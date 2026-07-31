@@ -204,11 +204,19 @@ def _llm_veto_filter(meta: dict) -> None:
                 continue
         obs.log("llm_veto_strip", ticker=pl.get("ticker"), plan_id=pl.get("id"),
                 detail="terfili ajan vetosu: REVIEW + karşı → dolum düşürüldü")
-        plans_led = store.read_jsonl("trade_plans.jsonl")
-        for _pr in plans_led:
-            if _pr.get("id") == pl["id"]:
-                _pr["llm_veto"] = True
-        store.write_jsonl("trade_plans.jsonl", plans_led)
+        # KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31): eskiden çıplak read+write idi ve AYNI
+        # deftere Hermes'in görüş damgası (`store.update_jsonl`, kilitli) ile `merge_dated_jsonl`
+        # de yazıyor. Kilit tek taraflıysa kilit yoktur: kaybeden yazar bütün araya girmiş
+        # satırları eski kopyasıyla geri alırdı ve hiçbir yerde iz kalmazdı.
+        def _veto_patch(rows, _pid=pl["id"]):
+            hit = False
+            for _pr in rows:
+                if _pr.get("id") == _pid:
+                    _pr["llm_veto"] = True
+                    hit = True
+            return hit
+
+        store.update_jsonl("trade_plans.jsonl", _veto_patch)
     meta["armed"] = kept_armed
 
 
@@ -1307,12 +1315,19 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                 _trail_patch_alarm(sym, res, cur_stop, float(ts))
 
     # (1.3) execution-divergence audit on trades closed THIS cycle
+    #
+    # KİLİTLİ YAMA (B3, 2026-07-31): eskiden defter burada okunuyor, ARADA Alpaca çağrıları
+    # yapılıyor ve sonunda TAMAMI geri yazılıyordu — kilitsiz, üstelik uzun bir pencerede. O
+    # pencerede `_persist_trade` bir satır eklerse (canlı döngü) yeni satır SESSİZCE siliniyordu.
+    # Yamalar artık toplanıp tek kilitli `update_jsonl` ile uygulanır: kilit penceresi ağ
+    # çağrılarını KAPSAMAZ (süreçler-arası kilidi ağ gecikmesi kadar tutmak yeni bir kilitlenme
+    # sınıfı açardı) ve defter yeniden okunduğu için araya giren satırlar korunur.
     trades = store.read_jsonl("trades.jsonl")
     last_row = {}
     for i, t in enumerate(trades):
         if t.get("plan_id"):
             last_row[t["plan_id"]] = i           # newest row per plan_id (the one just persisted this cycle)
-    patched = False
+    _yamalar: dict = {}
     for tr in closed_this_cycle:
         o = by_coid.get(tr.get("plan_id"))
         af = alpaca.exit_fill_price(o) if o else None
@@ -1322,17 +1337,28 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         div = abs(af - sim) / sim if sim else 0.0
         i = last_row.get(tr.get("plan_id"))
         if i is not None and "alpaca_fill_price" not in trades[i]:
-            trades[i]["alpaca_fill_price"] = round(af, 4)
-            trades[i]["mirror_divergence"] = round(div, 5)
-            patched = True
+            _yamalar[tr.get("plan_id")] = {"alpaca_fill_price": round(af, 4),
+                                           "mirror_divergence": round(div, 5)}
         if div > MIRROR_DRIFT_TOL:
             out["drift"].append({"ticker": tr.get("ticker"), "sim": round(sim, 4), "alpaca": round(af, 4),
                                  "div_pct": round(div * 100, 3)})
             obs.alarm(obs.ALARM_MIRROR_DRIFT,
                       f"ayna sapması: {tr.get('ticker')} — sim {sim} vs Alpaca {af} (%{div*100:.2f})",
                       ticker=tr.get("ticker"), sim=sim, alpaca_fill=af, divergence=round(div, 4))
-    if patched:
-        store.write_jsonl("trades.jsonl", trades)   # atomic (mkstemp + os.replace) — telemetry backfill only
+    if _yamalar:
+        def _fill_patch(rows, _y=_yamalar):
+            son: dict = {}
+            for _i, _t in enumerate(rows):        # plan başına EN YENİ satır (bu turda yazılan)
+                if _t.get("plan_id") in _y:
+                    son[_t["plan_id"]] = _i
+            hit = False
+            for _pid, _i in son.items():
+                if "alpaca_fill_price" not in rows[_i]:
+                    rows[_i].update(_y[_pid])
+                    hit = True
+            return hit
+
+        store.update_jsonl("trades.jsonl", _fill_patch)   # kilitli oku-değiştir-yaz (telemetri)
 
     # Faz 1 (1a): HAYALET emirler — Alpaca'da canlı görünen ama yerel izde (armed/alpaca_submitted/
     # mirror durum makinesi) karşılığı olmayan coid'ler. Motor bunları AÇMADI: ya operatör elle emir

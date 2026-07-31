@@ -66,14 +66,29 @@ def scoreboard() -> dict:
     return store.read_json("scoreboard.json", {"current_version": None, "versions": {}})
 
 
+SCOREBOARD = "scoreboard.json"
+
+
+def _sb_default() -> dict:
+    return {"current_version": None, "versions": {}}
+
+
 def update_scoreboard(version: int, **fields) -> dict:
-    sb = scoreboard()
+    """KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31).
+
+    Eskiden kilitsizdi ve bu depoda BELGELİ bir kayıp-güncelleme yoluydu: karneye ship yolu
+    (reflect), ölçüm yolu (baseline.set_row_fields) ve replay (run.py) yazıyor — üçü ayrı
+    süreçte olabiliyor. Kilitsiz oku-değiştir-yaz'da geç kalan yazar, arada yazılmış BÜTÜN
+    satırları eski kopyasıyla geri alır ve hiçbir yerde iz kalmaz. `store.update_json` hem
+    süreç-içi hem (artık) süreçler-arası kilidi alır."""
     v = str(version)
-    sb["versions"].setdefault(v, {})
-    sb["versions"][v].update(fields)
-    sb["current_version"] = version
-    store.write_json("scoreboard.json", sb)
-    return sb
+
+    def _patch(sb: dict) -> bool:
+        sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
+        sb["current_version"] = version
+        return True
+
+    return store.update_json(SCOREBOARD, _patch, _sb_default())
 
 
 def set_row_fields(version: int, **fields) -> dict:
@@ -86,13 +101,18 @@ def set_row_fields(version: int, **fields) -> dict:
     iki gerçek kaynağı birbirini yalanlar. Ölçüm bir KARAR değildir; hangi sürümün canlı olduğunu
     değiştiremez.
 
-    Yalnız `versions[str(version)]` satırına yazar; `current_version` olduğu gibi bırakılır."""
-    sb = scoreboard()
+    Yalnız `versions[str(version)]` satırına yazar; `current_version` olduğu gibi bırakılır.
+
+    KİLİTLİ (B3, 2026-07-31): `update_scoreboard` ile AYNI gerekçe — bu fonksiyon canlı worker
+    koşarken elle tetiklenen bir ölçüm yolundan (baseline backfill) çağrılıyor, yani iki süreçli
+    kayıp-güncellemenin en olası kapısı buydu."""
     v = str(version)
-    sb["versions"].setdefault(v, {})
-    sb["versions"][v].update(fields)
-    store.write_json("scoreboard.json", sb)
-    return sb
+
+    def _patch(sb: dict) -> bool:
+        sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
+        return True
+
+    return store.update_json(SCOREBOARD, _patch, _sb_default())
 
 
 def revert_to(version: int) -> dict:

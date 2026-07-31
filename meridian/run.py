@@ -73,7 +73,11 @@ def _reset_book_to(res, end: str) -> dict:
             "positions": {}, "armed": [], "pending_exits": {}, "last_date": end,
             "day_start_equity": cash, "alpaca_submitted": [], "broker_rejected": [],
             "peak_equity": peak}
-    store.write_json("portfolio.json", book)
+    # KİLİT (B3, 2026-07-31): tohum yolu CANLI defteri ezer. `store.file_lock` artık süreçler
+    # arasıdır — bu yazım canlı worker koşarken tetiklenirse kitabı ortasından yakalamak yerine
+    # sıraya girer (worker'ı durdurma disiplini yerini KORUR; kilit onun yerine geçmez).
+    with store.file_lock("portfolio.json"):
+        store.write_json("portfolio.json", book)
     console.print(f"[cyan]kitap tohumlanan deftere hizalandı: nakit {cash:,.2f}$ "
                   f"(gerçekleşen {realized:,.2f}$, zirve {peak:,.2f}$)[/cyan]")
     return book
@@ -160,8 +164,11 @@ def replay_seed(start: str, end: str) -> dict:
     # simülasyonun çıktısı. Sıradaki `equity_curve.json` yazımı bu toplu yazımın ZAMAN İMZASIDIR;
     # `ledgerstamp.seed_boundary()` geriye dönük sınırı tam olarak o çiftten ölçer — bu iki satırın
     # ARDIŞIKLIĞI bozulursa o ölçüm de bozulur.
-    store.write_jsonl("trades.jsonl", ledgerstamp.stamp_rows(res.trades, ledgerstamp.REPLAY_SEED))
-    store.write_json("equity_curve.json", {"version": version, "points": res.equity})
+    # KİLİT (B3): iki yazım ARDIŞIK kalmalı (yukarıdaki gerekçe) ve ikisi de defterin tamamını
+    # ezer — kilit ikisini tek sıraya alır, aradaki adım hâlâ tek bir sözlük kurmaktır.
+    with store.file_lock("trades.jsonl"), store.file_lock("equity_curve.json"):
+        store.write_jsonl("trades.jsonl", ledgerstamp.stamp_rows(res.trades, ledgerstamp.REPLAY_SEED))
+        store.write_json("equity_curve.json", {"version": version, "points": res.equity})
     detail = res.detail(goal)
     # PROVENANS'I KORU (2026-07-22): re-seed karneyi sıfırdan kuruyordu ve aynı sürümde duran
     # operatör kararının kaydını (source=operator_override) siliyordu — karar strategy.yaml'da hâlâ
@@ -224,7 +231,8 @@ def replay_seed(start: str, end: str) -> dict:
         _p = _anc.get("parent")
     if len(_new_vers) > 1:
         console.print(f"[cyan]soyağacı korundu: {sorted(_new_vers)} (rollback ebeveyn skorunu okuyabilir)[/cyan]")
-    store.write_json("scoreboard.json", {"current_version": version, "versions": _new_vers})
+    with store.file_lock("scoreboard.json"):    # B3: karneye üç ayrı yol yazıyor (bkz. versioning.py)
+        store.write_json("scoreboard.json", {"current_version": version, "versions": _new_vers})
 
     # dated signal history for the Signals page — the real plans/candidates the replay produced.
     # PLAN DEFTERİ İŞLEM DEFTERİNİ TAŞIMAK ZORUNDA (2026-07-22, `eleme` dedektörü yakaladı):
@@ -238,7 +246,8 @@ def replay_seed(start: str, end: str) -> dict:
     _have = {p.get("id") for p in _keep}
     _keep = [p for p in _plans if p.get("id") in _need and p.get("id") not in _have] + _keep
     store.write_jsonl("candidates.jsonl", (res.candidate_log or [])[-300:])
-    store.write_jsonl("trade_plans.jsonl", _keep)
+    with store.file_lock("trade_plans.jsonl"):  # B3: merge_dated_jsonl/update_jsonl ile aynı sıra
+        store.write_jsonl("trade_plans.jsonl", _keep)
 
     # KİTABI DA YENİDEN KUR (2026-07-22 bulgusu — `yeniden_hesap` dedektörü yakaladı):
     # replay, trades/equity/scoreboard'u yeniden yazıyordu ama portfolio.json'a DOKUNMUYORDU.

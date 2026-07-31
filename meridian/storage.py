@@ -150,8 +150,14 @@ def connect(path: Path | str | None = None, *, create: bool = True) -> sqlite3.C
 def pragma_state(conn: sqlite3.Connection | None = None) -> dict:
     """Açık PRAGMA'ların CANLI değeri — iddia değil ölçüm (testin okuduğu yüzey)."""
     c = conn or connect()
+    out = {}
     with _GUARD:
-        return {p: c.execute(f"PRAGMA {p}").fetchone()[p] for p, _ in PRAGMAS}
+        for p, _ in PRAGMAS:
+            row = c.execute(f"PRAGMA {p}").fetchone()
+            # Sütun adı PRAGMA adıyla AYNI DEĞİLDİR (`busy_timeout` → `timeout`); ada göre
+            # okumak KeyError verirdi. Tek sütunlu sonuç: ilk değeri al.
+            out[p] = None if not row else next(iter(row.values()))
+    return out
 
 
 def close_all() -> None:
@@ -361,23 +367,30 @@ def append_row(name: str, row: dict) -> None:
             raise
 
 
-def replace_rows(name: str, rows: list[dict]) -> None:
-    """Defterin TAMAMINI tek transaction'da değiştirir (`store.write_jsonl` karşılığı)."""
+def do_replace_rows(c: sqlite3.Connection, name: str, rows: list[dict]) -> int:
+    """TRANSACTION YÖNETMEZ — çağıran açar/kapatır. `dbmigrate` altı varlığı TEK transaction'da
+    taşıyabilsin diye ayrıldı: parite digesti tutmazsa hepsi birlikte geri alınır."""
     tbl = _TABLE[name]
-    cols = [c for c, _ in _COLS[name]]
+    cols = [c2 for c2, _ in _COLS[name]]
     ph = ",".join("?" * (len(cols) + 1))
-    q = f'INSERT INTO {tbl} ({",".join(chr(34) + c + chr(34) for c in cols)},extra_json) VALUES ({ph})'
+    q = f'INSERT INTO {tbl} ({",".join(chr(34) + x + chr(34) for x in cols)},extra_json) VALUES ({ph})'
     payload = []
     for r in rows:
         vals, extra = _row_to_cols(name, r)
         payload.append((*vals, extra))
+    c.execute(f"DELETE FROM {tbl}")
+    c.executemany(q, payload)
+    _touch(c, name, n=len(payload))
+    return len(payload)
+
+
+def replace_rows(name: str, rows: list[dict]) -> None:
+    """Defterin TAMAMINI tek transaction'da değiştirir (`store.write_jsonl` karşılığı)."""
     c = connect()
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
         try:
-            c.execute(f"DELETE FROM {tbl}")
-            c.executemany(q, payload)
-            _touch(c, name, n=len(payload))
+            do_replace_rows(c, name, rows)
             c.execute("COMMIT")
         except BaseException:
             c.execute("ROLLBACK")
@@ -400,17 +413,22 @@ def read_doc(name: str) -> Any:
         return None
 
 
-def write_doc(name: str, doc: Any) -> None:
+def do_write_doc(c: sqlite3.Connection, name: str, doc: Any) -> None:
+    """TRANSACTION YÖNETMEZ — bkz. `do_replace_rows` gerekçesi."""
     tbl = _TABLE[name]
+    c.execute(f"INSERT INTO {tbl}(id, doc_json, updated_at) VALUES (1, ?, ?) "
+              f"ON CONFLICT(id) DO UPDATE SET doc_json=excluded.doc_json, "
+              f"updated_at=excluded.updated_at",
+              (json.dumps(doc, ensure_ascii=False), time.time()))
+    _touch(c, name, n=1)
+
+
+def write_doc(name: str, doc: Any) -> None:
     c = connect()
-    blob = json.dumps(doc, ensure_ascii=False)
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
         try:
-            c.execute(f"INSERT INTO {tbl}(id, doc_json, updated_at) VALUES (1, ?, ?) "
-                      f"ON CONFLICT(id) DO UPDATE SET doc_json=excluded.doc_json, "
-                      f"updated_at=excluded.updated_at", (blob, time.time()))
-            _touch(c, name, n=1)
+            do_write_doc(c, name, doc)
             c.execute("COMMIT")
         except BaseException:
             c.execute("ROLLBACK")
@@ -449,7 +467,8 @@ def read_series(name: str = EQUITY) -> Any:
     return {**env, POINTS_KEY: pts}
 
 
-def write_series(doc: Any, name: str = EQUITY) -> None:
+def do_write_series(c: sqlite3.Connection, doc: Any, name: str = EQUITY) -> int:
+    """TRANSACTION YÖNETMEZ — bkz. `do_replace_rows` gerekçesi."""
     tbl = _TABLE[name]
     env = {k: v for k, v in (doc or {}).items() if k != POINTS_KEY}
     pts = list((doc or {}).get(POINTS_KEY) or [])
@@ -463,13 +482,18 @@ def write_series(doc: Any, name: str = EQUITY) -> None:
             eq = p[1] if isinstance(p, (list, tuple)) and len(p) > 1 and isinstance(p[1], (int, float)) \
                 and not isinstance(p[1], bool) else None
             payload.append((ts, eq, json.dumps(p, ensure_ascii=False)))
+    c.execute(f"DELETE FROM {tbl}")
+    c.executemany(f"INSERT INTO {tbl}(ts, equity, extra_json) VALUES (?,?,?)", payload)
+    _touch(c, name, n=len(payload), env=env)
+    return len(payload)
+
+
+def write_series(doc: Any, name: str = EQUITY) -> None:
     c = connect()
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
         try:
-            c.execute(f"DELETE FROM {tbl}")
-            c.executemany(f"INSERT INTO {tbl}(ts, equity, extra_json) VALUES (?,?,?)", payload)
-            _touch(c, name, n=len(payload), env=env)
+            do_write_series(c, doc, name)
             c.execute("COMMIT")
         except BaseException:
             c.execute("ROLLBACK")

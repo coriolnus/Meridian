@@ -471,9 +471,37 @@ def run_cycle(date: str, *, tickers, tail_of, rs_of, sector_of, max_corr_of, eff
     """Bir EOD turu × tüm kollar → kitap güncellenir, kapanan işlemler deftere yazılır.
 
     `write=False` testler için: kitap/işlemler ÜRETİLİR, diske YAZILMAZ (canlı state'e yazan test yok).
-    Dönüş: {"trades": [...], "books": {...}, "dropped_arms": [...], "seeded": [...]} ya da None (kapalı)."""
+    Dönüş: {"trades": [...], "books": {...}, "dropped_arms": [...], "seeded": [...]} ya da None (kapalı).
+
+    KİLİT (B3, 2026-07-31): gövde bir OKU-DEĞİŞTİR-YAZdır (kitap okunur, tur işlenir, kitap geri
+    yazılır) ve kilitsizdi. Tek yazar OLMASI kilidi gereksiz kılmaz: aynı kodu iki SÜREÇ koşarsa
+    (zamanlayıcı + elle tetiklenen tur) geç biten, öbürünün tüm kollarını eski kopyasıyla geri
+    alır. Kilit YALNIZ `write=True` iken alınır — `write=False` hiçbir bayta dokunmaz ve testlerin
+    saf yolunu kilit sırasına sokmak, ölçümü ölçülen şeyin dışındaki bir şeye bağlardı."""
     if not ENABLED:
         return None
+    if write:
+        with store.file_lock(BOOKS_FILE):
+            return _run_cycle_govde(
+                date, tickers=tickers, tail_of=tail_of, rs_of=rs_of, sector_of=sector_of,
+                max_corr_of=max_corr_of, eff=eff, regime=regime, regime_ok=regime_ok, goal=goal,
+                limits=limits, version=version, bars=bars, index_bars=index_bars,
+                sigs_by_variant=sigs_by_variant, live_armed=live_armed,
+                seed_sessions=seed_sessions, write=True)
+    return _run_cycle_govde(
+        date, tickers=tickers, tail_of=tail_of, rs_of=rs_of, sector_of=sector_of,
+        max_corr_of=max_corr_of, eff=eff, regime=regime, regime_ok=regime_ok, goal=goal,
+        limits=limits, version=version, bars=bars, index_bars=index_bars,
+        sigs_by_variant=sigs_by_variant, live_armed=live_armed, seed_sessions=seed_sessions,
+        write=False)
+
+
+def _run_cycle_govde(date: str, *, tickers, tail_of, rs_of, sector_of, max_corr_of, eff: dict,
+                     regime: dict, regime_ok: bool, goal: dict, limits: dict, version: int,
+                     bars: dict, index_bars=None, sigs_by_variant: dict | None = None,
+                     live_armed: list | None = None, seed_sessions: int = SEED_SESSIONS,
+                     write: bool = True) -> dict | None:
+    """`run_cycle`ın gövdesi — kilit ONUN üzerindedir (bkz. oradaki gerekçe)."""
     doc = store.read_json(BOOKS_FILE, None) if write else None
     if not isinstance(doc, dict) or "variants" not in doc:
         doc = _new_doc()

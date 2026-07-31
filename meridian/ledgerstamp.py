@@ -172,14 +172,20 @@ def seed_boundary() -> dict:
         guven, neden = "yuksek", (f"toplu yazım imzası VAR (mtime farkı {delta}sn ≤ "
                                   f"{BULK_WRITE_TOLERANCE_S}sn) — defter, {replay_end} sonuna kadar "
                                   f"koşan tohum yazımından bu yana hiç eklenmemiş")
+    elif not _olculebilir:
+        guven, neden = "orta", (f"toplu yazım imzası ÖLÇÜLEMEZ (defter SQLite arka ucunda: iki "
+                                f"varlığın damgası tek transaction'da aynı ana düşer) — sınır yine "
+                                f"{replay_end}, sonrası canlı eklemeye açık sayılır")
     else:
         guven, neden = "orta", (f"toplu yazım imzası YOK (mtime farkı {delta}sn) — defter tohum "
                                 f"yazımından SONRA da yazılmış; sınır yine {replay_end}, sonrası "
                                 f"canlı eklemeye açık")
     return {"replay_end": replay_end, "toplu_yazim": toplu, "mtime_delta_s": delta,
             "n_equity_points": len(pts), "guven": guven, "neden": neden,
-            "kanit": (f"{EQUITY} son noktası (tek yazar: run.replay_seed) + "
-                      f"{LEDGER}/{EQUITY} mtime çifti"),
+            "kanit": ((f"{EQUITY} son noktası (tek yazar: run.replay_seed) + "
+                       f"{LEDGER}/{EQUITY} mtime çifti") if _olculebilir else
+                      (f"{EQUITY} son noktası (tek yazar: run.replay_seed); mtime çifti SQLite "
+                       f"arka ucunda ölçülemez")),
             "equity_ilk_nokta": (str(pts[0][0])[:10] if pts else None)}
 
 
@@ -236,6 +242,15 @@ def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
 def migrate(apply: bool = False) -> dict:
     """TEK SEFERLİK GERİYE MİGRASYON. Kuru koşu VARSAYILANDIR (`barrepair` kuralı: veri yazan bir
     aracın varsayılanı yazmak olamaz). Uygulama tek atomik `write_jsonl` ile biter."""
+    # KİLİT (B3, 2026-07-31): oku-değiştir-yaz. `store.file_lock` artık SÜREÇLER ARASIdır
+    # (fcntl.flock), yani modülün başındaki "store kilidi süreç-içidir" uyarısının dayandığı
+    # boşluk kapandı — CLI ile canlı worker aynı sırayı paylaşır. Süreç kontrolü (main) yine
+    # durur: kilit yarışı önler, ama defteri iki farklı NİYETLE yeniden yazmayı önlemez.
+    with store.file_lock(LEDGER):
+        return _migrate_locked(apply)
+
+
+def _migrate_locked(apply: bool) -> dict:
     rows = store.read_jsonl(LEDGER)
     b = seed_boundary()
     kararlar = classify(rows, b)
