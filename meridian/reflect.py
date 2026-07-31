@@ -1124,7 +1124,9 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
 
 def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows: tuple | None = None,
                               k_max: int = 3, budget: int = 10, tried: set | None = None,
-                              on_probe=None, regime: str | None = None) -> dict:
+                              on_probe=None, regime: str | None = None,
+                              max_minutes: float | None = None,
+                              deadline_ts: float | None = None) -> dict:
     """Walk the incumbent ONCE, then probe up to `budget` single-variable candidates (magnitude-first,
     breadth across UCB-ranked knobs) through the SAME OOS gate. Returns the best gate-CLEARING probe (or
     None). Probes are NOT recorded as hypotheses — a probe that lost vs this incumbent is not a permanent
@@ -1132,7 +1134,61 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     regime (Phase 3): a REGIME-TARGETED search — every probe becomes var@regime (routed into
     params_by_regime by versioning.bump) and BOTH incumbent and candidates are graded only on that
     regime's trades. The current value each probe steps from is the regime override when one exists,
-    else the global value (that IS the effective value the regime trades under today)."""
+    else the global value (that IS the effective value the regime trades under today).
+
+    SÜRE TAVANI (WP-H/H11, 2026-07-31) — `max_minutes` / `deadline_ts`, VARSAYILAN YOK.
+    Vaka: `hermes_runtime._warmup_sprint` bu aramayı hermes döngüsünün KENDİ iş parçacığında koşturur
+    ve nominal süresi 1-5 SAATtir. O süre boyunca döngü bir sonraki `hermes_poll` nabzına gelemez;
+    bekçi 8 saatte MECHANISM_STALE üretir ve operatör hiçbir arıza yokken alarma koşar. Daha kötüsü:
+    bekçinin elinde ALARM'dan başka bir araç yoktu — İPTAL edemiyordu.
+
+    NEDEN MEVCUT `MERIDIAN_SEARCH_MAX_MIN` YETMİYOR (ölçüldü, aşağıdaki `_max_min`): o tavan yalnız
+    TAZE hesapları ATLAR, aramayı DURDURMAZ — döngü kalan sondaları (önbellekten) dolaşmaya devam
+    eder ve her biri yine tam `_gate_eval` koşar. Yani o tavan K sayımını dürüst tutmak için vardır,
+    duvar-saatini bağlamak için değil. Bu tavan aramanın KENDİSİNİ bitirir.
+
+    KİBAR-İPTAL, YARIM SONUÇ DEĞİL: tavan aşıldığında o ana dek BİTMİŞ sondalarla normal bir sonuç
+    döner (`best` dahil — kapıyı geçmiş bir aday, arama kesildi diye çöpe atılmaz). Kesintinin
+    KENDİSİ sonuçta damgalıdır (`kesildi`/`sebep`/`kalan_sonda`), çünkü "10 sondadan 3'ü değerlendi"
+    ile "yalnız 3 sonda vardı" AYNI sözlükle temsil edilirse sonraki okuyucu aramayı eksik değil
+    KÜÇÜK sanır. `kesildi` kesilmeyen koşumlarda da (False olarak) yazılır: alanın YOKLUĞU ile
+    "kesilmedi" birbirine karışmasın.
+
+    K SAYIMI DOKUNULMAZ: kapıya giden K = PLANLANAN toplam sonda sayısıdır (`total`), değerlendirilen
+    değil. Kesinti K'yı küçültseydi kazananın-laneti cezası hafifler ve tavan, kapıyı GEVŞETEN bir
+    kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur."""
+    import time as _t_mod
+    # TAVAN SAATİ EN BAŞTA BAŞLAR — incumbent yürüyüşü DAHİL. Sayacı sonda döngüsünde başlatmak,
+    # tavanın aramanın en pahalı tek adımını (incumbent walk-forward) hiç ölçmemesi demekti: 5 saatlik
+    # bir tavan, incumbent 5 saat sürdüğünde de "aşılmamış" görünürdü.
+    _t_basla = _t_mod.time()
+    _tavan_ts = None
+    if deadline_ts is not None:
+        _tavan_ts = float(deadline_ts)
+    elif max_minutes is not None and float(max_minutes) > 0:
+        _tavan_ts = _t_basla + float(max_minutes) * 60.0
+
+    def _tavan_asildi() -> bool:
+        return _tavan_ts is not None and _t_mod.time() > _tavan_ts
+
+    def _kesinti(evaluated: int, kalan: int) -> dict:
+        """Kesinti damgası + YASA 4 kaydı (gerekçe ≥20 karakter): sessiz bir kesinti, kısa bir
+        aramadan ayırt edilemez ve okuyucu aramanın eksik olduğunu ASLA öğrenemez."""
+        gecen = round((_t_mod.time() - _t_basla) / 60.0, 2)
+        damga = {"kesildi": True, "sebep": "sure_tavani",
+                 "tavan_dk": (round((_tavan_ts - _t_basla) / 60.0, 2) if _tavan_ts else None),
+                 "gecen_dk": gecen, "kalan_sonda": int(kalan)}
+        try:
+            from . import obs as _obs_k
+            _obs_k.log("search_sure_tavani_kesildi", evaluated=evaluated, kalan_sonda=int(kalan),
+                       gecen_dk=gecen, tavan_dk=damga["tavan_dk"], regime=regime,
+                       detail="koordinat araması süre tavanına takıldı ve KİBARCA kesildi — biten "
+                              "sondalarla dönüldü, kalanlar hiç değerlendirilmedi; K sayımı "
+                              "planlanan toplam sonda üzerinden DEĞİŞMEDEN kaldı")
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kesinti damgası ZATEN dönüş sözlüğünde taşınıyor ve kayıt denemesi çağıranı düşüremez
+            pass
+        return damga
+
     goal = goal or config.goal()
     w = windows or _default_windows()
     bounds = config.bounds()
@@ -1196,6 +1252,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     evaluated = cleared = 0
     best, trace = None, []
     total = len(probes)
+    kesinti: dict = {"kesildi": False}
     if on_probe:
         # Publish the plan (total + incumbent) the MOMENT it is known. The incumbent walk above takes ~a
         # minute, during which the caller has no idea how big the run is — "başlıyor…" with no scale.
@@ -1204,6 +1261,12 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             pass
     for i, (var, new) in enumerate(probes, 1):
+        # TAVAN KONTROLÜ SONDALAR ARASINDA (sondanın İÇİNDE değil): tek bir walk-forward bölünemez;
+        # ortasından kesmek yarım bir ölçüm bırakırdı ve yarım ölçüm, ölçüm değildir. Kesinti noktası
+        # her zaman iki tam sondanın arasıdır — dönen `trace` bu yüzden hep tutarlı satırlar taşır.
+        if _tavan_asildi():
+            kesinti = _kesinti(evaluated, kalan=total - (i - 1))
+            break
         tried.add((var, new))
         base_var = str(var).split("@", 1)[0]
         old = overrides.get(base_var, params.get(base_var)) if regime else params.get(base_var)
@@ -1238,7 +1301,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                 pass                      # progress reporting must NEVER break the search
     return {"incumbent_oos": inc_oos, "evaluated": evaluated, "cleared": cleared,
             "fresh": _fresh_done, "cached_hits": evaluated - _fresh_done, "skipped_wallclock": _skipped_fresh,
-            "best": best, "trace": trace[-40:], "regime": regime}
+            "best": best, "trace": trace[-40:], "regime": regime, "planlanan_sonda": total,
+            **kesinti}
 
 
 def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple | None = None,

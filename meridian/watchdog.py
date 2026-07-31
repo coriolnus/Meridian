@@ -21,8 +21,20 @@ _BEAT_LOCK = threading.Lock()   # canlıda görüldü: scheduler + hermes iş pa
 # ad → beklenen azami sessizlik (saniye). Yorumlar dürüst gerekçe: pencere neden bu genişlikte.
 EXPECTED: dict[str, int] = {
     "scheduler_poll":   30 * 60,          # 300 sn'lik poll — 30 dk sessizlik = süreç ölü/kilitli
-    "hermes_poll":      30 * 60,          # bekleme döngüsü de aynı ritimde
-    "warmup_sprint":    8 * 3600,         # nominal ~1-5 sa; 8 sa üstü = kadans anomalisi görünür olsun
+    # `hermes_poll` PENCERESİ 30 DK KALIR AMA ANLAMI 2026-07-31'DE (WP-H/H11) DEĞİŞTİ: nabzı artık
+    # yalnız `_run` döngüsünün turu atmıyor, ISINMA SPRİNTİ de her sondada atıyor. Eskiden ısınma
+    # koşarken (nominal 1-5 sa) döngü tura dönemiyor, nabız susuyor ve bekçi SAHTE bir
+    # MECHANISM_STALE üretiyordu — mekanizma ölü değil MEŞGULdü. Nabzın sorduğu soru "döngü turladı
+    # mı" değil, "hermes ipliği canlı ve ilerliyor mu"dur; ısınma içinden atılan nabız o soruya
+    # DOĞRU cevap verir. Pencereyi ısınmaya göre genişletmek yanlış olurdu: o zaman gerçekten ölmüş
+    # bir poll ipliği de saatlerce görünmezdi.
+    "hermes_poll":      30 * 60,          # bekleme döngüsü + ısınma sprinti (sonda başına nabız)
+    # `warmup_sprint` EŞİĞİ 8 SA'DA KALIR — VE ARTIK GERÇEK BİR ANOMALİ ÖLÇER. Nominal ~1-5 sa;
+    # H11'den beri aramanın KENDİ süre tavanı var (HERMES_WARMUP_MAX_MIN, varsayılan 300 dk = 5 sa)
+    # ve tavana takılan koşum kibarca kesilir. Yani 8 sa'lık bir sessizlik artık "ısınma uzun sürdü"
+    # olamaz: tavan onu 5 saatte keserdi. Kalan tek açıklama tavanın ÇALIŞMAMASIDIR (iplik asıldı,
+    # sonda içinde kilitlendi, süreç öldü) — eşiği eskiden gürültü üreten bir sayı, şimdi teşhis.
+    "warmup_sprint":    8 * 3600,
     "cf_advance":       4 * 24 * 3600,    # seans-bağımlı: uzun hafta sonu + tatil toleransı
     "p5_calibrations":  4 * 24 * 3600,    # seans-bağımlı (P5 her döngüde)
     "mirror_reconcile": 4 * 24 * 3600,    # seans-bağımlı (alpaca modunda her döngüde)

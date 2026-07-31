@@ -16,6 +16,44 @@ STATUS_FILE = "hermes_status.json"
 REFLECTION_MIN_DAYS = int(os.environ.get("HERMES_REFLECTION_MIN_DAYS", "30"))   # Phase 3 overfitting horizon
 WARMUP_EVERY_POLLS = int(os.environ.get("MERIDIAN_WARMUP_EVERY_POLLS", "12"))   # ısınma sprinti sıklığı (poll)
 
+# ---- ISINMA SPRİNTİ SÜRE TAVANI (WP-H/H11, 2026-07-31) -----------------------------------------
+# 300 dk = 5 sa, ısınmanın NOMİNAL üst bandı (ölçülmüş aralık 1-5 sa). Tavan bir kısıtlama değil,
+# ANOMALİ SINIRI: nominal bandın içinde kalan hiçbir koşum kesilmez; 5 saati aşan koşum tanım gereği
+# artık nominal değildir ve döngüyü daha fazla rehin tutmasının hiçbir gerekçesi yoktur.
+WARMUP_MAX_MIN_DEFAULT = 300
+
+
+def _warmup_tavan_dk() -> float:
+    """`HERMES_WARMUP_MAX_MIN` (dk) — HER ÇAĞRIDA okunur, modül yüklenirken DEĞİL.
+
+    Neden çağrı anında: bu değer bir operatör kolu (canlıda bir bakım penceresinde daraltılmak
+    istenebilir) ve modül-yükleme anında dondurulmuş bir env, süreç yeniden başlatılana kadar
+    değişmez — yani kolun çevrildiği ama hiçbir şeyin değişmediği bir yanılsama üretirdi.
+
+    BOZUK DEĞER SESSİZCE 0 OLMAZ: `float("abc")` istisnası yutulup 0'a düşülseydi tavan HER
+    ısınmayı anında keserdi ve ısınma kadansı sessizce ölürdü — bekçi bile göremezdi, çünkü nabız
+    atılmaya devam ederdi. Bozuk değer ADIYLA uyarılır ve varsayılana dönülür."""
+    ham = os.environ.get("HERMES_WARMUP_MAX_MIN")
+    if ham is None or not str(ham).strip():
+        return float(WARMUP_MAX_MIN_DEFAULT)
+    try:
+        v = float(ham)
+    except (TypeError, ValueError):
+        obs.warn("hermes_warmup_max_min_gecersiz", value=str(ham)[:40],
+                 fallback_min=WARMUP_MAX_MIN_DEFAULT,
+                 detail="HERMES_WARMUP_MAX_MIN sayıya çevrilemedi — varsayılan tavana dönüldü; "
+                        "0'a düşmek ısınma kadansını sessizce öldürürdü")
+        return float(WARMUP_MAX_MIN_DEFAULT)
+    if v <= 0:
+        # 0/negatif = "tavan yok" DEĞİL, "her koşumu anında kes" olurdu. Operatör tavanı kaldırmak
+        # isterse doğru kol devre dışı bırakmadır (MERIDIAN_WARMUP_SPRINTS=0), tavanı sıfırlamak değil.
+        obs.warn("hermes_warmup_max_min_gecersiz", value=str(ham)[:40],
+                 fallback_min=WARMUP_MAX_MIN_DEFAULT,
+                 detail="HERMES_WARMUP_MAX_MIN sıfır ya da negatif — bu 'tavan yok' değil 'her "
+                        "ısınmayı anında kes' anlamına gelirdi; varsayılan tavana dönüldü")
+        return float(WARMUP_MAX_MIN_DEFAULT)
+    return v
+
 
 def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | None:
     """#2 REJİM-HEDEFLİ ARKA PLAN YANSIMASI: canlı rejimin ufku dolmadığında boşta beklemek,
@@ -42,9 +80,28 @@ def _warmup_sprint() -> None:
     """Boş-döngü ısınması (öneri #4): coordinate_descent_search'i SHIP ETMEDEN koştur — yalnız UCB
     önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz). En iyi probe'un
     özeti hermes_status'a yazılır (görünürlük). Ağ/veri hatası sessizce yutulur — ısınma asla döngüyü
-    kırmaz."""
+    kırmaz.
+
+    WP-H/H11 (2026-07-31) — İKİ KUSUR BİRDEN KAPANIR, İKİSİ DE AYNI KÖKTEN:
+
+      (1) POLL AÇLIĞI. Bu fonksiyon hermes bekleme döngüsünün KENDİ iş parçacığında koşar ve nominal
+          süresi 1-5 saattir. O süre boyunca `_run` döngüsü bir sonraki tura dönemez, yani
+          `watchdog.beat("hermes_poll")` ATILMAZ. Bekçinin `hermes_poll` penceresi 30 DAKİKAdır →
+          ısınma her koştuğunda MECHANISM_STALE üretilir. Bu SAHTE bir alarmdır: mekanizma ölü değil,
+          MEŞGULdür. Ve sahte alarmın maliyeti gerçek alarmdan yüksektir — operatörü alarm okumamaya
+          eğitir. Çözüm: nabız artık sondadan sondaya, ısınmanın İÇİNDEN atılıyor. `hermes_poll`
+          nabzının ısınma tarafından atıldığı bu yoruma yazılıdır: nabız "poll döngüsü turladı"
+          demez, "hermes ipliği CANLI ve İLERLİYOR" der — bekçinin gerçekte sorduğu soru budur.
+
+      (2) İPTAL EDİLEMEZLİK. 8 saati aşan bir ısınmada bekçinin elinde ALARM'dan başka araç yoktu.
+          Artık aramanın kendisi bir süre tavanı taşıyor (`max_minutes`) ve tavana takılırsa KİBARCA
+          kesiliyor — biten sondalarla dönüyor, kesinti damgalanıyor. Bekçi eşiği 8 saatte KALIR ve
+          bu bilinçlidir: tavan 5 saat olduğuna göre 8 saatlik bir sessizlik artık "uzun sürdü"
+          değil "tavan çalışmadı" demektir — yani eşik nihayet GERÇEK bir anomali ölçer.
+    """
     try:
         from . import hermes, reflect, dataset
+        from . import watchdog as _wd8
         bars, index = dataset.load()
         # #2: önce sıradaki muhtemel yansımaların incumbent'ları (global + canlı + ufku dolu arka plan
         # rejimi) — yansıma anında kapı beklemesin; sonra sonda ısınması.
@@ -57,16 +114,32 @@ def _warmup_sprint() -> None:
             reflect.prefill_incumbents(bars, index, [None, live, bg])
         except Exception as e:
             obs.warn("incumbent_prefill_failed", error=f"{type(e).__name__}: {e}")
+        def _nabiz(i, total, *_a):
+            """Her sonda bitiminde İKİ nabız. Mevcut `on_probe` dikişi yeniden kullanılır: aramaya
+            ikinci bir geri-çağırma parametresi eklemek, aynı olayı iki kanaldan taşıyan bir
+            ikizlik yaratırdı. Nabız yazımı `store.write_json`dur (birkaç ms) ve sonda başına bir
+            kez olur — 40 sondalık bir turda toplam maliyet ölçülemeyecek kadar küçüktür."""
+            _wd8.beat("warmup_sprint")     # ısınmanın KENDİ kadansı ilerliyor
+            _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
+
+        _tavan = _warmup_tavan_dk()
         res = reflect.coordinate_descent_search(bars, index, budget=int(os.environ.get("HERMES_WARMUP_BUDGET", "10")),
-                                                k_max=2)
-        from . import watchdog as _wd8
-        _wd8.beat("warmup_sprint")
+                                                k_max=2, max_minutes=_tavan, on_probe=_nabiz)
+        _wd8.beat("warmup_sprint")         # sonda HİÇ koşmadıysa da ısınma turladı: kadans nabzı düşmez
+        _wd8.beat("hermes_poll")
         _state["last_warmup"] = {"at": _now(), "evaluated": res.get("evaluated"),
                                  "cleared": res.get("cleared"),
-                                 "best": (res.get("best") or {}).get("variable")}
+                                 "best": (res.get("best") or {}).get("variable"),
+                                 # KESİNTİ PANODA GÖRÜNÜR: "3 sonda değerlendi" ile "10 sondanın
+                                 # 3'ü değerlendi, kalanı kesildi" aynı karta yazılamaz.
+                                 "kesildi": bool(res.get("kesildi")),
+                                 "sebep": res.get("sebep"), "tavan_dk": _tavan,
+                                 "kalan_sonda": res.get("kalan_sonda")}
         from . import obs
         obs.log("warmup_sprint", evaluated=res.get("evaluated"), cleared=res.get("cleared"),
-                best=(res.get("best") or {}).get("variable"))
+                best=(res.get("best") or {}).get("variable"),
+                kesildi=bool(res.get("kesildi")), tavan_dk=_tavan,
+                kalan_sonda=res.get("kalan_sonda"))
     except Exception as e:
         _state["last_warmup"] = {"at": _now(), "error": type(e).__name__}
 
