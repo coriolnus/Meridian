@@ -152,8 +152,10 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   rafine üstünlük KANITLANAMADI (B aylık-rebalans CI-0-içi, vol/DD kötü; muhafazakâr okuma) →
   HAM KOL incumbent. ASIL BULGU — KALICI PIT ŞERHİ: +13,1p/yıl fazlanın büyük kısmı evren-seçim
   yanlılığı; PIT-sağkalan evrende ~6-7p/yıl (D t=2.08 — hayatta, kill#2 tetiklenmedi). 2021+
-  tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). SIRADAKİ İŞ: ham kolun aylık
-  gölge-kitap implementasyonu (hüküm sonrası serbest; Opus turu) + kart-dilbilgisi dersi WP-M'de. · G4 ikinci kurulum (trend-içi geri-çekilme, korelasyon<0,3; pullback
+  tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). **GÖLGE-KİTAP ✅ KOD-HAZIR
+  (2026-07-31 gece turu; canlıya sonraki pencerede):** trend_shadow.py sıfır-yetkili paralel defter
+  — şasi-birebir sabitler, PIT şerhi kitap içinde, YASA-6 okuyucuları çivili, 645-seans smoke temiz
+  (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · G4 ikinci kurulum (trend-içi geri-çekilme, korelasyon<0,3; pullback
   askı-bulgusuyla birleşik yeniden-tasarım) · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
   G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · VCP-DECOMPOSE programı (katalog #30:
   VCP = residual-mom + 52wh + hacim-primi + daralma bileşenlerine ayrıştır — 1.1/1.2/1.4
@@ -342,6 +344,11 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-07-31 ~21:45 GÖLGE-KİTAP TURU KAPANDI.** Trend kolu canlı paralel-defter olarak hazır
+  (d3425e2); dağıtım paketi = H11 + SQLite −0.0 düzeltmesi + gölge-kitap (migrasyonsuz düz kod);
+  tam suite koşuyor, yeşilse pencere operatöre tek komutla hazır. 23:32 yedek + ~02:00 ilk
+  SQLite-gecesi döngüsü izlemede.
 
 - **2026-07-31 ~15:30 EDG-009 TREND-RAFİNE HÜKMÜ.** Rafine üstünlük kanıtlanamadı → ham kol
   incumbent; KALICI PIT ŞERHİ: fazlanın ~yarısı evren-seçim yanlılığı (~6-7p/yıl, D t=2.08
