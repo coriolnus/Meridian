@@ -48,3 +48,175 @@ dev = [
     "import-linter>=2.13",
     "mutmut>=3.7.0",
 ]
+
+# ================================================================================================
+# IMPORT-LINTER — MİMARİ SÖZLEŞMELERİ (WP-H/H4, 2026-07-31)
+# ================================================================================================
+# NE YAPAR: `lint-imports` grimp ile GERÇEK import grafiğini çıkarır ve aşağıdaki sözleşmeleri
+# ölçer. Bu bir TESPİT KAPISIDIR, refactor aracı değil: sözleşmeler BUGÜNKÜ grafikten türetildi ve
+# bugün GEÇİYOR. Amaç yeni bir yukarı-yön bağımlılığın SESSİZCE doğmasını engellemek — bugüne
+# kadar "adapters üst katmanı import etmez" yalnız bir GELENEKti, ölçülmüyordu.
+#
+# İSTİSNALAR UYDURULMADI, ÖLÇÜLDÜ: `ignore_imports` satırlarının her biri bugün grafikte GERÇEKTEN
+# var olan bir kenardır ve gerekçesi yanında yazar. İstisna listesi boşalırsa satır silinir;
+# BÜYÜRSE bu bir mimari borç kaydıdır (denetimde görünür).
+[tool.importlinter]
+root_package = "meridian"
+# Grafik dışı bırakılanlar YOK: ölçüm tam pakete uygulanır (kısmi grafik = kısmi güvence).
+
+# ---- SÖZLEŞME 1: ADAPTÖR BAĞIMSIZLIĞI ----------------------------------------------------------
+# adapters/* DIŞ DÜNYAYA bakan kenar katmandır (HTTP, CSV, üçüncü-taraf SDK). Motor katmanını
+# (loop/api/scheduler/hermes*/sprint*) import ederse iki şey birden bozulur: (a) veri katmanı
+# karar katmanının yaşam döngüsüne bağlanır — bir adaptör testi tüm motoru içe aktarmak zorunda
+# kalır; (b) döngüsel import riski kenardan merkeze doğru yayılır.
+[[tool.importlinter.contracts]]
+name = "adapters yukarı-yön import etmez (kenar katman motoru tanımaz)"
+type = "forbidden"
+source_modules = ["meridian.adapters"]
+forbidden_modules = [
+    "meridian.api",
+    "meridian.loop",
+    "meridian.scheduler",
+    "meridian.run",
+    "meridian.broker",
+    "meridian.hermes",
+    "meridian.hermes_runtime",
+    "meridian.hermes_composite",
+    "meridian.sprint",
+    "meridian.sprint_run",
+    "meridian.reflect",
+    "meridian.backtest",
+    "meridian.strategy",
+]
+ignore_imports = [
+    # ÖLÇÜLEN TEK İSTİSNA (2026-07-31): `adapters/alpaca.py` fonksiyon gövdelerinde
+    # `from ..broker import ENTRY_TIF, RISK_PCT_PER_R, MAX_NOTIONAL_PCT, entry_order_decision`
+    # yapar. Bu BİLİNÇLİ bir bağımlılıktır — WP-E "iki-motor icra yasası": giriş emrinin tipi/
+    # limiti/TIF'i İÇ broker'ın yasasıdır ve dış adaptör ona UYAR. Yasayı adaptöre kopyalamak iki
+    # motorun sessizce ayrışmasına yol açardı (mirror_drift sınıfı). Refactor edilecekse yön:
+    # yasa ortak bir `execution_law` modülüne iner, iki motor da ondan okur. BU TURDA YAPILMADI.
+    "meridian.adapters.alpaca -> meridian.broker",
+]
+
+# ---- SÖZLEŞME 2: ÇEKİRDEK-ALTYAPI KATMANI ------------------------------------------------------
+# store/storage/config/obs HERKESİN import ettiği tabandır. Taban bir üst katmanı import ederse
+# grafik tersine döner ve "yalnız store'u içe aktar" diyen bir test aslında tüm uygulamayı yükler.
+# (Not: bu dörtlünün KENDİ arasında döngü VARDIR — config→obs→store→config. Bu bilinen bir borçtur
+#  ve sözleşme 4'ün kapsamı dışında bırakıldı; bu sözleşme yalnız DIŞARI-YUKARI yönü ölçer.)
+[[tool.importlinter.contracts]]
+name = "çekirdek-altyapı üst katmanları import etmez"
+type = "forbidden"
+source_modules = [
+    "meridian.store",
+    "meridian.storage",
+    "meridian.config",
+    "meridian.obs",
+]
+forbidden_modules = [
+    "meridian.api",
+    "meridian.loop",
+    "meridian.scheduler",
+    "meridian.run",
+    "meridian.backtest",
+    "meridian.reflect",
+    "meridian.hermes",
+    "meridian.hermes_runtime",
+    "meridian.sprint",
+    "meridian.sprint_run",
+    "meridian.broker",
+    "meridian.strategy",
+    "meridian.score",
+    "meridian.analytics",
+    "meridian.health",
+    "meridian.skills",
+    "meridian.watchdog",
+    "meridian.dataset",
+    "meridian.adapters",
+    "meridian.memory",
+    "meridian.guard",
+]
+
+# ---- SÖZLEŞME 3: SAF YAPRAKLAR BİRBİRİNDEN BAĞIMSIZ --------------------------------------------
+# Bu beş modülün BUGÜN hiçbir meridian import'u yoktur (ölçüldü). Saf-fonksiyon adacıklarıdır:
+# `indicators` matematiktir, `barclock` takvimdir, `codelaw` metin denetimidir, `provenance`
+# köken takibidir. Aralarında bir kenar doğarsa bu bir tasarım kayması sinyalidir — sessiz kalmaz.
+[[tool.importlinter.contracts]]
+name = "saf yapraklar (indicators/barclock/codelaw/provenance/macro) birbirinden bağımsız"
+type = "independence"
+modules = [
+    "meridian.indicators",
+    "meridian.barclock",
+    "meridian.codelaw",
+    "meridian.provenance",
+    "meridian.adapters.macro",
+]
+
+# ---- SÖZLEŞME 4+5: DÖNGÜSÜZLÜK (İKİ AYRI ZİNCİR — TEK ZİNCİR OLAMADIĞI ÖLÇÜLDÜ) ---------------
+# `layers` sözleşmesi yön DAYATIR, yani kapsadığı küme üzerinde DÖNGÜSÜZLÜĞÜ garanti eder
+# (yukarı-yön import yasak → geri kenar imkânsız → döngü imkânsız) ve DOLAYLI zincirleri de sayar.
+#
+# ÖLÇÜLEN GERÇEK (2026-07-31, ilk deneme kırmızı döndü — bulgu kaydedildi): tek bir
+# `api > scheduler > loop > backtest > strategy > indicators` zinciri KURULAMIYOR, çünkü backtest
+# DOLAYLI olarak loop'a bağlı:
+#     meridian.backtest → skills (l.33) → analytics (l.198) → shadow_variants (l.2658)
+#                       → shadow_lifecycle (l.373…) → loop (l.439: `from .loop import _scan_tail`)
+# Yani "backtest loop'un altındadır" iddiası BUGÜN YANLIŞTIR. Bu, repo genelindeki 20 modüllük
+# güçlü-bağlı bileşenin (analytics/hermes/loop/reflect/watchdog/skills/shadow_*) backtest'i de
+# içine çektiğinin kanıtı. İddiayı `ignore_imports` ile bastırmak yerine sözleşme İKİYE bölündü:
+# her ikisi de SIFIR istisnayla geçiyor, ve geçmedikleri yer (aradaki köprü) burada YAZILI.
+[[tool.importlinter.contracts]]
+name = "üst kadans zinciri katmanlı ve döngüsüz (api > scheduler > loop)"
+type = "layers"
+layers = [
+    "meridian.api",
+    "meridian.scheduler",
+    "meridian.loop",
+]
+
+# Deterministik karar çekirdeği: motorun LLM'siz, defter-yazmayan, saf hesap katmanı. Bu zincirin
+# döngüsüz kalması sözleşmenin en değerli parçası — bir gün `indicators` `strategy`yi import
+# ederse ölçüm şasisi kendi kuyruğunu yemeye başlar.
+[[tool.importlinter.contracts]]
+name = "deterministik karar çekirdeği katmanlı ve döngüsüz (backtest > strategy > regime > guard > indicators)"
+type = "layers"
+layers = [
+    "meridian.backtest",
+    "meridian.strategy",
+    "meridian.regime",
+    "meridian.guard",
+    "meridian.indicators",
+]
+
+# ================================================================================================
+# MUTMUT — HAFTALIK MUTASYON TESTİ (WP-H/H5, 2026-07-31)
+# ================================================================================================
+# KURULUM, KOŞUM DEĞİL. İlk gerçek koşum bakım ritüelindedir (saatler sürer) — `ops/haftalik_
+# mutasyon.sh` onu koşar ve skoru `docs/mutasyon/<tarih>.md`ye yazar.
+#
+# ANAHTAR ADLARI ÖLÇÜLDÜ, EZBERDEN YAZILMADI: kurulu mutmut 3.7.0'da `paths_to_mutate` ve
+# `tests_dir` DEPRECATED (configuration.py:100-113 uyarı basıyor); karşılıkları `source_paths` ve
+# `pytest_add_cli_args_test_selection`. Eski adlar bugün çalışır ama bir sonraki ana sürümde
+# sessizce düşer — o gün mutasyon TÜM repoyu mutasyona uğratmaya başlardı (koşum saatlerden
+# günlere çıkar, kimse nedenini anlamaz).
+#
+# NEDEN `source_paths=meridian` + `only_mutate=üç dosya`: mutmut 3 kaynak ağacını `mutants/`e
+# KOPYALAR ve testler oradan import eder (__main__.py:264 setup_source_paths). source_paths yalnız
+# üç dosya olsaydı `mutants/meridian/` paketi EKSİK kopyalanır ve her test import hatasıyla ölürdü
+# — mutasyon skoru "%100 öldürüldü" gibi görünürdü (en tehlikeli yanlış-yeşil). Paket bütün
+# kopyalanır, mutasyon YALNIZ üç dosyaya uygulanır.
+#
+# ÜÇ DOSYA NEDEN BUNLAR: para yolunun karar çekirdeği. broker.py = pozisyon/risk/de-risk rampası,
+# guard.py = parametre sınırları, score.py = skor=para yasası. Bir mutant burada hayatta kalıyorsa
+# testler o davranışı ÖLÇMÜYOR demektir ve bu depoda ölçülmeyen davranış = uydurma riski.
+[tool.mutmut]
+source_paths = ["meridian"]
+only_mutate = [
+    "meridian/broker.py",
+    "meridian/guard.py",
+    "meridian/score.py",
+]
+pytest_add_cli_args_test_selection = ["tests"]
+# Mutant başına test koşumu için zaman aşımı: taban koşum × 5 + 10 sn. Varsayılan (×15) bu suitede
+# asılı bir mutantı dakikalarca bekletirdi; 3 dosyalık kapsamda ×5 fazlasıyla yeterli pay bırakır.
+timeout_multiplier = 5.0
+timeout_constant = 10.0
