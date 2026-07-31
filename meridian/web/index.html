@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Meridian — Bugün</title>
+<!-- TEMA, STİLDEN ÖNCE VE SENKRON. defer/async YOK ve bilerek: bu script `data-theme`i ilk
+     boyamadan önce koymak zorunda, yoksa gece vardiyasında her açılış beyaz bir flaşla başlar.
+     Harici dosya, çünkü dağıtım CSP'si `script-src 'self'` — satır içi script bloklanır. -->
+<script src="/theme.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -30,8 +34,13 @@
   colours left are green/amber/red, revalued for a light ground (see :root).
   Figures are always Geist Mono with tabular numerals so a column of numbers
   reads as a column. Omega's own muted grey #8f8b86 was NOT taken: it measures
-  2.89:1 on its own bone panel and the reference uses it at 10px, so this build
-  uses #585450 (4.51:1) and keeps the warm cast.
+  3.12:1 on its own bone panel and the reference uses it at 10px, so this build
+  uses #585450 (7.50:1 on paper, 5.47:1 at its worst real composited ground)
+  and keeps the warm cast.
+  FIGURES RE-MEASURED 2026-08-01: this comment previously cited 2.89 and 4.51.
+  Neither could be reproduced — the 4.51 had been taken against a ground that
+  does not exist in the DOM. Every number here now comes from DESIGN.md
+  § Measurement provenance, computed against the worst REAL composited ground.
   STORY: The operator opens the tab, reads what the system did overnight, and
   decides whether anything needs a hand. Nothing performs; nothing decorates.
   FIRST VIEWPORT (revised 2026-07-27): A top bar of live readings. A 56px icon
@@ -73,12 +82,26 @@
      KONTRAST: --accent metin olarak da güvenli (20.38:1), ama tint yalnız DOLGU içindir. */
   --accent:#050505; --accent-2:#050505; --accent-tint:#f3f3f3;
   /* semantic — these mean money, so they are never decoration.
-     AÇIK ZEMİN ÖLÇÜMÜ (2026-07-27): eski koyu-zemin değerleri burada çöküyordu
-     (#4cc38a 2.22:1, #e0a82e 2.14:1, #f2555a 3.37:1). Yenileri üç zeminin de
-     EN KÖTÜSÜNDE AA metin geçiyor: yeşil 4.60, kehribar 5.90, kırmızı 5.59. */
+     AÇIK ZEMİN ÖLÇÜMÜ (yeniden ölçüldü 2026-08-01): eski koyu-zemin değerleri burada
+     çöküyordu (#4cc38a 2.22:1, #e0a82e 2.14:1, #f2555a 3.37:1). Yeniler, her rengin
+     KENDİ %10 tinti üzerinde — çipin içinde fiilen oturduğu zemin — en kötü gerçek
+     bileşikte AA geçiyor: yeşil 4.88, kehribar 5.80, kırmızı 4.78.
+     Önceki yorum 4.60/5.90/5.59 diyordu; o üçlü yeniden üretilemedi. */
   --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
   --violet:#050505; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
+  /* SAÇ TELLERİ VE PERDELER JETONDUR (2026-08-01): bu değerler önce kuralların içinde sabit
+     rgba() olarak duruyordu ve tema değişimine TEPKİ VERMİYORDU. En kritiği --nav-bg idi:
+     gece temasında üst bar BEYAZ kalır, HALT ve KRİZ kırmızısı üstünde görünmez olurdu — bu
+     hatanın tersi zaten bir kez yaşandı (aşağıdaki nav yorumu). Kural: renk taşıyan hiçbir
+     değer kuralın içinde YAZILMAZ, jetondan gelir. Aksi hâlde ikinci tema sessizce kırılır. */
+  --nav-bg:rgba(255,255,255,.82);
+  --green-h:rgba(12,106,59,.35); --amber-h:rgba(110,74,0,.35); --red-h:rgba(179,36,44,.35);
+  --amber-h2:rgba(110,74,0,.40);
+  --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
+  --scrim:rgba(5,5,5,.42);
+  --green-stamp:rgba(12,106,59,.55);
+  --pm-pos:rgba(12,106,59,.08); --pm-neg:rgba(179,36,44,.07);
   --r-card:12px; --r-ctl:10px; --r-bar:2px;
   /* --r-pill KALDIRILDI (2026-07-27): tanımlıydı ama HİÇBİR kural onu kullanmıyordu.
      Belge "hap geometrisi" diye bir şey anlatıyordu, artefaktta karşılığı yoktu. */
@@ -89,6 +112,60 @@
   --label-size:10px; --label-track:.16em;
   --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
   --max:1180px;
+  color-scheme:light;
+}
+
+/* ============================================================================
+   GECE ZEMİNİ (2026-08-01)
+   ----------------------------------------------------------------------------
+   AYNI MASA, İKİNCİ IŞIK. Değişen YALNIZ renktir: geometri, tipografi, boşluk
+   ve yarıçap iki temada birebir aynıdır. Sebep Bloomberg dersidir — operatörün
+   kas hafızası düzeni tanır, ışığı değil. Bir jetonun burada bir KONUM ya da
+   ÖLÇÜ değeri varsa, o bir hatadır.
+
+   NİYE VAR: 24/7 düşük-ışık ergonomisi. "Daha iyi okunur" DEĞİL — kanıt tersini
+   söylüyor (Piepenbrock 2013/14 pozitif polarite lehine; en çok alıntılanan
+   halation kaynağı hakemli değil). Gündüz varsayılan kalır.
+   Bkz. DESIGN.md § The Polarity-Honesty Rule.
+
+   SAF SİYAH VE SAF BEYAZ YASAK. #000 üzerinde açık metin halation üretir ve
+   yetişkinlerin ~%40-47'sinde bir miktar astigmatizm var. Zemin #1c1a18,
+   mürekkep #d4d0cb — sıcak tonu koruyor, yani iki tema aynı ürün.
+
+   DEĞERLER TERS ÇEVİRİLEREK ÜRETİLMEDİ, ÖLÇÜLEREK ÜRETİLDİ. Eski koyu dünyanın
+   kırmızısı #f2555a burada kendi %10 tinti üzerinde 4.12 (--card) ve 3.72
+   (--card-2) ölçtü — AA ALTI. Sebep: tint zemini KENDİ mürekkebine doğru taşır;
+   açık zeminde bu mürekkebe yardım eder, koyu zeminde ZARAR verir. Bu yüzden
+   gece para renkleri naif bir ters çevirmenin vereceğinden AÇIKTIR.
+   Bkz. DESIGN.md § The Tint-Direction Rule.
+   ============================================================================ */
+:root[data-theme="gece"]{
+  --bg:#1c1a18; --bg2:#232120; --card:#262320; --card-2:#2f2b27; --raise:#38342f;
+  --slip:#2f2b27; --slip-ink:#d4d0cb;
+  --line:#38342f; --line-2:#4a453f;
+  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#b0a9a0;
+  --accent:#d4d0cb; --accent-2:#e8e4df; --accent-tint:#302c28;
+  /* Para renkleri — her biri KENDİ tinti üzerinde en kötü gerçek bileşikte:
+     yeşil 5.21, kehribar 5.39, kırmızı 4.93. Üçü de AA. */
+  --green:#4cc38a; --amber:#e0a82e; --red:#f58b8f;
+  --violet:#d4d0cb; --violet2:#d4d0cb; --blue:#d4d0cb;
+  --green-t:rgba(76,195,138,.10); --amber-t:rgba(224,168,46,.10); --red-t:rgba(245,139,143,.10);
+  /* ÜST BAR TEMAYLA DÖNER. Beyaz kalsaydı HALT/KRİZ kırmızısı üstünde kaybolurdu —
+     Omega geçişinde yaşanan 1.27:1 arızasının aynadaki hâli. Gece: kırmızı 7.41. */
+  --nav-bg:rgba(28,26,24,.82);
+  --green-h:rgba(76,195,138,.35); --amber-h:rgba(224,168,46,.35); --red-h:rgba(245,139,143,.35);
+  --amber-h2:rgba(224,168,46,.40);
+  --ink-h:rgba(212,208,203,.30); --ink-h-soft:rgba(212,208,203,.18);
+  /* PERDE: mekanizma gece zeminine TAŞINMIYOR ve bu ölçüldü. Gündüz siyah %42
+     perde sayfayı karta karşı 2.79 ayırıyor; gece zemin zaten koyu olduğu için
+     SAF SİYAHLA BİLE tavan 1.34. Yani gece ayrımı luminansla değil, perdenin
+     backdrop-blur'u ve modal kartın kendi saç teliyle kuruluyor. Alfa yine de
+     yükseltildi (.42 → .66): elde edilebilir ayrımın tamamı alınsın diye.
+     Sıcak-siyah, saf siyah değil — Warm Rule perdede de geçerli. */
+  --scrim:rgba(10,9,8,.66);
+  --green-stamp:rgba(76,195,138,.55);
+  --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
+  color-scheme:dark;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 /* YATAY TAŞMA KAPALI (2026-07-27): çekmece kapalıyken position:fixed + translateX(101%) ile
@@ -119,6 +196,17 @@ a{color:inherit;text-decoration:none}
   padding-top:var(--s3);color:var(--tx2)}
 .side .sitem.cikis:hover{color:var(--red);background:var(--red-t)}
 .side .sitem.cikis .vis-label{font-weight:400}
+
+/* Tema anahtarı — çıkışla AYNI aile (oturum tercihi), o yüzden aynı ayırıcı çizginin altında.
+   Ama hover'ı kırmızı DEĞİL: tema değiştirmek bir kayıp anlatmaz, geri alınabilir bir tercihtir.
+   Renk burada nötr kalır — Money Rule: renk yalnız parayı ve müdahale gerektiren durumu anlatır. */
+.side .sitem.tema{border-bottom:none;border-top:1px solid var(--line-2);margin-top:var(--s3);
+  padding-top:var(--s3);color:var(--tx2)}
+.side .sitem.tema:hover{color:var(--tx);background:var(--accent-tint)}
+.side .sitem.tema .vis-label{font-weight:400}
+/* Grup TEK ayırıcı çizgi taşır: tema düğmesi varken çıkış ikinci bir çizgi çizmez, yoksa ray
+   sonunda üst üste iki kural görünür ve iki ayrı bölge varmış gibi okunur. */
+.side .sitem.tema + .sitem.cikis{border-top:none;margin-top:0;padding-top:0}
 
 /* ---- GİRİŞ KAPISI ---- */
 /* Sistemin kendi grameri: kağıt zemin, kemik kart, saç teli, mono mikro etiket, siyah hap.
@@ -155,9 +243,12 @@ a{color:inherit;text-decoration:none}
 /* ---- accession header — the ruled top edge of the sheet ---- */
 /* OMEGA: bar sayfayla aynı ışıkta durur, üstünden geçen içeriği bulanıklaştırarak ayrılır.
    Eskiden rgba(8,9,10,.72) idi — koyu dünyadan kalmıştı ve açık zemine geçince ÜST BAR KOYU
-   KALDI: HALT ile KRİZ kırmızısı kendi zemininde 1.27:1 ölçüldü, yani acil durdurma
-   düğmeleri görünmez olmuştu. Beyaz translüsan + saç teli, ölçüm 5.64:1'e döndü. */
-nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(8px);
+   KALDI: HALT ile KRİZ kırmızısı kendi zemininde 1.27:1 ölçüldü (bu tarihsel rakam yeniden
+   ölçüldü ve DOĞRULANDI), yani acil durdurma düğmeleri görünmez olmuştu.
+   Zemin artık --nav-bg jetonudur ve TEMAYLA DÖNER; barın koyu temada beyaz kalması aynı
+   arızanın aynadaki hâli olurdu. Kırmızı bar üstünde: gündüz 6.55, gece 7.41.
+   (Bu yorum 2026-08-01'e kadar 5.64 diyordu; o rakam yeniden üretilemedi.) */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--nav-bg);backdrop-filter:blur(8px);
   border-bottom:1px solid var(--line-2);box-shadow:0 3px 0 -2px var(--line)}
 nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2)}
 /* ACİL DURDURMA SARMADA KAYMAZ (2026-07-27). 1280x720'de bar iki satıra sarıyor ve HALT
@@ -266,7 +357,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 /* count stamps in the index */
 .pillc{background:var(--accent);color:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;
   border-radius:var(--r-ctl);font-variant-numeric:tabular-nums}
-.pillc.g{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+.pillc.g{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
 .pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 
 main{min-width:0}
@@ -277,7 +368,7 @@ main{min-width:0}
    incelemede çıktı; açık tonu AA'yı geçiyor ve indigonun "etkileşim" anlamı bozulmuyor. */
 .slabel{display:inline-flex;align-items:center;gap:var(--s2);color:var(--accent-2);font-family:var(--mono);font-size:11px;
   font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;margin-bottom:var(--s4);
-  padding:4px 9px;border:1px solid rgba(5,5,5,.18);background:var(--accent-tint)}
+  padding:4px 9px;border:1px solid var(--ink-h-soft);background:var(--accent-tint)}
 .slabel .d{width:6px;height:6px;background:var(--accent);border-radius:0}
 .greet{font-family:var(--display);font-weight:500;font-size:clamp(24px,4.6vw,28px);letter-spacing:-.015em;line-height:1.06}
 /* KISILMIŞ KARŞILAMA (2026-07-27): Bugün'ün başlığı 48px'te sayfanın en büyük şeyiydi ama tek bir
@@ -299,7 +390,7 @@ main{min-width:0}
 .spine::before{content:"";position:absolute;left:var(--s5);top:calc(var(--s4) + 7px);width:8px;height:8px;background:var(--green)}
 .spine .msg{font-weight:600;font-size:14px;letter-spacing:-.005em;color:var(--tx)}
 .spine.calm{color:var(--tx2);background:transparent;border-top-color:var(--line);border-bottom-color:var(--line)}
-.spine.calm::before{background:rgba(12,106,59,.55)}
+.spine.calm::before{background:var(--green-stamp)}
 .spine.calm .msg{color:var(--tx2);font-weight:400}
 .spine.attn{background:var(--amber-t);border-top-color:var(--amber);border-bottom-color:var(--amber)}
 .spine.attn::before{background:var(--amber)}
@@ -345,11 +436,11 @@ main{min-width:0}
 .pm-conf{position:relative;height:2px;background:var(--line);border-radius:var(--r-bar);overflow:hidden;margin-top:2px}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:var(--r-bar)}
 .pm-cell.pos{color:var(--green)} .pm-cell.neg{color:var(--red)}
-.pm-cell.pos{background:rgba(12,106,59,.08)} .pm-cell.neg{background:rgba(179,36,44,.07)}
+.pm-cell.pos{background:var(--pm-pos)} .pm-cell.neg{background:var(--pm-neg)}
 .pm-yield{position:relative;font-size:24px;font-weight:500;letter-spacing:-.045em;line-height:1;color:currentColor}
 .pm-n{position:relative;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
 /* under-sown: the ochre stake a trials officer puts in a plot with too few rows */
-.pm-cell.thin{box-shadow:inset 0 0 0 1px rgba(110,74,0,.35)}
+.pm-cell.thin{box-shadow:inset 0 0 0 1px var(--amber-h)}
 .pm-thin{position:relative;align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:700;
   letter-spacing:var(--label-track);text-transform:uppercase;color:var(--amber);background:var(--amber-t);padding:2px 6px;margin-top:2px}
 /* never sown: bare worked earth, not a zero */
@@ -386,7 +477,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .pd-stats .v{font-family:var(--mono);font-size:20px;font-weight:400;letter-spacing:-.04em;line-height:1}
 /* an under-sown plot says so in words, not just with a stake */
 .pd-warn{font-size:13px;line-height:1.65;color:var(--amber);background:var(--amber-t);
-  border:1px solid rgba(110,74,0,.40);padding:11px 13px;margin-bottom:var(--s5)}
+  border:1px solid var(--amber-h2);padding:11px 13px;margin-bottom:var(--s5)}
 .pd-sub{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
   color:var(--tx2);margin:var(--s5) 0 var(--s2);padding-bottom:7px;border-bottom:1px solid var(--line)}
 .pd-sub:first-of-type{margin-top:0}
@@ -510,10 +601,10 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* rubber stamps: struck in the state's own ink, ruled, never a soft pill */
 .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);text-align:center;
   letter-spacing:var(--label-track);display:inline-block;text-transform:uppercase}
-.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
-.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(110,74,0,.35)}
-.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
-.t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px rgba(5,5,5,.30)}
+.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-h)}
+.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
+.t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--ink-h)}
 .chain{font-size:11px;color:var(--tx2);font-family:var(--mono)}
 .reason{font-size:11px;color:var(--tx2);margin-top:3px;line-height:1.5}
 .empty{color:var(--tx2);text-align:center;padding:var(--s8);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
@@ -530,8 +621,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .hyp .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:var(--s3)}
 .hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.04em}
 .st{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);letter-spacing:var(--label-track);text-transform:uppercase}
-.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
-.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
 .s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .hyp h3{font-family:var(--display);font-size:17px;margin-bottom:8px;font-weight:400;letter-spacing:-.008em;line-height:1.3}
 .hyp p{font-size:13px;color:var(--tx2);line-height:1.7;max-width:74ch}
@@ -549,7 +640,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .levels{display:flex;gap:var(--s2);flex-wrap:wrap;margin:var(--s3) 0 var(--s4)}
 .lv{font-family:var(--mono);font-size:12px;padding:5px 11px;border-radius:var(--r-ctl);border:1px solid var(--line);
   color:var(--tx2);font-variant-numeric:tabular-nums;letter-spacing:.04em}
-.lv.on{background:var(--accent-tint);color:var(--accent-2);border-color:rgba(5,5,5,.30);font-weight:700}
+.lv.on{background:var(--accent-tint);color:var(--accent-2);border-color:var(--ink-h);font-weight:700}
 
 /* ---- one control primitive: .dlbtn ---- */
 .dlbtn{font-size:13px;font-weight:600;padding:9px 15px;min-height:44px;border-radius:var(--r-ctl);border:1px solid var(--line-2);
@@ -594,9 +685,9 @@ code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:
 .crit{display:flex;align-items:flex-start;gap:var(--s3);padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
 .crit:last-child{border-bottom:none}
 .ck{width:18px;height:18px;border-radius:0;flex:none;display:grid;place-items:center;font-size:10px;margin-top:1px;font-family:var(--mono);font-weight:700}
-.ck.ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+.ck.ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
 .ck.no{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
-.ck.man{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(110,74,0,.35)}
+.ck.man{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-h)}
 
 /* ---- markdown / lessons ---- */
 .searchbox{width:100%;font-family:var(--sans)}
@@ -643,7 +734,7 @@ svg text{font-family:var(--mono)}
 .evrow .etime{font-family:var(--mono);font-size:11px;color:var(--tx2);white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* ---- klavye yardım katmanı ---- */
-.kbd-ov{position:fixed;inset:0;z-index:80;background:rgba(5,5,5,.42);backdrop-filter:blur(4px);
+.kbd-ov{position:fixed;inset:0;z-index:80;background:var(--scrim);backdrop-filter:blur(4px);
   display:grid;place-items:center;padding:var(--s6)}
 .kbd-panel{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
   padding:var(--s6);width:min(460px,100%)}
@@ -700,8 +791,8 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .gatechain{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .gc{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r-ctl);
   letter-spacing:var(--label-track);cursor:default;text-transform:uppercase}
-.gc.p{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
-.gc.f{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+.gc.p{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.gc.f{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
 .gc.arrow{background:none;color:var(--tx2);padding:0 1px;box-shadow:none}
 /* dairesel gauge (deflasyon + sabır) — hafif SVG, harici kütüphane yok */
 .gaugewrap{display:flex;align-items:center;gap:var(--s4)}

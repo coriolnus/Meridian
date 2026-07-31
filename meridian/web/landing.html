@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Tema, stilden ÖNCE ve senkron — bkz. theme.js başlığı. -->
+<script src="/theme.js"></script>
 <title>Meridian · Ajan tarar, sen karar verirsin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,12 +101,48 @@
   --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
   --violet:#050505; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
-  --r-card:12px; --r-ctl:10px; --r-pill:999px; --r-bar:2px;
+  --r-card:12px; --r-ctl:10px; --r-bar:2px;
   --elev:none;
   --label-size:10px; --label-track:.16em;
   --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
   --max:1180px;
+  /* Saç telleri ve perdeler JETONDUR — kural içinde sabit rgba() tema değişimine tepki vermez.
+     Bkz. index.html'deki uzun gerekçe. */
+  --nav-bg:rgba(255,255,255,.82);
+  --green-h:rgba(12,106,59,.35); --amber-h:rgba(110,74,0,.35); --red-h:rgba(179,36,44,.35);
+  --amber-h2:rgba(110,74,0,.40);
+  --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
+  --scrim:rgba(5,5,5,.42);
+  --green-stamp:rgba(12,106,59,.55);
+  --pm-pos:rgba(12,106,59,.08); --pm-neg:rgba(179,36,44,.07);
+  color-scheme:light;
+
 }
+/* ============================================================================
+   GECE ZEMİNİ (2026-08-01) — index.html ile AYNI değer takımı.
+   Üç yüzey tek tercih okur (theme.js); değerler ayrışırsa operatör aynı üründe
+   iki dünya görür. Bir jeton burada değişecekse ÜÇÜNDE birden değişir.
+   Gerekçe ve ölçümler: DESIGN.md § Colors, index.html § gece bloğu.
+   ============================================================================ */
+:root[data-theme="gece"]{
+  --bg:#1c1a18; --bg2:#232120; --card:#262320; --card-2:#2f2b27; --raise:#38342f;
+  --slip:#2f2b27; --slip-ink:#d4d0cb;
+  --line:#38342f; --line-2:#4a453f;
+  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#b0a9a0;
+  --accent:#d4d0cb; --accent-2:#e8e4df; --accent-tint:#302c28;
+  --green:#4cc38a; --amber:#e0a82e; --red:#f58b8f;
+  --violet:#d4d0cb; --violet2:#d4d0cb; --blue:#d4d0cb;
+  --green-t:rgba(76,195,138,.10); --amber-t:rgba(224,168,46,.10); --red-t:rgba(245,139,143,.10);
+  --nav-bg:rgba(28,26,24,.82);
+  --green-h:rgba(76,195,138,.35); --amber-h:rgba(224,168,46,.35); --red-h:rgba(245,139,143,.35);
+  --amber-h2:rgba(224,168,46,.40);
+  --ink-h:rgba(212,208,203,.30); --ink-h-soft:rgba(212,208,203,.18);
+  --scrim:rgba(10,9,8,.66);
+  --green-stamp:rgba(76,195,138,.55);
+  --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
+  color-scheme:dark;
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 /* the canon's ground is flat: one near-black, no wash, no image */
@@ -129,7 +167,7 @@ section[id]{scroll-margin-top:88px}
 .rise.in{opacity:1;transform:none}
 
 /* ---- top bar — a hairline appears only once the page has moved under it ---- */
-nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(8px);
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:var(--nav-bg);backdrop-filter:blur(8px);
   border-bottom:1px solid transparent;transition:border-color var(--t)}
 nav.stuck{border-bottom-color:var(--line-2)}
 .nav-in{max-width:var(--max);margin:0 auto;padding:var(--s3) var(--s6);display:flex;align-items:center;
@@ -208,7 +246,7 @@ h1 .g{color:var(--tx2)}
 /* the lit indigo, not the base one: --accent on its own tint is 3.7:1 at 11px */
 .app .slabel{display:inline-flex;align-items:center;gap:var(--s2);margin:0 0 var(--s4);color:var(--accent-2);
   font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
-  padding:4px 9px;border:1px solid rgba(5,5,5,.18);background:var(--accent-tint);border-radius:var(--r-ctl)}
+  padding:4px 9px;border:1px solid var(--ink-h-soft);background:var(--accent-tint);border-radius:var(--r-ctl)}
 .app .slabel .d{width:6px;height:6px;background:var(--accent-2);border-radius:2px}
 .greet{font-weight:600;font-size:28px;letter-spacing:-.022em;line-height:1.15;color:var(--tx)}
 .subline{color:var(--tx2);font-size:13px;margin-top:9px;line-height:1.65;max-width:72ch;font-variant-numeric:tabular-nums}
@@ -231,8 +269,8 @@ h1 .g{color:var(--tx2)}
    figure, not a texture. A 3-trade mean cannot look as firm as a 55-trade one. */
 .pm-conf{position:relative;height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:2px}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:2px}
-.pm-cell.pos{color:var(--green);background:rgba(12,106,59,.08)}
-.pm-cell.neg{color:var(--red);background:rgba(179,36,44,.07)}
+.pm-cell.pos{color:var(--green);background:var(--pm-pos)}
+.pm-cell.neg{color:var(--red);background:var(--pm-neg)}
 .pm-yield{position:relative;font-size:24px;font-weight:500;letter-spacing:-.045em;line-height:1;color:currentColor}
 .pm-n{position:relative;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
 /* no trades here: a quieter ground and a word, not a zero */
@@ -267,9 +305,9 @@ h1 .g{color:var(--tx2)}
 /* state stamps: struck in the state's own ink, ruled, never a soft pill */
 .tag{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px;border-radius:var(--r-ctl);
   text-align:center;letter-spacing:.09em;display:inline-block;text-transform:uppercase}
-.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
-.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(110,74,0,.35)}
-.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-h)}
+.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
 
 /* ---- SECTION HEAD — a hairline opens the section, the title comes first, and the
    classification sits under it as a quiet mono caption, never a tracked eyebrow ---- */
@@ -325,10 +363,10 @@ h2 .g{color:var(--tx2)}
 .hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.02em}
 .st{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 9px;border-radius:var(--r-ctl);
   letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
-.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
 /* rolled back is a money outcome, so it is red; rejected before it ever shipped is
    not a loss, so it stays neutral — and the version it killed carries the strike. */
-.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
 .s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .hyp h3{font-size:17px;margin-bottom:var(--s2);line-height:1.3}
 .hyp p{font-size:14px;color:var(--tx2);line-height:1.7;max-width:68ch}
@@ -359,7 +397,7 @@ h2 .g{color:var(--tx2)}
   padding:9px 0;border-bottom:1px solid var(--line);letter-spacing:.01em;min-width:0}
 .chk s{width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:600;
   text-decoration:none;font-family:var(--mono);background:var(--green-t);color:var(--green);
-  border-radius:var(--r-ctl);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+  border-radius:var(--r-ctl);box-shadow:inset 0 0 0 1px var(--green-h)}
 /* the transcript — the raw record, read as typed */
 .pane{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--bg2);padding:var(--s6);min-height:400px}
 /* machine captions stay as the machine typed them — no uppercase transform:
@@ -758,121 +796,6 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
 <p class="disc">Meridian bir araştırma aracıdır, yatırım danışmanı değildir. Geçmiş performans gelecek getirinin göstergesi değildir. Otonom bir dil modelinin denetimsiz strateji düzenlemesi deneysel bir yaklaşımdır; canlı sermaye ile kullanılmadan önce uzun bir paper kaydı ve kendi bağımsız değerlendirmen gerekir.</p>
 </div></footer>
 
-<script>
-const io=new IntersectionObserver(e=>e.forEach(x=>x.isIntersecting&&x.target.classList.add('in')),{threshold:.15,rootMargin:'0px 0px -60px'});
-document.querySelectorAll('.rise').forEach((el,i)=>{el.style.transitionDelay=(i%4)*60+'ms';io.observe(el)});
-const nav=document.getElementById('nav');
-addEventListener('scroll',()=>nav.classList.toggle('stuck',scrollY>20));
-const f=document.getElementById('fill');
-f.innerHTML=f.textContent.trim().split(' ').map(w=>'<w>'+w+'</w>').join(' ');
-const ws=[...f.querySelectorAll('w')];
-function paint(){const r=f.getBoundingClientRect(),h=innerHeight;
- const p=Math.min(1,Math.max(0,(h*0.85-r.top)/(r.height+h*0.35)));
- const n=Math.round(p*ws.length);ws.forEach((w,i)=>w.classList.toggle('on',i<n));}
-addEventListener('scroll',paint,{passive:true});paint();
-</script>
-<script>
-/* ÖĞRENME DEFTERİ — CANLI. Bu blok daha önce elle yazılmış dört sürüm kaydının yerini aldı;
-   o kayıtlar state/ ile çelişiyordu (sayfa iki hipotezin kâr ettiğini söylüyordu, gerçekte
-   hiçbiri kapıyı geçmemişti). Kural: sayı gelmezse sayı GÖSTERİLMEZ — asla yer tutucuya
-   düşülmez, çünkü bu sayfanın tek dışa dönük iddiası dürüstlüktür. */
-(function () {
-  var STATUS_TR = {
-    rejected_by_backtest: "backtest kapısında elendi",
-    rejected_by_guard: "guard kurallarına takıldı",
-    rejected_by_confirmation: "doğrulamada elendi",
-    superseded: "yerini yenisi aldı",
-    shipped: "canlıya çıktı", promoted: "canlıya çıktı", accepted: "canlıya çıktı"
-  };
-  var esc = function (t) { var d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; };
-
-  function fail(msg) {
-    var n = document.getElementById("pub-note");
-    if (n) n.textContent = "Canlı kayıt şu an okunamıyor. Rakam uydurmaktansa boş bırakıyoruz.";
-    var l = document.getElementById("pub-ledger");
-    if (l) l.innerHTML = '<div class="hyp"><div class="top"><span class="v">kayıt alınamadı</span></div>' +
-      '<p>' + esc(msg) + '</p></div>';
-  }
-
-  fetch("/api/public/summary", { headers: { accept: "application/json" } })
-    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-    .then(function (d) {
-      var total = d.hypotheses_total || 0, shipped = d.hypotheses_shipped || 0;
-      var note = document.getElementById("pub-note");
-      if (note) {
-        note.textContent = shipped > 0
-          ? total + " hipotezden " + shipped + " tanesi kapıyı geçti ve canlıya çıktı."
-          : total + " hipotez önerildi, hiçbiri kapıyı geçemedi. Defterin şu anki dürüst hali bu: "
-            + "sistem henüz bir kenar bulduğunu kanıtlayamadı.";
-      }
-      var rows = [];
-      var by = d.hypotheses_by_status || {};
-      Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).forEach(function (k) {
-        rows.push('<div class="hyp"><div class="top">' +
-          '<span class="v">' + esc(STATUS_TR[k] || k) + '</span>' +
-          '<span class="st ' + (k === "shipped" || k === "promoted" || k === "accepted" ? "s-ok" : "s-rj") + '">' +
-          by[k] + ' hipotez</span></div></div>');
-      });
-      rows.push('<div class="hyp"><div class="top"><span class="v">ölçülen</span></div>' +
-        '<div class="meta">' +
-        '<span>kapanmış işlem <b>' + (d.closed_trades != null ? d.closed_trades : "—") + '</b></span>' +
-        '<span>başarı notu <b style="color:var(--' + ((d.score || 0) > 0 ? "green" : "red") + ')">' +
-        (d.score != null ? d.score : "—") + '</b></span>' +
-        '<span>denenen değişken <b>' + (d.variables_tried != null ? d.variables_tried : "—") + '</b></span>' +
-        '<span>sürüm <b>v' + (d.strategy_version != null ? d.strategy_version : "—") + '</b></span>' +
-        '</div></div>');
-      var l = document.getElementById("pub-ledger");
-      if (l) l.innerHTML = rows.join("");
-
-      /* hero cred: skill sayısı CANLI (eski sabit sayı (66) 2026-07-30 arşiviyle çürüdü);
-         sayı gelmezse yedek metin sayısız kalır — uydurma rakam kuralı burada da geçerli */
-      var sc = document.getElementById("pub-skills");
-      if (sc && d.skills_live != null) sc.textContent = d.skills_live + " skill";
-
-      /* döngü panosu: mekanizmayı anlatır, sonucu state'ten söyler */
-      var cs = document.getElementById("pub-cycle-state");
-      if (cs) {
-        cs.textContent = shipped > 0
-          ? "→ şu ana kadar " + shipped + " öneri kapıyı geçti."
-          : "→ şu ana kadar hiçbir öneri kapıyı geçemedi. Döngü çalışıyor, kenar henüz yok.";
-      }
-
-      /* matrisin örneklem dipnotu CANLI (K1): "31 kapanmış işlem" sabit yazılıydı, defterde 95 var */
-      var mf = document.getElementById("pub-matrix-foot");
-      if (mf && d.closed_trades != null) {
-        mf.textContent = d.closed_trades + " kapanmış işlemden hesaplandı. "
-          + "Ortalama R, işlem başına riske göre getiri.";
-      }
-
-      /* ürün maketindeki matris: gerçek kurulum × rejim verisi */
-      var m = d.matrix, mg = document.getElementById("pub-matrix");
-      if (mg && m && (m.grid || []).length) {
-        var RG = { chop: "yatay/kararsız", trend_up: "yükseliş trendi", high_vol: "yüksek dalgalanma" };
-        var h = '<div class="pm-corner"></div>' +
-          m.regimes.map(function (r) { return '<div class="pm-sect">' + esc(RG[r] || r) + '</div>'; }).join("");
-        m.grid.forEach(function (row) {
-          h += '<div class="pm-strip">' + esc(row.setup) + '</div>';
-          row.cells.forEach(function (c, i) {
-            var rg = esc(RG[m.regimes[i]] || m.regimes[i]);
-            if (!c) { h += '<div class="pm-cell pm-unsown"><span class="pm-sectlabel">' + rg +
-                        '</span><span class="pm-none">veri yok</span></div>'; return; }
-            /* nötr bant: |ortalama| örneklem gürültüsünün altındaysa ne yeşil ne kırmızı */
-            var band = 1 / Math.sqrt(c.n);
-            var cls = Math.abs(c.mean_r) <= band ? "" : (c.mean_r > 0 ? " pos" : " neg");
-            var conf = Math.min(100, Math.round(100 * Math.log(c.n + 1) / Math.log(61)));
-            h += '<div class="pm-cell' + cls + '" style="--conf:' + conf + '%">' +
-                 '<span class="pm-sectlabel">' + rg + '</span>' +
-                 '<span class="pm-yield mono-num">' + (c.mean_r > 0 ? "+" : "") + c.mean_r.toFixed(2) + 'R</span>' +
-                 '<span class="pm-conf" aria-hidden="true"><i></i></span>' +
-                 '<span class="pm-n">' + c.n + ' işlem</span></div>';
-          });
-        });
-        mg.style.setProperty("--cols", m.regimes.length);
-        mg.innerHTML = h;
-      }
-    })
-    .catch(function (e) { fail(String(e && e.message || e)); });
-})();
-</script>
+<script src="/landing.js"></script>
 </body>
 </html>

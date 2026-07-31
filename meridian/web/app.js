@@ -95,6 +95,12 @@ const trn = (x, d = 0) => { const n = Number(x); return (x == null || !Number.is
 const money = x => x == null ? "—" : "$" + trn(x, 2);
 const pctf = (x, d = 2) => { const n = Number(x); return (x == null || !Number.isFinite(n)) ? "—" : "%" + (n * 100).toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d }); };   // fraction -> localized Turkish %
 const cls = x => x == null ? "" : (x > 0 ? "pos" : (x < 0 ? "neg" : ""));
+// ÖN EKLİ DEĞER — değer yoksa ÖN EK DE BASILMAZ.
+// `L${d.autonomy_level}` boş veride "Lundefined", `v${s.strategy_version}` "vundefined"
+// üretiyordu. Bunlar bir sayı gibi görünür (harf + jeton) ama hiçbir şey ölçmez — trn()'in
+// "—" dediği yerde şablonun uydurma kaçırması. Aynı yasa, tipografik hâli.
+// Görsel doğrulama sunucusunda (boş /api/*) yakalandı, 2026-08-01.
+const onk = (p, v) => (v == null || v === "" || (typeof v === "number" && !Number.isFinite(v))) ? "—" : `${p}${v}`;
 const TAG = { GO: "t-go", REVIEW: "t-rv", NO_GO: "t-no", pass: "t-go", reject: "t-no" };
 
 const REGIME_TR = { trend_up: "yükseliş trendi", trend_down: "düşüş trendi", chop: "yatay/kararsız", high_vol: "yüksek dalgalanma" };
@@ -260,7 +266,7 @@ async function refreshStatus() {
   const pulse = $("pulse"), txt = $("statustext");
   pulse.className = "dot pulse" + (t.halted ? " halt" : (t.stale ? " stale" : ""));
   const age = t.heartbeat_age_seconds == null ? "—" : Math.round(t.heartbeat_age_seconds) + " sn önce";
-  txt.textContent = t.halted ? "DURDURULDU" : (t.stale ? `gecikmiş · ${age}` : `canlı · paper · L${t.autonomy_level} · ${age}`);
+  txt.textContent = t.halted ? "DURDURULDU" : (t.stale ? `gecikmiş · ${age}` : `canlı · paper · ${onk("L", t.autonomy_level)} · ${age}`);
   const hb = $("haltbtn");
   hb.textContent = t.halted ? "DEVAM" : "HALT";
   hb.title = t.halted ? "Devam et: yeni alımlara tekrar izin ver" : "Acil durdur: yeni hiçbir alım yapılmaz";
@@ -423,6 +429,10 @@ const _ico = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const RAIL_ICON = {
   // Çıkış — kapıdan dışarı çıkan ok. Diğer gliflerle aynı kalem: 24 birim kutu, 1.5px kontur.
   cikis: _ico('<path d="M14.5 20.5h-8a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2h8"/><path d="M15 12h5.5"/><path d="m18 8.5 3.5 3.5-3.5 3.5"/>'),
+  // Tema — HEDEFİ gösterir, mevcut hâli değil: gündüzdeyken ay (gece'ye geçer), gecedeyken güneş.
+  // Düğmenin üstündeki etiket de hedefi söyler, yani ikon ile yazı aynı şeyi anlatır.
+  tema_gece: _ico('<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/>'),
+  tema_gunduz: _ico('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>'),
   // Bugün — bugünün yaprağı: tarihli bir sayfa
   brifing: _ico('<rect x="3.5" y="5" width="17" height="15" rx="1.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>'),
   // Kararlar — yolun ikiye ayrıldığı yer
@@ -488,7 +498,7 @@ async function buildSidebar(today, x) {
            x && x.skill_count ? `${x.skill_count} araç` : null],
     operasyon: [hb.mirror_drift ? "ayna SAPMA" : "ayna uyumlu",
                 today.data_ok === false ? "veri kapısı KAPALI" : "veri temiz"],
-    ayarlar: [`ayna ${hb.mirror_drift ? "SAPMA" : "uyumlu"}`, `L${today.autonomy_level}`],
+    ayarlar: [`ayna ${hb.mirror_drift ? "SAPMA" : "uyumlu"}`, onk("L", today.autonomy_level)],
   };
   // Hangi görünüm açık? Şerit her tazelemede yeniden kurulduğu için go()'nun yazdığı
   // aria-current siliniyordu — aktiflik yalnız BİÇİMLE anlatılıyordu, ekran okuyucuya hiç
@@ -522,14 +532,54 @@ async function buildSidebar(today, x) {
     <div class="acct">
       <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${hb.mirror_drift ? "neg" : "pos"}">${hb.mirror_drift ? "sapma" : "ayna uyumlu"}</b></div>
       <div class="r"><span>Sermaye</span><b>${money(today.equity)}</b></div>
-      <div class="r"><span>Otonomi</span><b>L${today.autonomy_level} · paper</b></div>
+      <div class="r"><span>Otonomi</span><b>${onk("L", today.autonomy_level)} · paper</b></div>
       <div class="r"><span>Nabız</span><b class="${today.stale ? 'warn' : 'pos'}">${today.stale ? 'gecikmiş' : 'canlı'}</b></div>
     </div>
     <p class="slab">GÖRÜNÜM</p>${items}
+    ${_temaDugmesiHTML()}
     ${_PAROLA_KURULU ? `<button class="sitem cikis" id="cikis-btn" type="button" onclick="cikisYap()">
       <span class="top"><span class="lbl" aria-hidden="true">${RAIL_ICON.cikis}</span>
       <span class="vis-label">Çıkış yap</span></span></button>` : ""}`;
 }
+
+// ---- TEMA ANAHTARI ---------------------------------------------------------------------------
+// YERİ RAYIN SONU, üst bar DEĞİL. İki sebep:
+//  1. Üst barda HALT ve KRİZ var ve HALT'ın SABİT bir evi olmak zorunda (kas hafızası; sarmada
+//     kaymaması için ayrıca kural yazılmıştı). Bara bir düğme eklemek o evi 44px kaydırırdı.
+//  2. Tema bir OPERASYON kontrolü değil, bir oturum tercihidir — çıkışla aynı ailedendir.
+//     Ray sonu zaten o aile için ayrılmış bölge.
+// Düğme HEDEFİ söyler ("Gece teması" = basınca geceye geçer), mevcut hâli değil: tek düğmeli bir
+// anahtarda mevcut hâli yazmak, düğmenin ne yapacağını okuyucunun tersine çevirmesini gerektirir.
+function _temaDugmesiHTML() {
+  const gece = window.MeridianTema && window.MeridianTema.al() === "gece";
+  // Etiket ve aria-label AYRI yazılır, biri diğerine ek getirilerek üretilmez: "Gece teması"
+  // + "ne geç" → "temasıne geç" çıkıyordu. Türkçe ek ünlü uyumuna bağlıdır ve dizgi
+  // birleştirmesiyle doğru sonuç vermez.
+  const hedef = gece ? "Gündüz teması" : "Gece teması";
+  const eylem = gece ? "Gündüz temasına geç" : "Gece temasına geç";
+  return `<button class="sitem tema" id="tema-btn" type="button" onclick="temaDegistir()"
+      aria-label="${eylem}">
+      <span class="top"><span class="lbl" aria-hidden="true">${
+        gece ? RAIL_ICON.tema_gunduz : RAIL_ICON.tema_gece}</span>
+      <span class="vis-label">${hedef}</span></span></button>`;
+}
+
+window.temaDegistir = () => {
+  if (!window.MeridianTema) return;   // theme.js yüklenmediyse sessizce hiçbir şey yapma
+  window.MeridianTema.degistir();
+};
+
+// Düğmenin kendi etiketi tema değişiminde güncellenmeli. Tüm rayı yeniden çizmek yerine YALNIZ
+// düğmeyi değiştiriyoruz: ray yeniden çizilirse odak kaybolur ve klavyeyle gezinen operatör
+// düğmenin üstünden düşer.
+addEventListener("meridian:tema", () => {
+  const btn = document.getElementById("tema-btn");
+  if (!btn) return;
+  const yeni = document.createRange().createContextualFragment(_temaDugmesiHTML()).firstElementChild;
+  const odakta = document.activeElement === btn;
+  btn.replaceWith(yeni);
+  if (odakta) yeni.focus();
+});
 
 // ---- ÇIKIŞ -----------------------------------------------------------------------------------
 // YERİ RAYIN SONU, üst bar DEĞİL: üst barda HALT ve KRİZ duruyor. Oturumu kapatan bir düğmeyi
@@ -825,7 +875,7 @@ RENDER.brifing = async () => {
       <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
         <p class="big">${money(t.equity)}</p>
         <div id="eq-spark" style="margin-top:10px" aria-hidden="true"></div>
-        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${pctf(t.day_pnl_pct)}</span> · ${(t.open_positions || []).length} pozisyon · strateji v${s.strategy_version}</p></div>
+        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${pctf(t.day_pnl_pct)}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p></div>
       <div class="hstat"><p class="l">Risk</p>
         <div class="srow"><span>Tavan (rejim bütçesi)</span><b style="color:${budget === 0 ? 'var(--amber)' : 'var(--tx)'}">%${budget}${budget === 0 ? " · kapalı" : ""}</b></div>
         <div class="srow"><span>Açıktaki risk</span><b>%${exposure}</b></div>
@@ -4155,7 +4205,7 @@ RENDER.ayarlar = async () => {
     <div class="card rise" style="margin-top:18px;border-color:${d.live_enabled ? 'var(--red)' : 'var(--line-2)'}">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
         <b>· Güvenlik durumu</b>
-        <span class="tx3">Canlı işlem: <b class="${d.live_enabled ? 'neg' : 'pos'}">${d.live_enabled ? 'AÇIK' : 'kapalı'}</b> · Otonomi: <b>L${d.autonomy_level}</b> · Mod: <b>paper</b></span></div>
+        <span class="tx3">Canlı işlem: <b class="${d.live_enabled ? 'neg' : 'pos'}">${d.live_enabled ? 'AÇIK' : 'kapalı'}</b> · Otonomi: <b>${onk("L", d.autonomy_level)}</b> · Mod: <b>paper</b></span></div>
       <p class="hint" style="margin-top:8px">${esc(d.note || '')} Canlı yalnızca iki güvenlik bayrağı (MERIDIAN_MODE=live + MERIDIAN_I_ACCEPT_RISK=true) elle ayarlanır ve otonomi ≥ L1 olursa açılır — bu ekran bunları değiştirmez.</p></div>
     ${alpacaCard}
     ${groups}

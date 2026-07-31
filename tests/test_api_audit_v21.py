@@ -61,7 +61,15 @@ def test_p1c_public_get_allowlist():
     # KİMLİK UÇLARI (2026-07-29): `/api/session` yetkisizdir çünkü panonun "giriş ekranı mı,
     # uygulama mı" sorusunu yanıtlar — yetki isteseydi giriş ekranı hiç çizilemezdi. Gerekçe ve
     # dönen alanların sınırı `api.KIMLIK_UCLARI` yanında; buradan OKUNUR, kopyalanmaz.
-    allow = {"/", "/app.js", "/landing", "/workflow", "/healthz", "/metrics", "/halt",
+    # STATİK BETİKLER (2026-08-01): /theme.js, /landing.js, /workflow.js — `/app.js` ile aynı
+    # sınıf. Bunlar HTML'lerin İÇİNDEN çıkarıldı, yeni içerik yayına açılmadı: aynı kod daha önce
+    # aynı sayfalarda satır içi duruyordu ve o sayfalar (`/landing`, `/workflow`) zaten bu listede.
+    # Yani maruziyet BİREBİR aynı; değişen tek şey kodun hangi dosyada olduğu.
+    # Çıkarma sebebi güvenlik: dağıtım CSP'si `script-src 'self'` satır içi bloğu bloklar, o hâlde
+    # bırakılsalardı iki sayfa canlıda ölü açılırdı. Hiçbiri veri UCU değildir, hiçbiri state
+    # okumaz — FileResponse ile diskten sabit dosya döner.
+    allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js",
+             "/landing", "/workflow", "/healthz", "/metrics", "/halt",
              "/api/public/summary"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"

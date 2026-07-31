@@ -290,6 +290,28 @@ def appjs():
     return FileResponse(WEB / "app.js", media_type="application/javascript", headers=_NOCACHE)
 
 
+# STATİK BETİKLER TEK TEK YÖNLENDİRİLİR (StaticFiles montajı YOK): montaj, WEB dizinine sonradan
+# düşen her dosyayı — yedek, taslak, .orig — sessizce yayına açar. Ad ad yazmak sıkıcı ama
+# yayına ne çıktığı okunabilir kalır.
+#
+# NEDEN SATIR İÇİ DEĞİL DE DOSYA: dağıtım CSP'si `script-src 'self'` (deploy/Caddyfile).
+# Satır içi bloklar üretimde bloklanır — landing ve workflow bu yüzden dışarı taşındı; o iki
+# sayfa aksi hâlde canlıda ölü açılırdı (workflow'un tüm diyagramı script'te üretiliyor).
+@app.get("/theme.js")
+def themejs():
+    return FileResponse(WEB / "theme.js", media_type="application/javascript", headers=_NOCACHE)
+
+
+@app.get("/landing.js")
+def landingjs():
+    return FileResponse(WEB / "landing.js", media_type="application/javascript", headers=_NOCACHE)
+
+
+@app.get("/workflow.js")
+def workflowjs():
+    return FileResponse(WEB / "workflow.js", media_type="application/javascript", headers=_NOCACHE)
+
+
 @app.get("/landing", response_class=HTMLResponse)
 def landing():
     """The original marketing landing page — the design reference the dashboard is cut from."""

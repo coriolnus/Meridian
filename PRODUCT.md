@@ -59,11 +59,30 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 ## Brand Commitments
 
 - Product name: Meridian.
-- **Standing visual preference (revised 2026-07-27 by the operator, binding — SUPERSEDES the dark
-  canon below):** the operator found a reference they want the product converted to:
-  `https://www.nextjsshop.com/templates/omega/preview` ("Omega", a commercial Next.js/Tailwind
-  agency template, $129). Confirmed decisions: **all three surfaces convert** (landing, dashboard,
-  workflow), on a **light** ground, and **all seven Omega section patterns** are adopted.
+- **Standing visual preference — TWO GROUNDS (revised 2026-07-31 by the operator, binding;
+  amends the 2026-07-27 light-only decision, which remains binding for the daylight ground):**
+  the Omega conversion stands and is not reopened; a **second, night ground is added beside it**,
+  and the operator switches between them with a control in the top bar.
+  - **One token vocabulary, two value sets.** There is exactly one set of CSS variable names.
+    Geometry, type scale, spacing, radii and the zero-shadow invariant are identical across the
+    two grounds — **only colour values change**. A theme switch must cause no reflow and no
+    relearning. Any token that exists in one set and not the other is a bug.
+  - **Why a night ground, stated honestly:** it is a **24/7 low-light ergonomics** choice, not a
+    readability claim. The reading-performance evidence runs the *other* way (Piepenbrock et al.,
+    *Ergonomics* 2013/2014: positive polarity — dark text on light — is faster and more accurate),
+    and roughly 40–47% of adults have some astigmatism and see halation around light glyphs on a
+    dark field. The daylight ground therefore stays the **default**; the night ground is for a
+    shift worked in a dark room and is the operator's to choose.
+  - **Night ground constraints:** no pure black (`#000`) and no pure white (`#fff`); a warm
+    dark-grey field around `#1E1E1E` with off-white text in the `#CCC`–`#D4D4D4` band. Warm
+    neutrals throughout, so the two grounds read as one product.
+  - **The night ground is NOT a return to "CAM KOKPİT."** The rejected dark world was a cold
+    blue-black instrument panel with an instrument-cyan accent and IBM Plex. This is the Omega
+    grammar re-lit: same warm neutrals, same absence of an interaction colour, same black-pill
+    logic inverted to an off-white pill. Do not resurrect the old palette.
+  - Concrete token values, per-theme, with measured contrast ratios: `DESIGN.md`.
+  - Confirmed 2026-07-27 and unchanged: **all three surfaces convert** (landing, dashboard,
+    workflow) and **all seven Omega section patterns** are adopted.
   - Measured from the live preview at `omega.nextjsshop-preview.workers.dev`, not guessed:
     type **Geist + Geist Mono** (identical to what Meridian already loads — no font migration);
     ground `#ffffff`, warm bone panels `#f8f5f2` / `#fbfaf8` / `#f1ece8`, cool chip `#f3f3f3`;
@@ -81,7 +100,9 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
   - Prior rejected directions, kept as anti-references: a cyanotype specimen ledger, an
     agricultural experiment station, and the dark Linear/Vercel/Raycast canon that this replaces.
     Do not propose a themed or historical world; Omega is a straight product-software reference.
-    If a future pass wants to depart from this, ask first — this is a preference, not a guess.
+    Adding a night ground does **not** reopen any of these — it re-lights Omega, it does not
+    replace it. If a future pass wants to depart from this, ask first — this is a preference, not
+    a guess.
 - The current dashboard (`index.html`) already carries a named, deliberate visual language — "CAM
   KOKPİT" (glass cockpit): cold blue-black instrument-panel surfaces, hairline rules, no
   shadows/gradients, IBM Plex Sans + Mono, one instrument-cyan accent, state-only green/amber/red.
@@ -113,5 +134,13 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 
 ## Accessibility & Inclusion
 
-No formally required standard confirmed; the existing dashboard informally targeted AA contrast
-(per its own code comments). Carry forward at least that bar.
+No externally required standard applies (single private operator, no public users). The bar the
+project holds itself to is **WCAG 2.2 AA**, and it now applies to **both grounds** — every text
+token clears 4.5:1 against the worst surface it actually composites onto, measured rather than
+estimated (see `DESIGN.md`). APCA may inform night-ground tuning but never replaces WCAG 2.2 as
+the standard; it is not an approved WCAG 3 method.
+
+Two known deviations are declared rather than hidden: hairline borders do not reach the 3:1
+non-text bar in either ground (the text-input border is the one real exposure), and full ARIA
+live-region coverage is deliberately partial — a console streaming continuous numbers would drown
+a screen reader, so only critical state changes announce.
