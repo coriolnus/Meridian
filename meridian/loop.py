@@ -1027,6 +1027,22 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     except Exception as e:
         obs.warn("evaluate_outcomes_failed", error=f"{type(e).__name__}: {e}")
 
+    # ---- WP-K TREND KOLU GÖLGE-KİTABI (2026-07-31) — ANA İŞTEN SONRA, SIFIR YETKİ ----
+    # EDG-2026-009'un incumbent kolu (chandelier × N=10) canlı barlarda SANAL bir defterde yürür.
+    # Emir yolu, portföy, plan, karne: HİÇBİRİNE dokunmaz — tek yazdığı `trend_book.json`.
+    # HATA ANA DÖNGÜYÜ ASLA KIRMAZ (YASA 4): bir gölge defterinin muhasebesi, gerçek kitabın
+    # nabzını/kapanışını rehin alamaz. Yutma SESSİZ DEĞİL — olay adıyla kaydedilir ve gölge
+    # özeti None kalır (uydurma sıfır DEĞİL: "ölçülemedi" ile "pozisyon yok" ayrı şeylerdir).
+    _trend = None
+    try:
+        from . import trend_shadow as _ts
+        _trend = _ts.run_cycle(bars, index, on_date=dstr)
+    except Exception as e:
+        obs.warn("trend_shadow_failed", error=f"{type(e).__name__}: {e}", date=dstr,
+                 detail="gölge-kitap turu düştü — canlı döngü ETKİLENMEDİ (sıfır yetkili katman)")
+    _trend_ozet = ({"pozisyon": _trend.get("pozisyon"), "equity": _trend.get("equity"),
+                    "status": _trend.get("status")} if isinstance(_trend, dict) else None)
+
     equity = round(b.equity(_marks(per, d)), 2)
     health.write_heartbeat(version=version, open_positions=len(b.positions), equity=equity,
                            last_bar=dstr, regime=rj["regime"], exposure_budget_pct=rj["exposure_budget_pct"],
@@ -1036,10 +1052,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                            mirror_drift=bool(mirror.get("drift")))
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
-            halted=halted, breaker=breaker, data_ok=not data_bad)
+            halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet)
     return {"status": "ok", "date": dstr, "regime": rj["regime"], "candidates": len(candidates),
             "plans": len(plans), "armed": len(meta["armed"]), "open_positions": len(b.positions),
-            "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad}
+            "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad,
+            "trend_book": _trend_ozet}
 
 
 SCAN_TAIL_BARS = 340       # P2 tarama penceresi: 252-bar ısınma + haftalık resample payı

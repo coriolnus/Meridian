@@ -1701,6 +1701,14 @@ def api_diagnostics(request: Request):
         "marketstream": __import__("meridian.marketstream", fromlist=["health"]).health(),   # Faz 2 data akışı; ok:None/down görünür
         "barfeed": __import__("meridian.barfeed", fromlist=["health"]).health(),             # Faz 3 dayanıklı bar-tetiği (consumer-group)
         "intraday": _intra,          # Faz 4 gözlem-modu + intraday_decisions.jsonl özeti (dış okuma)
+        # WP-K TREND KOLU GÖLGE-KİTABI (2026-07-31) — EDG-2026-009 incumbent kolunun CANLI sanal
+        # defteri. DIŞ OKUYUCU BURASIDIR (YASA 6): defteri `trend_shadow` yazar, `intraday_shadow`
+        # ile AYNI desen — dosya adı LİTERAL okunur ki `codelaw.artifact_graph` tüketiciyi görsün;
+        # okuma modülün kendi içinde kalsaydı artefakt "yazılıyor ama kimse okumuyor" görünürdü.
+        # `pit_serh` özetin İÇİNDE taşınır ve panoya rakamla BİRLİKTE çıkar: +13,1p/yıl'ı şerhsiz
+        # okutmamak bu kolun hükmünün parçasıdır (yanlılık-düşülmüş ~6-7p/yıl).
+        "trend_kitabi": __import__("meridian.trend_shadow", fromlist=["ozet"]).ozet(
+            store.read_json("trend_book.json", None)),
 
         # BÜTÜNLÜK: "koşuyor mu" değil "üretiyor mu / kaybetmiyor mu / deterministik mi" (2026-07-21)
         # ÖNBELLEKLİ OKUMA (2026-07-28): `integrity_report_cached` yalnız BURASI için var; yan
