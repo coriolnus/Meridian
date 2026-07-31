@@ -112,6 +112,12 @@
   --label-size:10px; --label-track:.16em;
   --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
   --max:1180px;
+  /* ALAN KENARI — WCAG 2.2 1.4.11 (metin dışı 3:1). Saç telleri bilerek 1.1-1.5 arasında
+     (beyanlı sapma: kart ve çip DOLGUSUYLA tanınır, kenarıyla değil). Ama METİN GİRİŞİ öyle
+     değil: kutunun nerede başladığını gösteren TEK şey kenarıdır — DESIGN.md'nin "tek gerçek
+     maruziyet" dediği yer burasıydı. Bu yüzden form kontrolleri --line-2'yi DEĞİL bu jetonu
+     kullanır. Ölçüldü: gündüz en kötü gerçek zeminde 3.36, gece 3.25. */
+  --field:#8a8580;
   color-scheme:light;
 }
 
@@ -165,6 +171,7 @@
   --scrim:rgba(10,9,8,.66);
   --green-stamp:rgba(76,195,138,.55);
   --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
+  --field:#7e776e;
   color-scheme:dark;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -228,7 +235,7 @@ a{color:inherit;text-decoration:none}
 .gate-sub{font-size:13px;color:var(--tx2);line-height:1.5;margin:0 0 var(--s3)}
 .gate-l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2)}
-.gate-in{background:var(--bg);color:var(--tx);border:1px solid var(--line-2);
+.gate-in{background:var(--bg);color:var(--tx);border:1px solid var(--field);
   border-radius:var(--r-ctl);padding:10px 13px;min-height:44px;font-family:var(--sans);font-size:14px}
 .gate-in:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .gate-in:focus{border-color:var(--accent);background:var(--card)}
@@ -688,13 +695,13 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .kstat{font-size:12px;margin-top:2px}
 .kin{display:flex;gap:var(--s2);flex-wrap:wrap}
 .kin input,.searchbox{flex:1;min-width:220px;min-height:44px;font-size:13px;padding:10px 13px;border-radius:var(--r-ctl);
-  border:1px solid var(--line-2);background:var(--bg2);color:var(--tx);font-family:var(--mono);transition:var(--t)}
+  border:1px solid var(--field);background:var(--bg2);color:var(--tx);font-family:var(--mono);transition:var(--t)}
 .kin input::placeholder,.searchbox::placeholder{color:var(--tx2)}
 .kin input:focus-visible,.searchbox:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .kin input:focus,.searchbox:focus{border-color:var(--accent);background:var(--card)}
 /* native controls belong to the world too — a stock select inside a committed form is a lapse */
 select,input[type=text],input[type=number],input[type=password]{font-family:var(--mono);font-size:13px;color:var(--tx);
-  background:var(--bg2);border:1px solid var(--line-2);border-radius:var(--r-ctl);padding:9px 11px;transition:var(--t)}
+  background:var(--bg2);border:1px solid var(--field);border-radius:var(--r-ctl);padding:9px 11px;transition:var(--t)}
 /* ODAK GÖRÜNÜR OLMAK ZORUNDA (2026-07-27). Eskiden `outline:none` + `border-color` idi; ama
    Ajan'daki dört girdi app.js'ten SATIR İÇİ `border` alıyor ve satır içi stil hiçbir :focus
    kuralının border-color'ını dinlemez. Gerçek klavye girdisiyle ölçüldü: o dört girdide odak

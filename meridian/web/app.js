@@ -101,6 +101,19 @@ const cls = x => x == null ? "" : (x > 0 ? "pos" : (x < 0 ? "neg" : ""));
 // "—" dediği yerde şablonun uydurma kaçırması. Aynı yasa, tipografik hâli.
 // Görsel doğrulama sunucusunda (boş /api/*) yakalandı, 2026-08-01.
 const onk = (p, v) => (v == null || v === "" || (typeof v === "number" && !Number.isFinite(v))) ? "—" : `${p}${v}`;
+// KAZANCA AÇIK İŞARET — renk TEK kanal olmasın.
+// pctf/money pozitifte işaret basmıyor: "%12,34" ile "%-12,34" arasındaki tek fark, biri için
+// İŞARETİN YOKLUĞU. Yokluk bir işaret değildir. Renk körü bir okuyucu (ve gri basılmış bir ekran
+// görüntüsü) için ayırt edici tek kanal renge kalıyordu — oysa cls() zaten "bu bir kazanç/kayıp"
+// diyor. Kod tabanının R ve IC değerlerinde kullandığı sözleşme buydu ("+0,214R"); yüzde ve para
+// okumaları o sözleşmenin dışında kalmıştı. Yeni glif sözlüğü GETİRİLMEDİ: ok yerine mevcut "+".
+// İşaret % ve $'ın İÇİNE girer — "%+12,34", "+%12,34" değil (Türkçe'de birim önce gelir).
+const isr = (x, metin) => {
+  const n = Number(x);
+  if (x == null || !Number.isFinite(n) || n <= 0) return metin;
+  const s = String(metin);
+  return (s[0] === "%" || s[0] === "$") ? s[0] + "+" + s.slice(1) : "+" + s;
+};
 const TAG = { GO: "t-go", REVIEW: "t-rv", NO_GO: "t-no", pass: "t-go", reject: "t-no" };
 
 const REGIME_TR = { trend_up: "yükseliş trendi", trend_down: "düşüş trendi", chop: "yatay/kararsız", high_vol: "yüksek dalgalanma" };
@@ -875,7 +888,7 @@ RENDER.brifing = async () => {
       <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
         <p class="big">${money(t.equity)}</p>
         <div id="eq-spark" style="margin-top:10px" aria-hidden="true"></div>
-        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${pctf(t.day_pnl_pct)}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p></div>
+        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p></div>
       <div class="hstat"><p class="l">Risk</p>
         <div class="srow"><span>Tavan (rejim bütçesi)</span><b style="color:${budget === 0 ? 'var(--amber)' : 'var(--tx)'}">%${budget}${budget === 0 ? " · kapalı" : ""}</b></div>
         <div class="srow"><span>Açıktaki risk</span><b>%${exposure}</b></div>
@@ -1383,7 +1396,7 @@ const _MKT_GRID = "grid-template-columns:78px 112px 100px 112px 66px 70px 106px 
 // `renk=false`: 52 haftalık zirveye uzaklık YAPISAL olarak ≤0'dır (zirve tavandır). Onu kırmızıya
 // boyamak her satırı "kayıp" diye okuturdu — oysa bu bir MESAFE ölçüsüdür, getiri değil.
 const mktPct = (x, renk = true) => x == null ? '<span class="mut">—</span>'
-  : `<span class="${renk ? cls(x) : ""}">%${trn(x, 2)}</span>`;
+  : `<span class="${renk ? cls(x) : ""}">${renk ? isr(x, "%" + trn(x, 2)) : "%" + trn(x, 2)}</span>`;
 const mktUsd = v => {
   if (v == null) return '<span class="mut">—</span>';
   const a = Math.abs(v);
@@ -2154,7 +2167,7 @@ RENDER.operasyon = async () => {
         KIYAS TABANI olarak kullanılır.</p>
       <h3 class="t" style="margin-top:14px">1 · İşlem başına $ beklentisi <span class="mut">(blok-bootstrap %95 CI)</span></h3>
       <div class="srow"><span>Ortalama net / işlem</span><b class="${b.value == null ? "mut" : cls(b.value)}">${
-        b.value == null ? "ölçülmedi" : `${money(b.value)}
+        b.value == null ? "ölçülmedi" : `${isr(b.value, money(b.value))}
           <span class="mut">${ci ? `· %95 CI [${money(ci.lo)}, ${money(ci.hi)}]` : ""}
           ${b.anlamli === false ? '· <span class="warn">aralık sıfırı kapsıyor</span>' : ""}
           · n=${b.n ?? "—"} · medyan ${money(b.medyan)}</span>`}</b></div>
@@ -2176,7 +2189,7 @@ RENDER.operasyon = async () => {
         hakkında farklı şey söyleyemez.</p>
       <h3 class="t" style="margin-top:14px">4 · Toplam net PnL vs ödenen friksiyon</h3>
       <div class="srow"><span>Net PnL</span><b class="${np.value == null ? "mut" : cls(np.value)}">${
-        np.value == null ? "ölçülmedi" : `${money(np.value)}
+        np.value == null ? "ölçülmedi" : `${isr(np.value, money(np.value))}
           <span class="mut">· ödenen friksiyon ${money(np.toplam_friksiyon)} · oran ${trn(np.oran, 3)}×</span>`}</b></div>
       <p class="hint">4. ölçüt "net &gt; 0" DEĞİL <b>büyüklük</b> sorar: net PnL'in İŞARETİ 1. ölçütle
         matematiksel olarak aynı sorudur (Σpnl = n × ortalama), iki kez sormak paydayı şişirirdi. Kenar,
@@ -2978,7 +2991,7 @@ RENDER.intraday = async () => {
   const veRows = (ve.recent || []).map(p => `<div class="trow" style="grid-template-columns:66px 92px 92px 1fr">
       <span class="tick">${esc(p.ticker)}</span><span class="mono-num">${money(p.sim_fill)}</span>
       <span class="mono-num">${money(p.eod_fill)}</span>
-      <span class="mono-num ${cls(p.delta_pct)}">%${trn(p.delta_pct, 2)} <span class="mut" style="font-size:11px">EOD − gölge · ${esc(p.date)}</span></span></div>`).join("");
+      <span class="mono-num ${cls(p.delta_pct)}">${isr(p.delta_pct, "%" + trn(p.delta_pct, 2))} <span class="mut" style="font-size:11px">EOD − gölge · ${esc(p.date)}</span></span></div>`).join("");
   const s5 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Gölge icra · Faz 4b
       ${_chip(sh.enabled === false ? "KAPALI" : "GÖLGE · EMİR YOK", sh.enabled === false ? "t-vi" : "t-go")}</h2>
     <p class="hint" style="margin-top:0">Tetik kesildiği anda <b>tam icra kararı</b> (kapılar + boyutlandırma + emir niyeti)
@@ -2997,7 +3010,7 @@ RENDER.intraday = async () => {
       zamanlama farkı gibi okunurdu.</p>
     <div class="srow"><span>Eşleşen çift / eşleşmeyen</span><b>${ve.n_paired ?? 0} · <span class="mut">${ve.n_unpaired ?? 0} eşleşmedi</span></b></div>
     <div class="srow"><span>Ortalama fark (EOD − gölge)</span><b class="${ve.mean_delta_pct == null ? "mut" : cls(ve.mean_delta_pct)}">${
-      ve.mean_delta_pct == null ? "ölçülmedi" : "%" + trn(ve.mean_delta_pct, 3)}</b></div>
+      ve.mean_delta_pct == null ? "ölçülmedi" : isr(ve.mean_delta_pct, "%" + trn(ve.mean_delta_pct, 3))}</b></div>
     ${veRows ? `<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:66px 92px 92px 1fr">
         <span>HİSSE</span><span>GÖLGE</span><span>EOD</span><span>FARK</span></div>${veRows}</div>`
       : `<p class="hint">Henüz eşleşen çift yok — bir gölge kararı ancak aynı plan EOD'de de dolduğunda kıyaslanabilir.</p>`}</div>`;
@@ -3456,7 +3469,7 @@ const RECORD_VIEW = {
       title: `${esc(t.ticker || "?")} <span class="mut">×</span> ${esc(EXIT_TR[t.exit_reason] || t.exit_reason || "kapandı")}`,
       body: `<div class="pd-stats">
           ${pdStat("SONUÇ", rTxt, cls(r))}
-          ${pdStat("K/Z", t.pnl_pct == null ? "—" : pctf(t.pnl_pct, 1), cls(t.pnl_pct))}
+          ${pdStat("K/Z", t.pnl_pct == null ? "—" : isr(t.pnl_pct, pctf(t.pnl_pct, 1)), cls(t.pnl_pct))}
           ${pdStat("BAR", t.bars_held ?? "—")}</div>
         <h3 class="pd-sub">Giriş ve çıkış</h3>
         ${pdRow("Açılış", esc(t.ts_open || ""))}${pdRow("Kapanış", esc(t.ts_close || ""))}
@@ -3563,8 +3576,8 @@ RENDER.performans = async () => {
   const sd = d.score_detail || {}, eq = (d.equity_curve && d.equity_curve.points) || [];
   const regRows = Object.entries(d.per_regime || {}).map(([r, v]) => `<div class="trow" style="grid-template-columns:120px 50px 70px 70px 70px">
     <span><span class="tag t-vi">${REGIME_TR[r] || r}</span></span><span class="mono-num">${v.n}</span>
-    <span class="mono-num ${cls(v.score)}">${v.score == null ? 'az işlem' : v.score}</span><span class="mono-num">${pctf(v.win_rate, 0)}</span>
-    <span class="mono-num ${cls(v.avg_r)}">${v.avg_r ?? '—'}R</span></div>`).join("");
+    <span class="mono-num ${cls(v.score)}">${v.score == null ? 'az işlem' : isr(v.score, v.score)}</span><span class="mono-num">${pctf(v.win_rate, 0)}</span>
+    <span class="mono-num ${cls(v.avg_r)}">${v.avg_r == null ? '—' : isr(v.avg_r, v.avg_r)}R</span></div>`).join("");
   const skRows = Object.entries(d.per_skill || {}).map(([s, v]) => `<div class="trow" style="grid-template-columns:1fr 60px 80px">
     <span class="chain">${esc(s)}</span><span class="mono-num">${v.n}</span><span class="mono-num">${pctf(v.hit_rate, 0)}</span></div>`).join("");
   $("page-performans").innerHTML = `
@@ -3833,7 +3846,7 @@ function eylemKutu(baslik, amac, durum, durumSinif, kontrol, ipucuId, ayar) {
 function eylemSeridi(d) {
   const s = d.status || {}, sp = d.sprint || {}, it = d.integrations || {};
   const pend = it.backfill_pending || 0;
-  const inpStil = "background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:var(--r-ctl);padding:3px 6px;min-height:44px";
+  const inpStil = "background:var(--card);border:1px solid var(--field);color:var(--tx);border-radius:var(--r-ctl);padding:3px 6px;min-height:44px";
 
   // 1 · DÜŞÜN — beyni elle çalıştır
   const dusun = `<button class="dlbtn" id="hbtn-reflect" onclick="hermesReflect()">Şimdi düşün</button>
@@ -3868,10 +3881,10 @@ function eylemSeridi(d) {
     <div class="card rise" style="margin-top:14px"><h2 class="t">Yedek anahtar havuzu <span class="tx3" style="font-weight:400">(429 rotasyonu)</span></h2>
       <p class="hint" style="margin-top:0">Aynı sağlayıcıdan yedek anahtar eklersen kota dolduğunda ajan otomatik döner. Değer loglanmaz.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-        <select id="pool-prov" style="background:var(--bg);color:var(--tx);border:1px solid var(--line-2);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
+        <select id="pool-prov" style="background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
           <option value="gemini">gemini</option><option value="anthropic">anthropic</option><option value="openrouter">openrouter</option></select>
         <input id="pool-key" type="password" placeholder="yedek API anahtarı" autocomplete="off"
-          style="flex:1;min-width:180px;background:var(--bg);color:var(--tx);border:1px solid var(--line-2);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
+          style="flex:1;min-width:180px;background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
         <button class="dlbtn" onclick="addPoolKey()">Havuza ekle</button></div>
       <p class="hint" id="pool-msg" style="margin-top:8px"></p></div>`;
 }

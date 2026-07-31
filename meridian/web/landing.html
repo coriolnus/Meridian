@@ -117,6 +117,12 @@
   --scrim:rgba(5,5,5,.42);
   --green-stamp:rgba(12,106,59,.55);
   --pm-pos:rgba(12,106,59,.08); --pm-neg:rgba(179,36,44,.07);
+  /* ALAN KENARI — WCAG 2.2 1.4.11 (metin dışı 3:1). Saç telleri bilerek 1.1-1.5 arasında
+     (beyanlı sapma: kart ve çip DOLGUSUYLA tanınır, kenarıyla değil). Ama METİN GİRİŞİ öyle
+     değil: kutunun nerede başladığını gösteren TEK şey kenarıdır — DESIGN.md'nin "tek gerçek
+     maruziyet" dediği yer burasıydı. Bu yüzden form kontrolleri --line-2'yi DEĞİL bu jetonu
+     kullanır. Ölçüldü: gündüz en kötü gerçek zeminde 3.36, gece 3.25. */
+  --field:#8a8580;
   color-scheme:light;
 
 }
@@ -142,6 +148,7 @@
   --scrim:rgba(10,9,8,.66);
   --green-stamp:rgba(76,195,138,.55);
   --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
+  --field:#7e776e;
   color-scheme:dark;
 }
 

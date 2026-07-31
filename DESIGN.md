@@ -258,10 +258,24 @@ against `--card` measures 1.09 (daylight) and 1.27 (night).
 
 What carries the burden instead: chips and cards are identified by their **fill** and their text,
 not by their border; every interactive control draws a 2px `--accent` `:focus-visible` outline at
-2px offset, which measures 18.76 (daylight) and 10.18 (night) against a card. **The single real
-exposure is the text input**, whose `--line-2` border at 1.47 / 1.65 is the only thing that marks
-the field boundary. Raising it means raising `--line-2` in both themes, which changes the whole
-surface, and is a separate decision — not one to make silently inside another change.
+2px offset, which measures 18.76 (daylight) and 10.18 (night) against a card.
+
+**The one real exposure — the text input — is now closed, and it did not require moving
+`--line-2`.** The previous version of this section identified the field boundary as the single
+place where a hairline is the *only* thing identifying a component, and deferred the fix on the
+grounds that raising `--line-2` would change every surface. That framing was the mistake: 1.4.11
+asks for 3:1 on *information required to identify a component*, which is a narrower set than
+*every line in the interface*. So form controls got their own token instead.
+
+| Token | Daylight | Night | worst real ground |
+|---|---|---|---|
+| `--field` (form control border) | `#8a8580` | `#7e776e` | **3.12** / **3.18** on `--card-2` |
+
+Applied to every text input, password field, number field and `select`, on all three surfaces,
+including the ones `app.js` styles inline — one of which was using `--line` (1.28), weaker still
+than the value this section was worried about. Decorative and structural hairlines stay at
+1.09–1.83 by choice: a card edge is not a component boundary, and making every rule in the system
+shout would destroy the quiet the ramp exists to produce.
 
 The tonal ramp that replaces shadow is deliberately shallow — daylight `bg→bg2` 1.043, `bg2→card`
 1.041, `card→card-2` 1.080, `bg→card-2` 1.173; night 1.082 / 1.026 / 1.113 / 1.236. A tonal step
@@ -281,6 +295,15 @@ scrim figure as evidence that the night overlay is fine.
 **The Money Rule.** Colour means money. If a value is not a realised outcome, a risk state, or a
 control that can lose money, it is `--tx` or `--tx2`. There is no decorative colour and no
 interaction colour in this system — adding one breaks the only signal the operator scans for.
+
+**The Second-Channel Rule.** Because colour carries meaning here, colour may never carry it
+**alone**. Every gain/loss figure states its direction in a mark as well as a hue: losses already
+had a minus from the formatter, so gains now take an explicit `+`. The absence of a sign is not a
+sign — a reader with a colour vision deficiency, or anyone looking at a greyscale screenshot, was
+being asked to infer *gain* from a missing character. The convention was already in the codebase
+for `R` and IC values (`+0,214R`); percentage and currency readouts had simply been left outside
+it. The sign goes **inside** the unit — `%+12,34`, not `+%12,34`. No arrow glyph was introduced:
+the system already had a sign vocabulary, and a second one would need its own justification.
 
 **The Warm Rule.** Every neutral is warm in both themes. Daylight hairlines are `#e7e3df`, not
 `rgba(0,0,0,.08)`; night hairlines are `#38342f`, not `#333`. A single cool grey (`#f3f3f3`) is
