@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(.venv/bin/python -c \"from meridian import codelaw; print\\(codelaw.silent_handlers\\(\\)\\); print\\(codelaw.report\\(\\)['ok']\\)\")",
-      "Bash(.venv/bin/python -m pytest tests/test_orgu2_v103.py -q)"
-    ]
-  }
-}
