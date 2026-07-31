@@ -372,27 +372,36 @@ font binary (`GeistMono-Medium.ttf` v1.401, `unitsPerEm` 1000, 846 glyphs):
 non-shifting figures and an unmistakable zero — are met by the font's construction rather than by
 optional features, which is a stronger guarantee than a feature flag. There is no font migration.
 
-**What was not measured, and why.** Two things:
+**What the earlier pass could not measure, and how it was settled.** Two things were left open
+when this section was first written; both were closed on 2026-08-01 by rendering in a browser
+rather than by reading the font binary.
 
-1. **The `1`/`l` pair at real rendering size.** Geometry says the two glyphs are within a fifth of
-   a pixel of each other at 10px; whether they are *perceptually* separable on the operator's
-   display was **not measured** — that needs a render-and-observe test, which this pass could not
-   perform. Treat the pair as unresolved. It is a small exposure in practice because mono here
-   carries digits and UPPERCASE labels, where the confusable partner is `I` (which *is*
-   separated), not lowercase `l`. **Do not set a mixed-case identifier in mono until this is
-   tested.**
-2. **The Google-served build.** `index.html` loads Geist Mono from Google Fonts, which serves
-   `geistmono/v6` as unicode-range-subset WOFF2. The file measured here is the Vercel/Raycast
-   build v1.401 found on this machine. Same family, different build and different version
-   counters; Google subsets, and subsetting can drop features. The Google build's GSUB feature
-   list was **not measured** — verifying it would mean downloading and unpacking a WOFF2, which is
-   outside this pass's authority. The findings above are stated for v1.401.
+1. **The `1`/`l` pair at real rendering size.** Geometry put the two glyphs within a fifth of a
+   pixel of each other at 10px, and geometry could not decide whether they are *perceptually*
+   separable. A render-and-observe test settled it — see below.
+2. **The Google-served build — now measured, in the browser.** The earlier pass could only
+   inspect the local Vercel/Raycast build v1.401 and flagged the Google `geistmono/v6` subset as
+   unverified. It has since been tested where it actually matters: rendered by the browser, from
+   Google, at the sizes the interface uses.
 
-Related, and also unverified: `index.html` sets `font-feature-settings:'cv11','ss01'` on `body`.
-`cv11` does not exist in Geist Mono's feature list at all, so it is definitively a no-op there.
-Whether either tag exists in **Geist sans** was **not measured** — no local copy of the sans was
-available. `cv11` is an Inter naming convention and is most likely a leftover from a previous
-world; treat both declarations as unverified until the sans is inspected.
+**Both open font questions are closed, and both closed against the declaration:**
+
+- **`cv11` and `ss01` do nothing, in either family.** The same string was set twice — once plain,
+  once with `font-feature-settings:'cv11','ss01'` — in Geist Sans and Geist Mono, at 40px, and
+  the renderings were **identical**: the double-storey `a` stayed double-storey, the digits did
+  not change, and the advance widths matched to three decimals (Sans 488.234 both ways, Mono
+  566.883 both ways). `cv11` is an Inter convention that survived the move off Inter. **Both
+  declarations were deleted from all three surfaces on 2026-08-01.** A declaration that changes
+  nothing still reads as work done — the typographic form of claiming an unmeasured number.
+- **`1` versus `l` is legible at 10–11px, and the exposure was never where it looked.** Rendered
+  at 10, 11, 12, 13, 16 and 28px: `1` carries an angled flag and a full-width foot bar, `l` a
+  narrower top flag and a curved right foot, `I` two crossbars. They are tight at 10px but they
+  are distinct. More to the point, **`--label-size` mono is `text-transform: uppercase` by rule**,
+  so a lowercase `l` never renders at 10px in this interface at all; the pair can only meet in
+  `code` and drawer identifiers, which are set at 12px or larger. The earlier instruction to
+  avoid mixed-case identifiers in mono is lifted.
+- The `0` slash was confirmed visually at every size, which independently re-confirms that
+  `slashed-zero` would be redundant even if the feature existed.
 
 ### Hierarchy
 - **Display** (500, 28px, 1.18, −0.02em): the largest heading on a view; one per view.
@@ -580,6 +589,20 @@ Every component below is identical in geometry across the two themes. Only the t
 - Only the button re-renders on switch, not the whole rail: a full redraw drops focus and a
   keyboard operator falls off the control they just used.
 
+### Data Tables (`.tbl`)
+- **This class had no stylesheet at all until 2026-08-01.** `app.js` emitted four
+  `<table class="tbl">` and `index.html` defined nothing for it, so all four rendered with browser
+  defaults — and because the global reset zeroes padding, their cells were touching. The class
+  name existed; the contract behind it did not. Worth stating plainly: a named class is not
+  evidence that anything styles it.
+- **Header:** the mono 10px uppercase micro-label, left-aligned, over a single `--line-2` rule.
+- **Rows:** separated by `--line` hairlines, none after the last row. No zebra striping, no
+  vertical rules, no outer box — the card already closes the edge.
+- **Numeric columns carry `.num`:** right-aligned, mono, `tabular-nums`. The header takes the
+  class too, so the column reads from the same edge as its values. Decimals must line up or the
+  column cannot be compared down its length, which is the only reason to put numbers in a column.
+- Alignment is applied per cell, not per table: a table's text columns stay left-aligned.
+
 ### Bullet Graph (replaces the two radial gauges)
 - **Fixed geometry: a 150px axis and a 54px readout, 212px in total.** Both are fixed on purpose.
   Two bullets with different axis lengths cannot be compared by length, which is the only advantage
@@ -747,8 +770,8 @@ uncertainty.
 - **Don't** add a fourth radius. There are three — 2px, 10px, 12px — and no pill.
 - **Don't** promise `slashed-zero`. Geist Mono has no `zero` feature; the slash is already in the
   default glyph.
-- **Don't** set a mixed-case identifier in Geist Mono until the `1`/`l` pair has been rendered and
-  checked at 10–11px.
+- **Don't** declare a font feature without rendering it both ways first. `cv11` and `ss01` sat on
+  `body` for months and did nothing.
 - **Don't** justify the night theme as "easier to read". It is a low-light ergonomics choice and
   the reading-performance evidence runs the other way.
 - **Don't** substitute APCA for WCAG 2.2 AA.

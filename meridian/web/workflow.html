@@ -16,10 +16,17 @@
   The operator asked for that register after two themed worlds were built and
   rejected, and named the bar — Linear, Vercel, Raycast — which is recorded as a
   binding brand commitment in PRODUCT.md. So this sheet owns no metaphor: no era,
-  no material, no field book. It owns DENSITY WITH CALM. A near-black ground with
-  NO wash, hairline structure instead of boxes, surfaces that step by four or five
-  points of luminance rather than by shadow, one restrained indigo that means
-  "interactive" and nothing else. Geist and Geist Mono — the canon's actual voice.
+  no material, no field book. It owns DENSITY WITH CALM: no wash on the ground,
+  hairline structure instead of boxes, surfaces that step by a few points of
+  luminance rather than by shadow. Geist and Geist Mono — the canon's actual voice.
+
+  GROUND (corrected 2026-08-01): this paragraph described a near-black ground and
+  "one restrained indigo that means interactive" long after both were gone. The
+  Omega conversion moved every surface to a warm light ground and DELETED the
+  interaction colour outright — --accent is ink, not indigo, and colour belongs to
+  measurement alone. The sheet now carries TWO grounds (daylight and night, see the
+  :root blocks below) and the operator's choice is shared across all three surfaces
+  by theme.js. Wherever this contract still says a colour word, read the TOKEN.
 
   THE ENCODING IS UNCHANGED AND STAYS UNCHANGED — only its vocabulary is re-cut.
   This sheet once sorted its six node types by six saturated hues. It does not.
@@ -53,11 +60,15 @@
   filter, which is a tell. The Geist Mono category label carries the type on its
   own. The ic: strings stay in N, unrendered, so nothing is lost.
 
-  INDIGO IS INTERACTION. --accent marks the path a hand touched — hover, focus,
-  selection, and the chain traced by a click — and nothing else on this sheet uses
-  it. No node here carries a pass / attention / loss STATE, so green, amber and
-  red are defined by the canon but deliberately never printed: semantic colour
-  appears only where it means something.
+  --accent IS INTERACTION, AND IT IS NOT A COLOUR. It marks the path a hand touched
+  — hover, focus, selection, and the chain traced by a click — and nothing else on
+  this sheet uses it. It reads as ink on the daylight ground and as bone on the
+  night one; it never carries chroma. (This paragraph was headed "INDIGO IS
+  INTERACTION" until 2026-08-01; the indigo had been removed months earlier and the
+  heading was simply describing a value that no longer existed.)
+  No node here carries a pass / attention / loss STATE, so green, amber and red are
+  defined by the canon but deliberately never printed: semantic colour appears only
+  where it means something.
 
   DOM contract preserved: every id, class, inline handler, node position and edge
   kept by name. Only the palette, the type, the silhouettes and the ground changed.
@@ -80,8 +91,10 @@
   /* OMEGA'DA ETKİLEŞİM RENGİ YOKTUR: birincil eylem siyah haptır. Renk yalnız ÖLÇÜME aittir. */
   --accent:#050505; --accent-2:#050505; --accent-tint:#f3f3f3;
   /* semantic — these mean money, so they are never decoration.
-     Açık zemin ölçümü: eski değerler burada 1.83-3.37:1'e düşüyordu. Yeniler en kötü
-     zeminde de AA metin geçiyor — yeşil 4.60, kehribar 5.90, kırmızı 5.59. */
+     Açık zemin ölçümü (yeniden ölçüldü 2026-08-01): eski değerler burada 1.83-3.37:1'e
+     düşüyordu. Yeniler, her rengin KENDİ %10 tinti üzerinde — çipin fiilen oturduğu zemin —
+     en kötü gerçek bileşikte AA geçiyor: yeşil 4.88, kehribar 5.80, kırmızı 4.78.
+     Önceki yorum 4.60/5.90/5.59 diyordu; o üçlü yeniden üretilemedi. */
   --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
   --violet:#050505; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
@@ -129,8 +142,16 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 /* the ground is flat. The canon does not wash its background. */
+/* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ.
+   Bu iki özellik Inter sözleşmesidir ve önceki görsel dünyadan kalmıştı. Google Fonts'un
+   servis ettiği GERÇEK derlemede (üretimde yüklenen dosya) tarayıcıda yan yana basıldı:
+   Geist Sans ve Geist Mono'da glifler özellikli ve özelliksiz BİREBİR AYNI çıktı —
+   çift katlı 'a' çift katlı kaldı, rakamlar değişmedi, genişlikler aynı.
+   Etkisi olmayan bir bildirim, yapılmış bir iş izlenimi verir; uydurma yasağının
+   tipografik hâli. Aynı sebeple 'slashed-zero' da EKLENMEZ: Geist Mono'da `zero`
+   özelliği yok, ama eğik çizgi zaten varsayılan glifin içinde (yukarıda görüldü). */
 body{background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;
-  font-feature-settings:'cv11','ss01';letter-spacing:-.011em;
+  letter-spacing:-.011em;
   padding:var(--s10) var(--s6) var(--s12)}
 h1{font-family:var(--display);font-weight:600;letter-spacing:-.022em;line-height:1.18}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}

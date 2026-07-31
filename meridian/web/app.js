@@ -2351,9 +2351,9 @@ RENDER.operasyon = async () => {
       <div class="srow"><span>En yoğun aile</span><b class="warn">${esc(f.en_yogun_aile || "—")}
         <span class="mut">· tüm hipotezlerin ${pctf(f.en_yogun_pay, 1)}'i</span></b></div>
       ${!olu.length ? `<p class="hint">Ölü aile YOK (>= eşik denemeye ulaşmış ve 0 ship olan knob yok).</p>` : `
-      <table class="tbl"><thead><tr><th>ölü aile</th><th>denendi</th><th>ship</th><th>denenen değerler</th></tr></thead>
-      <tbody>${olu.map(([k, v]) => `<tr><td><code>${esc(k)}</code></td><td>${v.denendi}</td>
-        <td class="${v.ship ? "" : "neg"}">${v.ship}</td>
+      <table class="tbl"><thead><tr><th>ölü aile</th><th class="num">denendi</th><th class="num">ship</th><th>denenen değerler</th></tr></thead>
+      <tbody>${olu.map(([k, v]) => `<tr><td><code>${esc(k)}</code></td><td class="num">${v.denendi}</td>
+        <td class="num ${v.ship ? "" : "neg"}">${v.ship}</td>
         <td class="mut">${esc((v.denenen_degerler || []).join(", "))}</td></tr>`).join("")}</tbody></table>`}
       <div class="srow"><span>Defterde HİÇ önerilmemiş düğme</span>
         <b class="${hic.length ? "warn" : "pos"}">${esc(f.hic_onerilmemis_sayi || "—")}</b></div>
@@ -2374,10 +2374,10 @@ RENDER.operasyon = async () => {
       ${!sv ? "" : `
       <h3 class="t" style="margin-top:16px">Gölge-varyant portföyleri ${_chip("kâğıt defter", "t-rv")}</h3>
       ${sv.n_satir ? `
-      <table class="tbl"><thead><tr><th>varyant</th><th>son karar</th><th>sinyal / silahlanır</th><th>kümülatif ayrışma</th></tr></thead>
+      <table class="tbl"><thead><tr><th>varyant</th><th>son karar</th><th class="num">sinyal / silahlanır</th><th class="num">kümülatif ayrışma</th></tr></thead>
       <tbody>${Object.entries(sv.son_karar || {}).map(([k, v]) => `<tr><td><code>${esc(k)}</code>
         <span class="mut">${esc(v.label || "")}</span></td><td class="mut">${esc(v.date || "")}</td>
-        <td>${v.signal_n ?? 0} / ${v.would_arm_n ?? 0}</td>
+        <td class="num">${v.signal_n ?? 0} / ${v.would_arm_n ?? 0}</td>
         <td class="${(sv.kumulatif_ayrisma || {})[k] ? "warn" : "mut"}">${(sv.kumulatif_ayrisma || {})[k] ?? 0}</td>
         </tr>`).join("")}</tbody></table>
       <p class="hint">k_variants=${sv.k_variants ?? "—"} <b>ÇOKLU-KARŞILAŞTIRMA PAYDASI</b> — "en iyi varyant"
@@ -2472,10 +2472,10 @@ RENDER.operasyon = async () => {
         if (sh && sh.hucreler) {
           const hl = Object.entries(sh.hucreler);
           o += `<h3 class="t" style="margin-top:16px">Rejim hücreleri ${_chip("küçültülmüş (2C)", "t-rv")}</h3>
-            <table class="tbl"><thead><tr><th>rejim</th><th>ham</th><th>küçültülmüş</th><th>n</th><th>ağırlık w</th></tr></thead>
+            <table class="tbl"><thead><tr><th>rejim</th><th class="num">ham</th><th class="num">küçültülmüş</th><th class="num">n</th><th class="num">ağırlık w</th></tr></thead>
             <tbody>${hl.map(([k, v]) => `<tr><td><code>${esc(k)}</code></td>
-              <td class="mut">${trn(v.ham, 4)}R</td><td><b>${trn(v.kucultulmus, 4)}R</b></td>
-              <td>${v.n}</td><td class="${v.agirlik < 0.2 ? "warn" : "mut"}">${trn(v.agirlik, 3)}</td></tr>`).join("")}</tbody></table>
+              <td class="num mut">${trn(v.ham, 4)}R</td><td class="num"><b>${trn(v.kucultulmus, 4)}R</b></td>
+              <td class="num">${v.n}</td><td class="num ${v.agirlik < 0.2 ? "warn" : "mut"}">${trn(v.agirlik, 3)}</td></tr>`).join("")}</tbody></table>
             <p class="hint">τ²=${trn(sh.tau2, 6)} · genel ortalama ${trn(sh.genel_ortalama, 4)}R.
               ${sh.tau2 === 0 ? `<b class="warn">τ²=0: hücreler-arası yayılımın TAMAMI hücre-içi gürültüyle
               açıklanıyor — bu defterde rejimler arasında ÖLÇÜLEBİLİR gerçek fark YOK, bu yüzden her hücre
