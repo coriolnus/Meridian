@@ -153,6 +153,22 @@ Giriş kilidini de dene: yanlış parolayla 9 kez POST at, 9.'da **429** ve kala
   depoya (Redis) taşınmalı.
 - **İki faktör yok.** Parola + oturum çerezi seçildi. TOTP eklemek `meridian/auth.py` içinde
   ayrı bir doğrulama adımı demek; broker hesabına bakan bir yüzey için düşünmeye değer.
-- **CSP `style-src` içinde `unsafe-inline` var.** `app.js` DOM'u satır içi stil taşıyan şablon
-  dizgileriyle üretiyor; kaldırmak app.js'in yeniden yazılması demek. `script-src` temiz —
-  asıl koruma orada.
+- **CSP'de `unsafe-inline` İKİ yerde var: `style-src` ve — 2026-08-01'den beri açıkça —
+  `script-src`.** Bu ikincisi bir düzeltmedir, bir gevşeme değil: `script-src 'self'` yazılıydı
+  ama pano 40 adet satır içi olay özniteliği (`onclick`/`oninput`) kullanıyor ve CSP onları da
+  bloklar. O hâliyle dağıtılsaydı **pano çizilir, hiçbir düğme çalışmazdı — HALT ve KRİZ dahil.**
+  Sessizce ölü bir acil durdurma, eksik bir CSP başlığından daha tehlikelidir.
+  Ne kaybediliyor: XSS'e karşı ikinci savunma hattı. Kalan savunma `esc()` ve verinin tek
+  kaynaktan gelmesi. Nasıl kapanır: 40 öznitelik olay delegasyonuna çevrilir (tek dinleyici +
+  kayıtlı eylem haritası), sonra `'unsafe-inline'` `script-src`'den silinir.
+  `style-src`'deki ayrı ve daha eski bir borç: `app.js` satır içi stil taşıyan şablon dizgileri
+  üretiyor.
+
+- **Dağıtımda üç yeni statik dosya var:** `theme.js` (tema önyükleyicisi — `<head>`'de senkron,
+  yoksa gece temasında her açılış beyaz flaşla başlar), `landing.js` ve `workflow.js` (HTML'lerden
+  çıkarılan bloklar). Üçü de `api.py`'de ad ad yönlendirilmiş; `StaticFiles` montajı YOK.
+  Dağıtımdan sonra üçünün de 200 döndüğünü doğrula:
+
+```bash
+for f in theme.js landing.js workflow.js app.js; do curl -s -o /dev/null -w "$f %{http_code}\n" https://alan-adin/$f; done
+```
