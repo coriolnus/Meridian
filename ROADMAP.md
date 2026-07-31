@@ -210,6 +210,11 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   roller, yasalar, canlı-güvenlik).
 - **H7 restore tatbikatı** 📋 — Mac'teki yedekten boş dizine süre-ölçümlü geri dönüş provası;
   çeyreklik ritim ("restore edilmemiş yedek hipotezdir").
+- **H11 mekanizma süre-tavanları** 📋 (2026-07-31 vakası): warmup_sprint 07:09'dan beri 2
+  işçiyle tavansız koşuyor, mekanizma-bekçisi alarmladı (hermes_poll'u da geciktiriyor) —
+  bekçi ALARM edebiliyor ama İPTAL edemiyor. Uzun-hesap mekanizmalarına (warmup, kanıt-dolgusu,
+  antrenman) beyan edilmiş süre-tavanı + tavan aşımında kibar-iptal; MERIDIAN_SEARCH_MAX_MIN
+  yalnız hermes aramasını kapsıyor (yanlış genelleme düzeltildi).
 - **REDDEDİLDİ (bizim gerçekte):** Litestream/SQLite-PRAGMA/DuckLake (Meridian'da SQLite YOK —
   state dosya+Redis; el kitabının varsayımı yanlış) · Pandera (karantina-v2 + bars_integrity zaten
   ölçülmüş özel koruma) · GE/Temporal/K8s/SBOM/fail2ban/staging (el kitabı da reddediyor) ·
