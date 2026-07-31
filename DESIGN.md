@@ -523,6 +523,17 @@ decorative chrome around a number. Position on a common scale is the most accura
 encoding (Cleveland & McGill 1984; Heer & Bostock 2010) and a radial meter throws that away in
 exchange for pixels that carry no data.
 
+*This rule was written while the interface still contained two of them.* A 92×92 `_donut` reported
+model deflation and a 92×92 `_ring` reported the EOD refetch counter; both were replaced by bullet
+graphs on 2026-08-01. Few is explicit that this is what the form is for — the bullet graph was
+developed to replace the meters and gauges dashboards reach for by habit.
+
+**The ban is on radial encoding, not on vertical bars.** The warm-up thermometer stays: it is
+already linear, merely rotated. Deleting it would have been obedience to the word of the rule
+against its reason. Cleveland & McGill's ranking is also **not universal** — McColeman et al. found
+it task-dependent — so the ban rests on the stronger, simpler argument: an arc spends most of its
+pixels on no data, and two arcs cannot be compared the way two bars on one axis can.
+
 **The Bullet-Graph Rule.** Where a measure needs context — a target, a threshold, a healthy band —
 draw Stephen Few's bullet graph, to spec: a text label; a single linear quantitative scale; the
 featured measure as a visually prominent bar; one or two comparative measures as a short line
@@ -530,6 +541,20 @@ running **perpendicular** to the bar; and **two to five** qualitative ranges, id
 Encode those ranges as **distinct intensities of a single hue**, never as distinct hues — distinct
 hues are exactly what a colour-blind reader cannot separate. A bullet graph replaces a gauge; it
 does not sit next to one.
+
+**The Absent-Comparison Rule.** The perpendicular line is drawn only where a comparison value
+genuinely exists. The EOD patience counter has one — `refetch_max` is the count at which the system
+gives up — so it gets the line. Model deflation has no defined target, so it gets none. Drawing a
+reference line at a made-up number would state a threshold the system does not have, and it would
+look exactly like the one that is real.
+
+**The Empty-Bar Rule.** A bar of zero length means *measured, and it came out zero*. When there is
+no measurement, no bar is drawn at all: the axis and its ranges stay (the scale belongs to the
+metric, not to the data), the readout is an em dash, and the words **ölçüm yok** appear beneath.
+This is inherited from the donut it replaced, which drew an empty ring rather than a fake angle.
+Ranges must therefore never be filled in as a background that could be mistaken for a value.
+Where a call site previously wrote `attempts || 0`, it now passes `null` — `0/8` and *no reading*
+are different claims and the interface must not merge them.
 
 ## Components
 
@@ -554,6 +579,24 @@ Every component below is identical in geometry across the two themes. Only the t
   accent tint, never the red used by Sign out, because changing theme reports no loss.
 - Only the button re-renders on switch, not the whole rail: a full redraw drops focus and a
   keyboard operator falls off the control they just used.
+
+### Bullet Graph (replaces the two radial gauges)
+- **Fixed geometry: a 150px axis and a 54px readout, 212px in total.** Both are fixed on purpose.
+  Two bullets with different axis lengths cannot be compared by length, which is the only advantage
+  the form has over the donut it replaced. The readout box is fixed because the first build sized
+  it to content and `%42,0` was clipped to `%42,`.
+- **Label above, bare.** Mono, 10px, uppercase, `--label-track`. Not the boxed `.slabel` section
+  chip — that gave every bullet the outline of a control and invited a click that does nothing.
+- **Ranges:** two to five, ideally three, drawn as an intensity ladder over `--card-2` → `--line`
+  → `--line-2` → `--tx3`. `--raise` is excluded: it measures 1.09 against a card and an invisible
+  first range would make the range count a claim on paper only. **No separate night ladder exists** —
+  the tokens invert, so the ladder runs light-to-dark in daylight and dark-to-light at night by
+  itself.
+- **The featured bar** is 6px inside a 12px range track, so the measure reads as distinct from the
+  qualitative bands rather than as another band.
+- **Colour follows state, not decoration:** neutral `--accent` while comfortable, `--amber` past
+  60% of the axis, `--red` once the give-up threshold is reached. This is the alarm channel, not
+  the money channel — see *The Money Rule*.
 
 ### Buttons
 - **Shape:** gently curved (10px), 44px minimum height for every interactive control.

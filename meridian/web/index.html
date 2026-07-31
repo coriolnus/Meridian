@@ -794,8 +794,29 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .gc.p{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
 .gc.f{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
 .gc.arrow{background:none;color:var(--tx2);padding:0 1px;box-shadow:none}
-/* dairesel gauge (deflasyon + sabır) — hafif SVG, harici kütüphane yok */
+/* ÖLÇÜ ŞERİDİ — eskiden burada iki dairesel gauge vardı (deflasyon + sabır); ikisi de bullet
+   graph'a çevrildi (2026-08-01). Gerekçe app.js'teki _bullet başlığında; özet: radyal kodlama
+   niceliği açı/alanla taşır, lineer eksen konum/uzunlukla — ve halkanın pikselleri veri
+   taşımıyordu. Sarmalayıcı adı KORUNDU: app.js sınıfı isimle üretiyor. */
 .gaugewrap{display:flex;align-items:center;gap:var(--s4)}
+
+/* bullet graph — Few 2006/2013. 150px eksen + 54px okuma = 212px, İKİSİ DE SABİT: aynı karttaki
+   iki bullet farklı eksene sahip olursa uzunluklar karşılaştırılamaz ve bileşenin tek üstünlüğü
+   kaybolur. Okuma kutusu da sabit çünkü ilk denemede taşıp kırpılıyordu ("%42," diye kesildi). */
+.bullet{flex:none;width:212px}
+.bl-row{display:flex;align-items:center;gap:var(--s2);margin-top:5px}
+.bullet svg{display:block;flex:none}
+/* Etiket — Label-Above kuralı: mono, 10px, büyük harf, izli. `.slabel` KULLANILMAZ; o kutulu
+   bir bölüm çipidir ve her bullet'ı tıklanabilir bir kontrol gibi gösteriyordu. */
+.bl-lab{font-family:var(--mono);font-size:var(--label-size);font-weight:700;
+  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);line-height:1.2}
+/* Okuma barın YANINDA, ÜSTÜNDE değil: bar 6px ve sayı 13px — üst üste konsalar sayı barı
+   ezerdi. Sabit kutuda sağa hizalı ve tabular: iki bullet alt alta gelince rakamlar sütun olur. */
+.bl-val{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;
+  text-align:right;flex:none;width:54px}
+/* "ölçüm yok" bar YOKKEN çıkar ve barın yerini ALMAZ — sıfır uzunlukta bir bar "ölçtük, sıfır"
+   demektir; ölçülmemiş bir şey için bu bir uydurmadır. Yazı, boşluğun kendisini adlandırır. */
+.bl-yok{font-size:11px;color:var(--tx2);margin-top:3px;font-style:normal}
 /* .cap biçimi İKİ göstergede de aynı olmalı. Kural yalnız `.gaugewrap .cap` altında yazılıydı, bu
    yüzden termometrenin başlığı gövde varsayılanına düşüyordu (16px/--tx ↔ 12px/--tx2) ve aynı
    şeridin iki kartı farklı yazı tipi ve renkte görünüyordu (2026-07-22). */

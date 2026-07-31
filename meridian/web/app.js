@@ -1233,30 +1233,83 @@ function _bellSVG(h) {
     <text x="2" y="${H + 14}" fill="var(--tx2)" font-size="10">P(ΔS>0)=${h.p} · gerekli ≥${h.p_required} (0.80+K cezası) → ${h.p >= h.p_required ? "GEÇER ✓" : "GEÇMEZ ✗"}</text>
   </svg>`;
 }
-function _donut(pct, label, color) {
-  // dairesel gösterge — hafif SVG; pct=null → boş halka + "veri yok" (uydurma açı çizilmez)
-  const R = 34, C = 2 * Math.PI * R, W2 = 92;
-  const p = pct == null ? 0 : Math.max(0, Math.min(100, pct));
-  return `<svg viewBox="0 0 ${W2} ${W2}" style="width:${W2}px;flex:none" role="img"
-    aria-label="${esc(label)}: ${pct == null ? "veri yok" : trn(p, 0) + "%"}">
-    <circle cx="46" cy="46" r="${R}" fill="none" stroke="var(--raise)" stroke-width="9"/>
-    ${pct == null ? "" : `<circle cx="46" cy="46" r="${R}" fill="none" stroke="var(--${color || "accent"})" stroke-width="9"
-      stroke-dasharray="${(p / 100 * C).toFixed(1)} ${C.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 46 46)"/>`}
-    <text x="46" y="43" text-anchor="middle" fill="var(--tx)" font-size="14" font-weight="600">${pct == null ? "—" : trn(p, 0) + "%"}</text>
-    <text x="46" y="58" text-anchor="middle" fill="var(--tx2)" font-size="10">${esc(label)}</text>
-  </svg>`;
-}
-function _ring(step, total, label, danger) {
-  const R = 34, C = 2 * Math.PI * R;
-  const p = total ? step / total : 0;
-  return `<svg viewBox="0 0 92 92" style="width:92px;flex:none" role="img"
-    aria-label="${esc(label)}: ${step} / ${total}">
-    <circle cx="46" cy="46" r="${R}" fill="none" stroke="var(--raise)" stroke-width="9"/>
-    <circle cx="46" cy="46" r="${R}" fill="none" stroke="var(--${danger ? "red" : (p > 0.6 ? "amber" : "accent")})" stroke-width="9"
-      stroke-dasharray="${(p * C).toFixed(1)} ${C.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 46 46)"/>
-    <text x="46" y="43" text-anchor="middle" fill="var(--tx)" font-size="14" font-weight="600">${step}/${total}</text>
-    <text x="46" y="58" text-anchor="middle" fill="var(--tx2)" font-size="10">${esc(label)}</text>
-  </svg>`;
+// ---- BULLET GRAPH — _donut ve _ring'in YERİNE (2026-08-01) ------------------------------------
+// NEDEN İKİ HALKA KALDIRILDI: Few'nun bullet graph spesifikasyonu (Perceptual Edge 2006,
+// rev. 2013) tam olarak bunun için yazıldı — "gösterge panolarında sıkça kullanılan metre ve
+// kadranların YERİNİ almak üzere geliştirildi". Radyal kodlama niceliği AÇI ve ALAN ile taşır;
+// Cleveland & McGill'in doğruluk sıralamasında bu, ortak bir eksen üzerindeki KONUM ve UZUNLUĞUN
+// altındadır. Üstelik 92×92'lik bir halkanın çoğu pikseli hiçbir veri taşımıyordu.
+//
+// NÜANS — ÜÇ GÖSTERGE AYNI DEĞİLDİ, ÜÇÜ BİRDEN KALDIRILMADI: `.thermo` termometresi zaten
+// LİNEER (dikey bir tüp). Yasak radyal kodlamayadır, dikey bara değil; termometre KALDI ve
+// DESIGN.md'de izin verilen iki lineer metre formundan biri olarak yazıya geçti.
+//
+// SIRALAMA EVRENSEL DEĞİL: McColeman ve ark. Cleveland/McGill sıralamasının göreve bağlı
+// olduğunu gösterdi. Bu yüzden gerekçe yalnız sıralamaya dayanmıyor — asıl dayanak Tufte'nin
+// data-ink argümanı ve tek eksende KARŞILAŞTIRILABİLİRLİK.
+//
+// FEW'NUN BEŞ BİLEŞENİ, HEPSİ BURADA:
+//   1. metin etiketi                      → `etiket`
+//   2. tek lineer nicel eksen             → 0..`max`
+//   3. belirgin çubuk (ölçülen değer)     → `deger`
+//   4. DİK karşılaştırma çizgisi          → `hedef` (yoksa çizilmez, uydurulmaz)
+//   5. 2–5 nitel aralık (ideal 3)         → `bantlar`
+// Aralıklar TEK HUE'NUN FARKLI YOĞUNLUKLARI ile kodlanır, farklı hue'larla DEĞİL: farklı hue,
+// renk körü bir okuyucunun ayıramadığı tam olarak o şeydir. Burada hue nötr sıcak gridir.
+//
+// BOŞ HÂL DÜRÜSTLÜĞÜ KORUNDU (bu, _donut'tan devralınan sözleşmedir): `deger == null` ise
+// SIFIR BARI ÇİZİLMEZ. Eksen ve bantlar durur (ölçek metriğin kendisinden gelir, veriden değil),
+// bar yoktur ve okuma "ölçüm yok" der. Sıfır uzunlukta bir bar "ölçtük, sıfır çıktı" demektir —
+// ölçülmemiş bir şey için bu bir uydurmadır.
+function _bullet(o) {
+  // 150px EKSEN + 54px OKUMA = 212px. Eksen SABİT: aynı karttaki iki bullet farklı eksen
+  // uzunluğuna sahip olursa uzunluklar karşılaştırılamaz ve bileşenin tek üstünlüğü gider.
+  // Okuma kutusu da sabit — ilk denemede eksen 208px'ti ve okuma taşıp kırpılıyordu ("%42,").
+  const W = 150, H = 18, IZ = 12, BAR = 6;          // iz: bant yüksekliği, bar: ölçüm yüksekliği
+  const max = Number(o.max) > 0 ? Number(o.max) : 100;
+  const olculdu = o.deger != null && Number.isFinite(Number(o.deger));
+  const v = olculdu ? Math.max(0, Math.min(max, Number(o.deger))) : null;
+  const X = n => (Math.max(0, Math.min(max, n)) / max) * W;
+
+  // Nitel aralıklar — kesir sınırları, açıktan koyuya. Üç bant Few'nun önerdiği idealdir.
+  const bantlar = (o.bantlar && o.bantlar.length ? o.bantlar : [0.6, 0.85, 1]).slice(0, 5);
+  // Yoğunluk merdiveni — TEK hue (sıcak nötr), artan koyuluk. Jetonlar temayla döndüğü için
+  // gece zemininde merdiven kendiliğinden ters yöne (artan açıklık) çalışır; ayrı bir gece
+  // listesi TUTULMUYOR. --raise listede YOK: kart üstünde neredeyse görünmez (1.09) ve ilk
+  // bant görünmezse "2-5 aralık" iddiası kağıt üstünde kalırdı.
+  const YOG = ["var(--card-2)", "var(--line)", "var(--line-2)", "var(--tx3)", "var(--tx2)"];
+  let onceki = 0;
+  const iz = bantlar.map((b, i) => {
+    const x0 = onceki * W, x1 = Math.min(1, b) * W;
+    onceki = b;
+    return `<rect x="${x0.toFixed(1)}" y="${(H - IZ) / 2}" width="${Math.max(0, x1 - x0).toFixed(1)}"
+      height="${IZ}" fill="${YOG[i] || YOG[YOG.length - 1]}"/>`;
+  }).join("");
+
+  const bar = olculdu ? `<rect x="0" y="${(H - BAR) / 2}" width="${X(v).toFixed(1)}"
+      height="${BAR}" fill="var(--${o.renk || "accent"})" rx="1"/>` : "";
+
+  // Karşılaştırma ölçüsü: eksene DİK kısa çizgi. Few'nun spesifikasyonunda bu, barın kendisinden
+  // ayrı okunmalı — bu yüzden iz yüksekliğini taşar.
+  const hedef = (o.hedef != null && Number.isFinite(Number(o.hedef)))
+    ? `<line x1="${X(o.hedef).toFixed(1)}" y1="1" x2="${X(o.hedef).toFixed(1)}" y2="${H - 1}"
+        stroke="var(--tx)" stroke-width="2"/>` : "";
+
+  const okuma = olculdu ? (o.metin != null ? o.metin : trn(v, 0)) : "—";
+  const sesli = `${o.etiket}: ${olculdu ? okuma : "ölçüm yok"}`
+    + (o.hedef != null ? `, karşılaştırma ${o.hedef}` : "");
+
+  // Etiket `.slabel` DEĞİL: o sınıf kutulu bir bölüm çipidir (kenar + tint dolgu) ve her
+  // bullet'ı bir kontrol gibi gösteriyordu. Burada gereken çıplak mikro-etiket.
+  return `<div class="bullet">
+    <p class="bl-lab">${esc(o.etiket)}</p>
+    <div class="bl-row">
+      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(sesli)}"
+        preserveAspectRatio="none">${iz}${bar}${hedef}</svg>
+      <b class="bl-val mono-num${olculdu ? "" : " mut"}">${esc(okuma)}</b>
+    </div>
+    ${olculdu ? "" : `<p class="bl-yok">ölçüm yok</p>`}
+  </div>`;
 }
 // ---- IC MİNİ TRENDİ (kütüphanesiz, 120×28) ------------------------------------------------------
 // Tek bir IC sayısı "yükseliyor mu?" sorusunu CEVAPLAYAMAZ; score_calibration.json her turda üzerine
@@ -1709,7 +1762,14 @@ RENDER.operasyon = async () => {
   const s3 = `<div class="card rise"><h2 class="t">Bölüm 3 · MLOps & Hermes</h2>
     <div class="g2">
       <div>
-        <div class="gaugewrap">${_donut(ml.deflate ? ml.deflate.avg_deflation_pct : null, "deflasyon", "amber")}
+        <div class="gaugewrap">${_bullet({
+          deger: ml.deflate ? ml.deflate.avg_deflation_pct : null,
+          max: 100, etiket: "deflasyon", renk: "amber",
+          metin: ml.deflate ? "%" + trn(ml.deflate.avg_deflation_pct, 1) : null,
+          // HEDEF YOK ve UYDURULMUYOR: deflasyonun "olması gereken" bir değeri tanımlı değil.
+          // Karşılaştırma çizgisi çizmek, var olmayan bir eşiği varmış gibi göstermek olurdu.
+          // Bantlar yalnız ölçeği okunur kılar (üçte bir dilimler), bir hüküm taşımaz.
+          bantlar: [1 / 3, 2 / 3, 1]})}
           <span class="cap"><b>Model aşırı-güven sayacı</b><br>${ml.deflate
             ? `arama iyimserliğinin ort. %${trn(ml.deflate.avg_deflation_pct, 1)}'i onay yürüyüşünde törpülendi (${ml.deflate.n} ship)`
             : (() => {
@@ -2562,7 +2622,21 @@ RENDER.operasyon = async () => {
   const quar = (pl.quarantine || []).map(t => _chip(t, "t-no")).join(" ");
   const s4 = `<div class="card rise"><h2 class="t">Bölüm 4 · Veri hattı & karantina</h2>
     <div class="gaugewrap">
-      ${_ring(pl.refetch_attempts || 0, pl.refetch_max || 8, "EOD sabır", (pl.refetch_attempts || 0) >= (pl.refetch_max || 8))}
+      ${(() => {
+        // Burada karşılaştırma ölçüsü GERÇEKTEN var: `refetch_max` bir eşiktir — o sayıda
+        // denemede pes edilir. Bu yüzden dik çizgi çizilir. Halkada bu eşik hiç görünmüyordu,
+        // yalnız "3/8" metninden çıkarılabiliyordu.
+        // `|| 0` KULLANILMIYOR: alan hiç gelmediğinde "0/8" yazmak "sıfır deneme yapıldı"
+        // demektir, oysa bilinen tek şey ölçümün ELDE OLMADIĞIDIR. Sıfır bir ölçümdür,
+        // yokluk değil. Eski halka bu ikisini birbirine karıştırıyordu.
+        const mx = pl.refetch_max || 8;
+        const n = Number.isFinite(Number(pl.refetch_attempts)) ? Number(pl.refetch_attempts) : null;
+        return _bullet({
+          deger: n, max: mx, hedef: mx, etiket: "EOD sabır",
+          metin: n == null ? null : `${n}/${mx}`,
+          renk: n == null ? "accent" : (n >= mx ? "red" : (n / mx > 0.6 ? "amber" : "accent")),
+          bantlar: [0.6, 1]});
+      })()}
       <span class="cap"><b>8 adımlı sabır sayacı</b><br>EOD yayını gecikirse tazeleme bayrağı sıcak tutulur; ${pl.refetch_max || 8}. denemede pes edilir ve LOGLANIR.<br>son başarılı tazeleme: <b>${esc(pl.last_refetch_session || "—")}</b> · kazanç takvimi ${pl.earnings_attempts || 0}/5 deneme</span></div>
     <div class="srow" style="margin-top:12px"><span>SPY çapraz-doğrulama</span><b class="${xcCls}">${esc(xc.status || "—")}${xc.divergence != null ? ` · sapma ${xc.divergence}` : ""}${xc.status === "cache_stale" ? " (önbellek bayat — karşılaştırma yapılmadı)" : ""}</b></div>
     <div class="srow"><span>Atomik yazım (IO)</span><b>${io.p95_ms != null ? `p50 ${trn(io.p50_ms, 1)} · p95 ${trn(io.p95_ms, 1)} ms` : (io.writes ? io.writes + " yazım (p95 için ≥20)" : "—")}${io.p95_ms > 50 ? ' · <span class="neg">DARBOĞAZ</span>' : ""}</b></div>
