@@ -1,0 +1,1484 @@
+{
+ "olcum_kimligi": {
+  "ajan": "S1 / Rol 2 — retrospektif katkı ölçümü",
+  "tarih": "2026-07-31",
+  "sozlesme": [
+   "research/cards/EDG-2026-001-52wh-proximity.yaml",
+   "research/cards/EDG-2026-002-volume-shock.yaml"
+  ],
+  "kip": "SALT-ÖLÇÜM — repo/state'e YAZILMADI; her şey scratchpad/s1_retro/sandbox kopyasında",
+  "bar_tabani": "TAKVİM-KAPILI temiz barlar (data.sanitize_bars, XNYS)",
+  "kart_dosyalari_guncellenmedi": true,
+  "canlı_esik_degisikligi": "YOK — hiçbir eşik ölçümden sonra değiştirilmedi"
+ },
+ "bt2_hasar_tespiti": {
+  "soru": "hayalet seanslar component_ic tablosunu ne kadar kirletmişti?",
+  "yontem": "AYNI kod iki kez: (a) 2026-07-30 00:10'da üretilmiş mevcut state/component_ic.json (kapı ÖNCESİ), (b) sandbox'ta takvim-kapılı yeniden üretim. Ek olarak kapı açık/kapalı A/B (dirty_ab.json) uygulama farkını sabitler.",
+  "dusen_satirlar": {
+   "toplam": 431,
+   "2025-05-26_memorial_day": 251,
+   "2018-11-22_thanksgiving": 179,
+   "karantina_duzeltilmemis": {
+    "2012-01-20": 1,
+    "2013-07-15": 1,
+    "2013-12-18": 1
+   }
+  },
+  "orneklem_degismedi": {
+   "gercek": 95,
+   "cf": 2106,
+   "havuz_tekil": 1952,
+   "not": "hiçbir GÖZLEM satırı hayalet tarihte değil (doğrulandı: 0/5 tarih)"
+  },
+  "ic_kaymasi": {
+   "hucre_sayisi": 63,
+   "max_mutlak_delta": 0.0129,
+   "ortalama": 0.00398,
+   "medyan": 0.0037
+  },
+  "anlamlilik_donmeleri": [
+   {
+    "katman": "cf",
+    "bilesen": "rs",
+    "ufuk": "20",
+    "ic_kirli": -0.0338,
+    "ic_temiz": -0.0467,
+    "delta": -0.0129,
+    "anlamli_kirli": false,
+    "anlamli_temiz": true
+   },
+   {
+    "katman": "cf",
+    "bilesen": "tight",
+    "ufuk": "20",
+    "ic_kirli": 0.0481,
+    "ic_temiz": 0.0418,
+    "delta": -0.0063,
+    "anlamli_kirli": true,
+    "anlamli_temiz": false
+   },
+   {
+    "katman": "havuz",
+    "bilesen": "rs",
+    "ufuk": "10",
+    "ic_kirli": -0.0435,
+    "ic_temiz": -0.0552,
+    "delta": -0.0117,
+    "anlamli_kirli": false,
+    "anlamli_temiz": true
+   },
+   {
+    "katman": "havuz",
+    "bilesen": "rs",
+    "ufuk": "20",
+    "ic_kirli": -0.0328,
+    "ic_temiz": -0.0451,
+    "delta": -0.0123,
+    "anlamli_kirli": false,
+    "anlamli_temiz": true
+   },
+   {
+    "katman": "havuz",
+    "bilesen": "tight",
+    "ufuk": "20",
+    "ic_kirli": 0.05,
+    "ic_temiz": 0.0442,
+    "delta": -0.0058,
+    "anlamli_kirli": true,
+    "anlamli_temiz": false
+   }
+  ],
+  "anlamli_hucre_sayimi": {
+   "kirli": {
+    "gercek": 2,
+    "cf": 8,
+    "havuz": 6
+   },
+   "temiz": {
+    "gercek": 2,
+    "cf": 8,
+    "havuz": 7
+   }
+  },
+  "manset_degismedi": {
+   "kirli": {
+    "bilesen": "rvol20",
+    "horizon": 5,
+    "ic": 0.2336,
+    "n": 95,
+    "ci": {
+     "lo": 0.0336,
+     "hi": 0.4155,
+     "seviye": 0.95
+    },
+    "anlamli": true
+   },
+   "temiz": {
+    "bilesen": "rvol20",
+    "horizon": 5,
+    "ic": 0.2341,
+    "n": 95,
+    "ci": {
+     "lo": 0.0342,
+     "hi": 0.416,
+     "seviye": 0.95
+    },
+    "anlamli": true
+   }
+  },
+  "hukum": "HASAR GERÇEK AMA BU POPÜLASYONDA KÜÇÜK: |ΔIC| medyanı 0.0037, en büyüğü 0.0129; manşet bileşen (rvol20 @5) ve katman başına anlamlı hücre sayısı pratikte aynı. ANCAK 63 hücrenin 5'i ANLAMLILIK HÜKMÜNÜ değiştirdi (aralık kenarındaki hücreler) — yani zarar ortalamada değil, KARAR SINIRINDA. KAPSAM UYARISI: gözlem penceresi 2022-2026 ve içindeki tek hayalet tarih 2025-05-26; 2018-11-22 bu tabloya HİÇ değmiyor. 2018'i kapsayan artefaktlar (uzun geçmişli R-tabloları, eşik eğrileri) BU ölçümle aklanmış SAYILMAZ — ayrı yeniden üretim ister.",
+  "etki_kanali": "hayalet bar gözlemin KENDİSİ değil; kirlilik (a) yuvarlanan pencerelere (SMA20 / 252-gün zirvesi) ve (b) hayalet barı AŞAN ileri-getiri penceresine sızıyor. 2025-05-26'nın ±30 günü içinde yalnız 43 gözlem var → küçük kayma."
+ },
+ "edg_2026_001_52wh": {
+  "kart_basari_olcutu": "cf-katmanlı IC: CI 0'ı dışlar VE |IC|>=0.03 (large-cap alt-örnek)",
+  "altornek": {
+   "tanim": "ADV(50g, dolar hacmi) o TARİHTE evren medyanının üstünde (nokta-zamanlı, nedensel)",
+   "n": {
+    "gercek": 47,
+    "cf": 1184,
+    "havuz": 1086
+   },
+   "n_gun": {
+    "gercek": 46,
+    "cf": 544,
+    "havuz": 545
+   },
+   "pay_pct": {
+    "gercek": 49.5,
+    "cf": 56.2,
+    "havuz": 55.6
+   }
+  },
+  "ic_largecap": {
+   "gercek": {
+    "5": {
+     "ic": 0.0105,
+     "n": 47,
+     "n_gun": 46,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.2775,
+      "hi": 0.2968
+     },
+     "ci_boot": {
+      "lo": -0.2668,
+      "hi": 0.289,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0284,
+     "n": 47,
+     "n_gun": 46,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.3131,
+      "hi": 0.2609
+     },
+     "ci_boot": {
+      "lo": -0.3114,
+      "hi": 0.2974,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.1038,
+     "n": 47,
+     "n_gun": 46,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.189,
+      "hi": 0.3797
+     },
+     "ci_boot": {
+      "lo": -0.1788,
+      "hi": 0.3734,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   },
+   "cf": {
+    "5": {
+     "ic": -0.0215,
+     "n": 1182,
+     "n_gun": 543,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0784,
+      "hi": 0.0355
+     },
+     "ci_boot": {
+      "lo": -0.0881,
+      "hi": 0.0455,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0158,
+     "n": 1182,
+     "n_gun": 543,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0727,
+      "hi": 0.0413
+     },
+     "ci_boot": {
+      "lo": -0.0849,
+      "hi": 0.0565,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.0374,
+     "n": 1179,
+     "n_gun": 541,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0198,
+      "hi": 0.0943
+     },
+     "ci_boot": {
+      "lo": -0.0304,
+      "hi": 0.1004,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   },
+   "havuz": {
+    "5": {
+     "ic": -0.0213,
+     "n": 1084,
+     "n_gun": 544,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0808,
+      "hi": 0.0382
+     },
+     "ci_boot": {
+      "lo": -0.0893,
+      "hi": 0.0458,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0204,
+     "n": 1084,
+     "n_gun": 544,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0799,
+      "hi": 0.0392
+     },
+     "ci_boot": {
+      "lo": -0.0882,
+      "hi": 0.0464,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.0276,
+     "n": 1082,
+     "n_gun": 542,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0321,
+      "hi": 0.087
+     },
+     "ci_boot": {
+      "lo": -0.0373,
+      "hi": 0.0953,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   }
+  },
+  "baglam_tam_evren": {
+   "gercek": {
+    "5": {
+     "ic": -0.0535,
+     "n": 95,
+     "n_gun": 93,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.2523,
+      "hi": 0.1497
+     },
+     "ci_boot": {
+      "lo": -0.2564,
+      "hi": 0.1554,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": 0.066,
+     "n": 94,
+     "n_gun": 92,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.1385,
+      "hi": 0.2651
+     },
+     "ci_boot": {
+      "lo": -0.1325,
+      "hi": 0.2725,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.0458,
+     "n": 93,
+     "n_gun": 91,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.1594,
+      "hi": 0.2472
+     },
+     "ci_boot": {
+      "lo": -0.1679,
+      "hi": 0.2473,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   },
+   "cf": {
+    "5": {
+     "ic": -0.0181,
+     "n": 2102,
+     "n_gun": 742,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0608,
+      "hi": 0.0247
+     },
+     "ci_boot": {
+      "lo": -0.0704,
+      "hi": 0.0377,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0144,
+     "n": 2100,
+     "n_gun": 740,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0572,
+      "hi": 0.0284
+     },
+     "ci_boot": {
+      "lo": -0.0677,
+      "hi": 0.0407,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.0125,
+     "n": 2094,
+     "n_gun": 736,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0304,
+      "hi": 0.0553
+     },
+     "ci_boot": {
+      "lo": -0.042,
+      "hi": 0.0639,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   },
+   "havuz": {
+    "5": {
+     "ic": -0.0112,
+     "n": 1948,
+     "n_gun": 743,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0556,
+      "hi": 0.0332
+     },
+     "ci_boot": {
+      "lo": -0.0655,
+      "hi": 0.0404,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0129,
+     "n": 1946,
+     "n_gun": 741,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0573,
+      "hi": 0.0316
+     },
+     "ci_boot": {
+      "lo": -0.0626,
+      "hi": 0.0411,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": 0.0111,
+     "n": 1941,
+     "n_gun": 737,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0334,
+      "hi": 0.0556
+     },
+     "ci_boot": {
+      "lo": -0.0401,
+      "hi": 0.0674,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   }
+  },
+  "baglam_kucuk_yari": {
+   "cf": {
+    "5": {
+     "ic": -0.0116,
+     "n": 920,
+     "n_gun": 485,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0761,
+      "hi": 0.0531
+     },
+     "ci_boot": {
+      "lo": -0.0911,
+      "hi": 0.0674,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "10": {
+     "ic": -0.0127,
+     "n": 918,
+     "n_gun": 483,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0774,
+      "hi": 0.052
+     },
+     "ci_boot": {
+      "lo": -0.0896,
+      "hi": 0.0624,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    },
+    "20": {
+     "ic": -0.0219,
+     "n": 915,
+     "n_gun": 480,
+     "neden": null,
+     "ci_fisher": {
+      "lo": -0.0865,
+      "hi": 0.043
+     },
+     "ci_boot": {
+      "lo": -0.1019,
+      "hi": 0.0558,
+      "b_ok": 2000
+     },
+     "anlamli": false,
+     "anlamli_fisher": false
+    }
+   }
+  },
+  "cift_sayim_kontrolu": {
+   "gercek": {
+    "rho_vcp_skor": 0.1655,
+    "n": 47,
+    "rho_bilesenler": {
+     "s_prox": 0.0889,
+     "rs": 0.2714,
+     "s_tight": 0.4153,
+     "s_vol": -0.1297
+    },
+    "kart_esigi": 0.8,
+    "kart_kill_tetikledi": false
+   },
+   "cf": {
+    "rho_vcp_skor": -0.0355,
+    "n": 1184,
+    "rho_bilesenler": {
+     "s_prox": -0.2817,
+     "rs": 0.0755,
+     "s_tight": 0.4734,
+     "s_vol": -0.0559
+    },
+    "kart_esigi": 0.8,
+    "kart_kill_tetikledi": false
+   },
+   "havuz": {
+    "rho_vcp_skor": -0.0512,
+    "n": 1086,
+    "rho_bilesenler": {
+     "s_prox": -0.3015,
+     "rs": 0.0744,
+     "s_tight": 0.466,
+     "s_vol": -0.0422
+    },
+    "kart_esigi": 0.8,
+    "kart_kill_tetikledi": false
+   }
+  },
+  "dagilim_sinyal_populasyonu": {
+   "gercek": {
+    "min": 0.6504,
+    "p25": 0.9689,
+    "medyan": 0.9868,
+    "p75": 0.9928,
+    "max": 0.9998,
+    "pay_0.95_ustu_pct": 85.1
+   },
+   "cf": {
+    "min": 0.5081,
+    "p25": 0.9555,
+    "medyan": 0.9855,
+    "p75": 0.9948,
+    "max": 1.0,
+    "pay_0.95_ustu_pct": 76.8
+   },
+   "havuz": {
+    "min": 0.5081,
+    "p25": 0.9536,
+    "medyan": 0.9852,
+    "p75": 0.9949,
+    "max": 1.0,
+    "pay_0.95_ustu_pct": 76.2
+   }
+  },
+  "tani_panel": {
+   "tam_gecmis": {
+    "5": {
+     "ort_gunluk_IC": -0.0062,
+     "nw_se": 0.00622,
+     "nw_t": -1.0,
+     "anlamli_nw": false,
+     "n_gun": 5422,
+     "ort_kesit_genisligi": 114,
+     "n_gozlem_yaklasik": 619721,
+     "ci95_nw": {
+      "lo": -0.0184,
+      "hi": 0.006
+     }
+    },
+    "10": {
+     "ort_gunluk_IC": -0.0103,
+     "nw_se": 0.00855,
+     "nw_t": -1.2,
+     "anlamli_nw": false,
+     "n_gun": 5417,
+     "ort_kesit_genisligi": 114,
+     "n_gozlem_yaklasik": 619086,
+     "ci95_nw": {
+      "lo": -0.027,
+      "hi": 0.0065
+     }
+    },
+    "20": {
+     "ort_gunluk_IC": -0.0149,
+     "nw_se": 0.01189,
+     "nw_t": -1.25,
+     "anlamli_nw": false,
+     "n_gun": 5407,
+     "ort_kesit_genisligi": 114,
+     "n_gozlem_yaklasik": 617814,
+     "ci95_nw": {
+      "lo": -0.0382,
+      "hi": 0.0085
+     }
+    }
+   },
+   "cf_penceresi": {
+    "5": {
+     "ort_gunluk_IC": 0.0042,
+     "nw_se": 0.01348,
+     "nw_t": 0.31,
+     "anlamli_nw": false,
+     "n_gun": 1141,
+     "ort_kesit_genisligi": 124,
+     "n_gozlem_yaklasik": 142358,
+     "ci95_nw": {
+      "lo": -0.0222,
+      "hi": 0.0306
+     }
+    },
+    "10": {
+     "ort_gunluk_IC": 0.0036,
+     "nw_se": 0.01811,
+     "nw_t": 0.2,
+     "anlamli_nw": false,
+     "n_gun": 1136,
+     "ort_kesit_genisligi": 124,
+     "n_gozlem_yaklasik": 141733,
+     "ci95_nw": {
+      "lo": -0.0319,
+      "hi": 0.0391
+     }
+    },
+    "20": {
+     "ort_gunluk_IC": 0.0096,
+     "nw_se": 0.02418,
+     "nw_t": 0.4,
+     "anlamli_nw": false,
+     "n_gun": 1126,
+     "ort_kesit_genisligi": 124,
+     "n_gozlem_yaklasik": 140481,
+     "ci95_nw": {
+      "lo": -0.0378,
+      "hi": 0.057
+     }
+    }
+   }
+  },
+  "tani_panel_tum_evren": {
+   "cf_penceresi": {
+    "5": {
+     "ort_gunluk_IC": 0.0023,
+     "nw_se": 0.0127,
+     "nw_t": 0.18,
+     "anlamli_nw": false,
+     "n_gun": 1141,
+     "ort_kesit_genisligi": 249,
+     "n_gozlem_yaklasik": 284195,
+     "ci95_nw": {
+      "lo": -0.0226,
+      "hi": 0.0272
+     }
+    },
+    "10": {
+     "ort_gunluk_IC": 0.0017,
+     "nw_se": 0.01664,
+     "nw_t": 0.1,
+     "anlamli_nw": false,
+     "n_gun": 1136,
+     "ort_kesit_genisligi": 249,
+     "n_gozlem_yaklasik": 282945,
+     "ci95_nw": {
+      "lo": -0.031,
+      "hi": 0.0343
+     }
+    },
+    "20": {
+     "ort_gunluk_IC": 0.0053,
+     "nw_se": 0.0217,
+     "nw_t": 0.24,
+     "anlamli_nw": false,
+     "n_gun": 1126,
+     "ort_kesit_genisligi": 249,
+     "n_gozlem_yaklasik": 280445,
+     "ci95_nw": {
+      "lo": -0.0373,
+      "hi": 0.0478
+     }
+    }
+   }
+  },
+  "aralik_kisiti": {
+   "panel_feat_52wh": {
+    "n": 284652,
+    "p25": 0.7655,
+    "medyan": 0.8698,
+    "p75": 0.9424,
+    "pay_esik_ustu_pct": null,
+    "pay_0.95_ustu_pct": 22.0
+   },
+   "panel_volpct50": {
+    "n": 285056,
+    "p25": 26.0,
+    "medyan": 52.0,
+    "p75": 78.0,
+    "pay_esik_ustu_pct": null,
+    "pay_80_ustu_pct": 23.5
+   },
+   "not": "sinyal popülasyonundaki karşılıkları sonuc.json/edg_001.dagilim"
+  },
+  "kriter_degerlendirmesi": {
+   "en_iyi_hucre_cf_largecap": {
+    "ufuk": 20,
+    "ic": 0.0374,
+    "ci_boot": {
+     "lo": -0.0304,
+     "hi": 0.1004
+    },
+    "ic_esigi_gecti": true,
+    "ci_esigi_gecti": false
+   },
+   "basari_olcutu_karsilandi": false,
+   "kill_1_anlamsiz_large_cap": true,
+   "kill_2_vcp_korelasyon_0.8_ustu": false,
+   "kill_2_olculen_rho": -0.0355
+  },
+  "hukum_onerisi": {
+   "status": "registered → archived",
+   "gerekce": "Kill #1 TETİKLENDİ: large-cap alt-örneğin 9 hücresinin (3 katman × 3 ufuk) HİÇBİRİ anlamlı değil (tarih-kümeli bootstrap). En iyi hücre cf@20 IC=0.0374 — |IC|>=0.03 eşiğini geçiyor ama CI [-0.030,+0.100] sıfırı KAPSIYOR; kart iki şartı VE ile bağlamış, karşılanmadı. Kill #2 (VCP korelasyonu>0.8) TETİKLENMEDİ: ölçülen ρ=-0.036 — yani 52wh VCP skorunun yeni bir adı DEĞİL, gerçekten bağımsız bir büyüklük; ama bağımsız ve BİLGİSİZ. Aile kill #1'den kapanır, çift-sayımdan değil.",
+   "guclendiren_tani": "Panel tanısı (kart dışı) aynı yöne bakıyor: large-cap panelde ortalama günlük IC tam geçmişte -0.006/-0.010/-0.015 (NW t = -1.0/-1.2/-1.25) ve cf penceresinde +0.004/+0.004/+0.010 (t=0.2-0.4) — hiçbiri anlamlı, işaret tez yönünde bile değil. Yani boş sonuç YALNIZCA aralık kısıtının eseri değil: aralık açıldığında da edge yok.",
+   "kayit_altina_alinmasi_gereken_sinir": "Barroso-Wang'ın küçük-ölçek itirazı BU ölçümle DOĞRULANAMAZ: evrenin tamamı likit büyük/mega-cap; 'alt-örnek' zaten büyük olan 250 ismin ADV üst yarısıdır, karşı kutupta gerçek bir small-cap kolu YOK. Kart 'Barroso-Wang doğrulanmış olur' diyor — önerilen düzeltme: 'bu evrende edge ölçülemedi', literatür hükmü DEĞİL."
+  }
+ },
+ "edg_2026_002_volshock": {
+  "kart_basari_olcutu": "temiz-bar tablosunda bant yapısı yeniden doğrulanır VE seçilen form cf-IC'de CI-0-dışı katkı verir (aşama kapısı)",
+  "asama_1_bant_yeniden_uretimi": {
+   "temiz_tablo_cf20": {
+    "0-0.8": {
+     "n": 12,
+     "n_gun": 12,
+     "ort_pct": -0.799,
+     "medyan_pct": -0.795,
+     "ci_boot_pct": {
+      "lo": -2.62,
+      "hi": 0.88
+     },
+     "iddia_pct": -0.8,
+     "iddia_n": 12,
+     "isaret_ayni": true
+    },
+    "0.8-1.5": {
+     "n": 271,
+     "n_gun": 211,
+     "ort_pct": -0.634,
+     "medyan_pct": -0.951,
+     "ci_boot_pct": {
+      "lo": -1.99,
+      "hi": 0.71
+     },
+     "iddia_pct": -0.52,
+     "iddia_n": 269,
+     "isaret_ayni": true
+    },
+    "1.5-2.0": {
+     "n": 955,
+     "n_gun": 475,
+     "ort_pct": 1.8,
+     "medyan_pct": 1.193,
+     "ci_boot_pct": {
+      "lo": 0.93,
+      "hi": 2.64
+     },
+     "iddia_pct": 1.84,
+     "iddia_n": 955,
+     "isaret_ayni": true
+    },
+    "2.0+": {
+     "n": 856,
+     "n_gun": 433,
+     "ort_pct": 1.401,
+     "medyan_pct": 0.975,
+     "ci_boot_pct": {
+      "lo": 0.51,
+      "hi": 2.32
+     },
+     "iddia_pct": 1.44,
+     "iddia_n": 857,
+     "isaret_ayni": true
+    }
+   },
+   "hayalet_ab_izole": {
+    "0-0.8": {
+     "kirli_ort_pct": -0.799,
+     "temiz_ort_pct": -0.799,
+     "delta_pp": 0.0,
+     "kirli_n": 12,
+     "temiz_n": 12
+    },
+    "0.8-1.5": {
+     "kirli_ort_pct": -0.681,
+     "temiz_ort_pct": -0.634,
+     "delta_pp": 0.047,
+     "kirli_n": 270,
+     "temiz_n": 271
+    },
+    "1.5-2.0": {
+     "kirli_ort_pct": 1.819,
+     "temiz_ort_pct": 1.8,
+     "delta_pp": -0.019,
+     "kirli_n": 955,
+     "temiz_n": 955
+    },
+    "2.0+": {
+     "kirli_ort_pct": 1.408,
+     "temiz_ort_pct": 1.401,
+     "delta_pp": -0.007,
+     "kirli_n": 857,
+     "temiz_n": 856
+    }
+   },
+   "hukum": "BANT YAPISI HAYALET ARTEFAKTI DEĞİL. Kapı açık/kapalı A/B'de en büyük kayma 0.047 pp (0.8-1.5 bandı); yazılı tablo (strategy.py:26-33) temiz barlarla 0.11 pp içinde ve n'ler ±2'de yeniden üretildi. Kill #1 TETİKLENMEDİ.",
+   "ancak_yapinin_ic_ayrimlari": {
+    "not": "Bant ORTALAMALARININ aralıkları örtüşüyor; 'yapı doğrulandı' hükmü ancak FARKIN aralığı sıfırı dışlarsa verilebilir. Tarih-kümeli bootstrap, B=4000.",
+    "farklar": {
+     "tatli_nokta_eksi_negatif_bant [1.5-2.0] - [0.8-1.5]": {
+      "fark_pp": 2.434,
+      "ci_boot_pp": {
+       "lo": 0.9438,
+       "hi": 3.9321,
+       "b_ok": 4000
+      },
+      "sifiri_disliyor": true
+     },
+     "tatli_nokta_eksi_ust_bant [1.5-2.0] - [2.0+]": {
+      "fark_pp": 0.399,
+      "ci_boot_pp": {
+       "lo": -0.6342,
+       "hi": 1.4041,
+       "b_ok": 4000
+      },
+      "sifiri_disliyor": false
+     },
+     "ust_bant_eksi_negatif_bant [2.0+] - [0.8-1.5]": {
+      "fark_pp": 2.035,
+      "ci_boot_pp": {
+       "lo": 0.473,
+       "hi": 3.6193,
+       "b_ok": 4000
+      },
+      "sifiri_disliyor": true
+     }
+    }
+   },
+   "kritik_nüans": "Yapı 'yeniden üretildi' ama İÇİNDEKİ İKİ İDDİA AYNI SAĞLAMLIKTA DEĞİL: (a) yüksek hacim > düşük hacim ADIMI gerçek — [1.5-2.0]-[0.8-1.5] = +2.43 pp, CI [+0.94,+3.93] sıfırı dışlıyor; (b) TEPE/monoton-olmama iddiası GERÇEK DEĞİL — [1.5-2.0]-[2.0+] = +0.40 pp, CI [-0.63,+1.40] sıfırı kapsıyor. Üçgen formun tüm gerekçesi (b)'ydi ve (b) ölçümle desteklenmiyor.",
+   "ucgenin_sifirladigi_bolge": {
+    "tanim": "rvol20 >= 2.5 — üçgen bu barlara 0 puan verir",
+    "n": 433,
+    "ort_fwd20_pct": 1.609,
+    "ci_boot_pct": {
+     "lo": 0.64,
+     "hi": 2.54
+    },
+    "not": "strategy.py'nin yazılı 'muhafazakârlık' notu tam burayı işaret ediyor: 2.0+ bandı pozitifken üçgen 2.5 üstünü 0'lıyor. Bu satır o bölgenin ÖLÇÜMÜDÜR."
+   }
+  },
+  "asama_2_grid": {
+   "grid_cf": {
+    "p80|ucgen(1.75)": {
+     "esik": 80,
+     "form": "ucgen(1.75)",
+     "n_sok_satiri": 2075,
+     "sok_payi_pct": 98.5,
+     "hucreler": {
+      "5": {
+       "ic": 0.0373,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0054,
+        "hi": 0.08
+       },
+       "ci_boot": {
+        "lo": -0.0128,
+        "hi": 0.0854,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0329,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0099,
+        "hi": 0.0756
+       },
+       "ci_boot": {
+        "lo": -0.0166,
+        "hi": 0.0816,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.0144,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0285,
+        "hi": 0.0572
+       },
+       "ci_boot": {
+        "lo": -0.031,
+        "hi": 0.0609,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    },
+    "p80|persentil-dogrusal": {
+     "esik": 80,
+     "form": "persentil-dogrusal",
+     "n_sok_satiri": 2075,
+     "sok_payi_pct": 98.5,
+     "hucreler": {
+      "5": {
+       "ic": 0.0097,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0331,
+        "hi": 0.0524
+       },
+       "ci_boot": {
+        "lo": -0.0395,
+        "hi": 0.0576,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0155,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0273,
+        "hi": 0.0583
+       },
+       "ci_boot": {
+        "lo": -0.0321,
+        "hi": 0.0618,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.0322,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0107,
+        "hi": 0.0749
+       },
+       "ci_boot": {
+        "lo": -0.0113,
+        "hi": 0.0785,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    },
+    "p90|ucgen(1.75)": {
+     "esik": 90,
+     "form": "ucgen(1.75)",
+     "n_sok_satiri": 1966,
+     "sok_payi_pct": 93.4,
+     "hucreler": {
+      "5": {
+       "ic": 0.0322,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0106,
+        "hi": 0.0748
+       },
+       "ci_boot": {
+        "lo": -0.0174,
+        "hi": 0.0776,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0226,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0202,
+        "hi": 0.0653
+       },
+       "ci_boot": {
+        "lo": -0.025,
+        "hi": 0.0709,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.0002,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0426,
+        "hi": 0.0431
+       },
+       "ci_boot": {
+        "lo": -0.0438,
+        "hi": 0.0463,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    },
+    "p90|persentil-dogrusal": {
+     "esik": 90,
+     "form": "persentil-dogrusal",
+     "n_sok_satiri": 1966,
+     "sok_payi_pct": 93.4,
+     "hucreler": {
+      "5": {
+       "ic": 0.0089,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0338,
+        "hi": 0.0517
+       },
+       "ci_boot": {
+        "lo": -0.0345,
+        "hi": 0.0571,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0152,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0276,
+        "hi": 0.0579
+       },
+       "ci_boot": {
+        "lo": -0.0297,
+        "hi": 0.062,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.0332,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0097,
+        "hi": 0.0759
+       },
+       "ci_boot": {
+        "lo": -0.0135,
+        "hi": 0.0789,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    },
+    "p95|ucgen(1.75)": {
+     "esik": 95,
+     "form": "ucgen(1.75)",
+     "n_sok_satiri": 1413,
+     "sok_payi_pct": 67.1,
+     "hucreler": {
+      "5": {
+       "ic": 0.0247,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0181,
+        "hi": 0.0674
+       },
+       "ci_boot": {
+        "lo": -0.0252,
+        "hi": 0.0734,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0228,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.02,
+        "hi": 0.0655
+       },
+       "ci_boot": {
+        "lo": -0.0296,
+        "hi": 0.071,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.014,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0289,
+        "hi": 0.0568
+       },
+       "ci_boot": {
+        "lo": -0.0349,
+        "hi": 0.0614,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    },
+    "p95|persentil-dogrusal": {
+     "esik": 95,
+     "form": "persentil-dogrusal",
+     "n_sok_satiri": 1413,
+     "sok_payi_pct": 67.1,
+     "hucreler": {
+      "5": {
+       "ic": 0.0066,
+       "n": 2102,
+       "n_gun": 742,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0362,
+        "hi": 0.0493
+       },
+       "ci_boot": {
+        "lo": -0.0407,
+        "hi": 0.0549,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "10": {
+       "ic": 0.0152,
+       "n": 2100,
+       "n_gun": 740,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0276,
+        "hi": 0.058
+       },
+       "ci_boot": {
+        "lo": -0.0333,
+        "hi": 0.0625,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      },
+      "20": {
+       "ic": 0.0354,
+       "n": 2094,
+       "n_gun": 736,
+       "neden": null,
+       "ci_fisher": {
+        "lo": -0.0074,
+        "hi": 0.0782
+       },
+       "ci_boot": {
+        "lo": -0.0101,
+        "hi": 0.082,
+        "b_ok": 2000
+       },
+       "anlamli": false,
+       "anlamli_fisher": false
+      }
+     }
+    }
+   },
+   "taban_ham_kiyas": {
+    "rvol20": {
+     "5": {
+      "ic": 0.0364,
+      "n": 2102,
+      "n_gun": 742,
+      "neden": null,
+      "ci_fisher": {
+       "lo": -0.0063,
+       "hi": 0.0791
+      },
+      "ci_boot": {
+       "lo": -0.0103,
+       "hi": 0.0838,
+       "b_ok": 2000
+      },
+      "anlamli": false,
+      "anlamli_fisher": false
+     },
+     "10": {
+      "ic": 0.0499,
+      "n": 2100,
+      "n_gun": 740,
+      "neden": null,
+      "ci_fisher": {
+       "lo": 0.0072,
+       "hi": 0.0925
+      },
+      "ci_boot": {
+       "lo": 0.0026,
+       "hi": 0.0972,
+       "b_ok": 2000
+      },
+      "anlamli": true,
+      "anlamli_fisher": true
+     },
+     "20": {
+      "ic": 0.0645,
+      "n": 2094,
+      "n_gun": 736,
+      "neden": null,
+      "ci_fisher": {
+       "lo": 0.0217,
+       "hi": 0.107
+      },
+      "ci_boot": {
+       "lo": 0.017,
+       "hi": 0.1111,
+       "b_ok": 2000
+      },
+      "anlamli": true,
+      "anlamli_fisher": true
+     }
+    },
+    "volpct50": {
+     "5": {
+      "ic": 0.0097,
+      "n": 2102,
+      "n_gun": 742,
+      "neden": null,
+      "ci_fisher": {
+       "lo": -0.033,
+       "hi": 0.0525
+      },
+      "ci_boot": {
+       "lo": -0.0364,
+       "hi": 0.0566,
+       "b_ok": 2000
+      },
+      "anlamli": false,
+      "anlamli_fisher": false
+     },
+     "10": {
+      "ic": 0.0157,
+      "n": 2100,
+      "n_gun": 740,
+      "neden": null,
+      "ci_fisher": {
+       "lo": -0.0271,
+       "hi": 0.0584
+      },
+      "ci_boot": {
+       "lo": -0.031,
+       "hi": 0.0639,
+       "b_ok": 2000
+      },
+      "anlamli": false,
+      "anlamli_fisher": false
+     },
+     "20": {
+      "ic": 0.0322,
+      "n": 2094,
+      "n_gun": 736,
+      "neden": null,
+      "ci_fisher": {
+       "lo": -0.0106,
+       "hi": 0.075
+      },
+      "ci_boot": {
+       "lo": -0.0129,
+       "hi": 0.0803,
+       "b_ok": 2000
+      },
+      "anlamli": false,
+      "anlamli_fisher": false
+     }
+    }
+   },
+   "ucgen_kapisiz_mevcut_dugme": {
+    "not": "canlı koddaki uyuyan düğme (entry.w_rvolband, ağırlık 0). Kart grid'inin bir noktası DEĞİL — mevcut nesnenin ölçümü, K'ya sayılmaz. Grid'in 'katkı' iddiası hem ham rvol20'ye hem BUNA karşı okunmalı.",
+    "hucreler": {
+     "5": {
+      "ic": 0.0397,
+      "n": 2102,
+      "ci_boot": {
+       "lo": -0.0089,
+       "hi": 0.0871,
+       "b_ok": 4000
+      },
+      "anlamli": false
+     },
+     "10": {
+      "ic": 0.0388,
+      "n": 2100,
+      "ci_boot": {
+       "lo": -0.0102,
+       "hi": 0.086,
+       "b_ok": 4000
+      },
+      "anlamli": false
+     },
+     "20": {
+      "ic": 0.0154,
+      "n": 2094,
+      "ci_boot": {
+       "lo": -0.0282,
+       "hi": 0.0611,
+       "b_ok": 4000
+      },
+      "anlamli": false
+     }
+    }
+   },
+   "hucre_muhasebesi": {
+    "grid_noktasi": 6,
+    "ufuk": 3,
+    "toplam_hucre": 18,
+    "anlamli_hucre": 0,
+    "sansla_beklenen_yanlis_pozitif_%95": 0.9
+   },
+   "en_iyi_grid_hucresi": {
+    "en_buyuk_mutlak_ic": {
+     "ad": "p80|ucgen(1.75) @5",
+     "ic": 0.0373,
+     "ci_boot": {
+      "lo": -0.0128,
+      "hi": 0.0854
+     },
+     "anlamli": false
+    },
+    "anlamliliga_en_yakin": {
+     "ad": "p95|persentil-dogrusal @20",
+     "ic": 0.0354,
+     "ci_boot": {
+      "lo": -0.0101,
+      "hi": 0.082
+     },
+     "anlamli": false
+    }
+   },
+   "hukum": "Kill #2 TETİKLENDİ: 18 hücrenin HİÇBİRİ CI-0-dışı katkı vermedi. Dahası her şekillendirilmiş/kapılı form, ZATEN ÖLÇÜLMÜŞ ham rvol20'den DAHA KÖTÜ: ham rvol20 cf@10 IC=0.0499 CI[+0.003,+0.097] ve cf@20 IC=0.0645 CI[+0.017,+0.111] ANLAMLI iken, en iyi grid noktası 0.0354 (CI sıfırı kapsıyor) ve canlıdaki uyuyan kapısız üçgen 0.0154 @20 (anlamsız).",
+   "neden_kapi_ise_yaramiyor": "persentil kapısı bu popülasyonda neredeyse BOŞ: p80 satırların %98.5'ini, p90 %93.4'ünü 'şok' sayıyor (panelde bu oran %23.5). cf defteri zaten kırılım/hacim-onaylı adaylardan oluşuyor — hacim şoku bu popülasyonda ayırt edici bir olay DEĞİL, sabit."
+  },
+  "hukum_onerisi": {
+   "status": "registered → archived",
+   "canli_esik": "min_volume_ratio=1.5 DEĞİŞMEZ (kart: 'mevcut sezgisel eşik KALIR')",
+   "golge_kolu": "AÇILMAZ — aşama kapısının 2. şartı karşılanmadı",
+   "gerekce": "Aşama-1 (bant yeniden üretimi) GEÇTİ, aşama-2 (form katkısı) KALDI. Kart aşama kapısını VE ile bağlamış → arşiv. Canlı eşik değişikliği zaten ancak prescreen+PARA-v3 kapısından geçebilirdi; o kapıya götürülecek kanıt YOK.",
+   "rol1_icin_ayrik_bulgu": "ÖLÇÜM BİR SONRAKİ KARTIN KONUSUNU İŞARET EDİYOR (bu turda UYGULANMAZ — ölçümden sonra eşik/form seçmek yasak): kanıt MONOTON formu üçgene tercih ediyor. (1) tepe iddiası CI ile desteklenmiyor; (2) üçgenin 0'ladığı rvol>=2.5 bölgesinin ort. 20-bar getirisi +1.61%, CI [+0.64,+2.54] — ANLAMLI POZİTİF, yani üçgen kanıtlanmış kazancı cezalandırıyor; (3) ham monoton rvol20 iki ufukta anlamlı. strategy.py:36-40'taki yazılı 'sağ kol kanıttan sert' muhafazakârlık notu ÖLÇÜLDÜ ve haklı çıktı. Bu YENİ bir kart konusudur (form revizyonu), bu kartın hükmü değil."
+  }
+ },
+ "k_muhasebesi": {
+  "kart_kayitli": {
+   "EDG-2026-001": 1,
+   "EDG-2026-002": 5,
+   "toplam_kayitli": 6
+  },
+  "gercekte_olculen_kombinasyon": {
+   "EDG-2026-001": 1,
+   "EDG-2026-002": 6,
+   "not": "kart K+=5 diye kayıtlı (3 eşik + 2 form, TOPLAM olarak) ama ölçülen nesne 3×2=6 KOMBİNASYONDUR. Kart şeması eksenleri topluyor, çarpmıyor → K 1 birim EKSİK kayıtlı. Rol 1'e şema notu."
+  },
+  "ufuk_carpani": {
+   "ufuk_sayisi": 3,
+   "not": "5/10/20 kartlarda SÖZLEŞME olarak yazılı (mevcut component_ic ufukları) → yeni K değil; ama raporlanan hücre sayısı 001 için 9, 002 için 18'dir ve çoklu-sınama okuması bu sayıya göre yapılmalıdır."
+  },
+  "tani_olcumleri_K_disi": {
+   "liste": [
+    "panel Fama-MacBeth tanısı (52wh + rvol20 + volpct50)",
+    "bant farklarının bootstrap aralığı",
+    "kapısız üçgen (mevcut uyuyan düğme)",
+    "kapı açık/kapalı hayalet A/B"
+   ],
+   "gerekce": "hiçbiri yeni bir eşik/form SEÇMEDİ; hepsi ya zaten kayıtlı bir nesnenin ölçümü ya da boş-sonucun yorumunu ayıran tanı. Yine de hüküm TAŞIMAZLAR: kart hükmü yalnız ön-kayıtlı popülasyon+kriterden çıkar."
+  },
+  "cok_sinama_notu": "002'de 18 hücrede %95 seviyesinde şansla ~0.9 yanlış-pozitif beklenirdi; gözlenen anlamlı hücre 0. Yani boş sonuç çoklu-sınama düzeltmesine İHTİYAÇ DUYMADAN boştur (düzeltme yalnız pozitifleri zayıflatırdı)."
+ },
+ "survivorship_notu": "ZORUNLU NOT — HER İKİ KARTI DA ETKİLER. Evren data.REPLAY_UNIVERSE: bugün yaşayan ~250 likit isim; 2022-2025'te düşen bir avuç isim (INTC/PYPL/ENPH/MRNA/VFC…) BİLEREK eklenmiş, ama delisted/iflas/satın alınmış adlar YOK ve tarihsel üyelik nokta-zamanlı DEĞİL. YÖN: seviyeler YUKARI yanlı (panelde her rvol bandının 20-bar ortalaması ~+1.2%, yani 'bant farkı' okunabilir ama 'bant seviyesi' okunamaz). HÜKÜMLERE ETKİSİ: 001 için yanlılık BULGUYU GÜÇLENDİRİR — hayatta kalan isimler tam da zirveye yakın kalmayı başaranlardır, yani 52wh yanlı evrende OLDUĞUNDAN İYİ görünmeliydi; buna rağmen edge çıkmadı, arşiv hükmü bu yüzden daha sağlam. 002 için bant FARKLARI yanlılığa görece dayanıklı, ama grid'in boş çıkması yanlılıktan bağımsız (kapı zaten boş). cf katmanı ayrıca ALINMAMIŞ hipotetik girişlerdir (seçim yanlılığı ayrı ve açık durur).",
+ "olculemedi": {
+  "maliyet_modeli": "pessimistic_band_v2 İNMEDİ (E3 bekleniyor) — her iki kartın cost_model alanı hâlâ 'bekleniyor'. Bu ölçümlerin hiçbiri maliyet düşülmüş DEĞİL; IC ham öngörü içeriğidir. Boş sonuçlar için bu bir sorun değil (maliyet yalnız kötüleştirirdi), ama POZİTİF bir hüküm çıksaydı maliyet olmadan verilemezdi.",
+  "gercek_katman_gucu": "gerçek defterde large-cap alt-örnek n=47 → CI genişliği ±0.28. Bu katmanda 'anlamsız' bulgusu ÖRNEKLEM KURAKLIĞIDIR, kanıt değil; hüküm cf katmanından ve panel tanısından geliyor.",
+  "g2_olcum_kaynagi": "strategy.py:26-33'ün kaynağı g2_olcum.py depoda YOK → 'yazılı sayı vs benim sayım' farkı uygulama farkını içerebilirdi; bu yüzden hayalet hükmü yazılı sayıya değil, kapı açık/kapalı A/B'ye dayandırıldı."
+ },
+ "kart_guncelleme_onerileri_ROL1_ISLER": {
+  "uyari": "BU AJAN KART DOSYALARINA YAZMADI. Aşağısı öneridir; işleme yetkisi Rol 1'dedir.",
+  "EDG-2026-001": {
+   "status": "registered → archived",
+   "trial_ids": [
+    "S1-retro-2026-07-31-52wh"
+   ],
+   "sonuc_ozeti": "large-cap alt-örnekte 9/9 hücre anlamsız; en iyi cf@20 IC=0.0374 CI[-0.030,+0.100]. VCP korelasyonu ρ=-0.036 (çift-sayım YOK). Panel tanısı da boş → aile kapandı.",
+   "metin_duzeltme_onerisi": "kill #1'in 'Barroso-Wang doğrulanmış olur' ifadesi 'bu (tamamı likit) evrende edge ölçülemedi' olarak düzeltilmeli — karşı kutupta small-cap kolu yok."
+  },
+  "EDG-2026-002": {
+   "status": "registered → archived",
+   "trial_ids": [
+    "S1-retro-2026-07-31-volshock"
+   ],
+   "sonuc_ozeti": "bant yapısı temiz barlarda DOĞRULANDI (hayalet A/B max 0.047 pp) → kill #1 tetiklenmedi; ama 6 grid noktası × 3 ufuk = 18 hücrede 0 anlamlı katkı → kill #2 tetiklendi. Canlı eşik min_volume_ratio=1.5 KALIR, gölge kolu açılmaz.",
+   "k_registry_duzeltmesi": "K+=5 → K+=6 (3×2 kombinasyon; eksenler toplanmaz, çarpılır)",
+   "torun_kart_onerisi": "YENİ kart: rvol form revizyonu (monoton vs üçgen). Gerekçe ölçülmüş: tepe iddiası CI'siz, üçgenin 0'ladığı rvol>=2.5 bölgesi +1.61% CI[+0.64,+2.54]. Ön-kayıt ÖNCE, ölçüm SONRA."
+  }
+ }
+}

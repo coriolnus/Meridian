@@ -41,3 +41,10 @@ markers = [
     # ipliği kendi join etmekle yükümlüdür (etmezse aynı fikstürün dedektörü onu adıyla düşürür).
     "hermes_gercek_iplik: hermes arka plan ipliği taklit EDİLMEZ; test onu kendi join eder",
 ]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.164.0",
+    "import-linter>=2.13",
+    "mutmut>=3.7.0",
+]

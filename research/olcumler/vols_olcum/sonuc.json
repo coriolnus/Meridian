@@ -1,0 +1,1404 @@
+{
+ "kart": "EDG-2026-008",
+ "aile": "momentum_vol_scaling_overlay",
+ "olcum_zamani": "2026-07-31T11:31:53.538473+00:00",
+ "tasarim": {
+  "carpan": "m = clip(sigma_hedef / sigma_gercek(P), 0.5, 1.5) — YALNIZ yeni-giriş boyutuna",
+  "uygulama_noktasi": "dolum anında `size_mult` üzerinden (motorun derisk rampasıyla AYNI yol); `plan['size_r']` DEĞİŞMEZ → guard'ın gördüğü open_risk_r değişmez → kapı hükmü kaymaz",
+  "as_of": "m, D KAPANIŞININ SPY verisinden hesaplanır ve D+1 AÇILIŞINDA dolan emre uygulanır — ileri bakma YOK",
+  "sigma_hedef_kaynagi": "IS [2022-01-01, 2024-01-01) gerçekleşen vol serisinin MEDYANI; on_adim_sigma.py'de TEK SEFER hesaplandı, koşuma BEYAN edilerek geçirildi (aranmadı, K'yı artırmaz)",
+  "kollar": {
+   "ref_snapshot": "yamasız ikiz (pozitif kontrol referansı)",
+   "kapali": "yamalı motor, knob KAPALI (pozitif kontrol ikizi)",
+   "p21_oosonly": "P=21, çarpan YALNIZ 2024-01-01'den itibaren",
+   "p63_oosonly": "P=63, çarpan YALNIZ 2024-01-01'den itibaren"
+  },
+  "kosulmayan": "isonly / tam kollar KOŞULMADI — WP-M oosonly standardı; tanı gerekirse Rol-1 ister"
+ },
+ "eksik_kollar": null,
+ "kod_damgasi": {
+  "zaman": "2026-07-31T10:41:07+00:00",
+  "git_head": "6ec281c3aefc05b40d67d1630bea05d5746a79e3",
+  "git_kirli": [],
+  "n_dosya": 89,
+  "kopya_repo_ile_ayni": true
+ },
+ "on_adim_sigma": {
+  "tanimlar": {
+   "sigma_gercek": "SPY günlük getirilerinin P-gün örneklem std'si (ddof=1) × sqrt(252); t ve ÖNCESİ — motorun `backtest.vols_gerceklesen` fonksiyonunun ta kendisi",
+   "sigma_hedef": "[2022-01-01, 2024-01-01) seanslarında hesaplanan sigma_gercek serisinin MEDYANI",
+   "isinma": "IS'in ilk seanslarında pencere, IS penceresinden ÖNCEKİ (2021) SPY barlarıyla dolar — bu ileri bakma DEĞİL, geriye bakmadır ve replay de aynısını yapar",
+   "m": "clip(sigma_hedef/sigma_gercek, 0.5, 1.5) — KART SABİTİ"
+  },
+  "endeks": {
+   "sembol": "SPY",
+   "n_bar": 1398,
+   "ilk": "2021-01-04",
+   "son": "2026-07-29"
+  },
+  "pencereler": {
+   "21": {
+    "sigma_hedef": 0.17654516,
+    "is_n_gun": 501,
+    "is_sigma_ort": 0.185163,
+    "is_sigma_p05_p95": [
+     0.095297,
+     0.305223
+    ],
+    "is_olculemedi_gun": 0,
+    "oos_n_gun": 583,
+    "oos_sigma_medyan": 0.122657,
+    "oos_m_medyan": 1.439344,
+    "oos_m_p05_p95": [
+     0.810581,
+     1.5
+    ],
+    "oos_bagli_oran": 0.469983
+   },
+   "63": {
+    "sigma_hedef": 0.18274196,
+    "is_n_gun": 501,
+    "is_sigma_ort": 0.189251,
+    "is_sigma_p05_p95": [
+     0.106887,
+     0.279261
+    ],
+    "is_olculemedi_gun": 0,
+    "oos_n_gun": 583,
+    "oos_sigma_medyan": 0.121196,
+    "oos_m_medyan": 1.5,
+    "oos_m_p05_p95": [
+     0.553444,
+     1.5
+    ],
+    "oos_bagli_oran": 0.516295
+   }
+  }
+ },
+ "imza_tablosu": {
+  "ref_snapshot": {
+   "oos_score": 0.0579,
+   "para_search": 0.1605,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "trade_digest_confirm": "715385ddfbcf9c88b8d0a626de86d3e5fc5c44004c06cbd0504d40fcfffcf3e2",
+   "qty_digest_search": "15c83b0254cc8bd7899f2d02739518eafd2f129998995bdbbf7c86fcd2972458",
+   "qty_digest_confirm": "1b39119c88a3d540d1c78c1b06442106dc28c922bf02842d6d0417e7981c3a09",
+   "sure_sn": 724.4,
+   "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/vols_olcum/ref_snapshot/meridian/backtest.py",
+   "fold_avg_r_mean": 0.0608,
+   "equity_search": {},
+   "equity_oos": {}
+  },
+  "kapali": {
+   "oos_score": 0.0579,
+   "para_search": 0.1605,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "trade_digest_confirm": "715385ddfbcf9c88b8d0a626de86d3e5fc5c44004c06cbd0504d40fcfffcf3e2",
+   "qty_digest_search": "15c83b0254cc8bd7899f2d02739518eafd2f129998995bdbbf7c86fcd2972458",
+   "qty_digest_confirm": "1b39119c88a3d540d1c78c1b06442106dc28c922bf02842d6d0417e7981c3a09",
+   "sure_sn": 722.2,
+   "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/vols_olcum/meridian/backtest.py",
+   "fold_avg_r_mean": 0.0608,
+   "equity_search": {
+    "n_gun": 400,
+    "gunluk_vol": 0.004912,
+    "yillik_vol": 0.07797,
+    "gunluk_ort_getiri": 0.00021249,
+    "gunluk_sharpe_yillik": 0.686763,
+    "mtm_max_dd": 0.058151,
+    "toplam_getiri": 0.083253
+   },
+   "equity_oos": {
+    "n_gun": 576,
+    "gunluk_vol": 0.004266,
+    "yillik_vol": 0.067725,
+    "gunluk_ort_getiri": 7.905e-05,
+    "gunluk_sharpe_yillik": 0.294138,
+    "mtm_max_dd": 0.071709,
+    "toplam_getiri": 0.041044
+   }
+  },
+  "p21_oosonly": {
+   "oos_score": 0.0807,
+   "para_search": 0.2103,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 180,
+   "oos_n": 109,
+   "search_n": 86,
+   "confirm_n": 20,
+   "avg_r": 0.046,
+   "win_rate": 0.367,
+   "sharpe": 0.508,
+   "max_drawdown": 0.0746,
+   "total_return": 0.0737,
+   "trade_digest_search": "b3eb14ca13fb38e10c6f2846c392f14b916e0fe9d6bc21da9941c9c7f8d7e3a3",
+   "trade_digest_confirm": "8d79158307a962631fc427917fa72f67416aded80ecce5e0466595cbc97d9e40",
+   "qty_digest_search": "ad6f0afde6d941005ff9b2045d44bf7f029d9199bf840a2503a03ef8d2c11aed",
+   "qty_digest_confirm": "95172565c80b6e5bcf7491af867e0aea59a2e2dd8131096887bd372604f01f7c",
+   "sure_sn": 766.2,
+   "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/vols_olcum/meridian/backtest.py",
+   "fold_avg_r_mean": 0.0807,
+   "equity_search": {
+    "n_gun": 400,
+    "gunluk_vol": 0.005697,
+    "yillik_vol": 0.090431,
+    "gunluk_ort_getiri": 0.00030477,
+    "gunluk_sharpe_yillik": 0.84928,
+    "mtm_max_dd": 0.066326,
+    "toplam_getiri": 0.122009
+   },
+   "equity_oos": {
+    "n_gun": 576,
+    "gunluk_vol": 0.004923,
+    "yillik_vol": 0.078143,
+    "gunluk_ort_getiri": 0.00015955,
+    "gunluk_sharpe_yillik": 0.514535,
+    "mtm_max_dd": 0.074603,
+    "toplam_getiri": 0.088474
+   }
+  },
+  "p63_oosonly": {
+   "oos_score": 0.0528,
+   "para_search": 0.1037,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 146,
+   "oos_n": 75,
+   "search_n": 61,
+   "confirm_n": 13,
+   "avg_r": 0.002,
+   "win_rate": 0.333,
+   "sharpe": 0.359,
+   "max_drawdown": 0.0767,
+   "total_return": 0.0429,
+   "trade_digest_search": "d49ea1227dee34766ed4e7f83b5d20547e6d1c3cc645e7151837274f43e583a0",
+   "trade_digest_confirm": "807b2a044f60c3a4a548e0b4b48134971059031ba924e0881bcd356e5e62c7f0",
+   "qty_digest_search": "ae255b31d43e4ac5e1f361562863a816fc41e226c078648e584294e75daa9bec",
+   "qty_digest_confirm": "fa959fa6899fca9c5a6b815a9f2ac290920ed81b40489cb68586410f06498887",
+   "sure_sn": 771.2,
+   "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/vols_olcum/meridian/backtest.py",
+   "fold_avg_r_mean": 0.0038,
+   "equity_search": {
+    "n_gun": 400,
+    "gunluk_vol": 0.004522,
+    "yillik_vol": 0.07178,
+    "gunluk_ort_getiri": 0.00015608,
+    "gunluk_sharpe_yillik": 0.547944,
+    "mtm_max_dd": 0.075177,
+    "toplam_getiri": 0.059931
+   },
+   "equity_oos": {
+    "n_gun": 576,
+    "gunluk_vol": 0.00377,
+    "yillik_vol": 0.059848,
+    "gunluk_ort_getiri": 0.00010382,
+    "gunluk_sharpe_yillik": 0.43715,
+    "mtm_max_dd": 0.07675,
+    "toplam_getiri": 0.057192
+   }
+  }
+ },
+ "yol_tutarliligi": {
+  "ref_snapshot": {
+   "search_digest_yeniden_uretildi": true,
+   "confirm_digest_yeniden_uretildi": true,
+   "pnl_dollars_var": true,
+   "qty_var": true,
+   "geometri_ayni": true,
+   "n_sembol": 250
+  },
+  "kapali": {
+   "search_digest_yeniden_uretildi": true,
+   "confirm_digest_yeniden_uretildi": true,
+   "pnl_dollars_var": true,
+   "qty_var": true,
+   "geometri_ayni": true,
+   "n_sembol": 250
+  },
+  "p21_oosonly": {
+   "search_digest_yeniden_uretildi": true,
+   "confirm_digest_yeniden_uretildi": true,
+   "pnl_dollars_var": true,
+   "qty_var": true,
+   "geometri_ayni": true,
+   "n_sembol": 250
+  },
+  "p63_oosonly": {
+   "search_digest_yeniden_uretildi": true,
+   "confirm_digest_yeniden_uretildi": true,
+   "pnl_dollars_var": true,
+   "qty_var": true,
+   "geometri_ayni": true,
+   "n_sembol": 250
+  }
+ },
+ "pozitif_kontrol": {
+  "yontem": "yamasız ikiz (ref_snapshot) ile yamalı-knob-kapalı (kapali) kollarının SEARCH + CONFIRM defter imzaları, BOYUT (qty) imzaları ve skorları",
+  "artefakt_notu": "`trade_digest_tum` KIYASA GİRMEZ: yamalı motorda `_trades_all` (IS dahil TÜM defter), yamasızda its+itc (yalnız OOS) demektir — EDG-005'te belgelenen artefaktın aynısı.",
+  "esitlikler": {
+   "search_digest": true,
+   "confirm_digest": true,
+   "qty_digest_search": true,
+   "qty_digest_confirm": true,
+   "oos_score": true,
+   "para_search": true,
+   "is_score": true,
+   "holdout_score": true,
+   "n_trades_total": true
+  },
+  "degerler": {
+   "ref_snapshot": {
+    "oos_score": 0.0579,
+    "para_search": 0.1605,
+    "is_score": 0.0651,
+    "n_trades_total": 201
+   },
+   "kapali": {
+    "oos_score": 0.0579,
+    "para_search": 0.1605,
+    "is_score": 0.0651,
+    "n_trades_total": 201
+   }
+  },
+  "gecti": true
+ },
+ "kiyaslar": {
+  "p21_oosonly": {
+   "imza_farki": {
+    "oos_score": [
+     0.0579,
+     0.0807
+    ],
+    "para_search": [
+     0.1605,
+     0.2103
+    ],
+    "sharpe_islem": [
+     0.226,
+     0.508
+    ],
+    "avg_r": [
+     0.012,
+     0.046
+    ],
+    "win_rate": [
+     0.354,
+     0.367
+    ],
+    "oos_n": [
+     130,
+     109
+    ],
+    "search_n": [
+     103,
+     86
+    ],
+    "confirm_n": [
+     22,
+     20
+    ],
+    "max_drawdown_islem": [
+     0.0717,
+     0.0746
+    ],
+    "total_return": [
+     0.0319,
+     0.0737
+    ],
+    "is_score": [
+     0.0651,
+     0.0651
+    ],
+    "holdout_score": [
+     null,
+     null
+    ],
+    "fold_avg_r_mean": [
+     0.0608,
+     0.0807
+    ],
+    "search_digest_esit": false,
+    "qty_digest_esit": false
+   },
+   "para_v3": {
+    "p_delta_negatif": 0.4417,
+    "ort_delta": 0.050498,
+    "lo": -0.55667,
+    "hi": 0.74103,
+    "ci_sifir_disi": false,
+    "n_gecerli": 600,
+    "n_olcemedi": 0,
+    "neden": null
+   },
+   "ci": {
+    "search": {
+     "n_gun": 399,
+     "ort_fark_bps": 0.923,
+     "ort_fark_ci_bps": [
+      -1.999,
+      2.579
+     ],
+     "p_getiri_dustu": 0.3588,
+     "gunluk_vol_taban": 0.004912,
+     "gunluk_vol_tedavi": 0.005697,
+     "yillik_vol_taban": 0.07797,
+     "yillik_vol_tedavi": 0.090431,
+     "vol_orani": 1.159817,
+     "vol_farki_ci": [
+      -0.00026632,
+      0.00180716
+     ],
+     "p_vol_dustu": 0.0635,
+     "maxdd_taban": 0.058152,
+     "maxdd_tedavi": 0.066326,
+     "maxdd_farki_ort": 0.014179,
+     "maxdd_farki_ci": [
+      -0.020381,
+      0.056844
+     ],
+     "p_maxdd_dustu": 0.1948,
+     "sharpe_taban": 0.686763,
+     "sharpe_tedavi": 0.849281,
+     "sharpe_farki_ci": [
+      -0.750013,
+      0.569259
+     ],
+     "p_sharpe_dustu": 0.472,
+     "sharpe_boot_gecersiz": 0,
+     "neden": null
+    },
+    "oos_tam": {
+     "n_gun": 575,
+     "ort_fark_bps": 0.805,
+     "ort_fark_ci_bps": [
+      -1.152,
+      2.595
+     ],
+     "p_getiri_dustu": 0.232,
+     "gunluk_vol_taban": 0.004266,
+     "gunluk_vol_tedavi": 0.004923,
+     "yillik_vol_taban": 0.067725,
+     "yillik_vol_tedavi": 0.078143,
+     "vol_orani": 1.15382,
+     "vol_farki_ci": [
+      -0.00035628,
+      0.00139285
+     ],
+     "p_vol_dustu": 0.0938,
+     "maxdd_taban": 0.071709,
+     "maxdd_tedavi": 0.074603,
+     "maxdd_farki_ort": 0.004276,
+     "maxdd_farki_ci": [
+      -0.050535,
+      0.058878
+     ],
+     "p_maxdd_dustu": 0.4108,
+     "sharpe_taban": 0.294138,
+     "sharpe_tedavi": 0.514536,
+     "sharpe_farki_ci": [
+      -0.445348,
+      0.827191
+     ],
+     "p_sharpe_dustu": 0.264,
+     "sharpe_boot_gecersiz": 0,
+     "neden": null
+    }
+   }
+  },
+  "p63_oosonly": {
+   "imza_farki": {
+    "oos_score": [
+     0.0579,
+     0.0528
+    ],
+    "para_search": [
+     0.1605,
+     0.1037
+    ],
+    "sharpe_islem": [
+     0.226,
+     0.359
+    ],
+    "avg_r": [
+     0.012,
+     0.002
+    ],
+    "win_rate": [
+     0.354,
+     0.333
+    ],
+    "oos_n": [
+     130,
+     75
+    ],
+    "search_n": [
+     103,
+     61
+    ],
+    "confirm_n": [
+     22,
+     13
+    ],
+    "max_drawdown_islem": [
+     0.0717,
+     0.0767
+    ],
+    "total_return": [
+     0.0319,
+     0.0429
+    ],
+    "is_score": [
+     0.0651,
+     0.0651
+    ],
+    "holdout_score": [
+     null,
+     null
+    ],
+    "fold_avg_r_mean": [
+     0.0608,
+     0.0038
+    ],
+    "search_digest_esit": false,
+    "qty_digest_esit": false
+   },
+   "para_v3": {
+    "p_delta_negatif": 0.5333,
+    "ort_delta": -0.030684,
+    "lo": -0.67272,
+    "hi": 0.56688,
+    "ci_sifir_disi": false,
+    "n_gecerli": 600,
+    "n_olcemedi": 0,
+    "neden": null
+   },
+   "ci": {
+    "search": {
+     "n_gun": 399,
+     "ort_fark_bps": -0.564,
+     "ort_fark_ci_bps": [
+      -4.264,
+      1.863
+     ],
+     "p_getiri_dustu": 0.7438,
+     "gunluk_vol_taban": 0.004912,
+     "gunluk_vol_tedavi": 0.004522,
+     "yillik_vol_taban": 0.07797,
+     "yillik_vol_tedavi": 0.07178,
+     "vol_orani": 0.920611,
+     "vol_farki_ci": [
+      -0.00210361,
+      0.00072851
+     ],
+     "p_vol_dustu": 0.6995,
+     "maxdd_taban": 0.058152,
+     "maxdd_tedavi": 0.075177,
+     "maxdd_farki_ort": 0.008088,
+     "maxdd_farki_ci": [
+      -0.034211,
+      0.053043
+     ],
+     "p_maxdd_dustu": 0.333,
+     "sharpe_taban": 0.686763,
+     "sharpe_tedavi": 0.547945,
+     "sharpe_farki_ci": [
+      -1.793804,
+      0.571779
+     ],
+     "p_sharpe_dustu": 0.748,
+     "sharpe_boot_gecersiz": 0,
+     "neden": null
+    },
+    "oos_tam": {
+     "n_gun": 575,
+     "ort_fark_bps": 0.248,
+     "ort_fark_ci_bps": [
+      -2.382,
+      2.294
+     ],
+     "p_getiri_dustu": 0.4358,
+     "gunluk_vol_taban": 0.004266,
+     "gunluk_vol_tedavi": 0.00377,
+     "yillik_vol_taban": 0.067725,
+     "yillik_vol_tedavi": 0.059848,
+     "vol_orani": 0.883682,
+     "vol_farki_ci": [
+      -0.00208072,
+      0.00040912
+     ],
+     "p_vol_dustu": 0.8618,
+     "maxdd_taban": 0.071709,
+     "maxdd_tedavi": 0.07675,
+     "maxdd_farki_ort": -0.015395,
+     "maxdd_farki_ci": [
+      -0.082845,
+      0.038147
+     ],
+     "p_maxdd_dustu": 0.6943,
+     "sharpe_taban": 0.294138,
+     "sharpe_tedavi": 0.43715,
+     "sharpe_farki_ci": [
+      -1.12264,
+      0.8952
+     ],
+     "p_sharpe_dustu": 0.447,
+     "sharpe_boot_gecersiz": 0,
+     "neden": null
+    }
+   }
+  }
+ },
+ "carpan": {
+  "p21_oosonly": {
+   "IS_2022_2024": {
+    "n_gun": 501,
+    "n_m_olculdu": 501,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.176545,
+    "m_medyan": 1.0,
+    "m_ort": 1.043258,
+    "m_p05_p95": [
+     0.578414,
+     1.5
+    ],
+    "m_min_max": [
+     0.514246,
+     1.5
+    ],
+    "m_ham_medyan": 1.0,
+    "m_ham_p05_p95": [
+     0.578414,
+     1.852569
+    ],
+    "bagli_oran": 0.1856,
+    "bagli_alt_oran": 0.0,
+    "bagli_ust_oran": 0.1856,
+    "m_1_ustu_oran": 0.501,
+    "m_1_alti_oran": 0.499,
+    "uygulanan_medyan": 1.0,
+    "uygulanan_p05_p95": [
+     1.0,
+     1.0
+    ],
+    "uygulanan_1_disi_gun": 0,
+    "neden": null
+   },
+   "OOS_search": {
+    "n_gun": 400,
+    "n_m_olculdu": 400,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.123018,
+    "m_medyan": 1.435114,
+    "m_ort": 1.282242,
+    "m_p05_p95": [
+     0.5,
+     1.5
+    ],
+    "m_min_max": [
+     0.5,
+     1.5
+    ],
+    "m_ham_medyan": 1.435114,
+    "m_ham_p05_p95": [
+     0.40013,
+     2.353523
+    ],
+    "bagli_oran": 0.49,
+    "bagli_alt_oran": 0.0525,
+    "bagli_ust_oran": 0.4375,
+    "m_1_ustu_oran": 0.83,
+    "m_1_alti_oran": 0.17,
+    "uygulanan_medyan": 1.435114,
+    "uygulanan_p05_p95": [
+     0.5,
+     1.5
+    ],
+    "uygulanan_1_disi_gun": 400,
+    "neden": null
+   },
+   "OOS_tam": {
+    "n_gun": 583,
+    "n_m_olculdu": 583,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.122657,
+    "m_medyan": 1.439344,
+    "m_ort": 1.307382,
+    "m_p05_p95": [
+     0.810581,
+     1.5
+    ],
+    "m_min_max": [
+     0.5,
+     1.5
+    ],
+    "m_ham_medyan": 1.439344,
+    "m_ham_p05_p95": [
+     0.810581,
+     2.359408
+    ],
+    "bagli_oran": 0.47,
+    "bagli_alt_oran": 0.036,
+    "bagli_ust_oran": 0.434,
+    "m_1_ustu_oran": 0.8525,
+    "m_1_alti_oran": 0.1475,
+    "uygulanan_medyan": 1.4398,
+    "uygulanan_p05_p95": [
+     0.810581,
+     1.5
+    ],
+    "uygulanan_1_disi_gun": 583,
+    "neden": null
+   },
+   "cifte_kisma_OOS": {
+    "n_gun": 583,
+    "derisk_medyan": 0.561,
+    "derisk_p05_p95": [
+     0.0708,
+     1.0
+    ],
+    "derisk_min": 0.0708,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.096369,
+     1.5
+    ],
+    "toplam_armed": 341,
+    "derisk_altinda_gun": 469,
+    "m_altinda_gun": 86,
+    "cifte_kisma_gun": 86,
+    "cifte_kisma_oran": 0.1475,
+    "dolum_denenen_gun": 104,
+    "cifte_kisma_dolumlu_gun": 5,
+    "en_sert_carpim": 0.062105,
+    "carpim_medyan": 0.62745,
+    "cifte_kisma_ornek": [
+     {
+      "date": "2024-08-06",
+      "derisk": 0.3812,
+      "m": 0.94042435,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-07",
+      "derisk": 0.3812,
+      "m": 0.91886074,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-08",
+      "derisk": 0.3812,
+      "m": 0.91929686,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-09",
+      "derisk": 0.3812,
+      "m": 0.8479482,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-12",
+      "derisk": 0.3812,
+      "m": 0.84739253,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-13",
+      "derisk": 0.3812,
+      "m": 0.85535963,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-14",
+      "derisk": 0.3812,
+      "m": 0.81804811,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-15",
+      "derisk": 0.3812,
+      "m": 0.8218838,
+      "n_fill": 0
+     },
+     {
+      "date": "2024-08-16",
+      "derisk": 0.3812,
+      "m": 0.80466114,
+      "n_fill": 1
+     },
+     {
+      "date": "2024-08-19",
+      "derisk": 0.3742,
+      "m": 0.81040272,
+      "n_fill": 0
+     }
+    ],
+    "neden": null
+   },
+   "cifte_kisma_IS": {
+    "n_gun": 501,
+    "derisk_medyan": 1.0,
+    "derisk_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "derisk_min": 0.4226,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "toplam_armed": 114,
+    "derisk_altinda_gun": 189,
+    "m_altinda_gun": 0,
+    "cifte_kisma_gun": 0,
+    "cifte_kisma_oran": 0.0,
+    "dolum_denenen_gun": 54,
+    "cifte_kisma_dolumlu_gun": 0,
+    "en_sert_carpim": 0.4226,
+    "carpim_medyan": 1.0,
+    "cifte_kisma_ornek": null,
+    "neden": null
+   },
+   "dolum_OOS": {
+    "n_denendi": 130,
+    "n_oldu": 113,
+    "ret_nedenleri": {
+     "entry_missed_limit": 13,
+     "open_below_stop": 1,
+     "max_chase": 3
+    },
+    "neden": null
+   }
+  },
+  "p63_oosonly": {
+   "IS_2022_2024": {
+    "n_gun": 501,
+    "n_m_olculdu": 501,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.18274196,
+    "pencere": 63,
+    "sigma_gercek_medyan": 0.182742,
+    "m_medyan": 1.0,
+    "m_ort": 1.046063,
+    "m_p05_p95": [
+     0.654378,
+     1.5
+    ],
+    "m_min_max": [
+     0.628459,
+     1.5
+    ],
+    "m_ham_medyan": 1.0,
+    "m_ham_p05_p95": [
+     0.654378,
+     1.709669
+    ],
+    "bagli_oran": 0.1776,
+    "bagli_alt_oran": 0.0,
+    "bagli_ust_oran": 0.1776,
+    "m_1_ustu_oran": 0.501,
+    "m_1_alti_oran": 0.499,
+    "uygulanan_medyan": 1.0,
+    "uygulanan_p05_p95": [
+     1.0,
+     1.0
+    ],
+    "uygulanan_1_disi_gun": 0,
+    "neden": null
+   },
+   "OOS_search": {
+    "n_gun": 400,
+    "n_m_olculdu": 400,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.18274196,
+    "pencere": 63,
+    "sigma_gercek_medyan": 0.12587,
+    "m_medyan": 1.451835,
+    "m_ort": 1.26492,
+    "m_p05_p95": [
+     0.550912,
+     1.5
+    ],
+    "m_min_max": [
+     0.53651,
+     1.5
+    ],
+    "m_ham_medyan": 1.451835,
+    "m_ham_p05_p95": [
+     0.550912,
+     1.760575
+    ],
+    "bagli_oran": 0.42,
+    "bagli_alt_oran": 0.0,
+    "bagli_ust_oran": 0.42,
+    "m_1_ustu_oran": 0.8325,
+    "m_1_alti_oran": 0.1675,
+    "uygulanan_medyan": 1.451835,
+    "uygulanan_p05_p95": [
+     0.550912,
+     1.5
+    ],
+    "uygulanan_1_disi_gun": 400,
+    "neden": null
+   },
+   "OOS_tam": {
+    "n_gun": 583,
+    "n_m_olculdu": 583,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.18274196,
+    "pencere": 63,
+    "sigma_gercek_medyan": 0.121196,
+    "m_medyan": 1.5,
+    "m_ort": 1.32661,
+    "m_p05_p95": [
+     0.553444,
+     1.5
+    ],
+    "m_min_max": [
+     0.53651,
+     1.5
+    ],
+    "m_ham_medyan": 1.507817,
+    "m_ham_p05_p95": [
+     0.553444,
+     1.879988
+    ],
+    "bagli_oran": 0.5163,
+    "bagli_alt_oran": 0.0,
+    "bagli_ust_oran": 0.5163,
+    "m_1_ustu_oran": 0.8851,
+    "m_1_alti_oran": 0.1149,
+    "uygulanan_medyan": 1.5,
+    "uygulanan_p05_p95": [
+     0.553444,
+     1.5
+    ],
+    "uygulanan_1_disi_gun": 583,
+    "neden": null
+   },
+   "cifte_kisma_OOS": {
+    "n_gun": 583,
+    "derisk_medyan": 0.1183,
+    "derisk_p05_p95": [
+     0.0526,
+     1.0
+    ],
+    "derisk_min": 0.0523,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.061,
+     1.5
+    ],
+    "toplam_armed": 379,
+    "derisk_altinda_gun": 487,
+    "m_altinda_gun": 67,
+    "cifte_kisma_gun": 67,
+    "cifte_kisma_oran": 0.1149,
+    "dolum_denenen_gun": 74,
+    "cifte_kisma_dolumlu_gun": 4,
+    "en_sert_carpim": 0.055444,
+    "carpim_medyan": 0.163688,
+    "cifte_kisma_ornek": [
+     {
+      "date": "2025-04-04",
+      "derisk": 0.1183,
+      "m": 0.9737409,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-07",
+      "derisk": 0.1183,
+      "m": 0.83135041,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-08",
+      "derisk": 0.1183,
+      "m": 0.83914205,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-09",
+      "derisk": 0.1183,
+      "m": 0.8355637,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-10",
+      "derisk": 0.1183,
+      "m": 0.59635726,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-11",
+      "derisk": 0.1183,
+      "m": 0.57439357,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-14",
+      "derisk": 0.1183,
+      "m": 0.57235703,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-15",
+      "derisk": 0.1183,
+      "m": 0.57111632,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-16",
+      "derisk": 0.1183,
+      "m": 0.5711468,
+      "n_fill": 0
+     },
+     {
+      "date": "2025-04-17",
+      "derisk": 0.1183,
+      "m": 0.57056943,
+      "n_fill": 0
+     }
+    ],
+    "neden": null
+   },
+   "cifte_kisma_IS": {
+    "n_gun": 501,
+    "derisk_medyan": 1.0,
+    "derisk_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "derisk_min": 0.4226,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "toplam_armed": 114,
+    "derisk_altinda_gun": 189,
+    "m_altinda_gun": 0,
+    "cifte_kisma_gun": 0,
+    "cifte_kisma_oran": 0.0,
+    "dolum_denenen_gun": 54,
+    "cifte_kisma_dolumlu_gun": 0,
+    "en_sert_carpim": 0.4226,
+    "carpim_medyan": 1.0,
+    "cifte_kisma_ornek": null,
+    "neden": null
+   },
+   "dolum_OOS": {
+    "n_denendi": 88,
+    "n_oldu": 79,
+    "ret_nedenleri": {
+     "entry_missed_limit": 6,
+     "open_below_stop": 1,
+     "qty_zero": 1,
+     "max_chase": 1
+    },
+    "neden": null
+   }
+  },
+  "kapali": {
+   "IS_2022_2024": {
+    "n_gun": 501,
+    "n_m_olculdu": 501,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.176545,
+    "m_medyan": 1.0,
+    "m_ort": 1.043258,
+    "m_p05_p95": [
+     0.578414,
+     1.5
+    ],
+    "m_min_max": [
+     0.514246,
+     1.5
+    ],
+    "m_ham_medyan": 1.0,
+    "m_ham_p05_p95": [
+     0.578414,
+     1.852569
+    ],
+    "bagli_oran": 0.1856,
+    "bagli_alt_oran": 0.0,
+    "bagli_ust_oran": 0.1856,
+    "m_1_ustu_oran": 0.501,
+    "m_1_alti_oran": 0.499,
+    "uygulanan_medyan": 1.0,
+    "uygulanan_p05_p95": [
+     1.0,
+     1.0
+    ],
+    "uygulanan_1_disi_gun": 0,
+    "neden": null
+   },
+   "OOS_search": {
+    "n_gun": 400,
+    "n_m_olculdu": 400,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.123018,
+    "m_medyan": 1.435114,
+    "m_ort": 1.282242,
+    "m_p05_p95": [
+     0.5,
+     1.5
+    ],
+    "m_min_max": [
+     0.5,
+     1.5
+    ],
+    "m_ham_medyan": 1.435114,
+    "m_ham_p05_p95": [
+     0.40013,
+     2.353523
+    ],
+    "bagli_oran": 0.49,
+    "bagli_alt_oran": 0.0525,
+    "bagli_ust_oran": 0.4375,
+    "m_1_ustu_oran": 0.83,
+    "m_1_alti_oran": 0.17,
+    "uygulanan_medyan": 1.0,
+    "uygulanan_p05_p95": [
+     1.0,
+     1.0
+    ],
+    "uygulanan_1_disi_gun": 0,
+    "neden": null
+   },
+   "OOS_tam": {
+    "n_gun": 583,
+    "n_m_olculdu": 583,
+    "olcemedi_gun": 0,
+    "olcemedi_ornek": null,
+    "sigma_hedef": 0.17654516,
+    "pencere": 21,
+    "sigma_gercek_medyan": 0.122657,
+    "m_medyan": 1.439344,
+    "m_ort": 1.307382,
+    "m_p05_p95": [
+     0.810581,
+     1.5
+    ],
+    "m_min_max": [
+     0.5,
+     1.5
+    ],
+    "m_ham_medyan": 1.439344,
+    "m_ham_p05_p95": [
+     0.810581,
+     2.359408
+    ],
+    "bagli_oran": 0.47,
+    "bagli_alt_oran": 0.036,
+    "bagli_ust_oran": 0.434,
+    "m_1_ustu_oran": 0.8525,
+    "m_1_alti_oran": 0.1475,
+    "uygulanan_medyan": 1.0,
+    "uygulanan_p05_p95": [
+     1.0,
+     1.0
+    ],
+    "uygulanan_1_disi_gun": 0,
+    "neden": null
+   },
+   "cifte_kisma_OOS": {
+    "n_gun": 583,
+    "derisk_medyan": 0.8691,
+    "derisk_p05_p95": [
+     0.0987,
+     1.0
+    ],
+    "derisk_min": 0.0987,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.0987,
+     1.0
+    ],
+    "toplam_armed": 304,
+    "derisk_altinda_gun": 312,
+    "m_altinda_gun": 0,
+    "cifte_kisma_gun": 0,
+    "cifte_kisma_oran": 0.0,
+    "dolum_denenen_gun": 121,
+    "cifte_kisma_dolumlu_gun": 0,
+    "en_sert_carpim": 0.0987,
+    "carpim_medyan": 0.8691,
+    "cifte_kisma_ornek": null,
+    "neden": null
+   },
+   "cifte_kisma_IS": {
+    "n_gun": 501,
+    "derisk_medyan": 1.0,
+    "derisk_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "derisk_min": 0.4226,
+    "derisk_sifir_gun": 0,
+    "carpim_p05_p95": [
+     0.4557,
+     1.0
+    ],
+    "toplam_armed": 114,
+    "derisk_altinda_gun": 189,
+    "m_altinda_gun": 0,
+    "cifte_kisma_gun": 0,
+    "cifte_kisma_oran": 0.0,
+    "dolum_denenen_gun": 54,
+    "cifte_kisma_dolumlu_gun": 0,
+    "en_sert_carpim": 0.4226,
+    "carpim_medyan": 1.0,
+    "cifte_kisma_ornek": null,
+    "neden": null
+   },
+   "dolum_OOS": {
+    "n_denendi": 155,
+    "n_oldu": 134,
+    "ret_nedenleri": {
+     "entry_missed_limit": 14,
+     "open_below_stop": 1,
+     "max_chase": 5,
+     "qty_zero": 1
+    },
+    "neden": null
+   }
+  }
+ },
+ "m_serisi_koldan_bagimsiz": {
+  "gecti": true,
+  "n_gun": 1146,
+  "not": "kapali kolu P=21 ile aynı sigma_hedef'i taşır ve knob KAPALI olduğu hâlde m'yi kaydeder; iki serinin birebir aynı olması m'nin SPY'den türediğini, portföy durumundan ETKİLENMEDİĞİNİ gösterir",
+  "ilk_fark": null
+ },
+ "mekanizma_islem_sayisi": {
+  "kart_beyani": "cost_model: 'overlay işlem sayısını değiştirmez (boyut değiştirir)' — ÖLÇÜM BU BEYANI YALANLIYOR",
+  "yol": "m > 1 → pozisyon boyu büyür → özkaynak salınımı artar → `broker.derisk_mult` rampası daha derin, `broker.max_positions_at` eşzamanlı slotu kısar → silahlı planların daha azı dolum kapısından geçer",
+  "kollar": {
+   "kapali": {
+    "toplam_armed_OOS": 304,
+    "fill_kapisindan_gecen": 155,
+    "dolan": 134,
+    "ret_nedenleri": {
+     "entry_missed_limit": 14,
+     "open_below_stop": 1,
+     "max_chase": 5,
+     "qty_zero": 1
+    },
+    "derisk_medyan": 0.8691,
+    "derisk_altinda_gun": 312,
+    "derisk_p05_p95": [
+     0.0987,
+     1.0
+    ],
+    "oos_n_islem": 130
+   },
+   "p21_oosonly": {
+    "toplam_armed_OOS": 341,
+    "fill_kapisindan_gecen": 130,
+    "dolan": 113,
+    "ret_nedenleri": {
+     "entry_missed_limit": 13,
+     "open_below_stop": 1,
+     "max_chase": 3
+    },
+    "derisk_medyan": 0.561,
+    "derisk_altinda_gun": 469,
+    "derisk_p05_p95": [
+     0.0708,
+     1.0
+    ],
+    "oos_n_islem": 109
+   },
+   "p63_oosonly": {
+    "toplam_armed_OOS": 379,
+    "fill_kapisindan_gecen": 88,
+    "dolan": 79,
+    "ret_nedenleri": {
+     "entry_missed_limit": 6,
+     "open_below_stop": 1,
+     "qty_zero": 1,
+     "max_chase": 1
+    },
+    "derisk_medyan": 0.1183,
+    "derisk_altinda_gun": 487,
+    "derisk_p05_p95": [
+     0.0526,
+     1.0
+    ],
+    "oos_n_islem": 75
+   }
+  },
+  "not": "`plan['size_r']` DEĞİŞMEDİĞİ için guard'ın kapı hükmü kaymadı (silahlanan plan sayısı tedavi kollarında DAHA YÜKSEK); düşüş guard'dan değil DOLUM KAPISINDAN geliyor — bu ayrım tasarımın doğrudan sonucu ve ölçülebilir olması için sayaçlar oraya kondu."
+ },
+ "pozitif_ev_onkosulu": {
+  "kart_beyani": "taban V3 OOS para_search 0.0856 > 0 (wpg_olcum ref_snapshot, 2026-07-31 sabahı)",
+  "bu_turda_olculen_taban": {
+   "para_search": 0.1605,
+   "oos_score": 0.0579,
+   "oos_n": 130,
+   "is_score": 0.0651
+  },
+  "sapma_nedeni": "MOTOR AYNI GÜN DEĞİŞTİ: bu tur BUGÜNKÜ depo motoruyla koşuldu (WP-E E1 giriş-icra yasası: limit fiyat tavanı + gap vetosu; goal.yaml'a `execution_v2`/`pessimistic_band_v2` blokları eklendi; H9 SQLite turu). wpg_olcum'un 0.0856'sı E1 ÖNCESİ motorun sayısıdır — iki sayı farklı motorlardan gelir, kıyaslanamaz. Bu turun İÇ tutarlılığı bozulmaz: dört kolun DÖRDÜ de aynı motorla koştu.",
+  "onkosul_saglandi": true
+ },
+ "hukum": {
+  "yazildi": true,
+  "esikler": {
+   "P(ΔS<0) < ": 0.5,
+   "P(düşüş) >= ": 0.95,
+   "kill2_m_bandi": [
+    0.9,
+    1.1
+   ],
+   "kill2_medyan_tolerans": 0.05
+  },
+  "hangi_pencere": "başarı/kill okuması SEARCH dilimindendir (PARA-v3 ile AYNI popülasyon); tam-OOS karşılığı bilgi olarak yanında durur",
+  "kollar": {
+   "p21_oosonly": {
+    "onerilen": "bilgisiz/yonsuz",
+    "kill_gerekceleri": null,
+    "basari_kosulu": {
+     "para_dusmedi_P<0.5": true,
+     "p_delta_negatif": 0.4417,
+     "para_anlamli_artti": false,
+     "vol_dustu_P>=0.95": false,
+     "maxdd_dustu_P>=0.95": false
+    },
+    "koruma": {
+     "search": {
+      "vol_dustu": false,
+      "maxdd_dustu": false,
+      "p_vol_dustu": 0.0635,
+      "p_maxdd_dustu": 0.1948,
+      "sharpe_anlamli_dustu": false,
+      "sharpe_farki_ci": [
+       -0.750013,
+       0.569259
+      ],
+      "getiri_farki_ci_sifir_disi": false
+     },
+     "oos_tam": {
+      "vol_dustu": false,
+      "maxdd_dustu": false,
+      "p_vol_dustu": 0.0938,
+      "p_maxdd_dustu": 0.4108,
+      "sharpe_anlamli_dustu": false,
+      "sharpe_farki_ci": [
+       -0.445348,
+       0.827191
+      ],
+      "getiri_farki_ci_sifir_disi": false
+     }
+    },
+    "carpan_etkisiz_kill2": false,
+    "carpan_ozet": {
+     "m_medyan": 1.439344,
+     "m_p05_p95": [
+      0.810581,
+      1.5
+     ],
+     "bagli_oran": 0.47,
+     "bagli_ust_oran": 0.434,
+     "bagli_alt_oran": 0.036,
+     "m_1_ustu_oran": 0.8525
+    },
+    "gerekce": "P(ΔPARA<0)=0.4417 · vol düştü P=0.0635 · maxDD düştü P=0.1948 · m medyan=1.439344 p05-p95=[0.810581, 1.5] bağlı=0.47"
+   },
+   "p63_oosonly": {
+    "onerilen": "bilgisiz/yonsuz",
+    "kill_gerekceleri": null,
+    "basari_kosulu": {
+     "para_dusmedi_P<0.5": false,
+     "p_delta_negatif": 0.5333,
+     "para_anlamli_artti": false,
+     "vol_dustu_P>=0.95": false,
+     "maxdd_dustu_P>=0.95": false
+    },
+    "koruma": {
+     "search": {
+      "vol_dustu": false,
+      "maxdd_dustu": false,
+      "p_vol_dustu": 0.6995,
+      "p_maxdd_dustu": 0.333,
+      "sharpe_anlamli_dustu": false,
+      "sharpe_farki_ci": [
+       -1.793804,
+       0.571779
+      ],
+      "getiri_farki_ci_sifir_disi": false
+     },
+     "oos_tam": {
+      "vol_dustu": false,
+      "maxdd_dustu": false,
+      "p_vol_dustu": 0.8618,
+      "p_maxdd_dustu": 0.6943,
+      "sharpe_anlamli_dustu": false,
+      "sharpe_farki_ci": [
+       -1.12264,
+       0.8952
+      ],
+      "getiri_farki_ci_sifir_disi": false
+     }
+    },
+    "carpan_etkisiz_kill2": false,
+    "carpan_ozet": {
+     "m_medyan": 1.5,
+     "m_p05_p95": [
+      0.553444,
+      1.5
+     ],
+     "bagli_oran": 0.5163,
+     "bagli_ust_oran": 0.5163,
+     "bagli_alt_oran": 0.0,
+     "m_1_ustu_oran": 0.8851
+    },
+    "gerekce": "P(ΔPARA<0)=0.5333 · vol düştü P=0.6995 · maxDD düştü P=0.333 · m medyan=1.5 p05-p95=[0.553444, 1.5] bağlı=0.5163"
+   }
+  },
+  "kill3_iki_pencerede_de_yonsuz": true,
+  "aile_onerisi": "arşiv"
+ }
+}

@@ -1,0 +1,1347 @@
+{
+ "olcum": "WP-G çift ölçüm — EDG-2026-005 (SMA kapısı) + EDG-2026-006 (ToM tilt)",
+ "olcum_zamani": "2026-07-31T07:26:43.513690+00:00",
+ "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wpg_olcum",
+ "beyan": "SALT-ÖLÇÜM. Depoya ve canlı state'e HİÇBİR yazım yapılmadı; her kol kendi state_<kol>/ dizinine yazdı, barlar canlı önbellekten SALT-OKUNUR okundu (load_cached ağa çıkmaz, CSV yeniden yazmaz).",
+ "kod_damgasi": {
+  "depo": {
+   "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/alpaca.py": "1c147db1c8ab24f96ae772676191b97874b9709c64038df309916f33c92930d4",
+   "adapters/constituents.py": "f202a8cd583bbc2068afa9657f609b8bb19859b9de9a155d499adf194c06d1de",
+   "adapters/data.py": "7456483fa848ca6c3a0b55d11d1a4f81fcaa47b1b42821a851db23bf9cb76e9a",
+   "adapters/finviz.py": "88e5bf68b156a60a1adaa44c849853299de9dea0d1604249bda59c7b27bad0c8",
+   "adapters/fmp.py": "045a3b642e95bbbbf03daa4fc97093d47bf0d9770c4096450ecdf3ee840886fb",
+   "adapters/insider.py": "6fb31fe29f4c49a5ed0f426706ec9ee4c3e882a1ef0030177ebc5ab520adc76c",
+   "adapters/macro.py": "96dac96231fab4aad36d747954dcdee9dc49af0a85e89582ff00e9e36e2d8687",
+   "adapters/massive.py": "fbebb1d2ed588451520c3d8b9d3310864ed664e87ce7bbf78f31890f8049bdfb",
+   "adapters/news.py": "102e48eba1110d355d1b39b73fcc6085ff52701ff59380b467cf5319dc5d330c",
+   "adapters/shortinterest.py": "832ce0e2cf1adcef49d0ccca87286e31dac41605176e90163295149972b8ebbe",
+   "analytics.py": "1b4847784ef14658af9ce972526f5784e79a53d94b5e6bfd7936bf61c94da36a",
+   "api.py": "fa0dc389f1534df1c4c193896b96e9b316c15abb6f28ba9cf97f44377ff59ded",
+   "arming.py": "6eff2a39cebb6ab633bbc3e0de6473834ce1a72a9dd19078a4ca1d29d2936956",
+   "auth.py": "7ddf5abe2d9b26f7a3e73b12784b1d4a386e9a679a3fdc5497a1ec4262404032",
+   "auth_cli.py": "172608ea591fd4abaa07bfcc1144cc99101b51c16797ab367a87adb49c86d507",
+   "backtest.py": "e28e61280fa27adf4c2ce6f7bdb2dfea59271ba926941011635b3f600573ed41",
+   "bararchive.py": "818b14a38965f7673d37bb250e21209a9d8b7e2c6682b27d977674dfe6cc11e4",
+   "barclock.py": "1fcca2c9231f6168643b3bddc54ebbe3704feb17b397a4e706ff6f86d2652ce5",
+   "barfeed.py": "73f941490a674a08c9688edf9bcc170f577abc5aa20f0bc9aa745ce64b44098f",
+   "barrepair.py": "7d7127b4ad6598796daf60abdcbe1b3f489a949289655fbaa2eb8d422e4da554",
+   "barsarchive.py": "77da37d407ecf0be5558e896dc3354ab81ba52ac49a63db62f0e148adab3b156",
+   "baseline.py": "c8ad232d664f3035bc694d15e8a5659e037d65dd8b82b47f16b257cdd609f3e0",
+   "broker.py": "3745cacfa69d75de6ecbee6d7cb985a5e3a76c5fcb4e528d5ce70c33035f6128",
+   "cf_backfill.py": "5d42cb48a32a3f44d38b910b1d032c2aace2e5c2be8f1cd7e9a7b2be78fe9a5e",
+   "codelaw.py": "734afd1a92f75898caed7b76893c5855bba2a3971672ad0140eb5f87f643d872",
+   "component_ic.py": "ee61e56fc03fbb5966fb927b735091b750a46800f0d5e889eb71eb7eab30f767",
+   "config.py": "6600a211eb2ed940f6088f33bdd4803b793a67266b913deb6e1265f27a0b2acd",
+   "counterfactual.py": "e20ac7001a993d384c5958984811d83a0c5beb2f169b887ffca81f6225b99462",
+   "dataset.py": "e6ea06a8f1ac14c20e0bdaee650bd4ac81416bd6688cdd4c683853196b21fc29",
+   "earnings.py": "41c6b4bf402be4bf0a79f0ee2b4912e0560a64a50f8ee15b00e2e031d11b46da",
+   "guard.py": "4231d9ce8019e8dd887d9f7938c7e3bfed4b10946ba7ee269906a9b85a522f2b",
+   "health.py": "1c797aaf8896d735b467d7194ead0e17ddf5abf298a064589f41265b12400958",
+   "hermes.py": "c04f32fbfebde53ca3959d2c344eb662f6f72e97e341b844982ce0f9167c0f40",
+   "hermes_composite.py": "cbffa7a7a71772dbf919b67edbce36ae77e3112a9cecbb0416519c7bed6bd602",
+   "hermes_runtime.py": "18388db3849b059c3e2ca76b559341d3c95a7fe19aedff52831183585c05e374",
+   "hotstate.py": "fa79f9b676eb68b42cceb7fd02590a591d50c3b4e1aa98ef6b45f8104507d688",
+   "indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+   "integrity_registry.py": "62c966fb41a5946968aed0f5637b4b56f99a12ed1c442a0586f9a60660da0adf",
+   "intraday_cycle.py": "daa7aeb6689acd2bf516bee58e2bfe32885084fafe70884eb42b35372a83d246",
+   "intraday_shadow.py": "ac2eb57572d78af230ab0312b774a406efc722ba4a077fb0663cba463c3dc793",
+   "ledgers.py": "3149d487643ff74be900127166e750d94dd934c645f3b9b0ab85487beb714f51",
+   "ledgerstamp.py": "837d48358c637b04527ac1e32594971927d618e892b44b4760061a98c8e5efd8",
+   "loop.py": "15c957cb610c9f17ac3eb79d7a417dfe8ec39a4ce6f01615218f7a638a5456f4",
+   "marketstream.py": "839b64229181b78300a4dd85a94bb1dc200bafb19aba91545875985956da7557",
+   "marketview.py": "37c34359737a9d1fdcbdcadf0938f6f1e0ab017a9640c93a669b7e9a41ae6f20",
+   "mcp_server.py": "fa876f1a4d6be7a160c339403689a9704adf923d70e04f2d49e42973562765d9",
+   "memory.py": "c9941fd398c56dab1f036fd05f1ce0a82871d46b63cf796388b9910eacf3aa0e",
+   "mirror_stream.py": "f3e604e08474812227bcceb46f723ee904cc56442f1c9e0694952f6f1c0b8843",
+   "mutation.py": "01d19e13d06f61726ad38ad3a50a6ebbe61c19c6c2f7bd0617b5be1b9242c569",
+   "notify.py": "dac9024c4c900031ecf7e1f26c730bb05ab5666f9219692f03d5a74c85c86b7d",
+   "nous_eval.py": "c2d22a10a54b75f31d699e4559c778a17e8da6f4306047dbbe6b1e64ccbc47fd",
+   "obs.py": "d1a24f5bdd0db26030cbfc800a862be0c897654d58e1b2113b4428410f86ab5e",
+   "oos_erosion.py": "2b8ce8a329b88760ca4c8937a01a171fe1146cc8ac2d0a85aaea6a8be7e91d2d",
+   "oos_pipeline.py": "44d1c5210991f7a5edc9af038db942f2e01f81a9155b4ab356a1b76cb8956d24",
+   "prescreen.py": "d6c95fff9658895d8b5531f77eeb8205b8867098abccb7f4ee25109e47b92862",
+   "probgate.py": "97c88cead6981bb93e86c011fc9f56f25bab7c3b125558ef2b504d63f670feb8",
+   "provenance.py": "64117604982b17940e72649b23a3f57d9aa87f075b17056aea2c84eb6bb90da5",
+   "recompute.py": "39214be4a927d0b377f9702b0612deb6c7da64aff8b9b5eacf39567d0ff79247",
+   "reflect.py": "6cebbcf4dd9b0395656fb741ddfe9a2661a385397ceb1b95f52dd6fe6bf75319",
+   "regime.py": "90b2b2a3a4ed58b2d51ee0297986f5d092248222dd06fecc5cbfc178f5fc0b79",
+   "regime_trigger.py": "e9a1f5f06dd841ccc5a4f910b9991885924af7dfb20975cba4f5e8a411faaaf4",
+   "rollback.py": "27fa940a313e30b1af64313f413a2ba73327876f68b6e378a24f31f752737579",
+   "run.py": "9a6b1548042f6ed73d502c65b01a62a906cce9243deea81c2a32a1f62c74771a",
+   "scheduler.py": "0db22ee0da40e9057481764736644d8bc663f5881c11de4eb79c074ff30155cb",
+   "score.py": "d4dba15b9e60f17d1b52c25c6786d7ad3f1b62e66bde8090655952333e3b93c4",
+   "secrets.py": "43cacdf9e2f2050bd794a3ed5d828933d7a408c4de8bbded57c3b0672d61116b",
+   "selfreview.py": "cdec767e1c5edc47940747c61cd7d7184fa9cd0eb02e4c281cc4ff6a10934eb6",
+   "shadow_lifecycle.py": "471d47ffc171134a5d041d87d80ad489f900b0580df666dda7e00ab8f68d9dfb",
+   "shadow_model.py": "a4e5ff5e70411d51b0bb8887e405155a813c893ad4e6ac42bbcb35bafa00ab56",
+   "shadow_variants.py": "27b53702be7fadbcaeedbf89901280d3f6c3d50f7b46020411618b3e7b5c99fb",
+   "shadowlaw.py": "f8ae4deba330a9ac2ec4fc07b2a111147da6dcededb4518e2578867cdaea83a5",
+   "sieve.py": "bcb37c0020f186134f0d14e59365ba70f05669715a0c6ad2faaed6a12b0d2933",
+   "skill_evolve.py": "efd3c598bf6c155d226ccf284470db8d2c5a20b4eaae72c8d43cd9ad62cff8fa",
+   "skills.py": "fc58f0a3b725f0d5f349748abb517c9e2d87438890d4d4a1122732ae12e13221",
+   "spend.py": "6052ae51595aefc0e78b7e2db35578f571b3ad118dd884d5f0be048eddcc50e6",
+   "sprint.py": "969e17a044fa49005e8106e4e5daf6d92dec0fdee69e151acbc581fbad6ca835",
+   "sprint_run.py": "5d8cb948ccaba89205048f4cc36d5978fbae1261c0ba3fb143afa004ac3a122a",
+   "store.py": "84094ec05b9b521d0b9f282828bfd57b59c6e3d206f7b0c494cde2dda08e44a8",
+   "strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+   "streamhealth.py": "83176fc8509a40b4988ead40c07cfa04cffde9213a404f87e978ea99fa334e9d",
+   "threshold_curve.py": "2c9cb758e44b5772373f05a80bb1ffe902b99f7d430bf26f0213ad125f41ca39",
+   "validation.py": "b2e73faf2e8e23dccdb2abcd69ecf921261e88595562fe923aae90ca61562a6d",
+   "validation_report.py": "04ad19f326224ab757e20d293587aa6daca132cf5659c17e31601205dd2fa5ab",
+   "versioning.py": "e2790f160b9cafd79ce97d03f6d673b3b3aa093fad7c9cf17a1c4aece63daad2",
+   "watchdog.py": "cc4525240fcc6bcc1d9434bee7030aa6480ca2a404e69cb1c884678235077bc1"
+  },
+  "sandbox": {
+   "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/alpaca.py": "3aa25c79dac55ebce55c13f6a7b21364aa5cc3341af742d89df037d6ecf3643c",
+   "adapters/constituents.py": "f202a8cd583bbc2068afa9657f609b8bb19859b9de9a155d499adf194c06d1de",
+   "adapters/data.py": "7456483fa848ca6c3a0b55d11d1a4f81fcaa47b1b42821a851db23bf9cb76e9a",
+   "adapters/finviz.py": "88e5bf68b156a60a1adaa44c849853299de9dea0d1604249bda59c7b27bad0c8",
+   "adapters/fmp.py": "045a3b642e95bbbbf03daa4fc97093d47bf0d9770c4096450ecdf3ee840886fb",
+   "adapters/insider.py": "6fb31fe29f4c49a5ed0f426706ec9ee4c3e882a1ef0030177ebc5ab520adc76c",
+   "adapters/macro.py": "96dac96231fab4aad36d747954dcdee9dc49af0a85e89582ff00e9e36e2d8687",
+   "adapters/massive.py": "fbebb1d2ed588451520c3d8b9d3310864ed664e87ce7bbf78f31890f8049bdfb",
+   "adapters/news.py": "102e48eba1110d355d1b39b73fcc6085ff52701ff59380b467cf5319dc5d330c",
+   "adapters/shortinterest.py": "832ce0e2cf1adcef49d0ccca87286e31dac41605176e90163295149972b8ebbe",
+   "analytics.py": "1b4847784ef14658af9ce972526f5784e79a53d94b5e6bfd7936bf61c94da36a",
+   "api.py": "fa0dc389f1534df1c4c193896b96e9b316c15abb6f28ba9cf97f44377ff59ded",
+   "arming.py": "6eff2a39cebb6ab633bbc3e0de6473834ce1a72a9dd19078a4ca1d29d2936956",
+   "auth.py": "7ddf5abe2d9b26f7a3e73b12784b1d4a386e9a679a3fdc5497a1ec4262404032",
+   "auth_cli.py": "172608ea591fd4abaa07bfcc1144cc99101b51c16797ab367a87adb49c86d507",
+   "backtest.py": "ea18f008051d23a4d41729d726f2a9003dfa8e188add4fbafd7b91dab1905d34",
+   "bararchive.py": "818b14a38965f7673d37bb250e21209a9d8b7e2c6682b27d977674dfe6cc11e4",
+   "barclock.py": "1fcca2c9231f6168643b3bddc54ebbe3704feb17b397a4e706ff6f86d2652ce5",
+   "barfeed.py": "73f941490a674a08c9688edf9bcc170f577abc5aa20f0bc9aa745ce64b44098f",
+   "barrepair.py": "7d7127b4ad6598796daf60abdcbe1b3f489a949289655fbaa2eb8d422e4da554",
+   "barsarchive.py": "77da37d407ecf0be5558e896dc3354ab81ba52ac49a63db62f0e148adab3b156",
+   "baseline.py": "c8ad232d664f3035bc694d15e8a5659e037d65dd8b82b47f16b257cdd609f3e0",
+   "broker.py": "e0e990196b1a21282cfb247592e12e4ce9fcec4d6da1c71dff518e8504632bba",
+   "cf_backfill.py": "5d42cb48a32a3f44d38b910b1d032c2aace2e5c2be8f1cd7e9a7b2be78fe9a5e",
+   "codelaw.py": "734afd1a92f75898caed7b76893c5855bba2a3971672ad0140eb5f87f643d872",
+   "component_ic.py": "ee61e56fc03fbb5966fb927b735091b750a46800f0d5e889eb71eb7eab30f767",
+   "config.py": "6600a211eb2ed940f6088f33bdd4803b793a67266b913deb6e1265f27a0b2acd",
+   "counterfactual.py": "e20ac7001a993d384c5958984811d83a0c5beb2f169b887ffca81f6225b99462",
+   "dataset.py": "e6ea06a8f1ac14c20e0bdaee650bd4ac81416bd6688cdd4c683853196b21fc29",
+   "earnings.py": "41c6b4bf402be4bf0a79f0ee2b4912e0560a64a50f8ee15b00e2e031d11b46da",
+   "guard.py": "282d46785e662159ac8c5fab67a9aa09add45e0b070d121edb452a547b014f9c",
+   "health.py": "1c797aaf8896d735b467d7194ead0e17ddf5abf298a064589f41265b12400958",
+   "hermes.py": "c04f32fbfebde53ca3959d2c344eb662f6f72e97e341b844982ce0f9167c0f40",
+   "hermes_composite.py": "cbffa7a7a71772dbf919b67edbce36ae77e3112a9cecbb0416519c7bed6bd602",
+   "hermes_runtime.py": "18388db3849b059c3e2ca76b559341d3c95a7fe19aedff52831183585c05e374",
+   "hotstate.py": "fa79f9b676eb68b42cceb7fd02590a591d50c3b4e1aa98ef6b45f8104507d688",
+   "indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+   "integrity_registry.py": "62c966fb41a5946968aed0f5637b4b56f99a12ed1c442a0586f9a60660da0adf",
+   "intraday_cycle.py": "daa7aeb6689acd2bf516bee58e2bfe32885084fafe70884eb42b35372a83d246",
+   "intraday_shadow.py": "ac2eb57572d78af230ab0312b774a406efc722ba4a077fb0663cba463c3dc793",
+   "ledgers.py": "3149d487643ff74be900127166e750d94dd934c645f3b9b0ab85487beb714f51",
+   "ledgerstamp.py": "837d48358c637b04527ac1e32594971927d618e892b44b4760061a98c8e5efd8",
+   "loop.py": "fc53fbede3121c785bffe79351df8375348ccf589f1acbf976a5ccb2293f527f",
+   "marketstream.py": "839b64229181b78300a4dd85a94bb1dc200bafb19aba91545875985956da7557",
+   "marketview.py": "37c34359737a9d1fdcbdcadf0938f6f1e0ab017a9640c93a669b7e9a41ae6f20",
+   "mcp_server.py": "fa876f1a4d6be7a160c339403689a9704adf923d70e04f2d49e42973562765d9",
+   "memory.py": "c9941fd398c56dab1f036fd05f1ce0a82871d46b63cf796388b9910eacf3aa0e",
+   "mirror_stream.py": "f3e604e08474812227bcceb46f723ee904cc56442f1c9e0694952f6f1c0b8843",
+   "mutation.py": "01d19e13d06f61726ad38ad3a50a6ebbe61c19c6c2f7bd0617b5be1b9242c569",
+   "notify.py": "dac9024c4c900031ecf7e1f26c730bb05ab5666f9219692f03d5a74c85c86b7d",
+   "nous_eval.py": "c2d22a10a54b75f31d699e4559c778a17e8da6f4306047dbbe6b1e64ccbc47fd",
+   "obs.py": "d1a24f5bdd0db26030cbfc800a862be0c897654d58e1b2113b4428410f86ab5e",
+   "oos_erosion.py": "2b8ce8a329b88760ca4c8937a01a171fe1146cc8ac2d0a85aaea6a8be7e91d2d",
+   "oos_pipeline.py": "44d1c5210991f7a5edc9af038db942f2e01f81a9155b4ab356a1b76cb8956d24",
+   "prescreen.py": "d6c95fff9658895d8b5531f77eeb8205b8867098abccb7f4ee25109e47b92862",
+   "probgate.py": "97c88cead6981bb93e86c011fc9f56f25bab7c3b125558ef2b504d63f670feb8",
+   "provenance.py": "64117604982b17940e72649b23a3f57d9aa87f075b17056aea2c84eb6bb90da5",
+   "recompute.py": "39214be4a927d0b377f9702b0612deb6c7da64aff8b9b5eacf39567d0ff79247",
+   "reflect.py": "6cebbcf4dd9b0395656fb741ddfe9a2661a385397ceb1b95f52dd6fe6bf75319",
+   "regime.py": "90b2b2a3a4ed58b2d51ee0297986f5d092248222dd06fecc5cbfc178f5fc0b79",
+   "regime_trigger.py": "e9a1f5f06dd841ccc5a4f910b9991885924af7dfb20975cba4f5e8a411faaaf4",
+   "rollback.py": "27fa940a313e30b1af64313f413a2ba73327876f68b6e378a24f31f752737579",
+   "run.py": "9a6b1548042f6ed73d502c65b01a62a906cce9243deea81c2a32a1f62c74771a",
+   "scheduler.py": "0db22ee0da40e9057481764736644d8bc663f5881c11de4eb79c074ff30155cb",
+   "score.py": "d4dba15b9e60f17d1b52c25c6786d7ad3f1b62e66bde8090655952333e3b93c4",
+   "secrets.py": "43cacdf9e2f2050bd794a3ed5d828933d7a408c4de8bbded57c3b0672d61116b",
+   "selfreview.py": "cdec767e1c5edc47940747c61cd7d7184fa9cd0eb02e4c281cc4ff6a10934eb6",
+   "shadow_lifecycle.py": "471d47ffc171134a5d041d87d80ad489f900b0580df666dda7e00ab8f68d9dfb",
+   "shadow_model.py": "a4e5ff5e70411d51b0bb8887e405155a813c893ad4e6ac42bbcb35bafa00ab56",
+   "shadow_variants.py": "27b53702be7fadbcaeedbf89901280d3f6c3d50f7b46020411618b3e7b5c99fb",
+   "shadowlaw.py": "f8ae4deba330a9ac2ec4fc07b2a111147da6dcededb4518e2578867cdaea83a5",
+   "sieve.py": "bcb37c0020f186134f0d14e59365ba70f05669715a0c6ad2faaed6a12b0d2933",
+   "skill_evolve.py": "efd3c598bf6c155d226ccf284470db8d2c5a20b4eaae72c8d43cd9ad62cff8fa",
+   "skills.py": "fc58f0a3b725f0d5f349748abb517c9e2d87438890d4d4a1122732ae12e13221",
+   "spend.py": "6052ae51595aefc0e78b7e2db35578f571b3ad118dd884d5f0be048eddcc50e6",
+   "sprint.py": "969e17a044fa49005e8106e4e5daf6d92dec0fdee69e151acbc581fbad6ca835",
+   "sprint_run.py": "5d8cb948ccaba89205048f4cc36d5978fbae1261c0ba3fb143afa004ac3a122a",
+   "store.py": "84094ec05b9b521d0b9f282828bfd57b59c6e3d206f7b0c494cde2dda08e44a8",
+   "strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+   "streamhealth.py": "83176fc8509a40b4988ead40c07cfa04cffde9213a404f87e978ea99fa334e9d",
+   "threshold_curve.py": "2c9cb758e44b5772373f05a80bb1ffe902b99f7d430bf26f0213ad125f41ca39",
+   "validation.py": "b2e73faf2e8e23dccdb2abcd69ecf921261e88595562fe923aae90ca61562a6d",
+   "validation_report.py": "04ad19f326224ab757e20d293587aa6daca132cf5659c17e31601205dd2fa5ab",
+   "versioning.py": "e2790f160b9cafd79ce97d03f6d673b3b3aa093fad7c9cf17a1c4aece63daad2",
+   "watchdog.py": "cc4525240fcc6bcc1d9434bee7030aa6480ca2a404e69cb1c884678235077bc1"
+  },
+  "farkli": [
+   "adapters/alpaca.py",
+   "backtest.py",
+   "broker.py",
+   "guard.py",
+   "loop.py"
+  ]
+ },
+ "pozitif_kontrol": {
+  "tanim": "overlay'siz İKİ koşumun BİREBİR eşitliği. İkiz-1: yamalı motor, knob'lar KAPALI (sma_kapali). İkiz-2: YAMASIZ motor (ref_snapshot) — overlay kodu hiç yok. Aynı barlar, aynı pencere, aynı state. Eşitlik = boru hattı doğrulandı ve yamanın kapalıyken NO-OP olduğu ampirik olarak kanıtlandı.",
+  "gecti": true,
+  "farkli_alanlar": {},
+  "digestler": {
+   "sma_kapali": {
+    "search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+    "confirm": "50e8c130006e525918c4548774a4ee12af346e6066b235b066ccbc36cb1cff0c",
+    "search_arti_confirm": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+    "kosum_anindaki_search_digest": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+    "yeniden_hesap_tutuyor": true
+   },
+   "ref_snapshot": {
+    "search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+    "confirm": "50e8c130006e525918c4548774a4ee12af346e6066b235b066ccbc36cb1cff0c",
+    "search_arti_confirm": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+    "kosum_anindaki_search_digest": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+    "yeniden_hesap_tutuyor": true
+   }
+  },
+  "digest_sma_kapali": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+  "digest_ref_snapshot": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+  "olcut": "Search digest EŞİT **ve** Confirm digest EŞİT **ve** on üç sayısal imza alanı eşit. Defter kıyası OOS'un TAMAMINI (Search+Confirm) kapsar; hiçbir dilim kıyasın dışında bırakılmadı.",
+  "tum_digest_artefakti": {
+   "bulgu": "İlk tur `pozitif_kontrol.gecti=false` verdi ve TEK sebebi `trade_digest_tum` alanıydı. Bu YANLIŞ NEGATİFTİ ve silinmedi, burada belge olarak duruyor.",
+   "kok_neden": "kosum.py:169 `trade_digest(res.get('_trades_all') or tum_oos)` yazıyor. `_trades_all` anahtarını YALNIZ yamalı motorun walk_forward'ı döndürür (backtest.py:817) ve içinde REPLAY'İN TAMAMI vardır (2022-01-01 → 2026-07-30, 161 işlem). Yamasız motorda o anahtar YOKTUR, `or` dalı devreye girer ve yalnız OOS dilimi hash'lenir (Search+Confirm, 86 işlem). Yani iki hash AYNI POPÜLASYONU hash'lemiyordu: 161 işlem vs 86 işlem.",
+   "kanit": {
+    "sma_kapali_trade_digest_tum": "995f1d33a8b8a71932b5f6d7cb0d86e39261878013b8f1aca17f04c21f7c47f1",
+    "ref_snapshot_trade_digest_tum": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+    "sma_kapali_search_arti_confirm": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8",
+    "not": "ref_snapshot'ın `trade_digest_tum`u, sma_kapali'nin search+confirm digest'iyle BİREBİR AYNIDIR — artefaktın 'yamasız motor OOS dilimini hash'liyor' açıklamasının doğrudan kanıtı.",
+    "n_trades_total_iki_kolda": {
+     "sma_kapali": 161,
+     "ref_snapshot": 161
+    }
+   },
+   "duzeltme": "Pozitif kontrol artık Search ve Confirm digest'lerinin AYRI eşitliğine bakar; `trade_digest_tum` kıyastan çıkarıldı ama kayıttan çıkarılmadı."
+  },
+  "depo_motoru_bulasma_notu": {
+   "olay": "Ölçüm sürerken (2026-07-31) WP-E ajanı depoda broker.py, guard.py, loop.py ve adapters/alpaca.py dosyalarını DEĞİŞTİRDİ (E1 giriş-icra yasası). Bu yüzden depo motorunu çağıran ref_repo kolu benim motorumla AYNI MOTOR DEĞİLDİR ve pozitif kontrol olarak kullanılamaz. Kontrol, 01:35 anlık görüntüsünün yamasız ikizi (ref_snapshot) ile yapıldı — backtest.py'ye WP-E dokunmadığı hash ile doğrulandı.",
+   "ref_repo_imza": {
+    "oos_score": 0.0579,
+    "para_search": 0.1605,
+    "n_trades_total": 201,
+    "oos_n": 130,
+    "search_n": 103,
+    "confirm_n": 22,
+    "avg_r": 0.012,
+    "win_rate": 0.354,
+    "sharpe": 0.226,
+    "max_drawdown": 0.0717,
+    "total_return": 0.0319,
+    "is_score": 0.0651,
+    "holdout_score": null,
+    "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+    "trade_digest_tum": "83d2a81a83dfe8453fad6459cd49c473472e3c8bcbfb868e2dc3cf9cde67df40"
+   },
+   "ref_snapshot_imza": {
+    "oos_score": 0.0699,
+    "para_search": 0.0856,
+    "n_trades_total": 161,
+    "oos_n": 88,
+    "search_n": 71,
+    "confirm_n": 15,
+    "avg_r": 0.078,
+    "win_rate": 0.409,
+    "sharpe": 0.283,
+    "max_drawdown": 0.0699,
+    "total_return": 0.0339,
+    "is_score": 0.0616,
+    "holdout_score": null,
+    "trade_digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+    "trade_digest_tum": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8"
+   },
+   "ref_repo_noearn_imza": {
+    "oos_score": 0.0579,
+    "para_search": 0.1605,
+    "n_trades_total": 202,
+    "oos_n": 130,
+    "search_n": 103,
+    "confirm_n": 22,
+    "avg_r": 0.012,
+    "win_rate": 0.354,
+    "sharpe": 0.226,
+    "max_drawdown": 0.0717,
+    "total_return": 0.0319,
+    "is_score": 0.0651,
+    "holdout_score": null,
+    "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+    "trade_digest_tum": "83d2a81a83dfe8453fad6459cd49c473472e3c8bcbfb868e2dc3cf9cde67df40"
+   },
+   "r1_baseline_beklenen": {
+    "oos_score": 0.0749,
+    "para_search": 0.1005,
+    "oos_n": 90,
+    "not": "r1_baseline.py (2026-07-30 14:38) — o sandbox'ta earnings.csv YOKTU (kazanç karartması NO-OP)."
+   }
+  }
+ },
+ "edg_005_sma_kapisi": {
+  "kart": "EDG-2026-005",
+  "aile": "spy_sma_regime_gate",
+  "imza_tablosu": {
+   "oos_score": {
+    "kapali": 0.0699,
+    "acik": 0.0806,
+    "delta": 0.0107
+   },
+   "para_search": {
+    "kapali": 0.0856,
+    "acik": 0.1254,
+    "delta": 0.0398
+   },
+   "oos_n": {
+    "kapali": 88,
+    "acik": 90,
+    "delta": 2.0
+   },
+   "search_n": {
+    "kapali": 71,
+    "acik": 76,
+    "delta": 5.0
+   },
+   "n_trades_total": {
+    "kapali": 161,
+    "acik": 153,
+    "delta": -8.0
+   },
+   "avg_r": {
+    "kapali": 0.078,
+    "acik": 0.099,
+    "delta": 0.021
+   },
+   "win_rate": {
+    "kapali": 0.409,
+    "acik": 0.422,
+    "delta": 0.013
+   },
+   "sharpe": {
+    "kapali": 0.283,
+    "acik": 0.406,
+    "delta": 0.123
+   },
+   "max_drawdown": {
+    "kapali": 0.0699,
+    "acik": 0.0707,
+    "delta": 0.0008
+   },
+   "total_return": {
+    "kapali": 0.0339,
+    "acik": 0.0481,
+    "delta": 0.0142
+   },
+   "is_score": {
+    "kapali": 0.0616,
+    "acik": -0.0349,
+    "delta": -0.0965
+   },
+   "holdout_score": {
+    "kapali": null,
+    "acik": null,
+    "delta": null
+   }
+  },
+  "search_dd_islem": {
+   "kapali": 0.045662,
+   "acik": 0.058287
+  },
+  "portfoy_equity_search": {
+   "n_gun": {
+    "kapali": 400,
+    "acik": 400,
+    "delta": 0.0
+   },
+   "gunluk_vol": {
+    "kapali": 0.004212,
+    "acik": 0.004607,
+    "delta": 0.000395
+   },
+   "yillik_vol": {
+    "kapali": 0.066864,
+    "acik": 0.073128,
+    "delta": 0.006264
+   },
+   "mtm_max_dd": {
+    "kapali": 0.06886,
+    "acik": 0.067144,
+    "delta": -0.001716
+   },
+   "toplam_getiri": {
+    "kapali": 0.060011,
+    "acik": 0.066951,
+    "delta": 0.00694
+   },
+   "gunluk_ort_getiri": {
+    "kapali": 0.00015501,
+    "acik": 0.0001731,
+    "delta": 1.8e-05
+   }
+  },
+  "portfoy_equity_oos": {
+   "n_gun": {
+    "kapali": 576,
+    "acik": 576,
+    "delta": 0.0
+   },
+   "gunluk_vol": {
+    "kapali": 0.003532,
+    "acik": 0.003847,
+    "delta": 0.000315
+   },
+   "yillik_vol": {
+    "kapali": 0.056064,
+    "acik": 0.061076,
+    "delta": 0.005012
+   },
+   "mtm_max_dd": {
+    "kapali": 0.069919,
+    "acik": 0.070746,
+    "delta": 0.000827
+   },
+   "toplam_getiri": {
+    "kapali": 0.056967,
+    "acik": 0.064875,
+    "delta": 0.007908
+   },
+   "gunluk_ort_getiri": {
+    "kapali": 0.00010264,
+    "acik": 0.00011677,
+    "delta": 1.4e-05
+   }
+  },
+  "ci_gunluk_getiri_farki": {
+   "n_gun": 399,
+   "ort_fark_bps": 0.181,
+   "lo": -0.00014135,
+   "hi": 0.00034665,
+   "ort": 6.152e-05,
+   "neden": null,
+   "tanim": "açık − kapalı, AYNI günlerde eşleştirilmiş; 21 günlük hareketli blok bootstrap"
+  },
+  "vol_kiyasi": {
+   "gunluk_vol_kapali": 0.004212,
+   "gunluk_vol_acik": 0.004607,
+   "vol_orani_acik_bolu_kapali": 1.093683,
+   "not": "AYNI günlerde; oran<1 = kapı volatiliteyi düşürdü"
+  },
+  "ci_vol_farki": {
+   "ort": 0.00047556,
+   "lo": -9.26e-06,
+   "hi": 0.0011145,
+   "p_vol_dustu": 0.0272
+  },
+  "ci_para": {
+   "p_delta_negatif": 0.4267,
+   "ort_delta": 0.031557,
+   "lo": -0.479742,
+   "hi": 0.567855,
+   "n_gecerli": 600,
+   "n_olcemedi": 0,
+   "neden": null,
+   "defter_kaynagi": "tani_kapali.json / tani_acik.json (pnl_dollars'lı)",
+   "determinizm_dogrulamasi": {
+    "kapali_search_digest_esit": true,
+    "acik_search_digest_esit": true,
+    "not": "Tanı koşumu ilk turun defterini BİT DÜZEYİNDE yeniden üretmediyse ci_para bu defterden okunamaz — bu bayrak False ise sayı GEÇERSİZDİR."
+   }
+  },
+  "kapi_istatistigi": {
+   "search_penceresi": {
+    "n_gun": 400,
+    "sma_altinda_gun": 42,
+    "sma_ustunde_gun": 358,
+    "hukumsuz_gun_isinma": 0,
+    "kapi_bloke_gun_orani": 0.105,
+    "kapi_gecirgen_gun_orani": 0.895,
+    "kapi_flip_sayisi": 4,
+    "flip_basina_gun": 100.0
+   },
+   "tam_oos": {
+    "n_gun": 583,
+    "sma_altinda_gun": 55,
+    "sma_ustunde_gun": 528,
+    "hukumsuz_gun_isinma": 0,
+    "kapi_bloke_gun_orani": 0.0943,
+    "kapi_gecirgen_gun_orani": 0.9057,
+    "kapi_flip_sayisi": 6,
+    "flip_basina_gun": 97.17
+   }
+  },
+  "whipsaw": {
+   "tanim": "kapalı kolda kapının BLOKE ettiği günlerde silahlanmış planlar = kapının engellediği girişler. Etkileri KAPALI kolun GERÇEKLEŞMİŞ R'siyle ölçülür; yani 'kaçan girişin ne getireceği' varsayılmaz, ikiz koşumda ne getirdiği okunur.",
+   "search": {
+    "pencere": [
+     "2024-01-11",
+     "2025-08-18"
+    ],
+    "bloke_gun_sayisi": 42,
+    "bloke_gunde_silahlanan_plan": 0,
+    "bunlardan_gerceklesen_islem": 0,
+    "R_olculemeyen": 0,
+    "kacan_islemlerin_toplam_R": 0.0,
+    "kacan_islemlerin_ort_R": null,
+    "kacan_kazanan": 0,
+    "kacan_kaybeden": 0,
+    "gecikmeli_giren_sembol": [],
+    "kacan_ornekler": []
+   },
+   "tam_oos": {
+    "pencere": [
+     "2024-01-01",
+     "2026-04-30"
+    ],
+    "bloke_gun_sayisi": 55,
+    "bloke_gunde_silahlanan_plan": 0,
+    "bunlardan_gerceklesen_islem": 0,
+    "R_olculemeyen": 0,
+    "kacan_islemlerin_toplam_R": 0.0,
+    "kacan_islemlerin_ort_R": null,
+    "kacan_kazanan": 0,
+    "kacan_kaybeden": 0,
+    "gecikmeli_giren_sembol": [],
+    "kacan_ornekler": []
+   },
+   "kapi_flip_x_kacan_notu": "whipsaw maliyeti = flip SAYISI değil, flip'lerin ürettiği kaçan girişlerin gerçekleşmiş R toplamı. Flip sayısı §2.7'de."
+  },
+  "mekanizma_tanisi": {
+   "soru": "OOS defter ayrışması kapının OOS'taki BLOKAJINDAN mı geliyor, yoksa IS penceresinde değişen ve sınırı GEÇEN portföy durumundan mı?",
+   "yapisal_bulgu": {
+    "iddia": "walk_forward IS ve OOS'u ayrı koşmaz — TEK parça replay [is_start, holdout_end] koşar, dilimleme sonradan yapılır.",
+    "kanit_satiri": "meridian/backtest.py:764 `res = replay(params, bars, index_bars, goal, is_start, holdout_end, …)`",
+    "sonuc": "overlay IS'te de aktiftir; broker durumu (equity, peak_equity, açık pozisyonlar) IS→OOS sınırını taşır."
+   },
+   "H2_yapisal_eleme": {
+    "iddia": "`wpg.spy_sma_gate=1`in motorda TEK etki yolu vardır: `_ov['block_new_entries']`. Bloke ETMEDİĞİ bir günde yan etki üretmesi YAPISAL OLARAK mümkün değildir.",
+    "kanit": [
+     "backtest.py `wpg_overlay_day`: SMA knob'unun dokunduğu tek alan `block_new_entries = bool(on_sma and g.get('blocks_new_entries'))`; `tilt_uygulandi`/`min_score_delta` ToM knob'una bağlıdır ve bu kolda 0'dır.",
+     "`regime_mod.spy_sma_gate(...)` İKİ kolda da AYNI argümanlarla çağrılır (knob kapalıyken de hüküm kayda geçsin diye) — çağrı sırası/maliyeti fark üretmez.",
+     "`eff_entry = eff` (tilt kapalı) — tarayıcı ve guard iki kolda AYNI eşiği görür.",
+     "Kapının tek tüketicisi tarama koşuludur: `if bar_i >= no_trade_before and rj['exposure_budget_pct'] > 0 and slots > 0 and not _ov['block_new_entries']`.",
+     "`wpg.*` anahtarları strategy/guard tarafından OKUNMAZ; iki kolda anahtar KÜMESİ aynıdır (yalnız değer 0/1 farkı), dolayısıyla `config.resolve_params` çıktısı da aynıdır."
+    ],
+    "ampirik_teyit": "Pozitif kontrol yamanın KAPALIYKEN no-op olduğunu zaten kanıtlıyor; aşağıdaki `oosonly ≟ kapali` kıyası ise yamanın AÇIKKEN AMA BLOKE ETMEDİĞİ günlerde de no-op olduğunu ölçer."
+   },
+   "kapinin_isirigi": {
+    "IS_2022_2024": {
+     "bloke_gun": 239,
+     "kapali_kolun_bloke_gunde_silahlanan_plani": 8,
+     "acik_kolun_bloke_gunde_silahlanan_plani": 0
+    },
+    "OOS_2024_2026": {
+     "bloke_gun": 55,
+     "kapali_kolun_bloke_gunde_silahlanan_plani": 0,
+     "acik_kolun_bloke_gunde_silahlanan_plani": 0
+    },
+    "IS_te_engellenen_planlar": [
+     {
+      "date": "2022-08-17",
+      "ticker": "TJX",
+      "score": 65,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-08-18",
+      "ticker": "ON",
+      "score": 76,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-08-18",
+      "ticker": "EL",
+      "score": 61,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-11-15",
+      "ticker": "TJX",
+      "score": 76,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-11-18",
+      "ticker": "DECK",
+      "score": 84,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-11-22",
+      "ticker": "DE",
+      "score": 75,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-12-08",
+      "ticker": "ZBH",
+      "score": 64,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     },
+     {
+      "date": "2022-12-13",
+      "ticker": "OMC",
+      "score": 79,
+      "verdict": "REVIEW",
+      "setup": "breakout_vcp"
+     }
+    ],
+    "okuma": "Kapının bu ölçümdeki TEK fiilî ısırığı IS penceresindedir. OOS'ta bloke ettiği günlerde HİÇBİR kolda silahlı plan yoktur — yani OOS'ta hiçbir girişi engellememiştir."
+   },
+   "karsi_olgu": {
+    "tanim": {
+     "kapali": "kapı yok",
+     "acik": "kapı tüm replay",
+     "oosonly": "kapı yalnız OOS'ta bloke eder (IS yolu = kapali)",
+     "isonly": "kapı yalnız IS'te bloke eder (OOS'ta bloke etmez)"
+    },
+    "imzalar": {
+     "kapali": {
+      "trade_digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+      "trade_digest_confirm": "50e8c130006e525918c4548774a4ee12af346e6066b235b066ccbc36cb1cff0c",
+      "trade_digest_tum": "995f1d33a8b8a71932b5f6d7cb0d86e39261878013b8f1aca17f04c21f7c47f1",
+      "oos_score": 0.0699,
+      "para_search": 0.0856,
+      "is_score": 0.0616,
+      "sharpe": 0.283,
+      "oos_n": 88,
+      "search_n": 71,
+      "n_trades_total": 161
+     },
+     "acik": {
+      "trade_digest_search": "ecea745f73f7a1b5e47a24f549b7e7e918e488c9793e94b6f6397961bec809ca",
+      "trade_digest_confirm": "dd359130cf8d1262dc66d47951348cd63418b4d2f02e607af08d2a84b13b8666",
+      "trade_digest_tum": "bf3e98102e8468a82562440adff0328db692f66476f1a340a09056da9265029d",
+      "oos_score": 0.0806,
+      "para_search": 0.1254,
+      "is_score": -0.0349,
+      "sharpe": 0.406,
+      "oos_n": 90,
+      "search_n": 76,
+      "n_trades_total": 153
+     },
+     "oosonly": {
+      "trade_digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+      "trade_digest_confirm": "50e8c130006e525918c4548774a4ee12af346e6066b235b066ccbc36cb1cff0c",
+      "trade_digest_tum": "995f1d33a8b8a71932b5f6d7cb0d86e39261878013b8f1aca17f04c21f7c47f1",
+      "oos_score": 0.0699,
+      "para_search": 0.0856,
+      "is_score": 0.0616,
+      "sharpe": 0.283,
+      "oos_n": 88,
+      "search_n": 71,
+      "n_trades_total": 161
+     },
+     "isonly": {
+      "trade_digest_search": "ecea745f73f7a1b5e47a24f549b7e7e918e488c9793e94b6f6397961bec809ca",
+      "trade_digest_confirm": "dd359130cf8d1262dc66d47951348cd63418b4d2f02e607af08d2a84b13b8666",
+      "trade_digest_tum": "bf3e98102e8468a82562440adff0328db692f66476f1a340a09056da9265029d",
+      "oos_score": 0.0806,
+      "para_search": 0.1254,
+      "is_score": -0.0349,
+      "sharpe": 0.406,
+      "oos_n": 90,
+      "search_n": 76,
+      "n_trades_total": 153
+     }
+    },
+    "blok_sayaclari": {
+     "kapali": {
+      "IS_bloke_gun": 0,
+      "OOS_bloke_gun": 0,
+      "bastirilan_gun": 0
+     },
+     "acik": {
+      "IS_bloke_gun": 239,
+      "OOS_bloke_gun": 55,
+      "bastirilan_gun": 0
+     },
+     "oosonly": {
+      "IS_bloke_gun": 0,
+      "OOS_bloke_gun": 55,
+      "bastirilan_gun": 239
+     },
+     "isonly": {
+      "IS_bloke_gun": 239,
+      "OOS_bloke_gun": 0,
+      "bastirilan_gun": 55
+     }
+    },
+    "kiyaslar": {
+     "oosonly_vs_kapali": {
+      "search_digest_esit": true,
+      "confirm_digest_esit": true,
+      "tum_digest_esit": true,
+      "oos_score": [
+       0.0699,
+       0.0699
+      ],
+      "para_search": [
+       0.0856,
+       0.0856
+      ]
+     },
+     "isonly_vs_acik": {
+      "search_digest_esit": true,
+      "confirm_digest_esit": true,
+      "tum_digest_esit": true,
+      "oos_score": [
+       0.0806,
+       0.0806
+      ],
+      "para_search": [
+       0.1254,
+       0.1254
+      ]
+     },
+     "acik_vs_kapali": {
+      "search_digest_esit": false,
+      "confirm_digest_esit": false,
+      "tum_digest_esit": false,
+      "oos_score": [
+       0.0806,
+       0.0699
+      ],
+      "para_search": [
+       0.1254,
+       0.0856
+      ]
+     },
+     "okuma": "oosonly≡kapali ⇒ kapının OOS'ta DOĞRUDAN etkisi sıfır. isonly≡acik ⇒ acik-kapali OOS farkının TAMAMI IS-yankısıdır."
+    }
+   },
+   "IS_whipsaw": {
+    "tanim": "Kapının IS'te engellediği planların, KAPALI kolda gerçekleşmiş R'si. Toplam POZİTİFSE kapı masada para bıraktı; NEGATİFSE kapı zarar kesti.",
+    "engellenen_plan": 8,
+    "bunlardan_gerceklesen_islem": 8,
+    "R_olculemeyen": 0,
+    "kacan_toplam_R": -0.873,
+    "kacan_ort_R": -0.1091,
+    "kacan_toplam_dolar": -444.7,
+    "kazanan": 4,
+    "kaybeden": 4,
+    "kacan_islemler": [
+     {
+      "date": "2022-08-17",
+      "ticker": "TJX",
+      "r_multiple": -1.009,
+      "pnl_dollars": -654.21,
+      "exit_reason": "stop",
+      "ts_open": "2022-08-18",
+      "ts_close": "2022-08-22"
+     },
+     {
+      "date": "2022-08-18",
+      "ticker": "ON",
+      "r_multiple": -0.51,
+      "pnl_dollars": -386.52,
+      "exit_reason": "regime_flip",
+      "ts_open": "2022-08-19",
+      "ts_close": "2022-08-23"
+     },
+     {
+      "date": "2022-08-18",
+      "ticker": "EL",
+      "r_multiple": -0.991,
+      "pnl_dollars": -602.96,
+      "exit_reason": "stop",
+      "ts_open": "2022-08-19",
+      "ts_close": "2022-08-22"
+     },
+     {
+      "date": "2022-11-15",
+      "ticker": "TJX",
+      "r_multiple": 1.842,
+      "pnl_dollars": 1374.06,
+      "exit_reason": "time_stop",
+      "ts_open": "2022-11-16",
+      "ts_close": "2022-12-08"
+     },
+     {
+      "date": "2022-11-18",
+      "ticker": "DECK",
+      "r_multiple": 0.446,
+      "pnl_dollars": 370.57,
+      "exit_reason": "time_stop",
+      "ts_open": "2022-11-21",
+      "ts_close": "2022-12-13"
+     },
+     {
+      "date": "2022-11-22",
+      "ticker": "DE",
+      "r_multiple": 0.179,
+      "pnl_dollars": 133.57,
+      "exit_reason": "time_stop",
+      "ts_open": "2022-11-23",
+      "ts_close": "2022-12-15"
+     },
+     {
+      "date": "2022-12-08",
+      "ticker": "ZBH",
+      "r_multiple": 0.144,
+      "pnl_dollars": 92.16,
+      "exit_reason": "regime_flip",
+      "ts_open": "2022-12-09",
+      "ts_close": "2022-12-16"
+     },
+     {
+      "date": "2022-12-13",
+      "ticker": "OMC",
+      "r_multiple": -0.974,
+      "pnl_dollars": -771.37,
+      "exit_reason": "regime_flip",
+      "ts_open": "2022-12-14",
+      "ts_close": "2022-12-16"
+     }
+    ]
+   },
+   "is_penceresi_temiz_kiyas": {
+    "neden_temiz": "İki kol replay'in İLK gününde aynı durumdan başlar (boş portföy, START_EQUITY, peak_equity=START_EQUITY); IS içindeki fark taşınan bir durumdan gelemez, ancak kapının kendi blokajından gelebilir.",
+    "is_score": {
+     "kapali": 0.0616,
+     "acik": -0.0349,
+     "oosonly": 0.0616,
+     "isonly": -0.0349
+    },
+    "is_detail": {
+     "kapali": {
+      "n": 62,
+      "score": 0.0616,
+      "total_return": -0.0163,
+      "max_drawdown": 0.0567,
+      "sharpe": -0.254,
+      "avg_r": 0.048,
+      "win_rate": 0.419
+     },
+     "acik": {
+      "n": 53,
+      "score": -0.0349,
+      "total_return": -0.0494,
+      "max_drawdown": 0.0654,
+      "sharpe": -0.898,
+      "avg_r": -0.045,
+      "win_rate": 0.321
+     },
+     "oosonly": {
+      "n": 62,
+      "score": 0.0616,
+      "total_return": -0.0163,
+      "max_drawdown": 0.0567,
+      "sharpe": -0.254,
+      "avg_r": 0.048,
+      "win_rate": 0.419
+     },
+     "isonly": {
+      "n": 53,
+      "score": -0.0349,
+      "total_return": -0.0494,
+      "max_drawdown": 0.0654,
+      "sharpe": -0.898,
+      "avg_r": -0.045,
+      "win_rate": 0.321
+     }
+    },
+    "is_ozkaynak": {
+     "kapali": {
+      "n_gun": 501,
+      "gunluk_vol": 0.003244,
+      "mtm_max_dd": 0.056654,
+      "toplam_getiri": -0.003286
+     },
+     "acik": {
+      "n_gun": 501,
+      "gunluk_vol": 0.002568,
+      "mtm_max_dd": 0.065407,
+      "toplam_getiri": -0.042797
+     },
+     "oosonly": {
+      "n_gun": 501,
+      "gunluk_vol": 0.003244,
+      "mtm_max_dd": 0.056654,
+      "toplam_getiri": -0.003286
+     },
+     "isonly": {
+      "n_gun": 501,
+      "gunluk_vol": 0.002568,
+      "mtm_max_dd": 0.065407,
+      "toplam_getiri": -0.042797
+     }
+    },
+    "okuma": "kapali vs acik farkı = kapının IS'teki NEDENSEL etkisi. İşareti hangi yöne bakıyorsa kapının ölçülmüş tek doğrudan etkisi odur.",
+    "para_v3_IS": {
+     "kapali": -0.029,
+     "acik": -0.0878,
+     "oosonly": -0.029,
+     "isonly": -0.0878
+    },
+    "para_v3_IS_notu": "span_days=730.0 (IS penceresinin takvim uzunluğu) BEYAN edildi; PARA-v3 pencere uzunluğuna bölündüğü için bu değer OOS PARA'sıyla doğrudan kıyaslanamaz, iki kol arasında kıyaslanır.",
+    "ci_IS": {
+     "n_gun": 500,
+     "ort_fark_bps": -0.829,
+     "ort_fark_ci_bps": [
+      -2.442,
+      0.932
+     ],
+     "p_getiri_dustu": 0.759,
+     "gunluk_vol_kapali": 0.003244,
+     "gunluk_vol_acik": 0.002568,
+     "vol_orani": 0.791754,
+     "p_vol_dustu": 1.0,
+     "maxdd_farki_ort": -0.001138,
+     "maxdd_farki_ci": [
+      -0.047978,
+      0.049179
+     ],
+     "p_maxdd_dustu": 0.5447,
+     "neden": null,
+     "tanim": "açık − kapalı, IS penceresinde AYNI günlerde eşleştirilmiş; 21 günlük hareketli blok bootstrap. Bu pencerede iki kol aynı başlangıç durumundan koştuğu için CI kapının NEDENSEL etkisini ölçer."
+    }
+   },
+   "sinir_durumu": {
+    "kapali": {
+     "sinir": "2024-01-01",
+     "acik_pozisyonlar": [
+      "AVGO",
+      "LRCX"
+     ],
+     "n_acik_pozisyon": 2,
+     "IS_son_seans": {
+      "date": "2023-12-29",
+      "eq_open": 99816.71,
+      "peak_equity": 100731.52,
+      "size_mult": 1.0,
+      "eq_close": 99671.45
+     },
+     "OOS_ilk_seans": {
+      "date": "2024-01-02",
+      "eq_open": 99080.2,
+      "peak_equity": 100731.52,
+      "size_mult": 1.0,
+      "eq_close": 98594.37
+     }
+    },
+    "acik": {
+     "sinir": "2024-01-01",
+     "acik_pozisyonlar": [
+      "LRCX"
+     ],
+     "n_acik_pozisyon": 1,
+     "IS_son_seans": {
+      "date": "2023-12-29",
+      "eq_open": 95739.32,
+      "peak_equity": 100000.0,
+      "size_mult": 0.7479,
+      "eq_close": 95720.34
+     },
+     "OOS_ilk_seans": {
+      "date": "2024-01-02",
+      "eq_open": 95527.35,
+      "peak_equity": 100000.0,
+      "size_mult": 0.7055,
+      "eq_close": 95263.9
+     }
+    },
+    "oosonly": {
+     "sinir": "2024-01-01",
+     "acik_pozisyonlar": [
+      "AVGO",
+      "LRCX"
+     ],
+     "n_acik_pozisyon": 2,
+     "IS_son_seans": {
+      "date": "2023-12-29",
+      "eq_open": 99816.71,
+      "peak_equity": 100731.52,
+      "size_mult": 1.0,
+      "eq_close": 99671.45
+     },
+     "OOS_ilk_seans": {
+      "date": "2024-01-02",
+      "eq_open": 99080.2,
+      "peak_equity": 100731.52,
+      "size_mult": 1.0,
+      "eq_close": 98594.37
+     }
+    },
+    "isonly": {
+     "sinir": "2024-01-01",
+     "acik_pozisyonlar": [
+      "LRCX"
+     ],
+     "n_acik_pozisyon": 1,
+     "IS_son_seans": {
+      "date": "2023-12-29",
+      "eq_open": 95739.32,
+      "peak_equity": 100000.0,
+      "size_mult": 0.7479,
+      "eq_close": 95720.34
+     },
+     "OOS_ilk_seans": {
+      "date": "2024-01-02",
+      "eq_open": 95527.35,
+      "peak_equity": 100000.0,
+      "size_mult": 0.7055,
+      "eq_close": 95263.9
+     }
+    }
+   },
+   "is_penceresi_ozkaynak": {
+    "kapali": {
+     "n_gun": 501,
+     "toplam_getiri": -0.003286,
+     "mtm_max_dd": 0.056654
+    },
+    "acik": {
+     "n_gun": 501,
+     "toplam_getiri": -0.042797,
+     "mtm_max_dd": 0.065407
+    },
+    "oosonly": {
+     "n_gun": 501,
+     "toplam_getiri": -0.003286,
+     "mtm_max_dd": 0.056654
+    },
+    "isonly": {
+     "n_gun": 501,
+     "toplam_getiri": -0.042797,
+     "mtm_max_dd": 0.065407
+    }
+   },
+   "tasinan_durum_degiskeni": {
+    "ad": "broker'ın kümülatif portföy durumu — `peak_equity` (tepe-özkaynak) ve ona bağlı `derisk_mult` / `max_positions_at`, artı sınırda AÇIK pozisyon kümesi ve özkaynağın kendisi (backtest.py:271-273)",
+    "neden_belirleyici": "`fill_entry(plan, …, eq_now, size_mult=size_mult, …)` pozisyon boyunu eq_now × size_mult'tan hesaplar; `eff_max_open` eşzamanlı slot sayısını kısar. İkisi de YALNIZ (equity, peak_equity) ikilisine bağlıdır ve bu ikili 2022'den itibaren birikir.",
+    "OOS_ilk_seans": {
+     "kapali": {
+      "date": "2024-01-02",
+      "eq_open": 99080.2,
+      "peak_equity": 100731.52,
+      "size_mult": 1.0,
+      "eq_close": 98594.37
+     },
+     "acik": {
+      "date": "2024-01-02",
+      "eq_open": 95527.35,
+      "peak_equity": 100000.0,
+      "size_mult": 0.7055,
+      "eq_close": 95263.9
+     }
+    },
+    "OOS_ilk_seansta_ozkaynak_farki": -3552.85,
+    "OOS_ilk_seansta_peak_farki": -731.52,
+    "OOS_gununde_size_mult_farkli_gun_sayisi": 605,
+    "OOS_gun_sayisi": 645,
+    "size_mult_farkli_ilk_gunler": [
+     "2024-01-02",
+     "2024-01-03",
+     "2024-01-04",
+     "2024-01-05",
+     "2024-01-08",
+     "2024-01-09",
+     "2024-01-10",
+     "2024-01-11",
+     "2024-01-12",
+     "2024-01-16",
+     "2024-01-17",
+     "2024-01-18",
+     "2024-01-19",
+     "2024-01-22",
+     "2024-01-23"
+    ]
+   },
+   "hukum": {
+    "H1_IS_yankisi": true,
+    "H2_knob_acikken_yan_etki": false,
+    "kapinin_OOS_dogrudan_etkisi_sifir": true,
+    "tani": "H1 — OOS deltası kapının OOS ETKİSİ DEĞİL, IS-yankısıdır",
+    "sonuc_cumlesi": "EDG-005'in OOS imza farkı kapının OOS'taki davranışına ATFEDİLEMEZ: kapı OOS'ta hiçbir girişi engellemedi ve OOS-only kolu tabanla bit-bit aynı çıktı. Fark, kapının 2022'de (IS) engellediği girişlerin portföy durumunu (özkaynak/tepe-özkaynak/açık pozisyon) değiştirmesi ve bu durumun tek-parça replay'de sınırı geçmesidir."
+   }
+  },
+  "ci_maxdd_farki": {
+   "ort": 0.009406,
+   "lo": -0.016224,
+   "hi": 0.038665,
+   "p_maxdd_dustu": 0.2387,
+   "tanim": "açık − kapalı MTM maxDD farkı; 21 günlük eşleştirilmiş blok yeniden örnekleme, her tekrarda iki kolun yolu AYNI blok dizisiyle yeniden kurulur. Yolun zamanlaması korunmaz — bkz. kod yorumu."
+  },
+  "hukum": {
+   "basari_olcutu": "maxDD VEYA günlük vol anlamlı düşer VE net PARA DÜŞMEZ (P(ΔS<0) < 0.5 yeter)",
+   "anlamlilik_esigi": 0.95,
+   "anlamlilik_esigi_notu": "'anlamlı düşer' ilk turda ÖLÇÜLMEDEN, yalnız işaretle okunmuştu (maxDD −0,0017 → 'düştü'). Bu tur eşik BEYAN edilir: bir düşüşün anlamlı sayılması için blok-bootstrap altında P(düşüş) ≥ 0,95 olmalıdır.",
+   "delta_para": 0.0398,
+   "p_delta_para_negatif": 0.4267,
+   "para_kosulu_saglandi": true,
+   "vol_orani": 1.093683,
+   "vol_dustu_isaret": false,
+   "p_vol_dustu": 0.0272,
+   "vol_anlamli_dustu": false,
+   "vol_anlamli_ARTTI": true,
+   "maxdd_kapali": 0.06886,
+   "maxdd_acik": 0.067144,
+   "maxdd_delta": -0.001716,
+   "maxdd_dustu_isaret": true,
+   "p_maxdd_dustu": 0.2387,
+   "maxdd_anlamli_dustu": false,
+   "sharpe_kapali": 0.283,
+   "sharpe_acik": 0.406,
+   "sharpe_dustu": false,
+   "atif": {
+    "soru": "İki kolun OOS imza farkı KAPIYA atfedilebilir mi?",
+    "kapinin_OOS_dogrudan_etkisi_sifir": true,
+    "mekanizma_tanisi": "H1 — OOS deltası kapının OOS ETKİSİ DEĞİL, IS-yankısıdır",
+    "atif_gecerli": false,
+    "gerekce": "Kapı OOS'ta hiçbir girişi engellemedi ve kapıyı YALNIZ OOS'ta bloke ettiren karşı-olgu kolu tabanla BİT-BİT aynı defteri üretti. Dolayısıyla ölçülen OOS farkı kapının OOS davranışının değil, IS penceresinde değişip sınırı geçen portföy durumunun ürünüdür; kart ölçütü bu fark üzerinden UYGULANAMAZ."
+   },
+   "kill_tetiklendi_OOS_atifsiz": false,
+   "kill_tetiklendi": false,
+   "temiz_pencere_kill": {
+    "pencere": "IS 2022-01-01 → 2024-01-01 (tek nedensel-temiz pencere)",
+    "sharpe_kapali": -0.254,
+    "sharpe_acik": -0.898,
+    "sharpe_dustu": true,
+    "para_v3_kapali": -0.029,
+    "para_v3_acik": -0.0878,
+    "para_dustu": true,
+    "toplam_getiri_kapali": -0.0163,
+    "toplam_getiri_acik": -0.0494,
+    "maxdd_kapali": 0.0567,
+    "maxdd_acik": 0.0654,
+    "vol_orani": 0.791754,
+    "p_vol_dustu": 1.0,
+    "p_maxdd_dustu": 0.5447,
+    "p_getiri_dustu": 0.759,
+    "kart_kill1": "net Sharpe/PARA düşüyorsa kapı açılmaz",
+    "kill1_tetiklendi": true,
+    "kill1_okuma_sinirlari": {
+     "kill1_nokta_kiyasidir": "Kart kill#1'i 'net Sharpe/PARA DÜŞÜYORSA' diye yazılmıştır — nokta kıyası, CI şartı YOK. Tetikleme bu metne göre okundu.",
+     "gunluk_getiri_ci_sifiri_iceriyor_mu": true,
+     "ne_anlama_gelir": "Günlük getiri farkının %95 aralığı sıfırı içeriyorsa, kapının getiriyi düşürdüğü NOKTA tahmini vardır ama gürültüden ayrılmış DEĞİLDİR. Kill'i tetikleyen şey işaret; kanıtın gücü bu satırda.",
+     "ornek_buyuklugu": "Kapının IS'te fiilen engellediği giriş sayısı: 8. Hüküm bu kadar küçük bir doğrudan ısırığın portföy yolunda ürettiği kelebek etkisine dayanıyor.",
+     "vol_bulgusu": "Kartın TEZİ bu pencerede DOĞRULANDI: vol anlamlı düştü (oran 0.791754, P(vol düştü)=1.0). Kapı vol'ü düşürüyor — ama maxDD'yi düşürmüyor ve bedeli Sharpe/PARA."
+    }
+   },
+   "risk_kosulu_saglandi": false,
+   "karar_atif_varsayilsaydi": "KAPI_ACILMAZ_OLCUT_SAGLANMADI",
+   "karar": "HUKUMSUZ_OLCUM_TASARIMI",
+   "operasyonel_sonuc": "KAPI_ACILMAZ",
+   "operasyonel_sonuc_notu": "Knob KAPALI kalır. Birbirinden bağımsız yollar: (a) kapının OOS'taki doğrudan etkisi ölçüldü ve SIFIR — R1 OOS penceresinde knob'u açmanın defterde HİÇBİR karşılığı yok; (b) tek nedensel-temiz pencerede (IS 2022-2024) kartın kill#1'i TETİKLENDİ: Sharpe -0.254 → -0.898, PARA-v3 -0.029 → -0.0878; (c) atıf geçerli sayılsaydı bile OOS'ta kart ölçütünün risk koşulu sağlanmıyor.",
+   "karar_gerekcesi": "Ölçüm tasarımı IS-taşımasını AYRIŞTIRAMIYOR: walk_forward tek parça replay koştuğu için overlay IS'te de aktif ve broker durumu sınırı geçiyor. Kapının OOS'taki DOĞRUDAN etkisi ölçüldü ve SIFIR çıktı. Ölçülen fark kapı değil, 2022'de değişen portföy yolunun 2024-2026'ya taşınan yankısıdır. Atıf geçerli SAYILSAYDI kart ölçütünün okunuşu: vol anlamlı düştü = False (P(vol düştü)=0.0272); maxDD anlamlı düştü = False (P(maxDD düştü)=0.2387); PARA koşulu = True (P(ΔPARA<0)=0.4267); kill = False → KAPI_ACILMAZ_OLCUT_SAGLANMADI. Ayrıca vol DÜŞMEDİ, anlamlı biçimde ARTTI — kartın risk-aracı gerekçesinin ölçülen yönü TERSTİR."
+  }
+ },
+ "edg_006_tom_tilt": {
+  "kart": "EDG-2026-006",
+  "aile": "turn_of_month_exposure_tilt",
+  "on_adim": {
+   "tam_ornek": {
+    "evren_ew": {
+     "n_gun_toplam": 1397,
+     "n_tom": 266,
+     "n_diger": 1131,
+     "ort_tom": 0.00035,
+     "ort_diger": 0.000602,
+     "medyan_tom": 3.3e-05,
+     "medyan_diger": 0.000703,
+     "fark": -0.000252,
+     "fark_bps_gun": -2.52,
+     "ci_fark": {
+      "lo": -0.001641,
+      "hi": 0.00106,
+      "neden": null
+     },
+     "isaret_pozitif": false,
+     "ci_sifir_disi": false
+    },
+    "spy": {
+     "n_gun_toplam": 1397,
+     "n_tom": 266,
+     "n_diger": 1131,
+     "ort_tom": 0.000456,
+     "ort_diger": 0.000568,
+     "medyan_tom": 0.000677,
+     "medyan_diger": 0.000731,
+     "fark": -0.000112,
+     "fark_bps_gun": -1.12,
+     "ci_fark": {
+      "lo": -0.001471,
+      "hi": 0.001305,
+      "neden": null
+     },
+     "isaret_pozitif": false,
+     "ci_sifir_disi": false
+    }
+   },
+   "R1_OOS": {
+    "evren_ew": {
+     "n_gun_toplam": 583,
+     "n_tom": 111,
+     "n_diger": 472,
+     "ort_tom": -0.000382,
+     "ort_diger": 0.000797,
+     "medyan_tom": 0.000551,
+     "medyan_diger": 0.000674,
+     "fark": -0.001179,
+     "fark_bps_gun": -11.79,
+     "ci_fark": {
+      "lo": -0.003162,
+      "hi": 0.000639,
+      "neden": null
+     },
+     "isaret_pozitif": false,
+     "ci_sifir_disi": false
+    },
+    "spy": {
+     "n_gun_toplam": 583,
+     "n_tom": 111,
+     "n_diger": 472,
+     "ort_tom": 8.6e-05,
+     "ort_diger": 0.000898,
+     "medyan_tom": 0.001118,
+     "medyan_diger": 0.000963,
+     "fark": -0.000812,
+     "fark_bps_gun": -8.12,
+     "ci_fark": {
+      "lo": -0.002833,
+      "hi": 0.001265,
+      "neden": null
+     },
+     "isaret_pozitif": false,
+     "ci_sifir_disi": false
+    }
+   },
+   "R1_IS": {
+    "evren_ew": {
+     "n_gun_toplam": 501,
+     "n_tom": 96,
+     "n_diger": 405,
+     "ort_tom": 0.000684,
+     "ort_diger": 9.8e-05,
+     "medyan_tom": -0.001542,
+     "medyan_diger": 0.000549,
+     "fark": 0.000586,
+     "fark_bps_gun": 5.86,
+     "ci_fark": {
+      "lo": -0.002062,
+      "hi": 0.003191,
+      "neden": null
+     },
+     "isaret_pozitif": true,
+     "ci_sifir_disi": false
+    },
+    "spy": {
+     "n_gun_toplam": 501,
+     "n_tom": 96,
+     "n_diger": 405,
+     "ort_tom": 0.000488,
+     "ort_diger": -2e-05,
+     "medyan_tom": -0.001309,
+     "medyan_diger": 0.000359,
+     "fark": 0.000508,
+     "fark_bps_gun": 5.08,
+     "ci_fark": {
+      "lo": -0.002146,
+      "hi": 0.003175,
+      "neden": null
+     },
+     "isaret_pozitif": true,
+     "ci_sifir_disi": false
+    }
+   },
+   "R1_holdout": {
+    "evren_ew": {
+     "n_gun_toplam": 62,
+     "n_tom": 12,
+     "n_diger": 50,
+     "ort_tom": 0.000933,
+     "ort_diger": 0.000991,
+     "medyan_tom": -0.001796,
+     "medyan_diger": 0.001462,
+     "fark": -5.8e-05,
+     "fark_bps_gun": -0.58,
+     "ci_fark": {
+      "lo": null,
+      "hi": null,
+      "neden": "dilim < 30 gün"
+     },
+     "isaret_pozitif": false,
+     "ci_sifir_disi": null
+    },
+    "spy": {
+     "n_gun_toplam": 62,
+     "n_tom": 12,
+     "n_diger": 50,
+     "ort_tom": 0.00254,
+     "ort_diger": -8e-06,
+     "medyan_tom": 0.002607,
+     "medyan_diger": 0.000616,
+     "fark": 0.002548,
+     "fark_bps_gun": 25.48,
+     "ci_fark": {
+      "lo": null,
+      "hi": null,
+      "neden": "dilim < 30 gün"
+     },
+     "isaret_pozitif": true,
+     "ci_sifir_disi": null
+    }
+   }
+  },
+  "kill2": {
+   "birincil_dilim": "R1_OOS",
+   "birincil_seri": "evren_ew",
+   "fark_bps_gun": -11.79,
+   "isaret_pozitif": false,
+   "karar": "ISARETSIZ_ARSIV",
+   "not": "kart kill#2: 'ToM-içi/dışı getiri farkı bizim evren/dönemde işaretsizse arşiv'. CI-0-dışı olması ŞART DEĞİL (kart: hafif overlay), ama YÖN tutmalı."
+  },
+  "esik_siddeti_beyani": {
+   "knob": "entry.min_score",
+   "taban": 60,
+   "tilt_delta": 5.0,
+   "tilt_degeri": 65,
+   "not": "TEK değer, BEYAN edildi — grid YOK (kart: 'eşik şiddetini TEK değer seç ve beyan et'). ToM üyeliği DOLUM gününde (D+1, XNYS) değerlendirilir."
+  },
+  "hukum": {
+   "karar": "ARSIV_KILL2",
+   "gerekce": "Kart kill#2: 'ToM-içi/dışı getiri farkı bizim evren/dönemde İŞARETSİZSE arşiv.' Ön adım BİRİNCİL dilimde (R1 OOS, eşit ağırlıklı 250-sembol evreni) farkı TERS işaretli ölçtü: ToM günleri −3,82 bps/gün, ToM-dışı +7,97 bps/gün, fark −11,79 bps/gün. Literatürün beklentisi (+%0,14/gün) DEĞİL, tersi. Tilt'in varsayımı bizim dönemimizde YOKTUR; ikiz koşum KOŞULMADI çünkü kart bu adımı doğrudan kill kapısı olarak tanımlıyor.",
+   "ikiz_kosum_kosuldu_mu": false
+  }
+ },
+ "survivorship_notu": {
+  "evren": "data.REPLAY_UNIVERSE (250 sembol yüklendi; kod 251 sembol tanımlıyor)",
+  "durum": "Evren BUGÜNÜN listesidir ve tarihsel üyelik yeniden kurulmaz — as-of endeks üyeliği bu depoda YOK. Kısmî azaltım: listeye bilinçli olarak GERİ KALANLAR (INTC, PYPL, DIS, T, EA, PFE, ENPH, MRNA, MMM, HRL, VFC, F) eklenmiş, yani kapı yalnız bugünün kazananlarına ayarlanmıyor. Ayrıca verisi biten sembol 'delisted_markout' ile SON barında kapatılır (denetim #7/#46) — pozisyon sessizce buharlaşmaz.",
+  "bu_olcume_etkisi": "SMA kapısı ENDEKS seviyesindedir; hangi hisselerin evrende olduğuna değil SPY'ın kendi serisine bakar. Dolayısıyla kapının HÜKMÜ survivorship'ten etkilenmez; etkilenen şey kapının ENGELLEDİĞİ işlemlerin getirisidir (evren yukarı yanlıysa kaçan girişlerin getirisi de yukarı yanlıdır → kapının maliyeti OLDUĞUNDAN BÜYÜK görünür, yani bulgu kapı LEHİNE değil ALEYHİNE muhafazakârdır)."
+ },
+ "olcum_sinirlari": {
+  "bars_integrity_defteri_sandbox_state_dizinlerinde_YOK": {
+   "bulgu": "Kolların state dizinlerinde `bars_integrity.json` YOKTUR (bulunan: hiçbiri). `adapters.data.bars_integrity` defteri `store` üzerinden, yani `config.STATE`e göre okur; sandbox state'inde defter olmadığı için FAIL-OPEN dalı işler ve 'ölçüm için güvensiz dönem' DIŞLAMASI hiçbir kolda uygulanmamıştır.",
+   "etkisi": "A/B kıyasına etkisi YOK — dışlama TÜM kollarda aynı biçimde (hiç) uygulanmadı, kollar arası fark bu kanaldan gelemez. Etkilenen şey MUTLAK seviyedir: depo state'iyle koşulan bir ölçümün sayıları bu kolların sayılarıyla birebir kıyaslanamaz.",
+   "ne_yapilmadi": "Defter sandbox'a KOPYALANMADI; kopyalamak koşumları yeniden koşmayı gerektirirdi ve bulgu A/B'yi değiştirmiyor."
+  },
+  "depo_state_dosyasi_degisti": {
+   "gozlem": "Ölçüm sürerken depoda `state/bars_integrity.json` dosyasının mtime'ı 2026-07-31 10:19'a güncellendi.",
+   "benim_kollarim_mi": "HAYIR — kanıt: (1) kollar `config.STATE`i sandbox'a çevirir, `store` yalnız oradan yazar; (2) depo `state/events.jsonl`in son satırı 2026-07-30T23:59, yani kollarım depo defterine HİÇ yazmadı; (3) bu dosyayı yazan tek yol `barrepair.yaz_envanter` ve `bars_integrity_written` olayı depo defterinde YOK; (4) `adapters.data` bu dosyayı yalnız OKUR.",
+   "destekleyen_gozlem": "Aynı pencerede depoda `CLAUDE.md`, `ROADMAP.md`, `meridian/store.py`, `loop.py`, `analytics.py`, `run.py`, `watchdog.py`, `shadow_model.py`, `intraday_cycle.py`, `ledgerstamp.py`, `shadow_lifecycle.py`, `versioning.py`, `storage.py` dosyaları da değişti — depoda eşzamanlı BAŞKA ajan(lar) çalışıyor.",
+   "hüküm": "Eşzamanlı başka bir ajan. Sessizce yutulmadı, kayda geçti."
+  }
+ },
+ "maliyet_modeli": {
+  "beyan": "10 bps gidiş-dönüş — goal.yaml slippage_bps=5 × iki bacak, MOTORUN İÇİNDE uygulanır (broker.PaperBroker), rapor sonrası eklenen bir düzeltme DEĞİLDİR.",
+  "ek": "commission_per_share goal.yaml'dan; ADV tabanlı likidite tavanı ve fiyat etkisi de motorda etkin (Hard Rule 7)."
+ }
+}

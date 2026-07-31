@@ -1,0 +1,175 @@
+{
+  "kart": "EDG-2026-006",
+  "adim": "on_adim_tom_getiri_farki",
+  "olcum_zamani": "2026-07-30T22:41:24.683016+00:00",
+  "tanimlar": {
+    "ToM": "ayın SON işlem günü + izleyen ayın İLK 3 işlem günü (XNYS; McConnell-Xu standardı)",
+    "evren_getirisi": "EŞİT AĞIRLIKLI kesit ortalaması (kesitte >=30 sembol olan günler)",
+    "spy": "endeks günlük getirisi — VW'nin KABA VEKİLİ; McConnell-Xu'nun VW'si DEĞİL",
+    "ci": "gün bazlı bootstrap %95 (yeniden örnekleme birimi GÜN)",
+    "referans": "McConnell-Xu 2008 FAJ: VW %0,14/gün ToM vs −%0,01 diğer"
+  },
+  "n_sembol": 250,
+  "dilimler": {
+    "tam_ornek": {
+      "evren_ew": {
+        "n_gun_toplam": 1397,
+        "n_tom": 266,
+        "n_diger": 1131,
+        "ort_tom": 0.00035,
+        "ort_diger": 0.000602,
+        "medyan_tom": 3.3e-05,
+        "medyan_diger": 0.000703,
+        "fark": -0.000252,
+        "fark_bps_gun": -2.52,
+        "ci_fark": {
+          "lo": -0.001641,
+          "hi": 0.00106,
+          "neden": null
+        },
+        "isaret_pozitif": false,
+        "ci_sifir_disi": false
+      },
+      "spy": {
+        "n_gun_toplam": 1397,
+        "n_tom": 266,
+        "n_diger": 1131,
+        "ort_tom": 0.000456,
+        "ort_diger": 0.000568,
+        "medyan_tom": 0.000677,
+        "medyan_diger": 0.000731,
+        "fark": -0.000112,
+        "fark_bps_gun": -1.12,
+        "ci_fark": {
+          "lo": -0.001471,
+          "hi": 0.001305,
+          "neden": null
+        },
+        "isaret_pozitif": false,
+        "ci_sifir_disi": false
+      }
+    },
+    "R1_OOS": {
+      "evren_ew": {
+        "n_gun_toplam": 583,
+        "n_tom": 111,
+        "n_diger": 472,
+        "ort_tom": -0.000382,
+        "ort_diger": 0.000797,
+        "medyan_tom": 0.000551,
+        "medyan_diger": 0.000674,
+        "fark": -0.001179,
+        "fark_bps_gun": -11.79,
+        "ci_fark": {
+          "lo": -0.003162,
+          "hi": 0.000639,
+          "neden": null
+        },
+        "isaret_pozitif": false,
+        "ci_sifir_disi": false
+      },
+      "spy": {
+        "n_gun_toplam": 583,
+        "n_tom": 111,
+        "n_diger": 472,
+        "ort_tom": 8.6e-05,
+        "ort_diger": 0.000898,
+        "medyan_tom": 0.001118,
+        "medyan_diger": 0.000963,
+        "fark": -0.000812,
+        "fark_bps_gun": -8.12,
+        "ci_fark": {
+          "lo": -0.002833,
+          "hi": 0.001265,
+          "neden": null
+        },
+        "isaret_pozitif": false,
+        "ci_sifir_disi": false
+      }
+    },
+    "R1_IS": {
+      "evren_ew": {
+        "n_gun_toplam": 501,
+        "n_tom": 96,
+        "n_diger": 405,
+        "ort_tom": 0.000684,
+        "ort_diger": 9.8e-05,
+        "medyan_tom": -0.001542,
+        "medyan_diger": 0.000549,
+        "fark": 0.000586,
+        "fark_bps_gun": 5.86,
+        "ci_fark": {
+          "lo": -0.002062,
+          "hi": 0.003191,
+          "neden": null
+        },
+        "isaret_pozitif": true,
+        "ci_sifir_disi": false
+      },
+      "spy": {
+        "n_gun_toplam": 501,
+        "n_tom": 96,
+        "n_diger": 405,
+        "ort_tom": 0.000488,
+        "ort_diger": -2e-05,
+        "medyan_tom": -0.001309,
+        "medyan_diger": 0.000359,
+        "fark": 0.000508,
+        "fark_bps_gun": 5.08,
+        "ci_fark": {
+          "lo": -0.002146,
+          "hi": 0.003175,
+          "neden": null
+        },
+        "isaret_pozitif": true,
+        "ci_sifir_disi": false
+      }
+    },
+    "R1_holdout": {
+      "evren_ew": {
+        "n_gun_toplam": 62,
+        "n_tom": 12,
+        "n_diger": 50,
+        "ort_tom": 0.000933,
+        "ort_diger": 0.000991,
+        "medyan_tom": -0.001796,
+        "medyan_diger": 0.001462,
+        "fark": -5.8e-05,
+        "fark_bps_gun": -0.58,
+        "ci_fark": {
+          "lo": null,
+          "hi": null,
+          "neden": "dilim < 30 gün"
+        },
+        "isaret_pozitif": false,
+        "ci_sifir_disi": null
+      },
+      "spy": {
+        "n_gun_toplam": 62,
+        "n_tom": 12,
+        "n_diger": 50,
+        "ort_tom": 0.00254,
+        "ort_diger": -8e-06,
+        "medyan_tom": 0.002607,
+        "medyan_diger": 0.000616,
+        "fark": 0.002548,
+        "fark_bps_gun": 25.48,
+        "ci_fark": {
+          "lo": null,
+          "hi": null,
+          "neden": "dilim < 30 gün"
+        },
+        "isaret_pozitif": true,
+        "ci_sifir_disi": null
+      }
+    }
+  },
+  "kill2_hukmu": {
+    "birincil_dilim": "R1_OOS",
+    "birincil_seri": "evren_ew",
+    "fark_bps_gun": -11.79,
+    "isaret_pozitif": false,
+    "karar": "ISARETSIZ_ARSIV",
+    "not": "kart kill#2: 'ToM-içi/dışı getiri farkı bizim evren/dönemde işaretsizse arşiv'. CI-0-dışı olması ŞART DEĞİL (kart: hafif overlay), ama YÖN tutmalı."
+  }
+}

@@ -1,0 +1,2207 @@
+{
+ "meta": {
+  "amac": "WP-R: de-risk rampası sabitlenince çıkış paketi yeniden ölçümü (kart EDG-2026-003)",
+  "kart": "research/cards/EDG-2026-003-rampa-p3.yaml",
+  "zaman_utc": "2026-07-31T00:19:53+00:00",
+  "sure_s": 6322.4,
+  "beyan": "SALT-ÖLÇÜM: canlı repo/state'e yazım YOK; copytree-sandbox; record_erosion=False; rampa koşulu ÖLÇÜM-İÇİ monkeypatch (kod değişikliği YOK)",
+  "yasa": "PARA-v3",
+  "k_beyan": 4,
+  "k_zorlamasi": "reflect._gate_eval k_probes=4'e sabitlendi; prescreen'in kendi sayısı (koşul başına 2) cezayı GEVŞETİRDİ — sıkılaştırıldı, gevşetilmedi",
+  "pencere_id": "R1",
+  "pencereler": {
+   "is_start": "2022-01-01",
+   "oos_start": "2024-01-01",
+   "oos_end": "2026-04-30",
+   "holdout_end": "2026-07-30",
+   "embargo_days": 10
+  },
+  "yukleyici": "dataset.load_cached (ağa çıkmaz, bar CSV yeniden yazmaz), koşullar arası bellekli — sandbox'lar AYNI onarılmış master'dan kopyalandı",
+  "kod_surumu_damgasi": {
+   "import_ani_utc": "2026-07-30T22:34:31+00:00",
+   "birlesik_sha256_16": "e7360c653d470702",
+   "n_dosya": 90,
+   "dosyalar": {
+    "meridian/__init__.py": {
+     "sha256_16": "e3b0c44298fc1c14",
+     "mtime": "2026-07-14T00:15:43"
+    },
+    "meridian/adapters/__init__.py": {
+     "sha256_16": "e3b0c44298fc1c14",
+     "mtime": "2026-07-14T00:15:43"
+    },
+    "meridian/adapters/alpaca.py": {
+     "sha256_16": "3aa25c79dac55ebc",
+     "mtime": "2026-07-31T00:49:48"
+    },
+    "meridian/adapters/constituents.py": {
+     "sha256_16": "f202a8cd583bbc20",
+     "mtime": "2026-07-30T20:16:17"
+    },
+    "meridian/adapters/data.py": {
+     "sha256_16": "f81ba8731900e50f",
+     "mtime": "2026-07-31T01:34:21"
+    },
+    "meridian/adapters/finviz.py": {
+     "sha256_16": "88e5bf68b156a60a",
+     "mtime": "2026-07-30T22:37:49"
+    },
+    "meridian/adapters/fmp.py": {
+     "sha256_16": "045a3b642e95bbbb",
+     "mtime": "2026-07-30T21:50:55"
+    },
+    "meridian/adapters/insider.py": {
+     "sha256_16": "6fb31fe29f4c49a5",
+     "mtime": "2026-07-30T22:26:08"
+    },
+    "meridian/adapters/macro.py": {
+     "sha256_16": "96dac96231fab4aa",
+     "mtime": "2026-07-30T21:51:15"
+    },
+    "meridian/adapters/massive.py": {
+     "sha256_16": "fbebb1d2ed588451",
+     "mtime": "2026-07-30T00:32:29"
+    },
+    "meridian/adapters/news.py": {
+     "sha256_16": "102e48eba1110d35",
+     "mtime": "2026-07-30T21:51:33"
+    },
+    "meridian/adapters/shortinterest.py": {
+     "sha256_16": "832ce0e2cf1adcef",
+     "mtime": "2026-07-29T22:19:43"
+    },
+    "meridian/analytics.py": {
+     "sha256_16": "1b4847784ef14658",
+     "mtime": "2026-07-31T01:00:25"
+    },
+    "meridian/api.py": {
+     "sha256_16": "fa0dc389f1534df1",
+     "mtime": "2026-07-31T00:37:48"
+    },
+    "meridian/arming.py": {
+     "sha256_16": "6eff2a39cebb6ab6",
+     "mtime": "2026-07-21T18:15:59"
+    },
+    "meridian/auth.py": {
+     "sha256_16": "7ddf5abe2d9b26f7",
+     "mtime": "2026-07-29T14:52:51"
+    },
+    "meridian/auth_cli.py": {
+     "sha256_16": "172608ea591fd4ab",
+     "mtime": "2026-07-29T14:53:01"
+    },
+    "meridian/backtest.py": {
+     "sha256_16": "e28e61280fa27adf",
+     "mtime": "2026-07-30T21:16:42"
+    },
+    "meridian/bararchive.py": {
+     "sha256_16": "818b14a38965f767",
+     "mtime": "2026-07-27T10:38:37"
+    },
+    "meridian/barclock.py": {
+     "sha256_16": "1fcca2c9231f6168",
+     "mtime": "2026-07-23T23:49:22"
+    },
+    "meridian/barfeed.py": {
+     "sha256_16": "73f941490a674a08",
+     "mtime": "2026-07-23T23:28:10"
+    },
+    "meridian/barrepair.py": {
+     "sha256_16": "6b627d4c97dd222e",
+     "mtime": "2026-07-31T01:26:21"
+    },
+    "meridian/barsarchive.py": {
+     "sha256_16": "77da37d407ecf0be",
+     "mtime": "2026-07-30T02:19:38"
+    },
+    "meridian/baseline.py": {
+     "sha256_16": "c8ad232d664f3035",
+     "mtime": "2026-07-29T09:09:33"
+    },
+    "meridian/broker.py": {
+     "sha256_16": "e0e990196b1a2128",
+     "mtime": "2026-07-31T00:34:15"
+    },
+    "meridian/cf_backfill.py": {
+     "sha256_16": "5d42cb48a32a3f44",
+     "mtime": "2026-07-31T01:28:46"
+    },
+    "meridian/codelaw.py": {
+     "sha256_16": "734afd1a92f75898",
+     "mtime": "2026-07-30T04:13:04"
+    },
+    "meridian/component_ic.py": {
+     "sha256_16": "ee61e56fc03fbb59",
+     "mtime": "2026-07-31T01:28:34"
+    },
+    "meridian/config.py": {
+     "sha256_16": "6600a211eb2ed940",
+     "mtime": "2026-07-30T02:19:22"
+    },
+    "meridian/counterfactual.py": {
+     "sha256_16": "e20ac7001a993d38",
+     "mtime": "2026-07-22T23:46:56"
+    },
+    "meridian/dataset.py": {
+     "sha256_16": "e6ea06a8f1ac14c2",
+     "mtime": "2026-07-30T22:35:15"
+    },
+    "meridian/earnings.py": {
+     "sha256_16": "41c6b4bf402be4bf",
+     "mtime": "2026-07-26T19:29:06"
+    },
+    "meridian/guard.py": {
+     "sha256_16": "282d46785e662159",
+     "mtime": "2026-07-30T04:51:12"
+    },
+    "meridian/health.py": {
+     "sha256_16": "1c797aaf8896d735",
+     "mtime": "2026-07-30T15:04:52"
+    },
+    "meridian/hermes.py": {
+     "sha256_16": "c04f32fbfebde53c",
+     "mtime": "2026-07-30T21:08:42"
+    },
+    "meridian/hermes_composite.py": {
+     "sha256_16": "cbffa7a7a71772db",
+     "mtime": "2026-07-30T15:45:59"
+    },
+    "meridian/hermes_runtime.py": {
+     "sha256_16": "18388db3849b059c",
+     "mtime": "2026-07-26T23:17:24"
+    },
+    "meridian/hotstate.py": {
+     "sha256_16": "fa79f9b676eb68b4",
+     "mtime": "2026-07-30T03:57:14"
+    },
+    "meridian/indicators.py": {
+     "sha256_16": "941714dc666ae18a",
+     "mtime": "2026-07-29T21:42:42"
+    },
+    "meridian/integrity_registry.py": {
+     "sha256_16": "62c966fb41a59469",
+     "mtime": "2026-07-21T22:02:22"
+    },
+    "meridian/intraday_cycle.py": {
+     "sha256_16": "daa7aeb6689acd2b",
+     "mtime": "2026-07-30T02:41:38"
+    },
+    "meridian/intraday_shadow.py": {
+     "sha256_16": "ac2eb57572d78af2",
+     "mtime": "2026-07-27T17:09:55"
+    },
+    "meridian/ledgers.py": {
+     "sha256_16": "3149d487643ff74b",
+     "mtime": "2026-07-31T00:52:23"
+    },
+    "meridian/ledgerstamp.py": {
+     "sha256_16": "837d48358c637b04",
+     "mtime": "2026-07-31T00:52:32"
+    },
+    "meridian/loop.py": {
+     "sha256_16": "fc53fbede3121c78",
+     "mtime": "2026-07-31T00:33:46"
+    },
+    "meridian/marketstream.py": {
+     "sha256_16": "839b64229181b783",
+     "mtime": "2026-07-23T19:12:08"
+    },
+    "meridian/marketview.py": {
+     "sha256_16": "37c34359737a9d1f",
+     "mtime": "2026-07-30T20:15:44"
+    },
+    "meridian/mcp_server.py": {
+     "sha256_16": "fa876f1a4d6be7a1",
+     "mtime": "2026-07-22T00:21:28"
+    },
+    "meridian/memory.py": {
+     "sha256_16": "c9941fd398c56dab",
+     "mtime": "2026-07-23T10:37:33"
+    },
+    "meridian/mirror_stream.py": {
+     "sha256_16": "f3e604e084748122",
+     "mtime": "2026-07-23T18:02:02"
+    },
+    "meridian/mutation.py": {
+     "sha256_16": "01d19e13d06f6172",
+     "mtime": "2026-07-23T10:39:39"
+    },
+    "meridian/notify.py": {
+     "sha256_16": "dac9024c4c900031",
+     "mtime": "2026-07-30T21:52:23"
+    },
+    "meridian/nous_eval.py": {
+     "sha256_16": "c2d22a10a54b75f3",
+     "mtime": "2026-07-30T16:11:29"
+    },
+    "meridian/obs.py": {
+     "sha256_16": "d1a24f5bdd0db260",
+     "mtime": "2026-07-30T02:30:41"
+    },
+    "meridian/oos_erosion.py": {
+     "sha256_16": "2b8ce8a329b88760",
+     "mtime": "2026-07-30T14:46:46"
+    },
+    "meridian/oos_pipeline.py": {
+     "sha256_16": "44d1c5210991f7a5",
+     "mtime": "2026-07-22T17:36:20"
+    },
+    "meridian/prescreen.py": {
+     "sha256_16": "d6c95fff9658895d",
+     "mtime": "2026-07-30T14:16:54"
+    },
+    "meridian/probgate.py": {
+     "sha256_16": "97c88cead6981bb9",
+     "mtime": "2026-07-30T11:20:16"
+    },
+    "meridian/provenance.py": {
+     "sha256_16": "64117604982b1794",
+     "mtime": "2026-07-22T23:47:06"
+    },
+    "meridian/recompute.py": {
+     "sha256_16": "39214be4a927d0b3",
+     "mtime": "2026-07-30T03:00:31"
+    },
+    "meridian/reflect.py": {
+     "sha256_16": "6cebbcf4dd9b0395",
+     "mtime": "2026-07-30T21:52:50"
+    },
+    "meridian/regime.py": {
+     "sha256_16": "90b2b2a3a4ed58b2",
+     "mtime": "2026-07-30T21:51:49"
+    },
+    "meridian/regime_trigger.py": {
+     "sha256_16": "e9a1f5f06dd841cc",
+     "mtime": "2026-07-19T19:47:01"
+    },
+    "meridian/rollback.py": {
+     "sha256_16": "27fa940a313e30b1",
+     "mtime": "2026-07-29T09:06:24"
+    },
+    "meridian/run.py": {
+     "sha256_16": "9a6b1548042f6ed7",
+     "mtime": "2026-07-31T00:34:02"
+    },
+    "meridian/scheduler.py": {
+     "sha256_16": "0db22ee0da40e905",
+     "mtime": "2026-07-31T00:35:43"
+    },
+    "meridian/score.py": {
+     "sha256_16": "d4dba15b9e60f17d",
+     "mtime": "2026-07-22T16:19:38"
+    },
+    "meridian/secrets.py": {
+     "sha256_16": "43cacdf9e2f2050b",
+     "mtime": "2026-07-29T22:23:09"
+    },
+    "meridian/selfreview.py": {
+     "sha256_16": "cdec767e1c5edc47",
+     "mtime": "2026-07-30T02:29:03"
+    },
+    "meridian/shadow_lifecycle.py": {
+     "sha256_16": "471d47ffc171134a",
+     "mtime": "2026-07-30T18:43:27"
+    },
+    "meridian/shadow_model.py": {
+     "sha256_16": "a4e5ff5e70411d51",
+     "mtime": "2026-07-30T21:06:35"
+    },
+    "meridian/shadow_variants.py": {
+     "sha256_16": "27b53702be7fadbc",
+     "mtime": "2026-07-30T18:34:19"
+    },
+    "meridian/shadowlaw.py": {
+     "sha256_16": "f8ae4deba330a9ac",
+     "mtime": "2026-07-30T21:55:00"
+    },
+    "meridian/sieve.py": {
+     "sha256_16": "bcb37c0020f18613",
+     "mtime": "2026-07-22T15:27:54"
+    },
+    "meridian/skill_evolve.py": {
+     "sha256_16": "efd3c598bf6c155d",
+     "mtime": "2026-07-22T12:53:54"
+    },
+    "meridian/skills.py": {
+     "sha256_16": "fc58f0a3b725f0d5",
+     "mtime": "2026-07-30T21:54:13"
+    },
+    "meridian/spend.py": {
+     "sha256_16": "6052ae51595aefc0",
+     "mtime": "2026-07-26T20:37:56"
+    },
+    "meridian/sprint.py": {
+     "sha256_16": "969e17a044fa4900",
+     "mtime": "2026-07-30T21:37:21"
+    },
+    "meridian/sprint_run.py": {
+     "sha256_16": "5d8cb948ccaba892",
+     "mtime": "2026-07-22T00:30:09"
+    },
+    "meridian/store.py": {
+     "sha256_16": "84094ec05b9b521d",
+     "mtime": "2026-07-26T23:43:25"
+    },
+    "meridian/strategy.py": {
+     "sha256_16": "444a07eb83603f92",
+     "mtime": "2026-07-30T02:44:14"
+    },
+    "meridian/streamhealth.py": {
+     "sha256_16": "83176fc8509a40b4",
+     "mtime": "2026-07-23T19:11:50"
+    },
+    "meridian/threshold_curve.py": {
+     "sha256_16": "2c9cb758e44b5772",
+     "mtime": "2026-07-28T23:57:06"
+    },
+    "meridian/validation.py": {
+     "sha256_16": "b2e73faf2e8e23dc",
+     "mtime": "2026-07-30T15:02:25"
+    },
+    "meridian/validation_report.py": {
+     "sha256_16": "04ad19f326224ab7",
+     "mtime": "2026-07-26T19:19:17"
+    },
+    "meridian/versioning.py": {
+     "sha256_16": "e2790f160b9cafd7",
+     "mtime": "2026-07-26T21:45:05"
+    },
+    "meridian/watchdog.py": {
+     "sha256_16": "cc4525240fcc6bcc",
+     "mtime": "2026-07-30T21:55:21"
+    },
+    "state/bounds.yaml": {
+     "sha256_16": "e2091f8cd9500e28",
+     "mtime": "2026-07-30T03:55:52"
+    },
+    "state/goal.yaml": {
+     "sha256_16": "f5011d8f6b247081",
+     "mtime": "2026-07-30T02:38:46"
+    },
+    "state/strategy.yaml": {
+     "sha256_16": "9f3e4732315abe52",
+     "mtime": "2026-07-28T09:55:36"
+    }
+   }
+  }
+ },
+ "veri_hijyeni": {
+  "takvim": "XNYS",
+  "takvim_okundu": true,
+  "taranan_defter": 259,
+  "taranan_satir": 1344334,
+  "dusen_hayalet_satir": 442,
+  "karantina_satir": 13,
+  "toplam_dusen_satir": 455,
+  "yazilan_defter": 259,
+  "tarih_kirilimi": {
+   "2006-10-30": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2008-06-12": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2011-12-01": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2011-12-09": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2012-01-20": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2012-06-26": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2013-07-15": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2013-08-02": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2013-12-18": {
+    "dosya": 4,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 4
+    }
+   },
+   "2014-06-06": {
+    "dosya": 1,
+    "siniflar": {
+     "duzeltilmemis_fiyat": 1
+    }
+   },
+   "2018-11-22": {
+    "dosya": 184,
+    "siniflar": {
+     "duz_bar_sifir_hacim": 169,
+     "duzeltilmemis_fiyat": 15
+    }
+   },
+   "2025-05-26": {
+    "dosya": 258,
+    "siniflar": {
+     "birebir_kopya": 199,
+     "yakin_kopya": 52,
+     "duzeltilmemis_fiyat": 7
+    }
+   }
+  },
+  "kapi_reddetti": {},
+  "okunamayan": []
+ },
+ "tasarim": {
+  "adaylar": {
+   "P3_paketi": {
+    "exit.time_stop_days": 30,
+    "exit.breakeven_r": 2.0,
+    "exit.profit_target_r": 6.0,
+    "exit.trail_atr_mult": 3.5,
+    "exit.early_kill_pivot": 1
+   },
+   "early_kill_tek": {
+    "exit.early_kill_pivot": 1
+   }
+  },
+  "rampa_kosullari": {
+   "gevsek_6_15": [
+    0.06,
+    0.15
+   ],
+   "kapali": null
+  },
+  "uretim_rampasi_kodda": {
+   "kis": 0.03,
+   "sifirla": 0.08
+  }
+ },
+ "kontrol_uretim_rampasi": {
+  "not": "GATE PROBU DEĞİL — kod-sürümü kontrolü + kill#2 maxDD tabanı. K'ya SAYILMAZ.",
+  "rampa": {
+   "kis": 0.03,
+   "sifirla": 0.08,
+   "kaynak": "kodda sabit"
+  },
+  "ozet": {
+   "tam_replay_n": 161,
+   "oos_score": 0.0699,
+   "search_oos": {
+    "n": 71,
+    "kazanma_orani": 0.4507,
+    "ort_r": 0.1041,
+    "toplam_r": 7.389,
+    "ort_kazanan_r": 1.1414,
+    "ort_kaybeden_r": -0.7471,
+    "odeme_orani": 1.5278,
+    "kar_faktoru": 1.2536,
+    "maks_r": 2.864,
+    "min_r": -4.324,
+    "p95_r": 2.139,
+    "r_3ustu_pay": 0.0,
+    "ort_tutus_bar": 8.97,
+    "medyan_tutus_bar": 9.0,
+    "cikis_sebebi": {
+     "stop": 22,
+     "time_stop": 22,
+     "regime_flip": 13,
+     "target": 7,
+     "stop_gap": 5,
+     "target_gap": 2
+    },
+    "cikis_ailesi": {
+     "hedef": 9,
+     "stop": 27,
+     "zaman": 22,
+     "erken_itlaf": 0,
+     "diger": 13,
+     "stop_karda_TRAIL_VEKILI": 2,
+     "stop_zararda_SERT": 25
+    },
+    "maks_dusus_ORAN": 0.04566
+   },
+   "confirm_oos": {
+    "n": 15,
+    "kazanma_orani": 0.2,
+    "ort_r": -0.0701,
+    "toplam_r": -1.051,
+    "ort_kazanan_r": 1.3603,
+    "ort_kaybeden_r": -0.4277,
+    "odeme_orani": 3.1808,
+    "kar_faktoru": 0.7952,
+    "maks_r": 1.982,
+    "min_r": -1.038,
+    "p95_r": 1.403,
+    "r_3ustu_pay": 0.0,
+    "ort_tutus_bar": 9.13,
+    "medyan_tutus_bar": 9.0,
+    "cikis_sebebi": {
+     "regime_flip": 6,
+     "stop": 4,
+     "time_stop": 3,
+     "stop_gap": 1,
+     "target": 1
+    },
+    "cikis_ailesi": {
+     "hedef": 1,
+     "stop": 5,
+     "zaman": 3,
+     "erken_itlaf": 0,
+     "diger": 6,
+     "stop_karda_TRAIL_VEKILI": 0,
+     "stop_zararda_SERT": 5
+    },
+    "maks_dusus_ORAN": 0.00866
+   },
+   "tam_oos_detay": {
+    "n": 88,
+    "total_return": 0.0339,
+    "max_drawdown": 0.0699,
+    "sharpe": 0.283,
+    "avg_r": 0.078,
+    "win_rate": 0.409
+   },
+   "kuyruk_search": {
+    "horizon": 20,
+    "alpha": 0.95,
+    "n": 71,
+    "var_r": 6.375,
+    "cvar_r": 8.123,
+    "worst_r": 15.246,
+    "mean_r": 2.045
+   },
+   "foldlar_n_dengeli": [
+    {
+     "start": "2024-01-01",
+     "end": "2024-04-04",
+     "n": 20,
+     "avg_r": 0.3556
+    },
+    {
+     "start": "2024-04-04",
+     "end": "2024-11-22",
+     "n": 19,
+     "avg_r": 0.2063
+    },
+    {
+     "start": "2024-11-22",
+     "end": "2025-08-18",
+     "n": 22,
+     "avg_r": -0.1359
+    }
+   ],
+   "holdout_score": null
+  },
+  "rampa_serisi": {
+   "gun": 1146,
+   "cap_dagilimi_tam": {
+    "1": 249,
+    "2": 317,
+    "3": 107,
+    "4": 50,
+    "5": 423
+   },
+   "cap_dagilimi_2024_sonrasi": {
+    "1": 249,
+    "2": 265,
+    "3": 51,
+    "4": 15,
+    "5": 51
+   },
+   "ort_cap_2024_sonrasi": 1.976,
+   "cap5_pay_2024_sonrasi": 0.0808,
+   "cap0_1_pay_2024_sonrasi": 0.3946,
+   "ort_tepe_dususu_2024_sonrasi": 0.05791,
+   "maks_tepe_dususu_tam": 0.07171,
+   "dd_3ustu_pay_2024_sonrasi": 0.9239,
+   "dd_6ustu_pay_2024_sonrasi": 0.5626
+  },
+  "onceki_tur_referansi": {
+   "kaynak": "scratchpad/cikis_paketi/RAPOR.md (2026-07-31, aynı R1 penceresi)",
+   "incumbent_search_oos_n": 71,
+   "incumbent_tam_replay_n": 161,
+   "incumbent_oos_score": 0.0699,
+   "incumbent_para": 0.0856,
+   "incumbent_dd_kapanmis": 0.0457,
+   "uyari": "kod o ölçümden SONRA düzenlendi — bu satır o farkı ÖLÇER"
+  }
+ },
+ "hucreler": {
+  "gevsek_6_15": {
+   "rampa": {
+    "kis": 0.06,
+    "sifirla": 0.15
+   },
+   "incumbent": {
+    "tam_replay_n": 218,
+    "oos_score": -0.1412,
+    "search_oos": {
+     "n": 110,
+     "kazanma_orani": 0.4455,
+     "ort_r": 0.0768,
+     "toplam_r": 8.447,
+     "ort_kazanan_r": 0.9975,
+     "ort_kaybeden_r": -0.6628,
+     "odeme_orani": 1.505,
+     "kar_faktoru": 1.2089,
+     "maks_r": 2.864,
+     "min_r": -4.324,
+     "p95_r": 2.033,
+     "r_3ustu_pay": 0.0,
+     "ort_tutus_bar": 9.2,
+     "medyan_tutus_bar": 9.0,
+     "cikis_sebebi": {
+      "time_stop": 40,
+      "stop": 32,
+      "regime_flip": 24,
+      "target": 6,
+      "stop_gap": 6,
+      "target_gap": 2
+     },
+     "cikis_ailesi": {
+      "hedef": 8,
+      "stop": 38,
+      "zaman": 40,
+      "erken_itlaf": 0,
+      "diger": 24,
+      "stop_karda_TRAIL_VEKILI": 1,
+      "stop_zararda_SERT": 37
+     },
+     "maks_dusus_ORAN": 0.09669
+    },
+    "confirm_oos": {
+     "n": 22,
+     "kazanma_orani": 0.1364,
+     "ort_r": -0.3677,
+     "toplam_r": -8.09,
+     "ort_kazanan_r": 0.9977,
+     "ort_kaybeden_r": -0.5833,
+     "odeme_orani": 1.7103,
+     "kar_faktoru": 0.2701,
+     "maks_r": 1.979,
+     "min_r": -1.211,
+     "p95_r": 0.291,
+     "r_3ustu_pay": 0.0,
+     "ort_tutus_bar": 8.55,
+     "medyan_tutus_bar": 9.0,
+     "cikis_sebebi": {
+      "stop": 7,
+      "regime_flip": 7,
+      "stop_gap": 4,
+      "time_stop": 3,
+      "target": 1
+     },
+     "cikis_ailesi": {
+      "hedef": 1,
+      "stop": 11,
+      "zaman": 3,
+      "erken_itlaf": 0,
+      "diger": 7,
+      "stop_karda_TRAIL_VEKILI": 0,
+      "stop_zararda_SERT": 11
+     },
+     "maks_dusus_ORAN": 0.03616
+    },
+    "tam_oos_detay": {
+     "n": 135,
+     "total_return": 0.0528,
+     "max_drawdown": 0.1285,
+     "sharpe": 0.33,
+     "avg_r": 0.003,
+     "win_rate": 0.393
+    },
+    "kuyruk_search": {
+     "horizon": 20,
+     "alpha": 0.95,
+     "n": 110,
+     "var_r": 7.302,
+     "cvar_r": 9.029,
+     "worst_r": 16.715,
+     "mean_r": 1.514
+    },
+    "foldlar_n_dengeli": [
+     {
+      "start": "2024-01-01",
+      "end": "2024-06-26",
+      "n": 34,
+      "avg_r": 0.0805
+     },
+     {
+      "start": "2024-06-26",
+      "end": "2024-11-18",
+      "n": 30,
+      "avg_r": 0.2691
+     },
+     {
+      "start": "2024-11-18",
+      "end": "2025-08-18",
+      "n": 35,
+      "avg_r": -0.2793
+     }
+    ],
+    "holdout_score": null
+   },
+   "incumbent_rampa_serisi": {
+    "gun": 1146,
+    "cap_dagilimi_tam": {
+     "1": 130,
+     "2": 79,
+     "3": 36,
+     "4": 40,
+     "5": 861
+    },
+    "cap_dagilimi_2024_sonrasi": {
+     "1": 130,
+     "2": 79,
+     "3": 36,
+     "4": 40,
+     "5": 346
+    },
+    "ort_cap_2024_sonrasi": 3.623,
+    "cap5_pay_2024_sonrasi": 0.5483,
+    "cap0_1_pay_2024_sonrasi": 0.206,
+    "ort_tepe_dususu_2024_sonrasi": 0.07526,
+    "maks_tepe_dususu_tam": 0.12861,
+    "dd_3ustu_pay_2024_sonrasi": 0.8637,
+    "dd_6ustu_pay_2024_sonrasi": 0.6815
+   },
+   "adaylar": {
+    "P3_paketi": {
+     "knobs": {
+      "exit.time_stop_days": 30,
+      "exit.breakeven_r": 2.0,
+      "exit.profit_target_r": 6.0,
+      "exit.trail_atr_mult": 3.5,
+      "exit.early_kill_pivot": 1
+     },
+     "prescreen_satiri": {
+      "knob": "exit.breakeven_r=2.0;exit.early_kill_pivot=1;exit.profit_target_r=6.0;exit.time_stop_days=30;exit.trail_atr_mult=3.5",
+      "eski": null,
+      "yeni": null,
+      "bilesik": true,
+      "n_knobs": 5,
+      "knobs": {
+       "exit.time_stop_days": 30,
+       "exit.breakeven_r": 2.0,
+       "exit.profit_target_r": 6.0,
+       "exit.trail_atr_mult": 3.5,
+       "exit.early_kill_pivot": 1
+      },
+      "eski_knobs": {
+       "exit.time_stop_days": 15,
+       "exit.breakeven_r": 1.0,
+       "exit.profit_target_r": 2.5,
+       "exit.trail_atr_mult": 2.5,
+       "exit.early_kill_pivot": null
+      },
+      "motor_isliyor": true,
+      "inc_oos": -0.1412,
+      "cand_oos": -0.1484,
+      "delta": -0.0072,
+      "inc_n": 99,
+      "cand_n": 88,
+      "inc_folds": [
+       57,
+       37,
+       5
+      ],
+      "cand_folds": [
+       58,
+       26,
+       4
+      ],
+      "fold_wins": "1/3",
+      "fold_law": "n_dengeli",
+      "tail_delta": {
+       "var_r": 1.514,
+       "cvar_r": 1.533
+      },
+      "tail_ok": false,
+      "gate_law": "probabilistic",
+      "k_probes": 4,
+      "passes": false,
+      "why": "P(ΔS>0)=0.202 < gerekli 0.95 (K=4 aday cezası dahil)",
+      "margin": 0.02,
+      "yasa_surumu": "para_v3",
+      "pencere_id": "R1",
+      "inc_para": 0.1968,
+      "cand_para": -0.0284,
+      "para_delta": -0.2252,
+      "p": 0.202,
+      "p_required": 0.95,
+      "mean_delta": -0.2218,
+      "inc_dd": 0.0967,
+      "cand_dd": 0.0917,
+      "dd_ok": true,
+      "dd_durum": "gecti",
+      "eski_yasa_p": 0.385,
+      "eski_yasa_mean_delta": -0.0746,
+      "eski_yasa_gecerdi": false,
+      "iki_yasa_ayni_hukum": true
+     },
+     "ozet": {
+      "tam_replay_n": 197,
+      "oos_score": -0.1484,
+      "search_oos": {
+       "n": 95,
+       "kazanma_orani": 0.3579,
+       "ort_r": -0.0371,
+       "toplam_r": -3.521,
+       "ort_kazanan_r": 1.0596,
+       "ort_kaybeden_r": -0.6483,
+       "odeme_orani": 1.6344,
+       "kar_faktoru": 0.911,
+       "maks_r": 3.585,
+       "min_r": -2.391,
+       "p95_r": 1.914,
+       "r_3ustu_pay": 0.0105,
+       "ort_tutus_bar": 10.17,
+       "medyan_tutus_bar": 5.0,
+       "cikis_sebebi": {
+        "early_kill_pivot": 33,
+        "stop": 22,
+        "regime_flip": 21,
+        "time_stop": 12,
+        "target": 3,
+        "stop_gap": 3,
+        "target_gap": 1
+       },
+       "cikis_ailesi": {
+        "hedef": 4,
+        "stop": 25,
+        "zaman": 12,
+        "erken_itlaf": 33,
+        "diger": 21,
+        "stop_karda_TRAIL_VEKILI": 2,
+        "stop_zararda_SERT": 23
+       },
+       "maks_dusus_ORAN": 0.09169
+      },
+      "confirm_oos": {
+       "n": 24,
+       "kazanma_orani": 0.375,
+       "ort_r": 0.095,
+       "toplam_r": 2.28,
+       "ort_kazanan_r": 1.1343,
+       "ort_kaybeden_r": -0.5286,
+       "odeme_orani": 2.1459,
+       "kar_faktoru": 1.2876,
+       "maks_r": 2.034,
+       "min_r": -1.014,
+       "p95_r": 1.649,
+       "r_3ustu_pay": 0.0,
+       "ort_tutus_bar": 7.67,
+       "medyan_tutus_bar": 4.0,
+       "cikis_sebebi": {
+        "stop": 7,
+        "regime_flip": 7,
+        "early_kill_pivot": 6,
+        "target": 3,
+        "time_stop": 1
+       },
+       "cikis_ailesi": {
+        "hedef": 3,
+        "stop": 7,
+        "zaman": 1,
+        "erken_itlaf": 6,
+        "diger": 7,
+        "stop_karda_TRAIL_VEKILI": 1,
+        "stop_zararda_SERT": 6
+       },
+       "maks_dusus_ORAN": 0.01314
+      },
+      "tam_oos_detay": {
+       "n": 121,
+       "total_return": -0.011,
+       "max_drawdown": 0.1168,
+       "sharpe": -0.092,
+       "avg_r": -0.013,
+       "win_rate": 0.355
+      },
+      "kuyruk_search": {
+       "horizon": 20,
+       "alpha": 0.95,
+       "n": 95,
+       "var_r": 8.816,
+       "cvar_r": 10.562,
+       "worst_r": 17.098,
+       "mean_r": -0.785
+      },
+      "foldlar_n_dengeli": [
+       {
+        "start": "2024-01-01",
+        "end": "2024-06-05",
+        "n": 27,
+        "avg_r": 0.2473
+       },
+       {
+        "start": "2024-06-05",
+        "end": "2024-10-21",
+        "n": 26,
+        "avg_r": -0.0855
+       },
+       {
+        "start": "2024-10-21",
+        "end": "2025-08-18",
+        "n": 26,
+        "avg_r": -0.2635
+       }
+      ],
+      "holdout_score": null
+     },
+     "rampa_serisi": {
+      "gun": 1146,
+      "cap_dagilimi_tam": {
+       "2": 360,
+       "3": 23,
+       "4": 72,
+       "5": 691
+      },
+      "cap_dagilimi_2024_sonrasi": {
+       "2": 360,
+       "3": 23,
+       "4": 65,
+       "5": 183
+      },
+      "ort_cap_2024_sonrasi": 3.113,
+      "cap5_pay_2024_sonrasi": 0.29,
+      "cap0_1_pay_2024_sonrasi": 0.0,
+      "ort_tepe_dususu_2024_sonrasi": 0.08713,
+      "maks_tepe_dususu_tam": 0.12261,
+      "dd_3ustu_pay_2024_sonrasi": 0.9065,
+      "dd_6ustu_pay_2024_sonrasi": 0.8035
+     }
+    },
+    "early_kill_tek": {
+     "knobs": {
+      "exit.early_kill_pivot": 1
+     },
+     "prescreen_satiri": {
+      "knob": "exit.early_kill_pivot=1",
+      "eski": null,
+      "yeni": null,
+      "bilesik": true,
+      "n_knobs": 1,
+      "knobs": {
+       "exit.early_kill_pivot": 1
+      },
+      "eski_knobs": {
+       "exit.early_kill_pivot": null
+      },
+      "motor_isliyor": true,
+      "inc_oos": -0.1412,
+      "cand_oos": -0.146,
+      "delta": -0.0048,
+      "inc_n": 99,
+      "cand_n": 114,
+      "inc_folds": [
+       57,
+       37,
+       5
+      ],
+      "cand_folds": [
+       65,
+       41,
+       8
+      ],
+      "fold_wins": "2/3",
+      "fold_law": "n_dengeli",
+      "tail_delta": {
+       "var_r": -0.354,
+       "cvar_r": -0.521
+      },
+      "tail_ok": true,
+      "gate_law": "probabilistic",
+      "k_probes": 4,
+      "passes": false,
+      "why": "P(ΔS>0)=0.226 < gerekli 0.95 (K=4 aday cezası dahil)",
+      "margin": 0.02,
+      "yasa_surumu": "para_v3",
+      "pencere_id": "R1",
+      "inc_para": 0.1968,
+      "cand_para": 0.0388,
+      "para_delta": -0.158,
+      "p": 0.226,
+      "p_required": 0.95,
+      "mean_delta": -0.1559,
+      "inc_dd": 0.0967,
+      "cand_dd": 0.101,
+      "dd_ok": true,
+      "dd_durum": "gecti",
+      "eski_yasa_p": 0.3195,
+      "eski_yasa_mean_delta": -0.0956,
+      "eski_yasa_gecerdi": false,
+      "iki_yasa_ayni_hukum": true
+     },
+     "ozet": {
+      "tam_replay_n": 258,
+      "oos_score": -0.146,
+      "search_oos": {
+       "n": 125,
+       "kazanma_orani": 0.344,
+       "ort_r": 0.0128,
+       "toplam_r": 1.599,
+       "ort_kazanan_r": 1.0003,
+       "ort_kaybeden_r": -0.5051,
+       "odeme_orani": 1.9806,
+       "kar_faktoru": 1.0386,
+       "maks_r": 2.864,
+       "min_r": -1.158,
+       "p95_r": 2.027,
+       "r_3ustu_pay": 0.0,
+       "ort_tutus_bar": 7.39,
+       "medyan_tutus_bar": 7.0,
+       "cikis_sebebi": {
+        "stop": 31,
+        "time_stop": 31,
+        "early_kill_pivot": 31,
+        "regime_flip": 19,
+        "target": 7,
+        "stop_gap": 4,
+        "target_gap": 2
+       },
+       "cikis_ailesi": {
+        "hedef": 9,
+        "stop": 35,
+        "zaman": 31,
+        "erken_itlaf": 31,
+        "diger": 19,
+        "stop_karda_TRAIL_VEKILI": 1,
+        "stop_zararda_SERT": 34
+       },
+       "maks_dusus_ORAN": 0.10098
+      },
+      "confirm_oos": {
+       "n": 34,
+       "kazanma_orani": 0.2941,
+       "ort_r": -0.0968,
+       "toplam_r": -3.29,
+       "ort_kazanan_r": 0.8402,
+       "ort_kaybeden_r": -0.4872,
+       "odeme_orani": 1.7247,
+       "kar_faktoru": 0.7186,
+       "maks_r": 1.979,
+       "min_r": -1.034,
+       "p95_r": 1.715,
+       "r_3ustu_pay": 0.0,
+       "ort_tutus_bar": 6.12,
+       "medyan_tutus_bar": 4.0,
+       "cikis_sebebi": {
+        "stop": 9,
+        "early_kill_pivot": 9,
+        "regime_flip": 7,
+        "time_stop": 4,
+        "stop_gap": 2,
+        "target": 2,
+        "target_gap": 1
+       },
+       "cikis_ailesi": {
+        "hedef": 3,
+        "stop": 11,
+        "zaman": 4,
+        "erken_itlaf": 9,
+        "diger": 7,
+        "stop_karda_TRAIL_VEKILI": 0,
+        "stop_zararda_SERT": 11
+       },
+       "maks_dusus_ORAN": 0.02532
+      },
+      "tam_oos_detay": {
+       "n": 162,
+       "total_return": 0.0083,
+       "max_drawdown": 0.121,
+       "sharpe": 0.066,
+       "avg_r": 0.002,
+       "win_rate": 0.346
+      },
+      "kuyruk_search": {
+       "horizon": 20,
+       "alpha": 0.95,
+       "n": 125,
+       "var_r": 6.948,
+       "cvar_r": 8.508,
+       "worst_r": 14.814,
+       "mean_r": 0.213
+      },
+      "foldlar_n_dengeli": [
+       {
+        "start": "2024-01-01",
+        "end": "2024-06-05",
+        "n": 37,
+        "avg_r": 0.2504
+       },
+       {
+        "start": "2024-06-05",
+        "end": "2024-11-12",
+        "n": 36,
+        "avg_r": -0.11
+       },
+       {
+        "start": "2024-11-12",
+        "end": "2025-08-18",
+        "n": 36,
+        "avg_r": -0.1907
+       }
+      ],
+      "holdout_score": null
+     },
+     "rampa_serisi": {
+      "gun": 1146,
+      "cap_dagilimi_tam": {
+       "1": 8,
+       "2": 208,
+       "3": 48,
+       "4": 232,
+       "5": 650
+      },
+      "cap_dagilimi_2024_sonrasi": {
+       "1": 8,
+       "2": 208,
+       "3": 48,
+       "4": 232,
+       "5": 135
+      },
+      "ort_cap_2024_sonrasi": 3.441,
+      "cap5_pay_2024_sonrasi": 0.2139,
+      "cap0_1_pay_2024_sonrasi": 0.0127,
+      "ort_tepe_dususu_2024_sonrasi": 0.08226,
+      "maks_tepe_dususu_tam": 0.12392,
+      "dd_3ustu_pay_2024_sonrasi": 0.8986,
+      "dd_6ustu_pay_2024_sonrasi": 0.813
+     }
+    }
+   }
+  },
+  "kapali": {
+   "rampa": {
+    "kapali": true,
+    "mult": 1.0
+   },
+   "incumbent": {
+    "tam_replay_n": 270,
+    "oos_score": -0.2401,
+    "search_oos": {
+     "n": 114,
+     "kazanma_orani": 0.4298,
+     "ort_r": 0.0377,
+     "toplam_r": 4.301,
+     "ort_kazanan_r": 0.9799,
+     "ort_kaybeden_r": -0.6726,
+     "odeme_orani": 1.457,
+     "kar_faktoru": 1.0984,
+     "maks_r": 2.864,
+     "min_r": -4.324,
+     "p95_r": 2.034,
+     "r_3ustu_pay": 0.0,
+     "ort_tutus_bar": 8.91,
+     "medyan_tutus_bar": 9.0,
+     "cikis_sebebi": {
+      "time_stop": 39,
+      "stop": 34,
+      "regime_flip": 27,
+      "target": 6,
+      "stop_gap": 6,
+      "target_gap": 2
+     },
+     "cikis_ailesi": {
+      "hedef": 8,
+      "stop": 40,
+      "zaman": 39,
+      "erken_itlaf": 0,
+      "diger": 27,
+      "stop_karda_TRAIL_VEKILI": 1,
+      "stop_zararda_SERT": 39
+     },
+     "maks_dusus_ORAN": 0.1014
+    },
+    "confirm_oos": {
+     "n": 54,
+     "kazanma_orani": 0.3333,
+     "ort_r": -0.0784,
+     "toplam_r": -4.235,
+     "ort_kazanan_r": 0.9073,
+     "ort_kaybeden_r": -0.5713,
+     "odeme_orani": 1.5882,
+     "kar_faktoru": 0.7941,
+     "maks_r": 2.038,
+     "min_r": -1.209,
+     "p95_r": 1.768,
+     "r_3ustu_pay": 0.0,
+     "ort_tutus_bar": 7.81,
+     "medyan_tutus_bar": 8.0,
+     "cikis_sebebi": {
+      "regime_flip": 19,
+      "stop": 18,
+      "time_stop": 8,
+      "stop_gap": 5,
+      "target_gap": 2,
+      "target": 2
+     },
+     "cikis_ailesi": {
+      "hedef": 4,
+      "stop": 23,
+      "zaman": 8,
+      "erken_itlaf": 0,
+      "diger": 19,
+      "stop_karda_TRAIL_VEKILI": 1,
+      "stop_zararda_SERT": 22
+     },
+     "maks_dusus_ORAN": 0.0679
+    },
+    "tam_oos_detay": {
+     "n": 173,
+     "total_return": 0.0271,
+     "max_drawdown": 0.1491,
+     "sharpe": 0.149,
+     "avg_r": 0.012,
+     "win_rate": 0.405
+    },
+    "kuyruk_search": {
+     "horizon": 20,
+     "alpha": 0.95,
+     "n": 114,
+     "var_r": 7.902,
+     "cvar_r": 9.649,
+     "worst_r": 16.469,
+     "mean_r": 0.756
+    },
+    "foldlar_n_dengeli": [
+     {
+      "start": "2024-01-01",
+      "end": "2024-06-26",
+      "n": 35,
+      "avg_r": 0.0494
+     },
+     {
+      "start": "2024-06-26",
+      "end": "2024-11-13",
+      "n": 32,
+      "avg_r": 0.1737
+     },
+     {
+      "start": "2024-11-13",
+      "end": "2025-08-18",
+      "n": 35,
+      "avg_r": -0.2779
+     }
+    ],
+    "holdout_score": null
+   },
+   "incumbent_rampa_serisi": {
+    "gun": 1146,
+    "cap_dagilimi_tam": {
+     "5": 1146
+    },
+    "cap_dagilimi_2024_sonrasi": {
+     "5": 631
+    },
+    "ort_cap_2024_sonrasi": 5.0,
+    "cap5_pay_2024_sonrasi": 1.0,
+    "cap0_1_pay_2024_sonrasi": 0.0,
+    "ort_tepe_dususu_2024_sonrasi": 0.0812,
+    "maks_tepe_dususu_tam": 0.16838,
+    "dd_3ustu_pay_2024_sonrasi": 0.8764,
+    "dd_6ustu_pay_2024_sonrasi": 0.7306
+   },
+   "adaylar": {
+    "P3_paketi": {
+     "knobs": {
+      "exit.time_stop_days": 30,
+      "exit.breakeven_r": 2.0,
+      "exit.profit_target_r": 6.0,
+      "exit.trail_atr_mult": 3.5,
+      "exit.early_kill_pivot": 1
+     },
+     "prescreen_satiri": {
+      "knob": "exit.breakeven_r=2.0;exit.early_kill_pivot=1;exit.profit_target_r=6.0;exit.time_stop_days=30;exit.trail_atr_mult=3.5",
+      "eski": null,
+      "yeni": null,
+      "bilesik": true,
+      "n_knobs": 5,
+      "knobs": {
+       "exit.time_stop_days": 30,
+       "exit.breakeven_r": 2.0,
+       "exit.profit_target_r": 6.0,
+       "exit.trail_atr_mult": 3.5,
+       "exit.early_kill_pivot": 1
+      },
+      "eski_knobs": {
+       "exit.time_stop_days": 15,
+       "exit.breakeven_r": 1.0,
+       "exit.profit_target_r": 2.5,
+       "exit.trail_atr_mult": 2.5,
+       "exit.early_kill_pivot": null
+      },
+      "motor_isliyor": true,
+      "inc_oos": -0.2401,
+      "cand_oos": -0.0665,
+      "delta": 0.1736,
+      "inc_n": 103,
+      "cand_n": 97,
+      "inc_folds": [
+       61,
+       37,
+       5
+      ],
+      "cand_folds": [
+       59,
+       31,
+       7
+      ],
+      "fold_wins": "2/3",
+      "fold_law": "n_dengeli",
+      "tail_delta": {
+       "var_r": 0.729,
+       "cvar_r": 0.8
+      },
+      "tail_ok": false,
+      "gate_law": "probabilistic",
+      "k_probes": 4,
+      "passes": false,
+      "why": "P(ΔS>0)=0.481 < gerekli 0.95 (K=4 aday cezası dahil)",
+      "margin": 0.02,
+      "yasa_surumu": "para_v3",
+      "pencere_id": "R1",
+      "inc_para": 0.1026,
+      "cand_para": 0.0954,
+      "para_delta": -0.0072,
+      "p": 0.4815,
+      "p_required": 0.95,
+      "mean_delta": -0.0056,
+      "inc_dd": 0.1014,
+      "cand_dd": 0.0969,
+      "dd_ok": true,
+      "dd_durum": "gecti",
+      "eski_yasa_p": 0.555,
+      "eski_yasa_mean_delta": 0.0305,
+      "eski_yasa_gecerdi": false,
+      "iki_yasa_ayni_hukum": true
+     },
+     "ozet": {
+      "tam_replay_n": 243,
+      "oos_score": -0.0665,
+      "search_oos": {
+       "n": 106,
+       "kazanma_orani": 0.3302,
+       "ort_r": 0.0506,
+       "toplam_r": 5.368,
+       "ort_kazanan_r": 1.4501,
+       "ort_kaybeden_r": -0.6392,
+       "odeme_orani": 2.2685,
+       "kar_faktoru": 1.1183,
+       "maks_r": 7.133,
+       "min_r": -1.486,
+       "p95_r": 2.811,
+       "r_3ustu_pay": 0.0377,
+       "ort_tutus_bar": 10.12,
+       "medyan_tutus_bar": 7.0,
+       "cikis_sebebi": {
+        "early_kill_pivot": 32,
+        "stop": 27,
+        "regime_flip": 22,
+        "time_stop": 13,
+        "target": 6,
+        "stop_gap": 5,
+        "target_gap": 1
+       },
+       "cikis_ailesi": {
+        "hedef": 7,
+        "stop": 32,
+        "zaman": 13,
+        "erken_itlaf": 32,
+        "diger": 22,
+        "stop_karda_TRAIL_VEKILI": 2,
+        "stop_zararda_SERT": 30
+       },
+       "maks_dusus_ORAN": 0.09687
+      },
+      "confirm_oos": {
+       "n": 51,
+       "kazanma_orani": 0.451,
+       "ort_r": 0.1382,
+       "toplam_r": 7.046,
+       "ort_kazanan_r": 1.015,
+       "ort_kaybeden_r": -0.5821,
+       "odeme_orani": 1.7436,
+       "kar_faktoru": 1.4323,
+       "maks_r": 4.705,
+       "min_r": -1.209,
+       "p95_r": 1.662,
+       "r_3ustu_pay": 0.0196,
+       "ort_tutus_bar": 7.88,
+       "medyan_tutus_bar": 7.0,
+       "cikis_sebebi": {
+        "regime_flip": 19,
+        "early_kill_pivot": 13,
+        "stop": 12,
+        "target": 4,
+        "stop_gap": 2,
+        "time_stop": 1
+       },
+       "cikis_ailesi": {
+        "hedef": 4,
+        "stop": 14,
+        "zaman": 1,
+        "erken_itlaf": 13,
+        "diger": 19,
+        "stop_karda_TRAIL_VEKILI": 1,
+        "stop_zararda_SERT": 13
+       },
+       "maks_dusus_ORAN": 0.02626
+      },
+      "tam_oos_detay": {
+       "n": 160,
+       "total_return": 0.1131,
+       "max_drawdown": 0.1183,
+       "sharpe": 0.599,
+       "avg_r": 0.081,
+       "win_rate": 0.369
+      },
+      "kuyruk_search": {
+       "horizon": 20,
+       "alpha": 0.95,
+       "n": 106,
+       "var_r": 8.631,
+       "cvar_r": 10.449,
+       "worst_r": 16.477,
+       "mean_r": 0.968
+      },
+      "foldlar_n_dengeli": [
+       {
+        "start": "2024-01-01",
+        "end": "2024-06-26",
+        "n": 32,
+        "avg_r": 0.1777
+       },
+       {
+        "start": "2024-06-26",
+        "end": "2024-10-30",
+        "n": 31,
+        "avg_r": -0.1493
+       },
+       {
+        "start": "2024-10-30",
+        "end": "2025-08-18",
+        "n": 30,
+        "avg_r": 0.0604
+       }
+      ],
+      "holdout_score": null
+     },
+     "rampa_serisi": {
+      "gun": 1146,
+      "cap_dagilimi_tam": {
+       "5": 1146
+      },
+      "cap_dagilimi_2024_sonrasi": {
+       "5": 631
+      },
+      "ort_cap_2024_sonrasi": 5.0,
+      "cap5_pay_2024_sonrasi": 1.0,
+      "cap0_1_pay_2024_sonrasi": 0.0,
+      "ort_tepe_dususu_2024_sonrasi": 0.03896,
+      "maks_tepe_dususu_tam": 0.12458,
+      "dd_3ustu_pay_2024_sonrasi": 0.5848,
+      "dd_6ustu_pay_2024_sonrasi": 0.2583
+     }
+    },
+    "early_kill_tek": {
+     "knobs": {
+      "exit.early_kill_pivot": 1
+     },
+     "prescreen_satiri": {
+      "knob": "exit.early_kill_pivot=1",
+      "eski": null,
+      "yeni": null,
+      "bilesik": true,
+      "n_knobs": 1,
+      "knobs": {
+       "exit.early_kill_pivot": 1
+      },
+      "eski_knobs": {
+       "exit.early_kill_pivot": null
+      },
+      "motor_isliyor": true,
+      "inc_oos": -0.2401,
+      "cand_oos": -0.0305,
+      "delta": 0.2096,
+      "inc_n": 103,
+      "cand_n": 128,
+      "inc_folds": [
+       61,
+       37,
+       5
+      ],
+      "cand_folds": [
+       72,
+       46,
+       10
+      ],
+      "fold_wins": "2/3",
+      "fold_law": "n_dengeli",
+      "tail_delta": {
+       "var_r": -0.572,
+       "cvar_r": -0.793
+      },
+      "tail_ok": true,
+      "gate_law": "probabilistic",
+      "k_probes": 4,
+      "passes": false,
+      "why": "P(ΔS>0)=0.606 < gerekli 0.95 (K=4 aday cezası dahil)",
+      "margin": 0.02,
+      "yasa_surumu": "para_v3",
+      "pencere_id": "R1",
+      "inc_para": 0.1026,
+      "cand_para": 0.16,
+      "para_delta": 0.0574,
+      "p": 0.6055,
+      "p_required": 0.95,
+      "mean_delta": 0.0611,
+      "inc_dd": 0.1014,
+      "cand_dd": 0.1041,
+      "dd_ok": true,
+      "dd_durum": "gecti",
+      "eski_yasa_p": 0.579,
+      "eski_yasa_mean_delta": 0.0379,
+      "eski_yasa_gecerdi": false,
+      "iki_yasa_ayni_hukum": true
+     },
+     "ozet": {
+      "tam_replay_n": 312,
+      "oos_score": -0.0305,
+      "search_oos": {
+       "n": 139,
+       "kazanma_orani": 0.3741,
+       "ort_r": 0.0674,
+       "toplam_r": 9.373,
+       "ort_kazanan_r": 1.0888,
+       "ort_kaybeden_r": -0.543,
+       "odeme_orani": 2.005,
+       "kar_faktoru": 1.1984,
+       "maks_r": 7.133,
+       "min_r": -1.952,
+       "p95_r": 2.133,
+       "r_3ustu_pay": 0.0072,
+       "ort_tutus_bar": 7.03,
+       "medyan_tutus_bar": 5.0,
+       "cikis_sebebi": {
+        "early_kill_pivot": 37,
+        "time_stop": 32,
+        "stop": 30,
+        "regime_flip": 23,
+        "target": 9,
+        "stop_gap": 6,
+        "target_gap": 2
+       },
+       "cikis_ailesi": {
+        "hedef": 11,
+        "stop": 36,
+        "zaman": 32,
+        "erken_itlaf": 37,
+        "diger": 23,
+        "stop_karda_TRAIL_VEKILI": 1,
+        "stop_zararda_SERT": 35
+       },
+       "maks_dusus_ORAN": 0.10412
+      },
+      "confirm_oos": {
+       "n": 64,
+       "kazanma_orani": 0.3594,
+       "ort_r": 0.0136,
+       "toplam_r": 0.871,
+       "ort_kazanan_r": 0.8507,
+       "ort_kaybeden_r": -0.456,
+       "odeme_orani": 1.8657,
+       "kar_faktoru": 1.0466,
+       "maks_r": 2.107,
+       "min_r": -1.212,
+       "p95_r": 1.771,
+       "r_3ustu_pay": 0.0,
+       "ort_tutus_bar": 5.98,
+       "medyan_tutus_bar": 5.0,
+       "cikis_sebebi": {
+        "early_kill_pivot": 17,
+        "regime_flip": 17,
+        "stop": 14,
+        "time_stop": 7,
+        "stop_gap": 4,
+        "target": 3,
+        "target_gap": 2
+       },
+       "cikis_ailesi": {
+        "hedef": 5,
+        "stop": 18,
+        "zaman": 7,
+        "erken_itlaf": 17,
+        "diger": 17,
+        "stop_karda_TRAIL_VEKILI": 1,
+        "stop_zararda_SERT": 17
+       },
+       "maks_dusus_ORAN": 0.05152
+      },
+      "tam_oos_detay": {
+       "n": 207,
+       "total_return": 0.0912,
+       "max_drawdown": 0.105,
+       "sharpe": 0.493,
+       "avg_r": 0.054,
+       "win_rate": 0.377
+      },
+      "kuyruk_search": {
+       "horizon": 20,
+       "alpha": 0.95,
+       "n": 139,
+       "var_r": 7.33,
+       "cvar_r": 8.856,
+       "worst_r": 13.652,
+       "mean_r": 1.327
+      },
+      "foldlar_n_dengeli": [
+       {
+        "start": "2024-01-01",
+        "end": "2024-06-26",
+        "n": 43,
+        "avg_r": 0.1801
+       },
+       {
+        "start": "2024-06-26",
+        "end": "2024-11-20",
+        "n": 42,
+        "avg_r": 0.0655
+       },
+       {
+        "start": "2024-11-20",
+        "end": "2025-08-18",
+        "n": 42,
+        "avg_r": -0.0452
+       }
+      ],
+      "holdout_score": null
+     },
+     "rampa_serisi": {
+      "gun": 1146,
+      "cap_dagilimi_tam": {
+       "5": 1146
+      },
+      "cap_dagilimi_2024_sonrasi": {
+       "5": 631
+      },
+      "ort_cap_2024_sonrasi": 5.0,
+      "cap5_pay_2024_sonrasi": 1.0,
+      "cap0_1_pay_2024_sonrasi": 0.0,
+      "ort_tepe_dususu_2024_sonrasi": 0.04751,
+      "maks_tepe_dususu_tam": 0.10714,
+      "dd_3ustu_pay_2024_sonrasi": 0.6704,
+      "dd_6ustu_pay_2024_sonrasi": 0.4041
+     }
+    }
+   }
+  }
+ },
+ "imza_analizi": {
+  "gevsek_6_15": {
+   "P3_paketi": {
+    "d_n": -15,
+    "d_kazanma_orani": -0.0876,
+    "d_ort_kazanan_r": 0.0621,
+    "d_ort_r": -0.1139,
+    "d_maks_r": 0.721,
+    "d_odeme_orani": 0.1294,
+    "d_ort_tutus_bar": 0.97,
+    "d_maks_dusus": -0.005,
+    "trailing_imzasi": {
+     "kazanma_dustu": true,
+     "kazanan_buyudu": true,
+     "beklenti_artti": false,
+     "sag_kuyruk_acildi": true
+    },
+    "imza_skoru": "3/4"
+   },
+   "early_kill_tek": {
+    "d_n": 15,
+    "d_kazanma_orani": -0.1015,
+    "d_ort_kazanan_r": 0.0028,
+    "d_ort_r": -0.064,
+    "d_maks_r": 0.0,
+    "d_odeme_orani": 0.4756,
+    "d_ort_tutus_bar": -1.81,
+    "d_maks_dusus": 0.0043,
+    "trailing_imzasi": {
+     "kazanma_dustu": true,
+     "kazanan_buyudu": true,
+     "beklenti_artti": false,
+     "sag_kuyruk_acildi": false
+    },
+    "imza_skoru": "2/4"
+   }
+  },
+  "kapali": {
+   "P3_paketi": {
+    "d_n": -8,
+    "d_kazanma_orani": -0.0996,
+    "d_ort_kazanan_r": 0.4702,
+    "d_ort_r": 0.0129,
+    "d_maks_r": 4.269,
+    "d_odeme_orani": 0.8115,
+    "d_ort_tutus_bar": 1.21,
+    "d_maks_dusus": -0.0045,
+    "trailing_imzasi": {
+     "kazanma_dustu": true,
+     "kazanan_buyudu": true,
+     "beklenti_artti": true,
+     "sag_kuyruk_acildi": true
+    },
+    "imza_skoru": "4/4"
+   },
+   "early_kill_tek": {
+    "d_n": 25,
+    "d_kazanma_orani": -0.0557,
+    "d_ort_kazanan_r": 0.1089,
+    "d_ort_r": 0.0297,
+    "d_maks_r": 4.269,
+    "d_odeme_orani": 0.548,
+    "d_ort_tutus_bar": -1.88,
+    "d_maks_dusus": 0.0027,
+    "trailing_imzasi": {
+     "kazanma_dustu": true,
+     "kazanan_buyudu": true,
+     "beklenti_artti": true,
+     "sag_kuyruk_acildi": true
+    },
+    "imza_skoru": "4/4"
+   }
+  }
+ },
+ "kill1_paket_olur_mu": {
+  "esik": 0.6,
+  "adaylar": {
+   "P3_paketi": {
+    "p_by_kosul": {
+     "gevsek_6_15": 0.202,
+     "kapali": 0.4815
+    },
+    "hepsi_esigin_altinda": true,
+    "olculemeyen_kosul": []
+   },
+   "early_kill_tek": {
+    "p_by_kosul": {
+     "gevsek_6_15": 0.226,
+     "kapali": 0.6055
+    },
+    "hepsi_esigin_altinda": false,
+    "olculemeyen_kosul": []
+   }
+  }
+ },
+ "kill2_rampanin_korumasi": {
+  "dd_veto_margin": 0.04,
+  "taban_uretim_rampasi_3_8": {
+   "kapanmis_islem_dd": 0.04566,
+   "tam_oos_m2m_dd": 0.0699
+  },
+  "kosullar": {
+   "gevsek_6_15": {
+    "incumbent_kapanmis_islem_dd": 0.09669,
+    "incumbent_tam_oos_m2m_dd": 0.1285,
+    "delta_vs_uretim_kapanmis": 0.05103,
+    "delta_vs_uretim_m2m": 0.0586,
+    "veto_sinirini_asti_kapanmis": true,
+    "veto_sinirini_asti_m2m": true
+   },
+   "kapali": {
+    "incumbent_kapanmis_islem_dd": 0.1014,
+    "incumbent_tam_oos_m2m_dd": 0.1491,
+    "delta_vs_uretim_kapanmis": 0.05574,
+    "delta_vs_uretim_m2m": 0.0792,
+    "veto_sinirini_asti_kapanmis": true,
+    "veto_sinirini_asti_m2m": true
+   }
+  }
+ },
+ "gecen_hucreler": [],
+ "prescreen_raporlari": {
+  "gevsek_6_15": {
+   "incumbent": {
+    "version": 3,
+    "oos_score": -0.1412,
+    "n": 99,
+    "folds": [
+     57,
+     37,
+     5
+    ]
+   },
+   "k_probes": 2,
+   "n_denenen": 2,
+   "n_bilesik": 2,
+   "adaylar": [
+    {
+     "knob": "exit.breakeven_r=2.0;exit.early_kill_pivot=1;exit.profit_target_r=6.0;exit.time_stop_days=30;exit.trail_atr_mult=3.5",
+     "eski": null,
+     "yeni": null,
+     "bilesik": true,
+     "n_knobs": 5,
+     "knobs": {
+      "exit.time_stop_days": 30,
+      "exit.breakeven_r": 2.0,
+      "exit.profit_target_r": 6.0,
+      "exit.trail_atr_mult": 3.5,
+      "exit.early_kill_pivot": 1
+     },
+     "eski_knobs": {
+      "exit.time_stop_days": 15,
+      "exit.breakeven_r": 1.0,
+      "exit.profit_target_r": 2.5,
+      "exit.trail_atr_mult": 2.5,
+      "exit.early_kill_pivot": null
+     },
+     "motor_isliyor": true,
+     "inc_oos": -0.1412,
+     "cand_oos": -0.1484,
+     "delta": -0.0072,
+     "inc_n": 99,
+     "cand_n": 88,
+     "inc_folds": [
+      57,
+      37,
+      5
+     ],
+     "cand_folds": [
+      58,
+      26,
+      4
+     ],
+     "fold_wins": "1/3",
+     "fold_law": "n_dengeli",
+     "tail_delta": {
+      "var_r": 1.514,
+      "cvar_r": 1.533
+     },
+     "tail_ok": false,
+     "gate_law": "probabilistic",
+     "k_probes": 4,
+     "passes": false,
+     "why": "P(ΔS>0)=0.202 < gerekli 0.95 (K=4 aday cezası dahil)",
+     "margin": 0.02,
+     "yasa_surumu": "para_v3",
+     "pencere_id": "R1",
+     "inc_para": 0.1968,
+     "cand_para": -0.0284,
+     "para_delta": -0.2252,
+     "p": 0.202,
+     "p_required": 0.95,
+     "mean_delta": -0.2218,
+     "inc_dd": 0.0967,
+     "cand_dd": 0.0917,
+     "dd_ok": true,
+     "dd_durum": "gecti",
+     "eski_yasa_p": 0.385,
+     "eski_yasa_mean_delta": -0.0746,
+     "eski_yasa_gecerdi": false,
+     "iki_yasa_ayni_hukum": true
+    },
+    {
+     "knob": "exit.early_kill_pivot=1",
+     "eski": null,
+     "yeni": null,
+     "bilesik": true,
+     "n_knobs": 1,
+     "knobs": {
+      "exit.early_kill_pivot": 1
+     },
+     "eski_knobs": {
+      "exit.early_kill_pivot": null
+     },
+     "motor_isliyor": true,
+     "inc_oos": -0.1412,
+     "cand_oos": -0.146,
+     "delta": -0.0048,
+     "inc_n": 99,
+     "cand_n": 114,
+     "inc_folds": [
+      57,
+      37,
+      5
+     ],
+     "cand_folds": [
+      65,
+      41,
+      8
+     ],
+     "fold_wins": "2/3",
+     "fold_law": "n_dengeli",
+     "tail_delta": {
+      "var_r": -0.354,
+      "cvar_r": -0.521
+     },
+     "tail_ok": true,
+     "gate_law": "probabilistic",
+     "k_probes": 4,
+     "passes": false,
+     "why": "P(ΔS>0)=0.226 < gerekli 0.95 (K=4 aday cezası dahil)",
+     "margin": 0.02,
+     "yasa_surumu": "para_v3",
+     "pencere_id": "R1",
+     "inc_para": 0.1968,
+     "cand_para": 0.0388,
+     "para_delta": -0.158,
+     "p": 0.226,
+     "p_required": 0.95,
+     "mean_delta": -0.1559,
+     "inc_dd": 0.0967,
+     "cand_dd": 0.101,
+     "dd_ok": true,
+     "dd_durum": "gecti",
+     "eski_yasa_p": 0.3195,
+     "eski_yasa_mean_delta": -0.0956,
+     "eski_yasa_gecerdi": false,
+     "iki_yasa_ayni_hukum": true
+    }
+   ],
+   "guard_reddi": [],
+   "pencereler": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ],
+    "embargo_days": 10,
+    "pencere_id": "R1",
+    "rotasyon_tarihi": "2026-07-30",
+    "kiyas_uyarisi": "PENCERE R1 (2026-07-30 rotasyonu): R0 geometrisinde (OOS 2023-07-01→2025-12-31) ölçülmüş p/ΔS/PARA değerleri R1 değerleriyle KARŞILAŞTIRILAMAZ — aynı ada sahip iki farklı sınavdır. R0 kayıtları arşivde durur (arsiv_R0), silinmedi; habersiz kıyas YASAK."
+   },
+   "canli_state_degisen_dosyalar": [
+    "events.jsonl"
+   ],
+   "workdir": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wpr_olcum/gevsek_6_15",
+   "sure_s": 3575.2
+  },
+  "kapali": {
+   "incumbent": {
+    "version": 3,
+    "oos_score": -0.2401,
+    "n": 103,
+    "folds": [
+     61,
+     37,
+     5
+    ]
+   },
+   "k_probes": 2,
+   "n_denenen": 2,
+   "n_bilesik": 2,
+   "adaylar": [
+    {
+     "knob": "exit.breakeven_r=2.0;exit.early_kill_pivot=1;exit.profit_target_r=6.0;exit.time_stop_days=30;exit.trail_atr_mult=3.5",
+     "eski": null,
+     "yeni": null,
+     "bilesik": true,
+     "n_knobs": 5,
+     "knobs": {
+      "exit.time_stop_days": 30,
+      "exit.breakeven_r": 2.0,
+      "exit.profit_target_r": 6.0,
+      "exit.trail_atr_mult": 3.5,
+      "exit.early_kill_pivot": 1
+     },
+     "eski_knobs": {
+      "exit.time_stop_days": 15,
+      "exit.breakeven_r": 1.0,
+      "exit.profit_target_r": 2.5,
+      "exit.trail_atr_mult": 2.5,
+      "exit.early_kill_pivot": null
+     },
+     "motor_isliyor": true,
+     "inc_oos": -0.2401,
+     "cand_oos": -0.0665,
+     "delta": 0.1736,
+     "inc_n": 103,
+     "cand_n": 97,
+     "inc_folds": [
+      61,
+      37,
+      5
+     ],
+     "cand_folds": [
+      59,
+      31,
+      7
+     ],
+     "fold_wins": "2/3",
+     "fold_law": "n_dengeli",
+     "tail_delta": {
+      "var_r": 0.729,
+      "cvar_r": 0.8
+     },
+     "tail_ok": false,
+     "gate_law": "probabilistic",
+     "k_probes": 4,
+     "passes": false,
+     "why": "P(ΔS>0)=0.481 < gerekli 0.95 (K=4 aday cezası dahil)",
+     "margin": 0.02,
+     "yasa_surumu": "para_v3",
+     "pencere_id": "R1",
+     "inc_para": 0.1026,
+     "cand_para": 0.0954,
+     "para_delta": -0.0072,
+     "p": 0.4815,
+     "p_required": 0.95,
+     "mean_delta": -0.0056,
+     "inc_dd": 0.1014,
+     "cand_dd": 0.0969,
+     "dd_ok": true,
+     "dd_durum": "gecti",
+     "eski_yasa_p": 0.555,
+     "eski_yasa_mean_delta": 0.0305,
+     "eski_yasa_gecerdi": false,
+     "iki_yasa_ayni_hukum": true
+    },
+    {
+     "knob": "exit.early_kill_pivot=1",
+     "eski": null,
+     "yeni": null,
+     "bilesik": true,
+     "n_knobs": 1,
+     "knobs": {
+      "exit.early_kill_pivot": 1
+     },
+     "eski_knobs": {
+      "exit.early_kill_pivot": null
+     },
+     "motor_isliyor": true,
+     "inc_oos": -0.2401,
+     "cand_oos": -0.0305,
+     "delta": 0.2096,
+     "inc_n": 103,
+     "cand_n": 128,
+     "inc_folds": [
+      61,
+      37,
+      5
+     ],
+     "cand_folds": [
+      72,
+      46,
+      10
+     ],
+     "fold_wins": "2/3",
+     "fold_law": "n_dengeli",
+     "tail_delta": {
+      "var_r": -0.572,
+      "cvar_r": -0.793
+     },
+     "tail_ok": true,
+     "gate_law": "probabilistic",
+     "k_probes": 4,
+     "passes": false,
+     "why": "P(ΔS>0)=0.606 < gerekli 0.95 (K=4 aday cezası dahil)",
+     "margin": 0.02,
+     "yasa_surumu": "para_v3",
+     "pencere_id": "R1",
+     "inc_para": 0.1026,
+     "cand_para": 0.16,
+     "para_delta": 0.0574,
+     "p": 0.6055,
+     "p_required": 0.95,
+     "mean_delta": 0.0611,
+     "inc_dd": 0.1014,
+     "cand_dd": 0.1041,
+     "dd_ok": true,
+     "dd_durum": "gecti",
+     "eski_yasa_p": 0.579,
+     "eski_yasa_mean_delta": 0.0379,
+     "eski_yasa_gecerdi": false,
+     "iki_yasa_ayni_hukum": true
+    }
+   ],
+   "guard_reddi": [],
+   "pencereler": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ],
+    "embargo_days": 10,
+    "pencere_id": "R1",
+    "rotasyon_tarihi": "2026-07-30",
+    "kiyas_uyarisi": "PENCERE R1 (2026-07-30 rotasyonu): R0 geometrisinde (OOS 2023-07-01→2025-12-31) ölçülmüş p/ΔS/PARA değerleri R1 değerleriyle KARŞILAŞTIRILAMAZ — aynı ada sahip iki farklı sınavdır. R0 kayıtları arşivde durur (arsiv_R0), silinmedi; habersiz kıyas YASAK."
+   },
+   "canli_state_degisen_dosyalar": [
+    "events.jsonl",
+    "wf_cache_rev.json"
+   ],
+   "workdir": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wpr_olcum/kapali",
+   "sure_s": 1703.1
+  }
+ },
+ "kosu_sureleri": [
+  {
+   "kosul": "uretim_3_8_KONTROL",
+   "ad": "incumbent",
+   "sure_s": 1035.9
+  },
+  {
+   "kosul": "gevsek_6_15",
+   "ad": "incumbent",
+   "sure_s": 2178.7
+  },
+  {
+   "kosul": "gevsek_6_15",
+   "ad": "P3_paketi",
+   "sure_s": 666.3
+  },
+  {
+   "kosul": "gevsek_6_15",
+   "ad": "early_kill_tek",
+   "sure_s": 729.4
+  },
+  {
+   "kosul": "kapali",
+   "ad": "incumbent",
+   "sure_s": 611.0
+  },
+  {
+   "kosul": "kapali",
+   "ad": "P3_paketi",
+   "sure_s": 496.8
+  },
+  {
+   "kosul": "kapali",
+   "ad": "early_kill_tek",
+   "sure_s": 594.7
+  }
+ ]
+}
