@@ -380,10 +380,11 @@ def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni
         r = dilim.get(t)
         if r is None:
             continue
-        try:
-            p1, p12, pnow = r.at[a1, "close"], r.at[a12, "close"], r.at[rd, "close"]
-        except KeyError:
+        # ÇAPALAR YAPISAL OLARAK KUYRUĞUN İÇİNDEDİR (`me` zaten `tail`den türetildi); kontrol
+        # bir istisna yakalayıcısı DEĞİL bir üyelik kapısıdır — sessiz yutma yüzeyi açmaz.
+        if not (a1 in r.index and a12 in r.index and rd in r.index):
             continue
+        p1, p12, pnow = r.at[a1, "close"], r.at[a12, "close"], r.at[rd, "close"]
         if any(x is None or (isinstance(x, float) and math.isnan(x)) for x in (p1, p12, pnow)):
             continue
         if float(p12) <= 0:
