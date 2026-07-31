@@ -199,9 +199,24 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   state dosya+Redis; el kitabının varsayımı yanlış) · Pandera (karantina-v2 + bars_integrity zaten
   ölçülmüş özel koruma) · GE/Temporal/K8s/SBOM/fail2ban/staging (el kitabı da reddediyor) ·
   SDD çerçeveleri (kart+brief disiplini zaten SDD-lite).
-- **OPERATÖR KARARI → §6:** GİT İNİT (yerel, remote'suz; rsync exclude .git zaten hazır) — el
-  kitabının 2 No'lu kaldıracı, "git yok" sözleşme maddesini değiştirir; onay bekliyor · dış
-  dead-man (healthchecks.io tarzı) — bildirim kanalı kararına bağlı (mevcut §6 kalemi).
+- **H8 GİT** ✅ 2026-07-31 (operatör onayıyla): yerel git init, 863 dosya ilk commit `d9c3f24`;
+  .gitignore güncel (state/ [goal/bounds hariç] + backups/ + .env dışarıda — sır taşınmaz);
+  `dagit.sh`'a kirli-ağaç kapısı eklendi (yarım-iş canlıya gidemez; bilinçli istisna --kirli-gec).
+  YENİ SÖZLEŞME: tur başına commit; dosya-ayrıklık artık git-diff ile DENETLENEBİLİR.
+- **H9 SQLite defter çekirdeği 🔄 (operatör onayıyla; Opus sahada 2026-07-31):**
+  Kademe A: meridian/storage.py (WAL + synchronous=NORMAL + busy_timeout + foreign_keys) +
+  trades/trade_plans/scoreboard/portfolio/equity_curve/shadow_books → state/meridian.db;
+  parite-digest'li idempotent migrasyon (dbmigrate --uygula); store.py API'si korunur.
+  Kademe B: kalan TÜM JSON yazımlarına merkezî atomik-rename + flock (store.py'de tek kapı —
+  "süreç-içi kilit" tehlike sınıfı yapısal kapanır). events.jsonl JSONL KALIR (append-only doğru
+  biçim). Öğrenme-katmanı dosyaları (hypotheses/validation_ledger) Kademe C'ye ertelendi.
+- **H10 Litestream/PRAGMA/DuckLake hükmü (SQLite onayı sonrası yeniden değerlendirildi):**
+  PRAGMA seti → H9 storage.py'ye gömülü (UYGULA) · Litestream v0.5 → UYGULA-AŞAMALI: önce
+  file-replica (ikinci disk yolu + mevcut Mac-pull kapsar; RPO günler→dakikalar), OCI Object
+  Storage S3-uyumlu bucket + anahtar OPERATÖRDE (→§6; Always-Free 20GB yeter) gelince gerçek
+  off-box PITR · DuckDB → ölçüm tarafında OPSİYONEL okuma aracı (sıfır-risk ATTACH) ·
+  DuckLake → RED-ŞİMDİLİK (251-sembol EOD'de katalog katmanının çözdüğü sorun bizde yok;
+  tetik: bar arşivinin Parquet'e taşınması gündeme gelirse).
 
 ### SIRALAMA (güncel): mevcut dalga (BT-1→WP-E · WP-D-r2 · 1.2/1.4) → sabah konsolidasyon+dağıtım →
 **WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
