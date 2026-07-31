@@ -203,8 +203,10 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   canary/shadow = gölge-v2 + paper-lock · DST-lite yarısı = replay_seed + deterministik backtest ·
   snapshot testleri = çivi dizisi · yedek zinciri = VM-tar + Mac-pull · takvim/UTC = takvim kapısı ·
   iç dead-man = 17 bekçi + tick-watchdog + fail-notify.
-- **H1 Hypothesis invariant paketi** 📋 — anayasa yasalarını (YASA 4/6, uydurma, lookahead, takvim,
-  karantina değişmezleri) stateful property-testlere dök; EN YÜKSEK kaldıraç (Opus brief'i).
+- **H1 Hypothesis invariant paketi ✅ (2026-07-31 tur-2):** 20 property / 5 yasa bölümü (sanitize,
+  depo-roundtrip diferansiyeli, kayıpsızlık durum-makinesi, takvim kapısı, defter damgası).
+  İLK GÜN GERÇEK KUSUR: SQLite REAL −0.0 işaret kaybı (latent, canlıda 0 örnek; _isaretli_sifir
+  kapısıyla kapandı, @example kilitli) — property-testin varlık gerekçesi kendini ödedi.
 - **H2 tedarik-zinciri kapısı** ✅ 2026-07-31: `uv audit` temiz (69 paket, 0 zafiyet); dağıtım
   betiğine zorunlu ön-adım olarak kablolu (`dagit.sh` [0/6]) — ajan-önerili her yeni bağımlılık
   kurulum ÖNCESİ lockfile+audit'ten geçer (slopsquatting %19,7).
@@ -214,23 +216,25 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   (NoNewPrivileges/ProtectSystem=strict/PrivateTmp/ProtectHome önce; seccomp EN SON ve dikkatli).
   + `MERIDIAN_DASH_TOKEN` unit dosyasında DÜZ METİN (herkes-okur) → rotasyon + LoadCredential'a
   taşıma AYNI bakım penceresinde.
-- **H4 import-linter sözleşmeleri** 📋 — adapters→çekirdek yön kuralı + katman sözleşmesi; ajan
-  sürüklenmesine karşı yapısal kapı (Opus, H1 ile aynı brief'e binebilir).
-- **H5 mutmut haftalık** 📋 — YALNIZ karar çekirdeği (broker/guard/score); bakım penceresi işi,
-  per-commit DEĞİL; hedef ≥%80 (testlerin gerçekliği kapısı).
+- **H4 import-linter ✅ (tur-2):** 5 sözleşme 5/5 (506 bağımlılık); tek bilinçli istisna
+  adapters.alpaca→broker (WP-E iki-motor yasası); backtest→loop DOLAYLI zinciri ölçüldü (sözleşme
+  bölündü); MİMARİ BORÇ KAYDI: en büyük güçlü-bağlı bileşen 20 modül. ops/kapilar.sh zinciri +
+  dagit.sh [0c] kapısı canlı.
+- **H5 mutmut altyapı ✅ / İLK KOŞUM 📋:** yapılandırma + ops/haftalik_mutasyon.sh hazır
+  (mutmut 3.7 doğru anahtarlar; sahte-%100 tuzağı belgeli); ilk gerçek koşum bakım ritüelinde.
 - **H6 CLAUDE.md** ✅ 2026-07-31 — kısa çalışma sözleşmesi repo köküne yazıldı (log-önce kuralı,
   roller, yasalar, canlı-güvenlik).
 - **H7 restore tatbikatı** ✅ İLKİ YAPILDI (2026-07-31): A1 arşivinden çekme 3,1sn + açma 0,3sn,
   64/64 JSON sağlam, sayılar canlıyla birebir. BULGU→ÇÖZÜM: tar "file changed" exit-1'i unit'i
   FAILURE'a boyuyordu + SQLite sonrası ham tar yarışlı olurdu → yedek unit revize (exit<=1
   toleransı + storage.backup_to tutarlı kopya, canlıda doğrulandı). Çeyreklik ritim sürer.
-- **H11 mekanizma süre-tavanları + poll açlığı** 📋 (2026-07-31 vakası, kod okunarak düzeltildi):
-  warmup_sprint TASARIMI gereği uzun (bütçe 10 sonda × walk-forward ≈ 1-5 sa nominal;
-  watchdog.py:25 alarm eşiği 8 sa) — vaka "takılı süreç" değil. GERÇEK açıklar: (a) bekçi ALARM
-  edebiliyor ama İPTAL edemiyor (8 sa aşımında kibar-iptal yok); (b) warmup hermes döngüsünün
-  KENDİ thread'inde koştuğundan sürerken hermes_poll nabızsız kalıyor → sahte poll alarmı
-  (açlık). İş: uzun-hesap mekanizmalarına tavan-aşımı kibar-iptali + warmup'ı poll thread'inden
-  ayırmak (ya da poll nabzını warmup içinden atmak).
+- **H11 ✅ KOD-HAZIR (tur-2; canlıya sonraki pencerede):** coordinate_descent_search süre-tavanı +
+  kibar-iptal (YASA-4 olaylı) + warmup'ta sonda-başına çift nabız (warmup_sprint + hermes_poll —
+  açlık-alarmı sınıfı ölür); HERMES_WARMUP_MAX_MIN=300 varsayılan; 17 test. Bekçi eşikleri değişmedi.
+- **AÇIK KARAR (tur-2 bulgusu):** A1'e dev-grubu kurulumu — dagit.sh [3] '--extra dev' 7 gereksiz
+  paketi canlıya taşıyor ve audit kapısını alakasız CVE'ye açıyor; daraltma kolu --no-default-groups,
+  önce A1 çalışma-yolu import taraması (sonraki pencere).
+
 - **REDDEDİLDİ (bizim gerçekte):** Litestream/SQLite-PRAGMA/DuckLake (Meridian'da SQLite YOK —
   state dosya+Redis; el kitabının varsayımı yanlış) · Pandera (karantina-v2 + bars_integrity zaten
   ölçülmüş özel koruma) · GE/Temporal/K8s/SBOM/fail2ban/staging (el kitabı da reddediyor) ·
