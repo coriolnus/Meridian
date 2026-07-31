@@ -532,11 +532,14 @@ def write_entity(name: str, payload: Any) -> None:
 
 
 def meta(name: str) -> dict | None:
-    """Varlığın damgası: {present, rev, updated_at, n, migrated_at}. DB yoksa None."""
+    """Varlığın damgası: {present, rev, updated_at, n, migrated_at, source_digest, env_json}.
+
+    SÜTUN LİSTESİ ELLE YAZILMAZ (`SELECT *`): elle yazılan liste eskir ve eksik sütun SESSİZCE
+    None döner — ilk sürümde `source_digest` tam olarak böyle kayboldu, `--durum` raporunda
+    "kaynak digesti yok" diye okundu ve migrasyonun kendi kanıtı görünmez oldu."""
     c = connect()
     with _GUARD:
-        rec = c.execute("SELECT entity, present, rev, updated_at, n, migrated_at "
-                        "FROM entity_meta WHERE entity=?", (name,)).fetchone()
+        rec = c.execute("SELECT * FROM entity_meta WHERE entity=?", (name,)).fetchone()
     return rec
 
 
@@ -547,6 +550,25 @@ def stamp(name: str) -> tuple | None:
     if m is None:
         return None
     return (int(float(m["updated_at"]) * 1e9), int(m["rev"]))
+
+
+def backup_to(hedef: Path | str) -> Path:
+    """TUTARLI kopya — `sqlite3` çevrimiçi yedek API'siyle.
+
+    NEDEN DOSYA KOPYALAMAK YETMEZ: WAL modunda defterin bir kısmı `-wal` dosyasındadır. `tar`/`cp`
+    ile alınan bir kopya, `-wal` olmadan EKSİK ve `-wal` ile birlikte alınsa bile YARIŞLI olur
+    (kopyalama sırasında checkpoint çalışabilir). Yedeğin sessizce eksik olması, yedek olmamasından
+    daha kötüdür: geri yükleme gününe kadar görünmez."""
+    src = connect()
+    p = Path(hedef)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    dst = sqlite3.connect(str(p))
+    try:
+        with _GUARD:
+            src.backup(dst)
+    finally:
+        dst.close()
+    return p
 
 
 def mark_migrated(name: str, *, digest: str, conn: sqlite3.Connection | None = None) -> None:

@@ -1,0 +1,48 @@
+# deploy/litestream.yml — Meridian defter çekirdeğinin (state/meridian.db) SÜREKLİ REPLİKASYONU.
+#
+# TASLAK — KURULMADI. Bu dosya yalnız bir dosyadır; A1'e kurulum Rol-1'in bakım penceresindedir
+# (WP-H/H9). Hiçbir şey bu dosyayı otomatik okumaz.
+#
+# NEDEN LITESTREAM, NEDEN `cp`/`rsync` DEĞİL. `deploy/state_backup.sh` bugün `gcloud storage rsync`
+# ile TÜM state/ dizinini kopyalıyor. WAL modunda bir SQLite defterinin bir kısmı `meridian.db-wal`
+# dosyasındadır: rsync sırasında checkpoint çalışırsa kopya ne eski ne yeni — YARIŞLI ve sessizce
+# BOZUK bir yedek olur. Bozukluk geri yükleme gününe kadar görünmez, yani "yedeğimiz var" cümlesi
+# ölçülmemiş bir iddia hâline gelir. Litestream WAL çerçevelerini akış hâlinde kopyalar; her an
+# tutarlı bir noktaya (point-in-time) geri dönülebilir.
+#
+# NOT: rsync yedeği KALDIRILMAZ. İkisi farklı şeyi korur — rsync `state/` altındaki JSON/CSV/bar
+# artefaktlarını, Litestream YALNIZ defter çekirdeğini. Litestream'in `meridian.db*` dosyalarını
+# rsync'in dışında bırakmak Rol-1'in adımıdır (aşağıdaki adım listesi).
+
+dbs:
+  - path: /opt/meridian/state/meridian.db
+    # Checkpoint/senkron ayarları VARSAYILANDA bırakıldı: `store`/`storage` tarafında
+    # synchronous=NORMAL + WAL kullanılıyor ve Litestream'in kendi varsayılanları (1s sync,
+    # 10s snapshot aralığı değil) bu profille uyumlu. Ölçülmeden değiştirilmez.
+    replicas:
+      # --- REPLİKA 1: YEREL DOSYA (ilk aşama, BUGÜN kurulabilir) ---------------------------------
+      # Aynı makinede ayrı bir dizin. Disk arızasına karşı KORUMAZ; koruduğu şey UYGULAMA kaynaklı
+      # bozulma ve operatör hatasıdır (yanlış migrasyon, elle yazım, silinen satır) — yani bu turda
+      # gerçekten yeni olan risk. Off-box koruma S3/OCI replikasıyla gelir (aşağıda).
+      - type: file
+        path: /opt/meridian-litestream/meridian.db
+        retention: 168h            # 7 gün — `state_backup.sh` günlük tam kopyayla örtüşür
+        snapshot-interval: 6h      # günde 4 tam anlık görüntü; WAL akışı aralarını doldurur
+
+      # --- REPLİKA 2: OFF-BOX NESNE DEPOSU (BUCKET BEKLİYOR) -------------------------------------
+      # AÇILMADI: bu depoda BUGÜN tanımlı bir bucket YOK. Uydurulmuş bir bucket adı yazmak,
+      # kurulduğunda sessizce hiçbir yere replikasyon yapan bir yapılandırma bırakırdı — "yedek var"
+      # diyen ama olmayan bir satır. Operatör bucket'ı açtığında bu blok yorumdan çıkarılır ve
+      # `bucket`/`endpoint`/`region` GERÇEK değerlerle doldurulur.
+      #
+      # OCI Object Storage (A1 aynı bulutta — çıkış trafiği bedava, gecikme düşük):
+      # - type: s3
+      #   bucket: <BUCKET-BEKLİYOR>
+      #   path: meridian/meridian.db
+      #   endpoint: https://<namespace>.compat.objectstorage.<region>.oraclecloud.com
+      #   region: <region>
+      #   # Kimlik bilgileri DOSYAYA YAZILMAZ: systemd birimi `EnvironmentFile` ile verir
+      #   # (LITESTREAM_ACCESS_KEY_ID / LITESTREAM_SECRET_ACCESS_KEY). Bu depoda sır dosyaya
+      #   # yazılmaz kuralı `meridian/secrets.py` ile aynıdır.
+      #   retention: 720h          # 30 gün
+      #   snapshot-interval: 24h

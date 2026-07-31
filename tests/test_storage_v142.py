@@ -145,6 +145,21 @@ def test_iki_kez_uygula_ayni_sonuc(db_sandbox):
     assert len(store.read_jsonl("trades.jsonl")) == 1        # satır İKİYE katlanmadı
 
 
+def test_durum_raporu_kaynak_digestini_TASIR(db_sandbox):
+    """Migrasyonun KANITI DB'de kalmalı: `entity_meta.source_digest`, taşınan verinin kaynak
+    parmak izidir ve `--durum` onu okur. İlk sürümde `storage.meta` sütunları ELLE sayıyordu ve
+    bu sütun listede yoktu — rapor sessizce `null` basıyordu, yani migrasyonun kendi kanıtı
+    kaybolmuştu (elle yazılan sütun listesi eskir sınıfı)."""
+    _seed_files(db_sandbox)
+    dbmigrate.apply()
+    durum = {r["varlik"]: r for r in dbmigrate.db_state()}
+    for ad in ("trades.jsonl", "trade_plans.jsonl", "scoreboard.json",
+               "portfolio.json", "equity_curve.json"):
+        assert durum[ad]["kaynak_digest"], f"{ad}: kaynak digesti kaydedilmemiş"
+        assert durum[ad]["kaynak_digest"] == durum[ad]["db_digest"], ad
+        assert durum[ad]["migrated_at"]
+
+
 def test_kaynak_dosyalar_silinmez_migrated_ekiyle_durur(db_sandbox):
     _seed_files(db_sandbox)
     dbmigrate.apply()
@@ -244,3 +259,21 @@ def test_damga_icerik_degisince_degisir(db_sandbox):
     assert d1 != d2, "içerik değişti ama damga aynı kaldı — önbellek sonsuza kadar bayat kalırdı"
     assert store.mtime("trades.jsonl") is not None
     assert store.mtime("shadow_books.json") is None       # hiç yazılmamış varlık: ölçüm YOK
+
+
+# ---- 7. YEDEK TUTARLI OLMALI --------------------------------------------------------------------
+def test_yedek_tutarli_kopya_uretir(db_sandbox, tmp_path):
+    """WAL modunda ham dosya kopyası EKSİK olur; yedek çevrimiçi yedek API'sinden geçmeli.
+    (`/api/state/snapshot` ve gece rsync'i bu yolu kullanır — eksik bir yedek, geri yükleme
+    gününe kadar görünmez.)"""
+    _seed_files(db_sandbox)
+    dbmigrate.apply()
+    store.append_jsonl("trades.jsonl", dict(TRADE, id="T00002"))   # WAL'da bekleyen yazım
+    hedef = storage.backup_to(tmp_path / "yedek" / "meridian.db")
+    import sqlite3
+    c = sqlite3.connect(str(hedef))
+    c.row_factory = storage._dict_row
+    assert c.execute("PRAGMA integrity_check").fetchone()["integrity_check"] == "ok"
+    assert c.execute("SELECT COUNT(*) AS n FROM trades").fetchone()["n"] == 2
+    assert c.execute("SELECT COUNT(*) AS n FROM trade_plans").fetchone()["n"] == 1
+    c.close()

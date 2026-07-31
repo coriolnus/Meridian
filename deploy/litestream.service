@@ -1,0 +1,53 @@
+# deploy/litestream.service — Litestream systemd birimi (TASLAK, KURULMADI).
+#
+# WP-H/H9. A1'e kurulum Rol-1'in bakım penceresindedir; bu dosya yalnız bir dosyadır.
+#
+# KURULUM (Rol-1, sırayla):
+#   1) binary:   LITESTREAM sürümünü sabitle (apt/deb ya da tarball) — sürüm kaydı deploy notuna
+#   2) dizin:    sudo install -d -o meridian -g meridian /opt/meridian-litestream
+#   3) config:   sudo install -o root -g root -m 0644 deploy/litestream.yml /etc/litestream.yml
+#   4) sır:      (yalnız S3/OCI replikası açılacaksa) /etc/meridian/litestream.env — 0600, root
+#   5) birim:    sudo install -o root -g root -m 0644 deploy/litestream.service \
+#                    /etc/systemd/system/litestream.service
+#   6) sudo systemctl daemon-reload && sudo systemctl enable --now litestream
+#   7) DOĞRULA (iddia değil ölçüm):
+#        litestream databases -config /etc/litestream.yml
+#        litestream snapshots  -config /etc/litestream.yml /opt/meridian/state/meridian.db
+#      ve GERİ YÜKLEME PROVASI — yedeğin varlığı değil GERİ DÖNEBİLİRLİĞİ ölçülür:
+#        litestream restore -config /etc/litestream.yml -o /tmp/geri.db \
+#            /opt/meridian/state/meridian.db
+#        sqlite3 /tmp/geri.db "PRAGMA integrity_check; SELECT COUNT(*) FROM trades;"
+#      Sayı canlı deftere EŞİT değilse yedek yoktur — kurulum tamamlanmış SAYILMAZ.
+
+[Unit]
+Description=Litestream — Meridian defter çekirdeği (state/meridian.db) sürekli replikasyonu
+Documentation=https://litestream.io/
+# `After` YETMEZ, `Requires` de KOYULMAZ: Litestream Meridian'dan BAĞIMSIZ koşmalıdır. Uygulama
+# düştüğünde replikasyonun da durması, en çok yedeğe ihtiyaç duyulan anda yedeği kapatmak olurdu.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=meridian
+Group=meridian
+# Sırlar dosyada değil ortamda (yalnız S3/OCI replikası açıldığında gerekir; yoksa satır
+# etkisizdir — `-` öneki dosya yoksa birimi düşürmez).
+EnvironmentFile=-/etc/meridian/litestream.env
+ExecStart=/usr/bin/litestream replicate -config /etc/litestream.yml
+Restart=always
+RestartSec=5
+# Replikasyon durduğunda SESSİZ KALMASIN: birim düşerse journald'de görünür, ama operatörün
+# panosunda görünmez. Panoya bağlanması Rol-1'in ayrı adımıdır (izleme borcu, deploy notuna yazılır).
+StandardOutput=journal
+StandardError=journal
+
+# Yüzey daraltma — Litestream'in tek işi iki dizini okumak/yazmaktır.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/meridian/state /opt/meridian-litestream
+
+[Install]
+WantedBy=multi-user.target

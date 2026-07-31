@@ -27,9 +27,12 @@ TOHUM SINIRI UYDURULMAZ, ÖLÇÜLÜR. Sınırın kanıtı `run.replay_seed`in KE
 İkisi bağımsız kanıttır ve birbirini doğrular; ikisi de yoksa satır `belirsiz` kalır. AYIRT
 EDİLEMEYENE İSİM TAKMAK, ölçümü tam da BT-1'in şikâyet ettiği yere geri götürürdü.
 
-CANLI WORKER KOŞARKEN YAZMA: `store` kilidi süreç-içidir (bu depoda belgeli). Migrasyon CLI'si
-canlı süreç görürse `--uygula`yı REDDEDER (`--zorla` ile ezilir) — `barrepair` ile AYNI desen ve
-AYNI ölçüm fonksiyonu (iki kopya = iki farklı "canlı" tanımı).
+CANLI WORKER KOŞARKEN YAZMA: migrasyon CLI'si canlı süreç görürse `--uygula`yı REDDEDER
+(`--zorla` ile ezilir) — `barrepair` ile AYNI desen ve AYNI ölçüm fonksiyonu (iki kopya = iki
+farklı "canlı" tanımı). Bu kural, `store.file_lock` 2026-07-31'de SÜREÇLER ARASI olduktan sonra
+da GEÇERLİDİR ve gerekçesi değişti: kilit artık yarışı önler, ama defteri iki farklı NİYETLE
+yeniden yazmayı önlemez — canlı döngü satır eklerken migrasyonun defteri toptan yeniden yazması
+teknik olarak güvenli, operasyonel olarak yine yanlıştır.
 
 KULLANIM:
     python -m meridian.ledgerstamp                 # kuru koşu — sınıflandırma raporu
@@ -320,7 +323,8 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     if a.uygula and not a.zorla and _worker_running():
         print("[ledgerstamp] REDDEDİLDİ: canlı Meridian süreci görülüyor. Aynı defteri iki süreç "
-              "yeniden yazamaz (store kilidi süreç-içidir). Önce `./ops/stop-worker.sh`, "
+              "yeniden yazamaz — kilit yarışı önler ama iki farklı NİYETLE yeniden yazmayı "
+              "önlemez. Önce `./ops/stop-worker.sh`, "
               "sonra tekrar dene (ya da --zorla).", file=sys.stderr)
         return 2
     rapor = migrate(apply=a.uygula)

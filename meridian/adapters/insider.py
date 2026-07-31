@@ -63,7 +63,8 @@ YAZAR TEKLİĞİ (paralel-yazar güvenliği)
       state/insider_signals.json   sembol-başına özet skor
   Canlı worker (meridian.run / loop.daily_cycle) bu dosyalara DOKUNMAZ — ne okur ne yazar. Yazım
   `store.write_json` ile ATOMİKtir (mkstemp + os.replace), yani bir okur yarım dosya göremez.
-  `store.file_lock` SÜREÇ İÇİdir ve burada yeterlidir: tek yazar zaten tek süreçtir (CLI). Bu iki
+  `store.file_lock` 2026-07-31'den beri SÜREÇLER ARASIdır (fcntl.flock); burada zaten yeterliydi
+  (tek yazar tek süreçtir, CLI) — sertleşme bedavaya geldi. Bu iki
   dosya YENİ olduğu için, canlı worker koşarken bu CLI'ı çalıştırmak güvenlidir — çakışacak bir
   yazar yok. (fmp_usage.json muhasebesi ORTAKtır; oraya yazan zaten adapters/fmp.py'dir ve atomiktir.)
 

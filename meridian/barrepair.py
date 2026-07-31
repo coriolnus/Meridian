@@ -354,7 +354,8 @@ def main(argv: list[str] | None = None) -> int:
     syms = [s.strip().upper() for s in a.sembol.split(",") if s.strip()] or None
     if a.uygula and not a.zorla and _worker_running():
         print("[barrepair] REDDEDİLDİ: canlı Meridian süreci görülüyor. Aynı defteri iki süreç "
-              "yeniden yazamaz (store kilidi süreç-içidir). Önce `./ops/stop-worker.sh`, "
+              "yeniden yazamaz — kilit yarışı önler ama iki farklı NİYETLE yeniden yazmayı "
+              "önlemez. Önce `./ops/stop-worker.sh`, "
               "sonra tekrar dene (ya da --zorla).", file=sys.stderr)
         return 2
     if a.integrity:

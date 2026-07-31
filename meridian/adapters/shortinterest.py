@@ -64,7 +64,8 @@ YAZAR TEKLİĞİ (paralel-yazar güvenliği)
   state/short_interest.json         özet — TEK YAZAR: bu dosyanın CLI'ı
   state/short_interest_float.json   float önbelleği — TEK YAZAR: bu dosyanın CLI'ı
   Canlı worker (meridian.run / loop) bu dosyalara DOKUNMAZ. `store.write_json` atomiktir
-  (mkstemp + os.replace), yani okur yarım dosya göremez; `store.file_lock` süreç-içidir ve tek
+  (mkstemp + os.replace + fsync), yani okur yarım dosya göremez; `store.file_lock` 2026-07-31'den
+  beri süreçler arasıdır (fcntl.flock) ve tek
   yazar zaten tek süreç olduğu için yeterlidir. Dosyalar YENİ olduğundan canlı worker koşarken bu
   CLI'ı çalıştırmak güvenlidir.
 

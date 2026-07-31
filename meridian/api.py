@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import auth
 
-from . import store, config, analytics, health, memory, obs, secrets as secrets_mod
+from . import store, storage, config, analytics, health, memory, obs, secrets as secrets_mod
 
 def _auth_posture_check() -> None:
     """Açılışta yetki duruşunu DÜRÜSTÇE bildir (2026-07-22, yetki denetimi F2+F3).
@@ -1981,9 +1981,24 @@ def api_state_snapshot(request: Request):
             p = config.STATE / name
             if p.exists():
                 tar.add(str(p), arcname=f"meridian_state/{name}")
+            # SQLite GEÇİŞİ SONRASI YEDEK BOŞALMASIN (WP-H/H9, 2026-07-31): yukarıdaki listenin
+            # dördü (`trades`, `portfolio`, `scoreboard`, `equity_curve`) DB'ye taşındığında
+            # dosyaları `.migrated` ekiyle durur ve `p.exists()` False döner — yedek, öğrenmenin
+            # yeniden üretilemez kısmını SESSİZCE dışarıda bırakırdı. `.migrated` arşivi de
+            # eklenir: geçiş öncesi tarihin kanıtıdır ve `MERIDIAN_DB=off` yolunun girdisidir.
+            pm = config.STATE / (name + ".migrated")
+            if pm.exists():
+                tar.add(str(pm), arcname=f"meridian_state/{name}.migrated")
         hist = config.STATE / "history"
         if hist.exists():
             tar.add(str(hist), arcname="meridian_state/history")
+        # DEFTER ÇEKİRDEĞİ: TUTARLI kopya (çevrimiçi yedek API'si). Ham `meridian.db` dosyasını
+        # tar'lamak WAL yüzünden EKSİK/yarışlı bir kopya üretirdi — bkz. storage.backup_to.
+        if storage.active(storage.TRADES):
+            import tempfile as _tf
+            with _tf.TemporaryDirectory() as _d:
+                _snap = storage.backup_to(Path(_d) / storage.DB_NAME)
+                tar.add(str(_snap), arcname=f"meridian_state/{storage.DB_NAME}")
     buf.seek(0)
     return PlainTextResponse(buf.read(), media_type="application/gzip",
                              headers={"Content-Disposition": "attachment; filename=meridian_state.tar.gz"})

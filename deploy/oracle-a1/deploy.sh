@@ -42,8 +42,8 @@ uv sync --frozen 2>/dev/null || uv sync
 uv run python -c "import meridian.api, pandas, numpy, fastapi; print('meridian import OK')"
 
 # 4) state/ var mı? (yoksa uyar — operatör yerelden rsync'lemeli)
-if [ ! -f state/portfolio.json ]; then
-  echo "!! state/portfolio.json yok — yereldeki state/ dizinini rsync'le:"
+if [ ! -f state/portfolio.json ] && [ ! -s state/meridian.db ]; then
+  echo "!! state/portfolio.json (ya da state/meridian.db) yok — yereldeki state/ dizinini rsync'le:"
   echo "   rsync -az ./state/ ubuntu@<A1-IP>:/opt/meridian/state/"
 fi
 # sırlar 0600 (rsync -a izinleri taşır ama garanti altına al; dosya yoksa atla — SESSİZ DEĞİL)
@@ -106,12 +106,18 @@ sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; serv
 # 7) tohum + başlat
 #    KORUMA (serve.sh:16 ile BİREBİR): dolu bir state üzerine replay KOŞULMAZ. Eski sürüm bu kontrolü
 #    taşımıyordu → rsync'lenmiş CANLI state'in üstüne 2022→bugün replay koşabiliyordu.
-if [ ! -s state/trades.jsonl ]; then
-  echo "-- TOHUM: state/trades.jsonl boş/yok → geçmişten tohumlanıyor (2022 → bugün)"
+#    SQLite GEÇİŞİ SONRASI TUZAK KAPALI (WP-H/H9, 2026-07-31): migrasyon sonrası defter
+#    `state/meridian.db` içindedir ve `state/trades.jsonl` `.migrated` ekiyle durur — tek başına
+#    `-s state/trades.jsonl` kontrolü DOLU defteri BOŞ görüp CANLI defterin üstüne replay koşardı.
+if [ ! -s state/trades.jsonl ] && [ ! -s state/meridian.db ]; then
+  echo "-- TOHUM: state/trades.jsonl boş/yok ve state/meridian.db yok → geçmişten tohumlanıyor (2022 → bugün)"
   uv run python -m meridian.run --dry-run --replay 2022-01-01:"$(date +%F)" \
     || echo "   (tohum başarısız — canlı turlarla devam edilecek; sebebi yukarıdaki çıktıda)"
-else
+elif [ -s state/trades.jsonl ]; then
   echo "-- TOHUM ATLANDI: state/trades.jsonl dolu ($(wc -l < state/trades.jsonl) satır) — taşınan canlı state korunuyor"
+else
+  echo "-- TOHUM ATLANDI: defter SQLite'ta (state/meridian.db) — taşınan canlı state korunuyor"
+  uv run python -m meridian.dbmigrate --durum || true
 fi
 sudo systemctl restart meridian meridian-barsarchive
 sleep 8

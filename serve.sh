@@ -13,7 +13,11 @@ fi
 source ops/stop-worker.sh   # (2026-07-26 yetim sızıntısı vakasının belgesi o dosyanın başında)
 stop_worker
 # one-command up: seed state if empty, then advance to today (so the agent isn't stuck in the past)
-if [ ! -s state/trades.jsonl ]; then
+# SQLite GEÇİŞİ SONRASI TUZAK KAPALI (WP-H/H9, 2026-07-31): `dbmigrate --uygula` sonrası defter
+# `state/meridian.db` içindedir ve `state/trades.jsonl` `.migrated` ekiyle durur — yani tek başına
+# `-s state/trades.jsonl` kontrolü DOLU bir defteri BOŞ görür ve 2022→bugün replay'i CANLI defterin
+# üstüne koşardı. Koruma iki arka ucu birden ölçer.
+if [ ! -s state/trades.jsonl ] && [ ! -s state/meridian.db ]; then
   echo "→ no state yet — seeding from history (2022 → today)…"
   .venv/bin/python -m meridian.run --dry-run --replay 2022-01-01:"$(date +%F)" || echo "  (seed skipped/failed — will run live cycles instead)"
 fi

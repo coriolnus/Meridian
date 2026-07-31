@@ -348,6 +348,18 @@ def _orphan_state_files() -> dict:
         # secrets.py kendi dosya erişimini kullanır. Bunları orphan saymak yanlış pozitif olurdu.
         accessor_read = {"secrets.json"}
         known = read_names | sinks | contracts | accessor_read
+        # SQLite GEÇİŞİNİN İKİ YANLIŞ-POZİTİF SINIFI (WP-H/H9, 2026-07-31) — BEYAZ LİSTE DEĞİL,
+        # TÜRETME. İkisi de bu dedektörün "okuyucusu yok" testinden kendiliğinden geçemez ama
+        # ikisinin de kökeni BİLİNEN bir artefakttır; elle bir liste tutmak, hemen aşağıda
+        # (K1 bloğunda) reddedilen hastalığın ta kendisi olurdu:
+        #   (a) `<defter>.migrated` — `dbmigrate` taşıma sonrası kaynak dosyayı SİLMEZ, adını
+        #       değiştirir. Arşivin okuyucusu yoktur ÇÜNKÜ arşiv olması istenmiştir (geri dönüş
+        #       yolu). Kökü (`trades.jsonl`) `known` içindeyse arşiv de bilinir.
+        #   (b) `meridian.db-wal` / `-shm` — SQLite'ın KENDİ yan dosyaları. Adları kaynakta
+        #       geçmez ve geçmemelidir; `meridian.db` geçer. Yan dosya, ana dosyanın parçasıdır.
+        from . import storage as _sg
+        _db_yan = {f"{_sg.DB_NAME}{s}" for s in ("", "-wal", "-shm", "-journal")}
+        known = known | _db_yan | {f"{n}.migrated" for n in known}
         orphans = []
         for f in config.STATE.glob("*.json*"):
             nm = f.name
