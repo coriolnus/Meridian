@@ -40,6 +40,16 @@ guard_revizyonu:
     koşmadı (sonuc.json'da tüm ölçümler None; kanıt: resmom_olcum/sonuc.json + kaynak.json) —
     sonuç görülerek eşik gevşetme (post-hoc seçim) SÖZ KONUSU DEĞİL. success/kill eşikleri değişmedi.
   maliyet_beyani: "kırpma maliyeti biliniyor: 270/7.122 satır (%3,79) kapsam dışı; ölçülebilir taban 6.852"
-k_registry: {registered_at: "2026-07-31T06:49Z", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-07-31T06:49Z", trial_ids: [resmom_olcum/p70, resmom_olcum/p90]}
+status: archived   # 2026-07-31 ~07:30: İKİ KILL DE TETİKLENDİ. kill#1: 6/6 dilim hücresi CI-0-içi
+#   (p70@20 +0,53pp [−0,70,+1,46]; p90@20 +0,02pp [−1,75,+1,43]); sürekli IC de ölü (residmom @20
+#   +0,023 CI-0-içi). kill#2: artımlı katkı YOK — kök neden YAPISAL: spearman(residmom,rawmom)=0,625,
+#   p70 yüksek-residmom adayların %83'ü ham-momentum üst terzilinde; FF3 artıklaştırması bu
+#   popülasyonda momentumu AYRIŞTIRMIYOR ("yüksek residmom" ≈ ham momentumun yeniden etiketi).
+#   Pozitif kontrol GEÇTİ (rvol20 @20 IC 0.0637 vs çivi 0.0645; fark bars_integrity dışlaması);
+#   PK4/PK5 0.0 sapma. CI-yöntem duyarlılığı beyanlı: tek oynak hücre p70@20 yalnız savunulamaz
+#   iid-satır bootstrap'ında anlamlı — hüküm makul yöntemlere dayanıklı. AİLE KAPALI, torun kart
+#   YOK (farklı residüalizasyon aynı veride bağımsız örneklem vermez). Kanıt: resmom_olcum/sonuc.json.
+#   Yan kazanım: FF3 günlük faktörler repo'da (research/ff_factors/, damgalı) — ileride 1.5
+#   vol-overlay ve olası faktör-nötr ölçümler için altyapı hazır.
 notes: "S2 açılış kartı. Ölçüm scratchpad/resmom_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ölçüm ajanı DOKUNMAZ — hüküm önerisi raporla gelir, kartı Rol-1 günceller."

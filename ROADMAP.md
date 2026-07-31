@@ -73,8 +73,11 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   (ölçüm-sonrası-seçim yasağına uyuldu). BT-2 hasar tespiti: 5/63 hücre anlamlılık DEĞİŞTİRDİ
   (sınırda hasar); 2018 hayaleti bu pencereye değmiyor — uzun-geçmiş artefaktları aklanmadı.
 - 1.3 MAX-filtresi ✅ ARŞİV (2026-07-31: yön TERS — yüksek-MAX bizde @20 +1,46pp iyi; eleme
-  hedef-çıkışların %28'ini keserdi; kill×2). 1.1 residual momentum 📋 (FF ingestion + kart; S2
-  açılışı) · 1.5 momentum vol-scaling overlay 📋 (yalnız market/momentum).
+  hedef-çıkışların %28'ini keserdi; kill×2). **1.1 residual momentum ✅ ARŞİV (2026-07-31, kart
+  EDG-007, K=2): 6/6 hücre CI-0-içi + artımlı katkı yok — yapısal örtüşme (residmom≈rawmom ρ=0,625,
+  üst-terzil örtüşmesi %83); aile kapalı, torun yok. Yan kazanım: FF3 günlük faktörler repo'da
+  (research/ff_factors/, damgalı+doğrulanmış) — 1.5 için altyapı hazır.** 1.5 momentum vol-scaling
+  overlay 📋 (yalnız market/momentum; FF verisi artık mevcut).
 - EMİLDİ: eski G2 skor-inşası S1/S2 adayları (rvolband/min_rvol çekirdeği) → 1.4'ün kart hükmüne
   bağlandı (iki ayrı ölçüm değil) · eski G7 vol-hedefleme → 1.5'in portföy-bacağı olarak, ısı
   tavanıyla birlikte POZİTİF-EV ÖNKOŞULLU (denetim RS-1).
