@@ -153,16 +153,14 @@ Giriş kilidini de dene: yanlış parolayla 9 kez POST at, 9.'da **429** ve kala
   depoya (Redis) taşınmalı.
 - **İki faktör yok.** Parola + oturum çerezi seçildi. TOTP eklemek `meridian/auth.py` içinde
   ayrı bir doğrulama adımı demek; broker hesabına bakan bir yüzey için düşünmeye değer.
-- **CSP'de `unsafe-inline` İKİ yerde var: `style-src` ve — 2026-08-01'den beri açıkça —
-  `script-src`.** Bu ikincisi bir düzeltmedir, bir gevşeme değil: `script-src 'self'` yazılıydı
-  ama pano 40 adet satır içi olay özniteliği (`onclick`/`oninput`) kullanıyor ve CSP onları da
-  bloklar. O hâliyle dağıtılsaydı **pano çizilir, hiçbir düğme çalışmazdı — HALT ve KRİZ dahil.**
-  Sessizce ölü bir acil durdurma, eksik bir CSP başlığından daha tehlikelidir.
-  Ne kaybediliyor: XSS'e karşı ikinci savunma hattı. Kalan savunma `esc()` ve verinin tek
-  kaynaktan gelmesi. Nasıl kapanır: 40 öznitelik olay delegasyonuna çevrilir (tek dinleyici +
-  kayıtlı eylem haritası), sonra `'unsafe-inline'` `script-src`'den silinir.
-  `style-src`'deki ayrı ve daha eski bir borç: `app.js` satır içi stil taşıyan şablon dizgileri
-  üretiyor.
+- **CSP `script-src 'self'` ve artık gerçekten karşılanıyor.** Bu satır önce de öyle yazıyordu
+  ama karşılanmıyordu: pano 40 adet satır içi olay özniteliği (`onclick`/`oninput`) kullanıyordu
+  ve CSP onları da bloklar. O hâliyle dağıtılsaydı **pano çizilir, hiçbir düğme çalışmazdı —
+  HALT ve KRİZ dahil.** 2026-08-01'de hepsi olay delegasyonuna çevrildi (tek dinleyici + kayıtlı
+  izin listesi). Dağıtımdan sonra tarayıcı konsolunda **CSP ihlali görmemelisin**; görürsen bir
+  yere satır içi `onclick` geri gelmiştir.
+- **`style-src`'de hâlâ `unsafe-inline` var** ve bu açık bir borç: `app.js` DOM'u satır içi stil
+  taşıyan şablon dizgileriyle üretiyor; kaldırmak `app.js`'in yeniden yazılması demek.
 
 - **Dağıtımda üç yeni statik dosya var:** `theme.js` (tema önyükleyicisi — `<head>`'de senkron,
   yoksa gece temasında her açılış beyaz flaşla başlar), `landing.js` ve `workflow.js` (HTML'lerden

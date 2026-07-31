@@ -971,16 +971,15 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   <div class="hud" id="hud" aria-label="Risk ve müdahale HUD"></div>
   <div class="statuspill" id="statuspill" role="status" aria-live="polite"><span class="dot pulse" id="pulse"></span><span id="statustext">…</span></div>
   <div class="kswrap" id="kswrap">
-    <button class="kscover" id="kscover" type="button" aria-expanded="false" aria-controls="ksgroup"
-            onclick="toggleKs()" title="Kriz kontrolleri — tıklayarak aç">KRİZ ⚠</button>
+    <button class="kscover" id="kscover" type="button" aria-expanded="false" aria-controls="ksgroup" data-act="toggleKs" title="Kriz kontrolleri — tıklayarak aç">KRİZ ⚠</button>
     <div class="ksgroup" id="ksgroup" role="group" aria-label="Kriz kontrolleri">
-      <button id="ks1" onclick="opSoftHalt()">1 · Soft Halt — yeni giriş durur</button>
-      <button onclick="opCancelOpen()">2 · Cancel-Open — dolmamış girişler iptal</button>
-      <button onclick="opFlatten()" style="border-color:var(--red);color:var(--red)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
-      <button id="ks4" onclick="opLearnHalt(!window._LEARN_HALTED)">4 · Halt Learning — işlem sürer, ship durur</button>
+      <button id="ks1" data-act="opSoftHalt">1 · Soft Halt — yeni giriş durur</button>
+      <button data-act="opCancelOpen">2 · Cancel-Open — dolmamış girişler iptal</button>
+      <button data-act="opFlatten" style="border-color:var(--red);color:var(--red)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
+      <button id="ks4" data-act="opLearnHaltToggle">4 · Halt Learning — işlem sürer, ship durur</button>
     </div>
   </div>
-  <button class="halt" id="haltbtn" onclick="toggleHalt()">HALT</button>
+  <button class="halt" id="haltbtn" data-act="toggleHalt">HALT</button>
 </div></nav>
 
 <div class="shell">

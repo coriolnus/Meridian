@@ -33,32 +33,31 @@ meridian.ORNEK-ALAN-ADIN.com {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
 		# ---- CSP ----
-		# DÜZELTME 2026-08-01. Bu satır `script-src 'self'` diyordu ve bir önceki yorum
-		# "script-src'de unsafe-inline YOK, asıl koruma orada" diye övünüyordu. O CSP
-		# DAĞITILSAYDI PANO ÇALIŞMAZDI ve bu ölçüldü, tahmin edilmedi:
+		# `script-src 'self'` — ve bu artık GERÇEKTEN karşılanıyor. Bir önceki hâlinde de öyle
+		# yazıyordu ama karşılanmıyordu; o CSP dağıtılsaydı pano çizilir, hiçbir düğme iş
+		# görmezdi. İki ayrı arıza vardı, ikisi de 2026-08-01'de kapatıldı:
 		#
-		#   · landing.html ve workflow.html satır içi <script> blokları taşıyordu. İkisi de
-		#     bloklanırdı; workflow'un TÜM diyagramı o blokta üretiliyor, yani sayfa bomboş
-		#     açılırdı. → ÇÖZÜLDÜ: bloklar landing.js / workflow.js olarak dışarı alındı.
+		#   1. landing.html + workflow.html satır içi <script> taşıyordu (workflow'un TÜM
+		#      diyagramı o blokta üretiliyor → sayfa bomboş açılırdı).
+		#      → landing.js / workflow.js olarak dışarı alındı.
+		#   2. app.js'te 34 + index.html'de 6 = 40 SATIR İÇİ OLAY ÖZNİTELİĞİ (onclick/oninput).
+		#      CSP bunları da bloklar — <script> blokları kadar. Gezinme, çekmece, KRİZ grubu
+		#      ve HALT ölü olurdu.
+		#      → hepsi olay delegasyonuna çevrildi: tek document dinleyicisi, `data-act` adını
+		#        KAYITLI bir izin listesinde çözer (window[ad] DEĞİL — aksi hâlde DOM'a data-act
+		#        sokabilen herkes sayfadaki her globali çağırabilirdi).
 		#
-		#   · GERİYE KALAN ASIL SORUN: app.js'te 34, index.html'de 6 adet SATIR İÇİ OLAY
-		#     ÖZNİTELİĞİ var (onclick/oninput). CSP bunları da bloklar. Sonuç: pano çizilir,
-		#     ama hiçbir düğme iş görmez — gezinme, çekmece, KRİZ grubu ve HALT dahil.
-		#     Acil durdurmanın sessizce ölü olduğu bir dağıtım, korumadan daha tehlikelidir.
+		# DOĞRULANDI, varsayılmadı: canlı DOM'da 0 satır içi öznitelik; 33 kayıt ↔ 33 kullanım
+		# tam eşleşme; her kayıtlı ad tanımlı; HALT, dört KRİZ kolu, gezinme, tema ve çıkış
+		# tarayıcıda tek tek tıklanıp fonksiyona ulaştığı görüldü. eval / new Function /
+		# javascript: / dizgi-argümanlı setTimeout: hiçbiri yok.
 		#
-		# Bu yüzden script-src'de `unsafe-inline` VAR ve bu bir zayıflıktır, bir tercih değil.
-		# NE KAYBEDİLİYOR: enjekte edilmiş bir <script> ya da onclick'i tarayıcı reddetmez;
-		# XSS'e karşı ikinci savunma hattı yok. Kalan savunma app.js'in esc()'i ve verinin
-		# tek kaynaktan (kendi API'miz) gelmesi.
-		# NASIL KALDIRILIR: o 40 satır içi öznitelik olay DELEGASYONUNA çevrilecek — tek bir
-		# document dinleyicisi, data-act adını KAYITLI bir eylem haritasında çözer. İş
-		# mekanik ama 14'ü argüman taşıyor (ör. ackReject(key), skillRev(skill,action)), ve
-		# hepsi ancak veri geldiğinde render edildiğinden tek tek denenmeleri gerekir.
-		# O tur bittiğinde bu satırdan `'unsafe-inline'` SİLİNİR ve pano hâlâ çalışmalıdır.
+		# BU SATIRA `'unsafe-inline'` GERİ EKLEME. Eklemek zorunda kaldıysan bir yere satır içi
+		# onclick geri gelmiş demektir; çözüm eylemi EYLEMLER kümesine kaydetmek.
 		#
-		# style-src'deki `unsafe-inline` ayrı ve daha eski bir borç: app.js DOM'u satır içi
-		# stil taşıyan şablon dizgileriyle üretiyor.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		# style-src'deki `unsafe-inline` AYRI ve hâlâ açık bir borç: app.js DOM'u satır içi
+		# stil taşıyan şablon dizgileriyle üretiyor, kaldırmak app.js'in yeniden yazılması demek.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 		# Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler. Görünmez bir iframe
 		# içinde başka bir sayfaya gömülmeleri gerçek bir senaryo.

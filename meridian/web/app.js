@@ -172,7 +172,7 @@ function openDrawer({ title, eyebrow, bodyHTML, originEl }) {
     <div class="pd-head">
       <div><p class="pd-l">${eyebrow || "KAYIT"}</p>
         <h2 class="pd-t" id="pd-title">${title || ""}</h2></div>
-      <button type="button" class="pd-x" onclick="closeDrawer()" aria-label="Kaydı kapat">✕</button>
+      <button type="button" class="pd-x" data-act="closeDrawer" aria-label="Kaydı kapat">✕</button>
     </div>
     <div class="pd-body">${bodyHTML || ""}</div>`;
   dr.classList.add("open");
@@ -535,7 +535,7 @@ async function buildSidebar(today, x) {
     // taşır; `sub` DOM'da kalır: dar ekranda ve ekran okuyucuda hâlâ okunur.
     const full = sub ? `${label} — ${sub}` : label;
     const on = id === act;
-    return `<button class="sitem${on ? ' on' : ''}" data-p="${id}" onclick="go('${id}')"${on ? ' aria-current="page"' : ''}>` +
+    return `<button class="sitem${on ? ' on' : ''}" data-p="${id}" data-act="go" data-a1="${id}"${on ? ' aria-current="page"' : ''}>` +
            `<span class="top"><span class="lbl" aria-hidden="true">${RAIL_ICON[id] || ""}</span>` +
            `<span class="vis-label">${esc(label)}</span>${badge}</span>` +
            `${sub ? `<span class="sub">${sub}</span>` : ""}</button>`;
@@ -550,7 +550,7 @@ async function buildSidebar(today, x) {
     </div>
     <p class="slab">GÖRÜNÜM</p>${items}
     ${_temaDugmesiHTML()}
-    ${_PAROLA_KURULU ? `<button class="sitem cikis" id="cikis-btn" type="button" onclick="cikisYap()">
+    ${_PAROLA_KURULU ? `<button class="sitem cikis" id="cikis-btn" type="button" data-act="cikisYap">
       <span class="top"><span class="lbl" aria-hidden="true">${RAIL_ICON.cikis}</span>
       <span class="vis-label">Çıkış yap</span></span></button>` : ""}`;
 }
@@ -570,7 +570,7 @@ function _temaDugmesiHTML() {
   // birleştirmesiyle doğru sonuç vermez.
   const hedef = gece ? "Gündüz teması" : "Gece teması";
   const eylem = gece ? "Gündüz temasına geç" : "Gece temasına geç";
-  return `<button class="sitem tema" id="tema-btn" type="button" onclick="temaDegistir()"
+  return `<button class="sitem tema" id="tema-btn" type="button" data-act="temaDegistir"
       aria-label="${eylem}">
       <span class="top"><span class="lbl" aria-hidden="true">${
         gece ? RAIL_ICON.tema_gunduz : RAIL_ICON.tema_gece}</span>
@@ -581,6 +581,63 @@ window.temaDegistir = () => {
   if (!window.MeridianTema) return;   // theme.js yüklenmediyse sessizce hiçbir şey yapma
   window.MeridianTema.degistir();
 };
+
+// ---- OLAY DELEGASYONU — satır içi onclick/oninput'un yerine ----------------------------------
+// NEDEN: dağıtım CSP'si (deploy/Caddyfile) `script-src 'self'` olmalı, ve o başlık satır içi
+// OLAY ÖZNİTELİKLERİNİ de bloklar — sadece <script> bloklarını değil. Ölçüldü: app.js'te 34,
+// index.html'de 6 öznitelik vardı. O CSP ile dağıtım yapılsaydı pano ÇİZİLİR ama hiçbir düğme
+// iş görmezdi: gezinme, çekmece, KRİZ grubu ve HALT dahil. Sessizce ölü bir acil durdurma,
+// eksik bir güvenlik başlığından tehlikelidir — bu yüzden öznitelikler kaldırıldı, CSP değil.
+//
+// AD ÇÖZÜMLEME KAYITLIDIR, window[ad] DEĞİL. Doğrudan `window[el.dataset.act]()` çağırmak,
+// DOM'a bir `data-act` sokabilen herkese sayfadaki HER global fonksiyonu açardı. Aşağıdaki
+// küme bir izin listesidir: kayıtlı olmayan bir ad sessizce düşer.
+// Geç bağlama bilinçli: fonksiyonlar bu noktadan SONRA da tanımlanıyor, o yüzden referans
+// değil AD tutuluyor ve çözümleme tıklama anında yapılıyor.
+const EYLEMLER = new Set([
+  "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaClose", "alpacaSubmit",
+  "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
+  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "mktChip",
+  "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
+  "opSoftHalt", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
+  "testKey", "toggleHalt", "toggleKs",
+]);
+
+// Argüman kuralı: data-a1/a2 dizgidir. "true"/"false" boole'a çevrilir — intradayArm ve
+// kbdOverlay boole bekliyor ve dizgi "false" JS'te DOĞRUDUR, yani çevrilmezse `kbdOverlay("false")`
+// paneli kapatmak yerine açardı. Sayı çevrimi YAPILMIYOR: mevcut eylemlerin hiçbiri sayı almıyor
+// ve "007" gibi bir kimliği sessizce 7'ye çevirmek gerçek bir hata sınıfı olurdu.
+const _arg = v => v === undefined ? undefined : (v === "true" ? true : (v === "false" ? false : v));
+
+function _eylemCalistir(el, olay) {
+  const ad = el.dataset.act;
+  if (!ad || !EYLEMLER.has(ad)) return;
+  const fn = window[ad];
+  if (typeof fn !== "function") {
+    // Sessiz yutma DEĞİL: kayıtlı ama tanımsız bir ad, izin listesi ile kodun ayrıştığı
+    // anlamına gelir ve bu bir programlama hatasıdır — görünür olmalı.
+    console.error("kayıtlı eylem tanımsız:", ad);
+    return;
+  }
+  olay.preventDefault();
+  const a = [_arg(el.dataset.a1), _arg(el.dataset.a2)].filter(x => x !== undefined);
+  fn(...a);
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (el && !el.dataset.actOn) _eylemCalistir(el, e);
+});
+// `data-act-on="input"` taşıyanlar tıklamada DEĞİL yazarken çalışır (arama kutuları).
+document.addEventListener("input", e => {
+  const el = e.target.closest('[data-act][data-act-on="input"]');
+  if (el) _eylemCalistir(el, e);
+});
+
+// Kapak altındaki "Halt Learning" düğmesi tıklama ANINDAKİ durumu tersine çeviriyordu
+// (`opLearnHalt(!window._LEARN_HALTED)`). Bir öznitelikte hesap yapılamayacağı için sarmalayıcı:
+// aynı hesap, aynı anda, artık bir fonksiyonun içinde.
+window.opLearnHaltToggle = () => window.opLearnHalt(!window._LEARN_HALTED);
 
 // Düğmenin kendi etiketi tema değişiminde güncellenmeli. Tüm rayı yeniden çizmek yerine YALNIZ
 // düğmeyi değiştiriyoruz: ray yeniden çizilirse odak kaybolur ve klavyeyle gezinen operatör
@@ -656,7 +713,7 @@ function spineHTML(t, h, rc, ws) {
   const cls = acts.length ? "act" : (attn.length ? "attn" : "calm");
   const msg = acts.length ? "Senden bir şey bekliyor." : (attn.length ? "Göz atmaya değer." : "Sistem sakin — bugün senden bir şey beklemiyor.");
   const chips = items.map(([txt, page]) => page
-    ? `<button onclick="go('${page}')">${esc(txt)}</button>` : `<span>${esc(txt)}</span>`).join("");
+    ? `<button data-act="go" data-a1="${page}">${esc(txt)}</button>` : `<span>${esc(txt)}</span>`).join("");
   return `<div class="spine ${cls}" id="triage-spine" role="status" aria-live="polite">` +
          `<span class="msg">${msg}</span>${items.length ? `<span class="items">${chips}</span>` : ""}</div>`;
 }
@@ -772,7 +829,7 @@ function alertsInbox(a) {
     ? `<p class="hint warn">Pencere KESTİ: son ${a.window_lines || "?"} olay okundu ve en eskisi
        (${esc((a.window_oldest_ts || "").slice(0, 16))}) okundu-sınırından daha yeni — sınırla o
        satır arasındaki alarmlar bu listeye HİÇ girmedi.</p>` : "";
-  const btn = `<button class="dlbtn" onclick="ackAlerts()" ${groups.length ? "" : "disabled"}
+  const btn = `<button class="dlbtn" data-act="ackAlerts" ${groups.length ? "" : "disabled"}
       style="margin-top:10px">Tümünü okundu işaretle</button>
     <span id="alerts-ack-msg" class="hint" style="margin-left:8px"></span>`;
   const kanal = a.channel_configured
@@ -899,7 +956,7 @@ RENDER.brifing = async () => {
         <div class="srow"><span><span class="livedot" style="color:${dotc(hOn)}"></span>Hermes</span><b>${hOn ? esc(hs.brain || "aktif") + (hs.reflecting ? " · düşünüyor…" : "") : "pasif"}</b></div>
         <div class="srow"><span>LLM harcama</span><b class="${over ? "neg" : ""}">$${sp.spent_usd ?? 0} / $${sp.budget_usd ?? "—"}</b></div>
         <div class="srow" style="border:none;padding-bottom:0"><span>Ayna</span>
-          <b><button onclick="go('operasyon')" style="all:unset;cursor:pointer;border-bottom:1px dotted var(--tx2);color:${hb.mirror_drift ? "var(--red)" : "var(--tx)"}">${hb.mirror_drift ? "SAPMA → Operasyon" : "uyumlu → Operasyon"}</button></b></div></div>
+          <b><button data-act="go" data-a1="operasyon" style="all:unset;cursor:pointer;border-bottom:1px dotted var(--tx2);color:${hb.mirror_drift ? "var(--red)" : "var(--tx)"}">${hb.mirror_drift ? "SAPMA → Operasyon" : "uyumlu → Operasyon"}</button></b></div></div>
     </div></div>
 
     ${nextSessionCard(t)}
@@ -1460,7 +1517,7 @@ RENDER.market = async () => {
 
     <div class="card rise" style="margin-top:20px">
       <input class="searchbox" id="mkt-q" type="search" placeholder="hisse ara… (ör. AAPL)"
-             aria-label="Hisse kodunda ara" oninput="mktPaint()">
+             aria-label="Hisse kodunda ara" data-act="mktPaint" data-act-on="input">
       <div id="mkt-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
       <!-- Sabit kolon genişlikleri toplam ~886px: dar bir pencerede tablo SIKIŞMAZ, kendi
            kabında yatay kayar. Sayfanın gövdesi asla yana kaymaz. -->
@@ -1513,7 +1570,7 @@ function mktPaint() {
   const chips = $("mkt-chips");
   if (chips) chips.innerHTML = Object.keys(CHIP_TR).map(k =>
     `<button type="button" class="dlbtn${_MKT_CHIPS[k] ? " primary" : ""}" aria-pressed="${_MKT_CHIPS[k]}"
-       style="padding:7px 13px;min-height:36px;font-size:12px" onclick="mktChip('${k}')">${CHIP_TR[k]} · ${say[k]}</button>`).join("");
+       style="padding:7px 13px;min-height:36px;font-size:12px" data-act="mktChip" data-a1="${k}">${CHIP_TR[k]} · ${say[k]}</button>`).join("");
 
   const rows = all.filter(r =>
     (!q || String(r.ticker).includes(q)) &&
@@ -1522,7 +1579,7 @@ function mktPaint() {
   ).sort(mktCmp);
 
   const basl = (id, label, sortable) => sortable
-    ? `<button type="button" onclick="mktSort('${id}')" style="all:unset;cursor:pointer;padding:8px 0"
+    ? `<button type="button" data-act="mktSort" data-a1="${id}" style="all:unset;cursor:pointer;padding:8px 0"
          aria-label="${esc(label)} kolonuna göre sırala">${label}${_MKT_SORT.col === id ? (_MKT_SORT.dir > 0 ? " ↑" : " ↓") : ""}</button>`
     : `<span>${label}</span>`;
   const head = `<div class="trow head" style="${_MKT_GRID}">${
@@ -1634,13 +1691,12 @@ RENDER.operasyon = async () => {
             <span class="mut">${esc(String(f.detail || "gerekçe kaydedilmemiş"))}</span>
             <span class="etime">${esc(String(f.date || "—"))}</span></button>
           ${kapali ? `<span class="mut" style="font-size:11px;white-space:nowrap">kapatıldı ${esc(String(f.ack_ts || "").slice(0, 16))}</span>`
-                   : `<button class="dlbtn" style="padding:6px 12px;min-height:36px;font-size:12px"
-                        onclick="ackReject('${esc(key)}')">kapat</button>`}</div>`;
+                   : `<button class="dlbtn" style="padding:6px 12px;min-height:36px;font-size:12px" data-act="ackReject" data-a1="${esc(key)}">kapat</button>`}</div>`;
       };
       return `<h3 class="t" id="failsub" style="margin-top:16px">Reddedilen gönderimler (${open.length})</h3>
       <p class="hint">Broker emri geri çevirdi. Her satır açılır — gerekçe, plan ve tarih kayıtta.
         <b>Kapat</b>, kaydı silmez: yalnız triyaj şeridinden düşürür.</p>
-      ${open.length ? `<div style="margin:10px 0 4px"><button class="dlbtn" onclick="ackRejectAll()">
+      ${open.length ? `<div style="margin:10px 0 4px"><button class="dlbtn" data-act="ackRejectAll">
           Tümünü kapat (${open.length})</button> <span class="hint" id="fsub-msg" style="margin:0"></span></div>
         ${open.map(f => satir(f, false)).join("")}`
         : `<p class="hint">Açık ret yok — hepsi kapatıldı. <span id="fsub-msg"></span></p>`}
@@ -2930,7 +2986,7 @@ RENDER.intraday = async () => {
     ${(sk.session || sk.halt || sk.stale || sk.no_bars) ? `<div class="srow"><span>Atlanan</span><b class="mut">seans ${sk.session || 0} · halt ${sk.halt || 0} · bayat ${sk.stale || 0} · bar-yok ${sk.no_bars || 0}</b></div>` : ""}
     ${iq.last_error ? `<div class="srow"><span>Son hata</span><b class="neg">${esc(iq.last_error)}</b></div>` : ""}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center">
-      <button class="dlbtn" onclick="intradayArm(${armed ? "false" : "true"})">${armed ? "■ Silahlamayı KAPAT (gözleme dön)" : "Intraday silahlamayı AÇ"}</button>
+      <button class="dlbtn" data-act="intradayArm" data-a1="${armed ? "false" : "true"}">${armed ? "■ Silahlamayı KAPAT (gözleme dön)" : "Intraday silahlamayı AÇ"}</button>
       <span class="hint" id="intraday-arm-msg" style="margin:0"></span></div>
     <p class="hint" style="margin-top:10px">Gözlem-modu (Faz 4a) canlı dakikalık <b>kapanmış</b> barlarda EOD-silahlı planların tetik-geçişini ÖLÇER ve
     <code>intraday_decisions.jsonl</code>'e yazar — <b>emir göndermez, iç deftere dokunmaz</b> (sıfır yetki). Gerçek intraday
@@ -3111,7 +3167,7 @@ RENDER.ajan = async () => {
              üretiyordu (secrets.json ve bars/ BİLİNÇLİ olarak hariç) ama tam bu kartta BUTONSUZDU
              — yani paylaşılabilir teşhis paketi vardı ve ona basacak hiçbir yüzey yoktu. -->
         <a class="dlbtn" href="${dl('/api/debug_export')}" title="state kök dosyaları + son olaylar tek zip. secrets.json ve bars/ HARİÇ — anahtar sızdırmaz.">↓ Teşhis paketi (.zip)</a>
-        <button class="dlbtn" id="ntf-btn" onclick="notifyTest()">🔔 Bildirimi test et</button></div>
+        <button class="dlbtn" id="ntf-btn" data-act="notifyTest">🔔 Bildirimi test et</button></div>
       <p class="hint" id="ntf-msg" style="margin-top:6px"></p></div>`;
   // Öğrenme tek yüzeydir: eylem şeridi → beyin (Hermes) → defter → beceriler → dersler (Hafıza).
   // Alt renderlar kendi eski hedef div'lerine yazar — veri sözleşmesi değişmedi.
@@ -3158,7 +3214,7 @@ RENDER.hafiza = async () => {
       <span class="slabel"><span class="d"></span>HAFIZA · ÇIKARILAN DERSLER</span>
       <p class="subline" style="margin-top:8px">Ajanın kendi geçmişinden damıttığı, kalıcı yazılı dersler.</p></div>
     <div class="card rise" style="margin-top:18px"><h2 class="t">lessons.md</h2>
-      <input class="searchbox" id="lsearch" placeholder="derslerde ara…" oninput="filterLessons()"/>
+      <input class="searchbox" id="lsearch" placeholder="derslerde ara…" data-act="filterLessons" data-act-on="input"/>
       <div class="md" id="lessons" style="margin-top:14px">${mdToHtml(d.lessons_md)}</div></div>`;
 };
 function filterLessons() {
@@ -3245,8 +3301,8 @@ RENDER.skiller = async () => {
   const revCard = revs.length ? `<div class="card rise" style="border-color:var(--amber)"><h2 class="t">Revizyon taslakları · onayın bekleniyor (${revs.length})</h2>
     ${revs.map(r => `<div class="trow" style="grid-template-columns:1fr auto auto">
       <span><b>${esc(r.skill)}</b><br><span class="chain">${esc(r.rationale || "gerekçe yok")} · kanıt: n=${r.evidence?.n} ort ${r.evidence?.avg_r}R</span></span>
-      <button class="dlbtn" onclick="skillRev('${esc(r.skill)}','apply')">Onayla</button>
-      <button class="dlbtn" style="border-color:var(--red);color:var(--red)" onclick="skillRev('${esc(r.skill)}','reject')">Reddet</button></div>`).join("")}
+      <button class="dlbtn" data-act="skillRev" data-a1="${esc(r.skill)}" data-a2="apply">Onayla</button>
+      <button class="dlbtn" style="border-color:var(--red);color:var(--red)" data-act="skillRev" data-a1="${esc(r.skill)}" data-a2="reject">Reddet</button></div>`).join("")}
     <p class="hint">Taslak ajan tarafından ölçülmüş zayıflık kanıtıyla yazıldı (skills/&lt;ad&gt;/SKILL.md.v2-draft). Onay eski sürümü arşivler; karne sıfırdan ölçülür.</p></div>` : "";
   $("page-skiller").innerHTML = revCard + `
     <div class="rise" style="border-top:1px solid var(--line);padding-top:26px">
@@ -3385,7 +3441,7 @@ const RECORD_VIEW = {
         ${pdRow("Hisse", esc(f.ticker))}${pdRow("Plan", esc(f.plan_id))}${pdRow("Tarih", esc(f.date))}
         ${pdRow("Kapatıldı", f.ack_ts ? esc(String(f.ack_ts).slice(0, 16)) : null)}
         ${f.ack_ts ? "" : `<div style="margin-top:12px"><button class="dlbtn"
-            onclick="ackReject('${esc(`${f.plan_id || "?"}·${f.date || "?"}`)}')">Bu reddi kapat</button>
+            data-act="ackReject" data-a1="${esc(`${f.plan_id || "?"}·${f.date || "?"}`)}">Bu reddi kapat</button>
           <span class="hint" style="margin:0 0 0 8px">şeritten düşer, kayıt kalır</span></div>`}
         <h3 class="pd-sub">Ne anlama geliyor</h3>
         <p class="mut">Emir Alpaca'ya ulaştı ve geri çevrildi — yerel planda "gönderildi" görünür ama
@@ -3691,9 +3747,9 @@ RENDER.onaylar = async () => {
     const [lbl, kls] = TYPE_TR[it.type] || [it.type, "t-vi"];
     const btns = (it.actions || []).map(ac => {
       if (it.type === "skill_revision")
-        return `<button class="dlbtn" ${ac === "reject" ? 'style="border-color:var(--red);color:var(--red)"' : ""} onclick="skillRev('${esc(it.skill)}','${ac}')">${ac === "apply" ? "Onayla" : "Reddet"}</button>`;
+        return `<button class="dlbtn" ${ac === "reject" ? 'style="border-color:var(--red);color:var(--red)"' : ""} data-act="skillRev" data-a1="${esc(it.skill)}" data-a2="${ac}">${ac === "apply" ? "Onayla" : "Reddet"}</button>`;
       if (it.type === "skill_rec")
-        return `<button class="dlbtn" onclick="applySkillRec('${esc(it.skill)}','${esc(it.action)}')">Uygula</button>`;
+        return `<button class="dlbtn" data-act="applySkillRec" data-a1="${esc(it.skill)}" data-a2="${esc(it.action)}">Uygula</button>`;
       return "";
     }).join(" ");
     return `<div class="trow" style="grid-template-columns:96px 1fr auto;align-items:start">
@@ -3849,15 +3905,15 @@ function eylemSeridi(d) {
   const inpStil = "background:var(--card);border:1px solid var(--field);color:var(--tx);border-radius:var(--r-ctl);padding:3px 6px;min-height:44px";
 
   // 1 · DÜŞÜN — beyni elle çalıştır
-  const dusun = `<button class="dlbtn" id="hbtn-reflect" onclick="hermesReflect()">Şimdi düşün</button>
-    ${s.active ? `<button class="dlbtn" onclick="hermesCtl('stop')">Durdur</button>`
-               : `<button class="dlbtn" onclick="hermesCtl('start')">Başlat</button>`}`;
+  const dusun = `<button class="dlbtn" id="hbtn-reflect" data-act="hermesReflect">Şimdi düşün</button>
+    ${s.active ? `<button class="dlbtn" data-act="hermesCtl" data-a1="stop">Durdur</button>`
+               : `<button class="dlbtn" data-act="hermesCtl" data-a1="start">Başlat</button>`}`;
   const dusunDurum = s.reflecting ? "düşünüyor…" : (s.active ? "aktif · beklemede" : "pasif");
 
   // 2 · ANTRENMAN — kum havuzunda aday strateji ara (canlı defter dokunulmaz)
   const antrenman = sp.active
-    ? `<button class="dlbtn" onclick="sprintStop()">Durdur</button>`
-    : `<button class="dlbtn" id="sprint-start" onclick="sprintStart()">Antrenmanı başlat</button>`;
+    ? `<button class="dlbtn" data-act="sprintStop">Durdur</button>`
+    : `<button class="dlbtn" id="sprint-start" data-act="sprintStart">Antrenmanı başlat</button>`;
   const antAyar = sp.active ? "" : `<p class="hint" style="margin:0 0 4px">bütçe
        <input id="sprint-budget" type="number" value="12" min="4" max="30" style="width:54px;${inpStil}">
        · k_max <input id="sprint-kmax" type="number" value="3" min="1" max="5" style="width:46px;${inpStil}"></p>`;
@@ -3866,8 +3922,7 @@ function eylemSeridi(d) {
     : (sp.v2 ? `v${String(sp.v2).padStart(2, "0")} yayında` : "kapalı");
 
   // 3 · KANIT DOLGUSU — geçmiş planlara toplu LLM görüşü (sonuç gizli, look-ahead yok)
-  const dolgu = `<button class="dlbtn" id="hbtn-backfill" ${pend ? "" : "disabled"}
-      onclick="hermesBackfill()"> Görüş dolgusu${pend ? " (" + pend + ")" : ""}</button>`;
+  const dolgu = `<button class="dlbtn" id="hbtn-backfill" ${pend ? "" : "disabled"} data-act="hermesBackfill"> Görüş dolgusu${pend ? " (" + pend + ")" : ""}</button>`;
 
   return `<div class="rise"><span class="slabel"><span class="d"></span>ELİNDEKİ EYLEMLER</span>
       <h1 class="ph">Öğrenme. <span class="g">Üç düğme, üç iş.</span></h1>
@@ -3885,7 +3940,7 @@ function eylemSeridi(d) {
           <option value="gemini">gemini</option><option value="anthropic">anthropic</option><option value="openrouter">openrouter</option></select>
         <input id="pool-key" type="password" placeholder="yedek API anahtarı" autocomplete="off"
           style="flex:1;min-width:180px;background:var(--bg);color:var(--tx);border:1px solid var(--field);border-radius:var(--r-ctl);padding:6px 8px;min-height:44px;font-family:var(--mono);font-size:12px">
-        <button class="dlbtn" onclick="addPoolKey()">Havuza ekle</button></div>
+        <button class="dlbtn" data-act="addPoolKey">Havuza ekle</button></div>
       <p class="hint" id="pool-msg" style="margin-top:8px"></p></div>`;
 }
 
@@ -4015,7 +4070,7 @@ RENDER.hermes = async () => {
     const applyable = rc.action === "shadow" || rc.action === "activate";
     return `<div class="hyp"><div class="top"><span class="v">${esc(rc.skill)}</span><span class="st ${rc.action === 'shadow' ? 's-rb' : 's-ok'}">${esc(ACT_TR[rc.action] || rc.action)}</span></div>
       <p>${esc(rc.rationale || '')}</p>
-      ${applyable ? `<button class="dlbtn" style="margin-top:8px" onclick="applySkillRec('${esc(rc.skill)}','${esc(rc.action)}')">${esc(ACT_TR[rc.action])} · uygula</button>`
+      ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>`
                   : '<p class="hint" style="margin-top:4px">Bilgi amaçlı — bu araca daha çok yaslan.</p>'}</div>`;
   }).join("");
   $("ogrenme-eylem").innerHTML = eylemSeridi(d);
@@ -4189,15 +4244,15 @@ function keyField(name, label, desc, st, provider) {
     ? `<span class="pos">✓ ayarlı</span> <span class="tx3">(${SRC_TR[st.source] || st.source || ""})${st.hint ? " " + esc(st.hint) : ""}</span>`
     : `<span class="tx3">— ayarlı değil</span>`;
   const del = (st.set && st.source === "file")
-    ? `<button class="dlbtn" onclick="clearSecret('${name}')">Sil</button>` : "";
+    ? `<button class="dlbtn" data-act="clearSecret" data-a1="${name}">Sil</button>` : "";
   const test = (provider && st.set)
-    ? `<button class="dlbtn" onclick="testKey('${provider}','${name}')">Test et</button>` : "";
+    ? `<button class="dlbtn" data-act="testKey" data-a1="${provider}" data-a2="${name}">Test et</button>` : "";
   return `<div class="keyrow">
     <div class="kmeta"><b>${esc(label)}</b><span class="tx3" style="font-size:11px">${esc(desc)}</span>
       <span class="kstat" id="kstat-${name}">${status}</span></div>
     <div class="kin">
       <input type="password" id="key-${name}" placeholder="anahtarı yapıştır…" autocomplete="new-password" spellcheck="false" autocapitalize="off">
-      <button class="dlbtn" onclick="saveSecret('${name}')">Kaydet</button>${del}${test}</div></div>`;
+      <button class="dlbtn" data-act="saveSecret" data-a1="${name}">Kaydet</button>${del}${test}</div></div>`;
 }
 // Alpaca kartının HTML'i — RENDER.ayarlar'dan AYRILDI (2026-07-28) ki görünüm bu dış
 // çağrının arkasında beklemesin. Saf fonksiyon: veri girer, HTML çıkar, DOM'a dokunmaz.
@@ -4229,8 +4284,8 @@ function _alpacaKartHTML(a) {
         ${posRows?`<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:60px 60px 1fr 90px"><span>HİSSE</span><span>ADET</span><span>GİRİŞ</span><span>K/Z</span></div>${posRows}</div>`:''}
         ${ordRows?`<div class="tbl" style="margin-top:8px"><div class="trow head" style="grid-template-columns:60px 1fr 90px"><span>HİSSE</span><span>EMİR</span><span>SEVİYE</span></div>${ordRows}</div>`:''}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button class="dlbtn" onclick="alpacaSubmit()">Silahlı planları Alpaca'ya gönder</button>
-          <button class="dlbtn" onclick="alpacaClose()">■ Tüm Alpaca pozisyonlarını kapat</button></div></div>`;
+          <button class="dlbtn" data-act="alpacaSubmit">Silahlı planları Alpaca'ya gönder</button>
+          <button class="dlbtn" data-act="alpacaClose">■ Tüm Alpaca pozisyonlarını kapat</button></div></div>`;
     }
   return "";
 }
@@ -4565,7 +4620,7 @@ function kbdOverlay(show) {
     <div class="krow"><kbd>K</kbd><b>Önceki satır</b><span>yukarı · Enter kaydı açar</span></div>
     <div class="krow"><kbd>R</kbd><b>Yenile</b><span>aktif sayfayı yeniden yükler</span></div>
     <div class="krow"><kbd>?</kbd><b>Bu panel</b><span>Esc ile kapanır</span></div>
-    <button type="button" class="dlbtn" style="margin-top:16px" onclick="kbdOverlay(false)">Kapat</button></div>`;
+    <button type="button" class="dlbtn" style="margin-top:16px" data-act="kbdOverlay" data-a1="false">Kapat</button></div>`;
   ov.addEventListener("click", e => { if (e.target === ov) kbdOverlay(false); });
   ov.addEventListener("keydown", e => {
     if (e.key !== "Tab") return;
