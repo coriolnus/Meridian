@@ -316,10 +316,28 @@ def test_c10_presentation_carries_no_hardcoded_skill_count(page):
 
 def test_c10b_landing_binds_the_live_skill_count():
     """Sayıyı silmek yetmez — landing kancayı (#pub-skills) ve alanı (skills_live) kaybederse
-    sayfa sessizce sayısız kalır ve kimse fark etmez."""
-    text = (REPO / "meridian/web/landing.html").read_text()
-    assert 'id="pub-skills"' in text, "hero cred canlı bağlama kancasını kaybetmiş"
-    assert "skills_live" in text, "landing, /api/public/summary'nin skills_live alanını okumuyor"
+    sayfa sessizce sayısız kalır ve kimse fark etmez.
+
+    KAPSAM GENİŞLETİLDİ (2026-08-01): kanca HTML'de kalır ama okuma kodu artık `landing.js`'te.
+    Satır içi `<script>` blokları dağıtım CSP'si (`script-src 'self'`) onları blokladığı için
+    dışarı alındı — HTML'de bırakılsalardı sayfa canlıda ölü açılırdı. Bu test o taşımada
+    kırıldı ve **kırılması doğruydu**: bekçinin işi bağlamanın VARLIĞINI kanıtlamak, bağlamanın
+    hangi dosyada olduğunu varsaymak değil. Zayıflatılmadı, doğru yere baktırıldı — `skills_live`
+    ikisinden BİRİNDE yoksa test yine kırılır."""
+    html = (REPO / "meridian/web/landing.html").read_text()
+    js_yol = REPO / "meridian/web/landing.js"
+    js = js_yol.read_text() if js_yol.exists() else ""
+
+    assert 'id="pub-skills"' in html, "hero cred canlı bağlama kancasını kaybetmiş"
+    assert "skills_live" in html + js, (
+        "landing, /api/public/summary'nin skills_live alanını okumuyor "
+        "(ne landing.html'de ne landing.js'te)"
+    )
+    # Betik gerçekten sayfaya bağlı mı — dosya var ama <script src> düşmüşse okuma kodu ölüdür.
+    if "skills_live" in js:
+        assert 'src="/landing.js"' in html, (
+            "okuma kodu landing.js'te ama landing.html onu YÜKLEMİYOR — sayfa sayısız kalır"
+        )
 
 
 def test_c10c_public_summary_computes_skill_counts_from_the_registry():
