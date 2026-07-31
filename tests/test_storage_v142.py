@@ -91,11 +91,16 @@ def test_migrasyon_parite_digestini_dogrular(db_sandbox):
     assert store.read_json("shadow_books.json", None) is None
 
 
-def test_parite_tutmazsa_migrasyon_duser_ve_geri_alinir(db_sandbox, monkeypatch):
+def test_parite_tutmazsa_migrasyon_duser_ve_geri_alinir(db_sandbox):
     """Digest bir SÜS değil KAPIdır: eşleşmezse hiçbir varlık taşınmaz.
 
     Kanıt üretimi: DB'den okumayı bozarız (tek satır düşürülür). Parite turu bunu görmeli,
-    transaction geri alınmalı ve DB'de HİÇBİR satır kalmamalı."""
+    transaction geri alınmalı ve DB'de HİÇBİR satır kalmamalı.
+
+    YAMA `monkeypatch` FİKSTÜRÜNE BAĞLANMAZ (bu depoda üç kez yazılı ders): `monkeypatch.undo()`
+    O FİKSTÜRÜN TÜM yamalarını söker — `sandbox_state`in `config.STATE` yamasını da. Test o an
+    farkında olmadan CANLI `state/` dizinine bakmaya başlar; ilk yazımda canlı defteri kirletirdi.
+    Kendi yamasını kendi kurar, `try/finally` ile kendi söker."""
     _seed_files(db_sandbox)
     gercek = storage.read_entity
 
@@ -103,11 +108,13 @@ def test_parite_tutmazsa_migrasyon_duser_ve_geri_alinir(db_sandbox, monkeypatch)
         out = gercek(name)
         return out[:-1] if name == "trades.jsonl" and isinstance(out, list) else out
 
-    monkeypatch.setattr(storage, "read_entity", _bozuk)
-    rapor = dbmigrate.apply()
+    storage.read_entity = _bozuk
+    try:
+        rapor = dbmigrate.apply()
+    finally:
+        storage.read_entity = gercek
     assert rapor["ok"] is False
     assert "PARİTE TUTMADI" in rapor["hata"]
-    monkeypatch.undo()
     # Geri alma GERÇEK: hiçbir tablo dolmamış olmalı ve kaynak dosyalar YERİNDE.
     assert storage.read_entity("trade_plans.jsonl") == []
     assert storage.read_entity("portfolio.json") is None
