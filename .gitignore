@@ -22,6 +22,14 @@ __pycache__/
 dist/
 build/
 
+# ölçüm araçlarının ÇALIŞMA dizinleri (WP-H, 2026-07-31) — üretilmiş artefakt, kaynak değil.
+# .hypothesis/ : karşı-örnek veritabanı + shrink önbelleği. Makineye özgüdür ve commit'lenirse
+#                bir makinede bulunan karşı-örnek diğerinde "geçmiş gibi" görünür.
+# mutants/     : mutmut'un kaynak ağacının MUTASYONA UĞRAMIŞ kopyası (yüzlerce dosya, saniyede
+#                yeniden üretilir). Commit'lenirse depoda ikinci, bozuk bir meridian paketi durur.
+.hypothesis/
+mutants/
+
 # os
 .DS_Store
 

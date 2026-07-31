@@ -35,6 +35,7 @@ SQLite'ın tip afinitesi (60 → 60.0 dönüşümü) sessizce veriyi değiştire
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 import threading
@@ -286,13 +287,37 @@ def active(name: str | None = None) -> bool:
 
 
 # ---- SATIR ↔ KOLON ÇEVİRİSİ --------------------------------------------------------------------
+def _isaretli_sifir(val: Any) -> bool:
+    """`-0.0` mı? (`val == 0.0` her iki sıfır için de True'dur; ayrım YALNIZ işaret bitindedir.)
+
+    NEDEN AYRI BİR SORU (ÖLÇÜLDÜ 2026-07-31, WP-H/H1 property testi buldu — elle yazılmış hiçbir
+    örnek testi bunu aramamıştı): SQLite'ın REAL kolonu negatif sıfırın İŞARETİNİ KAYBEDER.
+        sqlite> CREATE TABLE t(x REAL); INSERT INTO t VALUES(-0.0); SELECT x FROM t;  →  0.0
+    Tip afinitesi savunması (`_matches`) bu sızıntıya YAPISAL OLARAK kördü: `-0.0` GERÇEKTEN bir
+    `float`tur, yani tip UYUYOR, alan yalnız kolona yazılıyor ve `extra_json` kaçış yolu hiç
+    devreye girmiyordu. Modül başlığındaki "tip afinitesi sessizce veriyi değiştiremez" vaadi tam
+    burada delikti.
+
+    ZARARI TEORİK DEĞİL, OPERASYONEL: `dbmigrate` parite digestini `json.dumps` ile hesaplar ve
+    JSON `-0.0` ile `0.0`ı FARKLI yazar. Canlı defterde tek bir `-0.0` bulunsaydı kaynak digesti
+    ile DB digesti tutmaz ve MİGRASYON TAMAMEN GERİ ALINIRDI — üstelik hata mesajı yalnız "digest
+    tutmadı" derdi, nedenini kimse bulamazdı. Canlı defter BUGÜN tarandı: 0 örnek (yani kusur
+    LATENT'ti, aktif değil). Ama `round(-1e-9, 4)` → `-0.0`tır ve bu depo her yerde `round` kullanır;
+    yani ilk örneğin doğması an meselesiydi.
+
+    ÇÖZÜM YENİ MEKANİZMA DEĞİL, VAR OLANIN DOĞRU TETİKLENMESİ: değer "kolonun sadakatle taşıyamadığı"
+    sınıfa alınır → `extra_json`a da yazılır → okumada extra KAZANIR. Kolon yine dolar (0.0),
+    yani sorgulanabilirlik kaybolmaz; DOĞRULUK extra'da yaşar."""
+    return isinstance(val, float) and val == 0.0 and math.copysign(1.0, val) < 0
+
+
 def _matches(val: Any, typ: str) -> bool:
     if typ == "BOOL":
         return isinstance(val, bool)
     if typ == "INTEGER":
         return isinstance(val, int) and not isinstance(val, bool)
     if typ == "REAL":
-        return isinstance(val, float)
+        return isinstance(val, float) and not _isaretli_sifir(val)
     return isinstance(val, str)
 
 
@@ -485,8 +510,12 @@ def do_write_series(c: sqlite3.Connection, doc: Any, name: str = EQUITY) -> int:
     pts = list((doc or {}).get(POINTS_KEY) or [])
     payload = []
     for p in pts:
+        # `_isaretli_sifir` kapısı BURADA DA GEREKLİ (aynı gerekçe, ikinci yazım yolu): eğrinin
+        # bir noktası `-0.0` ise kanonik yol onu yalnız REAL kolona yazar ve işaret kaybolur.
+        # Kanonik-dışı sayılıp `extra_json`a düşerse nokta HAM hâliyle korunur (okuma yolu zaten
+        # extra_json'u önceler). Kolon yine dolar — `ix_equity_ts` sorguları etkilenmez.
         if isinstance(p, (list, tuple)) and len(p) == 2 and isinstance(p[0], str) \
-                and isinstance(p[1], float):
+                and isinstance(p[1], float) and not _isaretli_sifir(p[1]):
             payload.append((p[0], p[1], None))
         else:
             ts = p[0] if isinstance(p, (list, tuple)) and p and isinstance(p[0], str) else None
