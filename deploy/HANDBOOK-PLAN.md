@@ -1,5 +1,45 @@
 # El kitabı → Meridian uygulama planı
 
+> ## UYGULAMA DURUMU — 2026-08-01
+>
+> Belgeleme turu bitti, uygulama başladı. Bu blok neyin KAPANDIĞINI söyler; aşağıdaki analiz
+> **belgeleme turunun** hâli olarak bırakıldı (tarihsel kayıt; "bu turda değişmedi" ifadeleri
+> o tura aittir).
+>
+> **Kapandı — dört tur, dört commit:**
+>
+> | Madde | Ne yapıldı | Nerede |
+> |---|---|---|
+> | §0 P1 | 20 sabit `rgba()` → 11 jeton adı | `index/landing/workflow.html` |
+> | §0 P2 | `theme.js`, `data-theme`, kalıcılık, ray sonunda anahtar | üç yüzey + `app.js` |
+> | §0 P3 | `--r-pill` borcu: üç yüzeyde de sıfır kullanım ölçüldü → **iddia bırakıldı**, ölü jeton silindi | `DESIGN.md`, `landing.html` |
+> | H6 | Gece değer takımı, üç yüzeyde birebir aynı; AA 0 ihlal (dosyadan yeniden ölçüldü) | üç yüzey |
+> | §4.1 | `_donut` + `_ring` → `_bullet()` (Few'nun beş bileşeni); `.thermo` KALDI (lineer) | `app.js`, `index.html` |
+> | H4 | `cv11`/`ss01` ölçüldü → **ölü**, üç yüzeyden silindi; `.tbl` ilk kez biçimlendirildi; sayı sütunları sağa hizalı | üç yüzey + `app.js` |
+> | H13/H18 | Kazanca açık `+` işareti — renk artık tek kanal değil | `app.js` (9 okuma) |
+> | H20 | `--field` jetonu: form kontrolü kenarı 3.12 (gündüz) / 3.18 (gece) → **1.4.11 geçti** | üç yüzey + `app.js` |
+>
+> **§7'nin "ölçülemedi" listesinden kapananlar:** §7.1 (`1`/`l` 10-11px'te — ayrık, ve
+> `--label-size` mono zaten UPPERCASE olduğu için küçük `l` o boyutta hiç render edilmiyor) ·
+> §7.2 (Google derlemesi — tarayıcıda, gerçek servis edilen dosyayla ölçüldü) · §7.3 (Geist
+> Sans `ss01`/`cv11` — yok, etkisiz) · §7.6 (üç yanlış kontrast rakamı düzeltildi, `index.html`
+> içindeki iki yanlış yorum da) · §7.7 (tarayıcı doğrulaması — artık yapılıyor).
+> **Hâlâ açık:** §7.4 (panel sayımı), §7.5 (alarm oranı — eşleme hükmü verilmeden ölçülemez).
+>
+> **Bu tur ortaya çıkan, planda OLMAYAN üç kusur** (üçü de düzeltildi):
+> 1. **CSP dağıtımı kırardı.** `deploy/Caddyfile` `script-src 'self'` diyor ama `landing.html`
+>    ve `workflow.html` satır içi script taşıyordu — üretimde ikisi de ölü açılırdı
+>    (workflow'un TÜM diyagramı o blokta üretiliyor). `landing.js` / `workflow.js` olarak
+>    çıkarıldı.
+> 2. **`.tbl` sınıfının hiç stili yoktu.** Dört tablo tarayıcı varsayılanıyla, hücreleri
+>    bitişik çiziliyordu.
+> 3. **Boş veride `undefined` sızıyordu** ("Lundefined", "strateji vundefined").
+>
+> **Sıradaki adaylar:** H12 (gömülü trendler) · H23 (satır-içi klavye gezinmesi) ·
+> H3 (beklenen-aralık bandı — önce bandın İSTATİSTİKSEL tanımı gerekir, uydurulamaz) ·
+> H2/H16/H17 (alarm bütçesi — önce EEMUA eşleme hükmü yazılmalı) · H5 (imputation işareti —
+> okuma ucunun onarım bayrağı taşıması gerekiyor) · H7 (komut paleti, en büyük tek kalem).
+
 **Ne bu:** operatörün verdiği UI/UX el kitabındaki HER maddenin mevcut kodla karşılaştırması.
 **Ne değil:** kod. Bu tur belgeleme turudur; `meridian/web/*` bu turda DEĞİŞMEDİ.
 **Yürürlükteki tasarım sözleşmesi:** `DESIGN.md` (bu turda iki-tema kararına göre yeniden yazıldı).

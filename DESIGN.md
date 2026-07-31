@@ -696,6 +696,24 @@ Every component below is identical in geometry across the two themes. Only the t
   survives a theme switch and leaves a white bar over a dark page; the previous inverse of exactly
   this bug measured loss-on-bar at **1.27:1** and made the emergency stops invisible.
 
+### Keyboard
+- `1`–`7` switch views, **derived from the view list** rather than a literal key string, so the
+  map cannot drift from the rail. `R` refreshes the active view. `?` opens the shortcut panel.
+  `Esc` closes whatever is open.
+- **`j` / `k` move between record rows.** The set is exactly `[data-rk]` — every row bound to the
+  record ledger and nothing else — filtered to what is actually visible. Opening was already
+  possible (rows are real `<button>`s, so Enter and Space worked); what was missing was moving
+  *between* rows, because Tab stops at every focusable fragment inside a row rather than stepping
+  row to row.
+- **No wrapping at the ends.** `j` at the last row stays on the last row. A list that loops
+  silently teleports the eye to the other end of the page.
+- **Focus is set with `preventScroll` and the scroll is done by hand**, offset by `--navh`. The
+  browser's own scrolling parks the focused row *underneath* the fixed top bar, so the row the
+  operator just moved to would be the one row they cannot see.
+- Guarded three ways, all verified: the handler does not fire inside `INPUT`/`TEXTAREA`/`SELECT`,
+  does not fire while the drawer is open (a modal whose backdrop still responds to keys is not
+  modal), and does not fire with a modifier held — `⌘K`/`⌘J` are deliberately left free.
+
 ### The Triage Band (signature)
 The first element on the day view and the system's Level-1 reading: one sentence answering "is
 anything waiting for me?", with the outstanding items as chips beside it. Calm is a quiet ruled

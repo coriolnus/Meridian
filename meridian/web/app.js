@@ -4561,6 +4561,8 @@ function kbdOverlay(show) {
   ov.setAttribute("aria-label", "Klavye kısayolları ve sayfa haritası");
   ov.innerHTML = `<div class="kbd-panel"><h2 class="t">Kısayollar · sayfa haritası</h2>
     ${PAGE_MAP.map(([k, n, d]) => `<div class="krow"><kbd>${k}</kbd><b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}
+    <div class="krow"><kbd>J</kbd><b>Sonraki satır</b><span>kayıt satırları arasında aşağı</span></div>
+    <div class="krow"><kbd>K</kbd><b>Önceki satır</b><span>yukarı · Enter kaydı açar</span></div>
     <div class="krow"><kbd>R</kbd><b>Yenile</b><span>aktif sayfayı yeniden yükler</span></div>
     <div class="krow"><kbd>?</kbd><b>Bu panel</b><span>Esc ile kapanır</span></div>
     <button type="button" class="dlbtn" style="margin-top:16px" onclick="kbdOverlay(false)">Kapat</button></div>`;
@@ -4593,5 +4595,30 @@ addEventListener("keydown", e => {
   if (e.key === "r" || e.key === "R") {
     const active = document.querySelector(".sitem.on")?.dataset.p || "brifing";
     if (RENDER[active]) RENDER[active]().then(revealActive);
+  }
+  // SATIR GEZİNMESİ — j/k. Görünüm tuşları sayfayı değiştiriyordu ama sayfanın İÇİNDE
+  // gezinmenin tek yolu Tab'dı, ve Tab bir satırdan diğerine gitmez: satırın içindeki her
+  // odaklanabilir parçaya uğrar. Kayıt açmak zaten Enter/Space ile çalışıyordu (satırlar
+  // gerçek <button>); eksik olan satırdan satıra ATLAMAKTI.
+  // Küme `[data-rk]`: kayıt defterine bağlı satırların TAMAMI ve yalnız onlar — hem <button>
+  // hem role="button" olanlar (başlık taşıyan slip HTML'de butona giremiyor).
+  if (e.key === "j" || e.key === "k" || e.key === "J" || e.key === "K") {
+    const satirlar = [...document.querySelectorAll("[data-rk]")]
+      .filter(el => el.offsetParent !== null);       // gizli görünümlerdekiler sayılmaz
+    if (!satirlar.length) return;
+    e.preventDefault();
+    const asagi = e.key === "j" || e.key === "J";
+    const su = satirlar.indexOf(document.activeElement);
+    // Odak listede değilse (sayfaya yeni girildi): j ilkine, k sonuncusuna gider.
+    const hedef = su < 0 ? (asagi ? 0 : satirlar.length - 1)
+                         : Math.min(satirlar.length - 1, Math.max(0, su + (asagi ? 1 : -1)));
+    const el = satirlar[hedef];
+    // `preventScroll` + elle kaydırma: tarayıcının kendi kaydırması satırı üst barın ALTINA
+    // sokuyor (bar position:fixed, 78px). Aynı sorun için --navh zaten ölçülüyor.
+    el.focus({ preventScroll: true });
+    const bar = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--navh")) || 78;
+    const r = el.getBoundingClientRect();
+    if (r.top < bar + 8) scrollTo({ top: scrollY + r.top - bar - 16, behavior: "instant" });
+    else if (r.bottom > innerHeight - 8) scrollTo({ top: scrollY + r.bottom - innerHeight + 16, behavior: "instant" });
   }
 });
