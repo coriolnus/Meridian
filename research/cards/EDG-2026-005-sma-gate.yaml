@@ -15,5 +15,22 @@ success_metric: "maxDD veya günlük vol anlamlı düşer VE net PARA skoru DÜ�
 kill_criteria:
   - "net Sharpe/PARA düşüyorsa kapı açılmaz (iş emri kuralı: rejim kapısı Sharpe düşürürse kaldır)"
   - "2011-2020-tipi whipsaw bizim pencerede de baskınsa arşiv + 'pano göstergesi yeter' hükmü"
-k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [wpg_olcum/sma, wpg_olcum/tani_x4]}
+status: archived   # 2026-07-31 tanı turu (ilk "KAPI_ACILABILIR" hükmü DÜŞTÜ — mekanizma kanıtıyla):
+# 1) ÖLÇÜM HÜKMÜ: R1-OOS kıyası HUKUMSUZ_OLCUM_TASARIMI — karşı-olgu kolları (oosonly≡kapali,
+#    isonly≡acik, digest bit-bit) kapının OOS doğrudan etkisinin TAM SIFIR olduğunu, acik−kapali
+#    OOS farkının tamamının IS-yankısı (broker peak_equity/derisk_mult taşıması; size_mult 645
+#    OOS seansının 605'inde farklı) olduğunu kanıtladı.
+# 2) OPERASYONEL: KAPI ACILMAZ — kill#1 tek atfedilebilir pencerede (IS 2022-24) TETİKLENDİ:
+#    Sharpe −0,254→−0,898, PARA-v3 −0,029→−0,0878. Tez KISMEN doğru: vol anlamlı düşüyor
+#    (oran 0,792, P=1,00) ama maxDD düşmüyor (P=0,545) ve bedel getiri/Sharpe/PARA.
+# 3) OOS'ta kapı 55 bloke günde 0 girişi engelliyor → kill#2'nin "pano göstergesi yeter" hükmü
+#    fiilen geçerli. Düzeltilmiş ci_para: P(ΔPARA<0)=0,427, CI[−0,48,+0,57] — sıfırdan ayrışmaz.
+# 4) KARŞI KANIT (dürüstlük): temiz-pencere günlük getiri farkı CI'si 0-içi [−2,44,+0,93]bps;
+#    doğrudan ısırık yalnız 8 giriş (−0,873R) — hüküm nokta kıyasıyla, kart metnine uygun.
+# 5) KART TEZİNİN "KOD ZATEN VAR" VARSAYIMI KISMEN YANLIŞ: regime.spy_sma_gate REPLAY yolunda
+#    bağlı değil (guard.py entry_gates arıyor; replay'de üreten yok — yalnız api.py canlı yolu).
+#    Kayıt: kablo bileti WP-G'de.
+# 6) SINIF BULGUSU (WP-M'ye taşındı): walk_forward tek-parça replay → IS'e dokunan HER overlay
+#    OOS skorunu portföy-durumu kanalıyla kirletir; gelecek knob ölçümlerinde "oosonly" kolu
+#    STANDART. Kanıt: wpg_olcum/sonuc.json + RAPOR.md (422 satır) + tani_*.json.

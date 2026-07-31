@@ -101,13 +101,21 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
 - 3.3 text/analist PEAD 🔒 veri bileti (analist-tahmin/NLP; proxy yasak). EMİLDİ: eski Y6
   transkript-LLM skoru (aynı text-veri ailesi; look-ahead disiplini şartıyla aynı bilete bağlı).
 
-### WP-G — Rejim Kapıları (dikkatle; her kapı ayrı deneme, K'ya sayılır)
-- SPY 200-SMA kapısı: KOD HAZIR (regime.entry_gates, default-off, guard'a kablolu) → gölge-overlay
-  ölçüm kartı 📋 · VIX koşullaması 🔒 veri-kilidi (Massive 403/FMP boş — kaynak operatörde).
-- EMİLDİ: eski Y3 dörtlüsünün SMA/VIX bacakları (kod aynı) · Y6 JM rejim modeli + koşullu vol
-  kısma (aynı ailenin ileri üyeleri; SMA kartı hükümden sonra) · turn-of-month index-tilt
-  (3.1 doğrulaması sonrası, hafif overlay olarak) · breadth/distribution-day = PANO GÖSTERGESİ,
-  kapı DEĞİL (kill-list).
+### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
+- **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
+  DÜŞTÜ: karşı-olgu kolları kapının OOS doğrudan etkisinin SIFIR olduğunu (55 bloke gün, 0
+  engellenen giriş), OOS "iyileşmesinin" tamamen IS-yankısı (portföy-durumu taşıması) olduğunu
+  kanıtladı; tek atfedilebilir pencerede kill#1: Sharpe −0,25→−0,90, PARA −0,03→−0,09. Tez kısmen
+  doğru (vol anlamlı ↓, oran 0,79) ama bedeli getiri — "pano göstergesi yeter". · **ToM tilt ✅
+  ARŞİV (EDG-006):** ön-adımda yön ters (−11,8bps), ikizler hiç açılmadı.
+- **KABLO BİLETİ 📋:** regime.spy_sma_gate REPLAY yolunda bağlı değil (guard entry_gates arıyor,
+  replay'de üreten yok; yalnız api.py canlı yolu) — "kod hazır" varsayımı kısmen yanlıştı; ölü-uç
+  temizliği (kaldır ya da bilinçli-pano-göstergesi olarak yeniden adlandır).
+- VIX koşullaması 🔒 veri-kilidi (operatörde) — SMA hükmünden sonra AİLE ÖNCELİĞİ DÜŞTÜ: rejim
+  kapısı ailesi bu evrende "vol'ü düşürür ama parayı da düşürür" profili verdi; JM rejim modeli +
+  koşullu vol kısma adayları açılmadan önce bu hüküm karşı-kanıt olarak okunmalı.
+- EMİLDİ: eski Y3 dörtlüsünün SMA/VIX bacakları · turn-of-month index-tilt (EDG-006 ile öldü) ·
+  breadth/distribution-day = PANO GÖSTERGESİ, kapı DEĞİL (kill-list).
 
 ### WP-R — Rampa/Çıkış Serbestleştirme ✅ ÖLÇÜLDÜ→DARALDI (2026-07-31 03:19; kart EDG-003 measured)
 - **HÜKÜM:** P3 paketi ÖLDÜ (rampa serbest bile olsa P≤0,48 — suçlu rampa değil paketmiş);
@@ -148,6 +156,10 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   kartlarının çatı hipotezi).
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
+- **YENİ (WP-G tanısından, SINIF bulgusu): "oosonly" kolu STANDART** — walk_forward tek-parça
+  replay koştuğu için IS'e dokunan HER overlay/knob OOS skorunu portföy-durumu kanalıyla
+  (peak_equity/derisk/açık pozisyonlar) kirletir; bundan böyle knob ölçümlerinde knob'u
+  oos_start'ta devreye alan kol zorunlu (kanıt: EDG-005 tanısı — oosonly≡kapali bit-bit).
 - PARA-v3 ① realized_delta para-ölçeği (rollback meta-kalibrasyonu) · ② açık-pozisyon DD vetosu
   (walk_forward günlük M2M eğrisi) · 2B blok-bootstrap CI standardı · 2C empirical-Bayes küçültme ·
   2D R2 holdout rotasyonu (zamanı gelince) · A4 tahmin-isabeti bandı · KIYAS-KİRLENMESİ düzeltmesi
@@ -303,6 +315,13 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-07-31 ~sabah WP-G + WP1 HÜKÜM GÜNÜ.** EDG-005 SMA-kapısı ARŞİV (tanı turu: OOS etkisi
+  sıfır — fark IS-yankısıymış; temiz pencerede kill#1; "oosonly standardı" WP-M'ye sınıf dersi
+  olarak girdi; ci_para kökü: _slim'in pnl_dollars düşürmesi) · EDG-006 ToM ARŞİV (ön-adım, yön
+  ters) · EDG-007 residual momentum ARŞİV (6/6 CI-0-içi; residmom≈rawmom ρ=0,63 yapısal; FF3
+  verisi yan-kazanım olarak repo'da). Skor: 12 ölçülen aile/filtre → 11 arşiv + 1 yaşayan
+  (uzun-ufuk trend). Aynı gün: git kuruldu (H8), SQLite defter-çekirdeği turu sahada (H9).
 
 - **2026-07-31 ~07:00 MÜHENDİSLİK EL KİTABI TURU (operatör dokümanı).** 2024-26 araştırma anketi
   gerçekle çarpıştırıldı → WP-H açıldı. Üç düzeltme: Meridian SQLite-backed DEĞİL (Litestream
