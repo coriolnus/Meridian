@@ -210,11 +210,13 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   roller, yasalar, canlı-güvenlik).
 - **H7 restore tatbikatı** 📋 — Mac'teki yedekten boş dizine süre-ölçümlü geri dönüş provası;
   çeyreklik ritim ("restore edilmemiş yedek hipotezdir").
-- **H11 mekanizma süre-tavanları** 📋 (2026-07-31 vakası): warmup_sprint 07:09'dan beri 2
-  işçiyle tavansız koşuyor, mekanizma-bekçisi alarmladı (hermes_poll'u da geciktiriyor) —
-  bekçi ALARM edebiliyor ama İPTAL edemiyor. Uzun-hesap mekanizmalarına (warmup, kanıt-dolgusu,
-  antrenman) beyan edilmiş süre-tavanı + tavan aşımında kibar-iptal; MERIDIAN_SEARCH_MAX_MIN
-  yalnız hermes aramasını kapsıyor (yanlış genelleme düzeltildi).
+- **H11 mekanizma süre-tavanları + poll açlığı** 📋 (2026-07-31 vakası, kod okunarak düzeltildi):
+  warmup_sprint TASARIMI gereği uzun (bütçe 10 sonda × walk-forward ≈ 1-5 sa nominal;
+  watchdog.py:25 alarm eşiği 8 sa) — vaka "takılı süreç" değil. GERÇEK açıklar: (a) bekçi ALARM
+  edebiliyor ama İPTAL edemiyor (8 sa aşımında kibar-iptal yok); (b) warmup hermes döngüsünün
+  KENDİ thread'inde koştuğundan sürerken hermes_poll nabızsız kalıyor → sahte poll alarmı
+  (açlık). İş: uzun-hesap mekanizmalarına tavan-aşımı kibar-iptali + warmup'ı poll thread'inden
+  ayırmak (ya da poll nabzını warmup içinden atmak).
 - **REDDEDİLDİ (bizim gerçekte):** Litestream/SQLite-PRAGMA/DuckLake (Meridian'da SQLite YOK —
   state dosya+Redis; el kitabının varsayımı yanlış) · Pandera (karantina-v2 + bars_integrity zaten
   ölçülmüş özel koruma) · GE/Temporal/K8s/SBOM/fail2ban/staging (el kitabı da reddediyor) ·
