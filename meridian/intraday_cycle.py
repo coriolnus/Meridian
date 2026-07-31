@@ -114,9 +114,11 @@ class IntradayConsumer:
         pdate = pf.get("last_date")
         if not pdate:
             return {}
-        try:
-            mt = (config.STATE / PLANS_FILE).stat().st_mtime_ns
-        except OSError:  # sessiz-yutma: defter henüz yok (taze kurulum) → plan nüfusu boş, gözlem pozisyon/silahlıya düşer
+        # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): plan defteri SQLite'a taşındığında
+        # dosya `.migrated` ekiyle donar; mtime tabanlı önbellek anahtarı bir daha DEĞİŞMEZ ve
+        # gözlem katmanı sonsuza kadar ilk turun plan nüfusunu gösterirdi. (0, 0) = defter yok.
+        mt = store.stamp(PLANS_FILE)
+        if mt == (0, 0):
             return {}
         if _PLANS_CACHE is not None and _PLANS_CACHE[0] == (pdate, mt):
             return _PLANS_CACHE[1]

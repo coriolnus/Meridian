@@ -297,14 +297,21 @@ def dataset_fingerprint() -> dict:
     """Eğitim setini besleyen defterlerin (boyut, mtime_ns) parmak izi. Okunamayan/olmayan dosya
     `None` olarak GEÇER (0 değil): "dosya yok" ile "dosya boş" ayrı hâllerdir ve ikincisi bir
     seferlik bir kaza, birincisi kalıcı bir kurulum eksiğidir."""
-    from . import config
+    # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): iki kaynak defter (`trades.jsonl`,
+    # `trade_plans.jsonl`) SQLite'a taşındığında dosyaları `.migrated` ekiyle DONAR — (boyut,
+    # mtime) çifti bir daha değişmez ve "veri seti değişmedi" parmak izi SONSUZA kadar taze
+    # görünürdü. `store.stamp` iki arka uçta da yalnız İÇERİK değişince değişir.
+    from . import store as _st
     out: dict = {}
     for name in FIT_SOURCES:
-        try:
-            st = (config.STATE / name).stat()
-            out[name] = [st.st_size, st.st_mtime_ns]
-        except OSError:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (None) — dosya yokluğu parmak izinin bir DEĞERİ, kaybolan bilgi yok
-            out[name] = None
+        s = _st.stamp(name)
+        # (0, 0) = defter YOK. `None` olarak geçer (0 değil): "dosya yok" ile "dosya boş" ayrı
+        # hâllerdir ve bu ayrım fonksiyonun kendi sözleşmesidir.
+        # BEKLENEN TEK SEFERLİK SİNYAL: demetin sırası eskiden [boyut, mtime_ns] idi, şimdi
+        # [damga, boyut/rev]. Bu değişiklikten SONRAKİ İLK koşuda parmak izi kaçınılmaz olarak
+        # farklı çıkar ve `taze=False` bir kez raporlanır (bir yeniden-fit tetikler). Uydurup
+        # eski sırayı taklit etmek, DB arka ucunda anlamsız bir demet üretirdi.
+        out[name] = None if s == (0, 0) else list(s)
     return out
 
 

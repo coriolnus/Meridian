@@ -3686,11 +3686,11 @@ def _nd_stamp() -> tuple:
     STATE YOLU DA DAMGANIN İÇİNDE: testler her koşuda AYRI bir sandbox'a yönlendirilir ve yol
     olmasaydı "defter yok" hâli (0, 0) iki farklı sandbox'ta AYNI anahtara düşerdi — bir testin
     sonucu diğerine sızardı (conftest'in `_clear_module_caches` yazarken şikâyet ettiği sınıf)."""
-    try:
-        st = (config.STATE / "trades.jsonl").stat()
-        return (str(config.STATE), st.st_mtime_ns, st.st_size)
-    except OSError:  # sessiz-yutma: defter yoksa damga sabit — sonuç zaten "defter boş" olur ve önbellek anlamsızlaşmaz
-        return (str(config.STATE), 0, 0)
+    # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): defter SQLite'a taşındığında
+    # `state/trades.jsonl` `.migrated` ekiyle DONAR ve mtime'ı bir daha değişmez — bu önbelleği
+    # SONSUZA kadar bayat yapardı ve hiçbir yerde görünmezdi. `store.stamp` iki arka uçta da
+    # "yalnız içerik değişince değişen" bir demet verir (dosyada mtime+boyut, DB'de updated_at+rev).
+    return (str(config.STATE), *store.stamp("trades.jsonl"))
 
 
 def _nd_ozet(kayitlar: list[dict]) -> dict:

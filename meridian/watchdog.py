@@ -1043,11 +1043,12 @@ COHERENCE_GRACE_S = 3600      # 1 sa: bir sonraki döngü zaten tazeler — pani
 def coherence_report() -> dict:
     """#4 — türev bayatlığı. Kaynak güncellendiği halde türev eskiyse bayrak. Grace: 1 saat (döngü
     kadansı). Yalnız gözlem: hangi kalibrasyonun eski veriyle konuştuğunu görünür kılar."""
-    import os
-    from . import config
+    # `store.mtime` ARKA UÇTAN BAĞIMSIZ (WP-H/H9, 2026-07-31): kaynakların dördü (trades,
+    # trade_plans, portfolio, scoreboard) SQLite'a taşınabilir ve o an dosyaları `.migrated`
+    # ekiyle DONAR — `os.path.getmtime` "kaynak hiç güncellenmiyor" derdi, yani bayatlık
+    # dedektörü tam da ölçmek için var olduğu şeyi göremez hâle gelirdi.
     def _m(name):
-        p = os.path.join(str(config.STATE), name)
-        return os.path.getmtime(p) if os.path.exists(p) else None
+        return store.mtime(name)
     stale, ok, absent = [], 0, []
     for art, srcs in DERIVED_SOURCES.items():
         a = _m(art)

@@ -124,11 +124,20 @@ def split(rows: list[dict] | None = None) -> dict[str, list[dict]]:
 
 # ---- GERİYE DÖNÜK SINIR ÖLÇÜMÜ ----------------------------------------------------------------
 def _mtime(name: str) -> float | None:
-    p = config.STATE / name
-    try:
-        return p.stat().st_mtime
-    except OSError:  # sessiz-yutma: dosya yoksa/okunamıyorsa ÖLÇÜM YAPILAMADI demektir ve çağıran bunu None olarak alıp `guven` alanına yazar — sessiz bir varsayıma dönüşmez
-        return None
+    """Arka uçtan bağımsız son-yazım zamanı (`store.mtime`). DOSYA çağında `stat().st_mtime`,
+    SQLite çağında `entity_meta.updated_at`. Ölçülemezse None — uydurma yok."""
+    return store.mtime(name)
+
+
+def _toplu_yazim_olculebilir() -> bool:
+    """TOPLU YAZIM İMZASI YALNIZ DOSYA ÇAĞINDA ANLAMLIDIR.
+
+    İmza şuna dayanır: `run.py:163` defteri, `run.py:164` eğriyi yazar; iki AYRI dosyanın mtime'ı
+    saniyeler içindeyse defter o toplu yazımdan beri hiç `append` almamıştır. SQLite'a taşındıktan
+    sonra iki varlığın damgası TEK migrasyon transaction'ında AYNI ana düşer — yani fark her zaman
+    ~0 çıkar ve imza "defter hiç eklenmedi" diye OKUNURDU. Bu bir ölçüm değil, migrasyonun kendi
+    gölgesidir. Ölçülemeyen bir imzayı VAR saymak, tam olarak BT-1'in şikâyet ettiği hatadır."""
+    return not (store.db_backed(LEDGER) or store.db_backed(EQUITY))
 
 
 def seed_boundary() -> dict:
@@ -152,7 +161,8 @@ def seed_boundary() -> dict:
             replay_end = str(pts[-1][0])[:10]
         except (IndexError, TypeError, ValueError):  # sessiz-yutma: eğri şeması beklenmedik — sınır ÖLÇÜLEMEDİ olarak kalır ve `neden` alanı bunu dışarı söyler (aşağıda), varsayılan bir tarih UYDURULMAZ
             replay_end = None
-    t_led, t_eq = _mtime(LEDGER), _mtime(EQUITY)
+    _olculebilir = _toplu_yazim_olculebilir()
+    t_led, t_eq = (_mtime(LEDGER), _mtime(EQUITY)) if _olculebilir else (None, None)
     delta = None if (t_led is None or t_eq is None) else round(abs(t_led - t_eq), 3)
     toplu = None if delta is None else bool(delta <= BULK_WRITE_TOLERANCE_S)
     if replay_end is None:
