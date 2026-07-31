@@ -147,16 +147,22 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   etkiler — sağ-kalan mid-cap'lerle ÜST-SINIR ölçümü yine mümkün, yanlılık beyanlı) → B-9 (tetik:
   trend kolu ship) · 13F önceliklendirme katmanı.
 
-### WP-K — Kurulum/Aile Genişletme 📋
-- Uzun-ufuk trend kolu RAFİNE ölçümü (İLK SAĞ KALAN AİLE — kart: ALIVE/refine; tasarım:
-  seçim-odaklı, ~3 ay tutuş, minimal durak, 2021+ sessizliği çözülmeli; aylık-rebalans gölge
-  kitabı tasarımı dahil) · G4 ikinci kurulum (trend-içi geri-çekilme, korelasyon<0,3; pullback
+### WP-K — Kurulum/Aile Genişletme
+- **Trend-kolu RAFİNE ✅ ÖLÇÜLDÜ (2026-07-31, kart EDG-009, K=4; pozitif kontrol 0.000000 farkla):**
+  rafine üstünlük KANITLANAMADI (B aylık-rebalans CI-0-içi, vol/DD kötü; muhafazakâr okuma) →
+  HAM KOL incumbent. ASIL BULGU — KALICI PIT ŞERHİ: +13,1p/yıl fazlanın büyük kısmı evren-seçim
+  yanlılığı; PIT-sağkalan evrende ~6-7p/yıl (D t=2.08 — hayatta, kill#2 tetiklenmedi). 2021+
+  tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). SIRADAKİ İŞ: ham kolun aylık
+  gölge-kitap implementasyonu (hüküm sonrası serbest; Opus turu) + kart-dilbilgisi dersi WP-M'de. · G4 ikinci kurulum (trend-içi geri-çekilme, korelasyon<0,3; pullback
   askı-bulgusuyla birleşik yeniden-tasarım) · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
   G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · VCP-DECOMPOSE programı (katalog #30:
   VCP = residual-mom + 52wh + hacim-primi + daralma bileşenlerine ayrıştır — 1.1/1.2/1.4
   kartlarının çatı hipotezi).
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
+- **YENİ (EDG-009'dan): kart eşik-DİLBİLGİSİ standardı** — success/kill metinlerinde her dal
+  KENDİ niteleyicisini açıkça taşır ("artar (CI 0-dışı)" gibi); belirsiz niteleyici = muhafazakâr
+  okuma + karta ders notu (EDG-009 vakası: "(P>=0.95)" hangi dala ait belirsizdi, hüküm değiştirici).
 - **YENİ (WP-G tanısından, SINIF bulgusu): "oosonly" kolu STANDART** — walk_forward tek-parça
   replay koştuğu için IS'e dokunan HER overlay/knob OOS skorunu portföy-durumu kanalıyla
   (peak_equity/derisk/açık pozisyonlar) kirletir; bundan böyle knob ölçümlerinde knob'u
@@ -170,7 +176,10 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   <×0,4 süspansiyon kuralının config'e bağlanması · Chen-2022 t-hurdle dengeleme notu (K-cezası
   kalibrasyonu — gevşetme değil referans).
 
-### WP-D — Veri Bütünlüğü 🔄 (hayalet-round-2 koşuyor)
+### WP-D — Veri Bütünlüğü 🔄
+- **DOĞRULANACAK (EDG-009 yan gözlemi):** 2026-07-30 BULGU-1 (hayalet-satır hacim şartı kaçağı)
+  artık üretilemiyor — depo kapısı GILD/CMCSA/DLTR/UNP satırlarını kendisi karantinaya alıyor
+  görünüyor; Rol-1 bağımsız teyidi bekliyor (teyitlenirse karantina-genişletme kalemi KAPANIR).
 - Karantina hacim-şartı genişletmesi (GILD-sınıfı %29 kaçak) · bars_integrity defteri (97 kalıcı
   dikiş/kimlik kırılması — silme değil güvensiz-dönem dışlama, tüketici kablolu) · türetilmiş
   artefaktların (component_ic/cf/eşik eğrileri) güvensiz-dönem-dışlamalı yeniden üretimi ·
@@ -329,6 +338,11 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-07-31 ~15:30 EDG-009 TREND-RAFİNE HÜKMÜ.** Rafine üstünlük kanıtlanamadı → ham kol
+  incumbent; KALICI PIT ŞERHİ: fazlanın ~yarısı evren-seçim yanlılığı (~6-7p/yıl, D t=2.08
+  hayatta); 2021+ = oynaklık, decay değil; eşik-dilbilgisi dersi WP-M'ye. Pozitif kontrol
+  0.000000. Kanıt research/olcumler/trend_rafine/. Sıradaki: aylık gölge-kitap Opus turu.
 
 - **2026-07-31 ~sabah WP-G + WP1 HÜKÜM GÜNÜ.** EDG-005 SMA-kapısı ARŞİV (tanı turu: OOS etkisi
   sıfır — fark IS-yankısıymış; temiz pencerede kill#1; "oosonly standardı" WP-M'ye sınıf dersi

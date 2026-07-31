@@ -1,0 +1,2457 @@
+{
+ "kart": {
+  "card_id": "EDG-2026-009",
+  "family": "long_horizon_trend_refine",
+  "grid": {
+   "cikis": [
+    "chandelier_mevcut",
+    "aylik_rebalans_duraksiz"
+   ],
+   "evren": [
+    "full_251",
+    "pit_sagkalan"
+   ]
+  },
+  "K": 4,
+  "cost_model": "10bps/bacak",
+  "sabit_kurallar": "12-1 momentum \u00fcst-N=10, ayl\u0131k de\u011ferlendirme (ay-sonu kapan\u0131\u015f), icra ERTES\u0130 seans a\u00e7\u0131l\u0131\u015f\u0131 (= ay\u0131n ilk i\u015flem g\u00fcn\u00fc, XNYS), e\u015fit-a\u011f\u0131rl\u0131k ayl\u0131k denkle\u015ftirme, \u00f6l\u00e7\u00fcm-i\u00e7i b\u00fct\u00fcnl\u00fck katman\u0131 (L1-L5)"
+ },
+ "beyanlar": {
+  "cita_secimi": "Her h\u00fccre KEND\u0130 evreninin EW'sine kar\u015f\u0131 \u00f6l\u00e7\u00fcl\u00fcr. full_251 i\u00e7in iki \u00e7\u0131ta raporlan\u0131r: (a) EW_full_BH = 2026-07-30 ham kol \u00e7\u0131tas\u0131 (statik B&H, pozitif kontrol\u00fcn birebir \u00fcretildi\u011fi \u00e7\u0131ta), (b) EW_full_aylik = ayl\u0131k denkle\u015ftirilmi\u015f EW (yap\u0131-e\u015flemeli). pit_sagkalan i\u00e7in statik B&H TANIMSIZDIR (evren zaman i\u00e7inde de\u011fi\u015fir) \u2014 \u00e7\u0131ta EW_pit_aylik'tir. H\u00fck\u00fcm \u00f6l\u00e7\u00fctleri E\u015eLEMEL\u0130 \u00e7\u0131tada okunur; taban \u00e7\u0131tas\u0131 da her sat\u0131rda verilir.",
+  "aylik_rebalans_duraksiz": "Ay-sonu kapan\u0131\u015f\u0131nda \u00fcst-10 momentum listesi yeniden kurulur; listeden d\u00fc\u015fen pozisyon ERTES\u0130 seans a\u00e7\u0131l\u0131\u015f\u0131nda kapan\u0131r. Ara durak/stop/hedef YOKTUR. Tek \u00e7\u0131k\u0131\u015f kanal\u0131: listeden d\u00fc\u015fmek (+ veri/b\u00fct\u00fcnl\u00fck zorunlu \u00e7\u0131k\u0131\u015flar\u0131).",
+  "pit_uyelik": "as-of okuma: hedef tarihten k\u00fc\u00e7\u00fck-e\u015fit en son \u00fcyelik anl\u0131k g\u00f6r\u00fcnt\u00fcs\u00fc. CSV 2026-06-30'da bitiyor; sonraki g\u00fcnler son anl\u0131k g\u00f6r\u00fcnt\u00fcyle ileri ta\u015f\u0131nd\u0131.",
+  "0bps_kosumlari": "YALNIZ maliyet ayr\u0131\u015ft\u0131rma te\u015fhisi; K'ya say\u0131lmaz, h\u00fckme girmez.",
+  "bootstrap": "dairesel blok-bootstrap, blok=21 i\u015flem g\u00fcn\u00fc, 2000 tekrar, tohum sabit."
+ },
+ "pozitif_kontrol": {
+  "sim_span": [
+   "2010-12-31",
+   "2026-07-28"
+  ],
+  "evren_bar_sayisi": 250,
+  "PK_A_ham_kol_sasi": {
+   "total_return": 60.776509695968684,
+   "cagr": 0.30315529656596385,
+   "vol_ann": 0.27934700560249776,
+   "sharpe": 1.0912706901710596,
+   "max_dd": -0.4021611675878538,
+   "years": 15.572895277207392,
+   "n_days": 3914,
+   "vs_EW_UNIVERSE": {
+    "ann_pct": 13.144974891878558,
+    "t_nw": 3.6906533241492476,
+    "n_months": 188
+   },
+   "vs_SPY": {
+    "ann_pct": 18.555546266093103,
+    "t_nw": 4.848831063442803,
+    "n_months": 188
+   }
+  },
+  "PK_B_rafine_motor_ozdeslik": {
+   "ayni_uzunluk": true,
+   "maks_mutlak_fark": 0.0,
+   "maks_bagil_fark_pct": 0.0,
+   "islem_bacagi": [
+    2352,
+    2352
+   ],
+   "cikislar": [
+    {
+     "chandelier": 479,
+     "no_data": 0,
+     "integrity": 3,
+     "final": 0
+    },
+    {
+     "chandelier": 479,
+     "rotate": 0,
+     "no_data": 0,
+     "integrity": 3,
+     "final": 0
+    }
+   ]
+  },
+  "PK_C_muhasebe": {
+   "PK4_segment": {
+    "segments": 187,
+    "days_checked": 3914,
+    "max_rel_diff_pct": 7.049980907251561e-14,
+    "worst_day": "2022-04-28"
+   },
+   "PK5_cashflow": {
+    "ledger_final": 61776509.69596869,
+    "cashflow_final": 61776509.695967495,
+    "rel_diff_pct": -1.9317880628477724e-12
+   }
+  },
+  "referans_2026_07_30": {
+   "fazla_yillik_pct": 13.144974891878558,
+   "t_nw": 3.6906533241492476,
+   "kaynak": "scratchpad/trend_kolu/sonuc.json N10_rebalance.vs_EW_UNIVERSE.tam"
+  },
+  "GUARD": {
+   "fazla_fark_puan": 0.0,
+   "t_fark": 0.0,
+   "kart_esigi_t_ge_3": true,
+   "kart_esigi_fazla_civarinda": true,
+   "motor_ozdesligi_tam": true,
+   "GECTI": true
+  }
+ },
+ "kapsam": {
+  "repo_head": "7293cc63f3a033360495c42c7bb9f60ac6b9d080",
+  "evren_beyan": 251,
+  "evren_barli": 250,
+  "bar_kapsami": [
+   "2004-01-02",
+   "2026-07-28"
+  ],
+  "sim_kapsami": [
+   "2010-12-31",
+   "2026-07-28"
+  ],
+  "sim_yil": 15.572895277207392,
+  "repo_kapisi_dusen_satir": 441,
+  "repo_kapisi_tarihler": {
+   "2006-10-30": 1,
+   "2008-06-12": 1,
+   "2011-12-01": 1,
+   "2011-12-09": 1,
+   "2012-01-20": 1,
+   "2012-06-26": 1,
+   "2013-07-15": 1,
+   "2013-08-02": 1,
+   "2013-12-18": 4,
+   "2014-06-06": 1,
+   "2018-11-22": 178,
+   "2025-05-26": 250
+  },
+  "butunluk_L1_satir": 0,
+  "butunluk_L2_satir": 15,
+  "butunluk_kirilma": 97,
+  "ffill": {
+   "ffilled_cells_in_span": 12252,
+   "cells_total": 1424927
+  },
+  "bar_kaynagi": "canl\u0131 \u00f6nbellek /Users/erdemozturk/AI-Trading/state/bars (SALT-OKUMA kopyas\u0131)"
+ },
+ "hucreler": {
+  "A_chandelier_full": {
+   "tanim": {
+    "cikis": "chandelier_mevcut",
+    "evren": "full_251",
+    "rol": "HAM KOL (pozitif kontrol h\u00fccresi / taban)",
+    "cita_esli": "EW_full_aylik",
+    "cita_taban": "EW_full_BH",
+    "sifir_bps": "A_chandelier_full_0bps"
+   },
+   "stats": {
+    "tam": {
+     "total_return": 60.776509695968684,
+     "cagr": 0.30315529656596385,
+     "vol_ann": 0.27934700560249776,
+     "sharpe": 1.0912706901710596,
+     "max_dd": -0.4021611675878538,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 3.08753462674839,
+     "cagr": 0.32589858966493845,
+     "vol_ann": 0.23759459001003622,
+     "sharpe": 1.3078109142888998,
+     "max_dd": -0.28028719505316435,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 3.253925090178724,
+     "cagr": 0.3365406307570258,
+     "vol_ann": 0.29471211918410306,
+     "sharpe": 1.1332334081970807,
+     "max_dd": -0.4021611675878538,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 2.6189294134916863,
+     "cagr": 0.26024116441493517,
+     "vol_ann": 0.29938686114942886,
+     "sharpe": 0.925880165597047,
+     "max_dd": -0.26794290761721684,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "devir": {
+    "n_rebalans": 187,
+    "islem_bacagi": 2352,
+    "n_giris": 492,
+    "n_kapanan_islem": 482,
+    "cikislar": {
+     "chandelier": 479,
+     "rotate": 0,
+     "no_data": 0,
+     "integrity": 3,
+     "final": 0
+    },
+    "aylik_islem_ort": 5.208556149732621,
+    "devir_tekyon_yillik_pct": 328.6016524114528,
+    "friksiyon_usd": 1520744.0865948678,
+    "friksiyon_son_ozkaynak_pct": 2.461686641215514,
+    "friksiyon_surukleme_yillik_pct": 0.6572033048229056,
+    "ort_nakit_agirlik_pct": 0.1362825404302691,
+    "tutus_gun": {
+     "10": 21.0,
+     "25": 42.0,
+     "50": 63.0,
+     "75": 104.0,
+     "90": 149.0,
+     "99": 319.60999999999996
+    },
+    "tutus_ort_gun": 79.65560165975104,
+    "tutus_1yil_ustu_pct": 2.4896265560165975
+   },
+   "fazla": {
+    "EW_full_BH": {
+     "tam": {
+      "ann_pct": 13.144974891878558,
+      "t_nw": 3.6906533241492476,
+      "p_one_sided": 0.00011183940748491107,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 16.07469398153859,
+      "pozitif_ay_pct": 63.297872340425535
+     },
+     "2011-2015": {
+      "ann_pct": 16.257494898078374,
+      "t_nw": 3.161272833265057,
+      "p_one_sided": 0.0007854064513152098,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.868373002387687,
+      "pozitif_ay_pct": 66.66666666666666
+     },
+     "2016-2020": {
+      "ann_pct": 13.10278053273386,
+      "t_nw": 2.839554345806841,
+      "p_one_sided": 0.0022588299540355775,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.076628535121136,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2021-2026": {
+      "ann_pct": 10.662776535702534,
+      "t_nw": 1.3648782774164212,
+      "p_one_sided": 0.08614565536946527,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.272595193074583,
+      "pozitif_ay_pct": 61.19402985074627
+     }
+    },
+    "EW_full_aylik": {
+     "tam": {
+      "ann_pct": 15.79911550625086,
+      "t_nw": 4.09413223981473,
+      "p_one_sided": 2.118762101289735e-05,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 17.8726270985833,
+      "pozitif_ay_pct": 62.76595744680851
+     },
+     "2011-2015": {
+      "ann_pct": 17.658577072760618,
+      "t_nw": 3.284833429577272,
+      "p_one_sided": 0.0005102133962705388,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 13.416478133416332,
+      "pozitif_ay_pct": 66.66666666666666
+     },
+     "2016-2020": {
+      "ann_pct": 15.103310235064926,
+      "t_nw": 2.571550765043058,
+      "p_one_sided": 0.005062208541889132,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 13.93636029451022,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2021-2026": {
+      "ann_pct": 15.02525155329526,
+      "t_nw": 1.8186859947226337,
+      "p_one_sided": 0.034479674813399024,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 23.874272851564534,
+      "pozitif_ay_pct": 59.70149253731343
+     }
+    },
+    "EW_pit_aylik": {
+     "tam": {
+      "ann_pct": 17.492656198640844,
+      "t_nw": 4.391818035029917,
+      "p_one_sided": 5.620337954450026e-06,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 18.234227294158238,
+      "pozitif_ay_pct": 62.76595744680851
+     },
+     "2011-2015": {
+      "ann_pct": 18.874728442903322,
+      "t_nw": 3.3067436694733305,
+      "p_one_sided": 0.0004719360965965815,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 14.096124520165976,
+      "pozitif_ay_pct": 66.66666666666666
+     },
+     "2016-2020": {
+      "ann_pct": 18.297700421045903,
+      "t_nw": 2.961978519023721,
+      "p_one_sided": 0.0015283455421304904,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 14.265478496069228,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2021-2026": {
+      "ann_pct": 15.83454777468849,
+      "t_nw": 1.8955495568576604,
+      "p_one_sided": 0.0290098164212876,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 24.12155361954536,
+      "pozitif_ay_pct": 59.70149253731343
+     }
+    },
+    "SPY_BH": {
+     "tam": {
+      "ann_pct": 18.555546266093103,
+      "t_nw": 4.848831063442803,
+      "p_one_sided": 6.209556388514823e-07,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 17.726691873322192,
+      "pozitif_ay_pct": 64.8936170212766
+     },
+     "2011-2015": {
+      "ann_pct": 22.583904846839342,
+      "t_nw": 3.904137105284536,
+      "p_one_sided": 4.7281082443139206e-05,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 14.55086037171921,
+      "pozitif_ay_pct": 70.0
+     },
+     "2016-2020": {
+      "ann_pct": 19.2956533036867,
+      "t_nw": 3.6603086946732466,
+      "p_one_sided": 0.00012595578759844127,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 13.372882793829646,
+      "pozitif_ay_pct": 65.0
+     },
+     "2021-2026": {
+      "ann_pct": 14.699913708034252,
+      "t_nw": 1.814173284855461,
+      "p_one_sided": 0.03482552586970318,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 23.215798660336283,
+      "pozitif_ay_pct": 61.19402985074627
+     }
+    }
+   },
+   "yil_yil_esli_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": 2.966967018761557,
+     "cita_pct": 2.817968658091319,
+     "fazla_puan": 0.1489983606702383,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 43.11170278663479,
+     "cita_pct": 16.93808475745737,
+     "fazla_puan": 26.173618029177415,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 53.95832472825137,
+     "cita_pct": 33.39570247072567,
+     "fazla_puan": 20.562622257525696,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 49.740846070736524,
+     "cita_pct": 19.08633171844083,
+     "fazla_puan": 30.654514352295692,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 16.113721048798602,
+     "cita_pct": 0.6320602476350246,
+     "fazla_puan": 15.481660801163578,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 24.809698006581993,
+     "cita_pct": 18.94660306744358,
+     "fazla_puan": 5.8630949391384135,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 30.721415801892693,
+     "cita_pct": 23.70283927392487,
+     "fazla_puan": 7.018576527967824,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 5.226329118447182,
+     "cita_pct": -6.936927825242756,
+     "fazla_puan": 12.163256943689937,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 49.30877611512785,
+     "cita_pct": 34.07562896441212,
+     "fazla_puan": 15.23314715071573,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 57.30432512870909,
+     "cita_pct": 16.67130722951249,
+     "fazla_puan": 40.6330178991966,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 14.624631675240419,
+     "cita_pct": 29.193196650216002,
+     "fazla_puan": -14.568564974975583,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 6.907609490893241,
+     "cita_pct": -10.459922365434826,
+     "fazla_puan": 17.367531856328068,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 35.707604545511096,
+     "cita_pct": 18.729735689262593,
+     "fazla_puan": 16.977868856248502,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 61.80779787672597,
+     "cita_pct": 12.869030061139664,
+     "fazla_puan": 48.9387678155863,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 11.843602015843224,
+     "cita_pct": 11.784486548822159,
+     "fazla_puan": 0.05911546702106474,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 22.30699934884923,
+     "cita_pct": 13.384247423274932,
+     "fazla_puan": 8.922751925574302,
+     "n_days": 142
+    }
+   },
+   "yil_yil_taban_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": 2.966967018761557,
+     "cita_pct": 3.154414822437457,
+     "fazla_puan": -0.18744780367589975,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 43.11170278663479,
+     "cita_pct": 17.266877404844006,
+     "fazla_puan": 25.84482538179078,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 53.95832472825137,
+     "cita_pct": 34.88482761775516,
+     "fazla_puan": 19.07349711049622,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 49.740846070736524,
+     "cita_pct": 21.236966982697925,
+     "fazla_puan": 28.503879088038598,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 16.113721048798602,
+     "cita_pct": 3.373775957269065,
+     "fazla_puan": 12.739945091529536,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 24.809698006581993,
+     "cita_pct": 11.679051718746836,
+     "fazla_puan": 13.130646287835157,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 30.721415801892693,
+     "cita_pct": 25.35689227055822,
+     "fazla_puan": 5.364523531334475,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 5.226329118447182,
+     "cita_pct": -5.484068025034161,
+     "fazla_puan": 10.710397143481343,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 49.30877611512785,
+     "cita_pct": 32.221690625026845,
+     "fazla_puan": 17.087085490101007,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 57.30432512870909,
+     "cita_pct": 34.969412913963495,
+     "fazla_puan": 22.334912214745593,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 14.624631675240419,
+     "cita_pct": 32.23695715229083,
+     "fazla_puan": -17.612325477050405,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 6.907609490893241,
+     "cita_pct": -25.642935593212968,
+     "fazla_puan": 32.55054508410621,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 35.707604545511096,
+     "cita_pct": 38.29071818325909,
+     "fazla_puan": -2.5831136377479913,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 61.80779787672597,
+     "cita_pct": 33.77438854029218,
+     "fazla_puan": 28.03340933643379,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 11.843602015843224,
+     "cita_pct": 19.778622625065356,
+     "fazla_puan": -7.935020609222132,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 22.30699934884923,
+     "cita_pct": 8.366186155123568,
+     "fazla_puan": 13.940813193725665,
+     "n_days": 142
+    }
+   },
+   "maliyet_ayristirma": {
+    "net_fazla_esli_pct": 15.79911550625086,
+    "brut_0bps_fazla_esli_pct": 16.57093512782366,
+    "cagr_net_pct": 30.315529656596386,
+    "cagr_0bps_pct": 31.17453518807334,
+    "friksiyon_surukleme_yillik_pct": 0.6572033048229056,
+    "not": "0bps ko\u015fumu YALNIZ maliyet ayr\u0131\u015ft\u0131rma te\u015fhisidir; h\u00fckme giren say\u0131 10bps'lidir."
+   }
+  },
+  "B_rotate_full": {
+   "tanim": {
+    "cikis": "aylik_rebalans_duraksiz",
+    "evren": "full_251",
+    "rol": "rafine",
+    "cita_esli": "EW_full_aylik",
+    "cita_taban": "EW_full_BH",
+    "sifir_bps": "B_rotate_full_0bps"
+   },
+   "stats": {
+    "tam": {
+     "total_return": 76.79627028698515,
+     "cagr": 0.3225931899777017,
+     "vol_ann": 0.2943878853130241,
+     "sharpe": 1.1007626079719766,
+     "max_dd": -0.43775735949307826,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 3.66106643500773,
+     "cagr": 0.36124221953687385,
+     "vol_ann": 0.24498645759202287,
+     "sharpe": 1.382943088906153,
+     "max_dd": -0.2651238829856014,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 3.9317736542259825,
+     "cagr": 0.3767266554481199,
+     "vol_ann": 0.3031877363451521,
+     "sharpe": 1.2080741271471658,
+     "max_dd": -0.43775735949307826,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 2.412142295226326,
+     "cagr": 0.24697652309949802,
+     "vol_ann": 0.32561563460937476,
+     "sharpe": 0.8439522726182767,
+     "max_dd": -0.30927683612750156,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "devir": {
+    "n_rebalans": 187,
+    "islem_bacagi": 2409,
+    "n_giris": 549,
+    "n_kapanan_islem": 539,
+    "cikislar": {
+     "chandelier": 0,
+     "rotate": 535,
+     "no_data": 0,
+     "integrity": 4,
+     "final": 0
+    },
+    "aylik_islem_ort": 5.818181818181818,
+    "devir_tekyon_yillik_pct": 372.0988571702076,
+    "friksiyon_usd": 2137527.31753219,
+    "friksiyon_son_ozkaynak_pct": 2.7475961375101883,
+    "friksiyon_surukleme_yillik_pct": 0.7441977143404153,
+    "ort_nakit_agirlik_pct": 0.016185685197209036,
+    "tutus_gun": {
+     "10": 20.0,
+     "25": 21.0,
+     "50": 41.0,
+     "75": 83.5,
+     "90": 167.0,
+     "99": 406.0400000000002
+    },
+    "tutus_ort_gun": 70.65862708719851,
+    "tutus_1yil_ustu_pct": 4.267161410018553
+   },
+   "fazla": {
+    "EW_full_BH": {
+     "tam": {
+      "ann_pct": 15.262059065838596,
+      "t_nw": 4.010934525006606,
+      "p_one_sided": 3.0239441095097974e-05,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 17.078599362514954,
+      "pozitif_ay_pct": 58.51063829787234
+     },
+     "2011-2015": {
+      "ann_pct": 19.586428773771082,
+      "t_nw": 4.24901143581975,
+      "p_one_sided": 1.0735797937099939e-05,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 13.999766903578232,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2016-2020": {
+      "ann_pct": 17.696960001533533,
+      "t_nw": 3.224050231496332,
+      "p_one_sided": 0.0006319561358384303,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 15.115968836501438,
+      "pozitif_ay_pct": 60.0
+     },
+     "2021-2026": {
+      "ann_pct": 9.666279483986306,
+      "t_nw": 1.2073787551064377,
+      "p_one_sided": 0.11364315670667688,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.051566339628785,
+      "pozitif_ay_pct": 53.73134328358209
+     }
+    },
+    "EW_full_aylik": {
+     "tam": {
+      "ann_pct": 17.961643766124435,
+      "t_nw": 4.452313600042871,
+      "p_one_sided": 4.24749877363884e-06,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 18.70086531903311,
+      "pozitif_ay_pct": 59.04255319148937
+     },
+     "2011-2015": {
+      "ann_pct": 21.02422449377217,
+      "t_nw": 4.409760353704247,
+      "p_one_sided": 5.174253763377861e-06,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 14.362448119778772,
+      "pozitif_ay_pct": 61.66666666666667
+     },
+     "2016-2020": {
+      "ann_pct": 19.771798902091064,
+      "t_nw": 2.9067910282085205,
+      "p_one_sided": 0.0018257852436417584,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 16.223392555966395,
+      "pozitif_ay_pct": 58.333333333333336
+     },
+     "2021-2026": {
+      "ann_pct": 13.992789426473774,
+      "t_nw": 1.698637698473445,
+      "p_one_sided": 0.044693734396190885,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 23.85657865009801,
+      "pozitif_ay_pct": 58.2089552238806
+     }
+    },
+    "EW_pit_aylik": {
+     "tam": {
+      "ann_pct": 19.68413538378446,
+      "t_nw": 4.68390199088107,
+      "p_one_sided": 1.4073231606116198e-06,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 19.136388771272916,
+      "pozitif_ay_pct": 61.170212765957444
+     },
+     "2011-2015": {
+      "ann_pct": 22.272213649427574,
+      "t_nw": 4.402538163811022,
+      "p_one_sided": 5.3495880946014855e-06,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 15.010175455525676,
+      "pozitif_ay_pct": 66.66666666666666
+     },
+     "2016-2020": {
+      "ann_pct": 23.08461809460123,
+      "t_nw": 3.199085066405603,
+      "p_one_sided": 0.0006893224162826208,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 16.71114173357588,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2021-2026": {
+      "ann_pct": 14.795426229854103,
+      "t_nw": 1.7660040362827618,
+      "p_one_sided": 0.03869758585417049,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 24.158249236911562,
+      "pozitif_ay_pct": 55.223880597014926
+     }
+    },
+    "SPY_BH": {
+     "tam": {
+      "ann_pct": 20.76517753802154,
+      "t_nw": 4.973112193871136,
+      "p_one_sided": 3.2943251849230437e-07,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 18.76224967444412,
+      "pozitif_ay_pct": 60.63829787234043
+     },
+     "2011-2015": {
+      "ann_pct": 26.078324791432795,
+      "t_nw": 4.798826006666436,
+      "p_one_sided": 7.979918175592057e-07,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 15.73460679946449,
+      "pozitif_ay_pct": 63.33333333333333
+     },
+     "2016-2020": {
+      "ann_pct": 24.119513285493287,
+      "t_nw": 3.614474784938368,
+      "p_one_sided": 0.0001504785516133617,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 16.625342629218448,
+      "pozitif_ay_pct": 65.0
+     },
+     "2021-2026": {
+      "ann_pct": 13.670129768385063,
+      "t_nw": 1.678639218285363,
+      "p_one_sided": 0.046611189189196885,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 22.875882867597404,
+      "pozitif_ay_pct": 55.223880597014926
+     }
+    }
+   },
+   "yil_yil_esli_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": 8.594212667189005,
+     "cita_pct": 2.817968658091319,
+     "fazla_puan": 5.776244009097686,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 46.96081735947284,
+     "cita_pct": 16.93808475745737,
+     "fazla_puan": 30.022732602015466,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 59.065685650606746,
+     "cita_pct": 33.39570247072567,
+     "fazla_puan": 25.669983179881072,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 53.3268295651574,
+     "cita_pct": 19.08633171844083,
+     "fazla_puan": 34.240497846716565,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 14.77549677738368,
+     "cita_pct": 0.6320602476350246,
+     "fazla_puan": 14.143436529748655,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 20.98415161380409,
+     "cita_pct": 18.94660306744358,
+     "fazla_puan": 2.0375485463605125,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 22.813688052877712,
+     "cita_pct": 23.70283927392487,
+     "fazla_puan": -0.8891512210471575,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 9.992160622182755,
+     "cita_pct": -6.936927825242756,
+     "fazla_puan": 16.92908844742551,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 58.41999528425526,
+     "cita_pct": 34.07562896441212,
+     "fazla_puan": 24.344366319843136,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 77.83367107742336,
+     "cita_pct": 16.67130722951249,
+     "fazla_puan": 61.162363847910875,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 29.301505028248798,
+     "cita_pct": 29.193196650216002,
+     "fazla_puan": 0.10830837803279536,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 5.450139886088157,
+     "cita_pct": -10.459922365434826,
+     "fazla_puan": 15.910062251522984,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 19.104675714969922,
+     "cita_pct": 18.729735689262593,
+     "fazla_puan": 0.37494002570732654,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 46.14974763485702,
+     "cita_pct": 12.869030061139664,
+     "fazla_puan": 33.280717573717354,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 13.523090240133318,
+     "cita_pct": 11.784486548822159,
+     "fazla_puan": 1.738603691311158,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 28.30330970535715,
+     "cita_pct": 13.384247423274932,
+     "fazla_puan": 14.91906228208222,
+     "n_days": 142
+    }
+   },
+   "yil_yil_taban_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": 8.594212667189005,
+     "cita_pct": 3.154414822437457,
+     "fazla_puan": 5.439797844751548,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 46.96081735947284,
+     "cita_pct": 17.266877404844006,
+     "fazla_puan": 29.693939954628835,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 59.065685650606746,
+     "cita_pct": 34.88482761775516,
+     "fazla_puan": 24.180858032851592,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 53.3268295651574,
+     "cita_pct": 21.236966982697925,
+     "fazla_puan": 32.089862582459475,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 14.77549677738368,
+     "cita_pct": 3.373775957269065,
+     "fazla_puan": 11.401720820114614,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 20.98415161380409,
+     "cita_pct": 11.679051718746836,
+     "fazla_puan": 9.305099895057257,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 22.813688052877712,
+     "cita_pct": 25.35689227055822,
+     "fazla_puan": -2.543204217680506,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 9.992160622182755,
+     "cita_pct": -5.484068025034161,
+     "fazla_puan": 15.476228647216917,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 58.41999528425526,
+     "cita_pct": 32.221690625026845,
+     "fazla_puan": 26.198304659228413,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 77.83367107742336,
+     "cita_pct": 34.969412913963495,
+     "fazla_puan": 42.864258163459866,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 29.301505028248798,
+     "cita_pct": 32.23695715229083,
+     "fazla_puan": -2.935452124042026,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 5.450139886088157,
+     "cita_pct": -25.642935593212968,
+     "fazla_puan": 31.093075479301124,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 19.104675714969922,
+     "cita_pct": 38.29071818325909,
+     "fazla_puan": -19.186042468289166,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 46.14974763485702,
+     "cita_pct": 33.77438854029218,
+     "fazla_puan": 12.375359094564843,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 13.523090240133318,
+     "cita_pct": 19.778622625065356,
+     "fazla_puan": -6.255532384932039,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 28.30330970535715,
+     "cita_pct": 8.366186155123568,
+     "fazla_puan": 19.937123550233583,
+     "n_days": 142
+    }
+   },
+   "maliyet_ayristirma": {
+    "net_fazla_esli_pct": 17.961643766124435,
+    "brut_0bps_fazla_esli_pct": 18.858630714673463,
+    "cagr_net_pct": 32.25931899777017,
+    "cagr_0bps_pct": 33.25809085508118,
+    "friksiyon_surukleme_yillik_pct": 0.7441977143404153,
+    "not": "0bps ko\u015fumu YALNIZ maliyet ayr\u0131\u015ft\u0131rma te\u015fhisidir; h\u00fckme giren say\u0131 10bps'lidir."
+   }
+  },
+  "C_chandelier_pit": {
+   "tanim": {
+    "cikis": "chandelier_mevcut",
+    "evren": "pit_sagkalan",
+    "rol": "rafine",
+    "cita_esli": "EW_pit_aylik",
+    "cita_taban": "EW_full_BH",
+    "sifir_bps": "C_chandelier_pit_0bps"
+   },
+   "stats": {
+    "tam": {
+     "total_return": 12.832419220073074,
+     "cagr": 0.1837548936141622,
+     "vol_ann": 0.25134532787564795,
+     "sharpe": 0.7991874593728177,
+     "max_dd": -0.32426111127787693,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 1.197673315128498,
+     "cagr": 0.1708858447191619,
+     "vol_ann": 0.2027973907218589,
+     "sharpe": 0.8801639433681349,
+     "max_dd": -0.2720869244989502,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 1.2415702180860602,
+     "cagr": 0.17553472015531324,
+     "vol_ann": 0.2542115523090917,
+     "sharpe": 0.7638165477757177,
+     "max_dd": -0.32426111127787693,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 1.8931456047764579,
+     "cagr": 0.21051921698242393,
+     "vol_ann": 0.28598638785647756,
+     "sharpe": 0.8140848191445555,
+     "max_dd": -0.26178315319315226,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "devir": {
+    "n_rebalans": 187,
+    "islem_bacagi": 2374,
+    "n_giris": 514,
+    "n_kapanan_islem": 504,
+    "cikislar": {
+     "chandelier": 504,
+     "rotate": 0,
+     "no_data": 0,
+     "integrity": 0,
+     "final": 0
+    },
+    "aylik_islem_ort": 5.44385026737968,
+    "devir_tekyon_yillik_pct": 340.48727466439175,
+    "friksiyon_usd": 448899.17903992714,
+    "friksiyon_son_ozkaynak_pct": 3.245268755218913,
+    "friksiyon_surukleme_yillik_pct": 0.6809745493287835,
+    "ort_nakit_agirlik_pct": 0.16125855369829703,
+    "tutus_gun": {
+     "10": 21.0,
+     "25": 41.0,
+     "50": 63.0,
+     "75": 104.0,
+     "90": 147.7,
+     "99": 310.8599999999989
+    },
+    "tutus_ort_gun": 75.76587301587301,
+    "tutus_1yil_ustu_pct": 1.7857142857142856
+   },
+   "fazla": {
+    "EW_full_BH": {
+     "tam": {
+      "ann_pct": 2.0723005018702167,
+      "t_nw": 0.6732867620415988,
+      "p_one_sided": 0.2503824364945991,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 14.076157140207943,
+      "pozitif_ay_pct": 55.319148936170215
+     },
+     "2011-2015": {
+      "ann_pct": 1.5613631604079137,
+      "t_nw": 0.45936705247002807,
+      "p_one_sided": 0.32298530203092435,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.082999492327197,
+      "pozitif_ay_pct": 56.666666666666664
+     },
+     "2016-2020": {
+      "ann_pct": -1.4316959654938177,
+      "t_nw": -0.3584263900946141,
+      "p_one_sided": 0.6399878773359287,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.475043831729455,
+      "pozitif_ay_pct": 56.666666666666664
+     },
+     "2021-2026": {
+      "ann_pct": 5.811883082235347,
+      "t_nw": 0.7986910099843568,
+      "p_one_sided": 0.2122348004438856,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 19.244922420963373,
+      "pozitif_ay_pct": 53.73134328358209
+     }
+    },
+    "EW_full_aylik": {
+     "tam": {
+      "ann_pct": 4.487559734480762,
+      "t_nw": 1.32661382995482,
+      "p_one_sided": 0.09231822929630158,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 16.00258454549001,
+      "pozitif_ay_pct": 55.319148936170215
+     },
+     "2011-2015": {
+      "ann_pct": 2.799273689233739,
+      "t_nw": 0.7499434978068491,
+      "p_one_sided": 0.22664436766273857,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.821136824541732,
+      "pozitif_ay_pct": 56.666666666666664
+     },
+     "2016-2020": {
+      "ann_pct": 0.3320146857110018,
+      "t_nw": 0.06192647893677218,
+      "p_one_sided": 0.4753106904094151,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.879305190995058,
+      "pozitif_ay_pct": 53.333333333333336
+     },
+     "2021-2026": {
+      "ann_pct": 9.999018919049396,
+      "t_nw": 1.3579424105757452,
+      "p_one_sided": 0.08724097931050026,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.653310517931278,
+      "pozitif_ay_pct": 56.71641791044776
+     }
+    },
+    "EW_pit_aylik": {
+     "tam": {
+      "ann_pct": 6.028905050464228,
+      "t_nw": 1.7663273879606218,
+      "p_one_sided": 0.038670469654270824,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 16.08096928454823,
+      "pozitif_ay_pct": 55.85106382978723
+     },
+     "2011-2015": {
+      "ann_pct": 3.87391469662266,
+      "t_nw": 1.026565972723066,
+      "p_one_sided": 0.15231244180379466,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.796614150237307,
+      "pozitif_ay_pct": 60.0
+     },
+     "2016-2020": {
+      "ann_pct": 3.1489270414247983,
+      "t_nw": 0.5705463670120774,
+      "p_one_sided": 0.28415359156660525,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.91872312113251,
+      "pozitif_ay_pct": 53.333333333333336
+     },
+     "2021-2026": {
+      "ann_pct": 10.775847821374839,
+      "t_nw": 1.452042454943595,
+      "p_one_sided": 0.07324490043894119,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.833641770515307,
+      "pozitif_ay_pct": 55.223880597014926
+     }
+    },
+    "SPY_BH": {
+     "tam": {
+      "ann_pct": 6.99636470220435,
+      "t_nw": 2.128980916244056,
+      "p_one_sided": 0.016627919664932576,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 15.418847405983843,
+      "pozitif_ay_pct": 57.446808510638306
+     },
+     "2011-2015": {
+      "ann_pct": 7.15219287553539,
+      "t_nw": 1.842887267717354,
+      "p_one_sided": 0.032672735823537594,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.05050517926963,
+      "pozitif_ay_pct": 61.66666666666667
+     },
+     "2016-2020": {
+      "ann_pct": 4.0291181451731495,
+      "t_nw": 0.907210922756489,
+      "p_one_sided": 0.18214763434776943,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.444400868442562,
+      "pozitif_ay_pct": 56.666666666666664
+     },
+     "2021-2026": {
+      "ann_pct": 9.68673822542021,
+      "t_nw": 1.2778368418393165,
+      "p_one_sided": 0.10065348056160925,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.122518438441134,
+      "pozitif_ay_pct": 55.223880597014926
+     }
+    }
+   },
+   "yil_yil_esli_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": -5.973614655368653,
+     "cita_pct": 2.545723902361563,
+     "fazla_puan": -8.519338557730215,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 21.030422308712794,
+     "cita_pct": 14.488045888398226,
+     "fazla_puan": 6.542376420314566,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 36.954225162799005,
+     "cita_pct": 30.854695980520553,
+     "fazla_puan": 6.099529182278451,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 29.5938942570227,
+     "cita_pct": 17.464516247224317,
+     "fazla_puan": 12.129378009798387,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 6.999281257219092,
+     "cita_pct": 1.4848754129562325,
+     "fazla_puan": 5.51440584426286,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 11.439853196453132,
+     "cita_pct": 16.27295297868454,
+     "fazla_puan": -4.833099782231409,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 10.562437209992147,
+     "cita_pct": 20.853590613609118,
+     "fazla_puan": -10.29115340361697,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 3.879674800294719,
+     "cita_pct": -7.37224041428528,
+     "fazla_puan": 11.251915214579999,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 26.598327709572334,
+     "cita_pct": 30.461705078493306,
+     "fazla_puan": -3.8633773689209727,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 33.607997492204355,
+     "cita_pct": 10.925865591610705,
+     "fazla_puan": 22.68213190059365,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 12.228345338807966,
+     "cita_pct": 27.712216069971053,
+     "fazla_puan": -15.483870731163085,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 5.878283033884868,
+     "cita_pct": -9.51999832435424,
+     "fazla_puan": 15.398281358239107,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 28.629630672923433,
+     "cita_pct": 16.15551334155423,
+     "fazla_puan": 12.474117331369206,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 40.524134537389614,
+     "cita_pct": 11.668035387493457,
+     "fazla_puan": 28.856099149896153,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 9.527874510873446,
+     "cita_pct": 12.145498786987762,
+     "fazla_puan": -2.6176242761143165,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 24.30009051500499,
+     "cita_pct": 12.692466475634046,
+     "fazla_puan": 11.607624039370945,
+     "n_days": 142
+    }
+   },
+   "yil_yil_taban_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": -5.973614655368653,
+     "cita_pct": 3.154414822437457,
+     "fazla_puan": -9.128029477806109,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 21.030422308712794,
+     "cita_pct": 17.266877404844006,
+     "fazla_puan": 3.7635449038687874,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 36.954225162799005,
+     "cita_pct": 34.88482761775516,
+     "fazla_puan": 2.0693975450438495,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 29.5938942570227,
+     "cita_pct": 21.236966982697925,
+     "fazla_puan": 8.356927274324777,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 6.999281257219092,
+     "cita_pct": 3.373775957269065,
+     "fazla_puan": 3.625505299950027,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 11.439853196453132,
+     "cita_pct": 11.679051718746836,
+     "fazla_puan": -0.2391985222937043,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 10.562437209992147,
+     "cita_pct": 25.35689227055822,
+     "fazla_puan": -14.794455060566069,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": 3.879674800294719,
+     "cita_pct": -5.484068025034161,
+     "fazla_puan": 9.363742825328881,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 26.598327709572334,
+     "cita_pct": 32.221690625026845,
+     "fazla_puan": -5.623362915454511,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 33.607997492204355,
+     "cita_pct": 34.969412913963495,
+     "fazla_puan": -1.3614154217591379,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 12.228345338807966,
+     "cita_pct": 32.23695715229083,
+     "fazla_puan": -20.008611813482858,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 5.878283033884868,
+     "cita_pct": -25.642935593212968,
+     "fazla_puan": 31.521218627097834,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 28.629630672923433,
+     "cita_pct": 38.29071818325909,
+     "fazla_puan": -9.661087510335653,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 40.524134537389614,
+     "cita_pct": 33.77438854029218,
+     "fazla_puan": 6.749745997097434,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 9.527874510873446,
+     "cita_pct": 19.778622625065356,
+     "fazla_puan": -10.25074811419191,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 24.30009051500499,
+     "cita_pct": 8.366186155123568,
+     "fazla_puan": 15.933904359881424,
+     "n_days": 142
+    }
+   },
+   "maliyet_ayristirma": {
+    "net_fazla_esli_pct": 6.028905050464228,
+    "brut_0bps_fazla_esli_pct": 6.7557276674760525,
+    "cagr_net_pct": 18.37548936141622,
+    "cagr_0bps_pct": 19.177563282683586,
+    "friksiyon_surukleme_yillik_pct": 0.6809745493287835,
+    "not": "0bps ko\u015fumu YALNIZ maliyet ayr\u0131\u015ft\u0131rma te\u015fhisidir; h\u00fckme giren say\u0131 10bps'lidir."
+   }
+  },
+  "D_rotate_pit": {
+   "tanim": {
+    "cikis": "aylik_rebalans_duraksiz",
+    "evren": "pit_sagkalan",
+    "rol": "rafine",
+    "cita_esli": "EW_pit_aylik",
+    "cita_taban": "EW_full_BH",
+    "sifir_bps": "D_rotate_pit_0bps"
+   },
+   "stats": {
+    "tam": {
+     "total_return": 14.992641734874692,
+     "cagr": 0.1948370882141841,
+     "vol_ann": 0.2721528331648654,
+     "sharpe": 0.7926788312134087,
+     "max_dd": -0.3483370244433259,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 1.6315759268418275,
+     "cagr": 0.21392823006866002,
+     "vol_ann": 0.2125419113110431,
+     "sharpe": 1.0194043086832694,
+     "max_dd": -0.2331336488769875,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 1.2032502470613204,
+     "cagr": 0.17148056141144097,
+     "vol_ann": 0.27205335879955533,
+     "sharpe": 0.7188990995077589,
+     "max_dd": -0.3483370244433259,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 1.8349266312301085,
+     "cagr": 0.20610189155308478,
+     "vol_ann": 0.3165779025364357,
+     "sharpe": 0.7529700568012953,
+     "max_dd": -0.3295678908023839,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "devir": {
+    "n_rebalans": 187,
+    "islem_bacagi": 2442,
+    "n_giris": 582,
+    "n_kapanan_islem": 572,
+    "cikislar": {
+     "chandelier": 0,
+     "rotate": 572,
+     "no_data": 0,
+     "integrity": 0,
+     "final": 0
+    },
+    "aylik_islem_ort": 6.171122994652406,
+    "devir_tekyon_yillik_pct": 397.47749237112214,
+    "friksiyon_usd": 612787.3023210103,
+    "friksiyon_son_ozkaynak_pct": 3.8316827981253567,
+    "friksiyon_surukleme_yillik_pct": 0.7949549847422444,
+    "ort_nakit_agirlik_pct": 1.5326913250201897e-17,
+    "tutus_gun": {
+     "10": 20.0,
+     "25": 21.0,
+     "50": 41.5,
+     "75": 83.0,
+     "90": 166.89999999999998,
+     "99": 355.15999999999985
+    },
+    "tutus_ort_gun": 66.61888111888112,
+    "tutus_1yil_ustu_pct": 3.146853146853147
+   },
+   "fazla": {
+    "EW_full_BH": {
+     "tam": {
+      "ann_pct": 3.2512490311894293,
+      "t_nw": 1.0094844685736726,
+      "p_one_sided": 0.156371173291849,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 14.547925521535523,
+      "pozitif_ay_pct": 51.59574468085106
+     },
+     "2011-2015": {
+      "ann_pct": 5.490625830692619,
+      "t_nw": 1.4296455258268357,
+      "p_one_sided": 0.07640939108736208,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.563917727469192,
+      "pozitif_ay_pct": 58.333333333333336
+     },
+     "2016-2020": {
+      "ann_pct": -1.389000271730978,
+      "t_nw": -0.3482514217886268,
+      "p_one_sided": 0.6361743135957896,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 10.857267039454157,
+      "pozitif_ay_pct": 50.0
+     },
+     "2021-2026": {
+      "ann_pct": 5.582097861942703,
+      "t_nw": 0.7431395682026752,
+      "p_one_sided": 0.22869859299766984,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 19.802057268852064,
+      "pozitif_ay_pct": 47.76119402985074
+     }
+    },
+    "EW_full_aylik": {
+     "tam": {
+      "ann_pct": 5.692042750523041,
+      "t_nw": 1.6458042081933282,
+      "p_one_sided": 0.04990203781482923,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 16.236261434065007,
+      "pozitif_ay_pct": 55.85106382978723
+     },
+     "2011-2015": {
+      "ann_pct": 6.772345934446755,
+      "t_nw": 1.65618987312013,
+      "p_one_sided": 0.04884168670216849,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.119307933317684,
+      "pozitif_ay_pct": 60.0
+     },
+     "2016-2020": {
+      "ann_pct": 0.3754101503059548,
+      "t_nw": 0.0748095699776098,
+      "p_one_sided": 0.4701831137079421,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.396682160178765,
+      "pozitif_ay_pct": 53.333333333333336
+     },
+     "2021-2026": {
+      "ann_pct": 9.760911281528784,
+      "t_nw": 1.2761939397051523,
+      "p_one_sided": 0.10094348520499676,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 22.262973004253553,
+      "pozitif_ay_pct": 55.223880597014926
+     }
+    },
+    "EW_pit_aylik": {
+     "tam": {
+      "ann_pct": 7.249657514558661,
+      "t_nw": 2.080151573836074,
+      "p_one_sided": 0.01875581619137914,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 16.38039420369735,
+      "pozitif_ay_pct": 56.91489361702128
+     },
+     "2011-2015": {
+      "ann_pct": 7.884982201860669,
+      "t_nw": 1.9003632615774488,
+      "p_one_sided": 0.02869273233591879,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.199657427080394,
+      "pozitif_ay_pct": 60.0
+     },
+     "2016-2020": {
+      "ann_pct": 3.1934380286930297,
+      "t_nw": 0.61815937276427,
+      "p_one_sided": 0.2682351439478811,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 12.5948337895369,
+      "pozitif_ay_pct": 55.00000000000001
+     },
+     "2021-2026": {
+      "ann_pct": 10.536199075568863,
+      "t_nw": 1.3691078037533715,
+      "p_one_sided": 0.08548278966224185,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 22.45644031842519,
+      "pozitif_ay_pct": 56.71641791044776
+     }
+    },
+    "SPY_BH": {
+     "tam": {
+      "ann_pct": 8.227318917190441,
+      "t_nw": 2.424957478160574,
+      "p_one_sided": 0.0076550899449032836,
+      "n_months": 188,
+      "fazla_std_yillik_pct": 15.75653512567736,
+      "pozitif_ay_pct": 56.38297872340425
+     },
+     "2011-2015": {
+      "ann_pct": 11.278964000076975,
+      "t_nw": 2.597813930983126,
+      "p_one_sided": 0.004690965853376679,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.57250976190828,
+      "pozitif_ay_pct": 65.0
+     },
+     "2016-2020": {
+      "ann_pct": 4.073977172412269,
+      "t_nw": 0.9738038823249483,
+      "p_one_sided": 0.1650769625414127,
+      "n_months": 60,
+      "fazla_std_yillik_pct": 11.83742215927312,
+      "pozitif_ay_pct": 53.333333333333336
+     },
+     "2021-2026": {
+      "ann_pct": 9.449250359488337,
+      "t_nw": 1.2162839080405805,
+      "p_one_sided": 0.1119383946967018,
+      "n_months": 67,
+      "fazla_std_yillik_pct": 21.365652233529666,
+      "pozitif_ay_pct": 52.23880597014925
+     }
+    }
+   },
+   "yil_yil_esli_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": -4.078191433483114,
+     "cita_pct": 2.545723902361563,
+     "fazla_puan": -6.623915335844677,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 22.570179749336706,
+     "cita_pct": 14.488045888398226,
+     "fazla_puan": 8.082133860938479,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 48.994674945611784,
+     "cita_pct": 30.854695980520553,
+     "fazla_puan": 18.13997896509123,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 36.88411428349199,
+     "cita_pct": 17.464516247224317,
+     "fazla_puan": 19.419598036267672,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 5.916461498342951,
+     "cita_pct": 1.4848754129562325,
+     "fazla_puan": 4.431586085386718,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 8.471322994867858,
+     "cita_pct": 16.27295297868454,
+     "fazla_puan": -7.8016299838166825,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 18.819152850664445,
+     "cita_pct": 20.853590613609118,
+     "fazla_puan": -2.034437762944674,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": -3.738959070593928,
+     "cita_pct": -7.37224041428528,
+     "fazla_puan": 3.6332813436913525,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 39.81420809187344,
+     "cita_pct": 30.461705078493306,
+     "fazla_puan": 9.352503013380131,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 21.71405565828577,
+     "cita_pct": 10.925865591610705,
+     "fazla_puan": 10.788190066675064,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 10.139686393946823,
+     "cita_pct": 27.712216069971053,
+     "fazla_puan": -17.572529676024228,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 11.454004557484954,
+     "cita_pct": -9.51999832435424,
+     "fazla_puan": 20.974002881839194,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 23.146600952917453,
+     "cita_pct": 16.15551334155423,
+     "fazla_puan": 6.9910876113632225,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 36.98005935989701,
+     "cita_pct": 11.668035387493457,
+     "fazla_puan": 25.31202397240355,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 12.598931422138172,
+     "cita_pct": 12.145498786987762,
+     "fazla_puan": 0.4534326351504081,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 22.493396478895566,
+     "cita_pct": 12.692466475634046,
+     "fazla_puan": 9.80093000326152,
+     "n_days": 142
+    }
+   },
+   "yil_yil_taban_citaya": {
+    "2010": {
+     "kol_pct": null,
+     "neden": "n_days=1"
+    },
+    "2011": {
+     "kol_pct": -4.078191433483114,
+     "cita_pct": 3.154414822437457,
+     "fazla_puan": -7.232606255920571,
+     "n_days": 252
+    },
+    "2012": {
+     "kol_pct": 22.570179749336706,
+     "cita_pct": 17.266877404844006,
+     "fazla_puan": 5.3033023444927,
+     "n_days": 250
+    },
+    "2013": {
+     "kol_pct": 48.994674945611784,
+     "cita_pct": 34.88482761775516,
+     "fazla_puan": 14.109847327856627,
+     "n_days": 252
+    },
+    "2014": {
+     "kol_pct": 36.88411428349199,
+     "cita_pct": 21.236966982697925,
+     "fazla_puan": 15.647147300794062,
+     "n_days": 252
+    },
+    "2015": {
+     "kol_pct": 5.916461498342951,
+     "cita_pct": 3.373775957269065,
+     "fazla_puan": 2.542685541073886,
+     "n_days": 252
+    },
+    "2016": {
+     "kol_pct": 8.471322994867858,
+     "cita_pct": 11.679051718746836,
+     "fazla_puan": -3.2077287238789776,
+     "n_days": 252
+    },
+    "2017": {
+     "kol_pct": 18.819152850664445,
+     "cita_pct": 25.35689227055822,
+     "fazla_puan": -6.537739419893773,
+     "n_days": 251
+    },
+    "2018": {
+     "kol_pct": -3.738959070593928,
+     "cita_pct": -5.484068025034161,
+     "fazla_puan": 1.7451089544402332,
+     "n_days": 251
+    },
+    "2019": {
+     "kol_pct": 39.81420809187344,
+     "cita_pct": 32.221690625026845,
+     "fazla_puan": 7.592517466846593,
+     "n_days": 252
+    },
+    "2020": {
+     "kol_pct": 21.71405565828577,
+     "cita_pct": 34.969412913963495,
+     "fazla_puan": -13.255357255677724,
+     "n_days": 253
+    },
+    "2021": {
+     "kol_pct": 10.139686393946823,
+     "cita_pct": 32.23695715229083,
+     "fazla_puan": -22.097270758344003,
+     "n_days": 252
+    },
+    "2022": {
+     "kol_pct": 11.454004557484954,
+     "cita_pct": -25.642935593212968,
+     "fazla_puan": 37.09694015069792,
+     "n_days": 251
+    },
+    "2023": {
+     "kol_pct": 23.146600952917453,
+     "cita_pct": 38.29071818325909,
+     "fazla_puan": -15.144117230341635,
+     "n_days": 250
+    },
+    "2024": {
+     "kol_pct": 36.98005935989701,
+     "cita_pct": 33.77438854029218,
+     "fazla_puan": 3.2056708196048334,
+     "n_days": 252
+    },
+    "2025": {
+     "kol_pct": 12.598931422138172,
+     "cita_pct": 19.778622625065356,
+     "fazla_puan": -7.179691202927185,
+     "n_days": 250
+    },
+    "2026": {
+     "kol_pct": 22.493396478895566,
+     "cita_pct": 8.366186155123568,
+     "fazla_puan": 14.127210323772,
+     "n_days": 142
+    }
+   },
+   "maliyet_ayristirma": {
+    "net_fazla_esli_pct": 7.249657514558661,
+    "brut_0bps_fazla_esli_pct": 8.102622631912727,
+    "cagr_net_pct": 19.48370882141841,
+    "cagr_0bps_pct": 20.431655523792802,
+    "friksiyon_surukleme_yillik_pct": 0.7949549847422444,
+    "not": "0bps ko\u015fumu YALNIZ maliyet ayr\u0131\u015ft\u0131rma te\u015fhisidir; h\u00fckme giren say\u0131 10bps'lidir."
+   }
+  }
+ },
+ "citalar": {
+  "EW_full_BH": {
+   "stats": {
+    "tam": {
+     "total_return": 10.702598887130796,
+     "cagr": 0.17111306256206138,
+     "vol_ann": 0.19426488685065077,
+     "sharpe": 0.9129048188511381,
+     "max_dd": -0.340148297052866,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 1.0941111017004004,
+     "cagr": 0.15961653122626385,
+     "vol_ann": 0.16145417231380518,
+     "sharpe": 0.9989209675632659,
+     "max_dd": -0.19382127473455124,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 1.418196349925914,
+     "cagr": 0.19353469516392252,
+     "vol_ann": 0.1986032059558247,
+     "sharpe": 0.9910615431507128,
+     "max_dd": -0.340148297052866,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 1.3687029963106379,
+     "cagr": 0.16775318003427597,
+     "vol_ann": 0.2162651836439497,
+     "sharpe": 0.8279517456762127,
+     "max_dd": -0.29060573820730207,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   }
+  },
+  "EW_full_aylik": {
+   "stats": {
+    "tam": {
+     "total_return": 7.362564431084136,
+     "cagr": 0.14611245393693562,
+     "vol_ann": 0.17378494505025677,
+     "sharpe": 0.8742707624106046,
+     "max_dd": -0.3762290661808393,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 0.9722641596773416,
+     "cagr": 0.14577195504299567,
+     "vol_ann": 0.16029942907458464,
+     "sharpe": 0.9299272201865644,
+     "max_dd": -0.19288448865953134,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 1.1935713070092913,
+     "cagr": 0.17044764122280864,
+     "vol_ann": 0.2007719683640838,
+     "sharpe": 0.885178706765127,
+     "max_dd": -0.3762290661808393,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 0.9845286285046226,
+     "cagr": 0.13117542773910906,
+     "vol_ann": 0.15868828980201058,
+     "sharpe": 0.8590966938419132,
+     "max_dd": -0.20431684862426147,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "uye_sayisi": {
+    "ilk": 202,
+    "son": 248,
+    "yil_ort": {
+     "2010": 202.0,
+     "2011": 208.2,
+     "2012": 211.0,
+     "2013": 214.7,
+     "2014": 224.3,
+     "2015": 227.7,
+     "2016": 231.8,
+     "2017": 234.9,
+     "2018": 236.6,
+     "2019": 240.0,
+     "2020": 243.2,
+     "2021": 246.2,
+     "2022": 249.0,
+     "2023": 249.0,
+     "2024": 249.5,
+     "2025": 249.8,
+     "2026": 248.8
+    }
+   },
+   "friksiyon_usd": 37309.51441517359,
+   "islem_bacagi": 43922
+  },
+  "EW_pit_aylik": {
+   "stats": {
+    "tam": {
+     "total_return": 5.704873104488918,
+     "cagr": 0.1299675068970667,
+     "vol_ann": 0.17031925531538333,
+     "sharpe": 0.8049760205633466,
+     "max_dd": -0.37469233428315873,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 0.876608818287471,
+     "cagr": 0.1344156868637858,
+     "vol_ann": 0.15597011990573442,
+     "sharpe": 0.8874004095907945,
+     "max_dd": -0.19116537837086145,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 0.921450979426893,
+     "cagr": 0.13979563986474397,
+     "vol_ann": 0.19849611858222976,
+     "sharpe": 0.759243259291677,
+     "max_dd": -0.37469233428315873,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 0.9129473076082528,
+     "cagr": 0.12372688083804384,
+     "vol_ann": 0.1545367587314787,
+     "sharpe": 0.8350379534179484,
+     "max_dd": -0.19895913018967726,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   },
+   "uye_sayisi": {
+    "ilk": 178,
+    "son": 238,
+    "yil_ort": {
+     "2010": 178.0,
+     "2011": 179.6,
+     "2012": 183.4,
+     "2013": 186.8,
+     "2014": 191.2,
+     "2015": 197.8,
+     "2016": 205.1,
+     "2017": 211.4,
+     "2018": 214.8,
+     "2019": 217.2,
+     "2020": 220.2,
+     "2021": 227.2,
+     "2022": 232.7,
+     "2023": 237.2,
+     "2024": 240.2,
+     "2025": 241.5,
+     "2026": 239.2
+    }
+   },
+   "friksiyon_usd": 31016.706976891197,
+   "islem_bacagi": 39867
+  },
+  "SPY_BH": {
+   "stats": {
+    "tam": {
+     "total_return": 4.834291487727928,
+     "cagr": 0.11992068139292766,
+     "vol_ann": 0.17097685236520652,
+     "sharpe": 0.7500312576297004,
+     "max_dd": -0.34104746704498423,
+     "years": 15.572895277207392,
+     "n_days": 3914
+    },
+    "2011-2015": {
+     "total_return": 0.6046438410074775,
+     "cagr": 0.09938285426036608,
+     "vol_ann": 0.1539777217391767,
+     "sharpe": 0.6929598486142272,
+     "max_dd": -0.1942388037821593,
+     "years": 4.991101984941821,
+     "n_days": 1257
+    },
+    "2016-2020": {
+     "total_return": 0.8599144363744897,
+     "cagr": 0.13238649735979857,
+     "vol_ann": 0.18917387200312696,
+     "sharpe": 0.7524384755239575,
+     "max_dd": -0.34104746704498423,
+     "years": 4.991101984941821,
+     "n_days": 1258
+    },
+    "2021-2026": {
+     "total_return": 1.0068850565362402,
+     "cagr": 0.1334565996482595,
+     "vol_ann": 0.16831219706195896,
+     "sharpe": 0.8312124715395006,
+     "max_dd": -0.2536057440706705,
+     "years": 5.560574948665297,
+     "n_days": 1396
+    }
+   }
+  }
+ },
+ "tabana_karsi_fark_ci": {
+  "B_rotate_full": {
+   "fazla_farki_esli_cita": {
+    "mean_ann_pct": 1.9207976791462917,
+    "ci95_low_ann_pct": -2.6570253267308006,
+    "ci95_high_ann_pct": 6.7188984221490875,
+    "p_two_sided_gt0": 0.391,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "fazla_farki_taban_cita": {
+    "mean_ann_pct": 1.9207976791462917,
+    "ci95_low_ann_pct": -2.6570253267308006,
+    "ci95_high_ann_pct": 6.7188984221490875,
+    "p_two_sided_gt0": 0.391,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "ham_getiri_farki": {
+    "mean_ann_pct": 1.9207976791462917,
+    "ci95_low_ann_pct": -2.6570253267308006,
+    "ci95_high_ann_pct": 6.7188984221490875,
+    "p_two_sided_gt0": 0.391,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "risk_esli_bootstrap": {
+    "vol_fark_ort_puan": 1.499991770738593,
+    "vol_fark_ci95": [
+     0.952460253810348,
+     2.0567898210264373
+    ],
+    "P_vol_dusuk": 0.0,
+    "maxdd_fark_ort_puan": -1.6057140377988044,
+    "maxdd_fark_ci95": [
+     -9.75513791343545,
+     7.010548056655311
+    ],
+    "P_maxdd_sig": 0.3395,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "not": "esli_cita = her h\u00fccre KEND\u0130 evreninin ayl\u0131k-EW'sine kar\u015f\u0131; taban_cita = ikisi de EW_full_BH'ye kar\u015f\u0131 (ham kolun 2026-07-30 \u00e7\u0131tas\u0131)."
+  },
+  "C_chandelier_pit": {
+   "fazla_farki_esli_cita": {
+    "mean_ann_pct": -8.913898555540655,
+    "ci95_low_ann_pct": -13.461650083038656,
+    "ci95_high_ann_pct": -4.374019117275947,
+    "p_two_sided_gt0": 0.0,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "fazla_farki_taban_cita": {
+    "mean_ann_pct": -10.397116559088968,
+    "ci95_low_ann_pct": -15.23396737713583,
+    "ci95_high_ann_pct": -5.576277197212595,
+    "p_two_sided_gt0": 0.0,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "ham_getiri_farki": {
+    "mean_ann_pct": -10.397116559088968,
+    "ci95_low_ann_pct": -15.23396737713583,
+    "ci95_high_ann_pct": -5.576277197212595,
+    "p_two_sided_gt0": 0.0,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "risk_esli_bootstrap": {
+    "vol_fark_ort_puan": -2.789963610354838,
+    "vol_fark_ci95": [
+     -3.505586213214647,
+     -2.119773977930751
+    ],
+    "P_vol_dusuk": 1.0,
+    "maxdd_fark_ort_puan": 1.1011269617870945,
+    "maxdd_fark_ci95": [
+     -10.74692072816774,
+     9.584803052328384
+    ],
+    "P_maxdd_sig": 0.6125,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "not": "esli_cita = her h\u00fccre KEND\u0130 evreninin ayl\u0131k-EW'sine kar\u015f\u0131; taban_cita = ikisi de EW_full_BH'ye kar\u015f\u0131 (ham kolun 2026-07-30 \u00e7\u0131tas\u0131)."
+  },
+  "D_rotate_pit": {
+   "fazla_farki_esli_cita": {
+    "mean_ann_pct": -7.428122986103021,
+    "ci95_low_ann_pct": -12.725821032501052,
+    "ci95_high_ann_pct": -2.3607795374315206,
+    "p_two_sided_gt0": 0.003,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "fazla_farki_taban_cita": {
+    "mean_ann_pct": -8.911340989651336,
+    "ci95_low_ann_pct": -14.313546414485302,
+    "ci95_high_ann_pct": -3.7073087430797376,
+    "p_two_sided_gt0": 0.001,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "ham_getiri_farki": {
+    "mean_ann_pct": -8.911340989651336,
+    "ci95_low_ann_pct": -14.313546414485302,
+    "ci95_high_ann_pct": -3.7073087430797376,
+    "p_two_sided_gt0": 0.001,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "risk_esli_bootstrap": {
+    "vol_fark_ort_puan": -0.7240646740278093,
+    "vol_fark_ci95": [
+     -1.4684195815106649,
+     -0.0008753917039462787
+    ],
+    "P_vol_dusuk": 0.9755,
+    "maxdd_fark_ort_puan": -0.8070952608816511,
+    "maxdd_fark_ci95": [
+     -13.270426639112836,
+     8.277517804420205
+    ],
+    "P_maxdd_sig": 0.478,
+    "n_days": 3914,
+    "block": 21,
+    "reps": 2000
+   },
+   "not": "esli_cita = her h\u00fccre KEND\u0130 evreninin ayl\u0131k-EW'sine kar\u015f\u0131; taban_cita = ikisi de EW_full_BH'ye kar\u015f\u0131 (ham kolun 2026-07-30 \u00e7\u0131tas\u0131)."
+  }
+ },
+ "pit_beyani": {
+  "UST_SINIR_BEYANI": "PIT kolu bir \u00dcST SINIRDIR. \u00dcyelik tarihi PIT'tir, F\u0130YATLAR DE\u011e\u0130LD\u0130R: bar \u00f6nbelle\u011finde yaln\u0131z BUG\u00dcN ya\u015fayan 250 sembol var. O tarihte S&P500 \u00fcyesi olup sonradan delist olan / iflas eden / sat\u0131n al\u0131nan isimler fiyatlanam\u0131yor, dolay\u0131s\u0131yla ne kola ne \u00e7\u0131taya giriyor. GER\u00c7EK PIT getirisi bu \u00f6l\u00e7\u00fcmden D\u00dc\u015e\u00dcK olabilir; bu kol yaln\u0131zca EVREN-SE\u00c7\u0130M (\u00fcyelik) yanl\u0131l\u0131\u011f\u0131n\u0131 kald\u0131r\u0131r, HAYATTA-KALMA (fiyat serisi) yanl\u0131l\u0131\u011f\u0131n\u0131 KALDIRMAZ.",
+  "maske": {
+   "csv": "/Users/erdemozturk/AI-Trading/research/pit_universe/sp500_uyelik_tarihi.csv",
+   "csv_snapshot_count": 2718,
+   "csv_span": [
+    "1996-01-02",
+    "2026-06-30"
+   ],
+   "csv_son_anlik_goruntu_ileri_tasindi_gun": 19,
+   "alias_used": true,
+   "alias_map": {
+    "FB": {
+     "yeni": "META",
+     "gerekce": "Facebook -> Meta ad de\u011fi\u015fimi; FB 2022-06-08 \u00e7\u0131k\u0131\u015f, META 2022-06-09 giri\u015f"
+    },
+    "PX": {
+     "yeni": "LIN",
+     "gerekce": "Praxair -> Linde plc; PX 2018-10-25 \u00e7\u0131k\u0131\u015f, LIN 2018-11-06 giri\u015f"
+    },
+    "UTX": {
+     "yeni": "RTX",
+     "gerekce": "United Technologies -> Raytheon Technologies; UTX 2020-03-03 \u00e7\u0131k\u0131\u015f, RTX 2020-04-03 giri\u015f"
+    },
+    "BHGE": {
+     "yeni": "BKR",
+     "gerekce": "Baker Hughes a GE co. -> Baker Hughes Co.; BHGE 2019-10-03 \u00e7\u0131k\u0131\u015f, BKR 2019-10-18 giri\u015f"
+    },
+    "HRS": {
+     "yeni": "LHX",
+     "gerekce": "Harris -> L3Harris; HRS 2019-04-02 \u00e7\u0131k\u0131\u015f, LHX 2019-06-01 giri\u015f"
+    },
+    "KRFT": {
+     "yeni": "KHC",
+     "gerekce": "Kraft Foods -> Kraft Heinz; KRFT 2015-07-02 \u00e7\u0131k\u0131\u015f, KHC 2015-07-06 giri\u015f"
+    },
+    "DISCA": {
+     "yeni": "WBD",
+     "gerekce": "Discovery A -> Warner Bros. Discovery; DISCA 2022-04-04 \u00e7\u0131k\u0131\u015f, WBD 2022-04-11 giri\u015f"
+    },
+    "DISCK": {
+     "yeni": "WBD",
+     "gerekce": "Discovery C s\u0131n\u0131f\u0131 \u2014 ayn\u0131 t\u00fczel ki\u015filik"
+    },
+    "ARNC": {
+     "yeni": "HWM",
+     "gerekce": "Alcoa Inc -> Arconic Inc -> Howmet Aerospace (S\u00dcREKL\u0130 listeleme); ARNC 2020-04-03 \u00e7\u0131k\u0131\u015f, HWM 2020-04-06 giri\u015f. BEL\u0130RS\u0130ZL\u0130K: 2016 ayr\u0131\u015fmas\u0131 yeni Alcoa'y\u0131 (AA) do\u011furdu; veri k\u00fcmesi s\u00fcrekli listelemeyi ARNC diye etiketlemi\u015f."
+    }
+   },
+   "universe_size": 250,
+   "hic_uye_olmayan_semboller": [
+    "BURL",
+    "LNG",
+    "PINS",
+    "ROKU",
+    "SNAP",
+    "SPOT"
+   ]
+  },
+  "maske_takmaadsiz": {
+   "alias_used": false,
+   "hic_uye_olmayan_semboller": [
+    "BURL",
+    "LNG",
+    "PINS",
+    "ROKU",
+    "SNAP",
+    "SPOT"
+   ]
+  },
+  "se\u00e7imde_elenen_aday_ay_sayisi": {
+   "MRVL": 186,
+   "LNG": 181,
+   "DECK": 159,
+   "LULU": 154,
+   "BX": 153,
+   "STLD": 144,
+   "KKR": 139,
+   "BURL": 139,
+   "PANW": 117,
+   "APO": 116,
+   "NXPI": 113,
+   "TSLA": 111,
+   "SNAP": 98,
+   "ROKU": 91,
+   "TRGP": 90,
+   "SPOT": 85,
+   "TER": 81,
+   "CDNS": 79,
+   "NOW": 74,
+   "ON": 72,
+   "PINS": 72,
+   "TTWO": 69,
+   "ALB": 67,
+   "PKG": 67,
+   "DLR": 65,
+   "LYV": 65,
+   "CHD": 60,
+   "FANG": 60,
+   "TMUS": 60,
+   "UAL": 57,
+   "CHTR": 54,
+   "SNPS": 53,
+   "O": 52,
+   "MTCH": 52,
+   "EQIX": 51,
+   "SWKS": 51,
+   "MPWR": 51,
+   "RCL": 48,
+   "MLM": 43,
+   "NCLH": 43
+  },
+  "se\u00e7imde_elenen_toplam_ay": 4038,
+  "tutulan_pozisyon_uye_degil_ay": {
+   "C_chandelier_pit": 0,
+   "D_rotate_pit": 0,
+   "beyan": "PIT s\u00fczgeci SE\u00c7\u0130M s\u00fczgecidir: endeksten d\u00fc\u015fen bir POZ\u0130SYON zorla kapat\u0131lmaz (kolun kendi \u00e7\u0131k\u0131\u015f kural\u0131 i\u015fler). Kart \u00fc\u00e7\u00fcnc\u00fc bir \u00e7\u0131k\u0131\u015f mekanizmas\u0131 tan\u0131mlam\u0131yor."
+  },
+  "takmaad_duyarliligi": {
+   "C_takmaadli_son_ozkaynak": 13832419.220073074,
+   "C_takmaadsiz_son_ozkaynak": 13736548.501119139,
+   "D_takmaadli_son_ozkaynak": 15992641.734874692,
+   "D_takmaadsiz_son_ozkaynak": 16067497.643704899,
+   "C_takmaadsiz_fazla_esli": {
+    "ann_pct": 5.981954853266469,
+    "t_nw": 1.7409295595090506,
+    "p_one_sided": 0.04084796328341137,
+    "n_months": 188,
+    "fazla_std_yillik_pct": 16.150113109738147,
+    "pozitif_ay_pct": 56.91489361702128
+   },
+   "D_takmaadsiz_fazla_esli": {
+    "ann_pct": 7.250977345855447,
+    "t_nw": 2.0958048862073873,
+    "p_one_sided": 0.018049751369923452,
+    "n_months": 188,
+    "fazla_std_yillik_pct": 16.39659617760322,
+    "pozitif_ay_pct": 56.91489361702128
+   }
+  }
+ },
+ "hukum_onerisi": {
+  "olcutlerin_okunusu": {
+   "B_rotate_full": {
+    "t_esli": 4.452313600042871,
+    "t_taban": 4.010934525006606,
+    "fazla_esli_pct": 17.961643766124435,
+    "fazla_taban_pct": 15.262059065838596,
+    "KORUYOR_t_ge_2": true,
+    "fazla_farki_esli_puan": 1.9207976791462917,
+    "fazla_farki_ci95": [
+     -2.6570253267308006,
+     6.7188984221490875
+    ],
+    "KORUYOR_bozulma_yok": true,
+    "P_net_fazla_artar": 0.8045,
+    "NET_FAZLA_ARTAR_P95": false,
+    "P_vol_dusuk": 0.0,
+    "P_maxdd_sig": 0.3395,
+    "RISK_DUSER_P95": false,
+    "vol_pct": 29.43878853130241,
+    "maxdd_pct": -43.77573594930782,
+    "taban_vol_pct": 27.934700560249777,
+    "taban_maxdd_pct": -40.21611675878538,
+    "devir_maliyeti_fazlayi_yutuyor": false,
+    "SUCCESS_METRIC_SIKI": false,
+    "SUCCESS_METRIC_LAFZI": true,
+    "SUCCESS_METRIC": false
+   },
+   "C_chandelier_pit": {
+    "t_esli": 1.7663273879606218,
+    "t_taban": 0.6732867620415988,
+    "fazla_esli_pct": 6.028905050464228,
+    "fazla_taban_pct": 2.0723005018702167,
+    "KORUYOR_t_ge_2": false,
+    "fazla_farki_esli_puan": -8.913898555540655,
+    "fazla_farki_ci95": [
+     -13.461650083038656,
+     -4.374019117275947
+    ],
+    "KORUYOR_bozulma_yok": false,
+    "P_net_fazla_artar": 0.0,
+    "NET_FAZLA_ARTAR_P95": false,
+    "P_vol_dusuk": 1.0,
+    "P_maxdd_sig": 0.6125,
+    "RISK_DUSER_P95": true,
+    "vol_pct": 25.134532787564794,
+    "maxdd_pct": -32.42611112778769,
+    "taban_vol_pct": 27.934700560249777,
+    "taban_maxdd_pct": -40.21611675878538,
+    "devir_maliyeti_fazlayi_yutuyor": false,
+    "SUCCESS_METRIC_SIKI": false,
+    "SUCCESS_METRIC_LAFZI": false,
+    "SUCCESS_METRIC": false
+   },
+   "D_rotate_pit": {
+    "t_esli": 2.080151573836074,
+    "t_taban": 1.0094844685736726,
+    "fazla_esli_pct": 7.249657514558661,
+    "fazla_taban_pct": 3.2512490311894293,
+    "KORUYOR_t_ge_2": true,
+    "fazla_farki_esli_puan": -7.428122986103021,
+    "fazla_farki_ci95": [
+     -12.725821032501052,
+     -2.3607795374315206
+    ],
+    "KORUYOR_bozulma_yok": false,
+    "P_net_fazla_artar": 0.0015,
+    "NET_FAZLA_ARTAR_P95": false,
+    "P_vol_dusuk": 0.9755,
+    "P_maxdd_sig": 0.478,
+    "RISK_DUSER_P95": true,
+    "vol_pct": 27.215283316486538,
+    "maxdd_pct": -34.833702444332594,
+    "taban_vol_pct": 27.934700560249777,
+    "taban_maxdd_pct": -40.21611675878538,
+    "devir_maliyeti_fazlayi_yutuyor": false,
+    "SUCCESS_METRIC_SIKI": false,
+    "SUCCESS_METRIC_LAFZI": false,
+    "SUCCESS_METRIC": false
+   }
+  },
+  "success_saglayan_hucreler_SIKI": [],
+  "success_saglayan_hucreler_LAFZI": [
+   "B_rotate_full"
+  ],
+  "OLCUT_OKUMA_BELIRSIZLIGI": "Kart metni: 'maliyet-sonras\u0131 net fazla artar VEYA maxDD/vol anlaml\u0131 d\u00fc\u015fer (P>=0.95)'. (P>=0.95) niteleyicisinin \u0130K\u0130 dala da m\u0131 yoksa YALNIZ ikinci dala m\u0131 ait oldu\u011fu metinden kesin de\u011fildir. \u00d6l\u00e7\u00fcm ajan\u0131 e\u015fi\u011fi DE\u011e\u0130\u015eT\u0130RMEZ ve SE\u00c7MEZ: iki okuma da hesaplan\u0131p raporlanm\u0131\u015ft\u0131r. Ayr\u0131m tek h\u00fccrede sonu\u00e7 de\u011fi\u015ftiriyor (B_rotate_full).",
+  "kill_1_hicbir_rafine_gecemiyor_SIKI": true,
+  "kill_1_hicbir_rafine_gecemiyor_LAFZI": false,
+  "pit_t_esli_cita": {
+   "C_chandelier_pit": 1.7663273879606218,
+   "D_rotate_pit": 2.080151573836074
+  },
+  "pit_t_taban_cita": {
+   "C_chandelier_pit": 0.6732867620415988,
+   "D_rotate_pit": 1.0094844685736726
+  },
+  "kill_2_pit_edge_kayboldu_t_lt_1": false,
+  "kill_2_taban_citayla_okunsaydi": true,
+  "kill_2_cita_secimine_duyarli": true,
+  "pit_t_ge_2_bulgusu_hucre_bazinda": {
+   "C_chandelier_pit": false,
+   "D_rotate_pit": true
+  },
+  "pit_t_ge_2_en_az_bir_hucre": true,
+  "pit_fazla_kaybi_puan": {
+   "C_vs_A": -9.770210455786632,
+   "D_vs_B": -10.711986251565776,
+   "not": "Her h\u00fccre KEND\u0130 evreninin ayl\u0131k-EW'sine kar\u015f\u0131; k\u0131yas evren-\u00fcst\u00fc oldu\u011fu i\u00e7in 'kay\u0131p' = \u00fcyelik (evren-se\u00e7im) yanl\u0131l\u0131\u011f\u0131n\u0131n fazlaya katk\u0131s\u0131n\u0131n \u00f6l\u00e7\u00fcs\u00fcd\u00fcr."
+  },
+  "kill_3_devir_maliyeti_yutan_hucreler": [],
+  "NOT": "Bu blok kart\u0131n \u00f6l\u00e7\u00fctlerinin \u00d6L\u00c7\u00dcM\u00dcD\u00dcR; h\u00fckm\u00fc Rol-1 yazar. \u00d6l\u00e7\u00fcm ajan\u0131 karta dokunmad\u0131."
+ }
+}

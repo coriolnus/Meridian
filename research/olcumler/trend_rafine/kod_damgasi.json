@@ -1,0 +1,72 @@
+{
+ "olcum": "EDG-2026-009 \u2014 WP-K uzun-ufuk trend kolu RAF\u0130NE",
+ "uretildi_utc": "2026-07-31T14:25:07.802196+00:00",
+ "repo_head": "7293cc63f3a033360495c42c7bb9f60ac6b9d080",
+ "repo_dirty": false,
+ "python": "Python 3.12.7",
+ "kod_sha256": {
+  "load.py": "b682abc31d9bf89ac067fbe3bc468fd1401d13b17f4336d70cc48173d8c1abd5",
+  "integrity.py": "242587653ea7a6fbfd38cf1f6084ed40d3683e8b0d27af80d34a2c0664a25f9f",
+  "verify.py": "4010079e9370b97cb9fc28285701e1ff147de3d8dbc8477d972d6465f92973ff",
+  "engine.py": "579eade52aeb2d4b2e07211de4a823bc8f1b2722cb7c6c6c76f0b97ebc712568",
+  "engine2.py": "5d60d06e8b0e7391ce1fc71bd492c2456aabf76fb34ebd4d0e180081b025ba8c",
+  "pit.py": "830fed64f37cdb1235b705ee77a7eb6fe9099dc8ec56b151eebce65c6292b969",
+  "prep.py": "0c6da01f585a2bf73f5afd9d7020a8570e02ae3ab1c16c6da52bc7c11d4433fb",
+  "poskontrol.py": "322532a95c5b830d4456585e8ce64ef6fd75de2e862e7d94c191930e3f3b741e",
+  "kosum.py": "cb8f946319171396a8bff082cb6a54aa15901781cbade9762fe46939c3481267",
+  "rapor.py": "23eeaf1379940171bb84a588c1af2d65989040fe74ae25dc8e835f145f367362",
+  "damga.py": "b0d1223a613683db1c2841d8c1243b0b9f5875d8fb54f5e83663d6071d97b65f"
+ },
+ "cikti_sha256": {
+  "poskontrol.json": "914543a9d2f29930374a2fd6aa4453da7f3415297dd68684c6bfc69f7454a6a8",
+  "sonuc.json": "6a2ce7f35510a3803785018699f93960fdfbefed6625d24ab5a7349abeb586a1",
+  "RAPOR.md": "686d9890167bd297012b2f741f182006729489b9757bf2207fdfa52c48451141"
+ },
+ "girdi_sha256": {
+  "kart": "9df64c1b37bf83f77bc5435e4d14a743cb9342877ef045e6c07ee0d0059c19ad",
+  "pit_uyelik_csv": "39a9202c9ef69a74c0ff07e2113ad41fb6da7c8c5b6cd9541f0185fb4391e717",
+  "sablon_sasi_engine": "579eade52aeb2d4b2e07211de4a823bc8f1b2722cb7c6c6c76f0b97ebc712568",
+  "sablon_sasi_sonuc": "e026f614fe9ecc86902660c78b7f5f56350675ba3b5c615891101ebcb900b858"
+ },
+ "bar_onbellegi": {
+  "kaynak": "/Users/erdemozturk/AI-Trading/state/bars",
+  "dosya_sayisi": 259,
+  "birlesik_sha256": "91a3f76063e2eb64f992ec60dffea093b2fa03447521c7fca8f1f796245a619e",
+  "not": "canl\u0131 \u00f6nbellekten SALT-OKUMA kopyas\u0131 (sandbox/state/bars); \u00f6l\u00e7\u00fcm hi\u00e7bir repo/state dosyas\u0131na yazmad\u0131"
+ },
+ "sasi_devralma": "load.py / integrity.py / verify.py / engine.py trend_kolu/'ndan DE\u011e\u0130\u015eT\u0130R\u0130LMEDEN kopyaland\u0131; sha256'lar\u0131 \u015fablonla ayn\u0131 olmal\u0131d\u0131r (a\u015fa\u011f\u0131da do\u011frulan\u0131r)",
+ "kosum_sirasinda_repo_head_degisti": {
+  "kosum_baslangici": "fe8eda261fe707c9a8ae9a30500c8c167365ba51",
+  "kosum_sonu": "7293cc63f3a033360495c42c7bb9f60ac6b9d080",
+  "araya_giren_commitler": [
+   "7293cc6 WIP: WP-H tur-2 ara kay\u0131t \u2014 import-linter mimari s\u00f6zle\u015fmeleri pyproject'e (H4)",
+   "deecba2 Kan\u0131t-kal\u0131c\u0131l\u0131\u011f\u0131: \u00f6l\u00e7\u00fcm h\u00fck\u00fcm-kan\u0131tlar\u0131 repo'ya (research/olcumler/)"
+  ],
+  "kritik_yollarda_degisiklik": [],
+  "olcum_etkilendi_mi": false,
+  "bar_onbellegi_kosum_boyunca_degismedi": true,
+  "not": "bar \u00f6nbelle\u011fi ko\u015fum ba\u015f\u0131nda ve sonunda sha256 ile kar\u015f\u0131la\u015ft\u0131r\u0131ld\u0131: 0 fark (state/ zaten versiyonlanm\u0131yor)."
+ },
+ "sasi_dogrulama": {
+  "load.py": {
+   "rafine": "b682abc31d9bf89ac067fbe3bc468fd1401d13b17f4336d70cc48173d8c1abd5",
+   "sablon": "b682abc31d9bf89ac067fbe3bc468fd1401d13b17f4336d70cc48173d8c1abd5",
+   "AYNI": true
+  },
+  "integrity.py": {
+   "rafine": "242587653ea7a6fbfd38cf1f6084ed40d3683e8b0d27af80d34a2c0664a25f9f",
+   "sablon": "242587653ea7a6fbfd38cf1f6084ed40d3683e8b0d27af80d34a2c0664a25f9f",
+   "AYNI": true
+  },
+  "verify.py": {
+   "rafine": "4010079e9370b97cb9fc28285701e1ff147de3d8dbc8477d972d6465f92973ff",
+   "sablon": "4010079e9370b97cb9fc28285701e1ff147de3d8dbc8477d972d6465f92973ff",
+   "AYNI": true
+  },
+  "engine.py": {
+   "rafine": "579eade52aeb2d4b2e07211de4a823bc8f1b2722cb7c6c6c76f0b97ebc712568",
+   "sablon": "579eade52aeb2d4b2e07211de4a823bc8f1b2722cb7c6c6c76f0b97ebc712568",
+   "AYNI": true
+  }
+ }
+}

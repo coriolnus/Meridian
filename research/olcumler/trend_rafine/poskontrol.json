@@ -1,0 +1,76 @@
+{
+ "sim_span": [
+  "2010-12-31",
+  "2026-07-28"
+ ],
+ "evren_bar_sayisi": 250,
+ "PK_A_ham_kol_sasi": {
+  "total_return": 60.776509695968684,
+  "cagr": 0.30315529656596385,
+  "vol_ann": 0.27934700560249776,
+  "sharpe": 1.0912706901710596,
+  "max_dd": -0.4021611675878538,
+  "years": 15.572895277207392,
+  "n_days": 3914,
+  "vs_EW_UNIVERSE": {
+   "ann_pct": 13.144974891878558,
+   "t_nw": 3.6906533241492476,
+   "n_months": 188
+  },
+  "vs_SPY": {
+   "ann_pct": 18.555546266093103,
+   "t_nw": 4.848831063442803,
+   "n_months": 188
+  }
+ },
+ "PK_B_rafine_motor_ozdeslik": {
+  "ayni_uzunluk": true,
+  "maks_mutlak_fark": 0.0,
+  "maks_bagil_fark_pct": 0.0,
+  "islem_bacagi": [
+   2352,
+   2352
+  ],
+  "cikislar": [
+   {
+    "chandelier": 479,
+    "no_data": 0,
+    "integrity": 3,
+    "final": 0
+   },
+   {
+    "chandelier": 479,
+    "rotate": 0,
+    "no_data": 0,
+    "integrity": 3,
+    "final": 0
+   }
+  ]
+ },
+ "PK_C_muhasebe": {
+  "PK4_segment": {
+   "segments": 187,
+   "days_checked": 3914,
+   "max_rel_diff_pct": 7.049980907251561e-14,
+   "worst_day": "2022-04-28"
+  },
+  "PK5_cashflow": {
+   "ledger_final": 61776509.69596869,
+   "cashflow_final": 61776509.695967495,
+   "rel_diff_pct": -1.9317880628477724e-12
+  }
+ },
+ "referans_2026_07_30": {
+  "fazla_yillik_pct": 13.144974891878558,
+  "t_nw": 3.6906533241492476,
+  "kaynak": "scratchpad/trend_kolu/sonuc.json N10_rebalance.vs_EW_UNIVERSE.tam"
+ },
+ "GUARD": {
+  "fazla_fark_puan": 0.0,
+  "t_fark": 0.0,
+  "kart_esigi_t_ge_3": true,
+  "kart_esigi_fazla_civarinda": true,
+  "motor_ozdesligi_tam": true,
+  "GECTI": true
+ }
+}

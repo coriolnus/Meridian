@@ -28,6 +28,27 @@ guards:
   - "PIT kolu ÜST-SINIR beyanı sonuc.json'a yazılır: ölü/çıkmış isimler fiyatlanamıyor, gerçek PIT getirisi bundan DÜŞÜK olabilir"
   - "2021+ dilim raporu: fazlanın yıl-yıl dağılımı (sessizlik rejim mi decay mi — tanı, eşik değil)"
   - "slim defterlerde pnl_dollars korunur; digest kıyasları search+confirm (tum-digest artefaktı bilinen)"
-k_registry: {registered_at: "2026-07-31T14:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-07-31T14:0xZ", trial_ids: [trend_rafine/A, trend_rafine/B, trend_rafine/C, trend_rafine/D]}
+status: measured   # 2026-07-31 ~15:30 — HÜKÜM (Rol-1):
+# 0) POZİTİF KONTROL BİREBİR (fazla 13.1450%, t 3.6907 — fark 0.000000; şasi geçerli).
+# 1) EŞİK-DİLBİLGİSİ KARARI (ajan dürüstçe bana bıraktı): success'in "(P>=0.95)" niteleyicisi
+#    dilbilgisel olarak risk dalına aitti AMA belirsizlik gerçek ve sonuç-değiştirici → kural gereği
+#    MUHAFAZAKÂR okuma esas: B hücresi (aylık-rebalans × full; fazla +17.96, t=4.45) iyileşme
+#    CI'sı 0-içi [−2.66,+6.72] + vol/maxDD kötüleşiyor + Sharpe yatay → SUCCESS DEĞİL.
+#    DERS WP-M'YE: kart eşiklerinde her dal KENDİ niteleyicisini açıkça taşır (dilbilgisi standardı).
+# 2) kill#1 (muhafazakâr): rafine ÜSTÜNLÜĞÜNÜ KANITLAYAMADI → rafine kapanır, HAM KOL İNCUMBENT
+#    kalır. B "yaşayan-ama-kanıtlanmamış varyant" notuyla tetik-şartlı aday (yeniden ölçüm ancak
+#    yeni pencere birikince — K yeniden ödenir).
+# 3) TURUN ASIL BULGUSU — PIT ŞERHİ (kalıcı, aile hükmüne iliştirildi): +13,1p/yıl'ın büyük kısmı
+#    EVREN-SEÇİM yanlılığı; PIT-sağkalan evrende fazla C +6.03 (t=1.77) / D +7.25 (t=2.08).
+#    kill#2 TETİKLENMEDİ (kartın kendi tanımı "kendi evreninin EW'si"; D t>=2 koşulunu karşılıyor)
+#    → survivorship-ŞÜPHE kaydı açılmadı; ham kol rakamı bundan böyle "yanlılık-düşülmüş ~6-7p/yıl"
+#    şerhiyle anılır. ÜST-SINIR beyanı geçerli: fiyatlar PIT değil — gerçek PIT bundan da düşük olabilir.
+# 4) 2021+ TANISI: eşlemeli çıtaya karşı erime YOK (fazla 15.03, t=1.82); t düşüşü paydadan
+#    (fazla std 14.9%→27.7%) — desen decay değil rejim/oynaklık; "kanıtlanamadı" sürüyor.
+# 5) kill#3 tetiklenmedi (aylık devir maliyet farkı 0.09p — yutmuyor). Çıta-yapısı bulgusu not:
+#    statik-EW ile eşlemeli-aylık-EW arasında 2.5p/yıl yapısal fark (friksiyon değil).
+# 6) YAN GÖZLEM (doğrulaması Rol-1'de): 2026-07-30 BULGU-1 (hayalet-satır hacim şartı) artık
+#    üretilemiyor — depo kapısı GILD/CMCSA/DLTR/UNP satırlarını kendisi karantinaya alıyor.
+# Kanıt: research/olcumler/trend_rafine/{sonuc.json,RAPOR.md,poskontrol.json,kod_damgasi.json}.
 notes: "Ölçüm scratchpad/trend_rafine/ altında SALT-ÖLÇÜM; trend_kolu/ şasisi şablon (SALT-OKUNUR). Kart dosyasına ölçüm ajanı DOKUNMAZ. Aylık gölge-kitap tasarımı HÜKÜMDEN SONRA (ölçüm-önce yasası)."
