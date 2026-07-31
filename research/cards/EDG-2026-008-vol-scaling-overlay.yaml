@@ -1,0 +1,32 @@
+card_id: EDG-2026-008
+family: momentum_vol_scaling_overlay   # WP1/1.5 (Moreira-Muir 2017; Barroso-Santa-Clara 2015)
+thesis: >
+  Vol-yönetimli maruziyet: piyasa gerçekleşen volatilitesi yüksekken yeni-giriş boyutunu kısmak,
+  düşükken tavana bırakmak, momentum-tipi stratejilerde Sharpe'ı artırır ve kuyruk riskini kırpar.
+  Long-only EOD uyarlaması: yeni girişlerin size_r'ına çarpan m = clip(sigma_hedef/sigma_gercek,
+  0.5, 1.5); sigma_hedef = IS-penceresi gerçekleşen medyan vol (as-of, aranmadı). Mevcut pozisyonlara
+  dokunulmaz (yalnız yeni-giriş boyutu — long-only, satış-baskısı yok).
+evidence_refs: [Moreira-Muir 2017 JF (vol-managed portfolios), Barroso-Santa-Clara 2015 JFE
+  (momentum crash risk), katalog aile 22, denetim RS-1 (pozitif-EV önkoşulu)]
+universe: full_251 (sinyal endeks-seviyesi SPY vol'ü; etki portföy boyutlandırması)
+features_asof: "sigma_gercek = SPY günlük getiri std × sqrt(252), pencere P gün, t ve öncesi; hayalet-temiz SPY"
+horizon: "R1 walk-forward ikiz koşum; OOSONLY STANDARDI ZORUNLU (WP-M 2026-07-31: knob oos_start'ta devreye girer — IS-taşıması kirletmesin); PARA-v3 + vol/maxDD + Sharpe"
+parameter_grid:
+  vol_penceresi_gun: [21, 63]        # tek eksen — K+=2
+cost_model: "10bps + not; overlay işlem sayısını değiştirmez (boyut değiştirir) — whipsaw maliyeti beklenmez, yine de flip/çarpan dağılımı raporlanır"
+success_metric: >
+  net PARA DÜŞMEZKEN (P(ΔS<0) < 0.5) günlük vol VEYA maxDD anlamlı düşer (P(düşüş) >= 0.95 —
+  EDG-005 beyan standardı) YA DA net PARA anlamlı artar (CI 0-dışı).
+kill_criteria:
+  - "Sharpe veya PARA anlamlı düşüyorsa arşiv (rejim-kapısı ailesiyle aynı ders: koruma bedava değilse alınmaz)"
+  - "çarpan OOS'ta fiilen bağlanmıyorsa (m medyanı ~1.0 ve 5-95 persentili [0.9,1.1] içinde) → ETKİSİZ, arşiv"
+  - "iki pencerede de sonuç yönsüz/CI-0-içi → bilgisiz, arşiv"
+guards:
+  - "POZİTİF-EV ÖNKOŞUL BEYANI: taban V3 OOS para_search 0.0856 > 0 (wpg_olcum ref_snapshot) — overlay pozitif tabana uygulanıyor"
+  - "pozitif kontrol: yamalı motor knob-KAPALI ≡ yamasız ikiz (search+confirm digest eşitliği — trade_digest_tum artefaktına dikkat, EDG-005 dersi)"
+  - "slim defterlerde pnl_dollars KORUNUR (EDG-005 ci_para dejenerasyonu dersi)"
+  - "oosonly kolu ZORUNLU + isonly/tam kollar yalnız tanı amaçlı; hüküm OOSONLY kıyasından yazılır"
+  - "PK4/PK5 yol-tutarlılık kontrolleri standart"
+k_registry: {registered_at: "2026-07-31T10:5xZ", trial_ids: [pending]}
+status: registered
+notes: "Ölçüm scratchpad/vols_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ölçüm ajanı DOKUNMAZ. G7 vol-hedefleme mirası: ısı-tavanı etkileşimi raporlanır (derisk rampasıyla çifte-kısma riski)."
