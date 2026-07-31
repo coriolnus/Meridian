@@ -1,27 +1,22 @@
-# meridian-backup.service — state/ dizininin günlük yerel yedeği (oneshot; timer tetikler).
-#
-# KAPSAM BİLİNÇLİ OLARAK DAR: yalnız YEREL disk (GCS/rclone YOK). Amaç, bozulan/silinen bir state'ten
-# saatler içinde dönebilmek; sunucu tamamen kaybolursa bu yedek de kaybolur (bilinen sınır — dış
-# kopya operatörün kararı). state/ ~181MB, sıkıştırılmış hâli çok daha küçük; 7 günlük saklama
-# 42GB boş diskte gürültü bile değil.
-#
-# secrets.json/auth.json da arşive girer (state/ içindeler) → arşiv dosyası SIRRI TAŞIR.
-# Bu yüzden hedef dizin ve dosyalar 0700/0600 (aşağıda ExecStartPre + umask).
+# meridian-backup.service — state/ günlük yerel yedek. 2026-07-31 H7/H9 revizyonu:
+#  * tar "file changed as we read it" (exit 1) ARTIK BAŞARISIZLIK DEĞİL — arşiv restore
+#    tatbikatıyla doğrulandı (64/64 JSON sağlam, H7 2026-07-31); yalnız exit>=2 gerçek hata.
+#  * SQLite defteri için ÖNCE çevrimiçi tutarlı kopya (storage.backup_to) alınır; tar bu
+#    kopyayı (meridian.db.yedek) içerir. WAL'lı canlı DB'nin ham tar kopyası yarışlı olurdu
+#    (storage.backup_to docstring'i: sessizce eksik yedek, yedek olmamasından kötüdür).
+#  * secrets arşive girer → 0700/0600 disiplini korunur (UMask + chmod).
 [Unit]
 Description=Meridian state/ daily local backup (tar.gz, 7-day retention)
-# Yedek anlık görüntüsü tutarlılığı: Meridian'ı DURDURMUYORUZ. state/ yazımları küçük ve atomik
-# (store.write_json → tmp+rename), jsonl'lar append-only; tar yarım bir satır yakalasa bile o
-# satır bir SONRAKİ yedekte tamdır. Servisi günlük yedek için durdurmak, kesintiyi riskten büyük yapardı.
 
 [Service]
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/opt/meridian
 UMask=0077
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStartPre=/bin/mkdir -p /home/ubuntu/backups
 ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
-# `sh -c` ŞART: systemd ExecStart'ı kabuğa vermez, $(date) genişletmez ve `%i` yalnız şablon
-# (birim@örnek) birimlerinde doludur — düz birimde boş genişleyip her gün AYNI dosyayı ezerdi.
-ExecStart=/bin/sh -c 'tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz -C /opt/meridian state'
-# 7 günden eski yedekleri sil. -delete yalnız eşleşen dosyaları siler; hiç eşleşme yoksa çıkış 0.
-ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name 'state-*.tar.gz' -mtime +7 -delete
+# NOT (systemd ikame tuzağı): $rc → systemd boş geçirirdi; $$ ile kaçırıldı (sh'a $rc ulaşır).
+# %%F → tar dosya adında günlük tarih (systemd % kaçışı — eski unit'ten miras, kanıtlı çalışıyor).
+ExecStart=/bin/sh -c 'if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "from meridian import storage; storage.backup_to(\"/opt/meridian/state/meridian.db.yedek\")"; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ]'
+ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
