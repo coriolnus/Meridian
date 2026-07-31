@@ -129,8 +129,15 @@ def _dict_row(cursor, row):
     return {d[0]: row[i] for i, d in enumerate(cursor.description)}
 
 
-def connect(path: Path | str | None = None, *, create: bool = True) -> sqlite3.Connection:
-    """Süreç başına (ve YOL başına) tek bağlantı. PRAGMA'lar bağlantı ömrü boyunca geçerlidir."""
+def connect(path: Path | str | None = None, *, create: bool = False) -> sqlite3.Connection:
+    """Süreç başına (ve YOL başına) tek bağlantı. PRAGMA'lar bağlantı ömrü boyunca geçerlidir.
+
+    `create=False` VARSAYILANDIR VE BİR SİGORTADIR. `sqlite3.connect` var olmayan bir yolu SESSİZCE
+    YARATIR; yanlış bir okuma yolu (ya da sandbox'sız bir test) canlı `state/`e BOŞ bir
+    `meridian.db` bırakabilirdi. O dosya bir kez doğduğunda `active()` onu görür ve — şeması
+    tamamlanmışsa — uygulama defterleri BOŞ okumaya başlar: migrasyon yapılmadan yapılmış gibi
+    görünen bir geçiş, en tehlikeli hâl. Yaratma yetkisi YALNIZ `dbmigrate`/`ensure_schema`
+    yolundadır; okuma yolları `active()` kapısından geçtiği için dosya zaten VARdır."""
     p = Path(path) if path is not None else db_path()
     key = str(p)
     with _GUARD:
@@ -139,6 +146,10 @@ def connect(path: Path | str | None = None, *, create: bool = True) -> sqlite3.C
             return conn
         if create:
             p.parent.mkdir(parents=True, exist_ok=True)
+        elif not p.exists():
+            raise FileNotFoundError(
+                f"SQLite defteri yok: {p} — `connect(create=True)` yalnız migrasyon yolunundur. "
+                f"Okuma yolları `storage.active()` kapısından geçmeli.")
         conn = sqlite3.connect(key, check_same_thread=False, isolation_level=None, timeout=5.0)
         conn.row_factory = _dict_row
         for pragma, val in PRAGMAS:
@@ -216,8 +227,8 @@ def _ddl() -> list[str]:
 
 
 def ensure_schema(conn: sqlite3.Connection | None = None) -> sqlite3.Connection:
-    """İdempotent şema kurulumu + sürüm damgası."""
-    c = conn or connect()
+    """İdempotent şema kurulumu + sürüm damgası. DB dosyasını YARATMA yetkisi olan tek yol."""
+    c = conn or connect(create=True)
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
         try:

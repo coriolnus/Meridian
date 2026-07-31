@@ -131,7 +131,7 @@ def plan() -> dict:
 
 def db_state() -> list[dict]:
     """DB'deki varlıkların CANLI sayaçları (iddia değil, tablodan sayım)."""
-    c = storage.connect()
+    c = storage.connect(create=True)
     storage.ensure_schema(c)
     rows = []
     for name in storage.ENTITIES:
@@ -157,7 +157,7 @@ def apply() -> dict:
     rapor["arsivlenen"] = []
 
     kaynaklar = {n: read_source(n) for n in storage.ENTITIES}
-    c = storage.connect()
+    c = storage.connect(create=True)
     storage.ensure_schema(c)
 
     # `_GUARD` tüm transaction boyunca tutulur: aynı süreçteki başka bir iplik araya bir

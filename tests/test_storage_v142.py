@@ -58,7 +58,7 @@ def test_pragmalar_iddia_degil_olcum(db_sandbox):
     `busy_timeout` ve `foreign_keys` BAĞLANTI ÖMÜRLÜdür — bağlantı fabrikası onları her açılışta
     basmazsa ikinci süreç sessizce varsayılanlarla koşar ve "WAL + busy_timeout var" cümlesi
     ölçülmemiş bir iddiaya döner."""
-    storage.ensure_schema(storage.connect())
+    storage.ensure_schema()          # DB'yi yaratma yetkisi olan TEK yol
     p = storage.pragma_state()
     assert p["journal_mode"] == "wal"
     assert p["synchronous"] == 1          # NORMAL

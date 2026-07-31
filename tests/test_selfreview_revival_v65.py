@@ -206,6 +206,10 @@ def test_layer_stays_advisory(sandbox_state, monkeypatch):
     selfreview.build()
     se.weekly_draft()
     touched = {p.name for p in sandbox_state.glob("*")} - before
+    # `.locks` BİR ARTEFAKT DEĞİL, KİLİT DİZİNİDİR (WP-H/H9 B2, 2026-07-31): `store.file_lock`
+    # süreçler-arası oldu ve `state/.locks/<ad>.lock` dosyalarını kullanıyor. Testin ölçtüğü şey
+    # "bu katman hangi KARAR dosyalarına yazıyor?"; kilit altyapısı o kümenin dışındadır ve
+    # sınırın kendisi aşağıdaki `strategy.yaml` iddiasıyla ölçülmeye devam eder.
     assert touched <= {"self_review.json", "events.jsonl", "skill_revisions.json",
-                       "near_miss.json", "sieve.json"}, f"beklenmeyen yazım: {touched}"
+                       "near_miss.json", "sieve.json", ".locks"}, f"beklenmeyen yazım: {touched}"
     assert not (sandbox_state / "strategy.yaml").exists()

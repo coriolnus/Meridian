@@ -63,16 +63,16 @@ def commit(child: dict) -> None:
 
 
 def scoreboard() -> dict:
-    return store.read_json("scoreboard.json", {"current_version": None, "versions": {}})
-
-
-SCOREBOARD = "scoreboard.json"
+    return store.read_json("scoreboard.json", _sb_default())
 
 
 def _sb_default() -> dict:
     return {"current_version": None, "versions": {}}
 
 
+# "scoreboard.json" AŞAĞIDA LİTERAL GEÇER, MODÜL SABİTİ DEĞİL: `test_learning_roundtrip_v76`
+# karneye TOPTAN yazan modülleri AST ile sayar ve sabit adı çözemez. Sabite çevirmek o dedektörü
+# SESSİZCE köreltirdi — "karneyi kim yazıyor?" sorusunun tek statik cevabı kaybolurdu.
 def update_scoreboard(version: int, **fields) -> dict:
     """KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31).
 
@@ -88,7 +88,7 @@ def update_scoreboard(version: int, **fields) -> dict:
         sb["current_version"] = version
         return True
 
-    return store.update_json(SCOREBOARD, _patch, _sb_default())
+    return store.update_json("scoreboard.json", _patch, _sb_default())
 
 
 def set_row_fields(version: int, **fields) -> dict:
@@ -112,7 +112,7 @@ def set_row_fields(version: int, **fields) -> dict:
         sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
         return True
 
-    return store.update_json(SCOREBOARD, _patch, _sb_default())
+    return store.update_json("scoreboard.json", _patch, _sb_default())
 
 
 def revert_to(version: int) -> dict:
