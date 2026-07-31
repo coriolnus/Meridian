@@ -198,7 +198,9 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 - **H2 tedarik-zinciri kapısı** ✅ 2026-07-31: `uv audit` temiz (69 paket, 0 zafiyet); dağıtım
   betiğine zorunlu ön-adım olarak kablolu (`dagit.sh` [0/6]) — ajan-önerili her yeni bağımlılık
   kurulum ÖNCESİ lockfile+audit'ten geçer (slopsquatting %19,7).
-- **H3 systemd sertleştirme** 📋 — ÖLÇÜLDÜ: meridian + barsarchive 9.2 UNSAFE; hedef <4
+- **H3 systemd sertleştirme** tur-1 ✅ (2026-07-31): 9.2 UNSAFE → 6.3 MEDIUM (iki servis;
+  dosya-sistemi/ad-alanı seti + pano token'ı unit'ten 0600 .dash.env'e taşındı+rotasyon).
+  Tur-2 📋: seccomp @system-service + CapabilityBoundingSet; hedef <4
   (NoNewPrivileges/ProtectSystem=strict/PrivateTmp/ProtectHome önce; seccomp EN SON ve dikkatli).
   + `MERIDIAN_DASH_TOKEN` unit dosyasında DÜZ METİN (herkes-okur) → rotasyon + LoadCredential'a
   taşıma AYNI bakım penceresinde.
@@ -208,8 +210,10 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   per-commit DEĞİL; hedef ≥%80 (testlerin gerçekliği kapısı).
 - **H6 CLAUDE.md** ✅ 2026-07-31 — kısa çalışma sözleşmesi repo köküne yazıldı (log-önce kuralı,
   roller, yasalar, canlı-güvenlik).
-- **H7 restore tatbikatı** 📋 — Mac'teki yedekten boş dizine süre-ölçümlü geri dönüş provası;
-  çeyreklik ritim ("restore edilmemiş yedek hipotezdir").
+- **H7 restore tatbikatı** ✅ İLKİ YAPILDI (2026-07-31): A1 arşivinden çekme 3,1sn + açma 0,3sn,
+  64/64 JSON sağlam, sayılar canlıyla birebir. BULGU→ÇÖZÜM: tar "file changed" exit-1'i unit'i
+  FAILURE'a boyuyordu + SQLite sonrası ham tar yarışlı olurdu → yedek unit revize (exit<=1
+  toleransı + storage.backup_to tutarlı kopya, canlıda doğrulandı). Çeyreklik ritim sürer.
 - **H11 mekanizma süre-tavanları + poll açlığı** 📋 (2026-07-31 vakası, kod okunarak düzeltildi):
   warmup_sprint TASARIMI gereği uzun (bütçe 10 sonda × walk-forward ≈ 1-5 sa nominal;
   watchdog.py:25 alarm eşiği 8 sa) — vaka "takılı süreç" değil. GERÇEK açıklar: (a) bekçi ALARM
@@ -225,7 +229,9 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   .gitignore güncel (state/ [goal/bounds hariç] + backups/ + .env dışarıda — sır taşınmaz);
   `dagit.sh`'a kirli-ağaç kapısı eklendi (yarım-iş canlıya gidemez; bilinçli istisna --kirli-gec).
   YENİ SÖZLEŞME: tur başına commit; dosya-ayrıklık artık git-diff ile DENETLENEBİLİR.
-- **H9 SQLite defter çekirdeği 🔄 (operatör onayıyla; Opus sahada 2026-07-31):**
+- **H9 SQLite defter çekirdeği ✅ CANLIDA (2026-07-31 ~10:56 UTC penceresi; operatör koştu):**
+  6/6 varlık parite-digest'le taşındı (shadow_books dahil); app-gözü birebir (95/94457.91/v3);
+  WAL aktif; .migrated geri-dönüş arşivleri yerinde; MERIDIAN_DB=off acil anahtarı hazır.
   Kademe A: meridian/storage.py (WAL + synchronous=NORMAL + busy_timeout + foreign_keys) +
   trades/trade_plans/scoreboard/portfolio/equity_curve/shadow_books → state/meridian.db;
   parite-digest'li idempotent migrasyon (dbmigrate --uygula); store.py API'si korunur.
