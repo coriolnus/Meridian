@@ -121,9 +121,17 @@ element carries no measurement, it carries no colour.
 full from the Omega reference the operator chose (`nextjsshop.com/templates/omega`): paper-white,
 warm bone panels, black primary action. The night ground is the same desk under a lamp: a warm
 dark-grey field with off-white ink, built for the 24/7 low-light shift the operator actually keeps.
-There is exactly **one set of token names**, two sets of values, and a switch in the top bar. Every
-rule below holds in both. Every geometry, every type size, every spacing step, every radius, and
-the flat-elevation invariant are **identical** across the two — only colour values move.
+There is exactly **one set of token names**, two sets of values, and a switch at the foot of the
+rail. Every rule below holds in both. Every geometry, every type size, every spacing step, every
+radius, and the flat-elevation invariant are **identical** across the two — only colour values move.
+
+**The rule that makes the second lighting possible is that no rule may contain a colour.** Every
+value that carries colour lives in a token, including the ones that are easy to forget: hairlines
+inside chips, the scrim behind a modal, matrix cell fills, and the translucent top bar. Twenty such
+literals were sitting inside rule bodies when the night ground was built, and each one would have
+survived the switch unchanged. The worst was the top bar: left as `rgba(255,255,255,.82)` it would
+stay white over a dark page and take the HALT and KRİZ controls with it — the exact inverse of a
+failure this system has already had once, measured at **1.27:1**.
 
 The strictest inheritance from Omega is the absence of an interaction colour. Omega's primary
 action is a black pill, not a blue one, and adopting that sharpened a rule Meridian already had

@@ -26,19 +26,33 @@
 > içindeki iki yanlış yorum da) · §7.7 (tarayıcı doğrulaması — artık yapılıyor).
 > **Hâlâ açık:** §7.4 (panel sayımı), §7.5 (alarm oranı — eşleme hükmü verilmeden ölçülemez).
 >
-> **Bu tur ortaya çıkan, planda OLMAYAN üç kusur** (üçü de düzeltildi):
-> 1. **CSP dağıtımı kırardı.** `deploy/Caddyfile` `script-src 'self'` diyor ama `landing.html`
->    ve `workflow.html` satır içi script taşıyordu — üretimde ikisi de ölü açılırdı
->    (workflow'un TÜM diyagramı o blokta üretiliyor). `landing.js` / `workflow.js` olarak
->    çıkarıldı.
+> | H23 | `j`/`k` satır gezinmesi (uçlarda sarmaz, `--navh` payı, üç koruma sınandı) | `app.js` |
+>
+> **Bu tur ortaya çıkan, planda OLMAYAN beş kusur** (beşi de düzeltildi):
+> 1. **CSP dağıtımı kırardı — iki ayrı yoldan.** `deploy/Caddyfile` `script-src 'self'` diyordu.
+>    (a) `landing.html` + `workflow.html` satır içi `<script>` taşıyordu — workflow'un TÜM
+>    diyagramı o blokta üretiliyor, sayfa bomboş açılırdı. → `landing.js` / `workflow.js`.
+>    (b) **Daha ağırı:** 40 satır içi olay özniteliği (`onclick`/`oninput`). CSP bunları da
+>    bloklar. Pano çizilir ama **hiçbir düğme iş görmezdi — HALT ve KRİZ dahil.**
+>    → hepsi olay delegasyonuna çevrildi (kayıtlı izin listesi, `window[ad]` değil), CSP
+>    geri sıkıldı, ve `tests/test_web_csp_uyum.py` (20 test) bunu kalıcı olarak koruyor.
+>    Test'in gerçekten kırıldığı kanıtlandı (haltbtn geçici olarak bozuldu → FAILED).
 > 2. **`.tbl` sınıfının hiç stili yoktu.** Dört tablo tarayıcı varsayılanıyla, hücreleri
 >    bitişik çiziliyordu.
 > 3. **Boş veride `undefined` sızıyordu** ("Lundefined", "strateji vundefined").
+> 4. **`workflow.html`'in yön sözleşmesi eski dünyayı anlatıyordu** — "near-black ground",
+>    "INDIGO IS INTERACTION"; indigo aylar önce kaldırılmıştı.
+> 5. **Landing YANLIŞ BULUT ADI veriyordu.** Dışa dönük sayfa iki yerde "Google Cloud" diyordu;
+>    sistem Oracle A1'de (`CLAUDE.md` §5). `PRODUCT.md` de "GCP Compute Engine VM" diyordu.
+>    Üçü de düzeltildi. Bu sayfanın tek dışa dönük iddiası dürüstlük — yanlış bir altyapı adı
+>    uydurma rakamla aynı sınıfa girer.
 >
-> **Sıradaki adaylar:** H12 (gömülü trendler) · H23 (satır-içi klavye gezinmesi) ·
-> H3 (beklenen-aralık bandı — önce bandın İSTATİSTİKSEL tanımı gerekir, uydurulamaz) ·
-> H2/H16/H17 (alarm bütçesi — önce EEMUA eşleme hükmü yazılmalı) · H5 (imputation işareti —
-> okuma ucunun onarım bayrağı taşıması gerekiyor) · H7 (komut paleti, en büyük tek kalem).
+> **Sıradaki adaylar:** H12 (gömülü trendler) · H3 (beklenen-aralık bandı — önce bandın
+> İSTATİSTİKSEL tanımı gerekir, uydurulamaz) · H2/H16/H17 (alarm bütçesi — önce EEMUA eşleme
+> hükmü yazılmalı; ölçüm kartı gerektirir, `CLAUDE.md` §3) · H5 (imputation işareti — okuma
+> ucunun onarım bayrağı taşıması gerekiyor, `api.py` girer) · H7 (komut paleti, en büyük tek
+> kalem) · `style-src`'deki `unsafe-inline` (app.js satır içi stil üretiyor — script tarafı
+> kapandı, stil tarafı hâlâ açık borç).
 
 **Ne bu:** operatörün verdiği UI/UX el kitabındaki HER maddenin mevcut kodla karşılaştırması.
 **Ne değil:** kod. Bu tur belgeleme turudur; `meridian/web/*` bu turda DEĞİŞMEDİ.

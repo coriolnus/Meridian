@@ -33,7 +33,7 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
 
 ## Operating Context
 
-- Runs as a 24/7 worker + FastAPI dashboard, either locally or on a GCP Compute Engine VM (systemd
+- Runs as a 24/7 worker + FastAPI dashboard, either locally or on an Oracle Cloud A1 VM (systemd
   unit, IAP tunnel for remote access; the dashboard binds to localhost only).
 - Three web surfaces, all served by `meridian/api.py` from `meridian/web/`:
   - `index.html` — the live operational dashboard ("Bugün" / Today).
