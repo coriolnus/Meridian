@@ -7,6 +7,7 @@
 5. Canlı sistem A1'de (Oracle, ubuntu@130.61.126.87). YERELDE `./serve.sh` KOŞMA (çift emir riski). Canlı worker koşarken state'e yazma. Dağıtım: dry-run + mtime kontrolü + bakım penceresi + doğrulama.
 6. Test disiplini: tam suite yalnız Rol-1'de tek-otoriter; ajanlar kapsam testi koşar. tail-kesmeli triyaj yok — tam `grep -E "FAILED|ERROR"`.
 7. Bekleme betiği (waiter) YASAK; uzun işler arka plan görevi olarak, çıktı dosyasından okunur.
-8. GİT (2026-07-31'den beri): tur başına commit (Rol-1 atar; ajanlar git komutu KOŞMAZ). Kirli
+8. GİT (2026-07-31'den beri): tur başına commit — Rol-1 UYGUN GÖRDÜĞÜ ANDA, operatör onayı
+   beklemeden atar (kalıcı yetki 2026-07-31); ajanlar git komutu KOŞMAZ. Kirli
    çalışma ağacıyla dağıtım YOK (`dagit.sh` kapısı; bilinçli istisna `--kirli-gec`). state/,
    backups/, .env versiyonlanmaz — sır asla commit'lenmez.
