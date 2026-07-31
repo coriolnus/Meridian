@@ -1,0 +1,33 @@
+card_id: EDG-2026-009
+family: long_horizon_trend_refine   # WP-K — TEK YAŞAYAN AİLENİN rafine turu
+thesis: >
+  Uzun-ufuk trend kolu (N=10 seçim, +13,1p/yıl vs EW-evren, t=3,69; edge SEÇİMDEN geliyor,
+  chandelier çıkışı maliyetli; medyan tutuş 63g; 2021-26 sessiz) iki eksende rafine edilebilir:
+  (a) ÇIKIŞ: chandelier yerine duraksız aylık-rebalans (edge seçimdense, çıkış mekaniği yalnız
+  maliyet üretir hipotezi); (b) EVREN: PIT-sağkalan alt-kümesi (survivorship üst-sınır beyanlı —
+  üyelik verisi repo'da, delist barları YOK; bu kol edge'in evren-seçim yanlılığına duyarlılığını ölçer).
+evidence_refs: [trend_kolu/ ölçümü 2026-07-30 (ham kol ALIVE hükmü), research/pit_universe/
+  sp500_uyelik_tarihi.csv (fja05680 MIT), ROADMAP WP-K tasarım notu, WP-M oosonly standardı]
+universe: "full_251 VE pit_sagkalan (1996+ üyelik-tarihli, yalnız bar-önbelleğinde yaşayanlar — ÜST-SINIR beyanlı)"
+features_asof: "trend şablonu ham koldakiyle BİREBİR (momentum sıralaması + trend filtresi, t ve öncesi); aylık-rebalans kolu ayın ilk işlem günü seçer (XNYS)"
+horizon: "trend_kolu ölçüm şasisi (walk-forward, EW-evren kıyası, t-istatistiği); 2021+ dönem-dilimli raporlama ZORUNLU (sessizlik teşhisi — K eksenine sayılmaz, rapor dilimi)"
+parameter_grid:
+  cikis: [chandelier_mevcut, aylik_rebalans_duraksiz]   # ×2
+  evren: [full_251, pit_sagkalan]                        # ×2 → K+=4 (çarpım)
+cost_model: "10bps; aylık-rebalans kolunda devir (turnover) AYRICA raporlanır — maliyet farkı hükme girer"
+success_metric: >
+  en az bir rafine hücre ham kolun yıllık fazlasını (t>=2 ile) KORURKEN şunlardan birini sağlar:
+  maliyet-sonrası net fazla artar VEYA maxDD/vol anlamlı düşer (P>=0.95). PIT kolunda edge'in
+  korunması (t>=2) başlı başına değerli bulgu — evren-yanlılığı savunması.
+kill_criteria:
+  - "hiçbir rafine hücre ham kolu geçemiyorsa: rafine ölür, HAM KOL YAŞAMAYA DEVAM EDER (bu kart aileyi öldüremez — yalnız rafineyi)"
+  - "PIT kolunda edge kayboluyorsa (t<1) → survivorship-şüphe kaydı AÇILIR; ham kolun hükmü 'şüpheli-yaşayan'a düşer (kill-list'e dokunulmaz, hüküm notu)"
+  - "aylık-rebalans devir maliyeti fazlayı yutuyorsa o hücre ölü (beklenen risk — dürüstçe raporla)"
+guards:
+  - "pozitif kontrol: ham kol (chandelier × full_251) bu şaside yeniden koşulur ve 2026-07-30 hükmüyle tutarlı çıkmalı (+13,1p/yıl civarı, t>=3) — üretilemezse şasi geçersiz, hüküm yok"
+  - "PIT kolu ÜST-SINIR beyanı sonuc.json'a yazılır: ölü/çıkmış isimler fiyatlanamıyor, gerçek PIT getirisi bundan DÜŞÜK olabilir"
+  - "2021+ dilim raporu: fazlanın yıl-yıl dağılımı (sessizlik rejim mi decay mi — tanı, eşik değil)"
+  - "slim defterlerde pnl_dollars korunur; digest kıyasları search+confirm (tum-digest artefaktı bilinen)"
+k_registry: {registered_at: "2026-07-31T14:0xZ", trial_ids: [pending]}
+status: registered
+notes: "Ölçüm scratchpad/trend_rafine/ altında SALT-ÖLÇÜM; trend_kolu/ şasisi şablon (SALT-OKUNUR). Kart dosyasına ölçüm ajanı DOKUNMAZ. Aylık gölge-kitap tasarımı HÜKÜMDEN SONRA (ölçüm-önce yasası)."

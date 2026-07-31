@@ -27,6 +27,16 @@ guards:
   - "slim defterlerde pnl_dollars KORUNUR (EDG-005 ci_para dejenerasyonu dersi)"
   - "oosonly kolu ZORUNLU + isonly/tam kollar yalnız tanı amaçlı; hüküm OOSONLY kıyasından yazılır"
   - "PK4/PK5 yol-tutarlılık kontrolleri standart"
-k_registry: {registered_at: "2026-07-31T10:5xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-07-31T10:5xZ", trial_ids: [vols_olcum/p21_oosonly, vols_olcum/p63_oosonly]}
+status: archived   # 2026-07-31 ~14:00: kill#3 — iki pencerede de yönsüz/CI-0-içi (P(vol düştü)
+#   p21=0.06 TERS / p63=0.70 eşik-altı; PARA CI'ları 0-içi; Sharpe farkları 0-içi). Pozitif kontrol
+#   9/9 GEÇTİ (qty_digest dahil); oosonly kapısı doğrulandı (is_score 4 kolda bit-bit 0.0651).
+#   ASIL BULGU (tasarımsal): sigma_hedef=IS-medyanı, OOS volü IS'in ~%70'i olunca overlay
+#   KALDIRAÇ-ARTIRICIYA dönüştü (m medyan 1.44-1.50, %47-52 üst-tavanda) ve ısı-rampasıyla
+#   ÇİFTE-KISMA kilitlenmesi yarattı (p63 derisk medyanı 0.118; OOS işlem 130→75 slot kısıtından).
+#   cost_model beyanı YALANLANDI: overlay işlem SAYISINI değiştirdi (dolum 155→88) — gelecek
+#   overlay kartlarında "sayı değişmez" varsayımı yazılmayacak. TORUN KART TETİK-ŞARTLI:
+#   asimetrik (yalnız-kıs, m<=1) varyant bu OOS'ta ölçülemez — m<1 yalnız 86/583 gün, dolum
+#   denemesi 5; tetik = yüksek-vol rejiminin gerçekten yaşandığı bir pencere birikmesi.
+#   Kanıt: vols_olcum/sonuc.json + RAPOR.md (297 satır).
 notes: "Ölçüm scratchpad/vols_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ölçüm ajanı DOKUNMAZ. G7 vol-hedefleme mirası: ısı-tavanı etkileşimi raporlanır (derisk rampasıyla çifte-kısma riski)."

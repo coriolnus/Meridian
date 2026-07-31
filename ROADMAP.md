@@ -76,8 +76,9 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   hedef-çıkışların %28'ini keserdi; kill×2). **1.1 residual momentum ✅ ARŞİV (2026-07-31, kart
   EDG-007, K=2): 6/6 hücre CI-0-içi + artımlı katkı yok — yapısal örtüşme (residmom≈rawmom ρ=0,625,
   üst-terzil örtüşmesi %83); aile kapalı, torun yok. Yan kazanım: FF3 günlük faktörler repo'da
-  (research/ff_factors/, damgalı+doğrulanmış) — 1.5 için altyapı hazır.** 1.5 momentum vol-scaling
-  overlay 📋 (yalnız market/momentum; FF verisi artık mevcut).
+  (research/ff_factors/, damgalı+doğrulanmış) — 1.5 için altyapı hazır.** **1.5 vol-scaling overlay ✅ ARŞİV (2026-07-31, EDG-008, K=2, kill#3): iki pencere de yönsüz;
+  tasarım dersi — IS-çapalı sigma_hedef düşük-vol OOS'ta kaldıraç-artırıcıya döner, ısı-rampasıyla
+  çifte-kısma; torun (yalnız-kıs m<=1) tetik-şartlı: yüksek-vol penceresi birikince.**
 - EMİLDİ: eski G2 skor-inşası S1/S2 adayları (rvolband/min_rvol çekirdeği) → 1.4'ün kart hükmüne
   bağlandı (iki ayrı ölçüm değil) · eski G7 vol-hedefleme → 1.5'in portföy-bacağı olarak, ısı
   tavanıyla birlikte POZİTİF-EV ÖNKOŞULLU (denetim RS-1).
