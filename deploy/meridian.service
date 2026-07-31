@@ -1,0 +1,20 @@
+# systemd unit — brings the Meridian compose stack back after a Compute Engine maintenance reboot.
+# Type=oneshot + RemainAfterExit=yes so the unit "stays active" while docker compose owns the processes.
+# Install: sudo cp deploy/meridian.service /etc/systemd/system/ && sudo systemctl enable --now meridian
+[Unit]
+Description=Meridian paper-trading worker + dashboard (docker compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/meridian
+Environment=MERIDIAN_GCP_PROJECT=%i
+ExecStart=/usr/bin/docker compose up -d --build
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

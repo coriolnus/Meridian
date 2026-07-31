@@ -1,0 +1,26 @@
+# secrets — NEVER commit, NEVER copy to the VM (Hard Rule 5)
+.env
+.env.*
+!.env.example
+
+# mutable state — canlı veri versiyonlanmaz (yedek zinciri: VM-tar + Mac-pull; git DEĞİL)
+state/
+!state/goal.yaml
+!state/bounds.yaml
+backups/
+
+# oturum artıkları (scratchpad repo dışında yaşar; sızıntı olursa da girmesin)
+scratchpad/
+.impeccable/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# os
+.DS_Store

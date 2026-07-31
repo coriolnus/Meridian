@@ -1,0 +1,49 @@
+# meridian-barsarchive.service — mrd:bars:* Redis ring'i → state/bars_intraday/ dayanıklı arşivci.
+#
+# NEDEN AYRI BİR BİRİM (worker'a asılı DEĞİL):
+# ops/barsarchive-run.sh'nin başındaki gerekçe burada da geçerli — arşivci panonun/worker'ın ömrüne
+# bağlı DEĞİLDİR. Yerelde serve.sh her çağrışında `stop_worker` ile süreç GRUBUNU indiriyor;
+# arşivciyi oraya asmak, panoyu her yeniden başlatışta bar akışını da kesmek olurdu. A1'de bunun
+# doğru karşılığı ayrı bir systemd birimidir: meridian restart olsa da arşivci koşmaya devam eder.
+# (Yereldeki nohup+pidfile deseninin yerini systemd alır; pidfile mantığı burada gereksizdir.)
+#
+# REDIS YOKSA NE OLUR (kodda doğrulandı, varsayım değil — barsarchive.py:343 poll / :413 run):
+#   poll() Redis'e ulaşamazsa None döner ("yazacak bar yoktu" ile AYNI ŞEY DEĞİLDİR, YASA 4) ve
+#   run() döngüsü ÇIKMAZ: idle_s (varsayılan 5 sn) uyur ve yeniden dener — Redis'i saniyede bir
+#   yeniden bağlanma denemesiyle dövmemek için. Yani süreç ölmez, sessizce boşa döner. Bu yüzden
+#   "aktif" olması bar YAZDIĞI anlamına GELMEZ; ölçüsü:  uv run python -m meridian.barsarchive --ozet
+#   After/Wants=redis-server.service bu yüzden var: açılışta Redis'i beklemek boşa dönen turları önler.
+#
+# Kurulum (deploy.sh bunu otomatik yapar):
+#   sudo cp deploy/oracle-a1/meridian-barsarchive.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now meridian-barsarchive
+#   systemctl status meridian-barsarchive  ·  journalctl -u meridian-barsarchive -f
+[Unit]
+Description=Meridian intraday bars archiver (mrd:bars:* -> state/bars_intraday)
+After=network-online.target redis-server.service
+Wants=network-online.target redis-server.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# PYTHONPATH=. — ops/barsarchive-run.sh:45 ile AYNI sözleşme (modül depo kökünden çözülür).
+Environment=PYTHONPATH=/opt/meridian
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+# .env varsa yüklenir (ops betiği de `. ./.env` yapıyor). DİKKAT: systemd yalnız KEY=VALUE satırı
+# okur — `export ` önekli satır eklenirse birim başlamaz. `-` öneki: dosya yoksa hata değil.
+EnvironmentFile=-/opt/meridian/.env
+# Bayraksız çağrı = uzun-koşan döngü (barsarchive.py main(): --ozet/--once yoksa arch.run()).
+# poll-ms / idle-s / count VARSAYILANLARI kullanılır — ops betiği de bayrak geçmiyor, taklit ediyoruz.
+ExecStart=/home/ubuntu/.local/bin/uv run python -m meridian.barsarchive
+Restart=always
+RestartSec=30
+# KillSignal=SIGINT: modülün __main__'i KeyboardInterrupt'ı yakalayıp stop()+close() yapıyor ve son
+# snapshot'ı basıyor (barsarchive.py main()). Python SIGTERM'i KeyboardInterrupt'a ÇEVİRMEZ, o yüzden
+# varsayılan SIGTERM o temiz yolu atlardı. VERİ GÜVENLİĞİ buna bağlı DEĞİL — her yazım ACK'ten önce
+# flush+fsync'lidir (Archive.write) ve ACK'lenmemiş giriş PEL'den yeniden teslim edilir; bu satır
+# yalnız temiz kapanış + günlüğe düşen kapanış özeti içindir.
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

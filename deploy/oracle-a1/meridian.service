@@ -1,0 +1,50 @@
+# meridian.service — Oracle Cloud Always Free Ampere A1 (aarch64 Linux) için YERLİ systemd birimi.
+#
+# macOS'taki launchd TCC engelini (~/Documents'tan LaunchAgent bloklanıyordu) çözer: Linux'ta systemd
+# sorunsuz çalışır, çöküş/yeniden başlatmada süreci geri getirir — keepalive.sh'a gerek kalmaz.
+# Docker YOK: Meridian saf Python + uv, build adımı yok; süreç doğrudan venv'den koşar (ARM'da hafif).
+#
+# Kurulum (A1'de, aşağıdaki deploy.sh bunu otomatik yapar):
+#   sudo cp deploy/oracle-a1/meridian.service /etc/systemd/system/meridian.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now meridian
+#   systemctl status meridian   ·   journalctl -u meridian -f
+[Unit]
+Description=Meridian paper-trading worker + dashboard (native uv/uvicorn)
+After=network-online.target
+Wants=network-online.target
+# SÜREÇ ÖLÜYKEN HABER VEREN TEK KATMAN. `notify.py` bildirimleri süreç İÇİNDEN yazar; Restart=always
+# bile kaldıramadığında (bozuk venv, dolu disk, OOM) haber verecek kimse kalmıyordu. Temiz
+# `systemctl stop` bunu TETİKLEMEZ — operatörün durdurması bir arıza değildir.
+OnFailure=meridian-fail-notify.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# --- broker & otomasyon ---
+Environment=MERIDIAN_BROKER=alpaca_paper
+Environment=MERIDIAN_AUTOSTART_CYCLE=1
+Environment=CYCLE_POLL_SECONDS=300
+Environment=MERIDIAN_AUTOSTART_HERMES=1
+Environment=HERMES_POLL_SECONDS=300
+# --- ÇEKİRDEK AYARI (4 OCPU, sunucuda ÖLÇÜLDÜ 2026-07-30: nproc=4 / 12GB). Eski "2 OCPU → havuzu
+#     KAPAT" notu ESKİDİ: operatör 4 OCPU'luk instance açabildi. Havuz artık AÇIK ve kendini
+#     sınırlıyor — reflect.py:1049 `workers = max(2, min(4, cpu_count-2))` → 4 çekirdekte 2 işçi,
+#     geriye sunucu+ajan için 2 çekirdek kalır (yerel prod serve.sh ile aynı bayrak).
+#     Duvar-saati tavanı yine geniş: Ampere çekirdeği Apple Silicon'dan yavaş, aramalar uzun sürer. ---
+Environment=MERIDIAN_PARALLEL_PROBES=1
+Environment=MERIDIAN_SEARCH_MAX_MIN=60
+Environment=HERMES_SEARCH_BUDGET=8
+# --- güvenlik: pano ağ üzerinden erişiliyorsa TOKEN ŞART. Yalnız-yerel (127.0.0.1) + SSH tünel
+#     önerilir; 0.0.0.0'a açacaksan bu token'ı gerçek bir değere ayarla (yazma uçları korunur). ---
+Environment=MERIDIAN_DASH_TOKEN=CHANGEME-long-random-ascii-token   # ASCII zorunlu (bkz. api._auth)
+# uv PATH'i (deploy.sh uv'yi ~/.local/bin veya ~/.cargo/bin'e kurar)
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.local/bin/uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080 --log-level warning
+Restart=always
+RestartSec=10
+# çöküş sonrası taze-veri çekimiyle healthz ~10dk 503 dönebilir — normal
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

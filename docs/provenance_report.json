@@ -1,0 +1,1329 @@
+{
+ "ok": false,
+ "drift": [
+  {
+   "artifact": "cf_open.json",
+   "key": "llm_opinion",
+   "rows": 125,
+   "detail": "125 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "llm_opinion",
+   "rows": 69945,
+   "detail": "69945 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "arming_eval",
+   "rows": 40,
+   "detail": "40 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "crosscheck",
+   "rows": 40,
+   "detail": "40 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "earnings_refresh",
+   "rows": 40,
+   "detail": "40 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "hermes_poll",
+   "rows": 40,
+   "detail": "40 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "warmup_sprint",
+   "rows": 40,
+   "detail": "40 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "scheduler_status.json",
+   "key": "last_processed",
+   "rows": 1,
+   "detail": "1 satırın hiçbirinde yok — tüketici hep None okuyor"
+  },
+  {
+   "artifact": "scheduler_status.json",
+   "key": "last_refetch_coverage",
+   "rows": 1,
+   "detail": "1 satırın hiçbirinde yok — tüketici hep None okuyor"
+  }
+ ],
+ "inconclusive": [],
+ "dead_fields": [
+  {
+   "artifact": "arming_report.json",
+   "key": "checked_at",
+   "rows": 4
+  },
+  {
+   "artifact": "arming_report.json",
+   "key": "rule",
+   "rows": 4
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "checked",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "date",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "drift",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "failed_submissions",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "force_sync",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "ghosts",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "mirror_drift",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "position_drift",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "skip_reason",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "stripped",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "trail_synced",
+   "rows": 12
+  },
+  {
+   "artifact": "broker_reconcile.json",
+   "key": "updated",
+   "rows": 12
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "atr",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "dormant_setup",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "entry_trigger",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "notes",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "pivot",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "profit_target",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "r_per_share",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "rs_rating",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "score",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "sector",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "setup",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "size_r",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "source_skill",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "stop",
+   "rows": 1937
+  },
+  {
+   "artifact": "candidates.jsonl",
+   "key": "ticker",
+   "rows": 1937
+  },
+  {
+   "artifact": "cf_open.json",
+   "key": "entry_date",
+   "rows": 125
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "bars_held",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "dormant",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "entry",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "entry_trigger",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "exit",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "gate_verdict",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "plan_id",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "r_multiple_expected",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "resolved",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "setup",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "stop",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "target",
+   "rows": 69945
+  },
+  {
+   "artifact": "counterfactuals.jsonl",
+   "key": "verdict",
+   "rows": 69945
+  },
+  {
+   "artifact": "data_quality.json",
+   "key": "crosscheck",
+   "rows": 4
+  },
+  {
+   "artifact": "data_quality.json",
+   "key": "index_issues",
+   "rows": 4
+  },
+  {
+   "artifact": "data_quality.json",
+   "key": "universe",
+   "rows": 4
+  },
+  {
+   "artifact": "equity_curve.json",
+   "key": "version",
+   "rows": 27
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "a",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "age_s",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "appended",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "as_of",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "attempt",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "best",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "book_at",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "breaker",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "budget",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "check",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "checked_at",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "cleared",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "coid",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "cur_score",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "data_ok",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "day_pnl_pct",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "delivered",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "dropped_rows",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "empty",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "equity",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "error",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "ev",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "evaluated",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "filled",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "found",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "from",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "from_version",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "got",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "had",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "halted",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "hyp_id",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "index_ok",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "index_session",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "k_max",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "kept_from_cache",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "kind",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "legal",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "max_pct",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "mechanism",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "min_n",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "model",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "n_cur",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "n_par",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "ok",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "open_positions",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "p",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "par_score",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "parent",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "plans",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "preloaded",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "quarantined",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "regime",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "rows",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "rpd",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "setup",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "source",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "status",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "tickers_failed",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "to",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "to_version",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "tool_calls",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "ts",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "unavailable",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "variable",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "version",
+   "rows": 6484
+  },
+  {
+   "artifact": "events.jsonl",
+   "key": "windows",
+   "rows": 6484
+  },
+  {
+   "artifact": "exit_efficiency.json",
+   "key": "_kaynak",
+   "rows": 35
+  },
+  {
+   "artifact": "exit_efficiency.json",
+   "key": "capture_pct",
+   "rows": 35
+  },
+  {
+   "artifact": "exit_efficiency.json",
+   "key": "reasons",
+   "rows": 35
+  },
+  {
+   "artifact": "gate_calibration.json",
+   "key": "go_win_rate",
+   "rows": 143
+  },
+  {
+   "artifact": "gate_calibration.json",
+   "key": "median_ratio",
+   "rows": 143
+  },
+  {
+   "artifact": "gate_calibration.json",
+   "key": "rule",
+   "rows": 143
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "armed",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "autonomy_level",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "data_ok",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "explore_mode",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "last_date",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "mirror_drift",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "mode",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "n_trades",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "replay_seeded",
+   "rows": 70
+  },
+  {
+   "artifact": "heartbeat.json",
+   "key": "score",
+   "rows": 70
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "brain_availability",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "last_poll",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "last_reflection",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "last_result",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "last_variable",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "poll_seconds",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "reflections",
+   "rows": 4
+  },
+  {
+   "artifact": "hermes_status.json",
+   "key": "started_at",
+   "rows": 4
+  },
+  {
+   "artifact": "hypotheses.jsonl",
+   "key": "overfit_suspect",
+   "rows": 1642
+  },
+  {
+   "artifact": "hypotheses.jsonl",
+   "key": "rationale",
+   "rows": 1642
+  },
+  {
+   "artifact": "hypotheses.jsonl",
+   "key": "reject_reasons",
+   "rows": 1642
+  },
+  {
+   "artifact": "hypotheses.jsonl",
+   "key": "source",
+   "rows": 1642
+  },
+  {
+   "artifact": "hypotheses.jsonl",
+   "key": "vs_benchmark_at_ship",
+   "rows": 1642
+  },
+  {
+   "artifact": "learning_loop_open.json",
+   "key": "last",
+   "rows": 17
+  },
+  {
+   "artifact": "learning_loop_open.json",
+   "key": "n_cur",
+   "rows": 17
+  },
+  {
+   "artifact": "learning_loop_open.json",
+   "key": "n_par",
+   "rows": 17
+  },
+  {
+   "artifact": "learning_loop_open.json",
+   "key": "parent",
+   "rows": 17
+  },
+  {
+   "artifact": "learning_loop_open.json",
+   "key": "version",
+   "rows": 17
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "_kaynak",
+   "rows": 128
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "buckets",
+   "rows": 128
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "cf_buckets",
+   "rows": 128
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "cf_pairs",
+   "rows": 128
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "r_gap",
+   "rows": 128
+  },
+  {
+   "artifact": "llm_calibration.json",
+   "key": "rule",
+   "rows": 128
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "cf_advance",
+   "rows": 40
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "mirror_reconcile",
+   "rows": 40
+  },
+  {
+   "artifact": "mechanism_beats.json",
+   "key": "p5_calibrations",
+   "rows": 40
+  },
+  {
+   "artifact": "near_miss.json",
+   "key": "_kaynak",
+   "rows": 62
+  },
+  {
+   "artifact": "near_miss.json",
+   "key": "blockers",
+   "rows": 62
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "artifact",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "artifacts",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "error",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "finished",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "run_id",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "skills_declared_not_run",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "skills_invoked",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "skills_skipped",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "started",
+   "rows": 735
+  },
+  {
+   "artifact": "pipeline_runs.jsonl",
+   "key": "status",
+   "rows": 735
+  },
+  {
+   "artifact": "regime.json",
+   "key": "breadth_score",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "distribution_days",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "ftd",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "metrics",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "min_exposure_score",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "rationale",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "score",
+   "rows": 77
+  },
+  {
+   "artifact": "regime.json",
+   "key": "source",
+   "rows": 77
+  },
+  {
+   "artifact": "regime_edge.json",
+   "key": "_kaynak",
+   "rows": 55
+  },
+  {
+   "artifact": "regime_edge.json",
+   "key": "chop",
+   "rows": 55
+  },
+  {
+   "artifact": "regime_edge.json",
+   "key": "trend_up",
+   "rows": 55
+  },
+  {
+   "artifact": "scheduler_status.json",
+   "key": "cycles",
+   "rows": 1
+  },
+  {
+   "artifact": "scheduler_status.json",
+   "key": "last_tick",
+   "rows": 1
+  },
+  {
+   "artifact": "score_calibration.json",
+   "key": "buckets",
+   "rows": 99
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "agent",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "attention",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "calibrations",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "contradictions",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "findings",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "progress",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "ts",
+   "rows": 31
+  },
+  {
+   "artifact": "self_review.json",
+   "key": "week",
+   "rows": 31
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "_kaynak",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "brier_train",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "features",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "mode",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "mu",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "note",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "sd",
+   "rows": 2
+  },
+  {
+   "artifact": "shadow_model.json",
+   "key": "w",
+   "rows": 2
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "cf_fidelity.gercek",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "cf_fidelity.kesisim",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "exit_efficiency.cf",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "exit_efficiency.gercek",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "llm_opinion_calibration.cf",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "llm_opinion_calibration.gercek",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "near_miss_report.rejim_dilimi",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "near_miss_report.satirlar",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "regime_edge",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "score_calibration.cf",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "score_calibration.gercek",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "shadow_model.cf",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "shadow_model.egitim",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "shadow_model.gercek",
+   "rows": 394
+  },
+  {
+   "artifact": "sieve.json",
+   "key": "shadow_model.terfi",
+   "rows": 394
+  },
+  {
+   "artifact": "skill_recommendations.jsonl",
+   "key": "action",
+   "rows": 6
+  },
+  {
+   "artifact": "skill_revisions.json",
+   "key": "at",
+   "rows": 2
+  },
+  {
+   "artifact": "skill_revisions.json",
+   "key": "chars",
+   "rows": 2
+  },
+  {
+   "artifact": "skills_registry.json",
+   "key": "counts",
+   "rows": 14
+  },
+  {
+   "artifact": "skills_registry.json",
+   "key": "credentials",
+   "rows": 14
+  },
+  {
+   "artifact": "skills_registry.json",
+   "key": "generated",
+   "rows": 14
+  },
+  {
+   "artifact": "skills_registry.json",
+   "key": "skill_evolution_enabled",
+   "rows": 14
+  },
+  {
+   "artifact": "skills_registry.json",
+   "key": "style",
+   "rows": 14
+  },
+  {
+   "artifact": "spend.jsonl",
+   "key": "in_tokens",
+   "rows": 471
+  },
+  {
+   "artifact": "spend.jsonl",
+   "key": "model",
+   "rows": 471
+  },
+  {
+   "artifact": "spend.jsonl",
+   "key": "note",
+   "rows": 471
+  },
+  {
+   "artifact": "spend.jsonl",
+   "key": "out_tokens",
+   "rows": 471
+  },
+  {
+   "artifact": "symbol_no_data.json",
+   "key": "ZZZZ",
+   "rows": 2
+  },
+  {
+   "artifact": "trade_plans.jsonl",
+   "key": "exit_reason",
+   "rows": 4271
+  },
+  {
+   "artifact": "trade_plans.jsonl",
+   "key": "pnl_dollars",
+   "rows": 4271
+  },
+  {
+   "artifact": "trade_plans.jsonl",
+   "key": "r_multiple",
+   "rows": 4271
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "bars_held",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "costs",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "entry",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "exit",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "exploration",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "id",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "mae_r",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "mfe_r",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "pnl_pct",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "qty",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "r_multiple_expected",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "scaled_out",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "setup",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "side",
+   "rows": 10064
+  },
+  {
+   "artifact": "trades.jsonl",
+   "key": "ticker",
+   "rows": 10064
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "date",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "n_no_data",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "n_stale",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "no_data",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "reason",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "stale",
+   "rows": 1
+  },
+  {
+   "artifact": "universe_drift.json",
+   "key": "universe",
+   "rows": 1
+  },
+  {
+   "artifact": "x.json",
+   "key": "a",
+   "rows": 1
+  },
+  {
+   "artifact": "y.jsonl",
+   "key": "b",
+   "rows": 1
+  }
+ ],
+ "artifacts": 56,
+ "rows_seen": 97869
+}

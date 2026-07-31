@@ -1,0 +1,98 @@
+"""spend.py — the Hermes cost ledger + budget guard. A self-improving agent that calls an LLM every
+few closed trades can quietly run up a bill; this makes the spend explicit and bounded. Every real
+Claude call appends its token usage and estimated USD to state/spend.jsonl, and before a call
+over_budget() refuses once the month's spend hits the budget (Hermes then falls back to the free
+deterministic proposer — the loop keeps learning, just without paid inference). Nothing here needs a
+key to build; it simply activates when Hermes runs. Prices are env-overridable for when they change."""
+from __future__ import annotations
+import datetime as dt
+import os
+
+from . import store
+
+# per-1M-token list prices (USD); override via env when pricing changes
+PRICE_IN_PER_M = float(os.environ.get("HERMES_PRICE_IN", "15.0"))
+PRICE_OUT_PER_M = float(os.environ.get("HERMES_PRICE_OUT", "75.0"))
+MONTHLY_BUDGET_USD = float(os.environ.get("HERMES_MONTHLY_BUDGET_USD", "20.0"))
+
+# MODEL BAŞINA fiyat (denetim turu 31, 2026-07-21). Eskiden TEK bir fiyat vardı ve `record(model=...)`
+# onu YOK SAYIYORDU: ücretsiz katmandaki Gemini ya da yerelde koşan Nous çağrıları da Opus listesi
+# ($15/$75 per M) ile fiyatlanıyordu. Sonuç: HARCANMAMIŞ para bütçeyi doldurur, over_budget() true
+# olur ve LLM katmanı sessizce kapanırdı — "beyin neden susuyor" sorusunun görünmez cevabı.
+# Anahtar: model adında geçen alt-dizge (küçük harf). Bilinmeyen model → varsayılan (muhafazakâr).
+PRICES: dict[str, tuple[float, float]] = {
+    "opus": (15.0, 75.0),
+    "sonnet": (3.0, 15.0),
+    "haiku": (0.8, 4.0),
+    "gemini": (float(os.environ.get("HERMES_PRICE_GEMINI_IN", "0.0")),
+               float(os.environ.get("HERMES_PRICE_GEMINI_OUT", "0.0"))),   # varsayılan: ücretsiz katman
+    "hermes-4": (0.0, 0.0),        # yerel/Nous portal — operatörün kurulumunda ücretsiz
+    "nous": (0.0, 0.0),
+}
+
+
+def price_for(model: str | None) -> tuple[float, float]:
+    m = str(model or "").lower()
+    for key, pair in PRICES.items():
+        if key in m:
+            return pair
+    return (PRICE_IN_PER_M, PRICE_OUT_PER_M)
+
+
+def _now_iso() -> str:
+    """UTC — defterin geri kalanıyla (obs, memory, watchdog) AYNI saat dilimi. Eskiden yerel saatti;
+    ay sınırı diğer kayıtlarla kayıyor ve satırlar olay defteriyle yan yana okunamıyordu (turu 31)."""
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+
+def estimate_cost(in_tokens: int, out_tokens: int, model: str | None = None) -> float:
+    p_in, p_out = price_for(model)
+    return round(in_tokens * p_in / 1_000_000 + out_tokens * p_out / 1_000_000, 4)
+
+
+def record(in_tokens: int, out_tokens: int, model: str, note: str = "", ts: str | None = None,
+           thought_tokens: int | None = None) -> dict:
+    """Append one call's usage to the ledger and return the row.
+
+    thought_tokens: DÜŞÜNEN modellerin (gemini-3.x) gizli akıl yürütme tokenları — sağlayıcı bunları
+    ÜRETİM tavanından yer ve faturalar, ama `candidatesTokenCount` içinde GÖRÜNMEZLER. Ölçülmediği
+    yerde None kalır (uydurma yasağı): yalnız cevabında bu sayıyı bildiren sağlayıcı yolu doldurur,
+    bu yüzden alan yoksa "sıfırdı" değil "ölçülmedi" demektir ve satıra hiç yazılmaz.
+    Maliyet formülü DEĞİŞMEDİ: burada fiyatlanan tek çıktı `out_tokens`tır. Düşünce tokenlarını
+    cost_usd'ye katmak fiyat sözleşmesini (ve mevcut denetim testlerini) değiştiren ayrı bir karardır;
+    tek düşünen sağlayıcı olan gemini zaten ücretsiz katmanda (PRICES["gemini"] = 0/0) fiyatlanıyor.
+    Sayı yine de defterde ve `summary()`de görünür — bütçenin görünmez tarafı artık ölçülebilir."""
+    row = {"ts": ts or _now_iso(), "model": model, "in_tokens": int(in_tokens),
+           "out_tokens": int(out_tokens), "cost_usd": estimate_cost(in_tokens, out_tokens, model),
+           "note": note}
+    if thought_tokens is not None:
+        row["thought_tokens"] = int(thought_tokens)
+    store.append_jsonl("spend.jsonl", row)
+    return row
+
+
+def month_spend(month: str | None = None) -> float:
+    m = month or _now_iso()[:7]                      # YYYY-MM
+    rows = store.read_jsonl("spend.jsonl")
+    return round(sum(float(r.get("cost_usd", 0.0)) for r in rows if str(r.get("ts", ""))[:7] == m), 4)
+
+
+def over_budget(budget: float | None = None, month: str | None = None) -> bool:
+    cap = MONTHLY_BUDGET_USD if budget is None else budget
+    return cap > 0 and month_spend(month) >= cap
+
+
+def summary(month: str | None = None) -> dict:
+    m = month or _now_iso()[:7]
+    rows = store.read_jsonl("spend.jsonl")
+    this_month = [r for r in rows if str(r.get("ts", ""))[:7] == m]
+    spent = round(sum(float(r.get("cost_usd", 0.0)) for r in this_month), 4)
+    # YASA 6 — üretilen alanın OKUYUCUSU: düşünce tokenları burada toplanır ve /api/spend üzerinden
+    # panoya çıkar. Alanı HİÇ taşımayan satır "ölçülmedi"dir; hiçbiri taşımıyorsa toplam None kalır
+    # (0 yazmak "düşünce yoktu" demek olurdu — ölçülmemişi ölçülmüş göstermek).
+    measured = [r for r in this_month if r.get("thought_tokens") is not None]
+    return {"month": m, "spent_usd": spent, "budget_usd": MONTHLY_BUDGET_USD,
+            "remaining_usd": round(max(0.0, MONTHLY_BUDGET_USD - spent), 4),
+            "over_budget": MONTHLY_BUDGET_USD > 0 and spent >= MONTHLY_BUDGET_USD,
+            "calls_this_month": len(this_month),
+            "thought_tokens": sum(int(r["thought_tokens"]) for r in measured) if measured else None}

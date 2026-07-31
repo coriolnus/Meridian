@@ -1,0 +1,85 @@
+# Caddyfile — Meridian panosu için TLS sonlandıran ters vekil.
+#
+# NEDEN CADDY: Let's Encrypt sertifikasını kendisi alır ve yeniler, HTTP→HTTPS yönlendirmesi
+# varsayılandır, ve yapılandırma bu dosya kadardır. nginx de olur ama sertifika yenileme ayrı bir
+# certbot zamanlayıcısı ister; tek operatörlü bir kurulumda unutulacak parça tam olarak odur.
+#
+# TEMEL KURAL: uvicorn 127.0.0.1'de KALIR. Vekil aynı makinede olduğu için loopback yeterlidir ve
+# pano internete DOĞRUDAN hiç açılmaz. `--host 0.0.0.0` vermeye gerek yoktur; verilirse zaten
+# api.py parola kurulu değilse açılmayı reddeder.
+#
+# KURULUM
+#   1. DNS: alan adının A kaydı Oracle VM'in genel IP'sine baksın (sertifika bunu doğrular).
+#   2. Oracle Security List / NSG: 80 ve 443 açık, DİĞER HER ŞEY KAPALI. 8080'i ASLA açma.
+#   3. VM'de yerel güvenlik duvarı da aynısını söylesin (Oracle imajları iptables ile gelir):
+#        sudo iptables -I INPUT -p tcp --dport 80  -j ACCEPT
+#        sudo iptables -I INPUT -p tcp --dport 443 -j ACCEPT
+#        sudo netfilter-persistent save
+#   4. `sudo caddy run --config /etc/caddy/Caddyfile` (ya da systemd servisi)
+#
+# ALAN ADI YOKSA: Caddy IP için Let's Encrypt sertifikası ALAMAZ. O durumda ya bir alan adı al
+# (yılda birkaç dolar) ya da `tls internal` kullan — o zaman tarayıcı uyarı verir ve uyarıyı
+# tıklayıp geçmek, ortadaki adam saldırısını fark etme yeteneğini kalıcı olarak kaybettirir.
+# Broker denetim yüzeyi için tavsiye: alan adı al.
+
+meridian.ORNEK-ALAN-ADIN.com {
+	# --- TLS: Caddy otomatik alır/yeniler. E-posta yenileme uyarıları için. ---
+	tls senin@eposta.com
+
+	# --- Güvenlik başlıkları ---
+	header {
+		# HSTS: tarayıcı bu alan adına bir daha ASLA http ile gitmesin. preload YOK —
+		# preload listesine girmek geri alınamaz ve tek operatörlü bir kurulumda gereksiz risk.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+		# CSP: pano tüm CSS/JS'i kendi kaynağından servis eder, ama Geist fontları Google'dan
+		# gelir. `unsafe-inline` GEREKLİ çünkü app.js DOM'u satır içi stil taşıyan şablon
+		# dizgileriyle üretiyor — bunu kaldırmak app.js'in yeniden yazılması demek. Şimdilik
+		# dürüst hali bu; script-src'de unsafe-inline YOK, asıl koruma orada.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+		# Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler. Görünmez bir iframe
+		# içinde başka bir sayfaya gömülmeleri gerçek bir senaryo.
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+
+		# Referrer: URL'lerde artık sır yok (?token= kaldırıldı) ama yol adları da bilgi taşır.
+		Referrer-Policy "no-referrer"
+
+		# Tarayıcı yetenekleri: panonun hiçbirine ihtiyacı yok.
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+
+		# Sunucu parmak izini azalt
+		-Server
+	}
+
+	# --- Giriş ucuna ek hız sınırı (savunma derinliği) ---
+	# api.auth zaten IP başına 15 dk'da 8 deneme sınırı uyguluyor. Bu katman onu TEKRARLAMIYOR;
+	# uygulamaya hiç ulaşmadan eleyerek scrypt maliyetini (~120 ms/deneme) saldırgana yüklemekten
+	# kurtarıyor — yoksa kaba kuvvet, kilide takılsa bile CPU'yu meşgul eden bir DoS'a dönüşür.
+	# NOT: rate_limit Caddy'nin standart dağıtımında YOKTUR, `xcaddy` ile eklenti gerekir.
+	# Eklenti kurmak istemiyorsan bu bloğu sil — uygulama sınırı yine de çalışır.
+	# @login path /api/login /api/setup-password
+	# rate_limit @login {
+	# 	zone login { key {remote_host} events 10 window 5m }
+	# }
+
+	# --- Vekil ---
+	reverse_proxy 127.0.0.1:8080 {
+		# api._secure_cookie ve _client_ip bu iki başlığı okur: ilki çerezin Secure
+		# işaretlenmesini, ikincisi hız sınırının doğru IP'yi görmesini sağlar.
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-For {remote_host}
+	}
+
+	# --- Loglar ---
+	log {
+		output file /var/log/caddy/meridian.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+		# URL'lerde sır yok ama yine de sorgu dizesini yazma — ileride biri ?token= benzeri
+		# bir şey eklerse log sessizce sır biriktirmeye başlamasın.
+		format json
+	}
+}

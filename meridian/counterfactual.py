@@ -1,0 +1,254 @@
+"""counterfactual.py — Karşı-olgusal defter (öneri #1). Motorun ANA darboğazı kanıt bant genişliği:
+tarayıcı her gün ~50 ticker için tam plan kuruyor ama yalnız alınan 1-2 işlem etiket üretiyor. Bu modül
+alınmayan her tam-şekilli adayı — NO_GO/REVIEW kalanları, slot yetmeyenleri VE uyuyan kurulumların
+(momentum_burst, episodic_pivot) ateşlemelerini — simüle bracket ile sonuna kadar izleyip ayrı bir
+deftere yazar: girer miydi, stop mu hedef mi, kaç R, MFE/MAE.
+
+YASA AYNASI: giriş, motorun birebir yasasıyla simüle edilir (bir SONRAKİ seans açılışı; boşluk
+korumaları MAX_ENTRY_GAP_PCT ve stop-altı açılış; slipaj fiyatın içinde). Çıkış ise STATİK bracket'tır:
+sert stop / hedef (stop-önce muhafazakârlığı, broker._touch_exit ile aynı sıra) + zaman stopu.
+Trail / scale-out / rejim-dönüşü çıkışları BİLEREK yok — amaç seçilim kalitesini ölçmek, birebir
+P&L kopyası değil; bu sapma dürüstçe burada belgelidir.
+
+SIFIR YETKİ: bu defter hiçbir kapı kararına kanıt OLAMAZ (seçilim yanlılığı + doldurma gerçekçiliği
+eksik). Yalnız gölge katmanları besler: gölge modelin eğitim seti, uyuyan kurulumların silahlanma
+ölçümü, skor kalibrasyonu (analytics). Yetkisizlik test-zorlamalıdır (test_evidence_v4)."""
+from __future__ import annotations
+
+from . import store, obs, config
+from .broker import MAX_ENTRY_GAP_PCT
+
+OPEN_FILE = "cf_open.json"          # açık karşı-olgusallar (bekleyen giriş / aktif izleme)
+LEDGER = "counterfactuals.jsonl"    # çözülmüş satırlar — gölge katmanların ham maddesi
+MAX_OPEN = 2500                     # 250 evrene göre tavan (~60 kayıt/gün × 15g zaman-stopu + pay); doluluk panelde
+DEFAULT_TIME_STOP = 15              # exit.time_stop_days ile aynı varsayılan
+
+
+def _slip() -> float:
+    try:
+        return float(config.goal().get("slippage_bps", 5)) / 10000.0
+    except Exception as e:
+        # YASA 4: goal.yaml okunamaz/biçimsizse kayma varsayımı sessizce SABİTE düşer — cf getirileri
+        # gerçek maliyet varsayımından kopar ve cf↔gerçek karşılaştırması yanıltıcı olur.
+        obs.warn("slippage_default_used", error=f"{type(e).__name__}: {e}", fallback_bps=5)
+        return 5.0 / 10000.0
+
+
+_LEDGER_IDS: dict = {"mtime": None, "ids": set()}
+
+
+def _ledger_ids() -> set:
+    """Çözülmüş satır kimlikleri — dosya mtime'ına göre önbellekli (backfill 1139 seans çağırır,
+    her seferinde 7000+ satır okumak O(n²) olurdu)."""
+    from . import config as _cfg
+    p = _cfg.STATE / LEDGER
+    try:
+        mt = p.stat().st_mtime
+    except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
+        _LEDGER_IDS.update(mtime=None, ids=set())
+        return _LEDGER_IDS["ids"]
+    if _LEDGER_IDS["mtime"] != mt:
+        _LEDGER_IDS.update(mtime=mt, ids={r.get("id") for r in store.read_jsonl(LEDGER) if r.get("id")})
+    return _LEDGER_IDS["ids"]
+
+
+def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_stop_days: int,
+            near_miss: list = (), regime: str = "?") -> int:
+    """P3 sonunda çağrılır: o günün TÜM planları (silahlı/silahsız) + uyuyan kurulum sinyalleri
+    bekleyen karşı-olgusal olarak açılır. Dönüş: eklenen kayıt sayısı (loop görmezden gelir).
+    near_miss: (EntrySignal, blocked_by listesi) çiftleri — eşiğin HEMEN altında ölen adaylar
+    (darboğaz turu, 2026-07-20). Sıfır yetki; resolved_rows bunları VARSAYILAN dışlar.
+
+    regime: O SEANSIN rejimi. İKİNCİ TUR DENETİMİ (2026-07-21) — plan satırları rejimi plandan
+    alıyordu ama UYUYAN ve EŞİK-ALTI satırlar "?" ile yazılıyordu: canlı defterin %70'i (7115'in
+    4950'si) rejimsizdi. Sonuç, sessiz bir mantık boşluğuydu: selfreview eşik-altı kanıtından
+    "`knob`@rejim sondası aramaya değer" ÖNERİSİ üretiyor — ama kanıtın kendisinde rejim YOK.
+    Öneri hangi rejime yazılacağını dayandıramıyordu. Rejim artık her satıra damgalanıyor."""
+    open_rows = store.read_json(OPEN_FILE, [])
+    # ÇİFT KAYIT KORUMASI (2026-07-21, backfill tekrarından ÖNCE bulundu): eskiden yalnız AÇIK
+    # satırlar eleniyordu. Çözülmüş bir satır artık open_rows'ta olmadığı için, defteri yeniden
+    # üreten her koşu AYNI kanıtı İKİNCİ kez açar ve çözer → 7115 satır 14000 olur, her ölçüm
+    # (kazanma oranı, ort. R, skill katkısı) çift sayılmış kanıtla hesaplanır. Kimse fark etmezdi.
+    seen = {r["id"] for r in open_rows} | _ledger_ids()
+    added, dropped = 0, 0
+    try:                                   # #3: skill-katkı ölçümü cf hızında — satır screener'ını taşır
+        from . import skills as _sk
+        _scr = _sk.screener_for
+    except Exception:  # sessiz-yutma: isteğe bağlı bağımlılık yok — yokluğu kusur değil yapılandırma; içe aktarma denemesinin kendisi zaten cevaptır
+        _scr = lambda s2: None
+
+    def _push(row):
+        nonlocal added, dropped
+        if row["id"] in seen:
+            return
+        if len(open_rows) >= MAX_OPEN:
+            dropped += 1
+            return
+        open_rows.append(row); seen.add(row["id"]); added += 1
+
+    for p in plans:
+        rps = float(p["entry_trigger"]) - float(p["stop"])
+        if rps <= 0:
+            continue
+        _push({"id": f"CF-{dstr}-{p['ticker']}-{p.get('setup','?')}", "date": dstr,
+               "ticker": p["ticker"], "setup": p.get("setup", "?"), "score": p.get("score"),
+               "entry_trigger": float(p["entry_trigger"]), "stop": float(p["stop"]),
+               "target": float(p.get("profit_target") or (p.get("targets") or [0])[0]),
+               # KANONİK AD + eski ad (2026-07-21): sınır geçişlerinde alan adı değişiyordu —
+               # plan `r_multiple_expected` yazıyor, cf onu `rr_expected` diye YENİDEN ADLANDIRIYORDU.
+               # Tüketiciler bunu "iki ad da olabilir" yamasıyla telafi ediyor; yaması olmayan her
+               # yeni tüketici satırı SESSİZCE eler. Artık ikisi de yazılıyor.
+               "rr_expected": p.get("r_multiple_expected"),
+               "r_multiple_expected": p.get("r_multiple_expected"),
+               "regime": p.get("regime_at_plan", "?"),
+               # DANIŞMAN GÖRÜŞÜ PLANDAN TAŞINIR (2026-07-22, köken takibi bulgusu). `_resolve`
+               # satır 163'te `row.get("llm_opinion")` arıyor ve BULAMIYORDU: açık cf satırı bu
+               # alanı hiç taşımıyordu. Ölçüldü: 69.945 cf satırının SIFIRI. Sonuç, panodaki
+               # "sim 0 çift" — LLM kalibrasyonunun karşıolgusal kanadı kalıcı olarak ölüydü ve
+               # hiçbir istisna oluşmadı. `dormant` ile birebir aynı sınıf, aynı fonksiyon.
+               "llm_opinion": p.get("llm_opinion"),
+               "verdict": p.get("gate_verdict", "?"), "taken": p["id"] in armed_ids,
+               "screener": (p.get("skill_chain") or [None])[0] or _scr(p.get("setup", "?")),
+               # UYUYAN ETİKETİ PLANDAN OKUNUR (2026-07-22): burada sabit `False` yazılıyordu. Ama
+               # cf_backfill uyuyan kurulum sinyallerini HEM `plans`e HEM `dormant_sigs`e koyuyor ve
+               # ikisinin cf kimliği AYNI biçimde (`CF-{gün}-{ticker}-{setup}`). Plan döngüsü önce
+               # koştuğu için kimliği kapıyor, dormant push'u çift-kayıt korumasına takılıp eleniyor.
+               # Sonuç: defterde 1116 momentum_burst satırı var ama `dormant` alanı HEPSİNDE False —
+               # yani "uyuyan kurulum kanıtı" diye filtreleyen her tüketici SIFIR satır görüyor.
+               "dormant": bool(p.get("dormant_setup")),
+               "status": "pending", "time_stop_days": int(time_stop_days),
+               "bars_held": 0})
+    for sig in dormant_sigs:                     # uyuyan kurulumlar: silahlanma kararının ileriye-dönük kanıtı
+        rps = float(sig.entry_trigger) - float(sig.stop)
+        if rps <= 0:
+            continue
+        _push({"id": f"CF-{dstr}-{sig.ticker}-{sig.setup}", "date": dstr,
+               "ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
+               "entry_trigger": float(sig.entry_trigger), "stop": float(sig.stop),
+               "target": float(sig.profit_target),
+               "rr_expected": round((sig.profit_target - sig.entry_trigger) / rps, 2),
+               "r_multiple_expected": round((sig.profit_target - sig.entry_trigger) / rps, 2),
+               "regime": regime or "?", "verdict": "DORMANT", "taken": False, "dormant": True,
+               "screener": _scr(sig.setup),
+               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0})
+    for sig, blockers in near_miss:              # eşik-altı gölge adaylar: eşiklerin masada bıraktığı ölçülsün
+        rps = float(sig.entry_trigger) - float(sig.stop)
+        if rps <= 0:
+            continue
+        _push({"id": f"CF-{dstr}-{sig.ticker}-{sig.setup}-nm", "date": dstr,
+               "ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
+               "entry_trigger": float(sig.entry_trigger), "stop": float(sig.stop),
+               "target": float(sig.profit_target),
+               "rr_expected": round((sig.profit_target - sig.entry_trigger) / rps, 2),
+               "r_multiple_expected": round((sig.profit_target - sig.entry_trigger) / rps, 2),
+               "regime": regime or "?", "verdict": "NEAR_MISS", "taken": False, "dormant": False,
+               "near_miss": True, "blocked_by": list(blockers),
+               "screener": _scr(sig.setup),
+               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0})
+    if dropped:
+        obs.warn("cf_ledger_full", dropped=dropped, cap=MAX_OPEN)
+    store.write_json(OPEN_FILE, open_rows)
+    return added
+
+
+def _resolve(row: dict, dstr: str, status: str, exit_px: float | None = None,
+             reason: str | None = None) -> dict:
+    """Açık kaydı kapat → deftere yazılacak satır. entered=False satırlar da yazılır (no_fill istatistiği
+    seçilim analizinde anlamlı) ama r_multiple'ları None — model eğitimi entered=True'yu süzer."""
+    # `row[k]` YERİNE `.get()`: açık defter uzun ömürlüdür — şema büyüdüğünde diskte hâlâ eski
+    # satırlar durur ve KeyError bütün çözümleme turunu düşürürdü (2026-07-21: `r_multiple_expected`
+    # eklenince tam bu oldu). Eksik alan satırı düşürmez; None taşır ve tüketici süzer.
+    out = {k: row.get(k) for k in ("id", "date", "ticker", "setup", "score", "entry_trigger", "stop",
+                                   "target", "rr_expected", "r_multiple_expected", "regime", "verdict",
+                                   "taken", "dormant")}
+    # kanonik ad ↔ takma ad: hangisi varsa ikisi de dolar (ledgers.py sözleşmesindeki alias beyanı)
+    if out["r_multiple_expected"] is None:
+        out["r_multiple_expected"] = out["rr_expected"]
+    elif out["rr_expected"] is None:
+        out["rr_expected"] = out["r_multiple_expected"]
+    if row.get("llm_opinion"):
+        out["llm_opinion"] = row["llm_opinion"]
+    if row.get("screener"):
+        out["screener"] = row["screener"]
+    if row.get("near_miss"):
+        out["near_miss"] = True
+        out["blocked_by"] = row.get("blocked_by") or []          # #4: görüş çözülmüş satıra taşınır (gösterge kalibrasyonu)
+    out.update({"resolved": dstr, "status": status, "exit_reason": reason,
+                "entered": status.startswith("closed"), "bars_held": row.get("bars_held", 0)})
+    if out["entered"]:
+        entry, rps = row["entry"], row["entry"] - row["stop"]
+        exit_fill = exit_px * (1.0 - _slip())
+        out.update({"entry": round(entry, 4), "exit": round(exit_fill, 4),
+                    "r_multiple": round((exit_fill - entry) / rps, 3) if rps > 0 else None,
+                    "mfe_r": round((row["hi"] - entry) / rps, 3) if rps > 0 else None,
+                    "mae_r": round((entry - row["lo"]) / rps, 3) if rps > 0 else None})
+    return out
+
+
+def advance(per: dict, d, dstr: str) -> dict:
+    """Her günlük döngüde çağrılır: açık karşı-olgusalları günün barıyla ilerletir. Motor yasası:
+    bekleyen giriş yalnız plan gününü izleyen İLK seansta dolar (boşluk korumalarıyla), dolmazsa
+    no_fill. Aktifler: stop-önce bar yürüyüşü + zaman stopu. Dönüş özeti loop görmezden gelir."""
+    open_rows = store.read_json(OPEN_FILE, [])
+    if not open_rows:
+        return {"open": 0}
+    slip = _slip()
+    still, resolved = [], []
+    for row in open_rows:
+        if row["date"] >= dstr:                          # bugün açıldı — ilk barı SONRAKİ seans
+            still.append(row); continue
+        t = row["ticker"]
+        if t not in per or d not in per[t].index:        # bar yok (delist/veri boşluğu) → süresiz bekletme yok
+            row["_miss"] = row.get("_miss", 0) + 1
+            if row["_miss"] > 5:
+                resolved.append(_resolve(row, dstr, "expired_no_data"))
+            else:
+                still.append(row)
+            continue
+        bar = per[t].loc[d]
+        o, h, l, c = float(bar["open"]), float(bar["high"]), float(bar["low"]), float(bar["close"])
+        if row["status"] == "pending":
+            # motorun giriş yasası birebir: sonraki seans açılışı, boşluk korumaları, slipaj fiyatta
+            if o > row["entry_trigger"] * (1.0 + MAX_ENTRY_GAP_PCT):
+                resolved.append(_resolve(row, dstr, "no_fill_gap")); continue
+            if o <= row["stop"]:
+                resolved.append(_resolve(row, dstr, "no_fill_gap_stop")); continue
+            row.update({"status": "active", "entry": o * (1.0 + slip), "entry_date": dstr,
+                        "hi": h, "lo": l, "bars_held": 0})
+            # doldurma günü barı da yürünür (motor da aynı gün stop/hedefe bakar) — aşağıya düş
+        if row["status"] == "active":
+            row["hi"] = max(row.get("hi", h), h); row["lo"] = min(row.get("lo", l), l)
+            ex = None
+            # broker._touch_exit ile AYNI iki kademe (2026-07-22, v75): önce AÇILIŞ (barın ilk basılan
+            # fiyatı — sırası kesin), sonra bar içi (sıra bilinemez → stop önce). Eski sıra bar-içi
+            # stop dokunuşunu açılıştaki hedef boşluğunun ÖNÜNE koyuyordu; bu defterde GERÇEKLEŞTİ:
+            # CF-2025-10-28-SWKS-momentum_burst, bar(o=83.14, h=84.53, l=78.59), hedef 82.74,
+            # stop 79.27 → açılış zaten hedefin üstündeydi, satır -1.01R yazıldı; doğrusu ≈-0.02R.
+            if o <= row["stop"]:
+                ex = (o, "stop_gap")
+            elif o >= row["target"]:
+                ex = (o, "target_gap")
+            elif l <= row["stop"]:
+                ex = (row["stop"], "stop")
+            elif h >= row["target"]:
+                ex = (row["target"], "target")
+            elif row["bars_held"] + 1 >= row.get("time_stop_days", DEFAULT_TIME_STOP):
+                ex = (c, "time_stop")
+            if ex:
+                resolved.append(_resolve(row, dstr, "closed", exit_px=ex[0], reason=ex[1]))
+            else:
+                row["bars_held"] += 1; still.append(row)
+    store.write_json(OPEN_FILE, still)
+    for r in resolved:
+        store.append_jsonl(LEDGER, r)
+    return {"open": len(still), "resolved": len(resolved)}
+
+
+def resolved_rows(entered_only: bool = True, include_near_miss: bool = False) -> list:
+    """near_miss satırları VARSAYILAN dışarıda: 8 mevcut tüketici (silahlanma, skill-katkı, gölge model,
+    LLM kalibrasyonu, öz-değerlendirme…) eşik-altı gölge adaylarla seyrelmemeli — onlar yalnız
+    near_miss_report'un sorusudur ("hangi eşik masada para bırakıyor?")."""
+    rows = store.read_jsonl(LEDGER)
+    if not include_near_miss:
+        rows = [r for r in rows if not r.get("near_miss")]
+    return [r for r in rows if r.get("entered")] if entered_only else rows

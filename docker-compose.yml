@@ -1,0 +1,42 @@
+# Meridian — worker (24/7 loop) + dashboard (read-model). Both share the state volume.
+# Secrets come from Secret Manager via the VM service account (roles/secretmanager.secretAccessor),
+# not from a copied .env. The dashboard binds to localhost only — reach it over an IAP SSH tunnel.
+services:
+  worker:
+    build: .
+    image: meridian:latest
+    restart: unless-stopped
+    environment:
+      MERIDIAN_MODE: "paper"                 # L0. Never live without §8 gates + two hand-set flags.
+      MERIDIAN_I_ACCEPT_RISK: "false"
+      MERIDIAN_GCP_PROJECT: "${MERIDIAN_GCP_PROJECT}"
+      TZ: "America/New_York"
+    volumes:
+      - ./state:/opt/meridian/state           # the ONLY mutable dir; nightly-synced to GCS
+    command: ["python", "-m", "meridian.run"]
+    healthcheck:                               # liveness: heartbeat is being written & fresh
+      test: ["CMD", "python", "-c", "import json,datetime as dt,sys; hb=json.load(open('/opt/meridian/state/heartbeat.json')); sys.exit(0 if (dt.datetime.now(dt.timezone.utc)-dt.datetime.fromisoformat(hb['ts'])).total_seconds()<1200 else 1)"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
+  dashboard:
+    image: meridian:latest
+    restart: unless-stopped
+    depends_on: [worker]
+    environment:
+      MERIDIAN_GCP_PROJECT: "${MERIDIAN_GCP_PROJECT}"
+      MERIDIAN_DASH_TOKEN: "${MERIDIAN_DASH_TOKEN:-}"
+      TZ: "America/New_York"
+    volumes:
+      - ./state:/opt/meridian/state:ro         # read-model: dashboard reads state, never the broker
+    command: ["uvicorn", "meridian.api:app", "--host", "127.0.0.1", "--port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"                  # localhost only — NO inbound firewall rule (reach via IAP tunnel)
+    healthcheck:                               # liveness: the read-model server responds
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

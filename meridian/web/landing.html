@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meridian · Ajan tarar, sen karar verirsin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ============================================================================
+  DIRECTION CONTRACT — Meridian, tanıtım sayfası (landing)
+  THESIS: The same world as index.html — the modern product-software canon,
+  executed straight. The operator asked for this register after two themed worlds
+  were built and rejected, and named the bar: Linear, Vercel, Raycast, dark. So
+  this surface owns no metaphor at all — no era, no material, no field book. What
+  it owns is DENSITY WITH CALM: a near-black ground, hairline structure instead of
+  boxes, one restrained indigo that means "interactive", and semantic
+  green/amber/red that mean money. Structure comes from rules and spacing, never
+  from containers.
+  OWN-WORLD: Geist and Geist Mono — Vercel's own faces, the canon's actual voice
+  rather than an approximation of it. #ffffff ground, surfaces that step by four
+  or five points of luminance instead of by shadow, 1px borders at 7-13% white,
+  6-8px radii, 150ms ease-out. Indigo #050505 is interaction and nothing else; it
+  never colours a measurement. Every figure is Geist Mono with tabular numerals so
+  a column of numbers reads as a column. The ground is flat — no wash, no image.
+  MODE: PERSUASION. The first screen answers three questions in seconds — what is
+  this, why does it matter, what do I do. The offer never hides behind decoration:
+  the loudest mark on each screen is the indigo lever, because indigo is where a
+  hand acts.
+  FIRST VIEWPORT: four mono status chips on a hairline, the claim at display size,
+  one paragraph of offer, two levers — then the product's own sheet in the app's
+  CURRENT grammar. That mock is what index.html + app.js render today: a 56px icon
+  rail of view initials, and the MATRIX as the interface itself — .pm-grid /
+  .pm-strip / .pm-sect / .pm-cell, rows are setups, columns are regimes, the mean
+  read at the intersection, and a CONFIDENCE TRACK (.pm-conf, width from --conf, a
+  log-scaled percentage of sample count) under each figure so a thin mean can never
+  pass itself off as a firm one. A section with no trades is drawn "veri yok", not
+  as a zero.
+  FAILURE IS NOT A COLOUR HERE EITHER: .struck is index.html's — a plain
+  strikethrough, muted, no hatch — and it does the work red used to on the section
+  where PEAD died in chop and on the two versions that never earned another season.
+  A NEGATIVE MEASUREMENT is still red; loss is a reading, death is a strike.
+  SECTION GRAMMAR: a hairline opens the section, the title comes first, and the
+  classification sits under it as a quiet mono caption — never a tracked eyebrow
+  riding over every heading. No box-card stacks, no icon tiles, no gradient text,
+  no glass as decoration, and NO PHOTOGRAPHS OR DECORATIVE IMAGERY of any kind: an
+  empty region is solved with type, rule and spacing.
+  TYPE RAMP (DESIGN.md's Ramp Rule): every literal font-size is one of
+  10 · 11 · 12 · 13 · 14 · 17 · 20 · 24 · 28 px, plus the clamp() display steps.
+  PRESERVED: every Turkish string, every id/class name, href/anchor target and the
+  script behaviour (IntersectionObserver .rise, nav.stuck, #fill word exposure).
+  WHICH FIGURES ARE LIVE (corrected 2026-07-30, K1 — the previous blanket claim was
+  "EVERY FIGURE ON THIS PAGE IS READ LIVE FROM state/", and that was NOT true):
+    LIVE, from /api/public/summary — the setup × regime matrix (#pub-matrix), the
+    learning ledger (#pub-ledger), the cycle verdict (#pub-cycle-state), the
+    matrix footnote (#pub-matrix-foot), the hypothesis note (#pub-note) and the
+    hero skill-count cred (#pub-skills — was a hard-coded count (66), rotted by
+    the 2026-07-30 archive: 68 folders → 31 live).
+    ILLUSTRATION, hard-coded on purpose — the PRODUCT MOCKUP panes below the matrix
+    (the morning sheet: exposure %60/%52, distribution days, the AVGO/… plan rows,
+    and the exposure-coach output pane). They show what the dashboard LOOKS LIKE;
+    they are not readings of state/. They are now LABELLED as such in the page
+    itself, because an unlabelled mockup figure is indistinguishable from a claim —
+    and this page's whole point is that a number is never invented here.
+  A blanket "everything is live" sentence is worse than no sentence: it launders the
+  illustrative numbers into measurements. The rule that matters is unchanged — no
+  figure presented AS A MEASUREMENT is ever hand-written.
+  This page previously carried hand-written learning records ("v05 promoted ·
+  gerçekleşen +0.11 · 31 işlem" and three more) that CONTRADICTED state/: in
+  reality no hypothesis has ever cleared the gate. They are gone. The matrix, the
+  ledger and the cycle state are now rendered from the endpoint, and when it
+  cannot be reached the page says so rather than falling back to a placeholder —
+  a number is never invented here. The endpoint is deliberately unauthenticated
+  and deliberately narrow: research aggregates only, never equity, positions,
+  tickers or keys. The field-book vocabulary went out with the world it belonged
+  to: parsel → işlem, ekilmemiş → veri yok.
+============================================================================ -->
+<style>
+:root{
+  --sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --display:var(--sans);
+  --mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace;
+  --serif:var(--sans);
+  /* spacing — one 4px base */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
+  /* OMEGA (2026-07-27): açık zemin, sıcak kemik paneller. Ayrım YALNIZ saç teli + ton farkıyla —
+     referansta ölçüldü, her kartta box-shadow:none. Token ADLARI değişmez. */
+  --bg:#ffffff; --bg2:#fbfaf8; --card:#f8f5f2; --card-2:#f1ece8; --raise:#ffffff;
+  --slip:#f1ece8; --slip-ink:#050505;
+  /* hairlines, not boxes — sıcak gri, nötr değil */
+  --line:#e7e3df; --line-2:#d9d4cf;
+  --tx:#050505; --tx2:#585450; --tx3:#585450;
+  /* OMEGA'DA ETKİLEŞİM RENGİ YOKTUR: birincil eylem siyah haptır. Renk yalnız ÖLÇÜME aittir. */
+  --accent:#050505; --accent-2:#050505; --accent-tint:#f3f3f3;
+  /* semantic — these mean money, so they are never decoration.
+     Açık zemin ölçümü: eski değerler burada 1.83-3.37:1'e düşüyordu. Yeniler en kötü
+     zeminde de AA metin geçiyor — yeşil 4.60, kehribar 5.90, kırmızı 5.59. */
+  --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
+  --violet:#050505; --violet2:#050505; --blue:#050505;
+  --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
+  --r-card:12px; --r-ctl:10px; --r-pill:999px; --r-bar:2px;
+  --elev:none;
+  --label-size:10px; --label-track:.16em;
+  --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
+  --max:1180px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+/* the canon's ground is flat: one near-black, no wash, no image */
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  font-feature-settings:'cv11','ss01';letter-spacing:-.011em}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-height:1.18}
+/* a rejected trial: struck and muted. No hatch — that belonged to a discarded world.
+   index.html pairs this with opacity:.75; here the struck text is 11-12px mono, and the
+   extra 25% drops it to 3.8:1. The strike is what says "dead", so the muting stays in the
+   colour alone and the reading clears 4.5:1. */
+.struck{color:var(--tx2);text-decoration:line-through;text-decoration-color:var(--line-2)}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}
+.mut{color:var(--tx2)}
+.pos{color:var(--green)} .neg{color:var(--red)}
+.mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--s6)}
+section[id]{scroll-margin-top:88px}
+/* one authored moment: content settles in, exponential ease-out, nothing else. */
+.rise{opacity:0;transform:translateY(6px);
+  transition:opacity var(--t-rise) var(--ease),transform var(--t-rise) var(--ease)}
+.rise.in{opacity:1;transform:none}
+
+/* ---- top bar — a hairline appears only once the page has moved under it ---- */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(8px);
+  border-bottom:1px solid transparent;transition:border-color var(--t)}
+nav.stuck{border-bottom-color:var(--line-2)}
+.nav-in{max-width:var(--max);margin:0 auto;padding:var(--s3) var(--s6);display:flex;align-items:center;
+  justify-content:space-between;gap:var(--s5)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px;letter-spacing:-.02em;color:var(--tx)}
+.logo i{width:14px;height:14px;display:block;flex:none;border-radius:var(--r-bar);background:var(--accent);
+  box-shadow:inset 0 0 0 3px var(--bg2)}
+.nav-r{display:flex;align-items:center;gap:var(--s6);min-width:0}
+/* index entries, not chrome: a rule appears under the hand */
+.nav-r a{color:var(--tx2);font-size:13px;padding-bottom:3px;border-bottom:1px solid transparent;
+  transition:color var(--t),border-color var(--t)}
+.nav-r a:hover{color:var(--tx);border-bottom-color:var(--accent)}
+/* ---- one control grammar: the indigo lever (a hand acts) or a raised hairline surface ---- */
+.btn-f,.btn-g,.btn-o{font-family:var(--sans);border-radius:var(--r-ctl);cursor:pointer;transition:var(--t);
+  display:inline-flex;align-items:center;justify-content:center;letter-spacing:-.011em;line-height:1.2}
+.btn-f{background:var(--accent);border:1px solid var(--accent);color:#fff;font-weight:600;font-size:14px;padding:12px 20px}
+.btn-f:hover{filter:brightness(.92)}
+.btn-g{background:var(--card);border:1px solid var(--line-2);color:var(--tx);font-weight:500;font-size:14px;padding:12px 20px}
+.btn-g:hover{background:var(--card-2)}
+.btn-o{background:transparent;border:1px solid var(--line-2);color:var(--tx);font-weight:500;font-size:13px;padding:8px 14px;flex:none}
+.btn-o:hover{background:var(--card-2)}
+
+/* ---- HERO — status line, claim, offer, levers ---- */
+header{padding:144px 0 0}
+/* four live readings, stamped exactly as the app's header stamps them */
+.creds{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s8);flex-wrap:wrap;
+  padding-bottom:var(--s5);border-bottom:1px solid var(--line)}
+.cred{display:inline-flex;align-items:center;gap:var(--s2);border:1px solid var(--line);background:var(--card);
+  color:var(--tx2);font-family:var(--mono);font-size:12px;padding:7px 11px;border-radius:var(--r-ctl);
+  white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none}
+h1{font-size:clamp(36px,5vw,58px);line-height:1.05}
+h1 .g{color:var(--tx2)}
+.hero-sub{margin-top:var(--s6);max-width:66ch;font-size:17px;line-height:1.7;color:var(--tx2)}
+.hero-cta{margin-top:var(--s8);display:flex;gap:var(--s3);flex-wrap:wrap}
+
+/* ---- the product's own sheet, in the window it actually runs in ---- */
+.device{margin:var(--s12) auto 0;max-width:1120px;position:relative}
+.screen{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);
+  overflow:hidden;box-shadow:var(--elev)}
+.tbar{display:flex;align-items:center;gap:var(--s2);padding:10px var(--s5);background:var(--card);
+  border-bottom:1px solid var(--line)}
+.tb{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:none}
+.turl{flex:1;text-align:center;font-size:11px;color:var(--tx2);font-family:var(--mono);letter-spacing:.02em}
+/* THE MATRIX OWNS THE SHEET, so the view list is not a menu column — it is the app's
+   own 56px icon rail carrying each view's initial, exactly as index.html renders it. */
+.app{display:grid;grid-template-columns:56px 1fr;background:var(--bg)}
+.side{border-right:1px solid var(--line);padding:0}
+.slab{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.22em;color:var(--tx2);
+  text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line)}
+/* the rail's own legend stays in the DOM for screen readers, not on the 56px margin */
+.side .slab{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.sitem{position:relative;display:flex;align-items:center;justify-content:center;width:56px;min-height:46px;
+  font-size:13px;color:var(--tx2);border-bottom:1px solid var(--line);transition:var(--t)}
+.sitem:last-child{border-bottom:none}
+.sitem .top{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0}
+.sitem .top .lbl{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.02em}
+.sitem.on{background:var(--card);color:var(--tx)}
+/* the selection marker, as the app draws it — indigo, because selection is interaction */
+.sitem.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+/* the full name never leaves the document — the rail only shrinks its presentation */
+.vis-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.pillc{background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;
+  padding:1px 5px;border-radius:var(--r-ctl);font-variant-numeric:tabular-nums}
+.pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.main{padding:var(--s6) var(--s6) var(--s8)}
+/* the account block belongs to a menu column, not a 56px rail — so it moved into the sheet */
+.acct{display:flex;align-items:baseline;gap:var(--s4);flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:var(--s3);margin-bottom:var(--s6)}
+.acct .slab{border-bottom:none;padding-bottom:0}
+.acct .r{display:flex;align-items:baseline;gap:var(--s2);font-size:13px;color:var(--tx2)}
+.acct .r b{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:-.02em}
+/* the sheet head, as the app prints it: the classification stamp, then the question */
+/* the lit indigo, not the base one: --accent on its own tint is 3.7:1 at 11px */
+.app .slabel{display:inline-flex;align-items:center;gap:var(--s2);margin:0 0 var(--s4);color:var(--accent-2);
+  font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  padding:4px 9px;border:1px solid rgba(5,5,5,.18);background:var(--accent-tint);border-radius:var(--r-ctl)}
+.app .slabel .d{width:6px;height:6px;background:var(--accent-2);border-radius:2px}
+.greet{font-weight:600;font-size:28px;letter-spacing:-.022em;line-height:1.15;color:var(--tx)}
+.subline{color:var(--tx2);font-size:13px;margin-top:9px;line-height:1.65;max-width:72ch;font-variant-numeric:tabular-nums}
+
+/* ---- THE MATRIX — the app's signature composition, reproduced. Rows are setups,
+   columns are regimes, the mean is read at the intersection, and the CONFIDENCE
+   TRACK under each figure is its sample size on a log scale. A section with no
+   trades is drawn "veri yok", never as a zero. ---- */
+.pm-grid{display:grid;grid-template-columns:170px repeat(var(--cols,2),minmax(0,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);margin-top:var(--s5)}
+.pm-grid>*{background:var(--bg)}
+.pm-corner{background:var(--bg2)}
+.pm-sect{background:var(--bg2);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--tx2);padding:11px var(--s4)}
+.pm-strip{background:var(--bg2);font-family:var(--mono);font-size:12px;font-weight:600;color:var(--tx);
+  padding:var(--s4);display:flex;align-items:center;letter-spacing:-.01em;word-break:break-word}
+.pm-cell{position:relative;padding:var(--s4);min-height:92px;
+  display:flex;flex-direction:column;justify-content:center;gap:5px;overflow:hidden}
+/* sample size, drawn the way this canon draws it: a confidence track under the
+   figure, not a texture. A 3-trade mean cannot look as firm as a 55-trade one. */
+.pm-conf{position:relative;height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:2px}
+.pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:2px}
+.pm-cell.pos{color:var(--green);background:rgba(12,106,59,.08)}
+.pm-cell.neg{color:var(--red);background:rgba(179,36,44,.07)}
+.pm-yield{position:relative;font-size:24px;font-weight:500;letter-spacing:-.045em;line-height:1;color:currentColor}
+.pm-n{position:relative;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
+/* no trades here: a quieter ground and a word, not a zero */
+.pm-unsown{background:var(--bg2)}
+.pm-none{position:relative;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--tx2)}
+/* a setup that died in this regime: struck and muted, never repainted red */
+.pm-cell.struck{background:var(--bg2)}
+/* the matrix never collapses inside the window — it scrolls — so the per-cell regime
+   name stays off the sheet, but never leaves the document a screen reader walks */
+.pm-sectlabel{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.pm-foot{margin-top:var(--s3);font-size:12px;color:var(--tx2);line-height:1.6;max-width:78ch}
+/* the day's book, opened after the matrix is read */
+.sheet-brk{margin-top:var(--s10);padding-top:var(--s6);border-top:1px solid var(--line)}
+/* the measurement columns — a ruled register divided by vertical rules */
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:var(--s5) 0 var(--s6);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mcard{background:none;border:none;border-left:1px solid var(--line);border-radius:0;padding:var(--s4)}
+.mcard:first-child{border-left:none;padding-left:0}
+.mcard .l{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tx2);margin-bottom:12px;line-height:1.4}
+.mcard .v{font-family:var(--mono);font-size:24px;font-weight:400;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
+/* the register — ruled rows of recorded candidates */
+.trow{display:grid;grid-template-columns:64px 1fr 74px 84px 88px;align-items:center;gap:var(--s3);
+  padding:12px 0;border-bottom:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
+.trow:last-child{border-bottom:none}
+.trow.head{color:var(--tx2);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.14em;
+  padding-bottom:9px;border-bottom:1px solid var(--line-2)}
+.tick{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:.02em;color:var(--tx)}
+/* state stamps: struck in the state's own ink, ruled, never a soft pill */
+.tag{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px;border-radius:var(--r-ctl);
+  text-align:center;letter-spacing:.09em;display:inline-block;text-transform:uppercase}
+.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(110,74,0,.35)}
+.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+
+/* ---- SECTION HEAD — a hairline opens the section, the title comes first, and the
+   classification sits under it as a quiet mono caption, never a tracked eyebrow ---- */
+section{padding:104px 0}
+.phead{border-top:1px solid var(--line);padding-top:var(--s6)}
+h2{font-size:clamp(27px,3.7vw,40px);line-height:1.1}
+h2 .g{color:var(--tx2)}
+.slabel{display:inline-flex;align-items:center;gap:var(--s3);margin-top:var(--s4);color:var(--tx2);
+  font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase}
+.slabel .d{width:14px;height:1px;background:var(--line-2);flex:none}
+
+/* ---- the four-part register: ruled entries, not four equal boxes ---- */
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:var(--s10);border-top:1px solid var(--line)}
+.case{position:relative;padding:var(--s8) var(--s8) var(--s8) 0;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column}
+.case:nth-child(2n){padding-left:var(--s8);padding-right:0;border-left:1px solid var(--line)}
+/* the entry lifts under the hand — one step of luminance, not a halo */
+.case .bgv{position:absolute;inset:0;z-index:0;background:var(--card);opacity:0;
+  transition:opacity var(--t) var(--ease)}
+.case:hover .bgv{opacity:1}
+.case > *{position:relative;z-index:1}
+.cpill{display:flex;align-items:baseline;gap:var(--s3);margin-bottom:var(--s5);flex-wrap:wrap}
+.cpill b{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.01em}
+.cpill span{font-family:var(--mono);font-size:10px;color:var(--tx2);padding:3px 8px;letter-spacing:.08em;
+  border-radius:var(--r-ctl);box-shadow:inset 0 0 0 1px var(--line-2);white-space:nowrap}
+.case h3{font-size:20px;margin-bottom:var(--s3);line-height:1.25}
+.case p{font-size:14px;color:var(--tx2);line-height:1.7;max-width:66ch}
+
+/* ---- the developing sentence: the argument resolves as you read down it,
+   muted reading type coming up to full contrast word by word ---- */
+.fill{font-weight:500;font-size:clamp(23px,3.2vw,38px);line-height:1.42;
+  letter-spacing:-.02em;max-width:23em}
+.fill w{color:var(--tx2);transition:color .45s var(--ease)}
+.fill w.on{color:var(--tx)}
+
+/* ---- the statutes: a ruled article list with the article number in the margin ---- */
+.rules{display:grid;grid-template-columns:1fr;gap:0;margin-top:var(--s10);border-top:1px solid var(--line)}
+.rule{display:grid;grid-template-columns:68px minmax(0,1fr);column-gap:var(--s6);align-items:start;
+  padding:var(--s6) 0 var(--s8);border-bottom:1px solid var(--line)}
+.rule .n{grid-column:1;grid-row:1 / span 2;font-family:var(--mono);font-size:14px;font-weight:500;
+  color:var(--tx2);font-variant-numeric:tabular-nums;letter-spacing:.04em;padding-top:2px}
+.rule h3{grid-column:2;grid-row:1;font-size:20px;margin-bottom:var(--s3)}
+.rule p{grid-column:2;grid-row:2;font-size:14px;color:var(--tx2);line-height:1.7;max-width:70ch}
+
+/* ---- the hypothesis ledger — sticky argument left, recorded versions right ---- */
+.ledger{display:grid;grid-template-columns:.85fr 1.15fr;gap:var(--s12) 64px;align-items:start}
+.lsticky{position:sticky;top:112px}
+.lsticky h2{margin-top:0}
+.lstack{display:flex;flex-direction:column;gap:var(--s3)}
+.hyp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);padding:var(--s5) var(--s6);transition:var(--t)}
+.hyp:hover{border-color:var(--line-2);background:var(--card-2)}
+.hyp .top{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);margin-bottom:var(--s4)}
+.hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.02em}
+.st{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 9px;border-radius:var(--r-ctl);
+  letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+/* rolled back is a money outcome, so it is red; rejected before it ever shipped is
+   not a loss, so it stays neutral — and the version it killed carries the strike. */
+.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px rgba(179,36,44,.35)}
+.s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.hyp h3{font-size:17px;margin-bottom:var(--s2);line-height:1.3}
+.hyp p{font-size:14px;color:var(--tx2);line-height:1.7;max-width:68ch}
+.hyp .meta{display:flex;gap:var(--s5);margin-top:var(--s4);padding-top:var(--s3);border-top:1px solid var(--line);
+  font-size:12px;color:var(--tx2);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.hyp .meta b{color:var(--tx);font-weight:600;font-family:var(--mono);font-size:12px;letter-spacing:-.02em}
+/* the agent's own note, raised one surface above the argument that quotes it */
+.slip{margin-top:var(--s8);background:var(--slip);color:var(--slip-ink);border:1px solid var(--line);
+  border-radius:var(--r-card);padding:var(--s5) var(--s6);box-shadow:var(--elev)}
+.slip .lbl{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tx2);margin-bottom:var(--s3);padding-bottom:var(--s2);border-bottom:1px solid var(--line)}
+.slip p{font-size:14px;line-height:1.75;color:var(--slip-ink);max-width:65ch}
+
+/* ---- WHAT IT DOES — argument left, the raw record right ---- */
+.svc{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:start;margin-bottom:112px}
+.svc:last-child{margin-bottom:0}
+/* the mark sits BESIDE the entry, in the margin — never a tile stacked over the heading */
+.svc .txt{position:sticky;top:120px;display:grid;grid-template-columns:26px minmax(0,1fr);
+  column-gap:var(--s4);align-items:baseline}
+.ico{grid-column:1;grid-row:1;font-size:17px;color:var(--tx2);line-height:1.5;text-align:left}
+.svc h3{grid-column:2;grid-row:1;font-size:clamp(24px,3vw,34px);margin-bottom:var(--s4);line-height:1.16}
+.svc h3 .g{color:var(--tx2)}
+.svc > .txt > p{grid-column:2;font-size:14px;color:var(--tx2);line-height:1.75;max-width:66ch}
+/* the instruments, checked off in the margin */
+.checks{grid-column:2;display:grid;grid-template-columns:1fr 1fr;gap:0 var(--s6);margin-top:var(--s6);
+  max-width:470px;border-top:1px solid var(--line)}
+.chk{display:flex;align-items:center;gap:var(--s3);font-family:var(--mono);font-size:12px;color:var(--tx2);
+  padding:9px 0;border-bottom:1px solid var(--line);letter-spacing:.01em;min-width:0}
+.chk s{width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:10px;font-weight:600;
+  text-decoration:none;font-family:var(--mono);background:var(--green-t);color:var(--green);
+  border-radius:var(--r-ctl);box-shadow:inset 0 0 0 1px rgba(12,106,59,.35)}
+/* the transcript — the raw record, read as typed */
+.pane{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--bg2);padding:var(--s6);min-height:400px}
+/* machine captions stay as the machine typed them — no uppercase transform:
+   under lang="tr" it would print "PİPELİNE" for an English identifier */
+.pcap{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.06em;
+  margin-bottom:var(--s5);padding-bottom:var(--s3);border-bottom:1px solid var(--line)}
+.bignum{font-family:var(--mono);font-size:clamp(40px,6vw,54px);font-weight:600;letter-spacing:-.05em;
+  font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
+.pnote{color:var(--tx2);font-size:14px;line-height:1.6;margin-top:var(--s3);margin-bottom:var(--s5);max-width:65ch}
+.mono{font-family:var(--mono);font-size:12px;line-height:2;color:var(--tx2)}
+.mono .k{color:var(--accent-2)} .mono .ok{color:var(--green)} .mono .w{color:var(--amber)}
+/* a measured gauge reads in the neutral ramp — indigo is interaction, never a reading */
+.bar{height:4px;border-radius:2px;background:var(--card-2);overflow:hidden;margin:var(--s2) 0 var(--s6)}
+.bar i{display:block;height:100%;background:var(--tx2);border-radius:2px}
+
+/* ---- the setup procedure: four ruled columns, numbered because the order is the instruction ---- */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:var(--s10);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.step{border-left:1px solid var(--line);padding:var(--s6) var(--s5) var(--s8)}
+.step:first-child{border-left:none;padding-left:0}
+.step .n{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--tx2);
+  font-variant-numeric:tabular-nums;letter-spacing:.04em;margin-bottom:var(--s5)}
+.step h3{font-size:17px;margin-bottom:var(--s3);line-height:1.3}
+.step p{font-size:14px;color:var(--tx2);line-height:1.7}
+
+/* ---- the close: one hairline, one lever, nothing else ---- */
+.cta{text-align:center;padding:112px 0 96px;border-top:1px solid var(--line)}
+.cta h2{font-size:clamp(31px,4.4vw,50px)}
+.cta p{margin:var(--s6) auto var(--s8);max-width:65ch;color:var(--tx2);font-size:17px;line-height:1.7}
+footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var(--tx2);font-size:13px}
+.f-in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s4)}
+.disc{margin-top:var(--s5);font-size:13px;color:var(--tx2);max-width:72ch;line-height:1.75}
+
+/* ---- responsive: the register turns into ruled rows, never a card stack ---- */
+@media(max-width:1000px){
+ .ledger,.svc{grid-template-columns:1fr;gap:var(--s10)}
+ .lsticky,.svc .txt{position:static}
+ .svc{margin-bottom:88px}
+}
+@media(max-width:900px){
+ section{padding:80px 0}
+ header{padding:120px 0 0}
+ /* on a narrow sheet the rail is wrong — the views come back as a scrolling strip
+    with their full names, exactly as the app switches them over */
+ .app{grid-template-columns:1fr}
+ .side{display:flex;overflow-x:auto;scrollbar-width:none;border-right:none;border-bottom:1px solid var(--line)}
+ .side::-webkit-scrollbar{display:none}
+ .sitem{width:auto;flex:none;justify-content:flex-start;gap:var(--s2);white-space:nowrap;
+   border-bottom:none;border-right:1px solid var(--line);padding:11px 13px}
+ .sitem:last-child{border-right:none}
+ .sitem .top{order:2}
+ .sitem .top .lbl{display:none}
+ .vis-label{order:1;position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;
+   clip:auto;clip-path:none;font-size:13px}
+ .sitem.on::before{top:auto;bottom:0;left:0;right:0;width:auto;height:2px}
+ .cases{grid-template-columns:1fr}
+ .case,.case:nth-child(2n){padding:var(--s6) 0;border-left:none;padding-left:0}
+ .steps{grid-template-columns:1fr 1fr}
+ .step{padding:var(--s6) var(--s5) var(--s6) 0}
+ .step:nth-child(2n){border-left:1px solid var(--line);padding-left:var(--s5)}
+ .step:nth-child(2n+1){border-left:none;padding-left:0}
+ .step:nth-child(n+3){border-top:1px solid var(--line)}
+ .mrow{grid-template-columns:1fr 1fr}
+ .mcard{padding:var(--s4) var(--s4) var(--s4) 0}
+ .mcard:nth-child(2n){border-left:1px solid var(--line);padding-left:var(--s4)}
+ .mcard:nth-child(2n+1){border-left:none;padding-left:0}
+ .mcard:nth-child(n+3){border-top:1px solid var(--line)}
+ /* the sheet keeps its OWN scroller: the matrix and the register stay ruled tables and
+    slide inside the window, so the page itself never scrolls sideways */
+ .main{padding:var(--s5) var(--s5) var(--s6);overflow-x:auto}
+ .trow{min-width:470px}
+ .pm-grid{grid-template-columns:112px repeat(var(--cols,2),minmax(0,1fr));min-width:470px}
+ .pm-cell{min-height:80px}
+}
+@media(max-width:760px){
+ .nav-in{padding:var(--s2) var(--s4);gap:var(--s3)}
+ .nav-r{gap:var(--s5);overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:1px}
+ .nav-r::-webkit-scrollbar{display:none}
+ .nav-r a{flex:none;font-size:13px;white-space:nowrap}
+ /* the index entries scroll; the lever stays pinned at the edge where a hand reaches it.
+    A solid ground behind it does the masking — no glow, this world has none. */
+ .btn-o{font-size:12px;padding:7px 12px;position:sticky;right:0;background:var(--bg);margin-left:var(--s2)}
+ header{padding:104px 0 0}
+ .checks{grid-template-columns:1fr;max-width:none}
+ .svc{margin-bottom:72px}
+ .pane{padding:var(--s5);min-height:0;overflow-x:auto}
+ .cta{padding:80px 0 72px}
+}
+@media(max-width:520px){
+ .wrap{padding:0 var(--s5)}
+ section{padding:64px 0}
+ .steps{grid-template-columns:1fr}
+ .step,.step:nth-child(2n){border-left:none;padding:var(--s5) 0}
+ .step:nth-child(n+2){border-top:1px solid var(--line)}
+ .svc .txt{grid-template-columns:22px minmax(0,1fr);column-gap:var(--s3)}
+ .btn-f,.btn-g{width:100%}
+ .hero-cta{gap:var(--s2)}
+ .f-in{flex-direction:column;align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+ *{transition:none!important;animation:none!important}
+ html{scroll-behavior:auto}
+ .rise{opacity:1;transform:none}
+ .fill w{color:var(--tx)}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="nav-in">
+  <div class="logo"><i></i> Meridian</div>
+  <div class="nav-r">
+    <a href="#nasil">Nasıl çalışır</a>
+    <a href="#kural">Kurallar</a>
+    <a href="#defter">Öğrenme defteri</a>
+    <button class="btn-o">Demo al</button>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="creds rise">
+    <span class="cred"><span class="dot"></span>Paper mode · canlı</span>
+    <span class="cred" id="pub-skills">skill kütüphanesi</span>
+    <span class="cred">Alpaca · FMP</span>
+    <span class="cred">Google Cloud'da 7/24</span>
+  </div>
+  <h1 class="rise">Ajan tarar.<br><span class="g">Kararı sen verirsin.</span></h1>
+  <p class="hero-sub rise">Meridian gece boyunca rejimi okur, 3.000 hisseyi tarar, adayları disiplin kapısından geçirir ve pozisyonu boyutlandırır. Sabah masanda sadece onaylanacak bir liste bulursun — ve neden orada olduklarının gerekçesi.</p>
+  <div class="hero-cta rise">
+    <button class="btn-f">Hesaplarını bağla</button>
+    <button class="btn-g">Bir sabah brifingi gör</button>
+  </div>
+
+  <div class="device rise"><div class="screen">
+    <div class="tbar">
+      <span class="tb"></span><span class="tb"></span><span class="tb"></span>
+      <span class="turl">app.meridian.trade / brifing</span>
+    </div>
+    <div class="app">
+      <div class="side">
+        <p class="slab">GÖRÜNÜM</p>
+        <div class="sitem on"><span class="top"><span class="lbl">S</span></span><span class="vis-label">Sabah brifingi</span></div>
+        <div class="sitem"><span class="top"><span class="lbl">A</span><span class="pillc">3</span></span><span class="vis-label">Adaylar</span></div>
+        <div class="sitem"><span class="top"><span class="lbl">T</span><span class="pillc q">7</span></span><span class="vis-label">Tezler</span></div>
+        <div class="sitem"><span class="top"><span class="lbl">Ö</span></span><span class="vis-label">Öğrenme</span></div>
+        <div class="sitem"><span class="top"><span class="lbl">S</span></span><span class="vis-label">Sistem</span></div>
+      </div>
+      <div class="main">
+        <div class="acct">
+          <p class="slab">HESAP</p>
+          <div class="r"><span>Alpaca · paper</span><b class="pos">bağlı</b></div>
+        </div>
+        <span class="slabel"><span class="d"></span>KURULUM × REJİM</span>
+        <p class="greet">Hangi uygulama, hangi koşulda?</p>
+        <p class="subline">Satırlar kurulum, sütunlar rejim. Her hücrenin altındaki çubuk kaç işlemden geldiğini gösterir — kısa çubuk, zayıf kanıt.</p>
+        <div class="pm-grid" id="pub-matrix" style="--cols:2">
+          <div class="pm-corner"></div>
+          <div class="pm-sect">yüksek breadth</div>
+          <div class="pm-sect">chop</div>
+
+          <!-- CANLI: /api/public/summary'den doldurulur. Burada uydurma bir örnek vardı
+               (PEAD × yüksek breadth = +0.11R · 31 işlem) — ne rakam ne de kurulum adları
+               state/ ile uyuşuyordu. -->
+        </div>
+        <!-- CANLI: kapanmış işlem sayısı /api/public/summary'den doldurulur. Burada "31 kapanmış
+             işlemden hesaplandı" SABİT yazıyordu; defterde bugün 95 kapanmış işlem var. Matrisin
+             kendisi canlı okunurken altındaki örneklem sayısının elle yazılı kalması, matrisi
+             daha küçük bir örneklemden hesaplanmış gibi gösteriyordu. -->
+        <p class="pm-foot" id="pub-matrix-foot">Ortalama R, işlem başına riske göre getiri.</p>
+
+        <div class="sheet-brk">
+          <!-- ÜRÜN MAKETİ — BURADAN AŞAĞISI ÖLÇÜM DEĞİL (K1, 2026-07-30). Aşağıdaki sayılar
+               (exposure %60/%52, distribution 3, plan satırları, exposure-coach çıktısı) panonun
+               NASIL GÖRÜNDÜĞÜNÜ anlatan sabit örneklerdir; state/ okuması DEĞİLDİR. Etiketsiz bir
+               maket rakamı bir iddiadan ayırt edilemez — bu yüzden görünür biçimde etiketli. -->
+          <p class="pcap" style="color:var(--amber)">ürün maketi · örnek ekran · aşağıdaki sayılar ölçüm değildir</p>
+          <p class="greet">Günaydın, Erdem</p>
+          <p class="subline">13 Tem · pre-market 08:42 ET · rejim: confirmed uptrend, broadening</p>
+        </div>
+        <div class="mrow">
+          <div class="mcard"><p class="l">Exposure tavanı</p><p class="v">%60</p></div>
+          <div class="mcard"><p class="l">Mevcut exposure</p><p class="v">%52</p></div>
+          <div class="mcard"><p class="l" lang="en">Distribution days</p><p class="v">3</p></div>
+          <div class="mcard"><p class="l">Onay bekleyen</p><p class="v" style="color:var(--amber)">3</p></div>
+        </div>
+        <div class="trow head"><span>HİSSE</span><span>KURULUM</span><span>R:R</span><span>BOYUT</span><span style="text-align:center">KAPI</span></div>
+        <div class="trow"><span class="tick">AVGO</span><span class="mut">VCP · stage 2 · RS 94</span><span>2.9R</span><span>$4.200</span><span class="tag t-go">GO</span></div>
+        <div class="trow"><span class="tick">NVDA</span><span class="mut">PEAD · earnings drift</span><span>2.8R</span><span>$3.000</span><span class="tag t-rv">REVIEW</span></div>
+        <div class="trow"><span class="tick">CRWD</span><span class="mut">Episodic pivot · hacim zayıf</span><span>1.8R</span><span class="mut">·</span><span class="tag t-no">NO_GO</span></div>
+      </div>
+    </div>
+  </div></div>
+</div></header>
+
+<section id="nasil"><div class="wrap">
+  <div class="phead rise">
+    <h2>Dört parça. <span class="g">Hepsi birbirini besliyor.</span></h2>
+    <span class="slabel"><span class="d"></span>SİSTEM</span>
+  </div>
+  <div class="cases">
+    <div class="case rise"><div class="bgv"></div>
+      <div class="cpill"><b>Gece pipeline'ı</b><span>04:10 ET</span></div>
+      <h3>Sen uyurken çalışır</h3>
+      <p>Breadth, uptrend, macro rejim → exposure tavanı. Sonra 3.000 hisse VCP, PEAD, CANSLIM ve momentum taramalarından geçer. Sabaha 12 aday, öğlene kadar beklemez.</p>
+    </div>
+    <div class="case rise"><div class="bgv"></div>
+      <div class="cpill"><b>Disiplin kapısı</b><span>GO / REVIEW / NO_GO</span></div>
+      <h3>Kötü işlemi sana ulaşmadan durdurur</h3>
+      <p>Plansız giriş, aşırı boyut, revenge risk, korelasyon yığılması, R:R eşiği. Kapı kod içinde — prompt'ta rica değil. NO_GO alan aday emir ekranına hiç gelmez.</p>
+    </div>
+    <div class="case rise"><div class="bgv"></div>
+      <div class="cpill"><b>Tez hafızası</b><span>IDEA → ACTIVE → CLOSED</span></div>
+      <h3>Ne düşündüğünü hatırlar</h3>
+      <p>Her fikir bir tez nesnesi: katalizör, kill kriteri, boyut, review tarihi. Pozisyon kapandığında MAE/MFE ile postmortem yazılır. Trading journal'ı doldurmayı unutmazsın — çünkü sen doldurmuyorsun.</p>
+    </div>
+    <div class="case rise"><div class="bgv"></div>
+      <div class="cpill"><b>Öğrenme döngüsü</b><span>her 5 kapanan işlem</span></div>
+      <h3>Yanıldığını öğrenir</h3>
+      <p>Tek değişkenlik hipotez → walk-forward backtest kapısı → canlı → gerçekleşen sonuç hipotezin üstüne geri yazılır. Tahminini tutmayan versiyon otomatik geri alınır.</p>
+    </div>
+  </div>
+</div></section>
+
+<section style="padding:var(--s10) 0 112px"><div class="wrap">
+  <p class="fill" id="fill">Çoğu trading botu bir stratejiyi ezberler ve piyasa değişince ölür. Meridian bir strateji değil — bir bilim insanı. Aynı anda tek bir değişkeni değiştirir, tahminini yazar, sonucu ölçer ve yanıldığında bunu kalıcı hafızasına kaydeder. Zamanla senin nasıl kaybettiğini, senden daha iyi bilir.</p>
+</div></section>
+
+<section id="kural" style="padding-top:0"><div class="wrap">
+  <div class="phead rise">
+    <h2>Ajanın <span class="g">değiştiremeyeceği şeyler.</span></h2>
+    <span class="slabel"><span class="d"></span>KURALLAR</span>
+  </div>
+  <div class="rules">
+    <div class="rule rise"><p class="n">01</p><h3>Döngü başına tek değişken</h3><p>Aynı anda iki şey değişirse hangisinin işe yaradığını asla bilemezsin. Kural kodda zorlanır; ihlal eden öneri diske hiç yazılmaz.</p></div>
+    <div class="rule rise"><p class="n">02</p><h3>Backtest kapısı</h3><p>Bir değişiklik ancak walk-forward, örneklem dışı testte mevcut stratejiyi geçerse canlıya çıkar. Reddedilen hipotez de bir sonuçtur — deftere yazılır.</p></div>
+    <div class="rule rise"><p class="n">03</p><h3>Risk limitleri dokunulmaz</h3><p>Günlük max kayıp, pozisyon başı risk, sektör yoğunluğu, drawdown devre kesici. Bunları sen yazarsın, ajan sadece okur.</p></div>
+  </div>
+</div></section>
+
+<section id="defter"><div class="wrap">
+  <div class="ledger">
+    <div class="lsticky rise">
+      <div class="phead">
+        <h2>Her hipotezin <span class="g">bir sonucu var.</span></h2>
+        <span class="slabel"><span class="d"></span>ÖĞRENME DEFTERİ</span>
+      </div>
+      <p style="margin-top:var(--s6);color:var(--tx2);font-size:14px;line-height:1.8;max-width:44ch">Öneren ama sonucunu hiç kontrol etmeyen bir ajan öğrenmiyordur — rastgele yürüyor demektir. Meridian her değişikliğin gerçekleşen skorunu geri yazar ve dersi kendi cümleleriyle kaydeder.</p>
+      <div class="slip">
+        <p class="lbl">defterin şu anki hali</p>
+        <p id="pub-note">Canlı kayıt yükleniyor…</p>
+      </div>
+    </div>
+    <!-- ÖĞRENME DEFTERİ — /api/public/summary'den CANLI okunur. Burada daha önce elle yazılmış
+         dört sürüm kaydı vardı ("v05 promoted · gerçekleşen +0.11 · 31 işlem" gibi) ve hiçbiri
+         state/ ile uyuşmuyordu: gerçekte HİÇBİR hipotez kapıyı geçmemişti. Uydurma rakam bir
+         daha buraya elle yazılmaz; sayı gelmezse sayfa sayı göstermez. -->
+    <div class="lstack" id="pub-ledger">
+      <div class="hyp"><div class="top"><span class="v">defter okunuyor</span></div>
+        <p>Canlı kayıt <code>/api/public/summary</code> ucundan alınıyor.</p></div>
+    </div>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="phead rise" style="margin-bottom:64px">
+    <h2>Üç iş. <span class="g">Her gün.</span></h2>
+    <span class="slabel"><span class="d"></span>NE YAPAR</span>
+  </div>
+
+  <div class="svc">
+    <div class="txt rise">
+      <div class="ico">◇</div>
+      <h3>Rejimi <span class="g">okur</span></h3>
+      <p>Tek bir hisseye bakmadan önce cevaplanması gereken soru: bugün ne kadar risk almalıyım? Breadth, uptrend gücü, dağıtım günleri, follow-through, makro rejim — hepsi tek bir sayıya iner: exposure tavanı.</p>
+      <!-- Skill çipleri yeşil onay işaretiyle "var ve çalışıyor" iddiasıdır. 2026-07-30 arşivinden
+           (68 → 31 canlı klasör) sonra skills/ ile tek tek karşılaştırıldı: buraya yalnız CANLI
+           skill'in gerçek klasör adı yazılır — arşivlenmiş ad kalırsa sayfa yalan söyler. -->
+      <div class="checks">
+        <span class="chk"><s>✓</s>market-breadth-analyzer</span>
+        <span class="chk"><s>✓</s>uptrend-analyzer</span>
+        <span class="chk"><s>✓</s>market-top-detector</span>
+        <span class="chk"><s>✓</s>macro-regime-detector</span>
+        <span class="chk"><s>✓</s>ibd-distribution-day-monitor</span>
+        <span class="chk"><s>✓</s>exposure-coach</span>
+      </div>
+    </div>
+    <div class="pane rise">
+      <p class="pcap">exposure-coach · çıktı</p>
+      <p class="bignum">%60</p>
+      <p class="pnote">net exposure tavanı · growth bias · yeni giriş serbest</p>
+      <div class="bar"><i style="width:61%"></i></div>
+      <div class="mono">
+        <span class="k">breadth</span> · %20MA üstü: 61% → <span class="ok">destekleyici</span><br>
+        <span class="k">uptrend</span> · confirmed, 12. gün → <span class="ok">güçlü</span><br>
+        <span class="k">distribution</span> · 3 gün / 25 → <span class="w">izlemede</span><br>
+        <span class="k">macro</span> · risk-on, kredi spread daralıyor<br>
+        <span class="k">liderlik</span> · semis, health care<br><br>
+        <span style="color:var(--tx3)">→ tavan %60. mevcut %52. 1 yeni pozisyona yer var.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="svc">
+    <div class="txt rise">
+      <div class="ico">◈</div>
+      <h3>Adayları <span class="g">üretir ve eler</span></h3>
+      <p>Tarama kolay kısım. Zor kısım, 31 adaydan 3'ünü seçip geri kalanını neden elediğini söyleyebilmek. Her aday bir tez, bir kill kriteri ve bir pozisyon boyutuyla gelir — yoksa gelmez.</p>
+      <div class="checks">
+        <span class="chk"><s>✓</s>vcp-screener</span>
+        <span class="chk"><s>✓</s>pead-screener</span>
+        <span class="chk"><s>✓</s>canslim-screener</span>
+        <span class="chk"><s>✓</s>stockbee-momentum-burst-screener</span>
+        <span class="chk"><s>✓</s>position-sizer</span>
+        <span class="chk"><s>✓</s>pre-trade-discipline-gate</span>
+      </div>
+    </div>
+    <div class="pane rise">
+      <p class="pcap">pipeline · 13 Tem 04:22 → 05:06</p>
+      <div class="mono">
+        <span class="k">tarama</span> 2.847 hisse<br>
+        &nbsp;&nbsp;vcp-screener ......... 31<br>
+        &nbsp;&nbsp;pead-screener ........ 14<br>
+        &nbsp;&nbsp;canslim-screener ..... 9<br><br>
+        <span class="k">analiz</span> theme-detector → 12<br>
+        <span class="k">boyut</span> position-sizer · %0.75 hesap riski<br>
+        <span class="k">kapı</span> pre-trade-discipline-gate<br>
+        &nbsp;&nbsp;AVGO ...... <span class="ok">GO</span><br>
+        &nbsp;&nbsp;NVDA ...... <span class="w">REVIEW</span> · sektör korelasyonu 0.74<br>
+        &nbsp;&nbsp;CRWD ...... <span style="color:var(--red)">NO_GO</span> · R:R 1.8 &lt; 2.0<br>
+        &nbsp;&nbsp;+9 aday .. elendi<br><br>
+        <span style="color:var(--tx3)">→ 3 aday onaya hazır. gerekçeler tezlere yazıldı.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="svc">
+    <div class="txt rise">
+      <div class="ico">◐</div>
+      <h3>Sonucundan <span class="g">öğrenir</span></h3>
+      <p>Pozisyon kapanır, postmortem yazılır, hipotezin gerçekleşen skoru geri yazılır. Beş kapanan işlemde bir öneri gelir; ama örneklem 20'ye ulaşmadan hiçbir öneri canlıya çıkmaz. Beş işlem kanıt değil, fikirdir.</p>
+      <!-- trader-memory-core emekli; signal-postmortem → backtest-expert'e,
+           trade-performance-coach → weekly-performance-digest'e katlandı (2026-07-30). -->
+      <div class="checks">
+        <span class="chk"><s>✓</s>backtest-expert</span>
+        <span class="chk"><s>✓</s>edge-strategy-reviewer</span>
+        <span class="chk"><s>✓</s>edge-pipeline-orchestrator</span>
+        <span class="chk"><s>✓</s>strategy-pivot-designer</span>
+        <span class="chk"><s>✓</s>weekly-performance-digest</span>
+      </div>
+    </div>
+    <div class="pane rise">
+      <p class="pcap">reflection cycle · mekanizma</p>
+      <div class="mono" id="pub-cycle">
+        <span class="k">1</span> kapanan işlemler okunur · rejime göre ayrıştırılır<br>
+        <span class="k">2</span> lessons.md okunur · denenmiş fikirler elenir<br>
+        <span class="k">3</span> tek değişkenli hipotez kurulur<br>
+        <span class="k">4</span> guard ....... sınır ve tek-değişken denetimi<br>
+        <span class="k">5</span> backtest .... örneklem dışı testte mevcut stratejiyi geçmeli<br>
+        <span class="k">6</span> canlı ....... yalnız kapıyı geçerse<br>
+        <span class="k">7</span> sonuç hipotezin üstüne geri yazılır<br>
+        <span class="k">8</span> tutmazsa otomatik geri alınır<br><br>
+        <span style="color:var(--tx3)" id="pub-cycle-state">durum okunuyor…</span>
+      </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <div class="phead rise">
+    <h2>Bir öğleden sonra. <span class="g">Sonrası sende değil.</span></h2>
+    <span class="slabel"><span class="d"></span>KURULUM</span>
+  </div>
+  <div class="steps">
+    <div class="step rise"><p class="n">01</p><h3>Hesapları bağla</h3><p>Alpaca paper ve FMP anahtarları Secret Manager'a yazılır. Diske düz metin yazılmaz.</p></div>
+    <div class="step rise"><p class="n">02</p><h3>Kuralları yaz</h3><p>Hedef getiri, max drawdown, risk limitleri, refleksiyon sıklığı. Ajanın değiştiremeyeceği çerçeve.</p></div>
+    <div class="step rise"><p class="n">03</p><h3>Deploy et</h3><p>Worker Google Cloud'a çıkar. Sunucu yeniden başlarsa systemd geri getirir; hafıza her gece yedeklenir.</p></div>
+    <div class="step rise"><p class="n">04</p><h3>Sabah aç</h3><p>Onayla, reddet, derinleş. Geri kalan her şey — tarama, boyut, journal, öğrenme — arkada döner.</p></div>
+  </div>
+</div></section>
+
+<div class="cta"><div class="wrap">
+  <h2 class="rise">Bugün <span class="g">paper'da başla.</span></h2>
+  <p class="rise">Canlı para bir ayar değişikliği değil. Yeterince sıkıcı bir paper geçmişi biriktirene kadar açılmaz — ve bunu ajan değil sen açarsın.</p>
+  <div class="rise" style="display:flex;gap:var(--s3);justify-content:center;flex-wrap:wrap">
+    <button class="btn-f">Hesaplarını bağla</button>
+    <button class="btn-g">Mimariyi oku</button>
+  </div>
+</div></div>
+
+<footer><div class="wrap"><div class="f-in">
+  <div class="logo" style="font-size:17px"><i style="width:11px;height:11px;box-shadow:inset 0 0 0 2px var(--bg2)"></i> Meridian</div>
+  <span>© 2026 · paper mode · yatırım tavsiyesi değildir</span>
+</div>
+<p class="disc">Meridian bir araştırma aracıdır, yatırım danışmanı değildir. Geçmiş performans gelecek getirinin göstergesi değildir. Otonom bir dil modelinin denetimsiz strateji düzenlemesi deneysel bir yaklaşımdır; canlı sermaye ile kullanılmadan önce uzun bir paper kaydı ve kendi bağımsız değerlendirmen gerekir.</p>
+</div></footer>
+
+<script>
+const io=new IntersectionObserver(e=>e.forEach(x=>x.isIntersecting&&x.target.classList.add('in')),{threshold:.15,rootMargin:'0px 0px -60px'});
+document.querySelectorAll('.rise').forEach((el,i)=>{el.style.transitionDelay=(i%4)*60+'ms';io.observe(el)});
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('stuck',scrollY>20));
+const f=document.getElementById('fill');
+f.innerHTML=f.textContent.trim().split(' ').map(w=>'<w>'+w+'</w>').join(' ');
+const ws=[...f.querySelectorAll('w')];
+function paint(){const r=f.getBoundingClientRect(),h=innerHeight;
+ const p=Math.min(1,Math.max(0,(h*0.85-r.top)/(r.height+h*0.35)));
+ const n=Math.round(p*ws.length);ws.forEach((w,i)=>w.classList.toggle('on',i<n));}
+addEventListener('scroll',paint,{passive:true});paint();
+</script>
+<script>
+/* ÖĞRENME DEFTERİ — CANLI. Bu blok daha önce elle yazılmış dört sürüm kaydının yerini aldı;
+   o kayıtlar state/ ile çelişiyordu (sayfa iki hipotezin kâr ettiğini söylüyordu, gerçekte
+   hiçbiri kapıyı geçmemişti). Kural: sayı gelmezse sayı GÖSTERİLMEZ — asla yer tutucuya
+   düşülmez, çünkü bu sayfanın tek dışa dönük iddiası dürüstlüktür. */
+(function () {
+  var STATUS_TR = {
+    rejected_by_backtest: "backtest kapısında elendi",
+    rejected_by_guard: "guard kurallarına takıldı",
+    rejected_by_confirmation: "doğrulamada elendi",
+    superseded: "yerini yenisi aldı",
+    shipped: "canlıya çıktı", promoted: "canlıya çıktı", accepted: "canlıya çıktı"
+  };
+  var esc = function (t) { var d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; };
+
+  function fail(msg) {
+    var n = document.getElementById("pub-note");
+    if (n) n.textContent = "Canlı kayıt şu an okunamıyor. Rakam uydurmaktansa boş bırakıyoruz.";
+    var l = document.getElementById("pub-ledger");
+    if (l) l.innerHTML = '<div class="hyp"><div class="top"><span class="v">kayıt alınamadı</span></div>' +
+      '<p>' + esc(msg) + '</p></div>';
+  }
+
+  fetch("/api/public/summary", { headers: { accept: "application/json" } })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (d) {
+      var total = d.hypotheses_total || 0, shipped = d.hypotheses_shipped || 0;
+      var note = document.getElementById("pub-note");
+      if (note) {
+        note.textContent = shipped > 0
+          ? total + " hipotezden " + shipped + " tanesi kapıyı geçti ve canlıya çıktı."
+          : total + " hipotez önerildi, hiçbiri kapıyı geçemedi. Defterin şu anki dürüst hali bu: "
+            + "sistem henüz bir kenar bulduğunu kanıtlayamadı.";
+      }
+      var rows = [];
+      var by = d.hypotheses_by_status || {};
+      Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).forEach(function (k) {
+        rows.push('<div class="hyp"><div class="top">' +
+          '<span class="v">' + esc(STATUS_TR[k] || k) + '</span>' +
+          '<span class="st ' + (k === "shipped" || k === "promoted" || k === "accepted" ? "s-ok" : "s-rj") + '">' +
+          by[k] + ' hipotez</span></div></div>');
+      });
+      rows.push('<div class="hyp"><div class="top"><span class="v">ölçülen</span></div>' +
+        '<div class="meta">' +
+        '<span>kapanmış işlem <b>' + (d.closed_trades != null ? d.closed_trades : "—") + '</b></span>' +
+        '<span>başarı notu <b style="color:var(--' + ((d.score || 0) > 0 ? "green" : "red") + ')">' +
+        (d.score != null ? d.score : "—") + '</b></span>' +
+        '<span>denenen değişken <b>' + (d.variables_tried != null ? d.variables_tried : "—") + '</b></span>' +
+        '<span>sürüm <b>v' + (d.strategy_version != null ? d.strategy_version : "—") + '</b></span>' +
+        '</div></div>');
+      var l = document.getElementById("pub-ledger");
+      if (l) l.innerHTML = rows.join("");
+
+      /* hero cred: skill sayısı CANLI (eski sabit sayı (66) 2026-07-30 arşiviyle çürüdü);
+         sayı gelmezse yedek metin sayısız kalır — uydurma rakam kuralı burada da geçerli */
+      var sc = document.getElementById("pub-skills");
+      if (sc && d.skills_live != null) sc.textContent = d.skills_live + " skill";
+
+      /* döngü panosu: mekanizmayı anlatır, sonucu state'ten söyler */
+      var cs = document.getElementById("pub-cycle-state");
+      if (cs) {
+        cs.textContent = shipped > 0
+          ? "→ şu ana kadar " + shipped + " öneri kapıyı geçti."
+          : "→ şu ana kadar hiçbir öneri kapıyı geçemedi. Döngü çalışıyor, kenar henüz yok.";
+      }
+
+      /* matrisin örneklem dipnotu CANLI (K1): "31 kapanmış işlem" sabit yazılıydı, defterde 95 var */
+      var mf = document.getElementById("pub-matrix-foot");
+      if (mf && d.closed_trades != null) {
+        mf.textContent = d.closed_trades + " kapanmış işlemden hesaplandı. "
+          + "Ortalama R, işlem başına riske göre getiri.";
+      }
+
+      /* ürün maketindeki matris: gerçek kurulum × rejim verisi */
+      var m = d.matrix, mg = document.getElementById("pub-matrix");
+      if (mg && m && (m.grid || []).length) {
+        var RG = { chop: "yatay/kararsız", trend_up: "yükseliş trendi", high_vol: "yüksek dalgalanma" };
+        var h = '<div class="pm-corner"></div>' +
+          m.regimes.map(function (r) { return '<div class="pm-sect">' + esc(RG[r] || r) + '</div>'; }).join("");
+        m.grid.forEach(function (row) {
+          h += '<div class="pm-strip">' + esc(row.setup) + '</div>';
+          row.cells.forEach(function (c, i) {
+            var rg = esc(RG[m.regimes[i]] || m.regimes[i]);
+            if (!c) { h += '<div class="pm-cell pm-unsown"><span class="pm-sectlabel">' + rg +
+                        '</span><span class="pm-none">veri yok</span></div>'; return; }
+            /* nötr bant: |ortalama| örneklem gürültüsünün altındaysa ne yeşil ne kırmızı */
+            var band = 1 / Math.sqrt(c.n);
+            var cls = Math.abs(c.mean_r) <= band ? "" : (c.mean_r > 0 ? " pos" : " neg");
+            var conf = Math.min(100, Math.round(100 * Math.log(c.n + 1) / Math.log(61)));
+            h += '<div class="pm-cell' + cls + '" style="--conf:' + conf + '%">' +
+                 '<span class="pm-sectlabel">' + rg + '</span>' +
+                 '<span class="pm-yield mono-num">' + (c.mean_r > 0 ? "+" : "") + c.mean_r.toFixed(2) + 'R</span>' +
+                 '<span class="pm-conf" aria-hidden="true"><i></i></span>' +
+                 '<span class="pm-n">' + c.n + ' işlem</span></div>';
+          });
+        });
+        mg.style.setProperty("--cols", m.regimes.length);
+        mg.innerHTML = h;
+      }
+    })
+    .catch(function (e) { fail(String(e && e.message || e)); });
+})();
+</script>
+</body>
+</html>

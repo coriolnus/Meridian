@@ -1,0 +1,505 @@
+"""component_ic.py — BİLEŞEN IC'si: skorun DÖRT HAM PARÇASINDAN hangisi tahmin gücü taşıyor?
+(Kârlılık Programı Aşama 1.2, 2026-07-28)
+
+CEVAPLADIĞI SORU. `score_calibration` tek bir soru sorar: 0-100 bileşik skor sonucu öngörüyor mu?
+Canlı cevap "hayır" (gerçek katman IC 0.049, gürültüden ayrılmıyor). Ama bileşik skor DÖRT ayrı
+büyüklüğün ağırlıklı toplamıdır ve o toplam, içindeki bir sinyali diğer üçünün gürültüsüyle
+söndürebilir. "Skorun IC'si sıfır" ile "skorun hiçbir parçası bilgi taşımıyor" AYNI CÜMLE DEĞİLDİR
+— ve ikisini ayırmadan ağırlıkları (entry.w_*) hangi yöne çevireceğimizi bilemeyiz. Bu modül dört
+parçayı ayrı ayrı, üç ufukta ve katman etiketli ölçer.
+
+SIFIR YETKİ. Hiçbir kapıya, hiçbir karara, hiçbir silahlanmaya girmez — yalnız rapor yazar
+(`state/component_ic.json`) ve pano/evidence_pack onu okur. Bir bileşenin IC'si yüksek çıksa bile
+ağırlığı ancak olasılıksal kapıdan geçen bir hipotezle değişebilir.
+
+--- ÜÇ TASARIM KARARI, ÜÇÜ DE ÖLÇÜMÜ DEĞİŞTİRDİĞİ İÇİN BURADA YAZILI ---
+
+(1) BİLEŞENLER DEFTERDE YOK, BARLARDAN YENİDEN HESAPLANIR. Denetlendi: `tt`, `vr`, `proximity_pct`
+    hiçbir deftere ALAN olarak yazılmıyor — yalnız `candidates.jsonl`in `notes` metninde
+    ("prox=1.2% vr=2.1 tt=0.83") ve orada da 313 satırın 13'ünde (replay yazıcısı `notes`u düşürüyor).
+    Bir string'i regex'le ayrıştırıp istatistik kurmak, ölçümü metin biçimine bağımlı yapardı.
+    Bunun yerine bileşenler `meridian.indicators`ın AYNI fonksiyonlarıyla bardan yeniden üretilir —
+    yani ölçümün kaynağı, canlı skorun kaynağıyla aynı koddur (tek yasa, tek uygulama).
+    Göstergelerin hepsi nedensel (causal) yuvarlanan pencerelerdir ve en uzun pencere 252 bar; canlı
+    yol 340 barlık kuyrukta hesapladığı için TAM SERİDE hesaplanan değer aynı barda BİREBİR aynıdır.
+
+(2) İLERİ GETİRİ SABİT UFUKTA VE YÜZDE — R DEĞİL. Defterdeki `r_multiple` işlemin KENDİ çıkışında
+    ölçülür; çıkış süresi işlemden işleme değişir (canlı defterde 1 ile 15 bar arası). Değişken
+    ufuklu bir getiriyle bileşen IC'si ölçmek, sinyalin gücünü çıkış kuralının davranışıyla
+    KARIŞTIRIR — ki bu turun asıl sorusu tam da o ikisini ayırmak. Ufuk sabitlenir (5/10/20 bar) ve
+    getiri sinyal barının kapanışından ölçülür: `close[t+h]/close[t] - 1`. Bu, sinyalin ÖNGÖRÜ
+    içeriğidir; icra (giriş kayması, stop, trail) ölçümün dışında kalır ve orası ayrı bir sorudur.
+    R'ye bölmek ayrıca satır başına farklı bir ölçekleyiciyle bölmek demekti — Spearman monoton
+    dönüşüme dayanıklıdır ama satır-başına-farklı bir bölen monoton dönüşüm DEĞİLDİR.
+
+(3) HAVUZ KATMANI TEKİLLEŞTİRİLİR. Alınmış (taken) bir cf satırı ile ona karşılık gelen gerçek
+    işlem AYNI (ticker, tarih) gözlemidir; bileşen değeri de ileri getirisi de bardan geldiği için
+    İKİSİ BİREBİR AYNI çifti üretir. `score_calibration`ın havuzu bunları iki kez sayar (orada
+    y ekseni farklı: gerçek çıkış R'si ile sim çıkış R'si gerçekten iki ayrı ölçümdür). Burada ise
+    aynı sayıyı iki kez saymak paydayı şişiren düpedüz bir yalan olurdu — havuz (ticker, tarih)
+    anahtarında tekilleştirilir, gerçek katman önceliklidir.
+
+(4) CF KATMANI BU TABLODA SADAKAT SORUSUNDAN BAĞIMSIZDIR (2026-07-29, Aşama 1.4'ün karar girdisi).
+    Bu, deponun her yerinde geçerli olan "cf sayıları simülasyondur, hüküm taşıyamaz" kuralının
+    GEREKÇELİ ve DAR bir istisnasıdır; gerekçe yazılı olmazsa istisna sessizce genelleşir.
+    cf defterinin bilinen kusuru ÇIKIŞ tarafındadır: `cf.advance` yalnız stop/target/time_stop
+    simüle eder (trail/breakeven/chandelier/giveback/regime_flip/scale_out ve komisyon/ADV/impact
+    YOK — bkz. `analytics.CF_EXIT_FIDELITY_NOTE`). Bu kusur, cf satırının `r_multiple`ını —
+    yani ÇIKIŞTA ölçülen her büyüklüğü — kirletir. Bu modülün y ekseni ise `r_multiple` DEĞİL:
+    ileri getiri, sinyal barının kapanışından BAR SERİSİNDEN hesaplanır (`close[t+h]/close[t]-1`).
+    Yani cf satırından alınan tek şey GİRİŞ ANIdır (ticker + tarih); geri kalan her şey barlardan
+    gelir ve o barlar gerçek işlemlerinkiyle AYNI barlardır. Bir çıkış kuralının simüle edilip
+    edilmemesi, giriş barından 5/10/20 bar sonraki fiyatı DEĞİŞTİRMEZ.
+    Bunun bedeli n≈95 → n≈2100'dür: gerçek katmanda her hücrenin güven aralığı ±0.20 genişliğinde
+    ve HİÇBİR hücre anlamlı değil; cf katmanında aralık ~±0.043'e iner. Aşama 1.4'ün ("hiçbir
+    bileşen anlamlı IC taşımıyorsa tez revizyonu") cevaplanabilir olması için gereken örneklem
+    yalnız buradan gelebilir — gerçek defter aylarca 100'ün altında kalacak.
+    SINIR: cf katmanı hâlâ ALINMAMIŞ hipotetik girişlerdir (seçim yanlılığı sorusu ayrı ve açık
+    durur) ve bu yüzden tabloda AYRI SATIR olarak, "sim" etiketiyle görünür — gerçek katmanla
+    aynı kefeye konmaz, yalnız yanında durur.
+
+(5) TABLO ARTIK YEDİ BİLEŞENLİ (G2, 2026-07-29). Başlıktaki "dört parça" 1.4 karar kapısının
+    girdisiydi; kapı "ağırlık ayarı değil YENİDEN İNŞA" hükmünü verdi ve üç yeni aday (rvol20,
+    mom12_1, rmom) buraya eklendi. Eski dördü SİLİNMEDİ: bir çekirdeğin diğerinden iyi olduğu
+    ancak ikisi aynı popülasyonda, aynı ufuklarda ve aynı CI disiplininde yan yana durursa
+    söylenebilir. Yeni satırların ölçek beyanı (ham seri mi, skora giren dönüşüm mü) COMPONENTS
+    tanımının yanında ve çıktının `yeni_bilesen_notu` alanında yazılıdır.
+"""
+from __future__ import annotations
+
+import math
+
+import pandas as pd
+
+from . import config, store, obs, sieve, indicators as ind
+from . import strategy as strat
+from .analytics import spearman_ic, IC_MIN_SAMPLE
+
+COMPONENT_IC_FILE = "component_ic.json"
+
+# UFUKLAR: 5 = bir işlem haftası, 20 = bir işlem ayı, 10 = ikisinin arası. `exit.time_stop_days`
+# canlıda 15 — yani 20 barlık ufuk, stratejinin kendi tutma süresini KAPSAYAN ilk ufuktur; 5 ise
+# kârın büyük kısmının geldiği time_stop çıkışlarının altındaki kısa vadeyi görür.
+HORIZONS = (5, 10, 20)
+
+# Dört ham bileşen — `strategy.evaluate_entry`de `entry.w_*` ağırlıklarının ÇARPTIĞI değerler.
+# İsimler ağırlık adlarını takip eder (w_rs → rs) ki pano tablosunda hangi ağırlığın hangi ölçüme
+# karşılık geldiği tahmin edilmek zorunda kalmasın.
+#
+# ÜÇ YENİ BİLEŞEN (G2, ROADMAP §E Aşama 7, 2026-07-29): rvol20 / mom12_1 / rmom. Eski dördü
+# KALDIRILMADI — kıyas sürsün diye yan yana ölçülürler; yeni bir çekirdeğin eskisinden iyi olduğu
+# ancak ikisi AYNI tabloda, aynı popülasyonda, aynı CI disiplininde durursa söylenebilir.
+#
+# BU HÜCRELER HAM DEĞERİ ÖLÇER, SKORA GİREN DÖNÜŞÜMÜ DEĞİL — VE BU FARK YAZILI OLMALI. Eski dört
+# bileşen skor uzayındadır (tight = tt·100, vol = kırpılmış oran, prox = kırpılmış puan). Yenilerde
+# ise ağırlığın çarptığı büyüklük bir DÖNÜŞÜMDÜR: entry.w_rvolband ham rvol'ü değil onun ÜÇGEN bant
+# puanını (strategy.rvol_band_score), entry.w_mom ise ham 12-1 getiriyi değil onun 63-barlık
+# yüzdelik rütbesini çarpar. Buradaki satırlar HAM seriyi ölçer; sebebi, G2 kanıt tabanının (2026-07-29
+# g2_olcum) tam olarak ham seriyi ölçmüş olması ve gece tablosunun o kanıtla DOĞRUDAN kıyaslanabilir
+# kalması. Sonuç: bu satırlar "bant puanının IC'si" DEĞİLDİR — üçgen dönüşüm monoton olmadığı için
+# Spearman IC'si de aynı sayı olmak zorunda değildir. Bandın kanıtı ayrı bir tablodur (bant ortalama
+# getirileri, g2_olcum çıktısı) ve bileşiğin uçtan uca ölçümü kalem E'nin aday profillerine aittir.
+COMPONENTS = ("rs", "tight", "vol", "prox", "rvol20", "mom12_1", "rmom")
+COMPONENT_WEIGHT_KEY = {"rs": "entry.w_rs", "tight": "entry.w_tight",
+                        "vol": "entry.w_vol", "prox": "entry.w_prox",
+                        "rvol20": "entry.w_rvolband", "mom12_1": "entry.w_mom",
+                        # rmom'un ağırlık DÜĞMESİ YOK: g2_olcum'da hiçbir ufukta anlamlı değil
+                        # (cf @20 IC 0.036, CI [-0.007, 0.079]) → yedek aday. Ölçülür, skora girmez.
+                        "rmom": None}
+COMPONENT_WEIGHT_DEFAULT = {"rs": 0.35, "tight": 0.30, "vol": 0.20, "prox": 0.15,
+                            "rvol20": 0.0, "mom12_1": 0.0, "rmom": None}
+LAYERS = ("gercek", "cf", "havuz")
+
+
+CI_Z = 1.96          # %95 iki yanlı normal kuantil
+
+
+def _fisher_ci(ic: float, n: int) -> tuple[float | None, float | None]:
+    """Spearman IC'si için Fisher-z GÜVEN ARALIĞI. Neden gerekli ve neden BU yaklaşım:
+
+    Bir hücrede "IC 0.15" yazması tek başına bir bulgu DEĞİLDİR — n=40'ta 0.15, sıfırdan ayırt
+    edilemez; n=2000'de aynı sayı sağlam bir sinyaldir. Aralık olmadan tablo, örneklem büyüklüğünü
+    okurun kafasında taşımasını bekler ve 07-28'in ilk okumasında ("vol tek tutarlı pozitif")
+    tam da bu risk vardı.
+
+    YÖNTEM: z = artanh(ic) dönüşümü korelasyonu yaklaşık normal ve VARYANSI ÖRNEKLEMDEN BAĞIMSIZ
+    bir ölçeğe taşır; Spearman için standart hata ≈ 1/sqrt(n-3) (Fisher yaklaşımı — Pearson için
+    tam, Spearman için yaygın kabul gören yaklaşıklık; katsayı düzeltmeleri (ör. 1.06) literatürde
+    tartışmalı olduğu için EKLENMEDİ, yani aralık bir miktar DAR olabilir ve bu yönde muhafazakâr
+    değildir: aralığın sıfırı kapsaması "kesin anlamsız" değil "anlamlılık gösterilemedi"dir).
+    Aralık z ölçeğinde kurulup tanh ile geri alınır — bu yüzden [-1,1] dışına ASLA taşmaz.
+
+    SINIR (yazılı olmalı, çünkü sayı bu sınırdan büyük görünüyor): formül gözlemlerin BAĞIMSIZ
+    olduğunu varsayar. cf katmanında gözlemler güne ve sembole KÜMELENMİŞTİR (tek günde onlarca
+    satır), yani etkin örneklem ham n'den küçüktür ve GERÇEK aralık buradakinden GENİŞTİR. Bu
+    tabloda cf aralıkları bu nedenle bir ALT SINIR olarak okunmalıdır; `score_calibration` aynı
+    gerekçeyle cf diliminde anlamlılığı hiç hesaplamıyordu (orada None bırakılmıştı). Burada
+    hesaplanıyor ama etiketiyle: `ci_varsayim` alanı çıktının içinde bu cümleyi taşır."""
+    if n is None or n <= 3:
+        return None, None
+    try:
+        z = math.atanh(max(-0.999999, min(0.999999, float(ic))))
+    except ValueError:  # sessiz-yutma: atanh yalnız |ic|>=1 ya da sayı-olmayan girdide patlar; ikisi de "aralık ÖLÇÜLEMEDİ" demektir ve None çifti hücrede zaten görünür (ci: None, anlamli: None) — ikinci bir uyarı aynı olguyu tekrar söylerdi
+        return None, None
+    se = 1.0 / math.sqrt(n - 3)
+    return round(math.tanh(z - CI_Z * se), 4), round(math.tanh(z + CI_Z * se), 4)
+
+
+def _component_frame(df: pd.DataFrame, prox_max: float,
+                     index_close: pd.Series | None = None) -> pd.DataFrame:
+    """Bir sembolün TÜM barları için YEDİ bileşen + üç ileri getiri.
+
+    Formüller `strategy.evaluate_entry`den BİREBİR alınmıştır (satır 114-124); `rs` orada
+    kesitsel olarak dışarıdan geldiği için burada da ayrı hesaplanır ve sonradan eklenir.
+    `index_close` yalnız `rmom` içindir; yoksa o sütun tamamen NaN kalır (uydurma yok)."""
+    close, high = df["close"], df["high"]
+    tt = ind.trend_template(df)                                   # [0,1] · ısınma dolmadan NaN
+    vr = ind.volume_ratio(df["volume"], 50)
+    pivot = ind.pivot_high(high, strat.PIVOT_LOOKBACK, exclude_recent=1)
+    prox_pct = (close - pivot) / pivot * 100.0
+    out = pd.DataFrame(index=df.index)
+    out["tight"] = tt * 100.0
+    out["vol"] = 100.0 * (vr / 3.0).clip(upper=1.0)
+    # KIRPMA TİE ÜRETİR VE BU BİLİNÇLİ: canlı formül `min(prox/prox_max, 1)` ile eşiğin ötesindeki
+    # her barı 0'a bastırır. Ölçümü "düzeltip" kırpmasız hesaplamak, canlı skorda OLMAYAN bir
+    # bileşenin IC'sini raporlamak olurdu. Spearman beraberlikleri ortalama rütbeyle kırar.
+    out["prox"] = (100.0 * (1.0 - (prox_pct / prox_max).clip(upper=1.0))
+                   if prox_max > 0 else pd.Series(0.0, index=df.index))
+    out.loc[pivot <= 0, "prox"] = float("nan")                    # geçersiz pivot → ölçülemedi
+    # G2 (2026-07-29): HAM seriler, canlı yolun kullandığı AYNI indicators fonksiyonlarıyla
+    # (tek yasa, tek uygulama — modül başlığı, karar 1).
+    out["rvol20"] = ind.rvol20(df["volume"])
+    out["mom12_1"] = ind.mom_12_1(close)
+    out["rmom"] = ind.residual_momentum(close, index_close)
+    for h, seri in forward_returns(df).items():
+        out[f"fwd{h}"] = seri
+    return out
+
+
+def forward_returns(df: pd.DataFrame) -> dict:
+    """{ufuk: ileri getiri serisi}. TEK TANIM, İKİ TÜKETİCİ (bileşen IC'si + eşik eğrisi).
+
+    İkinci bir yerde `close.shift(-h)/close-1` yazmak, ölçüm tanımını iki dosyaya kopyalamak olurdu;
+    biri değişince (ör. açılıştan ölçmeye geçilse) diğeri sessizce eski tanımda kalır ve iki tablo
+    aynı adı taşıyan iki farklı büyüklüğü gösterir. `getiri_tanimi` alanı da bu tek tanımı anlatır.
+
+    İLERİ BAKAN TEK YER VE YALNIZ ÖLÇÜM İÇİN: bu seri hiçbir sinyale, kapıya ya da karara girmez.
+    Serinin sonundaki h bar NaN kalır (ufuk dolmadı) — uydurulmaz."""
+    close = df["close"]
+    return {h: close.shift(-h) / close - 1.0 for h in HORIZONS}
+
+
+def _bars_taban() -> dict:
+    """Bu tablonun üretildiği bar tabanının damgası (`bars_integrity` defterinin bu turdaki etkisi).
+
+    Yerel ithalat, modülün mevcut deseni (`_load_universe`/`_load_index_close` ile aynı): `adapters`
+    zinciri bu modülün ithalat yüzeyine girmesin."""
+    from .adapters import data as data_adapter
+    return data_adapter.integrity_report()
+
+
+def _load_universe() -> dict:
+    """Önbellek CSV'lerinden bar evreni (cf_backfill ile AYNI yol: ağ yok, sanitize onarımı var)."""
+    from .adapters import data as data_adapter
+    per = {}
+    for t in data_adapter.REPLAY_UNIVERSE:
+        cp = data_adapter._cache_path(t)
+        if not cp.exists():
+            continue
+        try:
+            df, _ = data_adapter.sanitize_bars(pd.read_csv(cp, parse_dates=["date"]), t)
+            # BÜTÜNLÜK DEFTERİ (2026-07-31, hayalet-round-2): çözülmemiş ölçek/kimlik kırılmasından
+            # ÖNCEKİ dönem ölçümden düşer. Kural burada YENİDEN YAZILMAZ — `bars_integrity` defteri
+            # okunur (tek yasa, iki tüketici: cf_backfill aynı satırı çağırır). Defter yoksa hiçbir
+            # şey düşmez; tablonun eski hâline döner ve bunu `integrity_report()` söyler.
+            df = data_adapter.measurement_bars(df, t)
+            if df is not None and len(df) > strat.PIVOT_LOOKBACK + 3:
+                per[t] = df.set_index("date").sort_index()
+        except Exception as e:
+            # YASA 4: `continue` sembolü ölçüm evreninden SESSİZCE düşürürdü — bileşen IC'sinin
+            # paydası küçülür, hiçbir hata görünmez ve "neden bu kadar az satır?" cevapsız kalır.
+            obs.warn("component_ic_bars_unreadable", ticker=t, error=f"{type(e).__name__}: {e}")
+    return per
+
+
+def _load_index_close() -> pd.Series | None:
+    """Endeks (SPY) kapanışları — `rmom`un beta regresyonu için. `_load_universe` ile AYNI yol:
+    ağ yok, bar önbelleğinden, `sanitize_bars` onarımıyla.
+
+    Okunamazsa None döner ve rmom sütunu tamamen NaN kalır → o hücreler "ölçülemedi" olarak görünür,
+    sıfır olarak DEĞİL. YASA 4: sessizce None dönmez, sebebini adıyla uyarır — yoksa rmom satırı
+    tabloda aylarca "n=0" durur ve kimse endeks barının hiç okunmadığını fark etmez."""
+    from .adapters import data as data_adapter
+    sym = getattr(data_adapter, "INDEX_SYMBOL", "SPY")
+    try:
+        cp = data_adapter._cache_path(sym)
+        if not cp.exists():
+            obs.warn("component_ic_index_bars_missing", symbol=sym, path=str(cp))
+            return None
+        df, _ = data_adapter.sanitize_bars(pd.read_csv(cp, parse_dates=["date"]), sym)
+        df = data_adapter.measurement_bars(df, sym)      # evrenle AYNI kapı (bkz. _load_universe)
+        if df is None or df.empty:
+            obs.warn("component_ic_index_bars_empty", symbol=sym)
+            return None
+        return df.set_index("date").sort_index()["close"]
+    except Exception as e:
+        obs.warn("component_ic_index_bars_unreadable", symbol=sym, error=f"{type(e).__name__}: {e}")
+        return None
+
+
+def _rs_by_date(per: dict, dates: set) -> dict:
+    """Kesitsel RS derecesi — YALNIZ gereken tarihler için, canlı yolun kendi fonksiyonuyla.
+
+    RS bir sembolün kendi geçmişinden değil, o gün EVRENİN geri kalanına göre durduğu yerden gelir.
+    Bu yüzden tek tek satır üzerinden hesaplanamaz: her tarih için evrenin tamamının getirisi lazım.
+    `indicators.rs_rating` doğrudan çağrılır (beraberlik kuralı dahil canlıyla aynı)."""
+    rets = pd.DataFrame({t: df["close"] / df["close"].shift(strat.RS_LOOKBACK) - 1.0
+                         for t, df in per.items()})
+    out = {}
+    for d in sorted(dates):
+        if d not in rets.index:
+            continue
+        row = rets.loc[d].dropna()
+        if row.empty:
+            continue
+        out[d] = ind.rs_rating({t: float(v) for t, v in row.items()})
+    return out
+
+
+def _rows() -> tuple[list, dict]:
+    """Ölçülecek gözlemler: (katman, ticker, tarih). Eleme muhasebesiyle.
+
+    cf tarafı `resolved_rows(entered_only=True)` — `score_calibration`ın kullandığı POPÜLASYONUN
+    AYNISI (near-miss hariç). İki tablo aynı satırlardan hesaplanmazsa "bileşik skorun IC'si şu,
+    bileşenlerinki bu" karşılaştırması iki farklı deftere bakan bir kıyas olurdu."""
+    from . import counterfactual as cf
+    rows, sayim = [], {"gercek": 0, "cf": 0}
+    with sieve.Sieve("component_ic.gercek") as sv:
+        for t in store.read_jsonl("trades.jsonl"):
+            pid = str(t.get("plan_id") or "")
+            if not pid.startswith("P-"):
+                sv.drop("sema:plan_id_biçimi:eski_şema"); continue
+            parts = pid.split("-")                       # P-YYYY-MM-DD-TICKER
+            if len(parts) < 5:
+                sv.drop("sema:plan_id_biçimi:eksik_parça"); continue
+            sv.keep()
+            rows.append(("gercek", parts[4], "-".join(parts[1:4])))
+            sayim["gercek"] += 1
+    with sieve.Sieve("component_ic.cf") as sv:
+        for r in cf.resolved_rows(entered_only=True):
+            if not r.get("ticker") or not r.get("date"):
+                sv.drop("sema:eksik_alan:ticker_veya_date"); continue
+            sv.keep()
+            rows.append(("cf", str(r["ticker"]), str(r["date"])[:10]))
+            sayim["cf"] += 1
+    return rows, sayim
+
+
+def component_ic() -> dict | None:
+    """Bileşen × ufuk × katman IC tablosu. Ölçülemeyen her hücre None kalır (UYDURMA YASAĞI).
+
+    Dönüş None: hiç gözlem yoksa ya da bar evreni okunamadıysa — boş bir tablo yazıp "ölçtük"
+    izlenimi vermek, ölçmemekten daha kötüdür."""
+    rows, sayim = _rows()
+    if not rows:
+        return None
+    per = _load_universe()
+    if not per:
+        obs.warn("component_ic_no_bars", detail="önbellekte bar yok — bileşen IC'si ölçülemedi")
+        return None
+
+    params = config.load_strategy()["params"]
+    prox_max = float(params.get("entry.pivot_proximity_pct", 2.0) or 2.0)
+    # rmom'un ağırlığı YOKTUR (düğmesi yok) → None kalır; 0.0 yazmak "ağırlığı sıfıra ayarlanmış bir
+    # düğme var" demek olurdu ve pano o satırı öbür sıfırlarla aynı okurdu.
+    agirliklar = {c: (None if COMPONENT_WEIGHT_KEY[c] is None
+                      else float(params.get(COMPONENT_WEIGHT_KEY[c], COMPONENT_WEIGHT_DEFAULT[c])))
+                  for c in COMPONENTS}
+    index_close = _load_index_close()
+
+    # Bileşen serileri sembol başına BİR KEZ (satır başına değil): 7000+ satırın çoğu aynı sembolün
+    # farklı günleri; satır başına yeniden hesap aynı yuvarlanan pencereyi yüzlerce kez kurardı.
+    gerekli = {t for _, t, _ in rows}
+    comp = {}
+    for t in sorted(gerekli & set(per)):
+        try:
+            comp[t] = _component_frame(per[t], prox_max, index_close)
+        except Exception as e:
+            obs.warn("component_ic_frame_failed", ticker=t, error=f"{type(e).__name__}: {e}")
+
+    tarihler = {pd.Timestamp(d) for _, t, d in rows if t in comp}
+    rs_map = _rs_by_date(per, tarihler)
+
+    # (katman, bileşen, ufuk) → [(bileşen_değeri, ileri_getiri), ...]
+    buk: dict = {(lay, c, h): [] for lay in LAYERS for c in COMPONENTS for h in HORIZONS}
+    gorulen: set = set()          # havuz tekilleştirmesi (bkz. modül başlığı, karar 3)
+    with sieve.Sieve("component_ic.eslesme") as sv:
+        # GERÇEK ÖNCE: havuz tekilleştirmesinde çakışan (ticker, tarih) gerçek katmandan sayılsın.
+        for katman, ticker, dstr in sorted(rows, key=lambda r: (r[0] != "gercek", r[1], r[2])):
+            frame = comp.get(ticker)
+            if frame is None:
+                sv.drop("sema:bar_yok:sembol"); continue
+            d = pd.Timestamp(dstr)
+            if d not in frame.index:
+                sv.drop("sema:bar_yok:tarih"); continue
+            satir = frame.loc[d]
+            rsv = (rs_map.get(d) or {}).get(ticker)
+            if rsv is None:
+                sv.drop("sema:rs_kesiti_yok")
+                continue
+            sv.keep()
+            degerler = {"rs": float(rsv), "tight": satir["tight"], "vol": satir["vol"],
+                        "prox": satir["prox"], "rvol20": satir["rvol20"],
+                        "mom12_1": satir["mom12_1"], "rmom": satir["rmom"]}
+            yeni = (ticker, dstr) not in gorulen
+            gorulen.add((ticker, dstr))
+            for c in COMPONENTS:
+                x = degerler[c]
+                if pd.isna(x):
+                    continue          # ısınma dolmamış bileşen — o HÜCRE için gözlem yok, satır değil
+                for h in HORIZONS:
+                    y = satir[f"fwd{h}"]
+                    if pd.isna(y):
+                        continue      # ufuk dolmadı (serinin sonu) — uydurulmaz
+                    buk[(katman, c, h)].append((x, float(y)))
+                    if yeni:
+                        buk[("havuz", c, h)].append((x, float(y)))
+
+    def _hucre(pairs: list) -> dict:
+        if len(pairs) < IC_MIN_SAMPLE:
+            return {"ic": None, "n": len(pairs), "neden": f"n<{IC_MIN_SAMPLE}",
+                    "ci": None, "anlamli": None}
+        ic = spearman_ic(pairs)
+        # ic None: bir tarafta hiç rütbe değişimi yok → korelasyon TANIMSIZ, "0.0 ilişki" değil.
+        if ic is None:
+            return {"ic": None, "n": len(pairs), "neden": "rütbe değişimi yok",
+                    "ci": None, "anlamli": None}
+        lo, hi = _fisher_ci(ic, len(pairs))
+        return {"ic": round(ic, 4), "n": len(pairs), "neden": None,
+                "ci": None if lo is None else {"lo": lo, "hi": hi, "seviye": 0.95},
+                # ANLAMLILIK = ARALIK SIFIRI DIŞARIDA BIRAKIYOR MU. Tek bir IC sayısına bakıp
+                # "vol pozitif, ağırlığını artıralım" demek, n=95'te ±0.20 genişliğindeki bir
+                # aralığın içindeki bir kıpırtıyı bulgu sanmaktır — 07-28'in ilk bileşen tablosu
+                # tam olarak böyle okunma riski taşıyordu.
+                "anlamli": None if lo is None else bool(lo > 0 or hi < 0)}
+
+    tablo = {lay: {c: {str(h): _hucre(buk[(lay, c, h)]) for h in HORIZONS} for c in COMPONENTS}
+             for lay in LAYERS}
+
+    # HÜKÜM: en güçlü |IC| hangi bileşende ve ölçülebilen hücre var mı? Yalnız GERÇEK katman
+    # hüküm taşır (kuzey yıldızının 1. ölçütüyle aynı yasa) — cf katmanı bağlamdır, kanıt değil.
+    olculen = [(c, h, tablo["gercek"][c][str(h)]["ic"], tablo["gercek"][c][str(h)]["n"])
+               for c in COMPONENTS for h in HORIZONS if tablo["gercek"][c][str(h)]["ic"] is not None]
+    # ANLAMLI HÜCRE SAYIMI HER KATMAN İÇİN AYRI: 1.4 karar kapısının sorusu ("hiçbir bileşen anlamlı
+    # IC taşımıyor mu?") gerçek katmanda örneklem kuraklığından, cf katmanında ise gerçekten sıfır
+    # bilgiden ötürü "hayır" cevabı alabilir — ikisi AYNI cevap değildir ve tek sayıya indirilemez.
+    anlamli_sayim = {lay: sum(1 for c in COMPONENTS for h in HORIZONS
+                              if tablo[lay][c][str(h)].get("anlamli") is True) for lay in LAYERS}
+    if not olculen:
+        verdict = ("gerçek katmanda ÖLÇÜLEBİLEN bileşen hücresi yok — dört bileşenin hiçbiri "
+                   f"hakkında bir şey söylenemez (her hücre n<{IC_MIN_SAMPLE} ya da rütbe değişimi yok)")
+        en_guclu = None
+    else:
+        c, h, ic, n = max(olculen, key=lambda x: abs(x[2]))
+        hucre = tablo["gercek"][c][str(h)]
+        en_guclu = {"bilesen": c, "horizon": h, "ic": ic, "n": n,
+                    "ci": hucre.get("ci"), "anlamli": hucre.get("anlamli")}
+        # HÜKÜM CÜMLESİ ANLAMLILIĞI SÖYLER: "en güçlü bileşen X" cümlesi tek başına, aralığı sıfırı
+        # kapsayan bir sayıyı da bir bulgu gibi okutur. 07-28'in ilk tablosunda dört hücrenin dördü
+        # de böyleydi ve cümle bunu söylemiyordu.
+        nitelik = ("ANLAMLI" if hucre.get("anlamli") is True
+                   else "anlamlı DEĞİL (aralık sıfırı kapsıyor)")
+        verdict = (f"gerçek katmanın en güçlü bileşeni: {c} · {h} bar · IC {ic} (n={n}) — {nitelik}; "
+                   f"{len(olculen)}/{len(COMPONENTS) * len(HORIZONS)} hücre ölçülebildi, "
+                   f"{anlamli_sayim['gercek']} anlamlı. "
+                   f"cf (sim) katmanında {anlamli_sayim['cf']} anlamlı hücre var — bağlam, kanıt değil")
+
+    out = {
+        "horizons": list(HORIZONS), "components": list(COMPONENTS), "layers": list(LAYERS),
+        "agirliklar": agirliklar,
+        # GETİRİ TANIMI ÇIKTININ İÇİNDE: panoyu ya da beyni okuyan biri "hangi getiri?" sorusunu
+        # koda inmeden cevaplayabilmeli. Tanım değişirse bu satır da değişir; ikisi ayrı düşemez.
+        "getiri_tanimi": "close[t+h]/close[t]-1 (sinyal barı kapanışından, yüzde; R'ye bölünmez)",
+        "prox_max": prox_max, "tablo": tablo, "en_guclu": en_guclu, "verdict": verdict,
+        "anlamli_sayim": anlamli_sayim,
+        # YENİ BİLEŞENLERİN ÖLÇEK BEYANI ÇIKTININ İÇİNDE (getiri tanımı/CI varsayımıyla aynı
+        # gerekçe): panoyu ya da beyni okuyan biri "bu satır skora giren büyüklüğün mü, ham
+        # göstergenin mi IC'si?" sorusunu koda inmeden cevaplayabilmeli — aksi hâlde bant puanının
+        # IC'si sanılır ve monoton olmayan bir dönüşümün ardındaki fark görünmez.
+        "yeni_bilesen_notu": ("rvol20/mom12_1/rmom HAM seri olarak ölçülür (G2 kanıt tabanıyla "
+                              "doğrudan kıyaslanabilsin diye). Skora giren büyüklükler DÖNÜŞÜMDÜR: "
+                              "entry.w_rvolband üçgen bant puanını, entry.w_mom 63-barlık yüzdelik "
+                              "rütbeyi çarpar; üçgen MONOTON DEĞİLdir → bu IC bant puanının IC'si "
+                              "değildir. rmom'un ağırlık düğmesi yoktur (yedek aday, ölçülür)."),
+        # ARALIĞIN YÖNTEMİ VE VARSAYIMI ÇIKTININ İÇİNDE (getiri tanımıyla aynı gerekçe): panoyu ya
+        # da beyni okuyan biri "bu aralık neye göre?" sorusunu koda inmeden cevaplayabilmeli.
+        "ci_yontem": "Fisher-z, SE=1/sqrt(n-3), %95 iki yanlı",
+        "ci_varsayim": ("gözlemler bağımsız varsayılır; cf katmanında satırlar güne/sembole "
+                        "kümelenmiştir → gerçek aralık daha GENİŞtir, buradaki bir ALT SINIRdır"),
+        "cf_katman_gerekce": ("ileri getiri BARLARDAN hesaplanır (close[t+h]/close[t]-1); cf'ten "
+                              "yalnız GİRİŞ ANI alınır. cf'in çıkış-simülasyonu sadakat kusuru "
+                              "r_multiple'ı kirletir, bu tablonun y eksenini KİRLETMEZ"),
+        "n_gozlem": {"gercek": sayim["gercek"], "cf": sayim["cf"], "havuz_tekil": len(gorulen)},
+        # BAR TABANI ÇIKTININ İÇİNDE (getiri tanımı/CI varsayımıyla AYNI gerekçe): `bars_integrity`
+        # defteri evrenden DÖNEM düşürür — çözülmemiş ölçek/kimlik kırılmasından önceki geçmiş.
+        # Hangi tabandan üretildiği yazılmazsa iki `component_ic.json` aynı adı taşıyıp farklı bar
+        # kümesine ait olur ve fark GÖRÜNMEZ; "bu tabloyu yeniden üretmek gerekir mi?" sorusu da
+        # tahminle cevaplanır. Bu satır aynı zamanda `integrity_report()` sayacının TÜKETİCİSİdir:
+        # üretilip tüketilmeyen kanıt bu depoda yasaktır (YASA 6).
+        "bars_integrity": _bars_taban(),
+        sieve.PROV_KEY: sieve.provenance(sayim["gercek"] + sayim["cf"], sayim["gercek"], sayim["cf"],
+                                         stages_=("component_ic.gercek", "component_ic.cf",
+                                                  "component_ic.eslesme")),
+    }
+    store.write_json(COMPONENT_IC_FILE, out)
+    obs.log("component_ic", n_gercek=sayim["gercek"], n_cf=sayim["cf"],
+            olculen_hucre=len(olculen) if olculen else 0)
+    return out
+
+
+def compact_lines(doc: dict | None = None, max_satir: int = 6) -> list[str]:
+    """evidence_pack için KOMPAKT özet: yalnız gerçek katmanın ölçülebilen hücreleri, |IC| sırasıyla.
+
+    Beyne tam tablo (3 katman × 4 bileşen × 3 ufuk = 36 hücre) verilirse prompt şişer ve içindeki
+    tek anlamlı satır kaybolur. Ölçülemeyen hücreler HİÇ gitmez — ama kaç tanesinin ölçülemediği
+    bir satırda söylenir; "gördüğün her şey bu" ile "ölçebildiğimiz her şey bu" farkı beyne de
+    açıkça gitmeli, yoksa eksik kanıttan tam-kanıt gibi öneri üretir."""
+    doc = doc if doc is not None else store.read_json(COMPONENT_IC_FILE, None)
+    if not doc or not doc.get("tablo"):
+        return []
+    g = doc["tablo"].get("gercek") or {}
+    hucreler = [(c, h, g[c][str(h)]["ic"], g[c][str(h)]["n"])
+                for c in doc.get("components", COMPONENTS) for h in doc.get("horizons", HORIZONS)
+                if (g.get(c) or {}).get(str(h), {}).get("ic") is not None]
+    toplam = len(doc.get("components", COMPONENTS)) * len(doc.get("horizons", HORIZONS))
+    if not hucreler:
+        return [f"bileşen IC (gerçek katman): 0/{toplam} hücre ölçülebildi — hiçbir bileşen hakkında "
+                f"kanıt yok"]
+    hucreler.sort(key=lambda x: -abs(x[2]))
+
+    def _ci_metni(lay: str, c: str, h) -> str:
+        """Aralık BEYNE DE gider. Aralıksız bir IC listesi, hipotez üreten tarafa "vol pozitif"
+        gibi okunur ve ağırlık değiştirme önerisi ölçülmemiş bir kesinliğe dayanır."""
+        cell = ((doc["tablo"].get(lay) or {}).get(c) or {}).get(str(h), {})
+        ci = cell.get("ci")
+        if not ci:
+            return ""
+        return f" CI[{ci['lo']},{ci['hi']}]{'' if cell.get('anlamli') else ' (sıfırı kapsıyor)'}"
+
+    satirlar = [f"{c} @{h}bar IC {ic} (n={n}, ağırlık {doc.get('agirliklar', {}).get(c)})"
+                f"{_ci_metni('gercek', c, h)}"
+                for c, h, ic, n in hucreler[:max_satir]]
+    # CF SATIRI AYRI VE ETİKETLİ (2026-07-29): 1.4 karar kapısının cevaplanabilir olması için gereken
+    # örneklem yalnız cf'te var (n≈2100 vs 95), ama o satırlar ALINMAMIŞ girişlerdir — beyne
+    # etiketsiz giderse ikisini aynı kefeye koyar ve seçim yanlılığını görmez.
+    cf = doc["tablo"].get("cf") or {}
+    cf_hucre = [(c, h, cf[c][str(h)]["ic"], cf[c][str(h)]["n"])
+                for c in doc.get("components", COMPONENTS) for h in doc.get("horizons", HORIZONS)
+                if (cf.get(c) or {}).get(str(h), {}).get("anlamli") is True]
+    cf_hucre.sort(key=lambda x: -abs(x[2]))
+    for c, h, ic, n in cf_hucre[:max_satir]:
+        satirlar.append(f"[sim/cf] {c} @{h}bar IC {ic} (n={n}){_ci_metni('cf', c, h)} — alınmamış "
+                        f"hipotetik girişler, kanıt değil bağlam")
+    satirlar.append(f"[{len(hucreler)}/{toplam} hücre ölçülebildi; gerisi örneklem altı — "
+                    f"getiri: {doc.get('getiri_tanimi')}]")
+    return satirlar

@@ -1,0 +1,43 @@
+[project]
+name = "meridian"
+version = "0.1.0"
+description = "Meridian — a self-improving US-equity research-and-trading agent (L0 paper). Research system. Not financial advice."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+    "httpx>=0.27",
+    "aiofiles>=23.2",
+    "pandas-market-calendars>=4.4",
+    "rich>=13.7",
+    "jinja2>=3.1",
+    "websockets>=16.1",
+    "redis>=8.0.1",
+]
+
+[project.optional-dependencies]
+# Live broker path — installed but NEVER imported unless MERIDIAN_MODE=live AND MERIDIAN_I_ACCEPT_RISK=true
+live = ["alpaca-py>=0.20"]
+# Hermes brain — the Anthropic SDK. Installed LAST on the VM (§7); the deterministic proposer runs without it.
+brain = ["anthropic>=0.40", "google-cloud-secret-manager>=2.20"]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["meridian"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+markers = [
+    # Hermes danışma katmanının GERÇEK arka plan ipliğini isteyen test. Varsayılan olarak
+    # `tests/conftest.py::hermes_async_cagrilari` bu iplikleri no-op'a çevirir; işaretli test
+    # ipliği kendi join etmekle yükümlüdür (etmezse aynı fikstürün dedektörü onu adıyla düşürür).
+    "hermes_gercek_iplik: hermes arka plan ipliği taklit EDİLMEZ; test onu kendi join eder",
+]

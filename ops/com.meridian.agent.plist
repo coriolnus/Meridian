@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- EMEKLİ YOL (K1, 2026-07-30): bu plist launchd süpervizörü içindir ve ops/supervise.sh onu
+     VARSAYILAN OLARAK KURMAZ (üç gerekçe o betiğin başında: ~/Documents TCC engeli, .env'deki
+     MERIDIAN_DASH_TOKEN'ın launchd ortamına geçmemesi, ve keepalive'ın devre dışı kalması).
+     Kanonik süpervizör: ops/keepalive.sh.
+     YOLLAR DÜZELTİLDİ: WorkingDirectory ve python yolu ~/Documents/Claude/AI-Trading'i
+     gösteriyordu — o yol 2026-07-23'ten beri gerçek depoya SYMLINK. Bilerek zorlayan bir
+     operatörün en azından var olan bir yola bootstrap etmesi gerekir.
+     TOKEN BURAYA GÖMÜLMEZ: sır repoya yazılmaz. Token gerekiyorsa serve.sh yolu kullanılır. -->
+<dict>
+  <key>Label</key><string>com.meridian.agent</string>
+  <key>WorkingDirectory</key><string>/Users/erdemozturk/AI-Trading</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/erdemozturk/AI-Trading/.venv/bin/python</string>
+    <string>-m</string><string>uvicorn</string><string>meridian.api:app</string>
+    <string>--host</string><string>127.0.0.1</string>
+    <string>--port</string><string>8080</string>
+    <string>--log-level</string><string>warning</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>MERIDIAN_BROKER</key><string>alpaca_paper</string>
+    <key>MERIDIAN_PARALLEL_PROBES</key><string>1</string>
+    <key>MERIDIAN_AUTOSTART_CYCLE</key><string>1</string>
+    <key>CYCLE_POLL_SECONDS</key><string>300</string>
+    <key>MERIDIAN_AUTOSTART_HERMES</key><string>1</string>
+    <key>HERMES_POLL_SECONDS</key><string>300</string>
+    <key>MERIDIAN_SUPERVISED</key><string>1</string>
+  </dict>
+  <key>KeepAlive</key><true/>
+  <key>RunAtLoad</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>/tmp/meridian-dashboard.log</string>
+  <key>StandardErrorPath</key><string>/tmp/meridian-dashboard.log</string>
+</dict>
+</plist>

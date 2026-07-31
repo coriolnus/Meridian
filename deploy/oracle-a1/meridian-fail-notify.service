@@ -1,0 +1,42 @@
+# meridian-fail-notify.service — meridian.service ÖLDÜĞÜNDE operatöre haber ver.
+#
+# NEDEN VAR (ve neden mevcut bildirim yolu YETMİYOR). `meridian/notify.py` ZATEN Telegram/webhook +
+# yerel gelen kutusu taşıyor ve alarmları gönderiyor — AMA hepsi SÜREÇ İÇİNDEN çağrılır. Meridian
+# çöker ve `Restart=always` de kaldıramazsa (bozuk venv, dolu disk, OOM, hatalı yapılandırma) haber
+# verecek kimse kalmaz: pano cevap vermez, defterler ilerlemez ve bunu ancak operatör panoya
+# BAKTIĞINDA fark eder. Süreç ÖLÜYKEN tetiklenebilen tek katman systemd'nin kendisidir.
+#
+# BAĞ: meridian.service içinde `OnFailure=meridian-fail-notify.service`. systemd bu birimi YALNIZ
+# birim BAŞARISIZ duruma düştüğünde çalıştırır (temiz `systemctl stop` bunu TETİKLEMEZ — operatörün
+# kendi durdurması bir arıza değildir).
+#
+# KANAL YOKSA NE OLUR — YASA 4 GEREĞİ AÇIKÇA YAZILI: `notify.configured()` False ise (ne
+# TELEGRAM_BOT_TOKEN+CHAT_ID ne MERIDIAN_WEBHOOK_URL kurulu) `notify.send` hiçbir şey göndermez ve
+# False döner. Bu bir HATA DEĞİL, beyan edilmiş bir NO-OP'tur: birim yine 0 ile çıkar ve journal'a
+# "kanal yapılandırılmamış" satırını yazar. Sessizce başarılı görünmez — `journalctl -u
+# meridian-fail-notify` bakan biri gönderimin OLMADIĞINI okur. Kanal kimliğini kurmak OPERATÖR
+# kalemidir (panodaki Ayarlar → sırlar, ya da state/secrets.json).
+#
+# KURULUM: deploy/oracle-a1/deploy.sh bu dosyayı kopyalar. Elle:
+#   sudo cp deploy/oracle-a1/meridian-fail-notify.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+# DENEME (gerçek arıza beklemeden):
+#   sudo systemctl start meridian-fail-notify   ·   journalctl -u meridian-fail-notify -n 20
+[Unit]
+Description=Meridian: meridian.service FAILED bildirimi (oneshot, kanal yoksa no-op)
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Tek satırlık gövde: kanal varsa gönder, yoksa nedenini journal'a yaz. `|| true` ve `exit 0`
+# BİLEREK: bildirim katmanının kendi arızası (ağ, sağlayıcı 5xx, sır okunamadı) ikinci bir
+# başarısız birim üretip alarm gürültüsünü ikiye katlamamalı — asıl olay meridian.service'in
+# ölümüdür ve o journal'da zaten duruyor.
+# TEK FİZİKSEL SATIR — bilinçli: systemd `\` devamı, devam satırının baş boşluklarını -c dizgisine
+# dahil eder ve Python IndentationError ile çöker (2026-07-30 test-ateşlemesi bunu CANLIDA yakaladı:
+# güvenlik ağının kendisi hiç çalışmamıştı). Gömülü çok-satır Python systemd'de YASAK.
+ExecStart=/home/ubuntu/.local/bin/uv run python -c "from meridian import notify; ok = notify.configured(); print('[fail-notify] kanal yapilandirildi mi:', ok); print('[fail-notify] gonderim sonucu:', notify.send('MERIDIAN A1: meridian.service FAILED - surec olu, systemd OnFailure tetikledi. journalctl -u meridian -n 100')) if ok else print('[fail-notify] NO-OP: TELEGRAM_BOT_TOKEN+CHAT_ID veya MERIDIAN_WEBHOOK_URL yok (operator kalemi)')"
+ExecStartPost=/bin/sh -c "echo '[fail-notify] birim tamamlandi' ; exit 0"
+SuccessExitStatus=0 1

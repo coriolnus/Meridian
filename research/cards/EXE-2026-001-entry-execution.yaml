@@ -1,0 +1,27 @@
+card_id: EXE-2026-001
+family: entry_execution_reconciliation   # WP-E / E1-E2-E3
+thesis: >
+  İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra
+  modelleri koşuyor ve ayna gap durumunda reddediliyor (95/95 satırda alpaca_fill_price yok).
+  Açılış mikroyapısı (spread >20bps, ilk-saat negatif getiri) naif açılış-dolumunu yapısal olarak
+  cezalandırır; marketable stop-limit + gap davranışının NETLEŞTİRİLMESİ hem iki motoru hizalar
+  hem slipaj defterini (E2) ilk kez veriyle doldurur.
+evidence_refs: [Cooper-Cliff-Gulen 2008, Bogousslavsky-Muravyev 2023 JFM, Lou-Polk-Skouras 2019 JFE,
+  WP0 matrisi mek.4/13 (broker.py:127-197, alpaca.py:289-300, broker_reconcile failed_submissions)]
+universe: full_251
+features_asof: "emir parametreleri plan anında (sinyal barı kapanışı) sabitlenir; as-of ihlali yok"
+horizon: "giriş emri: ertesi seans; TIF=DAY (GTC'den değişim — gap'te taşınan emir ertesi gün bayat tetik taşır)"
+parameter_grid:
+  limit_offset: ["min(0.5*ATR14, %1.0)", "min(0.25*ATR14, %0.5)", "min(1.0*ATR14, %1.5)"]  # 3 kombinasyon → K+=3
+  gap_davranisi: ["zaten-tetik-üstü-açılışta marketable-limit(cap=limit)", "iptal (gap-risk vetosu)"]  # 2 → K+=2
+cost_model: "mevcut 10bps model + E3 kötümser bandı (açılış-spread 20bps large-cap) — bant bu kartla config'e girer"
+success_metric: >
+  (a) ayna red oranı ~0'a iner (broker_reconcile.failed_submissions); (b) E2 defteri dolmaya başlar
+  (fill−resmi_açılış, fill−limit); (c) iç-defter-vs-ayna dolum farkı ölçülür hale gelir (mirror_divergence).
+  Bu bir EDGE kartı değil İCRA kartı: DoD-tabanlı; PARA-v3 hükmü gerekmez, ama K-grid'i sayılır.
+kill_criteria:
+  - "limit-offset hiçbir grid noktasında dolum oranını kabul edilebilir tutamıyorsa (dolmama >%40) tasarım geri döner"
+  - "iki motor hizalanamıyorsa (yapısal engel) fark KALICI ölçüm olarak damgalanır, gizlenmez"
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1]}
+status: registered
+notes: "Bağımlılık: BT-1/SIP gece kolları broker/alpaca/loop'ta — WP-E ajanı onlar indikten sonra başlar."

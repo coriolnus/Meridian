@@ -1,0 +1,25 @@
+card_id: EDG-2026-002
+family: high_volume_shock
+thesis: >
+  Olağandışı hacim şoku görünürlüğü artırır ve sonraki haftalarda pozitif getiriyle ilişkilidir
+  (Gervais-Kaniel-Mingelgrin). Meridian'ın "hacim onayı" zaten bu ailenin sezgisel hali — AMA canlı
+  eşik (min_volume_ratio=1.5 doğrusal) kendi ölçülmüş bant tablosuyla çelişiyor (0.8-1.5 bandı
+  NEGATİF, 1.5-2.0 tatlı nokta). Bu kart sezgiseli nicelle değiştirme kararının ölçümüdür.
+evidence_refs: [Gervais-Kaniel-Mingelgrin 2001 JoF, strategy.py:26-33 ölçülmüş bant tablosu (n=2093),
+  WP0 riski #2, katalog PDF aile 9]
+universe: full_251
+features_asof: "feat_volshock = hacim persentili (son 50 gün dağılımı, yalnız t ve öncesi); mevcut rvol_band_score (uykuda, ağırlık 0) ile kıyas — hayalet-temiz barlardan YENİDEN üretilmiş tabloyla (BT-2 şartı)"
+horizon: "retrospektif katkı: cf/component_ic ufukları; sonra gölge-v1 giriş kolu adayı (V-defterine tek satır)"
+parameter_grid:
+  persentil_esigi: [80, 90, 95]
+  bant_formu: ["ucgen(tepe 1.75)", "persentil-dogrusal"]  # 3x2=6 KOMBINASYON -> K+=6 (ilk kayit K+=5 HATALIYDI; 2026-07-31 duzeltildi — grid carpiminda toplanmaz, carpilir)
+cost_model: pessimistic_band_v2_bekleniyor
+success_metric: "temiz-bar tablosunda bant yapısı yeniden doğrulanır VE seçilen form cf-IC'de CI-0-dışı katkı verir; ancak o zaman gölge kolu açılır (aşama kapısı)"
+kill_criteria:
+  - "temiz-bar yeniden-üretimi bant yapısını çürütürse (hayalet-artefaktıysa) mevcut sezgisel eşik KALIR, kart arşivlenir"
+  - "hiçbir grid noktası katkı vermezse arşiv; canlı eşik değişikliği ANCAK prescreen+PARA-v3 kapısından"
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1-retro]}
+status: archived   # 2026-07-31: bant yapısı hayalet-artefaktı DEĞİL (A/B max 0.047pp) AMA 18 hücrenin 0'ı ham
+#   rvol20'yi geçemedi (ham @20 IC=0.0645 CI[+0.017,+0.111] ANLAMLI) → canlı min_volume_ratio=1.5 KALIR, gölge kolu açılmaz.
+#   TORUN-KART ADAYI (yeni ön-kayıt gerektirir): "tepe/monoton-değil" iddiası desteklenmedi; üçgenin 0'ladığı rvol≥2.5
+#   bölgesi +1.61% CI[+0.64,+2.54] ANLAMLI POZİTİF — form revizyonu ölçümden-sonra-seçim yasağı gereği bu turda YAPILMADI

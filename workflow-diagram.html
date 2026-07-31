@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian — Operasyon ve Teşhis Paneli</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0f0f0f; color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding:24px; }
+  .header h1 { font-size:22px; font-weight:700; }
+  .header p { color:#888; font-size:13px; margin-top:6px; max-width:980px; line-height:1.5; }
+  .controls { display:flex; align-items:center; gap:14px; margin:14px 0 2px; flex-wrap:wrap; }
+  .seg { display:inline-flex; border:1px solid #2b313b; border-radius:9px; overflow:hidden; }
+  .seg button { background:#161616; color:#9aa1ab; border:0; padding:7px 15px; font-size:12.5px; cursor:pointer; font-weight:600; font-family:inherit; }
+  .seg button.on { background:#26303d; color:#fff; }
+  .hint { font-size:11.5px; color:#5a616c; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; margin:10px 0 10px; font-size:12px; color:#bbb; align-items:center; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .legend i { width:12px; height:12px; border-radius:3px; display:inline-block; border:2px solid; }
+  #legendHeat { display:none; }
+  #heatBar { width:220px; height:10px; border-radius:5px;
+             background:linear-gradient(90deg,hsl(120,70%,42%),hsl(60,75%,45%),hsl(0,75%,48%)); }
+  #outer { background:#161616; border-radius:14px; margin-top:6px; overflow:hidden; position:relative; }
+  #wrap { position:relative; width:1840px; transform-origin:top left; }
+  #edges { position:absolute; inset:0; width:1840px; pointer-events:none; }
+  .lane { position:absolute; left:14px; right:14px; background:#131519; border:1px solid #1f232a; border-radius:12px;
+          transition:height .2s, top .2s; }
+  .laneTitle { position:absolute; left:28px; font-size:11px; letter-spacing:2.5px; color:#5a616c; font-weight:700;
+               background:none; border:0; cursor:pointer; font-family:inherit; z-index:4; }
+  .laneTitle:hover { color:#9aa1ab; }
+  .node { position:absolute; width:195px; border:2px solid; border-radius:12px; padding:14px 16px; cursor:pointer;
+          transition:transform .15s, box-shadow .15s, opacity .2s; user-select:none; }
+  .node .ic { font-size:20px; }
+  .node .lb { font-weight:700; font-size:14px; margin-top:6px; line-height:1.25; }
+  .node .sb { font-size:11px; color:#c7c7c7; margin-top:4px; line-height:1.35; }
+  .node .ms { font-size:10.5px; font-weight:700; margin-top:6px; display:inline-block; letter-spacing:.3px; }
+  .node .wbadge { position:absolute; top:-9px; right:-9px; width:21px; height:21px; border-radius:50%;
+                  background:#3a2d12; border:1.5px solid #F59E0B; font-size:11px; display:flex;
+                  align-items:center; justify-content:center; }
+  .node .subBadge { position:absolute; bottom:5px; right:9px; font-size:10px; color:#7f8794; }
+  .node:hover { transform:scale(1.05); z-index:5; }
+  .node.sel { transform:scale(1.06); z-index:6; }
+  .node.dim { opacity:.22; }
+  .node.mismatch { animation:pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(245,158,11,0); }
+                     50%     { box-shadow:0 0 0 7px rgba(245,158,11,.18); } }
+  path.edge { fill:none; stroke:#444; stroke-width:2; transition:opacity .2s; }
+  path.edge.hot { stroke-width:2.6; stroke-dasharray:7 5; animation:dash .5s linear infinite; }
+  path.edge.vetoed { stroke-dasharray:3 6; opacity:.85; stroke-width:2.2; }
+  path.edge.visited { opacity:.45; }
+  path.edge.dimE { opacity:.12; }
+  path.edge.stub { stroke-dasharray:5 5; stroke:#5a616c; }
+  @keyframes dash { to { stroke-dashoffset:-12; } }
+  text.elb { font-size:10.5px; fill:#9aa1ab; paint-order:stroke; stroke:#161616; stroke-width:4px; font-weight:600; }
+  text.elb.dimT { opacity:.12; }
+  #player { display:flex; align-items:center; gap:10px; background:#161616; border-radius:12px;
+            padding:11px 14px; margin-top:12px; flex-wrap:wrap; }
+  #player button, #player select { background:#22262e; border:1px solid #2f3542; color:#dfe3e8;
+            border-radius:8px; padding:6px 11px; cursor:pointer; font-size:13px; font-family:inherit; }
+  #player button:hover { background:#2a3140; }
+  #player input[type=range] { flex:1; min-width:220px; accent-color:#5fd4c8; }
+  #cap { font-size:12px; color:#9aa1ab; width:100%; line-height:1.5; }
+  #ovl { position:fixed; inset:0; background:rgba(5,6,8,.74); backdrop-filter:blur(3px);
+         display:none; align-items:center; justify-content:center; z-index:60; }
+  #ovlCard { background:#14161a; border:1px solid #2a303a; border-radius:14px; padding:18px 22px; max-width:95vw; }
+  #ovlHead { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:12px; }
+  #ovlHead b { font-size:15px; }
+  #ovlClose { background:#22262e; border:1px solid #2f3542; color:#dfe3e8; border-radius:8px;
+              padding:4px 11px; cursor:pointer; font-size:14px; }
+  #ovlBody { position:relative; transform-origin:top left; }
+  #ovlSvg { position:absolute; inset:0; pointer-events:none; }
+  .node.sub { width:180px; padding:11px 13px; cursor:default; }
+  .node.sub .lb { font-size:13px; } .node.sub .sb { font-size:10.5px; }
+  #tip { position:fixed; display:none; max-width:350px; background:#1d2026; border:1px solid #333a44; color:#dfe3e8;
+         font-size:12px; line-height:1.5; padding:10px 12px; border-radius:10px; z-index:99; pointer-events:none;
+         box-shadow:0 8px 30px rgba(0,0,0,.6); }
+  #tip b { color:#fff; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Meridian — Operasyon ve Teşhis Paneli</h1>
+  <p>Kapanan XNYS seansından Alpaca paper emrine giden işlem döngüsü + Hermes öğrenme döngüsü — artık canlı beslenebilir:
+     çift-durum senkron izleme, gecikme ısı haritası, time-travel log oynatıcı ve daraltılabilir kulvarlar.
+     Tık: bağlantıları vurgula · Çift tık (⊕ işaretli düğüm): iç akış · Kulvar başlığı: daralt/aç.</p>
+</div>
+<div class="controls">
+  <div class="seg">
+    <button id="btnTopo" class="on">Topoloji</button>
+    <button id="btnHeat">Gecikme (ısı)</button>
+  </div>
+  <span class="hint">Beslemek için: JSON logu sayfaya sürükle-bırak, alttaki “Demo yükle”ye bas ya da konsoldan <code>meridianFeed({...})</code> çağır.</span>
+</div>
+<div class="legend" id="legendTopo">
+  <span><i style="background:#1e3a5f;border-color:#3B82F6"></i> Tetikleyici</span>
+  <span><i style="background:#1a3d2e;border-color:#10B981"></i> İşleme</span>
+  <span><i style="background:#3d2e1a;border-color:#F59E0B"></i> Araç / Servis</span>
+  <span><i style="background:#3d1a1a;border-color:#EF4444"></i> Çıktı</span>
+  <span><i style="background:#1a1a2e;border-color:#6366F1"></i> Veri Deposu</span>
+  <span><i style="background:#2e1a3d;border-color:#A855F7"></i> Karar Noktası</span>
+</div>
+<div class="legend" id="legendHeat">
+  <span>hızlı</span><div id="heatBar"></div><span>yavaş</span>
+  <span style="color:#5a616c">·</span>
+  <span id="heatMin" style="color:#7fd49a"></span><span style="color:#5a616c">→</span><span id="heatMax" style="color:#e0766e"></span>
+  <span style="color:#5a616c">(log ölçek — ölçümü olmayan düğüm gri kalır)</span>
+</div>
+<div id="outer"><div id="wrap">
+  <div class="lane" id="laneTrade"></div>
+  <div class="lane" id="laneLearn"></div>
+  <button class="laneTitle" id="tTrade"></button>
+  <button class="laneTitle" id="tLearn"></button>
+  <svg id="edges"></svg>
+</div></div>
+<div id="player">
+  <button id="btnPrev" title="önceki adım">⏮</button>
+  <button id="btnPlay" title="oynat/durdur">▶</button>
+  <button id="btnNext" title="sonraki adım">⏭</button>
+  <input type="range" id="rng" min="0" max="0" value="0" disabled>
+  <select id="spd"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option></select>
+  <button id="btnDemo">Demo yükle</button>
+  <button id="btnClear">Temizle</button>
+  <div id="cap">Log bekleniyor — bir günlük karar logunu (JSON) sürükle-bırak ya da “Demo yükle” ile örnek günü oynat.</div>
+</div>
+<div id="ovl"><div id="ovlCard">
+  <div id="ovlHead"><b id="ovlTitle"></b><button id="ovlClose">✕ kapat</button></div>
+  <div id="ovlBody"><svg id="ovlSvg"></svg></div>
+</div></div>
+<div id="tip"></div>
+<script>
+"use strict";
+// ============================== VERİ ==============================
+const STYLE = {
+  trigger:{bg:"#1e3a5f",bd:"#3B82F6"}, proc:{bg:"#1a3d2e",bd:"#10B981"},
+  tool:{bg:"#3d2e1a",bd:"#F59E0B"},   out:{bg:"#3d1a1a",bd:"#EF4444"},
+  data:{bg:"#1a1a2e",bd:"#6366F1"},   dec:{bg:"#2e1a3d",bd:"#A855F7"} };
+const X=[40,350,660,970,1280,1590];
+const NODES=[
+ {id:1, t:"trigger",ic:"⏱", lb:"Zamanlayıcı",        sb:"300 sn poll · XNYS kapanışı", c:0,r:0,
+  tip:"<b>Zamanlayıcı daemon'u.</b> Kapanan her XNYS seansında BİR günlük döngü koşar; seans başına en fazla bir ağ tazelemesi (EOD yayın gecikmesine 8 denemeli sabır). HALT bayrağına saygı duyar."},
+ {id:2, t:"proc",ic:"📥", lb:"Veri Tazeleme",         sb:"barlar + kazanç takvimi",     c:1,r:0,
+  tip:"<b>EOD barlar</b> (önbellek disiplinli, seans başına 1 tazeleme) + haftada bir <b>FMP kazanç takvimi</b> → earnings.csv. Aynı dosya hem PEAD çapasını hem kazanç-karartma guard'ını besler."},
+ {id:3, t:"proc",ic:"🧭", lb:"Rejim Tespiti",         sb:"trend / chop / panic",        c:2,r:0,
+  tip:"Endeks + piyasa genişliği → <b>market_regime</b>. Rejim-yuvalı parametreler (params_by_regime) ve rejim-izole öğrenme bu etiketi anahtar olarak kullanır."},
+ {id:4, t:"proc",ic:"🔍", lb:"Tarama: 4 Kurulum",     sb:"VCP · pullback · burst · EP", c:3,r:0,
+  tip:"breakout_vcp ve pullback <b>SİLAHLI</b>; momentum_burst ve episodik pivot <b>UYUYAN</b> (kapı silahlanma kararını verene dek ölçülür). EP'de kazanç raporu çapası ZORUNLU — veri yoksa hiç ateşlemez."},
+ {id:5, t:"dec",ic:"🛡", lb:"Risk Kapıları",          sb:"halt · bütçe · karartma · guard", c:4,r:0,
+  tip:"HALT, veri tazeliği, rejim maruz-kalım bütçesi, kazanç karartması, bekleyen-emir guard'ı (mirror_busy). <b>Branşlar:</b> bütçe &gt;0 → normal akış; bütçe %0 → keşif modu."},
+ {id:6, t:"proc",ic:"🕳", lb:"Keşif Sondası",         sb:"≤0.25R · tek pozisyon",       c:5,r:0,
+  tip:"<b>YENİ (#1):</b> bütçe %0 rejimde kanıt toplama — yalnız GO planı, ≤0.25R tavan, exploration:true etiketi kapanış satırına dek taşınır. Chop 'uyuyan' değil 'öğrenen' olur."},
+ {id:7, t:"proc",ic:"🔮", lb:"Gölge Model",           sb:"P(kazanç) damgası",           c:5,r:1,
+  tip:"Saf-numpy lojistik: skor, R:R, rejim one-hot → <b>p_win_shadow</b> plana damgalanır. <b>TERFİ KURALI (#3):</b> ≥30 taze çiftte canlı Brier taban-oranı yenerse → yalnız REVIEW vetosu (P&lt;0.35→NO_GO). GO/NO_GO'ya asla dokunmaz."},
+ {id:8, t:"dec",ic:"✅", lb:"GO / REVIEW / NO_GO",    sb:"nihai plan kararı",           c:4,r:1,
+  tip:"Kural tabanlı nihai karar. <b>GO → emir; REVIEW/NO_GO → yalnız kayıt.</b> LLM'ler öneri/danışma katmanıdır — kapıyı asla baypas edemez."},
+ {id:9, t:"out",ic:"📤", lb:"Alpaca Emir",            sb:"bracket · paper-api",         c:3,r:1,
+  tip:"httpx REST → <b>paper-api.alpaca.markets</b> (sabit kilit — gerçek para asla). Bracket: giriş + stop + hedef; trailing stop PATCH ile yalnız yukarı senkron. <b>Çift-durum düğümü:</b> sol yarı iç defter, sağ yarı Alpaca API."},
+ {id:10,t:"tool",ic:"🔁", lb:"Ayna Akışı (WS)",       sb:"trade_updates dinleyici",     c:2,r:1,
+  tip:"WebSocket <b>trade_updates</b> → coid-anahtarlı emir durum makinesi. Kopukluk &gt;60 sn → stream_ok=false; koruyucu bacaklar ASLA iptal edilmez. Reconcile 300 sn'de bir çapraz doğrular. <b>Çift-durum düğümü.</b>"},
+ {id:11,t:"data",ic:"📒", lb:"Defter",                sb:"trades · positions · mirror", c:1,r:1,
+  tip:"trades.jsonl, portfolio.json, mirror_orders.json — mkstemp+os.replace <b>atomik yazım</b>. exploration etiketi ve plan damgaları (plan_id join) burada kalıcılaşır."},
+ {id:12,t:"trigger",ic:"🧠", lb:"Hermes Bekleme",     sb:"ufuk bekçisi + ısınma",       c:0,r:2,
+  tip:"Rejim-kapsamlı aşırı-uyum ufku (≥30 gün + yeterli işlem, katı-VE) dolunca yansıma tetikler. <b>YENİ (#4):</b> ufuk dolmadan boş döngüde 12 poll'da bir <b>ısınma sprinti</b> — ship'siz arama, UCB öncelikleri ısınır."},
+ {id:13,t:"tool",ic:"🤖", lb:"LLM Beyin Zinciri",     sb:"claude → nous → gemini",      c:1,r:2,
+  tip:"HERMES_BRAIN_ORDER: Claude → lokal hermes-agent (68 Meridian skill + SOUL.md) → Gemini. <b>Tek-değişken</b> önerisi üretir; bütçe kapısı ödemeli beyinleri keser. Öneri = danışma, karar = kapı. <b>Çift tıkla:</b> iç akış."},
+ {id:14,t:"dec",ic:"🎲", lb:"Olasılıksal Kapı",       sb:"P(ΔS&gt;0) ≥ 0.80+K",          c:2,r:2,
+  tip:"Blok-bootstrap (N=2000, seed=42) eşleştirilmiş karşılaştırma, <b>Search-OOS (%70)</b> üzerinde. K-sonda cezası: eşik 0.80+0.01·K (tavan 0.95). Fixture yoksa eski marj yasasına dürüst geri dönüş."},
+ {id:15,t:"dec",ic:"🚶", lb:"Doğrulama Yürüyüşü",     sb:"Confirm-OOS · P ≥ 0.70",      c:3,r:2,
+  tip:"Aramanın hiç görmediği <b>%30 dilimde</b> onay yürüyüşü. predicted_delta onay ortalamasıyla DEFLATE edilir — arama iyimserliği rapora sızamaz."},
+ {id:16,t:"out",ic:"🚢", lb:"Ship + Alfa Damgası",    sb:"params vN+1",                 c:4,r:2,
+  tip:"Versiyon numarası asla geri kullanılmaz. <b>YENİ (#5):</b> her ship'e vs_benchmark_at_ship (SPY-üstü alfa) damgası — kapı bileşeni DEĞİL; 20-30 gözlem sonrası veto adaylığı veriyle kararlaşır."},
+ {id:17,t:"data",ic:"🗄", lb:"Hipotez Hafızası",      sb:"hypotheses · search_history", c:5,r:2,
+  tip:"Kabuller VE retler ölçülen sayılarla kaydedilir; canlı skor rejim-etiketli (live_score@regime). Isınma sprintlerinin izleri de buraya yazılır — bir sonraki arama bilgili başlar."}];
+const EDGES=[
+ {f:1,t:2, l:"kapanan seans"},        {f:2,t:3, l:"barlar"},
+ {f:3,t:4, l:"rejim etiketi"},        {f:4,t:5, l:"aday planlar"},
+ {f:5,t:6, l:"bütçe %0"},             {f:5,t:7, l:"bütçe >0"},
+ {f:6,t:7, l:"≤0.25R keşif planı"},   {f:7,t:8, l:"p_win_shadow"},
+ {f:8,t:9, l:"GO"},                   {f:8,t:11,l:"NO_GO / REVIEW · kayıt"},
+ {f:9,t:10,l:"emir durumu (WS)"},     {f:10,t:11,l:"fill / iptal"},
+ {f:11,t:12,l:"kapanan işlemler"},    {f:12,t:13,l:"ufuk dolu → yansıma"},
+ {f:13,t:14,l:"tek-değişken önerisi"},{f:14,t:15,l:"P(ΔS>0) ≥ eşik"},
+ {f:14,t:17,l:"RET · kayıt"},         {f:15,t:16,l:"onay P ≥ 0.70"},
+ {f:16,t:17,l:"hipotez + alfa damgası"},{f:16,t:4, l:"params vN+1 (geri besleme)"}];
+
+// Alt-ağlar: veri tabanlı — başka düğümler de eklenebilir (5: kapı zinciri, 14: bootstrap iç akışı)
+const SUBGRAPHS={
+ 13:{ title:"LLM Beyin Zinciri — iç akış (HERMES_BRAIN_ORDER)", W:1080, H:420,
+  nodes:[
+   {id:"g", t:"dec",  ic:"💰", lb:"Bütçe Kapısı",          sb:"ödemeli beyinleri keser",       x:30,  y:160,
+    tip:"Günlük LLM bütçesi aşıldıysa zincirin tamamı atlanır — sistem LLM'siz de karar üretir (kapı kural tabanlıdır)."},
+   {id:"a", t:"tool", ic:"🅐", lb:"Claude",                sb:"birincil beyin",                x:290, y:30,
+    tip:"Birincil öneri kaynağı. Boş veya hatalı yanıt → zincir bir sonraki beyne düşer (hermes_brain_empty uyarısı loglanır)."},
+   {id:"b", t:"tool", ic:"🅑", lb:"hermes-agent (lokal)",  sb:"v0.18.2 · canlı skill seti · SOUL.md",  x:290, y:160,
+    tip:"Lokal Nous hermes-agent, subprocess <b>hermes chat -q</b> (300 sn timeout, NO_COLOR). Meridian'ın canlı skill'leri symlink'li (güncel sayı: state/skills_registry.json); SOUL.md Meridian brifingi yüklü — ajan uygulamanın bir parçası."},
+   {id:"c", t:"tool", ic:"🅒", lb:"Gemini",                sb:"gemini-3.5-flash · native",     x:290, y:290,
+    tip:"Native gemini provider, GEMINI_API_KEY (arayüzden girilir, asla loglanmaz — son-4 maske). Faturalama açılınca gemini-3.1-pro'ya tek komutla geçilir."},
+   {id:"p", t:"proc", ic:"🧩", lb:"JSON Ayıklama",         sb:"son panel + unwrap",            x:560, y:160,
+    tip:"CLI çıktısının SON ╭─╰─ panelinden JSON çekilir (prompt eko tuzağına karşı); panelin ~80 kolonluk sert satır kırması string İÇİNDEYSE katlanır (_unwrap_strings)."},
+   {id:"o", t:"out",  ic:"📨", lb:"Tek-Değişken Önerisi",  sb:"probes_tested ile kapıya",      x:820, y:160,
+    tip:"one_variable_only yasası: öneri tek parametre değiştirir. Denenen K sonda sayısı kapının eşiğini yükseltir (0.80+0.01·K) — çok deneyen, daha güçlü kanıt borçlanır."}],
+  edges:[ {f:"g",t:"a",l:"bütçe OK"}, {f:"a",t:"b",l:"boş / hata → düş"}, {f:"b",t:"c",l:"boş / hata → düş"},
+          {f:"a",t:"p",l:"yanıt"}, {f:"b",t:"p",l:"CLI panel çıktısı"}, {f:"c",t:"p",l:"yanıt"},
+          {f:"p",t:"o",l:"hipotez JSON"} ]}};
+
+// Emir durumu → renk (Alpaca durum adlarıyla birebir)
+const ST_COLOR={filled:"#10B981", new:"#F59E0B", accepted:"#F59E0B", pending_new:"#F59E0B",
+  partially_filled:"#F59E0B", pending_cancel:"#F59E0B", canceled:"#EF4444", cancelled:"#EF4444",
+  rejected:"#EF4444", expired:"#EF4444", stopped:"#EF4444"};
+const DARK={"#10B981":"#12352a","#F59E0B":"#3a2d12","#EF4444":"#3a1616","#6b7280":"#26262b"};
+const stColor=s=>ST_COLOR[String(s||"").toLowerCase()]||"#6b7280";
+
+// Gömülü demo günü — gerçek bir döngünün şekliyle (H00027 reddi dahil)
+const DEMO={
+ latency:{1:14,2:2600,3:38,4:310,5:12,6:6,7:18,8:9,9:840,10:4100,11:26,12:7,13:23400,14:6800,15:2900,16:180,17:22},
+ dual:{9:{inner:"filled",outer:"pending_new"},10:{inner:"canceled",outer:"canceled"}},
+ timeline:[
+  {ts:"22:05",label:"Seans kapandı — zamanlayıcı günlük döngüyü tetikledi",nodes:[1],edges:[[1,2]]},
+  {ts:"22:06",label:"EOD barlar + haftalık kazanç takvimi tazelendi (FMP)",nodes:[2],edges:[[2,3]]},
+  {ts:"22:06",label:"Rejim: trend — params_by_regime[trend] aktif",nodes:[3],edges:[[3,4]]},
+  {ts:"22:07",label:"Tarama: NVDA breakout_vcp adayı (skor 78 · RR 2.4)",nodes:[4],edges:[[4,5]]},
+  {ts:"22:07",label:"Risk kapıları temiz — bütçe >0, keşif moduna gerek yok",nodes:[5],edges:[[5,7]],veto:[[5,6]]},
+  {ts:"22:07",label:"Gölge damga: p_win_shadow 0.58 (terfisiz — yalnız kanıt)",nodes:[7],edges:[[7,8]]},
+  {ts:"22:07",label:"Karar: GO — bracket plan hazır",nodes:[8],edges:[[8,9]],veto:[[8,11]]},
+  {ts:"22:08",label:"Alpaca paper emri gönderildi (coid damgalı)",nodes:[9],edges:[[9,10]]},
+  {ts:"22:08",label:"WS: accepted → filled; defter-Alpaca senkron farkı ⚠ (Alpaca Emir düğümündeki bölünmeye bak)",nodes:[10],edges:[[10,11]]},
+  {ts:"22:08",label:"Defter yazıldı — kapanan işlem öğrenme ufkuna eklendi",nodes:[11],edges:[[11,12]]},
+  {ts:"22:10",label:"Hermes: ufuk dolmadı → yansıma yok; ısınma sprinti koştu (ship yok)",nodes:[12],veto:[[12,13]]},
+  {ts:"23:00",label:"H00027: öneri kapıda RED (0.146 &lt; 0.185) — ret ölçülen sayılarla hafızaya yazıldı",nodes:[13,14],edges:[[13,14],[14,17]],veto:[[14,15]]}]};
+
+// ============================== DURUM ==============================
+const S={ mode:"topology", collapsed:{trade:false,learn:false}, dual:{}, latency:{},
+          playback:{log:[],idx:-1,playing:false,timer:null,speed:1}, selected:null, subgraph:null };
+
+// ============================== DOM ==============================
+const $=id=>document.getElementById(id);
+const wrap=$("wrap"), svg=$("edges"), tip=$("tip"), outer=$("outer"),
+      laneTrade=$("laneTrade"), laneLearn=$("laneLearn"), tTrade=$("tTrade"), tLearn=$("tLearn"),
+      rng=$("rng"), cap=$("cap"), btnPlay=$("btnPlay");
+const NS="http://www.w3.org/2000/svg";
+const byId={}, elById={};
+const key=(f,t)=>f+"-"+t;
+const laneOf=n=>n.r===2?"learn":"trade";
+const visible=n=>!S.collapsed[laneOf(n)];
+const fmtMs=ms=>ms>=1000?(ms/1000).toFixed(1).replace(".",",")+" s":Math.round(ms)+" ms";
+
+function moveTip(e){ const w=tip.offsetWidth,h=tip.offsetHeight;
+  tip.style.left=Math.min(e.clientX+16,innerWidth-w-12)+"px";
+  tip.style.top=Math.min(e.clientY+16,innerHeight-h-12)+"px"; }
+
+function tipHtml(n){
+  let h=`<b>${n.lb}</b><br>${n.tip}`;
+  const d=S.dual[n.id];
+  if(d) h+=`<br><br><b>Canlı durum:</b> Defter <i>${d.inner}</i> · Alpaca <i>${d.outer}</i>`+
+    (d.inner!==d.outer?` — <b style="color:#F59E0B">senkron bekliyor ⚠</b>`:` — senkron ✓`);
+  const ms=S.latency[n.id];
+  if(ms!=null) h+=`<br><b>Gecikme:</b> ${fmtMs(ms)}`;
+  return h; }
+
+function mkNode(n,parent,sub){
+  const s=STYLE[n.t], d=document.createElement("div");
+  d.className="node"+(sub?" sub":"");
+  d.style.background=s.bg; d.style.borderColor=s.bd;
+  d.innerHTML=`<div class="ic">${n.ic}</div><div class="lb">${n.lb}</div><div class="sb">${n.sb}</div>`+
+    `<span class="ms" style="display:none"></span><span class="wbadge" style="display:none" title="">⚠</span>`+
+    (!sub&&SUBGRAPHS[n.id]?`<span class="subBadge">⊕ çift tık: iç akış</span>`:"");
+  d.addEventListener("mouseenter",()=>{tip.innerHTML=tipHtml(n);tip.style.display="block";});
+  d.addEventListener("mousemove",moveTip);
+  d.addEventListener("mouseleave",()=>tip.style.display="none");
+  parent.appendChild(d); return d; }
+
+// ana düğümler
+let clickTimer=null;
+NODES.forEach(n=>{
+  byId[n.id]=n;
+  const d=mkNode(n,wrap,false);
+  d.style.left=X[n.c]+"px";
+  d.addEventListener("click",e=>{ e.stopPropagation();
+    if(clickTimer) clearTimeout(clickTimer);
+    clickTimer=setTimeout(()=>{clickTimer=null; nodeClick(n.id);},230); });
+  d.addEventListener("dblclick",e=>{ e.stopPropagation();
+    if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}
+    if(SUBGRAPHS[n.id]) openSub(n.id); });
+  elById[n.id]=d; });
+
+// ok uçları (marker'lar belge genelinde çözülür — alt-ağ svg'si de kullanır)
+const colors=[...new Set(Object.values(STYLE).map(s=>s.bd)),"#666"];
+const defs=document.createElementNS(NS,"defs");
+colors.forEach(c=>{ const m=document.createElementNS(NS,"marker");
+  m.setAttribute("id","arw"+c.slice(1)); m.setAttribute("viewBox","0 0 10 10");
+  m.setAttribute("refX","9"); m.setAttribute("refY","5"); m.setAttribute("markerWidth","7");
+  m.setAttribute("markerHeight","7"); m.setAttribute("orient","auto-start-reverse");
+  const p=document.createElementNS(NS,"path"); p.setAttribute("d","M 0 0 L 10 5 L 0 10 z"); p.setAttribute("fill",c);
+  m.appendChild(p); defs.appendChild(m); });
+svg.appendChild(defs);
+
+// ============================== YERLEŞİM ==============================
+function layout(){
+  const top=72, gap=35,
+        tradeH=S.collapsed.trade?40:445,
+        learnTop=top+tradeH+gap,
+        learnH=S.collapsed.learn?40:212,
+        H=learnTop+learnH+26;
+  return {tradeTop:top,tradeH,learnTop,learnH,H,Y:[top+40,top+263,learnTop+48]}; }
+
+function rect(id){ const e=elById[id]; return {x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight,
+  cx:e.offsetLeft+e.offsetWidth/2, cy:e.offsetTop+e.offsetHeight/2}; }
+
+function pathFor(ed,L){
+  const a=rect(ed.f), b=rect(ed.t), k=key(ed.f,ed.t);
+  if(k==="16-4"){ const x=(a.x+a.w+X[5])/2-8;
+    return `M ${a.cx} ${a.y} C ${x} ${a.y-120} ${x} ${L.Y[1]} ${x} ${L.Y[1]-60} C ${x} 60 ${b.cx+180} 40 ${b.cx} ${b.y}`; }
+  if(k==="8-11") return `M ${a.cx} ${a.y+a.h} C ${a.cx-160} ${a.y+a.h+72} ${b.cx+180} ${b.y+b.h+72} ${b.cx} ${b.y+b.h}`;
+  if(k==="14-17")return `M ${a.cx} ${a.y+a.h} C ${a.cx+220} ${a.y+a.h+62} ${b.cx-200} ${b.y+b.h+62} ${b.cx} ${b.y+b.h}`;
+  if(k==="11-12")return `M ${a.cx-40} ${a.y+a.h} C ${a.cx-60} ${a.y+a.h+70} ${b.cx} ${b.y-60} ${b.cx} ${b.y}`;
+  if(k==="5-7")  return `M ${a.cx+40} ${a.y+a.h} C ${a.cx+90} ${a.y+a.h+60} ${b.cx-60} ${b.y-56} ${b.cx-30} ${b.y}`;
+  if(Math.abs(a.cy-b.cy)<30){ const sx=a.cx<b.cx?a.x+a.w:a.x, tx=a.cx<b.cx?b.x:b.x+b.w;
+    return `M ${sx} ${a.cy} C ${(sx+tx)/2} ${a.cy} ${(sx+tx)/2} ${b.cy} ${tx} ${b.cy}`; }
+  const sy=a.cy<b.cy?a.y+a.h:a.y, ty=a.cy<b.cy?b.y:b.y+b.h;
+  return `M ${a.cx} ${sy} C ${a.cx} ${(sy+ty)/2} ${b.cx} ${(sy+ty)/2} ${b.cx} ${ty}`; }
+
+// gizli kulvara giden kenar → görünen düğümde kısa "güdük" ok (tık: kulvarı açar)
+function stubPath(ed,srcVisible){
+  const n=rect(srcVisible?ed.f:ed.t);
+  const hidden=byId[srcVisible?ed.t:ed.f];
+  const hiddenBelow=laneOf(hidden)==="learn";
+  if(srcVisible){ const y0=hiddenBelow?n.y+n.h:n.y, y1=hiddenBelow?y0+55:y0-55;
+    return `M ${n.cx} ${y0} L ${n.cx} ${y1}`; }
+  const y1=hiddenBelow?n.y+n.h:n.y, y0=hiddenBelow?y1+55:y1-55;
+  return `M ${n.cx} ${y0} L ${n.cx} ${y1}`; }
+
+function drawEdges(){
+  const L=layout();
+  [...svg.querySelectorAll("path.edge,text.elb")].forEach(e=>e.remove());
+  EDGES.forEach(ed=>{
+    ed.el=null; ed.tl=null; ed.stub=false;
+    const va=visible(byId[ed.f]), vb=visible(byId[ed.t]);
+    if(!va&&!vb) return;
+    let d, frac=0.5, labelTxt=ed.l;
+    if(va&&vb){ d=pathFor(ed,L); if(ed.f===16&&ed.t===4) frac=0.30; }
+    else { d=stubPath(ed,va); ed.stub=true;
+      const hidden=byId[va?ed.t:ed.f];
+      labelTxt=ed.l+(laneOf(hidden)==="learn"?" ⤵":" ⤴"); }
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("d",d); p.setAttribute("class","edge"+(ed.stub?" stub":""));
+    p.setAttribute("marker-end","url(#arw666)");
+    if(ed.stub){ p.style.pointerEvents="stroke"; p.style.cursor="pointer";
+      const hiddenLane=laneOf(byId[va?ed.t:ed.f]);
+      p.addEventListener("click",ev=>{ev.stopPropagation(); S.collapsed[hiddenLane]=false; update();}); }
+    svg.appendChild(p); ed.el=p;
+    const mid=p.getPointAtLength(p.getTotalLength()*frac);
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",ed.stub?mid.x+10:mid.x); t.setAttribute("y",ed.stub?mid.y+4:mid.y-6);
+    t.setAttribute("text-anchor",ed.stub?"start":"middle"); t.setAttribute("class","elb");
+    t.textContent=labelTxt; svg.appendChild(t); ed.tl=t; }); }
+
+// ============================== BOYAMA ==============================
+function paintNodes(){
+  const vals=NODES.map(n=>S.latency[n.id]).filter(v=>v!=null&&v>0);
+  const lmin=vals.length?Math.min(...vals):0, lmax=vals.length?Math.max(...vals):0;
+  NODES.forEach(n=>{
+    const e=elById[n.id], st=STYLE[n.t];
+    e.classList.remove("mismatch");
+    const msEl=e.querySelector(".ms"), wEl=e.querySelector(".wbadge");
+    msEl.style.display="none"; wEl.style.display="none";
+    if(S.mode==="latency"){
+      const ms=S.latency[n.id];
+      if(ms!=null&&vals.length){
+        const t=lmax>lmin?Math.max(0,Math.min(1,Math.log(ms/lmin)/Math.log(lmax/lmin))):.5;
+        const hue=120*(1-t);
+        e.style.background=`hsl(${hue},55%,15%)`;
+        e.style.borderColor=`hsl(${hue},75%,45%)`;
+        msEl.textContent=fmtMs(ms); msEl.style.color=`hsl(${hue},80%,64%)`; msEl.style.display="";
+      } else { e.style.background="#232327"; e.style.borderColor="#4a4a52";
+        msEl.textContent="ölçüm yok"; msEl.style.color="#7a7a85"; msEl.style.display=""; }
+    } else {
+      const d=S.dual[n.id];
+      if(d&&d.inner&&d.outer&&d.inner!==d.outer){
+        const ci=stColor(d.inner), co=stColor(d.outer);
+        e.style.background=`linear-gradient(105deg, ${DARK[ci]||"#26262b"} 0 50%, ${DARK[co]||"#26262b"} 50% 100%)`;
+        e.style.borderColor="#F59E0B";
+        e.classList.add("mismatch");
+        wEl.style.display="flex"; wEl.title=`Defter: ${d.inner} · Alpaca: ${d.outer} — senkron bekliyor`;
+      } else { e.style.background=st.bg; e.style.borderColor=st.bd; }
+    }});
+  $("legendTopo").style.display=S.mode==="latency"?"none":"flex";
+  $("legendHeat").style.display=S.mode==="latency"?"flex":"none";
+  if(S.mode==="latency"&&vals.length){ $("heatMin").textContent=fmtMs(lmin); $("heatMax").textContent=fmtMs(lmax); }
+  $("btnTopo").classList.toggle("on",S.mode!=="latency");
+  $("btnHeat").classList.toggle("on",S.mode==="latency"); }
+
+function clearPaint(){
+  NODES.forEach(n=>elById[n.id].classList.remove("sel","dim"));
+  EDGES.forEach(ed=>{ if(!ed.el) return;
+    ed.el.classList.remove("hot","dimE","vetoed","visited");
+    ed.el.style.stroke=""; ed.el.setAttribute("marker-end","url(#arw666)");
+    ed.tl.classList.remove("dimT"); }); }
+
+function paintHighlight(o){       // {hot:Set, veto:Set, visited:Set, nodes:Set}
+  clearPaint();
+  EDGES.forEach(ed=>{ if(!ed.el) return;
+    const k=key(ed.f,ed.t), c=STYLE[byId[ed.f].t].bd;
+    if(o.hot.has(k)){ ed.el.classList.add("hot"); ed.el.style.stroke=c;
+      ed.el.setAttribute("marker-end","url(#arw"+c.slice(1)+")"); }
+    else if(o.veto.has(k)){ ed.el.classList.add("vetoed"); ed.el.style.stroke="#EF4444";
+      ed.el.setAttribute("marker-end","url(#arwEF4444)"); }
+    else if(o.visited.has(k)){ ed.el.classList.add("visited"); ed.el.style.stroke=c;
+      ed.el.setAttribute("marker-end","url(#arw"+c.slice(1)+")"); }
+    else { ed.el.classList.add("dimE"); ed.tl.classList.add("dimT"); } });
+  NODES.forEach(n=>elById[n.id].classList.toggle("dim",!o.nodes.has(n.id)));
+  if(S.selected!=null&&elById[S.selected]) elById[S.selected].classList.add("sel"); }
+
+function applySel(){
+  const id=S.selected, hot=new Set(), nodes=new Set([id]);
+  EDGES.forEach(ed=>{ if(ed.f===id||ed.t===id){ hot.add(key(ed.f,ed.t)); nodes.add(ed.f); nodes.add(ed.t); }});
+  paintHighlight({hot,veto:new Set(),visited:new Set(),nodes}); }
+
+function applyStepPaint(){
+  const pb=S.playback, st=pb.log[pb.idx];
+  if(!st){ clearPaint(); return; }
+  const visited=new Set(), hot=new Set(), veto=new Set(), nodes=new Set();
+  for(let i=0;i<pb.idx;i++) (pb.log[i].edges||[]).forEach(([f,t])=>visited.add(key(f,t)));
+  (st.edges||[]).forEach(([f,t])=>{hot.add(key(f,t)); nodes.add(f); nodes.add(t);});
+  (st.veto||[]).forEach(([f,t])=>{veto.add(key(f,t)); nodes.add(f);});
+  (st.nodes||[]).forEach(id=>nodes.add(id));
+  paintHighlight({hot,veto,visited,nodes});
+  cap.innerHTML=`<b>${st.ts||""}</b> — ${st.label||""} <span style="color:#5a616c">(${pb.idx+1}/${pb.log.length})</span>`;
+  rng.value=pb.idx; }
+
+function repaintOverlays(){
+  if(S.selected!=null) applySel();
+  else if(S.playback.idx>=0) applyStepPaint();
+  else clearPaint(); }
+
+// ============================== GÜNCELLE ==============================
+function update(){
+  const L=layout();
+  laneTrade.style.top=L.tradeTop+"px"; laneTrade.style.height=L.tradeH+"px";
+  laneLearn.style.top=L.learnTop+"px"; laneLearn.style.height=L.learnH+"px";
+  tTrade.style.top=(L.tradeTop+13)+"px"; tLearn.style.top=(L.learnTop+13)+"px";
+  tTrade.textContent=(S.collapsed.trade?"▸ ":"▾ ")+"GÜNLÜK İŞLEM DÖNGÜSÜ"+(S.collapsed.trade?"  — daraltıldı (aç)":"");
+  tLearn.textContent=(S.collapsed.learn?"▸ ":"▾ ")+"ÖĞRENME DÖNGÜSÜ (HERMES)"+(S.collapsed.learn?"  — daraltıldı (aç)":"");
+  wrap.style.height=L.H+"px"; svg.setAttribute("height",L.H); svg.style.height=L.H+"px";
+  NODES.forEach(n=>{ const e=elById[n.id];
+    e.style.display=visible(n)?"":"none"; e.style.top=L.Y[n.r]+"px"; });
+  paintNodes();
+  drawEdges();
+  repaintOverlays();
+  fit(); }
+
+function fit(){ const L=layout(), s=Math.min(1,outer.clientWidth/1840);
+  wrap.style.transform=`scale(${s})`; outer.style.height=(L.H*s)+"px"; }
+addEventListener("resize",fit);
+
+// ============================== ETKİLEŞİM ==============================
+function nodeClick(id){ pause(); S.selected=(S.selected===id?null:id); repaintOverlays(); }
+outer.addEventListener("click",()=>{ S.selected=null; repaintOverlays(); });
+tTrade.addEventListener("click",e=>{e.stopPropagation(); S.collapsed.trade=!S.collapsed.trade; update();});
+tLearn.addEventListener("click",e=>{e.stopPropagation(); S.collapsed.learn=!S.collapsed.learn; update();});
+$("btnTopo").addEventListener("click",()=>{S.mode="topology";update();});
+$("btnHeat").addEventListener("click",()=>{S.mode="latency";update();});
+
+// ---- oynatıcı ----
+function capDefault(){ cap.textContent="Log bekleniyor — bir günlük karar logunu (JSON) sürükle-bırak ya da “Demo yükle” ile örnek günü oynat."; }
+function setStep(i){ const pb=S.playback;
+  if(!pb.log.length) return;
+  pb.idx=Math.max(-1,Math.min(i,pb.log.length-1));
+  S.selected=null; repaintOverlays();
+  if(pb.idx<0) cap.textContent=`${pb.log.length} adımlık log hazır — ▶ ile oynat`; }
+function pause(){ const pb=S.playback; pb.playing=false;
+  if(pb.timer){clearInterval(pb.timer);pb.timer=null;} btnPlay.textContent="▶"; }
+function startTimer(){ const pb=S.playback;
+  pb.timer=setInterval(()=>{ if(pb.idx>=pb.log.length-1){pause();return;} setStep(pb.idx+1); },1400/pb.speed); }
+function play(){ const pb=S.playback;
+  if(!pb.log.length) return;
+  if(pb.playing){ pause(); return; }
+  if(pb.idx>=pb.log.length-1) pb.idx=-1;
+  pb.playing=true; btnPlay.textContent="⏸";
+  setStep(pb.idx+1); pb.playing=true;
+  startTimer(); }
+btnPlay.addEventListener("click",play);
+$("btnPrev").addEventListener("click",()=>{pause();setStep(S.playback.idx-1);});
+$("btnNext").addEventListener("click",()=>{pause();setStep(S.playback.idx+1);});
+rng.addEventListener("input",()=>{pause();setStep(+rng.value);});
+$("spd").addEventListener("change",e=>{ const pb=S.playback; pb.speed=+e.target.value;
+  if(pb.playing){ clearInterval(pb.timer); startTimer(); }});
+$("btnDemo").addEventListener("click",()=>meridianFeed(DEMO));
+$("btnClear").addEventListener("click",()=>{ pause();
+  S.latency={}; S.dual={}; S.playback.log=[]; S.playback.idx=-1; S.selected=null;
+  rng.disabled=true; rng.value=0; rng.max=0; capDefault(); update(); });
+
+// ---- besleme API'si ----
+window.meridianFeed=function(data){
+  try{
+    if(data.latency){ S.latency={}; Object.entries(data.latency).forEach(([k,v])=>{ if(v!=null) S.latency[+k]=+v; }); }
+    if(data.dual){ S.dual={}; Object.entries(data.dual).forEach(([k,v])=>{ S.dual[+k]=v; }); }
+    if(Array.isArray(data.timeline)){ pause();
+      S.playback.log=data.timeline; S.playback.idx=-1;
+      rng.max=Math.max(0,data.timeline.length-1); rng.value=0; rng.disabled=!data.timeline.length;
+      cap.textContent=`${data.timeline.length} adımlık log yüklendi — ▶ ile oynat, sürgüyle gez`; }
+    update(); return {ok:true};
+  }catch(e){ cap.textContent="Besleme hatası: "+e.message; return {ok:false,error:String(e)}; } };
+
+document.addEventListener("dragover",e=>e.preventDefault());
+document.addEventListener("drop",e=>{ e.preventDefault();
+  const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ meridianFeed(JSON.parse(r.result)); }
+                 catch(err){ cap.textContent="JSON çözümlenemedi: "+err.message; } };
+  r.readAsText(f); });
+
+// ---- alt-ağ ----
+function srect(el){ return {x:el.offsetLeft,y:el.offsetTop,w:el.offsetWidth,h:el.offsetHeight,
+  cx:el.offsetLeft+el.offsetWidth/2, cy:el.offsetTop+el.offsetHeight/2}; }
+function openSub(id){
+  const sg=SUBGRAPHS[id]; if(!sg) return;
+  S.subgraph=id;
+  $("ovlTitle").textContent=sg.title;
+  const body=$("ovlBody"), osvg=$("ovlSvg");
+  [...body.querySelectorAll(".node")].forEach(e=>e.remove());
+  [...osvg.querySelectorAll("path,text")].forEach(e=>e.remove());
+  body.style.width=sg.W+"px"; body.style.height=sg.H+"px";
+  osvg.setAttribute("width",sg.W); osvg.setAttribute("height",sg.H);
+  $("ovl").style.display="flex";
+  const els={};
+  sg.nodes.forEach(n=>{ const d=mkNode(n,body,true);
+    d.style.left=n.x+"px"; d.style.top=n.y+"px"; els[n.id]=d; });
+  sg.edges.forEach(ed=>{
+    const a=srect(els[ed.f]), b=srect(els[ed.t]);
+    let d;
+    if(Math.abs(a.cx-b.cx)<20){ const sy=a.cy<b.cy?a.y+a.h:a.y, ty=a.cy<b.cy?b.y:b.y+b.h;
+      d=`M ${a.cx} ${sy} C ${a.cx} ${(sy+ty)/2} ${b.cx} ${(sy+ty)/2} ${b.cx} ${ty}`; }
+    else { const sx=a.cx<b.cx?a.x+a.w:a.x, tx=a.cx<b.cx?b.x:b.x+b.w;
+      d=`M ${sx} ${a.cy} C ${(sx+tx)/2} ${a.cy} ${(sx+tx)/2} ${b.cy} ${tx} ${b.cy}`; }
+    const c=STYLE[sg.nodes.find(n=>n.id===ed.f).t].bd;
+    const p=document.createElementNS(NS,"path");
+    p.setAttribute("d",d); p.setAttribute("class","edge");
+    p.style.stroke=c; p.setAttribute("marker-end","url(#arw"+c.slice(1)+")");
+    osvg.appendChild(p);
+    const mid=p.getPointAtLength(p.getTotalLength()/2);
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",mid.x); t.setAttribute("y",mid.y-6);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("class","elb");
+    t.textContent=ed.l; osvg.appendChild(t); });
+  const sc=Math.min(1,(innerWidth*0.92-60)/sg.W);
+  body.style.transform=`scale(${sc})`;
+  $("ovlCard").style.width=(sg.W*sc+46)+"px";
+  body.style.marginBottom=((sc-1)*sg.H)+"px"; }
+function closeSub(){ $("ovl").style.display="none"; S.subgraph=null; tip.style.display="none"; }
+$("ovlClose").addEventListener("click",closeSub);
+$("ovl").addEventListener("click",e=>{ if(e.target.id==="ovl") closeSub(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSub(); });
+
+// ============================== BAŞLAT ==============================
+update();
+</script>
+</body>
+</html>

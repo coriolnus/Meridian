@@ -1,0 +1,19 @@
+card_id: EDG-2026-005
+family: spy_sma_regime_gate   # WP-G
+thesis: >
+  SPY 200-günlük SMA altındayken yeni kırılma girişlerini kapatmak drawdown/vol azaltır (Faber
+  ailesi; alfa değil risk aracı). KOD ZATEN VAR (regime.spy_sma_gate, default-off, guard'a kablolu)
+  — bu kart yalnız ÖLÇÜM: whipsaw maliyeti dahil net etki.
+evidence_refs: [Faber 2007 JWM, Brock-Lakonishok-LeBaron 1992, katalog PDF aile 25 (Grade B/C:
+  2011-2020 whipsaw uyarısı), WP0 mek.14]
+universe: full_251 (kapı endeks-seviyesi; etkisi portföye)
+features_asof: "SPY kapanışı vs SMA200, t itibarıyla; hayalet-temiz SPY serisi"
+horizon: "R1 walk-forward: kapı-açık vs kapı-kapalı ikiz koşum; PARA-v3 + maxDD/vol kıyası"
+parameter_grid: {pencere: [200]}   # tek pencere — K+=1 (150/250 grid'i BİLEREK yok: parametre turizmi)
+cost_model: "10bps; whipsaw = kapı flip'lerinin ürettiği ek işlem maliyeti AYRICA raporlanır"
+success_metric: "maxDD veya günlük vol anlamlı düşer VE net PARA skoru DÜŞMEZ (P(ΔS<0) < 0.5 yeter — risk aracı, alfa değil)"
+kill_criteria:
+  - "net Sharpe/PARA düşüyorsa kapı açılmaz (iş emri kuralı: rejim kapısı Sharpe düşürürse kaldır)"
+  - "2011-2020-tipi whipsaw bizim pencerede de baskınsa arşiv + 'pano göstergesi yeter' hükmü"
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
+status: registered

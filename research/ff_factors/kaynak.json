@@ -1,0 +1,71 @@
+{
+  "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip",
+  "indirme_zamani_utc": "2026-07-31T06:52:00Z",
+  "kaynak_last_modified": "Wed, 01 Jul 2026 15:56:47 GMT",
+  "zip_sha256": "af8aec07d55c98caa15045a77b87455be68cb8847b2ee5bd03bf5c2c8a3f96e2",
+  "zip_bayt": 177699,
+  "csv_sha256": "a205919113088e7a4a342721b8ff4c6a77ae360b7f2bcea9d56ae3d766a6d1c0",
+  "satir_sayisi": 26253,
+  "tarih_araligi": [
+    "1926-07-01",
+    "2026-05-29"
+  ],
+  "kolonlar": [
+    "date",
+    "mkt_rf",
+    "smb",
+    "hml",
+    "rf"
+  ],
+  "birim": "ONDALIK günlük getiri (kaynak yüzdeydi, 100'e bölündü)",
+  "lisans_notu": "Ken French data library — ücretsiz akademik dağıtım",
+  "kaynak_vintage_notu": "This file was created by using the 202605 CRSP database.",
+  "ayristirma_metasi": {
+    "zip_icerik": [
+      "F-F_Research_Data_Factors_daily.csv"
+    ],
+    "ham_satir_sayisi": 26260,
+    "baslik_satiri_index": 4,
+    "dosya_notu": "This file was created by using the 202605 CRSP database.",
+    "atlanan_sayisi": 1,
+    "tekrar_tarih": 0,
+    "nan_hucre": 0,
+    "eksik_kod_hucre": 0,
+    "mkt_rf_mutlak_maks": 0.1744,
+    "rf_negatif_gun": 0
+  },
+  "atlanan_satir_ornekleri": [
+    "Copyright 2026 Eugene F. Fama and Kenneth R. French"
+  ],
+  "dogrulama": {
+    "kapsam": {
+      "esik": ">= 2026-06",
+      "son_tarih": "2026-05-29",
+      "gecti": false,
+      "neden": "Ken French kütüphanesi 202605 CRSP vintage'ından üretilmiş; kaynak dosya 2026-07-01'de güncellenmiş ve 2026-05-29'da bitiyor. Yapısal ~2 aylık yayın gecikmesi — indirme/ayrıştırma hatası DEĞİL."
+    },
+    "spy_korelasyonu": {
+      "sanitize_raporu": {},
+      "ortusen_gun": 5636,
+      "ortusen_aralik": [
+        "2004-01-05",
+        "2026-05-29"
+      ],
+      "korelasyon_spy_ham_vs_mkt_rf": 0.987566,
+      "korelasyon_spy_fazla_vs_mkt_rf": 0.98759,
+      "korelasyon_2022_sonrasi": 0.994159,
+      "esik": 0.95,
+      "gecti": true,
+      "beta_spy_uzerine_mkt_rf": 0.970081,
+      "neden": null
+    },
+    "butunluk": {
+      "tekrar_tarih": 0,
+      "nan_hucre": 0,
+      "eksik_kod_hucre": 0,
+      "rf_negatif_gun": 0,
+      "gecti": true
+    },
+    "TUM_GUARDLAR_GECTI": false
+  }
+}

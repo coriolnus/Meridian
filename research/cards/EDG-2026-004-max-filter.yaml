@@ -1,0 +1,24 @@
+card_id: EDG-2026-004
+family: max_lottery_avoid_filter   # WP1/1.3
+thesis: >
+  Son 21 günde aşırı yüksek maksimum günlük getiri (MAX) taşıyan "piyango" hisseleri sonraki dönemde
+  underperform eder (Bali-Cakici-Whitelaw); yüksek-MAX kırılma adaylarını elemek false-breakout
+  maliyetini düşürebilir. Long-only için saf kaçınma filtresi.
+evidence_refs: [Bali-Cakici-Whitelaw 2011 JFE, katalog PDF aile 16 — NOT: birinci-el makale bu
+  katalog turunda çekilmedi (caveat listesi); ölçüm kendi verimizde, literatür-bağımsız hüküm]
+universe: full_251
+features_asof: "feat_max21 = max(günlük getiri, son 21 gün), yalnız t ve öncesi; takvim-kapılı barlar"
+horizon: "cf-katmanlı retrospektif: girilen+kılpayı popülasyonda yüksek-MAX'ın 5/10/20g ileri getirisi + false-breakout (stop-öncesi ölüm) oranına etkisi"
+parameter_grid:
+  max_esigi_persentil: [90, 95]       # K+=2
+cost_model: "10bps + not"
+success_metric: "yüksek-MAX dilimin ileri getirisi anlamlı DÜŞÜK (CI 0-dışı) VE eleme simülasyonu net beklentiyi ARTIRIYOR"
+kill_criteria:
+  - "eleme net beklentiyi düşürüyorsa (kazananları da eliyorsa) arşiv"
+  - "dilim farkı CI-0-içi → bilgisiz, arşiv"
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
+status: archived   # 2026-07-31: iki kill de tetiklendi — yön TERS (yüksek-MAX @20 +1,46pp DAHA İYİ,
+#   CI[+0,66,+2,27]); eleme beklentiyi DÜŞÜRÜR (−0,34pp anlamlı; elenen dilim hedef-çıkışların %27,9'unu taşıyor);
+#   false-breakout iyileşmesi yok. Pozitif kontrol geçti (rvol20 0,0645 birebir). Hüküm "bu evrende işe yaramaz" —
+#   evrensel değil (survivorship: piyango etkisinin yaşadığı küçük/ölen isimler evrende yok).
+#   Torun-not: feat_max21 zayıf-pozitif iz (yalnız 2023, medyansız) — kart açılmaya değmez.

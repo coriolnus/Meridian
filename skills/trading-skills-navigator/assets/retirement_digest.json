@@ -1,0 +1,151 @@
+{
+  "as_of": "2026-07-29T22:31:17+00:00",
+  "retired": {
+    "breadth-chart-analyst": {
+      "merged_into": "market-breadth-analyzer",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "breakout-trade-planner": {
+      "merged_into": "docs/G3B-CIKIS-REFORMU-NOTLARI.md",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "cot-contrarian-detector": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "dividend-growth-pullback-screener": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "downtrend-duration-analyzer": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "dual-axis-skill-reviewer": {
+      "merged_into": "trading-skills-navigator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "earnings-trade-analyzer": {
+      "merged_into": "pead-screener",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "edge-candidate-agent": {
+      "merged_into": "edge-pipeline-orchestrator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "edge-concept-synthesizer": {
+      "merged_into": "edge-pipeline-orchestrator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "edge-hint-extractor": {
+      "merged_into": "edge-pipeline-orchestrator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "edge-signal-aggregator": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "edge-strategy-designer": {
+      "merged_into": "edge-pipeline-orchestrator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "ftd-detector": {
+      "merged_into": "macro-regime-detector",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "kanchi-dividend-review-monitor": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "kanchi-dividend-sop": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "kanchi-dividend-us-tax-accounting": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "market-news-analyst": {
+      "merged_into": "market-environment-analysis",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "news-reaction-failure-analyzer": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "options-strategy-advisor": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "pair-trade-screener": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "scenario-analyzer": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "sector-analyst": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "signal-postmortem": {
+      "merged_into": "backtest-expert",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "skill-designer": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "skill-idea-miner": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "skill-integration-tester": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "stanley-druckenmiller-investment": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "stockbee-20pct-study": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "stockbee-setup-fluency-trainer": {
+      "merged_into": "weekly-performance-digest",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "technical-analyst": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "trade-hypothesis-ideator": {
+      "merged_into": "edge-pipeline-orchestrator",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "trade-performance-coach": {
+      "merged_into": "weekly-performance-digest",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "trader-memory-core": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "us-market-bubble-detector": {
+      "merged_into": "market-top-detector",
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "us-stock-analysis": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    },
+    "value-dividend-screener": {
+      "merged_into": null,
+      "retired_at": "2026-07-29T22:31:17+00:00"
+    }
+  },
+  "schema_version": 1,
+  "source": "state/skills_registry.json"
+}

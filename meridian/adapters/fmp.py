@@ -1,0 +1,365 @@
+"""adapters/fmp.py — Financial Modeling Prep (STABLE API). Enriches live candidates (fundamentals,
+quotes, constituents, earnings) when FMP_API_KEY is present. Without a key it reports unavailable and
+the FMP-`req` skills stay disabled — no faked data (Hard Rule 7).
+
+Stable API contract (per FMP docs):
+  base    https://financialmodelingprep.com/stable
+  auth    every request takes ?apikey=<KEY>   (passed as a query param, never in the path/logs)
+  style   query params, e.g. /quote?symbol=AAPL , /profile?symbol=AAPL , /search-name?query=apple
+"""
+from __future__ import annotations
+import httpx
+from .. import secrets
+
+BASE = "https://financialmodelingprep.com/stable"
+
+
+def available() -> bool:
+    """ANAHTAR VAR demektir (birincil YA DA yedek) — ÇALIŞIYOR demek DEĞİL. Kotalı bir anahtar 429
+    döndürürken de True'dur; üretim sorusunun cevabı health() (adapters.data denetim turu 2, 2026-07-21)."""
+    return bool(_active_keys())
+
+
+# Sağlık kaydı: her çağrı bunu günceller. available()=True ama sürekli 429 ise BU söyler; eskiden
+# tüm hatalar `except: return []` ile yutuluyordu ve FMP'nin ölü olduğunu hiçbir yer bilmiyordu.
+# `blocked_until` KALDIRILDI (2026-07-26): yazılıyordu ama üretimde HİÇBİR yerde okunmuyordu —
+# gerçek kota bloğu anahtar-başına `_KEY_BLOCKED` ile tutuluyor. Okunmayan bir alan, "kota bloğu
+# izleniyor" izlenimi verip hiçbir şey yapmıyordu. `last_key`/`last_body` ise ÖLÇÜM: 418 başarısız
+# çağrının sebebini (kota mı, auth mı, ağ mı) tahminle değil kayıtla cevaplamak için.
+_HEALTH = {"ok": None, "calls": 0, "fails": 0, "last_status": None, "last_error": "", "at": None,
+           "last_key": None, "last_body": ""}
+QUOTA_COOLDOWN_S = 3600     # 429 sonrası toplu tüketicilerin bekleyeceği süre
+
+# --- YEDEK ANAHTAR ROTASYONU (2026-07-23, operatör isteği) -----------------------------------
+# Birincil FMP anahtarı günlük kotayı (ücretsiz katman ~250/gün) doldurup 429 yeyince İKİNCİ bir
+# anahtara OTOMATİK geçilir. İkinci anahtar ayrı bir ücretsiz hesaptan alınır ve günlük kotayı fiilen
+# İKİYE katlar — "çalışmıyor"un baskın sebebi tam da bu kota tükenmesiydi. Kota-bloğu ANAHTAR-BAŞINA
+# izlenir; ikisi de bloklu olmadıkça sistem 'kota doldu' saymaz. Anahtarlar asla loglanmaz/sızmaz.
+BACKUP_KEY = "FMP_API_KEY_2"
+_KEY_BLOCKED: dict[str, float] = {}   # anahtar-adı -> blocked_until (epoch)
+
+
+def _active_keys() -> list[tuple[str, str]]:
+    """Sıralı (ad, değer): birincil önce, sonra yedek. Boş/None atlanır; AYNI değer iki kez sayılmaz
+    (operatör yanlışlıkla aynısını girerse boş yere ikinci 429 çağrısı yapılmaz). Anahtar OKUMANIN
+    TEK KAYNAĞI — dağılırsa sızma/sürüklenme riski (denetim turu 2, 'anahtar tek yerde')."""
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for name in ("FMP_API_KEY", BACKUP_KEY):
+        v = secrets.get(name)
+        if v and v not in seen:
+            seen.add(v)
+            out.append((name, v))
+    return out
+
+
+def _key_blocked(name: str) -> bool:
+    import time as _t
+    return _t.time() < float(_KEY_BLOCKED.get(name) or 0)
+
+
+def _block_key(name: str) -> None:
+    import time as _t
+    _KEY_BLOCKED[name] = _t.time() + QUOTA_COOLDOWN_S
+
+
+def health() -> dict:
+    return dict(_HEALTH)
+
+
+USAGE_FILE = "fmp_usage.json"       # {date, calls, fails, blocked_at} — günlük kota muhasebesi
+
+
+def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body: str = "") -> None:
+    """Günlük çağrı sayacı (denetim turu 4): ücretsiz katman ~250/gün ve 250 ticker'lık BİR bar
+    tazelemesi bunun tamamını yakıyor. Sayaç olmadan 'kota neden bitti' sorusu tahminle cevaplanıyordu.
+
+    HER OLGU PARAMETRE OLARAK GELİR, `_HEALTH`TEN OKUNMAZ (2026-07-26). Eskiden durum/anahtar adı
+    modül-globalinden geri okunuyordu ve bu iki yoldan birden yanlış atıf üretiyordu:
+      * BAYAT ATIF — `ping()` `_HEALTH["last_key"]`i hiç yazmıyordu; yedek anahtarın testi, bir
+        ÖNCEKİ çağrının anahtar adıyla `by_key`e işleniyordu.
+      * THREAD YARIŞI — `_HEALTH` tek ve paylaşılan; iki iş parçacığı (zamanlayıcı + ajan) aynı anda
+        çağırdığında biri diğerinin durumunu okuyup kendi satırını onun adına yazıyordu.
+    İkisi de sessizdi: sayılar tutuyordu, KİME ait olduğu yanlıştı — ve teşhis o dağılımdan çıkıyor.
+
+    GÖVDE KİLİTLİDİR (2026-07-26): oku-değiştir-yaz idi ama `read_json` ile `write_json` AYRI kilit
+    bölümleriydi — aradaki pencerede ikinci bir iş parçacığı (zamanlayıcı vs. API `ping`) aynı belgeyi
+    okuyup kendi artırımını yazınca birinci çağrı SAYILMAMIŞ oluyordu. Kota muhasebesinin eksik
+    sayması, tam da 'kota neden bitti' sorusunu cevaplayamamak demektir. `store.file_lock` bir RLock
+    döndürür: AYNI SÜREÇTEKİ iplikler için yeterlidir; süreçler-arası koruma İDDİA EDİLMEZ (ayrı bir
+    süreç bu defteri yazsaydı kayıp yine mümkündü — bugün yazan tek süreç var)."""
+    try:
+        from .. import store
+        import datetime as _d
+        today = _d.date.today().isoformat()
+        with store.file_lock(USAGE_FILE):
+            u = store.read_json(USAGE_FILE, {}) or {}
+            if u.get("date") != today:
+                # GÜN DÖNÜMÜ: sayaçlar sıfırlanır ama `quota_hits` TAŞINIR (2026-07-26). O defterin
+                # tek amacı sağlayıcının kota RESET SAATİNİ ölçmek; ölçüm ancak gün SINIRINI aşan bir
+                # pencerede yapılabilir. Her gece silmek, tam da ölçülmek istenen olguyu siliyordu.
+                u = {"date": today, "calls": 0, "fails": 0, "blocked_at": None,
+                     "quota_hits": list(u.get("quota_hits") or [])[-20:]}
+            u["calls"] = int(u.get("calls", 0)) + 1
+            # SEBEP DAĞILIMI (2026-07-26): "510 çağrı / 418 başarısız" tek başına kota mı, auth mı,
+            # ağ mı olduğunu söylemiyordu — ve yanlış teşhis yanlış politikayı doğurur (bir
+            # çağrı-sayısı bütçesi, sorun ConnectError ise TAMAMEN yanlış araçtır). Yanıt
+            # ALINMADIYSA anahtar istisna SINIF ADIdır, "None" değil: "yanıt gelmedi" ile "yanıt
+            # 200 değildi" ayrı şeyler.
+            _lbl = str(status) if status is not None else (error or "?").split(":")[0]
+            u.setdefault("by_status", {})[_lbl] = int((u.get("by_status") or {}).get(_lbl, 0)) + 1
+            _k = key_name or "?"
+            u.setdefault("by_key", {})[_k] = int((u.get("by_key") or {}).get(_k, 0)) + 1
+            if not ok:
+                u["fails"] = int(u.get("fails", 0)) + 1
+                if status == 429:
+                    if not u.get("blocked_at"):
+                        u["blocked_at"] = u["calls"]
+                    # 429'un GERÇEK saati ve GERÇEK gövdesi — sağlayıcının reset saatini ÖLÇMEK
+                    # için. Son 20 ile sınırlı: defter büyümesin, ama desen görünsün.
+                    import datetime as _dt2
+                    u.setdefault("quota_hits", []).append(
+                        {"at": _dt2.datetime.now(_dt2.timezone.utc).isoformat(timespec="seconds"),
+                         "key": _k, "calls_today": u["calls"], "body": (body or "")[:200]})
+                    u["quota_hits"] = u["quota_hits"][-20:]
+            store.write_json(USAGE_FILE, u)
+    except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
+        pass
+
+
+def usage() -> dict:
+    try:
+        from .. import store
+        return store.read_json(USAGE_FILE, {}) or {}
+    except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
+        return {}
+
+
+def quota_blocked() -> bool:
+    """TÜM FMP anahtarları 429 kotasında mı? Yedek anahtar açıksa False — toplu tüketici (250 ticker'lık
+    bar tazelemesi) onunla ilerler; yedek günlük kotayı ikiye katlar. Tek anahtar varsa eski davranış:
+    o bloklu ise True. Kota dolmuşken istek atmak ne veri getirir ne kotayı geri verir; yalnız diğer
+    FMP tüketicilerini (kazanç, temel veri) aç bırakır."""
+    keys = _active_keys()
+    return bool(keys) and all(_key_blocked(name) for name, _ in keys)
+
+
+def _redact(msg: str) -> str:
+    """apikey sorgu parametresi olarak gider; httpx'in hata metni TAM URL'i taşır. Bu metin bir gün
+    loglanırsa anahtar diske düşer — TÜM aktif anahtarları (birincil + yedek) kaynağında maskele."""
+    out = str(msg)
+    for _, key in _active_keys():
+        if key:
+            out = out.replace(key, "***")
+    return out
+
+
+def _get(path: str, params: dict | None = None, timeout: float = 20.0):
+    """Sıradaki AÇIK anahtarla GET; birincil 429 (kota) yeyince YEDEK anahtara ROTASYON. Anahtar çağırana
+    asla sızmaz (yalnız _get_with_key ekler; hata metni maskelenir). 401/403/5xx rotasyonla çözülmez."""
+    keys = _active_keys()
+    if not keys:
+        raise RuntimeError("FMP_API_KEY absent — FMP calls disabled")
+    last_exc: Exception | None = None
+    for name, key in keys:
+        if _key_blocked(name):
+            continue                       # bu anahtar kota-bloklu — yedeğe geç, boş istek atma
+        try:
+            # Anahtar ADI çağrının KENDİSİYLE taşınır (değer asla loglanmaz). Modül-globaline
+            # yazıp orada geri okumak, iki iş parçacığı arasında atfı sessizce takas ediyordu.
+            return _get_with_key(path, params, timeout, key, key_name=name)
+        except httpx.HTTPStatusError as e:
+            last_exc = e
+            # 429'u _HEALTH["last_status"]'tan oku (yanıt gövdesinden değil): _get_with_key onu GERÇEK
+            # yanıt kodundan set eder; bazı çağrılar/mock'lar HTTPStatusError'ı response=None ile atar.
+            if _HEALTH.get("last_status") == 429:
+                _block_key(name)           # bu anahtarı kota-bloğuna al...
+                if any(n != name and not _key_blocked(n) for n, _ in keys):
+                    try:
+                        from .. import obs
+                        obs.log("fmp_key_rotated", key_slot=name, reason="429_quota",
+                                detail="birincil FMP kotası doldu — yedek anahtara geçildi")
+                    except Exception:  # sessiz-yutma: kayıt kanalı düştü; rotasyonun kendisi kararı düşürmez
+                        pass
+                continue                   # ...ve YEDEK anahtara rotasyon
+            raise                          # 401/403/5xx: rotasyon çözmez
+        except Exception as e:
+            last_exc = e
+            raise                          # ağ hatası: kota değil; yedek de aynı ağda, rotasyon anlamsız
+    # buraya gelindi: ya tüm anahtarlar önceden bloklu ya da hepsi 429 verdi
+    if last_exc is not None:
+        raise last_exc
+    # HEPSİ ÖN-BLOKLU: eskiden birincil anahtarla YİNE DE bir istek atılıyordu. Kota dolmuşken atılan
+    # istek ne veri getirir ne kotayı geri verir — yalnız `fails` sayacını şişirir ve bloğun kendi
+    # amacını (boş istek atmamak) çiğner. Canlı defterde 510 çağrının 418'i başarısızdı; bu yol o
+    # sayının bir kısmını kendi eliyle üretiyordu. Artık istek ATILMAZ ve sebep açıkça söylenir.
+    raise RuntimeError("FMP: tüm anahtarlar kota-bloklu — istek atılmadı")
+
+
+def _get_with_key(path: str, params: dict | None, timeout: float, key: str, key_name: str = "?"):
+    """TEK anahtarla ham GET + sağlık/kota muhasebesi + maskeleme. Rotasyon _get()'te; burada tek deneme.
+
+    `key_name` MUHASEBENİN ÖZNESİDİR: hangi anahtar konuştu. Çağrı boyunca YEREL taşınır ve
+    `_usage`a parametre geçer — modül-globali üzerinden dolaşsaydı eşzamanlı iki çağrı birbirinin
+    adına yazardı ve `ping()` gibi rotasyonsuz yollar hiç ad yazmadığı için bayat atıf üretirdi."""
+    import datetime as _dt
+    q = dict(params or {})
+    q["apikey"] = key
+    _HEALTH["calls"] += 1
+    _HEALTH["at"] = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
+    _HEALTH["last_key"] = key_name     # pano/health() için; muhasebe artık BUNU okumaz
+    _HEALTH["last_status"] = None      # ÖNCEKİ çağrının durumu bu çağrıya sızmasın: bağlantı hatası
+                                       # (yanıt yok) eski bir 429'u miras alıp sahte kota-bloğu kurardı
+    status, body = None, ""
+    try:
+        r = httpx.get(f"{BASE}/{path.lstrip('/')}", params=q, timeout=timeout)
+        status = r.status_code
+        _HEALTH["last_status"] = status
+        # GÖVDEYİ YALNIZCA KAYDET, ÜZERİNDE DAL AÇMA (2026-07-26). Sağlayıcının 429 gövdesi kotanın
+        # ne zaman sıfırlandığını çoğu zaman yazar; onu okumadan "bütçe" kurmak varsayım eklemek
+        # olurdu. `getattr` zorunlu: testlerdeki sahte yanıt nesnelerinde `.text` yok.
+        body = _redact(getattr(r, "text", "") or "")[:200]
+        _HEALTH["last_body"] = body
+        r.raise_for_status()
+        _HEALTH.update({"ok": True, "last_error": ""})
+        _usage(True, status=status, key_name=key_name, body=body)
+        return r.json()
+    except Exception as e:
+        _HEALTH["fails"] += 1
+        _err = _redact(f"{type(e).__name__}: {e}")[:200]
+        _HEALTH.update({"ok": False, "last_error": _err})
+        _usage(False, status=status, key_name=key_name, error=_err, body=body)
+        # MASKELİ yeniden fırlat: bir çağıran str(e) loglarsa ham URL (dolayısıyla anahtar) diske
+        # düşmesin. TÜR KORUNUR — ping() HTTPStatusError.response.status_code'a bakıp 401'i "anahtar
+        # geçersiz" diye çeviriyor; türü RuntimeError'a çevirmek o teşhisi bozuyordu.
+        try:
+            e.args = tuple(_redact(str(a)) for a in e.args)
+        except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
+            pass
+        raise
+
+
+# ---- data endpoints (stable) ----
+def quote(symbols: list[str]) -> list[dict]:
+    """Real-time quote(s). Stable: /quote?symbol=AAPL (comma-join for a batch).
+
+    ÇOKLU-SEMBOL — CANLI DOĞRULANDI (2026-07-23, taze yedek anahtarla): ücretsiz katmanda TEKİL
+    /quote?symbol=AAPL çalışır (200) ama çoklu virgül-liste /quote?symbol=A,B,C ve /batch-quote?symbols=
+    İKİSİ DE **HTTP 402 "Payment Required"** döndürür (ücretli özellik). Kritik olan: 402 GÜRÜLTÜLÜ bir
+    hata — FMP sessizce ilk sembolü döndürüp gerisini DÜŞÜRMÜYOR, yani Finviz'deki sessiz-sürüklenme
+    sınıfı BURADA YOK ve aşağıdaki `except` bunu yakalayıp [] döndürüyor (graceful). batch-quote'a
+    geçmek de fayda etmez (o da 402). Üretimde çoklu yol zaten tüketilmiyor. Sonuç: kod değişikliği
+    GEREKMEZ; ücretli plana geçilirse çoklu yol açılır."""
+    if not available() or not symbols:
+        return []
+    try:
+        return _get("quote", {"symbol": ",".join(symbols[:50])})
+    except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
+        return []
+
+
+def profile(symbol: str) -> dict | None:
+    if not available() or not symbol:
+        return None
+    try:
+        rows = _get("profile", {"symbol": symbol})
+        return rows[0] if isinstance(rows, list) and rows else (rows or None)
+    except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
+        return None
+
+
+def earnings_dates(symbol: str, strict: bool = False) -> list[str]:
+    """Sembolün kazanç RAPOR tarihleri (ISO, geçmiş+yakın gelecek). Stable: earnings?symbol=X.
+    PEAD çapası + kazanç-karartma guard'ı bunu tüketir. Hata/anahtarsızlıkta boş liste.
+
+    strict=True → HATA YUTULMAZ (denetim turu 4, 2026-07-21). Sebep: boş liste "bu şirket kazanç
+    açıklamıyor" ile "istek başarısız" arasında ayrım yapmıyordu; kotanın pas ortasında bitmesi
+    (bugün olduğu gibi) YARIM bir kazanç takvimi üretiyor, karartma guard'ı da veri yokken
+    FAIL-OPEN olduğundan o isimlerde kazanç günü işlem açılıyordu."""
+    if not available():
+        return []
+    try:
+        data = _get("earnings", {"symbol": symbol})
+        out = []
+        for row in (data if isinstance(data, list) else []):
+            d = str(row.get("date") or row.get("epsDate") or "")[:10]
+            try:
+                import datetime as _dt
+                _dt.date.fromisoformat(d)
+                out.append(d)
+            except ValueError:  # sessiz-yutma: sağlayıcının biçimsiz TEK tarih alanı; yalnız o tarih düşer, satır başına uyarı 250 ticker'lık turda log seli olurdu
+                continue
+        return sorted(set(out))
+    except Exception:
+        if strict:
+            raise
+        return []
+
+
+def historical_eod(symbol: str) -> list[dict]:
+    """Full EOD OHLCV history. Stable: /historical-price-eod/full?symbol=AAPL."""
+    if not available() or not symbol:
+        return []
+    try:
+        data = _get("historical-price-eod/full", {"symbol": symbol})
+        return data if isinstance(data, list) else data.get("historical", []) if isinstance(data, dict) else []
+    except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
+        return []
+
+
+# ÇIKARILDI 2026-07-30 (temizlik turu): `income_statement`, `search_name`, `stock_list` — üçü de
+# `_get` üzerine ince sarmalayıcıydı ve ÜÇÜNÜN DE ÜRETİM ÇAĞIRANI YOKTU.
+# ÇAĞIRAN TARAMASI (meridian/ + tests/ + ops/ + deploy/): tek eşleşme tanımların kendisiydi;
+# `skills/` altındaki isim benzeri eşleşmeler AYRI betiklerin kendi FMP istemcileridir
+# (skills/_emekli/.../screen_dividend_stocks.py gibi), bu modülü içe aktarmazlar.
+# NEDEN SİLİNDİ, "belki lazım olur" DEĞİL: her biri FMP kotasından ücret yakabilecek bir ağ yolu
+# açıyordu ve hiçbiri bir karara bağlı değildi — kotanın tamamı bugün bar zinciri + kazanç takvimi
+# + insider akışı tarafından bütçelenmiş durumda (bkz. fmp.usage / adapters/insider.py başlığı).
+# GERİ-AL: üçü de `_get(path, params)` çağıran üç satırlık gövdelerdi —
+#   income_statement → _get("income-statement", {"symbol": symbol})
+#   search_name      → _get("search-name", {"query": query})
+#   stock_list       → _get("stock-list")
+# aynı `if not available(): return []` + `except: return []` kalıbıyla (yukarıdaki
+# `historical_eod` birebir aynı desendedir, şablon olarak o kullanılabilir).
+
+
+def sp500_constituents() -> list[str]:
+    """Current S&P 500 membership (survivorship-biased; use only for a live universe, not backtests)."""
+    if not available():
+        return []
+    try:
+        data = _get("sp500-constituent")
+        return [row["symbol"] for row in data if isinstance(row, dict) and "symbol" in row]
+    except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
+        return []
+
+
+# ---- connectivity self-test (for the dashboard "Test" button) — never returns the key ----
+def ping(which: str = "FMP_API_KEY") -> dict:
+    """Live reachability + auth check for a SPECIFIC key. which=FMP_API_KEY (varsayılan) birincilyi,
+    which=FMP_API_KEY_2 YEDEK anahtarı test eder — Ayarlar'daki iki ayrı 'Test et' düğmesi. Rotasyon YOK:
+    hangi anahtarı doğruladığımızı bilelim. Returns NO secret — only {ok, detail}. HTTP 401/403 => wrong key."""
+    key = secrets.get(which)
+    label = "Yedek FMP" if which == BACKUP_KEY else "FMP"
+    if not key:
+        return {"ok": False, "detail": f"{label} anahtarı girilmemiş"}
+    try:
+        # `which` ZATEN anahtarın adıdır — muhasebeye o geçer. Eskiden hiç ad geçilmediği için
+        # yedek anahtarın testi, bir ÖNCEKİ çağrının adıyla `by_key`e işleniyordu (bayat atıf).
+        rows = _get_with_key("quote", {"symbol": "AAPL"}, 12.0, key, key_name=which)
+        if isinstance(rows, list) and rows and "price" in rows[0]:
+            return {"ok": True, "detail": f"bağlandı · AAPL ${rows[0].get('price')}"}
+        if isinstance(rows, dict) and rows.get("Error Message"):
+            return {"ok": False, "detail": "anahtar reddedildi (Error Message)"}
+        return {"ok": False, "detail": "beklenmedik yanıt (anahtar geçersiz olabilir)"}
+    except httpx.HTTPStatusError as e:
+        code = e.response.status_code
+        why = "anahtar geçersiz/yetkisiz" if code in (401, 403) else f"HTTP {code}"
+        return {"ok": False, "detail": why}
+    except Exception as e:
+        return {"ok": False, "detail": f"bağlanılamadı ({type(e).__name__})"}
+
+
+def status() -> dict:
+    return {"provider": "FMP", "available": available(),
+            "reason": "" if available() else "FMP_API_KEY yok — Ayarlar'dan ekleyin"}

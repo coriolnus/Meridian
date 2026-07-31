@@ -1,0 +1,22 @@
+card_id: EDG-2026-001
+family: 52_week_high_proximity
+thesis: >
+  Fiyatın 52-hafta zirvesine yakınlığı, çapa (anchoring) yanlılığı nedeniyle ileri getiriyi öngörür;
+  yatırımcılar zirveye yakın iyi habere eksik tepki verir. VCP tezinin akademik akrabası — bu kart
+  aynı zamanda VCP'nin bu bileşeni ZATEN ne kadar taşıdığını (örtüşme/korelasyon) ölçer.
+evidence_refs: [George-Hwang 2004 JoF, Barroso-Wang 2021 (small-cap itirazı — bu yüzden yalnız
+  large-cap alt-örnek), katalog PDF aile 5]
+universe: large_cap_subset   # Barroso-Wang gereği; alt-örnek tanımı = evrenin ADV üst yarısı (grid'e sayılmaz, tek tanım)
+features_asof: "feat_52wh = close[t] / rolling_max(high, 252)[t] — yalnız t ve öncesi; hayalet-temiz barlardan (BT-2 sonrası yeniden üretilmiş component_ic altyapısı)"
+horizon: "retrospektif katkı: mevcut cf/component_ic ufukları (5/10/20g); gölge sıralama kolu ancak katkı anlamlıysa açılır"
+parameter_grid: {yok: "tek tanım, tek formül — grid'siz; K+=1 (bu ölçümün kendisi)"}
+cost_model: pessimistic_band_v2_bekleniyor   # E3 inene kadar mevcut 10bps + not
+success_metric: "cf-katmanlı IC: CI 0'ı dışlar VE |IC|>=0.03 (large-cap alt-örnekte); VCP-skorla korelasyonu AYRICA raporlanır (çift-sayım kontrolü)"
+kill_criteria:
+  - "large-cap alt-örnekte anlamsız → aile kapanır (Barroso-Wang doğrulanmış olur), kalıcı arşiv"
+  - "VCP skoruyla korelasyon > 0.8 → bağımsız kol AÇILMAZ (mevcut maruziyetin yeni adı olurdu); yalnız skor-özelliği adayı kalır"
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1-retro]}
+status: archived   # 2026-07-31: 9/9 hücre anlamsız (tarih-kümeli bootstrap; en iyi cf@20 IC=0.037 CI[-0.030,+0.100]);
+#   panel tanısı aralık-kısıtı artefaktını dışladı (işaret tez yönünde bile değil); survivorship hükmü GÜÇLENDİRİYOR.
+#   Kill#2 TETİKLENMEDİ: ρ(52wh,VCP)=-0.036 — özellik bağımsız ama bilgisiz. METİN DÜZELTMESİ: "Barroso-Wang
+#   doğrulandı" DENEMEZ (small-cap karşı-kutup yok) — doğru ifade: "bu evrende edge ölçülemedi"

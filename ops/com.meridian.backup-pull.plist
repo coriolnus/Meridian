@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- com.meridian.backup-pull — A1'deki state yedeklerinin VM-DIŞI kopyasını günde bir kez çeker.
+     Kurulum/kaldırma komutları çağrılan betiğin BAŞINDA yorum olarak duruyor (ops/pull-a1-backups.sh);
+     tek yerde olsunlar diye RUNBOOK'a KOPYALANMADI.
+
+     TCC AYRIMI — ÖNEMLİ VE ESKİ ENGELLE KARIŞTIRILMAMALI. 2026'da launchd'nin bir LaunchAgent'ı
+     çalıştırmayı reddettiği vaka, hedefin ~/Documents ALTINDA olmasındandı: macOS o dizini TCC ile
+     korur ve launchd bağlamının okuma izni yoktur (bkz. ops/com.meridian.agent.plist ve
+     ops/supervise.sh gerekçeleri). BURADAKİ hedef ~/AI-Trading — yani EV KÖKÜNDE, korumalı dizinin
+     dışında. Aynı engel BURAYA UYGULANMAZ.
+     TEK KALAN TCC TEMASI: varsayılan SSH anahtarı yolu ~/Documents/OCI/... altındadır. Betik onu
+     okuyamazsa SESSİZ KALMAZ (çıkış kodu 2 + log satırı). Engelle karşılaşılırsa anahtarı korumalı
+     dizinin dışına taşıyıp MERIDIAN_A1_KEY ile göster — plist'i değiştirmeye gerek yok.
+
+     NEDEN StartCalendarInterval (StartInterval DEĞİL): Mac uykudayken kaçan bir TAKVİM tetikleyicisi
+     launchd tarafından uyanışta TELAFİ edilir (geciktirilmiş çalıştırma). `StartInterval` ise uyku
+     boyunca sayacı ilerletmez ve dizüstü kapalıyken günler atlanabilirdi — "günde bir yedek" iddiası
+     sessizce yanlış olurdu. Saat 21:40 seçildi: EOD turu ve A1'in kendi yedek timer'ı çoktan bitmiş olur.
+
+     TOKEN/SIR GÖMÜLMEZ: yalnız yol değişkenleri. Anahtarın kendisi diskte kalır, plist'te değil. -->
+<dict>
+  <key>Label</key><string>com.meridian.backup-pull</string>
+  <key>WorkingDirectory</key><string>/Users/erdemozturk/AI-Trading</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/erdemozturk/AI-Trading/ops/pull-a1-backups.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>21</integer>
+    <key>Minute</key><integer>40</integer>
+  </dict>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/tmp/meridian-backup-pull.log</string>
+  <key>StandardErrorPath</key><string>/tmp/meridian-backup-pull.log</string>
+</dict>
+</plist>

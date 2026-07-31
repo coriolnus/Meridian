@@ -1,0 +1,27 @@
+card_id: EDG-2026-003
+family: ramp_freeze_exit_package   # WP-R ölçüm ayağı
+thesis: >
+  De-risk rampası (tepe-DD %3→kıs/%8→sıfırla, kodda sabit) günlerin %92'sinde aktif ve işlem
+  üretimini boğuyor; P3 çıkış paketi (breakeven 2.0 + hedef 6R + zaman 30g + iz 3.5ATR + erken-itlaf)
+  imzayı 4/4 verdi ama örneklem çöküşüyle reddedildi. Rampa SABİTLENİNCE (ölçüm-içi yama; kod
+  değişikliği HÜKÜMDEN SONRA) P3 ve early_kill-tek-başına yeniden ölçülür.
+evidence_refs: [cikis_paketi/RAPOR.md 2026-07-31 (kök-neden ölçümü), AUDIT ED-1, broker.max_positions_at]
+universe: full_251
+features_asof: "prescreen sandbox R1 geometrisi; barlar takvim-kapılı; rampa eşiği ölçüm-içi monkeypatch (kıs=%6/sıfırla=%15 'gevşek' + 'kapalı' iki koşul)"
+horizon: "walk-forward R1; PARA-v3 yasası"
+parameter_grid:
+  adaylar: ["P3-paketi", "early_kill_pivot=1 tek"]      # 2 aday
+  rampa_kosulu: ["gevsek(6/15)", "kapali"]              # ×2 → K+=4 (çarpım!)
+cost_model: "mevcut 10bps + not: E3 bandı inince yeniden okunur"
+success_metric: "P(ΔS>0) >= K=4-cezalı eşik (0.95 tabanından) HERHANGİ bir rampa koşulunda; imza korunmalı (kazanan büyür/beklenti artar)"
+kill_criteria:
+  - "iki rampa koşulunda da P<0.60 → paket ölür; rampa-değil-paket suçlanır, WP-R kod turu yine yapılabilir (rampa bounds'a taşınır) ama P3 arşive"
+  - "rampa-kapalı koşulda maxDD veto sınırını aşarsa (DD_VETO_MARGIN) → rampanın koruması GERÇEK, gevşetme sınırlı kalır"
+k_registry: {registered_at: "2026-07-31T04:4x", trial_ids: [pending]}
+status: measured   # 2026-07-31 03:19 (6.322s, K=4): P3 PAKETİ ÖLDÜ — kill#1 (P=0,202 gevşek / 0,482
+#   kapalı rampa; ikisi de <0,60): rampa suçlu DEĞİLMİŞ, tam serbestlikte bile paket kendini kanıtlayamıyor →
+#   P3 arşiv. early_kill-tek SAĞ (rampa-kapalı P=0,606 — kill üstü, geçiş altı) → gölge-v2 V3 kolunda birikime
+#   devam. kill#2 ÖLÇÜLDÜ — RAMPANIN KORUMASI GERÇEK: serbest bırakınca incumbent DD %4,6→%9,7 (M2M %12,9);
+#   gevşetme lehine kanıt YOK. WP-R kod turu daralıyor: eşikleri bounds'a taşımak yalnız görünürlük için
+#   (gevşetme değil) — düşük öncelik.
+notes: "Kod turu (rampa eşikleri bounds'a + profit_target/time_stop 'kapalı' değerleri) HÜKÜMDEN sonra; ölçüm-önce yasası."

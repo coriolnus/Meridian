@@ -1,0 +1,27 @@
+# meridian-backup.service — state/ dizininin günlük yerel yedeği (oneshot; timer tetikler).
+#
+# KAPSAM BİLİNÇLİ OLARAK DAR: yalnız YEREL disk (GCS/rclone YOK). Amaç, bozulan/silinen bir state'ten
+# saatler içinde dönebilmek; sunucu tamamen kaybolursa bu yedek de kaybolur (bilinen sınır — dış
+# kopya operatörün kararı). state/ ~181MB, sıkıştırılmış hâli çok daha küçük; 7 günlük saklama
+# 42GB boş diskte gürültü bile değil.
+#
+# secrets.json/auth.json da arşive girer (state/ içindeler) → arşiv dosyası SIRRI TAŞIR.
+# Bu yüzden hedef dizin ve dosyalar 0700/0600 (aşağıda ExecStartPre + umask).
+[Unit]
+Description=Meridian state/ daily local backup (tar.gz, 7-day retention)
+# Yedek anlık görüntüsü tutarlılığı: Meridian'ı DURDURMUYORUZ. state/ yazımları küçük ve atomik
+# (store.write_json → tmp+rename), jsonl'lar append-only; tar yarım bir satır yakalasa bile o
+# satır bir SONRAKİ yedekte tamdır. Servisi günlük yedek için durdurmak, kesintiyi riskten büyük yapardı.
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+UMask=0077
+ExecStartPre=/bin/mkdir -p /home/ubuntu/backups
+ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
+# `sh -c` ŞART: systemd ExecStart'ı kabuğa vermez, $(date) genişletmez ve `%i` yalnız şablon
+# (birim@örnek) birimlerinde doludur — düz birimde boş genişleyip her gün AYNI dosyayı ezerdi.
+ExecStart=/bin/sh -c 'tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz -C /opt/meridian state'
+# 7 günden eski yedekleri sil. -delete yalnız eşleşen dosyaları siler; hiç eşleşme yoksa çıkış 0.
+ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name 'state-*.tar.gz' -mtime +7 -delete

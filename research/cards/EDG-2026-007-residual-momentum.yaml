@@ -1,0 +1,45 @@
+card_id: EDG-2026-007
+family: residual_momentum   # WP1/1.1 (Blitz-Huij-Martens)
+thesis: >
+  12-1 ay momentumun FF3 (piyasa/boyut/değer) yüklerinden arındırılmış artığı ("residual momentum")
+  ham momentuma benzer prim taşır ama faktör-kaynaklı çökme riski düşüktür (Blitz-Huij-Martens 2011).
+  Bizim kullanım adaylığı: kırılma adaylarında yüksek-residmom dilim, HAM momentuma göre ARTIMLI
+  bilgi taşıyorsa skor bileşeni olur; taşımıyorsa aile ölür (ham momentum zaten skorda temsil ediliyor).
+evidence_refs: [Blitz-Huij-Martens 2011 J.Emp.Finance (katalog aile 1 — birinci-el PDF bu turda
+  çekilmedi, caveat beyanlı; hüküm kendi verimizde literatür-bağımsız), AUDIT aday-katalog, ROADMAP WP1/1.1]
+universe: full_251
+features_asof: >
+  Günlük FF3 faktörleri (Ken French kütüphanesi; indirme URL+zaman+sha256 damgalı, research/ff_factors/).
+  Her sembol için t-öncesi 756 işlem günü (~36 ay) pencerede OLS: r_i − rf = a + b·MKT + s·SMB + h·HML + e.
+  residmom(t) = son 252 günün İLK 231'inin (son 21 gün hariç; 12-1) artık toplamı / aynı pencerenin
+  artık std'si (vol-ölçekli). YALNIZ t ve öncesi veri; takvim-kapılı barlar; bars_integrity güvensiz-dönem
+  dışlaması uygulanır. Karşılaştırma kontrolü: ham 12-1 momentum aynı pencere/ölçekleme ile.
+horizon: "cf-katmanlı retrospektif (MAX/volshock şablonu): girilen+kılpayı popülasyonda dilim ileri getirisi 5/10/20g + çift-sıralama artık-katkı testi"
+parameter_grid:
+  residmom_persentil: [70, 90]        # tek eksen — K+=2 (çarpım yok)
+cost_model: "10bps + not (E3 bandı inince yeniden okunur)"
+success_metric: >
+  yüksek-residmom dilimin @20g ileri getirisi anlamlı YÜKSEK (blok-bootstrap CI 0-dışı) VE
+  çift-sıralamada ham-momentum-dilimi İÇİNDE residmom yayılımı pozitif anlamlı (artımlı bilgi kanıtı).
+kill_criteria:
+  - "dilim farkı CI-0-içi → bilgisiz, arşiv"
+  - "artımlı katkı yok (yayılım ham 12-1 momentum ile açıklanıyor) → skor bileşeni olarak ölü, arşiv"
+  - "FF ingestion doğrulaması geçmezse (kapsam/bütünlük) ölçüm YAPILMAZ — veri bileti açılır, K harcanmaz"
+guards:
+  - "pozitif kontrol: ham rvol20 @20 IC 0.0645 çivisi AYNI boru hattında yeniden üretilmeli (üretilmezse boru hattı geçersiz, hüküm yazılmaz)"
+  - "FF doğrulama: MKT-RF ile SPY-getiri korelasyonu > 0.95 (günlük, örtüşen dönem) + FF son tarihi ≥ popülasyon son tarihi − 65 işlem günü (GÖRELİ — bkz. guard_revizyonu)"
+  - "popülasyon kırpması ZORUNLU-BEYANLI: yalnız t ≤ FF_son satırları ölçülür; kırpılan satır sayısı ve oranı sonuc.json'a yazılır"
+  - "PK4/PK5 yol-tutarlılık kontrolleri standart"
+guard_revizyonu:
+  tarih: "2026-07-31T07:1xZ (Rol-1)"
+  eski: "kapsam ≥ 2026-06 (mutlak tarih)"
+  neden: >
+    Ken French kütüphanesi yapısal olarak ~1 ay gecikmeli yayınlıyor (202605 vintage, son tarih
+    2026-05-29) — mutlak-tarihli guard bu kaynağa karşı HİÇBİR ZAMAN sağlanamaz; kart kalıcı kilitli
+    kalırdı. Revizyon ÖLÇÜM-ÖNCESİ yapıldı: ingest ajanı kapı düşünce boru hattının hiçbir bacağını
+    koşmadı (sonuc.json'da tüm ölçümler None; kanıt: resmom_olcum/sonuc.json + kaynak.json) —
+    sonuç görülerek eşik gevşetme (post-hoc seçim) SÖZ KONUSU DEĞİL. success/kill eşikleri değişmedi.
+  maliyet_beyani: "kırpma maliyeti biliniyor: 270/7.122 satır (%3,79) kapsam dışı; ölçülebilir taban 6.852"
+k_registry: {registered_at: "2026-07-31T06:49Z", trial_ids: [pending]}
+status: registered
+notes: "S2 açılış kartı. Ölçüm scratchpad/resmom_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ölçüm ajanı DOKUNMAZ — hüküm önerisi raporla gelir, kartı Rol-1 günceller."

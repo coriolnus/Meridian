@@ -1,0 +1,216 @@
+"""marketstream.py — PİYASA-VERİSİ dinleyicisi: Alpaca dakikalık KAPANMIŞ bar akışı → mrd:bars (Faz 2).
+
+mirror_stream (yürütme) trade_updates taşır; BU katman AYRI bir hosttan (stream.data.alpaca.markets)
+dakikalık kapanmış barları dinler ve `hotstate.ingest_bars` ile Redis Stream'e (mrd:bars) + sıcak
+fiyata yazar. Reconnect/backoff/nabız/down-reassert YASASI `streamhealth.run_stream`ten gelir — KOPYA
+YOK (mirror ile AYNI nesne). Bu modülde yalnız emre-özgü olan var: data URL, batched-array parse,
+`b`→ingest.
+
+LOOK-AHEAD (yapısal): abonelik YALNIZ `bars` kanalıdır. Yalnız `T=="b"` (dakika kapanınca gelen
+TAMAMLANMIŞ bar) ingest edilir; `u`(düzeltme)/`d`(forming günlük)/`t`/`q` ASLA. Forming/partial fiyat
+mrd:price'a/mrd:bars'a yazılmaz. Bar `t` = dakika BAŞLANGICI; close_ts = t+60s (hotstate sözleşmesi).
+mrd:bars backtest/recompute'a ASLA girmez — kalıcı öğrenme kaynağı yine EOD immutable dosya barları.
+
+SAĞLIK UÇUCU (disk YOK, K5): marketstream emir tutmaz, yalnız telemetri; okuyan tek yer aynı süreçteki
+API. Disk bayrağı olmadığından "ölü dinleyici diskte yeşil bırakır" alt-sınıfı YAPISAL olarak yok.
+Tazelik yasası yine geçerli: görev ölürse `checked_at` donar → `ok` False.
+
+TEK SAHİP (406): iex hesap başına TEK data bağlantısına izin verir; ikincisi 406. `start()` idempotent
+singleton — çift bağlantı yapısal önlenir.
+"""
+from __future__ import annotations
+import asyncio
+import json
+import os
+
+from . import streamhealth, hotstate, obs, secrets
+from .adapters import alpaca
+from .streamhealth import _pause, _now_iso   # ad = aynı nesne (test `marketstream._pause` monkeypatch'i)
+
+FEED = os.environ.get("MERIDIAN_DATA_FEED", "iex")
+# 0/unset = efektif sınırsız. iex bars kanalı sembol-SINIRSIZ (30-tavan yalnız t/q kanallarına ait) →
+# tüm evren tek abonelikte. Bu yalnız opsiyonel bir güvenlik valfi.
+MAX_SYMBOLS = int(os.environ.get("MERIDIAN_STREAM_MAX_SYMBOLS", "0")) or None
+INDEX_SYMBOL = "SPY"
+
+
+def subscribed_symbols() -> list[str]:
+    """Abone olunacak evren: açık POZİSYONLAR → SPY → REPLAY_UNIVERSE, tekilleştirilmiş. Pozisyonlar EN
+    BAŞTA — izlenmeyen bir pozisyon sıcak-fiyat kör noktasıdır. Varsayılan kırpma YOK (iex sınırsız)."""
+    from .adapters.data import REPLAY_UNIVERSE
+    from . import store
+    pf = store.read_json("portfolio.json", {}) or {}
+    out: list[str] = []
+    seen: set[str] = set()
+    for t in list((pf.get("positions") or {}).keys()) + [INDEX_SYMBOL] + list(REPLAY_UNIVERSE):
+        t = str(t).strip().upper()
+        if t and t not in seen:
+            seen.add(t)
+            out.append(t)
+    if MAX_SYMBOLS:
+        out = out[:MAX_SYMBOLS]
+    return out
+
+
+class MarketState:
+    """UÇUCU süreç-içi durum: sağlık (ortak StreamHealth, persist=no-op) + bar telemetrisi. hydrate
+    ÇAĞRILMAZ — disk yok, her süreç taze başlar."""
+
+    def __init__(self):
+        self.bars_seen = 0
+        self.last_bar_at: str | None = None
+        # persist=no-op → market sağlığı DİSKE yazmaz (mirror'da diske yazar). Yasa yine tek.
+        self.health = streamhealth.StreamHealth("marketstream", "piyasa verisi", persist=lambda: None)
+
+
+STATE: MarketState | None = None
+
+
+def state() -> MarketState:
+    global STATE
+    if STATE is None:
+        STATE = MarketState()
+    return STATE
+
+
+class MarketStreamListener:
+    """asyncio dinleyicisi — `streamhealth.run_stream(spec)` protokolünü uygular; reconnect/backoff
+    BEDAVA gelir. `session` emre-özgü: auth + `bars` aboneliği + batched-array parse + `b`→ingest."""
+
+    connect_kwargs = {"ping_interval": 20, "ping_timeout": 20}
+
+    def __init__(self):
+        self.state = state()
+        self.health = self.state.health
+        self._stop = asyncio.Event()
+        self._alive = False
+        self._down_since = None
+        self._cancel_fired = False
+        self._subs = subscribed_symbols()
+
+    # --- run_stream(spec) protokolü ---
+    @property
+    def stop_event(self) -> asyncio.Event:
+        return self._stop
+
+    @staticmethod
+    def _url() -> str:
+        return alpaca.data_ws_url(FEED)
+
+    def url(self) -> str:
+        return self._url()
+
+    async def pause(self, s: float) -> None:
+        return await _pause(s)
+
+    def on_grace_exceeded(self) -> None:
+        # BİLİNÇLİ no-op: piyasa-verisi kesintisinde iptal edilecek koruma bacağı YOK (bu yolda emir
+        # yok). Görünürlük set_stream/touch'tan gelir; devre-kesici mirror'a özgüdür.
+        pass
+
+    async def session(self, ws, mark_alive) -> None:
+        """Emre-özgü oturum: auth + YALNIZ `bars` aboneliği + batched-array parse. Bir WS frame'i
+        BİRDEN ÇOK mesaj taşıyabilir (karışık sembol/tip) → dizi üzerinde döngü şart."""
+        await ws.send(json.dumps({"action": "auth",
+                                  "key": secrets.get("ALPACA_PAPER_KEY") or "",
+                                  "secret": secrets.get("ALPACA_PAPER_SECRET") or ""}))
+        await ws.send(json.dumps({"action": "subscribe", "bars": self._subs}))   # YALNIZ kapalı-bar kanalı
+        async for raw in ws:
+            if self._stop.is_set():
+                break
+            try:
+                msgs = json.loads(raw)
+            except (json.JSONDecodeError, TypeError):  # sessiz-yutma: yardımcı G/Ç; çağıran yokluğu yedekle karşılar
+                continue
+            batch = {}
+            for m in (msgs if isinstance(msgs, list) else [msgs]):
+                T = m.get("T")
+                # v68/D2: alive YALNIZ KANITLI olayda (auth'lı / abonelik / bar) — 'connected' (auth
+                # öncesi) alive YAPMAZ. mark_alive idempotent.
+                if (T == "success" and m.get("msg") == "authenticated") or T == "subscription" or T == "b":
+                    mark_alive()
+                if T == "b":
+                    s = m.get("S")
+                    if s:
+                        batch[s] = {"o": m.get("o"), "h": m.get("h"), "l": m.get("l"), "c": m.get("c"),
+                                    "v": m.get("v", 0), "vw": m.get("vw"), "n": m.get("n"), "t": m.get("t")}
+                elif T == "error":
+                    self._on_error(m)
+                    if int(m.get("code", 0) or 0) in (401, 402, 403, 404):
+                        # AUTH BAŞARISIZ: yanlış anahtarla çekiçleme yok (mirror'ın unauth disiplini).
+                        # run_stream backoff'u 60s'te tavan yapar; auth hatası kalıcıdır, o yüzden
+                        # burada uzun bir bekleme koyup oturumu bitiriyoruz (Alpaca'yı ≤60s'te dövmeyelim).
+                        await _pause(300)
+                        return
+                # 'u'/'d'/'t'/'q' → look-ahead/kapsam gereği YOK SAYILIR (batch'e girmez)
+            if batch:
+                self.state.bars_seen += len(batch)
+                self.state.last_bar_at = _now_iso()
+                hotstate.ingest_bars(batch)          # append + set_price, TEK pipeline (tek yazma yolu)
+
+    def _on_error(self, m: dict) -> None:
+        code = int(m.get("code", 0) or 0)
+        if code == 406:
+            obs.warn("marketstream_conn_limit",
+                     detail="data akışında zaten bir bağlantı var — tek-sahip ihlali (ikinci soket kapanır)")
+        elif code in (401, 402, 403, 404):
+            obs.warn("marketstream_unauthorized", code=code)
+        elif code in (405, 409, 410):
+            obs.warn("marketstream_subscription_limited", code=code,
+                     detail="feed/kota kısıtı — MERIDIAN_DATA_FEED=iex varsayılanına dönülebilir")
+        else:
+            obs.warn("marketstream_error", error=f"code={code}: {str(m.get('msg'))[:80]}")
+
+    async def run(self) -> None:
+        await streamhealth.run_stream(self)
+
+    def stop(self) -> None:
+        self._stop.set()
+
+    def snapshot(self) -> dict:
+        """StreamHealth üstüne market ekleri. `ok` ORTAK yasadan (flag × nabız tazeliği) — mirror ile
+        aynı hesap; görev ölürse checked_at donar → ok False (disk bayrağı yok, donmuş-yeşil alt-sınıf yok)."""
+        base = streamhealth.health_snapshot(self.health.to_dict())
+        return {**base, "alive": bool(self._alive), "feed": FEED,
+                "bars_seen": self.state.bars_seen, "last_bar_at": self.state.last_bar_at,
+                "last_bar_age_s": streamhealth._age_s(self.state.last_bar_at),
+                "subscribed": len(self._subs)}
+
+
+# ---------------- SINGLETON (406 zorunluluğu: iex hesap başına TEK data bağlantısı) ----------------
+_LISTENER: MarketStreamListener | None = None
+_TASK = None
+
+
+def listener() -> MarketStreamListener:
+    global _LISTENER
+    if _LISTENER is None:
+        _LISTENER = MarketStreamListener()
+    return _LISTENER
+
+
+def start(loop=None):
+    """IDEMPOTENT: _TASK canlıysa no-op → çift bağlantı (=406) YAPISAL önlenir. uvicorn'un event
+    loop'unda görev olarak koşar (mirror ile aynı desen)."""
+    global _TASK
+    if _TASK is not None and not _TASK.done():
+        return _TASK
+    loop = loop or asyncio.get_event_loop()
+    _TASK = loop.create_task(listener().run())
+    return _TASK
+
+
+def stop() -> None:
+    if _LISTENER is not None:
+        _LISTENER.stop()
+
+
+def health() -> dict:
+    """Pano/API görünürlüğü. Dinleyici HİÇ koşmamışsa (paper yok / bayrak kapalı) listener KURMADAN
+    `ok=None` döner — 'unknown ≠ broken' üçüncü hâli (mirror'ın h5c ikizi); pano '—' der, 'KOPUK' değil."""
+    if _LISTENER is None:
+        return {"ok": None, "flag": False, "stale": True, "alive": False, "feed": FEED,
+                "bars_seen": 0, "last_bar_at": None, "last_bar_age_s": None,
+                "checked_at": None, "checked_age_s": None, "down_since": None,
+                "last_error": None, "last_event_ts": None, "subscribed": 0}
+    return _LISTENER.snapshot()

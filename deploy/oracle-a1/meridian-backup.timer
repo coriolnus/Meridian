@@ -1,0 +1,19 @@
+# meridian-backup.timer — meridian-backup.service'i günde bir tetikler.
+#
+# SAAT SEÇİMİ: 23:30 UTC. Zamanlayıcı (scheduler.py) UTC ile çalışır; piyasa saatleri ise
+# America/New_York'tur (bararchive/barclock açıkça NY). 23:30 UTC = 18:30/19:30 NY (DST'ye göre),
+# yani kapanış (16:00 NY) + kapanış-sonrası işlerin ardına düşer. VM'in TZ'sini DEĞİŞTİRMEYE gerek
+# yok — OnCalendar burada açıkça UTC diyor, sunucu TZ'si ne olursa olsun aynı anda koşar.
+[Unit]
+Description=Daily Meridian state/ backup
+
+[Timer]
+OnCalendar=*-*-* 23:30:00 UTC
+# Persistent: VM kapalıyken kaçan atış, açılışta TELAFİ edilir. Reboot/bakım penceresi bir günü
+# sessizce yutmasın diye açık (yedeğin sessizce hiç koşmaması, geç koşmasından kötüdür).
+Persistent=true
+# Aynı dakikada başka işlerle çakışmasın; tar 181MB'ı okurken I/O'yu tek başına almasın.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

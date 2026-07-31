@@ -1,0 +1,26 @@
+card_id: EDG-2026-006
+family: turn_of_month_exposure_tilt   # WP-G ailesi (rejim/maruziyet overlay)
+thesis: >
+  Getiriler ay dönümünde yoğunlaşır (son işlem günü + ilk 3 gün; likidite/maaş-akışı/kurumsal
+  rebalans mekaniği). Endeks-seviyesi maruziyet-eğimi olarak long-only uyumlu: ToM penceresi
+  dışında yeni-giriş iştahını kısmak (kapatmak DEĞİL — hafif tilt).
+evidence_refs: [McConnell-Xu 2008 FAJ (birinci-el doğrulandı 2026-07-31: VW %0,14/gün ToM vs
+  −%0,01 diğer; large-cap'te de var), Lakonishok-Smidt 1988, uluslararası 2020'ler replikasyonları
+  (WP3.1 raporu — Japonya hariç sürüyor)]
+universe: full_251 (sinyal takvim-seviyesi; etki portföy maruziyeti)
+features_asof: "ToM = ayın son işlem günü + izleyen 3 işlem günü (XNYS takvimi, as-of)"
+horizon: "R1 walk-forward ikiz-koşum: tilt-açık (ToM-dışı yeni girişlerde skor-eşiği yukarı) vs kapalı"
+parameter_grid: {pencere: ["son1+ilk3"]}   # tek tanım (literatür standardı) — K+=1; eşik-şiddeti grid'i BİLEREK yok
+cost_model: "10bps + E3 bandı inince yeniden"
+success_metric: "net PARA düşmeden vol/DD iyileşmesi VEYA net PARA artışı (CI-0-dışı fark şart değil — hafif overlay; ama YÖN tutarlı olmalı)"
+kill_criteria:
+  - "tilt net PARA'yı düşürüyorsa kapı açılmaz (iş emri: rejim kapısı Sharpe düşürürse kaldır)"
+  - "ToM-içi/dışı getiri farkı bizim evren/dönemde işaretsizse arşiv"
+k_registry: {registered_at: "2026-07-31T05:3x", trial_ids: [wpg_olcum/on_adim_tom]}
+status: archived   # 2026-07-31 06:48: kill#2 ÖN-ADIMDA tetiklendi (ikiz koşum HİÇ AÇILMADI — K tasarrufu):
+#   ToM-içi/dışı EW evren getiri farkı R1_OOS'ta −11,79 bps/gün (YÖN NEGATİF; SPY vekili de −8,12),
+#   tam örnek −2,52. McConnell-Xu işareti bizim evren/dönemde YOK — tilt'in koruyacağı yoğunlaşma
+#   mevcut değil. Kanıt: wpg_olcum/on_adim_tom.json (bootstrap CI'lar hep 0-içi; holdout <30 gün
+#   ölçülemedi-nedenli). Not: bu "takvim anomalisi öldü" genellemesi DEĞİL — bizim 250-sembol
+#   large/mid evreni + 2020-26 penceresi hükmü; literatür VW-endeks bulgusuyla çelişki decay/evren
+#   farkı olabilir.
