@@ -1157,11 +1157,14 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     K SAYIMI DOKUNULMAZ: kapıya giden K = PLANLANAN toplam sonda sayısıdır (`total`), değerlendirilen
     değil. Kesinti K'yı küçültseydi kazananın-laneti cezası hafifler ve tavan, kapıyı GEVŞETEN bir
     kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur."""
-    import time as _t_mod
+    # `_time` BURADA içe aktarılır (eskiden sonda döngüsünün hemen üstündeydi): süre tavanı ondan
+    # ÖNCE, fonksiyonun ilk satırında saat okumak zorunda. Tek alias kalır — aynı modülün iki adı,
+    # ikisinden birinin sessizce farklı bir saat okuduğu izlenimi verirdi.
+    import time as _time
     # TAVAN SAATİ EN BAŞTA BAŞLAR — incumbent yürüyüşü DAHİL. Sayacı sonda döngüsünde başlatmak,
     # tavanın aramanın en pahalı tek adımını (incumbent walk-forward) hiç ölçmemesi demekti: 5 saatlik
     # bir tavan, incumbent 5 saat sürdüğünde de "aşılmamış" görünürdü.
-    _t_basla = _t_mod.time()
+    _t_basla = _time.time()
     _tavan_ts = None
     if deadline_ts is not None:
         _tavan_ts = float(deadline_ts)
@@ -1169,12 +1172,18 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         _tavan_ts = _t_basla + float(max_minutes) * 60.0
 
     def _tavan_asildi() -> bool:
-        return _tavan_ts is not None and _t_mod.time() > _tavan_ts
+        return _tavan_ts is not None and _time.time() > _tavan_ts
 
     def _kesinti(evaluated: int, kalan: int) -> dict:
         """Kesinti damgası + YASA 4 kaydı (gerekçe ≥20 karakter): sessiz bir kesinti, kısa bir
-        aramadan ayırt edilemez ve okuyucu aramanın eksik olduğunu ASLA öğrenemez."""
-        gecen = round((_t_mod.time() - _t_basla) / 60.0, 2)
+        aramadan ayırt edilemez ve okuyucu aramanın eksik olduğunu ASLA öğrenemez.
+
+        `kalan_sonda` = DÖNGÜNÜN HİÇ ULAŞMADIĞI sonda sayısı. `planlanan_sonda - evaluated` ile
+        AYNI ŞEY DEĞİLDİR ve olmamalıdır: aradaki fark `skipped_wallclock`tur — o sondalara ULAŞILDI
+        (ve K sayımında dururlar), yalnız taze hesapları `MERIDIAN_SEARCH_MAX_MIN` yüzünden
+        atlandı. İkisini tek sayıya indirmek, iki farklı eksikliği (hiç bakılmadı / bakıldı ama
+        hesaplanmadı) ayırt edilemez kılardı."""
+        gecen = round((_time.time() - _t_basla) / 60.0, 2)
         damga = {"kesildi": True, "sebep": "sure_tavani",
                  "tavan_dk": (round((_tavan_ts - _t_basla) / 60.0, 2) if _tavan_ts else None),
                  "gecen_dk": gecen, "kalan_sonda": int(kalan)}
@@ -1244,7 +1253,6 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
             fresh_planned += 1
     probes = planned
     _parallel_prefill_probes(probes, current, version, goal, w, regime)
-    import time as _time
     _t0 = _time.time()
     _max_min = float(os.environ.get("MERIDIAN_SEARCH_MAX_MIN", "35"))
     _fresh_done = _skipped_fresh = 0

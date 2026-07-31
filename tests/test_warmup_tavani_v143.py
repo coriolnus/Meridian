@@ -81,7 +81,11 @@ def test_tavan_asilinca_arama_kibarca_kesilir(seeded_sandbox, monkeypatch):
     assert res["kesildi"] is True
     assert res["sebep"] == "sure_tavani"
     assert res["planlanan_sonda"] > res["evaluated"] >= 0
-    assert res["kalan_sonda"] == res["planlanan_sonda"] - res["evaluated"]
+    # `kalan_sonda` = döngünün HİÇ ULAŞMADIĞI sonda. `planlanan - evaluated` ile aynı OLMAK ZORUNDA
+    # DEĞİL: aradaki fark `skipped_wallclock`tur (ulaşıldı ama taze hesap atlandı). Muhasebe bu üç
+    # sayının TOPLAMI üzerinden kurulur — ikisini eşitleyen bir iddia, atlama yolunun devreye
+    # girdiği ilk gün sahte bir kırmızı verirdi.
+    assert res["kalan_sonda"] + res["evaluated"] + res["skipped_wallclock"] == res["planlanan_sonda"]
     assert res["gecen_dk"] is not None and res["tavan_dk"] is not None
 
 
