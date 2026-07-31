@@ -308,7 +308,7 @@ def _icra(kitap: dict, xd, per: dict, mpos: dict) -> None:
     kitap["pending"] = None
 
 
-def _isaretle(kitap: dict, s, per: dict, mpos: dict) -> list:
+def _isaretle(kitap: dict, s, per: dict) -> list:
     """GÜNLÜK M2M + chandelier tepe takibi. Barı olmayan sembol için ŞASİNİN ffill'i uygulanır
     (son bilinen kapanış); atlanan sembol SAYILIR ve olayla duyurulur — sessiz boşluk yok."""
     v = kitap["cash"]
@@ -470,7 +470,7 @@ def run_cycle(bars: dict, index, on_date: str | None = None) -> dict:
     for s in yeni:
         if kitap.get("pending"):
             _icra(kitap, s, per, mpos)
-        eks = _isaretle(kitap, s, per, mpos)
+        eks = _isaretle(kitap, s, per)
         if eks:
             eksikler[str(s.date())] = eks
         ae = ay_sonu_mu(s)
