@@ -59,8 +59,18 @@ if kaynak != ["meridian"]:
                 f"her test import hatasıyla ölür ve skor sahte %100 çıkar")
 if set(sadece) != beklenen:
     hata.append(f"only_mutate beklenen {sorted(beklenen)} değil: {sadece}")
-if testler != ["tests"]:
-    hata.append(f"test seçimi beklenen ['tests'] değil: {testler}")
+# Test seçimi: 'tests' ile BAŞLAMALI; kalanı yalnız --deselect çiftleri olabilir (ortam-duyarlı
+# dışlamalar, pyproject'te gerekçeli). Birebir-eşitlik kapısı 2026-08-01'de meşru dışlamayı
+# kırmızıya boyadı — kapı artık biçimi ölçer, listeyi ezberlemez.
+if not testler or testler[0] != "tests":
+    hata.append(f"test seçimi 'tests' ile başlamıyor: {testler}")
+else:
+    kalan = testler[1:]
+    while kalan:
+        if kalan[0] != "--deselect" or len(kalan) < 2 or not kalan[1].startswith("tests/"):
+            hata.append(f"test seçiminde --deselect çifti dışında öğe: {kalan}")
+            break
+        kalan = kalan[2:]
 
 # DURUM FİKSTÜRÜ KAPISI (H5 kırığı, 2026-08-01). mutmut testleri `mutants/` içinden koşturur;
 # `config.ROOT` orada `mutants/`e çözülür ve `mutants/state/` yoksa HER test FileNotFoundError ile
