@@ -633,6 +633,18 @@ def api_today(request: Request):
     # ALAN ŞİMDİ HAZIR, PANO SONRAKİ TURDA BAĞLAR (web/* bu turda başka bir kolda).
     from . import ledgerstamp as _ls
     d["defter"] = _ls.counts()
+    # SERMAYENİN KÖKENİ (sermaye tohum-ayrıştırması, 2026-08-01) — `d["equity"]`in YANINDA durmak
+    # ZORUNDA. Ölçülen kusur: pano "Sermaye 94.457,91$" yazıyordu ve o sayı 100.000$ başlangıçtan
+    # ANTRENMAN TOHUMUNUN (replay_seed, 95 satır) −5.542,09$'ı düşülmüş hâliydi; canlı-kâğıt işlem
+    # sayısı ise SIFIR. Yani sayının kendisi doğru, ANLATTIĞI şey yanlıştı — operatör bir antrenman
+    # artefaktını "sistemin kaybı" diye okuyordu. Blok üç soruyu tek bakışta cevaplar: bu para kimin
+    # (gerçek-canlı sermaye), kaç gerçek işlemden geldi (canlı_islem_n), tohumun etkisi ne kadardı
+    # ve hâlâ düşülüyor mu (tohum_etkisi_usd + durum + reset_tarihi).
+    # HESAP `meridian.sermaye`DE, BURADA DEĞİL: `python -m meridian.sermaye --durum` ile bu uç AYNI
+    # fonksiyonu çağırır — iki hesap olsaydı terminal ile pano aynı gün farklı bir "gerçek-canlı
+    # sermaye" söyleyebilirdi.
+    from . import sermaye as _sr
+    d["sermaye_koken"] = _sr.koken()
     _enrich_stale_plans(d.get("todays_plans") or [], d["latest_session"])
     return d
 

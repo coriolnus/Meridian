@@ -460,9 +460,10 @@ def _p(x, birim="$") -> str:
         return str(x)
 
 
-def _durum_yaz(d: dict) -> None:
+def _durum_yaz(d: dict, baslik: bool = True) -> None:
     k = d["koken"]
-    print("[sermaye] KÖKEN ÖLÇÜMÜ (hiçbir bayt yazılmadı)")
+    if baslik:
+        print("[sermaye] KÖKEN ÖLÇÜMÜ (hiçbir bayt yazılmadı)")
     print(f"  ayrışık mı            : {'EVET' if d['ayrisik'] else 'HAYIR'}"
           + (f"  (reset {k['reset_tarihi']}, ofset {_p(k['ofset_usd'])})" if d["ayrisik"] else ""))
     print(f"  gerçek-canlı sermaye  : {_p(k['gercek_canli_sermaye'])}   [{k['ibare']}]  renk={k['renk']}")
@@ -488,7 +489,7 @@ def _yaz(rapor: dict) -> None:
     mod = ("UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA REDDEDİLDİ" if rapor.get("applied") else "KURU KOŞU (hiçbir bayt yazılmadı)"))
     print(f"[sermaye] {mod}")
-    _durum_yaz(rapor["durum"])
+    _durum_yaz(rapor["durum"], baslik=False)
     o, y = rapor["onceki"], rapor["yeni"]
     print(f"  --- YAZILACAK (kitap) ---")
     for alan in ("cash", "realized_pnl", "day_start_equity", "peak_equity"):

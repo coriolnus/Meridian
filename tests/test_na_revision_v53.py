@@ -142,7 +142,18 @@ def test_no_module_writes_another_modules_file():
         # run.py: yalnız RE-SEED yolunda kitabı tohumlanan deftere hizalar (2026-07-22).
         # Hizalamasaydı pano nakdi ile sermaye eğrisi birbirini tutmuyordu ve hiçbir istisna
         # fırlamıyordu — `yeniden_hesap` dedektörü yakaladı.
-        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py"},
+        # sermaye.py (tohum-ayrıştırması, 2026-08-01): TEK SEFERLİK sermaye tabanı migrasyonu —
+        # `ledgerstamp.py`nin trades.jsonl'daki rolünün AYNISI ve aynı gerekçelerle güvenli:
+        # yazar bir DAEMON değil elle koşulan CLI'dir (kuru koşu varsayılan, `--uygula` canlı süreç
+        # görürse REDDEDİLİR — barrepair'in aynı fonksiyonu), yazım `store.file_lock(PORTFOLIO)`
+        # altında oku-değiştir-yaz'dır (loop._save_broker ve hermes damgasıyla AYNI kilit), ve
+        # İDEMPOTENTTİR (ikinci koşu `zaten_ayrisik` der, tek bayt yazmaz). Dokunduğu alanlar
+        # dört tanedir ve kitapta `sermaye_resetleri` kaydıyla BEYANLIDIR.
+        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py"},
+        # sermaye.py eğriye NOKTA eklemez; `points` DIŞINDA bir zarf anahtarına (reset_isaretleri)
+        # kırılma beyanı yazar. Nokta eklemek `ledgerstamp.seed_boundary`nin tohum sınırını
+        # kaydırırdı (bkz. sermaye.py modül başlığı + test_B3).
+        "equity_curve.json": {"run.py", "sermaye.py"},
         "candidates.jsonl": {"loop.py", "run.py"},
         "counterfactuals.jsonl": {"counterfactual.py", "cf_backfill.py"},
         "cf_open.json": {"counterfactual.py", "hermes.py"},   # cf sahibi + LLM görüş damgası (kilitli)

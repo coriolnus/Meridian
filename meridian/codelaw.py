@@ -339,7 +339,13 @@ DECLARED_SINKS: dict[str, str] = {
     "integrity_alarmed.json": "aynı disiplin, bütünlük alarmları için",
     "mechanism_beats.json": "mekanizma nabızları (hangi mekanizma en son ne zaman çalıştı); watchdog "
                             "bayatlık kararını buradan verir ve sonucu integrity_report ile dışarı taşır",
-    "monotonic_state.json": "monotonluk dedektörünün önceki ölçümü — karşılaştırma için tutulan iç durum",
+    # NOT (2026-08-01): `monotonic_state.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu yalnız
+    # kendi modülündeydi (watchdog.monotonicity_report), statik graf onu "dış okuyucusu yok" diye
+    # görüyordu. Artık DIŞ bir okuyucusu var: `sermaye._peak_affi` affın `was` değerini dedektörün
+    # KENDİ TABANINDAN okur — kitaptaki `peak_equity`den değil, çünkü af TAM eşleşme ister ve
+    # dedektör kıyası bu dosyayla yapar. İkisi ayrışsaydı af hiç tutmaz, bayrak sonsuza dek kırmızı
+    # kalırdı. Muafiyet işi bittikten sonra da yerinde dursaydı liste "kimsenin bakmadığı çöplüğe"
+    # dönerdi (bu sözlüğün kendi kuralı; aynı gerekçeyle finviz_universe ve learning_loop_open çıktı).
     "ownership_state.json": "sahiplik dedektörünün önceki ölçümü — aynı gerekçe",
     "bars_fingerprint.json": "bar dosyalarının parmak izi; determinizm dedektörünün karşılaştırma tabanı",
 

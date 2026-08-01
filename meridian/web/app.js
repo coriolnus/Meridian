@@ -462,6 +462,53 @@ const RAIL_ICON = {
   ayarlar: _ico('<path d="M4 7.5h8.5M17.5 7.5H20M4 16.5h4.5M13.5 16.5H20"/><circle cx="15" cy="7.5" r="2.5"/><circle cx="11" cy="16.5" r="2.5"/>'),
 };
 
+// ---- SERMAYENİN KÖKENİ (2026-08-01) ------------------------------------------------------------
+// ÖLÇÜLEN KUSUR: pano "Sermaye 94.457,91$" yazıyordu. Sayı doğruydu, ANLATTIĞI şey yanlıştı —
+// 100.000$ başlangıçtan ANTRENMAN TOHUMUNUN (replay_seed, 95 satır) −5.542,09$'ı düşülmüş hâliydi
+// ve canlı-kâğıt işlem sayısı SIFIRDI. Operatör her sabah bir simülasyon artefaktını "sistemin
+// kaybı" diye okuyordu. İki ekleme, ikisi de /api/today `sermaye_koken` bloğundan:
+//   * değerin YANINDA türü söyleyen kısa ibare  → "gerçek-canlı (0 işlem)"
+//   * ALTINDA sönük ayrı satır                  → tohumun etkisi + ayrıştırılıp ayrıştırılmadığı
+// BOYANMA KURALI: renk `k.renk`ten gelir ve gerçek-canlı P&L 0 iken NÖTRDÜR. Hiç işlem yapmamış
+// bir çağa kırmızı/yeşil vermek, tam da bu turun kapattığı yanlış okumanın görsel hâliydi.
+// İKİ TÜKETİCİ, TEK İŞLEV: kenar şeridi ve Bugün kahramanı aynı satırı çizer — iki kopya olsaydı
+// biri güncellenip diğeri bayatlar ve pano kendi içinde çelişirdi.
+const SERMAYE_RENK = { poz: "pos", neg: "neg", notr: "" };
+
+function sermayeIbaresi(k) {
+  if (!k) return "";                       // uç bu alanı vermiyorsa SUS — uydurma etiket yok
+  return `<span class="mut" style="font-weight:400;letter-spacing:0">${esc(k.ibare || "")}</span>`;
+}
+
+function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
+  if (!k) return "";
+  const parca = [];
+  // KENAR ŞERİDİNDE İBARE BU SATIRA İNER, `<b>`nin İÇİNE DEĞİL: `.acct .r b` kuralı
+  // `white-space:nowrap` + `flex:none` taşır (index.html:330), yani değerin yanına eklenen her
+  // kelime satırı GENİŞLETİR ve dar şeritte "Sermaye" etiketini taşırırdı. Geniş kahraman kartında
+  // ibare değerin hemen altında kendi satırında durur.
+  if (ibareyle && k.ibare) parca.push(esc(k.ibare));
+  // BAYAT NABIZ BEYAN EDİLİR. Büyük sayı `today.equity`den gelir ve o da NABIZDAN okunur
+  // (analytics.today: hb.equity ?? pf.cash). Ayrıştırma uygulandığı an kitap yeni tabana geçer ama
+  // nabız worker bir tur koşana kadar ESKİ tabanı taşır — yani pano birkaç dakika iki farklı
+  // sermaye biliyor olur. Sessiz kalmak, tam da bu turun kapattığı "sayı doğru, anlattığı yanlış"
+  // hâlinin küçük bir tekrarı olurdu.
+  if (k.nabiz_ayrisik) parca.push(`<span class="warn">nabız bayat — kitap ${
+      money(k.gercek_canli_sermaye)} (worker ilk turda tazeler)</span>`);
+  if (k.tohum_etkisi_usd != null) {
+    // Tohum etkisi ÖLÇÜLDÜ. Reset sonrası 0 YAZILMAZ: değer olduğu gibi durur, DURUMU değişir.
+    parca.push(`tohum (antrenman) etkisi ${money(k.tohum_etkisi_usd)} · ${esc(k.tohum_etkisi_ibare || "")}`);
+  } else if (k.tohum_etkisi_neden) {
+    // ÜÇÜNCÜ HÂL: "etki yok" değil "ölçülemedi" — nedeni yanında durur (uydurma yasağı).
+    parca.push(`tohum etkisi ölçülmedi${kisa ? "" : ` — ${esc(k.tohum_etkisi_neden)}`}`);
+  }
+  if (k.ayrisik && k.reset_tarihi) parca.push(`ayrıştırma ${esc(String(k.reset_tarihi).slice(0, 10))}`);
+  if (k.tohum_islem_n) parca.push(`${k.tohum_islem_n} tohum satırı defterde kaldı`);
+  if (!parca.length) return "";
+  return `<p class="sub mut" style="margin-top:4px;font-size:11px;line-height:1.45">${
+      parca.join(" · ")}</p>`;
+}
+
 async function buildSidebar(today, x) {
   // Nav bir İNDEKS'tir, etiket listesi değil: her görünümün altında o sayfanın tek satırlık CANLI
   // özeti okunur — kullanıcı tıklamadan "orada ne var?" sorusunun cevabını görür. Tüm değerler
@@ -544,7 +591,8 @@ async function buildSidebar(today, x) {
     <p class="slab">HESAP</p>
     <div class="acct">
       <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${hb.mirror_drift ? "neg" : "pos"}">${hb.mirror_drift ? "sapma" : "ayna uyumlu"}</b></div>
-      <div class="r"><span>Sermaye</span><b>${money(today.equity)}</b></div>
+      <div class="r"><span>Sermaye</span><b class="${SERMAYE_RENK[(today.sermaye_koken || {}).renk] || ""}">${money(today.equity)}</b></div>
+      ${sermayeKokenSatiri(today.sermaye_koken, { kisa: true, ibareyle: true })}
       <div class="r"><span>Otonomi</span><b>${onk("L", today.autonomy_level)} · paper</b></div>
       <div class="r"><span>Nabız</span><b class="${today.stale ? 'warn' : 'pos'}">${today.stale ? 'gecikmiş' : 'canlı'}</b></div>
     </div>
@@ -943,9 +991,11 @@ RENDER.brifing = async () => {
 
     <div class="hero rise" style="margin-top:24px"><div class="hero-grid">
       <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
-        <p class="big">${money(t.equity)}</p>
+        <p class="big ${SERMAYE_RENK[(t.sermaye_koken || {}).renk] || ""}">${money(t.equity)}</p>
+        <p class="sub" style="margin-top:2px">${sermayeIbaresi(t.sermaye_koken)}</p>
         <div id="eq-spark" style="margin-top:10px" aria-hidden="true"></div>
-        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p></div>
+        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p>
+        ${sermayeKokenSatiri(t.sermaye_koken)}</div>
       <div class="hstat"><p class="l">Risk</p>
         <div class="srow"><span>Tavan (rejim bütçesi)</span><b style="color:${budget === 0 ? 'var(--amber)' : 'var(--tx)'}">%${budget}${budget === 0 ? " · kapalı" : ""}</b></div>
         <div class="srow"><span>Açıktaki risk</span><b>%${exposure}</b></div>
