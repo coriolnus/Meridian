@@ -86,9 +86,12 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
 ### WP2 — Basit Referans-Verisi Adayları 🔓 KİLİT AÇILDI (2026-08-01 — EDGAR, operatörsüz)
 - 2.4 EAP ✅ KAPALI (güç-yeterli). **2.1 ✅ ÇÖZÜLDÜ: SEC EDGAR companyfacts PIT verisi repo'da**
   (research/edgar_facts/; filed-tarihli — dei ilk-ifşa medyan 7 gün; 250/251 kapsam; FMP/operatör
-  bileti DÜŞTÜ). **2.2 EDG-013 🔄 ÖLÇÜMDE** (mom×turnover, artımlılık şartlı) · **2.3 EDG-012 🔄
-  ÖLÇÜMDE** (net issuance, iki uç dilim) · **2.5 EDG-014 🔄 ÖLÇÜMDE** — "PIT'siz ASLA" yasası
-  filed-tabanlı as-of ile İLK KEZ meşru sağlandı (GP∧Assets 184/251, sektör-çarpıklık beyanlı).
+  bileti DÜŞTÜ). **2.2 EDG-013 ✅ YAŞAYAN-ADAY
+  (lafzen success: koşullu @20 +0,32% anlamlı + artımlılık; AMA tanı turnover ANA etkisini işaret
+  ediyor → kaderi EDG-016'ya şartlı, entegrasyon bekliyor)** · **2.3 EDG-012 ✅ ARŞİV** (yön ters+
+  anlamlı, U-eğrisi; REIT/büyüme yapısal) · **2.5 EDG-014 ✅ ARŞİV** (bilgisiz; finans-dışı da) —
+  "PIT'siz ASLA" yasası filed-tabanlı as-of ile İLK KEZ meşru sağlandı · **2.6 EDG-016 🔄 ÖLÇÜMDE**
+  (turnover ana-etkisi — 013'ün mekanizma ayrıştırması; ikisi birlikte hükme bağlanacak).
 
 ### WP3 — Doğrulama ve Ek-Veri Aileleri
 - 3.2 insider yeniden-kaydı ✅ KAPALI: gerçek CMP ayrımıyla ölçüldü, pozitif-kontrollü sıfır →

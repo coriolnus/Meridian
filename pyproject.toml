@@ -225,6 +225,8 @@ pytest_add_cli_args_test_selection = ["tests",
     # codelaw = kaynak-ağacı ÖZ-DENETİMİ; mutmut v3 mutantları kaynak dosyalara trampolinle
     # GÖMDÜĞÜ için mutant-ağacında yapısal geçemez (üretilmiş kodda işaretsiz yakalayıcı görür).
     "--deselect", "tests/test_codelaw_v59.py",
+    # pano-kompozisyon testleri repo-kökü research/+ROADMAP okur — mutants/'ta yok (ortam sınıfı).
+    "--deselect", "tests/test_edge_dashboard_v102.py",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
