@@ -67,13 +67,22 @@ if set(sadece) != beklenen:
 from pathlib import Path  # aşağıdaki fikstür bloğu da kullanır; ilk kullanım burada
 if not testler:
     hata.append("test seçimi BOŞ — mutasyon hiçbir şeyi ölçmez")
-for o in testler:
+# Biçim: önce tests/*.py dosyaları, sonra opsiyonel --deselect çiftleri (pozitif dosyaların
+# İÇİNDEKİ tekil ortam testleri için; hedef pozitif listedeki bir dosyada olmalı).
+i = 0
+while i < len(testler) and testler[i] != "--deselect":
+    o = testler[i]
     if not (o.startswith("tests/") and o.endswith(".py")):
-        hata.append(f"pozitif seçimde tests/*.py dışı öğe: {o}")
-        break
+        hata.append(f"pozitif seçimde tests/*.py dışı öğe: {o}"); break
     if not Path(o).exists():
-        hata.append(f"seçimdeki dosya yok: {o} (silindi/taşındıysa liste güncellenmeli)")
-        break
+        hata.append(f"seçimdeki dosya yok: {o} (silindi/taşındıysa liste güncellenmeli)"); break
+    i += 1
+else:
+    dosyalar = set(testler[:i]); kalan = testler[i:]
+    while kalan:
+        if kalan[0] != "--deselect" or len(kalan) < 2 or kalan[1].split("::")[0] not in dosyalar:
+            hata.append(f"--deselect çifti bozuk ya da hedefi pozitif listede değil: {kalan[:2]}"); break
+        kalan = kalan[2:]
 
 # DURUM FİKSTÜRÜ KAPISI (H5 kırığı, 2026-08-01). mutmut testleri `mutants/` içinden koşturur;
 # `config.ROOT` orada `mutants/`e çözülür ve `mutants/state/` yoksa HER test FileNotFoundError ile

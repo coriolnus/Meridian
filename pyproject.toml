@@ -246,6 +246,8 @@ pytest_add_cli_args_test_selection = [
     "tests/test_score_audit_v40.py",
     "tests/test_temizlik_kablolama_v137.py",
     "tests/test_trend_shadow_v144.py",
+    # Pozitif dosyaların İÇİNDEKİ tekil ortam testleri (repo-kökü betik/varlık okuyanlar):
+    "--deselect", "tests/test_golge_v2_yasam_dongusu_v132.py::test_VM_disi_yedek_cekici_calistirilabilir_ve_sozdizimi_temiz",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
