@@ -30,6 +30,32 @@ def _start_equity() -> float:
     return float(START_EQUITY)
 
 
+def _sermaye_ofseti(pf: dict) -> float:
+    """BEYAN EDİLMİŞ SERMAYE TABANI KAYMASI (sermaye tohum-ayrıştırması, 2026-08-01).
+
+    Aşağıdaki üç kimlik "kitap ne diyor?" ile "defter/eğri ne diyor?"yu karşılaştırır ve ikisinin
+    AYNI TABANDA olduğunu varsayar. `meridian.sermaye` o varsayımı BİLEREK ve BEYANLA bozar: kitap
+    100.000$'lık canlı tabana taşınır, defter ise antrenman tohumunun K/Z'sini taşımaya devam eder
+    (satırlar öğrenmenin girdisi, silinmiyorlar).
+
+    İki yanlış çıkış vardı: kimlikleri susturmak (o zaman resetten SONRA kaybolan bir işlem de
+    görünmez olurdu) ya da bayrağı kalıcı kırmızı bırakmak (kurt masalı — operatör kırmızıyı yok
+    saymayı öğrenir). Üçüncü yol: ofset BEYANDIR, kitapta yazılıdır, ve kimlik GEÇMİŞTEN türeyen
+    tarafa (defter toplamı / eğri sonu) o ofseti ekleyerek ölçmeye DEVAM eder. Reset yapılmamış bir
+    depoda 0.0'dır ve hiçbir satırın davranışı değişmez."""
+    try:
+        from .sermaye import ofset
+        return ofset(pf)
+    except Exception:  # sessiz-yutma: SESSİZ DEĞİL — ofset okunamazsa kimlik ESKİ (ofsetsiz) hâliyle ölçülür, yani reset yapılmış bir depoda satır KIRMIZI yanar ve operatörü buraya getirir; sessiz olan hâl, ofseti uydurup kimliği yeşile boyamak olurdu
+        return 0.0
+
+
+def _ofset_notu(ofset: float) -> str:
+    """Ofset satıra GİRDİYSE detayda ADIYLA görünür — yoksa okuyan, kimliğin neden tuttuğunu
+    (ya da hangi payla tuttuğunu) yalnız kaynağa bakarak anlayabilirdi."""
+    return "" if not ofset else f" [beyanlı sermaye reset ofseti {ofset:+,.2f}$ eklendi]"
+
+
 def _f(x, d=0.0) -> float:
     try:
         return float(x)
@@ -181,41 +207,49 @@ def report(deep: bool = False) -> dict:
                              karsilastirilan - len(sapan), karsilastirilan, detay,
                              "trades.jsonl `entry` alanı", "adapters.data.load_bars açılışı"))
 
+    # OFSET TEK YERDE OKUNUR: üç kimlik de aynı beyanı kullanmalı. Üç ayrı okuma olsaydı biri
+    # güncellenip diğerleri unutulduğunda "aynı yasanın iki uygulaması" sınıfı buraya, tam da onu
+    # kovalayan modülün içine dönerdi.
+    _ofs = _sermaye_ofseti(pf)
+    _ofs_not = _ofset_notu(_ofs)
+
     # 1) GERÇEKLEŞEN K/Z — broker'ın koşan muhasebesi ile işlem defterinin toplamı
     #    A: broker her kapanışta portfolio.realized_pnl'i artırır (durum makinesi)
-    #    B: trades.jsonl satırlarındaki pnl_dollars toplamı (defter)
+    #    B: trades.jsonl satırlarındaki pnl_dollars toplamı (defter) + beyanlı reset ofseti
     #    Ayrışma = kaybolmuş ya da iki kez sayılmış işlem. Hiçbir istisna fırlatmaz.
     if trades:
         a = _f(pf.get("realized_pnl"))
-        b = sum(_f(t.get("pnl_dollars")) for t in trades)
+        b = sum(_f(t.get("pnl_dollars")) for t in trades) + _ofs
         rows.append(_row("realized_pnl", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
-                         f"broker muhasebesi {a:,.2f}$ · defter toplamı {b:,.2f}$"
+                         f"broker muhasebesi {a:,.2f}$ · defter toplamı {b:,.2f}${_ofs_not}"
                          + ("" if abs(a - b) <= MONEY_TOL
                             else f" — {abs(a-b):,.2f}$ AYRIŞMA: işlem kaybolmuş ya da çift sayılmış"),
-                         "portfolio.realized_pnl", "Σ trades.pnl_dollars"))
+                         "portfolio.realized_pnl", "Σ trades.pnl_dollars + sermaye reset ofseti"))
 
     # 2) NAKİT — pozisyon yokken nakit, başlangıç sermayesi + gerçekleşen K/Z olmak ZORUNDA
-    #    A: broker'ın nakit hesabı   B: sermaye kimliği (başlangıç + gerçekleşen)
+    #    A: broker'ın nakit hesabı   B: sermaye kimliği (başlangıç + gerçekleşen + beyanlı ofset)
     if trades and not (pf.get("positions") or {}):
         a = _f(pf.get("cash"))
-        b = _start_equity() + sum(_f(t.get("pnl_dollars")) for t in trades)
+        b = _start_equity() + sum(_f(t.get("pnl_dollars")) for t in trades) + _ofs
         rows.append(_row("cash_identity", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
-                         f"nakit {a:,.2f}$ · kimlik {b:,.2f}$ (açık pozisyon yok)"
+                         f"nakit {a:,.2f}$ · kimlik {b:,.2f}$ (açık pozisyon yok){_ofs_not}"
                          + ("" if abs(a - b) <= MONEY_TOL else " — sermaye kimliği BOZUK"),
-                         "portfolio.cash", "başlangıç + Σ pnl_dollars"))
+                         "portfolio.cash", "başlangıç + Σ pnl_dollars + sermaye reset ofseti"))
 
     # 3) SERMAYE EĞRİSİ ↔ KİTAP — eğrinin son noktası kitabın söylediği sermaye mi?
-    #    A: equity_curve.json son nokta   B: nakit + açık pozisyonların maliyeti
+    #    A: equity_curve.json son nokta + beyanlı ofset   B: kitap nakdi
+    #    Ofset EĞRİ tarafına eklenir çünkü eğri (defter gibi) GEÇMİŞTEN türer; kitap yeni tabandadır.
     eq = (store.read_json("equity_curve.json", {}) or {}).get("points") or []
     if eq and not (pf.get("positions") or {}):
-        a = _f(eq[-1][1]) if isinstance(eq[-1], (list, tuple)) and len(eq[-1]) > 1 else None
+        _tail = _f(eq[-1][1]) if isinstance(eq[-1], (list, tuple)) and len(eq[-1]) > 1 else None
+        a = None if _tail is None else _tail + _ofs
         b = _f(pf.get("cash"))
         if a is not None:
             rows.append(_row("equity_curve_tail", abs(a - b) <= MONEY_TOL, round(a, 2), round(b, 2),
-                             f"eğri sonu {a:,.2f}$ · kitap nakdi {b:,.2f}$"
+                             f"eğri sonu {_tail:,.2f}$ · kitap nakdi {b:,.2f}${_ofs_not}"
                              + ("" if abs(a - b) <= MONEY_TOL
                                 else " — panoda gösterilen eğri kitabı temsil ETMİYOR"),
-                             "equity_curve.json[-1]", "portfolio.cash"))
+                             "equity_curve.json[-1] + sermaye reset ofseti", "portfolio.cash"))
 
     # 4) KARNE ↔ DEFTER — karnedeki işlem sayısı defterin uzunluğuna eşit mi?
     #    Karne, terfi/geri-alma kararlarının dayanağı: yanlış n, yanlış skor demektir.
