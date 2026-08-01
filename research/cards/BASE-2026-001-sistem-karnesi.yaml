@@ -1,0 +1,32 @@
+card_id: BASE-2026-001
+family: sistem_karnesi_tazeleme   # KARNE kartı — edge-avı DEĞİL; eşik/K yok, metrikler ÖN-BEYANLI
+thesis: >
+  Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net
+  −5.542 USD). O günden beri: E1 iki-motor icra yasası, karantina-v2, bars_integrity dışlaması,
+  kapı emekliliği, takvim kapısı, SQLite defteri. SORU: BUGÜNKÜ motor + BUGÜNKÜ canlı parametreler
+  (strategy.yaml v-güncel) tarihsel pencerede PARA KAZANIYOR MU — ve eski tabandan sapmanın
+  kaynağı ne? Bu kart cımbızlamayı önlemek için metrikleri ÖNCEDEN beyan eder; hüküm eşiği yoktur
+  (karne yorumu Rol-1'de).
+evidence_refs: [state defteri (ledgerstamp 95/95 replay_seed), research/olcumler/wpg_olcum
+  (ref_snapshot 01:35 imzası oos 0.0699 / para 0.0856), r1_baseline 2026-07-30 (0.0749/0.1005/n90),
+  canlı gerçek 2026-08-01 (0 canlı işlem; tek silahlanma 2026-07-15 E1-öncesi; E2 doğmamış)]
+universe: full_251
+features_asof: "BUGÜNKÜ repo motoru (HEAD damgalı) + BUGÜNKÜ canlı state/strategy.yaml parametreleri + tüm güncel veri kapıları AÇIK (takvim, karantina-v2, bars_integrity)"
+horizon: "R1 geometrisi BİREBİR (is 2022-01-01, oos 2024-01-01→2026-04-30, holdout →2026-07-30, embargo 10, foldlar aynı) — eski tabanla kıyaslanabilirlik için; ayrıca holdout-sonrası 07-31'e uzatılmış tam-pencere TANI dilimi"
+parameter_grid:
+  kollar: [tam_guncel, butunluk_dislamasiz, e1_oncesi_icra]   # 3 kol — atıf ayrıştırması (K-avı değil, karne)
+cost_model: "10bps + E3 kötümser bant alanları raporda (net_kotumser dahil)"
+success_metric: >
+  EŞİK YOK — beyan edilen karne alanları: oos_score, PARA-v3 detail + realized_usd (kırpılmamış
+  dolar), mtm_dd_veto bloğu, işlem sayıları, SİLAHLANMA HUNİSİ (aday→plan→silahlı→dolu oranları —
+  "neden canlıda 0 işlem" sorusunun replay karşılığı), yıl-yıl PnL dilimi; üç referansla kıyas
+  tablosu (tohum-replay / ref_snapshot / r1_baseline) ve kol-farklarıyla sapma atfı.
+kill_criteria:
+  - "yok (karne kartı) — ölçülemeyen alan None+neden"
+guards:
+  - "pozitif kontrol: ref_snapshot imzasının yeniden-üretimi DENENMEZ (motor bilerek farklı) —
+    yerine PK: tam_guncel kolun digest'i iki koşumda bit-bit aynı (determinizm) + kod damgası"
+  - "slim defterlerde pnl_dollars + kaynak korunur; oosonly tartışması KONU DIŞI (knob yok — motorun bütünü ölçülüyor)"
+k_registry: {registered_at: "2026-08-01T16:2xZ", trial_ids: [karne — K sayılmaz (eşiksiz tanı)]}
+status: registered
+notes: "scratchpad/karne_olcum/ SALT-ÖLÇÜM; kart dosyasına ajan DOKUNMAZ. Karne yorumu + ROADMAP/§1 güncellemesi Rol-1'de."
