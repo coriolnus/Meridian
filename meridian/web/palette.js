@@ -283,7 +283,9 @@
       ".mrdp-alt-bar{display:flex;gap:var(--s4);flex-wrap:wrap;padding:var(--s2) var(--s4);",
       "  border-top:1px solid var(--line-2);background:var(--bg2);font-family:var(--mono);font-size:11px;color:var(--tx2)}",
       /* --- iki adımlı onay --- */
-      ".mrdp-onay{padding:var(--s5) var(--s4);border-left:3px solid var(--red)}",
+      /* tehlike çerçevesi: İNCE ve dört-kenar — kalın tek-kenar şerit jenerik/AI-tell (tasarım
+         bekçisi bulgusu 2026-08-01); tehlike semantiği çerçeve+`.uyari` metniyle korunur */
+      ".mrdp-onay{padding:var(--s5) var(--s4);border:1px solid var(--red);border-radius:var(--r-card)}",
       ".mrdp-onay h3{font-size:14px;font-weight:700;color:var(--tx);margin:0 0 var(--s2)}",
       ".mrdp-onay p{font-size:12.5px;color:var(--tx2);margin:0 0 var(--s3);line-height:1.45}",
       ".mrdp-onay .uyari{color:var(--red)}",
