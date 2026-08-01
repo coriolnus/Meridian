@@ -1,0 +1,31 @@
+card_id: EDG-2026-011
+family: inplay_candidate_priority   # WP-K/G5 — aday SIRALAMA overlay'i (kurulum değil)
+thesis: >
+  Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol)
+  diğer adaylardan daha iyi ileri getiri/isabet taşır → slot kısıtlıyken aday SIRALAMASINA
+  öncelik-katmanı olur. Ölçüt WP-M #3 standardına uygun: taban = AYNI-GÜN ADAY HAVUZU (piyasa
+  sürüklenmesi ayıklanır); rvol zaten skorda olduğundan ARTIMLILIK şartı var.
+evidence_refs: [ROADMAP WP-K/G5 (katalizör+RVOL), earnings kapsaması 194/251 (WP-D — kapsam beyanı
+  zorunlu), katalog "in-play" pratiği (birinci-el yok — caveat; hüküm kendi verimizde)]
+universe: "cf-katmanlı aday popülasyonu (girilen+kılpayı) — full_251 kesiti değil, ADAY kesiti"
+features_asof: >
+  in_play(t) = |t - en_yakın_earnings_tarihi| <= P gün (yalnız t'de BİLİNEN takvim; earnings
+  kapsamı dışındaki 57 sembol için None — dilime girmez, beyan edilir) VE rvol20(t) >= 1.5.
+  Karşılaştırma katmanları: yalnız-katalizör, yalnız-rvol, ikisi (artımlılık ayrışsın).
+horizon: "cf-katmanlı retrospektif: aday-gün dilimlerinin 5/10/20g ileri getirisi, taban = aynı-gün aday-havuzu ortalaması; 21g blok-bootstrap CI"
+parameter_grid:
+  katalizor_penceresi_gun: [3, 5]   # K+=2
+cost_model: "10bps + not (sıralama overlay'i işlem üretmez — mevcut adaylar arasında seçim değiştirir)"
+success_metric: >
+  in-play diliminin aday-havuzu-fazlası @10 VEYA @20 anlamlı POZİTİF (CI 0-dışı) VE artımlılık:
+  fazla, yalnız-rvol katmanının fazlasını anlamlı aşıyor (katalizörün rvol-ötesi katkısı).
+kill_criteria:
+  - "iki pencerede de fazla CI-0-içi → bilgisiz, arşiv"
+  - "artımlılık yok (yalnız-rvol aynı fazlayı veriyor) → 'rvol zaten skorda' hükmü, arşiv"
+  - "in-play aday-gün sayısı <150 → ölçülemedi-nedenli askı (K harcanmaz, tanım gevşetilmez)"
+guards:
+  - "pozitif kontrol: ham rvol20 @20 IC ≈0.064 aynı boru hattında"
+  - "earnings kapsam beyanı: dilim-dışı None sayımı raporda; PK4/PK5 standart"
+k_registry: {registered_at: "2026-08-01T10:0xZ", trial_ids: [pending]}
+status: registered
+notes: "Ölçüm scratchpad/inplay_olcum/ SALT-ÖLÇÜM; karta ajan DOKUNMAZ. Hüküm pozitifse entegrasyon guard-sıralama turu (ayrı)."
