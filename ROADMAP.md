@@ -83,11 +83,12 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   bağlandı (iki ayrı ölçüm değil) · eski G7 vol-hedefleme → 1.5'in portföy-bacağı olarak, ısı
   tavanıyla birlikte POZİTİF-EV ÖNKOŞULLU (denetim RS-1).
 
-### WP2 — Basit Referans-Verisi Adayları
-- 2.4 EAP ✅ KAPALI: EDGE YOK (güç-yeterli 12,6-yıl; kart arşiv) · 2.1 shares-outstanding kaynak
-  bileti 🔒 (FMP profile kısmi ama kota tükenik — kaynak kararı operatörde) · 2.2 short-term
-  momentum (yüksek-turnover) 🔒2.1 · 2.3 net-issuance filtresi 🔒2.1 · 2.5 gross profitability
-  🔒 PIT-fundamentals bileti (PIT'siz ASLA; proxy yasak).
+### WP2 — Basit Referans-Verisi Adayları 🔓 KİLİT AÇILDI (2026-08-01 — EDGAR, operatörsüz)
+- 2.4 EAP ✅ KAPALI (güç-yeterli). **2.1 ✅ ÇÖZÜLDÜ: SEC EDGAR companyfacts PIT verisi repo'da**
+  (research/edgar_facts/; filed-tarihli — dei ilk-ifşa medyan 7 gün; 250/251 kapsam; FMP/operatör
+  bileti DÜŞTÜ). **2.2 EDG-013 🔄 ÖLÇÜMDE** (mom×turnover, artımlılık şartlı) · **2.3 EDG-012 🔄
+  ÖLÇÜMDE** (net issuance, iki uç dilim) · **2.5 EDG-014 🔄 ÖLÇÜMDE** — "PIT'siz ASLA" yasası
+  filed-tabanlı as-of ile İLK KEZ meşru sağlandı (GP∧Assets 184/251, sektör-çarpıklık beyanlı).
 
 ### WP3 — Doğrulama ve Ek-Veri Aileleri
 - 3.2 insider yeniden-kaydı ✅ KAPALI: gerçek CMP ayrımıyla ölçüldü, pozitif-kontrollü sıfır →
@@ -200,8 +201,9 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   4b gölge → Faz 5 kanıt → Faz 6 BEŞ KİLİT (değişmedi) · 6.1 guard-ret oranı izleme.
 
 ### WP-O — Operatör Kalemleri → §6 (envanter §6.1; bu plandaki 🔒 biletlerin sahipleri orada:
-bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı · shares-outstanding kaynağı ·
-PIT-fundamentals · analist/NLP verisi · FISV/PSKY)
+bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı [öncelik düşük — aile hükmü zayıf] ·
+analist/NLP verisi · FISV/PSKY; ~~shares-outstanding~~ ve ~~PIT-fundamentals~~ 2026-08-01'de
+EDGAR'la operatörsüz çözüldü)
 
 ### WP-H — Mühendislik Dayanıklılığı 📋 (2026-07-31 el kitabı turu; kaynak: operatörün 2024-26
 araştırma anketi — bizim gerçekle çarpıştırılmış hali. İlke: "AI mevcut disiplini AMPLİFİYE eder;
