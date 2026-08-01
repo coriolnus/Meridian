@@ -288,7 +288,7 @@ pytest_add_cli_args_test_selection = [
 # süren bir ritüelde görünmez. Kopya `mutants/state/`e düşer, canlı `state/` ASLA yazılmaz:
 # testlerin yazımı da mutantların yan etkisi de o kopyada kalır (bugüne kadarki tek koruma
 # conftest bekçisiydi; bu, ondan önce gelen yapısal koruma).
-also_copy = ["state"]
+also_copy = ["state", "research/edgar_facts"]  # 2. giriş (2026-08-01): edgar_shares köprüsü — dosya yoksa kaynak-uyarısı defter yazar ve conftest canlı-state bekçisi patlar (15. koşum)
 # Mutant başına test koşumu için zaman aşımı: taban koşum × 5 + 10 sn. Varsayılan (×15) bu suitede
 # asılı bir mutantı dakikalarca bekletirdi; 3 dosyalık kapsamda ×5 fazlasıyla yeterli pay bırakır.
 timeout_multiplier = 5.0
