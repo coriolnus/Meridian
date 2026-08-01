@@ -248,6 +248,10 @@ pytest_add_cli_args_test_selection = [
     "tests/test_score_audit_v40.py",
     "tests/test_temizlik_kablolama_v137.py",
     "tests/test_trend_shadow_v144.py",
+    # Tam-envanter taraması (2026-08-01, mutants-ağacında -x'siz tek geçiş): kalan 3 ortam testi —
+    "--deselect", "tests/test_llm_advisor_v6.py::test_agent_skill_sync_links_enabled_prunes_stale_spares_alien",
+    "--deselect", "tests/test_temizlik_kablolama_v137.py::test_propose_deterministic_operator_kalemi_olarak_belgeli",
+    "--deselect", "tests/test_temizlik_kablolama_v137.py::test_supervised_bayraginin_gercek_bir_kurucusu_var",
     # Pozitif dosyaların İÇİNDEKİ tekil ortam testleri (repo-kökü betik/varlık okuyanlar):
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
