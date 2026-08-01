@@ -227,6 +227,8 @@ pytest_add_cli_args_test_selection = ["tests",
     "--deselect", "tests/test_codelaw_v59.py",
     # pano-kompozisyon testleri repo-kökü research/+ROADMAP okur — mutants/'ta yok (ortam sınıfı).
     "--deselect", "tests/test_edge_dashboard_v102.py",
+    # skills/ betiğini repo-kökünden derleyen tek test (aynı ortam sınıfı — dosyanın kalanı yaşar).
+    "--deselect", "tests/test_finviz_v81.py::test_skill_script_compiles_and_documents_the_new_flags",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
