@@ -237,13 +237,23 @@ def test_b_gap_scan_saf_kalir():
 # C — EARNINGS 2-GÜN MARJ: KÖK NEDEN, TÜRETME, DAVRANIŞ-DEĞİŞMEDİ ÇİVİSİ
 # =================================================================================================
 def test_c_marj_turetilir_ve_bugunku_deger_iki_gundur():
-    """DAVRANIŞ ÇİVİSİ: 14 − 7 − 5 = 2. Sayı SABİT YAZILMADI, üç girdiden TÜRETİLDİ — girdilerden
-    biri değişirse marj kendiliğinden değişir (ve bu test bilerek girdileri de kilitler, çünkü
-    'davranış değişmedi' iddiası ancak girdiler sabitse anlamlıdır)."""
-    assert (earnings.REFRESH_FWD_DAYS, earnings.REFRESH_CADENCE_DAYS, earnings.BLACKOUT_DAYS) == (14, 7, 5)
-    assert earnings.margin_days() == 2
+    """TÜRETME ÇİVİSİ: marj SABİT YAZILMADI, üç girdiden TÜRETİLDİ — girdilerden biri değişirse
+    marj kendiliğinden değişir. Bu testin beklentisi de LİTERAL DEĞİL, aynı aritmetiktir;
+    beklenen değeri elle yazmak, türetmeyi test eden bir testte ikinci bir sabit doğururdu.
+
+    GİRDİLER AYRICA KİLİTLİ: hangi üç sayının yürürlükte olduğu bir DAVRANIŞ kararıdır ve sessizce
+    değişemez. 2026-08-01 mikro-turunda `REFRESH_FWD_DAYS` 14 → 21 yapıldı (Rol-1 kararı, yalnız
+    FETCH penceresi; karartma semantiği DEĞİŞMEDİ) → marj 2 günden 9 güne çıktı."""
+    assert (earnings.REFRESH_FWD_DAYS, earnings.REFRESH_CADENCE_DAYS, earnings.BLACKOUT_DAYS) == (21, 7, 5)
+    assert earnings.margin_days() == (earnings.REFRESH_FWD_DAYS
+                                      - earnings.REFRESH_CADENCE_DAYS
+                                      - earnings.BLACKOUT_DAYS)
+    # MARJIN İŞARETİ BİR DAVRANIŞ SÖZLEŞMESİDİR: marj ≤ 0 olduğu an `in_blackout` veri yokken
+    # FAIL-OPEN'a düşer ve motor bilanço gününe pozisyonla girebilir (bkz. margin_days docstring).
+    assert earnings.margin_days() > 0, "marj tükendi — karartma guard'ı fail-open'a düşer"
     src = inspect.getsource(earnings.margin_days)
-    assert "return 2" not in src, "marj sabit yazılmış — türetme yok"
+    for yasak in ("return 2", "return 9"):
+        assert yasak not in src, f"marj sabit yazılmış — türetme yok ({yasak})"
 
 
 def test_c_tazeleme_penceresi_sabitlerden_okunur(monkeypatch, sandbox_state):
@@ -251,7 +261,11 @@ def test_c_tazeleme_penceresi_sabitlerden_okunur(monkeypatch, sandbox_state):
     ile aynı kaynaktan okur. İki yerde iki pencere, `margin_days`ı sessizce yalan yapardı."""
     bugun = dt.date(2026, 7, 30)
     s, e = earnings.refresh_window(bugun)
-    assert (s, e) == ("2026-07-23", "2026-08-13")
+    # BEKLENTİ DE SABİTLERDEN TÜRETİLİR: literal bir tarih yazmak, pencere sabiti değiştiği gün
+    # (14→21, 2026-08-01) testin kendisini ikinci bir gerçek kaynağı hâline getirirdi.
+    assert (s, e) == (str(bugun - dt.timedelta(days=earnings.REFRESH_BACK_DAYS)),
+                      str(bugun + dt.timedelta(days=earnings.REFRESH_FWD_DAYS)))
+    assert (s, e) == ("2026-07-23", "2026-08-20"), "bugünkü sabitlerle beklenen pencere değişti"
     gorulen = {}
     from meridian.adapters import data as da
 
@@ -266,7 +280,8 @@ def test_c_tazeleme_penceresi_sabitlerden_okunur(monkeypatch, sandbox_state):
     assert gorulen["kw"].get("with_time") is True
 
     src = inspect.getsource(earnings.refresh)
-    assert "timedelta(days=7)" not in src and "timedelta(days=14)" not in src
+    for lit in ("timedelta(days=7)", "timedelta(days=14)", "timedelta(days=21)"):
+        assert lit not in src, f"`refresh` satır-içi pencere literali taşıyor ({lit})"
 
 
 def test_c_kok_neden_bmo_amc_degil_yazili():
@@ -367,10 +382,14 @@ def test_c_fmp_yolu_saat_sutununu_silmez(sandbox_state, monkeypatch):
 def test_c_coverage_marji_ve_ileri_gunu_soyler(sandbox_state):
     """GÖRÜNÜRLÜK: marj ve GERÇEK ileri kapsama yan yana. `ileri_gun < BLACKOUT_DAYS` = guard
     bugün fiilen kör; bu cümle bugüne dek hiçbir yüzeyde yoktu."""
-    fut = (dt.date.today() + dt.timedelta(days=9)).isoformat()
+    # İKİ SAYI BİLEREK FARKLI: `marj_gun` sabitlerden TÜRETİLİR (bugün 9), `ileri_gun` takvimin
+    # ÖLÇÜLEN ucudur (burada 11). Eşit seçilirlerse test hangisini doğruladığını söyleyemez.
+    ILERI = 11
+    fut = (dt.date.today() + dt.timedelta(days=ILERI)).isoformat()
     _takvim(sandbox_state, [("AAA", fut)])
     cov = earnings.coverage(["AAA", "BBB"])
-    assert cov["marj_gun"] == 2 and cov["ileri_gun"] == 9 and cov["saat_bilinen"] == 0
+    assert cov["marj_gun"] == earnings.margin_days() and cov["marj_gun"] != ILERI
+    assert cov["ileri_gun"] == ILERI and cov["saat_bilinen"] == 0
     past = (dt.date.today() - dt.timedelta(days=3)).isoformat()
     _takvim(sandbox_state, [("AAA", past)])
     assert earnings.coverage()["ileri_gun"] == 0 and earnings.coverage()["inert"] is True

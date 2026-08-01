@@ -19,6 +19,15 @@ BLACKOUT_DAYS = 5   # no fresh entry within this many calendar days before a sch
 # bugün+14], kadans HAFTALIK, BLACKOUT_DAYS = 5. Normal işleyişte bir sonraki tazelemeden hemen
 # ÖNCEKİ asgari ileri kapsama 14-7 = 7 gün olur; karartma 5 gün ister → marj yalnız 2 GÜN.
 #
+# KARAR (Rol-1, 2026-08-01 mikro-tur): İLERİ PENCERE 14 → 21. Yukarıdaki bulgunun ucuz çözümü
+# scheduler.py'nin `earnings_calendar_gave_up` dalında ZATEN adıyla yazılıydı ("ileri pencereyi
+# genişletmek; Nasdaq ucu ANAHTARSIZ ve ~15 istek — kota maliyeti ≈ 0") ve karar verildi.
+# Marj TÜRETİLDİĞİ için tek sabit değişti: 21 − 7 − 5 = 9 GÜN (2 değil). NE DEĞİŞMEDİ: karartma
+# semantiği (`BLACKOUT_DAYS` aynı 5, `in_blackout` bit-bit aynı), kadans (haftalık isocalendar
+# kapısı), fail-open yasası. Değişen TEK şey FETCH penceresinin ileri ucudur — yani takvimin ne
+# kadar ilerisini GÖRDÜĞÜ; hangi planın karartıldığı DEĞİL. Maliyet: Nasdaq gün-başına sorgulanır,
+# pencere 21 gün genişledi → tur başına ~7 ek anahtarsız istek.
+#
 # KÖK NEDEN NE DEĞİL (ikisi de ölçülüp ELENDİ, bkz. `margin_days` docstring'i):
 #   * BMO/AMC belirsizliği DEĞİL — o per-sembol bir SAAT belirsizliğidir, marj ise takvimin
 #     ileri KAPSAMASI ile kadans arasındaki farktan doğar; saat bilgisi marjı hiç etkilemez.
@@ -34,7 +43,7 @@ BLACKOUT_DAYS = 5   # no fresh entry within this many calendar days before a sch
 # sözleşmesi) ve aynı dosyaya iki yazar çakışmadır. Sabitler burada TEK yerde ve tek modülün malı;
 # `config.py`ye taşınması istenirse üç satırlık bir taşımadır (türetme `margin_days`te kalır).
 REFRESH_BACK_DAYS = 7      # tazelemede geriye bakılan gün (PEAD çapası)
-REFRESH_FWD_DAYS = 14      # tazelemede ileriye bakılan gün (karartma penceresini besleyen uç)
+REFRESH_FWD_DAYS = 21      # tazelemede ileriye bakılan gün (karartma penceresini besleyen uç; 14→21, 2026-08-01)
 REFRESH_CADENCE_DAYS = 7   # tazeleme kadansı — scheduler'ın HAFTALIK isocalendar kapısı (advance_once)
 
 # BMO/AMC DARALTMASI — YOL VAR, ANAHTAR KAPALI. `time` alanı ölçüldü ve GERÇEK (2026-08-01, Nasdaq
@@ -117,7 +126,10 @@ def report_time(ticker: str, on_date: str) -> str | None:
 
 
 def margin_days() -> int:
-    """KARARTMA MARJI = ileri kapsama − kadans − karartma penceresi. Bugün: 14 − 7 − 5 = 2 GÜN.
+    """KARARTMA MARJI = ileri kapsama − kadans − karartma penceresi. Bugün: 21 − 7 − 5 = 9 GÜN.
+
+    (2026-08-01 ÖNCESİ 14 − 7 − 5 = 2 GÜNDÜ; ileri pencere kararla 21'e çıkarıldı — bkz. modül
+    başındaki KARAR bloğu. Karartma semantiği DEĞİŞMEDİ; genişleyen yalnız FETCH penceresidir.)
 
     NE ÖLÇER: iki tazeleme arasındaki EN KÖTÜ anda (bir sonraki tazelemeden hemen önce) takvimin
     ileri kapsaması `REFRESH_FWD_DAYS - REFRESH_CADENCE_DAYS` güne iner. Karartma `BLACKOUT_DAYS`

@@ -24,6 +24,7 @@ SRC = Path(__file__).resolve().parent.parent
 APPJS = (SRC / "meridian" / "web" / "app.js").read_text()
 HEALTH = (SRC / "meridian" / "health.py").read_text()
 SKILLS = (SRC / "meridian" / "skills.py").read_text()
+ANALYTICS = (SRC / "meridian" / "analytics.py").read_text()
 
 # EMEKLİ METİN ARAMASI YORUM SATIRLARINI SAYMAZ: bu turun her düzeltmesi kaldırdığı yanlış cümleyi
 # GEREKÇESİYLE birlikte yazıyor ("eski metin şuydu, neden yanlıştı"). O gerekçe kaynakta durmalı ama
@@ -211,6 +212,89 @@ def test_nabiz_uc_degerli_okunur():
     penceresi geçti". Tek etikete katlanırsa duruş taze görünür."""
     assert 'v.hic_kosmadi ? ["HİÇ KOŞMADI", "t-no"]' in APPJS
     assert 'v.bayat ? ["BAYAT", "t-rv"] : ["taze", "t-go"]' in APPJS
+
+
+# ---------------- 9) SESSİZ YÜZEY, İKİNCİ DALGA (mikro-tur 2026-08-01) ----------------
+# Kusur sınıfı yukarıdaki (C) ile AYNI: arka uç alanı ÜRETİR, pano hiç okumaz. Üç alan
+# /api/diagnostics'te ZATEN vardı ve app.js'te tek bir okuma satırı yoktu — yani üçü de
+# "yazılıyor ama kimse okumuyor" idi.
+def test_tavan_durumu_sonuc_karnesinde_okunuyor():
+    """`result_verdict.tavan_durumu` (← analytics.live_expectancy_ceiling) SONUÇ hükmü kartında.
+    Canlı beklenti süspansiyon eşiğinin altına düşse panoda hiçbir şey değişmiyordu."""
+    assert "rv.tavan_durumu" in APPJS
+    assert "Canlı-beklenti tavanı" in APPJS
+    # KOLON ≠ ÖLÇÜT: payda 4'te kalır ve satır bunu KENDİSİ söyler (rozet + açıklama).
+    assert '_chip("HÜKME GİRMEZ", "t-rv")' in APPJS
+    assert "bir ölçüt değil bir KOLONdur" in APPJS
+    # Sunucunun kendi gerekçe cümlesi ekrana çıkar — pano ikinci bir hüküm metni YAZMAZ.
+    assert "esc(tv.hukum" in APPJS
+
+
+def test_tavan_durum_adlarinin_uretici_tuketici_paritesi():
+    """ÜRETİCİ/TÜKETİCİ PARİTESİ (v79 dersi, FAZ6_KILITLERI ile aynı desen):
+    `analytics.LIVE_CEILING_DURUMLAR` dört durumu TEK yerde tanımlar. Pano sözlüğü eksik kalırsa
+    durum ham jetonla ("suspansiyon_degerlendirmesi") görünür; fazla kalırsa olmayan bir hâl için
+    metin ve TON taşır — ve ton bu kartta bir uyarı sinyalidir."""
+    i = ANALYTICS.index("LIVE_CEILING_DURUMLAR = (")
+    uretilen = set(re.findall(r'"([a-z0-9_]+)"', ANALYTICS[i:i + 200]))
+    assert uretilen, "analytics.LIVE_CEILING_DURUMLAR okunamadı"
+    for sozluk in ("const TAVAN_TR = {", "const TAVAN_TON = {"):
+        blok = APPJS[APPJS.index(sozluk):]
+        blok = blok[:blok.index("};")]
+        bilinen = set(re.findall(r"([a-z0-9_]+):", blok))
+        assert uretilen == bilinen, \
+            f"{sozluk} ayrıştı: eksik={sorted(uretilen - bilinen)} fazla={sorted(bilinen - uretilen)}"
+
+
+def test_tavan_altinda_YESIL_boyanmaz():
+    """TON KURALI: `tavan_altinda` sunucunun kendi cümlesiyle "iyi haber değil, kuralın BEKLEDİĞİ
+    hâl"dir. Yeşile boyamak normal hâli bir başarı ilanına çevirirdi. `tavan_ustunde` ise bir
+    başarı gibi GÖRÜNDÜĞÜ hâlde şüphe işaretidir ve süspansiyonla aynı uyarı tonunu alır."""
+    blok = APPJS[APPJS.index("const TAVAN_TON = {"):]
+    blok = blok[:blok.index("};")]
+    assert '"pos"' not in blok, "tavan kolonunda yeşil ton var — normal hâl kutlanıyor"
+    assert 'tavan_altinda: ""' in blok
+    assert 'tavan_ustunde: "warn"' in blok and 'suspansiyon_degerlendirmesi: "warn"' in blok
+    assert 'olculemedi: "mut"' in blok
+
+
+def test_eb_sutunu_bilesen_ic_tablosunda_okunuyor():
+    """2C `eb` bloğu: hücrede ham sayının ALTINDA sönük ikiz + tablo altında özet. Özet DIŞ
+    okuyucudan (`shrunk_component_ic.tablo_ici_eb`) gelir — YASA 6."""
+    assert "(cic.eb || {}).katmanlar" in APPJS and "const ebKatman = lay =>" in APPJS
+    assert "`${c}@${h}`" in APPJS, "hücre anahtarı (bileşen@ufuk) kurulmuyor"
+    assert "(ml.shrunk_component_ic || {}).tablo_ici_eb" in APPJS
+    assert "${ebOzet}" in APPJS, "EB özeti tabloya eklenmemiş — tanımlı ama ölü"
+
+
+def test_eb_blogu_yokken_UYDURMA_sifir_kucultme_demez():
+    """"Blok yok"u "0 küçültme" diye raporlamak uydurma olurdu (analytics._tablo_ici_eb_ozeti'nin
+    kendi gerekçesi). Pano da aynı ayrımı yapar ve sebebi dosyanın YAŞI olarak söyler."""
+    assert "henüz üretilmedi" in APPJS
+    assert "ölçülmemiş bir küçültmeyi 0 diye raporlamak uydurma olurdu" in APPJS
+    # ham `ic` alanlarının değişmediği ekranda da yazılı — okur EB'yi yeni gerçek sanmasın
+    assert "bit-bit değişmedi" in APPJS
+
+
+def test_trend_kitabi_karti_bagli_ve_serh_METIN_olarak_gorunur():
+    """TASARIM İLKESİ: şerh rakamdan ayrılamaz. `pit_serh` kitabın içinde taşınıyor ve panoda
+    rakamlarla AYNI kartta METİN olarak çıkar — tooltip/çekmece değil."""
+    assert "d.trend_kitabi" in APPJS
+    assert "Trend kolu · canlı gölge-kitap" in APPJS
+    assert "esc(tk.pit_serh)" in APPJS
+    assert "PIT ŞERHİ (rakamdan ayrılamaz)" in APPJS
+    for alan in ("tk.pozisyon", "tk.equity", "tk.nakit", "tk.kapanan", "tk.last_session"):
+        assert alan in APPJS, f"trend kitabı kartı {alan} okumuyor"
+
+
+def test_trend_kitabi_dogmamis_defter_ile_bos_defteri_AYIRIR():
+    """"pozisyon 0" ile "defter yok" AYNI cümle değildir: kitap GEÇMİŞSİZ doğar ve ilk giriş ilk
+    ay-sonundadır. İkisini tek boş karta katlamak, dürüst bir başlangıcı arıza gibi gösterirdi."""
+    assert "if (!tk.var) return" in APPJS
+    assert '_chip("DOĞMADI", "t-vi")' in APPJS
+    assert "ilk giriş ilk AY-SONUNDA olur" in APPJS
+    # Şerhin DÜŞMESİ bir görüntü kusuru değil defter kırılmasıdır — ayrı ve sert cümle.
+    assert "PIT ŞERHİ DEFTERDEN DÜŞMÜŞ" in APPJS
 
 
 # ---------------- ÇAPRAZ: UYDURMA METİN YASAĞI ----------------

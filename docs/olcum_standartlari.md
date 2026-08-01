@@ -155,3 +155,51 @@ yanında, o KATMANIN ortak ortalamasına küçültülmüş ikizi (`eb_ic`) ve k�
 - **Beyan edilen sınır:** aynı bileşenin 5/10/20 bar hücreleri aynı gözlemlerden türer, bağımsız
   değildir → τ² bir miktar küçük, küçültme bir miktar güçlü olabilir.
 - Dış okuyucu: `analytics.shrunk_component_ic()["tablo_ici_eb"]` (YASA 6).
+
+---
+
+## Ek — CHEN-2022 t-HURDLE DENGELEME NOTU (K-cezası kalibrasyon referansı, 2026-08-01)
+
+**GEVŞETME DEĞİL, REFERANS.** Bu not `probgate.p_required_for`u değiştirmez; kapı bugün ne
+yapıyorsa aynen onu yapmaya devam eder. Yazılma sebebi tek: kalibre edilmemiş bir ceza, gevşek bir
+ceza kadar ölçülmemiştir — ve K-cezasının hangi kutupta durduğu hiçbir yerde yazılı değildi.
+
+Kapımız çoklu-sınamanın **en muhafazakâr** ucundadır: `p_req = 1 − α_family/K` (gerçek Bonferroni,
+2026-07-22'den beri; aile-bazlı hata oranını = FWER kontrol eder, tavan yok). Literatürün öteki
+kutbu Harvey–Liu–Zhu (2016) tarafında değil karşısındadır: HLZ kesitsel tahminciler için t > 3,0
+civarı bir çıta önerirken, **Chen (2022)** yayın yanlılığına FDR (yanlış keşif oranı) merceğinden
+bakıp bu sertliğin **aşırı cezalandırdığını** savunur — gerçek bir kenarı reddetmenin (Tip-II)
+maliyeti FWER hesabına hiç girmez.
+
+**Bu depodaki hüküm — üç cümle.**
+1. FWER kutbunda kalıyoruz, bilinçli: yanlış bir "ship" doğrudan para kaybettirir, kaçırılan bir
+   aday ise yalnız fırsat maliyetidir ve **yeniden aranabilir**. Asimetri gerçek.
+2. Ama sertlik ölçülmemiş bir erdemdir: K=40'ta p_req 0,995 olur ve *"kapı kaç GERÇEK kenarı
+   reddetti?"* sorusu bu depoda ÖLÇÜLMEMİŞTİR (`oos_erosion` yıpranmayı, `deflate_why` huniyi sayar;
+   ikisi de "reddedilen aday null mıydı" sorusunu cevaplamaz).
+3. FDR tarafına geçmek (ör. Benjamini–Hochberg) bir **kapı gevşetmesidir** → ön-kayıtlı ölçüm kartı
+   olmadan yapılmaz (`research/cards/`).
+
+**Kartta ne yazar.** K-cezasına dokunan her ölçüm hangi kutupta ölçtüğünü (FWER mi FDR mi) ve
+`k_probes` paydasının nasıl sayıldığını açıkça yazar. "Grid'de ÇARPILARAK sayılır" kuralı DEĞİŞMEZ.
+
+---
+
+## Ek — TIME_TIGHTEN KARAR KAYDI (2026-08-01)
+
+**Karar: `earnings.TIME_TIGHTEN` KAPALI KALIR.** Açılması **blackout-etki ölçüm kartına** bağlıdır
+— kapı gevşetmesi ölçümsüz yapılmaz.
+
+Anahtar açılsaydı `in_blackout` BMO satırlarında karartmanın yakın ucunu bir gün daraltırdı (rapor
+gününün kendisi karartmadan çıkardı). Veri gerçek: Nasdaq takvimi satırların ~%34'ünde BMO/AMC
+söylüyor (ölçüm 2026-08-01, 6 iş günü / 1307 satır: time-not-supplied %65,7 · time-after-hours
+%19,7 · time-pre-market %14,5). **Ama daraltmanın ETKİSİ ölçülmemiştir** — "BMO günü girmek AMC
+günü girmekten ne kadar farklı?" sorusunun bu depoda tek satırlık bir ölçümü yok. Ölçülmemiş bir
+gevşetme, kazandığı işlemleri gösterir ve kaybettirdiği gap'leri saymaz.
+
+**Açılma şartı (tek yol).** Ön-kayıtlı bir kart (`research/cards/`): BMO/AMC ayrımının rapor-günü
+girişlerindeki getiri dağılımına etkisi + kill kriteri. Kart hüküm verirse anahtar Rol-1 kararıyla
+açılır. Bugünkü hâli: yol KURULU ve testte açılıp kapatılarak gerçekten çalıştığı kanıtlanıyor
+(`tests/test_wpd_kalanlar_v147.py`), veri bugünden itibaren birikiyor (geçmiş takvim geriye doğru
+zenginleşmez) ve birikimin sayacı `earnings.coverage()["saat_bilinen"]`dır — kart yazıldığı gün
+ölçecek verisi hazır olur.

@@ -1972,12 +1972,27 @@ RENDER.operasyon = async () => {
     // HÜCRE ARTIK ARALIĞINI DA TAŞIR (2026-07-29): tek başına bir IC sayısı, n'i okurun kafasında
     // taşımasını bekler. Aralık sıfırı kapsıyorsa hücre SÖNÜK çizilir — "ölçtük ama gösteremedik"
     // ile "ölçtük ve bulduk" aynı görünmemeli.
-    const hucre = (tbl, c, h) => {
+    // ---- 2C EMPİRİK-BAYES SÜTUNU (WP-M, 2026-08-01) — HÜCRENİN İÇİNDE, HAM SAYININ ALTINDA ----
+    // `component_ic.json` artık `eb` adlı PARALEL bir sütun taşıyor ve panoda hiç görünmüyordu.
+    // Küçültülmüş ikiz AYRI BİR TABLOYA konmadı: iki tablo, aynı hücrenin iki sayısını okurun
+    // kafasında eşleştirmesini isterdi (bu kartın kendi tarihindeki "havuzlanmış rakam tek görünen
+    // sayı oldu" kusurunun aynısı). Ham sayı BÜYÜK ve renkli kalır, EB ikizi onun ALTINDA sönük
+    // durur — çünkü bugün eb HÜKME GİRMEZ, yalnız "bu sayı ne kadar gürültüydü"yü söyler.
+    // BLOK YOKSA HÜCREDE HİÇBİR ŞEY YAZILMAZ (ve sebebi tablonun altındaki özet satırında durur):
+    // hücreye "eb yok" basmak, ölçülmemiş bir şeyi her satırda tekrarlayan bir gürültü olurdu.
+    const ebKatman = lay => (((cic.eb || {}).katmanlar || {})[lay] || {}).hucreler || null;
+    const hucre = (tbl, c, h, lay) => {
       const cell = ((tbl[c] || {})[String(h)]) || {};
       if (cell.ic == null) return `<span class="mono-num mut">— <span style="font-size:10px">(${esc(cell.neden || "ölçülmedi")})</span></span>`;
       const ci = cell.ci;
+      const ebh = (ebKatman(lay) || {})[`${c}@${h}`];
+      // `eb_ic` null olabilir (hücre küçültülemedi) — o zaman ikiz satırı da düşer.
+      const ebYazi = ebh && ebh.eb_ic != null
+        ? `<span class="mut" style="font-size:10px;display:block">EB ${(ebh.eb_ic > 0 ? "+" : "") + trn(ebh.eb_ic, 3)}${
+            ebh.shrink_katsayisi != null ? ` · w=${trn(ebh.shrink_katsayisi, 2)}` : ""}</span>`
+        : "";
       return `<span class="mono-num ${cell.anlamli ? cls(cell.ic) : "mut"}">${(cell.ic > 0 ? "+" : "") + trn(cell.ic, 3)}
-        ${ci ? `<span class="mut" style="font-size:10px">[${trn(ci.lo, 2)},${trn(ci.hi, 2)}]</span>` : ""}</span>`;
+        ${ci ? `<span class="mut" style="font-size:10px">[${trn(ci.lo, 2)},${trn(ci.hi, 2)}]</span>` : ""}${ebYazi}</span>`;
     };
     const satir = (lay, c, etiket) => {
       const tbl = cic.tablo[lay] || {};
@@ -1985,8 +2000,31 @@ RENDER.operasyon = async () => {
       return `<div class="trow" style="${kolonlar}">
         <span class="tick">${esc(c)}</span>
         <span>${etiket}</span>
-        <span class="mono-num mut">n=${n0 ?? "—"}</span>${hz.map(h => hucre(tbl, c, h)).join("")}
+        <span class="mono-num mut">n=${n0 ?? "—"}</span>${hz.map(h => hucre(tbl, c, h, lay)).join("")}
         </div>`; };
+    // EB ÖZET SATIRI — DIŞ OKUYUCUDAN (YASA 6). Hücrelerdeki ikizler tablonun KENDİ `eb` bloğundan
+    // geliyor; bu satır ise `analytics.shrunk_component_ic().tablo_ici_eb` okuyucusundan gelir ve
+    // "blok var mı, kaç hücre küçüldü, en çok hangi hücre çekildi" sorularını cevaplar. İkisi AYNI
+    // hesaptır (test_C_iki_cetvel_YOK...) — ayrışırlarsa aynı adı taşıyan iki sayı doğardı.
+    const ebOzet = (() => {
+      const t = ((ml.shrunk_component_ic || {}).tablo_ici_eb) || null;
+      if (!t) return `<p class="hint"><b>EB sütunu:</b> okuyucu servis edilmiyor —
+        <code>/api/diagnostics</code> <code>shrunk_component_ic.tablo_ici_eb</code> alanı boş.</p>`;
+      if (!t.var) return `<p class="hint"><b>EB sütunu:</b> <span class="mut">henüz üretilmedi</span> —
+        ${esc(t.neden || "")}. Bu bir arıza değil, dosyanın YAŞIDIR; "küçültme yok" diye okunamaz
+        (ölçülmemiş bir küçültmeyi 0 diye raporlamak uydurma olurdu).</p>`;
+      const e = t.en_cok_cekilen || null;
+      return `<p class="hint"><b>EB sütunu</b> ${_chip("HÜKÜM VERMEZ", "t-rv")} — gerçek katmanda
+        ${t.n_hucre ?? "—"} hücre${t.kucultuldu ? "" : " (küçültme YAPILMADI)"}${
+        t.kucultuldu ? `, ortak ortalama ${trn(t.genel_ortalama, 4)} · τ²=${trn(t.tau2, 5)}` : ""}.
+        ${t.neden ? esc(t.neden) + " " : ""}${e ? `En çok çekilen hücre <code>${esc(e.hucre)}</code>:
+        ham ${trn(e.ham_ic, 3)} → EB ${trn(e.eb_ic, 3)} (çekim ${trn(e.cekim, 3)} · w=${trn(e.shrink_katsayisi, 2)} · n=${e.n ?? "—"}).` : ""}
+        <br><span class="mut">${esc(t.yontem || "")}</span></p>
+      <p class="hint">Hücrelerdeki <b>EB</b> ikizi ham sayının ALTINDA sönük durur çünkü ham <code>ic</code>
+        alanları <b>bit-bit değişmedi</b> ve bugünün okuyucuları (beyin özeti, yeniden-üretim farkı, hükümler)
+        HAM ic okumaya devam ediyor. <code>w</code> hücrenin KENDİ tahminine verilen ağırlıktır:
+        w=1 hiç küçültme, w=0 tam küçültme. ${esc(t.kapsam || "")}</p>`;
+    })();
     const komp = cic.components || [];
     // CF SATIRLARI AYRI VE "SIM" ETİKETLİ (Aşama 1.4 karar girdisi, 2026-07-29). Gerekçe kodda
     // yazılı (component_ic modül başlığı, karar 4): bu tablonun y ekseni cf'in kirli çıkış
@@ -2005,7 +2043,8 @@ RENDER.operasyon = async () => {
       <b>alınmamış</b> hipotetik girişlerdir (seçim yanlılığı ayrı bir soru) ve kanıt değil <b>bağlam</b>dır.</p>
       <p class="hint">Aralık varsayımı: ${esc(cic.ci_varsayim || "")}. Sönük yazılan hücrelerde aralık
       sıfırı kapsıyor — bir bileşenin IC'si <b>ağırlığıyla ters işaretli</b> görünse bile önce aralığa bakılır;
-      bu tablo hipotez ÜRETİR, karar vermez.</p>`;
+      bu tablo hipotez ÜRETİR, karar vermez.</p>
+      ${ebOzet}`;
   })();
   const reRows = Object.entries(re3)
     .filter(([k, v]) => k !== "_kaynak" && v && typeof v === "object")
@@ -2214,10 +2253,50 @@ RENDER.operasyon = async () => {
          <b class="${DURUM_TON[v.durum] || "mut"}">${esc(v.durum || "?")}</b></span>`).join("")}</b></div>`;
     const b = c.dolar_beklenti || {}, pf = c.profit_factor || {}, dd = c.maks_dusus || {}, np = c.net_pnl || {};
     const ci = b.ci || null;
+    // ---- CANLI-BEKLENTİ TAVANI (WP-M, 2026-08-01) — KOLON, ÖLÇÜT DEĞİL --------------------------
+    // Sunucu bu alanı (`result_verdict.tavan_durumu` ← analytics.live_expectancy_ceiling) ÜRETİYORDU
+    // ve hiçbir yüzey OKUMUYORDU: canlı beklenti backtest'in yarısını aşsa da, süspansiyon eşiğinin
+    // altına düşse de panoda hiçbir şey değişmezdi. Satır ŞERİDİN ALTINDA ama ÖLÇÜT ŞERİDİNİN
+    // DIŞINDA durur ve payda "4/4" olarak kalır — beşinci bir ölçüt gibi okunmasın diye rozeti
+    // "HÜKME GİRMEZ" der. TON KURALI: `tavan_altinda` YEŞİL DEĞİLDİR — sunucunun kendi cümlesiyle
+    // "iyi haber değil, kuralın BEKLEDİĞİ hâl". Yeşile boyamak, normal hâli bir başarı ilanına
+    // çevirirdi; `tavan_ustunde` ise (bir başarı gibi görünmesine rağmen) bir ŞÜPHE işaretidir ve
+    // süspansiyonla AYNI uyarı tonunu alır.
+    const tavanSatir = (() => {
+      const tv = rv.tavan_durumu || null;
+      if (!tv) return `<div class="srow"><span>Canlı-beklenti tavanı ${_chip("HÜKME GİRMEZ", "t-rv")}</span>
+        <b class="mut">servis edilmiyor — <code>result_verdict.tavan_durumu</code> alanı boş</b></div>`;
+      const TAVAN_TR = { olculemedi: "ÖLÇÜLEMEDİ", suspansiyon_degerlendirmesi: "SÜSPANSİYON DEĞERLENDİRMESİ",
+                         tavan_altinda: "tavan altında", tavan_ustunde: "TAVAN ÜSTÜNDE" };
+      // Nötr = ölçülemedi + tavan_altinda · Uyarı = süspansiyon + tavan_ustunde.
+      const TAVAN_TON = { olculemedi: "mut", tavan_altinda: "", tavan_ustunde: "warn",
+                          suspansiyon_degerlendirmesi: "warn" };
+      const t = TAVAN_TON[tv.durum] == null ? "mut" : TAVAN_TON[tv.durum];
+      const olculdu = tv.durum !== "olculemedi";
+      return `<div class="srow" style="margin-top:2px"><span>Canlı-beklenti tavanı
+          <span class="mut">(canlı R ↔ backtest R)</span> ${_chip("HÜKME GİRMEZ", "t-rv")}</span>
+        <b class="${t}">${esc(TAVAN_TR[tv.durum] || tv.durum || "—")}${olculdu
+          ? ` <span class="mut">· canlı ${trn(tv.canli_beklenti_r, 4)}R ${tv.tavan_r != null
+              ? `· tavan ${trn(tv.tavan_r, 4)}R (backtest ${trn(tv.backtest_beklenti_r, 4)}R × ${trn(tv.cap_mult, 2)})` : ""}
+             ${tv.oran != null ? `· oran ${trn(tv.oran, 3)} (süspansiyon eşiği ${trn(tv.suspend_ratio, 2)})` : ""}
+             · n=${tv.canli_n ?? 0}</span>`
+          : ""}</b></div>
+      <p class="hint" style="margin:-2px 0 6px">${esc(tv.hukum || "")}</p>
+      <p class="hint">Bu satır <b>bir ölçüt değil bir KOLONdur</b>: yukarıdaki payda 4'te kalır,
+        <code>passed/failed/unmeasured/zayif</code> sayaçlarına girmez ve hiçbir kapıyı (probgate/guard/arming)
+        kısmaz. Süspansiyon bir <b>operatör kararıdır</b> — burası onu yalnız görünür kılar.
+        ${tv.kural_uyari ? `<b class="warn">${esc(tv.kural_uyari)}</b> · ` : ""}${(() => {
+          // Katsayının NEREDEN geldiği (goal.yaml mı kod varsayılanı mı) satırın parçasıdır:
+          // "0,5" tek başına, kimsenin yazmadığı bir sayının operatör kararı sanılmasına açıktır.
+          const kk = Object.entries(tv.kural_kaynak || {});
+          return kk.length ? `Kural kaynağı: <code>${esc(kk.map(([k, v]) => `${k}=${v}`).join(" · "))}</code>. ` : "";
+        })()}${tv.durum === "olculemedi" ? "" : `Olası hâller: ${esc((tv.durumlar || []).join(" / "))}.`}</p>`;
+    })();
     return `<div class="card rise"><h2 class="t">Sonuç hükmü · dolar merceği ${_chip("EDGE'in ikizi", "t-rv")}</h2>
       <div class="srow" style="margin-top:2px"><span>HÜKÜM ${_chip(`${rv.passed}/4 geçti`, "t-rv")}</span>
         <b class="${ton}">${esc(rv.verdict)}</b></div>
       ${serit}
+      ${tavanSatir}
       <p class="hint">Birim: ${esc(rv.birim || "")}. <b>Friksiyon İKİ KEZ kesilmez</b> — <code>pnl_dollars</code>
         zaten NET (kayma dolum fiyatının içinde, komisyonlar düşülmüş); <code>costs</code> yalnız 4. ölçütte
         KIYAS TABANI olarak kullanılır.</p>
@@ -2636,6 +2715,46 @@ RENDER.operasyon = async () => {
       (çıkış mimarisi) hipotezlerini besler. Bir çıkış kuralı ancak olasılıksal kapıdan geçen bir hipotezle değişir.</p></div>`;
   })();
 
+  // ---------- WP-K TREND KOLU · CANLI GÖLGE-KİTAP (2026-08-01) ----------
+  // `/api/diagnostics.trend_kitabi` (← trend_shadow.ozet) üretiliyordu ve panoda HİÇ okunmuyordu:
+  // EDG-2026-009'un hükümlü incumbent kolu canlı barlar üzerinde sanal bir defterde yürüyor, ama
+  // operatör defterin doğup doğmadığını bile göremiyordu.
+  //
+  // TASARIM İLKESİ — ŞERH RAKAMDAN AYRILAMAZ. `pit_serh` kitabın İÇİNDE taşınıyor (trend_shadow
+  // her yazımda yeniden çakıyor) ve burada da rakamlarla AYNI kartta, METİN olarak çıkar. Şerhi
+  // bir tooltip'e, bir "detay" çekmecesine ya da başka bir karta koymak, +13,1p/yıl'ı şerhsiz
+  // okutmanın en kolay yoludur — kolun hükmü "yanlılık-düşülmüş ~6-7p/yıl"dır ve o cümle rakamın
+  // yanında durmazsa rakam yalan söyler.
+  // GETİRİ YÜZDESİ YEŞİL/KIRMIZI BOYANMAZ: bu defter SANALDIR ve sıfır yetkilidir; canlı PnL ile
+  // aynı görsel dile sokmak, kartı bir kazanç tablosu gibi okuturdu.
+  const sTrend = (() => {
+    const tk = d.trend_kitabi || null;
+    if (!tk) return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap</h2>
+      <p class="empty">Özet servis edilmiyor — /api/diagnostics <code>trend_kitabi</code> alanı boş.</p></div>`;
+    if (!tk.var) return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap ${_chip("DOĞMADI", "t-vi")}</h2>
+      <p class="hint" style="margin-top:0">Defter (<code>state/trend_book.json</code>) henüz yazılmadı — kitap
+      GEÇMİŞSİZ doğar ve ilk giriş ilk AY-SONUNDA olur. Bu bir arıza değil, kolun dürüst başlangıç hâlidir;
+      "pozisyon 0" ile "defter yok" AYNI cümle değildir ve burada ikincisi yazıyor.</p></div>`;
+    return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap
+        ${_chip("SANAL · SIFIR YETKİ", "t-rv")}</h2>
+      <p class="hint" style="margin-top:0">EDG-2026-009'un hükümlü incumbent kolu (chandelier çıkış × N=10 × 12-1 momentum)
+        canlı barlar üzerinde <b>sanal</b> bir defterde ileri yürütülüyor. Ölçüm DEĞİL — ölçülmüş bir hükmün
+        canlı birikimi; emir yolu <b>import bile edilmiyor</b>.</p>
+      <div class="srow"><span>Defter durumu</span><b class="pos">DOĞDU${
+        tk.last_session ? ` · son seans ${esc(String(tk.last_session).slice(0, 10))}` : ""}${
+        tk.last_run ? ` <span class="mut">· son koşum ${esc(String(tk.last_run).replace("T", " ").slice(0, 16))}</span>` : ""}</b></div>
+      <div class="srow"><span>Açık pozisyon / kapanan işlem</span><b>${tk.pozisyon ?? 0} pozisyon ·
+        <span class="mut">${tk.kapanan ?? 0} kapandı · ${tk.gun ?? 0} gün eğri</span></b></div>
+      <div class="srow"><span>Sanal özsermaye</span><b>${tk.equity == null ? '<span class="mut">ölçülmedi — eğri boş</span>'
+        : `${money(tk.equity)} <span class="mut">· nakit ${money(tk.nakit)}${
+          tk.getiri_pct != null ? ` · defter başından beri ${isr(tk.getiri_pct, "%" + trn(tk.getiri_pct, 3))}` : ""}</span>`}</b></div>
+      ${tk.pit_serh ? `<p class="hint" style="margin-top:10px"><b class="warn">PIT ŞERHİ (rakamdan ayrılamaz):</b>
+        ${esc(tk.pit_serh)}</p>`
+        : `<p class="hint" style="margin-top:10px"><b class="neg">PIT ŞERHİ DEFTERDEN DÜŞMÜŞ.</b>
+        Şerh kitabın içinde taşınır ve her yazımda yeniden çakılır; yokluğu bir görüntü kusuru değil,
+        defterin kendisinde bir kırılmadır — rakamlar şerhsiz okunmamalı.</p>`}</div>`;
+  })();
+
   // ---------- ÖĞRENME ÇARKI · HİPOTEZ HUNİSİ (2026-07-27) ----------
   // Huninin NEREDE öldüğü tek bir "ship yok" cümlesinden okunamaz. Sayılar 0 olsa da satır çıkar —
   // 0 dürüst bir sayıdır ve satırın hiç görünmemesi "ölçmedik" ile "hiç olmadı"yı aynı yapardı.
@@ -2970,7 +3089,7 @@ RENDER.operasyon = async () => {
     Sistem sağlıklıyken yeşil fısıldar; müdahale gerekirse KRİZ grubu tepede.
     Kriz butonları: HUD'daki <b>KRİZ ⚠</b> kapağının altında (yanlış tıka karşı emniyetli).</p>
     <div style="margin-top:20px"></div>
-    ${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}${sSelale}${sCark}${sIntra}${s4}${s5}${s6}${sSag}${sOgr}`;
+    ${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}${sSelale}${sTrend}${sCark}${sIntra}${s4}${s5}${s6}${sSag}${sOgr}`;
 };
 
 // 5.3 — seans-içi bar akışındaki eksik dakika pencereleri. Ölçümü zamanlayıcı kancası yapar; burası

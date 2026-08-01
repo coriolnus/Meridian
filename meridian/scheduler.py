@@ -734,7 +734,7 @@ def advance_once() -> dict:
                         # sayı yazıldı ki bir dahaki karar tahminle değil ölçümle verilsin.
                         # KALICI HÂLE GETİRİLDİ (2026-08-01): üç girdi (ileri pencere / kadans /
                         # karartma) artık `earnings.py`de ADLANDIRILMIŞ sabitler ve marj onlardan
-                        # TÜRETİLİYOR (`earnings.margin_days()` → bugün 14-7-5 = 2 gün). Sayı
+                        # TÜRETİLİYOR (`earnings.margin_days()` → bugün 21-7-5 = 9 gün). Sayı
                         # buradan da, `coverage()`ten de AYNI türetmeden okunur; üç sayıdan biri
                         # değişirse uyarı kendiliğinden doğruyu söyler.
                         # KADANSIN SAHİBİ BU DAL: `REFRESH_CADENCE_DAYS = 7`in gerçek karşılığı
@@ -744,9 +744,12 @@ def advance_once() -> dict:
                         #     `in_blackout` veri yokken FAIL-OPEN'dır (bilerek: bilgi yokken
                         #     bloklamaz), dolayısıyla o hafta karartma guard'ı HERKES için kapanır
                         #     ve motor bilanço gününe pozisyonla girebilir.
-                        # İKİ UCUZ ÇÖZÜM, İKİSİ DE HÂLÂ ROL 1'E AİT (davranış kararı): ileri
-                        # pencereyi genişletmek (`REFRESH_FWD_DAYS`; Nasdaq ucu ANAHTARSIZ ve ~15
-                        # istek — kota maliyeti ≈ 0) ya da pes ederken hafta damgasını YAKMAMAK.
+                        # İKİ UCUZ ÇÖZÜM VARDI (davranış kararı, Rol-1). BİRİNCİSİ UYGULANDI
+                        # (2026-08-01): ileri pencere `REFRESH_FWD_DAYS` 14 → 21 (Nasdaq ucu
+                        # ANAHTARSIZ ve gün-başına sorgulanıyor — kota maliyeti ≈ 0), marj 2 → 9
+                        # gün. Yani bu dal pes etse bile ileri kapsama bir hafta daha dayanır.
+                        # İKİNCİSİ HÂLÂ AÇIK: pes ederken hafta damgasını YAKMAMAK — damga
+                        # yakıldığı sürece ardışık iki pes ileri kapsamayı yine 0'a indirir.
                         _state["earnings_week"] = list(wk)
                         _state["earnings_attempts"] = 0
                         _cov = earnings.coverage(list(REPLAY_UNIVERSE)) or {}

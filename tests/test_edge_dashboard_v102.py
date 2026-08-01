@@ -258,10 +258,16 @@ def test_yeni_kartlar_bolum3_kompozisyonuna_gercekten_giriyor():
     # yine anlam taşır — karne "beyin PARAMETRE tahminlerinde ne kadar isabetli?", sistem önerileri
     # bir ÜST katman ("beyin MEKANİZMALAR hakkında ne görüyor?"). İkisi yan yana durunca kendini
     # geliştirme döngüsü tek bakışta okunur; araya başka bir kart girse zincir kopardı.
+    # WP-K TREND GÖLGE-KİTABI (2026-08-01): `sTrend` kâr şelalesi ile öğrenme çarkı ARASINA girdi.
+    # Yer bilinçli — şelale "kenar parayı nerede bırakıyor?" der, trend kitabı ölçülmüş bir kenarın
+    # canlı birikimidir; ikisi de "kenar" katmanıdır. Huninin (sCark) ÜSTÜNDE durur çünkü huni
+    # hipotez üretiminin sağlığıdır, kitap ise hükmü verilmiş bir kolun defteri. `sHermes`→`sNous`
+    # bitişikliğine DOKUNULMADI (yukarıdaki gerekçe).
     assert ("${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}"
-            "${sSelale}${sCark}${sIntra}${s4}${s5}${s6}") in src, \
+            "${sSelale}${sTrend}${sCark}${sIntra}${s4}${s5}${s6}") in src, \
         "yeni kartlar sayfa kompozisyonuna girmedi — tanımlı ama ölü"
-    for kart in ("Hermes karnesi", "Y3 rejim/risk dörtlüsü", "Sistem önerileri"):
+    for kart in ("Hermes karnesi", "Y3 rejim/risk dörtlüsü", "Sistem önerileri",
+                 "Trend kolu · canlı gölge-kitap"):
         assert kart in src, f"{kart} kartı yok"
 
 
