@@ -193,7 +193,7 @@ def turnover21(volume: pd.Series, shares) -> pd.Series:
     else:
         try:
             sh = pd.Series(float(shares), index=volume.index)
-        except (TypeError, ValueError):   # sessiz-yutma DEĞİL: sayıya çevrilemeyen bir hisse sayımı "ölçülemedi"dir ve dönen NaN serisi bunu hücre hücre GÖSTERİR (çağıran taraf None'u 0 gibi kullanamaz)
+        except (TypeError, ValueError):   # sessiz-yutma: sayıya çevrilemeyen hisse sayımı "ölçülemedi"dir; dönen NaN serisi bunu hücre hücre GÖSTERİR — yutulan istisna değil, dürüst-None çevirisidir (çağıran None'u 0 gibi kullanamaz; MARKER biçimi YASA-4 dedektörü için, "DEĞİL" eki işareti bozuyordu)
             return pd.Series(float("nan"), index=volume.index)
     to = med / sh.where(sh > 0)
     return to.where(to <= TURNOVER_FIZIKSEL_TAVAN)
