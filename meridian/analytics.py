@@ -2027,6 +2027,156 @@ def _pf(pnls: list) -> dict:
             "n_kazanan": sum(1 for p in pnls if p > 0), "n_kaybeden": sum(1 for p in pnls if p < 0)}
 
 
+# ---- WP-M: CANLI-BEKLENTİ TAVANI — YAZILI KURALIN ÖLÇÜLEN HÂLİ (2026-08-01) -------------------
+# NEDEN BURADA VE NEDEN BİR KOLON. ROADMAP'in WP-M borç listesinde şu kural yazılıydı: "canlı
+# beklenti tavanı backtest×0,5 ve <×0,4 süspansiyon". Kural yazılıydı ama HİÇBİR KOD onu OKUMUYORDU
+# ve bu tam olarak `explore_rate`/`kill_switch_file` sınıfıdır: operatör yürürlükte sanır, hiçbir
+# yüzey ölçmez.
+#
+# ARANDI VE BULUNAMADI — bağlanacak MEVCUT bir karar noktası YOK (2026-08-01 taraması: probgate,
+# reflect/rollback, guard, arming, autonomy_ladder, oos_erosion, watchdog, versioning). Depoda
+# canlı ile backtest'i kıyaslayan TEK mekanizma `probgate.refresh_meta_calibration`dır ve o,
+# BEKLENTİ SEVİYESİNİ değil ΔS FARKINI kıyaslar (predicted_delta ↔ realized_delta) — üstelik kendi
+# beyanıyla ÖLÇEK BORCU altındadır (`olcek_borcu`: iki taraf farklı birimde). Yani "canlı beklenti
+# tavanı"nı oraya bağlamak, farklı bir soruyu ölçen bir mekanizmanın üstüne ikinci bir anlam
+# yüklemek olurdu.
+#
+# SEÇİLEN YOL: EN YAKIN DÜRÜST YER = SONUÇ hükmünün KOLONU. Canlı işlem-başına beklenti zaten
+# `result_verdict`in 1. ölçütünde (dolar merceğinde) yaşıyor; bu kolon aynı defteri R biriminde,
+# backtest karşılığıyla YAN YANA koyar. `beta_duzeltilmis` ve `net_kotumser` ile AYNI SINIF:
+# sayaçlara (passed/failed/unmeasured/zayif) HİÇ dokunmaz, `criteria` sözlüğüne GİRMEZ, payda 4
+# kalır. HÜKÜM VERMEZ — süspansiyon kararı operatörün, kapı kararı probgate'indir.
+LIVE_CEILING_DURUMLAR = ("olculemedi", "tavan_altinda", "tavan_ustunde", "suspansiyon_degerlendirmesi")
+
+
+def live_expectancy_ceiling(goal: dict | None = None) -> dict:
+    """Canlı beklenti ↔ backtest beklentisi kıyası (WP-M kuralı). SAF OKUMA, HÜKÜM YOK.
+
+    İKİ TARAF, TEK BİRİM (R = işlem başına ortalama):
+      canlı    — `trades.jsonl`ın YÜRÜRLÜKTEKİ sürüme ait, TOHUM OLMAYAN satırlarının `r_multiple`
+                 ortalaması. Payda yasası `learning_scorecard`ınkiyle BİREBİR aynıdır
+                 (live_paper + belirsiz; `replay_seed` TRAINING sayılır ve girmez) — aynı depoda
+                 "canlı defter kimdir?" sorusunun ikinci bir cevabı olamaz.
+      backtest — karnedeki AYNI sürümün `backtest_full.avg_r` alanı. Sürüm eşleşmesi
+                 `rollback.check_and_rollback`in popülasyon yasasıyla aynıdır; iki tarafı farklı
+                 sürümlerden okumak like-for-like'ı bozardı.
+
+    ORAN YALNIZ POZİTİF BİR BACKTEST BEKLENTİSİNDE TANIMLIDIR. Negatif bir beklentinin "yarısı"
+    bir tavan değildir (−0,04'ün yarısı −0,02'dir ve canlı −0,01 gelirse "tavanı aştı" demek
+    saçmadır). Bu durumda durum `olculemedi`dir ve nedeni adıyla yazılır — UYDURMA YASAĞI.
+
+    DÖRT DURUM (`LIVE_CEILING_DURUMLAR`):
+      olculemedi                — taraflardan biri yok / n yetersiz / backtest beklentisi ≤ 0
+      suspansiyon_degerlendirmesi — oran < suspend_ratio (ÖNCE bakılır: daha sert olan hüküm)
+      tavan_altinda             — canlı ≤ tavan; kuralın BEKLEDİĞİ hâl (iyi haber değil, NORMAL hâl)
+      tavan_ustunde             — canlı > tavan; bir başarı ilanı DEĞİL, bir ŞÜPHE işareti:
+                                  ya backtest fazla kötümser modellenmiş ya canlı örneklem şanslı."""
+    from . import ledgerstamp as _ls
+    g = goal or config.goal()
+    kural = config.live_expectancy_rule(g)
+    min_s = int(g.get("min_sample") or 30)
+
+    sb = store.read_json("scoreboard.json", {"versions": {}})
+    surum = sb.get("current_version")
+    satir = ((sb.get("versions") or {}).get(str(surum)) or {}) if surum is not None else {}
+    bt = satir.get("backtest_full") or {}
+    bt_r = bt.get("avg_r")
+    try:
+        bt_r = None if bt_r is None else float(bt_r)
+    except (TypeError, ValueError):  # sessiz-yutma: karnede biçimsiz tek alan; taraf ÖLÇÜLEMEDİ olarak görünür ve neden alanı bunu söyler
+        bt_r = None
+
+    # --- canlı taraf: tohum-olmayan, yürürlükteki sürüme ait, R'si ölçülmüş satırlar ------------
+    rlar, kanitli_n, belirsiz_n = [], 0, 0
+    for t in _trades():
+        if surum is None or t.get("strategy_version") != surum:
+            continue
+        kaynak_damgasi = _ls.kaynak_of(t)
+        if kaynak_damgasi == _ls.REPLAY_SEED:
+            continue
+        r = t.get("r_multiple")
+        if r is None:
+            continue
+        try:
+            rlar.append(float(r))
+        except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek r_multiple; n çıktıda görünür, gizli kayıp yok
+            continue
+        if kaynak_damgasi == _ls.LIVE_PAPER:
+            kanitli_n += 1
+        else:
+            belirsiz_n += 1
+    canli_n = len(rlar)
+    # YUVARLAMA UÇTA (probgate._score_pair ile aynı gerekçe): oran ve tavan kıyası HAM ortalamadan
+    # hesaplanır; rapor alanları uçta yuvarlanır. Yuvarlanmış bir paydan bölmek, eşik civarındaki
+    # bir hükmü ölçüm hassasiyetine bağlardı.
+    canli_ham = (sum(rlar) / canli_n) if canli_n else None
+    canli_r = round(canli_ham, 4) if canli_ham is not None else None
+
+    tavan_ham = None if (bt_r is None or bt_r <= 0) else bt_r * kural["cap_mult"]
+    tavan = None if tavan_ham is None else round(tavan_ham, 4)
+    oran = (round(canli_ham / bt_r, 3) if (canli_ham is not None and bt_r is not None and bt_r > 0)
+            else None)
+
+    neden = None
+    if surum is None:
+        durum, neden = "olculemedi", "karnede yürürlükteki sürüm yok (current_version boş)"
+    elif bt_r is None:
+        durum, neden = "olculemedi", (f"v{surum} karne satırında `backtest_full.avg_r` YOK — "
+                                      f"backtest beklentisi ölçülmemiş, tavan hesaplanamaz")
+    elif bt_r <= 0:
+        durum, neden = "olculemedi", (f"backtest beklentisi pozitif DEĞİL ({bt_r}R) — negatif bir "
+                                      f"beklentinin yarısı bir tavan değildir; oran TANIMSIZ")
+    elif canli_n < min_s:
+        durum, neden = "olculemedi", (f"canlı örneklem {canli_n} < min_sample {min_s} — beklenti "
+                                      f"ölçülemedi (0 değil, BİLİNMİYOR)")
+    elif (canli_ham / bt_r) < kural["suspend_ratio"]:
+        durum = "suspansiyon_degerlendirmesi"
+    elif canli_ham > tavan_ham:
+        durum = "tavan_ustunde"
+    else:
+        durum = "tavan_altinda"
+
+    hukum = {
+        "olculemedi": f"TAVAN DURUMU ÖLÇÜLEMEDİ — {neden}",
+        "suspansiyon_degerlendirmesi": (
+            f"canlı {canli_r}R / backtest {bt_r}R = {oran} < {kural['suspend_ratio']} — "
+            f"SÜSPANSİYON DEĞERLENDİRMESİ kuralı tetiklendi (ROADMAP §WP-M). Bu satır bir KARAR "
+            f"DEĞİL, bir ÇAĞRIdır: süspansiyon operatör kalemidir"),
+        "tavan_ustunde": (
+            f"canlı {canli_r}R, tavanın ({tavan}R = backtest {bt_r}R × {kural['cap_mult']}) "
+            f"ÜSTÜNDE — bir başarı ilanı değil ŞÜPHE işareti: ya backtest fazla kötümser "
+            f"modellenmiş ya canlı örneklem şanslı (n={canli_n})"),
+        "tavan_altinda": (
+            f"canlı {canli_r}R ≤ tavan {tavan}R (backtest {bt_r}R × {kural['cap_mult']}); "
+            f"oran {oran} ≥ süspansiyon eşiği {kural['suspend_ratio']} — kuralın BEKLEDİĞİ hâl"),
+    }[durum]
+
+    return {
+        "durum": durum, "hukum": hukum, "neden": neden,
+        # DURUM UZAYI ÇIKTININ İÇİNDE: okuyucu "başka hangi değerler mümkün?" sorusunu koda inmeden
+        # cevaplayabilmeli — `getiri_tanimi`/`ci_yontem` beyanlarıyla aynı gerekçe.
+        "durumlar": list(LIVE_CEILING_DURUMLAR),
+        "hukme_girmez": True,
+        "surum": surum,
+        "canli_beklenti_r": canli_r, "canli_n": canli_n,
+        "canli_kanitli_n": kanitli_n, "canli_belirsiz_n": belirsiz_n,
+        "backtest_beklenti_r": bt_r, "backtest_n": bt.get("n"),
+        "tavan_r": tavan, "oran": oran,
+        "cap_mult": kural["cap_mult"], "suspend_ratio": kural["suspend_ratio"],
+        "kural_kaynak": kural["kaynak"], "kural_metni": kural["kural_metni"],
+        "kural_uyari": kural["uyari"],
+        "min_sample": min_s,
+        "birim": "R (işlem başına ortalama)",
+        "kaynak": ("canlı: trades.jsonl · yürürlükteki sürüm · replay_seed HARİÇ (payda yasası "
+                   "learning_scorecard ile aynı) | backtest: scoreboard.json "
+                   "versions[<sürüm>].backtest_full.avg_r"),
+        "kapsam": ("ADVISORY KOLON — `result_verdict`in dört ölçütünden hiçbirini değiştirmez, "
+                   "passed/failed/unmeasured/zayif sayaçlarına GİRMEZ ve hiçbir kapıyı "
+                   "(probgate/guard/arming) kısmaz. Süspansiyon bir OPERATÖR kararıdır; bu alan "
+                   "onu yalnız GÖRÜNÜR kılar"),
+    }
+
+
 def result_verdict() -> dict:
     """SONUÇ HÜKMÜ — DÖRT DOLAR ÖLÇÜTÜNÜN TEK YAZILI KARARI. EDGE hükmünün ikizi: aynı dört durum
     (SAGLANDI/ZAYIF/SAGLANMADI/OLCULEMEDI), aynı `_olcut` şekli, aynı tek-cümle deseni.
@@ -2172,10 +2322,16 @@ def result_verdict() -> dict:
         "durum": ("olculemedi" if _kot.get("net_kotumser") is None
                   else ("pozitif" if _kot["net_kotumser"] > 0 else "negatif")),
     }
+    # --- WP-M CANLI-BEKLENTİ TAVANI KOLONU (2026-08-01) -----------------------------------------
+    # `beta_duzeltilmis`/`net_kotumser` ile AYNI SINIF ve aynı gerekçe: kolon, ölçüt değil. Dört
+    # ölçüt bu depoda yazılı bir sözleşmedir (`passed/4`, health.sonuc_hukmu kapısı, testler);
+    # beşinci bir ölçüt eklemek hiçbir eşiği değiştirmeden hükmü kaydırırdı. Bu kolon, ROADMAP'te
+    # yazılı ama bugüne kadar hiçbir kodun okumadığı canlı-beklenti tavanı kuralını GÖRÜNÜR yapar.
     return {"criteria": criteria, "passed": passed, "failed": failed,
             "unmeasured": unmeasured, "zayif": zayif, "verdict": verdict,
             "beta_duzeltilmis": beta_kolon,
             "net_kotumser": kotumser_kolon,
+            "tavan_durumu": live_expectancy_ceiling(),
             "birim": "USD (başlangıç sermayesi $100.000)",
             "karar_kullanimi": ("rafineri kararları EDGE hükmüne bakar; sermaye artırımı ve "
                                 "silahlanma İKİ hükme birden (EDGE + SONUÇ) bakar — ROADMAP §3.1")}
@@ -2955,20 +3111,24 @@ def shrunk_regime_cells(goal: dict | None = None) -> dict:
     return out
 
 
-def shrunk_component_ic() -> dict:
-    """Bileşen IC'lerinin küçültülmüş hâli. Kaynak `component_ic.json`ın GERÇEK katmanı; cf katmanı
-    dahil EDİLMEZ (farklı popülasyon — alınmamış hipotetik girişler; ikisini bir havuzda küçültmek
-    iki farklı gerçeği tek ortalamaya çekerdi)."""
-    doc = store.read_json("component_ic.json", None)
-    if not doc:
-        return {"n_hucre": 0, "kucultuldu": False, "neden": "component_ic.json yok"}
-    # ŞEMA KAYNAKTAN DOĞRULANDI (2026-07-30): tablo["gercek"][bileşen][ufuk] = {ic, n, ci, anlamli}.
-    # Tahmin edilen bir şema ("hucreler" listesi) SESSİZCE 0 hücre veriyordu ve fonksiyon "küçültme
-    # yapılmadı" diyerek DOĞRU ama YANLIŞ NEDENLE dürüst kalıyordu — tam olarak `trades.jsonl`ın
-    # setup/score dersi: alan adı tutmazsa tüketici satırı sessizce eler.
+# σᵢ YASASI, TEK YERDE (2C, WP-M turu 2026-08-01). Küçültme HAM IC ÖLÇEĞİNDE (r) yapılır ve orada
+# Var(r) ≈ 1/(n−1)'dir. Aynı hücrenin YAYIMLANAN güven aralığı ise Fisher-z ölçeğinde kurulur ve
+# orada Var(z) = 1/(n−3)'tür (`component_ic._fisher_ci`). İKİ FARKLI SABİT, İKİ FARKLI ÖLÇEK —
+# çelişki değil; ama yazılı olmazsa "aynı tabloda iki cetvel" gibi okunur, o yüzden burada duruyor.
+def _ic_hucreleri(katman_tablo: dict) -> dict:
+    """component_ic tablosunun BİR KATMANINDAN empirik-Bayes hücreleri: {bileşen@ufuk: {mean,n,sd}}.
+
+    TEK TANIM, İKİ TÜKETİCİ: pano okuyucusu (`shrunk_component_ic`) ve tablonun KENDİ `eb` bloğu
+    (`component_ic._eb_blok`). İkinci bir yerde hücre kurmak, aynı adı taşıyan iki farklı küçültme
+    üretirdi ve fark ancak üçüncü haneyi karşılaştıran biri tarafından görülürdü.
+
+    ŞEMA KAYNAKTAN DOĞRULANDI (2026-07-30): tablo[katman][bileşen][ufuk] = {ic, n, ci, anlamli}.
+    Tahmin edilen bir şema ("hucreler" listesi) SESSİZCE 0 hücre veriyordu ve okuyucu "küçültme
+    yapılmadı" diyerek DOĞRU ama YANLIŞ NEDENLE dürüst kalıyordu — tam olarak `trades.jsonl`ın
+    setup/score dersi: alan adı tutmazsa tüketici satırı sessizce eler."""
     import math as _m
-    cells = {}
-    for bilesen, ufuklar in ((doc.get("tablo") or {}).get("gercek") or {}).items():
+    cells: dict = {}
+    for bilesen, ufuklar in (katman_tablo or {}).items():
         if not isinstance(ufuklar, dict):
             continue
         for ufuk, h in ufuklar.items():
@@ -2977,14 +3137,59 @@ def shrunk_component_ic() -> dict:
             ic, n = h.get("ic"), h.get("n")
             if ic is None or not n:
                 continue
-            # IC'nin standart hatası ≈ 1/√(n−1) (Fisher yaklaşımı) → sd = SE·√n
+            # σᵢ = 1/√(n−1) → `_empirical_bayes` σ²ᵢ = sd²/n hesapladığı için sd = √(n/(n−1)).
             cells[f"{bilesen}@{ufuk}"] = {
                 "mean": float(ic), "n": int(n),
                 "sd": (float(_m.sqrt(int(n)) / _m.sqrt(max(1, int(n) - 1))) if int(n) > 1 else None)}
-    out = _empirical_bayes(cells)
+    return cells
+
+
+def shrunk_component_ic() -> dict:
+    """Bileşen IC'lerinin küçültülmüş hâli. Kaynak `component_ic.json`ın GERÇEK katmanı; cf katmanı
+    dahil EDİLMEZ (farklı popülasyon — alınmamış hipotetik girişler; ikisini bir havuzda küçültmek
+    iki farklı gerçeği tek ortalamaya çekerdi).
+
+    `tablo_ici_eb` (WP-M 2C, 2026-08-01): tablonun KENDİ `eb` bloğunun DIŞ OKUYUCUSU (YASA 6).
+    Bu fonksiyon hesabı eskisi gibi kendisi yapmaya devam eder — blok yalnız GÖRÜNÜR olur, hükme
+    girmez. Blok yoksa (dosya `eb` alanı eklenmeden önce üretilmişse) bu dürüstçe söylenir;
+    "yok"u "sıfır küçültme" diye raporlamak uydurma olurdu."""
+    doc = store.read_json("component_ic.json", None)
+    if not doc:
+        return {"n_hucre": 0, "kucultuldu": False, "neden": "component_ic.json yok",
+                "tablo_ici_eb": {"var": False, "neden": "component_ic.json yok"}}
+    out = _empirical_bayes(_ic_hucreleri((doc.get("tablo") or {}).get("gercek") or {}))
     out["kaynak"] = "component_ic.json — YALNIZ gerçek katman (cf hariç: farklı popülasyon)"
     out["rol"] = "GÖSTERGE — verdict tabanlarına girmez"
+    out["tablo_ici_eb"] = _tablo_ici_eb_ozeti(doc)
     return out
+
+
+def _tablo_ici_eb_ozeti(doc: dict) -> dict:
+    """`component_ic.json`ın tablo-içi `eb` bloğunun TEK SATIRLIK özeti (YASA 6 okuyucusu).
+
+    Ham `ic` alanlarına DOKUNMAZ ve hiçbir hüküm üretmez; yalnız "blok var mı, kaç hücre
+    küçültüldü, en çok hangi hücre çekildi" sorularını cevaplar. En çok çekilen hücre bilerek
+    seçilir: küçültmenin NE KADAR olduğunu görmeden küçültülmüş bir sayıya güvenmek, ham sayıya
+    güvenmekten daha iyi değildir (2C bloğunun kendi gerekçesi)."""
+    eb = doc.get("eb")
+    if not isinstance(eb, dict) or not (eb.get("katmanlar") or {}):
+        return {"var": False,
+                "neden": ("tabloda `eb` bloğu YOK — dosya blok eklenmeden ÖNCE üretilmiş "
+                          "(bir sonraki `component_ic()` koşumunda doğar)")}
+    ger = (eb.get("katmanlar") or {}).get("gercek") or {}
+    hucreler = ger.get("hucreler") or {}
+    en_cok = None
+    if hucreler:
+        ad, h = max(hucreler.items(), key=lambda kv: abs(kv[1].get("cekim") or 0.0))
+        en_cok = {"hucre": ad, "ham_ic": h.get("ham_ic"), "eb_ic": h.get("eb_ic"),
+                  "shrink_katsayisi": h.get("shrink_katsayisi"), "cekim": h.get("cekim"),
+                  "n": h.get("n")}
+    return {"var": True, "n_hucre": ger.get("n_hucre"), "kucultuldu": ger.get("kucultuldu"),
+            "genel_ortalama": ger.get("genel_ortalama"), "tau2": ger.get("tau2"),
+            "neden": ger.get("neden"), "en_cok_cekilen": en_cok,
+            "yontem": eb.get("yontem"), "hukum_verir": False,
+            "kapsam": ("component_ic tablosunun KENDİ eb sütunu (yalnız gerçek katman özetlendi); "
+                       "ham `ic` alanları DEĞİŞMEZ ve okuyucular ham ic okumaya devam eder")}
 
 
 # ==================================================================================================

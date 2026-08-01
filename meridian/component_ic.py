@@ -64,6 +64,12 @@ ağırlığı ancak olasılıksal kapıdan geçen bir hipotezle değişebilir.
     ancak ikisi aynı popülasyonda, aynı ufuklarda ve aynı CI disiplininde yan yana durursa
     söylenebilir. Yeni satırların ölçek beyanı (ham seri mi, skora giren dönüşüm mü) COMPONENTS
     tanımının yanında ve çıktının `yeni_bilesen_notu` alanında yazılıdır.
+
+(6) EMPİRİK-BAYES SÜTUNU PARALELDİR, YERİNE GEÇMEZ (WP-M 2C, 2026-08-01). Çıktıya `eb` alanı
+    eklendi: her hücrenin ham IC'sinin yanında, o katmanın ortak ortalamasına küçültülmüş ikizi
+    (`eb_ic`) ve küçültme katsayısı (`shrink_katsayisi`). `tablo` sözlüğü BİT-BİT AYNI kalır;
+    bugünün okuyucuları (beyin `compact_lines`, pano, `yeniden_uret` farkı) ham `ic` okumaya
+    devam eder. Gerekçe, σ yasası ve beyan edilen sınır `_eb_blok`un üstündeki blokta.
 """
 from __future__ import annotations
 
@@ -144,6 +150,69 @@ def _fisher_ci(ic: float, n: int) -> tuple[float | None, float | None]:
         return None, None
     se = 1.0 / math.sqrt(n - 3)
     return round(math.tanh(z - CI_Z * se), 4), round(math.tanh(z + CI_Z * se), 4)
+
+
+# ==================================================================================================
+# 2C — EMPİRİK BAYES SÜTUNU (WP-M borç kalemi, 2026-08-01)
+# ==================================================================================================
+# NE. Her hücrenin HAM `ic`'sinin YANINA, o katmanın ortak ortalamasına James-Stein tarzı
+# küçültülmüş bir ikizi (`eb_ic`) + küçültme katsayısı (`shrink_katsayisi`) yazılır.
+#
+# NEDEN. Bu tablonun hücreleri n=31 ile n=2100 arasında değişiyor ve panoda AYNI yazı tipiyle yan
+# yana duruyorlar. Küçük hücrenin ekstrem IC'si büyük ölçüde gürültüdür; "en güçlü bileşen" seçimi
+# tam o gürültüyü seçer (kazananın-laneti). Küçültme, her hücreyi kendi belirsizliği ölçüsünde
+# ortak ortalamaya çeker.
+#
+# HAM `ic` DEĞİŞMEZ — GERİYE UYUM ÇİVİLİ. `eb` bir PARALEL SÜTUNdur: `tablo` sözlüğüne tek bayt
+# dokunmaz, ayrı bir üst-seviye alanda durur. Bugünün okuyucuları (`compact_lines` → beyin,
+# `analytics.shrunk_component_ic` → pano, `yeniden_uret` farkı) HAM ic okumaya devam eder. `eb`
+# bugün YALNIZ GÖRÜNÜRDÜR; bir hükme bağlanması ayrı bir karardır.
+#
+# NEDEN KATMAN BAŞINA VE NEDEN TEK HAVUZDA DEĞİL: `gercek` ile `cf` FARKLI POPÜLASYONLARDIR (biri
+# alınmış işlemler, öteki alınmamış hipotetik girişler) — modül başlığının 4. kararı bunu zaten
+# yazıyor. İkisini tek ortalamaya çekmek, iki farklı gerçeği tek sayıya eritirdi.
+#
+# BEYAN EDİLEN SINIR: aynı bileşenin 5/10/20 barlık hücreleri AYNI gözlemlerden türer, yani
+# bağımsız değildirler. Momentler yöntemi τ²'yi hücreler-arası varyanstan tahmin ederken bağımsızlık
+# varsayar → τ² bir miktar KÜÇÜK, küçültme bir miktar GÜÇLÜ olabilir. Bu, sayıyı yanlış yapmaz ama
+# "ne kadar" sorusunu belirsizleştirir; `beyan` alanı bunu çıktının içinde taşır.
+def _eb_blok(tablo: dict) -> dict:
+    """Katman başına empirik-Bayes küçültme sütunu. HAM `ic` alanlarına DOKUNMAZ.
+
+    Hesap `analytics._empirical_bayes` ile yapılır ve hücreler `analytics._ic_hucreleri` ile
+    kurulur — TEK UYGULAMA, İKİ TÜKETİCİ (pano okuyucusu aynı fonksiyonları çağırır). İkinci bir
+    küçültme yazmak, aynı adı taşıyan iki farklı sayı üretirdi."""
+    from .analytics import _empirical_bayes, _ic_hucreleri
+    katmanlar = {}
+    for lay in LAYERS:
+        ham = _empirical_bayes(_ic_hucreleri((tablo or {}).get(lay) or {}))
+        katmanlar[lay] = {
+            "n_hucre": ham.get("n_hucre"), "kucultuldu": ham.get("kucultuldu"),
+            "genel_ortalama": ham.get("genel_ortalama"), "tau2": ham.get("tau2"),
+            "sigma2_vekil": ham.get("sigma2_vekil"), "neden": ham.get("neden"),
+            "hucreler": {ad: {"ham_ic": h["ham"], "eb_ic": h["kucultulmus"],
+                              "shrink_katsayisi": h["agirlik"], "cekim": h["cekim"], "n": h["n"]}
+                         for ad, h in (ham.get("hucreler") or {}).items()},
+        }
+    return {
+        "katmanlar": katmanlar,
+        "hucre_anahtari": "bileşen@ufuk",
+        "yontem": ("empirik Bayes / James-Stein (momentler yöntemi): eb_ic = w·ic + (1−w)·ortak; "
+                   "w = τ²/(τ²+σ²ᵢ); τ² = hücreler-arası varyans − ortalama hücre-içi varyans, "
+                   "0'a kıstırılmış; ortak ortalama n-ağırlıklıdır"),
+        "shrink_katsayisi_tanimi": ("w = hücrenin KENDİ tahminine verilen ağırlık. w=1 → hiç "
+                                    "küçültme (ham=eb), w=0 → TAM küçültme (eb=ortak ortalama). "
+                                    "`cekim` = ham_ic − eb_ic, yani küçültmenin BÜYÜKLÜĞÜ"),
+        "sigma_yasasi": ("σᵢ = 1/√(n−1) — küçültme HAM IC (r) ölçeğinde yapılır. Hücrenin `ci` "
+                         "alanı ise Fisher-z ölçeğindedir ve orada SE = 1/√(n−3): iki farklı "
+                         "sabit, iki farklı ÖLÇEK (çelişki değil)"),
+        "beyan": ("PARALEL SÜTUN — ham `ic` alanları DEĞİŞMEZ ve bugünün okuyucuları (beyin, pano, "
+                  "yeniden-üretim farkı) HAM ic okumaya devam eder. Küçültülmüş değer hiçbir "
+                  "hükme, kapıya ya da eşiğe girmez; küçültme n'i BÜYÜTMEZ, yalnız ortalamayı "
+                  "çeker. Katmanlar AYRI küçültülür (gerçek/cf farklı popülasyonlardır). SINIR: "
+                  "aynı bileşenin 5/10/20 bar hücreleri aynı gözlemlerden türer, bağımsız "
+                  "değildir → τ² bir miktar küçük, küçültme bir miktar güçlü olabilir"),
+    }
 
 
 def _component_frame(df: pd.DataFrame, prox_max: float,
@@ -431,6 +500,10 @@ def component_ic(write: bool = True) -> dict | None:
         "getiri_tanimi": "close[t+h]/close[t]-1 (sinyal barı kapanışından, yüzde; R'ye bölünmez)",
         "prox_max": prox_max, "tablo": tablo, "en_guclu": en_guclu, "verdict": verdict,
         "anlamli_sayim": anlamli_sayim,
+        # 2C EMPİRİK-BAYES PARALEL SÜTUN (WP-M, 2026-08-01) — `tablo`ya DOKUNMAZ, yanında durur.
+        # Gerekçe ve sınırlar `_eb_blok`un üstündeki blokta; okuyucusu
+        # `analytics.shrunk_component_ic().tablo_ici_eb` (YASA 6).
+        "eb": _eb_blok(tablo),
         # YENİ BİLEŞENLERİN ÖLÇEK BEYANI ÇIKTININ İÇİNDE (getiri tanımı/CI varsayımıyla aynı
         # gerekçe): panoyu ya da beyni okuyan biri "bu satır skora giren büyüklüğün mü, ham
         # göstergenin mi IC'si?" sorusunu koda inmeden cevaplayabilmeli — aksi hâlde bant puanının

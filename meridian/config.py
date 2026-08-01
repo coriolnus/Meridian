@@ -72,6 +72,106 @@ def limits() -> dict:
     return goal()["limits"]
 
 
+# --- WP-M: CANLI-BEKLENTİ TAVANI (ROADMAP §WP-M borç kalemi, 2026-08-01) -------------------------
+# KURAL (ROADMAP'te yazılı, bugüne kadar HİÇBİR KOD OKUMUYORDU): canlı beklenti tavanı =
+# backtest × 0,5; canlı/backtest oranı × 0,4'ün altına düşerse SÜSPANSİYON DEĞERLENDİRMESİ.
+# Yazılı ama bağlanmamış bir kural, `explore_rate`/`kill_switch_file` sınıfındadır: operatör onu
+# yürürlükte sanır, gerçekte hiçbir yüzey onu ölçmez. Bu tur kuralı KONFİGÜRE EDİLEBİLİR yapar ve
+# ölçülür kılar — HÜKÜM VERDİRMEZ (bkz. analytics.live_expectancy_ceiling'in `hukme_girmez`i).
+#
+# VARSAYILAN NEDEN KODDA, goal.yaml'da DEĞİL: goal.yaml DEĞİŞMEZ sözleşmedir ve bu turda
+# DOKUNULMADI (dosyaya yeni alan yazmak, canlı state'e yazmaktır — bu depoda ayrı bir yetki).
+# Kod varsayılanı sayesinde alanlar goal.yaml'da OLMASA DA kural yürürlüktedir; operatör bir gün
+# `live_expectancy_cap_mult` / `live_suspend_ratio` anahtarlarını dosyaya yazarsa DOSYA KAZANIR.
+# Kaynak her okumada ADIYLA raporlanır (`kaynak` alanı) ki "0,5 nereden geldi?" sorusu tahminle
+# cevaplanmasın.
+#
+# GUARD ŞERHİ: bu iki ad `guard.GOAL_KEYS` içinde DEĞİLDİR, yani bugün Hermes'in önerebileceği bir
+# değişken adı da değildir (`bounds.yaml`da yoklar → `classify_proposal` zaten reddeder). Operatör
+# alanları goal.yaml'a yazmaya karar verirse GOAL_KEYS'e de eklenmelidir — aksi hâlde GU1
+# sürüklenme testi "goal.yaml'da tanınmayan anahtar" diye kırmızı yanar. Bu, unutulmasın diye
+# burada yazılıdır ve `docs/olcum_standartlari.md`de tekrarlanır.
+LIVE_EXPECTANCY_CAP_MULT = 0.5    # canlıdan BEKLENEN tavan = backtest beklentisi × bu katsayı
+LIVE_SUSPEND_RATIO = 0.4          # canlı/backtest bu oranın ALTINA düşerse süspansiyon değerlendirmesi
+_LIVE_EXPECTANCY_ALANLARI = (("live_expectancy_cap_mult", LIVE_EXPECTANCY_CAP_MULT),
+                             ("live_suspend_ratio", LIVE_SUSPEND_RATIO))
+
+
+def live_expectancy_rule(goal_doc: dict | None = None) -> dict:
+    """Canlı-beklenti tavanı kuralının YÜRÜRLÜKTEKİ değerleri + her değerin KAYNAĞI.
+
+    Dönüş: {"cap_mult", "suspend_ratio", "kaynak": {alan: "goal.yaml"|"kod varsayilani"},
+            "kural_metni", "uyari"}.
+
+    ÜÇ DÜRÜSTLÜK KURALI:
+      (1) goal.yaml'da alan YOKSA kod varsayılanı kullanılır ve `kaynak` bunu söyler — sessiz bir
+          varsayılan, okuyucuya "operatör böyle yazmış" izlenimi verirdi.
+      (2) GEÇERSİZ değer (sayı değil / (0,1] dışında) SESSİZCE kabul EDİLMEZ: uyarılır (YASA 4) ve
+          kod varsayılanına düşülür. Bir tavan katsayısının 0 ya da negatif olması "tavan yok"
+          demek değil, ölçümü anlamsız kılmak demektir.
+      (3) suspend_ratio > cap_mult TUTARSIZDIR — süspansiyon eşiği beklenti tavanının ÜSTÜNDEyse
+          tavanın altındaki her NORMAL sonuç aynı anda süspansiyon adayı olurdu. Bu durumda İKİ
+          alan birden kod varsayılanına döner ve gerekçe `uyari` alanında taşınır.
+
+    Saf okuma: hiçbir dosyaya yazmaz, hiçbir davranışı değiştirmez."""
+    if goal_doc is None:
+        try:
+            goal_doc = goal()
+        except (OSError, ValueError) as e:
+            # YASA 4: goal.yaml okunamıyorsa kural yine yürür (varsayılanlar kodda) ama bu SESSİZ
+            # kalamaz — okunamayan bir sözleşme, "alan yazılmamış" ile aynı şey değildir.
+            try:
+                from . import obs
+                obs.warn("live_expectancy_goal_unreadable", error=f"{type(e).__name__}: {e}")
+            except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok ve kural okuması bundan ötürü durduramaz
+                pass
+            goal_doc = {}
+    if not isinstance(goal_doc, dict):
+        goal_doc = {}
+
+    degerler, kaynak, uyarilar = {}, {}, []
+    for ad, varsayilan in _LIVE_EXPECTANCY_ALANLARI:
+        ham = goal_doc.get(ad)
+        if ham is None:
+            degerler[ad], kaynak[ad] = varsayilan, "kod varsayilani"
+            continue
+        try:
+            v = float(ham)
+        except (TypeError, ValueError):  # sessiz-yutma: sayıya çevrilemeyen değer AŞAĞIDA geçersiz sayılır, uyarı listesine adıyla girer ve obs.warn ile bir kez duyurulur — burada susmak kaydı ERTELER, yutmaz
+            v = None
+        if v is None or not (0.0 < v <= 1.0):
+            uyarilar.append(f"{ad}={ham!r} geçersiz (sayı ve (0,1] aralığında olmalı) — "
+                            f"kod varsayılanı {varsayilan} kullanıldı")
+            degerler[ad], kaynak[ad] = varsayilan, "kod varsayilani (goal.yaml degeri gecersiz)"
+        else:
+            degerler[ad], kaynak[ad] = v, "goal.yaml"
+
+    if degerler["live_suspend_ratio"] > degerler["live_expectancy_cap_mult"]:
+        uyarilar.append(
+            f"tutarsız kural: live_suspend_ratio ({degerler['live_suspend_ratio']}) > "
+            f"live_expectancy_cap_mult ({degerler['live_expectancy_cap_mult']}) — süspansiyon eşiği "
+            f"beklenti tavanının üstünde olamaz; İKİ alan da kod varsayılanına döndürüldü")
+        for ad, varsayilan in _LIVE_EXPECTANCY_ALANLARI:
+            degerler[ad], kaynak[ad] = varsayilan, "kod varsayilani (goal.yaml kurali tutarsiz)"
+
+    if uyarilar:
+        try:
+            from . import obs
+            obs.warn("live_expectancy_rule_invalid", detail=" · ".join(uyarilar))
+        except Exception:  # sessiz-yutma: kayıt kanalı düştü — uyarı metni yine dönüş sözlüğünde taşınır, yani kayıp değil
+            pass
+
+    return {"cap_mult": degerler["live_expectancy_cap_mult"],
+            "suspend_ratio": degerler["live_suspend_ratio"],
+            "kaynak": kaynak,
+            "varsayilanlar": {"live_expectancy_cap_mult": LIVE_EXPECTANCY_CAP_MULT,
+                              "live_suspend_ratio": LIVE_SUSPEND_RATIO},
+            "kural_metni": ("canlı beklenti TAVANI = backtest beklentisi × cap_mult; "
+                            "canlı/backtest oranı suspend_ratio'nun ALTINDAysa SÜSPANSİYON "
+                            "DEĞERLENDİRMESİ (ROADMAP §WP-M)"),
+            "uyari": (" · ".join(uyarilar) if uyarilar else None)}
+
+
 def strategy_path() -> Path:
     return STATE / "strategy.yaml"
 
