@@ -1,0 +1,33 @@
+card_id: EDG-2026-010
+family: trend_pullback_setup   # WP-K/G4 — ikinci kurulum adayı
+thesis: >
+  Mevcut kırılma ailesi GÜÇTE giriyor (breakout/momentum-burst). G4 hipotezi: trend şablonunu
+  geçen hisselerde GERİ-ÇEKİLMEDE giriş (destek dokunuşu + devam tetiği) kırılmadan farklı günlerde,
+  farklı fiyat noktalarında sinyal üretir ve bağımsız bir aile oluşturur. Bağımsızlık ŞART:
+  kırılma sinyalleriyle yüksek örtüşen bir "yeni" aile aile değil, alt-türdür.
+evidence_refs: [ROADMAP WP-K G4 (korelasyon<0.3 şartı + pullback askı-bulgusu notu), katalog
+  devam-formasyonları ailesi (birinci-el çekilmedi — caveat; hüküm kendi verimizde)]
+universe: full_251
+features_asof: >
+  Ön-şart: hisse trend şablonunu geçiyor (mevcut şablon tanımı, t itibarıyla). Geri-çekilme tanımı
+  (grid): (a) sma20_dokunus — kapanış 20-SMA'ya <=%2 mesafede VE son 5 günde >=%4 geri-çekilme;
+  (b) dip10 — kapanış son 10 işlem gününün en düşüğüne <=%1 mesafede. Devam tetiği (her ikisinde):
+  ertesi günlerde kapanış > önceki günün yükseği (ilk gerçekleşme sinyal günüdür). Takvim-kapılı
+  barlar + bars_integrity dışlaması. YALNIZ t ve öncesi.
+horizon: "cf-katmanlı retrospektif (MAX/resmom şablonu): sinyal-sonrası 5/10/20g ileri getiri + kırılma-sinyalleriyle örtüşme ölçümü"
+parameter_grid:
+  geri_cekilme_tanimi: [sma20_dokunus, dip10]   # K+=2
+cost_model: "10bps + not"
+success_metric: >
+  sinyal dilimi @10 VEYA @20 anlamlı POZİTİF (21g blok-bootstrap CI 0-dışı) VE kırılma-ailesi
+  sinyalleriyle örtüşme <0.3 (aynı sembol-gün kesişimi / birleşimi, Jaccard) — bağımsız aile kanıtı.
+kill_criteria:
+  - "iki tanımda da ileri getiri CI-0-içi → bilgisiz, arşiv"
+  - "örtüşme >=0.3 → bağımsız aile DEĞİL (kırılmanın alt-türü), arşiv + not"
+  - "sinyal sayısı ölçüm için yetersizse (<200 sembol-gün) → ölçülemedi-nedenli, kart askıda (K harcanmaz — tanım gevşetilmez)"
+guards:
+  - "pozitif kontrol: ham rvol20 @20 IC ≈0.0645 aynı boru hattında"
+  - "PK4/PK5 yol-tutarlılık standart; pnl_dollars-dersi bu kartta konu dışı (defter koşumu yok, kesit ölçümü)"
+k_registry: {registered_at: "2026-08-01T08:5xZ", trial_ids: [pending]}
+status: registered
+notes: "Ölçüm scratchpad/pullback_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ajan DOKUNMAZ. Hüküm pozitifse sıradaki adım gölge-önce entegrasyon tasarımıdır (ayrı tur)."
