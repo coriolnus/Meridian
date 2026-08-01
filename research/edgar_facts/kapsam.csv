@@ -1,0 +1,14 @@
+tag,sembol_n_tum,sembol_n_evren251,satir,end_min,end_max,filed_min,filed_max,gecikme_medyan_gun,gecikme_p10,gecikme_p90,gecikme_negatif_n,birimler,form_ilk5,aile
+CommonStockSharesIssued,233,226,23251,2006-12-31,2026-07-03,2009-05-07,2026-07-31,119.0,29.0,418.0,1,shares,"10-Q,10-K,8-K,10-Q/A,10-K/A",shares
+CommonStockSharesOutstanding,193,188,17938,2006-12-31,2026-07-03,2009-06-26,2026-07-31,123.0,28.0,421.0,0,shares,"10-Q,10-K,8-K,10-Q/A,10-K/A",shares
+EntityCommonStockSharesOutstanding,247,239,15060,2008-12-31,2026-07-30,2009-04-15,2026-07-31,7.0,3.0,32.0,10,shares,"10-Q,10-K,10-Q/A,10-K/A,8-K",shares
+WeightedAverageNumberOfDilutedSharesOutstanding,255,247,52300,2007-09-29,2026-07-03,2009-04-15,2026-07-31,388.0,27.0,429.0,0,shares,"10-Q,10-K,8-K,10-Q/A,10-K/A",shares
+WeightedAverageNumberOfShareOutstandingBasicAndDiluted,39,37,1404,2010-09-30,2022-03-31,2012-05-14,2022-04-27,389.0,29.0,512.0,0,shares,"10-Q,10-K,10-Q/A,8-K,20-F/A",shares
+WeightedAverageNumberOfSharesOutstandingBasic,252,244,51903,2007-09-29,2026-07-03,2009-04-15,2026-07-31,388.0,27.0,426.0,0,shares,"10-Q,10-K,8-K,10-Q/A,10-K/A",shares
+Assets,258,250,35987,2007-12-31,2026-07-03,2009-04-15,2026-07-31,121.0,28.0,417.0,0,USD,"10-Q,10-K,8-K,10-Q/A,10-K/A",fundamentals
+CostOfGoodsAndServicesSold,142,138,17054,2007-09-29,2026-07-03,2009-07-22,2026-07-31,389.0,27.0,480.7000000000007,0,USD,"10-Q,10-K,8-K,10-K/A,10-Q/A",fundamentals
+CostOfRevenue,70,70,9756,2007-09-30,2026-06-30,2009-05-11,2026-07-31,388.0,27.0,500.0,0,USD,"10-Q,10-K,8-K,10-Q/A,10-K/A",fundamentals
+GrossProfit,125,122,25619,2006-12-31,2026-06-30,2009-06-03,2026-07-31,389.0,30.0,612.0,0,USD,"10-Q,10-K,8-K,10-K/A,10-Q/A",fundamentals
+RevenueFromContractWithCustomerExcludingAssessedTax,186,180,17875,2015-12-31,2026-07-03,2017-07-26,2026-07-31,387.0,27.0,518.0,0,USD,"10-Q,10-K,8-K,10-K/A,10-KT",fundamentals
+RevenueFromContractWithCustomerIncludingAssessedTax,43,41,2167,2016-03-31,2026-06-30,2018-04-24,2026-07-30,390.0,28.0,604.4000000000001,0,USD,"10-Q,10-K,8-K,10-Q/A",fundamentals
+Revenues,211,204,34041,2006-12-31,2026-06-30,2009-04-15,2026-07-31,389.0,30.0,609.0,0,"AFN,USD","10-Q,10-K,8-K,10-Q/A,10-K/A",fundamentals

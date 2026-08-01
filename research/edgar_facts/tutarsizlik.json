@@ -1,0 +1,447 @@
+{
+ "gelir_etiketi_yok": [
+  "GS",
+  "SPOT",
+  "SYF"
+ ],
+ "brutkar_ve_maliyet_yok": [
+  "AEP",
+  "AFL",
+  "AIG",
+  "ALL",
+  "APO",
+  "AVB",
+  "AXP",
+  "BAC",
+  "BLK",
+  "BX",
+  "CB",
+  "CDNS",
+  "CEG",
+  "CHTR",
+  "CMCSA",
+  "COF",
+  "CSX",
+  "CTSH",
+  "D",
+  "DAL",
+  "DFS",
+  "DIS",
+  "DLR",
+  "ED",
+  "EOG",
+  "ES",
+  "EXC",
+  "FANG",
+  "FI",
+  "FISV",
+  "GS",
+  "HAL",
+  "HES",
+  "HLT",
+  "HUM",
+  "HWM",
+  "IRM",
+  "JPM",
+  "KKR",
+  "LIN",
+  "LUV",
+  "LYV",
+  "MA",
+  "MAR",
+  "MET",
+  "MS",
+  "NEE",
+  "NOC",
+  "NSC",
+  "O",
+  "PARA",
+  "PGR",
+  "PLD",
+  "PNC",
+  "PRU",
+  "PYPL",
+  "SCHW",
+  "SPG",
+  "SPOT",
+  "SRE",
+  "SYF",
+  "TRV",
+  "UAL",
+  "UNP",
+  "UPS",
+  "USB",
+  "V",
+  "VTR",
+  "WFC",
+  "WMB",
+  "XOM"
+ ],
+ "gross_profit_yok_ama_maliyet_var": [
+  "AMT",
+  "C",
+  "CBRE",
+  "CCI",
+  "CCL",
+  "CI",
+  "COP",
+  "CVX",
+  "DUK",
+  "DVN",
+  "ECL",
+  "EQT",
+  "ETN",
+  "EXPE",
+  "F",
+  "FCX",
+  "FDX",
+  "GD",
+  "GOOG",
+  "GOOGL",
+  "INTU",
+  "IPG",
+  "ITW",
+  "KMI",
+  "KR",
+  "LLY",
+  "LNG",
+  "MCD",
+  "META",
+  "MMM",
+  "MPC",
+  "MRK",
+  "MRNA",
+  "MTCH",
+  "NCLH",
+  "OMC",
+  "OXY",
+  "PCAR",
+  "PEG",
+  "PFE",
+  "PG",
+  "PINS",
+  "PPG",
+  "PSX",
+  "QCOM",
+  "RCL",
+  "REGN",
+  "ROST",
+  "SBUX",
+  "SLB",
+  "SNAP",
+  "SO",
+  "T",
+  "TMUS",
+  "UNH",
+  "VFC",
+  "VRTX",
+  "VZ",
+  "WBD",
+  "WEC",
+  "WELL",
+  "WMT",
+  "XEL"
+ ],
+ "assets_yok": [
+  "SPOT"
+ ],
+ "iki_gelir_etiketi_cakisma": [
+  {
+   "symbol": "WMT",
+   "ortak_donem": 58,
+   "farkli_deger_n": 58,
+   "max_rel_fark": 0.011765442499032353
+  },
+  {
+   "symbol": "CBRE",
+   "ortak_donem": 58,
+   "farkli_deger_n": 57,
+   "max_rel_fark": 0.032230470697144485
+  },
+  {
+   "symbol": "IPG",
+   "ortak_donem": 57,
+   "farkli_deger_n": 57,
+   "max_rel_fark": 0.2318987644004059
+  },
+  {
+   "symbol": "BURL",
+   "ortak_donem": 56,
+   "farkli_deger_n": 56,
+   "max_rel_fark": 0.004475715041830473
+  },
+  {
+   "symbol": "COP",
+   "ortak_donem": 56,
+   "farkli_deger_n": 56,
+   "max_rel_fark": 0.4608948708621317
+  },
+  {
+   "symbol": "FCX",
+   "ortak_donem": 56,
+   "farkli_deger_n": 56,
+   "max_rel_fark": 0.12206192251580483
+  },
+  {
+   "symbol": "LNG",
+   "ortak_donem": 57,
+   "farkli_deger_n": 55,
+   "max_rel_fark": 0.24882629107981222
+  },
+  {
+   "symbol": "CCI",
+   "ortak_donem": 54,
+   "farkli_deger_n": 54,
+   "max_rel_fark": 24.74418604651163
+  },
+  {
+   "symbol": "AVB",
+   "ortak_donem": 53,
+   "farkli_deger_n": 53,
+   "max_rel_fark": 834.6460431654676
+  },
+  {
+   "symbol": "DVN",
+   "ortak_donem": 51,
+   "farkli_deger_n": 51,
+   "max_rel_fark": 1.4361471861471862
+  },
+  {
+   "symbol": "KMI",
+   "ortak_donem": 51,
+   "farkli_deger_n": 51,
+   "max_rel_fark": 0.18848653667595172
+  },
+  {
+   "symbol": "COF",
+   "ortak_donem": 49,
+   "farkli_deger_n": 49,
+   "max_rel_fark": 7.593283582089552
+  },
+  {
+   "symbol": "CVX",
+   "ortak_donem": 49,
+   "farkli_deger_n": 49,
+   "max_rel_fark": 0.15270626648248148
+  },
+  {
+   "symbol": "MET",
+   "ortak_donem": 49,
+   "farkli_deger_n": 49,
+   "max_rel_fark": 63.58841463414634
+  },
+  {
+   "symbol": "WMB",
+   "ortak_donem": 49,
+   "farkli_deger_n": 48,
+   "max_rel_fark": 0.4562131469753221
+  },
+  {
+   "symbol": "ED",
+   "ortak_donem": 49,
+   "farkli_deger_n": 47,
+   "max_rel_fark": 0.06166606563288857
+  },
+  {
+   "symbol": "OXY",
+   "ortak_donem": 50,
+   "farkli_deger_n": 47,
+   "max_rel_fark": 0.25961904761904764
+  },
+  {
+   "symbol": "AMT",
+   "ortak_donem": 49,
+   "farkli_deger_n": 46,
+   "max_rel_fark": 15.890677966101695
+  },
+  {
+   "symbol": "D",
+   "ortak_donem": 45,
+   "farkli_deger_n": 45,
+   "max_rel_fark": 0.5973053892215568
+  },
+  {
+   "symbol": "SRE",
+   "ortak_donem": 43,
+   "farkli_deger_n": 42,
+   "max_rel_fark": 0.21215780998389694
+  },
+  {
+   "symbol": "TRGP",
+   "ortak_donem": 45,
+   "farkli_deger_n": 41,
+   "max_rel_fark": 0.26490924805531546
+  },
+  {
+   "symbol": "EQT",
+   "ortak_donem": 39,
+   "farkli_deger_n": 38,
+   "max_rel_fark": 1.8210745214539952
+  },
+  {
+   "symbol": "HES",
+   "ortak_donem": 32,
+   "farkli_deger_n": 32,
+   "max_rel_fark": 7500000000.0
+  },
+  {
+   "symbol": "LYB",
+   "ortak_donem": 55,
+   "farkli_deger_n": 32,
+   "max_rel_fark": 0.032582386892571216
+  },
+  {
+   "symbol": "XOM",
+   "ortak_donem": 30,
+   "farkli_deger_n": 30,
+   "max_rel_fark": 0.052181913774973714
+  }
+ ],
+ "iki_gelir_etiketi_cakisan_sembol_n": 131,
+ "dei_vs_usgaap_hisse": {
+  "karsilastirilabilir_sembol_n": 60,
+  "medyan_rel_fark_>1%_sembol_n": 8,
+  "en_buyuk_10": [
+   {
+    "symbol": "MET",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 820397071.0,
+    "rel_fark_max": 820397071.0
+   },
+   {
+    "symbol": "CCI",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 998.3025809310417,
+    "rel_fark_max": 998.3025809310417
+   },
+   {
+    "symbol": "CL",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 1.004469040217038,
+    "rel_fark_max": 1.004469040217038
+   },
+   {
+    "symbol": "C",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 0.9990000000114153,
+    "rel_fark_max": 0.9990000000114153
+   },
+   {
+    "symbol": "RTX",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 0.9985262486302483,
+    "rel_fark_max": 0.9985262486302483
+   },
+   {
+    "symbol": "IP",
+    "ortak_tarih": 4,
+    "rel_fark_medyan": 0.16731291599443912,
+    "rel_fark_max": 0.2822623630422611
+   },
+   {
+    "symbol": "OXY",
+    "ortak_tarih": 23,
+    "rel_fark_medyan": 0.16704340969732978,
+    "rel_fark_max": 2.1674428605782565
+   },
+   {
+    "symbol": "KVUE",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 0.10378349815714437,
+    "rel_fark_max": 0.10378349815714437
+   },
+   {
+    "symbol": "EQR",
+    "ortak_tarih": 2,
+    "rel_fark_medyan": 0.0064354271649277065,
+    "rel_fark_max": 0.012870854329855413
+   },
+   {
+    "symbol": "QCOM",
+    "ortak_tarih": 1,
+    "rel_fark_medyan": 0.005929161674948672,
+    "rel_fark_max": 0.005929161674948672
+   }
+  ]
+ },
+ "bayat_seri_evren": [
+  {
+   "symbol": "C",
+   "son_filed": "2026-02-20"
+  },
+  {
+   "symbol": "SPOT",
+   "son_filed": "2026-02-10"
+  }
+ ],
+ "bayat_seri_emekli": [
+  {
+   "symbol": "ANSS",
+   "son_filed": "2025-04-30"
+  },
+  {
+   "symbol": "DFS",
+   "son_filed": "2025-04-30"
+  },
+  {
+   "symbol": "FI",
+   "son_filed": "2026-05-06"
+  },
+  {
+   "symbol": "HES",
+   "son_filed": "2025-05-08"
+  },
+  {
+   "symbol": "IPG",
+   "son_filed": "2025-11-10"
+  },
+  {
+   "symbol": "K",
+   "son_filed": "2025-10-30"
+  },
+  {
+   "symbol": "PARA",
+   "son_filed": "2025-07-31"
+  },
+  {
+   "symbol": "WBA",
+   "son_filed": "2025-06-26"
+  }
+ ],
+ "shares_birimleri": {
+  "shares": 161856
+ },
+ "fundamentals_birimleri": {
+  "USD": 142498,
+  "AFN": 1
+ },
+ "shares_val_sifir_veya_negatif": 76,
+ "shares_filed_end_oncesi": {
+  "satir": 11,
+  "tag_dagilimi": {
+   "EntityCommonStockSharesOutstanding": 10,
+   "CommonStockSharesIssued": 1
+  },
+  "en_negatif_gun": -309
+ },
+ "fundamentals_filed_end_oncesi": {
+  "satir": 0,
+  "tag_dagilimi": {},
+  "en_negatif_gun": 8
+ },
+ "_okuma_notu": "Bu envanter KAYNAKTAKI (SEC dosyalamalarindaki) tutarsizliklarin sayimidir; duzeltilmemistir. Olcum tarafi filtresini kendisi secer ve kartinda yazar.",
+ "ornekler": {
+  "MET_dei_sifir": "MET 2010-06-30: dei EntityCommonStockSharesOutstanding=0 iken us-gaap CommonStockSharesOutstanding=820,397,071 (dosyalayan hatasi: sifir)",
+  "CCI_olcek_hatasi": "CCI 2008-12-31: us-gaap Issued/Outstanding=2.884644e11, dei=288,665,752 (us-gaap tarafinda 1000x olcek hatasi)",
+  "OXY_issued_vs_outstanding": "OXY 2023-09-30: Issued=1.105568e9 > Outstanding=877,701,484 (fark hazine hissesi \u2014 HATA DEGIL, semantik)",
+  "AVB_gelir_etiketi": "AVB 2026Q2: RevenueFromContract...=1.78e6 ama Revenues=7.78e8 (REIT'te kira geliri sozlesme-geliri etiketine girmez; iki etiket AYNI SEY DEGIL)",
+  "COP_gelir_etiketi": "COP 2026Q1: RevenueFromContract...=1.350e10, Revenues=1.576e10 (fark: diger gelirler)",
+  "MPWR_AFN": "MPWR FY2012 Revenues birimi 'AFN' (Afgan afganisi) olarak etiketlenmis \u2014 tek satir, dosyalayan hatasi; USD filtresi bunu duser",
+  "GOOG_GOOGL_dei_yok": "Alphabet'te dei:EntityCommonStockSharesOutstanding YOK (cok-sinifli kapak sayisi boyutlu/dimensioned tag ile verilir, companyfacts boyutlu olculeri tasimaz). us-gaap CommonStockSharesOutstanding toplam sinif adedini veriyor (2026-06-30: 1.223e10).",
+  "negatif_gecikme": "11 satirda filed < end (kapak tarihi dosyalamadan SONRAYA yazilmis; ADBE end=2010-06-15 filed=2010-01-22 gibi acik yazim hatalari). PIT kurali `filed`i kullandigi icin bu satirlar erken bilgi SIZDIRMAZ.",
+  "XOM_kimlik_kaymasi": "company_tickers.json XOM -> CIK 2115436 ('ExxonMobil Holdings Corp', NYSE, halef S-8 POS'lari 2026-07-01); o kayitta TEK BIR us-gaap/dei olcusu yok (yalniz 'ffd' ucret olgusu). Butun gecmis oncul CIK 34088'de ('Exxon Mobil Corporation', son 10-Q 2026-05-04) \u2014 haritaya EK CIK olarak eklendi, XOM satirlari 34088'den geliyor.",
+  "C_companyfacts_gecikmesi": "Citigroup (CIK 831001) 2026-05-07'de 2026-03-31 donemli, inline-XBRL'li 10-Q dosyalamis (submissions API'de gorunuyor) ama 2026-08-01 cekiminde companyfacts'teki en son filed 2026-02-20 (FY2025 10-K). Yani SEC toplayicisinin kendisi gecikebiliyor; canli kullanimda 'son filed' bekcisi sart.",
+  "SPOT_ifrs": "SPOT (Spotify) yabanci ozel ihracci: 20-F + 'ifrs-full' taksonomisi. us-gaap etiketlerinin HICBIRI yok (Assets dahil); yalniz dei hisse serisi var. IFRS cikarimi bu turda YAPILMADI.",
+  "GS_SYF_gelir_etiketi": "GS ve SYF'de us-gaap:Revenues ve RevenueFromContract... YOK; finansal kurumlar geliri InterestAndDividendIncomeOperating / RevenuesNetOfInterestExpense gibi etiketlerle verir (bu turda cekilmedi)."
+ }
+}

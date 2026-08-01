@@ -1,0 +1,1836 @@
+{
+ "eslesen": [
+  {
+   "symbol": "AAPL",
+   "cik": 320193,
+   "title": "Apple Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ABBV",
+   "cik": 1551152,
+   "title": "AbbVie Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ABT",
+   "cik": 1800,
+   "title": "ABBOTT LABORATORIES",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ADBE",
+   "cik": 796343,
+   "title": "ADOBE INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ADI",
+   "cik": 6281,
+   "title": "ANALOG DEVICES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ADSK",
+   "cik": 769397,
+   "title": "Autodesk, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AEP",
+   "cik": 4904,
+   "title": "AMERICAN ELECTRIC POWER CO INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AFL",
+   "cik": 4977,
+   "title": "AFLAC INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AIG",
+   "cik": 5272,
+   "title": "AMERICAN INTERNATIONAL GROUP, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ALB",
+   "cik": 915913,
+   "title": "ALBEMARLE CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ALL",
+   "cik": 899051,
+   "title": "ALLSTATE CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AMAT",
+   "cik": 6951,
+   "title": "APPLIED MATERIALS INC /DE",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AMD",
+   "cik": 2488,
+   "title": "ADVANCED MICRO DEVICES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AMGN",
+   "cik": 318154,
+   "title": "AMGEN INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AMT",
+   "cik": 1053507,
+   "title": "AMERICAN TOWER CORP /MA/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AMZN",
+   "cik": 1018724,
+   "title": "AMAZON COM INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "APD",
+   "cik": 2969,
+   "title": "Air Products & Chemicals, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "APO",
+   "cik": 1858681,
+   "title": "Apollo Global Management, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AVB",
+   "cik": 915912,
+   "title": "AVALONBAY COMMUNITIES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AVGO",
+   "cik": 1730168,
+   "title": "Broadcom Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AXP",
+   "cik": 4962,
+   "title": "AMERICAN EXPRESS CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "AZO",
+   "cik": 866787,
+   "title": "AUTOZONE INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BA",
+   "cik": 12927,
+   "title": "BOEING CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BAC",
+   "cik": 70858,
+   "title": "BANK OF AMERICA CORP /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BAX",
+   "cik": 10456,
+   "title": "BAXTER INTERNATIONAL INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BDX",
+   "cik": 10795,
+   "title": "BECTON DICKINSON & CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BIIB",
+   "cik": 875045,
+   "title": "BIOGEN INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BKNG",
+   "cik": 1075531,
+   "title": "Booking Holdings Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BKR",
+   "cik": 1701605,
+   "title": "Baker Hughes Co",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BLK",
+   "cik": 2012383,
+   "title": "BlackRock, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BMY",
+   "cik": 14272,
+   "title": "BRISTOL MYERS SQUIBB CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BSX",
+   "cik": 885725,
+   "title": "BOSTON SCIENTIFIC CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BURL",
+   "cik": 1579298,
+   "title": "Burlington Stores, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "BX",
+   "cik": 1393818,
+   "title": "Blackstone Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "C",
+   "cik": 831001,
+   "title": "CITIGROUP INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CAG",
+   "cik": 23217,
+   "title": "CONAGRA BRANDS INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CAT",
+   "cik": 18230,
+   "title": "CATERPILLAR INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CB",
+   "cik": 896159,
+   "title": "Chubb Ltd",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CBRE",
+   "cik": 1138118,
+   "title": "CBRE GROUP, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CCI",
+   "cik": 1051470,
+   "title": "CROWN CASTLE INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CCL",
+   "cik": 815097,
+   "title": "Carnival Corp Ltd.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CDNS",
+   "cik": 813672,
+   "title": "CADENCE DESIGN SYSTEMS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CEG",
+   "cik": 1868275,
+   "title": "Constellation Energy Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CF",
+   "cik": 1324404,
+   "title": "CF Industries Holdings, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CHD",
+   "cik": 313927,
+   "title": "CHURCH & DWIGHT CO INC /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CHTR",
+   "cik": 1091667,
+   "title": "CHARTER COMMUNICATIONS, INC. /MO/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CI",
+   "cik": 1739940,
+   "title": "Cigna Group",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CL",
+   "cik": 21665,
+   "title": "COLGATE PALMOLIVE CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CLX",
+   "cik": 21076,
+   "title": "CLOROX CO /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CMCSA",
+   "cik": 1166691,
+   "title": "COMCAST CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CMI",
+   "cik": 26172,
+   "title": "CUMMINS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "COF",
+   "cik": 927628,
+   "title": "CAPITAL ONE FINANCIAL CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "COP",
+   "cik": 1163165,
+   "title": "CONOCOPHILLIPS",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "COST",
+   "cik": 909832,
+   "title": "COSTCO WHOLESALE CORP /NEW",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CRM",
+   "cik": 1108524,
+   "title": "Salesforce, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CSX",
+   "cik": 277948,
+   "title": "CSX CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CTSH",
+   "cik": 1058290,
+   "title": "COGNIZANT TECHNOLOGY SOLUTIONS CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CVS",
+   "cik": 64803,
+   "title": "CVS HEALTH Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "CVX",
+   "cik": 93410,
+   "title": "CHEVRON CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "D",
+   "cik": 715957,
+   "title": "DOMINION ENERGY, INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DAL",
+   "cik": 27904,
+   "title": "DELTA AIR LINES, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DD",
+   "cik": 1666700,
+   "title": "DuPont de Nemours, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DE",
+   "cik": 315189,
+   "title": "DEERE & CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DECK",
+   "cik": 910521,
+   "title": "DECKERS OUTDOOR CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DG",
+   "cik": 29534,
+   "title": "DOLLAR GENERAL CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DHR",
+   "cik": 313616,
+   "title": "DANAHER CORP /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DIS",
+   "cik": 1744489,
+   "title": "Walt Disney Co",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DLR",
+   "cik": 1297996,
+   "title": "DIGITAL REALTY TRUST, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DLTR",
+   "cik": 935703,
+   "title": "DOLLAR TREE, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DOV",
+   "cik": 29905,
+   "title": "DOVER Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DOW",
+   "cik": 1751788,
+   "title": "DOW INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DUK",
+   "cik": 1326160,
+   "title": "Duke Energy CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "DVN",
+   "cik": 1090012,
+   "title": "DEVON ENERGY CORP/DE",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EA",
+   "cik": 712515,
+   "title": "ELECTRONIC ARTS INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ECL",
+   "cik": 31462,
+   "title": "ECOLAB INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ED",
+   "cik": 1047862,
+   "title": "CONSOLIDATED EDISON INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EL",
+   "cik": 1001250,
+   "title": "ESTEE LAUDER COMPANIES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EMR",
+   "cik": 32604,
+   "title": "EMERSON ELECTRIC CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ENPH",
+   "cik": 1463101,
+   "title": "Enphase Energy, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EOG",
+   "cik": 821189,
+   "title": "EOG RESOURCES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EQIX",
+   "cik": 1101239,
+   "title": "EQUINIX INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EQR",
+   "cik": 906107,
+   "title": "EQUITY RESIDENTIAL",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EQT",
+   "cik": 33213,
+   "title": "EQT Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ES",
+   "cik": 72741,
+   "title": "EVERSOURCE ENERGY",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ETN",
+   "cik": 1551182,
+   "title": "Eaton Corp plc",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EW",
+   "cik": 1099800,
+   "title": "Edwards Lifesciences Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EXC",
+   "cik": 1109357,
+   "title": "EXELON CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "EXPE",
+   "cik": 1324424,
+   "title": "Expedia Group, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "F",
+   "cik": 37996,
+   "title": "FORD MOTOR CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "FANG",
+   "cik": 1539838,
+   "title": "Diamondback Energy, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "FCX",
+   "cik": 831259,
+   "title": "FREEPORT-MCMORAN INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "FDX",
+   "cik": 1048911,
+   "title": "FEDEX CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "FISV",
+   "cik": 798354,
+   "title": "FISERV INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GD",
+   "cik": 40533,
+   "title": "GENERAL DYNAMICS CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GE",
+   "cik": 40545,
+   "title": "GENERAL ELECTRIC CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GILD",
+   "cik": 882095,
+   "title": "GILEAD SCIENCES, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GIS",
+   "cik": 40704,
+   "title": "GENERAL MILLS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GOOG",
+   "cik": 1652044,
+   "title": "Alphabet Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GOOGL",
+   "cik": 1652044,
+   "title": "Alphabet Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "GS",
+   "cik": 886982,
+   "title": "GOLDMAN SACHS GROUP INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HAL",
+   "cik": 45012,
+   "title": "HALLIBURTON CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HD",
+   "cik": 354950,
+   "title": "HOME DEPOT, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HLT",
+   "cik": 1585689,
+   "title": "Hilton Worldwide Holdings Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HON",
+   "cik": 773840,
+   "title": "HONEYWELL INTERNATIONAL INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HRL",
+   "cik": 48465,
+   "title": "HORMEL FOODS CORP /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HSY",
+   "cik": 47111,
+   "title": "HERSHEY CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HUM",
+   "cik": 49071,
+   "title": "HUMANA INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "HWM",
+   "cik": 4281,
+   "title": "Howmet Aerospace Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "INTC",
+   "cik": 50863,
+   "title": "INTEL CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "INTU",
+   "cik": 896878,
+   "title": "INTUIT INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "IP",
+   "cik": 51434,
+   "title": "INTERNATIONAL PAPER CO /NEW/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "IRM",
+   "cik": 1020569,
+   "title": "IRON MOUNTAIN INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ISRG",
+   "cik": 1035267,
+   "title": "INTUITIVE SURGICAL INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ITW",
+   "cik": 49826,
+   "title": "ILLINOIS TOOL WORKS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "JNJ",
+   "cik": 200406,
+   "title": "JOHNSON & JOHNSON",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "JPM",
+   "cik": 19617,
+   "title": "JPMORGAN CHASE & CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KDP",
+   "cik": 1418135,
+   "title": "Keurig Dr Pepper Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KHC",
+   "cik": 1637459,
+   "title": "Kraft Heinz Co",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KKR",
+   "cik": 1404912,
+   "title": "KKR & Co. Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KLAC",
+   "cik": 319201,
+   "title": "KLA CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KMB",
+   "cik": 55785,
+   "title": "KIMBERLY CLARK CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KMI",
+   "cik": 1506307,
+   "title": "KINDER MORGAN, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KO",
+   "cik": 21344,
+   "title": "COCA COLA CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KR",
+   "cik": 56873,
+   "title": "KROGER CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "KVUE",
+   "cik": 1944048,
+   "title": "Kenvue Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LHX",
+   "cik": 202058,
+   "title": "L3HARRIS TECHNOLOGIES, INC. /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LIN",
+   "cik": 1707925,
+   "title": "LINDE PLC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LLY",
+   "cik": 59478,
+   "title": "ELI LILLY & Co",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LMT",
+   "cik": 936468,
+   "title": "LOCKHEED MARTIN CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LNG",
+   "cik": 3570,
+   "title": "Cheniere Energy, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LOW",
+   "cik": 60667,
+   "title": "LOWES COMPANIES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LRCX",
+   "cik": 707549,
+   "title": "LAM RESEARCH CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LULU",
+   "cik": 1397187,
+   "title": "lululemon athletica inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LUV",
+   "cik": 92380,
+   "title": "SOUTHWEST AIRLINES CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LYB",
+   "cik": 1489393,
+   "title": "LyondellBasell Industries N.V.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "LYV",
+   "cik": 1335258,
+   "title": "Live Nation Entertainment, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MA",
+   "cik": 1141391,
+   "title": "Mastercard Inc",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MAR",
+   "cik": 1048286,
+   "title": "MARRIOTT INTERNATIONAL INC /MD/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MCD",
+   "cik": 63908,
+   "title": "MCDONALDS CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MCHP",
+   "cik": 827054,
+   "title": "MICROCHIP TECHNOLOGY INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MDLZ",
+   "cik": 1103982,
+   "title": "Mondelez International, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MDT",
+   "cik": 1613103,
+   "title": "Medtronic plc",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MET",
+   "cik": 1099219,
+   "title": "METLIFE INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "META",
+   "cik": 1326801,
+   "title": "Meta Platforms, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MKC",
+   "cik": 63754,
+   "title": "MCCORMICK & CO INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MLM",
+   "cik": 916076,
+   "title": "MARTIN MARIETTA MATERIALS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MMM",
+   "cik": 66740,
+   "title": "3M CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MNST",
+   "cik": 865752,
+   "title": "Monster Beverage Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MO",
+   "cik": 764180,
+   "title": "ALTRIA GROUP, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MPC",
+   "cik": 1510295,
+   "title": "Marathon Petroleum Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MPWR",
+   "cik": 1280452,
+   "title": "MONOLITHIC POWER SYSTEMS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MRK",
+   "cik": 310158,
+   "title": "Merck & Co., Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MRNA",
+   "cik": 1682852,
+   "title": "Moderna, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MRVL",
+   "cik": 1835632,
+   "title": "Marvell Technology, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MS",
+   "cik": 895421,
+   "title": "MORGAN STANLEY",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MSFT",
+   "cik": 789019,
+   "title": "MICROSOFT CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MTCH",
+   "cik": 891103,
+   "title": "Match Group, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "MU",
+   "cik": 723125,
+   "title": "MICRON TECHNOLOGY INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NCLH",
+   "cik": 1513761,
+   "title": "Norwegian Cruise Line Holdings Ltd.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NEE",
+   "cik": 753308,
+   "title": "NEXTERA ENERGY INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NEM",
+   "cik": 1164727,
+   "title": "NEWMONT Corp /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NFLX",
+   "cik": 1065280,
+   "title": "NETFLIX INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NKE",
+   "cik": 320187,
+   "title": "NIKE, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NOC",
+   "cik": 1133421,
+   "title": "NORTHROP GRUMMAN CORP /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NOW",
+   "cik": 1373715,
+   "title": "ServiceNow, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NSC",
+   "cik": 702165,
+   "title": "NORFOLK SOUTHERN CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NUE",
+   "cik": 73309,
+   "title": "NUCOR CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NVDA",
+   "cik": 1045810,
+   "title": "NVIDIA CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "NXPI",
+   "cik": 1413447,
+   "title": "NXP Semiconductors N.V.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "O",
+   "cik": 726728,
+   "title": "REALTY INCOME CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "OKE",
+   "cik": 1039684,
+   "title": "ONEOK INC /NEW/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "OMC",
+   "cik": 29989,
+   "title": "OMNICOM GROUP INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ON",
+   "cik": 1097864,
+   "title": "ON SEMICONDUCTOR CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ORCL",
+   "cik": 1341439,
+   "title": "ORACLE CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ORLY",
+   "cik": 898173,
+   "title": "O REILLY AUTOMOTIVE INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "OXY",
+   "cik": 797468,
+   "title": "OCCIDENTAL PETROLEUM CORP /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PANW",
+   "cik": 1327567,
+   "title": "Palo Alto Networks Inc",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PCAR",
+   "cik": 75362,
+   "title": "PACCAR INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PEG",
+   "cik": 788784,
+   "title": "PUBLIC SERVICE ENTERPRISE GROUP INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PEP",
+   "cik": 77476,
+   "title": "PEPSICO INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PFE",
+   "cik": 78003,
+   "title": "PFIZER INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PG",
+   "cik": 80424,
+   "title": "PROCTER & GAMBLE Co",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PGR",
+   "cik": 80661,
+   "title": "PROGRESSIVE CORP/OH/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PH",
+   "cik": 76334,
+   "title": "Parker-Hannifin Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PINS",
+   "cik": 1506293,
+   "title": "PINTEREST, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PKG",
+   "cik": 75677,
+   "title": "PACKAGING CORP OF AMERICA",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PLD",
+   "cik": 1045609,
+   "title": "Prologis, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PM",
+   "cik": 1413329,
+   "title": "Philip Morris International Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PNC",
+   "cik": 713676,
+   "title": "PNC FINANCIAL SERVICES GROUP, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PPG",
+   "cik": 79879,
+   "title": "PPG INDUSTRIES INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PRU",
+   "cik": 1137774,
+   "title": "PRUDENTIAL FINANCIAL INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PSA",
+   "cik": 1393311,
+   "title": "Public Storage",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PSX",
+   "cik": 1534701,
+   "title": "Phillips 66",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "PYPL",
+   "cik": 1633917,
+   "title": "PayPal Holdings, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "QCOM",
+   "cik": 804328,
+   "title": "QUALCOMM INC/DE",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "RCL",
+   "cik": 884887,
+   "title": "ROYAL CARIBBEAN CRUISES LTD",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "REGN",
+   "cik": 872589,
+   "title": "REGENERON PHARMACEUTICALS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ROK",
+   "cik": 1024478,
+   "title": "ROCKWELL AUTOMATION, INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ROKU",
+   "cik": 1428439,
+   "title": "ROKU, INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ROST",
+   "cik": 745732,
+   "title": "ROSS STORES, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "RTX",
+   "cik": 101829,
+   "title": "RTX Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SBUX",
+   "cik": 829224,
+   "title": "STARBUCKS CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SCHW",
+   "cik": 316709,
+   "title": "SCHWAB CHARLES CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SHW",
+   "cik": 89800,
+   "title": "SHERWIN WILLIAMS CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SLB",
+   "cik": 87347,
+   "title": "SLB LIMITED/NV",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SNAP",
+   "cik": 1564408,
+   "title": "Snap Inc",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SNPS",
+   "cik": 883241,
+   "title": "SYNOPSYS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SO",
+   "cik": 92122,
+   "title": "SOUTHERN CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SPG",
+   "cik": 1063761,
+   "title": "SIMON PROPERTY GROUP INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SPOT",
+   "cik": 1639920,
+   "title": "Spotify Technology S.A.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SRE",
+   "cik": 1032208,
+   "title": "SEMPRA",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "STLD",
+   "cik": 1022671,
+   "title": "STEEL DYNAMICS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "STZ",
+   "cik": 16918,
+   "title": "CONSTELLATION BRANDS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SWKS",
+   "cik": 4127,
+   "title": "SKYWORKS SOLUTIONS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SYF",
+   "cik": 1601712,
+   "title": "Synchrony Financial",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SYK",
+   "cik": 310764,
+   "title": "STRYKER CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "SYY",
+   "cik": 96021,
+   "title": "SYSCO CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "T",
+   "cik": 732717,
+   "title": "AT&T INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TDG",
+   "cik": 1260221,
+   "title": "TransDigm Group INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TER",
+   "cik": 97210,
+   "title": "TERADYNE, INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TGT",
+   "cik": 27419,
+   "title": "TARGET CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TJX",
+   "cik": 109198,
+   "title": "TJX COMPANIES INC /DE/",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TMO",
+   "cik": 97745,
+   "title": "THERMO FISHER SCIENTIFIC INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TMUS",
+   "cik": 1283699,
+   "title": "T-Mobile US, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TRGP",
+   "cik": 1389170,
+   "title": "Targa Resources Corp.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TRV",
+   "cik": 86312,
+   "title": "TRAVELERS COMPANIES, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TSLA",
+   "cik": 1318605,
+   "title": "Tesla, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TSN",
+   "cik": 100493,
+   "title": "TYSON FOODS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TTWO",
+   "cik": 946581,
+   "title": "TAKE TWO INTERACTIVE SOFTWARE INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "TXN",
+   "cik": 97476,
+   "title": "TEXAS INSTRUMENTS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "UAL",
+   "cik": 100517,
+   "title": "United Airlines Holdings, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "UNH",
+   "cik": 731766,
+   "title": "UNITEDHEALTH GROUP INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "UNP",
+   "cik": 100885,
+   "title": "UNION PACIFIC CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "UPS",
+   "cik": 1090727,
+   "title": "UNITED PARCEL SERVICE INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "USB",
+   "cik": 36104,
+   "title": "US BANCORP DE",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "V",
+   "cik": 1403161,
+   "title": "VISA INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VFC",
+   "cik": 103379,
+   "title": "V F CORP",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VLO",
+   "cik": 1035002,
+   "title": "VALERO ENERGY CORP/TX",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VMC",
+   "cik": 1396009,
+   "title": "Vulcan Materials CO",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VRTX",
+   "cik": 875320,
+   "title": "VERTEX PHARMACEUTICALS INC / MA",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VTR",
+   "cik": 740260,
+   "title": "Ventas, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "VZ",
+   "cik": 732712,
+   "title": "VERIZON COMMUNICATIONS INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WBD",
+   "cik": 1437107,
+   "title": "Warner Bros. Discovery, Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WEC",
+   "cik": 783325,
+   "title": "WEC ENERGY GROUP, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WELL",
+   "cik": 766704,
+   "title": "WELLTOWER INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WFC",
+   "cik": 72971,
+   "title": "WELLS FARGO & COMPANY/MN",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WMB",
+   "cik": 107263,
+   "title": "WILLIAMS COMPANIES, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "WMT",
+   "cik": 104169,
+   "title": "Walmart Inc.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "XEL",
+   "cik": 72903,
+   "title": "XCEL ENERGY INC",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "XOM",
+   "cik": 2115436,
+   "title": "ExxonMobil Holdings Corp",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ZBH",
+   "cik": 1136869,
+   "title": "ZIMMER BIOMET HOLDINGS, INC.",
+   "rol": "universe",
+   "cik_kaynak": "company_tickers.json"
+  },
+  {
+   "symbol": "ANSS",
+   "cik": 1013462,
+   "title": "ANSYS INC",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "DFS",
+   "cik": 1393612,
+   "title": "Discover Financial Services",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "FI",
+   "cik": 798354,
+   "title": "FISERV INC",
+   "rol": "retired",
+   "cik_kaynak": "FISV ile ayni ihracci (CIK 798354); ticker cozumu bos"
+  },
+  {
+   "symbol": "HES",
+   "cik": 4447,
+   "title": "HESS CORP",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "IPG",
+   "cik": 51644,
+   "title": "INTERPUBLIC GROUP OF COMPANIES, INC.",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "K",
+   "cik": 55067,
+   "title": "KELLANOVA",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "PARA",
+   "cik": 813828,
+   "title": "Paramount Global",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "WBA",
+   "cik": 1618921,
+   "title": "Walgreens Boots Alliance, Inc.",
+   "rol": "retired",
+   "cik_kaynak": "browse-edgar atom (ticker cozumu)"
+  },
+  {
+   "symbol": "XOM",
+   "cik": 34088,
+   "title": "Exxon Mobil Corporation",
+   "rol": "universe",
+   "cik_kaynak": "oncul/halef cozumu",
+   "not": "oncul kayit \u2014 guncel CIK 2115436'da finansal XBRL olgusu yok (yalniz ffd)"
+  }
+ ],
+ "eslesmeyen": [],
+ "paylasilan_cik": {
+  "798354": [
+   "FISV",
+   "FI"
+  ],
+  "1652044": [
+   "GOOG",
+   "GOOGL"
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+tag,ilk_ifsa_n,medyan_gun,p10,p90,min_gun,max_gun,aile
+CommonStockSharesIssued,11215,36.0,26.0,57.0,-3,1155,shares
+CommonStockSharesOutstanding,8426,36.0,24.0,58.0,10,1152,shares
+EntityCommonStockSharesOutstanding,14878,7.0,3.0,32.0,-309,397,shares
+WeightedAverageNumberOfDilutedSharesOutstanding,25094,34.0,24.0,59.0,8,1093,shares
+WeightedAverageNumberOfShareOutstandingBasicAndDiluted,799,39.0,26.0,404.20000000000005,19,817,shares
+WeightedAverageNumberOfSharesOutstandingBasic,24961,34.0,24.0,59.0,8,1093,shares
+Assets,16642,35.0,24.0,55.0,8,854,fundamentals
+CostOfGoodsAndServicesSold,8599,35.0,25.0,394.0,14,1093,fundamentals
+CostOfRevenue,4770,33.0,24.0,392.0,16,982,fundamentals
+GrossProfit,10895,37.0,25.0,331.0,14,1093,fundamentals
+RevenueFromContractWithCustomerExcludingAssessedTax,8897,35.0,24.0,397.0,8,1093,fundamentals
+RevenueFromContractWithCustomerIncludingAssessedTax,1159,37.0,25.0,404.0,19,957,fundamentals
+Revenues,14898,36.0,25.0,396.0,11,1506,fundamentals
