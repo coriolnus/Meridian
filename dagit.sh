@@ -13,7 +13,7 @@
 set -euo pipefail
 KEY="$HOME/.ssh/oci-a1.key"; IP="130.61.126.87"; REPO="$HOME/AI-Trading"
 SSH=(ssh -i "$KEY" -o ConnectTimeout=15 ubuntu@"$IP")
-RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude 'scratchpad' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache')
+RSYNC_EXC=(--exclude '.venv' --exclude '.git' --exclude 'state' --exclude 'backups' --exclude 'scratchpad' --exclude '__pycache__' --exclude '.claude' --exclude '.hypothesis' --exclude 'mutants' --exclude '.pytest_cache' --exclude '.env' --exclude '.dash.env')  # SIR SINIFI (2026-08-01 vakası): rsync --delete A1-yerel .dash.env'i SİLDİ — sırlar dağıtıma binmez, kanal push_secret.sh
 
 echo "=== [0a/5] git temiz-ağaç kapısı ==="
 cd "$REPO"
