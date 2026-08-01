@@ -109,9 +109,10 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   kanıtladı; tek atfedilebilir pencerede kill#1: Sharpe −0,25→−0,90, PARA −0,03→−0,09. Tez kısmen
   doğru (vol anlamlı ↓, oran 0,79) ama bedeli getiri — "pano göstergesi yeter". · **ToM tilt ✅
   ARŞİV (EDG-006):** ön-adımda yön ters (−11,8bps), ikizler hiç açılmadı.
-- **KABLO BİLETİ 📋:** regime.spy_sma_gate REPLAY yolunda bağlı değil (guard entry_gates arıyor,
-  replay'de üreten yok; yalnız api.py canlı yolu) — "kod hazır" varsayımı kısmen yanlıştı; ölü-uç
-  temizliği (kaldır ya da bilinçli-pano-göstergesi olarak yeniden adlandır).
+- **KABLO BİLETİ ✅ KAPANDI (2026-08-01 temizlik turu):** spy_sma_gate GÖSTERGE'ye emekli edildi
+  (blocks sabit False + knob_emekli beyanı + sessiz-diriliş çivisi; hükümsüz kapıya çekilmiş kablo
+  söküldü). KALAN KÜÇÜK İŞ 📋: bounds.yaml'dan knob satırı düşülecek (makine etkisiz knob'u hâlâ
+  örnekliyor — 6 değerlendirme boşa K harcadı; akşam penceresi).
 - VIX koşullaması 🔒 veri-kilidi (operatörde) — SMA hükmünden sonra AİLE ÖNCELİĞİ DÜŞTÜ: rejim
   kapısı ailesi bu evrende "vol'ü düşürür ama parayı da düşürür" profili verdi; JM rejim modeli +
   koşullu vol kısma adayları açılmadan önce bu hüküm karşı-kanıt olarak okunmalı.
@@ -348,6 +349,15 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-08-01 ~09:45 PARALEL DALGA İNDİ.** H3 tur-2 seccomp 6.3→2.1 OK · WP-D teyit (kapı 3/4
+  aktif dışlıyor; DLTR kaynak-onarımlı) · EDG-010 pullback ARŞİV (lafzen-success/kanıten-kenarsız;
+  WP-M ders #3: ham-getiri ölçütü yasak) · PARA-v3 ①② indi (realized_usd + mtm_dd_veto, geriye-uyum
+  çivili; ölçek borcu rakamla görünür: n_ölçülen=0) · EDG-005 kapı emekliliği + component_ic aracı
+  (kuru: 61/63 hücre; rs cf/havuz ANLAMLI NEGATİF — w_rs=0.35 İZLEME) + mutmut fikstürü (--kisa
+  kanıtlı) · .gitignore ölü-negasyon: goal/bounds ilk kez gerçekten versiyonda. Karne 15 ölçülen →
+  14 arşiv + 1 yaşayan. AKŞAM PENCERESİ PAKETİ: kod dağıtımı + component_ic --uygula + bounds knob
+  düşümü.
 
 - **2026-07-31 ~21:45 GÖLGE-KİTAP TURU KAPANDI.** Trend kolu canlı paralel-defter olarak hazır
   (d3425e2); dağıtım paketi = H11 + SQLite −0.0 düzeltmesi + gölge-kitap (migrasyonsuz düz kod);
