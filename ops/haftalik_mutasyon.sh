@@ -90,10 +90,71 @@ print("  ✓ yapılandırma okundu ve kapsam DOĞRULANDI (3 dosya, tests/ seçim
 PY
 }
 
+# ---- KISA DOĞRULAMA: mutmut UÇTAN UCA koşuyor mu? (H5 kırığının kanıt kapısı, 2026-08-01) -------
+# NE KANITLAR: mutant üretimi + `mutants/state` fikstürü + İSTATİSTİK TOPLAMA + mutant başına test
+# koşumu zincirinin TAMAMI çalışıyor ve mutantlar GERÇEKTEN öldürülüyor. Kırık tam da bu zincirin
+# ortasındaydı (istatistik toplanamıyordu) ve "yapılandırma görülüyor" öz-testi onu YAKALAYAMAZDI.
+#
+# NEDEN AYRI BİR ÇALIŞMA DİZİNİ: tam koşumun test seçimi `tests/` (yani TÜM suite) — istatistik
+# toplama o seçimi bir kez baştan sona koşar ve kısa doğrulama olmaktan çıkar. mutmut yapılandırmayı
+# YALNIZ cwd'deki pyproject.toml'dan okur (env/CLI ile daraltılamaz — mutmut/configuration.py), o
+# yüzden daraltma ancak ayrı bir çalışma dizininde mümkün. Depo pyproject'i ASLA elden geçirilmez:
+# ritüelin ortasında gerçek yapılandırmayı geçici olarak değiştirmek, koşum yarıda kalırsa depoyu
+# bozuk bırakırdı. Kaynak ağaçları KOPYALANMAZ, SEMBOLİK BAĞ verilir (kopya maliyeti sıfır; mutmut
+# zaten kendi `mutants/` kopyasını çıkarır ve mutasyon YALNIZ o kopyaya yazılır).
+kisa_dogrulama() {
+  local ws
+  ws="$(mktemp -d "${TMPDIR:-/tmp}/meridian-mutasyon-kisa.XXXXXX")"
+  trap 'rm -rf "$ws"' EXIT
+  echo "=== kısa doğrulama: ${KISA_DOSYA} × ${KISA_TEST} (çalışma dizini: $ws) ==="
+  ln -s "$KOK/meridian" "$ws/meridian"
+  ln -s "$KOK/tests"    "$ws/tests"
+  ln -s "$KOK/state"    "$ws/state"
+  "$KOK/.venv/bin/python" - "$ws" "$KISA_DOSYA" "$KISA_TEST" <<'PY'
+import re, sys, pathlib
+ws, dosya, test = sys.argv[1], sys.argv[2], sys.argv[3]
+metin = pathlib.Path("pyproject.toml").read_text()
+# GERÇEK pyproject'ten TÜRETİLİR (kopyalanır + tek bölüm daraltılır): pytest ini ayarları, markerlar
+# ve bağımlılık bölümleri birebir aynı kalsın — kısa mod tam koşumun küçültülmüşü olmalı.
+bas = metin.index("[tool.mutmut]")
+son = metin.find("\n[", bas + 1)
+son = len(metin) if son == -1 else son
+dar = (f"[tool.mutmut]\nsource_paths = [\"meridian\"]\nonly_mutate = [\"{dosya}\"]\n"
+       f"pytest_add_cli_args_test_selection = [\"{test}\"]\nalso_copy = [\"state\"]\n"
+       f"timeout_multiplier = 5.0\ntimeout_constant = 10.0\n")
+pathlib.Path(ws, "pyproject.toml").write_text(metin[:bas] + dar + metin[son:])
+print(f"  daraltılmış yapılandırma yazıldı: only_mutate={dosya} · test={test}")
+PY
+  local kod=0
+  ( cd "$ws" && "$KOK/.venv/bin/mutmut" run ) || kod=$?
+  echo "  mutmut run çıkış kodu: $kod (0'dan farklı = hayatta kalan mutant VAR — arıza değil)"
+  # FİKSTÜR KAPISI: kırığın kendisi. Dosya yoksa istatistik toplama baştan ölürdü.
+  if [[ ! -f "$ws/mutants/state/goal.yaml" ]]; then
+    echo "!! KISA DOĞRULAMA KIRMIZI: mutants/state/goal.yaml kurulmadı (also_copy işlemedi)"; return 1
+  fi
+  echo "  ✓ fikstür kuruldu: mutants/state/goal.yaml"
+  local ozet
+  ozet="$( cd "$ws" && "$KOK/.venv/bin/mutmut" results 2>&1 | tail -20 )"
+  echo "$ozet"
+  # ÖLDÜRÜLEN MUTANT SAYISI SIFIRSA ZİNCİR ÇALIŞMIYOR DEMEKTİR: testler ya hiç koşmadı ya da
+  # hepsi kırıktı. "mutmut hata vermedi" bunu KANITLAMAZ — sayıya bakılır.
+  if ! echo "$ozet" | grep -qiE "killed[^0-9]*[1-9]|🎉[^0-9]*[1-9]"; then
+    echo "!! KISA DOĞRULAMA KIRMIZI: hiç mutant ÖLDÜRÜLMEDİ — istatistik/test zinciri koşmuyor"
+    return 1
+  fi
+  echo ">> KISA DOĞRULAMA YEŞİL: üretim → fikstür → istatistik → mutant koşumu zinciri çalışıyor."
+}
+
 if [[ "${1:-}" == "--kontrol" ]]; then
   oz_test
   echo ">> öz-test TAMAM. Tam koşum için argümansız çalıştır (SAATLER sürer)."
   exit 0
+fi
+
+if [[ "${1:-}" == "--kisa" ]]; then
+  oz_test
+  kisa_dogrulama
+  exit $?
 fi
 
 oz_test
