@@ -4,7 +4,9 @@
 !.env.example
 
 # mutable state — canlı veri versiyonlanmaz (yedek zinciri: VM-tar + Mac-pull; git DEĞİL)
-state/
+# NOT (2026-08-01 düzeltmesi): `state/` dizin-dışlaması negasyonları ÖLDÜRÜYORDU (git, dışlanan
+# dizinin içine hiç bakmaz) — `state/*` desenine geçildi ki goal/bounds istisnaları GERÇEKTEN işlesin.
+state/*
 !state/goal.yaml
 !state/bounds.yaml
 backups/

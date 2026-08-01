@@ -1,0 +1,61 @@
+# state/bounds.yaml — IMMUTABLE. The sandbox Hermes may move inside.
+# Hermes may propose ONE variable per hypothesis, on-step and in-range. Enforced in guard.py.
+entry.rs_rating_min:      {min: 60,  max: 95,  step: 1,   type: int}
+entry.pivot_proximity_pct: {min: 0.5, max: 8.0, step: 0.1, type: float}
+entry.min_volume_ratio:   {min: 1.0, max: 4.0, step: 0.1, type: float}
+entry.min_score:          {min: 40,  max: 90,  step: 1,   type: int}
+exit.profit_target_r:     {min: 2.0, max: 6.0, step: 0.5, type: float}
+exit.time_stop_days:      {min: 3,   max: 40,  step: 1,   type: int}
+exit.trail_atr_mult:      {min: 1.0, max: 5.0, step: 0.1, type: float}
+exit.breakeven_r:         {min: 0.0, max: 3.0, step: 0.5, type: float}
+stop_loss_atr_mult:       {min: 0.8, max: 4.0, step: 0.1, type: float}
+position_size_r:          {min: 0.1, max: 1.0, step: 0.1, type: float}
+regime.min_exposure_score: {min: 0,   max: 80,  step: 5,   type: int}
+# Batch L — new edge/exit knobs, default OFF (0) so baseline is unchanged; Hermes can explore them.
+exit.giveback_pct:        {min: 0.0, max: 0.6, step: 0.1, type: float}   # peak-profit give-back exit (#10)
+exit.chandelier_lookback: {min: 0,   max: 30,  step: 5,   type: int}     # swing-high chandelier trail (#9)
+entry.max_ext_atr:        {min: 0.0, max: 12.0, step: 1.0, type: float}  # 50SMA extension climax filter (#13)
+entry.rs_dual_horizon:    {min: 0,   max: 1,   step: 1,   type: int}     # dual-horizon RS gate on/off (#12)
+exit.scale_out_r:         {min: 1.0, max: 4.0, step: 0.5, type: float}   # bank partial at this R (#8)
+exit.scale_out_frac:      {min: 0.0, max: 0.75, step: 0.25, type: float} # fraction to bank; 0 = off (#8)
+# öneri #3 — VCP skor bileşen ağırlıkları (seçilim fonksiyonu artık kapı disipliniyle tunlanabilir).
+# Formül normalize: ağırlıklar oynayınca ölçek [0,100] kalır. Varsayılanlar eski sabitler.
+entry.w_rs:               {min: 0.10, max: 0.60, step: 0.05, type: float}
+entry.w_tight:            {min: 0.05, max: 0.55, step: 0.05, type: float}
+entry.w_vol:              {min: 0.05, max: 0.45, step: 0.05, type: float}
+entry.w_prox:             {min: 0.00, max: 0.40, step: 0.05, type: float}
+# G2 skor yeniden inşası (ROADMAP §E Aşama 7 G2, 2026-07-29) — YENİ bileşenler, VARSAYILAN KAPALI.
+# Batch L deseni: satırlar burada olduğu için Hermes onları KUM HAVUZUNDA arayabilir, ama strategy.yaml
+# onları taşımadığından canlı etkileri 0'dır ve bileşik skor birebir eskisidir. Canlıya geçiş ancak
+# OOS kapısından geçen bir adayla olur. Kanıt: g2_olcum 2026-07-29 (rvol gerçek @5 IC 0.234 / @10 0.219
+# ANLAMLI, cf @10 0.047 / @20 0.062 ANLAMLI; bant 1.5-2.0 → +1.84% n=955; mom12_1 cf @20 +0.055).
+entry.w_rvolband:         {min: 0.00, max: 0.40, step: 0.05, type: float}  # rvol BANT puanı ağırlığı
+entry.w_mom:              {min: 0.00, max: 0.40, step: 0.05, type: float}  # 12-1 momentum rütbe ağırlığı
+entry.min_rvol:           {min: 0.0,  max: 2.0,  step: 0.1,  type: float}  # rvol taban filtresi; 0 = kapalı
+# G3b ÇIKIŞ REFORMU (ROADMAP §3.2 G3b, 2026-07-30) — DÖRT YENİ SATIR, HEPSİ VARSAYILAN KAPALI/NÖTR.
+# Batch L deseni birebir: satırlar burada olduğu için kum havuzunda ARANABİLİR, strategy.yaml onları
+# taşımadığı için canlı etkileri SIFIRDIR (çivi testi: test_g3b_cikis_v124).
+# Kanıt tabanı — G3b ön-ölçümü (2026-07-29, cf n≈2100): kapanış-KONUMU sürekli sinyal olarak SIFIR
+# (IC≈0), ama PİVOT-ALTI kapanış kısa ufukta gerçek negatif (@5bar -0.74% vs pivot-üstü +0.32%, n=302;
+# @20'de kısmen toparlar) → erken itlaf YALNIZ "pivot-altı kapanış" biçiminde savunulabilir.
+exit.early_kill_pivot:    {min: 0,   max: 1,   step: 1,   type: int}     # pivot-altı kapanış → ertesi açılış çık; 0 = kapalı
+# ERKEN İTLAF PENCERESİ: kural yalnız ilk `early_kill_bars` yönetim barında geçerlidir. Varsayılan 1 =
+# ROADMAP'in düz okunuşu ("kırılım günü kapanışı"), yani pozisyonun GÖRDÜĞÜ ilk kapanış. Kanıt ufku 5
+# bar olduğu için aralık 10'a kadar açık — ama kalibrasyon kapıdan geçmek zorunda.
+exit.early_kill_bars:     {min: 1,   max: 10,  step: 1,   type: int}     # itlaf penceresi (bar); early_kill_pivot=0 iken ATIL
+# YAPI-TABANLI STOP: 0 = ATR stopu (varsayılan, bugünkü yasa), 1 = pivot − tampon.
+stop_mode:                {min: 0,   max: 1,   step: 1,   type: int}     # 0=atr (varsayılan) / 1=pivot_alti
+stop_buffer_atr:          {min: 0.1, max: 1.0, step: 0.1, type: float}   # pivot_alti tamponu (ATR katı); stop_mode=0 iken ATIL
+# Y3 REJİM/RİSK DÖRTLÜSÜ (ROADMAP §3.1 Y3, 2026-07-30) — DÖRT SATIR, HEPSİ VARSAYILAN KAPALI (0).
+# Batch L deseni birebir: satırlar burada olduğu için kum havuzunda ARANABİLİR, strategy.yaml onları
+# taşımadığı için canlı etkileri SIFIRDIR (çivi testi: test_hafta3b_v125). Beklenti getiri DEĞİL
+# risk: vol ~-1/3, MaxDD ~yarı. Dördü de guard/loop giriş-kapısı zincirinde bayrak-arkasıdır ve
+# açılışları gölge-varyant/prescreen ölçümünden geçmek zorundadır.
+regime.spy_sma_gate:      {min: 0,   max: 1,   step: 1,   type: int}     # SPY 200-SMA altı → YENİ giriş yok; zorla tasfiye YOK
+# VIX/VIX3M: VERİ KAYNAĞI DOĞRULANDI ve YOK (2026-07-30) — Massive endeks uçları HTTP 403
+# NOT_AUTHORIZED, FMP quote ^VIX/VIX/^VIX3M/VIX3M dördü de BOŞ. Satır arama uzayında yerini alsın
+# ve ölçüm yolu hazır olsun diye İNER, ama kapı `veri_yok` beyanıyla DEVRE DIŞIDIR: knob 1 yapılsa
+# bile karar üretmez (regime.VIX_DATA_STATUS). Oran UYDURULMAZ, vekil bir seri VIX adıyla sunulmaz.
+regime.vix_backwardation_gate: {min: 0, max: 1, step: 1, type: int}      # VIX>VIX3M akut anahtarı; BUGÜN veri_yok → atıl
+portfolio.sector_cap:     {min: 0.0, max: 30.0, step: 5.0, type: float}  # sektör NOTIONAL payı tavanı %; 0 = kapalı (bant 25-30)
+portfolio.heat_cap:       {min: 0.0, max: 8.0,  step: 1.0, type: float}  # açık risk / NAV tavanı %; 0 = kapalı (bant 6-8)

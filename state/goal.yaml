@@ -1,0 +1,88 @@
+# state/goal.yaml — IMMUTABLE. Hermes may NEVER edit this file.
+# Written by intake on 2026-07-14. Any change is a human action, not an agent action.
+schema_version: 1
+universe: "S&P 500"
+style: "swing_momentum"
+session_tz: "America/New_York"
+
+# success
+target_return_30d: 0.07
+min_sharpe: 1.2
+
+# failure
+max_drawdown: 0.08
+# failure_below: 30 GÜNLÜK gerçekleşen getiri bu eşiğin altına düşerse deney BAŞARISIZDIR.
+# ÖLÇÜLÜYOR (K1, 2026-07-30): watchdog.goal_failure_report() → GOAL_FAILURE alarmı. Tanımlandığı
+# 2026-07-14'ten 07-30'a kadar hiçbir kod bu hükmü okumuyordu (score.py yalnız hedef üçlüsünü
+# composite'e katıyor); yani deney başarısız olsa bunu söyleyecek tek satır kod yoktu.
+failure_below: -0.04
+
+# learning
+reflection_every: 5
+min_sample: 30
+one_variable_only: true
+backtest_gate: true
+rollback_if_worse_by: 0.10
+# explore_rate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). Tek eşleşmesi
+# guard.py'nin GOAL_KEYS üyelik setidir (drift koruması, değerlendirme değil). Gerçek keşif
+# kararları başka yerlerden gelir: reflect.py `--explore` CLI bayrağı ve loop.py'nin maruziyet
+# bütçesi koşulu — ikisi de bu 0.15'i OKUMAZ. Bu değeri değiştirmek hiçbir davranışı değiştirmez;
+# gerçek bir olasılığa bağlanması ayrı bir karardır (ROADMAP K1 kalemi).
+explore_rate: 0.15
+max_accepted_changes_per_month: 8      # anti-overfit throttle
+
+# frictions
+commission_per_share: 0.0
+slippage_bps: 5
+fill: next_bar_open
+
+# ---------------------------------------------------------------------------------------------
+# E1 — GİRİŞ İCRA YASASI (WP-E, kart EXE-2026-001, 2026-07-31). BURADA, çünkü icra yasası bir
+# ARAMA DEĞİŞKENİ DEĞİLDİR: `strategy.yaml`a konsaydı Hermes kendi dolum fiyatını seçebilirdi
+# (bir ajanın kendi karnesini yazması). Değişmez dosyada = yalnız insan değiştirir.
+# Yasayı OKUYAN tek yer `broker.entry_law()`; iki motor da (iç `fill_entry` + ayna
+# `alpaca.submit_plan`) oradan okur — kopya yok.
+execution_v2:
+  # limit = tetik + min(limit_atr_mult·ATR14, limit_pct_cap·tetik). Kart grid'inin VARSAYILAN
+  # noktası. Diğer noktalar: (0.25, 0.005) ve (1.0, 0.015) — hangisinin daha iyi olduğu E2
+  # defteri dolduktan SONRA ölçülür; bugün seçim gerekçesi ölçüm değil VARSAYILANDIR ve öyle yazılı.
+  limit_atr_mult: 0.5
+  limit_pct_cap: 0.01
+  # gap davranışı: gönderim anında fiyat zaten tetiğin üstündeyse (buy-stop GEÇERSİZ — bugünkü
+  # 95/95 reddin kökü) ne olacak? "marketable_limit" = limit fiyatlı emir (tavan yine limit),
+  # "cancel" = gap-risk vetosu (emir gönderilmez, iç motor da doldurmaz).
+  gap_behavior: marketable_limit
+  # TIF: GTC bir sonraki seansa BAYAT tetik taşır (seviye sinyal barı kapanışına sabitli).
+  tif: day
+
+# ---------------------------------------------------------------------------------------------
+# E3 — KÖTÜMSER MALİYET BANDI (WP-E, 2026-07-31). NEDEN VAR: yürürlükteki friksiyon modeli
+# `slippage_bps: 5` (tek yön) + komisyon 0'dır ve bu, GÜN İÇİ ortalama bir spread varsayar.
+# Girişlerimizin TAMAMI AÇILIŞTA olur ve açılış mikroyapısı farklıdır: efektif spread seans
+# açılışında gün ortasının katıdır ve large-cap'te bile onlarca bps'e çıkar
+# (Bogousslavsky-Muravyev 2023 JFM; Lou-Polk-Skouras 2019 JFE gece/gündüz ayrışması).
+# BU BLOK HİÇBİR DOLUMU DEĞİŞTİRMEZ — yalnız RAPOR yüzeyinde `net_kotumser` ikiz sütununu besler
+# (analytics.result_verdict / profit_waterfall). Karar yüzeylerine (probgate/prescreen) GİRMEZ.
+# `ampirik_*` alanları BOŞ doğar: E2 slipaj defteri biriktikçe `analytics.pessimistic_band_update`
+# onları ÖLÇÜMLE doldurur. Ölçülmeden None kalırlar — varsayılan bir sayı yazmak, ölçülmemiş bir
+# şeyi ölçülmüş göstermek olurdu.
+pessimistic_band_v2:
+  acilis_spread_bps: 20.0      # large-cap açılış efektif spread'i (yarısı tek yönde ödenir)
+  mevcut_model_bps: 10.0       # yürürlükteki model: 5 bps × 2 bacak = 10 bps round-trip
+  kaynak: "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE"
+  ampirik_bps: null            # E2 defterinden ölçülen gerçek (fill − resmî açılış) — HENÜZ YOK
+  ampirik_n: 0
+  ampirik_guncelleme: null
+
+# hard risk limits — immutable to Hermes, enforced in guard.py
+limits:
+  autonomy_level: 0                    # 0=paper autonomous, 1=live+approval, 2=live autonomous
+  max_position_r: 1.0
+  max_open_positions: 5
+  max_daily_loss_pct: 3.0
+  max_sector_exposure_pct: 40.0
+  no_trade_before_bars: 3              # skip the first N bars after the open
+  # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
+  # SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmaz. Yani buradaki yolu değiştirmek
+  # kill-switch'i TAŞIMAZ — dosya yine state/HALT olur. Yanlış kontrol hissi vermemesi için yazılı.
+  kill_switch_file: "state/HALT"
