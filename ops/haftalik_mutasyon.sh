@@ -59,18 +59,20 @@ if kaynak != ["meridian"]:
                 f"her test import hatasıyla ölür ve skor sahte %100 çıkar")
 if set(sadece) != beklenen:
     hata.append(f"only_mutate beklenen {sorted(beklenen)} değil: {sadece}")
-# Test seçimi: 'tests' ile BAŞLAMALI; kalanı yalnız --deselect çiftleri olabilir (ortam-duyarlı
-# dışlamalar, pyproject'te gerekçeli). Birebir-eşitlik kapısı 2026-08-01'de meşru dışlamayı
-# kırmızıya boyadı — kapı artık biçimi ölçer, listeyi ezberlemez.
-if not testler or testler[0] != "tests":
-    hata.append(f"test seçimi 'tests' ile başlamıyor: {testler}")
-else:
-    kalan = testler[1:]
-    while kalan:
-        if kalan[0] != "--deselect" or len(kalan) < 2 or not kalan[1].startswith("tests/"):
-            hata.append(f"test seçiminde --deselect çifti dışında öğe: {kalan}")
-            break
-        kalan = kalan[2:]
+# Test seçimi POZİTİF LİSTE biçiminde (H5 nihai biçim, 2026-08-01): karar-çekirdeğini import
+# eden test DOSYALARI açıkça sayılır (negatif-dışlama her yeni repo-kökü-varlık testinde
+# kırılıyordu — 8 koşumluk kovalamaca). Kapı biçimi ölçer, listeyi ezberlemez: boş olmayan,
+# yalnız tests/*.py öğeleri; her dosya GERÇEKTEN var olmalı (silinen test sessizce seçim
+# daraltmasın).
+if not testler:
+    hata.append("test seçimi BOŞ — mutasyon hiçbir şeyi ölçmez")
+for o in testler:
+    if not (o.startswith("tests/") and o.endswith(".py")):
+        hata.append(f"pozitif seçimde tests/*.py dışı öğe: {o}")
+        break
+    if not Path(o).exists():
+        hata.append(f"seçimdeki dosya yok: {o} (silindi/taşındıysa liste güncellenmeli)")
+        break
 
 # DURUM FİKSTÜRÜ KAPISI (H5 kırığı, 2026-08-01). mutmut testleri `mutants/` içinden koşturur;
 # `config.ROOT` orada `mutants/`e çözülür ve `mutants/state/` yoksa HER test FileNotFoundError ile

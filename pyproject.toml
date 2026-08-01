@@ -215,20 +215,37 @@ only_mutate = [
     "meridian/guard.py",
     "meridian/score.py",
 ]
-pytest_add_cli_args_test_selection = ["tests",
-    # ORTAM-DUYARLI DOSYA DIŞLAMASI (H5, 2026-08-01; iki ayrı testi ayrı koşumlarda kırdı):
-    # yetki-sınırı testleri repo-kökü yüzeylerini subprocess'le çağırır (ops/meridian-guard.sh,
-    # ajan-guard kancası) ve mutants/ kopya-ortamında YAPISAL olarak koşamaz — gerçek suite'te
-    # aynı gün 5 kez yeşiller. Mutasyon skoru karar-çekirdeği testlerinin gücünü ölçer; ortam
-    # testleri bu ölçüme girmez. Dışlama mutasyon koşumuna ÖZGÜdür, suite'e değil.
-    "--deselect", "tests/test_authority_boundaries_v77.py",
-    # codelaw = kaynak-ağacı ÖZ-DENETİMİ; mutmut v3 mutantları kaynak dosyalara trampolinle
-    # GÖMDÜĞÜ için mutant-ağacında yapısal geçemez (üretilmiş kodda işaretsiz yakalayıcı görür).
-    "--deselect", "tests/test_codelaw_v59.py",
-    # pano-kompozisyon testleri repo-kökü research/+ROADMAP okur — mutants/'ta yok (ortam sınıfı).
-    "--deselect", "tests/test_edge_dashboard_v102.py",
-    # skills/ betiğini repo-kökünden derleyen tek test (aynı ortam sınıfı — dosyanın kalanı yaşar).
-    "--deselect", "tests/test_finviz_v81.py::test_skill_script_compiles_and_documents_the_new_flags",
+pytest_add_cli_args_test_selection = [
+    # POZİTİF SEÇİM (H5 nihai biçim, 2026-08-01 — 8 koşumluk dışlama-kovalamacasının dürüst sonu):
+    # mutasyon skoru broker/guard/score DAVRANIŞINI sınayan testlerin gücünü ölçer. Negatif-dışlama
+    # her yeni repo-kökü-varlık testinde kırılıyordu (4 sınıf, 5 kayıt); seçim artık POZİTİF ve
+    # TÜRETİLMİŞ: bu üç modülü doğrudan import eden test dosyaları (grep ile; liste büyüyünce
+    # ops/haftalik_mutasyon.sh öz-testi biçimi doğrular, içeriği ezberlemez). Tam suite'in kapsamı
+    # DEĞİŞMEZ — bu seçim yalnız mutasyon koşumuna özgüdür.
+    "tests/test_audit_fixes.py",
+    "tests/test_batch_k.py",
+    "tests/test_batch_l.py",
+    "tests/test_broker_audit_v24.py",
+    "tests/test_canslim_v94.py",
+    "tests/test_decision_v3.py",
+    "tests/test_evidence_v4.py",
+    "tests/test_execution_fidelity_v75.py",
+    "tests/test_exhaustion_hammer_v92.py",
+    "tests/test_gaps_batch_v51.py",
+    "tests/test_gaps_final_v52.py",
+    "tests/test_golge_v2_yasam_dongusu_v132.py",
+    "tests/test_icra_gercekligi_v141.py",
+    "tests/test_intraday_shadow_v105.py",
+    "tests/test_ledger_contract_v57.py",
+    "tests/test_llm_advisor_v6.py",
+    "tests/test_na_revision_v53.py",
+    "tests/test_pead_v93.py",
+    "tests/test_recompute_v62.py",
+    "tests/test_regime_patch.py",
+    "tests/test_risk.py",
+    "tests/test_score_audit_v40.py",
+    "tests/test_temizlik_kablolama_v137.py",
+    "tests/test_trend_shadow_v144.py",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
