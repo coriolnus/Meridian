@@ -1,0 +1,183 @@
+{
+ "olcum": "EDG-2026-011 — WP-K/G5 in-play aday önceliklendirme",
+ "uretildi_utc": "2026-08-01T10:11:31.450905+00:00",
+ "repo_head": "8de825c0f5636a54334f9cc3c90a33d5a8b6ec7e",
+ "repo_dirty": true,
+ "python": "Python 3.12.7",
+ "kod_sha256": {
+  "olcum.py": "7db971a1c9fb4da16c651c8743dc445bb5f1c812f5cd4f5f40d20e78865eecd2",
+  "rapor.py": "039060be7e1003212872dec84ce61643d91d352c77c0e826f645114679a66c77",
+  "damga.py": "738a5ab673e55baa43d4d623a3c5ed74958b93cff6c7238288628b31d87b91b3",
+  "kosum_sarmali.py": "d12fdc179ddf4a96fbdef2a4387d85f3d9e0fc4c26a8923518fd95003205662e"
+ },
+ "cikti_sha256": {
+  "sonuc.json": "4e99f049b783c75fedf39ec713833e828a0edeb7a58712d3fbf6ba20283abb10",
+  "RAPOR.md": "23e2864216ee8b42a806574ce63b6853cef368a8315079fb25dc6f8cff1e4055",
+  "aday_gunler.csv": "ab9c4b0fac9d5833f444e731e487f6d49714e357a1963185c602d16769601164",
+  "kosum_zemini.json": "7cb3bb284e61f07ec13e524faed3de5e29c10ac402fa32b12c02788f2efb447e"
+ },
+ "girdi_sha256": {
+  "kart": "6c744676e24e7beedc3ca5c453eed4a4f807f491147bf2b2e658e06e29e654b2",
+  "meridian/indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+  "meridian/analytics.py": "075c5d8175d97c004d57f1ef7b10e0d76364deccffac9172a17e34ab00943cf5",
+  "meridian/adapters/data.py": "a34c8f2f5d1c32119d2f79ad0395e6abc07de6a643ebb861419899e9a808ce62",
+  "meridian/earnings.py": "95ab3a03f2272c113782953f918b2012b4697c9ca7169ee08570a5b8960b1570",
+  "state/earnings.csv": "caea1ef4c8acaa8b0fd2a2085da599fac7f92bde3f7cc0bdd7857dc90d69e71c",
+  "state/bars_integrity.json": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+  "state/counterfactuals.jsonl": "df479477d73c9f7998bebc368e505cb0ed77677c676719782b907199eb771f09",
+  "state/cf_open.json": "fea01ce5696cf8d593800d0e9cc9af25617b4a46338f701bbd0ade99f49a6189",
+  "state/component_ic.json": "07b82f55eb19d35e60a371dc64c954beb973f0b190b622c51d5a87c0d3ad9565",
+  "sablon_pullback_olcum": "42955783a2f7709dc49f59de2a54b41af124a4ecd1e2260eb3c1b9a54fdf0bfa",
+  "sablon_max_olcum": "27c23e429625498ed4e24481568997ea1d15f838e53716ee763999e44992492b"
+ },
+ "bar_onbellegi": {
+  "kaynak": "/Users/erdemozturk/AI-Trading/state/bars",
+  "dosya_sayisi": 259,
+  "birlesik_sha256": "91a3f76063e2eb64f992ec60dffea093b2fa03447521c7fca8f1f796245a619e",
+  "not": "canlı önbellek SALT-OKUNDU (config.BARS = state/bars); ölçüm hiçbir repo/state dosyasına YAZMADI — yazımlar sandbox/_state'te"
+ },
+ "sandbox_state_icerigi": [
+  "bars_integrity.json",
+  "earnings.csv",
+  "events.jsonl"
+ ],
+ "kosum_zemini_olculdu": {
+  "zemin_sabit_kaldi": true,
+  "kosum_sirasinda_degisen_dosya": [],
+  "kosum_basi_utc": "2026-08-01T10:09:42.204201+00:00",
+  "kosum_sonu_utc": "2026-08-01T10:09:52.926435+00:00",
+  "repo_head_basta": "8de825c0f5636a54334f9cc3c90a33d5a8b6ec7e",
+  "repo_head_sonda": "8de825c0f5636a54334f9cc3c90a33d5a8b6ec7e",
+  "not": "ÖLÇÜLDÜ, varsayılmadı: ithal edilen 12 dosyanın sha256'sı koşumdan önce ve sonra alındı ve BİREBİR aynı çıktı."
+ },
+ "kosum_sirasinda_repo_head": {
+  "oturum_basi": "8aaf05e",
+  "kosum_sonu": "8de825c0f5636a54334f9cc3c90a33d5a8b6ec7e",
+  "araya_giren_commitler": [
+   "8de825c EDG-011 in-play önceliklendirme kartı (G5; K=2, taban-fazlası + artımlılık şartlı — WP-M #3 uyumlu)",
+   "8b6bbbc bounds: emekli spy_sma_gate knob'u düşürüldü (yerel — A1 ile eşitlendi)",
+   "120a20e ROADMAP: kablo bileti kapandı + paralel dalga karar kaydı + rs-IC izleme notu",
+   "c783442 .gitignore ölü-negasyon düzeltmesi: state/ → state/* — goal.yaml + bounds.yaml artık GERÇEKTEN versiyonda",
+   "a3ee855 Temizlik turu: EDG-005 kapı emekliliği + component_ic aracı + mutmut fikstürü",
+   "ba7006b CLAUDE.md: ajan uçuştayken add -A yasağı (a94d425 dersi)",
+   "274da2d WIP: temizlik ajanı ara kayıt — haftalik_mutasyon.sh K3 fikstür düzeltmesi sürüyor",
+   "a94d425 EDG-010 pullback ARŞİV — lafzen-success/kanıten-kenarsız; ölçüt-kusuru itiraflı + WP-M ders #3",
+   "2d4cbf4 EDG-010 pullback kurulumu ön-kayıt kartı (G4; K=2, bağımsızlık şartı Jaccard<0.3)",
+   "bbe8082 dagit.sh: doğrulama healthz portu 8000→8080 (dünkü '000' vakasının kökü) + [3] karar notu sadeleşti",
+   "ad9ffe8 dagit.sh [3]: A1'e dev-grubu kurulumu daraltıldı (--no-dev)",
+   "9db5063 dagit.sh: rsync dışlamalarına .claude/.hypothesis/mutants/.pytest_cache"
+  ],
+  "kritik_yollarda_degisiklik": [
+   "meridian/analytics.py",
+   "research/cards/EDG-2026-011-inplay-onceliklendirme.yaml"
+  ],
+  "olcum_etkilendi_mi": true
+ },
+ "calisma_agaci_kirliligi": {
+  "kural": "ölçümün İTHAL ETTİĞİ dosyalar koşum penceresinde değişmiş olabilir mi?",
+  "kirli_dosyalar": [
+   {
+    "yol": "meridian/adapters/data.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:06:23.392203+00:00"
+   },
+   {
+    "yol": "meridian/analytics.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:05:37.567232+00:00"
+   },
+   {
+    "yol": "meridian/api.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:10:36.871967+00:00"
+   },
+   {
+    "yol": "meridian/barsarchive.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:09:05.777696+00:00"
+   },
+   {
+    "yol": "meridian/component_ic.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:06:37.270272+00:00"
+   },
+   {
+    "yol": "meridian/config.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:08:23.470723+00:00"
+   },
+   {
+    "yol": "meridian/earnings.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:05:58.549345+00:00"
+   },
+   {
+    "yol": "meridian/loop.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:07:15.908164+00:00"
+   },
+   {
+    "yol": "meridian/scheduler.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:10:22.583711+00:00"
+   },
+   {
+    "yol": "meridian/web/app.js",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:11:19.455489+00:00"
+   },
+   {
+    "yol": "docs/olcum_standartlari.md",
+    "durum": "??",
+    "mtime_utc": "2026-08-01T10:09:56.996758+00:00"
+   },
+   {
+    "yol": "meridian/olcum_araclari.py",
+    "durum": "??",
+    "mtime_utc": "2026-08-01T10:08:27.369297+00:00"
+   },
+   {
+    "yol": "research/edgar_facts/",
+    "durum": "??",
+    "mtime_utc": null
+   }
+  ],
+  "olcumun_bagimli_oldugu_dosyalar": {
+   "meridian/indicators.py": {
+    "mtime_utc": "2026-07-29T18:42:42.316841+00:00",
+    "git_kirli": false
+   },
+   "meridian/analytics.py": {
+    "mtime_utc": "2026-08-01T10:05:37.567232+00:00",
+    "git_kirli": true
+   },
+   "meridian/adapters/data.py": {
+    "mtime_utc": "2026-08-01T10:06:23.392203+00:00",
+    "git_kirli": true
+   },
+   "meridian/earnings.py": {
+    "mtime_utc": "2026-08-01T10:05:58.549345+00:00",
+    "git_kirli": true
+   },
+   "state/earnings.csv": {
+    "mtime_utc": "2026-07-29T22:10:30.875123+00:00",
+    "git_kirli": false
+   },
+   "state/bars_integrity.json": {
+    "mtime_utc": "2026-07-31T07:19:54.665058+00:00",
+    "git_kirli": false
+   },
+   "state/counterfactuals.jsonl": {
+    "mtime_utc": "2026-07-29T21:09:57.113081+00:00",
+    "git_kirli": false
+   },
+   "state/cf_open.json": {
+    "mtime_utc": "2026-07-29T21:10:00.215837+00:00",
+    "git_kirli": false
+   }
+  },
+  "paralel_oturum_notu": "Koşum sırasında meridian/earnings.py, meridian/analytics.py ve meridian/adapters/data.py çalışma ağacında KİRLİ görüldü (başka bir oturum BMO/AMC turu işliyor). Etkilenme ÖLÇÜLDÜ: (a) diff analytics.spearman_ic'e DOKUNMUYOR; (b) data.py diff'i yalnız nasdaq_earnings_window (ağ çağrısı — bu ölçüm onu HİÇ çağırmaz); (c) earnings._load'ın (ticker,date) ayrıştırması PK5-D ile bağımsız ayrıştırmaya karşı sınandı ve BİREBİR eşleşti; (d) koşum sarmalı sha'ları koşum boyunca sabit ölçtü."
+ },
+ "pycache_notu": "Python import'u repo'da `meridian/__pycache__/*.pyc` üretir/yeniler. Bu, ölçümün repoda bıraktığı TEK izdir; versiyonlanmayan bytecode önbelleğidir, kaynak dosya değiştirilmemiştir.",
+ "sablon_devralma": "olcum.py'nin bar yükleme / blok-bootstrap / pozitif kontrol / PK4 bölümleri pullback_olcum/olcum.py'den devralındı (birebir kopya DEĞİL: popülasyon cf aday paneline çevrildi ve TEKİLLEŞTİRİLDİ, taban aynı-gün aday havuzuna çevrildi, artımlılık için ORTAK-blok fark bootstrap'ı eklendi, PK5 bu kartın özdeşliklerine uyarlandı (A rvol, B katman maskesi, D takvim yükleyici). Pozitif kontrol ŞABLONUN satır düzeyinde bırakıldı ki çivi karşılaştırılabilir kalsın."
+}

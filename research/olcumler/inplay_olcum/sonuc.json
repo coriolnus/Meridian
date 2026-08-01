@@ -1,0 +1,1212 @@
+{
+  "kart": "EDG-2026-011",
+  "aile": "inplay_candidate_priority",
+  "olcum_tarihi": "2026-08-01T10:09:48.374196+00:00",
+  "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/inplay_olcum",
+  "DURUM": "OLCULMEDI_KILL3",
+  "kart_metni_uygulamasi": {
+    "universe": "cf-katmanlı aday popülasyonu — counterfactuals.jsonl entered=True (near_miss DAHİL = 'girilen+kılpayı') + cf_open.json; TEKİL (ticker, date)",
+    "in_play": "|t - en yakın kazanç tarihi| <= P TAKVİM günü (P ∈ [3, 5]) VE rvol20(t) >= 1.5",
+    "katmanlar": "yalniz_katalizor (yalnız kazanç yakınlığı) / yalniz_rvol (yalnız rvol20>=1.5) / in_play (ikisi) — artımlılık bu üçlüden okunur",
+    "taban": "AYNI-GÜN ADAY HAVUZU: o takvim gününde ileri getirisi tanımlı TÜM aday-günlerin ortalaması (piyasa sürüklenmesi ayıklanır). Birincil okuma havuz ortalamasına SATIRIN KENDİSİ DAHİLdir (kartın harfi); birini-dışarıda-bırak (LOO) okuması duyarlılık olarak AYRICA verilir, hükme girmez.",
+    "ileri_getiri": "close[t+h]/close[t]-1, TAM (takvim-kapılı + integrity-dışlamalı) bar serisinden; h ∈ 5/10/20",
+    "artimlilik": "ort(in_play fazlası) - ort(yalniz_rvol fazlası); CI ORTAK gün bloklarından (aynı blokla iki ortalama birden hesaplanır)",
+    "maliyet": "10.0bps tek-yön; kart cost_model 'sıralama overlay'i işlem üretmez' diyor → hüküm BRÜT üzerinden, net değer AYRICA verilir",
+    "ci": "21-günlük HAREKETLİ BLOK bootstrap (%95 persentil, 2000 tekrar)",
+    "rvol20": "meridian.indicators.rvol20 (depo fonksiyonu; 20g hacim ortalamasına oran)"
+  },
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 248,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": 0,
+    "defter_yolu_dusen": 46256,
+    "defter_yolu_sembol": 57,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {}
+  },
+  "integrity_guvenli_baslangic_sembol_sayisi": 0,
+  "populasyon_muhasebesi": {
+    "cf_satir": 7161,
+    "cf_girilmemis": 108,
+    "cf_eksik_alan": 0,
+    "cf_near_miss": 4947,
+    "open_satir": 69,
+    "open_eksik_alan": 0,
+    "open_near_miss": 50,
+    "ham_satir": 7122,
+    "tekil_aday_gun": 6807,
+    "dusen_kopya_satir": 315
+  },
+  "eslesme_muhasebesi": {
+    "bar_yok_sembol": 43,
+    "bar_yok_tarih": 0,
+    "kabul": 6764,
+    "rvol_nan": 0
+  },
+  "kazanc_takvimi": {
+    "kaynak": "/Users/erdemozturk/AI-Trading/state/earnings.csv",
+    "yukleyici": "meridian.earnings._load() (DEPONUN kendi yükleyicisi; dosya sandbox'a kopyalandı, canlı dosyaya DOKUNULMADI)",
+    "dosya_mtime_utc": "2026-07-29T22:10:30.875123+00:00",
+    "sembol_sayisi": 193,
+    "toplam_tarih_sayisi": 193,
+    "sembol_basina_tarih": {
+      "min": 1,
+      "maks": 1
+    },
+    "tarih_araligi": [
+      "2025-06-24",
+      "2026-08-13"
+    ],
+    "tarih_ay_dagilimi": {
+      "2025-06": 1,
+      "2026-07": 123,
+      "2026-08": 69
+    },
+    "evren_kapsami": {
+      "replay_universe": 251,
+      "takvimde_bilinen": 193,
+      "kart_beyani": "194/251 (kart evidence_refs)"
+    },
+    "aday_evreni_kapsami": {
+      "aday_sembol": 248,
+      "takvimde_bilinen": 190,
+      "kapsam_disi_sembol": 58,
+      "kapsam_disi_ornek": [
+        "ABT",
+        "ADBE",
+        "ADI",
+        "ADSK",
+        "AVGO",
+        "AZO",
+        "BAC",
+        "BKR",
+        "BLK",
+        "BURL",
+        "C",
+        "CAG"
+      ]
+    }
+  },
+  "pit_denetimi": {
+    "kart_sarti": "in_play(t) tanımı kartta 'yalnız t'de BİLİNEN takvim' diye yazılmıştır — yani t gününde elde olan kazanç takvimi.",
+    "bulgu": "state/earnings.csv TEK BİR İLERİYE-DÖNÜK ANLIK GÖRÜNTÜdür: her sembol için yalnız BİR tarih (sonraki planlı rapor) tutulur ve dosya haftalık olarak ÜZERİNE yazılır. Depoda kazanç tarihlerinin TARİHSEL (nokta-zamanlı) kaydı YOK: state/history altında takvim anlık görüntüsü yok, counterfactuals.jsonl satırlarında kazanç alanı yok, başka hiçbir state dosyasında rapor tarihi yok.",
+    "kod_dayanagi": "meridian/earnings.py — refresh(): Nasdaq penceresi [bugün-7g, bugün+14g]; refresh_from_fmp(): fmp.earnings_dates; her ikisi de earnings.csv'yi os.replace ile YENİDEN YAZAR. Geçmişe dönük arşiv tutulmaz.",
+    "aday_gun_araligi": [
+      "2022-01-03",
+      "2026-07-28"
+    ],
+    "takvim_tarih_araligi": [
+      "2025-06-24",
+      "2026-08-13"
+    ],
+    "sonuc": "PIT-DOĞRU in_play, aday popülasyonunun EZİCİ çoğunluğu için ÖLÇÜLEMEZ: takvimde hiç tarih bulunmayan bir dönemde (2022-01..2026-06) t'de bilinen takvim depoda yok. Kartın tanımını korumak için ölçüm İKİ okumayla verilir: (a) PIT-DOĞRU okuma — ölçülemez, None+neden; (b) PIT-İHLALLİ ÜST SINIR — bugünkü anlık görüntü TÜM geçmişe uygulanır (geleceğe bakar, HÜKME GİRMEZ) ve yalnız 'tanım gevşetilse bile örneklem yeter mi?' sorusunu kapatmak için sayılır."
+  },
+  "havuz_tabani": {
+    "gun_sayisi": 998,
+    "gun_basina_aday": {
+      "ort": 6.673347,
+      "medyan": 5.0,
+      "min": 1,
+      "maks": 54,
+      "tek_adayli_gun": 137
+    },
+    "not": "tek-adaylı günlerde birincil (kendisi-dahil) fazla TANIM GEREĞİ 0'dır; LOO okuması o günleri ölçemez (n<2) ve dışlar — iki okuma bu yüzden AYRI verilir"
+  },
+  "i_dilim_sayilari": {
+    "3": {
+      "yalniz_katalizor": 23,
+      "yalniz_rvol": 2401,
+      "in_play": 11,
+      "havuz_toplam": 6764,
+      "takvim_kapsami_disi_aday_gun": 1669,
+      "rvol_olculemez_aday_gun": 0
+    },
+    "5": {
+      "yalniz_katalizor": 24,
+      "yalniz_rvol": 2401,
+      "in_play": 12,
+      "havuz_toplam": 6764,
+      "takvim_kapsami_disi_aday_gun": 1669,
+      "rvol_olculemez_aday_gun": 0
+    }
+  },
+  "i_dilim_ufuk_olculebilirligi": {
+    "3": {
+      "yalniz_katalizor": {
+        "n_aday_gun": 23,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 1,
+        "ufku_tanimli_fwd10": 0,
+        "ufku_tanimli_fwd20": 0
+      },
+      "yalniz_rvol": {
+        "n_aday_gun": 2401,
+        "tarih_araligi": [
+          "2022-01-04",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 2387,
+        "ufku_tanimli_fwd10": 2383,
+        "ufku_tanimli_fwd20": 2379
+      },
+      "in_play": {
+        "n_aday_gun": 11,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 1,
+        "ufku_tanimli_fwd10": 0,
+        "ufku_tanimli_fwd20": 0
+      }
+    },
+    "5": {
+      "yalniz_katalizor": {
+        "n_aday_gun": 24,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 1,
+        "ufku_tanimli_fwd10": 0,
+        "ufku_tanimli_fwd20": 0
+      },
+      "yalniz_rvol": {
+        "n_aday_gun": 2401,
+        "tarih_araligi": [
+          "2022-01-04",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 2387,
+        "ufku_tanimli_fwd10": 2383,
+        "ufku_tanimli_fwd20": 2379
+      },
+      "in_play": {
+        "n_aday_gun": 12,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufku_tanimli_fwd5": 1,
+        "ufku_tanimli_fwd10": 0,
+        "ufku_tanimli_fwd20": 0
+      }
+    }
+  },
+  "i_dilim_ufuk_notu": "in-play dilimi TAMAMEN verinin SON HAFTASINDA oturuyor (takvim anlık görüntüsü ileriye dönük olduğu için katalizör yakınlığı yalnız bugünün çevresinde kurulabiliyor). Bu yüzden 10g ve 20g ileri getirisi HENÜZ OLUŞMAMIŞTIR: dilim yalnız küçük DEĞİL, kart success_metric'inin okuduğu iki ufukta TAMAMEN BOŞTUR.",
+  "i_dilim_sayilari_notu": "katalizör ve in_play sayıları PIT-İHLALLİ ÜST SINIRdır (bugünkü takvim anlık görüntüsü tüm geçmişe uygulanmıştır). PIT-DOĞRU sayı bunlardan KÜÇÜK ya da eşittir; üst sınır bile kill#3 eşiğini (150) geçmiyorsa PIT-doğru okuma da geçemez.",
+  "kill3_inplay_sayisi": {
+    "3": {
+      "n_inplay_aday_gun_UST_SINIR": 11,
+      "esik": 150,
+      "yeterli": false,
+      "pit_dogru_n": null,
+      "pit_dogru_neden": "t'de bilinen takvim depoda yok (tek ileriye-dönük anlık görüntü) — PIT-doğru dilim sayılamaz"
+    },
+    "5": {
+      "n_inplay_aday_gun_UST_SINIR": 12,
+      "esik": 150,
+      "yeterli": false,
+      "pit_dogru_n": null,
+      "pit_dogru_neden": "t'de bilinen takvim depoda yok (tek ileriye-dönük anlık görüntü) — PIT-doğru dilim sayılamaz"
+    }
+  },
+  "i_fazla_tablosu": {
+    "3": {
+      "yalniz_katalizor": {
+        "n_aday_gun": 23,
+        "n_sembol": 21,
+        "n_gun": 5,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 1,
+              "ort": null,
+              "medyan": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "neden": "n<30"
+            },
+            "havuz_fazlasi": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            }
+          },
+          "10": {
+            "neden": "gözlem yok"
+          },
+          "20": {
+            "neden": "gözlem yok"
+          }
+        }
+      },
+      "yalniz_rvol": {
+        "n_aday_gun": 2401,
+        "n_sembol": 247,
+        "n_gun": 786,
+        "tarih_araligi": [
+          "2022-01-04",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 2387,
+              "ort": 0.001698,
+              "medyan": 0.001441,
+              "std": 0.050822,
+              "pozitif_oran": 0.512778,
+              "ci": {
+                "lo": -0.002193,
+                "hi": 0.006208,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.002193,
+                "hi": 0.006208,
+                "n_gun": 782,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.000698,
+              "maliyet_dusulmus_ci_lo": -0.003193,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2387,
+              "ort": 0.000251,
+              "medyan": 0.0,
+              "std": 0.040633,
+              "pozitif_oran": 0.482195,
+              "ci": {
+                "lo": -0.001023,
+                "hi": 0.001909,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001023,
+                "hi": 0.001909,
+                "n_gun": 782,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000749,
+              "maliyet_dusulmus_ci_lo": -0.002023,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2329,
+              "ort": 0.000356,
+              "medyan": -0.000451,
+              "std": 0.047931,
+              "pozitif_oran": 0.494204,
+              "ci": {
+                "lo": -0.001068,
+                "hi": 0.002409,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001068,
+                "hi": 0.002409,
+                "n_gun": 724,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000644,
+              "maliyet_dusulmus_ci_lo": -0.002068,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          },
+          "10": {
+            "ham": {
+              "n": 2383,
+              "ort": 0.005465,
+              "medyan": 0.003681,
+              "std": 0.068976,
+              "pozitif_oran": 0.530843,
+              "ci": {
+                "lo": -0.00021,
+                "hi": 0.013666,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.00021,
+                "hi": 0.013666,
+                "n_gun": 779,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.004465,
+              "maliyet_dusulmus_ci_lo": -0.00121,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2383,
+              "ort": 0.0001,
+              "medyan": -9.1e-05,
+              "std": 0.056913,
+              "pozitif_oran": 0.474192,
+              "ci": {
+                "lo": -0.001778,
+                "hi": 0.002747,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001778,
+                "hi": 0.002747,
+                "n_gun": 779,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.0009,
+              "maliyet_dusulmus_ci_lo": -0.002778,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2325,
+              "ort": 0.000198,
+              "medyan": -0.001429,
+              "std": 0.067569,
+              "pozitif_oran": 0.486022,
+              "ci": {
+                "lo": -0.00191,
+                "hi": 0.0034,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.00191,
+                "hi": 0.0034,
+                "n_gun": 721,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000802,
+              "maliyet_dusulmus_ci_lo": -0.00291,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          },
+          "20": {
+            "ham": {
+              "n": 2379,
+              "ort": 0.01281,
+              "medyan": 0.006656,
+              "std": 0.098115,
+              "pozitif_oran": 0.543506,
+              "ci": {
+                "lo": 0.003886,
+                "hi": 0.025287,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.003886,
+                "hi": 0.025287,
+                "n_gun": 775,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "maliyet_dusulmus_ort": 0.01181,
+              "maliyet_dusulmus_ci_lo": 0.002886,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2379,
+              "ort": 0.000588,
+              "medyan": 0.0,
+              "std": 0.077666,
+              "pozitif_oran": 0.479613,
+              "ci": {
+                "lo": -0.001746,
+                "hi": 0.003847,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001746,
+                "hi": 0.003847,
+                "n_gun": 775,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000412,
+              "maliyet_dusulmus_ci_lo": -0.002746,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2321,
+              "ort": 0.000857,
+              "medyan": -0.001135,
+              "std": 0.093474,
+              "pozitif_oran": 0.491598,
+              "ci": {
+                "lo": -0.001497,
+                "hi": 0.004635,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001497,
+                "hi": 0.004635,
+                "n_gun": 717,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000143,
+              "maliyet_dusulmus_ci_lo": -0.002497,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          }
+        }
+      },
+      "in_play": {
+        "n_aday_gun": 11,
+        "n_sembol": 11,
+        "n_gun": 4,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 1,
+              "ort": null,
+              "medyan": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "neden": "n<30"
+            },
+            "havuz_fazlasi": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            }
+          },
+          "10": {
+            "neden": "gözlem yok"
+          },
+          "20": {
+            "neden": "gözlem yok"
+          }
+        }
+      }
+    },
+    "5": {
+      "yalniz_katalizor": {
+        "n_aday_gun": 24,
+        "n_sembol": 21,
+        "n_gun": 5,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 1,
+              "ort": null,
+              "medyan": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "neden": "n<30"
+            },
+            "havuz_fazlasi": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            }
+          },
+          "10": {
+            "neden": "gözlem yok"
+          },
+          "20": {
+            "neden": "gözlem yok"
+          }
+        }
+      },
+      "yalniz_rvol": {
+        "n_aday_gun": 2401,
+        "n_sembol": 247,
+        "n_gun": 786,
+        "tarih_araligi": [
+          "2022-01-04",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 2387,
+              "ort": 0.001698,
+              "medyan": 0.001441,
+              "std": 0.050822,
+              "pozitif_oran": 0.512778,
+              "ci": {
+                "lo": -0.002067,
+                "hi": 0.006231,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.002067,
+                "hi": 0.006231,
+                "n_gun": 782,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.000698,
+              "maliyet_dusulmus_ci_lo": -0.003067,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2387,
+              "ort": 0.000251,
+              "medyan": 0.0,
+              "std": 0.040633,
+              "pozitif_oran": 0.482195,
+              "ci": {
+                "lo": -0.001098,
+                "hi": 0.001914,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001098,
+                "hi": 0.001914,
+                "n_gun": 782,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000749,
+              "maliyet_dusulmus_ci_lo": -0.002098,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2329,
+              "ort": 0.000356,
+              "medyan": -0.000451,
+              "std": 0.047931,
+              "pozitif_oran": 0.494204,
+              "ci": {
+                "lo": -0.001125,
+                "hi": 0.002509,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001125,
+                "hi": 0.002509,
+                "n_gun": 724,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000644,
+              "maliyet_dusulmus_ci_lo": -0.002125,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          },
+          "10": {
+            "ham": {
+              "n": 2383,
+              "ort": 0.005465,
+              "medyan": 0.003681,
+              "std": 0.068976,
+              "pozitif_oran": 0.530843,
+              "ci": {
+                "lo": -0.000322,
+                "hi": 0.013242,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.000322,
+                "hi": 0.013242,
+                "n_gun": 779,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.004465,
+              "maliyet_dusulmus_ci_lo": -0.001322,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2383,
+              "ort": 0.0001,
+              "medyan": -9.1e-05,
+              "std": 0.056913,
+              "pozitif_oran": 0.474192,
+              "ci": {
+                "lo": -0.001769,
+                "hi": 0.002717,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001769,
+                "hi": 0.002717,
+                "n_gun": 779,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.0009,
+              "maliyet_dusulmus_ci_lo": -0.002769,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2325,
+              "ort": 0.000198,
+              "medyan": -0.001429,
+              "std": 0.067569,
+              "pozitif_oran": 0.486022,
+              "ci": {
+                "lo": -0.001801,
+                "hi": 0.003449,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001801,
+                "hi": 0.003449,
+                "n_gun": 721,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000802,
+              "maliyet_dusulmus_ci_lo": -0.002801,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          },
+          "20": {
+            "ham": {
+              "n": 2379,
+              "ort": 0.01281,
+              "medyan": 0.006656,
+              "std": 0.098115,
+              "pozitif_oran": 0.543506,
+              "ci": {
+                "lo": 0.003729,
+                "hi": 0.02603,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.003729,
+                "hi": 0.02603,
+                "n_gun": 775,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "maliyet_dusulmus_ort": 0.01181,
+              "maliyet_dusulmus_ci_lo": 0.002729,
+              "neden": null
+            },
+            "havuz_fazlasi": {
+              "n": 2379,
+              "ort": 0.000588,
+              "medyan": 0.0,
+              "std": 0.077666,
+              "pozitif_oran": 0.479613,
+              "ci": {
+                "lo": -0.001592,
+                "hi": 0.003888,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001592,
+                "hi": 0.003888,
+                "n_gun": 775,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000412,
+              "maliyet_dusulmus_ci_lo": -0.002592,
+              "neden": null,
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 2321,
+              "ort": 0.000857,
+              "medyan": -0.001135,
+              "std": 0.093474,
+              "pozitif_oran": 0.491598,
+              "ci": {
+                "lo": -0.001748,
+                "hi": 0.004605,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.001748,
+                "hi": 0.004605,
+                "n_gun": 717,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000143,
+              "maliyet_dusulmus_ci_lo": -0.002748,
+              "neden": null,
+              "taban_olculemeyen_satir": 58
+            }
+          }
+        }
+      },
+      "in_play": {
+        "n_aday_gun": 12,
+        "n_sembol": 11,
+        "n_gun": 5,
+        "tarih_araligi": [
+          "2026-07-21",
+          "2026-07-28"
+        ],
+        "ufuklar": {
+          "5": {
+            "ham": {
+              "n": 1,
+              "ort": null,
+              "medyan": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "neden": "n<30"
+            },
+            "havuz_fazlasi": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            },
+            "havuz_fazlasi_LOO_duyarlilik": {
+              "n": 1,
+              "ort": null,
+              "neden": "n<30",
+              "taban_olculemeyen_satir": 0
+            }
+          },
+          "10": {
+            "neden": "gözlem yok"
+          },
+          "20": {
+            "neden": "gözlem yok"
+          }
+        }
+      }
+    }
+  },
+  "ii_artimlilik": {
+    "tanim": "kart success_metric 2. bacağı: in-play fazlası, yalnız-rvol katmanının fazlasını ANLAMLI aşıyor mu (katalizörün rvol-ötesi katkısı)?",
+    "3": {
+      "5": {
+        "fark": null,
+        "nA": 1,
+        "nB": 2387,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=1 < 30 — ölçülemez (kill#3 zaten askıda)"
+      },
+      "10": {
+        "fark": null,
+        "nA": 0,
+        "nB": 2383,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=0 < 30 — ölçülemez (kill#3 zaten askıda)"
+      },
+      "20": {
+        "fark": null,
+        "nA": 0,
+        "nB": 2379,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=0 < 30 — ölçülemez (kill#3 zaten askıda)"
+      }
+    },
+    "5": {
+      "5": {
+        "fark": null,
+        "nA": 1,
+        "nB": 2387,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=1 < 30 — ölçülemez (kill#3 zaten askıda)"
+      },
+      "10": {
+        "fark": null,
+        "nA": 0,
+        "nB": 2383,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=0 < 30 — ölçülemez (kill#3 zaten askıda)"
+      },
+      "20": {
+        "fark": null,
+        "nA": 0,
+        "nB": 2379,
+        "ci": null,
+        "anlamli": null,
+        "neden": "in_play dilimi n=0 < 30 — ölçülemez (kill#3 zaten askıda)"
+      }
+    }
+  },
+  "iii_pozitif_kontrol": {
+    "aciklama": "AYNI boru hattı, kart guards çivisi: ham rvol20 @20 cf-katman IC ≈0.064 (max_olcum/EDG-2026-004 turu 0.0645; resmom 0.0637; pullback 0.0642 — hepsi bars_integrity dışlamalı yolda).",
+    "katman": "counterfactuals.jsonl entered=True & near_miss=False (component_ic katmanı), ŞABLONLA AYNI SATIR DÜZEYİ (tekilleştirme YOK)",
+    "eslesme_muhasebesi": {
+      "bar_yok_sembol": 45,
+      "bar_yok_tarih": 0,
+      "kabul": 7077
+    },
+    "katman_n": 2099,
+    "5": {
+      "ic": 0.0374,
+      "n": 2095,
+      "ci": {
+        "lo": -0.018,
+        "hi": 0.0889,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.01799,
+        "hi": 0.08894,
+        "n_gun": 742,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "10": {
+      "ic": 0.0516,
+      "n": 2093,
+      "ci": {
+        "lo": -0.0079,
+        "hi": 0.0981,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.007941,
+        "hi": 0.098123,
+        "n_gun": 740,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "20": {
+      "ic": 0.0642,
+      "n": 2087,
+      "ci": {
+        "lo": 0.013,
+        "hi": 0.1118,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": 0.013038,
+        "hi": 0.111824,
+        "n_gun": 736,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": true,
+      "neden": null
+    },
+    "tekil_panel_uzerinde_tani": {
+      "20": {
+        "ic": 0.0533,
+        "n": 1932,
+        "ci": {
+          "lo": -0.0015,
+          "hi": 0.094,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.001508,
+          "hi": 0.094039,
+          "n_gun": 736,
+          "n_boot_gecerli": 600,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "neden": null
+      },
+      "not": "TEKİLLEŞTİRME etkisi: aynı gün birden çok setup satırı tek aday-güne indiği için katman üyeliği ve ağırlıklar değişir. HÜKME GİRMEZ."
+    },
+    "civi_hedef": 0.0645,
+    "civi_olculen": 0.0642,
+    "civi_sapma": 0.0003,
+    "tolerans": 0.005,
+    "GECTI": true,
+    "defterdeki_deger_cf_rvol20": {
+      "5": {
+        "ic": 0.032,
+        "n": 2102,
+        "neden": null,
+        "ci": {
+          "lo": -0.0108,
+          "hi": 0.0747,
+          "seviye": 0.95
+        },
+        "anlamli": false
+      },
+      "10": {
+        "ic": 0.0456,
+        "n": 2100,
+        "neden": null,
+        "ci": {
+          "lo": 0.0029,
+          "hi": 0.0882,
+          "seviye": 0.95
+        },
+        "anlamli": true
+      },
+      "20": {
+        "ic": 0.0604,
+        "n": 2094,
+        "neden": null,
+        "ci": {
+          "lo": 0.0176,
+          "hi": 0.103,
+          "seviye": 0.95
+        },
+        "anlamli": true
+      }
+    }
+  },
+  "pk4_yol_tutarliligi": {
+    "tanim": "YOL TUTARLILIĞI: close[t+h]/close[t]-1, aradaki GÜNLÜK getirilerin bileşiğine eşit olmalı. Takvim kapısı/integrity kırpması ufkun İÇİNDE bar düşürdüyse ya da kaydırma bir gün kaysaydı bu özdeşlik bozulurdu.",
+    "kapsam": "tekil aday-gün paneli + pozitif kontrolün satır düzeyi paneli",
+    "fwd5": {
+      "n": 13743,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd10": {
+      "n": 13699,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd20": {
+      "n": 13624,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    }
+  },
+  "pk5_ozdeslikler": {
+    "tanim": "DÖRT ÖZDEŞLİK: (A) rvol20 GERİYE-BAKIŞSIZ — tam seride ile df.iloc[:i+1] kesilmiş seride aynı değer; (B) katman maskeleri bağımsız (vektörsüz, saf python) türetimle birebir aynı; (C) hızlı ortalama-bootstrap ile satır-toplayan bootstrap aynı gün dizisinde birebir aynı; (D) kazanç takvimi KANONİK yükleyici (meridian.earnings._load) ile bağımsız ayrıştırma birebir aynı.",
+    "A_rvol_geriye_bakissizlik": {
+      "n_ornek": 32,
+      "maks_fark": 0.0,
+      "gecti": true
+    },
+    "B_katman_maskesi": {
+      "n_sinama": 6,
+      "ayrisan": 0,
+      "gecti": true
+    },
+    "C_hizli_ortalama_ozdesligi": {
+      "n_ornek": 50,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "D_takvim_yukleyici_ozdesligi": {
+      "kanonik_sembol": 193,
+      "bagimsiz_sembol": 193,
+      "sembol_ayrismasi": 0,
+      "deger_ayrismasi": 0,
+      "gecti": true
+    },
+    "gecti": true
+  },
+  "hukum": {
+    "kart_success_metric": "in-play diliminin aday-havuzu-fazlası @10 VEYA @20 anlamlı POZİTİF (CI 0-dışı) VE artımlılık: fazla, yalnız-rvol katmanının fazlasını anlamlı aşıyor",
+    "kart_kill": [
+      "iki pencerede de fazla CI-0-içi → arşiv",
+      "artımlılık yok → 'rvol zaten skorda' hükmü, arşiv",
+      "in-play aday-gün < 150 → ölçülemedi-nedenli askı (K harcanmaz, tanım gevşetilmez)"
+    ],
+    "P_basina": {
+      "3": {
+        "olculdu": false,
+        "neden": "kill#3: in-play aday-gün üst sınırı 11 < 150",
+        "bacak1_fazla": null,
+        "bacak2_artimlilik": null
+      },
+      "5": {
+        "olculdu": false,
+        "neden": "kill#3: in-play aday-gün üst sınırı 12 < 150",
+        "bacak1_fazla": null,
+        "bacak2_artimlilik": null
+      }
+    },
+    "yalniz_rvol_katmani_PIT_TEMIZ": {
+      "5": {
+        "ham_ort": 0.001698,
+        "fazla_ort": 0.000251,
+        "fazla_ci": {
+          "lo": -0.001023,
+          "hi": 0.001909,
+          "seviye": 0.95
+        },
+        "fazla_pozitif_anlamli": false,
+        "fazla_LOO_ort": 0.000356,
+        "fazla_LOO_ci": {
+          "lo": -0.001068,
+          "hi": 0.002409,
+          "seviye": 0.95
+        }
+      },
+      "10": {
+        "ham_ort": 0.005465,
+        "fazla_ort": 0.0001,
+        "fazla_ci": {
+          "lo": -0.001778,
+          "hi": 0.002747,
+          "seviye": 0.95
+        },
+        "fazla_pozitif_anlamli": false,
+        "fazla_LOO_ort": 0.000198,
+        "fazla_LOO_ci": {
+          "lo": -0.00191,
+          "hi": 0.0034,
+          "seviye": 0.95
+        }
+      },
+      "20": {
+        "ham_ort": 0.01281,
+        "fazla_ort": 0.000588,
+        "fazla_ci": {
+          "lo": -0.001746,
+          "hi": 0.003847,
+          "seviye": 0.95
+        },
+        "fazla_pozitif_anlamli": false,
+        "fazla_LOO_ort": 0.000857,
+        "fazla_LOO_ci": {
+          "lo": -0.001497,
+          "hi": 0.004635,
+          "seviye": 0.95
+        }
+      }
+    },
+    "pozitif_kontrol_GECTI": true,
+    "pk4_gecti": true,
+    "pk5_gecti": true,
+    "oneri": "ASKI (kill#3) — in-play aday-gün sayısı iki pencerede de 150 eşiğinin ALTINDA; üstelik bu sayı PIT-İHLALLİ ÜST SINIRdır. Kart ÖLÇÜLEMEDİ: K HARCANMAZ, tanım GEVŞETİLMEZ. Kök neden veri: kazanç takvimi nokta-zamanlı DEĞİL (tek ileriye-dönük anlık görüntü)."
+  }
+}

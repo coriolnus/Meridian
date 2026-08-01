@@ -26,6 +26,18 @@ kill_criteria:
 guards:
   - "pozitif kontrol: ham rvol20 @20 IC ≈0.064 aynı boru hattında"
   - "earnings kapsam beyanı: dilim-dışı None sayımı raporda; PK4/PK5 standart"
-k_registry: {registered_at: "2026-08-01T10:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T10:0xZ", trial_ids: [inplay_olcum/ASKI — K harcanmadı]}
+status: askida   # 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile
+#   11-12 << 150. KÖK NEDEN VERİ: state/earnings.csv tarihsel takvim DEĞİL — haftalık os.replace
+#   tazelemesi tek ileriye-dönük anlık görüntü bırakıyor (193 sembol × 1 tarih, hepsi 2026-07/08);
+#   geçmiş kazanç tarihi deposu YOK (arandı: history'de yok, cf satırlarında yok). Dilim zorunlu
+#   olarak son haftaya yığılıyor, ileri getirisi henüz doğmamış.
+#   YENİDEN AÇILMA YOLLARI (ikisi de kuruldu/kuyrukta): (a) earnings anlık görüntüleri artık
+#   fetch-damgalı arşivleniyor (WP-D turu ek kalemi) → takvim aylar içinde PIT birikir;
+#   (b) EDGAR 8-K/10-Q filed tarihleri tarihsel vekil adayı (EDGAR ingestion turu indi mi bak) —
+#   vekil kullanılacaksa KART REVİZYONU + gecikme-yanlılığı beyanı ŞART (filed ≠ duyuru günü).
+#   YAN BULGU (PIT-temiz): yalnız-rvol katmanı aynı-gün aday-havuzuna karşı üç ufukta CI-0-içi —
+#   kill#2'nin ("rvol zaten skorda") zemini; kart yeniden açıldığında bu taban hazır.
+#   Pozitif kontrol 0.0642 + PK4/PK5 tam geçti; zemin-sabitliği sha256 sarmalıyla kanıtlı.
+#   Kanıt: research/olcumler/inplay_olcum/.
 notes: "Ölçüm scratchpad/inplay_olcum/ SALT-ÖLÇÜM; karta ajan DOKUNMAZ. Hüküm pozitifse entegrasyon guard-sıralama turu (ayrı)."
