@@ -237,7 +237,12 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   adapters.alpaca→broker (WP-E iki-motor yasası); backtest→loop DOLAYLI zinciri ölçüldü (sözleşme
   bölündü); MİMARİ BORÇ KAYDI: en büyük güçlü-bağlı bileşen 20 modül. ops/kapilar.sh zinciri +
   dagit.sh [0c] kapısı canlı.
-- **H5 mutmut altyapı ✅ / İLK KOŞUM 📋:** yapılandırma + ops/haftalik_mutasyon.sh hazır
+- **H5 ✅ İLK GERÇEK KARNE (2026-08-01, 14. koşumda — 13 kırıklık saga 4 ortam-sınıfı + 2 araç-yalanı
+  dersiyle altyapıya döndü):** 2.698 mutant → öldürülen 1.267 · hayatta 1.305 · testsiz 118 · skor
+  **~%49** (hedef %80; NOT: pozitif-seçim alt-kümesinde ölçüldü — tam suite'in dışlanan davranış
+  testleri bir kısmını öldürebilir, skor alt-sınır okunur). 1.305 hayatta-kalan = ÖNCELİKLİ TEST-BORCU
+  envanteri (ör. kelly_fraction ailesi); test-borcu turu 📋 kuyrukta.
+- **H5-eski kayıt:** yapılandırma + ops/haftalik_mutasyon.sh hazır
   (mutmut 3.7 doğru anahtarlar; sahte-%100 tuzağı belgeli); ilk gerçek koşum bakım ritüelinde.
 - **H6 CLAUDE.md** ✅ 2026-07-31 — kısa çalışma sözleşmesi repo köküne yazıldı (log-önce kuralı,
   roller, yasalar, canlı-güvenlik).
