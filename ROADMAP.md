@@ -394,6 +394,13 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-01 ~17:50 UIUX S1 CANLIDA (otonom gece, pencere-5).** WP0 onaylandı → S1 iki ajanla:
+  DTCG tokens.json (eş-doğrulamalı; ham-renk istisnası SIFIR çıktı) + 136-çift kontrast raporu
+  (8 beyansız bulgu — B1 merdiven-çöküşü, B6 aynı-renk-iki-seri: refinement-turu adayı) + RUNBOOK
+  yüzeyi (50 bölüm kaynak-türetimli, 34 dürüst-boşluk; /runbook auth'lu, alarm→çapa bağlı) +
+  g-kısayolları + soru-cümleleri. YAN AV: CSP listesinde eksik virgül — palette.js hiç
+  denetlenmemişti. Suite-10 yeşil. Gece nöbetçisi A1'de (trend_book/turnover/yedek).
+
 - **2026-08-01 ~16:15 GÜN KAPANIŞI (tam-güç günü).** Mutasyon %49→%86,8 (28-ajan Workflow) ·
   EDG-016 turnover SUCCESS→KABLOLANDI (bounds'ta bakir düğme) · BASE-001 karne: '+%2,5/4,5yıl,
   2024-bağımlı' + huni üç-darboğaz · sermaye tohum-ayrıştırması CANLI (100k gerçek-canlı taban;
