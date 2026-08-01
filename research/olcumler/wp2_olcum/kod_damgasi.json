@@ -1,0 +1,36 @@
+{
+  "repo_HEAD": "db94dc70be76e1f220ce99107c556817eb66fc0f",
+  "repo": "/Users/erdemozturk/AI-Trading",
+  "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wp2_olcum",
+  "olcum_kodu_sha256": {
+    "birlestir.py": "33db94ec21aeea6d1d503516413ffa86fb6e9d97de925237bdb8bd1eee575f4f",
+    "k012.py": "832b1b9bbf6b4de873f439d0495b340ef16807133086a7f9eb5eecce80fc5ed1",
+    "k013.py": "082822aa22a28c519e154d85aea18db51a4851bc8325365d9f3bf6be5a4ec99e",
+    "k014.py": "a02dda53ecf1dc27ff9d7584d74c4ad72b9184afae19405bc7ea0d714ac46696",
+    "ortak.py": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+    "pk.py": "25c1221ef0758fd2f99f517423ea6b2501e67c550a75abc92544be3737ba0af6",
+    "rapor.py": "4455f4c2794fe6c46fa7fc96b7a6fdc0d41f93ba14c87920ce3c1c80743cbae1"
+  },
+  "girdi_sha256": {
+    "research/edgar_facts/shares_outstanding.csv.gz": "446f7bf00a227c586697f0a9669e82dc85abbb9504d67df45e4b695a03d998a3",
+    "research/edgar_facts/fundamentals.csv.gz": "626bba1a61b527e2d64bb19bbf10682ce34ee0bd765ac7862450c5a1ad6778b2",
+    "research/edgar_facts/tutarsizlik.json": "1bd10c16127bede4bbf7c7b21fe80a4279cfa378f84ceea8a093b34c9cf6dda8",
+    "state/bars_integrity.json": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+    "state/counterfactuals.jsonl": "df479477d73c9f7998bebc368e505cb0ed77677c676719782b907199eb771f09",
+    "state/cf_open.json": "fea01ce5696cf8d593800d0e9cc9af25617b4a46338f701bbd0ade99f49a6189"
+  },
+  "kart_sha256": {
+    "EDG-2026-012-net-issuance.yaml": "3e716253b337db6296169ec360fc50294dca1496b323853383befc04bdcafbec",
+    "EDG-2026-013-mom-turnover.yaml": "0e223e6d3db9ede06c29d52f45e5c48d0acc6c2ad89310f7d47b78384dbf9f42",
+    "EDG-2026-014-gross-profitability.yaml": "ff864dc1e3cb6b89b7d452c466be854d1c1905cd944ba40b87d70500902a291e"
+  },
+  "cikti_sha256": {
+    "sonuc.json": "8c0e7a843cc1bd79c47e7f905d1f321a0fbf4966c8860ecd286fed8adbf58fd1",
+    "sonuc_012.json": "dc9ca471da1614e1932661b2dba54ee5ad9193331032113605eed7fad5f89544",
+    "sonuc_013.json": "ff89e49b3d0c5b9dfa4b8e80353962aa9e5b914e41920f36f74d5d3e8aa5caca",
+    "sonuc_014.json": "e818835315d90f1472ad84710a9adb8893cf0284f11c90f41d904c23945bb702",
+    "pk.json": "3ac6c229b8d606b247ddb4248577e4d320fbbd7dfb7701f945a479740801de01"
+  },
+  "python": "Python 3.12.7",
+  "not": "Kart dosyalarının sha256'sı ölçüm ÖNCESİ ve SONRASI aynıdır — ajan karta DOKUNMADI."
+}

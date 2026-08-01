@@ -1,0 +1,682 @@
+{
+  "kart": "EDG-2026-013",
+  "aile": "short_momentum_turnover",
+  "olcum_tarihi": "2026-08-01T10:50:33.284743+00:00",
+  "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wp2_olcum",
+  "DURUM": "OLCULDU",
+  "kart_metni_uygulamasi": {
+    "as_of_shares": "EDG-012 ile BİREBİR aynı altyapı (ortak.build_hisse): dei→us-gaap Outstanding önceliği, Issued ve ağırlıklı-ortalama YOK, val>0, donem_turu=anlik, bayatlık bekçisi, split güncel-baz dönüşümü, ölçek-hatası penceresi None.",
+    "turnover21": "medyan21(hacim) / as_of_shares(t). Bar hacmi GÜNCEL bazda split-düzeltilmiş olduğu için hisse sayımı da GÜNCEL baza çevrildi — oran böylece bölünmeden bağımsız (pay ve payda aynı bazda).",
+    "mom21": "close[t]/close[t-21]-1 (21 İŞLEM günü, t dâhil geriye)",
+    "kesit": "İKİ KATMAN DA AYNI KESİTTE sıralanır: o gün mom21 VE turnover21 tanımlı semboller. Aksi hâlde artımlılık farkı kapsam farkıyla karışırdı. 'Koşulsuz, tam evren' okuması AYRICA tanı olarak verildi.",
+    "katmanlar": "mom_ust20_kosulsuz = o gün mom21 üst %20; mom_ust20_turnover_ustu = aynı dilim ∧ turnover21 > o günün kesit MEDYANI",
+    "taban": "aynı-gün EVREN ortalaması (o gün ileri getirisi tanımlı tüm yüklü semboller)",
+    "ci": "21 ardışık gözlem günü (=21 işlem günü) blok-bootstrap, %95, 2000 tekrar",
+    "artimlilik": "koşullu dilim fazlası − koşulsuz dilim fazlası; bootstrap AYNI gün dizisini iki dilime de uygular (eşleştirilmiş fark)",
+    "maliyet": "10.0bps tek-yön; hüküm BRÜT üzerinden"
+  },
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 248,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": 0,
+    "defter_yolu_dusen": 46256,
+    "defter_yolu_sembol": 57,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {}
+  },
+  "hisse_muhasebesi": {
+    "ham_satir": 161856,
+    "birim_veya_val_dusen": 76,
+    "anlik_iki_etiket_satir": 32954,
+    "birincil_dei": 244,
+    "birincil_usgaap": 8,
+    "seri_olmayan_sembol": [
+      "EL",
+      "HRL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+    ],
+    "yedek_etiket_eklenen_kayit": 22,
+    "fiziksel_bekci": {
+      "tavan": 1.0,
+      "gecersiz_kayit": 7,
+      "etkilenen_sembol": {
+        "BKR": {
+          "kayit": 1,
+          "ornek_deger": 100.0
+        },
+        "CSX": {
+          "kayit": 1,
+          "ornek_deger": 3.0
+        },
+        "ETN": {
+          "kayit": 1,
+          "ornek_deger": 100.0
+        },
+        "LIN": {
+          "kayit": 2,
+          "ornek_deger": 25000.0
+        },
+        "ROKU": {
+          "kayit": 1,
+          "ornek_deger": 4818812.0
+        },
+        "SPG": {
+          "kayit": 1,
+          "ornek_deger": 8000.0
+        }
+      },
+      "bar_yok_sembol": 10
+    }
+  },
+  "panel_muhasebesi": {
+    "sembol": 248,
+    "gozlem_hucre": 1252244,
+    "neden_sayimi": {
+      "dosyalama_yok": 573996,
+      "olcek_hatasi_gidis_donus": 1884,
+      "anlik_hisse_serisi_yok": 31447,
+      "bayat_seri": 40002,
+      "olcek_hatasi_fiziksel_imkansiz": 5237
+    },
+    "turnover_gecerli": 886434,
+    "mom_gecerli": 1247036,
+    "ikisi_de": 886420
+  },
+  "kesit_muhasebesi": {
+    "gozlem_gunu_toplam": 5678,
+    "kesit_yeterli_gun": 4271,
+    "min_kesit": 50,
+    "kesit_buyuklugu": {
+      "medyan": 210.0,
+      "min": 1,
+      "maks": 232
+    },
+    "tarih_araligi": [
+      "2009-08-04",
+      "2026-07-28"
+    ],
+    "turnover21_dagilimi": {
+      "0.01": 0.001924,
+      "0.25": 0.004442,
+      "0.5": 0.006067,
+      "0.75": 0.008949,
+      "0.99": 0.050849
+    },
+    "mom21_dagilimi": {
+      "0.01": -0.215737,
+      "0.25": -0.034033,
+      "0.5": 0.01275,
+      "0.75": 0.058594,
+      "0.99": 0.268551
+    }
+  },
+  "akrabalik_beyani": {
+    "not": "kart guard: rvol20 ZATEN skorda; turnover ile akrabalığı beyan edilir.",
+    "n_ornek": 200000,
+    "spearman_turnover21_rvol20": -0.077113,
+    "spearman_turnover21_mom21": -0.00853,
+    "gun_ici_ortalama_spearman_turnover_rvol": -0.084163
+  },
+  "i_dilim_tablosu": {
+    "mom_ust20_kosulsuz": {
+      "n_sembol_gun": 178954,
+      "n_gun": 4271,
+      "n_sembol": 242,
+      "mom21_ort": 0.115717,
+      "turnover21_medyan": 0.007199,
+      "ufuklar": {
+        "10": {
+          "ham": {
+            "n": 178493,
+            "ort": 0.006622,
+            "medyan": 0.006318,
+            "std": 0.066055,
+            "pozitif_oran": 0.553999,
+            "ci": {
+              "lo": 0.00385,
+              "hi": 0.009465,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.00385,
+              "hi": 0.009465,
+              "n_gun": 4262,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.005622,
+            "neden": null
+          },
+          "evren_fazlasi": {
+            "n": 178493,
+            "ort": 9.7e-05,
+            "medyan": -0.001611,
+            "std": 0.059181,
+            "pozitif_oran": 0.483885,
+            "ci": {
+              "lo": -0.001063,
+              "hi": 0.001339,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.001063,
+              "hi": 0.001339,
+              "n_gun": 4262,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.000903,
+            "neden": null
+          }
+        },
+        "20": {
+          "ham": {
+            "n": 178024,
+            "ort": 0.013125,
+            "medyan": 0.011702,
+            "std": 0.093821,
+            "pozitif_oran": 0.567867,
+            "ci": {
+              "lo": 0.008471,
+              "hi": 0.017937,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.008471,
+              "hi": 0.017937,
+              "n_gun": 4252,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.012125,
+            "neden": null
+          },
+          "evren_fazlasi": {
+            "n": 178024,
+            "ort": 0.000108,
+            "medyan": -0.002754,
+            "std": 0.084752,
+            "pozitif_oran": 0.481177,
+            "ci": {
+              "lo": -0.00202,
+              "hi": 0.002513,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.00202,
+              "hi": 0.002513,
+              "n_gun": 4252,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.000892,
+            "neden": null
+          }
+        }
+      }
+    },
+    "mom_ust20_turnover_ustu": {
+      "n_sembol_gun": 112544,
+      "n_gun": 4271,
+      "n_sembol": 236,
+      "mom21_ort": 0.132835,
+      "turnover21_medyan": 0.009748,
+      "ufuklar": {
+        "10": {
+          "ham": {
+            "n": 112338,
+            "ort": 0.007894,
+            "medyan": 0.00681,
+            "std": 0.074127,
+            "pozitif_oran": 0.550339,
+            "ci": {
+              "lo": 0.004739,
+              "hi": 0.011197,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.004739,
+              "hi": 0.011197,
+              "n_gun": 4262,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.006894,
+            "neden": null
+          },
+          "evren_fazlasi": {
+            "n": 112338,
+            "ort": 0.001486,
+            "medyan": -0.001024,
+            "std": 0.066612,
+            "pozitif_oran": 0.491205,
+            "ci": {
+              "lo": -2.7e-05,
+              "hi": 0.003247,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -2.7e-05,
+              "hi": 0.003247,
+              "n_gun": 4262,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.000486,
+            "neden": null
+          }
+        },
+        "20": {
+          "ham": {
+            "n": 112087,
+            "ort": 0.015711,
+            "medyan": 0.012769,
+            "std": 0.105546,
+            "pozitif_oran": 0.564445,
+            "ci": {
+              "lo": 0.010151,
+              "hi": 0.021466,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.010151,
+              "hi": 0.021466,
+              "n_gun": 4252,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.014711,
+            "neden": null
+          },
+          "evren_fazlasi": {
+            "n": 112087,
+            "ort": 0.003154,
+            "medyan": -0.001047,
+            "std": 0.095555,
+            "pozitif_oran": 0.493786,
+            "ci": {
+              "lo": 0.0004,
+              "hi": 0.006127,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.0004,
+              "hi": 0.006127,
+              "n_gun": 4252,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.002154,
+            "neden": null
+          }
+        }
+      }
+    }
+  },
+  "ii_artimlilik_kosullu_eksi_kosulsuz": {
+    "10": {
+      "nA": 112338,
+      "nB": 178493,
+      "fark": 0.00139,
+      "ci": {
+        "lo": 0.000623,
+        "hi": 0.002147,
+        "seviye": 0.95
+      },
+      "n_gun": 4262,
+      "blok": 21,
+      "n_boot_gecerli": 2000,
+      "atlanan": 0,
+      "anlamli": true,
+      "pozitif_anlamli": true,
+      "negatif_anlamli": false,
+      "neden": null
+    },
+    "20": {
+      "nA": 112087,
+      "nB": 178024,
+      "fark": 0.003046,
+      "ci": {
+        "lo": 0.001728,
+        "hi": 0.004489,
+        "seviye": 0.95
+      },
+      "n_gun": 4252,
+      "blok": 21,
+      "n_boot_gecerli": 2000,
+      "atlanan": 0,
+      "anlamli": true,
+      "pozitif_anlamli": true,
+      "negatif_anlamli": false,
+      "neden": null
+    }
+  },
+  "iii_tani_dilimleri": {
+    "not": "TANI — kart bacağı DEĞİL, K harcanmaz. 'mom_ust20_turnover_ALTI' kayıtlı iki dilimin TÜMLEYENİDİR (yeni grid noktası değil), CI'sı okunabilir. 'turnover_ANA_ETKI_q5' ise kartın grid'inde OLMAYAN bir kesittir: CI BİLEREK hesaplanmadı — CI'lı sınansaydı K çarpılırdı. Test isteniyorsa KENDİ kartını ister.",
+    "mom_ust20_turnover_ALTI": {
+      "n": 66410,
+      "ufuklar": {
+        "10": {
+          "n": 66155,
+          "ort": -0.002263,
+          "medyan": -0.002367,
+          "std": 0.043663,
+          "pozitif_oran": 0.471453,
+          "ci": {
+            "lo": -0.003759,
+            "hi": -0.00073,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.003759,
+            "hi": -0.00073,
+            "n_gun": 4261,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": true,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": true,
+          "maliyet_dusulmus_ort": -0.003263,
+          "neden": null
+        },
+        "20": {
+          "n": 65937,
+          "ort": -0.005069,
+          "medyan": -0.00507,
+          "std": 0.06188,
+          "pozitif_oran": 0.459742,
+          "ci": {
+            "lo": -0.008074,
+            "hi": -0.002256,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.008074,
+            "hi": -0.002256,
+            "n_gun": 4251,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": true,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": true,
+          "maliyet_dusulmus_ort": -0.006069,
+          "neden": null
+        }
+      }
+    },
+    "mom_ust20_kosulsuz_TAM_EVREN": {
+      "n": 251564,
+      "ufuklar": {
+        "10": {
+          "n": 251076,
+          "ort": 0.000102,
+          "medyan": -0.00192,
+          "std": 0.06195,
+          "pozitif_oran": 0.481316,
+          "ci": {
+            "lo": -0.000839,
+            "hi": 0.001244,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.000839,
+            "hi": 0.001244,
+            "n_gun": 5647,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "maliyet_dusulmus_ort": -0.000898,
+          "neden": null
+        },
+        "20": {
+          "n": 250575,
+          "ort": 0.00036,
+          "medyan": -0.002892,
+          "std": 0.08845,
+          "pozitif_oran": 0.480619,
+          "ci": {
+            "lo": -0.001569,
+            "hi": 0.002442,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.001569,
+            "hi": 0.002442,
+            "n_gun": 5637,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "maliyet_dusulmus_ort": -0.00064,
+          "neden": null
+        }
+      }
+    },
+    "turnover_ANA_ETKI_q5_CI_YOK": {
+      "aciklama": "0 = en düşük turnover, 4 = en yüksek; momentum koşulu YOK, tüm kesit",
+      "ufuklar": {
+        "10": {
+          "0": {
+            "n": 178496,
+            "fazla_ort": -0.00197,
+            "turnover_ort": 0.003449
+          },
+          "1": {
+            "n": 175873,
+            "fazla_ort": -0.001641,
+            "turnover_ort": 0.004913
+          },
+          "2": {
+            "n": 175731,
+            "fazla_ort": -0.000336,
+            "turnover_ort": 0.006187
+          },
+          "3": {
+            "n": 175871,
+            "fazla_ort": 0.000593,
+            "turnover_ort": 0.008188
+          },
+          "4": {
+            "n": 177550,
+            "fazla_ort": 0.00312,
+            "turnover_ort": 0.019565
+          }
+        },
+        "20": {
+          "0": {
+            "n": 178027,
+            "fazla_ort": -0.004075,
+            "turnover_ort": 0.003447
+          },
+          "1": {
+            "n": 175413,
+            "fazla_ort": -0.003189,
+            "turnover_ort": 0.004911
+          },
+          "2": {
+            "n": 175271,
+            "fazla_ort": -0.001044,
+            "turnover_ort": 0.006184
+          },
+          "3": {
+            "n": 175411,
+            "fazla_ort": 0.001443,
+            "turnover_ort": 0.008182
+          },
+          "4": {
+            "n": 177079,
+            "fazla_ort": 0.006513,
+            "turnover_ort": 0.019551
+          }
+        }
+      }
+    }
+  },
+  "hukum_onerisi": {
+    "kart_success_metric": "turnover-koşullu mom diliminin fazlası @10 VEYA @20 anlamlı POZİTİF VE koşulsuz mom fazlasını anlamlı AŞIYOR (artımlılık)",
+    "bacaklar": {
+      "kosullu_fazla": {
+        "10": {
+          "n": 112338,
+          "ort": 0.001486,
+          "ci": {
+            "lo": -2.7e-05,
+            "hi": 0.003247,
+            "seviye": 0.95
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false
+        },
+        "20": {
+          "n": 112087,
+          "ort": 0.003154,
+          "ci": {
+            "lo": 0.0004,
+            "hi": 0.006127,
+            "seviye": 0.95
+          },
+          "anlamli": true,
+          "pozitif_anlamli": true,
+          "negatif_anlamli": false
+        }
+      },
+      "kosulsuz_fazla": {
+        "10": {
+          "n": 178493,
+          "ort": 9.7e-05,
+          "ci": {
+            "lo": -0.001063,
+            "hi": 0.001339,
+            "seviye": 0.95
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false
+        },
+        "20": {
+          "n": 178024,
+          "ort": 0.000108,
+          "ci": {
+            "lo": -0.00202,
+            "hi": 0.002513,
+            "seviye": 0.95
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false
+        }
+      },
+      "artimlilik": {
+        "10": {
+          "nA": 112338,
+          "nB": 178493,
+          "fark": 0.00139,
+          "ci": {
+            "lo": 0.000623,
+            "hi": 0.002147,
+            "seviye": 0.95
+          },
+          "n_gun": 4262,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "anlamli": true,
+          "pozitif_anlamli": true,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "20": {
+          "nA": 112087,
+          "nB": 178024,
+          "fark": 0.003046,
+          "ci": {
+            "lo": 0.001728,
+            "hi": 0.004489,
+            "seviye": 0.95
+          },
+          "n_gun": 4252,
+          "blok": 21,
+          "n_boot_gecerli": 2000,
+          "atlanan": 0,
+          "anlamli": true,
+          "pozitif_anlamli": true,
+          "negatif_anlamli": false,
+          "neden": null
+        }
+      }
+    },
+    "bacak1_kosullu_pozitif_anlamli": true,
+    "bacak2_artimlilik_pozitif_anlamli": true,
+    "iki_bacak_AYNI_ufukta": true,
+    "success_metric_KARSILANDI": true,
+    "kill1_kosullu_CI_0_ici": false,
+    "kill2_artimlilik_yok": false,
+    "kill3_reversal_anlamli_negatif": false,
+    "oneri": "SUCCESS — kart ölçütü karşılandı"
+  }
+}

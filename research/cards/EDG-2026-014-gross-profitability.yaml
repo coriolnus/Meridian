@@ -26,6 +26,10 @@ kill_criteria:
   - "geçerli sembol-ay < 2500 → askı (K harcanmaz)"
 guards:
   - "pozitif kontrol rvol20 + PK4/PK5; sektör-duyarlılık dilimi RAPOR (finans-dışı alt-küme aynı yönde mi — eşik değil, tanı)"
-k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [wp2_olcum/gpa_ust30, wp2_olcum/gpa_alt30]}
+status: archived   # 2026-08-01 ~13:45 — kill#1: BİLGİSİZ. Üst/alt dilimler ve yayılım @20+@60
+#   hepsi CI-0-içi; beşli dilim monoton değil; finans-dışı tanı dilimi (165 sembol) aynı.
+#   23.272 sembol-ay; PIT yalnız filed (medyan 169g), sızıntı 0. Novy-Marx bu evren/dönemde yok —
+#   büyük-cap sağ-kalanlarda kârlılık primi ya fiyatlanmış ya da evrene özgü değil.
+#   Kanıt: wp2_olcum/sonuc_014.json.
 notes: "wp2_olcum sandbox; 'PIT'siz fundamentals proxy YASAK' yasası bu kartla İLK KEZ meşru aşılıyor — filed-tabanlı as-of zorunlu, end-tabanlı okuma YASAK (sızıntı)."

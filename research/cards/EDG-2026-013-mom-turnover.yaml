@@ -22,6 +22,13 @@ kill_criteria:
   - "kısa-dönem ters-dönüş baskınsa (fazla anlamlı NEGATİF) → dürüstçe 'bu ufukta reversal' arşiv + not"
 guards:
   - "pozitif kontrol rvol20 + PK4/PK5; turnover-rvol korelasyonu RAPORLANIR (akrabalık beyanı — rvol zaten skorda)"
-k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [wp2_olcum/kosulsuz, wp2_olcum/kosullu]}
+status: measured   # 2026-08-01 ~13:45 — LAFZEN SUCCESS, MEKANİZMA ŞARTLI-YAŞAYAN (Rol-1 hükmü):
+#   koşullu dilim fazlası @20 +0,315% CI[+0,04,+0,61] anlamlı; ARTIMLILIK @10 ve @20 anlamlı
+#   pozitif; koşulsuz-mom fazlası sıfır; turnover rvol'un kılığı DEĞİL (ρ=−0,077); maliyet-sonrası
+#   @20 net +0,215%. ANCAK tanı tablosu (CI'sız — K korunarak) turnover ANA ETKİSİNİN daha büyük
+#   olduğunu gösteriyor (q4 @20 +0,651% > koşullu +0,315%) → "momentum turnover'da güçlenir"
+#   ETKİLEŞİMİ doğrulanmış sayılmaz; sinyal turnover'ın kendisi olabilir. HÜKÜM: aile YAŞAYAN-ADAY;
+#   entegrasyon kararı EDG-2026-016 (turnover ana-etkisi kartı) hükmüne ŞARTLI — mekanizma
+#   netleşmeden skor/kapı entegrasyonu YOK. Kanıt: wp2_olcum/sonuc_013.json.
 notes: "wp2_olcum sandbox, EDG-012 ile ortak as-of altyapısı."

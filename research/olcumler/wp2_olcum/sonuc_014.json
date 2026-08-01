@@ -1,0 +1,1090 @@
+{
+  "kart": "EDG-2026-014",
+  "aile": "gross_profitability",
+  "olcum_tarihi": "2026-08-01T10:45:11.387553+00:00",
+  "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wp2_olcum",
+  "DURUM": "OLCULDU",
+  "kart_metni_uygulamasi": {
+    "pit": "as-of YALNIZ `filed` üzerinden (filed<=t son FY kaydı). `end<=t` okuması KULLANILMADI — README §1: end filtresi PIT DEĞİLDİR.",
+    "fy_secimi": "donem_turu == 'yillik' (donem_gun 316–400) akış kalemleri; Assets donem_turu == 'anlik'.",
+    "gp_etiket_onceligi": "GrossProfit varsa o; yoksa (Revenues → RevenueFromContract...Excluding → ...Including) − (CostOfRevenue → CostOfGoodsAndServicesSold). REIT gelir-etiketi tuzağı: `Revenues` ÖNCE (tutarsizlik.json #1).",
+    "assets": "AYNI dosyalamadan (aynı symbol+filed) ve AYNI `end`; eşleşmeyen gözlem DÜŞÜRÜLDÜ (uydurma yok).",
+    "temizlik": "unit=='USD' (MPWR FY2012 AFN satırı düşer) & val>0 (kart: 'val<=0 düşülür' — GrossProfit etiketinin negatif satırları da bu kuralla düşer; sayısı muhasebede).",
+    "bayatlik_bekcisi": "son FY dosyalaması gözlem gününden 550 günden eskiyse None ('bayat_FY_serisi') — companyfacts'in kendi gecikmesi (tutarsizlik.json #6) sessizce eski veriyle karar aldırmasın.",
+    "gpa": "gp / assets",
+    "gozlem": "her takvim ayının SON işlem günü",
+    "dilim": "aynı gün kesitinde gpa üst %30 / alt %30",
+    "taban": "kart: aynı-gün GP-ALT-KÜMESİ ortalaması (kendi evreninin tabanı — EDG-009 dersi), tüm evren DEĞİL",
+    "evren_beyani": "GP-hesaplanabilir alt-küme. SEKTÖR ÇARPIKLIĞI BEYANLI: banka/sigorta/REIT satış-maliyeti yayımlamaz (tutarsizlik.json → brutkar_ve_maliyet_yok). Hüküm 'bu alt-kümede' okunur.",
+    "ci": "21 ardışık gözlem günü blok-bootstrap (%95, 2000 tekrar); aylık panelde 21 ay — 60g örtüşmesinden GENİŞ, muhafazakâr. 3 aylık blok tanı olarak ayrıca verildi.",
+    "maliyet": "10.0bps tek-yön; hüküm BRÜT üzerinden"
+  },
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 248,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": 0,
+    "defter_yolu_dusen": 46256,
+    "defter_yolu_sembol": 57,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {}
+  },
+  "temel_muhasebesi": {
+    "ham_satir": 142499,
+    "birim_veya_val_dusen": 148,
+    "AFN_dusen": 1,
+    "grossprofit_val_le0_dusen": 64,
+    "FY_akis_satir": 20882,
+    "assets_anlik_satir": 35983,
+    "gp_grossprofit_etiketi": 4269,
+    "gp_gelir_eksi_maliyet": 2209,
+    "assets_ayni_dosyalama_ayni_end": 4968,
+    "assets_ayni_end_eslesmeyen": 1510,
+    "assets_ayni_dosyalama_yakin_end": 1,
+    "assets_eslesmeyen": 1509,
+    "gozlem_satir": 4969,
+    "sembol_n": 179,
+    "evren_kesisim_n": 175,
+    "gp_kaynak_dagilimi": {
+      "GrossProfit": 3269,
+      "Revenues-CostOfGoodsAndServicesSold": 660,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfGoodsAndServicesSold": 428,
+      "Revenues-CostOfRevenue": 406,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfRevenue": 142,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfGoodsAndServicesSold": 46,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfRevenue": 18
+    }
+  },
+  "panel_muhasebesi": {
+    "sembol": 248,
+    "gozlem_hucre": 59618,
+    "neden_sayimi": {
+      "FY_dosyalama_yok": 16360,
+      "bayat_FY_serisi": 2109,
+      "GP_hesaplanamayan_sembol": 17877
+    },
+    "gecerli": 23272,
+    "gp_kaynak_hucre": {
+      "GrossProfit": 15494,
+      "Revenues-CostOfRevenue": 1953,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfRevenue": 720,
+      "RevenueFromContractWithCustomerExcludingAssessedTax-CostOfGoodsAndServicesSold": 1847,
+      "Revenues-CostOfGoodsAndServicesSold": 2977,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfGoodsAndServicesSold": 180,
+      "RevenueFromContractWithCustomerIncludingAssessedTax-CostOfRevenue": 101
+    },
+    "filed_gecikme_ozeti": {
+      "n": 23272,
+      "medyan": 169.0,
+      "p10": 32.0,
+      "p90": 325.0,
+      "maks": 550.0,
+      "negatif_n": 0
+    }
+  },
+  "kill3_ornekem": {
+    "gecerli_sembol_ay": 23272,
+    "esik": 2500,
+    "yeterli": true
+  },
+  "kesit_muhasebesi": {
+    "gozlem_gunu_toplam": 271,
+    "gecerli_gpa_gunu": 202,
+    "kesit_yeterli_gun": 191,
+    "min_kesit": 50,
+    "kesit_buyuklugu": {
+      "medyan": 103.0,
+      "min": 1,
+      "maks": 162
+    },
+    "tarih_araligi": [
+      "2010-08-31",
+      "2026-06-30"
+    ],
+    "gp_altkume_sembol_n": 173,
+    "gpa_dagilimi": {
+      "0.01": 0.025543,
+      "0.1": 0.121211,
+      "0.3": 0.214129,
+      "0.5": 0.311183,
+      "0.7": 0.414526,
+      "0.9": 0.588723,
+      "0.99": 0.974928
+    },
+    "sektor_dagilimi": {
+      "tech": 28,
+      "health": 25,
+      "staples": 25,
+      "consumer": 23,
+      "industrials": 17,
+      "materials": 15,
+      "energy": 14,
+      "comms": 14,
+      "reits": 7,
+      "utilities": 4,
+      "financials": 1
+    }
+  },
+  "kapsam_tanisi": {
+    "README_F_ve_G_evrende": 184,
+    "bu_olcumde_gpa_uretebilen": 173,
+    "aradaki_semboller": [
+      "DD",
+      "DE",
+      "HON",
+      "INTU",
+      "KR",
+      "MCD",
+      "NEM",
+      "RTX",
+      "SO",
+      "TMO",
+      "TMUS"
+    ],
+    "neden": "README kapsamı 'etiket var mı' sorusunu sorar; bu ölçüm ek olarak FY (donem_turu=='yillik') VE aynı dosyalamada Assets VE val>0 ister. Aradaki semboller bu üç şarttan birini sağlamıyor.",
+    "yil_basina_kesit": {
+      "2009": 6,
+      "2010": 60,
+      "2011": 87,
+      "2012": 90,
+      "2013": 94,
+      "2014": 94,
+      "2015": 101,
+      "2016": 101,
+      "2017": 103,
+      "2018": 109,
+      "2019": 155,
+      "2020": 162,
+      "2021": 158,
+      "2022": 152,
+      "2023": 148,
+      "2024": 150,
+      "2025": 150,
+      "2026": 150
+    }
+  },
+  "i_dilim_tablosu": {
+    "gpa_ust_30pct": {
+      "n_sembol_ay": 6973,
+      "n_gun": 191,
+      "n_sembol": 88,
+      "gpa_ort": 0.568075,
+      "gpa_medyan": 0.522832,
+      "ufuklar": {
+        "20": {
+          "ham": {
+            "n": 6942,
+            "ort": 0.013953,
+            "medyan": 0.011319,
+            "std": 0.090394,
+            "pozitif_oran": 0.566119,
+            "ci": {
+              "lo": 0.008959,
+              "hi": 0.019019,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.008959,
+              "hi": 0.019019,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.012953,
+            "neden": null
+          },
+          "kendi_evren_fazlasi": {
+            "n": 6942,
+            "ort": -0.000126,
+            "medyan": -0.002147,
+            "std": 0.080085,
+            "pozitif_oran": 0.487612,
+            "ci": {
+              "lo": -0.00223,
+              "hi": 0.00293,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.00223,
+              "hi": 0.00293,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.001126,
+            "neden": null
+          },
+          "kendi_evren_fazlasi_blok3": {
+            "n": 6942,
+            "ort": -0.000126,
+            "medyan": -0.002147,
+            "std": 0.080085,
+            "pozitif_oran": 0.487612,
+            "ci": {
+              "lo": -0.002693,
+              "hi": 0.002389,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.002693,
+              "hi": 0.002389,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 3,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.001126,
+            "neden": null
+          }
+        },
+        "60": {
+          "ham": {
+            "n": 6883,
+            "ort": 0.039453,
+            "medyan": 0.035113,
+            "std": 0.152884,
+            "pozitif_oran": 0.612378,
+            "ci": {
+              "lo": 0.024917,
+              "hi": 0.054445,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.024917,
+              "hi": 0.054445,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.038453,
+            "neden": null
+          },
+          "kendi_evren_fazlasi": {
+            "n": 6883,
+            "ort": -0.001277,
+            "medyan": -0.005392,
+            "std": 0.140019,
+            "pozitif_oran": 0.480604,
+            "ci": {
+              "lo": -0.008069,
+              "hi": 0.008086,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.008069,
+              "hi": 0.008086,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.002277,
+            "neden": null
+          },
+          "kendi_evren_fazlasi_blok3": {
+            "n": 6883,
+            "ort": -0.001277,
+            "medyan": -0.005392,
+            "std": 0.140019,
+            "pozitif_oran": 0.480604,
+            "ci": {
+              "lo": -0.008127,
+              "hi": 0.005377,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.008127,
+              "hi": 0.005377,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 3,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.002277,
+            "neden": null
+          }
+        }
+      }
+    },
+    "gpa_alt_30pct": {
+      "n_sembol_ay": 6811,
+      "n_gun": 191,
+      "n_sembol": 96,
+      "gpa_ort": 0.134063,
+      "gpa_medyan": 0.142766,
+      "ufuklar": {
+        "20": {
+          "ham": {
+            "n": 6772,
+            "ort": 0.014184,
+            "medyan": 0.008845,
+            "std": 0.105545,
+            "pozitif_oran": 0.543857,
+            "ci": {
+              "lo": 0.007371,
+              "hi": 0.020178,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.007371,
+              "hi": 0.020178,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.013184,
+            "neden": null
+          },
+          "kendi_evren_fazlasi": {
+            "n": 6772,
+            "ort": 0.00012,
+            "medyan": -0.00494,
+            "std": 0.091914,
+            "pozitif_oran": 0.467661,
+            "ci": {
+              "lo": -0.003797,
+              "hi": 0.002918,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.003797,
+              "hi": 0.002918,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.00088,
+            "neden": null
+          },
+          "kendi_evren_fazlasi_blok3": {
+            "n": 6772,
+            "ort": 0.00012,
+            "medyan": -0.00494,
+            "std": 0.091914,
+            "pozitif_oran": 0.467661,
+            "ci": {
+              "lo": -0.002479,
+              "hi": 0.002924,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.002479,
+              "hi": 0.002924,
+              "n_gun": 191,
+              "n_boot_gecerli": 2000,
+              "blok": 3,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": -0.00088,
+            "neden": null
+          }
+        },
+        "60": {
+          "ham": {
+            "n": 6721,
+            "ort": 0.042648,
+            "medyan": 0.029091,
+            "std": 0.188483,
+            "pozitif_oran": 0.589049,
+            "ci": {
+              "lo": 0.022946,
+              "hi": 0.059454,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": 0.022946,
+              "hi": 0.059454,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.041648,
+            "neden": null
+          },
+          "kendi_evren_fazlasi": {
+            "n": 6721,
+            "ort": 0.001981,
+            "medyan": -0.01231,
+            "std": 0.171367,
+            "pozitif_oran": 0.459604,
+            "ci": {
+              "lo": -0.010732,
+              "hi": 0.011015,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.010732,
+              "hi": 0.011015,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 21,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.000981,
+            "neden": null
+          },
+          "kendi_evren_fazlasi_blok3": {
+            "n": 6721,
+            "ort": 0.001981,
+            "medyan": -0.01231,
+            "std": 0.171367,
+            "pozitif_oran": 0.459604,
+            "ci": {
+              "lo": -0.005443,
+              "hi": 0.009954,
+              "seviye": 0.95
+            },
+            "ci_meta": {
+              "lo": -0.005443,
+              "hi": 0.009954,
+              "n_gun": 189,
+              "n_boot_gecerli": 2000,
+              "blok": 3,
+              "atlanan": 0,
+              "neden": null
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false,
+            "maliyet_dusulmus_ort": 0.000981,
+            "neden": null
+          }
+        }
+      }
+    }
+  },
+  "ii_yayilim_ust_eksi_alt": {
+    "20": {
+      "nA": 6942,
+      "nB": 6772,
+      "fark": -0.000246,
+      "ci": {
+        "lo": -0.005223,
+        "hi": 0.006254,
+        "seviye": 0.95
+      },
+      "n_gun": 191,
+      "blok": 21,
+      "n_boot_gecerli": 2000,
+      "atlanan": 0,
+      "anlamli": false,
+      "pozitif_anlamli": false,
+      "negatif_anlamli": false,
+      "neden": null
+    },
+    "60": {
+      "nA": 6883,
+      "nB": 6721,
+      "fark": -0.003258,
+      "ci": {
+        "lo": -0.0182,
+        "hi": 0.016935,
+        "seviye": 0.95
+      },
+      "n_gun": 189,
+      "blok": 21,
+      "n_boot_gecerli": 2000,
+      "atlanan": 0,
+      "anlamli": false,
+      "pozitif_anlamli": false,
+      "negatif_anlamli": false,
+      "neden": null
+    }
+  },
+  "iii_besli_dilim_TANI": {
+    "not": "0 = en düşük gpa, 4 = en yüksek. CI BİLEREK yok — hüküm bacağı değil, K harcanmaz.",
+    "ufuklar": {
+      "20": {
+        "0": {
+          "n": 4635,
+          "fazla_ort": -0.000303,
+          "gpa_ort": 0.106976
+        },
+        "1": {
+          "n": 4522,
+          "fazla_ort": 0.0006,
+          "gpa_ort": 0.21872
+        },
+        "2": {
+          "n": 4538,
+          "fazla_ort": -0.000992,
+          "gpa_ort": 0.31095
+        },
+        "3": {
+          "n": 4525,
+          "fazla_ort": 0.002253,
+          "gpa_ort": 0.414082
+        },
+        "4": {
+          "n": 4616,
+          "fazla_ort": -0.001517,
+          "gpa_ort": 0.630243
+        }
+      },
+      "60": {
+        "0": {
+          "n": 4600,
+          "fazla_ort": 0.001757,
+          "gpa_ort": 0.107042
+        },
+        "1": {
+          "n": 4489,
+          "fazla_ort": 0.000111,
+          "gpa_ort": 0.218875
+        },
+        "2": {
+          "n": 4503,
+          "fazla_ort": -0.002907,
+          "gpa_ort": 0.311149
+        },
+        "3": {
+          "n": 4489,
+          "fazla_ort": 0.00632,
+          "gpa_ort": 0.414122
+        },
+        "4": {
+          "n": 4576,
+          "fazla_ort": -0.005215,
+          "gpa_ort": 0.630382
+        }
+      }
+    }
+  },
+  "iv_sektor_duyarliligi_TANI": {
+    "not": "kart guard: 'finans-dışı alt-küme aynı yönde mi — EŞİK DEĞİL, TANI'. Finans = meridian.backtest.SECTORS içinde {financials, reits}. Kendi tabanı kendi alt-kümesinden. HÜKME GİRMEZ, K harcanmaz.",
+    "finansdisi_sembol_n": 165,
+    "GP_altkumesinde_kalan_finans_sembol": [
+      "AMT",
+      "C",
+      "CBRE",
+      "CCI",
+      "EQIX",
+      "EQR",
+      "PSA",
+      "WELL"
+    ],
+    "dilim": {
+      "gpa_ust_30pct_FINANSDISI": {
+        "n_sembol_ay": 6795,
+        "n_gun": 191,
+        "n_sembol": 87,
+        "gpa_ort": 0.569511,
+        "gpa_medyan": 0.528656,
+        "ufuklar": {
+          "20": {
+            "ham": {
+              "n": 6765,
+              "ort": 0.013932,
+              "medyan": 0.011358,
+              "std": 0.09058,
+              "pozitif_oran": 0.566445,
+              "ci": {
+                "lo": 0.008858,
+                "hi": 0.019299,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.008858,
+                "hi": 0.019299,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.012932,
+              "neden": null
+            },
+            "kendi_evren_fazlasi": {
+              "n": 6765,
+              "ort": -0.00029,
+              "medyan": -0.002241,
+              "std": 0.080283,
+              "pozitif_oran": 0.485588,
+              "ci": {
+                "lo": -0.002423,
+                "hi": 0.002642,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.002423,
+                "hi": 0.002642,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.00129,
+              "neden": null
+            },
+            "kendi_evren_fazlasi_blok3": {
+              "n": 6765,
+              "ort": -0.00029,
+              "medyan": -0.002241,
+              "std": 0.080283,
+              "pozitif_oran": 0.485588,
+              "ci": {
+                "lo": -0.002838,
+                "hi": 0.002139,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.002838,
+                "hi": 0.002139,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 3,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.00129,
+              "neden": null
+            }
+          },
+          "60": {
+            "ham": {
+              "n": 6707,
+              "ort": 0.039344,
+              "medyan": 0.035015,
+              "std": 0.153155,
+              "pozitif_oran": 0.611749,
+              "ci": {
+                "lo": 0.024632,
+                "hi": 0.053277,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.024632,
+                "hi": 0.053277,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.038344,
+              "neden": null
+            },
+            "kendi_evren_fazlasi": {
+              "n": 6707,
+              "ort": -0.001644,
+              "medyan": -0.006007,
+              "std": 0.140361,
+              "pozitif_oran": 0.478903,
+              "ci": {
+                "lo": -0.007993,
+                "hi": 0.007871,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.007993,
+                "hi": 0.007871,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.002644,
+              "neden": null
+            },
+            "kendi_evren_fazlasi_blok3": {
+              "n": 6707,
+              "ort": -0.001644,
+              "medyan": -0.006007,
+              "std": 0.140361,
+              "pozitif_oran": 0.478903,
+              "ci": {
+                "lo": -0.008577,
+                "hi": 0.00546,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.008577,
+                "hi": 0.00546,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 3,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.002644,
+              "neden": null
+            }
+          }
+        }
+      },
+      "gpa_alt_30pct_FINANSDISI": {
+        "n_sembol_ay": 6611,
+        "n_gun": 191,
+        "n_sembol": 92,
+        "gpa_ort": 0.138659,
+        "gpa_medyan": 0.147532,
+        "ufuklar": {
+          "20": {
+            "ham": {
+              "n": 6574,
+              "ort": 0.014842,
+              "medyan": 0.009571,
+              "std": 0.106819,
+              "pozitif_oran": 0.546547,
+              "ci": {
+                "lo": 0.007794,
+                "hi": 0.021271,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.007794,
+                "hi": 0.021271,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.013842,
+              "neden": null
+            },
+            "kendi_evren_fazlasi": {
+              "n": 6574,
+              "ort": 0.000635,
+              "medyan": -0.004664,
+              "std": 0.092844,
+              "pozitif_oran": 0.470794,
+              "ci": {
+                "lo": -0.003512,
+                "hi": 0.003812,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.003512,
+                "hi": 0.003812,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000365,
+              "neden": null
+            },
+            "kendi_evren_fazlasi_blok3": {
+              "n": 6574,
+              "ort": 0.000635,
+              "medyan": -0.004664,
+              "std": 0.092844,
+              "pozitif_oran": 0.470794,
+              "ci": {
+                "lo": -0.002262,
+                "hi": 0.003717,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.002262,
+                "hi": 0.003717,
+                "n_gun": 191,
+                "n_boot_gecerli": 2000,
+                "blok": 3,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": -0.000365,
+              "neden": null
+            }
+          },
+          "60": {
+            "ham": {
+              "n": 6525,
+              "ort": 0.043786,
+              "medyan": 0.029865,
+              "std": 0.190744,
+              "pozitif_oran": 0.589425,
+              "ci": {
+                "lo": 0.023378,
+                "hi": 0.061706,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.023378,
+                "hi": 0.061706,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.042786,
+              "neden": null
+            },
+            "kendi_evren_fazlasi": {
+              "n": 6525,
+              "ort": 0.002892,
+              "medyan": -0.011852,
+              "std": 0.172696,
+              "pozitif_oran": 0.462069,
+              "ci": {
+                "lo": -0.009197,
+                "hi": 0.012043,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.009197,
+                "hi": 0.012043,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.001892,
+              "neden": null
+            },
+            "kendi_evren_fazlasi_blok3": {
+              "n": 6525,
+              "ort": 0.002892,
+              "medyan": -0.011852,
+              "std": 0.172696,
+              "pozitif_oran": 0.462069,
+              "ci": {
+                "lo": -0.005121,
+                "hi": 0.011137,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.005121,
+                "hi": 0.011137,
+                "n_gun": 189,
+                "n_boot_gecerli": 2000,
+                "blok": 3,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.001892,
+              "neden": null
+            }
+          }
+        }
+      }
+    },
+    "yayilim": {
+      "20": {
+        "nA": 6765,
+        "nB": 6574,
+        "fark": -0.000925,
+        "ci": {
+          "lo": -0.005899,
+          "hi": 0.005704,
+          "seviye": 0.95
+        },
+        "n_gun": 191,
+        "blok": 21,
+        "n_boot_gecerli": 2000,
+        "atlanan": 0,
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null
+      },
+      "60": {
+        "nA": 6707,
+        "nB": 6525,
+        "fark": -0.004536,
+        "ci": {
+          "lo": -0.020164,
+          "hi": 0.01714,
+          "seviye": 0.95
+        },
+        "n_gun": 189,
+        "blok": 21,
+        "n_boot_gecerli": 2000,
+        "atlanan": 0,
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null
+      }
+    }
+  },
+  "hukum_onerisi": {
+    "kart_success_metric": "üst-dilim fazlası @60 anlamlı POZİTİF (CI 0-dışı; @20 destekleyici) VE üst−alt yayılımı pozitif anlamlı",
+    "bacaklar": {
+      "ust@60": {
+        "n": 6883,
+        "ort": -0.001277,
+        "ci": {
+          "lo": -0.008069,
+          "hi": 0.008086,
+          "seviye": 0.95
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false
+      },
+      "ust@20": {
+        "n": 6942,
+        "ort": -0.000126,
+        "ci": {
+          "lo": -0.00223,
+          "hi": 0.00293,
+          "seviye": 0.95
+        },
+        "anlamli": false
+      },
+      "alt@60": {
+        "n": 6721,
+        "ort": 0.001981,
+        "ci": {
+          "lo": -0.010732,
+          "hi": 0.011015,
+          "seviye": 0.95
+        },
+        "anlamli": false
+      },
+      "alt@20": {
+        "n": 6772,
+        "ort": 0.00012,
+        "ci": {
+          "lo": -0.003797,
+          "hi": 0.002918,
+          "seviye": 0.95
+        },
+        "anlamli": false
+      },
+      "yayilim@60": {
+        "nA": 6883,
+        "nB": 6721,
+        "fark": -0.003258,
+        "ci": {
+          "lo": -0.0182,
+          "hi": 0.016935,
+          "seviye": 0.95
+        },
+        "n_gun": 189,
+        "blok": 21,
+        "n_boot_gecerli": 2000,
+        "atlanan": 0,
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null
+      },
+      "yayilim@20": {
+        "nA": 6942,
+        "nB": 6772,
+        "fark": -0.000246,
+        "ci": {
+          "lo": -0.005223,
+          "hi": 0.006254,
+          "seviye": 0.95
+        },
+        "n_gun": 191,
+        "blok": 21,
+        "n_boot_gecerli": 2000,
+        "atlanan": 0,
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null
+      }
+    },
+    "bacak1_ust60_pozitif_anlamli": false,
+    "bacak2_yayilim60_pozitif_anlamli": false,
+    "success_metric_KARSILANDI": false,
+    "kill1_ust_ve_yayilim_20_60_CI_0_ici": true,
+    "kill2_yon_ters_anlamli": false,
+    "kill3_ornek_yetersiz": false,
+    "oneri": "ARŞİV — kill#1 (üst dilim ve yayılım @20+@60 CI-0-içi, bilgisiz)"
+  }
+}

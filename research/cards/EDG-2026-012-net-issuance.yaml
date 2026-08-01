@@ -26,6 +26,10 @@ kill_criteria:
 guards:
   - "pozitif kontrol: ham rvol20 @20 IC ≈0.064; PK4/PK5 standart; pnl konu dışı (kesit)"
   - "kapsam + filed-gecikme dağılımı raporda; frame/karşılaştırmalı-tekrar tuzağı: aynı (start,end) için İLK filed kullanılmaz — as-of mantığı zaten son-filed<=t okur, tekrarlar zararsız (beyan)"
-k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [wp2_olcum/ihrac_ust20, wp2_olcum/gerialim_alt20]}
+status: archived   # 2026-08-01 ~13:45 — kill#2: YÖN LİTERATÜRÜN TERSİ VE ANLAMLI (MAX deseni):
+#   ihraç dilimi fazlası @20 +0,35% CI[+0,10,+0,57], @60 +1,04% CI[+0,33,+1,67]; geri-alım CI-0-içi.
+#   Beşli dilim U-eğrisi (monoton ters ilişki YOK); ihraç dilimi REIT+büyüme-tekno ağırlıklı,
+#   evren sağ-kalan — işaretin en olası yapısal açıklaması. 39.084 sembol-ay; filed medyan 43g;
+#   PIT sızıntı 0. Kanıt: research/olcumler/wp2_olcum/sonuc_012.json.
 notes: "Ölçüm scratchpad/wp2_olcum/ (üç kart tek sandbox, sıralı); karta ajan DOKUNMAZ."
