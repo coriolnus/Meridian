@@ -1,0 +1,31 @@
+card_id: EDG-2026-012
+family: net_share_issuance   # WP2/2.3 (Pontiff-Woodgate; Daniel-Titman)
+thesis: >
+  Net hisse İHRAÇ edenler sonraki dönemde düşük, GERİ-ALANLAR yüksek getiri verir (yönetimin
+  zamanlama bilgisi). PIT: EDGAR filed-tarihli hisse sayımı — değer ancak dosyalama günü bilinir.
+evidence_refs: [research/edgar_facts/ (2026-08-01 ingest; README PIT semantiği + tutarsizlik.json),
+  Pontiff-Woodgate 2008 / Daniel-Titman 2006 (birinci-el çekilmedi — caveat; hüküm kendi verimizde)]
+universe: full_251 (kapsam beyanlı — shares serisi olan ~250)
+features_asof: >
+  as_of_shares(t) = filed<=t olan SON kayıt; etiket önceliği dei:EntityCommonStockSharesOutstanding
+  → us-gaap:CommonStockSharesOutstanding (Issued KULLANILMAZ — hazine farkı; donem_turu=anlik şart,
+  ağırlıklı-ortalama serileri KULLANILMAZ). val<=0 satır düşülür; 5×'ten büyük sıçrama split-takvimiyle
+  açıklanamıyorsa şüpheli-işaret (CCI vakası) → o sembol-dönem None+neden. net_ihrac(t) =
+  as_of_shares(t)/as_of_shares(t-252ig) − 1 (split-düzeltmesi: bar-split çarpanlarıyla normalize).
+horizon: "kesit dilim ölçümü: aylık gözlem noktaları; ileri getiri 20/60g; taban = aynı-gün evren ortalaması (ders #3); 21g blok-bootstrap CI"
+parameter_grid:
+  dilim: [ihrac_ust_20pct, gerialim_alt_20pct]   # iki uç dilim — K+=2
+cost_model: "10bps + not (yavaş sinyal; devir düşük)"
+success_metric: >
+  ihraç-dilimi fazlası @60 anlamlı NEGATİF VEYA geri-alım-dilimi fazlası @60 anlamlı POZİTİF
+  (CI 0-dışı) VE yön literatürle tutarlı; @20 destekleyici raporlanır.
+kill_criteria:
+  - "iki uç dilim de @20 ve @60'ta CI-0-içi → bilgisiz, arşiv"
+  - "yön literatürün TERSİ ve anlamlı → 'bu evrende ters' arşiv + not (MAX vakası deseni)"
+  - "geçerli sembol-ay < 3000 → askı (K harcanmaz)"
+guards:
+  - "pozitif kontrol: ham rvol20 @20 IC ≈0.064; PK4/PK5 standart; pnl konu dışı (kesit)"
+  - "kapsam + filed-gecikme dağılımı raporda; frame/karşılaştırmalı-tekrar tuzağı: aynı (start,end) için İLK filed kullanılmaz — as-of mantığı zaten son-filed<=t okur, tekrarlar zararsız (beyan)"
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
+status: registered
+notes: "Ölçüm scratchpad/wp2_olcum/ (üç kart tek sandbox, sıralı); karta ajan DOKUNMAZ."

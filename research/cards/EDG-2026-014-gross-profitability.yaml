@@ -1,0 +1,31 @@
+card_id: EDG-2026-014
+family: gross_profitability   # WP2/2.5 (Novy-Marx) — PIT ŞARTI ARTIK SAĞLANIYOR
+thesis: >
+  Brüt kârlılık (GP/Assets) yüksek şirketler ileri dönemde daha iyi getiri verir (Novy-Marx 2013
+  "the other side of value"). Bugüne dek PIT'siz proxy YASAKTI; EDGAR filed-tarihli temel veriyle
+  ilk kez meşru ölçülebilir.
+evidence_refs: [research/edgar_facts/ (GP∧Assets 184/251; ilk-ifşa medyan 33-37 gün),
+  Novy-Marx 2013 JFE (birinci-el yok — caveat), ROADMAP WP2/2.5 + PIT yasası]
+universe: "GP-hesaplanabilir alt-küme (184/251) — SEKTÖR-ÇARPIKLIK BEYANLI: eksik 67 yapısal
+  (banka/sigorta/REIT satış-maliyeti yayımlamaz); hüküm 'bu alt-kümede' okunur"
+features_asof: >
+  Yıllık (FY) kayıtlar; gp(t) = GrossProfit(filed<=t son FY) yoksa Revenues−CostOfRevenue|
+  CostOfGoodsAndServicesSold (etiket önceliği beyanlı; REIT gelir-etiketi tuzağı: Revenues önce —
+  tutarsizlik.json #3); assets(t) aynı filed'dan; gpa(t) = gp/assets. AVN birim-anomalisi (MPWR)
+  ve val<=0 düşülür.
+horizon: "kesit dilim: aylık gözlem; ileri getiri 20/60g; taban = aynı-gün GP-alt-kümesi ortalaması (kendi evreninin tabanı — EDG-009 dersi); 21g blok CI"
+parameter_grid:
+  dilim: [gpa_ust_30pct, gpa_alt_30pct]   # iki uç — K+=2
+cost_model: "10bps + not (çok yavaş sinyal)"
+success_metric: >
+  üst-dilim fazlası @60 anlamlı POZİTİF (CI 0-dışı; @20 destekleyici) VE üst−alt yayılımı pozitif
+  anlamlı (monotonluk kanıtı).
+kill_criteria:
+  - "üst dilim ve yayılım @20+@60 CI-0-içi → bilgisiz, arşiv"
+  - "yön ters-anlamlı → 'bu evrende ters' arşiv + not"
+  - "geçerli sembol-ay < 2500 → askı (K harcanmaz)"
+guards:
+  - "pozitif kontrol rvol20 + PK4/PK5; sektör-duyarlılık dilimi RAPOR (finans-dışı alt-küme aynı yönde mi — eşik değil, tanı)"
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
+status: registered
+notes: "wp2_olcum sandbox; 'PIT'siz fundamentals proxy YASAK' yasası bu kartla İLK KEZ meşru aşılıyor — filed-tabanlı as-of zorunlu, end-tabanlı okuma YASAK (sızıntı)."

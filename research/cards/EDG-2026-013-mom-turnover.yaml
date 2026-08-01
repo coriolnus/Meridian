@@ -1,0 +1,27 @@
+card_id: EDG-2026-013
+family: short_momentum_turnover   # WP2/2.2 (Lee-Swaminathan hacim-momentum ailesi)
+thesis: >
+  Kısa-dönem momentum (1 ay) yüksek-TURNOVER hisselerde güçlenir/kalıcılaşır. Turnover = hacim /
+  dolaşımdaki hisse (PIT as-of) — ham hacimden farkı şirket-büyüklüğü normalizasyonu.
+evidence_refs: [research/edgar_facts/, Lee-Swaminathan 2000 (birinci-el yok — caveat), ROADMAP WP2/2.2]
+universe: full_251 (kapsam beyanlı)
+features_asof: >
+  turnover21(t) = medyan21(hacim) / as_of_shares(t) (EDG-012'deki as-of/etiket/temizlik kuralları
+  BİREBİR); mom21(t) = 21 günlük getiri. Dilimler: mom21 üst %20; koşul katmanları — koşulsuz vs
+  turnover-medyan-üstü koşullu (artımlılık ayrışsın).
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması; 21g blok CI"
+parameter_grid:
+  katman: [mom_ust20_kosulsuz, mom_ust20_turnover_ustu]   # K+=2
+cost_model: "10bps + not"
+success_metric: >
+  turnover-koşullu mom diliminin fazlası @10 VEYA @20 anlamlı POZİTİF VE koşulsuz mom fazlasını
+  anlamlı AŞIYOR (artımlılık — turnover'ın katkısı; ders #3 taban-fazlası).
+kill_criteria:
+  - "koşullu dilim fazlası CI-0-içi → bilgisiz, arşiv"
+  - "artımlılık yok (koşulsuz aynı) → 'turnover bilgi katmıyor' arşiv"
+  - "kısa-dönem ters-dönüş baskınsa (fazla anlamlı NEGATİF) → dürüstçe 'bu ufukta reversal' arşiv + not"
+guards:
+  - "pozitif kontrol rvol20 + PK4/PK5; turnover-rvol korelasyonu RAPORLANIR (akrabalık beyanı — rvol zaten skorda)"
+k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [pending]}
+status: registered
+notes: "wp2_olcum sandbox, EDG-012 ile ortak as-of altyapısı."
