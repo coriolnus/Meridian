@@ -457,3 +457,73 @@ def test_the_row_repair_mode_still_works_and_is_untouched():
     onar = barrepair.repair(apply=True)
     assert onar["ghost_rows"] == 1
     assert not (config.STATE / data.INTEGRITY_FILE).exists()               # defter YAZILMADI
+
+
+# ============================================================ 6. TÜRETİLMİŞ ARTEFAKTIN YENİDEN
+#                                                                 ÜRETİMİ (WP-D borcu, 2026-08-01)
+# NEDEN BU DOSYADA: defterin TÜKETİCİSİ burada çivileniyor (madde 6). "Tüketici defteri okuyor"
+# ile "defterdeki tablo o okumayla ÜRETİLMİŞ" aynı cümle değildir — canlı `component_ic.json`
+# dışlama kapısından ÖNCE üretilmişti ve bunu kendisi söylüyordu (`bars_integrity` alanı yok).
+# Araç o farkı GÖRÜNÜR kılar; aşağıdaki çiviler aracın kendi yasasını tutar.
+def _tablo(ic_degerleri: dict) -> dict:
+    """En küçük geçerli component_ic belgesi — yalnız farkın ölçüldüğü alanlarla."""
+    from meridian import component_ic as cic
+    tablo = {lay: {c: {str(h): {"ic": None, "n": 0, "ci": None, "anlamli": None}
+                       for h in cic.HORIZONS} for c in cic.COMPONENTS} for lay in cic.LAYERS}
+    for (lay, c, h), hucre in ic_degerleri.items():
+        tablo[lay][c][str(h)] = hucre
+    return {"tablo": tablo, "n_gozlem": {"gercek": 1, "cf": 1, "havuz_tekil": 1},
+            "anlamli_sayim": {"gercek": 0, "cf": 0, "havuz": 0}, "verdict": "test",
+            "bars_integrity": {"rows_excluded": 7}}
+
+
+def test_yeniden_uretim_KURU_KOSU_defteri_yazmaz_ve_farki_SOYLER(monkeypatch):
+    """KURU KOŞU VARSAYILANDIR (barrepair'in 1. kuralı, bu araçta da): tek bayt yazılmaz."""
+    from meridian import component_ic as cic, store
+    eski = _tablo({("cf", "rvol20", 20): {"ic": 0.0604, "n": 2094, "ci": None, "anlamli": True}})
+    eski.pop("bars_integrity")                     # dışlama kapısından ÖNCE üretilmiş defter
+    store.write_json(cic.COMPONENT_IC_FILE, eski)
+    yeni = _tablo({("cf", "rvol20", 20): {"ic": 0.0642, "n": 2087, "ci": None, "anlamli": False}})
+    monkeypatch.setattr(cic, "component_ic", lambda write=True: yeni)
+    rapor = cic.yeniden_uret(uygula=False)
+    assert rapor["uygulandi"] is False
+    assert store.read_json(cic.COMPONENT_IC_FILE)["tablo"]["cf"]["rvol20"]["20"]["ic"] == 0.0604
+    f = [x for x in rapor["farklar"] if (x["katman"], x["bilesen"], x["ufuk"]) == ("cf", "rvol20", 20)]
+    assert len(f) == 1 and f[0]["d_ic"] == 0.0038 and f[0]["anlamlilik_dondu"] is True
+    assert rapor["sayim"]["anlamlilik_donen"] == 1
+    # BAR TABANI FARKI ASIL HABER: eski dosyada alan YOK → "bilinmiyor" değil, "kapıdan önce" denir
+    assert "ÖNCE" in rapor["bar_tabani"]["eski"] and rapor["bar_tabani"]["yeni"]["rows_excluded"] == 7
+    # anlamlılığı DÖNEN hücre listenin BAŞINDA: karar girdisi olan fark, gürültünün ardına düşmez
+    assert rapor["farklar"][0]["anlamlilik_dondu"] is True
+
+
+def test_yeniden_uretim_UYGULA_yazar_ve_IDEMPOTENTtir(monkeypatch):
+    from meridian import component_ic as cic, store
+    yeni = _tablo({("gercek", "rs", 5): {"ic": 0.11, "n": 95, "ci": None, "anlamli": False}})
+    monkeypatch.setattr(cic, "component_ic", lambda write=True: yeni)
+    r1 = cic.yeniden_uret(uygula=True)
+    assert r1["uygulandi"] is True and r1["sayim"]["degisen"] >= 1
+    assert store.read_json(cic.COMPONENT_IC_FILE)["tablo"]["gercek"]["rs"]["5"]["ic"] == 0.11
+    r2 = cic.yeniden_uret(uygula=True)                       # AYNI girdi → fark YOK, aynı içerik
+    assert r2["sayim"]["degisen"] == 0 and r2["farklar"] == []
+
+
+def test_olculemeyen_tur_DEFTERI_BOSALTMAZ(monkeypatch):
+    """UYDURMA YASAĞININ ikiz kuralı: ölçülemeyen bir tur, elde olan kanıtı SİLMEZ."""
+    from meridian import component_ic as cic, store
+    eski = _tablo({("cf", "rs", 10): {"ic": -0.0453, "n": 2100, "ci": None, "anlamli": True}})
+    store.write_json(cic.COMPONENT_IC_FILE, eski)
+    monkeypatch.setattr(cic, "component_ic", lambda write=True: None)
+    rapor = cic.yeniden_uret(uygula=True)
+    assert rapor["uygulandi"] is False and rapor["olculdu"] is False and "ÖLÇÜLEMEDİ" in rapor["neden"]
+    assert store.read_json(cic.COMPONENT_IC_FILE)["tablo"]["cf"]["rs"]["10"]["ic"] == -0.0453
+
+
+def test_gecelik_P5_yolu_YAZMAYA_devam_eder():
+    """YASA 6 / mevcut okuyucular: `write` bayrağı EKLENDİ ama VARSAYILANI True — gecelik P5
+    çağrısı (loop.py) birebir eski davranışta. Bayrağın varsayılanı sessizce dönerse tablo bir daha
+    hiç yazılmaz ve kimse fark etmez (tam olarak bu turda temizlenen sınıf)."""
+    import inspect
+    from meridian import component_ic as cic, loop
+    assert inspect.signature(cic.component_ic).parameters["write"].default is True
+    assert "_cic.component_ic()" in inspect.getsource(loop.daily_cycle)

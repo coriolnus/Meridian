@@ -103,15 +103,17 @@ PY
 # bozuk bırakırdı. Kaynak ağaçları KOPYALANMAZ, SEMBOLİK BAĞ verilir (kopya maliyeti sıfır; mutmut
 # zaten kendi `mutants/` kopyasını çıkarır ve mutasyon YALNIZ o kopyaya yazılır).
 kisa_dogrulama() {
-  local ws
-  ws="$(mktemp -d "${TMPDIR:-/tmp}/meridian-mutasyon-kisa.XXXXXX")"
-  trap 'rm -rf "$ws"' EXIT
+  # DEĞİŞKEN GLOBAL, `local` DEĞİL: EXIT tuzağı fonksiyon DÖNDÜKTEN sonra koşar ve yerel değişken o
+  # anda yok olmuş olur — `set -u` altında temizlik "unbound variable" ile ölürdü (ilk koşumda oldu).
+  KISA_WS="$(mktemp -d "${TMPDIR:-/tmp}/meridian-mutasyon-kisa.XXXXXX")"
+  trap 'rm -rf "${KISA_WS:-}"' EXIT
+  local ws="$KISA_WS"
   echo "=== kısa doğrulama: ${KISA_DOSYA} × ${KISA_TEST} (çalışma dizini: $ws) ==="
   ln -s "$KOK/meridian" "$ws/meridian"
   ln -s "$KOK/tests"    "$ws/tests"
   ln -s "$KOK/state"    "$ws/state"
   "$KOK/.venv/bin/python" - "$ws" "$KISA_DOSYA" "$KISA_TEST" <<'PY'
-import re, sys, pathlib
+import sys, pathlib
 ws, dosya, test = sys.argv[1], sys.argv[2], sys.argv[3]
 metin = pathlib.Path("pyproject.toml").read_text()
 # GERÇEK pyproject'ten TÜRETİLİR (kopyalanır + tek bölüm daraltılır): pytest ini ayarları, markerlar
@@ -133,15 +135,36 @@ PY
     echo "!! KISA DOĞRULAMA KIRMIZI: mutants/state/goal.yaml kurulmadı (also_copy işlemedi)"; return 1
   fi
   echo "  ✓ fikstür kuruldu: mutants/state/goal.yaml"
-  local ozet
-  ozet="$( cd "$ws" && "$KOK/.venv/bin/mutmut" results 2>&1 | tail -20 )"
-  echo "$ozet"
-  # ÖLDÜRÜLEN MUTANT SAYISI SIFIRSA ZİNCİR ÇALIŞMIYOR DEMEKTİR: testler ya hiç koşmadı ya da
-  # hepsi kırıktı. "mutmut hata vermedi" bunu KANITLAMAZ — sayıya bakılır.
-  if ! echo "$ozet" | grep -qiE "killed[^0-9]*[1-9]|🎉[^0-9]*[1-9]"; then
-    echo "!! KISA DOĞRULAMA KIRMIZI: hiç mutant ÖLDÜRÜLMEDİ — istatistik/test zinciri koşmuyor"
+  # HÜKÜM SAYIDAN OKUNUR, EKRANDAN DEĞİL. `mutmut results` YALNIZ hayatta kalanları listeler
+  # (killed satırları bilerek basmaz) — ilk denemede bu yüzden "hiç öldürülmedi" sanıldı, oysa 266
+  # mutant ölmüştü. Makine-okunur kaynak `export-cicd-stats`in yazdığı JSON'dur.
+  # KOMUT ADI `export-cicd-stats` (tire), fonksiyon adı `export_cicd_stats` DEĞİL — click alt
+  # çizgiyi tireye çevirir. İlk denemede alt çizgiyle çağrıldı, komut sessizce bulunamadı ve kapı
+  # "sonuç üretilmedi" dedi: çıktıyı /dev/null'a atan bir çağrı, kendi yazım hatasını da yutar.
+  ( cd "$ws" && "$KOK/.venv/bin/mutmut" export-cicd-stats ) || {
+    echo "!! KISA DOĞRULAMA KIRMIZI: export-cicd-stats çalışmadı (mutmut sürümü/komut adı değişmiş olabilir)"
     return 1
-  fi
+  }
+  "$KOK/.venv/bin/python" - "$ws" <<'PY' || return 1
+import json, pathlib, sys
+p = pathlib.Path(sys.argv[1], "mutants", "mutmut-cicd-stats.json")
+if not p.exists():
+    print("!! KISA DOĞRULAMA KIRMIZI: mutmut-cicd-stats.json yok — koşum sonuç ÜRETMEDİ")
+    raise SystemExit(1)
+d = json.loads(p.read_text())
+print(f"  mutant: toplam={d.get('total')} · öldürülen={d.get('killed')} · hayatta={d.get('survived')} "
+      f"· testsiz={d.get('no_tests')} · zaman aşımı={d.get('timeout')}")
+# İKİ KOŞUL BİRDEN: mutant ÜRETİLDİ (total>0) VE testler onları GERÇEKTEN öldürebiliyor (killed>0).
+# killed=0, "suite bu dosyayı hiç sınamıyor" ile "testler hiç koşmadı"yı aynı yüzle gösterir — ve
+# H5'in kırığı tam olarak ikincisiydi. Hayatta kalan mutant sayısı bir ARIZA değil, ölçüm sonucudur.
+if not d.get("total"):
+    print("!! KISA DOĞRULAMA KIRMIZI: hiç mutant üretilmedi (only_mutate/source_paths eşleşmiyor)")
+    raise SystemExit(1)
+if not d.get("killed"):
+    print("!! KISA DOĞRULAMA KIRMIZI: hiç mutant ÖLDÜRÜLMEDİ — istatistik/test zinciri koşmuyor "
+          "(fikstür kırığının imzası: her test aynı hatayla ölürse hiçbir mutant ölmez)")
+    raise SystemExit(1)
+PY
   echo ">> KISA DOĞRULAMA YEŞİL: üretim → fikstür → istatistik → mutant koşumu zinciri çalışıyor."
 }
 
