@@ -222,6 +222,9 @@ pytest_add_cli_args_test_selection = ["tests",
     # aynı gün 5 kez yeşiller. Mutasyon skoru karar-çekirdeği testlerinin gücünü ölçer; ortam
     # testleri bu ölçüme girmez. Dışlama mutasyon koşumuna ÖZGÜdür, suite'e değil.
     "--deselect", "tests/test_authority_boundaries_v77.py",
+    # codelaw = kaynak-ağacı ÖZ-DENETİMİ; mutmut v3 mutantları kaynak dosyalara trampolinle
+    # GÖMDÜĞÜ için mutant-ağacında yapısal geçemez (üretilmiş kodda işaretsiz yakalayıcı görür).
+    "--deselect", "tests/test_codelaw_v59.py",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
