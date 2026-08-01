@@ -37,3 +37,6 @@ mutants/
 
 # Claude oturum artıkları (worktree/ayarlar — yerel)
 .claude/
+
+# mutasyon ham logları — üretilmiş artefakt (rapor .md versiyonlanır, ham log versiyonlanmaz)
+docs/mutasyon/.*.ham.log
