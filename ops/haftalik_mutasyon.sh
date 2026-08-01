@@ -193,6 +193,13 @@ set +e
 "$UV" run mutmut run 2>&1 | tee "${CIKTI_DIZIN}/.${TARIH}.ham.log"
 KOSUM_KODU=${PIPESTATUS[0]}
 set -e
+# MUTMUT'UN SESSİZ YALANI (2026-08-01, ikinci kırık): temiz-koşum/istatistik toplama düşse bile
+# `mutmut run` exit 0 verebiliyor ("failed to collect stats. runner returned 1" yalnız stdout'ta).
+# Çıkış kodunu ham logdaki arıza imzasından DÜZELTİYORUZ — skor üretmeyen koşum başarı sayılamaz.
+if grep -q "failed to collect stats" "${CIKTI_DIZIN}/.${TARIH}.ham.log"; then
+  echo "!! istatistik toplanamadı — koşum BAŞARISIZ sayılıyor (mutmut exit 0 dese bile)"
+  KOSUM_KODU=1
+fi
 
 BITIS="$(date -u +%FT%TZ)"
 
