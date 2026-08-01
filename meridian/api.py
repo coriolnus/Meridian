@@ -1491,6 +1491,12 @@ def api_diagnostics(request: Request):
     _ishadow = store.read_jsonl("intraday_shadow_orders.jsonl")
     _intra["shadow"] = __import__("meridian.intraday_shadow",
                                   fromlist=["summarize"]).summarize(_ishadow)
+    # 5.3 SEANS-İÇİ KESİNTİ/BOŞLUK RAPORU — YASA 6 tüketicisi (pano `RENDER.intraday`).
+    # BURADA YENİDEN HESAPLANMAZ: ölçümü zamanlayıcı kancası (`scheduler._intraday_gap_check`) her
+    # poll'de bir kez yapar ve durum dosyasına yazar. Panonun her anketinde yeniden taramak, aynı
+    # gerçeği iki farklı ANDA ölçüp iki farklı cevap üretirdi (ve dosya kuyruğunu her F5'te okurdu).
+    # `None` = kanca bu süreçte hiç koşmadı — "boşluk yok" DEĞİL, "bakılmadı" (üçüncü hâl).
+    _intra["akis_boslugu"] = sched.get("intraday_gap")
     # ---- FAZ-6 KİLİT ZİNCİRİNİN ÜÇ GİRDİSİ TEK KEZ HESAPLANIR (v130) ----------------------------
     # `edge_verdict`/`result_verdict` blok-bootstrap CI koşuyor ve `validation_trio` DSR hesaplıyor.
     # Üçü hem kendi satırlarında hem kilit zincirinde okunuyor; ikinci kez çağırmak aynı istekte aynı
@@ -1565,6 +1571,16 @@ def api_diagnostics(request: Request):
         },
         "risk": {"regime": store.read_json("regime.json", {}),
                  "blackout_radar": earnings.blackout_radar(list(REPLAY_UNIVERSE), today),
+                 # KAZANÇ TAKVİMİNİN PIT BİRİKİM DEFTERİ (D, 2026-08-01) — `earnings.csv` tek anlık
+                 # görüntüdür ve her tazeleme geçmişi EZER; defter "bu tarihler bu fetch gününde
+                 # biliniyordu"yu biriktirir. DIŞ OKUYUCU BURASIDIR (YASA 6): sayaç panoya çıkar,
+                 # asıl tüketici gelecekteki ölçüm turlarıdır (EDG-011 kartı).
+                 # DOSYA ADI LİTERAL OKUNUR (trend_book.json ile aynı desen ve aynı gerekçe):
+                 # `codelaw.artifact_graph` statik bir graftır; okuma `earnings` modülünün içinde
+                 # kalsaydı defter "yazılıyor ama kimse okumuyor" görünürdü. Maliyet ölçülü: kadans
+                 # HAFTALIK, yani ~52 satır/yıl — anket başına birkaç ms'lik ayrıştırma.
+                 "earnings_pit": earnings.snapshot_stats(
+                     store.read_jsonl("history/earnings_snapshots.jsonl")),
                  "halted": health.halted(), "learn_halted": health.learn_halted()},
         "mlops": {"recent_hypotheses": diffs, "deflate": an.deflate_stats(),
                   "deflate_why": an.deflate_why(), "gate_hist": last_hist,

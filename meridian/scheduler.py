@@ -512,6 +512,49 @@ def _weekly_validation(wk: list) -> dict:
     return out
 
 
+GAP_SEEN_MAX = 200          # tekrar-bastırma defterinin tavanı (imza başına tek uyarı, sınırsız değil)
+
+
+def _intraday_gap_check() -> dict | None:
+    """5.3 — SEANS-İÇİ KESİNTİ TESPİTİ. Her poll'de HAFİF bir kontrol: seans-içi bar akışında eksik
+    dakika penceresi var mı? Ölçüm SAF fonksiyonda (`barsarchive.gap_scan` — dosyanın yalnız kuyruğu
+    okunur); burada yalnız KAYIT ve TEKRAR-BASTIRMA var.
+
+    NEDEN TAM BURADA (halt kapısından ÖNCE): HALT motoru durdurur, veri akışını DEĞİL. Halt
+    sırasında akış sessizce koparsa bunu söyleyecek başka bir yer yok ve halt kalktığında motor
+    delikli bir seansın üstüne karar verir. Kontrol salt-okunurdur; halt'ın koruduğu şeye dokunmaz.
+
+    TEKRAR-BASTIRMA: pencere (60 dk) iki poll'ü (2 × 5 dk) fazlasıyla kapsar, yani AYNI boşluk her
+    poll'de yeniden görünür. İmza (gün|tür|sembol|başlangıç) başına TEK uyarı basılır; imza defteri
+    `GAP_SEEN_MAX` ile sınırlıdır (sınırsız bir set, günlerce koşan worker'da sızıntıdır)."""
+    from . import barsarchive, obs
+    rapor = barsarchive.gap_scan()
+    if rapor.get("durum") in ("seans_disi", "arsiv_yok"):
+        _state["intraday_gap"] = {k: rapor[k] for k in ("durum", "gun", "olculdu")}
+        return rapor
+    gorulen = list(_state.get("intraday_gap_seen") or [])
+    yeni = 0
+    for b in rapor.get("bosluklar") or []:
+        imza = f"{rapor['gun']}|{b['tur']}|{b['sembol'] or '*'}|{b['baslangic']}"
+        if imza in gorulen:
+            continue
+        gorulen.append(imza)
+        yeni += 1
+        obs.warn("intraday_gap_detected", tur=b["tur"], sembol=b["sembol"], gun=rapor["gun"],
+                 aralik=f"{b['baslangic'][11:16]}-{b['bitis'][11:16]}Z", eksik_dk=b["eksik_dk"],
+                 beklenen=b["beklenen"], gelen=b["gelen"], pencere_dk=rapor["esik"]["pencere_dk"],
+                 detail=("seans içinde HİÇ bar gelmeyen dakika penceresi — akış kesintisi; "
+                         "mrd:bars bir RING'tir, o dakikalar geri gelmez"
+                         if b["tur"] == "akis" else
+                         "sembol deliğin iki yanında dakika dakika akıyordu ama arada sustu"))
+    _state["intraday_gap"] = {**{k: rapor[k] for k in
+                                 ("durum", "gun", "olculdu", "pencere", "sembol", "gelen_bar",
+                                  "bozuk_satir", "bosluk_sayisi", "esik")},
+                              "bosluklar": (rapor.get("bosluklar") or [])[:8], "yeni_uyari": yeni}
+    _state["intraday_gap_seen"] = gorulen[-GAP_SEEN_MAX:]
+    return rapor
+
+
 def advance_once() -> dict:
     """Run ONE daily cycle to the latest available bar if a new session has closed. Safe to call
     manually (a dashboard button) or from the loop. No-ops when already current or halted."""
@@ -522,6 +565,16 @@ def advance_once() -> dict:
         from . import watchdog
         watchdog.beat("scheduler_poll")
         watchdog.check_and_alarm()
+        try:
+            _intraday_gap_check()
+        except Exception as e:
+            # YASA 4: bu düşerse akış kesintisi YENİDEN sessizleşir — kontrolün kendisi kaybolur ve
+            # pano "boşluk yok" ile "bakılmadı"yı ayıramaz. Kontrol çağıranı DÜŞÜREMEZ (günlük döngü
+            # akış sağlığına bağlı değildir), ama sessiz de kalamaz.
+            from . import obs as _obs_gap
+            _obs_gap.warn("intraday_gap_check_failed", error=f"{type(e).__name__}: {e}",
+                          detail="seans-içi boşluk taraması koşmadı — akış kesintisi bu turda ÖLÇÜLMEDİ")
+            _state["intraday_gap"] = {"durum": "olculemedi", "hata": f"{type(e).__name__}: {e}"}
         if health.halted():
             _persist()
             return {"status": "halted"}
@@ -678,27 +731,29 @@ def advance_once() -> dict:
                         # ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI (sınıf avı, 2026-07-30) --------
                         # T+1 kusurunun sınıfı buydu: "kodda örtük yayın-zamanı varsayımı". Buradaki
                         # varsayım ÖLÇÜLDÜ ve marjı DAR çıktı — davranış DEĞİŞTİRİLMEDİ, yalnız
-                        # sayı yazıldı ki bir dahaki karar tahminle değil ölçümle verilsin:
-                        #   * `earnings.refresh` penceresi [bugün-7, bugün+14], kadans HAFTALIK,
-                        #     `earnings.BLACKOUT_DAYS = 5`.
-                        #   * NORMAL işleyişte bir sonraki tazelemeden hemen önceki asgari İLERİ
-                        #     kapsama 14-7 = 7 gün > 5 → marj yalnız 2 GÜN.
-                        #   * BU DAL O MARJI TÜKETİR: hafta damgası pes ederken de İLERLER, yani
+                        # sayı yazıldı ki bir dahaki karar tahminle değil ölçümle verilsin.
+                        # KALICI HÂLE GETİRİLDİ (2026-08-01): üç girdi (ileri pencere / kadans /
+                        # karartma) artık `earnings.py`de ADLANDIRILMIŞ sabitler ve marj onlardan
+                        # TÜRETİLİYOR (`earnings.margin_days()` → bugün 14-7-5 = 2 gün). Sayı
+                        # buradan da, `coverage()`ten de AYNI türetmeden okunur; üç sayıdan biri
+                        # değişirse uyarı kendiliğinden doğruyu söyler.
+                        # KADANSIN SAHİBİ BU DAL: `REFRESH_CADENCE_DAYS = 7`in gerçek karşılığı
+                        # yukarıdaki isocalendar kapısıdır — sabit oraya bakarak yazıldı.
+                        #   * BU DAL MARJI TÜKETİR: hafta damgası pes ederken de İLERLER, yani
                         #     bir sonraki deneme 7 gün daha ileridedir → ileri kapsama 0'a iner.
                         #     `in_blackout` veri yokken FAIL-OPEN'dır (bilerek: bilgi yokken
                         #     bloklamaz), dolayısıyla o hafta karartma guard'ı HERKES için kapanır
                         #     ve motor bilanço gününe pozisyonla girebilir.
-                        # SESSİZ DEĞİL (aşağıdaki uyarı + `earnings.coverage().future_dates`), ama
-                        # "tek kaçan hafta marjın tamamını yer" yazılı değildi. İKİ UCUZ ÇÖZÜM,
-                        # İKİSİ DE ROL 1'E AİT (davranış kararı): ileri pencereyi genişletmek
-                        # (Nasdaq ucu ANAHTARSIZ ve ~15 istek — kota maliyeti ≈ 0) ya da pes
-                        # ederken hafta damgasını YAKMAMAK.
+                        # İKİ UCUZ ÇÖZÜM, İKİSİ DE HÂLÂ ROL 1'E AİT (davranış kararı): ileri
+                        # pencereyi genişletmek (`REFRESH_FWD_DAYS`; Nasdaq ucu ANAHTARSIZ ve ~15
+                        # istek — kota maliyeti ≈ 0) ya da pes ederken hafta damgasını YAKMAMAK.
                         _state["earnings_week"] = list(wk)
                         _state["earnings_attempts"] = 0
+                        _cov = earnings.coverage(list(REPLAY_UNIVERSE)) or {}
                         obs.warn("earnings_calendar_gave_up", attempts=att,
                                  blackout_days=getattr(earnings, "BLACKOUT_DAYS", None),
-                                 ileri_kapsama_gun=(earnings.coverage(list(REPLAY_UNIVERSE))
-                                                    or {}).get("future_dates"),
+                                 marj_gun=_cov.get("marj_gun"), ileri_gun=_cov.get("ileri_gun"),
+                                 ileri_kapsama_gun=_cov.get("future_dates"),
                                  detail="FMP 5 denemede satır vermedi — takvim bu hafta boş kalacak; "
                                         "ileri kapsama tükenirse karartma guard'ı FAIL-OPEN kapanır")
                     else:

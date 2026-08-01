@@ -76,7 +76,7 @@ import json
 import os
 import time
 
-from . import config, hotstate, obs
+from . import barclock, config, hotstate, obs
 
 # --- Sabitler ------------------------------------------------------------------------------------
 ARCHIVE_DIR = "bars_intraday"          # state/ altında; YALNIZ bu modül yazar (bkz. yazar tekliği)
@@ -501,6 +501,178 @@ def summary(limit_days: int | None = None) -> dict:
             "per_day": per_day, "dir": str(base)}
 
 
+# --- SEANS-İÇİ KESİNTİ/BOŞLUK DEDEKTÖRÜ (5.3, 2026-08-01) ---------------------------------------
+# NE DEĞİL: tarihsel tarama değil. `summary()` arşivin BÜYÜKLÜĞÜNÜ ölçer ("kaç gün, kaç satır") ve
+# sıfır satırla dolu bir günü "arşiv var" diye okur. Bu ise CANLI AKIŞ SAĞLIĞIdır: seans İÇİNDE,
+# son `GAP_WINDOW_MIN` dakikada beklenen dakikalık barların gelmediği bir pencere var mı?
+#
+# NEDEN GEREKLİ: akış kopuşunun bugünkü tek sinyali `marketstream`in WS bağlantı durumu
+# (`streamhealth`) — yani SOKET'in sağlığı. Soket ayakta kalıp abonelik sessizleşirse (sağlayıcı
+# tarafında düşen sembol, kısılan feed, tüketicinin takılması) bağlantı YEŞİL görünür ve dakikalar
+# sessizce kaybolur. Kayıp da kalıcıdır: `mrd:bars` bir RING'tir (~2 seans), o dakika geri gelmez.
+#
+# İKİ SINIF, İKİSİ DE AYRI OKUNUR — birleştirilirse ikisi de görünmez olur:
+#   * "akis"   → o dakikada HİÇBİR sembolden bar gelmedi. Bu bir KESİNTİdir.
+#   * "sembol" → akış genelde akıyor ama BU sembol sustu.
+#
+# YANLIŞ POZİTİF KAPISI (ve neden yoğunluk değil BAĞLAM ölçülüyor): dakikalık bar yalnız İŞLEM
+# olduğunda doğar. Seyrek işlem gören bir sembolde eksik dakika NORMALDİR ve onu boşluk saymak
+# beklentiyi UYDURMAK olurdu. Bu yüzden bir sembol boşluğu ancak deliğin İKİ YANINDA da sembolün
+# dakika dakika tıkırdadığı kanıtlanırsa raporlanır (`GAP_CONTEXT_*`). Pencere-geneli "yoğunluk"
+# ölçüsü bilerek KULLANILMADI: büyük bir delik yoğunluğu kendi düşürür ve dedektör tam da en büyük
+# kesintiyi görmez olurdu.
+GAP_WINDOW_MIN = 60        # geriye bakılan pencere (dk) — canlı sağlık, tarih taraması değil
+GAP_LAG_MIN = 2            # son N dakika HENÜZ boşluk sayılmaz (bar kapanışı + XREADGROUP + fsync gecikir)
+GAP_MIN_MIN = 3            # bu kadar ARDIŞIK eksik dakika bir BOŞLUKTUR (1-2 dk = gürültü)
+GAP_CONTEXT_MIN = 5        # deliğin iki yanında bakılan bağlam (dk)
+GAP_CONTEXT_NEED = 4       # bağlamın en az bu kadar dakikasında bar OLMALI (sembol "sürekli akıyor")
+GAP_TAIL_BYTES = 4_000_000  # gün dosyasının yalnız SONU okunur (bkz. `_pencere_satirlari`)
+GAP_MAX_REPORT = 20        # rapora giren en fazla boşluk (yük sınırı; sayı ayrıca `bosluk_sayisi`de)
+
+
+def _pencere_satirlari(day: str, tail_bytes: int = GAP_TAIL_BYTES):
+    """Gün dosyasının SONUNDAN (ticker, t) çiftleri. `(satirlar, bozuk, var_mi)` döner.
+
+    NEDEN TAM DOSYA DEĞİL: 250 sembol × 390 dakika ≈ 100 bin satır/gün. Dedektör son bir saati
+    yargılıyor, günü değil — tam dosyayı her poll'de ayrıştırmak ölçtüğü şeyin bin katı iş olurdu.
+    Kuyruk okumasının TEK riski yarım ilk satırdır ve o AÇIKÇA atılır (`readline`), bozuk sayılmaz."""
+    p = _day_path(day)
+    if not p.exists():
+        return [], 0, False
+    boyut = p.stat().st_size
+    with open(p, "rb") as fh:
+        if boyut > tail_bytes:
+            fh.seek(boyut - tail_bytes)
+            fh.readline()                     # YARIM İLK SATIR: veri değil, kesik — atılır
+        ham = fh.read()
+    satirlar, bozuk = [], 0
+    for line in ham.decode("utf-8", "replace").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:  # sessiz-yutma: YUTMA DEĞİL — bozuk satır `bozuk` sayacına girer ve raporun `bozuk_satir` alanıyla çağırana çıkar; ayrıca uyarmak, her poll'de olay defterine satır düşürürdü
+            bozuk += 1
+            continue
+        tk, t = rec.get("ticker"), rec.get("t")
+        if tk and t:
+            satirlar.append((str(tk), str(t)))
+    return satirlar, bozuk, True
+
+
+def _kosular(eksik: list) -> list:
+    """Sıralı eksik-dakika listesini ARDIŞIK koşulara böl: [(ilk, son, uzunluk), ...]"""
+    out = []
+    for m in eksik:
+        if out and (m - out[-1][1]).total_seconds() == 60:
+            out[-1][1] = m
+            out[-1][2] += 1
+        else:
+            out.append([m, m, 1])
+    return [tuple(x) for x in out]
+
+
+def gap_scan(as_of=None, day: str | None = None, rows=None,
+             window_min: int = GAP_WINDOW_MIN, lag_min: int = GAP_LAG_MIN,
+             min_gap_min: int = GAP_MIN_MIN, context_min: int = GAP_CONTEXT_MIN,
+             context_need: int = GAP_CONTEXT_NEED) -> dict:
+    """SAF ölçüm — olay BASMAZ, dosya YAZMAZ. Kaydı ve tekrar-bastırmayı çağıran yapar
+    (`scheduler._intraday_gap_check`); böylece testler gerçek `events.jsonl`'a dokunmadan koşar.
+
+    `rows` verilirse diske hiç gidilmez (fikstür yolu). `as_of` verilmezse TEK saat `barclock`tan
+    gelir — seans sınırı da oradan (NY 9:30-16:00, DST-farkında); saat/seans yasası burada
+    KOPYALANMAZ."""
+    simdi = as_of or barclock.now()
+    if simdi.tzinfo is None:
+        simdi = simdi.replace(tzinfo=barclock.UTC)
+    gun = day or barclock.session_date(simdi)
+    bitis = simdi.replace(second=0, microsecond=0) - dt.timedelta(minutes=int(lag_min))
+    baslangic = bitis - dt.timedelta(minutes=int(window_min))
+    beklenen = []
+    m = baslangic
+    while m < bitis:
+        if barclock.is_market_open(m):
+            beklenen.append(m)
+        m += dt.timedelta(minutes=1)
+    out = {"gun": gun, "olculdu": _now_iso(), "durum": "ok", "bosluklar": [], "bosluk_sayisi": 0,
+           "pencere": {"baslangic": baslangic.isoformat(), "bitis": bitis.isoformat(),
+                       "beklenen_dk": len(beklenen)},
+           "sembol": 0, "gelen_bar": 0, "bozuk_satir": 0,
+           "esik": {"pencere_dk": int(window_min), "gecikme_dk": int(lag_min),
+                    "asgari_bosluk_dk": int(min_gap_min), "baglam_dk": int(context_min),
+                    "baglam_gereken": int(context_need)}}
+    if not beklenen:
+        # SEANS DIŞI: beklenti YOK, dolayısıyla eksiklik de yok. "Sıfır boşluk bulundu" demek,
+        # gece yarısı için sağlıklı akış RAPORU üretmek olurdu — üçüncü hâl adıyla söylenir.
+        out["durum"] = "seans_disi"
+        return out
+    if rows is None:
+        rows, bozuk, var = _pencere_satirlari(gun)
+        out["bozuk_satir"] = bozuk
+        if not var:
+            # ARŞİV HİÇ AÇILMAMIŞ: arşivci koşmuyorsa "akış koptu" demek YANLIŞ suçlamadır —
+            # ölçülemeyen bir şey None'dır (uydurma yasağı), hüküm verilmez.
+            out["durum"] = "arsiv_yok"
+            return out
+    pencere = {}
+    for tk, t in rows:
+        o = barclock.parse_utc(t)
+        if o is None:
+            continue
+        o = o.replace(second=0, microsecond=0)
+        if baslangic <= o < bitis:
+            pencere.setdefault(str(tk).upper(), set()).add(o)
+    out["sembol"] = len(pencere)
+    out["gelen_bar"] = sum(len(v) for v in pencere.values())
+    bek = set(beklenen)
+    dolu = set().union(*pencere.values()) if pencere else set()
+    akis_eksik = sorted(bek - dolu)
+    bosluklar = []
+    for ilk, son, n in _kosular(akis_eksik):
+        if n >= min_gap_min:
+            bosluklar.append({"tur": "akis", "sembol": None, "baslangic": ilk.isoformat(),
+                              "bitis": son.isoformat(), "eksik_dk": n,
+                              "beklenen": len(beklenen), "gelen": len(dolu)})
+    akis_eksik_kume = set(akis_eksik)
+    for tk in sorted(pencere):
+        var = pencere[tk]
+        for ilk, son, n in _kosular(sorted(bek - var)):
+            if n < min_gap_min:
+                continue
+            # AKIŞ KESİNTİSİNİN İÇİNDE KALAN SEMBOL BOŞLUĞU AYRICA RAPORLANMAZ: tek kesinti için
+            # 250 satır basmak, asıl olayı kendi gürültüsüyle gömerdi (ve iki kez saydırırdı).
+            if all(x in akis_eksik_kume for x in _dakikalar(ilk, son)):
+                continue
+            onces = [x for x in _dakikalar(ilk - dt.timedelta(minutes=context_min),
+                                           ilk - dt.timedelta(minutes=1)) if x in bek]
+            sonras = [x for x in _dakikalar(son + dt.timedelta(minutes=1),
+                                            son + dt.timedelta(minutes=context_min)) if x in bek]
+            if len(onces) < context_need or len(sonras) < context_need:
+                continue            # bağlam pencereye SIĞMIYOR → hüküm verilemez (kenar etkisi)
+            if sum(1 for x in onces if x in var) < context_need or \
+               sum(1 for x in sonras if x in var) < context_need:
+                continue            # sembol zaten seyrek akıyor → delik BEKLENTİ değil, normal
+            bosluklar.append({"tur": "sembol", "sembol": tk, "baslangic": ilk.isoformat(),
+                              "bitis": son.isoformat(), "eksik_dk": n,
+                              "beklenen": len(beklenen), "gelen": len(var)})
+    if not dolu:
+        # DOSYA VAR AMA PENCEREDE TEK BAR YOK: bu, yukarıdaki `akis` koşusuyla zaten yakalanır
+        # (tüm pencere tek boşluktur); durum adı okuyucuya sebebi söyler.
+        out["durum"] = "pencerede_bar_yok"
+    out["bosluk_sayisi"] = len(bosluklar)
+    out["bosluklar"] = sorted(bosluklar, key=lambda b: (-b["eksik_dk"], str(b["sembol"] or "")))[:GAP_MAX_REPORT]
+    return out
+
+
+def _dakikalar(ilk, son) -> list:
+    out, m = [], ilk
+    while m <= son:
+        out.append(m)
+        m += dt.timedelta(minutes=1)
+    return out
+
+
 def render_summary(limit_days: int | None = None) -> str:
     """`--ozet` metni. Sıfır satırlı arşiv SAHTE bir 'her şey yolunda' göstermez — açıkça söyler."""
     s = summary(limit_days)
@@ -541,10 +713,17 @@ def main(argv: list[str] | None = None) -> int:
                    help=f"hiç akış yokken tur arası uyku (sn); varsayılan {DEFAULT_IDLE_S}")
     p.add_argument("--count", type=int, default=DEFAULT_COUNT, help="tur/akış başına en fazla giriş")
     p.add_argument("--once", action="store_true", help="tek tur koş ve çık (cron/duman testi)")
+    p.add_argument("--bosluk", action="store_true",
+                   help="seans-içi boşluk taraması (5.3): son penceredeki eksik bar aralıkları")
     a = p.parse_args(argv)
 
     if a.ozet:
         print(render_summary(a.gun))
+        return 0
+
+    if a.bosluk:
+        # OPERATÖRÜN İKİNCİ OKUYUCUSU (asıl tüketici: scheduler kancası → /api/diagnostics).
+        print(json.dumps(gap_scan(), ensure_ascii=False, indent=1))
         return 0
 
     arch = BarsArchiver(poll_ms=a.poll_ms, idle_s=a.idle_s, count=a.count)

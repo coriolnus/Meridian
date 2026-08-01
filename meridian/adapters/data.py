@@ -2475,11 +2475,23 @@ def is_retired(ticker: str) -> bool:
     return str(ticker or "").upper() in RETIRED_SYMBOLS
 
 
-def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25) -> dict:
+# Nasdaq takviminin `time` alanı → kanonik BMO/AMC. ÖLÇÜM (2026-08-01, 6 iş günü / 1307 satır):
+#   time-not-supplied  859 (%65,7)   time-after-hours  258 (%19,7)   time-pre-market  190 (%14,5)
+# Yani satırların ~%34'ünde baskının seans-öncesi/sonrası olduğu GERÇEKTEN biliniyor. Haritada
+# OLMAYAN her değer None'a düşer — "bilinmiyor" bir varsayılan DEĞİL, bir yokluktur (uydurma yasağı).
+NASDAQ_EARNINGS_TIME = {"time-pre-market": "bmo", "time-after-hours": "amc"}
+
+
+def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
+                           with_time: bool = False) -> dict:
     """#5 — Nasdaq'ın ANAHTARSIZ kazanç takvimi (api.nasdaq.com/api/calendar/earnings?date=...).
     Gün başına bir istek; iş günü penceresi için {TICKER: [date,...]} döner. FMP'nin 250/gün kota
     duvarına karşı birincil kaynak: 21 günlük pencere ≈ 15 istek (evren boyundan BAĞIMSIZ — FMP'de
-    250 ticker = 250 istek = bütün günlük kota). Hata gün bazında yutulur; kısmi sonuç dürüsttür."""
+    250 ticker = 250 istek = bütün günlük kota). Hata gün bazında yutulur; kısmi sonuç dürüsttür.
+
+    `with_time=True` → değerler `(date, "bmo"|"amc"|None)` İKİLİSİ olur. VARSAYILAN False, yani
+    şekil DEĞİŞMEZ: mevcut çağıranlar ve kayıtlı sahteler aynı sözlüğü görür (alan eklemek, eski
+    sözleşmeyi kırmadan yapılır)."""
     out: dict[str, list] = {}
     for d in pd.bdate_range(start, end):
         ds = str(d.date())
@@ -2489,7 +2501,8 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25) -> 
             for r_ in rows:
                 sym = str(r_.get("symbol") or "").upper().strip()
                 if sym:
-                    out.setdefault(sym, []).append(ds)
+                    tm = NASDAQ_EARNINGS_TIME.get(str(r_.get("time") or "").strip().lower())
+                    out.setdefault(sym, []).append((ds, tm) if with_time else ds)
         except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
             pass
         time.sleep(polite_delay)

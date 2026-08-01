@@ -331,8 +331,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 # çağrıda stat() yapıyor, binlerce replay'de gereksiz sistem çağrısı istemeyiz.
                 _bl = (earnings.in_blackout(sig.ticker, str(d.date()))
                        if (_det is not None or verdict != "NO_GO") else False)
+                _ek = earnings.known(sig.ticker)
                 if _det is not None:
-                    _ek = earnings.known(sig.ticker)
                     _det.append({"check": "earnings_blackout", "passed": not _bl, "severity": "hard",
                                  "value": sig.ticker, "threshold": None,
                                  "coverage": "known" if _ek else "no_calendar_data",
@@ -340,6 +340,15 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                                           else (None if _ek else "kazanç takvimi YOK — kontrol edilemedi"))})
                 if verdict != "NO_GO" and _bl:
                     verdict = "NO_GO"; greasons = list(greasons) + ["kazanç öncesi karartma (earnings blackout)"]
+                # BEYANLI FAIL-OPEN NOTU — AYNI YASA, İKİ MOTOR (2026-08-01). Yukarıdaki 2026-07-22
+                # dersinin birebir tekrarı: kural iki motorda da uygulanıyor, KAYDI yalnız canlıda
+                # yazılsaydı `test_differential_v60` haklı olarak ayrışma derdi ve replay'den
+                # tohumlanan planlar "kapsam bilgisi hiç yokmuş" gibi görünürdü. Not KARAR
+                # DEĞİŞTİRMEZ; sıra da canlıyla AYNI (önce karartma vetosu, sonra not).
+                # `_ek` artık detay kapalıyken de ölçülür: maliyeti `_load()`in mtime-önbellekli tek
+                # `stat()`ı — arama yolunda plan başına bir sistem çağrısı, ölçülü ve kabul edilmiş.
+                if not _ek:
+                    greasons = list(greasons) + [earnings.COVERAGE_NOTE]
                 plan["gate_verdict"], plan["gate_reasons"] = verdict, greasons
                 if _det is not None:
                     plan["gate_checks"] = _det

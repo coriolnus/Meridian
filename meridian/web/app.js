@@ -2973,6 +2973,27 @@ RENDER.operasyon = async () => {
     ${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}${sSelale}${sCark}${sIntra}${s4}${s5}${s6}${sSag}${sOgr}`;
 };
 
+// 5.3 — seans-içi bar akışındaki eksik dakika pencereleri. Ölçümü zamanlayıcı kancası yapar; burası
+// yalnız okur. "—" (ölçüm yok) ile "0 boşluk" (ölçüldü, temiz) BİLEREK farklı cümlelerdir.
+const _GAP_DURUM = { seans_disi: "seans dışı — beklenen bar yok, hüküm verilmedi",
+                     arsiv_yok: "seans-içi arşiv açılmamış — ölçülemedi",
+                     pencerede_bar_yok: "pencerede TEK bar yok — akış sessiz",
+                     olculemedi: "tarama düştü — bu turda ÖLÇÜLMEDİ" };
+function _gapRows(g) {
+  if (!g) return `<div class="srow"><span>Seans-içi boşluk</span><b class="mut">— · tarama bu süreçte hiç koşmadı</b></div>`;
+  const not = _GAP_DURUM[g.durum];
+  if (not) return `<div class="srow"><span>Seans-içi boşluk</span><b class="mut">${esc(not)}</b></div>`;
+  const n = g.bosluk_sayisi ?? 0, pen = g.pencere || {};
+  const satir = (g.bosluklar || []).slice(0, 4).map(b =>
+    `<div class="trow" style="grid-template-columns:78px 108px 1fr">
+       <span class="tick">${esc(b.sembol || "AKIŞ")}</span>
+       <span class="mono-num">${esc(String(b.baslangic).slice(11, 16))}–${esc(String(b.bitis).slice(11, 16))}Z</span>
+       <span class="chain mut">${b.eksik_dk} dk eksik · beklenen ${b.beklenen} / gelen ${b.gelen}</span></div>`).join("");
+  return `<div class="srow"><span>Seans-içi boşluk <span class="tx3">(son ${pen.beklenen_dk ?? "?"} beklenen dk)</span></span>
+      <b class="${n ? "neg" : "pos"}">${n ? `${n} boşluk · ${g.sembol ?? 0} sembol akıyor` : `boşluk yok · ${g.gelen_bar ?? 0} bar / ${g.sembol ?? 0} sembol`}</b></div>
+    ${satir ? `<div class="tbl" style="margin-top:8px">${satir}</div>` : ""}`;
+}
+
 RENDER.intraday = async () => {
   const d = await j("/api/diagnostics");
   const iq = d.intraday || {}, mkt = d.marketstream || {}, bf = d.barfeed || {}, hs = d.hotstate || {};
@@ -3009,13 +3030,18 @@ RENDER.intraday = async () => {
     <div class="srow"><span>Akış</span><b class="${mktOk ? "pos" : (mktDown ? "neg" : "")}">${mktOk ? "canlı · " + esc(mkt.feed || "iex") + " feed" : (mktDown ? "kopuk — EOD dosyalarına düşülür" : "başlamadı")}</b></div>
     <div class="srow"><span>Akan bar / abone</span><b>${mkt.bars_seen ?? 0} bar · ${mkt.subscribed ?? 0} sembol</b></div>
     ${mkt.last_bar_at ? `<div class="srow"><span>Son kapanmış bar</span><b>${relTime(mkt.last_bar_at)}${mkt.last_bar_age_s > 180 ? ' · <span class="warn">seyrek (piyasa kapalı olabilir)</span>' : ""}</b></div>` : ""}</div>`;
-  // ---- 4) Dayanıklı tetik + Redis ----
+  // ---- 4) Dayanıklı tetik + Redis + SEANS-İÇİ BOŞLUK (5.3) ----
+  // Bağlantı YEŞİL olduğu hâlde dakikaların kaybolabildiği bir sınıf var (soket ayakta, abonelik
+  // sessiz). `akis_boslugu` o sınıfın tek görünür yüzeyidir. ÜÇ HÂL AYRI OKUNUR — null ("kanca hiç
+  // koşmadı"), "seans_disi"/"arsiv_yok" ("bakılamadı") ve ölçülmüş sonuç ("0 boşluk" gerçekten 0).
+  // Bunlar birbirine karıştırılırsa pano, ölçülmemiş bir sessizliği "sağlıklı" diye gösterir.
   const s4 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Dayanıklı tetik <span class="tx3" style="font-weight:400">(consumer-group)</span>
       ${_chip(bfOk ? "CANLI" : (bf.ok === false ? "KOPUK" : "—"), bfOk ? "t-go" : (bf.ok === false ? "t-no" : "t-vi"))}</h2>
     <div class="srow"><span>Okunan olay / bar</span><b>${bf.events_read ?? 0} olay · ${bf.frames_seen ?? 0} bar</b></div>
     <div class="srow"><span>Bekleyen (lag) / düşen bayat</span><b class="${bf.pending > 50 ? "warn" : ""}">${bf.pending ?? 0} bekleyen · ${bf.stale_dropped ?? 0} düşürüldü</b></div>
     <div class="srow"><span>Tüketici bağlı</span><b class="${bf.has_consumer ? "pos" : "mut"}">${bf.has_consumer ? "evet · intraday_cycle" : "hayır"}</b></div>
-    <div class="srow" style="margin-top:8px"><span>Redis sıcak katman</span><b class="${hsOk ? "pos" : (hs.ok === false ? "neg" : "")}">${hsOk ? "bağlı · " + (hs.writes ?? 0) + " yazma" : (hs.ok === false ? "kopuk — dosyaya düşülür" : "—")}</b></div></div>`;
+    <div class="srow" style="margin-top:8px"><span>Redis sıcak katman</span><b class="${hsOk ? "pos" : (hs.ok === false ? "neg" : "")}">${hsOk ? "bağlı · " + (hs.writes ?? 0) + " yazma" : (hs.ok === false ? "kopuk — dosyaya düşülür" : "—")}</b></div>
+    ${_gapRows(iq.akis_boslugu)}</div>`;
 
   // ---- 5) FAZ 4B GÖLGE: "tetik kesilseydi NE olurdu?" ----
   // Tetik-geçişi tek başına bir karar DEĞİLDİR: kapılar, boyutlandırma ve likidite tavanı emri

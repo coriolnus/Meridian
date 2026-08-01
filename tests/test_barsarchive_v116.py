@@ -487,14 +487,23 @@ def test_bars_intraday_dizinine_yalniz_bu_modul_yazar():
 
 
 def test_modul_paralel_ajanin_yuzeyine_dokunmaz():
-    """Bu tur SALT-OKUNUR olması gereken modülleri değiştirmedi; import bile yalnız üçü."""
+    """İTHAL YÜZEYİ KİLİTLİ — liste BÜYÜDÜ ve büyümesi gerekçelidir (2026-08-01).
+
+    Üçtü, dörde çıktı: `barclock`. Gerekçe, testin kendi amacıyla AYNI YÖNDE — seans-içi boşluk
+    dedektörü (5.3) "hangi dakika BEKLENİYOR" sorusunu cevaplamak zorunda ve o cevabın iki bileşeni
+    (dakika damgası ayrıştırma + NY seans sınırı, DST-farkında) `barclock`ta TEK yerde yaşıyor.
+    Alternatif, 9:30-16:00 kapısını buraya KOPYALAMAKtı; bu depoda "aynı yasa iki yerde, biri
+    güncellenmemiş" baskın kusur sınıfıdır. Yani ithal eklemek, kopyayı önlemenin bedeli.
+    Kilit KALDIRILMADI: liste hâlâ tam eşleşme — beşinci bir ithal yine bu testi çakar."""
     import ast
     mod = ast.parse(SRC)
     yerel = set()
     for node in ast.walk(mod):
         if isinstance(node, ast.ImportFrom) and node.level == 1:
             yerel |= {a.name for a in node.names}
-    assert yerel == {"config", "hotstate", "obs"}
+    assert yerel == {"barclock", "config", "hotstate", "obs"}
+    # SEANS YASASI KOPYALANMADI: saat sınırı burada literal olarak yeniden yazılmamalı.
+    assert "is_market_open" in SRC and "9, 30" not in SRC and "9 * 60 + 30" not in SRC
 
 
 # ---------------------------------------------------------------------------------------------

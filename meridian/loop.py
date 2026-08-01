@@ -556,6 +556,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
 
     candidates, plans, dormant_sigs, explore_pool = [], [], [], []
     near_miss_sigs = []
+    # P3 BLOĞUNUN DIŞINDA TANIMLANIR, İÇİNDE DEĞİL: blok `halted`/`data_bad`/slot koşuluna bağlıdır
+    # ve koşmadığı turda sayaç TANIMSIZ kalırdı — `daily_cycle` olayı o turda NameError'la düşerdi.
+    _kapsam_disi = 0         # bu turda karartma kapısının KONUŞAMADIĞI plan sayısı (beyanlı fail-open)
     explore_mode = (not halted and not data_bad and rj["exposure_budget_pct"] <= 0)
     if not halted and not data_bad and (rj["exposure_budget_pct"] > 0 or explore_mode) \
             and len(b.positions) < limits["max_open_positions"]:
@@ -673,6 +676,15 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                          else (None if _ek else "kazanç takvimi YOK — kontrol edilemedi"))})
                 if verdict != "NO_GO" and _bl:
                     verdict = "NO_GO"; greasons = list(greasons) + ["kazanç öncesi karartma (earnings blackout)"]
+                # FAIL-OPEN ARTIK BEYANLI (2026-08-01). `gate_checks.coverage` bunu 2026-07-21'den
+                # beri taşıyordu ama KARAR SATIRINDA — panonun ve operatörün ilk baktığı
+                # `gate_reasons`ta — iz yoktu: evrenin 57/251'inde karartma kapısı sessizce
+                # geçirgendi. Not KARAR DEĞİŞTİRMEZ (NO_GO değil, REVIEW'e düşürme değil): veri
+                # yokluğu sembolün suçu değil, bizim görünürlük borcumuzdur. Metnin "NOT: " öneki
+                # ve gerekçesi `earnings.COVERAGE_NOTE`ta yazılı.
+                if not _ek:
+                    greasons = list(greasons) + [earnings.COVERAGE_NOTE]
+                    _kapsam_disi += 1
                 # SENKRON KORUMASI (v3 kriter-1): aynada bu hisse için hâlâ CANLI bir emir ya da motor
                 # yetimi pozisyon varken YENİ karar üretilmez — çifte maruziyet/karışık defter riski.
                 # Kaynak: son uzlaştırmanın anlık görüntüsü (her döngü sonunda tazelenir).
@@ -1050,9 +1062,16 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                            breaker_tripped=breaker, halted=halted, data_ok=not data_bad,
                            explore_mode=bool(explore_mode),
                            mirror_drift=bool(mirror.get("drift")))
+    # KAPSAM SAYACI (2026-08-01): "kaç plan üretildi" ile "kaç planda karartma kapısı KONUŞABİLDİ"
+    # ayrı sayılardır. İkincisi bugüne dek hiçbir olayda yoktu; fail-open sessizken bir eğilim
+    # (kapsamın aşınması) yalnız plan plan bakılarak görülebilirdi. `takvim_bos` üçüncü hâli taşır:
+    # "57 sembol eksik" ile "takvim HİÇ yok" aynı sayıyla anlatılmaz.
+    _kapsam = {"plan": len(plans), "kapsanan": len(plans) - _kapsam_disi, "kapsam_disi": _kapsam_disi,
+               "takvim_bos": not earnings._load()}
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
-            halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet)
+            halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet,
+            earnings_kapsami=_kapsam)
     return {"status": "ok", "date": dstr, "regime": rj["regime"], "candidates": len(candidates),
             "plans": len(plans), "armed": len(meta["armed"]), "open_positions": len(b.positions),
             "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad,
