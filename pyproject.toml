@@ -216,11 +216,12 @@ only_mutate = [
     "meridian/score.py",
 ]
 pytest_add_cli_args_test_selection = ["tests",
-    # ORTAM-DUYARLI TEST DIŞLAMASI (H5 ikinci kırık, 2026-08-01): bu test repo-kökü yüzeylerini
-    # (ajan-guard kancası) denetler ve mutants/ kopya-ortamında YAPISAL olarak geçemez — gerçek
-    # suite'te aynı gün 5 kez yeşildi. Mutasyon skoru karar-çekirdeği testlerinin gücünü ölçer;
-    # ortam-denetim testi bu ölçüme girmez. Dışlama mutasyon koşumuna ÖZGÜdür, suite'e değil.
-    "--deselect", "tests/test_authority_boundaries_v77.py::test_c3_agent_guard_hook_blocks_the_surfaces_it_claims",
+    # ORTAM-DUYARLI DOSYA DIŞLAMASI (H5, 2026-08-01; iki ayrı testi ayrı koşumlarda kırdı):
+    # yetki-sınırı testleri repo-kökü yüzeylerini subprocess'le çağırır (ops/meridian-guard.sh,
+    # ajan-guard kancası) ve mutants/ kopya-ortamında YAPISAL olarak koşamaz — gerçek suite'te
+    # aynı gün 5 kez yeşiller. Mutasyon skoru karar-çekirdeği testlerinin gücünü ölçer; ortam
+    # testleri bu ölçüme girmez. Dışlama mutasyon koşumuna ÖZGÜdür, suite'e değil.
+    "--deselect", "tests/test_authority_boundaries_v77.py",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
