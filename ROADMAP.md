@@ -163,9 +163,11 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · **G4 pullback ✅ ARŞİV (2026-08-01, kart EDG-010, K=2): bağımsızlık GERÇEK (Jaccard ~0.02)
   ama kenar YOK — ham pozitiflik evren-tabanında kayboluyor (dip10 trend-evreninde anlamlı negatif);
   kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
-  G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · VCP-DECOMPOSE programı (katalog #30:
-  VCP = residual-mom + 52wh + hacim-primi + daralma bileşenlerine ayrıştır — 1.1/1.2/1.4
-  kartlarının çatı hipotezi).
+  G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · **VCP-DECOMPOSE ✅ ARŞİV (2026-08-01, EDG-015,
+  K=2): çatı da bilgisiz — üst-%20 kompozit @10 aday-havuzunun ANLAMLI ALTINDA; form=bileşen-toplamı
+  (ρ=0,95). WP-K'da ölçülmemiş hipotez KALMADI.** ⚠ İZLEME→ÖĞRENME: canlı skorun kesit-içi
+  sıralaması kısa ufukta kanıtsız/ters (rs-negatif bulgusuyla tutarlı) — knob kararı öğrenme
+  döngüsünün/operatörün; kanıt vcp_olcum'da.
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
 - **YENİ (EDG-010'dan, ders #3): ölçütler HAM getiri okuyamaz** — success/kill her zaman

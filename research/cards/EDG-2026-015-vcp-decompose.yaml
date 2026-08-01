@@ -27,6 +27,18 @@ kill_criteria:
   - "geçerli aday-gün < 2000 → askı (K harcanmaz)"
 guards:
   - "pozitif kontrol rvol20 @20 ≈0.0642 + PK4/PK5; temiz_taban (ders #4) earnings-penceresi kirliliği raporlanır (olcum_araclari.temiz_taban — İLK saha kullanımı)"
-k_registry: {registered_at: "2026-08-01T12:0xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T12:0xZ", trial_ids: [vcp_olcum/kompozit_ust20, vcp_olcum/kompozit_artik]}
+status: archived   # 2026-08-01 ~14:30 — kill#1: ÇATI DA BİLGİSİZ; WP-K açık-hipotez listesi KAPANDI.
+#   Üst-%20 kompozit dilimi aday-havuzu fazlası: @20 CI-0-içi; @10 −0,35% CI[−0,53,−0,01] —
+#   TAMAMEN NEGATİF (ders#2 şerhi: lafız "CI-içi", bulgu a-fortiori taşıyor VE fazlasını söylüyor:
+#   sıralama @10'da TERS işliyor). Artık katkı ölçülemez-dejenere: ρ(kompozit,bileşen-toplamı)=0,947
+#   — form üst uçta yeni sıralama üretmiyor; eşit-ağırlık toplam daha da negatif (@10 IC −0,046 vs
+#   −0,035: mevcut ağırlıklar kümenin kendisini hafif iyileştiriyor ama kesit-içi kenar YOK).
+#   PK5-A: canlı evaluate_entry gerçekten koşturuldu, yeniden-kurulan skor bit-bit özdeş (prox_max
+#   canlıdan 2.3 — kod varsayılanı değil); pozitif kontrol 0.0642 sapma 0.0000.
+#   STRATEJİK BULGU (öğrenme döngüsü/operatör bilgisi — elle knob değişikliği YOK): canlı kompozit
+#   skorun kesit-içi sıralaması kısa ufukta ADAY HAVUZUNUN ALTINDA; rs-negatif-IC bulgusuyla tutarlı.
+#   Skor, adayları eleme/eşikleme işlevi görüyor olabilir ama İÇ SIRALAMA değeri kanıtsız.
+#   temiz_taban İLK SAHA KULLANIMI: n_olaysiz_kimlik ayrımı yanlış-temiz okumayı önledi; kısmî-takvim
+#   sınırı araç-notu olarak kaydedildi. Kanıt: research/olcumler/vcp_olcum/.
 notes: "scratchpad/vcp_olcum/ SALT-ÖLÇÜM; karta ajan DOKUNMAZ."

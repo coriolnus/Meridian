@@ -1,0 +1,230 @@
+{
+ "olcum": "EDG-2026-015 — WP-K çatı hipotezi: VCP-DECOMPOSE",
+ "uretildi_utc": "2026-08-01T11:02:27.861769+00:00",
+ "repo_head": "a19008ebb16610b03f607c2adc5ba0354135c479",
+ "repo_dirty": true,
+ "python": "Python 3.12.7",
+ "kod_sha256": {
+  "olcum.py": "202492563ce7fc4efb5b07d1c78794dfa11708c4d3e14d8266b1fcbaaa08acfa",
+  "rapor.py": "8ed95340ee9734ce87acc999fd39eb073c880befaea714257022014bd790a761",
+  "damga.py": "aed07127fde4eb9f3a9f7adee3998a074a9167f41e1f941d989e7c02b40ebe06",
+  "kosum_sarmali.py": "3d697cd1554a16efdf49be1d1b9f2bdfdb4403073468b40eb6a4ebdea4cbf31a",
+  "probe.py": "806df10aac64b67e86f977f2d163a7b1d78b8f84c48be96df4feb73184700d52"
+ },
+ "cikti_sha256": {
+  "sonuc.json": "fdac4752c8255311639ac2f204bcc4f48f4497169fdb382519160579d48acd10",
+  "RAPOR.md": "7985df5faeab08d6e971f785c26c3c2cf114b07911e0b179aefb2ff652df4a46",
+  "aday_gunler.csv": "d4fa5465f13d8ddae77bfb50729c0c95b2629a3b30b8e55ba03046e908ae3a58",
+  "kosum_zemini.json": "c3e54dff05c946799a57d71e03514c98f2bb8e748f9283e08ff38ac76e8f86b0"
+ },
+ "girdi_sha256": {
+  "meridian/strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+  "meridian/component_ic.py": "a418b1aeecf15565aefcf9bcb6f3fc3ae194baeae8715b1b1ae691ea564f5660",
+  "meridian/indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+  "meridian/analytics.py": "63642036c0e9fe79e64001f01296faf91af41c210d9789068acf5b6f0726e151",
+  "meridian/adapters/data.py": "a34c8f2f5d1c32119d2f79ad0395e6abc07de6a643ebb861419899e9a808ce62",
+  "meridian/earnings.py": "dbed9833a64b38cfa0e4bca2e2bc663c7af90c4172ef1a7b85b1066f47b9757b",
+  "meridian/olcum_araclari.py": "5baeab2cc0c716bb31ad33381e5d1f8fcfd7a107b33356b509f042bf5d84c23c",
+  "meridian/config.py": "7be49132c6a1985c3d7a1fec0abb640ce7020392547ec26ccddad8e36f52be05",
+  "meridian/store.py": "9181bafe1e91d61ecbfc96e0b675257a9d06efbe91821d024befe27b59ba3e90",
+  "state/strategy.yaml": "9f3e4732315abe5200d03a31c790a9a84f2914df70c2521280224610c1123f79",
+  "state/earnings.csv": "caea1ef4c8acaa8b0fd2a2085da599fac7f92bde3f7cc0bdd7857dc90d69e71c",
+  "state/bars_integrity.json": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+  "state/counterfactuals.jsonl": "df479477d73c9f7998bebc368e505cb0ed77677c676719782b907199eb771f09",
+  "state/cf_open.json": "fea01ce5696cf8d593800d0e9cc9af25617b4a46338f701bbd0ade99f49a6189",
+  "state/component_ic.json": "07b82f55eb19d35e60a371dc64c954beb973f0b190b622c51d5a87c0d3ad9565",
+  "research/cards/EDG-2026-015-vcp-decompose.yaml": "65ceda5d0962acacfcfe84c8aa553c9b6624af22a1b8ade3013f9d62a3cf9c79"
+ },
+ "sablon_sha256": {
+  "inplay_olcum/olcum.py": "7db971a1c9fb4da16c651c8743dc445bb5f1c812f5cd4f5f40d20e78865eecd2",
+  "pullback_olcum/olcum.py": "42955783a2f7709dc49f59de2a54b41af124a4ecd1e2260eb3c1b9a54fdf0bfa",
+  "resmom_olcum/olcum.py": "cfb7ace671821f68ac590daf8b566cabb038b5223ecd758f015b553bd8a7a013"
+ },
+ "bar_onbellegi": {
+  "kaynak": "/Users/erdemozturk/AI-Trading/state/bars",
+  "dosya_sayisi": 259,
+  "birlesik_sha256": "91a3f76063e2eb64f992ec60dffea093b2fa03447521c7fca8f1f796245a619e",
+  "not": "canlı önbellek SALT-OKUNDU (config.BARS = state/bars); ölçüm hiçbir repo/state dosyasına YAZMADI — yazımlar sandbox/_state'te"
+ },
+ "sandbox_state_icerigi": [
+  "bars_integrity.json",
+  "earnings.csv",
+  "events.jsonl",
+  "strategy.yaml"
+ ],
+ "kosum_zemini_olculdu": {
+  "zemin_sabit_kaldi": true,
+  "kosum_sirasinda_degisen_dosya": [],
+  "kosum_basi_utc": "2026-08-01T11:01:19.971596+00:00",
+  "kosum_sonu_utc": "2026-08-01T11:02:27.634745+00:00",
+  "repo_head_basta": "a19008ebb16610b03f607c2adc5ba0354135c479",
+  "repo_head_sonda": "a19008ebb16610b03f607c2adc5ba0354135c479",
+  "izlenen_dosya_sayisi": 16,
+  "not": "ÖLÇÜLDÜ, varsayılmadı: ithal edilen dosyaların sha256'sı koşumdan önce ve sonra alındı. CANLI WORKER counterfactuals.jsonl'a satır ekleyebildiği için bu dosya da izlenen listededir.",
+  "ayrisma_sebebi": null,
+  "kosum_penceresi_commitleri": [],
+  "kosum_penceresi_degisen_dosyalar": []
+ },
+ "oturum_boyunca_repo_head": {
+  "oturum_basi": "8aaf05e",
+  "kosum_sonu": "a19008ebb16610b03f607c2adc5ba0354135c479",
+  "araya_giren_commitler": [
+   "a19008e H5: pano-kompozisyon testi mutasyon-dışı (ortam sınıfı #3) + ROADMAP WP2 hükümleri işlendi",
+   "12ac032 EDG-016 turnover ana-etkisi kartı — EDG-013'ün kaderini belirleyecek mekanizma ayrıştırması (K=2)",
+   "4c18f28 WP2 hükümleri: EDG-012 ARŞİV (yön ters+U-eğrisi) · EDG-013 YAŞAYAN-ADAY (mekanizma EDG-016'ya şartlı) · EDG-014 ARŞİV (bilgisiz)",
+   "db94dc7 H5: codelaw öz-denetim testi mutasyon koşumundan dışlandı (mutant-trampolinli ağaçta yapısal geçemez)",
+   "214a3f2 H5: yetki-sınırı test DOSYASI mutasyon koşumundan dışlandı (ortam-bağımlı subprocess yüzeyleri; suite'te yaşamaya devam)",
+   "2e9ae96 H5 öz-test kapısı: birebir-eşitlik yerine biçim-ölçümü (tests + izinli --deselect çiftleri)",
+   "dc40792 H5 ikinci kırık düzeltmesi: ortam-duyarlı test dışlaması + mutmut sessiz-yalan kapısı",
+   "319cadb Mutasyon ham logu versiyon dışına (koşan turun canlı log dosyasıydı — a94d425 süpürmesiyle girmişti)",
+   "299892a EDG-015 VCP-decompose kartı — WP-K çatı hipotezi, son ölçülmemiş soru (K=2; temiz_taban ilk saha kullanımı)",
+   "aaa7a40 WP-D kalan üçlü + PIT earnings arşivi indi",
+   "f43ed42 WP-M kalan borçlar indi: canlı-beklenti tavanı + temiz_taban standardı + EB küçültme",
+   "120aa74 ROADMAP: WP2 kilidi açıldı — 2.1 EDGAR'la çözüldü, üç aile ölçümde; operatör listesi küçüldü",
+   "a933399 WP2 ölçüm dalgası kartları: EDG-012 net-issuance + EDG-013 mom×turnover + EDG-014 gross profitability",
+   "d918576 EDGAR companyfacts PIT verisi repo'da — WP2 kilidi AÇILDI (operatörsüz)",
+   "9d49768 EDG-011 ASKI (kill#3, K harcanmadı) — kök neden: earnings takvimi PIT birikmiyor",
+   "8de825c EDG-011 in-play önceliklendirme kartı (G5; K=2, taban-fazlası + artımlılık şartlı — WP-M #3 uyumlu)",
+   "8b6bbbc bounds: emekli spy_sma_gate knob'u düşürüldü (yerel — A1 ile eşitlendi)",
+   "120a20e ROADMAP: kablo bileti kapandı + paralel dalga karar kaydı + rs-IC izleme notu",
+   "c783442 .gitignore ölü-negasyon düzeltmesi: state/ → state/* — goal.yaml + bounds.yaml artık GERÇEKTEN versiyonda",
+   "a3ee855 Temizlik turu: EDG-005 kapı emekliliği + component_ic aracı + mutmut fikstürü",
+   "ba7006b CLAUDE.md: ajan uçuştayken add -A yasağı (a94d425 dersi)",
+   "274da2d WIP: temizlik ajanı ara kayıt — haftalik_mutasyon.sh K3 fikstür düzeltmesi sürüyor",
+   "a94d425 EDG-010 pullback ARŞİV — lafzen-success/kanıten-kenarsız; ölçüt-kusuru itiraflı + WP-M ders #3",
+   "2d4cbf4 EDG-010 pullback kurulumu ön-kayıt kartı (G4; K=2, bağımsızlık şartı Jaccard<0.3)",
+   "bbe8082 dagit.sh: doğrulama healthz portu 8000→8080 (dünkü '000' vakasının kökü) + [3] karar notu sadeleşti",
+   "ad9ffe8 dagit.sh [3]: A1'e dev-grubu kurulumu daraltıldı (--no-dev)",
+   "9db5063 dagit.sh: rsync dışlamalarına .claude/.hypothesis/mutants/.pytest_cache"
+  ],
+  "kritik_yollarda_degisiklik": [
+   "meridian/adapters/data.py",
+   "meridian/analytics.py",
+   "meridian/component_ic.py",
+   "meridian/earnings.py",
+   "meridian/olcum_araclari.py",
+   "research/cards/EDG-2026-015-vcp-decompose.yaml"
+  ],
+  "olcum_etkilendi_mi": true,
+  "not": "Rol-1 ölçüm sırasında commit atabilir (kalıcı yetki). Etkilenme, KOŞUM PENCERESİ sha'larıyla ayrıca ölçülmüştür (kosum_zemini_olculdu)."
+ },
+ "calisma_agaci_kirliligi": {
+  "kural": "ölçümün İTHAL ETTİĞİ dosyalar koşum penceresinde değişmiş olabilir mi?",
+  "kirli_dosyalar": [
+   {
+    "yol": "docs/mutasyon/2026-08-01.md",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:59:35.469794+00:00"
+   },
+   {
+    "yol": "docs/olcum_standartlari.md",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:56:03.471359+00:00"
+   },
+   {
+    "yol": "meridian/earnings.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:42:15.286480+00:00"
+   },
+   {
+    "yol": "meridian/scheduler.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:42:29.520049+00:00"
+   },
+   {
+    "yol": "meridian/web/app.js",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:57:02.891481+00:00"
+   },
+   {
+    "yol": "tests/test_edge_dashboard_v102.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:47:13.756505+00:00"
+   },
+   {
+    "yol": "tests/test_pano_turu_v139.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:49:34.166060+00:00"
+   },
+   {
+    "yol": "tests/test_wpd_kalanlar_v147.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T10:43:19.084965+00:00"
+   }
+  ],
+  "olcumun_bagimli_oldugu_dosyalar": {
+   "meridian/strategy.py": {
+    "mtime_utc": "2026-07-29T23:44:14.519614+00:00",
+    "git_kirli": false
+   },
+   "meridian/component_ic.py": {
+    "mtime_utc": "2026-08-01T10:06:37.270272+00:00",
+    "git_kirli": false
+   },
+   "meridian/indicators.py": {
+    "mtime_utc": "2026-07-29T18:42:42.316841+00:00",
+    "git_kirli": false
+   },
+   "meridian/analytics.py": {
+    "mtime_utc": "2026-08-01T10:20:15.559583+00:00",
+    "git_kirli": false
+   },
+   "meridian/adapters/data.py": {
+    "mtime_utc": "2026-08-01T10:06:23.392203+00:00",
+    "git_kirli": false
+   },
+   "meridian/earnings.py": {
+    "mtime_utc": "2026-08-01T10:42:15.286480+00:00",
+    "git_kirli": true
+   },
+   "meridian/olcum_araclari.py": {
+    "mtime_utc": "2026-08-01T10:08:27.369297+00:00",
+    "git_kirli": false
+   },
+   "meridian/config.py": {
+    "mtime_utc": "2026-08-01T10:08:23.470723+00:00",
+    "git_kirli": false
+   },
+   "meridian/store.py": {
+    "mtime_utc": "2026-07-31T07:20:50.560398+00:00",
+    "git_kirli": false
+   },
+   "state/strategy.yaml": {
+    "mtime_utc": "2026-07-28T06:55:36.707711+00:00",
+    "git_kirli": false
+   },
+   "state/earnings.csv": {
+    "mtime_utc": "2026-07-29T22:10:30.875123+00:00",
+    "git_kirli": false
+   },
+   "state/bars_integrity.json": {
+    "mtime_utc": "2026-07-31T07:19:54.665058+00:00",
+    "git_kirli": false
+   },
+   "state/counterfactuals.jsonl": {
+    "mtime_utc": "2026-07-29T21:09:57.113081+00:00",
+    "git_kirli": false
+   },
+   "state/cf_open.json": {
+    "mtime_utc": "2026-07-29T21:10:00.215837+00:00",
+    "git_kirli": false
+   },
+   "state/component_ic.json": {
+    "mtime_utc": "2026-07-29T21:10:07.247128+00:00",
+    "git_kirli": false
+   },
+   "research/cards/EDG-2026-015-vcp-decompose.yaml": {
+    "mtime_utc": "2026-08-01T10:37:46.282687+00:00",
+    "git_kirli": false
+   }
+  }
+ },
+ "pycache_notu": "Python import'u repo'da `meridian/__pycache__/*.pyc` üretir/yeniler. Bu, ölçümün repoda bıraktığı TEK izdir; versiyonlanmayan bytecode önbelleğidir, kaynak dosya değiştirilmemiştir.",
+ "sablon_devralma": "olcum.py'nin bar yükleme / aday popülasyonu / blok-bootstrap / aynı-gün havuz tabanı / pozitif kontrol / PK4 bölümleri inplay_olcum/olcum.py'den (o da pullback_olcum'dan) devralındı; ÇİFT SIRALAMA (slice_compare + kova-içi havuzlanmış fark + block_boot'lu _pooled) resmom_olcum/olcum.py (EDG-007) şablonundan devralındı. YENİ olanlar: kompozit skorun canlı fonksiyondan yeniden kurulması, bilesen_toplami (eşit-ağırlık z), artık-IC ve PK5-A (evaluate_entry'nin KENDİSİYLE skor özdeşliği).",
+ "kart_dokunulmadi": {
+  "kart_yolu": "research/cards/EDG-2026-015-vcp-decompose.yaml",
+  "sha256": "65ceda5d0962acacfcfe84c8aa553c9b6624af22a1b8ade3013f9d62a3cf9c79",
+  "git_kirli": false,
+  "not": "ölçüm ajanı karta DOKUNMAZ; hükmü Rol-1 işler"
+ }
+}
