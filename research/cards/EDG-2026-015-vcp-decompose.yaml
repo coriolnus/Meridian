@@ -1,0 +1,32 @@
+card_id: EDG-2026-015
+family: vcp_decompose   # WP-K çatı hipotezi — programın SON ölçülmemiş sorusu
+thesis: >
+  VCP/kırılma bileşik skorunun bileşen-aileleri TEK TEK arşivlendi (residmom≈rawmom EDG-007,
+  52wh EDG-001, volshock EDG-002; ham rvol20 tek anlamlı iz). Çatı sorusu: BİLEŞİK skor (canlı
+  skor fonksiyonunun gerçek formu/ağırlıkları) bileşenlerin basit toplamının ÖTESİNDE artımlı
+  bilgi taşıyor mu? Taşımıyorsa "form katkısız — skor, bileşenlerinin toplamıdır" hükmüyle
+  WP-K'nın açık hipotez listesi SIFIRLANIR.
+evidence_refs: [EDG-001/002/007 arşiv hükümleri, component_ic defteri (rs cf/havuz NEGATİF izleme
+  notu dahil), ROADMAP WP-K/VCP-DECOMPOSE, canlı skor fonksiyonu (repo — ağırlıklar oradan)]
+universe: "cf-katmanlı aday popülasyonu (girilen+kılpayı) — kompozit skorun gerçekten uygulandığı kesit"
+features_asof: >
+  kompozit(t) = canlı skor fonksiyonunun bileşen-ağırlıklı değeri (repodan BİREBİR — yeniden icat
+  yok; hangi fonksiyon/ağırlıklar kullanıldığı beyan edilir); bilesen_toplami(t) = aynı bileşenlerin
+  eşit-ağırlık z-skor ortalaması (form-suz taban). Takvim-kapılı + bars_integrity dışlamalı.
+horizon: "kesit dilim: aday-gün paneli; ileri getiri 10/20g; taban = aynı-gün aday-havuzu (ders #3); 21g blok CI"
+parameter_grid:
+  katman: [kompozit_ust20, kompozit_artik]   # dilim + artık-katkı — K+=2
+cost_model: "10bps + not"
+success_metric: >
+  kompozit-üst-dilim aday-havuzu-fazlası @10 VEYA @20 anlamlı POZİTİF VE artık-katkı anlamlı:
+  kompozit, bilesen_toplami kontrol edildikten sonra da bilgi taşıyor (çift-sıralama VEYA
+  artık-IC; EDG-007 şablonu).
+kill_criteria:
+  - "dilim fazlası CI-0-içi → çatı da bilgisiz; WP-K açık-hipotez listesi kapanır (arşiv)"
+  - "dilim pozitif AMA artık yok → 'form katkısız: skor=bileşen toplamı' arşiv + skor-sadeleştirme notu operatöre"
+  - "geçerli aday-gün < 2000 → askı (K harcanmaz)"
+guards:
+  - "pozitif kontrol rvol20 @20 ≈0.0642 + PK4/PK5; temiz_taban (ders #4) earnings-penceresi kirliliği raporlanır (olcum_araclari.temiz_taban — İLK saha kullanımı)"
+k_registry: {registered_at: "2026-08-01T12:0xZ", trial_ids: [pending]}
+status: registered
+notes: "scratchpad/vcp_olcum/ SALT-ÖLÇÜM; karta ajan DOKUNMAZ."
