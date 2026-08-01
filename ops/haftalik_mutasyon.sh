@@ -64,6 +64,7 @@ if set(sadece) != beklenen:
 # kırılıyordu — 8 koşumluk kovalamaca). Kapı biçimi ölçer, listeyi ezberlemez: boş olmayan,
 # yalnız tests/*.py öğeleri; her dosya GERÇEKTEN var olmalı (silinen test sessizce seçim
 # daraltmasın).
+from pathlib import Path  # aşağıdaki fikstür bloğu da kullanır; ilk kullanım burada
 if not testler:
     hata.append("test seçimi BOŞ — mutasyon hiçbir şeyi ölçmez")
 for o in testler:
