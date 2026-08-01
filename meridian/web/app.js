@@ -1285,6 +1285,98 @@ setInterval(pollHUD, 20000); pollHUD();
 // =============================== OPERASYON — teşhis paneli ===============================
 // Faz 2: /api/diagnostics tek ucundan beslenir. Her satır CANLI; veri yoksa dürüstçe "yok" der.
 function _chip(txt, cls) { return `<span class="tag ${cls}">${esc(txt)}</span>`; }
+
+// ---- BELİRSİZLİK KODLAMASI (WP-P/P5, 2026-08-01) ---------------------------------------------
+// KUSUR SINIFI: bu panoda ONARILMIŞ/SİMÜLE bir hücre ile ölçülmüş bir hücre AYNI mürekkeple
+// yazılıyordu. Köken bilgisi vardı (künye `_kaynak`, `n_cf`, `sadakat` şerhleri) ama METİN olarak,
+// hücrenin YANINDA değil ALTINDA ya da bir paragraf uzağında. Okuyucu iki sayıyı yan yana gördüğü
+// anda ikisine aynı ağırlığı veriyordu — Sarma/Kay'in "belirsizliği gösterimin İÇİNE göm" kuralının
+// tam tersi.
+//
+// RENK KULLANILMAZ ve bu bir kısıt değil bir hüküm: renk bu panoda ÖLÇÜMÜN kanalı (Money Rule).
+// Belirsizlik ölçüm değil, ölçümün KÖKENİ hakkında bir şerhtir. Kesikli alt çizgi ayrı bir kanal,
+// tek kalınlıkta ve renk körü okuyucuda da çalışıyor.
+//
+// BEYAN ZORUNLU: `title` olmadan kesik çizgi bir süstür. Beyanı çağıran yazar, çünkü hücrenin
+// neden belirsiz olduğunu YALNIZ çağıran bilir (sim dilim mi, onarılmış bar mı, havuz mu).
+function belirsiz(icerik, beyan) {
+  return `<span class="belirsiz" title="${esc(beyan)}">${icerik}</span>`;
+}
+
+// ---- BAYATLIK SOLMASI (WP-P/P5) --------------------------------------------------------------
+// ÜÇ KADEME, EŞİKLER BURADA VE TEK YERDE. Opaklık NİCELİK TAŞIMAZ: "%58 opak = 4 gün eski" diye
+// bir okuma yoktur ve olmamalı — solma yalnız "bu satır eskiyor" der, YAŞIN KENDİSİ metin olarak
+// zaten yazılı (tarih hücrede duruyor). Sayı hiçbir kademede gizlenmez ve değişmez.
+// GÜN SINIRLARI: 1 gün = önceki seans (hafta sonu normaldir) · 3 gün = uzun hafta sonu sınırı ·
+// 7 gün = bir haftadır bar gelmiyor. Aynı takvim gerçekçiliği watchdog.EXPECTED'de de var.
+const BAYAT_ESIK_GUN = [1, 3, 7];
+function bayatSinif(tarih, referans) {
+  if (!tarih || !referans) return "";           // ölçülemeyen bayatlık SOLDURULMAZ (uydurma yasağı)
+  const t = Date.parse(String(tarih)), r = Date.parse(String(referans));
+  if (!Number.isFinite(t) || !Number.isFinite(r)) return "";
+  const gun = (r - t) / 86400000;
+  if (gun < BAYAT_ESIK_GUN[0]) return "";
+  if (gun < BAYAT_ESIK_GUN[1]) return " bayat-1";
+  if (gun < BAYAT_ESIK_GUN[2]) return " bayat-2";
+  return " bayat-3";
+}
+
+// ---- SESSİZ HAT (WP-P/P1, 2026-08-01) --------------------------------------------------------
+// LEVEL-1 TOPLAMA. Üç sağlık yüzeyi (bekçi · kilit · tazelik) bu turdan önce ÜÇ AYRI yerde ve
+// SAĞLIKLIYKEN DE konuşuyordu: HUD'da bekçi rozeti, statuspill'de nabız, Bölüm 1'de akış satırı.
+// Sürekli konuşan bir gösterge sapma anında ses değiştiremez — toplama, alarm yorgunluğuna karşı
+// kurulmuş tek yapısal savunmadır (ISA-101/HP-HMI Level-1; klinik alarm literatürüyle aynı bulgu).
+//
+// HÜKÜM PANODA KURULMAZ: hangi segmentin saplandığı, sapmanın SÜRESİ ve runbook ipucu sunucudan
+// (`api._sessiz_hat`) gelir. Burada ikinci bir eşik hesabı olsaydı aynı gerçeğin iki metni doğardı
+// ve biri sessizce bayatlardı — bu deponun tekrar eden kusur sınıfı.
+//
+// AÇILIMDA TAVAN VAR (4 satır): 11 bekçi birden geciktiğinde şerit bir listeye dönüşür ve Level-1
+// olmaktan çıkar. Kalan sayı YAZILIR ("+7 daha") — kırpma sessiz olamaz.
+const SH_ACILIM_TAVAN = 4;
+function sessizHat(sh) {
+  if (!sh) return "";
+  const segler = (sh.segmentler || []).map(s => {
+    if (s.saglikli) return `<span class="sh-seg">${esc(s.ad)} <b>${esc(s.ozet ?? "—")}</b></span>`;
+    const kalan = (s.n_sapma ?? 0) - (s.sapmalar || []).length;
+    const satirlar = (s.sapmalar || []).slice(0, SH_ACILIM_TAVAN).map(x =>
+      `<span class="sh-row"><b>${esc(x.ad ?? "?")}</b>${
+        x.sure ? ` <span class="sh-sure">${esc(x.sure)}</span>` : ""}${
+        x.detay ? ` <span class="sh-ip">· ${esc(x.detay)}</span>` : ""}${
+        x.ipucu ? ` <span class="sh-ip">· ${esc(x.ipucu)}</span>` : ""}</span>`).join("");
+    return `<span class="sh-seg sh-sap${s.kritik ? " kritik" : ""}">${esc(s.ad)} <b>${esc(s.ozet ?? "—")}</b>
+      <span class="sh-ac">${satirlar}${kalan > 0
+        ? `<span class="sh-fazla">+${kalan} daha — tam liste bu kartın kendi bölümünde</span>` : ""}</span></span>`;
+  });
+  // AYIRICI YALNIZ SAĞLIKLI ŞERİTTE: sapan segment kendi bloğunu açtığı için nokta ayırıcı
+  // satırın ortasında öksüz kalırdı.
+  const govde = sh.saglikli ? segler.join('<span class="sh-sep">·</span>') : segler.join(" ");
+  // ARIA-LIVE DAR TUTULUR (ROADMAP §WP-P kararı: yalnız kritik alarm/kilit). Sağlıklı şerit
+  // `role="status"` TAŞIMAZ — her yeniden çizimde "bekçiler 17/17" diye duyurulan bir satır,
+  // görsel tarafta kapatılan gürültünün işitsel kopyası olurdu. Sapma varsa duyurulur.
+  return `<div class="sessizhat${sh.saglikli ? " ok" : " sap"}"${
+    sh.saglikli ? "" : ' role="status"'} aria-label="${esc(sh.satir || "")}">${govde}</div>`;
+}
+
+// ---- ALARM BÜTÇESİ (WP-P/P2) -----------------------------------------------------------------
+// EEMUA 191 merceği: üretim HIZI da bir ölçüttür. TON KURALI — uyarı rengi YALNIZ ölçülen bir
+// tavan aşıldığında (tepe/10dk ya da duran alarm). Dağılım hedefi (80/15/5) ton TAŞIMAZ: bu
+// sistem üç dilimden birini (emergency) üretemiyor, yani hedefe göre "aşım" hükmü kurulamaz.
+// Kurulsaydı ölçülemeyen bir şey hakkında hüküm olurdu.
+function alarmButce(ab) {
+  if (!ab) return "";
+  const d = ab.dagilim || {}, t = ab.tepe_10dk, y = ab.yas_s;
+  const tepeAsim = (ab.asim || {}).tepe, duranAsim = (ab.asim || {}).duran;
+  // ROLE YOK: bu bir KPI, bir olay değil. Duyurulacak bir şey olduğunda onu sessiz hat söyler.
+  return `<div class="alarmbutce${ab.asim_var ? " asim" : ""}">
+    alarm bütçesi · son 24 sa: <b>${d.low ?? "—"}</b> low · <b>${d.high ?? "—"}</b> high ·
+    <span class="ab-not">acil ölçülemez (üretici yok)</span> —
+    tepe <b>${t ?? "—"}</b>/10dk ${tepeAsim ? "▲" : ""}<span class="ab-not">(tavan ${ab.tavan_10dk ?? "—"})</span> ·
+    duran <b>${ab.duran ?? "—"}</b> ${duranAsim ? "▲" : ""}<span class="ab-not">(tavan ${ab.tavan_duran ?? "—"})</span>${
+      ab.damgasiz ? ` · <span class="ab-not">${ab.damgasiz} damgasız satır sayıma girmedi</span>` : ""}${
+      y ? ` · <span class="ab-not">${Math.round(y)} sn önce hesaplandı</span>` : ""}
+    ${ab.asim_var ? `<span class="ab-not" style="display:block">${esc((ab.duran_beyan || ""))}</span>` : ""}</div>`;
+}
 function _bar(pct, color) {
   const w = Math.max(0, Math.min(100, pct));
   return `<div class="bar"><i style="width:${w}%${color ? `;background:var(--${color})` : ""}"></i></div>`;
@@ -1415,19 +1507,65 @@ function _bullet(o) {
     ? `<line x1="${X(o.hedef).toFixed(1)}" y1="1" x2="${X(o.hedef).toFixed(1)}" y2="${H - 1}"
         stroke="var(--tx)" stroke-width="2"/>` : "";
 
+  // NİCEL EKSEN AÇIKÇA ÇİZİLİR (WP-P/P3, 2026-08-01). Few'nun 2. bileşeni "tek lineer NİCEL
+  // eksen"dir ve nicel olması ölçek İŞARETLERİYLE kurulur. Bant sınırları uzunluğu okunabilir
+  // kılıyordu ama sayısal ızgara yoktu: bar "üçte iki civarı" diye okunuyordu, "0-100 ekseninde
+  // 66" diye değil. Çentikler eksenin ALTINDA ve saç teli — data-ink kuralı gereği bunlar
+  // gösterimin en sönük mürekkebidir ve barla YARIŞMAZ.
+  // Çentik konumları BANTLARDAN türetilir, ayrıca uydurulmaz: ikinci bir ölçek tanımı olsaydı
+  // bantlarla çentikler ayrışabilir ve eksen kendi kendisiyle çelişirdi.
+  // ÇENTİKLER SAÇ TELİ TONUNDA (--line-2, gündüz 1.47 · gece 1.83 zemine karşı) ve bu BEYANLI bir
+  // sapmadır: WCAG 2.2 1.4.11'in 3:1 metin-dışı eşiğinin altındadırlar. Gerekçe, bu dosyanın saç
+  // teli jetonları için zaten yazılı olan gerekçenin aynısı — çentikler ZORUNLU BİLGİ TAŞIMAZ,
+  // bant merdiveni ve sağdaki sayısal okuma aynı ölçeği tek başlarına veriyor. Ölçeği erişilebilir
+  // kılan şey çentikler değil, ALTLARINDAKİ İKİ UÇ ETİKETİdir (--tx2, gündüz 6.91 · gece 6.72).
+  const centik = [0, ...bantlar].map(b => {
+    const x = Math.min(1, b) * W;
+    return `<line x1="${x.toFixed(1)}" y1="${H - 1}" x2="${x.toFixed(1)}" y2="${H + 2.5}"
+      stroke="var(--line-2)" stroke-width="1"/>`;
+  }).join("");
+  // UÇ ETİKETLERİ — ekseni "nicel" yapan şey. Bunlar olmadan bar "üçte iki civarı" diye okunuyordu,
+  // "0-100 ekseninde 66" diye değil. Ölçek metriğin KENDİSİNDEN gelir (max), veriden değil: bar
+  // çizilmemiş olsa bile eksen aynı yerde durur (boş-hâl sözleşmesi).
+  // BİÇİM CSS'TE (`.bl-ax`), ÖZNİTELİKTE DEĞİL: `font-family="var(--mono)"` bir sunum
+  // özniteliğinde güvenilir değil (fill/stroke'ta çalışıyor olması onu genellemez).
+  const ucEtiket = `<text class="bl-ax" x="0" y="${H + 10}">0</text>
+    <text class="bl-ax" x="${W}" y="${H + 10}" text-anchor="end">${
+      esc(o.olcek_ust != null ? o.olcek_ust : trn(max, 0))}</text>`;
+
+  // MİNİ TREND — YALNIZ GERÇEK SERİ VARSA. `o.seri` verilmezse hiçbir şey çizilmez ve YERİ DE
+  // TUTULMAZ: boş bir sparkline kutusu "trend ölçtük, düz çıktı" diye okunur — ölçülmemiş bir
+  // şey için bu bir uydurmadır (bu dosyanın boş-hâl sözleşmesinin aynısı).
+  // ≥2 NOKTA ŞARTI: tek noktalı bir "trend" bir trend değildir.
+  const seri = (o.seri || []).map(Number).filter(Number.isFinite);
+  let trendSvg = "";
+  if (seri.length >= 2) {
+    const TW = 54, TH = 14;
+    const lo = Math.min(...seri), hi = Math.max(...seri), acik = (hi - lo) || 1;
+    const pts = seri.map((s, i) =>
+      `${(i * TW / (seri.length - 1)).toFixed(1)},${(TH - 1 - ((s - lo) / acik) * (TH - 2)).toFixed(1)}`
+    ).join(" ");
+    trendSvg = `<svg class="bl-spark" viewBox="0 0 ${TW} ${TH}" width="${TW}" height="${TH}"
+      role="img" aria-label="son ${seri.length} ölçüm: ${trn(seri[0], 1)} → ${trn(seri[seri.length - 1], 1)}"
+      preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="var(--tx2)"
+      stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+
   const okuma = olculdu ? (o.metin != null ? o.metin : trn(v, 0)) : "—";
   const sesli = `${o.etiket}: ${olculdu ? okuma : "ölçüm yok"}`
-    + (o.hedef != null ? `, karşılaştırma ${o.hedef}` : "");
+    + (o.hedef != null ? `, karşılaştırma ${o.hedef}` : "")
+    + (seri.length >= 2 ? `, son ${seri.length} ölçümün eğilimi` : "");
 
   // Etiket `.slabel` DEĞİL: o sınıf kutulu bir bölüm çipidir (kenar + tint dolgu) ve her
   // bullet'ı bir kontrol gibi gösteriyordu. Burada gereken çıplak mikro-etiket.
   return `<div class="bullet">
     <p class="bl-lab">${esc(o.etiket)}</p>
     <div class="bl-row">
-      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(sesli)}"
-        preserveAspectRatio="none">${iz}${bar}${hedef}</svg>
+      <svg viewBox="0 0 ${W} ${H + 12}" width="${W}" height="${H + 12}" role="img" aria-label="${esc(sesli)}"
+        preserveAspectRatio="none">${iz}${bar}${hedef}${centik}${ucEtiket}</svg>
       <b class="bl-val mono-num${olculdu ? "" : " mut"}">${esc(okuma)}</b>
     </div>
+    ${trendSvg ? `<div class="bl-trend">${trendSvg}<span class="bl-trend-lab">son ${seri.length}</span></div>` : ""}
     ${olculdu ? "" : `<p class="bl-yok">ölçüm yok</p>`}
   </div>`;
 }
@@ -1645,7 +1783,8 @@ function mktPaint() {
       <span class="tick">${esc(r.ticker)}${r.source !== "bars" ? `<br><span class="mut" style="font-size:10px;font-weight:400">${esc(r.source)}</span>` : ""}${
         r.retired ? `<br><span class="mut" style="font-size:10px;font-weight:400">emekli</span>` : ""}</span>
       <span>${mktSpark(r.spark)}</span>
-      <span class="mono-num">${r.close == null ? '<span class="mut">—</span>' : money(r.close)}<br>
+      <span class="mono-num${bayat ? bayatSinif(r.last_date, _MKT.as_of) : ""}">${
+        r.close == null ? '<span class="mut">—</span>' : money(r.close)}<br>
         <span class="${bayat ? "warn" : "mut"}" style="font-size:10px">${esc(r.last_date || "bar yok")}</span></span>
       <span class="mono-num">${r.intraday_close == null ? '<span class="mut">—</span>'
         : `${money(r.intraday_close)}<br><span class="mut" style="font-size:10px">${esc(mktSaat(r.intraday_ts))}</span>`}</span>
@@ -1883,12 +2022,19 @@ RENDER.operasyon = async () => {
       <div>
         <div class="gaugewrap">${_bullet({
           deger: ml.deflate ? ml.deflate.avg_deflation_pct : null,
-          max: 100, etiket: "deflasyon", renk: "amber",
+          // ÖLÇEĞİN ÜST UCU BİRİMİYLE YAZILIR: çıplak "100" bir yüzde ekseninde birimsiz kalırdı
+          // ve okuma ("%42,1") ile eksen farklı iki dilde konuşurdu.
+          max: 100, olcek_ust: "%100", etiket: "deflasyon", renk: "amber",
           metin: ml.deflate ? "%" + trn(ml.deflate.avg_deflation_pct, 1) : null,
           // HEDEF YOK ve UYDURULMUYOR: deflasyonun "olması gereken" bir değeri tanımlı değil.
           // Karşılaştırma çizgisi çizmek, var olmayan bir eşiği varmış gibi göstermek olurdu.
           // Bantlar yalnız ölçeği okunur kılar (üçte bir dilimler), bir hüküm taşımaz.
-          bantlar: [1 / 3, 2 / 3, 1]})}
+          bantlar: [1 / 3, 2 / 3, 1],
+          // MİNİ TREND GERÇEK SERİDEN (WP-P/P3): `analytics.deflate_stats` ship BAŞINA
+          // `deflation_pct` taşıyor (`last`, son 8 kayıt, defter sırasında) ve bugüne dek
+          // panoda hiç okunmuyordu — ortalama tek başına "arama iyimserliği artıyor mu
+          // azalıyor mu" sorusunu cevaplayamaz. Seri YOKSA sparkline ÇİZİLMEZ (bkz. _bullet).
+          seri: (ml.deflate && ml.deflate.last || []).map(r => r.deflation_pct)})}
           <span class="cap"><b>Model aşırı-güven sayacı</b><br>${ml.deflate
             ? `arama iyimserliğinin ort. %${trn(ml.deflate.avg_deflation_pct, 1)}'i onay yürüyüşünde törpülendi (${ml.deflate.n} ship)`
             : (() => {
@@ -2000,10 +2146,18 @@ RENDER.operasyon = async () => {
         : (nr < 30 ? `ölçülmedi — gerçek dilim &lt;30 (n_real=${nr}); defter doluyor`
                    : `ölçülmedi — n_real=${nr} yeterli ama ayrık dilim yok: rütbe değişimi olmadı ya da kalibrasyon dosyası ayrıştırmadan ÖNCE yazılmış (bayat)`)}</b></div>
       <div class="srow"><span>cf dilim IC ${_chip("sim", "t-rv")}</span><b class="${cf3 ? "mut" : "mut"}">${cf3
-        ? `${trn(cf3.rank_ic, 4)} · n=${cf3.n}` : "ölçülmedi"}</b></div>
+        ? `${belirsiz(trn(cf3.rank_ic, 4), "SİM KÖKENLİ: bu IC karşı-olgusal (alınmamış) girişlerin "
+            + "simüle sonuçlarından hesaplandı — canlı çıkış yasasının yalnız bir kısmı simüle edilir. "
+            + "Kesik alt çizgi bunu söyler: bağlam, kanıt değil."
+            + (cf3.sadakat ? ` Sadakat: ${cf3.sadakat}` : ""))} · n=${cf3.n}` : "ölçülmedi"}</b></div>
       ${cf3 && cf3.sadakat ? `<p class="hint" style="margin:-2px 0 6px">Sim dilimin sadakati: ${esc(cf3.sadakat)}.
         Bu satır <b>bağlamdır, kanıt değildir</b> — hüküm yalnız gerçek dilimden çıkar.</p>` : ""}
-      <div class="srow"><span>Havuzlanmış IC ${_chip("karışım", "t-rv")}</span><b>${sc2.rank_ic != null ? trn(sc2.rank_ic, 4) : "ölçülmedi"}
+      <div class="srow"><span>Havuzlanmış IC ${_chip("karışım", "t-rv")}</span><b>${sc2.rank_ic != null
+        ? belirsiz(trn(sc2.rank_ic, 4),
+            `KARIŞIK KÖKEN: ${sc2.n_real ?? 0} gerçek + ${sc2.n_cf ?? 0} sim satır tek sayıya `
+            + "havuzlandı ve sim tarafı paydayı domine ediyor. Hüküm YALNIZ gerçek dilimden çıkar; "
+            + "bu satır bağlamdır.")
+        : "ölçülmedi"}
         <span class="mut">(sim ağırlıklı, ${sc2.n_real ?? 0} gerçek / ${sc2.n_cf ?? 0} sim)</span></b></div>`;
   })();
 
@@ -2033,7 +2187,7 @@ RENDER.operasyon = async () => {
     const ebKatman = lay => (((cic.eb || {}).katmanlar || {})[lay] || {}).hucreler || null;
     const hucre = (tbl, c, h, lay) => {
       const cell = ((tbl[c] || {})[String(h)]) || {};
-      if (cell.ic == null) return `<span class="mono-num mut">— <span style="font-size:10px">(${esc(cell.neden || "ölçülmedi")})</span></span>`;
+      if (cell.ic == null) return `<span class="mono-num num mut">— <span style="font-size:10px">(${esc(cell.neden || "ölçülmedi")})</span></span>`;
       const ci = cell.ci;
       const ebh = (ebKatman(lay) || {})[`${c}@${h}`];
       // `eb_ic` null olabilir (hücre küçültülemedi) — o zaman ikiz satırı da düşer.
@@ -2041,7 +2195,7 @@ RENDER.operasyon = async () => {
         ? `<span class="mut" style="font-size:10px;display:block">EB ${(ebh.eb_ic > 0 ? "+" : "") + trn(ebh.eb_ic, 3)}${
             ebh.shrink_katsayisi != null ? ` · w=${trn(ebh.shrink_katsayisi, 2)}` : ""}</span>`
         : "";
-      return `<span class="mono-num ${cell.anlamli ? cls(cell.ic) : "mut"}">${(cell.ic > 0 ? "+" : "") + trn(cell.ic, 3)}
+      return `<span class="mono-num num ${cell.anlamli ? cls(cell.ic) : "mut"}">${(cell.ic > 0 ? "+" : "") + trn(cell.ic, 3)}
         ${ci ? `<span class="mut" style="font-size:10px">[${trn(ci.lo, 2)},${trn(ci.hi, 2)}]</span>` : ""}${ebYazi}</span>`;
     };
     const satir = (lay, c, etiket) => {
@@ -2050,7 +2204,7 @@ RENDER.operasyon = async () => {
       return `<div class="trow" style="${kolonlar}">
         <span class="tick">${esc(c)}</span>
         <span>${etiket}</span>
-        <span class="mono-num mut">n=${n0 ?? "—"}</span>${hz.map(h => hucre(tbl, c, h, lay)).join("")}
+        <span class="mono-num num mut">n=${n0 ?? "—"}</span>${hz.map(h => hucre(tbl, c, h, lay)).join("")}
         </div>`; };
     // EB ÖZET SATIRI — DIŞ OKUYUCUDAN (YASA 6). Hücrelerdeki ikizler tablonun KENDİ `eb` bloğundan
     // geliyor; bu satır ise `analytics.shrunk_component_ic().tablo_ici_eb` okuyucusundan gelir ve
@@ -2081,7 +2235,7 @@ RENDER.operasyon = async () => {
     // simülasyonundan DEĞİL, barlardan gelir — cf'ten alınan tek şey giriş anıdır. Bu yüzden n≈2100
     // burada kullanılabilir; ama satırlar gerçek katmanla AYNI KEFEYE konmaz, altında ve etiketli durur.
     return `<div class="tbl"><div class="trow head" style="${kolonlar}">
-        <span>BİLEŞEN</span><span>KATMAN</span><span>ÖRNEKLEM</span>${hz.map(h => `<span>${h} BAR</span>`).join("")}</div>
+        <span>BİLEŞEN</span><span>KATMAN</span><span class="num">ÖRNEKLEM</span>${hz.map(h => `<span class="num">${h} BAR</span>`).join("")}</div>
       ${komp.map(c => satir("gercek", c, _chip("gerçek", "t-go"))).join("")}
       ${komp.map(c => satir("cf", c, _chip("sim", "t-rv"))).join("")}</div>
       <p class="hint" style="margin-top:8px">İleri getiri: <code>${esc(cic.getiri_tanimi || "")}</code> ·
@@ -2101,8 +2255,8 @@ RENDER.operasyon = async () => {
     .sort((a, b) => (b[1].n || 0) - (a[1].n || 0))
     .map(([k, v]) => `<div class="trow" style="grid-template-columns:130px 64px 84px 1fr">
       <span class="tick">${esc(REGIME_TR[k] || k)}</span>
-      <span class="mono-num">n=${v.n ?? 0}</span>
-      <span class="mono-num ${cls(v.avg_r)}">${v.avg_r != null ? (v.avg_r > 0 ? "+" : "") + trn(v.avg_r, 3) + "R" : "—"}</span>
+      <span class="mono-num num">n=${v.n ?? 0}</span>
+      <span class="mono-num num ${cls(v.avg_r)}">${v.avg_r != null ? (v.avg_r > 0 ? "+" : "") + trn(v.avg_r, 3) + "R" : "—"}</span>
       <span class="chain">kazanç ${v.win_rate != null ? pctf(v.win_rate, 1) : "—"}${(v.n ?? 0) < 20
         ? ' · <span class="warn">ince örneklem (n&lt;20 — yön okunmaz)</span>' : ""}</span></div>`).join("");
   const reKaynak = (re3._kaynak || {}).source;
@@ -2187,7 +2341,7 @@ RENDER.operasyon = async () => {
       : "ölçülmedi — ilk terminal hipotez bekleniyor (tahmin VE gerçekleşen birlikte gerekir)"}</b></div>
     <h3 class="t" style="margin-top:16px">4 · Rejim başına edge ${_chip(reKaynak || "kaynak damgasız", "t-rv")}</h3>
     ${reRows ? `<div class="tbl"><div class="trow head" style="grid-template-columns:130px 64px 84px 1fr">
-        <span>REJİM</span><span>ÖRNEKLEM</span><span>ORT. R</span><span>KAZANÇ ORANI</span></div>${reRows}</div>`
+        <span>REJİM</span><span class="num">ÖRNEKLEM</span><span class="num">ORT. R</span><span>KAZANÇ ORANI</span></div>${reRows}</div>`
       : `<p class="hint">regime_edge.json henüz üretilmedi — ilk P5 turunda dolar; boş liste "edge yok" DEĞİLDİR.</p>`}
     <h3 class="t" style="margin-top:16px">5 · Kuyruk (sermaye hayatta kalır mı?) ${_chip("gerçek", "t-go")}</h3>
     ${(() => {
@@ -2576,7 +2730,7 @@ RENDER.operasyon = async () => {
       <tbody>${Object.entries(sv.son_karar || {}).map(([k, v]) => `<tr><td><code>${esc(k)}</code>
         <span class="mut">${esc(v.label || "")}</span></td><td class="mut">${esc(v.date || "")}</td>
         <td class="num">${v.signal_n ?? 0} / ${v.would_arm_n ?? 0}</td>
-        <td class="${(sv.kumulatif_ayrisma || {})[k] ? "warn" : "mut"}">${(sv.kumulatif_ayrisma || {})[k] ?? 0}</td>
+        <td class="num ${(sv.kumulatif_ayrisma || {})[k] ? "warn" : "mut"}">${(sv.kumulatif_ayrisma || {})[k] ?? 0}</td>
         </tr>`).join("")}</tbody></table>
       <p class="hint">k_variants=${sv.k_variants ?? "—"} <b>ÇOKLU-KARŞILAŞTIRMA PAYDASI</b> — "en iyi varyant"
         seçimi bu sayıyla cezalandırılmalıdır. ${esc(sv.rol || "")}</p>`
@@ -3136,9 +3290,11 @@ RENDER.operasyon = async () => {
     <div class="slabel rise"><span class="d"></span>OPERASYON · CAM KOKPİT</div>
     <h1 class="ph rise">Teşhis <span class="g">ve müdahale.</span></h1>
     <p class="subline rise">Mutabakat, kapılar, MLOps, kenar, veri hattı, sağlayıcılar ve öğrenme kadansları — üstte sabit HUD.
-    Sistem sağlıklıyken yeşil fısıldar; müdahale gerekirse KRİZ grubu tepede.
+    Sistem sağlıklıyken sessiz hat TEK sönük satırda kalır ve renk taşımaz; sapan segment kendini açar.
     Kriz butonları: HUD'daki <b>KRİZ ⚠</b> kapağının altında (yanlış tıka karşı emniyetli).</p>
-    <div style="margin-top:20px"></div>
+    <div style="margin-top:16px"></div>
+    ${sessizHat(d.sessiz_hat)}
+    ${alarmButce(d.alarm_butcesi)}
     ${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}${sSelale}${sTrend}${sCark}${sIntra}${s4}${s5}${s6}${sSag}${sOgr}`;
 };
 

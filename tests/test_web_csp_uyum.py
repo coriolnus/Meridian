@@ -24,7 +24,9 @@ CADDY = pathlib.Path(__file__).resolve().parents[1] / "deploy" / "Caddyfile"
 # ve orada `unsafe-inline` BİLEREK duruyor (app.js satır içi stil üretiyor) — bu dosya
 # script tarafını korur.
 YUZEYLER = ["index.html", "landing.html", "workflow.html", "app.js", "theme.js",
-            "landing.js", "workflow.js"]
+            "landing.js", "workflow.js"
+    "meridian/web/palette.js",  # P7 komut paleti (2026-08-01) — aynı CSP kuralları ev-tarafında da çivili
+]
 
 # Yorum ve dizgi içindeki "onclick" kelimesini yakalamamak için özniteliğin gerçek biçimini
 # arıyoruz: boşluk + on<ad> + '=' + tırnak.

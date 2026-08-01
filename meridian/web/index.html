@@ -138,6 +138,21 @@
    yetişkinlerin ~%40-47'sinde bir miktar astigmatizm var. Zemin #1c1a18,
    mürekkep #d4d0cb — sıcak tonu koruyor, yani iki tema aynı ürün.
 
+   WP-P/P6 DENETİMİ (2026-08-01) — SONUÇ VE AÇIK KALAN.
+   Denetim üç yüzeyi (index.html · app.js · theme.js) `#000/#fff/black/white` için
+   taradı. BULGU: gece temasında SIFIR saf değer — zemin #1c1a18, mürekkep #d4d0cb,
+   perde rgba(10,9,8,.66); app.js ve theme.js hiç renk DEĞERİ taşımıyor (jeton
+   sözleşmesi tutuyor). Yani halation argümanının hedeflediği yüzey TEMİZ.
+   AÇIK KALAN, BEYANLI: gündüz temasında `--bg:#ffffff` ve `--raise:#ffffff` saf
+   beyaz. BU TURDA DEĞİŞTİRİLMEDİ ve gerekçesi ölçüldü: gündüz merdiveni
+   #ffffff → #fbfaf8 → #f8f5f2 → #f1ece8, yani zemin ile ilk panel arasında
+   yalnız %3 luminans var. --bg'yi sıcak kırık-beyaza indirmek bu adımı çökertir;
+   merdiveni korumak için DÖRT yüzey jetonunun birden yeniden değerlenmesi gerekir
+   ve o hamle DESIGN.md § Measurement provenance'taki her kontrast rakamını
+   geçersiz kılar. Bu bir REFİNEMENT turu; o iş kendi ölçüm turunu hak ediyor.
+   Ayrıca halation argümanı KOYU zemin + açık metin içindir ve gündüz temasında
+   uygulanmaz — oradaki dava (parlama) ayrı bir dava ve ayrıca ölçülmeli.
+
    DEĞERLER TERS ÇEVİRİLEREK ÜRETİLMEDİ, ÖLÇÜLEREK ÜRETİLDİ. Eski koyu dünyanın
    kırmızısı #f2555a burada kendi %10 tinti üzerinde 4.12 (--card) ve 3.72
    (--card-2) ölçtü — AA ALTI. Sebep: tint zemini KENDİ mürekkebine doğru taşır;
@@ -187,7 +202,15 @@ html{scroll-behavior:smooth;overflow-x:clip}
    çift katlı 'a' çift katlı kaldı, rakamlar değişmedi, genişlikler aynı.
    Etkisi olmayan bir bildirim, yapılmış bir iş izlenimi verir; uydurma yasağının
    tipografik hâli. Aynı sebeple 'slashed-zero' da EKLENMEZ: Geist Mono'da `zero`
-   özelliği yok, ama eğik çizgi zaten varsayılan glifin içinde (yukarıda görüldü). */
+   özelliği yok, ama eğik çizgi zaten varsayılan glifin içinde (yukarıda görüldü).
+
+   WP-P/P4 (2026-08-01) BU HÜKMÜ YENİDEN AÇTI VE YİNE KAPATTI. İş emri "slashed-zero'yu
+   sayısal yüzeylerde aç" diyordu; kaynakta duran ölçüm bunun NO-OP olacağını söylüyor
+   (2026-08-01, üretimde yüklenen Google Fonts derlemesinde tarayıcıda yan yana basıldı).
+   `font-feature-settings:'zero'` eklemek, ölçülmüş olarak ETKİSİZ bir bildirimi
+   "tipografi denetimi yapıldı" diye kayda geçirmek olurdu — tam olarak yukarıdaki
+   cümlenin yasakladığı şey. Hedef (0 ile O'yu ayırmak) zaten SAĞLANIYOR: Geist Mono'nun
+   varsayılan sıfırı eğik çizgili. Bu blok, hükmün üçüncü kez açılmaması için burada. */
 body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;
   letter-spacing:-.011em}
 h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-height:1.18}
@@ -285,7 +308,15 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 .statuspill{display:inline-flex;align-items:center;gap:var(--s2);border:1px solid var(--line-2);background:var(--card);
   color:var(--tx2);font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:var(--r-ctl)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-.dot.pulse{animation:pulse 2.6s infinite} .dot.stale{background:var(--amber)} .dot.halt{background:var(--red)}
+/* HAREKET KURALI (WP-P/P10, 2026-08-01): PULS YALNIZ ANOMALİ SİNYALİDİR.
+   ESKİ KURAL `.dot.pulse{animation:pulse}` idi ve app.js sınıfı KOŞULSUZ basıyor
+   (`"dot pulse" + (halted ? " halt" : stale ? " stale" : "")`) — yani sağlıklı sistemde de
+   üst barda sürekli yanıp sönen bir nokta vardı. Sürekli hareket, hareketin haber olma
+   kapasitesini tüketir: gerçekten bir şey bozulduğunda nokta zaten yanıp sönüyordu.
+   SINIF ADLARI DEĞİŞMEDİ (app.js sözleşmesi korunur); animasyon yalnız `.stale`/`.halt`
+   niteleyicisiyle BİRLİKTE çalışır. Sağlıklı nokta artık durağan yeşildir. */
+.dot.pulse.stale,.dot.pulse.halt{animation:pulse 2.6s infinite}
+.dot.stale{background:var(--amber)} .dot.halt{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* the halt lever — the one control that stops the collection */
 .halt{border:1px solid var(--red);color:var(--red);background:transparent;padding:0 16px;
@@ -687,6 +718,16 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    sütunun hangi kenardan okunacağı belirsiz kalır. */
 .tbl .num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
   white-space:nowrap}
+/* IZGARA TABLOLARI DA AYNI KURALA TABİ (WP-P/P4, 2026-08-01). `.tbl` iki farklı biçimde
+   üretiliyor: gerçek `<table>` ve `.trow` ızgarası. Sağa-hizalı sayı sözleşmesi yalnız
+   birincisinde yürürlükteydi — yani aynı panoda iki farklı sayı sütunu grameri vardı ve
+   ondalıklar ızgara tablolarında alt alta gelmiyordu.
+   `.trow` bir CSS ızgarasıdır, doğrudan çocukları ızgara ÖĞESİDİR (blok gibi davranır), bu
+   yüzden `text-align` onlarda çalışır. `white-space` DEVRALINMAZ: ızgara hücreleri alt satır
+   taşıyor (aralık, EB ikizi) ve nowrap onları taşırırdı — bu yüzden kural yalnız hizalamadır.
+   BAŞLIK DA İŞARETLENİR: sütunun hangi kenardan okunacağı belirsiz kalmasın diye `.trow.head`
+   karşılığı olmayan bir hizalama BIRAKILMAZ (bkz. yukarıdaki gerekçe). */
+.trow > .num{text-align:right;font-variant-numeric:tabular-nums;white-space:normal}
 .tbl code{font-family:var(--mono);font-size:12px}
 .ktbl{margin-top:var(--s3);display:flex;flex-direction:column;gap:var(--s4)}
 .keyrow{display:grid;grid-template-columns:1fr;gap:var(--s2);padding:var(--s3) 0;border-top:1px solid var(--line)}
@@ -787,8 +828,13 @@ kbd{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px soli
 /* keşif modu: the sheet is marked as an unconfirmed exposure — a ruled orpiment
    border on the plate, no halo. Colored glow was the discarded cockpit's device. */
 body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:70;
-  border:2px solid var(--amber);animation:explorePulse 2.8s ease-in-out infinite}
-@keyframes explorePulse{0%,100%{opacity:.4}50%{opacity:.9}}
+  border:2px solid var(--amber);opacity:.7}
+/* PULS KALDIRILDI (WP-P/P10): keşif modu bir ANOMALİ DEĞİL, operatörün seçtiği bir duruştur
+   (≤0.25R sonda). Ekranın dört kenarında saatlerce nefes alan bir çerçeve, hareketi durum
+   bildiriminin diline çeviriyordu — ve o dil bozulduğunda söylenecek bir şey kalmıyordu.
+   ÇERÇEVE DURUYOR: mod hâlâ görünür, yalnız artık kıpırdamıyor. `@keyframes explorePulse`
+   SİLİNDİ — kullanılmayan bir kare listesi bırakmak, kaldırılmış bir kararı geri alınabilir
+   gibi göstermek olurdu. */
 .hud{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
 .hudchip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
   color:var(--tx2);font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:var(--r-ctl);
@@ -849,6 +895,15 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    ezerdi. Sabit kutuda sağa hizalı ve tabular: iki bullet alt alta gelince rakamlar sütun olur. */
 .bl-val{font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap;
   text-align:right;flex:none;width:54px}
+/* MİNİ TREND (WP-P/P3) — bullet'ın ALTINDA, eksenin solundan hizalı. Ölçek TAŞIMAZ ve bu
+   bilerek: sparkline'ın işi "hangi yöne gidiyor"dur, "ne kadar"ı zaten üstteki bar söylüyor.
+   Sönük mürekkep: barla yarışırsa okuyucu hangisinin ölçüm olduğunu bilemez. */
+/* EKSENİN UÇ ETİKETLERİ — bunlar ölçeği NİCEL yapan tek şey. Sönük ve mono: barla yarışmazlar
+   ama okunurlar (--tx2 kart üzerinde gündüz 6.91 · gece 6.72 — AA'nın çok üstünde). */
+.bl-ax{font-family:var(--mono);font-size:8px;fill:var(--tx2);letter-spacing:.02em}
+.bl-trend{display:flex;align-items:center;gap:var(--s2);margin-top:4px}
+.bl-trend svg{display:block;flex:none}
+.bl-trend-lab{font-family:var(--mono);font-size:10px;color:var(--tx2);letter-spacing:.04em}
 /* "ölçüm yok" bar YOKKEN çıkar ve barın yerini ALMAZ — sıfır uzunlukta bir bar "ölçtük, sıfır"
    demektir; ölçülmemiş bir şey için bu bir uydurmadır. Yazı, boşluğun kendisini adlandırır. */
 .bl-yok{font-size:11px;color:var(--tx2);margin-top:3px;font-style:normal}
@@ -863,6 +918,62 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
   position:relative;overflow:hidden;flex:none}
 .thermo .tube i{position:absolute;left:0;right:0;bottom:0;height:100%;background:var(--accent);
   transform:scaleY(var(--fill,0));transform-origin:bottom;transition:transform .4s var(--ease)}
+/* ============================================================================================
+   SESSİZ HAT (WP-P/P1, 2026-08-01) — LEVEL-1 TOPLAMA
+   --------------------------------------------------------------------------------------------
+   BU ŞERİDİN TASARIM HÜKMÜ: sağlıklıyken GÖRÜNMEZE YAKIN olmak. Ne kutusu var, ne kenarı, ne
+   zemini; tek sönük mono satır. Sebep ISA-101/HP-HMI'nın Level-1 kuralı: sürekli konuşan bir
+   gösterge sapma anında bir SES DEĞİŞİMİ üretemez. Bu şerit sessizken bir şey söylemiyor olmak
+   ZORUNDA, ki sapınca söylediği şey duyulsun.
+   RENK YALNIZ SAPAN SEGMENTTE. Sağlıklı segmentler --tx2'de kalır; şeridin tamamını boyamak
+   "hepsi bozuk" der ve toplamanın ayırt etme gücünü siler. ============================================================================================ */
+.sessizhat{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s3);
+  font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
+/* SAĞLIKLI HÂLDE KALIN YOK: `b` gövdesi de sönük kalır. Sayıyı vurgulamak, sayının kendisinin
+   bir haber olduğunu ima ederdi — oysa "17/17" tam olarak haber OLMAMASI gereken şeydir. */
+.sessizhat .sh-seg{white-space:nowrap}
+.sessizhat .sh-seg b{font-weight:500;color:inherit}
+.sessizhat .sh-sep{opacity:.45}
+/* SAPAN SEGMENT: renk + kalınlık YALNIZ burada. `.kritik` ikinci kademe — makine durmuş ya da
+   bir mekanizma hiç koşmamış demektir; kehribar "geride" der, kırmızı "durdu" der. */
+.sessizhat .sh-sap{color:var(--amber);font-weight:700;white-space:normal}
+.sessizhat .sh-sap.kritik{color:var(--red)}
+.sessizhat .sh-sap b{color:inherit;font-weight:700}
+/* AÇILIM sapan segmentin ALTINDA, tam genişlikte: ad + süre + runbook ipucu. Çekmece DEĞİL —
+   bir tık ardına saklanan sapma, sessiz hattın kazandırdığı görünürlüğü geri alırdı. */
+.sessizhat .sh-ac{display:block;flex-basis:100%;margin:var(--s1) 0 var(--s2);
+  padding-left:var(--s3);border-left:2px solid currentColor;font-weight:400}
+.sessizhat .sh-row{display:block;white-space:normal}
+.sessizhat .sh-row b{font-weight:700;color:inherit}
+.sessizhat .sh-sure{color:inherit;opacity:.85}
+.sessizhat .sh-ip{color:var(--tx2);font-weight:400}
+.sessizhat .sh-fazla{color:var(--tx2);font-weight:400;display:block}
+
+/* ALARM BÜTÇESİ (WP-P/P2) — aynı sessizlik sözleşmesi: TEK kompakt satır, sönük.
+   `.asim` YALNIZ ölçülen tavan aşıldığında (tepe/10dk ya da duran alarm) takılır. Dağılım
+   hedefi (80/15/5) ton TAŞIMAZ: bu sistem üç dilimden birini üretemiyor, yani hedefe göre
+   "aşım" hükmü kurulamaz — kurulsaydı ölçülemeyen bir şey hakkında hüküm olurdu. */
+.alarmbutce{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
+  font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
+.alarmbutce b{font-weight:500;color:inherit}
+.alarmbutce.asim{color:var(--amber)}
+.alarmbutce.asim b{color:inherit;font-weight:700}
+.alarmbutce .ab-not{color:var(--tx2);font-weight:400}
+
+/* BELİRSİZLİK KODLAMASI (WP-P/P5) — kesikli alt çizgi.
+   NİYE ALT ÇİZGİ, RENK DEĞİL: renk bu panoda ÖLÇÜMÜN kendisine ayrılmış bir kanal (Money Rule).
+   Belirsizlik bir ölçüm değil, ölçümün KÖKENİ hakkında bir şerhtir — ayrı bir kanal ister.
+   Kesik çizgi Sarma/Kay'in "belirsizliği gösterimin İÇİNE göm" kuralının en ucuz biçimi ve
+   tek-renk/tek-kalınlık olduğu için renk körü bir okuyucuda da çalışır.
+   BAŞLIK ZORUNLU: `title` olmadan kesik çizgi bir SÜS olur. Beyanı kim üretiyorsa o yazar. */
+.belirsiz{text-decoration:underline dashed currentColor 1px;text-underline-offset:3px;
+  text-decoration-skip-ink:none}
+/* BAYATLIK SOLMASI — üç kademe, sınıf adları BEYANLI (yaş eşikleri app.js `bayatSinif`'ta).
+   Opaklık niceliği taşımaz, yalnız "bu satır eskiyor" der; sayının KENDİSİ hiçbir kademede
+   değişmez ve gizlenmez. Üç kademe yeter: daha fazlası okunamayan bir gri merdiveni olurdu. */
+.bayat-1{opacity:.78} .bayat-2{opacity:.58} .bayat-3{opacity:.42}
+
 /* rejim çubukları */
 .regrow{display:grid;grid-template-columns:130px 1fr auto;gap:var(--s3);align-items:center;
   padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
@@ -1051,5 +1162,6 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
   <p class="disc">Meridian bir araştırma aracıdır, yatırım danışmanı değildir. Otonom bir dil modelinin denetimsiz strateji düzenlemesi deneyseldir; canlı sermaye ile kullanılmadan önce uzun bir paper kaydı ve senin bağımsız değerlendirmen gerekir.</p>
 </footer>
 <script src="/app.js"></script>
+<script src="/palette.js"></script>
 </body>
 </html>

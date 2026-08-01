@@ -816,6 +816,145 @@ def integrity_report_cached() -> tuple[dict, float]:
     return rep, 0.0
 
 
+# =============================================================================================
+# ALARM BÜTÇESİ (WP-P/P2, 2026-08-01) — "kaç alarm ürettik" sorusunun EEMUA 191 merceği.
+# ---------------------------------------------------------------------------------------------
+# NİYE VAR: bu depoda alarm ÜRETİMİ ölçülüyordu (her jeton bir satır), alarm YÜKÜ hiç ölçülmüyordu.
+# Klinik ve kontrol-odası kanıtının ortak bulgusu şu: bir operatörü kör eden şey tek bir kaçırılmış
+# alarm değil, bakılamayacak kadar çok alarmdır. EEMUA 191 bu yüzden bir BÜTÇE tanımlar — üretim
+# hızının kendisi bir ölçüttür.
+#
+# SEVİYE EŞLEMESİ BEYANLIDIR VE EKSİKTİR (uydurma yasağı):
+# `obs._emit` ÜÇ seviye basar — "info", "warn", "alarm". EEMUA'nın üç önceliğiyle birebir örtüşmez:
+#   warn  → low         (bir insanın gün içinde bakması beklenen; karar yolunu durdurmaz)
+#   alarm → high        (bildirim zincirine giren sınıf: NOTIFY_TOKENS + 6 sa susturma penceresi)
+#   emergency → ÜRETİCİSİ YOK. Bu seviyeyi basan tek satır kod yok. Sayacı 0 yazmak "ölçtük, hiç
+#   acil alarm çıkmadı" demek olurdu; gerçek ise "bu sistem acil sınıfını HİÇ ÜRETEMİYOR". İkisi
+#   aynı şey değil — alan None kalır ve gerekçesi `emergency_neden` ile BİRLİKTE taşınır.
+# `info` bütçeye GİRMEZ: bir alarm değil, bir kayıt satırıdır. Bütçeye katılsaydı gürültünün
+# kendisi bütçeyi doldurur ve ölçüt anlamını yitirirdi.
+SEVIYE_EEMUA = {"warn": "low", "alarm": "high"}
+EEMUA_HEDEF_YUZDE = {"low": 80, "high": 15, "emergency": 5}   # EEMUA 191 öncelik dağılımı hedefi
+
+ALARM_PENCERE_S = 24 * 3600           # bütçe penceresi — "son 24 saat"
+ALARM_TEPE_PENCERE_S = 10 * 60        # tepe ölçümünün kayan penceresi
+ALARM_TEPE_TAVAN = 10                 # EEMUA 191: kabul edilebilir tepe ≤10 alarm / 10 dk
+ALARM_DURAN_TAVAN = 10                # EEMUA 191: aynı anda DURAN alarm ≤10
+
+_ALARM_CACHE: dict = {}
+ALARM_TTL_S = 30.0
+
+
+def _alarm_tepe(damgalar: list[float]) -> tuple[int, str | None]:
+    """En yoğun `ALARM_TEPE_PENCERE_S` penceresindeki alarm sayısı + o pencerenin başlangıcı.
+
+    Kayan pencere, O(n): damgalar artan sırada gelir; sol kenar pencereden düşeni atar."""
+    if not damgalar:
+        return 0, None
+    en, en_i, sol = 0, 0, 0
+    for sag in range(len(damgalar)):
+        while damgalar[sag] - damgalar[sol] > ALARM_TEPE_PENCERE_S:
+            sol += 1
+        if sag - sol + 1 > en:
+            en, en_i = sag - sol + 1, sol
+    return en, dt.datetime.fromtimestamp(damgalar[en_i], dt.timezone.utc).isoformat(
+        timespec="seconds")
+
+
+def alarm_budget() -> dict:
+    """Son 24 saatin alarm bütçesi: EEMUA dağılımı + 10 dk tepe + duran alarm sayısı.
+
+    PENCERE TARİH TABANLIDIR, satır limitli DEĞİL (`events_since` — K1 dersi: satır limiti
+    `hotstate_down` selinde pencereyi 16 saate düşürmüştü). Yani sayılar bir ALT SINIR değil,
+    defterin tamamı üzerinden ölçülmüş gerçek sayılardır.
+
+    DAMGASIZ SATIR AYRI SAYILIR: `events_since` ts'siz satırı pencerede TUTAR (ölçülemeyeni yok
+    saymamak için) ama bir zaman noktasına oturtulamayan satır tepe hesabına giremez. 24 saatlik
+    sayıma katmak "bu satır bu pencerede oldu" iddiası olurdu — ölçüm yokken bir iddia."""
+    olaylar = events_since(1)
+    simdi = _now()
+    sinir = simdi - ALARM_PENCERE_S
+    dagilim = {"low": 0, "high": 0}
+    damgalar: list[float] = []
+    damgasiz = 0
+    for e in olaylar:
+        oncelik = SEVIYE_EEMUA.get(str(e.get("level") or ""))
+        if oncelik is None:                     # info — bütçeye girmez (bkz. blok başlığı)
+            continue
+        ts = e.get("ts")
+        if not ts:
+            damgasiz += 1
+            continue
+        try:
+            t = dt.datetime.fromisoformat(str(ts)).timestamp()
+        except (TypeError, ValueError):  # sessiz-yutma: bozuk damga SAYIYA GİRMEZ ama kaybolmaz — `damgasiz` sayacında dürüstçe görünür
+            damgasiz += 1
+            continue
+        if t < sinir:
+            continue
+        dagilim[oncelik] += 1
+        damgalar.append(t)
+    damgalar.sort()
+    tepe, tepe_basi = _alarm_tepe(damgalar)
+
+    duran = store.read_json(ALARMED_FILE, [])
+    duran_adlar = sorted(str(x) for x in duran) if isinstance(duran, list) else []
+    n_duran = len(duran_adlar)
+
+    toplam = dagilim["low"] + dagilim["high"]
+    # YÜZDE PAYDASI ÖLÇÜLENDİR: emergency üretilemediği için payda low+high'tır ve bu payda
+    # `yuzde_beyan` ile birlikte taşınır — %85/%15 okuyan biri bunu 80/15/5 hedefiyle
+    # kıyaslarken paydanın eksik olduğunu BİLMEK zorunda.
+    yuzde = ({"low": round(100 * dagilim["low"] / toplam, 1),
+              "high": round(100 * dagilim["high"] / toplam, 1),
+              "emergency": None} if toplam else {"low": None, "high": None, "emergency": None})
+    asim = {"tepe": tepe > ALARM_TEPE_TAVAN, "duran": n_duran > ALARM_DURAN_TAVAN}
+    return {
+        "pencere_s": ALARM_PENCERE_S,
+        "dagilim": {**dagilim, "emergency": None},
+        "toplam": toplam,
+        "yuzde": yuzde,
+        "hedef_yuzde": dict(EEMUA_HEDEF_YUZDE),
+        "tepe_10dk": tepe, "tepe_basi": tepe_basi, "tavan_10dk": ALARM_TEPE_TAVAN,
+        "duran": n_duran, "duran_adlar": duran_adlar[:8], "tavan_duran": ALARM_DURAN_TAVAN,
+        "damgasiz": damgasiz,
+        "asim": asim, "asim_var": bool(asim["tepe"] or asim["duran"]),
+        "eslemem": dict(SEVIYE_EEMUA),
+        "emergency_neden": ("obs.py'de 'emergency' seviyesini basan kod YOK — sayaç 0 değil None. "
+                            "0 yazmak 'ölçtük, acil alarm çıkmadı' demek olurdu; gerçek şu ki bu "
+                            "sistem acil sınıfını üretemiyor."),
+        "yuzde_beyan": ("payda YALNIZ low+high — emergency üretilemediği için 80/15/5 hedefinin "
+                        "üçüncü dilimi bu sistemde ÖLÇÜLEMEZ, sıfır değil."),
+        "duran_beyan": ("duran alarm = `watchdog_alarmed.json` — penceresini aşmış ve HÂLÂ aşmakta "
+                        "olan mekanizmalar. Toparlanan mekanizma listeden düşer."),
+    }
+
+
+def alarm_budget_cached() -> tuple[dict, float]:
+    """Panonun okuduğu alarm bütçesi + kaç saniye önce hesaplandığı.
+
+    `integrity_report_cached` ile AYNI desen ve aynı gerekçe: `/api/diagnostics` 20 saniyede bir
+    yoklanıyor ve bu hesap 27 bin satırlık olay defterini baştan sona okuyor. TTL bayatlığı
+    SINIRLAR, `age` onu GÖRÜNÜR yapar — pano taze gibi göstermez."""
+    import time as _t
+    from . import config as _cfg
+    # ÖNBELLEK ANAHTARI `config.STATE` İÇERİR ve bu bir ayrıntı değil: ölçümler kum havuzu
+    # kopyasında koşuyor (config.STATE yönlendirmesi). Anahtarsız bir süreç-içi önbellek, kum
+    # havuzuna geçen bir çağrıya CANLI defterin sayılarını döndürürdü — ölçüm turlarının en
+    # sinsi kirlenme yolu, üstelik sessiz. Yön değişince önbellek kendiliğinden ıskalar.
+    anahtar = str(getattr(_cfg, "STATE", ""))
+    now = _t.monotonic()
+    hit = _ALARM_CACHE.get(anahtar)
+    if hit is not None:
+        rep, at = hit
+        if (now - at) < ALARM_TTL_S:
+            return rep, round(now - at, 1)
+    rep = alarm_budget()
+    _ALARM_CACHE.clear()          # tek girdi yeter; havuz anahtarları birikip sızıntı yapmasın
+    _ALARM_CACHE[anahtar] = (rep, now)
+    return rep, 0.0
+
+
 INTRADAY_STAMP_LEDGERS = ("intraday_decisions.jsonl", "intraday_shadow_orders.jsonl")
 
 

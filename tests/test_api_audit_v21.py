@@ -68,7 +68,14 @@ def test_p1c_public_get_allowlist():
     # Çıkarma sebebi güvenlik: dağıtım CSP'si `script-src 'self'` satır içi bloğu bloklar, o hâlde
     # bırakılsalardı iki sayfa canlıda ölü açılırdı. Hiçbiri veri UCU değildir, hiçbiri state
     # okumaz — FileResponse ile diskten sabit dosya döner.
-    allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js",
+    # /palette.js (2026-08-01, ⌘K komut paleti): `/app.js` ile TAM AYNI sınıf — panonun
+    # kendi arayüz kodu, FileResponse ile diskten dönen sabit dosya, sıfır state okuması,
+    # sıfır veri ucu. Yetki İSTEYEMEZ: aynı sayfada `/app.js` de yetkisiz yükleniyor ve
+    # giriş kapısını ÇİZEN kod odur; palet betiği 401 alsaydı sayfa yarım yüklenirdi.
+    # Maruziyet yeni değil — dosya, index.html'in içindeki kodun CSP (`script-src 'self'`)
+    # yüzünden dışarı taşınmış hâli. Paletin KENDİSİ de oturum kapalıyken açılmayı
+    # reddediyor (palette.js: kapiAcik) — yani betiğin okunabilmesi bir yüzey açmıyor.
+    allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js", "/palette.js",
              "/landing", "/workflow", "/healthz", "/metrics", "/halt",
              "/api/public/summary"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}

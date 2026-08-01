@@ -8,6 +8,7 @@ import hmac
 import inspect
 import json
 import os
+import time as _time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -310,6 +311,14 @@ def landingjs():
 @app.get("/workflow.js")
 def workflowjs():
     return FileResponse(WEB / "workflow.js", media_type="application/javascript", headers=_NOCACHE)
+
+
+# ⌘K komut paleti. Yol AD AD yazılmak ZORUNDA (yukarıdaki not: StaticFiles montajı yok) —
+# index.html'e script etiketini eklemek TEK BAŞINA yetmez, bu satır olmadan üretimde 404
+# döner ve palet sessizce hiç var olmaz.
+@app.get("/palette.js")
+def palettejs():
+    return FileResponse(WEB / "palette.js", media_type="application/javascript", headers=_NOCACHE)
 
 
 @app.get("/landing", response_class=HTMLResponse)
@@ -1378,6 +1387,150 @@ def _saglayicilar(sched: dict) -> dict:
             "saglayicilar": satirlar}
 
 
+# =================================================================================================
+# SESSİZ HAT (WP-P/P1, 2026-08-01) — ÜÇ SAĞLIK YÜZEYİNİN LEVEL-1 TOPLAMASI
+# -------------------------------------------------------------------------------------------------
+# NİYE VAR: bekçi durumu, durdurma kilitleri ve veri tazeliği panoda ÜÇ AYRI yerde yaşıyordu (HUD
+# rozeti · Bölüm 1 satırları · statuspill) ve üçü de SAĞLIKLIYKEN de konuşuyordu. ISA-101/HP-HMI'nın
+# Level-1 kuralı bunun tersini söyler: sağlıklı sistem GÖRÜNMEZE yakın durmalı, çünkü her zaman
+# konuşan bir gösterge sapma anında bir SES DEĞİŞİMİ üretemez. Toplama, alarm yorgunluğuna karşı
+# kurulmuş tek yapısal savunmadır.
+#
+# YENİ MEKANİZMA İCAT EDİLMEDİ. Üç segmentin de girdisi ZATEN üretiliyordu:
+#   bekçiler → `watchdog.report()` (aynı istekte bir kez hesaplanır, buraya ENJEKTE edilir)
+#   kilitler → `health.halted()` / `health.learn_halted()` / heartbeat'in `breaker_tripped` alanı
+#   veri     → `health.heartbeat_age_seconds()` + heartbeat'in `last_bar`/`data_ok` alanları
+# Bu fonksiyon yalnız TOPLAR ve sapmayı ADIYLA + SÜRESİYLE + RUNBOOK İPUCUYLA dışarı verir.
+#
+# "KİLİT" BURADA FAZ-6 KİLİT ZİNCİRİ DEĞİLDİR ve olamaz: o zincir fail-closed'dır ve KAPALI olması
+# NORMAL hâldir (Faz 6 açılmadı). Onu sessiz hatta koymak, hattı ilk günden kalıcı olarak kırmızıya
+# boyardı — yani toplamanın amacını tam tersine çevirirdi. Buradaki kilitler DURDURMA kollarıdır:
+# normal konumları "kapalı"dır ve AÇIK olmaları bir sapmadır.
+_SESSIZ_HAT_NABIZ_ESIK_S = 900.0      # health.stale() varsayılanıyla AYNI eşik — ikinci bir gerçek yok
+
+
+def _sure_metni(saniye: float | None) -> str | None:
+    """Sapmanın SÜRESİ — "açık" bir bayrak, "3 sa 12 dk'dır açık" bir karardır."""
+    if saniye is None or saniye < 0:
+        return None
+    dk = int(saniye // 60)
+    if dk < 60:
+        return f"{dk} dk"
+    sa, kalan = divmod(dk, 60)
+    return f"{sa} sa {kalan} dk" if sa < 48 else f"{sa // 24} gün {sa % 24} sa"
+
+
+def _dosya_yasi_s(p) -> float | None:
+    """Bayrak dosyasının yaşı = kilidin ne kadardır açık olduğu. Dosya yoksa/okunamıyorsa None —
+    "0 saniyedir açık" yazmak uydurma olurdu."""
+    try:
+        return max(0.0, _time.time() - p.stat().st_mtime)
+    except OSError:  # sessiz-yutma: SÜRE ölçülemedi ama KİLİDİN AÇIK OLDUĞU zaten çağıranda biliniyor — None dönüp "süre ölçülemedi" demek, uydurma bir süre yazmaktan iyidir
+        return None
+
+
+def _sessiz_hat(wd: dict, hb: dict) -> dict:
+    """Level-1 toplama: üç segment, her biri {saglikli, ozet, sapmalar[]}.
+
+    SÖZLEŞME: `saglikli` üç değerli DEĞİLDİR. Ölçülemeyen bir segment SAĞLIKSIZDIR (fail-open
+    değil): "bakamadım"ı "iyi" saymak, sessiz hattın var olma sebebini ortadan kaldırır. Ama
+    sapmanın METNİ ölçülemezliği ayrı söyler — operatörün eylemi ikisinde farklıdır."""
+    segmentler = []
+
+    # ---- 1) BEKÇİLER ---------------------------------------------------------------------------
+    stale = list(wd.get("stale") or [])
+    never = list(wd.get("never") or [])
+    toplam = wd.get("total")
+    b_sapma = [{"ad": s.get("name"),
+                "sure": _sure_metni((s.get("gap_h") or 0) * 3600.0),
+                "detay": f"pencere {s.get('expected_h')} sa",
+                "ipucu": "mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor"}
+               for s in stale[:4]]
+    b_sapma += [{"ad": n, "sure": None, "detay": "kurulumdan beri hiç koşmadı",
+                 "ipucu": "nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama)"}
+                for n in never[:4]]
+    segmentler.append({
+        "ad": "bekçiler", "saglikli": not b_sapma,
+        # KRİTİK = "hiç koşmadı". watchdog.report'un kendi ifadesiyle en yüksek sesli hâl:
+        # geciken bir mekanizma yavaşlamıştır, hiç koşmamış bir mekanizma KABLOLANMAMIŞTIR.
+        "kritik": bool(never),
+        "ozet": (f"{wd.get('ok')}/{toplam}" if toplam is not None else "—"),
+        "n_sapma": len(stale) + len(never), "sapmalar": b_sapma})
+
+    # ---- 2) KİLİTLER ---------------------------------------------------------------------------
+    # Normal konum "kapalı". Açık bir kol bir arıza DEĞİL bir DURUM olabilir (operatör eliyle
+    # çekilmiştir) — ama her hâlükârda sessiz kalamaz: HALT açıkken sistemin "sessiz sağlıklı"
+    # görünmesi, tam olarak bu turun kapattığı yanılsamadır.
+    kollar = [
+        ("soft_halt", health.halted(), health.halt_path(),
+         "yeni giriş DURDU — kaldırmak için panoda Kademe 1 (Soft Halt) kolu"),
+        ("halt_learning", health.learn_halted(), health.learn_halt_path(),
+         "ship DURDU (işlem sürer) — Kademe 4 kolu; rollback güvenlik olarak açık kalır"),
+    ]
+    k_sapma = []
+    for ad, acik, yol, ipucu in kollar:
+        if acik:
+            k_sapma.append({"ad": ad, "sure": _sure_metni(_dosya_yasi_s(yol)),
+                            "detay": "kol ÇEKİLİ", "ipucu": ipucu})
+    # Devre kesici bir DOSYA değil heartbeat alanı — süresi ölçülemez ve uydurulmaz.
+    kesici = hb.get("breaker_tripped")
+    n_kol = len(kollar) + (1 if kesici is not None else 0)
+    if kesici:
+        k_sapma.append({"ad": "devre_kesici", "sure": None,
+                        "detay": "günlük zarar kesicisi ATEŞLEDİ",
+                        "ipucu": "kesici bir sonraki seansta kendiliğinden sıfırlanır — "
+                                 "sıfırlanmıyorsa risk defterine bak"})
+    segmentler.append({
+        "ad": "kilitler", "saglikli": not k_sapma,
+        # ÇEKİLİ HER KOL KRİTİKTİR: makine ya durmuştur ya da öğrenmesi durmuştur. Bu segmentte
+        # "hafif sapma" diye bir hâl yok — kol ya kapalıdır ya bir şeyi durduruyordur.
+        "kritik": bool(k_sapma),
+        "ozet": f"{n_kol - len(k_sapma)}/{n_kol}",
+        "n_sapma": len(k_sapma), "sapmalar": k_sapma,
+        "beyan": ("kilit = DURDURMA kolu (soft halt · halt learning · devre kesici). Normal konum "
+                  "KAPALI; N/N 'hiçbiri çekili değil' demektir. Faz-6 kilit zinciri BU DEĞİLDİR — "
+                  "o zincir fail-closed'dır ve kapalı olması normal hâldir.")})
+
+    # ---- 3) VERİ TAZELİĞİ ----------------------------------------------------------------------
+    yas = health.heartbeat_age_seconds()
+    son_bar = hb.get("last_bar")
+    v_sapma = []
+    if yas is None:
+        v_sapma.append({"ad": "nabız", "sure": None, "detay": "nabız damgası OKUNAMADI",
+                        "ipucu": "heartbeat.json yok ya da bozuk — worker hiç tur atmadı mı"})
+    elif yas > _SESSIZ_HAT_NABIZ_ESIK_S:
+        v_sapma.append({"ad": "nabız", "sure": _sure_metni(yas), "detay": "nabız bayat",
+                        "ipucu": f"eşik {int(_SESSIZ_HAT_NABIZ_ESIK_S // 60)} dk — "
+                                 "zamanlayıcı döngüsü ilerliyor mu (tick bekçisi)"})
+    if hb.get("data_ok") is False:
+        v_sapma.append({"ad": "veri_kalitesi", "sure": None, "detay": "data_ok=False",
+                        "ipucu": "veri kalitesi kapısı düştü — karantina ve kaynak sağlığı kartı"})
+    segmentler.append({
+        "ad": "veri", "saglikli": not v_sapma,
+        # ÖZET SON BARI SÖYLER: "taze" tek başına neyin taze olduğunu söylemez. VE "taze" KELİMESİ
+        # YALNIZ SAPMA YOKKEN YAZILIR — bayat bir nabzın yanında duran "taze" damgası, sessiz hattın
+        # kapatmak için kurulduğu yanılsamanın ta kendisi olurdu.
+        "ozet": ((f"taze — {son_bar}" if son_bar else "taze") if not v_sapma
+                 else (str(son_bar) if son_bar else "—")),
+        # KRİTİK = ÖLÇÜLEMEDİ. "Nabız 20 dk geride" beklenir bir gecikmedir; "nabız damgası
+        # okunamadı" ölçüm aletinin kendisinin düştüğü hâldir ve ikisi aynı tonu alamaz.
+        "kritik": bool(yas is None or hb.get("data_ok") is False),
+        "asof": son_bar, "nabiz_yas_s": (round(yas) if yas is not None else None),
+        "n_sapma": len(v_sapma), "sapmalar": v_sapma})
+
+    saglikli = all(s["saglikli"] for s in segmentler)
+    return {
+        "saglikli": saglikli,
+        "segmentler": segmentler,
+        # TEK SATIRLIK OKUMA SUNUCUDA KURULUR: pano ikinci bir cümle kurmaz, yoksa aynı gerçeğin
+        # iki metni doğar ve biri bayatlar (bu deponun tekrar eden kusur sınıfı).
+        "satir": " · ".join(f"{s['ad']} {s['ozet']}" for s in segmentler),
+        "beyan": ("LEVEL-1 TOPLAMA: hepsi sağlıklıyken TEK sönük satır çıkar ve renk taşımaz. "
+                  "Sapan segment AÇILIR ve YALNIZ o segment renklenir — sağlıklı olanlar sönük "
+                  "kalır. Sürekli konuşan bir gösterge, sapma anında ses değiştiremez."),
+    }
+
+
 @app.get("/api/diagnostics")
 def api_diagnostics(request: Request):
     """Faz 1 — Teşhis API'si: diskte zaten duran tüm operasyon telemetrisini TEK uçta toplar.
@@ -1486,6 +1639,12 @@ def api_diagnostics(request: Request):
     # operatöre görünür kılmak; bu okuma o görünür tüketicidir.
     _integrity_rep, _integrity_age = __import__(
         "meridian.watchdog", fromlist=["integrity_report_cached"]).integrity_report_cached()
+    # BEKÇİ RAPORU TEK KEZ (WP-P/P1): hem `watchdog` satırı hem sessiz hat okuyor. İki çağrı iki
+    # okuma anı demektir ve aynı yanıtta iki farklı "kaç bekçi gecikti" cevabı doğabilirdi.
+    _wd = __import__("meridian.watchdog",
+                     fromlist=["report", "alarm_budget_cached"])
+    _wd_rep = _wd.report()
+    _alarm_rep, _alarm_age = _wd.alarm_budget_cached()
     _intra = __import__("meridian.intraday_cycle", fromlist=["health"]).health()
     _idec = store.read_jsonl("intraday_decisions.jsonl")
     _intra["decisions"] = {"total": len(_idec), "fired": sum(1 for r in _idec if r.get("fired")),
@@ -1749,7 +1908,14 @@ def api_diagnostics(request: Request):
                              "ticks": warm_ticks % _wep, "every": _wep,
                              "skip": hstat.get("_warm_skip"), "polled": bool(hstat.get("last_poll")),
                              "horizon_ready": hstat.get("horizon_ready")}},
-        "watchdog": __import__("meridian.watchdog", fromlist=["report"]).report(),
+        "watchdog": _wd_rep,
+        # SESSİZ HAT (WP-P/P1) — bekçi + kilit + tazelik TEK Level-1 toplaması. `_wd_rep` AYNI
+        # NESNEDİR: bekçi raporunu ikinci kez çağırmak, aynı yanıtta "bekçi 17/17" ile
+        # "sessiz hat 16/17" gibi iki farklı gerçek doğurabilirdi (iki ayrı okuma anı).
+        "sessiz_hat": _sessiz_hat(_wd_rep, hb),
+        # ALARM BÜTÇESİ (WP-P/P2) — EEMUA 191 merceğiyle son 24 sa. `_age` DIŞARI VERİLİR:
+        # önbellekli bir sayıyı taze gibi göstermek bu deponun kovaladığı kusur sınıfıdır.
+        "alarm_butcesi": {**_alarm_rep, "yas_s": _alarm_age},
         "hotstate": hot,          # Redis sıcak katman (intraday) — down GÖRÜNÜR olmalı, sessiz değil
         "marketstream": __import__("meridian.marketstream", fromlist=["health"]).health(),   # Faz 2 data akışı; ok:None/down görünür
         "barfeed": __import__("meridian.barfeed", fromlist=["health"]).health(),             # Faz 3 dayanıklı bar-tetiği (consumer-group)
