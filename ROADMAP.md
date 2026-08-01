@@ -288,24 +288,24 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 + finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)
 - **ZATEN VAR:** tabular-nums (19 kullanım) · dürüstlük-UI (None≠0 = YASA, provenance rozetleri,
   sermaye-köken, nabız-bayat beyanı) · koyu tema · CSP script-src-self · yoğun-uzman düzeni.
-- **P1 Sessiz-Hat (Level-1) 📋:** 17 bekçi + kilitler + tazelik TEK toplanmış şeritte — sağlıklı
+- **P1 Sessiz-Hat ✅ CANLI (2026-08-01):** 17 bekçi + kilitler + tazelik TEK toplanmış şeritte — sağlıklı
   = "17/17" sönük tek özet, SAPMADA segment açılır; renk yalnız anomalide (ASM 5× tespit kanıtı;
   klinik alarm-yorgunluğuna karşı toplama KRİTİK).
-- **P2 Alarm bütçesi KPI 📋:** EEMUA 80/15/5 + <10/10dk tepe + <10 duran-alarm canlı gösterge;
+- **P2 Alarm bütçesi ✅ CANLI:** EEMUA 80/15/5 + <10/10dk tepe + <10 duran-alarm canlı gösterge;
   taşkın-toplama.
-- **P3 Gauge yasağı 📋:** mevcut 2 gauge → bullet-graph + gömülü-trend + beklenen-aralık bandı
+- **P3 Gauge yasağı ✅:** mevcut 2 gauge → bullet-graph + gömülü-trend + beklenen-aralık bandı
   (Few spesifikasyonu; tek-hue yoğunluk aralıkları).
-- **P4 Tipografi denetimi 📋:** slashed-zero + sağa-hizalı sabit ondalık taraması; Geist KORUNUR
+- **P4 Tipografi ✅ (slashed-zero ölçülüp-gereksiz):** slashed-zero + sağa-hizalı sabit ondalık taraması; Geist KORUNUR
   (bilinçli-bastırılmış operatör kararı — el kitabının Inter önerisi REDDEDİLDİ).
-- **P5 Belirsizlik kodlaması 📋:** onarım-dolgu/imputation hücrelerinde belirsizlik-görseli +
+- **P5 Belirsizlik ✅ (renksiz kanal):** onarım-dolgu/imputation hücrelerinde belirsizlik-görseli +
   bayatlık-solması standardı (Sarma/Kay).
-- **P6 Saf-siyah sürgünü 📋:** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);
+- **P6 ✅ gece-teması doğrulandı / gündüz-beyazı refinement-turu kalemi 📋:** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);
   WCAG 2.2 AA UYUMLULUK STANDARDI KALIR (APCA yalnız tasarım-yardımcısı — el kitabının kendi
   düzeltmesi: WCAG-3 onaylı değil).
-- **P7 ⌘K komut paleti 📋 (ayrı tur):** tek eylem yüzeyi; kilit/nav/filtre; kısayol-ipuçları;
+- **P7 ⌘K paleti ✅ CANLI (933 satır, 25+7 komut, iki-adım onay):** tek eylem yüzeyi; kilit/nav/filtre; kısayol-ipuçları;
   CSP-self uyumlu.
 - **P9 Kapsama/drift renk-skalaları 📋:** tek-hue sequential (koyu-uyumlu) + CVD-güvenli diverging.
-- **P10 Hareket kuralı 📋:** prefers-reduced-motion + ≤300ms puls YALNIZ-anomali; skeleton
+- **P10 Hareket ✅ (koşulsuz-puls söküldü):** prefers-reduced-motion + ≤300ms puls YALNIZ-anomali; skeleton
   sınırlaması kural olarak (zaten kullanılmıyor).
 - **RED/UYARLANDI:** APCA-birincil (red) · Inter (red — Geist kalır) · skeleton yaygınlaştırma
   (red — Viget karşı-kanıtı) · ARIA-live genişletme (dar: yalnız kritik alarm/kilit — tek görüşür
@@ -393,6 +393,15 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-08-01 ~16:15 GÜN KAPANIŞI (tam-güç günü).** Mutasyon %49→%86,8 (28-ajan Workflow) ·
+  EDG-016 turnover SUCCESS→KABLOLANDI (bounds'ta bakir düğme) · BASE-001 karne: '+%2,5/4,5yıl,
+  2024-bağımlı' + huni üç-darboğaz · sermaye tohum-ayrıştırması CANLI (100k gerçek-canlı taban;
+  rampanın hayalet-tepe kusuru dahil) · WP-P pano dönüşümü CANLI (sessiz-hat 16/17'yi dürüstçe
+  gösterdi + alarm-KPI ilk gün tepe-aşımını yakaladı + ⌘K palet) · dagit sır-silme sınıfı kapandı ·
+  8-K vekili + P9 dışında WP-P tamam. DÖRT pencere, DOKUZ tam-suite, ~50 commit. İzlemede: akşam
+  trend_book doğumu + turnover ilk örneklemesi + restart-patlamasının alarm-tepesini şişirmesi
+  (yarın: dağıtım-penceresi muafiyeti değerlendirilebilir — bilinçli, ölçülmüş karar ister).
 
 - **2026-08-01 ~16:00 BÜYÜK HÜKÜM GÜNÜ KAPANIŞI.** EDG-016 turnover SUCCESS (yeni yaşayan sinyal;
   net +0,55% @20; survivorship-şerhli) · EDG-013 devir-arşiv · EDG-015 VCP-çatı arşiv (a-fortiori:
