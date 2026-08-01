@@ -248,6 +248,7 @@ pytest_add_cli_args_test_selection = [
     "tests/test_trend_shadow_v144.py",
     # Pozitif dosyaların İÇİNDEKİ tekil ortam testleri (repo-kökü betik/varlık okuyanlar):
     "--deselect", "tests/test_golge_v2_yasam_dongusu_v132.py::test_VM_disi_yedek_cekici_calistirilabilir_ve_sozdizimi_temiz",
+    "--deselect", "tests/test_golge_v2_yasam_dongusu_v132.py::test_LaunchAgent_plist_gunde_bir_kosar_ve_TCC_ayrimini_yazar",
 ]
 # DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
 # BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
