@@ -284,6 +284,33 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   DuckLake → RED-ŞİMDİLİK (251-sembol EOD'de katalog katmanının çözdüğü sorun bizde yok;
   tetik: bar arşivinin Parquet'e taşınması gündeme gelirse).
 
+### WP-P — Pano/Operatör Arayüzü (2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası
++ finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)
+- **ZATEN VAR:** tabular-nums (19 kullanım) · dürüstlük-UI (None≠0 = YASA, provenance rozetleri,
+  sermaye-köken, nabız-bayat beyanı) · koyu tema · CSP script-src-self · yoğun-uzman düzeni.
+- **P1 Sessiz-Hat (Level-1) 📋:** 17 bekçi + kilitler + tazelik TEK toplanmış şeritte — sağlıklı
+  = "17/17" sönük tek özet, SAPMADA segment açılır; renk yalnız anomalide (ASM 5× tespit kanıtı;
+  klinik alarm-yorgunluğuna karşı toplama KRİTİK).
+- **P2 Alarm bütçesi KPI 📋:** EEMUA 80/15/5 + <10/10dk tepe + <10 duran-alarm canlı gösterge;
+  taşkın-toplama.
+- **P3 Gauge yasağı 📋:** mevcut 2 gauge → bullet-graph + gömülü-trend + beklenen-aralık bandı
+  (Few spesifikasyonu; tek-hue yoğunluk aralıkları).
+- **P4 Tipografi denetimi 📋:** slashed-zero + sağa-hizalı sabit ondalık taraması; Geist KORUNUR
+  (bilinçli-bastırılmış operatör kararı — el kitabının Inter önerisi REDDEDİLDİ).
+- **P5 Belirsizlik kodlaması 📋:** onarım-dolgu/imputation hücrelerinde belirsizlik-görseli +
+  bayatlık-solması standardı (Sarma/Kay).
+- **P6 Saf-siyah sürgünü 📋:** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);
+  WCAG 2.2 AA UYUMLULUK STANDARDI KALIR (APCA yalnız tasarım-yardımcısı — el kitabının kendi
+  düzeltmesi: WCAG-3 onaylı değil).
+- **P7 ⌘K komut paleti 📋 (ayrı tur):** tek eylem yüzeyi; kilit/nav/filtre; kısayol-ipuçları;
+  CSP-self uyumlu.
+- **P9 Kapsama/drift renk-skalaları 📋:** tek-hue sequential (koyu-uyumlu) + CVD-güvenli diverging.
+- **P10 Hareket kuralı 📋:** prefers-reduced-motion + ≤300ms puls YALNIZ-anomali; skeleton
+  sınırlaması kural olarak (zaten kullanılmıyor).
+- **RED/UYARLANDI:** APCA-birincil (red) · Inter (red — Geist kalır) · skeleton yaygınlaştırma
+  (red — Viget karşı-kanıtı) · ARIA-live genişletme (dar: yalnız kritik alarm/kilit — tek görüşür
+  operatör) · Doherty 400ms (Nielsen 0.1/1/10 esas) · P8 confirmed-state zaten mimaride (E1/mutabakat).
+
 ### SIRALAMA (güncel): mevcut dalga (BT-1→WP-E · WP-D-r2 · 1.2/1.4) → sabah konsolidasyon+dağıtım →
 **WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
