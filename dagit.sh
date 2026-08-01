@@ -69,7 +69,7 @@ echo "  ✓"
 # kümesine geri döndürür (pytest `--extra dev`den gelmeye devam eder). KARAR ROL-1'İN — dağıtım
 # semantiğini ölçüm turu tek başına değiştirmez.
 echo "=== [3/5] uv sync --frozen ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv sync --frozen --extra dev -q && echo "  ✓"'
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv sync --frozen --no-dev -q && echo "  ✓"'
 
 echo "=== [4/5] bakım penceresi ==="
 "${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive && echo "  ✓ durdu"'
