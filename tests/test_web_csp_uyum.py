@@ -23,9 +23,17 @@ CADDY = pathlib.Path(__file__).resolve().parents[1] / "deploy" / "Caddyfile"
 # Tarayıcının çalıştırdığı her şey. `.html` içindeki `<style>` blokları style-src'ye tabidir
 # ve orada `unsafe-inline` BİLEREK duruyor (app.js satır içi stil üretiyor) — bu dosya
 # script tarafını korur.
-YUZEYLER = ["index.html", "landing.html", "workflow.html", "app.js", "theme.js",
-            "landing.js", "workflow.js"
-    "meridian/web/palette.js",  # P7 komut paleti (2026-08-01) — aynı CSP kuralları ev-tarafında da çivili
+#
+# LİSTE BİR SÜRE SESSİZCE YARIM KOŞTU (2026-08-01'de bulundu). Girdiler arasında VİRGÜL
+# EKSİKTİ ve Python iki dizgiyi bitiştirdi: `"workflow.js" "meridian/web/palette.js"` →
+# `"workflow.jsmeridian/web/palette.js"`. Sonuç: `workflow.js` hiç sınanmadı, `palette.js` hiç
+# sınanmadı, ve var olmayan bitişik ad `pytest.skip` ile SESSİZCE atlandı — yani koruma yeşil
+# görünüyordu. Bu, bu deponun tekrar eden kusur sınıfının ta kendisi ("kurulu ≠ çalışır").
+# Ayrıca yol biçimi de karışmıştı: `_oku()` adları `WEB / ad` diye çözer, yani girdiler
+# DOSYA ADI olmalı — depo-kökü göreli yol değil.
+YUZEYLER = ["index.html", "landing.html", "workflow.html", "runbook.html",
+            "app.js", "theme.js", "landing.js", "workflow.js",
+            "palette.js",  # P7 komut paleti (2026-08-01) — aynı CSP kuralları ev-tarafında da çivili
 ]
 
 # Yorum ve dizgi içindeki "onclick" kelimesini yakalamamak için özniteliğin gerçek biçimini
@@ -55,7 +63,7 @@ def test_satir_ici_olay_ozniteligi_yok(ad):
     )
 
 
-@pytest.mark.parametrize("ad", ["index.html", "landing.html", "workflow.html"])
+@pytest.mark.parametrize("ad", ["index.html", "landing.html", "workflow.html", "runbook.html"])
 def test_satir_ici_script_blogu_yok(ad):
     """`<script>` yalnız `src` ile gelmeli; gövdeli blok CSP'ye takılır."""
     kaynak = _oku(ad)

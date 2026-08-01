@@ -16,6 +16,44 @@ const VIEWS = [
 // Eski yer imleri ve derin bağlantılar kırılmaz — hepsi yeni yüzeyine yönlenir.
 const ROUTE_ALIAS = { hermes: "ajan", hafiza: "ajan", skiller: "ajan",
                       performans: "brifing", onaylar: "adaylar" };
+// ---- EKRAN-BAŞINA SORU CÜMLESİ (UIUX S1-T5) --------------------------------------------------
+// İş emri Program IA: "Her ekran tek cümlelik bir soruyu cevaplar; cevaplamadığı hiçbir veri o
+// ekranda durmaz ('ekrana dök' yasağı)." O cümleler bugüne dek YALNIZ kod yorumlarında yaşıyordu
+// (bkz. yukarıdaki VIEWS bloğu) — yani kuralı uygulaması gereken kişi onu ekranda göremiyordu.
+// Cümle ekrana çıktığı an bir DENETİM ÇIPASI olur: bir blok eklerken "bu, bu sorunun cevabı mı?"
+// diye sorulacak yer, o bloğun eklendiği ekranın kendi başlığıdır.
+//
+// ON İKİ GİRDİ, ON İKİ RENDER: `RENDER.*` on iki görünüm çizer (yedi sayfa + beş gömülü bölüm:
+// performans · onaylar · hermes · skiller · hafiza). Gömülü olanlar da kendi sorusunu taşır,
+// çünkü "ekrana dök" riski tam olarak orada doğuyor — bir sayfaya beşinci bir bölüm eklemek,
+// yeni bir sayfa açmaktan çok daha ucuz görünür.
+//
+// TEK KAYNAK BURASIDIR. WP0'ın "Ek-A" listesi bu sözlüğün kendisidir; belgeye kopyalanan bir
+// ikinci liste, ilk düzenlemede sessizce ayrışırdı.
+const EKRAN_SORUSU = {
+  brifing:    "Bu ekran şunu cevaplar: dün gece ne oldu, bugün ne silahlandı, sermayem ne durumda?",
+  adaylar:    "Bu ekran şunu cevaplar: bugün neye karar veriliyor — sistem ne öneriyor, benden ne bekliyor?",
+  market:     "Bu ekran şunu cevaplar: bugün neyi izliyorum — evrenin tamamı hangi kapanışta, neresi bayat?",
+  operasyon:  "Bu ekran şunu cevaplar: sistem sağlıklı mı; değilse NE ve NEREDE?",
+  intraday:   "Bu ekran şunu cevaplar: bugünkü bar akışı ve silahlanma canlı ne durumda?",
+  ajan:       "Bu ekran şunu cevaplar: makine ne öğreniyor — hipotez defteri ve kalibrasyon ne diyor?",
+  ayarlar:    "Bu ekran şunu cevaplar: sistem nasıl yapılandırılmış, hangi anahtarlar kurulu?",
+  hermes:     "Bu bölüm şunu cevaplar: düşünen beyin şu an ne yapıyor, sıradaki tur ne bekliyor?",
+  hafiza:     "Bu bölüm şunu cevaplar: ajan kendi geçmişinden ne çıkardı — kalıcı dersler neler?",
+  skiller:    "Bu bölüm şunu cevaplar: hangi araçlar hatta, hangileri emekli, katkıları ölçüldü mü?",
+  performans: "Bu bölüm şunu cevaplar: bugüne kadar ne birikti — eğri, düşüş ve kırılımlar ne diyor?",
+  onaylar:    "Bu bölüm şunu cevaplar: şu an benim onayımı bekleyen ne var?",
+};
+// SÖNÜK VE TEK SATIR (iş emri: "başlık-altı tek sönük satır"). Kendi CSS sınıfı YOK — bu tur
+// paralel koşuyor ve index.html'in <style>'ı başka bir hattın alanı; satır mevcut `.hint`
+// mertebesine oturur, tonu satır içi düşürülür. `data-soru` bir kancadır: testler on iki
+// görünümün on ikisinde de bu satırın varlığını buradan ölçer.
+function soruCumlesi(id) {
+  const s = EKRAN_SORUSU[id];
+  if (!s) return "";           // kayıtsız görünüm sessizce boş satır üretir, uydurma cümle değil
+  return `<p class="hint soru-c" data-soru="${id}" style="margin-top:6px;font-size:12px;` +
+         `color:var(--tx3);max-width:80ch">${esc(s)}</p>`;
+}
 let HALTED = false, SUMMARY = null;
 // Piyasa sekmesi bir kez çizildiğinde şeridin alt satırına düşen CANLI sayılar. null = "henüz
 // ölçülmedi" (sayfa açılmadı) — şerit o zaman satırı hiç yazmaz, sıfır yazmaz.
@@ -891,13 +929,28 @@ function alertsInbox(a) {
   // olay akışı `<button class="evrow rowbtn">` üretiyordu: aynı görünüm, zıt davranış, aynı
   // sayfada. Tıkla-çekmece deseninin sisteme yayıldığı yerde sessizce başarısız olan tek nokta
   // buydu — üstelik operatörün en tedirgin olduğu yerde.
-  const rows = groups.map(g => {
+  // RUNBOOK BAĞI SATIRIN İÇİNE GİREMEZ, YANINA GİRER (UIUX S1-T3): satırın kendisi bir
+  // <button>'dır (kaydı açar, j/k gezinmesine `data-rk` ile bağlıdır) ve bir <a> butonun
+  // içerik modeline GİRMEZ — iç içe etkileşimli öğe, hem geçersiz HTML hem de "hangisine
+  // bastım" belirsizliğidir. Bu yüzden satır bir sarmalayıcıya alınır: sol tarafta kayıt
+  // butonu (eskisiyle birebir aynı), sağda ayrı bir teşhis bağı. İki niyet, iki hedef.
+  // SARMALAYICI BİR CSS KURALINI DA DEVRE DIŞI BIRAKIR: `.evrow:last-child{border-bottom:none}`
+  // artık eşleşemez (buton sarmalayıcının son çocuğu değil, bağ ondan sonra geliyor). Yani
+  // listenin ALTINA fazladan bir kıl çizgi düşerdi. index.html'in <style>'ı bu turda başka bir
+  // hattın alanı olduğu için kural orada değil BURADA telafi edilir — son satır kendi
+  // kenarlığını kapatır. Görsel sonuç önceki hâlle birebir aynı.
+  const rows = groups.map((g, i) => {
     const k = rec("alert", g);
-    return `<button ${rowAttrs(k, `${g.token}${g.n > 1 ? ` ×${g.n}` : ""} · ${g.message || ""}. Kaydı aç.`)} class="evrow rowbtn">
+    const son = i === groups.length - 1;
+    return `<div class="alarm-satir" style="display:grid;grid-template-columns:minmax(0,1fr) auto;` +
+      `gap:var(--s3, 10px);align-items:center">` +
+      `<button ${rowAttrs(k, `${g.token}${g.n > 1 ? ` ×${g.n}` : ""} · ${g.message || ""}. Kaydı aç.`)} class="evrow rowbtn"${
+        son ? ' style="border-bottom:none"' : ""}>
       <span class="neg" aria-hidden="true">▲</span>
       <span class="etxt"><span class="tag t-no">${esc(g.token)}</span>
         ${g.n > 1 ? `<b>×${g.n}</b>` : ""} <span class="neg">${esc(g.message || "")}</span></span>
-      <span class="etime">${relTime(g.last_ts)}</span></button>`;
+      <span class="etime">${relTime(g.last_ts)}</span></button>` +
+      runbookLink(g.token) + `</div>`;
   }).join("");
   return head + trunc + rows + btn;
 }
@@ -987,7 +1040,8 @@ RENDER.brifing = async () => {
   $("bugun-now").innerHTML = `
     ${spineHTML(t, h, null, (_DIAG || {}).hud)}
     <div class="rise" style="margin-top:20px"><h1 class="greet quiet">${greetWord}, ${OPERATOR}</h1>
-      <p class="subline" style="margin-top:6px">${esc(realToday)}${staleSession ? ` · son seans <b style="color:var(--tx)">${esc(sessionDate)}</b>` : ""}</p></div>
+      <p class="subline" style="margin-top:6px">${esc(realToday)}${staleSession ? ` · son seans <b style="color:var(--tx)">${esc(sessionDate)}</b>` : ""}</p>
+      ${soruCumlesi("brifing")}</div>
 
     <div class="hero rise" style="margin-top:24px"><div class="hero-grid">
       <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
@@ -1120,7 +1174,7 @@ RENDER.adaylar = async () => {
     <div class="rise"><span class="slabel"><span class="d"></span>TARAMA HATTI</span>
       <h2 class="ph">Bir sonraki açılış <span class="g">için.</span></h2>
       <p class="subline">Veri <b style="color:var(--tx)">${esc(asOf || '—')}</b>'e kadar taze · kaynak <b style="color:var(--tx)">${esc(provider)}</b> · adaylar <b style="color:var(--tx)">bir sonraki açılışa</b> yöneliktir</p>
-</div>
+      ${soruCumlesi("adaylar")}</div>
 
     ${(() => {   // yerel LLM ajanının İKİNCİ GÖRÜŞÜ — danışma katmanı, kapı kararını değiştirmez
       const rv = d.candidate_review || {};
@@ -1334,6 +1388,29 @@ function bayatSinif(tarih, referans) {
 // AÇILIMDA TAVAN VAR (4 satır): 11 bekçi birden geciktiğinde şerit bir listeye dönüşür ve Level-1
 // olmaktan çıkar. Kalan sayı YAZILIR ("+7 daha") — kırpma sessiz olamaz.
 const SH_ACILIM_TAVAN = 4;
+// ---- RUNBOOK BAĞI (UIUX S1-T3) ---------------------------------------------------------------
+// J2 zinciri "alarm → teşhis → runbook → çözüm"un SON HALKASI. Bu tur öncesinde alarm satırları ve
+// sessiz-hat sapmaları bir hedef gösteremiyordu: runbook YOKTU. Artık `docs/RUNBOOK.md` var ve
+// `/runbook` onun okuyucusu; her sapma/alarm adı orada bir bölüm ÇAPASIDIR.
+//
+// ÇAPA KURALI TEK VE DÖNÜŞÜMSÜZ: çapa = adın küçük harfli hâli. Bekçi mekanizmaları ve sessiz-hat
+// sapma adları zaten küçük harf (`scheduler_poll`, `nabız`), alarm jetonları BÜYÜK harf
+// (`MECHANISM_STALE`) ve üretici onları `.lower()` ile yazıyor — tek `toLowerCase()` üçünü de
+// karşılar. Slug'lama YOK: burada bir slug kuralı olsaydı üreticidekiyle ikiye ayrılır ve biri
+// sessizce bayatlardı (bu deponun tekrar eden kusur sınıfı). Türkçe harf çapada AYNEN durur;
+// `encodeURIComponent` yalnız URL katmanını güvenceye alır, tarayıcı fragmanı çözüp eşleştirir.
+//
+// BAĞ ASLA "BİLDİĞİM BİR ŞEY VAR" DEMEZ: hedefte o ad için yazılmış bir girdi olmayabilir —
+// runbook o durumda "runbook girdisi henüz yazılmadı" der. Yani bağ bir VAAT değil, bir ADRES.
+function runbookHref(ad) {
+  return "/runbook#" + encodeURIComponent(String(ad ?? "").toLowerCase());
+}
+function runbookLink(ad, sinif) {
+  if (!ad) return "";
+  return `<a class="${sinif || "rb-link"}" href="${runbookHref(ad)}"` +
+         ` title="Runbook: ${esc(String(ad))}" style="font-size:11px;color:var(--tx2);` +
+         `text-decoration:underline;text-underline-offset:2px;white-space:nowrap">runbook ↗</a>`;
+}
 function sessizHat(sh) {
   if (!sh) return "";
   const segler = (sh.segmentler || []).map(s => {
@@ -1343,7 +1420,8 @@ function sessizHat(sh) {
       `<span class="sh-row"><b>${esc(x.ad ?? "?")}</b>${
         x.sure ? ` <span class="sh-sure">${esc(x.sure)}</span>` : ""}${
         x.detay ? ` <span class="sh-ip">· ${esc(x.detay)}</span>` : ""}${
-        x.ipucu ? ` <span class="sh-ip">· ${esc(x.ipucu)}</span>` : ""}</span>`).join("");
+        x.ipucu ? ` <span class="sh-ip">· ${esc(x.ipucu)}</span>` : ""}${
+        x.ad ? ` ${runbookLink(x.ad, "sh-rb")}` : ""}</span>`).join("");
     return `<span class="sh-seg sh-sap${s.kritik ? " kritik" : ""}">${esc(s.ad)} <b>${esc(s.ozet ?? "—")}</b>
       <span class="sh-ac">${satirlar}${kalan > 0
         ? `<span class="sh-fazla">+${kalan} daha — tam liste bu kartın kendi bölümünde</span>` : ""}</span></span>`;
@@ -1692,6 +1770,7 @@ RENDER.market = async () => {
   $("page-market").innerHTML = `
     <div class="slabel rise"><span class="d"></span>PİYASA · İZLENEN EVREN</div>
     <h1 class="ph rise">Piyasa — izlenen <span class="g">evren.</span></h1>
+    ${soruCumlesi("market")}
     <p class="subline rise"><b style="color:var(--tx)">${d.n}</b> hisse · kaynak
       <b style="color:var(--tx)">${src.bars ?? 0}</b> bars CSV${src.finviz_extra
         ? ` + <b style="color:var(--tx)">${src.finviz_extra}</b> finviz ekstrası` : ""}<br>
@@ -3289,6 +3368,7 @@ RENDER.operasyon = async () => {
   $("page-operasyon").innerHTML = `
     <div class="slabel rise"><span class="d"></span>OPERASYON · CAM KOKPİT</div>
     <h1 class="ph rise">Teşhis <span class="g">ve müdahale.</span></h1>
+    ${soruCumlesi("operasyon")}
     <p class="subline rise">Mutabakat, kapılar, MLOps, kenar, veri hattı, sağlayıcılar ve öğrenme kadansları — üstte sabit HUD.
     Sistem sağlıklıyken sessiz hat TEK sönük satırda kalır ve renk taşımaz; sapan segment kendini açar.
     Kriz butonları: HUD'daki <b>KRİZ ⚠</b> kapağının altında (yanlış tıka karşı emniyetli).</p>
@@ -3427,6 +3507,7 @@ RENDER.intraday = async () => {
   $("page-intraday").innerHTML = `
     <div class="slabel rise"><span class="d"></span>INTRADAY · DAKİKALIK AKIŞ</div>
     <h1 class="ph rise">Dakikalık <span class="g">gözlem.</span></h1>
+    ${soruCumlesi("intraday")}
     <p class="subline rise">Alpaca dakikalık kapanmış barlar → Redis akışı → dayanıklı tetik → gözlem-modu ölçüm → gölge icra kararı.
     Karar hattı EOD kalır; burası intraday veriyi ve sıfır-yetkili ölçümleri gösterir.</p>
     <div style="margin-top:20px"></div>
@@ -3502,7 +3583,8 @@ RENDER.ajan = async () => {
   $("ajan-own").innerHTML = `
     <div class="rise" style="border-top:1px solid var(--line);padding-top:26px">
       <span class="slabel"><span class="d"></span>ÖĞRENME DEFTERİ · HER TAHMİNİN BİR SONUCU VAR</span>
-      <p class="subline" style="margin-top:8px">Beyin ne önerdi, kapı ne dedi, gerçekte ne oldu — üçü yan yana.</p></div>
+      <p class="subline" style="margin-top:8px">Beyin ne önerdi, kapı ne dedi, gerçekte ne oldu — üçü yan yana.</p>
+      ${soruCumlesi("ajan")}</div>
     <div class="card rise" style="margin-top:18px"><h2 class="t">Strateji sürümleri (v01 → …)</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${timeline || '<span class="mut">yalnızca v01</span>'}</div></div>
     <div class="card rise" style="margin-top:16px"><h2 class="t">Kalibrasyon — tahmin mi tuttu?</h2>${scatter(d.calibration_scatter)}
@@ -3565,7 +3647,8 @@ RENDER.hafiza = async () => {
   $("page-hafiza").innerHTML = `
     <div class="rise" style="border-top:1px solid var(--line);padding-top:26px">
       <span class="slabel"><span class="d"></span>HAFIZA · ÇIKARILAN DERSLER</span>
-      <p class="subline" style="margin-top:8px">Ajanın kendi geçmişinden damıttığı, kalıcı yazılı dersler.</p></div>
+      <p class="subline" style="margin-top:8px">Ajanın kendi geçmişinden damıttığı, kalıcı yazılı dersler.</p>
+      ${soruCumlesi("hafiza")}</div>
     <div class="card rise" style="margin-top:18px"><h2 class="t">lessons.md</h2>
       <input class="searchbox" id="lsearch" placeholder="derslerde ara…" data-act="filterLessons" data-act-on="input"/>
       <div class="md" id="lessons" style="margin-top:14px">${mdToHtml(d.lessons_md)}</div></div>`;
@@ -3661,7 +3744,8 @@ RENDER.skiller = async () => {
     <div class="rise" style="border-top:1px solid var(--line);padding-top:26px">
       <span class="slabel"><span class="d"></span>ARAÇ KÜTÜPHANESİ · ${c.enabled ?? "—"} AKTİF ARAÇ, HEPSİ DENETLENEBİLİR</span>
       <p class="subline" style="margin-top:8px">Ajanın kullandığı analiz araçları ve her birinin ölçülen katkısı.
-        Aşağıdaki bölümler YALNIZ aktif araçları listeler; hattan düşürülenler alttaki katlanır rafta.</p></div>
+        Aşağıdaki bölümler YALNIZ aktif araçları listeler; hattan düşürülenler alttaki katlanır rafta.</p>
+      ${soruCumlesi("skiller")}</div>
     <div class="mrow rise" style="margin-top:18px">
       ${mc("Aktif", c.enabled, "var(--green)", "şu an çalışan")}${mc("Pipeline'da", c.active_in_pipelines, "var(--amber)", "günlük hatta bağlı")}${mc("Emekli · birleşti", birlesenN + emekliN, "var(--tx2)", "hattan düşürüldü, kaydı duruyor")}${mc("Kayıtta toplam", c.total, null, "aktif + emekli + kapalı")}</div>${runsCard(d.recent_runs)}${cats}${emekliCard}`;
 };
@@ -3993,7 +4077,8 @@ RENDER.performans = async () => {
     <div class="rise" style="border-top:1px solid var(--line);padding-top:26px">
       <span class="slabel"><span class="d"></span>BİRİKİM · GEÇMİŞ VERİNİN ÜSTÜNDE SINAMA</span>
       <p class="subline" style="margin-top:8px">Yukarısı bugün ne olduğunu, burası bugüne kadar
-        ne biriktiğini anlatır. Aynı kitabın iki zaman ölçeği.</p></div>
+        ne biriktiğini anlatır. Aynı kitabın iki zaman ölçeği.</p>
+      ${soruCumlesi("performans")}</div>
     <div class="mrow rise" style="margin-top:18px">
       ${mc("Başarı notu", sd.score, cls(sd.score) === 'pos' ? 'var(--green)' : cls(sd.score) === 'neg' ? 'var(--red)' : 'inherit', "−1…+1")}
       ${mc("Toplam getiri", pctf(sd.total_return, 1), 'var(--green)', "baştan bugüne")}${mc("En sert düşüş", pctf(sd.max_drawdown, 1), 'var(--amber)', "azı iyi")}${mc("Sharpe", sd.sharpe, null, "riske göre getiri")}</div>
@@ -4112,7 +4197,8 @@ RENDER.onaylar = async () => {
       <span style="display:flex;gap:6px">${btns}</span></div>`;
   }).join("");
   $("page-onaylar").innerHTML = `
-    <div class="rise"><span class="slabel"><span class="d"></span>SENİN ONAYINI BEKLEYENLER</span></div>
+    <div class="rise"><span class="slabel"><span class="d"></span>SENİN ONAYINI BEKLEYENLER</span>
+      ${soruCumlesi("onaylar")}</div>
     <div class="card rise" style="margin-top:14px"><h2 class="t">Gelen kutusu (${inbox.length})</h2>
       <p class="hint" style="margin-top:0">Sistemin sana getirdiği her karar türü tek listede — kanıtıyla.
         Yukarıdaki adaylar bilgi; burası iş.</p>
@@ -4430,7 +4516,8 @@ RENDER.hermes = async () => {
   $("page-hermes").innerHTML = `
     <div class="rise"><span class="slabel"><span class="d"></span>DÜŞÜNME BEYNİ</span>
       <h3 class="t" style="font-size:14px;margin-top:10px">Beyin durumu</h3>
-      <p class="subline">${d.skill_count ?? "—"} beceri okunuyor · ${claude ? esc(BRAIN_TR[s.brain] || s.brain) : "deterministik önerici (LLM anahtarı yok)"}</p></div>
+      <p class="subline">${d.skill_count ?? "—"} beceri okunuyor · ${claude ? esc(BRAIN_TR[s.brain] || s.brain) : "deterministik önerici (LLM anahtarı yok)"}</p>
+      ${soruCumlesi("hermes")}</div>
     <div class="g2 rise" style="margin-top:22px">
       <div class="card"><h2 class="t">Durum</h2>
         <div class="acct" style="margin-top:4px">
@@ -4696,6 +4783,7 @@ RENDER.ayarlar = async () => {
   $("page-ayarlar").innerHTML = `
     <div class="rise"><span class="slabel"><span class="d"></span>AYARLAR</span>
       <h1 class="ph">API <span class="g">anahtarları.</span></h1>
+      ${soruCumlesi("ayarlar")}
       <p class="hint">Anahtarlar bu bilgisayarda yalnızca senin okuyabileceğin bir dosyada saklanır (<code>state/secrets.json</code>, izin 0600) — <b>koda, loga veya ekrana asla yazılmaz</b>; sadece son 4 hanesi maskeli gösterilir. Kaydettikten sonra kutu temizlenir.</p></div>
     <div class="card rise" style="margin-top:18px;border-color:${d.live_enabled ? 'var(--red)' : 'var(--line-2)'}">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
@@ -4951,7 +5039,28 @@ const PAGE_DESC = {
   ajan: "üç eylem düğmesi · Hermes beyni · hipotez defteri · beceriler · dersler",
   ayarlar: "API anahtarları · Alpaca aynası · sözlük",
 };
-const PAGE_MAP = VIEWS.map(([id, label], i) => [String(i + 1), label, PAGE_DESC[id] || ""]);
+// ---- 'g' ÖNEKLİ SAYFA ATLAMA (UIUX S1-T4) ----------------------------------------------------
+// İş emri Program X `g d / g a / g r` diyor; WP0 İ6 bunu şiddet-2 borç saydı (1-7 vardı, g yoktu).
+// EŞLEME MEVCUT GÖRÜNÜM ADLARINA GÖRE KURULDU (iş emrinin adları bu panonun adları değil):
+//   g b → Bugün      (brifing)    g k → Kararlar (adaylar)
+//   g d → Piyasa     (market)     — iş emrindeki "veri"; bu panoda veri yüzeyi Piyasa'dır
+//   g a → Operasyon  (operasyon)  — iş emrindeki "alarm"; sessiz hat ve alarm bütçesi orada
+//   g i → Intraday   (intraday)   g r → Öğrenme (ajan) — iş emrindeki "araştırma"
+//   g y → Ayarlar    (ayarlar)
+// Yedi görünümün YEDİSİ de kapsanır: dördünü bağlayıp üçünü dışarıda bırakmak, "hangileri var"
+// sorusunu her seferinde deneyerek cevaplatırdı — kısayolun amacı tam da bunu bitirmek.
+//
+// NEDEN ÖNEK: `d`, `a`, `r` tek başına ALINAMAZ — `r` zaten "yenile", `k`/`j` satır gezinmesi.
+// Önek bir ayrı kip açar ve o kipte tek tuş TÜKETİLİR; yani `g k` satır gezinmesini tetiklemez.
+const GIT_KISAYOL = { b: "brifing", k: "adaylar", d: "market", a: "operasyon",
+                      i: "intraday", r: "ajan", y: "ayarlar" };
+// Önek SÜRESİZ AÇIK KALAMAZ: yarım bırakılmış bir `g`, dakikalar sonra basılan `r`yi sayfa
+// atlamasına çevirirdi — kullanıcının hiç istemediği bir eylem, hiç beklemediği anda.
+const G_PENCERE_MS = 1500;
+let _gOnekTs = 0;
+const _gTusu = id => (Object.keys(GIT_KISAYOL).find(t => GIT_KISAYOL[t] === id) || "");
+const PAGE_MAP = VIEWS.map(([id, label], i) =>
+  [String(i + 1), label, PAGE_DESC[id] || "", _gTusu(id) ? `g ${_gTusu(id)}` : ""]);
 let _kbdOrigin = null;
 function kbdOverlay(show) {
   let ov = $("kbd-ov");
@@ -4967,12 +5076,22 @@ function kbdOverlay(show) {
   // arkadaki sayfa hem okunabiliyor hem Tab'la gezilebiliyordu.
   ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
   ov.setAttribute("aria-label", "Klavye kısayolları ve sayfa haritası");
+  // TÜM KISAYOLLAR TEK YERDE (UIUX S1-T4). Panel eskiden yalnız 1-7 · J/K · R · ?'i sayıyordu;
+  // ⌘K paleti ve satır-içi Enter/Esc davranışı hiçbir yerde yazılı değildi — yani panonun en
+  // çok kullanılan kısayolu, kısayol haritasında YOKTU. Harita eksikse hatırlamaya zorlar
+  // (Nielsen İ6) ve bu tam da panelin kapatmak için var olduğu şey.
   ov.innerHTML = `<div class="kbd-panel"><h2 class="t">Kısayollar · sayfa haritası</h2>
-    ${PAGE_MAP.map(([k, n, d]) => `<div class="krow"><kbd>${k}</kbd><b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}
+    ${PAGE_MAP.map(([k, n, d, g]) => `<div class="krow"><kbd>${k}</kbd>${
+      g ? `<kbd>${esc(g)}</kbd>` : ""}<b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}
+    <div class="krow"><kbd>g</kbd><b>Sayfa atlama öneki</b><span>g + harf (yukarıdaki ikinci sütun) · ${G_PENCERE_MS / 1000} sn içinde</span></div>
+    <div class="krow"><kbd>⌘K</kbd><b>Komut paleti</b><span>Ctrl+K de olur · sembol/görünüm/müdahale arama</span></div>
     <div class="krow"><kbd>J</kbd><b>Sonraki satır</b><span>kayıt satırları arasında aşağı</span></div>
     <div class="krow"><kbd>K</kbd><b>Önceki satır</b><span>yukarı · Enter kaydı açar</span></div>
     <div class="krow"><kbd>R</kbd><b>Yenile</b><span>aktif sayfayı yeniden yükler</span></div>
     <div class="krow"><kbd>?</kbd><b>Bu panel</b><span>Esc ile kapanır</span></div>
+    <div class="krow"><kbd>Esc</kbd><b>Kapat / iptal</b><span>çekmece · palet · bu panel · yarım kalmış g öneki</span></div>
+    <p class="hint" style="margin-top:14px">Alarm ve sessiz-hat satırlarındaki <b>runbook ↗</b> bağı
+      teşhis belgesine gider (<a href="/runbook">/runbook</a>) — panodan ayrılır.</p>
     <button type="button" class="dlbtn" style="margin-top:16px" data-act="kbdOverlay" data-a1="false">Kapat</button></div>`;
   ov.addEventListener("click", e => { if (e.target === ov) kbdOverlay(false); });
   ov.addEventListener("keydown", e => {
@@ -4991,10 +5110,25 @@ addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const tag = (e.target && e.target.tagName) || "";
   if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
-  if (e.key === "Escape") return kbdOverlay(false);
+  if (e.key === "Escape") { _gOnekTs = 0; return kbdOverlay(false); }
   // Çekmece açıkken (aria-modal) arkadaki kısayollar ateşlenmez — modalın altındaki sayfaya
   // görünmeden gitmek modal olmanın anlamını bozar. Esc yukarıda zaten çalıştı.
   if ($("plotdrawer")?.classList.contains("open")) return;
+  // ---- 'g' ÖNEKLİ SAYFA ATLAMA (UIUX S1-T4) --------------------------------------------------
+  // ÖNEK KİPİ HER ŞEYDEN ÖNCE ÇÖZÜLÜR: `g r` beklerken `r`nin "yenile"ye düşmesi, iki tuşluk
+  // bir niyetin ortasında başka bir eylem yapmak olurdu. Kip TÜKETİCİDİR — tanınmayan bir
+  // harf gelirse dizi İPTAL edilir ve o tuş da DÜŞER (yarım niyet, yanlış eyleme dönüşemez).
+  if (_gOnekTs) {
+    const zamaninda = Date.now() - _gOnekTs < G_PENCERE_MS;
+    _gOnekTs = 0;
+    if (zamaninda) {
+      const hedef = GIT_KISAYOL[e.key.toLowerCase()];
+      if (hedef) { e.preventDefault(); kbdOverlay(false); return go(hedef); }
+      return;               // 'g' + tanınmayan tuş: sessiz iptal (yanlış sayfaya gitmekten iyi)
+    }
+    // Süre dolmuşsa önek YOK sayılır ve tuş NORMAL yolundan devam eder — aşağı düşer.
+  }
+  if (e.key === "g" || e.key === "G") { _gOnekTs = Date.now(); return; }
   if (e.key === "?") { e.preventDefault(); return kbdOverlay(!$("kbd-ov")); }
   // Tuş = görünümün VIEWS içindeki sırası. Sabit "1234567" dizesi listeden bağımsızdı ve
   // yardım paneliyle birlikte kayabiliyordu; artık aynı kaynaktan türer.

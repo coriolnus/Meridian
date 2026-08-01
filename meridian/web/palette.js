@@ -524,10 +524,23 @@
       yazma: false,
       calistir: function () { if (hazir("kbdOverlay")) window.kbdOverlay(true); }
     });
+    /* RUNBOOK ARTIK GERÇEK HEDEFİNE GİDİYOR (UIUX S1-T3, 2026-08-01).
+       Bu satır bir süre "Karar hattı şeması (runbook)" adıyla /workflow'a gidiyordu — çünkü
+       runbook diye bir yüzey YOKTU ve palet operatöre var olmayan bir şeyi vaat edemezdi;
+       en yakın akrabasına bağlamak zorunda kalmıştı. `docs/RUNBOOK.md` + `/runbook` ile o
+       zorunluluk bitti. İki komut artık AYRI ve adları ne olduklarını söylüyor: biri AKIŞ
+       şeması (sistem nasıl çalışır), diğeri TEŞHİS belgesi (bozulunca ne yapılır). */
     K.push({
-      id: "yrd:workflow", grup: "Yardımcı", ad: "Karar hattı şeması (runbook)",
+      id: "yrd:runbook", grup: "Yardımcı", ad: "Runbook · teşhis belgesi",
+      altyazi: "/runbook — alarm → belirti → teşhis → çözüm. docs/RUNBOOK.md'nin okuyucusu; panodan AYRILIR.",
+      anahtarlar: ["runbook", "teshis", "alarm", "bekci", "mekanizma", "nabiz", "ne yapmali"],
+      yazma: false,
+      calistir: function () { location.href = "/runbook"; }
+    });
+    K.push({
+      id: "yrd:workflow", grup: "Yardımcı", ad: "Karar hattı şeması",
       altyazi: "/workflow — günlük karar hattının uçtan uca akışı. Panodan AYRILIR.",
-      anahtarlar: ["runbook", "workflow", "akis", "sema", "karar hatti", "diyagram"],
+      anahtarlar: ["workflow", "akis", "sema", "karar hatti", "diyagram"],
       yazma: false,
       calistir: function () { location.href = "/workflow"; }
     });

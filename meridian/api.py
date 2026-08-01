@@ -5,9 +5,11 @@ gate for local use. Research system. Paper mode. Not financial advice."""
 from __future__ import annotations
 import functools
 import hmac
+import html
 import inspect
 import json
 import os
+import re
 import time as _time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -411,6 +413,170 @@ def workflow():
     """İnteraktif günlük karar hattı diyagramı — kapanış sonrası tek döngünün tam akışı; bugünkü
     darboğaz turunda eklenen mekanizmalar YENİ rozetiyle işaretli. Bağımsız, dış bağımlılık yok."""
     return FileResponse(WEB / "workflow.html")
+
+
+# ---- RUNBOOK YÜZEYİ (UIUX S1-T3, 2026-08-01) -------------------------------------------------
+# J2 zinciri "alarm → teşhis → runbook → çözüm" son halkasızdı: pano alarm satırları ve sessiz-hat
+# sapmaları bir hedef gösteremiyordu (WP0 borç #1). Hedef artık `docs/RUNBOOK.md` ve OKUYUCUSU bu
+# rota (YASA 6: okuyucusuz yazım yok).
+#
+# NEDEN SUNUCUDA RENDER (istemci tarafı markdown ayrıştırıcı DEĞİL): dağıtım CSP'si
+# `script-src 'self'` — istemci yolu ayrı bir /runbook.js dosyası + ayrı bir /api/runbook ucu +
+# bir ayrıştırıcı isterdi. Üç hareketli parça yerine bir fonksiyon. Üretim anında HTML gömmek de
+# elendi: gömülü kopya `docs/RUNBOOK.md` ile SESSİZCE ayrışabilirdi. Burada kaynak HER İSTEKTE
+# diskten okunur, yani ayrışma imkânsızdır.
+#
+# YETKİ: `_auth` ZORUNLU. Runbook mekanizma adlarını, betik başlıklarını ve mühendislik
+# günlüğünün açık-kalanlarını taşır — sistemin iç haritasıdır. `/landing` ve `/workflow` genel
+# anlatım yüzeyleridir; bu değil.
+_MD_SATIR_ICI = (
+    # SIRA BAĞLAYICI: `**` tek `*`ten ÖNCE, yoksa kalın metin iki boş `<em>`e bölünür.
+    (re.compile(r"`([^`]+)`"), r"<code>\1</code>"),
+    (re.compile(r"\*\*([^*]+)\*\*"), r"<strong>\1</strong>"),
+    (re.compile(r"\*([^*]+)\*"), r"<em>\1</em>"),
+    # YALNIZ BELGE-İÇİ ÇAPA BAĞLARI. Dış bağlantı üretilmez: runbook'un kendi kaynağı bu
+    # depodadır ve bir belge üreticisinin dışarı bağlantı açması, denetlenmeyen bir yüzeydir.
+    (re.compile(r"\[([^\]]+)\]\(#([A-Za-z0-9_\-]+)\)"), r'<a href="#\2">\1</a>'),
+)
+
+
+def _md_satir(s: str) -> str:
+    """Satır içi biçimleme — ÖNCE kaçış, SONRA desenler. Ters sıra, md içindeki bir `<` işaretini
+    etiket sanardı. Desenlerin kullandığı karakterler (`*`, backtick, köşeli parantez) kaçıştan
+    etkilenmez, yani sıra güvenli."""
+    s = html.escape(s, quote=False)
+    for desen, yerine in _MD_SATIR_ICI:
+        s = desen.sub(yerine, s)
+    return s
+
+
+_MD_BASLIK = re.compile(r"^(#{1,3})\s+(.*?)(?:\s*\{#([^}]+)\})?\s*$")
+# `ops/runbook_uret.py::YAZILMADI` ile AYNI dizge. İki yerde durması bir kopya değil bir
+# SÖZLEŞMEDİR (üretici yazar, okuyucu tanır) ve test onu çivili tutar — ayrışırsa işaret
+# sessizce sönerdi, yani eksik girdiler çözülmüş girdilerle aynı tonda görünürdü.
+_RUNBOOK_YAZILMADI = "runbook girdisi henüz yazılmadı"
+
+
+def _md_render(md: str) -> tuple[str, str]:
+    """`docs/RUNBOOK.md` → (gövde HTML, içindekiler HTML).
+
+    KENDİ ÜRETTİĞİMİZ MARKDOWN'IN DAR AYRIŞTIRICISIDIR, genel amaçlı bir markdown motoru
+    DEĞİL — ve bir bağımlılık eklememek için böyle: `ops/runbook_uret.py` yalnız şu yapıları
+    üretir ve üretici ile ayrıştırıcı aynı turda yazıldı. Tanınmayan bir satır KAYBOLMAZ,
+    paragraf olarak çıkar (sessiz yutma yok).
+
+    ÇAPALAR `{#ad}` sözdiziminden gelir ve BAŞLIK ADININ KENDİSİDİR (slug'lanmaz): pano
+    `/runbook#<mekanizma>` bağını çalışma anında API'den gelen adla kurar, araya bir dönüşüm
+    girseydi iki ayrı slug kuralı doğar ve biri sessizce bayatlardı."""
+    govde: list[str] = []
+    toc: list[str] = []
+    liste_derinlik = 0        # 0 = liste yok, 1 = <ul>, 2 = iç içe <ul>
+    kod = False
+    kod_tampon: list[str] = []
+    alinti: list[str] = []
+
+    def _liste_kapat():
+        nonlocal liste_derinlik
+        while liste_derinlik > 0:
+            govde.append("</ul>")
+            liste_derinlik -= 1
+
+    def _alinti_kapat():
+        if alinti:
+            govde.append("<blockquote><p>" + " ".join(alinti) + "</p></blockquote>")
+            alinti.clear()
+
+    for ham in md.splitlines():
+        if ham.startswith("```"):
+            if kod:
+                govde.append("<pre><code>" + html.escape("\n".join(kod_tampon), quote=False) + "</code></pre>")
+                kod_tampon.clear()
+            else:
+                _liste_kapat(); _alinti_kapat()
+            kod = not kod
+            continue
+        if kod:
+            kod_tampon.append(ham)
+            continue
+
+        if not ham.strip():
+            _liste_kapat(); _alinti_kapat()
+            continue
+
+        m = _MD_BASLIK.match(ham)
+        if m:
+            _liste_kapat(); _alinti_kapat()
+            duzey, metin, capa = len(m.group(1)), m.group(2), m.group(3)
+            kimlik = f' id="{html.escape(capa, quote=True)}"' if capa else ""
+            govde.append(f"<h{duzey}{kimlik}>{_md_satir(metin)}</h{duzey}>")
+            if capa and duzey <= 2:
+                sinif = ' class="g"' if duzey == 1 else ""
+                toc.append(f'<li{sinif}><a href="#{html.escape(capa, quote=True)}">'
+                           f"{_md_satir(metin)}</a></li>")
+            continue
+
+        if ham.startswith("---"):
+            _liste_kapat(); _alinti_kapat()
+            govde.append("<hr>")
+            continue
+
+        if ham.startswith("> "):
+            _liste_kapat()
+            alinti.append(_md_satir(ham[2:]))
+            continue
+        _alinti_kapat()
+
+        if ham.startswith("  - "):
+            if liste_derinlik == 0:
+                govde.append("<ul>"); liste_derinlik = 1
+            if liste_derinlik == 1:
+                govde.append("<ul>"); liste_derinlik = 2
+            govde.append(f"<li>{_md_satir(ham[4:])}</li>")
+            continue
+        if ham.startswith("- "):
+            while liste_derinlik > 1:
+                govde.append("</ul>"); liste_derinlik -= 1
+            if liste_derinlik == 0:
+                govde.append("<ul>"); liste_derinlik = 1
+            # "runbook girdisi henüz yazılmadı" satırı BU SAYFADAKİ TEK RENKLİ ÖĞEDİR: eksiğin
+            # adı, çözülmüş bir satırla aynı tonda duramaz.
+            sinif = ' class="yok"' if _RUNBOOK_YAZILMADI in ham else ""
+            govde.append(f"<li{sinif}>{_md_satir(ham[2:])}</li>")
+            continue
+
+        _liste_kapat()
+        govde.append(f"<p>{_md_satir(ham)}</p>")
+
+    if kod:                       # kapanmamış çit — içerik YUTULMAZ, olduğu gibi basılır
+        govde.append("<pre><code>" + html.escape("\n".join(kod_tampon), quote=False) + "</code></pre>")
+    _liste_kapat(); _alinti_kapat()
+    return "\n".join(govde), ("<ul>" + "\n".join(toc) + "</ul>" if toc else "")
+
+
+RUNBOOK_MD = Path(__file__).resolve().parents[1] / "docs" / "RUNBOOK.md"
+_RUNBOOK_YER_TUTUCU = ("<!--RUNBOOK-GOVDE-->", "<!--RUNBOOK-TOC-->")
+
+
+@app.get("/runbook", response_class=HTMLResponse)
+def runbook(request: Request):
+    """`docs/RUNBOOK.md`'nin okunur yüzeyi — alarm satırlarının ve sessiz-hat sapmalarının hedefi.
+
+    EKSİK KAYNAK SESSİZ GEÇMEZ. Belge yoksa ya da kabuk yer tutucularını kaybettiyse sayfa BOŞ
+    dönmez: ne olduğunu ve nasıl düzeltileceğini (`python ops/runbook_uret.py`) söyleyen bir
+    hata döner. Boş bir runbook, olay anında en kötü yalandır — "bakacak bir şey yok" der."""
+    _auth(request)
+    kabuk = (WEB / "runbook.html").read_text(encoding="utf-8")
+    for yt in _RUNBOOK_YER_TUTUCU:
+        if yt not in kabuk:
+            raise HTTPException(status_code=500,
+                                detail=f"runbook.html yer tutucusunu kaybetti: {yt}")
+    if not RUNBOOK_MD.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="docs/RUNBOOK.md YOK — runbook henüz üretilmemiş. Üret: python ops/runbook_uret.py")
+    govde, toc = _md_render(RUNBOOK_MD.read_text(encoding="utf-8"))
+    sayfa = kabuk.replace(_RUNBOOK_YER_TUTUCU[0], govde).replace(_RUNBOOK_YER_TUTUCU[1], toc)
+    return HTMLResponse(sayfa, headers=_NOCACHE)
 
 
 # ---------- liveness / metrics (no auth — used by health checks & scrapers) ----------

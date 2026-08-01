@@ -23,14 +23,14 @@ birebir uyumlu — mevcut CSS-değişken katmanı DTCG'ye kaynaklık edebilir (S
 
 12 görünüm (`RENDER.*`): bugun · kararlar(onaylar) · market · operasyon · intraday · ogrenme(ajan/
 hermes/skiller/hafiza karması) · ayarlar · adaylar · brifing · performans + `landing` + `workflow`.
-Her ekran için "cevapladığı soru" cümlesi taslağı hazırlandı (Ek-A, aşağıda kısaltıldı):
+Her ekran için "cevapladığı soru" cümlesi hazırlandı — TEK KAYNAK: `app.js::EKRAN_SORUSU` (S1-T5 ile panoya işlendi; buradaki 4 örnek özet):
 - **Bugün** — "Dün gece ne oldu, bugün ne silahlı, sermayem ne durumda?" (J1'in evi; sermaye-köken
   bloğu bugün eklendi)
 - **Operasyon** — "Sistem sağlıklı mı; değilse NE ve NEREDE?" (Sessiz-Hat + alarm-bütçesi burada)
 - **Intraday** — "Bugünkü akış/silahlanma canlı ne durumda?"
 - **Öğrenme** — "Makine ne öğreniyor; gölge kollar/karne ne diyor?" (J3'ün evi — İŞ EMRİNİN
   6-alan hiyerarşisine göre EN KALABALIK ve bölünme adayı)
-- (kalan 8 ekran Ek-A'da)
+- (kalanı `app.js::EKRAN_SORUSU` — kopya liste bilinçli tutulmuyor, ayrışırdı)
 **İSTEK (iş emri 13/2):** operatörden güncel ekran görüntüleri — özellikle Bugün, Operasyon,
 Öğrenme, Market (gündüz+gece birer adet yeter).
 
