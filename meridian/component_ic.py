@@ -106,15 +106,24 @@ HORIZONS = (5, 10, 20)
 # kalması. Sonuç: bu satırlar "bant puanının IC'si" DEĞİLDİR — üçgen dönüşüm monoton olmadığı için
 # Spearman IC'si de aynı sayı olmak zorunda değildir. Bandın kanıtı ayrı bir tablodur (bant ortalama
 # getirileri, g2_olcum çıktısı) ve bileşiğin uçtan uca ölçümü kalem E'nin aday profillerine aittir.
-COMPONENTS = ("rs", "tight", "vol", "prox", "rvol20", "mom12_1", "rmom")
+#
+# (7) SEKİZİNCİ SATIR: turnover21 (EDG-2026-016, 2026-08-01). Kartın hükmü SUCCESS ve entegrasyon
+#     kararı "elle ağırlık yok — kablola, düğmeyi bounds'a 0 ile indir, ölçüsünü öğrenme döngüsü
+#     versin". Bu tablo o döngünün GÖZÜDÜR: düğme 0'da dururken bile hücreler her gece dolar, yani
+#     "önce aç sonra ölç" kısır döngüsüne girilmez. Satırın ölçtüğü büyüklük HAM orandır
+#     (medyan21(hacim)/as_of_shares); skora giren büyüklük onun yüzdelik PUANIdır
+#     (`strategy.turnover_score`) — dönüşüm monotondur, yani Spearman IC'si aynı sayıdır, ama ölçek
+#     beyanı yine de yazılıdır (`yeni_bilesen_notu`). Payda EDGAR'dan gelir ve ölçülemeyen hücre
+#     None kalır; kaynağın sayacı çıktının `turnover_kaynak` alanındadır.
+COMPONENTS = ("rs", "tight", "vol", "prox", "rvol20", "mom12_1", "rmom", "turnover21")
 COMPONENT_WEIGHT_KEY = {"rs": "entry.w_rs", "tight": "entry.w_tight",
                         "vol": "entry.w_vol", "prox": "entry.w_prox",
                         "rvol20": "entry.w_rvolband", "mom12_1": "entry.w_mom",
                         # rmom'un ağırlık DÜĞMESİ YOK: g2_olcum'da hiçbir ufukta anlamlı değil
                         # (cf @20 IC 0.036, CI [-0.007, 0.079]) → yedek aday. Ölçülür, skora girmez.
-                        "rmom": None}
+                        "rmom": None, "turnover21": "entry.w_turnover"}
 COMPONENT_WEIGHT_DEFAULT = {"rs": 0.35, "tight": 0.30, "vol": 0.20, "prox": 0.15,
-                            "rvol20": 0.0, "mom12_1": 0.0, "rmom": None}
+                            "rvol20": 0.0, "mom12_1": 0.0, "rmom": None, "turnover21": 0.0}
 LAYERS = ("gercek", "cf", "havuz")
 
 
@@ -216,12 +225,15 @@ def _eb_blok(tablo: dict) -> dict:
 
 
 def _component_frame(df: pd.DataFrame, prox_max: float,
-                     index_close: pd.Series | None = None) -> pd.DataFrame:
-    """Bir sembolün TÜM barları için YEDİ bileşen + üç ileri getiri.
+                     index_close: pd.Series | None = None,
+                     ticker: str | None = None) -> pd.DataFrame:
+    """Bir sembolün TÜM barları için SEKİZ bileşen + üç ileri getiri.
 
     Formüller `strategy.evaluate_entry`den BİREBİR alınmıştır (satır 114-124); `rs` orada
     kesitsel olarak dışarıdan geldiği için burada da ayrı hesaplanır ve sonradan eklenir.
-    `index_close` yalnız `rmom` içindir; yoksa o sütun tamamen NaN kalır (uydurma yok)."""
+    `index_close` yalnız `rmom` içindir; yoksa o sütun tamamen NaN kalır (uydurma yok).
+    `ticker` yalnız `turnover21` içindir (as-of hisse sayımı sembole çapalıdır); verilmezse o sütun
+    tamamen NaN kalır — sıfır DEĞİL, "ölçülemedi"."""
     close, high = df["close"], df["high"]
     tt = ind.trend_template(df)                                   # [0,1] · ısınma dolmadan NaN
     vr = ind.volume_ratio(df["volume"], 50)
@@ -241,9 +253,41 @@ def _component_frame(df: pd.DataFrame, prox_max: float,
     out["rvol20"] = ind.rvol20(df["volume"])
     out["mom12_1"] = ind.mom_12_1(close)
     out["rmom"] = ind.residual_momentum(close, index_close)
+    # EDG-016 (2026-08-01): turnover21 = medyan21(hacim)/as_of_shares(t). Payda BAR BAŞINA as-of
+    # okunur (tek çağrı, vektörel) — sembolün bugünkü hisse sayısını tüm geçmişe yaymak PIT
+    # sızıntısı olurdu ve tam olarak EDGAR README'nin GOOGL örneğindeki hatadır. Ölçülemeyen
+    # payda → o barda NaN + neden (sayaç `edgar_shares.okuma_raporu()`nda).
+    out["turnover21"] = _turnover_serisi(df, ticker)
     for h, seri in forward_returns(df).items():
         out[f"fwd{h}"] = seri
     return out
+
+
+def _turnover_serisi(df: pd.DataFrame, ticker: str | None) -> pd.Series:
+    """Sembolün TÜM barları için devir hızı. Payda = as-of EDGAR hisse sayımı (bar başına).
+
+    ÜRETİM YOLU BUNU KENDİLİĞİNDEN KAPSAR: `component_ic()` bu çerçeveyi her gece (P5) yeniden
+    kurar, yani düğme 0'da dururken bile `turnover21` hücreleri dolar ve kartın "ölçüsünü öğrenme
+    döngüsü versin" kararı ölçülebilir bir zemine oturur. Ticker verilmezse ya da bar çerçevesi
+    tarihsizse seri tamamen NaN'dır (uydurma yasağı — tarihsiz bir as-of okuma yapılamaz)."""
+    bos = pd.Series(float("nan"), index=df.index)
+    if not ticker:
+        return bos
+    try:
+        from .adapters import edgar_shares as _es
+        idx = df.index
+        tarihler = (idx if isinstance(idx, pd.DatetimeIndex)
+                    else pd.to_datetime(df["date"]) if "date" in df.columns else None)
+        if tarihler is None:
+            return bos
+        sh, _neden = _es.as_of_shares_series(
+            ticker, [d.strftime("%Y-%m-%d") for d in pd.DatetimeIndex(tarihler)])
+        return ind.turnover21(df["volume"], pd.Series(sh, index=df.index))
+    except Exception as e:
+        # YASA 4: sessizce NaN dönmek, turnover satırının neden hep "n=0" olduğunu cevapsız
+        # bırakırdı — bileşen ölçülemez ama SEBEBİ adıyla deftere düşer.
+        obs.warn("component_ic_turnover_failed", ticker=ticker, error=f"{type(e).__name__}: {e}")
+        return bos
 
 
 def forward_returns(df: pd.DataFrame) -> dict:
@@ -266,6 +310,23 @@ def _bars_taban() -> dict:
     zinciri bu modülün ithalat yüzeyine girmesin."""
     from .adapters import data as data_adapter
     return data_adapter.integrity_report()
+
+
+def _turnover_kaynak() -> dict:
+    """EDGAR payda okumasının bu koşumdaki sayacı + en sık ölçülememe sebebi.
+
+    Yerel ithalat, modülün mevcut deseni (`_bars_taban`/`_load_universe` ile aynı). Sayaç okunamazsa
+    sebebiyle birlikte döner — sessiz boş sözlük, "hiç okuma olmadı" ile "sayaç kırık" arasındaki
+    farkı silerdi."""
+    try:
+        from .adapters import edgar_shares as _es
+        r = _es.okuma_raporu()
+        neden = r.get("neden") or {}
+        r["en_sik_neden"] = (max(neden.items(), key=lambda kv: kv[1])[0] if neden else None)
+        return r
+    except Exception as e:
+        return {"hata": f"{type(e).__name__}: {e}",
+                "not": "payda sayacı OKUNAMADI — turnover hücreleri yine de tabloda (None ise ölçülemedi)"}
 
 
 def _load_universe() -> dict:
@@ -401,7 +462,7 @@ def component_ic(write: bool = True) -> dict | None:
     comp = {}
     for t in sorted(gerekli & set(per)):
         try:
-            comp[t] = _component_frame(per[t], prox_max, index_close)
+            comp[t] = _component_frame(per[t], prox_max, index_close, ticker=t)
         except Exception as e:
             obs.warn("component_ic_frame_failed", ticker=t, error=f"{type(e).__name__}: {e}")
 
@@ -428,7 +489,8 @@ def component_ic(write: bool = True) -> dict | None:
             sv.keep()
             degerler = {"rs": float(rsv), "tight": satir["tight"], "vol": satir["vol"],
                         "prox": satir["prox"], "rvol20": satir["rvol20"],
-                        "mom12_1": satir["mom12_1"], "rmom": satir["rmom"]}
+                        "mom12_1": satir["mom12_1"], "rmom": satir["rmom"],
+                        "turnover21": satir["turnover21"]}
             yeni = (ticker, dstr) not in gorulen
             gorulen.add((ticker, dstr))
             for c in COMPONENTS:
@@ -512,7 +574,16 @@ def component_ic(write: bool = True) -> dict | None:
                               "doğrudan kıyaslanabilsin diye). Skora giren büyüklükler DÖNÜŞÜMDÜR: "
                               "entry.w_rvolband üçgen bant puanını, entry.w_mom 63-barlık yüzdelik "
                               "rütbeyi çarpar; üçgen MONOTON DEĞİLdir → bu IC bant puanının IC'si "
-                              "değildir. rmom'un ağırlık düğmesi yoktur (yedek aday, ölçülür)."),
+                              "değildir. rmom'un ağırlık düğmesi yoktur (yedek aday, ölçülür). "
+                              "turnover21 (EDG-016) HAM oran olarak ölçülür; skora giren büyüklük "
+                              "onun yüzdelik puanıdır (strategy.turnover_score) ve o dönüşüm "
+                              "MONOTONdur → Spearman IC'si aynı sayıdır."),
+        # TURNOVER PAYDASININ KAYNAK SAYACI — ÜRETİLEN KANIT TÜKETİLİR (YASA 6). Bu alan aynı
+        # zamanda fail-open beyanının GÖRÜNÜR yüzüdür: kaç hücrenin hangi sebeple ölçülemediği
+        # (dosya yok / sembol EDGAR kapsamında değil / seri bayat / ölçek hatası) burada durur ve
+        # gecelik `component_ic` olayına özet olarak düşer. Sayaç SÜREÇ-İÇİdir: bu koşumun
+        # okumalarını sayar, tarihsel bir toplam değildir.
+        "turnover_kaynak": _turnover_kaynak(),
         # ARALIĞIN YÖNTEMİ VE VARSAYIMI ÇIKTININ İÇİNDE (getiri tanımıyla aynı gerekçe): panoyu ya
         # da beyni okuyan biri "bu aralık neye göre?" sorusunu koda inmeden cevaplayabilmeli.
         "ci_yontem": "Fisher-z, SE=1/sqrt(n-3), %95 iki yanlı",
@@ -535,8 +606,15 @@ def component_ic(write: bool = True) -> dict | None:
     }
     if write:
         store.write_json(COMPONENT_IC_FILE, out)
+        # GÜNLÜK DÖNGÜ OLAYINDA TURNOVER SAYACI (EDG-016 fail-open beyanının okuyucusu): payda kaç
+        # kez okunabildi, kaç kez okunamadı ve EN SIK sebep neydi. Olay satırı kısa tutulur; tam
+        # döküm `component_ic.json` → `turnover_kaynak` alanındadır.
+        tk = out.get("turnover_kaynak") or {}
         obs.log("component_ic", n_gercek=sayim["gercek"], n_cf=sayim["cf"],
-                olculen_hucre=len(olculen) if olculen else 0)
+                olculen_hucre=len(olculen) if olculen else 0,
+                turnover_payda_olculdu=tk.get("olculdu"),
+                turnover_payda_olculemedi=tk.get("olculemedi"),
+                turnover_payda_en_sik_neden=tk.get("en_sik_neden"))
     return out
 
 

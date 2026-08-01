@@ -191,9 +191,12 @@ def test_bilesenler_barlardan_YENIDEN_hesaplanir_ve_tablo_uc_katmanli(bar_evreni
     out = component_ic.component_ic()
 
     # TABLO 2026-07-29'da YEDİ BİLEŞENE ÇIKTI (G2 skor yeniden inşası): eski dördü kıyas tabanı
-    # olarak DURUYOR, üç yeni aday (rvol20 / mom12_1 / rmom) yanlarına eklendi. Sıra da çivilenir:
-    # pano ve evidence_pack satırları bu listeden üretiyor.
-    assert out["components"] == ["rs", "tight", "vol", "prox", "rvol20", "mom12_1", "rmom"]
+    # olarak DURUYOR, üç yeni aday (rvol20 / mom12_1 / rmom) yanlarına eklendi. 2026-08-01'de
+    # SEKİZİNCİ satır geldi: turnover (EDG-2026-016 hükmü SUCCESS → ölçülmüş yolun kablolanması;
+    # düğmesi `entry.w_turnover` bounds'ta VARSAYILAN 0). Sıra da çivilenir: pano ve evidence_pack
+    # satırları bu listeden üretiyor.
+    assert out["components"] == ["rs", "tight", "vol", "prox", "rvol20", "mom12_1", "rmom",
+                                 "turnover21"]
     assert out["horizons"] == [5, 10, 20]
     assert set(out["tablo"]) == {"gercek", "cf", "havuz"}
     for c in ("rs", "tight", "vol", "prox", "rvol20", "mom12_1"):
@@ -207,6 +210,12 @@ def test_bilesenler_barlardan_YENIDEN_hesaplanir_ve_tablo_uc_katmanli(bar_evreni
     # değil, boşluğun DÜRÜSTÇE raporlandığını çiviler.
     for h in ("5", "10", "20"):
         assert out["tablo"]["gercek"]["rmom"][h]["ic"] is None, "ısınmamış rmom sayı uydurdu"
+    # turnover AYNI GEREKÇEYLE bu fikstürde ölçülemez: paydası EDGAR as-of hisse sayımıdır ve
+    # sentetik AAA/BBB o kapsamda YOKTUR. Ölçülemeyen hücre None kalır ve SEBEBİ sayaçta durur —
+    # 0.0 yazmak "devir sıfır" demek olurdu (uydurma yasağı).
+    for h in ("5", "10", "20"):
+        assert out["tablo"]["gercek"]["turnover21"][h]["ic"] is None, "kapsam dışı sembolde turnover uydurdu"
+    assert (out["turnover_kaynak"] or {}).get("en_sik_neden") == "anlik_hisse_serisi_yok"
     # Ağırlıklar tabloyla birlikte gider: hangi bileşenin ne kadar ağırlık taşıdığı, IC'nin
     # yanında olmazsa "hangi ağırlığı hangi yöne?" sorusu kanıta bağlanamaz.
     assert set(out["agirliklar"]) == set(out["components"])

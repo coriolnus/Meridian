@@ -143,6 +143,62 @@ def residual_momentum(close: pd.Series, index_close: pd.Series | None) -> pd.Ser
     return num / den.where(den > 0)
 
 
+# =================================================================================================
+# EDG-2026-016 — TURNOVER (devir hızı). Kartın hükmü SUCCESS (2026-08-01): üst-%20 dilim
+# evren-fazlası @10 +0,31% CI[+0,15,+0,49] · @20 +0,65% CI[+0,34,+1,01]; rvol20+mom21 kontrolünden
+# sonra ARTIK üç yöntemle birden sağ (kova-tabanı +0,56%, kova-içi +0,77%, artık-IC @20 0,0284);
+# q5 TEKDÜZE MONOTON; maliyet-sonrası net +0,55% (20bps duyarlılıkta +0,45%).
+# =================================================================================================
+TURNOVER_WINDOW = 21          # ölçümdeki pencere (ortak.bar_paneli: rolling(21, min_periods=21))
+TURNOVER_FIZIKSEL_TAVAN = 1.0  # medyan-21g hacim dolaşımdaki hissenin TAMAMINI aşamaz
+
+
+def med_volume21(volume: pd.Series, period: int = TURNOVER_WINDOW) -> pd.Series:
+    """21 barlık MEDYAN hacim. Pencere dolmadan NaN (yarım pencereyle "medyan" raporlanmaz).
+
+    NEDEN MEDYAN VE NEDEN ORTALAMA DEĞİL: bu büyüklük devir hızının PAYIDIR ve tek bir kazanç-günü
+    ya da endeks-yeniden-dengeleme hacmi ortalamayı katlarken medyanı kıpırdatmaz. Ölçüm bu tanımla
+    yapıldı (EDG-012/013/016 üçünde de aynı satır); ortalamaya çevirmek, kartın ölçtüğü büyüklükten
+    BAŞKA bir seriyi aynı adla skora sokmak olurdu."""
+    return volume.rolling(period, min_periods=period).median()
+
+
+def turnover21(volume: pd.Series, shares) -> pd.Series:
+    """DEVİR HIZI: medyan21(hacim) / as_of_shares(t) — EDG-016'nın ölçtüğü seri, BİREBİR.
+
+    `shares` bir SAYI (o barın as-of hisse sayımı) ya da `volume` ile HİZALI bir seri olabilir;
+    None/NaN olduğu yerde sonuç NaN'dır — "ölçülemedi", sıfır değil (UYDURMA YASAĞI).
+
+    İKİ TARAF DA GÜNCEL BAZDA — YAZILI OLSUN. Bar hacmi (FMP/Cboe) split-DÜZELTİLMİŞTİR, yani
+    bugünün hisse birimindedir; EDGAR'ın bildirdiği sayım ise DOSYALAMA GÜNÜNÜN birimindedir ve
+    `adapters.edgar_shares` onu güncel baza çevirerek verir. İki uç aynı bazda olduğu için oran
+    bölünmeden BAĞIMSIZDIR; birini çevirmeyi unutmak AAPL 2019'da 4×, GOOGL 2021'de 20× hatalı bir
+    devir üretirdi.
+
+    FİZİKSEL BEKÇİ (VERİ KALİTESİ — SİNYAL EŞİĞİ DEĞİL, BEYANLI). Devir > 1 ise hücre NaN'dır: bir
+    şirketin günlük MEDYAN işlem hacmi dolaşımdaki hissesinin tamamını geçemez. Bu bir eşik ayarı
+    değil FİZİKSEL İMKÂNSIZLIKTIR ve kaynağı ölçülmüş vakalardır — kapak sayfasında "3 hisse" yazan
+    CSX 2011-04, "100" yazan ETN 2012-11/BKR 2017-08, "8.000" yazan SPG 2013-02, "25.000" yazan
+    LIN 2017-10 kayıtları devri 10⁴ katına çıkarıyordu. Kartın hiçbir eşiğine dokunmaz; yalnız
+    uydurma bir değerin skora girmesini engeller.
+    ÖLÇÜMDEN FARKI (beyan): ölçüm bekçiyi KAYIT düzeyinde işletir — bir as-of kaydının geçerlilik
+    penceresindeki medyan devir 1'i aşarsa o kaydın TAMAMI geçersizdir. Burada bekçi NOKTASALdır:
+    yalnız devri 1'i aşan barlar düşer. Aynı imkânsızlığı aynı yönde eler, penceredeki temiz günleri
+    ayakta bırakır; yani canlı yol ölçümden daha AZ eler, daha çok değil."""
+    if shares is None:
+        return pd.Series(float("nan"), index=volume.index)
+    med = med_volume21(volume)
+    if isinstance(shares, pd.Series):
+        sh = shares.astype(float).reindex(volume.index)
+    else:
+        try:
+            sh = pd.Series(float(shares), index=volume.index)
+        except (TypeError, ValueError):   # sessiz-yutma DEĞİL: sayıya çevrilemeyen bir hisse sayımı "ölçülemedi"dir ve dönen NaN serisi bunu hücre hücre GÖSTERİR (çağıran taraf None'u 0 gibi kullanamaz)
+            return pd.Series(float("nan"), index=volume.index)
+    to = med / sh.where(sh > 0)
+    return to.where(to <= TURNOVER_FIZIKSEL_TAVAN)
+
+
 def pivot_high(high: pd.Series, lookback: int = 40, exclude_recent: int = 1) -> pd.Series:
     """Highest high over the consolidation window, excluding the most recent bar(s).
     Used as the breakout pivot: an entry triggers when close clears this level."""

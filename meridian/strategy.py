@@ -51,6 +51,78 @@ RVOL_BAND_HALFWIDTH = 0.75
 #       kalem E'nin (aday profilleri) işidir ve ağırlığı 0 olduğu sürece hiçbir karara girmez.
 MOM_RANK_WINDOW = 63
 
+# =================================================================================================
+# EDG-2026-016 TURNOVER — ÖLÇÜLMÜŞ YOLUN KABLOLANMASI (2026-08-01). AĞIRLIK VARSAYILAN 0.0.
+# =================================================================================================
+# HÜKÜM (kart status bloğu, Rol-1 onaylı SUCCESS): turnover21 = medyan21(hacim)/as_of_shares(t)
+# kesitte MONOTON bilgi taşıyor — üst %20 dilim evren-fazlası @10 +0,31% CI[+0,15,+0,49], @20
+# +0,65% CI[+0,34,+1,01]; rvol20+mom21 kontrolünden sonra ARTIK üç yöntemle birden sağ (etkinin
+# ~%85'i kontrolden sağ çıkıyor); q5 TEKDÜZE monoton; maliyet-sonrası @20 net +0,55%.
+# ENTEGRASYON KARARI: ELLE AĞIRLIK YOK. Bileşen kablolanır, düğmesi bounds.yaml'a VARSAYILAN 0 ile
+# iner, ölçüsünü ÖĞRENME DÖNGÜSÜ kendi verir (Batch L / G2 / G3b deseninin birebir aynısı).
+#
+# ÖLÇEK: ÖLÇÜLMÜŞ EVREN YÜZDELİKLERİ — UYDURMA EĞRİ DEĞİL. Kanıt kesitseldir ("o gün evrenin üst
+# %20'si"), bu fonksiyon ise SAF ve TEK SEMBOLLÜDÜR: günün kesiti burada YOKTUR (kesitsel rütbe
+# gerektiren `rs` tam bu yüzden dışarıdan parametre olarak gelir). Bu yüzden ham devir, ölçümün
+# HAVUZLANMIŞ dağılımının yüzdeliklerine göre [1,99] puanına oturtulur; çapa noktaları ölçümün kendi
+# çıktısıdır (sonuc_016.json → kesit_muhasebesi.turnover21_dagilimi, n=885.803 sembol-gün,
+# 2009-08-04 → 2026-07-28, 242 sembol).
+# ÜÇ SINIR, YAZILI OLSUN:
+#   (1) BU BİR KESİT RÜTBESİ DEĞİL, SABİT KALİBRASYONDUR. Günün kesiti dar/geniş olduğunda gerçek
+#       rütbe kayar; sabit çapa kaymaz. Dönüşüm MONOTON olduğu için kartın "q5 tekdüze monoton"
+#       bulgusunun YÖNÜ korunur, ama bu puanın IC'si ölçülen IC ile aynı sayı olmak zorunda değildir.
+#   (2) EKSTRAPOLASYON YOK: p01 altı 1, p99 üstü 99 puanla sınırlanır. Ölçülmemiş bölgede eğri
+#       uydurmak, kanıtın söylemediğini söylemek olurdu.
+#   (3) ÇAPALAR YAŞLANIR: evrenin likiditesi kaydıkça 2026-08-01 dağılımı eskir. Bu bir sabit değil
+#       bir ÖLÇÜM ARTEFAKTIDIR ve tazelenmesi yeni bir ölçüm turunun işidir.
+TURNOVER_PCTL_CAPA = ((0.001924, 1.0), (0.004442, 25.0), (0.006067, 50.0),
+                      (0.008949, 75.0), (0.050849, 99.0))
+_TO_LOGX = np.log(np.array([c[0] for c in TURNOVER_PCTL_CAPA], dtype=float))
+_TO_PCT = np.array([c[1] for c in TURNOVER_PCTL_CAPA], dtype=float)
+
+
+def turnover_score(turnover: Optional[float]) -> Optional[float]:
+    """Ham devir → [1,99] puanı: ölçülmüş evren yüzdelikleri arasında log-doğrusal ara değer.
+
+    Ölçülemeyen/0-altı girdi → None (uydurma yasağı). Log ölçek, dağılım sağa çarpık olduğu içindir
+    (p50 0,0061 · p99 0,0508); dönüşüm monotondur, yani sıralamayı — kanıtın taşıdığı tek şeyi —
+    korur."""
+    if turnover is None or pd.isna(turnover):
+        return None
+    x = float(turnover)
+    if x <= 0:
+        return None
+    return float(np.interp(np.log(x), _TO_LOGX, _TO_PCT))
+
+
+def _turnover_now(df: pd.DataFrame, ticker: str) -> tuple[Optional[float], str]:
+    """Son KAPALI barın devir hızı + ölçülemediyse NEDENİ. (değer, neden) — neden "" ise ölçüldü.
+
+    SAFLIK DİKİŞİ, EMSALİYLE BİRLİKTE: bu modülün başlığı "PURE. No I/O" der ve o yasanın GEREKÇESİ
+    aynı cümlede yazılıdır — canlı ile backtest AYNI fonksiyonu koşmalı, ayrışırlarsa her backtest
+    sayısı yalan olur. Buradaki okuma o gerekçeyi İHLAL ETMEZ: `research/edgar_facts/` deponun içinde
+    STATİK bir dosyadır, okuma (ticker, tarih) çiftinin DETERMİNİST bir fonksiyonudur ve duvar
+    saatine bakmaz; canlı yol da replay yolu da aynı dosyadan aynı as-of kuralıyla aynı sayıyı alır.
+    EMSAL AYNI DOSYADA: `evaluate_pead` tam olarak bu biçimde `earnings.days_since_report(ticker,
+    last_date)` çağırır — tarihe çapalı, dosya-destekli, PIT bir okuma. İkinci bir desen icat
+    edilmedi.
+
+    TARİH SÜTUNU YOKSA OKUMA DA YOK: as-of bir okuma tarihsiz yapılamaz ve "bugünü" varsaymak
+    (duvar saati) tam da §4'ün yasakladığı şey olurdu — sentetik/tarihsiz çerçevelerde bileşen
+    dürüstçe ölçülemez kalır."""
+    if "date" not in df.columns:
+        return None, "tarih_yok"
+    last_date = str(df["date"].iloc[-1])[:10]
+    from .adapters import edgar_shares as _es           # yerel ithalat: emsal `earnings` (bkz. yukarı)
+    sh, neden = _es.as_of_shares_detay(ticker, last_date)
+    if sh is None:
+        return None, (neden or "olculemedi")
+    v = ind.turnover21(df["volume"], sh).iloc[-1]
+    if pd.isna(v):
+        # Pay tarafı: 21 barlık medyan penceresi dolmadıysa ya da FİZİKSEL BEKÇİ (devir>1) kapattıysa.
+        return None, ("fiziksel_bekci_veya_isinma")
+    return float(v), ""
+
 
 def _align_index_close(df: pd.DataFrame, index_close: pd.Series) -> pd.Series:
     """Endeks serisini `bars`ın SATIR EKSENİNE oturtur (G2, 2026-07-29).
@@ -224,6 +296,10 @@ class EntrySignal:
     rvol20: Optional[float] = None      # volume / SMA20(volume) — ham (bant dönüşümü skor tarafında)
     mom_12_1: Optional[float] = None    # close[t-21]/close[t-252]-1
     rmom: Optional[float] = None        # artık 12-1 momentum; endeks serisi verilmezse None
+    # EDG-016 (2026-08-01): medyan21(hacim)/as_of_shares(t) — HAM oran (yüzdelik puanı skor
+    # tarafında). Aynı gerekçe: sinyal barında hesaplanan değer, hesaplandığı yerde ALAN olarak
+    # yazılır ki gelecekteki ölçüm onu regex'siz okusun. Ölçülemeyen hücre None (0.0 DEĞİL).
+    turnover21: Optional[float] = None
 
     def as_row(self) -> dict:
         return {
@@ -237,6 +313,7 @@ class EntrySignal:
             "rvol20": None if self.rvol20 is None else round(self.rvol20, 6),
             "mom_12_1": None if self.mom_12_1 is None else round(self.mom_12_1, 6),
             "rmom": None if self.rmom is None else round(self.rmom, 6),
+            "turnover21": None if self.turnover21 is None else round(self.turnover21, 8),
         }
 
 
@@ -366,6 +443,35 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
             return None
         score_num += w_mom * mom_score
         score_den += w_mom
+    # --- EDG-016 TURNOVER TERİMİ (2026-08-01): SIFIR-ETKİLİ. `entry.w_turnover` varsayılanı 0.0
+    # olduğu sürece ne pay ne payda değişir; skor yukarıdaki ifadenin BİREBİR kendisidir (çivi:
+    # test_turnover_kablolama_v149). Değer ağırlıktan BAĞIMSIZ hesaplanır ve deftere yazılır.
+    #
+    # FAIL-OPEN VE NEDEN KOMŞUSUNDAN FARKLI — BEYAN. Üstteki iki dal ölçülemeyen bileşende
+    # `return None` der ("kurulum yok"); bu dal DEMEZ, ölçülemeyen turnover'ı terimi HİÇ EKLEMEDEN
+    # geçer (pay da payda da dokunulmaz, yani skor kalan bileşenlerin kendi ölçeğinde kalır). Fark
+    # keyfi değil, girdinin CİNSİNDEN gelir: rvb/mom kurulumun ZATEN istediği barlardan hesaplanır —
+    # ölçülemiyorsa ısınma dolmamıştır ve orada gerçekten kurulum yoktur. Turnover'ın paydası ise
+    # DIŞ ve statik bir dosyadır (`research/edgar_facts/`, aylık tazelenir); o dosyanın yokluğu bir
+    # PİYASA olgusu değil bir ALTYAPI olgusudur. Aynı refleksi burada da uygulamak, dosya
+    # tazelenmediği ya da sembol EDGAR kapsamında olmadığı gün motoru TOPTAN sustururdu — kimsenin
+    # seçmediği bir "veri kesintisi → işlem durdu" bağlantısı. Bedeli yazılı olsun: knob açıkken
+    # kapsam dışındaki semboller turnover'sız skorlanır, yani o gün iki farklı ölçekte skor üretilir;
+    # bu SESSİZ DEĞİLDİR — sebep sayacı `adapters.edgar_shares.okuma_raporu()`ndan gecelik
+    # `component_ic` olayına ve `component_ic.json` → `turnover_kaynak` alanına düşer.
+    # SAYACIN KAPSAMI TAM OLARAK YAZILI OLSUN: o sayaç PAYDA okumasının sebeplerini taşır (dosya
+    # yok / sembol EDGAR kapsamında değil / dosyalama yok / bayat seri / ölçek hatası) ve kapsam
+    # dışı sembollerin ADINI da (`kapsam_disi_sembol`) — sayı tek başına eyleme dönüşmez. Payda
+    # okunup da ORAN düşerse (fiziksel bekçi: devir>1, ya da 21 barlık medyan penceresi dolmamışsa)
+    # bu sayaçta görünmez; o vaka defter satırında `turnover21: null` olarak ve gecelik tablonun
+    # turnover hücrelerindeki `n` düşüşünde görünür. İki kanal iki farklı olguyu sayar; birini
+    # ötekinin adıyla raporlamak, kaynağı bozuk olanla oranı imkânsız olanı karıştırmak olurdu.
+    to_val = _turnover_now(df, ticker)[0]      # NEDEN alanının okuyucusu: testler + sayaç raporu
+    to_score = turnover_score(to_val)
+    w_to = _f(params, "entry.w_turnover", 0.0)
+    if w_to > 0 and to_score is not None:
+        score_num += w_to * to_score
+        score_den += w_to
     score = int(round(score_num / score_den))
     if score < score_min:
         return None
@@ -399,7 +505,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
         profit_target=float(target), size_r=float(size_final), r_per_share=float(r_per_share),
         # `notes` DEĞİŞMEDİ: yeni bileşenler metne EKLENMEZ, alan olarak gider (bkz. EntrySignal).
         notes=f"prox={proximity_pct:.2f}% vr={vr:.2f} tt={tt:.2f} rr={rr:.2f} conv={conviction:.2f}",
-        rvol20=rvol_val, mom_12_1=mom_val, rmom=rmom_val,
+        rvol20=rvol_val, mom_12_1=mom_val, rmom=rmom_val, turnover21=to_val,
     )
 
 
