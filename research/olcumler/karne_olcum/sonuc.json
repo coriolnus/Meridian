@@ -1,0 +1,3845 @@
+{
+ "kart": "BASE-2026-001",
+ "beyan": "SALT-ÖLÇÜM sandbox. Kart dosyasına DOKUNULMADI. Eşik yok (karne kartı); hüküm Rol-1'de. Ölçülemeyen alan None + neden.",
+ "kod_damgasi": {
+  "repo_head": "505603bf244a5edfbfaed64b06d022b915c4b3da",
+  "meridian_git_kirli": null,
+  "n_dosya": 91,
+  "depo_ile_farkli_dosyalar": [],
+  "depoda_olmayan": [],
+  "bayt_esit": true,
+  "sandbox_sha256": {
+   "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "adapters/alpaca.py": "1c147db1c8ab24f96ae772676191b97874b9709c64038df309916f33c92930d4",
+   "adapters/constituents.py": "f202a8cd583bbc2068afa9657f609b8bb19859b9de9a155d499adf194c06d1de",
+   "adapters/data.py": "a34c8f2f5d1c32119d2f79ad0395e6abc07de6a643ebb861419899e9a808ce62",
+   "adapters/finviz.py": "88e5bf68b156a60a1adaa44c849853299de9dea0d1604249bda59c7b27bad0c8",
+   "adapters/fmp.py": "045a3b642e95bbbbf03daa4fc97093d47bf0d9770c4096450ecdf3ee840886fb",
+   "adapters/insider.py": "93e5471696cbe4bc7347ca8bfd5cb303cdf4ec2469688586c6a746a9fee864df",
+   "adapters/macro.py": "96dac96231fab4aad36d747954dcdee9dc49af0a85e89582ff00e9e36e2d8687",
+   "adapters/massive.py": "fbebb1d2ed588451520c3d8b9d3310864ed664e87ce7bbf78f31890f8049bdfb",
+   "adapters/news.py": "102e48eba1110d355d1b39b73fcc6085ff52701ff59380b467cf5319dc5d330c",
+   "adapters/shortinterest.py": "0ccd021f0bbe10f7208f9fc485126684888b4ed72cb0518863275dbea7486a0b",
+   "analytics.py": "63642036c0e9fe79e64001f01296faf91af41c210d9789068acf5b6f0726e151",
+   "api.py": "97ad2691429bf2f52c90b82130212ed540b929e78b0ecf93b345dec0a7227ced",
+   "arming.py": "6eff2a39cebb6ab633bbc3e0de6473834ce1a72a9dd19078a4ca1d29d2936956",
+   "auth.py": "7ddf5abe2d9b26f7a3e73b12784b1d4a386e9a679a3fdc5497a1ec4262404032",
+   "auth_cli.py": "172608ea591fd4abaa07bfcc1144cc99101b51c16797ab367a87adb49c86d507",
+   "backtest.py": "f605fbdf7d164e5d987e2eddd756a8971b02bacb3a415d2ff10c3a8673181866",
+   "bararchive.py": "818b14a38965f7673d37bb250e21209a9d8b7e2c6682b27d977674dfe6cc11e4",
+   "barclock.py": "1fcca2c9231f6168643b3bddc54ebbe3704feb17b397a4e706ff6f86d2652ce5",
+   "barfeed.py": "73f941490a674a08c9688edf9bcc170f577abc5aa20f0bc9aa745ce64b44098f",
+   "barrepair.py": "f0400c29db4fd8a2c6c7aae62981f9ce38a349c9a5e4536d203a55bda85e7c78",
+   "barsarchive.py": "a86428094110b3c2220d50f8eca53407a462ed3ca2e8fa3e1131a44c05ebfb4e",
+   "baseline.py": "c8ad232d664f3035bc694d15e8a5659e037d65dd8b82b47f16b257cdd609f3e0",
+   "broker.py": "e495e5e0e71020fde5e87307bfe8b1a3b87625c0d11d9c558de15d6d73d7425d",
+   "cf_backfill.py": "a809a78ed3dc4df2d6946a1d1e4aa228223b4b9e523f724b9456a81c67cac4f8",
+   "codelaw.py": "734afd1a92f75898caed7b76893c5855bba2a3971672ad0140eb5f87f643d872",
+   "component_ic.py": "a418b1aeecf15565aefcf9bcb6f3fc3ae194baeae8715b1b1ae691ea564f5660",
+   "config.py": "7be49132c6a1985c3d7a1fec0abb640ce7020392547ec26ccddad8e36f52be05",
+   "counterfactual.py": "e20ac7001a993d384c5958984811d83a0c5beb2f169b887ffca81f6225b99462",
+   "dataset.py": "e6ea06a8f1ac14c20e0bdaee650bd4ac81416bd6688cdd4c683853196b21fc29",
+   "dbmigrate.py": "5f828a5549824018c0a3e09373d97e16ef7a2c4dfbb218b113f411c70e83c22a",
+   "earnings.py": "dbed9833a64b38cfa0e4bca2e2bc663c7af90c4172ef1a7b85b1066f47b9757b",
+   "guard.py": "6bf0056fc66788ea8b7ac93d02fde25afdcbe57f46cbfb623657f8c8bde04e1d",
+   "health.py": "1c797aaf8896d735b467d7194ead0e17ddf5abf298a064589f41265b12400958",
+   "hermes.py": "c04f32fbfebde53ca3959d2c344eb662f6f72e97e341b844982ce0f9167c0f40",
+   "hermes_composite.py": "cbffa7a7a71772dbf919b67edbce36ae77e3112a9cecbb0416519c7bed6bd602",
+   "hermes_runtime.py": "dd13953aa29efc611b7c085b278565439b8a035ca8f7f0d62ee375a636534344",
+   "hotstate.py": "fa79f9b676eb68b42cceb7fd02590a591d50c3b4e1aa98ef6b45f8104507d688",
+   "indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+   "integrity_registry.py": "62c966fb41a5946968aed0f5637b4b56f99a12ed1c442a0586f9a60660da0adf",
+   "intraday_cycle.py": "6573dda37b06e3c12ee02b13b36f032885c42085c6fee45655e3393579a2cb8d",
+   "intraday_shadow.py": "ac2eb57572d78af230ab0312b774a406efc722ba4a077fb0663cba463c3dc793",
+   "ledgers.py": "3149d487643ff74be900127166e750d94dd934c645f3b9b0ab85487beb714f51",
+   "ledgerstamp.py": "f77395ea9749e77d9a5d12fb1b81b01e185e55c8beec244c5aa5a473dd3f463e",
+   "loop.py": "ede9cdfc8ee5a740b529130fbb8b49deda820a37ed3754593f569a76250b9b90",
+   "marketstream.py": "839b64229181b78300a4dd85a94bb1dc200bafb19aba91545875985956da7557",
+   "marketview.py": "37c34359737a9d1fdcbdcadf0938f6f1e0ab017a9640c93a669b7e9a41ae6f20",
+   "mcp_server.py": "fa876f1a4d6be7a160c339403689a9704adf923d70e04f2d49e42973562765d9",
+   "memory.py": "c9941fd398c56dab1f036fd05f1ce0a82871d46b63cf796388b9910eacf3aa0e",
+   "mirror_stream.py": "f3e604e08474812227bcceb46f723ee904cc56442f1c9e0694952f6f1c0b8843",
+   "mutation.py": "01d19e13d06f61726ad38ad3a50a6ebbe61c19c6c2f7bd0617b5be1b9242c569",
+   "notify.py": "dac9024c4c900031ecf7e1f26c730bb05ab5666f9219692f03d5a74c85c86b7d",
+   "nous_eval.py": "c2d22a10a54b75f31d699e4559c778a17e8da6f4306047dbbe6b1e64ccbc47fd",
+   "obs.py": "d1a24f5bdd0db26030cbfc800a862be0c897654d58e1b2113b4428410f86ab5e",
+   "olcum_araclari.py": "5baeab2cc0c716bb31ad33381e5d1f8fcfd7a107b33356b509f042bf5d84c23c",
+   "oos_erosion.py": "2b8ce8a329b88760ca4c8937a01a171fe1146cc8ac2d0a85aaea6a8be7e91d2d",
+   "oos_pipeline.py": "44d1c5210991f7a5edc9af038db942f2e01f81a9155b4ab356a1b76cb8956d24",
+   "prescreen.py": "d6c95fff9658895d8b5531f77eeb8205b8867098abccb7f4ee25109e47b92862",
+   "probgate.py": "97c88cead6981bb93e86c011fc9f56f25bab7c3b125558ef2b504d63f670feb8",
+   "provenance.py": "64117604982b17940e72649b23a3f57d9aa87f075b17056aea2c84eb6bb90da5",
+   "recompute.py": "38d21114548d4818a7594a2b7ab0271cdf64c37552527042203ae823d338f235",
+   "reflect.py": "920b00ae7ccf1cd79d0805ce28294ffdc4da9c5e3f7c046f14a409056fef9c91",
+   "regime.py": "7143b71013776b12de958da54023a68287884be6abecf2e94ea93abfe4125940",
+   "regime_trigger.py": "e9a1f5f06dd841ccc5a4f910b9991885924af7dfb20975cba4f5e8a411faaaf4",
+   "rollback.py": "27fa940a313e30b1af64313f413a2ba73327876f68b6e378a24f31f752737579",
+   "run.py": "9630ae90305ccba33d05f2dc87b59527e8354d40c17e0caabe638bbe4a8faede",
+   "scheduler.py": "0af64bfb6d9e670ec471cb9c8afaa45c5dc82ba02b54f2ddfcf13b73e2a9d43f",
+   "score.py": "d4dba15b9e60f17d1b52c25c6786d7ad3f1b62e66bde8090655952333e3b93c4",
+   "secrets.py": "43cacdf9e2f2050bd794a3ed5d828933d7a408c4de8bbded57c3b0672d61116b",
+   "selfreview.py": "cdec767e1c5edc47940747c61cd7d7184fa9cd0eb02e4c281cc4ff6a10934eb6",
+   "shadow_lifecycle.py": "8790dc20d38a51018ba9a45892daaa2b0ebd8db2f0e2f1bb9043effa5924dce6",
+   "shadow_model.py": "99f3c1c8588c631a0012b9f0ddc4b42041c0b9b409bc05591d5bc6e0fcc63051",
+   "shadow_variants.py": "27b53702be7fadbcaeedbf89901280d3f6c3d50f7b46020411618b3e7b5c99fb",
+   "shadowlaw.py": "5e551f07476cccb7b4efa3b4e428b96ca0d8942c85e09965843c1bb0a1520878",
+   "sieve.py": "bcb37c0020f186134f0d14e59365ba70f05669715a0c6ad2faaed6a12b0d2933",
+   "skill_evolve.py": "efd3c598bf6c155d226ccf284470db8d2c5a20b4eaae72c8d43cd9ad62cff8fa",
+   "skills.py": "fc58f0a3b725f0d5f349748abb517c9e2d87438890d4d4a1122732ae12e13221",
+   "spend.py": "6052ae51595aefc0e78b7e2db35578f571b3ad118dd884d5f0be048eddcc50e6",
+   "sprint.py": "969e17a044fa49005e8106e4e5daf6d92dec0fdee69e151acbc581fbad6ca835",
+   "sprint_run.py": "5d8cb948ccaba89205048f4cc36d5978fbae1261c0ba3fb143afa004ac3a122a",
+   "storage.py": "5895855836835d4f0aa3354659fbbb7ad3afe6d9bd163c043ad010dde3d67f90",
+   "store.py": "9181bafe1e91d61ecbfc96e0b675257a9d06efbe91821d024befe27b59ba3e90",
+   "strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+   "streamhealth.py": "83176fc8509a40b4988ead40c07cfa04cffde9213a404f87e978ea99fa334e9d",
+   "threshold_curve.py": "2c9cb758e44b5772373f05a80bb1ffe902b99f7d430bf26f0213ad125f41ca39",
+   "trend_shadow.py": "bb5ecc90e91d5afe0cab0d00bc0efcf2a554e4625faf8617f73a0d96ffa068aa",
+   "validation.py": "b2e73faf2e8e23dccdb2abcd69ecf921261e88595562fe923aae90ca61562a6d",
+   "validation_report.py": "04ad19f326224ab757e20d293587aa6daca132cf5659c17e31601205dd2fa5ab",
+   "versioning.py": "4c8e405fecdc1d028cc5e79331311910c3575f4345a1808f7f993b4f06f4c724",
+   "watchdog.py": "4610c057558a921a3df8f6db4b20c492dd7c3e9555090e1dbd7f64ba2a78317e"
+  },
+  "kosum_sonrasi_dogrulama": {
+   "head_kosum_sonrasi": "249074da38dadc970adf64936658c3c1a0016ada",
+   "head_damgalanan": "505603bf244a5edfbfaed64b06d022b915c4b3da",
+   "head_degisti": true,
+   "kosum_sonrasi_farkli_dosyalar": [
+    "component_ic.py",
+    "indicators.py",
+    "strategy.py"
+   ],
+   "sandbox_hala_depoyla_bayt_esit": false,
+   "beyan": "Damga koşumdan ÖNCE alındı; bu blok koşumdan SONRA yeniden doğrular. Sandbox motoru koşum boyunca DEĞİŞMEDİ (kopya); bu kontrol deponun ölçüm sırasında kayıp kaymadığını gösterir — kaydıysa kolların hangi kod üzerinde koştuğu yine sandbox sha'larıdır.",
+   "depo_ilerledi_commitler": [
+    "249074d YASA-4 işaret biçimi: turnover21 yakalayıcısı — 'sessiz-yutma DEĞİL' eki MARKER_RE'yi bozuyordu (WP-D vakasının tekrarı; suite-7 kırmızısının kökü)",
+    "d68b6b0 MUTANT-BORCU TURU İNDİ: 14 küme × yaz+doğrula — örneklem-öldürme 422/440 (%96)",
+    "5dfca07 TURNOVER KABLOLANDI — EDG-016 sinyali makinenin arama uzayında (default-0, davranış bit-bit)",
+    "fa2ec12 EDGAR 8-K/Item-2.02 tarihsel kazanç-tarihi vekili repo'da (EDG-011 yeniden-açılış yolu)"
+   ],
+   "etki_beyani": "KOLLAR HANGİ KODU ÖLÇTÜ: sandbox motoru = HEAD 505603bf244a5edfbfaed64b06d022b915c4b3da (bayt eşit, damga anında doğrulandı). Ölçüm sürerken depo ilerledi ve replay KARAR YOLUNDAKİ iki dosyaya (strategy.py, indicators.py) dokundu; component_ic.py ölçüm yolundadır, replay'e girmez. Ekleyen commit (5dfca07) kendi mesajında 'default-0, davranış bit-bit' beyan eder — BU BEYAN BU ÖLÇÜMDE DOĞRULANMADI (doğrulaması beşinci bir koşum ister ve kartta yoktur). Bu yüzden karne sayıları 505603bf244a5edfbfaed64b06d022b915c4b3da HEAD'ine aittir ve bugünün HEAD'i için TEKRAR ÖLÇÜM GEREKTİRİR — ya da o commit'in bit-bit iddiası ayrıca sınanmalıdır."
+  }
+ },
+ "on_adim": {
+  "kod_damgasi": {
+   "repo_head": "505603bf244a5edfbfaed64b06d022b915c4b3da",
+   "meridian_git_kirli": null,
+   "n_dosya": 91,
+   "depo_ile_farkli_dosyalar": [],
+   "depoda_olmayan": [],
+   "bayt_esit": true,
+   "sandbox_sha256": {
+    "__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapters/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "adapters/alpaca.py": "1c147db1c8ab24f96ae772676191b97874b9709c64038df309916f33c92930d4",
+    "adapters/constituents.py": "f202a8cd583bbc2068afa9657f609b8bb19859b9de9a155d499adf194c06d1de",
+    "adapters/data.py": "a34c8f2f5d1c32119d2f79ad0395e6abc07de6a643ebb861419899e9a808ce62",
+    "adapters/finviz.py": "88e5bf68b156a60a1adaa44c849853299de9dea0d1604249bda59c7b27bad0c8",
+    "adapters/fmp.py": "045a3b642e95bbbbf03daa4fc97093d47bf0d9770c4096450ecdf3ee840886fb",
+    "adapters/insider.py": "93e5471696cbe4bc7347ca8bfd5cb303cdf4ec2469688586c6a746a9fee864df",
+    "adapters/macro.py": "96dac96231fab4aad36d747954dcdee9dc49af0a85e89582ff00e9e36e2d8687",
+    "adapters/massive.py": "fbebb1d2ed588451520c3d8b9d3310864ed664e87ce7bbf78f31890f8049bdfb",
+    "adapters/news.py": "102e48eba1110d355d1b39b73fcc6085ff52701ff59380b467cf5319dc5d330c",
+    "adapters/shortinterest.py": "0ccd021f0bbe10f7208f9fc485126684888b4ed72cb0518863275dbea7486a0b",
+    "analytics.py": "63642036c0e9fe79e64001f01296faf91af41c210d9789068acf5b6f0726e151",
+    "api.py": "97ad2691429bf2f52c90b82130212ed540b929e78b0ecf93b345dec0a7227ced",
+    "arming.py": "6eff2a39cebb6ab633bbc3e0de6473834ce1a72a9dd19078a4ca1d29d2936956",
+    "auth.py": "7ddf5abe2d9b26f7a3e73b12784b1d4a386e9a679a3fdc5497a1ec4262404032",
+    "auth_cli.py": "172608ea591fd4abaa07bfcc1144cc99101b51c16797ab367a87adb49c86d507",
+    "backtest.py": "f605fbdf7d164e5d987e2eddd756a8971b02bacb3a415d2ff10c3a8673181866",
+    "bararchive.py": "818b14a38965f7673d37bb250e21209a9d8b7e2c6682b27d977674dfe6cc11e4",
+    "barclock.py": "1fcca2c9231f6168643b3bddc54ebbe3704feb17b397a4e706ff6f86d2652ce5",
+    "barfeed.py": "73f941490a674a08c9688edf9bcc170f577abc5aa20f0bc9aa745ce64b44098f",
+    "barrepair.py": "f0400c29db4fd8a2c6c7aae62981f9ce38a349c9a5e4536d203a55bda85e7c78",
+    "barsarchive.py": "a86428094110b3c2220d50f8eca53407a462ed3ca2e8fa3e1131a44c05ebfb4e",
+    "baseline.py": "c8ad232d664f3035bc694d15e8a5659e037d65dd8b82b47f16b257cdd609f3e0",
+    "broker.py": "e495e5e0e71020fde5e87307bfe8b1a3b87625c0d11d9c558de15d6d73d7425d",
+    "cf_backfill.py": "a809a78ed3dc4df2d6946a1d1e4aa228223b4b9e523f724b9456a81c67cac4f8",
+    "codelaw.py": "734afd1a92f75898caed7b76893c5855bba2a3971672ad0140eb5f87f643d872",
+    "component_ic.py": "a418b1aeecf15565aefcf9bcb6f3fc3ae194baeae8715b1b1ae691ea564f5660",
+    "config.py": "7be49132c6a1985c3d7a1fec0abb640ce7020392547ec26ccddad8e36f52be05",
+    "counterfactual.py": "e20ac7001a993d384c5958984811d83a0c5beb2f169b887ffca81f6225b99462",
+    "dataset.py": "e6ea06a8f1ac14c20e0bdaee650bd4ac81416bd6688cdd4c683853196b21fc29",
+    "dbmigrate.py": "5f828a5549824018c0a3e09373d97e16ef7a2c4dfbb218b113f411c70e83c22a",
+    "earnings.py": "dbed9833a64b38cfa0e4bca2e2bc663c7af90c4172ef1a7b85b1066f47b9757b",
+    "guard.py": "6bf0056fc66788ea8b7ac93d02fde25afdcbe57f46cbfb623657f8c8bde04e1d",
+    "health.py": "1c797aaf8896d735b467d7194ead0e17ddf5abf298a064589f41265b12400958",
+    "hermes.py": "c04f32fbfebde53ca3959d2c344eb662f6f72e97e341b844982ce0f9167c0f40",
+    "hermes_composite.py": "cbffa7a7a71772dbf919b67edbce36ae77e3112a9cecbb0416519c7bed6bd602",
+    "hermes_runtime.py": "dd13953aa29efc611b7c085b278565439b8a035ca8f7f0d62ee375a636534344",
+    "hotstate.py": "fa79f9b676eb68b42cceb7fd02590a591d50c3b4e1aa98ef6b45f8104507d688",
+    "indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+    "integrity_registry.py": "62c966fb41a5946968aed0f5637b4b56f99a12ed1c442a0586f9a60660da0adf",
+    "intraday_cycle.py": "6573dda37b06e3c12ee02b13b36f032885c42085c6fee45655e3393579a2cb8d",
+    "intraday_shadow.py": "ac2eb57572d78af230ab0312b774a406efc722ba4a077fb0663cba463c3dc793",
+    "ledgers.py": "3149d487643ff74be900127166e750d94dd934c645f3b9b0ab85487beb714f51",
+    "ledgerstamp.py": "f77395ea9749e77d9a5d12fb1b81b01e185e55c8beec244c5aa5a473dd3f463e",
+    "loop.py": "ede9cdfc8ee5a740b529130fbb8b49deda820a37ed3754593f569a76250b9b90",
+    "marketstream.py": "839b64229181b78300a4dd85a94bb1dc200bafb19aba91545875985956da7557",
+    "marketview.py": "37c34359737a9d1fdcbdcadf0938f6f1e0ab017a9640c93a669b7e9a41ae6f20",
+    "mcp_server.py": "fa876f1a4d6be7a160c339403689a9704adf923d70e04f2d49e42973562765d9",
+    "memory.py": "c9941fd398c56dab1f036fd05f1ce0a82871d46b63cf796388b9910eacf3aa0e",
+    "mirror_stream.py": "f3e604e08474812227bcceb46f723ee904cc56442f1c9e0694952f6f1c0b8843",
+    "mutation.py": "01d19e13d06f61726ad38ad3a50a6ebbe61c19c6c2f7bd0617b5be1b9242c569",
+    "notify.py": "dac9024c4c900031ecf7e1f26c730bb05ab5666f9219692f03d5a74c85c86b7d",
+    "nous_eval.py": "c2d22a10a54b75f31d699e4559c778a17e8da6f4306047dbbe6b1e64ccbc47fd",
+    "obs.py": "d1a24f5bdd0db26030cbfc800a862be0c897654d58e1b2113b4428410f86ab5e",
+    "olcum_araclari.py": "5baeab2cc0c716bb31ad33381e5d1f8fcfd7a107b33356b509f042bf5d84c23c",
+    "oos_erosion.py": "2b8ce8a329b88760ca4c8937a01a171fe1146cc8ac2d0a85aaea6a8be7e91d2d",
+    "oos_pipeline.py": "44d1c5210991f7a5edc9af038db942f2e01f81a9155b4ab356a1b76cb8956d24",
+    "prescreen.py": "d6c95fff9658895d8b5531f77eeb8205b8867098abccb7f4ee25109e47b92862",
+    "probgate.py": "97c88cead6981bb93e86c011fc9f56f25bab7c3b125558ef2b504d63f670feb8",
+    "provenance.py": "64117604982b17940e72649b23a3f57d9aa87f075b17056aea2c84eb6bb90da5",
+    "recompute.py": "38d21114548d4818a7594a2b7ab0271cdf64c37552527042203ae823d338f235",
+    "reflect.py": "920b00ae7ccf1cd79d0805ce28294ffdc4da9c5e3f7c046f14a409056fef9c91",
+    "regime.py": "7143b71013776b12de958da54023a68287884be6abecf2e94ea93abfe4125940",
+    "regime_trigger.py": "e9a1f5f06dd841ccc5a4f910b9991885924af7dfb20975cba4f5e8a411faaaf4",
+    "rollback.py": "27fa940a313e30b1af64313f413a2ba73327876f68b6e378a24f31f752737579",
+    "run.py": "9630ae90305ccba33d05f2dc87b59527e8354d40c17e0caabe638bbe4a8faede",
+    "scheduler.py": "0af64bfb6d9e670ec471cb9c8afaa45c5dc82ba02b54f2ddfcf13b73e2a9d43f",
+    "score.py": "d4dba15b9e60f17d1b52c25c6786d7ad3f1b62e66bde8090655952333e3b93c4",
+    "secrets.py": "43cacdf9e2f2050bd794a3ed5d828933d7a408c4de8bbded57c3b0672d61116b",
+    "selfreview.py": "cdec767e1c5edc47940747c61cd7d7184fa9cd0eb02e4c281cc4ff6a10934eb6",
+    "shadow_lifecycle.py": "8790dc20d38a51018ba9a45892daaa2b0ebd8db2f0e2f1bb9043effa5924dce6",
+    "shadow_model.py": "99f3c1c8588c631a0012b9f0ddc4b42041c0b9b409bc05591d5bc6e0fcc63051",
+    "shadow_variants.py": "27b53702be7fadbcaeedbf89901280d3f6c3d50f7b46020411618b3e7b5c99fb",
+    "shadowlaw.py": "5e551f07476cccb7b4efa3b4e428b96ca0d8942c85e09965843c1bb0a1520878",
+    "sieve.py": "bcb37c0020f186134f0d14e59365ba70f05669715a0c6ad2faaed6a12b0d2933",
+    "skill_evolve.py": "efd3c598bf6c155d226ccf284470db8d2c5a20b4eaae72c8d43cd9ad62cff8fa",
+    "skills.py": "fc58f0a3b725f0d5f349748abb517c9e2d87438890d4d4a1122732ae12e13221",
+    "spend.py": "6052ae51595aefc0e78b7e2db35578f571b3ad118dd884d5f0be048eddcc50e6",
+    "sprint.py": "969e17a044fa49005e8106e4e5daf6d92dec0fdee69e151acbc581fbad6ca835",
+    "sprint_run.py": "5d8cb948ccaba89205048f4cc36d5978fbae1261c0ba3fb143afa004ac3a122a",
+    "storage.py": "5895855836835d4f0aa3354659fbbb7ad3afe6d9bd163c043ad010dde3d67f90",
+    "store.py": "9181bafe1e91d61ecbfc96e0b675257a9d06efbe91821d024befe27b59ba3e90",
+    "strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+    "streamhealth.py": "83176fc8509a40b4988ead40c07cfa04cffde9213a404f87e978ea99fa334e9d",
+    "threshold_curve.py": "2c9cb758e44b5772373f05a80bb1ffe902b99f7d430bf26f0213ad125f41ca39",
+    "trend_shadow.py": "bb5ecc90e91d5afe0cab0d00bc0efcf2a554e4625faf8617f73a0d96ffa068aa",
+    "validation.py": "b2e73faf2e8e23dccdb2abcd69ecf921261e88595562fe923aae90ca61562a6d",
+    "validation_report.py": "04ad19f326224ab757e20d293587aa6daca132cf5659c17e31601205dd2fa5ab",
+    "versioning.py": "4c8e405fecdc1d028cc5e79331311910c3575f4345a1808f7f993b4f06f4c724",
+    "watchdog.py": "4610c057558a921a3df8f6db4b20c492dd7c3e9555090e1dbd7f64ba2a78317e"
+   }
+  },
+  "tani_dilimi": {
+   "n_sembol": 250,
+   "n_endeks_satir": 1398,
+   "endeks_ilk_bar": "2021-01-04",
+   "endeks_son_bar": "2026-07-29",
+   "holdout_2026_07_30": {
+    "n_seans": 1146,
+    "son_seans": "2026-07-29"
+   },
+   "tani_2026_07_31": {
+    "n_seans": 1146,
+    "son_seans": "2026-07-29"
+   },
+   "ayni_takvim": true,
+   "hukum": "07-31'e uzatma AYNI takvimi üretir (bar önbelleği daha erken bitiyor) → AYRI KOŞUM GEREKMEZ; tam-pencere tanı dilimi tam_guncel kolunun `full_detail`/`equity_tam` alanlarından okunur.",
+   "sembol_son_bar_dagilimi": {
+    "2026-07-29": 43,
+    "2026-07-28": 207
+   }
+  },
+  "butunluk_erisimi": {
+   "defter_sembol_sayisi": 61,
+   "defter_dislanan_bar_toplam_tum_gecmis": 48735,
+   "guvenli_baslangic_R1_BASLANGICINDAN_SONRA_olan_semboller": {
+    "DD": "2025-11-04",
+    "HON": "2026-06-30"
+   },
+   "n_R1_icinde": 2,
+   "n_R1_oncesinde_biten": 59,
+   "hukum": "R1 penceresi 2022-01-01'de başlıyor; güvenli_başlangıcı bu tarihten ÖNCE olan sembollerde defter R1 içinde HİÇBİR satır düşürmez."
+  }
+ },
+ "eksik_kollar": null,
+ "karne": {
+  "tam_guncel": {
+   "kol": "tam_guncel",
+   "oos_score": 0.0579,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "holdout_score_neden": "5/30 closed trades — score undefined (None, not 0.0)",
+   "para_v3_search": 0.1605,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "realized_usd_search": {
+    "n_islem": 103,
+    "n_pnl": 103,
+    "n_eksik": 0,
+    "tam_kapsam": true,
+    "start_equity": 100000.0,
+    "span_days": 585.0,
+    "hedef_usd": 42995.22,
+    "annual_target": 0.25,
+    "birim": "USD",
+    "hukum_verir": false,
+    "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+    "olculdu": true,
+    "pnl_usd": 6901.93,
+    "ham_oran": 0.160528,
+    "skor_usd": 0.1605,
+    "kirpildi": false,
+    "neden": null
+   },
+   "mtm_dd_veto": {
+    "olculdu": true,
+    "max_mtm_dd": 0.072,
+    "esik": 0.04,
+    "esik_kaynagi": "shadowlaw.DD_VETO_MARGIN",
+    "ihlal": true,
+    "n_ihlal_gunu": 447,
+    "n_gun": 1146,
+    "pencere": {
+     "ilk": "2022-01-03",
+     "son": "2026-07-29"
+    },
+    "hukum_verir": false,
+    "neden": null
+   },
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca",
+   "sure_sn": 4769.7
+  },
+  "butunluk_dislamasiz": {
+   "kol": "butunluk_dislamasiz",
+   "oos_score": 0.0579,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "holdout_score_neden": "5/30 closed trades — score undefined (None, not 0.0)",
+   "para_v3_search": 0.1605,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "realized_usd_search": {
+    "n_islem": 103,
+    "n_pnl": 103,
+    "n_eksik": 0,
+    "tam_kapsam": true,
+    "start_equity": 100000.0,
+    "span_days": 585.0,
+    "hedef_usd": 42995.22,
+    "annual_target": 0.25,
+    "birim": "USD",
+    "hukum_verir": false,
+    "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+    "olculdu": true,
+    "pnl_usd": 6901.93,
+    "ham_oran": 0.160528,
+    "skor_usd": 0.1605,
+    "kirpildi": false,
+    "neden": null
+   },
+   "mtm_dd_veto": {
+    "olculdu": true,
+    "max_mtm_dd": 0.072,
+    "esik": 0.04,
+    "esik_kaynagi": "shadowlaw.DD_VETO_MARGIN",
+    "ihlal": true,
+    "n_ihlal_gunu": 447,
+    "n_gun": 1146,
+    "pencere": {
+     "ilk": "2022-01-03",
+     "son": "2026-07-29"
+    },
+    "hukum_verir": false,
+    "neden": null
+   },
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca",
+   "sure_sn": 958.7
+  },
+  "e1_oncesi_icra": {
+   "kol": "e1_oncesi_icra",
+   "oos_score": 0.0699,
+   "is_score": 0.0616,
+   "holdout_score": null,
+   "holdout_score_neden": "5/30 closed trades — score undefined (None, not 0.0)",
+   "para_v3_search": 0.0856,
+   "n_trades_total": 161,
+   "oos_n": 88,
+   "search_n": 71,
+   "confirm_n": 15,
+   "avg_r": 0.078,
+   "win_rate": 0.409,
+   "sharpe": 0.283,
+   "max_drawdown": 0.0699,
+   "total_return": 0.0339,
+   "realized_usd_search": {
+    "n_islem": 71,
+    "n_pnl": 71,
+    "n_eksik": 0,
+    "tam_kapsam": true,
+    "start_equity": 100000.0,
+    "span_days": 585.0,
+    "hedef_usd": 42995.22,
+    "annual_target": 0.25,
+    "birim": "USD",
+    "hukum_verir": false,
+    "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+    "olculdu": true,
+    "pnl_usd": 3675.78,
+    "ham_oran": 0.085493,
+    "skor_usd": 0.0855,
+    "kirpildi": false,
+    "neden": null
+   },
+   "mtm_dd_veto": {
+    "olculdu": true,
+    "max_mtm_dd": 0.0708,
+    "esik": 0.04,
+    "esik_kaynagi": "shadowlaw.DD_VETO_MARGIN",
+    "ihlal": true,
+    "n_ihlal_gunu": 693,
+    "n_gun": 1146,
+    "pencere": {
+     "ilk": "2022-01-03",
+     "son": "2026-07-29"
+    },
+    "hukum_verir": false,
+    "neden": null
+   },
+   "digest_tum": "995f1d33a8b8a71932b5f6d7cb0d86e39261878013b8f1aca17f04c21f7c47f1",
+   "digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+   "equity_digest": "ea6777ea1b70bf0860258e0434d688e5c76ae659713559aac9d902aba0fb38a5",
+   "plan_digest": "b5390efe9f241786728a03f20cf67e170268432a8909cc6b21058c108fa7b215",
+   "sure_sn": 4785.4
+  },
+  "tam_guncel_pk": {
+   "kol": "tam_guncel_pk",
+   "oos_score": 0.0579,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "holdout_score_neden": "5/30 closed trades — score undefined (None, not 0.0)",
+   "para_v3_search": 0.1605,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "realized_usd_search": {
+    "n_islem": 103,
+    "n_pnl": 103,
+    "n_eksik": 0,
+    "tam_kapsam": true,
+    "start_equity": 100000.0,
+    "span_days": 585.0,
+    "hedef_usd": 42995.22,
+    "annual_target": 0.25,
+    "birim": "USD",
+    "hukum_verir": false,
+    "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+    "olculdu": true,
+    "pnl_usd": 6901.93,
+    "ham_oran": 0.160528,
+    "skor_usd": 0.1605,
+    "kirpildi": false,
+    "neden": null
+   },
+   "mtm_dd_veto": {
+    "olculdu": true,
+    "max_mtm_dd": 0.072,
+    "esik": 0.04,
+    "esik_kaynagi": "shadowlaw.DD_VETO_MARGIN",
+    "ihlal": true,
+    "n_ihlal_gunu": 447,
+    "n_gun": 1146,
+    "pencere": {
+     "ilk": "2022-01-03",
+     "son": "2026-07-29"
+    },
+    "hukum_verir": false,
+    "neden": null
+   },
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca",
+   "sure_sn": 958.9
+  }
+ },
+ "kol_ortak_beyan": {
+  "tam_guncel": {
+   "strategy_version": 3,
+   "strategy_version_kaynagi": "state/strategy.yaml:version",
+   "geometri": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ]
+   },
+   "embargo": 10,
+   "n_sembol": 250,
+   "calendar_ilk": "2022-01-03",
+   "calendar_son": "2026-07-29",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "veri_kapilari": {
+    "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+    "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+    "bars_integrity_defteri_state_te_var": true,
+    "bars_integrity_defter_ozeti": {
+     "rev": 1,
+     "sembol_sayisi": 61,
+     "kirilma_sayisi": 98,
+     "dislanan_bar_toplam": 48735,
+     "uretildi": "2026-07-31T00:01:10"
+    },
+    "integrity_report": {
+     "file": "bars_integrity.json",
+     "ledger_symbols": 61,
+     "ledger_rev": 1,
+     "generated_at": "2026-07-31T00:01:10",
+     "applied": {},
+     "rows_excluded": 0
+    },
+    "ghost_report": {
+     "dates": {
+      "2006-10-30": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "ALB"
+       ]
+      },
+      "2008-06-12": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "AVGO"
+       ]
+      },
+      "2011-12-01": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2011-12-09": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2012-01-20": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "EL"
+       ]
+      },
+      "2012-06-26": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "DLTR"
+       ]
+      },
+      "2013-07-15": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-08-02": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-12-18": {
+       "rows": 4,
+       "classes": {
+        "unadjusted_row": 4
+       },
+       "tickers": [
+        "CMCSA",
+        "GILD",
+        "TDG",
+        "CHD"
+       ]
+      },
+      "2014-06-06": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "UNP"
+       ]
+      },
+      "2018-11-22": {
+       "rows": 178,
+       "classes": {
+        "ghost_session": 178
+       },
+       "tickers": [
+        "CRM",
+        "ORCL",
+        "HD",
+        "NKE",
+        "MCD",
+        "LOW",
+        "JPM",
+        "BAC",
+        "GS",
+        "V",
+        "MA",
+        "AXP"
+       ]
+      },
+      "2025-05-26": {
+       "rows": 250,
+       "classes": {
+        "ghost_session": 250
+       },
+       "tickers": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AVGO",
+        "AMD",
+        "CRM",
+        "ADBE",
+        "ORCL",
+        "GOOGL",
+        "META",
+        "NFLX",
+        "AMZN"
+       ]
+      }
+     },
+     "rows": 441,
+     "calendar": "XNYS",
+     "calendar_ok": true,
+     "refused": {},
+     "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+    }
+   },
+   "oos_split": {
+    "search_start": "2024-01-11",
+    "search_end": "2025-08-18",
+    "span_days": 585,
+    "confirm_end": "2026-04-30"
+   }
+  },
+  "butunluk_dislamasiz": {
+   "strategy_version": 3,
+   "strategy_version_kaynagi": "state/strategy.yaml:version",
+   "geometri": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ]
+   },
+   "embargo": 10,
+   "n_sembol": 250,
+   "calendar_ilk": "2022-01-03",
+   "calendar_son": "2026-07-29",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "veri_kapilari": {
+    "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+    "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+    "bars_integrity_defteri_state_te_var": false,
+    "bars_integrity_defter_ozeti": {
+     "rev": null,
+     "sembol_sayisi": null,
+     "kirilma_sayisi": null,
+     "dislanan_bar_toplam": null,
+     "uretildi": null
+    },
+    "integrity_report": {
+     "file": "bars_integrity.json",
+     "ledger_symbols": 0,
+     "ledger_rev": null,
+     "generated_at": null,
+     "applied": {},
+     "rows_excluded": 0
+    },
+    "ghost_report": {
+     "dates": {
+      "2006-10-30": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "ALB"
+       ]
+      },
+      "2008-06-12": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "AVGO"
+       ]
+      },
+      "2011-12-01": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2011-12-09": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2012-01-20": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "EL"
+       ]
+      },
+      "2012-06-26": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "DLTR"
+       ]
+      },
+      "2013-07-15": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-08-02": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-12-18": {
+       "rows": 4,
+       "classes": {
+        "unadjusted_row": 4
+       },
+       "tickers": [
+        "CMCSA",
+        "GILD",
+        "TDG",
+        "CHD"
+       ]
+      },
+      "2014-06-06": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "UNP"
+       ]
+      },
+      "2018-11-22": {
+       "rows": 178,
+       "classes": {
+        "ghost_session": 178
+       },
+       "tickers": [
+        "CRM",
+        "ORCL",
+        "HD",
+        "NKE",
+        "MCD",
+        "LOW",
+        "JPM",
+        "BAC",
+        "GS",
+        "V",
+        "MA",
+        "AXP"
+       ]
+      },
+      "2025-05-26": {
+       "rows": 250,
+       "classes": {
+        "ghost_session": 250
+       },
+       "tickers": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AVGO",
+        "AMD",
+        "CRM",
+        "ADBE",
+        "ORCL",
+        "GOOGL",
+        "META",
+        "NFLX",
+        "AMZN"
+       ]
+      }
+     },
+     "rows": 441,
+     "calendar": "XNYS",
+     "calendar_ok": true,
+     "refused": {},
+     "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+    }
+   },
+   "oos_split": {
+    "search_start": "2024-01-11",
+    "search_end": "2025-08-18",
+    "span_days": 585,
+    "confirm_end": "2026-04-30"
+   }
+  },
+  "e1_oncesi_icra": {
+   "strategy_version": 3,
+   "strategy_version_kaynagi": "state/strategy.yaml:version",
+   "geometri": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ]
+   },
+   "embargo": 10,
+   "n_sembol": 250,
+   "calendar_ilk": "2022-01-03",
+   "calendar_son": "2026-07-29",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.1,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "veri_kapilari": {
+    "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+    "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+    "bars_integrity_defteri_state_te_var": true,
+    "bars_integrity_defter_ozeti": {
+     "rev": 1,
+     "sembol_sayisi": 61,
+     "kirilma_sayisi": 98,
+     "dislanan_bar_toplam": 48735,
+     "uretildi": "2026-07-31T00:01:10"
+    },
+    "integrity_report": {
+     "file": "bars_integrity.json",
+     "ledger_symbols": 61,
+     "ledger_rev": 1,
+     "generated_at": "2026-07-31T00:01:10",
+     "applied": {},
+     "rows_excluded": 0
+    },
+    "ghost_report": {
+     "dates": {
+      "2006-10-30": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "ALB"
+       ]
+      },
+      "2008-06-12": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "AVGO"
+       ]
+      },
+      "2011-12-01": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2011-12-09": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2012-01-20": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "EL"
+       ]
+      },
+      "2012-06-26": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "DLTR"
+       ]
+      },
+      "2013-07-15": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-08-02": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-12-18": {
+       "rows": 4,
+       "classes": {
+        "unadjusted_row": 4
+       },
+       "tickers": [
+        "CMCSA",
+        "GILD",
+        "TDG",
+        "CHD"
+       ]
+      },
+      "2014-06-06": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "UNP"
+       ]
+      },
+      "2018-11-22": {
+       "rows": 178,
+       "classes": {
+        "ghost_session": 178
+       },
+       "tickers": [
+        "CRM",
+        "ORCL",
+        "HD",
+        "NKE",
+        "MCD",
+        "LOW",
+        "JPM",
+        "BAC",
+        "GS",
+        "V",
+        "MA",
+        "AXP"
+       ]
+      },
+      "2025-05-26": {
+       "rows": 250,
+       "classes": {
+        "ghost_session": 250
+       },
+       "tickers": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AVGO",
+        "AMD",
+        "CRM",
+        "ADBE",
+        "ORCL",
+        "GOOGL",
+        "META",
+        "NFLX",
+        "AMZN"
+       ]
+      }
+     },
+     "rows": 441,
+     "calendar": "XNYS",
+     "calendar_ok": true,
+     "refused": {},
+     "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+    }
+   },
+   "oos_split": {
+    "search_start": "2024-01-11",
+    "search_end": "2025-08-18",
+    "span_days": 585,
+    "confirm_end": "2026-04-30"
+   }
+  },
+  "tam_guncel_pk": {
+   "strategy_version": 3,
+   "strategy_version_kaynagi": "state/strategy.yaml:version",
+   "geometri": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ]
+   },
+   "embargo": 10,
+   "n_sembol": 250,
+   "calendar_ilk": "2022-01-03",
+   "calendar_son": "2026-07-29",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "veri_kapilari": {
+    "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+    "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+    "bars_integrity_defteri_state_te_var": true,
+    "bars_integrity_defter_ozeti": {
+     "rev": 1,
+     "sembol_sayisi": 61,
+     "kirilma_sayisi": 98,
+     "dislanan_bar_toplam": 48735,
+     "uretildi": "2026-07-31T00:01:10"
+    },
+    "integrity_report": {
+     "file": "bars_integrity.json",
+     "ledger_symbols": 61,
+     "ledger_rev": 1,
+     "generated_at": "2026-07-31T00:01:10",
+     "applied": {},
+     "rows_excluded": 0
+    },
+    "ghost_report": {
+     "dates": {
+      "2006-10-30": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "ALB"
+       ]
+      },
+      "2008-06-12": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "AVGO"
+       ]
+      },
+      "2011-12-01": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2011-12-09": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "TDG"
+       ]
+      },
+      "2012-01-20": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "EL"
+       ]
+      },
+      "2012-06-26": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "DLTR"
+       ]
+      },
+      "2013-07-15": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-08-02": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "PINS"
+       ]
+      },
+      "2013-12-18": {
+       "rows": 4,
+       "classes": {
+        "unadjusted_row": 4
+       },
+       "tickers": [
+        "CMCSA",
+        "GILD",
+        "TDG",
+        "CHD"
+       ]
+      },
+      "2014-06-06": {
+       "rows": 1,
+       "classes": {
+        "unadjusted_row": 1
+       },
+       "tickers": [
+        "UNP"
+       ]
+      },
+      "2018-11-22": {
+       "rows": 178,
+       "classes": {
+        "ghost_session": 178
+       },
+       "tickers": [
+        "CRM",
+        "ORCL",
+        "HD",
+        "NKE",
+        "MCD",
+        "LOW",
+        "JPM",
+        "BAC",
+        "GS",
+        "V",
+        "MA",
+        "AXP"
+       ]
+      },
+      "2025-05-26": {
+       "rows": 250,
+       "classes": {
+        "ghost_session": 250
+       },
+       "tickers": [
+        "AAPL",
+        "MSFT",
+        "NVDA",
+        "AVGO",
+        "AMD",
+        "CRM",
+        "ADBE",
+        "ORCL",
+        "GOOGL",
+        "META",
+        "NFLX",
+        "AMZN"
+       ]
+      }
+     },
+     "rows": 441,
+     "calendar": "XNYS",
+     "calendar_ok": true,
+     "refused": {},
+     "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+    }
+   },
+   "oos_split": {
+    "search_start": "2024-01-11",
+    "search_end": "2025-08-18",
+    "span_days": 585,
+    "confirm_end": "2026-04-30"
+   }
+  }
+ },
+ "evren": {
+  "replay_universe_n": 251,
+  "yuklenen": 250,
+  "yuklenemeyen": [
+   "FISV"
+  ],
+  "retired_n": 8,
+  "kart_beyani": "full_251",
+  "sapma_nedeni": "`data.REPLAY_UNIVERSE` 251 sembol; 250 tanesi yüklendi. Yüklenemeyen: ['FISV'] — `state/bars/fisv.csv` DOSYASI YOK, `load_cached._read` dosyayı bulamayınca None döner ve sembol replay evreninden düşer (uydurma bar üretilmez). Bu, kartın 251 beyanıyla ölçülen 250 arasındaki TEK farktır.",
+  "retired_symbols_n": 8
+ },
+ "defter_alan_beyani": {
+  "pnl_dollars_slim_defterde": true,
+  "kaynak_slim_defterde": false,
+  "kaynak_neden_yok": "`PaperBroker.close_position` kaynak damgasını BİLEREK basmaz (broker.py:480-489: 'Damgayı YAZAR basar, üretici değil'). Replay defteri hiçbir yazara teslim edilmediği için satırlarda `kaynak` alanı DOĞMAZ — slim'leme onu KAYBETMEDİ, üretici hiç üretmedi.",
+  "regime_at_plan_notu": "Kapanış satırında alan adı `regime`dir (`regime_at_plan` Position'da kalır); slim defterde `regime_at_plan` None görünür — wpg_olcum'un aynı artefaktı, digest tanımını bozmamak için korundu.",
+  "ornek_satir_alanlari": [
+   "bars_held",
+   "costs",
+   "entry",
+   "exit",
+   "exit_reason",
+   "id",
+   "mae_r",
+   "mfe_r",
+   "plan_id",
+   "pnl_dollars",
+   "pnl_pct",
+   "qty",
+   "r_multiple",
+   "regime",
+   "regime_at_plan",
+   "scaled_out",
+   "score",
+   "setup",
+   "size_r",
+   "strategy_version",
+   "ticker",
+   "ts_close",
+   "ts_open"
+  ]
+ },
+ "kotumser_bant": {
+  "tam_guncel": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "hukme_girmez": true,
+   "tam_replay": {
+    "dilim": "tam replay penceresi",
+    "n": 201,
+    "net": 2492.87,
+    "ek_maliyet": 1470.41,
+    "net_kotumser": 1022.46,
+    "n_olculen": 201,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_search": {
+    "dilim": "OOS Search",
+    "n": 103,
+    "net": 6901.93,
+    "ek_maliyet": 906.25,
+    "net_kotumser": 5995.68,
+    "n_olculen": 103,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_tum": {
+    "dilim": "OOS (search+confirm)",
+    "n": 125,
+    "net": 3313.97,
+    "ek_maliyet": 979.69,
+    "net_kotumser": 2334.28,
+    "n_olculen": 125,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "kaynak_yasa": "meridian.analytics.pessimistic_band + _kotumser_ek_dolar (net_kotumser() canlı defteri okur, bu yüzden çağrılmadı — aynı yasanın ikinci uygulaması YAZILMADI)"
+  },
+  "butunluk_dislamasiz": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "hukme_girmez": true,
+   "tam_replay": {
+    "dilim": "tam replay penceresi",
+    "n": 201,
+    "net": 2492.87,
+    "ek_maliyet": 1470.41,
+    "net_kotumser": 1022.46,
+    "n_olculen": 201,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_search": {
+    "dilim": "OOS Search",
+    "n": 103,
+    "net": 6901.93,
+    "ek_maliyet": 906.25,
+    "net_kotumser": 5995.68,
+    "n_olculen": 103,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_tum": {
+    "dilim": "OOS (search+confirm)",
+    "n": 125,
+    "net": 3313.97,
+    "ek_maliyet": 979.69,
+    "net_kotumser": 2334.28,
+    "n_olculen": 125,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "kaynak_yasa": "meridian.analytics.pessimistic_band + _kotumser_ek_dolar (net_kotumser() canlı defteri okur, bu yüzden çağrılmadı — aynı yasanın ikinci uygulaması YAZILMADI)"
+  },
+  "e1_oncesi_icra": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "hukme_girmez": true,
+   "tam_replay": {
+    "dilim": "tam replay penceresi",
+    "n": 161,
+    "net": 2804.21,
+    "ek_maliyet": 956.39,
+    "net_kotumser": 1847.82,
+    "n_olculen": 161,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_search": {
+    "dilim": "OOS Search",
+    "n": 71,
+    "net": 3675.78,
+    "ek_maliyet": 439.53,
+    "net_kotumser": 3236.25,
+    "n_olculen": 71,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_tum": {
+    "dilim": "OOS (search+confirm)",
+    "n": 86,
+    "net": 3253.86,
+    "ek_maliyet": 469.31,
+    "net_kotumser": 2784.55,
+    "n_olculen": 86,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "kaynak_yasa": "meridian.analytics.pessimistic_band + _kotumser_ek_dolar (net_kotumser() canlı defteri okur, bu yüzden çağrılmadı — aynı yasanın ikinci uygulaması YAZILMADI)"
+  },
+  "tam_guncel_pk": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "hukme_girmez": true,
+   "tam_replay": {
+    "dilim": "tam replay penceresi",
+    "n": 201,
+    "net": 2492.87,
+    "ek_maliyet": 1470.41,
+    "net_kotumser": 1022.46,
+    "n_olculen": 201,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_search": {
+    "dilim": "OOS Search",
+    "n": 103,
+    "net": 6901.93,
+    "ek_maliyet": 906.25,
+    "net_kotumser": 5995.68,
+    "n_olculen": 103,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "oos_tum": {
+    "dilim": "OOS (search+confirm)",
+    "n": 125,
+    "net": 3313.97,
+    "ek_maliyet": 979.69,
+    "net_kotumser": 2334.28,
+    "n_olculen": 125,
+    "n_notional_yok": 0,
+    "isaret_donuyor": false,
+    "neden": null
+   },
+   "kaynak_yasa": "meridian.analytics.pessimistic_band + _kotumser_ek_dolar (net_kotumser() canlı defteri okur, bu yüzden çağrılmadı — aynı yasanın ikinci uygulaması YAZILMADI)"
+  }
+ },
+ "silahlanma_hunisi": {
+  "tam_guncel": {
+   "seans_kapisi": {
+    "n_seans": 1146,
+    "n_taranan_seans": 581,
+    "n_bloke_seans": 565,
+    "bloke_neden": {
+     "maruziyet_butcesi_0(rejim)": 482,
+     "maruziyet>0_ama_taranmadi(slot_dolu_veya_ilk_3_bar)": 83
+    },
+    "taranan_seans_orani": 0.507,
+    "rejim_dagilimi": {
+     "trend_up": {
+      "n_seans": 602,
+      "n_taranan_seans": 526,
+      "n_sinyal": 553
+     },
+     "chop": {
+      "n_seans": 323,
+      "n_taranan_seans": 55,
+      "n_sinyal": 38
+     },
+     "high_vol": {
+      "n_seans": 187,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     },
+     "trend_down": {
+      "n_seans": 34,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     }
+    }
+   },
+   "basamaklar": {
+    "0_seans": 1146,
+    "1_taranan_seans": 581,
+    "2_scan_entry_cagrisi": 143959,
+    "3_aday_sinyal": 591,
+    "4_plan": 591,
+    "5_GO": 93,
+    "5_REVIEW": 353,
+    "5_NO_GO": 145,
+    "6_silahli(GO+REVIEW)": 446,
+    "7_fill_cagrisina_ulasan": 237,
+    "8_dolu": 201,
+    "9_kapanmis_islem": 201
+   },
+   "oranlar": {
+    "sinyal/scan": 0.004105,
+    "silahli/plan": 0.7547,
+    "fill_cagrisi/silahli": 0.5314,
+    "dolu/fill_cagrisi": 0.8481,
+    "dolu/silahli": 0.4507,
+    "dolu/plan": 0.3401,
+    "dolu/seans": 0.1754
+   },
+   "hukum_dagilimi": {
+    "GO": 93,
+    "REVIEW": 353,
+    "NO_GO": 145
+   },
+   "no_go_nedenleri": {
+    "max 5 pozisyon dolu": 108,
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 40,
+    "'tech' sektör tavanı %40 aşılıyor": 21,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.0R açık risk)": 20,
+    "'financials' sektör tavanı %40 aşılıyor": 19,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.9R açık risk)": 18,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.6R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.8R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.7R açık risk)": 11,
+    "'industrials' sektör tavanı %40 aşılıyor": 10,
+    "'health' sektör tavanı %40 aşılıyor": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.3R açık risk)": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.1R açık risk)": 6,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.2R açık risk)": 5,
+    "'consumer' sektör tavanı %40 aşılıyor": 4,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.5R açık risk)": 4,
+    "'staples' sektör tavanı %40 aşılıyor": 3,
+    "'comms' sektör tavanı %40 aşılıyor": 1,
+    "'materials' sektör tavanı %40 aşılıyor": 1,
+    "'reits' sektör tavanı %40 aşılıyor": 1,
+    "'utilities' sektör tavanı %40 aşılıyor": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, health)": 1,
+    "R:R 2.3 marjinal": 1,
+    "kazanç öncesi karartma (earnings blackout)": 1
+   },
+   "review_nedenleri": {
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 92,
+    "skor alt bantta": 51,
+    "portföy ısısı yüksek (~4.2R açık risk)": 26,
+    "'tech' sektöründe korelasyon yığılması": 23,
+    "portföy ısısı yüksek (~3.9R açık risk)": 21,
+    "'financials' sektöründe korelasyon yığılması": 20,
+    "portföy ısısı yüksek (~4.0R açık risk)": 20,
+    "'comms' sektöründe korelasyon yığılması": 19,
+    "R:R 2.2 marjinal": 18,
+    "'consumer' sektöründe korelasyon yığılması": 17,
+    "R:R 2.1 marjinal": 17,
+    "'industrials' sektöründe korelasyon yığılması": 17,
+    "portföy ısısı yüksek (~4.1R açık risk)": 16,
+    "'health' sektöründe korelasyon yığılması": 11,
+    "portföy ısısı yüksek (~3.8R açık risk)": 8,
+    "'utilities' sektöründe korelasyon yığılması": 8,
+    "portföy ısısı yüksek (~3.7R açık risk)": 6,
+    "'staples' sektöründe korelasyon yığılması": 5,
+    "R:R 2.3 marjinal": 5,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, financials)": 3,
+    "'materials' sektöründe korelasyon yığılması": 3,
+    "R:R 2.0 marjinal": 3,
+    "portföy ısısı yüksek (~4.4R açık risk)": 3,
+    "'reits' sektöründe korelasyon yığılması": 3,
+    "portföy ısısı yüksek (~3.5R açık risk)": 3,
+    "'industrials' bugünün lider sektörlerinde değil (health, utilities, tech)": 3,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, reits)": 2,
+    "'financials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'staples' bugünün lider sektörlerinde değil (utilities, health, energy)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'tech' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, staples, consumer)": 2,
+    "'health' bugünün lider sektörlerinde değil (tech, consumer, comms)": 2,
+    "'materials' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 2,
+    "portföy ısısı yüksek (~4.3R açık risk)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, reits, comms)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 2,
+    "portföy ısısı yüksek (~4.5R açık risk)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, utilities)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'comms' bugünün lider sektörlerinde değil (financials, consumer, materials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (energy, utilities, health)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (materials, health, comms)": 2,
+    "'comms' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, utilities)": 2,
+    "'comms' bugünün lider sektörlerinde değil (health, energy, industrials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, materials)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, tech)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, energy, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, staples, energy)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, staples, materials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, staples)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, staples)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, materials, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, materials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, reits, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, utilities)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, health, staples)": 1,
+    "'materials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.91) — gerçek konsantrasyon": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.87) — gerçek konsantrasyon": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, comms, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, staples)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, staples, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, consumer, staples)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, comms, reits)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'materials' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, tech, comms)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, reits, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, financials, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (health, staples, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, financials, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, materials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, health, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, materials, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "portföy ısısı yüksek (~3.6R açık risk)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, materials, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, staples, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, financials, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, reits, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, energy, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, financials, energy)": 1,
+    "'staples' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'energy' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, consumer, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, utilities, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, reits, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, comms, materials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, utilities, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, energy)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, energy, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, comms, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, utilities, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, health)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, financials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (industrials, consumer, tech)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, industrials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, consumer, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, financials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (comms, energy, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, energy, reits)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, energy, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, utilities)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, health, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (health, utilities, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, tech, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, health, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (industrials, utilities, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, industrials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, health, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, health)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, consumer, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, industrials, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, industrials, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, staples, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, industrials, staples)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, reits, comms)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, staples, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'reits' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, health, energy)": 1
+   },
+   "fill_ret_nedenleri": {
+    "entry_missed_limit": 26,
+    "max_chase": 6,
+    "open_below_stop": 3,
+    "qty_zero": 1
+   },
+   "silahli_ama_fill_cagrisina_ULASMAYAN": {
+    "n": 209,
+    "sinif": {
+     "slot_dolu(eff_max_open)": 180,
+     "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)": 29
+    },
+    "ornekler": [
+     {
+      "plan_id": "P-2023-04-21-MDT",
+      "fill_seansi": "2023-04-24",
+      "sinif": "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)"
+     },
+     {
+      "plan_id": "P-2023-04-25-SPOT",
+      "fill_seansi": "2023-04-26",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-26-MSFT",
+      "fill_seansi": "2023-04-27",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-27-VRTX",
+      "fill_seansi": "2023-04-28",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-01-ITW",
+      "fill_seansi": "2023-05-02",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-GOOGL",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-ZBH",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-12-ZBH",
+      "fill_seansi": "2023-05-15",
+      "sinif": "slot_dolu(eff_max_open)"
+     }
+    ]
+   },
+   "tutarlilik": {
+    "sinyal==plan": true,
+    "dolu==kapanmis_islem": true,
+    "silahli_olmayan_plandan_fill_cagrisi": [],
+    "ayna_acik_kalan": [],
+    "beyan": "`sinyal==plan`: motorda her scan_entry sinyali TAM BİR plan üretir (backtest.py:292-360). `dolu==kapanmis_islem`: replay pencere sonunda TÜM açık pozisyonları mark-out ile kapatır, yani dolan her pozisyon deftere düşer."
+   }
+  },
+  "butunluk_dislamasiz": {
+   "seans_kapisi": {
+    "n_seans": 1146,
+    "n_taranan_seans": 581,
+    "n_bloke_seans": 565,
+    "bloke_neden": {
+     "maruziyet_butcesi_0(rejim)": 482,
+     "maruziyet>0_ama_taranmadi(slot_dolu_veya_ilk_3_bar)": 83
+    },
+    "taranan_seans_orani": 0.507,
+    "rejim_dagilimi": {
+     "trend_up": {
+      "n_seans": 602,
+      "n_taranan_seans": 526,
+      "n_sinyal": 553
+     },
+     "chop": {
+      "n_seans": 323,
+      "n_taranan_seans": 55,
+      "n_sinyal": 38
+     },
+     "high_vol": {
+      "n_seans": 187,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     },
+     "trend_down": {
+      "n_seans": 34,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     }
+    }
+   },
+   "basamaklar": {
+    "0_seans": 1146,
+    "1_taranan_seans": 581,
+    "2_scan_entry_cagrisi": 143959,
+    "3_aday_sinyal": 591,
+    "4_plan": 591,
+    "5_GO": 93,
+    "5_REVIEW": 353,
+    "5_NO_GO": 145,
+    "6_silahli(GO+REVIEW)": 446,
+    "7_fill_cagrisina_ulasan": 237,
+    "8_dolu": 201,
+    "9_kapanmis_islem": 201
+   },
+   "oranlar": {
+    "sinyal/scan": 0.004105,
+    "silahli/plan": 0.7547,
+    "fill_cagrisi/silahli": 0.5314,
+    "dolu/fill_cagrisi": 0.8481,
+    "dolu/silahli": 0.4507,
+    "dolu/plan": 0.3401,
+    "dolu/seans": 0.1754
+   },
+   "hukum_dagilimi": {
+    "GO": 93,
+    "REVIEW": 353,
+    "NO_GO": 145
+   },
+   "no_go_nedenleri": {
+    "max 5 pozisyon dolu": 108,
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 40,
+    "'tech' sektör tavanı %40 aşılıyor": 21,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.0R açık risk)": 20,
+    "'financials' sektör tavanı %40 aşılıyor": 19,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.9R açık risk)": 18,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.6R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.8R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.7R açık risk)": 11,
+    "'industrials' sektör tavanı %40 aşılıyor": 10,
+    "'health' sektör tavanı %40 aşılıyor": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.3R açık risk)": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.1R açık risk)": 6,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.2R açık risk)": 5,
+    "'consumer' sektör tavanı %40 aşılıyor": 4,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.5R açık risk)": 4,
+    "'staples' sektör tavanı %40 aşılıyor": 3,
+    "'comms' sektör tavanı %40 aşılıyor": 1,
+    "'materials' sektör tavanı %40 aşılıyor": 1,
+    "'reits' sektör tavanı %40 aşılıyor": 1,
+    "'utilities' sektör tavanı %40 aşılıyor": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, health)": 1,
+    "R:R 2.3 marjinal": 1,
+    "kazanç öncesi karartma (earnings blackout)": 1
+   },
+   "review_nedenleri": {
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 92,
+    "skor alt bantta": 51,
+    "portföy ısısı yüksek (~4.2R açık risk)": 26,
+    "'tech' sektöründe korelasyon yığılması": 23,
+    "portföy ısısı yüksek (~3.9R açık risk)": 21,
+    "'financials' sektöründe korelasyon yığılması": 20,
+    "portföy ısısı yüksek (~4.0R açık risk)": 20,
+    "'comms' sektöründe korelasyon yığılması": 19,
+    "R:R 2.2 marjinal": 18,
+    "'consumer' sektöründe korelasyon yığılması": 17,
+    "R:R 2.1 marjinal": 17,
+    "'industrials' sektöründe korelasyon yığılması": 17,
+    "portföy ısısı yüksek (~4.1R açık risk)": 16,
+    "'health' sektöründe korelasyon yığılması": 11,
+    "portföy ısısı yüksek (~3.8R açık risk)": 8,
+    "'utilities' sektöründe korelasyon yığılması": 8,
+    "portföy ısısı yüksek (~3.7R açık risk)": 6,
+    "'staples' sektöründe korelasyon yığılması": 5,
+    "R:R 2.3 marjinal": 5,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, financials)": 3,
+    "'materials' sektöründe korelasyon yığılması": 3,
+    "R:R 2.0 marjinal": 3,
+    "portföy ısısı yüksek (~4.4R açık risk)": 3,
+    "'reits' sektöründe korelasyon yığılması": 3,
+    "portföy ısısı yüksek (~3.5R açık risk)": 3,
+    "'industrials' bugünün lider sektörlerinde değil (health, utilities, tech)": 3,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, reits)": 2,
+    "'financials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'staples' bugünün lider sektörlerinde değil (utilities, health, energy)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'tech' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, staples, consumer)": 2,
+    "'health' bugünün lider sektörlerinde değil (tech, consumer, comms)": 2,
+    "'materials' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 2,
+    "portföy ısısı yüksek (~4.3R açık risk)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, reits, comms)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 2,
+    "portföy ısısı yüksek (~4.5R açık risk)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, utilities)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'comms' bugünün lider sektörlerinde değil (financials, consumer, materials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (energy, utilities, health)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (materials, health, comms)": 2,
+    "'comms' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, utilities)": 2,
+    "'comms' bugünün lider sektörlerinde değil (health, energy, industrials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, materials)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, tech)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, energy, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, staples, energy)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, staples, materials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, staples)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, staples)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, materials, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, materials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, reits, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, utilities)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, health, staples)": 1,
+    "'materials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.91) — gerçek konsantrasyon": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.87) — gerçek konsantrasyon": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, comms, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, staples)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, staples, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, consumer, staples)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, comms, reits)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'materials' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, tech, comms)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, reits, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, financials, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (health, staples, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, financials, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, materials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, health, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, materials, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "portföy ısısı yüksek (~3.6R açık risk)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, materials, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, staples, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, financials, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, reits, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, energy, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, financials, energy)": 1,
+    "'staples' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'energy' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, consumer, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, utilities, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, reits, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, comms, materials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, utilities, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, energy)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, energy, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, comms, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, utilities, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, health)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, financials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (industrials, consumer, tech)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, industrials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, consumer, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, financials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (comms, energy, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, energy, reits)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, energy, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, utilities)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, health, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (health, utilities, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, tech, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, health, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (industrials, utilities, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, industrials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, health, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, health)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, consumer, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, industrials, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, industrials, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, staples, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, industrials, staples)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, reits, comms)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, staples, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'reits' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, health, energy)": 1
+   },
+   "fill_ret_nedenleri": {
+    "entry_missed_limit": 26,
+    "max_chase": 6,
+    "open_below_stop": 3,
+    "qty_zero": 1
+   },
+   "silahli_ama_fill_cagrisina_ULASMAYAN": {
+    "n": 209,
+    "sinif": {
+     "slot_dolu(eff_max_open)": 180,
+     "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)": 29
+    },
+    "ornekler": [
+     {
+      "plan_id": "P-2023-04-21-MDT",
+      "fill_seansi": "2023-04-24",
+      "sinif": "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)"
+     },
+     {
+      "plan_id": "P-2023-04-25-SPOT",
+      "fill_seansi": "2023-04-26",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-26-MSFT",
+      "fill_seansi": "2023-04-27",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-27-VRTX",
+      "fill_seansi": "2023-04-28",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-01-ITW",
+      "fill_seansi": "2023-05-02",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-GOOGL",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-ZBH",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-12-ZBH",
+      "fill_seansi": "2023-05-15",
+      "sinif": "slot_dolu(eff_max_open)"
+     }
+    ]
+   },
+   "tutarlilik": {
+    "sinyal==plan": true,
+    "dolu==kapanmis_islem": true,
+    "silahli_olmayan_plandan_fill_cagrisi": [],
+    "ayna_acik_kalan": [],
+    "beyan": "`sinyal==plan`: motorda her scan_entry sinyali TAM BİR plan üretir (backtest.py:292-360). `dolu==kapanmis_islem`: replay pencere sonunda TÜM açık pozisyonları mark-out ile kapatır, yani dolan her pozisyon deftere düşer."
+   }
+  },
+  "e1_oncesi_icra": {
+   "seans_kapisi": {
+    "n_seans": 1146,
+    "n_taranan_seans": 597,
+    "n_bloke_seans": 549,
+    "bloke_neden": {
+     "maruziyet_butcesi_0(rejim)": 482,
+     "maruziyet>0_ama_taranmadi(slot_dolu_veya_ilk_3_bar)": 67
+    },
+    "taranan_seans_orani": 0.5209,
+    "rejim_dagilimi": {
+     "trend_up": {
+      "n_seans": 602,
+      "n_taranan_seans": 549,
+      "n_sinyal": 584
+     },
+     "chop": {
+      "n_seans": 323,
+      "n_taranan_seans": 48,
+      "n_sinyal": 37
+     },
+     "high_vol": {
+      "n_seans": 187,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     },
+     "trend_down": {
+      "n_seans": 34,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     }
+    }
+   },
+   "basamaklar": {
+    "0_seans": 1146,
+    "1_taranan_seans": 597,
+    "2_scan_entry_cagrisi": 148147,
+    "3_aday_sinyal": 621,
+    "4_plan": 621,
+    "5_GO": 117,
+    "5_REVIEW": 367,
+    "5_NO_GO": 137,
+    "6_silahli(GO+REVIEW)": 484,
+    "7_fill_cagrisina_ulasan": 165,
+    "8_dolu": 161,
+    "9_kapanmis_islem": 161
+   },
+   "oranlar": {
+    "sinyal/scan": 0.004192,
+    "silahli/plan": 0.7794,
+    "fill_cagrisi/silahli": 0.3409,
+    "dolu/fill_cagrisi": 0.9758,
+    "dolu/silahli": 0.3326,
+    "dolu/plan": 0.2593,
+    "dolu/seans": 0.1405
+   },
+   "hukum_dagilimi": {
+    "GO": 117,
+    "REVIEW": 367,
+    "NO_GO": 137
+   },
+   "no_go_nedenleri": {
+    "max 5 pozisyon dolu": 93,
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 44,
+    "'tech' sektör tavanı %40 aşılıyor": 27,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.8R açık risk)": 20,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.0R açık risk)": 17,
+    "'financials' sektör tavanı %40 aşılıyor": 15,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.9R açık risk)": 9,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.1R açık risk)": 9,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.2R açık risk)": 9,
+    "'consumer' sektör tavanı %40 aşılıyor": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.7R açık risk)": 8,
+    "'industrials' sektör tavanı %40 aşılıyor": 6,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.6R açık risk)": 5,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.4R açık risk)": 5,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.5R açık risk)": 3,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.3R açık risk)": 3,
+    "'health' sektör tavanı %40 aşılıyor": 2,
+    "'comms' sektör tavanı %40 aşılıyor": 2,
+    "'energy' sektör tavanı %40 aşılıyor": 2,
+    "'staples' sektör tavanı %40 aşılıyor": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, health)": 1,
+    "R:R 2.3 marjinal": 1,
+    "kazanç öncesi karartma (earnings blackout)": 1
+   },
+   "review_nedenleri": {
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 93,
+    "skor alt bantta": 54,
+    "'tech' sektöründe korelasyon yığılması": 23,
+    "'financials' sektöründe korelasyon yığılması": 20,
+    "R:R 2.1 marjinal": 19,
+    "'comms' sektöründe korelasyon yığılması": 17,
+    "'consumer' sektöründe korelasyon yığılması": 16,
+    "R:R 2.2 marjinal": 16,
+    "portföy ısısı yüksek (~3.9R açık risk)": 16,
+    "portföy ısısı yüksek (~4.2R açık risk)": 14,
+    "portföy ısısı yüksek (~4.3R açık risk)": 12,
+    "'health' sektöründe korelasyon yığılması": 11,
+    "portföy ısısı yüksek (~4.0R açık risk)": 11,
+    "'industrials' sektöründe korelasyon yığılması": 10,
+    "portföy ısısı yüksek (~4.1R açık risk)": 8,
+    "portföy ısısı yüksek (~3.7R açık risk)": 6,
+    "R:R 2.3 marjinal": 6,
+    "'utilities' sektöründe korelasyon yığılması": 5,
+    "'staples' sektöründe korelasyon yığılması": 4,
+    "R:R 2.0 marjinal": 4,
+    "portföy ısısı yüksek (~4.4R açık risk)": 4,
+    "portföy ısısı yüksek (~4.5R açık risk)": 4,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, financials)": 3,
+    "'materials' sektöründe korelasyon yığılması": 3,
+    "portföy ısısı yüksek (~3.8R açık risk)": 3,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, financials)": 3,
+    "'consumer' bugünün lider sektörlerinde değil (energy, health, financials)": 3,
+    "'industrials' bugünün lider sektörlerinde değil (health, utilities, tech)": 3,
+    "'financials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 2,
+    "'staples' bugünün lider sektörlerinde değil (utilities, health, energy)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'tech' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "portföy ısısı yüksek (~3.6R açık risk)": 2,
+    "'materials' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, reits, comms)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 2,
+    "'energy' sektöründe korelasyon yığılması": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'reits' sektöründe korelasyon yığılması": 2,
+    "'health' bugünün lider sektörlerinde değil (tech, consumer, comms)": 2,
+    "'comms' bugünün lider sektörlerinde değil (financials, consumer, materials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (energy, utilities, health)": 2,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (materials, health, comms)": 2,
+    "'comms' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, utilities)": 2,
+    "'comms' bugünün lider sektörlerinde değil (health, energy, industrials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, materials)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, tech)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, energy, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, staples, energy)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, staples, materials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, staples)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, staples)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, materials, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, materials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, reits, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, health, staples)": 1,
+    "'materials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.91) — gerçek konsantrasyon": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, comms, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, consumer, staples)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, staples, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, comms, reits)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'materials' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, tech, comms)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, reits, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, financials, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, reits, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, financials, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (health, staples, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, financials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, materials, health)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, materials, industrials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, energy, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, materials, utilities)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, staples, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, financials, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, reits)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, utilities, comms)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, reits, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (tech, reits, utilities)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, reits, health)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "portföy ısısı yüksek (~3.5R açık risk)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (reits, consumer, tech)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, consumer, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, energy, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, financials, energy)": 1,
+    "'staples' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'energy' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'energy' bugünün lider sektörlerinde değil (reits, tech, financials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, consumer, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, consumer, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, utilities, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, reits, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, comms, materials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, utilities, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, energy)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, energy, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, comms, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, comms, staples)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, comms, staples)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈1.00) — gerçek konsantrasyon": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, utilities, health)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.90) — gerçek konsantrasyon": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, utilities, industrials)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, utilities, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, industrials, health)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, health, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (health, materials, utilities)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, materials, utilities)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (comms, health, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, health, staples)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, health)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, financials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (industrials, consumer, tech)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, materials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, industrials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, consumer, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, utilities, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, health)": 1,
+    "'financials' bugünün lider sektörlerinde değil (comms, energy, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, energy, reits)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, energy, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, utilities)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, health, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (health, utilities, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, tech, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, health, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (industrials, utilities, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, industrials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, health, consumer)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, consumer, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, industrials, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, industrials, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, staples, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, industrials, staples)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, reits, comms)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, staples, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'reits' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, health, energy)": 1
+   },
+   "fill_ret_nedenleri": {
+    "open_below_stop": 2,
+    "max_chase": 2
+   },
+   "silahli_ama_fill_cagrisina_ULASMAYAN": {
+    "n": 319,
+    "sinif": {
+     "slot_dolu(eff_max_open)": 273,
+     "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)": 46
+    },
+    "ornekler": [
+     {
+      "plan_id": "P-2023-05-02-ZBH",
+      "fill_seansi": "2023-05-03",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-GOOGL",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-17-NOW",
+      "fill_seansi": "2023-05-18",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-17-RCL",
+      "fill_seansi": "2023-05-18",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-23-AVGO",
+      "fill_seansi": "2023-05-24",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-06-09-NFLX",
+      "fill_seansi": "2023-06-12",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-06-14-LYV",
+      "fill_seansi": "2023-06-15",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-06-16-SPOT",
+      "fill_seansi": "2023-06-20",
+      "sinif": "slot_dolu(eff_max_open)"
+     }
+    ]
+   },
+   "tutarlilik": {
+    "sinyal==plan": true,
+    "dolu==kapanmis_islem": true,
+    "silahli_olmayan_plandan_fill_cagrisi": [],
+    "ayna_acik_kalan": [],
+    "beyan": "`sinyal==plan`: motorda her scan_entry sinyali TAM BİR plan üretir (backtest.py:292-360). `dolu==kapanmis_islem`: replay pencere sonunda TÜM açık pozisyonları mark-out ile kapatır, yani dolan her pozisyon deftere düşer."
+   }
+  },
+  "tam_guncel_pk": {
+   "seans_kapisi": {
+    "n_seans": 1146,
+    "n_taranan_seans": 581,
+    "n_bloke_seans": 565,
+    "bloke_neden": {
+     "maruziyet_butcesi_0(rejim)": 482,
+     "maruziyet>0_ama_taranmadi(slot_dolu_veya_ilk_3_bar)": 83
+    },
+    "taranan_seans_orani": 0.507,
+    "rejim_dagilimi": {
+     "trend_up": {
+      "n_seans": 602,
+      "n_taranan_seans": 526,
+      "n_sinyal": 553
+     },
+     "chop": {
+      "n_seans": 323,
+      "n_taranan_seans": 55,
+      "n_sinyal": 38
+     },
+     "high_vol": {
+      "n_seans": 187,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     },
+     "trend_down": {
+      "n_seans": 34,
+      "n_taranan_seans": 0,
+      "n_sinyal": 0
+     }
+    }
+   },
+   "basamaklar": {
+    "0_seans": 1146,
+    "1_taranan_seans": 581,
+    "2_scan_entry_cagrisi": 143959,
+    "3_aday_sinyal": 591,
+    "4_plan": 591,
+    "5_GO": 93,
+    "5_REVIEW": 353,
+    "5_NO_GO": 145,
+    "6_silahli(GO+REVIEW)": 446,
+    "7_fill_cagrisina_ulasan": 237,
+    "8_dolu": 201,
+    "9_kapanmis_islem": 201
+   },
+   "oranlar": {
+    "sinyal/scan": 0.004105,
+    "silahli/plan": 0.7547,
+    "fill_cagrisi/silahli": 0.5314,
+    "dolu/fill_cagrisi": 0.8481,
+    "dolu/silahli": 0.4507,
+    "dolu/plan": 0.3401,
+    "dolu/seans": 0.1754
+   },
+   "hukum_dagilimi": {
+    "GO": 93,
+    "REVIEW": 353,
+    "NO_GO": 145
+   },
+   "no_go_nedenleri": {
+    "max 5 pozisyon dolu": 108,
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 40,
+    "'tech' sektör tavanı %40 aşılıyor": 21,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.0R açık risk)": 20,
+    "'financials' sektör tavanı %40 aşılıyor": 19,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.9R açık risk)": 18,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.6R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.8R açık risk)": 17,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.7R açık risk)": 11,
+    "'industrials' sektör tavanı %40 aşılıyor": 10,
+    "'health' sektör tavanı %40 aşılıyor": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.3R açık risk)": 8,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.1R açık risk)": 6,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~5.2R açık risk)": 5,
+    "'consumer' sektör tavanı %40 aşılıyor": 4,
+    "portföy ısısı sert tavanı %4.5R aşıyor (~4.5R açık risk)": 4,
+    "'staples' sektör tavanı %40 aşılıyor": 3,
+    "'comms' sektör tavanı %40 aşılıyor": 1,
+    "'materials' sektör tavanı %40 aşılıyor": 1,
+    "'reits' sektör tavanı %40 aşılıyor": 1,
+    "'utilities' sektör tavanı %40 aşılıyor": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, health)": 1,
+    "R:R 2.3 marjinal": 1,
+    "kazanç öncesi karartma (earnings blackout)": 1
+   },
+   "review_nedenleri": {
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)": 92,
+    "skor alt bantta": 51,
+    "portföy ısısı yüksek (~4.2R açık risk)": 26,
+    "'tech' sektöründe korelasyon yığılması": 23,
+    "portföy ısısı yüksek (~3.9R açık risk)": 21,
+    "'financials' sektöründe korelasyon yığılması": 20,
+    "portföy ısısı yüksek (~4.0R açık risk)": 20,
+    "'comms' sektöründe korelasyon yığılması": 19,
+    "R:R 2.2 marjinal": 18,
+    "'consumer' sektöründe korelasyon yığılması": 17,
+    "R:R 2.1 marjinal": 17,
+    "'industrials' sektöründe korelasyon yığılması": 17,
+    "portföy ısısı yüksek (~4.1R açık risk)": 16,
+    "'health' sektöründe korelasyon yığılması": 11,
+    "portföy ısısı yüksek (~3.8R açık risk)": 8,
+    "'utilities' sektöründe korelasyon yığılması": 8,
+    "portföy ısısı yüksek (~3.7R açık risk)": 6,
+    "'staples' sektöründe korelasyon yığılması": 5,
+    "R:R 2.3 marjinal": 5,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, financials)": 3,
+    "'materials' sektöründe korelasyon yığılması": 3,
+    "R:R 2.0 marjinal": 3,
+    "portföy ısısı yüksek (~4.4R açık risk)": 3,
+    "'reits' sektöründe korelasyon yığılması": 3,
+    "portföy ısısı yüksek (~3.5R açık risk)": 3,
+    "'industrials' bugünün lider sektörlerinde değil (health, utilities, tech)": 3,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, reits)": 2,
+    "'financials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'staples' bugünün lider sektörlerinde değil (utilities, health, energy)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'tech' bugünün lider sektörlerinde değil (reits, consumer, staples)": 2,
+    "'health' bugünün lider sektörlerinde değil (reits, staples, consumer)": 2,
+    "'health' bugünün lider sektörlerinde değil (tech, consumer, comms)": 2,
+    "'materials' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 2,
+    "portföy ısısı yüksek (~4.3R açık risk)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, reits, comms)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 2,
+    "portföy ısısı yüksek (~4.5R açık risk)": 2,
+    "'industrials' bugünün lider sektörlerinde değil (energy, materials, utilities)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, financials)": 2,
+    "'comms' bugünün lider sektörlerinde değil (financials, consumer, materials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (energy, utilities, health)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (materials, health, comms)": 2,
+    "'comms' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, utilities)": 2,
+    "'comms' bugünün lider sektörlerinde değil (health, energy, industrials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, materials)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, tech)": 2,
+    "'health' bugünün lider sektörlerinde değil (materials, energy, industrials)": 2,
+    "'financials' bugünün lider sektörlerinde değil (materials, staples, energy)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, staples, materials)": 2,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, staples)": 2,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, staples)": 2,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, industrials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, materials, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, industrials, materials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, reits, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, tech, utilities)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, health, staples)": 1,
+    "'materials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.91) — gerçek konsantrasyon": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, consumer)": 1,
+    "açık pozisyonlarla yüksek korelasyon (ρ≈0.87) — gerçek konsantrasyon": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, comms, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, staples)": 1,
+    "'tech' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, staples, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, consumer, staples)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, comms, reits)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'materials' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (energy, tech, comms)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, utilities, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, reits, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, staples)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, consumer, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (health, financials, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (health, staples, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, financials, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (energy, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, materials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (industrials, health, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, materials, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (materials, tech, reits)": 1,
+    "portföy ısısı yüksek (~3.6R açık risk)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, materials, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, staples, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, financials, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, reits, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, health, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, energy, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (reits, financials, energy)": 1,
+    "'staples' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'energy' bugünün lider sektörlerinde değil (reits, financials, utilities)": 1,
+    "'financials' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, reits, staples)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, staples, financials)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (reits, consumer, financials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (reits, utilities, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, reits, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, utilities, reits)": 1,
+    "'comms' bugünün lider sektörlerinde değil (utilities, reits, consumer)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, comms, materials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, tech)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, materials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (financials, utilities, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, financials, consumer)": 1,
+    "'energy' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, energy)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, energy, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (energy, comms, consumer)": 1,
+    "'reits' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'tech' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, consumer, comms)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, comms, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (energy, utilities, health)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, utilities, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, industrials)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, health, financials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'staples' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, utilities, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, staples, health)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, financials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'financials' bugünün lider sektörlerinde değil (tech, energy, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (industrials, consumer, tech)": 1,
+    "'comms' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, industrials, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, industrials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, consumer, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (utilities, staples, reits)": 1,
+    "'tech' bugünün lider sektörlerinde değil (consumer, utilities, financials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (comms, energy, materials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (comms, energy, reits)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, energy, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, comms, financials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'utilities' bugünün lider sektörlerinde değil (tech, comms, energy)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (comms, tech, utilities)": 1,
+    "'reits' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, comms, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, comms)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, utilities, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (utilities, tech, health)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (utilities, health, tech)": 1,
+    "'energy' bugünün lider sektörlerinde değil (health, utilities, tech)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, tech, utilities)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, health, utilities)": 1,
+    "'health' bugünün lider sektörlerinde değil (industrials, utilities, reits)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, industrials, consumer)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, industrials, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (health, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, health, consumer)": 1,
+    "'comms' bugünün lider sektörlerinde değil (tech, consumer, health)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (consumer, financials, tech)": 1,
+    "'health' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (consumer, financials, materials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, consumer, health)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, consumer, industrials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, industrials, consumer)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'energy' bugünün lider sektörlerinde değil (materials, industrials, tech)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, industrials, energy)": 1,
+    "'tech' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (energy, materials, industrials)": 1,
+    "'financials' bugünün lider sektörlerinde değil (materials, energy, industrials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (materials, staples, energy)": 1,
+    "'health' bugünün lider sektörlerinde değil (energy, materials, staples)": 1,
+    "'comms' bugünün lider sektörlerinde değil (energy, industrials, staples)": 1,
+    "'reits' bugünün lider sektörlerinde değil (energy, materials, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (materials, financials, tech)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, materials)": 1,
+    "'energy' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'industrials' bugünün lider sektörlerinde değil (tech, reits, financials)": 1,
+    "'health' bugünün lider sektörlerinde değil (tech, reits, comms)": 1,
+    "'consumer' bugünün lider sektörlerinde değil (tech, staples, reits)": 1,
+    "'financials' bugünün lider sektörlerinde değil (consumer, tech, industrials)": 1,
+    "'materials' bugünün lider sektörlerinde değil (consumer, financials, industrials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'reits' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'staples' bugünün lider sektörlerinde değil (health, consumer, financials)": 1,
+    "'tech' bugünün lider sektörlerinde değil (health, financials, utilities)": 1,
+    "'staples' bugünün lider sektörlerinde değil (financials, health, energy)": 1
+   },
+   "fill_ret_nedenleri": {
+    "entry_missed_limit": 26,
+    "max_chase": 6,
+    "open_below_stop": 3,
+    "qty_zero": 1
+   },
+   "silahli_ama_fill_cagrisina_ULASMAYAN": {
+    "n": 209,
+    "sinif": {
+     "slot_dolu(eff_max_open)": 180,
+     "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)": 29
+    },
+    "ornekler": [
+     {
+      "plan_id": "P-2023-04-21-MDT",
+      "fill_seansi": "2023-04-24",
+      "sinif": "AYRISTIRILAMADI(breaker/ayni_gun_dolan_slot)"
+     },
+     {
+      "plan_id": "P-2023-04-25-SPOT",
+      "fill_seansi": "2023-04-26",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-26-MSFT",
+      "fill_seansi": "2023-04-27",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-04-27-VRTX",
+      "fill_seansi": "2023-04-28",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-01-ITW",
+      "fill_seansi": "2023-05-02",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-GOOGL",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-10-ZBH",
+      "fill_seansi": "2023-05-11",
+      "sinif": "slot_dolu(eff_max_open)"
+     },
+     {
+      "plan_id": "P-2023-05-12-ZBH",
+      "fill_seansi": "2023-05-15",
+      "sinif": "slot_dolu(eff_max_open)"
+     }
+    ]
+   },
+   "tutarlilik": {
+    "sinyal==plan": true,
+    "dolu==kapanmis_islem": true,
+    "silahli_olmayan_plandan_fill_cagrisi": [],
+    "ayna_acik_kalan": [],
+    "beyan": "`sinyal==plan`: motorda her scan_entry sinyali TAM BİR plan üretir (backtest.py:292-360). `dolu==kapanmis_islem`: replay pencere sonunda TÜM açık pozisyonları mark-out ile kapatır, yani dolan her pozisyon deftere düşer."
+   }
+  }
+ },
+ "yil_yil_pnl": {
+  "tam_guncel": {
+   "yillar": {
+    "2022": {
+     "n": 10,
+     "pnl_dollars": -1790.2,
+     "r_toplam": -2.479,
+     "n_kazanan": 3,
+     "ort_r": -0.2479,
+     "kazanma_orani": 0.3
+    },
+    "2023": {
+     "n": 50,
+     "pnl_dollars": 378.76,
+     "r_toplam": 4.725,
+     "n_kazanan": 20,
+     "ort_r": 0.0945,
+     "kazanma_orani": 0.4
+    },
+    "2024": {
+     "n": 81,
+     "pnl_dollars": 8481.23,
+     "r_toplam": 11.328,
+     "n_kazanan": 36,
+     "ort_r": 0.1399,
+     "kazanma_orani": 0.4444
+    },
+    "2025": {
+     "n": 46,
+     "pnl_dollars": -4281.35,
+     "r_toplam": -7.236,
+     "n_kazanan": 11,
+     "ort_r": -0.1573,
+     "kazanma_orani": 0.2391
+    },
+    "2026": {
+     "n": 14,
+     "pnl_dollars": -295.57,
+     "r_toplam": -2.267,
+     "n_kazanan": 3,
+     "ort_r": -0.1619,
+     "kazanma_orani": 0.2143
+    }
+   },
+   "toplam_pnl_dollars": 2492.87,
+   "n_toplam": 201,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "butunluk_dislamasiz": {
+   "yillar": {
+    "2022": {
+     "n": 10,
+     "pnl_dollars": -1790.2,
+     "r_toplam": -2.479,
+     "n_kazanan": 3,
+     "ort_r": -0.2479,
+     "kazanma_orani": 0.3
+    },
+    "2023": {
+     "n": 50,
+     "pnl_dollars": 378.76,
+     "r_toplam": 4.725,
+     "n_kazanan": 20,
+     "ort_r": 0.0945,
+     "kazanma_orani": 0.4
+    },
+    "2024": {
+     "n": 81,
+     "pnl_dollars": 8481.23,
+     "r_toplam": 11.328,
+     "n_kazanan": 36,
+     "ort_r": 0.1399,
+     "kazanma_orani": 0.4444
+    },
+    "2025": {
+     "n": 46,
+     "pnl_dollars": -4281.35,
+     "r_toplam": -7.236,
+     "n_kazanan": 11,
+     "ort_r": -0.1573,
+     "kazanma_orani": 0.2391
+    },
+    "2026": {
+     "n": 14,
+     "pnl_dollars": -295.57,
+     "r_toplam": -2.267,
+     "n_kazanan": 3,
+     "ort_r": -0.1619,
+     "kazanma_orani": 0.2143
+    }
+   },
+   "toplam_pnl_dollars": 2492.87,
+   "n_toplam": 201,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "e1_oncesi_icra": {
+   "yillar": {
+    "2022": {
+     "n": 11,
+     "pnl_dollars": -1696.87,
+     "r_toplam": -2.337,
+     "n_kazanan": 4,
+     "ort_r": -0.2125,
+     "kazanma_orani": 0.3636
+    },
+    "2023": {
+     "n": 51,
+     "pnl_dollars": 71.71,
+     "r_toplam": 5.287,
+     "n_kazanan": 22,
+     "ort_r": 0.1037,
+     "kazanma_orani": 0.4314
+    },
+    "2024": {
+     "n": 60,
+     "pnl_dollars": 6490.08,
+     "r_toplam": 12.232,
+     "n_kazanan": 29,
+     "ort_r": 0.2039,
+     "kazanma_orani": 0.4833
+    },
+    "2025": {
+     "n": 26,
+     "pnl_dollars": -1693.08,
+     "r_toplam": -3.849,
+     "n_kazanan": 9,
+     "ort_r": -0.148,
+     "kazanma_orani": 0.3462
+    },
+    "2026": {
+     "n": 13,
+     "pnl_dollars": -367.63,
+     "r_toplam": -1.373,
+     "n_kazanan": 2,
+     "ort_r": -0.1056,
+     "kazanma_orani": 0.1538
+    }
+   },
+   "toplam_pnl_dollars": 2804.21,
+   "n_toplam": 161,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "tam_guncel_pk": {
+   "yillar": {
+    "2022": {
+     "n": 10,
+     "pnl_dollars": -1790.2,
+     "r_toplam": -2.479,
+     "n_kazanan": 3,
+     "ort_r": -0.2479,
+     "kazanma_orani": 0.3
+    },
+    "2023": {
+     "n": 50,
+     "pnl_dollars": 378.76,
+     "r_toplam": 4.725,
+     "n_kazanan": 20,
+     "ort_r": 0.0945,
+     "kazanma_orani": 0.4
+    },
+    "2024": {
+     "n": 81,
+     "pnl_dollars": 8481.23,
+     "r_toplam": 11.328,
+     "n_kazanan": 36,
+     "ort_r": 0.1399,
+     "kazanma_orani": 0.4444
+    },
+    "2025": {
+     "n": 46,
+     "pnl_dollars": -4281.35,
+     "r_toplam": -7.236,
+     "n_kazanan": 11,
+     "ort_r": -0.1573,
+     "kazanma_orani": 0.2391
+    },
+    "2026": {
+     "n": 14,
+     "pnl_dollars": -295.57,
+     "r_toplam": -2.267,
+     "n_kazanan": 3,
+     "ort_r": -0.1619,
+     "kazanma_orani": 0.2143
+    }
+   },
+   "toplam_pnl_dollars": 2492.87,
+   "n_toplam": 201,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  }
+ },
+ "yil_yil_pnl_oos_search": {
+  "tam_guncel": {
+   "yillar": {
+    "2024": {
+     "n": 76,
+     "pnl_dollars": 7582.9,
+     "r_toplam": 9.46,
+     "n_kazanan": 33,
+     "ort_r": 0.1245,
+     "kazanma_orani": 0.4342
+    },
+    "2025": {
+     "n": 27,
+     "pnl_dollars": -680.97,
+     "r_toplam": 1.729,
+     "n_kazanan": 8,
+     "ort_r": 0.064,
+     "kazanma_orani": 0.2963
+    }
+   },
+   "toplam_pnl_dollars": 6901.93,
+   "n_toplam": 103,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "butunluk_dislamasiz": {
+   "yillar": {
+    "2024": {
+     "n": 76,
+     "pnl_dollars": 7582.9,
+     "r_toplam": 9.46,
+     "n_kazanan": 33,
+     "ort_r": 0.1245,
+     "kazanma_orani": 0.4342
+    },
+    "2025": {
+     "n": 27,
+     "pnl_dollars": -680.97,
+     "r_toplam": 1.729,
+     "n_kazanan": 8,
+     "ort_r": 0.064,
+     "kazanma_orani": 0.2963
+    }
+   },
+   "toplam_pnl_dollars": 6901.93,
+   "n_toplam": 103,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "e1_oncesi_icra": {
+   "yillar": {
+    "2024": {
+     "n": 55,
+     "pnl_dollars": 5044.09,
+     "r_toplam": 10.145,
+     "n_kazanan": 26,
+     "ort_r": 0.1845,
+     "kazanma_orani": 0.4727
+    },
+    "2025": {
+     "n": 16,
+     "pnl_dollars": -1368.31,
+     "r_toplam": -2.756,
+     "n_kazanan": 6,
+     "ort_r": -0.1722,
+     "kazanma_orani": 0.375
+    }
+   },
+   "toplam_pnl_dollars": 3675.78,
+   "n_toplam": 71,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "tam_guncel_pk": {
+   "yillar": {
+    "2024": {
+     "n": 76,
+     "pnl_dollars": 7582.9,
+     "r_toplam": 9.46,
+     "n_kazanan": 33,
+     "ort_r": 0.1245,
+     "kazanma_orani": 0.4342
+    },
+    "2025": {
+     "n": 27,
+     "pnl_dollars": -680.97,
+     "r_toplam": 1.729,
+     "n_kazanan": 8,
+     "ort_r": 0.064,
+     "kazanma_orani": 0.2963
+    }
+   },
+   "toplam_pnl_dollars": 6901.93,
+   "n_toplam": 103,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  }
+ },
+ "tam_pencere_tani": {
+  "istenen_pencere_sonu": "2026-07-31",
+  "olculebilirlik": "07-31'e uzatma AYNI takvimi üretir (bar önbelleği daha erken bitiyor) → AYRI KOŞUM GEREKMEZ; tam-pencere tanı dilimi tam_guncel kolunun `full_detail`/`equity_tam` alanlarından okunur.",
+  "ayni_takvim": true,
+  "endeks_son_bar": "2026-07-29",
+  "tam_detail": {
+   "score": 0.0748,
+   "n": 201,
+   "min_sample": 30,
+   "total_return": 0.0249,
+   "realized_30d": 0.0004,
+   "max_drawdown": 0.0634,
+   "sharpe": 0.112,
+   "sharpe_measurable": true,
+   "avg_r": 0.02,
+   "win_rate": 0.363,
+   "components": {
+    "ret": 0.006,
+    "dd": 0.208,
+    "sharpe": 0.046
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "holdout_detail": {
+   "score": null,
+   "n": 5,
+   "min_sample": 30,
+   "reason": "5/30 closed trades — score undefined (None, not 0.0)"
+  },
+  "equity_holdout": {
+   "olculdu": true,
+   "n_gun": 62,
+   "eq_ilk": 102753.6,
+   "eq_son": 102492.85,
+   "gunluk_vol": 0.000288,
+   "yillik_vol": 0.004575,
+   "gunluk_ort_getiri": -4.161e-05,
+   "mtm_max_dd": 0.003231,
+   "toplam_getiri": -0.002538
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 102492.85,
+   "gunluk_vol": 0.003645,
+   "yillik_vol": 0.057867,
+   "gunluk_ort_getiri": 2.815e-05,
+   "mtm_max_dd": 0.07197,
+   "toplam_getiri": 0.024929
+  },
+  "tam_pencere_pnl": {
+   "yillar": {
+    "2022": {
+     "n": 10,
+     "pnl_dollars": -1790.2,
+     "r_toplam": -2.479,
+     "n_kazanan": 3,
+     "ort_r": -0.2479,
+     "kazanma_orani": 0.3
+    },
+    "2023": {
+     "n": 50,
+     "pnl_dollars": 378.76,
+     "r_toplam": 4.725,
+     "n_kazanan": 20,
+     "ort_r": 0.0945,
+     "kazanma_orani": 0.4
+    },
+    "2024": {
+     "n": 81,
+     "pnl_dollars": 8481.23,
+     "r_toplam": 11.328,
+     "n_kazanan": 36,
+     "ort_r": 0.1399,
+     "kazanma_orani": 0.4444
+    },
+    "2025": {
+     "n": 46,
+     "pnl_dollars": -4281.35,
+     "r_toplam": -7.236,
+     "n_kazanan": 11,
+     "ort_r": -0.1573,
+     "kazanma_orani": 0.2391
+    },
+    "2026": {
+     "n": 14,
+     "pnl_dollars": -295.57,
+     "r_toplam": -2.267,
+     "n_kazanan": 3,
+     "ort_r": -0.1619,
+     "kazanma_orani": 0.2143
+    }
+   },
+   "toplam_pnl_dollars": 2492.87,
+   "n_toplam": 201,
+   "olculemeyen_satir": 0,
+   "olculemeyen_neden": null
+  },
+  "neden": null
+ },
+ "kiyas": {
+  "tohum_replay_defteri": {
+   "kaynak_dosya": "state/trades.jsonl (sandbox kopyası)",
+   "n": 95,
+   "net_pnl_dollars": -5542.09,
+   "toplam_r": -3.995,
+   "ort_r": -0.0421,
+   "kazanma_orani": 0.3684,
+   "ts_open_araligi": [
+    "2023-01-23",
+    "2026-07-17"
+   ],
+   "ts_close_araligi": [
+    "2023-02-01",
+    "2026-07-20"
+   ],
+   "strategy_version_dagilimi": {
+    "4": 95
+   },
+   "kaynak_damgasi_dagilimi": {
+    "None": 95
+   },
+   "kaynak_damgasi_notu": "`kaynak` alanı satırlarda YOK → `ledgerstamp.kaynak_of` bunları `belirsiz`/`damgasiz` sayar. Kartın 'ledgerstamp 95/95 replay_seed' ifadesi bu DOSYADAN doğrulanamadı (defter migrasyonu yapılmamış); sayılar yine de tek yazarlıdır (run.replay_seed).",
+   "yil_yil": {
+    "yillar": {
+     "2023": {
+      "n": 35,
+      "pnl_dollars": -4702.99,
+      "r_toplam": -5.379,
+      "n_kazanan": 10,
+      "ort_r": -0.1537,
+      "kazanma_orani": 0.2857
+     },
+     "2024": {
+      "n": 25,
+      "pnl_dollars": -15.14,
+      "r_toplam": 3.914,
+      "n_kazanan": 13,
+      "ort_r": 0.1566,
+      "kazanma_orani": 0.52
+     },
+     "2025": {
+      "n": 21,
+      "pnl_dollars": -873.71,
+      "r_toplam": -4.918,
+      "n_kazanan": 6,
+      "ort_r": -0.2342,
+      "kazanma_orani": 0.2857
+     },
+     "2026": {
+      "n": 14,
+      "pnl_dollars": 49.75,
+      "r_toplam": 2.388,
+      "n_kazanan": 6,
+      "ort_r": 0.1706,
+      "kazanma_orani": 0.4286
+     }
+    },
+    "toplam_pnl_dollars": -5542.09,
+    "n_toplam": 95,
+    "olculemeyen_satir": 0,
+    "olculemeyen_neden": null
+   },
+   "KIYAS SINIRI": "Tohum defteri strategy_version 4 ile üretildi (state/history/v0004.yaml: regime.min_exposure_score=20); bu ölçümün üç kolu CANLI v3 (=40) ile koşuyor. Yani tohum ↔ kol farkı motor+veri farkı DEĞİLDİR, PARAMETRE farkını da içerir."
+  },
+  "ref_snapshot_wpg": {
+   "oos_score": 0.0699,
+   "para_search": 0.0856,
+   "n_trades_total": 161,
+   "oos_n": 88,
+   "search_n": 71,
+   "confirm_n": 15,
+   "avg_r": 0.078,
+   "win_rate": 0.409,
+   "sharpe": 0.283,
+   "max_drawdown": 0.0699,
+   "total_return": 0.0339,
+   "is_score": 0.0616,
+   "holdout_score": null,
+   "trade_digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+   "trade_digest_tum": "e5d49110bcbc0b3d956f1e43f5a3f53a6628538fdd6533d93c3aedd503d0c6a8"
+  },
+  "r1_baseline_20260730": {
+   "oos_score": 0.0749,
+   "oos_n": 90,
+   "para_score": 0.1005,
+   "search_n": 71,
+   "is_score": 0.0616,
+   "oos_detail": {
+    "n": 90,
+    "total_return": 0.0353,
+    "realized_30d": 0.0012,
+    "max_drawdown": 0.0689,
+    "sharpe": 0.294,
+    "sharpe_measurable": true,
+    "avg_r": 0.079,
+    "win_rate": 0.411
+   },
+   "geometri": {
+    "is_start": "2022-01-01",
+    "oos_start": "2024-01-01",
+    "oos_end": "2026-04-30",
+    "holdout_end": "2026-07-30",
+    "folds": [
+     "2024-01-01",
+     "2024-10-01",
+     "2025-07-01",
+     "2026-04-30"
+    ]
+   }
+  }
+ },
+ "sapma_atfi": {
+  "alanlar": {
+   "oos_score": {
+    "tam_guncel": 0.0579,
+    "r1_baseline_20260730": 0.0749,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": -0.017,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": -0.012,
+    "AYRISTIRILAMAYAN_KALAN": -0.005
+   },
+   "para_search": {
+    "tam_guncel": 0.1605,
+    "r1_baseline_20260730": 0.1005,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": 0.06,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 0.0749,
+    "AYRISTIRILAMAYAN_KALAN": -0.0149
+   },
+   "oos_n": {
+    "tam_guncel": 130,
+    "r1_baseline_20260730": 90,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": 40.0,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 42.0,
+    "AYRISTIRILAMAYAN_KALAN": -2.0
+   },
+   "n_trades_total": {
+    "tam_guncel": 201,
+    "r1_baseline_20260730": null,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": null,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 40.0,
+    "AYRISTIRILAMAYAN_KALAN": null
+   },
+   "search_n": {
+    "tam_guncel": 103,
+    "r1_baseline_20260730": 71,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": 32.0,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 32.0,
+    "AYRISTIRILAMAYAN_KALAN": 0.0
+   },
+   "avg_r": {
+    "tam_guncel": 0.012,
+    "r1_baseline_20260730": 0.079,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": -0.067,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": -0.066,
+    "AYRISTIRILAMAYAN_KALAN": -0.001
+   },
+   "win_rate": {
+    "tam_guncel": 0.354,
+    "r1_baseline_20260730": 0.411,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": -0.057,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": -0.055,
+    "AYRISTIRILAMAYAN_KALAN": -0.002
+   },
+   "sharpe": {
+    "tam_guncel": 0.226,
+    "r1_baseline_20260730": 0.294,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": -0.068,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": -0.057,
+    "AYRISTIRILAMAYAN_KALAN": -0.011
+   },
+   "max_drawdown": {
+    "tam_guncel": 0.0717,
+    "r1_baseline_20260730": 0.0689,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": 0.0028,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 0.0018,
+    "AYRISTIRILAMAYAN_KALAN": 0.001
+   },
+   "total_return": {
+    "tam_guncel": 0.0319,
+    "r1_baseline_20260730": 0.0353,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": -0.0034,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": -0.002,
+    "AYRISTIRILAMAYAN_KALAN": -0.0014
+   },
+   "is_score": {
+    "tam_guncel": 0.0651,
+    "r1_baseline_20260730": 0.0616,
+    "TOPLAM_SAPMA(tam_guncel − r1_baseline)": 0.0035,
+    "butunluk_etkisi(tam_guncel − butunluk_dislamasiz)": 0.0,
+    "icra_yasasi_etkisi(tam_guncel − e1_oncesi_icra)": 0.0035,
+    "AYRISTIRILAMAYAN_KALAN": 0.0
+   }
+  },
+  "beyan": "Kalan pay AYRIŞTIRILAMAYANDIR ve en az şu bileşenleri içerir: (a) 2026-07-30 → bugün arasında motorun bütünlük/icra DIŞINDAKİ değişimleri, (b) bar önbelleğinin değişmesi (karantina-v2 onarımları + takvim kapısı + iki yeni seans), (c) kolların ölçüm çerçevesindeki (yükleyici/state) farkları. Bu bileşenler bu turda AYRI KOL OLARAK ÖLÇÜLMEDİ — kart üç kol beyan etti.",
+  "not_r1_baseline_parametreleri": "r1_baseline 2026-07-30'da AYNI parametrelerle (strategy v3) koştu → kıyas parametre açısından temizdir; tohum defteri ise v4 parametreleriyle üretildi."
+ },
+ "wpg_digest_gozlemi": {
+  "kollar": {
+   "tam_guncel": {
+    "ref_repo": {
+     "search_digest_ayni": true,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": true,
+     "para_ayni": true,
+     "n_trades_total_ayni": true
+    },
+    "ref_snapshot": {
+     "search_digest_ayni": false,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": false,
+     "para_ayni": false,
+     "n_trades_total_ayni": false
+    }
+   },
+   "butunluk_dislamasiz": {
+    "ref_repo": {
+     "search_digest_ayni": true,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": true,
+     "para_ayni": true,
+     "n_trades_total_ayni": true
+    },
+    "ref_snapshot": {
+     "search_digest_ayni": false,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": false,
+     "para_ayni": false,
+     "n_trades_total_ayni": false
+    }
+   },
+   "e1_oncesi_icra": {
+    "ref_repo": {
+     "search_digest_ayni": false,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": false,
+     "para_ayni": false,
+     "n_trades_total_ayni": false
+    },
+    "ref_snapshot": {
+     "search_digest_ayni": true,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": true,
+     "para_ayni": true,
+     "n_trades_total_ayni": true
+    }
+   },
+   "tam_guncel_pk": {
+    "ref_repo": {
+     "search_digest_ayni": true,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": true,
+     "para_ayni": true,
+     "n_trades_total_ayni": true
+    },
+    "ref_snapshot": {
+     "search_digest_ayni": false,
+     "tum_digest_ayni": false,
+     "oos_score_ayni": false,
+     "para_ayni": false,
+     "n_trades_total_ayni": false
+    }
+   }
+  },
+  "wpg_imzalari": {
+   "ref_repo": {
+    "oos_score": 0.0579,
+    "para_search": 0.1605,
+    "n_trades_total": 201,
+    "olcum_zamani": "2026-07-30T23:26:52+00:00"
+   },
+   "ref_snapshot": {
+    "oos_score": 0.0699,
+    "para_search": 0.0856,
+    "n_trades_total": 161,
+    "olcum_zamani": "2026-07-30T23:28:53+00:00"
+   }
+  },
+  "beyan": "POZİTİF KONTROL DEĞİL, GÖZLEM. Kart 'ref_snapshot yeniden-üretimi DENENMEZ' der ve denenmedi: hiçbir kol o motoru kurmaya çalışmadı, kollar bugünün HEAD kopyasıyla koştu. Buradaki eşitlikler ÖLÇÜM SONRASI görülen çakışmalardır ve sapma atfının bağımsız doğrulamasıdır. `tum_digest` beklenen şekilde ayrışır: WP-G 2026-07-30 gecesinde koştu, bar önbelleği o günden beri iki seans büyüdü — Search/Confirm dilimleri (≤2026-04-30) etkilenmez, TAM replay defteri etkilenir."
+ },
+ "determinizm_pk": {
+  "iki_kosum": [
+   "tam_guncel",
+   "tam_guncel_pk"
+  ],
+  "bit_bit_ayni": true,
+  "farkli_alanlar": null,
+  "karsilastirilan_alanlar": [
+   "trade_digest_tum",
+   "trade_digest_search",
+   "trade_digest_confirm",
+   "plan_digest",
+   "equity_digest",
+   "oos_score",
+   "para_search",
+   "n_trades_total",
+   "oos_n",
+   "is_score"
+  ],
+  "huni_ayni": true,
+  "sure_sn": [
+   4769.7,
+   958.9
+  ]
+ },
+ "kol_digest_matrisi": {
+  "tam_guncel": {
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca"
+  },
+  "butunluk_dislamasiz": {
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca"
+  },
+  "e1_oncesi_icra": {
+   "digest_tum": "995f1d33a8b8a71932b5f6d7cb0d86e39261878013b8f1aca17f04c21f7c47f1",
+   "digest_search": "5a826091681e5980633be0572bc38e6284124f7130213b2c5dea0fce9f1dd8e2",
+   "equity_digest": "ea6777ea1b70bf0860258e0434d688e5c76ae659713559aac9d902aba0fb38a5",
+   "plan_digest": "b5390efe9f241786728a03f20cf67e170268432a8909cc6b21058c108fa7b215"
+  },
+  "tam_guncel_pk": {
+   "digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca"
+  }
+ },
+ "e1_kolu_gecerlilik": {
+  "yontem": "BAYRAK YOLU — goal.yaml `execution_v2.limit_pct_cap` 0.01 → 0.10. 2026-07-30 tarihli motor kopyası KULLANILMADI; gerekçe: E1'in replay yolundaki TEK etkisi `fill_entry`in limit tavanıdır (gap vetosu `gap_at_submit=None` ile atıl, TIF yalnız ayna alanı) ve o tavan limit=tetik×1.10 > max_chase tetik×1.04 olduğunda HİÇ BAĞLAMAZ.",
+  "iddia": "e1_oncesi_icra kolunda `entry_missed_limit` reddi SIFIR olmalı",
+  "olculen_e1_oncesi_entry_missed_limit": 0,
+  "olculen_tam_guncel_entry_missed_limit": 26,
+  "iddia_dogrulandi": true,
+  "e1_entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.1,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  },
+  "tam_guncel_entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  }
+ }
+}

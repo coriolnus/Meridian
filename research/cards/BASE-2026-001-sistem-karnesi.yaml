@@ -28,5 +28,23 @@ guards:
     yerine PK: tam_guncel kolun digest'i iki koşumda bit-bit aynı (determinizm) + kod damgası"
   - "slim defterlerde pnl_dollars + kaynak korunur; oosonly tartışması KONU DIŞI (knob yok — motorun bütünü ölçülüyor)"
 k_registry: {registered_at: "2026-08-01T16:2xZ", trial_ids: [karne — K sayılmaz (eşiksiz tanı)]}
-status: registered
+status: measured   # 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1):
+# CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146
+# seans, bugünkü motor+canlı v3 parametreler): +2.493$ (=+%2,5 toplam, ~%0,55/yıl); kötümser bantla
+# +1.022$ (işaret dönmüyor, kâr %59 eriyor); 2024 tek başına +8.481$ — diğer dört yıl toplam
+# −5.988$; holdout −0,25%; Sharpe 0,112 (hedef 1,2). Tohum tabanına göre işaret döndü ama kaynağı
+# büyük ölçüde v4→v3 parametre farkı + E1.
+# ATIF: sapmanın tamamına yakını E1 icra yasası; bütünlük-dışlaması canlı backtest yolunda ZATEN
+# uygulanmıyor (ölçüldü: 0 satır; measurement-yolu tüketicileri component_ic+cf — bilinen bilinçli
+# ayrım) → kol-2 etkisi tanımlı-sıfır. E1 ÇİFT YÖNLÜ: PARA-v3 0,086→0,161 YUKARI ama oos_score
+# 0,070→0,058 AŞAĞI — İKİ ÖLÇÜT ZIT (WP-M izleme notu: skor yasası ile para yasası ayrışıyor).
+# HUNİ ("neden canlıda 0 işlem"in cevabı): dolu-işlem 0,175/seans (~5,7 seansta 1); üç darboğaz
+# sırayla: rejim-kapısı (582/1146 seans bütçe=0; high_vol+trend_down HİÇ taranmıyor, chop 55/323),
+# slot-doluluğu (446 silahlının 180'i eff_max_open'a takıldı), E1 limit tavanı (26 kaçırma).
+# DETERMİNİZM bit-bit (5 digest); kollar WP-G gecesinin imzalarıyla bağımsız çakıştı. SINIRLAR:
+# karne HEAD 505603bf'e ait (turnover-kablolama sonrası bit-bit beyanı bu ölçümde değil kendi
+# çivilerinde); tohum kıyası v4-parametreli (saf motor farkı değil); yerel trades.jsonl damgasız.
+# YORUM (karne bağlamı): 15 arşivlik edge-programı bulgusuyla TUTARLI — kısa-ufuk kesit makinesi
+# tek başına para basmıyor; gerçekçi umut uzun-ufuk trend kolu + turnover sinyali + kapı/slot
+# darboğazlarının öğrenme döngüsünce gevşetilip gevşetilmeyeceği. Kanıt: research/olcumler/karne_olcum/.
 notes: "scratchpad/karne_olcum/ SALT-ÖLÇÜM; kart dosyasına ajan DOKUNMAZ. Karne yorumu + ROADMAP/§1 güncellemesi Rol-1'de."
