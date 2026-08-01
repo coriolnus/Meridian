@@ -176,6 +176,100 @@ analiz bu iki çifti iki kez sayar.
 
 ---
 
+## 5c. `earnings_8k_tarihleri.csv` — 8-K/Item-2.02 kazanç-tarihi **vekili**
+
+Ayrı bir SEC ucundan (`data.sec.gov/submissions/`) çekilmiş, companyfacts serilerinden
+**bağımsız** bir veri kümesi. Amaç: EDG-2026-011'i askıya düşüren boşluk — tarihsel
+kazanç takvimi yokluğu — için vekil. **Bu tur ölçüm değil; kart revizyonu Rol-1'de.**
+
+| alan | anlam |
+|---|---|
+| `filed` | 8-K'nin SEC'e dosyalandığı gün (EDGAR `filingDate`) |
+| `report_date` | 8-K'nin "period of report" alanı = raporlanan olayın günü |
+| `acceptance` | EDGAR kabul zaman damgasının **ham** dizgesi (§ aşağıdaki uyarı) |
+| `items` | 8-K madde listesi (ör. `2.02,9.01`) |
+| `accn` | dosyalama numarası |
+
+Filtre: `form == '8-K'` (8-K/A **hariç**, 97 satır) ∧ `items` içinde `2.02` ∧
+`filed >= 2010-01-01`. 17.535 satır · 258 sembol · 2010-01-07 → 2026-07-31.
+Sembol başına yıllık ortalama 4,34 (medyan 4,13); 212/258 sembol 3,5–4,5 bandında,
+**3,5'in altında sembol yok**.
+
+### VEKİL-YANLILIK BEYANI — kartta zorunlu okunur
+
+Tam metin `kaynak_8k.json` → `VEKIL_YANLILIK_BEYANI` (9 madde). Özü:
+
+1. Bu **duyuru takvimi değil, dosyalama günü**. 8-K filed ≈ duyuru günü ya da ertesi
+   iş günü; SEC dört iş günü tanır. Ölçülen: `filed == report_date` %90,8, ≤1 gün %96,3.
+2. **BMO/AMC yok ve `acceptance`'tan türetilemez** — saat dilimi sınandı, **çözülemedi**
+   (§ aşağıda).
+3. **Item-2.02 işaretsiz duyurular kaçar** (yalnız 7.01/8.01 ile duyuranlar).
+4. 8-K/A alınmadı.
+5. `report_date` duyuru gününe daha yakın bir aday ama dosyalayanın beyanı.
+6. PIT: `filed <= t`. **İleriye dönük** takvim bu dosyadan üretilemez.
+7. **CIK halefiyeti — sessiz tarih kesiği** (aşağıda).
+8. **Yabancı ihraççı boşluğu**: SPOT (0 satır), NXPI (ilk 2.02 2019).
+9. Aynı olay için çok satır olabilir (133 aynı-gün çift).
+
+### Doğrulama
+
+- **`state/earnings.csv` kesişimi** (Nasdaq/FMP ucu, bağımsız takvim): bugüne düşmüş
+  123 kayıtta **119 tam gün isabeti, 4 kayıt +1 gün**; sapan yok.
+- **Kamuya bilinen günler** (AAPL+NVDA 2023–24, 16 çeyrek): **16/16 tam isabet**.
+  Kaynak beyanı: bu tarihler *model bilgisidir*, birinci-el kayıt değil.
+- **companyfacts accession çapraz kontrolü**: companyfacts'teki 228 adet 8-K
+  accession'ının **228'i** ham submissions verisinde bulundu — ama yalnız 3'ü 2.02
+  taşıyor (kalanı Item 8.01 recast finansal). Bu test **ayrıştırma bütünlüğünü**
+  doğrular, 2.02 kapsamını değil.
+
+### `acceptance` saat dilimi — ÇÖZÜLEMEDİ
+
+İki hipotez de veri altkümelerinde imkânsız sonuç veriyor ve altkümeler **neredeyse
+ayrık** (kesişim 1 sembol):
+
+| hipotez | 06–22 ET penceresi dışı | 17:30 kuralı ihlali | yığıldığı yer |
+|---|---|---|---|
+| `Z` gerçek UTC | 1347 (%7,7) | 28 (%0,2) | BMO raporlayıcılar (PG 67/67, WBA 43/43) |
+| dizge zaten ET | 528 (%3,0) | 5663 (%32,3) | AMC raporlayıcılar (AAPL 68/68, AMZN 67/67) |
+
+PG'nin bülteni ~06:55 ET çıkarken damga 07:0x; AAPL'inki 16:30 ET'de çıkarken damga
+20:30. Damga **şirket düzeyinde çok kararlı**, yani sütun gerçek sinyal taşıyor —
+ama kalibrasyonu birinci-el bülten zaman damgası ister. **Hüküm: BMO/AMC türetilmez.**
+
+### CIK halefiyeti — sessiz tarih kesiği
+
+Seri bugünkü CIK'e bağlıdır; holdco/yeniden yapılanma kuran şirketlerde eski geçmiş
+**selef CIK'te kalır ve bu dosyada yoktur**. 41 sembolde ilk 2.02 > 2010-06-30.
+Tanı (`scratchpad/edgar_8k/cik_ilk.py`) ikiye ayırıyor:
+
+- **Gerçek IPO** (CIK zaten yeniydi): TSLA, META, PANW, NOW, SNAP, PINS, ROKU, MRNA,
+  BURL, HLT, SYF, NCLH, ENPH, KKR, TRGP…
+- **Halef CIK** (eski geçmiş başka CIK'te): **BLK ilk 2.02 = 2024-10-11** (selef
+  "BlackRock, Inc."), GOOG/GOOGL = 2015-10-22 (Alphabet), DIS = 2019-05-08
+  ("TWDC Holdco 613"), CI ("Halfmoon Parent"), DOW, LIN ("ZAMALIGHT PLC"), AVGO,
+  MDT, ETN, DD ("DowDuPont"), KHC, BKR, CEG, APO, KVUE, MRVL, WBA, PYPL, ABBV…
+
+Bu aralık **"veri yok"** demektir, "kazanç duyurusu yok" demez.
+
+### Sıklık sapmaları
+
+46 sembolde yıllık oran > 4,5 (maks CF 7,89; IPG 7,28; MET 6,88; LUV 6,53). Nedeni
+incelendi: **aynı çeyrek için ek 2.02 dosyalamaları** — ön-duyuru/işletme güncellemesi
+(LUV 12 Oca + 22 Oca), ertesi-gün tamamlayıcı (CF ardışık iki gün), ek materyal
+(MET `2.02,7.01,9.01`). 14 günlük kümeleme 716 satırı birleştirip medyanı 4,13 → 4,06'ya
+çekiyor ve >4,5 sembol sayısını 46 → 22'ye düşürüyor. **Kümeleme penceresi bir model
+seçimidir; CSV ham bırakıldı**, seçim ölçüm kartında beyan edilir.
+
+6 adet >200 günlük boşluk (KDP 287, LLY 278, MKC 271/210, PSA 209, VTR 203) —
+incelenmedi, envanterde. Erken biten 7 sembol = emekli semboller (§5b), delist
+tarihleriyle uyumlu.
+
+Boru hattı: `betikler/download_8k.py` → `extract_8k.py` → `validate_8k.py` →
+`make_kaynak_8k.py`. 719 istek, 0 hata, ~190 MB ham JSON (depoya konmadı; sha256'ları
+`kaynak_8k.json` içinde).
+
+---
+
 ## 6. Tazeleme
 
 Boru hattı `betikler/` altında, bu sırayla: `build_cikmap.py` → `download.py` →
