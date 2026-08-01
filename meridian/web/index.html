@@ -937,12 +937,15 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .sessizhat .sh-sep{opacity:.45}
 /* SAPAN SEGMENT: renk + kalınlık YALNIZ burada. `.kritik` ikinci kademe — makine durmuş ya da
    bir mekanizma hiç koşmamış demektir; kehribar "geride" der, kırmızı "durdu" der. */
-.sessizhat .sh-sap{color:var(--amber);font-weight:700;white-space:normal}
+/* SAPAN SEGMENT TAM SATIRI ALIR: açılımı bir sütuna sıkışırsa runbook ipucu okunmaz olur.
+   `flex-basis` BURADA yazılır çünkü ızgaranın flex ÖĞESİ `.sh-seg`tir — içindeki `.sh-ac`ye
+   yazmak sessizce hiçbir şey yapmaz (o bir flex öğesi değil). */
+.sessizhat .sh-sap{color:var(--amber);font-weight:700;white-space:normal;flex-basis:100%}
 .sessizhat .sh-sap.kritik{color:var(--red)}
 .sessizhat .sh-sap b{color:inherit;font-weight:700}
 /* AÇILIM sapan segmentin ALTINDA, tam genişlikte: ad + süre + runbook ipucu. Çekmece DEĞİL —
    bir tık ardına saklanan sapma, sessiz hattın kazandırdığı görünürlüğü geri alırdı. */
-.sessizhat .sh-ac{display:block;flex-basis:100%;margin:var(--s1) 0 var(--s2);
+.sessizhat .sh-ac{display:block;margin:var(--s1) 0 var(--s2);
   padding-left:var(--s3);border-left:2px solid currentColor;font-weight:400}
 .sessizhat .sh-row{display:block;white-space:normal}
 .sessizhat .sh-row b{font-weight:700;color:inherit}

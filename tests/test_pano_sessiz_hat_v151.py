@@ -192,7 +192,8 @@ def test_bullet_FEW_bes_bilesenini_tasir():
     assert "function _bullet(o)" in APPJS
     assert 'class="bl-lab"' in APPJS                       # 1
     assert "const centik = [0, ...bantlar]" in APPJS       # 2 — ölçek işaretleri
-    assert 'font-size="8"' in APPJS and 'text-anchor="end"' in APPJS   # 2 — uç etiketleri
+    assert 'class="bl-ax"' in APPJS and 'text-anchor="end"' in APPJS   # 2 — uç etiketleri
+    assert re.search(r"\.bl-ax\{[^}]*font-family:var\(--mono\)", CSS)  # 2 — biçimi CSS'te
     assert "const bar = olculdu ?" in APPJS                # 3
     assert "const hedef = (o.hedef != null" in APPJS       # 4
     assert "const bantlar = (o.bantlar" in APPJS           # 5
