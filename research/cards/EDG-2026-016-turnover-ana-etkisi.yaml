@@ -1,0 +1,29 @@
+card_id: EDG-2026-016
+family: turnover_main_effect   # WP2/2.2-devamı — EDG-013'ün mekanizma ayrıştırması
+thesis: >
+  EDG-013 tanısı (CI'sız, K korunarak) turnover ANA etkisinin momentum-koşulundan bağımsız ve
+  daha büyük olduğunu gösterdi (q4 @20 +0,651% tanı vs koşullu +0,315%). Bu kart ana etkiyi
+  ÖN-KAYITLI ölçer: yüksek-turnover diliminin taban-fazlası VE rvol20+momentum kontrolünde
+  ARTIK katkısı. Hüküm, EDG-013'ün "yaşayan-aday" statüsünün kaderini belirler: ana etki
+  bağımsız-anlamlıysa sinyal turnover'dır (013'ün etkileşim-tezi düşer, ama sinyal yaşar);
+  artık yoksa ikisi de rvol/mom akrabalığına düşer.
+evidence_refs: [research/olcumler/wp2_olcum/sonuc_013.json (tanı tablosu), EDG-013 hüküm notu,
+  research/edgar_facts/ (as-of altyapısı + fiziksel devir bekçisi)]
+universe: full_251 (kapsam beyanlı; fiziksel bekçi: implied devir>1 → None+neden — kabuk-sayısı vakaları)
+features_asof: "turnover21(t) = medyan21(hacim)/as_of_shares(t) — EDG-012/013 as-of kuralları BİREBİR (wp2_olcum altyapısı yeniden kullanılır)"
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması; 21g blok CI"
+parameter_grid:
+  katman: [turnover_ust20, turnover_artik_rvol_mom_kontrollu]   # K+=2
+cost_model: "10bps + not; devir-maliyeti netleştirmesi raporda (yüksek-turnover diliminin kendisi ucuz işlem görür — beyan)"
+success_metric: >
+  üst-dilim fazlası @20 anlamlı POZİTİF VE artık-katkı anlamlı: rvol20-dilimi VE koşulsuz-mom
+  kontrol edildikten sonra turnover hâlâ bilgi taşıyor (çift-sıralama VE artık-IC; EDG-007 şablonu).
+kill_criteria:
+  - "üst dilim fazlası CI-0-içi → bilgisiz, arşiv (EDG-013 tanısı yanılsamaydı — o da nota düşer)"
+  - "artık yok (rvol/mom açıklıyor) → 'akraba sinyal' arşiv; EDG-013 de aynı gerekçeyle arşive iner"
+  - "maliyet-sonrası net fazla <=0 → 'brüt-var-net-yok' arşiv + not"
+guards:
+  - "pozitif kontrol rvol20 @20 ≈0.0642 + PK4/PK5 + fiziksel devir bekçisi + 200g bayatlık bekçisi (SCHW vakası)"
+k_registry: {registered_at: "2026-08-01T13:5xZ", trial_ids: [pending]}
+status: registered
+notes: "scratchpad/wp2_olcum/ altyapısı YENİDEN KULLANILIR (yeni sandbox açma — as-of/split-takvimi/bekçiler hazır); karta ajan DOKUNMAZ. Bu hüküm + EDG-013 birlikte okunup entegrasyon kararı Rol-1'de."
