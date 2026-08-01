@@ -433,8 +433,11 @@ def test_katalog_cf_katmanini_tasir():
 # =================================================================================================
 def test_Y3_dort_knob_bounds_ta_var_ve_varsayilan_KAPALI():
     b = config.bounds()
-    for k in ("regime.spy_sma_gate", "regime.vix_backwardation_gate",
-              "portfolio.sector_cap", "portfolio.heat_cap"):
+    # `regime.spy_sma_gate` BU LİSTEDE DEĞİL: EDG-005 ile EMEKLİ (gösterge, kapı değil) ve karar
+    # yolunda karşılığı yok. Canlı `bounds.yaml`da satırı hâlâ durabilir (state versiyonlanmaz —
+    # düşürmek Rol-1/operatör kalemi), o yüzden VARLIĞI da YOKLUĞU da assert EDİLMEZ; yerine
+    # ETKİSİZLİĞİ ayrı bir çiviyle ölçülür (test_Y3_sma_gostergesi_yeni_girisi_KAPATMAZ).
+    for k in ("regime.vix_backwardation_gate", "portfolio.sector_cap", "portfolio.heat_cap"):
         assert k in b, f"{k} bounds'ta yok"
         assert float(b[k]["min"]) == 0, f"{k} kapalı konumu (0) bounds'ta yok"
     # canlı strateji onları TAŞIMIYOR → canlı etki SIFIR (Batch L deseni)
@@ -479,7 +482,7 @@ def test_Y3_VIX_veri_yok_ve_ORAN_UYDURULMAZ():
     assert g["hukum"] is None
 
 
-def test_Y3_spy_sma_isinma_dolmadan_KARAR_VERMEZ():
+def test_Y3_spy_sma_isinma_dolmadan_HUKUM_URETMEZ():
     import pandas as pd
     kisa = pd.DataFrame({"close": [100.0] * 50})
     g = regime.spy_sma_gate(kisa, {"regime.spy_sma_gate": 1})
@@ -498,17 +501,27 @@ def test_Y3_zorla_tasfiye_YOK():
     assert "zorla tasfiye YOK" in src
 
 
-def test_Y3_acik_kapi_yeni_girisi_kapatir():
+def test_Y3_sma_gostergesi_yeni_girisi_KAPATMAZ():
+    """EDG-005 hükmü (2026-08-01): SMA bacağı GÖSTERGE, kapı DEĞİL.
+
+    ÇİVİ ELDE KURULMUŞ `entry_gates` NESNESİYLE: knob 1 + endeks 200-SMA'nın ALTINDA + sözlük
+    guard'a `entry_gates` anahtarıyla ELDEN verilmiş — yani kapının ateşlemesi için gereken her
+    koşul sağlanmış hâlde. Hüküm yine de GO'dur, çünkü tüketici kaldırıldı. Eski test bu satırların
+    NO_GO ürettiğini ölçüyordu; hükmü değişen bir yasanın çivisi de değişir, gevşemez."""
     import pandas as pd
     dusen = pd.DataFrame({"close": [200.0 - i * 0.3 for i in range(260)]})
     eg = regime.entry_gates(dusen, {"regime.spy_sma_gate": 1})
-    assert eg["spy_sma_gate"]["hukum"] == "altinda"
-    assert eg["blocks_new_entries"] is True and "regime.spy_sma_gate" in eg["blocking"]
+    assert eg["spy_sma_gate"]["hukum"] == "altinda"            # ÖLÇÜLDÜ (gösterge yaşıyor)
+    assert eg["blocks_new_entries"] is False and eg["blocking"] == []
     plan = {"sector": "Tech", "r_multiple_expected": 2.5, "size_r": 0.5, "score": 80}
     pf = {"open_positions": 1, "sector_counts": {}, "open_risk_r": 1.0, "max_corr": 0.1}
     reg = {"exposure_budget_pct": 80, "leading_sectors": [], "entry_gates": eg}
-    v, nedenler = guard.classify_gate(plan, pf, reg, _goal(), params={})
-    assert v == "NO_GO" and any("rejim kapısı" in n for n in nedenler)
+    v, nedenler = guard.classify_gate(plan, pf, reg, _goal(),
+                                      params={"regime.spy_sma_gate": 1})
+    assert v == "GO" and not any("rejim kapısı" in n for n in nedenler)
+    # ve knob'suz hâlle BİREBİR aynı hüküm (emekli düğme hiçbir yolu değiştirmez)
+    reg_temiz = {"exposure_budget_pct": 80, "leading_sectors": []}
+    assert guard.classify_gate(plan, pf, reg_temiz, _goal(), params={}) == (v, nedenler)
 
 
 # =================================================================================================

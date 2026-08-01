@@ -155,13 +155,17 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). **GÖLGE-KİTAP ✅ KOD-HAZIR
   (2026-07-31 gece turu; canlıya sonraki pencerede):** trend_shadow.py sıfır-yetkili paralel defter
   — şasi-birebir sabitler, PIT şerhi kitap içinde, YASA-6 okuyucuları çivili, 645-seans smoke temiz
-  (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · G4 ikinci kurulum (trend-içi geri-çekilme, korelasyon<0,3; pullback
-  askı-bulgusuyla birleşik yeniden-tasarım) · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
+  (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · **G4 pullback ✅ ARŞİV (2026-08-01, kart EDG-010, K=2): bağımsızlık GERÇEK (Jaccard ~0.02)
+  ama kenar YOK — ham pozitiflik evren-tabanında kayboluyor (dip10 trend-evreninde anlamlı negatif);
+  kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
   G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · VCP-DECOMPOSE programı (katalog #30:
   VCP = residual-mom + 52wh + hacim-primi + daralma bileşenlerine ayrıştır — 1.1/1.2/1.4
   kartlarının çatı hipotezi).
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
+- **YENİ (EDG-010'dan, ders #3): ölçütler HAM getiri okuyamaz** — success/kill her zaman
+  taban-fazlası (aynı-gün evren / ilgili alt-evren) üzerinden yazılır; ham pozitiflik piyasa
+  sürüklenmesidir (EDG-010 vakası: lafzen-success, kanıten-kenarsız).
 - **YENİ (EDG-009'dan): kart eşik-DİLBİLGİSİ standardı** — success/kill metinlerinde her dal
   KENDİ niteleyicisini açıkça taşır ("artar (CI 0-dışı)" gibi); belirsiz niteleyici = muhafazakâr
   okuma + karta ders notu (EDG-009 vakası: "(P>=0.95)" hangi dala ait belirsizdi, hüküm değiştirici).

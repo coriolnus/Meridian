@@ -343,11 +343,14 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
         _chk("score_band", plan.get("score", 100) < min_score + REVIEW_SCORE_BAND,
              "skor alt bantta", "soft", value=plan.get("score"), threshold=f">={min_score + REVIEW_SCORE_BAND:.0f}")
 
-    # --- Y3 DÖRTLÜSÜ: İKİ PORTFÖY TAVANI + İKİ PİYASA KAPISI, HEPSİ BAYRAK-ARKASI ---------------
+    # --- Y3'ÜN KARAR YOLUNDA KALAN KISMI: İKİ PORTFÖY TAVANI, İKİSİ DE BAYRAK-ARKASI -----------
     # DEFAULT KAPALI: knob yoksa/0 ise bu blok HİÇBİR ŞEY yapmaz ve kapı birebir eski davranışı
     # gösterir (çivi testi: params={} ile hüküm değişmez). Açılışları ÖLÇÜMDEN geçecek
     # (gölge-varyant/prescreen) — bugün yalnız yolu ve beyanı iniyor.
-    _y3_entry_gates(plan, portfolio, regime, params, _chk)
+    #
+    # Y3'ün İKİ PİYASA KAPISI (SPY 200-SMA, VIX backwardation) BU ZİNCİRDEN ÇIKARILDI — EDG-005
+    # hükmü: GÖSTERGE, KAPI DEĞİL (gerekçe `_y3_portfolio_caps` gövdesinde).
+    _y3_portfolio_caps(plan, portfolio, params, _chk)
 
     if hard:
         return "NO_GO", hard
@@ -363,8 +366,8 @@ SECTOR_CAP_DEFAULT_PCT = 25.0     # bandın ALT ucu (muhafazakâr): açılırsa 
 HEAT_CAP_DEFAULT_PCT = 6.0        # NAV yüzdesi — bandın alt ucu, aynı gerekçe
 
 
-def _y3_entry_gates(plan: dict, portfolio: dict, regime: dict, params: dict | None, _chk) -> None:
-    """Y3'ün giriş-kapısı zinciri. Dördü de `params` içindeki knob 0/yok iken TAMAMEN ATIL.
+def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -> None:
+    """Y3'ün karar yolunda KALAN iki tavanı. İkisi de `params` içindeki knob 0/yok iken TAMAMEN ATIL.
 
     (1) portfolio.sector_cap  — sektör AĞIRLIĞI tavanı (%25-30 bandı). Mevcut `sector_cap` sert
         kuralı POZİSYON SAYISI tavanıdır (`max_sector_exposure_pct` ile sayıya çevrilir); bu knob
@@ -376,10 +379,20 @@ def _y3_entry_gates(plan: dict, portfolio: dict, regime: dict, params: dict | No
         beyanı knob açılana kadar birebir geçerli kalır. Ölçüm katmanının ADI burada bilerek
         yazılmaz: guard SAF kalmak zorunda ve o modülü ne çağırır ne içe aktarır; ısı `portfolio`
         sözlüğünden `heat_pct` alanı olarak GELİR (çağıranın sorumluluğu).
-    (3)(4) İki piyasa kapısı (`regime.spy_sma_gate`, `regime.vix_backwardation_gate`) rejim
-        katmanında ölçülür (`regime.entry_gates`) ve buraya HÜKÜM olarak gelir: `regime` sözlüğünde
-        `entry_gates` varsa okunur. Kapı burada yeniden HESAPLANMAZ — endeks barları guard'ın
-        sözleşmesinde yoktur ve iki yerde hesaplamak iki gerçek demektir (denetim turu 12'nin dersi).
+    (3)(4) İKİ PİYASA KAPISI BU ZİNCİRDEN ÇIKTI — EDG-005 HÜKMÜ: GÖSTERGE, KAPI DEĞİL (2026-08-01).
+        `regime.spy_sma_gate` ÖLÇÜLDÜ (kart EDG-2026-005, arşiv): tek atfedilebilir pencerede kill#1
+        tetiklendi (Sharpe −0,25→−0,90, PARA-v3 −0,029→−0,088); vol düşüyor ama bedeli getiri. OOS'ta
+        55 bloke günde 0 girişi engelledi → kill#2'nin "pano göstergesi yeter" hükmü yürürlükte.
+        `regime.vix_backwardation_gate` ise doğrulanmış VERİ-YOK (Massive 403 + FMP boş) — hüküm
+        üretemez. Yani bu satırdan sonra `regime["entry_gates"]` okunsa bile HİÇBİR koşulda True
+        gelemezdi: okuyan bir satır bırakmak, ölü bir kapıyı canlı gibi gösteren süs olurdu.
+        Kapının hükmü ÖLMEDİ, YERİ DEĞİŞTİ: `regime.entry_gates()` hâlâ ölçer ve pano satırı
+        (`api._y3_gate_row`) gösterir — karar yoluna GİRMEZ.
+        GERİ ALMA (kablo yeniden kurulacaksa): VIX kaynağı gelirse ya da SMA kapısı yeni bir kartla
+        yeniden açılırsa (a) `regime.entry_gates` sabit `blocks_new_entries=False`ini kaldırır,
+        (b) `regime.build_regime_json` anahtarı yeniden yazar, (c) burada tüketici satır geri gelir.
+        Üçü BİRLİKTE olmadan kapı çalışmaz — parça parça geri alınamaz (bugünkü ölü-ucun kendisi
+        bu üçlünün ikisi eksik hâliydi).
     """
     p = params or {}
     # (1) sektör notional tavanı
@@ -414,9 +427,4 @@ def _y3_entry_gates(plan: dict, portfolio: dict, regime: dict, params: dict | No
             _chk("y3_heat_cap", toplam > heat_pct_cap,
                  f"Y3 ısı tavanı: açık risk %{toplam:.2f} NAV > %{heat_pct_cap:.1f}", "hard",
                  value=round(toplam, 3), threshold=f"<={heat_pct_cap:.1f}%")
-    # (3)(4) rejim katmanının hükmü
-    eg = regime.get("entry_gates") if isinstance(regime, dict) else None
-    if isinstance(eg, dict) and eg.get("blocks_new_entries"):
-        _chk("y3_regime_entry_gate", True,
-             "Y3 rejim kapısı yeni girişi kapattı: " + ", ".join(eg.get("blocking") or []),
-             "hard", value=",".join(eg.get("blocking") or []), threshold="bloke yok")
+    # (3)(4) YOK — bilerek. Rejim katmanının piyasa kapıları artık GÖSTERGEdir (docstring, EDG-005).

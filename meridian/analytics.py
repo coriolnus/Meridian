@@ -2363,8 +2363,34 @@ def prediction_accuracy_band() -> dict:
     `oran` = gerçekleşen/öngörülen. 1'in ALTI sistematik iyimserliktir (kapı bunu extra_p ile
     cezalandırır); NEGATİF oran, tahminin YÖNÜNÜN bile yanlış olduğunu söyler ve ayrı sayılır —
     büyüklük hatasıyla yön hatası aynı sayıda erirse hermes "biraz iyimserim" diye okur, oysa
-    bugünkü tek kayıt "ters yöne gitti" diyor."""
+    bugünkü tek kayıt "ters yöne gitti" diyor.
+
+    PARA ÖLÇEĞİ SÜTUNU (WP-M ①, 2026-08-01 — `shadowlaw.realized_usd`in okuyucusu, YASA 6).
+    `oran` BİLEŞİK ölçekte bir sayıdır: `realized_delta`yı rollback eski bileşik skordan yazıyor
+    (`probgate.refresh_meta_calibration` bunu `olcek_borcu` alanıyla adıyla beyan ediyor). Yani bu
+    karne "SKOR ne kadar tuttu?" sorusunu cevaplıyor, "PARA ne yaptı?" sorusunu DEĞİL — ve ikisi
+    ters işaretli olabilir. Sütun o ikinci cetveli yanına koyar: her çift, ROLLBACK'İN KENDİ
+    popülasyon yasasıyla (`strategy_version` eşleşmesi — `rollback.check_and_rollback` aynen böyle
+    diliyor) dolar tarafından da okunur. Yeni mekanizma YOK: aynı defter, aynı dilimleme, ikinci
+    bir birim. `celiski=True` = skor iyileşme derken para tersini söylüyor; hükmü yoktur, GÖRÜNÜR
+    kılar. Ölçülemeyen taraf None kalır (UYDURMA YASAĞI)."""
+    from . import shadowlaw
     hyps = memory.all_hypotheses()
+    _tr = _trades()
+    _g = config.goal()
+
+    def _para_of(version_to) -> dict | None:
+        """Bir sürümün canlı defterdeki dolar karnesi — rollback'in `cur_trades` dilimiyle AYNI.
+
+        Blok `money_score_detail`in KENDİ çıktısından okunur (ayrı bir hesap kurulmaz): kapının
+        gördüğü sözlük ile karnenin gördüğü sözlük AYNI olmak zorunda, yoksa iki cetvel sessizce
+        ayrışır. `money_score_detail` min_sample altında da bu bloğu döndürür — bu yüzden skor
+        None iken bile para okunabilir."""
+        if version_to is None:
+            return None
+        rows = [t for t in _tr if t.get("strategy_version") == version_to]
+        return shadowlaw.money_score_detail(rows, _g)["realized_usd"] if rows else None
+
     ciftler = []
     for h in hyps:
         pd_, rd_ = h.get("predicted_delta"), h.get("realized_delta")
@@ -2376,14 +2402,38 @@ def prediction_accuracy_band() -> dict:
             continue
         if abs(p) < 1e-9:
             continue
+        _pb = _para_of(h.get("version_to"))
+        _usd = (_pb or {}).get("pnl_usd")
         ciftler.append({"id": h.get("id"), "ts": h.get("ts"), "variable": h.get("variable"),
                         "status": h.get("status"), "predicted": round(p, 4),
                         "realized": round(r, 4), "oran": round(r / p, 3),
-                        "yon_dogru": bool((r > 0) == (p > 0))})
+                        "yon_dogru": bool((r > 0) == (p > 0)),
+                        # --- para sütunu ---
+                        "para_usd": _usd, "para_n": (_pb or {}).get("n_pnl", 0),
+                        # İŞARETSİZ (0) taraf ÇELİŞKİ ÜRETEMEZ: sıfırı "kötü" saymak, ölçülmemiş bir
+                        # yönü ölçülmüş gibi raporlamak olurdu.
+                        "celiski": (None if (_usd is None or r == 0 or _usd == 0)
+                                    else bool((r > 0) != (_usd > 0)))})
     n = len(ciftler)
+    _para_olculen = [c for c in ciftler if c["celiski"] is not None]
     out = {"n": n, "min_n": A4_BAND_MIN_N, "ciftler": ciftler[-10:],
            "hedef_oran": A4_BAND_TARGET_RATIO,
-           "kaynak": "hypotheses.jsonl predicted_delta ↔ realized_delta (rollback + ship ölçümleri)"}
+           "kaynak": "hypotheses.jsonl predicted_delta ↔ realized_delta (rollback + ship ölçümleri)",
+           "para_olcegi": {
+               "n_olculen": len(_para_olculen),
+               "n_celiski": sum(1 for c in _para_olculen if c["celiski"]),
+               "celiskili_idler": [c["id"] for c in _para_olculen if c["celiski"]][:10],
+               "birim": "USD", "hukum_verir": False,
+               "kaynak": ("shadowlaw.realized_usd — trades.jsonl'ın `strategy_version` dilimi "
+                          "(rollback.check_and_rollback ile AYNI popülasyon yasası)"),
+               "beyan": ("`oran` BİLEŞİK ölçektedir (realized_delta rollback'ten gelir), bu sütun "
+                         "DOLAR. Çelişki = skor iyileşme derken paranın tersini söylemesi; hüküm "
+                         "vermez, ölçek borcunun (probgate.olcek_borcu) görünür yüzüdür."),
+               "hukum": ("PARA TARAFI ÖLÇÜLEMEDİ — hiçbir çiftin sürümü canlı defterde "
+                         "`pnl_dollars`lı satır taşımıyor" if not _para_olculen else
+                         ("ÇELİŞKİ YOK — ölçülen çiftlerde skor ve para AYNI yönü gösteriyor"
+                          if not any(c["celiski"] for c in _para_olculen) else
+                          "ÇELİŞKİ VAR — skor ile para ters yönü gösteren çift(ler) mevcut"))}}
     if n == 0:
         out.update({"band": None, "hukum": "HİÇ ÇİFT YOK — hermes'in tahmin isabeti ÖLÇÜLMEMİŞ "
                                           "(ship olmadan gerçekleşme yazılamaz)", "yon_isabeti": None})

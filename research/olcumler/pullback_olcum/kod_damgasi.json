@@ -1,0 +1,152 @@
+{
+ "olcum": "EDG-2026-010 — WP-K/G4 trend-pullback kurulumu",
+ "uretildi_utc": "2026-08-01T09:10:33.809472+00:00",
+ "repo_head": "2d4cbf4f050bebbbae74b5b7da67c97767313439",
+ "repo_dirty": true,
+ "python": "Python 3.12.7",
+ "kod_sha256": {
+  "olcum.py": "42955783a2f7709dc49f59de2a54b41af124a4ecd1e2260eb3c1b9a54fdf0bfa",
+  "bagimsizlik_ek.py": "e9212eae0ec7f40cd5334a06ffac5491bbd258b0cf13f7f12479ce753aa478dd",
+  "rapor.py": "d4a64af8fe66bf1e36006819c1a2df07cf8aa4a9ed1e8de6d0148d787dd4a54e",
+  "duman.py": "5c81a56d61ff0a4c2ec91d56a85378f6b87d7948d49921f4c98aff5511fb1121",
+  "damga.py": "312445330694513f171e6c39ca94aa74b83a8a3f0870e71e5385220b359151b9"
+ },
+ "cikti_sha256": {
+  "sonuc.json": "af4dfc9393a24550ff16c8c687680446b330a03e5c05037c201e10815ce1b49d",
+  "bagimsizlik_ek.json": "5288a783dff04211f878258b701fd93786bb5c87fc2e27a0a9018d627bbdae5c",
+  "RAPOR.md": "2a136e75538e4e627a32b79929f914b5cf033fac14af4eb9c6a5aab9ac21273d",
+  "sinyaller.csv": "1d9d564736a7b36b092d87820eb9ca4c3f424138e8e8ab3ba940294c77619f1a"
+ },
+ "girdi_sha256": {
+  "kart": "1699f25102ac9e664e42aad1ad2bc91ed1eef1d2ced1ede2aa245e6cd59b92c7",
+  "meridian/indicators.py": "941714dc666ae18ae2ba5fcc46a12c4e84c0fad8006f88b4136c331b25ac8649",
+  "meridian/strategy.py": "444a07eb83603f92cee9a1b7fdf6048f9cde164e16f9f5ec4f9471b508f710b6",
+  "meridian/adapters/data.py": "7c2cbe9fe5d98a42d6618c6433e3ba3d539da992dad4a5f723487c3631937570",
+  "meridian/analytics.py": "2c8f78fc548518d96f15f1fed9e78ce5b35d704f23c2fef4524e68f56803d664",
+  "state/strategy.yaml": "9f3e4732315abe5200d03a31c790a9a84f2914df70c2521280224610c1123f79",
+  "state/bars_integrity.json": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+  "state/counterfactuals.jsonl": "df479477d73c9f7998bebc368e505cb0ed77677c676719782b907199eb771f09",
+  "state/cf_open.json": "fea01ce5696cf8d593800d0e9cc9af25617b4a46338f701bbd0ade99f49a6189",
+  "state/component_ic.json": "07b82f55eb19d35e60a371dc64c954beb973f0b190b622c51d5a87c0d3ad9565",
+  "sablon_max_olcum": "27c23e429625498ed4e24481568997ea1d15f838e53716ee763999e44992492b",
+  "sablon_resmom_olcum": "cfb7ace671821f68ac590daf8b566cabb038b5223ecd758f015b553bd8a7a013"
+ },
+ "bar_onbellegi": {
+  "kaynak": "/Users/erdemozturk/AI-Trading/state/bars",
+  "dosya_sayisi": 259,
+  "birlesik_sha256": "91a3f76063e2eb64f992ec60dffea093b2fa03447521c7fca8f1f796245a619e",
+  "not": "canlı önbellek SALT-OKUNDU (config.BARS = state/bars); ölçüm hiçbir repo/state dosyasına YAZMADI — yazımlar sandbox/_state'te"
+ },
+ "sandbox_state_icerigi": [
+  "bars_integrity.json",
+  "events.jsonl"
+ ],
+ "kosum_sirasinda_repo_head": {
+  "kosum_baslangici": "2d4cbf4f050bebbbae74b5b7da67c97767313439",
+  "kosum_sonu": "2d4cbf4f050bebbbae74b5b7da67c97767313439",
+  "araya_giren_commitler": [],
+  "kritik_yollarda_degisiklik": [],
+  "olcum_etkilendi_mi": false
+ },
+ "calisma_agaci_kirliligi": {
+  "kural": "ölçümün İTHAL ETTİĞİ dosyalar koşum penceresinde değişmiş olabilir mi?",
+  "kirli_dosyalar": [
+   {
+    "yol": "meridian/analytics.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:04:14.429699+00:00"
+   },
+   {
+    "yol": "meridian/api.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T08:59:31.231170+00:00"
+   },
+   {
+    "yol": "meridian/backtest.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:05:48.912678+00:00"
+   },
+   {
+    "yol": "meridian/component_ic.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:10:29.291728+00:00"
+   },
+   {
+    "yol": "meridian/guard.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T08:56:49.450059+00:00"
+   },
+   {
+    "yol": "meridian/regime.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:00:18.136397+00:00"
+   },
+   {
+    "yol": "meridian/shadowlaw.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:00:00.892907+00:00"
+   },
+   {
+    "yol": "meridian/web/app.js",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:00:01.477373+00:00"
+   },
+   {
+    "yol": "tests/test_hafta3b_v125.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:02:15.948155+00:00"
+   },
+   {
+    "yol": "tests/test_regime_audit_v37.py",
+    "durum": "M",
+    "mtime_utc": "2026-08-01T09:01:36.246071+00:00"
+   },
+   {
+    "yol": "docs/mutasyon/",
+    "durum": "??",
+    "mtime_utc": null
+   },
+   {
+    "yol": "tests/test_para_v3_borclari_v145.py",
+    "durum": "??",
+    "mtime_utc": "2026-08-01T09:05:56.649751+00:00"
+   }
+  ],
+  "olcumun_bagimli_oldugu_dosyalar": {
+   "meridian/indicators.py": {
+    "mtime_utc": "2026-07-29T18:42:42.316841+00:00",
+    "git_kirli": false
+   },
+   "meridian/strategy.py": {
+    "mtime_utc": "2026-07-29T23:44:14.519614+00:00",
+    "git_kirli": false
+   },
+   "meridian/adapters/data.py": {
+    "mtime_utc": "2026-07-30T23:13:10.966300+00:00",
+    "git_kirli": false
+   },
+   "meridian/analytics.py": {
+    "mtime_utc": "2026-08-01T09:04:14.429699+00:00",
+    "git_kirli": true
+   },
+   "state/bars_integrity.json": {
+    "mtime_utc": "2026-07-31T07:19:54.665058+00:00",
+    "git_kirli": false
+   },
+   "state/counterfactuals.jsonl": {
+    "mtime_utc": "2026-07-29T21:09:57.113081+00:00",
+    "git_kirli": false
+   },
+   "state/cf_open.json": {
+    "mtime_utc": "2026-07-29T21:10:00.215837+00:00",
+    "git_kirli": false
+   },
+   "state/strategy.yaml": {
+    "mtime_utc": "2026-07-28T06:55:36.707711+00:00",
+    "git_kirli": false
+   }
+  }
+ },
+ "pycache_notu": "Python import'u repo'da `meridian/__pycache__/*.pyc` üretir/yeniler. Bu, ölçümün repoda bıraktığı TEK izdir; versiyonlanmayan bytecode önbelleğidir, kaynak dosya değiştirilmemiştir (max_olcum/resmom_olcum turlarında da böyle).",
+ "sablon_devralma": "olcum.py'nin bar yükleme / blok-bootstrap / pozitif kontrol / PK4 bölümleri resmom_olcum/olcum.py'den devralındı (birebir kopya DEĞİL: popülasyon bar paneline çevrildi, PK5 bu kartın özdeşliklerine uyarlandı, ortalama-bootstrap cebirsel özdeş hızlı yola çevrildi ve bu PK5-C ile sınandı)."
+}

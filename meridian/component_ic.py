@@ -67,6 +67,7 @@ ağırlığı ancak olasılıksal kapıdan geçen bir hipotezle değişebilir.
 """
 from __future__ import annotations
 
+import json
 import math
 
 import pandas as pd
@@ -295,11 +296,19 @@ def _rows() -> tuple[list, dict]:
     return rows, sayim
 
 
-def component_ic() -> dict | None:
+def component_ic(write: bool = True) -> dict | None:
     """Bileşen × ufuk × katman IC tablosu. Ölçülemeyen her hücre None kalır (UYDURMA YASAĞI).
 
     Dönüş None: hiç gözlem yoksa ya da bar evreni okunamadıysa — boş bir tablo yazıp "ölçtük"
-    izlenimi vermek, ölçmemekten daha kötüdür."""
+    izlenimi vermek, ölçmemekten daha kötüdür.
+
+    `write=False` (2026-08-01, yeniden-üretim aracı için): tabloyu hesaplar ama `component_ic.json`a
+    ve başarı olayına YAZMAZ. Varsayılan True olduğu için gecelik P5 çağrısı (loop.py) birebir
+    eskisi gibi davranır. Kuru koşunun yazmaması bir incelik değil şart: bu tablo canlı state'te
+    durur ve worker koşarken ikinci bir sürecin yazması bu depoda yasak.
+    DÜRÜST SINIR: bar okuma yolunun UYARILARI (hayalet satır, karantina, dışlanan dönem —
+    `obs.warn`) kuru koşuda da deftere düşer. Onlar ölçümün kendi kaydıdır ve susturulmaları YASA
+    4 ihlali olurdu; yani "kuru koşu" = artefakta dokunmaz, telemetriye sessizlik vaat etmez."""
     rows, sayim = _rows()
     if not rows:
         return None
@@ -451,9 +460,10 @@ def component_ic() -> dict | None:
                                          stages_=("component_ic.gercek", "component_ic.cf",
                                                   "component_ic.eslesme")),
     }
-    store.write_json(COMPONENT_IC_FILE, out)
-    obs.log("component_ic", n_gercek=sayim["gercek"], n_cf=sayim["cf"],
-            olculen_hucre=len(olculen) if olculen else 0)
+    if write:
+        store.write_json(COMPONENT_IC_FILE, out)
+        obs.log("component_ic", n_gercek=sayim["gercek"], n_cf=sayim["cf"],
+                olculen_hucre=len(olculen) if olculen else 0)
     return out
 
 
@@ -503,3 +513,165 @@ def compact_lines(doc: dict | None = None, max_satir: int = 6) -> list[str]:
     satirlar.append(f"[{len(hucreler)}/{toplam} hücre ölçülebildi; gerisi örneklem altı — "
                     f"getiri: {doc.get('getiri_tanimi')}]")
     return satirlar
+
+
+# ==================================================================================================
+# YENİDEN ÜRETİM ARACI — "defterdeki tablo hangi bar tabanından çıktı?" (WP-D borcu, 2026-08-01)
+# ==================================================================================================
+# NEDEN VAR. `_load_universe`/`_load_index_close` 2026-07-31'de `measurement_bars()` kapısına
+# bağlandı: çözülmemiş ölçek/kimlik kırılmasından ÖNCEKİ dönem ölçümden düşer (hayalet-round-2).
+# Ama `state/component_ic.json` o günden ÖNCE üretilmişti ve dosya bunu KENDİ SÖYLÜYOR: `bars_integrity`
+# alanı yok (o alan da aynı turda eklendi). Yani defterdeki tablo ile bugünkü boru hattının ürettiği
+# tablo AYNI ADI taşıyan İKİ FARKLI ölçümdür — ve fark ölçüldü (EDG-007 raporu: cf rvol20 @20
+# defterde 0,0604, dışlamalı boru hattında 0,0637).
+#
+# NEDEN AYRI BİR ARAÇ (gecelik P5 zaten `component_ic()` çağırıyor). İki sebep:
+#   (1) Gecelik koşum tabloyu SESSİZCE değiştirir; hangi hücrenin ne kadar kaydığı hiçbir yerde
+#       görünmez. Bu tablo 1.4 karar kapısının ve ağırlık tartışmasının girdisi — "anlamlı" bayrağı
+#       düşen bir hücrenin fark edilmeden değişmesi, kararın altını sessizce oyar.
+#   (2) P5 veri kapsamasına REHİN (öğrenme-rehineliği dersi): daily_cycle noop olduğu gecelerde
+#       öğrenme adımları da durur. Yeniden üretimin ne zaman gerçekleştiği tahmine kalmamalı.
+#
+# YETKİSİ SIFIR VE KURU KOŞU VARSAYILAN: araç yalnız ESKİ↔YENİ farkını basar. `--uygula` verilmedikçe
+# tek bayt yazmaz; verildiğinde de canlı worker koşuyorsa REDDEDER (state'e iki süreçten yazım yasağı).
+# İDEMPOTENT: aynı bar tabanı + aynı defterlerle ikinci koşum "0 hücre değişti" der ve aynı içeriği
+# yazar (çıktıda zaman damgası yoktur — fark yalnız GERÇEK bir girdi değişikliğinden gelir).
+_FARK_ALANLARI = ("ic", "n", "anlamli")
+
+
+def _hucre_farklari(eski: dict | None, yeni: dict) -> list[dict]:
+    """Hücre hücre ESKİ↔YENİ. Kayıp/yeni hücre de bir FARKtır: ölçülebilirlik sınırının kayması
+    (n eşiğin altına düşmesi) sayının kaymasından daha büyük bir haberdir."""
+    e_tab = (eski or {}).get("tablo") or {}
+    y_tab = yeni.get("tablo") or {}
+    out = []
+    for lay in LAYERS:
+        for c in COMPONENTS:
+            for h in HORIZONS:
+                e = ((e_tab.get(lay) or {}).get(c) or {}).get(str(h))
+                y = ((y_tab.get(lay) or {}).get(c) or {}).get(str(h))
+                if y is None:
+                    continue                      # yeni tabloda hiç yok (bileşen listesi değişmiş)
+                e = e or {}
+                if all(e.get(k) == y.get(k) for k in _FARK_ALANLARI) and e:
+                    continue
+                d_ic = (None if (e.get("ic") is None or y.get("ic") is None)
+                        else round(float(y["ic"]) - float(e["ic"]), 4))
+                out.append({"katman": lay, "bilesen": c, "ufuk": h,
+                            "eski_ic": e.get("ic"), "yeni_ic": y.get("ic"), "d_ic": d_ic,
+                            "eski_n": e.get("n"), "yeni_n": y.get("n"),
+                            "eski_anlamli": e.get("anlamli"), "yeni_anlamli": y.get("anlamli"),
+                            "anlamlilik_dondu": (e.get("anlamli") is not y.get("anlamli")),
+                            "defterde_yoktu": not e})
+    # SIRALAMA HÜKME GÖRE: önce anlamlılığı dönen hücreler (karar girdisi), sonra |Δic|.
+    out.sort(key=lambda r: (not r["anlamlilik_dondu"], -abs(r["d_ic"] or 0)))
+    return out
+
+
+def yeniden_uret(uygula: bool = False) -> dict:
+    """component_ic.json'ı GÜVENSİZ-DÖNEM-DIŞLAMALI boru hattından yeniden üretir.
+
+    Kuru koşu (varsayılan): hesaplar, defterdekiyle karşılaştırır, HİÇBİR ŞEY yazmaz.
+    `uygula=True`: aynı hesabı yazar. Yeni tablo ölçülemezse (None) HİÇBİR KOŞULDA yazılmaz —
+    ölçülemeyen bir turda defteri boşaltmak, elde olan kanıtı da silmek olurdu."""
+    eski = store.read_json(COMPONENT_IC_FILE, None)
+    yeni = component_ic(write=False)
+    if yeni is None:
+        return {"uygulandi": False, "olculdu": False,
+                "neden": ("yeni tablo ÖLÇÜLEMEDİ (gözlem yok ya da bar evreni okunamadı) — "
+                          "defter OLDUĞU GİBİ bırakıldı"),
+                "eski_var": bool(eski), "farklar": [], "sayim": {}}
+    farklar = _hucre_farklari(eski, yeni)
+    toplam = len(LAYERS) * len(COMPONENTS) * len(HORIZONS)
+    rapor = {
+        "olculdu": True, "eski_var": bool(eski),
+        "sayim": {
+            "hucre_toplam": toplam, "degisen": len(farklar),
+            "anlamlilik_donen": sum(1 for f in farklar if f["anlamlilik_dondu"]),
+            "defterde_olmayan": sum(1 for f in farklar if f["defterde_yoktu"]),
+        },
+        # BAR TABANI FARKI ASIL SORU: tablonun hangi evrenden çıktığı. Eski dosyada alan YOKSA
+        # bu "bilinmiyor" değil, "dışlama kapısı henüz yoktu" demektir ve öyle yazılır.
+        "bar_tabani": {
+            "eski": (eski or {}).get("bars_integrity", "ALAN YOK — dışlama kapısından ÖNCE üretilmiş"),
+            "yeni": yeni.get("bars_integrity"),
+        },
+        "n_gozlem": {"eski": (eski or {}).get("n_gozlem"), "yeni": yeni.get("n_gozlem")},
+        "anlamli_sayim": {"eski": (eski or {}).get("anlamli_sayim"), "yeni": yeni.get("anlamli_sayim")},
+        "verdict": {"eski": (eski or {}).get("verdict"), "yeni": yeni.get("verdict")},
+        "farklar": farklar,
+        "uygulandi": False,
+    }
+    if uygula:
+        store.write_json(COMPONENT_IC_FILE, yeni)
+        obs.log("component_ic_yeniden_uretildi", degisen_hucre=len(farklar),
+                anlamlilik_donen=rapor["sayim"]["anlamlilik_donen"],
+                n_gercek=(yeni.get("n_gozlem") or {}).get("gercek"),
+                n_cf=(yeni.get("n_gozlem") or {}).get("cf"))
+        rapor["uygulandi"] = True
+    return rapor
+
+
+def _fark_yazdir(rapor: dict, max_satir: int = 40) -> None:
+    mod = "UYGULANDI" if rapor.get("uygulandi") else "KURU KOŞU (hiçbir bayt yazılmadı)"
+    print(f"[component_ic] {mod}")
+    if not rapor.get("olculdu"):
+        print(f"  {rapor.get('neden')}")
+        return
+    s = rapor["sayim"]
+    print(f"  hücre: {s['degisen']}/{s['hucre_toplam']} DEĞİŞTİ · anlamlılığı dönen: "
+          f"{s['anlamlilik_donen']} · defterde hiç olmayan: {s['defterde_olmayan']}")
+    print(f"  gözlem  eski={rapor['n_gozlem']['eski']}")
+    print(f"          yeni={rapor['n_gozlem']['yeni']}")
+    print(f"  anlamlı eski={rapor['anlamli_sayim']['eski']}  yeni={rapor['anlamli_sayim']['yeni']}")
+    bt_e, bt_y = rapor["bar_tabani"]["eski"], rapor["bar_tabani"]["yeni"]
+    print(f"  bar tabanı ESKİ: {bt_e if isinstance(bt_e, str) else json.dumps(bt_e, ensure_ascii=False)[:200]}")
+    print(f"  bar tabanı YENİ: {json.dumps(bt_y, ensure_ascii=False)[:200] if bt_y else 'YOK'}")
+    if rapor["farklar"]:
+        print(f"  {'katman':7} {'bileşen':9} {'ufuk':>4} {'eski_ic':>9} {'yeni_ic':>9} {'Δ':>8} "
+              f"{'eski_n':>7} {'yeni_n':>7}  anlamlı")
+        for f in rapor["farklar"][:max_satir]:
+            anl = f"{f['eski_anlamli']}→{f['yeni_anlamli']}" + (" **" if f["anlamlilik_dondu"] else "")
+            print(f"  {f['katman']:7} {f['bilesen']:9} {f['ufuk']:>4} "
+                  f"{str(f['eski_ic']):>9} {str(f['yeni_ic']):>9} {str(f['d_ic']):>8} "
+                  f"{str(f['eski_n']):>7} {str(f['yeni_n']):>7}  {anl}")
+        if len(rapor["farklar"]) > max_satir:
+            print(f"  ... +{len(rapor['farklar']) - max_satir} satır (tamamı için --json)")
+    else:
+        print("  fark YOK — defterdeki tablo bugünkü boru hattının ürettiğiyle birebir aynı")
+    print(f"  ESKİ hüküm: {rapor['verdict']['eski']}")
+    print(f"  YENİ hüküm: {rapor['verdict']['yeni']}")
+    if not rapor.get("uygulandi"):
+        print("  → yazmak için: python -m meridian.component_ic --uygula  (canlı worker DURMUŞ olmalı)")
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+    import sys
+
+    ap = argparse.ArgumentParser(
+        prog="python -m meridian.component_ic",
+        description="component_ic.json'ı güvensiz-dönem-dışlamalı boru hattından yeniden üretir")
+    ap.add_argument("--uygula", action="store_true", help="YAZ (varsayılan: kuru koşu)")
+    ap.add_argument("--json", action="store_true", dest="as_json", help="raporu JSON olarak bas")
+    ap.add_argument("--zorla", action="store_true",
+                    help="canlı süreç görülse de yaz (riski sen alırsın)")
+    a = ap.parse_args(argv)
+    if a.uygula and not a.zorla:
+        from .barrepair import _worker_running          # tek desen, çok tüketici (dbmigrate/ledgerstamp)
+        if _worker_running():
+            print("[component_ic] REDDEDİLDİ: canlı Meridian süreci görülüyor. Gecelik P5 zaten bu "
+                  "tabloyu yazıyor — iki süreç aynı defteri iki farklı bar tabanıyla yeniden "
+                  "yazabilir. Önce `./ops/stop-worker.sh`, sonra tekrar dene (ya da --zorla).",
+                  file=sys.stderr)
+            return 2
+    rapor = yeniden_uret(uygula=a.uygula)
+    if a.as_json:
+        print(json.dumps(rapor, ensure_ascii=False, indent=1, default=str))
+    else:
+        _fark_yazdir(rapor)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

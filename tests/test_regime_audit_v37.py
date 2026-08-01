@@ -86,84 +86,92 @@ def test_rg3b_every_emitted_label_is_a_valid_regime():
     assert labels <= set(config.VALID_REGIMES)
 
 
-# ---------- RG4: entry_gates ÜRETİCİ-TÜKETİCİ PARİTESİ (2026-07-31) ----------
-# RG1'in aynı kusuru, bu kez NO_GO'yu DEĞİŞTİREN bir kapıda: `guard._y3_entry_gates` Y3'ün iki
-# piyasa kapısının hükmünü `regime["entry_gates"]`ten OKUYOR ama o anahtarı yalnız api.py'nin PANO
-# yolu (`_y3_gate_row`) üretiyordu. guard'a `regime` olarak HER motorda `build_regime_json` çıktısı
-# gider (loop.py:529→655, backtest.py:230→323, cf_backfill.py:39→94) — anahtar orada YOKTU, `eg`
-# None'a düşüyordu ve kapı knob AÇILSA BİLE canlı döngüde de replay'de de yapısal olarak
-# ateşleyemiyordu. Kapı panoda vardı, KARARDA yoktu.
+# ---------- RG4: SMA/VIX bacakları GÖSTERGE, KAPI DEĞİL (EDG-005 hükmü, 2026-08-01) ----------
+# TARİHÇE (iki turda iki farklı kusur, ikisi de aynı ölü-uç):
+#   2026-07-31: `guard._y3_entry_gates` hükmü `regime["entry_gates"]`ten OKUYOR ama anahtarı yalnız
+#     api.py'nin PANO yolu üretiyordu → kapı panoda vardı, KARARDA yoktu. Parite kuruldu (üretici
+#     `build_regime_json`a eklendi).
+#   2026-07-31 (aynı gün, ölçüm): kart EDG-2026-005 ARŞİVE düştü — "KAPI AÇILMAZ, pano göstergesi
+#     yeter" (kill#1: tek atfedilebilir pencerede Sharpe −0,25→−0,90, PARA −0,029→−0,088; OOS'ta 55
+#     bloke günde 0 giriş engellendi). Yani kurulan parite, HÜKMÜ OLMAYAN bir kapının kablosuydu.
+#   2026-08-01: ölü-uç hükme uygun temizlendi — tüketici (guard) ve üretici (build_regime_json)
+#     kaldırıldı, hüküm PANO GÖSTERGESİ olarak yaşıyor. Aşağıdaki çiviler bu üç noktayı da tutar:
+#     ne kapı sessizce dirilir, ne gösterge sessizce kaybolur.
 _RG4_PLAN = {"sector": "Tech", "r_multiple_expected": 2.5, "size_r": 0.5, "score": 80}
 _RG4_PF = {"open_positions": 1, "sector_counts": {}, "open_risk_r": 1.0, "max_corr": 0.1}
 
 
-def test_rg4_producer_emits_the_exact_key_the_consumer_reads():
-    """ÇİVİ: tüketicinin OKUDUĞU ad ile üreticinin YAZDIĞI ad aynı, ve yasa TEK yerde."""
+def test_rg4_karar_yolunda_TUKETICI_de_URETICI_de_YOK():
+    """ÇİVİ: kapı üç noktadan birinde bile geri gelirse bu test kırılır (sessiz diriliş yasağı).
+
+    Kaynak-metin çivisi BİLEREK: davranış çivisi (aşağıdaki rg4b) knob=1'de hükmün değişmediğini
+    ölçer, ama biri tüketiciyi geri koyup üreticiyi unutursa davranış YİNE aynı kalır ve ölü-uç
+    sessizce geri döner. Bu turda temizlenen kusur tam olarak o hâldi."""
     import json
     from meridian import api
 
-    src_guard = inspect.getsource(guard._y3_entry_gates)
-    assert 'regime.get("entry_gates")' in src_guard          # tüketicinin okuduğu ad — sabitlenir
+    src_guard = inspect.getsource(guard._y3_portfolio_caps)
+    assert 'regime.get("entry_gates")' not in src_guard, \
+        "guard rejim kapısını yeniden TÜKETİYOR — EDG-005 hükmü: gösterge, kapı DEĞİL"
+    assert not hasattr(guard, "_y3_entry_gates"), "eski kapı zinciri geri gelmiş"
+    src_build = inspect.getsource(rg.build_regime_json)
+    assert 'out["entry_gates"]' not in src_build, \
+        "üretici geri gelmiş — okuyucusuz yazım (YASA 6) ve ölü-ucun kendisi"
     idx = make_bars(300, seed=11, trend=-0.0015)
     rj = rg.build_regime_json(idx, {"regime.min_exposure_score": 0}, "2026-07-20")
-    assert "entry_gates" in rj, "üretici, tüketicinin okuduğu anahtarı YAZMIYOR (kapı süs)"
-    eg = rj["entry_gates"]
-    # guard'ın gerçekten dokunduğu alanlar (guard.py:419-422) — şekil paritesi
-    assert isinstance(eg.get("blocks_new_entries"), bool)
-    assert isinstance(eg.get("blocking"), list)
-    # TEK YASA: pano yolu da motor yolu da AYNI ortak fonksiyonu, aynı imzayla çağırır. Kapı iki
-    # yerde HESAPLANMAZ — iki uygulama iki gerçek demektir (RG1'in dersi).
-    assert "entry_gates(index_bars, params)" in inspect.getsource(rg.build_regime_json)
-    assert "_rg.entry_gates(bars, params)" in inspect.getsource(api._y3_gate_row)
+    assert "entry_gates" not in rj
     json.dumps(rj, ensure_ascii=False)                       # regime.json'a serileşmeli
+    # GÖSTERGE YOLU DURUYOR ve TEK yerde hesaplanıyor: pano satırı ortak fonksiyonu çağırır.
+    assert "_rg.entry_gates(bars, params)" in inspect.getsource(api._y3_gate_row)
 
 
-def test_rg4b_open_gate_reaches_NO_GO_through_the_LIVE_regime_object():
-    """UÇTAN UCA: elle kurulmuş bir fikstür değil, `build_regime_json`ın ÜRETTİĞİ nesne doğrudan
-    guard'a verilir — motorların yaptığının aynısı. Kusur tam burada görünmezdi."""
+def test_rg4b_knob_1_verilse_bile_HUKUM_DEGISMEZ():
+    """DAVRANIŞ ÇİVİSİ (temizliğin "hiçbir şey değişmedi" kanıtı): AYNI düşen endekste knob 0 ile
+    knob 1 BİREBİR aynı hükmü ve aynı gerekçe listesini üretir. Temizlikten önce knob=1 NO_GO
+    veriyordu; canlı strateji knob'u TAŞIMADIĞI için canlı davranış zaten değişmemişti, ama
+    hipotez uzayı bu knob'u örnekleyebiliyordu — bu çivi o yolu da kapatır."""
     idx = make_bars(300, seed=11, trend=-0.0015)             # kapanış 200-SMA'nın ALTINDA
-    params = {"regime.min_exposure_score": 0, "regime.spy_sma_gate": 1}
-    rj = rg.build_regime_json(idx, params, "2026-07-20")
-    assert rj["exposure_budget_pct"] > 0, "NO_GO'nun sebebi bütçe olmamalı — kapı ölçülmeli"
-    assert rj["entry_gates"]["blocks_new_entries"] is True
-    assert rj["entry_gates"]["blocking"] == ["regime.spy_sma_gate"]
-    v, nedenler = guard.classify_gate(_RG4_PLAN, _RG4_PF, rj, config.goal(), params=params)
-    assert v == "NO_GO" and any("rejim kapısı" in n for n in nedenler), \
-        "rejim kapısı hükmü guard'a ULAŞMIYOR"
+    taban = {"regime.min_exposure_score": 0}
+    acik = {**taban, "regime.spy_sma_gate": 1}
+    rj_kapali = rg.build_regime_json(idx, taban, "2026-07-20")
+    rj_acik = rg.build_regime_json(idx, acik, "2026-07-20")
+    assert rj_kapali == rj_acik, "emekli knob rejim nesnesini DEĞİŞTİRİYOR"
+    assert rj_acik["exposure_budget_pct"] > 0, "hüküm bütçeden gelmemeli — ölçüm anlamsızlaşır"
+    v_kapali = guard.classify_gate(_RG4_PLAN, _RG4_PF, rj_kapali, config.goal(), params=taban)
+    v_acik = guard.classify_gate(_RG4_PLAN, _RG4_PF, rj_acik, config.goal(), params=acik)
+    assert v_kapali == v_acik, "emekli knob guard hükmünü DEĞİŞTİRİYOR"
+    assert not any("rejim kapısı" in n for n in v_acik[1])
 
 
-def test_rg4c_knob_closed_is_permissive_and_the_verdict_is_untouched():
-    """DEFAULT KAPALI çivisi: AYNI düşen endekste knob 0 iken kapı hiçbir karara girmez —
-    ama hüküm yine de KAYDA GEÇER (kapalı knob'un tarihçesi olmadan açılış kararı kanıtsız kalır)."""
+def test_rg4c_gosterge_OLCULMEYE_devam_eder_ve_emekliligini_SOYLER():
+    """Kapı elendi diye ÖLÇÜM susmaz: SPY'ın 200-SMA'nın altında olduğu panoda görünür. Ve satır
+    kendi emekliliğini ÇIKTININ İÇİNDE söyler — pano metnine güvenmek zorunda kalmayalım."""
     idx = make_bars(300, seed=11, trend=-0.0015)
-    rj = rg.build_regime_json(idx, {"regime.min_exposure_score": 0}, "2026-07-20")
-    eg = rj["entry_gates"]
-    assert eg["spy_sma_gate"]["enabled"] is False
+    eg = rg.entry_gates(idx, {"regime.spy_sma_gate": 1})
+    sma = eg["spy_sma_gate"]
+    assert sma["hukum"] == "altinda" and sma["close"] and sma["sma"]   # ölçüldü
+    assert sma["enabled"] is False and sma["blocks_new_entries"] is False
+    assert sma["knob_emekli"]["karar"] == "EDG-2026-005"
+    assert "EMEKLİ" in sma["why"], "knob 1 verildi ve bu SESSİZ kaldı"
     assert eg["blocks_new_entries"] is False and eg["blocking"] == []
-    assert eg["spy_sma_gate"]["hukum"] == "altinda"          # ölçüldü, uygulanmadı
+    assert eg["karar_yolu"] is False and "KAPI DEĞİL" in eg["beyan"]
     assert eg["vix_backwardation_gate"]["hukum"] is None     # kaynak yok — oran UYDURULMAZ
-    v, nedenler = guard.classify_gate(_RG4_PLAN, _RG4_PF, rj, config.goal(), params={})
-    assert not any("rejim kapısı" in n for n in nedenler)
 
 
-def test_rg4d_unmeasurable_gate_is_a_DECLARED_None_never_a_missing_key():
-    """Isınma dolmadan kapı KARAR VERMEZ — ama anahtar YİNE DE VARDIR ve nedenini SÖYLER.
-    Bugün düzeltilen kusur tam olarak sessiz-eksik-anahtardı; hiçbir yolda geri gelmemeli."""
+def test_rg4d_olculemeyen_hukum_BEYANLI_None_kalir():
+    """Isınma dolmadan hüküm ÜRETİLMEZ — ama alan YİNE DE VARDIR ve nedenini SÖYLER. Kapı ölmüş
+    olsa da bu kural göstergede birebir geçerli: ölçülemeyen sayı uydurulmaz."""
     bos = pd.DataFrame({"date": [], "open": [], "high": [], "low": [], "close": [], "volume": []})
     for bars in (make_bars(50, seed=3), bos):
-        rj = rg.build_regime_json(bars, {"regime.min_exposure_score": 0,
-                                         "regime.spy_sma_gate": 1}, "2026-07-20")
-        assert "entry_gates" in rj, "ölçülemedi diye anahtar DÜŞTÜ — sessiz eksik anahtar geri geldi"
-        eg = rj["entry_gates"]
+        eg = rg.entry_gates(bars, {"regime.spy_sma_gate": 1})
         sma = eg["spy_sma_gate"]
         assert sma["hukum"] is None and "ısınma" in sma["why"]    # BEYANLI None, sessiz False değil
         assert sma["close"] is None and sma["sma"] is None        # ölçülmemiş sayı UYDURULMAZ
-        # ölçülemeyen koşul yeni riski DURDURMAZ (aksi hâlde knob hiç ölçülemezdi)
-        assert eg["blocks_new_entries"] is False
+        rj = rg.build_regime_json(bars, {"regime.min_exposure_score": 0,
+                                         "regime.spy_sma_gate": 1}, "2026-07-20")
         _, nedenler = guard.classify_gate(_RG4_PLAN, _RG4_PF, rj, config.goal(),
                                           params={"regime.spy_sma_gate": 1})
-        assert not any("rejim kapısı" in n for n in nedenler), \
-            "ölçülemeyen kapı yeni girişi kapattı — knob bir daha hiç ölçülemezdi"
+        assert not any("rejim kapısı" in n for n in nedenler)
 
 
 # ---------- RT1: tetikleyici karar vermez ----------

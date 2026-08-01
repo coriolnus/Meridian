@@ -18,6 +18,7 @@
 #
 # KULLANIM:
 #   ./ops/haftalik_mutasyon.sh --kontrol   # HIZLI öz-test: mutmut yapılandırmayı GÖRÜYOR mu?
+#   ./ops/haftalik_mutasyon.sh --kisa      # KISA doğrulama: tek dosya + dar test seçimi, DAKİKALAR
 #   ./ops/haftalik_mutasyon.sh             # TAM koşum (SAATLER) → docs/mutasyon/<tarih>.md
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,6 +27,11 @@ TARIH="$(date +%F)"
 CIKTI_DIZIN="docs/mutasyon"
 CIKTI="${CIKTI_DIZIN}/${TARIH}.md"
 UV="${UV:-uv}"
+KOK="$(pwd)"
+# Kısa doğrulamanın kapsamı: GERÇEK hedeflerden EN KÜÇÜĞÜ + onun kendi denetim testi. Yapay bir
+# oyuncak modül seçilmedi — kısa mod, tam koşumun küçültülmüş hâli olmalı, benzeri değil.
+KISA_DOSYA="${KISA_DOSYA:-meridian/score.py}"
+KISA_TEST="${KISA_TEST:-tests/test_score_audit_v40.py}"
 
 # ---- ÖZ-TEST: yapılandırma GERÇEKTEN okunuyor mu? ----------------------------------------------
 # Bu adım koşumdan ÖNCE gelir ve bir sigortadır. mutmut 3'te `paths_to_mutate`/`tests_dir`
@@ -55,6 +61,19 @@ if set(sadece) != beklenen:
     hata.append(f"only_mutate beklenen {sorted(beklenen)} değil: {sadece}")
 if testler != ["tests"]:
     hata.append(f"test seçimi beklenen ['tests'] değil: {testler}")
+
+# DURUM FİKSTÜRÜ KAPISI (H5 kırığı, 2026-08-01). mutmut testleri `mutants/` içinden koşturur;
+# `config.ROOT` orada `mutants/`e çözülür ve `mutants/state/` yoksa HER test FileNotFoundError ile
+# ölür — istatistik toplanamaz. Kopyayı mutmut'un kendi `also_copy` kancası yapar; bu kapı o
+# satırın DURDUĞUNU ve kaynağın gerçekten var olduğunu ölçer (ikisi de olmadan koşum baştan ölü).
+from pathlib import Path
+kopya = [str(p) for p in c.also_copy]
+if "state" not in kopya:
+    hata.append(f"also_copy içinde 'state' YOK: {kopya} — mutants/state kurulmaz, her test "
+                f"`required config missing: .../mutants/state/goal.yaml` ile ölür")
+for gerekli in ("state/goal.yaml", "state/bounds.yaml"):
+    if not Path(gerekli).exists():
+        hata.append(f"{gerekli} YOK — kopyalanacak fikstürün kaynağı eksik")
 
 # Kapının KENDİSİNİ sına: filtre gerçekten kapsam dışını eliyor mu?
 if c.should_mutate("meridian/api.py"):

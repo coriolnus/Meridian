@@ -444,6 +444,71 @@ def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:
             "gunler": gunler, "kumulatif": kumulatif}
 
 
+# ---- ② AÇIK-POZİSYON DÜŞÜŞÜ: M2M EĞRİSİNİN KENDİ RAPORU (WP-M borcu, 2026-08-01) ---------------
+# NEDEN VAR. Kapının okuduğu `max_drawdown`, `score.score_detail` içinde KAPANMIŞ-İŞLEM eğrisiyle
+# günlük M2M eğrisinin KÖTÜSÜ olarak birleşiyor (audit #6 düzeltmesi) — yani M2M zaten sayılıyor,
+# ama AYRI BİR SAYI OLARAK HİÇBİR YERDE DURMUYOR. Sonuç: "kapalı işlem düşüşü %4,6 ama açık
+# pozisyonlarla M2M %12,9" gibi bir bulgu ancak ÖLÇÜM BETİĞİYLE elde ediliyordu (EDG-2026-003
+# kill#2 tam olarak böyle ölçüldü) ve her ölçüm turunda elle yeniden üretiliyordu.
+#
+# BU BLOK HÜKÜM VERMEZ — adı "veto" ama kapı değildir, VETONUN EŞİĞİNE GÖRE OKUNAN BİR RAPORDUR.
+# Eşik `shadowlaw.DD_VETO_MARGIN`den gelir çünkü EDG-2026-003'ün kill ölçütü ("rampa-kapalı koşulda
+# maxDD veto sınırını aşarsa") o sabiti adıyla anıyor; ikinci bir eşik tanımlamak aynı yasanın ikinci
+# uygulaması olurdu. Kapının kendi düşüş vetosu (`reflect._gate_eval`, aday↔incumbent FARKI üzerinden)
+# DEĞİŞMEDİ ve bu blok ona hiçbir girdi vermez.
+#
+# UYDURMA YASAĞI: eğri boşsa `max_mtm_dd` None ve `ihlal` None döner — "ihlal yok" DEĞİL,
+# "ÖLÇÜLEMEDİ". Boş bir eğriden False üretmek, hiç bakılmamış bir koşula temiz kâğıdı vermekti.
+MTM_DD_ORNEK_LIMIT = 5     # ihlal günlerinden çıktıya girecek İLK n örnek (defter şişmesin)
+
+
+def mtm_dd_veto(equity_curve: list, esik: float | None = None,
+                ornek: int = MTM_DD_ORNEK_LIMIT) -> dict:
+    """Günlük M2M özkaynak eğrisinin tepe-altı düşüşü + veto eşiğine göre okunuşu (RAPOR).
+
+    `equity_curve`: `BacktestResult.equity` biçimi — [(tarih, özkaynak)]. Dönüş, `walk_forward`ın
+    `mtm_dd_veto` anahtarına aynen konur; hiçbir kapı kararına girmez."""
+    from . import shadowlaw
+    # EŞİĞİN KAYNAĞI DA RAPORLANIR: bir ölçüm turunda eşik elle verilmişse (duyarlılık taraması) o
+    # rapor "yasanın eşiğiyle ölçüldü" diye okunamamalı — kaynak alanı yalanı imkânsız kılar.
+    esik_kaynagi = "shadowlaw.DD_VETO_MARGIN" if esik is None else "cagiran_verdi"
+    esik = float(shadowlaw.DD_VETO_MARGIN if esik is None else esik)
+    ortak = {"esik": esik, "esik_kaynagi": esik_kaynagi, "hukum_verir": False,
+             "kapsam": ("günlük piyasaya-göre (M2M) özkaynak eğrisinin tepe-altı düşüşü — AÇIK "
+                        "pozisyonların çukurunu kapanmış-işlem eğrisi gizler. RAPOR: ölçüm "
+                        "kartlarına girer, kapıya girmez.")}
+    pts: list[tuple[str, float]] = []
+    for satir in (equity_curve or []):
+        try:
+            tarih, eq = satir[0], float(satir[1])
+        except (TypeError, ValueError, IndexError, KeyError):  # sessiz-yutma: biçimsiz eğri noktası düşüş hesabına GİREMEZ ama KAYBOLMAZ — `n_atlanan` alanında raporlanır, yani "eğrinin kaç noktası okunamadı" sorusu raporun kendisinden cevaplanabilir kalır
+            continue
+        pts.append((str(tarih)[:10], eq))
+    n_atlanan = len(equity_curve or []) - len(pts)
+    if not pts:
+        return {**ortak, "olculdu": False, "max_mtm_dd": None, "ihlal": None,
+                "ihlal_gunleri": [], "n_gun": 0, "n_ihlal_gunu": 0, "n_atlanan": n_atlanan,
+                "pencere": None,
+                "neden": "M2M eğrisi boş/biçimsiz — açık-pozisyon düşüşü ÖLÇÜLEMEDİ (sıfır değil)"}
+    tepe = pts[0][1]
+    maks = 0.0
+    maks_gun = pts[0][0]
+    ihlaller: list[dict] = []
+    for tarih, eq in pts:
+        tepe = max(tepe, eq)
+        dd = ((tepe - eq) / tepe) if tepe > 0 else 0.0
+        if dd > maks:
+            maks, maks_gun = dd, tarih
+        if dd > esik:
+            ihlaller.append({"tarih": tarih, "dd": round(dd, 4),
+                             "tepe": round(tepe, 2), "equity": round(eq, 2)})
+    return {**ortak, "olculdu": True, "max_mtm_dd": round(maks, 4),
+            "max_mtm_dd_gunu": maks_gun, "ihlal": bool(maks > esik),
+            "ihlal_gunleri": ihlaller[:max(0, int(ornek))],
+            "n_gun": len(pts), "n_ihlal_gunu": len(ihlaller), "n_atlanan": n_atlanan,
+            "pencere": {"ilk": pts[0][0], "son": pts[-1][0]}, "neden": None}
+
+
 def _regime_slice(trades: list, eval_regime: str | None) -> list:
     """Phase 3 regime-isolated learning: when a hypothesis targets ONE regime (var@regime), it must be
     graded only on trades that occurred UNDER that regime. Every replay trade already carries the tag
@@ -713,4 +778,11 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
         "oos_folds_full": folds_full, "oos_tail_risk_full": tail_full,
         "holdout_score": hold_d["score"], "holdout_detail": hold_d,
         "full_detail": res.detail(goal),
+        # ② AÇIK-POZİSYON DÜŞÜŞÜ (WP-M, 2026-08-01): TAM replay penceresinin ([is_start,
+        # holdout_end]) M2M eğrisi üzerinden. Dilim SEÇİLMEZ çünkü blok kapıya girmez ve dilim
+        # seçmek "hangi pencerede kırmızı?" sorusunu rapor okuyucusundan gizlerdi; pencere
+        # `pencere` alanında adıyla yazılıdır. `oos_detail.max_drawdown` bu eğriyi ZATEN
+        # kapanmış-işlem eğrisiyle birleştirip tek sayıya indiriyor — bu blok o birleşmeden ÖNCEKİ
+        # M2M sayısını ayrı tutar (EDG-2026-003'ün "kapalı %9,7 / M2M %12,9" bulgusunun kalıcı hâli).
+        "mtm_dd_veto": mtm_dd_veto(res.equity),
     }

@@ -852,12 +852,15 @@ def _slippage_measured(trades: list[dict], goal: dict) -> dict:
 
 
 def _y3_gate_row() -> dict:
-    """Y3'ün iki PİYASA kapısının canlı hükmü + iki PORTFÖY tavanının knob durumu (3b).
+    """Y3'ün iki PİYASA GÖSTERGESİNİN canlı hükmü + iki PORTFÖY tavanının knob durumu (3b).
 
-    Kapılar KAPALI olsa bile hüküm HESAPLANIR ve panoda görünür ("kapanış 200-SMA'nın üstünde") —
-    bir knob'un ölçümden geçmesi için önce onun hükmünün TARİHÇESİ olması gerekir; kapalı knob'un
-    hükmünü hiç yazmamak, açılış kararını kanıtsız bırakırdı. Endeks barları okunamazsa satır
-    `veri_yok` der, sessizce "kapı açık değil" demez."""
+    EDG-005 HÜKMÜ (2026-08-01): SMA/VIX bacakları KAPI DEĞİL, GÖSTERGEdir — ve bu satır artık onların
+    TEK tüketicisidir (guard'daki tüketici ile `build_regime_json`daki üretici kaldırıldı). Yani
+    burada gösterilen hüküm hiçbir karar yoluna girmez; `regime.entry_gates()` bunu `karar_yolu:
+    False` + `beyan` alanlarıyla çıktının İÇİNDE söyler, pano metnine güvenmek zorunda kalmayalım.
+    Hüküm kapı olmasa da HESAPLANIR: SPY'ın 200-SMA'sının altında mı üstünde mi olduğu, kapının
+    elenmesinden bağımsız bir piyasa okumasıdır (ve o eleme kararının kanıt zinciri buradan geçti).
+    Endeks barları okunamazsa satır `veri_yok` der, sessizce "hüküm üstünde" demez."""
     from . import regime as _rg, config as _cfg
     params = {}
     try:

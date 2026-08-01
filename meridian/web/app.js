@@ -2509,21 +2509,23 @@ RENDER.operasyon = async () => {
   })();
 
   // ---------- Y3 REJİM/RİSK DÖRTLÜSÜ (3b) ----------
-  // Dördü de DEFAULT-OFF. Kart kapalıyken de HÜKMÜ gösterir: bir knob'un ölçümden geçmesi için
-  // önce hükmünün TARİHÇESİ olmalı. VIX bacağı ayrıca `veri_yok` — kaynak DOĞRULANDI ve yok.
+  // İKİ PİYASA BACAĞI ARTIK GÖSTERGE, KAPI DEĞİL (EDG-005 hükmü, 2026-08-01): hüküm ölçülür ve
+  // burada görünür ama hiçbir karar yoluna girmez (guard tüketicisi + regime üreticisi kaldırıldı).
+  // Kart bunu SÖYLER — "kapalı" yazmak, açılabilir bir kapı varmış gibi okunurdu. İki PORTFÖY
+  // tavanı ise hâlâ karar yolunda ve DEFAULT-OFF. VIX bacağı ayrıca `veri_yok` (kaynak yok).
   const sY3 = (() => {
     const y = ml.y3_entry_gates || null;
     if (!y) return "";
     const sma = y.spy_sma_gate || {}, vix = y.vix_backwardation_gate || {}, caps = y.portfolio_caps || {};
     return `<div class="card rise"><h2 class="t">Y3 rejim/risk dörtlüsü
-        ${_chip(y.blocks_new_entries ? "YENİ GİRİŞ KAPALI" : "hepsi default-off", y.blocks_new_entries ? "t-no" : "t-rv")}</h2>
-      <div class="srow"><span>SPY ${sma.window ?? 200}-SMA kapısı
-        <span class="mut">(${sma.enabled ? "AÇIK" : "kapalı"})</span></span>
+        ${_chip("piyasa bacakları: GÖSTERGE (kapı değil)", "t-rv")}</h2>
+      <div class="srow"><span>SPY ${sma.window ?? 200}-SMA göstergesi
+        <span class="mut">(karar yolunda DEĞİL — ${esc((sma.knob_emekli || {}).karar || "EDG-2026-005")})</span></span>
         <b class="${sma.hukum === "altinda" ? "warn" : "mut"}">${sma.hukum
           ? `${esc(sma.hukum)} · ${trn(sma.close, 2)} vs ${trn(sma.sma, 2)}`
           : "hüküm YOK (ısınma/veri)"}</b></div>
       <div class="srow"><span>VIX/VIX3M backwardation
-        <span class="mut">(${vix.enabled ? "AÇIK" : "kapalı"})</span></span>
+        <span class="mut">(veri-kilitli${vix.enabled ? " · knob 1 ama etkisiz" : ""} — karar yolunda DEĞİL)</span></span>
         <b class="mut">${esc((vix.veri || {}).reason || "—")}</b></div>
       <p class="hint">VIX kaynağı DOĞRULANDI ve YOK: <code>${esc((vix.veri || {}).massive || "")}</code> ·
         <code>${esc((vix.veri || {}).fmp || "")}</code> — oran UYDURULMAZ, vekil bir seri VIX adıyla sunulmaz.</p>

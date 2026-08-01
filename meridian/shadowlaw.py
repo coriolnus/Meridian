@@ -179,6 +179,79 @@ def ret_c_v3(total_return: float, span_days: float,
     return _clip(float(total_return) / h)
 
 
+# ---- ① PARA ÖLÇEĞİ: R-KATI DEĞİL, GERÇEKLEŞEN DOLAR (WP-M borcu, 2026-08-01) --------------------
+# NEDEN VAR. PARA-v3'ün karar sayısı `ret_c_v3` [-1,+1]'e KISTIRILMIŞ bir orandır ve iki yerde
+# parayı GÖRÜNMEZ kılar:
+#   (1) KIRPILMA BÖLGESİ: |pencere_getirisi| hedefi aştığı anda skor 1,0'da (ya da −1,0'da) DONAR.
+#       O bölgede defter iki katına da çıksa yarıya da inse skor AYNI sayıyı yazar — "skor arttı ama
+#       para azaldı" (ve tersi) çelişkisinin doğduğu yer tam burasıdır.
+#   (2) ÖLÇEK KARIŞIMI: rollback'ın yazdığı `realized_delta` HÂLÂ bileşik ölçektedir
+#       (`probgate.refresh_meta_calibration`in `olcek_borcu` alanı bunu adıyla beyan ediyor).
+#       Bileşik bir gerçekleşmeyi para ölçeğinde bir öngörüyle kıyaslamak birim karışımıdır; ikisini
+#       de bağlayabilecek TEK ortak cetvel, kırpılmamış DOLAR'dır.
+# Bu blok o cetveli üretir. HÜKÜM VERMEZ, hiçbir kapıya girmez, mevcut hiçbir alanı değiştirmez —
+# `money_score_detail` çıktısına EK bir anahtar olarak durur (geriye-uyum: eski alanların değerleri
+# bit-bit aynı kalır, çünkü hesabın hiçbiri onlara dokunmaz).
+#
+# YAPISAL ÖZDEŞLİK (ve bu bir hata değil, KANITTIR): `skor_usd` = kıs(pnl_usd / hedef_usd) ve
+# `pnl_usd/hedef_usd` = (Σpnl/başlangıç_sermayesi) / hedef_pencere = `ret_c_v3`in ta kendisidir.
+# Yani normalize edilmiş ikiz, karar skoruyla ÖZDEŞ ÇIKMAK ZORUNDADIR (testte çivili). Bloğun
+# bilgi katkısı normalize edilmiş sayıda DEĞİL, `pnl_usd` + `ham_oran` + `kirpildi` üçlüsündedir:
+# kırpılma bayrağı, "bu skorun ötesinde para hareket ediyor ama karar değişkeni kör" der.
+#
+# UYDURMA YASAĞI: `pnl_dollars` taşımayan bir defterde dolar ÖLÇÜLEMEZ — sıfır yazılmaz, None +
+# neden döner. Satırların BİR KISMI eksikse ölçüm yapılır ama `tam_kapsam=False` ve kaç satırın
+# düştüğü ADIYLA beyan edilir (score.equity_curve eksik alanı sessizce 0 sayıyor; burada sessiz
+# değil).
+def realized_usd(trades: list[dict], span_days: float | None = None,
+                 start_equity: float = score_mod.START_EQUITY,
+                 annual_target: float = ANNUAL_TARGET_RETURN) -> dict:
+    """Gerçekleşen dolar PnL'in PARA-v3'e paralel ölçeği. Hüküm vermez; ölçüm/karne yolu okur."""
+    rows = list(trades or [])
+    pnls: list[float] = []
+    n_eksik = 0
+    for t in rows:
+        v = t.get("pnl_dollars")
+        if v is None:
+            n_eksik += 1
+            continue
+        try:
+            pnls.append(float(v))
+        except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek satır dolar toplamına GİREMEZ ama KAYBOLMAZ — `n_eksik` sayacına yazılır, `tam_kapsam=False` olur ve `neden` alanı kaç satırın düştüğünü söyler; uydurma bir dolar toplamak alternatifti
+            n_eksik += 1
+    span = float(span_days) if span_days and span_days > 0 else score_mod._span_days(rows)
+    hedef_usd = hedef_pencere(span, annual_target) * float(start_equity)
+    ortak = {"n_islem": len(rows), "n_pnl": len(pnls), "n_eksik": n_eksik,
+             "tam_kapsam": bool(rows) and n_eksik == 0,
+             "start_equity": float(start_equity), "span_days": round(span, 1),
+             "hedef_usd": round(hedef_usd, 2) if hedef_usd > 0 else None,
+             "annual_target": annual_target, "birim": "USD",
+             "hukum_verir": False,
+             "kapsam": ("PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için "
+                        "kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. "
+                        "Hiçbir kapı kararına girmez.")}
+    if not pnls:
+        return {**ortak, "olculdu": False, "pnl_usd": None, "ham_oran": None,
+                "skor_usd": None, "kirpildi": None,
+                "neden": ("defterde `pnl_dollars` taşıyan satır YOK — dolar ölçeği ÖLÇÜLEMEDİ "
+                          "(sıfır değil, bilinmiyor)" if rows else
+                          "defter boş — dolar ölçeği ÖLÇÜLEMEDİ (sıfır değil, bilinmiyor)")}
+    if not hedef_usd > 0:
+        return {**ortak, "olculdu": False, "pnl_usd": round(sum(pnls), 2), "ham_oran": None,
+                "skor_usd": None, "kirpildi": None,
+                "neden": ("pencere-eşlenik hedef sıfır/negatif çıktı — oran ölçülemedi "
+                          "(pnl_usd yine de ham olarak raporlanır)")}
+    pnl_usd = sum(pnls)
+    ham = pnl_usd / hedef_usd
+    return {**ortak, "olculdu": True, "pnl_usd": round(pnl_usd, 2),
+            "ham_oran": round(ham, 6), "skor_usd": round(_clip(ham), 4),
+            # KIRPILDI = karar skoru doydu: bu noktadan sonra para hareket eder, skor ETMEZ.
+            "kirpildi": bool(abs(ham) > 1.0),
+            "neden": (None if n_eksik == 0 else
+                      f"{n_eksik}/{len(rows)} satırda `pnl_dollars` yok/biçimsiz — dolar toplamı "
+                      f"EKSİK (score.equity_curve bu satırları sessizce 0 sayar; burada beyanlı)")}
+
+
 def money_score_detail(trades: list[dict], goal: dict, span_days: float | None = None,
                        mtm_equity: list | None = None,
                        annual_target: float = ANNUAL_TARGET_RETURN) -> dict:
@@ -188,14 +261,21 @@ def money_score_detail(trades: list[dict], goal: dict, span_days: float | None =
     (karne/tarih kırılmasın). Burada yalnız KAPININ okuduğu sayı yeniden türetilir.
 
     v1 None dönerse (min_sample altı) v3 de None döner: bilinmeyen skor, vasat skor gibi
-    okunamaz (§4)."""
+    okunamaz (§4).
+
+    `realized_usd` (WP-M ①, 2026-08-01) EK bir anahtardır ve İKİ DALDA DA döner — bilerek: skor
+    min_sample altında ÖLÇÜLEMEZ ama para ölçülebilir. "Skor yok" ile "para yok" aynı cümle
+    değildir ve rollback meta-kalibrasyonunun okumak istediği tam olarak bu ayrımdır. Mevcut
+    alanların DEĞERLERİ bu turda değişmedi (geriye-uyum çivisi testte)."""
     d = score_mod.score_detail(trades, goal, span_days=span_days, mtm_equity=mtm_equity)
     if d.get("score") is None:
         return {"score": None, "reason": d.get("reason"), "n": d.get("n"),
-                "law": YASA_SURUMU, "decides": True}
+                "law": YASA_SURUMU, "decides": True,
+                "realized_usd": realized_usd(trades, span_days, annual_target=annual_target)}
     span = float(span_days) if span_days and span_days > 0 else score_mod._span_days(trades)
     rv3 = ret_c_v3(d["total_return"], span, annual_target)
     return {"score": round(rv3, 4), "score_eski_yasa": d["score"], "n": d["n"],
+            "realized_usd": realized_usd(trades, span, annual_target=annual_target),
             "total_return": d["total_return"], "span_days": round(span, 1),
             "hedef_pencere": round(hedef_pencere(span, annual_target), 5),
             "annual_target": annual_target,

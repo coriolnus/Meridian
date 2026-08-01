@@ -28,6 +28,18 @@ kill_criteria:
 guards:
   - "pozitif kontrol: ham rvol20 @20 IC ≈0.0645 aynı boru hattında"
   - "PK4/PK5 yol-tutarlılık standart; pnl_dollars-dersi bu kartta konu dışı (defter koşumu yok, kesit ölçümü)"
-k_registry: {registered_at: "2026-08-01T08:5xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T08:5xZ", trial_ids: [pullback_olcum/sma20, pullback_olcum/dip10]}
+status: archived   # 2026-08-01 ~09:15 — HÜKÜM (Rol-1, ölçüt-kusuru itiraflı):
+# LAFZEN "SUCCESS" (ham @10/@20 CI-0-dışı pozitif + Jaccard 0.019-0.024 << 0.3), KANITEN KENARSIZ:
+# ham pozitiflik aynı-gün evren/trend-evreni tabanında KAYBOLUYOR (fazlalar ~0; dip10 trend-evreni
+# fazlası üç ufukta ANLAMLI NEGATİF). KART-YAZIM KUSURU (Rol-1'in): success_metric ham getiriyi
+# okuyor — piyasa sürüklenmesinden ayrışmıyor; bugüne dek aile ölçütleri hep dilim-vs-taban idi,
+# burada atlandı. Eşik geriye dönük değişmez → hüküm dürüstçe: OPERASYONEL ARŞİV (kenarsız).
+# YENİ KART AÇILMADI (bilinçli): taban-fazlası tanı olarak ZATEN ölçüldü ve boş/negatif —
+# yeniden kartlamak sonucu bilinen ölçümü tekrarlamak olurdu (K israfı).
+# DEĞERLİ YAN BULGU: bağımsızlık gerçek (pullback günleri kırılma günlerinden ayrık, iki kaynakla
+# doğrulanmış) — ama bağımsız olduğu şeyin kenarı yok. DERS WP-M'YE (#3): ölçütler HAM getiri
+# OKUYAMAZ; taban-fazlası (aynı-gün evren/ilgili-evren) zorunlu standart.
+# Pozitif kontrol 0.0642 (çivi 0.0645) + PK4/PK5 sıfır sapma. Bar-alanı belirsizliği beyanlı
+# (high/low birincil, kapanış duyarlılığı aynı yön). Kanıt: research/olcumler/pullback_olcum/.
 notes: "Ölçüm scratchpad/pullback_olcum/ altında SALT-ÖLÇÜM; kart dosyasına ajan DOKUNMAZ. Hüküm pozitifse sıradaki adım gölge-önce entegrasyon tasarımıdır (ayrı tur)."

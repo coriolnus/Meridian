@@ -216,6 +216,26 @@ only_mutate = [
     "meridian/score.py",
 ]
 pytest_add_cli_args_test_selection = ["tests"]
+# DURUM FİKSTÜRÜ — İLK KOŞUMUN KIRIĞI VE KÖK NEDENİ (H5, 2026-08-01).
+# BULGU: ilk gerçek koşumda istatistik toplanamadı; her test `FileNotFoundError: required config
+# missing: .../mutants/state/goal.yaml` ile öldü.
+# KÖK NEDEN (ölçüldü, tahmin değil): `config.ROOT = MERIDIAN_ROOT env ?? Path(config.__file__)
+# .parent.parent` ve mutmut testleri `mutants/` içinden koşturur (`PytestRunner.run_tests` →
+# `change_cwd("mutants")`), yani orada `config.__file__` = `mutants/meridian/config.py` → ROOT =
+# `mutants/` → `mutants/state/` ARANIR ve YOKTUR. Kusur ne testte ne config'te: mutmut kaynak
+# ağacını kopyalarken kaynağın YANINDAKİ durum dizinini kopyalamıyordu.
+# DÜZELTME BURADA, BETİKTE DEĞİL: `also_copy` mutmut'un kendi kopya kancasıdır ve HER `mutmut run`
+# çağrısında işler — düzeltme betiğe konsaydı `uv run mutmut run`u elle çağıran ilk kişi aynı
+# duvara toslardı (ve hata mesajı yine yapılandırmayı değil testleri suçlar görünürdü).
+# NEDEN TÜM `state/` VE NEDEN "goal.yaml + bounds.yaml" YETMEZ: ölçüldü — yalnız o iki dosyayla
+# suite'in bir kısmı `state/component_ic.json`, `state/trades.jsonl`, `state/bars/*` gibi CANLI
+# defterlerde patlıyor (tests/test_hafta3b_v125.py 9 hata). Mutasyon testinin anlamı "suite AYNEN
+# koşarken mutant yakalanıyor mu"dur; eksik fikstürle koşan bir suite yanlış-yeşil üretir (kırık
+# testler mutantı "öldürmüş" gibi sayılırdı). Kopya maliyeti ölçüldü: ~1,8 sn / 179 MB — saatler
+# süren bir ritüelde görünmez. Kopya `mutants/state/`e düşer, canlı `state/` ASLA yazılmaz:
+# testlerin yazımı da mutantların yan etkisi de o kopyada kalır (bugüne kadarki tek koruma
+# conftest bekçisiydi; bu, ondan önce gelen yapısal koruma).
+also_copy = ["state"]
 # Mutant başına test koşumu için zaman aşımı: taban koşum × 5 + 10 sn. Varsayılan (×15) bu suitede
 # asılı bir mutantı dakikalarca bekletirdi; 3 dosyalık kapsamda ×5 fazlasıyla yeterli pay bırakır.
 timeout_multiplier = 5.0

@@ -142,48 +142,41 @@ def build_regime_json(index_bars: pd.DataFrame, params: dict, date: str) -> dict
         "rationale": f"{regime}: exposure_score={score} vs min={min_exp} -> budget={budget}%; "
                      f"distribution_days={dd}, ftd={ftd}",
     }
-    # --- ÜRETİCİ-TÜKETİCİ PARİTESİ: `entry_gates` (2026-07-31) -------------------------------
-    # KUSUR: `guard._y3_entry_gates` Y3'ün iki PİYASA kapısının hükmünü `regime["entry_gates"]`ten
-    # OKUYOR (guard.py:418) ama o anahtarı YALNIZ api.py'nin pano yolu (`_y3_gate_row`) üretiyordu.
-    # guard'a `regime` olarak verilen sözlük ise HER motorda bu fonksiyonun çıktısıdır
-    # (loop.py:529+655, backtest.py:230+323, cf_backfill.py:39+94, shadow_lifecycle.py:444).
-    # Yani anahtar yoktu, `eg` None'a düşüyordu ve iki kapı knob AÇILSA BİLE canlı döngüde de
-    # replay'de de YAPISAL OLARAK ateşleyemiyordu — kapı yalnız PANODA vardı, KARARDA yoktu.
-    # KAPI BURADA YENİDEN HESAPLANMAZ: ortak `entry_gates()` çağrılır, api.py'nin çağrısıyla
-    # (`_rg.entry_gates(bars, params)`) BİREBİR aynı imza ve aynı girdilerle — tek yasa, tek yer
-    # (denetim turu 12'nin dersi; `leading_sectors` ayrışmasının aynısı, tur 23).
-    # PARAMS DÜZLEMİ: kapı, bu fonksiyona ZATEN verilen `params`ı okur — kendine ayrı bir düzlem
-    # SEÇMEZ. Canlı döngü ve backtest buraya FLAT params verir (loop.py:529, backtest.py:230),
-    # gölge yaşam döngüsü kendi kolunun `eff`ini (shadow_lifecycle.py:444); bu fark ÖNCEDEN VARDI
-    # ve `regime.*` anahtarlarında zararsızdır, çünkü guard.py:134-140 `regime.*` knob'larının
-    # `@regime` override'ını YAPISAL OLARAK ETKİSİZ ilan edip proposal kapısında REDDEDER (rejim
-    # tespiti rejim bilinmeden ÖNCE koşar) — yani iki düzlem bu anahtarlarda ayrışmaz.
-    #
-    # AYRI BİR "index_bars yok" DALI YOKTUR ve bu bir eksiklik DEĞİL, ölçülmüş bir olgudur:
-    #   * `index_bars=None` BU SATIRA ULAŞAMAZ — fonksiyonun BAŞINDAKİ `distribution_days` çağrısı
-    #     `len(None)` ile ZATEN TypeError atar (regime.py:84). Buraya savunma kodu yazmak hiç
-    #     koşmayacak bir dal ve YANLIŞ bir yorum eklemek olurdu; None'ın çökmesi bu düzeltmenin
-    #     kapsamı dışında, ÖNCEDEN VAR OLAN davranıştır.
-    #   * ULAŞILABİLİR yetersizlik (boş / 200 bardan kısa endeks) `entry_gates` içinde ZATEN
-    #     BEYANLI-None döner: `spy_sma_gate.hukum = None` + `why="ısınma yetersiz (n/200 bar)"`,
-    #     `blocks_new_entries=False`. Yani anahtar HER ZAMAN VARDIR ve ölçülemediğinde bunu SÖYLER
-    #     — sessiz eksik anahtar (bugünkü kusur) hiçbir yolda geri gelmez. Ölçülemeyen koşul yeni
-    #     riski DURDURMAZ; ortak fonksiyonun şekli pano yoluyla birebir aynı kalır.
-    out["entry_gates"] = entry_gates(index_bars, params)
+    # --- `entry_gates` ANAHTARI BURADA YAZILMAZ — EDG-005 HÜKMÜ: GÖSTERGE, KAPI DEĞİL (2026-08-01)
+    # 2026-07-31'de bu satır, üretici-tüketici paritesini kurmak için eklenmişti: `guard` hükmü
+    # `regime["entry_gates"]`ten okuyor ama anahtarı yalnız pano yolu üretiyordu (kapı panoda vardı,
+    # kararda yoktu). Parite kuruldu ve AYNI GÜN kapının kendisi ÖLÇÜLDÜ: kart EDG-2026-005 arşive
+    # düştü — "KAPI AÇILMAZ, pano göstergesi yeter". Dolayısıyla doğru düzeltme paritenin diğer
+    # ucundan gelir: tüketici kaldırıldı (guard `_y3_portfolio_caps` docstring'i), üretici de
+    # kaldırılır. YASA 6 (okuyucusuz yazım yok) bunu ZORUNLU kılar: guard okumayı bıraktıktan sonra
+    # `regime.json`daki bu anahtarın üretim tüketicisi kalmaz — yazmaya devam etmek, her gün her
+    # motorda hesaplanan ve kimsenin okumadığı bir alan bırakmak olurdu.
+    # HÜKÜM ÖLMEDİ, YERİ DEĞİŞTİ: `entry_gates()` hâlâ ölçer; TEK tüketicisi pano satırıdır
+    # (`api._y3_gate_row` → `y3_entry_gates`). Yani SPY 200-SMA hükmü GÖRÜNÜR, hiçbir karara GİRMEZ.
+    # GERİ ALMA: kapı yeni bir kartla açılacaksa üç yer BİRLİKTE değişir — (a) `entry_gates`in sabit
+    # `blocks_new_entries=False`i, (b) bu satır, (c) guard'daki tüketici. İkisi eksik hâli tam olarak
+    # bu turda temizlenen ölü-uçtu.
     return out
 
 
 # ==================================================================================================
-# Y3 REJİM/RİSK DÖRTLÜSÜ — İKİ PİYASA KAPISI (Hafta 3b, 2026-07-30). HEPSİ VARSAYILAN KAPALI.
+# Y3 REJİM/RİSK DÖRTLÜSÜ — İKİ PİYASA GÖSTERGESİ (Hafta 3b, 2026-07-30; EDG-005 sonrası 2026-08-01)
 # ==================================================================================================
+# EDG-005 HÜKMÜ (2026-07-31, kart arşiv): bu bölümün İKİ PİYASA KAPISI ARTIK KAPI DEĞİL, GÖSTERGEdir.
+# SPY 200-SMA kapısı ölçüldü ve kill#1 tetiklendi (tek atfedilebilir pencerede Sharpe −0,25→−0,90,
+# PARA-v3 −0,029→−0,088; vol anlamlı düşüyor ama bedeli getiri) — OOS'ta 55 bloke günde 0 giriş
+# engelledi, yani kill#2'nin "pano göstergesi yeter" hükmü fiilen geçerli. VIX bacağı ise doğrulanmış
+# VERİ-YOK. İkisinin de hükmü ÖLÇÜLÜR ve PANODA görünür; hiçbiri karar yoluna girmez (tüketici
+# guard'dan, üretici `build_regime_json`dan kaldırıldı — bkz. o iki gövdedeki geri-alma notu).
 # BEKLENTİ (ROADMAP §3.1 Y3): getiri DEĞİL risk — vol ~-1/3, MaxDD ~yarı. Bu yüzden dördü de
 # "kâr getirir" iddiasıyla değil "düşüşü kısar" iddiasıyla gelir ve ikisi de ÖLÇÜMDEN geçecek
 # (gölge-varyant / prescreen). Bugün hiçbiri açık değil: knob satırı bounds.yaml'da var,
 # strategy.yaml onları TAŞIMIYOR, dolayısıyla canlı etkileri SIFIRDIR (Batch L deseni).
 #
-# İKİSİ DE YALNIZ YENİ GİRİŞİ KAPATIR — ZORLA TASFİYE YOKTUR. Sebebi ölçülebilirlik: zorla tasfiye
-# açık pozisyonların ömrünü kesip defterin çıkış istatistiğini bozar ve "kapı mı işe yaradı, çıkış
-# mı" sorusu bir daha ayrıştırılamaz. Kapı yeni riski durdurur; mevcut pozisyon kendi kuralıyla ölür.
+# ZORLA TASFİYE YOKTUR VE ARTIK YENİ GİRİŞ DE KAPANMAZ. Tasfiye yasağının gerekçesi ölçülebilirlikti
+# (zorla tasfiye açık pozisyonların ömrünü kesip defterin çıkış istatistiğini bozar ve "kapı mı işe
+# yaradı, çıkış mı" sorusu bir daha ayrıştırılamaz); yeni-giriş kapatma ise ÖLÇÜLDÜ ve ELENDİ
+# (EDG-005). Geriye ölçülen ve gösterilen bir hüküm kalır.
 
 SPY_SMA_GATE_WINDOW = 200      # 200 günlük ortalama — literatürün en belgeli trend filtresi
 VIX_BACKWARDATION_MIN = 1.0    # VIX/VIX3M bu oranın ÜSTÜ = backwardation (akut stres)
@@ -214,40 +207,57 @@ def vix_term_structure() -> dict:
     return {"oran": None, "vix": None, "vix3m": None, **VIX_DATA_STATUS}
 
 
+# EDG-005 KARARININ MAKİNE-OKUNUR HÂLİ. Metin çıktının içinde durur (pano ve beyin koda inmeden
+# "bu satır neden karar vermiyor?" sorusunu cevaplayabilmeli) ve hükmün adresi kartın kendisidir.
+SPY_SMA_EMEKLI = {
+    "karar": "EDG-2026-005", "tarih": "2026-07-31", "durum": "arşiv",
+    "hukum": "KAPI AÇILMAZ — pano göstergesi yeter",
+    "kanit": ("tek atfedilebilir pencerede (IS 2022-24) kill#1: Sharpe −0,254→−0,898, "
+              "PARA-v3 −0,029→−0,0878; vol anlamlı düşüyor (oran 0,792) ama bedeli getiri. "
+              "OOS'ta 55 bloke günde 0 giriş engellendi (doğrudan etki TAM SIFIR)"),
+}
+
+
 def spy_sma_gate(index_bars, params: dict | None = None) -> dict:
-    """SPY 200-SMA YENİ-GİRİŞ KAPISI — varsayılan KAPALI (`regime.spy_sma_gate` = 0).
+    """SPY 200-SMA HÜKMÜ — **PANO GÖSTERGESİ, KAPI DEĞİL** (EDG-005 hükmü, 2026-08-01).
 
-    Açıkken: endeksin kapanışı 200 günlük ortalamanın ALTINDAysa YENİ giriş kapanır
-    (`blocks_new_entries: True`). Açık pozisyonlara DOKUNULMAZ.
+    Endeksin kapanışı 200 günlük ortalamanın altında mı üstünde mi — ÖLÇÜLÜR ve gösterilir.
+    Hiçbir karar yoluna GİRMEZ: `blocks_new_entries` SABİT False'tur ve `regime.spy_sma_gate`
+    knob'u 1 verilse bile bu değişmez. Sebep ölçümdür, tercih değil: kart EDG-2026-005 ölçüldü,
+    kill#1 tetiklendi ve "pano göstergesi yeter" hükmüyle arşive düştü (ayrıntı `SPY_SMA_EMEKLI`).
+    Knob'un adı çıktıda KALIR — hükmü hangi düğmenin taşıdığı, düğme emekli olduktan sonra da
+    okunabilir olmalı; ayrıca canlı `bounds.yaml` satırı düşürülene dek (Rol-1 kalemi) makine o adı
+    hâlâ örnekleyebilir ve o örneklemenin ETKİSİZ olduğu burada YAZILI durur.
 
-    Isınma dolmadan kapı KARAR VERMEZ: 200 barlık bir ortalama 150 bardan hesaplanıp "sma200" adıyla
-    sunulamaz (classify'ın 2026-07-22'de düzelttiği uydurmanın aynısı). Isınma yoksa kapı `None`
-    hükmüyle döner ve `blocks_new_entries` FALSE kalır — ölçülemeyen bir koşul yeni riski durdurmaz
-    (muhafazakâr taraf BURADA kapıyı kapatmak DEĞİL: kapatmak, ölçüm olmadan davranışı değiştirmek
-    olurdu ve knob'un ölçülmesini imkânsızlaştırırdı)."""
-    on = bool(int((params or {}).get("regime.spy_sma_gate", 0) or 0))
-    out = {"knob": "regime.spy_sma_gate", "enabled": on, "window": SPY_SMA_GATE_WINDOW,
+    Isınma dolmadan hüküm ÜRETİLMEZ: 200 barlık bir ortalama 150 bardan hesaplanıp "sma200" adıyla
+    sunulamaz (classify'ın 2026-07-22'de düzelttiği uydurmanın aynısı). Isınma yoksa `hukum` BEYANLI
+    None döner — sessiz bir "ustunde" değil."""
+    istendi = bool(int((params or {}).get("regime.spy_sma_gate", 0) or 0))
+    out = {"knob": "regime.spy_sma_gate", "enabled": False, "window": SPY_SMA_GATE_WINDOW,
+           # SABİT False — hesaplanmıyor. Bu alanı yeniden HESAPLANIR yapmak kapıyı geri açmaktır ve
+           # tek başına yetmez de: üretici + tüketici de geri gelmeli (bkz. build_regime_json).
            "blocks_new_entries": False, "close": None, "sma": None,
-           "forced_liquidation": False,
-           "rol": "YENİ GİRİŞ kapısı — zorla tasfiye YOK; açık pozisyon kendi kuralıyla kapanır"}
+           "forced_liquidation": False, "knob_emekli": SPY_SMA_EMEKLI,
+           "rol": "PANO GÖSTERGESİ — kapı DEĞİL; hiçbir karar yoluna girmez (EDG-005)"}
+    # Knob AÇIK istenmişse bu SESSİZ KALMAZ: "1 yazdım ama hiçbir şey olmadı" sessizliği, bu turda
+    # temizlenen ölü-ucun tam olarak yaşattığı deneyimdi.
+    emekli_notu = (" — knob 1 verildi ama EMEKLİ (EDG-005): hüküm karara GİRMEZ" if istendi
+                   else " — hüküm yalnız panoda görünür")
     if index_bars is None or len(index_bars) < SPY_SMA_GATE_WINDOW:
         out["hukum"] = None
         out["why"] = (f"ısınma yetersiz ({0 if index_bars is None else len(index_bars)}/"
-                      f"{SPY_SMA_GATE_WINDOW} bar) — kapı KARAR VERMEZ")
+                      f"{SPY_SMA_GATE_WINDOW} bar) — hüküm ÜRETİLMEDİ")
         return out
     close = index_bars["close"]
     sma = ind.sma(close, SPY_SMA_GATE_WINDOW).iloc[-1]
     c = close.iloc[-1]
     if pd.isna(sma):
         out["hukum"] = None
-        out["why"] = "200-SMA NaN — kapı KARAR VERMEZ"
+        out["why"] = "200-SMA NaN — hüküm ÜRETİLMEDİ"
         return out
-    alti = bool(c < sma)
     out.update({"close": round(float(c), 2), "sma": round(float(sma), 2),
-                "hukum": "altinda" if alti else "ustunde",
-                "blocks_new_entries": bool(on and alti),
-                "why": (f"kapanış {c:.2f} vs {SPY_SMA_GATE_WINDOW}-SMA {sma:.2f}"
-                        + ("" if on else " — knob KAPALI, hüküm yalnız kayda geçer"))})
+                "hukum": "altinda" if bool(c < sma) else "ustunde",
+                "why": (f"kapanış {c:.2f} vs {SPY_SMA_GATE_WINDOW}-SMA {sma:.2f}" + emekli_notu)})
     return out
 
 
@@ -268,20 +278,32 @@ def vix_backwardation_gate(params: dict | None = None) -> dict:
             "why": ("VIX/VIX3M kaynağı DOĞRULANDI ve YOK (Massive 403, FMP boş) — kapı devre dışı; "
                     "oran uydurulmaz" if not ts["available"] else
                     ("backwardation" if (ts["oran"] or 0) > VIX_BACKWARDATION_MIN else "normal")),
-            "rol": "YENİ GİRİŞ kapısı — zorla tasfiye YOK"}
+            # `enabled` knob'u OLDUĞU GİBİ yansıtır (SMA bacağından farklı olarak): bu knob EMEKLİ
+            # DEĞİL, VERİ-KİLİTLİ. Ayrım önemli — biri ölçüldü ve elendi, öteki hiç ölçülemedi.
+            # Kaynak geldiği gün kapı YİNE DE kendiliğinden açılmaz: kablo (üretici+tüketici) da
+            # kaldırıldığı için önce yeni bir kart, sonra üç noktalı geri-alma gerekir.
+            "rol": "PANO GÖSTERGESİ — kapı DEĞİL; veri gelse bile kablo yeniden kurulmadan karar vermez"}
 
 
 def entry_gates(index_bars, params: dict | None = None) -> dict:
-    """Y3'ün iki piyasa kapısının BİRLEŞİK hükmü — guard/loop giriş zincirinin okuduğu tek yer.
+    """Y3'ün iki piyasa GÖSTERGESİNİN birleşik hükmü — TEK tüketicisi pano satırı (`api._y3_gate_row`).
 
-    `blocks_new_entries` yalnız AÇIK bir knob ve ÖLÇÜLMÜŞ bir koşulla True olur. Hangi kapının
-    bloke ettiği `blocking` listesinde ADIYLA görünür — "yeni giriş yok" cümlesinin sebebi
-    kaybolmasın (bugüne kadar exposure_budget %0 dışında bir sebep yoktu ve o da kaydediliyordu)."""
+    ADI TARİHSEL, ANLAMI DEĞİL: 2026-08-01'e kadar bu sözlük guard'ın giriş zincirinde okunuyordu;
+    EDG-005 hükmüyle (kapı açılmaz, pano göstergesi yeter) tüketici de üretici de kaldırıldı. Ad
+    korundu çünkü panonun sözleşmesi (`y3_entry_gates`) ve kartların/raporların atıfları bu ad
+    üzerinden yazılı — iki ad iki gerçek riskini yeniden doğurmamak için burada TEK ad, tek yer.
+
+    `blocks_new_entries` ARTIK HESAPLANMAZ, SABİT False'tur ve `blocking` sabit boştur. Bunları
+    alt göstergelerden yeniden türetmek, hükmü tek bir alan değişikliğiyle sessizce diriltilebilir
+    bırakırdı; bu depoda "açılabilir duran kapı" ile "açık kapı" arasındaki fark bir gözden kaçırma
+    kadar incedir. Alanlar SİLİNMEZ çünkü panonun okuduğu şekil budur (YASA 6: tüketicisi var)."""
     sma = spy_sma_gate(index_bars, params)
     vix = vix_backwardation_gate(params)
-    blocking = [g["knob"] for g in (sma, vix) if g.get("blocks_new_entries")]
-    return {"blocks_new_entries": bool(blocking), "blocking": blocking,
+    return {"blocks_new_entries": False, "blocking": [],
             "spy_sma_gate": sma, "vix_backwardation_gate": vix,
             "forced_liquidation": False,
-            "beyan": ("Y3 dörtlüsünün iki PİYASA kapısı; ikisi de default-off ve ölçümden geçmeden "
-                      "açılmaz. Zorla tasfiye YOKTUR.")}
+            "karar_yolu": False,
+            "beyan": ("EDG-005 hükmü: GÖSTERGE, KAPI DEĞİL. İki piyasa hükmü ölçülür ve panoda "
+                      "görünür; hiçbiri yeni girişi kapatmaz ve zorla tasfiye YOK (hiç olmadı). "
+                      "SMA bacağı ÖLÇÜLDÜ ve elendi (kart arşiv), VIX bacağı veri-kilitli."),
+            "emekli": SPY_SMA_EMEKLI}

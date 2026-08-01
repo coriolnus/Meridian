@@ -1,0 +1,157 @@
+{
+  "aciklama": "EDG-2026-010 · BAĞIMSIZLIK bacağının İKİNCİ KAYNAĞI — kırılma tetiklerinin panel üzerinde\nyeniden türetilmesi.\n\nNEDEN: birincil kaynak (state/counterfactuals.jsonl) motorun GERÇEK aday üretimidir ama defter\nYALNIZ 2022-01-03..2026-07-23'ü kapsar ve kırılma kümesini skor/RS/R:R kapılarından GEÇMİŞ hâliyle\nverir (near_miss hariç yalnız 1.988 sembol-gün). Böylesine DAR bir B kümesiyle Jaccard'ın küçük\nçıkması kısmen mekaniktir. Bu betik kırılma ailesini kurulumların PLAN-TETİK çekirdeğinden\n(strategy.py) yeniden türetir — çok daha GENİŞ bir B verir; örtüşme oranı |A∩B|/|A| B'de monotondur,\nyani geniş B bağımsızlık iddiası için MUHAFAZAKÂR sınavdır.\n\nTÜRETME BEYANI (ne alındı / ne alınmadı):\n  breakout_vcp çekirdeği (strategy.evaluate_entry'den, SALT-OHLCV kısmı):\n      pivot = ind.pivot_high(high, PIVOT_LOOKBACK=40, exclude_recent=1)\n      c_prev < pivot <= c_now                      (taze kırılma)\n      ind.volume_ratio(volume, 50) >= entry.min_volume_ratio\n      (c_now-pivot)/pivot*100 <= entry.pivot_proximity_pct\n  momentum_burst çekirdeği (strategy.evaluate_momentum_burst'ten, SALT-OHLCV kısmı):\n      gun_yuzde = c/cprev-1 >= 0.04\n      hacim_patlamasi = vol[t] / ort(vol[t-20..t-1]) >= 1.5\n      c > sma50 ; tt >= 0.6 ; c > cprev\n  ALINMADI (ve NEDEN): rs_rating >= entry.rs_rating_min (kesitsel RS, gün bazlı evren durumu\n  gerektirir), bileşik skor >= entry.min_score (RS'e bağlı), weekly_uptrend (haftalık yeniden\n  örnekleme — seri değil skaler döner), R:R/DISCIPLINE_MIN_RR ve yapısal stop kapıları (plan\n  üretimi, tetik değil). Bunların hepsi B'yi DARALTIR; alınmaması B'yi GENİŞLETİR.\n\nParametreler CANLI state/strategy.yaml'dan okunur (kod varsayılanı değil).",
+  "parametre_kaynagi": {
+    "dosya": "state/strategy.yaml (CANLI)",
+    "entry.min_volume_ratio": 1.5,
+    "entry.pivot_proximity_pct": 2.3,
+    "PIVOT_LOOKBACK": 40,
+    "burst_gun_yuzdesi": 0.04,
+    "burst_hacim_carpani": 1.5,
+    "tt_kapisi": 0.6
+  },
+  "kume_buyuklukleri": {
+    "breakout_vcp_cekirdek": 10567,
+    "momentum_burst_cekirdek": 6515,
+    "kirilma_ailesi_BIRLESIM": 15982
+  },
+  "tam_panel": {
+    "sma20_dokunus": {
+      "breakout_vcp_cekirdek": {
+        "n_A": 19915,
+        "n_B": 10567,
+        "n_kesisim": 156,
+        "n_birlesim": 30326,
+        "jaccard": 0.005144,
+        "A_icinde_ortusen_oran": 0.007833,
+        "B_icinde_ortusen_oran": 0.014763,
+        "neden": null
+      },
+      "momentum_burst_cekirdek": {
+        "n_A": 19915,
+        "n_B": 6515,
+        "n_kesisim": 805,
+        "n_birlesim": 25625,
+        "jaccard": 0.031415,
+        "A_icinde_ortusen_oran": 0.040422,
+        "B_icinde_ortusen_oran": 0.123561,
+        "neden": null
+      },
+      "kirilma_ailesi_BIRLESIM": {
+        "n_A": 19915,
+        "n_B": 15982,
+        "n_kesisim": 831,
+        "n_birlesim": 35066,
+        "jaccard": 0.023698,
+        "A_icinde_ortusen_oran": 0.041727,
+        "B_icinde_ortusen_oran": 0.051996,
+        "neden": null
+      }
+    },
+    "dip10": {
+      "breakout_vcp_cekirdek": {
+        "n_A": 35475,
+        "n_B": 10567,
+        "n_kesisim": 253,
+        "n_birlesim": 45789,
+        "jaccard": 0.005525,
+        "A_icinde_ortusen_oran": 0.007132,
+        "B_icinde_ortusen_oran": 0.023942,
+        "neden": null
+      },
+      "momentum_burst_cekirdek": {
+        "n_A": 35475,
+        "n_B": 6515,
+        "n_kesisim": 733,
+        "n_birlesim": 41257,
+        "jaccard": 0.017767,
+        "A_icinde_ortusen_oran": 0.020662,
+        "B_icinde_ortusen_oran": 0.11251,
+        "neden": null
+      },
+      "kirilma_ailesi_BIRLESIM": {
+        "n_A": 35475,
+        "n_B": 15982,
+        "n_kesisim": 868,
+        "n_birlesim": 50589,
+        "jaccard": 0.017158,
+        "A_icinde_ortusen_oran": 0.024468,
+        "B_icinde_ortusen_oran": 0.054311,
+        "neden": null
+      }
+    }
+  },
+  "cf_penceresi": {
+    "sma20_dokunus": {
+      "pencere": [
+        "2022-01-03",
+        "2026-07-23"
+      ],
+      "breakout_vcp_cekirdek": {
+        "n_A": 4922,
+        "n_B": 1905,
+        "n_kesisim": 40,
+        "n_birlesim": 6787,
+        "jaccard": 0.005894,
+        "A_icinde_ortusen_oran": 0.008127,
+        "B_icinde_ortusen_oran": 0.020997,
+        "neden": null
+      },
+      "momentum_burst_cekirdek": {
+        "n_A": 4922,
+        "n_B": 1550,
+        "n_kesisim": 168,
+        "n_birlesim": 6304,
+        "jaccard": 0.02665,
+        "A_icinde_ortusen_oran": 0.034132,
+        "B_icinde_ortusen_oran": 0.108387,
+        "neden": null
+      },
+      "kirilma_ailesi_BIRLESIM": {
+        "n_A": 4922,
+        "n_B": 3206,
+        "n_kesisim": 175,
+        "n_birlesim": 7953,
+        "jaccard": 0.022004,
+        "A_icinde_ortusen_oran": 0.035555,
+        "B_icinde_ortusen_oran": 0.054585,
+        "neden": null
+      }
+    },
+    "dip10": {
+      "pencere": [
+        "2022-01-03",
+        "2026-07-23"
+      ],
+      "breakout_vcp_cekirdek": {
+        "n_A": 6842,
+        "n_B": 1905,
+        "n_kesisim": 49,
+        "n_birlesim": 8698,
+        "jaccard": 0.005633,
+        "A_icinde_ortusen_oran": 0.007162,
+        "B_icinde_ortusen_oran": 0.025722,
+        "neden": null
+      },
+      "momentum_burst_cekirdek": {
+        "n_A": 6842,
+        "n_B": 1550,
+        "n_kesisim": 161,
+        "n_birlesim": 8231,
+        "jaccard": 0.01956,
+        "A_icinde_ortusen_oran": 0.023531,
+        "B_icinde_ortusen_oran": 0.103871,
+        "neden": null
+      },
+      "kirilma_ailesi_BIRLESIM": {
+        "n_A": 6842,
+        "n_B": 3206,
+        "n_kesisim": 179,
+        "n_birlesim": 9869,
+        "jaccard": 0.018138,
+        "A_icinde_ortusen_oran": 0.026162,
+        "B_icinde_ortusen_oran": 0.055833,
+        "neden": null
+      }
+    }
+  }
+}
