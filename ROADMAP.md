@@ -90,8 +90,11 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   (lafzen success: koşullu @20 +0,32% anlamlı + artımlılık; AMA tanı turnover ANA etkisini işaret
   ediyor → kaderi EDG-016'ya şartlı, entegrasyon bekliyor)** · **2.3 EDG-012 ✅ ARŞİV** (yön ters+
   anlamlı, U-eğrisi; REIT/büyüme yapısal) · **2.5 EDG-014 ✅ ARŞİV** (bilgisiz; finans-dışı da) —
-  "PIT'siz ASLA" yasası filed-tabanlı as-of ile İLK KEZ meşru sağlandı · **2.6 EDG-016 🔄 ÖLÇÜMDE**
-  (turnover ana-etkisi — 013'ün mekanizma ayrıştırması; ikisi birlikte hükme bağlanacak).
+  "PIT'siz ASLA" yasası filed-tabanlı as-of ile İLK KEZ meşru sağlandı · **2.6 EDG-016 ✅ SUCCESS —
+  YENİ YAŞAYAN SİNYAL: turnover ana-etkisi** (@20 net +0,55% CI-0-dışı; artık üç yöntemle sağ;
+  q5 monoton; survivorship-şerhi kalıcı). 2.2/EDG-013 arşive DEVREDİLDİ (etkileşim-tezi düştü).
+  SIRADAKİ ADIM 📋: turnover özniteliği skor-bileşeni olarak kablolanır + knob bounds'a default-0
+  (öğrenme döngüsü ölçer, gölge-önce; elle ağırlık YOK) — ayrı implementasyon turu.
 
 ### WP3 — Doğrulama ve Ek-Veri Aileleri
 - 3.2 insider yeniden-kaydı ✅ KAPALI: gerçek CMP ayrımıyla ölçüldü, pozitif-kontrollü sıfır →
@@ -356,6 +359,15 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+
+- **2026-08-01 ~16:00 BÜYÜK HÜKÜM GÜNÜ KAPANIŞI.** EDG-016 turnover SUCCESS (yeni yaşayan sinyal;
+  net +0,55% @20; survivorship-şerhli) · EDG-013 devir-arşiv · EDG-015 VCP-çatı arşiv (a-fortiori:
+  canlı skor kesit-sıralaması @10 TERS — stratejik izleme) · EDG-012/014 arşiv · EDG-011 askı
+  (PIT-takvim birikimi başladı) · EDG-010 arşiv+ders#3. WP2 KOMPLE ÇÖZÜLDÜ (EDGAR, operatörsüz);
+  WP-K hipotez listesi SIFIR. Karne: 19 kart → 16 hükümlü (14 arşiv + trend-kolu + turnover),
+  1 askı, 1 ölçüm-altyapı (EXE), mutasyon-karnesi koşumda. İki pencere daha (sabah H11+gölge-kitap,
+  öğlen WP-M/WP-D/pano) — üçü de temiz. Sıradaki: turnover-kablolama turu + H5 ilk skor + akşam
+  trend_book doğumu.
 
 - **2026-08-01 ~09:45 PARALEL DALGA İNDİ.** H3 tur-2 seccomp 6.3→2.1 OK · WP-D teyit (kapı 3/4
   aktif dışlıyor; DLTR kaynak-onarımlı) · EDG-010 pullback ARŞİV (lafzen-success/kanıten-kenarsız;

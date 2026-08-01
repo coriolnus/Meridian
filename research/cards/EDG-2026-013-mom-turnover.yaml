@@ -23,7 +23,10 @@ kill_criteria:
 guards:
   - "pozitif kontrol rvol20 + PK4/PK5; turnover-rvol korelasyonu RAPORLANIR (akrabalık beyanı — rvol zaten skorda)"
 k_registry: {registered_at: "2026-08-01T11:0xZ", trial_ids: [wp2_olcum/kosulsuz, wp2_olcum/kosullu]}
-status: measured   # 2026-08-01 ~13:45 — LAFZEN SUCCESS, MEKANİZMA ŞARTLI-YAŞAYAN (Rol-1 hükmü):
+status: archived   # 2026-08-01 ~16:00 GÜNCEL HÜKÜM — EDG-016 kaderi belirledi: ETKİLEŞİM-TEZİ
+#   DÜŞTÜ, sinyal TURNOVER ana-etkisi olarak EDG-016'da yaşıyor (momentum koşulu etkiyi yarıya
+#   indiriyordu: +0,32 vs +0,65 @20). Bu kart arşive iner — bulgusu değersiz değil, DEVREDİLDİ.
+#   (İlk hüküm kaydı korunuyor:) LAFZEN SUCCESS, MEKANİZMA ŞARTLI-YAŞAYAN (Rol-1 hükmü):
 #   koşullu dilim fazlası @20 +0,315% CI[+0,04,+0,61] anlamlı; ARTIMLILIK @10 ve @20 anlamlı
 #   pozitif; koşulsuz-mom fazlası sıfır; turnover rvol'un kılığı DEĞİL (ρ=−0,077); maliyet-sonrası
 #   @20 net +0,215%. ANCAK tanı tablosu (CI'sız — K korunarak) turnover ANA ETKİSİNİN daha büyük

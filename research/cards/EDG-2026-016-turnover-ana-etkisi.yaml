@@ -24,6 +24,19 @@ kill_criteria:
   - "maliyet-sonrası net fazla <=0 → 'brüt-var-net-yok' arşiv + not"
 guards:
   - "pozitif kontrol rvol20 @20 ≈0.0642 + PK4/PK5 + fiziksel devir bekçisi + 200g bayatlık bekçisi (SCHW vakası)"
-k_registry: {registered_at: "2026-08-01T13:5xZ", trial_ids: [pending]}
-status: registered
+k_registry: {registered_at: "2026-08-01T13:5xZ", trial_ids: [wp2_olcum/turnover_ust20, wp2_olcum/turnover_artik]}
+status: measured   # 2026-08-01 ~16:00 — SUCCESS (üç kill de tetiklenmedi; Rol-1 onaylı):
+#   üst-%20 dilim evren-fazlası @10 +0,31% CI[+0,15,+0,49], @20 +0,65% CI[+0,34,+1,01]; ARTIK üç
+#   yöntemle birden sağ (A1 kova-tabanı +0,56%, A2 kova-içi +0,77% — 9 kovanın 8'i anlamlı-pozitif,
+#   hiçbiri negatif; artık-IC @20 0,0284 anlamlı — etkinin ~%85'i rvol/mom kontrolünden sağ çıkıyor);
+#   q5 TEKDÜZE monoton; MALİYET-SONRASI @20 net +0,55% CI-0-dışı (20bps duyarlılıkta da +0,45%).
+#   PIT sızıntı 0; fiziksel+bayatlık bekçileri işledi (SCHW 1.006 hücre kapatıldı).
+#   BEYANLI ÇEKİNCELER (hükme iliştirik): (1) HAYATTA-KALMA yanlılığı pozitif bulguda yukarı-çarpıtır
+#   ve bu veriyle büyüklüğü ölçülemez — delist-bar kilidi açılana dek kalıcı şerh; (2) alt-dönem
+#   kararlılığı grid'de yoktu, ölçülmedi; (3) sabit-bps maliyet modeli kayma taşımıyor.
+#   EDG-013 YANSIMASI: sinyal TURNOVER'dır — momentum koşulu etkiyi YARIYA indiriyor (+0,32 vs
+#   +0,65); 013'ün etkileşim-tezi düştü. ENTEGRASYON KARARI (Rol-1): elle knob YOK; sıradaki adım
+#   ölçülmüş-yol — turnover özniteliğinin skor-bileşeni olarak KABLOLANIP knob'unun bounds'a
+#   default-0 eklenmesi (öğrenme döngüsü kendi ölçer; gölge-önce). Ayrı implementasyon turu.
+#   Kanıt: research/olcumler/wp2_olcum/sonuc_016.json + RAPOR_016.md.
 notes: "scratchpad/wp2_olcum/ altyapısı YENİDEN KULLANILIR (yeni sandbox açma — as-of/split-takvimi/bekçiler hazır); karta ajan DOKUNMAZ. Bu hüküm + EDG-013 birlikte okunup entegrasyon kararı Rol-1'de."
