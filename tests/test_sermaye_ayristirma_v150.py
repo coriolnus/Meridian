@@ -428,6 +428,8 @@ def test_G3b_bayat_nabiz_BEYAN_edilir(sandbox_state):
     """Büyük sayı `today.equity`den gelir ve o da NABIZDAN okunur. Reset anı ile worker'ın ilk turu
     ARASINDA pano iki farklı sermaye bilir; sessiz kalmak bu turun kapattığı hâlin tekrarı olurdu."""
     _tohumlanmis_dunya()
+    # ÜÇÜNCÜ HÂL: nabız hiç yazılmamışsa cevap "ayrışma yok" DEĞİL "kıyas yapılamadı"dır.
+    assert sermaye.koken()["nabiz_ayrisik"] is None
     store.write_json("heartbeat.json", {"equity": 97_000.0, "regime": "trend_up"})
     assert sermaye.koken()["nabiz_ayrisik"] is False       # nabız kitapla aynı → sessiz
     sermaye.uygula()                                        # kitap 100k'ya taşındı, nabız 97k kaldı

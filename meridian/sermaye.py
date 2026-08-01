@@ -181,10 +181,13 @@ def koken() -> dict:
                        "defterde tohum satırı yok — antrenman tohumu hiç koşmamış")
     kitap_nakit = pf.get("cash")
     nabiz_eq = hb.get("equity")
+    # ÜÇÜNCÜ HÂL KORUNUR: nabız ya da kitap sayı taşımıyorsa cevap `False` ("ayrışma yok") DEĞİL
+    # `None`dur ("kıyas yapılamadı"). İkisini aynı değere indirmek, nabzın hiç yazılmadığı bir
+    # sistemde panoya "her şey tutuyor" dedirtirdi.
     try:
-        nabiz_ayrisik = (kitap_nakit is not None and nabiz_eq is not None
-                         and abs(float(nabiz_eq) - float(kitap_nakit)) > 1.0)
-    except (TypeError, ValueError):  # sessiz-yutma: nabız/kitap alanı sayıya çevrilemedi — kıyas YAPILAMADI, üçüncü hâl None olarak dışarı çıkar (aşağıdaki alan) ve pano onu "ölçülmedi" gösterir
+        nabiz_ayrisik = (None if (kitap_nakit is None or nabiz_eq is None)
+                         else abs(float(nabiz_eq) - float(kitap_nakit)) > 1.0)
+    except (TypeError, ValueError):  # sessiz-yutma: nabız/kitap alanı sayıya çevrilemedi — kıyas YAPILAMADI, üçüncü hâl `None` olarak dışarı çıkar ve pano onu "ölçülmedi" gösterir
         nabiz_ayrisik = None
     return {
         # GERÇEK-CANLI SERMAYE KİTAPTAN OKUNUR, NABIZDAN DEĞİL: nabız yalnız worker bir tur
@@ -489,14 +492,17 @@ def _yaz(rapor: dict) -> None:
     mod = ("UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA REDDEDİLDİ" if rapor.get("applied") else "KURU KOŞU (hiçbir bayt yazılmadı)"))
     print(f"[sermaye] {mod}")
-    _durum_yaz(rapor["durum"], baslik=False)
+    # UYGULANDIYSA SONRAKİ HÂL BASILIR. Kuru koşunun anlık görüntüsünü "UYGULANDI" başlığının
+    # altında basmak, operatöre yazımdan ÖNCEKİ kitabı yazımdan SONRAKİ sanki gibi gösterirdi —
+    # aracın kendi çıktısı yalan söylerdi.
+    _durum_yaz(rapor.get("sonraki_durum") or rapor["durum"], baslik=False)
     o, y = rapor["onceki"], rapor["yeni"]
-    print(f"  --- YAZILACAK (kitap) ---")
+    print(f"  --- {'YAZILAN' if rapor.get('yazildi') else 'YAZILACAK'} (kitap) ---")
     for alan in ("cash", "realized_pnl", "day_start_equity", "peak_equity"):
         print(f"    {alan:18s} {_p(o.get(alan)):>16s}  →  {_p(y.get(alan)):>16s}")
     print(f"    ofset (yeni−eski)  {_p(rapor['ofset']):>16s}   "
           f"→ recompute üç kimliği bu ofsetle ölçmeye devam eder")
-    print(f"  --- YAZILACAK (eğri) ---")
+    print(f"  --- {'YAZILAN' if rapor.get('yazildi') else 'YAZILACAK'} (eğri) ---")
     print(f"    {CURVE_MARK_KEY}: +1 işaret (points DOKUNULMAZ — {rapor['durum']['egri']['n_nokta']} "
           f"nokta yerinde kalır)")
     print(f"  --- DOKUNULMAYAN ---")
