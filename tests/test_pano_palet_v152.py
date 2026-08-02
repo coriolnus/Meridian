@@ -342,7 +342,13 @@ def test_yazma_komutlari_dogru_gorunume_gotururu(kaynak):
     assert re.search(r'if \(k\.gorunum\) gorunumeGec\(k\.gorunum\)', kaynak), (
         "yazma komutları çalıştırılmadan önce ilgili görünüme geçmiyor"
     )
-    for beklenen in ('gorunum: "ajan"', 'gorunum: "brifing"', 'gorunum: "operasyon"'):
+    # ÇİVİ TAŞINDI (S2R-2, silme yok): hedefler eski görünüm adlarıydı ("ajan", "brifing",
+    # "operasyon") ve alias sayesinde doğru SAYFAYA gidiyorlardı — ama sayfanın BAŞINA. İçerik
+    # göçünden sonra o sayfalar beş-yedi bölümlü; komutun yazdığı düğme (#hbtn-msg, #bp-alerts,
+    # #fsub-msg) sayfanın ortasında kalıyordu. Hedefler artık BÖLÜM ÇAPASI taşıyor. Ölçülen kural
+    # aynı: her yazma komutu, sonucunu göreceği yüzeye götürmeli.
+    for beklenen in ('gorunum: "ogrenme#hermes"', 'gorunum: "gozetim"',
+                     'gorunum: "kilitler#mudahale"', 'gorunum: "portfoy#failsub"'):
         assert beklenen in kaynak, f"{beklenen} bağlaması kayıp"
 
 
@@ -393,7 +399,10 @@ def test_intraday_silahlama_tahmin_edilmez(kaynak):
     Bilinmeyen durumda `intradayArm(true)` çağırmak, zaten silahlıyken tekrar
     silahlamak (ya da tersini) demektir. Palet tahmin etmez, oraya götürür.
     """
-    assert 'document.querySelector(\'#page-intraday [data-act="intradayArm"]\')' in kaynak
+    # ÇİVİ TAŞINDI (S2R-2): ARM düğmesi intraday'in EMİR yarısıyla birlikte Portföy'e taşındı
+    # (`#page-intraemir`). Eski seçici hiçbir şey bulamaz ve palet SESSİZCE yedek "git" komutuna
+    # düşerdi — yani silahlama komutu kalıcı olarak çalışmaz hâle gelirdi ve testi yeşil kalırdı.
+    assert 'document.querySelector(\'#page-intraemir [data-act="intradayArm"]\')' in kaynak
     assert "act:arm-git" in kaynak, "durum bilinmiyorken kullanılan gezinme yedeği yok"
 
 

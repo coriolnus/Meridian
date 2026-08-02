@@ -439,21 +439,24 @@ def _render_adlari() -> set[str]:
     return acik | set(re.findall(r"^\s*(\w+):\s*\[", blok.group(1), re.M))
 
 
-def test_t5_on_dokuz_gorunumun_hepsinde_soru_var():
-    """ON DOKUZ RENDER, ON DOKUZ CÜMLE (S2R-1: 7 alan sayfası + 12 bölüm).
+def test_t5_her_cizilebilir_yuzeyin_sorusu_var():
+    """HER ÇİZİLEBİLİR YÜZEY, BİR CÜMLE. Sayı bilerek SABİT DEĞİL — kural sayının kendisi
+    değil, eşleşmenin TAM olması.
 
-    Bölümler de sayılır: 'ekrana dök' riski tam olarak orada doğar — bir sayfaya bir bölüm
-    daha eklemek, yeni bir sayfa açmaktan çok daha ucuz görünür.
-
-    ÇİVİ TAŞINDI (2026-08-02): sayı 12'den 19'a çıktı çünkü IA yedi alan sayfasına geçti ve
-    eski on iki görünüm SİLİNMEDİ — yeni evlerinin altında bölüm olarak yaşıyorlar. Kural
-    aynı kaldı: soru cümlesi olmayan çizilebilir bir yüzey YOK.
+    ÇİVİ İKİ KEZ TAŞINDI (silme yok, gerekçe kayıtlı):
+      * S2R-1 (2026-08-02): 12 → 19. IA yedi alan sayfasına geçti, eski on iki görünüm
+        silinmeden bölüm oldu.
+      * S2R-2 (2026-08-02): 19 → değişken. İçerik göçü üç görünümü BÖLDÜ (onaylar/intraday/
+        operasyon) ve sekiz yeni bölüm doğdu; sayıyı sabitlemek, her göçte testin "kaç oldu"
+        diye güncellenmesini gerektirirdi ve o güncelleme kuralı DEĞİL sayıyı korurdu.
+        Sabit sayı yerine ALT SINIR + TAM EŞLEŞME: yüzey sayısı yediden az olamaz (yedi alan
+        sayfası) ve cümlesiz/karşılıksız tek bir ad bile kalamaz.
     """
     blok = re.search(r"const EKRAN_SORUSU = \{(.*?)\n\};", KOD_JS, re.S)
     assert blok, "EKRAN_SORUSU tanımlı değil"
     sorular = dict(re.findall(r"(\w+):\s*\"([^\"]+)\"", blok.group(1)))
     renderlar = _render_adlari()
-    assert len(renderlar) == 19, f"RENDER sayısı değişmiş ({len(renderlar)}): {sorted(renderlar)}"
+    assert len(renderlar) >= 19, f"çizilebilir yüzey sayısı düşmüş ({len(renderlar)}) — içerik kaybı?"
     assert set(sorular) == renderlar, (
         f"soru cümlesi olmayan / karşılığı olmayan görünüm: {sorted(set(sorular) ^ renderlar)}")
     for ad, cumle in sorular.items():
@@ -461,23 +464,46 @@ def test_t5_on_dokuz_gorunumun_hepsinde_soru_var():
         assert len(cumle) < 160, f"{ad}: 'tek sönük satır' değil, paragraf olmuş"
 
 
+def test_t5_mertebe_on_eki_dogru():
+    """Cümlenin İLK İKİ KELİMESİ mertebeyi söyler ve bu bir sözleşmedir: alan sayfası "Bu ekran
+    şunu cevaplar:", bölüm "Bu bölüm şunu cevaplar:". S2R-2'de altı bölüm ev değiştirdi; bir
+    bölümün cümlesi "ekran" kalsaydı okuyucu onu hâlâ bir sayfa sanardı."""
+    blok = re.search(r"const EKRAN_SORUSU = \{(.*?)\n\};", KOD_JS, re.S).group(1)
+    sorular = dict(re.findall(r"(\w+):\s*\"([^\"]+)\"", blok))
+    sayfalar = set(re.findall(r"^\s*(\w+):\s*\[", re.search(
+        r"const ALAN_BAS = \{(.*?)\n\};", APPJS, re.S).group(1), re.M))
+    for ad, c in sorular.items():
+        beklenen = "Bu ekran şunu cevaplar:" if ad in sayfalar else "Bu bölüm şunu cevaplar:"
+        assert c.startswith(beklenen), f"{ad}: mertebe öneki yanlış — {c[:26]!r}"
+
+
 def test_t5_her_gorunum_cumleyi_gercekten_ciziyor():
     """Sözlükte durmak yetmez — RENDER onu BASMALI. Bir tanım, çağrılmadıkça bir yorumdur
     (YASA 6'nın bu turdaki küçük kardeşi: okuyucusuz yazım yok).
 
-    S2R-1'den beri iki çizim yolu var: bölümler cümleyi DOĞRUDAN basıyor
-    (`soruCumlesi("market")`), alan sayfaları ise ortak kabuktan (`alanBasHTML` → `soruCumlesi(id)`).
-    İkisi de sayılır; ikisi birden sayılmazsa "çiziliyor" iddiası yarım kalır."""
+    ÜÇ ÇİZİM YOLU (S2R-2): alan sayfaları ortak kabuktan (`alanBasHTML` → `soruCumlesi(id)`),
+    bölümlerin çoğu ortak bölüm başlığından (`bolumBasHTML` → `soruCumlesi(id)`), kalanı
+    doğrudan (`soruCumlesi("market")`). Üçü de sayılır; biri sayılmazsa "çiziliyor" iddiası
+    yarım kalır.
+
+    ÇİVİ TAŞINDI (S2R-2): S2R-1'de iki yol vardı ve bölümler cümleyi kendi gövdelerinde
+    basıyordu. Göç sırasında o gövdelerin başlık katmanları ERİTİLDİ (kart-içinde-kart yasağı)
+    ve tek bir kalıba indi — dolayısıyla ölçüm de o kalıbı tanımak zorunda."""
     dogrudan = set(re.findall(r'soruCumlesi\("(\w+)"\)', APPJS))
     kabuk = re.search(r"function alanBasHTML\(id\) \{(.*?)\n\}", APPJS, re.S)
     assert kabuk and "soruCumlesi(id)" in kabuk.group(1), \
         "alan sayfası kabuğu soru cümlesini BASMIYOR"
+    bolum = re.search(r"function bolumBasHTML\(id, baslik, altyazi\) \{(.*?)\n\}", APPJS, re.S)
+    assert bolum and "soruCumlesi(id)" in bolum.group(1), \
+        "bölüm başlığı kalıbı soru cümlesini BASMIYOR"
     # Kabuğun kapsadığı sayfalar: ALAN_BAS sözlüğünün anahtarları (kabuk onları çizer).
     bas = re.search(r"const ALAN_BAS = \{(.*?)\n\};", APPJS, re.S)
     assert bas, "ALAN_BAS tanımlı değil"
     kabuklu = set(re.findall(r"^\s*(\w+):\s*\[", bas.group(1), re.M))
-    cizilen = dogrudan | kabuklu
-    assert cizilen == _render_adlari(), (
+    # `bolumBasHTML("<ad>", …)` çağrıları — bölümün cümlesini basan ikinci yol.
+    bolumlu = set(re.findall(r'bolumBasHTML\("(\w+)"', APPJS))
+    cizilen = dogrudan | kabuklu | bolumlu
+    assert cizilen >= _render_adlari(), (
         f"çizilmeyen soru cümlesi: {sorted(_render_adlari() - cizilen)}")
 
 

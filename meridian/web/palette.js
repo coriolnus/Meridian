@@ -348,16 +348,36 @@
       });
     }
 
-    /* Blok içi tek gerçek çapa (app.js: `id="failsub"`). Uydurulmuş çapa YOK. */
-    if (el("page-operasyon")) {
+    /* BÖLÜM ÇAPALARI (S2R-2). S2R-1'de tek gerçek çapa `#failsub`ti ve o da eski
+       `operasyon` görünümüne bağlıydı; içerik göçüyle ret defteri Portföy'ün
+       `mutabakat` bölümüne taşındı. Artık her bölüm başlığı bir çapa taşıyor
+       (`bolumBasHTML` → `id="<bolum>"`), yani palet sayfanın TEPESİNE değil
+       aranan bölüme götürebiliyor. Uydurulmuş çapa YOK: her biri app.js'te
+       gerçekten üretilen bir id. */
+    if (el("page-mutabakat")) {
       K.push({
         id: "git:failsub", grup: "Gezinme", ad: "Reddedilen emirler",
-        altyazi: "Operasyon → ret kaydı bloğuna kaydır ve odakla",
-        anahtarlar: ["ret", "reject", "broker", "emir", "hata"],
+        altyazi: "Portföy & Emirler → mutabakat masası → ret kaydı bloğuna kaydır ve odakla",
+        anahtarlar: ["ret", "reject", "broker", "emir", "hata", "mutabakat"],
         yazma: false,
-        calistir: function () { return gorunumeGec("operasyon#failsub"); }
+        calistir: function () { return gorunumeGec("portfoy#failsub"); }
       });
     }
+    [["karne", "ogrenme", "Karne — öğreniyor mu?", ["karne", "ogrenme", "skor", "hukum"]],
+     ["kapilar", "kosu", "Disiplin kapısı — karar ağacı", ["kapi", "gate", "karar", "matris", "eleme"]],
+     ["mudahale", "kilitler", "Müdahale kademeleri", ["kademe", "kol", "halt", "mudahale", "kilit"]],
+     ["intraemir", "portfoy", "Seans-içi silahlanma · gölge icra", ["intraday", "golge", "silah", "arm"]],
+     ["veriboru", "veri", "Veri hattı · karantina · bütünlük", ["karantina", "butunluk", "veri", "hat"]]
+    ].forEach(function (r) {
+      if (!el("page-" + r[0])) return;
+      K.push({
+        id: "git:" + r[0], grup: "Gezinme", ad: r[2],
+        altyazi: "Bölüm çapasına gider ve odaklar.",
+        anahtarlar: r[3].concat(["bolum"]),
+        yazma: false,
+        calistir: function () { return gorunumeGec(r[1] + "#" + r[0]); }
+      });
+    });
 
     /* ---- (b) KİLİT / MÜDAHALE — hepsi app.js'in kendi eylemleri ---------- */
     var halt = el("haltbtn");
@@ -376,31 +396,31 @@
       id: "act:soft", grup: "Müdahale", ad: "Kademe 1 · Soft Halt",
       altyazi: "Yeni emir girişi durur; mevcut pozisyonlar yönetilmeye devam eder.",
       anahtarlar: ["kademe", "soft", "halt", "1", "giris"],
-      yazma: true, tehlike: true, yerliOnay: true, gorunum: "operasyon", fn: "opSoftHalt"
+      yazma: true, tehlike: true, yerliOnay: true, gorunum: "kilitler#mudahale", fn: "opSoftHalt"
     });
     K.push({
       id: "act:cancel", grup: "Müdahale", ad: "Kademe 2 · Cancel-Open",
       altyazi: "Yalnız DOLMAMIŞ giriş emirleri iptal edilir; koruyucu stop/hedef bacaklarına dokunulmaz.",
       anahtarlar: ["kademe", "cancel", "iptal", "2", "emir"],
-      yazma: true, tehlike: true, yerliOnay: true, gorunum: "operasyon", fn: "opCancelOpen"
+      yazma: true, tehlike: true, yerliOnay: true, gorunum: "kilitler#mudahale", fn: "opCancelOpen"
     });
     K.push({
       id: "act:flatten", grup: "Müdahale", ad: "Kademe 3 · FLATTEN — tüm pozisyonlar",
       altyazi: "Alpaca paper hesabındaki TÜM pozisyonlar piyasadan kapatılır, tüm emirler iptal edilir. Elle açtığın pozisyonlar dahil. Geri alınamaz.",
       anahtarlar: ["kademe", "flatten", "kapat", "3", "pozisyon", "hepsi"],
-      yazma: true, tehlike: true, yerliOnay: true, gorunum: "operasyon", fn: "opFlatten"
+      yazma: true, tehlike: true, yerliOnay: true, gorunum: "kilitler#mudahale", fn: "opFlatten"
     });
     K.push({
       id: "act:learnhalt", grup: "Müdahale", ad: "Kademe 4 · Halt Learning",
       altyazi: "İşlemler DEVAM eder; Hermes yeni strateji versiyonu ship EDEMEZ. Rollback açık kalır.",
       anahtarlar: ["kademe", "learning", "ogrenme", "ship", "4"],
-      yazma: true, tehlike: true, yerliOnay: true, gorunum: "operasyon", fn: "opLearnHaltToggle"
+      yazma: true, tehlike: true, yerliOnay: true, gorunum: "kilitler#mudahale", fn: "opLearnHaltToggle"
     });
     /* INTRADAY SİLAHLAMA — durumu BİLMEDEN çalıştırılmaz. Düğme yalnız Intraday
        çizildiğinde DOM'da olur ve `data-a1` o an hangi yöne gidileceğini taşır.
        Sayfa çizilmemişken `intradayArm(true)` demek, zaten silahlıyken tekrar
        silahlamak (ya da tersini) demektir — palet tahmin etmez, götürür. */
-    var armBtn = document.querySelector('#page-intraday [data-act="intradayArm"]');
+    var armBtn = document.querySelector('#page-intraemir [data-act="intradayArm"]');
     if (armBtn) {
       /* `data-a1` düğmenin GİDECEĞİ yönü taşır: "true" = şu an silahsız, komut açacak.
          Değişken adı `ac` OLAMAZ — bu kapsamda paleti açan `ac()` fonksiyonunu gölgeler. */
@@ -411,7 +431,7 @@
         altyazi: acacak ? "Otonom intraday emir kapısını kaldıran hazırlık bayrağı. Faz 4b yok — şu an emir göndermez."
                         : "Gözlem-moduna döner: yalnız ölçüm, emir yok.",
         anahtarlar: ["intraday", "arm", "silah", "gozlem"],
-        yazma: true, tehlike: true, yerliOnay: acacak, gorunum: "intraday",
+        yazma: true, tehlike: true, yerliOnay: acacak, gorunum: "portfoy#intraemir",
         fn: "intradayArm", arg: acacak
       });
     } else {
@@ -420,7 +440,7 @@
         altyazi: "Silahlama durumu yalnız Intraday çizildiğinde okunabilir — palet tahmin etmez, seni oraya götürür.",
         anahtarlar: ["intraday", "arm", "silah", "gozlem"],
         yazma: false,
-        calistir: function () { return gorunumeGec("intraday"); }
+        calistir: function () { return gorunumeGec("portfoy#intraemir"); }
       });
     }
 
@@ -429,13 +449,13 @@
       id: "act:ackalerts", grup: "Onay kuyruğu", ad: "Uyarıları okundu işaretle",
       altyazi: "Bugün → uyarı gelen kutusu; sunucu sınırı yeniden çekilir.",
       anahtarlar: ["uyari", "alert", "ack", "okundu", "gelen kutusu"],
-      yazma: true, gorunum: "brifing", fn: "ackAlerts"
+      yazma: true, gorunum: "gozetim", fn: "ackAlerts"
     });
     K.push({
       id: "act:ackrejects", grup: "Onay kuyruğu", ad: "Tüm reddedilen emirleri kapat",
       altyazi: "Açık broker retlerinin tamamı kapatılır; şerit uyarısı düşer.",
       anahtarlar: ["ret", "reject", "kapat", "ack", "broker"],
-      yazma: true, gorunum: "operasyon#failsub", fn: "ackRejectAll"
+      yazma: true, gorunum: "portfoy#failsub", fn: "ackRejectAll"
     });
 
     /* ---- ÖĞRENME --------------------------------------------------------- */
@@ -443,25 +463,25 @@
       id: "act:reflect", grup: "Öğrenme", ad: "Hermes: şimdi düşün",
       altyazi: "Koordinat-iniş araması başlatır (dakikalar sürer); tüm düğmeler aynı OOS kapısından geçer.",
       anahtarlar: ["hermes", "dusun", "reflect", "arama", "beyin"],
-      yazma: true, gorunum: "ajan", fn: "hermesReflect"
+      yazma: true, gorunum: "ogrenme#hermes", fn: "hermesReflect"
     });
     K.push({
       id: "act:backfill", grup: "Öğrenme", ad: "Hermes: görüş dolgusu (backfill)",
       altyazi: "Arka planda geçmiş görüş biriktirir; kalibrasyon güncellendikçe karnede görünür.",
       anahtarlar: ["backfill", "dolgu", "gorus", "kalibrasyon"],
-      yazma: true, gorunum: "ajan", fn: "hermesBackfill"
+      yazma: true, gorunum: "ogrenme#hermes", fn: "hermesBackfill"
     });
     K.push({
       id: "act:sprintstart", grup: "Öğrenme", ad: "Antrenman sprinti başlat",
       altyazi: "Bütçe ve K-max değerleri Öğrenme sayfasındaki kutulardan okunur — bu yüzden komut önce oraya götürür.",
       anahtarlar: ["sprint", "antrenman", "basla", "train"],
-      yazma: true, gorunum: "ajan", fn: "sprintStart"
+      yazma: true, gorunum: "ogrenme#hermes", fn: "sprintStart"
     });
     K.push({
       id: "act:sprintstop", grup: "Öğrenme", ad: "Antrenman sprintini durdur",
       altyazi: "Koşan sprinti keser.",
       anahtarlar: ["sprint", "durdur", "stop"],
-      yazma: true, gorunum: "ajan", fn: "sprintStop"
+      yazma: true, gorunum: "ogrenme#hermes", fn: "sprintStop"
     });
 
     /* ---- (c) GÖRÜNÜM FİLTRELERİ — mevcut çip mekanizması ----------------- */
@@ -498,7 +518,7 @@
       anahtarlar: ["ders", "lesson", "ara", "ogrenme"],
       yazma: false,
       calistir: function () {
-        return gorunumeGec("ajan").then(function () { odakla("lsearch"); });
+        return gorunumeGec("ogrenme#hafiza").then(function () { odakla("lsearch"); });
       }
     });
 

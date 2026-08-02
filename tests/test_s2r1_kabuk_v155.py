@@ -143,14 +143,23 @@ def test_alias_hedefi_iceriğin_GERCEKTEN_durdugu_sayfadir():
 
 
 def test_alias_ve_alan_bolumleri_ayni_gercegi_soyler():
-    """İki liste (alias + kabuk bölüm listesi) aynı eşlemeyi taşıyor. Ayrışırlarsa bir görünüm
-    ya çizilir-ama-erişilemez ya erişilir-ama-çizilmez olur; ikisi de sessizdir."""
+    """Alias'ı OLAN her bölüm, alias'ının gösterdiği sayfanın altında çizilmeli. Ayrışırlarsa
+    bir görünüm ya çizilir-ama-erişilemez ya erişilir-ama-çizilmez olur; ikisi de sessizdir.
+
+    ÇİVİ TAŞINDI (S2R-2, silme yok): eski hâli "ALAN_BOLUMLERI'nin HER girdisinin bir alias'ı
+    olmalı" diyordu ve bu S2R-1'de doğruydu — o zaman bölüm listesi eski on iki görünümün TAM
+    kopyasıydı. S2R-2'de sekiz YENİ bölüm doğdu (mutabakat, kapilar, veriboru, intraemir,
+    karne, golge, bilesenic, mudahale) ve hiçbiri bir eski yer imi DEĞİL. Onlara alias vermek,
+    hiç var olmamış bir `#mutabakat` yer imini destekliyormuş gibi yapmak olurdu. Kural
+    daraldı, gevşemedi: alias'ı olan bölüm için eşleşme hâlâ ZORUNLU."""
     alias = _sozluk("ROUTE_ALIAS")
     blok = re.search(r"const ALAN_BOLUMLERI = \{(.*?)\n\};", APPJS, re.S).group(1)
     for alan, liste in re.findall(r"^\s*(\w+):\s*\[([^\]]*)\]", blok, re.M):
         for bolum in re.findall(r'"(\w+)"', liste):
-            assert alias.get(bolum) == alan, \
-                f"{bolum} kabuk tarafından {alan} altında çiziliyor ama alias'ı {alias.get(bolum)}"
+            if bolum not in alias:
+                continue                      # S2R-2'nin yeni bölümü — eski yer imi yok
+            assert alias[bolum] == alan, \
+                f"{bolum} kabuk tarafından {alan} altında çiziliyor ama alias'ı {alias[bolum]}"
 
 
 def test_bolum_hatasi_SAYFAYI_dusurmez():
@@ -158,7 +167,10 @@ def test_bolum_hatasi_SAYFAYI_dusurmez():
     diğeri sağlamdı. Aynı sayfaya alındıkları an tek bir istisna sayfanın TAMAMINI 'Veri
     yüklenemedi' ekranına çevirirdi. Hata bölüm başına yalıtılır — ve YUTULMAZ (YASA 4): düşen
     bölüm kendi kabında ne olduğunu yazar."""
-    fn = _govde("function alanSayfasi(id, bolumler) {", "\n// EŞLEME ROUTE_ALIAS'IN")
+    # ÇİVİ TAŞINDI (S2R-2): kesme sınırı "\n// EŞLEME ROUTE_ALIAS'IN" idi ve o yorum bloğu
+    # içerik göçüyle birlikte yeniden yazıldı (eşleme artık ROUTE_ALIAS'ın aynası DEĞİL).
+    # Yeni sınır tablonun kendi başlığı — gövde aynı gövde, sınır adı güncel.
+    fn = _govde("function alanSayfasi(id, bolumler) {", "\n// ---- S2R-2 · BÖLÜM → SAYFA")
     assert "try {" in fn and "catch (e)" in fn, "bölüm hatası yalıtılmıyor"
     assert "Bölüm yüklenemedi" in fn, "düşen bölüm sessiz kalıyor"
     assert "esc(String(e))" in fn, "istisna metni gösterilmiyor — sessiz yutma"

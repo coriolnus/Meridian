@@ -19,6 +19,7 @@ eğimi ölçümden değil SÜREÇ KAZALARINDAN gelirdi — kimse fark etmezdi, �
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 
 import pytest
@@ -261,11 +262,31 @@ def test_yeni_kartlar_bolum3_kompozisyonuna_gercekten_giriyor():
     # WP-K TREND GÖLGE-KİTABI (2026-08-01): `sTrend` kâr şelalesi ile öğrenme çarkı ARASINA girdi.
     # Yer bilinçli — şelale "kenar parayı nerede bırakıyor?" der, trend kitabı ölçülmüş bir kenarın
     # canlı birikimidir; ikisi de "kenar" katmanıdır. Huninin (sCark) ÜSTÜNDE durur çünkü huni
-    # hipotez üretiminin sağlığıdır, kitap ise hükmü verilmiş bir kolun defteri. `sHermes`→`sNous`
-    # bitişikliğine DOKUNULMADI (yukarıdaki gerekçe).
-    assert ("${s1}${s2}${s3}${sEdge}${sSonuc}${sDogrulama}${sHermes}${sNous}${sY3}"
-            "${sSelale}${sTrend}${sCark}${sIntra}${s4}${s5}${s6}") in src, \
-        "yeni kartlar sayfa kompozisyonuna girmedi — tanımlı ama ölü"
+    # hipotez üretiminin sağlığıdır, kitap ise hükmü verilmiş bir kolun defteri.
+    #
+    # ---- ÇİVİ TAŞINDI (S2R-2 içerik göçü, 2026-08-02) — SİLME YOK, ÖLÇÜM YER DEĞİŞTİRDİ ----
+    # Eski çivi TEK BİR dizgeydi: on altı parçanın `#page-operasyon`a yazılan sırası. O sıra
+    # S2R-2'de var olamaz, çünkü Operasyon sayfası KALDIRILDI: on dokuz parça altı sayfa
+    # bölümüne dağıldı (ADR "redesign replaces"). Tek dizgeyi aramak, göçten sonra ölçülemez bir
+    # şeyi ölçmeye çalışmak olurdu.
+    #
+    # KURAL AYNI KALDI ve iki parçaya ayrıldı:
+    #   (1) ÖLÜ KOD YOK — `opParcalar()`ın ürettiği HER anahtar bir sayfada YAZILMALI. Bir kartı
+    #       tanımlayıp hiçbir yere koymamak, tam da bu testin kovaladığı sessiz ölü koddur.
+    #   (2) ANLAM TAŞIYAN BİTİŞİKLİKLER KORUNDU — `sEdge`→`sSonuc` (hüküm ikizi) ve
+    #       `sHermes`→`sNous` (parametre isabeti → mekanizma değerlendirmesi). İkisi de göçte
+    #       BİRLİKTE taşındı; ayrılsalardı yukarıdaki gerekçeler sessizce boşa düşerdi.
+    ret = re.search(r"return \{ alarm: alarmButce\(d\.alarm_butcesi\),(.*?)\};", src, re.S)
+    assert ret, "opParcalar bir parça sözlüğü döndürmüyor"
+    anahtarlar = [k for k in re.findall(r"\b(s\w+)\b", ret.group(1))]
+    tuketici = src[src.index("RENDER.operasyon = async () => {"):]
+    for k in anahtarlar:
+        assert re.search(r"\bo?p\.%s\b" % re.escape(k), tuketici), \
+            f"opParcalar '{k}' üretiyor ama hiçbir sayfa bölümü yazmıyor — tanımlı ama ölü"
+    assert re.search(r"p\.sEdge \+ p\.sSonuc\b", tuketici), \
+        "EDGE ile dolar merceği (ikizi) ayrılmış — okunma yeri onun YANIDIR"
+    assert re.search(r"op\.sHermes \+ op\.sNous\b", tuketici), \
+        "Hermes karnesi ile sistem önerileri ayrılmış — kendini geliştirme döngüsü zinciri kopar"
     for kart in ("Hermes karnesi", "Y3 rejim/risk dörtlüsü", "Sistem önerileri",
                  "Trend kolu · canlı gölge-kitap"):
         assert kart in src, f"{kart} kartı yok"

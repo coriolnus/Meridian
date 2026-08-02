@@ -309,6 +309,11 @@ def test_operasyon_altbasligi_sabit_panel_sayisi_iddia_etmez():
 
 
 def test_arac_kutuphanesi_basligi_sabit_sayi_yazmaz():
-    """Başlık sayıyı API sayacından alır (`c.enabled`), gövdeye elle yazılmaz."""
-    assert "${c.enabled ?? \"—\"} AKTİF ARAÇ" in APPJS
-    assert not re.search(r"(?<!\$\{)\b(30|37|67) ARAÇ\b", APPJS)
+    """Başlık sayıyı API sayacından alır (`c.enabled`), gövdeye elle yazılmaz.
+
+    ÇİVİ TAŞINDI (S2R-2, silme yok): S2R-2 içerik göçünde bölüm başlıkları tek kalıba indi
+    (`bolumBasHTML`) ve büyük harfli `.slabel` şeridi eridi — başlık artık cümle düzeninde
+    ("Araç kütüphanesi · N aktif araç"). Ölçülen kural DEĞİŞMEDİ: sayı sayaçtan gelir, elle
+    yazılmaz. Büyük harfli metni aramak, kuralı değil o günkü tipografiyi çivilemekti."""
+    assert "${c.enabled ?? \"—\"} aktif araç" in APPJS
+    assert not re.search(r"(?<!\$\{)\b(30|37|67) (ARAÇ|aktif araç)\b", APPJS)

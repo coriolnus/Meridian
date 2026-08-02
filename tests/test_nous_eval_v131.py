@@ -497,7 +497,11 @@ def test_E5_pano_karti_ve_api_alani_BAGLI(sandbox_state):
     assert '"improvement_proposals": an.improvement_proposals_status()' in api_src
     js = (SRC / "web" / "app.js").read_text()
     assert "ml.improvement_proposals" in js, "pano kartı alanı okumuyor"
-    assert "${sNous}" in js, "kart Operasyon sayfasının render listesinde YOK"
+    # ÇİVİ TAŞINDI (S2R-2 içerik göçü, 2026-08-02): Operasyon sayfası KALDIRILDI ve `sNous` kartı
+    # Öğrenme'nin `karne` bölümüne, Hermes karnesinin (`sHermes`) HEMEN ARDINA taşındı — v131'in
+    # kurduğu bitişiklik sözleşmesi korunarak. Ölçülen kural aynı: kart bir render listesinde
+    # OLMALI, yoksa alan servis edilir ve kimse görmez.
+    assert "op.sHermes + op.sNous" in js, "kart hiçbir sayfa bölümünün render listesinde YOK"
     for parca in ("KALİTE KAPISI", "DEVREDEN", "Sistem önerileri"):
         assert parca in js, f"kartta eksik: {parca}"
 
