@@ -172,6 +172,12 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**FREEZE İLAN EDİLDİ (2026-08-02 ~16:50, Rol-1):** donan KOD tepesi `571a094` (içerik: v76 onarımı
+da6bec3 ✓ fikstür-yalnız/eşiksiz doğrulandı + 65/65 bağımsız teyit · guard turu 014bc78 ·
+destekleyici koşu + runbook yenilemesi 5aaef3d · ROADMAP dersleri). Ağaç temiz, aktif test süreci
+yok. Bu noktadan sonra yeni KOD commit'i YOK; hüküm/log commit'i serbest — ama t3 kadans dersi
+gereği log-edit + `ops/runbook_uret.py` TEK commit'te. Adım 3 (otoriter suite) bu tepede başlatıldı.
+
 **Geri alma:** kod: yerelde önceki tepeye checkout + `./dagit.sh --uygula` (≈5 dk; state'e
 dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
 
