@@ -382,6 +382,123 @@ def cancel_open_entries() -> dict:
     return out
 
 
+def _filled_qty(o: dict) -> float:
+    """Bir emrin dolmuş adedi; okunamayan/biçimsiz alan 0 sayılır (sahiplik KANITI olarak asla
+    yukarı yuvarlanmaz — ölçülemeyen adet, sahip olunan adet değildir)."""
+    try:
+        return abs(float((o or {}).get("filled_qty") or 0.0))
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; 0 dönmek FAIL-CLOSED yöndür — sahiplik kanıtı zayıflar, kapatma adedi BÜYÜMEZ
+        return 0.0
+
+
+_LIVE_ORDER_STATES = ("new", "accepted", "pending_new", "held", "open", "accepted_for_bidding",
+                      "partially_filled")
+
+
+def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
+    """İÇ MOTORUN ÇIKIŞ KARARINI AYNAYA TAŞI: yalnız MOTORUN KENDİ bracket'ını kapatır.
+
+    NEDEN VAR (C9, denetim 2026-08-02): time_stop / regime_flip / giveback / erken-itlaf çıkışları
+    iç defteri kapatıyor ama aynadaki bracket AÇIK kalıyordu. Sonuç mutabakatta "motor yetimi"
+    olarak HER TURDA alarm basıyor ve sembol `loop._mirror_busy` üzerinden kalıcı olarak karar
+    dışında kalıyordu (huninin kendi kendini aç bırakması). Bu depoda pozisyon kapatan tek yol
+    `close_all` idi — operatör jetonlu ve SAHİPSİZ (herkesin pozisyonunu düzleştirir), yani iç
+    motorun dar çıkış kararı için kullanılamazdı.
+
+    SAHİPLİK — `close_all`DAN DAHA DAR, ONAY JETONU YOK, GEREKÇESİ ŞU: bu çağrı insanın varlığına
+    değil MOTORUN KENDİ pozisyonuna dokunur ve dokunacağı her şeyi ENGINE_COID_PREFIX taşıyan bir
+    PARENT emirden TÜRETİR:
+      * Koruma bacaklarının (TP/SL) client_order_id'si Alpaca üretimidir — `is_engine_order` onlarda
+        HER ZAMAN False döner. O yüzden sahiplik BACAKTA değil PARENT'ta doğrulanır ve yalnız sahip
+        olduğumuz parent'ın bacakları iptal edilir.
+      * Sahiplik KANITI "bir P- emri var" değil "bir P- emri DOLDU"dur: dolmamış/iptal olmuş tarihsel
+        emirler pozisyonun bizim olduğunu göstermez. Kanıt yoksa hiçbir pozisyon kapatılmaz
+        (`owned=False`) — operatörün aynı sembolü elde tutması bu yüzden güvenlidir.
+      * Kapatma DELETE /v2/positions/{sym}?qty=<sahip olunan adet> ile YAPILIR: aynı sembolde
+        operatörün kendi hisseleri varsa onlar düşmez. Adet, parent'ın `filled_qty`si ile GERÇEK
+        pozisyon adedinin KÜÇÜĞÜDÜR (ikisinden büyüğü asla).
+
+    ÇIPLAK PENCERE — BEYANLI: koruma bacakları kapatmadan ÖNCE iptal edilmek zorundadır (aksi hâlde
+    hisseler açık satış emirlerince tutulur ve kapatma "insufficient qty" ile reddedilir). İptal
+    başarılı olup kapatma düşerse pozisyon o an KORUMASIZDIR — dönüşte `naked: True` gelir; çağıran
+    (loop._mirror_exit_sync) bunu ALARM'a çevirir ve bir sonraki döngüde yeniden dener. Bu pencere
+    sessiz DEĞİLDİR.
+
+    Dönüş: {ok, owned, cancelled[], closed_qty, naked, reachable, detail}."""
+    out = {"ok": False, "owned": False, "cancelled": [], "closed_qty": 0.0,
+           "naked": False, "reachable": True, "detail": ""}
+    sym = str(symbol or "").strip()
+    if not sym:
+        return {**out, "detail": "sembol verilmedi"}
+    ords = orders(status="all", limit=200, nested=True)
+    if not transport()["ok"]:
+        # A1 deseni: [] burada "emir yok" DEĞİL, arıza. Arızada sahiplik doğrulanamaz → dokunma.
+        return {**out, "reachable": False,
+                "detail": transport().get("error") or "alpaca transport down"}
+    parents = [o for o in (ords or [])
+               if str(o.get("symbol")) == sym and is_engine_order(o)
+               and (plan_id is None or str(o.get("client_order_id")) == str(plan_id))]
+    filled = [o for o in parents
+              if _filled_qty(o) > 0 or str(o.get("status", "")).lower() in ("filled", "partially_filled")]
+    if not parents:
+        return {**out, "detail": f"sahiplik doğrulanamadı: {sym} için '{ENGINE_COID_PREFIX}' önekli "
+                                 f"motor emri bulunamadı (plan_id={plan_id})"}
+    out["owned"] = True
+
+    # 1) BİZİM emirlerimiz: canlı parent + sahip olduğumuz parent'ın canlı bacakları.
+    for p in parents:
+        if str(p.get("status", "")).lower() in _LIVE_ORDER_STATES and p.get("id"):
+            res = cancel_order(str(p["id"]))
+            out["cancelled"].append({"id": str(p["id"]), "kind": "parent", "ok": bool(res.get("ok"))})
+        for leg in (p.get("legs") or []):
+            if str(leg.get("status", "")).lower() in _LIVE_ORDER_STATES and leg.get("id"):
+                res = cancel_order(str(leg["id"]))
+                out["cancelled"].append({"id": str(leg["id"]), "kind": "leg", "ok": bool(res.get("ok"))})
+
+    # 2) Pozisyon: gerçekten var mı, ve kaçı BİZİM?
+    apos = positions()
+    if not transport()["ok"]:
+        return {**out, "reachable": False, "naked": _naked(out),
+                "detail": transport().get("error") or "pozisyon listesi okunamadı"}
+    pos_qty = 0.0
+    for p in (apos or []):
+        if str(p.get("symbol")) == sym:
+            try:
+                pos_qty = abs(float(p.get("qty") or 0.0))
+            except (TypeError, ValueError):  # sessiz-yutma: biçimsiz adet alanı; 0 sayılır — kapatma adedi BÜYÜMEZ, çağıran yeniden dener
+                pos_qty = 0.0
+            break
+    owned_qty = sum(_filled_qty(o) for o in filled)
+    close_qty = min(owned_qty, pos_qty)
+    if close_qty <= 0:
+        # Ayna pozisyonu YOK (emir hiç dolmadı / zaten kapandı) ya da sahiplik kanıtı sıfır adet.
+        # İptaller yapıldı; kapatılacak bir şey kalmadı — bu bir BAŞARIDIR, sessiz bir arıza değil.
+        return {**out, "ok": True,
+                "detail": (f"kapatılacak motor pozisyonu yok (aynada {pos_qty:g}, "
+                           f"sahip olunan {owned_qty:g})")}
+    try:
+        q = int(close_qty) if float(close_qty).is_integer() else close_qty
+        r = httpx.delete(f"{_paper_base()}/v2/positions/{sym}", headers=_headers(),
+                         params={"qty": str(q)}, timeout=25)
+        _note(True)                      # cevap geldi: 4xx bile olsa broker ULAŞILABİLİR
+        if r.status_code >= 400:
+            try:
+                det = r.json().get("message", f"HTTP {r.status_code}")
+            except Exception:  # sessiz-yutma: gövde JSON değil (sağlayıcı HTML/boş dönebilir); durum kodu tek başına yeterli kanıttır
+                det = f"HTTP {r.status_code}"
+            return {**out, "ok": False, "naked": _naked(out), "detail": str(det)[:200]}
+        return {**out, "ok": True, "closed_qty": float(close_qty), "detail": ""}
+    except Exception as e:
+        _note(False, f"close_engine_position: {type(e).__name__}: {e}")
+        return {**out, "ok": False, "reachable": False, "naked": _naked(out),
+                "detail": f"{type(e).__name__}: {e}"}
+
+
+def _naked(out: dict) -> bool:
+    """Koruma bacağı BAŞARIYLA iptal edildi mi? (kapatma düşerse pozisyon çıplak kalır)"""
+    return any(c.get("kind") == "leg" and c.get("ok") for c in (out.get("cancelled") or []))
+
+
 def asset_tradable(symbol: str) -> bool | None:
     """Faz 3 LULD vekili: emir göndermeden önce varlık işleme açık mı? Alpaca assets ucu tradable ve
     status taşır (halted/delist → tradable=false). Ulaşılamazsa None → FAIL-OPEN (emri Alpaca'nın

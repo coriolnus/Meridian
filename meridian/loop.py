@@ -91,6 +91,337 @@ class _MirrorUnreachable(Exception):
     """Ayna (Alpaca) ulaşılamıyor: gönderim atlanır, planlar SİLAHLI kalır — iç defter tek gerçek."""
 
 
+# ==================================================================================================
+# AYNA ÇIKIŞ KUYRUĞU (C9, denetim 2026-08-02) — İÇ MOTORUN ÇIKIŞ KARARI AYNAYA İLETİLİR
+# ==================================================================================================
+# BULGU: `pending_exits` → `close_position` yolu (time_stop / regime_flip / giveback / erken itlaf)
+# YALNIZ iç defteri kapatıyordu. Aynadaki bracket TP/SL taşıdığı için pozisyon AÇIK kalıyor,
+# mutabakat onu `engine_orphans` sayıp HER TURDA alarm basıyor ve sembol `_mirror_busy` üzerinden
+# kalıcı olarak karar dışına düşüyordu. Kuyruk üç şey için var:
+#   1. İki motorun ÇIKIŞI da aynı kararla kapansın (giriş tarafı E1'de zaten hizalanmıştı).
+#   2. Kapatma DÜŞERSE yetim SESSİZ kalmasın — alarm + bir sonraki döngüde yeniden deneme.
+#   3. Çıkış-kaynaklı yetim, "iç defter planı düşürdü ama ayna doldu" (split-brain) yetiminden
+#      AYRI sınıflansın: ikisi farklı teşhis, aynı isimle sayılırlarsa ikisi de okunamaz hâle gelir.
+# İKİ-MOTOR YASASI: iç motorun ÇIKIŞ KARARI burada DEĞİŞMEZ — yalnız ayna o kararı izler.
+# DOKUNULMAYAN: intraday `_touch_exit` (TP/SL) çıkışlarının aynada KARŞILIĞI VARDIR (bracket'ın
+# kendi bacakları doldurur) — onları buradan kapatmak çift satış olurdu. `scale_out`un ayna boşluğu
+# ise bilinçli ve belgeli (reconcile `scaled` dalı), bu tur onu da değiştirmez.
+MIRROR_EXIT_KEY = "mirror_exit_pending"
+
+
+def _mirror_exit_enqueue(meta: dict, ticker: str, plan_id, reason: str, dstr: str) -> None:
+    """İç motorun uyguladığı çıkışı ayna kuyruğuna yazar. Yalnız `alpaca_paper` modunda: iç-broker
+    modunda kuyruk hiç doğmaz (davranış birebir eskisi)."""
+    if config.BROKER != "alpaca_paper":
+        return
+    pend = meta.setdefault(MIRROR_EXIT_KEY, {})
+    cur = dict(pend.get(ticker) or {})
+    pend[ticker] = {"plan_id": plan_id or cur.get("plan_id"),
+                    "reason": reason or cur.get("reason"),
+                    "since": cur.get("since") or dstr,
+                    "tries": int(cur.get("tries") or 0),
+                    "naked": bool(cur.get("naked"))}
+
+
+def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
+    """Kuyruktaki her çıkışı aynada uygular. BAŞARISIZI KUYRUKTA BIRAKIR — bir sonraki döngüde
+    yeniden denenir; hiçbir yetim sessizce terk edilmez (deneme sayısı satırda taşınır).
+
+    Denemeye tavan KOYULMADI bilerek: "N denemeden sonra vazgeç" tam olarak sessiz yetim üretirdi.
+    Kuyruk pozisyon sayısıyla sınırlıdır (≤ max_open_positions), yani sınırsız büyüyemez."""
+    out: dict = {"closed": [], "failed": [], "skipped": None}
+    pend = dict(meta.get(MIRROR_EXIT_KEY) or {})
+    if not pend:
+        return out
+    if config.BROKER != "alpaca_paper":
+        out["skipped"] = f"broker={config.BROKER}"
+        return out
+    from .adapters import alpaca
+    if not alpaca.paper_available():
+        out["skipped"] = "paper_available()=False"
+        obs.warn("mirror_exit_deferred", n=len(pend), tickers=sorted(pend),
+                 detail="Alpaca kimliği/erişimi yok — ayna çıkışı ERTELENDİ, kuyruk duruyor")
+        return out
+    kalan: dict = {}
+    for t, info in pend.items():
+        info = dict(info or {})
+        info["tries"] = int(info.get("tries") or 0) + 1
+        try:
+            res = alpaca.close_engine_position(t, plan_id=info.get("plan_id"))
+        except Exception as e:
+            res = {"ok": False, "detail": f"{type(e).__name__}: {e}", "naked": False}
+        if res.get("ok"):
+            out["closed"].append({"ticker": t, "qty": res.get("closed_qty"), "tries": info["tries"]})
+            obs.log("mirror_exit_closed", ticker=t, plan_id=info.get("plan_id"),
+                    reason=info.get("reason"), qty=res.get("closed_qty"), tries=info["tries"],
+                    cancelled=len(res.get("cancelled") or []), detail=str(res.get("detail", ""))[:120])
+            continue
+        info["naked"] = bool(info.get("naked")) or bool(res.get("naked"))
+        info["son_detay"] = str(res.get("detail", ""))[:200]
+        info["owned"] = bool(res.get("owned"))
+        kalan[t] = info
+        out["failed"].append({"ticker": t, **{k: info[k] for k in ("tries", "naked", "son_detay")}})
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                  f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada "
+                  f"AÇIK; {info['tries']}. deneme"
+                  + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else ""),
+                  ticker=t, plan_id=info.get("plan_id"), tries=info["tries"],
+                  naked=info["naked"], owned=info["owned"], detail=info["son_detay"])
+    meta[MIRROR_EXIT_KEY] = kalan
+    return out
+
+
+# ==================================================================================================
+# SİLAHLI PLANIN KAPI-DIŞI DÜŞÜRÜLMESİ (C23, denetim 2026-08-02) — SESSİZ DEĞİL
+# ==================================================================================================
+# BULGU: `if not halted and not breaker and not data_bad and size_mult > 0:` tutmazsa TÜM silahlı
+# planlar `carried=[]` ile hiçbir olay / defter satırı / `broker_status` damgası olmadan yok
+# oluyordu. Aynı sessizlik plan başına da vardı (`if len(b.positions) < eff_max_open and ...` else'siz).
+# İLKE ZATEN AYNI DOSYADA YAZILI (gap-veto dalı): "silahlı bir planın kaybolma sebebi defterden
+# okunabilmeli". Bu blok o ilkeyi kapı-dışı düşürmelere uygular. KARAR DEĞİŞMEZ: plan yine düşer.
+def _stamp_plan_status(plans: list) -> None:
+    """Düşürülen planların `broker_status` damgasını trade_plans.jsonl'a KALICI yazar.
+
+    Neden `merge_dated_jsonl` değil: o çağrı bir TARİHİN tüm satırlarını verilen listeyle DEĞİŞTİRİR
+    — elimizde yalnız düşen alt küme varken kullanmak aynı günün diğer planlarını SİLERDİ. Kilitli
+    `update_jsonl` ile satır bazında yama yapılır (araya giren yazarlar korunur)."""
+    by_id = {p.get("id"): p.get("broker_status") for p in (plans or [])
+             if p.get("id") and p.get("broker_status")}
+    if not by_id:
+        return
+
+    def _yama(rows: list) -> bool:
+        ch = False
+        for r in rows:
+            s = by_id.get(r.get("id"))
+            if s and r.get("broker_status") != s:
+                r["broker_status"] = s
+                ch = True
+        return ch
+
+    try:
+        store.update_jsonl("trade_plans.jsonl", _yama)
+    except Exception as e:
+        obs.warn("plan_status_stamp_failed", error=f"{type(e).__name__}: {e}", n=len(by_id))
+
+
+def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
+    """Düşen silahlı plana: `broker_status` damgası + olay + E2 defter satırı (üçü birden).
+
+    E2'DE `motor="kapi"` — BİLİNÇLİ: bu satır ne iç motorun ne aynanın bir İCRA kararıdır, plan
+    ikisine de ULAŞMADAN kapıda düştü. `motor="ic"` yazsaydık `analytics.entry_execution_summary`
+    kartın kill-ölçütü olan `dolmama_orani`nın PAYDASINI şişirirdi — ölçüm eşiği kod değişikliğiyle
+    sessizce kayardı (kill-list dokunulmazdır). ÖLÇÜM BORCU BEYANLI: `entry_execution_summary`
+    bugün yalnız `ic`/`ayna` kovalarını ayırıyor, `kapi` kovasının özet okuyucusu HENÜZ YOK —
+    bugünkü okuyucular olay defteri (`armed_dropped`) ve plan satırının `broker_status` damgasıdır
+    (gap-veto ile birebir aynı desen)."""
+    status = f"armed_dropped_{gate}"
+    pl["broker_status"] = status
+    obs.warn("armed_dropped", ticker=pl.get("ticker"), plan_id=pl.get("id"), gate=gate,
+             broker_status=status, plan_date=pl.get("date"),
+             detail="silahlı plan kapı-dışı koşulda düşürüldü — dolum HİÇ denenmedi", **extra)
+    _entry_exec_write({"date": dstr, "plan_id": pl.get("id"), "ticker": pl.get("ticker"),
+                       "motor": "kapi", "entry_trigger": pl.get("entry_trigger"),
+                       "karar": status, "fill": None,
+                       "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None,
+                       "red_detay": {"kapi": gate, **extra}})
+
+
+def _cancel_mirror_entries(dstr: str, gate: str) -> dict:
+    """HALT/breaker: aynadaki DOLMAMIŞ giriş emirlerini de kapat (C23 önerisi).
+
+    Eskiden HALT yalnız İÇ tarafı durduruyordu; ayna emri D-1 akşamından TIF=day ile canlıydı ve
+    HALT onu iptal etmiyordu — iç motor "bugün giriş yok" derken ayna dolabiliyordu. Sahiplik
+    süzgeci adaptörün İÇİNDE (`cancel_open_entries`: yalnız ENGINE_COID_PREFIX önekli, yalnız
+    DOLMAMIŞ emirler; dolmuş parent'ın koruma bacaklarına DOKUNULMAZ)."""
+    if config.BROKER != "alpaca_paper":
+        return {"skipped": f"broker={config.BROKER}"}
+    try:
+        from .adapters import alpaca
+        if not alpaca.paper_available():
+            return {"skipped": "paper_available()=False"}
+        res = alpaca.cancel_open_entries()
+        obs.log("mirror_entries_cancelled", gate=gate, date=dstr,
+                cancelled=len(res.get("cancelled") or []), kept=len(res.get("kept") or []),
+                foreign=len(res.get("foreign") or []),
+                detail="HALT/breaker: aynadaki dolmamış giriş emirleri kapatıldı (sahiplik önekli)")
+        return res
+    except Exception as e:
+        obs.warn("mirror_entry_cancel_failed", error=f"{type(e).__name__}: {e}", gate=gate)
+        return {"ok": False, "detail": f"{type(e).__name__}: {e}"}
+
+
+def _armed_dropped_by_gate(meta: dict, dstr: str, gate: str) -> None:
+    """Kapı kapalıyken TÜM silahlı planlar düşer (KARAR AYNEN KORUNDU) — ama artık defterden
+    okunabilir biçimde. HALT/breaker'da ayrıca aynadaki dolmamış girişler iptal edilir; bu iptal
+    silahlı plan OLMASA DA koşar, çünkü ayna emri önceki akşamdan kalmış olabilir."""
+    if gate in ("halt", "breaker"):
+        _cancel_mirror_entries(dstr, gate)
+    armed = list(meta.get("armed") or [])
+    if not armed:
+        return
+    for pl in armed:
+        _armed_drop_row(pl, dstr, gate)
+    _stamp_plan_status(armed)
+    obs.log("armed_dropped_batch", gate=gate, n=len(armed), date=dstr,
+            tickers=[p.get("ticker") for p in armed][:10])
+
+
+# ==================================================================================================
+# AYNAYA GÖNDERİM — TEK KAPI (C8, denetim 2026-08-02)
+# ==================================================================================================
+# BULGU: bu gövde YALNIZ `daily_cycle`ın içinde yaşıyordu ve panodaki "gönder" düğmesi
+# (api.py /api/alpaca/submit_armed) kendi ÇIPLAK `submit_plan` çağrısını kuruyordu. Sonuç: ikinci
+# bir emir yolu — de-risk çarpanı YOK (%5 düşüşte iç motor 0,6 ile doldururken düğme TAM boyut
+# gönderiyordu), entry_law girdileri (atr/ref_price) YOK (aynı planda İKİ farklı limit tavanı;
+# üstelik ref_price=None gap dalını `marketable_limit`e çevirip kırılım teyidini tümden kaldırıyordu),
+# dedup (`alpaca_submitted`) YOK, E2 defter satırı YOK, `_MirrorUnreachable` reddi YOK (hesap
+# okunamazken hayali 100k üzerinden boyutlandırıyordu).
+# BU TURDA MANTIK DEĞİŞMEDİ, TAŞINDI: iki çağıran da buradan geçer. Ayrım yalnız GİRDİLERİN
+# NEREDEN GELDİĞİNDE: döngü kendi taze `eq_now`/`plans`ını verir, uç nokta veremediği için
+# fonksiyon onları defterden okur (okunamazsa REDDEDER — hayali sermayeyle gönderim yok).
+def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
+                        plans: list | None = None, halted: bool | None = None,
+                        source: str = "loop") -> dict:
+    """Silahlı planları Alpaca PAPER aynasına gönderir (E1 yasası + de-risk + dedup + E2 + red sınıfı).
+
+    `meta` YERİNDE değiştirilir (armed / alpaca_submitted / broker_rejected) — KALICILIK ÇAĞIRANIN
+    İŞİDİR: döngü tur sonunda `_save_broker` ile yazar, uç nokta dönen `submitted_ids`/`dropped_ids`
+    ile portfolio.json'a KİLİT ALTINDA yama uygular (canlı worker'ın armed setini ezmemek için tam
+    belge yazımı YASAK).
+
+    `eq_now`: İÇ defterin güncel öz sermayesi — de-risk çarpanının PAYDASI `meta['peak_equity']` ile
+    aynı defterden gelmek zorundadır (Alpaca öz sermayesiyle karıştırmak çarpanı bozar). None ise
+    nabızdan okunur; nabız da yoksa gönderim REDDEDİLİR (UYDURMA YASAĞI: ölçülemeyen çarpan 1.0
+    varsayılamaz — tam olarak C8'in düzelttiği kusur budur)."""
+    out: dict = {"ok": False, "submitted": 0, "results": [], "equity": None, "detail": "",
+                 "source": source, "submitted_ids": [], "dropped_ids": []}
+    if config.BROKER != "alpaca_paper":
+        return {**out, "detail": f"broker={config.BROKER} — ayna kapalı"}
+    if halted is None:
+        halted = health.halted()
+    if halted:
+        return {**out, "detail": "HALT aktif — emir gönderilmez"}
+    if not meta.get("armed"):
+        return {**out, "ok": True, "detail": "silahlı plan yok"}
+    from .adapters import alpaca
+    if not alpaca.paper_available():
+        # DAVRANIŞ FARKI, BEYANLI (C8): döngü eskiden bu kapıyı hiç kontrol etmiyor, anahtarsız
+        # hâlde `account()`u çağırıp `_MirrorUnreachable` üzerinden HER TUR bir BROKER_REJECT
+        # ALARMI basıyordu. Anahtar YOKLUĞU bir broker arızası değil bir YAPILANDIRMA hâlidir —
+        # alarm sınıfını kirletiyordu. Sessizleşmedi, SINIFI DÜŞTÜ: uyarı olarak kayda geçer.
+        obs.warn("mirror_submit_skipped", kaynak=source, n=len(meta.get("armed") or []),
+                 detail="ALPACA_PAPER_KEY yok — ayna gönderimi atlandı, planlar SİLAHLI kaldı")
+        return {**out, "detail": "Alpaca paper anahtarları yok"}
+    if eq_now is None:
+        _hb = store.read_json(health.HEARTBEAT, {}) or {}
+        if _hb.get("equity") is None:
+            return {**out, "detail": "iç defter öz sermayesi okunamadı (nabızda `equity` yok) — "
+                                     "de-risk çarpanı ÖLÇÜLEMEZ, gönderim reddedildi"}
+        eq_now = float(_hb["equity"])
+    try:
+        acct = alpaca.account()
+        if acct is None and not alpaca.transport()["ok"]:
+            # ULAŞILAMADI ≠ 100k. Hesap okunamıyorken START_EQUITY'ye düşmek, hayali bir
+            # sermaye üzerinden boyutlandırmak demekti; üstelik gönderimler de ağ hatasıyla
+            # düşüp geçerli planları 'broker reddi' diye siliyordu. Aynayı ATLA, planlar
+            # SİLAHLI kalsın — iç defter zaten tek gerçek (denetim 2026-07-21).
+            obs.alarm(obs.ALARM_BROKER_REJECT,
+                      f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı",
+                      detail=alpaca.transport().get("error", "")[:160])
+            raise _MirrorUnreachable()
+        eq = float(acct["equity"]) if acct and "equity" in acct else START_EQUITY
+        out["equity"] = eq
+        submitted, sent, rejected, kept = set(meta.get("alpaca_submitted", [])), 0, [], []
+        vetoed: list = []              # E1 gap-risk vetosu — ret DEĞİL, kendi kararımız
+        for pl in meta["armed"]:
+            if pl["id"] in submitted:
+                kept.append(pl)
+                out["results"].append({"ticker": pl.get("ticker"), "ok": False,
+                                       "detail": "zaten gönderildi (dedup)", "dedup": True})
+                continue
+            # E1: ayna İÇ MOTORLA AYNI icra girdilerini alır — ATR ve referans fiyat
+            # yan tablodan (silahlanma anında sabitlendi), yasa `broker.entry_law`dan.
+            _lw = (meta.get("entry_law") or {}).get(pl.get("id")) or {}
+            res = alpaca.submit_plan(pl, eq,   # mirror the SAME drawdown de-risk as the internal fill (#50)
+                                     size_mult=derisk_mult(eq_now, meta.get("peak_equity", START_EQUITY)),
+                                     atr=_lw.get("atr"), ref_price=_lw.get("ref_price"))
+            out["results"].append({"ticker": pl.get("ticker"), **res})
+            _law_out = res.get("law") or _lw
+            _entry_exec_write({
+                "date": dstr, "plan_id": pl.get("id"), "ticker": pl.get("ticker"),
+                "motor": "ayna", "entry_trigger": pl.get("entry_trigger"),
+                "limit": _law_out.get("limit"), "atr": _law_out.get("atr"),
+                "law": _law_out.get("law"), "emir_tipi": _law_out.get("mode"),
+                "tif": _law_out.get("tif"), "gap_at_submit": _law_out.get("gap_at_submit"),
+                "karar": ("submitted" if res.get("ok")
+                          else ("gap_veto" if res.get("veto")
+                                else ("unreachable" if res.get("reachable") is False
+                                      else "rejected"))),
+                "red_nedeni": (None if res.get("ok") else str(res.get("detail", ""))[:200]),
+                "red_sinifi": (None if res.get("ok")
+                               else _reject_class(res.get("detail"), veto=res.get("veto"),
+                                                  reachable=res.get("reachable"))),
+                "kaynak": source,
+                "qty": res.get("qty"), "fill": None,
+                "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None})
+            if res.get("veto"):
+                # GAP-RİSK VETOSU: bizim kararımız, broker reddi DEĞİL. Plan silahlı
+                # KALMAZ (iç motor da `gap_at_submit` üzerinden aynı vetoyu uygular —
+                # tek yasa) ve ret dağılımına yazılmaz, yoksa broker sağlığı hakkında
+                # yanlış bir sayı üretirdi. Plan SATIRI damgalanır: silahlı bir planın
+                # kaybolma sebebi defterden okunabilmeli (broker_status ile aynı desen).
+                pl["broker_status"] = "gap_veto"
+                vetoed.append(pl)
+                out["dropped_ids"].append(pl["id"])
+                obs.log(BR.EV_GAP_VETO, ticker=pl.get("ticker"), plan_id=pl.get("id"),
+                        trigger=pl.get("entry_trigger"), limit=_law_out.get("limit"))
+                continue
+            if res.get("ok"):
+                submitted.add(pl["id"]); sent += 1; kept.append(pl)
+                out["submitted_ids"].append(pl["id"])
+            elif res.get("reachable") is False:
+                # ağ arızası — plan SİLAHLI kalır, 'reddedildi' diye düşürülmez
+                kept.append(pl)
+                obs.log("alpaca_submit_unreachable", ticker=pl["ticker"],
+                        detail=str(res.get("detail", ""))[:160])
+            else:
+                # STRICT (Phase 1.1): a rejected order is NOT marked submitted and is DROPPED from
+                # the armed set, so the internal broker never fills a phantom trade next open.
+                pl["broker_status"] = "failed_broker_rejection"
+                rejected.append({"date": dstr, "plan_id": pl["id"], "ticker": pl["ticker"],
+                                 "detail": str(res.get("detail", ""))[:200]})
+                out["dropped_ids"].append(pl["id"])
+                obs.alarm(obs.ALARM_BROKER_REJECT, f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}",
+                          ticker=pl["ticker"], plan_id=pl["id"])
+            obs.log("alpaca_submit", ticker=pl["ticker"], ok=res.get("ok"),
+                    detail=res.get("detail", ""), kaynak=source)
+        meta["armed"] = kept                       # phantom-free: only Alpaca-accepted plans stay armed
+        meta["alpaca_submitted"] = list(submitted)[-200:]
+        if rejected or vetoed:
+            # DURABLE failed_broker_rejection: trade_plans.jsonl was serialized BEFORE this branch,
+            # so re-merge the (same, now-mutated) plan dicts — the on-disk rows gain broker_status.
+            # Also keep a bounded ledger in portfolio meta; reconcile surfaces it to the dashboard.
+            # `plans` YOKSA (pano yolu — o tur üretilmiş plan listesi elimizde değil) satır bazında
+            # kilitli yama: merge_dated_jsonl bir TARİHİN tüm satırlarını değiştirdiği için alt
+            # kümeyle çağrılamaz (aynı günün diğer planlarını silerdi).
+            if plans is not None:
+                store.merge_dated_jsonl("trade_plans.jsonl", dstr, plans)
+            else:
+                _stamp_plan_status(list(vetoed)
+                                   + [{"id": r["plan_id"],
+                                       "broker_status": "failed_broker_rejection"} for r in rejected])
+            meta["broker_rejected"] = (meta.get("broker_rejected", []) + rejected)[-50:]
+        if sent:
+            obs.log("alpaca_orders_sent", n=sent, equity=eq, kaynak=source)
+        return {**out, "ok": True, "submitted": sent}
+    except _MirrorUnreachable:  # sessiz-yutma: ayna erişilemezliğinin alarmı yukarıda ZATEN yazıldı; burada ikinci kez uyarmak aynı olayı çiftler
+        return {**out, "detail": "ayna ulaşılamıyor — planlar silahlı kaldı", "unreachable": True}
+    except Exception as e:
+        obs.warn("alpaca_submit_failed", error=f"{type(e).__name__}: {e}", kaynak=source)
+        return {**out, "detail": f"{type(e).__name__}: {e}"}
+
+
 def _universe_drift_check() -> None:
     """Elle bakımlı evren endeksten düşmüş isim taşıyor mu? 2026-07-21'de 7 ölü sembol ELLE
     bulunmuştu; artık bunu söyleyen bir mekanizma var (adapters.constituents denetimi, tur 3).
@@ -118,7 +449,8 @@ def _load_broker() -> tuple[PaperBroker, dict]:
         from .broker import Position
         for t, p in st.get("positions", {}).items():
             b.positions[t] = Position(**p)
-    return b, (st or {"armed": [], "pending_exits": {}, "last_date": None, "day_start_equity": START_EQUITY})
+    return b, (st or {"armed": [], "pending_exits": {}, "last_date": None,
+                      "day_start_equity": START_EQUITY, MIRROR_EXIT_KEY: {}})
 
 
 _HOTSTATE_OFF_LOGGED: set = set()
@@ -157,7 +489,10 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
           # peak_equity MUST survive restarts/reloads: every cycle reloads meta from disk, so without
           # this the running peak collapsed to max(START_EQUITY, current) — drawdown always read ~0 and
           # the graded de-risk ramp + position throttle were PERMANENTLY inert (audit critical #10).
-          "peak_equity": meta.get("peak_equity", START_EQUITY)}
+          "peak_equity": meta.get("peak_equity", START_EQUITY),
+          # C9: aynada kapatılamamış çıkışlar RESTART'I ATLATMALI. Kaybolursa iç defteri kapalı,
+          # aynası açık bir pozisyon sessizce kalıcı yetim olur — bu bulgunun ta kendisi.
+          MIRROR_EXIT_KEY: meta.get(MIRROR_EXIT_KEY, {})}
     # AYNI KİLİT: Hermes'in görüş damgası da portfolio.json'a yazıyor (ayrı iş parçacığı) —
     # ikisi de store.file_lock(PORTFOLIO) altında olmalı, yoksa biri diğerinin defterini ezer.
     with store.file_lock(PORTFOLIO):
@@ -434,9 +769,14 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # ---- 1. OPEN(D): pending exits + armed entries from the prior cycle ----
     for t, reason in list(meta.get("pending_exits", {}).items()):
         if t in b.positions and t in per and d in per[t].index:
+            # C9: plan kimliği pozisyon kapanMADAN önce okunur — kapandıktan sonra `b.positions`ta
+            # yoktur ve aynadaki bracket'ı hangi emre bağlayacağımızı söyleyen TEK anahtar odur.
+            _pid = getattr(b.positions[t], "plan_id", None)
             b.close_position(t, per[t].loc[d, "open"], reason, dstr)
             _persist_trade(b.closed[-1])
+            _mirror_exit_enqueue(meta, t, _pid, reason, dstr)
     meta["pending_exits"] = {}
+    _mirror_exit_sync(meta, dstr)     # C9: kuyruk + önceki turlardan kalan yeniden denemeler
 
     halted = health.halted()
     day_pnl_pct = (b.equity(marks_open) - day_start_equity) / day_start_equity if day_start_equity else 0.0
@@ -459,7 +799,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         except Exception as e:
             obs.warn("llm_veto_layer_failed", error=f"{type(e).__name__}: {e}")
         carried = []
-        if not halted and not breaker and not data_bad and size_mult > 0:
+        # C23: kapı hangi sebeple kapandı? Sıra ÖNEMLİ — birden çok koşul aynı anda tutabilir ve
+        # damga TEK olmalı; en sert/en dıştaki sebep kazanır (HALT > breaker > veri > kısma).
+        _kapi = ("halt" if halted else "breaker" if breaker else "data_bad" if data_bad
+                 else "throttle" if size_mult <= 0 else None)
+        _dusen: list = []
+        if _kapi is None:
             fillable, carried = _carry_armed_without_bar(
                 meta.get("armed", []), lambda t: t in per and d in per[t].index)
             _law_tbl = meta.get("entry_law") or {}
@@ -503,6 +848,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                      asim_bps=_rej.get("asim_bps"),
                                      detail="E1 giriş yasası: dolum yazılmadı — cf defteri aynı "
                                             "plan_id ile kaçan işlemin sonucunu ölçmeye devam eder")
+                else:
+                    # C23 (plan-başı sessizlik): bu dalın else'i YOKTU — slot dolduğu ya da sembol
+                    # zaten defterde olduğu için düşen plan hiçbir iz bırakmadan yok oluyordu.
+                    # KARAR AYNI (plan düşer), yalnız SEBEBİ artık okunabilir.
+                    _armed_drop_row(plan, dstr,
+                                    "slot_full" if len(b.positions) >= eff_max_open else "already_open",
+                                    open_positions=len(b.positions), eff_max_open=eff_max_open)
+                    _dusen.append(plan)
+            if _dusen:
+                _stamp_plan_status(_dusen)
+        else:
+            _armed_dropped_by_gate(meta, dstr, _kapi)
         meta["armed"] = carried
 
     # ---- 2. INTRADAY(D): touch exits ----
@@ -812,89 +1169,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 except Exception:  # sessiz-yutma: obs alarmı/kaydı bu noktada ZATEN yazıldı; ikincil bildirim kanalının (Telegram/webhook) düşmesi alarmı asla düşüremez
                     pass
             # mirror the agent's armed BUY decisions to the Alpaca PAPER account (opt-in backend, paper-only)
-            if config.BROKER == "alpaca_paper" and not halted and meta["armed"]:
-                try:
-                    from .adapters import alpaca
-                    acct = alpaca.account()
-                    if acct is None and not alpaca.transport()["ok"]:
-                        # ULAŞILAMADI ≠ 100k. Hesap okunamıyorken START_EQUITY'ye düşmek, hayali bir
-                        # sermaye üzerinden boyutlandırmak demekti; üstelik gönderimler de ağ hatasıyla
-                        # düşüp geçerli planları 'broker reddi' diye siliyordu. Aynayı ATLA, planlar
-                        # SİLAHLI kalsın — iç defter zaten tek gerçek (denetim 2026-07-21).
-                        obs.alarm(obs.ALARM_BROKER_REJECT,
-                                  f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı",
-                                  detail=alpaca.transport().get("error", "")[:160])
-                        raise _MirrorUnreachable()
-                    eq = float(acct["equity"]) if acct and "equity" in acct else START_EQUITY
-                    submitted, sent, rejected, kept = set(meta.get("alpaca_submitted", [])), 0, [], []
-                    vetoed: list = []              # E1 gap-risk vetosu — ret DEĞİL, kendi kararımız
-                    for pl in meta["armed"]:
-                        if pl["id"] in submitted:
-                            kept.append(pl); continue
-                        # E1: ayna İÇ MOTORLA AYNI icra girdilerini alır — ATR ve referans fiyat
-                        # yan tablodan (silahlanma anında sabitlendi), yasa `broker.entry_law`dan.
-                        _lw = (meta.get("entry_law") or {}).get(pl.get("id")) or {}
-                        res = alpaca.submit_plan(pl, eq,   # mirror the SAME drawdown de-risk as the internal fill (#50)
-                                                 size_mult=derisk_mult(eq_now, meta.get("peak_equity", START_EQUITY)),
-                                                 atr=_lw.get("atr"), ref_price=_lw.get("ref_price"))
-                        _law_out = res.get("law") or _lw
-                        _entry_exec_write({
-                            "date": dstr, "plan_id": pl.get("id"), "ticker": pl.get("ticker"),
-                            "motor": "ayna", "entry_trigger": pl.get("entry_trigger"),
-                            "limit": _law_out.get("limit"), "atr": _law_out.get("atr"),
-                            "law": _law_out.get("law"), "emir_tipi": _law_out.get("mode"),
-                            "tif": _law_out.get("tif"), "gap_at_submit": _law_out.get("gap_at_submit"),
-                            "karar": ("submitted" if res.get("ok")
-                                      else ("gap_veto" if res.get("veto")
-                                            else ("unreachable" if res.get("reachable") is False
-                                                  else "rejected"))),
-                            "red_nedeni": (None if res.get("ok") else str(res.get("detail", ""))[:200]),
-                            "red_sinifi": (None if res.get("ok")
-                                           else _reject_class(res.get("detail"), veto=res.get("veto"),
-                                                              reachable=res.get("reachable"))),
-                            "qty": res.get("qty"), "fill": None,
-                            "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None})
-                        if res.get("veto"):
-                            # GAP-RİSK VETOSU: bizim kararımız, broker reddi DEĞİL. Plan silahlı
-                            # KALMAZ (iç motor da `gap_at_submit` üzerinden aynı vetoyu uygular —
-                            # tek yasa) ve ret dağılımına yazılmaz, yoksa broker sağlığı hakkında
-                            # yanlış bir sayı üretirdi. Plan SATIRI damgalanır: silahlı bir planın
-                            # kaybolma sebebi defterden okunabilmeli (broker_status ile aynı desen).
-                            pl["broker_status"] = "gap_veto"
-                            vetoed.append(pl)
-                            obs.log(BR.EV_GAP_VETO, ticker=pl.get("ticker"), plan_id=pl.get("id"),
-                                    trigger=pl.get("entry_trigger"), limit=_law_out.get("limit"))
-                            continue
-                        if res.get("ok"):
-                            submitted.add(pl["id"]); sent += 1; kept.append(pl)
-                        elif res.get("reachable") is False:
-                            # ağ arızası — plan SİLAHLI kalır, 'reddedildi' diye düşürülmez
-                            kept.append(pl)
-                            obs.log("alpaca_submit_unreachable", ticker=pl["ticker"],
-                                    detail=str(res.get("detail", ""))[:160])
-                        else:
-                            # STRICT (Phase 1.1): a rejected order is NOT marked submitted and is DROPPED from
-                            # the armed set, so the internal broker never fills a phantom trade next open.
-                            pl["broker_status"] = "failed_broker_rejection"
-                            rejected.append({"date": dstr, "plan_id": pl["id"], "ticker": pl["ticker"],
-                                             "detail": str(res.get("detail", ""))[:200]})
-                            obs.alarm(obs.ALARM_BROKER_REJECT, f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}",
-                                      ticker=pl["ticker"], plan_id=pl["id"])
-                        obs.log("alpaca_submit", ticker=pl["ticker"], ok=res.get("ok"), detail=res.get("detail", ""))
-                    meta["armed"] = kept                       # phantom-free: only Alpaca-accepted plans stay armed
-                    meta["alpaca_submitted"] = list(submitted)[-200:]
-                    if rejected or vetoed:
-                        # DURABLE failed_broker_rejection: trade_plans.jsonl was serialized BEFORE this branch,
-                        # so re-merge the (same, now-mutated) plan dicts — the on-disk rows gain broker_status.
-                        # Also keep a bounded ledger in portfolio meta; reconcile surfaces it to the dashboard.
-                        store.merge_dated_jsonl("trade_plans.jsonl", dstr, plans)
-                        meta["broker_rejected"] = (meta.get("broker_rejected", []) + rejected)[-50:]
-                    if sent:
-                        obs.log("alpaca_orders_sent", n=sent, equity=eq)
-                except _MirrorUnreachable:  # sessiz-yutma: ayna erişilemezliğinin alarmı submit_plan içinde ZATEN yazıldı; burada ikinci kez uyarmak aynı olayı çiftler
-                    pass                                    # planlar silahlı kaldı; alarm zaten yazıldı
-                except Exception as e:
-                    obs.warn("alpaca_submit_failed", error=f"{type(e).__name__}: {e}")
+            # C8 (2026-08-02): GÖVDE `mirror_submit_armed`A TAŞINDI — pano düğmesi de AYNI kapıdan
+            # geçsin diye. Mantık değişmedi; buradaki tek fark çağrı olması.
+            mirror_submit_armed(meta, dstr, eq_now=eq_now, plans=plans, halted=halted, source="loop")
 
         # ---- 2.4 GÖLGE-VARYANT PORTFÖYLERİ: tek kanca, SIFIR yetki, kendi defteri ----------------
         # P3'ün DIŞINDA (pipeline_run bloğu kapandıktan sonra): ölçüm katmanının maliyeti/arızası
@@ -1314,12 +1591,30 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     engine_syms = {o.get("symbol") for o in (all_orders or [])
                    if str(o.get("client_order_id", "")).startswith("P-")
                    and str(o.get("status", "")).lower() in ("filled", "partially_filled")}
-    orphans = sorted(sym for sym in a_by_sym if sym not in local and sym in engine_syms)
+    # C9: ÇIKIŞ-KAYNAKLI YETİM AYRI SINIFTIR. İki teşhis aynı isimle sayılırsa ikisi de okunamaz:
+    #   engine_orphans → "iç defter planı düşürdü, ayna DOLDU" (split-brain, sebebi bilinmiyor)
+    #   exit_orphans   → "iç motor ÇIKTI, aynayı kapatmayı denedik, kapanmadı" (sebep BİLİNİYOR,
+    #                     kuyrukta duruyor ve her döngüde yeniden deneniyor)
+    # Ayrımın ikinci sonucu: `_mirror_busy` (P3 karar kilidi) yalnız `engine_orphans`ı okur, yani
+    # çıkış-kaynaklı yetim sembolü SONSUZA DEK karar dışı bırakmaz — huninin kendi kendini aç
+    # bırakması C9'un asıl zararıydı. Koruma kaybolmaz: bracket'ın canlı bacakları varken sembol
+    # `alive_order_syms` üzerinden zaten kilitlidir.
+    _exit_pending = set((meta.get(MIRROR_EXIT_KEY) or {}).keys())
+    _tum_yetim = sorted(sym for sym in a_by_sym if sym not in local and sym in engine_syms)
+    orphans = [s for s in _tum_yetim if s not in _exit_pending]
+    exit_orphans = [s for s in _tum_yetim if s in _exit_pending]
     for sym in orphans:
         obs.alarm(obs.ALARM_MIRROR_DRIFT,
                   f"motor yetimi: {sym} Alpaca'da açık (motorun emri dolmuş) ama iç defterde yok",
                   ticker=sym)
+    for sym in exit_orphans:
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                  f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, "
+                  f"bir sonraki döngüde yeniden denenecek",
+                  ticker=sym, reason=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("reason"),
+                  tries=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("tries"))
     out["positions"]["engine_orphans"] = orphans
+    out["positions"]["exit_orphans"] = exit_orphans
     out["positions"]["external"] = sorted(sym for sym in a_by_sym
                                           if sym not in local and sym not in engine_syms)  # info only, no alarm
 

@@ -2310,19 +2310,49 @@ def api_alpaca(request: Request):
 @app.post("/api/alpaca/submit_armed")
 def api_alpaca_submit_armed(request: Request):
     """Submit the currently-armed plans to Alpaca paper now (manual trigger; the scheduler also does this
-    each cycle when MERIDIAN_BROKER=alpaca_paper). Refuses when halted."""
+    each cycle when MERIDIAN_BROKER=alpaca_paper). Refuses when halted.
+
+    E1 YASASI ARTIK TEK KAPIDAN (C8, denetim 2026-08-02): bu uç EskİDEN kendi gönderim mantığını
+    kuruyordu — `alpaca.submit_plan(p, eq)` çıplak varsayılanlarıyla. Yani de-risk çarpanı YOK
+    (%5 düşüşte döngü 0,6 ile doldururken düğme TAM boyut gönderiyordu), atr/ref_price YOK (aynı
+    planda iki farklı limit tavanı + gap dalında kırılım teyidinin tümden kalkması), dedup YOK
+    (`alpaca_submitted` ne okunuyor ne yazılıyordu → döngü aynı planı ikinci kez gönderip
+    duplicate-coid reddi alınca planı SİLAHLI kümeden düşürüyordu), E2 satırı YOK, ve hesap
+    okunamazken 100k sabitine düşüp hayali sermaye üzerinden boyutlandırma VARDI. Artık uç,
+    döngünün kullandığı `loop.mirror_submit_armed` fonksiyonunu çağırır — ikinci bir emir yolu
+    kalmadı.
+
+    KALICILIK: fonksiyon `meta`yı yerinde değiştirir; burada portfolio.json'a TAM BELGE yazımı
+    YASAK (canlı worker'ın o an güncellediği armed setini ezerdi). Yalnız iki alan KİLİT ALTINDA
+    yamalanır: gönderilen kimlikler dedup kümesine EKLENİR, düşen (veto/ret) planlar armed'dan
+    kimlikle ÇIKARILIR."""
     _auth(request)
-    from .adapters import alpaca
+    from . import loop as _loop
     if health.halted():
         return {"ok": False, "detail": "HALT aktif — emir gönderilmez"}
-    if not alpaca.paper_available():
-        return {"ok": False, "detail": "Alpaca paper anahtarları yok"}
-    meta = store.read_json("portfolio.json", {})
-    armed = meta.get("armed", [])
-    acct = alpaca.account()
-    eq = float(acct["equity"]) if acct and "equity" in acct else 100_000.0
-    results = [{"ticker": p["ticker"], **alpaca.submit_plan(p, eq)} for p in armed]
-    return {"ok": True, "submitted": sum(1 for r in results if r.get("ok")), "results": results, "equity": eq}
+    meta = store.read_json("portfolio.json", {}) or {}
+    # BOŞ TARİH YASAK: E2 penceresi `date >= cutoff` ile süzüyor — boş dize her pencereden SESSİZCE
+    # düşerdi, yani düğmeden geçen gönderim slipaj özetinde hiç görünmezdi. Nabızda işlenmiş bar
+    # yoksa gönderimin GERÇEK günü yazılır (uydurma değil: satırın tarihi eylemin tarihidir).
+    import datetime as _dt
+    dstr = str(meta.get("last_date") or _dt.date.today().isoformat())
+    res = _loop.mirror_submit_armed(meta, dstr, source="pano")
+    gonderilen, dusen = set(res.get("submitted_ids") or []), set(res.get("dropped_ids") or [])
+    if gonderilen or dusen:
+        def _yama(doc):
+            if not isinstance(doc, dict):
+                return False
+            doc["alpaca_submitted"] = list(dict.fromkeys(
+                list(doc.get("alpaca_submitted") or []) + sorted(gonderilen)))[-200:]
+            doc["armed"] = [p for p in (doc.get("armed") or []) if p.get("id") not in dusen]
+            doc["broker_rejected"] = meta.get("broker_rejected", doc.get("broker_rejected", []))
+            return True
+        store.update_json("portfolio.json", _yama, {})
+    obs.log("alpaca_submit_armed_endpoint", ok=res.get("ok"), submitted=res.get("submitted"),
+            dropped=len(dusen), detail=str(res.get("detail", ""))[:160])
+    return {"ok": bool(res.get("ok")), "submitted": res.get("submitted", 0),
+            "results": res.get("results", []), "equity": res.get("equity"),
+            "detail": res.get("detail", "")}
 
 
 @app.post("/api/alpaca/close_all")

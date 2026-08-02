@@ -149,7 +149,18 @@ def test_no_module_writes_another_modules_file():
         # altında oku-değiştir-yaz'dır (loop._save_broker ve hermes damgasıyla AYNI kilit), ve
         # İDEMPOTENTTİR (ikinci koşu `zaten_ayrisik` der, tek bayt yazmaz). Dokunduğu alanlar
         # dört tanedir ve kitapta `sermaye_resetleri` kaydıyla BEYANLIDIR.
-        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py"},
+        # api.py (C8, 2026-08-02): pano "gönder" düğmesi artık döngüyle AYNI gönderim kapısından
+        # (`loop.mirror_submit_armed`) geçiyor ve gönderimin SONUCUNU yazmak ZORUNDA — eskiden
+        # yazmadığı için `alpaca_submitted` dedup kümesi düğme yolunda hiç oluşmuyordu ve döngü
+        # aynı planı ikinci kez gönderip duplicate-coid reddi alınca planı silahlı kümeden
+        # düşürüyordu (denetim C8, bulgu 3). Kayıp-güncelleme riski YOK: yazım `store.update_json`
+        # ile `file_lock(PORTFOLIO)` altında oku-değiştir-yaz'dır (loop._save_broker ve hermes
+        # damgasıyla AYNI kilit) ve TAM BELGE YAZMAZ — yalnız üç alanı YAMALAR: gönderilen
+        # kimlikler `alpaca_submitted`a EKLENİR, düşen (veto/ret) planlar `armed`dan kimlikle
+        # ÇIKARILIR, `broker_rejected` defteri güncellenir. Canlı worker'ın o an ürettiği yeni
+        # armed satırları bu yüzden EZİLMEZ (tam belge yazımı bilerek reddedildi).
+        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py",
+                           "api.py"},
         # sermaye.py eğriye NOKTA eklemez; `points` DIŞINDA bir zarf anahtarına (reset_isaretleri)
         # kırılma beyanı yazar. Nokta eklemek `ledgerstamp.seed_boundary`nin tohum sınırını
         # kaydırırdı (bkz. sermaye.py modül başlığı + test_B3).

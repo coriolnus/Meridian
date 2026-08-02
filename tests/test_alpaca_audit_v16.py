@@ -72,9 +72,14 @@ def test_a1_reconcile_does_not_alarm_on_api_outage():
 def test_a1_unreachable_broker_keeps_plans_armed():
     """Ağ hatası ile broker reddi ayrılmazsa geçici bir kesinti GEÇERLİ bir silahlı planı kalıcı
     olarak düşürüyordu (31 sessiz kayıp sınıfının aynısı)."""
-    src = inspect.getsource(loop.daily_cycle)
+    # BEKÇİ DOĞRU YERE BAKTIRILDI (C8, 2026-08-02): ayna gönderim gövdesi `daily_cycle`ın içinden
+    # `loop.mirror_submit_armed`a TAŞINDI (pano düğmesi de aynı kapıdan geçsin diye). Bekçinin
+    # kırılması DOĞRUYDU — hüküm değişmedi, adresi değişti. Hüküm burada AYNEN duruyor.
+    src = inspect.getsource(loop.mirror_submit_armed)
     assert 'res.get("reachable") is False' in src
     assert "_MirrorUnreachable" in src
+    assert "mirror_submit_armed(" in inspect.getsource(loop.daily_cycle), \
+        "döngü ortak gönderim kapısını çağırmıyor — ikinci bir emir yolu geri gelmiş olabilir"
 
 
 def test_a1_submit_marks_reachability():
