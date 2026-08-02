@@ -937,6 +937,32 @@ ALARM_TEPE_PENCERE_S = 10 * 60        # tepe ölçümünün kayan penceresi
 ALARM_TEPE_TAVAN = 10                 # EEMUA 191: kabul edilebilir tepe ≤10 alarm / 10 dk
 ALARM_DURAN_TAVAN = 10                # EEMUA 191: aynı anda DURAN alarm ≤10
 
+# ---- RESTART-PATLAMASI MUAFİYETİ (küçük-kuyruk turu, 2026-08-02) -----------------------------
+# BU SAYILAR ÖLÇÜLDÜ, SEÇİLMEDİ. Canlı defter (A1, /opt/meridian/state/events.jsonl, 31.040 satır;
+# 24 saatlik bütçe penceresinde 459 warn+alarm, damgasız 0, bozuk 0):
+#   * ham 10 dk tepesi          = 18   (tavan 10 → AŞIM)   pencere başı 2026-08-02T16:48:03Z
+#   * tepe penceresinin 18 satırının 15'i, 16:52:11Z restart'ının +4s..+85s aralığında
+#   * restart pencereleri içi yoğunluk 8,9 satır/10dk · dışı 2,85 satır/10dk → 3,1×
+#   * restart penceresi HARİÇ tepe = 5 (muafiyet 3/5/10/15 dk'nın DÖRDÜNDE de aynı 5 çıkıyor;
+#     kalan tepe restart'sız bir pencerede, 02:57:31Z)
+#   * YALNIZ restart pencerelerinde görülen jetonlar (dışarıda SIFIR kez): warmup_coverage_short
+#     (22), hermes_brain_unavailable (7), hermes_bg_proposal_rejected (7), io_latency_high (4),
+#     hermes_brain_failed (4), hermes_brain_empty (2) — açılış sınıfı, süregelen arıza değil.
+# HÜKÜM: tepe GERÇEK ve restart kaynaklı → muafiyet EKLENDİ.
+# PENCERE NEDEN 5 DK: ölçülen patlama kütlesi restart+85 sn'de bitiyor ve 3 dk'lık muafiyet zaten
+# tabanı geri veriyor; 5 dk ölçülen kuyruğun ~3,5 katı bir emniyet payıdır AMA tepe penceresinin
+# (10 dk) YARISINI muaf tutmaz — yani restart'tan 5-10 dk SONRA süren gerçek bir alarm fırtınası
+# hâlâ sayılır ve tavanı deler. Daha geniş bir pencere seçmek, korumak istediğimiz şeyi de körleştirirdi.
+ALARM_RESTART_MUAFIYET_S = 5 * 60
+# Restart'ın ÖLÇÜLEN sinyali. `scheduler._rehydrate()` her süreç doğumunda BİR kez `info` seviyesinde
+# yazar (scheduler.py:96) ve seviyesi `info` olduğu için bütçenin kendi sayacına ZATEN girmez.
+# EŞLEŞME KANITI (aynı canlı defter, aynı 24 saat): 11 `scheduler_state_rehydrated` damgası vs
+# systemd journal'ındaki 11 "Started meridian.service" damgası — 11/11, fark 0..3 sn.
+# NEDEN BU, `scheduler_status.json`ın `started_at`i DEĞİL: `started_at` YALNIZ o an koşan sürecin
+# doğumunu taşır (24 saatlik pencerede 11 restart'ın 10'u görünmez); defterdeki jeton pencerenin
+# TAMAMINI kapsar. Uydurma sinyal yok — ikisi de zaten yazılan, ölçülmüş kayıtlar.
+ALARM_RESTART_JETONU = "scheduler_state_rehydrated"
+
 _ALARM_CACHE: dict = {}
 ALARM_TTL_S = 30.0
 
@@ -972,12 +998,21 @@ def alarm_budget() -> dict:
     sinir = simdi - ALARM_PENCERE_S
     dagilim = {"low": 0, "high": 0}
     damgalar: list[float] = []
+    restartlar: list[float] = []
     damgasiz = 0
     for e in olaylar:
+        ts = e.get("ts")
+        if str(e.get("event") or "") == ALARM_RESTART_JETONU and ts:
+            # Restart damgası AYRI toplanır ve bütçe sayacına GİRMEZ (seviyesi zaten `info`).
+            try:
+                _tr = dt.datetime.fromisoformat(str(ts)).timestamp()
+            except (TypeError, ValueError):  # sessiz-yutma: bozuk damgalı restart satırı muafiyet üretemez — muafiyetsiz saymak DAHA SIKI tarafta hata yapmaktır, maskeleme yönünde değil
+                _tr = None
+            if _tr is not None and _tr >= sinir - ALARM_RESTART_MUAFIYET_S:
+                restartlar.append(_tr)
         oncelik = SEVIYE_EEMUA.get(str(e.get("level") or ""))
         if oncelik is None:                     # info — bütçeye girmez (bkz. blok başlığı)
             continue
-        ts = e.get("ts")
         if not ts:
             damgasiz += 1
             continue
@@ -991,7 +1026,16 @@ def alarm_budget() -> dict:
         dagilim[oncelik] += 1
         damgalar.append(t)
     damgalar.sort()
-    tepe, tepe_basi = _alarm_tepe(damgalar)
+    restartlar.sort()
+    # TEPE İKİ KEZ ÖLÇÜLÜR. `tepe_ham_10dk` muafiyetsiz gerçektir ve HER ZAMAN taşınır — muafiyetin
+    # sakladığı sayı görünür kalmadan "sessiz maskeleme yasağı" bir slogan olurdu. Tavanla kıyaslanan
+    # (`asim.tepe`) ise muafiyetli değerdir: restart'ın kendi açılış gürültüsü operatörü uyandırmaz.
+    tepe_ham, tepe_ham_basi = _alarm_tepe(damgalar)
+    muaf = [t for t in damgalar
+            if any(r <= t <= r + ALARM_RESTART_MUAFIYET_S for r in restartlar)]
+    kalan = [t for t in damgalar if not any(r <= t <= r + ALARM_RESTART_MUAFIYET_S for r in restartlar)]
+    tepe, tepe_basi = _alarm_tepe(kalan)
+    muafiyet_uygulandi = bool(muaf) and tepe != tepe_ham
 
     duran = store.read_json(ALARMED_FILE, [])
     duran_adlar = sorted(str(x) for x in duran) if isinstance(duran, list) else []
@@ -1012,6 +1056,23 @@ def alarm_budget() -> dict:
         "yuzde": yuzde,
         "hedef_yuzde": dict(EEMUA_HEDEF_YUZDE),
         "tepe_10dk": tepe, "tepe_basi": tepe_basi, "tavan_10dk": ALARM_TEPE_TAVAN,
+        # ---- RESTART MUAFİYETİNİN BEYANI (sessiz maskeleme yasağı) ----
+        "tepe_ham_10dk": tepe_ham, "tepe_ham_basi": tepe_ham_basi,
+        "tepe_muafiyet_s": ALARM_RESTART_MUAFIYET_S,
+        "tepe_restart_n": len(restartlar),
+        "tepe_muaf_satir": len(muaf),
+        "tepe_muafiyet_uygulandi": muafiyet_uygulandi,
+        "tepe_beyan": (
+            f"tepe: {tepe} (restart-muafiyetli) — ham {tepe_ham}; "
+            f"{len(restartlar)} restart × {ALARM_RESTART_MUAFIYET_S // 60} dk penceresinde "
+            f"{len(muaf)} satır tepe SAYACINDAN düşüldü (24 saatlik dağılımda AYNEN duruyorlar). "
+            f"Restart sinyali: `{ALARM_RESTART_JETONU}` olayı."
+            if muafiyet_uygulandi else
+            (f"tepe: {tepe} (muafiyet uygulanmadı — pencerede {len(restartlar)} restart var ama "
+             f"tepe sayısını değiştirmedi; ham {tepe_ham})"
+             if restartlar else
+             f"tepe: {tepe} (muafiyet uygulanmadı — pencerede `{ALARM_RESTART_JETONU}` damgası YOK, "
+             f"yani restart ölçülemedi; sayı HAM)")),
         "duran": n_duran, "duran_adlar": duran_adlar[:8], "tavan_duran": ALARM_DURAN_TAVAN,
         "damgasiz": damgasiz,
         "asim": asim, "asim_var": bool(asim["tepe"] or asim["duran"]),

@@ -1,0 +1,19 @@
+# meridian-tick-watchdog.timer — bekçiyi 15 dk'da bir koşturur.
+#
+# NEDEN 15 DK ve NEDEN EŞİKTEN KÜÇÜK: eşik 45 dk'dır; 15 dk'lık kadans, bayatlığın en geç
+# 45+15=60 dk'da hüküm görmesini garanti eder. Kadansı eşiğe eşitlemek en kötü hâlde 90 dk
+# gecikme demekti — kurucu vakanın toplam süresinden (73 dk) uzun, yani bekçi vakayı ancak
+# bittikten sonra fark ederdi.
+#
+# OnBootSec=10min: açılışta uvicorn + scheduler'ın ilk damgayı yazmasına pay. (Betiğin ayrıca
+# kendi YAS lütuf penceresi vardır — bu ikisi farklı sınıflar: burası MAKİNE açılışı, oradaki
+# BİRİM yeniden başlatması.)
+[Unit]
+Description=Meridian tick-progress bekçisi (15 dk)
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+
+[Install]
+WantedBy=timers.target

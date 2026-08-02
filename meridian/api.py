@@ -15,7 +15,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
 from fastapi.routing import APIRoute
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -300,17 +300,117 @@ def _stream_view(mirror: dict | None = None) -> dict:
             "stream_last_event_ts": h.get("last_event_ts"), "stream_last_error": h.get("last_error")}
 
 
-_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
+# `max-age=0` EKLENDİ (küçük-kuyruk turu, 2026-08-02): `no-cache` tek başına RFC 9111'e göre zaten
+# "her kullanımdan önce doğrula" demektir, ama saha gerçeği bu değil — bazı ara katmanlar ve eski
+# tarayıcılar `no-cache`i sezgisel tazelik hesabına girmeyen bir öneri gibi işler. `max-age=0` aynı
+# şeyi ikinci kez, tartışmasız bir sayıyla söyler. Üçü birlikte: sakla, ama HER İSTEKTE doğrula.
+_NOCACHE = {"Cache-Control": "no-cache, max-age=0, must-revalidate"}
+
+# ---- STATİK VARLIK ÖNBELLEK SÖZLEŞMESİ (küçük-kuyruk turu, 2026-08-02) -----------------------
+# VAKA: "dagit'ten sonra değişikliği göremedim" — operatörün sert-yenilemeye mahkûm olduğu sınıf.
+# ESKİ HÂL iki ayrı yerden kırıktı:
+#   (a) 304 YOLU HİÇ YOKTU. `_NOCACHE` yalnız `Cache-Control` gönderiyordu; ETag'i starlette
+#       1.3.1'in `FileResponse.set_stat_headers`ı `st_mtime + "-" + st_size` md5'inden yazıyor AMA
+#       `If-None-Match`i okuyan kod YALNIZ `StaticFiles` montajındadır ve bu dosyada montaj
+#       BİLEREK yok (yukarıdaki not: montaj WEB dizinine düşen her taslağı yayına açar). Yani
+#       tarayıcı ETag'i sadakatle geri gönderiyor, sunucu onu görmezden gelip 518 KB'lık app.js'i
+#       her doğrulamada BAŞTAN gövdeliyordu.
+#   (b) ETAG İÇERİKTEN TÜRETİLMİYORDU. mtime tabanlı etiket iki yönde de yanılır: rsync içeriği
+#       değiştirmeden mtime'ı ilerletirse aynı bayt yeniden iner (gereksiz trafik — zararsız);
+#       mtime KORUNARAK içerik değişirse (kopyala-üzerine-yaz, `cp -p`, saat geri alınması)
+#       tarayıcı ESKİ kopyayı saklar — vakanın tam kaynağı ve zararsız olmayan yön.
+# YENİ HÂL: ETag dosya İÇERİĞİNİN sha256'sıdır (güçlü etiket) ve `If-None-Match` eşleşirse gövdesiz
+# 304 döner. Sert-yenileme ihtiyacı yapısal olarak ölür.
+_ETAG_MEMO: dict[str, tuple[int, int, str]] = {}
+
+
+def _icerik_etag(p: Path) -> str | None:
+    """Dosya İÇERİĞİNDEN güçlü ETag (sha256/32 hex). Dosya okunamıyorsa None.
+
+    HASH MALİYETİ ve MEMO'NUN SINIRI (gerekçe, brief'in "ağır dosya" maddesine cevap): app.js 518
+    KB'tır ve her istekte hash'lemek gereksizdir, bu yüzden sonuç `(mtime_ns, boyut)` anahtarıyla
+    süreç-içi memolanır. DİKKAT — mtime+boyut burada YALNIZ ÖNBELLEK ANAHTARIDIR, ETag'in DEĞERİ
+    DEĞİL. Fark önemlidir: anahtar ıskalarsa dosya yeniden hash'lenir (bir kez fazladan iş), ama
+    zayıf etiketin yanlış-pozitifi — "aynı mtime, farklı içerik" — tarayıcıya ASLA çıkamaz, çünkü
+    telden geçen değer her zaman o anki baytların özetidir. Zayıf etiket kabul edilseydi (a) fıkrası
+    çözülür (b) fıkrası AYNEN kalırdı; yani vaka kapanmazdı."""
+    try:
+        st = p.stat()
+    except OSError:  # sessiz-yutma: stat düşerse ETag ÜRETİLEMEZ ve hüküm burada verilmez — çağıran `_statik` yokluğu 404'e, okunamazlığı etiketsiz servise ayırır (uydurma etiket yasak)
+        return None
+    anahtar = _ETAG_MEMO.get(str(p))
+    if anahtar is not None and anahtar[0] == st.st_mtime_ns and anahtar[1] == st.st_size:
+        return anahtar[2]
+    import hashlib
+    h = hashlib.sha256()
+    try:
+        with open(p, "rb") as f:
+            for blok in iter(lambda: f.read(1 << 20), b""):
+                h.update(blok)
+    except OSError:  # sessiz-yutma: okuma yarıda düşerse yarım hash'ten etiket üretmek İÇERİK YALANI olurdu; etiketsiz dönülür ve gövdenin hükmünü FileResponse'un kendi hatası verir
+        return None
+    etag = f'"{h.hexdigest()[:32]}"'
+    _ETAG_MEMO[str(p)] = (st.st_mtime_ns, st.st_size, etag)
+    return etag
+
+
+def _inm_eslesir(basligi: str | None, etag: str) -> bool:
+    """RFC 9110 `If-None-Match` karşılaştırması — zayıf karşılaştırma (304 için doğru olan).
+
+    `*` her etiketle eşleşir; virgüllü liste tek tek denenir; `W/` öneki ATILIR (biz güçlü etiket
+    üretiyoruz ama bir ara katman etiketimizi zayıflatarak geri döndürebilir — o durumda gövdeyi
+    yeniden göndermek doğru DEĞİL, çünkü zayıflatılmış etiket hâlâ AYNI içeriği adresliyor)."""
+    if not basligi:
+        return False
+    for parca in basligi.split(","):
+        p = parca.strip()
+        if p == "*":
+            return True
+        if p.startswith("W/"):
+            p = p[2:]
+        if p == etag:
+            return True
+    return False
+
+
+def _statik(request: Request, ad: str, media_type: str | None = None):
+    """Ad-ad statik rotaların ORTAK gövdesi: içerik-ETag + no-cache + 304.
+
+    NEDEN ORTAK FONKSİYON (sekiz kopya değil): "iki kaynak, zamanla ayrışan iki yasa" bu depodaki
+    baskın hata deseni — `_NativeRoute`un gerekçesiyle aynı. Rotaların AD AD yazılması sözleşmesi
+    korunur (montaj hâlâ yok); ortaklaşan şey yalnızca önbellek davranışıdır."""
+    p = WEB / ad
+    etag = _icerik_etag(p)
+    if etag is None:
+        # Etiket üretilemedi. İKİ AYRI HÂL ve ikisi AYNI cevabı almaz (uydurma yasağı):
+        #   * DOSYA YOK → dürüst 404. (Starlette'in `FileResponse`u bu hâlde `RuntimeError`
+        #     atar, yani operatöre 500 döner: "sunucu bozuldu" der, oysa gerçek "dosya
+        #     dağıtılmamış"tır — dağıtım eksiğini bir çökme gibi gösteren bir yalan.)
+        #   * DOSYA VAR AMA HASH'LENEMEDİ (izin/IO) → etiketsiz servis edilir. 304 pazarlığı o
+        #     istekte yapılamaz; gövde her seferinde iner. Doğru olan budur — üretilemeyen etiket
+        #     UYDURULMAZ, ve okunabilir bir dosyayı 404 saymak da ayrı bir yalan olurdu.
+        if not p.is_file():
+            return JSONResponse({"error": "not_found", "path": ad,
+                                 "detail": "statik varlık sunucuda YOK — dağıtım eksik "
+                                           "(sunucu arızası değil)"},
+                                status_code=404, headers=_NOCACHE)
+        return FileResponse(p, media_type=media_type, headers=_NOCACHE)
+    basliklar = {**_NOCACHE, "ETag": etag}
+    if _inm_eslesir(request.headers.get("if-none-match"), etag):
+        # 304 GÖVDESİZDİR ve `Content-Length: 0` YAZILMAZ (RFC 9110 §15.4.5) — starlette'in
+        # `Response(status_code=304)`u zaten gövde yazmaz.
+        return Response(status_code=304, headers=basliklar)
+    return FileResponse(p, media_type=media_type, headers=basliklar)
 
 
 @app.get("/", response_class=HTMLResponse)
-def index():
-    return FileResponse(WEB / "index.html", headers=_NOCACHE)
+def index(request: Request):
+    return _statik(request, "index.html")
 
 
 @app.get("/app.js")
-def appjs():
-    return FileResponse(WEB / "app.js", media_type="application/javascript", headers=_NOCACHE)
+def appjs(request: Request):
+    return _statik(request, "app.js", "application/javascript")
 
 
 # STATİK BETİKLER TEK TEK YÖNLENDİRİLİR (StaticFiles montajı YOK): montaj, WEB dizinine sonradan
@@ -321,32 +421,37 @@ def appjs():
 # Satır içi bloklar üretimde bloklanır — landing ve workflow bu yüzden dışarı taşındı; o iki
 # sayfa aksi hâlde canlıda ölü açılırdı (workflow'un tüm diyagramı script'te üretiliyor).
 @app.get("/theme.js")
-def themejs():
-    return FileResponse(WEB / "theme.js", media_type="application/javascript", headers=_NOCACHE)
+def themejs(request: Request):
+    return _statik(request, "theme.js", "application/javascript")
 
 
 @app.get("/landing.js")
-def landingjs():
-    return FileResponse(WEB / "landing.js", media_type="application/javascript", headers=_NOCACHE)
+def landingjs(request: Request):
+    return _statik(request, "landing.js", "application/javascript")
 
 
 @app.get("/workflow.js")
-def workflowjs():
-    return FileResponse(WEB / "workflow.js", media_type="application/javascript", headers=_NOCACHE)
+def workflowjs(request: Request):
+    return _statik(request, "workflow.js", "application/javascript")
 
 
 # ⌘K komut paleti. Yol AD AD yazılmak ZORUNDA (yukarıdaki not: StaticFiles montajı yok) —
 # index.html'e script etiketini eklemek TEK BAŞINA yetmez, bu satır olmadan üretimde 404
 # döner ve palet sessizce hiç var olmaz.
 @app.get("/palette.js")
-def palettejs():
-    return FileResponse(WEB / "palette.js", media_type="application/javascript", headers=_NOCACHE)
+def palettejs(request: Request):
+    return _statik(request, "palette.js", "application/javascript")
 
 
 @app.get("/landing", response_class=HTMLResponse)
-def landing():
-    """The original marketing landing page — the design reference the dashboard is cut from."""
-    return FileResponse(WEB / "landing.html")
+def landing(request: Request):
+    """The original marketing landing page — the design reference the dashboard is cut from.
+
+    ÖNBELLEK NOTU (küçük-kuyruk turu): bu rota ve `/workflow` `_NOCACHE`i HİÇ göndermiyordu — yani
+    tanıtım sayfası, panonun aksine, tarayıcının sezgisel tazelik hesabına bırakılmıştı. C10
+    bekçisinin canlı-sayı sözleşmesi (landing.js → /api/public/summary) tam da bu sayfada geçerli
+    ve bayat bir HTML kabuğu o sözleşmeyi sessizce boşa çıkarırdı."""
+    return _statik(request, "landing.html")
 
 
 @app.get("/api/public/summary")
@@ -429,10 +534,10 @@ def _setup_regime_matrix(trades: list) -> dict:
 
 
 @app.get("/workflow", response_class=HTMLResponse)
-def workflow():
+def workflow(request: Request):
     """İnteraktif günlük karar hattı diyagramı — kapanış sonrası tek döngünün tam akışı; bugünkü
     darboğaz turunda eklenen mekanizmalar YENİ rozetiyle işaretli. Bağımsız, dış bağımlılık yok."""
-    return FileResponse(WEB / "workflow.html")
+    return _statik(request, "workflow.html")
 
 
 # ---- RUNBOOK YÜZEYİ (UIUX S1-T3, 2026-08-01) -------------------------------------------------

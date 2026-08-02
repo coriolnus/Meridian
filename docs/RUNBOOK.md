@@ -37,7 +37,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **11 ops betiği** başlığıyla okundu
+- **13 ops betiği** başlığıyla okundu
 - **41 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -115,9 +115,9 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/loop.py:739` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
   - `meridian/loop.py:746` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
   - `meridian/scheduler.py:234` → mesaj şablonu: `f"SEANS ATLANDI: {session} — bir sonraki seans kapandı, bu seansın barı hâlâ " f"gelmedi (kapsama %{100 * float(cov or 0):.0f} < %{100 * need:.0f})"`
-  - `meridian/watchdog.py:1210` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
-  - `meridian/watchdog.py:1270` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
-  - `meridian/watchdog.py:1277` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
+  - `meridian/watchdog.py:1271` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
+  - `meridian/watchdog.py:1331` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
+  - `meridian/watchdog.py:1338` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -134,7 +134,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/api.py:2628` → mesaj şablonu: `"HALT via dashboard"`
+  - `meridian/api.py:2733` → mesaj şablonu: `"HALT via dashboard"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -211,12 +211,12 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 - Bu jetonu **8 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
   - `meridian/selfreview.py:103` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
   - `meridian/watchdog.py:125` → mesaj şablonu: `f"mekanizma gecikti: {x['name']} — {x['gap_h']} sa (pencere {x['expected_h']} sa)"`
-  - `meridian/watchdog.py:1184` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
-  - `meridian/watchdog.py:1193` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
-  - `meridian/watchdog.py:1199` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
-  - `meridian/watchdog.py:1250` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
-  - `meridian/watchdog.py:1257` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
-  - `meridian/watchdog.py:1263` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
+  - `meridian/watchdog.py:1245` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
+  - `meridian/watchdog.py:1254` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
+  - `meridian/watchdog.py:1260` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
+  - `meridian/watchdog.py:1311` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
+  - `meridian/watchdog.py:1318` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
+  - `meridian/watchdog.py:1324` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -270,7 +270,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:1167` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
+  - `meridian/watchdog.py:1228` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -439,8 +439,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `earnings_refresh` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- `deploy/oracle-a1/tick_watchdog.sh` — başlığında `earnings_refresh` geçiyor.
 
 ## arming_eval {#arming_eval}
 
@@ -534,8 +533,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `sprint_cadence` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- `deploy/oracle-a1/tick_watchdog.sh` — başlığında `sprint_cadence` geçiyor.
 
 ## y4_collect {#y4_collect}
 
@@ -928,6 +926,95 @@ cd /opt/meridian && bash deploy/oracle-a1/deploy.sh
 
 Not: normalde bu betiği ELLE koşman gerekmez — yereldeki cutover.sh (aynı dizinde) durdurma +
 rsync + bu betik + token + doğrulama sırasını tek komutta yürütür.
+```
+
+## `deploy/oracle-a1/litestream_kur.sh` {#deploy-oracle-a1-litestream-kur-sh}
+
+```
+litestream_kur.sh — Litestream'i A1'e SÜRÜM-SABİTLİ + SHA256-KAPILI kurar (WP-H / H10 aşama-1).
+
+NEREDE KOŞAR: **A1'de**, /opt/meridian içinden. Mac'ten değil (ikili aarch64-Linux'tur).
+NE ZAMAN KOŞAR: bakım penceresinde, RUNBOOK "Bölüm B4" prosedürünün adımı olarak. Bu betiği bir
+AJAN KOŞMAZ — canlı defterin şemasına dokunan ilk `start`ı operatör açar (aşağıda `--baslat`).
+
+İDEMPOTENT: iki kez koşmak hiçbir şeyi bozmaz. Doğru sürüm zaten kuruluysa indirme ATLANIR;
+yapılandırma/birim dosyaları AYNIYSA "değişmedi" der ve dokunmaz; `enable` zaten etkinse geçer.
+
+==================================================================================================
+TEDARİK-ZİNCİRİ KAPISI (H2 ruhu — `uv audit` neyse bu da o)
+==================================================================================================
+Bu betik depo dışından bir İKİLİ indiriyor: Python paketlerine uyguladığımız kapıyı ona
+uygulaMAMAK, kapıyı en zayıf halkadan delmek olurdu. Üç kilit:
+1. SÜRÜM SABİT (`LS_SURUM`) — "latest" YASAK. `latest`, dünkü denetimden geçmemiş bir ikiliyi
+yarınki koşumda sessizce canlıya sokar.
+2. SHA256 SABİT (`LS_SHA256`) — yayıncının `checksums.txt`inden 2026-08-02'de alındı. İndirme
+ile eşleşmezse betik DURUR ve dosyayı SİLER; "belki ağ bozdu" diye tekrar denemez.
+3. MİMARİ KAPISI — `uname -m` aarch64 değilse durur (yanlış ikili "çalışmıyor" diye değil,
+"exec format error" diye ölürdü ve bunu birim journal'ında aramak saatler yerdi).
+SHA256 YENİLEME (sürüm yükseltirken): yayıncının checksums dosyasından okunur —
+curl -sSL https://github.com/benbjohnson/litestream/releases/download/v<SÜRÜM>/checksums.txt
+Sabit ELLE güncellenir ve turun commit'ine girer; betik onu İNTERNETTEN TAZELEMEZ (tazeleseydi
+kapı kapı olmaktan çıkar, "indirdiğimi indirdiğimle doğruladım" totolojisine dönerdi).
+```
+
+## `deploy/oracle-a1/tick_watchdog.sh` {#deploy-oracle-a1-tick-watchdog-sh}
+
+```
+tick_watchdog.sh — ASILI-TİCK bekçisinin GÖVDESİ (küçük-kuyruk turu, 2026-08-02).
+
+================================ NEDEN AYRI DOSYA ============================================
+Bu mantık 2026-07-31'de birim dosyasının `ExecStart=/bin/bash -c '...'` satırının İÇİNE
+yazılmıştı ve ÖLÜYDÜ. Kanıt (A1, salt-okuma ölçüm 2026-08-02 19:46 UTC):
+journalctl -u meridian-tick-watchdog.service
+Aug 02 19:32:34 (bash)[10835]: meridian-tick-watchdog.service:
+Referenced but unset environment variable evaluates to an empty string: YAS
+Aug 02 19:32:34 bash[10835]: [tick-watchdog] ilerleme var (s)
+`(s)` yazması `(${YAS}s)`nin boş genişlemesidir: systemd, ExecStart satırındaki `$YAS`/`${YAS}`
+dizgelerini bash'e VERMEDEN ÖNCE kendi ortam sözlüğünden ikame eder; sözlükte yoktur, boş dizge
+koyar. Bash'in gördüğü karşılaştırma `[ "" -gt 10800 ]` olur, "integer expression expected" ile
+düşer ve akış HER ZAMAN else dalına gider. Yani bekçi kurulduğu günden beri HİÇBİR restart
+yapamazdı — 45 dk mı 3 sa mı tartışması bu kusurun yanında ikincildir.
+SINIF: "birim dosyasında kabuk-sözdizimi varsayımı" — fail-notify'ın çok-satır-Python vakası
+(2026-07-30) ve `Environment=` satır-sonu yorumu vakasının (2026-08-02) ÜÇÜNCÜ kuşağı. Kalıcı
+ders bu üçünden çıkar: systemd birimi bir kabuk betiği DEĞİLDİR; mantık ayrı bir dosyada yaşar,
+birim yalnız o dosyayı çağırır. Bu dosya kabuk tarafından okunur, `$` ikamesi bash'indir.
+
+============================== EŞİK: 45 DK (KALICI) ==========================================
+ÖNCEKİ DEĞER 10800 sn idi ve birim açıklamasında "3sa-GECICI(ilk-tam-tick; sabah 45dk-normale
+döner)" yazıyordu. "Sabah" 2026-07-31'di; etiket 2026-08-02'ye kadar durdu. Artık KALICI 2700.
+ÖLÇÜM (A1 canlı olay defteri + systemd journal, 2026-08-02, salt-okuma):
+* NORMAL İŞLEYİŞ: son 24 saatte poll işaretlerinin (finviz_unavailable · candidate_review_backlog
+· sprint_cadence_*) 513 damgası — medyan aralık 300 sn, p95 301 sn, MAKSİMUM 302 sn (5,0 dk).
+45 dk bunun 8,9 KATIDIR. Yanlış alarm payı geniş.
+* KURUCU VAKA: 2026-07-30 21:14→22:27 UTC asılı-tick — ölçülen sessizlik 73,1 dk. 45 dk bunu
+YAKALAR; eski 10800 sn (3 sa) YAKALAMAZDI. Yani "geçici" gevşetme, bekçiyi tam da onu var
+eden vakaya karşı kör bırakmıştı.
+* İKİ EK İLERLEMESİZ PENCERE (aynı ölçüm, systemd'de restart YOK — süreç ayaktaydı):
+2026-07-31 00:16:16→01:56:32 = 100,3 dk ve 2026-07-31 20:12:58→21:37:32 = 84,6 dk.
+İKİSİ DE AYNI kod bölgesinde: `earnings_refreshed` olayından `arming_measured` olayına.
+Bunlar "yavaş ama çalışan kadans" DEĞİL, tekrar eden bir takılmadır (kök neden ayrı tur —
+günlükteki `earnings.refresh` ağ-nondeterminizmi kalemiyle aynı bölge). 45 dk'lık kapı bu
+pencerelerde ateşlenir ve bu DOĞRUDUR: kadans damgaları ilerlememiştir, restart sonrası
+sonraki poll onları yeniden koşar.
+
+========================= SEANS FARKINDALIĞI: ÖLÇÜLDÜ, GEREKSİZ ==============================
+Brief'in sorusu: hafta sonu tick yok — 45 dk sahte alarm üretir mi? ÖLÇÜM: HAYIR, ve bu yüzden
+takvim/mcal bağı EKLENMEDİ (gereksiz bir bağımlılık uydurmak çözüm değildir).
+* Ölçülen 24 saatin TAMAMI seans dışıdır (2026-08-02 Pazar) ve maksimum poll aralığı yine
+302 sn çıktı.
+* MEKANİZMA (koda karşı doğrulandı): `scheduler.advance_once()` seans dışında "güncel" dalına
+düşer ve o dal `_persist()` çağırır (scheduler.py:976) — yani `scheduler_status.updated`
+seanstan BAĞIMSIZ olarak her poll'de (300 sn) tazelenir. `_run()`un istisna dalı da
+`updated` yazar (scheduler.py:1051). Seans dışı olmak damganın DURMASI demek değildir.
+* CANLI KANIT: 2026-08-02 19:46:50Z ölçüm anı · scheduler_status.updated = 19:45:59Z → yaş 51 sn.
+
+============================ YAS (YENİDEN-BAŞLATMA-SONRASI) ==================================
+Yeniden başlatmadan hemen sonra `scheduler_status.json` HÂLÂ eski `updated`ı taşır (yeni süreç
+onu saniyeler içinde tazeler, ama "saniyeler" > 0). Zamanlayıcı o aralığa denk gelirse taze
+doğmuş bir süreci bayat sanıp yeniden başlatır — ve bu KENDİNİ BESLEYEN bir restart döngüsüdür.
+Bu yüzden servisin systemd'den okunan AYAKTA KALMA SÜRESİ eşiğin altındaysa hüküm VERİLMEZ.
+Sinyal uydurma değil ölçülmüştür: `ActiveEnterTimestamp` = 2026-08-02 19:05:18 UTC, aynı anın
+journal satırı "Started meridian.service" = 19:05:18 — birebir.
 ```
 
 ---

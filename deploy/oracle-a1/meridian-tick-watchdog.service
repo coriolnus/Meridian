@@ -1,0 +1,29 @@
+# meridian-tick-watchdog — ASILI-TİCK bekçisi.
+#
+# KURUCU VAKA (2026-07-30 21:14→22:27 UTC): worker çöküp yeniden doğdu, yeni beden açılışta
+# futex'te asıldı. uvicorn 503 CEVAPLIYORDU (yani "canlı"), ama tick İLERLEMİYORDU; süreç-içi
+# watchdog tick'in İÇİNDE olduğundan sustu, süreç ölmediği için OnFailure de ateşlemedi.
+# CANLILIK != İLERLEME. Bu birim İLERLEMEYİ ölçer.
+#
+# 2026-08-02 KÜÇÜK-KUYRUK TURU — İKİ DEĞİŞİKLİK:
+#   (1) MANTIK BİRİMDEN ÇIKTI. Önceki sürüm `ExecStart=/bin/bash -c '... $YAS ...'` idi ve systemd
+#       `$YAS`/`${YAS}`yi bash'e vermeden ikame ettiği için karşılaştırma HER ZAMAN düşüyordu:
+#       bekçi kurulduğu günden beri hiç restart yapamamıştı (kanıt journal'da: "[tick-watchdog]
+#       ilerleme var (s)" + "Referenced but unset environment variable ... : YAS"). Gövde artık
+#       tick_watchdog.sh'te; ayrıntılı kök-neden ve ölçüm o dosyanın başındadır.
+#   (2) EŞİK NORMALLEŞTİ: 10800 sn ("3sa-GECICI") → 2700 sn (45 dk), KALICI. "GEÇİCİ" etiketi
+#       kaldırıldı. Ölçüm: normal işleyişte maksimum poll aralığı 302 sn (45 dk = 8,9× pay);
+#       kurucu vakanın sessizliği 73,1 dk (45 dk yakalar, 3 sa YAKALAMAZDI).
+#
+# BU DOSYA DEPODA VERSİYONLANIR (bu turdan önce YALNIZ A1'in /etc/systemd/system'inde yaşıyordu —
+# yani hiçbir gözden geçirmeye, hiçbir teste ve hiçbir yeniden kuruluma dahil değildi; taze bir
+# cutover panoyu bu korumasız açardı).
+[Unit]
+Description=Meridian tick-progress bekçisi (scheduler_status.updated 45 dk bayatsa restart + journal kaydı)
+
+[Service]
+Type=oneshot
+# EŞİĞİ GEÇİCİ OLARAK DEĞİŞTİRMEK GEREKİRSE: `systemctl edit meridian-tick-watchdog.service` ile
+# drop-in'e `Environment=MERIDIAN_TICK_BAYAT_S=...` eklenir. Betik böyle bir sapmayı HER KOŞUDA
+# journal'a BEYAN eder — sessiz gevşetme bu turda kapatılan kusurdur.
+ExecStart=/opt/meridian/deploy/oracle-a1/tick_watchdog.sh

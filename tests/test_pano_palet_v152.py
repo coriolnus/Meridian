@@ -494,7 +494,12 @@ def test_api_palette_js_yolunu_sunar():
     """
     src = API.read_text()
     assert '@app.get("/palette.js")' in src, "api.py'de /palette.js yolu yok — üretimde 404"
-    assert re.search(r'FileResponse\(WEB / "palette\.js"', src)
+    # 2026-08-02 (küçük-kuyruk turu): ad-ad statik rotalar `FileResponse(WEB / "...")` yerine ortak
+    # `_statik(...)` gövdesinden geçiyor (içerik-ETag + 304). ESKİ ÇİVİ DESENE bakıyordu ve desen
+    # kalkınca test edilmeden ÖLECEKTİ — repodaki "bekçi, yokluğu sessizliğe eşitlenen izi değil
+    # DURUMU ölçmeli" dersinin aynısı. Yeni çivi, rotanın palette.js'i JS olarak sunduğunu ölçer.
+    assert re.search(r'_statik\(request, "palette\.js", "application/javascript"\)', src), \
+        "/palette.js rotası palette.js'i JS olarak sunmuyor"
 
 
 def test_palette_js_yolu_gercekten_kayitli():
@@ -506,9 +511,15 @@ def test_palette_js_yolu_gercekten_kayitli():
     çıkmadan aynı gerçeği kanıtlıyor.
     """
     from meridian.api import app
+    from starlette.requests import Request
 
     rota = [r for r in app.routes if getattr(r, "path", None) == "/palette.js"]
     assert rota, "/palette.js rota tablosunda yok — üretimde 404 ve palet hiç var olmaz"
-    yanit = rota[0].endpoint()
+    # 2026-08-02: işleyici artık `request` alıyor (içerik-ETag + `If-None-Match` 304 sözleşmesi).
+    # `If-None-Match` GÖNDERİLMEZ, yani bu çağrı kesin olarak GÖVDELİ dalı ölçer.
+    istek = Request({"type": "http", "method": "GET", "path": "/palette.js",
+                     "headers": [], "query_string": b""})
+    yanit = rota[0].endpoint(istek)
     assert pathlib.Path(yanit.path) == PALET, f"rota yanlış dosyayı sunuyor: {yanit.path}"
     assert "javascript" in yanit.media_type
+    assert yanit.headers.get("etag"), "statik rota ETag'siz — 304 pazarlığı yapılamaz"
