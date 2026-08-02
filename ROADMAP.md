@@ -37,6 +37,11 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   kokusu sabah listesinde); monitör-v2 + 3sa-gevşetilmiş bekçi nöbette.
 - **Operatöre sabah kalemleri:** MNST 2005 ×0,48 bütünlük yorumu · delist-bar kararı (QuantConnect
   vs Massive planı) · bildirim kanalı · FMP planı · VIX kaynağı · shares-outstanding kaynağı.
+- **DENETİM KUYRUĞU (2026-08-02 gecesi; kaynak `docs/SISTEM-DENETIMI-2026-08-02.md`):** KOVA A
+  (9 sessiz-güvenli düzeltme: C2/C4/C6/C7/C15/C20/C21/C22/C25-sayaç) gece ajan turunda; **KOVA B
+  16 kalem operatör onayı bekliyor** — sıralı öncelik önerisi: C9 (çıkış→ayna kopukluğu, yetim
+  pozisyon) → C8 (pano düğmesi E1-bypass) → C23 (HALT ayna-iptali) → C11/C18 (replay ATR bacağı,
+  karne rakamları değişir) → C13/C19 (canlı-ölü knob + kesici penceresi) → gerisi raporda.
 
 ## 2. DURUM PANOSU (2026-07-31 sabah)
 
@@ -394,6 +399,11 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-02 ~03:30 TAM-SİSTEM DENETİMİ İNDİ (operatör talebi: "bütün bileşenler").** 8 salt-okuma
+  denetçi + şiddet≥3'e adversarial doğrulayıcı (34 ajan): **25 doğrulanmış ciddi bulgu** (19 şiddet-3)
+  + 22 hafif + 1 çürütülen. Rapor+triyaj: `docs/SISTEM-DENETIMI-2026-08-02.md`. KOVA A (9 sessiz-güvenli
+  hata-yolu düzeltmesi) gece kapatılıyor; KOVA B (16 karar-değiştiren: en kritiği C9 çıkış-ayna kopukluğu)
+  operatör sabah onayında. Yan kazanım: her-gece-sprint gizemi çözüldü (C15 damga-ezilmesi).
 - **2026-08-01 ~17:50 UIUX S1 CANLIDA (otonom gece, pencere-5).** WP0 onaylandı → S1 iki ajanla:
   DTCG tokens.json (eş-doğrulamalı; ham-renk istisnası SIFIR çıktı) + 136-çift kontrast raporu
   (8 beyansız bulgu — B1 merdiven-çöküşü, B6 aynı-renk-iki-seri: refinement-turu adayı) + RUNBOOK
