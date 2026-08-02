@@ -354,6 +354,13 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   kilidi; koltuk-tek-başına-yeter-mi belirsizliği hesap-içi doğrulanmalı) · ücretli setler
   (Brain $25 / Estimize $75 / SmartInsider $10 — ancak FREE fizibilite sonrası) · ToS-yorumu:
   yerel-indirme yolu Rol-1 önerisiyle İZLENMEZ.
+- **LEARNING-SÜZGECİ HÜKMÜ (Ek-C — docs/QC-LEARNING-SUZGECI-EK-C.md):** metodolojide ÜSTÜNLÜK
+  BİZDE teyit (ön-kayıt/walk-forward/purged-CV katalogda yok; ISL makaleleri p-hacking ders-kitabı
+  örneği — "nasıl kodlanır" kaynağı, "kanıt" kaynağı DEĞİL). Taşınan somut değer: R1 evren-yaşam-
+  döngüsü + R2 SymbolData kalıbı + BC101 L5/L7 evren/ısıtma dersleri (API-bayatlık şerhiyle —
+  docs'la çapraz-doğrulamadan kopyalanmaz). ASIL defter-v3 kaynağı: docs research-environment
+  üçlüsü (applying-research + META-ANALYSIS [karne-akışımıza en yakın] + object-store).
+  Operatöre: sertifika yok, kurs-kaydı yapılmadı, CV değeri sıfır.
 - **BİLEŞEN-DERS KARTLARI (2026-08-03 /strategies taraması — docs/QC-STRATEJI-DERSLERI-EK-B.md;
   Rol-1 öncelik sırası, YAŞAYAN kolun üstünde çalıştıkları için (b)-adaylarından ÖNCE):**
   ① REJİM-KADRANI: SPY 12-ay t-stat [−1,+1] SÜREKLİ maruziyet çarpanı (kapı değil) — EDG-005
