@@ -157,8 +157,11 @@ def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     assert set(GUNDUZ) == set(GECE_OV), \
         ("gündüz renk katmanı ile CSS'in gece override kümesi ayrışıyor "
          f"(GECE bloğunda karşılığı olmayan renk jetonu): {sorted(set(GUNDUZ) ^ set(GECE_OV))}")
-    # ölçülmüş sayım — beyan kaynakta dursun
-    assert len(GUNDUZ) == 36 and len(TEMEL) == 23 and len(ROOT) == 59, \
+    # ölçülmüş sayım — beyan kaynakta dursun.
+    # 36 → 45 (WP-P/P9, 2026-08-02): --band-2 (nitel bant merdiveninin orta basamağı) +
+    # --kap-1..4 (tek-hue sequential kapsama rampası) + --dv-n2/n1/p1/p2 (CVD-güvenli
+    # diverging sapma skalası). Dokuzu da İKİ temaya birden girdi — bu testin varlık sebebi.
+    assert len(GUNDUZ) == 45 and len(TEMEL) == 23 and len(ROOT) == 68, \
         f"jeton sayımı değişmiş: temel {len(TEMEL)} · renk {len(GUNDUZ)} · toplam {len(ROOT)}"
 
 
@@ -210,7 +213,7 @@ def test_DTCG_semasi_gecerli():
             f"{p}: açıklamasız jeton — okuyucusuz yazım yok (YASA 6)"
         assert "$extensions" in tk and "org.meridian.css" in tk["$extensions"], \
             f"{p}: CSS eş-kaydı yok — eş-doğrulama yolu bu alan olmadan kurulamaz"
-    assert sayac == 59 + 36, f"jeton sayımı {sayac} (beklenen 95 = 23 temel + 2×36 renk)"
+    assert sayac == 68 + 45, f"jeton sayımı {sayac} (beklenen 113 = 23 temel + 2×45 renk)"
 
 
 def test_takma_adlar_COZULUYOR():

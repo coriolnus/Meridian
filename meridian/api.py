@@ -1241,7 +1241,12 @@ async def api_set_secret(name: str, request: Request):
             from . import hermes
             local_agent = hermes.sync_local_agent_gemini(enable=True)
         except Exception as e:
-            local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})"}
+            # `senkron_ts` BU DALDA DA ZORUNLU (ders (b), 2026-08-02). `sync_local_agent_gemini`
+            # kendi dönüşlerinin üçünde de damga taşıyor; import/çağrı bacağı düşerse damgasız
+            # bir sözlük dönerdi ve panonun okuduğu satır "damga yok" derdi — oysa ölçüm ANI
+            # burada BİLİNİYOR. Damgayı atlamak, bilinen bir zamanı bilinmiyor göstermekti.
+            local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
+                           "senkron_ts": memory.now_iso()}
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
             "skills_enabled": rec["changed"], "local_agent": local_agent}
 
@@ -1261,7 +1266,8 @@ def api_delete_secret(name: str, request: Request):
             from . import hermes
             local_agent = hermes.sync_local_agent_gemini(enable=False)   # yedeklenen Nous ayarına dön
         except Exception as e:
-            local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})"}
+            local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
+                           "senkron_ts": memory.now_iso()}          # bkz. POST dalındaki gerekçe
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
             "skills_disabled": rec["changed"], "local_agent": local_agent}
 

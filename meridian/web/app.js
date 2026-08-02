@@ -797,7 +797,7 @@ window.temaDegistir = () => {
 const EYLEMLER = new Set([
   "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaClose", "alpacaSubmit",
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
-  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "mktChip",
+  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
   "opSoftHalt", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
   "testKey", "toggleHalt", "toggleKs",
@@ -999,6 +999,18 @@ function relTime(ts) {
   if (s < 3600) return `${Math.round(s / 60)} dk önce`;
   if (s < 86400) return `${Math.round(s / 3600)} sa önce`;
   return `${Math.round(s / 86400)} gün önce`;
+}
+// MUTLAK DAMGA — "30 Tem 14:55". `relTime` bir SÜRE söyler ve süre, ekranda duran bir cümlenin
+// ne zaman ÖLÇÜLDÜĞÜNÜ söylemez: sayfa yenilenmeden duran bir "az önce" saatlerce yaşayabilir.
+// Bir DURUM satırının damgası mutlak olmalı (HERMES-DAYANIKLILIK dersi (b), 2026-08-02: altı gün
+// önceki bir OSError'un sonucu taze bir hüküm gibi okundu). Ayrıştırılamayan damga UYDURULMAZ —
+// çağıran "damga yok" dürüstlüğünü basar.
+function mutlakTs(ts) {
+  if (!ts) return null;
+  const d = new Date(ts);
+  if (isNaN(d)) return null;
+  return d.toLocaleString("tr-TR", { day: "numeric", month: "short",
+                                     hour: "2-digit", minute: "2-digit" });
 }
 function eventsFeed(events) {
   const rows = (events || []).slice(0, 12).map(e => {
@@ -2038,13 +2050,25 @@ function _bullet(o) {
   const v = olculdu ? Math.max(0, Math.min(max, Number(o.deger))) : null;
   const X = n => (Math.max(0, Math.min(max, n)) / max) * W;
 
-  // Nitel aralıklar — kesir sınırları, açıktan koyuya. Üç bant Few'nun önerdiği idealdir.
-  const bantlar = (o.bantlar && o.bantlar.length ? o.bantlar : [0.6, 0.85, 1]).slice(0, 5);
   // Yoğunluk merdiveni — TEK hue (sıcak nötr), artan koyuluk. Jetonlar temayla döndüğü için
   // gece zemininde merdiven kendiliğinden ters yöne (artan açıklık) çalışır; ayrı bir gece
-  // listesi TUTULMUYOR. --raise listede YOK: kart üstünde neredeyse görünmez (1.09) ve ilk
-  // bant görünmezse "2-5 aralık" iddiası kağıt üstünde kalırdı.
-  const YOG = ["var(--card-2)", "var(--line)", "var(--line-2)", "var(--tx3)", "var(--tx2)"];
+  // listesi TUTULMUYOR.
+  //
+  // BEŞ BANTTAN ÜÇE (B1 düzeltmesi, 2026-08-02 · kontrast-denetimi.md §5/B1 + §11.1b).
+  // Eski liste `card-2 → line → line-2 → tx3 → tx2` idi ve İKİ ayrı kusuru vardı:
+  //   (1) son iki basamak (`tx3`, `tx2`) iki temada da AYNI RENKTİ — oran 1.00;
+  //   (2) daha kötüsü, ekranda fiilen çizilen bantlar listenin İLK ikisiydi. `bantlar`
+  //       varsayılanı üç, çağrıların çoğu İKİ bant istiyor — yani görünen tek geçiş
+  //       `card-2 ↔ line`di ve o da 1.09:1, yani görünmüyordu. "2-5 nitel aralık" iddiası
+  //       ekranda tek tonluk bir şeritti.
+  // Üç bant Few'nun önerdiği idealdir ve orta basamak artık kendi jetonunu taşıyor:
+  // adımlar 2.46 / 2.49 (gündüz) · 2.45 / 2.46 (gece). Tek-hue bir merdivenin toplam
+  // menzili `card-2 ↔ tx2` ile sınırlı (~6.1:1), yani 3:1 adım ancak bantları ikiye
+  // indirerek alınabilirdi — skalayı yok ederek "erişilebilir" kılmak olurdu.
+  const YOG = ["var(--card-2)", "var(--band-2)", "var(--tx2)"];
+  // Nitel aralıklar — kesir sınırları, açıktan koyuya. Bant sayısı merdivenin uzunluğuyla
+  // sınırlı: liste kısaldığı gün fazladan sınır sessizce son bandı tekrarlardı.
+  const bantlar = (o.bantlar && o.bantlar.length ? o.bantlar : [0.6, 0.85, 1]).slice(0, YOG.length);
   let onceki = 0;
   const iz = bantlar.map((b, i) => {
     const x0 = onceki * W, x1 = Math.min(1, b) * W;
@@ -2147,7 +2171,30 @@ function icTrend(hist) {
        fill="none" stroke="${col}" stroke-width="1.5" ${dash} opacity=".9"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;flex:none" aria-hidden="true">
     <line x1="0" y1="${y(0)}" x2="${W}" y2="${y(0)}" stroke="var(--line)" stroke-width="1"/>
-    ${poly(havuz, "var(--tx3)", 'stroke-dasharray="2 2"')}${poly(cfs, "var(--violet)", 'stroke-dasharray="1 3"')}${poly(gercek, "var(--accent)", "")}</svg>`;
+    ${poly(havuz, IC_SERI.havuz[1], `stroke-dasharray="${IC_SERI.havuz[2]}"`)}${
+      poly(cfs, IC_SERI.sim[1], `stroke-dasharray="${IC_SERI.sim[2]}"`)}${
+      poly(gercek, IC_SERI.gercek[1], "")}</svg>`;
+}
+// ---- IC TRENDİ · SERİ SÖZLEŞMESİ (B6 düzeltmesi, 2026-08-02) ------------------------------------
+// TEK TABLO, İKİ TÜKETİCİ: çizim (`icTrend`) ve efsane (`icEfsane`) aynı satırdan okur. Ayrı
+// yazıldıkları sürece ayrışabilirlerdi ve TAM OLARAK ayrıştılar: efsane üç adı üç RENKLE
+// etiketliyordu, oysa `--violet` ile `--accent` iki temada da BİRE-BİR aynı renkti (oran 1.00)
+// ve grafikteki gerçek ayrım kesik-çizgi DESENİYDİ — efsane o deseni hiç göstermiyordu
+// (kontrast-denetimi.md §5/B6, öneri Ö8). Şimdi renk ayrı (luminans merdiveni: 17.80 → 9.60 →
+// 5.06, kart üstünde) VE efsane çizgi örneğini basıyor. Renk körü okuyucu için taşıyıcı kanal
+// desendir; hue EKLENMEDİ çünkü hue, renk körlüğünün sildiği tam o şeydir.
+const IC_SERI = {
+  gercek: ["gerçek", "var(--accent)", "0"],
+  sim: ["sim", "var(--violet)", "1 3"],
+  havuz: ["havuz", "var(--tx3)", "2 2"],
+};
+function icEfsane() {
+  return Object.values(IC_SERI).map(([ad, renk, desen]) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+       <svg width="18" height="6" viewBox="0 0 18 6" aria-hidden="true" style="flex:none">
+         <line x1="0" y1="3" x2="18" y2="3" stroke="${renk}" stroke-width="1.5"${
+           desen === "0" ? "" : ` stroke-dasharray="${desen}"`}/></svg>
+       <span style="color:${renk}">${ad}</span></span>`).join(" · ");
 }
 
 const CHECK_TR = { exposure_budget: "bütçe", max_open_positions: "pozisyon", sector_cap: "sektör tavanı",
@@ -2257,6 +2304,8 @@ RENDER.market = async () => {
        gerçek olduğu için satırı durur, "emekli" etiketiyle işaretlidir; bayatlık sayımına GİRMEZ.</p>` : ""}
     ${src.finviz_reason ? `<p class="hint rise">finviz keşfi: ${esc(src.finviz_reason)}</p>` : ""}
 
+    <div class="card rise" id="km-kart"></div>
+
     <div class="card rise">
       <input class="searchbox" id="mkt-q" type="search" placeholder="hisse ara… (ör. AAPL)"
              aria-label="Hisse kodunda ara" data-act="mktPaint" data-act-on="input">
@@ -2265,9 +2314,134 @@ RENDER.market = async () => {
            kabında yatay kayar. Sayfanın gövdesi asla yana kaymaz. -->
       <div id="mkt-tbl" style="margin-top:16px;overflow-x:auto"></div>
     </div>`;
+  kmCiz();
   mktPaint();
   mktSideSub();
 };
+
+// ==============================================================================================
+// P9 · KAPSAMA ISI-MATRİSİ (WP-P, 2026-08-02)
+// ----------------------------------------------------------------------------------------------
+// SORDUĞU SORU: "izlediğim evrende hangi ÖLÇÜM nerede EKSİK?" — Veri Sağlığı sayfasının soru
+// cümlesinin ("baktığım veri sağlam mı?") sayısal hâli. Bugüne kadar panonun verdiği cevap tek
+// bir sayıydı (`stale_n`), yani "kaç sembolün BARI bayat". Bar tazeliği kapsamanın YALNIZ BİR
+// boyutudur: 300 barlık bir sembolün barı taze olabilir ama 52-haftalık ölçümü YOKTUR ve o
+// eksiklik hiçbir yüzeyde görünmüyordu.
+//
+// EKSENLER MEVCUT VERİNİN DOĞAL EKSENİDİR, YENİ BİR UÇ AÇILMADI. Satırlar `marketview`in
+// BEYAN ETTİĞİ ölçüm pencereleridir (her biri kendi asgari bar sayısını ister ve yoksa None
+// döner — UYDURMA YASAĞI'nın kaynaktaki hâli); sütunlar evrenin dilimleridir. Hücre = o dilimde
+// o ölçümün ölçülebildiği sembollerin oranı. Yani matris, `None` sayımının haritasıdır: her
+// hücre "burada kaç sembol için bu soru CEVAPLANAMIYOR" der.
+//
+// İKİ SKALA, İKİ SORU (P9'un kendi sözleşmesi):
+//   · KAPSAMA — tek-hue sequential (`--kap-1..4`). "Ne kadarı ölçülebiliyor?"
+//   · SAPMA   — CVD-güvenli diverging (`--dv-n2..p2`). "Bu dilim EVRENDEN ne kadar ayrılıyor?"
+// İkincisi asıl teşhis aracıdır: evrenin %98'inde ölçülen bir alan POZİSYONDAKİ hisselerde
+// %60'a düşüyorsa, körlük tam da paranın durduğu yerdedir ve mutlak sayı bunu SÖYLEMEZ.
+// Taban her zaman TÜM sütunudur ve payda hücrede yazılıdır.
+//
+// RAKAM BİRİNCİ KANAL, DOLGU İKİNCİ: bir ısı skalasının komşu basamakları 3:1 olamaz (menzil
+// 2.05:1) — bu beyanlı bir sapmadır (kontrast-denetimi.md §6/İ8) ve bedeli, her hücrenin kendi
+// oranını RAKAMLA yazmasıyla ödenir. Renk körü okuyucu için sapma kutupları ayrıca mavi ↔ toprak
+// eksenindedir ve işaret (+/−) rakamın önünde durur.
+const KM_OLCUM = [
+  // [başlık, alan, pencere beyanı]  — pencereler marketview.py'nin sabitlerinden okunur DEĞİL,
+  // ORADAN KOPYALANIR ve bu bilinçli: modül sabitleri uçtan servis edilmiyor. Kopyanın
+  // ayrışması test edilemez, bu yüzden metin bir ÖLÇÜ değil bir AÇIKLAMA olarak yazıldı —
+  // hücrenin hükmü alanın None olup olmamasından gelir, bu metinden değil.
+  ["Son kapanış", "close", "bar var mı"],
+  ["1-gün değişim", "chg1_pct", "iki kapanış ister"],
+  ["20-gün değişim", "chg20_pct", "21 kapanış ister"],
+  ["ADV20 (dolar)", "adv20_usd", "20 bar + eksiksiz hacim"],
+  ["52-hafta uzaklık", "dist_52w_high_pct", "252 kapanış ister"],
+  ["Seans-içi kapanış", "intraday_close", "TASARIM GEREĞİ yalnız silahlı"],
+  ["Kazanç takvimi", "earnings_date", "ileri tarihli rapor"],
+];
+const KM_DILIM = [
+  ["TÜM", () => true],
+  ["pozisyon", r => !!r.position],
+  ["silahlı", r => !!r.armed],
+  ["planlı", r => (r.plans_n || 0) > 0],
+  ["emekli", r => !!r.retired],
+  ["barsız", r => r.source !== "bars"],
+];
+let _KM_MOD = "kapsama";
+// Eşikler SABİT ve burada: hücre başına "yüzdelik dilim" hesaplamak, aynı matrisin iki koşumda
+// iki farklı renk vermesine yol açardı (skala veriye göre kayardı). Sabit eşik, iki gün arasında
+// karşılaştırılabilir bir harita demektir.
+const _KM_ESIK = [50, 80, 95];              // <50 → k1 · <80 → k2 · <95 → k3 · ≥95 → k4
+const _KM_SAPMA = [5, 20];                  // |d|<5 nötr · <20 zayıf · ≥20 güçlü
+function _kmBant(pct) {
+  return "k" + (pct < _KM_ESIK[0] ? 1 : pct < _KM_ESIK[1] ? 2 : pct < _KM_ESIK[2] ? 3 : 4);
+}
+function _kmSapmaBant(d) {
+  const a = Math.abs(d);
+  if (a < _KM_SAPMA[0]) return "";
+  return (d < 0 ? "dn" : "dp") + (a < _KM_SAPMA[1] ? 1 : 2);
+}
+function kmCiz() {
+  const kap = $("km-kart");
+  if (!kap) return;
+  const rows = (_MKT && _MKT.rows) || [];
+  const bas = `<h2 class="t">Kapsama ısı-matrisi <span class="tx3" style="font-weight:400">(ölçüm × evren dilimi)</span></h2>`;
+  if (!rows.length) {
+    kap.innerHTML = bas + `<div class="empty">Evren satırı yok — matris çizilmedi (dürüst boşluk).</div>`;
+    return;
+  }
+  const dilim = KM_DILIM.map(([ad, f]) => [ad, rows.filter(f)]);
+  const sapma = _KM_MOD === "sapma";
+  // TABAN HER ZAMAN İLK SÜTUN (TÜM). Sapma kipinde ilk sütun kendi kendisinden çıkarıldığı için
+  // daima 0'dır ve bu bir arıza değil, tabanın KENDİSİDİR — hücre "taban" yazar, "0" değil.
+  const taban = {};
+  for (const [, alan] of KM_OLCUM) {
+    const t = dilim[0][1];
+    taban[alan] = t.length ? 100 * t.filter(r => r[alan] != null).length / t.length : null;
+  }
+  const hucre = (alan, satirlar, ilk) => {
+    const n = satirlar.length;
+    if (!n) return `<div class="km-cell km-yok" title="dilim boş">dilim yok</div>`;
+    const pct = 100 * satirlar.filter(r => r[alan] != null).length / n;
+    if (!sapma)
+      return `<div class="km-cell ${_kmBant(pct)}" title="${Math.round(pct)}% · ${
+        satirlar.filter(r => r[alan] != null).length}/${n} sembolde ölçüldü">%${Math.round(pct)}</div>`;
+    if (ilk) return `<div class="km-cell km-yok" title="karşılaştırma tabanı">taban</div>`;
+    const d = pct - (taban[alan] ?? 0);
+    return `<div class="km-cell ${_kmSapmaBant(d)}" title="${Math.round(pct)}% · taban %${
+      Math.round(taban[alan] ?? 0)} · ${n} sembol">${d > 0 ? "+" : d < 0 ? "−" : "±"}${
+      Math.abs(Math.round(d))}</div>`;
+  };
+  const grid = `<div class="km-wrap"><div class="km-grid" style="--kmc:${KM_DILIM.length}">
+    <div class="km-corner"></div>
+    ${dilim.map(([ad, s]) => `<div class="km-head">${esc(ad)}<b>${s.length}</b></div>`).join("")}
+    ${KM_OLCUM.map(([bas2, alan, pen]) => `<div class="km-row">${esc(bas2)}<i>${esc(pen)}</i></div>${
+      dilim.map(([, s], i) => hucre(alan, s, i === 0)).join("")}`).join("")}</div></div>`;
+  const sw = (kls, etiket) => `<span><span class="km-sw ${kls}"></span> ${etiket}</span>`;
+  const lejant = sapma
+    ? `<div class="km-lej">${sw("dn2", "−20p ve altı")}${sw("dn1", "−5…−20p")}${
+        sw("", "±5p (nötr)")}${sw("dp1", "+5…+20p")}${sw("dp2", "+20p ve üstü")}
+       <span class="mut">· taban: TÜM sütunu</span></div>`
+    : `<div class="km-lej">${sw("k1", "&lt;%50")}${sw("k2", "%50-80")}${sw("k3", "%80-95")}${
+        sw("k4", "≥%95")}${sw("", "dilim yok")}</div>`;
+  kap.innerHTML = bas + `
+    <div role="group" aria-label="Isı-matrisi skalası" style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" class="dlbtn${sapma ? "" : " primary"}" aria-pressed="${!sapma}"
+        style="padding:7px 13px;min-height:36px;font-size:12px"
+        data-act="kmMod" data-a1="kapsama">Kapsama</button>
+      <button type="button" class="dlbtn${sapma ? " primary" : ""}" aria-pressed="${sapma}"
+        style="padding:7px 13px;min-height:36px;font-size:12px"
+        data-act="kmMod" data-a1="sapma">Evrenden sapma</button>
+    </div>
+    ${grid}${lejant}
+    <p class="km-foot">Hücre, o dilimde ilgili ölçümün <b>ölçülebildiği</b> sembollerin oranıdır —
+    yani <code>None</code> sayımının haritası. Payda her sütunun başlığında yazılı; boş dilim
+    <b>renklendirilmez</b>, "dilim yok" der (sıfır bir ölçümdür, yokluk değil).
+    <b>Seans-içi kapanış satırı tasarım gereği yalnız silahlı sembollerde doludur</b> — oradaki
+    düşük kapsama bir arıza değil, "izlenmeyen sembole fiyat yazılmaz" kuralının kendisidir.
+    Sapma kipi her hücreyi TÜM sütunundan çıkarır: körlüğün <b>nerede yoğunlaştığı</b> mutlak
+    orandan okunamaz. Renk taramaya yardım eder, hükmü rakam verir.</p>`;
+}
+window.kmMod = (m) => { _KM_MOD = (m === "sapma") ? "sapma" : "kapsama"; kmCiz(); };
 
 // Şeridin "Piyasa" satırı YERİNDE güncellenir. buildSidebar'ı çağırmak /api/today'i ikinci kez
 // çekmek demekti — aynı veriyi iki kez istemek, iki farklı cevap alma ihtimalini de getirir.
@@ -3167,8 +3341,7 @@ async function opParcalar() {
     (alınmamış hipotetik giriş) · <b>karışım</b> = ikisi tek havuzda. Ölçülmemiş olan "0" değil <b>ölçülmedi</b> yazar.</p>
     <h3 class="t" style="margin-top:14px">1 · Skor → sonuç (rank-IC)</h3>
     ${icBlok}
-    <div class="srow"><span>IC trendi <span class="mut">(<span style="color:var(--accent)">gerçek</span> ·
-      <span style="color:var(--violet)">sim</span> · <span style="color:var(--tx3)">havuz</span> ·
+    <div class="srow"><span>IC trendi <span class="mut">(${icEfsane()} ·
       ${hist.length} nokta, günde bir)</span></span>${icTrend(hist)}</div>
     <h3 class="t" style="margin-top:16px">2 · SPY-üstü (alfa değil beta mı?)</h3>
     <div class="srow"><span>Fazla getiri <span class="mut">(ham)</span> ${_chip("gerçek", "t-go")}</span><b class="${br ? (br.beat_benchmark ? "pos" : "neg") : "mut"}">${br
@@ -4326,14 +4499,48 @@ RENDER.golge = async () => {
 
 // 5.3 — seans-içi bar akışındaki eksik dakika pencereleri. Ölçümü zamanlayıcı kancası yapar; burası
 // yalnız okur. "—" (ölçüm yok) ile "0 boşluk" (ölçüldü, temiz) BİLEREK farklı cümlelerdir.
-const _GAP_DURUM = { seans_disi: "seans dışı — beklenen bar yok, hüküm verilmedi",
-                     arsiv_yok: "seans-içi arşiv açılmamış — ölçülemedi",
-                     pencerede_bar_yok: "pencerede TEK bar yok — akış sessiz",
-                     olculemedi: "tarama düştü — bu turda ÖLÇÜLMEDİ" };
+// ---- HÜKÜM HARİTASI: BİLİNMEYEN DURUM YEŞİL DOĞAMAZ (WP-D eki, 2026-08-02) -------------------
+// ÖLÇÜLEN KUSUR: `gap_scan` yeni bir `takvim_yok` durumu üretmeye başladı (XNYS takvimi
+// konuşmadıysa BEKLENTİ üretilemez, dolayısıyla eksiklik de ÖLÇÜLEMEZ). Bu harita onu tanımıyordu
+// ve `_gapRows` bilinmeyen durumu ÖLÇÜLMÜŞ SONUÇ dalına düşürüyordu: `bosluk_sayisi` 0 geldiği
+// için satır YEŞİL "boşluk yok · 0 bar / 0 sembol" basıyordu. Yani takvimin sustuğu bir gün,
+// sağlıklı bir akış raporu gibi okunuyordu — fonksiyonun kendi üst yorumunun ("bunlar birbirine
+// karıştırılırsa pano, ölçülmemiş bir sessizliği 'sağlıklı' diye gösterir") tam olarak yasakladığı
+// sınıf, ve bekçi ÖLÇÜLEMEDİ yüzeyiyle (S2R-3 · C21/C22) aynı kusur.
+//
+// HÜKÜM: (a) `takvim_yok` haritaya girdi; (b) haritadaki her hâl artık kendi ÇİPİNİ taşıyor ve
+// hepsi `t-vi` (bu panonun "ölçüm yok / hüküm yok" kanalı — yeni renk İCAT EDİLMEDİ);
+// (c) BİLİNMEYEN bir durum artık ölçülmüş sayılmaz: ham adıyla, nötr çiple, "hüküm verilmedi"
+// diye basılır. Varsayılanın yeşil olması, üreticinin yarın ekleyeceği her yeni hâli
+// SAHTE-SAĞLIKLI doğurur — ve o hata sessizdir.
+// Çip sözcüğü de hükmün parçası: "ÖLÇEMEDİM" ile "ÖLÇÜLECEK BİR ŞEY YOKTU" aynı şey değildir.
+// Seans dışı bir dakikada eksik bar aramak anlamsızdır (hüküm yok); takvim susmuşsa aranacak
+// şey VARDI ama ölçülemedi. İkisi de nötr, ikisi de farklı KELİME — çift kodlama (Ç7).
+const _GAP_DURUM = {
+  seans_disi: ["seans dışı — o gün/o saatte beklenen bar YOK, aranacak boşluk da yok (alarm değil)",
+               "HÜKÜM YOK"],
+  takvim_yok: ["takvim okunamadı — boşluk taraması BU TURDA ÖLÇÜLEMEDİ; beklenti üretilemediği "
+               + "için eksiklik de ölçülemez. Boş liste \"boşluk yok\" DEĞİL.", "ÖLÇÜLEMEDİ"],
+  arsiv_yok: ["seans-içi arşiv açılmamış — ölçülemedi", "ÖLÇÜLEMEDİ"],
+  pencerede_bar_yok: ["pencerede TEK bar yok — akış sessiz, hüküm verilmedi", "HÜKÜM YOK"],
+  olculemedi: ["tarama düştü — bu turda ÖLÇÜLMEDİ", "ÖLÇÜLEMEDİ"],
+};
 function _gapRows(g) {
   if (!g) return `<div class="srow"><span>Seans-içi boşluk</span><b class="mut">— · tarama bu süreçte hiç koşmadı</b></div>`;
-  const not = _GAP_DURUM[g.durum];
-  if (not) return `<div class="srow"><span>Seans-içi boşluk</span><b class="mut">${esc(not)}</b></div>`;
+  if (g.durum !== "ok") {
+    const bilinen = Object.prototype.hasOwnProperty.call(_GAP_DURUM, g.durum);
+    // Takvim arızasının GEREKÇESİ üreticinin `seans` bloğunda duruyor (durum/takvim/açılış/
+    // kapanış/hata). Bugün `scheduler._intraday_gap_check` durum kopyasına o bloğu ALMIYOR, yani
+    // alan panoya çoğu zaman hiç ulaşmaz — okuma bu yüzden KORUMALI ve yokluğu bir arıza değil:
+    // hüküm zaten `durum`dan geliyor, `seans.hata` yalnız teşhisi kısaltır.
+    const se = g.seans || {};
+    const ek = [se.takvim ? `takvim ${se.takvim}` : null,
+                se.hata ? String(se.hata).slice(0, 90) : null].filter(Boolean).join(" · ");
+    const [cumle, cip] = bilinen ? _GAP_DURUM[g.durum]
+      : [`bilinmeyen tarama durumu (${g.durum ?? "—"}) — bu turda hüküm VERİLMEDİ`, "ÖLÇÜLEMEDİ"];
+    return `<div class="srow"><span>Seans-içi boşluk</span>
+      <b class="mut">${esc(cumle)}${ek ? ` · ${esc(ek)}` : ""} ${_chip(cip, "t-vi")}</b></div>`;
+  }
   const n = g.bosluk_sayisi ?? 0, pen = g.pencere || {};
   const satir = (g.bosluklar || []).slice(0, 4).map(b =>
     `<div class="trow" style="grid-template-columns:78px 108px 1fr">
@@ -4423,6 +4630,54 @@ async function intraParcalar() {
                   max_open: "SLOT DOLU", broker_kurali: "BROKER KURALI",
                   breaker_olculemedi: "KESİCİ ÖLÇÜLEMEDİ", data_bad_olculemedi: "VERİ ÖLÇÜLEMEDİ" };
   const shDurum = s => SH_TR[String(s || "").replace("blocked:", "")] || String(s || "—");
+  // ---- BORÇLAR TURUNUN BEYANI (2026-08-02): `red_nedeni` ve `atr_kaynak` ---------------------
+  // `blocked:broker_kurali` bir SINIFTIR, teşhis değil: hangi broker kuralının kestiği ayrı bir
+  // alanda (`red_nedeni`) taşınıyor ve o alan `broker._red(...)`ın kendi jetonudur — pano onu
+  // ikinci kez HESAPLAMAZ (iki hesap zamanla ayrışır, intraday_shadow.py'nin kendi kuralı), yalnız
+  // ÇEVİRİR. Çevirisiz bırakmak `qty_zero`yu ekrana ham basmak olurdu ve `.tag` uppercase'i
+  // tr-TR'de `POSİTİON_EXİSTS` gibi bozuk bir sözcük üretiyor — aynı sınıf hata.
+  // İKİSİ DE BUGÜNE KADAR ÖKSÜZDÜ (YASA 6): `intraday_shadow.record` yazıyor, `summarize` satırı
+  // aynen geçiriyor, `/api/diagnostics` servis ediyor ve panoda TEK okuyucusu yoktu. Bu blok o
+  // zinciri kapatır. Bilinmeyen bir jeton gelirse ham hâli basılır — sessizce yutulmaz (YASA 4).
+  const RED_TR = { already_open: "zaten açık pozisyon", max_chase: "kovalama tavanı aşıldı",
+                   open_below_stop: "açılış stop'un ALTINDA", qty_zero: "boyut sıfıra yuvarlandı",
+                   illiquid: "likidite yetersiz (ADV)", notional_cap: "notional tavanı" };
+  const redNedeni = k => k ? (RED_TR[String(k)] || String(k)) : null;
+  // ---- ÜÇ İCRA GİRDİSİ, ÜÇ HÂL (borçlar turu, 2026-08-02) ------------------------------------
+  // `entry_law` yan tablosu SİLAHLANMA ANINDA yazılır ve gölge icrasına üç girdi taşır: `atr`
+  // (limitin sıkılığı), `pivot` (erken itlaf), `gap_at_submit` (gap-risk vetosu). Üçü de panoda
+  // OKUNMUYORDU — üretici (`intraday_shadow.record`) yazıyor, `summarize` aynen geçiriyor,
+  // `/api/diagnostics` servis ediyor, tüketici yoktu (YASA 6, satır düzeyinde öksüz alan).
+  //
+  // ÜÇLÜ AYRIM BEKÇİ DİLİNİN AYNISI (S2R-3 · C21/C22): "ölçülemedi" ile "temiz" ayrı şeylerdir,
+  // ve burada ÜÇÜNCÜ bir hâl daha var — KOPUKLUK. Üretici bunu `_yan_tablo_kaynagi` ile TEK
+  // yerde ayırıyor ve üç ayrı cümle yazıyor:
+  //   · yan tabloda satır YOK        → KABLO KOPUK (tohumlanmış defter / yasa öncesi plan)
+  //   · satır var, alan None         → MEŞRU ölçümsüzlük (o gün hesaplanamadı)
+  //   · değer var                    → ölçüldü
+  // İlk ikisini tek cümleye katlamak, kopmuş bir kabloyu meşru bir boşluk gibi gösterirdi.
+  //
+  // AYRIM ÜRETİCİNİN CÜMLESİNDEN OKUNUR, YENİDEN HESAPLANMAZ. İki çıpa (`satır YOK` / `var ama`)
+  // `intraday_shadow._yan_tablo_kaynagi`nin İKİ dalına aittir ve testte o kaynağa karşı çivilenir:
+  // üretici cümlesini değiştirirse test KIRMIZI verir — pano sessizce yanlış sınıflandırmaz.
+  // Değerden türetmek mümkün DEĞİL: her iki hâlde de alan None gelir.
+  const _IK_KOPUK = "satır YOK", _IK_OLCULEMEDI = "var ama";
+  const icraDurum = kaynak => {
+    const s = String(kaynak || "");
+    if (!s) return "yok";                       // üretici bu alanı hiç yazmamış (yasa öncesi satır)
+    if (s.includes(_IK_KOPUK)) return "kopuk";
+    if (s.includes(_IK_OLCULEMEDI)) return "olculemedi";
+    return "olculdu";
+  };
+  // Kaynak cümlesi HER ZAMAN `title`da durur (belirsiz() sözleşmesi: beyansız kesik çizgi süstür).
+  // Renk kanal DEĞİL: kopukluk `warn`, ölçümsüzlük `mut` — ikisi de kelimeyle de ayrılıyor.
+  const icraGirdi = (etiket, deger, kaynak, bicim) => {
+    const d = icraDurum(kaynak);
+    if (d === "yok") return "";
+    if (d === "olculdu") return `${esc(etiket)} ${bicim(deger)}`;
+    return `<span class="${d === "kopuk" ? "warn" : "mut"}">${esc(etiket)} ${
+      belirsiz(d === "kopuk" ? "KABLO KOPUK" : "ÖLÇÜLEMEDİ", kaynak)}</span>`;
+  };
   const shRows = (sh.today || []).map(r => {
     const ws = r.status === "would_submit";
     const g = r.gates || {};
@@ -4431,12 +4686,25 @@ async function intraParcalar() {
     const gz = [g.halt ? "halt" : null, g.breaker ? "kesici" : null, g.data_bad ? "veri" : null,
                 g.position_exists ? "pozisyon var" : null, g.max_open_ok === false ? "slot dolu" : null,
                 g.size_mult != null ? `boyut ×${trn(g.size_mult, 2)}` : null].filter(Boolean).join(" · ");
+    // ÜÇ İCRA GİRDİSİ TEK ŞERİTTE. Sıra hüküm mertebesine göre: ATR (limitin sıkılığını
+    // belirler) → gap (vetoyu ateşler) → pivot (bugün hükmü DEĞİŞTİRMEZ, yalnız satıra yazılır).
+    // Ölçülmüş hâlde değer basılır; ölçülemeyen/kopuk hâlde üreticinin kendi cümlesi `title`da.
+    const icra = [
+      icraGirdi("ATR", r.atr, r.atr_kaynak,
+                v => `${trn(v, 2)}${r.limit != null ? ` (limit ${trn(r.limit, 2)})` : ""}`),
+      // gap ÜÇ DEĞERLİDİR: true/false ölçülmüş iki hüküm, None ise ölçüm YOK. `false`u
+      // "gap yoktu" diye basmak doğru; `null`u öyle basmak uydurma olurdu — ayrımı icraDurum yapar.
+      icraGirdi("gap", r.gap_at_submit, r.gap_at_submit_kaynak, v => (v ? "VAR" : "yok")),
+      icraGirdi("pivot", r.pivot, r.pivot_kaynak, v => trn(v, 2)),
+    ].filter(Boolean);
     return `<div class="trow" style="grid-template-columns:66px 96px 92px 74px 1fr 104px">
       <span class="tick">${esc(r.ticker)}</span>
       <span class="mono-num">${money(r.sim_price)}<br><span class="mut" style="font-size:10px">tetik ${trn(r.entry_trigger, 2)}</span></span>
       <span class="mono-num">${r.sim_fill == null ? '<span class="mut">—</span>' : money(r.sim_fill)}<br><span class="mut" style="font-size:10px">sim dolum</span></span>
       <span class="mono-num">${r.qty == null ? '<span class="mut">—</span>' : r.qty + " adet"}<br><span class="mut" style="font-size:10px">${r.risk_dollars == null ? "" : money(r.risk_dollars) + " risk"}</span></span>
-      <span class="chain mut" style="font-size:11px">${esc(gz || "—")}<br>${esc(mktSaat(r.bar_t))} · bar ${esc(String(r.bar_t || "").slice(0, 10))}</span>
+      <span class="chain mut" style="font-size:11px">${esc(gz || "—")}<br>${esc(mktSaat(r.bar_t))} · bar ${esc(String(r.bar_t || "").slice(0, 10))}${
+        r.red_nedeni ? `<br><span class="warn">broker kuralı: ${esc(redNedeni(r.red_nedeni))}</span>` : ""}${
+        icra.length ? `<br>${icra.join(" · ")}` : ""}</span>
       ${_chip(shDurum(r.status), ws ? "t-go" : "t-vi")}</div>`;
   }).join("");
   const veRows = (ve.recent || []).map(p => `<div class="trow" style="grid-template-columns:66px 92px 92px 1fr">
@@ -4449,6 +4717,14 @@ async function intraParcalar() {
       hesaplanır ve <code>intraday_shadow_orders.jsonl</code>'e yazılır. <b>Hiçbir emir gönderilmez</b>, canlı defter
       fill edilmez, <code>INTRADAY_ARM</code> bayrağına dokunulmaz — boyutlandırma KOPYA bir broker üzerinde EOD ile
       aynı kodla simüle edilir. Sim fiyat sözleşmesi: <code>max(bar açılışı, tetik)</code>.</p>
+    <p class="hint" style="margin-top:6px">Her satırın kapı şeridinde <b>üç icra girdisi</b> okunur —
+      <b>ATR</b> (limitin sıkılığı), <b>gap</b> (gönderim anı veto girdisi), <b>pivot</b> (erken itlaf).
+      Üçü de <code>portfolio.json.entry_law</code>'dan, <b>silahlanma anında</b> sabitlenir ve üç hâlleri
+      AYRI okunur: değer yazılıysa ölçüldü · <b>ÖLÇÜLEMEDİ</b> = satır var, o girdi o gün hesaplanamadı ·
+      <b>KABLO KOPUK</b> = yan tabloda plan satırı hiç yok (tohumlanmış defter ya da yasa öncesi
+      silahlanmış plan). Son ikisi kesik alt çizgiyle işaretlidir; üzerine gelince üreticinin kendi
+      cümlesi görünür. <b>Boş bir girdi "engel yoktu" DEĞİLDİR</b> — ölçülemeyen bir kapı, geçilmiş
+      bir kapı gibi okunamaz.</p>
     <div class="srow"><span>Bugün · gönderilecekti / bloklandı</span><b>${sh.today_n ?? 0} satır · <span class="pos">${sh.would_submit_n ?? 0}</span> / <span class="mut">${sh.blocked_n ?? 0}</span></b></div>
     <div class="srow"><span>Defter toplamı</span><b>${sh.total ?? 0} gölge kararı</b></div>
     ${shRows ? `<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:66px 96px 92px 74px 1fr 104px">
@@ -5891,15 +6167,34 @@ window.saveSecret = async (name) => {
     const res = await _secretFetch(name, "POST", { value: val });
     el.value = "";                       // never leave the secret sitting in the DOM
     await RENDER.ayarlar(); revealActive();   // re-render shows masked status; re-reveal or it stays hidden
-    const la = res.local_agent, st2 = $("kstat-" + name);   // yerel-ajan senkron sonucu (Gemini anahtarı)
-    if (la && st2) st2.innerHTML = la.ok ? `<span class="pos">✓ ${esc(la.detail)}</span>`
-                                         : `<span class="neg">${esc(la.detail)}</span>`;
+    _senkronSatiri(name, res.local_agent);   // yerel-ajan senkron sonucu (Gemini anahtarı)
   } catch (e) { if (stat) stat.innerHTML = `<span class="neg">${esc(e.message)}</span>`; }
 };
+// ---- HERMES-SENKRON SONUCU, ZAMAN DAMGALI (ders (b), 2026-08-02) ----------------------------
+// KUSUR: bu satır `la.detail`i damgasız basıyordu ve `RENDER.ayarlar()` yeniden çizdikten SONRA
+// ekranda kalıyordu — yani "senkron hatası (OSError)" cümlesi ne zaman ölçüldüğünü söylemiyordu.
+// Canlı vaka: altı gün önce oluşmuş bir hata, bugünün hükmü gibi okundu. `hermes.
+// sync_local_agent_gemini` artık HER dönüşünde (başarı · ret · istisna) `senkron_ts` taşıyor;
+// OKUYAN taraf burasıdır.
+// ALAN YOKSA UYDURULMAZ: "damga yok" yazılır. `Date.now()` basmak, ölçülmemiş bir anı ölçülmüş
+// göstermek olurdu — panonun okuduğu damga, motorun YAZDIĞI damga olmalı.
+// clearSecret DE ÇAĞIRIR: anahtar silindiğinde de senkron koşuyor (yedeklenen Nous ayarına
+// dönüş) ve o sonucun bugüne kadar HİÇBİR okuyucusu yoktu — sessiz bir başarısızlık yüzeyiydi.
+function _senkronSatiri(name, la) {
+  const el = $("kstat-" + name);
+  if (!el || !la) return;
+  const ts = mutlakTs(la.senkron_ts);
+  const damga = ts ? ` · ${esc(ts)}` : ' · <span class="warn">damga yok</span>';
+  el.innerHTML = la.ok ? `<span class="pos">✓ ${esc(la.detail)}</span>${damga}`
+                       : `<span class="neg">${esc(la.detail)}</span>${damga}`;
+}
 window.clearSecret = async (name) => {
   const stat = $("kstat-" + name);
-  try { await _secretFetch(name, "DELETE"); await RENDER.ayarlar(); revealActive(); }
-  catch (e) { if (stat) stat.innerHTML = `<span class="neg">${esc(e.message)}</span>`; }
+  try {
+    const res = await _secretFetch(name, "DELETE");
+    await RENDER.ayarlar(); revealActive();
+    _senkronSatiri(name, res.local_agent);
+  } catch (e) { if (stat) stat.innerHTML = `<span class="neg">${esc(e.message)}</span>`; }
 };
 window.notifyTest = async () => {
   const msg = $("ntf-msg");

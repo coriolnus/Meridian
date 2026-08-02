@@ -72,30 +72,76 @@
   /* OMEGA (2026-07-27): açık zemin, sıcak kemik paneller. Yüzeyler ışıkla değil TONLA basamaklanır,
      ve ayrım YALNIZ saç teli çizgi + ton farkıyla yapılır — bkz. --elev:none aşağıda.
      TOKEN ADLARI DEĞİŞMEZ: app.js DOM'u çalışma anında üretir, isim sözleşmesi bağlayıcıdır. */
-  --bg:#ffffff; --bg2:#fbfaf8; --card:#f8f5f2; --card-2:#f1ece8; --raise:#ffffff;
-  --slip:#f1ece8; --slip-ink:#050505;
+  /* WP-P/P6 · GÜNDÜZ JETON TURU (2026-08-02): SAF BEYAZ KALKTI. Aşağıdaki gece bloğunun
+     2026-08-01 tarihli "AÇIK KALAN, BEYANLI" notu tam olarak bu turu tarif ediyordu:
+     --bg'yi tek başına indirmek merdiveni çökertir, o yüzden DOKUZ yüzey jetonu BİRLİKTE
+     değerlendi. Yöntem: bg2/card/card-2/slip/accent-tint/line/line-2/field jetonlarının
+     (L+0.05) değeri TEK bir katsayıyla (0.9523) ölçeklendi — böylece merdivenin ADIM
+     ORANLARI korunur (1.047 / 1.041 / 1.072) — ve --bg, adımı koruyacak luminansta bir
+     SICAK kırık-beyaza (#fbf9f8, L 0.950) oturtuldu. Katsayının kendisi ölçülmüş bir
+     sınırdır: --red kendi tinti üstünde gömülü panelde 4.78 → 4.59 iner ve 4.5 eşiğine
+     0.09 pay kalır; daha derin bir tur PARA RENKLERİNİ de yeniden değerlemeyi gerektirir
+     (bkz. docs/kontrast-denetimi.md §11). Mürekkepler KIMILDAMADI. */
+  --bg:#fbf9f8; --bg2:#f5f4f2; --card:#f2efed; --card-2:#ece7e3; --raise:#fbf9f8;
+  --slip:#ece7e3; --slip-ink:#050505;
   /* hairlines, not boxes — sıcak gri, nötr değil */
-  --line:#e7e3df; --line-2:#d9d4cf;
-  --tx:#050505; --tx2:#585450; --tx3:#585450;
+  --line:#e2deda; --line-2:#d4cfca;
+  /* --tx3 ARTIK GERÇEK BİR ÜÇÜNCÜ BASAMAK (B1 düzeltmesi): iki temada da --tx2'nin
+     bire-bir kopyasıydı, yani "üç basamaklı mürekkep merdiveni" ekranda İKİ basamaktı.
+     Yeni değer kart üstünde 5.06:1 — AA korunur, --tx2'den (6.55) ölçülebilir biçimde
+     ayrışır (adım 1.30). Nitel bant merdiveni artık --tx3 KULLANMIYOR (bkz. --band-2). */
+  --tx:#050505; --tx2:#585450; --tx3:#686562;
   /* OMEGA'DA ETKİLEŞİM RENGİ YOKTUR: birincil eylem siyah haptır, kroma taşımaz.
      Bu, "renk yalnız ölçüme aittir" kuralını keskinleştirir — indigo tamamen kaldırıldı.
-     KONTRAST: --accent metin olarak da güvenli (20.38:1), ama tint yalnız DOLGU içindir. */
-  --accent:#050505; --accent-2:#050505; --accent-tint:#f3f3f3;
+     KONTRAST: --accent metin olarak da güvenli (19.42:1), ama tint yalnız DOLGU içindir. */
+  --accent:#050505; --accent-2:#050505; --accent-tint:#eeeeee;
   /* semantic — these mean money, so they are never decoration.
      AÇIK ZEMİN ÖLÇÜMÜ (yeniden ölçüldü 2026-08-01): eski koyu-zemin değerleri burada
      çöküyordu (#4cc38a 2.22:1, #e0a82e 2.14:1, #f2555a 3.37:1). Yeniler, her rengin
      KENDİ %10 tinti üzerinde — çipin içinde fiilen oturduğu zemin — en kötü gerçek
-     bileşikte AA geçiyor: yeşil 4.88, kehribar 5.80, kırmızı 4.78.
+     bileşikte AA geçiyor: yeşil 4.72, kehribar 5.57, kırmızı 4.59 (P9 turu, 2026-08-02:
+     yüzeyler indi, PARA RENKLERİ kımıldamadı — düşen zemin, düşen oran).
      Önceki yorum 4.60/5.90/5.59 diyordu; o üçlü yeniden üretilemedi. */
   --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
-  --violet:#050505; --violet2:#050505; --blue:#050505;
+  /* --violet ARTIK AYRI BİR SERİ RENGİ (B6 düzeltmesi). Ad tarihseldir (eski indigo
+     dünyası) ve DEĞİŞMEZ — app.js DOM'u çalışma anında üretir. Değeri --accent'in
+     bire-bir kopyasıydı: IC-trend grafiğinin `gerçek` ve `sim` serileri AYNI renkle
+     çiziliyor, efsane de onları AYRI renklerle etiketliyordu. Yeni değer üç serilik bir
+     LUMINANS merdiveninin orta basamağı (accent 17.8 → violet 9.6 → tx3 5.06, kart
+     üstünde); hue eklenmedi çünkü hue farkı renk körü okuyucunun ayıramadığı tam olarak
+     o şeydir. Ayrım ayrıca kesik-çizgi deseniyle İKİNCİ kanaldan taşınır ve efsane artık
+     o deseni GÖSTERİR (Ö8). */
+  --violet:#3e3c39; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
+  /* NİTEL BANT MERDİVENİNİN ORTA BASAMAĞI (P3/B1). Bullet grafiğinin bantları eskiden
+     --card-2 → --line → --line-2 → --tx3 → --tx2 idi; fiilen çizilen İLK İKİ-ÜÇ bandın
+     adımı 1.09 ve 1.15'ti, yani "2-5 nitel aralık" iddiası ekranda tek tondu. Merdiven
+     ÜÇ banda indi (Few'nun ideali) ve orta basamak kendi jetonunu aldı: adımlar 2.46 ve
+     2.49 (gündüz) · 2.45 ve 2.46 (gece). Tek hue, sıcak nötr; temayla döner. */
+  --band-2:#979491;
+  /* P9 · KAPSAMA ISI-MATRİSİ — TEK HUE SEQUENTIAL (koyu-uyumlu). Hue MÜREKKEBİN kendisidir:
+     jeton temayla döndüğü için gündüzde "daha çok mürekkep = daha koyu", gecede "daha çok
+     mürekkep = daha AÇIK" olur ve iki temada da "daha çok = daha yoğun" okunur. Ayrı bir
+     gece rampası tutulmaz. Tavan alfa .30'da SABİT ve bu ölçülmüş bir sınırdır: hücrenin
+     rakamı (--tx) gece temasında en koyu bandın üstünde 4.68:1 verir; .34'te 4.45'e, yani
+     AA altına düşerdi. Bantlar arası adım 1.14-1.25 — bir ISI SKALASI zaten 3:1 adımlarla
+     kurulamaz; hüküm hücrenin RAKAMINDAN gelir, dolgu tarama yardımıdır (bkz. §11/İ8). */
+  --kap-1:rgba(5,5,5,.06); --kap-2:rgba(5,5,5,.14);
+  --kap-3:rgba(5,5,5,.23); --kap-4:rgba(5,5,5,.30);
+  /* P9 · SAPMA (drift) — CVD-GÜVENLİ DIVERGING. Kutuplar MAVİ ↔ TOPRAK: renk körlüğünün
+     baskın iki biçimi (protan/deutan) kırmızı-yeşil eksenini siler, mavi-sarı eksenini
+     KORUR — bu yüzden diverging bir skala bu depoda yeşil↔kırmızı OLAMAZ. Ayrıca para
+     renkleri doygundur, bu kutuplar SOLUKTUR: "sapma" bir para hükmü değildir ve öyle
+     okunmamalıdır. İşaret ayrıca hücrenin rakamında (+/−) yazılıdır — kutupların
+     luminansı birbirine yakındır (1.07) ve tek başına kanal değildir. */
+  --dv-n2:rgba(46,82,122,.22); --dv-n1:rgba(46,82,122,.10);
+  --dv-p1:rgba(134,106,46,.10); --dv-p2:rgba(134,106,46,.22);
   /* SAÇ TELLERİ VE PERDELER JETONDUR (2026-08-01): bu değerler önce kuralların içinde sabit
      rgba() olarak duruyordu ve tema değişimine TEPKİ VERMİYORDU. En kritiği --nav-bg idi:
      gece temasında üst bar BEYAZ kalır, HALT ve KRİZ kırmızısı üstünde görünmez olurdu — bu
      hatanın tersi zaten bir kez yaşandı (aşağıdaki nav yorumu). Kural: renk taşıyan hiçbir
      değer kuralın içinde YAZILMAZ, jetondan gelir. Aksi hâlde ikinci tema sessizce kırılır. */
-  --nav-bg:rgba(255,255,255,.82);
+  --nav-bg:rgba(251,249,248,.82);
   --green-h:rgba(12,106,59,.35); --amber-h:rgba(110,74,0,.35); --red-h:rgba(179,36,44,.35);
   --amber-h2:rgba(110,74,0,.40);
   --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
@@ -116,8 +162,9 @@
      (beyanlı sapma: kart ve çip DOLGUSUYLA tanınır, kenarıyla değil). Ama METİN GİRİŞİ öyle
      değil: kutunun nerede başladığını gösteren TEK şey kenarıdır — DESIGN.md'nin "tek gerçek
      maruziyet" dediği yer burasıydı. Bu yüzden form kontrolleri --line-2'yi DEĞİL bu jetonu
-     kullanır. Ölçüldü: gündüz en kötü gerçek zeminde 3.36, gece 3.25. */
-  --field:#8a8580;
+     kullanır. Ölçüldü: gündüz en kötü gerçek zeminde 3.14, gece 3.18 (bu satır 2026-08-02'ye
+     kadar 3.36/3.25 diyordu; o çift yeniden ÜRETİLEMEDİ — kaynaktan ölçülen değer budur). */
+  --field:#86817d;
   color-scheme:light;
 }
 
@@ -138,20 +185,22 @@
    yetişkinlerin ~%40-47'sinde bir miktar astigmatizm var. Zemin #1c1a18,
    mürekkep #d4d0cb — sıcak tonu koruyor, yani iki tema aynı ürün.
 
-   WP-P/P6 DENETİMİ (2026-08-01) — SONUÇ VE AÇIK KALAN.
+   WP-P/P6 DENETİMİ (2026-08-01) — VE KAPANIŞI (2026-08-02).
    Denetim üç yüzeyi (index.html · app.js · theme.js) `#000/#fff/black/white` için
    taradı. BULGU: gece temasında SIFIR saf değer — zemin #1c1a18, mürekkep #d4d0cb,
    perde rgba(10,9,8,.66); app.js ve theme.js hiç renk DEĞERİ taşımıyor (jeton
    sözleşmesi tutuyor). Yani halation argümanının hedeflediği yüzey TEMİZ.
-   AÇIK KALAN, BEYANLI: gündüz temasında `--bg:#ffffff` ve `--raise:#ffffff` saf
-   beyaz. BU TURDA DEĞİŞTİRİLMEDİ ve gerekçesi ölçüldü: gündüz merdiveni
-   #ffffff → #fbfaf8 → #f8f5f2 → #f1ece8, yani zemin ile ilk panel arasında
-   yalnız %3 luminans var. --bg'yi sıcak kırık-beyaza indirmek bu adımı çökertir;
-   merdiveni korumak için DÖRT yüzey jetonunun birden yeniden değerlenmesi gerekir
-   ve o hamle DESIGN.md § Measurement provenance'taki her kontrast rakamını
-   geçersiz kılar. Bu bir REFİNEMENT turu; o iş kendi ölçüm turunu hak ediyor.
-   Ayrıca halation argümanı KOYU zemin + açık metin içindir ve gündüz temasında
-   uygulanmaz — oradaki dava (parlama) ayrı bir dava ve ayrıca ölçülmeli.
+   AÇIK KALAN İDİ: gündüz temasında `--bg:#ffffff` ve `--raise:#ffffff` saf beyaz.
+   O turda değiştirilmedi çünkü tek başına indirmek merdiveni çökertirdi ve
+   "merdiveni korumak için DÖRT yüzey jetonunun birden yeniden değerlenmesi
+   gerekir" diye yazıldı. WP-P/P9 turunda (2026-08-02) tam olarak o yapıldı:
+   DOKUZ yüzey jetonu tek katsayıyla (0.9523) birlikte indi, adım oranları
+   korundu, --bg sıcak kırık-beyaza (#fbf9f8) oturdu ve 148 çiftin tamamı
+   yeniden ölçüldü (docs/kontrast-denetimi.md §11). Gündüz temasında artık SIFIR
+   saf beyaz var. Dava, doğru adıyla PARLAMA idi ve ölçüldü: sayfanın en büyük
+   yüzeyi %5 luminans indi; daha derinine gitmek para renklerini de yeniden
+   değerlemeyi gerektiriyor (kırmızının payı 0.09'a inmiş durumda) ve o kendi
+   turudur.
 
    DEĞERLER TERS ÇEVİRİLEREK ÜRETİLMEDİ, ÖLÇÜLEREK ÜRETİLDİ. Eski koyu dünyanın
    kırmızısı #f2555a burada kendi %10 tinti üzerinde 4.12 (--card) ve 3.72
@@ -164,13 +213,25 @@
   --bg:#1c1a18; --bg2:#232120; --card:#262320; --card-2:#2f2b27; --raise:#38342f;
   --slip:#2f2b27; --slip-ink:#d4d0cb;
   --line:#38342f; --line-2:#4a453f;
-  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#b0a9a0;
+  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#95928f;
   --accent:#d4d0cb; --accent-2:#e8e4df; --accent-tint:#302c28;
   /* Para renkleri — her biri KENDİ tinti üzerinde en kötü gerçek bileşikte:
-     yeşil 5.21, kehribar 5.39, kırmızı 4.93. Üçü de AA. */
+     yeşil 5.31, kehribar 5.39, kırmızı 5.01. Üçü de AA (gece jetonları P9 turunda
+     KIMILDAMADI; bu üçlü 2026-08-02'de kaynaktan yeniden ölçüldü). */
   --green:#4cc38a; --amber:#e0a82e; --red:#f58b8f;
-  --violet:#d4d0cb; --violet2:#d4d0cb; --blue:#d4d0cb;
+  --violet:#b1afad; --violet2:#d4d0cb; --blue:#d4d0cb;
   --green-t:rgba(76,195,138,.10); --amber-t:rgba(224,168,46,.10); --red-t:rgba(245,139,143,.10);
+  /* Gece merdiveni TERS YÖNE koşar (koyu zemin, açılan bantlar) ama adımlar aynı ölçüdedir:
+     card-2 → band-2 2.45 · band-2 → tx2 2.46. Değer ters çevrilerek DEĞİL ölçülerek bulundu. */
+  --band-2:#676665;
+  /* Kapsama rampası gecede AÇILARAK ilerler — mürekkep açık olduğu için aynı alfa merdiveni
+     "daha çok mürekkep = daha yoğun" okumasını korur. Tavan .30: --tx bu bandın üstünde 4.68. */
+  --kap-1:rgba(212,208,203,.06); --kap-2:rgba(212,208,203,.14);
+  --kap-3:rgba(212,208,203,.23); --kap-4:rgba(212,208,203,.30);
+  /* Sapma kutupları gecede AÇILIR (koyu zeminde soluk-koyu bir dolgu hiç görünmezdi);
+     hue ekseni (mavi ↔ toprak) korunur, doygunluk yine para renklerinin ALTINDA. */
+  --dv-n2:rgba(138,168,200,.22); --dv-n1:rgba(138,168,200,.10);
+  --dv-p1:rgba(198,176,122,.10); --dv-p2:rgba(198,176,122,.22);
   /* ÜST BAR TEMAYLA DÖNER. Beyaz kalsaydı HALT/KRİZ kırmızısı üstünde kaybolurdu —
      Omega geçişinde yaşanan 1.27:1 arızasının aynadaki hâli. Gece: kırmızı 7.41. */
   --nav-bg:rgba(28,26,24,.82);
@@ -178,7 +239,7 @@
   --amber-h2:rgba(224,168,46,.40);
   --ink-h:rgba(212,208,203,.30); --ink-h-soft:rgba(212,208,203,.18);
   /* PERDE: mekanizma gece zeminine TAŞINMIYOR ve bu ölçüldü. Gündüz siyah %42
-     perde sayfayı karta karşı 2.72 ayırıyor (bu satır 2026-08-01'e kadar 2.79
+     perde sayfayı karta karşı 2.68 ayırıyor (bu satır 2026-08-01'e kadar 2.79
      diyordu; o rakam yeniden ÜRETİLEMEDİ — bkz. docs/kontrast-denetimi.md §8/D2.
      Değişen yalnız bu yorum; jeton kımıldamadı); gece zemin zaten koyu olduğu için
      SAF SİYAHLA BİLE tavan 1.34. Yani gece ayrımı luminansla değil, perdenin
@@ -700,6 +761,43 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
   .pm-sectlabel{display:block;position:relative;font-family:var(--mono);font-size:10px;font-weight:700;
     letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:2px}
 }
+
+/* ---- P9 · KAPSAMA ISI-MATRİSİ (2026-08-02) ------------------------------------------------
+   NEDEN AYRI BİR AİLE, `.pm-*` DEĞİL: parsel matrisi bir GETİRİ haritasıdır (işaretli para,
+   hücre başına güven rayı, çekmece açar); bu bir KAPSAMA haritasıdır (0-100 arası bir oran,
+   çekmecesi yok, ölçeği sıralı). İkisini tek sınıf ailesine sıkıştırmak, `.pm-cell.pos`in
+   para semantiğini kapsama hücresine taşırdı — bu depoda rengin YALNIZ parayı anlattığı bir
+   kural var ve bir ısı matrisi onu delerdi.
+   HÜCRENİN RAKAMI BİRİNCİ KANALDIR, dolgu ikincidir: dolgu adımları 1.14-1.25 (bir ısı
+   skalası 3:1 adımlarla kurulamaz) ve bu BEYANLI bir sapmadır (kontrast eki §11/İ8). */
+.km-wrap{overflow-x:auto;margin-top:var(--s4)}
+.km-grid{display:grid;grid-template-columns:186px repeat(var(--kmc,4),minmax(74px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line-2);min-width:min-content}
+.km-grid>*{background:var(--bg)}
+.km-corner{background:var(--bg2)}
+.km-head{background:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);
+  padding:9px var(--s2);text-align:center;line-height:1.4}
+.km-head b{display:block;font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;color:var(--tx)}
+.km-row{background:var(--bg2);font-size:12px;color:var(--tx);padding:9px var(--s3);
+  display:flex;flex-direction:column;justify-content:center;line-height:1.35}
+.km-row i{font-style:normal;font-family:var(--mono);font-size:10px;color:var(--tx2);
+  letter-spacing:var(--label-track);text-transform:uppercase}
+.km-cell{padding:9px var(--s2);text-align:center;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:13px;color:var(--tx);display:flex;align-items:center;justify-content:center;min-height:38px}
+/* sequential — tek hue, artan yoğunluk */
+.km-cell.k1{background:var(--kap-1)} .km-cell.k2{background:var(--kap-2)}
+.km-cell.k3{background:var(--kap-3)} .km-cell.k4{background:var(--kap-4)}
+/* diverging — CVD-güvenli mavi ↔ toprak; işaret ayrıca rakamda yazılıdır */
+.km-cell.dn2{background:var(--dv-n2)} .km-cell.dn1{background:var(--dv-n1)}
+.km-cell.dp1{background:var(--dv-p1)} .km-cell.dp2{background:var(--dv-p2)}
+/* ÖLÇÜM YOK ≠ SIFIR: dolgu yoktur, rakam yoktur, kelime vardır. */
+.km-cell.km-yok{color:var(--tx2);font-size:11px;letter-spacing:var(--label-track);text-transform:uppercase}
+.km-lej{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s3);
+  font-family:var(--mono);font-size:10px;letter-spacing:var(--label-track);
+  text-transform:uppercase;color:var(--tx2)}
+.km-sw{display:inline-block;width:22px;height:12px;border:1px solid var(--line-2);vertical-align:-2px}
+.km-foot{margin-top:var(--s3);font-size:12px;color:var(--tx2);line-height:1.6;max-width:80ch}
 
 /* ---- the ledger's measurement columns. A ruled register divided by vertical
    rules — not a row of equal cards with a big number in each. ---- */
