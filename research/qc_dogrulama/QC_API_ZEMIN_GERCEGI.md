@@ -33,3 +33,21 @@ security_reference.exchange_id           = NAS
 (dollar_volume sıralaması), fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir — ayrı
 fundamentals çağrısına gerek yok, look-ahead yok (her gün kendi kesiti). Delist-dahillik QC
 evreninin doğal özelliğidir; sağkalan-süzgeci YOKTUR.
+
+## EK ÖLÇÜM (2026-08-03, v2 koşumu) — QuantBook NESNE DURUMU KRİTİK
+
+v2 defteri H2'de yine DUR verdi ("universe_history hiçbir yıl diliminde satır döndürmedi").
+Sonda hücresi kök nedeni **aynı hücrede yan yana** ölçtü:
+
+| çağıran | pencere | sonuç |
+|---|---|---|
+| defterin H1'de kurduğu `qb` + `u` | 2020-08-03→08-14 | **n_satir=0** |
+| aynı `qb` + `u` | 2024-01-02→01-12 | **n_satir=0** |
+| **taze `QuantBook()` + taze `add_universe(top500)`** | 2020-08-03→08-14 | **9 satır** |
+| taze QuantBook (ayrı sonda) | 5g/30g/90g/365g, top50 | n=4/21/61/**252** |
+
+**HÜKÜM:** `universe_history` API'si her pencere uzunluğunda ve 2020'de de çalışıyor; ARIZA
+defterin H1'de kurduğu QuantBook örneğinin durumunda. Muhtemel sebep: H1'in API-keşfi/tarih-bağlamı
+çağrıları (`set_start_date` vb.) ya da aynı `qb` üzerinde önceki `add_universe`/`add_equity`
+birikimi. **KURAL (v3'e):** panel çekimi KENDİ TAZE `QuantBook()` örneğini kursun; keşif/sonda
+çağrıları ayrı örnekte kalsın — QuantBook nesnesi paylaşılmaz.
