@@ -125,6 +125,16 @@ UNIVERSE = [("AAPL", "tech"), ("JPM", "financials"), ("UNH", "health"), ("CAT", 
 SESSIONS = [f"2026-06-{d:02d}" for d in range(1, 25)]      # 24 seans
 BOOK_DATE = "2026-06-25"                                    # defterin son tarihi (planlar bundan eski)
 
+# C18 (denetim 2026-08-02) — FİKSTÜR ATR'si. SENTETİKTİR VE ÖYLE BEYAN EDİLİR: bu koşumun fiyatları
+# da sentetiktir (px = 100 + i) ve bu tickerların barı YOKTUR, yani ölçülmüş bir ATR14 yoktur.
+# UYDURMA YASAĞI ihlali değildir çünkü hiçbir yerde "ölçüldü" diye sunulmuyor — burada üretilen şey
+# bir PİYASA BÜYÜKLÜĞÜ değil, dedektör bataryasının yargılayacağı bir DEFTERdir ve o defterin gerçek
+# üreticiden (broker.fill_entry) geçmesi için icra girdisi ister.
+# DEĞER SEÇİMİ GEREKÇELİ: yasa `limit = tetik + min(0,5·ATR, %1·tetik)` (goal.yaml execution_v2).
+# %1,5'lik bir ATR'de ATR bacağı %0,75 verir ve YÜZDE TAVANINDAN SIKI olur — yani bacak GERÇEKTEN
+# bağlar. %2 seçilseydi iki taraf eşitlenir, `min()` ayırt etmez ve bacak dekor olurdu.
+FIXTURE_ATR_PCT = 0.015
+
 
 def build_state(dest: Path) -> Path:
     """Dedektörlerin YARGILAYACAK bir şeyi olsun diye gerçekçi bir defter seti üretir. Satır
@@ -183,8 +193,30 @@ def _build_ledgers(state: Path) -> None:
         candidates.append({"date": sess, "ticker": tkr, "score": plan["score"],
                            "setup": "breakout_vcp", "sector": sec, "source_skill": "vcp-screener"})
 
+        # C18 (denetim 2026-08-02) — E1 GİRİŞ YASASININ ATR BACAĞI BU MOTORDA DA TAŞINIR.
+        # ÖNCESİ: `fill_entry`e `atr=` HİÇ geçmiyordu → `broker.entry_limit_price` `a > 0` dalına
+        # giremiyor ve limit DAİMA yüzde tavanına düşüyordu. Canlı motor ise min(0,5·ATR14, %1) ile
+        # koşuyor. Yani DEDEKTÖRLERİ ölçen fikstür, ölçtüğü sistemin icra yasasının yarısını hiç
+        # işletmiyordu; yasanın ATR dalını bozan bir gelecek değişiklik burada iz bırakmazdı.
+        # DESEN backtest.py'deki `armed_atr` deseniyle AYNI: ATR bir DEFTER alanı değil bir İCRA
+        # girdisidir, o yüzden PLAN SÖZLÜĞÜNE değil AYRI bir değişkene konur ve `fill_entry`e ayrı
+        # argümanla geçer (plan şeması iki motorda AYNI kalmalı — test_differential_v60). Yan
+        # haritanın burada tek değere indirgenmesi, bu döngüde silahlanma ile dolumun AYNI adımda
+        # olmasındandır; ayrılık ilkesi (defter ≠ icra) korunur.
+        # HER 4. SEANS BİLEREK None: "ATR ölçülemedi" dalı (yalnız yüzde tavanı) da fikstürde
+        # gerçekten koşsun — tek dallı bir fikstür, iki dallı bir yasayı yarım ölçer.
+        armed_atr = None if i % 4 == 3 else round(px * FIXTURE_ATR_PCT, 4)
         if verdict != "NO_GO":            # GERÇEK ÜRETİCİ: işlem satırını broker yazar
-            broker.fill_entry(plan, px, sess, START_EQUITY)
+            _rej: dict = {}
+            broker.fill_entry(plan, px, sess, START_EQUITY, atr=armed_atr, reject_out=_rej)
+            # YASA 4 — SESSİZ YUTMA YOK. Dolum reddedilirse `close_position` None döner, `if row`
+            # satırı düşürür ve GO damgalı bir plan İŞLEMSİZ kalır: tam olarak korunum dedektörünün
+            # "sessiz kayıp" dediği kirlilik, üstelik TEMEL DURUMDA. Kirli temelde her mutasyon
+            # "yakalandı" görünür ve kapsama sayısı yalan söyler — o yüzden dürüstçe patlar.
+            if _rej.get("reason"):
+                raise RuntimeError(
+                    f"FİKSTÜR DOLUMU REDDEDİLDİ ({_rej['reason']}, {tkr} @ {sess}): temel durum "
+                    f"GO damgalı ama işlemsiz bir planla kirlenirdi. Ret ayrıntısı: {_rej}")
             close_px = px * (1.08 if i % 3 else 0.96)
             row = broker.close_position(tkr, close_px, "target" if i % 3 else "stop",
                                         f"2026-06-{min(28, int(sess[-2:]) + 3):02d}")

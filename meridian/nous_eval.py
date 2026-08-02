@@ -458,6 +458,18 @@ def _akibet(satir: dict, kuyruk: dict) -> str:
         return "ÖLÇÜLÜYOR (prescreen süreci koşuyor)"
     if st == "pending":
         return "SIRADA (bütçe açıldığında ölçülecek)"
+    if st == "measure_failed":
+        # C14 (2026-08-02) kuyruk durum alfabesine `measure_failed` ekledi; bu okuma o gün genel
+        # dala düşüyordu ("kuyruk durumu: measure_failed"). Teknik olarak doğru, PRATİKTE ÖLÜ:
+        # beyin bir sonraki haftanın önerisini `neden`e göre değiştirir ve iki başarısızlık İKİ AYRI
+        # derstir — "guard bütün adayları reddetti" (öneri fizibilitesizdi, ŞEKLİNİ değiştir) ile
+        # "ölçüm süreci ÖLÜ" (öneri sağlamdı, ALTYAPI düştü — aynısını tekrar öner) aynı cümleye
+        # katlanırsa H1'in kendi isabet karnesi okunamaz hâle gelir.
+        # Neden alanı BOŞ olabilir: o zaman "boş" DENİR, doldurulmaz (UYDURMA YASAĞI).
+        _n = q.get("neden")
+        return (f"ÖLÇÜM DÜŞTÜ: {str(_n)[:220]}" if _n else
+                "ÖLÇÜM DÜŞTÜ — `neden` alanı BOŞ (damgayı basan taraf gerekçe yazmamış; "
+                "bu bir KOPUKLUK işaretidir)")
     return f"kuyruk durumu: {st}"
 
 

@@ -212,16 +212,50 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
     gates, kaynak = _gates(b, meta, ticker)
     engel = _blocking(gates)
 
+    # C18 (denetim 2026-08-02) — E1 GİRİŞ YASASININ ATR BACAĞI. ÖNCESİ: `fill_entry`e `atr=` HİÇ
+    # geçmiyordu → limit DAİMA %1 yüzde tavanındaydı, canlı EOD motoru ise min(0,5·ATR14, %1) ile
+    # koşuyordu. Kırılma TEK YÖNLÜ: gölge, canlının REDDEDECEĞİ dolumları "would_submit" diye yazar
+    # → Faz 4b'nin kanıt tabanı (bu defterin varlık sebebi) iyimser bir icra modeli üzerine kurulur.
+    # ATR BURADA YENİDEN HESAPLANMAZ — `_copy_broker`ın zaten okuduğu portfolio.json'daki
+    # `entry_law` yan tablosundan gelir. O tablo SİLAHLANMA ANINDA (sinyal barı kapanışı)
+    # loop.py tarafından yazılır ve `_save_broker` ile restart'ı atlatır. İkinci bir ATR hesabı
+    # tam olarak bu modülün başlığındaki hatanın kendisi olurdu: "iki hesap zamanla AYRIŞIR ve
+    # gölge defteri EOD'yi değil KENDİNİ ölçmeye başlar".
+    # Yan tabloda satır yoksa (eski silahlı plan / tohumlanmış defter) None KALIR = "ölçülemedi":
+    # limit yalnız yüzde tavanıyla kurulur ve satır bunu `atr_kaynak` ile BEYAN eder — uydurma ATR
+    # yok, sessiz varsayım da yok.
+    _lw = (meta.get("entry_law") or {}).get(plan_id) or {}
+    atr_icra = _lw.get("atr")
+    # ÜÇ HÂL, ÜÇ CÜMLE — ikisini birleştirmek "ölçülemedi"yi "tablo yok" ile karıştırırdı ve bir
+    # KOPUKLUK (plan yan tabloda hiç yok) ile MEŞRU bir ölçümsüzlük (ATR o gün hesaplanamadı)
+    # okuyucuya aynı görünürdü.
+    if not _lw:
+        atr_kaynak = (f"{PORTFOLIO}.entry_law'da bu plan için satır YOK — ATR ÖLÇÜLEMEDİ "
+                      f"(tohumlanmış defter ya da yasa öncesi silahlanmış plan)")
+    elif atr_icra is None:
+        atr_kaynak = (f"{PORTFOLIO}.entry_law[{plan_id}] var ama `atr` None — silahlanma anında "
+                      f"ÖLÇÜLEMEDİ; limit yalnız yüzde tavanıyla kuruldu")
+    else:
+        atr_kaynak = f"{PORTFOLIO}.entry_law[{plan_id}] — silahlanma anında sabitlendi"
+
     qty = risk_dollars = sim_fill = None
+    red_nedeni = None
     if engel is None:
         # KOPYA broker üzerinde GERÇEK boyutlandırma: aynı fonksiyon, aynı korumalar.
+        _rej: dict = {}
         pos = b.fill_entry(plan, sim_price, as_of.isoformat(), b.equity(),
-                           size_mult=gates["size_mult"], adv=_daily_adv(ticker, session))
+                           size_mult=gates["size_mult"], adv=_daily_adv(ticker, session),
+                           atr=atr_icra, reject_out=_rej)
         if pos is None:
             # fill_entry'nin ret sebebini (gap / stop-altı açılış / likidite / notional) DIŞARIDA
             # yeniden hesaplamıyoruz: o mantığın ikinci kopyası zamanla ayrışır ve gölge defteri
             # EOD'yi değil kendini ölçmeye başlar. Sürüklenme riski > teşhis değeri.
+            # C18: ama artık BROKER'IN KENDİSİ sebebi söylüyor (`reject_out`) — bu bir ikinci kopya
+            # DEĞİL, aynı hesabın çıktısıdır ve satıra `red_nedeni` olarak yazılır. `status` jetonu
+            # BİLEREK `broker_kurali` kalır: pano (app.js SH_TR) sabit bir jeton sözlüğü çeviriyor
+            # ve yeni jeton orada çevrilmeden ham görünürdü — teşhis ayrı alanda, sınıf yerinde.
             engel = "broker_kurali"
+            red_nedeni = _rej.get("reason")
         else:
             qty, risk_dollars, sim_fill = pos.qty, pos.risk_dollars, pos.entry
     # Kopya broker'ın ömrü burada biter: nesne atılır, hiçbir kalıcılık yolu çağrılmaz.
@@ -236,6 +270,10 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
         # friksiyonu sistematik bir "fark" gibi gösterirdi (bkz. vs_eod gerekçesi).
         "sim_fill": sim_fill, "qty": qty, "risk_dollars": risk_dollars,
         "stop": plan.get("stop"), "target": plan.get("profit_target"),
+        # C18: hangi ATR ile ve NEREDEN gelen bir limitle karar verildiği satırda durur — bir
+        # kapının hangi girdiyle değerlendirildiği, kapının kendisi kadar önemlidir (bkz. `_gates`).
+        "atr": atr_icra, "limit": _lw.get("limit"), "atr_kaynak": atr_kaynak,
+        "red_nedeni": red_nedeni,
         "gates": gates, "gate_inputs_as_of": kaynak,
         "status": "would_submit" if engel is None else f"blocked:{engel}",
         # ÜÇ DAMGA (intraday_cycle ile aynı desen): as_of >= close_ts sonradan denetlenebilir.

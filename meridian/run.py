@@ -40,6 +40,9 @@ import argparse
 from rich.console import Console
 
 from . import config, store, backtest, dataset, memory, versioning, health, loop, ledgerstamp
+from . import broker as BR          # C18: ret SINIFI adı tek kaynaktan (`EV_MISSED_LIMIT`) —
+                                    # dizgiyi burada ikinci kez yazmak, tam da bu turun kovaladığı
+                                    # "aynı yasanın iki uygulaması" hatası olurdu
 
 console = Console()
 
@@ -293,6 +296,23 @@ def replay_seed(start: str, end: str) -> dict:
     })
     health.write_heartbeat(version=version, mode=config.MODE, replay_seeded=True,
                            n_trades=len(res.trades), score=detail["score"])
+    # C18 ÜRETİM OKUYUCUSU (YASA 6, 2026-08-02): iki-motor turu `BacktestResult.entry_rejects`i
+    # ÜRETTİ ama hiçbir üretim yolu onu BASMIYORDU. Yazılıp okunmayan bir sayaç, hiç ölçülmemiş
+    # sayaçla aynı şeydir — ve bu sayacın söylediği şey tam olarak turun bulgusudur: replay artık
+    # canlının REDDEDECEĞİ dolumları yazmıyor, kaçan dolumları SAYIYOR. Operatör re-seed bitiminde
+    # tek satırda görür; sayı beklenmedik biçimde 0 ise bu da bir bulgudur (limit fiilen bağlamıyor).
+    # SIFIR DA BASILIR: "ölçüldü ve sıfır" ile "hiç ölçülmedi" ayrı cümlelerdir (UYDURMA YASAĞI'nın
+    # ikiz maddesi) — o yüzden None ayrı dala düşer.
+    _rej = res.entry_rejects
+    if _rej is None:
+        console.print("[yellow]giriş retleri: ÖLÇÜLEMEDİ — replay ret sayacı yazmadı "
+                      "(BacktestResult.entry_rejects=None)[/yellow]")
+    else:
+        _diger = " · ".join(f"{k}={v}" for k, v in sorted(_rej.items())
+                            if k != BR.EV_MISSED_LIMIT)
+        console.print(f"[cyan]giriş retleri: {BR.EV_MISSED_LIMIT}="
+                      f"{int(_rej.get(BR.EV_MISSED_LIMIT, 0))}"
+                      + (f" · {_diger}" if _diger else " (başka ret sınıfı yok)") + "[/cyan]")
     console.print(f"[green]seeded state: {len(res.trades)} trades, score={detail['score']}, "
                   f"final_equity={res.equity[-1][1] if res.equity else None}[/green]")
     return {"trades": len(res.trades), "detail": detail}
