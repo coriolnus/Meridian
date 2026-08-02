@@ -218,6 +218,28 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   etkisi YOK, sıradaki pencereyle iner (yeni kuyruk kaydı açmayı gerektirmeyecek kadar küçük;
   pencereyi koşan, dağıtım anındaki main tepesini kaydetsin — 660dc10 dersi).
 
+- **STATE ŞİŞMESİ + YEDEK KAPSAMI (2026-08-02 gece, Rol-1 + Opus; H10 turunun devredilen bulgusu —
+  iki sınıf birden):** A1'de state/ 617M'in 438M'i = 4 sprint kum-havuzu × ~110M; gecelik tar 112,5M.
+  İKİ AYRI KÖK NEDEN ÖLÇÜLDÜ: (1) SINIF "belgede donmuş boyut varsayımı" — `sprint.SKIP_COPY` yalnız
+  `bars`ı atlıyordu; küme yazıldıktan SONRA doğan `bars_intraday` (43M) + `intraday_bars` (40M) her
+  kum havuzuna sessizce kopyalanıyordu (83M = ~110M'in 3/4'ü; sprint çocuğunun yolunda okuyucuları
+  YOK); docstring'in "~1.5 MB" iddiası 70× bayattı. Birikim SINIRSIZ DEĞİLDİ: SANDBOX_KEEP=3 +
+  start()-anı budaması çalışıyor, kararlı durum 4 dizin. (2) Aynı sabahki 4×5dk damgaları KADANS
+  KUSURU DEĞİL YENİ VAKA DEĞİL — C15'in (damga-ezme) canlı imzası: olay defterinde **154
+  `sprint_cadence_start`, HEPSİ `taze_aday_birikimi/taze=50/gecen_gun=0`**, tam 300sn poll
+  aralığında, 06:00'da pencere kapanınca kesiliyor; canlı `sprint_status.json`'da `n_hyp_at_start`
+  YOK (eski kod çocuğu eziyordu). Düzeltme (`_damgayi_koru`) 19:05 restart'ıyla ZATEN CANLIDA
+  (A1 diskinde grep'le doğrulandı); ilk yeni sprint damgayı yeniden basınca kadans kendi kendini
+  onarır — beklenti: bu gece 22:00'de TEK sprint, sonra haftalık taban. ÇÖZÜMLER: SKIP_COPY +=
+  {bars_intraday, intraday_bars} (çivi: test_sr4b, v45) · `meridian-backup.service` tar'ına
+  `--exclude=state/sprint` (ölçülen: 112,5M → **40.497.179 bayt ~40,5M**; RUNBOOK B4/9 satır 5'in
+  ~15M tahmini yanlıştı) + çift-yönlü kapsam çivisi (`test_backup_kapsami_sprint_haric_bars_dahil`,
+  v174: sprint dışarıda + bars/seans-içi arşivler İÇERİDE kalmak zorunda) · kayıp beyanı birim
+  yorumunda (sandbox `sprint_runs.jsonl` defterleri arşiv dışı — 2026-08-02'de 4/4 sandbox'ta
+  zaten yoktu) · H7 tatbikat beyanı güncellendi (B4/6). Sıklık artışı BİLEREK yapılmadı
+  (litestream defterin dakika-RPO'sunu taşıyor; bars günde bir değişiyor). Hedefli testler
+  74/74 + t3 yeşil.
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
@@ -327,6 +349,19 @@ dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
 dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + --uygula anı = operatör.
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
+
+- **DAĞITIM KUYRUĞU (2026-08-02 gece, state-şişmesi turu):** (a) `meridian-backup.service`
+  değişikliği rsync'le İNMEZ — /etc kopyası pencere içinde `sudo cp + daemon-reload + ELLE
+  test-ateşleme` ister (birimdeki sessiz-kayıp uyarısı: Result=success + yeni tar GÖRÜLMEDEN
+  tamam sayılmaz; beklenen tar ~40,5M, `tar -tzf`de `state/sprint/` YOK ama `state/bars/` VAR);
+  (b) `sprint.py` SKIP_COPY değişikliği worker restart'ıyla etkinleşir; ilk yeni sandbox'ta
+  `du -sh state/sprint/*` ile ~27M türetimi ölçüme çevrilir. İkisi de sıradaki pencere kalemi,
+  yeni pencere açtırmaz.
+- **SPRINT DÖNGÜ KAPATAMIYOR — n_v1=0 (yan bulgu, ayrı tur):** 154 kadans koşusunun İLKİ DAHİL
+  hepsi `phase=done, n_v1=0, "v1 ileri baz 0/30 işlem"` ile bitiyor — sprint hiç kalibrasyon
+  noktası üretmiyor ve `sprint_runs.jsonl` hiçbir sandbox'ta doğmuyor (Faz A min_sample).
+  "Örneklem kuraklığı → no_parent_score" ailesinin sprint bacağı; hedef sözleşmesi md.2'nin
+  "sprint noktaları ↑" sayacı bu yüzden akmıyor olabilir. Sahip: öğrenme katmanı turu.
 
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**

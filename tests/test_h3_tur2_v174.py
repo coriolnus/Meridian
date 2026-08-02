@@ -256,6 +256,29 @@ def test_backup_birimi_yedek_hedefini_aciyor():
     assert "/home/ubuntu/backups" in metin and "tar -czf" in metin
 
 
+def test_backup_kapsami_sprint_haric_bars_dahil():
+    """YEDEK KAPSAMI İKİ YÖNLÜ ÇİVİLİ (2026-08-02). Ölçüm (A1): tar 112,5M; `--exclude=state/sprint`
+    ile 40.497.179 bayt (~40,5M). state/sprint 438M'dir (4 kum havuzu × ~110M) ve tamamı
+    YENİDEN-ÜRETİLEBİLİR — her `sprint.start()` canlı state'ten yeni kum havuzu kurar; onu yedeklemek
+    72M'yi her gece boşuna yazmaktı.
+
+    ASIL RİSK TERS YÖNDE: kapsam daraltması iştah açar. Sessiz bir "yedek yine büyüdü" turu bir gün
+    `state/bars`ı (59M, WP-U: sağlayıcı geçmişi geri vermiyor) ya da seans-içi arşivleri
+    (bars_intraday/intraday_bars — TTL'li Redis akışının TEK kalıcı arşivi) de dışlarsa, kayıp
+    RESTORE ANINA kadar görünmez. O tur bu testi DÜŞÜRÜR: yeri doldurulamaz arşivler kapsamda kalır,
+    dışlanacaklarsa gerekçe önce buraya yazılır."""
+    exec_start = _deger("meridian-backup.service", "ExecStart")
+    assert exec_start is not None, "meridian-backup.service: ExecStart yok"
+    assert "--exclude=state/sprint" in exec_start, (
+        "yedek kum havuzu alt-ağacını yine arşive alıyor (2026-08-02: 438M yeniden-üretilebilir): "
+        f"{exec_start!r}")
+    for yol in ("state/bars", "state/bars_intraday", "state/intraday_bars"):
+        assert f"--exclude={yol}" not in exec_start, (
+            f"{yol} yedekten dışlanmış — yeri doldurulamaz arşiv (bars: WP-U; seans-içi: TTL'li "
+            f"Redis akışının tek kalıcı kopyası). Bilinçli bir karar ise ÖNCE bu testi ve birim "
+            f"yorumunu gerekçesiyle güncelle: {exec_start!r}")
+
+
 # ==================================================================================================
 # 3 — SIR DÜZENİ: token birimde DEĞİL, `.dash.env`te
 # ==================================================================================================
