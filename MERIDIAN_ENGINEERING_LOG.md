@@ -257,6 +257,25 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   journal'da SyntaxError YOK, `.yedek` İLK KEZ birim eliyle tazelendi (1.335.296 bayt), tar'da
   yedek üyesi 1. DERS (aileyi genelleştirir): birim içinde `\"` görülen her ExecStart şüphelidir —
   systemd'nin quoting'i sh değildir; değer taşımak gerekiyorsa argv kullan, kaçış kullanma.
+
+- **STATE-ŞİŞMESİ TURU KAPANIŞI (2026-08-02 gece ~21:00–22:10 UTC, Rol-1; ölçümler dağıtım-kuyruğu
+  kaydında):** (1) Otoriter suite donmuş `0248653`te **2 failed / 4104 passed**; triyaj İKİ AYRI
+  hüküm verdi: t3 kırmızısı YÜRÜYEN-AĞAÇ ARTEFAKTIYDI (nervous-dewdney merge'i 5f906c5 koşum
+  ORTASINDA indi; statik ağaçta yeşil — "otoriter suite yalnız donmuş ağaçta" dersi bir kez daha
+  fiilen kanıtlandı), v116 kırmızısı GERÇEKTİ: SKIP_COPY'ye giren `bars_intraday` literali
+  yazar-tekliği kör-taramasına takıldı → test-katmanı çözümü 48cd445 (MUAF kümesi
+  {barsarchive.py, sprint.py}, gerekçeli; tarama üçüncü modül için aynen tetikte). (2) **CERRAHİ
+  DAĞITIM KARARI (sınıf: "paralel-oturum trafiğinde tam-repo dağıtımı"):** main gece boyunca
+  hareketliydi — v166 ısı-tavanı karar-turu (`heat_hard_r 4.5→5.0`, goal.yaml İZLİ state!) +
+  v181'in commit'lenmemiş watchdog WIP'i + a2a7665. Tam `dagit.sh --uygula` ya kirli ağacı
+  (`--kirli-gec` → yarım-iş-canlıya YASAsı) ya da BAŞKASININ karar-turunu kendi penceresi/
+  doğrulaması olmadan taşıyacaktı (660dc10 sınıfının tam kendisi). Hüküm: kapsam tek dosyaya
+  daraltıldı — `meridian/sprint.py` worktree↔main ÖZDEŞ (sha `8b9b6baa…`), hedefli kapsam 146/146,
+  sha-doğrulamalı scp + yedek + yalnız-meridian restart. DAĞITIM ANINDAKİ main tepesi: `4c06c61`
+  (sprint.py o tepeyle de özdeş — 660dc10 dersi uygulandı, beyan doğru). SONUÇ: A1 ağacı BİLİNÇLİ
+  karışık ara durumda (19:05 içeriği + yeni sprint.py + /etc'de yeni yedek birimi); v166 goal
+  değişikliği, v181 api/watchdog kolları ve ağ-kapısı test katmanı CANLIYA İNMEDİ — her biri kendi
+  penceresinin/sahibinin işi, İLK TAM dagit ağacı eşitler ve dry-run delta'sı bu kaydı doğrular.
 - **SPRINT n_v1=0 KÖK NEDENİ ÖLÇÜLDÜ + DÜZELTİLDİ (2026-08-02 gece, öğrenme katmanı turu; sınıf:
   "depolama arka-ucu değişti, yan sözleşmeler sessizce bayatladı" — audit #23'ün [kopyalanan HALT]
   İKİNCİ kuşağı + SKIP_COPY-denylist-kaçağı [bars_intraday ile aynı tur]):** 154 kadans koşusunun
@@ -413,16 +432,23 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   (`state/sprint/` 0 üye · `state/bars/` 261 · `meridian.db.yedek` 1 · 0600). İlk ateşleme
   ayrıca H9'dan beri sessiz bir arızayı yakaladı (aşağıdaki yeni vaka). Mac'teki geniş
   2026-08-02 kopyası (112,5M) bilerek korunuyor; 23:30 timer'ı bu gece dar birimle koşacak.
-  (b) `sprint.py` SKIP_COPY değişikliği worker restart'ıyla etkinleşir; ilk yeni sandbox'ta
-  `du -sh state/sprint/*` ile ~27M türetimi ölçüme çevrilir. (b) sıradaki pencere kalemi,
-  yeni pencere açtırmaz; (c) **sprint DB-izolasyon düzeltmesi (SKIP_COPY += meridian.db/-wal/-shm)
-  da worker RESTART'ıYLA etkinleşir** (`sprint.start` worker sürecinde koşar) — (b) ile aynı
-  pencereye biner. KABUL ÖLÇÜTÜ (restart sonrası ilk kadans sprinti, 22:00): yeni sandbox'ta
-  `meridian.db` YOK; `sprint_status` `phase=baseline`de SAATLER mertebesinde ilerliyor (60 sn
-  değil) ve n_v1 tırmanıyor; Faz B'ye geçerse `sprint_runs.jsonl` sandbox'ta doğar. ÇATAL BEYANI:
-  iki-motor giriş yasası (0a4453f) 07-22'den beri dolumları sıkılaştırdı — n_v1 100'ün altında
-  kalabilir; 522 seansta <30 çıkarsa bu YENİ ve DÜRÜST bir bulgudur ("modern yasada eval-penceresi
-  kuraklığı", ayrı tur + gerekirse kart) — min_sample GEVŞETİLEREK "çözülmez".
+  (b)+(c) **KAPANDI (aynı gece 21:27–22:07 UTC, operatör talimatlı CERRAHİ dağıtım — gerekçe ve
+  ölçümler §BU OTURUMDA "STATE-ŞİŞMESİ TURU KAPANIŞI"):** `sprint.py` (iki turun birleşik içeriği,
+  sha 8b9b6baa…) tek dosya olarak A1'e indi (yedek `~/sprint.py.bak-20260802-2`), worker 21:27'de
+  restart (yalnız meridian; barsarchive kesilmedi). İlk sprint operatör talimatıyla `/api/sprint/start`
+  override'ından 22:04:08'de doğdu (kadans `mesgul:canli_arama`da bekliyordu — v181'in ölçtüğü
+  %99,9 CPU arama vakası). ÖLÇÜMLER: sandbox **30 MB** (~27M türetimi doğrulandı; dökümde
+  bars_intraday/intraday_bars/çıplak meridian.db YOK) · `phase=baseline, total=523, progress 0→1`
+  (22:04:17→22:06:50) — 60sn ölüm deseni KIRILDI · `n_hyp_at_start=51` status'ta ve çocuk yazımı
+  ezmedi (C15 canlı kanıt) · budama en eskiyi sildi (4 dizin). KABUL ÖLÇÜTÜNÜN KALAN YARISI
+  (n_v1 tırmanışı + Faz B'de `sprint_runs.jsonl` doğumu) SAATLİK iştir → SABAH KONTROLÜ kalemi.
+  ÇATAL BEYANI AYNEN YÜRÜRLÜKTE: iki-motor giriş yasası (0a4453f) 07-22'den beri dolumları
+  sıkılaştırdı — n_v1 100'ün altında kalabilir; 522 seansta <30 çıkarsa bu YENİ ve DÜRÜST bir
+  bulgudur ("modern yasada eval-penceresi kuraklığı", ayrı tur + gerekirse kart) — min_sample
+  GEVŞETİLEREK "çözülmez". Gecelik tar da elle ateşlemeyle YENİDEN doğrulandı (22:05, sprint
+  KOŞARKEN): Result=success, journal temiz, `.yedek` tazelendi, tar **40.598.037 bayt**
+  (koşan sandbox dahil `state/sprint/` 0 üye · bars 261 · db.yedek 1). KÜÇÜK KALEM (temizlik
+  turuna): `meridian.db.yedek` (2M) sandbox'a kopyalanıyor — SKIP_COPY adayı, okuyucusu yok.
 - **SPRINT DÖNGÜ KAPATAMIYOR — n_v1=0: KÖK NEDEN ÖLÇÜLDÜ, DÜZELTME HAZIR (2026-08-02 gece;
   ayrıntı §BU OTURUMDA):** kuraklık değil izolasyon deliği (DB kopyası reset'i görünmez kılıyor,
   monotonluk bekçisi 522/522 reddediyor). Kod + çiviler bu commit'te; canlıya İNİŞ yukarıdaki

@@ -477,8 +477,10 @@ ediyor; yeri doldurulamaz olan bars ise toplamın **onda biri**.
 **Ek ölçüm (2026-08-02, aynı keşif):** `tar -cz --exclude=state/sprint -C /opt/meridian state | wc -c`
 = **40.497.179 bayt (~40,5M)** — satır 5'in "~15M" tahmini YANLIŞTI, ölçülen budur (kalan hacmi
 bars 59M + iki seans-içi arşiv 83M taşıyor). Kum havuzlarının kendisi de ayrıca küçülüyor:
-`sprint.SKIP_COPY`ye iki seans-içi arşiv eklendi (aritmetik beklenti ~27M/kum-havuzu — türetim,
-ilk yeni sandbox'ta `du` ile doğrulanır).
+`sprint.SKIP_COPY`ye iki seans-içi arşiv eklendi — **ÖLÇÜLDÜ (2026-08-02 22:04, sandbox
+20260802-220408): 30 MB/kum-havuzu** (~27M türetimi doğrulandı; dökümde bars_intraday/
+intraday_bars/çıplak meridian.db yok; kalan hacim events.jsonl 10M + dashboard.log 5M + cf 4M).
+Kararlı durum 4 dizin × ~30M ≈ 120M'ye yakınsar (eski ~110M'likler budandıkça).
 
 | # | Seçenek | Neyi kapsar | Tazelik | Yer/bant | Ön koşul | Not |
 |---|---|---|---|---|---|---|
