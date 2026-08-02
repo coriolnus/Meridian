@@ -293,8 +293,66 @@ def _restored_baseline() -> int:
     return min(int(persisted), n_now) if isinstance(persisted, (int, float)) else n_now
 
 
+_acilis_senkron_calisti = False      # SÜREÇ BAŞINA bir kez (start/stop döngüsü tekrarlatmaz)
+
+
+def _acilis_senkron_dogrula() -> dict:
+    """(a) AÇILIŞ SENKRON-DOĞRULAMASI — SÜREÇ BAŞINA BİR KEZ (HERMES-DAYANIKLILIK, 2026-08-02).
+
+    CANLI VAKA (6 gün sessiz ölüm): A1 taşınmasında `~/.hermes` yapılandırması TAŞINMADI (hiçbir
+    dağıtım kanalının parçası değildi), `sync_local_agent_gemini` yalnız operatör panodan anahtar
+    GİRDİĞİNDE koşan TEK-ATIMLIK bir yol olduğu için kendini onarmadı ve hiçbir bekçi "yerel ajan
+    yapılandırılmış mı" diye sormuyordu. LLM ikinci-görüşü altı gün boyunca ölü kaldı; defterde
+    yalnız "boş cevap" satırları vardı.
+
+    KAPI ÜÇ AŞAMALIDIR VE HER AŞAMA ÖLÇÜMDÜR:
+      1. Meridian'ın kendi kasasında GEMINI_API_KEY var mı — yoksa yapılacak bir şey YOKTUR
+         (anahtarsız bir senkron, olmayan bir anahtarı taşımaya çalışmaktır).
+      2. Yerel CLI ölçülür (`hermes.local_agent_config_state`): model.default + ~/.hermes/.env.
+      3. ÖLÇÜLMÜŞ eksiklik varsa (ve yalnız o zaman) `sync_local_agent_gemini(True)` koşar.
+    ÖLÇÜLEMEYEN durum ONARILMAZ ama SESSİZ de kalmaz: uyarı düşer. "Bilinmiyor"u "bozuk" sayıp
+    çalışan bir kurulumu yeniden yapılandırmak, kapının önlemeye çalıştığı zararın ta kendisidir."""
+    from . import hermes
+    ts = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    try:
+        if not (secrets.get("GEMINI_API_KEY") or "").strip():
+            return {"yapildi": False, "sebep": "gemini_anahtari_yok", "senkron_ts": ts}
+        durum = hermes.local_agent_config_state()
+        yap = durum.get("yapilandirilmis")
+        if yap is True:
+            return {"yapildi": False, "sebep": "cli_zaten_yapilandirilmis",
+                    "model": durum.get("model"), "senkron_ts": ts}
+        if yap is None:
+            obs.warn("local_agent_config_olculemedi", neden=durum.get("neden"),
+                     kurulu=durum.get("kurulu"), model_durum=durum.get("model_durum"),
+                     detail="yerel ajan yapılandırması ÖLÇÜLEMEDİ — açılış senkronu koşmadı; "
+                            "bilinmeyeni bozuk sayıp yeniden yapılandırmak çalışan kurulumu bozardı")
+            return {"yapildi": False, "sebep": "olculemedi", "neden": durum.get("neden"),
+                    "senkron_ts": ts}
+        res = hermes.sync_local_agent_gemini(True)
+        obs.log("local_agent_resynced", ok=bool(res.get("ok")), neden=durum.get("neden"),
+                model_durum=durum.get("model_durum"), env_anahtar=durum.get("env_anahtar"),
+                detail=str(res.get("detail"))[:160], senkron_ts=res.get("senkron_ts", ts))
+        return {"yapildi": True, "ok": bool(res.get("ok")), "neden": durum.get("neden"),
+                "detail": res.get("detail"), "senkron_ts": res.get("senkron_ts", ts)}
+    except Exception as e:
+        # YASA 4: bu yol bir ÖZ-ONARIM yoludur; düşerse sessizce yutmak, onarımın koştuğu
+        # yanılsamasını üretir (canlı vakanın kök nedeniyle aynı sınıf). Döngü yine de kurulur —
+        # açılış doğrulaması hermes bekleme döngüsünü rehin alamaz.
+        obs.warn("local_agent_acilis_senkron_hatasi", error=f"{type(e).__name__}: {e}",
+                 detail="açılış senkron-doğrulaması düştü — yerel ajan yapılandırması BİLİNMİYOR")
+        return {"yapildi": False, "sebep": f"hata: {type(e).__name__}", "senkron_ts": ts}
+
+
 def _run(poll_seconds: int) -> None:
     from . import hermes
+    global _acilis_senkron_calisti
+    if not _acilis_senkron_calisti:
+        _acilis_senkron_calisti = True
+        # Döngünün İÇİNDE, `start()` içinde DEĞİL: ölçüm+senkron birkaç alt süreç koşturur ve
+        # `start()` uygulama açılışında (api.py startup) senkron çağrılır — orada bloklamak,
+        # yavaş/asılı bir CLI'nin panoyu açılışta rehin alması demekti.
+        _state["local_agent_sync"] = _acilis_senkron_dogrula()
     every = int(config.goal().get("reflection_every", 5))
     if _state.get("last_reflect_at") is None:
         _state["last_reflect_at"] = _restored_baseline()

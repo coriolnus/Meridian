@@ -1163,6 +1163,48 @@ def _agent_budget_take(max_wait: float = 0.0) -> bool:
     return True
 
 
+def _agent_budget_refund(reason: str) -> bool:
+    """AĞA HİÇ ÇIKMAMIŞ ÇAĞRIYI GÜN SAYACINDAN GERİ AL (HERMES-DAYANIKLILIK (d), 2026-08-02).
+
+    CANLI VAKA: yapılandırmasız yerel CLI hiçbir sağlayıcıya bağlanmadan `exit(1)` ediyordu, ama
+    `_agent_budget_take` çağrıdan ÖNCE düştüğü için ölü zincir 150/150'lik RPD kotasını 06:19'da
+    yaktı. Gerçek Gemini kotası EL DEĞMEMİŞken aday incelemesi tüm gün bütçe-reddi yedi: sayaç
+    korumaya çalıştığı şeyi (sağlayıcı kotası) ölçmüyordu.
+
+    NEDEN İADE, NEDEN "HİÇ ALMA" DEĞİL: yapılandırmasızlık ancak çağrının SONUCUNDAN bilinir
+    (CLI'yi çalıştırmadan yapılandırmasını ölçmek ikinci bir alt süreç demektir — her çağrıya bir
+    süreç eklemek, korumaya çalıştığımız maliyetten büyük). Bu yüzden düşüm önce alınır, hüküm
+    sonra kesinleşir. Yarış güvenliği `store.update_json` kilidindedir (oku-değiştir-yaz atomik).
+
+    RPM DAMGASI BİLEREK İADE EDİLMEZ. RPD sağlayıcı kotasını korur — yapılandırmasız çağrı ona
+    hiç dokunmadı, iade edilir. RPM damgası ise AYNI ZAMANDA yerel süreç-doğurma hızının tek
+    freni ve yapılandırmasız çağrı bir süreci GERÇEKTEN doğurdu (ölçülmüş yerel maliyet). İkisini
+    birden iade etmek, ölü bir CLI'yi poll başına sınırsız kez çalıştırmanın önünü açardı.
+
+    Dönüş: iade YAPILDI mı (gün damgası değiştiyse ya da sayaç zaten 0 ise yapılacak bir şey yok)."""
+    import datetime as _dt
+    today = str(_dt.date.today())
+    iade = {"oldu": False}
+
+    def _mut(st):
+        if st.get("date") != today or int(st.get("day", 0) or 0) <= 0:
+            return False            # dünün sayacına dokunmak, bugünü iki kez muhasebe etmektir
+        st["day"] = int(st["day"]) - 1
+        iade["oldu"] = True
+        return True
+
+    try:
+        store.update_json(AGENT_BUDGET_FILE, _mut, default={})
+    except Exception as e:
+        # YASA 4: iade düşerse SESSİZ kalmak, (d) kaleminin canlıda çalıştığını sanmak demektir —
+        # sayaç yanlış kalır ve bunu söyleyen tek satır olmaz. Karar akışı bozulmaz (çağıran zaten
+        # None dönüyor), yalnız muhasebe kaybı adıyla deftere düşer.
+        obs.warn("agent_budget_refund_failed", reason=reason, error=f"{type(e).__name__}: {e}",
+                 detail="ağa çıkmamış çağrının bütçe iadesi yazılamadı — gün sayacı fazla okuyor")
+        return False
+    return iade["oldu"]
+
+
 # ==================================================================================================
 # BÜTÇE ÖZ-AYARI — STATİK TAVANLAR KOTA DURUMUNDAN TÜRETİLİR (öğrenme otomasyonu turu, 2026-07-30)
 # ==================================================================================================
@@ -1328,6 +1370,89 @@ def _agent_tool_calls(stdout: str) -> int:
     return int(m.group(1)) if m else -1
 
 
+# ---- YAPILANDIRMASIZ CLI İMZALARI (HERMES-DAYANIKLILIK (c), 2026-08-02) -------------------------
+# İMZALAR ÖLÇÜLDÜ, TAHMİN EDİLMEDİ — kurulu hermes-agent kaynağından okundu (2026-08-02):
+#   hermes_cli/main.py `cmd_chat`: ilk-koşum bekçisi `_has_any_provider_configured()` False iken
+#   STDOUT'a "It looks like Hermes isn't configured yet ..." basar, TTY yoksa
+#   hermes_cli/setup.py `print_noninteractive_setup_guidance` rehberini ekler
+#   ("hermes config set model.default your-model-name" · "Or set OPENROUTER_API_KEY / OPENAI_API_KEY
+#   in your environment") ve `sys.exit(1)` eder. Yani süreç AĞA HİÇ ÇIKMAZ: ne sağlayıcıya istek
+#   gider, ne kota harcanır, ne de 429 alınır.
+# NEDEN AYRI SINIF: bu çıktı `_agent_reply_missing`/rc!=0 kapısından "boş cevap" olarak geçiyordu
+# ve `agent_call_empty` → `_pool_exhausted` → `brain_stand_down("agent")` zincirini besliyordu.
+# Yapılandırmasızlık KOTA DEĞİLDİR; 429-backoff'unu onunla kirletmek iki arızayı tek satırda
+# birleştirir ve altı gün süren sessiz ölümün teşhisini imkânsız kılar (canlı vaka).
+AGENT_UNCONFIGURED_SIGNS = (
+    "config set model.default",      # rehberin config kolu
+    "OPENROUTER_API_KEY",            # rehberin env-değişkeni kolu
+    "isn't configured yet",          # ilk-koşum bekçisinin kendi cümlesi (rehber metni değişse de kalır)
+)
+
+
+def _agent_unconfigured_sign(stdout: str, stderr: str) -> str | None:
+    """Çıktıda yapılandırma-hatası imzası var mı? Varsa EŞLEŞEN imza, yoksa None.
+
+    YALNIZ BOŞ-CEVAP YOLUNDA çağrılır: dolu bir modelin cevabında bu dizeler geçebilir (ajan
+    yapılandırmadan söz edebilir) ve o hâlde arıza yoktur. Sınıflandırmayı cevabın VARLIĞINDAN
+    bağımsız yapmak, konuşan bir modeli 'yapılandırmasız' ilan ederdi."""
+    hay = f"{stdout or ''}\n{stderr or ''}"
+    for sign in AGENT_UNCONFIGURED_SIGNS:
+        if sign in hay:
+            return sign
+    return None
+
+
+# ---- CLI SESSİZ MODU (`-Q`) — SÜRÜM DERSİ, 2026-08-02 ------------------------------------------
+# KÖK NEDEN (canlı vaka): `-q` SESSİZLİK DEĞİL, SORGU bayrağıdır (`-q QUERY, --query QUERY`) —
+# sessiz mod AYRI bir bayraktır: `-Q, --quiet` ("suppress banner, spinner, and tool previews. Only
+# output the final ..."). ÖLÇÜLDÜ: yerel kurulum v0.18.2, A1 v0.19.0 — ikisinde de ayrım aynı.
+# `-Q` olmadan stdout'a banner + "Query: <istemin yankısı>" + oturum özeti karışıyor ve
+# `_extract_json` YANKININ İÇİNDEKİ bağlam-JSON'unu yakalıyordu: `candidate_review_empty_parse`
+# olayı canlıda tam bunu yazdı (parse_ok=true · on_filtre_n=0 · ham_ilk="Query: You advise...").
+# Yani model dolu ve doğru cevap verirken kayıt boş çıkıyordu — arıza modelde değil, komut satırında.
+QUIET_FLAG = "-Q"
+# argparse/click "bilinmeyen bayrak" imzaları (ÖLÇÜLDÜ: `hermes chat -Z` → stderr
+# "hermes: error: unrecognized arguments: -Z", rc=2 — main() hiç koşmaz, ağa çıkılmaz).
+CLI_UNKNOWN_FLAG_SIGNS = ("unrecognized arguments", "no such option", "Unknown option")
+_quiet_flag_ok = True          # süreç-içi öğrenme: bir kez 'desteklenmiyor' denince tekrar denenmez
+
+
+def _agent_chat_cmd(bin_: str, prompt: str, preload: tuple, model: str | None) -> list:
+    """CLI `chat` komutunun TEK KURULUM YERİ. İki bayrak iki AYRI iş yapar ve karıştırılırsa arıza
+    sessizdir: `-q` istemi taşır, `-Q` çıktıyı yalnız son cevaba indirger."""
+    cmd = [bin_, "chat", "--accept-hooks"]
+    if _quiet_flag_ok:
+        cmd.append(QUIET_FLAG)
+    cmd += ["-q", prompt]
+    for sk in preload:
+        cmd += ["-s", sk]
+    if model:
+        cmd += ["--model", model]
+    return cmd
+
+
+def _cli_unknown_flag(out) -> bool:
+    """Süreç 'bu bayrağı tanımıyorum' mu dedi? (yalnız sıfır-dışı çıkışta anlamlı)."""
+    if out.returncode == 0:
+        return False
+    t = f"{out.stdout or ''}\n{out.stderr or ''}"
+    return any(s in t for s in CLI_UNKNOWN_FLAG_SIGNS) and QUIET_FLAG in t
+
+
+def _quiet_flag_unsupported_warn(out) -> None:
+    """`-Q` desteklenmiyor: SÜREÇ BAŞINA BİR uyarı + kalıcı geri düşüş. Sessiz düşmek yasak —
+    `-Q`suz çıktı yankı taşır ve ayrıştırıcı yanlış JSON yakalayabilir; operatör bunu bilmeli."""
+    global _quiet_flag_ok
+    if _quiet_flag_ok:
+        _quiet_flag_ok = False
+        obs.warn("agent_cli_flag_unsupported", flag=QUIET_FLAG, returncode=out.returncode,
+                 stderr_ilk=str(out.stderr or out.stdout or "")[:160].replace("\n", " ⏎ "),
+                 detail=f"yerel CLI {QUIET_FLAG} (sessiz mod) bayrağını tanımadı — bu çağrı ve "
+                        f"sonrakiler bayraksız koşuyor. RİSK: banner/istem yankısı stdout'a karışır "
+                        f"ve JSON ayrıştırıcı yankıdaki bloğu yakalayabilir (2026-08-02 canlı vakası). "
+                        f"Kalıcı çözüm: hermes-agent'ı -Q destekleyen sürüme yükselt.")
+
+
 def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 timeout: int = 300, max_wait: float = 0.0) -> str | None:
     """TÜM yerel-ajan çağrılarının tek kapısı (#1): skill senkronu + -s ön-yükleme + oran bütçesi +
@@ -1355,27 +1480,60 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
             return None
         # --accept-hooks: config'teki hooks_auto_accept ile birlikte koruma hook'unu başsız çağrıda
         # otomatik onaylar (aksi halde 'not allowlisted' → hook ateşlemez, savunma sessizce ölürdü).
-        cmd = [bin_, "chat", "--accept-hooks", "-q", prompt]
-        for sk in preload:
-            cmd += ["-s", sk]
-        if model:
-            cmd += ["--model", model]
+        cmd = _agent_chat_cmd(bin_, prompt, preload, model)
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
                              env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
-        empty = out.returncode != 0 or _agent_reply_missing(out.stdout)
+        if QUIET_FLAG in cmd and _cli_unknown_flag(out):
+            # GERİYE-UYUM (tek atımlık): `-Q` tanımayan bir CLI sürümü. Bayrak hatası AĞA ÇIKMAZ
+            # (argparse `main()`den önce düşer) → (d) gereği bütçe iade edilir ve düşüm yeniden alınır.
+            _agent_budget_refund("cli_flag_unsupported")
+            _quiet_flag_unsupported_warn(out)
+            if not _agent_budget_take(0.0):
+                return None
+            cmd = _agent_chat_cmd(bin_, prompt, preload, model)     # artık `-Q`suz (bayrak öğrenildi)
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                                 env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+        # BOŞLUK ÖLÇÜTÜ `-Q` İLE GENİŞLEDİ (ölçüldü, cli.py tek-sorgu sessiz kolu): sessiz modda
+        # stdout YALNIZ son cevabı taşır — ne banner, ne "Messages: N" özeti. Yani
+        # `_agent_reply_missing` sinyalini kaybeder ve cevapsız bir koşum (rc=0 + boş stdout,
+        # hata stderr'e gider) "dolu cevap" gibi geri dönerdi: ayrıştırıcı boş metinle uğraşır,
+        # defterde `agent_call_empty` HİÇ yazmazdı. Boş stdout artık ölçütün parçası.
+        empty = (out.returncode != 0 or not (out.stdout or "").strip()
+                 or _agent_reply_missing(out.stdout))
         tcalls = _agent_tool_calls(out.stdout)
+        # (c) BOŞ CEVABIN İKİ SINIFI AYRIŞIR: imza varsa CLI ağa çıkmadan yapılandırma rehberi
+        # bastı (yapılandırmasız), yoksa gerçekten cevapsız kalındı (kota/arka uç).
+        unconf = _agent_unconfigured_sign(out.stdout, out.stderr) if empty else None
         obs.log("agent_call", kind=kind, preloaded=len(preload), model=model or "varsayılan",
-                attempt=attempt + 1, empty=empty, tool_calls=tcalls)
+                attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf))
+        if unconf:
+            # (d) bütçe iadesi + (c) SOĞUMA YAZILMAZ ve zincir DENENMEZ: yapılandırmasız bir CLI
+            # ikinci modelde de yapılandırmasızdır — denemek ikinci bir süreci boşuna doğurur.
+            iade = _agent_budget_refund(f"agent_unconfigured:{kind}")
+            obs.warn("agent_unconfigured", kind=kind, imza=unconf, attempt=attempt + 1,
+                     model=model or "varsayılan", returncode=out.returncode,
+                     butce_iade=iade, cooldown_yazildi=False,
+                     detail=f"yerel CLI yapılandırılmamış (imza: {unconf!r}) — çağrı AĞA ÇIKMADI; "
+                            f"bu kota DEĞİLDİR: havuz soğuması yazılmaz, RPD sayacı iade edilir "
+                            f"(iade={iade}). Onarım: GEMINI_API_KEY ile açılış senkronu ya da "
+                            f"panodan anahtar girişi.")
+            return None
         if not empty:
-            if tcalls >= 0:                          # #4 telemetri: MCP araç kullanımını biriktir
-                try:
-                    st = store.read_json("agent_tooluse.json", {"calls": 0, "with_tools": 0, "total_tools": 0})
+            try:                                     # #4 telemetri: MCP araç kullanımını biriktir
+                st = store.read_json("agent_tooluse.json", {"calls": 0, "with_tools": 0, "total_tools": 0})
+                if tcalls >= 0:
                     st["calls"] += 1
                     st["with_tools"] += 1 if tcalls > 0 else 0
                     st["total_tools"] += tcalls
-                    store.write_json("agent_tooluse.json", st)
-                except Exception:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
-                    pass
+                else:
+                    # `-Q` OTURUM ÖZETİNİ BASTIRIR → araç sayısı ÖLÇÜLEMEZ. Ayrı sayaç, çünkü
+                    # ölçülemeyeni `calls`a katmak oranı sessizce seyreltir; hiç saymamak ise
+                    # sayacı dondurup "MCP hiç kullanılmadı" gibi okuturdu (eksik alan = sıfır
+                    # sanılır sınıfı). Sayı burada durur ve `integrations_status` onu YAYINLAR.
+                    st["olculemeyen"] = int(st.get("olculemeyen", 0)) + 1
+                store.write_json("agent_tooluse.json", st)
+            except Exception:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
+                pass
             return out.stdout
     # ZİNCİR UZUNLUĞU DÜRÜST BİLDİRİLİR: canlı defterde bu satır "tüm model zinciri cevapsız" diyordu
     # ama tried=1'di — NOUS_FALLBACK_MODEL hiç ayarlanmamıştı, yani "düşüş zinciri" tek elemanlıydı.
@@ -1652,17 +1810,122 @@ def ping_brain(provider: str) -> dict:
 # Yerli sağlayıcı: harness "gemini" id'sini ve GEMINI_API_KEY env adını yerel olarak tanır
 # (auth.py ProviderConfig) — OpenAI-uyumlu dolambaç GEREKMEZ (canlıda "Unknown provider: openai" ile bulundu).
 
+# ---- YEREL CLI YAPILANDIRMA ÖLÇÜMÜ (HERMES-DAYANIKLILIK (a), 2026-08-02) ------------------------
+# `hermes config get` SÖZLEŞMESİ ÖLÇÜLDÜ (kurulu sürüm, 2026-08-02) — tahmin edilmedi:
+#   • AYARLI anahtar  → stdout = ÇIPLAK değer, stderr boş, rc=0
+#   • AYARSIZ anahtar → stdout BOŞ, stderr = "Config key not set: <key>", rc=1
+#   • `config` alt komutu `cmd_chat`in ilk-koşum bekçisine GİRMEZ; yani yapılandırmasız bir kurulumda
+#     bile ölçüm yapılabilir (rehber metnini yalnız `chat` basar).
+# Ölçmeden yazılmış bir sürüm "rc!=0 → ölçülemedi" derdi ve tam da teşhis etmesi gereken hâli
+# (yapılandırmasız CLI) ölçülemez sayardı.
+CFG_UNSET_SIGN = "Config key not set"
+GEMINI_ENV_NAMES = ("GEMINI_API_KEY", "GOOGLE_API_KEY")   # CLI'nin Gemini için okuduğu env adları
+
+
+def _agent_cfg_get(bin_: str, key: str) -> tuple[str | None, str]:
+    """(değer, durum) — durum: "ayarli" | "ayarsiz" | "olculemedi".
+
+    UYDURMA YASAĞI: değer yalnız "ayarli" hâlinde doludur. "ayarsiz" hükmü SADECE ölçülmüş imzayla
+    verilir; imzasız bir hata (bozuk ikili, izin hatası, sürüm farkı) "yok" değil "BİLİNMİYOR"dur —
+    ikisini birleştirmek, ölçüm arızasını yapılandırma arızası gibi okutur ve yanlış onarımı tetikler."""
+    import subprocess
+    try:
+        r = subprocess.run([bin_, "config", "get", key], capture_output=True, text=True, timeout=30)
+    except Exception:
+        # sessiz-yutma: istisna BİLGİ KAYBETMEDEN "olculemedi" durumuna çevriliyor — bu yolun tek
+        # tüketicisi `local_agent_config_state` ve o, "olculemedi"yi hüküm vermeden yukarı taşıyıp
+        # açılış senkronunu DURDURUYOR (`local_agent_config_olculemedi` uyarısı orada basılır).
+        # Burada ayrıca uyarmak aynı olguyu iki kez bağırırdı; yutulan tek şey istisnanın TÜRÜ ve
+        # onun karara etkisi yok: asılan da, izin reddeden de, bulunamayan da ölçülemeyendir.
+        return None, "olculemedi"
+    out = (r.stdout or "").strip()
+    if r.returncode == 0 and out:
+        return out.splitlines()[-1].strip(), "ayarli"
+    if CFG_UNSET_SIGN in (r.stderr or ""):
+        return None, "ayarsiz"
+    return None, "olculemedi"
+
+
+def _agent_env_path() -> str:
+    """`~/.hermes/.env` — `sync_local_agent_gemini` ile AYNI yoldan türetilir (modül sabiti DEĞİL:
+    o dosya da `expanduser` çağrısını çalışma anında yapar ve testler tek noktadan yönlendirir)."""
+    return os.path.join(os.path.expanduser("~/.hermes"), ".env")
+
+
+def _agent_env_has_key() -> bool | None:
+    """`~/.hermes/.env` DOLU bir Gemini anahtar satırı taşıyor mu? None = dosya okunamadı.
+
+    DEĞER HİÇBİR ZAMAN OKUNMAZ/DÖNMEZ/LOGLANMAZ — yalnız satırın varlığı ve boş olmadığı. Dosyanın
+    YOKLUĞU bir ölçüm arızası değil, ölçülmüş bir yokluktur (canlı vaka: A1 taşınmasında ~/.hermes
+    hiç taşınmadı) — o yüzden None değil False döner."""
+    path = _agent_env_path()
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path) as fh:
+            for line in fh:
+                s = line.strip()
+                if s.startswith("export "):
+                    s = s[7:]
+                k, sep, v = s.partition("=")
+                if sep and k.strip() in GEMINI_ENV_NAMES and v.strip().strip("'\""):
+                    return True
+        return False
+    except OSError:
+        # sessiz-yutma: dosya VAR ama okunamadı (izin/G-Ç). Bu "anahtar yok" DEĞİLDİR ve öyle
+        # dönmek yanlış onarımı tetiklerdi: çağıran False'u ölçülmüş yokluk sayıp CLI'yi yeniden
+        # yapılandırırdı. None döndürmek arızayı KORUR — `local_agent_config_state` onu
+        # "yapilandirilmis=None"a çevirir, açılış senkronu koşmaz ve neden defterde uyarı olur.
+        return None
+
+
+def local_agent_config_state() -> dict:
+    """YEREL CLI'NİN YAPILANDIRMA DURUMU — ÖLÇÜLÜR, VARSAYILMAZ (açılış senkron-doğrulamasının girdisi).
+
+    Canlı vakanın kök nedeni tam olarak buydu: hiçbir bekçi "yerel ajan yapılandırılmış mı" diye
+    SORMUYORDU. Bu fonksiyon o soruyu iki bağımsız kanaldan ölçer — CLI'nin kendi config'i
+    (`model.default`) ve `~/.hermes/.env` anahtar satırı — ve ölçemediğini ölçemedi diye yazar.
+
+    Dönüş: {kurulu, model, model_durum, env_anahtar, yapilandirilmis, neden}
+      yapilandirilmis: True (iki kanal da dolu) · False (en az biri ÖLÇÜLMÜŞ boş) · None (ölçülemedi)."""
+    bin_ = _hermes_bin()
+    if not bin_:
+        return {"kurulu": False, "model": None, "model_durum": "olculemedi", "env_anahtar": None,
+                "yapilandirilmis": None, "neden": "yerel hermes-agent ikilisi bulunamadı"}
+    model, model_durum = _agent_cfg_get(bin_, "model.default")
+    env_key = _agent_env_has_key()
+    modelsiz = None if model_durum == "olculemedi" else (model_durum == "ayarsiz")
+    if modelsiz is True or env_key is False:
+        eksik = [ad for ad, yok in (("model.default ayarsız", modelsiz is True),
+                                    ("~/.hermes/.env Gemini anahtar satırı yok", env_key is False)) if yok]
+        yap, neden = False, " + ".join(eksik)
+    elif modelsiz is None or env_key is None:
+        # Kısmi ölçüm bir hüküm değildir: "ölçemediğim yer boştu" demek uydurmadır ve YANLIŞ TARAFA
+        # düşerdi — ölçülemeyen bir CLI'yi yeniden yapılandırmak, çalışan bir kurulumu bozabilir.
+        yap, neden = None, (f"model ölçümü={model_durum}"
+                            f" · env ölçümü={'okunamadı' if env_key is None else 'ok'}")
+    else:
+        yap, neden = True, None
+    return {"kurulu": True, "model": model, "model_durum": model_durum, "env_anahtar": env_key,
+            "yapilandirilmis": yap, "neden": neden}
+
 
 def sync_local_agent_gemini(enable: bool) -> dict:
     """Panodan girilen GEMINI_API_KEY'i YEREL hermes-agent'a taşır — operatör anahtarı TEK yerden
     (Ayarlar) girer, terminal/.env adımı yoktur. enable=True: mevcut model bloğu yedeklenir, ajanın
     .env'ine OPENAI_API_KEY yazılır (Gemini'ın OpenAI-uyumlu ucu bu adı okur) ve provider/base_url/model
     Gemini'a çevrilir. enable=False (anahtar silindi): .env satırı kaldırılır, yedeklenen Nous ayarı
-    geri yüklenir. Anahtar değeri hiçbir yerde loglanmaz/yansıtılmaz."""
+    geri yüklenir. Anahtar değeri hiçbir yerde loglanmaz/yansıtılmaz.
+
+    `senkron_ts` (HERMES-DAYANIKLILIK (b), 2026-08-02): HER dönüşte ISO damga bulunur — başarıda da,
+    reddte de, istisnada da. Panonun okuduğu satır "senkron OK" derken o cümlenin NE ZAMAN
+    ölçüldüğünü söylemiyordu; canlı vakada altı gün önceki bir OSError'un sonucu taze bir hüküm gibi
+    okundu. Damgasız bir durum satırı, bayatladığını kendisi söyleyemez."""
     import subprocess
+    ts = memory.now_iso()
     bin_ = _hermes_bin()
     if not bin_:
-        return {"ok": False, "detail": "yerel hermes-agent kurulu değil"}
+        return {"ok": False, "detail": "yerel hermes-agent kurulu değil", "senkron_ts": ts}
     home = os.path.expanduser("~/.hermes")
     env_path = os.path.join(home, ".env")
     backup_path = os.path.join(home, "meridian-model-backup.json")
@@ -1671,8 +1934,10 @@ def sync_local_agent_gemini(enable: bool) -> dict:
         subprocess.run([bin_, "config", "set", key, val], capture_output=True, text=True, timeout=30)
 
     def _cfg_get(key):
-        r = subprocess.run([bin_, "config", "get", key], capture_output=True, text=True, timeout=30)
-        return (r.stdout or "").strip().splitlines()[-1].strip() if r.stdout else ""
+        # TEK ÖLÇÜM YOLU (`_agent_cfg_get`): yedekleme burada, teşhis `local_agent_config_state`te
+        # aynı sözleşmeyi okumalı — iki ayrı ayrıştırıcı sessizce ayrışırdı. Davranış aynı: ayarsız
+        # anahtar (stdout boş) "" olarak yedeklenir ve geri yüklemede atlanır.
+        return _agent_cfg_get(bin_, key)[0] or ""
 
     def _write_env(key_value: str | None):
         lines = []
@@ -1693,7 +1958,7 @@ def sync_local_agent_gemini(enable: bool) -> dict:
         if enable:
             key = secrets.get("GEMINI_API_KEY")
             if not key:
-                return {"ok": False, "detail": "GEMINI_API_KEY boş"}
+                return {"ok": False, "detail": "GEMINI_API_KEY boş", "senkron_ts": ts}
             if not os.path.exists(backup_path):   # ilk geçişte mevcut (Nous) ayarı yedekle
                 prev = {"provider": _cfg_get("model.provider"), "base_url": _cfg_get("model.base_url"),
                         "default": _cfg_get("model.default")}
@@ -1704,8 +1969,8 @@ def sync_local_agent_gemini(enable: bool) -> dict:
             _cfg("model.provider", "gemini")            # yerli sağlayıcı — base_url override'ı KALDIRILIR
             subprocess.run([bin_, "config", "unset", "model.base_url"], capture_output=True, text=True, timeout=30)
             _cfg("model.default", model)
-            obs.log("local_agent_switched", to="gemini", model=model)
-            return {"ok": True, "detail": f"yerel ajan Gemini'a geçti · {model}"}
+            obs.log("local_agent_switched", to="gemini", model=model, senkron_ts=ts)
+            return {"ok": True, "detail": f"yerel ajan Gemini'a geçti · {model}", "senkron_ts": ts}
         else:
             _write_env(None)
             restored = None
@@ -1719,10 +1984,11 @@ def sync_local_agent_gemini(enable: bool) -> dict:
                         _cfg(k, v)
                 restored = prev.get("default")
                 os.unlink(backup_path)
-            obs.log("local_agent_switched", to="restored", model=restored)
-            return {"ok": True, "detail": f"yerel ajan eski ayara döndü · {restored or 'değişmedi'}"}
+            obs.log("local_agent_switched", to="restored", model=restored, senkron_ts=ts)
+            return {"ok": True, "detail": f"yerel ajan eski ayara döndü · {restored or 'değişmedi'}",
+                    "senkron_ts": ts}
     except Exception as e:
-        return {"ok": False, "detail": f"senkron hatası ({type(e).__name__})"}
+        return {"ok": False, "detail": f"senkron hatası ({type(e).__name__})", "senkron_ts": ts}
 
 
 REVIEW_SKILLS = ("vcp-screener", "pullback-screener", "pre-trade-discipline-gate",
@@ -1841,10 +2107,15 @@ def integrations_status() -> dict:
     except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
         pass
     tu = store.read_json("agent_tooluse.json", None)          # #4: MCP araç kullanım oranı
-    if tu and tu.get("calls"):
-        out["tool_use"] = {"calls": tu["calls"], "with_tools": tu.get("with_tools", 0),
+    if tu and (tu.get("calls") or tu.get("olculemeyen")):
+        # `olculemeyen` AYRI YAYINLANIR (2026-08-02, `-Q` sonrası): sessiz mod oturum özetini
+        # bastırdığı için araç sayısı okunamayan çağrılar var. Oranı onlarla seyreltmek uydurma,
+        # onları hiç göstermemek ise donmuş bir sayacı "kullanılmadı" diye okutmak olurdu.
+        out["tool_use"] = {"calls": tu.get("calls", 0), "with_tools": tu.get("with_tools", 0),
                            "total_tools": tu.get("total_tools", 0),
-                           "rate": round(tu.get("with_tools", 0) / tu["calls"], 2)}
+                           "olculemeyen": tu.get("olculemeyen", 0),
+                           "rate": (round(tu.get("with_tools", 0) / tu["calls"], 2)
+                                    if tu.get("calls") else None)}
     # havuz: sağlayıcı başına anahtar SAYISI + sağlığı (DEĞER YOK). Sağlık alanı v66'da eklendi:
     # "2 anahtar var" ile "2 anahtarın 2'si de tükenmiş" panoda aynı görünüyordu ve rotasyonun neden
     # işe yaramadığı hiçbir yerden okunamıyordu.
