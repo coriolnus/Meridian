@@ -1,0 +1,126 @@
+# litestream.yml — Meridian SQLite defterinin SÜREKLİ ÇOĞALTMASI (WP-H / H10 AŞAMA-1).
+# Canlı hedef: /etc/litestream.yml  (litestream'in ARAMADIĞI bir yol değil: v0.5.15
+# cmd/litestream/main_notwindows.go:12 `defaultConfigPath = "/etc/litestream.yml"`).
+# Kurulumu `litestream_kur.sh` yapar; pencere prosedürü RUNBOOK "Bölüm B4"tedir.
+#
+# ==================================================================================================
+# NEDEN VAR — VE NEYİ ÇÖZMEDİĞİ (önce dürüst sınır, sonra kazanç)
+# ==================================================================================================
+# H9'dan beri karar defteri (trades / trade_plans / scoreboard / portfolio / equity_curve /
+# shadow_books) `state/meridian.db` içinde, WAL modunda. Yedek zinciri BUGÜN iki halkalı:
+#   (1) meridian-backup.timer — her gece 23:32 UTC, `storage.backup_to` + tar.gz, 7 gün saklama;
+#   (2) ops/pull-a1-backups.sh — Mac'e günlük çekim (VM-DIŞI kopya), 30 gün saklama.
+# Bu zincirin ÖLÇÜLEN kusuru RPO'dur: gece 23:32'deki tar ile bir sonraki tar arasında geçen HER
+# ŞEY, VM kaybında kayıptır — en kötü durumda bir tam işlem günü (seans kararları, gölge kitapları,
+# öğrenme sayaçları). Litestream bu aralığı saniyelere indirir.
+#
+# ⚠ BU DOSYANIN KAPSAMADIĞI ŞEY — MEDYA ARIZASI. A1'de İKİNCİ FİZİKSEL DİSK YOK. Ölçüm
+# (2026-08-02, salt-okuma keşif):  lsblk → tek `sda` (46,6G): sda1 / (45,6G, %10 dolu, 40G boş),
+# sda15 /boot/efi, sda16 /boot. Yani `/home/ubuntu/replica` ile `/opt/meridian/state` AYNI blok
+# CİHAZDADIR. Disk/medya arızası ikisini birden götürür ve bu çoğaltma orada hiçbir şey kurtarmaz.
+# Kapsadığı arıza sınıfları ŞUNLARDIR ve yalnız şunlardır:
+#   • MANTIKSAL bozulma / yanlış migrasyon / yanlışlıkla silme → dakika hassasiyetli geri sarma;
+#   • süreç çöküşü ortasında yarım kalmış yazım → tutarlı en-son işlem noktasına dönüş;
+#   • VM tamamen kaybolursa: Mac'e çekilen replica kopyası (ops/pull-a1-backups.sh replica bacağı)
+#     — o kopyanın tazeliği çekim kadansı kadardır, saniye değil.
+# MEDYA + BÖLGE koruması AŞAMA-2'dir (OCI Object Storage S3-uyumlu bucket; anahtar OPERATÖRDE —
+# ROADMAP H10). Bu dosya aşama-2'ye geçerken YALNIZ `replica:` bloğunun değişmesi için yazıldı.
+#
+# ==================================================================================================
+# LİTESTREAM CANLI DB'YE **YAZAR** — "salt-okuma yeter mi?" SORUSUNUN ÖLÇÜLMÜŞ CEVABI: HAYIR
+# ==================================================================================================
+# Brief bunu ölçmeyi istedi; kaynak (v0.5.15) okundu, varsayılmadı:
+#   • db.go:1075  `PRAGMA journal_mode = wal;`      → DB dosyasına yazan bir çağrı
+#   • db.go:1083  `CREATE TABLE IF NOT EXISTS _litestream_seq (...)`
+#   • db.go:1089  `CREATE TABLE IF NOT EXISTS _litestream_lock (...)`
+#   • db.go:1544  `INSERT INTO _litestream_seq ... ON CONFLICT DO UPDATE`  (her senkron turunda)
+#   • db.go:2627  `PRAGMA wal_checkpoint(<mod>);`   (PASSIVE/TRUNCATE checkpoint'leri)
+# Yani litestream YALNIZ WAL okuyan pasif bir gözlemci DEĞİLDİR: canlı defterin ŞEMASINA iki tablo
+# ekler ve düzenli olarak checkpoint atar. Sonuçları:
+#   (a) birimin `ReadWritePaths`i `/opt/meridian/state`i AÇMAK ZORUNDA (salt-okuma birim çalışmaz);
+#   (b) `meridian.db` içinde `_litestream_seq` + `_litestream_lock` GÖRÜNECEK. Depoda tablo
+#       envanterini SABİTLEYEN bir ölçüm YOK (tarama: `sqlite_master` yalnız
+#       tests/test_denetim_defter_v159.py:221'de, o da sandbox'ta ve NEGATİF iddia) — yani bu iki
+#       tablo hiçbir kapıyı kırmaz. Yine de yedeğe/pariteye bakan bir sonraki tur onları GÖRDÜĞÜNDE
+#       "bu nereden geldi" diye sormasın diye burada yazılıdır.
+#   (c) checkpoint'ler Meridian'ın yazarlarıyla kilit yarışına girer → `busy-timeout` aşağıda
+#       Meridian'ın kendi PRAGMA'sıyla (storage.py:139 `busy_timeout=5000`) EŞİTLENDİ.
+#
+# GÜVENLİ TARAF (bu da ölçüldü, çünkü ters olsaydı `MERIDIAN_DB=off` acil anahtarı tehlikeliydi):
+# DB dosyası YOKSA litestream onu YARATMAZ — db.go:1030 `if os.IsNotExist(err) { return nil }`
+# ("Exit if no database file exists"). Yani defter dosya arka ucuna geri alınırsa litestream boşta
+# bekler; yanlışlıkla BOŞ bir meridian.db üretip onu çoğaltmaz.
+
+# ==================================================================================================
+# GLOBAL AYARLAR
+# ==================================================================================================
+# KONTROL SOKETİ KAPALI — BİLİNÇLİ. Varsayılan zaten kapalı (server.go:25 `DefaultSocketConfig`
+# → Enabled:false, Path:/var/run/litestream.sock) ama AÇIK YAZILDI: açılsaydı birim
+# `ProtectSystem=strict` altında /var/run'a yazamayacağı için AÇILIŞTA ölürdü. Çalışma-zamanı
+# start/stop komutlarına ihtiyacımız yok; birimi systemd yönetir.
+socket:
+  enabled: false
+
+# SNAPSHOT PENCERESİ — "72 saat" DEĞİL, 96 saat. Gerekçe hafta sonudur: ABD borsası Cts/Paz kapalı,
+# yani CUMA akşamı bozulan bir defter en erken PAZARTESİ sabahı fark edilir. 72 saatlik bir pencere
+# tam o vakada SINIRDA biter (Cuma 23:00 → Pazartesi 23:00) ve fark etme anı ile pencerenin bitişi
+# aynı güne düşer. 96 saat, hafta sonu + bir tam işlem gününü kapsar. Brief'in örneği (72h + 4
+# snapshot) BİLEREK aşıldı; maliyeti aşağıda sayıldı.
+# MALİYET (ölçüldü, tahmin değil): canlı meridian.db = 1.335.296 bayt (2026-08-02, A1). 12 saatte
+# bir snapshot × 96 saat = en fazla 8 canlı snapshot ≈ 10 MB (sıkıştırılmadan) + LTX zinciri.
+# Diskte 40 GB boş var; bu bütçe ölçülebilir bir yük DEĞİLDİR.
+# ANLAMI (main.go:389-403 + store.go:810 `EnforceSnapshotRetention`): `retention`den eski
+# snapshot'lar silinir, ardından o snapshot'ın altındaki alt-seviye LTX dosyaları da düşer — yani
+# GERİ SARILABİLİR pencere pratikte `retention` kadardır.
+snapshot:
+  interval: 12h
+  retention: 96h
+
+# DOKUNULMAYAN VARSAYILANLAR — sessiz atlama değil, BEYANLI tercih (v0.5.15 kaynağından okundu):
+#   levels           : L1=30sn · L2=5dk · L3=1sa   (compaction_level.go:14)
+#   l0-retention     : 5dk, L1'e sıkıştırıldıktan SONRA sayılır (store.go:68 + db.go:2968-2970)
+#                      → L0'ın budanması veri kaybı DEĞİLDİR; aynı işlemler L1'de durur. Geri sarma
+#                        çözünürlüğünü L1 (30sn) belirler, bu bizim 300sn'lik döngü kadansımızın
+#                        onda biri — ayarlamak için bir SEBEP ÖLÇÜLMEDİ, o yüzden ELLENMEDİ.
+#   checkpoint-interval : 1dk  · min-checkpoint-page-count : 1000 (~4MB) (db.go:34,36)
+#                      → 1,3MB'lık defterde sayfa eşiği HİÇ tetiklenmez; zaman eşiği yeter.
+#   auto-recover     : KAPALI (main.go:1106-1107 "Disabled by default to prevent silent data loss").
+#                      AÇMIYORUZ: bozuk LTX'te sessizce sıfırdan senkron, YASA 4'ün tam tersidir —
+#                      bozulmayı journal'da GÖRMEK isteriz.
+#   validation-interval : ayarlanmadı (periyodik doğrulama kapalı). Doğrulama bizde RİTÜELDİR:
+#                      H7 restore tatbikatı (RUNBOOK) `-integrity-check full` ile ölçer.
+
+dbs:
+  # TEK DB — H9 defter çekirdeği. Yol `meridian/storage.py`ten türer: `config.STATE / DB_NAME`
+  # (storage.py:59 `DB_NAME = "meridian.db"`, :143). A1'de STATE = /opt/meridian/state.
+  - path: /opt/meridian/state/meridian.db
+
+    # META DİZİNİ **state/ AĞACININ DIŞINDA** — BİLİNÇLİ SAPMA. Varsayılan konum DB'nin yanıdır:
+    # `<dir>/.<dosya>-litestream` (db.go:310 + litestream.go:20 `MetaDirSuffix = "-litestream"`),
+    # yani /opt/meridian/state/.meridian.db-litestream. ORADA BIRAKILAMAZ, çünkü `state/` her gece
+    # KOMPLE tar'lanıp Mac'e çekiliyor ve o tar'dan yapılacak bir GERİ YÜKLEME, yeni DB'nin yanına
+    # BAYAT bir meta dizini bırakırdı: litestream açılışta yerel TXID defterini replica'nınkiyle
+    # tutmayan bir durumda bulur ve `auto-recover` kapalı olduğu için (yukarı bak) çoğaltma DURUR.
+    # Bu, restore ritüelinin (H7) tam ortasına yerleştirilmiş sessiz bir tuzak olurdu.
+    # Meta içeriği YENİDEN ÜRETİLEBİLİR yerel muhasebedir — yedeklenmesi GEREKMEZ.
+    meta-path: /var/lib/litestream/meridian.db
+
+    # Meridian'ın kendi bağlantısıyla AYNI: storage.py:139 `("busy_timeout", 5000)`. Litestream
+    # varsayılanı 1sn'dir (db.go:35) ve bizim yazarlarımız bir checkpoint'i 1sn'den uzun
+    # bloklayabilir; ayrışan iki timeout, journal'i "database is locked" ile doldurup gerçek
+    # arızayı gürültüye gömerdi.
+    busy-timeout: 5s
+
+    replica:
+      # DOSYA REPLICA'SI — AYNI DİSKTE AYRI DİZİN (ikinci disk yok; dosya başındaki uyarı).
+      # `/home/ubuntu/backups`ın (tar zinciri) KARDEŞİDİR, İÇİNDE DEĞİL: yedek biriminin
+      # `find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete` budaması
+      # bugün ad+derinlik filtreli olduğu için replica'ya dokunmazdı — ama o filtrenin bir gün
+      # gevşetilmesi, iki mekanizmayı tek dizine koymuş olmamızın cezasını verirdi.
+      path: /home/ubuntu/replica/meridian.db
+
+      # 10 SANİYE — "saniyeler" mertebesi, gerekçeli. Worker döngüsü 300sn'dir
+      # (meridian.service `CYCLE_POLL_SECONDS=300`), yani 10sn ZATEN yazma kadansının otuzda biri:
+      # daha küçük bir değer RPO'yu ölçülebilir biçimde iyileştirmez, yalnız paylaşılan önyükleme
+      # diskinde boşuna G/Ç üretir. Varsayılan 1sn'dir (replica.go:26).
+      sync-interval: 10s

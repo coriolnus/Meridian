@@ -297,6 +297,190 @@ Bakmak için:
 ssh -i $K $A1 'sudo ls -d /tmp/systemd-private-*-meridian.service-*/tmp/prescreen-* 2>/dev/null | tail'
 ```
 
+## Bölüm B4 — H10 aşama-1: **Litestream sürekli çoğaltma** (bakım penceresi)
+
+H9'dan beri karar defteri `state/meridian.db`de (WAL). Yedek zinciri iki halkalı: gecelik tar
+(23:32 UTC, 7 gün) + Mac-pull (30 gün). **Ölçülen kusur RPO'dur:** iki tar arasındaki her şey VM
+kaybında kayıptır — en kötü hâlde bir tam işlem günü. Litestream bu aralığı **saniyelere** indirir.
+
+> ### ⚠ DÜRÜST SINIR — BU AŞAMA **MEDYA ARIZASINI KAPSAMAZ**
+> A1'de **ikinci fiziksel disk YOK.** Ölçüm (2026-08-02, salt-okuma keşif): `lsblk` → tek `sda`
+> (46,6G) · `sda1` = `/` (45,6G, %10 dolu, **40G boş**) · `sda15` `/boot/efi` · `sda16` `/boot`.
+> Yani `/home/ubuntu/replica` ile `/opt/meridian/state` **aynı blok cihazdadır**. Disk arızası
+> ikisini birden götürür. Bu aşamanın kapsadığı: **mantıksal bozulma / yanlış migrasyon / yanlış
+> silme / yarım yazım** → dakika hassasiyetli geri sarma; artı Mac'e çekilen replica kopyası.
+> **Medya + bölge koruması AŞAMA-2'dir** (OCI Object Storage S3-uyumlu bucket; anahtar
+> **OPERATÖRDE**, ROADMAP H10). `litestream.yml`de aşama-2'ye geçerken **yalnız `replica:` bloğu**
+> değişecek şekilde yazıldı.
+
+> ### ⚠ LİTESTREAM CANLI DEFTERE **YAZAR** (salt-okuma yeterli DEĞİL — ölçüldü, varsayılmadı)
+> v0.5.15 kaynağı: `db.go:1075` `PRAGMA journal_mode=wal` · `db.go:1083/1089`
+> `CREATE TABLE IF NOT EXISTS _litestream_seq` + `_litestream_lock` · `db.go:1544` her senkronda
+> `INSERT ... ON CONFLICT` · `db.go:2627` `PRAGMA wal_checkpoint`. Yani **ilk `start`, canlı
+> defterin ŞEMASINA iki tablo ekler** — prosedürün geri alınması en zor adımı budur ve bu yüzden
+> `litestream_kur.sh` bayraksız koşumda **başlatmaz**.
+> Güvenli taraf (bu da ölçüldü): DB dosyası yoksa litestream onu **yaratmaz**
+> (`db.go:1030` "Exit if no database file exists") → `MERIDIAN_DB=off` acil anahtarı güvende.
+
+**Dosyalar:** `deploy/oracle-a1/litestream.yml` (yapılandırma + tüm tasarım gerekçeleri) ·
+`deploy/oracle-a1/meridian-litestream.service` (H3 tur-2 sertleştirme seti) ·
+`deploy/oracle-a1/litestream_kur.sh` (sürüm-sabitli + sha256 kapılı, **idempotent**).
+**`deploy.sh` bu birimi KURMAZ** — kurulum bir bakım penceresi kalemidir.
+
+### Ön koşullar
+- Çalışma ağacı temiz + depo A1'e taşınmış (`dagit.sh` kapısı).
+- Bakım penceresi: worker'ın durması **şart değil** (birim `Requires=` taşımaz) ama ilk start
+  seans dışında yapılır — checkpoint'ler yazarlarla kilit yarışına girer.
+- `sudo` parolasız (betik `/usr/local/bin` + `/etc` + `/var/lib` altına yazar).
+
+### 1) GERİ-ALMA YEDEĞİ ÖNCE (bu adım atlanırsa prosedür başlamaz)
+```bash
+K=~/.ssh/oci-a1.key; A1=ubuntu@130.61.126.87
+# Defterin çevrimiçi tutarlı kopyası (yedek biriminin kullandığı yolun aynısı) — geri dönüş noktası
+ssh -i $K $A1 'export PATH=$HOME/.local/bin:$PATH; cd /opt/meridian && \
+  uv run python -c "from meridian import storage; storage.backup_to(\"/home/ubuntu/backups/meridian.db.h10-oncesi\")" && \
+  ls -la /home/ubuntu/backups/meridian.db.h10-oncesi'
+```
+
+### 2) Kurulum (idempotent; indirmeyi sha256 kapısı korur)
+```bash
+ssh -i $K $A1 'cd /opt/meridian && ./deploy/oracle-a1/litestream_kur.sh'
+# Beklenen: sha256 EŞLEŞTİ · /usr/local/bin/litestream kuruldu · dizinler 0750 ubuntu:ubuntu
+#           · /etc/litestream.yml + birim kuruldu · databases kuru doğrulaması geçti · ENABLE, BAŞLATILMADI
+```
+**Sürüm yükseltmede:** `litestream_kur.sh` içindeki `LS_SURUM` **ve** `LS_SHA256` birlikte
+güncellenir; sha256 yayıncının `checksums.txt`inden okunur. Betik onu internetten **tazelemez**
+(tazeleseydi kapı, "indirdiğimi indirdiğimle doğruladım" totolojisine dönerdi).
+
+### 3) BAŞLATMA (ayrı karar — şemaya iki tablo eklenir)
+```bash
+ssh -i $K $A1 'sudo systemctl start meridian-litestream && sleep 5 && systemctl is-active meridian-litestream'
+```
+
+### 4) DOĞRULAMA — yürürlükteki direktifler (yorum değil, systemd'nin okuduğu değer)
+```bash
+ssh -i $K $A1 'systemd-analyze cat-config systemd/system/meridian-litestream.service | grep -E "ReadWritePaths|ProtectSystem|SystemCallFilter|CapabilityBoundingSet"'
+ssh -i $K $A1 'systemd-analyze security meridian-litestream | tail -3'
+```
+> **BEKLENEN SKOR — TAHMİN, ÖLÇÜM DEĞİL.** Birim H3 tur-2 setinin **birebir aynısını** taşıyor
+> (üç birimle ortak direktifler testle çivili) ve `ReadWritePaths`i **daha dar** (yalnız
+> `state` + iki hedef dizin, `uv` ağacı yok) → **aynı sınıfa, 2,5–3,8 bandına** düşmesi beklenir.
+> Bu bir tahmindir; **gerçek sayı bu adımda ölçülür ve ROADMAP'e ÖLÇÜLEN değer yazılır.**
+
+### 5) DOĞRULAMA — duman testleri
+```bash
+# (a) journal: açılış hatası / SIGSYS var mı
+ssh -i $K $A1 'journalctl -u meridian-litestream -n 40 --no-pager'
+
+# (b) çoğaltma GERÇEKTEN yazıyor mu — "is-active" bunu KANITLAMAZ (barsarchive dersi)
+ssh -i $K $A1 'find /home/ubuntu/replica -type f | wc -l; find /home/ubuntu/replica -type f -printf "%T@ %p\n" | sort -n | tail -3'
+
+# (c) REPLICA YAŞI — BU BİRİMİN GERÇEK ÖLÇÜSÜ. İki ölçüm arasında en yeni dosyanın damgası
+#     DEĞİŞMELİ (defterde yazım varken). Değişmiyorsa çoğaltma sessizce durmuştur.
+ssh -i $K $A1 'date -u; find /home/ubuntu/replica -type f -newermt "-5 minutes" | wc -l'
+
+# (d) litestream'in kendi görüşü
+ssh -i $K $A1 'litestream databases -config /etc/litestream.yml; litestream ltx -config /etc/litestream.yml /opt/meridian/state/meridian.db 2>&1 | tail -5'
+
+# (e) BEKLENEN YAN ETKİ — iki yeni tablo görünecek (arıza DEĞİL, yukarıdaki uyarı)
+ssh -i $K $A1 'cd /opt/meridian && sqlite3 state/meridian.db "SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY 1;" 2>/dev/null || echo "(sqlite3 yok — uv run python -c ile bak)"'
+
+# (f) DEFTER HÂLÂ İLERLİYOR MU (çoğaltma yazarları bloklamadı mı)
+ssh -i $K $A1 'curl -s localhost:8080/healthz | head -c 200; echo'
+```
+
+### 6) RESTORE TATBİKATI — **H7 ritüeline eklenen adım** (çeyreklik)
+Tatbikat yapılmamış bir yedek, yedek değildir. H7 ritüeli bugüne dek **tar arşivini** tatbik
+ediyordu; H10'dan sonra **replica'dan geri yükleme** de her turda ölçülür.
+```bash
+# CANLI DEFTERE DOKUNMAZ: -o ile AYRI dosyaya yazılır, -integrity-check ile SQLite'a doğrulatılır.
+ssh -i $K $A1 'litestream restore -config /etc/litestream.yml \
+    -o /tmp/tatbikat-meridian.db -integrity-check full /opt/meridian/state/meridian.db && \
+  ls -la /tmp/tatbikat-meridian.db'
+
+# SAYILAR CANLIYLA TUTUYOR MU (H7'nin "64/64 JSON sağlam" adımının SQLite karşılığı)
+ssh -i $K $A1 'cd /opt/meridian && uv run python -c "
+import sqlite3
+for yol in (\"state/meridian.db\", \"/tmp/tatbikat-meridian.db\"):
+    c = sqlite3.connect(yol)
+    print(yol, {t: c.execute(f\"SELECT COUNT(*) FROM {t}\").fetchone()[0] for t in (\"trades\",\"trade_plans\",\"scoreboard\")})
+    c.close()"'
+
+# GERİ SARMA TATBİKATI (mantıksal bozulma senaryosu): 1 saat öncesine
+ssh -i $K $A1 'litestream restore -config /etc/litestream.yml -timestamp "$(date -u -d "-1 hour" +%Y-%m-%dT%H:%M:%SZ)" \
+    -o /tmp/tatbikat-1saat-once.db /opt/meridian/state/meridian.db && ls -la /tmp/tatbikat-1saat-once.db'
+
+# TEMİZLİK
+ssh -i $K $A1 'rm -f /tmp/tatbikat-meridian.db /tmp/tatbikat-1saat-once.db'
+```
+**Mac'teki kopyadan geri yükleme** (VM tamamen gitmişse): `ops/pull-a1-backups.sh` replica bacağı
+`~/AI-Trading/backups/a1-replica/` altına çeker. Mac'te litestream kuruluysa:
+```bash
+litestream restore -o /tmp/kurtarilan.db "file://$HOME/AI-Trading/backups/a1-replica/meridian.db"
+```
+Not: Mac kopyası A1'in **üst kümesidir** (silme yok) — `restore` noktayı TXID/zaman damgasına göre
+seçer, fazlalık eski snapshot yalnız daha eskiye sarma imkânıdır.
+
+### 7) İLK 24 SAAT — seccomp nöbeti (ATLANMAZ)
+Bu birimde **`OnFailure=` YOK** ve `Restart=always` var (gerekçe birim dosyasında: fail-notify
+gövdesi sabit metinle "meridian.service FAILED" der; buraya bağlamak yanlış alarm üretirdi).
+Yani bir `SystemCallFilter` kesmesi **sessiz çoğaltma kaybıdır** — kayıp ancak restore gerektiğinde
+görülür.
+```bash
+ssh -i $K $A1 'journalctl -u meridian-litestream --since "24 hours ago" | grep -Ei "SIGSYS|Main process exited|Scheduled restart" | tail -20'
+ssh -i $K $A1 'systemctl show meridian-litestream -p NRestarts'
+# ÖLÇÜ: NRestarts artmamalı VE replica'daki en yeni dosya damgası ilerlemeli (adım 5c).
+```
+SIGSYS görülürse: filtreyi kaldırma, **log moduna al** — reçete Bölüm B3'ün sonundadır
+(`SystemCallLog=@clock @cpu-emulation @debug @module @mount @obsolete @privileged @raw-io @reboot @swap`).
+
+### 8) GERİ ALMA (tek blok)
+```bash
+ssh -i $K $A1 'set -x
+  sudo systemctl disable --now meridian-litestream
+  sudo rm -f /etc/systemd/system/meridian-litestream.service /etc/litestream.yml
+  sudo systemctl daemon-reload
+  # replica + meta dizinleri: VERİ TAŞIRLAR. Silmek geri-alma DEĞİL, temizliktir — ayrı karar:
+  #   sudo rm -rf /home/ubuntu/replica /var/lib/litestream
+  # ikili de kalabilir (koşmayan bir ikili zarar vermez): sudo rm -f /usr/local/bin/litestream
+'
+```
+**`_litestream_seq` / `_litestream_lock` tabloları:** geri almada **bırakılır**. Zararsızdırlar
+(Meridian'ın hiçbir kodu tablo envanteri saymaz — tarama: `sqlite_master` yalnız
+`tests/test_denetim_defter_v159.py:221`de, sandbox'ta ve negatif iddia). Düşürülecekse **worker
+DURMUŞKEN** yapılır (CLAUDE.md §5: canlı worker koşarken state'e yazma):
+```bash
+# BAKIM PENCERESİ — worker durmuş olmalı
+ssh -i $K $A1 'sudo systemctl stop meridian && cd /opt/meridian && uv run python -c "
+import sqlite3; c=sqlite3.connect(\"state/meridian.db\")
+c.execute(\"DROP TABLE IF EXISTS _litestream_seq\"); c.execute(\"DROP TABLE IF EXISTS _litestream_lock\")
+c.commit(); c.close(); print(\"düşürüldü\")" && sudo systemctl start meridian'
+```
+
+### 9) ÜÇÜNCÜ KOPYA — **bar arşivi** için seçenek tablosu (KARAR OPERATÖRE; bu tablo VERİDİR)
+**Neden gündemde:** WP-U operasyonel bulgusu — mevcut Massive planı artık yalnız ~son 2 ayı
+veriyor, dolayısıyla **2004'e giden yerel bar arşivi yeniden-üretilemez KALINTIdır; kaybı kalıcı
+kayıptır** (ROADMAP WP-U). Litestream **yalnız `meridian.db`yi** çoğaltır — bar arşivi SQLite'ta
+değil, CSV/JSONL dosyalarındadır ve bu turun kapsamı DIŞINDADIR.
+
+**Ölçülen boyutlar (A1, 2026-08-02):** `state/` **617M** → `bars/` **59M** (260 CSV) ·
+`bars_intraday/` 43M · `intraday_bars/` 40M · `sprint/` **438M** (4 kum-havuzu × ~110M) ·
+`meridian.db` 1,3M. Gecelik tar.gz **~112M/gün**; A1'de 7 gün (421M), Mac'te 30 gün.
+**Kritik okuma:** günlük tar'ın hacmini **yeniden-üretilebilir sprint kum-havuzları** domine
+ediyor; yeri doldurulamaz olan bars ise toplamın **onda biri**.
+
+| # | Seçenek | Neyi kapsar | Tazelik | Yer/bant | Ön koşul | Not |
+|---|---|---|---|---|---|---|
+| 0 | **BUGÜNKÜ TABAN** (değişiklik yok) | bars **zaten** gecelik tar'ın içinde → A1 + Mac = **2 kopya** | 1 gün | 112M/gün × 30 | — | "üçüncü kopya" gerçekten ÜÇÜNCÜdür; ikinci kopya zaten var |
+| 1 | **Mac-pull'a ayrı `bars` bacağı** (rsync delta, `--delete` yok) | `state/bars` (59M) | çekim kadansı | ilk 59M, sonra delta (~KB) | yok — `ops/pull-a1-backups.sh`'a bir bacak | En ucuzu; ama Mac ile tar aynı makinede → yine **2. kopya**, 3. değil |
+| 2 | **OCI Object Storage bucket** (aşama-2) | `meridian.db` (litestream) **+** bars (rclone/aws-cli) | dakikalar / günlük | Always-Free 20G; 59M+ | **anahtar OPERATÖRDE** | Tek seçenek ki hem **off-box** hem **off-media**; H10 aşama-2 ile aynı anahtarı kullanır |
+| 3 | **Harici disk / ikinci makine** (Mac dışı) | seçilen ne varsa | elle / haftalık | disk maliyeti | operatör fiziksel erişim | Gerçek 3. kopya; otomasyonu yok, ritüele bağlı |
+| 4 | **Bağımsız bulut** (B2 / S3 / rsync.net) | bars + db | günlük | ~1$/ay altı | hesap + anahtar | Oracle hesabı kapanma riskini de kapsar (seçenek 2 kapsamaz) |
+| 5 | **tar kapsamını daralt** (`sprint/` hariç) + sıklığı artır | tar'ı 112M → ~15M'e indirir | günden saatlere inebilir | çok ucuz | `meridian-backup.service` düzenlemesi (**bu turun kapsamı DIŞI**) | Kopya SAYISINI artırmaz ama 1–4'ün hepsini ucuzlatır; kum-havuzu birikimi ayrı bir bulgudur |
+
+**Bu turun hükmü:** seçim yapılmadı — 1–5 arası her kalem operatör kalemidir. Ölçüm ve maliyetler
+yukarıda; tur, **karar vermeden** karar için gereken veriyi bıraktı.
+
 ## Bölüm C — sırlar (asla repo'da/git'te taşınMAZ)
 `state/secrets.json` git-ignored. İki yol:
 - **Panodan yeniden gir** (en temiz): Ayarlar sayfasından FMP/Alpaca/Gemini anahtarlarını tekrar gir.
