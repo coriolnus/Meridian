@@ -32,7 +32,16 @@ ExecStartPre=/bin/mkdir -p /home/ubuntu/backups
 ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # NOT (systemd ikame tuzağı): $rc → systemd boş geçirirdi; $$ ile kaçırıldı (sh'a $rc ulaşır).
 # %%F → tar dosya adında günlük tarih (systemd % kaçışı — eski unit'ten miras, kanıtlı çalışıyor).
-ExecStart=/bin/sh -c 'if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "from meridian import storage; storage.backup_to(\"/opt/meridian/state/meridian.db.yedek\")"; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ]'
+# PYTHON BACAĞI TIRNAKSIZDIR — `sys.argv` BİLEREK (2026-08-02 test-ateşlemesi buldu; sınıf:
+# "birimde kabuk-sözdizimi varsayımı", fail-notify çok-satır-Python ve Environment satır-sonu
+# yorumuyla AYNI AİLE, üçüncü vaka): eski satır yolu `\"...\"` ile geçiriyordu; systemd tek-tırnak
+# İÇİNDE de C-kaçışlarını çözer → sh'a ulaşan -c dizgisinin tırnakları erken kapanır ve python
+# `backup_to(/opt/...)` alır — H9'dan beri HER koşu SyntaxError'dü, `.yedek` HİÇ DOĞMAMIŞTI ve
+# `if...fi;` zinciri hatayı yutuyordu (journal 08-01/08-02 birebir; tar'da yedek üyesi 0).
+# Çözüm iki bacaklı: (1) yol string-literal değil sys.argv[1] — dizgide İÇ TIRNAK KALMADI,
+# systemd'nin çözeceği kaçış yok; (2) `ok` bayrağı — python bacağı düşerse tar YİNE alınır
+# (bars değerlidir) ama birim BAŞARISIZ beyan eder; sessiz yedek kaybı bir daha yaşanmaz.
+ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
 
 # ==================================================================================================

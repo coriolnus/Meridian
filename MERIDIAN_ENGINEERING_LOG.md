@@ -240,6 +240,24 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   (litestream defterin dakika-RPO'sunu taşıyor; bars günde bir değişiyor). Hedefli testler
   74/74 + t3 yeşil.
 
+- **YEDEK BİRİMİNİN PYTHON BACAĞI H9'DAN BERİ HİÇ ÇALIŞMAMIŞTI (2026-08-02 ~20:45 UTC, elle
+  test-ateşleme yakaladı; sınıf: "birimde kabuk-sözdizimi varsayımı" — fail-notify çok-satır-Python
+  ve Environment satır-sonu yorumuyla AYNI AİLE, ÜÇÜNCÜ vaka):** `storage.backup_to` bacağı yolu
+  `\"...\"` kaçışıyla geçiriyordu; systemd TEK-TIRNAK İÇİNDE de C-kaçışlarını çözer → sh'a ulaşan
+  `-c` dizgisinin tırnakları erken kapanır, python `backup_to(/opt/...)` alır → H9 revizyonundan
+  (2026-07-31) beri HER koşu SyntaxError (journal 08-01/08-02 birebir), `state/meridian.db.yedek`
+  diskte HİÇ DOĞMAMIŞ, tar hiçbir gece tutarlı DB kopyası içermemiş — ve `if...fi;` zinciri hatayı
+  yuttuğu, `rc` yalnız tar'ı ölçtüğü için her koşu `Result=success`'ti (birimin kendi "sessiz yedek
+  kaybı" uyarısının vücut bulmuş hâli; elle-ateşleme doktrini tam bu yüzden var ve işledi). ÇÖZÜM
+  İKİ BACAKLI: (1) yol string-literal değil `sys.argv[1]` — dizgide iç tırnak kalmadı, systemd'nin
+  çözeceği kaçış yok (önce sh katmanında elle provalandı: `.yedek` doğdu, `PRAGMA integrity_check`
+  ok); (2) `ok` bayrağı — python bacağı düşerse tar YİNE alınır ama birim BAŞARISIZ beyan eder.
+  Çivi: `test_backup_python_bacagi_tirnaksiz_ve_sessiz_degil` (v174: ExecStart'ta `\"` YASAK +
+  `sys.argv[1]` + `ok=0` + `[ $$ok -eq 1 ]` zorunlu). CANLI KANIT (ikinci ateşleme, 20:50 UTC):
+  journal'da SyntaxError YOK, `.yedek` İLK KEZ birim eliyle tazelendi (1.335.296 bayt), tar'da
+  yedek üyesi 1. DERS (aileyi genelleştirir): birim içinde `\"` görülen her ExecStart şüphelidir —
+  systemd'nin quoting'i sh değildir; değer taşımak gerekiyorsa argv kullan, kaçış kullanma.
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
@@ -360,12 +378,15 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
-- **DAĞITIM KUYRUĞU (2026-08-02 gece, state-şişmesi turu):** (a) `meridian-backup.service`
-  değişikliği rsync'le İNMEZ — /etc kopyası pencere içinde `sudo cp + daemon-reload + ELLE
-  test-ateşleme` ister (birimdeki sessiz-kayıp uyarısı: Result=success + yeni tar GÖRÜLMEDEN
-  tamam sayılmaz; beklenen tar ~40,5M, `tar -tzf`de `state/sprint/` YOK ama `state/bars/` VAR);
+- **DAĞITIM KUYRUĞU (2026-08-02 gece, state-şişmesi turu):** (a) **KAPANDI (aynı gece ~20:50 UTC,
+  operatör talimatlı pencere):** birim A1'e kuruldu (sha256 doğrulamalı scp + geri-alma yedeği
+  `~/meridian-backup.service.bak-20260802` + sudo cp + daemon-reload) ve İKİ kez elle
+  test-ateşlendi — ikinci koşum: Result=success, journal temiz, tar **40.593.530 bayt**
+  (`state/sprint/` 0 üye · `state/bars/` 261 · `meridian.db.yedek` 1 · 0600). İlk ateşleme
+  ayrıca H9'dan beri sessiz bir arızayı yakaladı (aşağıdaki yeni vaka). Mac'teki geniş
+  2026-08-02 kopyası (112,5M) bilerek korunuyor; 23:30 timer'ı bu gece dar birimle koşacak.
   (b) `sprint.py` SKIP_COPY değişikliği worker restart'ıyla etkinleşir; ilk yeni sandbox'ta
-  `du -sh state/sprint/*` ile ~27M türetimi ölçüme çevrilir. İkisi de sıradaki pencere kalemi,
+  `du -sh state/sprint/*` ile ~27M türetimi ölçüme çevrilir. (b) sıradaki pencere kalemi,
   yeni pencere açtırmaz.
 - **SPRINT DÖNGÜ KAPATAMIYOR — n_v1=0 (yan bulgu, ayrı tur):** 154 kadans koşusunun İLKİ DAHİL
   hepsi `phase=done, n_v1=0, "v1 ileri baz 0/30 işlem"` ile bitiyor — sprint hiç kalibrasyon

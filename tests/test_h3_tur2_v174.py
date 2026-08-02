@@ -279,6 +279,44 @@ def test_backup_kapsami_sprint_haric_bars_dahil():
             f"yorumunu gerekçesiyle güncelle: {exec_start!r}")
 
 
+def test_backup_python_bacagi_tirnaksiz_ve_sessiz_degil():
+    """BİRİMDE KABUK-SÖZDİZİMİ VARSAYIMI — bu ailenin ÜÇÜNCÜ vakası (öncekiler: fail-notify'ın
+    çok-satırlı Python'u, `Environment=` satır-sonu yorumu). 2026-08-02 bakım penceresinde ELLE
+    TEST-ATEŞLEME ile bulundu.
+
+    ÖLÇÜM ZİNCİRİ. Eski ExecStart yolu python'a `backup_to(\\"/opt/...\\")` diye, TERS-BÖLÜLÜ
+    tırnakla geçiriyordu. systemd TEK TIRNAK İÇİNDE DE C-kaçışlarını çözer → `sh`a ulaşan `-c`
+    dizgisinde tırnaklar erken kapanır ve python `backup_to(/opt/...)` görür. Sonuç: H9'dan
+    (2026-07-31) beri HER gece SyntaxError; journal'da 08-01 ve 08-02 kayıtları BİREBİR aynı;
+    `state/meridian.db.yedek` HİÇ DOĞMAMIŞ; tar'da yedek üyesi 0. Ve arıza SESSİZDİ: `if ... fi;`
+    zinciri python'un çıkışını yuttu, `rc` YALNIZ tar'ı ölçtüğü için birim `Result=success` dedi.
+    WAL'lı canlı DB'nin ham tar kopyası yarışlıdır — yani sessizce YARIM yedek alıyorduk.
+
+    ÇİVİLENEN İKİ ŞEY. (1) SÖZDİZİMİ: ExecStart'ta `\\"` dizisi GEÇMEZ — yol string-literal değil
+    `sys.argv[1]` ile taşınır, böylece systemd'nin kaçış çözmesi bir varsayım olmaktan çıkar.
+    (2) SESSİZLİK YASAĞI: python bacağı `|| ok=0` ile işaretlenir ve satır sonu `[ $$ok -eq 1 ]`
+    ile birimi DÜŞÜRÜR (tar yine alınır — yedeksiz kalmaktansa eksik yedek + gürültü)."""
+    exec_start = _deger("meridian-backup.service", "ExecStart")
+    assert exec_start is not None, "meridian-backup.service: ExecStart yok"
+
+    # (a) SINIF ÇİVİSİ: tek tırnak KORUMAZ; ters-bölülü tırnak systemd katmanında çözülür.
+    assert '\\"' not in exec_start, (
+        "ExecStart'ta ters-bölülü tırnak var — systemd tek-tırnak içinde de C-kaçışını çözer ve "
+        f"sh'a bozuk dizgi ulaşır (2026-08-02: H9'dan beri her gece SyntaxError): {exec_start!r}")
+
+    # (b) yol argv'de taşınır (string-literal DEĞİL).
+    assert "sys.argv[1]" in exec_start, (
+        "yedek yolu python'a argv yerine gömülü dizgiyle geçiyor — kaçış tuzağı geri gelmiş: "
+        f"{exec_start!r}")
+
+    # (c) SESSİZLİK YASAĞI: `_deger` HAM değeri döndürür, `$$` dosyadaki gibi çift dolar durur.
+    assert "|| ok=0" in exec_start, (
+        f"python bacağının arızası işaretlenmiyor — sessiz yedek kaybı sınıfı geri döner: {exec_start!r}")
+    assert "[ $$ok -eq 1 ]" in exec_start, (
+        "birim python bacağı düşse de `success` beyan ediyor — `rc` yalnız tar'ı ölçer "
+        f"(2026-08-02 vakasının TAM kök nedeni): {exec_start!r}")
+
+
 # ==================================================================================================
 # 3 — SIR DÜZENİ: token birimde DEĞİL, `.dash.env`te
 # ==================================================================================================
