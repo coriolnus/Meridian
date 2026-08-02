@@ -49,7 +49,14 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # bars symlinked; sprint subtree excluded; keys not needed; HALT must NEVER enter the sandbox — the
 # operator halting LIVE trading is the natural moment to run an offline sprint, but a copied kill-switch
 # makes every sandbox session suppress entries → n_v1=0 and a uselessly "inconclusive" sprint (audit #23).
-SKIP_COPY = {"bars", "sprint", "secrets.json", "HALT"}
+# SEANS-İÇİ ARŞİVLER DE ATLANIR (2026-08-02 A1 ölçümü). state/bars_intraday 43M + state/intraday_bars 40M
+# = 83M, yani bir kum havuzunun ~110M'inin dörtte üçü (state/sprint 438M = 4 × ~110M). Bu iki dizin bu
+# küme yazıldıktan SONRA doğdu — SKIP_COPY yalnız "bars"ı atlıyordu, yeni gelenler sessizce kopyalanır
+# oldu. YAZAR TEKLİĞİ arşivci tarafında: bars_intraday'i barsarchive.py, intraday_bars'ı bararchive.py
+# yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
+# yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
+# değil BEYANLA karşılıyor (barsarchive.py:748 — "arşivi YOK ... henüz hiç tur koşmadı").
+SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT"}
 
 
 def _now() -> str:
@@ -157,8 +164,16 @@ def _reset_sandbox_state(sbstate: Path) -> None:
 
 def _prune_old_sandboxes(keep: int = SANDBOX_KEEP) -> None:
     """Retain only the newest `keep` sprint sandboxes (L5). Each start() copies the live state tree into a
-    new dated dir (~1.5 MB; bars are symlinked) and nothing ever deleted them — an operator-paced disk leak.
-    Never deletes the currently-active sandbox."""
+    new dated dir (bars are symlinked) and nothing ever deleted them — an operator-paced disk leak.
+    Never deletes the currently-active sandbox.
+
+    BOYUT İDDİASI TAZELENDİ (2026-08-02). Bu docstring "~1.5 MB" diyordu: YAZILDIĞI GÜN DOĞRUYDU,
+    sonra canlı state büyüdü ve iddia bayatladı. A1'de ölçüm: state/ 617M, state/sprint 438M =
+    4 kum havuzu × ~110M. SKIP_COPY'ye bars_intraday+intraday_bars (43M+40M = 83M) eklendikten sonra
+    kum havuzu başına ARİTMETİK BEKLENTİ ~27M'dir (110−83). BU BİR TÜRETİM, ÖLÇÜM DEĞİL — yeni bir
+    sandbox doğduğunda `du -sh state/sprint/*` ile doğrulanmadan "ölçüldü" diye anılmaz.
+    Birikme sınırsız DEĞİL: SANDBOX_KEEP=3 + her start()'ta budama çalışıyor (2026-08-02 A1'de
+    doğrulandı), kararlı durum 4 dizin = 3 saklanan + 1 yeni."""
     root = config.STATE / "sprint"
     if not root.exists():
         return

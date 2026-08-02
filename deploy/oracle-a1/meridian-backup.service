@@ -5,6 +5,20 @@
 #    kopyayı (meridian.db.yedek) içerir. WAL'lı canlı DB'nin ham tar kopyası yarışlı olurdu
 #    (storage.backup_to docstring'i: sessizce eksik yedek, yedek olmamasından kötüdür).
 #  * secrets arşive girer → 0700/0600 disiplini korunur (UMask + chmod).
+#  * 2026-08-02 KAPSAM DARALTMASI — `--exclude=state/sprint`. Ölçüm (A1): bugünkü tar 112,5M;
+#    aynı ağaç sprint hariç `tar -cz --exclude=state/sprint -C /opt/meridian state | wc -c` =
+#    40.497.179 bayt (~40,5M). state/sprint 438M'dir (4 kum havuzu × ~110M) ve TAMAMI
+#    YENİDEN-ÜRETİLEBİLİR: her `sprint.start()` canlı state'ten yeni kum havuzu kurar.
+#    BİLEREK İÇERİDE KALANLAR: state/bars (59M, WP-U: yeniden-üretilemez — sağlayıcı geçmişi
+#    geri vermiyor) ve iki seans-içi arşiv dizini (bars_intraday + intraday_bars) — bunlar
+#    TTL'li Redis akışının TEK KALICI ARŞİVİDİR, düşerlerse geri gelmezler.
+#    KAYIP BEYANI (uydurma yasağı): kum havuzlarının içindeki `state/sprint/*/state/
+#    sprint_runs.jsonl` defterleri artık arşive GİRMEZ → bir restore'da sprint koşu tarihçesi
+#    kaybolur. Bu kayıp ÖLÇÜLDÜ ve bugün için boştur: 2026-08-02'de 4/4 sandbox'ta o defter
+#    ZATEN YOKTU (Faz A min_sample'a takılınca satır yazılmıyor). Defter bir gün dolmaya
+#    başlarsa bu karar yeniden tartılır.
+#    H7 tatbikat beyanı buna göre güncellendi: "64/64 JSON sağlam" restore'u sprint alt-ağacını
+#    İÇEREN bir arşiv üzerinde yapılmıştı; bundan sonraki tatbikatlar sprint'siz arşivi doğrular.
 [Unit]
 Description=Meridian state/ daily local backup (tar.gz, 7-day retention)
 
@@ -18,7 +32,7 @@ ExecStartPre=/bin/mkdir -p /home/ubuntu/backups
 ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # NOT (systemd ikame tuzağı): $rc → systemd boş geçirirdi; $$ ile kaçırıldı (sh'a $rc ulaşır).
 # %%F → tar dosya adında günlük tarih (systemd % kaçışı — eski unit'ten miras, kanıtlı çalışıyor).
-ExecStart=/bin/sh -c 'if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "from meridian import storage; storage.backup_to(\"/opt/meridian/state/meridian.db.yedek\")"; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ]'
+ExecStart=/bin/sh -c 'if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "from meridian import storage; storage.backup_to(\"/opt/meridian/state/meridian.db.yedek\")"; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
 
 # ==================================================================================================

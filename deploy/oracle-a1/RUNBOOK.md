@@ -392,6 +392,11 @@ ssh -i $K $A1 'curl -s localhost:8080/healthz | head -c 200; echo'
 ### 6) RESTORE TATBİKATI — **H7 ritüeline eklenen adım** (çeyreklik)
 Tatbikat yapılmamış bir yedek, yedek değildir. H7 ritüeli bugüne dek **tar arşivini** tatbik
 ediyordu; H10'dan sonra **replica'dan geri yükleme** de her turda ölçülür.
+> **TATBİKAT BEYANI GÜNCELLENDİ (2026-08-02, tar kapsam daraltması):** H7'nin "64/64 JSON sağlam"
+> restore'u `state/sprint` alt-ağacını İÇEREN bir arşiv üzerinde yapılmıştı. `meridian-backup.service`
+> artık `--exclude=state/sprint` taşıyor → bundan sonraki tar tatbikatları sprint alt-ağacını arşivde
+> **aramaz**; yokluğu arıza değil, beyanlı kapsamdır (gerekçe + kayıp beyanı birim dosyasının tepe
+> yorumunda). `bars/`, `bars_intraday/`, `intraday_bars/` kapsamda KALIR ve tatbikatta doğrulanır.
 ```bash
 # CANLI DEFTERE DOKUNMAZ: -o ile AYRI dosyaya yazılır, -integrity-check ile SQLite'a doğrulatılır.
 ssh -i $K $A1 'litestream restore -config /etc/litestream.yml \
@@ -468,6 +473,11 @@ değil, CSV/JSONL dosyalarındadır ve bu turun kapsamı DIŞINDADIR.
 `meridian.db` 1,3M. Gecelik tar.gz **~112M/gün**; A1'de 7 gün (421M), Mac'te 30 gün.
 **Kritik okuma:** günlük tar'ın hacmini **yeniden-üretilebilir sprint kum-havuzları** domine
 ediyor; yeri doldurulamaz olan bars ise toplamın **onda biri**.
+**Ek ölçüm (2026-08-02, aynı keşif):** `tar -cz --exclude=state/sprint -C /opt/meridian state | wc -c`
+= **40.497.179 bayt (~40,5M)** — satır 5'in "~15M" tahmini YANLIŞTI, ölçülen budur (kalan hacmi
+bars 59M + iki seans-içi arşiv 83M taşıyor). Kum havuzlarının kendisi de ayrıca küçülüyor:
+`sprint.SKIP_COPY`ye iki seans-içi arşiv eklendi (aritmetik beklenti ~27M/kum-havuzu — türetim,
+ilk yeni sandbox'ta `du` ile doğrulanır).
 
 | # | Seçenek | Neyi kapsar | Tazelik | Yer/bant | Ön koşul | Not |
 |---|---|---|---|---|---|---|
@@ -476,10 +486,14 @@ ediyor; yeri doldurulamaz olan bars ise toplamın **onda biri**.
 | 2 | **OCI Object Storage bucket** (aşama-2) | `meridian.db` (litestream) **+** bars (rclone/aws-cli) | dakikalar / günlük | Always-Free 20G; 59M+ | **anahtar OPERATÖRDE** | Tek seçenek ki hem **off-box** hem **off-media**; H10 aşama-2 ile aynı anahtarı kullanır |
 | 3 | **Harici disk / ikinci makine** (Mac dışı) | seçilen ne varsa | elle / haftalık | disk maliyeti | operatör fiziksel erişim | Gerçek 3. kopya; otomasyonu yok, ritüele bağlı |
 | 4 | **Bağımsız bulut** (B2 / S3 / rsync.net) | bars + db | günlük | ~1$/ay altı | hesap + anahtar | Oracle hesabı kapanma riskini de kapsar (seçenek 2 kapsamaz) |
-| 5 | **tar kapsamını daralt** (`sprint/` hariç) + sıklığı artır | tar'ı 112M → ~15M'e indirir | günden saatlere inebilir | çok ucuz | `meridian-backup.service` düzenlemesi (**bu turun kapsamı DIŞI**) | Kopya SAYISINI artırmaz ama 1–4'ün hepsini ucuzlatır; kum-havuzu birikimi ayrı bir bulgudur |
+| 5 | **tar kapsamını daralt** (`sprint/` hariç) + sıklığı artır | tar'ı 112,5M → **40,5M'e** indirir (ÖLÇÜLDÜ; eski ~15M tahmini yanlıştı) | günden saatlere inebilir | çok ucuz | ~~birim düzenlemesi~~ **UYGULANDI repo'da (2026-08-02):** `--exclude=state/sprint` + çift-yönlü çivi (`test_h3_tur2_v174::test_backup_kapsami_sprint_haric_bars_dahil`); canlıya kurulum sıradaki pencerede (cp + daemon-reload + **elle test-ateşleme**, birimdeki sessiz-kayıp uyarısı) | Kopya SAYISINI artırmaz ama 1–4'ün hepsini ucuzlatır. **Sıklık artışı BİLEREK yapılmadı:** defterin dakika-RPO'sunu litestream zaten taşıyor, bars günde bir değişiyor — ölçülebilir faydası şimdilik yok, operatör isterse artık ucuz |
 
-**Bu turun hükmü:** seçim yapılmadı — 1–5 arası her kalem operatör kalemidir. Ölçüm ve maliyetler
-yukarıda; tur, **karar vermeden** karar için gereken veriyi bıraktı.
+**Bu turun hükmü (2026-08-02 güncellemesi):** üçüncü-kopya seçimi HÂLÂ yapılmadı — 1–4 operatör
+kalemidir. Satır 5'in repo yarısı bu turda kapandı (kapsam daraltması + kum-havuzu küçültmesi,
+ölçümleriyle); "kum-havuzu birikimi ayrı bir bulgudur" notu da kapandı — birikim SINIRLIYMIŞ
+(SANDBOX_KEEP=3, kararlı durum 4 dizin), 2026-08-02 sabahındaki 4×5dk damgalarının kökü C15
+damga-ezme kusuruydu (154 kadans başlangıcı ölçüldü; düzeltme aynı gün canlıya indi, ayrıntı
+MERIDIAN_ENGINEERING_LOG.md).
 
 ## Bölüm C — sırlar (asla repo'da/git'te taşınMAZ)
 `state/secrets.json` git-ignored. İki yol:

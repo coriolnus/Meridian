@@ -60,6 +60,18 @@ def test_sr4_halt_and_secrets_never_enter_the_sandbox():
         assert name in sprint.SKIP_COPY, f"{name} kum havuzuna kopyalanıyor"
 
 
+def test_sr4b_seans_ici_arsivler_kum_havuzuna_kopyalanmaz():
+    """SR4'ün BOYUT kardeşi — AYRI test, çünkü sınıfı ayrı. HALT/secrets bir İZOLASYON iddiasıdır
+    (kopyalanırsa sprint yanlış ölçer); bars_intraday/intraday_bars ise izolasyonu bozmaz, yalnız
+    kum havuzunu şişirir — sınıf BOYUT. 2026-08-02 A1 ölçümü: bu iki seans-içi önbellek 83M/sandbox
+    (43M + 40M), yani ~110M'lik kum havuzunun dörtte üçü; sprint çocuğunun yolunda OKUYUCULARI YOK.
+    SKIP_COPY bu kararın TEK ÇİVİLEME NOKTASI: kümeden düşerlerse kopyalama sessizce geri gelir —
+    hiçbir şey patlamaz, yalnız state/sprint yeniden şişer, yani testsiz fark edilmez."""
+    for name in ("bars_intraday", "intraday_bars"):
+        assert name in sprint.SKIP_COPY, \
+            f"{name} kum havuzuna kopyalanıyor (2026-08-02 ölçümü: ikisi birlikte 83M/sandbox)"
+
+
 # ---------- SR2: pencereler sabit ----------
 def test_sr2_windows_are_hardcoded_not_tunable():
     assert sprint.CUTOFF < sprint.EVAL_START, "seçim ve ölçüm pencereleri AYRIK olmalı"
