@@ -154,6 +154,34 @@ def _maybe_notify(token: str, message: str) -> None:
         if notify.send(f"⚠️ {token}: {message}"):
             sent[token] = time.time()
             store.write_json("notify_sent.json", sent)
+        else:
+            # DÖRDÜNCÜ SESSİZ DELİK (C7, 2026-08-02): kanal BAĞLIYKEN teslimatın BAŞARISIZ olması
+            # hiçbir sayaca girmiyordu. `notify_undelivered.json`ı besleyen tek yol yukarıdaki
+            # "kanal YOK" dalıydı; yani "kanal yok" ölçülüyor, "kanal var ama cevap vermiyor"
+            # ölçülmüyordu. Sonuç: `parity_report`ın `alarm_delivery` satırı yığın ACK ile
+            # soğurulduğunda yeşil, `notify_channel` satırı `configured()` True olduğu için
+            # KOŞULSUZ yeşil — iki satır da yeşilken operatöre tek bir alarm ulaşmamış olabilirdi.
+            # Bu, modülün kuruluş ayrımının ("alarm yazıldı ≠ alarm ULAŞTI") tam da adını koyduğu
+            # vakada kırılmasıydı. `notify.py` bu düşüşte `notify_delivery_failed` uyarısı basıyor
+            # ama ÜRETİM tarafında okuyucusu yok (YASA 6) — sayaç okuyucusu olan yüzeydir.
+            #
+            # `_teslim_hatasi` AYRI SAYAÇ: `_toplam` ikisini birden taşır (kalıntı hesabı bozulmaz),
+            # ama "kanal yokken biriken yığın" ile "kanal bağlıyken düşen teslimat" AYRI olgulardır
+            # ve `alarm_delivery` metni ikisini karıştırmamalıdır. Alt çizgiyle başlar: jeton
+            # listesini basan yüzeyler (`watchdog.parity_report`) `_` önekli anahtarları eler.
+            #
+            # `notify_sent.json` YAZILMAZ (mevcut davranış korunur): susturma penceresi yalnız
+            # GERÇEKTEN gönderilmiş bir mesajla kurulur, yoksa başarısız bir deneme kanalı
+            # 6 saat susturur ve alarm kaybolur.
+            def _bump_fail(d):
+                # store.update_json SÖZLEŞMESİ: belgeyi YERİNDE değiştir ve True dön (yeni sözlük
+                # döndürmek sessizce hiçbir şey yazmaz — yukarıdaki kardeş dalın dersi).
+                d[token] = int(d.get(token, 0)) + 1
+                d["_toplam"] = int(d.get("_toplam", 0)) + 1
+                d["_teslim_hatasi"] = int(d.get("_teslim_hatasi", 0)) + 1
+                return True
+
+            store.update_json("notify_undelivered.json", _bump_fail, {})
     except Exception:  # sessiz-yutma: obs alarmı/kaydı bu noktada ZATEN yazıldı; ikincil bildirim kanalının (Telegram/webhook) düşmesi alarmı asla düşüremez
         pass
 

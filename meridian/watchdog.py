@@ -260,9 +260,32 @@ def conservation_report() -> dict:
     if not plans:
         return {"plans": 0, "unexplained": 0, "rows": []}
     traded = {str(t.get("plan_id")) for t in store.read_jsonl("trades.jsonl")}
-    # düşüşü olayla kaydedilmiş planlar (taşıma/veto/broker reddi/süresi doldu)
+    # PENCERE SATIR DEĞİL TARİH TABANLI, VE HÜKÜM VERİLEN PLANLARDAN TÜRETİLİR (C6, 2026-08-02).
+    # Eski hâli `limit=8000` / `limit=20000` idi. Ölçüm (yerel defter, 27.403 satır): 8000 satır
+    # yalnız SON 3 günü kapsıyordu ve K1'in az aşağıda yazdığı BROKER_REJECT düzeltmesi bugünkü
+    # canlı defterde ÖLÜYDÜ — 4 reddin (UNP/NSC/TMO/RTX) satır indeksleri sondan 15-19 bin geride,
+    # hepsi pencerenin DIŞINDA; rapor onları hâlâ "kayıtsız kayboldu" diye sayıyordu. Aynı dosyada
+    # `events_since()` (bkz. aşağıda) tam bu ders için yazılmıştı ve parity_report ona geçirilmiş,
+    # korunum raporu geçirilmemişti.
+    #
+    # PENCEREYİ NEDEN PLAN DEFTERİ BELİRLİYOR: bu rapor plan defterinin TAMAMINA hüküm verir —
+    # sabit bir gün sayısı (7/30/90) seçmek aynı körlüğü daha yavaş biçimde geri getirirdi. En eski
+    # plan hangi güne aitse pencere oraya kadar açılır; replay tohumu planları için bu "tüm defter"
+    # demektir ve maliyeti sıfırdır (`store.read_jsonl` dosyayı zaten tam okuyup sonra dilimler).
+    _tarihler = [str(p.get("date")) for p in plans if p.get("date")]
+    try:
+        _en_eski = dt.date.fromisoformat(min(_tarihler)) if _tarihler else None
+        _gun = max(30, (dt.date.today() - _en_eski).days + 2) if _en_eski else 3650
+    except Exception as e:
+        # SESSİZ DEĞİL: plan tarihi ISO değilse pencere DARALTILMAZ, tam defter okunur — ölçüm
+        # aracının biçim hatası yüzünden dedektörün görüş alanını kısmak, C6'nın ta kendisidir.
+        _gun = 3650
+        from . import obs
+        obs.warn("conservation_plan_date_unparsable", error=f"{type(e).__name__}: {e}",
+                 detail="pencere tam deftere açıldı (daraltma YOK)")
+    olaylar = events_since(_gun)     # TEK okuma: hem `dropped` hem `live_start` bundan türer
     dropped = set()
-    for e in store.read_jsonl("events.jsonl", limit=8000):
+    for e in olaylar:
         ev = e.get("event") or ""
         if ev in ("armed_expired_no_bar", "armed_no_bar_carried", "llm_veto_strip",
                   "regressive_session_refused"):
@@ -294,8 +317,13 @@ def conservation_report() -> dict:
     # dolayısıyla "neden silahlanmadı" (seans-içi arming rekabeti) orada yapısal olarak görünmez.
     # Ölçüldü (2026-07-21): 31 bayrağın 30'u replay dönemiydi, 1'i GERÇEK canlı sızıntıydı (GS 07-14).
     # Bu yüzden sayı DÖNEME göre ayrılır: canlı = eyleme dönüşür sinyal, replay = kayıt körlüğü.
+    # SINIR DEFTERİN TAMAMINDAN OKUNUR, PENCEREDEN DEĞİL (C6): `limit=20000` ile ilk daily_cycle
+    # 2026-07-22 görünüyordu, defterdeki GERÇEK ilk daily_cycle ise 2026-07-10 — aradaki 12 günde
+    # açıklanamayan her plan `replay_era` ("körlük, sızıntı değil") sayılıp sessizce düşerdi.
+    # Yukarıdaki pencere en eski PLANA kadar açık olduğu için ilk daily_cycle'ı yapısal olarak
+    # kapsar (planlar daima olay defterinden eskidir ya da onunla yaşıttır).
     live_start = ""
-    for e in store.read_jsonl("events.jsonl", limit=20000):
+    for e in olaylar:
         if e.get("event") == "daily_cycle" and e.get("date"):
             live_start = str(e["date"])
             break
@@ -346,8 +374,21 @@ def determinism_report(persist: bool = False) -> dict:
     from . import config
     try:
         sizes = {p.name: p.stat().st_size for p in config.BARS.glob("*.csv")}
-    except Exception:  # sessiz-yutma: sonuç KAYDA GEÇİYOR — dönen detay "kontrol atlandı" der, "temiz" demez
-        return {"ok": True, "detail": "bar dizini okunamadı — kontrol atlandı"}
+    except Exception as e:
+        # FAIL-CLOSED (C22, 2026-08-02). Eski hâli `{"ok": True, "detail": "kontrol atlandı"}` idi ve
+        # işaretinin gerekçesi ("sonuç KAYDA GEÇİYOR") FİİLEN YANLIŞTI: hiçbir obs.warn basılmıyordu
+        # ve `detail` metnini okuyan TEK bir tüketici yoktu — üç tüketicinin (bu dosya :1086,
+        # mutation.py:315, pano `_patOK`) üçü de yalnız `ok`a bakar. Yani ÖLÇÜLEMEYEN bir hüküm
+        # "temiz" kılığında yeşile boyanıyordu; UYDURMA YASAĞI'nın tam karşılığı.
+        # `olculemedi` MAKİNE-OKUNUR: alarm katmanı bunu "SESSİZ BAR MUTASYONU" diye değil
+        # "ÖLÇÜLEMEDİ" diye adlandırır (bkz. check_integrity_and_alarm) — ölçülemeyen bir hükmü
+        # ihlal diye anlatmak da bir uydurmadır.
+        from . import obs
+        obs.warn("determinism_bars_unreadable", error=f"{type(e).__name__}: {e}",
+                 detail="bar dizini okunamadı — sessiz bar mutasyonu bu turda ÖLÇÜLEMEDİ "
+                        "(taban ilerletilmedi; kanıt duruyor, tespit bir tur ertelendi)")
+        return {"ok": False, "olculemedi": True, "error": f"{type(e).__name__}: {e}",
+                "detail": "bar dizini okunamadı — ÖLÇÜLEMEDİ ('temiz' DEĞİL)"}
     rev = int(store.read_json("wf_cache_rev.json", {}).get("rev", 0))
     prev = store.read_json(FINGERPRINT_FILE, None)
     if persist:
@@ -696,6 +737,10 @@ def parity_report() -> dict:
     # (yapısal boşluğun tarihi kaybolmaz); yalnız GÖRÜLMÜŞ kısmı düşülür.
     _kalan = max(0, _tot - _absorbed)
     _cfg = bool(_nt.configured())
+    # KANAL BAĞLIYKEN DÜŞEN TESLİMAT (C7, 2026-08-02): `obs._maybe_notify` artık `notify.send`
+    # False dönerse de sayar. Bu satırın metni bu ayrımı YAPMAK ZORUNDA — yığının "kanal YOKKEN
+    # toplandığını" söylemek, yığın kanal BAĞLIYKEN düşen teslimatlardan oluşuyorsa uydurmadır.
+    _fail = int(_und.get("_teslim_hatasi") or 0)
     if _tot:
         _tokens = ", ".join(f"{k}×{v}" for k, v in sorted(_und.items()) if not k.startswith("_"))
         # Metin, `notify.configured()` GERÇEĞİNDEN üretilir. Eski hâli kanal bağlıyken bile
@@ -705,13 +750,17 @@ def parity_report() -> dict:
             _detail = (f"birikmiş {_tot} alarmın tamamı okundu (ACK ile soğuruldu) — "
                        f"kalıntı yok ({_tokens})")
         elif _cfg:
-            _detail = (f"kanal bağlı, {_kalan} birikmiş (ACK ile soğurulur) — bu yığın kanal "
-                       f"YOKKEN toplandı ({_tokens}); teslim edilmiş değil, yalnız yerel gelen "
-                       f"kutusunda duruyor")
+            _detail = (f"kanal bağlı, {_kalan} birikmiş (ACK ile soğurulur) — "
+                       + (f"bunun {_fail} tanesi kanal BAĞLIYKEN teslim EDİLEMEDİ "
+                          f"(notify.send False döndü — uzak uç cevap vermiyor)"
+                          if _fail else "bu yığın kanal YOKKEN toplandı")
+                       + f" ({_tokens}); teslim edilmiş değil, yalnız yerel gelen "
+                         f"kutusunda duruyor")
         else:
             _detail = (f"{_kalan} alarm TESLİM EDİLEMEDİ ({_tokens}) — bildirim kanalı "
                        f"yapılandırılmamış (Telegram/webhook). Dedektörler çalışıyor ama "
-                       f"kimse duymuyor.")
+                       f"kimse duymuyor."
+                       + (f" Ayrıca {_fail} teslimat kanal BAĞLIYKEN düşmüştü." if _fail else ""))
         # ACK'İN SAHİBİ (2026-07-26): `ack_by` yazılıyordu ve hiçbir yerde OKUNMUYORDU (alan
         # düzeyinde yasa 6). Kalıntının DÜŞÜLMÜŞ olması bir eylemdir ve her eylemin bir faili
         # vardır: satır "bu yığını kim, ne zaman kapattı"yı da taşımalı. Alan YOKSA eklenmez —
@@ -768,15 +817,62 @@ def parity_report() -> dict:
     return {"rows": rows, "ok": all(r["ok"] for r in rows), "n_cycles": len(recent)}
 
 
+# DÜŞEN DEDEKTÖRÜN İSKELETİ (C21): yalnız tüketicilerin KÖŞELİ PARANTEZLE indekslediği alanlar.
+# Boş liste "bulgu yok" demez, "bu turda ölçülmedi" der — hükmü `dedektor_dustu`/`olculemedi`
+# taşır ve alarm katmanı onu adıyla duyurur (check_integrity_and_alarm).
+_DEDEKTOR_BOS: dict[str, dict] = {
+    "production":   {"starved": [], "waiting": [], "total": 0},
+    "conservation": {"plans": 0, "unexplained": 0, "rows": []},
+    "determinism":  {},
+    "coherence":    {"stale": [], "total": 0},
+    "monotonicity": {"regressions": [], "amnestied": [], "tracked": 0},
+    "ownership":    {"lost": []},
+    "parity":       {"rows": [], "n_cycles": 0},
+}
+
+
 def integrity_report(persist: bool = False) -> dict:
     """YEDİ dedektörü tek çağrıda topla (teşhis paneli + öz-değerlendirme buradan okur).
     7. desen (parity/makullük) 2026-07-21'de eklendi: ilk altısı bileşen bazlıdır ve 'doğru
     parçalar, yanlış sistem sonucu' sınıfını göremez — motorun evrenin %18'inde karar verdiği
-    hata tam olarak o sınıftandı."""
-    return {"production": production_report(), "conservation": conservation_report(),
-            "determinism": determinism_report(persist=persist), "coherence": coherence_report(),
-            "monotonicity": monotonicity_report(persist=persist),
-            "ownership": ownership_report(persist=persist), "parity": parity_report()}
+    hata tam olarak o sınıftandı.
+
+    DEĞERLEME SIRASI SÖZLEŞMESİ (C21, 2026-08-02): `parity_report()` persist'li ÜÇLÜDEN
+    (determinism/monotonicity/ownership) ÖNCE değerlenir. Eski hâlde parity sözlük literalinde EN
+    SON duruyordu; Python sözlük değerlerini soldan sağa değerlediği için üçlü TABANINI DİSKE
+    YAZDIKTAN sonra parity çağrılıyordu. parity_report korumasız fırlatma yüzeyleri taşır
+    (store okumaları, `_lg.validate_live`, `_rc.report()`, `_sv.report()`); biri fırlarsa
+    `check_integrity_and_alarm` hiçbir alarm üretmeden düşer, `integrity_alarmed.json` yazılmaz,
+    ama YENİ TABAN çoktan yazılmıştır — o turun gerilemesi bir sonraki turda prev==cur olduğu için
+    KALICI olarak kaybolur. Bu, persist kapısının kendi gerekçesinin (bkz. determinism_report
+    docstring'i) istisna yolunda birebir tekrarıydı.
+
+    DEDEKTÖR-BAŞINA YALITIM: düşen bir dedektör diğerlerini GÖTÜRMEZ; `{"ok": False,
+    "dedektor_dustu": True, "error": ...}` döner ve alarm katmanı bunu adıyla duyurur. Yalıtımın
+    iskeleti (`_DEDEKTOR_BOS`) şart: tüketiciler alt alanları köşeli parantezle indeksliyor
+    (bu dosyada :1086+, mutation.py:311-313, pano app.js:3677-3690) — iskeletsiz bir hata sözlüğü
+    yalıtımı çağıranda KeyError'a çevirirdi, yani hiç yalıtmamış olurdu."""
+    def _tut(ad: str, fn) -> dict:
+        try:
+            return fn()
+        except Exception as e:
+            from . import obs
+            obs.warn("integrity_detector_failed", detector=ad, error=f"{type(e).__name__}: {e}",
+                     detail="bu dedektör BU TURDA hüküm veremedi — diğerleri koştu; "
+                            "ölçülemeyen hüküm 'temiz' sayılmaz")
+            return {**_DEDEKTOR_BOS.get(ad, {}), "ok": False, "dedektor_dustu": True,
+                    "olculemedi": True, "error": f"{type(e).__name__}: {e}"}
+
+    _par = _tut("parity", parity_report)      # ÖNCE — persist'li üçlü tabanı yazmadan ÖNCE düşsün
+    # Anahtar SIRASI korunur (pano ve öz-değerlendirme bu sırayla basar); değişen yalnız DEĞERLEME
+    # sırasıdır — `_par` yukarıda hesaplandı.
+    return {"production": _tut("production", production_report),
+            "conservation": _tut("conservation", conservation_report),
+            "determinism": _tut("determinism", lambda: determinism_report(persist=persist)),
+            "coherence": _tut("coherence", coherence_report),
+            "monotonicity": _tut("monotonicity", lambda: monotonicity_report(persist=persist)),
+            "ownership": _tut("ownership", lambda: ownership_report(persist=persist)),
+            "parity": _par}
 
 
 # ---- PANO İÇİN KISA ÖMÜRLÜ ÖNBELLEK (2026-07-28) -------------------------------------------
@@ -1050,7 +1146,13 @@ def goal_failure_report() -> dict:
 def check_integrity_and_alarm() -> None:
     """Bütünlük ihlallerini bir kez alarmlar (bekçi felsefesi: yalnız haber verir, düzeltmez)."""
     from . import obs
-    rep = integrity_report(persist=True)   # taban YALNIZ burada ilerler (tek sahip)
+    # TABAN SAHİPLİĞİ (C21 düzeltmesi, 2026-08-02): burası CANLI state'te tabanı ilerleten TEK
+    # yoldur, ama "tek sahip" cümlesi mutlak biçimde YANLIŞTI — `mutation.py:310` da
+    # `integrity_report(persist=True)` çağırır. Aradaki fark yönlendirmedir, çağrı değil:
+    # mutation.py `_LIVE_STATE` koruması ve `_state_dir` ile GEÇİCİ bir kopyaya yazar
+    # (mutation.py:54-80, :609-635), yani canlı tabana dokunmaz.
+    # DOĞRU CÜMLE: canlı tabanın tek yazarı burasıdır — `persist=True` çağrısının tek sahibi DEĞİL.
+    rep = integrity_report(persist=True)
     prev = set(store.read_json("integrity_alarmed.json", []))
     now = set()
     # SÖZLEŞME HÜKMÜ (K1): mandal deseni akranlarıyla aynı — eşik altına düşüş bir kez alarmlanır,
@@ -1070,13 +1172,27 @@ def check_integrity_and_alarm() -> None:
         # YASA 4: hüküm ölçülemezse SESSİZ kalmaz. Buradaki istisna "deney başarısız değil" demek
         # değil, "başarısızlık kriterini ölçemedim" demektir; ikisi karıştırılamaz.
         obs.warn("goal_failure_check_failed", error=f"{type(e).__name__}: {e}")
-    for s in rep["production"]["starved"]:
+    # DÜŞEN DEDEKTÖR ADIYLA DUYURULUR (C21): yalıtım tek başına sessizlik üretmemeli — "ölçemedim"
+    # de bir hükümdür ve operatöre gitmelidir. `determinism` DIŞARIDA: onun kendi dalı (aşağıda)
+    # `olculemedi`yi zaten alarmlar; buradan ikinci kez duyurmak aynı olguyu iki kanaldan anlatırdı.
+    for _ad, _dr in rep.items():
+        if _ad == "determinism" or not isinstance(_dr, dict) or not _dr.get("dedektor_dustu"):
+            continue
+        tok = f"detector_failed:{_ad}"
+        now.add(tok)
+        if tok not in prev:
+            obs.alarm("MECHANISM_STALE",
+                      f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}",
+                      kind="detector_failed", detector=_ad)
+    # `.get(...)` KÖŞELİ PARANTEZ YERİNE (C21): düşen bir dedektörün iskeleti alanı taşısa bile
+    # tüketici tarafını indeksleme kazasına açık bırakmak, yalıtımı burada geri kırardı.
+    for s in rep["production"].get("starved") or []:
         tok = f"starved:{s['name']}"
         now.add(tok)
         if tok not in prev:
             obs.alarm("MECHANISM_STALE", f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)",
                       mechanism=s["name"], kind="starved")
-    if rep["conservation"]["unexplained"]:
+    if rep["conservation"].get("unexplained"):
         tok = "conservation"
         now.add(tok)
         if tok not in prev:
@@ -1084,11 +1200,18 @@ def check_integrity_and_alarm() -> None:
                       f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu",
                       kind="conservation")
     if not rep["determinism"].get("ok"):
-        tok = "determinism"
+        # ÖLÇÜLEMEDİ ≠ İHLAL (C22): bar dizini okunamadığında (ya da dedektör düştüğünde) hüküm
+        # YOKTUR. Onu "SESSİZ BAR MUTASYONU" diye adlandırmak uydurma olurdu; jeton da AYRIDIR,
+        # böylece ölçüm geri geldiğinde GERÇEK bir mutasyon kendi jetonuyla yeniden alarmlanır.
+        _olcum_yok = bool(rep["determinism"].get("olculemedi"))
+        tok = "determinism_unmeasured" if _olcum_yok else "determinism"
         now.add(tok)
         if tok not in prev:
-            obs.alarm("DATA_QUALITY", f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}",
-                      kind="determinism")
+            obs.alarm("DATA_QUALITY",
+                      (f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}"
+                       if _olcum_yok else
+                       f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"),
+                      kind="determinism", olculemedi=_olcum_yok)
     for pr in rep.get("parity", {}).get("rows", []):
         if pr.get("ok"):
             continue
@@ -1133,7 +1256,7 @@ def check_integrity_and_alarm() -> None:
         if tok not in prev:
             obs.alarm("MECHANISM_STALE",
                       f"MAKULLÜK: {pr['check']} — {pr['detail']}", kind="parity", check=pr["check"])
-    for st in rep["coherence"]["stale"]:                       # #4 bayat türev (eski veriyle konuşan kalibrasyon)
+    for st in rep["coherence"].get("stale") or []:             # #4 bayat türev (eski veriyle konuşan kalibrasyon)
         tok = f"stale:{st['artifact']}"
         now.add(tok)
         if tok not in prev:

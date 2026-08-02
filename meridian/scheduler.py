@@ -99,11 +99,15 @@ def _rehydrate() -> dict:
     return got
 
 
+_CALENDAR_WARNED = False
+
+
 def _last_closed_session() -> str | None:
     """Most recent GENUINELY CLOSED XNYS session (market_close <= now, UTC). The old version included
     today's session from midnight, so the once-per-session refetch fired PRE-OPEN (when the feed can't
     have today's bar yet), consumed the dedup flag, and every post-close poll that evening ran
     cache-only — new bars arrived a full session late (audit #12)."""
+    global _CALENDAR_WARNED
     try:
         import pandas_market_calendars as mcal
         today = dt.date.today()
@@ -111,7 +115,27 @@ def _last_closed_session() -> str | None:
         now = dt.datetime.now(dt.timezone.utc)
         closed = [str(d.date()) for d, row in sched.iterrows() if row["market_close"] <= now]
         return closed[-1] if closed else None
-    except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
+    except Exception as e:
+        # SESSİZ DEĞİL ama SÜREÇ BAŞINA BİR KEZ (C2, 2026-08-02). Eski işaretin gerekçesi
+        # ("asıl karar bu değere bağlı DEĞİL ve çağıran yokluğu yedek değerle karşılıyor")
+        # GERÇEĞE AYKIRIYDI — repoda 13 yerde harfi harfine tekrarlanan bir şablon damgaydı ve
+        # burada tutmuyordu: `last_closed` None dönerse `advance_once` içinde `_dense` ve
+        # `_chasing` False kalır, `fresh` KALICI False olur ve terminal atlama, merdiven adım-1,
+        # onarım/sip düzeltici, aynı-akşam bacağı, earnings, arming, selfreview, yetim süpürme,
+        # nous_eval, öğrenme kadansı, Y4, haftalık üçlü, skill revizyonu ve crosscheck — yani TÜM
+        # seans-sonrası kadans — tek bir uyarı bile düşmeden durur. Yedek değer YOKTUR.
+        # Kardeş `_leg_ready` bu boşluğu kapatmaz: `if not session: return None` ile try'a hiç
+        # girmez, dolayısıyla onun tek-seferlik uyarısı da ATEŞLENMEZ.
+        #
+        # TEKRAR-UYARI YOK: bu yol her poll'de (300 sn) çalışır; koşulsuz uyarı 288 satır/gün
+        # üretir ve olay defterini — gelen kutusunun ve tüm makullük dedektörlerinin okuduğu
+        # kaynağı — boğardı (K1 seli dersi). Anlatılacak olgu "takvim YOK", "her poll" değil.
+        if not _CALENDAR_WARNED:
+            _CALENDAR_WARNED = True
+            from . import obs
+            obs.warn("session_calendar_unavailable", error=f"{type(e).__name__}: {e}",
+                     detail="seans takvimi okunamadı — son KAPANMIŞ seans bilinmiyor, seans-sonrası "
+                            "kadansın TAMAMI duruyor (süreç başına bir kez kaydedilir)")
         return None
 
 
