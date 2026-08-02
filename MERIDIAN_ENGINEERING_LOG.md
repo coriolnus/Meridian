@@ -243,6 +243,14 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
+- **BEKLEYEN DAĞITIM KUYRUĞU (2026-08-02 akşam; toplu pencere 16:55 UTC SONRASI birikim — sahibi
+  Rol-1; kuyruk boşalınca bu satır silinir):** tek kalem: `8dc7c8b` — takvim_yok zinciri
+  (scheduler kancası erken-dönüşü + süreç başına bir `gap_scan_calendar_unavailable` + v175
+  çivisi). Worktree dalında (`claude/beautiful-hypatia-136378`), main'e HENÜZ inmedi. Yol:
+  dal main'e merge → otoriter suite DONMUŞ tepede → sıradaki bakım penceresiyle `./dagit.sh`.
+  Dikkat: rsync kodu diske indirir ama KOŞAN worker eski kalır — scheduler.py değişikliği ancak
+  restart'la etkinleşir (2026-08-02 adım 3-4 dersi); o güne dek canlıda `takvim_yok` hâli olay
+  defterinde sessiz kalmaya devam eder (pano tarafı zaten canlıda, e3edaf0 penceresiyle indi).
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
   operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
