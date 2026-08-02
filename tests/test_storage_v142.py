@@ -19,7 +19,7 @@ def db_sandbox(sandbox_state):
     """Sandbox + bağlantı temizliği. Bağlantılar süreç ömrü boyunca havuzda kalır; her test kendi
     tmp yoluna açar, ama tanıtıcıları bırakmak uzun suite'te fd sızdırır."""
     yield sandbox_state
-    storage.close_all()
+    storage.close_connections()
 
 
 TRADE = {"id": "T00001", "ts_open": "2026-01-02", "ts_close": "2026-01-09", "ticker": "AAPL",

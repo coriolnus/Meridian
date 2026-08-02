@@ -137,7 +137,7 @@ SB = {"current_version": 3, "versions": {"3": {"live_score": -0.0089, "n_trades"
 @pytest.fixture
 def db_sandbox(sandbox_state):
     yield sandbox_state
-    storage.close_all()
+    storage.close_connections()
 
 
 def _seed(state) -> None:

@@ -173,14 +173,14 @@ def _karantina(rapor: dict, db_yeni: bool, sebep: str) -> None:
     çevirirdi — yani düzeltmenin kapatmaya çalıştığı sınıfın daha kötüsünü üretirdi. O hâlde
     hüküm rapora yazılır, dosyaya dokunulmaz.
 
-    `close_all()` HER İKİ DALDA. Açık bir bağlantı (a) yeniden adlandırılmış dosyaya WAL geri
-    yazabilir, (b) `_SCHEMA_OK` önbelleğini diskteki gerçeğin ötesinde tutar — önbellek "şema
-    tamam" derken şema geri alınmış olabilir. `close_all` ikisini birden temizler."""
+    `close_connections()` HER İKİ DALDA. Açık bir bağlantı (a) yeniden adlandırılmış dosyaya WAL
+    geri yazabilir, (b) `_SCHEMA_OK` önbelleğini diskteki gerçeğin ötesinde tutar — önbellek "şema
+    tamam" derken şema geri alınmış olabilir. `close_connections` ikisini birden temizler."""
     db = storage.db_path()
     kayit: dict = {"yapildi": False, "db_yeni": db_yeni, "sebep": sebep,
                    "hedef": None, "tasinan": []}
     try:
-        storage.close_all()
+        storage.close_connections()
     except Exception as e:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (kapatma_hatasi raporda) — kapatılamayan bir tanıtıcı, dosyayı kenara alma kararını geri aldıramaz ve süreç sonu onu toplar
         kayit["kapatma_hatasi"] = f"{type(e).__name__}: {e}"
     if not db_yeni:

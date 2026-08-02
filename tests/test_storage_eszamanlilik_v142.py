@@ -99,7 +99,7 @@ def kok(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "STATE", state)
     monkeypatch.setattr(config, "HISTORY", state / "history")
     yield tmp_path
-    storage.close_all()
+    storage.close_connections()
 
 
 def test_iki_surec_dosya_arka_ucunda_yazim_kaybetmez(kok):

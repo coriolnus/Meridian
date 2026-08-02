@@ -72,7 +72,7 @@ def kum_havuzu(db: bool = False):
     """Örnek BAŞINA taze `state/` dizini. `db=True` ise SQLite şeması kurulur (defterler DB'ye gider).
 
     SÖKÜMDE ÜÇ ŞEY GERİ ALINIR ve üçü de bu depoda belgeli bir sızıntı sınıfına karşılık gelir:
-      1. `storage.close_all()` — bağlantı havuzu YOLA göre anahtarlıdır; kapatılmayan bağlantı
+      1. `storage.close_connections()` — bağlantı havuzu YOLA göre anahtarlıdır; kapatılmayan bağlantı
          silinmiş bir tmp dizinine tutunur ve sonraki örnek onu yeniden kullanmaya çalışırdı.
       2. `store._FILE_LOCKS` — kilit nesneleri (state_dizini, ad) ile anahtarlıdır; temizlenmezse
          süreç ömrü boyunca örnek başına bir kilit birikir (yavaş sızıntı, açık dosya tanıtıcısı).
@@ -84,13 +84,13 @@ def kum_havuzu(db: bool = False):
     st_dir.mkdir(parents=True)
     eski = (config.STATE, config.HISTORY, config.BARS)
     config.STATE, config.HISTORY, config.BARS = st_dir, st_dir / "history", st_dir / "bars"
-    storage.close_all()
+    storage.close_connections()
     try:
         if db:
             storage.ensure_schema()
         yield st_dir
     finally:
-        storage.close_all()
+        storage.close_connections()
         anahtar = str(st_dir)
         with store._LOCKS_GUARD:
             for k in [k for k in store._FILE_LOCKS if k[0] == anahtar]:
