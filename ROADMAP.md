@@ -226,8 +226,13 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   replay koştuğu için IS'e dokunan HER overlay/knob OOS skorunu portföy-durumu kanalıyla
   (peak_equity/derisk/açık pozisyonlar) kirletir; bundan böyle knob ölçümlerinde knob'u
   oos_start'ta devreye alan kol zorunlu (kanıt: EDG-005 tanısı — oosonly≡kapali bit-bit).
-- PARA-v3 ① realized_delta para-ölçeği (rollback meta-kalibrasyonu) · ② açık-pozisyon DD vetosu
-  (walk_forward günlük M2M eğrisi) · 2B blok-bootstrap CI standardı · 2C empirical-Bayes küçültme ·
+- ~~PARA-v3 ①②~~ ✅ (①: 2026-08-01 + zincir-çivisi v178; ②: 2026-08-02 kapı-bacağı — ölçülür,
+  veto-bağlamaz [MERIDIAN_DD_MTM_VETO kapalı; bağlama = M2M-σ ölçüm kartı]). KALAN üç kayıt:
+  (i) probgate.refresh_meta_calibration birim-karışımı (PARA-öngörü÷BİLEŞİK-gerçekleşme → her
+  çift atlanan; rollback/memory dokunuşu + extra_p kararı — KARAR TURU); (ii) İZLEME: canlı
+  gate_calibration.json bayat (olcek_borcu anahtarları yok — 07-30'dan beri koşmamış olabilir);
+  (iii) DD_VETO_MARGIN'in raporda mutlak-eşik gibi okunması (goal.max_drawdown=0.08 ile ilişkisi
+  bir cümleyle netleşmeli) + ledgers.py:226 sözleşme cümlesine dd_mtm_* notu. · 2B blok-bootstrap CI standardı · 2C empirical-Bayes küçültme ·
   2D R2 holdout rotasyonu (zamanı gelince) · A4 tahmin-isabeti bandı · KIYAS-KİRLENMESİ düzeltmesi
   (olay-penceresi-dışı kıyas — EAP yan bulgusu; tüm evren-medyanı ölçümleri etkileniyor) ·
   prescreen raporlarına kod-sürümü damgası · PK4/PK5 yol-tutarlılık kontrolleri ölçüm-şablonu
