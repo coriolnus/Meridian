@@ -1046,9 +1046,13 @@ async def api_skill_revision(request: Request):
     skill, action = str(body.get("skill") or ""), str(body.get("action") or "")
     from . import skill_evolve
     if action == "apply":
-        return skill_evolve.apply_revision(skill)
+        out = skill_evolve.apply_revision(skill)
+        _diag_onbellek_bosalt("skill_revision_apply")
+        return out
     if action == "reject":
-        return skill_evolve.reject_revision(skill)
+        out = skill_evolve.reject_revision(skill)
+        _diag_onbellek_bosalt("skill_revision_reject")   # taslak kuyruğu kısaldı: eksen-2 sayacı değişti
+        return out
     raise HTTPException(status_code=400, detail="action: apply|reject")
 
 
@@ -1066,6 +1070,7 @@ async def api_skills_apply(request: Request):
     res = skills.apply_skill_action(skill or "", action or "")
     if res.get("ok"):
         obs.log("skill_action_applied", skill=skill, action=action)
+        _diag_onbellek_bosalt("skill_action")     # YALNIZ ok: reddedilen eylem hiçbir şeyi değiştirmedi
     return res
 
 
@@ -1352,6 +1357,7 @@ async def api_set_secret(name: str, request: Request):
             # burada BİLİNİYOR. Damgayı atlamak, bilinen bir zamanı bilinmiyor göstermekti.
             local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
                            "senkron_ts": memory.now_iso()}
+    _diag_onbellek_bosalt("secret_set")           # sağlayıcı/beceri durumu değişti (maskeli alanlar)
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
             "skills_enabled": rec["changed"], "local_agent": local_agent}
 
@@ -1373,6 +1379,7 @@ def api_delete_secret(name: str, request: Request):
         except Exception as e:
             local_agent = {"ok": False, "detail": f"senkron hatası ({type(e).__name__})",
                            "senkron_ts": memory.now_iso()}          # bkz. POST dalındaki gerekçe
+    _diag_onbellek_bosalt("secret_cleared")       # POST dalıyla aynı gerekçe, ters yön
     return {"ok": True, "name": name, "status": secrets_mod.status().get(name),
             "skills_disabled": rec["changed"], "local_agent": local_agent}
 
@@ -1438,6 +1445,7 @@ async def api_intraday_arm(request: Request):
     on = bool(body.get("on"))
     now = health.set_intraday_arm(on)
     obs.log("intraday_arm", on=now, source="dashboard")
+    _diag_onbellek_bosalt("intraday_arm")
     return {"intraday_armed": now}
 
 
@@ -1450,6 +1458,7 @@ async def api_control_learn_halt(request: Request):
     on = bool(body.get("on"))
     now = health.set_learn_halt(on)
     obs.log("control_learn_halt", on=now, source="dashboard")
+    _diag_onbellek_bosalt("learn_halt")
     return {"learn_halted": now}
 
 
@@ -1462,6 +1471,9 @@ def api_control_cancel_open(request: Request):
     res = alpaca.cancel_open_entries()
     obs.log("control_cancel_open", cancelled=len(res.get("cancelled", [])),
             kept=len(res.get("kept", [])), ok=res.get("ok"))
+    # YALNIZ GERÇEKTEN İPTAL VARSA: `ok` ama sıfır iptal, hiçbir teşhis alanını kıpırdatmaz.
+    if res.get("ok") and res.get("cancelled"):
+        _diag_onbellek_bosalt("cancel_open")
     return res
 
 
@@ -1543,6 +1555,7 @@ def api_alerts_ack(request: Request):
     obs.log("alerts_acked", pending_before=_before.get("pending"),
             groups=len(_before.get("groups") or []), channel_configured=_before.get("channel_configured"),
             ack_ts=doc["ack_ts"], absorbed=doc["absorbed"], ack_by=doc["ack_by"])
+    _diag_onbellek_bosalt("alerts_ack")
     return {"acked": True, **doc, "inbox": notify.inbox()}
 
 
@@ -1586,6 +1599,9 @@ async def api_broker_reject_ack(request: Request):
     # İZ: operatörün yaptığı her değişiklik kayıtlı olmalı — "bu retleri kim, ne zaman kapattı".
     obs.log("broker_rejects_acked", acked_n=len(bilinen), unknown_n=len(unknown), ack_ts=ts,
             open_after=len(bolunmus["open"]), ack_by="operator")
+    # YALNIZ TANINAN ANAHTAR KAPANDIYSA: tamamı `unknown` olan bir istek defteri değiştirmez.
+    if bilinen:
+        _diag_onbellek_bosalt("broker_reject_ack")
     return {"acked_n": len(bilinen), "unknown": unknown, "ack_ts": ts,
             "open": len(bolunmus["open"]), "acked": len(bolunmus["acked"])}
 
@@ -1828,12 +1844,131 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
     }
 
 
+# ---- /api/diagnostics KISA ÖMÜRLÜ YANIT ÖNBELLEĞİ (v181, 2026-08-03) -------------------------
+# CANLI ŞİKÂYET: "pano çok yavaşlamış" — ölçüm: bu uç 8,8-10,4 sn. Kökün ikinci yarısı: uç,
+# panonun HER anketinde ~60 üreticiyi (yedi bütünlük dedektörü, blok-bootstrap CI'lar, 61 JSONL +
+# 97 CSV okuması) baştan koşturuyordu. İçeride iki parçanın kendi TTL'i vardı
+# (`integrity_report_cached` 20 sn, `alarm_budget_cached` 30 sn) ama YÜKÜN GERİ KALANI korumasızdı.
+#
+# TTL NEDEN 45 SANİYE (ölçülmüş kadanslara göre, keyfi değil):
+#   * ALT SINIR — pano `refreshStatus`u 15 sn'de bir bu ucu çağırıyor (app.js: sessiz hat şeridi,
+#     her sayfada) ve `pollHUD` 20 sn'de bir; istemci `JCACHE`i 15 sn dedupe ediyor. Yani uca
+#     ~15 sn'de bir gerçek istek düşüyor. 30 sn'lik bir TTL yalnız her ikinci isteği kurtarırdı ve
+#     içerideki 20 sn'lik bütünlük TTL'ine sıkışırdı; 45 sn ÜÇ ankete karşılık bir hesap demektir.
+#   * ÜST SINIR — bu uçtan okunan en dar tespit penceresi `watchdog.EXPECTED`in en küçüğüdür
+#     (30 dk: scheduler_poll/hermes_poll). 45 sn onun %2,5'i; yani önbellek hiçbir mekanizma
+#     durmasını operatörün fark edebileceği ölçüde gizleyemez. 60 sn'ye çıkarmadım: şerit 15 sn'de
+#     bir tazeleniyor ve 60 sn ART ARDA DÖRT güncellemenin aynı sayıları göstermesi demek olurdu —
+#     "pano donmuş" hissi, düzeltmeye çalıştığımız şikâyetin ta kendisi.
+#
+# BAYATLIK DÜRÜST TAŞINIR: yanıt `hesaplama_ts` (hesabın ANI) + `onbellekten` (bu istek hesapladı
+# mı, yoksa kutudan mı geldi) alanlarını taşır. Ve İÇERİDEKİ YAŞ ALANLARI ZARFLA BİRLİKTE YAŞLANIR:
+# `integrity_age_s` ile `alarm_butcesi.yas_s` önbellekten servis edilirken zarfın yaşı KADAR
+# artırılır. Bu satır olmasaydı 40 saniyelik bir kopya `integrity_age_s: 0.0` diyerek "bu istekte
+# hesaplandı" iddia ederdi — panoya taze gibi görünen bayat sayı, tam da bu deponun kovaladığı
+# kusur. Hiçbir alan, içinde bulunduğu zarftan taze olduğunu iddia edemez.
+_DIAG_CACHE: dict = {}
+DIAG_TTL_S = 45.0
+
+
+def _diag_yaslandir(yuk: dict, yas: float) -> dict:
+    """Önbellekten servis edilen yükün yaş alanlarını zarfın yaşıyla toplar. Ölçülmemiş (None)
+    bir yaş YAŞLANDIRILMAZ — yoksa 'ölçülemedi' sessizce bir sayıya dönüşürdü."""
+    out = dict(yuk)
+    _ia = out.get("integrity_age_s")
+    if isinstance(_ia, (int, float)):
+        out["integrity_age_s"] = round(_ia + yas, 1)
+    _ab = out.get("alarm_butcesi")
+    if isinstance(_ab, dict) and isinstance(_ab.get("yas_s"), (int, float)):
+        out["alarm_butcesi"] = {**_ab, "yas_s": round(_ab["yas_s"] + yas, 1)}
+    return out
+
+
+def _diag_onbellek_oku(taze: bool) -> dict | None:
+    """Geçerli (TTL içinde) bir kopya varsa yaşlandırılmış hâlini döndürür, yoksa None.
+    `taze` zorla-tazeleme yoludur: operatör bir düzeltmenin canlıya değdiğini 45 sn beklemeden
+    görebilmeli — aksi hâlde önbellek, teşhis ucunu teşhis edilemez yapardı."""
+    if taze:
+        return None
+    hit = _DIAG_CACHE.get(str(getattr(config, "STATE", "")))
+    if not hit:
+        return None
+    yuk, at = hit
+    yas = _time.monotonic() - at
+    if yas >= DIAG_TTL_S:
+        return None
+    return {**_diag_yaslandir(yuk, yas), "onbellekten": True}
+
+
+def _diag_onbellege_yaz(yuk: dict) -> dict:
+    """Taze hesabı damgalar, kutuya koyar ve döndürür."""
+    import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
+    yuk = {**yuk, "onbellekten": False,
+           "hesaplama_ts": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")}
+    # ANAHTAR `config.STATE` İÇERİR (alarm_budget_cached emsali, aynı gerekçe): ölçüm/test yolları
+    # kum havuzuna yönlendiriyor ve anahtarsız bir süreç-içi kutu, kum havuzuna CANLI defterin
+    # sayılarını servis ederdi. Tek girdi yeter — havuz anahtarları birikip sızıntı yapmasın.
+    _DIAG_CACHE.clear()
+    _DIAG_CACHE[str(getattr(config, "STATE", ""))] = (yuk, _time.monotonic())
+    return yuk
+
+
+def _diag_onbellek_bosalt(neden: str) -> None:
+    """DURUM DEĞİŞTİ → teşhis zarfı geçersiz. Kontrol eylemleri BAŞARIYLA uygulandığında çağrılır.
+
+    NİYE ŞART: 45 saniyelik zarf, operatörün AZ ÖNCE yaptığı şeyi gizleyebilir. HALT'a basıp
+    Operasyon sayfasında `hud.halted: false` okumak önbelleğin en pahalı hatası olurdu — operatör
+    düğmenin çalışmadığını sanıp ikinci kez basar. Bayatlık PASİF veri için kabul edilebilir;
+    operatörün KENDİ eyleminin sonucu için asla.
+
+    YALNIZ BAŞARIDA: reddedilen/no-op istek zarfı düşürmez. Düşürseydi her başarısız tıklama bir
+    TAM teşhis hesabı tetiklerdi — panoyu yavaşlatan şey tam olarak o hesaptır, yani geçersizleştirme
+    kendi çözdüğü sorunu geri getirirdi.
+
+    NEDEN ROTA SINIFINDA (`_NativeRoute`) DEĞİL, ÇAĞRI YERİNDE: rota katmanından yalnız HTTP durumu
+    görünür, oysa bu depoda kontrol uçlarının çoğu başarısızlığı 200 + `{"ok": false}` ile bildirir
+    (submit_armed HALT'ta, notify_test kanalsızken, close_all onaysızken). Durum-kodu kancası o
+    üçünü "başarı" sayardı.
+
+    ENVANTER — ÇAĞRILDIĞI ROTALAR (hepsi POST/DELETE, hepsi teşhis yükünde bir alanı kıpırdatır):
+      * kill-switch: `/api/halt`, `/api/resume` → hud.halted, risk.halted. `/api/control/halt`
+        bu ikisine DELEGE eder, bu yüzden AYRICA çağırmaz (tek halt yolu sözleşmesi — o ucun notu).
+      * bayraklar: `/api/control/learn_halt` → hud.learn_halted · `/api/intraday-arm` → intraday.*
+      * icra: `/api/alpaca/submit_armed`, `/api/alpaca/close_all`, `/api/control/cancel_open`
+        → reconcile.*, ledgers, mirror akışı
+      * gelen kutusu/bildirim: `/api/alerts/ack`, `/api/broker_reject/ack` → sessiz_hat,
+        reconcile.failed_submissions · `/api/notify/test` → alarm_butcesi
+      * kadanslar: `/api/scheduler/advance`, `/api/hermes/reflect`,
+        `/api/hermes/{start,stop,backfill,sync_integrations}`, `/api/sprint/{start,stop}`
+        → scheduler.*, ogrenme.*, mlops.warmup
+      * yapılandırma: `/api/secrets/{name}` (POST+DELETE), `/api/skills/apply`,
+        `/api/skills/revision` → pipeline.finviz, saglayicilar, ogrenme.eksen2
+      * onay: `/api/approvals/{id}` → onay defteri + damıtılan dersler
+    ENVANTER DIŞI VE NEDENİ: `/api/login`, `/api/logout`, `/api/setup-password` (oturum kimliği
+    teşhis yükünde tek bir alanı bile değiştirmez) ve `/api/hermes/pool_key` (anahtar hermes CLI
+    havuzuna yazılır; teşhis yükünde karşılığı yok). İkisi de zarfı boşuna düşürmemeli.
+    """
+    if not _DIAG_CACHE:
+        return                      # zaten boş — düşürülecek bir iddia yok
+    _DIAG_CACHE.clear()
+    try:
+        obs.log("diag_cache_invalidated", neden=neden)
+    except Exception:  # sessiz-yutma: kutu YUKARIDA boşaltıldı, asıl iş bitti; kayıt kanalının düşmesi bir HALT/onay isteğini 500'e çeviremez
+        pass
+
+
 @app.get("/api/diagnostics")
-def api_diagnostics(request: Request):
+def api_diagnostics(request: Request, taze: int = 0):
     """Faz 1 — Teşhis API'si: diskte zaten duran tüm operasyon telemetrisini TEK uçta toplar.
     Mutabakat (hayaletler, HWM çiftleri, force-sync), risk/bütçe, MLOps (diff, deflasyon, ısınma,
-    UCB), veri hattı (sabır, karantina, IO gecikme, çapraz-doğrulama), defter sayaçları."""
+    UCB), veri hattı (sabır, karantina, IO gecikme, çapraz-doğrulama), defter sayaçları.
+
+    YANIT 45 SANİYE ÖNBELLEKLİDİR (`hesaplama_ts` + `onbellekten` ile beyanlı; `?taze=1` zorlar) —
+    gerekçe ve TTL'in nereden geldiği yukarıdaki blokta yazılı."""
     _auth(request)
+    _kopya = _diag_onbellek_oku(bool(taze))
+    if _kopya is not None:
+        return _kopya
     from . import analytics as an, earnings
     from .adapters.data import REPLAY_UNIVERSE
     rc = store.read_json("broker_reconcile.json", {})
@@ -1975,7 +2110,10 @@ def api_diagnostics(request: Request):
     # LİTERAL yazılır, `codelaw.artifact_graph` statik graf olduğu için sabitten türetilen adı
     # çözemez ve artefakt "okuyucusu yok" diye görünürdü.
     _vrep = store.read_json("validation_report.json", None)
-    return {
+    # `_diag_onbellege_yaz`: taze yükü damgalar (hesaplama_ts + onbellekten=False) ve kutuya koyar.
+    # SARMALAYICI RETURN'ÜN İÇİNDE: gövde fırlarsa hiçbir şey önbelleğe girmez — yarım/hatalı bir
+    # teşhis 45 saniye boyunca servis edilemez.
+    return _diag_onbellege_yaz({
         "selfreview_summary": ({"attention": (_sr.get("attention") or [])[:5],
                                 "contradictions": (_sr.get("contradictions") or [])[:4],
                                 "generated": _sr.get("generated")} if _sr else None),
@@ -2282,7 +2420,7 @@ def api_diagnostics(request: Request):
         "ledger_contract": __import__("meridian.ledgers", fromlist=["report"]).report(),
         # ELEME MUHASEBESİ: "veri yok" ile "veri elendi" ayrı şeylerdir. Hangi satırın NEDEN
         # düştüğü sayılmazsa, sessiz eleme ekranda "henüz kanıt birikmedi" gibi okunur.
-        "sieve": __import__("meridian.sieve", fromlist=["report"]).report()}
+        "sieve": __import__("meridian.sieve", fromlist=["report"]).report()})
 
 
 # ---------- Hermes (the reflection brain) ----------
@@ -2325,7 +2463,9 @@ def api_hermes_reflect(request: Request):
     """Operator-triggered single reflection cycle (a few seconds — runs the walk-forward gate)."""
     _auth(request)
     from . import hermes_runtime
-    return hermes_runtime.reflect_now()
+    out = hermes_runtime.reflect_now()
+    _diag_onbellek_bosalt("hermes_reflect")
+    return out
 
 
 @app.post("/api/hermes/pool_key")
@@ -2347,9 +2487,13 @@ def api_hermes_control(action: str, request: Request):
     _auth(request)
     from . import hermes_runtime, hermes
     if action == "start":
-        return hermes_runtime.start(poll_seconds=int(os.environ.get("HERMES_POLL_SECONDS", "300")))
+        out = hermes_runtime.start(poll_seconds=int(os.environ.get("HERMES_POLL_SECONDS", "300")))
+        _diag_onbellek_bosalt("hermes_start")
+        return out
     if action == "stop":
-        return hermes_runtime.stop()
+        out = hermes_runtime.stop()
+        _diag_onbellek_bosalt("hermes_stop")
+        return out
     if action == "backfill":                       # çevrimdışı görüş dolgusu (kalibrasyon hızlandırma)
         # DÜĞME KALIR ama artık ELLE HIZLANDIRMADIR, tek tetik DEĞİL: varsayılan akış zamanlayıcının
         # seans-sonrası öğrenme kadansıdır (scheduler._learning_cadence). Tavan da sabit 40 değil —
@@ -2357,12 +2501,16 @@ def api_hermes_control(action: str, request: Request):
         # Bu uçtan `max_days` VERİLMEZ: iki yerde iki tavan, formül değiştiği gün sessizce ayrışırdı.
         bt = hermes.backfill_budget()
         hermes.backfill_opinions_async()
+        if bt["tavan"] > 0:                        # bütçe kıstıysa dolgu KOŞMADI — zarf da düşmez
+            _diag_onbellek_bosalt("hermes_backfill")
         return {"started": bt["tavan"] > 0, "butce": bt,
                 "kuyruk": hermes.backfill_queue(),
                 "detail": ("görüş dolgusu arka planda başladı" if bt["tavan"] > 0
                            else f"bütçe kıstı — dolgu koşmadı ({bt['formul']})")}
     if action == "sync_integrations":              # MCP/hook/cache/pool config'i elle tazele
-        return hermes.config_ensure_integrations()
+        out = hermes.config_ensure_integrations()
+        _diag_onbellek_bosalt("hermes_sync_integrations")
+        return out
     raise HTTPException(status_code=400, detail="unknown action")
 
 
@@ -2384,6 +2532,7 @@ def api_scheduler_advance(request: Request):
     # İZ (2026-07-21 N/A sorgusu): operatörün elle ilerlettiği bir seans, defterde otomatik olandan
     # ayırt edilebilmeli — yoksa "bu gün neden iki kez işlendi" sorusu cevapsız kalır.
     obs.log("scheduler_advance_manual", result=str(out)[:200])
+    _diag_onbellek_bosalt("scheduler_advance")     # bir döngü koştu: teşhis yükünün NEREDEYSE HEPSİ değişti
     return out
 
 
@@ -2405,14 +2554,20 @@ async def api_sprint_start(request: Request):
         body = await request.json()
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         body = {}
-    return sprint.start(body if isinstance(body, dict) else {})
+    out = sprint.start(body if isinstance(body, dict) else {})
+    # `sprint.py`ye DOKUNULMADI (ayrık oturum): burada yalnız uç, kendi zarfını düşürür.
+    if isinstance(out, dict) and out.get("ok") is not False and not out.get("error"):
+        _diag_onbellek_bosalt("sprint_start")
+    return out
 
 
 @app.post("/api/sprint/stop")
 def api_sprint_stop(request: Request):
     _auth(request)
     from . import sprint
-    return sprint.stop()
+    out = sprint.stop()
+    _diag_onbellek_bosalt("sprint_stop")
+    return out
 
 
 # ---------- Alpaca PAPER execution mirror (opt-in, paper-only) ----------
@@ -2481,6 +2636,10 @@ def api_alpaca_submit_armed(request: Request):
         store.update_json("portfolio.json", _yama, {})
     obs.log("alpaca_submit_armed_endpoint", ok=res.get("ok"), submitted=res.get("submitted"),
             dropped=len(dusen), detail=str(res.get("detail", ""))[:160])
+    # HALT dalı YUKARIDA döndü (zarf düşmez). Burada da yalnız defter GERÇEKTEN kıpırdadıysa
+    # düşürülür: gönderilen ya da düşen bir plan yoksa mutabakat yükü aynı kalır.
+    if gonderilen or dusen:
+        _diag_onbellek_bosalt("alpaca_submit_armed")
     return {"ok": bool(res.get("ok")), "submitted": res.get("submitted", 0),
             "results": res.get("results", []), "equity": res.get("equity"),
             "detail": res.get("detail", "")}
@@ -2497,6 +2656,9 @@ def api_alpaca_close_all(request: Request, confirm: str = ""):
     res = alpaca.close_all(confirm=confirm)
     obs.log("alpaca_close_all", ok=res.get("ok"), dry_run=res.get("dry_run", False),
             foreign=len(res.get("foreign", [])))
+    # KURU KOŞU DEĞİL: onay jetonu yoksa bu uç yalnız NE YAPACAĞINI raporlar, hiçbir şeye dokunmaz.
+    if res.get("ok") and not res.get("dry_run", False):
+        _diag_onbellek_bosalt("alpaca_close_all")
     return res
 
 
@@ -2567,6 +2729,7 @@ def api_notify_test(request: Request):
         return {"ok": False, "detail": "no Telegram/webhook configured — set it in Ayarlar"}
     ok = notify.send("✅ Meridian test bildirimi — kanal çalışıyor.")
     obs.log("notify_test_sent", ok=bool(ok))     # dışarıya çıkan her mesaj kayıtlı (N/A sorgusu)
+    _diag_onbellek_bosalt("notify_test")         # teslimat sayaçları + alarm bütçesi kıpırdadı
     return {"ok": bool(ok)}
 
 
@@ -2736,6 +2899,7 @@ def api_halt(request: Request):
         notify.halted(True)
     except Exception:  # sessiz-yutma: obs alarmı/kaydı bu noktada ZATEN yazıldı; ikincil bildirim kanalının (Telegram/webhook) düşmesi alarmı asla düşüremez
         pass
+    _diag_onbellek_bosalt("halt")
     return {"halted": True, "message": "state/HALT created — new entries stop within one bar."}
 
 
@@ -2749,6 +2913,7 @@ def api_resume(request: Request):
         notify.halted(False)
     except Exception:  # sessiz-yutma: obs alarmı/kaydı bu noktada ZATEN yazıldı; ikincil bildirim kanalının (Telegram/webhook) düşmesi alarmı asla düşüremez
         pass
+    _diag_onbellek_bosalt("resume")
     return {"halted": False, "message": "HALT cleared."}
 
 
@@ -2768,4 +2933,6 @@ async def api_approve(approval_id: str, request: Request):
             has_reason=bool(reason))
     if reason:
         memory.distill_lessons()
+    # L0'da 403 YUKARIDA fırladı (zarf düşmez); buraya gelen istek onay defterine satır yazmıştır.
+    _diag_onbellek_bosalt("approval_decision")
     return {"ok": True, "id": approval_id, "decision": decision}

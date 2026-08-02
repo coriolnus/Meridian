@@ -15,8 +15,9 @@ daha çok çekirdek var. Walk-forward reflection A1'de **yerelden yavaş** koşa
 
 **Çekirdek ayarı (2026-07-30 sunucuda ÖLÇÜLDÜ, `nproc=4`):** paralel sonda havuzu **AÇIK**
 (`MERIDIAN_PARALLEL_PROBES=1`, yerel prod ile aynı). Havuz kendini sınırlar —
-`reflect.py:1049` → `workers = max(2, min(4, cpu_count-2))` → 4 çekirdekte **2 işçi**, geriye
-sunucu+ajan için 2 çekirdek kalır. `MERIDIAN_SEARCH_MAX_MIN=60` duruyor: Ampere çekirdeği Apple
+`reflect._havuz_tavani()` → `max(1, min(4, cpu_count-2))` → 4 çekirdekte **2 işçi**, geriye
+sunucu+ajan için 2 çekirdek kalır; işçiler doğuştan `nice(15)` (2026-08-03: iki işçi 2 saat
+%99,9 CPU'yla pano API'sini boğdu — canlı vaka; taban 2→1'e indi, ≤3 çekirdekte tavan ezilmesin). `MERIDIAN_SEARCH_MAX_MIN=60` duruyor: Ampere çekirdeği Apple
 Silicon'dan yavaş, aramalar yine uzun sürer. *(Eski "2 OCPU → havuzu KAPAT" notu geçersiz.)*
 
 ---

@@ -252,10 +252,13 @@ def production_report() -> dict:
     return {"starved": starved, "waiting": waiting, "ok": ok, "total": len(checks)}
 
 
-def conservation_report() -> dict:
+def conservation_report(olaylar: list[dict] | None = None) -> dict:
     """#3 KORUNUM: giren her plan KAYITLI bir terminal duruma ulaşmalı — işleme dönüştü, kapıda
     reddedildi (NO_GO), ya da düşüşü OLAYLA kaydedildi. Hiçbirine uymayan plan = SESSİZ KAYIP
-    (P4 buharlaşması ve seans atlaması tam olarak buydu; hiçbir alarm ötmemişti)."""
+    (P4 buharlaşması ve seans atlaması tam olarak buydu; hiçbir alarm ötmemişti).
+
+    `olaylar`: ham olay satırları elden verilebilir (v181 tek-okuma paylaşımı). PENCERE YASASI
+    DEĞİŞMEZ — aşağıdaki `_gun` yine plan defterinden türer, yalnız süzülen liste paylaşılır."""
     plans = store.read_jsonl("trade_plans.jsonl")
     if not plans:
         return {"plans": 0, "unexplained": 0, "rows": []}
@@ -283,9 +286,9 @@ def conservation_report() -> dict:
         from . import obs
         obs.warn("conservation_plan_date_unparsable", error=f"{type(e).__name__}: {e}",
                  detail="pencere tam deftere açıldı (daraltma YOK)")
-    olaylar = events_since(_gun)     # TEK okuma: hem `dropped` hem `live_start` bundan türer
+    pencere = events_since(_gun, olaylar=olaylar)   # TEK okuma: `dropped` ve `live_start` bundan
     dropped = set()
-    for e in olaylar:
+    for e in pencere:
         ev = e.get("event") or ""
         if ev in ("armed_expired_no_bar", "armed_no_bar_carried", "llm_veto_strip",
                   "regressive_session_refused"):
@@ -323,7 +326,7 @@ def conservation_report() -> dict:
     # Yukarıdaki pencere en eski PLANA kadar açık olduğu için ilk daily_cycle'ı yapısal olarak
     # kapsar (planlar daima olay defterinden eskidir ya da onunla yaşıttır).
     live_start = ""
-    for e in olaylar:
+    for e in pencere:
         if e.get("event") == "daily_cycle" and e.get("date"):
             live_start = str(e["date"])
             break
@@ -428,7 +431,40 @@ PARITY_MIN_COVERAGE = 0.90     # işlenen seans, evrenin en az bu oranını gör
 PARITY_DRY_SESSIONS = 10       # tam kapsamalı bu kadar seansta HİÇ aday yoksa şüpheli
 
 
-def events_since(days: int, limit_hint: int | None = None) -> list[dict]:
+# ---- DEDEKTÖRLER ARASI TEK OKUMA (v181, 2026-08-03) -----------------------------------------
+# CANLI ŞİKÂYET: "pano çok yavaşlamış" — ölçüm: `/api/diagnostics` 8,8-10,4 sn. Kökün bir yarısı
+# burada: `integrity_report` olay defterini YEDİ KEZ baştan sona okuyup ayrıştırıyordu (parity 4×,
+# korunum 1×, monotonluk 1×, defter-sözleşmesi 1× — sonuncusu ledgers.py'de, bu turun kapsamı
+# dışında). C6'dan sonra pencereler TARİH tabanlı olduğu için hiçbiri satır limiti kullanmıyor ve
+# `store.read_jsonl` zaten dosyanın TAMAMINI okuyup sonra dilimliyor (store.py:329-354) — yani
+# yedi tam ayrıştırma, aynı 31 bin satır için. Rapor başına BİR okuma yeter: her pencere aynı ham
+# listeden süzülür ve sonuç bit-bit aynıdır (pencere hesabının kendisi değişmiyor).
+#
+# NEDEN DEDEKTÖRLERE KWARG OLARAK GEÇİRİLMİYOR: C21'in yalıtım + DEĞERLEME SIRASI sözleşmesi,
+# dedektörleri ARGÜMANSIZ saplamalarla değiştiren testlerle çivili (test_denetim_gozetim_v158:
+# `def _patla(): raise ...`). Sweep'in `olaylar=` geçirmesi o saplamaları TypeError'a çevirirdi —
+# yani bir hız düzeltmesi, kendisinden çok daha değerli bir sözleşmenin denetimini kırardı.
+# Paylaşım bu yüzden bağlamdan akar; dedektör imzaları DEĞİŞMEZ. Opsiyonel `olaylar=` parametresi
+# yine de her dedektörde durur: bağımsız çağıran (ve eşitlik çivisi) aynı listeyi ELDEN verebilsin.
+#
+# İPLİK-YEREL, MODÜL-GLOBAL DEĞİL: canlıda scheduler, hermes ve API iplikleri AYNI süreçte koşuyor.
+# Global bir kutu, bir ipliğin okumasını başka bir ipliğin turunda YAŞI BEYANSIZ biçimde bayat
+# gösterirdi — bu deponun kovaladığı kusur sınıfı. İpliğin kendi turu bitince kutu boşalır.
+_PAYLASIM = threading.local()
+
+
+def _olay_satirlari(limit: int | None = None, olaylar: list[dict] | None = None) -> list[dict]:
+    """Olay defterinin HAM satırları: elden verilmişse o liste, yoksa turun paylaşılan okuması,
+    o da yoksa diskten taze okuma. `limit` semantiği `store.read_jsonl` ile BİREBİR aynıdır
+    (son `limit` satır) — paylaşılan liste dilimlenir, yeniden okunmaz."""
+    rows = olaylar if olaylar is not None else getattr(_PAYLASIM, "olaylar", None)
+    if rows is None:
+        return store.read_jsonl("events.jsonl", limit=limit)
+    return rows[-limit:] if limit else rows
+
+
+def events_since(days: int, limit_hint: int | None = None,
+                 olaylar: list[dict] | None = None) -> list[dict]:
     """Olay defterinin TARİH tabanlı penceresi (K1, 2026-07-30).
 
     NEDEN SATIR LİMİTİ YETMİYOR: `limit=4000` nominal hacimde (~1.700/gün) ~2,3 gün demekti; ama
@@ -439,27 +475,32 @@ def events_since(days: int, limit_hint: int | None = None) -> list[dict]:
 
     MALİYET ~SIFIR: `store.read_jsonl` dosyanın TAMAMINI okuyup sonra dilimliyor (store.py:182-200),
     yani satır limiti I/O tasarrufu ETMİYORDU — yalnız görüş alanını daraltıyordu. Burada aynı okuma
-    yapılır, filtre ts üzerinedir. `limit_hint` yalnız çok uzun defterlerde üst sınır olarak durur."""
+    yapılır, filtre ts üzerinedir. `limit_hint` yalnız çok uzun defterlerde üst sınır olarak durur.
+
+    `olaylar` (v181): ham satırlar elden verilebilir — aynı turda ikinci kez okumamak için."""
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=days)).isoformat()
-    rows = store.read_jsonl("events.jsonl", limit=limit_hint)
+    rows = _olay_satirlari(limit=limit_hint, olaylar=olaylar)
     # ts YOKSA SATIR ATILMAZ: damgasız bir satırı pencere dışı saymak, ölçülemeyen şeyi "yok"
     # saymak olurdu. Damgasızlar korunur; sıralama ISO-8601 sözlüksel kıyasıyla yapılır (obs.py
     # tek yazar ve hep aynı biçimde yazar: isoformat(timespec="seconds"), hepsi +00:00).
     return [e for e in rows if not e.get("ts") or str(e["ts"]) >= since]
 
 
-def parity_report() -> dict:
-    """Canlı üretim oranları ile beklenen oranların kıyası. Her satır: {check, ok, detail}."""
+def parity_report(olaylar: list[dict] | None = None) -> dict:
+    """Canlı üretim oranları ile beklenen oranların kıyası. Her satır: {check, ok, detail}.
+
+    `olaylar`: ham olay satırları elden verilebilir (v181). Bu rapor defteri DÖRT kez okuyordu
+    (aşağıdaki 4000-satırlık dilim + 30/2/1 günlük üç pencere); dördü de aynı listeden süzülür."""
     from . import config as _cfg, notify as _nt
     rows = []
-    cycles = [e for e in store.read_jsonl("events.jsonl", limit=4000)
+    cycles = [e for e in _olay_satirlari(limit=4000, olaylar=olaylar)
               if e.get("event") == "daily_cycle"]
     recent = cycles[-30:]
 
     # 1) EVREN KAPSAMASI — kararların alındığı seans evreni gerçekten görüyor mu?
     #    (bulunan hatanın ta kendisi: %18'lik yanlı kesitte karar)
     # TARİH TABANLI PENCERE (K1): satır limiti bu kontrolü kör ediyordu — bkz. events_since().
-    _cov_ev = events_since(30)
+    _cov_ev = events_since(30, olaylar=olaylar)
     defer = [e for e in _cov_ev
              if e.get("event") in ("session_deferred_for_coverage", "universe_coverage_low")]
     low = [e for e in defer if e.get("event") == "universe_coverage_low"]
@@ -576,7 +617,7 @@ def parity_report() -> dict:
     #     dedektörleri kapatan bir yüzeye dönüştü ve bunu ölçen hiçbir şey yoktu.
     #     Bu satır o sınıfı KALICI olarak sorar: bir olay defteri domine ediyorsa, o olayın kendisi
     #     onarılana kadar tüm pencereli ölçümlerin şüpheli olduğu GÖRÜNÜR olur.
-    _dom_win = events_since(2)
+    _dom_win = events_since(2, olaylar=olaylar)
     if len(_dom_win) >= 500:
         _counts: dict[str, int] = {}
         for e in _dom_win:
@@ -600,7 +641,8 @@ def parity_report() -> dict:
     #     `beat()` çağırmasını gerektirir, o yüzden kesinti burada OLAY DEFTERİNDEN türetiliyor.
     #     streamhealth aynı sorunu DOWN_REASSERT_S kısıtlamasıyla çözdü; hotstate o deseni almadı
     #     (kısıtlamanın kendisi hotstate.py'de yapılmalı — bu turun kapsamı dışında, bkz. K1-NOTU).
-    _hot_down = [e for e in events_since(1) if str(e.get("event")) == "hotstate_down"]
+    _hot_down = [e for e in events_since(1, olaylar=olaylar)
+                 if str(e.get("event")) == "hotstate_down"]
     if _hot_down:
         rows.append({"check": "hotstate_sustained_down", "ok": False,
                      "detail": (f"son 24 saatte {len(_hot_down)} `hotstate_down` — Redis sıcak "
@@ -851,7 +893,12 @@ def integrity_report(persist: bool = False) -> dict:
     "dedektor_dustu": True, "error": ...}` döner ve alarm katmanı bunu adıyla duyurur. Yalıtımın
     iskeleti (`_DEDEKTOR_BOS`) şart: tüketiciler alt alanları köşeli parantezle indeksliyor
     (bu dosyada :1086+, mutation.py:311-313, pano app.js:3677-3690) — iskeletsiz bir hata sözlüğü
-    yalıtımı çağıranda KeyError'a çevirirdi, yani hiç yalıtmamış olurdu."""
+    yalıtımı çağıranda KeyError'a çevirirdi, yani hiç yalıtmamış olurdu.
+
+    TEK OKUMA (v181, 2026-08-03): olay defteri turun BAŞINDA bir kez okunur ve dedektörler onu
+    paylaşır (bkz. `_olay_satirlari` üstündeki gerekçe). Dedektör imzaları ve çağrı biçimi
+    DEĞİŞMEDİ — paylaşım iplik-yerel bağlamdan akar, çünkü C21 sözleşmesi dedektörleri argümansız
+    saplamalarla sınıyor."""
     def _tut(ad: str, fn) -> dict:
         try:
             return fn()
@@ -863,16 +910,33 @@ def integrity_report(persist: bool = False) -> dict:
             return {**_DEDEKTOR_BOS.get(ad, {}), "ok": False, "dedektor_dustu": True,
                     "olculemedi": True, "error": f"{type(e).__name__}: {e}"}
 
-    _par = _tut("parity", parity_report)      # ÖNCE — persist'li üçlü tabanı yazmadan ÖNCE düşsün
-    # Anahtar SIRASI korunur (pano ve öz-değerlendirme bu sırayla basar); değişen yalnız DEĞERLEME
-    # sırasıdır — `_par` yukarıda hesaplandı.
-    return {"production": _tut("production", production_report),
-            "conservation": _tut("conservation", conservation_report),
-            "determinism": _tut("determinism", lambda: determinism_report(persist=persist)),
-            "coherence": _tut("coherence", coherence_report),
-            "monotonicity": _tut("monotonicity", lambda: monotonicity_report(persist=persist)),
-            "ownership": _tut("ownership", lambda: ownership_report(persist=persist)),
-            "parity": _par}
+    try:
+        _ham = store.read_jsonl("events.jsonl")
+    except Exception as e:
+        # PAYLAŞILAN OKUMANIN ARIZASI YEDİ DEDEKTÖRÜ BİRDEN DÜŞÜREMEZ (C21 yalıtımı burada da
+        # geçerli): okuma düşerse `None` bırakılır ve her dedektör bugüne kadarki gibi KENDİ
+        # okumasını yapar — o zaman düşen dedektör tek başına düşer. Hız kaybı, yalıtım kaybından
+        # ucuzdur. Sessiz de kalmaz: "yavaş yola düşüldü" ölçülebilir bir olgudur.
+        _ham = None
+        from . import obs
+        obs.warn("integrity_shared_events_read_failed", error=f"{type(e).__name__}: {e}",
+                 detail="dedektörler kendi okumasına düştü — hüküm aynı, tur yalnızca yavaş")
+    _PAYLASIM.olaylar = _ham
+    try:
+        _par = _tut("parity", parity_report)  # ÖNCE — persist'li üçlü tabanı yazmadan ÖNCE düşsün
+        # Anahtar SIRASI korunur (pano ve öz-değerlendirme bu sırayla basar); değişen yalnız
+        # DEĞERLEME sırasıdır — `_par` yukarıda hesaplandı.
+        return {"production": _tut("production", production_report),
+                "conservation": _tut("conservation", conservation_report),
+                "determinism": _tut("determinism", lambda: determinism_report(persist=persist)),
+                "coherence": _tut("coherence", coherence_report),
+                "monotonicity": _tut("monotonicity", lambda: monotonicity_report(persist=persist)),
+                "ownership": _tut("ownership", lambda: ownership_report(persist=persist)),
+                "parity": _par}
+    finally:
+        # TUR BİTTİ, KUTU BOŞALIR: paylaşılan liste bu turun fotoğrafıdır. Bırakılsaydı bir sonraki
+        # BAĞIMSIZ `parity_report()` çağrısı, yaşı beyansız eski bir defteri okurdu.
+        _PAYLASIM.olaylar = None
 
 
 # ---- PANO İÇİN KISA ÖMÜRLÜ ÖNBELLEK (2026-07-28) -------------------------------------------
@@ -1441,7 +1505,7 @@ def _now_iso() -> str:
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 
 
-def monotonicity_report(persist: bool = False) -> dict:
+def monotonicity_report(persist: bool = False, olaylar: list[dict] | None = None) -> dict:
     """#5 — geriye-seans hatasının GENEL hali: bazı nicelikler ASLA azalmamalı (kitap tarihi, strateji
     sürümü, cache revizyonu, defter satır sayıları, tepe sermaye). Azalma = bozuk yazım, kötü restore
     ya da geri sarma. Son görülen değerler saklanır; azalırsa bayrak.
@@ -1476,7 +1540,13 @@ def monotonicity_report(persist: bool = False) -> dict:
                    ("hypotheses.jsonl", "hypotheses"), ("events.jsonl", "events"),
                    ("candidates.jsonl", "candidates")):
         try:
-            cur[key] = len(store.read_jsonl(f))
+            # OLAY DEFTERİ PAYLAŞILAN OKUMADAN SAYILIR (v181) — ve sayı TAM DEFTERİNDİR, pencerenin
+            # DEĞİL: bu sayaç bir uzunluk gerilemesi arıyor, tabanı da tam defterle yazılmış.
+            # Paylaşılan liste `store.read_jsonl("events.jsonl")`in kendisidir (limitsiz), yani
+            # `len()` bit-bit aynı sayıyı verir; pencerelenmiş bir liste gelseydi HER TUR sahte
+            # gerileme üretirdi. Bu yüzden paylaşım ham satırlarla yapılır, süzülmüşle değil.
+            cur[key] = (len(_olay_satirlari(olaylar=olaylar)) if f == "events.jsonl"
+                        else len(store.read_jsonl(f)))
         except Exception as e:
             # Eksik sayaç, monotonluk dedektöründe "gerileme yok" diye OKUNUR. Defterin kısalıp
             # kısalmadığı bilinmiyorsa bunu söylemek zorunda.

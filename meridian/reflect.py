@@ -1084,7 +1084,31 @@ def _probe_wf(cand_strat: dict, var: str, new, from_version: int, bars, index, g
 _POOL_WORKER_DATA: dict = {}
 
 
+def _havuz_tavani(tavan: int = 4) -> int:
+    """Havuz işçi sayısı TAVANI: `max(1, cpu-2)`, ayrıca çağıranın kendi tavanıyla sınırlı.
+
+    CANLI OLAY (2026-08-03, A1 4 OCPU): iki işçi iki saat boyunca %99,9 CPU'da koştu ve pano
+    API'sini boğdu (`/api/diagnostics` 8,8-10,4 sn) — operatör elle `renice` atmak zorunda kaldı.
+    "-2" tam bu yüzden var: bir çekirdek uvicorn'a, bir çekirdek işlem döngüsü/hermes ipliğine
+    kalmalı. ESKİ HÂLİ `max(2, ...)` İDİ ve tabanı 2'ye ÇİVİLİYORDU: 2 çekirdekli bir makinede
+    "cpu-2 = 0" hesabını EZİP yine iki işçi açıyordu, yani tavan orada hiç yoktu. Taban 1'e indi.
+    Arama SONUÇLARI değişmez — işçi sayısı yalnız duvar-saatini belirler (`ex.map` sırayı korur,
+    her sonda bağımsız ve `_PROBE_CACHE` anahtarlı)."""
+    return max(1, min(tavan, (os.cpu_count() or 4) - 2))
+
+
 def _pool_worker_init():
+    # KİBARLIK ÖNCE (2026-08-03): işçi AĞIR işe başlamadan önce nice'lanır — dataset yüklemesinin
+    # kendisi de (I/O + pandas) rekabet eden bir yüktür. `nice(15)` bir CPU TAVANI değildir: işçiler
+    # boş makinede yine tam hızda koşar, YALNIZ pano/uvicorn ya da işlem döngüsü CPU isteyince
+    # zamanlayıcı onlara öncelik verir. Canlıda elle atılan `renice`in kalıcı hâli budur.
+    # SESSİZ YUTMA GEREKÇESİ: nice ayarlanamazsa (platform desteklemiyor, izin yok) yapılacak tek
+    # şey daha yavaş bir panodur — arama sonucu ve bu turun hükmü DEĞİŞMEZ; kibarlık kurulamadı
+    # diye antrenmanı iptal etmek, ölçülen sorunu (yavaş pano) çözmeyip kanıt üretimini durdururdu.
+    try:
+        os.nice(15)
+    except (OSError, AttributeError):  # sessiz-yutma: kibarlık kurulamadıysa (platform/izin) tek sonuç daha yavaş bir panodur — arama sonucu ve bu turun hükmü DEĞİŞMEZ, işçiyi düşürmek kanıt üretimini durdururdu
+        pass
     # AĞA ÇIKMAYAN yükleme ŞART: load() bayat önbellekte fetch eder, fetch corporate-action tespitiyle
     # bar CSV'lerini yeniden yazar — her işçi kendi load()'unu çağırdığında işçiler BİRBİRİNİN barlarını
     # değiştiriyor, aynı aramanın sondaları farklı bar durumlarında ölçülüyordu (2026-07-21, canlıda
@@ -1123,7 +1147,7 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
                          "eval_regime": _eval_regime_of(var)})
         if not jobs:
             return
-        workers = max(2, min(4, (os.cpu_count() or 4) - 2))
+        workers = _havuz_tavani(4)          # kibarlık + tavan gerekçesi: `_havuz_tavani` docstring'i
         ctx = mp.get_context("spawn")
         with ProcessPoolExecutor(max_workers=workers, mp_context=ctx,
                                  initializer=_pool_worker_init) as ex:
@@ -1168,7 +1192,10 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
                      "goal": goal, "w": (w[0], w[1], w[2], w[3], list(w[4]), w[5]), "eval_regime": er}
                     for k, er in missing]
             ctx = mp.get_context("spawn")
-            with ProcessPoolExecutor(max_workers=min(len(jobs), 3), mp_context=ctx,
+            # AYNI TAVAN BURADA DA (2026-08-03): incumbent ön-hesabı da aynı süreçte, aynı
+            # çekirdekleri paylaşarak koşuyor. Kendi 3'lük sınırı KORUNUR (tavan onu yükseltmez,
+            # yalnız düşürebilir) — kibarlaştırma hiçbir yolda yükü ARTIRMAmalı.
+            with ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
                                      initializer=_pool_worker_init) as ex:
                 for key, wf in ex.map(_pool_probe_job, jobs):
                     _INC_CACHE[key] = wf
