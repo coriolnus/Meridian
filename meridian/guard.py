@@ -287,7 +287,7 @@ REVIEW_SCORE_BAND = 10         # score within this of entry.min_score -> REVIEW
 # test) davranış DEĞİŞTİRMEDEN koşar. Değerler taşınırken KORUNDU: 4,5 / 3,5 / 0,85 — bu tur bir
 # yönetişim turudur, eşik turu değil (eşik değişikliği ölçüm kartı ister).
 HEAT_REVIEW_R = 3.5            # total open risk (R) above this -> REVIEW (book getting concentrated)
-HEAT_HARD_R = 4.5             # total open risk (R) above this -> NO_GO (hard aggregate-heat ceiling)
+HEAT_HARD_R = 5.0             # OPERATÖR KARARI 2026-08-03 (d01ccb5): zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)
 CORR_REVIEW = 0.85           # candidate return-correlation with a held name above this -> REVIEW
 
 
