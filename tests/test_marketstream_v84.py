@@ -159,5 +159,6 @@ def test_structural_no_order_or_disk_paths():
     """Veri katmanı emir gönderemez / disk defteri yazamaz (UÇUCU). Kaynakta bu yollar GEÇMEZ."""
     src = inspect.getsource(mk)
     for forbidden in ("submit_plan", "httpx", "close_all", "cancel_open_entries",
+                      "close_engine_position", "replace_order_stop", "cancel_order",
                       "write_json", "write_jsonl", "append_jsonl", "write_text"):
         assert forbidden not in src, f"marketstream '{forbidden}' içeremez (emir/disk yolu yok)"

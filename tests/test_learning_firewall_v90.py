@@ -30,5 +30,6 @@ def test_intraday_consumer_never_touches_execution_or_persistent_book():
     yollarını İÇERMEZ — sıfır yetki yapısal kanıtı."""
     src = (MERIDIAN / "intraday_cycle.py").read_text()
     for forbidden in ("submit_plan", "submit_bracket", "fill_entry", "close_all", "cancel_open_entries",
+                      "close_engine_position", "replace_order_stop", "cancel_order",
                       "write_json", "update_json"):
         assert forbidden not in src, f"intraday_cycle '{forbidden}' içeremez (gözlem-modu, sıfır yetki)"

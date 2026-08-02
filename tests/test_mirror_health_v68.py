@@ -311,7 +311,10 @@ def test_h3e_reconnect_has_no_order_submitting_path():
     """Yapısal kilit: yeniden bağlanma yolunda emir GÖNDEREN hiçbir çağrı olamaz."""
     import inspect
     src = inspect.getsource(ms)
-    for forbidden in ("submit_plan", "submit_order", "httpx.post", "httpx.put", "close_all"):
+    # `cancel_open_entries` BİLEREK serbest: devre-kesicinin onaylı, sahiplik-filtreli yolu —
+    # ham tek-emir iptali (`cancel_order`) o filtreyi atlar, bu yüzden yasak.
+    for forbidden in ("submit_plan", "submit_order", "httpx.post", "httpx.put", "close_all",
+                      "close_engine_position", "replace_order_stop", "cancel_order"):
         assert forbidden not in src, f"akış katmanında emir yolu: {forbidden}"
 
 
