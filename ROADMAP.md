@@ -48,7 +48,9 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   bekçi "yerel ajan yapılandırılmış mı" ölçmüyordu — LLM ikinci-görüşü 6 gün sessiz öldü. Kalemler:
   (a) servis açılışında senkron-doğrulama (GEMINI_API_KEY dolu + CLI modelsiz → yeniden senkron + olay);
   (b) pano senkron-sonucu zaman-damgalı (bayat OSError vakası); (c) bekçi: agent_call boş-serisi
-  "kota" ile "yapılandırmasız"ı ayırt etsin.
+  "kota" ile "yapılandırmasız"ı ayırt etsin; (d) RPD bütçesi ağa HİÇ çıkmamış çağrıyı saymasın —
+  canlı vaka: ölü zincir 150/150'yi 06:19'da yaktı, gerçek Gemini kotası el değmemişken inceleme
+  tüm gün bütçe-reddi yedi (sayaç korumaya çalıştığını ölçmüyor).
 - **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
   yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
   `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
