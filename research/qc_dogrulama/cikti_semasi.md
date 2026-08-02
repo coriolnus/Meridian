@@ -1,7 +1,15 @@
-# EDG-2026-021 · QC doğrulama defteri — ÇIKTI ŞEMASI (`sonuc_021.json`) · defter v2.0
+# EDG-2026-021 · QC doğrulama defteri — ÇIKTI ŞEMASI (`sonuc_021.json`) · defter v3.0
 
 Kart: `research/cards/EDG-2026-021-qc-delist-dogrulama.yaml`
-Defter: `research/qc_dogrulama/qc_defter_021.py` (H11 tek JSON bloğu basar)
+Defter: **üç parça** — `qc_defter_021_a.py` · `_b.py` · `_c.py` (H11/JSON `_c`'dedir)
+
+```python
+for _p in ("a", "b", "c"):
+    exec(open(f"qc_defter_021_{_p}.py").read(), globals())
+```
+
+`globals()` ŞART (parçalar tek `S` durumunu paylaşır). Sıra a → b → c; `_b`/`_c` önceki
+parça yüklenmediyse hata verir. **`_c` DUR hâlinde de koşturulmalıdır** — JSON'u o basar.
 Kaydedilecek yer: `research/olcumler/qc_dogrulama/sonuc_021.json`
 Zemin gerçeği: `research/qc_dogrulama/QC_API_ZEMIN_GERCEGI.md`
 
@@ -21,6 +29,39 @@ Zemin gerçeği: `research/qc_dogrulama/QC_API_ZEMIN_GERCEGI.md`
 - **Ölçülemeyen her şey `null` + `neden`.** Hiçbir alan varsayılanla doldurulmaz.
 - Yüzde DEĞİL, ORAN: `0.00648` = %0,648.
 
+## 0a. v2 → v3: TAZE-QB KURALI (canlı arızanın kök nedeni)
+
+v2 canlıda H2'de DUR dedi ("hiçbir yıl diliminde satır dönmedi"). Kök neden **ölçüldü**
+(`QC_API_ZEMIN_GERCEGI.md` → "EK ÖLÇÜM"): hata `universe_history` API'sinde değil,
+**QuantBook örneğinin durumunda**. Defterin H1'de kurduğu `qb` (üzerinde
+`set_start_date`/`set_end_date` çağrılmıştı) 0 satır döndürürken, **aynı hücrede** taze bir
+`QuantBook()` + taze `add_universe` aynı pencerede 9 satır döndürdü.
+
+**v3'ün kuralı: QuantBook örneği AMAÇ BAŞINA ayrıdır ve PAYLAŞILMAZ.**
+
+| örnek | nerede kurulur | yalnız ne için |
+|---|---|---|
+| `QB_BAR` | H1 | `qb.history` bar çağrıları (H3 çapraz-kontrol + tamir) |
+| `QB_PANEL` | H2, **taze** | `universe_history` (panel). Üzerinde başka çağrı YOK |
+| `QB_SPX` | H2b, **taze** | SPX/ETF tanısı (`add_equity` örneği kirletir) |
+
+Ayrıca `set_start_date`/`set_end_date` **bilerek çağrılmaz** (örnek durumunu değiştiriyor;
+semboller `Fundamental`dan geldiği için ticker çözümüne gerek yok). `kosum.api_yolu`
+içindeki `tarih_baglami` alanı bunu beyan eder.
+
+**KENDİNİ-DOĞRULAYAN AÇILIŞ (`evren.mini_sonda`).** H2, 7 yıllık panel çekiminden ÖNCE aynı
+örnek ve aynı seçiciyle `SONDA_GUN` (10) günlük bir mini-sonda koşar:
+
+```
+{ "pencere_gun": 10, "n_kayit": int|null, "neden": str|null, "beyan": str }
+```
+
+`n_kayit` 0/`null` ise defter **HEMEN DUR** der ve 7 yıllık boş çekimi hiç koşturmaz. DUR
+metni: *"QuantBook örneği evren döndürmüyor — taze örnek kuralı ihlal/etkisiz"* + kontrol
+listesi (QB_PANEL taze mi, üzerinde `add_equity`/`set_start_date` çağrıldı mı, seçici Symbol
+listesi döndürüyor mu). **Hüküm okunurken `mini_sonda.n_kayit` ilk bakılacak sayılardandır:**
+doluysa evren yolu canlıda çalışmış demektir.
+
 ## 0b. v1 → v2 mimari değişikliği (şemayı okurken bilinmesi gerekir)
 
 v1 koşumu H2'de DUR dedi: FREE hesapta `history(Fundamental)` / `history(CoarseFundamental)`
@@ -38,7 +79,10 @@ Evren seçimi, fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir.
 `dolar_hacim_vekili`, `evren_cagri`, `DataNormalizationMode`), `pozitif_kontrol.ic_10_tani`,
 `tanimlar.mom21`, `tanimlar.hacim_bazi`, `olcum.*.evren_fazlasi_ikincil_gun_serisi_CI`.
 
-**Şemaya GELEN alanlar:** `defter_mimarisi`, `kosum.fundamental_alan_sondasi`,
+**v3'te GELEN alanlar:** `evren.mini_sonda`, `kosum.api_yolu.{qb_bar,qb_panel}`,
+`evren.spx_uyelik_denemesi.qb`.
+
+**v2'de GELEN alanlar:** `defter_mimarisi`, `kosum.fundamental_alan_sondasi`,
 `evren.panel_muhasebesi`, **`fiyat_capraz_kontrol`** (yeni üst düzey blok),
 `tanimlar.px_kaynagi`, `tanimlar.sureklilik_bekcisi`,
 `olcum.*.evren_fazlasi_gun_agirlikli_CI`, `delist_muhasebesi.cikis_muhasebesi`,
@@ -49,7 +93,7 @@ Evren seçimi, fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir.
 | alan | tip | anlamı |
 |---|---|---|
 | `kart` / `aile` | str | `"EDG-2026-021"` / `"qc_delist_dogrulama"` |
-| `defter_surumu` | str | `"2.0"` |
+| `defter_surumu` | str | `"3.0"` |
 | `defter_mimarisi` | str | tek-kaynak beyanı + v1'in ölü yollarının neden çıkarıldığı |
 | `defter_sha256` | null | koşan defter kendi kaynağını okumaz; sha REPO tarafında alınır |
 | `rol` | str | "sayı üretir, hüküm vermez" beyanı |
@@ -57,7 +101,7 @@ Evren seçimi, fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir.
 | `anahtarlar` | obj | H0'daki `ANAHTAR`ın KOŞUMDA KULLANILAN hâli → §3 |
 | `DUR` | str \| null | doluysa defter erken durdu; metin nedeni taşır |
 | `pozitif_kontrol` | obj | → §4 |
-| `evren` | obj | → §5 |
+| `evren` | obj | → §5 (`mini_sonda` dahil) |
 | `fiyat_capraz_kontrol` | obj | → §6 |
 | `tanimlar` | obj | ölçülen büyüklüklerin sözlü tanımları + `K_beyani` |
 | `tanim_sapmalari` | liste | → §7 · **hüküm okunurken İLK bakılacak yer** |
@@ -73,7 +117,7 @@ Evren seçimi, fiyat, hacim ve **as-of hisse sayısı** aynı çağrıdan gelir.
 
 ```
 { "zaman_utc": str, "ortam": "QuantConnect Research (QuantBook)",
-  "api_yolu": {"import","Resolution","quantbook","tarih_baglami","evren"},
+  "api_yolu": {"import","Resolution","qb_bar","tarih_baglami","evren","qb_panel"},
   "fundamental_alan_sondasi": { ... },      # ← YENİ, aşağıya bak
   "determinizm_sinamasi": bool,             # aynı girdi → aynı CI (H1b kendini sınar)
   "bellek_mb": {"H4_oznitelikli": float, "H6_turnoverli": float} }
@@ -142,11 +186,18 @@ tutar. **Tampon ölçüm evrenini GENİŞLETMEZ**: ölçüme giren satır yalnı
 olanlardır (gün içi dolar-hacim rütbesi ≤ 250). Tamponun yetmediği kalıntı boşlukları
 süreklilik bekçisi kapatır ve `delist_muhasebesi.span_bekcisi_kapatti` altında **sayar**.
 
+### 5.1b `mini_sonda`
+
+Bkz. §0a. `{pencere_gun, n_kayit, neden, beyan}`. `n_kayit` boşsa `DUR` dolar, panel hiç
+çekilmez ve `panel_muhasebesi` gelmez. Yerel sınamada mutlu yolda `n_kayit=490`,
+evren-boş senaryosunda `0` → koşum 0,3 saniyede DUR dedi (dolu koşum 10,9 s).
+
 ### 5.2 `spx_uyelik_denemesi`
 
 ```
 { "denendi": true, "basarili": bool, "yol": str|null, "n_spx": int?,
-  "n_kesisim": int?, "n_son_gun_evren": int?, "neden": str|null, "karar": str }
+  "n_kesisim": int?, "n_son_gun_evren": int?, "neden": str|null, "karar": str,
+  "qb": "TAZE QuantBook() — QB_PANEL kirletilmesin diye ayrı örnek" }
 ```
 
 Kart "birebir SPX üyeliği varsa kullanılır" diyor. v2'de bu blok **yalnız TANIDIR**: evren

@@ -1,5 +1,18 @@
 # EDG-2026-021 · OPERATÖR TALİMATI — QC doğrulama defterini koşturma (defter v2)
 
+> ⚠️ **v3 GÜNCELLEMESİ (2026-08-03) — bu belgenin §2/§3/§7 adımları BAYAT.**
+> Defter artık TEK dosya değil ÜÇ dosya (QC `.py` başına 32.000 karakter sınırı — ölçüldü):
+> `qc_defter_021_a.py` (15.708) · `_b.py` (25.746) · `_c.py` (22.451). Projeye üçü de yüklenir,
+> notebook'ta TEK hücre şunu koşar:
+> ```python
+> for _p in ("a", "b", "c"):
+>     exec(open(f"qc_defter_021_{_p}.py").read(), globals())
+> ```
+> Ayrıca: QuantBook örneği PAYLAŞILMAZ (QB_BAR/QB_PANEL/QB_SPX ayrı; canlı arızanın kök nedeni —
+> bkz. QC_API_ZEMIN_GERCEGI.md "EK ÖLÇÜM"). H2'de 10-günlük mini-sonda kapısı vardır: evren boş
+> dönerse koşum 0,3 sn'de DUR der, 7 yıllık boş çekim yapmaz.
+
+
 Kart: `research/cards/EDG-2026-021-qc-delist-dogrulama.yaml`
 Defter: `research/qc_dogrulama/qc_defter_021.py` (**sürüm 2.0**)
 Şema: `research/qc_dogrulama/cikti_semasi.md`
