@@ -172,6 +172,21 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**TOPLU PENCERE KAPANDI (2026-08-02 ~19:55 TR / 16:55 UTC, Rol-1, tam-otonom):** WP programının
+tüm mühendislik+ölçüm dalgası tek pencerede canlıya indi. Zincir: otoriter suite SIFIR kırmızı
+(~3.821; ilk koşum 2 çivi-kırmızısı onarımla kapandı — getsource-taşınma + alias-beyanı) →
+dagit [1b] versiyonlu-state hükmü İKİ DOSYADA KOPYALA (w_turnover + E1/E3/limits.heat_* canlıda
+İLK KEZ doğdu; yedekli, bayt-özdeş) → rsync+restart healthz 200 → H3-t2 B3: üç birim migre,
+tur-1 drop-in söküldü, systemd-analyze **2.0 OK ×3** (6.3'ten), HERMES-RW-OK + PROTECTHOME-OK
+probları, yedek-birimi ✓, SIGSYS 0 (24-saat nöbeti başladı). CANLI ETKİLEŞİM KANITI: state
+kopyasından saniyeler sonra `hermes_bg_proposal_rejected variable=entry.w_turnover bg_regime=chop`
+— yeni knob + C16 rejim-sınırı birlikte doğru çalıştı. BEKLEYEN TEK KABUL: inceleme-kaydı
+(2026-07-31) — -Q düzeltmesi canlıda ama Gemini GERÇEK günlük kotası öğleden sonraki
+ayrıştırılamayan-döngüde tükendi (cooldown 7200s); kota dönüşünde (~07:00 UTC) ilk poll
+kanıtlar, izleyici kurulu. Hükümler: EDG-017 ARŞİV (3 kill) · EDG-018 askıya:veri-kapısı
+(%96,6 çıkış-ismi barsız — delist-bar kararının fiyat-etiketi) · KYS-001 ARŞİV (yanlılık
+pratik-önemsiz; temiz-kıyas opsiyonel).
+
 **FREEZE KALKTI (2026-08-02 ~17:40 TR / 14:40 UTC, Rol-1 pencere-oturumu):** korunan boru hattı
 TAMAMLANDI — otoriter tam suite `571a094` tepesinde SIFIR kırmızı (exit 0) + `./dagit.sh --uygula`
 14:00 UTC'de operatör talimatıyla ("bitince otomatik uygula ve doğrula") koştu: 5 kapı yeşil,
