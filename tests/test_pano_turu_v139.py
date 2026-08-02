@@ -55,7 +55,11 @@ def test_rozet_adlari_uc_ayri_sayiyi_uc_ayri_adla_soyler():
 
 
 def test_dolgulu_rozet_yalniz_gercek_inbox_ile():
-    assert 'const dolgulu = id === "adaylar" && rozet === "inbox"' in APPJS
+    # ÇİVİ TAŞINDI (S2R-1, 2026-08-02): rozetin taşıyıcısı "adaylar" görünümüydü; o görünüm artık
+    # "Koşu & Döngü" alan sayfasının altında bir BÖLÜM ve rozet o sayfanın maddesinde duruyor.
+    # Kural değişmedi — dolgulu rozet YALNIZ ölçülmüş gelen kutusuyla yazılır; değişen tek şey
+    # rozetin hangi ray maddesine bastığı.
+    assert 'const dolgulu = id === "kosu" && rozet === "inbox"' in APPJS
     assert "class=\"pillc${dolgulu ? '' : ' q'}\"" in APPJS
 
 

@@ -369,7 +369,9 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
   padding:11px 12px 11px 14px;min-height:44px;border-radius:0;margin-bottom:0;cursor:pointer;transition:var(--t);width:100%;
   text-align:left;background:none;border:none;border-bottom:1px solid var(--line);font-family:inherit}
 .side .sitem{width:100%;padding:9px 12px;min-height:44px;align-items:stretch;justify-content:center;overflow:visible}
-.side .sitem .top{width:100%;justify-content:flex-start;gap:10px}
+/* `align-items:flex-start` (S2R-1): etiket iki satıra sardığında ikon ve rozet İLK satıra
+   hizalanır. Ortalanırlarsa iki satırlık maddede glif aşağı kayar ve şerit dişli görünür. */
+.side .sitem .top{width:100%;justify-content:flex-start;align-items:flex-start;gap:10px}
 /* MARJ İŞARETİ ARTIK HARF DEĞİL ÇİZİM (2026-07-27): şerit tek Türkçe baş harf basıyordu ve
    O (Operasyon) ile Ö (Öğrenme) 13px'te yalnız iki noktayla ayrılıyordu — okunaksız bir ayrım.
    Yerine 20px satır-çizim ikon; currentColor + 1.5px kontur, kanonun kendi kalemi. Glif
@@ -384,10 +386,14 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
    Genişleyen rayda ad birinci sınıf metindir — saklamak hem gereksiz hem yanıltıcı olurdu.
    Kural YALNIZ ray içinde geçerli: .vis-label matriste hâlâ ekilmemiş hücrelerin sr-only adını
    taşıyor ve orada gizli KALMALI. */
+/* ETİKET İKİ SATIRA SARAR (S2R-1, 2026-08-02): yeni IA'nın adları ADR'nin adlarıdır ve en
+   uzunu ("Kilitler & Yapılandırma", 23 karakter) 208px'lik rayda tek satıra SIĞMIYOR. Eski
+   `nowrap` + `ellipsis` çifti onu "Kilitler & Yapılandır…" diye keserdi ve yarım okunan bir
+   menü maddesi, hiç okunmayandan daha yanıltıcıdır — kullanıcı gördüğünü TAM sanır. */
 .side .sitem .vis-label{position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;
   clip:auto;clip-path:none;border:0;font-size:14px;font-weight:500;color:inherit;
-  white-space:nowrap;flex:1 1 auto;min-width:0;text-overflow:ellipsis}
-.side .sitem .top .lbl{flex:0 0 20px}
+  white-space:normal;line-height:1.25;flex:1 1 auto;min-width:0;text-overflow:clip}
+.side .sitem .top .lbl{flex:0 0 20px;margin-top:1px}
 /* the account block belongs to a menu column, not a 56px rail — it moves into the sheet */
 .side .slab,.side .acct{display:none}
 /* the full name stays in the DOM for screen readers and for the wide/phone layouts */
@@ -426,6 +432,51 @@ main{min-width:0}
 .subline{color:var(--tx2);font-size:14px;margin-top:14px;font-variant-numeric:tabular-nums;line-height:1.6;max-width:72ch}
 .ph{font-family:var(--display);font-weight:500;font-size:clamp(24px,3.7vw,28px);letter-spacing:-.012em;line-height:1.08}
 .ph .g,h2 .g{color:var(--tx2);font-weight:400;font-family:var(--display)}
+
+/* ============================================================================
+   S2R-1 · ALAN SAYFASI KABUĞU (2026-08-02)
+   Yedi alan sayfasının her biri kendi başlığını (`.alan-bas`) yazar; eski on iki
+   görünüm o başlığın ALTINDA `.alan-bolum` olarak yaşar. Yeni renk jetonu YOK —
+   ayrım yine saç teli çizgi ve ton farkıyla (Omega kuralı).
+   ============================================================================ */
+.alan-bas{margin-bottom:var(--s6)}
+/* Bölümler arası ayrım bir kart kenarı DEĞİL, bir kural çizgisidir: kart içinde kart,
+   bu turun kaldırmaya çalıştığı "katman katman kutu" hissinin ta kendisiydi. */
+.alan-bolum + .alan-bolum{margin-top:var(--s12);padding-top:var(--s10);border-top:1px solid var(--line-2)}
+/* Eski görünümün kendi başlığı ARTIK BİR BÖLÜM BAŞLIĞIDIR: sayfanın h1'i alan sayfasınındır.
+   Mertebe JS'te düşürülür (app.js `_bolumBasliklariniIndir`); BOY da düşmeli, yoksa iki
+   başlık aynı ağırlıkta görünür ve hiyerarşi yalnız DOM'da kalır — yani okunmaz. */
+.alan-bolum h2.ph,.alan-bolum h2.greet{font-family:var(--display);font-weight:500;font-size:19px;
+  letter-spacing:-.01em;line-height:1.2}
+
+/* ---- GENEL BAKIŞ (J1 sabah turu) — TEK EKRAN, KAYDIRMASIZ --------------------------
+   Sözleşme kuralın kendisinde: altı kart tek kolona dizilseydi sayfa ~2400px olur ve
+   "tek ekran" iddiası sessizce düşerdi. Sütun sayısı bu yüzden burada ÇİVİLİ; tek
+   sütuna iniş YALNIZ dar ekran sorgusunda (orada kaydırma zaten dürüst hâldir). */
+.gb-ust{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:var(--s4);margin-top:var(--s4)}
+.gb-trend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4);margin-top:var(--s4)}
+.gb-kart{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+  padding:var(--s5);display:flex;flex-direction:column;min-width:0}
+.gb-govde{flex:1 1 auto;min-width:0}
+.gb-say{font-family:var(--mono);font-size:clamp(20px,2.6vw,26px);font-weight:400;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;line-height:1.05;color:var(--tx);display:block}
+.gb-alt{font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums;margin-top:var(--s2)}
+.gb-alt b{color:var(--tx);font-weight:500}
+/* Tek bağ, tek yön: kartın kendisi tıklanabilir DEĞİL (yanlışlıkla sayfa değiştirmek,
+   özet okurken en ucuz hata olurdu) — bağ ayrı ve adlandırılmış bir kontroldür. */
+.gb-bag{align-self:flex-start;margin-top:var(--s4);font-family:var(--mono);font-size:11px;
+  letter-spacing:.04em;color:var(--tx2);background:none;border:none;padding:4px 0;
+  border-bottom:1px solid var(--line-2);cursor:pointer;min-height:24px}
+.gb-bag:hover{color:var(--tx);border-bottom-color:var(--accent)}
+.gb-bag:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Alarm bütçesi TEK SATIRDIR, kart değil (ADR): kart olsaydı yedinci kart olur ve
+   tek-ekran bütçesini kart sayısıyla değil yüksekliğiyle sessizce yerdi. */
+.gb-alarm{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s2) var(--s3);margin-top:var(--s4);
+  padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-bar);
+  font-family:var(--mono);font-size:11px;color:var(--tx2);line-height:1.6}
+.gb-alarm.asim{border-color:var(--amber-h);color:var(--amber)}
+.gb-alarm .gb-bag{margin-top:0;margin-left:auto;align-self:baseline}
+@media(max-width:980px){.gb-ust,.gb-trend{grid-template-columns:1fr}}
 
 /* ---- DURUM ŞERİDİ — the dateline band ruled across the sheet. A stamp square
    carries the state; calm is a ruled sentence you can read past, act is the
@@ -597,7 +648,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* BAŞLIK MERTEBESİ (2026-07-27): kart başlıkları h3'tü ve üstlerinde hiç h2 yoktu — ağaç
    h1'den h3'e atlıyordu. Etiket biçimi (mono 11px indigo, kural altında) DEĞİŞMEZ; değişen
    yalnız etiketin mertebesi. Bu yüzden seçici tag'den sınıfa taşındı. */
-.card .t{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:var(--label-track);
+.card .t,.gb-kart .t{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:var(--label-track);
   margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line-2)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
 
@@ -932,6 +983,13 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .sessizhat{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
   display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s3);
   font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
+/* GLOBAL KAP (S2R-1): şerit artık sayfaların DIŞINDA, `<main>`in ilk çocuğu. Üst bar sabit
+   olduğu için buradaki yapışkanlık onun altına oturur; zemin sayfa zemini olmalı, yoksa altından
+   kayan içerik satırın arasından okunur. BOŞKEN HİÇ YER KAPLAMAZ (`:empty`) — ölçüm gelmeden
+   önce 28px'lik boş bir bant, "tek ekran" bütçesinden sessizce yenmiş olurdu. */
+.sh-global{position:sticky;top:var(--navh,76px);z-index:20;background:var(--bg);
+  padding-top:var(--s2);margin-bottom:var(--s2)}
+.sh-global:empty{display:none}
 /* SAĞLIKLI HÂLDE KALIN YOK: `b` gövdesi de sönük kalır. Sayıyı vurgulamak, sayının kendisinin
    bir haber olduğunu ima ederdi — oysa "17/17" tam olarak haber OLMAMASI gereken şeydir. */
 .sessizhat .sh-seg{white-space:nowrap}
@@ -1101,55 +1159,87 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 <div class="shell">
   <aside class="side" id="side" role="navigation" aria-label="Görünümler"></aside>
   <main id="main">
-    <!-- BEŞ GÖRÜNÜM (2026-07-22 sadeleştirmesi). Sekiz sayfa vardı ve üç çift aynı soruyu iki
-         yerden cevaplıyordu; sermaye, skor ve beceri tabloları sayfalar arasında tekrar ediyordu.
-         Birleşen sayfaların render'ları KORUNUR — her biri kendi alt div'ine yazar, rotalar alias
-         olur, eski yer imleri kırılmaz. -->
+    <!-- SESSİZ HAT — HER SAYFADA, SABİT ÜSTTE (S2R-1). Bugüne dek YALNIZ Operasyon sayfasında
+         çiziliyordu: yani panonun imza öğesi, operatörün en az açtığı sayfanın içinde
+         yaşıyordu. Artık `<main>`in ilk çocuğu ve üst barın altına yapışık — sayfa değişse de
+         yerinden oynamaz. İçeriğini `refreshStatus()` besler (15 sn), yani hangi sayfada
+         olursan ol aynı nabza bakarsın. Sağlıklıyken tek sönük satır, renk taşımaz. -->
+    <div id="sessizhat-global" class="sh-global"></div>
 
-    <!-- BUGÜN = para yüzeyi. "Şu an" (durum/pozisyon/akış) ile "birikim" (eğri/rejim/işlemler)
-         aynı soruya bakıyordu: kitap nerede? -->
-    <!-- BUGÜN ARTIK DURUM ŞERİDİYLE AÇILIR (2026-07-27). Matris masaüstünde şeridi y=710'a,
-         telefonda y=1386'ya itiyordu: operatörün sekmeyi açma sebebi olan TEK soru — "senden bir
-         şey bekliyor mu?" — bir matrisin ve içeriksiz 48px'lik bir selamlamanın altında kalıyordu.
-         Sıra artık: durum şeridi → kısılmış karşılama → sermaye → seans → defterler. -->
-    <section class="page active" id="page-brifing">
-      <div id="bugun-now"></div>
-      <div id="page-performans" style="margin-top:var(--s10)"></div>
+    <!-- ============================================================================
+         S2R-1 KABUĞU (2026-08-02, ADR docs/UIUX-S2R-REDESIGN.md) — YEDİ ALAN SAYFASI.
+         Önceki on iki görünüm SİLİNMEDİ: her biri yeni evinin altında `.alan-bolum`
+         olarak yaşıyor ve kendi render'ı kendi div'ine yazmayı sürdürüyor. Böylece
+         (a) eski hash'ler ROUTE_ALIAS ile kırılmadan yeni eve gider, (b) hiçbir tablo
+         öksüz kalmaz (YASA-6 korunumu), (c) tek `git revert` ile dönüş mümkün.
+         İçeriğin GERÇEK göçü — kart kart, "soruya hizmet" denetimiyle — S2R-2'nin işi.
+
+         KURAL: `.page` YALNIZ yeni yedi sayfadadır. Eski kaplar artık `.page` DEĞİL
+         (`go()` aktifliği `.page` üzerinden çeviriyor — iç içe iki `.page` olsaydı
+         gizli bir bölüm "aktif" kalır ve j/k gezinmesi görünmeyen satırları sayardı).
+         ============================================================================ -->
+
+    <!-- 1 · GENEL BAKIŞ — J1'in evi. Tek ekran, kaydırmasız; her kart bir ÖZET ve tek
+         bir "→ alan sayfası" bağı taşır. Detay burada YOK: detayın yeri alan sayfası. -->
+    <section class="page active" id="page-genel"></section>
+
+    <!-- 2 · VERİ SAĞLIĞI — kapsama/tazelik/karantina + intraday akış durumu. -->
+    <section class="page" id="page-veri">
+      <div class="alan-bas"></div>
+      <!-- PİYASA = izlenen evrenin TAMAMI tek bakışta. Her sayı EOD kapanış verisidir,
+           canlı fiyat DEĞİL: son seans başlıkta yazar, barı geride kalan semboller
+           adıyla sayılır. -->
+      <div class="alan-bolum" id="page-market"></div>
+      <div class="alan-bolum" id="page-intraday"></div>
     </section>
 
-    <!-- KARARLAR = kanıt (kurulum × rejim matrisi) + sistemin ÖNERDİĞİ (adaylar) + senin
-         ONAYINI bekleyen (gelen kutusu). Üçü tek bir soruyu paylaşıyor: bugün neye karar
-         veriliyor? Matris burada bir pencere süsü değil, kararın DAYANAĞI: bir adayın
-         kurulumu bu rejimde bugüne dek ne verdi? Hücreye bas, kayıt yandan açılır. -->
-    <section class="page" id="page-adaylar">
-      <div id="plotmap"></div>
-      <div id="adaylar-now" style="margin-top:var(--s12)"></div>
-      <div id="page-onaylar" style="margin-top:var(--s10)"></div>
+    <!-- 3 · KOŞU & DÖNGÜ — gece döngüsünün ürettikleri: kanıt matrisi, adaylar, onay kuyruğu. -->
+    <section class="page" id="page-kosu">
+      <div class="alan-bas"></div>
+      <!-- KARARLAR = kanıt (kurulum × rejim matrisi) + sistemin ÖNERDİĞİ (adaylar) + senin
+           ONAYINI bekleyen (gelen kutusu). Matris burada süs değil kararın DAYANAĞI:
+           bir adayın kurulumu bu rejimde bugüne dek ne verdi? -->
+      <div class="alan-bolum" id="page-adaylar">
+        <div id="plotmap"></div>
+        <div id="adaylar-now" style="margin-top:var(--s12)"></div>
+        <div id="page-onaylar" style="margin-top:var(--s10)"></div>
+      </div>
     </section>
 
-    <!-- PİYASA = izlenen evrenin TAMAMI tek bakışta. Kararlar sayfası yalnız kapıya girmiş birkaç
-         sembolü gösterir; "bugün neyi izliyorum?" sorusunun panoda hiç cevabı yoktu — evrenin
-         varlığı yalnız state/bars/ dizinindeki dosya sayısıydı. Buradaki her sayı EOD kapanış
-         verisidir, canlı fiyat DEĞİL: son seans başlıkta yazar, barı geride kalan semboller
-         adıyla sayılır. -->
-    <section class="page" id="page-market"></section>
-
-    <section class="page" id="page-operasyon"></section>
-
-    <section class="page" id="page-intraday"></section>
-
-    <!-- ÖĞRENME = tek yüzey: EYLEMLER (üç düğme tek hizada) → beyin → hipotez defteri →
-         beceriler → dersler. Üç interaktif kontrol üç ayrı kartın dibine gömülüydü; operatör
-         "ne yapabilirim?" sorusunu üç sayfa gezerek cevaplıyordu. -->
-    <section class="page" id="page-ajan">
-            <div id="ogrenme-eylem"></div>
-      <div id="page-hermes" style="margin-top:var(--s6)"></div>
-      <div id="ajan-own" style="margin-top:var(--s10)"></div>
-      <div id="page-skiller" style="margin-top:var(--s10)"></div>
-      <div id="page-hafiza" style="margin-top:var(--s10)"></div>
+    <!-- 4 · PORTFÖY & EMİRLER — pozisyonlar, silahlı emirler, sermaye detayı, birikim. -->
+    <section class="page" id="page-portfoy">
+      <div class="alan-bas"></div>
+      <!-- BUGÜN = para yüzeyi. "Şu an" (durum/pozisyon/akış) ile "birikim" (eğri/rejim/
+           işlemler) aynı soruya bakıyor: kitap nerede? -->
+      <div class="alan-bolum" id="page-brifing">
+        <div id="bugun-now"></div>
+        <div id="page-performans" style="margin-top:var(--s10)"></div>
+      </div>
     </section>
 
-    <section class="page" id="page-ayarlar"></section>
+    <!-- 5 · ÖĞRENME — en büyük sadeleşme: ajan + hermes + skiller + hafıza tek yüzeyde. -->
+    <section class="page" id="page-ogrenme">
+      <div class="alan-bas"></div>
+      <div class="alan-bolum" id="page-ajan">
+        <div id="ogrenme-eylem"></div>
+        <div id="page-hermes" style="margin-top:var(--s6)"></div>
+        <div id="ajan-own" style="margin-top:var(--s10)"></div>
+        <div id="page-skiller" style="margin-top:var(--s10)"></div>
+        <div id="page-hafiza" style="margin-top:var(--s10)"></div>
+      </div>
+    </section>
+
+    <!-- 6 · GÖZETİM & ALARMLAR — sessiz hat detayı, bekçiler, mutabakat, olay günlüğü. -->
+    <section class="page" id="page-gozetim">
+      <div class="alan-bas"></div>
+      <div class="alan-bolum" id="page-operasyon"></div>
+    </section>
+
+    <!-- 7 · KİLİTLER & YAPILANDIRMA — kollar, bayraklar, anahtarlar, tema/yoğunluk. -->
+    <section class="page" id="page-kilitler">
+      <div class="alan-bas"></div>
+      <div class="alan-bolum" id="page-ayarlar"></div>
+    </section>
   </main>
 </div>
 

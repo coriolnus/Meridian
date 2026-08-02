@@ -360,8 +360,15 @@ def test_t4_g_esleme_tum_gorunumleri_kapsar():
         r"const VIEWS = \[(.*?)\];", KOD_JS, re.S).group(1)))
     assert set(esleme.values()) == set(views), (
         f"g-eşlemesi VIEWS ile ayrışmış: {sorted(set(esleme.values()) ^ set(views))}")
-    # İş emrinin adlandırdığı üçlü + brief'in eklediği 'b' — bunlar sözleşmedir.
-    for tus, hedef in (("d", "market"), ("a", "operasyon"), ("r", "ajan"), ("b", "brifing")):
+    # İş emrinin adlandırdığı üçlü + açılış sayfası — bunlar sözleşmedir.
+    #
+    # ÇİVİ TAŞINDI (S2R-1, 2026-08-02): eski hedefler (market/operasyon/ajan/brifing) artık
+    # SAYFA DEĞİL, alan sayfalarının altındaki bölümler. Sözleşmenin KENDİSİ değişmedi — iş
+    # emrinin `g d`/`g a`/`g r` üçlüsü hâlâ veri/alarm/araştırma yüzeylerine bağlı; yeni IA'da
+    # o yüzeylerin adları kelimenin tam anlamıyla "Veri Sağlığı", "Gözetim & Alarmlar" ve
+    # "Öğrenme" oldu, yani harf ile hedef arasındaki bağ artık bir yorum satırı okumadan kuruluyor.
+    # 'b' (Bugün) yerini 'g' (Genel Bakış) aldı: açılış sayfası odur.
+    for tus, hedef in (("d", "veri"), ("a", "gozetim"), ("r", "ogrenme"), ("g", "genel")):
         assert esleme.get(tus) == hedef, f"g {tus} → {esleme.get(tus)} (beklenen {hedef})"
 
 
@@ -416,18 +423,37 @@ def test_t4_global_soru_isareti_haritayi_aciyor():
 # ==================================================================================
 
 def _render_adlari() -> set[str]:
-    return set(re.findall(r"^RENDER\.(\w+) = ", APPJS, re.M))
+    """RENDER'ın TAMAMI. S2R-1'den beri iki kaynağı var ve ikisi de sayılmalı:
+
+    * açık atamalar (`RENDER.brifing = …`) — on iki eski görünüm + Genel Bakış,
+    * kabuk üreteci (`RENDER[alan] = alanSayfasi(alan, …)`) — altı alan sayfası.
+
+    Yalnız açık atamaları saymak, altı sayfayı denetimin DIŞINDA bırakırdı: soru cümlesi
+    olmayan bir sayfa test yeşilken doğabilirdi ve bu, testin var olma sebebinin tersi olurdu.
+    """
+    acik = set(re.findall(r"^RENDER\.(\w+) = ", APPJS, re.M))
+    blok = re.search(r"const ALAN_BOLUMLERI = \{(.*?)\n\};", APPJS, re.S)
+    assert blok, "ALAN_BOLUMLERI tanımlı değil — kabuk üreteci kaybolmuş"
+    assert "RENDER[alan] = alanSayfasi(alan, bolumler)" in APPJS, \
+        "alan sayfaları ALAN_BOLUMLERI'nden TÜRETİLMİYOR — iki liste elle tutulur ve kayar"
+    return acik | set(re.findall(r"^\s*(\w+):\s*\[", blok.group(1), re.M))
 
 
-def test_t5_on_iki_gorunumun_hepsinde_soru_var():
-    """ON İKİ RENDER, ON İKİ CÜMLE. Gömülü bölümler (performans · onaylar · hermes · skiller ·
-    hafiza) de sayılır: 'ekrana dök' riski tam olarak orada doğar — bir sayfaya beşinci bir
-    bölüm eklemek, yeni bir sayfa açmaktan çok daha ucuz görünür."""
+def test_t5_on_dokuz_gorunumun_hepsinde_soru_var():
+    """ON DOKUZ RENDER, ON DOKUZ CÜMLE (S2R-1: 7 alan sayfası + 12 bölüm).
+
+    Bölümler de sayılır: 'ekrana dök' riski tam olarak orada doğar — bir sayfaya bir bölüm
+    daha eklemek, yeni bir sayfa açmaktan çok daha ucuz görünür.
+
+    ÇİVİ TAŞINDI (2026-08-02): sayı 12'den 19'a çıktı çünkü IA yedi alan sayfasına geçti ve
+    eski on iki görünüm SİLİNMEDİ — yeni evlerinin altında bölüm olarak yaşıyorlar. Kural
+    aynı kaldı: soru cümlesi olmayan çizilebilir bir yüzey YOK.
+    """
     blok = re.search(r"const EKRAN_SORUSU = \{(.*?)\n\};", KOD_JS, re.S)
     assert blok, "EKRAN_SORUSU tanımlı değil"
     sorular = dict(re.findall(r"(\w+):\s*\"([^\"]+)\"", blok.group(1)))
     renderlar = _render_adlari()
-    assert len(renderlar) == 12, f"RENDER sayısı değişmiş ({len(renderlar)}): {sorted(renderlar)}"
+    assert len(renderlar) == 19, f"RENDER sayısı değişmiş ({len(renderlar)}): {sorted(renderlar)}"
     assert set(sorular) == renderlar, (
         f"soru cümlesi olmayan / karşılığı olmayan görünüm: {sorted(set(sorular) ^ renderlar)}")
     for ad, cumle in sorular.items():
@@ -437,10 +463,22 @@ def test_t5_on_iki_gorunumun_hepsinde_soru_var():
 
 def test_t5_her_gorunum_cumleyi_gercekten_ciziyor():
     """Sözlükte durmak yetmez — RENDER onu BASMALI. Bir tanım, çağrılmadıkça bir yorumdur
-    (YASA 6'nın bu turdaki küçük kardeşi: okuyucusuz yazım yok)."""
-    cagrilan = set(re.findall(r'soruCumlesi\("(\w+)"\)', APPJS))
-    assert cagrilan == _render_adlari(), (
-        f"çizilmeyen soru cümlesi: {sorted(_render_adlari() - cagrilan)}")
+    (YASA 6'nın bu turdaki küçük kardeşi: okuyucusuz yazım yok).
+
+    S2R-1'den beri iki çizim yolu var: bölümler cümleyi DOĞRUDAN basıyor
+    (`soruCumlesi("market")`), alan sayfaları ise ortak kabuktan (`alanBasHTML` → `soruCumlesi(id)`).
+    İkisi de sayılır; ikisi birden sayılmazsa "çiziliyor" iddiası yarım kalır."""
+    dogrudan = set(re.findall(r'soruCumlesi\("(\w+)"\)', APPJS))
+    kabuk = re.search(r"function alanBasHTML\(id\) \{(.*?)\n\}", APPJS, re.S)
+    assert kabuk and "soruCumlesi(id)" in kabuk.group(1), \
+        "alan sayfası kabuğu soru cümlesini BASMIYOR"
+    # Kabuğun kapsadığı sayfalar: ALAN_BAS sözlüğünün anahtarları (kabuk onları çizer).
+    bas = re.search(r"const ALAN_BAS = \{(.*?)\n\};", APPJS, re.S)
+    assert bas, "ALAN_BAS tanımlı değil"
+    kabuklu = set(re.findall(r"^\s*(\w+):\s*\[", bas.group(1), re.M))
+    cizilen = dogrudan | kabuklu
+    assert cizilen == _render_adlari(), (
+        f"çizilmeyen soru cümlesi: {sorted(_render_adlari() - cizilen)}")
 
 
 def test_t5_satir_sonuk_ve_kancasi_var():

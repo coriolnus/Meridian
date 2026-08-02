@@ -229,7 +229,10 @@
     var s = document.querySelector(".sitem.on");
     if (s && s.dataset.p) return s.dataset.p;
     var h = (location.hash || "").slice(1);
-    return h || "brifing";
+    /* Son çare AÇILIŞ SAYFASIDIR ve o sayfa S2R-1'de "genel" oldu (app.js VARSAYILAN_ROTA).
+       Eski ad burada kalsaydı yalnız bu dalda — ne ray çizilmiş ne hash yazılmış anın
+       içinde — palet "yenile"yi yanlış sayfaya uygulardı: nadir, sessiz ve teşhisi zor. */
+    return h || "genel";
   }
   /* Bir eylemi çalıştırmadan ÖNCE ilgili görünüme geç. Sebep ölçüldü, tercih
      değil: app.js'in eylemleri sonuçlarını sayfaya ait bir düğüme yazıyor

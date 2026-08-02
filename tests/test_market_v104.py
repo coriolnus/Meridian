@@ -157,10 +157,17 @@ def test_ust_duzey_alanlarin_da_tuketicisi_var(sandbox_state):
 # 5) Statik kablolama — sekme gerçekten var ve yetki isteniyor
 # =================================================================================================
 def test_statik_sekme_kablolari():
+    """ÇİVİ TAŞINDI (S2R-1, 2026-08-02): Piyasa artık kendi başına bir SEKME değil, "Veri Sağlığı"
+    alan sayfasının altında bir BÖLÜM. Ölçtüğümüz şey değişmedi — evren yüzeyi erişilebilir mi,
+    çizen bir render'ı ve bir kabı var mı, ucu yetkili mi? Eklenen tek şart: eski `#market`
+    yer imi KIRILMAMALI, yani alias'ı olmalı. Alias olmasaydı bu tur, kaydedilmiş bir bağlantıyı
+    sessizce ölü bağa çevirirdi."""
     js = APP_JS.read_text()
-    assert '["market", "Piyasa"]' in js, "VIEWS'te market görünümü yok"
-    assert "RENDER.market" in js and "RAIL_ICON" in js and "market:" in js
-    assert 'id="page-market"' in INDEX_HTML.read_text(), "index.html'de sayfa kabı yok"
+    assert '["veri", "Veri Sağlığı"]' in js, "VIEWS'te veri sağlığı alan sayfası yok"
+    assert re.search(r"const ROUTE_ALIAS = \{.*?\bmarket: \"veri\"", js, re.S), \
+        "eski #market yer imi yeni evine yönlenmiyor"
+    assert "RENDER.market" in js and "RAIL_ICON" in js and "veri:" in js
+    assert 'id="page-market"' in INDEX_HTML.read_text(), "index.html'de bölüm kabı yok"
 
     blok = next(b for b in re.split(r"\n(?=@app\.)", API_SRC.read_text()) if '"/api/market"' in b)
     assert "_auth(request)" in blok, "/api/market yetkisiz açık"
@@ -168,10 +175,12 @@ def test_statik_sekme_kablolari():
 
 def test_klavye_haritasi_VIEWS_ten_turer():
     """Yeni sekme eklenirken elle güncellenen ikinci bir liste OLMAMALI (2026-07-27 dersi:
-    iki liste kayınca yardım paneli var olmayan kısayolları belgeliyordu)."""
+    iki liste kayınca yardım paneli var olmayan kısayolları belgeliyordu).
+
+    ÇİVİ TAŞINDI (S2R-1): açıklama satırı artık `market`in değil, evi olan `veri` sayfasının."""
     js = APP_JS.read_text()
     assert "const PAGE_MAP = VIEWS.map(" in js
-    assert "market:" in js.split("const PAGE_DESC = {")[1].split("};")[0], "PAGE_DESC.market yok"
+    assert "veri:" in js.split("const PAGE_DESC = {")[1].split("};")[0], "PAGE_DESC.veri yok"
 
 
 # =================================================================================================
