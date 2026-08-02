@@ -163,11 +163,12 @@ def test_c24_anahtar_YOKKEN_modul_varsayilanina_duser(seeded):
     goal = copy.deepcopy(config.goal())
     for k in ("heat_hard_r", "heat_review_r", "corr_review"):
         goal["limits"].pop(k)
-    # 3,4 + 1,0 = 4,4R ≤ 4,5 → sert tavan DEĞİL; REVIEW (3,5R yumuşak bandı) beklenir.
+    # 3,4 + 1,0 = 4,4R ≤ 5,0 → sert tavan DEĞİL; REVIEW (3,5R yumuşak bandı) beklenir.
+    # (OPERATÖR KARARI 2026-08-03: varsayılan 4,5→5,0 — d01ccb5/7e99eff; sınır senaryosu güncellendi.)
     v, r = guard.classify_gate(_plan(), _pf(open_risk_r=3.4), _rejim(), goal)
     assert v == "REVIEW" and any("ısı" in x for x in r), (v, r)
-    assert guard.classify_gate(_plan(), _pf(open_risk_r=3.6), _rejim(), goal)[0] == "NO_GO", \
-        "4,6R varsayılan 4,5R tavanını aşmalı — fail-safe varsayılan yanlış"
+    assert guard.classify_gate(_plan(), _pf(open_risk_r=4.1), _rejim(), goal)[0] == "NO_GO", \
+        "5,1R varsayılan 5,0R tavanını aşmalı — fail-safe varsayılan yanlış"
     assert (guard.HEAT_HARD_R, guard.HEAT_REVIEW_R, guard.CORR_REVIEW) == (5.0, 3.5, 0.85)
 
 
