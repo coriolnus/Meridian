@@ -161,6 +161,17 @@ emekli-sembol modülü devreye girer (payda 259→251) — BEKLENEN, doğrulama 
    (boş-hâl metinleri "ölçüm yok" ≠ 0 doğru) · fail-notify beyanlı NO-OP aynen.
 8. Log kapanışı: DAĞITIM BLOKE kaydı kapatılır; pencere sonucu + doğrulama çıktıları işlenir.
 
+**DESTEKLEYİCİ KOŞU (2026-08-02 gece, diğer oturum — otoriter koşunun yerine geçmez):** izole
+worktree (da6bec3 + state fotoğrafı kopyası) tam suite: **2 failed / 3750 passed** —
+v76 6'lısı YEŞİL, girişim ailesi bu koşuda da ateşlenmedi (ikinci bağımsız kanıt). İki kırmızı
+ortam artefaktı, ikisi de dağıtımı bloklamaz ama ikisi de bulgu: (1) c1[shadow] —
+`skills/_emekli/shadow/` BOŞ ve git-izsiz dizin, yalnız Mac diskinde; "taşındı-silinmedi"
+güvencesi git'ten yeniden üretilemiyor (skill-temizlik sahibine: tombstone'a README/`.keep` +
+versiyonlama önerisi). (2) uiux-t3 SINIFI: runbook §AÇIK KALANLAR günlüğün AYNASIDIR —
+günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa t3'ü yeniden kırar
+(892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
+DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
+
 **Geri alma:** kod: yerelde önceki tepeye checkout + `./dagit.sh --uygula` (≈5 dk; state'e
 dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
 
