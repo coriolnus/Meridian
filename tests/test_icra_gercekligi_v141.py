@@ -505,6 +505,27 @@ def test_law6_slipaj_summary_has_a_dashboard_reader(sandbox_state):
         "(YASA 6)")
 
 
+def test_law6_e3_e4_have_dashboard_readers(sandbox_state):
+    """`icra` bloğunun kalan İKİ üyesi de okuyucusuzdu: E3 (kötümser band) ve E4 (gece/gündüz)
+    `/api/diagnostics`te tam servis ediliyor ama hiçbir yüzey basmıyordu — E2'nin bu tur kapattığı
+    boşluğun aynısı. Dört assert ayrı: zincir koptuğunda HANGİ okuyucunun düştüğü mesajdan okunur."""
+    app = (pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js").read_text()
+    assert "ek_bps_giris" in app, (
+        "pano E3'ün YÜRÜRLÜKTEKİ bandını okumuyor — girişe yüklenen ek maliyet (`ek_bps_giris`) "
+        "hiçbir yüzeyde görünmüyor, yani hükmün maliyet varsayımı okuyucusuz (YASA 6)")
+    assert "ampirik_bps" in app and "min_n" in app, (
+        "pano E3'ün AMPİRİK ölçümünü ya da onun asgari örneklemini okumuyor — `min_n` yükten "
+        "okunmalı; panoya sabit (20) yazılırsa analytics'teki BAND_MIN_N değişikliği ekrana "
+        "yansımaz ve pano eski asgariyi savunmayı sürdürür (C10 dersi: sabit sayı yasak)")
+    assert "gece_payi" in app and "icra_farki" in app, (
+        "pano E4'ün genel özetini okumuyor — `gece_payi` (kâr hangi bacaktan) ve `icra_farki` "
+        "(işlem − yol = çıkış seviyesi + friksiyon) okuyucusuz ölçüm olarak duruyor (YASA 6)")
+    assert "hucre_min_n" in app, (
+        "pano E4'ün ince-hücre eşiğini YÜKTEN okumuyor — panoya sabit (5) yazılırsa "
+        "NIGHTDAY_HUCRE_MIN_N değişikliği ekrana yansımaz ve sönük satırların gerekçesi yalan "
+        "olur (C10 dersi: sabit sayı yasak)")
+
+
 def test_e2_ledger_rows_are_json_serialisable(sandbox_state):
     """Defter satırı JSONL'e yazılabilir olmalı — karar sözlüğü içinde numpy/Timestamp taşımaz."""
     d = BR.entry_order_decision(100.0, ref_price=99.5, atr=1.0)
