@@ -56,7 +56,24 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
 # yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
 # değil BEYANLA karşılıyor (barsarchive.py:748 — "arşivi YOK ... henüz hiç tur koşmadı").
-SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT"}
+# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (2026-08-02 ölçümü). WP-H/H9'dan
+# (07-31) beri altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
+# `storage.active`; yol her çağrıda `config.STATE`ten türer). DB kum havuzuna kopyalanınca
+# `_reset_sandbox_state`in HAM DOSYA yazımları çocuğun store okumalarına GÖRÜNMEZ olur: çocuk
+# canlının `portfolio.json`unu DB kopyasından okur, `last_date="2026-07-31"` görür ve
+# `loop.daily_cycle` monotonluk bekçisi (loop.py:719) eval penceresindeki HER tarihsel seansı
+# `regressive_session_refused` ile reddeder. ÖLÇÜM (A1, salt-okuma): son kum havuzunda 522/522 seans
+# reddedildi, DB'deki 95 işlemin hepsi strategy_version=4 olduğu için `_count(1)=0`, ve 07-31'den
+# beri 154 kadans koşusunun TAMAMI ~60 sn'de `phase=done, n_v1=0` ile bitti — yani mekanizma
+# migrasyondan bu yana hiç kalibrasyon noktası üretemedi. Kum havuzu DB'SİZ DOĞUNCA çocukta
+# `storage.active()` False döner ve dosya-tabanlı davranışa, yani migrasyon ÖNCESİ ÖLÇÜLMÜŞ-İYİ yola
+# (07-22 sprinti: n_v1=100) dönülür. İKİNCİ KAZANÇ AYNI SATIRDA: canlı worker yazarken SICAK bir WAL
+# veritabanını `shutil` ile kopyalamak tutarlı bir anlık görüntü DEĞİLDİR (ana dosya ile -wal/-shm
+# ayrı anlarda okunur) — o risk de kapanır. Sınıf: audit #23'ün (kopyalanan HALT tüm sandbox
+# girişlerini bastırır) ikinci kuşağı, artı "SKIP_COPY denylist'i state'e yeni gelen artefaktları
+# sessizce kaçırır" (hemen üstteki bars_intraday vakasıyla aynı tur).
+SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT",
+             "meridian.db", "meridian.db-wal", "meridian.db-shm"}
 
 
 def _now() -> str:
@@ -141,7 +158,12 @@ def _sandbox_runs(limit: int = 5) -> tuple[list, str | None]:
 
 def _reset_sandbox_state(sbstate: Path) -> None:
     """Blank the sandbox ledgers so the sprint measures ITS OWN forward trades, starting from a fresh v1
-    with parent=None (exactly the live starting condition, minus the accumulated history)."""
+    with parent=None (exactly the live starting condition, minus the accumulated history).
+
+    KISIT (2026-08-02): buradaki HAM YOL yazımları yalnız kum havuzu DEPOLAMA ARTEFAKTISIZ (yani
+    `meridian.db`siz) doğduğu için store-görünür bir gerçektir — `state/`e yeni bir depolama
+    artefaktı gelirse SKIP_COPY'ye girmek ZORUNDADIR, aksi halde bu sıfırlama sessizce hiçbir şeyi
+    sıfırlamaz (gerekçe ve ölçüm SKIP_COPY'nin üstünde)."""
     from .score import START_EQUITY
     (sbstate / "trades.jsonl").write_text("")
     (sbstate / "hypotheses.jsonl").write_text("")
@@ -189,12 +211,14 @@ def _prune_old_sandboxes(keep: int = SANDBOX_KEEP) -> None:
             pass
 
 
-def start(cfg: dict | None = None) -> dict:
-    cfg = cfg or {}
-    if status().get("active"):
-        return {"status": "already_running", **status()}
-    _prune_old_sandboxes()
-    sid = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+def _kur_kum_havuzu(sid: str) -> Path:
+    """Kum havuzunu kur ve KÖKÜNÜ döndür: kopya → bars bağı → skills bağı → defter sıfırlama.
+
+    `start()`TEN AYRI BİR FONKSİYON OLMASININ SEBEBİ ÖLÇÜLEBİLİRLİKTİR (2026-08-02): izolasyon
+    sözleşmesini sınayan test YASANIN KENDİSİNİ çağırabilmelidir. Sırayı (kopya, bağlar, sıfırlama)
+    teste yeniden yazmak bu depoda tekrar tekrar yaşanan "aynı yasanın iki uygulaması" hatasıdır —
+    testteki kopya yeşil kalırken üretim yolu sessizce ayrışır ve dedektör hiçbir şey ölçmez.
+    Fonksiyon SAFtır: yalnız diski kurar, süreç doğurmaz, durum dosyası yazmaz."""
     # SBROOT KANONİK YOLA DAMGALANIR (K1, 2026-07-30). `state/sprint_status.json` hâlâ
     # `/Users/erdemozturk/Documents/Claude/AI-Trading/...` yolunu taşıyor — 2026-07-22 sprintinden
     # kalma bir damga, ve o yol 07-23 taşımasından beri gerçek depoya SYMLINK. Sembolik yolu
@@ -232,6 +256,17 @@ def start(cfg: dict | None = None) -> dict:
     except (OSError, NotImplementedError):  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
         pass
     _reset_sandbox_state(sbstate)
+    return sbroot
+
+
+def start(cfg: dict | None = None) -> dict:
+    cfg = cfg or {}
+    if status().get("active"):
+        return {"status": "already_running", **status()}
+    _prune_old_sandboxes()
+    sid = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    sbroot = _kur_kum_havuzu(sid)
+    live = config.STATE
     conf = {"k_max": int(cfg.get("k_max", 3)), "budget": int(cfg.get("budget", 12))}
     env = {**os.environ, "MERIDIAN_ROOT": str(sbroot), "MERIDIAN_BROKER": "internal",
            "MERIDIAN_SPRINT_STATUS": str((live / STATUS_FILE).resolve())}

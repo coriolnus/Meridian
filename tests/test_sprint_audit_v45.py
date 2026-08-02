@@ -20,7 +20,7 @@ import pathlib
 import pytest
 import yaml
 
-from meridian import config, sprint, store
+from meridian import config, sprint, storage, store
 
 
 SRC = inspect.getsource(sprint)
@@ -70,6 +70,71 @@ def test_sr4b_seans_ici_arsivler_kum_havuzuna_kopyalanmaz():
     for name in ("bars_intraday", "intraday_bars"):
         assert name in sprint.SKIP_COPY, \
             f"{name} kum havuzuna kopyalanıyor (2026-08-02 ölçümü: ikisi birlikte 83M/sandbox)"
+
+
+def test_sr4c_depolama_artefakti_kum_havuzuna_kopyalanmaz():
+    """SR4 AİLESİ (İZOLASYON), SR4b'nin BOYUT ailesi DEĞİL — ayrım bu testin varlık sebebidir.
+
+    `meridian.db` kopyalanınca kum havuzu şişmez (defter dosyalarının kendisi zaten kopyalanıyor);
+    BOZULAN ŞEY ÖLÇÜMÜN KENDİSİDİR. WP-H/H9'dan (2026-07-31) beri altı defter DB varsa SQLite'tan
+    okunur, oysa `_reset_sandbox_state` defterleri HAM DOSYA yazımıyla sıfırlar — DB kopyası
+    dururken o sıfırlama çocuğun store okumalarına GÖRÜNMEZ. Ölçülen sonuç (A1, salt-okuma):
+    çocuk canlının `portfolio.json`unu DB kopyasından okuyup `last_date="2026-07-31"` görüyor,
+    `loop.daily_cycle` monotonluk bekçisi eval penceresindeki 522/522 seansı
+    `regressive_session_refused` ile reddediyor ve 154 kadans koşusunun tamamı ~60 sn'de
+    `phase=done, n_v1=0` ile bitiyordu. Yani HALT ile aynı sınıf (audit #23): kopyalanan tek bir
+    artefakt tüm kum havuzu girişlerini bastırıyor, hiçbir şey patlamıyor, sprint yalnız
+    "inconclusive" diyor. `-wal`/`-shm` de çivilenir: ana dosya atlanıp yan dosyalar kopyalanırsa
+    sandbox'ta yarım bir veritabanı doğar (ve sıcak bir WAL'i `shutil` ile kopyalamak zaten
+    tutarlı bir anlık görüntü değildir)."""
+    for name in (storage.DB_NAME, storage.DB_NAME + "-wal", storage.DB_NAME + "-shm"):
+        assert name in sprint.SKIP_COPY, \
+            (f"{name} kum havuzuna kopyalanıyor — çocukta `storage.active()` True döner ve "
+             f"`_reset_sandbox_state`in ham dosya sıfırlaması store katmanına görünmez olur")
+
+
+@pytest.fixture
+def db_kum_havuzu(sandbox_state):
+    """sandbox_state + bağlantı temizliği. `storage._CONNS` YOL-anahtarlıdır ve süreç ömrü boyunca
+    açık kalır; tanıtıcıyı bırakmak uzun suite'te fd sızdırır (test_storage_v142 deseni)."""
+    yield sandbox_state
+    storage.close_connections()
+
+
+def test_sr1d_kum_havuzu_dbsiz_dogar_ve_sifirlama_store_katmanina_gorunur(db_kum_havuzu, monkeypatch):
+    """DAYANIKLI ÇİVİ: sıfırlama STORE KATMANINDAN doğrulanır, dosyadan değil — arka-uçtan bağımsız.
+
+    SR1b bu vakayı YAKALAYAMADI ve sebebi tam olarak buydu: `(sb/"trades.jsonl").read_text() == ""`
+    diye DOSYAYA bakıyor, yani üretimin okuduğu yüzeye değil. Depolama arka-ucu değişince (WP-H/H9)
+    iddia doğru kaldı ama ANLAMINI kaybetti: dosya boş, defter dolu. Buradaki iddialar `store` ile
+    ölçülür, dolayısıyla yarın üçüncü bir arka-uç gelse bile "kum havuzu SIFIR bir defterle doğar"
+    cümlesi ölçülmeye devam eder.
+
+    Kurgu üretimin ölçülmüş hâlidir: canlıda migre bir DB var, portföyün `last_date`i eval
+    penceresinin İLERİSİNDE (canlıda 2026-07-31 idi; burada 2099 — monotonluk bekçisi için aynı
+    şey) ve defterdeki tek işlem strategy_version≠1 (canlıda 95 işlemin hepsi v4 → `_count(1)=0`)."""
+    storage.ensure_schema()                    # DB'yi yaratma yetkisi olan TEK yol
+    store.write_json("portfolio.json", {
+        "cash": 94457.91, "realized_pnl": -5542.09, "last_id": 95, "positions": {}, "armed": [],
+        "pending_exits": {}, "last_date": "2099-01-01", "day_start_equity": 94457.91})
+    store.append_jsonl("trades.jsonl", {"id": "T00001", "ticker": "AAPL", "side": "long",
+                                        "strategy_version": 4, "r_multiple": 1.5})
+    # KURULUM ÇİPASI: bu satır düşerse test ölçmek İSTEDİĞİ yolu ölçmüyordur (DB devrede değil) ve
+    # aşağıdaki yeşil, izolasyondan değil kurulum hatasından gelirdi.
+    assert store.db_backed("portfolio.json") and store.read_json("portfolio.json")["last_date"] == "2099-01-01"
+    # WAL kontrol noktası: son bağlantı kapanınca veri ANA dosyaya iner. Kopyalanan şeyin gerçekten
+    # canlı defter olması gerekir — yoksa "kopya zararsızdı" sonucu ölçümden değil zamanlamadan gelir.
+    storage.close_connections()
+
+    sbstate = sprint._kur_kum_havuzu("20990101-000000") / "state"
+    monkeypatch.setattr(config, "STATE", sbstate)      # artık ÇOCUĞUN gördüğü state buradır
+    assert store.read_json("portfolio.json", {})["last_date"] is None, \
+        ("çocuk canlının portföyünü okuyor — `loop.daily_cycle` monotonluk bekçisi eval "
+         "penceresindeki HER seansı `regressive_session_refused` ile reddeder (n_v1=0)")
+    assert store.read_jsonl("trades.jsonl") == [], \
+        "kum havuzu canlının işlemleriyle doğdu — v1 sayımı ve taban ölçümü kirlenir"
+    assert not (sbstate / "meridian.db").exists(), \
+        "kum havuzu DEPOLAMA ARTEFAKTIYLA doğdu — mekanizma budur, iki iddianın da kökü"
 
 
 # ---------- SR2: pencereler sabit ----------
