@@ -1,0 +1,42 @@
+card_id: EDG-2026-020
+family: postevent_inplay   # EDG-011'in PIT-temiz tek-yönlü halefi (2026-08-02 keşif hükmü; 011 askıda kalır, lafzı korunur)
+thesis: >
+  Kazançı GERÇEKLEŞMİŞ (0 <= t−e <= P; e = olay günü, kamusal geçmiş olgu — PIT-güvenli)
+  sembollerde rvol-koşullu önceliklendirme, aday havuzunun geri kalanına karşı taban-fazlası
+  taşır mı? EDG-011'in "katalizör yakınlığı" tezinin ölçülebilir yarısı. BEYAN: bu eksen
+  PEAD-KOMŞULUĞUDUR — motorda evaluate_pead değerlendiricisi zaten var; bu kartın varlık
+  gerekçesi ancak PEAD-sinyalinden AYRIŞAN bilgi taşımasıdır (kill#2 tam bunu ölçer).
+evidence_refs: [research/olcumler/kesif_2026-08-02/RAPOR_edg011_g6_kesif.md (iki-eksen doğrulama
+  %98,4; PIT hüküm tablosu), research/cards/EDG-2026-011-inplay-onceliklendirme.yaml (ana tez),
+  research/olcumler/kys_olcum/ (Nasdaq-geçmişi çekim yolu + kapsama)]
+universe: full_251 (kapsam beyanlı; olay-takvimi Nasdaq-geçmişi 251/251 %99,7 tamlık)
+features_asof: >
+  in_play(t) = SADECE e <= t dalı: min(t − e) <= P olan en yakın GERÇEKLEŞMİŞ olay (gelecek
+  tarih KULLANILMAZ — ex-post kaynak duyuru-öncesi bilinirliği kanıtlayamaz, keşif tablosu).
+  rvol20(t) canlı tanımla birebir (SMA20 — EDG-017 dersi: tanım tekilliği). Olay kaynağı
+  Nasdaq-geçmişi (gün-başına raporlayanlar); 8-K acceptance yalnız çapraz-doğrulama satırı.
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün ADAY-HAVUZU (in_play-dışı) ortalaması; 21g blok CI"
+parameter_grid:
+  pencere_gun: [3, 5]   # K+=2 (011'in grid'i taşındı; başka hücre YOK)
+cost_model: "10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu"
+success_metric: >
+  in_play∧rvol>=1.5 diliminin @20 taban-fazlası anlamlı POZİTİF (CI 0-dışı) VE PEAD-ayrışması:
+  evaluate_pead sinyal kümesiyle örtüşme düşük (Jaccard) YA DA pead-kontrollü artık anlamlı
+  (çift-sıralama/artık-IC — EDG-016 şablonu).
+kill_criteria:
+  - "iki pencerede de @20 fazla CI-0-içi → bilgisiz, arşiv (011'e de not düşer: tek-yönlü yarı da boş)"
+  - "PEAD-örtüşmesi yüksek VE pead-kontrollü artık CI-0-içi → 'PEAD kopyası' arşiv — motor zaten taşıyor"
+  - "maliyet-sonrası net <=0 → arşiv + not"
+guards:
+  - "pozitif kontrol: rvol20 @20 IC ≈0.0642 çivisi sandbox'ta yeniden üretilir (üretilemezse DUR)"
+  - "PIT: yalnız e<=t; gelecek-tarih okuyan tek satır bile ihlaldir (test/assert ile çivilenir)"
+  - "olay-takvimi kanıtı ölçüm klasörüne arşivlenir (scratchpad-kaybı sınıfı — EDG-016 dersi)"
+  - "PK4/PK5 + temiz_taban zorunlu; eşik-dilbilgisi"
+k_registry: {registered_at: "2026-08-02T23:55Z", trial_ids: [inplay_postevent/p3, inplay_postevent/p5]}
+status: registered
+notes: >
+  Ölçüm ajanı KARTA DOKUNMAZ; hüküm Rol-1'de. Sandbox: research/olcumler/inplay_postevent/.
+  Olay-takvimi: KYS turunun çekim betiği (kys_olcum/takvim_cek.py) yeniden kullanılır ya da
+  scratchpad önbelleği (kys_root/cal_cache, 1.198 gün) kopyalanır — her hâlde kanıt klasöre.
+  EDG-011 ile ilişki: 011 ASKIDA kalır (iki-yönlü lafzı korunur, PIT defteri birikirse açılır);
+  bu kart onun tek-yönlü yarısını ölçer, hükmü 011'e not düşülür.
