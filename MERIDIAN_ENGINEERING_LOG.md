@@ -123,7 +123,7 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   Commit 4d695ff; A1'e dağıtım bakım penceresini bekliyor (o güne dek canlıdaki eski satır
   zararsız gürültü üretmeye devam eder).
 
-## DAĞITIM PENCERESİ PLANI (2026-08-02, Rol-1 — İKİ OTURUMUN İŞİ TEK PENCEREDE)
+## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
 (84fcf69..6aba956) + icra-bloğu merge'i (46ce02f: E2 `kapi` kovası, E2/E3/E4 pano okuyucuları) +
@@ -191,8 +191,9 @@ olarak çözülmüş: birim artık token taşımıyor) · scheduler_status.updat
 restart'tan beri İLERLİYOR (canlılık ve ilerleme ayrı ayrı var) · /api/diagnostics: `icra.slipaj.kapi`
 VAR (n=0, dağılım {} — dürüst boş hâl) + kotumser_band + gece_gunduz VAR · evren:
 universe_drift/universe=251, retired_in_universe=0 (payda 259→251 GERÇEKLEŞTİ) · servis edilen
-app.js YENİ paket (kapi_dagilimi içeriyor) · fail-notify birimi repo ile bayt-özdeş. BEYAN: pano
-kartlarının tarayıcı-render'ı görsel doğrulanmadı (veri+paket kanıtı tam); ilk pano bakışı son mühür.
+app.js YENİ paket (kapi_dagilimi içeriyor) · fail-notify birimi repo ile bayt-özdeş. SON MÜHÜR
+(operatör, ~15:00 UTC): pano tünelden açıldı, DÖRT KART DOĞRU BASIYOR — PENCERE KAPANDI. Adım 8
+tam: BLOKE kaydı kapalı, freeze kalkık, iki oturumun işi tek pencerede canlıda.
 
 **FREEZE İLAN EDİLDİ (2026-08-02 ~16:50, Rol-1):** donan KOD tepesi `571a094` (içerik: v76 onarımı
 da6bec3 ✓ fikstür-yalnız/eşiksiz doğrulandı + 65/65 bağımsız teyit · guard turu 014bc78 ·
