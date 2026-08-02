@@ -184,11 +184,35 @@ def refresh(tickers: list[str]) -> int:
 
     ÜÇÜNCÜ SÜTUN (`time`): kaynağın BMO/AMC alanı biliniyorsa yazılır, bilinmiyorsa BOŞ kalır.
     Karar yolunu BUGÜN etkilemez (`TIME_TIGHTEN=False`); alan birikmeye BUGÜN başlar çünkü geçmiş
-    takvim geriye doğru zenginleşmez — bugün yazılmayan saat bilgisi bir daha gelmez."""
+    takvim geriye doğru zenginleşmez — bugün yazılmayan saat bilgisi bir daha gelmez.
+
+    KISMİ PENCERE ARTIK SESSİZ DEĞİL (denetim C25, 2026-08-02): Nasdaq ucu gün başına sorgulanır ve
+    düşen günü GÜN BAZINDA yutar. Eskiden "20 iş gününün 19'u düştü" ile "hepsi geldi" buraya AYNI
+    şekilde geliyordu — tek gün satır döndürdüğü sürece tur "başarı" sayılıyor, kaç gün-diliminin
+    kaçtığı HİÇBİR yere yazılmıyordu; yeni duyurulan bir kazanç tarihi kaçan dilimde kalırsa
+    `in_blackout` o sembolde (veri yokken fail-open) False döner ve motor bilanço gününe pozisyonla
+    girer. Artık adaptör `stats` sayacını doldurur, eksik kapsama `earnings_refresh_window_partial`
+    olarak UYARI basar ve sayılar `earnings_refreshed`e alan olarak geçer.
+    ⚠ YEDEĞE DÜŞME EŞİĞİ DEĞİŞMEDİ: FMP hâlâ YALNIZ `not rows` (tam boşluk) hâlinde denenir —
+    eşiği kısmi kapsamaya çekmek bir KOTA kararıdır ve operatörün kalemindedir. Burada eklenen
+    yalnız GÖRÜNÜRLÜKTÜR; hangi planın karartıldığı bit-bit aynıdır."""
     from .adapters import data as _da
     uni = {str(t).upper() for t in tickers}
     _s, _e = refresh_window()          # PENCERE TEK TANIMDAN (bkz. margin_days) — literal YOK
-    fetched = _da.nasdaq_earnings_window(_s, _e, with_time=True)
+    # BOŞ KALIRSA "ÖLÇÜLMEDİ" DEMEKTİR, "kapsama tam" DEMEZ: `stats`i yalnız gerçek adaptör doldurur;
+    # sahte/eski bir uygulama sözlüğe dokunmaz ve aşağıdaki alanlar None olarak (nedeniyle) geçer.
+    _gun: dict = {}
+    fetched = _da.nasdaq_earnings_window(_s, _e, with_time=True, stats=_gun)
+    _gun_dusen = _gun.get("dusen")
+    if _gun_dusen:
+        from . import obs
+        obs.warn("earnings_refresh_window_partial", source="nasdaq",
+                 istenen=_gun.get("istenen"), cevaplayan=_gun.get("cevaplayan"),
+                 dusen=_gun_dusen, dusen_gunler=",".join(_gun.get("dusen_gunler") or []),
+                 kapsama=_gun.get("kapsama"), son_hata=_gun.get("son_hata"),
+                 detail="kazanç takvimi penceresi KISMİ geldi — kaçan gün-diliminde duyurulan bir "
+                        "rapor tarihi bir sonraki tazelemeye kadar BİLİNMEZ ve karartma o sembolde "
+                        "fail-open kalır (yedeğe düşme eşiği DEĞİŞMEDİ: FMP yalnız tam boşlukta)")
     # ŞEKİL NORMALİZASYONU: adaptör `with_time=True` ile (tarih, "bmo"|"amc"|None) İKİLİSİ döner;
     # `with_time` verilmemiş/eski bir uygulama (ve testlerdeki sahteler) DÜZ tarih dizisi döner.
     # İkisi de kabul edilir — çağıranın kendi sözleşmesini kırmadan alan kazanmasının yolu bu.
@@ -235,7 +259,12 @@ def refresh(tickers: list[str]) -> int:
     from . import obs
     obs.log("earnings_refreshed", source=src, new_rows=len(rows), total=len(merged),
             # SAAT ALANI KAÇ SATIRDA BİLİNİYOR — birikimin sayacı (ölçüm 2026-08-01: ~%34 bekleniyor)
-            time_known=sum(1 for v in merged.values() if v))
+            time_known=sum(1 for v in merged.values() if v),
+            # GÜN KAPSAMASI (C25): "yeni satır sayısı" tek başına kapsamayı ANLATMAZ — 1 gün cevap
+            # verip 19 gün düşse de `new_rows` pozitif görünür. Ölçülmediyse None + neden.
+            gun_istenen=_gun.get("istenen"), gun_cevaplayan=_gun.get("cevaplayan"),
+            gun_dusen=_gun.get("dusen"), gun_kapsama=_gun.get("kapsama"),
+            gun_olcum_yok=(None if _gun else "adaptör sayaç doldurmadı — kapsama ÖLÇÜLMEDİ"))
     return len(rows)
 
 

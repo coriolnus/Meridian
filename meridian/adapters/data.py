@@ -1230,17 +1230,47 @@ def _leg_universe(ticker: str) -> list:
 def _alpaca_session_bars(ticker: str, session: str) -> dict:
     """{TICKER: bar + `_source`}. Damga BAR BAŞINA taşınır: hangi basamağın (sip/iex)
     servis ettiği tahmin edilmez — `alpaca.same_evening_bars` söyler ve defterde o adla yaşar.
-    Basamak turlar arasında değişebilir (abonelik soğuması), o yüzden damga sembolle birlikte gider."""
+    Basamak turlar arasında değişebilir (abonelik soğuması), o yüzden damga sembolle birlikte gider.
+
+    `asked` İSTEKTEN SONRA İŞARETLENİR (denetim C20, 2026-08-02). Eskiden işaret istekten ÖNCE
+    atılıyordu ve `same_evening_bars` ARIZADA FIRLATMIYOR ({"source": None, "bars": {}} döner),
+    altındaki `snapshots`/`daily_bars` ise chunk arızasında KISMİ sonuç döndürüyor. Yani 3 chunk'ın
+    2.'si 429 aldığında ~150 sembol "soruldu" sayılıyor ama memo'ya HİÇ girmiyordu; defteri temizleyen
+    üretim yolu olmadığı için o semboller SEANS BOYUNCA bir daha SORULAMIYOR (`need` boş kalıyor),
+    `_session_coverage` 0,90 altında sıkışıyor ve merdiven `_declare_terminal_skip`e yürüyordu —
+    bacağın kapatmak için yazıldığı SAHTE "SEANS ATLANDI" sınıfının ta kendisi.
+
+    "CEVAP GELDİ" NASIL ÖLÇÜLÜR (uydurma yasağı — tahmin edilmez, SAYAÇTAN okunur): `bars` içinde
+    dönen sembol tanım gereği cevaplamıştır. Barsız kalan sembol için iki ayrı gerçek vardır ve
+    dönen sözlük ikisini ayırt etmez: (a) istek TEMİZ tamamlandı, sembolün o seansta gerçekten barı
+    yok; (b) istek düştü/soğumaya takıldı, sembol HİÇ sorulmadı. Ayrımı `alpaca.data_transport()`
+    sayaçları verir — `calls` istek başına, `fails` arıza başına artar (alpaca._get_data). En az bir
+    istek çıktıysa (calls>0), hiç arıza yoksa (fails==0) ve bir katman servis ettiyse (source), o
+    turda İSTENEN HER SEMBOL cevaplanmıştır → hepsi işaretlenir; aksi hâlde YALNIZ barı dönenler
+    işaretlenir, kalanlar bir sonraki poll'de yeniden sorulur.
+
+    TEKRAR-DÖVME BURADA DEĞİL, SOĞUMADA DURUR: arıza `alpaca._data_fail` ile 300 sn'lik soğuma
+    yazar; aynı turdaki sonraki semboller `_data_cooled` yüzünden AĞA HİÇ ÇIKMAZ (None → bars boş →
+    yine işaret yok). Soğuma dolunca poll yeniden dener — kaybedilen tek şey bir soğuma penceresidir,
+    bütün seans değil."""
     from . import alpaca
     memo = _ALPACA_MEMO.setdefault(session, {})
     asked = _ALPACA_ASKED.setdefault(session, set())
     need = [s for s in _leg_universe(ticker) if s.upper() not in asked]
     if need:
-        asked.update(s.upper() for s in need)
+        _tr0 = alpaca.data_transport() or {}
         res = alpaca.same_evening_bars(need, session) or {}
+        _tr1 = alpaca.data_transport() or {}
         src = res.get("source")
-        for sym, bar in (res.get("bars") or {}).items():
+        bars = res.get("bars") or {}
+        for sym, bar in bars.items():
             memo[sym] = {**bar, "_source": src}
+        answered = {str(s).upper() for s in bars}
+        _calls = int(_tr1.get("calls") or 0) - int(_tr0.get("calls") or 0)
+        _fails = int(_tr1.get("fails") or 0) - int(_tr0.get("fails") or 0)
+        if src and _calls > 0 and _fails == 0:
+            answered |= {s.upper() for s in need}     # TEMİZ tam cevap: barsız sembol GERÇEKTEN barsız
+        asked.update(answered)
     return memo
 
 
@@ -1865,18 +1895,27 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
     # yani boşluğu doldurur, veriyi ele geçirmez. T+1'de otoriter kaynak geldiğinde EZİLİR.
     _leg = _leg_eligible(ticker, end, incremental_ok, best)
     if _leg:
-        _leg_src = None
+        _leg_src, _leg_err = None, None
         try:
             adf, _leg_src = _fetch_alpaca_session(ticker, _leg)
         except Exception as e:
             adf = pd.DataFrame()
+            _leg_err = type(e).__name__
             _bar_warn("same_evening_leg_failed", e, ticker=ticker.upper())
         if adf is not None and not adf.empty:
             adf = sanitize_bars(adf.assign(volume=adf["volume"].fillna(0)), ticker)[0]
         if adf is not None and not adf.empty and not best.empty:
             adf = adf[~adf["date"].isin(set(best["date"]))]   # ZİNCİRİN satırı KAZANIR, ezilmez
         if adf is None or adf.empty or not _leg_src:
-            outcomes["alpaca"] = "empty"
+            # BACAK KOLU DA ZİNCİRİN SÖZLEŞMESİNE TABİDİR (denetim C20 hafif-kardeşi, 2026-08-02):
+            # İSTEK PATLADIYSA "empty" YAZILAMAZ. Aşağıdaki hüküm `o.startswith("error")` ile
+            # okunuyor; bacak hiçbir zaman `error:` yazmadığı için diğer kolların temiz-boş döndüğü
+            # bir turda İSTİSNA `symbol_unknown` hükmüne dönüşüyor, `_record_no_data` serisi artıyor
+            # ve 5. turda DATA_QUALITY "evren bakımı gerekiyor olabilir" diyordu — yani ağ arızası
+            # "sembol öldü" kanıtına çevriliyordu. Bu, aşağıda uzun uzun anlatılan ve 2026-07-22'de
+            # düzeltildiği söylenen hatanın bacaktaki nüshasıydı. Anahtar da damgayı izler:
+            # başarıda `outcomes[_leg_src]` yazılıyor, arızada damga HENÜZ YOK → "alpaca".
+            outcomes[_leg_src or "alpaca"] = f"error:{_leg_err}" if _leg_err else "empty"
             _ALPACA_PENDING.pop(ticker.upper(), None)         # yazılmayacak bar 'geçici' sayılmaz
         else:
             outcomes[_leg_src] = f"rows:{len(adf)}"
@@ -2482,8 +2521,11 @@ def is_retired(ticker: str) -> bool:
 NASDAQ_EARNINGS_TIME = {"time-pre-market": "bmo", "time-after-hours": "amc"}
 
 
+EARNINGS_WINDOW_FAILED_DAYS_KEPT = 8   # `stats["dusen_gunler"]` listesi sınırsız büyümez (olay satırı okunabilir kalır)
+
+
 def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
-                           with_time: bool = False) -> dict:
+                           with_time: bool = False, stats: dict | None = None) -> dict:
     """#5 — Nasdaq'ın ANAHTARSIZ kazanç takvimi (api.nasdaq.com/api/calendar/earnings?date=...).
     Gün başına bir istek; iş günü penceresi için {TICKER: [date,...]} döner. FMP'nin 250/gün kota
     duvarına karşı birincil kaynak: 21 günlük pencere ≈ 15 istek (evren boyundan BAĞIMSIZ — FMP'de
@@ -2491,8 +2533,22 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
 
     `with_time=True` → değerler `(date, "bmo"|"amc"|None)` İKİLİSİ olur. VARSAYILAN False, yani
     şekil DEĞİŞMEZ: mevcut çağıranlar ve kayıtlı sahteler aynı sözlüğü görür (alan eklemek, eski
-    sözleşmeyi kırmadan yapılır)."""
+    sözleşmeyi kırmadan yapılır).
+
+    `stats` — GÜN-BAŞINA DÜRÜSTLÜK SAYACI (denetim C25, 2026-08-02). Verilirse şu alanlarla
+    DOLDURULUR: `istenen` (iş günü sayısı), `cevaplayan`, `dusen`, `dusen_gunler` (ilk N tarih),
+    `son_hata` (son düşen günün istisna adı), `kapsama` (cevaplayan/istenen; iş günü YOKSA None —
+    sıfıra bölünen bir oranı 0,0 diye yazmak ölçülmemiş bir sayı uydurmak olurdu).
+
+    NEDEN DÖNÜŞ TİPİ DEĞİL DE YARDIMCI ALAN: dönüşü ikiliye çevirmek `{TICKER: [...]}` sözleşmesine
+    yaslanan kayıtlı sahteleri (tests/test_wpd_kalanlar_v147.py, tests/test_throughput_v7.py)
+    kırardı; `stats` sözlüğü çağıran tarafından verildiği için eski çağıran HİÇBİR fark görmez ve
+    doldurulmamış bir `stats` "ölçülmedi" demektir — "kapsama tam" DEMEZ (uydurma yasağı).
+
+    BU FONKSİYON HÜKÜM VERMEZ: eşik/yedeğe düşme kararı çağıranındır (bkz. earnings.refresh);
+    burada yalnız SAYILIR."""
     out: dict[str, list] = {}
+    _ok, _dusen, _gunler, _son_hata = 0, 0, [], None
     for d in pd.bdate_range(start, end):
         ds = str(d.date())
         try:
@@ -2503,9 +2559,19 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
                 if sym:
                     tm = NASDAQ_EARNINGS_TIME.get(str(r_.get("time") or "").strip().lower())
                     out.setdefault(sym, []).append((ds, tm) if with_time else ds)
-        except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
-            pass
+            _ok += 1
+        except Exception as _e:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli ve tek gün turu düşüremez; DÜŞEN GÜN ARTIK SAYILIYOR (`stats`) ve hükmü çağıran verir
+            _dusen += 1
+            _son_hata = type(_e).__name__
+            if len(_gunler) < EARNINGS_WINDOW_FAILED_DAYS_KEPT:
+                _gunler.append(ds)
         time.sleep(polite_delay)
+    if stats is not None:
+        _istenen = _ok + _dusen
+        stats.update(istenen=_istenen, cevaplayan=_ok, dusen=_dusen, dusen_gunler=_gunler,
+                     son_hata=_son_hata,
+                     kapsama=(round(_ok / _istenen, 4) if _istenen else None),
+                     kapsama_yok_nedeni=(None if _istenen else "pencerede iş günü yok"))
     return out
 
 
