@@ -87,7 +87,7 @@ limits:
   # (operatörün değişmez zarfı) ne bounds.yaml'da (arama uzayı) görünüyorlardı. DEĞERLER AYNEN
   # TAŞINDI — davranış bit-bit değişmedi. Hermes bunları öneremez (guard.LIMIT_KEYS); değiştiren
   # yalnız operatördür. guard anahtar yoksa aynı varsayılanlara düşer (fail-safe).
-  heat_hard_r: 4.5                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)
+  heat_hard_r: 5.0                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)
   # ZARF GERİLİMİ, BİLEREK AÇIK BIRAKILDI: max_open_positions × max_position_r = 5×1,0 = 5,0R, yani
   # sert tavan ilan edilen zarfın ALTINDADIR ve tam boyutta 5. pozisyon YAPISAL olarak imkânsızdır
   # (ilan edilen "5 pozisyon" tam-konviksiyonda fiilen 4'tür). Ölçüldü: 390 planlık defterde ısı
