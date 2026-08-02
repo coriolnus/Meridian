@@ -125,6 +125,17 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
+- **DAĞITIM BLOKE — tam suite birleşik main'de KIRMIZI (2026-08-02, dağıtım kapısında bulundu):**
+  operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
+  tam suite 16 failed / 2 error / 3688 passed verdi → --uygula KOŞULMADI, canlı eski kodda.
+  Ayrıştırma: (a) 7'si İZOLE de kırmızı = GERÇEK; bunlardan RUNBOOK eşitliği (uiux t3) yeniden-üretimle
+  kapandı; kalan 6'sı test_learning_roundtrip_v76 — fikstür kanıt tabanı 17 < min_sample 30 →
+  par_score None → rollback zinciri kademeli çöküyor ("örneklem kuraklığı → no_parent_score" sınıfı).
+  Tarihleme: aynı 6, bugünkü üç turu İÇERMEYEN ağaçta da kırmızı → kırılma ≤90a6663, bugünkü toplu
+  indirmeden DEĞİL; tam suite uzun süredir koşulmadığından görünmemiş. (b) 9'u yalnız tam-suite'te
+  kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) — AYRI hastalık, ayrı tur.
+  SIRA: önce 6'lık roundtrip kökü (öğrenme-katmanı turu; parent-baseline mayınına dikkat — canlıyı
+  v3'e geri aldırabilir), sonra girişim avı, sonra dağıtım. Çıktılar: scratchpad/full_suite_predeploy.txt.
 - **BT-2 YENİDEN AÇILDI (trend-kolu ölçümünün yan bulguları, 2026-07-31 ~02:30):**
   BULGU-1: karantina hacim-şartı gerçek hayalet sınıfının %29'unu kaçırıyor (10 kaçak ×2-ölçek
   satırı: GILD/CMCSA 2013-12-18, DLTR, UNP). BULGU-2: kapıdan geçen 97 çözülmemiş ölçek/kimlik
