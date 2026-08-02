@@ -76,6 +76,9 @@ import shutil
 import sys
 import time
 
+# SAF YAPRAK — döngüsel bağımlılık yok, canlı state'e dokunmaz, yalnız damga üretir (WP-M 2026-08-02).
+from . import olcum_araclari
+
 KISMI_DOSYA = "prescreen_kismi.json"     # her adaydan SONRA yazılır (süreç ölürse ölçüm kaybolmasın)
 SONUC_DOSYA = "prescreen_sonuc.json"
 FINGERPRINT_DOSYA = "canli_fingerprint.json"
@@ -215,6 +218,10 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         live: pathlib.Path, resume: bool = False, log=print) -> dict:
     """Ön-elemeyi koş ve raporu döndür. `log` enjekte edilebilir (test sessiz koşsun diye)."""
     t0 = time.time()
+    # Damga KOŞU BAŞINDA bir kez alınır: hem kısmi hem nihai rapora AYNI kimlik yazılsın (koşu
+    # ortasında checkout yapılırsa iki rapor iki farklı SHA gösterirdi), hem de aday başına bir
+    # `git` alt süreci koşmayalım.
+    damga = olcum_araclari.kod_surumu_damgasi()
     before = live_fingerprint(live)
     state = _sandbox(workdir, live)
     (workdir / FINGERPRINT_DOSYA).write_text(json.dumps({"before": before}))
@@ -288,7 +295,8 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         (workdir / KISMI_DOSYA).write_text(json.dumps(
             {"incumbent": {"version": ver, "oos_score": inc["oos_score"], "n": inc_n,
                            "folds": [f.get("n") for f in inc["oos_folds"]]},
-             "k_probes": k_probes, "adaylar": adaylar, "kalan": kalan},
+             "k_probes": k_probes, "adaylar": adaylar, "kalan": kalan,
+             "kod_surumu": damga},
             indent=1, ensure_ascii=False))
 
     sonuc = []
@@ -396,6 +404,12 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         # CANLI STATE KANITI RAPORUN İÇİNDE: "dokunmadım" iddiası, raporu okuyanın kontrol
         # edebileceği bir sayıya bağlanır. Boş liste = tek bayt yazılmadı.
         "canli_state_degisen_dosyalar": degisen,
+        # KOD-SÜRÜMÜ DAMGASI (WP-M, 2026-08-02): "bu rapor hangi kod hâliyle üretildi?" sorusu
+        # bugüne kadar raporun DIŞINDA aranıyordu (dosya tarihi, oturum kaydı, hafıza) ve orada
+        # tahmine dönüşüyordu. git HEAD + `kirli_agac` + ölçüm-araçları sürüm listesi artık raporun
+        # İÇİNDE durur. Git yoksa/başarısızsa alan None + neden'dir (UYDURMA YASAĞI) — rapor yine
+        # üretilir, çünkü damga bir ÖLÇÜM değil bir KİMLİKTİR ve yokluğu ölçümü geçersizleştirmez.
+        "kod_surumu": damga,
         "workdir": str(workdir), "sure_s": round(time.time() - t0, 1),
     }
     (workdir / SONUC_DOSYA).write_text(json.dumps(rapor, indent=1, ensure_ascii=False))

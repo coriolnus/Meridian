@@ -1,8 +1,8 @@
 # Ölçüm Standartları (WP-M)
 
 > Bu dosya bir ANLATI değil, bir KONTROL LİSTESİDİR. Ölçüm kartı yazan ya da ölçüm kodu koşan
-> herkes buradaki dört maddeyi kartın "yöntem" bölümünde AÇIKÇA karşılar. Karşılamayan bir ölçüm
-> hüküm taşımaz.
+> herkes buradaki DERSLERİ ve "Ölçüm şablonu — zorunlu adımlar" bölümünü kartın "yöntem"
+> bölümünde AÇIKÇA karşılar. Karşılamayan bir ölçüm hüküm taşımaz.
 >
 > Kaynak: ROADMAP §WP-M (Metodoloji/Yasa Borçları). Her ders bir ÖLÇÜLMÜŞ vakadan doğdu; vaka
 > numarası (EDG-00x) yanında yazılıdır — ders bir tercih değil, bir hata kaydıdır.
@@ -96,6 +96,184 @@ bir kart ve yeni bir ön-kayıt gerektirir.
 - Olay listesinde adı geçmeyen bir kimliğin satırları TEMİZ sayılır; kaç kimliğin öyle sayıldığı
   `n_olaysiz_kimlik` ile görünür. "Olay listesi eksik" ile "o sembolde olay yok" aynı şey değildir.
 - Hiç ölçülebilir satır yoksa `kirlilik_orani` **None**'dır (0.0 değil).
+
+---
+
+## Ders #5 — Taban AYNI GÜNÜN temiz evrenidir (gün-bazlı kıyas, 2026-08-02)
+
+**Kural.** Ders #3 tabanı "aynı-gün evren" der; Ders #4 o tabanın olay-penceresinden temizlenmesini
+ister. İkisi birlikte tek bir çağrıdır:
+
+```python
+from meridian.olcum_araclari import olay_disi_kiyas
+
+r = olay_disi_kiyas(evren_getirileri, olay_gunleri, pencere=(1, 10), min_taban=5)
+fazlalar = r["fazlalar"]              # her hedefin AYNI GÜN temiz-evren medyanından fazlası
+assert r["n_taban_yok"] == 0 or r["uyari"]   # tabansız hedefler SAYILIR, sessizce düşmez
+```
+
+**Neden `temiz_taban` yetmiyor.** `temiz_taban` tek bir HAVUZ döndürür — "olay penceresine hiç
+değmemiş tüm satırlar". Havuz tabanı, olay gününün piyasa-genelinde nasıl bir gün olduğunu (rejim,
+volatilite, endeks hareketi) düzeltmez. İki taban iki ayrı soruya cevaptır ve ikisi de meşrudur:
+havuz "bu kurulum genel olarak evrenden farklı mı", gün tabanı "olay günü O GÜNÜN evreninden
+farklı mı" (olay-çalışması sorusu). Kart hangisini kullandığını YAZAR.
+
+**Fonksiyonun dört dürüstlük kuralı (çıktıda adıyla durur).**
+1. Hedefin **kendi kimliği** o günün tabanından düşülür — yoksa ölçüm kendini kendine kıyaslar ve
+   etkiyi 1/N kadar sistematik olarak küçültür.
+2. `min_taban` altındaki günler kıyasa GİRMEZ ve `n_taban_yok` ile sayılır. Bu günler rastgele
+   değildir (ince günler sistematik olarak seçilir) — sessiz düşürme burada seçim yanlılığıdır.
+3. `sikisma` alanı, aynı hedeflerin KİRLİ tabanla (o günün tüm satırları) kıyasını da verir ve
+   farkı yazar: temizliğin etkiyi ne kadar açtığı raporda görünür. **Kirli taban hükme girmez**,
+   yalnız düzeltmenin büyüklüğünü gösterir.
+4. `kirlilik_orani` hiç ölçülebilir satır yoksa **None**'dır (0.0 değil).
+
+**Kartta ne yazar.** `ozet` (medyan mı ortalama mı), `min_taban`, `n_taban_yok`, `kirlilik_orani`,
+`sikisma.fark`. `fazlalar` serisi zaman sıralıysa aralığı **Ders #6** ile kurulur.
+
+---
+
+## Ders #6 — Aralık BLOK bootstrap'la kurulur; IID bir tercih değil HATA SINIFIDIR (2026-08-02)
+
+**Kural.** Seri zaman sıralıysa ve gözlemler arasında otokorelasyon olasıysa — günlük/bar
+getirileri, işlem serileri, eşitlik eğrisi farkları, gün-bazlı taban-fazlası serileri — güven
+aralığı **blok** bootstrap ile kurulur:
+
+```python
+from meridian.olcum_araclari import blok_bootstrap_ci
+
+ci = blok_bootstrap_ci(fazlalar)                 # blok=None → n^(1/3) kuralı
+assert ci["lo"] is not None                      # None = ÖLÇÜLEMEDİ (neden alanı dolu)
+karar = ci["sifiri_disliyor"]                    # ölçülemediyse None — False DEĞİL
+```
+
+**IID bootstrap (`blok=1`) bu sınıfta YASAKTIR.** Bağımlılığı kırar, ortalamanın örnekleme
+dağılımını olduğundan dar gösterir ve hükmü **tek yönde** kaydırır: IID daima "daha anlamlı"
+görünür, hiçbir zaman daha az. Fonksiyon `blok=1`i reddetmez ama `iid: True` diye damgalar ve
+uyarır — IID yalnız gözlemlerin gerçekten değiştirilebilir (exchangeable) olduğu kesitlerde
+meşrudur ve o zaman bile kartta "neden IID meşru" cümlesi yazılır.
+
+**Kanıt (bu depodan, ölçülmüş).** Dolar beklentisi, n=95: IID aralık [−116,86, −0,00] sıfırı kıl
+payı dışarıda bırakıyordu — okuma: "kaybettiğimiz kanıtlandı". Blok aralık [−137,75, +14,53] sıfırı
+içeriyor — okuma: "n=95'te henüz kanıtlanmadı". Aynı defter, iki hüküm.
+
+**Beyan edilen sınırlar (çıktıda durur).** MOVING (örtüşen) bloktur, dizi sarılmaz; bedeli
+uçlardaki gözlemlerin biraz az örneklenmesidir. Aralık ORTALAMA içindir (medyan/oran için yeniden
+türetilir). Serinin ZAMAN SIRASINDA olduğu varsayılır — karıştırılmış bir seride blok yapısı
+anlamsızdır ve fonksiyon bunu anlayamaz. `n < 4×blok` ise uyarı çıkar.
+
+**Mevcut hesaplar değişmedi.** `analytics._blok_bootstrap_ci` (CIRCULAR blok, blok=5 **işlem**) ve
+`score.tail_risk` kendi eksenlerinde aynen çalışır; onlar yayımlanmış hükümlerin tabanıdır ve bu
+standart onları geriye dönük yeniden yazmaz.
+
+---
+
+## Ders #7 — Çok hücreli özette EN İYİ HÜCRE küçültülmeden yazılmaz (2026-08-02)
+
+**Kural.** Bir kart K hücre ölçüyorsa (bileşen × ufuk, rejim × kurulum, eşik × pencere) ve özette
+"en iyi hücre" rapor ediliyorsa, ham değerin YANINDA küçültülmüş değeri de yazılır:
+
+```python
+from meridian.olcum_araclari import eb_kucult
+
+r = eb_kucult({"rs@10": 0.21, "rvol@10": 0.08, ...}, {"rs@10": 0.09, "rvol@10": 0.09, ...})
+r["en_iyi_ham"]["ham"], r["en_iyi_ham"]["kucultulmus"], r["sira_degisti"]
+```
+
+**Neden.** En iyi hücre, en büyük GERÇEK etkiye sahip hücre değildir: en büyük (gerçek etki +
+gürültü) toplamına sahip hücredir. Ham en-iyi bu yüzden **sistematik olarak yukarı yanlıdır** ve
+yanlılık hücre sayısıyla büyür ("kazananın laneti"). Bu, K-cezasının kapıda çözdüğü sorunun ÖZET
+tarafındaki ikizidir: kapı "kaç yoklama yaptın?" diye sorar, küçültme "kazananın ne kadarı
+gürültüydü?" diye sorar. İkisi birbirinin yerine geçmez.
+
+**Hüküm vermez.** Küçültülmüş değer eşiklere GİRMEZ ve `success`/`kill` ölçütlerinde kullanılmaz —
+küçültme örneklemi büyütmez, yalnız gürültüyü geri alır. Kart eşiği neyse odur; bu araç eşiği ne
+gevşetir ne sıkar (`analytics._empirical_bayes`in "verdict tabanlarına giremez" beyanının aynısı).
+
+**Beyan edilen sınırlar.** τ² sıfıra kıstırılırsa ("hücreler arasında ölçülebilir gerçek fark YOK")
+her hücre ortak ortalamaya TAM küçültülür — eksiklik değil, dürüst cevap. Hücreler **bağımsız
+varsayılır**; aynı gözlemlerden türeyen hücrelerde (aynı bileşenin 5/10/20 bar ufukları) τ² bir
+miktar küçük, küçültme bir miktar güçlü olur. SE'si olmayan hücre küçültülMEZ, atılmaz: ham hâliyle
+durur ve `n_se_yok` ile sayılır.
+
+**İKİZİ VAR, BİLEREK AYRI.** `analytics._empirical_bayes` aynı momentler yöntemini {mean, n, sd}
+sözleşmesiyle ve n-ağırlıklı tabanla uygular; o, YAYIMLANMIŞ sayıların (`component_ic.json` `eb`
+sütunu, pano) kaynağıdır. `eb_kucult` doğrudan SE ile ve düz-ortalama hedefiyle çalışır ve kart
+özetlerinin standardıdır. İkisini tek gövdeye indirgemek yayımlanmış `eb_ic` değerlerini habersiz
+oynatırdı.
+
+---
+
+## Ölçüm şablonu — ZORUNLU ADIMLAR (pozitif kontrol + PK4/PK5, 2026-08-02)
+
+Bu bölüm yeni bir kural getirmiyor: **yapılmakta olanı yazıya geçiriyor.** trend-kolu, vcp, inplay,
+pullback ve wp2 ölçümleri bu adımları zaten koştu ve raporlarında ayrı başlıklar altında yazdı;
+yazılı olmadığı için her tur yeniden keşfediliyordu. Bundan böyle bir ölçüm raporu bu üç kapıyı
+**adıyla ve sayısıyla** taşır. Taşımayan rapor eksiktir; hükmü askıdadır.
+
+**(i) POZİTİF KONTROL — boru hattı bilinen bir etkiyi bulabiliyor mu?**
+Kartta ÖNCEDEN yazılmış, bilinen bir büyüklük (ör. "cf katmanında ham rvol20 @20 IC ≈ 0,0645") aynı
+boru hattından yeniden ölçülür; ölçülen değer, sapma ve **önceden yazılmış tolerans** rapora yazılır.
+Sıfır bulan bir ölçüm, pozitif kontrolü olmadan "edge yok" diyemez — bulamayan bir boru hattı da
+sıfır gösterir. Pozitif kontrolün kendisi ölçüm başlamadan karta yazılır (sonradan seçilen kontrol,
+kontrol değildir).
+
+> **UYARI (trend-kolu dersi, 2026-07-31): tek-enstrümanlı pozitif kontrol, portföy-yolu hatalarına
+> karşı YAPISAL OLARAK KÖRDÜR.** SPY'ın kendisinde doğrulanan bir mantık, ağırlıklandırma/defter
+> tarafındaki %27'lik bir sapmayı göstermedi. PK4/PK5 tam bu yüzden eklendi ve hatayı anında
+> ayrıştırdı.
+
+**(ii) PK4 — YOL TUTARLILIĞI.** İki farklı yoldan hesaplanan aynı büyüklük birebir tutmalıdır.
+Kanonik biçimi: `close[t+h]/close[t] − 1`, aradaki GÜNLÜK getirilerin bileşiğine eşit olmalı.
+Portföy tarafında: ağırlık serisinden türetilen eğri ile defterden türetilen eğri aynı olmalı.
+Rapora **n** ve **maks mutlak/bağıl fark** yazılır (geçmiş turlar: 0,0 · 7,0e-14%). Bu kapı,
+takvim kapısının/bütünlük kırpmasının ufkun İÇİNDE bar düşürmesini ve bir günlük kayma hatalarını
+yakalar — ikisi de hiçbir istisna atmadan hükmü kaydırır.
+
+**(iii) PK5 — ÖZDEŞLİKLER.** Ölçümün dayandığı cebirsel/mantıksal özdeşlikler tek tek sınanır ve
+her biri ayrı satırda raporlanır. Bu depoda görülmüş özdeşlik aileleri:
+- **geriye-bakışsızlık:** gösterge TAM seride ve `df.iloc[:i+1]` KESİLMİŞ seride aynı değeri vermeli
+  (kart "yalnız t ve öncesi" diyorsa bu bir iddia değil, sınanabilir bir özdeşliktir);
+- **bağımsız yeniden-türetim:** vektörize hesap, kaba/saf-python bir ikinci uygulamayla birebir aynı;
+- **nakit-akışı özdeşliği:** friksiyon/boyutlandırma defteri kapanmalı (geçmiş tur: −1,9e-12%);
+- **kaynak özdeşliği:** yeniden kurulan kompozit, motorun KENDİ döndürdüğü skorla birebir aynı.
+
+**Rapor kapı satırı.** Üç kapı raporun sonunda tek satırda özetlenir:
+`pozitif kontrol EVET/HAYIR · PK4 EVET/HAYIR · PK5 EVET/HAYIR`. **HAYIR bir başarısızlık değil, bir
+DURDURMA sebebidir**: kapısı düşmüş bir ölçümün hükmü yazılmaz.
+
+---
+
+## Ek — KOD-SÜRÜMÜ DAMGASI (2026-08-02)
+
+**Kural.** Ölçüm raporu, hangi kod hâliyle üretildiğini KENDİ İÇİNDE söyler:
+`olcum_araclari.kod_surumu_damgasi()` → `git_head` + `kirli_agac` + `arac_surumleri`.
+Bugün `prescreen` raporları (`prescreen_sonuc.json` ve kısmi `prescreen_kismi.json`) bu damgayı
+`kod_surumu` alanında taşır; damga koşu BAŞINDA bir kez alınır (koşu ortasında checkout yapılırsa
+iki rapor iki farklı SHA göstermesin).
+
+**Neden.** "Bu sayı hangi kodla üretildi?" sorusunun cevabı raporun dışında arandığında (dosya
+tarihi, oturum kaydı, hafıza) tahmine dönüşür; bir aracın davranışı değiştiğinde eski rapor
+SESSİZCE yeni davranışla okunur.
+
+**İki dürüstlük kuralı.** (1) git yoksa/başarısızsa `git_head` **None** ve `git_neden` doludur —
+boş dizgi ya da tahmin yazılmaz. (2) `kirli_agac: True` ise rapor o SHA'dan **yeniden üretilemez**;
+SHA o anki kodun değil, atasının adıdır. Damga bir ÖLÇÜM değil bir KİMLİKTİR: yokluğu ölçümü
+geçersizleştirmez, ama sessizce yokluğu kabul edilemez.
+
+---
+
+## İLERİYE DÖNÜKLÜK ŞERHİ (bu dosyanın tamamı için)
+
+**Bu dosyaya bir ders ya da araç eklenmesi, o araç olmadan verilmiş HİÇBİR kart hükmünü
+geçersizleştirmez ve hiçbir eşiği geriye dönük değiştirmez.** `research/cards/` altındaki mevcut
+hükümler, eşikler ve kill-list'ler oldukları gibi durur; `research/olcumler/` altındaki raporlar
+tarihe aittir. Eski bir hükmü yeni bir araçla tazelemek istiyorsan bu, **yeni bir ön-kayıt kartı**
+ve yeni bir ölçüm gerektirir — eski kartın üzerine yazılmaz.
+
+Sebep, standartların kendisiyle aynı: hükmü ölçümden SONRA değiştirebilmek, kartın var oluş
+sebebini ortadan kaldırır. Bir aracın "daha doğru" olması onu geçmişe uygulama yetkisi vermez;
+verirse, hangi geçmiş hükmün hangi araçla yeniden okunacağını seçen kişi hükmü de seçmiş olur.
 
 ---
 

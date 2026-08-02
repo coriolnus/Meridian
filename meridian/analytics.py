@@ -1676,11 +1676,17 @@ def _realized_drawdown() -> dict:
 # dışarıda bırakıyor, blok aralığı [−137,75, +14,53] ise sıfırı İÇERİYOR. Yani IID okuma
 # "kaybettiğimiz kanıtlandı" derdi; blok okuma dürüst cevabı verir: n=95'te henüz kanıtlanmadı.
 #
-# KAPSAM BEYANI: bu, ROADMAP §3.1'in "genel blok-bootstrap CI standardı" (2B) kalemi DEĞİLDİR —
-# o kalem hâlâ açık. Burada YALNIZ dolar beklentisi için bir aralık üretilir; `benchmark_relative`
-# kendi IID işlem-düzeyi bootstrap'ında (BENCH_BOOTSTRAP_*) bilinçli olarak DEĞİŞMEDEN bırakıldı,
-# çünkü onun ölçtüğü büyüklük (toplam getiri farkı) ve o alanın tüketicileri bu turun kapsamı
-# dışında ve sessizce değiştirilmesi mevcut hükmü (2. ölçüt) haber vermeden kaydırırdı.
+# KAPSAM BEYANI: bu, ROADMAP §3.1'in "genel blok-bootstrap CI standardı" (2B) kalemi DEĞİLDİR.
+# Burada YALNIZ dolar beklentisi için bir aralık üretilir; `benchmark_relative` kendi IID
+# işlem-düzeyi bootstrap'ında (BENCH_BOOTSTRAP_*) bilinçli olarak DEĞİŞMEDEN bırakıldı, çünkü onun
+# ölçtüğü büyüklük (toplam getiri farkı) ve o alanın tüketicileri bu turun kapsamı dışında ve
+# sessizce değiştirilmesi mevcut hükmü (2. ölçüt) haber vermeden kaydırırdı.
+#
+# 2B NEREYE İNDİ (2026-08-02): genel standart `olcum_araclari.blok_bootstrap_ci`dir (MOVING blok,
+# n^(1/3) kuralı, getiri serileri için) ve İLERİYE dönük ölçüm şablonlarını bağlar. AŞAĞIDAKİ
+# HESAP ONA DEVREDİLMEDİ ve bir hanesi bile oynatılmadı: burası CIRCULAR blok, blok=5 İŞLEM ekseni
+# ve YAYIMLANMIŞ hükümlerin tabanı; ortak bir gövdeye indirgemek `result_verdict`in aralıklarını
+# habersiz kaydırırdı. İki uygulama, iki eksen, iki yazılı gerekçe — kopya değil, sözleşme farkı.
 BOOT_BLOCK_TRADES = 5   # blok uzunluğu, İŞLEM cinsinden. `score.tail_risk`ın circular-block
                         # bootstrap'ı da 5 kullanıyor: aynı depoda "işlem ekseninde bağımlılık
                         # bloğu ne kadar uzun?" sorusunun iki farklı cevabı olmasın.
@@ -3053,7 +3059,13 @@ def _empirical_bayes(cells: dict) -> dict:
 
     Dönüşte her hücre `ham`, `kucultulmus`, `agirlik` (w) ve `cekim` (ham−küçültülmüş) taşır:
     küçültmenin NE KADAR olduğunu görmeden küçültülmüş sayıya güvenmek, ham sayıya güvenmekten
-    daha iyi değildir."""
+    daha iyi değildir.
+
+    İKİZİ VAR, BİLEREK AYRI (2026-08-02): `olcum_araclari.eb_kucult` aynı momentler yöntemini
+    doğrudan SE ile ve düz-ortalama hedefiyle uygular; o, KART ÖZETLERİNİN ileriye dönük standardı
+    ve "en iyi hücre" seçim yanlılığına karşı yazıldı. BURASI n-ağırlıklı tabanla çalışır ve
+    YAYIMLANMIŞ sayıların (`component_ic.json` `eb` sütunu, pano) kaynağıdır — ikisini tek gövdeye
+    indirgemek yayımlanmış `eb_ic` değerlerini HABERSİZ oynatırdı. Bu turda tek hane oynatılmadı."""
     iyi = {k: v for k, v in (cells or {}).items()
            if v.get("mean") is not None and (v.get("n") or 0) > 0}
     if len(iyi) < SHRINK_MIN_CELLS:
