@@ -181,7 +181,12 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   fikstürünün kanıt tabanı 17 < min_sample 30'a düştü, 6 arıza bundan kademeli (score→None zinciri).
   Üretim değişikliği DOĞRU; onarım fikstürde (tur açık, Opus uçuşta) — eşik/assert GEVŞETİLMEZ.
   (b) 9'u yalnız tam-suite'te kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) —
-  AYRI hastalık, ayrı tur. SIRA: v76 fikstür onarımı → girişim avı → yeşil suite → dağıtım.
+  AYRI hastalık, ayrı tur. SIZINTI İPUCU (2026-08-02, izole worktree koşusu, diğer oturum): taze
+  git-worktree'de `state/` HİÇ YOKKEN tam suite koşuldu → koşu sonunda repo-kökü `state/`te
+  test-artığı `bounds.yaml` + `goal.yaml` DURUYOR — en az bir test/conftest yolu sandbox'a değil
+  repo-köküne yazıyor (v72 ailesinin yaşayan somut kanıtı). Girişim-avı turu buradan başlayabilir:
+  aynı düzenek (state'siz taze worktree + tam suite) sızan yazıcıyı deterministik yakalar.
+  SIRA: v76 fikstür onarımı → girişim avı → yeşil suite → dağıtım.
   Çıktılar: scratchpad/full_suite_predeploy.txt. GÜNCELLEME (2026-08-02 akşam, Rol-1): icra-bloğu
   merge'i (46ce02f) sonrası otoriter koşu 7 kırmızı = 6×v76 + uiux-t3 (t3 892bf75 ile kapandı);
   girişim ailesi o koşuda ateşlenmedi. Pencere planı: §DAĞITIM PENCERESİ PLANI.
