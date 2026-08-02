@@ -440,8 +440,10 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   %99,9 CPU arama vakası). ÖLÇÜMLER: sandbox **30 MB** (~27M türetimi doğrulandı; dökümde
   bars_intraday/intraday_bars/çıplak meridian.db YOK) · `phase=baseline, total=523, progress 0→1`
   (22:04:17→22:06:50) — 60sn ölüm deseni KIRILDI · `n_hyp_at_start=51` status'ta ve çocuk yazımı
-  ezmedi (C15 canlı kanıt) · budama en eskiyi sildi (4 dizin). KABUL ÖLÇÜTÜNÜN KALAN YARISI
-  (n_v1 tırmanışı + Faz B'de `sprint_runs.jsonl` doğumu) SAATLİK iştir → SABAH KONTROLÜ kalemi.
+  ezmedi (C15 canlı kanıt) · budama en eskiyi sildi (4 dizin). n_v1 TIRMANIŞI DA ÖLÇÜLDÜ
+  (22:11:40 okuması): `progress 9/523, n_v1=1` — **migrasyondan (07-22) beri İLK sıfır-üstü n_v1**;
+  süreç canlı (%99,3 CPU), hız ~1,7 seans/dk → tam baseline ~5 saat. KALAN (sabah kontrolü):
+  final n_v1 + Faz B'de `sprint_runs.jsonl` doğumu.
   ÇATAL BEYANI AYNEN YÜRÜRLÜKTE: iki-motor giriş yasası (0a4453f) 07-22'den beri dolumları
   sıkılaştırdı — n_v1 100'ün altında kalabilir; 522 seansta <30 çıkarsa bu YENİ ve DÜRÜST bir
   bulgudur ("modern yasada eval-penceresi kuraklığı", ayrı tur + gerekirse kart) — min_sample
