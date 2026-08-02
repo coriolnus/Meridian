@@ -55,6 +55,13 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   filtreden sıfır görüşle çıktığı hâlde OLAYSIZ None dönüyor (hermes.py ~2109) — ham cevabın ilk
   ~300 karakteriyle bir `candidate_review_empty_parse` uyarısı gerekir (2026-08-02 canlı vaka:
   Gemini dolu cevap verdi, kayıt yok, sebep görünmez).
+- **VERSİYONLU-STATE DAĞITIM BOŞLUĞU (2026-08-02 akşam, canlı doğrulandı — KRİTİK SINIF):**
+  bounds.yaml/goal.yaml versiyonda AMA rsync state/'i dışlar → hiçbir dağıtım bunları canlıya
+  taşımıyor. Canlıda w_turnover YOK (sıfır turnover-örneklemesinin C15'ten bağımsız İKİNCİ kök
+  nedeni — knob hiç doğmamış), heat_hard_r YOK (guard fail-safe aynı değerlerde; sahiplik canlıda
+  gerçekleşmemiş). ÇÖZÜM toplu pencerede: canlı↔repo diff (canlıda repo-dışı satır varsa DUR) →
+  worker durmuşken scp → doğrulama. KALICI KALEM: dagit'e versiyonlu-state adımı (diff-göster +
+  onaylı-kopya) eklenmeli.
 - **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
   yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
   `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
