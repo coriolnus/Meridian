@@ -819,6 +819,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     _rej: dict = {}
                     _pos = b.fill_entry(plan, _open, dstr, eq_now, size_mult=size_mult,
                                         adv=_adv(per[t], d), atr=_lw.get("atr"),
+                                        pivot=float(_lw.get("pivot") or 0.0),   # C13: yapı çizgisi
                                         gap_at_submit=_lw.get("gap_at_submit"), reject_out=_rej)
                     _base = {"date": dstr, "plan_id": plan.get("id"), "ticker": t, "motor": "ic",
                              "entry_trigger": plan.get("entry_trigger"), "limit": _lw.get("limit"),
@@ -861,6 +862,23 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         else:
             _armed_dropped_by_gate(meta, dstr, _kapi)
         meta["armed"] = carried
+
+    # C19 (denetim 2026-08-02) — GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
+    # ve KAPANIŞ markıyla yapılıyordu (`b.equity(_marks(per, d))`); okuma tarafı ise D+1'in AÇILIŞ
+    # markıyla (`marks_open`, denetim #1 düzeltmesi). Sonuç: canlı kesicinin penceresi
+    # KAPANIŞ(D)→AÇILIŞ(D+1), yani YALNIZ GECELİK BOŞLUK — portföy düzeyinde −%3'lük bir gecelik
+    # boşluk pratikte oluşmadığı için `max_daily_loss_pct: 3.0` canlıda fiilen ATILDI. Replay
+    # (backtest.py `day_start_equity = broker.equity(marks_open_on(d))`, dolumlardan SONRA) ve
+    # gölge-v2 (shadow_lifecycle.py `bk["day_start_equity"] = b.equity(_marks_open())`) ise
+    # AÇILIŞ(D)→AÇILIŞ(D+1) penceresini, yani D'nin TÜM seansını ölçüyordu. Kanonik semantik
+    # REPLAY'inkidir (2026-07-18 denetiminin yarım kalmış düzeltmesi: okuma tarafı açılışa
+    # çevrilmiş, YAZMA tarafı kapanışta unutulmuş) ve canlı taraf ona EŞİTLENDİ.
+    # FAZ SIRASI DA BİREBİR: backtest.py bu satırı dolumlardan SONRA, gün-içi çıkışlardan ÖNCE
+    # yazar — bu blok da tam orada. Markı hesaplayan sözlük YENİDEN kurulur: `marks_open` fill'den
+    # ÖNCE hesaplandığı için bu turda dolan pozisyonları içermez ve onları işaretsiz bırakmak
+    # gün-başı sermayesini eksik ölçerdi.
+    meta["day_start_equity"] = b.equity({t: float(per[t].loc[d, "open"]) for t in b.positions
+                                         if t in per and d in per[t].index})
 
     # ---- 2. INTRADAY(D): touch exits ----
     # regime-resolved params for intraday consumers: at this point P1 hasn't recomputed yet, so the
@@ -905,7 +923,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             df_t = per[t].loc[:d].reset_index()
             pos_regime_ok = (rj["regime"] in ("trend_up", "chop")) if getattr(pos, "exploration", False) else regime_ok
             dec = strat.manage_position(df_t, {"entry": pos.entry, "stop": pos.stop,
-                    "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share},
+                    "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share,
+                    # C13: SÖZLÜĞÜN İKİNCİ KOPUKLUĞU. Pivot fill_entry'e geçse bile bu sözlükte
+                    # yoksa `early_kill_pivot_exit` yine None okuyup False dönerdi — iki kopukluk
+                    # bağımsızdı, ikisi de kapanmadan knob canlıda ateşleyemez. Replay
+                    # (backtest.py) ve gölge-v2 (shadow_lifecycle.py) bu alanı zaten taşıyordu.
+                    "pivot": pos.pivot},
                     eff, pos.bars_held, pos_regime_ok)
             pos.trail_stop = dec.trail_stop
             if dec.exit_now:
@@ -1085,8 +1108,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     _ref = float(per[c["ticker"]].loc[d, "close"])
                 except Exception:  # sessiz-yutma: referans ÖLÇÜLEMEDİ ve karar sözlüğü bunu `ref_kaynak` ile beyan eder (uydurma fiyat yok)
                     _ref = None
-                _plan_law[plan["id"]] = BR.entry_order_decision(
-                    float(c["entry_trigger"]), ref_price=_ref, atr=c.get("atr"))
+                # C13 (denetim 2026-08-02): PİVOT DA BU YAN TABLODA TAŞINIR. Kurulumun yapı çizgisi
+                # `strategy.early_kill_pivot_exit`in okuduğu TEK girdidir; replay (backtest.armed_pivots)
+                # ve gölge-v2 onu taşıyordu, canlı motor TAŞIMIYORDU → `Position.pivot` daima 0.0 →
+                # knob terfi etse canlıda SESSİZ NO-OP, replayde ateşler (sahte-terfi yolu). Plan
+                # SÖZLÜĞÜNE konmaz (şema iki motorda aynı kalmalı, test_differential_v60) — icra
+                # girdisi olduğu için icra tablosuna konur, `atr`/`ref_price` ile aynı yasa.
+                # Ölçülemezse None (0.0 DEĞİL): fill_entry `pivot or 0.0` ile "bilinmiyor"a düşer.
+                _pv = float(c.get("pivot") or 0.0)
+                _plan_law[plan["id"]] = {
+                    **BR.entry_order_decision(float(c["entry_trigger"]), ref_price=_ref,
+                                              atr=c.get("atr")),
+                    "pivot": (_pv if _pv > 0 else None)}
                 if plan["dormant_setup"]:
                     # uyuyan kurulum: normal slot ASLA — yalnız keşif sondası (GO şartı, çıta yüksek)
                     if verdict == "GO":
@@ -1226,7 +1259,10 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # except Exception:  # sessiz-yutma: hotstate uçucu türev; fiyat kopyalama hatası günlük turu düşüremez
     #     pass
     _hotstate_off_once("mrd:price", "daily_cycle", "get_price")
-    meta["day_start_equity"] = b.equity(_marks(per, d))
+    # C19: `meta["day_start_equity"]` ARTIK BURADA YAZILMIYOR. Eski satır
+    # (`b.equity(_marks(per, d))` — KAPANIŞ markı) canlı devre kesicisini bir GECELİK BOŞLUK
+    # kesicisine indiriyordu; yazım açılış fazına, replay ile aynı noktaya taşındı (yukarıda
+    # "C19" bloğu). Buraya ikinci bir yazım koymak, iki motoru yeniden ayrıştırırdı.
     mirror = {}
     try:
         mirror = reconcile_broker_state(meta, dstr, b.closed,   # Phase 1: reconcile internal book ↔ Alpaca mirror

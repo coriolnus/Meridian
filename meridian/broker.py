@@ -291,7 +291,9 @@ class PaperBroker:
         `pivot` (G3b, 2026-07-30): kurulumun YAPI çizgisi, `strategy.early_kill_pivot_exit`in okuduğu
         seviye. PLAN SÖZLÜĞÜNDEN DEĞİL AYRI ARGÜMANDAN gelir — plan defteri şeması iki motorda AYNI
         kalmak zorundadır (test_differential_v60), pivot ise bir defter alanı değil icra girdisidir.
-        Geçirmeyen çağıran (canlı loop.py) için 0.0 = "bilinmiyor" → erken itlaf ateşlemez.
+        Geçirmeyen çağıran için 0.0 = "bilinmiyor" → erken itlaf ateşlemez. C13 (2026-08-02): canlı
+        `loop.py` de artık geçiriyor (`entry_law` yan tablosu) — bu satır eskiden "canlı geçirmez"
+        diyordu ve tam olarak o kopukluk, knob terfi ederse canlıda sessiz no-op üretiyordu.
 
         E1 (WP-E, 2026-07-31) — AYNI YASA, İKİ MOTOR. `atr` / `gap_at_submit` de PLAN SÖZLÜĞÜNDEN
         DEĞİL ayrı argümandan gelir (pivot ile aynı gerekçe: ikisi de defter alanı değil İCRA

@@ -84,7 +84,9 @@ BOOK_SCHEMA = 1
 #   V3 — G3b erken itlaf. `exit.early_kill_bars` VARSAYILANDA (1) bırakıldı: ikinci düğmeyi de
 #        oynatmak iki değişkenli bir kol yapardı ve "hangisi etkiledi" sorusu ölçülemez hâle gelirdi.
 #        Pivot GEREKLİDİR ve bu motor onu taşır (armed yan haritası → fill_entry(pivot=...) →
-#        Position.pivot); canlı yolda pivot 0.0 olduğu için orada atıldır (strategy.py dikiş notu).
+#        Position.pivot). C13 (2026-08-02): canlı yol da artık taşıyor — bu satır eskiden "canlıda
+#        pivot 0.0, orada atıldır" diyordu, yani bu kolun ölçtüğü kazanç terfi etse canlıda sessiz
+#        no-op olurdu. Kol artık CANLIDA UYGULANABİLİR bir düğmeyi ölçüyor.
 #   V6 — Batch L #8 kısmi kâr alma. YALNIZ `scale_out_frac`: `scale_out_r` zaten 2.0 (üretim
 #        varsayılanı VE canlı strategy.yaml değeri) — onu sete koymak E4 no-op tuzağının ta kendisi
 #        olurdu. `noop_arms()` bunu koda değil ÖLÇÜME dayanarak yakalar.
@@ -215,9 +217,12 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
          armed_next: list, seeded: bool = False) -> list[dict]:
     """Bir varyantın BİR seansı. Dönüş: o gün KAPANAN işlem satırları (broker'ın ürettiği satırlar).
 
-    `armed_next`: bu seansın KAPANIŞINDA silahlanacak planlar — `[{"plan": {...}, "pivot": float}]`.
-    Pivot plan SÖZLÜĞÜNE konmaz, YAN haritada taşınır: `backtest.replay`in `armed_pivots` deseni ve
-    aynı gerekçe (pivot bir defter alanı değil bir İCRA girdisidir; G3b notu, broker.py:132).
+    `armed_next`: bu seansın KAPANIŞINDA silahlanacak planlar —
+    `[{"plan": {...}, "pivot": float, "atr": float|None}]`. Pivot ve ATR plan SÖZLÜĞÜNE konmaz, YAN
+    haritada taşınır: `backtest.replay`in `armed_pivots`/`armed_atr` deseni ve aynı gerekçe (ikisi de
+    bir defter alanı değil bir İCRA girdisidir; G3b notu, broker.py:132). `atr` yoksa/None ise E1
+    limiti yalnız yüzde tavanıyla kurulur — uydurma ATR yok, ama o durumda bu motor canlıdan GEVŞEK
+    kalır, o yüzden `_day` onu silahlanma anındaki sinyalden DOLDURUR (C11/C18).
 
     İLERİ-DÖNÜKLÜK YOK: D'nin kararları D'nin KAPANIŞINDA verilir, icrası D+1'in AÇILIŞINDA olur."""
     d = pd.Timestamp(date)
@@ -256,8 +261,14 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
         bar = _bar_on(df, d)
         if bar is not None and not breaker_tripped and size_mult > 0 \
                 and len(b.positions) < eff_max_open and t not in b.positions:
+            # C11+C18 (denetim 2026-08-02): `atr` de pivot ile AYNI yan haritadan geçer. Geçmediği
+            # sürece `broker.entry_limit_price` ATR bacağını hiç göremiyor ve bu motor limiti DAİMA
+            # %1 tavanıyla kuruyordu — canlı motor min(0,5·ATR14, %1) ile koşarken. Gölge-v2 terfi
+            # kanıtı üretir; canlının reddedeceği dolumları yazması, terfi kararını iyimser bir icra
+            # modeli üzerinden verdirirdi. Ölçülemeyen ATR None kalır (uydurma yok).
             b.fill_entry(plan, bar["open"], date, eq_now, size_mult=size_mult,
-                         adv=_adv(df, d), pivot=float(entry.get("pivot") or 0.0))
+                         adv=_adv(df, d), pivot=float(entry.get("pivot") or 0.0),
+                         atr=entry.get("atr"))
     # replay burada `armed`ı SIFIRLAR (bar-yok = tatil/delisting, plan gerçekten dolmaz). Gölge de
     # geçmiş/taze bar üzerinde koşar, canlı `_carry_armed_without_bar` TAŞIMA kuralı buraya girmez:
     # o kural bir EOD YAYIN GECİKMESİ çaresidir ve gölge katmanı zaten canlı akışın barlarını görür.
@@ -377,6 +388,16 @@ def _day(doc: dict, date: str, live: dict, *, tickers, tail_of, rs_of, sector_of
                 _judged, _armed, armed_next = sv._judge(
                     sigs, date, sector_of=sector_of, max_corr_of=_corr, params=params,
                     regime=regime, goal=goal, limits=limits, version=version, bk=book_state)
+                # C11/C18: E1 limitinin ATR bacağı. `sv._judge` yan haritayı yalnız `pivot` ile
+                # üretiyor; ATR aynı sinyal nesnesinde ZATEN ölçülmüştür (`EntrySignal.atr`) ve
+                # burada eklenir — silahlanma anında sabitlenir, dolum anında yeniden hesaplanmaz
+                # (canlı `entry_law` tablosu ve replay `armed_atr` ile aynı yasa). Yazım
+                # `shadow_variants`e DEĞİL buraya kondu: v1 karar defteri fill koşturmaz, ATR'yi
+                # okuyan tek motor budur (YASA 6 — okuyucusuz alan yazılmaz).
+                _atr_of = {getattr(s, "ticker", None): (float(getattr(s, "atr", 0.0) or 0.0) or None)
+                           for s in (sigs or [])}
+                for _e in armed_next:
+                    _e.setdefault("atr", _atr_of.get(_e["plan"]["ticker"]))
             closed = step(bk, params, date, bars_of, regime_ok=regime_ok, limits=limits,
                           goal=goal, armed_next=armed_next, seeded=seeded)
         except Exception as e:

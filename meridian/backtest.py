@@ -105,6 +105,11 @@ class BacktestResult:
     end: str
     plan_log: list = None       # every armed/rejected plan, dated (for the Signals page)
     candidate_log: list = None  # top candidates scanned per day, dated
+    # C18 (2026-08-02): silahlı planın dolmama NEDENLERİ, neden → adet. `entry_missed_limit` burada
+    # görünür olmadan "replay canlının reddettiği dolumları yazıyor mu?" sorusu ÖLÇÜLEMİYORDU (canlı
+    # taraf aynı sayacı `entry_exec.jsonl`in `karar` alanına yazıyor, replay tarafında karşılığı yoktu).
+    # None = bu sonuç eski bir çağrıdan geliyor / sayaç hiç doldurulmadı; {} = doldu ve HİÇ ret olmadı.
+    entry_rejects: dict = None
 
     def detail(self, goal: dict) -> dict:
         return score_mod.score_detail(self.trades, goal)
@@ -156,9 +161,26 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     # bir allowlist tutarken REPLAY-only alanlar için BİLİNÇLİ OLARAK tutmaz: replay'in bilip canlının
     # bilmediği bir alan, tam olarak "backtest sayıları yalan olur" ayrışmasıdır (§4). Pivot bir
     # DEFTER alanı değil bir İCRA girdisidir (broker.fill_entry → Position.pivot →
-    # strategy.early_kill_pivot_exit), o yüzden defter şemasına değil icra yoluna konur. Canlı yol
-    # fill_entry'e pivot GEÇİRMEZ → Position.pivot 0.0 → erken itlaf canlıda atıl (dikiş, 3b'ye devir).
+    # strategy.early_kill_pivot_exit), o yüzden defter şemasına değil icra yoluna konur.
+    # C13 (2026-08-02) — DİKİŞ KAPANDI: canlı yol da artık pivotu taşıyor (loop.py `entry_law` yan
+    # tablosu → fill_entry(pivot=...) → Position.pivot → manage_position sözlüğü). Eskiden burada
+    # "canlı fill_entry'e pivot GEÇİRMEZ → erken itlaf canlıda atıl" yazıyordu; o cümle artık YANLIŞ
+    # olurdu ve `exit.early_kill_pivot` terfi ederse canlıda sessiz no-op üreten sahte-terfi yolunun
+    # ta kendisiydi.
     armed_pivots: dict[str, float] = {}
+    # C11+C18 (denetim 2026-08-02): ATR de AYNI yan-harita deseniyle taşınır. ÖNCESİ: replay
+    # `fill_entry`e `atr=` HİÇ geçmiyordu → `broker.entry_limit_price` `a > 0` dalına giremiyor ve
+    # limit DAİMA yüzde tavanına (%1) düşüyordu; canlı motor ise min(0,5·ATR14, %1) ile koşuyordu.
+    # Yani "TEK YASA, İKİ MOTOR" (broker.py başlığı) giriş limitinde KIRIKTI ve kırılma tek yönlüydü:
+    # replay canlının REDDEDECEĞİ dolumları yazıyor, `entry_missed_limit` sayısını sıfırlıyor ve
+    # öğrenme kapısı/gölge terfisi iyimser bir icra modeli üzerinden karar veriyordu.
+    # ATR ölçülemezse None KALIR (0.0 değil): `entry_limit_price` None'ı "ölçülemedi" diye okur ve
+    # yalnız yüzde tavanını bağlar — uydurma ATR yok (UYDURMA YASAĞI).
+    armed_atr: dict[str, float | None] = {}
+    # C18: kaçan dolumlar SAYILIR, yutulmaz. `reject_out` sözlüğü fill başına doldurulur ve nedenler
+    # burada birikir; `BacktestResult.entry_rejects` iki motorun kaçırdığı dolumları kıyaslanabilir
+    # kılar (canlı taraf aynı sayacı `entry_exec` defterine `karar` alanıyla zaten yazıyor).
+    entry_rejects: dict[str, int] = {}
     pending_exits: dict[str, str] = {}  # ticker -> reason, to execute at next open
     # regime-resolved params for INTRADAY consumers (scale_out): the regime known at D's intraday is
     # D-1's (computed at the prior CLOSE) — using flat `params` here silently ignored any
@@ -197,9 +219,14 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             t = plan["ticker"]
             if t in per and d in per[t].index and not breaker_tripped and size_mult > 0 \
                     and len(broker.positions) < eff_max_open and t not in broker.positions:
+                _rej: dict = {}
                 broker.fill_entry(plan, per[t].loc[d, "open"], str(d.date()), eq_now,
                                   size_mult=size_mult, adv=_adv(per[t], d),
-                                  pivot=armed_pivots.get(t, 0.0))   # G3b: yapı çizgisi (icra girdisi)
+                                  pivot=armed_pivots.get(t, 0.0),   # G3b: yapı çizgisi (icra girdisi)
+                                  atr=armed_atr.get(t),             # C11/C18: E1 limitinin ATR bacağı
+                                  reject_out=_rej)
+                if _rej.get("reason"):
+                    entry_rejects[_rej["reason"]] = entry_rejects.get(_rej["reason"], 0) + 1
         # KASITLI REPLAY↔CANLI FARKI (2026-07-23, tarama "diverged" işaretledi ama sürüklenme DEĞİL):
         # canlı loop._carry_armed_without_bar bar-yok planı bir seans TAŞIR (GS-1140), replay burada
         # armed'ı SIFIRLAR. İki senaryo AYRIdır: canlıda bar-yok = EOD YAYIN GECİKMESİ (geçici, plan
@@ -209,6 +236,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         # de geçerli: replay/backfill, canlının BASİTLEŞTİRİLMİŞ modelidir — hizalanacak sürüklenme yok.
         armed = []
         armed_pivots = {}            # yan harita `armed` ile AYNI ömre sahip: birlikte doğar, birlikte ölür
+        armed_atr = {}               # (aynı ömür — ATR de silahlanma anında sabitlenir, yeniden hesaplanmaz)
         day_start_equity = broker.equity(marks_open_on(d))
 
         # ---- 2. INTRADAY(D): touch exits ----
@@ -355,6 +383,11 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 if verdict != "NO_GO":                 # GO or REVIEW arm (== old pass); NO_GO does not
                     armed.append(plan)
                     armed_pivots[sig.ticker] = float(sig.pivot)     # G3b: yapı çizgisi plana DEĞİL yana
+                    # C11/C18: ATR SİNYAL BARINDA ölçülmüştür (strategy.EntrySignal.atr) — silahlanma
+                    # anında sabitlenir, dolum anında yeniden hesaplanmaz (canlı `entry_law` tablosuyla
+                    # aynı yasa: aynı plan iki motorda iki farklı limitle dolamaz).
+                    _a = float(sig.atr) if sig.atr else 0.0
+                    armed_atr[sig.ticker] = _a if _a > 0 else None   # ölçülemedi → None (0.0 DEĞİL)
                     sector_ct[sec] = sector_ct.get(sec, 0) + 1
                     slots -= 1
                 plan_log.append(plan)
@@ -381,7 +414,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                     _warn_once("markout_close_failed", ticker=t, error=f"{type(e).__name__}: {e}")
 
     return BacktestResult(trades=broker.closed, equity=equity_curve, params=params, start=start,
-                          end=end, plan_log=plan_log, candidate_log=candidate_log)
+                          end=end, plan_log=plan_log, candidate_log=candidate_log,
+                          entry_rejects=entry_rejects)
 
 
 def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:

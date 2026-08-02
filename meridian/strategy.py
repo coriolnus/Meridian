@@ -249,9 +249,15 @@ def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars
 
     PİVOT YOKSA ÇIKIŞ DA YOKTUR: `position["pivot"]` eksik/ölçülemez (None, NaN, ≤0) ise False.
     Motorun ELEME yasası ölçülemeyen GİRİŞ kapısı girdisini eler; bir ÇIKIŞTA aynı refleks tersine
-    çalışırdı — ölçülemeyen bir seviyeden UYDURMA bir çıkış üretmek olurdu. Bugün canlı planlar bu
-    alanı taşımıyor (bkz. modül sonundaki dikiş notu), yani bayrak açılsa bile canlıda ateşlemez;
-    replay planları taşıyor, ölçüm oradan gelir."""
+    çalışırdı — ölçülemeyen bir seviyeden UYDURMA bir çıkış üretmek olurdu.
+
+    C13 (denetim 2026-08-02) — KABLO ARTIK ÜÇ MOTORDA DA VAR. Buraya kadar "canlı planlar bu alanı
+    taşımıyor, yani bayrak açılsa bile canlıda ateşlemez" yazıyordu: replay/gölge ölçerken canlının
+    YAPISAL olarak ateşleyemediği bir düğme, terfi ettiğinde canlıda sessiz no-op olurdu (sahte
+    terfi). Kopukluk İKİ yerdeydi ve ikisi de kapandı — `loop.py` pivotu `entry_law` yan tablosunda
+    taşıyıp `fill_entry(pivot=...)`e geçiriyor (→ `Position.pivot`) ve `manage_position`a verdiği
+    sözlüğe `"pivot"` koyuyor. Ölçülemeyen pivot yine 0.0/None kalır ve bu dal dürüstçe False
+    döner — değişen tek şey, artık ölçülebildiğinde ateşleyebilmesi."""
     if int(_f(params, "exit.early_kill_pivot", 0)) != 1:
         return False
     window = int(_f(params, "exit.early_kill_bars", 1))
