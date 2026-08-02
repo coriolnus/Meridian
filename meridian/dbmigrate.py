@@ -19,18 +19,32 @@ afinitesi bir int'i float'a çevirseydi (60 → 60.0) bu ölçüm onu YAKALAR. B
 tip uyuşmazlığında alanı ayrıca `extra_json`a yazar ve okumada `extra_json` kazanır.
 
 KAYNAK DOSYALAR SİLİNMEZ. Taşıma sonrası aynı dizinde `.migrated` son-ekiyle bırakılır. Silmek,
-geri dönüşü olan bir adımı geri dönüşü olmayan bir adıma çevirirdi; `MERIDIAN_DB=off` acil
-anahtarının anlamlı olması için dosyaların DURMASI gerekir. (Adı değiştirilir, çünkü aynı anda
-İKİ okunabilir gerçek kaynağı bırakmak, hangisinin doğru olduğunu belirsizleştirirdi.)
+geri dönüşü olan bir adımı geri dönüşü olmayan bir adıma çevirirdi. (Adı değiştirilir, çünkü aynı
+anda İKİ okunabilir gerçek kaynağı bırakmak, hangisinin doğru olduğunu belirsizleştirirdi.)
+
+GERİ DÖNÜŞ KOLU `--geri-al`DIR, `MERIDIAN_DB=off` DEĞİL (C5, 2026-08-02 — bu başlık eskiden anahtarı
+"acil anahtar" diye anıyor ve dosyaların DURMASINI yeterli sayıyordu; YANLIŞTI). Dosyalar `.migrated`
+ADIYLA duruyor, yani anahtarı tek başına çeken operatör altı defteri BOŞ okur (kanonik ad yok →
+çağıranın varsayılanı) ve ilk yazımda AYRIŞIK ikinci bir kitap doğar. `--geri-al` bu adımı bir kola
+indirir: DB kenara alınır (`meridian.db.rolledback-<ts>`), arşivler ASIL adlarına döner, ve DB ile
+dosya satır sayıları YAN YANA raporlanır.
+
+GERİ-AL VERİ SİLMEZ, YALNIZ YENİDEN ADLANDIRIR. Üç şey birden korunur ve üçü de rapora yazılır:
+(1) DB dosyası (`.rolledback-<ts>`) — migrasyondan SONRA yazılanların TEK kopyası ondadır, o yüzden
+kenarda tutulur ve fark (`db_n − dosya_n`) operatörün önüne basılır; (2) `.migrated` arşivi asıl
+adına döner; (3) kanonik adda ZATEN bir dosya varsa (anahtar çekiliyken doğmuş ayrışık kitap) o da
+silinmez, `.ayrisik-<ts>` ekiyle kenara alınır. Hüküm tek cümledir: geri-al'dan sonra defterler
+DOSYADAN, migrasyon ÖNCESİ hâliyle okunur; başka her şey kenarda, adıyla durur.
 
 CANLI WORKER KOŞARKEN YAZMA. `ledgerstamp`/`barrepair` ile AYNI desen ve AYNI ölçüm fonksiyonu:
-canlı süreç görülürse `--uygula` REDDEDİLİR (`--zorla` ile ezilir).
+canlı süreç görülürse `--uygula` VE `--geri-al` REDDEDİLİR (`--zorla` ile ezilir).
 
 KULLANIM:
     python -m meridian.dbmigrate                 # kuru koşu — sayım + parite digestleri
     python -m meridian.dbmigrate --json          # aynı rapor, makine-okunur
     python -m meridian.dbmigrate --uygula        # TAŞI (worker durdurulmuş olmalı)
     python -m meridian.dbmigrate --durum         # yalnız DB durumu (şema sürümü, varlık sayaçları)
+    python -m meridian.dbmigrate --geri-al       # GERİ DÖN: DB kenara, arşivler asıl adına
 """
 from __future__ import annotations
 
@@ -44,9 +58,18 @@ from typing import Any
 
 from . import config, storage
 
-MIGRATED_SUFFIX = ".migrated"
+# TEK KAYNAK `storage`tadır: `active()`in `MERIDIAN_DB=off` beyanı (C5) aynı eki ölçer; iki ayrı
+# sabit olsaydı biri değiştiğinde uyarı arşivleri sessizce göremez olurdu.
+MIGRATED_SUFFIX = storage.MIGRATED_SUFFIX
 # Başarısız migrasyondan sonra kenara alınan DB'nin son eki: `meridian.db.failed-<ts>` (C4).
 FAILED_SUFFIX = ".failed-"
+# `--geri-al` ile kenara alınan (SAĞLAM, taşınmış defter içeren) DB'nin son eki. `FAILED_SUFFIX`ten
+# AYRI: biri "bu DB hiç kurulamadı", diğeri "bu DB çalışıyordu ve içinde migrasyon SONRASI yazımlar
+# olabilir". İki hâli tek ada toplamak, operatörün hangisini silebileceğini belirsizleştirirdi.
+ROLLEDBACK_SUFFIX = ".rolledback-"
+# Geri-al sırasında kanonik adı İŞGAL EDEN dosyanın son eki: `MERIDIAN_DB=off` çekiliyken doğan
+# ayrışık ikinci kitap. Üzerine yazılmaz — geri-al bir kurtarma koludur, veri silmez.
+DIVERGENT_SUFFIX = ".ayrisik-"
 
 
 # ---- KAYNAK OKUMA (store YÖNLENDİRMESİNİ ATLAR) ------------------------------------------------
@@ -348,6 +371,147 @@ def apply() -> dict:
     return rapor
 
 
+# ---- GERİ AL (kurtarma kolu) -------------------------------------------------------------------
+def _kenara(p: Path, hedef: Path, kayit: dict) -> bool:
+    """Tek dosyayı yeniden adlandır; sonucu `kayit`a yaz. SİLMEZ ve ÜZERİNE YAZMAZ."""
+    if not p.exists():
+        return False
+    if hedef.exists():
+        kayit.setdefault("hatalar", []).append(f"{hedef.name} zaten var — {p.name} taşınmadı")
+        return False
+    try:
+        p.rename(hedef)
+        kayit.setdefault("tasinan", []).append(f"{p.name} → {hedef.name}")
+        return True
+    except OSError as e:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (rapor `hatalar` + çağıranda ok=False) — taşınamayan dosya bir istisnayla tüm kurtarmayı düşürmemeli, kalan adımlar operatöre daha çok geri kazandırır
+        kayit.setdefault("hatalar", []).append(f"{p.name}: {type(e).__name__}: {e}")
+        return False
+
+
+def rollback() -> dict:
+    """`--geri-al`: DB'yi kenara al, `.migrated` arşivlerini ASIL adlarına döndür, PARİTEYİ raporla.
+
+    NEDEN BU KOL VAR (C5). `MERIDIAN_DB=off` "acil geri dönüş" diye belgelenmişti ama tek başına
+    defterleri BOŞ okutuyordu: kaynaklar `.migrated` adında duruyor, `store._path` kanonik ada
+    bakıyor, bulamıyor ve çağıranın varsayılanına düşüyordu (ölçüldü: trades n=0, portfolio/
+    scoreboard/equity VARSAYILAN). Eksik olan elle `mv` adımıydı ve hiçbir yerde yazılı değildi.
+
+    SIRA BİLEREK BÖYLEDİR:
+      1. ÖLÇÜM ÖNCE — DB satır sayıları/digestleri okunur. Dosya kenara alındıktan SONRA bu ölçüm
+         alınamaz; alınamayan ölçüm rapora "None" diye girer ve operatör farkı göremez.
+      2. BAĞLANTILARI KAPAT — açık bir tanıtıcı yeniden adlandırılmış dosyaya WAL geri yazabilir ve
+         `_SCHEMA_OK` önbelleği "şema tamam" demeye devam ederdi (`_karantina` ile aynı gerekçe).
+      3. DB KENARA — `-wal`/`-shm` dahil; ana ad değişip yan dosyalar kalsaydı ileride doğacak taze
+         bir `meridian.db` BAYAT bir WAL'la eşleşirdi.
+      4. ARŞİVLER ASIL ADINA — kanonik adı işgal eden bir dosya varsa o da silinmez, `.ayrisik-<ts>`
+         ile kenara alınır.
+    Adım 3 ile 4 arasındaki pencerede süreç çökerse hâl DÜRÜSTTÜR: DB kenarda, arşivler `.migrated`
+    adında — yani `active()` False, defterler boş okunur ve komut yeniden koşturulabilir (idempotent).
+
+    PARİTE RAPORU BİR UYARIDIR, BİR ONAY DEĞİL: `db_n − dosya_n` farkı, migrasyondan SONRA DB'ye
+    yazılmış ve arşivde BULUNMAYAN satırların sayısıdır. O satırların TEK kopyası kenara alınan
+    DB'dedir — bu yüzden dosya silinmez ve fark raporun en üstüne basılır."""
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    db = storage.db_path()
+    rapor: dict = {"geri_al": True, "ts": ts, "db": str(db), "db_var_idi": db.exists(),
+                   "db_kenara": {"yapildi": False, "hedef": None}, "varliklar": [], "ok": True}
+
+    # 1) ÖLÇÜM ÖNCE (bkz. docstring). Şemasız/yoksa `db_state()` BOŞ liste döner — uydurulmuş
+    #    sıfır sayaç yazılmaz, alanlar None kalır.
+    db_once = {r["varlik"]: r for r in db_state()}
+
+    # 2) BAĞLANTILARI KAPAT
+    try:
+        storage.close_connections()
+    except Exception as e:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (kapatma_hatasi raporda) — kapatılamayan bir tanıtıcı kurtarma kararını geri aldıramaz ve süreç sonu onu toplar
+        rapor["kapatma_hatasi"] = f"{type(e).__name__}: {e}"
+
+    # 3) DB KENARA
+    kayit: dict = {"yapildi": False, "hedef": None}
+    if db.exists():
+        hedef = db.with_name(db.name + ROLLEDBACK_SUFFIX + ts)
+        kayit["hedef"] = str(hedef)
+        for ek in ("", "-wal", "-shm"):
+            _kenara(db.with_name(db.name + ek), hedef.with_name(hedef.name + ek), kayit)
+        kayit["yapildi"] = not db.exists()
+        if not kayit["yapildi"]:
+            rapor["ok"] = False
+    rapor["db_kenara"] = kayit
+
+    # 4) ARŞİVLER ASIL ADINA + parite sayımı
+    for name in storage.ENTITIES:
+        p = source_path(name)
+        ars = p.with_name(name + MIGRATED_SUFFIX)
+        onceki = db_once.get(name) or {}
+        rec: dict = {"varlik": name, "arsiv_var_idi": ars.exists(), "geri_donen": False,
+                     "db_n": onceki.get("n") if onceki else None,
+                     "db_digest": onceki.get("db_digest") if onceki else None,
+                     "ayrisik_kenara": None, "dosya_n": None, "dosya_digest": None, "fark": None}
+        if ars.exists():
+            if p.exists():
+                # KANONİK AD İŞGAL EDİLMİŞ: anahtar çekiliyken doğmuş AYRIŞIK ikinci kitap.
+                # Üzerine yazmak, kurtarma kolunu veri kaybına çevirirdi.
+                ayr = p.with_name(name + DIVERGENT_SUFFIX + ts)
+                if _kenara(p, ayr, rec):
+                    rec["ayrisik_kenara"] = ayr.name
+            if not p.exists():
+                rec["geri_donen"] = _kenara(ars, p, rec)
+        if rec.get("hatalar"):
+            rapor["ok"] = False
+        src = read_source(name)
+        if src["present"]:
+            rec["dosya_n"] = src["n"]
+            rec["dosya_digest"] = digest(src["payload"]) if src["payload"] is not None else None
+            if rec["db_n"] is not None:
+                rec["fark"] = int(rec["db_n"]) - int(src["n"])
+        # SAYI TEK BAŞINA YETMEZ: tekil belgeler (`scoreboard`/`portfolio`/`shadow_books`) için `n`
+        # HER ZAMAN 1'dir, yani `fark` içerik değişimine KÖRDÜR. Ayrışmayı görebilen tek ölçüm
+        # digesttir — migrasyonun kendi parite kanıtıyla aynı fonksiyon, aynı normalizasyon.
+        rec["digest_esit"] = (None if (rec["db_digest"] is None or rec["dosya_digest"] is None)
+                              else rec["db_digest"] == rec["dosya_digest"])
+        rapor["varliklar"].append(rec)
+
+    rapor["geri_donen"] = [v["varlik"] for v in rapor["varliklar"] if v["geri_donen"]]
+    rapor["yapildi"] = bool(kayit["yapildi"] or rapor["geri_donen"])
+    rapor["aktif"] = storage.active(storage.TRADES)
+    rapor["db_dosyasi_var"] = db.exists()
+    farkli = [v for v in rapor["varliklar"] if v["fark"] or v["digest_esit"] is False]
+    rapor["fark_var"] = [{"varlik": v["varlik"], "db_n": v["db_n"], "dosya_n": v["dosya_n"],
+                          "fark": v["fark"], "digest_esit": v["digest_esit"]} for v in farkli]
+    # BEYAN DALDAN TÜRETİLİR, SABİT DEĞİL (`_karantina` ile aynı kural): raporun kendi ölçümüyle
+    # çelişen bir cümle, kapatmaya çalıştığımız sınıfın ta kendisi olurdu.
+    if not rapor["yapildi"]:
+        rapor["beyan"] = ("GERİ ALINACAK BİR ŞEY YOK — kenara alınacak DB dosyası ve asıl adına "
+                          "dönecek `.migrated` arşivi bulunamadı; defterler ZATEN dosyadan okunuyor.")
+    elif rapor["db_dosyasi_var"]:
+        # `aktif` TEK BAŞINA YETMEZ: `MERIDIAN_DB=off` çekiliyken taşınamamış bir DB de `aktif=False`
+        # gösterir ve "geri alındı" cümlesi anahtar kapanır kapanmaz YALAN olurdu. Ölçülen şey
+        # dosyanın kanonik adda DURUYOR olmasıdır.
+        rapor["beyan"] = (f"EKSİK GERİ ALMA: DB dosyası HÂLÂ kanonik adında ({db.name}) — kenara "
+                          f"alınamadı (bkz. hatalar). Şu an aktif={rapor['aktif']}; dosya elle "
+                          f"taşınmadıkça DB devreye geri döner.")
+    else:
+        rapor["beyan"] = (f"GERİ ALINDI — DB devrede DEĞİL, {len(rapor['geri_donen'])} defter asıl "
+                          f"adına döndü ve dosya arka ucundan okunuyor. Kenara alınan DB SİLİNMEDİ: "
+                          f"{kayit['hedef'] or '(DB yoktu)'}")
+    if rapor["fark_var"]:
+        rapor["beyan"] += (" | DİKKAT: DB ile geri dönen dosya AYNI DEĞİL (migrasyon SONRASI "
+                           "yazımlar arşivde yok) — "
+                           + ", ".join(
+                               f"{f['varlik']}: DB {f['db_n']} vs dosya {f['dosya_n']} satır"
+                               + ("" if f["fark"] else " (sayı aynı, İÇERİK farklı)")
+                               for f in rapor["fark_var"])
+                           + ". O yazımların TEK kopyası kenara alınan DB'dedir; SİLME.")
+    try:
+        from . import obs
+        obs.warn("sqlite_ledger_rolled_back", geri_donen=rapor["geri_donen"],
+                 db_kenara=kayit.get("hedef"), aktif=rapor["aktif"],
+                 fark=rapor["fark_var"], detail=rapor["beyan"])
+    except Exception:  # sessiz-yutma: kayıt kanalı düştü; geri alma DİSKTE zaten uygulandı ve rapora yazıldı — kayıt denemesi onu geri alamaz
+        pass
+    return rapor
+
+
 def _worker_running() -> bool:
     """Canlı Meridian süreci var mı? `barrepair`in AYNI ölçümü — kopyalanmaz, çağrılır."""
     from .barrepair import _worker_running as _wr
@@ -392,6 +556,32 @@ def _print(rapor: dict) -> None:
               "(worker DURDURULMUŞ olmalı)")
 
 
+def _print_geri_al(rapor: dict) -> None:
+    print(f"[dbmigrate] GERİ AL ({rapor['ts']})")
+    k = rapor["db_kenara"]
+    print(f"  db: {rapor['db']}  (koşu öncesi vardı: {rapor['db_var_idi']})")
+    print(f"  DB kenara: {'EVET' if k.get('yapildi') else 'HAYIR'}"
+          + (f"  → {k['hedef']}" if k.get("hedef") else ""))
+    for t in k.get("tasinan") or []:
+        print(f"    {t}")
+    print(f"  {'varlık':22s} {'arşiv':>6s} {'geri':>5s} {'db_n':>7s} {'dosya_n':>8s} {'fark':>6s}  digest")
+    for v in rapor["varliklar"]:
+        d = {True: "eşit", False: "AYRIŞIK", None: "-"}[v["digest_esit"]]
+        print(f"  {v['varlik']:22s} {str(v['arsiv_var_idi']):>6s} {str(v['geri_donen']):>5s} "
+              f"{str(v['db_n'] if v['db_n'] is not None else '-'):>7s} "
+              f"{str(v['dosya_n'] if v['dosya_n'] is not None else '-'):>8s} "
+              f"{str(v['fark'] if v['fark'] is not None else '-'):>6s}  {d}"
+              + (f"  [ayrışık kenara: {v['ayrisik_kenara']}]" if v["ayrisik_kenara"] else ""))
+        for h in v.get("hatalar") or []:
+            print(f"      HATA: {h}")
+    for h in k.get("hatalar") or []:
+        print(f"  HATA: {h}")
+    if rapor.get("kapatma_hatasi"):
+        print(f"  kapatma_hatasi: {rapor['kapatma_hatasi']}")
+    print(f"  aktif (DB'den mi okunuyor): {rapor['aktif']}")
+    print(f"  {rapor['beyan']}")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="python -m meridian.dbmigrate",
@@ -399,9 +589,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--uygula", action="store_true", help="TAŞI (varsayılan: kuru koşu)")
     ap.add_argument("--json", action="store_true", help="raporu JSON olarak bas")
     ap.add_argument("--durum", action="store_true", help="yalnız DB durumunu bas")
+    ap.add_argument("--geri-al", dest="geri_al", action="store_true",
+                    help="GERİ DÖN: DB'yi kenara al, `.migrated` arşivlerini asıl adlarına döndür")
     ap.add_argument("--zorla", action="store_true",
-                    help="canlı süreç görülse de taşı (riski sen alırsın)")
+                    help="canlı süreç görülse de taşı/geri al (riski sen alırsın)")
     a = ap.parse_args(argv)
+    if a.uygula and a.geri_al:
+        # ÇELİŞKİLİ NİYET SESSİZCE SIRALANMAZ: hangisinin önce koştuğuna bağlı olarak sonuç
+        # "taşındı" ya da "geri alındı" olurdu ve operatör hangisini istediğini raporda göremezdi.
+        print("[dbmigrate] REDDEDİLDİ: --uygula ile --geri-al aynı koşuda verilemez (çelişkili "
+              "niyet). Önce birini koş, raporu oku, sonra karar ver.", file=sys.stderr)
+        return 2
     if a.durum:
         out = {"db": str(storage.db_path()), "db_var": storage.db_path().exists(),
                "sema_surumu": storage.schema_version() if storage.db_path().exists() else None,
@@ -409,11 +607,21 @@ def main(argv: list[str] | None = None) -> int:
                "durum": db_state() if storage.db_path().exists() else []}
         print(json.dumps(out, ensure_ascii=False, indent=1, default=str))
         return 0
-    if a.uygula and not a.zorla and _worker_running():
-        print("[dbmigrate] REDDEDİLDİ: canlı Meridian süreci görülüyor. Defter taşınırken canlı "
-              "yazar olamaz. Önce `./ops/stop-worker.sh`, sonra tekrar dene (ya da --zorla).",
-              file=sys.stderr)
+    # TEK KAPI, İKİ YAZAN YOL: `--geri-al` de arka ucu ayağının altından çeker (DB kenara alınır),
+    # yani `--uygula` ile AYNI korumayı hak eder. Ayrı bir kapı yazmak, korumanın ikisinden birinde
+    # sessizce eskimesine açık kapı bırakırdı.
+    if (a.uygula or a.geri_al) and not a.zorla and _worker_running():
+        print("[dbmigrate] REDDEDİLDİ: canlı Meridian süreci görülüyor. Defter taşınırken ya da "
+              "GERİ ALINIRKEN canlı yazar olamaz — arka uç ayağının altından çekilir. "
+              "Önce `./ops/stop-worker.sh`, sonra tekrar dene (ya da --zorla).", file=sys.stderr)
         return 2
+    if a.geri_al:
+        rapor = rollback()
+        if a.json:
+            print(json.dumps(rapor, ensure_ascii=False, indent=1, default=str))
+        else:
+            _print_geri_al(rapor)
+        return 0 if rapor.get("ok", True) else 1
     rapor = apply() if a.uygula else plan()
     if a.json:
         print(json.dumps(rapor, ensure_ascii=False, indent=1, default=str))

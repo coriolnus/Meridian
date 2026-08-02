@@ -20,7 +20,18 @@ migrasyonudur, davranış migrasyonu DEĞİL.
 ANAHTARLAMA KAPISI (`active`). DB YOKSA her şey eskisi gibi dosyadan okur/yazar. DB `dbmigrate`
 ile DOĞDUĞU an altı defter DB'ye geçer. Yani kod dağıtımı ile veri geçişi AYRI iki olaydır:
 Rol-1 bakım penceresinde `python -m meridian.dbmigrate --uygula` koşana kadar davranış birebir
-bugünküdür. `MERIDIAN_DB=off` acil geri dönüş anahtarıdır (dosyalar `.migrated` ekiyle DURUYOR).
+bugünküdür.
+
+`MERIDIAN_DB=off` TEK BAŞINA GERİ DÖNÜŞ DEĞİLDİR (C5, 2026-08-02 — bu satır eskiden onu "acil geri
+dönüş anahtarı" ilan ediyordu ve YANLIŞTI). Migrasyondan sonra kaynak dosyalar `.migrated` ADIYLA
+durur; `store._path` kanonik ada bakar, bulamaz ve çağıranın VARSAYILANINA düşer. Yani anahtarı tek
+başına çeken operatör "eski hâle döndüm" sanırken altı defteri BOŞ okur ve ilk yazımda AYRIŞIK
+ikinci bir kitap doğar (`last_id` sıfırlanır → kimlik çakışması). Bugünkü sözleşme İKİ parçalıdır:
+  * GERİ DÖNÜŞ KOLU: `python -m meridian.dbmigrate --geri-al` — DB'yi kenara alır, `.migrated`
+    arşivlerini ASIL adlarına döndürür, DB ile dosya satır sayılarını rapor eder. Veri SİLMEZ.
+  * ANAHTAR (`MERIDIAN_DB=off`): kolun ÇEKİLDİĞİNİ varsaymaz, ÖLÇER. Anahtar açıkken DB dosyası
+    dururken kaynaklar hâlâ `.migrated` ise `active()` süreç başına BİR KEZ `obs.warn` basar
+    (`db_off_kaynaklar_arsivde`) — sessizce boş varsayılana düşmek bu bulgunun kendisiydi.
 
 YOL ÇAĞRI ANINDA ÇÖZÜLÜR. `config.STATE` ölçüm sandbox'larında (testler, sprint, mutasyon)
 değiştirilir; modül yükleme anında yol dondurmak o sandbox'ları KIRAR — bu yüzden `db_path()`
@@ -47,6 +58,9 @@ from . import config
 
 DB_NAME = "meridian.db"
 SCHEMA_VERSION = 1
+# Taşınmış kaynak dosyanın son eki. TEK KAYNAK BURADADIR: `dbmigrate` bunu içe aktarır. İki yerde
+# iki sabit olsaydı, biri değiştiğinde `MERIDIAN_DB=off` uyarısı arşivleri sessizce göremez olurdu.
+MIGRATED_SUFFIX = ".migrated"
 
 # ---- VARLIK KAYDI ------------------------------------------------------------------------------
 # Kanonik dosya adı → (tablo, tür). Tür üç değerlidir:
@@ -116,6 +130,9 @@ def kind_of(name: str) -> str | None:
 _CONNS: dict[str, sqlite3.Connection] = {}
 _GUARD = threading.RLock()
 _SCHEMA_OK: set = set()
+# `MERIDIAN_DB=off` uyarısı YOL BAŞINA BİR KEZ ölçülür (C5). `active()` her okumada çağrılır;
+# ölçümü önbelleğe almasaydık her `read_json` altı `stat()` ve potansiyel bir olay satırı üretirdi.
+_OFF_OLCULDU: set = set()
 
 PRAGMAS = (("journal_mode", "wal"), ("synchronous", "normal"),
            ("busy_timeout", 5000), ("foreign_keys", 1))
@@ -187,6 +204,10 @@ def close_connections() -> None:
                 pass
         _CONNS.clear()
         _SCHEMA_OK.clear()
+        # `_OFF_OLCULDU` DA TEMİZLENİR: bu çağrı disk gerçeğinin DEĞİŞTİĞİ anlarda yapılır
+        # (`--geri-al`, karantina, test sökümü) — ölçümü taşımak, önbelleği diskteki gerçeğin
+        # ötesinde tutmak olurdu (`_SCHEMA_OK` ile aynı gerekçe).
+        _OFF_OLCULDU.clear()
 
 
 # ---- ŞEMA --------------------------------------------------------------------------------------
@@ -283,8 +304,51 @@ def schema_version(conn: sqlite3.Connection | None = None) -> int | None:
 
 
 def disabled_by_env() -> bool:
-    """`MERIDIAN_DB=off` acil geri dönüş anahtarı: DB dosyası dursa bile dosya yoluna dönülür."""
+    """`MERIDIAN_DB=off`: DB dosyası dursa bile dosya yoluna dönülür.
+
+    BU BİR GERİ DÖNÜŞ DEĞİL, BİR ANAHTARDIR. Dosyalar `.migrated` adında duruyorsa dosya yolu BOŞ
+    okur; geri dönüş kolu `dbmigrate --geri-al`dır (modül docstring'i). Anahtarın bu yarım hâli
+    `_acil_anahtar_beyani()` tarafından ölçülüp beyan edilir."""
     return os.environ.get("MERIDIAN_DB", "").strip().lower() in ("0", "off", "false", "no")
+
+
+def _acil_anahtar_beyani() -> None:
+    """`MERIDIAN_DB=off` çekilmiş AMA defterler hâlâ arşivdeyse SÜREÇ BAŞINA BİR KEZ uyar (C5).
+
+    ÖLÇÜLEN HÂL: anahtar açık + `meridian.db` DOSYASI duruyor + kanonik ada sahip kaynak YOK ama
+    `<ad>.migrated` VAR. Bu üçlü tam olarak "operatör acil anahtarı çekti ve defterler boş okunmaya
+    başladı" demektir: `store._path` kanonik ada bakar, bulamaz, çağıranın varsayılanına düşer —
+    ölçüldü (denetim C5): trades n=0, portfolio/scoreboard/equity VARSAYILAN, `stamp`=(0,0).
+
+    NEDEN REDDETMEK DEĞİL DE UYARMAK. Bu kod yolu bir OKUMA kapısıdır ve kriz anında çekilen bir
+    anahtarın ardından koşar; istisna fırlatmak panoyu ve worker'ı topyekûn düşürürdü — yani
+    operatörün elindeki son gözlem yüzeyini de alırdı. Eksik olan şey KARAR değil BEYAN'dı: hangi
+    defterlerin arşivde olduğu ve kolun adı (`--geri-al`) tek satırda önüne gelir.
+
+    ÖLÇÜM ÖNBELLEĞE ALINIR (`_OFF_OLCULDU`) ama DB dosyası YOKKEN alınmaz: dosya yoksa ortada
+    "yarım geri dönüş" hâli de yoktur ve o durum aynı süreç içinde migrasyonla değişebilir."""
+    p = db_path()
+    if not p.exists():                      # tek `stat` — DB yoksa anlatılacak bir hâl yok
+        return
+    key = str(p)
+    if key in _OFF_OLCULDU:
+        return
+    _OFF_OLCULDU.add(key)
+    state = Path(config.STATE)
+    arsivde = [n for n in ENTITIES
+               if not (state / n).exists() and (state / (n + MIGRATED_SUFFIX)).exists()]
+    if not arsivde:
+        return
+    try:
+        from . import obs
+        obs.warn("db_off_kaynaklar_arsivde", db=key, arsivde=arsivde, n=len(arsivde),
+                 detail=("MERIDIAN_DB=off çekili ve DB devre dışı, AMA bu defterlerin dosya "
+                         "karşılığı `.migrated` adında — kanonik addan okuyan her çağrı BOŞ "
+                         "varsayılana düşer (geri dönüş DEĞİL, boş defter). Geri dönüş kolu: "
+                         "`python -m meridian.dbmigrate --geri-al` (DB kenara alınır, arşivler "
+                         "asıl adlarına döner, hiçbir veri silinmez)."))
+    except Exception:  # sessiz-yutma: kayıt kanalı düştü; BEYAN denemesi bir okuma kapısını düşüremez ve kararı (dosya yoluna dön) zaten çağıran uyguluyor — hâl her yeni süreçte yeniden ölçülür
+        pass
 
 
 def active(name: str | None = None) -> bool:
@@ -292,6 +356,7 @@ def active(name: str | None = None) -> bool:
     if name is not None and name not in _TABLE:
         return False
     if disabled_by_env():
+        _acil_anahtar_beyani()
         return False
     p = db_path()
     key = str(p)

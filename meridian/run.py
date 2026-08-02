@@ -1,15 +1,41 @@
-"""run.py — entrypoint + scheduler (US market-calendar aware).
+"""run.py — entrypoint (TOHUMLAMA + TEK ATIŞ). 24/7 KADANS BURADA DEĞİL: `scheduler.advance_once`.
 
   python -m meridian.run --dry-run --replay 2023-01-01:2024-12-31   # seed state from real history
   python -m meridian.run --once                                     # one live paper daily cycle
-  python -m meridian.run                                            # 24/7 worker loop (VM/tmux)
+  MERIDIAN_AUTOSTART_CYCLE=1 uvicorn meridian.api:app               # 24/7 kadans (süreç-içi zamanlayıcı)
 
 The replay writes REAL state (trades, equity, regime, candidates, plans, scoreboard) so the
-dashboard and the reflection loop have genuine data — not fixtures. Research system. Paper mode."""
+dashboard and the reflection loop have genuine data — not fixtures. Research system. Paper mode.
+
+KALICI KURAL — İki kadans yasası tek depoda yaşayamaz (C3, 2026-08-02).
+`worker()` 24/7 kadansın İKİNCİ bir uygulamasıydı ve ÜRETİMDE HİÇ KOŞMUYORDU: canlı ve yerel
+başlatma yollarının HEPSİ uvicorn + süreç-içi `scheduler.start()`tir (`deploy/oracle-a1/
+meridian.service`, `ops/com.meridian.agent.plist`, `serve.sh`); `meridian.run` yalnız `--replay`
+tohumu için çağrılıyordu. Koşmayan bir yol DÜZELTME BASKISI ÜRETMEZ — bu yüzden zamanlayıcıda
+adıyla düzeltilmiş ÜÇ kusuru son gününe kadar taşıdı:
+  (a) SEANS TANIMI: takvim indeksinden `sessions[-1]` okuyordu, yani BUGÜNÜN seansını GECE
+      YARISINDAN itibaren "kapanmış" sayıyordu. `scheduler._last_closed_session` tam bu hatayı
+      `market_close <= now` filtresiyle "audit #12" diye düzeltilmiş ilan ediyor.
+  (b) VERİ YOLU: `dataset.load(use_cache=False)` çağırıyordu, `load_live()` DEĞİL — o yolda ne
+      Finviz keşfi ne aynı-akşam Alpaca bacağı vardır (aynı-akşam kapısı `session=` yalnız
+      `load_live` üzerinden verilir).
+  (c) İLERLEME: `daily_cycle` dönüşü hiç sorgulanmadan `last_processed` yazılıyordu — kapsama
+      kapısı `noop`/`waiting_for_universe`/`refused_regressive` dönse bile o seans bir daha
+      denenmiyordu; sık/seyrek merdiven, `_repair_once_per_session` ve çoklu-seans yetişme
+      döngüsü bu yolda YOKTU.
+Seans-sonrası kadansların HİÇBİRİ (öğrenme, Y4, haftalık üçlü, arming, selfreview, yetim süpürme,
+nous, sprint, earnings, intraday gap) burada yoktu. Dördüncü bir yama kusuru kapatırdı, SINIFI
+kapatmazdı: sınıf "ikinci bir kadans uygulamasının var olması"dır. O yüzden hüküm EMEKLİLİKtir.
+
+GERİ ALINABİLİRLİK. Gövde silindi ama KAYBOLMADI: bu turdan önceki her sürüm tam metni taşır
+(`git show 8aaf05e:meridian/run.py`). Kadansın kendisi zaten `scheduler.py`de yaşıyor ve orada
+DÜZELTİLMİŞ hâliyle koşuyor — yani geri alınacak bir yetenek değil, yalnız bir kopya emekli oldu.
+`worker()` adı yaşamaya devam eder ama artık YÖNLENDİRİR (bkz. gövdesindeki gerekçe).
+YAN ETKİ (beyan, kapsam DIŞI): `obs.ALARM_HEARTBEAT_STALE` jetonunun depodaki TEK üreticisi bu
+döngüydü; jeton bugün üreticisiz kaldı. Üretimde zaten hiç ateşlenemiyordu (asılı-tick koruması
+`meridian-tick-watchdog.timer`dır) — jetonun yeni bir üreticiye bağlanması ayrı bir bulgudur."""
 from __future__ import annotations
 import argparse
-import time
-import datetime as dt
 
 from rich.console import Console
 
@@ -287,40 +313,39 @@ def once() -> dict:
     return summary
 
 
+# KANONİK 24/7 YOL — tek cümle, tek yer. Dockerfile/compose/README/servis birimleri bunu anlatır;
+# metin burada durur ki dört ayrı yerde dört ayrı hâle sürüklenmesin.
+KADANS_YOLU = (
+    "24/7 kadans bu süreçte DEĞİL: `MERIDIAN_AUTOSTART_CYCLE=1 uvicorn meridian.api:app` "
+    "(api süreç-içi `scheduler.start()` bağlar). Yerelde `./serve.sh`; A1'de "
+    "`systemctl start meridian` (deploy/oracle-a1/meridian.service).")
+
+
 def worker(poll_seconds: int = 60) -> None:
-    """24/7 worker. Writes a heartbeat every tick; runs a daily cycle when a new session has closed.
-    Respects the kill-switch. Meant to run under systemd + tmux on the VM."""
-    import pandas_market_calendars as mcal
+    """EMEKLİ (C3, 2026-08-02) — kadans KOŞMAZ, çağıranı zamanlayıcı yoluna YÖNLENDİRİR.
+
+    Gerekçe ve geri-alınabilirlik notu modül docstring'indedir ("İki kadans yasası tek depoda
+    yaşayamaz"). Burada yalnız BİÇİM açıklanır:
+
+    SESSİZCE DÖNMEZ, YÜKSEK SESLE REDDEDER. Bu fonksiyonu çağıran her yol (`python -m meridian.run`,
+    eski Dockerfile CMD'i, eski compose `command`ı) bir 24/7 worker BAŞLATTIĞINI sanır. Sessiz bir
+    `return`, "worker koştu ve hemen çıktı" gibi görünürdü — `restart: unless-stopped` altında bu,
+    hiçbir kadans koşmadan sağlıklı görünen sonsuz bir yeniden başlatma döngüsüdür: emekli ettiğimiz
+    kusur sınıfının (koşmayan mekanizma, sessiz sapma) aynısını başka kapıdan geri getirirdi.
+    `SystemExit(2)` yanlış komutu operatörün önünde tutar ve süpervizöre de sıfır-dışı kod verir.
+
+    `poll_seconds` imzada KALIR: `main()` onu `--poll`dan geçirir ve reddedilen çağrının hangi
+    niyetle yapıldığı (bir poll döngüsü bekleniyordu) olay kaydına yazılır."""
     from . import obs
-    nyse = mcal.get_calendar("XNYS")
-    bootstrap_v01()
-    console.print("[bold green]Meridian worker up — paper mode, autonomy L0[/bold green]")
-    obs.log("worker_up", mode=config.MODE, autonomy_level=config.limits()["autonomy_level"])
-    last_processed = None
-    while True:
-        try:
-            # self-detect a hung/slow loop: if the heartbeat is already stale as we wake, alarm
-            if health.stale(max(900, poll_seconds * 3)):
-                obs.alarm(obs.ALARM_HEARTBEAT_STALE, f"nabız {health.heartbeat_age_seconds()}sn gecikmeli")
-            if health.halted():
-                obs.alarm(obs.ALARM_HALT, "HALT dosyası mevcut — yeni giriş yok")
-                health.write_heartbeat(note="HALT file present — no new entries")
-            else:
-                today = dt.date.today()
-                sched = nyse.schedule(start_date=str(today - dt.timedelta(days=7)), end_date=str(today))
-                sessions = [str(d.date()) for d in sched.index]
-                last_closed = sessions[-1] if sessions else None
-                if last_closed and last_closed != last_processed:
-                    bars, index = dataset.load(use_cache=False)
-                    summary = loop.daily_cycle(bars, index)
-                    console.print(f"[cyan]{summary}[/cyan]")
-                    last_processed = last_closed
-                else:
-                    health.write_heartbeat(note="between sessions", last_processed=last_processed)
-        except Exception as e:  # stop-on-failure semantics: log loudly, keep heartbeat honest
-            console.print(f"[red]worker error: {type(e).__name__}: {e}[/red]")
-            health.write_heartbeat(status="error", error=f"{type(e).__name__}: {e}")
-        time.sleep(poll_seconds)
+    try:
+        obs.warn("retired_worker_invoked", poll_seconds=int(poll_seconds), detail=KADANS_YOLU)
+    except Exception:  # sessiz-yutma: kayıt kanalı düştü; RET KARARI aşağıdaki SystemExit ile ZATEN uygulanıyor ve gerekçe konsola basıldı — kayıt denemesi reddi geri alamaz
+        pass
+    console.print("[red]REDDEDİLDİ: `run.worker()` EMEKLİ (C3, 2026-08-02) — ikinci bir kadans "
+                  "uygulamasıydı, üretimde hiç koşmadı ve düzeltilmiş üç kusuru taşıyordu.[/red]")
+    console.print(f"[yellow]{KADANS_YOLU}[/yellow]")
+    console.print("[yellow]Tek seferlik bir seans için: python -m meridian.run --once[/yellow]")
+    raise SystemExit(2)
 
 
 def main(argv=None):
@@ -334,7 +359,11 @@ def main(argv=None):
                     help="canlı sürümün EBEVEYN tabanını walk-forward'dan ÖLÇ (varsayılan: hiçbir yere yazmaz)")
     ap.add_argument("--publish", action="store_true",
                     help="--parent-baseline ölçümünü karneye YAZ — ölçmek yayınlamak değildir, ayrı karar")
-    ap.add_argument("--poll", type=int, default=60)
+    # `--poll` bayrağı DURUYOR ama artık bir döngü beslemiyor: bayraklı çağrı emekli `worker()`a
+    # düşer ve yönlendirmeyle reddedilir. Bayrağı sessizce KALDIRMAK, onu geçen eski bir betiği
+    # "bilinmeyen argüman" hatasıyla düşürürdü — hata mesajı da yanlış yeri gösterirdi.
+    ap.add_argument("--poll", type=int, default=60,
+                    help="(EMEKLİ) eski 24/7 döngünün poll aralığı — kadans artık zamanlayıcıda")
     args = ap.parse_args(argv)
 
     if args.parent_baseline:

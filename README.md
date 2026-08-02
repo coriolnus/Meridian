@@ -72,14 +72,24 @@ uv sync --extra dev
 uv run python -m meridian.run --dry-run --replay 2023-01-01:2026-07-10
 # tests (purity, frictions, guard rejections, score=None, rollback)
 uv run pytest -q
-# dashboard  → http://127.0.0.1:8080
+# dashboard (read-only) → http://127.0.0.1:8080
 uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080
-# one live paper cycle / the 24/7 worker
+# one live paper cycle
 uv run python -m meridian.run --once
-uv run python -m meridian.run
+# THE 24/7 PATH — dashboard + in-process scheduler. `./serve.sh` does exactly this (plus keepalive).
+MERIDIAN_AUTOSTART_CYCLE=1 CYCLE_POLL_SECONDS=300 \
+  uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080
 # force a reflection cycle (deterministic proposer — no LLM)
 uv run python -m meridian.reflect --auto
 ```
+
+> **`python -m meridian.run` is NOT the 24/7 worker (retired 2026-08-02, C3).** Its `worker()` was a
+> *second* implementation of the daily cadence that never ran in production — every real start path
+> (`serve.sh`, `ops/com.meridian.agent.plist`, `deploy/oracle-a1/meridian.service`) has always been
+> uvicorn + the in-process scheduler. Because it never ran, it never got the fixes the scheduler did
+> (session-close definition, `load_live` data path, ladder/repair progress gating). Calling it now
+> refuses loudly and points here; the module docstring in `meridian/run.py` carries the full
+> reasoning and the reversibility note. **Two cadence laws cannot live in one repository.**
 
 Config lives in two **immutable** files Hermes may never edit: `state/goal.yaml` (success/failure/risk
 contract) and `state/bounds.yaml` (the parameter sandbox).
