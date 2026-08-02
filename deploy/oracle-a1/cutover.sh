@@ -119,25 +119,35 @@ adim 4/6 "uzakta deploy.sh (uv sync + redis + systemd birimleri + tohum kapısı
 oldu "deploy.sh tamamlandı"
 
 # --- 5) pano token'ı -----------------------------------------------------------------------------
-adim 5/6 "MERIDIAN_DASH_TOKEN üretimi"
-# DİKKAT (eski runbook hatası): B.3'teki sed deseni 'DEĞİŞTİR-uzun-rastgele-token' idi, oysa
-# meridian.service'teki placeholder 'CHANGEME-long-random-ascii-token'. sed eşleşmeyince SESSİZCE
-# 0 döner → servis bilinen bir placeholder token'la canlıya çıkardı. Desen artık dosyadan doğrulandı
-# ve değişimin GERÇEKTEN olduğu aşağıda kontrol ediliyor.
+adim 5/6 "MERIDIAN_DASH_TOKEN (.dash.env yoksa üret + doğrula)"
+# Token birimde DEĞİL (H3 tur-1/2): meridian.service `EnvironmentFile=-/opt/meridian/.dash.env`
+# okur; birim dosyası 0644'tür, sır oraya yazılmaz. `.dash.env` dagit.sh rsync'inden bilerek
+# dışlanır (2026-08-01 vakası: --delete A1'dekini sildi) → dosya SUNUCUDA üretilir, taşınmaz.
+# DİKKAT (aynı sınıfın iki kuşağı — "sessiz sıfır-etkili adım"): (1) eski runbook sed'i yanlış
+# desendi, eşleşmeyince sessizce 0 döndü → placeholder canlıya çıktı; (2) düzeltilmiş sed
+# `CHANGEME` grep'ine bağlıydı — H3 tur-2 placeholder'ı birimden çıkarınca adım yine sessiz
+# no-op'a düştü, taze kurulum TOKEN'SIZ kalırdı. Artık desen değil DOSYANIN KENDİSİ ölçülür ve
+# sonuç (dolu + 0600) aşağıda doğrulanır. İDEMPOTENT: dolu .dash.env'e DOKUNULMAZ — üzerine
+# yazmak operatörün canlı token'ını habersiz döndürmek olurdu. deploy.sh (adım 4) dosyayı
+# çoğu koşuda zaten üretmiştir; burası bağımsız SON KAPI olarak yine de ölçer.
 "${SSH[@]}" "ubuntu@$IP" '
   set -e
-  if grep -q "CHANGEME-long-random-ascii-token" /etc/systemd/system/meridian.service; then
-    sudo sed -i "s/CHANGEME-long-random-ascii-token/$(openssl rand -hex 24)/" /etc/systemd/system/meridian.service
-    grep -q "CHANGEME-long-random-ascii-token" /etc/systemd/system/meridian.service \
-      && { echo "TOKEN DEĞİŞTİRİLEMEDİ"; exit 1; }
-    echo "  token üretildi (openssl rand -hex 24)"
+  if [ ! -s /opt/meridian/.dash.env ]; then
+    printf "MERIDIAN_DASH_TOKEN=%s\n" "$(openssl rand -hex 24)" | sudo tee /opt/meridian/.dash.env >/dev/null
+    echo "  token üretildi (openssl rand -hex 24) → /opt/meridian/.dash.env"
   else
-    echo "  token zaten ayarlı (placeholder yok) — dokunulmadı"
+    echo "  .dash.env zaten dolu — DOKUNULMADI (mevcut token korunuyor)"
+  fi
+  sudo chown ubuntu:ubuntu /opt/meridian/.dash.env
+  sudo chmod 600 /opt/meridian/.dash.env
+  IZIN="$(stat -c "%a" /opt/meridian/.dash.env 2>/dev/null || echo YOK)"
+  if [ ! -s /opt/meridian/.dash.env ] || [ "$IZIN" != "600" ]; then
+    echo "  .dash.env DOĞRULANAMADI (izin=$IZIN)"; exit 1
   fi
   sudo systemctl daemon-reload
   sudo systemctl restart meridian
-' || patla "5/6 token" "token ayarlanamadı — /etc/systemd/system/meridian.service'i elle kontrol et"
-oldu "token ayarlandı, meridian yeniden başlatıldı"
+' || patla "5/6 token" ".dash.env kurulamadı/doğrulanamadı — uzakta elle bak: sudo ls -l /opt/meridian/.dash.env (reçete: RUNBOOK Bölüm B, elle yol adım 3)"
+oldu "token /opt/meridian/.dash.env'de (dolu + 0600), meridian yeniden başlatıldı"
 sleep 8
 
 # --- 6) doğrulama --------------------------------------------------------------------------------

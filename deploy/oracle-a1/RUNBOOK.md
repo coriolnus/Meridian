@@ -70,17 +70,21 @@ bash deploy/oracle-a1/cutover.sh 130.61.126.87
 | 2 | **YEREL durdurma**: `stop_worker` (süreç grubu) + `barsarchive-run.sh stop` + keepalive | **rsync'ten ÖNCE** — koşan worker state'e yazarken alınan kopya yarım defterle gider |
 | 3 | rsync: önce repo (`--exclude .venv .git state`), sonra `state/` ayrıca | durmuş süreçten tutarlı görüntü; sırlar uzakta 0600'e sabitlenir |
 | 4 | uzakta `deploy.sh` | uv sync + redis + systemd birimleri + **tohum kapısı** |
-| 5 | `MERIDIAN_DASH_TOKEN` üretimi (`openssl rand -hex 24`) + restart | placeholder token'la canlıya çıkmayı önler |
+| 5 | `MERIDIAN_DASH_TOKEN`: `.dash.env` yoksa üret (`openssl rand -hex 24`) + dolu/0600 doğrula + restart | token'sız canlıya çıkmayı önler; dolu dosyaya DOKUNMAZ (habersiz rotasyon yasak) |
 | 6 | doğrulama tablosu + **çift-emir uyarısı** | |
 
 **keepalive neden özel ele alınıyor:** `ops/keepalive.sh` pidfile silinince kendini kapatır ama
 **60 sn'ye kadar** yaşar (uyku turu) — o süre içinde worker'ı **diriltir**. Betik önce PID'i
 (komut kimliğiyle doğrulayarak) öldürür, sonra pidfile'ı siler. `caffeinate`'e dokunulmaz.
 
-> **DÜZELTİLEN HATA (bu tur):** eski B.3 adımındaki `sed` deseni `DEĞİŞTİR-uzun-rastgele-token`
-> idi, oysa `meridian.service`'teki placeholder `CHANGEME-long-random-ascii-token`. Desen
-> eşleşmediği için `sed` **sessizce 0 dönüyor**, servis bilinen bir placeholder token'la canlıya
-> çıkıyordu. `cutover.sh` artık doğru deseni kullanır **ve değişimin gerçekten olduğunu doğrular**.
+> **DÜZELTİLEN HATA (aynı sınıfın iki kuşağı — "sessiz sıfır-etkili adım"):** (1) eski B.3
+> adımındaki `sed` deseni `DEĞİŞTİR-uzun-rastgele-token` idi, oysa placeholder
+> `CHANGEME-long-random-ascii-token` — desen eşleşmeyince `sed` **sessizce 0 dönüyor**, servis
+> bilinen bir placeholder token'la canlıya çıkıyordu. (2) Düzeltme `CHANGEME` grep'ine bağlanmıştı;
+> H3 tur-2 (2026-08-02) placeholder'ı birimden tamamen çıkarınca `cutover.sh`'ın o adımı da
+> `deploy.sh`'ın bekçisi de **sessiz no-op**'a düştü — taze kurulum TOKEN'SIZ kalırdı. İki betik
+> artık desen değil **dosyanın kendisini** ölçer: `/opt/meridian/.dash.env` yok/boşsa üretilir,
+> doluysa DOKUNULMAZ (habersiz rotasyon yasak) ve sonuç (dolu + 0600) doğrulanır.
 
 <details><summary>Elle yol (cutover.sh koşmuyorsa)</summary>
 

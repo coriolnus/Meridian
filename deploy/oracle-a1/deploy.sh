@@ -93,11 +93,31 @@ sudo cp deploy/oracle-a1/meridian-backup.timer       /etc/systemd/system/meridia
 # OnFailure hedefi: meridian.service ölürse operatöre haber verir. enable EDİLMEZ (oneshot,
 # yalnız OnFailure tetikler). Kanal kurulu değilse birim no-op'tur ve nedenini journal'a yazar.
 sudo cp deploy/oracle-a1/meridian-fail-notify.service /etc/systemd/system/meridian-fail-notify.service
-if grep -q 'CHANGEME-long-random-ascii-token' /etc/systemd/system/meridian.service; then
-  echo "!! /etc/systemd/system/meridian.service içindeki MERIDIAN_DASH_TOKEN HÂLÂ PLACEHOLDER."
-  echo "   Düzelt:  sudo sed -i \"s/CHANGEME-long-random-ascii-token/\$(openssl rand -hex 24)/\" /etc/systemd/system/meridian.service"
-  echo "   (cutover.sh bunu otomatik yapar.)"
+# PANO TOKEN'I — BİRİMDE DEĞİL, 0600'lük /opt/meridian/.dash.env'te (H3 tur-1/2):
+# meridian.service onu `EnvironmentFile=-/opt/meridian/.dash.env` ile okur; birim dosyası 0644'tür,
+# sır oraya YAZILMAZ. Dosya SUNUCUDA üretilir, dağıtımla TAŞINMAZ (dagit.sh rsync'i .dash.env'i
+# bilerek dışlar — 2026-08-01 vakası: --delete A1'dekini silmişti). Eski `grep CHANGEME` bekçisi
+# ÖLDÜ: H3 tur-2 placeholder'ı birimden çıkarınca desen-bağımlı bekçi SESSİZ NO-OP oldu ve taze
+# kurulum token'sız kalırdı — o yüzden desen değil DOSYANIN KENDİSİ ölçülür. İDEMPOTENT: dolu
+# dosyaya DOKUNULMAZ; üzerine yazmak operatörün canlı token'ını habersiz döndürmek olurdu.
+if [ ! -s /opt/meridian/.dash.env ]; then
+  echo "-- pano token'ı üretiliyor → /opt/meridian/.dash.env (openssl rand -hex 24)"
+  printf 'MERIDIAN_DASH_TOKEN=%s\n' "$(openssl rand -hex 24)" | sudo tee /opt/meridian/.dash.env >/dev/null
+else
+  echo "-- /opt/meridian/.dash.env zaten dolu — DOKUNULMADI (mevcut token korunuyor)"
 fi
+# izinler her koşuda garanti altına alınır (yukarıdaki secrets/auth chmod'larıyla aynı sınıf;
+# içeriğe dokunmaz)
+sudo chown ubuntu:ubuntu /opt/meridian/.dash.env
+sudo chmod 600 /opt/meridian/.dash.env
+# DOĞRULAMA (sed-vakası dersi: adımın gerçekleştiğini dosya söyler): dolu + 0600, değilse DUR —
+# token'sız devam etmek panoyu parolasız canlıya çıkarmak olurdu
+DASH_IZIN="$(stat -c '%a' /opt/meridian/.dash.env 2>/dev/null || echo YOK)"
+if [ ! -s /opt/meridian/.dash.env ] || [ "$DASH_IZIN" != "600" ]; then
+  echo "!! /opt/meridian/.dash.env DOĞRULANAMADI (izin=$DASH_IZIN) — pano token'sız kalırdı"
+  exit 1
+fi
+echo "-- pano token'ı: /opt/meridian/.dash.env dolu + 0600 ✓"
 mkdir -p /home/ubuntu/backups     # yedek hedefi — timer ilk atışta var olmalı
 sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
