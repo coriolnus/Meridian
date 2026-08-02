@@ -39,10 +39,11 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   vs Massive planı) · bildirim kanalı · FMP planı · VIX kaynağı · shares-outstanding kaynağı.
 - **DENETİM KUYRUĞU (2026-08-02 gecesi; kaynak `docs/SISTEM-DENETIMI-2026-08-02.md`):** KOVA A
   **9/9 İNDİ** (d50b03b defter+kadans · 395920e veri-hattı · 8a38248 gözetim; 44 yeni test, hepsi
-  kırmızı-önce/canlı-kopya doğrulamalı). **KOVA B 16 kalem operatör onayı bekliyor** — sıralı
-  öncelik önerisi: C9 (çıkış→ayna kopukluğu, yetim pozisyon) → C8 (pano düğmesi E1-bypass) → C23
-  (HALT ayna-iptali) → C11/C18 (replay ATR bacağı, karne rakamları değişir) → C13/C19 (canlı-ölü
-  knob + kesici penceresi) → gerisi raporda.
+  kırmızı-önce/canlı-kopya doğrulamalı). **KOVA B 16/16 İNDİ (2026-08-02 gündüz, operatör onayıyla — üç dalga):**
+  90a6663 icra-güvenlik (C9/C23/C8) · 6020fa0 yapı (C3/C5) · 84fcf69 öğrenme-politika (C14/C16/C17) ·
+  9b8327e küçükler (C1/C25) · 0a4453f iki-motor (C11/C18/C13/C19) · 6aba956 dalga-3 (C24/C12) ·
+  0170cc0 borçlar + takip hükümleri (v76 fikstürü, Y3 ölçülemedi-notu). Dağıtıldı 14:00/14:30 UTC;
+  birim migrasyonu yapıldı. 25 bulgunun 25'i kapalı ya da bilinçli-beyanlı.
 - **Hermes-CLI yapılandırma dersi (2026-08-02, canlı vaka):** A1 taşınmasında ~/.hermes yapılandırması
   taşınmadı (hiçbir kanalın parçası değildi), senkron tek-atımlık olduğundan kendini onarmadı, hiçbir
   bekçi "yerel ajan yapılandırılmış mı" ölçmüyordu — LLM ikinci-görüşü 6 gün sessiz öldü. Kalemler:
