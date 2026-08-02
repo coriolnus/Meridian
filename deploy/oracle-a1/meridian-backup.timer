@@ -17,3 +17,8 @@ RandomizedDelaySec=300
 
 [Install]
 WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — BU DOSYADA YAPILACAK BİR ŞEY YOK (tur-2, 2026-08-02 incelemesi).
+# Timer birimlerinin `[Service]` bölümü yoktur: sertleştirme direktifleri süreç yürütmeye aittir ve
+# burada geçersizdir. Bu timer'ın tetiklediği süreç `meridian-backup.service`tir; sertleştirme
+# ORADA yapıldı. `systemd-analyze security meridian-backup.timer` da bu yüzden anlamsızdır.

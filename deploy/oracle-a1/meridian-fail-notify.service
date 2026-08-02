@@ -40,3 +40,22 @@ Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/ubuntu/.local/bin/uv run python -c "from meridian import notify; ok = notify.configured(); print('[fail-notify] kanal yapilandirildi mi:', ok); print('[fail-notify] gonderim sonucu:', notify.send('MERIDIAN A1: meridian.service FAILED - surec olu, systemd OnFailure tetikledi. journalctl -u meridian -n 100')) if ok else print('[fail-notify] NO-OP: TELEGRAM_BOT_TOKEN+CHAT_ID veya MERIDIAN_WEBHOOK_URL yok (operator kalemi)')"
 ExecStartPost=/bin/sh -c "echo '[fail-notify] birim tamamlandi' ; exit 0"
 SuccessExitStatus=0 1
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — BU BİRİME UYGULANMADI, VE BU BİLİNÇLİ (tur-2, 2026-08-02).
+#
+# GEREKÇE (rahatlık değil, arıza şekli): bu birim SON KATMANDIR — yalnız her şey öldüğünde konuşur.
+# Ve kendi arızasını BİLEREK yutar: `|| true` / `exit 0` / `SuccessExitStatus=0 1` (yukarıdaki
+# gerekçeye bkz. — ikinci bir başarısız birim alarm gürültüsünü ikiye katlamasın diye). Yani bir
+# sertleştirme hatası burada TANIM GEREĞİ GÖRÜNMEZDİR: birim yine 0 ile çıkar, bildirim gitmez ve
+# bunu kimse ölçemez. Aynı sınıfın canlı vakası 2026-07-30'da yaşandı (gömülü çok-satır Python →
+# IndentationError; güvenlik ağının kendisi hiç çalışmamıştı, test-ateşlemesiyle yakalandı).
+#
+# MARUZİYET SINIRLIDIR, o yüzden takas kabul edilebilir: User=ubuntu (root değil), Type=oneshot,
+# yılda birkaç saniye koşar, tetikleyicisi systemd'nin kendisidir (dışarıdan çağrılamaz).
+#
+# NE ZAMAN SERTLEŞTİRİLİR: `journalctl -u meridian-fail-notify` ile GERÇEK bir gönderim
+# doğrulandıktan SONRA, ve sertleştirilmiş hâli AYNI test-ateşlemesiyle (elle `systemctl start` +
+# operatörün telefonuna düşen bildirim) yeniden doğrulanarak. Ölçmeden sertleştirmek, bu birimde
+# "sessiz güvenlik ağı" üretir — hiç güvenlik ağı olmamasından kötüdür.
+# ==================================================================================================
