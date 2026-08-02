@@ -334,12 +334,12 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   (bilinçli-bastırılmış operatör kararı — el kitabının Inter önerisi REDDEDİLDİ).
 - **P5 Belirsizlik ✅ (renksiz kanal):** onarım-dolgu/imputation hücrelerinde belirsizlik-görseli +
   bayatlık-solması standardı (Sarma/Kay).
-- **P6 ✅ gece-teması doğrulandı / gündüz-beyazı refinement-turu kalemi 📋:** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);
+- **P6 ✅ TAM (gündüz turu 2026-08-02 indi — 9 yüzey tek-katsayı, sıfır saf beyaz; 148-çift yeniden-ölçüm, 0 hüküm değişimi):** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);
   WCAG 2.2 AA UYUMLULUK STANDARDI KALIR (APCA yalnız tasarım-yardımcısı — el kitabının kendi
   düzeltmesi: WCAG-3 onaylı değil).
 - **P7 ⌘K paleti ✅ CANLI (933 satır, 25+7 komut, iki-adım onay):** tek eylem yüzeyi; kilit/nav/filtre; kısayol-ipuçları;
   CSP-self uyumlu.
-- **P9 Kapsama/drift renk-skalaları 📋:** tek-hue sequential (koyu-uyumlu) + CVD-güvenli diverging.
+- **P9 ✅ (2026-08-02):** kapsama ısı-matrisi (7×6, None-haritası) + tek-hue sequential + CVD-güvenli diverging; jetonlu, AA-ölçülü.
 - **P10 Hareket ✅ (koşulsuz-puls söküldü):** prefers-reduced-motion + ≤300ms puls YALNIZ-anomali; skeleton
   sınırlaması kural olarak (zaten kullanılmıyor).
 - **RED/UYARLANDI:** APCA-birincil (red) · Inter (red — Geist kalır) · skeleton yaygınlaştırma
