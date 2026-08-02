@@ -87,6 +87,18 @@ def test_c1_meridian_service_bind_adresini_env_degiskeninden_alir():
     assert "#" not in env_satirlari[0]
 
 
+def test_meridian_service_hicbir_environment_satirinda_satir_sonu_yorumu_yok():
+    """KIRMIZI-ÖNCE: üstteki çivi yalnız BIND_HOST satırını korur; 2026-08-02'de aynı tuzak
+    DASH_TOKEN satırında yakalandı (`...token   # ASCII zorunlu...`). systemd `Environment=`
+    satır-sonu yorumu desteklemez — `#` ve sonrası boşluklarla ayrı `VAR=VAL` atamaları sanılır,
+    geçersizleri journal'e "Invalid environment assignment, ignoring" düşürür. Bu test dosyadaki
+    HER `Environment=` satırını çiviler: yorum kendi `#` satırına yazılır, değere iliştirilmez."""
+    kirli = [l for l in UNIT.read_text().splitlines()
+             if l.startswith("Environment=") and "#" in l]
+    assert kirli == [], \
+        f"`Environment=` satırında satır-sonu yorumu var — systemd bunu değerin parçası sayar: {kirli}"
+
+
 def test_c1_kapinin_okudugu_ad_ile_baslaticilarin_yazdigi_ad_AYNI():
     """TEK KAYNAK KAYNAK-ÇİVİSİ: kapı ile başlatıcı FARKLI adlara bakarsa (yazım hatası, yeniden
     adlandırma) hiçbir test kırılmadan hayalet girdi GERİ GELİR. Ad api.py'den OKUNUR, elle
