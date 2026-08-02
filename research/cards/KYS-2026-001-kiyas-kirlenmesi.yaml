@@ -1,0 +1,35 @@
+card_id: KYS-2026-001
+family: kiyas_kirlenmesi   # ölçüm-ALTYAPISI yanlılık kartı (edge hipotezi DEĞİL) — EAP yan bulgusunun ön-kayıtlı nicelleştirmesi
+thesis: >
+  EAP ölçümünün yan bulgusu (2026-07-31): herhangi bir olay penceresinde evrenin ort. %64'ü /
+  medyan %74'ü KENDİ kazanç-öncesi penceresinde — "evren medyanı/ortalamasına göre fazla getiri"
+  kullanan TÜM ölçümler (component_ic, cf R-tabloları, kart taban-fazlaları) sistematik olarak
+  SIKIŞTIRILMIŞ olabilir. Bu kart yanlılığı ÖLÇER: standart kıyas ile olay-penceresi-dışı
+  (temiz) kıyas arasındaki farkı iki temsilci yüzeyde nicelleştirir ve İLERİYE dönük standardın
+  karar kuralını üretir. RETRO YENİDEN-HÜKÜM YOK: geçmiş kart hükümleri değişmez; çıktı yalnız
+  (a) ileri-standart, (b) hangi geçmiş ölçümlerin "yeniden-okuma adayı" olduğunun envanteri.
+evidence_refs: [research/cards/README.md ("kart-adayı yeni bulgular" kaydı),
+  "EAP düzeltilmiş okuma +21,1bps (eşik-altı — EAP hükmü değişmedi, emsal)"]
+universe: full_251 (kapsam beyanlı)
+features_asof: "olay penceresi = kazanç-takvimi karartma tanımıyla BİREBİR (earnings.in_blackout kaynak); temiz-kıyas aracı = olcum_araclari yeni yardımcı (WP-M şasi turu — bağımlılık)"
+horizon: "iki temsilci yüzey: (Y1) component_ic üst-desil taban-fazlası @10/@20; (Y2) cf R-tablosu medyan-kıyas satırı; her ikisinde standart-vs-temiz fark, 21g blok CI"
+parameter_grid:
+  yuzey: [temiz_kiyas_component_ic, temiz_kiyas_cf_r_tablosu]   # K+=2 (çarpımla)
+cost_model: "uygulanmaz (getiri-iddiasi yok; fark ölçümü)"
+success_metric: >
+  Fark ölçülür ve raporlanır (başarı = nicelleştirme, yön değil): |standart − temiz| farkının
+  CI'sı raporda; fark @20'de >=10bps VE CI 0-dışı ise "yeniden-okuma adayı" envanteri doldurulur
+  (kart adları + hangi eşiğe ne kadar yaklaştıkları — hüküm DEĞİL, envanter).
+kill_criteria:
+  - "iki yüzeyde de fark CI-0-içi VE |fark|<10bps → yanlılık pratik-önemsiz; ileri-standart notu düşer, temiz-kıyas ZORUNLU OLMAZ (opsiyonel kalır), kart arşiv"
+  - "temiz-kıyas aracı olay-pencerelerini takvim kapsamasındaki boşluklar yüzünden evrenin >%20'sinde etiketleyemiyorsa → 'ölçülemedi' beyanı, kart askıya (earnings kapsaması kalemine bağlanır); UYDURMA YASAK"
+guards:
+  - "PK: sentetik kontrol — yapay olay-penceresi enjeksiyonuyla bilinen-yönlü sıkıştırma aracın ölçtüğü yönde çıkmalı (araç-doğrulama, ölçümden ÖNCE)"
+  - "temiz_taban mevcut davranışı KIRILMAZ (WP-M şasi testi çivili); retro hüküm değişikliği YASAK — rapor 'envanter' dilinde"
+k_registry: {registered_at: "2026-08-02T15:20Z", trial_ids: [kys_olcum/component_ic_temiz, kys_olcum/cf_temiz]}
+status: registered
+notes: >
+  BAĞIMLILIK: WP-M şasi turunun olay-penceresi-dışı kıyas yardımcısı (olcum_araclari) inmeden
+  ölçüm BAŞLAMAZ. Ölçüm ajanı karta dokunmaz; hüküm Rol-1'de. Sandbox:
+  research/olcumler/kys_olcum/. Kanıt (sonuc_kys001.json + RAPOR_KYS001.md) hüküm commit'iyle
+  aynı commit'te.

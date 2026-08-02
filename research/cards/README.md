@@ -4,6 +4,8 @@ sayılır; eşikler ölçümden SONRA değiştirilemez. Şema: iş emri §5. Dur
 registered → measuring → promoted | archived.
 
 ## Aktif kartlar
+- EDG-2026-017-rvol-form-revizyonu.yaml — rvol>=2.5 bölgesi form-şartsız + sürekli-rvol artığı (registered 2026-08-02; K+=2)
+- KYS-2026-001-kiyas-kirlenmesi.yaml — olay-penceresi kıyas-yanlılığı nicelleştirme; ALTYAPI kartı, retro-hüküm yok (registered 2026-08-02; K+=2; WP-M şasi aracına bağımlı)
 - EXE-2026-001-entry-execution.yaml — E1 icra mutabakatı + limit-offset grid (registered)
 - EDG-2026-001-52wh-proximity.yaml — 52-hafta-zirvesi, YALNIZ large-cap alt-örnek (registered)
 - EDG-2026-002-volume-shock.yaml — hacim-şoku persentili, bant tablosu revizyonu (registered)

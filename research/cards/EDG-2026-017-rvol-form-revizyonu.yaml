@@ -1,0 +1,39 @@
+card_id: EDG-2026-017
+family: rvol_form_revizyonu   # WP1/1.4 torunu — EDG-002 hükmünün beyanlı adayı (ölçüm-sonrası-seçim yasağına uyularak YENİ ön-kayıt)
+thesis: >
+  EDG-002 (volshock) hükmü bant-tablosunu arşivledi AMA yan gözlem bıraktı: ham rvol>=2.5
+  bölgesi @20 +1,61% anlamlı-pozitifti ve ÜÇGEN-FORM şartı bu bölgeyi sıfırlıyordu. Bu kart o
+  gözlemi ÖN-KAYITLI ölçer: form-şartsız rvol>=2.5 bölgesinin taban-fazlası VE bölgenin sürekli
+  rvol20 sinyaline (canlı eşik zaten rvol20 kullanır) ARTIK katkısı. Hüküm entegrasyon sorusunu
+  cevaplar: >=2.5 gerçek bir eşik-etkisiyse skor/kapı adayıdır; sürekli-rvol'un monoton
+  devamıysa mevcut canlı eşik yeterlidir (yeni mekanizma AÇILMAZ).
+evidence_refs: [research/cards/EDG-2026-002-volume-shock.yaml (hüküm + yan gözlem),
+  "ham rvol20 @20 IC 0.065 canlı-eşik aklaması (EDG-002 tanısı)"]
+universe: full_251 (kapsam beyanlı; delist-bar şerhi: hayatta-kalma yanlılığı pozitif bulguda
+  yukarı-çarpıtır — EDG-016 emsali kalıcı şerh)
+features_asof: "rvol20(t) = hacim(t)/medyan20(hacim) — canlı tanımla BİREBİR (indicators.py kaynak; ölçüm kopyası sandbox'ta doğrulanır)"
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması (ders#3: ham-getiri YASAK); 21g blok CI"
+parameter_grid:
+  katman: [rvol25_bolge_fazlasi, rvol25_artik_rvol_surekli_kontrollu]   # K+=2 (çarpımla)
+cost_model: "10bps sabit + 20bps duyarlılık satırı (EDG-016 emsali); yüksek-rvol günü spread daralması beyan-notu"
+success_metric: >
+  rvol>=2.5 bölge fazlası @20 anlamlı POZİTİF (CI 0-dışı) VE artık-katkı anlamlı: sürekli
+  rvol20 (desil-kontrol, EDG-007/016 çift-sıralama şablonu) hesaba katıldıktan sonra >=2.5
+  bölgesi hâlâ bilgi taşıyor (kova-tabanı VE artık-IC iki yöntemde de aynı yön + en az birinde
+  CI 0-dışı).
+kill_criteria:
+  - "bölge fazlası @20 CI-0-içi → bilgisiz, arşiv (EDG-002 yan gözlemi pencere-artefaktıydı — karta not düşer)"
+  - "artık yok (sürekli-rvol açıklıyor: kontrol sonrası CI-0-içi) → 'monoton devam' arşiv; canlı eşik yeterli, yeni mekanizma açılmaz"
+  - "maliyet-sonrası net fazla <=0 (10bps) → 'brüt-var-net-yok' arşiv + not"
+guards:
+  - "pozitif kontrol: ham rvol20 @20 IC ≈0.0642 çivisi sandbox'ta yeniden üretilir (üretilemezse ölçüm DURUR)"
+  - "PK4/PK5 yol-tutarlılık kontrolleri + temiz_taban (aynı-gün evren) zorunlu"
+  - "eşik-dilbilgisi (ders#2): her dalın niteleyicisi metinde açık — belirsizlik muhafazakâr okunur"
+k_registry: {registered_at: "2026-08-02T15:20Z", trial_ids: [wp1_rvol_form/bolge_fazlasi, wp1_rvol_form/artik_kontrollu]}
+status: registered
+notes: >
+  Ölçüm ajanı KARTA DOKUNMAZ; hüküm Rol-1'de. Sandbox: research/olcumler/wp1_rvol_form/
+  (EDG-002 altyapısı varsa yeniden kullanılır — yeni as-of gerektirmez, yalnız OHLCV).
+  Kanıt dosyaları (sonuc_017.json + RAPOR_017.md) hüküm commit'iyle AYNI commit'te.
+  2018-hayaleti şerhi: uzun-geçmiş artefaktları aklanmadı (BT-2 tespiti) — alt-dönem
+  kararlılık satırı rapora eklenir (grid'e dahil değil, betimleyici).
