@@ -154,6 +154,16 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   güncel ölçüm dizinleri (kys_olcum, wp1_rvol_form, wp_u_midcap) bunu zaten yapıyor, wp2_olcum
   geleneğin öncesinde kalmıştı, hizalandı.
 
+- **`takvim_yok` zinciri KAPANDI (WP-D'nin bilerek ertelenen kalemi, 2026-08-02):** `gap_scan`in
+  üçüncü hâli panoda WP-P'yle tanınmıştı (e3edaf0: `_GAP_DURUM` girdisi + bilinmeyen-durum
+  "hüküm VERİLMEDİ" dalı, çivisi v171'de); scheduler kancası eksikti — rapor ölçülmüş-sonuç
+  dalına düşüyor, arıza nedenini taşıyan `seans` bloğu state'e hiç girmiyor ve hâl olay
+  defterinde SESSİZdi. Çözüm (`scheduler._intraday_gap_check`): erken-dönüş listesine
+  `takvim_yok` + `seans` kopyası YALNIZ bu hâlde (pano teşhisi; diğer iki hâl bit-bit aynı) +
+  süreç başına BİR `gap_scan_calendar_unavailable` uyarısı (emsal `_CALENDAR_WARNED`; 300 sn
+  poll'de koşulsuz uyarı 288 satır/gün ederdi). Çivi: v175 (3 test; kırmızı-önce dört geri-alma
+  senaryosunda fiilen doğrulandı). A1'e sıradaki bakım penceresiyle iner.
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
@@ -264,6 +274,15 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
+- **BEKLEYEN DAĞITIM KUYRUĞU (ilk kayıt 2026-08-02 akşam; güncelleme aynı gece: dal main'e merge
+  edildi — sahibi Rol-1; kuyruk boşalınca bu satır silinir):** tek kalem: takvim_yok zinciri
+  (`8dc7c8b` — scheduler kancası erken-dönüşü + süreç başına bir `gap_scan_calendar_unavailable`
+  + v175 çivisi; worktree turu xenodochial-chandrasekhar, main'e merge ile indi). EDG-016
+  penceresi (b857f48, dagit --uygula yeşil) bu kalemden ÖNCE koştu — kalem canlıda DEĞİL.
+  Kalan yol: otoriter suite DONMUŞ tepede → sıradaki bakım penceresiyle `./dagit.sh`.
+  Dikkat: rsync kodu diske indirir ama KOŞAN worker eski kalır — scheduler.py değişikliği ancak
+  restart'la etkinleşir (2026-08-02 adım 3-4 dersi); o güne dek canlıda `takvim_yok` hâli olay
+  defterinde sessiz kalmaya devam eder (pano tarafı zaten canlıda, e3edaf0 penceresiyle indi).
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
   operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
