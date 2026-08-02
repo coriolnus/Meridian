@@ -340,16 +340,11 @@ def test_c12_SILAHLANAN_planlar_NAV_bacaginda_SAYILIR():
     assert set(silahli["sector_notional"]) == {"tech", "fin"}
 
 
-def test_c12_NAV_olculemezse_isi_None_dondurur_0_0_DEGIL(seeded):
-    """0,0 dönmek "ısı yok" demek olurdu; None "ölçemedik" der ve guard o dalda tavanı UYGULAMAZ
-    (hüküm değişmez, sıfıra bölme yok) ama karar ağacına AYRI bir satır düşer.
-
-    AÇIK KALAN (kapsam dışı, Rol-1'e): o satır bugün `passed=True, note=None` olarak kaydediliyor,
-    yani denetimde tam olarak "tavan tuttu" görünümünde duruyor — guard'ın kendi beyanı ("bu
-    SESSİZ KALMAZ") ile çelişir. Düzeltme `_chk`in not politikasını değiştirmeyi gerektiriyor ve
-    `tests/test_mutborc_guard_iy3_portfolio_caps_v148.py` bugünkü hâli (`note is None`) ADIYLA
-    çiviliyor — yani bir POLİTİKA kararı, bu turun kapsamı değil. Buradaki çivi ölçülebilir olanı
-    tutar: `heat_pct` None gelir, satır VAR ve `value` uydurulmaz."""
+def test_c12_NAV_olculemezse_isi_None_dondurur_ve_SATIR_SEBEBINI_TASIR(seeded):
+    """ÖLÇÜLEMEDİ ≠ HÜKÜM (Rol-1 hükmü, 2026-08-02). `heat_pct` 0,0 değil None döner ("ısı yok"
+    ile "ölçemedik" ayrı şeylerdir); guard tavanı UYGULAMAZ (fail-open BİLİNÇLİ — Y3 alanlarını
+    hâlâ göndermeyen üreticiler var) ama karar satırı EKSİK ALANI adıyla taşır, yoksa denetimde
+    "tavan tuttu"dan ayırt edilemez ve operatör panoda `enabled: true` görürken korumasız kalır."""
     olculemez = guard.y3_portfolio_inputs([], equity=0.0, size_fn=_sizer())
     assert olculemez["heat_pct"] is None
     detay: list = []
@@ -357,7 +352,16 @@ def test_c12_NAV_olculemezse_isi_None_dondurur_0_0_DEGIL(seeded):
                                {"portfolio.heat_cap": 6.0}, detail_out=detay)
     satir = [c for c in detay if c["check"] == "y3_heat_cap"]
     assert satir and satir[0]["value"] is None and satir[0]["severity"] == "soft", detay
+    assert satir[0]["passed"] is True, "fail-open hükmü değişmiş — üreticileri kablosuz kalanlar var"
+    assert "ölçülemedi" in (satir[0]["note"] or "") and "fail-open" in satir[0]["note"], satir
     assert not any("ısı tavanı" in x for x in r), "ölçülemeyen ısı bir vetoya dönüştü"
+    # NEGATİF KONTROL: ölçülebilen tur beyanı TAŞIMAZ (yoksa her satır 'ölçülemedi' derdi)
+    detay2: list = []
+    guard.classify_gate(_plan(), _pf(**guard.y3_portfolio_inputs([], equity=100_000.0,
+                                                                 size_fn=_sizer())),
+                        _rejim(), config.goal(), {"portfolio.heat_cap": 6.0}, detail_out=detay2)
+    olculen = [c for c in detay2 if c["check"] == "y3_heat_cap"][0]
+    assert olculen["note"] is None and olculen["severity"] == "hard", olculen
 
 
 def test_c12_PLAN_SEMASI_degismedi_dolar_alanlari_deftere_INMEZ(seeded, monkeypatch):

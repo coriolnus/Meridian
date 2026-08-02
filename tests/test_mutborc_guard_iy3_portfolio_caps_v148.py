@@ -194,7 +194,14 @@ def test_plan_notionali_yoksa_SIFIR_sayilir_uydurulmaz():
 def test_NAV_olculemezse_sektor_tavani_UYGULANMAZ_ve_SESSIZ_KALMAZ():
     """NAV=0: tavan uygulanmaz (hüküm değişmez, sıfıra bölme yok) AMA karar ağacında SOFT bir
     satırla beyan edilir — 'tavan tuttu' diye okunamaz. `value` None'dır: ölçülemeyen sayı
-    uydurulmaz (UYDURMA YASAĞI)."""
+    uydurulmaz (UYDURMA YASAĞI).
+
+    ÇİVİ GÜNCELLENDİ (2026-08-02, Rol-1 hükmü — C12 ek bulgusu). Eskiden burada `note is None`
+    yazıyordu ve o çivi, guard'ın KENDİ beyanını ("bu SESSİZ KALMAZ") test yeşilken ihlal
+    ediyordu: `passed=True, note=None` bir satır, denetimde "tavan çalıştı ve geçti"den AYIRT
+    EDİLEMEZ. Yeni yasa: `passed` DEĞİŞMEZ (fail-open bilinçli — Y3 alanlarını hâlâ göndermeyen
+    üreticiler var, `False` onların TÜM planlarını keserdi), ama satır EKSİK ALANI adıyla taşır.
+    ÖLÇÜLEMEDİ ≠ HÜKÜM."""
     pf = {"equity": 0.0, "sector_notional": {"Tech": 5000.0}}
     hukum, nedenler, satirlar = _kapi({"notional": 1000.0}, pf,
                                       params={"portfolio.sector_cap": 25.0})
@@ -203,13 +210,17 @@ def test_NAV_olculemezse_sektor_tavani_UYGULANMAZ_ve_SESSIZ_KALMAZ():
     assert s["passed"] is True, "ölçüm yapılamadığı tur 'tavan çalıştı' diye kaydedildi"
     assert s["severity"] == "soft"
     assert s["value"] is None and s["threshold"] == "<=25%"
-    assert s["note"] is None
+    assert s["note"] and "ölçülemedi" in s["note"], \
+        "geçen satır sebebini taşımıyor — 'tavan tuttu'dan ayırt edilemez"
+    assert "equity" in s["note"], "EKSİK ALAN adıyla yazılmalı (hangi kablo bağlanacak?)"
+    assert "fail-open" in s["note"], "hükmün YOK olduğu beyan edilmeli"
 
     # equity ALANI HİÇ YOKKEN de aynı dal: eksik alan ile 0.0 aynı anlama gelir
     _, _, satirlar2 = _kapi({"notional": 1000.0}, pf, params={"portfolio.sector_cap": 25.0},
                             pf_sil=("equity",))
     assert satirlar2["y3_sector_cap"]["severity"] == "soft"
     assert satirlar2["y3_sector_cap"]["value"] is None
+    assert satirlar2["y3_sector_cap"]["note"] == s["note"], "iki eksik-alan yolu farklı beyan veriyor"
 
 
 def test_NAV_bir_dolarken_bile_sektor_tavani_OLCULUR():
@@ -266,7 +277,10 @@ def test_isi_toplami_tavana_ESITken_gecer_ve_risksiz_plan_SIFIR_ekler():
 
 def test_isi_olculemezse_tavan_UYGULANMAZ_ve_SESSIZ_KALMAZ():
     """`heat_pct` yok/None: 3a beyanı ('yalnız gösterge') knob açıkken de korunur ama SOFT satır
-    zorunludur — açık bir knobun ölçüm yapamadığı tur denetimde görünmelidir."""
+    zorunludur — açık bir knobun ölçüm yapamadığı tur denetimde görünmelidir.
+
+    ÇİVİ GÜNCELLENDİ (2026-08-02, Rol-1 hükmü): `note is None` yerine BEYAN. Gerekçe kardeş
+    testte (sektör tavanı) yazılı; `passed` değişmedi, satır artık eksik alanı adıyla taşıyor."""
     for pf, sil in (({"equity": 100_000.0}, ("heat_pct",)),
                     ({"equity": 100_000.0, "heat_pct": None}, ())):
         hukum, nedenler, satirlar = _kapi({"risk_dollars": 50_000.0}, pf,
@@ -276,7 +290,16 @@ def test_isi_olculemezse_tavan_UYGULANMAZ_ve_SESSIZ_KALMAZ():
         assert s["passed"] is True, "ısı ölçülemediği tur 'tavan çalıştı' diye kaydedildi"
         assert s["severity"] == "soft"
         assert s["value"] is None and s["threshold"] == "<=6.0%"
-        assert s["note"] is None
+        assert s["note"] and "ölçülemedi: heat_pct" in s["note"] and "fail-open" in s["note"], s
+        assert "equity" not in s["note"], \
+            "NAV ÖLÇÜLMÜŞKEN eksik alan listesine yazılmış — beyan hangi kablonun eksik " \
+            "olduğunu yanlış söylerse okuyucuyu yanlış yere baktırır"
+
+    # İKİ alan birden eksikse İKİSİ de yazılır (hangi kabloyu bağlayınca tavan ayağa kalkar?)
+    _, _, satirlar3 = _kapi({"risk_dollars": 50_000.0}, {"equity": 0.0, "heat_pct": None},
+                            params={"portfolio.heat_cap": 6.0})
+    n3 = satirlar3["y3_heat_cap"]["note"]
+    assert "heat_pct" in n3 and "equity" in n3, n3
 
 
 def test_NAV_yokken_plan_riski_isiya_EKLENMEZ_ve_sifira_bolunmez():

@@ -323,11 +323,18 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     # Faz 3 (5b): yapılandırılmış karar ağacı — detail_out verilirse HER kontrol pass/fail olarak
     # kaydedilir ("neden GO verdi?" sorusu geçen kontrolleri de gerektirir; yalnız vetolar yetmez).
     # Karar mantığı DEĞİŞMEZ: hard/soft listeleri birebir aynı dizgilerle dolar.
-    def _chk(name: str, failed: bool, why: str, sev: str, value=None, threshold=None):
+    def _chk(name: str, failed: bool, why: str, sev: str, value=None, threshold=None,
+             gecse_de_yaz: bool = False):
+        # `note` KURAL OLARAK yalnız DÜŞEN kontrolde yazılır: geçen bir satıra ret gerekçesi yazmak
+        # kararı okuyan herkesi yanıltırdı. TEK İSTİSNA `gecse_de_yaz` (C12 ek bulgusu, 2026-08-02,
+        # Rol-1 hükmü): "ÖLÇÜLEMEDİ" dalları `failed=False` ile çağrılır (fail-open BİLİNÇLİ — Y3
+        # alanlarını hâlâ göndermeyen üreticiler var, `failed=True` onların TÜM planlarını keserdi)
+        # ve satır `passed=True, note=None` olarak, yani tam olarak "tavan tuttu" görünümünde
+        # düşüyordu. ÖLÇÜLEMEDİ ≠ HÜKÜM: hüküm DEĞİŞMEZ, ama satır sebebini TAŞIR.
         if detail_out is not None:
             detail_out.append({"check": name, "passed": not failed, "severity": sev,
                                "value": value, "threshold": threshold,
-                               "note": why if failed else None})
+                               "note": why if (failed or gecse_de_yaz) else None})
         if failed:
             (hard if sev == "hard" else soft).append(why)
 
@@ -488,6 +495,17 @@ def y3_portfolio_inputs(positions, armed_plans=(), *, equity: float, size_fn) ->
             "heat_pct": (100.0 * risk / eq) if eq > 0 else None}
 
 
+def _olculemedi_notu(eksik: list, tavan: str) -> str:
+    """ÖLÇÜLEMEDİ ≠ HÜKÜM (Rol-1 hükmü, 2026-08-02). Açık bir tavanın ölçüm yapamadığı tur karar
+    ağacında `passed=True` düşer — fail-open BİLİNÇLİDİR, çünkü Y3 alanlarını hâlâ göndermeyen
+    üreticiler var (gölge-v1/v2, mutation) ve `passed=False` onların TÜM planlarını keserdi. Ama
+    satır sebebini taşımak ZORUNDA: eksik alan adıyla yazılmazsa denetimde "tavan tuttu"dan
+    ayırt edilemez ve operatör panoda `enabled: true` görürken hiçbir koruma almaz (C12'nin
+    kendisi tam olarak bu sessizlikten doğdu)."""
+    return (f"ölçülemedi: {', '.join(eksik)} — {tavan} tavanının HÜKMÜ YOK (fail-open); "
+            f"bu satır 'tavan tuttu' diye okunamaz")
+
+
 def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -> None:
     """Y3'ün karar yolunda KALAN iki tavanı. İkisi de `params` içindeki knob 0/yok iken TAMAMEN ATIL.
 
@@ -531,16 +549,21 @@ def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -
                  value=round(pay, 2), threshold=f"<={cap_pct:.0f}%")
         else:
             # NAV ölçülemedi → tavan UYGULANMAZ ve bu SESSİZ KALMAZ: açık bir knob'un ölçüm
-            # yapamadığı tur, "tavan tuttu" diye okunamaz.
-            _chk("y3_sector_cap", False, "Y3 sektör tavanı: NAV ölçülemedi — tavan uygulanmadı",
-                 "soft", value=None, threshold=f"<={cap_pct:.0f}%")
+            # yapamadığı tur, "tavan tuttu" diye okunamaz. ÖLÇÜLEMEDİ ≠ HÜKÜM (2026-08-02): satır
+            # GEÇER (fail-open bilinçli) ama EKSİK ALANI adıyla taşır — okuyucu "tavan çalıştı" ile
+            # "tavan ölçemedi"yi ayırt edemezse açık bir knob sessizce atıl kalır.
+            _chk("y3_sector_cap", False, _olculemedi_notu(["equity"], "Y3 sektör"),
+                 "soft", value=None, threshold=f"<={cap_pct:.0f}%", gecse_de_yaz=True)
     # (2) portföy ısısı tavanı (NAV %)
     heat_pct_cap = float(p.get("portfolio.heat_cap", 0) or 0)
     if heat_pct_cap > 0:
         isi = portfolio.get("heat_pct")
         if isi is None:
-            _chk("y3_heat_cap", False, "Y3 ısı tavanı: ısı ölçülemedi — tavan uygulanmadı", "soft",
-                 value=None, threshold=f"<={heat_pct_cap:.1f}%")
+            # Aynı yasa (ÖLÇÜLEMEDİ ≠ HÜKÜM): NAV da ölçülemiyorsa iki eksik alan da adıyla yazılır
+            # — "hangisini kablolayınca tavan ayağa kalkar?" sorusu karar satırından cevaplanmalı.
+            _eksik = ["heat_pct"] + ([] if float(portfolio.get("equity") or 0.0) > 0 else ["equity"])
+            _chk("y3_heat_cap", False, _olculemedi_notu(_eksik, "Y3 ısı"), "soft",
+                 value=None, threshold=f"<={heat_pct_cap:.1f}%", gecse_de_yaz=True)
         else:
             # Aday planın riski de eklenir: tavan ÖNCEDEN bakar, sonradan değil.
             plan_risk = float(plan.get("risk_dollars") or 0.0)
