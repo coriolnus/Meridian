@@ -131,11 +131,14 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   Ayrıştırma: (a) 7'si İZOLE de kırmızı = GERÇEK; bunlardan RUNBOOK eşitliği (uiux t3) yeniden-üretimle
   kapandı; kalan 6'sı test_learning_roundtrip_v76 — fikstür kanıt tabanı 17 < min_sample 30 →
   par_score None → rollback zinciri kademeli çöküyor ("örneklem kuraklığı → no_parent_score" sınıfı).
-  Tarihleme: aynı 6, bugünkü üç turu İÇERMEYEN ağaçta da kırmızı → kırılma ≤90a6663, bugünkü toplu
-  indirmeden DEĞİL; tam suite uzun süredir koşulmadığından görünmemiş. (b) 9'u yalnız tam-suite'te
-  kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) — AYRI hastalık, ayrı tur.
-  SIRA: önce 6'lık roundtrip kökü (öğrenme-katmanı turu; parent-baseline mayınına dikkat — canlıyı
-  v3'e geri aldırabilir), sonra girişim avı, sonra dağıtım. Çıktılar: scratchpad/full_suite_predeploy.txt.
+  Tarihleme DÜZELTİLDİ (ilk iddia "≤90a6663" HATALIYDI — kıyas ağacı rebase sonrası olduğundan
+  ayrıştırıcı değildi; bisect ile kesinleşti): kök 0a4453f (iki-motor C11/C18) — replay giriş limiti
+  canlıyla aynı yasaya sıkılaştı (min(0,5·ATR14, %1); eskiden ATR'siz daima %1), v76 sentetik
+  fikstürünün kanıt tabanı 17 < min_sample 30'a düştü, 6 arıza bundan kademeli (score→None zinciri).
+  Üretim değişikliği DOĞRU; onarım fikstürde (tur açık, Opus uçuşta) — eşik/assert GEVŞETİLMEZ.
+  (b) 9'u yalnız tam-suite'te kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) —
+  AYRI hastalık, ayrı tur. SIRA: v76 fikstür onarımı → girişim avı → yeşil suite → dağıtım.
+  Çıktılar: scratchpad/full_suite_predeploy.txt.
 - **BT-2 YENİDEN AÇILDI (trend-kolu ölçümünün yan bulguları, 2026-07-31 ~02:30):**
   BULGU-1: karantina hacim-şartı gerçek hayalet sınıfının %29'unu kaçırıyor (10 kaçak ×2-ölçek
   satırı: GILD/CMCSA 2013-12-18, DLTR, UNP). BULGU-2: kapıdan geçen 97 çözülmemiş ölçek/kimlik
