@@ -354,6 +354,21 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   kilidi; koltuk-tek-başına-yeter-mi belirsizliği hesap-içi doğrulanmalı) · ücretli setler
   (Brain $25 / Estimize $75 / SmartInsider $10 — ancak FREE fizibilite sonrası) · ToS-yorumu:
   yerel-indirme yolu Rol-1 önerisiyle İZLENMEZ.
+- **EXPLORER DERİN-OKUMA HÜKMÜ (Ek-D — docs/QC-EXPLORER-DERSLERI-EK-D.md; 473 strateji, API-tam-envanter):**
+  Explorer da kazanan-deposu DEĞİL — ÖLÇÜLDÜ: medyan OOS-1Y Sharpe −0,035, %50,8 negatif, SPY'yi
+  geçen %5,8 (9 gerçek-kazanan, 4'ü Meridian-yakın: 343 B/M+F-Score · 341 TERS-likidite-value ·
+  32 · 342); "score"=3-AYLIK Sharpe (aşırı-uydurma makinesi — 478 istisna değil beklenen çıktı);
+  %30 ID silinmiş (sağkalan yanlılığı sayıyla). KART-KUYRUĞU REVİZE (Explorer-teyitleriyle yeni
+  öncelik): ① PORTFÖY-düzeyi %4-8 tepe-dip kapısı vs isim-bazlı chandelier (ratchet DD'yi
+  YÜKSELTMİŞ 31-26; take-profit en zararlı özellik: medyan −0,70/SPY-geçen %0) · ② rejim-KADRANI
+  (kapı popülasyon-düzeyi teyit: medyan↑ ama sağ-kuyruk kesik — SPY-geçen %2,6-vs-%8,0; EDG-005
+  bağımsız üretildi) · ③ HRP/korelasyon-küme bütçesi (YENİ — 452 DD %17,9; CF(ρ̄) kartının çalışan
+  hâli) · ④ EDG-016 evren-koşulluluk ÜÇ-KOL (341 karşı-örneği: düşük-likidite-value OOS-1Y 1,58 —
+  EDG-021 motoruyla) · ⑤ ufuk-uzatma 63g→252g (yıllık-rebalans SPY-geçme 4×) · ⑥ tamsayı bayrak-
+  skoru (en iyi strateji 343 tam G-Score kalıbı). META-DERSLER: 3-aylık pencere hiçbir karnede
+  birincil-sıralayıcı olamaz (kendi karnemizde kontrol → yoksa kill-list'e) · yorum-sayısı negatif
+  sinyal (ρ=−0,591) · trend-t-stat çarpanı Explorer'da da YOK (Ek-B kartı teyitsiz ama açık).
+  Açık kapı: kod-düzeyi okuma (klon ister — operatör hesabıyla, istenirse).
 - **LEARNING-SÜZGECİ HÜKMÜ (Ek-C — docs/QC-LEARNING-SUZGECI-EK-C.md):** metodolojide ÜSTÜNLÜK
   BİZDE teyit (ön-kayıt/walk-forward/purged-CV katalogda yok; ISL makaleleri p-hacking ders-kitabı
   örneği — "nasıl kodlanır" kaynağı, "kanıt" kaynağı DEĞİL). Taşınan somut değer: R1 evren-yaşam-
