@@ -38,10 +38,17 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 - **Operatöre sabah kalemleri:** MNST 2005 ×0,48 bütünlük yorumu · delist-bar kararı (QuantConnect
   vs Massive planı) · bildirim kanalı · FMP planı · VIX kaynağı · shares-outstanding kaynağı.
 - **DENETİM KUYRUĞU (2026-08-02 gecesi; kaynak `docs/SISTEM-DENETIMI-2026-08-02.md`):** KOVA A
-  (9 sessiz-güvenli düzeltme: C2/C4/C6/C7/C15/C20/C21/C22/C25-sayaç) gece ajan turunda; **KOVA B
-  16 kalem operatör onayı bekliyor** — sıralı öncelik önerisi: C9 (çıkış→ayna kopukluğu, yetim
-  pozisyon) → C8 (pano düğmesi E1-bypass) → C23 (HALT ayna-iptali) → C11/C18 (replay ATR bacağı,
-  karne rakamları değişir) → C13/C19 (canlı-ölü knob + kesici penceresi) → gerisi raporda.
+  **9/9 İNDİ** (d50b03b defter+kadans · 395920e veri-hattı · 8a38248 gözetim; 44 yeni test, hepsi
+  kırmızı-önce/canlı-kopya doğrulamalı). **KOVA B 16 kalem operatör onayı bekliyor** — sıralı
+  öncelik önerisi: C9 (çıkış→ayna kopukluğu, yetim pozisyon) → C8 (pano düğmesi E1-bypass) → C23
+  (HALT ayna-iptali) → C11/C18 (replay ATR bacağı, karne rakamları değişir) → C13/C19 (canlı-ölü
+  knob + kesici penceresi) → gerisi raporda.
+- **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
+  yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
+  `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
+  sıfırlamıyor (test_regime_patch sıraya-bağlı düşüş — kısmi `-k` seçimlerinde; tam suite düzeninde
+  görünmez) · pano `_patOK/_patNote` `dedektor_dustu/olculemedi` bilmiyor (düşen dedektör yeşil
+  görünür — S2R-3/app.js kalemi) · mutation.py `dedektor_dustu`yu okumuyor.
 
 ## 2. DURUM PANOSU (2026-07-31 sabah)
 
