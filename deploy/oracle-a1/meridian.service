@@ -36,8 +36,11 @@ Environment=MERIDIAN_PARALLEL_PROBES=1
 Environment=MERIDIAN_SEARCH_MAX_MIN=60
 Environment=HERMES_SEARCH_BUDGET=8
 # --- güvenlik: pano ağ üzerinden erişiliyorsa TOKEN ŞART. Yalnız-yerel (127.0.0.1) + SSH tünel
-#     önerilir; 0.0.0.0'a açacaksan bu token'ı gerçek bir değere ayarla (yazma uçları korunur). ---
-Environment=MERIDIAN_DASH_TOKEN=CHANGEME-long-random-ascii-token   # ASCII zorunlu (bkz. api._auth)
+#     önerilir; 0.0.0.0'a açacaksan bu token'ı gerçek bir değere ayarla (yazma uçları korunur).
+#     Token ASCII zorunlu (bkz. api._auth). Yorum BU satırda çünkü systemd `Environment=` satır-sonu
+#     yorumu desteklemez: `#` ve sonrası boşluklarla ayrı atamalara bölünür, geçersiz sayılıp
+#     journal'e "Invalid environment assignment, ignoring" gürültüsü düşer. ---
+Environment=MERIDIAN_DASH_TOKEN=CHANGEME-long-random-ascii-token
 # --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------
 #     api._auth_posture_check bu değişkeni okur ve loopback DIŞI + parolasız hâlde süreci
 #     AÇMAYI REDDEDER. Eskiden ExecStart `--host 127.0.0.1` SABİTİYDİ ve bu değişkeni hiçbir
