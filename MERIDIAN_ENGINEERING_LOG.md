@@ -209,6 +209,15 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   önce merge'lediği main'i HABERSİZ taşıyabilir — pencereyi koşan oturum dağıtım ANINDAKİ main
   tepesini kaydetmeli (EDG-016 kaydı b857f48 derken fiilen 6545c6a içeriği taşındı).
 
+- **OTURUM KAPANIŞI (2026-08-02 gece, Rol-1 — takvim_yok/pencere oturumu):** hungry-jemison
+  merge'i (0652841: bekçi kapıları + v176 + sınıf-ailesi bağı; RUNBOOK çakışması regen'le çözüldü,
+  merge-sonrası 93/93) indi; ÜÇ tur worktree'si + dalı temizlendi (xenodochial / unruffled /
+  hungry-jemison) — repo TEK checkout. Dağıtım kuyruğu BOŞ. Otoriter suite referansı:
+  **3969/0 @ 6545c6a** (bu oturumun pencere koşusu). A1 çalışma-yolu içeriği 6545c6a-özdeş;
+  main 0652841 farkı yalnız test-katmanı (conftest bekçi kapıları + v176) ve belgeler — runtime
+  etkisi YOK, sıradaki pencereyle iner (yeni kuyruk kaydı açmayı gerektirmeyecek kadar küçük;
+  pencereyi koşan, dağıtım anındaki main tepesini kaydetsin — 660dc10 dersi).
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
