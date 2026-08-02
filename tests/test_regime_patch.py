@@ -316,11 +316,16 @@ def test_llm_chain_falls_through_on_provider_error(seeded_sandbox, monkeypatch):
     assert hermes.propose_with_llm() is None
 
 
-def test_nous_local_mode_detection_and_headless_call(seeded_sandbox, monkeypatch, tmp_path):
+def test_nous_local_mode_detection_and_headless_call(seeded_sandbox, monkeypatch, tmp_path,
+                                                     hermes_bin_cozumleyici_asil):
     """Yerel hermes-agent = uygulamanın parçası: ikili varsa Nous beyni ANAHTARSIZ hazırdır ve öneri
-    tek atımlık `hermes chat -q` süreciyle alınır; 'local' zorlaması ve URL modu ayrışır."""
+    tek atımlık `hermes chat -q` süreciyle alınır; 'local' zorlaması ve URL modu ayrışır.
+
+    Conftest'teki `_yerel_ajan_ikilisi_kapali` autouse saplamasının BİLİNÇLİ istisnasıdır: burada
+    ölçülen şey çözümleyicinin KENDİSİ, dolayısıyla gerçek fonksiyon geri takılır."""
     import subprocess
     from meridian import hermes, secrets
+    monkeypatch.setattr(hermes, "_hermes_bin", hermes_bin_cozumleyici_asil)
     vals = {}
     monkeypatch.setattr(secrets, "get", lambda k: vals.get(k))
     fake_bin = tmp_path / "hermes"; fake_bin.write_text("#!/bin/sh\n"); fake_bin.chmod(0o755)
