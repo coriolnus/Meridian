@@ -3701,6 +3701,10 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
          `fill_vs_limit_bps` (yasanın tavanı bağladı mı?) dağılımları.
       3. İKİ MOTOR AYNI ŞEYİ Mİ YAPTI? — aynı `plan_id` için iç motorun kararı ile aynanın kararı.
 
+    ÜÇÜNÜN YANINDA DÖRDÜNCÜ BİR KOVA DURUR ama bir SORU DEĞİL, betimleyici bir sayımdır: `kapi`
+    (`motor="kapi"`, yazan `loop._armed_drop_row`). O satırlar hiç icra edilmemiş — kapıda düşmüş —
+    silahlı planlardır; oran/eşik üretmezler ve kill paydasının DIŞINDADIR (bkz. bölüm 4).
+
     `n=0` bir kusur DEĞİL bir DURUMDUR ve öyle yazılır: defter bugün doğdu, ilk satırlar ilk
     `alpaca_paper` döngüsünde düşer. Boş defterden ortalama üretmek (0.0 bps) "slipaj yok" demek
     olurdu."""
@@ -3708,9 +3712,10 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
     tum = store.read_jsonl(ENTRY_LEDGER)
     ayna = [r for r in rows if r.get("motor") == "ayna"]
     ic = [r for r in rows if r.get("motor") == "ic"]
+    kapi = [r for r in rows if r.get("motor") == "kapi"]
     out: dict = {
         "pencere_gun": days, "n": len(rows), "n_defter": len(tum),
-        "ayna": {"n": len(ayna)}, "ic_motor": {"n": len(ic)},
+        "ayna": {"n": len(ayna)}, "ic_motor": {"n": len(ic)}, "kapi": {"n": len(kapi)},
         "durum": ("defter boş — ilk satır ilk ayna döngüsünde düşer (BROKER=alpaca_paper)"
                   if not tum else "dolu"),
         "kaynak": f"state/{ENTRY_LEDGER} (yazan: loop; E1 yasası: broker.entry_law)",
@@ -3755,7 +3760,27 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
         "kill_esigi": 0.40,
         "fill_vs_resmi_acilis_bps": _bps_ozet([r.get("fill_vs_resmi_acilis_bps") for r in ic_dolan]),
     })
-    # --- 4) İKİ MOTOR MUTABAKATI (kartın (c) ölçütü) -------------------------------------------
+    # --- 4) KAPIDA DÜŞEN SİLAHLI PLANLAR (BETİMLEYİCİ SAYIM — ORAN/EŞİK YOK) -------------------
+    # `motor="kapi"` satırlarını yazan `loop._armed_drop_row`tur: plan silahlıydı, kapı kapalıydı,
+    # dolum HİÇ denenmedi. Burada YALNIZ sayılır — oran/eşik üretmek ön-kayıtsız YENİ bir ölçüt
+    # doğururdu (kart EXE-2026-001 grid'inin dışında kalırdı). Gate adı üç kademede okunur:
+    # `red_detay.kapi` → `karar`ın `armed_dropped_` öneki soyulmuş hâli → "?" (BİLİNMEYEN GİZLENMEZ:
+    # sınıflanamayan satır ham olarak sayılır, sessizce düşürülmez).
+    kapi_dag: dict = defaultdict(int)
+    for r in kapi:
+        g = (r.get("red_detay") or {}).get("kapi")
+        if not g:
+            k = str(r.get("karar") or "")
+            g = k[len("armed_dropped_"):] if k.startswith("armed_dropped_") else None
+        kapi_dag[str(g) if g else "?"] += 1
+    out["kapi"].update({
+        "kapi_dagilimi": dict(kapi_dag),
+        "not": ("Bu satırlar ne iç motorun ne aynanın İCRA KARARIDIR — plan ikisine de ULAŞMADAN "
+                "kapıda düştü, dolum HİÇ denenmedi. BİLEREK `ic_motor.dolmama_orani` paydasının "
+                "DIŞINDADIR: kill ölçütünün paydasını şişirmek eşiği kod değişikliğiyle sessizce "
+                "kaydırırdı (kill-list dokunulmazdır — kart EXE-2026-001)."),
+    })
+    # --- 5) İKİ MOTOR MUTABAKATI (kartın (c) ölçütü) -------------------------------------------
     ic_by = {r.get("plan_id"): r for r in ic if r.get("plan_id")}
     ayrisan, ortak = [], 0
     for r in ayna:

@@ -2499,6 +2499,31 @@ async function opParcalar() {
       return `<h3 class="t" style="margin-top:16px">Gönderim olayları · başarısız (${evs.length})</h3>
         <p class="hint">Kalıcı ret defterinin GÖRMEDİĞİ iki hâl burada: ağ arızasında plan silahlı
           kalır, gönderim istisnasında hiç deneme kaydı düşmez. Halka son ${n80} olay.</p>${rows}`;
+    })()}
+    ${(() => {
+      // KAPIDA DÜŞEN SİLAHLI PLANLAR (E2 defterinin `motor="kapi"` kovası; yazan loop._armed_drop_row).
+      // Bu satırlar bir İCRA KARARI DEĞİL: plan ne iç motora ne aynaya ulaştı, dolum HİÇ denenmedi.
+      // Bu yüzden kart EXE-2026-001'in kill-ölçütü `dolmama_orani`nın PAYDASINA girmezler ve masada
+      // AYRI durur — gönderim/ret satırlarıyla toplanırsa "emir çıktı ama tutmadı" gibi okunurdu.
+      // ÜÇ HÂL AYRI (`_gapRows` deseni): kova YOK (ölçüm okunamadı) ≠ n=0 (ölçüldü, düşen yok) ≠ n>0.
+      const slp = (d.icra || {}).slipaj || {}, kp = slp.kapi;
+      if (!kp) return `<p class="hint" style="margin-top:12px"><span class="mut">Kapıda düşen silahlı
+        planlar okunamadı (E2 özetinde <code>kapi</code> kovası yok) — bu kutu ölçüm YOK demektir,
+        "düşen plan yok" demek değildir.</span></p>`;
+      const pen = slp.pencere_gun ?? "?";
+      if (!kp.n) return `<p class="hint" style="margin-top:12px">Son ${pen} günde kapıda düşen
+        silahlı plan yok — silahlanan her plan icra yoluna girdi.</p>`;
+      // BİLİNMEYEN ANAHTAR HAM GÖSTERİLİR (EXIT_TR deseni): sözlükte olmayan bir kapı adı sessizce
+      // "diğer"e katlanırsa yeni bir kapı sınıfı panoda GÖRÜNMEDEN doğar.
+      const KAPI_TR = { halt: "HALT — icra durdurma", breaker: "devre kesici",
+                        data_bad: "veri arızası", throttle: "boyut kısıcı (size_mult=0)",
+                        slot_full: "slot dolu", already_open: "sembol zaten defterde" };
+      const rows = Object.entries(kp.kapi_dagilimi || {}).sort((a, b) => b[1] - a[1]).map(([g, n]) =>
+        `<div class="srow"><span>${esc(KAPI_TR[g] || g)}</span><b class="mono-num">${n}</b></div>`).join("");
+      return `<h3 class="t" style="margin-top:16px">Kapıda düşen silahlı planlar (${kp.n})</h3>
+        <p class="hint">Plan silahlıydı, kapı kapalıydı: <b>dolum hiç denenmedi</b> — ne iç motorun
+          ne aynanın icra kararı. Bu sayı <b>dolmama oranının</b> paydasına GİRMEZ; kill ölçütü kod
+          değişikliğiyle kaymaz. Pencere son ${pen} gün.</p>${rows}`;
     })()}</div>`;
 
   // ---------- BÖLÜM 2 · RİSK & REJİM KAPILARI ----------
@@ -3994,8 +4019,9 @@ RENDER.operasyon = async () => {
 RENDER.mutabakat = async () => {
   const p = await opParcalar();
   $("page-mutabakat").innerHTML = bolumBasHTML("mutabakat", "Mutabakat masası",
-    "Broker API'si, yürütme akışı, hayalet emirler, HWM ikizleri, parçalı dolum ve reddedilen "
-    + "gönderimler. Sessiz hattın <b>emir reddedildi</b> çipi buraya iner.") + p.s1;
+    "Broker API'si, yürütme akışı, hayalet emirler, HWM ikizleri, parçalı dolum, reddedilen "
+    + "gönderimler ve kapıda düşen silahlı planlar. Sessiz hattın <b>emir reddedildi</b> çipi "
+    + "buraya iner.") + p.s1;
 };
 
 // ---- KOŞU & DÖNGÜ · KAPILAR (ADR: "kapıdan ne geçti") ----------------------------------------
