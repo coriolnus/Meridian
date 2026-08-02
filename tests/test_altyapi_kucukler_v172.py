@@ -459,6 +459,24 @@ def test_wpg_kalan_Y3_satirlari_ve_KAPALI_konumlari_DURUYOR():
         assert float(b[k]["min"]) == 0, f"{k} kapalı konumu (0) kayboldu"
 
 
+def test_wpg_bayat_gerekceler_GERCEGE_esitlendi():
+    """C10 SINIFI ("doğru görünen ama okunmayan/yanlış yorum"): emeklilik tamamlandıktan sonra iki
+    yerde ESKİ dünyayı anlatan gerekçe kaldı. İkisi de yalnız yorumdu, yani hiçbir test kırmıyordu
+    — tam da bu yüzden çivi gerekiyor: yanlış bir gerekçe, bir sonraki turda yanlış bir karara
+    dönüşür (ör. "satır zaten dönebilir" diye çiviyi hiç koymamak)."""
+    reg = (REPO / "meridian" / "regime.py").read_text()
+    assert "satırı düşürülene dek" not in reg, \
+        "regime.py hâlâ 'bounds satırı düşürülene dek makine örnekleyebilir' diyor — satır 8b6bbbc ile DÜŞTÜ"
+    assert "8b6bbbc" in reg and "test_altyapi_kucukler_v172" in reg, \
+        "regime.py emekliliğin son halkasını (satır düştü + çivinin adresi) söylemiyor"
+
+    v125 = (REPO / "tests" / "test_hafta3b_v125.py").read_text()
+    assert "state versiyonlanmaz" not in v125, \
+        ("v125 hâlâ 'state versiyonlanmaz' diyor — `state/goal.yaml`+`state/bounds.yaml` c783442'den "
+         "beri VERSİYONDA; yokluk assert'inden kaçınmanın gerekçesi o iddiayla birlikte düşmüştü")
+    assert "test_altyapi_kucukler_v172" in v125, "v125, yokluk çivisinin nerede olduğunu söylemiyor"
+
+
 def test_wpg_emekli_knob_KARAR_YOLUNU_hala_degistirmiyor():
     """İKİNCİ SAVUNMA HATTI (satır geri gelse DAHİ): knob 1 + endeks 200-SMA'nın ALTINDA iken
     kapı yine de yeni girişi KAPATMAZ — `blocks_new_entries` sabit False.
@@ -473,3 +491,172 @@ def test_wpg_emekli_knob_KARAR_YOLUNU_hala_degistirmiyor():
     assert eg["spy_sma_gate"]["hukum"] == "altinda", "gösterge ÖLDÜ — emeklilik ölçümü de götürdü"
     assert eg["spy_sma_gate"]["blocks_new_entries"] is False, "emekli knob karar yolunu geri açtı"
     assert eg["blocks_new_entries"] is False and eg["blocking"] == []
+
+
+# =================================================================================================
+# ⑤ dagit.sh — VERSİYONLU STATE ADIMI ([1b] diff + bakım penceresi kopyası)
+# =================================================================================================
+# NEDEN BU ÇİVİLER: adım A1'e SSH ister, yani testte KOŞTURULAMAZ. O yüzden iki katman ölçülür:
+#   (a) YAPI  — adımın YERİ (kuru koşum sınırı, durdur/başlat arası) ve sözdizimi. Yer yanlışsa
+#               adım ya koşan worker'ın altından yapılandırma değiştirir ya da etkisi bir sonraki
+#               restart'a kadar görünmez; ikisi de sessizdir.
+#   (b) DAVRANIŞ — hükmü veren gömülü Python, dagit.sh'tan ÇIKARILIP gerçekten koşturulur. Kopyası
+#               değil KENDİSİ: kaynak metni kopyalayan bir test, betik değişince yeşil kalırdı.
+DAGIT = REPO / "dagit.sh"
+
+
+def _dagit_satirlari() -> list[str]:
+    return DAGIT.read_text().splitlines()
+
+
+def _satir_no(iz: str) -> int:
+    for i, s in enumerate(_dagit_satirlari()):
+        if iz in s:
+            return i
+    raise AssertionError(f"dagit.sh'ta bulunamadı: {iz!r} — çivi bayatlamış")
+
+
+def _gomulu_hukum_betigi() -> str:
+    """dagit.sh'ın İÇİNDEKİ hüküm betiğini çıkar (<<'PY' … PY)."""
+    satirlar = _dagit_satirlari()
+    bas = next(i for i, s in enumerate(satirlar) if "<<'PY'" in s)
+    son = next(i for i, s in enumerate(satirlar[bas + 1:], start=bas + 1) if s == "PY")
+    return "\n".join(satirlar[bas + 1:son])
+
+
+def test_dagit_sozdizimi_TEMIZ():
+    """`bash -n`: adım eklendi diye betik açılışta patlamamalı. Dağıtım betiğinin sözdizimi hatası,
+    bakım penceresinin ortasında öğrenilecek en pahalı şeydir."""
+    import subprocess
+    r = subprocess.run(["bash", "-n", str(DAGIT)], capture_output=True, text=True)
+    assert r.returncode == 0, f"dagit.sh sözdizimi bozuk:\n{r.stderr}"
+
+
+def test_dagit_1b_adimi_DRY_RUN_ile_RSYNC_ARASINDA():
+    """YER YASASI: [1b] dry-run'dan SONRA (operatör farkı gözle görsün), rsync'ten ÖNCE."""
+    dry = _satir_no("[1/5] rsync DRY-RUN")
+    bir_b = _satir_no("[1b/5] versiyonlu state farkı")
+    rsync = _satir_no("[2/5] rsync")
+    assert dry < bir_b < rsync, f"[1b] yanlış yerde (dry={dry}, 1b={bir_b}, rsync={rsync})"
+
+
+def test_dagit_KURU_KOSUMDA_kopyalama_YOK():
+    """KURU KOŞUM SINIRI: `--uygula` kapısı [1b]'den SONRA, her `scp`den ÖNCE gelir.
+
+    Sıra tersine dönerse kuru koşum canlı yapılandırmayı DEĞİŞTİRİR — "yalnız göster" sözü veren
+    bir komutun sessizce yazması, bu betiğin var oluş amacına aykırıdır."""
+    bir_b = _satir_no("[1b/5] versiyonlu state farkı")
+    kapi = _satir_no('!= "--uygula" ]]')
+    satirlar = _dagit_satirlari()
+    scpler = [i for i, s in enumerate(satirlar) if s.strip().startswith("scp ")]
+    assert scpler, "dagit.sh'ta hiç `scp` yok — kopya adımı kaybolmuş"
+    assert bir_b < kapi, "kuru koşum kapısı [1b]'den ÖNCE — kuru koşumda diff hiç görünmez"
+    assert all(kapi < i for i in scpler), \
+        f"`scp` kuru-koşum kapısından ÖNCE ({scpler}) — `./dagit.sh` canlıya yazardı"
+
+
+def test_dagit_kopya_DURDURMA_ile_BASLATMA_ARASINDA():
+    """PENCERE İÇİ YER: kopya `systemctl stop`tan SONRA, `systemctl … start`tan ÖNCE.
+
+    Önce olsaydı koşan worker'ın `config.goal()` lru_cache'i eski değerle donmuş hâlde dosya
+    değişirdi (aynı anda iki gerçek). Sonra olsaydı yeni süreç ESKİ yapılandırmayla açılır ve
+    etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik."""
+    dur = _satir_no("systemctl stop meridian")
+    bas = _satir_no("systemctl start meridian")
+    scpler = [i for i, s in enumerate(_dagit_satirlari()) if s.strip().startswith("scp ")]
+    # BOŞ LİSTE ÜZERİNDE `all(...)` DAİMA TRUE: bu satır olmadan çivi, `scp` hiç yokken de yeşil
+    # kalırdı — yani kopya adımı tümden silinse "yeri doğru" derdi. (Karşıt koşumda yakalandı.)
+    assert scpler, "dagit.sh'ta hiç `scp` yok — kopya adımı kaybolmuş, yer iddiası boşa düşer"
+    assert all(dur < i < bas for i in scpler), \
+        f"kopya bakım penceresinin dışında (stop={dur}, scp={scpler}, start={bas})"
+
+
+def test_dagit_dosya_listesi_GIT_TEN_turetilir():
+    """Elle yazılmış bir dosya listesi, bu turda kapatılan kopukluğun ta kendisiydi: üçüncü bir
+    state dosyası versiyona alınırsa adım onu kendiliğinden kapsamalı."""
+    metin = DAGIT.read_text()
+    assert "git ls-files state/" in metin, \
+        "versiyonlu state listesi git'ten türetilmiyor — yeni bir dosya sessizce kapsam dışı kalır"
+    # ÖLÇÜM (varsayım değil): bugün git'in bildiği versiyonlu state dosyaları
+    import subprocess
+    r = subprocess.run(["git", "ls-files", "state/"], cwd=str(REPO), capture_output=True, text=True)
+    izlenen = sorted(x for x in r.stdout.split() if x)
+    assert izlenen == ["state/bounds.yaml", "state/goal.yaml"], \
+        f"versiyonlu state kümesi değişti: {izlenen} — adımın gerekçesi yeniden okunmalı"
+
+
+def _hukum(canli: str, repo: str, tmp_path) -> tuple[str, str]:
+    """Gömülü hüküm betiğini GERÇEKTEN koştur; (HUKUM, insan metni) döndür."""
+    import subprocess, sys
+    betik = tmp_path / "hukum.py"
+    betik.write_text(_gomulu_hukum_betigi())
+    a, b = tmp_path / "canli.yaml", tmp_path / "repo.yaml"
+    a.write_text(canli); b.write_text(repo)
+    r = subprocess.run([sys.executable, str(betik), str(a), str(b)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, f"hüküm betiği patladı:\n{r.stderr}"
+    satirlar = r.stdout.splitlines()
+    hukum = [s for s in satirlar if s.startswith("HUKUM=")]
+    assert hukum, f"hüküm satırı basılmadı — bash tarafı bunu grep'liyor:\n{r.stdout}"
+    return hukum[-1], "\n".join(s for s in satirlar if not s.startswith("HUKUM="))
+
+
+def test_dagit_hukum_repoda_YENI_anahtar_KOPYALA(tmp_path):
+    """ASIL VAKA (`entry.w_turnover`): repo ilerledi, canlı hiç görmedi → kopyalanır."""
+    h, metin = _hukum("a: 1\n", "a: 1\nentry.w_turnover: {min: 0.0, max: 0.4}\n", tmp_path)
+    assert h == "HUKUM=KOPYALA", f"repo ilerlemesi kopyalanmıyor: {h} / {metin}"
+    assert "repoda YENİ" in metin and "w_turnover" in metin, \
+        f"canlının hiç görmediği düğme adıyla söylenmiyor: {metin!r}"
+
+
+def test_dagit_hukum_CANLIDA_repo_disi_anahtar_ENGEL(tmp_path):
+    """CANLI ELLE DEĞİŞİKLİK SESSİZCE EZİLMEZ: canlıda repoda olmayan bir anahtar varsa kopya YOK."""
+    h, metin = _hukum("a: 1\nelle_eklenen_dugme: 3\n", "a: 1\n", tmp_path)
+    assert h == "HUKUM=ENGEL", f"canlı elle değişikliği ezilecekti: {h}"
+    assert "REPO-DIŞI" in metin and "elle_eklenen_dugme" in metin, \
+        f"engelin SEBEBİ adıyla söylenmiyor: {metin!r}"
+
+
+def test_dagit_hukum_YALNIZ_YORUM_farki_KOPYALA(tmp_path):
+    """AYRIM ANAHTAR DÜZEYİNDE: bu dosyalar yorum ağırlıklıdır (mezar taşları, kanıt blokları).
+    Satır bazlı bir kapı her yorum düzenlemesinde ENGEL derdi — yani hiç kopyalamazdı, kapı
+    olmayan bir kapı. POZİTİF KONTROL: ayrımın gerçekten anahtar düzeyinde olduğunu gösterir."""
+    h, metin = _hukum("# eski yorum\na: 1\n", "# YENİDEN YAZILMIŞ yorum bloğu\na: 1\n", tmp_path)
+    assert h == "HUKUM=KOPYALA", f"yalnız yorum farkı ENGEL sayıldı: {h}"
+    assert "fark YOK" in metin, f"ayrımın yalnız yorumda olduğu söylenmiyor: {metin!r}"
+
+
+def test_dagit_hukum_ic_ice_blok_DEGER_farkini_gorur(tmp_path):
+    """goal.yaml iç içedir (`execution_v2.limit_pct_cap`) — düzleştirme olmasaydı blok içi bir
+    değer değişikliği 'fark yok' görünürdü."""
+    h, metin = _hukum("execution_v2:\n  limit_pct_cap: 0.01\n",
+                      "execution_v2:\n  limit_pct_cap: 0.02\n", tmp_path)
+    assert h == "HUKUM=KOPYALA"
+    assert "execution_v2.limit_pct_cap" in metin, f"iç içe yol görünmüyor: {metin!r}"
+
+
+def test_dagit_hukum_BOZUK_yaml_FAIL_CLOSED(tmp_path):
+    """UYDURMA YASAĞI'nın ikizi: ayrıştırılamayan dosya 'fark yok' DEĞİLDİR — hüküm VERİLEMEDİ.
+    Ölçülemeyen hüküm 'temiz' sayılamaz, o yüzden ENGEL (operatöre)."""
+    h, metin = _hukum("a: [1,\n", "a: 1\n", tmp_path)
+    assert h == "HUKUM=ENGEL", f"ayrıştırılamayan dosya sessizce kopyalanacaktı: {h}"
+    assert "okunamadı" in metin, f"ayrıştırma hatası beyan edilmiyor: {metin!r}"
+
+
+def test_dagit_kopya_YEDEK_alir_ve_DOGRULAR():
+    """GERİ ALINABİLİRLİK + KANIT: üstüne yazmadan önce yedek (birim migrasyonu dersi), sonra
+    bayt-özdeşlik doğrulaması. Doğrulanmamış bir kopya, kopyalandığı VARSAYILAN bir kopyadır."""
+    metin = DAGIT.read_text()
+    assert ".bak-" in metin, "kopya öncesi yedek YOK — geri alma yolu kapalı"
+    assert "cmp -s -" in metin, "kopya bayt-özdeşlik doğrulaması YOK (kopyalandı VARSAYILIYOR)"
+    # doğrulama düşerse dağıtım DURMALI: belirsiz yapılandırmayla motor başlatılmaz
+    assert "DAĞITIM DURDU" in metin, "doğrulama düştüğünde betik yine de başlatıyor"
+
+
+def test_dagit_gerekce_CANLI_VAKAYI_yaziyor():
+    """YASA 6 / okunur gerekçe: adımın neden var olduğu betikte yazılı olmalı — bir dağıtım
+    adımının maliyeti, gerekçesi okunmadan hiçbir turda doğru tartılamaz."""
+    metin = DAGIT.read_text()
+    assert "w_turnover" in metin, "adımın doğduğu canlı vaka yazılmamış"
+    assert "c783442" in metin, "iki dosyanın versiyonda olduğu gerçeğinin kaynağı yazılmamış"
+    assert "operatör" in metin.lower(), "engel dalında hükmün kimde olduğu yazılmamış"

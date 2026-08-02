@@ -226,8 +226,16 @@ def spy_sma_gate(index_bars, params: dict | None = None) -> dict:
     knob'u 1 verilse bile bu değişmez. Sebep ölçümdür, tercih değil: kart EDG-2026-005 ölçüldü,
     kill#1 tetiklendi ve "pano göstergesi yeter" hükmüyle arşive düştü (ayrıntı `SPY_SMA_EMEKLI`).
     Knob'un adı çıktıda KALIR — hükmü hangi düğmenin taşıdığı, düğme emekli olduktan sonra da
-    okunabilir olmalı; ayrıca canlı `bounds.yaml` satırı düşürülene dek (Rol-1 kalemi) makine o adı
-    hâlâ örnekleyebilir ve o örneklemenin ETKİSİZ olduğu burada YAZILI durur.
+    okunabilir olmalı.
+
+    ARAMA UZAYI HALKASI DA KAPANDI (8b6bbbc, 2026-08-01): `state/bounds.yaml`daki
+    `regime.spy_sma_gate` satırı DÜŞTÜ — makine bu adı artık hiç örneklemez (satır dururken altı
+    değerlendirme, sonucu yapısal olarak sabit bir eksene harcanmıştı). Bu docstring 2026-08-02'ye
+    kadar "satır düşürülene dek makine o adı hâlâ örnekleyebilir" diyordu; doğru görünen ama
+    GERÇEĞE UYMAYAN bir cümleydi. Bugünkü durum: satırın yerinde bounds.yaml'da bir MEZAR TAŞI
+    yorumu var (nereye emekli olduğu + hüküm kaynağı + çivilerin adresi); sessiz-diriliş çivileri
+    `tests/test_altyapi_kucukler_v172.py` (satır GERİ GELEMEZ) ve `tests/test_hafta3b_v125.py`
+    (satır geri gelse DAHİ karar yolu değişmez — ikinci savunma hattı) dosyalarında.
 
     Isınma dolmadan hüküm ÜRETİLMEZ: 200 barlık bir ortalama 150 bardan hesaplanıp "sma200" adıyla
     sunulamaz (classify'ın 2026-07-22'de düzelttiği uydurmanın aynısı). Isınma yoksa `hukum` BEYANLI

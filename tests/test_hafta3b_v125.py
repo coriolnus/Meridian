@@ -434,9 +434,17 @@ def test_katalog_cf_katmanini_tasir():
 def test_Y3_dort_knob_bounds_ta_var_ve_varsayilan_KAPALI():
     b = config.bounds()
     # `regime.spy_sma_gate` BU LİSTEDE DEĞİL: EDG-005 ile EMEKLİ (gösterge, kapı değil) ve karar
-    # yolunda karşılığı yok. Canlı `bounds.yaml`da satırı hâlâ durabilir (state versiyonlanmaz —
-    # düşürmek Rol-1/operatör kalemi), o yüzden VARLIĞI da YOKLUĞU da assert EDİLMEZ; yerine
-    # ETKİSİZLİĞİ ayrı bir çiviyle ölçülür (test_Y3_sma_gostergesi_yeni_girisi_KAPATMAZ).
+    # yolunda karşılığı yok. Satır 8b6bbbc (2026-08-01) ile bounds'tan DÜŞTÜ ve YOKLUĞU artık
+    # çivili — ama BU dosyada değil: `tests/test_altyapi_kucukler_v172.py::
+    # test_wpg_bounds_ta_spy_sma_gate_SATIRI_YOK`. Burada ölçülen şey ETKİSİZLİĞİDİR
+    # (test_Y3_sma_gostergesi_yeni_girisi_KAPATMAZ) — yani satır bir gün geri gelse DAHİ karar
+    # yolunun değişmediği. İki çivi AYRI KALIR: biri arama uzayını, diğeri karar yolunu korur.
+    #
+    # BAYAT GEREKÇE DÜZELTİLDİ (2026-08-02): bu blok eskiden yokluk assert'inden KAÇINIYORDU ve
+    # gerekçesi "canlı dosya repodan bağımsız yaşar, çünkü o dizin versiyona girmez" idi. İddia
+    # c783442'den beri YANLIŞ: `.gitignore` ölü-negasyon düzeltmesi `state/goal.yaml` ile
+    # `state/bounds.yaml`ı GERÇEKTEN versiyona aldı. Kaçınmanın gerekçesi düşünce çivi kondu (v172).
+    # NOT: yanlış gerekçenin bedeli, yanlış olduğu süre boyunca ÇİVİSİZ geçen bir emeklilikti.
     for k in ("regime.vix_backwardation_gate", "portfolio.sector_cap", "portfolio.heat_cap"):
         assert k in b, f"{k} bounds'ta yok"
         assert float(b[k]["min"]) == 0, f"{k} kapalı konumu (0) bounds'ta yok"
