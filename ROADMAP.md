@@ -444,6 +444,11 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-03 OPERATÖR MANDASI — STRATEJİDE TABU YOK:** "katı hiçbir kural yok; değişmesi
+  gereken değişir, kalkması gereken kalkar." Hiçbir strateji bileşeni (çıkış/boyutlama/skor/
+  evren/ufuk/yaşayan sinyaller dahil) dokunulmaz değildir; QC-ders hükümleri ve sonraki tüm
+  turlar tam yapısal serbestlikle verilir. DEĞİŞMEYEN tek şey karar TERAZİSİ: ölçüm-önce +
+  kart + kill-disiplini ("değişmesi gereken"i keyfîden ayıran mekanizmanın kendisi).
 - **2026-08-02 ~21:20 EDG-016 KANIT ZİNCİRİ KAPANDI + A1'E DAĞITIM.** Kartın hükmü depodaki yolu
   gösteriyordu ama kod damgası + damgalı betikler scratchpad'deydi; sınıf avı 012–014 kodunu da
   yakaladı → 11 dosya damga-SHA doğrulamalı `wp2_olcum/` arşivine (039c5b8, merge 06e8f60);
