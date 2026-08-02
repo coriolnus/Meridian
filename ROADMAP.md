@@ -406,6 +406,15 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-02 ~04:30 GECE KAPANIŞI: S2R ÜÇLEMESİ TAMAM + KOVA A 9/9 — DAĞITIM OPERATÖR KAPISINDA.**
+  S2R-1 kabuk (f7f66fa) → S2R-2 göç 20 bölüm + YASA-6 emekli listesi (9ca0998) → S2R-3 cila +
+  bekçi ÖLÇÜLEMEDİ yüzeyi + palet-20 (006cc67). Denetim KOVA A: d50b03b/395920e/8a38248 +
+  close_connections yeniden-adı (8ac8e1a, C5 yasa-çivisi isim çakışması). Final tam suite ~3.600
+  test SIFIR kırmızı; dagit kapıları [0a-0c]+kuru-koşu YEŞİL. `--uygula` izin-sınıflandırıcısına
+  takıldı (2 ret — otonom pencerede canlı-sunucu yazımı; karar operatöre bırakıldı, tek komut:
+  `./dagit.sh --uygula`). A1'de C15 canlı hasarı ölçüldü: sprint HER 5-DK poll'de yeniden
+  tetikleniyor (99 start, tamamlanma olayı YOK, w_turnover örneklemesi 0) — düzeltme dağıtımla
+  iner, kadans kendini bir koşuda onarır; sprint erken-ölümü AYRI şüphe (dağıtım-sonrası izleme).
 - **2026-08-02 ~03:30 TAM-SİSTEM DENETİMİ İNDİ (operatör talebi: "bütün bileşenler").** 8 salt-okuma
   denetçi + şiddet≥3'e adversarial doğrulayıcı (34 ajan): **25 doğrulanmış ciddi bulgu** (19 şiddet-3)
   + 22 hafif + 1 çürütülen. Rapor+triyaj: `docs/SISTEM-DENETIMI-2026-08-02.md`. KOVA A (9 sessiz-güvenli
