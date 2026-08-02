@@ -30,7 +30,21 @@ guards:
   - "PK4/PK5 yol-tutarlılık kontrolleri + temiz_taban (aynı-gün evren) zorunlu"
   - "eşik-dilbilgisi (ders#2): her dalın niteleyicisi metinde açık — belirsizlik muhafazakâr okunur"
 k_registry: {registered_at: "2026-08-02T15:20Z", trial_ids: [wp1_rvol_form/bolge_fazlasi, wp1_rvol_form/artik_kontrollu]}
-status: registered
+status: archived   # 2026-08-02 ~21:05 TR — ARŞİV (Rol-1 hükmü; ÜÇ kill de tetiklendi):
+#   kill#1: bölge fazlası @20 +0,050% CI[−0,200,+0,279] — CI-0-İÇİ (bilgisiz). kill#2: kontrol
+#   sonrası A1 +0,063% CI-0-içi VE artık-IC −0,0020 CI-0-içi (iki yöntem TERS işaretli — success
+#   "aynı yön" şartı da düştü). kill#3: net @20 −0,050% (10bps) ≤ 0. Alt-dönemler: hiçbiri CI-0-dışı
+#   değil; işaret 2019+ eksi. HÜKÜM CÜMLESİ: EDG-002'nin yan gözlemi (cf-katmanı +1,61%) evrensel
+#   bölge-etkisine DÖNÜŞMEZ — ham +1,12% pozitiflik taban-fazlasında yok (ders#3 vakası); s1_retro
+#   teyit: "pozitif hacim etkisi kırılım popülasyonuna koşulludur". Canlı rvol20 eşiği (EDG-002
+#   aklaması) DEĞİŞMEZ; torun yok, aile kapalı.
+#   BEYANLI ÇEKİNCELER (hükme iliştirik): (1) kart metnindeki medyan20/SMA20 çelişkisi muhafazakâr
+#   okundu — hüküm SMA tanımıyla (pozitif-kontrol çivisinin tanımı); medyan tanısı +0,049% aynı
+#   sonuç, hüküm değişmez. (2) cf-katmanı sayısı bekçi olarak yeniden üretildi (n=430, +1,60% —
+#   EDG-002 ile uyumlu), yeni K harcamadı; o gözlemin statüsü EDG-002 hükmü altında kalır.
+#   PK: IC-çivisi 0,0642 (sapma 0,0003), PK4/PK5-C/E/F sıfır-farkla; PK5-A/B/D uygulanmadı-beyanlı
+#   (yalnız OHLCV). Kanıt: research/olcumler/wp1_rvol_form/ (sonuc_017.json + RAPOR_017.md +
+#   kod_damgasi_017.json + betikler; motor sha256-kopyasında koşuldu — kirli-ağaç izolasyonu).
 notes: >
   Ölçüm ajanı KARTA DOKUNMAZ; hüküm Rol-1'de. Sandbox: research/olcumler/wp1_rvol_form/
   (EDG-002 altyapısı varsa yeniden kullanılır — yeni as-of gerektirmez, yalnız OHLCV).

@@ -1,0 +1,383 @@
+{
+  "olcum_tarihi": "2026-08-02T15:11:13.730063+00:00",
+  "motor_sha256_repo_vs_kopya": {
+    "__init__.py": {
+      "repo": "e3b0c44298fc1c149afbf4c8996fb924",
+      "kopya": "e3b0c44298fc1c149afbf4c8996fb924"
+    },
+    "adapters/__init__.py": {
+      "repo": "e3b0c44298fc1c149afbf4c8996fb924",
+      "kopya": "e3b0c44298fc1c149afbf4c8996fb924"
+    },
+    "adapters/alpaca.py": {
+      "repo": "6fc99df2b8910d633579ba60b78d7313",
+      "kopya": "6fc99df2b8910d633579ba60b78d7313"
+    },
+    "adapters/constituents.py": {
+      "repo": "f202a8cd583bbc2068afa9657f609b8b",
+      "kopya": "f202a8cd583bbc2068afa9657f609b8b"
+    },
+    "adapters/data.py": {
+      "repo": "5fe766f9b077dd5d5a8ea6746b864665",
+      "kopya": "5fe766f9b077dd5d5a8ea6746b864665"
+    },
+    "adapters/edgar_shares.py": {
+      "repo": "a57646896569d58c6ea6b5513a19bfa5",
+      "kopya": "a57646896569d58c6ea6b5513a19bfa5"
+    },
+    "adapters/finviz.py": {
+      "repo": "88e5bf68b156a60a1adaa44c84985329",
+      "kopya": "88e5bf68b156a60a1adaa44c84985329"
+    },
+    "adapters/fmp.py": {
+      "repo": "045a3b642e95bbbbf03daa4fc97093d4",
+      "kopya": "045a3b642e95bbbbf03daa4fc97093d4"
+    },
+    "adapters/insider.py": {
+      "repo": "93e5471696cbe4bc7347ca8bfd5cb303",
+      "kopya": "93e5471696cbe4bc7347ca8bfd5cb303"
+    },
+    "adapters/macro.py": {
+      "repo": "96dac96231fab4aad36d747954dcdee9",
+      "kopya": "96dac96231fab4aad36d747954dcdee9"
+    },
+    "adapters/massive.py": {
+      "repo": "fbebb1d2ed588451520c3d8b9d331086",
+      "kopya": "fbebb1d2ed588451520c3d8b9d331086"
+    },
+    "adapters/news.py": {
+      "repo": "102e48eba1110d355d1b39b73fcc6085",
+      "kopya": "102e48eba1110d355d1b39b73fcc6085"
+    },
+    "adapters/shortinterest.py": {
+      "repo": "0ccd021f0bbe10f7208f9fc485126684",
+      "kopya": "0ccd021f0bbe10f7208f9fc485126684"
+    },
+    "analytics.py": {
+      "repo": "f8e55c333eee74df1cd29f795950eff2",
+      "kopya": "f8e55c333eee74df1cd29f795950eff2"
+    },
+    "api.py": {
+      "repo": "a7eb8c558935426a7369a782274aeefc",
+      "kopya": "a7eb8c558935426a7369a782274aeefc"
+    },
+    "arming.py": {
+      "repo": "6eff2a39cebb6ab633bbc3e0de647383",
+      "kopya": "6eff2a39cebb6ab633bbc3e0de647383"
+    },
+    "auth.py": {
+      "repo": "7ddf5abe2d9b26f7a3e73b12784b1d4a",
+      "kopya": "7ddf5abe2d9b26f7a3e73b12784b1d4a"
+    },
+    "auth_cli.py": {
+      "repo": "172608ea591fd4abaa07bfcc1144cc99",
+      "kopya": "172608ea591fd4abaa07bfcc1144cc99"
+    },
+    "backtest.py": {
+      "repo": "37e02be5d741beb6c4db80f2c335aa8c",
+      "kopya": "37e02be5d741beb6c4db80f2c335aa8c"
+    },
+    "bararchive.py": {
+      "repo": "818b14a38965f7673d37bb250e21209a",
+      "kopya": "818b14a38965f7673d37bb250e21209a"
+    },
+    "barclock.py": {
+      "repo": "1fcca2c9231f6168643b3bddc54ebbe3",
+      "kopya": "1fcca2c9231f6168643b3bddc54ebbe3"
+    },
+    "barfeed.py": {
+      "repo": "73f941490a674a08c9688edf9bcc170f",
+      "kopya": "73f941490a674a08c9688edf9bcc170f"
+    },
+    "barrepair.py": {
+      "repo": "0ca31c36996ce940ac6601c4712bdff8",
+      "kopya": "0ca31c36996ce940ac6601c4712bdff8"
+    },
+    "barsarchive.py": {
+      "repo": "ae1a02ac7ecfa847cf912950b58cbebc",
+      "kopya": "ae1a02ac7ecfa847cf912950b58cbebc"
+    },
+    "baseline.py": {
+      "repo": "c8ad232d664f3035bc694d15e8a5659e",
+      "kopya": "c8ad232d664f3035bc694d15e8a5659e"
+    },
+    "broker.py": {
+      "repo": "dc3a59079ee30168b01b2af852dbd8f1",
+      "kopya": "dc3a59079ee30168b01b2af852dbd8f1"
+    },
+    "cf_backfill.py": {
+      "repo": "a8b78741899c0981c4c6a97e812f812f",
+      "kopya": "a8b78741899c0981c4c6a97e812f812f"
+    },
+    "codelaw.py": {
+      "repo": "05e35690f81fbd99eaebe119282f09ec",
+      "kopya": "05e35690f81fbd99eaebe119282f09ec"
+    },
+    "component_ic.py": {
+      "repo": "8af3f642d1c85a9f1f95683765abb0b4",
+      "kopya": "8af3f642d1c85a9f1f95683765abb0b4"
+    },
+    "config.py": {
+      "repo": "7be49132c6a1985c3d7a1fec0abb640c",
+      "kopya": "7be49132c6a1985c3d7a1fec0abb640c"
+    },
+    "counterfactual.py": {
+      "repo": "e20ac7001a993d384c5958984811d83a",
+      "kopya": "e20ac7001a993d384c5958984811d83a"
+    },
+    "dataset.py": {
+      "repo": "e6ea06a8f1ac14c20e0bdaee650bd4ac",
+      "kopya": "e6ea06a8f1ac14c20e0bdaee650bd4ac"
+    },
+    "dbmigrate.py": {
+      "repo": "8ab0bb0949c5b7af78a246fd827ef0f5",
+      "kopya": "8ab0bb0949c5b7af78a246fd827ef0f5"
+    },
+    "earnings.py": {
+      "repo": "4ae489239f4edec47f66ce4fe05e86b9",
+      "kopya": "4ae489239f4edec47f66ce4fe05e86b9"
+    },
+    "guard.py": {
+      "repo": "2c0d98f11cd9b5f010da449e705419fe",
+      "kopya": "2c0d98f11cd9b5f010da449e705419fe"
+    },
+    "health.py": {
+      "repo": "1c797aaf8896d735b467d7194ead0e17",
+      "kopya": "1c797aaf8896d735b467d7194ead0e17"
+    },
+    "hermes.py": {
+      "repo": "893b48bc67107a289b8918f71504c1fd",
+      "kopya": "893b48bc67107a289b8918f71504c1fd"
+    },
+    "hermes_composite.py": {
+      "repo": "7a8a9e32b2c452eb46d2f91aa18545a4",
+      "kopya": "7a8a9e32b2c452eb46d2f91aa18545a4"
+    },
+    "hermes_runtime.py": {
+      "repo": "f33ee29dc79957d69eb10ec4bd68d95b",
+      "kopya": "f33ee29dc79957d69eb10ec4bd68d95b"
+    },
+    "hotstate.py": {
+      "repo": "fa79f9b676eb68b42cceb7fd02590a59",
+      "kopya": "fa79f9b676eb68b42cceb7fd02590a59"
+    },
+    "indicators.py": {
+      "repo": "48f1a14ea15591e177aaa214d42cf360",
+      "kopya": "48f1a14ea15591e177aaa214d42cf360"
+    },
+    "integrity_registry.py": {
+      "repo": "62c966fb41a5946968aed0f5637b4b56",
+      "kopya": "62c966fb41a5946968aed0f5637b4b56"
+    },
+    "intraday_cycle.py": {
+      "repo": "6573dda37b06e3c12ee02b13b36f0328",
+      "kopya": "6573dda37b06e3c12ee02b13b36f0328"
+    },
+    "intraday_shadow.py": {
+      "repo": "3a5e2d596d707cbeae3b7fb95faaae59",
+      "kopya": "3a5e2d596d707cbeae3b7fb95faaae59"
+    },
+    "ledgers.py": {
+      "repo": "23cc372f38473a9e826adfb4c58e49fe",
+      "kopya": "23cc372f38473a9e826adfb4c58e49fe"
+    },
+    "ledgerstamp.py": {
+      "repo": "f77395ea9749e77d9a5d12fb1b81b01e",
+      "kopya": "f77395ea9749e77d9a5d12fb1b81b01e"
+    },
+    "loop.py": {
+      "repo": "77b6d4f858d71554c84e9e16f8419d07",
+      "kopya": "77b6d4f858d71554c84e9e16f8419d07"
+    },
+    "marketstream.py": {
+      "repo": "839b64229181b78300a4dd85a94bb1dc",
+      "kopya": "839b64229181b78300a4dd85a94bb1dc"
+    },
+    "marketview.py": {
+      "repo": "37c34359737a9d1fdcbdcadf0938f6f1",
+      "kopya": "37c34359737a9d1fdcbdcadf0938f6f1"
+    },
+    "mcp_server.py": {
+      "repo": "fa876f1a4d6be7a160c339403689a970",
+      "kopya": "fa876f1a4d6be7a160c339403689a970"
+    },
+    "memory.py": {
+      "repo": "c9941fd398c56dab1f036fd05f1ce0a8",
+      "kopya": "c9941fd398c56dab1f036fd05f1ce0a8"
+    },
+    "mirror_stream.py": {
+      "repo": "f3e604e08474812227bcceb46f723ee9",
+      "kopya": "f3e604e08474812227bcceb46f723ee9"
+    },
+    "mutation.py": {
+      "repo": "28c1905ea847af4fa6ed8f625f7a5838",
+      "kopya": "28c1905ea847af4fa6ed8f625f7a5838"
+    },
+    "notify.py": {
+      "repo": "dac9024c4c900031ecf7e1f26c730bb0",
+      "kopya": "dac9024c4c900031ecf7e1f26c730bb0"
+    },
+    "nous_eval.py": {
+      "repo": "42d24b4fa26fa6dca4bf4c57651aeead",
+      "kopya": "42d24b4fa26fa6dca4bf4c57651aeead"
+    },
+    "obs.py": {
+      "repo": "14b06e081bef46c96849c17bb3d3ee57",
+      "kopya": "14b06e081bef46c96849c17bb3d3ee57"
+    },
+    "olcum_araclari.py": {
+      "repo": "5c4b29ae48912f2948906554e429ab1d",
+      "kopya": "5c4b29ae48912f2948906554e429ab1d"
+    },
+    "oos_erosion.py": {
+      "repo": "2b8ce8a329b88760ca4c8937a01a171f",
+      "kopya": "2b8ce8a329b88760ca4c8937a01a171f"
+    },
+    "oos_pipeline.py": {
+      "repo": "44d1c5210991f7a5edc9af038db942f2",
+      "kopya": "44d1c5210991f7a5edc9af038db942f2"
+    },
+    "prescreen.py": {
+      "repo": "84ff8c1965466e9f8b85104c6685090a",
+      "kopya": "84ff8c1965466e9f8b85104c6685090a"
+    },
+    "probgate.py": {
+      "repo": "97c88cead6981bb93e86c011fc9f56f2",
+      "kopya": "97c88cead6981bb93e86c011fc9f56f2"
+    },
+    "provenance.py": {
+      "repo": "64117604982b17940e72649b23a3f57d",
+      "kopya": "64117604982b17940e72649b23a3f57d"
+    },
+    "recompute.py": {
+      "repo": "5be75636de2b80abd8891f3f8b8bb2d2",
+      "kopya": "5be75636de2b80abd8891f3f8b8bb2d2"
+    },
+    "reflect.py": {
+      "repo": "a8a2804a52f1e619f891c25a70a8a6df",
+      "kopya": "a8a2804a52f1e619f891c25a70a8a6df"
+    },
+    "regime.py": {
+      "repo": "7143b71013776b12de958da54023a682",
+      "kopya": "7143b71013776b12de958da54023a682"
+    },
+    "regime_trigger.py": {
+      "repo": "e9a1f5f06dd841ccc5a4f910b9991885",
+      "kopya": "e9a1f5f06dd841ccc5a4f910b9991885"
+    },
+    "rollback.py": {
+      "repo": "27fa940a313e30b1af64313f413a2ba7",
+      "kopya": "27fa940a313e30b1af64313f413a2ba7"
+    },
+    "run.py": {
+      "repo": "e1a8a184b358b1a70c259bb2856c20c5",
+      "kopya": "e1a8a184b358b1a70c259bb2856c20c5"
+    },
+    "scheduler.py": {
+      "repo": "ce3c8a9a94c15f3af55e0506a9dd0bcc",
+      "kopya": "ce3c8a9a94c15f3af55e0506a9dd0bcc"
+    },
+    "score.py": {
+      "repo": "d4dba15b9e60f17d1b52c25c6786d7ad",
+      "kopya": "d4dba15b9e60f17d1b52c25c6786d7ad"
+    },
+    "secrets.py": {
+      "repo": "43cacdf9e2f2050bd794a3ed5d828933",
+      "kopya": "43cacdf9e2f2050bd794a3ed5d828933"
+    },
+    "selfreview.py": {
+      "repo": "cdec767e1c5edc47940747c61cd7d718",
+      "kopya": "cdec767e1c5edc47940747c61cd7d718"
+    },
+    "sermaye.py": {
+      "repo": "82a41fecf2f3cd09067c7c02876afcbe",
+      "kopya": "82a41fecf2f3cd09067c7c02876afcbe"
+    },
+    "shadow_lifecycle.py": {
+      "repo": "ff5191c7ec3eb697e786a0837bcecc02",
+      "kopya": "ff5191c7ec3eb697e786a0837bcecc02"
+    },
+    "shadow_model.py": {
+      "repo": "99f3c1c8588c631a0012b9f0ddc4b420",
+      "kopya": "99f3c1c8588c631a0012b9f0ddc4b420"
+    },
+    "shadow_variants.py": {
+      "repo": "27b53702be7fadbcaeedbf89901280d3",
+      "kopya": "27b53702be7fadbcaeedbf89901280d3"
+    },
+    "shadowlaw.py": {
+      "repo": "5e551f07476cccb7b4efa3b4e428b96c",
+      "kopya": "5e551f07476cccb7b4efa3b4e428b96c"
+    },
+    "sieve.py": {
+      "repo": "bcb37c0020f186134f0d14e59365ba70",
+      "kopya": "bcb37c0020f186134f0d14e59365ba70"
+    },
+    "skill_evolve.py": {
+      "repo": "efd3c598bf6c155d226ccf284470db8d",
+      "kopya": "efd3c598bf6c155d226ccf284470db8d"
+    },
+    "skills.py": {
+      "repo": "fc58f0a3b725f0d5f349748abb517c9e",
+      "kopya": "fc58f0a3b725f0d5f349748abb517c9e"
+    },
+    "spend.py": {
+      "repo": "6052ae51595aefc0e78b7e2db35578f5",
+      "kopya": "6052ae51595aefc0e78b7e2db35578f5"
+    },
+    "sprint.py": {
+      "repo": "242f47611ecaf2603e54a7247572d0bc",
+      "kopya": "242f47611ecaf2603e54a7247572d0bc"
+    },
+    "sprint_run.py": {
+      "repo": "b7feae6c38566b58677790d6c7e087ff",
+      "kopya": "b7feae6c38566b58677790d6c7e087ff"
+    },
+    "storage.py": {
+      "repo": "f5c5cecef5c827edad53ac469c2df851",
+      "kopya": "f5c5cecef5c827edad53ac469c2df851"
+    },
+    "store.py": {
+      "repo": "9181bafe1e91d61ecbfc96e0b675257a",
+      "kopya": "9181bafe1e91d61ecbfc96e0b675257a"
+    },
+    "strategy.py": {
+      "repo": "6fb76448ac423ca57e264688cb43b995",
+      "kopya": "6fb76448ac423ca57e264688cb43b995"
+    },
+    "streamhealth.py": {
+      "repo": "83176fc8509a40b4988ead40c07cfa04",
+      "kopya": "83176fc8509a40b4988ead40c07cfa04"
+    },
+    "threshold_curve.py": {
+      "repo": "2c9cb758e44b5772373f05a80bb1ffe9",
+      "kopya": "2c9cb758e44b5772373f05a80bb1ffe9"
+    },
+    "trend_shadow.py": {
+      "repo": "bb5ecc90e91d5afe0cab0d00bc0efcf2",
+      "kopya": "bb5ecc90e91d5afe0cab0d00bc0efcf2"
+    },
+    "validation.py": {
+      "repo": "b2e73faf2e8e23dccdb2abcd69ecf921",
+      "kopya": "b2e73faf2e8e23dccdb2abcd69ecf921"
+    },
+    "validation_report.py": {
+      "repo": "04ad19f326224ab757e20d293587aa6d",
+      "kopya": "04ad19f326224ab757e20d293587aa6d"
+    },
+    "versioning.py": {
+      "repo": "4c8e405fecdc1d028cc5e79331311910",
+      "kopya": "4c8e405fecdc1d028cc5e79331311910"
+    },
+    "watchdog.py": {
+      "repo": "a6be9606723e97c355e49c459e4919b0",
+      "kopya": "a6be9606723e97c355e49c459e4919b0"
+    }
+  },
+  "olcum_kodu_sha256": {
+    "k017.py": "8b611f198272d6de37b72860218744657b549b77f435701d657ef8c73c038498",
+    "ortak017.py": "5ad89ea1893f890b86dd5cff0d11947d7a6904c11dd90507b3c2535fabc83372",
+    "pk017.py": "d90ca90f0770f0bcdb422dc6eed0b19b15b596332d6d829b15633df3741e2088",
+    "rapor_017.py": "8b3044e408107d2e43dad162320949a8e08ec7a3067b17f16b87f9ece169a1d8"
+  }
+}
