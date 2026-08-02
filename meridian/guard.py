@@ -22,7 +22,30 @@ GOAL_KEYS = {"schema_version", "universe", "style", "session_tz", "target_return
              # GU1 sürüklenme testi (test_guard_audit_v27) bu iki adı burada görmezse kırmızı yanar.
              "execution_v2", "pessimistic_band_v2"}
 LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_daily_loss_pct",
-              "max_sector_exposure_pct", "no_trade_before_bars", "kill_switch_file"}
+              "max_sector_exposure_pct", "no_trade_before_bars", "kill_switch_file",
+              # C24 (denetim 2026-08-02): portföy-ısısı ve korelasyon eşikleri KOD SABİTİYDİ — ne
+              # operatörün değişmez zarfında (goal.yaml) ne arama uzayında (bounds.yaml). Yani
+              # canlı defterde plan kesen bir risk eşiği HİÇBİR yönetişim yüzeyinde görünmüyordu
+              # (adı konmuş sınıfın ikinci örneği: `broker.max_positions_at` rampası). Üçü de
+              # goal.yaml `limits`e OPERATÖR KALEMİ olarak indi: Hermes öneremez (bu liste), arama
+              # göremez (bounds'ta yok), operatör tek satırla değiştirir. DEĞERLER KORUNDU.
+              "heat_hard_r", "heat_review_r", "corr_review"}
+
+# --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI (C13b, 2026-08-02) ------------------------------------
+# Bir knob replay/gölgede ÖLÇÜLÜR ama canlı motorda yapısal olarak hiçbir şey yapmazsa, terfi yolu
+# ölçülmemiş bir ΔS'i kazanç sayar: aday kapıdan geçer, strategy.yaml'a iner, canlıda SESSİZ NO-OP
+# olur ve `rollback.evaluate_outcomes` gerçekleşmeyen tahmini o değişkenin suçu gibi deftere yazar.
+# `validate_change` bu sınıfı `regime.*@regime` için ADIYLA reddediyordu ama SINIF korumasızdı —
+# `exit.early_kill_pivot` (denetim C13) tam bu deliğe oturmuştu.
+#
+# LİSTE BUGÜN BOŞ VE BOŞ OLMASI DOĞRUDUR: pivot kablosu 2026-08-02'de canlıya bağlandı
+# (`loop.fill_entry(pivot=…)` + `manage_position` sözlüğünde `pivot`). Bu dal İKİNCİ savunma
+# hattıdır; BİRİNCİ hat motor-eşitliği çivisidir (tests/test_kovab_ikimotor_v164: üç motorun
+# yönetim-sözlüğü alan kümesi EŞİT, yani yeni bir ayrışma adsız yakalanır). Birinci hat kırmızı
+# yandığında knob buraya ADIYLA + GEREKÇEYLE yazılır ve terfi yolu aynı turda kapanır.
+LIVE_DEAD_KNOBS: dict[str, str] = {
+    # "exit.early_kill_pivot": "canlı fill_entry pivot geçirmiyor, manage_position sözlüğünde pivot yok",
+}
 
 
 @dataclass
@@ -145,6 +168,16 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
         return Verdict(False, [f"'{base}' is immutable (goal/limits block); Hermes may not propose it"],
                        variable=variable)
 
+    # --- canlı motorun OKUYAMADIĞI knob: yapısal etkisizlik (C13b) — regime.* dalının İKİZİ -------
+    # Buradaki ret, yukarıdaki `regime.*@regime` reddiyle AYNI gerekçeye dayanır ve aynı zararı
+    # önler: replay ΔS ölçer, kapı kabul eder, canlı uygulayamaz → defterde SAHTE kazanç ya da
+    # SAHTE kalıcı çıkmaz sokak. Fark, o reddin YALNIZ @regime son ekiyle gelen öneriyi kapatması,
+    # bunun DÜZ öneriyi de kapatmasıdır (C13'ün kaçtığı tek yol düz öneriydi).
+    if base in LIVE_DEAD_KNOBS:
+        return Verdict(False, [f"'{base}' canlı motorda YAPISAL olarak ölü ({LIVE_DEAD_KNOBS[base]}) — "
+                               f"replay/gölge ΔS ölçer, canlı uygulayamaz; kablo bağlanmadan terfi "
+                               f"edilirse defterde ölçülmemiş bir kazanç kalır"], variable=variable)
+
     # --- must be a tunable in bounds.yaml ---
     if base not in bounds:
         return Verdict(False, [f"'{base}' is not a tunable variable in bounds.yaml"], variable=variable)
@@ -248,6 +281,11 @@ def check_trade(plan: dict, portfolio: dict, regime: dict, goal: dict) -> TradeV
 DISCIPLINE_MIN_RR = 2.0        # pre-trade-discipline-gate R:R floor — a HARD veto (R:R now varies per plan)
 REVIEW_RR_BAND = 0.3           # R:R below floor+band -> REVIEW (marginal)
 REVIEW_SCORE_BAND = 10         # score within this of entry.min_score -> REVIEW
+# ÜÇ EŞİK ARTIK OPERATÖR KALEMİDİR (C24, 2026-08-02) — buradakiler YALNIZ FAIL-SAFE VARSAYILANDIR.
+# Kanonik kaynak `goal.yaml`ın `limits` bloğudur ve `classify_gate` onu ORADAN okur; anahtar yoksa
+# bu değerlere düşer, yani eski goal.yaml'lı bir kopya (ya da elle kurulmuş bir goal sözlüğü taşıyan
+# test) davranış DEĞİŞTİRMEDEN koşar. Değerler taşınırken KORUNDU: 4,5 / 3,5 / 0,85 — bu tur bir
+# yönetişim turudur, eşik turu değil (eşik değişikliği ölçüm kartı ister).
 HEAT_REVIEW_R = 3.5            # total open risk (R) above this -> REVIEW (book getting concentrated)
 HEAT_HARD_R = 4.5             # total open risk (R) above this -> NO_GO (hard aggregate-heat ceiling)
 CORR_REVIEW = 0.85           # candidate return-correlation with a held name above this -> REVIEW
@@ -270,6 +308,13 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     ödüllü kurulumları eliyor, tüm işlemi sıfırlayamıyor. (Eski gerekçe: her plan aynı R:R'yi
     taşırken sert taban, Hermes profit_target_r'yi düşürdüğünde TÜM işlemi durdururdu.)"""
     limits = goal["limits"]
+    # C24: ısı/korelasyon eşikleri OPERATÖR ZARFINDAN gelir; anahtar yoksa modül varsayılanı
+    # (fail-safe — eski bir goal.yaml ya da elle kurulmuş goal sözlüğü davranışı değiştirmez).
+    # `float(... or default)` DEĞİL `.get(..., default)`: 0.0 meşru bir eşiktir (her planı keser)
+    # ve `or` onu sessizce 4,5'e çevirirdi — operatörün yazdığı sayı operatörün sayısıdır.
+    heat_hard_r = float(limits.get("heat_hard_r", HEAT_HARD_R))
+    heat_review_r = float(limits.get("heat_review_r", HEAT_REVIEW_R))
+    corr_review = float(limits.get("corr_review", CORR_REVIEW))
     hard, soft = [], []
     sec = plan.get("sector", "?")
     sc = portfolio.get("sector_counts", {})
@@ -310,20 +355,20 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
          f"R:R {rr:.1f} < {DISCIPLINE_MIN_RR:.1f} (yetersiz ödül/risk)", "hard",
          value=round(rr, 2), threshold=f">={DISCIPLINE_MIN_RR:.1f}")
     open_heat = portfolio.get("open_risk_r", 0.0) + float(plan.get("size_r", 0.0))
-    _chk("heat_hard", open_heat > HEAT_HARD_R,
-         f"portföy ısısı sert tavanı %{HEAT_HARD_R:.1f}R aşıyor (~{open_heat:.1f}R açık risk)", "hard",
-         value=round(open_heat, 2), threshold=f"<={HEAT_HARD_R:.1f}R")
+    _chk("heat_hard", open_heat > heat_hard_r,
+         f"portföy ısısı sert tavanı %{heat_hard_r:.1f}R aşıyor (~{open_heat:.1f}R açık risk)", "hard",
+         value=round(open_heat, 2), threshold=f"<={heat_hard_r:.1f}R")
 
     # --- SOFT (REVIEW) ---
     _chk("sector_stacking", sc.get(sec, 0) >= 1,
          f"'{sec}' sektöründe korelasyon yığılması", "soft", value=sc.get(sec, 0), threshold="0")
     heat = portfolio.get("open_risk_r", 0.0) + float(plan.get("size_r", 0.0))
-    _chk("heat_review", heat > HEAT_REVIEW_R,
+    _chk("heat_review", heat > heat_review_r,
          f"portföy ısısı yüksek (~{heat:.1f}R açık risk)", "soft",
-         value=round(heat, 2), threshold=f"<={HEAT_REVIEW_R:.1f}R")
-    _chk("correlation", float(portfolio.get("max_corr", 0.0)) > CORR_REVIEW,
+         value=round(heat, 2), threshold=f"<={heat_review_r:.1f}R")
+    _chk("correlation", float(portfolio.get("max_corr", 0.0)) > corr_review,
          f"açık pozisyonlarla yüksek korelasyon (ρ≈{float(portfolio.get('max_corr', 0.0)):.2f}) — gerçek konsantrasyon",
-         "soft", value=round(float(portfolio.get("max_corr", 0.0)), 2), threshold=f"<={CORR_REVIEW}")
+         "soft", value=round(float(portfolio.get("max_corr", 0.0)), 2), threshold=f"<={corr_review}")
     # #11: prefer names in the day's leading sectors. leading_sectors may be plain names (older/backtest
     # path, often []) OR dicts {sector,momentum,n} (live loop's sector_momentum) — normalize to names so
     # the membership test and the join never see a dict (that TypeError only surfaced on a live cycle with
@@ -364,6 +409,83 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
 # hangi değer varsayılır" sorusunun cevabıdır ve kapı KAPALIYKEN hiç okunmaz.
 SECTOR_CAP_DEFAULT_PCT = 25.0     # bandın ALT ucu (muhafazakâr): açılırsa en sıkı hâliyle açılır
 HEAT_CAP_DEFAULT_PCT = 6.0        # NAV yüzdesi — bandın alt ucu, aynı gerekçe
+
+
+# --- Y3 ÜRETİCİ↔TÜKETİCİ SÖZLEŞMESİ (C12, 2026-08-02) --------------------------------------------
+# `_y3_portfolio_caps` ÜÇ portföy + İKİ plan alanı okur. Denetim C12: ÜRETİM ÇAĞIRANLARININ HİÇBİRİ
+# bu alanları göndermiyordu — ampirik kanıt, en sıkı tavanla (sector_cap=0,1 / heat_cap=0,1) bile
+# hükmün BİREBİR aynı kalmasıydı. Yani knob "açık" görünüyor (pano `enabled: true`), arama uzayında
+# duruyor (bounds.yaml), Hermes önerebiliyor — ama yapısal olarak HİÇBİR yapılandırmada bağlayamıyor:
+# aday replay incumbent'la bit-bit özdeş çıkar, kapı reddeder ve meşru bir risk kontrolü deftere
+# KALICI kara liste ("already tried and failed") olarak yazılır.
+#
+# Alan adları burada SÖZLEŞME olarak durur (üretici testi bu iki demeti okur) ve ölçüm yardımcıları
+# da burada: aynı büyüklüğün dört üreticide ayrı ayrı yazılması bu deponun ilk günden beri kovaladığı
+# sınıftır (iki yüzey, sessiz ayrışma — `check_trade` kopyası GU2'de tam bundan patlamıştı).
+Y3_PORTFOLIO_FIELDS = ("equity", "sector_notional", "heat_pct")
+Y3_PLAN_FIELDS = ("notional", "risk_dollars")
+
+
+def y3_plan_inputs(plan: dict, *, equity: float, size_fn) -> dict:
+    """Aday planın DOLAR büyüklükleri (`notional`, `risk_dollars`) — kapı bunları PLANDAN okur.
+
+    BOYUTLANDIRMA YASASI KOPYALANMAZ, ÇAĞRILIR: `size_fn` broker'ın `size_position`'ıdır ve
+    ÇAĞIRANDAN gelir, çünkü guard broker'ı import EDEMEZ (içe aktarım kilidi,
+    test_gate_statistics_v74 — "hüküm yalnız argümanlarının fonksiyonudur" yasasının uygulaması).
+    Böylece qty/risk aritmetiği tek yerde kalır: boyutlandırıcı yarın değişirse tavan onunla
+    birlikte değişir, ayrı bir kopya sessizce geride kalmaz.
+
+    TAHMİN OLDUĞU BEYANLIDIR. Kapı SİLAHLANMA anında (D kapanışı) koşar, dolum ERTESİ AÇILIŞTA
+    olur — o günün açılış fiyatı da, o andaki sermaye de HENÜZ YOKTUR. Ölçüm tetik fiyatı + bugünkü
+    sermaye ile yapılır; gerçek dolum slippage/ADV tavanı/kısma çarpanıyla farklı çıkar. Bu bir
+    muhasebe satırı değil, ÖNCEDEN bakan bir kısıttır; sapma yönü tek taraflı değildir ve tavanın
+    kendisi zaten bir bandın alt ucundan seçilir.
+    """
+    trig = float(plan.get("entry_trigger") or 0.0)
+    qty, risk_dollars = size_fn(trig, float(plan.get("stop") or 0.0),
+                                float(plan.get("size_r") or 0.0), float(equity or 0.0))
+    return {"notional": float(qty) * trig, "risk_dollars": float(risk_dollars)}
+
+
+def y3_portfolio_inputs(positions, armed_plans=(), *, equity: float, size_fn) -> dict:
+    """`_y3_portfolio_caps`ın okuduğu ÜÇ portföy alanını KİTAPTAN ölçer — üreticilerin tek kaynağı.
+
+    positions   : açık pozisyon satırları — {"sector","qty","entry","stop","trail_stop","mark"}.
+                  `mark` yoksa girişe düşülür: uydurma fiyat yerine BİLİNEN fiyat. Bu, kâr etmiş bir
+                  pozisyonun notional'ını olduğundan KÜÇÜK gösterir, yani tavan geç bağlar — sapma
+                  muhafazakâr yönde DEĞİLDİR ve bu yüzden çağıran markı geçirmek zorundadır (üç
+                  üretici de geçiriyor; alan burada yalnız fail-safe olarak duruyor).
+    armed_plans : dolmamış ama SLOT TUTAN planlar. R bacağı (`open_risk_r`) onları ZATEN sayıyor;
+                  NAV bacağı saymasaydı aynı kitabı iki tavan farklı büyüklükte görürdü ve akşam
+                  aynı anda silahlanan iki plan birbirini hiç görmezdi.
+    ISI YASASI ölçüm katmanınınkiyle AYNIDIR: Σ max(0, giriş − max(stop, trail)) × adet ⁄ NAV.
+                  `trail` savunmacı `max` ile alınır (broker yasası: trail asla gevşemez), yani
+                  ölçülen şey "bugün stop'a düşse kaybedilecek" olandır — ilk risk değil.
+    NAV ölçülemezse (eq ≤ 0) `heat_pct` **None** döner. 0.0 dönmek "ısı yok" demek olurdu ve açık
+                  bir tavan ölçemediği turu "tavan tuttu" diye okuturdu; guard None dalında tavanı
+                  UYGULAMAZ ve bunu karar satırında SÖYLER.
+    """
+    eq = float(equity or 0.0)
+    sector_notional: dict = {}
+    risk = 0.0
+    for p in positions:
+        qty = float(p.get("qty") or 0.0)
+        entry = float(p.get("entry") or 0.0)
+        mark = p.get("mark")
+        px = float(mark) if mark is not None else entry
+        sec = p.get("sector") or "?"
+        sector_notional[sec] = sector_notional.get(sec, 0.0) + qty * px
+        stop = float(p.get("stop") or 0.0)
+        trail = p.get("trail_stop")
+        etkin = max(stop, float(trail)) if trail is not None else stop
+        risk += max(0.0, (entry - etkin) * qty)
+    for a in (armed_plans or ()):
+        d = y3_plan_inputs(a, equity=eq, size_fn=size_fn)
+        sec = a.get("sector") or "?"
+        sector_notional[sec] = sector_notional.get(sec, 0.0) + d["notional"]
+        risk += d["risk_dollars"]
+    return {"equity": eq, "sector_notional": sector_notional,
+            "heat_pct": (100.0 * risk / eq) if eq > 0 else None}
 
 
 def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -> None:

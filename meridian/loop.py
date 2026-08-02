@@ -1020,6 +1020,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             slots = limits["max_open_positions"] - len(b.positions)
             _plan_law: dict = {}     # plan_id → E1 icra kararı (aşağıda silahlananlar için saklanır)
             others_rets = [ind.returns_tail(per[o].loc[:d, "close"]) for o in b.positions if o in per]  # once/day
+            # C12 (denetim 2026-08-02): Y3 NAV TAVANLARININ ÜRETİCİ TARAFI. `guard._y3_portfolio_caps`
+            # equity/sector_notional/heat_pct (portföy) + notional/risk_dollars (plan) okuyor; canlı
+            # döngü BUNLARIN HİÇBİRİNİ göndermiyordu, yani `portfolio.sector_cap`/`heat_cap` knob'ları
+            # açılsa bile yapısal olarak bağlayamıyordu (en sıkı tavanla bile hüküm birebir aynı).
+            # Kitap seansta BİR KEZ ölçülür (aday döngüsü içinde değişmez); silahlananlar aday başına
+            # eklenir, çünkü `open_risk_r` bacağı da onları sayıyor. NAV KAPANIŞ markıyla: kapı D'nin
+            # kapanışında koşar, `marks_open` sabahın devre-kesici penceresine aittir.
+            _y3_mk = _marks(per, d)
+            _y3_eq = b.equity(_y3_mk)
+            _y3_book = [{"sector": SECTORS.get(t, "?"), "qty": p.qty, "entry": p.entry,
+                         "stop": p.stop, "trail_stop": p.trail_stop, "mark": _y3_mk.get(t)}
+                        for t, p in b.positions.items()]
             for c in candidates:
                 portfolio = {"open_positions": len(b.positions) + len(meta["armed"]),
                              # 0.0 at ARM time — identical to the backtest (backtest.py "breaker enforced
@@ -1030,7 +1042,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                              "sector_counts": sector_ct, "day_pnl_pct": 0.0,
                              "open_risk_r": sum(p.size_r for p in b.positions.values())
                                             + sum(a["size_r"] for a in meta["armed"]),
-                             "max_corr": ind.corr_max(per[c["ticker"]].loc[:d, "close"], others_rets)}
+                             "max_corr": ind.corr_max(per[c["ticker"]].loc[:d, "close"], others_rets),
+                             **guard.y3_portfolio_inputs(_y3_book, meta["armed"], equity=_y3_eq,
+                                                         size_fn=b.size_position)}
                 _pid = (f"P-{dstr}-{c['ticker']}-{c.get('setup','')}" if c.get("dormant_setup")
                         else f"P-{dstr}-{c['ticker']}")   # uyuyan: kurulum ekli kimlik (çakışma + ayrışma)
                 plan = {"id": _pid, "date": dstr, "ticker": c["ticker"], "side": "long",
@@ -1043,7 +1057,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         "profit_target": c["profit_target"], "strategy_version": version,
                         "skill_chain": [skills.screener_for(c.get("setup", "breakout_vcp")), "position-sizer", "pre-trade-discipline-gate"]}
                 _checks = []                            # Faz 3 (5b): yapılandırılmış karar ağacı
-                verdict, greasons = guard.classify_gate(plan, portfolio, rj, goal, eff, detail_out=_checks)
+                # C12: dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider — `armed_pivots`/`atr`
+                # yan haritalarıyla aynı gerekçe: `notional`/`risk_dollars` bir DEFTER alanı değil,
+                # tavanın girdisidir. E2'ye (`trade_plans.jsonl`) yazılan sözlük `plan`dır ve şeması
+                # değişmedi; kapıya giden onun zenginleştirilmiş KOPYASIDIR.
+                _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=_y3_eq,
+                                                             size_fn=b.size_position)}
+                verdict, greasons = guard.classify_gate(_gate_plan, portfolio, rj, goal, eff, detail_out=_checks)
                 _bl = earnings.in_blackout(c["ticker"], dstr)
                 # DOĞRULANDI mı yoksa VERİ YOK mu? İkisi de "passed" görünüyordu; canlıda evrenin
                 # %28'inde (250'nin 69'u) takvim yok, yani guard o isimlerde sessizce kapalı. Plan

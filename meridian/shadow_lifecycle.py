@@ -384,6 +384,18 @@ def _day(doc: dict, date: str, live: dict, *, tickers, tail_of, rs_of, sector_of
             # Bar bulunamayan sembolde çağıranın girdisine düşülür — uydurma sıfır yerine bilinen kaynak.
             _corr = _corr_fn(bars_of, d, list((bk.get("positions") or {})), max_corr_of)
             armed_next = []
+            # C12 KAPSAM BEYANI (2026-08-02) — GÖLGE KOLU Y3 NAV TAVANLARINI GÖREMEZ. Kapının
+            # portföy sözlüğünü bu modül DEĞİL `sv._judge` kurar (v1 ve v2 aynı yüzeyi paylaşır);
+            # canlı/replay/cf üçlüsüne bu turda eklenen `equity`/`sector_notional`/`heat_pct` +
+            # plan `notional`/`risk_dollars` alanları orada YOKTUR. SONUCU: `portfolio.sector_cap`
+            # ya da `portfolio.heat_cap` taşıyan bir KOL kurulursa, gölge defteri o tavanı hiç
+            # uygulamaz ve kolun ölçtüğü ΔS canlıda karşılığı olmayan bir sayı olur — yani C13'ün
+            # sahte-terfi sınıfının gölge katmanındaki hâli. Bugün ateşlenemez (VARIANTS'ta böyle
+            # bir kol yok ve iki knob da 0). Kapatma yolu TEK satırdır: `sv._judge`in `portfolio`
+            # sözlüğüne `guard.y3_portfolio_inputs(...)` (veri `bk`de ZATEN var: `_book_state`
+            # `equity`yi üretiyor) ve kapıya giden plana `guard.y3_plan_inputs(...)`.
+            # Bu beyan `tests/test_kovab_dalga3_v166.py` ile ÇAKILIDIR: kablo bağlandığı gün
+            # beyan bayatlar ve test kırmızı yanar (bayat beyan, yokluğundan beterdir).
             if regime.get("exposure_budget_pct", 0) > 0:
                 _judged, _armed, armed_next = sv._judge(
                     sigs, date, sector_of=sector_of, max_corr_of=_corr, params=params,

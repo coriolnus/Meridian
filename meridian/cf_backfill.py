@@ -19,8 +19,16 @@ import pandas as pd
 
 from . import config, store, strategy as strat, regime as regime_mod, indicators as ind
 from . import guard, skills, obs, earnings, counterfactual as cf, loop
+from . import broker as broker_mod
 from .backtest import SECTORS
+from .score import START_EQUITY
 from .adapters import data as data_adapter
+
+# C12: Y3 tavanlarının plan-tarafı girdisi (`notional`/`risk_dollars`) BOYUTLANDIRMA YASASINI ister.
+# Yasa broker'ındır ve KOPYALANMAZ: `size_position` örnek durumuna hiç dokunmaz (yalnız
+# argümanlarının fonksiyonudur), o yüzden tek bir ATIL broker örneği üzerinden çağrılır — bu örnek
+# hiçbir emir taşımaz, hiçbir pozisyon tutmaz, hiçbir yere yazmaz.
+_SIZE_FN = broker_mod.PaperBroker(START_EQUITY, 0.0, 0.0).size_position
 
 
 def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
@@ -76,8 +84,14 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
     # P3: kapı (düz portföy → per-aday intrinsik verdict). earnings blackout dahil; mirror/shadow atlanır.
     plans, armed_ids = [], set()
     slots = int(goal["limits"]["max_open_positions"])
+    # C12: Y3 alanları DÜZ kitapla da gönderilir. Kitap boş olduğu için `sector_notional` {} ve ısı
+    # 0,0'dır — bu bir ölçüm boşluğu DEĞİL ölçülmüş gerçektir (masada gerçekten hiçbir şey yok);
+    # None dönmek "bilmiyoruz" derdi. NAV simülasyonun başlangıç sermayesidir: payda olmadan
+    # `sector_cap` her adaya "NAV ölçülemedi" soft bayrağı takar ve cf'in hükümlerini kirletirdi.
+    # Portföy-BAĞIMSIZLIK beyanı (yukarıda) korunur: eklenen alanlar boş kitabın alanlarıdır.
     flat_pf = {"open_positions": 0, "sector_counts": {}, "day_pnl_pct": 0.0,
-               "open_risk_r": 0.0, "max_corr": 0.0}
+               "open_risk_r": 0.0, "max_corr": 0.0,
+               **guard.y3_portfolio_inputs([], equity=START_EQUITY, size_fn=_SIZE_FN)}
     for c in candidates:
         pid = (f"P-{dstr}-{c['ticker']}-{c.get('setup', '')}" if c.get("dormant_setup")
                else f"P-{dstr}-{c['ticker']}")
@@ -91,7 +105,10 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
                 "profit_target": c["profit_target"], "strategy_version": version,
                 "skill_chain": [skills.screener_for(c.get("setup", "breakout_vcp")),
                                 "position-sizer", "pre-trade-discipline-gate"]}
-        verdict, reasons = guard.classify_gate(plan, flat_pf, rj, goal, eff)
+        # C12: plan şeması DEĞİŞMEZ — kapıya zenginleştirilmiş kopya gider (canlı/replay ile aynı
+        # desen; `plans` listesine ve cf defterine yazılan sözlük `plan`ın kendisidir).
+        _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=START_EQUITY, size_fn=_SIZE_FN)}
+        verdict, reasons = guard.classify_gate(_gate_plan, flat_pf, rj, goal, eff)
         if verdict != "NO_GO" and earnings.in_blackout(c["ticker"], dstr):
             verdict, reasons = "NO_GO", list(reasons) + ["kazanç öncesi karartma"]
         plan["gate_verdict"], plan["gate_reasons"] = verdict, reasons

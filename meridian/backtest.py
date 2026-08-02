@@ -299,6 +299,16 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             for t in broker.positions:
                 sector_ct[SECTORS.get(t, "?")] = sector_ct.get(SECTORS.get(t, "?"), 0) + 1
             others_rets = [ind.returns_tail(per[o].loc[:d, "close"]) for o in broker.positions if o in per]  # once/day
+            # C12: Y3 NAV tavanlarının üretici tarafı (canlı döngüyle AYNI yasa — `guard.y3_*`
+            # ÇAĞRILIR, kopyalanmaz). Kitap seansta bir kez ölçülür; `armed` aday başına eklenir.
+            # NAV kapanış markıyla (`marks_on`), çünkü arm CLOSE(D) fazındadır — `marks_open_on`
+            # AÇILIŞ fazının (devre kesici/kısma) markıdır ve buraya konması denetim #1'in
+            # ileri-bakış hatasının aynadaki hâli olurdu.
+            _y3_mk = marks_on(d)
+            _y3_eq = broker.equity(_y3_mk)
+            _y3_book = [{"sector": SECTORS.get(t, "?"), "qty": p.qty, "entry": p.entry,
+                         "stop": p.stop, "trail_stop": p.trail_stop, "mark": _y3_mk.get(t)}
+                        for t, p in broker.positions.items()]
 
             candidates = []
             for t, df_t in per.items():
@@ -340,7 +350,9 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                              "day_pnl_pct": 0.0,  # breaker enforced at fill (open), not at arm time
                              "open_risk_r": sum(p.size_r for p in broker.positions.values())
                                             + sum(a["size_r"] for a in armed),
-                             "max_corr": ind.corr_max(per[sig.ticker].loc[:d, "close"], others_rets)}
+                             "max_corr": ind.corr_max(per[sig.ticker].loc[:d, "close"], others_rets),
+                             **guard.y3_portfolio_inputs(_y3_book, armed, equity=_y3_eq,
+                                                         size_fn=broker.size_position)}
                 # KARAR AĞACI (ikinci tur denetimi, 2026-07-21): plan defterini İKİ üretici yazıyor —
                 # canlı döngü (gate_checks ile) ve replay tohumu (gate_checks OLMADAN). Defter replay ile
                 # tohumlandığı için panonun karar-ağacı tablosu 144 satırın 144'ünde BOŞTU: "neden GO
@@ -348,7 +360,12 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 # uygulaması deseninin ŞEMA hâli. detay yalnız İSTENDİĞİNDE üretilir: arama yolunda
                 # binlerce replay koşuyor, her plana 8 sözlük eklemek belleği şişirirdi.
                 _det = [] if with_gate_detail else None
-                verdict, greasons = guard.classify_gate(plan, portfolio, rj, goal, eff, detail_out=_det)
+                # C12: dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider (canlı döngüyle aynı
+                # desen ve aynı gerekçe: plan defterinin şeması iki motorda EŞİT kalmalı —
+                # test_differential_v60 tam bunu çiviliyor).
+                _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=_y3_eq,
+                                                             size_fn=broker.size_position)}
+                verdict, greasons = guard.classify_gate(_gate_plan, portfolio, rj, goal, eff, detail_out=_det)
                 # KARAR AĞACININ SATIRI da tek yasa olmalı (diferansiyel motor testi, 2026-07-22):
                 # karartma kuralını İKİ motor da uyguluyordu ama KANITINI yalnız canlı döngü yazıyordu —
                 # replay'den tohumlanan planların gate_checks'inde 'earnings_blackout' satırı YOKTU.

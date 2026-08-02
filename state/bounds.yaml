@@ -68,5 +68,12 @@ stop_buffer_atr:          {min: 0.1, max: 1.0, step: 0.1, type: float}   # pivot
 # ve ölçüm yolu hazır olsun diye İNER, ama kapı `veri_yok` beyanıyla DEVRE DIŞIDIR: knob 1 yapılsa
 # bile karar üretmez (regime.VIX_DATA_STATUS). Oran UYDURULMAZ, vekil bir seri VIX adıyla sunulmaz.
 regime.vix_backwardation_gate: {min: 0, max: 1, step: 1, type: int}      # VIX>VIX3M akut anahtarı; BUGÜN veri_yok → atıl
+# C12 (denetim 2026-08-02): AŞAĞIDAKİ İKİ SATIR 2026-08-02'YE KADAR YAPISAL OLARAK ATILDI — arama
+# uzayında duruyorlardı ama HİÇBİR üretim çağıranı kapının okuduğu portföy alanlarını göndermiyordu,
+# yani en sıkı tavanla (0,1/0,1) bile hüküm değişmiyordu. Kablo bağlandı: canlı döngü, replay ve
+# cf_backfill artık equity/sector_notional/heat_pct + plan notional/risk_dollars geçiriyor
+# (`guard.y3_portfolio_inputs` / `guard.y3_plan_inputs`). ARTIK ATEŞLENEBİLİRLER — 0 varsayılanı
+# değişmedi, yani bugünkü canlı davranış aynı. KAPSAM DIŞI KALAN ÜRETİCİLER (beyan): gölge-v1/v2
+# (`shadow_variants._judge`) ve `mutation.py` — o iki yoldaki bir Y3 kolu tavanı UYGULAMAZ.
 portfolio.sector_cap:     {min: 0.0, max: 30.0, step: 5.0, type: float}  # sektör NOTIONAL payı tavanı %; 0 = kapalı (bant 25-30)
 portfolio.heat_cap:       {min: 0.0, max: 8.0,  step: 1.0, type: float}  # açık risk / NAV tavanı %; 0 = kapalı (bant 6-8)

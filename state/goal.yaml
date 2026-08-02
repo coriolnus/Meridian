@@ -82,6 +82,22 @@ limits:
   max_daily_loss_pct: 3.0
   max_sector_exposure_pct: 40.0
   no_trade_before_bars: 3              # skip the first N bars after the open
+  # --- PORTFÖY ISISI / KORELASYON EŞİKLERİ (C24, 2026-08-02: koddan buraya TAŞINDI) --------------
+  # Üçü de `meridian/guard.py`de modül sabitiydi: canlı defterde plan kesiyorlardı ama ne burada
+  # (operatörün değişmez zarfı) ne bounds.yaml'da (arama uzayı) görünüyorlardı. DEĞERLER AYNEN
+  # TAŞINDI — davranış bit-bit değişmedi. Hermes bunları öneremez (guard.LIMIT_KEYS); değiştiren
+  # yalnız operatördür. guard anahtar yoksa aynı varsayılanlara düşer (fail-safe).
+  heat_hard_r: 4.5                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)
+  # ZARF GERİLİMİ, BİLEREK AÇIK BIRAKILDI: max_open_positions × max_position_r = 5×1,0 = 5,0R, yani
+  # sert tavan ilan edilen zarfın ALTINDADIR ve tam boyutta 5. pozisyon YAPISAL olarak imkânsızdır
+  # (ilan edilen "5 pozisyon" tam-konviksiyonda fiilen 4'tür). Ölçüldü: 390 planlık defterde ısı
+  # tavanının TEK bağlayıcı sert kısıt olduğu vaka 1 (2025-12-19/C, 4,58R, 4 açık pozisyon) —
+  # marjinal etki %0,26 ve yön muhafazakâr (risk EKLEYEMEZ, yalnız keser). Eşitlemek (4,5 → 5,0)
+  # RİSK ARTIRAN bir karardır ve OPERATÖRÜNDÜR: kod artık bu kararı sizin adınıza vermiyor, yalnız
+  # görünür kılıyor. Tutarlılık çivisi `heat_hard_r <= max_open_positions × max_position_r` (test
+  # test_kovab_dalga3_v166) yalnız "zarfı AŞMASIN" der; altında kalmak meşrudur.
+  heat_review_r: 3.5                   # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)
+  corr_review: 0.85                    # adayın açık pozisyonlarla getiri korelasyonu → REVIEW
   # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
   # SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmaz. Yani buradaki yolu değiştirmek
   # kill-switch'i TAŞIMAZ — dosya yine state/HALT olur. Yanlış kontrol hissi vermemesi için yazılı.
