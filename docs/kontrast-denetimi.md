@@ -477,3 +477,61 @@ Biçim: `mürekkep · zemin yığını (alttan üste, `+` ile) · tema · oran �
 | --card | --bg + --scrim | gunduz | 2.72 | 3.0 |
 | --card | --bg + --scrim | gece | 1.23 | 3.0 |
 <!-- CIVI-TABLOSU-SONU -->
+
+---
+
+## 10 · S2R-3 (cila) eki — 2026-08-02
+
+**Kapsam sınırı:** yalnız S2R-3'ün DEĞİŞTİRDİĞİ/EKLEDİĞİ yüzeyler. 136 çiftin tamamı yeniden
+üretilmedi (§3 tablosu değişmedi ve bayat değil: jeton değerlerine bu turda DOKUNULMADI —
+`tokens.json` ve `:root` blokları bit-bit aynı, `test_tasarim_token_v153` bunu her koşumda
+yeniden ölçüyor). B1–B6 bulgularına ve §6/§7 hükümlerine dokunulmadı; onlar ayrı bir onay turu.
+
+### 10.1 · Bulgu: S2R-3 SIFIR yeni renk çifti getirdi
+
+Cila turu üç yeni görsel yüzey doğurdu ve üçü de mevcut jeton çiftlerini yeniden kullanıyor:
+
+| Yeni yüzey | Kullanılan çift | gündüz | gece | eşik | hüküm |
+|---|---|---|---|---|---|
+| Bekçi ÜÇÜNCÜ DURUM çipi (`t-vi` · "ÖLÇÜLEMEDİ") | `--accent-2` üstünde `--accent-tint` | **18.37** | **10.94** | 4.5 | GEÇTİ — §9 çivisinde zaten var |
+| Aynı çipin kenarı | `--ink-h` üstünde `--accent-tint` | **2.05** | **2.12** | 3.0 | KALDI — **önceden kayıtlı** (§3-F, istisna İ3, öneri Ö5) |
+| Ölçülemedi satırının gövdesi (`.mut`) | `--tx2` üstünde `--card` | **6.91** | **6.72** | 4.5 | GEÇTİ — §9 çivisinde var |
+| Gölge-varyant kartı gövdesi | `--tx` üstünde `--card` | **18.76** | **10.18** | 4.5 | GEÇTİ — §9 çivisinde var |
+| Gölge-varyant "kâğıt defter" çipi (`t-rv`) | `--amber` üstünde `--card` + `--amber-t` | **6.29** | **6.06** | 4.5 | GEÇTİ — §9'daki en kötü hâli (`--card-2` üstünde 5.85/5.39) zaten çivili |
+| Öz-değerlendirme kartı (sev çipleri) | `t-no`/`t-rv`/`t-vi`, hepsi taşındı | — | — | — | Renk çifti DEĞİŞMEDİ, yalnız kabı değişti |
+
+Rakamlar `test_tasarim_token_v153`in kendi hesabıyla (source-over alfa birleştirme + WCAG 2.x
+bağıl parlaklık) kaynaktan yeniden üretildi. **§9 çivi tablosuna satır eklenmedi**, çünkü eklenecek
+yeni bir çift yok — eklemek, aynı rakamı ikinci kez yazıp ikisinin ayrışmasına kapı açardı.
+
+### 10.2 · Bulgu S3-1 · Nötr çipin DOLGUSU gündüz temasında fiilen görünmez (1.02:1)
+
+Ölçüm (dolgunun kart zeminine karşı oranı; metin değil, DOLGU):
+
+| çip dolgusu | gündüz | gece |
+|---|---|---|
+| `--accent-tint` (t-vi · nötr) | **1.02** | 1.13 |
+| `--green-t` (t-go) | 1.16 | 1.20 |
+| `--red-t` (t-no) | 1.17 | 1.19 |
+| `--amber-t` (t-rv) | 1.16 | 1.20 |
+
+Yani dört çipin DÖRDÜ de "kutu" olarak görünmüyor; hüküm **mürekkepten ve KELİMEDEN** geliyor.
+Bu bir gerileme DEĞİL — nötr çip, yanındaki yeşil/kırmızı kardeşleriyle aynı görsel bütçede
+duruyor ve ISA-101 disiplininin ("sağlıklı durumun rengi yoktur") beklenen sonucu. **Ama bir
+kırılganlık kaydıdır:** üçüncü durumu taşıyan tek güçlü kanal `ÖLÇÜLEMEDİ` kelimesinin kendisi
+(18.37:1). Kelime kısaltılır ya da yalnız bir ikona indirilirse durum gündüz temasında
+GÖRÜNMEZ olur. Çift kodlama (Ç7) bu yüzden metinle sağlanıyor ve testi var
+(`test_s2r3_cila_v160::test_UCUNCU_DURUM_ne_yesil_ne_kirmizi_ve_YENI_RENK_ICAT_ETMEZ`).
+
+**ÖNERİ — UYGULANMADI (Ö-S3-1):** nötr çipe kesikli kenar (`.belirsiz` deseninin çip karşılığı)
+vermek, dolgu kontrastına dokunmadan ikinci bir kanal açardı. Uygulanmadı çünkü yeni bir çip
+varyantı üç yıl sonra "hangi kenar neydi?" sorusunu doğurur ve bu turun sözleşmesi "mevcut dünya
+korunur" idi. Karar bir sonraki jeton yeniden-değerleme turuna bırakıldı.
+
+### 10.3 · Yeniden doğrulanan kural: boşluk jetonları renk çiftlerini kaydırmaz
+
+S2R-3'ün asıl işi boşluktu (blok ritmi `--s4`/`--s5`/`--s12`+`--s10`). Boşluk jetonlarının
+kontrasta etkisi YOKTUR ve bu ölçüldü değil, yapısaldır: `--s*` jetonları `dimension` tipinde,
+hiçbiri `color` katmanında değil (`test_tasarim_token_v153::test_renk_jetonlarinin_HEPSI_renk_
+TEMEL_jetonlarin_HICBIRI_degil` bunu her koşumda ayırıyor). Yeni jeton EKLENMEDİ: jeton sayımı
+23 temel + 2×36 renk = 95, S2R-3 öncesiyle aynı.

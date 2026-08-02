@@ -188,10 +188,87 @@
     return [{ id: id, n: ((mevcut && Number(mevcut.n)) || 0) + 1, t: simdi }].concat(kalan).slice(0, 24);
   }
 
+  /* ==========================================================================
+     BÖLÜM ÇAPALARI — YİRMİSİ DE (S2R-3, 2026-08-02)
+     --------------------------------------------------------------------------
+     ÖLÇÜLEN EKSİK: S2R-2 panoyu yedi sayfa / YİRMİ bölüm hâline getirdi ama
+     palet yalnız BEŞ bölüme gidebiliyordu (karne · kapilar · mudahale ·
+     intraemir · veriboru) + `#failsub`. Kalan on beş bölümün adı paletde HİÇ
+     geçmiyordu: operatör "mutabakat" yazınca hiçbir şey çıkmıyor, "adaylar"
+     yazınca hiçbir şey çıkmıyordu. Palet bir bilgi mimarisi haritasıdır; on
+     beş odası olmayan bir harita, haritanın kendisine olan güveni bitirir —
+     bir kez boş dönen arama bir daha denenmez.
+
+     ARAMA TÜRKÇE-KATLAMALI: `katla()` ö/ü/ş/ğ/ç/İ/ı'yı düzler, yani "golge",
+     "gölge", "GÖLGE" ve "gOlGe" aynı satırı bulur. Anahtar kelimeler bunun
+     ÜSTÜNE eklenir: ad "Mutabakat masası" iken operatörün aklındaki kelime
+     "ayna", "broker" ya da "ghost" olabilir.
+
+     SIRA = ALAN_BOLUMLERI (app.js) sırası; yani paletdeki sıra sayfadaki OKUMA
+     sırasıdır. İki liste ayrışırsa test kırılır (test_s2r3_cila_v160).
+     ÇAPALARIN HEPSİ GERÇEK: her `<bölüm>` bir `bolumBasHTML(id, …)` çağrısında
+     üretilen `id`dir ve kabı `#page-<bölüm>` index.html'de durur — uydurma
+     çapa YOK (`el("page-"+id)` kapısı bunu çalışma anında da doğrular).
+     ========================================================================== */
+  var SAYFA_ADI = {
+    veri: "Veri Sağlığı", kosu: "Koşu & Döngü", portfoy: "Portföy & Emirler",
+    ogrenme: "Öğrenme", gozetim: "Gözetim & Alarmlar", kilitler: "Kilitler & Yapılandırma"
+  };
+  var BOLUMLER = [
+    /* [bölüm id, sayfa, palet adı, anahtar kelimeler] */
+    ["market", "veri", "Piyasa · izlenen evren",
+      ["piyasa", "evren", "sembol", "universe", "tazelik", "kapanis"]],
+    ["intraday", "veri", "Seans-içi akış",
+      ["intraday", "akis", "bar", "stream", "redis", "bosluk", "dakika"]],
+    ["veriboru", "veri", "Veri hattı · karantina · bütünlük",
+      ["karantina", "butunluk", "veri", "hat", "dedektor", "saglayici", "bekci"]],
+    ["adaylar", "kosu", "Tarama hattı · adaylar",
+      ["aday", "tarama", "sinyal", "plan", "candidate", "elenen"]],
+    ["kapilar", "kosu", "Disiplin kapısı · karar ağacı",
+      ["kapi", "gate", "karar", "matris", "eleme", "rejim", "karartma"]],
+    ["brifing", "portfoy", "Kitap · şu an",
+      ["kitap", "pozisyon", "sermaye", "equity", "brifing", "bugun"]],
+    ["onaylar", "portfoy", "Onay kuyruğu · senden iş isteyenler",
+      ["onay", "kuyruk", "approve", "bekleyen", "karar"]],
+    ["mutabakat", "portfoy", "Mutabakat masası",
+      ["mutabakat", "ayna", "broker", "ghost", "hwm", "dolum", "reconcile"]],
+    ["intraemir", "portfoy", "Seans-içi silahlanma · gölge icra",
+      ["intraday", "golge", "silah", "arm", "tetik", "icra"]],
+    ["performans", "portfoy", "Birikim · para eğrisi ve defter",
+      ["performans", "egri", "birikim", "islem", "trade", "dusus", "kelly"]],
+    ["karne", "ogrenme", "Karne · öğreniyor mu?",
+      ["karne", "ogrenme", "skor", "hukum", "kalibrasyon", "rejim"]],
+    ["golge", "ogrenme", "Gölge kollar · kâğıt defter",
+      ["golge", "shadow", "kagit", "varyant", "trend kolu", "kitap"]],
+    ["bilesenic", "ogrenme", "Kenar ölçümleri · bileşen IC + EB",
+      ["kenar", "edge", "ic", "bilesen", "bayes", "selale", "dogrulama"]],
+    ["hermes", "ogrenme", "Düşünen beyin · sprint",
+      ["hermes", "beyin", "sprint", "llm", "mlops", "dikkat", "oz-degerlendirme"]],
+    ["ajan", "ogrenme", "Hipotez defteri",
+      ["hipotez", "defter", "ajan", "oneri", "surum", "revizyon"]],
+    ["skiller", "ogrenme", "Araç kütüphanesi · beceriler",
+      ["skill", "arac", "beceri", "katki", "emekli"]],
+    ["hafiza", "ogrenme", "Hafıza · çıkarılan dersler",
+      ["hafiza", "ders", "lesson", "memory", "cikarim"]],
+    ["operasyon", "gozetim", "Alarmlar · bekçiler · olay günlüğü",
+      ["alarm", "bekci", "olay", "gozetim", "butce", "gelen kutusu", "nabiz"]],
+    ["mudahale", "kilitler", "Müdahale kademeleri",
+      ["kademe", "kol", "halt", "mudahale", "kilit", "flatten", "cancel"]],
+    ["ayarlar", "kilitler", "Yapılandırma · API anahtarları",
+      ["ayar", "anahtar", "key", "yapilandirma", "alpaca", "disa aktar", "sozluk"]]
+  ];
+
+
   var CEKIRDEK = {
     katla: katla, bulanikSkor: bulanikSkor, komutSkoru: komutSkoru,
     sirala: sirala, gecmisiGuncelle: gecmisiGuncelle,
-    SON_GRUP: SON_GRUP, GRUP_SIRA: GRUP_SIRA
+    SON_GRUP: SON_GRUP, GRUP_SIRA: GRUP_SIRA,
+    /* BÖLÜM TABLOSU DA DIŞA VERİLİR (S2R-3): tablo saf VERİdir ve testin onu
+       kaynak metninden regex'le sökmesi gerekmemeli — sökülen bir tablo,
+       kodun ÇALIŞTIRDIĞI tablo olmayabilir. Node testi gerçek diziyi alır ve
+       gerçek `bulanikSkor` ile arar; yani "yirmi bölüm de bulunuyor" iddiası
+       ölçülür, beyan edilmez. */
+    SAYFA_ADI: SAYFA_ADI, BOLUMLER: BOLUMLER
   };
 
   /* Node testi için dışa aktarım. Tarayıcıda `module` tanımsızdır → dal hiç
@@ -363,17 +440,12 @@
         calistir: function () { return gorunumeGec("portfoy#failsub"); }
       });
     }
-    [["karne", "ogrenme", "Karne — öğreniyor mu?", ["karne", "ogrenme", "skor", "hukum"]],
-     ["kapilar", "kosu", "Disiplin kapısı — karar ağacı", ["kapi", "gate", "karar", "matris", "eleme"]],
-     ["mudahale", "kilitler", "Müdahale kademeleri", ["kademe", "kol", "halt", "mudahale", "kilit"]],
-     ["intraemir", "portfoy", "Seans-içi silahlanma · gölge icra", ["intraday", "golge", "silah", "arm"]],
-     ["veriboru", "veri", "Veri hattı · karantina · bütünlük", ["karantina", "butunluk", "veri", "hat"]]
-    ].forEach(function (r) {
+    BOLUMLER.forEach(function (r) {
       if (!el("page-" + r[0])) return;
       K.push({
         id: "git:" + r[0], grup: "Gezinme", ad: r[2],
-        altyazi: "Bölüm çapasına gider ve odaklar.",
-        anahtarlar: r[3].concat(["bolum"]),
+        altyazi: SAYFA_ADI[r[1]] + " → bölüm çapasına gider ve odaklar.",
+        anahtarlar: r[3].concat(["bolum", r[0]]),
         yazma: false,
         calistir: function () { return gorunumeGec(r[1] + "#" + r[0]); }
       });

@@ -465,7 +465,9 @@ main{min-width:0}
    Kapalı hâli tek satırlık bir kural çizgisidir: sayfada yer kaplamaz ama
    varlığını ve nedenini söyler. Mevcut `.gloss` deseninin kardeşi; kendi rengi
    yok, `--line`/`--tx2` jetonlarını okur. */
-.detay-kat{border-top:1px solid var(--line);margin-top:var(--s6);padding-top:var(--s4)}
+/* MARJ --s6'DAN --s4'E (S2R-3 · blok ritmi): tek ölçü. Değer BURADA, tek yerde —
+   S2R-3 bloğunda tekrarlanmaz (aynı özgüllük → sonra yazılan sessizce kazanır). */
+.detay-kat{border-top:1px solid var(--line);margin-top:var(--s4);padding-top:var(--s4)}
 .detay-kat>summary{cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2);list-style:none;min-height:32px;display:flex;
   align-items:center;gap:var(--s2)}
@@ -476,6 +478,15 @@ main{min-width:0}
 .detay-kat>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .detay-kat .dk-not{text-transform:none;letter-spacing:0;color:var(--tx3)}
 .detay-kat .dk-govde{padding-top:var(--s3)}
+/* ÇİFT ÇERÇEVE ERİDİ (S2R-3). Altı detay katmanının beşi çerçevesiz gövde taşıyor;
+   biri (Veri Sağlığı → "Intraday · Faz 4a gözlem özeti") tam bir `.card` alıyor
+   çünkü o parça `opParcalar()`ta kart olarak üretiliyor ve tek tüketicisi burası.
+   Sonuç: katlanmış bir bölmenin İÇİNDE ikinci bir kutu — "katman katman kutu"
+   hissinin ta kendisi. Kartı JS'te ikiye ayırmak yerine kural burada eritiliyor:
+   detay katmanına düşen HER kart çerçevesini bırakır, içeriğini bırakmaz. Yeni
+   değer YOK — çerçeve `none`a iniyor, dolgu sıfırlanıyor. */
+.detay-kat .dk-govde > .card{background:none;border:none;border-radius:0;padding:0;margin-top:0}
+.detay-kat .dk-govde > .card > .t:first-child{margin-top:0}
 .detay-kat .dk-neden{margin-top:0;color:var(--tx3);max-width:80ch}
 
 /* MÜDAHALE KOLLARI — üç kolon: ne yapar / şu anki hâli / düğme. Kapağın altındaki
@@ -486,6 +497,60 @@ main{min-width:0}
 .kol-satir:last-of-type{border-bottom:none}
 .kol-durum{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
 @media(max-width:720px){.kol-satir{grid-template-columns:1fr;gap:var(--s2)}}
+
+/* ============================================================================
+   S2R-3 · BLOK RİTMİ — ÜÇ ÖLÇÜ, HEPSİ JETON, HİÇBİRİ SATIR İÇİ (2026-08-02)
+   ----------------------------------------------------------------------------
+   ÖLÇÜLEN KUSUR: dikey ritim iki yerde birden tutuluyordu. Kural CSS'te
+   (`.card + .card` = --s4) yazılıydı ama app.js otuz bir blok kabına AYRICA
+   satır içi `style="margin-top:Npx"` basıyordu ve N şuydu: 10, 14, 16, 18, 20,
+   22. Satır içi stil kuralı HER ZAMAN yener, yani sözleşme fiilen yoktu — aynı
+   mertebedeki iki kart arası sayfadan sayfaya 10px ile 22px arasında geziniyor,
+   ve okuyucu bu farkı "burada bir hiyerarşi var" diye okuyordu. Yoktu.
+
+   ÜÇ ÖLÇÜ VE YALNIZ ÜÇÜ (hepsi jeton, ham px YOK):
+     BLOK ARASI     --s4   (16px) — kart · ızgara · metrik şeridi · detay katmanı
+     BAŞLIK ALTI    --s5   (20px) — `.bolum-bas` kendi margin-bottom'u, TEK yerde
+     BÖLÜM ARASI    --s12 + --s10 (48+40) — `.alan-bolum + .alan-bolum` kural çizgisi
+   Satır içi margin'ler app.js'ten SİLİNDİ (31 kap); ritmi artık yalnız bu blok
+   söyler ve testi var (test_s2r3_cila_v160).
+
+   ÖLÇÜ BLOĞUN KENDİSİNDE, KOMŞUSUNDA DEĞİL. İlk deneme `X + Y` (kardeş) biçimindeydi
+   ve SESSİZCE yarım kaldı: bir kartın ÖNÜNDE her zaman başka bir blok olmuyor —
+   Piyasa'da kart bir `<p class="hint">`i, Öğrenme'de bir başlık paragrafını izliyor
+   ve o hâllerde kural hiç ateşlenmiyordu (yani kart metne yapışıyordu). Blok kendi
+   marjını taşır; SIFIRLANDIĞI iki hâl aşağıda ve ikisi de gerekçeli.
+
+   ÖZGÜLLÜK BİLEREK (0,1,0): ızgara sıfırlayıcıları (0,2,0) ve (0,3,0) HER ZAMAN
+   yener. Izgara `gap` kullanır; orada marj bozucudur ve bu 2026-07-28'de ölçülmüş
+   bir arızanın (üç kutu 259/275/275'te kayık) çözümüdür — cila onu geri getiremez. */
+:is(.card,.g2,.mrow,.hero,.gloss,.detay-kat){margin-top:var(--s4)}
+/* SIFIRLAMA 1 — IZGARA ÇOCUĞU. Eski `.g2 > .card + .card` ailesi yalnız İKİNCİ
+   kartı sıfırlıyordu; blok artık kendi marjını taşıdığı için BİRİNCİ kartın da
+   sıfırlanması gerekiyor, yoksa ızgaranın ilk kutusu tek başına 16px aşağı kayar
+   (tam olarak 2026-07-28 arızasının aynası). Satır içi `style="…grid…"` ile
+   kurulan ızgaralar da kapsanır — o biçim `.eylem-serit`te fiilen kullanılıyor. */
+:is(.g2,.hero-grid,.eylem-serit,[style*="grid"]) >
+  :is(.card,.g2,.mrow,.hero,.gloss,.detay-kat){margin-top:0}
+/* SIFIRLAMA 2 — BÖLÜM BAŞLIĞINDAN SONRAKİ İLK BLOK. Aradaki tek ölçü `.bolum-bas`ın
+   kendi margin-bottom'udur (--s5). Aksi hâlde başlık-gövde mesafesi bölümden bölüme
+   değişirdi (ölçüldü: 20px ile 44px arası) ve sayfa yamuk taranırdı. */
+.bolum-bas + :is(.card,.g2,.mrow,.hero,.gloss,.detay-kat){margin-top:0}
+/* `.hero-grid` ve `.eylem-serit` bu ailede DEĞİL: ikisi de bir kartın İÇ yerleşim
+   sarmalayıcısı, bir bölüm bloğu değil. Aileye alsaydık `.hero`nun içine 16px'lik
+   bir boşluk enjekte ederdik — kartın kendi dolgusuna eklenen, kimsenin istemediği
+   bir kaçık. Yukarıdaki sıfırlamada EBEVEYN olarak duruyorlar, çocuk olarak değil.
+
+   `.mrow` (--s8 → --s4), `.gloss` ve `.detay-kat` marjları KENDİ kurallarında
+   bildirilir; burada tekrarlanmaz. Aynı özgüllükteki bir bildirimi iki yere yazmak
+   kazananı KAYNAK SIRASINA bağlar ve bu blok yukarıda olduğu için burada yazılan
+   değer sessizce kaybederdi (ilk denemede tam bu oldu ve gözle görülmezdi). */
+/* ÖĞRENME'NİN İLK SINIRI (taranabilirlik): eylem şeridi bir bölüm DEĞİL ama
+   ondan sonraki ilk `.alan-bolum` yine de bir bölüm sınırıdır. Kural çizgisi
+   olmadan Karne, şeridin düğmelerine yapışık başlıyordu — yedi bölümlü sayfada
+   ilk sınırın eksik olması, geri kalan altı sınırın da ritmini yalanlıyordu. */
+#ogrenme-eylem + .alan-bolum{margin-top:var(--s12);padding-top:var(--s10);
+  border-top:1px solid var(--line-2)}
 
 /* ---- GENEL BAKIŞ (J1 sabah turu) — TEK EKRAN, KAYDIRMASIZ --------------------------
    Sözleşme kuralın kendisinde: altı kart tek kolona dizilseydi sayfa ~2400px olur ve
@@ -638,7 +703,12 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 
 /* ---- the ledger's measurement columns. A ruled register divided by vertical
    rules — not a row of equal cards with a big number in each. ---- */
-.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:var(--s8) 0;
+/* MARJ --s8'DEN --s4'E İNDİ (S2R-3 · blok ritmi): app.js beş `.mrow` çağrısının BEŞİNDE de
+   üst marjı satır içi eziyordu (10/16/18px) — yani --s8 (32px) hiçbir zaman ÜSTTE geçerli
+   olmadı, yalnız ALTTA sessizce duruyor ve tek başına ritmi bozuyordu. Değer BURADA, tek
+   yerde: aynı bildirimi S2R-3 bloğunda tekrarlamak, kaynak sırasına bağlı sessiz bir
+   kazanan/kaybeden oyunu doğururdu (aynı özgüllük → sonra yazılan kazanır). */
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:var(--s4) 0;
   border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
 .mcard{background:none;border:none;border-left:1px solid var(--line);border-radius:0;
   padding:var(--s5) var(--s5) var(--s5) var(--s5);transition:var(--t)}

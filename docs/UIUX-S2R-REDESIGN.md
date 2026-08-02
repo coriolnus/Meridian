@@ -121,3 +121,200 @@ Bootstrap çan eğrisi (kapının kanıtı), Pipeline koşuları ("beyan edildi 
 emekli araç rafı (zaten `<details>`), terimler sözlüğü (zaten `<details>`), Öz-değerlendirme ·
 DİKKAT (öğrenme katmanlarının kendi denetimi — Öğrenme'de kaldı, Gözetim'e taşınması S2R-3'e
 bırakıldı çünkü tek karttan ayrıştırılması gerekiyor).
+
+---
+
+# Ek C — S2R-3 cila kaydı (2026-08-02, uygulandı)
+
+Cila turunun sözleşmesi: **mevcut dünya korunur.** Yeni görsel dil, yeni renk jetonu, yeni bileşen
+varyantı YOK. Değişen üç şey: ritmin nerede tutulduğu, iki içerik borcunun ödenmesi, ve bir
+dürüstlük yüzeyinin üçüncü duruma açılması.
+
+## C.1 · Yoğunluk ve boşluk ritmi — iki yerde tutulan ölçü tek yere indi
+
+**Ölçülen kusur:** ritim CSS'te yazılıydı (`.card + .card` = `--s4`) ama `app.js` **otuz bir**
+blok kabına AYRICA satır içi `style="margin-top:Npx"` basıyordu ve N şuydu: 10, 14, 16, 18, 20, 22.
+Satır içi stil kuralı her zaman yener — yani sözleşme fiilen yoktu. Aynı mertebedeki iki kart
+arası sayfadan sayfaya 10px ile 22px arasında geziniyordu ve okuyucu bu farkı "burada bir
+hiyerarşi var" diye okuyordu. Yoktu.
+
+**Hüküm — ÜÇ ÖLÇÜ, hepsi jeton, hiçbiri satır içi:**
+
+| ne | ölçü | nerede tanımlı |
+|---|---|---|
+| blok arası (kart · ızgara · metrik şeridi · detay katmanı · sözlük) | `--s4` (16px) | `index.html` → *S2R-3 · BLOK RİTMİ* |
+| bölüm başlığı altı | `--s5` (20px) | `.bolum-bas{margin-bottom}` — TEK yerde |
+| bölüm arası | `--s12` + `--s10` (48+40) | `.alan-bolum + .alan-bolum` — DEĞİŞMEDİ |
+
+Uygulama: 31 satır içi marj silindi; `.mrow`'un kendi `--s8` (32px) marjı `--s4`e indi (beş
+çağrının beşinde de zaten satır içi eziliyordu — yani 32 hiçbir zaman ÜSTTE geçerli olmadı,
+yalnız ALTTA sessizce duruyor ve ritmi tek başına bozuyordu); `.detay-kat` `--s6`dan `--s4`e;
+`.hero`nun 24px'lik ham marjı kalktı.
+
+**Ölçü bloğun KENDİSİNDE, komşusunda değil.** İlk kurgu kardeş seçiciydi (`X + Y`) ve sessizce
+yarım koşuyordu: bir kartın önünde her zaman başka bir blok olmuyor — Piyasa'da kart bir
+`<p class="hint">`i izliyor — ve o hâllerde kural hiç ateşlenmiyordu, yani kart metne yapışıyordu
+ve hiçbir test kırmızı vermiyordu. Taban kural artık `:is(.card,.g2,.mrow,.hero,.gloss,
+.detay-kat){margin-top:var(--s4)}`; sıfırlandığı iki hâl var ve ikisi de gerekçeli: (1) ızgara
+ÇOCUĞU — eski aile yalnız İKİNCİ kartı sıfırlıyordu, blok kendi marjını taşıyınca BİRİNCİ kartın
+da sıfırlanması gerekti (yoksa ızgaranın ilk kutusu tek başına 16px kayar — 2026-07-28
+arızasının aynası); (2) `.bolum-bas`tan sonraki ilk blok. Taban kuralın özgüllüğü bilerek
+`(0,1,0)`: hem eski sıfırlayıcılar `(0,3,0)` hem yeni ızgara-çocuğu sıfırlaması `(0,2,0)` onu her
+zaman yener. `.hero-grid` ve `.eylem-serit` aileye ALINMADI — ikisi de bir kartın İÇ yerleşim
+sarmalayıcısı; aileye alsaydık `.hero`nun içine 16px'lik bir kaçık enjekte ederdik.
+
+**Aynı bildirim iki yere yazılmaz.** `.mrow`/`.gloss`/`.detay-kat` marjları kendi kurallarında
+duruyor, S2R-3 bloğunda tekrarlanmıyor: aynı özgüllükteki iki bildirimin kazananı KAYNAK SIRASINA
+bağlıdır ve bu turda tam olarak o hata bir kez yapıldı (blok yukarıda olduğu için orada yazılan
+`--s4`, aşağıdaki `--s8`e sessizce yeniliyordu — gözle görülmezdi). Test artık her sınıf için
+"marj TEK kuralda bildirilmiş" diye ölçüyor.
+
+**Öğrenme'nin ilk sınırı eklendi:** `#ogrenme-eylem + .alan-bolum` artık kural çizgisi taşıyor.
+Yedi bölümlü bir sayfada ilk sınırın eksik olması (Karne, eylem şeridinin düğmelerine yapışık
+başlıyordu) geri kalan altı sınırın ritmini de yalanlıyordu.
+
+**Kart-içinde-kart:** tarandı, YOK. `rise`sız `class="card"` beş yerde geçiyor ve beşi de bir
+ızgara ÇOCUĞU (yan yana kart, iç içe değil). Liste ve gerekçeleri
+`test_s2r3_cila_v160::IZGARA_KARTLARI`de; listeye gerekçesiz satır giremez.
+
+**Çift çerçeve: BİR tane vardı, eridi.** Altı detay katmanının beşi çerçevesiz gövde taşıyor;
+biri (Veri Sağlığı → "Intraday · Faz 4a gözlem özeti") tam bir `.card` alıyordu, çünkü o parça
+`opParcalar()`ta kart olarak üretiliyor ve tek tüketicisi orası. Sonuç: katlanmış bir bölmenin
+İÇİNDE ikinci bir kutu. Kart JS'te bölünmedi (tek üretici/tek tüketici — bölmek iki yeri
+ayrıştırma riskine açardı); kural CSS'te eritildi: `.detay-kat .dk-govde > .card` çerçevesini ve
+dolgusunu bırakır, içeriğini bırakmaz. Yeni değer YOK.
+
+## C.2 · İçerik borcu #1 — gölge-varyant portföyleri `golge` bölümüne indi
+
+Ek A'nın açık bıraktığı borç. Blok, Hermes karnesi kartının bir ALT BAŞLIĞIYDI ve S2R-2 onu
+taşıyamamıştı çünkü göç sözleşmesi "bölüm taşı, kart gövdesi yeniden yazma"ydı.
+
+**Hüküm:** kart gövdesi bölündü. `sHermes` artık yalnız H1–H3 + MAE; yeni `sGolgeVaryant` kendi
+kartı ve `golge` bölümünde yazılıyor. Bölüm iki kol taşıyor ve sırası hüküm mertebesine göre:
+**canlı gölge-kitap** (hükmü verilmiş TEK kol, gerçek barlar) → **varyant portföyleri** (k adet
+aday kol, çoklu-karşılaştırma paydasıyla). Altyazıdaki borç beyanı ("öteki gölge kol Karne
+bölümünde") kaldırıldı — ödenmiş bir borcu anlatan altyazı okuru var olmayan bir yere gönderir.
+
+**Okuyucu korunumu (YASA-6):** `shadow_variants`ın altı alanı da birebir taşındı — `n_satir` ·
+`son_karar{label,date,signal_n,would_arm_n}` · `kumulatif_ayrisma` · `k_variants` · `rol` ·
+`durum`. Panoda başka okuyucusu yok; biri düşseydi alan öksüz kalırdı. `k_variants` (çoklu-
+karşılaştırma paydası) bilerek tabloyla AYNI kartta bırakıldı: "şerh rakamdan ayrılamaz" kuralının
+bu karttaki karşılığı — payda ayrılırsa "en iyi varyant" seçiminin yanlılığı görünmez olur.
+İki hâl ayrı cümle olarak korundu: uç servis etmiyorsa kart **hiç doğmaz**; defter boşsa kart
+doğar ve arka ucun kendi `durum` cümlesini yazar.
+
+## C.3 · İçerik borcu #2 — "Öz-değerlendirme · DİKKAT": karttan AYRILDI, Öğrenme'de KALDI
+
+İki ayrı karar, ikisi de ölçüldü:
+
+**(a) Karttan ayrıştırıldı.** Blok "Bölüm 3 · MLOps & Hermes" kartının dibinde, iki ızgara
+sütununun altında bir `<h3>` olarak duruyordu. Kartın başlığı onu ARAMAYACAĞIN bir yere
+koyuyordu: bir DİKKAT listesi, bir tesisat kartının dip başlığı olamaz. Artık kendi kartı
+(`sOzDeg`).
+
+**(b) Gözetim'e TAŞINMADI — ölçüm, varsayım değil.** `selfreview._attention()` sekiz kural
+ailesi üretiyor. Dağılım:
+
+| kural ailesi | hangi sorunun cevabı |
+|---|---|
+| skor kalibrasyonu IC'si (gerçek dilim, anlamlı, < −0.05) | ÖĞRENME |
+| cf sadakati onaysız | ÖĞRENME |
+| kapı kendini sıkılaştırdı (`gate_meta.extra_p`) | ÖĞRENME |
+| çıkışta masada R kalıyor (`exit.nudge_active`) | ÖĞRENME |
+| ilerleme eşiği doldu (`progress`, silahlanma kanıtı) | ÖĞRENME |
+| bekleyen revizyon taslağı | ÖĞRENME |
+| near-miss hipotez tohumu | ÖĞRENME |
+| mekanizma kesintisi / bekçi olay sayısı | GÖZETİM |
+
+Altıya bir. Ve **tek gözetim ailesinin Gözetim'de ZATEN evi var:** `selfreview.mechanism_failed()`
+`MECHANISM_STALE` alarmı üretiyor (jeton `obs.NOTIFY_TOKENS` içinde, `monitoring.sh` grepliyor) ve
+o alarm Gözetim'in gelen kutusunda okunuyor. Bloğu taşımak, yedi öğrenme hükmünü "sistem sağlıklı
+mı?" sorusunun altına gömer ve iki sağlık satırını İKİNCİ kez göstererek operatörün asıl
+şikâyetini ("aynı soruya iki yerden cevap") geri getirirdi. **Ev: Öğrenme · beyin bölümü.** Kart
+sağlık yarısının nerede yaşadığını ekrandan söylüyor, böylece okur "burada mı, orada mı?" diye
+sormuyor.
+
+## C.4 · Bekçi dürüstlük yüzeyi — üçüncü durum (denetim C21/C22'nin pano ayağı)
+
+**Ölçülen kusur.** watchdog düşen bir dedektörü `_DEDEKTOR_BOS` **iskeletiyle** döndürüyor
+(`{**iskelet, ok: False, dedektor_dustu: True, olculemedi: True, error: …}`) — yani `starved: []`,
+`stale: []`, `lost: []` BOŞ gelir. Panonun `_patOK`'u iki değerliydi ve o boşlukları "bulgu yok"
+diye okuyup satırı **YEŞİL "temiz"** basıyordu: ölçülemeyen bir hüküm, ölçülmüş bir temizlik
+kılığında (üretkenlik · korunum · tutarlılık desenleri). Ters yön de yanlıştı: `determinism`
+fail-closed'ta `ok:False` döndüğü için **KIRMIZI "İHLAL"** basılıyordu — oysa watchdog'un kendi
+cümlesi, "ölçülemeyen bir hükmü ihlal diye anlatmak da bir uydurmadır".
+
+**Hüküm — üç durum:**
+
+| durum | koşul | çip | metin |
+|---|---|---|---|
+| temiz | ölçüldü, bulgu yok | `t-go` | mevcut özet satırı |
+| İHLAL | ölçüldü, bulgu var | `t-no` | mevcut bulgu satırı |
+| **ÖLÇÜLEMEDİ** | `olculemedi === true` **veya** `dedektor_dustu === true` | `t-vi` (nötr) + `.mut` gövde | `ÖLÇÜLEMEDİ — bu turda hüküm verilmedi (detector_failed · olculemedi) · <hata>. Boş liste "bulgu yok" DEĞİL.` |
+
+**Renk icat edilmedi.** `t-vi` bu panoda zaten "ölçüm yok / hüküm yok" kanalı: sağlayıcı kartında
+`"çağrı yok"`, defter sözleşmesinde `"boş"`, trend kitabında `"DOĞMADI"`. İkinci bir nötr renk üç
+ay sonra "hangi gri neydi?" sorusunu doğururdu. Çift kodlama (Ç7) **kelimeyle** sağlanıyor:
+üç durumun üçü de farklı bir sözcük basıyor (bkz. kontrast eki §10.2 — nötr çipin DOLGUSU gündüz
+temasında 1.02:1, yani hüküm mürekkepten ve kelimeden geliyor; bu dört çipin dördü için de böyle).
+
+**Makine-okunur ad satırda duruyor.** Metin `olculemedi` (ve dedektör yalıtımı devredeyse
+`detector_failed`) kelimelerini AYNEN yazıyor: operatörün panodan okuduğu ad ile obs günlüğünde
+(`integrity_detector_failed`) ve alarm katmanında greplediği ad aynı olmalı. Yalnız `olculemedi`
+taşıyan hâl `detector_failed` DEMEZ — olmayan bir yalıtım olayını raporlamak da uydurma olurdu.
+Kaç dedektörün ölçemediği kart BAŞLIĞINDA da sayılıyor: yedi satırın içinde tek bir nötr çipi
+kaçırmak kolaydır ve "7 desen temiz" izlenimi tam da bu kaçışla doğar.
+
+**Aynı kusur sınıfı ikinci bir kartta kapandı:** sağlayıcı sağlık kartı `p.olculemedi` satırını
+`t-no` (kırmızı) basıyordu. Sağlık OKUMASININ düşmesi, sağlayıcının ARIZALI olduğu anlamına
+gelmez ve o hüküm zaten ayrı bir satırda (`SON ÇAĞRI BAŞARISIZ`) yaşıyor. Nötre indi.
+
+## C.5 · Palet, `g`-kısayolu, `?` haritası, CSP
+
+**Palet yirmi bölümün beşine gidebiliyordu.** `mutabakat`, `golge`, `bilesenic` ve on iki eski
+görünüm adının hiçbiri palet aramasında geçmiyordu — operatör "mutabakat" yazıyor, hiçbir şey
+çıkmıyordu. Palet bir bilgi mimarisi haritasıdır; on beş odası olmayan bir harita, haritanın
+kendisine olan güveni bitirir (bir kez boş dönen arama bir daha denenmez).
+
+Hüküm: `BOLUMLER` tablosu — **yirmi satır**, sırası `ALAN_BOLUMLERI` ile birebir (yani paletdeki
+sıra sayfadaki OKUMA sırası). Tablo paletin SAF ÇEKİRDEĞİNE alındı ve dışa veriliyor: test onu
+kaynak metninden regex'le sökmüyor, gerçek diziyi alıp gerçek `bulanikSkor` ile arıyor — "yirmi
+bölüm de bulunuyor" iddiası ölçülüyor, beyan edilmiyor. Türkçe katlama (`katla`) sayesinde "gölge"
+ve "golge" aynı satırı buluyor; her satır ayrıca kendi id'sini anahtar kelime olarak taşıyor.
+Uydurma çapa yok: her `<bölüm>` hem `bolumBasHTML(id, …)`ın ürettiği bir `id`, hem `#page-<bölüm>`
+kabı (`el()` kapısı çalışma anında da doğruluyor).
+
+**`g`-kısayolu** yedi sayfanın yedisini kapsıyordu, değişmedi. **`?` haritasına** iki satır
+eklendi: ⌘K'nın kapsamı ("yedi sayfa ve yirmi bölümün tamamı") ve bölüm çapası biçimi
+(`portfoy#mutabakat`) — özellik keşif yüzeyinde yazmıyorsa fiilen yoktur (Nielsen İ6).
+
+**CSP:** `YUZEYLER` listesi zaten tamdı (app.js · palette.js · theme.js · landing.js ·
+workflow.js + dört html). Eksik olan, listenin TAM OLDUĞUNUN ölçülmesiydi — 2026-08-01'in
+virgül-bitişme vakasında liste yeşil görünürken iki yüzey hiç sınanmıyordu. Yeni test listeyi
+`meridian/web` dizininin gerçek `.js`/`.html` kümesiyle **iki yönlü** karşılaştırıyor: eksik giren
+yüzey de, bitişip var olmayan ada dönüşen giriş de kırmızı verir.
+
+## C.6 · Ölçüm ve kapsam
+
+- Yeni test: `tests/test_s2r3_cila_v160.py` (29 test). Bekçi hüküm dilimi **Node ile
+  koşturuluyor** ve yükler `meridian.watchdog._DEDEKTOR_BOS`tan **import ediliyor** — üretici/
+  tüketici paritesi ancak üreticinin kendi iskeletiyle ölçülür, elle yazılmış bir taklidiyle değil.
+  `test_TEST_KENDINI_KANITLAR_eski_iki_degerli_hukum_YESIL_derdi` testin kırabildiğini kanıtlıyor.
+- Taşınan çivi: `test_s2r2_goc_v156::sahipler` — "Gölge-varyant portföyleri" `karne_ek`ten
+  `golge`ye geçti (silinmedi, ev değiştirdi; silinseydi tablo bir daha izlenmezdi).
+- Koşum: `-k "pano or s2r or uiux or tasarim or csp or edge_dashboard"` → **368 geçti, 0 hata**
+  (exit 0) + `node --check` app.js/palette.js temiz. Ayrıca bölünen üç kart (`sHermes`,
+  `sGolgeVaryant`, `sOzDeg`) Node'da FİİLEN çalıştırılıp HTML denge denetiminden geçirildi
+  (dolu / boş-defter / uç-yok hâllerinin üçünde de etiket yığını dengeli). Tam suite Rol-1'de.
+
+## C.7 · Yapılmadı, bilerek
+
+- **Jeton yeniden-değerlemesi yok.** `tokens.json` ve `:root` blokları bit-bit aynı; jeton sayımı
+  23 temel + 2×36 renk = 95. Kontrast §3 tablosu bu yüzden bayat değil.
+- **Nötr çipe ikinci kanal (kesikli kenar) uygulanmadı** — öneri Ö-S3-1 olarak kontrast ekine
+  yazıldı. Yeni bir çip varyantı bu turun "mevcut dünya korunur" sözleşmesini deler.
+- **Bölüm arası ölçüsü (`--s12`+`--s10`) yeniden değerlenmedi.** Zaten tek kuralda ve tek ölçüde;
+  daraltmak bir yoğunluk KARARIdır ve ekran görüntüsüyle operatör onayına aittir.
+- **Kalan ham px boşluk değerleri app.js'te duruyor** (kart İÇİ `margin-top:8px/10px` gibi
+  satırlar). Bu tur BLOK ritmini kapattı; kart-içi mikro ritim ayrı bir tur ve ayrı bir ölçüm
+  ister — ikisini aynı commit'e koymak, kırılma hâlinde hangisinin kırdığını ölçülemez kılardı.

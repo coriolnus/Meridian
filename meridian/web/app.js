@@ -930,7 +930,7 @@ function nextSessionCard(t) {
   const armed = t.armed_plans || [];
   const sent = new Set(t.alpaca_submitted || []);
   if (!armed.length)
-    return `<div class="card rise" style="margin-top:16px"><h2 class="t">Sıradaki seans · niyet</h2>
+    return `<div class="card rise"><h2 class="t">Sıradaki seans · niyet</h2>
       <div class="empty">Silahlı emir yok — açılışta yeni tarama yapılır; kapıyı geçen çıkarsa burada listelenir.</div></div>`;
   const rows = armed.map(p => {
     const mirror = sent.has(p.id)
@@ -945,7 +945,7 @@ function nextSessionCard(t) {
       <span class="mono-num">${p.size_r ?? "—"}R</span>
       <span style="text-align:right">${mirror}</span></div>`;
   }).join("");
-  return `<div class="card rise" style="margin-top:16px"><h2 class="t">Sıradaki seans · ${armed.length} emir ateşlenecek</h2>
+  return `<div class="card rise"><h2 class="t">Sıradaki seans · ${armed.length} emir ateşlenecek</h2>
     <div class="trow head" style="grid-template-columns:64px 1fr 90px 90px 90px 92px">
       <span>HİSSE</span><span>PLAN</span><span>STOP</span><span>HEDEF</span><span>${T("BOYUT","boyut")}</span><span style="text-align:right">AYNA</span></div>
     ${rows}</div>`;
@@ -1487,7 +1487,7 @@ RENDER.brifing = async () => {
       `${esc(greetWord)}, ${esc(OPERATOR)} · ${esc(realToday)}${
         staleSession ? ` · son seans <b style="color:var(--tx)">${esc(sessionDate)}</b>` : ""}`)}
 
-    <div class="hero rise" style="margin-top:24px"><div class="hero-grid">
+    <div class="hero rise"><div class="hero-grid">
       <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
         <p class="big ${SERMAYE_RENK[(t.sermaye_koken || {}).renk] || ""}">${money(t.equity)}</p>
         <p class="sub" style="margin-top:2px">${sermayeIbaresi(t.sermaye_koken)}</p>
@@ -1514,7 +1514,7 @@ RENDER.brifing = async () => {
          satır 247px yüksekliğe fırlıyor ve metinler iç içe geçmiş görünüyordu — operatörün "uzman
          modunda metinler birbirine geçmiş" dediği tam buydu. Yanındaki "Açık pozisyonlar" kartı ise
          tek satırlık; geniş tablo tam genişliğe, dar kart altına alındı. -->
-    <div class="card rise" style="margin-top:16px"><h2 class="t">${planDate ? `Son sinyaller · ${esc(planDate)}${t.latest_session && planDate < t.latest_session ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu (son seans ${esc(t.latest_session)})</span>` : ""}` : "Adaylar"}</h2>
+    <div class="card rise"><h2 class="t">${planDate ? `Son sinyaller · ${esc(planDate)}${t.latest_session && planDate < t.latest_session ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu (son seans ${esc(t.latest_session)})</span>` : ""}` : "Adaylar"}</h2>
       ${planRows || `<div class="empty">Kapıyı geçen taze aday yok — dürüst boşluk.</div>`}</div>
     <div class="card rise"><h2 class="t">Açık pozisyonlar (${(t.open_positions || []).length})</h2>
       ${posRows || `<div class="empty">Açık pozisyon yok.</div>`}</div>`;
@@ -1610,13 +1610,13 @@ RENDER.adaylar = async () => {
       // BAYATLIK DÜRÜSTÇE SÖYLENİR: görüş katmanı bir seansı kaçırırsa (canlıda oldu — tek-atışlık
       // koşuda daemon thread öldürülüyordu) eski görüş taze karar gibi okunurdu.
       const bayat = latestSignal && String(rv.date) < String(latestSignal);
-      return `<div class="card rise" style="margin-top:22px"><h2 class="t">LLM ikinci görüşü · ${esc(rv.date)} · ${esc(rv.model || rv.brain || "")}${
+      return `<div class="card rise"><h2 class="t">LLM ikinci görüşü · ${esc(rv.date)} · ${esc(rv.model || rv.brain || "")}${
         bayat ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— BAYAT: ${esc(latestSignal)} seansı için görüş alınmadı</span>` : ""}</h2>
         <p class="hint" style="margin-top:0">Danışma katmanı — kapı kararını DEĞİŞTİRMEZ, yalnız not düşer.</p>
         ${rows}</div>`;
     })()}
 
-    <div class="card rise" style="margin-top:22px"><h2 class="t">${d.latest_session && latestSignal && latestSignal < d.latest_session
+    <div class="card rise"><h2 class="t">${d.latest_session && latestSignal && latestSignal < d.latest_session
         ? `Son sinyaller · ${esc(latestSignal)} <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu; ${esc(d.latest_session)} seansından beri kapıyı geçen taze aday yok</span>`
         : `Bir sonraki açılış için${latestSignal ? ` · ${esc(latestSignal)} kapanışından` : ''}`} <span class="tx3" style="font-weight:400">(${nextActionable.length})</span></h2>
       ${gateLegend()}
@@ -1636,7 +1636,7 @@ RENDER.adaylar = async () => {
                  : `Bu seansta temiz geçen taze bir aday yok — dürüst boşluk. Piyasa uygun olduğunda ajan otomatik silahlanır.`}</div>`)}
 </div>
 
-    <div class="g2 rise" style="margin-top:16px">
+    <div class="g2 rise">
       <div class="pane"><p class="mut" style="font-size:12px;margin-bottom:14px">${T("tarama hattı", "pipeline")} · son çalışma</p>
         <div class="mono"><span class="k">tarama</span> toplam ${(d.candidates||[]).length} aday
 ${Object.entries(bySkill).map(([k, n]) => `  ${esc(k).padEnd(26, ' ')} ${n}`).join("\n")}
@@ -2262,7 +2262,7 @@ RENDER.market = async () => {
        gerçek olduğu için satırı durur, "emekli" etiketiyle işaretlidir; bayatlık sayımına GİRMEZ.</p>` : ""}
     ${src.finviz_reason ? `<p class="hint rise">finviz keşfi: ${esc(src.finviz_reason)}</p>` : ""}
 
-    <div class="card rise" style="margin-top:20px">
+    <div class="card rise">
       <input class="searchbox" id="mkt-q" type="search" placeholder="hisse ara… (ör. AAPL)"
              aria-label="Hisse kodunda ara" data-act="mktPaint" data-act-on="input">
       <div id="mkt-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"></div>
@@ -2685,17 +2685,42 @@ async function opParcalar() {
           return `<div class="srow"><span>Ajan skill kapsamı</span><b class="${ok ? "pos" : "warn"}">${ag.enabled != null ? `${ag.linked}/${ag.enabled} bağlı${ag.stale_linked ? ` · ${ag.stale_linked} bayat` : ""}${(ag.missing || []).length ? " · eksik: " + ag.missing.join(",") : ""}` : "—"}</b></div>`; })()}
       </div>
     </div>
-    ${(() => { const sr = d.selfreview_summary; if (!sr) return "";
-      const att = (sr.attention || []).map(a => `<div class="trow" style="grid-template-columns:auto 1fr">
-        <span class="tag ${a.sev === "yüksek" ? "t-no" : "t-rv"}">${esc(a.sev)}</span><span style="font-size:12px">${esc(a.why)}</span></div>`).join("");
-      const con = (sr.contradictions || []).map(c => `<div class="trow" style="grid-template-columns:auto 1fr">
-        <span class="tag t-vi">${esc(c.pair)}</span><span class="chain">${esc(c.detail)}</span></div>`).join("");
-      return `<h3 class="t" style="margin-top:16px">Öz-değerlendirme · DİKKAT (${(sr.attention || []).length})</h3>
-        ${att || '<p class="hint">Eşiği geçen dikkat maddesi yok — sistem sakin.</p>'}
-        ${con ? `<h3 class="t" style="margin-top:16px">Katman çelişkileri (${sr.contradictions.length})</h3>${con}` : ""}`; })()}
     ${ml.gate_hist ? `<h3 class="t" style="margin-top:16px">Bootstrap çan eğrisi — ${esc(ml.gate_hist.id || "")} · ${esc(ml.gate_hist.variable || "")}</h3>${_bellSVG(ml.gate_hist)}`
                    : `<p class="hint" style="margin-top:12px">Çan eğrisi: olasılıksal kapının bir sonraki koşusunda burada çizilir (histogram hipotez kaydıyla taşınır).</p>`}
     ${diffs ? `<h3 class="t" style="margin-top:16px">Değişken diferansiyeli · son öneriler</h3>${diffs}` : ""}</div>`;
+
+  // ---------- ÖZ-DEĞERLENDİRME · DİKKAT — KENDİ KARTI, ÖĞRENME'DE KALIR (S2R-3) --------------
+  // ADR'nin S2R-2'ye bıraktığı içerik borcu #2. İki karar ayrı ayrı verildi:
+  //
+  // (1) KARTTAN AYRIŞTIRILDI. Blok "Bölüm 3 · MLOps & Hermes" kartının DİBİNDE, iki ızgara
+  //     sütununun altında bir `<h3>` olarak duruyordu. Kartın başlığı ("MLOps & Hermes") onu
+  //     ARAMAYACAĞIN bir yere koyuyordu: bir DİKKAT listesi, bir tesisat kartının alt başlığı
+  //     olamaz. Kendi kartına çıktı — kart-içinde-kart değil, kartTAN ayrılma.
+  //
+  // (2) GÖZETİM'E TAŞINMADI ve bu ÖLÇÜLDÜ, varsayılmadı. `selfreview._attention()` sekiz kural
+  //     ailesi üretir; altısı ÖĞRENME katmanının hükmüdür (skor kalibrasyonu IC'si, cf sadakati,
+  //     kapının kendini sıkılaştırması, çıkış verimliliği, eşik-doldu ilerlemeleri, bekleyen
+  //     revizyonlar, near-miss hipotez tohumları), yalnız ikisi sağlık sinyalidir (mekanizma
+  //     kesintisi, bekçi olay sayısı). Ve o ikisinin Gözetim'de ZATEN bir evi var: mekanizma
+  //     kesintisi `MECHANISM_STALE` alarmı üretir (selfreview.mechanism_failed) ve alarm gelen
+  //     kutusunda okunur. Bloğu Gözetim'e taşımak, altı öğrenme hükmünü "sistem sağlıklı mı?"
+  //     sorusunun altına gömer ve iki sağlık satırını İKİNCİ kez göstererek operatörün asıl
+  //     şikâyetini ("aynı soruya iki yerden cevap") geri getirirdi.
+  //     ⇒ Ev: Öğrenme · beyin bölümü. Gerekçe ADR Ek C'de yazılıdır.
+  const sOzDeg = (() => {
+    const sr = d.selfreview_summary;
+    if (!sr) return "";           // uç servis etmiyor: uydurma "sistem sakin" kartı DOĞMAZ
+    const att = (sr.attention || []).map(a => `<div class="trow" style="grid-template-columns:auto 1fr">
+      <span class="tag ${a.sev === "yüksek" ? "t-no" : "t-rv"}">${esc(a.sev)}</span><span style="font-size:12px">${esc(a.why)}</span></div>`).join("");
+    const con = (sr.contradictions || []).map(c => `<div class="trow" style="grid-template-columns:auto 1fr">
+      <span class="tag t-vi">${esc(c.pair)}</span><span class="chain">${esc(c.detail)}</span></div>`).join("");
+    return `<div class="card rise"><h2 class="t">Öz-değerlendirme · DİKKAT (${(sr.attention || []).length})</h2>
+      <p class="hint" style="margin-top:0">Öğrenme katmanlarının KENDİ denetimi: kural-tabanlı, eşiği
+        geçen maddeler (selfreview). Mekanizma kesintileri ayrıca <b>MECHANISM_STALE</b> alarmı üretir
+        ve Gözetim &amp; Alarmlar'ın gelen kutusunda okunur — burada tekrarlanmaz.</p>
+      ${att || '<p class="hint">Eşiği geçen dikkat maddesi yok — sistem sakin.</p>'}
+      ${con ? `<h3 class="t" style="margin-top:16px">Katman çelişkileri (${sr.contradictions.length})</h3>${con}` : ""}</div>`;
+  })();
 
   // ---------- EDGE SAĞLIĞI · DÖRT ÖLÇÜT (2026-07-27) ----------
   // Panonun cevaplaması gereken asıl soru "mekanizmalar koşuyor mu" değil "bir KENAR var mı ve
@@ -3259,12 +3284,19 @@ async function opParcalar() {
     }
   })();
 
-  // ---------- HERMES KARNESİ (H1+H2+H3, 3b) + MAE + GÖLGE-VARYANT ----------
+  // ---------- HERMES KARNESİ (H1+H2+H3, 3b) + MAE ----------
   // NEDEN TEK KART: üçü de aynı soruyu farklı katmanda soruyor — "öğrenme döngüsü GERÇEKTEN kapandı
   // mı?" H1 beynin kendi tahmin isabetini, H2 mezarlığını ve kör noktasını, H3 bileşik kuyruğun
   // dolup boşaldığını gösterir. Ayrı kartlara dağıtılsa hiçbiri tek başına hüküm vermezdi.
+  //
+  // GÖLGE-VARYANT ARTIK BU KARTTA DEĞİL (S2R-3, ADR'nin S2R-2'ye bıraktığı içerik borcu #1).
+  // O blok bu kartın bir ALT BAŞLIĞIYDI ve gerekçesi zayıftı: k_variants portföyleri "beyin
+  // parametre tahminlerinde ne kadar isabetli?" sorusuna DEĞİL, "kâğıt üstünde koşan gölge kollar
+  // ne veriyor?" sorusuna cevap veriyor — yani `golge` bölümünün soru cümlesinin birebir kendisi.
+  // S2R-2 onu taşıyamadı çünkü sözleşmesi "bölüm taşı, kart gövdesi yeniden yazma"ydı; cila
+  // turunun işi tam olarak o gövdeyi bölmekti. Bkz. aşağıdaki `sGolgeVaryant`.
   const sHermes = (() => {
-    const c = ml.hermes_scorecard || null, mp = ml.mae_profile || null, sv = ml.shadow_variants || null;
+    const c = ml.hermes_scorecard || null, mp = ml.mae_profile || null;
     if (!c) return `<div class="card rise"><h2 class="t">Hermes karnesi</h2>
       <p class="empty">Karne henüz servis edilmiyor.</p></div>`;
     const pb = c.prediction_band || {}, f = c.families || {}, q = c.composite_queue || {};
@@ -3302,8 +3334,27 @@ async function opParcalar() {
         <b class="mut">medyan ${trn((mp.kaybedenler || {}).medyan, 3)}R · p90 ${trn((mp.kaybedenler || {}).p90, 3)}R
           · maks ${trn((mp.kaybedenler || {}).maks, 3)}R</b></div>
       <p class="hint">${(mp.hukum || []).map(x => esc(x)).join(" · ")} <b>${esc(mp.rol || "")}</b></p>`}
-      ${!sv ? "" : `
-      <h3 class="t" style="margin-top:16px">Gölge-varyant portföyleri ${_chip("kâğıt defter", "t-rv")}</h3>
+      </div>`;
+  })();
+
+  // ---------- GÖLGE-VARYANT PORTFÖYLERİ — KENDİ KARTI, EVİ `golge` (S2R-3) ----------
+  // İçerik borcunun ödenmesi: blok Hermes karnesi kartının alt başlığı olmaktan çıkıp kendi
+  // kartına taşındı ve `golge` bölümünde yazılıyor. OKUYUCU KORUNUMU BİREBİR: `shadow_variants`ın
+  // altı alanı da (n_satir · son_karar{label,date,signal_n,would_arm_n} · kumulatif_ayrisma ·
+  // k_variants · rol · durum) aynen taşındı — panoda başka okuyucusu yok, bir tanesi düşseydi
+  // alan öksüz kalırdı (YASA-6, HTTP→DOM katmanı).
+  //
+  // İKİ HÂL AYRI CÜMLE OLARAK KORUNDU: `sv` YOKSA kart hiç doğmaz (uç servis etmiyor);
+  // `sv.n_satir` sıfırsa kart DOĞAR ve `sv.durum`u yazar — "defter boş" ile "ölçüm yok" bu
+  // panoda asla aynı ekran değildir.
+  //
+  // ÇOKLU-KARŞILAŞTIRMA PAYDASI (`k_variants`) TABLOYLA AYNI KARTTA KALIR: "en iyi varyant"
+  // rakamı paydadan ayrılırsa seçim yanlılığı görünmez olur — şerh rakamdan ayrılamaz kuralının
+  // (trend kitabındaki `pit_serh` ile aynı kural) bu karttaki karşılığı budur.
+  const sGolgeVaryant = (() => {
+    const sv = ml.shadow_variants || null;
+    if (!sv) return "";
+    return `<div class="card rise"><h2 class="t">Gölge-varyant portföyleri ${_chip("kâğıt defter", "t-rv")}</h2>
       ${sv.n_satir ? `
       <table class="tbl"><thead><tr><th>varyant</th><th>son karar</th><th class="num">sinyal / silahlanır</th><th class="num">kümülatif ayrışma</th></tr></thead>
       <tbody>${Object.entries(sv.son_karar || {}).map(([k, v]) => `<tr><td><code>${esc(k)}</code>
@@ -3313,8 +3364,7 @@ async function opParcalar() {
         </tr>`).join("")}</tbody></table>
       <p class="hint">k_variants=${sv.k_variants ?? "—"} <b>ÇOKLU-KARŞILAŞTIRMA PAYDASI</b> — "en iyi varyant"
         seçimi bu sayıyla cezalandırılmalıdır. ${esc(sv.rol || "")}</p>`
-      : `<p class="hint">${esc(sv.durum || "")}</p>`}`}
-      </div>`;
+      : `<p class="hint">${esc(sv.durum || "")}</p>`}</div>`;
   })();
 
   // ---------- SİSTEM ÖNERİLERİ (NOUS SİSTEM-DEĞERLENDİRME KATMANI B/C/D) ----------
@@ -3690,19 +3740,52 @@ async function opParcalar() {
                  : k === "coherence" ? !(v.stale || []).length
                  : k === "ownership" ? v.ok !== false && !(v.lost || []).length
                  : v.ok !== false && !(v.regressions || []).length && !(v.shrunk || 0);
-  const _patNote = (k, v) => k === "production" ? `${v.ok ?? 0}/${v.total ?? 0} mekanizma üretiyor${(v.starved || []).length ? ` · AÇ: ${v.starved.map(s => s.name).join(", ")}` : ""}${(v.waiting || []).length ? ` · ${v.waiting.length} bekliyor` : ""}`
+  // ---- ÜÇÜNCÜ DURUM: ÖLÇÜLEMEDİ (S2R-3 · denetim C21/C22'nin pano ayağı, 2026-08-02) ---------
+  // `_patOK` İKİ DEĞERLİYDİ ve bu, watchdog'un iki yeni alanını (dedektor_dustu / olculemedi)
+  // panoda GÖRÜNMEZ kılıyordu. Düşen bir dedektör artık `_DEDEKTOR_BOS` iskeletiyle dönüyor —
+  // yani `starved: []`, `stale: []`, `lost: []` BOŞ gelir. Üç desende (üretkenlik/korunum/
+  // tutarlılık) `_patOK` o boşluğu "bulgu yok" diye okur ve satır YEŞİL "temiz" basardı:
+  // ölçülemeyen bir hüküm, ölçülmüş bir temizlik kılığında. UYDURMA YASAĞI'nın tam karşılığı.
+  // Ters yön de yanlıştı: determinism fail-closed'ta `ok:false` döner ve son dal onu KIRMIZI
+  // "İHLAL" basardı — oysa watchdog'un kendi cümlesi "ölçülemeyen bir hükmü ihlal diye anlatmak
+  // da bir uydurmadır" (determinism_report, C22 yorumu).
+  //
+  // ÜÇÜNCÜ DURUM NE YEŞİL NE KIRMIZI. Görsel dil UYDURULMADI, panoda zaten var: `t-vi` çipi bu
+  // panoda "ölçüm yok / hüküm yok" kanalıdır (sağlayıcı kartı: `["çağrı yok", "t-vi"]`; defter
+  // sözleşmesi: `"boş"`; trend kitabı: `"DOĞMADI"`). Aynı çip burada da kullanılır — ikinci bir
+  // nötr renk icat etmek, üç yıl sonra "hangi gri neydi?" sorusunu doğururdu.
+  //
+  // MAKİNE-OKUNUR AD SATIRDA DURUR: metin `olculemedi` (ve dedektör yalıtımı devredeyse
+  // `detector_failed`) kelimelerini AYNEN yazar. Operatörün panodan okuduğu ad ile obs
+  // günlüğünde (`integrity_detector_failed`) ve alarm katmanında greplediği ad AYNI olmalı;
+  // yalnız Türkçe bir cümle yazmak, panoyu günlükten koparırdı.
+  const _patOlculemedi = v => !!v && (v.olculemedi === true || v.dedektor_dustu === true);
+  const _patDurum = (k, v) => _patOlculemedi(v) ? "olculemedi" : (_patOK(k, v) ? "temiz" : "ihlal");
+  const _patOlcumYok = v => `ÖLÇÜLEMEDİ — bu turda hüküm verilmedi (${
+    v.dedektor_dustu ? "detector_failed · olculemedi" : "olculemedi"})${
+    v.error ? ` · ${String(v.error).slice(0, 140)}` : ""}. Boş liste "bulgu yok" DEĞİL.`;
+  const _patNote = (k, v) => _patOlculemedi(v) ? _patOlcumYok(v)
+                 : k === "production" ? `${v.ok ?? 0}/${v.total ?? 0} mekanizma üretiyor${(v.starved || []).length ? ` · AÇ: ${v.starved.map(s => s.name).join(", ")}` : ""}${(v.waiting || []).length ? ` · ${v.waiting.length} bekliyor` : ""}`
                  : k === "conservation" ? `${v.plans ?? 0} plan → ${v.traded ?? 0} işlem · ${v.no_fill ?? 0} dolmadı${_say(v.unexplained) ? ` · ${_say(v.unexplained)} AÇIKLANAMAYAN` : ""}`
                  : k === "determinism" ? `${v.appended ?? 0} salt-ekleme defteri doğrulandı${v.shrunk ? ` · ${v.shrunk} defter KISALDI` : ""}`
                  : k === "coherence" ? `${v.ok ?? 0}/${v.total ?? 0} kalibrasyon taze${(v.stale || []).length ? ` · BAYAT: ${v.stale.map(x => `${x.artifact || x}${x.behind_h != null ? ` (${x.behind_h}sa geride)` : ""}`).join(", ")}` : ""}`
                  : k === "monotonicity" ? `${v.tracked ?? 0} sayaç izleniyor${(v.regressions || []).length ? ` · GERİLEME: ${v.regressions.map(x => `${x.field} ${x.was}→${x.now}`).join(", ")}` : ""}${(v.amnestied || []).length ? ` · AFFEDİLDİ: ${v.amnestied.map(a => `${a.field} ${a.was}→${a.now} (${a.reason || ""})`.slice(0, 120)).join(" | ")}` : ""}`
                  : k === "ownership" ? ((v.lost || []).length ? `${v.lost.length} sahipsiz alan: ${v.lost.map(x => `${x.file || "?"}.${x.field || "?"}`).join(", ")}` : "her kaydın sahibi var")
                  : `${(v.rows || []).filter(r => r.ok).length}/${(v.rows || []).length} makullük denetimi geçti`;
+  const PAT_CIP = { temiz: ["temiz", "t-go"], ihlal: ["İHLAL", "t-no"],
+                    olculemedi: ["ÖLÇÜLEMEDİ", "t-vi"] };
   const patRows = Object.keys(PAT_TR).filter(k => ig[k]).map(k => {
-    const v = ig[k], ok = _patOK(k, v);
+    const v = ig[k], durum = _patDurum(k, v), [etiket, kls] = PAT_CIP[durum];
+    // Metin de mertebe düşürür: ölçülemeyen satır `mut` ile yazılır. Ölçülmüş bir bulguyla aynı
+    // mürekkeple yazılsaydı çip nötr olsa bile satır "okunmuş bir hüküm" gibi tararnırdı.
     return `<div class="trow" style="grid-template-columns:110px 1fr auto">
-      <span class="tick">${esc(PAT_TR[k])}</span><span class="chain">${esc(_patNote(k, v))}</span>
-      ${_chip(ok ? "temiz" : "İHLAL", ok ? "t-go" : "t-no")}</div>`;
+      <span class="tick">${esc(PAT_TR[k])}</span><span class="chain${
+        durum === "olculemedi" ? " mut" : ""}">${esc(_patNote(k, v))}</span>
+      ${_chip(etiket, kls)}</div>`;
   }).join("");
+  // ÖLÇÜLEMEYEN DEDEKTÖR SAYISI BAŞLIKTA DA GÖRÜNÜR: yedi satırın içinde tek bir nötr çipi
+  // kaçırmak kolaydır ve "7 desen temiz" izlenimi tam da bu kaçışla doğar.
+  const patOlcumsuz = Object.keys(PAT_TR).filter(k => ig[k] && _patOlculemedi(ig[k]));
   const parityBad = ((ig.parity || {}).rows || []).filter(r => !r.ok).map(r =>
     `<div class="trow" style="grid-template-columns:190px 1fr">
       <span class="tick">${esc(r.check)}</span><span class="chain neg">${esc(r.detail || "")}</span></div>`).join("");
@@ -3727,8 +3810,13 @@ async function opParcalar() {
     : `<span class="tag ${_ageS >= 15 ? "t-vi" : "t-go"}" style="font-weight:400;font-size:10px;margin-left:8px"
         title="Rapor 20 sn'lik önbellekten okunur; bu sayı kaç saniye önce hesaplandığını söyler (0 = bu istekte).">${
         _ageS <= 0 ? "şu an hesaplandı" : `${esc(String(_ageS))} sn önce hesaplandı`}</span>`;
-  const s5 = `<div class="card rise"><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (7 desen)${ageBadge}</h2>
+  const s5 = `<div class="card rise"><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (7 desen)${
+      patOlcumsuz.length ? " " + _chip(`${patOlcumsuz.length} DEDEKTÖR ÖLÇEMEDİ`, "t-vi") : ""}${ageBadge}</h2>
     ${patRows || '<p class="hint">Bütünlük raporu yok.</p>'}
+    ${patOlcumsuz.length ? `<p class="hint">Bu turda hüküm veremeyen dedektör: <b>${
+      esc(patOlcumsuz.map(k => PAT_TR[k]).join(", "))}</b> (watchdog <code>olculemedi</code>/<code>detector_failed</code>).
+      Yalıtım çalıştı — diğerleri koştu; ama ölçülemeyen desen <b>temiz sayılmaz</b> ve bu satırlar
+      ne yeşil ne kırmızıdır. Kanıt duruyor, tespit bir tur ertelendi.</p>` : ""}
     <p class="hint">Testler "kod çalışıyor mu" der; bu yedi desen "sistem üretiyor mu, kaybetmiyor mu,
     ürettiği kanıt tüketilebilir mi" diye sorar. 2026-07-21'de motorun evrenin %18'inde karar verdiği
     hatayı yalnız 7. desen (makullük) görebiliyordu.</p>
@@ -3789,10 +3877,14 @@ async function opParcalar() {
     if (!blok) return "";
     const satirlar = blok.saglayicilar || [];
     const rows = satirlar.map(p => {
+      // ÇİP KIRMIZIDAN NÖTRE İNDİ (S2R-3): sağlık OKUMASININ düşmesi, sağlayıcının ARIZALI
+      // olduğu anlamına gelmez — "ölçemedim" ile "son çağrı başarısız" iki ayrı hükümdür ve
+      // ikincisi zaten aşağıdaki `t-no` satırında yaşıyor. Ölçülemeyeni ihlal diye boyamak,
+      // bütünlük dedektörlerindeki (C21/C22) kusurun aynısıydı — aynı turda aynı dille kapandı.
       if (p.olculemedi) return `<div class="trow" style="grid-template-columns:120px 1fr auto">
         <span class="chain">${esc(p.ad)}</span>
-        <span class="mut" style="font-size:12px">sağlık okuması istisna verdi: ${esc(p.olculemedi)}</span>
-        ${_chip("ÖLÇÜLEMEDİ", "t-no")}</div>`;
+        <span class="mut" style="font-size:12px">sağlık okuması istisna verdi (olculemedi): ${esc(p.olculemedi)}</span>
+        ${_chip("ÖLÇÜLEMEDİ", "t-vi")}</div>`;
       // ok: true/false/null — null "bu süreçte hiç çağrılmadı"dır ve YEŞİL de KIRMIZI da değildir.
       const [lbl, kls] = p.ok === true ? ["sağlıklı", "t-go"]
         : (p.ok === false ? ["SON ÇAĞRI BAŞARISIZ", "t-no"] : ["çağrı yok", "t-vi"]);
@@ -3870,8 +3962,8 @@ async function opParcalar() {
   // duruyor (bkz. sessizHatGlobal). İkinci bir çizim, iki farklı anın ölçümünü aynı anda
   // gösterirdi. Alarm bütçesinin TAM kırılımı Gözetim'in işi olmayı sürdürür.
   return { alarm: alarmButce(d.alarm_butcesi),
-           s1, s2, s3, sEdge, sSonuc, sDogrulama, sHermes, sNous, sY3,
-           sSelale, sTrend, sCark, sIntra, s4, s5, s6, sSag, sOgr };
+           s1, s2, s3, sOzDeg, sEdge, sSonuc, sDogrulama, sHermes, sNous, sY3,
+           sSelale, sTrend, sGolgeVaryant, sCark, sIntra, s4, s5, s6, sSag, sOgr };
 }
 
 // ---- GÖZETİM & ALARMLAR (eski `operasyon` adı, yeni ve DAR kapsam) ---------------------------
@@ -3960,16 +4052,19 @@ RENDER.bilesenic = async () => {
 // ADR: "gölge kollar (küçük-katlar hedefi)". Canlı gölge-kitap kâğıt üstünde koşar ve canlı
 // deftere DOKUNMAZ; hükmü verilmiş bir kolun ölçülen birikimidir.
 //
-// GÖLGE-VARYANT PORTFÖYLERİ BURADA DEĞİL, karnenin İÇİNDE. Bilinçli ve beyanlı: o blok Hermes
-// karnesi kartının bir alt başlığı (`sHermes`) ve kartı gövdesinden ayırmadan taşıyamayız —
-// S2R-2'nin sözleşmesi bölüm taşımak, kart gövdesi yeniden yazmak DEĞİL. Altyazı bunu söylüyor;
-// okuyucu "öteki gölge kol nerede?" sorusunu ekrandan cevaplayabilmeli.
+// S2R-3'TE BÖLÜM TAMAMLANDI: gölge-VARYANT portföyleri Hermes karnesi kartının alt başlığı
+// olmaktan çıkarıldı ve buraya indi (`sGolgeVaryant`). Artık bölümün soru cümlesi ("kâğıt üstünde
+// koşan gölge kollar ne veriyor?") İKİ kolun ikisini de kapsıyor ve altyazı okuru başka bir
+// sayfaya yönlendirmiyor — S2R-2'nin beyanlı borcu kapandı.
+//
+// SIRA: canlı gölge-KİTAP önce (hükmü verilmiş TEK kol, gerçek barlar), varyant PORTFÖYLERİ sonra
+// (k tane aday kol, çoklu-karşılaştırma paydasıyla). Hüküm verilmiş olan, aday olanın üstündedir.
 RENDER.golge = async () => {
   const p = await opParcalar();
   $("page-golge").innerHTML = bolumBasHTML("golge", "Gölge kollar · kâğıt defter",
-    "Canlı gölge-kitap (trend kolu): kâğıt üstünde koşar, canlı sermayeye dokunmaz. "
-    + "Gölge-<b>varyant</b> portföyleri Hermes karnesi kartının içinde (yukarıdaki Karne bölümü) — "
-    + "tek bir kartın alt başlığı oldukları için bu tur ayrıştırılmadı.") + p.sTrend;
+    "İki kâğıt kol: hükmü verilmiş trend kolunun canlı gölge-kitabı ve k adet varyant portföyü. "
+    + "İkisi de kâğıt üstünde koşar, canlı sermayeye dokunmaz — emir yolu import bile edilmez.")
+    + p.sTrend + p.sGolgeVaryant;
 };
 
 // 5.3 — seans-içi bar akışındaki eksik dakika pencereleri. Ölçümü zamanlayıcı kancası yapar; burası
@@ -4036,11 +4131,11 @@ async function intraParcalar() {
     <span class="chain mut">${esc((r.bar_t || "").slice(11, 16))} UTC · ${r.admissible_bars ?? 0} bar${r.last_close != null ? " · $" + trn(r.last_close, 2) : ""}</span>
     <span class="mono-num">${r.entry_trigger != null ? "eşik " + trn(r.entry_trigger, 2) : "—"}</span>
     ${_chip(r.fired === true ? "GEÇTİ" : (r.fired === false ? "bekliyor" : "—"), r.fired === true ? "t-go" : "t-vi")}</div>`).join("");
-  const s2 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Son intraday ölçümleri · ${dec.total ?? 0} toplam</h2>
+  const s2 = `<div class="card rise"><h2 class="t">Son intraday ölçümleri · ${dec.total ?? 0} toplam</h2>
     ${rows ? `<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:70px 1fr 90px 74px"><span>HİSSE</span><span>KAPANMIŞ BAR</span><span>EŞİK</span><span>DURUM</span></div>${rows}</div>`
            : `<p class="hint">Henüz ölçüm yok — seans açıkken izlenen sembollerde (açık pozisyon ∪ EOD-silahlı) tetik-geçişi ölçülünce dolar. Piyasa kapalıysa tüketici doğru şekilde boştadır.</p>`}</div>`;
   // ---- 3) Piyasa-veri akışı (marketstream) ----
-  const s3 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Piyasa-veri akışı <span class="tx3" style="font-weight:400">(Alpaca → mrd:bars)</span>
+  const s3 = `<div class="card rise"><h2 class="t">Piyasa-veri akışı <span class="tx3" style="font-weight:400">(Alpaca → mrd:bars)</span>
       ${_chip(mktOk ? "CANLI" : (mktDown ? "KOPUK" : "—"), mktOk ? "t-go" : (mktDown ? "t-no" : "t-vi"))}</h2>
     <div class="srow"><span>Akış</span><b class="${mktOk ? "pos" : (mktDown ? "neg" : "")}">${mktOk ? "canlı · " + esc(mkt.feed || "iex") + " feed" : (mktDown ? "kopuk — EOD dosyalarına düşülür" : "başlamadı")}</b></div>
     <div class="srow"><span>Akan bar / abone</span><b>${mkt.bars_seen ?? 0} bar · ${mkt.subscribed ?? 0} sembol</b></div>
@@ -4050,7 +4145,7 @@ async function intraParcalar() {
   // sessiz). `akis_boslugu` o sınıfın tek görünür yüzeyidir. ÜÇ HÂL AYRI OKUNUR — null ("kanca hiç
   // koşmadı"), "seans_disi"/"arsiv_yok" ("bakılamadı") ve ölçülmüş sonuç ("0 boşluk" gerçekten 0).
   // Bunlar birbirine karıştırılırsa pano, ölçülmemiş bir sessizliği "sağlıklı" diye gösterir.
-  const s4 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Dayanıklı tetik <span class="tx3" style="font-weight:400">(consumer-group)</span>
+  const s4 = `<div class="card rise"><h2 class="t">Dayanıklı tetik <span class="tx3" style="font-weight:400">(consumer-group)</span>
       ${_chip(bfOk ? "CANLI" : (bf.ok === false ? "KOPUK" : "—"), bfOk ? "t-go" : (bf.ok === false ? "t-no" : "t-vi"))}</h2>
     <div class="srow"><span>Okunan olay / bar</span><b>${bf.events_read ?? 0} olay · ${bf.frames_seen ?? 0} bar</b></div>
     <div class="srow"><span>Bekleyen (lag) / düşen bayat</span><b class="${bf.pending > 50 ? "warn" : ""}">${bf.pending ?? 0} bekleyen · ${bf.stale_dropped ?? 0} düşürüldü</b></div>
@@ -4091,7 +4186,7 @@ async function intraParcalar() {
       <span class="tick">${esc(p.ticker)}</span><span class="mono-num">${money(p.sim_fill)}</span>
       <span class="mono-num">${money(p.eod_fill)}</span>
       <span class="mono-num ${cls(p.delta_pct)}">${isr(p.delta_pct, "%" + trn(p.delta_pct, 2))} <span class="mut" style="font-size:11px">EOD − gölge · ${esc(p.date)}</span></span></div>`).join("");
-  const s5 = `<div class="card rise" style="margin-top:16px"><h2 class="t">Gölge icra · Faz 4b
+  const s5 = `<div class="card rise"><h2 class="t">Gölge icra · Faz 4b
       ${_chip(sh.enabled === false ? "KAPALI" : "GÖLGE · EMİR YOK", sh.enabled === false ? "t-vi" : "t-go")}</h2>
     <p class="hint" style="margin-top:0">Tetik kesildiği anda <b>tam icra kararı</b> (kapılar + boyutlandırma + emir niyeti)
       hesaplanır ve <code>intraday_shadow_orders.jsonl</code>'e yazılır. <b>Hiçbir emir gönderilmez</b>, canlı defter
@@ -4214,7 +4309,7 @@ RENDER.ajan = async () => {
   $("ajan-own").innerHTML = bolumBasHTML("ajan", "Hipotez defteri",
     "Beyin ne önerdi, kapı ne dedi, gerçekte ne oldu — üçü yan yana. Her satır açılır: kapı "
     + "kaydı, OOS sayıları ve eleme gerekçesi çekmecede.")
-    + `<div class="card rise" style="margin-top:18px"><h2 class="t">Strateji sürümleri (v01 → …)</h2>
+    + `<div class="card rise"><h2 class="t">Strateji sürümleri (v01 → …)</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${timeline || '<span class="mut">yalnızca v01</span>'}</div></div>
     ${skillAttrCard(d.skill_attribution)}
     <div class="lstack rise" style="margin-top:16px">${cards || '<div class="empty">Henüz tahmin yok.</div>'}</div>`;
@@ -4253,7 +4348,7 @@ function skillAttrCard(attr) {
       <span class="mono-num mut">${s.n_cf || 0}</span>
       <span class="mono-num" style="color:${cfc}">${s.cf_avg_r == null ? '—' : (s.cf_avg_r > 0 ? '+' : '') + s.cf_avg_r}R</span></div>`;
   };
-  return `<div class="card rise" style="margin-top:16px"><h2 class="t">Beceri katkısı — hangi araç işe yarıyor? <span class="tx3" style="font-weight:400">(en zayıf üstte)</span></h2>
+  return `<div class="card rise"><h2 class="t">Beceri katkısı — hangi araç işe yarıyor? <span class="tx3" style="font-weight:400">(en zayıf üstte)</span></h2>
     <div class="tbl" style="margin-top:10px">
       <div class="trow head" style="grid-template-columns:1fr 46px 60px 64px 56px 70px"><span>ARAÇ</span><span>N</span><span>İSABET</span><span>ORT. R</span><span>N·SİM</span><span>SİM R</span></div>
       ${skills.map(row).join('')}</div></div>`;
@@ -4277,7 +4372,7 @@ RENDER.hafiza = async () => {
   window._lessons = d.lessons_md;
   $("page-hafiza").innerHTML = bolumBasHTML("hafiza", "Hafıza · çıkarılan dersler",
     "Ajanın kendi geçmişinden damıttığı, kalıcı yazılı dersler.")
-    + `<div class="card rise" style="margin-top:18px"><h2 class="t">lessons.md</h2>
+    + `<div class="card rise"><h2 class="t">lessons.md</h2>
       <input class="searchbox" id="lsearch" placeholder="derslerde ara…" data-act="filterLessons" data-act-on="input"/>
       <div class="md" id="lessons" style="margin-top:14px">${mdToHtml(d.lessons_md)}</div></div>`;
 };
@@ -4372,7 +4467,7 @@ RENDER.skiller = async () => {
     "Ajanın kullandığı analiz araçları ve her birinin ölçülen katkısı. Listeler YALNIZ aktif "
     + "araçları sayar; hattan düşürülenler alttaki katlanır rafta, gerekçesiyle durur.")
     + revCard + `
-    <div class="mrow rise" style="margin-top:18px">
+    <div class="mrow rise">
       ${mc("Aktif", c.enabled, "var(--green)", "şu an çalışan")}${mc("Pipeline'da", c.active_in_pipelines, "var(--amber)", "günlük hatta bağlı")}${mc("Emekli · birleşti", birlesenN + emekliN, "var(--tx2)", "hattan düşürüldü, kaydı duruyor")}${mc("Kayıtta toplam", c.total, null, "aktif + emekli + kapalı")}</div>${runsCard(d.recent_runs)}${cats}${emekliCard}`;
 };
 // ---- PIPELINE KOŞU DEFTERİ (K1, 2026-07-30) -------------------------------------------------
@@ -4706,7 +4801,7 @@ RENDER.performans = async () => {
     + "işlemlerin tek tek hesabı. Karne (öğreniyor mu?) Öğrenme sayfasında.")
     + `<div class="card rise"><h2 class="t">Para eğrisi (paper)</h2>${line(eq)}</div>
     ${riskCard(d.kelly, d.tail_risk, d.slippage_measured, d.benchmark_veto_tally)}
-    <div class="card rise" style="margin-top:16px"><h2 class="t">Son işlemler · tek tek hesap (${d.n_trades ?? 0} toplam)</h2>
+    <div class="card rise"><h2 class="t">Son işlemler · tek tek hesap (${d.n_trades ?? 0} toplam)</h2>
       <div class="trow head" style="grid-template-columns:78px 60px 1fr 64px 96px 96px"><span>KAPANIŞ</span><span>HİSSE</span><span>ÇIKIŞ NEDENİ</span><span>R</span><span>REJİM</span><span style="text-align:right">AYNA</span></div>
       ${tradeRows(d.recent_trades || [])}</div>`;
 };
@@ -4748,7 +4843,7 @@ RENDER.karne = async () => {
     : `<div class="card rise"><h2 class="t">Öğreniyor mu? — dürüst karne</h2>
       <p class="hint" style="margin-top:0"><b>${esc(L.verdict || '—')}</b></p>
       ${(() => { const alt = karneAlt(L);
-        return `<div class="mrow" style="margin-top:10px">
+        return `<div class="mrow">
         ${mc("Yayınlanan", L.shipped, null, alt.shipped)}${mc("Terfi eden", L.promoted, "var(--green)", alt.promoted)}${mc("Geri alınan", L.rolled_back, "var(--red)", alt.rolled_back)}${mc("Ölçülen sonuç", L.outcomes_measured, "var(--amber)", alt.outcomes)}</div>`; })()}
       <p class="hint" style="margin-top:8px">Kalibrasyon: ${L.calibration?.n||0} sonuç · isabet ${L.calibration?.hit_rate!=null?pctf(L.calibration.hit_rate,0):'—'} · sürüm v${String(L.current_version??1).padStart(2,'0')} · zamanlayıcı ${(L0.scheduler||{}).active?'<b class="pos">aktif</b>':'<b class="warn">kapalı</b>'} · son seans ${esc((L0.scheduler||{}).portfolio_last_date||'—')}</p>
       ${regimeTriggerRows(L.regime_budget_triggers, L.status_counts, L.overfit_suspects)}</div>`;
@@ -4756,11 +4851,11 @@ RENDER.karne = async () => {
     "Hükmün kendisi: kaç değişiklik yayınlandı, kaçı tuttu, kaçı geri alındı; kâğıt defterin "
     + "notu; rejim ve araç başına kırılım; tahminlerin kalibrasyonu.")
     + karneKart
-    + `<div class="mrow rise" style="margin-top:16px">
+    + `<div class="mrow rise">
       ${mc("Başarı notu", sd.score, cls(sd.score) === 'pos' ? 'var(--green)' : cls(sd.score) === 'neg' ? 'var(--red)' : 'inherit', "−1…+1")}
       ${mc("Toplam getiri", pctf(sd.total_return, 1), 'var(--green)', "baştan bugüne")}${mc("En sert düşüş", pctf(sd.max_drawdown, 1), 'var(--amber)', "azı iyi")}${mc("Sharpe", sd.sharpe, null, "riske göre getiri")}</div>
     ${!p ? `<div class="card rise"><div class="empty">Performans ucu okunamadı — kırılım tabloları çizilemedi.</div></div>`
-      : `<div class="g2 rise" style="margin-top:16px">
+      : `<div class="g2 rise">
       <div class="card"><h2 class="t">Piyasa havasına göre kırılım</h2>
         <div class="trow head" style="grid-template-columns:120px 50px 70px 70px 70px"><span>REJİM</span><span>N</span><span>NOT</span><span>KAZANMA %</span><span>ORT R</span></div>
         ${regRows || '<div class="empty">Rejim kırılımı için kapanmış işlem yok.</div>'}</div>
@@ -4768,7 +4863,7 @@ RENDER.karne = async () => {
         <div class="trow head" style="grid-template-columns:1fr 60px 80px"><span>KAYNAK ARAÇ</span><span>N</span><span>İSABET</span></div>
         ${skRows || '<div class="empty">Araç kırılımı için kapanmış işlem yok.</div>'}</div>
     </div>`}
-    <div class="card rise" style="margin-top:16px"><h2 class="t">Kalibrasyon — tahmin mi tuttu?</h2>
+    <div class="card rise"><h2 class="t">Kalibrasyon — tahmin mi tuttu?</h2>
       ${a ? scatter(a.calibration_scatter) : '<div class="empty">Ajan ucu okunamadı.</div>'}
       ${a && a.calibration && a.calibration.n ? `<p class="scatter-note" style="color:var(--tx2)">Brier <b>${a.calibration.brier}</b> (düşük iyi) · isabet <b>${pctf(a.calibration.hit_rate, 0)}</b> · ${a.calibration.n} sonuçlanan tahmin</p>` : ''}</div>
     ${op ? op.sHermes + op.sNous
@@ -4795,9 +4890,9 @@ function riskCard(kelly, tail, slip, veto) {
   const slipTxt = slip.measured_bps == null
     ? `<span class="mut">— ayna hiç dolmadı (n=${slip.n ?? 0})</span>`
     : `<b class="${Math.abs(slip.measured_bps) > (slip.assumed_bps ?? 0) ? "warn" : "pos"}">${esc(String(slip.measured_bps))} bps</b>`;
-  return `<div class="card rise" style="margin-top:16px"><h2 class="t">Boyut tavanı · kuyruk riski · ölçülen friksiyon
+  return `<div class="card rise"><h2 class="t">Boyut tavanı · kuyruk riski · ölçülen friksiyon
       <span class="tx3" style="font-weight:400">(hepsi DANIŞMAN — hiçbiri kapıya bağlı değil)</span></h2>
-    <div class="mrow" style="margin-top:10px">
+    <div class="mrow">
       ${mc("Kelly tavanı (tam)", fk == null ? "—" : (fk >= 0 ? "+" : "") + fk, fk == null ? null : (fk >= 0 ? "var(--green)" : "var(--red)"), `isabet ${pctf(kelly.win_rate, 0)} · K/Z ${num(kelly.win_loss_ratio)}`)}
       ${mc("Yarım Kelly", num(hk), null, `n=${kelly.n ?? "—"} · sabit-R değişmez`)}
       ${mc("VaR (%95)", num(tail.var_r, "R"), "var(--amber)", `${tail.horizon ?? "—"} işlem ufku`)}
@@ -4877,7 +4972,7 @@ RENDER.onaylar = async () => {
   $("page-onaylar").innerHTML = bolumBasHTML("onaylar", "Onay kuyruğu · senden iş isteyenler",
     "Sistemin sana getirdiği her karar türü tek listede, kanıtıyla. Otonomi merdiveni de "
     + "burada: gerçek paraya bir ayarla değil, kanıtla geçilir.")
-    + `<div class="card rise" style="margin-top:14px"><h2 class="t">Gelen kutusu (${inbox.length})</h2>
+    + `<div class="card rise"><h2 class="t">Gelen kutusu (${inbox.length})</h2>
       <p class="hint" style="margin-top:0">Adaylar (Koşu &amp; Döngü) bilgi verir; burası iş ister.</p>
       ${rows || '<div class="empty">Bekleyen karar yok — eşik dolduğunda burada belirir (bildirimi de düşer).</div>'}</div>
     ${a.level >= 1 ? `<div class="card rise"><h2 class="t">Canlı emir onayları</h2>
@@ -4935,7 +5030,7 @@ function sprintCard(sp, learning) {
   let echo = "";
   if (ls === "no_ship_v1_stands") echo = `<p class="hint" style="margin-top:0">Canlı durum: <b class="warn">kapıyı geçen öneri yok — ${esc(lvTxt)} duruyor</b>. Antrenman bir adayı kum havuzunda dürüstçe kanıtlayabilir.</p>`;
   else if (ls === "shipped_awaiting_min_sample") echo = `<p class="hint" style="margin-top:0">Canlı durum: <b class="pos">${esc(lvTxt)} yayında</b> — işlem birikiyor.</p>`;
-  const tiles = `<div class="mrow" style="margin-top:10px">
+  const tiles = `<div class="mrow">
     ${mc("Aşama", ph, active ? "var(--accent-2)" : null, "kum havuzu")}
     ${mc("Baz ileri işlem", sp.n_v1 ?? "—", null, "kum havuzu bazı")}
     ${mc("Yayınlanan", sp.v2 ? "v" + String(sp.v2).padStart(2, "0") : (sp.shipped === false ? "yok" : "—"), sp.v2 ? "var(--green)" : null, "gate'i geçti")}
@@ -4970,7 +5065,7 @@ function sprintCard(sp, learning) {
     <h3 class="pd-sub" style="margin-top:14px">Son koşular <span class="tx3" style="font-weight:400">(sprint_runs.jsonl · en yeni 5)</span></h3>
     <div class="trow head" style="grid-template-columns:110px 1fr 70px 90px"><span>NE ZAMAN</span><span>DEĞİŞKEN / KOŞU</span><span>DENENEN</span><span>SONUÇ</span></div>
     ${runRows}`;
-  return `<div class="card rise" style="margin-top:16px" id="sprint-card"><h2 class="t">Öğrenme antrenmanı <span class="tx3" style="font-weight:400">(learning sprint)</span></h2>
+  return `<div class="card rise" id="sprint-card"><h2 class="t">Öğrenme antrenmanı <span class="tx3" style="font-weight:400">(learning sprint)</span></h2>
     <p class="hint" style="margin-top:0">Kum havuzu · seçim ≤${esc(sp.cutoff || "—")} · ölçüm ${esc(sp.eval_start || "—")}→bugün (ayrık pencereler) · canlı defter dokunulmaz.</p>
     ${echo}<div id="sprint-body">${body}</div></div>`;
 }
@@ -5218,7 +5313,7 @@ RENDER.hermes = async () => {
   const op = await opParcalar().catch(() => null);
   $("page-hermes").innerHTML = bolumBasHTML("hermes", "Düşünen beyin · sprint",
     `${d.skill_count ?? "—"} beceri okunuyor · ${claude ? esc(BRAIN_TR[s.brain] || s.brain) : "deterministik önerici (LLM anahtarı yok)"}`)
-    + `<div class="g2 rise" style="margin-top:22px">
+    + `<div class="g2 rise">
       <div class="card"><h2 class="t">Durum</h2>
         <div class="acct" style="margin-top:4px">
           <div class="r"><span>Beyin</span><b>${esc(brain)}</b></div>
@@ -5277,12 +5372,12 @@ RENDER.hermes = async () => {
     ${/* KARNE KARTI BURADAN ÇIKTI (S2R-2): hüküm, Öğrenme hiyerarşisinin İLK bölümüdür
           (`karne`) ve orada performans kırılımlarıyla + kalibrasyonla yan yana durur. Burada
           kalsaydı aynı dört sayaç iki bölümde iki kez okunurdu. */""}
-    <div class="card rise" style="margin-top:16px"><h2 class="t">Beceri önerileri · Eksen-2 <span class="tx3" style="font-weight:400">(${(d.skill_recommendations||[]).length} · sen onaylarsın)</span></h2>
+    <div class="card rise"><h2 class="t">Beceri önerileri · Eksen-2 <span class="tx3" style="font-weight:400">(${(d.skill_recommendations||[]).length} · sen onaylarsın)</span></h2>
       <div class="lstack" style="margin-top:10px">${recCards
         || `<div class="empty">${eksen2Bos(((dg || {}).ogrenme || {}).eksen2, !!dg)}</div>`}</div></div>
-    <div class="card rise" style="margin-top:16px"><h2 class="t">Son parametre önerileri</h2>
+    <div class="card rise"><h2 class="t">Son parametre önerileri</h2>
       <div class="lstack" style="margin-top:10px">${cards || '<div class="empty">Henüz öneri yok — "Şimdi düşün"e bas.</div>'}</div></div>
-    ${op ? op.s3 + op.sCark : `<div class="card rise"><div class="empty">MLOps ve öğrenme çarkı ölçülemedi — teşhis ucu okunamadı. Bu boşluk "mekanizma yok" DEĞİL, ölçüm YOK demektir.</div></div>`}
+    ${op ? op.s3 + op.sOzDeg + op.sCark : `<div class="card rise"><div class="empty">MLOps, öz-değerlendirme ve öğrenme çarkı ölçülemedi — teşhis ucu okunamadı. Bu boşluk "mekanizma yok" DEĞİL, ölçüm YOK demektir.</div></div>`}
     ${havuzKutusuHTML()}
     ${intCard(d.integrations)}`;
   if (d.sprint && d.sprint.active) _scheduleSprintPoll();        // live progress while a sprint runs
@@ -5401,7 +5496,7 @@ function _alpacaKartHTML(a) {
       const on = a.backend === "alpaca_paper";
       const posRows = (acc.positions || []).map(p => `<div class="trow" style="grid-template-columns:60px 60px 1fr 90px"><span class="tick">${esc(p.symbol)}</span><span class="mono-num">${p.qty}</span><span class="mut">giriş ${esc(p.avg_entry)}</span><span class="mono-num ${(+p.upl)>=0?'pos':'neg'}">${(+p.upl>=0?'+':'')}${esc(p.upl)}</span></div>`).join("");
       const ordRows = (acc.open_orders || []).map(o => `<div class="trow" style="grid-template-columns:60px 1fr 90px"><span class="tick">${esc(o.symbol)}</span><span class="mut">${esc(o.side)} ${o.qty} ${esc(o.type)}</span><span class="mono-num">${esc(o.stop||o.limit||'')}</span></div>`).join("");
-      return `<div class="card rise" style="margin-top:16px"><h2 class="t">Alpaca kağıt hesabı ${acc.connected?'<span class="pos" style="font-size:12px">● bağlı</span>':'<span class="neg">bağlı değil</span>'}</h2>
+      return `<div class="card rise"><h2 class="t">Alpaca kağıt hesabı ${acc.connected?'<span class="pos" style="font-size:12px">● bağlı</span>':'<span class="neg">bağlı değil</span>'}</h2>
         <p class="hint" style="margin-top:0">${esc(a.note||'')}</p>
         <div class="acct" style="margin-top:6px">
           <div class="r"><span>İcra arka-ucu</span><b class="${on?'pos':''}">${on?'ALPACA PAPER (aktif)':'içsel simülatör'}</b></div>
@@ -5475,14 +5570,14 @@ RENDER.ayarlar = async () => {
   const _defTxt = (n, dsc) => dsc.includes("{default}")
     ? dsc.replace("{default}", md[n] || "(kodda tanımlı varsayılan)") : dsc;
   const groups = KEY_GROUPS.map(([title, sub, keys]) => `
-    <div class="card rise" style="margin-top:16px"><h2 class="t">${esc(title)}</h2>
+    <div class="card rise"><h2 class="t">${esc(title)}</h2>
       <p class="hint" style="margin-top:0">${esc(sub)}</p>
       <div class="ktbl">${keys.map(([n, l, dsc, prov]) => keyField(n, l, _defTxt(n, dsc), sec[n], prov)).join("")}</div></div>`).join("");
   $("page-ayarlar").innerHTML = bolumBasHTML("ayarlar", "Yapılandırma · API anahtarları",
     "Anahtarlar bu bilgisayarda yalnızca senin okuyabileceğin bir dosyada saklanır "
     + "(<code>state/secrets.json</code>, izin 0600) — <b>koda, loga veya ekrana asla yazılmaz</b>; "
     + "sadece son 4 hanesi maskeli gösterilir. Kaydettikten sonra kutu temizlenir.")
-    + `<div class="card rise" style="margin-top:18px;border-color:${d.live_enabled ? 'var(--red)' : 'var(--line-2)'}">
+    + `<div class="card rise" style="border-color:${d.live_enabled ? 'var(--red)' : 'var(--line-2)'}">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
         <b>· Güvenlik durumu</b>
         <span class="tx3">Canlı işlem: <b class="${d.live_enabled ? 'neg' : 'pos'}">${d.live_enabled ? 'AÇIK' : 'kapalı'}</b> · Otonomi: <b>${onk("L", d.autonomy_level)}</b> · Mod: <b>paper</b></span></div>
@@ -5795,7 +5890,8 @@ function kbdOverlay(show) {
     ${PAGE_MAP.map(([k, n, d, g]) => `<div class="krow"><kbd>${k}</kbd>${
       g ? `<kbd>${esc(g)}</kbd>` : ""}<b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}
     <div class="krow"><kbd>g</kbd><b>Sayfa atlama öneki</b><span>g + harf (yukarıdaki ikinci sütun) · ${G_PENCERE_MS / 1000} sn içinde</span></div>
-    <div class="krow"><kbd>⌘K</kbd><b>Komut paleti</b><span>Ctrl+K de olur · sembol/görünüm/müdahale arama</span></div>
+    <div class="krow"><kbd>⌘K</kbd><b>Komut paleti</b><span>Ctrl+K de olur · yedi sayfa <b>ve yirmi bölümün tamamı</b> · sembol · müdahale · öğrenme eylemleri</span></div>
+    <div class="krow"><kbd>#</kbd><b>Bölüm çapası</b><span>her bölüm başlığı bir adrestir (<code>portfoy#mutabakat</code>) — ⌘K aranan bölüme kaydırır, sayfanın tepesine değil</span></div>
     <div class="krow"><kbd>J</kbd><b>Sonraki satır</b><span>kayıt satırları arasında aşağı</span></div>
     <div class="krow"><kbd>K</kbd><b>Önceki satır</b><span>yukarı · Enter kaydı açar</span></div>
     <div class="krow"><kbd>R</kbd><b>Yenile</b><span>aktif sayfayı yeniden yükler</span></div>

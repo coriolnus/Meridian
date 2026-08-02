@@ -391,9 +391,14 @@ def test_hicbir_uc_ve_alan_okumasi_dusmedi():
         "veriboru":  ["quarantine", "ledgers", "hotstate", "marketstream"],
         "intraemir": ["shadow", "vs_eod", "decisions_written"],
         "karne":     ["per_regime", "per_skill", "calibration_scatter", "outcomes_measured"],
-        "golge":     ["trend_kitabi"],
-        "karne_ek":  ["Gölge-varyant portföyleri", "MAE · stopun kör ikizi",
-                      "improvement_proposals"],
+        # ÇİVİ TAŞINDI (S2R-3, 2026-08-02): "Gölge-varyant portföyleri" bu satırda `karne_ek`
+        # altındaydı ve bu, S2R-2'nin BEYANLI BORCUNU kaydediyordu — blok Hermes karnesi kartının
+        # bir alt başlığıydı ve göç sözleşmesi ("bölüm taşı, kart gövdesi yeniden yazma") onu
+        # ayırmaya izin vermiyordu. Cila turu gövdeyi böldü; blok artık `golge` bölümünün kendi
+        # kartı. Çivi SİLİNMEDİ, ev değiştirdi — silinseydi tablo bir daha hiç izlenmezdi.
+        # (Alanların TAM listesi ve bölünmenin okuyucu korunumu: test_s2r3_cila_v160.)
+        "golge":     ["trend_kitabi", "shadow_variants", "Gölge-varyant portföyleri"],
+        "karne_ek":  ["MAE · stopun kör ikizi", "improvement_proposals"],
         "bilesenic": ["component_ic", "score_calibration_history", "prediction_hit",
                       "benchmark_relative", "regime_edge"],
         "mudahale":  ["opSoftHalt", "opCancelOpen", "opFlatten", "opLearnHaltToggle"],
