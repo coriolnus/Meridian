@@ -161,7 +161,7 @@ def test_s4_temiz_planda_her_dugumun_value_ve_threshold_degeri_birebir_sabittir(
         "daily_loss_breaker": (-1.23, ">-%3"),       # round(-0.012345*100, 2)
         "position_size":      (0.55555, "<=1.0R"),
         "rr_floor":           (3.14, ">=2.0"),       # round(3.14159, 2)
-        "heat_hard":          (1.67, "<=4.5R"),      # round(1.11111+0.55555, 2)
+        "heat_hard":          (1.67, "<=5.0R"),      # round(1.11111+0.55555, 2)
         "sector_stacking":    (0, "0"),
         "heat_review":        (1.67, "<=3.5R"),
         "correlation":        (0.12, "<=0.85"),      # round(0.12345, 2)
@@ -372,22 +372,25 @@ def test_s5_rr_bir_iken_belirsiz_degil_marjinal_dalina_girer():
 
 # ============================================================================================
 # S5: portföy ısısı — iki tavan, iki ayrı eşitlik sınırı
+# SINIR DEĞERLERİ 5,0R'DE: OPERATÖR KARARI 2026-08-03 (d01ccb5) heat_hard_r'yi 4,5→5,0R taşıdı;
+# LIMITS fikstüründe `heat_hard_r` YOKTUR, yani bu vakalar guard'ın FAIL-SAFE varsayılanını
+# (HEAT_HARD_R) sınar ve sınır ancak o sayının üstünde/üstünde-değil olarak anlamlıdır.
 # ============================================================================================
 def test_s5_isi_sert_tavanina_tam_esitken_sert_veto_yok():
-    """`open_heat > 4.5` → `>=`: 4.5R tam tavan SERT değil, yalnız yumuşak bayraktır."""
-    port = {**PORT, "open_risk_r": 4.0}
+    """`open_heat > 5.0` → `>=`: 5.0R tam tavan SERT değil, yalnız yumuşak bayraktır."""
+    port = {**PORT, "open_risk_r": 4.5}
     plan = {**PLAN, "size_r": 0.5}
     v, r, detail = _run(plan=plan, port=port)
-    assert v == "REVIEW" and r == ["portföy ısısı yüksek (~4.5R açık risk)"]
+    assert v == "REVIEW" and r == ["portföy ısısı yüksek (~5.0R açık risk)"]
     assert _by(detail, "heat_hard")["passed"] is True
-    assert _by(detail, "heat_hard")["value"] == 4.5
+    assert _by(detail, "heat_hard")["value"] == 5.0
 
 
 def test_s5_isi_sert_tavanini_asinca_no_go():
-    port = {**PORT, "open_risk_r": 4.1}
+    port = {**PORT, "open_risk_r": 4.6}
     plan = {**PLAN, "size_r": 0.5}
     v, r, detail = _run(plan=plan, port=port)
-    assert v == "NO_GO" and r == ["portföy ısısı sert tavanı %4.5R aşıyor (~4.6R açık risk)"]
+    assert v == "NO_GO" and r == ["portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)"]
     assert _by(detail, "heat_hard")["severity"] == "hard"
 
 
@@ -491,7 +494,7 @@ def test_s9_tamamen_bos_girdilerde_kapi_patlamaz_ve_yalnizca_butce_vetosu_verir(
         "daily_loss_breaker": (0.0, ">-%3"),
         "position_size":      (0, "<=0.5R"),
         "rr_floor":           (0.0, ">=2.0"),
-        "heat_hard":          (0.0, "<=4.5R"),
+        "heat_hard":          (0.0, "<=5.0R"),
         "sector_stacking":    (0, "0"),
         "heat_review":        (0.0, "<=3.5R"),
         "correlation":        (0.0, "<=0.85"),

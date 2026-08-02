@@ -11,9 +11,13 @@ def test_hard_heat_cap_is_no_go():
     goal, params = config.goal(), config.default_strategy()["params"]
     regime = {"exposure_budget_pct": 60}
     plan = {"ticker": "X", "sector": "tech", "size_r": 1.0, "r_multiple_expected": 2.5, "score": 90}
-    # 4.0R already open + 1.0R new = 5.0R > HEAT_HARD_R(4.5) -> NO_GO
+    # OPERATÖR KARARI 2026-08-03 (d01ccb5): heat_hard_r 4,5→5,0R — senaryo tavanın üstüne taşındı.
+    # 4.5R already open + 1.0R new = 5.5R > HEAT_HARD_R(5.0) -> NO_GO.
+    # open_risk_r SENTETİKTİR (4 pozisyon × max_position_r=1,0 zarfının üstünde) ve BİLEREK öyle:
+    # tavan artık zarfa EŞİT olduğu için, ısı vetosunu open_positions vetosundan AYRIŞTIRAN tek
+    # kurulum budur — open_positions 4'te kalır, düşen tek sert kural heat_hard'dır.
     v, r = guard.classify_gate(plan, {"open_positions": 4, "sector_counts": {}, "day_pnl_pct": 0,
-                                      "open_risk_r": 4.0}, regime, goal, params)
+                                      "open_risk_r": 4.5}, regime, goal, params)
     assert v == "NO_GO" and any("sert tavan" in x for x in r)
 
 

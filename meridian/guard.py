@@ -284,8 +284,10 @@ REVIEW_SCORE_BAND = 10         # score within this of entry.min_score -> REVIEW
 # ÜÇ EŞİK ARTIK OPERATÖR KALEMİDİR (C24, 2026-08-02) — buradakiler YALNIZ FAIL-SAFE VARSAYILANDIR.
 # Kanonik kaynak `goal.yaml`ın `limits` bloğudur ve `classify_gate` onu ORADAN okur; anahtar yoksa
 # bu değerlere düşer, yani eski goal.yaml'lı bir kopya (ya da elle kurulmuş bir goal sözlüğü taşıyan
-# test) davranış DEĞİŞTİRMEDEN koşar. Değerler taşınırken KORUNDU: 4,5 / 3,5 / 0,85 — bu tur bir
-# yönetişim turudur, eşik turu değil (eşik değişikliği ölçüm kartı ister).
+# test) davranış DEĞİŞTİRMEDEN koşar. TAŞIMA turu bir yönetişim turuydu, eşik turu değil: değerler
+# 4,5 / 3,5 / 0,85 olarak KORUNMUŞTU. `heat_hard_r` o günden BERİ değişti — OPERATÖR KARARI
+# 2026-08-03 (d01ccb5) onu 4,5→5,0R'ye taşıdı (ilan edilen zarfa eşitleme); aşağıdaki fail-safe de
+# aynı karara göre güncellendi (7e99eff). Diğer ikisi taşındıkları gibi durur.
 HEAT_REVIEW_R = 3.5            # total open risk (R) above this -> REVIEW (book getting concentrated)
 HEAT_HARD_R = 5.0             # OPERATÖR KARARI 2026-08-03 (d01ccb5): zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)
 CORR_REVIEW = 0.85           # candidate return-correlation with a held name above this -> REVIEW
@@ -311,7 +313,8 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     # C24: ısı/korelasyon eşikleri OPERATÖR ZARFINDAN gelir; anahtar yoksa modül varsayılanı
     # (fail-safe — eski bir goal.yaml ya da elle kurulmuş goal sözlüğü davranışı değiştirmez).
     # `float(... or default)` DEĞİL `.get(..., default)`: 0.0 meşru bir eşiktir (her planı keser)
-    # ve `or` onu sessizce 4,5'e çevirirdi — operatörün yazdığı sayı operatörün sayısıdır.
+    # ve `or` onu sessizce modül varsayılanına (bugün 5,0R) çevirirdi — operatörün yazdığı sayı
+    # operatörün sayısıdır.
     heat_hard_r = float(limits.get("heat_hard_r", HEAT_HARD_R))
     heat_review_r = float(limits.get("heat_review_r", HEAT_REVIEW_R))
     corr_review = float(limits.get("corr_review", CORR_REVIEW))

@@ -138,7 +138,7 @@ def test_c24_isi_tavani_GOAL_LIMITSTEN_okunur(seeded):
     goal = config.goal()
     pf = _pf(open_risk_r=3.0)                       # 3,0R açık + 1,0R aday = 4,0R
     assert guard.classify_gate(_plan(), pf, _rejim(), goal)[0] != "NO_GO", \
-        "4,0R bugünkü 4,5R tavanının ALTINDA — başlangıç durumu yanlış kurulmuş"
+        "4,0R bugünkü 5,0R tavanının ALTINDA — başlangıç durumu yanlış kurulmuş"
     sikilastirilmis = copy.deepcopy(goal)
     sikilastirilmis["limits"]["heat_hard_r"] = 3.5
     verdict, reasons = guard.classify_gate(_plan(), pf, _rejim(), sikilastirilmis)
@@ -173,8 +173,9 @@ def test_c24_anahtar_YOKKEN_modul_varsayilanina_duser(seeded):
 
 
 def test_c24_SIFIR_esik_or_ile_yutulmaz(seeded):
-    """0,0 MEŞRU bir eşiktir (her planı keser) ve `float(x or default)` onu sessizce 4,5'e
-    çevirirdi — operatörün yazdığı sayı operatörün sayısıdır. `.get(ad, varsayilan)` şart."""
+    """0,0 MEŞRU bir eşiktir (her planı keser) ve `float(x or default)` onu sessizce modül
+    varsayılanına (bugün 5,0 — d01ccb5) çevirirdi: operatörün yazdığı sayı operatörün sayısıdır.
+    `.get(ad, varsayilan)` şart."""
     goal = copy.deepcopy(config.goal())
     goal["limits"]["heat_hard_r"] = 0.0
     v, r = guard.classify_gate(_plan(size_r=0.25), _pf(open_risk_r=0.0), _rejim(), goal)
@@ -194,8 +195,10 @@ def test_c24_degerler_TASINIRKEN_korundu(seeded):
 
 def test_c24_TUTARLILIK_CIVISI_sert_tavan_zarfi_ASAMAZ(seeded):
     """`heat_hard_r <= max_open_positions × max_position_r`. YÖN ÖNEMLİ: çivi "eşit olsun" demez,
-    "AŞMASIN" der. Altında kalmak meşrudur ve bugün bilerek altındadır (goal.yaml'da yorumlu);
-    aşmak ise ilan edilen zarfı sessizce büyütmek olurdu — tavan artık hiçbir şeyi kesmezdi."""
+    "AŞMASIN" der. Altında kalmak meşrudur; bugün ise TAM EŞİTTİR (5,0R = 5×1,0R — OPERATÖR
+    KARARI 2026-08-03, d01ccb5: eşitleme risk artıran ve operatöre ait bir karardı, kod artık onu
+    kendiliğinden vermiyor). Aşmak ilan edilen zarfı sessizce büyütmek olurdu — tavan artık
+    hiçbir şeyi kesmezdi; çivinin yönü bu yüzden `<=`dir, `==` değil."""
     lim = config.goal()["limits"]
     zarf = float(lim["max_open_positions"]) * float(lim["max_position_r"])
     assert float(lim["heat_hard_r"]) <= zarf, \
