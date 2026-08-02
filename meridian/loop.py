@@ -211,10 +211,11 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
     E2'DE `motor="kapi"` — BİLİNÇLİ: bu satır ne iç motorun ne aynanın bir İCRA kararıdır, plan
     ikisine de ULAŞMADAN kapıda düştü. `motor="ic"` yazsaydık `analytics.entry_execution_summary`
     kartın kill-ölçütü olan `dolmama_orani`nın PAYDASINI şişirirdi — ölçüm eşiği kod değişikliğiyle
-    sessizce kayardı (kill-list dokunulmazdır). ÖLÇÜM BORCU BEYANLI: `entry_execution_summary`
-    bugün yalnız `ic`/`ayna` kovalarını ayırıyor, `kapi` kovasının özet okuyucusu HENÜZ YOK —
-    bugünkü okuyucular olay defteri (`armed_dropped`) ve plan satırının `broker_status` damgasıdır
-    (gap-veto ile birebir aynı desen)."""
+    sessizce kayardı (kill-list dokunulmazdır). ÖLÇÜM BORCU KAPANDI (2026-08-02):
+    `analytics.entry_execution_summary` artık `kapi` kovasını AYRI sayıyor (`kapi_dagilimi` —
+    betimleyici, oran/eşik ÜRETMEZ) ve pano mutabakat masası onu yüzeye çıkarıyor; eski okuyucular
+    — olay defteri (`armed_dropped`) ve plan satırının `broker_status` damgası — yanında aynen
+    duruyor (gap-veto ile birebir aynı desen)."""
     status = f"armed_dropped_{gate}"
     pl["broker_status"] = status
     obs.warn("armed_dropped", ticker=pl.get("ticker"), plan_id=pl.get("id"), gate=gate,

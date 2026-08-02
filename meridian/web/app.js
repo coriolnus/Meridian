@@ -2499,7 +2499,265 @@ async function opParcalar() {
       return `<h3 class="t" style="margin-top:16px">Gönderim olayları · başarısız (${evs.length})</h3>
         <p class="hint">Kalıcı ret defterinin GÖRMEDİĞİ iki hâl burada: ağ arızasında plan silahlı
           kalır, gönderim istisnasında hiç deneme kaydı düşmez. Halka son ${n80} olay.</p>${rows}`;
+    })()}
+    ${(() => {
+      // KAPIDA DÜŞEN SİLAHLI PLANLAR (E2 defterinin `motor="kapi"` kovası; yazan loop._armed_drop_row).
+      // Bu satırlar bir İCRA KARARI DEĞİL: plan ne iç motora ne aynaya ulaştı, dolum HİÇ denenmedi.
+      // Bu yüzden kart EXE-2026-001'in kill-ölçütü `dolmama_orani`nın PAYDASINA girmezler ve masada
+      // AYRI durur — gönderim/ret satırlarıyla toplanırsa "emir çıktı ama tutmadı" gibi okunurdu.
+      // ÜÇ HÂL AYRI (`_gapRows` deseni): kova YOK (ölçüm okunamadı) ≠ n=0 (ölçüldü, düşen yok) ≠ n>0.
+      const slp = (d.icra || {}).slipaj || {}, kp = slp.kapi;
+      if (!kp) return `<p class="hint" style="margin-top:12px"><span class="mut">Kapıda düşen silahlı
+        planlar okunamadı (E2 özetinde <code>kapi</code> kovası yok) — bu kutu ölçüm YOK demektir,
+        "düşen plan yok" demek değildir.</span></p>`;
+      const pen = slp.pencere_gun ?? "?";
+      if (!kp.n) return `<p class="hint" style="margin-top:12px">Son ${pen} günde kapıda düşen
+        silahlı plan yok — silahlanan her plan icra yoluna girdi.</p>`;
+      // BİLİNMEYEN ANAHTAR HAM GÖSTERİLİR (EXIT_TR deseni): sözlükte olmayan bir kapı adı sessizce
+      // "diğer"e katlanırsa yeni bir kapı sınıfı panoda GÖRÜNMEDEN doğar.
+      const KAPI_TR = { halt: "HALT — icra durdurma", breaker: "devre kesici",
+                        data_bad: "veri arızası", throttle: "boyut kısıcı (size_mult=0)",
+                        slot_full: "slot dolu", already_open: "sembol zaten defterde" };
+      const rows = Object.entries(kp.kapi_dagilimi || {}).sort((a, b) => b[1] - a[1]).map(([g, n]) =>
+        `<div class="srow"><span>${esc(KAPI_TR[g] || g)}</span><b class="mono-num">${n}</b></div>`).join("");
+      return `<h3 class="t" style="margin-top:16px">Kapıda düşen silahlı planlar (${kp.n})</h3>
+        <p class="hint">Plan silahlıydı, kapı kapalıydı: <b>dolum hiç denenmedi</b> — ne iç motorun
+          ne aynanın icra kararı. Bu sayı <b>dolmama oranının</b> paydasına GİRMEZ; kill ölçütü kod
+          değişikliğiyle kaymaz. Pencere son ${pen} gün.</p>${rows}`;
     })()}</div>`;
+
+  // BPS ÖZETİ — ÜÇ İCRA KARTININ ORTAK BİÇİMLEYİCİSİ (E2 · E3 · E4). Eskiden sIcra'nın IIFE'si
+  // içindeydi; E4'ün `giris_gap_bps`i de aynı `_bps_ozet` şeklini taşıdığı için buraya çıkarıldı.
+  // TEK TANIM ŞART: ikinci bir kopya, "ölçülemeyen" satırının bir kartta gösterilip diğerinde
+  // yutulması gibi sessiz bir ayrışmayı ilk düzenlemede doğururdu.
+  // None istatistik 0.0 gibi BASILMAZ: n=0 "slipaj sıfırdı" değil "ölçüm yok"tur; paydadan düşen
+  // satır (`n_olculemeyen`) sessizce kaybolmaz, sayısıyla yanında durur.
+  const fmtBps = o => (!o || !o.n)
+    ? `— (n=0${o && o.n_olculemeyen ? ` · ölçülemeyen ${trn(o.n_olculemeyen)}` : ""})`
+    : `ort ${trn(o.ort, 1)} · medyan ${trn(o.medyan, 1)} · p90 ${trn(o.p90, 1)} bps `
+      + `(n=${trn(o.n)}${o.n_olculemeyen ? ` · ölçülemeyen ${trn(o.n_olculemeyen)}` : ""})`;
+
+  // ---------- İCRA GERÇEKLİĞİ · E2 SLİPAJ DEFTERİ (kart EXE-2026-001) --------------------------
+  // NEDEN AYRI KART: Bölüm 1 "iç defterim brokerinkiyle aynı mı?" diye sorar (sapma/hayalet/HWM);
+  // burası "emir çıkınca NE OLDU?" diye — ret SINIFI, dolumun bps faturası, kill ölçütü ve iki
+  // motorun mutabakatı. İkisi tek kartta toplansa sapma sayıları icra sayılarıyla aynı sütuna
+  // dizilir, "kaç emir reddedildi" ile "kaç pozisyon ayrıştı" birbirine karışırdı.
+  // EŞİK YÜKTEN OKUNUR (C10 dersi): `kill_esigi` panoya SABİT yazılmaz — analytics'te değişirse
+  // pano sessizce eski eşiği savunmaya devam ederdi; ekrandaki sayı ölçümün kendi sayısıdır.
+  // None ≠ 0 (UYDURMA YASAĞI): oranın paydası boşken "%0" basmak "ret yok / slipaj yok" demek
+  // olurdu. Ölçülemeyen her yerde "—" + NEDEN yazar.
+  const sIcra = (() => {
+    const slp2 = (d.icra || {}).slipaj;   // dosya idiyomu: `|| {}` zinciri, opsiyonel-zincir yok
+    const bas = `<div class="card rise"><h2 class="t">İcra gerçekliği
+      <span class="tx3" style="font-weight:400">(E2 slipaj defteri · kart EXE-2026-001)</span></h2>`;
+    // ÜÇ HÂL AYRI (`_gapRows` / kapı bloğu deseni): yük YOK (ölçüm okunamadı) ≠ defter BOŞ
+    // (ölçüldü, satır düşmedi) ≠ dolu. Birincisi arıza, ikincisi durum — aynı kutuya sığmazlar.
+    if (!slp2 || !Object.keys(slp2).length) return `${bas}
+      <p class="hint"><span class="mut">Ölçüm okunamadı — E2 özeti teşhis yükünde yok
+        (<code>icra.slipaj</code>). Bu kutu <b>ölçüm YOK</b> demektir, "icra temiz" demek
+        değildir.</span></p></div>`;
+    const pen = esc(String(slp2.pencere_gun ?? "?"));
+    if (String(slp2.durum || "").includes("defter boş")) return `${bas}
+      <div class="srow"><span>Defter</span><b class="mut">${esc(slp2.durum)}</b></div>
+      <div class="srow"><span>Defterdeki satır</span><b class="mono-num">${trn(slp2.n_defter ?? 0)}</b></div>
+      <p class="hint">Nedeni yük kendi söylüyor; pano ikinci bir açıklama uydurmaz. Boş defterden
+        oran/ortalama ÜRETİLMEZ: "%0 ret" ya da "0,0 bps" yazmak "slipaj yok" demek olurdu.
+        Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p></div>`;
+    const ay = slp2.ayna || {}, dl = ay.dolum || {}, ic = slp2.ic_motor || {}, mt = slp2.mutabakat || {};
+    // BİLİNMEYEN ANAHTAR HAM BASILIR (EXIT_TR/kapı deseni): sözlükte olmayan bir karar ya da ret
+    // sınıfı sessizce "diğer"e katlanırsa yeni bir sınıf panoda GÖRÜNMEDEN doğar.
+    const ICRA_TR = { submitted: "gönderildi", rejected: "broker reddetti", veto: "yasa vetosu",
+                      unreachable: "broker erişilemedi", fill: "doldu", skip: "atlandı",
+                      entry_missed_limit: "limit kaçtı (dolmadı)", entry_gap_veto: "gap vetosu",
+                      stop_vs_current: "stop cari fiyatın yanlış tarafında", gap_veto: "gap vetosu",
+                      buying_power: "alım gücü yetmedi", diger: "diğer" };
+    // BOŞ SÖZLÜK SATIR BASMAZ: "0 kayıt" ile "kova hiç yok" ayrımı başlıkta zaten yapıldı.
+    const dagRows = dag => Object.entries(dag || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
+      `<div class="srow"><span>${esc(ICRA_TR[k] || k)}</span><b class="mono-num">${trn(n)}</b></div>`).join("");
+    const stopN = (ay.red_sinifi_dagilimi || {}).stop_vs_current || 0;
+    const dm = ic.dolmama_orani, ke = ic.kill_esigi;   // ikisi de YÜKTEN — eşik burada sabit değil
+    const asildi = (dm != null && ke != null && dm > ke);
+    const ayr = mt.ayrisan || [];
+    const ayrRows = ayr.map(a => `<div class="trow" style="grid-template-columns:70px 120px 1fr 1fr">
+        <span class="tick">${esc(a.ticker || "?")}</span>
+        <span class="chain mut">${esc(String(a.plan_id || "—").slice(0, 14))}</span>
+        <span class="chain">ayna: ${esc(ICRA_TR[a.ayna] || a.ayna || "—")} · dolum ${a.ayna_fill != null ? trn(a.ayna_fill, 2) : "yok"}</span>
+        <span class="chain">iç: ${esc(ICRA_TR[a.ic] || a.ic || "—")}</span></div>`).join("");
+    return `${bas}
+      <div class="srow"><span>Pencere</span><b class="mono-num">${pen} gün · pencerede ${trn(slp2.n ?? 0)} satır · defterde ${trn(slp2.n_defter ?? 0)}</b></div>
+      <p class="hint">Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p>
+
+      <h3 class="t" style="margin-top:16px">Ayna · gönderim &amp; ret (${trn(ay.n ?? 0)})</h3>
+      <div class="srow"><span>Ret oranı <span class="tx3">(payda: gönderim denemesi)</span></span>
+        <b class="${ay.red_orani == null ? "mut" : (ay.red_orani > 0 ? "neg" : "pos")}">${ay.red_orani == null ? "— gönderim denemesi yok" : pctf(ay.red_orani, 1)}</b></div>
+      <div class="srow"><span>Kartın (a) ölçütü · <code>stop_vs_current</code></span>
+        <b class="${stopN ? "neg" : "pos"}">${trn(stopN)}${stopN ? " — sıfıra inmeli" : " · ölçüt karşılandı"}</b></div>
+      ${dagRows(ay.karar_dagilimi)}
+      ${dagRows(ay.red_sinifi_dagilimi)}
+      <div class="srow"><span>Dolum</span><b class="mono-num">${trn(dl.n_dolan ?? 0)} dolan · oran ${dl.dolum_orani == null ? '<span class="mut">— gönderilen emir yok</span>' : pctf(dl.dolum_orani, 1)}</b></div>
+      <div class="srow"><span>Dolum − resmî açılış</span><b class="mono-num">${fmtBps(dl.fill_vs_resmi_acilis_bps)}</b></div>
+      <div class="srow"><span>Dolum − limit</span><b class="mono-num">${fmtBps(dl.fill_vs_limit_bps)}</b></div>
+      <p class="hint">Limite sıfır yakınlık tavanın BAĞLADIĞINI, belirgin negatif ise yasanın para
+        bıraktığını söyler — ikisi de kart grid'inin ölçüm girdisidir, karar değil.</p>
+
+      <h3 class="t" style="margin-top:16px">İç motor · kill ölçütü (${trn(ic.n ?? 0)})</h3>
+      <div class="srow"><span>Dolmama oranı</span>
+        <b class="${dm == null ? "mut" : (asildi ? "neg" : "pos")}">${dm == null ? "— ölçülmedi (iç motor satırı yok)" : pctf(dm, 1)}${dm == null ? "" : (asildi ? " · kill ölçütü aşıldı (kart EXE-2026-001)" : " · eşiğin altında")}</b></div>
+      <div class="srow"><span>Kill eşiği <span class="tx3">(yükten okunur)</span></span>
+        <b class="${ke == null ? "mut" : "mono-num"}">${ke == null ? "— eşik yükte yok" : pctf(ke, 0)}</b></div>
+      <div class="srow"><span>Kaçan limit · gap vetosu · dolan</span>
+        <b class="mono-num">${trn(ic.kacan_limit_n ?? 0)} · ${trn(ic.gap_veto_n ?? 0)} · ${trn(ic.n_dolan ?? 0)}</b></div>
+      <div class="srow"><span>Dolum − resmî açılış <span class="tx3">(iç motor)</span></span><b class="mono-num">${fmtBps(ic.fill_vs_resmi_acilis_bps)}</b></div>
+      ${dagRows(ic.karar_dagilimi)}
+
+      <h3 class="t" style="margin-top:16px">İki motor mutabakatı</h3>
+      <div class="srow"><span>Ortak plan</span><b class="mono-num">${trn(mt.ortak_plan_n ?? 0)}</b></div>
+      <div class="srow"><span>Ayrışan plan</span>
+        <b class="${mt.ayrisan_n ? "warn" : "pos"}">${mt.ayrisan_n ? trn(mt.ayrisan_n) + " — iki motor hizalanmadı" : "ayrışma yok"}</b></div>
+      ${ayrRows ? `<div class="tbl" style="margin-top:8px">${ayrRows}</div>` : ""}
+      <p class="hint">Ayna dolumu aynı gün henüz uzlaşmamış olabilir: <b>dolum yok</b> + iç motor
+        <b>doldu</b> satırları pencere ilerledikçe kapanır. Kapanmayan ayrışma gizlenmez, kalıcı
+        ölçüm olarak burada durur.</p></div>`;
+  })();
+
+  // ---------- İCRA GERÇEKLİĞİ · E3 KÖTÜMSER MALİYET BANDI --------------------------------------
+  // NEDEN E2'DEN AYRI KART: E2 "emir çıkınca ne oldu?"yu ölçer; burası "o faturayı hangi VARSAYIMLA
+  // hesaplıyoruz?" sorusudur. Yürürlükteki band bir GİRDİdir (goal.yaml sözleşmesi), ampirik ölçüm
+  // ise o girdinin sınanmasıdır. İkisi E2'nin bps satırlarının arasına serpiştirilse "gerçekte
+  // ödediğimiz" ile "varsaydığımız" aynı sütuna düşer ve fark okunmaz hâle gelirdi.
+  // ASGARİ-N YÜKTEN OKUNUR (C10 dersi): `min_n` panoya SABİT yazılmaz — analytics'teki BAND_MIN_N
+  // değişirse pano sessizce eski asgariyi savunmaya devam ederdi.
+  // ÖLÇER, UYGULAMAZ: bu kart goal.yaml'ı DEĞİŞTİRMEZ ve değiştirdiğini ima etmez; `uygulama`
+  // alanı sözleşmeyi kendi ağzıyla söyler, pano onu kendi cümlesiyle yeniden yazmaz.
+  const sBand = (() => {
+    const kb = (d.icra || {}).kotumser_band;   // dosya idiyomu: `|| {}` zinciri, opsiyonel-zincir yok
+    const bas = `<div class="card rise"><h2 class="t">Kötümser maliyet bandı
+      <span class="tx3" style="font-weight:400">(E3 · yürürlük + ampirik ölçüm)</span></h2>`;
+    if (!kb || !Object.keys(kb).length) return `${bas}
+      <p class="hint"><span class="mut">Ölçüm okunamadı — E3 özeti teşhis yükünde yok
+        (<code>icra.kotumser_band</code>). Bu kutu <b>ölçüm YOK</b> demektir, "maliyet bandı
+        yerinde" demek değildir.</span></p></div>`;
+    const yr = kb.yururlukteki || {};
+    // BİLİNMEYEN TABAN HAM BASILIR (EXIT_TR/kapı deseni): sözlükte olmayan bir taban adı sessizce
+    // "band yok"a katlanırsa yeni bir taban sınıfı panoda GÖRÜNMEDEN doğar.
+    const TABAN = { ampirik: ["AMPİRİK TABAN", "t-go"], literatur: ["LİTERATÜR TABANI", "t-vi"],
+                    yok: ["BAND YOK", "t-no"] };
+    const [tlbl, tkls] = TABAN[String(yr.taban || "")] || [String(yr.taban || "—"), "t-no"];
+    const amp = kb.ampirik_bps;   // None ≠ 0: ölçülmemiş bandı "0,0 bps" basmak "maliyet yok" derdi
+    return `${bas}
+      <h3 class="t">Yürürlükteki band ${_chip(tlbl, tkls)}</h3>
+      <div class="srow"><span>Ek maliyet <span class="tx3">(giriş bacağına)</span></span>
+        <b class="mono-num">${trn(yr.ek_bps_giris, 2)} bps</b></div>
+      <div class="srow"><span>Açılış spread'i</span>
+        <b class="${yr.acilis_spread_bps == null ? "mut" : "mono-num"}">${yr.acilis_spread_bps == null
+          ? "—" : trn(yr.acilis_spread_bps, 2) + " bps"}</b></div>
+      <div class="srow"><span>Yürürlükteki slipaj modeli</span>
+        <b class="mono-num">${trn(yr.yururlukteki_slippage_bps, 2)} bps</b></div>
+      ${(yr.ampirik_n || 0) > 0 ? `<div class="srow"><span>Dosyadaki ampirik değer</span>
+        <b class="mono-num">${trn(yr.ampirik_bps, 2)} bps · n=${trn(yr.ampirik_n)}</b></div>` : ""}
+      <p class="hint">Kapsam: ${esc(yr.kapsam || "—")}. Kaynak: <code>${esc(yr.kaynak || "—")}</code></p>
+
+      <h3 class="t" style="margin-top:16px">Ampirik ölçüm <span class="tx3">(E2 defterinden)</span></h3>
+      <div class="srow"><span>Pencerede dolan satır</span><b class="mono-num">${trn(kb.n_dolan ?? 0)}</b></div>
+      ${amp == null
+        ? `<div class="srow"><span>Ampirik band</span>
+             <b class="mut">${esc(kb.neden || "gerekçe alanı boş — yük nedenini yazmadı")}</b></div>
+           <div class="srow"><span>İlerleme <span class="tx3">(asgari örneklem yükten)</span></span>
+             <b class="mono-num">ölçülmüş dolum ${trn(kb.n_olculen ?? 0)} / asgari ${trn(kb.min_n)}</b></div>`
+        : `<div class="srow"><span>Ampirik ek maliyet <span class="tx3">(dolum − resmî açılış, ort)</span></span>
+             <b class="mono-num">${trn(amp, 2)} bps · n=${trn(kb.n_olculen ?? 0)}</b></div>
+           <div class="srow"><span>Medyan · p90</span>
+             <b class="mono-num">${trn(kb.medyan_bps, 2)} · ${trn(kb.p90_bps, 2)} bps</b></div>`}
+      <p class="hint">Bu bir <b>ÖLÇÜMDÜR</b>, uygulama değil: ${esc(kb.uygulama || "—")} Bandı doldurmak
+        <b>operatör eylemidir</b>; pano da analytics de kendi maliyet paydasını kendisi güncellemez.
+        Asgari örneklem (${trn(kb.min_n)}) yükten okunur — panoya sabit yazılsaydı analytics'teki
+        değişiklik ekrana yansımaz, pano eski asgariyi savunmayı sürdürürdü.</p></div>`;
+  })();
+
+  // ---------- İCRA GERÇEKLİĞİ · E4 GECE / GÜNDÜZ AYRIŞTIRMASI ----------------------------------
+  // NEDEN AYRI KART: E2/E3 emrin FATURASINI ölçer; bu kart "kâr hangi bacaktan geldi?" diye sorar.
+  // Girişler AÇILIŞTA olduğu için her işlem önce bir gece bacağı satın alır ve momentumun işareti
+  // iki bacakta zıt olabilir — tek ortalamada toplanırlarsa birbirlerini yerler ve kart "yol" diye
+  // tek bir sayı gösterip ayrışmayı gizlerdi.
+  // TRAINING AYRI SATIR (BT-1 dersi): `replay_seed` tohum satırları KURALLARIN karakteridir, canlı
+  // icra kanıtı DEĞİL. Canlı kâğıtla aynı hücrede toplanırlarsa hüküm tohumdan gelir ve öyle
+  // göründüğü yerde de öyle okunmaz.
+  // İNCE HÜCRE EŞİĞİ YÜKTEN (C10): `hucre_min_n` panoya sabit yazılmaz; ince hücrenin değeri
+  // GİZLENMEZ, etiketlenir — saklamak "ölçüm yok" ile "az örneklem"i aynı kutuya koyardı.
+  // None ≠ 0: `gece_payi` paydası (|gece|+|gündüz|) ~0 iken oran TANIMSIZdır; "%0" basmak "gece
+  // bacağı yok" demek olurdu.
+  const sGeceG = (() => {
+    const gg = (d.icra || {}).gece_gunduz;
+    const bas = `<div class="card rise"><h2 class="t">Gece / gündüz ayrıştırması
+      <span class="tx3" style="font-weight:400">(E4 · tutuş yolunun iki bacağı)</span></h2>`;
+    if (!gg || !Object.keys(gg).length) return `${bas}
+      <p class="hint"><span class="mut">Ölçüm okunamadı — E4 özeti teşhis yükünde yok
+        (<code>icra.gece_gunduz</code>). Bu kutu <b>ölçüm YOK</b> demektir, "bacaklar dengeli"
+        demek değildir.</span></p></div>`;
+    // ÜÇ HÂL AYRI (`_gapRows` deseni): yük YOK (yukarısı) ≠ ölçülemedi (`neden_bos` — yük nedenini
+    // KENDİ söyler) ≠ ölçüldü. Ortadaki hâlde tek bir bacak yüzdesi bile uydurulmaz.
+    if (gg.neden_bos) return `${bas}
+      <div class="srow"><span>Durum</span><b class="mut">${esc(gg.neden_bos)}</b></div>
+      <div class="srow"><span>Defterdeki işlem · ölçülemeyen</span>
+        <b class="mono-num">${trn(gg.n ?? 0)} · ${trn(gg.n_olculemeyen ?? 0)}</b></div>
+      <p class="hint">Nedeni yük kendi söylüyor; pano ikinci bir açıklama uydurmaz. Ölçülemeyen
+        defterden bacak payı ÜRETİLMEZ: "%50 gece" yazmak ölçülmemiş bir kırılımı ölçülmüş
+        göstermek olurdu.</p></div>`;
+    const gn = gg.genel || {};   // bacaklar KESİRDİR (0,02 = %2) — pctf yüzdeye çevirir
+    const KAYNAK_TR = { training: "eğitim (tohum)", live_paper: "canlı kâğıt", belirsiz: "belirsiz" };
+    const CAPKOL = "grid-template-columns:112px 74px 46px 1fr 1fr 1fr";
+    // BİLİNMEYEN KAYNAK/DİLİM HAM BASILIR: yeni bir damga sınıfı sessizce "belirsiz"e katlanırsa
+    // panoda GÖRÜNMEDEN doğar. `olculemedi` dilimi de ham durur — bir güne düşürülmez.
+    const capRows = (gg.capraz || []).map(c => {
+      const ince = c.yeterli === false;
+      return `<div class="trow" style="${CAPKOL}${ince ? ";opacity:.55" : ""}">
+        <span class="tick">${esc(KAYNAK_TR[String(c.kaynak || "")] || c.kaynak || "—")}</span>
+        <span class="chain">${esc(c.tutus_dilimi || "—")}</span>
+        <span class="mono-num num">${trn(c.n ?? 0)}</span>
+        <span class="mono-num num">${pctf(c.gece, 2)}</span>
+        <span class="mono-num num">${pctf(c.gunduz, 2)}</span>
+        <span class="mono-num num">${pctf(c.islem, 2)}${ince
+          ? ' <span class="mut">· ince</span>' : ""}</span></div>`;
+    }).join("");
+    return `${bas}
+      <h3 class="t">Genel <span class="tx3">(ölçülebilen tüm satırlar)</span></h3>
+      <div class="srow"><span>Gece bacağı <span class="tx3">(önceki kapanış → açılış)</span></span>
+        <b class="mono-num">${pctf(gn.gece, 2)}</b></div>
+      <div class="srow"><span>Gündüz bacağı <span class="tx3">(açılış → kapanış)</span></span>
+        <b class="mono-num">${pctf(gn.gunduz, 2)}</b></div>
+      <div class="srow"><span>Tutulan yol <span class="tx3">(gece + gündüz)</span></span>
+        <b class="mono-num">${pctf(gn.yol, 2)}</b></div>
+      <div class="srow"><span>İşlemin kendi getirisi <span class="tx3">(<code>pnl_pct</code>)</span></span>
+        <b class="mono-num">${pctf(gn.islem, 2)}</b></div>
+      <div class="srow"><span>İcra farkı <span class="tx3">(işlem − yol)</span></span>
+        <b class="mono-num">${pctf(gn.icra_farki, 2)}</b></div>
+      <div class="srow"><span>Gecenin payı <span class="tx3">(mutlak bacaklardan)</span></span>
+        <b class="${gn.gece_payi == null ? "mut" : "mono-num"}">${gn.gece_payi == null
+          ? "— iki bacak ~0, pay tanımsız" : pctf(gn.gece_payi, 2)}</b></div>
+      <div class="srow"><span>Payda <span class="tx3">(sayaç, alarm değil)</span></span>
+        <b class="mono-num">ölçülebilen ${trn(gg.n_olculebilir ?? 0)} · <span class="mut">ölçülemeyen
+          ${trn(gg.n_olculemeyen ?? 0)}</span> · defterde ${trn(gg.n ?? 0)}</b></div>
+      <p class="hint">Özdeşlik: <code>${esc(gg.ozdeslik || "—")}</code> — gündüz + gece TUTULAN YOLun
+        tamamıdır, yaklaşık değil tam. <b>İcra farkı</b> = işlem − yol: çıkış seviyesi + friksiyon,
+        yani tam olarak E1/E2'nin ölçtüğü şey. Üçü tek sayıda toplansaydı icra maliyeti piyasa
+        hareketi gibi görünürdü. Yöntem: ${esc(gg.yontem || "—")}</p>
+
+      <h3 class="t" style="margin-top:16px">Giriş gap'i</h3>
+      <div class="srow"><span>Açılış − önceki kapanış</span><b class="mono-num">${fmtBps(gg.giris_gap_bps)}</b></div>
+      <p class="hint">SATIN ALINAN gece bacağı — tutulan yolun <b>İÇİNDE DEĞİLDİR</b> (yol giriş
+        açılışında başlar). E1'in limit tavanı tam olarak bu sayıyı kelepçeler; ikisi ayrı
+        okunmazsa tavanın neyi kestiği görünmez.</p>
+      ${capRows ? `<h3 class="t" style="margin-top:16px">Kaynak × tutuş dilimi</h3>
+        <div class="tbl"><div class="trow head" style="${CAPKOL}">
+          <span>KAYNAK</span><span>DİLİM</span><span class="num">N</span>
+          <span class="num">GECE</span><span class="num">GÜNDÜZ</span><span class="num">İŞLEM</span></div>
+        ${capRows}</div>
+        <p class="hint"><b>eğitim (tohum)</b> satırları <code>replay_seed</code> damgalıdır: kuralların
+          karakteridir, <b>canlı icra kanıtı değildir</b> — canlı kâğıtla aynı hücrede toplanmaz.
+          Sönük satırlar <b>ince hücre</b>: n &lt; ${trn(gg.hucre_min_n)} (eşik yükten okunur, panoda
+          sabit değil); değer gizlenmez, etiketlenir. <code>olculemedi</code> dilimi
+          <code>bars_held</code> taşımayan satırların kovasıdır ve ham durur.</p>` : ""}</div>`;
+  })();
 
   // ---------- BÖLÜM 2 · RİSK & REJİM KAPILARI ----------
   const regimes = ["trend_up", "trend_down", "chop", "high_vol"].map(r => {
@@ -3957,7 +4215,7 @@ async function opParcalar() {
   // duruyor (bkz. sessizHatGlobal). İkinci bir çizim, iki farklı anın ölçümünü aynı anda
   // gösterirdi. Alarm bütçesinin TAM kırılımı Gözetim'in işi olmayı sürdürür.
   return { alarm: alarmButce(d.alarm_butcesi),
-           s1, s2, s3, sOzDeg, sEdge, sSonuc, sDogrulama, sHermes, sNous, sY3,
+           s1, sIcra, sBand, sGeceG, s2, s3, sOzDeg, sEdge, sSonuc, sDogrulama, sHermes, sNous, sY3,
            sSelale, sTrend, sGolgeVaryant, sCark, sIntra, s4, s5, s6, sSag, sOgr };
 }
 
@@ -3994,8 +4252,12 @@ RENDER.operasyon = async () => {
 RENDER.mutabakat = async () => {
   const p = await opParcalar();
   $("page-mutabakat").innerHTML = bolumBasHTML("mutabakat", "Mutabakat masası",
-    "Broker API'si, yürütme akışı, hayalet emirler, HWM ikizleri, parçalı dolum ve reddedilen "
-    + "gönderimler. Sessiz hattın <b>emir reddedildi</b> çipi buraya iner.") + p.s1;
+    "Broker API'si, yürütme akışı, hayalet emirler, HWM ikizleri, parçalı dolum, reddedilen "
+    + "gönderimler ve kapıda düşen silahlı planlar. Sessiz hattın <b>emir reddedildi</b> çipi "
+    + "buraya iner. Altında <b>E2 icra gerçekliği</b> (ret sınıfı, dolumun bps faturası, iç "
+    + "motorun kill ölçütü, iki motorun mutabakatı), <b>E3 kötümser band</b> (yürürlükteki "
+    + "varsayım + defterden ampirik ölçüm) ve <b>E4 gece/gündüz</b> (kâr hangi bacaktan geldi).")
+    + p.s1 + p.sIcra + p.sBand + p.sGeceG;
 };
 
 // ---- KOŞU & DÖNGÜ · KAPILAR (ADR: "kapıdan ne geçti") ----------------------------------------

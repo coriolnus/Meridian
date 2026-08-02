@@ -15,6 +15,7 @@ Bu dosya dört şeyi kilitler:
 import ast
 import inspect
 import json
+import pathlib
 
 import pandas as pd
 import pytest
@@ -263,11 +264,51 @@ def test_e2_summary_counts_rejects_fills_and_engine_disagreement(sandbox_state):
     assert s["mutabakat"]["ortak_plan_n"] == 1 and s["mutabakat"]["ayrisan_n"] == 0
 
 
+def test_e2_kapi_bucket_counts_gates_without_touching_the_kill_denominator(sandbox_state):
+    """`motor="kapi"` KENDİ KOVASINDA sayılır ve kill paydasına SIZMAZ.
+
+    Bu testin asıl çivisi son assert: `dolmama_orani` YALNIZ iç motorun icra kararlarından
+    hesaplanır. Kapıda düşen plan hiç icra edilmedi — paydaya girseydi kartın kill eşiği (0.40)
+    kod değişikliğiyle sessizce kayardı ve kill-list DOKUNULMAZDIR (kart EXE-2026-001)."""
+    rows = [
+        {"date": "2026-08-02", "plan_id": "P1", "ticker": "A", "motor": "ic", "karar": "fill",
+         "fill": 100.4},
+        {"date": "2026-08-02", "plan_id": "P2", "ticker": "B", "motor": "ic",
+         "karar": "entry_missed_limit", "fill": None},
+        {"date": "2026-08-02", "plan_id": "P3", "ticker": "C", "motor": "kapi",
+         "karar": "armed_dropped_halt", "fill": None, "red_detay": {"kapi": "halt"}},
+        {"date": "2026-08-02", "plan_id": "P4", "ticker": "D", "motor": "kapi",
+         "karar": "armed_dropped_halt", "fill": None, "red_detay": {"kapi": "halt"}},
+        {"date": "2026-08-02", "plan_id": "P5", "ticker": "E", "motor": "kapi",
+         "karar": "armed_dropped_slot_full", "fill": None,
+         "red_detay": {"kapi": "slot_full", "acik": 3}},
+    ]
+    for r in rows:
+        store.append_jsonl(loop.ENTRY_LEDGER, r)
+    s = an.entry_execution_summary(days=None)
+    assert s["kapi"]["n"] == 3
+    assert s["kapi"]["kapi_dagilimi"] == {"halt": 2, "slot_full": 1}
+    assert s["ic_motor"]["n"] == 2
+    assert s["ic_motor"]["dolmama_orani"] == 0.5, \
+        "kapi satırları kill paydasına sızdı — eşik kod değişikliğiyle kaydı"
+    assert s["n"] == 5      # üst-düzey sayım HAM kalır: kova ayrımı satırları saklamaz
+
+
+def test_e2_kapi_gate_falls_back_to_the_decision_prefix(sandbox_state):
+    """`red_detay` yoksa gate `karar`ın `armed_dropped_` önekinden soyulur — satır "?"e düşmez."""
+    store.append_jsonl(loop.ENTRY_LEDGER, {
+        "date": "2026-08-02", "plan_id": "P9", "ticker": "Z", "motor": "kapi",
+        "karar": "armed_dropped_breaker", "fill": None})
+    s = an.entry_execution_summary(days=None)
+    assert s["kapi"]["kapi_dagilimi"] == {"breaker": 1}
+
+
 def test_e2_empty_ledger_reports_a_state_not_a_zero(sandbox_state):
     s = an.entry_execution_summary()
     assert s["n"] == 0 and "defter boş" in s["durum"]
     assert s["ayna"]["red_orani"] is None and s["ic_motor"]["dolmama_orani"] is None
     assert s["ayna"]["dolum"]["fill_vs_resmi_acilis_bps"]["ort"] is None
+    assert s["kapi"]["n"] == 0 and s["kapi"]["kapi_dagilimi"] == {}
 
 
 # =================================================================================================
@@ -433,6 +474,56 @@ def test_law6_entry_ledger_has_a_reader_in_another_module(sandbox_state):
     rap = codelaw.report()
     assert loop.ENTRY_LEDGER not in rap["unread"]
     assert rap["artifact_violations"] == []
+
+
+def test_law6_kapi_bucket_has_a_dashboard_reader(sandbox_state):
+    """ZİNCİRİN SON HALKASI: analytics kovayı sayıyor, api onu `icra.slipaj` altında servis ediyor,
+    PANO da okumak zorunda. Okuyucusuz bir sayı YASA 6'nın tam olarak yasakladığı şeydir —
+    `kapi` kovası bu tur açılana kadar (loop._armed_drop_row'un beyan ettiği borç) tam da öyleydi."""
+    app = (pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js").read_text()
+    assert "kapi_dagilimi" in app, "pano E2 `kapi` kovasını okumuyor — ölçüm okuyucusuz (YASA 6)"
+    assert "slipaj" in app, "pano `icra.slipaj` özetine hiç dokunmuyor"
+
+
+def test_law6_slipaj_summary_has_a_dashboard_reader(sandbox_state):
+    """`kapi` kovası dışında KALAN E2 yükü de okuyucusuzdu: ret SINIFI, iç motorun kill ölçütü,
+    kill EŞİĞİ ve iki-motor ayrışması `/api/diagnostics`te tam servis ediliyor ama hiçbir yüzey
+    basmıyordu. Dördü ayrı ayrı assert edilir: zincir koptuğunda HANGİ okuyucunun düştüğü
+    testin mesajından okunur, "pano bir şeyi okumuyor" gibi bulanık bir kırmızı gelmez."""
+    app = (pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js").read_text()
+    assert "red_sinifi_dagilimi" in app, (
+        "pano ayna RET SINIFI dağılımını okumuyor — kartın (a) ölçütü (`stop_vs_current` sıfıra "
+        "inmeli) hiçbir yüzeyde görünmüyor (YASA 6)")
+    assert "dolmama_orani" in app, (
+        "pano iç motorun `dolmama_orani`sını okumuyor — kart EXE-2026-001'in KILL ÖLÇÜTÜ "
+        "okuyucusuz ölçüm olarak duruyor (YASA 6)")
+    assert "kill_esigi" in app, (
+        "pano eşiği YÜKTEN okumuyor — eşik panoya sabit yazılırsa (0.40) analytics'teki değişiklik "
+        "ekrana yansımaz ve pano eski eşiği savunmayı sürdürür (C10 dersi: sabit sayı yasak)")
+    assert "ayrisan_n" in app, (
+        "pano iki-motor mutabakatını okumuyor — `ayrisan_n` kartın (c) ölçütü, ayrışma gizlenemez "
+        "(YASA 6)")
+
+
+def test_law6_e3_e4_have_dashboard_readers(sandbox_state):
+    """`icra` bloğunun kalan İKİ üyesi de okuyucusuzdu: E3 (kötümser band) ve E4 (gece/gündüz)
+    `/api/diagnostics`te tam servis ediliyor ama hiçbir yüzey basmıyordu — E2'nin bu tur kapattığı
+    boşluğun aynısı. Dört assert ayrı: zincir koptuğunda HANGİ okuyucunun düştüğü mesajdan okunur."""
+    app = (pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js").read_text()
+    assert "ek_bps_giris" in app, (
+        "pano E3'ün YÜRÜRLÜKTEKİ bandını okumuyor — girişe yüklenen ek maliyet (`ek_bps_giris`) "
+        "hiçbir yüzeyde görünmüyor, yani hükmün maliyet varsayımı okuyucusuz (YASA 6)")
+    assert "ampirik_bps" in app and "min_n" in app, (
+        "pano E3'ün AMPİRİK ölçümünü ya da onun asgari örneklemini okumuyor — `min_n` yükten "
+        "okunmalı; panoya sabit (20) yazılırsa analytics'teki BAND_MIN_N değişikliği ekrana "
+        "yansımaz ve pano eski asgariyi savunmayı sürdürür (C10 dersi: sabit sayı yasak)")
+    assert "gece_payi" in app and "icra_farki" in app, (
+        "pano E4'ün genel özetini okumuyor — `gece_payi` (kâr hangi bacaktan) ve `icra_farki` "
+        "(işlem − yol = çıkış seviyesi + friksiyon) okuyucusuz ölçüm olarak duruyor (YASA 6)")
+    assert "hucre_min_n" in app, (
+        "pano E4'ün ince-hücre eşiğini YÜKTEN okumuyor — panoya sabit (5) yazılırsa "
+        "NIGHTDAY_HUCRE_MIN_N değişikliği ekrana yansımaz ve sönük satırların gerekçesi yalan "
+        "olur (C10 dersi: sabit sayı yasak)")
 
 
 def test_e2_ledger_rows_are_json_serialisable(sandbox_state):
