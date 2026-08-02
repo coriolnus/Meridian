@@ -42,22 +42,42 @@ from tests import wf_fixtures as wf
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 MERIDIAN = REPO / "meridian"
-REPLAY_START, REPLAY_END = "2022-01-03", "2023-12-29"
+# Pencere BİR YIL: skorun getiri bileşeni bir ORANDIR (realized_30d), pencereyi uzatmak onu
+# büyütmez ama düşüş (drawdown) için daha çok fırsat verir — kanıt tabanı sembol sayısıyla
+# büyütülüyor, pencereyle değil.
+REPLAY_START, REPLAY_END = "2022-01-03", "2022-12-30"
 
 # Turu kapatan tek değişkenli hamle ve onun tersi. İkisi de bounds.yaml içinde, adım üstünde.
 KNOB = "position_size_r"
-SMALL, FULL = 0.1, 1.0          # ölçülen: küçük pozisyon popülasyonu ebeveyninden ~0.26 skor geride
+SMALL, FULL = 0.1, 1.0          # ölçülen: küçük pozisyon popülasyonu ebeveyninden ~0.21 skor geride
 
 
 # ----------------------------------------------------------------------------------------------
 # SENTETİK AMA GERÇEKÇİ KANIT — gerçek motoru besleyecek VCP biçimli barlar.
 # Rastgele yürüyüş işe yaramıyor: `evaluate_entry` 40 günlük zirvenin TAZE kırılımını, hacim
 # genişlemesini, pivota yakınlığı ve taban-yüksekliği/ATR oranını BİRLİKTE arıyor — rastgele seri
-# 4 yılda 3 işlem üretti. Bu üreteç ardışık VCP tabanları kurar ve her üçüncü kırılımı BAŞARISIZ
+# 4 yılda 3 işlem üretti. Bu üreteç ardışık VCP tabanları kurar ve her beşinci kırılımı BAŞARISIZ
 # kılar (her kırılımın tuttuğu bir dünyada hiçbir parametre farkı ölçülemez).
+#
+# C11/C18 (0a4453f, 2026-08-02) replay'in giriş limitini CANLIYLA AYNI yasaya sıkılaştırdı: dolum
+# artık silahlanma anında ölçülen ATR ile `min(0,5·ATR14, %1)` tavanının ÜSTÜNDE yazılamıyor.
+# Eski fikstür bu yasayı geçemiyordu ÇÜNKÜ her barın açılışı KENDİ kapanışına eşitti — günlük
+# hareketin TAMAMI gece boşluğunda oluyordu ve kırılım ertesi açılış tetiğin (= sinyal barının
+# kapanışı) tam %1 üstüne düşüyordu. Ölçüldü: 66 silahlı planın 34'ü `entry_missed_limit`, 15'i
+# `open_below_stop` ile kaçtı, kanıt tabanı 17 tamamlanmış işleme indi — `min_sample`=30 ALTI.
+# Fikstür bu DÜRÜST icra modelinde min_sample'ı marjla aşacak şekilde büyütüldü (17 → 68); üç
+# değişiklik, üçü de ÜRETİM DAVRANIŞINA DEĞİL sentetik dünyanın kendisine:
+#   1. GEOMETRİ: açılış artık ÖNCEKİ kapanışın yanında doğuyor, high/low ikisini de kapsıyor.
+#      Sistematik %1'lik gece boşluğu kalktı → limit tavanı artık kurgusal bir boşlukla değil
+#      gerçek fiyat hareketiyle sınanıyor (ölçüldü: entry_rejects = {}).
+#   2. KANIT HACMİ: sembol 8 → 16, kadans kısaldı (cycle 40+i) → aynı pencerede daha çok kurulum.
+#   3. ÖLÇÜLEBİLİRLİK: taban derinliği ve koşu hızı büyüdü (depth .09→.16, run %1→%1,5) → ATR ve
+#      dolayısıyla stop mesafesi ~%1,5'ten ~%2,2'ye çıktı. Bu şart: stop dar olunca 1R'lik
+#      pozisyonun istediği notional %25 tavanına (broker.MAX_NOTIONAL_PCT) çarpıp kırpılıyor ve
+#      `position_size_r` farkı skorda ERİYOR — yani turun ÖLÇTÜĞÜ düğme ölçülemez hâle geliyordu.
 # ----------------------------------------------------------------------------------------------
-def staircase_bars(n=800, seed=7, start="2021-01-04", cycle=48, base_days=40, depth=0.09,
-                   pop=0.006, run=0.010, sigma=0.004, fail_every=3, fail_run=-0.013) -> pd.DataFrame:
+def staircase_bars(n=800, seed=7, start="2021-01-04", cycle=48, base_days=40, depth=0.16,
+                   pop=0.006, run=0.015, sigma=0.004, fail_every=5, fail_run=-0.019) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     close = np.zeros(n)
     vol = np.zeros(n)
@@ -66,7 +86,7 @@ def staircase_bars(n=800, seed=7, start="2021-01-04", cycle=48, base_days=40, de
     for i in range(n):
         ph = i % cycle
         failing = (i // cycle) % fail_every == fail_every - 1
-        if ph < base_days:                      # taban: %9 düşüş, sonra daralarak zirveye dönüş
+        if ph < base_days:                      # taban: `depth` kadar düşüş, daralarak zirveye dönüş
             frac = ph / max(1, base_days - 1)
             shape = -depth * np.sin(np.pi * frac) ** 1.4
             px = top * (1 + shape) * (1 + rng.normal(0, sigma * (1 - 0.75 * frac)))
@@ -75,15 +95,20 @@ def staircase_bars(n=800, seed=7, start="2021-01-04", cycle=48, base_days=40, de
         elif ph == base_days:                   # kırılım: pivotun ~%0.6 üstü, hacim genişlemesiyle
             px = top * (1 + pop)
             vol[i] = rng.uniform(2.6, 3.2) * 1_000_000
-        else:                                   # devam ya da (her 3. döngüde) başarısız kırılım
+        else:                                   # devam ya da (her `fail_every`. döngüde) başarısız kırılım
             px = px * (1 + (fail_run if failing else run) + rng.normal(0, sigma))
             vol[i] = rng.uniform(1.0, 1.5) * 1_000_000
             if ph == cycle - 1:
                 top = px
         close[i] = px
-    high = close * (1 + np.abs(rng.normal(0, 0.0012, n)))
-    low = close * (1 - np.abs(rng.normal(0, 0.0012, n)))
-    openp = close * (1 + rng.normal(0, 0.0008, n))
+    # Açılış ÖNCEKİ kapanışın yanında (gece boşluğu küçük), gün-içi hareket açılış→kapanış arasında;
+    # high/low İKİSİNİ DE kapsar. Eskiden `open = close·(1+ε)` idi: bar tutarsızdı (açılış high'ın
+    # üstüne çıkabiliyordu) ve günlük hareketin tamamı boşluğa yığıldığı için hem dolumlar limite
+    # takılıyor hem çıkışlar `*_gap` dalından geliyordu — icra yasasının sınanmadığı bir dünya.
+    prev_close = np.concatenate(([close[0]], close[:-1]))
+    openp = prev_close * (1 + rng.normal(0, 0.0008, n))
+    high = np.maximum(close, openp) * (1 + np.abs(rng.normal(0, 0.0012, n)))
+    low = np.minimum(close, openp) * (1 - np.abs(rng.normal(0, 0.0012, n)))
     return pd.DataFrame({"date": pd.bdate_range(start, periods=n), "open": openp,
                          "high": high, "low": low, "close": close, "volume": vol})
 
@@ -96,9 +121,12 @@ def _index_bars(n=800) -> pd.DataFrame:
                          "volume": np.full(n, 5e7)})
 
 
-# backtest.SECTORS'ta bulunan GERÇEK semboller — sektör tavanı kapısı da kendi yolundan koşsun
-TICKERS = ["AAPL", "MSFT", "NVDA", "JPM", "UNH", "XOM", "HD", "CAT"]
-BARS = {t: staircase_bars(seed=11 * i + 5, cycle=44 + i, base_days=36 + i)
+# backtest.SECTORS'ta bulunan GERÇEK semboller — sektör tavanı kapısı da kendi yolundan koşsun.
+# 8 → 16 (yukarıdaki 2. madde): sektör dağılımı geniş tutuldu ki `max_sector_exposure_pct` kapısı
+# kanıt tabanını tek sektöre sıkışmış bir popülasyondan üretmesin.
+TICKERS = ["AAPL", "MSFT", "NVDA", "JPM", "UNH", "XOM", "HD", "CAT",
+           "PG", "DIS", "NEE", "AMT", "LIN", "GS", "MRK", "LOW"]
+BARS = {t: staircase_bars(seed=11 * i + 5, cycle=40 + i, base_days=32 + i)
         for i, t in enumerate(TICKERS)}
 INDEX = _index_bars()
 
