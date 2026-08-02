@@ -1,0 +1,46 @@
+card_id: EDG-2026-021
+family: qc_delist_dogrulama   # WP-U kilidinin QuantConnect kolu — EDG-016'nın survivorship-şerhinin İLK gerçek ölçümü
+thesis: >
+  EDG-016 (turnover ana-etkisi, YAŞAYAN) sağkalan-evrende ölçüldü ve şerhi kalıcıydı: "hayatta-kalma
+  yanlılığı pozitif bulguda yukarı-çarpıtır, bu veriyle büyüklüğü ölçülemez" (EDG-018 kapı ölçümü:
+  çıkışların %96,6'sı arşivde barsız). QuantConnect'in survivorship-bias-free ABD hisse verisi
+  (delist dahil) bu şerhi İLK KEZ ölçülebilir kılar: aynı turnover üst-dilim tasarımı delist-dahil
+  evrende yeniden ölçülür. Hüküm sorusu: sinyal delist-gerçeğinde ne kadarıyla sağ?
+execution_note: >
+  ÖLÇÜM MOTORU DIŞARIDA KOŞAR (QC research ortamı, operatör hesabı — hesap/kimlik operatörde;
+  Rol-1/ajanlar hesap açamaz/kimlik giremez). Ajan yalnız KENDİNE-YETERLİ defter (notebook) üretir;
+  OPERATÖR yapıştırıp koşturur, çıktı JSON'unu repoya bırakır; hüküm Rol-1'de. Bu, "ölçüm ajanı
+  karta dokunmaz" disiplininin dış-motor uyarlamasıdır: defter EŞİKLERİ İÇERMEZ (yalnız sayı üretir).
+universe: qc_us_equity_delist_dahil — S&P500-benzeri large-cap süzgeci defterde TANIMLI ve
+  raporda beyanlı (dolar-hacim üst-N; birebir SPX üyeliği QC'de ayrı veri — varsa kullanılır,
+  yoksa süzgeç-vekili beyan edilir); pencere 2020-08→2026-07 (yerel ölçümle örtüşen 6 yıl)
+features_asof: "turnover21(t) = medyan21(hacim)/shares_outstanding(t) — EDG-016 tanımına en yakın QC karşılığı; sapma varsa (ör. QC split-ayarı) defter raporda beyan eder"
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması; 21g blok CI (defter kendi bootstrap'ını taşır — bağımlılıksız)"
+parameter_grid:
+  katman: [qc_turnover_ust20_fazlasi]   # K+=1 (tek hücre — doğrulama, arama değil)
+cost_model: "10bps + 20bps duyarlılık satırı (EDG-016 ile kıyaslanabilirlik)"
+success_metric: >
+  Delist-dahil evrende üst-%20 turnover diliminin @20 taban-fazlası anlamlı POZİTİF (CI 0-dışı)
+  → sinyal delist-gerçeğinde SAĞ; büyüklük EDG-016'nın +0,65 brüt/+0,55 net değeriyle yan yana
+  raporlanır (fark = survivorship-priminin ölçüsü).
+kill_criteria:
+  - "fazla CI-0-içi ya da negatif → YAŞAYAN SİNYAL ŞÜPHEDE: hüküm otomatik kill DEĞİL — Rol-1+operatör
+     birlikte değerlendirir (evren/tanım sapmaları önce elenir; ikinci koşum hakkı tanım-eşitleme
+     içindir, eşik-esnetme değildir)"
+  - "defter evren/tanım sapmasını kapatamıyorsa (ör. shares_outstanding as-of QC'de yoksa) →
+     'ölçülemedi' beyanı, kart askıya (uydurma vekil YASAK)"
+guards:
+  - "pozitif kontrol defterin İÇİNDE: rvol20 @20 IC işareti/mertebesi (yerel çivi ≈0.064) QC evreninde
+     yeniden üretilir — üretilemezse defter DUR der ve nedenini basar"
+  - "defter deterministik (sabit tohum), tek dosya, dış bağımlılıksız; çıktı JSON şeması kartta
+     (sonuc_021.json: hücre/CI/n/evren-sayıları/PK/beyanlar)"
+  - "operatör koşum kanıtı: QC çıktısının TAM JSON'u research/olcumler/qc_dogrulama/'ya konur;
+     hüküm kanıtla aynı commit'te"
+k_registry: {registered_at: "2026-08-03T00:40Z", trial_ids: [qc_dogrulama/turnover_ust20]}
+status: registered
+notes: >
+  Operatör QC hesabını 2026-08-03'te açtı. Akış: (1) ajan defteri üretir →
+  research/qc_dogrulama/qc_defter_021.py + OPERATOR_TALIMATI.md; (2) operatör QC Research'te
+  yeni notebook'a yapıştırır, koşturur (~dk mertebesi), son hücrenin JSON çıktısını kopyalayıp
+  research/olcumler/qc_dogrulama/sonuc_021.json olarak kaydeder (ya da bana yapıştırır);
+  (3) hüküm Rol-1. Trend-kolu QC-ikizi AYRI kart olarak, bu tur sonuçlanınca değerlendirilir.
