@@ -50,7 +50,10 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   (b) pano senkron-sonucu zaman-damgalı (bayat OSError vakası); (c) bekçi: agent_call boş-serisi
   "kota" ile "yapılandırmasız"ı ayırt etsin; (d) RPD bütçesi ağa HİÇ çıkmamış çağrıyı saymasın —
   canlı vaka: ölü zincir 150/150'yi 06:19'da yaktı, gerçek Gemini kotası el değmemişken inceleme
-  tüm gün bütçe-reddi yedi (sayaç korumaya çalıştığını ölçmüyor).
+  tüm gün bütçe-reddi yedi (sayaç korumaya çalıştığını ölçmüyor); (e) `review_candidates` dolu cevabın
+  filtreden sıfır görüşle çıktığı hâlde OLAYSIZ None dönüyor (hermes.py ~2109) — ham cevabın ilk
+  ~300 karakteriyle bir `candidate_review_empty_parse` uyarısı gerekir (2026-08-02 canlı vaka:
+  Gemini dolu cevap verdi, kayıt yok, sebep görünmez).
 - **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
   yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
   `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
