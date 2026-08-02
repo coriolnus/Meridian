@@ -10,6 +10,9 @@
 8. GİT (2026-07-31'den beri): tur başına commit — Rol-1 UYGUN GÖRDÜĞÜ ANDA, operatör onayı
    beklemeden atar (kalıcı yetki 2026-07-31); ajanlar git komutu KOŞMAZ. Kirli
    çalışma ağacıyla dağıtım YOK (`dagit.sh` kapısı; bilinçli istisna `--kirli-gec`). state/,
-   backups/, .env versiyonlanmaz — sır asla commit'lenmez. AJAN UÇUŞTAYKEN hüküm/doküman
+   backups/, .env versiyonlanmaz — sır asla commit'lenmez (İSTİSNA: state/goal.yaml +
+   state/bounds.yaml İZLİdir — dagit [1b] SSoT, c783442; ana checkout'taki git işlemleri bu
+   ikisini içerik-aynı yeniden yazar, bekçi/mtime teşhisinde önce birth + .git/logs bak,
+   2026-08-02 vakası). AJAN UÇUŞTAYKEN hüküm/doküman
    commit'leri AÇIK YOL LİSTESİYLE atılır (`git add -A` yasak — a94d425 vakası: tur ayrıklığını
    süpürüp bulandırdı).

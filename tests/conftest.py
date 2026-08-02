@@ -1,3 +1,5 @@
+import hashlib
+import os
 import pathlib
 
 import pandas as pd
@@ -55,6 +57,37 @@ _MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DU
 # ta kendisi. Bekçi her testten sonra canlı dizini karşılaştırır ve sızıntıyı ADIYLA düşürür.
 _LIVE = pathlib.Path(__file__).resolve().parent.parent / "state"
 
+# ---- GİT-İZLİ SÖZLEŞME DOSYALARI: PARMAK İZİ mtime DEĞİL İÇERİK (2026-08-02) --------------------
+# Bu iki dosya `state/` altında olmalarına rağmen GİT-İZLİDİR — `dagit.sh` [1b] adımının SSoT'si
+# (c783442'den beri). CLAUDE.md'deki "state/ versiyonlanmaz" cümlesinin BİLİNÇLİ istisnasıdırlar.
+# SONUCU ŞU: ana checkout'ta paralel bir oturumun git işlemi (checkout/stash/restore) onları
+# REPO İÇERİĞİYLE BİREBİR yeniden yazar — dosya değişmez, mtime değişir. Bu katmanda mtime o hâlde
+# SIZINTIYI değil GİT TRAFİĞİNİ ölçüyordu ve alarm nondeterministik oluyordu.
+#   KANIT (2026-08-02): `test_regime_patch::test_scheduler_flag_survives_publish_lag` teardown'unda
+#   `['bounds.yaml']` ile düştü. inode adliyesi: goal.yaml doğum 14:28:04; bounds.yaml doğum
+#   18:01:21 + YERİNDE yeniden-yazım 18:06:34. Son içerik `.git/index` blob'uyla BİREBİR aynıydı
+#   (yani yazan taraf repo→state restorasyonuydu, bir test değil). Testler ayrıca AKLANDI: iki
+#   enstrümanlı tam tekrar koşumu (tüm Python alt süreçlerine sitecustomize audit-hook + 0,2 sn
+#   mtime poller; worktree + ana checkout; 84 test ×2 yeşil) canlı bounds.yaml'a TEK yazım denemesi
+#   göstermedi. Yanlış alarmın bedeli, doğru alarmın bedelinden büyüktür: susturulan bir bekçi.
+# GERÇEK-KAYNAK `git ls-files state/`TİR ama conftest git koşturamaz (ve koşsa her teste bir alt
+# süreç eklerdi) → bu küme ELLE tutulur: `state/` altına ÜÇÜNCÜ bir dosya versiyona girerse buraya
+# elle eklenmelidir, yoksa aynı yanlış alarm o dosyada geri döner.
+_IZLI_SOZLESME_DOSYALARI = ("bounds.yaml", "goal.yaml")
+
+
+def _izli_icerik_ozeti(yol: str) -> str | None:
+    """İzli sözleşme dosyasının sha256'sı; okunamazsa None (çağıran mtime'a geri düşer).
+
+    ÖLÇÜM BÜTÇESİ: iki dosya × ~30 KB, test başına iki parmak izi → ~120 KB/test okuma. Komşu
+    yorumdaki ölçüm (650 dosyada os.scandir ~4-5 ms) yanında pratik olarak görünmez; bunun
+    karşılığında kapatılan şey, katmanın TAMAMINI susturmaya götüren bir yanlış-alarm sınıfıdır."""
+    try:
+        with open(yol, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()
+    except OSError:  # sessiz-yutma: bekçinin KENDİ G/Ç'si düştü (dosya git tarafından o an değiştiriliyor olabilir) — çağıran mtime_ns'e geri düşer, yani dedektör kapanmaz sadece eski hassasiyetine iner
+        return None
+
 
 def _live_fingerprint() -> dict:
     # ALT DİZİNLER DE TARANIR (2026-07-29, C2 turu): eski glob("*.json*") yalnız köke bakıyordu —
@@ -75,7 +108,14 @@ def _live_fingerprint() -> dict:
                     if e.is_dir(follow_symlinks=False):
                         stack.append(e.path)
                     elif e.is_file(follow_symlinks=False):
-                        out[e.path.removeprefix(base)] = e.stat(follow_symlinks=False).st_mtime_ns
+                        rel = e.path.removeprefix(base)
+                        # İZLİ İKİLİ İÇERİKLE, GERİ KALAN HER ŞEY mtime İLE (gerekçe yukarıda).
+                        # Karşılaştırma GÖRELİ YOL üzerindedir: yalnız KÖKteki bounds/goal.yaml
+                        # muaftır — bir alt dizinde aynı adı taşıyan dosya git-izli değildir ve
+                        # dedektör orada daraltılmaz.
+                        ozet = _izli_icerik_ozeti(e.path) if rel in _IZLI_SOZLESME_DOSYALARI else None
+                        out[rel] = (ozet if ozet is not None
+                                    else e.stat(follow_symlinks=False).st_mtime_ns)
         except OSError:  # sessiz-yutma: canlı dizin yoksa (taze klon/CI) karşılaştıracak bir şey de yoktur
             pass
     return out
@@ -286,7 +326,16 @@ def _no_live_state_writes(request):
         after = _live_fingerprint()
         changed = sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
         if changed:
-            pytest.fail(f"CANLI state DEĞİŞTİ ({request.node.name}): {changed} — yazım kancalara "
+            # TEŞHİS İPUCU: izli dosyalarda mtime yenilemeleri artık ELENİYOR (bkz.
+            # `_IZLI_SOZLESME_DOSYALARI`). Bu alarm o dosyalardan birini gösteriyorsa geriye iki
+            # olasılık kalır ve operatör hangisini aradığını bilmelidir; ipucu olmadan bu turda
+            # kapatılan yanlış-alarm sınıfı yeniden aranırdı.
+            izli = [k for k in changed if k in _IZLI_SOZLESME_DOSYALARI]
+            ipucu = (f" [{izli} GİT-İZLİdir (dagit [1b] SSoT); içerik-aynı mtime yenilemeleri artık "
+                     f"elenmektedir — yani bu alarm İÇERİK farkı ya da DOĞUM demektir. Doğumu "
+                     f"paralel bir oturumun git işlemi (checkout/stash/restore) de üretebilir: "
+                     f"önce `git status`/`git diff` ile bak, sonra testi suçla]" if izli else "")
+            pytest.fail(f"CANLI state DEĞİŞTİ ({request.node.name}): {changed}{ipucu} — yazım kancalara "
                         f"görünmedi, yani ALT SÜREÇ ya da fikstür söküldükten sonra yazan bir iplik "
                         f"var. Bu sınıf, uygulama açıkken taranamaz — worker'ı `./ops/stop-worker.sh` "
                         f"ile durdur (çıplak pkill probe havuzunu yetim bırakır; 2026-07-26 vakası) "
@@ -368,6 +417,78 @@ def hermes_async_cagrilari(request):
             f"yaşıyor. `config.STATE` sandbox'tan geri alındıktan sonra yazarsa kayıt CANLI "
             f"state/events.jsonl'a düşer ve operatörün defterinde gerçek bir `agent_call` gibi "
             f"okunur. İpliği başlatan çağrıyı taklit et ya da testte join et.")
+
+
+# ---- YEREL GERÇEK AJAN İKİLİSİ TESTLERE KAPALI (2026-08-02) -------------------------------------
+# Yukarıdaki blok hermes İPLİĞİNİ kesiyordu; bu blok o ipliğin ALT SÜRECİNİ kesiyor — aynı
+# ÖNLE/YAKALA felsefesinin bir katman aşağısı, ve önlenen şey daha pahalı.
+#
+# ÖLÇÜLEN VAKA (2026-08-02): `test_regime_patch::test_scheduler_flag_survives_publish_lag` GERÇEK
+# kadans makinesini koşturuyor; `nous_eval → hermes._agent_call` yolu makinede KURULU gerçek
+# `~/.local/bin/hermes` ikilisini buluyor ve başlatıyordu. O CLI kendi `~/.hermes/config.yaml`
+# kaydıyla `python -m meridian.mcp_server`ı MERIDIAN_ROOT=/Users/erdemozturk/AI-Trading (yani ANA
+# CHECKOUT — canlı-kopya state) sabitiyle doğuruyor. Üç bedelin ikisi ölçüldü, üçüncüsü bekliyordu:
+#   (1) GERÇEK Gemini kotası yanıyor — bir 429 fırtınası bu yoldan ölçüldü;
+#   (2) operatörün `~/.hermes` durumuna TESTTEN yazılıyor;
+#   (3) MCP BUGÜN salt-okur olduğu için canlı state'e yazım OLMADI. Yani kapı bugün şans eseri
+#       kapalıydı: ajan/MCP tarafına yarın eklenecek İLK yazım yolu doğrudan canlı state'e düşerdi.
+# Ayrıca bir testin makinedeki kurulumu keşfedip süreç doğurması, o testin sonucunu MAKİNEYE bağlar:
+# başka bir makinede başka sonuç veren bir test, geçtiğinde de hiçbir şey kanıtlamaz.
+#
+# ÜRETİM YOLU DEĞİŞMEZ: `_agent_call` None ikiliyle zaten DÜRÜST fail-open'dır (None döner, süreç
+# doğmaz, çağıran deterministik yoluna iner). Kesilen tek şey KEŞİF koludur.
+_HERMES_BIN_ENV0 = os.environ.get("HERMES_LOCAL_BIN")
+
+
+def _hermes_bin_stub() -> str | None:
+    """Yalnız TESTİN ENJEKTE ETTİĞİ ikiliyi onurlandırır; keşif kollarını hiç yürütmez.
+
+    NEDEN DÜPEDÜZ `lambda: None` DEĞİL: üç test (test_regime_patch 327/358/389) tmp'de sahte bir
+    betik yaratıp `monkeypatch.setenv("HERMES_LOCAL_BIN", ...)` ile gösteriyor ve `subprocess.run`ı
+    zaten saplıyor — koşulsuz None onların BEKLENTİSİNİ değiştirirdi. Kesilmesi gereken kol
+    keşiftir (PATH → ~/.hermes/bin → ~/.local/bin), testin açıkça verdiği yol değil.
+
+    NEDEN `!= _HERMES_BIN_ENV0`: KABUKTAN miras alınan bir değer de makinedeki GERÇEK ikiliyi
+    gösterebilir — o hâlde kapı bir ortam değişkeniyle sessizce açılırdı. Yalnız süreç İÇİNDE
+    enjekte edilen (yani ithal anındaki fotoğraftan farklı) değer test-kaynaklı sayılır.
+    `os.path.exists` kontrolü üretimdeki kolun aynısıdır: sahte yol da gerçekten var olmalı."""
+    cand = os.environ.get("HERMES_LOCAL_BIN")
+    if cand and cand != _HERMES_BIN_ENV0 and os.path.exists(cand):
+        return cand
+    return None
+
+
+@pytest.fixture(autouse=True)
+def _yerel_ajan_ikilisi_kapali():
+    """Hiçbir test makinede kurulu GERÇEK hermes CLI'yi başlatmasın (gerekçe: yukarıdaki blok).
+
+    KENDİ YAMASINI KENDİ KURAR/SÖKER — `monkeypatch` FİKSTÜRÜNÜ PAYLAŞMAZ: bu dosyada aynı ders üç
+    kez yazılı (`_kancalari_kur`, `hermes_async_cagrilari`, `_hotstate_off_by_default`); paylaşılan
+    monkeypatch'e bağlanmak fikstür SÖKÜM SIRASINI değiştirir ve komşu bekçilerin ölçümünü bozar.
+    try/finally: yama HER hâlükârda geri konur — test düşse de, hata atsa da.
+
+    SIRA GARANTİSİ (testin yaması kazanır): autouse fikstürler test-düzeyi `monkeypatch`ten ÖNCE
+    kurulur, dolayısıyla sahte ikili isteyen testlerin kendi `setattr`ı (v169/v13/v96 deseni) bu
+    saplamanın ÜSTÜNE yazar; söküm ters sırada olduğu için monkeypatch önce saplamayı geri koyar,
+    sonra bu fikstür GERÇEK çözümleyiciyi geri koyar. Zincir her iki yönde de kapalıdır.
+
+    ORİJİNALİ YIELD EDER: gerçek çözümleyiciyi SINAYAN testin ona ulaşabileceği tek yol budur
+    (`hermes_bin_cozumleyici_asil` fikstürü) — aksi halde o test kendi saplamasını ölçerdi."""
+    import meridian.hermes as _hm
+    _asil = _hm._hermes_bin
+    _hm._hermes_bin = _hermes_bin_stub
+    try:
+        yield _asil
+    finally:
+        _hm._hermes_bin = _asil
+
+
+@pytest.fixture
+def hermes_bin_cozumleyici_asil(_yerel_ajan_ikilisi_kapali):
+    """GERÇEK `_hermes_bin` çözümleyicisi — yukarıdaki autouse saplamasının BİLİNÇLİ istisnası.
+    Çözümleyicinin KENDİSİNİ sınayan test bunu `monkeypatch.setattr` ile geri takar; saplamayı
+    ölçen bir test, ölçtüğünü sandığı üretim koluna hiç dokunmamış olurdu."""
+    return _yerel_ajan_ikilisi_kapali
 
 
 def _clear_module_caches():
