@@ -19,15 +19,59 @@ import os
 import sys
 
 
+# KADANS DAMGASI — ebeveynin (`sprint.start`) yazdığı, çocuğun ÜRETMEDİĞİ alanlar. Çocuğun her
+# yazımında KORUNUR; bkz. `_damgayi_koru`.
+STAMP_KEYS = ("cfg", "n_hyp_at_start")
+
+
+def _damgayi_koru(path: str, payload: dict) -> dict:
+    """Mevcut durum dosyasındaki KADANS DAMGASINI payload'a geri koy (C15, 2026-08-02).
+
+    KUSUR. `sprint.start()` `n_hyp_at_start` (+ `cfg`) damgasını CANLI `sprint_status.json`a yazar
+    ve kendi yorumunda nedenini beyan eder: "Damga olmadan `taze = len(hyps) − 0` olurdu ve tetik
+    HER GECE yanardı". Ama çocuk süreç aynı dosyayı sabit bir payload'la BİRLEŞTİRMEDEN EZİYORDU ve
+    o payload'da damga YOKTU. Sonuç ölçüldü: ilk ilerleme yazımında damga siliniyor, `should_run`
+    `taze = 41 − 0 = 41 ≥ SPRINT_MIN_NEW_HYP` görüyor ve `gun < 7` olsa bile "taze_aday_birikimi"
+    ile tetikliyordu — haftalık disiplin yerine gecelik zincir.
+
+    NEDEN BİRLEŞTİRME, NEDEN PAYLOAD'A TAŞIMA DEĞİL. İki seçenek vardı: (a) damgayı `start()`ta
+    çocuğa argüman olarak geçirmek, (b) çocuğun her yazımında dosyadaki damgayı korumak. (a)
+    `n_hyp` ölçümünü `Popen`ın ÖNÜNE almayı ve çocuğun `cfg` sözleşmesini genişletmeyi gerektirir,
+    üstelik `main()`in hata yolunu (sid'siz payload) ve `sprint.stop()`u KAPSAMAZ — damga oralardan
+    yine düşerdi. (b) tek bir yerde, yazımın kendi katmanında kapanır. Yazım ATOMİK kalır: okuma,
+    aynı fonksiyonda `os.replace`ten hemen önce yapılır, yani oku-yaz penceresi mikrosaniyeliktir
+    ve tek diğer yazar (ebeveyn) o dosyaya sprint ömrü boyunca yalnız BİR kez yazar.
+
+    SID KAPISI. Dosyadaki kayıt BAŞKA bir sprintin ise damga taşınmaz: bir önceki sprintin tabanını
+    bu sprintin damgası gibi sunmak, ölçülmemiş bir sayıyı ölçülmüş gibi göstermek olurdu. Payload
+    sid taşımıyorsa (`main()`in hata yolu) kapı uygulanmaz — o yazım zaten dosyadaki kaydın
+    ÜSTÜNE yazıyor ve damgasını korumak, sprint çökünce kadans tabanının da sıfırlanmasını önler."""
+    try:
+        with open(path) as f:
+            eski = json.load(f)
+    except (OSError, ValueError):  # sessiz-yutma: dosya yoksa/bozuksa korunacak damga da yoktur; payload olduğu gibi yazılır ve ebeveynin damga yazımı zaten AYRI bir yoldur
+        return payload
+    if not isinstance(eski, dict):
+        return payload
+    if payload.get("sid") is not None and eski.get("sid") != payload.get("sid"):
+        return payload
+    korunan = {k: eski[k] for k in STAMP_KEYS if k in eski and k not in payload}
+    return {**korunan, **payload} if korunan else payload
+
+
 def _write_live_status(payload: dict) -> None:
     """ATOMIC — the API process polls this file every few seconds while the child rewrites it; a plain
     truncate-then-write let /api/sprint (and /api/hermes, which embeds it) read half-written JSON and
-    500 intermittently (audit #29)."""
+    500 intermittently (audit #29).
+
+    KADANS DAMGASI KORUNUR (C15): payload yalnız ÇOCUĞUN ürettiği alanları taşır; dosyadaki
+    `n_hyp_at_start`/`cfg` bu yazımda silinirse sprint kadansı haftalık tabanını kaybeder."""
     path = os.environ.get("MERIDIAN_SPRINT_STATUS")
     if not path:
         return
     try:
         import tempfile
+        payload = _damgayi_koru(path, payload)
         fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path) or ".", suffix=".tmp")
         with os.fdopen(fd, "w") as f:
             json.dump(payload, f)

@@ -115,9 +115,15 @@ def test_parite_tutmazsa_migrasyon_duser_ve_geri_alinir(db_sandbox):
         storage.read_entity = gercek
     assert rapor["ok"] is False
     assert "PARİTE TUTMADI" in rapor["hata"]
-    # Geri alma GERÇEK: hiçbir tablo dolmamış olmalı ve kaynak dosyalar YERİNDE.
-    assert storage.read_entity("trade_plans.jsonl") == []
-    assert storage.read_entity("portfolio.json") is None
+    # GERİ ALMA GERÇEK — ama SORU DEĞİŞTİ (C4, 2026-08-02). Burada eskiden
+    # `storage.read_entity(...) == []` soruluyordu: HAM DB katmanına sorulan bir soru, ve dönen []
+    # "tamamı geri alındı" diye okunuyordu. Aynı anda `store.read_jsonl` DA [] dönüyordu, çünkü
+    # geride ŞEMALI-BOŞ ama `active()`in True dediği bir DB kalıyordu — altı defter sessizce boş
+    # okunuyordu ve bu test onu görmüyordu. Başarısız migrasyon artık geride AKTİF DB BIRAKMAZ,
+    # dolayısıyla doğru soru "UYGULAMA ne okuyor?"tur. (Çiviler: test_denetim_defter_v159.py)
+    assert storage.active(storage.TRADES) is False and not storage.db_path().exists()
+    assert store.read_jsonl("trades.jsonl") == [TRADE]        # defter dosyadan GERÇEK okunuyor
+    assert store.read_json("portfolio.json", {})["cash"] == BOOK["cash"]
     assert (db_sandbox / "trades.jsonl").exists()
     assert not (db_sandbox / "trades.jsonl.migrated").exists()
 
@@ -128,7 +134,10 @@ def test_bozuk_kaynak_sessizce_atlanmaz(db_sandbox):
     (db_sandbox / "portfolio.json").write_text("{ bozuk json")
     rapor = dbmigrate.apply()
     assert rapor["ok"] is False and "portfolio.json" in rapor["hata"]
-    assert storage.read_entity("trades.jsonl") == []      # tamamı geri alındı
+    # (C4, 2026-08-02) — gerekçe için bkz. `test_parite_tutmazsa_...`: soru HAM DB katmanına değil,
+    # uygulamanın okuduğu katmana sorulur. Başarısız migrasyondan sonra DB DEVREDE DEĞİLDİR.
+    assert storage.active(storage.TRADES) is False
+    assert store.read_jsonl("trades.jsonl") == [TRADE]    # defter KAYBOLMADI (eskiden [] dönerdi)
 
 
 # ---- 3. İDEMPOTENS + ARŞİVLEME -----------------------------------------------------------------

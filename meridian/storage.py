@@ -227,21 +227,38 @@ def _ddl() -> list[str]:
     return out
 
 
+def apply_schema(conn: sqlite3.Connection) -> None:
+    """Şema ifadeleri — TRANSACTION YÖNETMEZ (çağıran açar/kapatır); `do_replace_rows` ile aynı desen.
+
+    NEDEN AYRILDI (C4, 2026-08-02). `ensure_schema` KENDİ `BEGIN…COMMIT`ini atıyordu ve `dbmigrate`
+    onu migrasyon transaction'ından ÖNCE çağırıyordu. Sonuç ölçüldü: migrasyon KAYNAK_BOZUK ya da
+    PARİTE_TUTMADI ile düşse bile şema COMMIT edilmiş kalıyor, `active()` "dosya var + şema sürümü
+    var" görüp True dönüyor ve altı defter BOŞ okunuyordu — yani `connect` docstring'inin adıyla
+    yasakladığı hâl ("migrasyon yapılmadan yapılmış gibi görünen bir geçiş"). Şemayı çağıranın
+    transaction'ına sokabilmek, o geri almanın ŞEMAYI DA götürmesini sağlar: düşen bir migrasyondan
+    sonra geride şemasız (yani `active()`in False dediği) bir dosya kalır.
+
+    `_SCHEMA_OK` önbelleğine BURADA YAZILMAZ: bu ifadeler henüz COMMIT edilmemiş olabilir ve
+    geri alınabilir bir gerçeği önbelleğe yazmak, önbelleği diskteki gerçeğin ötesine geçirirdi.
+    Damgayı yalnız COMMIT'i kendisi atan `ensure_schema` düşürür."""
+    for stmt in _ddl():
+        conn.execute(stmt)
+    row = conn.execute("SELECT MAX(version) AS v FROM schema_version").fetchone()
+    if row is None or row["v"] is None:
+        conn.execute("INSERT INTO schema_version(version, applied_at) VALUES (?, ?)",
+                     (SCHEMA_VERSION, time.time()))
+    for name in ENTITIES:
+        conn.execute("INSERT OR IGNORE INTO entity_meta(entity, present, rev, updated_at, n) "
+                     "VALUES (?, 0, 0, 0, 0)", (name,))
+
+
 def ensure_schema(conn: sqlite3.Connection | None = None) -> sqlite3.Connection:
     """İdempotent şema kurulumu + sürüm damgası. DB dosyasını YARATMA yetkisi olan tek yol."""
     c = conn or connect(create=True)
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
         try:
-            for stmt in _ddl():
-                c.execute(stmt)
-            row = c.execute("SELECT MAX(version) AS v FROM schema_version").fetchone()
-            if row is None or row["v"] is None:
-                c.execute("INSERT INTO schema_version(version, applied_at) VALUES (?, ?)",
-                          (SCHEMA_VERSION, time.time()))
-            for name in ENTITIES:
-                c.execute("INSERT OR IGNORE INTO entity_meta(entity, present, rev, updated_at, n) "
-                          "VALUES (?, 0, 0, 0, 0)", (name,))
+            apply_schema(c)
             c.execute("COMMIT")
         except BaseException:
             c.execute("ROLLBACK")

@@ -38,12 +38,15 @@ import argparse
 import hashlib
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
 from . import config, storage
 
 MIGRATED_SUFFIX = ".migrated"
+# Başarısız migrasyondan sonra kenara alınan DB'nin son eki: `meridian.db.failed-<ts>` (C4).
+FAILED_SUFFIX = ".failed-"
 
 
 # ---- KAYNAK OKUMA (store YÖNLENDİRMESİNİ ATLAR) ------------------------------------------------
@@ -130,9 +133,17 @@ def plan() -> dict:
 
 
 def db_state() -> list[dict]:
-    """DB'deki varlıkların CANLI sayaçları (iddia değil, tablodan sayım)."""
-    c = storage.connect(create=True)
-    storage.ensure_schema(c)
+    """DB'deki varlıkların CANLI sayaçları (iddia değil, tablodan sayım).
+
+    ŞEMA KURMAZ (C4, 2026-08-02). Eskiden `connect(create=True)` + `ensure_schema(c)` çağırıyordu;
+    yani SALT-OKUMA diye çağrılan bir rapor, DB dosyasını yaratıp şemayı KALICI COMMIT ediyordu.
+    İki sonucu vardı: (1) `plan()` "hiçbir bayt yazılmaz, DB açılmaz" diye beyan ederken bu yoldan
+    geçtiğinde tam tersini yapıyordu, (2) `apply()`in şemayı transaction'ın İÇİNE alan düzeltmesi
+    aynı kapıdan delinirdi (plan zaten şemayı dışarıda COMMIT etmiş olurdu). Şema yoksa dönüş BOŞ
+    LİSTEdir — "DB henüz devrede değil" hükmünü uydurulmuş sıfır sayaçlarla karıştırmamak için."""
+    if not storage.db_path().exists() or storage.schema_version() is None:
+        return []
+    c = storage.connect()
     rows = []
     for name in storage.ENTITIES:
         m = storage.meta(name) or {}
@@ -147,25 +158,97 @@ def db_state() -> list[dict]:
     return rows
 
 
+# ---- BAŞARISIZ MİGRASYONDAN SONRA: DB'Yİ KENARA AL ---------------------------------------------
+def _karantina(rapor: dict, db_yeni: bool, sebep: str) -> None:
+    """Bu koşuda DOĞAN DB'yi `meridian.db.failed-<ts>` diye kenara al ve BEYAN ET (C4, 2026-08-02).
+
+    NEDEN GEREKLİ. Şema artık migrasyon transaction'ının içinde kurulduğu için geri alma onu da
+    götürür ve `active()` zaten False döner — ama geride ŞEMASIZ bir `meridian.db` DOSYASI kalır.
+    O dosya iki yerde yanlış okunur: `serve.sh`in `[ ! -s state/meridian.db ]` kapısı ("DB var,
+    tohum koşmasın") ve operatörün gözü. Kenara almak, hata yolunu tek bir cümleye indirger:
+    başarısız migrasyondan sonra DB YOKTUR, defterler DOSYADAN okunur.
+
+    NEDEN YALNIZ 'YENİ DOĞAN' DB. Dosya bu koşudan ÖNCE de varsa içinde DAHA ÖNCE taşınmış
+    (`migrated_at` damgalı) defterler olabilir; onu kenara almak, hata yolunu veri kaybına
+    çevirirdi — yani düzeltmenin kapatmaya çalıştığı sınıfın daha kötüsünü üretirdi. O hâlde
+    hüküm rapora yazılır, dosyaya dokunulmaz.
+
+    `close_all()` HER İKİ DALDA. Açık bir bağlantı (a) yeniden adlandırılmış dosyaya WAL geri
+    yazabilir, (b) `_SCHEMA_OK` önbelleğini diskteki gerçeğin ötesinde tutar — önbellek "şema
+    tamam" derken şema geri alınmış olabilir. `close_all` ikisini birden temizler."""
+    db = storage.db_path()
+    kayit: dict = {"yapildi": False, "db_yeni": db_yeni, "sebep": sebep,
+                   "hedef": None, "tasinan": []}
+    try:
+        storage.close_all()
+    except Exception as e:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (kapatma_hatasi raporda) — kapatılamayan bir tanıtıcı, dosyayı kenara alma kararını geri aldıramaz ve süreç sonu onu toplar
+        kayit["kapatma_hatasi"] = f"{type(e).__name__}: {e}"
+    if not db_yeni:
+        kayit["not"] = ("DB bu koşudan ÖNCE de vardı — daha önce taşınmış defterler içerebilir, "
+                        "kenara almak veri kaybı olurdu. Şema bu koşuda transaction İÇİNDE "
+                        "kurulduğu için geri alma yalnız bu koşunun eklediğini götürdü.")
+    else:
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        hedef = db.with_name(db.name + FAILED_SUFFIX + ts)
+        # `-wal`/`-shm` de taşınır: ana dosya adı değişip yan dosyalar `meridian.db-wal` adıyla
+        # kalsaydı, İLERİDE doğacak taze bir `meridian.db` bayat bir WAL'la eşleşirdi.
+        for ek in ("", "-wal", "-shm"):
+            kaynak = db.with_name(db.name + ek)
+            if not kaynak.exists():
+                continue
+            try:
+                kaynak.rename(hedef.with_name(hedef.name + ek))
+                kayit["tasinan"].append(hedef.name + ek)
+            except OSError as e:  # sessiz-yutma: sonuç KAYDA GEÇİYOR (tasima_hatasi raporda + obs olayı) — dosya taşınamasa bile şema geri alındığı için `active()` yine False; operatör dosyayı elle kaldırır
+                kayit["tasima_hatasi"] = f"{type(e).__name__}: {e}"
+        kayit["yapildi"] = bool(kayit["tasinan"])
+        kayit["hedef"] = str(hedef)
+    kayit["aktif"] = storage.active(storage.TRADES)
+    # BEYAN DALDAN TÜRETİLİR, SABİT DEĞİL: `aktif=True` iken "DB devrede değil" yazmak, raporun
+    # kendi ölçümüyle çelişen bir cümle olurdu (bu turda kapatılan sınıfın ta kendisi).
+    kayit["beyan"] = (
+        "başarısız migrasyondan sonra DB DEVREDE DEĞİL — altı defter dosya arka ucundan okunur "
+        "(kaynak dosyalar yerinde ve .migrated eki almadı)" if not kayit["aktif"] else
+        "DB DEVREDE KALDI — içinde daha önce taşınmış defterler var; bu koşunun taşımaya "
+        "çalıştığı varlıklar taşınmadı ve kaynakları .migrated eki almadı")
+    rapor["karantina"] = kayit
+    try:
+        from . import obs
+        obs.warn("sqlite_migration_failed_db_quarantined", sebep=sebep, db_yeni=db_yeni,
+                 hedef=kayit["hedef"], aktif=kayit["aktif"], detail=kayit["beyan"])
+    except Exception:  # sessiz-yutma: kayıt kanalı düştü; karantina kararı DİSKTE zaten uygulandı ve rapora yazıldı — kayıt denemesi onu geri alamaz
+        pass
+
+
 # ---- UYGULA ------------------------------------------------------------------------------------
 def apply() -> dict:
     """TEK TRANSACTION + PARİTE KANITI. Digest tutmazsa hiçbir varlık taşınmaz."""
+    # DB BU KOŞUDA MI DOĞUYOR? ÖLÇÜM, ilk `connect(create=True)`dan ÖNCE alınır — sonrasında
+    # sorulsaydı cevap HER ZAMAN "var" olurdu ve hata yolu, taşınmış defter içeren bir DB'yi de
+    # kenara alabilirdi (bkz. `_karantina`).
+    db_yeni = not storage.db_path().exists()
     rapor = plan()
     rapor["applied"] = True
     rapor["yazildi"] = False
     rapor["parite"] = []
     rapor["arsivlenen"] = []
+    rapor["db_yeni"] = db_yeni
 
     kaynaklar = {n: read_source(n) for n in storage.ENTITIES}
     c = storage.connect(create=True)
-    storage.ensure_schema(c)
 
     # `_GUARD` tüm transaction boyunca tutulur: aynı süreçteki başka bir iplik araya bir
     # BEGIN/COMMIT sokarsa transaction'ın atomikliği (ve dolayısıyla geri alma sözü) kalmaz.
     with storage._GUARD:
-        onceki = {n: (storage.meta(n) or {}) for n in storage.ENTITIES}
         c.execute("BEGIN IMMEDIATE")
         try:
+            # ŞEMA TRANSACTION'IN İÇİNDE (C4). Eskiden `storage.ensure_schema(c)` BURADAN ÖNCE
+            # çağrılıyordu ve kendi COMMIT'ini atıyordu: migrasyon düşse bile şema diskte kalıyor,
+            # `active()` True dönüyor ve altı defter SESSİZCE boş okunuyordu. Şema artık aşağıdaki
+            # ROLLBACK'lerin kapsamındadır. `onceki` (entity_meta) okuması da bu yüzden içeri alındı
+            # — tablo ancak şema kurulduktan sonra vardır.
+            storage.apply_schema(c)
+            onceki = {n: (storage.meta(n) or {}) for n in storage.ENTITIES}
             tasinan = []
             for name in storage.ENTITIES:
                 m = onceki.get(name) or {}
@@ -189,6 +272,7 @@ def apply() -> dict:
                     rapor["ok"] = False
                     rapor["hata"] = (f"{name} okunamadı ({src.get('hata')}) — hiçbir varlık "
                                      f"taşınmadı. Önce kaynağı onar.")
+                    _karantina(rapor, db_yeni, "KAYNAK_BOZUK")
                     return rapor
                 kind = storage.kind_of(name)
                 if kind == "rows":
@@ -223,6 +307,7 @@ def apply() -> dict:
                 rapor["ok"] = False
                 rapor["hata"] = (f"PARİTE TUTMADI: {hatali} — hiçbir varlık taşınmadı (tek "
                                  f"transaction geri alındı). Kaynak dosyalar YERİNDE.")
+                _karantina(rapor, db_yeni, "PARİTE_TUTMADI")
                 return rapor
             c.execute("COMMIT")
             rapor["yazildi"] = bool(tasinan)
@@ -234,6 +319,11 @@ def apply() -> dict:
                 pass
             rapor["ok"] = False
             rapor["hata"] = f"{type(e).__name__}: {e}"
+            # BEKLENMEDİK İSTİSNA DA BİR HATA-DÖNÜŞ YOLUDUR: istisna yukarı çıkarken geride
+            # yarım doğmuş bir DB bırakmak, iki bilinen hata dalını kapatıp üçüncüsünü açık
+            # tutmak olurdu. `rapor` çağırana ulaşmaz (aşağıda `raise` var) — bu yüzden karar
+            # obs olayına da yazılır.
+            _karantina(rapor, db_yeni, f"istisna:{type(e).__name__}")
             raise
 
     # ARŞİVLEME COMMIT'TEN SONRA. Sıra bilerek böyledir: dosyalar önce yeniden adlandırılıp
@@ -285,6 +375,18 @@ def _print(rapor: dict) -> None:
         print(f"  arşivlenen kaynak: {rapor['arsivlenen']}")
     if rapor.get("hata"):
         print(f"  HATA: {rapor['hata']}")
+    k = rapor.get("karantina")
+    if k:
+        # Hata yolunun DB'ye ne yaptığı operatörün önüne ÇIKAR: "hiçbir varlık taşınmadı" cümlesi
+        # tek başına, geride aktif-ama-boş bir DB kalıp kalmadığını söylemiyordu (C4).
+        print(f"  KARANTİNA: {'DB kenara alındı' if k.get('yapildi') else 'DB taşınmadı'}"
+              f"  (db_yeni={k.get('db_yeni')}, aktif={k.get('aktif')})")
+        if k.get("hedef"):
+            print(f"    → {k['hedef']}  {k.get('tasinan') or ''}")
+        for anahtar in ("not", "kapatma_hatasi", "tasima_hatasi"):
+            if k.get(anahtar):
+                print(f"    {anahtar}: {k[anahtar]}")
+        print(f"    {k.get('beyan')}")
     if not rapor.get("applied"):
         print("  → uygulamak için: python -m meridian.dbmigrate --uygula  "
               "(worker DURDURULMUŞ olmalı)")

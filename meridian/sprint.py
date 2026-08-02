@@ -227,6 +227,11 @@ def start(cfg: dict | None = None) -> dict:
     # HİPOTEZ SAYACI BAŞLANGIÇTA DAMGALANIR: otomatik kadansın ikinci tetiği ("son sprintten beri
     # taze aday birikti mi") ancak bir TABAN varsa ölçülebilir. Damga olmadan `taze = len(hyps) − 0`
     # olurdu ve tetik her gece yanardı — haftalık disiplin sessizce kaybolurdu.
+    # DAMGAYI ÇOCUK SÜREÇ SİLİYORDU (C15, 2026-08-02). Yukarıdaki `Popen` çocuğa
+    # `MERIDIAN_SPRINT_STATUS` ile BU dosyayı verir ve `sprint_run._write_live_status` onu
+    # birleştirmeden eziyordu: aşağıdaki damga İLK ilerleme yazımında yok oluyor, `should_run`
+    # tabanı 0 sayıp her gece tetikliyordu. Koruma çocuk tarafında (`sprint_run._damgayi_koru`) —
+    # yazımın kendi katmanında, çünkü `stop()` ve çocuğun hata yolu da aynı dosyaya yazar.
     try:
         from . import memory
         n_hyp = len(memory.all_hypotheses())
