@@ -582,11 +582,44 @@ def test_filling_an_interior_hole_bumps_the_wf_revision(sandbox_state, monkeypat
 # ==================================================================================================
 # 6) YENİDEN-DENEME MERDİVENİ
 # ==================================================================================================
+#: `earnings.refresh`in bu dosyada döneceği sabit satır sayısı — DEĞERİ DEĞİL, İŞARETİ önemli
+#: (>0 = "takvim tazelendi" dalı). Gerekçe `_sched_env` içinde.
+_EARNINGS_SATIR = 1
+
+
 def _sched_env(monkeypatch, coverage: dict, index: pd.DataFrame, session="2026-07-29"):
-    from meridian import dataset as ds, health, loop, reflect, scheduler, watchdog
+    from meridian import dataset as ds, earnings, health, loop, reflect, scheduler, watchdog
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: session)
     monkeypatch.setattr(health, "halted", lambda: False)
     monkeypatch.setattr(ds, "load_live", lambda use_cache=True, session=None: (coverage, index))
+    # ---- KAZANÇ TAKVİMİ BACAĞI TESTTE KAPALI (v177 ağ-kapısı turu, 2026-08-02) -------------------
+    # `advance_once` gövdesinde bu dosyanın konusuyla İLGİSİZ bir haftalık kadans var
+    # (scheduler.py:777): `earnings.refresh(REPLAY_UNIVERSE)` → 251 sembol, `nasdaq_earnings_window`
+    # üzerinden api.nasdaq.com'a GÜN BAŞINA bir istek (-7/+21 gün ≈ 20 iş günü), Nasdaq boş dönerse
+    # ayrıca 251 istekli FMP yedeği. Bu dosyanın hiçbir iddiası earnings'e bakmaz — ölçtüğü şey
+    # aynı-akşam YOĞUN/SEYREK faz merdivenidir — ama bacak yamalı olmadığı için `_sched_env` kuran
+    # BEŞ testin hepsi o yolu gerçekten yürüyordu.
+    #
+    # BULUNUŞU (v177 kapısının ilk hasadı): conftest'e autouse soket kapısı (`_dis_ag_kapali`)
+    # konunca bu testler KIRMIZIYA DÖNMEDİ, YAVAŞLADI — `_get_json`ın üç denemelik geri çekilme
+    # merdiveni (0,4+0,8+1,6sn) artık gerçekten koşuyor ve `earnings_attempts` beşe dayanana kadar
+    # tur başına ~61sn ödeniyordu. Yani kapı, kırmızı üretmeden yamalanmamış bir yolu görünür yaptı.
+    #
+    # NEDEN `earnings.refresh`, `data._get_json` DEĞİL: kadansın çağırdığı sınır burasıdır ve tek
+    # yamayla İKİ kolu birden kapatır (Nasdaq + 251 ticker'lık FMP yedeği). `_get_json`ı yamalamak
+    # yalnız Nasdaq kolunu keserdi; FMP kolu ticker başına 0,1sn görgü beklemesiyle ayakta kalırdı.
+    #
+    # NEDEN >0 DÖNÜYOR, 0 DEĞİL: iki gerekçe. (1) Kapı ÖNCESİ gerçeklik buydu — ağ isteği başarılı
+    # oluyor, `n > 0` dalı `earnings_week` damgasını basıyor ve SONRAKİ `advance_once` çağrıları
+    # bloğu hiç görmüyordu; testlerin bugüne dek yeşil olduğu durum makinesi budur ve yama onu
+    # DEĞİŞTİRMEZ, yalnız ağdan bağımsız kılar. (2) `n == 0` dalı beş denemelik bir sayaç
+    # (`earnings_attempts`) çevirir; o sayaç testlerin `advance_once` DÖNGÜ SAYISINA bağlanır ve
+    # konusu bar merdiveni olan bir teste ikinci, ilgisiz bir merdiven karıştırırdı.
+    #
+    # TESTLERİN BEKLENTİSİ DEĞİŞMEDİ: hiçbir assert'e dokunulmadı; `_events()` olayları ADLA
+    # süzüyor, dolayısıyla bu dalın bastığı `earnings_calendar_refreshed` kaydı hiçbir iddiaya
+    # karışmaz. Kapsam DOSYA-İÇİdir: 23 dosyalık sınıf avı bu turda DEĞİL (kuyrukta).
+    monkeypatch.setattr(earnings, "refresh", lambda tickers: _EARNINGS_SATIR)
     monkeypatch.setattr(watchdog, "beat", lambda *a, **k: None)
     monkeypatch.setattr(watchdog, "check_and_alarm", lambda *a, **k: None)
     monkeypatch.setattr(reflect, "clear_wf_caches", lambda *a, **k: None)

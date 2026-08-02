@@ -289,6 +289,16 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**AĞ-KAPISI İNDİ — "CANLI-BEKÇİ YANLIŞ ALARMI" AÇIK #1 KAPANDI (2026-08-03 ~02:50 TR, Rol-1;
+devir hungry-jemison'dan):** birincil aday (soket-düzeyi autouse kapı) ölçümle kaldı: 13-dosya
+süpürmesi kapısız 37 dış TCP (4 IP) → kapılı 0; FAILED küme diff'i BOŞ (yama yetkisi doğmadı);
+hedef-test tek başına yeşil 2/2. v133'ün merdiven-ödemesi Rol-1 yetkisiyle tek-nokta yamayla
+kapandı (earnings.refresh sınırı, 5 tüketici; ~25 dk türetilmiş → 6,6 sn; assert dokunuşu sıfır).
+Dürüst sınır conftest'te beyanlı: kapı connect'i sarar, getaddrinfo sarılmaz (DNS çıkabilir).
+KUYRUK: gerçek-ağ sınıf avı — v133'te merdivensiz shortinterest bacağı + aynı giriş noktalarına
+değinen ~23 dosya (ayrı tur). Sınıf-ailesi: "test gerçek ağa çıkar" (nondeterminizm+kota+makine-
+bağımlılık) — hermes-CLI kolu 0652841, earnings kolu bu tur.
+
 **TOPLU PENCERE KAPANDI (2026-08-02 ~19:55 TR / 16:55 UTC, Rol-1, tam-otonom):** WP programının
 tüm mühendislik+ölçüm dalgası tek pencerede canlıya indi. Zincir: otoriter suite SIFIR kırmızı
 (~3.821; ilk koşum 2 çivi-kırmızısı onarımla kapandı — getsource-taşınma + alias-beyanı) →

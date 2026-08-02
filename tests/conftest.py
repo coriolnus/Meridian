@@ -1,6 +1,8 @@
 import hashlib
+import ipaddress
 import os
 import pathlib
+import socket
 
 import pandas as pd
 import numpy as np
@@ -489,6 +491,144 @@ def hermes_bin_cozumleyici_asil(_yerel_ajan_ikilisi_kapali):
     Çözümleyicinin KENDİSİNİ sınayan test bunu `monkeypatch.setattr` ile geri takar; saplamayı
     ölçen bir test, ölçtüğünü sandığı üretim koluna hiç dokunmamış olurdu."""
     return _yerel_ajan_ikilisi_kapali
+
+
+# ---- DIŞ AĞ TESTLERE KAPALI: SOKET DÜZEYİNDE (2026-08-02) ---------------------------------------
+# Bir önceki blok yerel bir ALT SÜRECİ kesiyordu; bu blok o sürecin de altındaki katmanı kesiyor —
+# İŞLETİM SİSTEMİ SOKETİNİ. Aynı ÖNLE/YAKALA felsefesinin en alt basamağı, ve kapsadığı yüzey en
+# geniş olanı: hangi kütüphane kullanılırsa kullanılsın (httpx, requests, urllib, redis-py), makine
+# dışına giden her TCP bağlantısı TEK bir yerden — `socket.socket.connect` — geçer. Adaptör başına
+# saplama yazmak bu sınıfı asla kapatamaz, çünkü kapatılması gereken şey adaptörlerin LİSTESİ değil,
+# o listenin YARIN ALACAĞI HÂLdir.
+#
+# ÖLÇÜLEN VAKA (2026-08-02): `test_regime_patch::test_scheduler_flag_survives_publish_lag` GERÇEK
+# kadans makinesini koşturuyor; `scheduler.advance_once → earnings.refresh →
+# data.nasdaq_earnings_window` yolu `api.nasdaq.com`a GÜN BAŞINA bir istek atıyordu. Sayılar (kapı
+# YOKKEN, geçici bir sayaç eklentisiyle ölçüldü): o TEK test 23 dış TCP bağlantısı; 13 dosyalık
+# süpürme 4 ayrı dış IP'ye toplam 37 bağlantı. Bedel üç katmanlı ve üçü de ölçüldü:
+#   (1) NONDETERMİNİZM — testin sonucu Nasdaq'ın o ANKİ cevabına bağlanır. Ağ yokken ya da uç 5xx
+#       dönerken kırmızı olur ve o kırmızılık ÜRÜNLE ilgisizdir; geçtiğinde de bir şey KANITLAMAZ,
+#       çünkü ölçtüğü şey kod değil o günün internetidir. (`_yerel_ajan_ikilisi_kapali` bloğundaki
+#       "makineye bağlı test hiçbir şey kanıtlamaz" dersinin ağ kolu.)
+#   (2) KOTA — Nasdaq kolu anahtarsızdır, ama `earnings.refresh` gün kapsaması eşiğin (0,90)
+#       altına düşünce FMP YEDEĞİNE iner ve o kol GERÇEK anahtarla koşar (250 istek/gün = bütün
+#       günlük kota). Yani bir test koşumu canlı sistemin veri bütçesini yakabilir.
+#   (3) SÜRE — 13 dosyalık süpürmede 70,8sn duvar süresine karşılık 20,0sn CPU; aradaki ~50sn
+#       düpedüz ağ beklemesidir.
+#
+# NE GEÇER: AF_UNIX (soket çifti / yerel IPC) ve LOOPBACK (127.0.0.0/8, ::1, "localhost"). Bu bir
+# kolaylık değil ZORUNLULUK: `hotstate` KENDİ testleri (v83/v84) `redis://127.0.0.1:6379` ile
+# GERÇEK Redis'e bağlanır — `_hotstate_off_by_default` onları bilerek muaf tutar ve bu kapı da
+# onların ÜSTÜNDE durur. Kapının konusu "ağ" değil, MAKİNE DIŞINA çıkan IP trafiğidir.
+#
+# NEDEN "DENEMEDEN": paket YOLA ÇIKMADAN düşülür. Bağlanıp sonra kapatmak (ya da timeout'a
+# bırakmak) üç bedelin üçünü de ödemiş olurdu — uç isteği görür, kota yanar, süre akar.
+#
+# KAPSAMIN DÜRÜST SINIRI (uydurma yasağı): kapı YALNIZ `connect`/`connect_ex`i sarar. Ad çözümü
+# (`getaddrinfo`) C katmanındadır, Python soket nesnesinden geçmez ve SARILMAZ — yani dış bir ad
+# için DNS sorgusu hâlâ çözümleyiciye gidebilir. Kesilen şey hedefe giden BAĞLANTIdır; "test
+# süreci hiç paket üretmez" DEĞİLDİR ve öyle okunmamalıdır.
+_YEREL_ADLAR = frozenset({"localhost", "localhost.localdomain", ""})
+
+
+class DisAgErisimiKapali(RuntimeError):
+    """Bir test MAKİNE DIŞINA bağlanmaya çalıştı; bağlantı DENENMEDEN düşürüldü.
+
+    `RuntimeError` SEÇİMİ BİLİNÇLİ, `OSError` DEĞİL: OSError türevi bir istisna httpcore/httpx'in
+    bağlantı-hatası eşlemesine takılıp `httpx.ConnectError`e dönüşürdü ve çağıran tarafta "ağ
+    yoktu" diye okunurdu — yani kapı, kapattığı şeyi TAKLİT eder ve GÖRÜNMEZ olurdu. Amaç tam
+    tersi: yamalanmamış yol gürültülü biçimde görünsün.
+
+    Ama `Exception` türevi olması da ZORUNLU: üretimin dürüst fail-open yolları (`_get_json` üç
+    denemeden sonra `FetchError`a çevirir, `nasdaq_earnings_window` günü GÜN BAZINDA yutar ve
+    `stats`e sayar) `except Exception` ile yazılıdır. BaseException türetmek o yolları kırar ve
+    kapı, ölçmek istediği DAVRANIŞI değiştirmiş olurdu."""
+
+
+def _mesaj(adres) -> str:
+    return (
+        f"DIŞ AĞ TESTLERE KAPALI: bir test {adres!r} adresine bağlanmaya çalıştı "
+        f"(bağlantı DENENMEDİ — hedefe paket gitmedi). Bu bir kapı arızası değil, YAMALANMAMIŞ BİR "
+        f"YOL bulgusudur: o test bugün ne ölçtüğünü sanıyorsa sansın, fiilen o anki ağın durumunu "
+        f"ölçüyor. ÇÖZÜM ağı açmak değil, ADAPTÖRÜ TESTİNDE YAMALAMAKtır — örn. "
+        f"`monkeypatch.setattr(meridian.adapters.data, '_get_json', ...)`, ya da bir üst katmanda "
+        f"`data.nasdaq_earnings_window` / `fmp.historical_eod`. Geçen tek trafik makine İÇİdir: "
+        f"AF_UNIX ve loopback (127.0.0.0/8, ::1, localhost) — hotstate'in gerçek-Redis testleri "
+        f"oradan koşar. Gerekçe: tests/conftest.py, 'DIŞ AĞ TESTLERE KAPALI' bloğu."
+    )
+
+
+def _yerel_adres_mi(sock, adres) -> bool:
+    """Bu adres MAKİNE İÇİ mi? (AF_UNIX / loopback / belirtilmemiş)"""
+    if getattr(sock, "family", None) not in (socket.AF_INET, socket.AF_INET6):
+        return True          # AF_UNIX, AF_NETLINK, AF_BLUETOOTH...: IP çıkışı değil, kapının konusu dışı
+    try:
+        host = adres[0]
+    except (TypeError, IndexError, KeyError):  # sessiz-yutma: AF_INET(6) için beklenmedik adres şekli; hüküm veremediğimiz bir adresi YEREL SAYMAK kapıyı sessizce açardı, dışarı sayılır
+        return False
+    if isinstance(host, (bytes, bytearray)):
+        host = bytes(host).decode("ascii", "replace")
+    if not isinstance(host, str):
+        return False
+    if host.lower() in _YEREL_ADLAR:
+        return True
+    try:
+        ip = ipaddress.ip_address(host.split("%")[0])   # "fe80::1%en0" → kapsam ekini at
+    except ValueError:  # sessiz-yutma: IP değil ÇÖZÜMLENMEMİŞ ad (örn. "api.nasdaq.com"); ad çözmek kapının işi değil ve çözülmemiş bir ad YEREL SAYILAMAZ → dışarı
+        return False
+    return ip.is_loopback or ip.is_unspecified          # 0.0.0.0 / :: → çekirdek bunu yerele çevirir
+
+
+@pytest.fixture(autouse=True)
+def _dis_ag_kapali():
+    """Hiçbir test makine DIŞINA TCP bağlantısı açmasın (gerekçe: yukarıdaki blok).
+
+    KENDİ YAMASINI KENDİ KURAR/SÖKER — `monkeypatch` FİKSTÜRÜNÜ PAYLAŞMAZ: bu dosyada aynı ders
+    dört kez yazılı (`_kancalari_kur`, `hermes_async_cagrilari`, `_hotstate_off_by_default`,
+    `_yerel_ajan_ikilisi_kapali`); paylaşılan monkeypatch'e bağlanmak fikstür SÖKÜM SIRASINI
+    değiştirir ve komşu bekçilerin ölçümünü bozar. try/finally: yama HER hâlükârda geri konur —
+    test düşse de, hata atsa da.
+
+    SIRA GARANTİSİ (testin yaması kazanır): autouse fikstürler test-düzeyi `monkeypatch`ten ÖNCE
+    kurulur. Bu kapıda sıra ayrıca ÖNEMSİZdir, çünkü rekabet YOK: testin yaması ADAPTÖR katmanında
+    olur (`data._get_json`, `fmp.historical_eod`) ve o yol soket katmanına hiç İNMEZ — kapı sessiz
+    kalır. Kapı yalnız yamalanmamış BİR yol kaldığında konuşur; söylediği şey de tam olarak budur.
+
+    KAÇIŞ FİKSTÜRÜ YOKTUR, ve bilerek yoktur: "şu test dışarı çıkabilsin" düğmesi, kapının
+    kapattığı sınıfı tek satırda geri açan bir yol bırakırdı ve BUGÜN o düğmenin tüketicisi yok
+    (tüketicisiz mekanizma yasağı). `_yerel_ajan_ikilisi_kapali`nın `hermes_bin_cozumleyici_asil`
+    istisnası bu kapıya EMSAL DEĞİL: orada muafiyetin somut bir tüketicisi vardı — çözümleyicinin
+    KENDİSİNİ sınayan test. Burada dış ağın kendisini sınayan bir test yok."""
+    _asil, _asil_ex = socket.socket.connect, socket.socket.connect_ex
+    # `connect`/`connect_ex` socket.socket'in KENDİ __dict__inde DEĞİL — C tabanından (_socket.socket)
+    # miras alınır. Sökerken körlemesine geri ATAMAK, sınıfa aslında hiç var olmamış bir girdi
+    # bırakırdı (davranış aynı, ama sınıfın şekli kalıcı olarak değişmiş olurdu). Doğru söküm:
+    # başlangıçta girdi VARSA geri koy, YOKSA sil ve mirası yeniden aç.
+    _vardi = {"connect": "connect" in socket.socket.__dict__,
+              "connect_ex": "connect_ex" in socket.socket.__dict__}
+
+    def _kapi(self, adres):
+        if _yerel_adres_mi(self, adres):
+            return _asil(self, adres)
+        raise DisAgErisimiKapali(_mesaj(adres))
+
+    def _kapi_ex(self, adres):
+        # connect_ex normalde errno DÖNDÜRÜR, atmaz. Burada bilerek ATIYOR: sessiz bir errno,
+        # kapının bulduğu yamalanmamış yolu çağıranın "bağlanamadım" dalına gömerdi — yani kapı
+        # kurulmuş ama görünmez olurdu (bu depodaki en pahalı kusur sınıfı).
+        if _yerel_adres_mi(self, adres):
+            return _asil_ex(self, adres)
+        raise DisAgErisimiKapali(_mesaj(adres))
+
+    socket.socket.connect, socket.socket.connect_ex = _kapi, _kapi_ex
+    try:
+        yield
+    finally:
+        for _ad, _fn in (("connect", _asil), ("connect_ex", _asil_ex)):
+            if _vardi[_ad]:
+                setattr(socket.socket, _ad, _fn)
+            elif _ad in socket.socket.__dict__:
+                delattr(socket.socket, _ad)
 
 
 def _clear_module_caches():
