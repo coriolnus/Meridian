@@ -33,7 +33,18 @@ guards:
   - "olay-takvimi kanıtı ölçüm klasörüne arşivlenir (scratchpad-kaybı sınıfı — EDG-016 dersi)"
   - "PK4/PK5 + temiz_taban zorunlu; eşik-dilbilgisi"
 k_registry: {registered_at: "2026-08-02T23:55Z", trial_ids: [inplay_postevent/p3, inplay_postevent/p5]}
-status: registered
+status: archived   # 2026-08-03 ~00:55 TR — ARŞİV (Rol-1 hükmü; kill#1 TAM + kill#3 TAM):
+#   @20 havuz-fazlası P3 −0,62% [−1,30,+0,51] · P5 −0,73% [−1,23,+0,30] — ikisi de CI-0-içi,
+#   nokta-tahminler NEGATİF; dört hücrede net(10/20bps) ≤ 0. DERS#3 DERS-KİTABI VAKASI: ham @20
+#   +1,12/+1,19% tamamen taban-sürüklenmesi (dilim günlerinin kendi-gün tabanı +1,93% vs genel
+#   +0,96%) — kazanç-sonrası günler herkesin iyi olduğu günler, dilim havuzun ALTINDA. kill#2
+#   bileşiği karşılanmadı ama anlamsız: Jaccard 0,020/0,023 (PEAD-kopyası DEĞİL) — kopya olmayan
+#   ama bilgi de taşımayan eksen. PK'lar: IC-çivisi 0,0642 (sapma 0,0003); PIT kesme-değişmezliği
+#   6764/6764 sıfır-ayrışma + saf-python ikiz + negatif kontrol (%43,4 fark — kapı tavtoloji değil).
+#   ÇEKİNCE (hükme iliştirik): BMO/AMC süzülmüş — t−e=0 AMC satırları (390) olay-öncesi seans
+#   olabilir; yön ve büyüklük hükmü değiştirmez (negatif nokta-tahminler), torun AÇILMAZ.
+#   EDG-011 YANSIMASI: tek-yönlü yarı BOŞ — iki-yönlü tez askıda kalır ve bu sonuç ALEYHTE
+#   ÖNSEL olarak 011 kartına not düşülür. Kanıt: research/olcumler/inplay_postevent/.
 notes: >
   Ölçüm ajanı KARTA DOKUNMAZ; hüküm Rol-1'de. Sandbox: research/olcumler/inplay_postevent/.
   Olay-takvimi: KYS turunun çekim betiği (kys_olcum/takvim_cek.py) yeniden kullanılır ya da

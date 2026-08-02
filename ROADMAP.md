@@ -204,8 +204,10 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   olgunlaştı [Nasdaq-geçmişi %99,7 tamlık + EDGAR 8-K %98,4 çapraz-doğrulama, dakika-damgalı]
   ama kartın "t'de BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz; PIT defteri 0 satır —
   A1'de snapshot dosyası hiç doğmamış, AYRICA canlı earnings.csv 2-sütunlu/Jul-31 bayat =
-  tazeleme turu dağıtımdan beri koşmamış, İZLENECEK). Tek-yönlü post-event tez YENİ kartla:
-  EDG-2026-020 · **G6 koşullu-kısa → RAF (2026-08-02 fizibilite keşfi: 5 yüzeyin 4'ü YOK
+  tazeleme turu dağıtımdan beri koşmamış, İZLENECEK). Tek-yönlü post-event tez ölçüldü ve
+  **EDG-2026-020 ✅ ARŞİV (2026-08-03: kill#1+#3 — havuz-fazlası CI-0-içi/negatif-nokta; ham
+  +%1,1 taban-sürüklenmesiydi [ders#3 vakası]; PEAD-kopyası değil ama bilgi de yok; 011'e
+  aleyhte-önsel not düşüldü)** · **G6 koşullu-kısa → RAF (2026-08-02 fizibilite keşfi: 5 yüzeyin 4'ü YOK
   [broker/strategy/gölge/ayna], 12-kalem motor inşası; EDG-005 karşı-gözlemi: SPY<200MA
   günlerinde long hâlâ pozitif-beklentili görünüyor — kısa tezine doğrudan karşı; 55 OOS
   bloke-gününde 0 silahlanma. Yeniden açılış: operatör kararı + delist-bar sonrası kısa-tez

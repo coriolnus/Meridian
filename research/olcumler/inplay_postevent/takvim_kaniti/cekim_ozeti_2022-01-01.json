@@ -1,0 +1,19 @@
+{
+  "dilim": [
+    "2022-01-01",
+    "2023-02-28"
+  ],
+  "istenen_is_gunu": 302,
+  "dilim_kapsama": 1.0,
+  "onbellekte_toplam_gun": 1096,
+  "bu_kosumda_ok": 259,
+  "bu_kosumda_dusen": 0,
+  "dusen_gunler_ornek": [],
+  "kaynak": "nasdaq (anahtarsız) · 0 FMP çağrısı",
+  "muhur": {
+    "config_ROOT": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root",
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root/state",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "muhur": "TUTTU"
+  }
+}

@@ -1,0 +1,259 @@
+{"date": "2022-03-03", "n_ham_sembol": 94, "syms": ["AVGO", "BURL", "COST", "KR", "MRVL"]}
+{"date": "2022-03-04", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-03-07", "n_ham_sembol": 29, "syms": []}
+{"date": "2022-03-08", "n_ham_sembol": 66, "syms": []}
+{"date": "2022-03-09", "n_ham_sembol": 67, "syms": []}
+{"date": "2022-03-10", "n_ham_sembol": 125, "syms": ["ORCL"]}
+{"date": "2022-03-11", "n_ham_sembol": 23, "syms": []}
+{"date": "2022-03-14", "n_ham_sembol": 40, "syms": []}
+{"date": "2022-03-15", "n_ham_sembol": 54, "syms": []}
+{"date": "2022-03-16", "n_ham_sembol": 42, "syms": []}
+{"date": "2022-03-17", "n_ham_sembol": 80, "syms": ["DG", "FDX"]}
+{"date": "2022-03-18", "n_ham_sembol": 12, "syms": []}
+{"date": "2022-03-21", "n_ham_sembol": 21, "syms": ["NKE"]}
+{"date": "2022-03-22", "n_ham_sembol": 26, "syms": ["ADBE", "CCL"]}
+{"date": "2022-03-23", "n_ham_sembol": 48, "syms": ["GIS"]}
+{"date": "2022-03-24", "n_ham_sembol": 52, "syms": []}
+{"date": "2022-03-25", "n_ham_sembol": 14, "syms": []}
+{"date": "2022-03-28", "n_ham_sembol": 38, "syms": []}
+{"date": "2022-03-29", "n_ham_sembol": 55, "syms": ["LULU", "MKC", "MU"]}
+{"date": "2022-03-30", "n_ham_sembol": 56, "syms": []}
+{"date": "2022-03-31", "n_ham_sembol": 78, "syms": []}
+{"date": "2022-04-01", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-04-04", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-04-05", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-04-06", "n_ham_sembol": 15, "syms": []}
+{"date": "2022-04-07", "n_ham_sembol": 13, "syms": ["CAG", "STZ"]}
+{"date": "2022-04-08", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-04-11", "n_ham_sembol": 5, "syms": []}
+{"date": "2022-04-12", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-04-13", "n_ham_sembol": 15, "syms": ["BLK", "DAL", "JPM"]}
+{"date": "2022-04-14", "n_ham_sembol": 27, "syms": ["C", "GS", "MS", "PGR", "PNC", "UNH", "USB", "WFC"]}
+{"date": "2022-04-15", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-04-18", "n_ham_sembol": 22, "syms": ["BAC", "SCHW", "SYF"]}
+{"date": "2022-04-19", "n_ham_sembol": 37, "syms": ["HAL", "JNJ", "LMT", "NFLX", "OMC", "PLD", "TRV"]}
+{"date": "2022-04-20", "n_ham_sembol": 59, "syms": ["ABT", "BKR", "CCI", "CSX", "KMI", "LRCX", "PG", "STLD", "TSLA", "UAL"]}
+{"date": "2022-04-21", "n_ham_sembol": 89, "syms": ["BX", "DHR", "DOV", "DOW", "FCX", "ISRG", "NEE", "NUE", "PM", "PPG", "SNAP", "T", "UNP"]}
+{"date": "2022-04-22", "n_ham_sembol": 20, "syms": ["AXP", "KMB", "NEM", "SLB", "VZ"]}
+{"date": "2022-04-25", "n_ham_sembol": 61, "syms": ["CDNS", "KO", "PKG"]}
+{"date": "2022-04-26", "n_ham_sembol": 146, "syms": ["CB", "COF", "ECL", "ENPH", "EQR", "EW", "GE", "GOOG", "GOOGL", "MDLZ", "MMM", "MSFT", "PCAR", "PEP", "RTX", "SHW", "TER", "TXN", "UPS", "V", "VLO", "WBD"]}
+{"date": "2022-04-27", "n_ham_sembol": 228, "syms": ["AFL", "AMGN", "AMT", "AVB", "BA", "BSX", "EQIX", "EQT", "F", "FISV", "GD", "HUM", "KHC", "META", "NOW", "NSC", "ORLY", "PINS", "PYPL", "QCOM", "SPOT", "TMUS"]}
+{"date": "2022-04-28", "n_ham_sembol": 290, "syms": ["AAPL", "AEP", "AMZN", "BAX", "CAT", "CHD", "CMCSA", "DLR", "GILD", "HSY", "INTC", "IP", "IRM", "KDP", "KLAC", "LHX", "LIN", "LLY", "LUV", "MA", "MCD", "MO", "MRK", "NOC", "ROKU", "SO", "SYK", "TMO", "XEL"]}
+{"date": "2022-04-29", "n_ham_sembol": 64, "syms": ["ABBV", "BMY", "CHTR", "CL", "CVX", "HON", "LYB", "PSX", "XOM"]}
+{"date": "2022-05-02", "n_ham_sembol": 119, "syms": ["CLX", "DVN", "EXPE", "FANG", "MPWR", "NXPI", "ON", "WEC", "WMB"]}
+{"date": "2022-05-03", "n_ham_sembol": 231, "syms": ["AIG", "AMD", "BIIB", "CMI", "DD", "EL", "ETN", "HLT", "HWM", "ITW", "KKR", "MLM", "MPC", "MTCH", "OKE", "PEG", "PFE", "PRU", "PSA", "ROK", "SBUX", "SWKS", "ZBH"]}
+{"date": "2022-05-04", "n_ham_sembol": 309, "syms": ["ALB", "ALL", "BKNG", "CF", "CTSH", "CVS", "EMR", "ES", "LNG", "MAR", "MET", "MRNA", "O", "REGN", "VMC"]}
+{"date": "2022-05-05", "n_ham_sembol": 407, "syms": ["APD", "APO", "BDX", "CBRE", "COP", "D", "ED", "EOG", "LYV", "MNST", "PH", "RCL", "SRE", "TRGP", "VRTX", "VTR"]}
+{"date": "2022-05-06", "n_ham_sembol": 78, "syms": ["CI"]}
+{"date": "2022-05-09", "n_ham_sembol": 228, "syms": ["DUK", "EXC", "MCHP", "SPG", "TSN"]}
+{"date": "2022-05-10", "n_ham_sembol": 275, "syms": ["EA", "NCLH", "OXY", "SYY", "TDG", "WELL"]}
+{"date": "2022-05-11", "n_ham_sembol": 171, "syms": ["DIS"]}
+{"date": "2022-05-12", "n_ham_sembol": 252, "syms": ["CEG"]}
+{"date": "2022-05-13", "n_ham_sembol": 81, "syms": []}
+{"date": "2022-05-16", "n_ham_sembol": 199, "syms": ["TTWO"]}
+{"date": "2022-05-17", "n_ham_sembol": 44, "syms": ["HD", "WMT"]}
+{"date": "2022-05-18", "n_ham_sembol": 27, "syms": ["ADI", "LOW", "SNPS", "TGT", "TJX"]}
+{"date": "2022-05-19", "n_ham_sembol": 29, "syms": ["AMAT", "DECK", "PANW", "ROST", "VFC"]}
+{"date": "2022-05-20", "n_ham_sembol": 8, "syms": []}
+{"date": "2022-05-23", "n_ham_sembol": 36, "syms": []}
+{"date": "2022-05-24", "n_ham_sembol": 34, "syms": ["AZO", "INTU"]}
+{"date": "2022-05-25", "n_ham_sembol": 28, "syms": ["NVDA"]}
+{"date": "2022-05-26", "n_ham_sembol": 57, "syms": ["ADSK", "AVGO", "BURL", "COST", "DG", "DLTR", "MDT", "MRVL"]}
+{"date": "2022-05-27", "n_ham_sembol": 10, "syms": []}
+{"date": "2022-05-30", "n_ham_sembol": 2, "syms": []}
+{"date": "2022-05-31", "n_ham_sembol": 33, "syms": ["CRM"]}
+{"date": "2022-06-01", "n_ham_sembol": 31, "syms": []}
+{"date": "2022-06-02", "n_ham_sembol": 23, "syms": ["HRL", "LULU"]}
+{"date": "2022-06-03", "n_ham_sembol": 5, "syms": []}
+{"date": "2022-06-06", "n_ham_sembol": 9, "syms": []}
+{"date": "2022-06-07", "n_ham_sembol": 17, "syms": []}
+{"date": "2022-06-08", "n_ham_sembol": 28, "syms": []}
+{"date": "2022-06-09", "n_ham_sembol": 18, "syms": []}
+{"date": "2022-06-10", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-06-13", "n_ham_sembol": 9, "syms": ["ORCL"]}
+{"date": "2022-06-14", "n_ham_sembol": 16, "syms": []}
+{"date": "2022-06-15", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-06-16", "n_ham_sembol": 6, "syms": ["ADBE", "KR"]}
+{"date": "2022-06-17", "n_ham_sembol": 1, "syms": []}
+{"date": "2022-06-20", "n_ham_sembol": 1, "syms": []}
+{"date": "2022-06-21", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-06-22", "n_ham_sembol": 9, "syms": []}
+{"date": "2022-06-23", "n_ham_sembol": 13, "syms": ["FDX"]}
+{"date": "2022-06-24", "n_ham_sembol": 7, "syms": ["CCL"]}
+{"date": "2022-06-27", "n_ham_sembol": 7, "syms": ["NKE"]}
+{"date": "2022-06-28", "n_ham_sembol": 11, "syms": []}
+{"date": "2022-06-29", "n_ham_sembol": 19, "syms": ["GIS", "MKC"]}
+{"date": "2022-06-30", "n_ham_sembol": 10, "syms": ["MU", "STZ"]}
+{"date": "2022-07-01", "n_ham_sembol": 3, "syms": []}
+{"date": "2022-07-04", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-07-05", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-07-06", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-07-07", "n_ham_sembol": 9, "syms": []}
+{"date": "2022-07-08", "n_ham_sembol": 1, "syms": []}
+{"date": "2022-07-11", "n_ham_sembol": 5, "syms": []}
+{"date": "2022-07-12", "n_ham_sembol": 5, "syms": ["PEP"]}
+{"date": "2022-07-13", "n_ham_sembol": 11, "syms": ["DAL"]}
+{"date": "2022-07-14", "n_ham_sembol": 14, "syms": ["CAG", "JPM", "MS"]}
+{"date": "2022-07-15", "n_ham_sembol": 13, "syms": ["BLK", "C", "PGR", "PNC", "UNH", "USB", "WFC"]}
+{"date": "2022-07-18", "n_ham_sembol": 12, "syms": ["BAC", "GS", "PLD", "SCHW", "SYF"]}
+{"date": "2022-07-19", "n_ham_sembol": 32, "syms": ["HAL", "JNJ", "LMT", "NFLX", "OMC"]}
+{"date": "2022-07-20", "n_ham_sembol": 60, "syms": ["ABT", "BIIB", "BKR", "CCI", "CSX", "KMI", "STLD", "TSLA", "UAL"]}
+{"date": "2022-07-21", "n_ham_sembol": 97, "syms": ["BX", "COF", "DHR", "DOV", "DOW", "FCX", "ISRG", "NUE", "PM", "PPG", "SNAP", "T", "TRV", "UNP"]}
+{"date": "2022-07-22", "n_ham_sembol": 26, "syms": ["AXP", "NEE", "SLB", "VZ"]}
+{"date": "2022-07-25", "n_ham_sembol": 72, "syms": ["CDNS", "NEM", "NXPI", "PKG"]}
+{"date": "2022-07-26", "n_ham_sembol": 137, "syms": ["CB", "ECL", "ENPH", "EQR", "FISV", "GE", "GOOG", "GOOGL", "KMB", "KO", "MCD", "MDLZ", "MMM", "MSFT", "PCAR", "RTX", "SYK", "TER", "TXN", "UPS", "V"]}
+{"date": "2022-07-27", "n_ham_sembol": 252, "syms": ["AEP", "AVB", "BA", "BMY", "BSX", "CTSH", "EQIX", "EQT", "F", "GD", "HLT", "HUM", "KHC", "LRCX", "META", "NOW", "NSC", "ORLY", "QCOM", "ROK", "SHW", "SPOT", "TMUS"]}
+{"date": "2022-07-28", "n_ham_sembol": 274, "syms": ["AAPL", "AMT", "AMZN", "BAX", "CMCSA", "DECK", "DLR", "ES", "EW", "HON", "HSY", "INTC", "IP", "KDP", "KLAC", "LHX", "LIN", "LUV", "MA", "MLM", "MO", "MRK", "NOC", "PFE", "RCL", "ROKU", "SO", "TMO", "VFC", "VLO", "XEL"]}
+{"date": "2022-07-29", "n_ham_sembol": 69, "syms": ["ABBV", "CHD", "CHTR", "CL", "CVX", "LYB", "PG", "PSX", "XOM"]}
+{"date": "2022-08-01", "n_ham_sembol": 101, "syms": ["AFL", "CF", "DVN", "FANG", "MPWR", "ON", "PINS", "SPG", "WMB"]}
+{"date": "2022-08-02", "n_ham_sembol": 206, "syms": ["AMD", "CAT", "CMI", "DD", "EA", "ETN", "GILD", "ITW", "KKR", "MAR", "MCHP", "MPC", "MTCH", "OXY", "PEG", "PRU", "PYPL", "SBUX", "WEC", "ZBH"]}
+{"date": "2022-08-03", "n_ham_sembol": 316, "syms": ["ALB", "ALL", "BKNG", "CLX", "CVS", "EXC", "MET", "MRNA", "O", "REGN"]}
+{"date": "2022-08-04", "n_ham_sembol": 458, "syms": ["AMGN", "APD", "APO", "BDX", "CBRE", "CEG", "CI", "COP", "DUK", "ED", "EOG", "EXPE", "HWM", "IRM", "LLY", "LNG", "LYV", "MNST", "PH", "PSA", "SRE", "SWKS", "TRGP", "VMC", "VRTX", "VTR", "WBD"]}
+{"date": "2022-08-05", "n_ham_sembol": 73, "syms": []}
+{"date": "2022-08-08", "n_ham_sembol": 206, "syms": ["AIG", "D", "OKE", "TSN", "TTWO"]}
+{"date": "2022-08-09", "n_ham_sembol": 290, "syms": ["EMR", "NCLH", "SYY", "TDG", "WELL"]}
+{"date": "2022-08-10", "n_ham_sembol": 150, "syms": ["DIS"]}
+{"date": "2022-08-11", "n_ham_sembol": 256, "syms": []}
+{"date": "2022-08-12", "n_ham_sembol": 89, "syms": []}
+{"date": "2022-08-15", "n_ham_sembol": 210, "syms": []}
+{"date": "2022-08-16", "n_ham_sembol": 50, "syms": ["HD", "WMT"]}
+{"date": "2022-08-17", "n_ham_sembol": 31, "syms": ["ADI", "LOW", "SNPS", "TGT", "TJX"]}
+{"date": "2022-08-18", "n_ham_sembol": 35, "syms": ["AMAT", "EL", "ROST"]}
+{"date": "2022-08-19", "n_ham_sembol": 12, "syms": []}
+{"date": "2022-08-22", "n_ham_sembol": 22, "syms": ["PANW"]}
+{"date": "2022-08-23", "n_ham_sembol": 30, "syms": ["INTU", "MDT"]}
+{"date": "2022-08-24", "n_ham_sembol": 27, "syms": ["ADSK", "CRM", "NVDA"]}
+{"date": "2022-08-25", "n_ham_sembol": 46, "syms": ["BURL", "DG", "DLTR", "MRVL"]}
+{"date": "2022-08-26", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-08-29", "n_ham_sembol": 14, "syms": []}
+{"date": "2022-08-30", "n_ham_sembol": 25, "syms": []}
+{"date": "2022-08-31", "n_ham_sembol": 31, "syms": []}
+{"date": "2022-09-01", "n_ham_sembol": 33, "syms": ["AVGO", "HRL", "LULU"]}
+{"date": "2022-09-02", "n_ham_sembol": 3, "syms": []}
+{"date": "2022-09-05", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-09-06", "n_ham_sembol": 9, "syms": []}
+{"date": "2022-09-07", "n_ham_sembol": 26, "syms": []}
+{"date": "2022-09-08", "n_ham_sembol": 25, "syms": []}
+{"date": "2022-09-09", "n_ham_sembol": 8, "syms": ["KR"]}
+{"date": "2022-09-12", "n_ham_sembol": 14, "syms": ["ORCL"]}
+{"date": "2022-09-13", "n_ham_sembol": 10, "syms": []}
+{"date": "2022-09-14", "n_ham_sembol": 15, "syms": []}
+{"date": "2022-09-15", "n_ham_sembol": 9, "syms": ["ADBE"]}
+{"date": "2022-09-16", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-09-19", "n_ham_sembol": 2, "syms": ["AZO"]}
+{"date": "2022-09-20", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-09-21", "n_ham_sembol": 8, "syms": ["GIS"]}
+{"date": "2022-09-22", "n_ham_sembol": 18, "syms": ["COST", "FDX"]}
+{"date": "2022-09-23", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-09-26", "n_ham_sembol": 3, "syms": []}
+{"date": "2022-09-27", "n_ham_sembol": 16, "syms": []}
+{"date": "2022-09-28", "n_ham_sembol": 14, "syms": []}
+{"date": "2022-09-29", "n_ham_sembol": 7, "syms": ["MU", "NKE"]}
+{"date": "2022-09-30", "n_ham_sembol": 10, "syms": ["CCL"]}
+{"date": "2022-10-03", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-10-04", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-10-05", "n_ham_sembol": 8, "syms": []}
+{"date": "2022-10-06", "n_ham_sembol": 12, "syms": ["CAG", "MKC", "STZ"]}
+{"date": "2022-10-07", "n_ham_sembol": 3, "syms": []}
+{"date": "2022-10-10", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-10-11", "n_ham_sembol": 2, "syms": []}
+{"date": "2022-10-12", "n_ham_sembol": 6, "syms": ["PEP"]}
+{"date": "2022-10-13", "n_ham_sembol": 13, "syms": ["BLK", "DAL", "PGR"]}
+{"date": "2022-10-14", "n_ham_sembol": 14, "syms": ["C", "JPM", "MS", "PNC", "UNH", "USB", "WFC"]}
+{"date": "2022-10-17", "n_ham_sembol": 12, "syms": ["BAC", "SCHW"]}
+{"date": "2022-10-18", "n_ham_sembol": 31, "syms": ["GS", "ISRG", "JNJ", "LMT", "NFLX", "OMC", "UAL"]}
+{"date": "2022-10-19", "n_ham_sembol": 59, "syms": ["ABT", "BKR", "CCI", "KMI", "LRCX", "PG", "PLD", "PPG", "STLD", "TRV", "TSLA"]}
+{"date": "2022-10-20", "n_ham_sembol": 83, "syms": ["BX", "CSX", "DHR", "DOV", "DOW", "FCX", "NUE", "PM", "SNAP", "T", "UNP"]}
+{"date": "2022-10-21", "n_ham_sembol": 21, "syms": ["AXP", "SLB", "VZ"]}
+{"date": "2022-10-24", "n_ham_sembol": 61, "syms": ["CDNS", "PKG"]}
+{"date": "2022-10-25", "n_ham_sembol": 133, "syms": ["BIIB", "BMY", "CB", "ENPH", "EQR", "GE", "GOOG", "GOOGL", "HAL", "ITW", "KMB", "KO", "MMM", "MSFT", "PCAR", "RTX", "SHW", "SPOT", "SYF", "TER", "TXN", "UPS", "V", "VLO"]}
+{"date": "2022-10-26", "n_ham_sembol": 209, "syms": ["BA", "BSX", "DLR", "EQT", "F", "GD", "HLT", "KHC", "KLAC", "META", "NOW", "NSC", "ORLY", "TMO", "VFC"]}
+{"date": "2022-10-27", "n_ham_sembol": 269, "syms": ["AAPL", "AEP", "AMT", "AMZN", "BAX", "CAT", "CBRE", "CMCSA", "COF", "DECK", "EW", "FISV", "GILD", "HON", "INTC", "IP", "KDP", "LHX", "LIN", "LUV", "MA", "MCD", "MO", "MPWR", "MRK", "NOC", "PINS", "SO", "TMUS", "VRTX", "XEL"]}
+{"date": "2022-10-28", "n_ham_sembol": 67, "syms": ["ABBV", "CHD", "CHTR", "CL", "CVX", "LYB", "NEE", "XOM"]}
+{"date": "2022-10-31", "n_ham_sembol": 77, "syms": ["AFL", "EMR", "HWM", "NXPI", "ON", "PEG", "SYK", "WMB"]}
+{"date": "2022-11-01", "n_ham_sembol": 209, "syms": ["AIG", "AMD", "CLX", "DVN", "EA", "ECL", "ETN", "KKR", "LLY", "MDLZ", "MPC", "MTCH", "NEM", "OKE", "PFE", "PRU", "PSA", "PSX", "SPG", "SYY", "WEC"]}
+{"date": "2022-11-02", "n_ham_sembol": 297, "syms": ["ALB", "ALL", "APO", "BKNG", "CF", "CTSH", "CVS", "EL", "EQIX", "ES", "HUM", "MET", "MLM", "O", "QCOM", "ROK", "ROKU", "VMC", "ZBH"]}
+{"date": "2022-11-03", "n_ham_sembol": 408, "syms": ["AMGN", "APD", "AVB", "CI", "CMI", "COP", "DUK", "ED", "EOG", "EXC", "EXPE", "IRM", "LNG", "LYV", "MAR", "MCHP", "MNST", "MRNA", "PH", "PYPL", "RCL", "REGN", "SBUX", "SRE", "SWKS", "TRGP", "VTR", "WBD"]}
+{"date": "2022-11-04", "n_ham_sembol": 73, "syms": ["D", "HSY"]}
+{"date": "2022-11-07", "n_ham_sembol": 178, "syms": ["FANG", "TTWO", "WELL"]}
+{"date": "2022-11-08", "n_ham_sembol": 293, "syms": ["CEG", "DD", "DIS", "NCLH", "OXY"]}
+{"date": "2022-11-09", "n_ham_sembol": 276, "syms": []}
+{"date": "2022-11-10", "n_ham_sembol": 311, "syms": ["BDX", "TDG"]}
+{"date": "2022-11-11", "n_ham_sembol": 17, "syms": []}
+{"date": "2022-11-14", "n_ham_sembol": 317, "syms": ["TSN"]}
+{"date": "2022-11-15", "n_ham_sembol": 56, "syms": ["HD", "WMT"]}
+{"date": "2022-11-16", "n_ham_sembol": 49, "syms": ["LOW", "NVDA", "TGT", "TJX"]}
+{"date": "2022-11-17", "n_ham_sembol": 48, "syms": ["AMAT", "PANW", "ROST"]}
+{"date": "2022-11-18", "n_ham_sembol": 12, "syms": []}
+{"date": "2022-11-21", "n_ham_sembol": 40, "syms": []}
+{"date": "2022-11-22", "n_ham_sembol": 38, "syms": ["ADI", "ADSK", "BURL", "DLTR", "MDT"]}
+{"date": "2022-11-23", "n_ham_sembol": 16, "syms": []}
+{"date": "2022-11-24", "n_ham_sembol": 1, "syms": []}
+{"date": "2022-11-25", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-11-28", "n_ham_sembol": 8, "syms": []}
+{"date": "2022-11-29", "n_ham_sembol": 28, "syms": ["INTU"]}
+{"date": "2022-11-30", "n_ham_sembol": 46, "syms": ["CRM", "HRL", "SNPS"]}
+{"date": "2022-12-01", "n_ham_sembol": 29, "syms": ["DG", "KR", "MRVL"]}
+{"date": "2022-12-02", "n_ham_sembol": 5, "syms": []}
+{"date": "2022-12-05", "n_ham_sembol": 8, "syms": []}
+{"date": "2022-12-06", "n_ham_sembol": 27, "syms": ["AZO"]}
+{"date": "2022-12-07", "n_ham_sembol": 30, "syms": []}
+{"date": "2022-12-08", "n_ham_sembol": 26, "syms": ["AVGO", "COST", "LULU"]}
+{"date": "2022-12-09", "n_ham_sembol": 2, "syms": []}
+{"date": "2022-12-12", "n_ham_sembol": 7, "syms": []}
+{"date": "2022-12-13", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-12-14", "n_ham_sembol": 12, "syms": []}
+{"date": "2022-12-15", "n_ham_sembol": 15, "syms": ["ADBE"]}
+{"date": "2022-12-16", "n_ham_sembol": 8, "syms": []}
+{"date": "2022-12-19", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-12-20", "n_ham_sembol": 18, "syms": ["FDX", "GIS", "NKE"]}
+{"date": "2022-12-21", "n_ham_sembol": 5, "syms": ["CCL", "MU"]}
+{"date": "2022-12-22", "n_ham_sembol": 10, "syms": []}
+{"date": "2022-12-23", "n_ham_sembol": 2, "syms": []}
+{"date": "2022-12-26", "n_ham_sembol": 0, "syms": []}
+{"date": "2022-12-27", "n_ham_sembol": 1, "syms": []}
+{"date": "2022-12-28", "n_ham_sembol": 4, "syms": []}
+{"date": "2022-12-29", "n_ham_sembol": 6, "syms": []}
+{"date": "2022-12-30", "n_ham_sembol": 2, "syms": []}
+{"date": "2023-01-02", "n_ham_sembol": 0, "syms": []}
+{"date": "2023-01-03", "n_ham_sembol": 2, "syms": []}
+{"date": "2023-01-04", "n_ham_sembol": 5, "syms": []}
+{"date": "2023-01-05", "n_ham_sembol": 15, "syms": ["CAG", "STZ"]}
+{"date": "2023-01-06", "n_ham_sembol": 2, "syms": []}
+{"date": "2023-01-09", "n_ham_sembol": 9, "syms": []}
+{"date": "2023-01-10", "n_ham_sembol": 4, "syms": []}
+{"date": "2023-01-11", "n_ham_sembol": 1, "syms": []}
+{"date": "2023-01-12", "n_ham_sembol": 8, "syms": []}
+{"date": "2023-01-13", "n_ham_sembol": 14, "syms": ["BAC", "BLK", "C", "DAL", "JPM", "UNH", "WFC"]}
+{"date": "2023-01-16", "n_ham_sembol": 2, "syms": []}
+{"date": "2023-01-17", "n_ham_sembol": 20, "syms": ["GS", "MS", "UAL"]}
+{"date": "2023-01-18", "n_ham_sembol": 20, "syms": ["KMI", "PLD", "PNC", "SCHW"]}
+{"date": "2023-01-19", "n_ham_sembol": 31, "syms": ["NFLX", "PG", "PPG"]}
+{"date": "2023-01-20", "n_ham_sembol": 10, "syms": ["SLB"]}
+{"date": "2023-01-23", "n_ham_sembol": 25, "syms": ["BKR", "SYF"]}
+{"date": "2023-01-24", "n_ham_sembol": 56, "syms": ["COF", "DHR", "GE", "HAL", "ISRG", "JNJ", "LMT", "MMM", "MSFT", "PCAR", "RTX", "TRV", "TXN", "UNP", "VZ"]}
+{"date": "2023-01-25", "n_ham_sembol": 108, "syms": ["ABT", "BA", "CCI", "CSX", "FCX", "GD", "KMB", "LRCX", "NEE", "NOW", "NSC", "PGR", "PKG", "STLD", "T", "TER", "TSLA", "USB"]}
+{"date": "2023-01-26", "n_ham_sembol": 127, "syms": ["BX", "CMCSA", "DOW", "INTC", "KLAC", "LHX", "LUV", "MA", "MKC", "NOC", "NUE", "ROK", "SHW", "V", "VLO", "XEL"]}
+{"date": "2023-01-27", "n_ham_sembol": 29, "syms": ["AXP", "CHTR", "CL", "CVX"]}
+{"date": "2023-01-30", "n_ham_sembol": 44, "syms": ["NXPI"]}
+{"date": "2023-01-31", "n_ham_sembol": 76, "syms": ["AMD", "AMGN", "CAT", "CB", "DOV", "EA", "EW", "IP", "MCD", "MDLZ", "MPC", "MTCH", "PFE", "PSX", "SNAP", "SPOT", "SYK", "SYY", "UPS", "XOM"]}
+{"date": "2023-02-01", "n_ham_sembol": 79, "syms": ["AFL", "ALL", "BSX", "HUM", "MET", "META", "MO", "TMO", "TMUS"]}
+{"date": "2023-02-02", "n_ham_sembol": 135, "syms": ["AAPL", "AMZN", "APD", "BDX", "BMY", "CLX", "COP", "CTSH", "DECK", "EL", "F", "GILD", "GOOG", "GOOGL", "HON", "HSY", "ITW", "LLY", "MCHP", "MRK", "PH", "QCOM", "SBUX", "WEC"]}
+{"date": "2023-02-03", "n_ham_sembol": 31, "syms": ["CHD", "CI", "LYB", "REGN", "ZBH"]}
+{"date": "2023-02-06", "n_ham_sembol": 49, "syms": ["CMI", "ON", "PINS", "SPG", "SWKS", "TSN", "TTWO"]}
+{"date": "2023-02-07", "n_ham_sembol": 114, "syms": ["DD", "ENPH", "FISV", "KKR", "LIN", "OMC", "PRU", "RCL", "TDG", "VFC", "VRTX"]}
+{"date": "2023-02-08", "n_ham_sembol": 133, "syms": ["AVB", "CVS", "D", "DIS", "EMR", "ETN", "MPWR", "ORLY"]}
+{"date": "2023-02-09", "n_ham_sembol": 138, "syms": ["ABBV", "APO", "BAX", "DUK", "EQR", "EXPE", "HLT", "PEP", "PM", "PYPL", "VTR"]}
+{"date": "2023-02-10", "n_ham_sembol": 29, "syms": []}
+{"date": "2023-02-13", "n_ham_sembol": 56, "syms": ["CDNS", "ES"]}
+{"date": "2023-02-14", "n_ham_sembol": 116, "syms": ["DVN", "ECL", "EXC", "HWM", "KO", "MAR"]}
+{"date": "2023-02-15", "n_ham_sembol": 126, "syms": ["ADI", "AIG", "ALB", "BIIB", "CF", "EQIX", "EQT", "KHC", "MLM", "ROKU", "SNPS", "WELL"]}
+{"date": "2023-02-16", "n_ham_sembol": 113, "syms": ["AMAT", "CEG", "DLR", "ED", "SO", "VMC"]}
+{"date": "2023-02-17", "n_ham_sembol": 24, "syms": []}
+{"date": "2023-02-20", "n_ham_sembol": 13, "syms": ["WMB"]}
+{"date": "2023-02-21", "n_ham_sembol": 118, "syms": ["FANG", "HD", "MDT", "O", "PANW", "PEG", "PSA", "WMT"]}
+{"date": "2023-02-22", "n_ham_sembol": 164, "syms": ["NVDA", "TJX", "TRGP"]}
+{"date": "2023-02-23", "n_ham_sembol": 210, "syms": ["ADSK", "AEP", "AMT", "BKNG", "CBRE", "EOG", "INTU", "IRM", "KDP", "LNG", "LYV", "MRNA", "NEM", "WBD"]}
+{"date": "2023-02-24", "n_ham_sembol": 32, "syms": []}
+{"date": "2023-02-27", "n_ham_sembol": 97, "syms": ["OKE", "OXY"]}
+{"date": "2023-02-28", "n_ham_sembol": 183, "syms": ["AZO", "MNST", "NCLH", "ROST", "SRE", "TGT"]}

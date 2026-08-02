@@ -1,0 +1,346 @@
+{
+  "kart": "EDG-2026-020",
+  "olcum_zamani": "2026-08-02T20:18:17.351482+00:00",
+  "kod_surumu": {
+    "git_head": "b8ed0760adcb908bd93c732e03153f24c7de24b0",
+    "git_head_kisa": "b8ed076",
+    "kirli_agac": true,
+    "git_neden": null,
+    "olcum_araclari_surum": "2026-08-02",
+    "arac_surumleri": {
+      "temiz_taban": "1.0",
+      "olay_disi_kiyas": "1.0",
+      "blok_bootstrap_ci": "1.0",
+      "eb_kucult": "1.0"
+    },
+    "beyan": "git_head None ise ÖLÇÜLEMEDİ (neden alanında yazar) — boş dizgi ya da tahmin yazılmaz. kirli_agac True ise rapor bu SHA'dan YENİDEN ÜRETİLEMEZ: SHA o anki kodun değil atasının adıdır. arac_surumleri, raporun hangi ölçüm-aracı davranışıyla üretildiğini söyler (araç değişirse sürümü de değişir)."
+  },
+  "motor_damgasi": {
+    "n_dosya": 93,
+    "tum_agac_sha256": "93435534a3ed44cab6f3f5b128d6ea4c907ea03b3524e3166121297ac357da03",
+    "olcume_giren_moduller": {
+      "config.py": "7be49132c6a1985c3d7a1fec0abb640c",
+      "indicators.py": "48f1a14ea15591e177aaa214d42cf360",
+      "strategy.py": "6fb76448ac423ca57e264688cb43b995",
+      "earnings.py": "1776ed03b47a6d44b454e303c80f416e",
+      "analytics.py": "f8e55c333eee74df1cd29f795950eff2",
+      "olcum_araclari.py": "bc80eac4538b215914a1c49170b2e1ea",
+      "adapters/data.py": "5fe766f9b077dd5d5a8ea6746b864665",
+      "obs.py": "14b06e081bef46c96849c17bb3d3ee57",
+      "store.py": "9181bafe1e91d61ecbfc96e0b675257a"
+    },
+    "kritik_modul_bulunamadi": [],
+    "repo_kopya_ayrisan": [],
+    "beyan": "sha256'lar REPO dosyalarının; 'repo_kopya_ayrisan' boş ise kum havuzundaki kopya repo ile bit-bit aynıdır. İki çıktının aynı koddan geldiğini 'olcume_giren_moduller' sözlüklerinin eşitliği KANITLAR — git SHA'sı kirli ağaçta bunu kanıtlayamaz."
+  },
+  "muhur": {
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/inplay_postevent_calisma/_state",
+    "config_BARS": "/Users/erdemozturk/AI-Trading/state/bars",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "beyan": "config.STATE kum havuzuna çevrildi; barlar CANLI önbellekten SALT-OKUNUR okunur; kum havuzu earnings.csv TARİHSEL takvimle dolduruldu (canlı dosyaya TEK BAYT yazılmadı)"
+  },
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 248,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": [],
+    "defter_yolu_dusen": 46256,
+    "defter_yolu_sembol": 57,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {},
+    "kisa_semboller": [
+      "HON",
+      "DD"
+    ]
+  },
+  "takvim_muhasebesi": {
+    "dosya": [
+      {
+        "ad": "gunler.jsonl",
+        "satir": 43,
+        "sha256": "ad27e737f3788953cf5684576bb3b2e2331bb3e540cd06963c8c9d3920f7632d"
+      },
+      {
+        "ad": "gunler_a.jsonl",
+        "satir": 259,
+        "sha256": "202445773ca4d9b3e050f9ea7f8bbfba5ee3344febf3f81b858aafe6327fa122"
+      },
+      {
+        "ad": "gunler_b.jsonl",
+        "satir": 305,
+        "sha256": "baa9577f49bdf450a3f6f0f95e304a5d0776a92144d14cd2f65b1d85ac9b3d9c"
+      },
+      {
+        "ad": "gunler_c.jsonl",
+        "satir": 304,
+        "sha256": "c2239b80c23a32d34873e305ba0f859758afbf95b953a2f18aaa18412d059f5f"
+      },
+      {
+        "ad": "gunler_d.jsonl",
+        "satir": 287,
+        "sha256": "8f74bbafef52508e505b66a82c637063859c20ac181d454ae56012fc96599e3c"
+      }
+    ],
+    "satir": 1198,
+    "bozuk_satir": 0,
+    "tekil_gun": 1198,
+    "gun_araligi": [
+      "2022-01-03",
+      "2026-08-05"
+    ],
+    "sembol": 251,
+    "olay_gunu": 4687,
+    "sembol_basina_medyan": 19.0,
+    "kaynak": "Nasdaq anahtarsız takvim (adapters.data.nasdaq_earnings_window) — kys_olcum/takvim_cek.py ile çekildi, bu klasöre ARŞİVLENDİ",
+    "saat_alani": "YOK — takvim_cek.py:74 bmo/amc'yi süzüyor (keşif turu şerhi)"
+  },
+  "aday_muhasebesi": {
+    "cf_satir": 7161,
+    "cf_girilmemis": 108,
+    "cf_eksik_alan": 0,
+    "open_satir": 69,
+    "open_eksik_alan": 0,
+    "ham_aday_satiri": 7122,
+    "tekillestirmede_dusen": 315,
+    "tekil_aday_gun": 6807,
+    "bar_eslesen_aday_gun": 6764
+  },
+  "pozitif_kontrol": {
+    "aciklama": "KART GUARD'I — ham rvol20 @20 cf-katman IC çivisi. AYNI boru hattı (bars_integrity DIŞLAMALI yol): max_olcum 0.0645, resmom 0.0637, pullback 0.0642, WP2/EDG-016 0.0642, EDG-017 0.0642, EDG-011 0.0642. Çivi tutmazsa boru hattı GEÇERSİZ ve HİÇBİR hücre için sayı yazılmaz.",
+    "katman": "counterfactuals.jsonl entered=True & near_miss=False (component_ic katmanı)",
+    "populasyon_muhasebesi": {
+      "cf_satir": 7161,
+      "cf_girilmemis": 108,
+      "cf_eksik_alan": 0,
+      "open_satir": 69,
+      "open_eksik_alan": 0
+    },
+    "eslesme_muhasebesi": {
+      "bar_yok_sembol": 45,
+      "bar_yok_tarih": 0,
+      "kabul": 7077
+    },
+    "5": {
+      "ic": 0.0374,
+      "n": 2095,
+      "ci": {
+        "lo": -0.0178,
+        "hi": 0.0847,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.017837,
+        "hi": 0.084732,
+        "n_gun": 742,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "10": {
+      "ic": 0.0516,
+      "n": 2093,
+      "ci": {
+        "lo": -0.0089,
+        "hi": 0.1011,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": -0.008866,
+        "hi": 0.101141,
+        "n_gun": 740,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": false,
+      "neden": null
+    },
+    "20": {
+      "ic": 0.0642,
+      "n": 2087,
+      "ci": {
+        "lo": 0.0146,
+        "hi": 0.1135,
+        "seviye": 0.95
+      },
+      "ci_meta": {
+        "lo": 0.014635,
+        "hi": 0.113532,
+        "n_gun": 736,
+        "n_boot_gecerli": 600,
+        "blok": 21,
+        "atlanan": 0,
+        "neden": null
+      },
+      "anlamli": true,
+      "neden": null
+    },
+    "civi_hedef": 0.0645,
+    "civi_olculen": 0.0642,
+    "civi_sapma": 0.0003,
+    "tolerans": 0.005,
+    "GECTI": true,
+    "defterdeki_deger_cf_rvol20": {
+      "5": 0.032,
+      "10": 0.0456,
+      "20": 0.0604
+    }
+  },
+  "pit_assert": {
+    "bacak_1_yapisal": {
+      "tanim": "gecikme_gunu: searchsorted(side='right') → ev[:j] dilimi; yalnız o dilimin SON öğesi okunur. j==0 satırlarda diziye HİÇ dokunulmaz (maskeli indeksleme).",
+      "satir_basi_assert_tetiklendi": 0,
+      "gecti": true
+    },
+    "bacak_2_kesme_degismezligi": {
+      "tanim": "Her satır için takvim O SATIRIN t'sinde KESİLİR (ev[ev<=t]) ve gecikme yeniden hesaplanır. Fark 0 ⇒ gelecek tarihlerin sonuca katkısı SIFIR.",
+      "n_satir": 6764,
+      "ayrisan": 0,
+      "alt_ornek_mi": false,
+      "gecti": true
+    },
+    "bacak_3_bagimsiz_saf_python": {
+      "tanim": "gecikme_gunu_saf (liste taraması, ayrı kod yolu) ile birebir aynı sayı.",
+      "n_satir": 6764,
+      "ayrisan": 0,
+      "gecti": true
+    },
+    "negatif_kontrol_kapi_etkin_mi": {
+      "tanim": "İKİ YÖNLÜ (EDG-011'in |t−e| lafzı) hesap kaç satırda FARKLI sayı verirdi? 0 çıksaydı kapı hiçbir şeyi kesmiyor demekti ve 'PIT-temiz' beyanı boş olurdu. BU SAYI HÜKME GİRMEZ ve in_play hesabında KULLANILMAZ.",
+      "n_satir_farkli": 2935,
+      "oran": 0.433915,
+      "kapi_etkin": true
+    },
+    "kapsama": {
+      "aday_satiri": 6764,
+      "takvimde_olmayan_sembol_satiri": 0,
+      "gecmis_olayi_olmayan_satir": 183
+    },
+    "GECTI": true
+  },
+  "pk4": {
+    "tanim": "close[t+h]/close[t]-1 ile aradaki GÜNLÜK getirilerin bileşiği ÖZDEŞ olmalı. Takvim kapısı / integrity kırpması ufkun İÇİNDE bar düşürdüyse ya da kaydırma bir gün kaysaydı özdeşlik bozulurdu.",
+    "kapsam": "pozitif kontrol satırları + TÜM bar paneli (her sembol, her bar)",
+    "fwd5": {
+      "n": 1258029,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd10": {
+      "n": 1256766,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "fwd20": {
+      "n": 1254248,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true
+    },
+    "gecti": true
+  },
+  "pk5": {
+    "kapsam_beyani": "KAPSAM BEYANI: WP2 dalgasının PK5-B (split bazı) ve PK5-D (fundamentals as-of) bacakları\n    BU KARTTA UYGULANMAZ — kart yalnız OHLCV + olay TARİHİ kullanır, hiçbir fundamentals/as-of\n    serisi okumaz. Uygulanmayan bir bekçiyi 'geçti' diye raporlamak UYDURMA olurdu.\n\n    Bu kartın PK5'i BEŞ bacaktır:\n      A — rvol20 GERİYE-BAKIŞSIZ: tam seri ile df.iloc[:i+1] kesilmiş seride aynı değer\n      C — hızlı ortalama-bootstrap ≡ satır-toplayan kanonik yol\n      E — hızlı Spearman ≡ kanonik analytics.spearman_ic\n      F — in_play maskesi ≡ KANONİK meridian.olcum_araclari.temiz_taban(pencere=(0,P)) tümleyeni\n      G — takvim yükleyici: arşivlenmiş JSONL ayrıştırması ≡ deponun kendi earnings._load()'u",
+    "A_rvol20_geriye_bakissiz": {
+      "n": 32,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true,
+      "tanim": "indicators.rvol20 TAM seride ve df.iloc[:i+1] KESİLMİŞ seride AYNI değeri vermeli"
+    },
+    "C_hizli_ortalama": {
+      "n_ornek": 50,
+      "maks_mutlak_fark": 0.0,
+      "gecti": true,
+      "tanim": "mean_block_boot (gün-toplamı/gün-adedi) ile block_boot (satır toplayıp mean) AYNI gün dizisinde birebir aynı sayıyı vermeli"
+    },
+    "E_hizli_spearman": {
+      "olcumler": [
+        {
+          "n": 5000,
+          "kanonik": 0.001367,
+          "hizli": 0.001367,
+          "mutlak_fark": 0.0
+        },
+        {
+          "n": 50000,
+          "kanonik": 0.002912,
+          "hizli": 0.002912,
+          "mutlak_fark": 0.0
+        },
+        {
+          "n": 208032,
+          "kanonik": 0.002106,
+          "hizli": 0.002106,
+          "mutlak_fark": 0.0
+        }
+      ],
+      "gecti": true,
+      "tanim": "IC bootstrap'ının hızlı yolu kanonik analytics.spearman_ic ile BİREBİR aynı"
+    },
+    "F_temiz_taban_ozdesligi": {
+      "tanim": "in_play(0<=t−e<=P) maskesi, KANONİK olcum_araclari.temiz_taban(pencere=(0,P)) fonksiyonunun KİRLİ saydığı satırlarla BİREBİR aynı olmalı (aynı pencere aritmetiği, iki bağımsız uygulama). Gün birimi TAKVİM GÜNÜdür.",
+      "pencereler": {
+        "3": {
+          "ayrisan": 0,
+          "gecti": true,
+          "hizli_inplay": 951,
+          "kanonik_inplay": 951,
+          "kanonik_kirlilik_orani": 0.1406,
+          "kanonik_gun_birimi": "takvim gunu",
+          "kanonik_pencere": {
+            "once": 0,
+            "sonra": 3
+          },
+          "kanonik_n_olay": 4687,
+          "kanonik_n_olaysiz_kimlik": 0,
+          "kanonik_n_cozulemeyen": 0,
+          "kanonik_n_temiz": 5813,
+          "kanonik_uyari": null
+        },
+        "5": {
+          "ayrisan": 0,
+          "gecti": true,
+          "hizli_inplay": 1137,
+          "kanonik_inplay": 1137,
+          "kanonik_kirlilik_orani": 0.1681,
+          "kanonik_gun_birimi": "takvim gunu",
+          "kanonik_pencere": {
+            "once": 0,
+            "sonra": 5
+          },
+          "kanonik_n_olay": 4687,
+          "kanonik_n_olaysiz_kimlik": 0,
+          "kanonik_n_cozulemeyen": 0,
+          "kanonik_n_temiz": 5627,
+          "kanonik_uyari": null
+        }
+      },
+      "gecti": true
+    },
+    "G_takvim_yukleyici": {
+      "bagimsiz_sembol": 251,
+      "kanonik_sembol": 251,
+      "ayrisan_sembol": 0,
+      "ayrisan_tarih": 0,
+      "gecti": true,
+      "tanim": "arşivlenmiş JSONL ayrıştırması (ortak020.takvim_yukle) ile DEPONUN kendi earnings._load()'u (kum havuzu CSV'sinden) BİREBİR aynı takvimi vermeli"
+    },
+    "gecti": true
+  },
+  "KAPILAR": {
+    "pozitif_kontrol": true,
+    "pit_assert": true,
+    "pk4": true,
+    "pk5": true
+  },
+  "DUR": false
+}

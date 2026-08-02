@@ -41,3 +41,7 @@ status: askida   # 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play ada
 #   Pozitif kontrol 0.0642 + PK4/PK5 tam geçti; zemin-sabitliği sha256 sarmalıyla kanıtlı.
 #   Kanıt: research/olcumler/inplay_olcum/.
 notes: "Ölçüm scratchpad/inplay_olcum/ SALT-ÖLÇÜM; karta ajan DOKUNMAZ. Hüküm pozitifse entegrasyon guard-sıralama turu (ayrı)."
+
+# 2026-08-03 Rol-1 notu: ASKI SÜRER (tanım tarafı — bkz. research/olcumler/kesif_2026-08-02/).
+# ALEYHTE ÖNSEL: tek-yönlü PIT-temiz yarı (EDG-2026-020) ölçüldü ve BOŞ çıktı (kill#1+#3;
+# havuz-fazlası negatif-nokta, CI-0-içi). İki-yönlü tez açılırsa bu sonuç karşı-kanıt okunmalı.

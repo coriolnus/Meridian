@@ -1,0 +1,1953 @@
+{
+  "kart": "EDG-2026-020",
+  "aile": "postevent_inplay",
+  "olcum_zamani": "2026-08-02T20:18:26.168892+00:00",
+  "kod_surumu": {
+    "git_head": "b8ed0760adcb908bd93c732e03153f24c7de24b0",
+    "git_head_kisa": "b8ed076",
+    "kirli_agac": true,
+    "git_neden": null,
+    "olcum_araclari_surum": "2026-08-02",
+    "arac_surumleri": {
+      "temiz_taban": "1.0",
+      "olay_disi_kiyas": "1.0",
+      "blok_bootstrap_ci": "1.0",
+      "eb_kucult": "1.0"
+    },
+    "beyan": "git_head None ise ÖLÇÜLEMEDİ (neden alanında yazar) — boş dizgi ya da tahmin yazılmaz. kirli_agac True ise rapor bu SHA'dan YENİDEN ÜRETİLEMEZ: SHA o anki kodun değil atasının adıdır. arac_surumleri, raporun hangi ölçüm-aracı davranışıyla üretildiğini söyler (araç değişirse sürümü de değişir)."
+  },
+  "motor_damgasi": {
+    "n_dosya": 93,
+    "tum_agac_sha256": "93435534a3ed44cab6f3f5b128d6ea4c907ea03b3524e3166121297ac357da03",
+    "olcume_giren_moduller": {
+      "config.py": "7be49132c6a1985c3d7a1fec0abb640c",
+      "indicators.py": "48f1a14ea15591e177aaa214d42cf360",
+      "strategy.py": "6fb76448ac423ca57e264688cb43b995",
+      "earnings.py": "1776ed03b47a6d44b454e303c80f416e",
+      "analytics.py": "f8e55c333eee74df1cd29f795950eff2",
+      "olcum_araclari.py": "bc80eac4538b215914a1c49170b2e1ea",
+      "adapters/data.py": "5fe766f9b077dd5d5a8ea6746b864665",
+      "obs.py": "14b06e081bef46c96849c17bb3d3ee57",
+      "store.py": "9181bafe1e91d61ecbfc96e0b675257a"
+    },
+    "kritik_modul_bulunamadi": [],
+    "repo_kopya_ayrisan": [],
+    "beyan": "sha256'lar REPO dosyalarının; 'repo_kopya_ayrisan' boş ise kum havuzundaki kopya repo ile bit-bit aynıdır. İki çıktının aynı koddan geldiğini 'olcume_giren_moduller' sözlüklerinin eşitliği KANITLAR — git SHA'sı kirli ağaçta bunu kanıtlayamaz."
+  },
+  "motor_damgasi_pk_ile_ayni_mi": true,
+  "K_muhasebesi": {
+    "parameter_grid": {
+      "pencere_gun": [
+        3,
+        5
+      ]
+    },
+    "K_bu_turda": 2,
+    "carpim_kurali": "grid'de ÇARPILARAK sayılır; bu kartta tek eksen (pencere_gun) → K = 2",
+    "kutup": "FWER (kapı p_req = 1 − α_family/K, gerçek Bonferroni). Bu ölçüm kapıya DOKUNMAZ; kutbu yalnız beyan eder.",
+    "grid_disi_satirlar": [
+      "alt-dönem (betimleyici)",
+      "@5 (betimleyici)",
+      "min_taban=5 (duyarlılık)",
+      "kirli-taban sıkışma (Ders #5 k.3)",
+      "kontrolsüz artık-IC ikizi"
+    ]
+  },
+  "muhur": {
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/inplay_postevent_calisma/_state",
+    "config_BARS": "/Users/erdemozturk/AI-Trading/state/bars",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "beyan": "config.STATE kum havuzuna çevrildi; barlar CANLI önbellekten SALT-OKUNUR okunur; kum havuzu earnings.csv TARİHSEL takvimle dolduruldu (canlı dosyaya TEK BAYT yazılmadı)"
+  },
+  "bar_muhasebesi": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "okunamadi": 0,
+    "kisa": 2,
+    "yuklendi": 248,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "takvim_reddedilen": [],
+    "defter_yolu_dusen": 46256,
+    "defter_yolu_sembol": 57,
+    "hesaplanan_dislanan_satir": 0,
+    "iki_yol_ayrisan_sembol": [],
+    "kirilma_sinifi": {},
+    "kisa_semboller": [
+      "HON",
+      "DD"
+    ]
+  },
+  "takvim_muhasebesi": {
+    "dosya": [
+      {
+        "ad": "gunler.jsonl",
+        "satir": 43,
+        "sha256": "ad27e737f3788953cf5684576bb3b2e2331bb3e540cd06963c8c9d3920f7632d"
+      },
+      {
+        "ad": "gunler_a.jsonl",
+        "satir": 259,
+        "sha256": "202445773ca4d9b3e050f9ea7f8bbfba5ee3344febf3f81b858aafe6327fa122"
+      },
+      {
+        "ad": "gunler_b.jsonl",
+        "satir": 305,
+        "sha256": "baa9577f49bdf450a3f6f0f95e304a5d0776a92144d14cd2f65b1d85ac9b3d9c"
+      },
+      {
+        "ad": "gunler_c.jsonl",
+        "satir": 304,
+        "sha256": "c2239b80c23a32d34873e305ba0f859758afbf95b953a2f18aaa18412d059f5f"
+      },
+      {
+        "ad": "gunler_d.jsonl",
+        "satir": 287,
+        "sha256": "8f74bbafef52508e505b66a82c637063859c20ac181d454ae56012fc96599e3c"
+      }
+    ],
+    "satir": 1198,
+    "bozuk_satir": 0,
+    "tekil_gun": 1198,
+    "gun_araligi": [
+      "2022-01-03",
+      "2026-08-05"
+    ],
+    "sembol": 251,
+    "olay_gunu": 4687,
+    "sembol_basina_medyan": 19.0,
+    "kaynak": "Nasdaq anahtarsız takvim (adapters.data.nasdaq_earnings_window) — kys_olcum/takvim_cek.py ile çekildi, bu klasöre ARŞİVLENDİ",
+    "saat_alani": "YOK — takvim_cek.py:74 bmo/amc'yi süzüyor (keşif turu şerhi)"
+  },
+  "aday_muhasebesi": {
+    "cf_satir": 7161,
+    "cf_girilmemis": 108,
+    "cf_eksik_alan": 0,
+    "open_satir": 69,
+    "open_eksik_alan": 0,
+    "ham_aday_satiri": 7122,
+    "tekillestirmede_dusen": 315,
+    "tekil_aday_gun": 6807,
+    "bar_eslesen_aday_gun": 6764,
+    "havuz_gun_sayisi": 1014,
+    "gun_basina_aday_medyan": 5.0,
+    "rvol_olculemez_aday_gun": 0,
+    "gecmis_olayi_olmayan_aday_gun": 183
+  },
+  "ders4_temiz_taban": {
+    "3": {
+      "n_toplam": 6764,
+      "n_temiz": 5813,
+      "n_kirli": 951,
+      "n_cozulemeyen": 0,
+      "n_olculebilir": 6764,
+      "kirlilik_orani": 0.1406,
+      "pencere": {
+        "once": 0,
+        "sonra": 3
+      },
+      "gun_birimi": "takvim gunu",
+      "n_kimlik": 248,
+      "n_olay": 4687,
+      "n_olaysiz_kimlik": 0,
+      "uyari": null
+    },
+    "5": {
+      "n_toplam": 6764,
+      "n_temiz": 5627,
+      "n_kirli": 1137,
+      "n_cozulemeyen": 0,
+      "n_olculebilir": 6764,
+      "kirlilik_orani": 0.1681,
+      "pencere": {
+        "once": 0,
+        "sonra": 5
+      },
+      "gun_birimi": "takvim gunu",
+      "n_kimlik": 248,
+      "n_olay": 4687,
+      "n_olaysiz_kimlik": 0,
+      "uyari": null
+    }
+  },
+  "pead_kosum_muhasebesi": {
+    "cagri": 6764,
+    "atesledi": 104,
+    "bar_kisa": 0,
+    "hata": 0,
+    "strategy_yaml_version": 3,
+    "params_okunan_anahtar": 18,
+    "pead_params_varsayilan": {
+      "pead.watch_days": 35,
+      "pead.min_gap_pct": 3.0,
+      "pead.min_volume_ratio": 1.2
+    },
+    "rs_gun": 1014,
+    "rs_kesit_medyan": 248.0
+  },
+  "hucreler": {
+    "P3": {
+      "pencere_gun": 3,
+      "dilim_tanimi": "in_play(0 <= t−e <= 3 takvim günü, YALNIZ e<=t) ∧ rvol20>=1.5",
+      "n_in_play": 951,
+      "n_dilim": 729,
+      "n_havuz": 6764,
+      "gecikme_dagilimi": {
+        "0": 390,
+        "1": 379,
+        "2": 119,
+        "3": 63
+      },
+      "tarih_araligi": [
+        "2022-01-14",
+        "2026-07-28"
+      ],
+      "@5": {
+        "n": 649,
+        "ort": -0.003242,
+        "medyan": -0.002113,
+        "std": 0.043125,
+        "pozitif_oran": 0.471495,
+        "ci": {
+          "lo": -0.008077,
+          "hi": 0.001301,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.008077,
+          "hi": 0.001301,
+          "n_gun": 330,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 719,
+        "n_taban_yok": 70,
+        "ham_getiri_betimleyici": {
+          "n": 649,
+          "ort": -0.000987,
+          "medyan": -0.001153,
+          "std": 0.040421,
+          "pozitif_oran": 0.48074,
+          "ci": {
+            "lo": -0.004878,
+            "hi": 0.002625,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.004878,
+            "hi": 0.002625,
+            "n_gun": 330,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.002255,
+          "havuz_geneli_in_play_disi_ort": 0.000965,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 968,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.001973,
+          "fark_temiz_eksi_kirli": -0.001269,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.004242,
+          "20bps_net_ort": -0.005242,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@5_min_taban5_DUYARLILIK": {
+        "n": 370,
+        "ort": -0.000899,
+        "medyan": -0.001009,
+        "std": 0.043995,
+        "pozitif_oran": 0.483784,
+        "ci": {
+          "lo": -0.00598,
+          "hi": 0.006118,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.00598,
+          "hi": 0.006118,
+          "n_gun": 175,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 719,
+        "n_taban_yok": 349,
+        "ham_getiri_betimleyici": {
+          "n": 370,
+          "ort": -0.001,
+          "medyan": -0.000206,
+          "std": 0.042286,
+          "pozitif_oran": 0.494595,
+          "ci": {
+            "lo": -0.005324,
+            "hi": 0.003205,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.005324,
+            "hi": 0.003205,
+            "n_gun": 175,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": -0.000101,
+          "havuz_geneli_in_play_disi_ort": 0.000965,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 968,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.000868,
+          "fark_temiz_eksi_kirli": -3.1e-05,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.001899,
+          "20bps_net_ort": -0.002899,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "@10": {
+        "n": 647,
+        "ort": -0.004821,
+        "medyan": -0.00554,
+        "std": 0.063238,
+        "pozitif_oran": 0.443586,
+        "ci": {
+          "lo": -0.011057,
+          "hi": 0.003029,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.011057,
+          "hi": 0.003029,
+          "n_gun": 328,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 717,
+        "n_taban_yok": 70,
+        "ham_getiri_betimleyici": {
+          "n": 647,
+          "ort": 0.003557,
+          "medyan": 0.002159,
+          "std": 0.058236,
+          "pozitif_oran": 0.516229,
+          "ci": {
+            "lo": -0.003377,
+            "hi": 0.010904,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.003377,
+            "hi": 0.010904,
+            "n_gun": 328,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.008379,
+          "havuz_geneli_in_play_disi_ort": 0.00442,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 965,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.002455,
+          "fark_temiz_eksi_kirli": -0.002366,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.005821,
+          "20bps_net_ort": -0.006821,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@10_min_taban5_DUYARLILIK": {
+        "n": 370,
+        "ort": -0.001804,
+        "medyan": -0.004088,
+        "std": 0.059805,
+        "pozitif_oran": 0.445946,
+        "ci": {
+          "lo": -0.008912,
+          "hi": 0.008187,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.008912,
+          "hi": 0.008187,
+          "n_gun": 175,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 717,
+        "n_taban_yok": 347,
+        "ham_getiri_betimleyici": {
+          "n": 370,
+          "ort": 0.003777,
+          "medyan": 0.003598,
+          "std": 0.060324,
+          "pozitif_oran": 0.527027,
+          "ci": {
+            "lo": -0.001796,
+            "hi": 0.010146,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.001796,
+            "hi": 0.010146,
+            "n_gun": 175,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.005581,
+          "havuz_geneli_in_play_disi_ort": 0.00442,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 965,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.000512,
+          "fark_temiz_eksi_kirli": -0.001292,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.002804,
+          "20bps_net_ort": -0.003804,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "@20": {
+        "n": 646,
+        "ort": -0.006202,
+        "medyan": -0.00486,
+        "std": 0.089028,
+        "pozitif_oran": 0.46904,
+        "ci": {
+          "lo": -0.013005,
+          "hi": 0.005118,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.013005,
+          "hi": 0.005118,
+          "n_gun": 327,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 716,
+        "n_taban_yok": 70,
+        "ham_getiri_betimleyici": {
+          "n": 646,
+          "ort": 0.011218,
+          "medyan": 0.010106,
+          "std": 0.079323,
+          "pozitif_oran": 0.555728,
+          "ci": {
+            "lo": -0.000224,
+            "hi": 0.024047,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.000224,
+            "hi": 0.024047,
+            "n_gun": 327,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.01742,
+          "havuz_geneli_in_play_disi_ort": 0.009542,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 957,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.003272,
+          "fark_temiz_eksi_kirli": -0.00293,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.007202,
+          "20bps_net_ort": -0.008202,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@20_min_taban5_DUYARLILIK": {
+        "n": 370,
+        "ort": -0.003148,
+        "medyan": -0.001177,
+        "std": 0.07657,
+        "pozitif_oran": 0.489189,
+        "ci": {
+          "lo": -0.01138,
+          "hi": 0.012743,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.01138,
+          "hi": 0.012743,
+          "n_gun": 175,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 716,
+        "n_taban_yok": 346,
+        "ham_getiri_betimleyici": {
+          "n": 370,
+          "ort": 0.00902,
+          "medyan": 0.008129,
+          "std": 0.079784,
+          "pozitif_oran": 0.545946,
+          "ci": {
+            "lo": -0.003254,
+            "hi": 0.025709,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.003254,
+            "hi": 0.025709,
+            "n_gun": 175,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.012168,
+          "havuz_geneli_in_play_disi_ort": 0.009542,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 957,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.001565,
+          "fark_temiz_eksi_kirli": -0.001583,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.004148,
+          "20bps_net_ort": -0.005148,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "alt_donem_@20_BETIMLEYICI": {
+        "2022": {
+          "n_aday_gun": 1109,
+          "n": 97,
+          "fazla_ort": -0.021444,
+          "ci": null,
+          "ci_neden": "gözlem günü sayısı < 63 (blok bootstrap için yetersiz)",
+          "n_gozlem_gunu": 55,
+          "neden": null
+        },
+        "2023": {
+          "n_aday_gun": 1532,
+          "n": 130,
+          "fazla_ort": 0.005103,
+          "ci": {
+            "lo": 0.002351,
+            "hi": 0.016198,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 65,
+          "neden": null
+        },
+        "2024": {
+          "n_aday_gun": 1728,
+          "n": 214,
+          "fazla_ort": -0.002587,
+          "ci": {
+            "lo": -0.008003,
+            "hi": 0.008936,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 97,
+          "neden": null
+        },
+        "2025": {
+          "n_aday_gun": 1387,
+          "n": 127,
+          "fazla_ort": 0.013637,
+          "ci": {
+            "lo": -0.0038,
+            "hi": 0.019132,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 76,
+          "neden": null
+        },
+        "2026": {
+          "n_aday_gun": 1008,
+          "n": 78,
+          "fazla_ort": -0.048308,
+          "ci": null,
+          "ci_neden": "gözlem günü sayısı < 63 (blok bootstrap için yetersiz)",
+          "n_gozlem_gunu": 34,
+          "neden": null
+        }
+      },
+      "pead_ayrismasi": {
+        "tanim": "Kartın varlık gerekçesi: bu eksen evaluate_pead'den AYRIŞAN bilgi taşıyor mu? İki bacak: (1) küme ÖRTÜŞMESİ (Jaccard), (2) pead-KONTROLLÜ artık (çift-sıralama + artık-IC, EDG-016 şablonu).",
+        "ortusme": {
+          "dilim_vs_pead": {
+            "n_A": 729,
+            "n_B": 104,
+            "kesisim": 16,
+            "birlesim": 817,
+            "jaccard": 0.019584,
+            "A_icinde_B_orani": 0.021948,
+            "B_icinde_A_orani": 0.153846
+          },
+          "yalniz_inplay_vs_pead": {
+            "n_A": 951,
+            "n_B": 104,
+            "kesisim": 17,
+            "birlesim": 1038,
+            "jaccard": 0.016378,
+            "A_icinde_B_orani": 0.017876,
+            "B_icinde_A_orani": 0.163462
+          },
+          "beyan": "kümeler (ticker,date) aday-günleridir; evren aday havuzudur (n=6764). A = in_play3∧rvol>=1.5 dilimi, B = evaluate_pead ateşleyen aday-günler."
+        },
+        "A_cift_siralama": {
+          "tanim": "EDG-016/EDG-007 şablonu: kontrol kovası = pead∈{0,1}. Her kovada dilim satırlarının AYNI-GÜN in_play-dışı taban fazlası ayrı ayrı ölçülür. pead=False kovası ASIL artık okumasıdır: 'PEAD ateşlememiş satırlarda in_play hâlâ bilgi taşıyor mu?'",
+          "10": {
+            "pead_yok": {
+              "n": 635,
+              "ort": -0.004887,
+              "medyan": -0.00554,
+              "std": 0.063194,
+              "pozitif_oran": 0.444094,
+              "ci": {
+                "lo": -0.011372,
+                "hi": 0.00313,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.011372,
+                "hi": 0.00313,
+                "n_gun": 321,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_dilim_ham": 701,
+              "n_taban_yok": 66,
+              "ham_getiri_betimleyici": {
+                "n": 635,
+                "ort": 0.003219,
+                "medyan": 0.00142,
+                "std": 0.058375,
+                "pozitif_oran": 0.513386,
+                "ci": {
+                  "lo": -0.00393,
+                  "hi": 0.01098,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.00393,
+                  "hi": 0.01098,
+                  "n_gun": 321,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": 0.008105,
+                "havuz_geneli_in_play_disi_ort": 0.00444,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 964,
+              "taban_gun_basina_n_medyan": 4.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": -0.002608,
+                "fark_temiz_eksi_kirli": -0.002278,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": -0.005887,
+                "20bps_net_ort": -0.006887,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "pead_var": {
+              "n": 0,
+              "ort": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "negatif_anlamli": null,
+              "neden": "n<30",
+              "n_dilim_ham": 16,
+              "n_taban_yok": 16,
+              "ham_getiri_betimleyici": null,
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": null,
+                "havuz_geneli_in_play_disi_ort": 0.003106,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 71,
+              "taban_gun_basina_n_medyan": 1.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": null,
+                "fark_temiz_eksi_kirli": null,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": null,
+                "20bps_net_ort": null,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "kova_farki_beyan": "iki kova AYRI evrenlerde (pead=0 / pead=1) kendi tabanlarına karşı ölçülür; kovalar arası fark İSTATİSTİK OLARAK kıyaslanmaz — tabanlar farklıdır."
+          },
+          "20": {
+            "pead_yok": {
+              "n": 634,
+              "ort": -0.006242,
+              "medyan": -0.004445,
+              "std": 0.08915,
+              "pozitif_oran": 0.471609,
+              "ci": {
+                "lo": -0.01297,
+                "hi": 0.005334,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.01297,
+                "hi": 0.005334,
+                "n_gun": 320,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_dilim_ham": 700,
+              "n_taban_yok": 66,
+              "ham_getiri_betimleyici": {
+                "n": 634,
+                "ort": 0.010706,
+                "medyan": 0.009628,
+                "std": 0.079345,
+                "pozitif_oran": 0.55205,
+                "ci": {
+                  "lo": -0.001145,
+                  "hi": 0.023707,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.001145,
+                  "hi": 0.023707,
+                  "n_gun": 320,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": 0.016948,
+                "havuz_geneli_in_play_disi_ort": 0.009648,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 956,
+              "taban_gun_basina_n_medyan": 4.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": -0.00339,
+                "fark_temiz_eksi_kirli": -0.002852,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": -0.007242,
+                "20bps_net_ort": -0.008242,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "pead_var": {
+              "n": 0,
+              "ort": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "negatif_anlamli": null,
+              "neden": "n<30",
+              "n_dilim_ham": 16,
+              "n_taban_yok": 16,
+              "ham_getiri_betimleyici": null,
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": null,
+                "havuz_geneli_in_play_disi_ort": 0.002536,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 71,
+              "taban_gun_basina_n_medyan": 1.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": null,
+                "fark_temiz_eksi_kirli": null,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": null,
+                "20bps_net_ort": null,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "kova_farki_beyan": "iki kova AYRI evrenlerde (pead=0 / pead=1) kendi tabanlarına karşı ölçülür; kovalar arası fark İSTATİSTİK OLARAK kıyaslanmaz — tabanlar farklıdır."
+          }
+        },
+        "B_artik_ic": {
+          "tanim": "GÜN BAZLI kesitte fwd getirinin YÜZDELİK RÜTBESİ, (gün × pead) kovası ortalamasından ARINDIRILIR (kova merkezleme = ikili regresörle gün-içi OLS'in cebirsel özdeşi). Artık ile dilim göstergesi arasındaki Spearman IC, pead-kontrollü artık katkıdır. Kova üyesi n=1 ise merkezleme artığı TANIM GEREĞİ 0'dır ve o satır DIŞLANIR (sayılır: n_tek_uyeli_kova_dusen).",
+          "10": {
+            "pead_kontrollu": {
+              "ic": -0.0207,
+              "n": 6479,
+              "ci": {
+                "lo": -0.0478,
+                "hi": 0.0074,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.047769,
+                "hi": 0.007439,
+                "n_gun": 864,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_tek_uyeli_kova_dusen": 218,
+              "n_dilim_artikta": 680
+            },
+            "kontrolsuz_ikiz": {
+              "ic": -0.0193,
+              "n": 6560,
+              "ci": {
+                "lo": -0.0457,
+                "hi": 0.0074,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.045656,
+                "hi": 0.007438,
+                "n_gun": 869,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null
+            }
+          },
+          "20": {
+            "pead_kontrollu": {
+              "ic": -0.0111,
+              "n": 6442,
+              "ci": {
+                "lo": -0.0332,
+                "hi": 0.0142,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.033237,
+                "hi": 0.014168,
+                "n_gun": 856,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_tek_uyeli_kova_dusen": 218,
+              "n_dilim_artikta": 679
+            },
+            "kontrolsuz_ikiz": {
+              "ic": -0.0119,
+              "n": 6523,
+              "ci": {
+                "lo": -0.0373,
+                "hi": 0.0124,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.037324,
+                "hi": 0.01237,
+                "n_gun": 861,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null
+            }
+          }
+        }
+      }
+    },
+    "P5": {
+      "pencere_gun": 5,
+      "dilim_tanimi": "in_play(0 <= t−e <= 5 takvim günü, YALNIZ e<=t) ∧ rvol20>=1.5",
+      "n_in_play": 1137,
+      "n_dilim": 791,
+      "n_havuz": 6764,
+      "gecikme_dagilimi": {
+        "0": 390,
+        "1": 379,
+        "2": 119,
+        "3": 63,
+        "4": 77,
+        "5": 109
+      },
+      "tarih_araligi": [
+        "2022-01-14",
+        "2026-07-28"
+      ],
+      "@5": {
+        "n": 696,
+        "ort": -0.003478,
+        "medyan": -0.002902,
+        "std": 0.045147,
+        "pozitif_oran": 0.46408,
+        "ci": {
+          "lo": -0.006814,
+          "hi": 0.000575,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.006814,
+          "hi": 0.000575,
+          "n_gun": 352,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 780,
+        "n_taban_yok": 84,
+        "ham_getiri_betimleyici": {
+          "n": 696,
+          "ort": -0.000298,
+          "medyan": -0.000986,
+          "std": 0.043196,
+          "pozitif_oran": 0.484195,
+          "ci": {
+            "lo": -0.004485,
+            "hi": 0.003308,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.004485,
+            "hi": 0.003308,
+            "n_gun": 352,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.00318,
+          "havuz_geneli_in_play_disi_ort": 0.000951,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 959,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.001696,
+          "fark_temiz_eksi_kirli": -0.001782,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.004478,
+          "20bps_net_ort": -0.005478,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@5_min_taban5_DUYARLILIK": {
+        "n": 400,
+        "ort": -0.000858,
+        "medyan": -0.001624,
+        "std": 0.046542,
+        "pozitif_oran": 0.4825,
+        "ci": {
+          "lo": -0.005312,
+          "hi": 0.003856,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.005312,
+          "hi": 0.003856,
+          "n_gun": 187,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 780,
+        "n_taban_yok": 380,
+        "ham_getiri_betimleyici": {
+          "n": 400,
+          "ort": 0.000101,
+          "medyan": -0.000455,
+          "std": 0.045985,
+          "pozitif_oran": 0.49,
+          "ci": {
+            "lo": -0.005726,
+            "hi": 0.003532,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.005726,
+            "hi": 0.003532,
+            "n_gun": 187,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.000959,
+          "havuz_geneli_in_play_disi_ort": 0.000951,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 959,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.000494,
+          "fark_temiz_eksi_kirli": -0.000365,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.001858,
+          "20bps_net_ort": -0.002858,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "@10": {
+        "n": 694,
+        "ort": -0.005319,
+        "medyan": -0.005808,
+        "std": 0.064101,
+        "pozitif_oran": 0.439481,
+        "ci": {
+          "lo": -0.009995,
+          "hi": 0.001569,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.009995,
+          "hi": 0.001569,
+          "n_gun": 350,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 778,
+        "n_taban_yok": 84,
+        "ham_getiri_betimleyici": {
+          "n": 694,
+          "ort": 0.004288,
+          "medyan": 0.002926,
+          "std": 0.059616,
+          "pozitif_oran": 0.523055,
+          "ci": {
+            "lo": -0.001494,
+            "hi": 0.011289,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.001494,
+            "hi": 0.011289,
+            "n_gun": 350,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.009607,
+          "havuz_geneli_in_play_disi_ort": 0.004461,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 956,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.002215,
+          "fark_temiz_eksi_kirli": -0.003104,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.006319,
+          "20bps_net_ort": -0.007319,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@10_min_taban5_DUYARLILIK": {
+        "n": 400,
+        "ort": -0.00188,
+        "medyan": -0.004005,
+        "std": 0.061938,
+        "pozitif_oran": 0.4475,
+        "ci": {
+          "lo": -0.008168,
+          "hi": 0.005996,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.008168,
+          "hi": 0.005996,
+          "n_gun": 187,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 778,
+        "n_taban_yok": 378,
+        "ham_getiri_betimleyici": {
+          "n": 400,
+          "ort": 0.004008,
+          "medyan": 0.003074,
+          "std": 0.061995,
+          "pozitif_oran": 0.5275,
+          "ci": {
+            "lo": -0.002064,
+            "hi": 0.009329,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.002064,
+            "hi": 0.009329,
+            "n_gun": 187,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.005887,
+          "havuz_geneli_in_play_disi_ort": 0.004461,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 956,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.000368,
+          "fark_temiz_eksi_kirli": -0.001511,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.00288,
+          "20bps_net_ort": -0.00388,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "@20": {
+        "n": 693,
+        "ort": -0.007326,
+        "medyan": -0.005087,
+        "std": 0.089514,
+        "pozitif_oran": 0.464646,
+        "ci": {
+          "lo": -0.012317,
+          "hi": 0.00299,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.012317,
+          "hi": 0.00299,
+          "n_gun": 349,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 777,
+        "n_taban_yok": 84,
+        "ham_getiri_betimleyici": {
+          "n": 693,
+          "ort": 0.01193,
+          "medyan": 0.01052,
+          "std": 0.080768,
+          "pozitif_oran": 0.559885,
+          "ci": {
+            "lo": 0.000971,
+            "hi": 0.024142,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": 0.000971,
+            "hi": 0.024142,
+            "n_gun": 349,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": true,
+          "pozitif_anlamli": true,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.019255,
+          "havuz_geneli_in_play_disi_ort": 0.009637,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 948,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": -0.00273,
+          "fark_temiz_eksi_kirli": -0.004595,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.008326,
+          "20bps_net_ort": -0.009326,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 1
+      },
+      "@20_min_taban5_DUYARLILIK": {
+        "n": 400,
+        "ort": -0.001486,
+        "medyan": -0.000534,
+        "std": 0.077609,
+        "pozitif_oran": 0.4975,
+        "ci": {
+          "lo": -0.008534,
+          "hi": 0.011492,
+          "seviye": 0.95
+        },
+        "ci_meta": {
+          "lo": -0.008534,
+          "hi": 0.011492,
+          "n_gun": 187,
+          "n_boot_gecerli": 2000,
+          "blok": 21,
+          "atlanan": 0,
+          "neden": null
+        },
+        "anlamli": false,
+        "pozitif_anlamli": false,
+        "negatif_anlamli": false,
+        "neden": null,
+        "n_dilim_ham": 777,
+        "n_taban_yok": 377,
+        "ham_getiri_betimleyici": {
+          "n": 400,
+          "ort": 0.010903,
+          "medyan": 0.009547,
+          "std": 0.081739,
+          "pozitif_oran": 0.5575,
+          "ci": {
+            "lo": -0.000781,
+            "hi": 0.023854,
+            "seviye": 0.95
+          },
+          "ci_meta": {
+            "lo": -0.000781,
+            "hi": 0.023854,
+            "n_gun": 187,
+            "n_boot_gecerli": 2000,
+            "blok": 21,
+            "atlanan": 0,
+            "neden": null
+          },
+          "anlamli": false,
+          "pozitif_anlamli": false,
+          "negatif_anlamli": false,
+          "neden": null
+        },
+        "taban_seviyesi_betimleyici": {
+          "dilim_gunlerinin_taban_ort": 0.012389,
+          "havuz_geneli_in_play_disi_ort": 0.009637,
+          "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+        },
+        "taban_gun_sayisi": 948,
+        "taban_gun_basina_n_medyan": 4.0,
+        "sikisma": {
+          "kirli_taban_fazlasi_ort": 7e-05,
+          "fark_temiz_eksi_kirli": -0.001556,
+          "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+        },
+        "maliyet": {
+          "10bps_net_ort": -0.002486,
+          "20bps_net_ort": -0.003486,
+          "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+        },
+        "min_taban": 5
+      },
+      "alt_donem_@20_BETIMLEYICI": {
+        "2022": {
+          "n_aday_gun": 1109,
+          "n": 110,
+          "fazla_ort": -0.018272,
+          "ci": null,
+          "ci_neden": "gözlem günü sayısı < 63 (blok bootstrap için yetersiz)",
+          "n_gozlem_gunu": 59,
+          "neden": null
+        },
+        "2023": {
+          "n_aday_gun": 1532,
+          "n": 137,
+          "fazla_ort": 0.000494,
+          "ci": {
+            "lo": -0.004904,
+            "hi": 0.011688,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 70,
+          "neden": null
+        },
+        "2024": {
+          "n_aday_gun": 1728,
+          "n": 220,
+          "fazla_ort": -0.006833,
+          "ci": {
+            "lo": -0.013226,
+            "hi": 0.003523,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 101,
+          "neden": null
+        },
+        "2025": {
+          "n_aday_gun": 1387,
+          "n": 143,
+          "fazla_ort": 0.012946,
+          "ci": {
+            "lo": -0.002901,
+            "hi": 0.01619,
+            "seviye": 0.95
+          },
+          "ci_neden": null,
+          "n_gozlem_gunu": 84,
+          "neden": null
+        },
+        "2026": {
+          "n_aday_gun": 1008,
+          "n": 83,
+          "fazla_ort": -0.041957,
+          "ci": null,
+          "ci_neden": "gözlem günü sayısı < 63 (blok bootstrap için yetersiz)",
+          "n_gozlem_gunu": 35,
+          "neden": null
+        }
+      },
+      "pead_ayrismasi": {
+        "tanim": "Kartın varlık gerekçesi: bu eksen evaluate_pead'den AYRIŞAN bilgi taşıyor mu? İki bacak: (1) küme ÖRTÜŞMESİ (Jaccard), (2) pead-KONTROLLÜ artık (çift-sıralama + artık-IC, EDG-016 şablonu).",
+        "ortusme": {
+          "dilim_vs_pead": {
+            "n_A": 791,
+            "n_B": 104,
+            "kesisim": 20,
+            "birlesim": 875,
+            "jaccard": 0.022857,
+            "A_icinde_B_orani": 0.025284,
+            "B_icinde_A_orani": 0.192308
+          },
+          "yalniz_inplay_vs_pead": {
+            "n_A": 1137,
+            "n_B": 104,
+            "kesisim": 23,
+            "birlesim": 1218,
+            "jaccard": 0.018883,
+            "A_icinde_B_orani": 0.020229,
+            "B_icinde_A_orani": 0.221154
+          },
+          "beyan": "kümeler (ticker,date) aday-günleridir; evren aday havuzudur (n=6764). A = in_play5∧rvol>=1.5 dilimi, B = evaluate_pead ateşleyen aday-günler."
+        },
+        "A_cift_siralama": {
+          "tanim": "EDG-016/EDG-007 şablonu: kontrol kovası = pead∈{0,1}. Her kovada dilim satırlarının AYNI-GÜN in_play-dışı taban fazlası ayrı ayrı ölçülür. pead=False kovası ASIL artık okumasıdır: 'PEAD ateşlememiş satırlarda in_play hâlâ bilgi taşıyor mu?'",
+          "10": {
+            "pead_yok": {
+              "n": 678,
+              "ort": -0.005772,
+              "medyan": -0.005392,
+              "std": 0.063152,
+              "pozitif_oran": 0.439528,
+              "ci": {
+                "lo": -0.011112,
+                "hi": 0.001433,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.011112,
+                "hi": 0.001433,
+                "n_gun": 341,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_dilim_ham": 758,
+              "n_taban_yok": 80,
+              "ham_getiri_betimleyici": {
+                "n": 678,
+                "ort": 0.003804,
+                "medyan": 0.002529,
+                "std": 0.058817,
+                "pozitif_oran": 0.520649,
+                "ci": {
+                  "lo": -0.002504,
+                  "hi": 0.011034,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.002504,
+                  "hi": 0.011034,
+                  "n_gun": 341,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": 0.009576,
+                "havuz_geneli_in_play_disi_ort": 0.004494,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 954,
+              "taban_gun_basina_n_medyan": 4.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": -0.002678,
+                "fark_temiz_eksi_kirli": -0.003094,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": -0.006772,
+                "20bps_net_ort": -0.007772,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "pead_var": {
+              "n": 1,
+              "ort": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "negatif_anlamli": null,
+              "neden": "n<30",
+              "n_dilim_ham": 20,
+              "n_taban_yok": 19,
+              "ham_getiri_betimleyici": {
+                "n": 1,
+                "ort": null,
+                "ci": null,
+                "anlamli": null,
+                "pozitif_anlamli": null,
+                "negatif_anlamli": null,
+                "neden": "n<30"
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": -0.115197,
+                "havuz_geneli_in_play_disi_ort": 0.002153,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 67,
+              "taban_gun_basina_n_medyan": 1.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": 0.193204,
+                "fark_temiz_eksi_kirli": 0.193204,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": 0.385407,
+                "20bps_net_ort": 0.384407,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "kova_farki_beyan": "iki kova AYRI evrenlerde (pead=0 / pead=1) kendi tabanlarına karşı ölçülür; kovalar arası fark İSTATİSTİK OLARAK kıyaslanmaz — tabanlar farklıdır."
+          },
+          "20": {
+            "pead_yok": {
+              "n": 677,
+              "ort": -0.007545,
+              "medyan": -0.005026,
+              "std": 0.089328,
+              "pozitif_oran": 0.465288,
+              "ci": {
+                "lo": -0.01264,
+                "hi": 0.003056,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.01264,
+                "hi": 0.003056,
+                "n_gun": 340,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_dilim_ham": 757,
+              "n_taban_yok": 80,
+              "ham_getiri_betimleyici": {
+                "n": 677,
+                "ort": 0.011438,
+                "medyan": 0.010391,
+                "std": 0.080085,
+                "pozitif_oran": 0.558346,
+                "ci": {
+                  "lo": 0.000728,
+                  "hi": 0.023997,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": 0.000728,
+                  "hi": 0.023997,
+                  "n_gun": 340,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": true,
+                "pozitif_anlamli": true,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": 0.018983,
+                "havuz_geneli_in_play_disi_ort": 0.009733,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 946,
+              "taban_gun_basina_n_medyan": 4.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": -0.003004,
+                "fark_temiz_eksi_kirli": -0.004541,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": -0.008545,
+                "20bps_net_ort": -0.009545,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "pead_var": {
+              "n": 1,
+              "ort": null,
+              "ci": null,
+              "anlamli": null,
+              "pozitif_anlamli": null,
+              "negatif_anlamli": null,
+              "neden": "n<30",
+              "n_dilim_ham": 20,
+              "n_taban_yok": 19,
+              "ham_getiri_betimleyici": {
+                "n": 1,
+                "ort": null,
+                "ci": null,
+                "anlamli": null,
+                "pozitif_anlamli": null,
+                "negatif_anlamli": null,
+                "neden": "n<30"
+              },
+              "taban_seviyesi_betimleyici": {
+                "dilim_gunlerinin_taban_ort": 0.015113,
+                "havuz_geneli_in_play_disi_ort": 0.003038,
+                "beyan": "BETİMLEYİCİ — hükme girmez. 'dilim günlerinin tabanı' ile 'havuz geneli' arasındaki fark, olay günlerinin piyasa-genelinde nasıl günler olduğunu gösterir (gün-bazlı tabanın var oluş sebebi: Ders #5)."
+              },
+              "taban_gun_sayisi": 67,
+              "taban_gun_basina_n_medyan": 1.0,
+              "sikisma": {
+                "kirli_taban_fazlasi_ort": 0.140054,
+                "fark_temiz_eksi_kirli": 0.140054,
+                "beyan": "kirli taban = O GÜNÜN TÜM aday satırları (in_play dâhil). HÜKME GİRMEZ; yalnız temizliğin etkiyi ne kadar açtığını gösterir (Ders #5 kural 3)."
+              },
+              "maliyet": {
+                "10bps_net_ort": 0.279107,
+                "20bps_net_ort": 0.278107,
+                "beyan": "tek-yön bps, fazladan DÜŞÜLÜR. Kart cost_model: '10bps + 20bps duyarlılık; olay-sonrası spread-genişlemesi beyan-notu'. BEYAN-NOTU: kazanç sonrası ilk günlerde spread GENİŞLER ve gerçek maliyet 10bps'in ÜSTÜNDE olabilir; bu ölçümde spread verisi YOK, dolayısıyla 20bps satırı bir ÜST OKUMA değil yalnız bir duyarlılıktır."
+              },
+              "min_taban": 1
+            },
+            "kova_farki_beyan": "iki kova AYRI evrenlerde (pead=0 / pead=1) kendi tabanlarına karşı ölçülür; kovalar arası fark İSTATİSTİK OLARAK kıyaslanmaz — tabanlar farklıdır."
+          }
+        },
+        "B_artik_ic": {
+          "tanim": "GÜN BAZLI kesitte fwd getirinin YÜZDELİK RÜTBESİ, (gün × pead) kovası ortalamasından ARINDIRILIR (kova merkezleme = ikili regresörle gün-içi OLS'in cebirsel özdeşi). Artık ile dilim göstergesi arasındaki Spearman IC, pead-kontrollü artık katkıdır. Kova üyesi n=1 ise merkezleme artığı TANIM GEREĞİ 0'dır ve o satır DIŞLANIR (sayılır: n_tek_uyeli_kova_dusen).",
+          "10": {
+            "pead_kontrollu": {
+              "ic": -0.023,
+              "n": 6479,
+              "ci": {
+                "lo": -0.0499,
+                "hi": 0.0058,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.049917,
+                "hi": 0.00578,
+                "n_gun": 864,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_tek_uyeli_kova_dusen": 218,
+              "n_dilim_artikta": 738
+            },
+            "kontrolsuz_ikiz": {
+              "ic": -0.0223,
+              "n": 6560,
+              "ci": {
+                "lo": -0.0488,
+                "hi": 0.0038,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.04876,
+                "hi": 0.003761,
+                "n_gun": 869,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null
+            }
+          },
+          "20": {
+            "pead_kontrollu": {
+              "ic": -0.0097,
+              "n": 6442,
+              "ci": {
+                "lo": -0.0331,
+                "hi": 0.0136,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.033135,
+                "hi": 0.013604,
+                "n_gun": 856,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null,
+              "n_tek_uyeli_kova_dusen": 218,
+              "n_dilim_artikta": 737
+            },
+            "kontrolsuz_ikiz": {
+              "ic": -0.0112,
+              "n": 6523,
+              "ci": {
+                "lo": -0.034,
+                "hi": 0.0124,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": -0.033966,
+                "hi": 0.012351,
+                "n_gun": 861,
+                "n_boot_gecerli": 600,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": false,
+              "pozitif_anlamli": false,
+              "negatif_anlamli": false,
+              "neden": null
+            }
+          }
+        }
+      }
+    }
+  },
+  "ders7_eb_kucultme": {
+    "hucreler": {
+      "P3@10": {
+        "ham": -0.004821,
+        "se": 0.0035934333487757943,
+        "kucultulmus": -0.005917,
+        "agirlik": 0.0,
+        "cekim": 0.0010960000000000006
+      },
+      "P3@20": {
+        "ham": -0.006202,
+        "se": 0.004623299203454757,
+        "kucultulmus": -0.005917,
+        "agirlik": 0.0,
+        "cekim": -0.00028499999999999966
+      },
+      "P5@10": {
+        "ham": -0.005319,
+        "se": 0.0029500541846686984,
+        "kucultulmus": -0.005917,
+        "agirlik": 0.0,
+        "cekim": 0.0005980000000000004
+      },
+      "P5@20": {
+        "ham": -0.007326,
+        "se": 0.0039049186617713385,
+        "kucultulmus": -0.005917,
+        "agirlik": 0.0,
+        "cekim": -0.0014089999999999997
+      }
+    },
+    "n_hucre": 4,
+    "kucultuldu": true,
+    "neden": null,
+    "tau2": 0.0,
+    "hedef": -0.005917,
+    "ortalama_se2": 1.4559717051072694e-05,
+    "yayilim": 1.2084420000000003e-06,
+    "en_iyi_ham": {
+      "hucre": "P3@10",
+      "ham": -0.004821,
+      "kucultulmus": -0.005917,
+      "cekim": 0.0010960000000000006,
+      "agirlik": 0.0
+    },
+    "en_iyi_kucultulmus": {
+      "hucre": "P3@10",
+      "ham": -0.004821,
+      "kucultulmus": -0.005917,
+      "cekim": 0.0010960000000000006,
+      "agirlik": 0.0
+    },
+    "sira_degisti": false,
+    "n_se_yok": 0,
+    "n_se_gecersiz": 0,
+    "n_cozulemeyen": 0,
+    "yontem": "empirik Bayes (momentler): w_i = τ²/(τ²+SE_i²); τ² = hücreler-arası yayılım − ortalama SE², 0'a kıstırılmış; hedef = hücrelerin düz ortalaması",
+    "beyan": "KÜÇÜLTÜLMÜŞ DEĞER HÜKÜM VERMEZ ve eşiklere GİRMEZ: küçültme örneklemi büyütmez, yalnız kazananın gürültü payını geri alır. `en_iyi_ham` ile `en_iyi_kucultulmus` FARKLI hücreler olabilir (`sira_degisti`) — bu, ham sıralamanın gürültüye ne kadar borçlu olduğunun ölçüsüdür. Hücreler bağımsız VARSAYILIR; aynı gözlemlerden türeyen hücrelerde (ör. aynı bileşenin 5/10/20 bar ufukları) τ² bir miktar küçük, küçültme bir miktar güçlü olur.",
+    "uyari": "τ²=0 — hücreler arasında ÖLÇÜLEBİLİR gerçek fark yok; her hücre ortak ortalamaya TAM küçültüldü (eksiklik değil, dürüst cevap)"
+  },
+  "KAPILAR": {
+    "pozitif_kontrol": true,
+    "pit_assert": true,
+    "pk4": true,
+    "pk5": true
+  },
+  "pozitif_kontrol_civi": 0.0642,
+  "pit_assert_ozet": {
+    "bacak_2_kesme_degismezligi": {
+      "tanim": "Her satır için takvim O SATIRIN t'sinde KESİLİR (ev[ev<=t]) ve gecikme yeniden hesaplanır. Fark 0 ⇒ gelecek tarihlerin sonuca katkısı SIFIR.",
+      "n_satir": 6764,
+      "ayrisan": 0,
+      "alt_ornek_mi": false,
+      "gecti": true
+    },
+    "bacak_3_bagimsiz_saf_python": {
+      "tanim": "gecikme_gunu_saf (liste taraması, ayrı kod yolu) ile birebir aynı sayı.",
+      "n_satir": 6764,
+      "ayrisan": 0,
+      "gecti": true
+    },
+    "negatif_kontrol_kapi_etkin_mi": {
+      "tanim": "İKİ YÖNLÜ (EDG-011'in |t−e| lafzı) hesap kaç satırda FARKLI sayı verirdi? 0 çıksaydı kapı hiçbir şeyi kesmiyor demekti ve 'PIT-temiz' beyanı boş olurdu. BU SAYI HÜKME GİRMEZ ve in_play hesabında KULLANILMAZ.",
+      "n_satir_farkli": 2935,
+      "oran": 0.433915,
+      "kapi_etkin": true
+    },
+    "GECTI": true
+  }
+}
