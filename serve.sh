@@ -36,7 +36,19 @@ export MERIDIAN_AUTOSTART_CYCLE="${MERIDIAN_AUTOSTART_CYCLE:-1}"
 export CYCLE_POLL_SECONDS="${CYCLE_POLL_SECONDS:-300}"
 export MERIDIAN_AUTOSTART_HERMES="${MERIDIAN_AUTOSTART_HERMES:-1}"
 export HERMES_POLL_SECONDS="${HERMES_POLL_SECONDS:-300}"
-.venv/bin/python -c "import subprocess,os; subprocess.Popen(['.venv/bin/python','-m','uvicorn','meridian.api:app','--host','127.0.0.1','--port','8080','--log-level','warning'], env=os.environ, stdout=open('state/dashboard.log','a'), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)"
+# BAĞLANMA ADRESİ TEK KAYNAKTAN (denetim C1, 2026-08-02) — api._auth_posture_check
+# `MERIDIAN_BIND_HOST`u okuyup "loopback DIŞINA parolasız açılma"yı REDDEDİYOR, ama bu değişkeni
+# HİÇBİR başlatıcı YAZMIYORDU: gerçek bağ burada `--host 127.0.0.1` SABİTİYDİ. Yani kapının var
+# olma nedeni olan tek senaryoda (operatör panoyu dışarı açar) değişken boş kalır, `public_bind`
+# False olur ve ne ret ne uyarı ateşlenirdi — okunan değer korunan olguyu belirlemiyordu.
+# ARTIK BELİRLİYOR: uvicorn'un `--host`u AŞAĞIDA `os.environ['MERIDIAN_BIND_HOST']`ten okunur,
+# yani burayı 0.0.0.0 yapan operatör parola kapısını da kurmuş olur. Varsayılan DEĞİŞMEDİ
+# (127.0.0.1) → bugünkü davranış bit-bit aynı. `.env` yukarıda (satır 32) yüklendiği için
+# operatör değeri oradan da verebilir; `:-` varsayılanı `set -u` altında güvenlidir.
+# HAZIR-OLMA YOKLAMASI 127.0.0.1'DE KALIR (aşağıdaki curl): 0.0.0.0 loopback'i de kapsar, yani
+# yaygın hâlde doğrudur; TEK bir dış IP'ye bağlanan operatör yoklamayı da uyarlamak zorundadır.
+export MERIDIAN_BIND_HOST="${MERIDIAN_BIND_HOST:-127.0.0.1}"
+.venv/bin/python -c "import subprocess,os; subprocess.Popen(['.venv/bin/python','-m','uvicorn','meridian.api:app','--host',os.environ['MERIDIAN_BIND_HOST'],'--port','8080','--log-level','warning'], env=os.environ, stdout=open('state/dashboard.log','a'), stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)"
 # kullanıcı-oturumu keepalive: sunucu çökerse 2 dk içinde diriltir (tekil örnek; detached)
 nohup ./ops/keepalive.sh >/dev/null 2>&1 &
 for i in $(seq 1 15); do [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ 2>/dev/null)" = "200" ] && { echo "✓ Meridian dashboard → http://127.0.0.1:8080"; exit 0; }; sleep 1; done

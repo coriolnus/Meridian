@@ -38,9 +38,18 @@ Environment=HERMES_SEARCH_BUDGET=8
 # --- güvenlik: pano ağ üzerinden erişiliyorsa TOKEN ŞART. Yalnız-yerel (127.0.0.1) + SSH tünel
 #     önerilir; 0.0.0.0'a açacaksan bu token'ı gerçek bir değere ayarla (yazma uçları korunur). ---
 Environment=MERIDIAN_DASH_TOKEN=CHANGEME-long-random-ascii-token   # ASCII zorunlu (bkz. api._auth)
+# --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------
+#     api._auth_posture_check bu değişkeni okur ve loopback DIŞI + parolasız hâlde süreci
+#     AÇMAYI REDDEDER. Eskiden ExecStart `--host 127.0.0.1` SABİTİYDİ ve bu değişkeni hiçbir
+#     başlatıcı yazmıyordu → kapı YAPISAL olarak ateşlenemiyordu. Artık ExecStart bağ adresini
+#     BURADAN alır: değeri değiştiren operatör kapıyı da kurmuş olur. Varsayılan DEĞİŞMEDİ.
+#     systemd `${VAR}` genişletmesi değişken bu birimde TANIMLI olduğu için çalışır (tanımsız
+#     olsaydı BOŞ dizeye genişler ve uvicorn'u kırardı — o yüzden satır aşağıdaki gibi ZORUNLU).
+#     SATIR SONU YORUMU YOK: systemd `Environment=` satırında `#` değerin parçası sayılır.
+Environment=MERIDIAN_BIND_HOST=127.0.0.1
 # uv PATH'i (deploy.sh uv'yi ~/.local/bin veya ~/.cargo/bin'e kurar)
 Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/home/ubuntu/.local/bin/uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080 --log-level warning
+ExecStart=/home/ubuntu/.local/bin/uv run uvicorn meridian.api:app --host ${MERIDIAN_BIND_HOST} --port 8080 --log-level warning
 Restart=always
 RestartSec=10
 # çöküş sonrası taze-veri çekimiyle healthz ~10dk 503 dönebilir — normal

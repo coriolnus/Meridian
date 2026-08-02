@@ -19,8 +19,11 @@ geri getirir:
      gününün 19'u düştü" ile "hepsi geldi" çağırana AYNI şekilde görünüyordu. Yeni yasa: adaptör
      `stats` sayacını doldurur, `earnings.refresh` eksik kapsamada `earnings_refresh_window_partial`
      uyarısı basar ve sayılar `earnings_refreshed`e alan olarak geçer.
-     ⚠ BU DOSYA FMP YEDEĞİNE DÜŞME EŞİĞİNİ SINAMAZ — o eşik (bugün: yalnız TAM boşluk) KOVA B'de,
-     operatör kalemindedir. Aşağıdaki `test_c25_esik_degismedi` tam da eşiğin DEĞİŞMEDİĞİNİ çiviler.
+     ⚠ EŞİK GÜNCELLENDİ (KOVA B, 2026-08-02, operatör onaylı): bu dosya yazıldığında FMP yedeği
+     YALNIZ tam boşlukta deneniyordu ve aşağıdaki çivi bunu KORUYORDU — "eşik bilinçli değişirse
+     KIRILARAK haber verir" diye. Değişti: kapsama `earnings.EARNINGS_FMP_FALLBACK_COVERAGE`ın
+     (0,90) altındaysa yedek denenir. Çivi silinmedi, YENİ yasaya çevrildi; eşiğin kendi kapsamlı
+     sınaması tests/test_kovab_kucuk_v165.py'dedir.
 
 KIRMIZI-ÖNCE: her testin docstring'i, düzeltme geri alındığında hangi satırın kırmızıya döneceğini
 söyler; testler eski davranışı da (yanlış tarafı) açıkça yasaklar.
@@ -303,6 +306,9 @@ def test_c25_kismi_pencere_uyari_basar(sandbox_state, monkeypatch):
     yalnız new_rows/total basıyordu ve kaç gün-diliminin kaçtığı HİÇBİR yerde yoktu."""
     from meridian import earnings
     from meridian.adapters import data as da
+    # KOVA B SONRASI ZORUNLU: kapsama 0,05 < 0,90 olduğu için `refresh` artık FMP yedeğini DENER.
+    # Bu test GÖRÜNÜRLÜĞÜ ölçer, yedeği değil — gerçek uca çıkmasın diye yol sahteyle kapatılır.
+    monkeypatch.setattr(earnings, "refresh_from_fmp", lambda t: 0)
     monkeypatch.setattr(da, "nasdaq_earnings_window",
                         _nasdaq_faki({"AAA": [("2026-08-05", "amc")]}, istenen=20, dusen=19))
     n = earnings.refresh(["AAA"])
@@ -344,10 +350,11 @@ def test_c25_sayac_dolmazsa_kapsama_olculmedi_der(sandbox_state, monkeypatch):
     assert ref[-1]["gun_olcum_yok"]
 
 
-def test_c25_esik_degismedi_kismi_pencere_hala_fmpye_dusmez(sandbox_state, monkeypatch):
-    """KOVA B ÇİVİSİ: FMP yedeğine düşme eşiği OPERATÖR KARARIDIR ve bu tur DEĞİŞMEDİ. Kısmi
-    pencere (19/20 gün düştü) hâlâ FMP'yi ÇAĞIRMAZ; eklenen tek şey görünürlüktür. Bu test bir
-    gün eşik bilinçli değiştirilirse KIRILARAK haber verir — sessiz kota sürüklenmesi olmaz."""
+def test_c25_esik_kova_b_ile_kismi_pencereyi_de_kapsar(sandbox_state, monkeypatch):
+    """EŞİK ÇİVİSİ — YENİ YASA (KOVA B, 2026-08-02): bu test yazıldığında kısmi pencere FMP'yi
+    ÇAĞIRMIYORDU ve çivi bunu koruyordu ("eşik bilinçli değişirse KIRILARAK haber verir").
+    Operatör eşiği kısmi kapsamaya çekti; çivi silinmedi, yeni yasaya çevrildi. Sessiz kota
+    sürüklenmesine karşı koruma aynen sürüyor: eşik yine ADIYLA sabit ve testle bağlı."""
     from meridian import earnings
     from meridian.adapters import data as da
     cagrildi: list = []
@@ -355,9 +362,9 @@ def test_c25_esik_degismedi_kismi_pencere_hala_fmpye_dusmez(sandbox_state, monke
     monkeypatch.setattr(da, "nasdaq_earnings_window",
                         _nasdaq_faki({"AAA": [("2026-08-05", "amc")]}, istenen=20, dusen=19))
     n = earnings.refresh(["AAA"])
-    assert cagrildi == [], "kısmi pencerede FMP yedeğine düşüldü — eşik sessizce değişmiş"
-    assert n == 1
+    assert cagrildi == [["AAA"]], "kısmi pencerede FMP yedeği DENENMEDİ — KOVA B eşiği geri alınmış"
+    assert n == 1, "dönüş sözleşmesi kaydı: Nasdaq yolunda hâlâ NASDAQ satır sayısı"
 
     # TAM BOŞLUK HÂLÂ YEDEĞE DÜŞER (eşiğin diğer ucu bozulmadı)
     monkeypatch.setattr(da, "nasdaq_earnings_window", _nasdaq_faki({}, istenen=20, dusen=20))
-    assert earnings.refresh(["AAA"]) == 7 and cagrildi
+    assert earnings.refresh(["AAA"]) == 7 and len(cagrildi) == 2

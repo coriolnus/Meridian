@@ -46,6 +46,35 @@ REFRESH_BACK_DAYS = 7      # tazelemede geriye bakılan gün (PEAD çapası)
 REFRESH_FWD_DAYS = 21      # tazelemede ileriye bakılan gün (karartma penceresini besleyen uç; 14→21, 2026-08-01)
 REFRESH_CADENCE_DAYS = 7   # tazeleme kadansı — scheduler'ın HAFTALIK isocalendar kapısı (advance_once)
 
+# --------------------------------------------------------------------------------------------------
+# FMP YEDEĞİNE DÜŞME EŞİĞİ — KISMİ PENCERE (denetim C25 / FMP yarısı, 2026-08-02; OPERATÖR ONAYLI)
+# --------------------------------------------------------------------------------------------------
+# ÖNCEKİ HÂL: `refresh` FMP'yi YALNIZ `not rows` (TAM boşluk) hâlinde deniyordu. Nasdaq ucu gün
+# başına sorgulanır ve düşen günü GÜN BAZINDA yutar; "20 iş gününün 19'u düştü" hâlinde tek gün
+# satır döndürdüğü sürece tur "başarı" sayılıyor ve yedek HİÇ denenmiyordu. Kaçan gün-diliminde
+# duyurulan bir rapor tarihi bir sonraki tazelemeye kadar BİLİNMEZ; `in_blackout` o sembolde (veri
+# yokken FAIL-OPEN) False döner ve motor bilanço gününe pozisyonla girer. Sayaç yarısı 2026-08-02'de
+# indi (`stats` + `earnings_refresh_window_partial`) ama o yalnız GÖRÜNÜRLÜKTÜ — hüküm yoktu.
+#
+# KARAR: gün kapsaması bu eşiğin ALTINDAYSA FMP yedeği DENENİR. Nasdaq'ın getirdiği satırlar
+# ATILMAZ — yedek EKLENİR ve mevcut birleştirme kuralları ((ticker,date) anahtarı, bilinen saat
+# bilinmeyeni ezer) aynen uygulanır.
+#
+# NEDEN 0,90 VE NEDEN SABİT: bu bir KOTA kararıdır, ölçümle ayarlanacak bir knob DEĞİL — arama
+# uzayında yer almaz, `bounds.yaml`a girmez. FMP kazanç ucu TICKER BAŞINA bir istektir (250 evren =
+# 250 istek = günlük kotanın tamamı), o yüzden yedek "her eksik günde" değil ancak pencerenin ONDA
+# BİRİNDEN FAZLASI düştüğünde açılır. Kota etkisi DAR: FMP zaten tam-boşlukta deneniyordu; eklenen
+# tek maliyet KISMİ günlerdir ve tazeleme haftalık olduğu için tavan haftada bir ekstra tam pastır.
+# Ölçülemeyen kapsama (pencerede iş günü yok / adaptör sayacı doldurmadı) eşiği TETİKLEMEZ: None bir
+# sayı değildir, "eksik" diye okumak uydurma olurdu.
+#
+# NE DEĞİŞMEDİ: karartma semantiği (`BLACKOUT_DAYS` = 5, `in_blackout` bit-bit aynı), tam-boşluk
+# yolu (`not rows` → `refresh_from_fmp` + `earnings_refresh_empty`), `refresh_from_fmp`in kendi
+# davranışı (dosyayı BAŞTAN yazması dahil — o "değiştirir" kusuru bu turun kapsamı DIŞINDA) ve
+# `refresh`in dönüş sözleşmesi (Nasdaq yolunda hâlâ Nasdaq satır sayısı → scheduler'ın `n > 0`
+# nabzı kaymaz).
+EARNINGS_FMP_FALLBACK_COVERAGE = 0.90
+
 # BMO/AMC DARALTMASI — YOL VAR, ANAHTAR KAPALI. `time` alanı ölçüldü ve GERÇEK (2026-08-01, Nasdaq
 # takvimi 6 gün / 1307 satır: time-not-supplied %65,7 · time-after-hours %19,7 · time-pre-market
 # %14,5). Yani satırların ~%34'ünde baskının seans-öncesi mi seans-sonrası mı olduğu BİLİNİYOR.
@@ -193,9 +222,11 @@ def refresh(tickers: list[str]) -> int:
     `in_blackout` o sembolde (veri yokken fail-open) False döner ve motor bilanço gününe pozisyonla
     girer. Artık adaptör `stats` sayacını doldurur, eksik kapsama `earnings_refresh_window_partial`
     olarak UYARI basar ve sayılar `earnings_refreshed`e alan olarak geçer.
-    ⚠ YEDEĞE DÜŞME EŞİĞİ DEĞİŞMEDİ: FMP hâlâ YALNIZ `not rows` (tam boşluk) hâlinde denenir —
-    eşiği kısmi kapsamaya çekmek bir KOTA kararıdır ve operatörün kalemindedir. Burada eklenen
-    yalnız GÖRÜNÜRLÜKTÜR; hangi planın karartıldığı bit-bit aynıdır."""
+    YEDEĞE DÜŞME EŞİĞİ ARTIK KISMİ PENCEREYİ DE KAPSIYOR (KOVA B, 2026-08-02, operatör onaylı):
+    kapsama `EARNINGS_FMP_FALLBACK_COVERAGE`ın (0,90) ALTINDAYSA FMP yedeği denenir ve düşüş
+    `earnings_fallback_partial_window` ile BEYAN EDİLİR. Nasdaq'ın getirdiği satırlar ATILMAZ —
+    yedek onların ÜSTÜNE değil, YANINA eklenir (nihai yazım her ikisinin ÜST KÜMESİDİR). Eşiğin
+    gerekçesi ve kota etkisi sabitin yanındadır. Karartma semantiği DEĞİŞMEDİ."""
     from .adapters import data as _da
     uni = {str(t).upper() for t in tickers}
     _s, _e = refresh_window()          # PENCERE TEK TANIMDAN (bkz. margin_days) — literal YOK
@@ -210,9 +241,12 @@ def refresh(tickers: list[str]) -> int:
                  istenen=_gun.get("istenen"), cevaplayan=_gun.get("cevaplayan"),
                  dusen=_gun_dusen, dusen_gunler=",".join(_gun.get("dusen_gunler") or []),
                  kapsama=_gun.get("kapsama"), son_hata=_gun.get("son_hata"),
+                 esik=EARNINGS_FMP_FALLBACK_COVERAGE,
                  detail="kazanç takvimi penceresi KISMİ geldi — kaçan gün-diliminde duyurulan bir "
                         "rapor tarihi bir sonraki tazelemeye kadar BİLİNMEZ ve karartma o sembolde "
-                        "fail-open kalır (yedeğe düşme eşiği DEĞİŞMEDİ: FMP yalnız tam boşlukta)")
+                        "fail-open kalır. Kapsama eşiğin ALTINDAYSA FMP yedeği denenir ve düşüş "
+                        "`earnings_fallback_partial_window` ile ayrıca beyan edilir; ÜSTÜNDEYSE bu "
+                        "uyarı tek başına durur (eksik ama yedeği hak etmeyen pencere).")
     # ŞEKİL NORMALİZASYONU: adaptör `with_time=True` ile (tarih, "bmo"|"amc"|None) İKİLİSİ döner;
     # `with_time` verilmemiş/eski bir uygulama (ve testlerdeki sahteler) DÜZ tarih dizisi döner.
     # İkisi de kabul edilir — çağıranın kendi sözleşmesini kırmadan alan kazanmasının yolu bu.
@@ -241,8 +275,41 @@ def refresh(tickers: list[str]) -> int:
     # BİRLEŞTİRME (ticker,date) ANAHTARLIDIR, (ticker,date,time) DEĞİL: aksi hâlde saati BİLİNEN ve
     # BİLİNMEYEN aynı rapor İKİ satır olur, `coverage().future_dates` şişer ve `_load` aynı tarihi
     # iki kez listeler. Bilinen saat bilinmeyeni EZER (bilgi kazanımı geri alınmaz), tersi olmaz.
+    # SIRA ÖNEMLİ: `merged` AŞAĞIDAKİ FMP çağrısından ÖNCE alınır — `refresh_from_fmp` dosyayı
+    # BAŞTAN yazar (o kusur bu turun kapsamı dışında, davranışı değişmedi) ve mevcut takvimin
+    # bir kısmını düşürebilir; önce alınan bu anlık görüntü onu nihai yazımda GERİ KOYAR.
     prev = _load()
     merged: dict = {(t, d): _TIMES.get((t, d)) for t, ds in prev.items() for d in ds}
+
+    # ---- KISMİ PENCEREDE FMP YEDEĞİ (C25 / FMP yarısı — eşik ve gerekçe: sabitin yanında) --------
+    # HÜKÜM BURADA VERİLİR, ADAPTÖRDE DEĞİL: `nasdaq_earnings_window` yalnız SAYAR (kendi
+    # docstring'inde beyanlı). Ölçülemeyen kapsama (None) eşiği tetiklemez — bkz. sabitin gerekçesi.
+    _kapsama = _gun.get("kapsama")
+    _fmp_yedek = None                  # None = DENENMEDİ · 0 = denendi, satır gelmedi (ikisi ayrı olgu)
+    if _kapsama is not None and _kapsama < EARNINGS_FMP_FALLBACK_COVERAGE:
+        from . import obs
+        from .adapters import fmp as _fmp
+        src = "nasdaq+fmp"             # kaynak damgası KARIŞIMI söyler; "nasdaq" demek yarım doğru olurdu
+        _fmp_yedek = refresh_from_fmp(tickers)
+        # FMP'nin YAZDIĞI dosyayı da birleştirmeye al. Nasdaq satırları AŞAĞIDA, en son uygulanır →
+        # yedek onları EZEMEZ. Saat bilgisi yalnız BOŞKEN doldurulur (bilinen bilinmeyeni ezer yasası).
+        _fmp_dosya = _load()
+        for _t, _ds in _fmp_dosya.items():
+            for _d in _ds:
+                if merged.get((_t, _d)) is None:
+                    merged[(_t, _d)] = _TIMES.get((_t, _d))
+        obs.warn("earnings_fallback_partial_window", source="nasdaq->fmp",
+                 kapsama=_kapsama, esik=EARNINGS_FMP_FALLBACK_COVERAGE,
+                 istenen=_gun.get("istenen"), cevaplayan=_gun.get("cevaplayan"), dusen=_gun_dusen,
+                 fmp_satir=_fmp_yedek, fmp_anahtar=bool(_fmp.available()),
+                 fmp_kota_bloklu=bool(_fmp.quota_blocked()),
+                 neden=(f"gün kapsaması {_kapsama} < eşik {EARNINGS_FMP_FALLBACK_COVERAGE} — kaçan "
+                        f"gün-diliminde duyurulan bir rapor tarihi bir sonraki tazelemeye kadar "
+                        f"BİLİNMEZ ve karartma o sembolde fail-open kalırdı"),
+                 detail="KISMİ pencere yedeğe düşürdü (KOVA B, operatör onaylı eşik): Nasdaq'ın "
+                        "getirdiği satırlar ATILMADI, FMP satırları yanlarına eklendi; karartma "
+                        "semantiği ve tam-boşluk yolu DEĞİŞMEDİ. Yedek bu turda kotadan ticker "
+                        "başına bir istek harcadı.")
     for t, d, tm in rows:
         if tm or (t, d) not in merged:
             merged[(t, d)] = tm or merged.get((t, d))
@@ -264,6 +331,9 @@ def refresh(tickers: list[str]) -> int:
             # verip 19 gün düşse de `new_rows` pozitif görünür. Ölçülmediyse None + neden.
             gun_istenen=_gun.get("istenen"), gun_cevaplayan=_gun.get("cevaplayan"),
             gun_dusen=_gun.get("dusen"), gun_kapsama=_gun.get("kapsama"),
+            # KISMİ-PENCERE YEDEĞİ (KOVA B): None = eşik tetiklenmedi/ölçülemedi, 0 = denendi ama
+            # satır gelmedi (anahtar yok ya da kota) — iki olgu aynı sayıyla anlatılamaz.
+            fmp_yedek=_fmp_yedek, fmp_yedek_esigi=EARNINGS_FMP_FALLBACK_COVERAGE,
             gun_olcum_yok=(None if _gun else "adaptör sayaç doldurmadı — kapsama ÖLÇÜLMEDİ"))
     return len(rows)
 

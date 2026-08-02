@@ -63,6 +63,26 @@ def _auth_posture_check() -> None:
     # kullanan operatör panoyu 127.0.0.1'de bırakır, o durumda zaten loopback'tedir ve bu kural
     # hiç tetiklenmez. Gerçekten bir kaçış kapısı gerekirse OKUNAN bir bayrak olarak eklenir —
     # güvenlik duruşu yorumla değil kodla gevşetilir.
+    # TEK KAYNAK — OKUNAN DEĞER ARTIK GERÇEKTEN BAĞLANILAN ADRESTİR (denetim C1, 2026-08-02).
+    # KUSUR NEYDİ: bu kapı `MERIDIAN_BIND_HOST`u okuyordu ama onu HİÇBİR başlatıcı YAZMIYORDU —
+    # gerçek bağ her yerde `--host 127.0.0.1` sabitiydi. Kapının var olma nedeni olan TEK
+    # senaryoda (operatör panoyu dışarı açmak için komut satırını elle `--host 0.0.0.0` yapar)
+    # değişken boş kalır, `public_bind=False` olur ve ne aşağıdaki `RuntimeError` ne satır
+    # 76'daki uyarı ateşlenirdi. Bu, 8 satır yukarıda kaldırılan HAYALET BAYRAK sınıfının bir
+    # derece hafif hâliydi: TRUST_PROXY'yi SIFIR kod okuyordu, bunu İKİ yer okuyor (burası ve
+    # auth_cli.status) ama SIFIR yer üretiyordu — ve okunan değer korunan olguyu belirlemiyordu.
+    # DÜZELTME BAŞLATICIDADIR, BURADA DEĞİL: kapı mantığı BİT-BİT AYNI. Değişen, `--host`un artık
+    # bu değişkenden gelmesi:
+    #   * serve.sh          → `export MERIDIAN_BIND_HOST="${MERIDIAN_BIND_HOST:-127.0.0.1}"` +
+    #                         uvicorn'a `os.environ['MERIDIAN_BIND_HOST']`
+    #   * meridian.service  → `Environment=MERIDIAN_BIND_HOST=127.0.0.1` + `--host ${MERIDIAN_BIND_HOST}`
+    # Yani panoyu dışarı açmanın DESTEKLENEN yolu artık kapıyı da kuruyor.
+    # HÂLÂ KABLOLANMAMIŞ OLANLAR (uydurma yasağı — "tüm başlatıcılar" demiyoruz): docker-compose.yml,
+    # Dockerfile, ops/com.meridian.agent.plist ve README.md örneği `--host 127.0.0.1` SABİTİDİR.
+    # Hepsi loopback olduğu için bugün fiilî açık YOK, ama o yollarda değişken hâlâ bir BEYANdır,
+    # bağ değil; ve elle `--host 0.0.0.0` yazan bir çağrı bu kapıyı yine atlar (kapı bağ adresini
+    # ölçmez, beyan edileni okur). TERS YÖN FAIL-CLOSED: değişken 0.0.0.0 iken başlatıcı
+    # loopback'te kalırsa süreç parolasız AÇILMAZ — yanlış alarm, ama muhafazakâr taraf.
     host = os.environ.get("MERIDIAN_BIND_HOST", "127.0.0.1")
     public_bind = host not in ("127.0.0.1", "localhost", "::1")
     if public_bind and not auth.password_set():
