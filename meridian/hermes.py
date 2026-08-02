@@ -2064,6 +2064,30 @@ def _skill_preload(kind: str, setups: tuple = ()) -> list:
     return top
 
 
+def _warn_review_empty(asama: str, text: str, raw: str, *, parse_ok: bool,
+                       ham: list, reviews: list, detail: str) -> None:
+    """İKİNCİ GÖRÜŞÜN İKİ SESSİZ ÖLÜM NOKTASI TEK OLAYA BAĞLANIR (2026-08-02 canlı vakası).
+
+    `review_candidates` cevabı kaydedemeden döndüğünde eskiden HİÇBİR iz kalmıyordu: çağıran
+    (`review_candidates_async._bg`) yalnız istisna yolunu görüyordu, ham metin kayboluyordu ve
+    "Gemini dolu cevap verdi ama kayıt yok" teşhis EDİLEMİYORDU. Bu yardımcı, kayıtsız-dönüşün
+    HER yolunu (`asama`) aynı olay adıyla, ayırt edici alanlarla basar — davranışı değiştirmez.
+    `ham_ilk`: model cevabının ilk 220 karakteri (sır değil — bizim metnimiz değil, modelin
+    cevabı); repr ile tek satıra düzleştirilir ki defter satırı bölünmesin."""
+    reddedilen = []
+    for r in ham:
+        if any(r is ok for ok in reviews):
+            continue
+        v = r.get("opinion") if isinstance(r, dict) else f"<{type(r).__name__}>"
+        reddedilen.append(str(v)[:40])
+        if len(reddedilen) >= 5:
+            break
+    obs.warn("candidate_review_empty_parse", asama=asama,
+             text_len=len(text or ""), extract_len=len(raw or ""), parse_ok=bool(parse_ok),
+             on_filtre_n=len(ham), son_filtre_n=len(reviews), reddedilen_gorusler=reddedilen,
+             ham_ilk=repr((text or "")[:220]), detail=detail)
+
+
 def review_candidates(dstr: str | None = None) -> dict | None:
     """ADAY DANIŞMA KATMANI — yerel ajan (skill kütüphanesiyle) bugünün adaylarına İKİNCİ GÖRÜŞ verir.
     YETKİ SINIRI: bu inceleme yalnız bilgilendirir; kapı kararlarını (GO/REVIEW/NO_GO), silahlanmayı
@@ -2099,14 +2123,30 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     if text is None:
         return None
     raw = _extract_json(text)
+    parse_ok, parse_err, data = True, None, None
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
-        data = json.loads(_unwrap_strings(raw))
-    reviews = [r for r in (data.get("reviews") or [])
+    except json.JSONDecodeError:  # sessiz-yutma: BURASI kayıp yol DEĞİL — ilk deneme CLI'nın satır-sarmalamasına takılır, hemen altındaki ikinci deneme (_unwrap_strings) onarım denemesidir; ikinci de düşerse bilgi YOK OLMAZ: aşağıda candidate_review_empty_parse (asama=json_parse, parse_ok=False, istisna adı) basılır.
+        try:
+            data = json.loads(_unwrap_strings(raw))
+        except Exception as e:
+            parse_ok, parse_err = False, type(e).__name__
+    if not parse_ok:
+        # KAYITSIZ DÖNÜŞ #1 — cevap geldi ama JSON'a çevrilemedi (canlı vaka 2026-08-02: Gemini dolu
+        # cevap verdi, kayıt yoktu, sebep görünmüyordu). Davranış AYNI (None); yalnız görünür oldu.
+        _warn_review_empty("json_parse", text, raw, parse_ok=False, ham=[], reviews=[],
+                           detail=f"model cevabı JSON'a çevrilemedi ({parse_err}); iki deneme de "
+                                  f"düştü — görüş kaydedilmedi, danışma katmanı bu seans sessiz")
+        return None
+    ham = list(data.get("reviews") or [])
+    reviews = [r for r in ham
                if isinstance(r, dict) and r.get("ticker")
                and r.get("opinion") in ("destekle", "çekimser", "karşı")]
     if not reviews:
+        # KAYITSIZ DÖNÜŞ #2 — JSON ayrıştı ama şekil/enum süzgeci geriye görüş bırakmadı.
+        _warn_review_empty("filtre", text, raw, parse_ok=True, ham=ham, reviews=reviews,
+                           detail=f"JSON ayrıştı ({len(ham)} ham görüş) ama şekil/enum süzgecinden "
+                                  f"sıfır görüş çıktı — kayıt yok")
         return None
     res = {"date": day, "model": active_model(), "brain": active_brain(),
            "reviews": reviews[:20], "ts": memory.now_iso(),

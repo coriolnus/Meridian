@@ -172,6 +172,16 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**FREEZE KALKTI (2026-08-02 ~17:40 TR / 14:40 UTC, Rol-1 pencere-oturumu):** korunan boru hattı
+TAMAMLANDI — otoriter tam suite `571a094` tepesinde SIFIR kırmızı (exit 0) + `./dagit.sh --uygula`
+14:00 UTC'de operatör talimatıyla ("bitince otomatik uygula ve doğrula") koştu: 5 kapı yeşil,
+healthz 200, app.js md5 birebir; bakım penceresinde agent_budget sıfırlandı (yakılan 150 hak ağa
+hiç çıkmamıştı — gerekçe dosyada). YENİ AÇIK TUR (operatör: "kök nedeni bulunca düzeltmeyi de
+uygula"): LLM ikinci-görüş cevabı DOLU gelirken kayda geçmiyor — görünürlük düzeltmesi
+`candidate_review_empty_parse` (hermes.py + test_review_gorunurluk_v168) bu commit'le iniyor;
+worker'ın bir sonraki poll'ü üretim-özdeş tanı olacak, kök neden olayla görünecek. Paralel oturuma
+not: dağıtım YAPILDI; adım 3-5 tekrarı gereksiz (aynı içeriği yeniden dağıtmak zararsız ama boş).
+
 **FREEZE İLAN EDİLDİ (2026-08-02 ~16:50, Rol-1):** donan KOD tepesi `571a094` (içerik: v76 onarımı
 da6bec3 ✓ fikstür-yalnız/eşiksiz doğrulandı + 65/65 bağımsız teyit · guard turu 014bc78 ·
 destekleyici koşu + runbook yenilemesi 5aaef3d · ROADMAP dersleri). Ağaç temiz, aktif test süreci
