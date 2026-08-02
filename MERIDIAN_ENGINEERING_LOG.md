@@ -182,6 +182,18 @@ uygula"): LLM ikinci-görüş cevabı DOLU gelirken kayda geçmiyor — görün�
 worker'ın bir sonraki poll'ü üretim-özdeş tanı olacak, kök neden olayla görünecek. Paralel oturuma
 not: dağıtım YAPILDI; adım 3-5 tekrarı gereksiz (aynı içeriği yeniden dağıtmak zararsız ama boş).
 
+**ADIM 7 DOĞRULAMASI YEŞİL (2026-08-02 ~14:50 UTC, Rol-1 — A1 canlıda, tümü salt-okur):**
+üç birim aktif (meridian · barsarchive · tick-watchdog.timer; restart 14:00:34 UTC) · healthz 200 ·
+journal restart-sonrası 48 satırda 0 "Invalid environment assignment" (pozitif kontrollü — birim
+düzeltmesi CANLIDA) · birimde CHANGEME yok; token `.dash.env` kanalında (48 kr; değer okunmadı,
+yazdırılmadı) ve `x-meridian-token` ile API 200 → token KORUNMUŞ (plan adım-6 endişesi yapısal
+olarak çözülmüş: birim artık token taşımıyor) · scheduler_status.updated=14:30:22Z, yaş 0,7 dk —
+restart'tan beri İLERLİYOR (canlılık ve ilerleme ayrı ayrı var) · /api/diagnostics: `icra.slipaj.kapi`
+VAR (n=0, dağılım {} — dürüst boş hâl) + kotumser_band + gece_gunduz VAR · evren:
+universe_drift/universe=251, retired_in_universe=0 (payda 259→251 GERÇEKLEŞTİ) · servis edilen
+app.js YENİ paket (kapi_dagilimi içeriyor) · fail-notify birimi repo ile bayt-özdeş. BEYAN: pano
+kartlarının tarayıcı-render'ı görsel doğrulanmadı (veri+paket kanıtı tam); ilk pano bakışı son mühür.
+
 **FREEZE İLAN EDİLDİ (2026-08-02 ~16:50, Rol-1):** donan KOD tepesi `571a094` (içerik: v76 onarımı
 da6bec3 ✓ fikstür-yalnız/eşiksiz doğrulandı + 65/65 bağımsız teyit · guard turu 014bc78 ·
 destekleyici koşu + runbook yenilemesi 5aaef3d · ROADMAP dersleri). Ağaç temiz, aktif test süreci
@@ -205,7 +217,8 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
-- **DAĞITIM BLOKE — tam suite birleşik main'de KIRMIZI (2026-08-02, dağıtım kapısında bulundu):**
+- **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
+  adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
   operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
   tam suite 16 failed / 2 error / 3688 passed verdi → --uygula KOŞULMADI, canlı eski kodda.
   Ayrıştırma: (a) 7'si İZOLE de kırmızı = GERÇEK; bunlardan RUNBOOK eşitliği (uiux t3) yeniden-üretimle
@@ -232,7 +245,7 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   güncel tracked-state kopyalama GU1-sınıfı sahte kırmızı üretir]). DERS (pencere planı adım 3'ü
   genelleştirir): OTORİTER SUITE YALNIZ DONMUŞ AĞAÇTA — sha'ya sabitlenmiş worktree veya freeze;
   merge alan bir checkout'ta koşan suite hüküm değil gürültü üretir. Çıktı: full_suite_a75_static.txt.
-  SIRA: v76 fikstür onarımı ✓ → girişim avı ✓ (kapandı) → yeşil suite → dağıtım.
+  SIRA: v76 fikstür onarımı ✓ → girişim avı ✓ → yeşil suite ✓ (3752/0, donmuş tepe) → dağıtım ✓ (pencere 14:00 UTC).
   Çıktılar: scratchpad/full_suite_predeploy.txt. GÜNCELLEME (2026-08-02 akşam, Rol-1): icra-bloğu
   merge'i (46ce02f) sonrası otoriter koşu 7 kırmızı = 6×v76 + uiux-t3 (t3 892bf75 ile kapandı);
   girişim ailesi o koşuda ateşlenmedi. Pencere planı: §DAĞITIM PENCERESİ PLANI.
