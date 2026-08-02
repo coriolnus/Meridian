@@ -1,0 +1,435 @@
+{
+  "kart": "KYS-2026-001 · kiyas_kirlenmesi (ALTYAPI kartı)",
+  "tur": "ön-kayıtlı ölçüm — RETRO YENİDEN-HÜKÜM YOK",
+  "adim1_pk": {
+    "gecti": true,
+    "kollar": [
+      {
+        "ad": "PK-0 pencere eşdeğerliği (in_blackout BİREBİR)",
+        "gecti": true,
+        "olcut": null,
+        "temiz_fazla_bps": null,
+        "kirli_fazla_bps": null,
+        "sikisma_bps": null,
+        "n_kirli_arac": 822,
+        "n_kirli_in_blackout": 822
+      },
+      {
+        "ad": "PK-1 δ=+30bps · yaygınlık %70",
+        "gecti": true,
+        "olcut": "temiz ≈ +30bps (±5.0) · sıkışma > 0 · kirli < temiz",
+        "temiz_fazla_bps": 29.47,
+        "kirli_fazla_bps": 15.35,
+        "sikisma_bps": 14.12,
+        "n_kirli_arac": null,
+        "n_kirli_in_blackout": null
+      },
+      {
+        "ad": "PK-2 δ=−30bps · yaygınlık %70",
+        "gecti": true,
+        "olcut": "temiz ≈ −30bps (±5.0) · sıkışma < 0 · |kirli|<|temiz|",
+        "temiz_fazla_bps": -30.53,
+        "kirli_fazla_bps": -16.62,
+        "sikisma_bps": -13.91,
+        "n_kirli_arac": null,
+        "n_kirli_in_blackout": null
+      },
+      {
+        "ad": "PK-3 δ=0 · yaygınlık %70 (uydurma kontrolü)",
+        "gecti": true,
+        "olcut": "|temiz| < 5.0bps VE |sıkışma| < 5.0bps",
+        "temiz_fazla_bps": -0.53,
+        "kirli_fazla_bps": 0.47,
+        "sikisma_bps": -1.0,
+        "n_kirli_arac": null,
+        "n_kirli_in_blackout": null
+      },
+      {
+        "ad": "PK-4 δ=+30bps · yaygınlık %15 (seyrek)",
+        "gecti": true,
+        "olcut": "0 ≤ sıkışma(seyrek) < 0.5 × sıkışma(yaygın)",
+        "temiz_fazla_bps": 29.95,
+        "kirli_fazla_bps": 27.04,
+        "sikisma_bps": 2.91,
+        "n_kirli_arac": null,
+        "n_kirli_in_blackout": null
+      }
+    ],
+    "esikler": {
+      "TOL_DOGRULUK_BPS": 5.0,
+      "TOL_SIFIR_BPS": 5.0,
+      "MAX_SEYREK_ORANI": 0.5,
+      "beyan": "eşikler gerçek-veri ölçümü başlamadan yazıldı; ilk taslaktaki keyfî `kirli/temiz < 0,50` şartı KAPI olmaktan çıkarılıp TANI alanına indirildi ve gerekçesi modül başlığında yazılıdır (kartın asıl şartı olan YÖN her taslakta geçiyordu)"
+    }
+  },
+  "adim2_kapsama": {
+    "esik": {
+      "kill_2": "etiketlenemeyen > %20 → 'ölçülemedi'",
+      "tanim": "satır (t,g) etiketlenebilir ⟺ takvim [g, g+5] iş günlerinin TAMAMINI görmüş"
+    },
+    "kaynaklar": {
+      "state/earnings.csv": {
+        "sembol_kapsamasi": 0.7649,
+        "takvim_tamligi": 0.0117,
+        "etiketlenemeyen_oran": 0.7274,
+        "gun_kapsamasi_kaydi": null
+      },
+      "state/sprint/.../earnings.csv": {
+        "sembol_kapsamasi": 0.7809,
+        "takvim_tamligi": 0.0928,
+        "etiketlenemeyen_oran": 0.4012,
+        "gun_kapsamasi_kaydi": null
+      },
+      "nasdaq_kum_havuzu": {
+        "sembol_kapsamasi": 1.0,
+        "takvim_tamligi": 0.9973,
+        "etiketlenemeyen_oran": 0.0,
+        "gun_kapsamasi_kaydi": "VAR — sorulan iş günleri dosyada satır satır duruyor"
+      }
+    },
+    "kullanilan_kaynak": "nasdaq_kum_havuzu",
+    "tarih_dogrulugu_birebir": true,
+    "olay_yayginligi_hedef_tarafi": {
+      "n_satir": 2201,
+      "penceresinde": 409,
+      "oran": 0.1858,
+      "yontem": "earnings.in_blackout, kum havuzuna yazılan Nasdaq takvimiyle",
+      "beyan": "ölçüm satırlarının kendi kazanç penceresinde olma oranı (hedef tarafı); TABAN tarafının kirliliği ölçüm adımında gün gün raporlanır"
+    }
+  },
+  "adim3_yuzeyler": {
+    "Y1_component_ic_ust_desil": {
+      "10": {
+        "n": 904,
+        "standart_bps": 24.316,
+        "temiz_bps": 24.712,
+        "fark_bps": -0.396,
+        "ci_lo_bps": -2.466,
+        "ci_hi_bps": 1.726,
+        "ci_sifiri_disliyor": false
+      },
+      "20": {
+        "n": 904,
+        "standart_bps": 74.736,
+        "temiz_bps": 74.791,
+        "fark_bps": -0.056,
+        "ci_lo_bps": -2.056,
+        "ci_hi_bps": 2.599,
+        "ci_sifiri_disliyor": false
+      }
+    },
+    "Y2_cf_r_tablosu": {
+      "10": {
+        "n": 2093,
+        "standart_bps": 9.141,
+        "temiz_bps": 9.537,
+        "fark_bps": -0.396,
+        "ci_lo_bps": -2.184,
+        "ci_hi_bps": 1.906,
+        "ci_sifiri_disliyor": false
+      },
+      "20": {
+        "n": 2087,
+        "standart_bps": 50.384,
+        "temiz_bps": 50.118,
+        "fark_bps": 0.265,
+        "ci_lo_bps": -1.954,
+        "ci_hi_bps": 2.911,
+        "ci_sifiri_disliyor": false
+      }
+    }
+  },
+  "adim3_y1_bilesen_tablosu": {
+    "rs": {
+      "10": {
+        "n": 209,
+        "standart_bps": -49.913,
+        "temiz_bps": -49.643,
+        "fark_bps": -0.27,
+        "ci": [
+          -1.572,
+          1.067
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": -126.206,
+        "temiz_bps": -124.442,
+        "fark_bps": -1.764,
+        "ci": [
+          -3.594,
+          1.194
+        ]
+      }
+    },
+    "tight": {
+      "10": {
+        "n": 209,
+        "standart_bps": -18.58,
+        "temiz_bps": -17.931,
+        "fark_bps": -0.65,
+        "ci": [
+          -7.315,
+          0.752
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": 51.296,
+        "temiz_bps": 57.63,
+        "fark_bps": -6.334,
+        "ci": [
+          -10.502,
+          -1.248
+        ]
+      }
+    },
+    "vol": {
+      "10": {
+        "n": 209,
+        "standart_bps": 13.542,
+        "temiz_bps": 13.496,
+        "fark_bps": 0.046,
+        "ci": [
+          -3.169,
+          2.758
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": 94.42,
+        "temiz_bps": 90.77,
+        "fark_bps": 3.65,
+        "ci": [
+          -2.218,
+          4.23
+        ]
+      }
+    },
+    "prox": {
+      "10": {
+        "n": 209,
+        "standart_bps": -75.837,
+        "temiz_bps": -75.287,
+        "fark_bps": -0.549,
+        "ci": [
+          -2.915,
+          4.907
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": -59.296,
+        "temiz_bps": -59.728,
+        "fark_bps": 0.432,
+        "ci": [
+          -4.104,
+          5.383
+        ]
+      }
+    },
+    "rvol20": {
+      "10": {
+        "n": 209,
+        "standart_bps": 17.505,
+        "temiz_bps": 17.388,
+        "fark_bps": 0.117,
+        "ci": [
+          -1.037,
+          3.607
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": 66.025,
+        "temiz_bps": 63.538,
+        "fark_bps": 2.486,
+        "ci": [
+          -0.722,
+          6.172
+        ]
+      }
+    },
+    "mom12_1": {
+      "10": {
+        "n": 209,
+        "standart_bps": 109.501,
+        "temiz_bps": 110.218,
+        "fark_bps": -0.717,
+        "ci": [
+          -1.976,
+          2.797
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": 196.768,
+        "temiz_bps": 194.357,
+        "fark_bps": 2.411,
+        "ci": [
+          0.318,
+          6.616
+        ]
+      }
+    },
+    "rmom": {
+      "10": {
+        "n": 209,
+        "standart_bps": 81.248,
+        "temiz_bps": 80.849,
+        "fark_bps": 0.399,
+        "ci": [
+          -1.604,
+          3.054
+        ]
+      },
+      "20": {
+        "n": 209,
+        "standart_bps": 149.793,
+        "temiz_bps": 148.915,
+        "fark_bps": 0.878,
+        "ci": [
+          -3.132,
+          2.797
+        ]
+      }
+    },
+    "turnover21": {
+      "10": {
+        "n": 198,
+        "standart_bps": 151.402,
+        "temiz_bps": 152.433,
+        "fark_bps": -1.031,
+        "ci": [
+          -2.916,
+          1.101
+        ]
+      },
+      "20": {
+        "n": 197,
+        "standart_bps": 134.636,
+        "temiz_bps": 136.386,
+        "fark_bps": -1.751,
+        "ci": [
+          -3.047,
+          1.551
+        ]
+      }
+    }
+  },
+  "adim3_sifiri_dislayan_hucreler": {
+    "n": 2,
+    "toplam_hucre": 16,
+    "hucreler": [
+      {
+        "bilesen": "tight",
+        "ufuk": "20",
+        "fark_bps": -6.334,
+        "ci": [
+          -10.502,
+          -1.248
+        ]
+      },
+      {
+        "bilesen": "mom12_1",
+        "ufuk": "20",
+        "fark_bps": 2.411,
+        "ci": [
+          0.318,
+          6.616
+        ]
+      }
+    ]
+  },
+  "adim4_envanter": {
+    "tetiklendi_mi(aritmetik)": false,
+    "yuzey_aritmetigi": {
+      "Y1_component_ic_ust_desil": {
+        "fark20_bps": -0.056,
+        "|fark20|>=10bps": false,
+        "ci20_sifiri_disliyor": false,
+        "envanter_tetigi(>=10bps VE CI 0-dışı)": false
+      },
+      "Y2_cf_r_tablosu": {
+        "fark20_bps": 0.265,
+        "|fark20|>=10bps": false,
+        "ci20_sifiri_disliyor": false,
+        "envanter_tetigi(>=10bps VE CI 0-dışı)": false
+      }
+    },
+    "envanter": null,
+    "neden_bos": "kart şartı '@20 fark >=10bps VE CI 0-dışı' hiçbir yüzeyde aritmetik olarak sağlanmadı — envanter doldurulmadı (uydurma yasağı)"
+  },
+  "taban_kirliligi": {
+    "kart_penceresi_5_0": {
+      "pencere": {
+        "once": 5,
+        "sonra": 0
+      },
+      "taban_kirliligi_medyan": 0.0282,
+      "taban_kirliligi_ortalama": 0.0741,
+      "taban_kirliligi_maks": 0.3494
+    },
+    "eap_benzeri_14_1_yaklasik": {
+      "pencere": {
+        "once": 14,
+        "sonra": 1
+      },
+      "taban_kirliligi_medyan": 0.0968,
+      "taban_kirliligi_ortalama": 0.2098,
+      "taban_kirliligi_maks": 0.7247
+    },
+    "beyan": "YALNIZ SAYIM — hiçbir etki/fazla-getiri bu satırdan okunmaz ve K'ya girmez. EAP penceresi İŞLEM günüdür; (14,1) onun TAKVİM günü yaklaşımıdır (10 iş günü ≈ 14 takvim günü) ve birebir değildir."
+  },
+  "populasyon": {
+    "ham_gozlem": 2194,
+    "etiketlenebilir": 2194,
+    "cf": 2099,
+    "gercek": 95,
+    "dusenler": {
+      "bar_yok_sembol": 0,
+      "bar_yok_tarih": 7,
+      "rs_kesiti_yok": 0
+    },
+    "beyan": "etiketlenemeyen satır ÖLÇÜME GİRMEZ (kart kill #2'nin konusu); orada in_blackout False döner ama bu 'temiz' değil 'veri yok'tur"
+  },
+  "gercek_katman_baglam": {
+    "10": {
+      "n": 94,
+      "fark_bps": 1.17,
+      "ci": [
+        -1.576,
+        4.493
+      ]
+    },
+    "20": {
+      "n": 93,
+      "fark_bps": 3.205,
+      "ci": [
+        -0.52,
+        5.279
+      ]
+    }
+  },
+  "kod_damgasi": {
+    "git_head": "be8296f1683429e5e197bf98fa67c4a49564172a",
+    "git_head_kisa": "be8296f",
+    "kirli_agac": true,
+    "git_neden": null,
+    "olcum_araclari_surum": "2026-08-02",
+    "arac_surumleri": {
+      "temiz_taban": "1.0",
+      "olay_disi_kiyas": "1.0",
+      "blok_bootstrap_ci": "1.0",
+      "eb_kucult": "1.0"
+    },
+    "beyan": "git_head None ise ÖLÇÜLEMEDİ (neden alanında yazar) — boş dizgi ya da tahmin yazılmaz. kirli_agac True ise rapor bu SHA'dan YENİDEN ÜRETİLEMEZ: SHA o anki kodun değil atasının adıdır. arac_surumleri, raporun hangi ölçüm-aracı davranışıyla üretildiğini söyler (araç değişirse sürümü de değişir)."
+  },
+  "muhur": {
+    "config_ROOT": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root",
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root/state",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "muhur": "TUTTU"
+  },
+  "hukum_yok": "bu dosya SAYI taşır. Kill/arşiv/askı hükmü Rol-1'dedir; kart ALTYAPI kartıdır ve geçmiş kart hükümleri bu turda DEĞİŞMEZ."
+}

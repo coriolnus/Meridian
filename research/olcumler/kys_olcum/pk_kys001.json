@@ -1,0 +1,107 @@
+{
+  "pk": "KYS-2026-001 araç-doğrulama (kart guards #1)",
+  "arac": "meridian.olcum_araclari.olay_disi_kiyas",
+  "tohum": 20260802,
+  "n_sembol": 200,
+  "n_gun": 40,
+  "delta_bps": 30.0,
+  "esikler": {
+    "TOL_DOGRULUK_BPS": 5.0,
+    "TOL_SIFIR_BPS": 5.0,
+    "MAX_SEYREK_ORANI": 0.5,
+    "beyan": "eşikler gerçek-veri ölçümü başlamadan yazıldı; ilk taslaktaki keyfî `kirli/temiz < 0,50` şartı KAPI olmaktan çıkarılıp TANI alanına indirildi ve gerekçesi modül başlığında yazılıdır (kartın asıl şartı olan YÖN her taslakta geçiyordu)"
+  },
+  "kollar": [
+    {
+      "ad": "PK-0 pencere eşdeğerliği (in_blackout BİREBİR)",
+      "pencere": {
+        "once": 5,
+        "sonra": 0
+      },
+      "n_satir": 8000,
+      "n_kirli_arac": 822,
+      "n_kirli_in_blackout": 822,
+      "n_taban_yok": 0,
+      "arac_fazlasi_ornek": [],
+      "guard_fazlasi_ornek": [],
+      "gecti": true,
+      "beyan": "olay_disi_kiyas'ın KİRLİ saydığı (sembol, gün) kümesi ile earnings.in_blackout'un True dediği küme birebir karşılaştırıldı; sentetik takvim kum havuzuna yazıldı, canlı state/earnings.csv'ye DOKUNULMADI"
+    },
+    {
+      "ad": "PK-1 δ=+30bps · yaygınlık %70",
+      "delta_bps": 30.0,
+      "yaygınlık": 0.7,
+      "n_hedef": 822,
+      "n_kiyaslanan": 822,
+      "n_taban_yok": 0,
+      "temiz_fazla_bps": 29.47,
+      "kirli_fazla_bps": 15.35,
+      "sikisma_bps": 14.12,
+      "kirli/temiz(tanı)": 0.5209,
+      "kiyas_agirlikli_kirlilik_medyan": 0.48,
+      "gun_kirliligi_max": 0.685,
+      "uyari": null,
+      "gecti": true,
+      "olcut": "temiz ≈ +30bps (±5.0) · sıkışma > 0 · kirli < temiz"
+    },
+    {
+      "ad": "PK-2 δ=−30bps · yaygınlık %70",
+      "delta_bps": -30.0,
+      "yaygınlık": 0.7,
+      "n_hedef": 822,
+      "n_kiyaslanan": 822,
+      "n_taban_yok": 0,
+      "temiz_fazla_bps": -30.53,
+      "kirli_fazla_bps": -16.62,
+      "sikisma_bps": -13.91,
+      "kirli/temiz(tanı)": 0.5444,
+      "kiyas_agirlikli_kirlilik_medyan": 0.48,
+      "gun_kirliligi_max": 0.685,
+      "uyari": null,
+      "gecti": true,
+      "olcut": "temiz ≈ −30bps (±5.0) · sıkışma < 0 · |kirli|<|temiz|"
+    },
+    {
+      "ad": "PK-3 δ=0 · yaygınlık %70 (uydurma kontrolü)",
+      "delta_bps": 0.0,
+      "yaygınlık": 0.7,
+      "n_hedef": 822,
+      "n_kiyaslanan": 822,
+      "n_taban_yok": 0,
+      "temiz_fazla_bps": -0.53,
+      "kirli_fazla_bps": 0.47,
+      "sikisma_bps": -1.0,
+      "kirli/temiz(tanı)": 0.8792,
+      "kiyas_agirlikli_kirlilik_medyan": 0.48,
+      "gun_kirliligi_max": 0.685,
+      "uyari": null,
+      "gecti": true,
+      "olcut": "|temiz| < 5.0bps VE |sıkışma| < 5.0bps"
+    },
+    {
+      "ad": "PK-4 δ=+30bps · yaygınlık %15 (seyrek)",
+      "delta_bps": 30.0,
+      "yaygınlık": 0.15,
+      "n_hedef": 186,
+      "n_kiyaslanan": 186,
+      "n_taban_yok": 0,
+      "temiz_fazla_bps": 29.95,
+      "kirli_fazla_bps": 27.04,
+      "sikisma_bps": 2.91,
+      "kirli/temiz(tanı)": 0.903,
+      "kiyas_agirlikli_kirlilik_medyan": 0.13,
+      "gun_kirliligi_max": 0.155,
+      "uyari": null,
+      "gecti": true,
+      "olcut": "0 ≤ sıkışma(seyrek) < 0.5 × sıkışma(yaygın)"
+    }
+  ],
+  "gecti": true,
+  "muhur": {
+    "config_ROOT": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root",
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root/state",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "muhur": "TUTTU"
+  },
+  "hukum_yok": "bu dosya ARACI sınar; kart hükmü Rol-1'dedir"
+}

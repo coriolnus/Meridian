@@ -1,0 +1,222 @@
+{
+  "adim": "2 — olay-etiketleme kapsaması (kart kill #2)",
+  "evren": 251,
+  "olcum_satirlari": {
+    "cf": 2106,
+    "gercek": 95
+  },
+  "tarih_araligi": {
+    "cf": [
+      "2022-01-03",
+      "2026-07-23"
+    ],
+    "gercek": [
+      "2023-01-20",
+      "2026-07-16"
+    ]
+  },
+  "esik": {
+    "kill_2": "etiketlenemeyen > %20 → 'ölçülemedi'",
+    "tanim": "satır (t,g) etiketlenebilir ⟺ takvim [g, g+5] iş günlerinin TAMAMINI görmüş"
+  },
+  "kaynaklar": {
+    "state/earnings.csv": {
+      "n_ticker": 193,
+      "n_satir": 193,
+      "ilk_tarih": "2025-06-24",
+      "son_tarih": "2026-08-13",
+      "evren_kesisimi": 192,
+      "sembol_kapsamasi": 0.7649,
+      "takvim_tamligi": {
+        "beklenen_ticker_basina": 18.2,
+        "gozlenen_medyan": 0,
+        "gozlenen_ortalama": 0.21,
+        "tamlik_orani": 0.0117,
+        "hic_tarihi_olmayan_evren_sembolu": 210,
+        "aralik": [
+          "2022-01-03",
+          "2026-07-23"
+        ],
+        "beyan": "gözlenen/beklenen; beklenen = 4 rapor/yıl × ölçüm aralığı (yıl)"
+      },
+      "gun_kapsamasi_kaydi": null,
+      "gun_kapsamasi_kaydi_neden": "birikim dosyası — hangi günlerin sorulduğu kaydı YOK (PIT defteri state/history/earnings_snapshots.jsonl yerelde mevcut değil); iki SINIR raporlanır",
+      "comert_sinir": {
+        "n": 2201,
+        "tam_gorulen": 600,
+        "kismi": 7,
+        "hic_gorulmemis": 1594,
+        "etiketlenebilir_oran": 0.2726,
+        "etiketlenemeyen_oran": 0.7274
+      },
+      "siki_sinir": {
+        "n": 2201,
+        "tam_gorulen": 16,
+        "kismi": 26,
+        "hic_gorulmemis": 2159,
+        "etiketlenebilir_oran": 0.0073,
+        "etiketlenemeyen_oran": 0.9927
+      }
+    },
+    "state/sprint/.../earnings.csv": {
+      "n_ticker": 196,
+      "n_satir": 2176,
+      "ilk_tarih": "1985-08-31",
+      "son_tarih": "2026-10-20",
+      "evren_kesisimi": 196,
+      "sembol_kapsamasi": 0.7809,
+      "takvim_tamligi": {
+        "beklenen_ticker_basina": 18.2,
+        "gozlenen_medyan": 0,
+        "gozlenen_ortalama": 1.69,
+        "tamlik_orani": 0.0928,
+        "hic_tarihi_olmayan_evren_sembolu": 180,
+        "aralik": [
+          "2022-01-03",
+          "2026-07-23"
+        ],
+        "beyan": "gözlenen/beklenen; beklenen = 4 rapor/yıl × ölçüm aralığı (yıl)"
+      },
+      "2022+_tarihi_olan_ticker": 196,
+      "ticker_basina_2022+_medyan": 1,
+      "siki_sinir": {
+        "n": 2201,
+        "tam_gorulen": 1318,
+        "kismi": 671,
+        "hic_gorulmemis": 212,
+        "etiketlenebilir_oran": 0.5988,
+        "etiketlenemeyen_oran": 0.4012
+      }
+    },
+    "nasdaq_kum_havuzu": {
+      "n_ticker": 251,
+      "n_satir": 4687,
+      "ilk_tarih": "2022-01-06",
+      "son_tarih": "2026-08-05",
+      "evren_kesisimi": 251,
+      "sembol_kapsamasi": 1.0,
+      "takvim_tamligi": {
+        "beklenen_ticker_basina": 18.2,
+        "gozlenen_medyan": 18,
+        "gozlenen_ortalama": 18.15,
+        "tamlik_orani": 0.9973,
+        "hic_tarihi_olmayan_evren_sembolu": 0,
+        "aralik": [
+          "2022-01-03",
+          "2026-07-23"
+        ],
+        "beyan": "gözlenen/beklenen; beklenen = 4 rapor/yıl × ölçüm aralığı (yıl)"
+      },
+      "sorulan_is_gunu": 1198,
+      "sorulan_ilk": "2022-01-03",
+      "sorulan_son": "2026-08-05",
+      "gun_kapsamasi_kaydi": "VAR — sorulan iş günleri dosyada satır satır duruyor",
+      "kesin": {
+        "n": 2201,
+        "tam_gorulen": 2201,
+        "kismi": 0,
+        "hic_gorulmemis": 0,
+        "etiketlenebilir_oran": 1.0,
+        "etiketlenemeyen_oran": 0.0
+      },
+      "katman_kirilimi": {
+        "cf": {
+          "n": 2106,
+          "tam_gorulen": 2106,
+          "kismi": 0,
+          "hic_gorulmemis": 0,
+          "etiketlenebilir_oran": 1.0,
+          "etiketlenemeyen_oran": 0.0
+        },
+        "gercek": {
+          "n": 95,
+          "tam_gorulen": 95,
+          "kismi": 0,
+          "hic_gorulmemis": 0,
+          "etiketlenebilir_oran": 1.0,
+          "etiketlenemeyen_oran": 0.0
+        }
+      }
+    }
+  },
+  "tarih_dogrulugu": {
+    "semboller": {
+      "AAPL": {
+        "beklenen": [
+          "2024-02-01",
+          "2024-05-02",
+          "2024-08-01",
+          "2024-10-31"
+        ],
+        "bulunan": [
+          "2024-02-01",
+          "2024-05-02",
+          "2024-08-01",
+          "2024-10-31"
+        ],
+        "birebir": true
+      },
+      "MSFT": {
+        "beklenen": [
+          "2024-01-30",
+          "2024-04-25",
+          "2024-07-30",
+          "2024-10-30"
+        ],
+        "bulunan": [
+          "2024-01-30",
+          "2024-04-25",
+          "2024-07-30",
+          "2024-10-30"
+        ],
+        "birebir": true
+      },
+      "JPM": {
+        "beklenen": [
+          "2024-01-12",
+          "2024-04-12",
+          "2024-07-12",
+          "2024-10-11"
+        ],
+        "bulunan": [
+          "2024-01-12",
+          "2024-04-12",
+          "2024-07-12",
+          "2024-10-11"
+        ],
+        "birebir": true
+      },
+      "NVDA": {
+        "beklenen": [
+          "2024-02-21",
+          "2024-05-22",
+          "2024-08-28",
+          "2024-11-20"
+        ],
+        "bulunan": [
+          "2024-02-21",
+          "2024-05-22",
+          "2024-08-28",
+          "2024-11-20"
+        ],
+        "birebir": true
+      }
+    },
+    "hepsi_birebir": true,
+    "beyan": "kaynak 2024 duyuru tarihleri bilinen gerçeğe karşı sağlandı (EAP turunun aynı sağlaması)"
+  },
+  "olay_yayginligi": {
+    "n_satir": 2201,
+    "penceresinde": 409,
+    "oran": 0.1858,
+    "yontem": "earnings.in_blackout, kum havuzuna yazılan Nasdaq takvimiyle",
+    "beyan": "ölçüm satırlarının kendi kazanç penceresinde olma oranı (hedef tarafı); TABAN tarafının kirliliği ölçüm adımında gün gün raporlanır"
+  },
+  "muhur": {
+    "config_ROOT": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root",
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root/state",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "muhur": "TUTTU"
+  },
+  "hukum_yok": "sayı üretildi; kill #2 hükmü Rol-1'dedir"
+}

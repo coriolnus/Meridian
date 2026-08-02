@@ -1,0 +1,1502 @@
+{
+  "kart": "KYS-2026-001",
+  "adim": "3 — iki yüzey (K=2)",
+  "pencere": {
+    "once": 5,
+    "sonra": 0,
+    "tanim": "earnings.in_blackout ile BİREBİR (PK-0 ile kanıtlandı)"
+  },
+  "populasyon": {
+    "ham_gozlem": 2194,
+    "etiketlenebilir": 2194,
+    "cf": 2099,
+    "gercek": 95,
+    "dusenler": {
+      "bar_yok_sembol": 0,
+      "bar_yok_tarih": 7,
+      "rs_kesiti_yok": 0
+    },
+    "beyan": "etiketlenemeyen satır ÖLÇÜME GİRMEZ (kart kill #2'nin konusu); orada in_blackout False döner ama bu 'temiz' değil 'veri yok'tur"
+  },
+  "getiri_tanimi": "close[t+h]/close[t]-1 — component_ic.forward_returns ile birebir",
+  "ozet_istatistigi": "medyan (gün tabanı)",
+  "min_taban": 5,
+  "ci": {
+    "blok_gun": 21,
+    "yontem": "moving block bootstrap, GÜN serisi üzerinde"
+  },
+  "yuzeyler": {
+    "Y1_component_ic_ust_desil": {
+      "tanim": "component_ic cf katmanının bileşen değerine göre ÜST DESİLİ; taban-fazlası standart (kirli) ve olay-dışı (temiz) tabanla",
+      "desil": 0.1,
+      "bilesenler": {
+        "rs": {
+          "10": {
+            "ad": "Y1·rs@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": -49.913,
+            "temiz_fazla_bps": -49.643,
+            "fark_standart_eksi_temiz_bps": -0.27,
+            "ci_fark": {
+              "ort_bps": -0.399,
+              "lo_bps": -1.572,
+              "hi_bps": 1.067,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": -41.369,
+              "lo_bps": -179.907,
+              "hi_bps": 103.751,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": -40.969,
+              "lo_bps": -179.133,
+              "hi_bps": 103.53,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.012035459477712784,
+              "kirli": -0.012194459302285798,
+              "fark": 0.00015899982457301398,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 98.0,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·rs@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": -126.206,
+            "temiz_fazla_bps": -124.442,
+            "fark_standart_eksi_temiz_bps": -1.764,
+            "ci_fark": {
+              "ort_bps": -1.711,
+              "lo_bps": -3.594,
+              "hi_bps": 1.194,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": -107.649,
+              "lo_bps": -255.498,
+              "hi_bps": 125.79,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": -105.938,
+              "lo_bps": -254.396,
+              "hi_bps": 126.64,
+              "n_gun": 167,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.018196381898548553,
+              "kirli": -0.01790553975982201,
+              "fark": -0.00029084213872654363,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 98.0,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "tight": {
+          "10": {
+            "ad": "Y1·tight@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": -18.58,
+            "temiz_fazla_bps": -17.931,
+            "fark_standart_eksi_temiz_bps": -0.65,
+            "ci_fark": {
+              "ort_bps": -2.135,
+              "lo_bps": -7.315,
+              "hi_bps": 0.752,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": -3.291,
+              "lo_bps": -80.832,
+              "hi_bps": 145.162,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": -1.156,
+              "lo_bps": -80.343,
+              "hi_bps": 150.122,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.01156488261741706,
+              "kirli": -0.010740298897444767,
+              "fark": -0.0008245837199722938,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 100.0,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·tight@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 51.296,
+            "temiz_fazla_bps": 57.63,
+            "fark_standart_eksi_temiz_bps": -6.334,
+            "ci_fark": {
+              "ort_bps": -4.594,
+              "lo_bps": -10.502,
+              "hi_bps": -1.248,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 32.447,
+              "lo_bps": -128.83,
+              "hi_bps": 226.326,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 37.041,
+              "lo_bps": -127.718,
+              "hi_bps": 236.009,
+              "n_gun": 97,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.0013494883576888883,
+              "kirli": 0.00036236018975510653,
+              "fark": -0.0017118485474439948,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 100.0,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "vol": {
+          "10": {
+            "ad": "Y1·vol@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 13.542,
+            "temiz_fazla_bps": 13.496,
+            "fark_standart_eksi_temiz_bps": 0.046,
+            "ci_fark": {
+              "ort_bps": -0.474,
+              "lo_bps": -3.169,
+              "hi_bps": 2.758,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 23.74,
+              "lo_bps": -19.704,
+              "hi_bps": 85.786,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 24.214,
+              "lo_bps": -18.675,
+              "hi_bps": 84.432,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.0004266984426342102,
+              "kirli": 7.265488371510642e-05,
+              "fark": 0.0003540435589191038,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 100.0,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·vol@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 94.42,
+            "temiz_fazla_bps": 90.77,
+            "fark_standart_eksi_temiz_bps": 3.65,
+            "ci_fark": {
+              "ort_bps": 1.313,
+              "lo_bps": -2.218,
+              "hi_bps": 4.23,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 84.47,
+              "lo_bps": 20.297,
+              "hi_bps": 179.416,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 83.157,
+              "lo_bps": 20.54,
+              "hi_bps": 177.787,
+              "n_gun": 151,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.004504951959521719,
+              "kirli": 0.004574922922557123,
+              "fark": -6.997096303540395e-05,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 100.0,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "prox": {
+          "10": {
+            "ad": "Y1·prox@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": -75.837,
+            "temiz_fazla_bps": -75.287,
+            "fark_standart_eksi_temiz_bps": -0.549,
+            "ci_fark": {
+              "ort_bps": 0.098,
+              "lo_bps": -2.915,
+              "hi_bps": 4.907,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": -19.312,
+              "lo_bps": -73.231,
+              "hi_bps": 124.24,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": -19.41,
+              "lo_bps": -75.766,
+              "hi_bps": 124.869,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.004008283444397076,
+              "kirli": -0.0040554381066428835,
+              "fark": 4.7154662245807444e-05,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 187.316252,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·prox@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": -59.296,
+            "temiz_fazla_bps": -59.728,
+            "fark_standart_eksi_temiz_bps": 0.432,
+            "ci_fark": {
+              "ort_bps": -0.058,
+              "lo_bps": -4.104,
+              "hi_bps": 5.383,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 45.409,
+              "lo_bps": -27.731,
+              "hi_bps": 245.987,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 45.467,
+              "lo_bps": -30.574,
+              "hi_bps": 247.681,
+              "n_gun": 171,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.005114982872755802,
+              "kirli": -0.00458653178297963,
+              "fark": -0.0005284510897761718,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 187.170336,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "rvol20": {
+          "10": {
+            "ad": "Y1·rvol20@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 17.505,
+            "temiz_fazla_bps": 17.388,
+            "fark_standart_eksi_temiz_bps": 0.117,
+            "ci_fark": {
+              "ort_bps": 0.436,
+              "lo_bps": -1.037,
+              "hi_bps": 3.607,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": -1.715,
+              "lo_bps": -31.336,
+              "hi_bps": 73.795,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": -2.151,
+              "lo_bps": -32.603,
+              "hi_bps": 72.883,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.0035189452115388375,
+              "kirli": -0.0006440391966172077,
+              "fark": -0.00287490601492163,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 3.053718,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·rvol20@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 66.025,
+            "temiz_fazla_bps": 63.538,
+            "fark_standart_eksi_temiz_bps": 2.486,
+            "ci_fark": {
+              "ort_bps": 2.194,
+              "lo_bps": -0.722,
+              "hi_bps": 6.172,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 7.294,
+              "lo_bps": -27.656,
+              "hi_bps": 121.354,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 5.1,
+              "lo_bps": -29.543,
+              "hi_bps": 118.92,
+              "n_gun": 163,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.005527959685014849,
+              "kirli": 0.00604497459485942,
+              "fark": -0.0005170149098445709,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 3.053718,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "mom12_1": {
+          "10": {
+            "ad": "Y1·mom12_1@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 109.501,
+            "temiz_fazla_bps": 110.218,
+            "fark_standart_eksi_temiz_bps": -0.717,
+            "ci_fark": {
+              "ort_bps": 0.247,
+              "lo_bps": -1.976,
+              "hi_bps": 2.797,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 151.768,
+              "lo_bps": -2.946,
+              "hi_bps": 464.828,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 151.521,
+              "lo_bps": -5.681,
+              "hi_bps": 465.938,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.006527585406311487,
+              "kirli": 0.0052579706416720495,
+              "fark": 0.0012696147646394373,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 0.740323,
+            "n_uygun_populasyon": 2093
+          },
+          "20": {
+            "ad": "Y1·mom12_1@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 196.768,
+            "temiz_fazla_bps": 194.357,
+            "fark_standart_eksi_temiz_bps": 2.411,
+            "ci_fark": {
+              "ort_bps": 2.744,
+              "lo_bps": 0.318,
+              "hi_bps": 6.616,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 221.739,
+              "lo_bps": 23.244,
+              "hi_bps": 747.573,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 218.995,
+              "lo_bps": 21.822,
+              "hi_bps": 743.425,
+              "n_gun": 146,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.001381815457164648,
+              "kirli": -0.0008042883589218786,
+              "fark": -0.0005775270982427694,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 0.737482,
+            "n_uygun_populasyon": 2087
+          }
+        },
+        "rmom": {
+          "10": {
+            "ad": "Y1·rmom@10",
+            "ufuk": 10,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 81.248,
+            "temiz_fazla_bps": 80.849,
+            "fark_standart_eksi_temiz_bps": 0.399,
+            "ci_fark": {
+              "ort_bps": 0.441,
+              "lo_bps": -1.604,
+              "hi_bps": 3.054,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 94.429,
+              "lo_bps": -8.92,
+              "hi_bps": 288.938,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 93.988,
+              "lo_bps": -8.98,
+              "hi_bps": 288.619,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.0048057264714830294,
+              "kirli": 0.0052579706416720495,
+              "fark": -0.0004522441701890201,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 22.675982,
+            "n_uygun_populasyon": 2092
+          },
+          "20": {
+            "ad": "Y1·rmom@20",
+            "ufuk": 20,
+            "n_hedef": 209,
+            "n_kiyaslanan": 209,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 149.793,
+            "temiz_fazla_bps": 148.915,
+            "fark_standart_eksi_temiz_bps": 0.878,
+            "ci_fark": {
+              "ort_bps": -0.186,
+              "lo_bps": -3.132,
+              "hi_bps": 2.797,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 201.25,
+              "lo_bps": 58.689,
+              "hi_bps": 428.368,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 201.437,
+              "lo_bps": 59.133,
+              "hi_bps": 427.699,
+              "n_gun": 149,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": true,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.009759158277545255,
+              "kirli": 0.00938160724784276,
+              "fark": 0.0003775510297024942,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 22.637069,
+            "n_uygun_populasyon": 2086
+          }
+        },
+        "turnover21": {
+          "10": {
+            "ad": "Y1·turnover21@10",
+            "ufuk": 10,
+            "n_hedef": 198,
+            "n_kiyaslanan": 198,
+            "n_taban_yok": 0,
+            "n_gun": 741,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 151.402,
+            "temiz_fazla_bps": 152.433,
+            "fark_standart_eksi_temiz_bps": -1.031,
+            "ci_fark": {
+              "ort_bps": -1.025,
+              "lo_bps": -2.916,
+              "hi_bps": 1.101,
+              "n_gun": 154,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 192.208,
+              "lo_bps": -68.868,
+              "hi_bps": 554.105,
+              "n_gun": 154,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 193.232,
+              "lo_bps": -69.21,
+              "hi_bps": 556.056,
+              "n_gun": 154,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0741,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": 0.005954769115680714,
+              "kirli": 0.005129786717374352,
+              "fark": 0.000824982398306362,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 0.019777,
+            "n_uygun_populasyon": 1975
+          },
+          "20": {
+            "ad": "Y1·turnover21@20",
+            "ufuk": 20,
+            "n_hedef": 197,
+            "n_kiyaslanan": 197,
+            "n_taban_yok": 0,
+            "n_gun": 737,
+            "n_yetersiz": false,
+            "standart_fazla_bps": 134.636,
+            "temiz_fazla_bps": 136.386,
+            "fark_standart_eksi_temiz_bps": -1.751,
+            "ci_fark": {
+              "ort_bps": -1.07,
+              "lo_bps": -3.047,
+              "hi_bps": 1.551,
+              "n_gun": 153,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_standart": {
+              "ort_bps": 215.918,
+              "lo_bps": -112.172,
+              "hi_bps": 646.498,
+              "n_gun": 153,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "ci_temiz": {
+              "ort_bps": 216.987,
+              "lo_bps": -113.641,
+              "hi_bps": 645.64,
+              "n_gun": 153,
+              "blok": 21,
+              "blok_kaynagi": "verildi",
+              "sifiri_disliyor": false,
+              "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+              "neden": null,
+              "uyari": null
+            },
+            "taban_kirliligi": {
+              "medyan": 0.0282,
+              "ortalama": 0.0743,
+              "maks": 0.3494,
+              "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+            },
+            "arac_sikismasi": {
+              "temiz": -0.012185449684554983,
+              "kirli": -0.01341524843664288,
+              "fark": 0.0012297987520878961,
+              "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+            },
+            "uyari": null,
+            "desil_esigi": 0.019777,
+            "n_uygun_populasyon": 1969
+          }
+        }
+      },
+      "havuzlanmis": {
+        "10": {
+          "ad": "Y1·havuz@10",
+          "ufuk": 10,
+          "n_hedef": 904,
+          "n_kiyaslanan": 904,
+          "n_taban_yok": 0,
+          "n_gun": 741,
+          "n_yetersiz": false,
+          "standart_fazla_bps": 24.316,
+          "temiz_fazla_bps": 24.712,
+          "fark_standart_eksi_temiz_bps": -0.396,
+          "ci_fark": {
+            "ort_bps": -0.288,
+            "lo_bps": -2.466,
+            "hi_bps": 1.726,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_standart": {
+            "ort_bps": 52.571,
+            "lo_bps": -2.931,
+            "hi_bps": 167.312,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_temiz": {
+            "ort_bps": 52.859,
+            "lo_bps": -2.682,
+            "hi_bps": 167.711,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "taban_kirliligi": {
+            "medyan": 0.0282,
+            "ortalama": 0.0741,
+            "maks": 0.3494,
+            "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+          },
+          "arac_sikismasi": {
+            "temiz": -0.0017137474271646247,
+            "kirli": -0.0016466722606819917,
+            "fark": -6.707516648263301e-05,
+            "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+          },
+          "uyari": null,
+          "not": "bileşenlerin üst-desillerinin BİRLEŞİMİ ((ticker,gün) tekilleştirildi)"
+        },
+        "20": {
+          "ad": "Y1·havuz@20",
+          "ufuk": 20,
+          "n_hedef": 904,
+          "n_kiyaslanan": 904,
+          "n_taban_yok": 0,
+          "n_gun": 737,
+          "n_yetersiz": false,
+          "standart_fazla_bps": 74.736,
+          "temiz_fazla_bps": 74.791,
+          "fark_standart_eksi_temiz_bps": -0.056,
+          "ci_fark": {
+            "ort_bps": 0.147,
+            "lo_bps": -2.056,
+            "hi_bps": 2.599,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_standart": {
+            "ort_bps": 110.114,
+            "lo_bps": 17.11,
+            "hi_bps": 288.01,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": true,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_temiz": {
+            "ort_bps": 109.967,
+            "lo_bps": 18.491,
+            "hi_bps": 288.199,
+            "n_gun": 513,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": true,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "taban_kirliligi": {
+            "medyan": 0.0282,
+            "ortalama": 0.0743,
+            "maks": 0.3494,
+            "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+          },
+          "arac_sikismasi": {
+            "temiz": -0.00033389713786613484,
+            "kirli": -0.0006395166341257585,
+            "fark": 0.0003056194962596237,
+            "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+          },
+          "uyari": null,
+          "not": "bileşenlerin üst-desillerinin BİRLEŞİMİ ((ticker,gün) tekilleştirildi)"
+        }
+      },
+      "baslik": {
+        "10": {
+          "bilesen_sayisi": 8,
+          "fark_medyan_bps": -0.27,
+          "fark_min_bps": -1.031,
+          "fark_maks_bps": 0.399
+        },
+        "20": {
+          "bilesen_sayisi": 8,
+          "fark_medyan_bps": 0.878,
+          "fark_min_bps": -6.334,
+          "fark_maks_bps": 3.65
+        }
+      }
+    },
+    "Y2_cf_r_tablosu": {
+      "tanim": "cf defterinin (entered, near-miss hariç) TAMAMI — R tablosunun medyan-kıyas satırının popülasyonu; aynı standart/temiz ikilisi",
+      "ufuklar": {
+        "10": {
+          "ad": "Y2·cf@10",
+          "ufuk": 10,
+          "n_hedef": 2093,
+          "n_kiyaslanan": 2093,
+          "n_taban_yok": 0,
+          "n_gun": 741,
+          "n_yetersiz": false,
+          "standart_fazla_bps": 9.141,
+          "temiz_fazla_bps": 9.537,
+          "fark_standart_eksi_temiz_bps": -0.396,
+          "ci_fark": {
+            "ort_bps": -0.087,
+            "lo_bps": -2.184,
+            "hi_bps": 1.906,
+            "n_gun": 740,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_standart": {
+            "ort_bps": 3.566,
+            "lo_bps": -49.517,
+            "hi_bps": 100.49,
+            "n_gun": 740,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_temiz": {
+            "ort_bps": 3.653,
+            "lo_bps": -49.108,
+            "hi_bps": 100.606,
+            "n_gun": 740,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "taban_kirliligi": {
+            "medyan": 0.0282,
+            "ortalama": 0.0741,
+            "maks": 0.3494,
+            "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+          },
+          "arac_sikismasi": {
+            "temiz": -0.0011033453632346424,
+            "kirli": -0.0014079752118318911,
+            "fark": 0.00030462984859724873,
+            "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+          },
+          "uyari": null,
+          "n_uygun_populasyon": 2093
+        },
+        "20": {
+          "ad": "Y2·cf@20",
+          "ufuk": 20,
+          "n_hedef": 2087,
+          "n_kiyaslanan": 2087,
+          "n_taban_yok": 0,
+          "n_gun": 737,
+          "n_yetersiz": false,
+          "standart_fazla_bps": 50.384,
+          "temiz_fazla_bps": 50.118,
+          "fark_standart_eksi_temiz_bps": 0.265,
+          "ci_fark": {
+            "ort_bps": 0.483,
+            "lo_bps": -1.954,
+            "hi_bps": 2.911,
+            "n_gun": 736,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_standart": {
+            "ort_bps": 40.613,
+            "lo_bps": -50.266,
+            "hi_bps": 192.014,
+            "n_gun": 736,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "ci_temiz": {
+            "ort_bps": 40.13,
+            "lo_bps": -50.963,
+            "hi_bps": 191.057,
+            "n_gun": 736,
+            "blok": 21,
+            "blok_kaynagi": "verildi",
+            "sifiri_disliyor": false,
+            "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+            "neden": null,
+            "uyari": null
+          },
+          "taban_kirliligi": {
+            "medyan": 0.0282,
+            "ortalama": 0.0743,
+            "maks": 0.3494,
+            "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+          },
+          "arac_sikismasi": {
+            "temiz": 0.000859677101979095,
+            "kirli": 0.0009571953724256677,
+            "fark": -9.751827044657269e-05,
+            "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+          },
+          "uyari": null,
+          "n_uygun_populasyon": 2087
+        }
+      }
+    }
+  },
+  "taban_havuzu": {
+    "10": 183711,
+    "20": 182504
+  },
+  "gercek_katman_baglam": {
+    "not": "n=95 popülasyon — desil istatistiği kurulamaz; BAĞLAM, hüküm değil",
+    "ufuklar": {
+      "10": {
+        "ad": "gercek@10",
+        "ufuk": 10,
+        "n_hedef": 94,
+        "n_kiyaslanan": 94,
+        "n_taban_yok": 0,
+        "n_gun": 741,
+        "n_yetersiz": false,
+        "standart_fazla_bps": -37.982,
+        "temiz_fazla_bps": -39.153,
+        "fark_standart_eksi_temiz_bps": 1.17,
+        "ci_fark": {
+          "ort_bps": 1.187,
+          "lo_bps": -1.576,
+          "hi_bps": 4.493,
+          "n_gun": 92,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "ci_standart": {
+          "ort_bps": -41.492,
+          "lo_bps": -159.517,
+          "hi_bps": 111.745,
+          "n_gun": 92,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "ci_temiz": {
+          "ort_bps": -42.679,
+          "lo_bps": -161.962,
+          "hi_bps": 111.68,
+          "n_gun": 92,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "taban_kirliligi": {
+          "medyan": 0.0282,
+          "ortalama": 0.0741,
+          "maks": 0.3494,
+          "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+        },
+        "arac_sikismasi": {
+          "temiz": -0.0069679896480461245,
+          "kirli": -0.007018468580034021,
+          "fark": 5.0478931987896214e-05,
+          "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+        },
+        "uyari": null
+      },
+      "20": {
+        "ad": "gercek@20",
+        "ufuk": 20,
+        "n_hedef": 93,
+        "n_kiyaslanan": 93,
+        "n_taban_yok": 0,
+        "n_gun": 737,
+        "n_yetersiz": false,
+        "standart_fazla_bps": -29.468,
+        "temiz_fazla_bps": -32.673,
+        "fark_standart_eksi_temiz_bps": 3.205,
+        "ci_fark": {
+          "ort_bps": 3.252,
+          "lo_bps": -0.52,
+          "hi_bps": 5.279,
+          "n_gun": 91,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "ci_standart": {
+          "ort_bps": -29.577,
+          "lo_bps": -102.561,
+          "hi_bps": 100.299,
+          "n_gun": 91,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "ci_temiz": {
+          "ort_bps": -32.828,
+          "lo_bps": -104.664,
+          "hi_bps": 99.196,
+          "n_gun": 91,
+          "blok": 21,
+          "blok_kaynagi": "verildi",
+          "sifiri_disliyor": false,
+          "yontem": "moving (örtüşen) blok bootstrap · blok=21 (verildi) · B=2000 · tohum=11 · yüzdelik aralığı",
+          "neden": null,
+          "uyari": null
+        },
+        "taban_kirliligi": {
+          "medyan": 0.0282,
+          "ortalama": 0.0743,
+          "maks": 0.3494,
+          "beyan": "kıyas günlerinde evrenin ne kadarı KENDİ olay penceresindeydi (EAP'nin %64 ort./%74 medyan bulgusunun bu yüzeydeki karşılığı)"
+        },
+        "arac_sikismasi": {
+          "temiz": -0.0008698636704638218,
+          "kirli": 0.0006541920397091783,
+          "fark": -0.0015240557101730001,
+          "aciklama": "kirli taban aynı hedefleri OLAYLA kıyaslar; `fark` temizliğin etkiyi ne kadar açtığını gösterir (pozitif = kirli ölçüm etkiyi SIKIŞTIRIYORDU). YALNIZ BİLGİ — hükme girmez"
+        },
+        "uyari": null
+      }
+    }
+  },
+  "aciklayici_yayginlik_sayimi": {
+    "kart_penceresi_5_0": {
+      "pencere": {
+        "once": 5,
+        "sonra": 0
+      },
+      "taban_kirliligi_medyan": 0.0282,
+      "taban_kirliligi_ortalama": 0.0741,
+      "taban_kirliligi_maks": 0.3494
+    },
+    "eap_benzeri_14_1_yaklasik": {
+      "pencere": {
+        "once": 14,
+        "sonra": 1
+      },
+      "taban_kirliligi_medyan": 0.0968,
+      "taban_kirliligi_ortalama": 0.2098,
+      "taban_kirliligi_maks": 0.7247
+    },
+    "beyan": "YALNIZ SAYIM — hiçbir etki/fazla-getiri bu satırdan okunmaz ve K'ya girmez. EAP penceresi İŞLEM günüdür; (14,1) onun TAKVİM günü yaklaşımıdır (10 iş günü ≈ 14 takvim günü) ve birebir değildir."
+  },
+  "kod_damgasi": {
+    "git_head": "be8296f1683429e5e197bf98fa67c4a49564172a",
+    "git_head_kisa": "be8296f",
+    "kirli_agac": true,
+    "git_neden": null,
+    "olcum_araclari_surum": "2026-08-02",
+    "arac_surumleri": {
+      "temiz_taban": "1.0",
+      "olay_disi_kiyas": "1.0",
+      "blok_bootstrap_ci": "1.0",
+      "eb_kucult": "1.0"
+    },
+    "beyan": "git_head None ise ÖLÇÜLEMEDİ (neden alanında yazar) — boş dizgi ya da tahmin yazılmaz. kirli_agac True ise rapor bu SHA'dan YENİDEN ÜRETİLEMEZ: SHA o anki kodun değil atasının adıdır. arac_surumleri, raporun hangi ölçüm-aracı davranışıyla üretildiğini söyler (araç değişirse sürümü de değişir)."
+  },
+  "muhur": {
+    "config_ROOT": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root",
+    "config_STATE": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/kys_root/state",
+    "canli_state": "/Users/erdemozturk/AI-Trading/state",
+    "muhur": "TUTTU"
+  },
+  "hukum_yok": "sayı üretildi; kart hükmü Rol-1'dedir (bu tur ALTYAPI kartıdır, retro hüküm YOK)"
+}

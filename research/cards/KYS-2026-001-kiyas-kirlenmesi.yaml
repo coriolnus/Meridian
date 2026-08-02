@@ -27,7 +27,18 @@ guards:
   - "PK: sentetik kontrol — yapay olay-penceresi enjeksiyonuyla bilinen-yönlü sıkıştırma aracın ölçtüğü yönde çıkmalı (araç-doğrulama, ölçümden ÖNCE)"
   - "temiz_taban mevcut davranışı KIRILMAZ (WP-M şasi testi çivili); retro hüküm değişikliği YASAK — rapor 'envanter' dilinde"
 k_registry: {registered_at: "2026-08-02T15:20Z", trial_ids: [kys_olcum/component_ic_temiz, kys_olcum/cf_temiz]}
-status: registered
+status: archived   # 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi):
+#   İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps
+#   [−1,95,+2,91] (@10 ikisi de −0,40bps, CI-0-içi). YANLILIK KART-PENCERESİNDE PRATİK-ÖNEMSİZ;
+#   temiz-kıyas aracı OPSİYONEL kalır (zorunlu değil — kill#1'in kendi hükmü); yeniden-okuma
+#   envanteri BOŞ. EAP'nin %64/74 gözlemi ÇELİŞKİ DEĞİL pencere-farkı: in_blackout penceresinde
+#   ((5,0)≈4 iş günü) taban kirliliği medyan %2,8; EAP'nin (14,1)'inde %9,7/%21,0 — ikincisi yalnız
+#   sayım, K'ya girmedi. 16 bileşen-hücresinde 2 tesadüfi-0-dışı (zıt işaretli, ≤6,3bps; beklenen
+#   ≈0,8) — desen yok. PK 5/5 (pencere-birebirlik sembol×gün tam taramayla); PK-tasarım onarımı
+#   dürüstlük-kayıtlı (eşik gevşetilmedi, keyfî şart kapı olmaktan çıkarıldı).
+#   YAN GÖZLEM (veri, hüküm değil): yerel earnings.csv yalnız İLERİ takvim (%1,2 tarihsel tamlık);
+#   Nasdaq-geçmişi 1198/1198 iş günü sıfır-düşüşle çekilebildi — tarihsel takvim dolgusu istenirse
+#   ucuz yol mevcut (kum havuzunda kaldı, depoya girmedi). Kanıt: research/olcumler/kys_olcum/.
 notes: >
   BAĞIMLILIK: WP-M şasi turunun olay-penceresi-dışı kıyas yardımcısı (olcum_araclari) inmeden
   ölçüm BAŞLAMAZ. Ölçüm ajanı karta dokunmaz; hüküm Rol-1'de. Sandbox:
