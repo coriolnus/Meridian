@@ -200,8 +200,16 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   — şasi-birebir sabitler, PIT şerhi kitap içinde, YASA-6 okuyucuları çivili, 645-seans smoke temiz
   (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · **G4 pullback ✅ ARŞİV (2026-08-01, kart EDG-010, K=2): bağımsızlık GERÇEK (Jaccard ~0.02)
   ama kenar YOK — ham pozitiflik evren-tabanında kayboluyor (dip10 trend-evreninde anlamlı negatif);
-  kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 "in-play" önceliklendirme (katalizör+RVOL) ·
-  G6 koşullu kısa (yalnız SPY<200MA, gölge-önce, küçük) · **VCP-DECOMPOSE ✅ ARŞİV (2026-08-01, EDG-015,
+  kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 in-play: EDG-011 ASKI SÜRER (tanım tarafı — 2026-08-02 keşfi: veri İKİ bağımsız eksenle
+  olgunlaştı [Nasdaq-geçmişi %99,7 tamlık + EDGAR 8-K %98,4 çapraz-doğrulama, dakika-damgalı]
+  ama kartın "t'de BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz; PIT defteri 0 satır —
+  A1'de snapshot dosyası hiç doğmamış, AYRICA canlı earnings.csv 2-sütunlu/Jul-31 bayat =
+  tazeleme turu dağıtımdan beri koşmamış, İZLENECEK). Tek-yönlü post-event tez YENİ kartla:
+  EDG-2026-020 · **G6 koşullu-kısa → RAF (2026-08-02 fizibilite keşfi: 5 yüzeyin 4'ü YOK
+  [broker/strategy/gölge/ayna], 12-kalem motor inşası; EDG-005 karşı-gözlemi: SPY<200MA
+  günlerinde long hâlâ pozitif-beklentili görünüyor — kısa tezine doğrudan karşı; 55 OOS
+  bloke-gününde 0 silahlanma. Yeniden açılış: operatör kararı + delist-bar sonrası kısa-tez
+  kanıtı. Kanıt: research/olcumler/kesif_2026-08-02/)** · **VCP-DECOMPOSE ✅ ARŞİV (2026-08-01, EDG-015,
   K=2): çatı da bilgisiz — üst-%20 kompozit @10 aday-havuzunun ANLAMLI ALTINDA; form=bileşen-toplamı
   (ρ=0,95). WP-K'da ölçülmemiş hipotez KALMADI.** ⚠ İZLEME→ÖĞRENME: canlı skorun kesit-içi
   sıralaması kısa ufukta kanıtsız/ters (rs-negatif bulgusuyla tutarlı) — knob kararı öğrenme
