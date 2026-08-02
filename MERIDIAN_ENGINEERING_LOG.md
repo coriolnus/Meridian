@@ -178,6 +178,15 @@ destekleyici koşu + runbook yenilemesi 5aaef3d · ROADMAP dersleri). Ağaç tem
 yok. Bu noktadan sonra yeni KOD commit'i YOK; hüküm/log commit'i serbest — ama t3 kadans dersi
 gereği log-edit + `ops/runbook_uret.py` TEK commit'te. Adım 3 (otoriter suite) bu tepede başlatıldı.
 
+**ADIM 3-4 TAMAM (2026-08-02 ~17:15, Rol-1) — OPERATÖR PENCERESİ BEKLENİYOR:** otoriter suite
+donmuş tepede **3752 passed / 0 kırmızı** (9:26; girişim ailesi ateşlenmedi, ortam artefaktı yok).
+dagit.sh onaysız kısım yeşil: audit ✓ · lint-imports 5/5 KEPT ✓ · dry-run delta YALNIZ 3 doküman
+(log/ROADMAP/RUNBOOK) + 2 lint-cache — kod A1 diskine önceki gece itilmişti (push_code_a1.sh),
+KOŞAN süreç hâlâ eski; restart birikimi tek seferde etkinleştirir ve yeşil suite tam bu ağacı
+kapsıyor (kod tepesi 571a094-özdeş; freeze sonrası tek commit bc08cc8 ROADMAP-yalnız). t3 tepede
+ayrıca teyitli (37/37). KALAN: operatör pencere saati + `./dagit.sh --uygula` + adım 6 birim
+migrasyonu (token-koruma) + adım 7 doğrulama listesi.
+
 **Geri alma:** kod: yerelde önceki tepeye checkout + `./dagit.sh --uygula` (≈5 dk; state'e
 dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
 
