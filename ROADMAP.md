@@ -181,8 +181,11 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   çıkışların **%96,57'si SIFIR bar** (338/350) ve 12 barlının hepsi 2024+ (ikinci-seçilim).
   Survivorship şerhi artık kapsama-yüzünde sayı; iki yaşayan sinyalin büyüklüğü delist-bar
   kaynağı gelmeden ölçülemez — operatör kararının fiyat-etiketi bu. Kanıt:
-  research/olcumler/wp_u_midcap/. EDG-018 askıda:veri-kapısı. Yollar (operatör kararı): QuantConnect ücretsiz araştırma
-  ortamında paralel doğrulama TURU vs Massive plan yükseltme (mimari delisted'ı zaten destekliyor).
+  research/olcumler/wp_u_midcap/. EDG-018 askıda:veri-kapısı. Yollar (2026-08-03 QC-araştırmasıyla YENİDEN ÇERÇEVELENDİ —
+  docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md): iki yol RAKİP DEĞİL TAMAMLAYICI. (a) QC platform-içi
+  ölçüm hattı — BEDAVA, BUGÜN (EDG-021 deseni kalıcılaşır; ToS verinin dışarı çıkışını kilitler,
+  içeride ölçüm serbest); (b) Massive yükseltme — YEREL ARŞİVİN tek meşru yolu (operatör kararı;
+  QC bunu ikame edemez — 'internal LEAN use only').
 - **⚠ OPERASYONEL BULGU (canlı sondaj):** mevcut Massive planı artık yalnız ~SON 2 AYI veriyor —
   2004'e giden yerel bar arşivi yeniden üretilemez KALINTI; arşiv kaybı = kalıcı kayıp → yedek
   zinciri kritikliği ↑ (VM-içi tar + Mac-pull mevcut; üçüncü kopya değerlendirilebilir).
@@ -333,6 +336,27 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   off-box PITR · DuckDB → ölçüm tarafında OPSİYONEL okuma aracı (sıfır-risk ATTACH) ·
   DuckLake → RED-ŞİMDİLİK (251-sembol EOD'de katalog katmanının çözdüğü sorun bizde yok;
   tetik: bar arşivinin Parquet'e taşınması gündeme gelirse).
+
+### WP-QC — QuantConnect Entegrasyonu 🆕 (2026-08-03; docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md)
+- **İlke:** veri platformda serbest/çıkışta kilitli → QC = platform-içi ölçüm + LEAN-yerel motor;
+  asla arşiv-kaynağı değil. Tüm ölçümler kart-disiplinli.
+- **FREE kuyruk (kart-önce, sırayla):** ① delist-kapsam testi (EDG-021 v2 defterinin H2'si zaten
+  ölçüyor) · ② EODHD earnings 1998+ tarihsel-dizi fizibilitesi (7-gün-pencere biçim riski) ·
+  ③ Quiver insider 2014+ derinlik (2021-öncesi legacy-alan ayrımı) · ④ Morningstar PIT-shares
+  (delist isimlerde tarihçe; 45-gün yaklaşıklama şerhi) · ⑤ RETIRED_SYMBOLS çapraz-doğrulama
+  (Security Master delist olayları + SPY constituents 2009+) · ⑥ Tiingo+SEC NLP ön-fizibilite
+  (R1-4 sınırında küçük örneklem) · ⑦ VIX/SPX rejim-bağlamı (Cash Indices 1998+, CBOE VIX 1990+
+  FREE — VIX veri-kilidi kısmen çözülebilir).
+- **İkinci-motor pilotu (WP-H kolu):** LEAN Apache-2.0 YEREL (CLI'sız — dotnet/docker; hesap
+  gerekmez) + KENDİ Massive/Alpaca barlarımız custom-data ile → tek sinyalde emir-düzeyi
+  diferansiyel. + bulut-ikizi FREE B-MICRO (200 bt/gün) elle.
+- **Operatör kararları (§6'ya):** katman yükseltmesi (Researcher Seat $10/ay — API/otomasyon
+  kilidi; koltuk-tek-başına-yeter-mi belirsizliği hesap-içi doğrulanmalı) · ücretli setler
+  (Brain $25 / Estimize $75 / SmartInsider $10 — ancak FREE fizibilite sonrası) · ToS-yorumu:
+  yerel-indirme yolu Rol-1 önerisiyle İZLENMEZ.
+- **RED:** canlı katman (sıfır yeni yetenek) · log/scrape dışa-aktarım (ToS) · K-grid'i QC
+  optimizasyonuna devir (kart disipliniyle uyumsuz) · ML-eğitim taşıma (Train kotası sembolik) ·
+  Benzinga ($120 — Tiingo FREE dururken) · FREE'de lean-cli (sözleşme ihlali).
 
 ### WP-P — Pano/Operatör Arayüzü (2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası
 + finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)
