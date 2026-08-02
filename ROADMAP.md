@@ -236,7 +236,7 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   artefaktların (component_ic/cf/eşik eğrileri) güvensiz-dönem-dışlamalı yeniden üretimi ·
   BMO/AMC alanının ileri-birikimi (data.py `time` alanı — EAP öldü, kalan değer blackout
   hassasiyeti; DÜŞÜK öncelik) · earnings kapsaması 194/251 + fail-open daraltma · 5.3 seans-içi
-  kesinti/boşluk tespiti · earnings 2-gün marj bulgusu (temizlik turu C-avı) kalıcı çözümü.
+  kesinti/boşluk tespiti · ~~earnings 2-gün marj~~ (2026-08-02 KEŞİFLE KAPALI: aaa7a40+653c121 türetimli çözmüş, marj=9g, çivi v147'de).
 
 ### WP-L — Öğrenme/Ölçek Merdiveni 📋 (tetik-şartlı; sırası kendiliğinden gelir)
 - Y5 meta-labeling (tetik: işlem birikimi — WP-R rampayı serbestleştirirse hızlanır) · Y7 ML
