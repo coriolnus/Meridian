@@ -123,6 +123,50 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   Commit 4d695ff; A1'e dağıtım bakım penceresini bekliyor (o güne dek canlıdaki eski satır
   zararsız gürültü üretmeye devam eder).
 
+## DAĞITIM PENCERESİ PLANI (2026-08-02, Rol-1 — İKİ OTURUMUN İŞİ TEK PENCEREDE)
+
+**Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
+(84fcf69..6aba956) + icra-bloğu merge'i (46ce02f: E2 `kapi` kovası, E2/E3/E4 pano okuyucuları) +
+RUNBOOK (892bf75) + birim düzeltmesi (4d695ff — migrasyon adımı aşağıda). Restart yan-etkisi:
+emekli-sembol modülü devreye girer (payda 259→251) — BEKLENEN, doğrulama maddesi var.
+
+**Sıra ve kapılar:**
+1. v76 fikstür onarımı iner (diğer oturum, Opus uçuşta). Kontrol: onarım FİKSTÜRDE — eşik/assert
+   gevşetilmedi.
+2. **FREEZE:** onarım inince main donar — iki oturum da yeni KOD commit'i atmaz (hüküm/log serbest,
+   açık yol listesiyle). Freeze beyanı bu bölüme tek satır işlenir.
+3. Dağıtım-öncesi TAM SUITE (Rol-1, tek-otoriter, ana checkout, arka plan görevi → dosyadan okuma).
+   Hedef 0 kırmızı. YALNIZ girişim-ailesi (izole-yeşil, v72 sınıfı) düşerse: izolasyon kanıtı +
+   karar OPERATÖRE (beyanlı kapı "yeşil suite"; Rol-1 tek başına gevşetmez). Başka kırmızı → dağıtım
+   YOK, tur açılır. Referans: 2026-08-02 akşam koşusu (merge'li main) 7 kırmızıydı = 6×v76 + uiux-t3
+   (t3 892bf75 ile kapandı; girişim ailesi o koşuda hiç ateşlenmedi).
+4. `./dagit.sh` onaysız kısım: temiz-ağaç + uv audit + lint-imports + rsync DRY-RUN. Dry-run GÖZLE
+   okunur: beklenen küme (meridian/ tests/ docs/ deploy/ ops/ + kök belgeler) dışı satır varsa DUR
+   (paralel-oturum yarım-iş dersi).
+5. Bakım penceresi: `./dagit.sh --uygula`. Zamanlama: Pazar akşamı veya Pazartesi seans açılışından
+   (13:30 UTC) ≥3 saat önce; 23:30 UTC yedek zamanlayıcısına bindirme yok (pencere ~5 dk, piyasa
+   kapalı). KOVA-B dağıtım yetkisini operatör açtı; pencere SAATİ yine de operatöre bildirilir
+   (restart istisnası operatör kalemi).
+6. **BİRİM MİGRASYONU (pencere içinde, rsync sonrası, start öncesi — EN RİSKLİ ADIM):**
+   /etc/systemd/system/meridian.service KOPYADIR (deploy/oracle-a1/deploy.sh:89 `sudo cp`) — rsync
+   + daemon-reload 4d695ff'i İNDİRMEZ. TOKEN KORUMA ZORUNLU (sed-placeholder vakası sınıfı: repo
+   şablonunda CHANGEME var, canlı kopyada gerçek DASH_TOKEN): (a) eski birim yedeklenir
+   (`meridian.service.bak-20260802`), (b) canlıdan mevcut token çekilir, (c) repo birimi cp'lenir,
+   (d) CHANGEME → MEVCUT token, (e) İKİ YÖNLÜ desen doğrulama: CHANGEME kalmadı + token bayt-özdeş,
+   (f) daemon-reload. Doğrulama: journal'de "Invalid environment assignment" YOK + tünelden token'lı
+   tek GET çalışıyor (token DEĞİŞMEDİ).
+7. dagit.sh [5] + genişletilmiş doğrulama: healthz 200 · meridian/barsarchive/tick-watchdog aktif ·
+   scheduler_status.updated ilk 30 dk tazeleniyor (asılı-tick sınıfı) · /api/diagnostics'te
+   `icra.slipaj.kapi` alanı VAR · evren paydası 251 · pano mutabakat sayfası dört kartı basıyor
+   (boş-hâl metinleri "ölçüm yok" ≠ 0 doğru) · fail-notify beyanlı NO-OP aynen.
+8. Log kapanışı: DAĞITIM BLOKE kaydı kapatılır; pencere sonucu + doğrulama çıktıları işlenir.
+
+**Geri alma:** kod: yerelde önceki tepeye checkout + `./dagit.sh --uygula` (≈5 dk; state'e
+dokunulmaz). Birim: adım 6(a) yedeği geri kopyalanır + daemon-reload.
+
+**Roller:** v76 onarımı + (gerekirse) girişim avı = diğer oturum · freeze beyanı, otoriter suite,
+dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + --uygula anı = operatör.
+
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
 - **DAĞITIM BLOKE — tam suite birleşik main'de KIRMIZI (2026-08-02, dağıtım kapısında bulundu):**
@@ -138,7 +182,9 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   Üretim değişikliği DOĞRU; onarım fikstürde (tur açık, Opus uçuşta) — eşik/assert GEVŞETİLMEZ.
   (b) 9'u yalnız tam-suite'te kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) —
   AYRI hastalık, ayrı tur. SIRA: v76 fikstür onarımı → girişim avı → yeşil suite → dağıtım.
-  Çıktılar: scratchpad/full_suite_predeploy.txt.
+  Çıktılar: scratchpad/full_suite_predeploy.txt. GÜNCELLEME (2026-08-02 akşam, Rol-1): icra-bloğu
+  merge'i (46ce02f) sonrası otoriter koşu 7 kırmızı = 6×v76 + uiux-t3 (t3 892bf75 ile kapandı);
+  girişim ailesi o koşuda ateşlenmedi. Pencere planı: §DAĞITIM PENCERESİ PLANI.
 - **BT-2 YENİDEN AÇILDI (trend-kolu ölçümünün yan bulguları, 2026-07-31 ~02:30):**
   BULGU-1: karantina hacim-şartı gerçek hayalet sınıfının %29'unu kaçırıyor (10 kaçak ×2-ölçek
   satırı: GILD/CMCSA 2013-12-18, DLTR, UNP). BULGU-2: kapıdan geçen 97 çözülmemiş ölçek/kimlik
