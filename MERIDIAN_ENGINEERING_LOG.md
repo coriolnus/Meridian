@@ -257,6 +257,34 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   journal'da SyntaxError YOK, `.yedek` İLK KEZ birim eliyle tazelendi (1.335.296 bayt), tar'da
   yedek üyesi 1. DERS (aileyi genelleştirir): birim içinde `\"` görülen her ExecStart şüphelidir —
   systemd'nin quoting'i sh değildir; değer taşımak gerekiyorsa argv kullan, kaçış kullanma.
+- **SPRINT n_v1=0 KÖK NEDENİ ÖLÇÜLDÜ + DÜZELTİLDİ (2026-08-02 gece, öğrenme katmanı turu; sınıf:
+  "depolama arka-ucu değişti, yan sözleşmeler sessizce bayatladı" — audit #23'ün [kopyalanan HALT]
+  İKİNCİ kuşağı + SKIP_COPY-denylist-kaçağı [bars_intraday ile aynı tur]):** 154 kadans koşusunun
+  tamamının ~60 sn'de `phase=done, n_v1=0` bitmesi ÖRNEKLEM KURAKLIĞI DEĞİL İZOLASYON DELİĞİYDİ.
+  Zincir: dbmigrate A1'de 07-31 02:01'de uygulandı (WP-H/H9 A3, cb48f93+; `.migrated` damgaları) →
+  altı defter `state/meridian.db` varken SQLite'tan okunur → `sprint.start()` kum havuzuna canlı
+  DB'yi de KOPYALIYORDU (SKIP_COPY migrasyon öncesi yazılmıştı) → `_reset_sandbox_state`in ham
+  dosya sıfırlaması çocuğun store okumalarına GÖRÜNMEZ → çocuk canlının `last_date=2026-07-31`ini
+  DB kopyasından okudu → `loop.daily_cycle` monotonluk bekçisi (2026-07-15 GS dersinin bekçisi —
+  DOĞRU çalıştı) eval penceresindeki HER seansı reddetti. KANIT (A1 salt-okuma): son sandbox'ta
+  522/522 `regressive_session_refused, book_at=2026-07-31`; sandbox DOSYASI `last_date: null` iken
+  sandbox DB'si `"2026-07-31"`; DB'deki 95 işlemin hepsi v4 → `_count(1)=0`; İLK kadans 07-31
+  02:08:10 = migrasyondan 7 dk sonra (tümü DB-sonrası; 07-22'nin dosya-tabanlı sprinti n_v1=100
+  üretmişti); son koşu 05:59:06→06:00:10 = 64 sn. Eval penceresi ve giriş kapıları AKLANDI — yürüyüş
+  taramaya hiç ulaşmadı. ÇÖZÜM (Opus, tek brief): SKIP_COPY += {meridian.db, -wal, -shm} (kum havuzu
+  DB'siz doğar → çocukta `storage.active()` False → ölçülmüş-iyi dosya yolu; sıcak-WAL kopyasının
+  tutarsız-anlık-görüntü riski de kapandı) + `start()`ten saf `_kur_kum_havuzu()` çıkarıldı (test
+  yasanın kendisini çağırır) + İKİ ÇİVİ (test_sr4c ad-çivisi; test_sr1d DAYANIKLI çivi: migre-DB'li
+  sentetik canlıda sıfırlama STORE KATMANINDAN doğrulanır — SR1b'nin körlüğü tam buydu, dosyaya
+  bakıyordu). Kırmızı-önce kanıtlı (sr1d üretim semptomuyla düştü: `'2099-01-01' is None`); kapsam
+  31/31 + storage 15/15 yeşil (Rol-1 bağımsız koşumu). sprint_runs.jsonl'ın hiç doğmaması aynı kökün
+  sonucu (Faz A, B'ye hiç ulaşmadı). YAN NOT: `_damgayi_koru` (C15) canlıda — bu gece 22:00'de TEK
+  60-sn'lik inconclusive sprint beklenir, düzeltme inene dek haftalık taban boşa döner. SINIF AVI:
+  state kopyalayan diğer iki mekanizma (prescreen._sandbox, mutation harness) defterleri
+  SIFIRLAMADIĞI için içerik-tutarlı — kırık değil; ama ikisi de sıcak-WAL kopya riskini taşıyor
+  (küçük, ayrı kalem). DERS: MERIDIAN_ROOT-sandbox izolasyonu dosya kopyası/reset'iyle kuruluysa
+  arka-uç değişimi onu sessizce deler; sandbox kuran her mekanizmada reset STORE katmanından test
+  edilmeli.
 
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
@@ -387,12 +415,20 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   2026-08-02 kopyası (112,5M) bilerek korunuyor; 23:30 timer'ı bu gece dar birimle koşacak.
   (b) `sprint.py` SKIP_COPY değişikliği worker restart'ıyla etkinleşir; ilk yeni sandbox'ta
   `du -sh state/sprint/*` ile ~27M türetimi ölçüme çevrilir. (b) sıradaki pencere kalemi,
-  yeni pencere açtırmaz.
-- **SPRINT DÖNGÜ KAPATAMIYOR — n_v1=0 (yan bulgu, ayrı tur):** 154 kadans koşusunun İLKİ DAHİL
-  hepsi `phase=done, n_v1=0, "v1 ileri baz 0/30 işlem"` ile bitiyor — sprint hiç kalibrasyon
-  noktası üretmiyor ve `sprint_runs.jsonl` hiçbir sandbox'ta doğmuyor (Faz A min_sample).
-  "Örneklem kuraklığı → no_parent_score" ailesinin sprint bacağı; hedef sözleşmesi md.2'nin
-  "sprint noktaları ↑" sayacı bu yüzden akmıyor olabilir. Sahip: öğrenme katmanı turu.
+  yeni pencere açtırmaz; (c) **sprint DB-izolasyon düzeltmesi (SKIP_COPY += meridian.db/-wal/-shm)
+  da worker RESTART'ıYLA etkinleşir** (`sprint.start` worker sürecinde koşar) — (b) ile aynı
+  pencereye biner. KABUL ÖLÇÜTÜ (restart sonrası ilk kadans sprinti, 22:00): yeni sandbox'ta
+  `meridian.db` YOK; `sprint_status` `phase=baseline`de SAATLER mertebesinde ilerliyor (60 sn
+  değil) ve n_v1 tırmanıyor; Faz B'ye geçerse `sprint_runs.jsonl` sandbox'ta doğar. ÇATAL BEYANI:
+  iki-motor giriş yasası (0a4453f) 07-22'den beri dolumları sıkılaştırdı — n_v1 100'ün altında
+  kalabilir; 522 seansta <30 çıkarsa bu YENİ ve DÜRÜST bir bulgudur ("modern yasada eval-penceresi
+  kuraklığı", ayrı tur + gerekirse kart) — min_sample GEVŞETİLEREK "çözülmez".
+- **SPRINT DÖNGÜ KAPATAMIYOR — n_v1=0: KÖK NEDEN ÖLÇÜLDÜ, DÜZELTME HAZIR (2026-08-02 gece;
+  ayrıntı §BU OTURUMDA):** kuraklık değil izolasyon deliği (DB kopyası reset'i görünmez kılıyor,
+  monotonluk bekçisi 522/522 reddediyor). Kod + çiviler bu commit'te; canlıya İNİŞ yukarıdaki
+  dağıtım kuyruğu kalemi (c). md.2 "sprint noktaları ↑" sayacı restart + ilk başarılı sprint'e
+  kadar akmaz. Kalan küçük kalem (sahipsiz bırakılmadı, düşük öncelik): prescreen/mutation'ın
+  sıcak-WAL kopya riski — temizlik turuna not.
 
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
