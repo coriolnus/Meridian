@@ -354,6 +354,20 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   kilidi; koltuk-tek-başına-yeter-mi belirsizliği hesap-içi doğrulanmalı) · ücretli setler
   (Brain $25 / Estimize $75 / SmartInsider $10 — ancak FREE fizibilite sonrası) · ToS-yorumu:
   yerel-indirme yolu Rol-1 önerisiyle İZLENMEZ.
+- **BİLEŞEN-DERS KARTLARI (2026-08-03 /strategies taraması — docs/QC-STRATEJI-DERSLERI-EK-B.md;
+  Rol-1 öncelik sırası, YAŞAYAN kolun üstünde çalıştıkları için (b)-adaylarından ÖNCE):**
+  ① REJİM-KADRANI: SPY 12-ay t-stat [−1,+1] SÜREKLİ maruziyet çarpanı (kapı değil) — EDG-005
+  hükmünü "kapı yanlış, modülasyon doğru" diye daraltır ya da rejim ailesini kapatır ·
+  ② KORELASYON-ÇARPANI: CF(ρ̄)=√(N/(1+(N−1)ρ̄)) brüt-kısıntı — işlem sayısı korunup maxDD
+  düşerse %92-aktif de-risk RAMPASI EMEKLİ EDİLİR (tabu-yok mandası kapsamında) · ③ ÇIKIŞ-
+  MİMARİSİ: ratchet-olmayan vol-GENİŞLEYEN eşik (DBII) — chandelier "durak maliyeti"
+  bulgusunun mekanizma-açıklaması; gölge-v2 varyant kolu olarak · ④ DİNAMİK-EVREN vs statik-251
+  (EDG-016 seçici-mi-sıralayıcı-mı — EDG-021 QC motoruyla AYNI turda koşabilir) · ⑤ ikili-bayrak
+  skoru + vol-önce koşullu sıralama (tutarlılık sınavları). (b)-KOVASI (8 aday, tam liste Ek-B):
+  ilk-3 = 354 idio-skew (EDG-004'ü AÇIKLAMA potansiyeli) · 16 overnight-ayrışımı (sıfır ek veri,
+  ÖZELLİK olarak yaşayan kola) · 269+125 kesitsel-mevsimsellik (tek kart, 125 grid-hücresi).
+  AYRI TUR: Strategy Explorer taraması (hesap-kapılı — Rol-1 tarayıcı oturumuyla; OOS-cezalı
+  skorla filtrelenmiş GERÇEK kazanan kümesi).
 - **RED:** canlı katman (sıfır yeni yetenek) · log/scrape dışa-aktarım (ToS) · K-grid'i QC
   optimizasyonuna devir (kart disipliniyle uyumsuz) · ML-eğitim taşıma (Train kotası sembolik) ·
   Benzinga ($120 — Tiingo FREE dururken) · FREE'de lean-cli (sözleşme ihlali).

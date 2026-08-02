@@ -32,3 +32,6 @@ registered → measuring → promoted | archived.
   getiri" kullanan TÜM ölçümler (component_ic, cf R-tabloları) sistematik sıkıştırılmış. Doğru
   kıyas tasarımı (olay-penceresi-dışı alt-küme) kendi ön-kaydını hak ediyor; düzeltilmiş EAP
   okuması bile (+21,1bps) eşiğin altında — EAP hükmünü değiştirmez, ölçüm-altyapısını iyileştirir.
+
+## Numara notu
+- EDG-2026-019 KULLANILMADI (2026-08-03 tespiti: 018→020 atlandı, kasıtsız boşluk; retro doldurma YAPILMAZ — numara emekli).
