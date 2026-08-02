@@ -6,6 +6,47 @@ import pytest
 
 from meridian import config
 
+# ---- MODÜL-DURUMU TABANI: BAŞLANGIÇ DEĞERİ İTHALDE FOTOĞRAFLANIR (2026-08-02) -------------------
+# `_clear_module_caches` bugüne dek her sızıntıyı TEK TEK, elle yazılmış bir literalle sıfırlıyordu
+# (`_fmp._HEALTH`). O desenin iki kusuru var ve ikisi de ölçüldü:
+#   (a) LİTERAL SÜRÜKLENMESİ — sıfırlama değeri üretim modülünden KOPYALANMIŞ bir sözlüktür; üretim
+#       tarafına bir alan eklenince kopya sessizce eksik kalır ve "sıfırlandı" sanılan durum aslında
+#       yarım sıfırlanır. Taban artık modülün KENDİ literalinden okunur, kopyalanmaz.
+#   (b) TEMBEL FOTOĞRAF TUZAĞI — fotoğrafı ilk `_clear_module_caches` çağrısında almak, o ana kadar
+#       koşmuş sandbox'sız bir testin KİRLETTİĞİ durumu "başlangıç değeri" diye dondurabilirdi.
+#       İthal anı tek güvenli an: conftest test modüllerinden ÖNCE yüklenir, hiçbir test koşmamıştır.
+# İthal maliyeti ölçüldü: dört modül 0,14 sn ve hiçbirinin modül düzeyinde G/Ç yan etkisi yok.
+import meridian.scheduler as _sch_mod
+import meridian.adapters.constituents as _con_mod
+import meridian.adapters.shortinterest as _si_mod
+import meridian.adapters.fmp as _fmp_mod
+
+# (modül, öznitelik) — hepsi SÖZLÜK ve hepsi YERİNDE sıfırlanır (clear+update): yeni bir dict
+# atamak, o sözlüğe başka modüllerden tutulan referansları koparır ve sıfırlama hiçbir şeye
+# dokunmamış olurdu (`_fmp._HEALTH` dersi, 2026-07-26).
+_MODUL_DURUMLARI = (
+    # scheduler._state — KANITLI VAKA (2026-08-02): `test_regime_patch::test_scheduler_flag_
+    # survives_publish_lag` kısmi seçimlerde (`-k "scheduler or regime or bottleneck"`) DÜŞÜYORDU.
+    # Test yalnız `last_refetch_session`/`refetch_attempts` alanlarını kuruyor; komşu bir testten
+    # devralınan `refetch_chase="2026-07-17"` merdiveni "son tarih doldu" dalına sokup bayrağı
+    # yakıyordu. Tek başına yeşil, paket içinde kırmızı — yani ölçülen şey dedektör değil SIRA.
+    # (Aynı ders `tests/test_ogrenme_otomasyonu_v136.py`de dosya-yerel bir fikstürle zaten yazılıydı;
+    #  burada kaynağa taşındı, çünkü sonraki her dosya aynı fikstürü yeniden yazmak zorunda kalırdı.)
+    (_sch_mod, "_state"),
+    # fmp._HEALTH — 2026-07-26'da bulunmuş vaka; gerekçesi `_clear_module_caches` içinde yazılı.
+    (_fmp_mod, "_HEALTH"),
+    # constituents/_HEALTH ve shortinterest/_HEALTH — AYNI SINIF, KANIT DÜZEYİ FARKLI ve bu beyan
+    # edilir: bir kırmızı test GÖZLENMEDİ. Ölçülen şey şu (geçici pytest eklentisiyle, 121 testlik
+    # `-k "scheduler or regime or bottleneck"` seçiminde): ikisi de testler arası TAŞINIYOR
+    # (constituents 68, shortinterest 119 testin başında tabandan farklıydı) ve okuyucuları
+    # `fmp._HEALTH`inkiyle aynı sınıftan — `watchdog.production_report` (watchdog.py:195) ve
+    # `/api/diagnostics` sağlayıcı satırları (api.py:1553). Yani mekanizma birebir aynı; eksik olan
+    # yalnız o mekanizmanın bugün ateşlediği bir testin bulunmuş olması.
+    (_con_mod, "_HEALTH"),
+    (_si_mod, "_HEALTH"),
+)
+_MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DURUMLARI}
+
 # ---- CANLI STATE SIZINTI BEKÇİSİ (2026-07-22) ---------------------------------------------------
 # Bulgu: tekil test dosyaları canlı `state/`e dokunmuyordu ama TAM SUITE dokunuyordu — canlı nabzı
 # (regime/equity/last_bar) siliyor, pano "rejim yok" gösteriyordu. Sebep sınıfı: bir test arka plan
@@ -352,12 +393,19 @@ def _clear_module_caches():
     # SAĞLIK KAYDI DA SIZIYORDU (2026-07-26): `_HEALTH` modül-global ve her çağrı onu günceller.
     # Sandbox'sız bir test mock 429 ile ok=False & calls>0 bırakınca SONRAKİ watchdog testi kendi
     # kurmadığı bir 'fmp_source starved' bulgusunu görüyordu — testin geçmesi ya da düşmesi
-    # sırasına bağlı hâle gelir ve o an dedektör değil, sızıntı ölçülüyor demektir. Sözlük YERİNDE
-    # sıfırlanır (clear+update): yeni bir dict atamak `fmp.health()` dışındaki modül referanslarını
-    # koparır ve reset hiçbir şeye dokunmamış olurdu. Literal fmp.py'deki başlangıç değeridir.
-    _fmp._HEALTH.clear()
-    _fmp._HEALTH.update({"ok": None, "calls": 0, "fails": 0, "last_status": None,
-                         "last_error": "", "at": None, "last_key": None, "last_body": ""})
+    # sırasına bağlı hâle gelir ve o an dedektör değil, sızıntı ölçülüyor demektir.
+    #
+    # ZAMANLAYICI DURUMU DA SIZIYORDU (2026-08-02): `scheduler._state` aynı sınıf, daha keskin —
+    # merdiven alanları (`refetch_chase`, `refetch_sparse_attempts`, `refetch_next_at`) bir sonraki
+    # teste taşınıyor ve o test yalnız kendi bildiği iki alanı kurduğu için ARTIĞIN üstüne yazamıyor.
+    #
+    # ÜÇÜ DE (+ iki kardeş `_HEALTH`) TEK YERDEN, MODÜLÜN KENDİ BAŞLANGIÇ DEĞERİYLE sıfırlanır;
+    # gerekçe ve kanıt düzeyleri `_MODUL_DURUMLARI` tanımında satır satır yazılı. Elle yazılmış
+    # literal ARTIK YOK: üretim tarafına eklenen bir alan, buradaki kopyayı sessizce eskitiyordu.
+    for _mod, _attr in _MODUL_DURUMLARI:
+        _d = getattr(_mod, _attr)
+        _d.clear()                                   # YERİNDE: dış referanslar kopmasın
+        _d.update(_MODUL_DURUMU0[f"{_mod.__name__}.{_attr}"])
     # KABA-KUVVET SAYACI DA SIZIYORDU (2026-07-29): `auth._FAILS` modül-global ve IP başına
     # başarısız giriş zaman damgası tutar. TestClient'ın istemci IP'si HER testte aynıdır
     # ("testclient"), yani başarısız girişi ölçen bir test 8 deneme biriktirince SONRAKİ testin

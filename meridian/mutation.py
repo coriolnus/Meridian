@@ -329,9 +329,12 @@ def _build_artifacts(state: Path) -> None:
 # =============================================================================================
 # DEDEKTÖR BATARYASI — "kırmızı" jetonların kümesi
 # =============================================================================================
-def detector_red(log: list | None = None) -> set[str]:
+def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]:
     """Bataryayı koştur ve KIRMIZI olan her şeyi tek bir jeton kümesine indir. Karşılaştırma
-    küme farkıyla yapılır: mutasyondan SONRA beliren jeton = o mutasyonun yakalandığı yer."""
+    küme farkıyla yapılır: mutasyondan SONRA beliren jeton = o mutasyonun yakalandığı yer.
+
+    `dusen` verilirse, BU KOŞUMDA DÜŞEN dedektörler adıyla oraya yazılır (jeton kümesine DEĞİL —
+    gerekçe aşağıda). Verilmezse hüküm yine `log`a düşer; hiçbir hâlde sessiz kalmaz."""
     from . import ledgers as lg
     from . import watchdog as wd
 
@@ -340,21 +343,59 @@ def detector_red(log: list | None = None) -> set[str]:
     # kıyaslar ve taban yazılmazsa mutasyondan önce/sonra aynı boş tabanla karşılaştırılır.
     # Canlıda bu yolun sahibi günlük döngüdür; burada geçici kopya üzerinde çalışılıyor.
     rep = wd.integrity_report(persist=True)
-    for s in rep["production"]["starved"]:
-        red.add(f"production:{s['name']}")
-    if rep["conservation"].get("unexplained"):
+
+    # ---- DÜŞEN DEDEKTÖR "BULGU YOK" DEĞİLDİR (2026-08-02; sınıf: SAHTE YEŞİL) ------------------
+    # C21'den beri `integrity_report` dedektör-başına yalıtımlıdır: düşen bir dedektör diğerlerini
+    # götürmez, `{**iskelet, "ok": False, "dedektor_dustu": True, ...}` döner. İSKELET bu modül İÇİN
+    # kondu (watchdog docstring'i çağıran olarak buranın adını veriyor) — ama aşağıdaki okuma
+    # iskeletin BOŞ listelerini "bu dedektör bir şey bulmadı" diye okuyordu. Sonuç iki yönlü yalan:
+    #   * TEMEL DURUMDA: batarya yarım koşmuşken `baseline_clean=True` — ölçüm zemininin temiz
+    #     olduğu iddiası, aslında ölçülemediği hâlde.
+    #   * MUTASYONDA: mutasyon MISSED sayılır ve "bugün göremediğimiz hata sınıfı" listesine girer.
+    #     Oysa görüp göremediği ÖLÇÜLMEDİ. Körlük haritasının değeri tam olarak bu ayrımdır.
+    # NEDEN JETON KÜMESİNE (`red`) EKLENMİYOR: küme farkı "mutasyondan sonra beliren jeton =
+    # yakalandı" diye okunur. Düşen bir dedektör jetonu, çöken bir dedektörü YAKALAMA sayardı ve
+    # kapsama sayısını yukarı çekerdi — bu modülün ilk tasarım kararının (sayıyı şişirmek ölçümü
+    # yalana çevirir) tam tersi. Ölçülemeyen ölçülemedi kalır, AYRI raporlanır.
+    _DEDEKTORLER = ("production", "conservation", "determinism", "coherence",
+                    "monotonicity", "ownership", "parity")
+    dustu: set[str] = set()
+    for _ad in _DEDEKTORLER:
+        _d = rep.get(_ad)
+        if not isinstance(_d, dict) or not _d.get("dedektor_dustu"):
+            continue
+        dustu.add(_ad)
+        _hata = str(_d.get("error") or "hata metni yok")
+        if dusen is not None:
+            dusen[_ad] = _hata
+        msg = f"{_ad} dedektörü DÜŞTÜ — bu koşumda ölçülmedi ({_hata})"
+        LOG.warning(msg)
+        if log is not None and msg not in log:
+            log.append(msg)
+
+    if "production" not in dustu:
+        for s in rep["production"]["starved"]:
+            red.add(f"production:{s['name']}")
+    if "conservation" not in dustu and rep["conservation"].get("unexplained"):
         red.add("conservation:unexplained")
-    if not rep["determinism"].get("ok"):
+    # DETERMİNİZM ÖZEL: iskeleti `{}` ve düşen dal `ok: False` taşır — koşulsuz okunsaydı çöken bir
+    # dedektör "sessiz bar mutasyonu YAKALANDI" diye raporlanırdı. Yanlış-yeşilden beter: yanlış
+    # KIRMIZI, üstelik başka bir bulgunun adıyla.
+    if "determinism" not in dustu and not rep["determinism"].get("ok"):
         red.add("determinism:silent_bar_mutation")
-    for st in rep["coherence"].get("stale", []):
-        red.add(f"coherence:{st['artifact']}")
-    for rg in rep["monotonicity"].get("regressions", []):
-        red.add(f"monotonicity:{rg['field']}")
-    for lo in rep["ownership"].get("lost", []):
-        red.add(f"ownership:{lo['file']}.{lo['field']}")
-    for pr in rep["parity"].get("rows", []):
-        if not pr.get("ok"):
-            red.add(f"parity:{pr['check']}")
+    if "coherence" not in dustu:
+        for st in rep["coherence"].get("stale", []):
+            red.add(f"coherence:{st['artifact']}")
+    if "monotonicity" not in dustu:
+        for rg in rep["monotonicity"].get("regressions", []):
+            red.add(f"monotonicity:{rg['field']}")
+    if "ownership" not in dustu:
+        for lo in rep["ownership"].get("lost", []):
+            red.add(f"ownership:{lo['file']}.{lo['field']}")
+    if "parity" not in dustu:
+        for pr in rep["parity"].get("rows", []):
+            if not pr.get("ok"):
+                red.add(f"parity:{pr['check']}")
 
     lrep = lg.report()
     for name in lrep.get("violating", []):
@@ -646,13 +687,21 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
     base_dir = tmp_root / "baseline"
     result: dict = {"workdir": str(tmp_root), "log": log}
     try:
+        dusen_baz: dict = {}
         with quiet_externals():
             build_state(base_dir)
             with using_state(base_dir):
                 detector_red(log)                    # 1. geçiş: durumlu dedektörler görüntü yazar
-                baseline = detector_red(log)         # 2. geçiş: GERÇEK temel durum
+                baseline = detector_red(log, dusen_baz)   # 2. geçiş: GERÇEK temel durum
             result["baseline_red"] = sorted(baseline)
             result["baseline_clean"] = not baseline
+            # TEMEL DURUM "TEMİZ" İLE "ÖLÇÜLDÜ" AYRI İKİ İDDİADIR (2026-08-02): `baseline_clean`
+            # yalnız "kırmızı jeton yok" der. Batarya yarım koştuysa bu cümle doğrudur ve
+            # YANILTICIDIR — bu yüzden düşen dedektörler AYRI bir alanda taşınır ve rapor onları
+            # kapsama satırının hemen altında basar. KOŞUM DURDURULMAZ (C21 yalıtımının gerekçesi:
+            # bir dedektörün çöküşü diğer altısının hükmünü götürmemeli); durduran şey yalnız
+            # KİRLİ temel durumdur, çünkü orada ölçülen sayı yalan söyler, eksik değil.
+            result["baseline_olculemedi"] = dict(dusen_baz)
             if baseline and strict:
                 raise RuntimeError(
                     "TEMEL DURUM KİRLİ — ölçüm yapılamaz: kirli bir temelde her mutasyon "
@@ -660,6 +709,7 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
             base_digest = dir_digest(base_dir)
 
             caught, missed, rows = {}, [], []
+            olculemedi: dict = {}                    # mutasyon adı → düşen dedektörler
             for mut in MUTATIONS:
                 work = tmp_root / f"mut_{mut.name}"
                 if work.exists():
@@ -667,12 +717,18 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 shutil.copytree(base_dir, work)
                 mut.apply(work)
                 changed = dir_digest(work) != base_digest
+                dusen_mut: dict = {}
                 with using_state(work):
-                    after = detector_red(log)
+                    after = detector_red(log, dusen_mut)
                 new = sorted(after - baseline)
                 row = {"mutation": mut.name, "note": mut.note, "changed_state": changed,
-                       "caught": bool(new), "detectors": new}
+                       "caught": bool(new), "detectors": new,
+                       # DÜŞEN DEDEKTÖR SATIRDA DURUR: bu mutasyon "kaçtı" görünse bile, kaçıp
+                       # kaçmadığı o dedektörler için ÖLÇÜLMEMİŞTİR.
+                       "olculemedi": sorted(dusen_mut)}
                 rows.append(row)
+                if dusen_mut:
+                    olculemedi[mut.name] = dict(dusen_mut)
                 if new:
                     caught[mut.name] = new
                 else:
@@ -684,7 +740,12 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 "n_mutations": n, "n_caught": len(caught), "n_missed": len(missed),
                 "coverage_pct": round(100.0 * len(caught) / n, 1) if n else 0.0,
                 "caught": caught, "missed": missed, "rows": rows,
-                "blind_spots": [{"mutation": m, "note": next(x.note for x in MUTATIONS if x.name == m)}
+                # KAPSAMA SAYISININ ÇEKİNCESİ, SAYININ YANINDA (2026-08-02): `n_olculemedi`>0 ise
+                # `coverage_pct` payı EKSİK ölçülmüş bir bataryadan gelir. Sayı düzeltilmez
+                # (düzeltmek, düşen dedektörün ne bulacağını UYDURMAK olurdu) — çekince beyan edilir.
+                "olculemedi": olculemedi, "n_olculemedi": len(olculemedi),
+                "blind_spots": [{"mutation": m, "note": next(x.note for x in MUTATIONS if x.name == m),
+                                 "olculemedi": sorted(olculemedi.get(m, {}))}
                                 for m in missed],
                 "sieve_present": not any("sieve dedektörü YOK" in m for m in log),
                 "out_of_scope": ["sp500_membership (ağ)", "fmp_source (ağ)"],
@@ -698,9 +759,23 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
 def format_report(res: dict) -> str:
     """İnsan okuyacak: sayı değil, KÖRLÜK LİSTESİ önemli."""
     L = ["MUTASYON KOŞUMU — dedektör körlük haritası", "=" * 62]
-    L.append(f"temel durum: {'TEMİZ' if res.get('baseline_clean') else 'KİRLİ ' + str(res.get('baseline_red'))}")
+    _bd = res.get("baseline_olculemedi") or {}
+    L.append(f"temel durum: {'TEMİZ' if res.get('baseline_clean') else 'KİRLİ ' + str(res.get('baseline_red'))}"
+             + (f"  ·  AMA {len(_bd)} DEDEKTÖR DÜŞTÜ ({', '.join(sorted(_bd))}) — 'temiz' ile "
+                f"'ölçüldü' aynı şey değil" if _bd else ""))
     L.append(f"mutasyon: {res['n_mutations']}  ·  yakalanan: {res['n_caught']}  ·  "
              f"KAÇAN: {res['n_missed']}  ·  kapsama: %{res['coverage_pct']}")
+    # ÖLÇÜLEMEDİ SATIRI — kapsama sayısının HEMEN ALTINDA (2026-08-02, sahte-yeşil sınıfı): düşen
+    # bir dedektörün boş listesi eskiden "bulgu yok" diye okunuyordu ve mutasyon MISSED sayılıyordu.
+    # "Göremedi" ile "ölçülemedi" aynı kutuya girerse körlük haritası kendi körlüğünü gizler.
+    _ol = res.get("olculemedi") or {}
+    if _ol:
+        L.append(f"ÖLÇÜLEMEDİ: {len(_ol)}/{res['n_mutations']} mutasyonda en az bir dedektör DÜŞTÜ "
+                 f"— kapsama sayısı EKSİK bataryadan geliyor (aşağıda mutasyon başına listeli)")
+        for m, d in sorted(_ol.items()):
+            L.append(f"  ! {m:38s} → {', '.join(f'{k} ({v})' for k, v in sorted(d.items()))}")
+    else:
+        L.append("ÖLÇÜLEMEDİ: yok — yedi dedektörün hepsi her koşumda hüküm verdi")
     L.append(f"sieve dedektörü: {'var' if res.get('sieve_present') else 'YOK (ölçülmedi)'}")
     L.append(f"kapsam dışı (ağ): {', '.join(res.get('out_of_scope', []))}")
     L.append("")
@@ -711,7 +786,10 @@ def format_report(res: dict) -> str:
     L.append("")
     L.append("KAÇANLAR — bugün GÖREMEDİĞİMİZ hata sınıfları (asıl çıktı budur)")
     for b in res["blind_spots"]:
-        L.append(f"  ✗ {b['mutation']}")
+        # "kaçtı" hükmü yalnız KOŞAN dedektörler için verilir; düşen varsa satır bunu söyler,
+        # yoksa okuyucu ölçülmemiş bir körlüğü ölçülmüş sanardı.
+        _bo = b.get("olculemedi") or []
+        L.append(f"  ✗ {b['mutation']}" + (f"   [ÖLÇÜLEMEDİ: {', '.join(_bo)}]" if _bo else ""))
         L.append(f"      {b['note']}")
     if not res["blind_spots"]:
         L.append("  (yok — bu SÜPHELİ bir sonuçtur: mutasyonlar yeterince keskin mi?)")

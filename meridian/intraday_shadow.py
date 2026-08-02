@@ -179,6 +179,26 @@ def _blocking(gates: dict) -> str | None:
     return None
 
 
+def _yan_tablo_kaynagi(plan_id, lw: dict, alan: str, none_ek: str) -> str:
+    """`entry_law` yan tablosundan gelen BİR icra girdisinin ÜÇ HÂLİ, ÜÇ AYRI CÜMLE.
+
+    Üçlü-ayrım C18'de ATR için yazıldı ve gerekçesi bacağa özel değildir: bir KOPUKLUK (plan yan
+    tabloda hiç yok — kablo kopmuş) ile MEŞRU bir ölçümsüzlük (girdi o gün hesaplanamadı) tek
+    cümleye katlanırsa, operatör gölge defterinde kopmuş bir kabloyu göremez. Aynı yasa artık
+    `pivot` ve `gap_at_submit` bacaklarında da geçerli — üç bacak için üç kopya cümle yazmak,
+    yarın birinin diğerlerinden sessizce ayrışması demekti.
+
+    `none_ek`: o bacağa ÖZGÜ sonuç cümlesi — "ölçülemedi" hepsinde aynı şey İFADE ETMEZ (ATR'de
+    limit gevşer, pivotta erken itlaf ateşlemez, gap'te veto ateşlemez) ve satırı okuyanın bilmesi
+    gereken şey tam olarak bu farktır."""
+    if not lw:
+        return (f"{PORTFOLIO}.entry_law'da bu plan için satır YOK — {alan.upper()} ÖLÇÜLEMEDİ "
+                f"(tohumlanmış defter ya da yasa öncesi silahlanmış plan)")
+    if lw.get(alan) is None:
+        return f"{PORTFOLIO}.entry_law[{plan_id}] var ama `{alan}` None — {none_ek}"
+    return f"{PORTFOLIO}.entry_law[{plan_id}] — silahlanma anında sabitlendi"
+
+
 def record(plan: dict, bar: dict, as_of) -> dict | None:
     """Tetik kesildiği ANDA tam icra kararını hesapla ve deftere yaz. HİÇBİR ŞEY GÖNDERMEZ.
 
@@ -229,14 +249,41 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
     # ÜÇ HÂL, ÜÇ CÜMLE — ikisini birleştirmek "ölçülemedi"yi "tablo yok" ile karıştırırdı ve bir
     # KOPUKLUK (plan yan tabloda hiç yok) ile MEŞRU bir ölçümsüzlük (ATR o gün hesaplanamadı)
     # okuyucuya aynı görünürdü.
-    if not _lw:
-        atr_kaynak = (f"{PORTFOLIO}.entry_law'da bu plan için satır YOK — ATR ÖLÇÜLEMEDİ "
-                      f"(tohumlanmış defter ya da yasa öncesi silahlanmış plan)")
-    elif atr_icra is None:
-        atr_kaynak = (f"{PORTFOLIO}.entry_law[{plan_id}] var ama `atr` None — silahlanma anında "
-                      f"ÖLÇÜLEMEDİ; limit yalnız yüzde tavanıyla kuruldu")
-    else:
-        atr_kaynak = f"{PORTFOLIO}.entry_law[{plan_id}] — silahlanma anında sabitlendi"
+    atr_kaynak = _yan_tablo_kaynagi(
+        plan_id, _lw, "atr",
+        "silahlanma anında ÖLÇÜLEMEDİ; limit yalnız yüzde tavanıyla kuruldu")
+
+    # ---- AYNI YAN TABLONUN OKUNMAYAN İKİ BACAĞI (borçlar turu, 2026-08-02) --------------------
+    # C18 ATR'yi bağladı; `entry_law` satırı ise ÜÇ icra girdisi taşıyor. Kalan ikisi burada
+    # okunmuyordu ve ikisinin kırılma sınıfı AYRI:
+    #
+    #   * `gap_at_submit` — ÖLÇÜM DEĞİŞTİRİR, C18'in ATR bacağıyla BİREBİR aynı yönde. `cancel`
+    #     grid noktasında canlı iki motor da girmez (`fill_entry` EV_GAP_VETO ile reddeder);
+    #     gölge, argümanı hiç geçirmediği için None ile koşuyordu, yani veto ateşlemiyordu ve
+    #     canlının REDDEDECEĞİ dolumları `would_submit` diye yazıyordu. Faz 4b'nin kanıt tabanı
+    #     yine iyimser bir icra modeli üzerine kurulurdu — bu defterin varlık sebebine aykırı.
+    #     BUGÜNKÜ YÜRÜRLÜKTEKİ NOKTA `marketable_limit` (goal.yaml execution_v2), yani bugün
+    #     davranış farkı SIFIR; kırılma grid `cancel`a çevrildiği gün SESSİZCE açılırdı — düzeltme
+    #     o güne ertelenirse ölçüm bozulduğu gün fark edilmez.
+    #
+    #   * `pivot` — bugün `fill_entry`in HÜKMÜNÜ DEĞİŞTİRMEZ ve bu böyle YAZILIYOR (uydurma yasağı:
+    #     bağlanan her bacak "kaçan dolum" bulur diye sunulamaz). Yalnız `Position.pivot` alanına
+    #     düşer, gölge de kopya broker'ı atar. Yine de geçirilir, İKİ SEBEPLE: (1) çağrı canlı
+    #     `loop.py:820` ile ARGÜMAN ARGÜMAN aynı olur — C13'ün kapattığı kopukluk ("replay taşıyor,
+    #     canlı taşımıyor → knob terfi edince bir motorda SESSİZ NO-OP") tam olarak bir motorun
+    #     eksik argümanla çağrılmasından doğmuştu ve gölge o listede kalan son motordu;
+    #     (2) yapı çizgisi satıra yazılır — hangi girdiyle karar verildiği, kararın kendisi kadar
+    #     önemlidir (bkz. `_gates`).
+    pivot_icra = _lw.get("pivot")
+    gap_icra = _lw.get("gap_at_submit")
+    pivot_kaynak = _yan_tablo_kaynagi(
+        plan_id, _lw, "pivot",
+        "silahlanma anında pivot ÖLÇÜLEMEDİ (0'dan büyük değildi); `fill_entry`e 0.0 gider = "
+        "'bilinmiyor' → `early_kill_pivot` ateşlemez")
+    gap_kaynak = _yan_tablo_kaynagi(
+        plan_id, _lw, "gap_at_submit",
+        "GÖNDERİM ANI kaydı yok; gap-risk vetosu ateşlemez — beyan edilmiş kapsam farkı "
+        "(broker.fill_entry: None = 'bu motorda gönderim anı YOK'), sessiz bir 'gap yoktu' değil")
 
     qty = risk_dollars = sim_fill = None
     red_nedeni = None
@@ -245,7 +292,13 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
         _rej: dict = {}
         pos = b.fill_entry(plan, sim_price, as_of.isoformat(), b.equity(),
                            size_mult=gates["size_mult"], adv=_daily_adv(ticker, session),
-                           atr=atr_icra, reject_out=_rej)
+                           atr=atr_icra,
+                           # `pivot or 0.0` = canlı loop.py:823 ile BİREBİR aynı ifade; 0.0 orada da
+                           # "bilinmiyor" demektir (broker.fill_entry docstring'i).
+                           pivot=float(pivot_icra or 0.0),
+                           # None BİLEREK None kalır: `False`a çevirmek "gap YOKTU" iddiasını
+                           # uydurmak olurdu, oysa hâl "gönderim anı ölçülmedi"dir.
+                           gap_at_submit=gap_icra, reject_out=_rej)
         if pos is None:
             # fill_entry'nin ret sebebini (gap / stop-altı açılış / likidite / notional) DIŞARIDA
             # yeniden hesaplamıyoruz: o mantığın ikinci kopyası zamanla ayrışır ve gölge defteri
@@ -273,6 +326,12 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
         # C18: hangi ATR ile ve NEREDEN gelen bir limitle karar verildiği satırda durur — bir
         # kapının hangi girdiyle değerlendirildiği, kapının kendisi kadar önemlidir (bkz. `_gates`).
         "atr": atr_icra, "limit": _lw.get("limit"), "atr_kaynak": atr_kaynak,
+        # BORÇLAR TURU (2026-08-02): yan tablonun diğer iki icra girdisi de satırda durur —
+        # `atr`/`atr_kaynak` ile AYNI desen, aynı gerekçe. JETON ADLARI DEĞİŞMEZ: `status` hâlâ
+        # `would_submit`/`blocked:*` sözlüğünden gelir (pano app.js SH_TR sabit bir jeton sözlüğü
+        # çeviriyor; yeni jeton orada çevrilmeden ham görünürdü — C18'in kararı, aynen korunuyor).
+        "pivot": pivot_icra, "pivot_kaynak": pivot_kaynak,
+        "gap_at_submit": gap_icra, "gap_at_submit_kaynak": gap_kaynak,
         "red_nedeni": red_nedeni,
         "gates": gates, "gate_inputs_as_of": kaynak,
         "status": "would_submit" if engel is None else f"blocked:{engel}",
