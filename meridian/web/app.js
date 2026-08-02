@@ -1436,16 +1436,11 @@ function gbAlarmSatiri(ab) {
     <span>duran <b>${ab.duran ?? "—"}</b> (tavan ${ab.tavan_duran ?? "—"})</span>
     <span>${ab.asim_var ? "▲ AŞIM" : "aşım yok"}</span>${bag}</div>`;
 }
-function bpAlpaca(alp) {
-  const acc = alp && alp.account;
-  if (!acc || !acc.connected)
-    return `<div class="empty">Alpaca kağıt hesabı bağlı değil.<br><span class="mut" style="font-size:12px">Ayarlar → Alpaca'dan anahtarları gir.</span></div>`;
-  const rows = (acc.positions || []).map(p =>
-    `<div class="srow"><span><span class="tick" style="font-size:13px">${esc(p.symbol)}</span> <span class="mut">${esc(p.qty)} adet</span></span><b class="${(+p.upl>=0)?'pos':'neg'}">${(+p.upl>=0?'+':'')}${trn(+p.upl,2)}</b></div>`).join("");
-  return `<div class="srow"><span>Hesap sermayesi</span><b>$${trn(acc.equity,2)}</b></div>
-    <div class="srow"><span>Alım gücü</span><b>$${trn(acc.buying_power,0)}</b></div>
-    <div class="srow"><span>Açık pozisyon / emir</span><b>${(acc.positions||[]).length} / ${(acc.open_orders||[]).length}</b></div>${rows}`;
-}
+// `bpAlpaca` BURADAN SİLİNDİ (2026-08-02, S2R-sonrası ölü-kod avı). Çağıranı YOKTU — göçten
+// ÖNCE de yoktu, yani S2R kırığı değil, "tanımlı ama ölü" sınıfıydı. YASA-6 kontrolü yapıldı:
+// okuduğu her alan (`account.connected/equity/buying_power/positions{symbol,qty,upl}/
+// open_orders`) `_alpacaKartHTML`de (Ayarlar → Alpaca kartı) zaten okunuyor — tekil okuyucusu
+// olduğu alan SIFIR, silmek hiçbir API alanını öksüz bırakmaz. Karar kaydı: UIUX-S2R ADR Ek B.
 RENDER.brifing = async () => {
   // KİTABIN ŞU ANKİ HÂLİ — Portföy & Emirler'in ilk bölümü.
   // SIRALAMA (2026-07-27): DURUM ŞERİDİ EN ÜSTTE. Bir tasarım incelemesi şeridi masaüstünde

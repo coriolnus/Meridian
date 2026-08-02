@@ -111,6 +111,13 @@ göç sonrası app.js karşılaştırıldı — kaybolan uç 0, kaybolan alan ok
 | Alarm gelen kutusu · olay akışı | brifing (Portföy) → **operasyon (Gözetim)** | TAŞINDI | ADR Gözetim tanımı. Alarmın iki evi vardı (biri "kaç tane", diğeri "hangileri") ve ikisi de yarımdı. |
 | Performans karne yarısı | performans (Portföy) → **karne (Öğrenme)** | TAŞINDI | Rejim/araç kırılımı Portföy'de dururken kimse onu öğrenme kanıtı okumuyordu. |
 
+**Ölü-kod silme (S2R-sonrası av, 2026-08-02):** `app.js::bpAlpaca` — sıfır çağıran (göçten ÖNCE de
+sıfırdı; S2R kırığı değil, miras ölü kod). YASA-6 kontrolü: okuduğu alan kümesi
+(`account.connected/equity/buying_power/positions{symbol,qty,upl}/open_orders`) Ayarlar'daki
+`_alpacaKartHTML`in okuduğu kümenin ALT kümesi — tekil okuyucusu olduğu alan yok, silme hiçbir
+API alanını öksüz bırakmadı. (Emeklilik değil silme: görünür bir bileşen değildi, hiçbir sayfada
+çizilmiyordu.)
+
 **Eritilen başlık katmanları** (kart-içinde-kart yasağı): bölümler kendi `.slabel + <h1> +
 .subline` üçlüsünü basmayı bıraktı; tek kalıp `bolumBasHTML()` (h2 + tek satır altyazı + soru
 cümlesi + çapa). Eylem şeridinin `<h1>Öğrenme. Üç düğme, üç iş.</h1>` başlığı ve brifing'in
