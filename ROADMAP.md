@@ -43,6 +43,12 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
   öncelik önerisi: C9 (çıkış→ayna kopukluğu, yetim pozisyon) → C8 (pano düğmesi E1-bypass) → C23
   (HALT ayna-iptali) → C11/C18 (replay ATR bacağı, karne rakamları değişir) → C13/C19 (canlı-ölü
   knob + kesici penceresi) → gerisi raporda.
+- **Hermes-CLI yapılandırma dersi (2026-08-02, canlı vaka):** A1 taşınmasında ~/.hermes yapılandırması
+  taşınmadı (hiçbir kanalın parçası değildi), senkron tek-atımlık olduğundan kendini onarmadı, hiçbir
+  bekçi "yerel ajan yapılandırılmış mı" ölçmüyordu — LLM ikinci-görüşü 6 gün sessiz öldü. Kalemler:
+  (a) servis açılışında senkron-doğrulama (GEMINI_API_KEY dolu + CLI modelsiz → yeniden senkron + olay);
+  (b) pano senkron-sonucu zaman-damgalı (bayat OSError vakası); (c) bekçi: agent_call boş-serisi
+  "kota" ile "yapılandırmasız"ı ayırt etsin.
 - **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
   yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
   `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
