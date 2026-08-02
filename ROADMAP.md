@@ -417,6 +417,17 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-02 ~17:40 GECE KAPANIŞI: KOVA-B CANLIDA — dağıtım kapısı kırmızıyı yakaladı, kök çözüldü,
+  A1 yeni kodla.** Kapı açılınca dağıtım-öncesi tam suite İLK KEZ otoriter koşuldu ve 16F/2E yakaladı
+  → `--uygula` durdu (kapı çalıştı). Bisect kökü: 0a4453f iki-motor ATR bacağı DOĞRU sıkılaştırması
+  v76 fikstür kanıt tabanını 17<30'a düşürdü → onarım FİKSTÜRDE (da6bec3; geometri+16 sembol,
+  17→68 işlem, eşik/assert değişmedi). Girişim avı ÇÜRÜTMELİ kapandı: sızıntı ipucu yanlış alarm
+  (bounds/goal = c783442 git-çıkışı), 9'lu aile = YÜRÜYEN-AĞAÇ artefaktı (a75a207 statik koşu 0/9);
+  DERS: otoriter suite yalnız DONMUŞ ağaçta. Yapısal kilitler: close_engine_position/replace_order_stop/
+  cancel_order üç ateş-duvarı listesine (b6273af). Freeze 571a094 → otoriter suite 3752/0 → pencere
+  14:00 UTC → birim migrasyonu token-korumalı TEMİZ (journal 0/48) → adım-7 doğrulaması yeşil
+  (healthz 200 · 3 birim aktif · scheduler 0,7 dk · evren 251 · fail-notify bayt-özdeş) — BLOKE
+  ÇÖZÜLDÜ (25e8824). Kadans dersi kalıcı: log-edit + runbook_uret TEK commit (t3 aynası).
 - **2026-08-02 ~04:30 GECE KAPANIŞI: S2R ÜÇLEMESİ TAMAM + KOVA A 9/9 — DAĞITIM OPERATÖR KAPISINDA.**
   S2R-1 kabuk (f7f66fa) → S2R-2 göç 20 bölüm + YASA-6 emekli listesi (9ca0998) → S2R-3 cila +
   bekçi ÖLÇÜLEMEDİ yüzeyi + palet-20 (006cc67). Denetim KOVA A: d50b03b/395920e/8a38248 +
