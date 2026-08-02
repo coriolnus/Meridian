@@ -2,7 +2,7 @@
 
 ÜÇ BULGU, TEK SINIF: bir RİSK KURALI, onu değiştirebilecek YÜZEYDEN kopuktu.
 
-  C24 — `HEAT_HARD_R = 4.5` (ve HEAT_REVIEW_R / CORR_REVIEW) modül sabitiydi: canlı defterde plan
+  C24 — `HEAT_HARD_R = 5.0` (ve HEAT_REVIEW_R / CORR_REVIEW) modül sabitiydi: canlı defterde plan
         kesiyordu ama ne operatörün değişmez zarfında (goal.yaml `limits`) ne arama uzayında
         (bounds.yaml) görünüyordu. Yönetişim kusuru: kod, operatörün ilan ettiği 5×1,0R zarfın
         ALTINDA bağlayan bir tavanı operatör adına seçiyordu. Üçü de `limits`e TAŞINDI, DEĞERLER
@@ -168,7 +168,7 @@ def test_c24_anahtar_YOKKEN_modul_varsayilanina_duser(seeded):
     assert v == "REVIEW" and any("ısı" in x for x in r), (v, r)
     assert guard.classify_gate(_plan(), _pf(open_risk_r=3.6), _rejim(), goal)[0] == "NO_GO", \
         "4,6R varsayılan 4,5R tavanını aşmalı — fail-safe varsayılan yanlış"
-    assert (guard.HEAT_HARD_R, guard.HEAT_REVIEW_R, guard.CORR_REVIEW) == (4.5, 3.5, 0.85)
+    assert (guard.HEAT_HARD_R, guard.HEAT_REVIEW_R, guard.CORR_REVIEW) == (5.0, 3.5, 0.85)
 
 
 def test_c24_SIFIR_esik_or_ile_yutulmaz(seeded):
