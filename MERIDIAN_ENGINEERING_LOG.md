@@ -206,13 +206,23 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   canlıyla aynı yasaya sıkılaştı (min(0,5·ATR14, %1); eskiden ATR'siz daima %1), v76 sentetik
   fikstürünün kanıt tabanı 17 < min_sample 30'a düştü, 6 arıza bundan kademeli (score→None zinciri).
   Üretim değişikliği DOĞRU; onarım fikstürde (tur açık, Opus uçuşta) — eşik/assert GEVŞETİLMEZ.
-  (b) 9'u yalnız tam-suite'te kırmızı, izole yeşil = suite-içi girişim (v72 sınıfı sızıntı ailesi) —
-  AYRI hastalık, ayrı tur. SIZINTI İPUCU (2026-08-02, izole worktree koşusu, diğer oturum): taze
-  git-worktree'de `state/` HİÇ YOKKEN tam suite koşuldu → koşu sonunda repo-kökü `state/`te
-  test-artığı `bounds.yaml` + `goal.yaml` DURUYOR — en az bir test/conftest yolu sandbox'a değil
-  repo-köküne yazıyor (v72 ailesinin yaşayan somut kanıtı). Girişim-avı turu buradan başlayabilir:
-  aynı düzenek (state'siz taze worktree + tam suite) sızan yazıcıyı deterministik yakalar.
-  SIRA: v76 fikstür onarımı → girişim avı → yeşil suite → dağıtım.
+  (b) GİRİŞİM AVI KAPANDI (2026-08-02 gece, diğer oturum) — iki hüküm, ikisi de çürütmeli:
+  (b1) SIZINTI İPUCU YANLIŞ ALARMDI: taze worktree'deki `bounds.yaml`+`goal.yaml` test artığı değil
+  GIT ÇIKIŞI — c783442 .gitignore ölü-negasyonunu düzeltip ikisini BİLEREK versiyona almış (ve o
+  commit ipucu ağacının atası); `--collect-only` provası doğruladı: dosyalar checkout anında var,
+  hiçbir test koşmadan. v72 ailesinin "yaşayan kanıtı" iddiası GERİ ÇEKİLDİ.
+  (b2) 9'LU AİLENİN GERÇEK KİMLİĞİ: suite-içi sızıntı DEĞİL, YÜRÜYEN-AĞAÇ ARTEFAKTI. İlk tam-suite
+  koşusu (8,5 dk) sırasında paralel merge main'i a75a207→0170cc0 taşıdı; 9'un tamamı kaynak-tarayan
+  yapısal test (inspect.getsource) ve import-edilmiş modül ile diskte yeniden yazılan kaynak ayrıştı.
+  Kanıt zinciri: imza tipi tekdüze · sıra eklentisi yok (alfabetik koşu, v76-zehirlenmesi imkânsız —
+  gate_statistics/kovab_yapi v76'dan ÖNCE koşar) · statik ağaçta 4/4 koşu temiz (46ce02f otoriter,
+  da6bec3 izole, ve ÇÜRÜTME KOŞUSU: a75a207 STATİK yeniden-koşumda 9'dan SIFIRI ateşlendi; çıkan
+  10 kırmızı = o ağacın bilinen gerçekleri [6×v76+t3] + 2 düzenek artefaktı [c1-tombstone; güncel
+  goal.yaml'ı (C24 anahtarlı) eski koda bindirince gu1b/authority-c3 — ayrıca ders: tarihi ağaca
+  güncel tracked-state kopyalama GU1-sınıfı sahte kırmızı üretir]). DERS (pencere planı adım 3'ü
+  genelleştirir): OTORİTER SUITE YALNIZ DONMUŞ AĞAÇTA — sha'ya sabitlenmiş worktree veya freeze;
+  merge alan bir checkout'ta koşan suite hüküm değil gürültü üretir. Çıktı: full_suite_a75_static.txt.
+  SIRA: v76 fikstür onarımı ✓ → girişim avı ✓ (kapandı) → yeşil suite → dağıtım.
   Çıktılar: scratchpad/full_suite_predeploy.txt. GÜNCELLEME (2026-08-02 akşam, Rol-1): icra-bloğu
   merge'i (46ce02f) sonrası otoriter koşu 7 kırmızı = 6×v76 + uiux-t3 (t3 892bf75 ile kapandı);
   girişim ailesi o koşuda ateşlenmedi. Pencere planı: §DAĞITIM PENCERESİ PLANI.
