@@ -169,8 +169,12 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   (`research/pit_universe/sp500_uyelik_tarihi.csv`, 2.719 satır, MIT — fja05680). S&P400/600 için
   hazır ücretsiz set BULUNAMADI (yfiua desteklemiyor — araştırma iddiası düzeltildi); alternatif:
   SEC 13(f) resmî listesi (2004Q1→, likidite-evreni; CUSIP→ticker emeği).
-- **SERT KISIT:** delist edilmiş hisselerin TARİHSEL BARLARI için ücretsiz kaynak YOK — üyelik
-  çözülse bile ölü isimler fiyatlanamaz. Yollar (operatör kararı): QuantConnect ücretsiz araştırma
+- **SERT KISIT (2026-08-02 SAYILANDI — EDG-018 kapı ölçümü):** delist-bar boşluğu ölçüldü:
+  endeksten çıkmış 703 ismin yalnız 12'si arşivde barlı (%1,71); EDG-016 panel-penceresindeki
+  çıkışların **%96,57'si SIFIR bar** (338/350) ve 12 barlının hepsi 2024+ (ikinci-seçilim).
+  Survivorship şerhi artık kapsama-yüzünde sayı; iki yaşayan sinyalin büyüklüğü delist-bar
+  kaynağı gelmeden ölçülemez — operatör kararının fiyat-etiketi bu. Kanıt:
+  research/olcumler/wp_u_midcap/. EDG-018 askıda:veri-kapısı. Yollar (operatör kararı): QuantConnect ücretsiz araştırma
   ortamında paralel doğrulama TURU vs Massive plan yükseltme (mimari delisted'ı zaten destekliyor).
 - **⚠ OPERASYONEL BULGU (canlı sondaj):** mevcut Massive planı artık yalnız ~SON 2 AYI veriyor —
   2004'e giden yerel bar arşivi yeniden üretilemez KALINTI; arşiv kaybı = kalıcı kayıp → yedek

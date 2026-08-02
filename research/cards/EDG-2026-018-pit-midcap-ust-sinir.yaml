@@ -35,7 +35,20 @@ guards:
   - "PIT üyelik as-of: her gözlem gününde sembol GERÇEKTEN üye miydi (look-ahead yasak); split/as-of bekçileri"
   - "sağkalma yanlılığı KALICI ŞERH — hüküm cümlesinde 'üst-sınır' kelimesi zorunlu"
 k_registry: {registered_at: "2026-08-02T15:25Z", trial_ids: [wp_u_midcap/kapsama_gate, wp_u_midcap/turnover_ust20]}
-status: registered
+status: askiya_veri_kapisi   # 2026-08-02 ~19:30 TR — ADIM-0 DÜŞTÜ (Rol-1 hükmü):
+#   (1) KOHORT KURULAMADI: sp500_uyelik_tarihi.csv salt-S&P500 (date,tickers; büyüklük alanı yok;
+#       günlük üye 487-507) — kartın pit_midcap_survivor kohortu bu kaynaktan İNMİYOR; depoda başka
+#       PIT evren kaynağı yok. (2) İSİM EŞİĞİ: brief'in yedek ekseni (endeksten-çıkmışlar, as-of)
+#       703 isim veriyor, yalnız 12'sinde bar var (<40) — kapı düştü, sinyal ÖLÇÜLMEDİ (ne pozitif
+#       ne negatif kanıt; "güçlü negatif" dalı AÇILMADI). (3) ASIL KAZANIM — ŞERH SAYILANDI:
+#       EDG-016 panel-penceresinde endeksten çıkan 350 ismin 338'i (%96,57) arşivde SIFIR bar;
+#       12 barlının hepsi 2024+ çıkışlı (ikinci-seçilim: bar "çıkmış olmaktan" değil canlı-evrende
+#       bulunmuş olmaktan var). Survivorship şerhinin kapsama-yüzü artık sayı; ETKİ büyüklüğü hâlâ
+#       ölçülemez. YENİDEN AÇILIŞ ŞARTI: delist-bar kaynağı (WP-U operatör kararı: QuantConnect
+#       turu vs Massive yükseltme) YA DA S&P400/600 PIT üyelik + bar kaynağı BİRLİKTE gelirse.
+#       Kanıt: research/olcumler/wp_u_midcap/ (kapsama_haritasi.json + RAPOR_018.md + betik;
+#       girdi sha256'ları + kod damgası 4b84871 raporda). K-muhasebesi: kapı hücresi harcandı,
+#       sinyal hücresi HARCANMADI (koşulmadı).
 notes: >
   Ölçüm ajanı KARTA DOKUNMAZ; hüküm + entegrasyon Rol-1'de. Sandbox:
   research/olcumler/wp_u_midcap/. Feasibility-gate SONUCU (kapsama haritası) her hâlde teslim
