@@ -538,6 +538,17 @@ def _weekly_validation(wk: list) -> dict:
 
 GAP_SEEN_MAX = 200          # tekrar-bastırma defterinin tavanı (imza başına tek uyarı, sınırsız değil)
 
+# TAKVİM ARIZASI SÜREÇ BAŞINA BİR KEZ ANLATILIR (WP-D kuyruğu, 2026-08-02). `_intraday_gap_check`
+# her poll'de (300 sn) koşar; koşulsuz bir uyarı 288 satır/gün üretir ve olay defterini — gelen
+# kutusunun ve tüm makullük dedektörlerinin okuduğu kaynağı — boğardı (K1 seli dersi). Kardeş
+# `_CALENDAR_WARNED` ile AYNI desen ve AYNI gerekçe; anlatılacak olgu "takvim YOK", "her poll" değil.
+# GERİ SIFIRLANMAZ (emsalle aynı): takvim döndüğünde bayrağı temizlemek, modül gidip geldikçe tam da
+# bastırmak istediğimiz seli geri açardı.
+# AD KARDEŞTEN AYRI (`session_calendar_unavailable` DEĞİL): farklı okuyucu, farklı sonuç. Orada son
+# KAPANMIŞ seans bilinmez ve seans-sonrası kadansın TAMAMI durur; burada yalnız boşluk taraması
+# ölçülemez, günlük döngü koşmaya devam eder. Tek adla saymak iki arızanın kapsamını karıştırırdı.
+_GAP_CALENDAR_WARNED = False
+
 
 def _intraday_gap_check() -> dict | None:
     """5.3 — SEANS-İÇİ KESİNTİ TESPİTİ. Her poll'de HAFİF bir kontrol: seans-içi bar akışında eksik
@@ -551,10 +562,28 @@ def _intraday_gap_check() -> dict | None:
     TEKRAR-BASTIRMA: pencere (60 dk) iki poll'ü (2 × 5 dk) fazlasıyla kapsar, yani AYNI boşluk her
     poll'de yeniden görünür. İmza (gün|tür|sembol|başlangıç) başına TEK uyarı basılır; imza defteri
     `GAP_SEEN_MAX` ile sınırlıdır (sınırsız bir set, günlerce koşan worker'da sızıntıdır)."""
+    global _GAP_CALENDAR_WARNED
     from . import barsarchive, obs
     rapor = barsarchive.gap_scan()
-    if rapor.get("durum") in ("seans_disi", "arsiv_yok"):
-        _state["intraday_gap"] = {k: rapor[k] for k in ("durum", "gun", "olculdu")}
+    if rapor.get("durum") in ("seans_disi", "arsiv_yok", "takvim_yok"):
+        kopya = {k: rapor[k] for k in ("durum", "gun", "olculdu")}
+        if rapor["durum"] == "takvim_yok":
+            # ARIZA NEDENİ YALNIZ BU HÂLDE TAŞINIR: takvim konuşmadığında `seans` bloğu (takvim adı
+            # + `hata`) tek teşhis kaynağıdır ve durum kopyası onu almadığı için panoya HİÇ
+            # ulaşmıyordu — `app.js` `_gapRows` bu yüzden bloğu korumalı okuyup yokluğunu normal
+            # sayıyor (4532'deki not). Kapanan boşluk burasıdır. Diğer iki hâlde blok teşhis
+            # TAŞIMAZ (`hata` None'dır, hüküm zaten `durum`dan okunur); onların kopyası minimal
+            # fark uğruna bit-bit AYNI kalır.
+            kopya["seans"] = rapor["seans"]
+            if not _GAP_CALENDAR_WARNED:
+                _GAP_CALENDAR_WARNED = True
+                obs.warn("gap_scan_calendar_unavailable", gun=rapor["gun"],
+                         error=rapor["seans"]["hata"],
+                         detail="XNYS takvimi okunamadı — seans-içi boşluk taraması bu turda "
+                                "ÖLÇÜLEMEDİ: beklenti üretilemediği için eksiklik de ölçülemez ve "
+                                "boş boşluk listesi 'boşluk yok' DEĞİLDİR (hüküm verilmedi). "
+                                "Günlük döngü etkilenmez; süreç başına bir kez kaydedilir")
+        _state["intraday_gap"] = kopya
         return rapor
     gorulen = list(_state.get("intraday_gap_seen") or [])
     yeni = 0
