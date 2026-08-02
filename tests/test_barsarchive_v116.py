@@ -475,11 +475,25 @@ def test_poll_ms_soket_timeout_altinda_kirpilir():
 # ---------------------------------------------------------------------------------------------
 # 8. YAZAR TEKLİĞİ
 # ---------------------------------------------------------------------------------------------
+# Taramanın MUAF listesi. Kural: bu kümeye girmek "adı ANIYOR ama YAZMIYOR" demektir; genişletmek
+# GEREKÇE ister ve gerekçe buraya yazılır (sessiz genişletme = tripwire'ın ölümü).
+#  · barsarchive.py — TEK YAZAR (`ARCHIVE_DIR = "bars_intraday"`), taramanın konusu.
+#  · sprint.py      — 2026-08-02 state-şişmesi turu: adı `SKIP_COPY` DENYLIST'inde ve gerekçe
+#                     yorumlarında geçiyor, yani dizine yazmak için değil KOPYALAMAMAK için anıyor
+#                     (ölçüm: bars_intraday+intraday_bars = 83M/sandbox). Yazar tekliği bozulmadı.
+MUAF = {"barsarchive.py", "sprint.py"}
+
+
 def test_bars_intraday_dizinine_yalniz_bu_modul_yazar():
     """YAZAR TEKLİĞİ — iddia değil TARAMA: `bars_intraday` adını meridian/ altında başka hiçbir
-    modül üretmez. (Komşu `bararchive.py` AYRI bir dizine — `intraday_bars` — yazar.)"""
+    modül üretmez. (Komşu `bararchive.py` AYRI bir dizine — `intraday_bars` — yazar.)
+
+    TARAMA BİLEREK KÖR (2026-08-02). Adı ANMAK ile YAZMAK'ı ayırt eden bir bağlam analizi
+    EKLENMEZ: akıllı süzgeç gerçek bir yazarı da "yorumdur" diye affeder ve tripwire susar. Ayrım
+    bunun yerine ELLE tutulan `MUAF` kümesiyle yapılır — üçüncü bir modül adı anar anmaz test YİNE
+    DÜŞER ve muafiyet ancak gerekçesi yazılarak genişler."""
     suclular = [p.name for p in MERIDIAN.rglob("*.py")
-                if "bars_intraday" in p.read_text() and p.name != "barsarchive.py"]
+                if "bars_intraday" in p.read_text() and p.name not in MUAF]
     assert suclular == [], f"state/bars_intraday/ tek yazarlı değil: {suclular}"
     # Komşu arşivin dizini AYRI olmalı — ikisi birbirinin dosyasına yazamaz.
     from meridian import bararchive
