@@ -184,5 +184,14 @@ def test_proposal_path_is_skill_aware_not_tool_forbidding():
     assert "_agent_call(" in src and "_skill_preload" in src              # tek kapı + ön-yükleme
     assert "FINAL message" in src and "ONLY the JSON" in src              # çıktı disiplini korunur
     wsrc = inspect.getsource(hermes._agent_call)                          # sözleşme sarmalayıcıda yaşıyor:
-    assert "sync_agent_skills()" in wsrc and '"-s"' in wsrc               # set eşitleme + -s yükleme
+    assert "sync_agent_skills()" in wsrc                                  # set eşitleme
     assert "_agent_budget_take" in wsrc                                   # + oran bütçesi (v9)
+    # ÇİVİ TAŞINAN GÖVDEYE YENİDEN HEDEFLENDİ (2026-08-02, HERMES-DAYANIKLILIK turu; 8aaf05e emsali).
+    # `-s` ön-yükleme bayrağı artık komutu kuran TEK yerde (`_agent_chat_cmd`) yaşıyor — çünkü `-Q`
+    # sessiz-mod bayrağı eklenirken komut iki kez kuruluyordu (bayrağın yarısını taşıyan ikinci
+    # davranış riski). İDDİA DEĞİŞMEDİ, YERİ DEĞİŞTİ: aranan şey hâlâ "ön-yükleme gerçekten
+    # gönderiliyor mu". Üçüncü satır kaçış yolunu kapatır: gövde ayrı dosyaya taşınıp `_agent_call`
+    # onu ÇAĞIRMASA, ilk iki iddia yine geçerdi ve çivi hiçbir şey ölçmezdi.
+    csrc = inspect.getsource(hermes._agent_chat_cmd)
+    assert '"-s"' in csrc                                                 # -s yükleme (taşınan gövde)
+    assert "_agent_chat_cmd(" in wsrc                                     # ve tek kapı onu ÇAĞIRIYOR

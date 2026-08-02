@@ -228,6 +228,15 @@ DECLARED_ALIASES = {
     # kör bırakırdı — `session_bar_never_published`ın 164 tarihsel satırının kaybolduğu hata tam
     # buydu (bkz. watchdog.py:parity_report'taki "failed_broker_rejection dersinin tersi" notu).
     ("analytics.py", "event", "kind"),
+    # ALIAS DEĞİL, AYRI DÜRÜSTLÜK SAYACI (2026-08-02, HERMES-DAYANIKLILIK / `-Q` turu). CLI'nin
+    # sessiz modu (`-Q`) oturum özetini bastırdığı için bazı çağrılarda araç sayısı ÖLÇÜLEMEZ.
+    # `calls` = araç sayısı ÖLÇÜLEBİLEN çağrılar (oranın paydası), `olculemeyen` = ölçülemeyenler.
+    # İkisi aynı kavramın iki adı DEĞİLDİR ve bilerek ayrık tutulur: ölçülemeyeni `calls`a katmak
+    # `rate`i sessizce seyreltir (uydurma), hiç saymamak ise sayacı dondurup "MCP hiç kullanılmadı"
+    # diye okutur (eksik alan = sıfır sanılır sınıfı). `integrations_status` ikisini AYRI yayınlar
+    # ve payda sıfırken `rate` None döner. Deseni yakalayan satır yalnızca "hangisi doluysa göster"
+    # kapısıdır (`if tu and (tu.get("calls") or tu.get("olculemeyen"))`), bir yedek-ad yaması değil.
+    ("hermes.py", "calls", "olculemeyen"),
 }
 
 

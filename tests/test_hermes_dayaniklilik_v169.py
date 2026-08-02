@@ -409,6 +409,20 @@ def test_q7_ozetsiz_dolu_cevap_telemetriyi_SEYRELTMEZ(ajan, monkeypatch):
     assert tu["olculemeyen"] == 1 and tu["rate"] is None      # oran UYDURULMAZ (payda 0)
 
 
+def test_q8_iki_sayac_AYRIK_kalir_capraz_civi():
+    """ÇAPRAZ ÇİVİ (test_parity_v56 `DECLARED_ALIASES` beyanının kod tarafı): `calls` ile
+    `olculemeyen` bir şema takası DEĞİL, iki AYRI ölçüdür. Oranın paydası YALNIZ `calls`tır ve
+    payda sıfırken oran UYDURULMAZ. Bir gün biri diğerine katılırsa beyan yalan söylemeye başlar —
+    o yüzden ayrıklık burada, kaynağın kendisinde kilitli."""
+    src = inspect.getsource(hermes.integrations_status)
+    assert 'tu.get("with_tools", 0) / tu["calls"]' in src          # payda = calls (olculemeyen DEĞİL)
+    assert 'if tu.get("calls") else None' in src                   # payda 0 → oran None
+    assert '"olculemeyen": tu.get("olculemeyen", 0)' in src        # ayrı alan olarak YAYINLANIR
+    cagri = inspect.getsource(hermes._agent_call)
+    assert 'st["olculemeyen"] = int(st.get("olculemeyen", 0)) + 1' in cagri
+    assert 'st["calls"] += 1' in cagri and cagri.index('st["calls"] += 1') < cagri.index('st["olculemeyen"]')
+
+
 def test_q5_chat_kurulumu_TEK_yerde():
     """Envanter kaynakta kilitli: CLI `chat` komutunu kuran TEK yer `_agent_chat_cmd`. İkinci bir
     kurulum yeri, bayrağın yarısını taşıyan ikinci bir davranış demektir (bu vakanın sınıfı)."""
