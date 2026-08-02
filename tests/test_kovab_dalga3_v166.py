@@ -181,7 +181,9 @@ def test_c24_SIFIR_esik_or_ile_yutulmaz(seeded):
 
 
 def test_c24_degerler_TASINIRKEN_korundu(seeded):
-    """Bu tur bir YÖNETİŞİM turudur, eşik turu değil: goal.yaml'daki üç sayı, koddaki fail-safe
+    """OPERATÖR KARARI 2026-08-03 (d01ccb5): heat_hard_r 4,5→5,0R — çivi
+    sessiz-değişimi önlemek içindi; açık karar geldi, beklenen değer güncellendi.
+    Bu tur bir YÖNETİŞİM turudur, eşik turu değil: goal.yaml'daki üç sayı, koddaki fail-safe
     varsayılanlarla AYNI olmalı. Eşik değişikliği ölçüm kartı ister (research/cards)."""
     lim = config.goal()["limits"]
     assert float(lim["heat_hard_r"]) == guard.HEAT_HARD_R
