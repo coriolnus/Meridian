@@ -1,0 +1,52 @@
+{
+  "kart": "EDG-2026-016",
+  "repo": "/Users/erdemozturk/AI-Trading",
+  "repo_HEAD": "90b5a0492655788b8f49c58295b62e67304d7f8c",
+  "sandbox": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wp2_olcum",
+  "olcum_tarihi": "2026-08-01T11:21:54.498340+00:00",
+  "olcum_kodu_sha256": {
+    "ortak.py": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+    "pk.py": "25c1221ef0758fd2f99f517423ea6b2501e67c550a75abc92544be3737ba0af6",
+    "k016.py": "fee321d9c66fcb35c992d43cb9a9476b3fd8b0895f0f1972eaaf5bf7e94c58b4",
+    "rapor_016.py": "70dae89c71e6f2d193ba754063c4c5a57723e1d6839f4b27e06209bdf818bb28",
+    "damga_016.py": "3c951b0c2fbddf4932db0c12ab1e93f5612e1a1c6aa8391195b964650feb2216"
+  },
+  "onceki_turdan_devralinan": {
+    "not": "ortak.py ve pk.py bu turda DEĞİŞTİRİLMEDİ; sha'lar önceki tur damgasıyla karşılaştırılır — eşitse pk.json'daki PK4/PK5 bu tur için de geçerlidir.",
+    "eslesme": {
+      "ortak.py": {
+        "onceki": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+        "simdi": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+        "ayni": true
+      },
+      "pk.py": {
+        "onceki": "25c1221ef0758fd2f99f517423ea6b2501e67c550a75abc92544be3737ba0af6",
+        "simdi": "25c1221ef0758fd2f99f517423ea6b2501e67c550a75abc92544be3737ba0af6",
+        "ayni": true
+      }
+    }
+  },
+  "girdi_sha256": {
+    "research/edgar_facts/shares_outstanding.csv.gz": "446f7bf00a227c586697f0a9669e82dc85abbb9504d67df45e4b695a03d998a3",
+    "state/bars_integrity.json": "ab6b2e5995ba3084782cbcedc2982a7d56d0d16a6245cadff14e74e5edfdedcc",
+    "state/counterfactuals.jsonl": "df479477d73c9f7998bebc368e505cb0ed77677c676719782b907199eb771f09",
+    "state/cf_open.json": "fea01ce5696cf8d593800d0e9cc9af25617b4a46338f701bbd0ade99f49a6189"
+  },
+  "kart_sha256": {
+    "EDG-2026-016-turnover-ana-etkisi.yaml": "42c49b33c93efe105c597b99751ab993bce1d05305c4963f8bb9d720080076cb"
+  },
+  "kart_mtime_utc": "2026-08-01T10:59:33.394331+00:00",
+  "kart_dokunulmadi": true,
+  "kart_dokunulmadi_kaniti": "kart dosyasının mtime'ı ölçüm başlangıcından ÖNCE — dosya bu tur boyunca YAZILMADI (ajan yalnız okudu).",
+  "cikti_sha256": {
+    "sonuc_016.json": "4f45e5e946d115c29ae0de6592c859ee3d21ab364ec4bc6af972b09422025e05"
+  },
+  "python": "Python 3.12.7",
+  "not": "Önceki turun kol_/sonuc_ dosyaları EZİLMEDİ; bu turun çıktıları sonuc_016.json + RAPOR_016.md.",
+  "girdi_onceki_turla_ayni": {
+    "research/edgar_facts/shares_outstanding.csv.gz": true,
+    "state/bars_integrity.json": true,
+    "state/counterfactuals.jsonl": true,
+    "state/cf_open.json": true
+  }
+}
