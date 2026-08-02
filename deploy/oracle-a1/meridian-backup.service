@@ -20,3 +20,48 @@ ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # %%F → tar dosya adında günlük tarih (systemd % kaçışı — eski unit'ten miras, kanıtlı çalışıyor).
 ExecStart=/bin/sh -c 'if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "from meridian import storage; storage.backup_to(\"/opt/meridian/state/meridian.db.yedek\")"; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — TUR-2 (2026-08-02). Tur-1 bu birimi ATLAMIŞTI (drop-in yalnız meridian ve
+# meridian-barsarchive'e kuruluyordu, bakim_h9.sh:56). ATLANMASI YANLIŞTI: bu birim `uv run
+# python -c` ile KOD ÇALIŞTIRIR ve arşive `state/secrets.json` DAHİL her şeyi alır — maruziyeti
+# diğer ikisiyle aynı sınıftadır. Gerekçelerin tamamı meridian.service'te; burada YALNIZ ayrışan
+# kalemler yazılıdır.
+#
+# ARIZA ŞEKLİ UYARISI (bu birime ÖZGÜ): `OnFailure=` YOK ve `Type=oneshot` günde bir koşar. Bir
+# sertleştirme hatası burada SESSİZ YEDEK KAYBIDIR — kimse haber almaz, kayıp ancak restore
+# gerektiğinde görülür. BU YÜZDEN uygulama prosedürü birimi ELLE bir kez tetiklemeden ve
+# `Result=success` + yeni tar dosyasını GÖRMEDEN tamamlanmış SAYILMAZ (bakim_h9.sh:79 deseni).
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — bu birim YEDEK HEDEFİNE yazar, ajan dizinine DEĞİL:
+#  /opt/meridian        : `storage.backup_to` → state/meridian.db.yedek; ayrıca `uv run`ın .venv
+#                         doğrulaması + import anında yazılan __pycache__.
+#  /home/ubuntu/backups : tar hedefi (ExecStart) + ExecStartPre mkdir/chmod + ExecStartPost
+#                         `find -delete` (7 günlük saklama). ProtectHome=read-only'yi deler.
+#                         `-` ÖNEKİ BİLEREK YOK: dizin yoksa systemd birimi AÇILIŞTA ve GÜRÜLTÜLÜ
+#                         reddeder ("Failed to set up mount namespacing"). Sessizce yedeksiz
+#                         koşmaktansa açıkça patlaması yeğdir. Dizini deploy.sh:101 kurar.
+#  /home/ubuntu/.cache  : `uv run` önbelleği — yoksa ExecStart'ın python bacağı BAŞLAMAZ.
+ReadWritePaths=/opt/meridian /home/ubuntu/backups /home/ubuntu/.cache
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Bu birimin ağ ihtiyacı YOK (tar + find + yerel SQLite kopyası). Liste yine de diğer ikisiyle
+# BİREBİR aynı: ortak direktiflerin ayrışmaması testle çivili, ve `uv run` çevrimdışı
+# doğrulayamadığı bir durumda ağa uzanabilir — o yolu kesmek yedeği kırardı.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+# Dışarıda bırakılanlar + gerekçeler + log-modu reçetesi: meridian.service. EN SON SATIR:
+SystemCallFilter=@system-service

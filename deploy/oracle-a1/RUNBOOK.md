@@ -100,18 +100,22 @@ rsync -az -e "ssh -i $K" ./state/ ubuntu@130.61.126.87:/opt/meridian/state/
 # 2) (A1) kurulum
 ssh -i $K ubuntu@130.61.126.87 'cd /opt/meridian && bash deploy/oracle-a1/deploy.sh'
 
-# 3) (A1) TOKEN — desen meridian.service'ten BİREBİR
+# 3) (A1) TOKEN — birimde DEĞİL, 0600 dosyada (H3 tur-1'den beri; eski `sed CHANGEME` adımı ÖLDÜ)
 ssh -i $K ubuntu@130.61.126.87 '
-  sudo sed -i "s/CHANGEME-long-random-ascii-token/$(openssl rand -hex 24)/" /etc/systemd/system/meridian.service
+  printf "MERIDIAN_DASH_TOKEN=%s\n" "$(openssl rand -hex 24)" | sudo tee /opt/meridian/.dash.env >/dev/null
+  sudo chown ubuntu:ubuntu /opt/meridian/.dash.env && sudo chmod 600 /opt/meridian/.dash.env
   sudo systemctl daemon-reload && sudo systemctl restart meridian'
 ```
+`meridian.service` bu dosyayı `EnvironmentFile=-/opt/meridian/.dash.env` ile okur. Birim dosyası
+0644'tür (herkes okur) — sır oraya YAZILMAZ. `.dash.env` `dagit.sh` rsync'inden bilerek dışlanmıştır
+(2026-08-01 vakası: `--delete` A1'deki dosyayı silmişti).
 </details>
 
 ## Bölüm B2 — A1'deki birimler (üçü de `deploy.sh` tarafından kurulur+enable edilir)
 
 | birim | ne yapar | not |
 |---|---|---|
-| `meridian.service` | worker + pano (uvicorn, 127.0.0.1:8080) | `Restart=always`; token burada |
+| `meridian.service` | worker + pano (uvicorn, 127.0.0.1:8080) | `Restart=always`; token birimde DEĞİL → `/opt/meridian/.dash.env` (0600) |
 | `meridian-barsarchive.service` | `mrd:bars:*` → `state/bars_intraday/` | **AYRI birim**: worker restart'ı bar akışını kesmesin (yereldeki serve.sh/`stop_worker` ayrıklığının karşılığı) |
 | `meridian-backup.timer` → `.service` | günlük `state/` tar.gz, 7 gün saklama | 23:30 UTC (kapanış sonrası), `Persistent=true` |
 | `redis-server` (apt) | sıcak durum + bar ring'i | **ŞART**, opsiyonel değil — `hotstate.py`/`barsarchive.py` buna bağlı. Ubuntu default'u yalnız `127.0.0.1` dinler, **değiştirme** |
@@ -119,6 +123,175 @@ ssh -i $K ubuntu@130.61.126.87 '
 **Redis yoksa arşivci ÖLMEZ, sessizce boşa döner:** `poll()` `None` döner, `run()` `idle_s` uyuyup
 yeniden dener (`barsarchive.py:343/413`). Yani `is-active` **bar yazdığını kanıtlamaz** — ölçüsü
 `--ozet` (aşağıda).
+
+## Bölüm B3 — H3 tur-2 systemd sertleştirme: **uygulama prosedürü** (bakım penceresi)
+
+Tur-1 (2026-07-31) maruziyeti **9.2 UNSAFE → 6.3 MEDIUM** yapmıştı ve seti ayrı bir drop-in'den
+(`sertlestirme.conf`) uyguluyordu. Tur-2 seti **birim dosyalarının içindedir** ve üç birimi kapsar:
+`meridian` · `meridian-barsarchive` · `meridian-backup`. `meridian-fail-notify` **bilerek dışarıda**
+(gerekçe o dosyanın içinde: kendi arızasını tanım gereği yutar, sertleştirme hatası görünmez olurdu).
+
+> **BEKLENEN SKOR — TAHMİN, ÖLÇÜM DEĞİL.** Yeni kalemler (`CapabilityBoundingSet=` ·
+> `SystemCallFilter=@system-service` + `SystemCallArchitectures=native` · `RestrictNamespaces` ·
+> `ProtectHostname`) `systemd-analyze security`'nin en ağır kalemlerini kapatır; **6.3'ten 2,5–3,8
+> bandına** düşmesi beklenir (ROADMAP hedefi <4). Bu bir tahmindir — **gerçek sayı adım 6'da
+> ölçülür ve ROADMAP'e ÖLÇÜLEN değer yazılır.** Tahmin tutmazsa hüküm ölçümündür.
+
+### Ön koşullar
+- Çalışma ağacı temiz (`dagit.sh` kapısı), depodaki birimler A1'e taşınmış olmalı
+  (`dagit.sh` rsync'i `/opt/meridian/deploy/oracle-a1/` altına bırakır; **birimleri `/etc`'e
+  KURMAZ** — kurulum bu bölümün işidir).
+- Piyasa **kapalı** olmalı: adım 3 iki servisi de durdurur.
+
+```bash
+K=~/.ssh/oci-a1.key ; A1=ubuntu@130.61.126.87
+```
+
+### 1) GERİ-ALMA YEDEĞİ ÖNCE (bu adım atlanırsa prosedür başlamaz)
+```bash
+ssh -i $K $A1 'set -e
+  D=/etc/systemd/system/h3-tur1-yedek-$(date -u +%Y%m%dT%H%M)
+  sudo mkdir -p $D
+  sudo cp -a /etc/systemd/system/meridian.service \
+             /etc/systemd/system/meridian-barsarchive.service \
+             /etc/systemd/system/meridian-backup.service $D/
+  sudo cp -a /etc/systemd/system/meridian.service.d $D/meridian.service.d 2>/dev/null || true
+  sudo cp -a /etc/systemd/system/meridian-barsarchive.service.d $D/meridian-barsarchive.service.d 2>/dev/null || true
+  echo "YEDEK: $D" ; sudo ls -R $D'
+```
+Çıktıdaki `YEDEK:` yolunu **not al** — adım 7 (geri alma) ona ihtiyaç duyar.
+
+### 2) Kopyala + tur-1 drop-in'ini SÖK
+```bash
+ssh -i $K $A1 'set -e
+  # (a) yeni birimler
+  sudo install -m 644 /opt/meridian/deploy/oracle-a1/meridian.service             /etc/systemd/system/
+  sudo install -m 644 /opt/meridian/deploy/oracle-a1/meridian-barsarchive.service /etc/systemd/system/
+  sudo install -m 644 /opt/meridian/deploy/oracle-a1/meridian-backup.service      /etc/systemd/system/
+  sudo install -m 644 /opt/meridian/deploy/oracle-a1/meridian-backup.timer        /etc/systemd/system/
+  # (b) tur-1 drop-in EMEKLİ — iki kaynak kalırsa yürürlükteki ayar okunamaz olur
+  sudo rm -f /etc/systemd/system/meridian.service.d/sertlestirme.conf \
+             /etc/systemd/system/meridian-barsarchive.service.d/sertlestirme.conf
+  sudo rmdir /etc/systemd/system/meridian.service.d \
+             /etc/systemd/system/meridian-barsarchive.service.d 2>/dev/null || true
+  # (c) TOKEN KAPISI — .dash.env yerinde mi? (yoksa pano token'sız açılır)
+  sudo test -s /opt/meridian/.dash.env && echo "  ✓ .dash.env var" || echo "  !! .dash.env YOK — Bölüm B adım 3"
+  # (c2) AJAN DİZİNİ KAPISI — `~/.hermes` ReadWritePaths'te `-` önekiyle YAZILIDIR (installer
+  #      düşmüş olabilir, Bölüm D). Dizin yoksa yol SESSİZCE atlanır ve ajan yazımları tur-1
+  #      kırıklığında kalır; birim yine de açılır. Burada GÖRÜNÜR yapılır:
+  test -d /home/ubuntu/.hermes && echo "  ✓ ~/.hermes var — yazma yolu açılacak" \
+    || echo "  !! ~/.hermes YOK — ajan yazımları kapalı kalır (Bölüm D: installer düşmüş)"
+  sudo systemctl daemon-reload
+  # (d) tek kaynak kanıtı: çıktıda YALNIZ .service dosyası görünmeli, drop-in görünmemeli
+  sudo systemd-analyze cat-config systemd/system/meridian.service | grep -E "^# /|sertlestirme"'
+```
+
+### 3) Yeniden başlat
+```bash
+ssh -i $K $A1 'sudo systemctl restart meridian meridian-barsarchive && sleep 12
+  systemctl is-active meridian meridian-barsarchive | tr "\n" " "; echo'
+```
+
+### 4) DOĞRULAMA — yürürlükteki direktifler (yorum değil, systemd'nin okuduğu değer)
+```bash
+ssh -i $K $A1 'for u in meridian meridian-barsarchive meridian-backup; do echo "--- $u"; \
+  systemctl show $u -p NoNewPrivileges -p ProtectSystem -p ProtectHome -p ReadWritePaths \
+    -p CapabilityBoundingSet -p RestrictAddressFamilies -p SystemCallFilter -p RestrictNamespaces \
+    | cut -c1-160; done'
+```
+`ReadWritePaths` **meridian'da `/home/ubuntu/.hermes` içermeli** (tur-1'de yoktu — sessiz kırıklık).
+
+### 5) DOĞRULAMA — üç duman testi
+```bash
+# (a) healthz  · 200=taze, 503=BAYAT ama süreç canlı (çöküş sonrası ~10dk normal)
+ssh -i $K $A1 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz'
+
+# (b) HERMES YAZMA PROBU — ~/.hermes gerçekten yazılabilir mi? (tur-1'in sessiz kırıklığının ölçüsü)
+#     Aynı ad alanıyla geçici bir birim koşar; CANLI sürece dokunmaz.
+ssh -i $K $A1 'sudo systemd-run --uid=ubuntu --pipe --wait --collect \
+  -p NoNewPrivileges=true -p ProtectSystem=strict -p ProtectHome=read-only \
+  -p ReadWritePaths="/opt/meridian /home/ubuntu/.cache /home/ubuntu/.hermes" \
+  -p SystemCallArchitectures=native -p SystemCallFilter=@system-service \
+  /bin/sh -c "touch /home/ubuntu/.hermes/.rw-probe && rm -f /home/ubuntu/.hermes/.rw-probe \
+              && echo HERMES-RW-OK || echo HERMES-RW-KIRIK ; \
+              (touch /home/ubuntu/.h3-negatif-kontrol 2>/dev/null && echo PROTECTHOME-KIRIK \
+              || echo PROTECTHOME-OK)"'
+#     BEKLENEN İKİ SATIR:  HERMES-RW-OK  +  PROTECTHOME-OK
+#     (ikinci satır POZİTİF DEĞİL NEGATİF kontroldür: ev dizininin geri kalanı hâlâ salt-okunur)
+
+# (c) TİCK AKIŞI — "is-active" ilerlemeyi kanıtlamaz (asılı-tick vakası, 2026-07-30).
+#     scheduler_status.updated TAZELENİYOR mu: iki ölçüm arasında damga DEĞİŞMELİ.
+ssh -i $K $A1 'cd /opt/meridian && export PATH=$HOME/.local/bin:$PATH
+  for i in 1 2; do uv run python -c "from meridian import store; \
+    print(store.read_json(\"scheduler_status.json\",{}).get(\"updated\"))"; sleep 90; done'
+
+# (d) BAR AKIŞI — arşivcinin ölçüsü `is-active` DEĞİL, satır sayısıdır (Redis düşse de aktif görünür)
+ssh -i $K $A1 'cd /opt/meridian && export PATH=$HOME/.local/bin:$PATH
+  uv run python -m meridian.barsarchive --ozet --gun 2'
+```
+
+### 6) YEDEK BİRİMİ ELLE TETİKLE + skorları ÖLÇ
+`meridian-backup.service`in `OnFailure=`i yoktur: sertleştirme onu kırarsa **kimse haber almaz**.
+Bu adım pazarlığa açık değildir.
+```bash
+ssh -i $K $A1 'sudo systemctl start meridian-backup.service
+  systemctl show meridian-backup.service -p ExecMainStatus -p Result | tr "\n" " "; echo
+  ls -lh /home/ubuntu/backups/ | tail -3
+  echo "--- maruziyet skorları (tur-1: 6.3) ---"
+  for u in meridian meridian-barsarchive meridian-backup; do \
+    printf "%-28s " $u; systemd-analyze security $u 2>/dev/null | tail -1; done'
+```
+Ölçülen üç sayıyı **ROADMAP §3 WP-H/H3 satırına yaz** (tahmini değil, ölçüleni).
+
+### 7) GERİ ALMA (herhangi bir adım düşerse — tek blok)
+```bash
+ssh -i $K $A1 'set -e
+  D=<adım-1de-not-edilen-YEDEK-yolu>
+  sudo cp -a $D/meridian.service $D/meridian-barsarchive.service $D/meridian-backup.service \
+             /etc/systemd/system/
+  [ -d $D/meridian.service.d ] && sudo cp -a $D/meridian.service.d /etc/systemd/system/
+  [ -d $D/meridian-barsarchive.service.d ] && sudo cp -a $D/meridian-barsarchive.service.d /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl restart meridian meridian-barsarchive
+  sleep 10; systemctl is-active meridian meridian-barsarchive | tr "\n" " "; echo'
+```
+**Kısmi geri alma da geçerlidir:** tek suçlu direktif biliniyorsa (adım 8'in çıktısı) yalnız o satırı
+birim dosyasından çıkarmak yeter — bütün seti geri almak gerekmez.
+
+### 8) İLK 24 SAAT — seccomp nöbeti (ATLANMAZ)
+`SystemCallFilter=@system-service` bir çağrıyı keserse süreç **SIGSYS ile ölür** (bu bilinçli: EPERM
+seçilseydi engel sıradan bir `OSError`a dönüşür ve bu depodaki `except OSError: pass` blokları onu
+sessizce yutardı). Arıza **açılışta değil, o kod yoluna ilk girildiğinde** gelir — adım 3-6'daki
+doğrulama onu yakalayamaz. Bu yüzden 24 saat izlenir:
+```bash
+# (a) SIGSYS ile ölüm oldu mu — üç birim için
+ssh -i $K $A1 'journalctl -u meridian -u meridian-barsarchive -u meridian-backup --since "-24h" \
+  | grep -Ei "SIGSYS|seccomp|status=31|Failed to set up mount namespacing|Read-only file system" | tail -30'
+# (b) çekirdek denetim tarafı: hangi syscall numarası kesildi
+ssh -i $K $A1 'sudo journalctl -k --since "-24h" | grep -i seccomp | tail -20'
+# (c) restart çırpınması var mı (arşivcide OnFailure yok — tek görünür iz budur)
+ssh -i $K $A1 'systemctl show meridian-barsarchive -p NRestarts; systemctl show meridian -p NRestarts'
+# (d) ajan yazımları geri geldi mi (tur-1'de sessizce durmuştu)
+ssh -i $K $A1 'cd /opt/meridian && grep -cE "agent_skills_synced|agent_integrations_synced" state/events.jsonl'
+```
+**Bir SIGSYS görülürse:** filtreyi kaldırma — **log moduna al.** İlgili birimde
+`SystemCallFilter=@system-service` satırını geçici olarak şununla değiştir:
+```
+SystemCallLog=@clock @cpu-emulation @debug @module @mount @obsolete @privileged @raw-io @reboot @swap
+```
+Bu, `@system-service`in **dışladıklarından** hangisinin gerçekten çağrıldığını journal'a yazar ve
+süreci **öldürmez**. (`SystemCallLog=@system-service` yanlıştır: *listelenen* çağrıları loglar, yani
+izin verilen her çağrıyı — kullanılamaz gürültü.) Suçlu belirlenince ya o çağrı filtreye
+`SystemCallFilter=@system-service <çağrı>` diye eklenir ya da kalemi dışarıda bırakma gerekçesi
+birim dosyasına yazılır.
+
+### Bilinen yan etki: `PrivateTmp` ve `/tmp/prescreen-*`
+`hermes_composite.py:330` ön-eleme alt süreçlerini `/tmp/prescreen-<id>` altında koşturur.
+`PrivateTmp=true` bunu **kırmaz** (özel ad alanı yazılabilir) ama SSH kabuğundan o dizin **görünmez**.
+Bakmak için:
+```bash
+ssh -i $K $A1 'sudo ls -d /tmp/systemd-private-*-meridian.service-*/tmp/prescreen-* 2>/dev/null | tail'
+```
 
 ## Bölüm C — sırlar (asla repo'da/git'te taşınMAZ)
 `state/secrets.json` git-ignored. İki yol:

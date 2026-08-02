@@ -35,12 +35,17 @@ Environment=HERMES_POLL_SECONDS=300
 Environment=MERIDIAN_PARALLEL_PROBES=1
 Environment=MERIDIAN_SEARCH_MAX_MIN=60
 Environment=HERMES_SEARCH_BUDGET=8
-# --- güvenlik: pano ağ üzerinden erişiliyorsa TOKEN ŞART. Yalnız-yerel (127.0.0.1) + SSH tünel
-#     önerilir; 0.0.0.0'a açacaksan bu token'ı gerçek bir değere ayarla (yazma uçları korunur).
-#     Token ASCII zorunlu (bkz. api._auth). Yorum BU satırda çünkü systemd `Environment=` satır-sonu
-#     yorumu desteklemez: `#` ve sonrası boşluklarla ayrı atamalara bölünür, geçersiz sayılıp
-#     journal'e "Invalid environment assignment, ignoring" gürültüsü düşer. ---
-Environment=MERIDIAN_DASH_TOKEN=CHANGEME-long-random-ascii-token
+# --- PANO TOKEN'I ARTIK BU DOSYADA DEĞİL (H3 tur-1, 2026-07-31 bakım penceresi) --------------
+#     `MERIDIAN_DASH_TOKEN` eskiden BURADA düz metin `Environment=` satırıydı; birim dosyası
+#     /etc/systemd/system altında 0644'tür — yani makinedeki HER kullanıcı token'ı okuyabiliyordu.
+#     Token rotasyona girdi ve 0600'lük `/opt/meridian/.dash.env` kanalına taşındı.
+#     `-` öneki: dosya yoksa hata değil (token'sız kurulumda pano açık kalır — tek savunma
+#     127.0.0.1 bağıdır, bkz. MERIDIAN_BIND_HOST kapısı aşağıda).
+#     DEPO–CANLI AYRIKLIĞI KAPANDI (H3 tur-2, 2026-08-02): bu satır 2026-07-31'de YALNIZ canlı
+#     birime `sed` ile eklenmişti (bakim_h9.sh:59), depodaki kopya CHANGEME'li kalmıştı. Depodaki
+#     birimi canlıya kopyalayan HER prosedür (deploy.sh:89 dahil) rotasyonu sessizce geri alırdı.
+#     Sır DOSYADA taşınır, birimde değil: `.dash.env` `dagit.sh` rsync'inden bilerek dışlanmıştır.
+EnvironmentFile=-/opt/meridian/.dash.env
 # --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------
 #     api._auth_posture_check bu değişkeni okur ve loopback DIŞI + parolasız hâlde süreci
 #     AÇMAYI REDDEDER. Eskiden ExecStart `--host 127.0.0.1` SABİTİYDİ ve bu değişkeni hiçbir
@@ -57,6 +62,107 @@ Restart=always
 RestartSec=10
 # çöküş sonrası taze-veri çekimiyle healthz ~10dk 503 dönebilir — normal
 TimeoutStartSec=0
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — TUR-2 (2026-08-02).  ÖNCEKİ: tur-1 (2026-07-31) aynı seti AYRI bir drop-in
+# dosyasından (`sertlestirme.conf`, bakim_h9.sh:56) uyguluyordu ve 9.2 UNSAFE → 6.3 MEDIUM yaptı.
+#
+# NEDEN ARTIK DROP-IN DEĞİL, BİRİMİN İÇİNDE: drop-in bir SKALER direktifi (ProtectHome, ProtectSystem)
+# birim dosyasının üstüne SESSİZCE yazar; `ReadWritePaths` ise BİRİKİR. İki kaynak bir arada olsaydı
+# tur-1'in `ProtectHome=read-only`si burada duruyormuş gibi görünürken aslında drop-in'den geliyor
+# olurdu ve dosyayı okuyan mühendis yürürlükteki ayarı YANLIŞ okurdu. Sertleştirme TEK yerde okunur.
+# → UYGULAMA PROSEDÜRÜ CANLIDAKİ TUR-1 DROP-IN'İNİ SİLER (RUNBOOK "H3 tur-2" bölümü, adım 2).
+#   Silinmezse zarar yok ama `systemd-analyze cat-config` iki kaynak gösterir; bu turun amacı o.
+# ==================================================================================================
+NoNewPrivileges=true
+# Süreç zaten User=ubuntu (root DEĞİL) — ama systemd sınırlayıcı kümeyi boş bırakmadıkça `setuid`
+# bir ikili çalıştırılırsa kapasiteler geri gelebilirdi. Boş küme = HİÇBİR yetenek. uvicorn 8080
+# (>1024) dinliyor, CAP_NET_BIND_SERVICE GEREKMİYOR — ölçüldü: ExecStart --port 8080.
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- ReadWritePaths ENVANTERİ — ÖLÇÜLDÜ (kod tarandı; "olsun diye" hiçbir yol eklenmedi) ---------
+#  /opt/meridian  → BÜTÜN AĞAÇ AÇIK, `state/`e DARALTILAMAZ. state DIŞINDA yazılan beş yol var:
+#     · logs/composite-prescreen.log  — hermes_composite.py:340-341 ROOT'a yazar (state'e DEĞİL)
+#     · skills/<ad>.v2-draft          — skill_evolve.py:169
+#     · research/edgar_facts/…csv.gz  — adapters/edgar_shares.py:71 (config.ROOT altı)
+#     · .venv/ + uv.lock              — `uv run` HER AÇILIŞTA ortamı doğrular ve gerekirse yazar
+#     · */__pycache__/*.pyc           — import ANINDA, kaynak ağacının her yerine
+#     (state'in kendisi: store.py:39 → config.STATE · strategy.yaml config.py:176 · SQLite+WAL)
+#     Tur-1 de tüm ağacı açmıştı ve canlıda çalıştı — daraltma bu turda ÖLÇÜLMEDİ, denenmedi.
+#  /home/ubuntu/.cache  → `uv run` önbelleği. ProtectHome=read-only'yi bilerek deler; ReadWritePaths
+#     ProtectHome/ProtectSystem'e ÖNCELİKLİDİR. Yoksa servis BAŞLAMAZ (tur-1'de canlıda ölçüldü).
+#  /home/ubuntu/.hermes → TUR-2 DÜZELTMESİ; TUR-1'DE EKSİKTİ VE SESSİZCE KIRIYORDU. Süreç bu dizine
+#     YAZAR: hermes.py:1942 `mkstemp(dir=~/.hermes)` + .env 0600 · :1956 meridian-model-backup.json ·
+#     :2072 config.yaml.meridian.bak + mkstemp/os.replace · :2215 skills/ mkdir · :2221 symlink
+#     kurma/sökme; ayrıca `hermes config set` alt süreci kendi config.yaml/auth.json'ını yazar.
+#     KIRILGANLIK SINIFI: bu yazımların HEPSİ `except OSError: pass` / `except Exception` altında —
+#     read-only kök altında hata GÖRÜNMEDEN yutulur, `sync_agent_skills` sessiz no-op'a döner.
+#     Yani tur-1 sonrası "ajan skill'leri eşitlendi" satırı YAZILMIYOR olabilir; RUNBOOK'un
+#     doğrulama adımı (hermes yazma probu) tam olarak bunu ölçer.
+#     `-` ÖNEKİ ZORUNLU ve ölçülmüş bir riske karşıdır: RUNBOOK Bölüm D'ye göre hermes-agent
+#     installer'ı DÜŞEBİLİR ve kurulum buna rağmen DEVAM EDER — yani `~/.hermes` OLMAYABİLİR.
+#     Öneksiz yazılsaydı systemd birimi "Failed to set up mount namespacing" ile REDDEDERDİ:
+#     ajanı olmayan bir kurulumda WORKER HİÇ AÇILMAZDI. Ajan Meridian'ın çalışması için şart
+#     değildir (ajansız deterministik öneriye düşer) — o yüzden yokluğu birimi öldürmemeli.
+#     Dizin yoksa yol sessizce atlanır ve durum tur-1'dekiyle AYNI kalır; RUNBOOK adım 2 dizinin
+#     varlığını AÇIKÇA yoklar ve adım 5(b) probu kırıklığı `HERMES-RW-KIRIK` diye adlandırır.
+ReadWritePaths=/opt/meridian /home/ubuntu/.cache -/home/ubuntu/.hermes
+# hermes_composite.py:330 `/tmp/prescreen-<id>` kullanıyor; PrivateTmp bunu KIRMAZ (özel ad alanı
+# yazılabilir) ama operatör SSH kabuğundan o dizini GÖREMEZ — RUNBOOK'ta nasıl bakılacağı yazılı.
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+# Kodda ve bağımlılık ağacında ad-alanı çağrısı YOK (grep: unshare/setns/nsenter/bwrap/chroot →
+# 0 isabet); alt süreçler düz fork/exec. CLONE_NEWUSER'ı kapatmak en ağır tek maruziyet kalemidir.
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# AF_NETLINK BİLEREK YOK: glibc getaddrinfo kaynak-adres seçimi için netlink açmayı DENER ve
+# başarısızlıkta düşer. Bu bir varsayım değil — tur-1 bu tam listeyle 2026-07-31'den beri canlıda
+# ve Alpaca/Anthropic dışa çağrıları çalışıyor. Redis 127.0.0.1:6379 (AF_INET), alt süreç
+# boruları/uvicorn sinyal çifti (AF_UNIX).
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# aarch64 tek mimari; 32-bit uyumluluk ikilisi yok (uv/python native arm64). Bu satır olmadan
+# seccomp filtresi başka bir ABI üzerinden dolaşılabilir.
+SystemCallArchitectures=native
+#
+# --- BİLİNÇLİ OLARAK DIŞARIDA BIRAKILANLAR (her biri gerekçeli — ölçülmeden eklenmez) ------------
+# MemoryDenyWriteExecute : ÖLÇÜLEMEDİ, o yüzden YOK. Bizim kodda ctypes/cffi yok (grep: 0 isabet)
+#   ama bağımlılık ağacı üçüncü parti (numpy/pandas/grpc/anthropic) ve CPython `uuid` gibi stdlib
+#   modülleri koşula bağlı `ctypes` yükler; libffi trampolini W+X ister. ASIL SEBEP ARIZA ŞEKLİ:
+#   ihlal AÇILIŞTA değil, o kod yoluna İLK GİRİLDİĞİNDE SIGSYS ile öldürür — yani aşağıdaki
+#   "başlat + healthz" doğrulaması bunu YAKALAYAMAZ. Tur-3 kalemi: 24 saat canlı gözlemle ölç.
+# PrivateDevices          : /dev kullanımı kodda yok (grep: 0 isabet) ama reflect.py:1059 süreç
+#   havuzu multiprocessing semaforları için /dev/shm ister; PrivateDevices'ın verdiği /dev/shm
+#   ÖZELdir ve havuz–ebeveyn eşleşmesi bu turda ölçülmedi. Tur-3 kalemi.
+# PrivateUsers / ProtectProc=invisible / ProcSubset=pid : ProcSubset /proc/meminfo,cpuinfo,stat'ı
+#   gizler; os.cpu_count() (reflect.py:1059, sprint.py:290) sysconf üzerinden okur ve bunun
+#   aarch64/glibc'de /sys mi /proc mu kullandığı ÖLÇÜLMEDİ. Yanlışsa işçi sayısı sessizce 2'ye
+#   düşer — sessiz bozulma sınıfı. Tur-3 kalemi.
+# IPAddressDeny/IPAddressAllow : Alpaca/FMP/Anthropic/Nous uç noktalarının IP kümesi SABİT DEĞİL
+#   (CDN arkası). Bir allowlist bugün çalışıp yarın veri akışını kesebilirdi.
+# SystemCallErrorNumber=EPERM : BİLEREK YOK. EPERM engellenen çağrıyı sıradan bir OSError'a
+#   çevirirdi ve bu depoda o hatalar yer yer `except OSError: pass` ile yutuluyor → seccomp
+#   engeli SESSİZ veri kaybına dönerdi. Varsayılan davranış (SIGSYS ile öldür) GÜRÜLTÜLÜDÜR:
+#   Restart=always yeniden başlatır, OnFailure=meridian-fail-notify operatöre haber verir ve
+#   journal "killed by SIGSYS" yazar. Gürültü, sessizlikten iyidir.
+#
+# EN SON SATIR — seccomp. @system-service dışladıkları: @clock @cpu-emulation @debug @keyring(kısmi)
+# @module @mount @obsolete @privileged @raw-io @reboot @swap. Bunların hiçbiri Meridian'ın yolunda
+# ölçülmedi; yine de bir kaçırma ihtimali VAR ve arıza şekli SIGSYS'tir (yukarıya bkz.).
+# ŞÜPHE HÂLİNDE LOG MODU (öldürmeden ölçmek): bu satırı GEÇİCİ OLARAK kaldır ve yerine
+#   SystemCallLog=@clock @cpu-emulation @debug @module @mount @obsolete @privileged @raw-io @reboot @swap
+# koy — @system-service'in DIŞLADIKLARINDAN hangisinin gerçekten çağrıldığı journal'a düşer,
+# süreç ÖLMEZ. (`SystemCallLog=@system-service` YANLIŞTIR: listelenen çağrılar loglanır, yani
+# izin verilen HER çağrıyı yazar — kullanılamaz gürültü.) Komut RUNBOOK'ta.
+# UYGULAMA PROSEDÜRÜ İLK 24 SAAT JOURNAL İZLEMEYİ ŞART KOŞAR.
+SystemCallFilter=@system-service
 
 [Install]
 WantedBy=multi-user.target
