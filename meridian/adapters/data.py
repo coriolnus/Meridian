@@ -1227,7 +1227,44 @@ def _leg_universe(ticker: str) -> list:
     return [INDEX_SYMBOL, *REPLAY_UNIVERSE, ticker.upper()]
 
 
-def _alpaca_session_bars(ticker: str, session: str) -> dict:
+def _leg_temiz_cevap(source, calls, fails) -> bool:
+    """BACAK İSTEĞİ "TEMİZ TAM CEVAP" MI? — TEK YASA, İKİ TÜKETİCİ.
+
+    (a) `_alpaca_session_bars`: temizse barı DÖNMEYEN sembol de `asked` defterine girer (tekrar-dövme
+        yasağı — bkz. C20 bloğu); (b) `_leg_outcome_reason`: temizse barsızlık `"empty"`dir, temiz
+        DEĞİLSE `outcomes`a `error:` yazılır (HATA ≠ BOŞ).
+    İKİ KOPYA YAZILSAYDI biri güncellenir diğeri unutulurdu — ve bu tam olarak yaşandı: C20
+    2026-08-02'de (a)'da düzeltildi, (b) açık kaldı ve ROADMAP küçük-kuyruğuna düştü."""
+    return bool(source) and int(calls or 0) > 0 and int(fails or 0) == 0
+
+
+def _leg_outcome_reason(tasima: dict) -> str | None:
+    """Bacak barsız döndüyse bu bir CEVAP mı, bir ARIZA mı? Cevapsa None (`"empty"` meşru), arızaysa
+    `outcomes`a yazılacak NEDEN (çağıran başına `error:` önekini koyar).
+
+    ÖLÇÜLÜR, TAHMİN EDİLMEZ: girdisi `alpaca.data_transport()` sayaçlarının BU ÇAĞRIDAKİ deltası ve
+    sembolün `asked` defterindeki hâli. `asked` zaten "bu sembol hakkında GÜVENİLİR bir cevabımız
+    var" defteridir; ikinci bir ölçüt uydurmak aynı yasanın ikinci uygulaması olurdu.
+
+    ÜÇ ARIZA SINIFI AYRI ADLANDIRILIR çünkü operatörün yapacağı şey farklıdır: `transport_fail`
+    (istek düştü — 429/5xx), `transport_no_call` (ağa HİÇ çıkılmadı: soğuma ya da anahtarsızlık),
+    `transport_no_source` (istek gitti, hiçbir katman servis etmedi). Üçü de sembol hakkında HÜKÜM
+    VERMEZ; hepsi `source_error` hükmüne akar ve `_record_no_data` serisini BESLEMEZ."""
+    if not tasima:
+        # ÖLÇÜM YOK (kayıtlı sahteler / eski çağrı yolu): "arıza" demek uydurma olurdu → eski
+        # davranış korunur ve barsızlık `"empty"` sayılır.
+        return None
+    if tasima.get("cevaplandi"):
+        return None                                   # TEMİZ cevap geldi, bar yok → gerçekten barsız
+    fails, calls = int(tasima.get("fails") or 0), int(tasima.get("calls") or 0)
+    if fails:
+        return f"transport_fail:{fails}/{calls}"
+    if not calls:
+        return "transport_no_call"
+    return "transport_no_source"
+
+
+def _alpaca_session_bars(ticker: str, session: str, tasima: dict | None = None) -> dict:
     """{TICKER: bar + `_source`}. Damga BAR BAŞINA taşınır: hangi basamağın (sip/iex)
     servis ettiği tahmin edilmez — `alpaca.same_evening_bars` söyler ve defterde o adla yaşar.
     Basamak turlar arasında değişebilir (abonelik soğuması), o yüzden damga sembolle birlikte gider.
@@ -1252,11 +1289,19 @@ def _alpaca_session_bars(ticker: str, session: str) -> dict:
     TEKRAR-DÖVME BURADA DEĞİL, SOĞUMADA DURUR: arıza `alpaca._data_fail` ile 300 sn'lik soğuma
     yazar; aynı turdaki sonraki semboller `_data_cooled` yüzünden AĞA HİÇ ÇIKMAZ (None → bars boş →
     yine işaret yok). Soğuma dolunca poll yeniden dener — kaybedilen tek şey bir soğuma penceresidir,
-    bütün seans değil."""
+    bütün seans değil.
+
+    `tasima` ÇIKTI PARAMETRESİ (ROADMAP küçük-kuyruk, 2026-08-02): verilirse bu çağrıdaki taşıma
+    deltası (`calls`/`fails`/`source`), istek çıkıp çıkmadığı (`istendi`) ve sembolün NİHAİ `asked`
+    hâli (`cevaplandi`) doldurulur. Tüketicisi `_fetch_alpaca_session`tir: barsızlığın "cevap" mı
+    "arıza" mı olduğu ancak bu sayaçlarla ayrılır (bkz. `_leg_outcome_reason`). Sözlük verilmezse
+    davranış BİT-BİT eskisi gibidir — bu bir alan kazanımıdır, sözleşme değişikliği değil."""
     from . import alpaca
     memo = _ALPACA_MEMO.setdefault(session, {})
     asked = _ALPACA_ASKED.setdefault(session, set())
     need = [s for s in _leg_universe(ticker) if s.upper() not in asked]
+    if tasima is not None:
+        tasima.update({"istendi": bool(need), "calls": 0, "fails": 0, "source": None})
     if need:
         _tr0 = alpaca.data_transport() or {}
         res = alpaca.same_evening_bars(need, session) or {}
@@ -1268,23 +1313,38 @@ def _alpaca_session_bars(ticker: str, session: str) -> dict:
         answered = {str(s).upper() for s in bars}
         _calls = int(_tr1.get("calls") or 0) - int(_tr0.get("calls") or 0)
         _fails = int(_tr1.get("fails") or 0) - int(_tr0.get("fails") or 0)
-        if src and _calls > 0 and _fails == 0:
+        if tasima is not None:
+            tasima.update({"calls": _calls, "fails": _fails, "source": src})
+        if _leg_temiz_cevap(src, _calls, _fails):
             answered |= {s.upper() for s in need}     # TEMİZ tam cevap: barsız sembol GERÇEKTEN barsız
         asked.update(answered)
+    if tasima is not None:
+        # NİHAİ HÂL, ARA HÂL DEĞİL: sembol bu turda cevaplamış da olabilir, ÖNCEKİ bir turun temiz
+        # cevabıyla zaten defterde de olabilir. İkisi de "güvenilir cevabımız var" demektir.
+        tasima["cevaplandi"] = ticker.upper() in asked
     return memo
 
 
-def _fetch_alpaca_session(ticker: str, session: str) -> tuple[pd.DataFrame, str | None]:
-    """Aynı-akşam barı → (COLS çerçevesi, kaynak damgası).
+def _fetch_alpaca_session(ticker: str, session: str) -> tuple[pd.DataFrame, str | None, str | None]:
+    """Aynı-akşam barı → (COLS çerçevesi, kaynak damgası, TAŞIMA ARIZA NEDENİ|None).
 
     HACİM: `alpaca_sip` KONSOLİDEDİR ve ham yazılır. `alpaca_iex` tek borsanın hacmidir ve
     ölçülmüş oranla ÇARPILIR; oran yoksa hacim UYDURULMAZ (0 + `volume_scaled: false`).
     Ham kayıt `_ALPACA_PENDING`e konur ve deftere ancak yazım BAŞARILI olursa geçer — yazılmamış
-    bir barı 'geçici' diye kaydetmek, olmayan bir satır hakkında hüküm üretmek olurdu."""
+    bir barı 'geçici' diye kaydetmek, olmayan bir satır hakkında hüküm üretmek olurdu.
+
+    ÜÇÜNCÜ ALAN — HATA ≠ BOŞ'UN İKİNCİ DELİĞİ (ROADMAP küçük-kuyruk, 2026-08-02): C20 kardeşi
+    yalnız FIRLATAN yolu kapatmıştı. `alpaca.same_evening_bars` ARIZADA FIRLATMAZ ({"source": None,
+    "bars": {}} döner), yani taşıma çöktüğünde bu fonksiyon SESSİZCE `(boş çerçeve, None)`
+    döndürüyor ve çağıran `outcomes`a `"empty"` yazıyordu — ağ arızası `symbol_unknown` hükmüne,
+    oradan `_record_no_data` serisine ve 5. turda "evren bakımı gerekiyor olabilir" alarmına
+    dönüşüyordu. Artık ayrımı `_alpaca_session_bars`ın `tasima` sayaçları veriyor: barsızlık ancak
+    TEMİZ bir cevabın ardından "empty"dir, aksi hâlde neden ADIYLA yukarı taşınır."""
     from .. import memory
-    bar = (_alpaca_session_bars(ticker, session) or {}).get(ticker.upper())
+    _tasima: dict = {}
+    bar = (_alpaca_session_bars(ticker, session, tasima=_tasima) or {}).get(ticker.upper())
     if not bar or not bar.get("close"):
-        return pd.DataFrame(), None
+        return pd.DataFrame(), None, _leg_outcome_reason(_tasima)
     src = bar.get("_source") or ALPACA_SOURCE
     raw_v = float(bar.get("volume") or 0.0)
     if src != ALPACA_SOURCE:
@@ -1300,7 +1360,7 @@ def _fetch_alpaca_session(ticker: str, session: str) -> tuple[pd.DataFrame, str 
         "source": src, "close": float(bar["close"]), "iex_volume": raw_v if scaled is not None else None,
         "volume": float(vol), "ratio": round(ratio, 4) if ratio else None,
         "volume_scaled": scaled, "at": memory.now_iso()}
-    return pd.DataFrame([row])[COLS], src
+    return pd.DataFrame([row])[COLS], src, None
 
 
 def _leg_eligible(ticker: str, end: str, incremental_ok: bool, best: pd.DataFrame) -> str | None:
@@ -1897,7 +1957,13 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
     if _leg:
         _leg_src, _leg_err = None, None
         try:
-            adf, _leg_src = _fetch_alpaca_session(ticker, _leg)
+            _leg_res = _fetch_alpaca_session(ticker, _leg)
+            # ŞEKİL NORMALİZASYONU (earnings._pair ile AYNI gerekçe): fonksiyon ÜÇLÜ döner
+            # (çerçeve, damga, taşıma-arızası). Kayıtlı sahteler — tests/test_denetim_verihatti_v157
+            # `lambda t, s: (pd.DataFrame(), None)` — İKİLİ döndürür ve o sözleşme KIRILMAZ: üçüncü
+            # alan yoksa "taşıma hakkında ÖLÇÜM YOK" demektir ve eski davranış ("empty") sürer.
+            adf, _leg_src = _leg_res[0], _leg_res[1]
+            _leg_err = _leg_res[2] if len(_leg_res) > 2 else None
         except Exception as e:
             adf = pd.DataFrame()
             _leg_err = type(e).__name__
@@ -1915,6 +1981,13 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
             # "sembol öldü" kanıtına çevriliyordu. Bu, aşağıda uzun uzun anlatılan ve 2026-07-22'de
             # düzeltildiği söylenen hatanın bacaktaki nüshasıydı. Anahtar da damgayı izler:
             # başarıda `outcomes[_leg_src]` yazılıyor, arızada damga HENÜZ YOK → "alpaca".
+            #
+            # İKİNCİ DELİK DE KAPALI (ROADMAP küçük-kuyruk, 2026-08-02): yukarıdaki `except` YALNIZ
+            # FIRLATAN yolu yakalıyordu; `alpaca.same_evening_bars` ise arızada FIRLATMAZ
+            # ({"source": None, "bars": {}}). Yani 429/soğuma/kotasızlık hâlinde `_leg_err` None
+            # kalıyor ve buraya yine "empty" yazılıyordu — düzeltmenin BEYAN ETTİĞİ sınıf açıktı.
+            # Neden artık taşıma sayaçlarından (calls/fails deltası) `_fetch_alpaca_session`
+            # üzerinden geliyor; `_leg_err` iki yolu da temsil eder.
             outcomes[_leg_src or "alpaca"] = f"error:{_leg_err}" if _leg_err else "empty"
             _ALPACA_PENDING.pop(ticker.upper(), None)         # yazılmayacak bar 'geçici' sayılmaz
         else:

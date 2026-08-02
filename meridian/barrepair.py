@@ -271,10 +271,20 @@ def integrity_apply(rapor: dict) -> dict:
     store.write_json(data.INTEGRITY_FILE, kayit)
     try:
         from . import obs
+        # BEYAN KODLA EŞİTLENDİ (denetim hafif bulgusu, 2026-08-02): bu satır `dataset.load_cached`i
+        # de "güvensiz dönemi dışlayanlar" arasında sayıyordu; `data.measurement_bars` docstring'i
+        # (GERÇEK KAYNAK) bunu ölçülmüş gerekçeyle REDDEDİYOR — `dataset` yolu BİLEREK bağlanmadı,
+        # `load_cached` yalnız `sanitize_bars` + `_window` çağırır. Yani onarımın kendi olayı, kirli
+        # kalan tabloları temiz ilan ediyordu; üstelik türetilmiş artefaktların yeniden üretilip
+        # üretilmeyeceğine karar veren satırda (UYDURMA YASAĞI'nın tam hedefi). Hangi yolların HÂLÂ
+        # güvensiz dönemi GÖRDÜĞÜ artık aynı cümlede yazılıdır.
         obs.warn("bars_integrity_written", symbols=kayit["sembol_sayisi"],
                  breaks=kayit["kirilma_sayisi"], rows_excluded=kayit["dislanan_bar_toplam"],
-                 detail="ölçüm yolları (component_ic, cf_backfill, dataset.load_cached) artık "
-                        "güvensiz dönemi DIŞLIYOR; türetilmiş artefaktlar YENİDEN ÜRETİLMELİ")
+                 detail="güvensiz dönemi DIŞLAYAN yollar: component_ic + cf_backfill (ikisi de "
+                        "data.measurement_bars üzerinden). HÂLÂ KİRLİ DÖNEMİ GÖREN yollar: "
+                        "dataset.load / dataset.load_cached — yani walk-forward, prescreen, reflect "
+                        "ve canlı tarama (gerekçe: data.measurement_bars docstring'i). Türetilmiş "
+                        "artefaktlar YENİDEN ÜRETİLMELİ")
     except Exception:  # sessiz-yutma: kayıt kanalı düştü; defter diske yazıldı ve rapor döndü
         pass
     return kayit

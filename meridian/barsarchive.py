@@ -528,6 +528,56 @@ GAP_CONTEXT_MIN = 5        # deliğin iki yanında bakılan bağlam (dk)
 GAP_CONTEXT_NEED = 4       # bağlamın en az bu kadar dakikasında bar OLMALI (sembol "sürekli akıyor")
 GAP_TAIL_BYTES = 4_000_000  # gün dosyasının yalnız SONU okunur (bkz. `_pencere_satirlari`)
 GAP_MAX_REPORT = 20        # rapora giren en fazla boşluk (yük sınırı; sayı ayrıca `bosluk_sayisi`de)
+GAP_CALENDAR = "XNYS"      # seans takvimi — data.CALENDAR / scheduler._leg_ready ile AYNI ad
+GAP_SEANS_CACHE_MAX = 40   # gün başına bir kayıt; uzun ömürlü worker'da sözlük sınırsız büyümesin
+_SEANS_CACHE: dict = {}    # {gün: (durum, açılış, kapanış, hata)} — YALNIZ başarılı okumalar
+
+
+def _seans_araligi(gun: str) -> tuple:
+    """O GÜNÜN GERÇEK seans aralığı — XNYS `schedule()`ten, UTC. `(durum, açılış, kapanış, hata)`.
+
+    durum: `"ok"` (seans günü; açılış/kapanış dolu) · `"seans_disi"` (takvim OKUNDU ve o gün seans
+    değil: hafta sonu/tam tatil) · `"takvim_yok"` (takvim okunamadı → HÜKÜM YOK).
+
+    NEDEN `barclock.is_market_open` DEĞİL (denetim 2026-08-02, hafif bulgu): o fonksiyon kendi
+    docstring'inde "TATİLLER hariç (yaklaşık)" der ve bunu şöyle meşrulaştırır — "Alpaca zaten
+    kapalıyken bar göndermez, o yüzden bu yalnız bir KOLAYLIK kapısıdır". Gerekçe `is_admissible`
+    için doğru, `gap_scan` için TERSİNE ÇEVRİLMİŞTİR: burada semantik "bar YOKSA kesinti VAR"dır,
+    yani barın gelmemesi tam da alarm sebebidir. Somut vaka NYSE YARIM GÜNLERİ (13:00 ET kapanış —
+    Şükran ertesi, 24 Aralık, 3 Temmuz): o gün dosya VARDIR (sabah barları yazılmıştır), ama
+    13:03-16:00 ET penceresi tamamen kapanış SONRASINA düşer; eski beklenti ~58 dakika üretir,
+    `dolu` boştur ve `tur="akis"` boşluğu SAHTE bir `intraday_gap_detected` uyarısı bastırırdı
+    ("mrd:bars bir RING'tir, o dakikalar geri gelmez" — yani operatör geri alınamaz bir veri kaybı
+    sanır). TAM tatil `arsiv_yok` ile kurtuluyordu, yarım gün kurtulmuyordu.
+
+    TAKVİM OKUNAMAZSA YEDEK BEKLENTİ ÜRETİLMEZ: `is_market_open`a geri düşmek kapatılan deliği
+    aynen geri açardı (yaklaşık takvim = sahte alarm). Ölçülemeyen şey None'dır ve `gap_scan`
+    `durum="takvim_yok"` ile HÜKÜM VERMEZ. Bu bir DARALMA değil, hükümsüzlüktür: gerçek bir
+    kesinti de o turda raporlanmaz, ama uydurma bir kesinti de raporlanmaz.
+
+    ÖNBELLEK YALNIZ BAŞARIYA: `gap_scan` her poll'de (300 sn) aynı günü sorar, takvim sorgusu
+    boşuna tekrarlanmasın. Ama bir ARIZAYI önbelleğe almak, takvim modülü geri geldikten sonra bile
+    o günü sonsuza dek "takvim_yok" bırakırdı — arıza her çağrıda yeniden denenir."""
+    key = str(gun)[:10]
+    hit = _SEANS_CACHE.get(key)
+    if hit is not None:
+        return hit
+    try:
+        import pandas_market_calendars as mcal
+        sched = mcal.get_calendar(GAP_CALENDAR).schedule(start_date=key, end_date=key)
+    except Exception as e:  # sessiz-yutma DEĞİL: neden `durum`/`seans.hata` ile çağırana ÇIKAR ve gap_scan hüküm vermez (olay basmak SAF fonksiyonun sözleşmesini kırardı — kaydı çağıran yapar)
+        return ("takvim_yok", None, None, f"{type(e).__name__}: {e}")
+    if not len(sched):
+        out = ("seans_disi", None, None, None)
+    else:
+        satir = sched.iloc[0]
+        out = ("ok", satir["market_open"].to_pydatetime(),
+               satir["market_close"].to_pydatetime(), None)
+    if len(_SEANS_CACHE) >= GAP_SEANS_CACHE_MAX:
+        for k in sorted(_SEANS_CACHE)[:len(_SEANS_CACHE) - GAP_SEANS_CACHE_MAX + 1]:
+            _SEANS_CACHE.pop(k, None)
+    _SEANS_CACHE[key] = out
+    return out
 
 
 def _pencere_satirlari(day: str, tail_bytes: int = GAP_TAIL_BYTES):
@@ -581,30 +631,48 @@ def gap_scan(as_of=None, day: str | None = None, rows=None,
     (`scheduler._intraday_gap_check`); böylece testler gerçek `events.jsonl`'a dokunmadan koşar.
 
     `rows` verilirse diske hiç gidilmez (fikstür yolu). `as_of` verilmezse TEK saat `barclock`tan
-    gelir — seans sınırı da oradan (NY 9:30-16:00, DST-farkında); saat/seans yasası burada
-    KOPYALANMAZ."""
+    gelir; SEANS SINIRI ise `barclock` DEĞİL, XNYS takvimidir (`_seans_araligi` — yarım gün/tatil
+    bilir). Saat yasası barclock'ta, TAKVİM yasası takvimde: ikisi de burada KOPYALANMAZ."""
     simdi = as_of or barclock.now()
     if simdi.tzinfo is None:
         simdi = simdi.replace(tzinfo=barclock.UTC)
     gun = day or barclock.session_date(simdi)
     bitis = simdi.replace(second=0, microsecond=0) - dt.timedelta(minutes=int(lag_min))
     baslangic = bitis - dt.timedelta(minutes=int(window_min))
+    # BEKLENTİ GERÇEK SEANS ARALIĞINDAN ÜRETİLİR: "9:30-16:00 hafta içi" varsayımı yarım günlerde
+    # kapanış SONRASINI beklenti sayıyor ve sahte akış-kesintisi alarmı basıyordu (bkz. `_seans_araligi`).
+    _cal_durum, _acilis, _kapanis, _cal_hata = _seans_araligi(gun)
     beklenen = []
-    m = baslangic
-    while m < bitis:
-        if barclock.is_market_open(m):
-            beklenen.append(m)
-        m += dt.timedelta(minutes=1)
+    if _cal_durum == "ok":
+        m = baslangic
+        while m < bitis:
+            if _acilis <= m < _kapanis:
+                beklenen.append(m)
+            m += dt.timedelta(minutes=1)
     out = {"gun": gun, "olculdu": _now_iso(), "durum": "ok", "bosluklar": [], "bosluk_sayisi": 0,
            "pencere": {"baslangic": baslangic.isoformat(), "bitis": bitis.isoformat(),
                        "beklenen_dk": len(beklenen)},
+           # SEANSIN KENDİSİ RAPORA GİRER: "58 dakika bekledim" cümlesinin NEDEN'i okunabilsin —
+           # yarım gün mü, tam gün mü, yoksa takvim mi konuşmadı (üç hâl üç adla ayrılır).
+           "seans": {"durum": _cal_durum, "takvim": GAP_CALENDAR,
+                     "acilis": _acilis.isoformat() if _acilis else None,
+                     "kapanis": _kapanis.isoformat() if _kapanis else None, "hata": _cal_hata},
            "sembol": 0, "gelen_bar": 0, "bozuk_satir": 0,
            "esik": {"pencere_dk": int(window_min), "gecikme_dk": int(lag_min),
                     "asgari_bosluk_dk": int(min_gap_min), "baglam_dk": int(context_min),
                     "baglam_gereken": int(context_need)}}
+    if _cal_durum == "takvim_yok":
+        # TAKVİM KONUŞMADI: beklenti ÜRETİLEMEZ, dolayısıyla eksiklik de ÖLÇÜLEMEZ. Yaklaşık bir
+        # takvimle hüküm vermek (eski davranış) yarım günlerde uydurma kesinti raporluyordu;
+        # "ölçemedim" demek, yanlış ölçmekten dürüsttür (uydurma yasağı).
+        out["durum"] = "takvim_yok"
+        return out
     if not beklenen:
         # SEANS DIŞI: beklenti YOK, dolayısıyla eksiklik de yok. "Sıfır boşluk bulundu" demek,
         # gece yarısı için sağlıklı akış RAPORU üretmek olurdu — üçüncü hâl adıyla söylenir.
+        # ARTIK TAM TATİLİ VE YARIM GÜNÜN KAPANIŞ SONRASINI DA KAPSAR: pencere gerçek
+        # market_open/market_close aralığının tamamen dışındaysa buraya düşer (eskiden yarım günde
+        # düşmüyordu — `beklenen` doluyor ve sahte "akis" boşluğu üretiliyordu).
         out["durum"] = "seans_disi"
         return out
     if rows is None:

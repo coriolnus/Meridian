@@ -211,6 +211,34 @@ def refresh(tickers: list[str]) -> int:
     250 ticker = 250 istek = günlük kota — o yüzden yedek). Sonuç MEVCUT csv ile BİRLEŞTİRİLİR
     (kaynak değişimi geçmiş çapaları silmez).
 
+    BİRLEŞTİRME YASASI — İKİ DAL, TEK BEYAN (denetim hafif bulgusu, 2026-08-02). Denetim bu
+    docstring'in yalnız BİR dalı anlattığını ve iki dalın da yanlış tarafta olduğunu ölçtü:
+
+      (i) NASDAQ DALI YALNIZ EKLİYORDU. Kazanç tarihi REVİZE edilip kaydığında (modülün kendi PIT
+          bloğu "borsanın en çok REVİZE EDİLEN takvimlerinden biri" diyor) ESKİ tarih dosyada
+          sonsuza dek kalıyordu: `in_blackout` HAYALET bir tarih için karartma uyguluyor,
+          `coverage().future_dates` şişiyor ve o hayalet ertesi gün GEÇMİŞ çapaya (PEAD) dönüşüyordu.
+          YENİ: kaynağın o turda DÖNDÜĞÜ ticker'lar için, kaynakta artık OLMAYAN GELECEK tarihler
+          (bugün dâhil, tazeleme penceresinin İÇİNDE kalanlar) DÜŞÜLÜR. GEÇMİŞ ÇAPALAR KALIR —
+          "geçmiş silinmez" sözü aynen korunur; emekliye ayrılan yalnız İLERİ-YÖNLÜ revizyondur.
+          KANIT ŞARTI: yalnız gün kapsaması TAM (1,0) olan turda. Kısmi pencerede bir tarihin
+          yokluğu revizyon DEĞİL, kaçan gün-dilimi olabilir; onu silmek karartmayı GERÇEKTEN
+          daraltırdı (bu modülün en pahalı hata sınıfı). Ölçülemeyen kapsama (None) da tetiklemez.
+
+     (ii) FMP DALI SESSİZCE DÜŞÜRÜYORDU. `refresh_from_fmp` dosyayı BAŞTAN yazıyor ve yalnız
+          `failed` ticker'ların önbellek satırlarını kurtarıyordu; BAŞARIYLA çekilen bir ticker'ın
+          Nasdaq'tan birikmiş tarihleri yazımdan sessizce düşüyordu — yani docstring'in "kaynak
+          değişimi geçmiş çapaları silmez" cümlesi tam da kaynak değişimi anında ihlal ediliyor ve
+          `days_since_report` (PEAD çapası) o sembollerde körelıyordu. YENİ: o yol da ÜST KÜME
+          kuralına çekildi (mevcut takvimin TAMAMI ∪ FMP satırları) — C25 kısmi-yolundaki
+          "yedek Nasdaq'ı EZMEZ" deseninin `refresh_from_fmp`in KENDİ yazımına uygulanmış hâli.
+
+    İKİ DEĞİŞİKLİĞİN KARARTMAYA ETKİSİ ZIT YÖNDEDİR ve bilerek öyledir: (ii) fail-open'ı KAPATIR
+    (kaybolan tarihler geri gelir → daha çok karartma), (i) yalnız kaynağın KENDİSİNİN geri
+    çektiği hayalet tarihleri kaldırır (o tarihte rapor YOKTUR — orada karartma koruma değil
+    gürültüdür). Her ikisi de olay basar: `earnings_future_revision_retired` ve
+    `earnings_refresh_partial`.
+
     ÜÇÜNCÜ SÜTUN (`time`): kaynağın BMO/AMC alanı biliniyorsa yazılır, bilinmiyorsa BOŞ kalır.
     Karar yolunu BUGÜN etkilemez (`TIME_TIGHTEN=False`); alan birikmeye BUGÜN başlar çünkü geçmiş
     takvim geriye doğru zenginleşmez — bugün yazılmayan saat bilgisi bir daha gelmez.
@@ -310,6 +338,38 @@ def refresh(tickers: list[str]) -> int:
                         "getirdiği satırlar ATILMADI, FMP satırları yanlarına eklendi; karartma "
                         "semantiği ve tam-boşluk yolu DEĞİŞMEDİ. Yedek bu turda kotadan ticker "
                         "başına bir istek harcadı.")
+
+    # ---- İLERİ-YÖNLÜ REVİZYON EMEKLİLİĞİ (denetim hafif bulgusu; gerekçe: refresh docstring'i (i))
+    # NEDEN BURADA: `merged` artık BİRİKMİŞ takvimdir (prev + varsa FMP yedeği) ve `rows` kaynağın
+    # BU TURDAKİ tam cevabıdır — ikisi ancak yan yanayken "kaynak bu tarihi geri çekti" denebilir.
+    # NEDEN `rows` UYGULANMADAN ÖNCE: aşağıdaki döngü kaynağın GÜNCEL tarihlerini yazar; emeklilik
+    # ondan sonra koşsaydı yeni yazılan satırı da düşürme riski taşırdı (aynı anahtar iki yasada).
+    # ÇAKIŞMA YOK: FMP yedeği yalnız kapsama < 0,90 iken koşar, emeklilik yalnız kapsama == 1,0
+    # iken — ikisi aynı turda BİRLİKTE çalışamaz (yani bir kaynağın getirdiğini diğeri silemez).
+    _emekli: list = []
+    if _kapsama == 1.0:
+        _bugun = dt.date.today().isoformat()
+        _konusan = {t for t, _d, _tm in rows}      # kaynak BU ticker hakkında konuştu
+        _guncel = {(t, d) for t, d, _tm in rows}   # …ve bunlar onun BUGÜNKÜ cevabı
+        # SESSİZ SEMBOL DOKUNULMAZ: tarihi pencerenin TAMAMEN dışına kayan sembol hiç dönmez ve
+        # `_konusan`a girmez — onun eski tarihi KALIR. Bu bilinçli bir DAR kapsamdır: "kaynak
+        # sustu" ile "kaynak geri çekti" aynı kanıt değildir.
+        _emekli = [(t, d) for (t, d) in sorted(merged)
+                   if t in _konusan and _bugun <= d <= _e and (t, d) not in _guncel]
+        for _k in _emekli:
+            merged.pop(_k, None)
+        if _emekli:
+            from . import obs
+            obs.warn("earnings_future_revision_retired", source="nasdaq",
+                     satir=len(_emekli), sembol=len({t for t, _ in _emekli}),
+                     ornek=";".join(f"{t}:{d}" for t, d in _emekli[:8]),
+                     pencere=f"{_s}..{_e}", kapsama=_kapsama,
+                     detail="kaynak TAM kapsamalı pencerede bu GELECEK tarihleri artık bildirmiyor "
+                            "→ revizyon emekliye ayrıldı (hayalet karartma + şişmiş future_dates "
+                            "kaynağı). GEÇMİŞ çapalara DOKUNULMADI; kısmi/ölçülemeyen kapsamada bu "
+                            "yol HİÇ çalışmaz (eksik gün-dilimini 'iptal' saymak karartmayı "
+                            "gerçekten daraltırdı).")
+
     for t, d, tm in rows:
         if tm or (t, d) not in merged:
             merged[(t, d)] = tm or merged.get((t, d))
@@ -334,6 +394,10 @@ def refresh(tickers: list[str]) -> int:
             # KISMİ-PENCERE YEDEĞİ (KOVA B): None = eşik tetiklenmedi/ölçülemedi, 0 = denendi ama
             # satır gelmedi (anahtar yok ya da kota) — iki olgu aynı sayıyla anlatılamaz.
             fmp_yedek=_fmp_yedek, fmp_yedek_esigi=EARNINGS_FMP_FALLBACK_COVERAGE,
+            # İLERİ-YÖNLÜ REVİZYON: kaç hayalet GELECEK tarih emekliye ayrıldı. 0 = tur koştu,
+            # revizyon yoktu; kapsama TAM değilse yol hiç koşmaz ve sayı yine 0'dır (ayrımı
+            # `gun_kapsama` alanı verir — iki alan yan yana okunur).
+            emekli_satir=len(_emekli),
             gun_olcum_yok=(None if _gun else "adaptör sayaç doldurmadı — kapsama ÖLÇÜLMEDİ"))
     return len(rows)
 
@@ -341,7 +405,16 @@ def refresh(tickers: list[str]) -> int:
 def refresh_from_fmp(tickers: list[str]) -> int:
     """Evrenin kazanç tarihlerini FMP'den çekip state/earnings.csv'ye yazar (ticker,date). Hem PEAD
     çapasını hem MEVCUT kazanç-karartma guard'ını (bugüne dek boş veriyle no-op'tu) gerçek veriyle
-    besler. Anahtar yoksa 0 döner; kısmi hata bir ticker'ı atlar, dosyayı bozmaz."""
+    besler. Anahtar yoksa 0 döner; kısmi hata bir ticker'ı atlar, dosyayı bozmaz.
+
+    YAZIM ÜST KÜMEDİR (denetim hafif bulgusu, 2026-08-02 — `refresh` docstring'i (ii) ile AYNI yasa):
+    dosya BAŞTAN yazılır ama içeriği "MEVCUT takvimin TAMAMI ∪ bu turun FMP satırları"dır. Eskiden
+    yalnız `failed` ticker'ların önbellek satırları kurtarılıyordu; yani BAŞARIYLA çekilen bir
+    ticker'ın Nasdaq'tan birikmiş tarihleri sessizce DÜŞÜYORDU (`days_since_report` körelir,
+    `in_blackout` o tarihlerde fail-open'a düşerdi). Kaynak değişimi geçmiş çapaları SİLMEZ.
+    DÖNÜŞ DEĞERİ DEĞİŞMEDİ: hâlâ "bu turda elde edilen satır" sayısıdır (FMP'nin döndürdükleri +
+    düşen ticker'lardan kurtarılanlar), dosyadaki TOPLAM değil — `refresh`in `if not n` kapısı ve
+    scheduler'ın nabzı o sayıya yaslanıyor."""
     from .adapters import fmp
     if not fmp.available():
         return 0
@@ -365,26 +438,30 @@ def refresh_from_fmp(tickers: list[str]) -> int:
     # (bugün oldu) 100 ticker gelir, 150'si düşerdi; in_blackout() veri yokken FAIL-OPEN olduğu için
     # o 150 isimde KAZANÇ GÜNÜ işlem açılırdı — sert bir guard sessizce no-op'a dönerdi.
     # Çözüm: yaz değil BİRLEŞTİR; başarısız ticker'ların ESKİ tarihleri korunur ve durum kaydedilir.
+    # SAAT SÜTUNU DA AYNI YOLDAN KORUNUR: FMP kazanç ucu BMO/AMC vermez (adapters.fmp.earnings_dates
+    # yalnız `date` okur), ama dosyayı bu yol da BAŞTAN yazar — `_TIMES` anlık görüntüsü olmasa
+    # Nasdaq'ın biriktirdiği saat bilgisini bir FMP tazelemesi SESSİZCE silerdi (aynı ders, sütun
+    # ölçeğinde). `prev`i almak `_TIMES`i de tazeler; ayrı bir `_load()` çağrısı gerekmez.
+    prev = _load()
+    _bilinen = dict(_TIMES)
     if failed:
         from . import obs
-        prev = _load()
         for t in failed:
             for d in prev.get(t, []):
                 rows.append((t, d))
         obs.warn("earnings_refresh_partial", ok=len(tickers) - len(failed), failed=len(failed),
                  kept_from_cache=len({t for t in failed if prev.get(t)}))
+    # ÜST KÜME (bkz. docstring): `rows` YALNIZ bu turun kazanımıdır ve dönüş değeri odur; DOSYAYA
+    # yazılan küme ise mevcut takvimin TAMAMIYLA birleştirilmiş hâlidir. İki kümenin ayrı tutulması
+    # kasıtlı — "kaç satır getirdim" ile "takvimde kaç satır var" aynı sayı değildir.
+    _yazilacak = ({(t, d) for t, ds in prev.items() for d in ds}
+                  | {(str(t).upper(), str(d)[:10]) for t, d in rows})
     import tempfile, os
-    # SAAT SÜTUNU BU YOLDAN DA KAYBOLMAZ: FMP kazanç ucu BMO/AMC vermez (adapters.fmp.earnings_dates
-    # yalnız `date` okur), ama dosyayı bu yol da BAŞTAN yazar. Eskiden 2 sütun yazdığı için Nasdaq
-    # yolunun biriktirdiği saat bilgisini bir FMP tazelemesi SESSİZCE SİLERDİ — "yaz değil BİRLEŞTİR"
-    # dersinin (yukarıdaki kısmi-başarısızlık koruması) aynısı, bu kez sütun ölçeğinde.
-    _load()                                    # `_TIMES`i tazele (mtime değişmediyse ucuz)
-    _bilinen = dict(_TIMES)
     path = config.STATE / "earnings.csv"
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     with __import__("os").fdopen(fd, "w") as fh:
         fh.write("ticker,date,time\n")
-        for t, d in sorted(set(rows)):
+        for t, d in sorted(_yazilacak):
             fh.write(f"{t},{d},{_bilinen_saat(_bilinen, t, d)}\n")
     os.replace(tmp, path)
     clear_cache()
