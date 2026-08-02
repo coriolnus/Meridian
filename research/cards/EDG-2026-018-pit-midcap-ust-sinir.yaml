@@ -1,0 +1,43 @@
+card_id: EDG-2026-018
+family: pit_midcap_ust_sinir   # WP-U/G1 — PIT-evrenli mid-cap ölçümü (ÜST-SINIR; delist-bar kilidi açılana dek yanlılık kalıcı-beyanlı)
+thesis: >
+  İki yaşayan sinyalin (turnover EDG-016 · trend EDG-009) canlı hükmü S&P500 large-cap
+  evreninde ölçüldü. Bu kart robustluğu SORAR: aynı turnover üst-dilim etkisi PIT-doğru
+  mid-cap evrende de var mı? Cevap ÜST-SINIRDIR — delist edilmiş mid-cap'lerin tarihsel barları
+  yok (kalıcı hayatta-kalma yanlılığı, YUKARI çarpıtır), o yüzden hüküm "mid-cap'te de sağ / değil"
+  DEĞİL, "sağkalan mid-cap'lerde EN İYİ İHTİMALLE şu kadar" olur.
+feasibility_gate: >
+  ADIM-0 (ZORUNLU, ölçümden ÖNCE): PIT üyelik listesindeki (sp500_uyelik_tarihi.csv) mid-cap
+  kohortu için bar ARŞİV KAPSAMASI ölçülür. Eğer sağkalan-mid-cap örneklemi anlamlı ölçüm için
+  yetersizse (kapsanan isim sayısı < 40 VEYA ortalama bar-geçmişi < 3 yıl) → ölçüm BAŞLAMAZ;
+  çıktı yalnız KAPSAMA HARİTASI olur (kaç isim, ne kadar geçmiş, hangi delist boşlukları) — bu
+  harita operatörün delist-bar kararına (WP-U kilidi) doğrudan girdi; kartın kendisi "askıya:
+  veri-kapısı" statüsüne düşer. UYDURMA YASAK: yetersiz veriyle sinyal ölçülmez.
+evidence_refs: [research/pit_universe/sp500_uyelik_tarihi.csv (2.719 satır, PIT üyelik),
+  research/cards/EDG-2026-016-turnover-ana-etkisi.yaml (large-cap referans hüküm), ROADMAP WP-U]
+universe: pit_midcap_survivor (üyelik-tarihli; SAĞKALAN — delist-bar yokluğu beyanlı yanlılık)
+features_asof: "turnover21(t) = medyan21(hacim)/as_of_shares(t) — EDG-016 tanımı BİREBİR; as-of altyapısı (edgar_facts) yeniden kullanılır"
+horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün MID-CAP-evren ortalaması (ders#3: ham-getiri yasak); 21g blok CI"
+parameter_grid:
+  katman: [midcap_turnover_ust20_fazlasi]   # K+=1 (tek hücre — robustluk sorusu, grid değil)
+cost_model: "10bps + 20bps duyarlılık; mid-cap likidite-primi maliyet-notu (spread büyük — beyan)"
+success_metric: >
+  ÜST-SINIR raporlanır: mid-cap üst-turnover dilimi @20 taban-fazlası + CI. Hüküm dili
+  ROBUSTLUK: fazla anlamlı-pozitif ise "large-cap etkisi mid-cap sağkalanlarda da ÜST-SINIR
+  olarak görünür (yanlılık yukarı)"; CI-0-içi ise "sağkalan mid-cap'te görünmüyor (yanlılığa
+  RAĞMEN — güçlü negatif kanıt)".
+kill_criteria:
+  - "feasibility_gate düşer → askıya:veri-kapısı, kapsama haritası teslim (kill DEĞİL — veri kilidi)"
+  - "üst-dilim fazlası CI-0-içi → mid-cap sağkalanda bilgisiz; large-cap'e ÖZGÜ (yanlılığa rağmen) — güçlü not, arşiv"
+  - "maliyet-sonrası net <=0 → mid-cap işlem maliyeti etkiyi yiyor, arşiv + not"
+guards:
+  - "pozitif kontrol: mid-cap evrende ham rvol20 @20 IC yeniden üretilir (üretilemezse DURUR)"
+  - "PIT üyelik as-of: her gözlem gününde sembol GERÇEKTEN üye miydi (look-ahead yasak); split/as-of bekçileri"
+  - "sağkalma yanlılığı KALICI ŞERH — hüküm cümlesinde 'üst-sınır' kelimesi zorunlu"
+k_registry: {registered_at: "2026-08-02T15:25Z", trial_ids: [wp_u_midcap/kapsama_gate, wp_u_midcap/turnover_ust20]}
+status: registered
+notes: >
+  Ölçüm ajanı KARTA DOKUNMAZ; hüküm + entegrasyon Rol-1'de. Sandbox:
+  research/olcumler/wp_u_midcap/. Feasibility-gate SONUCU (kapsama haritası) her hâlde teslim
+  edilir — ölçüm koşsa da koşmasa da operatöre WP-U girdisi. Kanıt (kapsama_haritasi.json +
+  varsa sonuc_018.json + RAPOR_018.md) hüküm commit'iyle aynı commit'te.
