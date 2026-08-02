@@ -569,6 +569,18 @@ def mtm_dd_veto(equity_curve: list, esik: float | None = None,
             "pencere": {"ilk": pts[0][0], "son": pts[-1][0]}, "neden": None}
 
 
+# ---- ② DEVAMI: M2M EĞRİSİNİN DİLİMLENMESİ — TEK YASA, İKİ OKUYUCU (WP-M ②, 2026-08-02) ---------
+# NEDEN AYRI FONKSİYON. Bu dilimleme yasası `segment_score` içinde satır-içiydi ve şimdi İKİNCİ bir
+# okuyucu doğuyor (`walk_forward._mtm_search` → kapının açık-pozisyon düşüş bacağı). Aynı yasanın iki
+# kopyası, bu depoda tekrar tekrar bulunan sürüklenme sınıfıdır (wf_fixtures'ın var oluş sebebi):
+# biri değişir, diğeri sessizce eski yasada kalır ve İKİ FARKLI POPÜLASYON ölçülür. Tek uygulama.
+# YARI-AÇIK [lo, seg_end): `_in_segment`in işlem yasasıyla AYNI sınır dilbilgisi — sınır günü iki
+# komşu dilimde birden sayılamaz.
+def mtm_slice(equity_curve: list, lo: str, seg_end: str) -> list:
+    """Günlük M2M özkaynak eğrisinin [lo, seg_end) dilimi. Biçim korunur: [(tarih, özkaynak)]."""
+    return [(dd, e) for dd, e in (equity_curve or []) if lo <= str(dd)[:10] < seg_end]
+
+
 def _regime_slice(trades: list, eval_regime: str | None) -> list:
     """Phase 3 regime-isolated learning: when a hypothesis targets ONE regime (var@regime), it must be
     graded only on trades that occurred UNDER that regime. Every replay trade already carries the tag
@@ -644,7 +656,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
         span = (_dt.date.fromisoformat(seg_end) - _dt.date.fromisoformat(lo)).days
     except Exception:  # sessiz-yutma: span yalnız RAPOR alanıdır; None dürüstçe "bilinmiyor" der ve hiçbir kapı kararına girmez
         span = None
-    mtm = [(dd, e) for dd, e in (mtm_equity or []) if lo <= str(dd)[:10] < seg_end] or None
+    mtm = mtm_slice(mtm_equity, lo, seg_end) or None
     return score_mod.score_detail(seg, goal, span_days=span, mtm_equity=mtm)
 
 
@@ -830,6 +842,20 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
                       "confirm_start": _s_end, "confirm_end": oos_end},
         "_trades_search": [t for t in graded if _in_segment(t, _tail_lo, _s_end)],
         "_trades_confirm": [t for t in graded if _in_segment(t, _s_end, oos_end)],
+        # ② AÇIK-POZİSYON DÜŞÜŞÜNÜN KAPIYA GİDEN YOLU (WP-M ②, 2026-08-02). `reflect._gate_eval`in
+        # düşüş vetosu bugüne kadar YALNIZ kapanmış-işlem eğrisini okuyabiliyordu ve bunun sebebi
+        # kendi yorumunda adıyla yazılıydı: "walk_forward o eğriyi DİLİM BAŞINA döndürmüyor".
+        # Artık döndürüyor. Dilim, `_trades_search` ile BİREBİR aynı sınırlardır (embargolu alt
+        # sınır + yarı-açık üst sınır) — veto bacağının iki tarafı farklı pencere görürse kıyas
+        # kıyas olmaktan çıkardı. Alt çizgili anahtar: `_trades_*` ile AYNI sözleşme — kapı girdisi,
+        # HÜKÜM DEFTERLERİNE (validation_ledger/kapı kaydı) yazılmaz.
+        # MALİYET BEYANI (ölçüldü, tahmin değil): `reflect._inc_disk_save` incumbent walk'ın TÜM
+        # sözlüğünü `state/inc_cache.json`a serileştirir, yani bu anahtar O DOSYAYI büyütür —
+        # canlı R1 Search penceresinde (2024-01-11→2025-08-18, ~417 iş günü) kayıt başına ~11 KB,
+        # 40 kayıtlık tavanda üst sınır ~440 KB (dosya bugün 190 KB). Eğriyi diskten KIRPMAK
+        # alternatifti ve REDDEDİLDİ: önbellekten gelen incumbent eğrisiz kalırdı, kapı sessizce
+        # "olculemedi" yazardı ve ölçüm hiç birikmezdi — yani bacağın var oluş sebebi ölürdü.
+        "_mtm_search": mtm_slice(res.equity, _tail_lo, _s_end),
         "is_score": is_d["score"], "is_detail": is_d,
         "oos_score": oos_d["score"], "oos_detail": oos_d,          # magnitude gate
         "oos_folds": folds, "oos_fold_avg_r_mean": round(sum(avgs) / len(avgs), 4) if avgs else None,

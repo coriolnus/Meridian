@@ -31,6 +31,24 @@ DD_VETO_MARGIN = shadowlaw.DD_VETO_MARGIN      # düşüş vetosunun marjı (par
 MONEY_GATE_MARGIN = shadowlaw.MONEY_GATE_MARGIN  # GATE_MARGIN'ın para-ölçek eşdeğeri
 HOLDOUT_DIVERGENCE = 0.10   # OOS→holdout drop beyond this flags overfit_suspect (does NOT block the ship)
 
+# ---- ② AÇIK-POZİSYON DÜŞÜŞÜ: ÖLÇÜLÜR, HÜKÜM VERMEZ (WP-M ②, 2026-08-02) -----------------------
+# EŞİK İCAT EDİLMEDİ, BU YÜZDEN BAĞLANMADI. M2M bacağı kapanmış-işlem bacağının YAPISINI aynen
+# alır (aday > incumbent + marj, tek yönlü) ama `DD_VETO_MARGIN`in türetimi KAPANMIŞ-İŞLEM düşüş
+# dağılımı üzerinde yapılmıştı: σ(düşüş)=0,0343 (blok-yeniden-örnekleme, 2000 replikasyon) ve "%8
+# bütçenin yarısı". M2M eğrisinin düşüş dağılımı BAŞKA bir dağılımdır (açık pozisyonların çukurunu
+# içerir, yani sistematik olarak DAHA GENİŞTİR) ve σ'sı ÖLÇÜLMEMİŞTİR. Ölçülmemiş bir dağılıma
+# ölçülmüş bir marjı taşımak, tam olarak bu depoda "eşik sonradan seçildi" diye yasaklanan hamledir.
+# Bu yüzden bacak ÖLÇÜLÜR ve kapı kaydına YAZILIR ama `passes`e GİRMEZ. Bağlanması için önce
+# `research/cards/` altında bir ölçüm kartı gerekir (M2M düşüş σ'sı + marj türetimi).
+# Bayrak yalnız O KARTIN ölçüm koşumları içindir; varsayılan KAPALI ve canlıda kapalı kalır.
+DD_MTM_VETO_ENV = "MERIDIAN_DD_MTM_VETO"
+
+
+def _dd_mtm_bagli() -> bool:
+    """M2M düşüş bacağı `passes`e bağlı mı? Varsayılan HAYIR (eşik ölçülmedi)."""
+    return os.environ.get(DD_MTM_VETO_ENV) == "1"
+
+
 # incumbent walk-forward is identical across every candidate in a reflection session — compute once.
 _INC_CACHE: dict = {}
 INC_DISK_FILE = "inc_cache.json"     # #2: incumbent walk'ları da bar-revizyonuyla diskte yaşar
@@ -261,14 +279,13 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     # (fikstür/legacy) düşüş ölçülemez → `dd_ok=True` ve kayıtta `dd_durum="olculemedi"` yazar.
     # Sessizce "geçti" demez; ÖLÇÜLEMEDİĞİNİ söyler.
     #
-    # BEYAN EDİLMİŞ SINIR (audit #6'nın kapsamı): veto, Search diliminin KAPANMIŞ-İŞLEM sermaye
-    # eğrisini okur. `score_detail` düşüşü hesaplarken günlük mark-to-market eğrisini de katlıyor
-    # ("açık pozisyon düşüşü saklanamasın"), ama `walk_forward` o eğriyi DİLİM BAŞINA döndürmüyor —
-    # yalnız `oos_detail.max_drawdown` içinde, tam-OOS ölçeğinde var. Yani AÇIK POZİSYON düşüşü bu
-    # vetonun tetikleyicisine GİRMEZ; bilgi kaybolmuyor (rapor alanında duruyor) ama veto onu
-    # görmüyor. Mevcut fold ve kuyruk vetoları da aynı biçimde kapanmış işlemler üzerinden çalışır,
-    # yani bu yeni bir tutarsızlık DEĞİL — mevcut sınırın aynısı. Kapatmak için `walk_forward`ın
-    # dilim-başına M2M eğrisi döndürmesi gerekir; ROADMAP'e ölçüm borcu olarak yazıldı.
+    # BEYAN EDİLMİŞ SINIR (audit #6'nın kapsamı): VETONUN TETİKLEYİCİSİ Search diliminin
+    # KAPANMIŞ-İŞLEM sermaye eğrisidir. `score_detail` düşüşü hesaplarken günlük mark-to-market
+    # eğrisini de katlıyor ("açık pozisyon düşüşü saklanamasın") ama o sayı `oos_detail`in içinde
+    # birleşmiş hâlde duruyor. 2026-08-02 itibarıyla `walk_forward` M2M eğrisini DİLİM BAŞINA
+    # döndürüyor (`_mtm_search`) ve aşağıdaki ikinci bacak onu AYRI ölçüyor — ama ÖLÇER, HÜKÜM
+    # VERMEZ (bkz. `DD_MTM_VETO_ENV` yorumu: marj kapanmış-işlem dağılımından türetildi, M2M
+    # dağılımının σ'sı ölçülmedi). Yani bu satırın hükmü DEĞİŞMEDİ; yanına ölçülen bir ikiz kondu.
     inc_dd = cand_dd = None
     dd_ok, dd_durum = True, "olculemedi"
     if _its and _cts:
@@ -277,6 +294,32 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         cand_dd = _sc.max_drawdown(_sc.equity_curve(_cts))
         dd_ok = not (cand_dd > inc_dd + DD_VETO_MARGIN)
         dd_durum = "gecti" if dd_ok else "veto"
+
+    # ---- AÇIK-POZİSYON (M2M) DÜŞÜŞ BACAĞI — ÖLÇÜLÜR, VARSAYILAN BAĞLANMAZ ----------------------
+    # AYNI YAPI, AYNI PENCERE, BAŞKA EĞRİ: `_mtm_search` ile `_trades_search` aynı sınırlardan
+    # kesilir (backtest.walk_forward), yani iki bacak aynı sınavı iki farklı mercekle okur. Düşüş
+    # formülü de AYNIDIR — yukarıdaki bacağın kullandığı `score.max_drawdown`. Kapı, `walk_forward`ın
+    # RAPOR bloğunu okumaz ve okuyamaz (o blok "hüküm vermez" beyanını taşır ve çivisi vardır);
+    # buradaki sayı kapının kendi girdisinden, kendi formülüyle türer.
+    # UYGULANAMAYAN KONTROL VETO SEBEBİ OLAMAZ: eğri yoksa (fikstür, legacy yol, replaysiz sözlük)
+    # `dd_mtm_durum="olculemedi"` yazar ve hiçbir şeyi engellemez — "temiz kâğıt" DEĞİL, "bakılmadı".
+    inc_dd_mtm = cand_dd_mtm = None
+    dd_mtm_ihlal, dd_mtm_durum = False, "olculemedi"
+    _imtm, _cmtm = inc.get("_mtm_search"), cand.get("_mtm_search")
+    _mtm_bagli = _dd_mtm_bagli()
+    if _imtm and _cmtm:
+        from . import score as _sc2
+        _ic = [float(e) for _d, e in _imtm]
+        _cc = [float(e) for _d, e in _cmtm]
+        if _ic and _cc:
+            inc_dd_mtm = _sc2.max_drawdown(_ic)
+            cand_dd_mtm = _sc2.max_drawdown(_cc)
+            dd_mtm_ihlal = bool(cand_dd_mtm > inc_dd_mtm + DD_VETO_MARGIN)
+            dd_mtm_durum = ("gecti" if not dd_mtm_ihlal else
+                            ("veto" if _mtm_bagli else "ihlal_baglanmadi"))
+    # HÜKME GİDEN TEK KAPI: bayrak kapalıyken bu değer HER ZAMAN True'dur, yani `passes` bu turda
+    # bit-bit eski davranıştadır (çivi: v178).
+    dd_mtm_ok = not (dd_mtm_ihlal and _mtm_bagli)
 
     # ---- OOS AŞINMA DEFTERİ (Aşama 2.2, 2026-07-28) --------------------------------------------
     # Bu değerlendirme, bu pencere geometrisine sorulan KAÇINCI sorudur? Parmak izi fold sınırlarını
@@ -359,7 +402,9 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         mag_why = "" if magnitude_ok else _gate_why(inc, cand, True, fold_wins, fold_total, True)
         law = "legacy_margin"
 
-    passes = bool(magnitude_ok and majority and tail_ok and dd_ok)
+    # `dd_mtm_ok` bayrak kapalıyken TANIM GEREĞİ True — bu terim varsayılan yolda NO-OP'tur ve
+    # yalnız ölçüm kartının koşumunda (MERIDIAN_DD_MTM_VETO=1) hüküm üretebilir.
+    passes = bool(magnitude_ok and majority and tail_ok and dd_ok and dd_mtm_ok)
 
     # ---- Y1 DOĞRULAMA: DSR (ADVISORY) + ADAY GETİRİ DEFTERİ (Hafta 3a, 2026-07-30) -------------
     # DSR, kapının SORMADIĞI soruyu sorar: "kaç aday denedik de bu geçti?" Aşınma defteri o yükü
@@ -431,6 +476,16 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             "incumbent_dd": None if inc_dd is None else round(float(inc_dd), 4),
             "candidate_dd": None if cand_dd is None else round(float(cand_dd), 4),
             "dd_ok": bool(dd_ok), "dd_durum": dd_durum, "dd_veto_margin": DD_VETO_MARGIN,
+            # AÇIK-POZİSYON (M2M) DÜŞÜŞ BACAĞI — ÖLÇÜM, HÜKÜM DEĞİL. Kayda girmesinin sebebi tam
+            # olarak eşiğin ölçülebilmesi: `ihlal_baglanmadi` yazan her satır, marj M2M dağılımına
+            # göre türetilseydi bu adayın RET edileceği anlamına gelir. Kartın ham maddesi budur.
+            "dd_mtm_ok": bool(dd_mtm_ok), "dd_mtm_durum": dd_mtm_durum,
+            "dd_mtm_bagli": bool(_mtm_bagli),
+            "incumbent_dd_mtm": None if inc_dd_mtm is None else round(float(inc_dd_mtm), 4),
+            "candidate_dd_mtm": None if cand_dd_mtm is None else round(float(cand_dd_mtm), 4),
+            "dd_mtm_beyan": ("açık-pozisyon düşüşü ÖLÇÜLDÜ, hükme BAĞLANMADI — marj "
+                             "(DD_VETO_MARGIN) kapanmış-işlem düşüş dağılımından türetildi, M2M "
+                             "dağılımının σ'sı ölçülmedi; bağlanması ölçüm kartı ister"),
             "gate_law": law, "k_probes": k_probes, **prob.as_gate_fields("search"),
             "incumbent_folds": inc_folds, "candidate_folds": cand_folds,
             "fold_law": fold_law, "fold_bounds": fold_bounds,
@@ -456,6 +511,13 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         # DÜŞÜŞ VETOSU (PARA-v3): skorda pazarlık konusuydu, artık pazarlık YOK.
         why = (f"aday OOS maks düşüşü incumbent'ı {DD_VETO_MARGIN} marjından fazla kötüleştiriyor "
                f"(düşüş {cand_dd:.4f} vs {inc_dd:.4f}) — düşüş vetosu")
+    elif not dd_mtm_ok:
+        # BU DALA VARSAYILAN YOLDA GİRİLMEZ (bayrak kapalı → dd_mtm_ok hep True). Var olma sebebi:
+        # bayrak açıkken ret gerekçesi "kuyruk riski" diye okunamamalı — aşağıdaki `else` kuyruk
+        # sözlüklerini okur ve M2M reddinde onlar None bile olabilir.
+        why = (f"aday AÇIK-POZİSYON (M2M) maks düşüşü incumbent'ı {DD_VETO_MARGIN} marjından fazla "
+               f"kötüleştiriyor (M2M düşüş {cand_dd_mtm:.4f} vs {inc_dd_mtm:.4f}) — M2M düşüş "
+               f"vetosu ({DD_MTM_VETO_ENV}=1 ile BAĞLI koşuluyor)")
     else:
         why = (f"candidate worsens OOS tail risk beyond {TAIL_MARGIN_R}R "
                f"(VaR {cand_tail['var_r']} vs {inc_tail['var_r']}, "
@@ -499,6 +561,11 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             "oos_para": cand_para, "incumbent_para": inc_para,
             "dd_ok": bool(dd_ok), "candidate_dd": None if cand_dd is None else round(float(cand_dd), 4),
             "incumbent_dd": None if inc_dd is None else round(float(inc_dd), 4),
+            # M2M ikizi ADVISORY defterde de durur: PBO/DSR analizleri "eşik M2M'ye taşınsaydı bu
+            # popülasyon nasıl değişirdi?" sorusunu ancak satır satır kayıtla cevaplayabilir.
+            "dd_mtm_durum": dd_mtm_durum, "dd_mtm_bagli": bool(_mtm_bagli),
+            "candidate_dd_mtm": None if cand_dd_mtm is None else round(float(cand_dd_mtm), 4),
+            "incumbent_dd_mtm": None if inc_dd_mtm is None else round(float(inc_dd_mtm), 4),
             "gate_law": law, "fold_wins": f"{fold_wins}/{fold_total}", "tail_ok": bool(tail_ok),
             "k_probes": int(k_probes or 1), "erosion_queries": erosion.get("queries"),
             "n_trials": _n_trials,
