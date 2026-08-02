@@ -717,6 +717,13 @@ def evidence_pack() -> str:
             if _q:
                 pack["composite_queue"] = {
                     "pending": _q.get("n_bekleyen"), "measured": _q.get("n_olculen"),
+                    # C14 OKUYUCUSU (YASA 6): `measure_failed` damgasını okuyan taraf BURASIDIR —
+                    # beyin, kuyruğa attığı fikrin ölçülüp ölçülmediğini görmeden aynı fikri her
+                    # hafta yeniden üretiyordu. "Ölçüm denendi ve DÜŞTÜ" ile "sırada bekliyor" aynı
+                    # cümle değildir: ilki bir arıza sinyali, ikincisi normal bir kuyruk hâli.
+                    "measure_failed": _q.get("n_basarisiz"),
+                    "measuring": _q.get("n_olculuyor"),
+                    "last_failure": _q.get("son_basarisiz"),
                     "weekly_budget_left": _q.get("butce_kalan"),
                     "how": ("propose a MULTI-knob idea as {\"composite\": {knob: value, ...}} — it is "
                             "NOT rejected by the one-variable law; it goes to the prescreen "
@@ -2626,14 +2633,31 @@ def propose_virgin_knob() -> dict | None:
     return None
 
 
-def reflect_once(target_regime: str | None = "auto") -> dict:
+def reflect_once(target_regime: str | None = "auto", *, background: bool = False) -> dict:
     """One live reflection. A single smart move (Claude, if a key is set) is tried first; if it doesn't
     clear the gate — or there's no key — we fall through to the systematic COORDINATE-DESCENT SEARCH across
     all knobs on the PRODUCTION windows. That is the escape from the ±1 trap that lets the live strategy
     actually evolve. submit() (inside both paths) remains the SOLE ship authority — the gate is unchanged.
     target_regime: the regime the CALLER's horizon guardrail certified ("auto" → read regime.json now).
     The standby loop passes its certified regime so a regime flip between the horizon check and the search
-    (the walk takes minutes) can't retarget the ship into an uncertified regime."""
+    (the walk takes minutes) can't retarget the ship into an uncertified regime.
+
+    `background` (C16, 2026-08-02) — ARKA PLAN TURU: CANLI OLMAYAN bir rejimin birikmiş kanıtıyla
+    koşulan yansıma (`hermes_runtime._bg_ready_regime` seçer). Bu bayrak olmadan çağrı, kanıtın hangi
+    rejimden geldiğini BİLMİYORDU ve `_bg_ready_regime`in emniyet beyanı ("ship yalnız
+    params_by_regime[o rejim]'i değiştirir — canlı davranış rejim dönene dek değişmez") kodda
+    KARŞILIKSIZDI: bg rejimi `trend_up` olduğunda aşağıdaki `!= "trend_up"` istisnası devreye giriyor,
+    arama GLOBAL koşuyor ve düz `params`a ship ediyordu — yani chop canlıyken chop davranışı, chop'un
+    hiç sertifika vermediği kanıtla ANINDA değişiyordu (canlı state'te birebir doğrulandı: regime=chop,
+    bg=trend_up, params_by_regime dört rejimde de boş).
+
+    SEÇİLEN VARYANT: TURU ATLAMAK DEĞİL, ARAMAYI O REJİME ZORLAMAK. Gerekçe: "bg rejimi canlıdan
+    farklıysa atla" kuralı bg yansımasının TANIMINI siler (bg turu zaten her zaman canlı-dışı bir
+    rejimdir — özelliğin varlık sebebi budur) ve chop'ta yaşarken trend_up defterindeki 57 işlemi
+    yeniden israfa çevirirdi. Zorlama ise beyanı GERÇEK yapar: her sonda `var@{rejim}` olur,
+    `versioning.bump` onu `params_by_regime[rejim]`e yazar, canlı davranış rejim dönene dek değişmez.
+    Atlama yalnız SON ÇARE olarak kalır: rejim adı geçerli değilse (kapsanamıyorsa) tur koşmaz —
+    çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir."""
     SEARCH_PROGRESS.clear()
     proposal = propose_with_llm()
     if proposal is None and VIRGIN_FALLBACK:
@@ -2648,7 +2672,17 @@ def reflect_once(target_regime: str | None = "auto") -> dict:
         pvar = str(proposal.get("variable") or "")
         preg = pvar.split("@", 1)[1] if "@" in pvar else None
         certified = None if target_regime == "auto" else target_regime
-        if preg is not None and certified is not None and preg != certified:
+        if background and (preg is None or (certified is not None and preg != certified)):
+            # C16 (b) BACAĞI: sertifika kontrolü `preg is None` hâline DE uygulanır — ama YALNIZ arka
+            # plan turunda. Global muafiyet ("or be global", aşağıdaki dal) CANLI turda meşrudur:
+            # canlı rejimin kanıtı düz `params`ı da meşru biçimde ayarlar. Arka plan turunda AYNI
+            # muafiyet, canlı-DIŞI bir rejimin kanıtıyla canlı davranışı değiştirme ruhsatına dönüşür
+            # — LLM/bakir-düğme yolu, aramayı rejime zorlamanın etrafından dolaşan bir yan kapıdır.
+            obs.warn("hermes_bg_proposal_rejected", variable=pvar or "(global)", bg_regime=certified,
+                     detail="arka plan turunda GLOBAL ya da farklı-rejim öneri reddedildi — canlı "
+                            "olmayan rejimin kanıtı yalnız o rejimin params_by_regime'ine girebilir")
+            proposal = None                     # fall through to the (bg-regime-scoped) search
+        elif preg is not None and certified is not None and preg != certified:
             obs.warn("hermes_proposal_uncertified_regime", variable=pvar, certified=certified)
             proposal = None                     # fall through to the (certified-regime) search
     if proposal is not None:
@@ -2665,8 +2699,30 @@ def reflect_once(target_regime: str | None = "auto") -> dict:
     # becomes var@{regime}, graded only on that regime's slice, shipping into params_by_regime. Under
     # trend_up (the regime the global params were tuned in, ~90% of the book) the search stays global:
     # the slice would be nearly the whole book anyway, and global ships must remain possible.
+    # BU İSTİSNA CANLI TURA AİTTİR (C16, 2026-08-02): gerekçesi "trend_up canlıdır, dilimi zaten
+    # defterin tamamıdır" cümlesine dayanır. Arka plan turunda o cümle YANLIŞtır ve istisna sessizce
+    # sertifikasız bir global ship yetkisine dönüşür — `background` dalı onu kapatır.
     live_reg = store.read_json("regime.json", {}).get("regime") if target_regime == "auto" else target_regime
-    search_regime = live_reg if live_reg in config.VALID_REGIMES and live_reg != "trend_up" else None
+    if background:
+        # ARKA PLAN TURU: `trend_up` İSTİSNASI BURADA GEÇERSİZDİR. O istisnanın gerekçesi ("defterin
+        # ~%90'ı trend_up, dilim zaten tüm defter") YALNIZCA trend_up CANLI iken doğrudur; arka plan
+        # turunda trend_up canlı DEĞİLDİR ve global ship, o rejimin kanıtıyla BAŞKA bir rejimin
+        # (canlının) davranışını anında değiştirir. Ship yüzeyi bu yüzden rejimle sınırlanır.
+        search_regime = live_reg if live_reg in config.VALID_REGIMES else None
+        if search_regime is None:
+            # KAPSANAMAYAN BG TURU KOŞMAZ. Alternatif "global koş" olurdu ve bu tam olarak kapatılan
+            # deliktir. Sessiz de geçmez: atlama bir olaydır, çünkü bg turlarının hiç koşmadığı bir
+            # sistem "arka plan öğrenmesi açık" diye rapor edilmeye devam ederdi.
+            obs.warn("bg_reflection_skipped_unscoped", target_regime=str(target_regime),
+                     detail="arka plan yansıması KAPSANAMADI (geçerli rejim adı yok) — global ship "
+                            "yetkisiyle koşmak yerine tur atlandı; canlı-dışı kanıt global params'a "
+                            "giremez")
+            SEARCH_PROGRESS.update(running=False, phase="skipped")
+            return {"status": "bg_regime_unscoped", "regime": target_regime,
+                    "beyan": ("arka plan turu rejimle sınırlanamadı — global ship yetkisiyle "
+                              "koşulmadı (C16)")}
+    else:
+        search_regime = live_reg if live_reg in config.VALID_REGIMES and live_reg != "trend_up" else None
     # TAVAN ARTIK TÜRETİLİR (bütçe öz-ayarı, 2026-07-30): `SEARCH_BUDGET` sabiti TABAN olarak durur
     # (env override yolu birebir aynı); `search_budget()` kota durumuna göre onu açar. Türetimin
     # KENDİSİ olaya yazılır — "bugün neden 20 sonda koştu?" sorusu defterden cevaplanabilsin.

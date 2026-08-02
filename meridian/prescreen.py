@@ -53,6 +53,19 @@ yine turdan tura değişiyordu (modül başlığının çözdüğü sorunun ayn�
   (3) Satır `bilesik=True` + `knobs={...}` taşır. Bir bileşik sonucu tek-değişkenli bir sonuç gibi
       okunursa "hangi düğme işe yaradı?" sorusunun cevabı YOK sanılır — oysa cevap "bu ölçüm onu
       sormadı"dır ve bunun satırda yazılı olması gerekir.
+
+KUYRUK GERİ-YAZIMI (`--queue-id`, C14, 2026-08-02) — KURAL (1)'İN TEK ADLANDIRILMIŞ DELİĞİ.
+`hermes_composite.spawn_pending` bu modülü ayrı bir süreçte başlatır ve satırı `measuring` damgalar;
+ölçüm bitişini AYNI satıra yazacak olan da bu süreçtir (kimlik `--queue-id` ile taşınır). Yani bu
+yol canlı state'e TEK BİR defterde, TEK BİR satır yazar: `composite_queue.jsonl`. Delik ADLIDIR ve
+sınırları kodda dar tutulur:
+  * Yazım `run()`un DIŞINDADIR (yalnız `main`). `run()` hâlâ canlı state'e sıfır bayt yazar ve
+    `canli_state_degisen_dosyalar` kanıtı ONUN kapsamını ölçer — yani "ölçüm canlıya dokunmadı"
+    iddiası bozulmaz, çünkü geri-yazım ölçüm BİTTİKTEN ve parmak izi alındıktan SONRA olur.
+  * Yazan taraf `config.STATE`i CANLIYA geri çevirir, yazar, sonra sandbox'a geri döner: aksi hâlde
+    damga sandbox kopyasındaki kuyruğa düşer ve HİÇ KİMSE onu okumazdı (halka yine açık kalırdı).
+  * Kuyruk satırı yazılmadan ölçüm yapmak, C14'ün ta kendisiydi: `measured` yazan üretim yolu YOKTU,
+    `n_olculen` yapısal olarak 0'dı ve ölmüş süreçler sonsuza dek "ÖLÇÜLÜYOR" görünüyordu.
 """
 from __future__ import annotations
 
@@ -392,6 +405,88 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     return rapor
 
 
+def kuyruk_ozeti(rapor: dict) -> dict:
+    """Kuyruk satırına giren ÖZET — tam rapor DEĞİL, ama hükmü taşıyan alanların hepsi.
+
+    NEDEN ÖZET: tam rapor (fold dizileri, guard redleri, parmak izi) kuyruk satırını onlarca kat
+    büyütürdü ve kuyruk bir DURUM defteridir, bir ölçüm arşivi değil. Tam rapor `workdir`de durur ve
+    özet ona İŞARET EDER (`workdir` alanı) — yani hiçbir bilgi kaybolmaz, yalnız yerinde kalır.
+
+    NEDEN BU ALANLAR: `passes` hükmün kendisi; `para_delta`/`p` PARA-v3 yasasının KARAR değişkenleri
+    (bileşik `delta` yalnız rapor metriğidir ve tek başına yazılırsa okuyucu onu hüküm sanır);
+    `motor_isliyor` "düğme replay motorunda ölü mü" ön koşulu — False ise 'geçmedi' bir ÇÜRÜTME
+    DEĞİLDİR; `pencere_id` habersiz kıyas yasağının taşıyıcısı (R0 sayısıyla R1 sayısı yan yana
+    konamaz); `why` reddin gerekçesi. Ölçülemeyen alan None kalır ve None "0" demek DEĞİLDİR."""
+    adaylar = rapor.get("adaylar") or []
+    return {
+        "n_aday": len(adaylar),
+        "k_probes": rapor.get("k_probes"),
+        "workdir": rapor.get("workdir"),
+        "sure_s": rapor.get("sure_s"),
+        "pencere_id": (rapor.get("pencereler") or {}).get("pencere_id"),
+        "adaylar": [{"knobs": a.get("knobs"), "passes": a.get("passes"),
+                     "motor_isliyor": a.get("motor_isliyor"),
+                     "inc_oos": a.get("inc_oos"), "cand_oos": a.get("cand_oos"),
+                     "delta": a.get("delta"), "para_delta": a.get("para_delta"),
+                     "p": a.get("p"), "p_required": a.get("p_required"),
+                     "dd_durum": a.get("dd_durum"), "gate_law": a.get("gate_law"),
+                     "yasa_surumu": a.get("yasa_surumu"),
+                     "why": (a.get("why") or "")[:240]} for a in adaylar],
+        "guard_reddi": [{"knob": g.get("knob"), "reasons": g.get("reasons")}
+                        for g in (rapor.get("guard_reddi") or [])],
+    }
+
+
+def kuyruk_geri_yaz(queue_id: str, live: pathlib.Path, rapor: dict) -> dict | None:
+    """Ölçüm bitişini kuyruk satırına damgala (C14). Dönen: yazılan alanlar ya da None (yazılamadı).
+
+    ASLA YÜKSELTMEZ: bir durum defterinin, tamamlanmış bir ölçümün raporunu düşürme yetkisi yoktur
+    (YASA 4: sessiz de kalmaz — uyarı defterine düşer). Rapor `--workdir`de zaten duruyor.
+
+    DAMGA ÖLÇÜMÜN GERÇEĞİNİ SÖYLER: sonuç üretildiyse `measured`; guard bütün adayları reddettiyse
+    ya da süreç patladıysa `measure_failed` + `neden`. "Ölçüldü" demek, ölçüm YAPILMADIĞI hâlde
+    halkayı kapanmış göstermek olurdu — kapanmış görünen açık bir halka, açık halkadan beterdir."""
+    from . import config
+    onceki = (config.STATE, config.HISTORY, config.BARS)
+    try:
+        # CANLI STATE'E GERİ DÖN: `run()` config.STATE'i sandbox kopyasına çevirdi ve `store` onu
+        # ÇAĞRI ANINDA okur — geri çevirmeden yazsaydık damga /tmp'deki kopyaya düşer, kuyruğu okuyan
+        # (analytics/nous_eval/evidence_pack) onu HİÇ görmezdi.
+        config.STATE = pathlib.Path(live)
+        config.HISTORY = pathlib.Path(live) / "history"
+        config.BARS = pathlib.Path(live) / "bars"
+        config.goal.cache_clear()
+        config.bounds.cache_clear()
+        from . import hermes_composite
+        hata = rapor.get("hata")
+        if hata:
+            alanlar = {"neden": str(hata)[:200], "result": kuyruk_ozeti(rapor),
+                       "olcum_k_probes": rapor.get("k_probes")}
+            hermes_composite.mark(str(queue_id), "measure_failed", **alanlar)
+            return {"status": "measure_failed", **alanlar}
+        # `olcum_k_probes` AYRI ALAN: satırdaki `k_probes` H4 BÜTÇE dilidir ("bu satır bütçeden bir
+        # yoklama yedi"); prescreen'in `k_probes`ı KAPI dilidir ("bu ölçümde kapıya kaç aday gitti").
+        # Tek alana yazmak iki farklı sayacı sessizce birbirine çevirirdi.
+        alanlar = {"result": kuyruk_ozeti(rapor), "olcum_k_probes": rapor.get("k_probes"),
+                   "workdir": rapor.get("workdir")}
+        hermes_composite.mark(str(queue_id), "measured", **alanlar)
+        return {"status": "measured", **alanlar}
+    except Exception as e:
+        try:
+            from . import obs
+            obs.warn("composite_queue_writeback_failed", queue_id=str(queue_id),
+                     error=f"{type(e).__name__}: {e}",
+                     detail="bileşik ölçüm bitti ama kuyruk satırı damgalanamadı — satır 'measuring' "
+                            "kalır ve gece kancasının pid yoklaması onu measure_failed yapar")
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok ve geri-yazım denemesi tamamlanmış ölçümün raporunu düşüremez
+            pass
+        return None
+    finally:
+        config.STATE, config.HISTORY, config.BARS = onceki
+        config.goal.cache_clear()
+        config.bounds.cache_clear()
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="meridian.prescreen",
                                  description="Aday parametreleri kapının yasasıyla ön-ele "
@@ -406,6 +501,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="daha önce ölçülmüş adayları atla (k_probes DEĞİŞMEZ)")
     ap.add_argument("--live-state", default=None,
                     help="canlı state dizini (varsayılan: config.STATE)")
+    ap.add_argument("--queue-id", default=None,
+                    help="bileşik öneri kuyruğu satır kimliği (C00001…) — ölçüm bitişinde o satır "
+                         "'measured' damgalanır (öner→ölç→öğren halkasının kapanışı)")
     ns = ap.parse_args(argv)
     if not ns.candidates and not ns.composite:
         ap.error("--candidates ya da --composite gerekli (ikisi birlikte de verilebilir)")
@@ -421,7 +519,19 @@ def main(argv: list[str] | None = None) -> int:
 
     from . import config as _cfg
     live = pathlib.Path(ns.live_state) if ns.live_state else _cfg.STATE
-    rapor = run(adaylar, pathlib.Path(ns.workdir), pathlib.Path(live), resume=ns.resume)
+    # ÇÖKME DE BİR AKIBETTİR: ölçüm patlarsa satır 'measuring' asılı kalırdı ve gece kancasının pid
+    # yoklaması onu ancak ERTESİ gece damgalayabilirdi. Burada damgalanır, istisna AYNEN yükseltilir
+    # (yutulmaz — çıkış kodu ve log'daki iz olduğu gibi kalsın). `BaseException`: SIGINT/SystemExit
+    # ile sonlanan bir ölçüm de "sonuç yok" demektir ve satırın bunu söylemesi gerekir.
+    try:
+        rapor = run(adaylar, pathlib.Path(ns.workdir), pathlib.Path(live), resume=ns.resume)
+    except BaseException as e:
+        if ns.queue_id:
+            kuyruk_geri_yaz(ns.queue_id, pathlib.Path(live),
+                            {"hata": f"{type(e).__name__}: {e}"})
+        raise
+    if ns.queue_id:
+        rapor["kuyruk_geri_yazim"] = kuyruk_geri_yaz(ns.queue_id, pathlib.Path(live), rapor)
     print(json.dumps(rapor, indent=1, ensure_ascii=False))
     return 0 if not rapor.get("hata") else 1
 

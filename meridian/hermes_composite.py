@@ -18,8 +18,20 @@ her ölçüm bir DENEMEDİR ve aşınma defterine/DSR'ye N olarak girer; sınır
 deflasyonu kendi eliyle şişirip her adayı imkânsızlaştırır. Bütçe sayacı bu yüzden aşınma defteriyle
 AYNI dili konuşur: her ölçüm `k_probes` beyanıyla kaydedilir.
 
-YASALAR: bu modül KARAR VERMEZ. Kuyruğa yazar, bütçeyi sayar, süreci başlatır, sonucu deftere yazar.
-`passes` semantiğine, tek-değişken yasasına ve kapı eşiklerine DOKUNMAZ."""
+HALKANIN KAPANIŞI (C14, 2026-08-02). "Sonucu deftere yazar" cümlesinin KARŞILIĞI 2026-08-02'ye kadar
+KODDA YOKTU: `spawn_pending` satırı `measuring` damgalıyor, prescreen sonucu yalnız `--workdir`e
+yazıyor ve kimse geri okumuyordu — yani `measured` yazan tek bir üretim yolu yoktu, `n_olculen`
+yapısal olarak hep 0'dı ve ölmüş bir süreç sonsuza dek "ÖLÇÜLÜYOR" görünüyordu (nous_eval._akibet
+beyne her hafta aynı yalanı taşıyordu). İKİ KABLO ÇEKİLDİ:
+  (a) KİMLİK TAŞIMASI — `spawn_pending` alt sürece `--queue-id <id>` geçirir; prescreen ölçüm
+      bitişinde AYNI kimliğe `mark(id, "measured", result=özet)` yazar (bkz. prescreen.kuyruk_geri_yaz).
+  (b) ÖLÜ SÜREÇ TOPLAMA — `reap_measuring()` her gece kancasında (spawn_pending'in İLK adımı)
+      'measuring' satırların pid'ini yoklar; ölmüş süreç `measure_failed` damgasını alır. Sessiz
+      asılı satır YOKTUR: ne damgalanabilen ne damgalanamayan hâl sessizdir.
+
+YASALAR: bu modül KARAR VERMEZ. Kuyruğa yazar, bütçeyi sayar, süreci başlatır, sonucun defterdeki
+kimliğini taşır ve ölmüş ölçümü damgalar. `passes` semantiğine, tek-değişken yasasına ve kapı
+eşiklerine DOKUNMAZ."""
 from __future__ import annotations
 
 import datetime as dt
@@ -120,11 +132,19 @@ def queue_status(rows: list | None = None) -> dict:
         by[str(r.get("status") or "?")] = by.get(str(r.get("status") or "?"), 0) + 1
     bekleyen = [r for r in rows if r.get("status") == "pending"]
     olculen = [r for r in rows if r.get("status") == "measured"]
+    # BAŞARISIZ ÖLÇÜM AYRI SAYILIR (C14): `measure_failed`, `pending`den de `measured`dan da
+    # BAŞKA bir olgudur — "sıra bekliyor" değil, "ölçüldü ve sonuç yok" da değil; ÖLÇÜM DENENDİ,
+    # BÜTÇE HARCANDI, SONUÇ YOK. Tek sayaca katlansaydı halkanın koptuğu yer yine görünmezdi.
+    basarisiz = [r for r in rows if r.get("status") == "measure_failed"]
+    olculuyor = [r for r in rows if r.get("status") == "measuring"]
     return {
         "n": len(rows), "durumlar": by,
         "bekleyen": [{"id": r.get("id"), "composite": r.get("composite"),
                       "rationale": (r.get("rationale") or "")[:160]} for r in bekleyen[:5]],
         "n_bekleyen": len(bekleyen), "n_olculen": len(olculen),
+        "n_basarisiz": len(basarisiz), "n_olculuyor": len(olculuyor),
+        "son_basarisiz": ({"id": basarisiz[-1].get("id"), "neden": basarisiz[-1].get("neden")}
+                          if basarisiz else None),
         "son_olcum": (olculen[-1].get("result") if olculen else None),
         "hafta": hafta, "haftalik_butce": WEEKLY_PROBE_BUDGET, "bu_hafta_kullanilan": used,
         "butce_kalan": max(0, WEEKLY_PROBE_BUDGET - used),
@@ -183,6 +203,83 @@ def mark(row_id: str, status: str, **fields) -> None:
 SPAWN_LOG = "logs/composite-prescreen.log"
 
 
+def _pid_canli(pid) -> bool | None:
+    """Süreç YAŞIYOR mu? True/False/None — None = ÖLÇÜLEMEDİ ("ölü" DEĞİL, uydurma yasağı).
+
+    `os.kill(pid, 0)` HİÇBİR sinyal göndermez; yalnız "bu pid'e sinyal gönderebilir miydim" sorusunu
+    çekirdeğe sorar. ESRCH → böyle bir süreç yok (ölü). EPERM → süreç VAR ama başkasının (canlı sayılır;
+    "izin yok"u "ölü" saymak, ölçümü koşan sürece ait olmayan bir hüküm kurmak olurdu).
+
+    BEYAN EDİLMİŞ SINIR — PID GERİ DÖNÜŞÜMÜ: işletim sistemi pid'leri yeniden kullanır, dolayısıyla
+    "canlı" cevabı o pid'in BİZİM prescreen'imiz olduğunu KANITLAMAZ. Yanılma yönü bilerek
+    muhafazakârdır: geri dönüşmüş bir pid'i canlı sanıp bir tur daha bekleriz (satır asılı kalır ama
+    YANLIŞ damga basılmaz); tersi yönde, koşan bir ölçümü "başarısız" damgalayıp sonucunu çöpe atmış
+    olurduk. Kimlik kanıtı (cmdline eşlemesi) taşınabilir değil (Linux /proc vs. macOS) ve bu tur
+    onu ölçmedi — açık ölçüm borcu."""
+    try:
+        p = int(pid)
+    except (TypeError, ValueError):  # sessiz-yutma: pid alanı YOK ya da biçimsiz — bu bir ölçüm SONUCU değil ÖLÇÜLEMEZLİKtir; çağıran None'ı ayrı bir dal olarak işler ve damga basmaz
+        return None
+    if p <= 0:
+        return None
+    try:
+        os.kill(p, 0)
+        return True
+    except ProcessLookupError:  # sessiz-yutma: istisnanın KENDİSİ ölçümün cevabıdır — ESRCH "böyle bir süreç yok" demektir ve çağıran onu measure_failed damgası + YASA 4 uyarısı olarak yazar; burada ikinci bir kanal gürültü olurdu
+        return False
+    except PermissionError:  # sessiz-yutma: EPERM "süreç VAR ama başkasının" demektir, yani canlılık ÖLÇÜLDÜ; izin yokluğunu ölüm saymak koşan bir ölçümü çöpe attırırdı ve bu bir arıza değil normal çok-kullanıcılı hâldir
+        return True
+    except OSError:  # sessiz-yutma: çekirdek başka bir nedenle cevap veremedi; canlılık ÖLÇÜLEMEDİ ve None dalı damga basmadan görünürlüğü korur
+        return None
+
+
+def reap_measuring(rows: list | None = None) -> dict:
+    """'measuring' satırların süreç canlılığını yokla; ölmüş süreç → `measure_failed` (C14).
+
+    NEDEN: prescreen ayrı bir süreçte koşar (`start_new_session`). O süreç çökerse, VM yeniden
+    başlarsa ya da OOM killer alırsa satır SONSUZA DEK 'measuring' kalırdı — `nous_eval._akibet`
+    beyne "ÖLÇÜLÜYOR (prescreen süreci koşuyor)" demeye devam eder, beyin aynı öneriyi her hafta
+    yeniden üretir ve haftalık bütçe harcanmış olur. Yoklama gece kancasının (spawn_pending) İLK
+    adımıdır: yeni ölçüm başlatmadan önce eski ölçümlerin akıbeti kesinleşir.
+
+    BÜTÇE İADE EDİLMEZ. `_budget_take` spawn'dan ÖNCE çağrılır ve o yoklama GERÇEKTEN harcandı
+    (süreç açıldı, CPU yandı, belki yarım ölçüm yazıldı). Başarısızlığı bahane edip sayacı geri
+    almak, bütçeyi "başarılı ölçüm sayacı"na çevirirdi — oysa H4 bütçesi DENEME sayar (DSR paydası
+    da denemeleri sayar), başarıyı değil.
+
+    ÜÇ DAL, ÜÇÜ DE GÖRÜNÜR: ölü → damga; canlı → dokunulmaz; ölçülemedi (pid yok/biçimsiz) →
+    DAMGALANMAZ ama uyarılır ve `queue_status.n_olculuyor` içinde sayılır. Kuru koşum (`dry_run`)
+    satırları hiç süreç açmadığı için ölçüm bile denemedi: ayrı bir kovada raporlanır."""
+    rows = store.read_jsonl(QUEUE_FILE) if rows is None else list(rows)
+    out: dict = {"olu": [], "canli": [], "olculemedi": [], "kuru_kosum": []}
+    for r in rows:
+        if str(r.get("status") or "") != "measuring":
+            continue
+        rid = str(r.get("id") or "")
+        if r.get("dry_run"):
+            out["kuru_kosum"].append(rid)
+            continue
+        canli = _pid_canli(r.get("pid"))
+        if canli is True:
+            out["canli"].append(rid)
+            continue
+        if canli is None:
+            out["olculemedi"].append(rid)
+            obs.warn("composite_measuring_pid_yok", id=rid, pid=r.get("pid"),
+                     detail="'measuring' satırında yoklanabilir pid YOK — süreç canlılığı "
+                            "ÖLÇÜLEMEDİ, bu yüzden damga basılmadı (uydurma yasağı); satır "
+                            "kuyruk durumunda n_olculuyor içinde görünür")
+            continue
+        mark(rid, "measure_failed", pid=r.get("pid"),
+             neden="ölçüm süreci ÖLÜ (pid yoklaması ESRCH) — sonuç geri yazılmadan sonlandı",
+             result=None)
+        out["olu"].append(rid)
+        obs.warn("composite_measure_failed", id=rid, pid=r.get("pid"),
+                 detail="bileşik ölçüm süreci sonuç yazmadan öldü — satır measure_failed "
+                        "damgalandı; haftalık yoklama bütçesi HARCANDI ve iade edilmez")
+    return out
+
+
 def _python() -> str:
     """Ölçümü ÇALIŞAN YORUMLAYICIYLA başlat. `"python"` yazmak, canlı worker'ın .venv'i yerine
     sistem python'una düşme riskiydi (numpy/pandas yok → süreç anında ölür, log'da görünür ama
@@ -200,11 +297,17 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
     ölse ölçüm devam eder ve tersi).
 
     Sonuç YAZIMI ölçümü yapan süreçtedir (prescreen çıktısı) — burada satır `measuring` olur ve
-    ertesi gece `evidence_pack` kuyruğun durumunu görür. `dry_run`: testler için (süreç açmaz)."""
+    ölçüm bitince O SÜREÇ `--queue-id` ile aynı satıra `measured` yazar (C14 kablosu). Ertesi gece
+    `evidence_pack` kuyruğun durumunu görür. `dry_run`: testler için (süreç açmaz).
+
+    ÖLÜ SÜREÇ TOPLAMA İLK ADIMDIR: yeni ölçüm başlatmadan önce eski 'measuring' satırların akıbeti
+    kesinleşir (`reap_measuring`). Sıra tersine olsaydı gece kancası, ölmüş bir ölçümün yanına bir
+    yenisini koyar ve kuyruk "iki ölçüm koşuyor" derdi — biri aylar önce ölmüşken."""
+    reaped = reap_measuring()
     rows = store.read_jsonl(QUEUE_FILE)
     bekleyen = [r for r in rows if r.get("status") == "pending"]
     out = {"n_bekleyen": len(bekleyen), "spawned": [], "atlanan": [], "butce_kalan": None,
-           "dry_run": bool(dry_run)}
+           "dry_run": bool(dry_run), "reaped": reaped}
     if not bekleyen:
         out["not"] = "kuyruk boş — yapılacak ölçüm yok"
         out["butce_kalan"] = max(0, WEEKLY_PROBE_BUDGET - _budget_used())
@@ -218,9 +321,15 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
         # BİÇİM PRESCREEN'İN SÖZLEŞMESİNDEN: `;` bir adayın DÜĞMELERİNİ ayırır (`|` ayrı adaylar).
         # Kuyruk satırı TEK bir bileşik adaydır → yalnız `;` kullanılır. `--workdir` zorunlu ve
         # kuyruk kimliğiyle adlandırılır: iki ölçüm birbirinin state kopyasını EZMESİN.
+        #
+        # `--queue-id` HALKAYI KAPATAN TEK BAYTTIR (C14): alt süreç kuyruk kimliğini bilmeden
+        # sonucu geri yazamaz — ve bilgi ona verilmediği için bugüne dek yazamadı. Kimlik komut
+        # satırından taşınır (dosya/ortam değişkeni değil): `logs/composite-prescreen.log`a düşen
+        # komut satırı, hangi sürecin hangi kuyruk satırını ölçtüğünün DENETLENEBİLİR kaydı olsun.
         arg = ";".join(f"{k}={v}" for k, v in (r.get("composite") or {}).items())
         workdir = f"/tmp/prescreen-{r.get('id')}"
-        cmd = [_python(), "-m", "meridian.prescreen", "--composite", arg, "--workdir", workdir]
+        cmd = [_python(), "-m", "meridian.prescreen", "--composite", arg, "--workdir", workdir,
+               "--queue-id", str(r.get("id") or "")]
         if dry_run:
             out["spawned"].append({"id": r.get("id"), "cmd": cmd, "pid": None})
             mark(str(r.get("id")), "measuring", k_probes=1, cmd=" ".join(cmd), dry_run=True)
@@ -256,6 +365,8 @@ def _cli() -> int:
     ap.add_argument("--ekle", help="düğme demeti: k=v,k=v")
     ap.add_argument("--gerekce", default="elle eklendi (CLI)")
     ap.add_argument("--spawn", action="store_true", help="bekleyeni ölçmeye başlat")
+    ap.add_argument("--yokla", action="store_true",
+                    help="'measuring' satırların süreç canlılığını yokla (ölü → measure_failed)")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     if a.ekle:
@@ -265,9 +376,11 @@ def _cli() -> int:
                 k, v = parca.split("=", 1)
                 comp[k.strip()] = float(v)
         print(json.dumps(enqueue(comp, rationale=a.gerekce, source="cli"), ensure_ascii=False, indent=1))
+    if a.yokla:
+        print(json.dumps(reap_measuring(), ensure_ascii=False, indent=1))
     if a.spawn:
         print(json.dumps(spawn_pending(dry_run=a.dry_run), ensure_ascii=False, indent=1))
-    if a.durum or not (a.ekle or a.spawn):
+    if a.durum or not (a.ekle or a.spawn or a.yokla):
         print(json.dumps(queue_status(), ensure_ascii=False, indent=1))
     return 0
 

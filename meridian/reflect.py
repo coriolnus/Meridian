@@ -1126,7 +1126,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                               k_max: int = 3, budget: int = 10, tried: set | None = None,
                               on_probe=None, regime: str | None = None,
                               max_minutes: float | None = None,
-                              deadline_ts: float | None = None) -> dict:
+                              deadline_ts: float | None = None,
+                              record_session: bool = True) -> dict:
     """Walk the incumbent ONCE, then probe up to `budget` single-variable candidates (magnitude-first,
     breadth across UCB-ranked knobs) through the SAME OOS gate. Returns the best gate-CLEARING probe (or
     None). Probes are NOT recorded as hypotheses — a probe that lost vs this incumbent is not a permanent
@@ -1156,7 +1157,44 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
 
     K SAYIMI DOKUNULMAZ: kapıya giden K = PLANLANAN toplam sonda sayısıdır (`total`), değerlendirilen
     değil. Kesinti K'yı küçültseydi kazananın-laneti cezası hafifler ve tavan, kapıyı GEVŞETEN bir
-    kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur."""
+    kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur.
+
+    ---- RESMÎ KAYIT: OTURUM BAŞINA BİR (C17, 2026-08-02) --------------------------------------
+    `record_session` — oturum sonunda TEK resmî değerlendirme kaydı düşürülür mü?
+
+    VAKA (ölçülmüş): sonda döngüsü `_gate_eval(..., record_erosion=True)` çağırıyordu, yani HER
+    sonda hem aşınma sayacını +1 artırıyor hem doğrulama defterine bir satır yazıyordu. Tek bir gün
+    (2026-07-30 07:11→14:04) 204 satır yazdı, `erosion.queries` 351→554'e tırmandı, aynı oturumun
+    `k_probes`ı sabit kalarak (17/27/40) her satırda yeniden sayıldı ve 204 satırda yalnız 60 ayrık
+    etiket kaldı (aynı aday altı kez, PBO popülasyonu kopyalarla kirli). Kodun KENDİ yorumu bunun
+    tersini söylüyordu: "arama oturumu pencereye BİR soru sorar".
+
+    ÇİFTE CEZA BEYANI — İKİ AYRI YÜK, HER BİRİ BİR KEZ SAYILIR:
+      * `erosion.queries` = OTURUMLAR ARASI seçilim baskısı ("bu pencere geometrisine ömür boyu kaç
+        RESMÎ soru soruldu"). Bir arama oturumu BİR soru sorar → oturum sonunda +1.
+      * `k_probes`        = OTURUM İÇİ çoklu test ("o tek soruyu sorarken kaç aday taradık") → K.
+    `_gate_eval` ikisini `_n_trials = erosion.queries + k_probes` ile TOPLAR. Sonda başına kayıt,
+    K'lık yükü aşınma sayacına K KEZ yazıp üstüne `k_probes` ile bir kez daha yazıyordu — aynı yükün
+    iki kanaldan, biri K kat şişmiş hâlde fiyatlanması. Artık her yük kendi kanalında tam bir kez.
+
+    MARJ HER ÇAĞRIDA UYGULANIR, SAYIM UYGULANMAZ (`oos_erosion.status` vs `note`): sondalar aşınmış
+    bir pencerede AYNI çıtayı görür — yalnız sayacı ilerletmezler. Yan etki olarak sondalar artık
+    OTURUM BOYUNCA SABİT bir marj görür; eskiden ilk sonda sayacı artırdığı için sonraki sondalar
+    kendi oturumlarının açtığı çıtayla yarışıyordu (ölçüm aracının kendi ölçtüğü şeyi değiştirmesi).
+
+    KİM YAZAR: kapıyı geçen aday VARSA resmî kaydı `submit()` düşürür — ship otoritesi AYNI kapıyı
+    aynı K ile yeniden koşar ve deftere o adayı yazar. Burada ikinci bir satır yazmak aynı oturumu
+    iki kez saymak ve PBO ızgarasına aynı adayı iki kopya sokmak olurdu. Geçen aday YOKSA kaydı bu
+    fonksiyon düşürür (oturum temsilcisi = en yüksek OOS'lu değerlendirilmiş aday), çünkü pencereye
+    soru SORULDU ve sorulmuş bir soruyu saymamak aşınmayı bedavaya getirirdi.
+    BEYAN EDİLMİŞ BOŞLUK: kazanan aday `submit`in GUARD dalında (kapıdan önce) reddedilirse o oturum
+    kayıtsız kalır. Arama yalnız bounds içinden sonda ürettiği için nadirdir; her ship oturumunu iki
+    kez saymaya yeğlenmiştir ve kapatmak `submit`in guard dalına dokunmayı gerektirir (bu turun
+    kapsamı dışında).
+    `record_session=False`: çağıran YAPISAL OLARAK ship edemiyorsa (ısınma sprinti — "Nothing ships")
+    resmî kayıt YAZILMAZ; ship edemeyen bir tur için resmî soru saymak, hiç sorulmamış bir soruyu
+    deftere yazmak olurdu. Kalan kanal (ısınmanın UCB önceliklerini ısıtması) dolaylı bir seçilim
+    yoludur ve bu tur onu ÖLÇMEDİ — açık ölçüm borcu, sayıya çevrilmiş bir varsayım değil."""
     # `_time` BURADA içe aktarılır (eskiden sonda döngüsünün hemen üstündeydi): süre tavanı ondan
     # ÖNCE, fonksiyonun ilk satırında saat okumak zorunda. Tek alias kalır — aynı modülün iki adı,
     # ikisinden birinin sessizce farklı bir saat okuduğu izlenimi verirdi.
@@ -1259,6 +1297,13 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
 
     evaluated = cleared = 0
     best, trace = None, []
+    # OTURUM TEMSİLCİSİ (C17): resmî kayıt oturum SONUNDA bir kez düşer ve bir adayın walk-forward
+    # sözlüğünü ister. `rep_cand` = en yüksek OOS'lu DEĞERLENDİRİLMİŞ aday — yani oturumun en güçlü
+    # ölçümü. Kapıyı geçen bir aday varsa resmî satırı zaten `submit` yazar (o adayla), bu yüzden
+    # temsilci yalnız "hiçbiri geçmedi" dalında kullanılır ve `passes` ölçütüne göre seçilmesi
+    # gereksiz olurdu: geçen aday yoksa geçme ölçütü ayırt edici değildir.
+    rep_cand = None
+    rep_oos = None
     total = len(probes)
     kesinti: dict = {"kesildi": False}
     if on_probe:
@@ -1286,11 +1331,16 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         if not _is_cached:
             _fresh_done += 1
         cand = _probe_wf(cand_strat, var, new, version, bars, index, goal, w)
-        # RESMÎ: arama oturumu pencereye BİR soru sorar (K aday tek beyanla taşınır — bkz. oos_erosion
-        # beyan (2)). Oturum içindeki her prob ayrı ayrı sayılsaydı aynı yük iki kez cezalandırılırdı.
-        passes, gate, _why = _gate_eval(inc, cand, k_probes=total, record_erosion=True)   # FULL gate + K-aday cezası (winner's curse)
+        # SONDA DEĞERLENDİRMESİ KAYITSIZDIR (C17, 2026-08-02). Yasa AYNEN koşar (tam kapı + K-aday
+        # kazanan-laneti cezası + yürürlükteki aşınma MARJI); yazılmayan tek şey SAYIM'dır. Buradaki
+        # `record_erosion=True` kodun kendi beyanının tam tersini yapıyordu: yorum "oturum pencereye
+        # BİR soru sorar" derken defter sonda başına bir soru sayıyordu. Oturumun tek resmî kaydı
+        # döngüden SONRA (ya da `submit` tarafından) düşer — bkz. fonksiyon başlığı.
+        passes, gate, _why = _gate_eval(inc, cand, k_probes=total, record_erosion=False)   # FULL gate + K-aday cezası (winner's curse)
         evaluated += 1
         c_oos = cand.get("oos_score")
+        if rep_cand is None or (c_oos is not None and (rep_oos is None or c_oos > rep_oos)):
+            rep_cand, rep_oos = cand, c_oos
         trace.append({"variable": var, "new": new, "old": old,
                       "candidate_oos": c_oos, "incumbent_oos": inc_oos,
                       "fold_wins": gate["fold_wins"], "tail_ok": gate["tail_ok"], "passes": passes})
@@ -1307,9 +1357,38 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                 on_probe(i, total, var, new, c_oos, inc_oos, passes, best)
             except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
                 pass                      # progress reporting must NEVER break the search
+    # ---- OTURUMUN TEK RESMÎ KAYDI (C17) --------------------------------------------------------
+    # Üç koşul da ZORUNLU ve her biri ayrı bir sahtelik sınıfını kapatır:
+    #   `record_session` — ship edemeyen çağıran (ısınma) resmî soru saymaz.
+    #   `evaluated > 0`  — hiç sonda koşmadıysa pencereye soru SORULMADI; sıfır ölçümü bir soru gibi
+    #                      saymak, aşınma sayacını "kaç kez fonksiyon çağrıldı"ya çevirirdi.
+    #   `best is None`   — kapıyı geçen aday varsa resmî kaydı `submit` düşürür (ship otoritesi aynı
+    #                      kapıyı aynı K ile yeniden koşar); ikinci satır oturumu iki kez sayardı.
+    oturum_kaydi = None
+    if record_session and evaluated > 0 and best is None and rep_cand is not None:
+        try:
+            _gate_eval(inc, rep_cand, k_probes=total, record_erosion=True)
+            oturum_kaydi = {"kaydedildi": True, "temsilci_oos": rep_oos, "k_probes": total}
+        except Exception as e:
+            # YASA 4: bir TELEMETRİ kaydının aramanın sonucunu düşürme yetkisi yoktur, ama sessiz de
+            # kalamaz — kayıt düşerse aşınma sayacı O OTURUMU HİÇ görmez ve çıta olması gerekenden
+            # gevşek kalır (yön: kapıyı gevşetir, yani sessizlik en pahalı seçenektir).
+            oturum_kaydi = {"kaydedildi": False, "hata": type(e).__name__}
+            try:
+                from . import obs as _obs_s
+                _obs_s.warn("search_session_record_failed", error=f"{type(e).__name__}: {e}",
+                            evaluated=evaluated, k_probes=total,
+                            detail="arama oturumunun TEK resmî kaydı yazılamadı — aşınma sayacı bu "
+                                   "oturumu görmedi ve çıta olması gerekenden gevşek kaldı")
+            except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok ve kayıt denemesi arama sonucunu düşüremez
+                pass
     return {"incumbent_oos": inc_oos, "evaluated": evaluated, "cleared": cleared,
             "fresh": _fresh_done, "cached_hits": evaluated - _fresh_done, "skipped_wallclock": _skipped_fresh,
             "best": best, "trace": trace[-40:], "regime": regime, "planlanan_sonda": total,
+            # KAYDIN AKIBETİ SONUÇTA GÖRÜNÜR: `None` = bu oturum resmî kayıt düşürmedi (ya kapıyı
+            # geçen aday `submit`e gitti, ya çağıran ship edemez, ya hiç sonda koşmadı). Alanın
+            # yokluğu ile "yazılamadı" birbirine karışmasın diye her hâlde yazılır.
+            "oturum_kaydi": oturum_kaydi,
             **kesinti}
 
 
@@ -1322,6 +1401,9 @@ def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple |
     submit() re-derives the same eval_regime from the winning variable's @suffix, so search and ship grade
     on the identical population."""
     goal = goal or config.goal()
+    # RESMÎ KAYIT ZİNCİRİ (C17): arama `record_session=True` (varsayılan) ile koşar. Kapıyı geçen aday
+    # ÇIKARSA kaydı aşağıdaki `submit` düşürür (ship otoritesi, aynı kapı, aynı K); çıkmazsa aramanın
+    # kendisi düşürür. İki dalın toplamı DEĞİŞMEZDİR: oturum başına TAM BİR resmî soru.
     res = coordinate_descent_search(bars, index, goal, windows=windows, k_max=k_max, budget=budget,
                                     on_probe=on_probe, regime=regime)
     best = res.get("best")

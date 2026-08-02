@@ -171,6 +171,13 @@ CONTRACTS: dict[str, Contract] = {
     # SEBEBİ odur ve düğme demeti olmadan satır prescreen'e hiç giremez. `status` ZORUNLU çünkü
     # kuyruğun tam-döngülü olması (pending → measuring → measured) yalnız o alanla denetlenebilir;
     # eksikse "öner→ölç→öğren" halkasının koptuğu görünmez kalır.
+    # DURUM ALFABESİ TAM HÂLİ (C14, 2026-08-02): pending → measuring → measured | measure_failed
+    # (+ giriş redleri: rejected_shape). `measure_failed` bir BAŞARISIZLIK KAYDIDIR, bir ara durum
+    # değil: ölçüm süreci sonucu geri yazmadan öldü (pid yoklaması), guard bütün adayları reddetti ya
+    # da prescreen patladı. Ayrı bir durum olmasının sebebi ölçülebilirlik: 'pending'e geri düşseydi
+    # bütçe harcanmış bir deneme yeniden sıraya girer ve sayaçlar aynı fikri iki kez sayardı;
+    # 'measured' olsaydı `n_olculen` sonuçsuz satırları da sayar ve halka kapanmış GÖRÜNÜRDÜ.
+    # Yazan: `hermes_composite.reap_measuring` (ölü süreç) + `prescreen.kuyruk_geri_yaz` (hata dalı).
     "composite_queue.jsonl": Contract(
         required=("ts", "id", "composite", "n_knobs", "status", "source"),
         writers=("hermes_composite.py",),   # satırı guard/hermes kurar, diske bu modül yazar

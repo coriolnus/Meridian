@@ -59,9 +59,18 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
     """#2 REJİM-HEDEFLİ ARKA PLAN YANSIMASI: canlı rejimin ufku dolmadığında boşta beklemek,
     diğer rejimlerin BİRİKMİŞ kanıtını israf etmekti (chop'ta yaşarken trend_up defterinde 80+
     işlem kullanılmadan duruyordu). Ufku DOLU (katı-VE, rejim-dilimli) canlı-dışı rejimlerden,
-    son arka-plan yansımasından beri EN ÇOK yeni işlem birikmişi seçilir. Güvenlik: ship yalnız
+    son arka-plan yansımasından beri EN ÇOK yeni işlem birikmişi seçilir. Rejim başına taban:
+    aynı kanıta ikinci kez yansıma yok.
+
+    GÜVENLİK BEYANI ARTIK KODDA KARŞILIĞI OLAN BİR CÜMLE (C16, 2026-08-02). Beyan: "ship yalnız
     params_by_regime[o rejim]'i değiştirir — canlı davranış rejim dönene dek değişmez ve o güne
-    kadar kapı+defterde denetlenmiştir. Rejim başına taban: aynı kanıta ikinci kez yansıma yok."""
+    kadar kapı+defterde denetlenmiştir." Bu cümle 2026-08-02'ye dek KARŞILIKSIZDI: bu fonksiyon
+    `trend_up` döndürdüğünde `reflect_once` içindeki `!= "trend_up"` istisnası aramayı GLOBAL
+    koşturuyor, `versioning.bump` '@' göremediği için düz `params`a yazıyordu — yani chop canlıyken
+    chop davranışı, chop'un hiç sertifika vermediği kanıtla anında değişiyordu. UYGULAMA YERİ BU
+    FONKSİYON DEĞİL: seçim burada, KAPSAMA `hermes.reflect_once(..., background=True)` dalındadır
+    (aşağıdaki çağrı bayrağı taşır). Beyanı taşıyan yorumla onu uygulayan kodun ayrı dosyalarda
+    olması bu kusurun kök nedeniydi; bu yüzden ikisi de birbirini ADIYLA gösterir."""
     baselines = _state.get("bg_reflect_by_regime") or {}
     best, best_n = None, 0
     for r in config.VALID_REGIMES:
@@ -78,9 +87,10 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
 
 def _warmup_sprint() -> None:
     """Boş-döngü ısınması (öneri #4): coordinate_descent_search'i SHIP ETMEDEN koştur — yalnız UCB
-    önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz). En iyi probe'un
-    özeti hermes_status'a yazılır (görünürlük). Ağ/veri hatası sessizce yutulur — ısınma asla döngüyü
-    kırmaz.
+    önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz) VE C17'den beri bu
+    beyan DEFTER tarafında da geçerli: `record_session=False` ile resmî aşınma/doğrulama kaydı
+    düşmez. En iyi probe'un özeti hermes_status'a yazılır (görünürlük). Ağ/veri hatası sessizce
+    yutulur — ısınma asla döngüyü kırmaz.
 
     WP-H/H11 (2026-07-31) — İKİ KUSUR BİRDEN KAPANIR, İKİSİ DE AYNI KÖKTEN:
 
@@ -123,8 +133,15 @@ def _warmup_sprint() -> None:
             _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
 
         _tavan = _warmup_tavan_dk()
+        # `record_session=False` (C17, 2026-08-02): "Nothing ships" beyanı artık DEFTER tarafında da
+        # doğru. Isınma her 12 poll'da bir koşar ve sonda başına resmî kayıt düşerken tek bir gecede
+        # aşınma sayacını yüzlerle besliyordu (`EROSION_QUERY_LIMIT=20` ilk ısınma gecesinde aşılıyor,
+        # +0.01 ek marj ömür boyu açık kalıyordu) — hiçbir şey ship edemeyen bir turun kapıyı KALICI
+        # olarak sıkması. Sıfır kayıt bir muafiyet değil, beyanın uygulanması: ship yetkisi olmayan
+        # tur resmî soru sormaz.
         res = reflect.coordinate_descent_search(bars, index, budget=int(os.environ.get("HERMES_WARMUP_BUDGET", "10")),
-                                                k_max=2, max_minutes=_tavan, on_probe=_nabiz)
+                                                k_max=2, max_minutes=_tavan, on_probe=_nabiz,
+                                                record_session=False)
         _wd8.beat("warmup_sprint")         # sonda HİÇ koşmadıysa da ısınma turladı: kadans nabzı düşmez
         _wd8.beat("hermes_poll")
         _state["last_warmup"] = {"at": _now(), "evaluated": res.get("evaluated"),
@@ -332,7 +349,11 @@ def _run(poll_seconds: int) -> None:
                         _state["_warm_skip"] = "bg_reflect"
                         obs.log("bg_reflection_start", regime=bg,
                                 detail="canlı ufuk dolu değil — birikmiş kanıtlı rejim arka planda işleniyor")
-                        _record(hermes.reflect_once(target_regime=bg))
+                        # `background=True` ARKA PLAN TURUNUN KİMLİĞİDİR (C16): `reflect_once` bu
+                        # bayrak olmadan kanıtın canlı-dışı bir rejimden geldiğini BİLEMİYORDU ve
+                        # bg=trend_up hâlinde ship yüzeyi GLOBAL oluyordu. Bayrak, aramayı `bg`
+                        # rejimine zorlar ve global (@'sız) önerileri o turda reddettirir.
+                        _record(hermes.reflect_once(target_regime=bg, background=True))
                         _state.setdefault("bg_reflect_by_regime", {})[bg] = len(trades)
                     finally:
                         _reflect_lock.release()
