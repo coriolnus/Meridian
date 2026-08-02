@@ -485,6 +485,26 @@ def test_law6_kapi_bucket_has_a_dashboard_reader(sandbox_state):
     assert "slipaj" in app, "pano `icra.slipaj` özetine hiç dokunmuyor"
 
 
+def test_law6_slipaj_summary_has_a_dashboard_reader(sandbox_state):
+    """`kapi` kovası dışında KALAN E2 yükü de okuyucusuzdu: ret SINIFI, iç motorun kill ölçütü,
+    kill EŞİĞİ ve iki-motor ayrışması `/api/diagnostics`te tam servis ediliyor ama hiçbir yüzey
+    basmıyordu. Dördü ayrı ayrı assert edilir: zincir koptuğunda HANGİ okuyucunun düştüğü
+    testin mesajından okunur, "pano bir şeyi okumuyor" gibi bulanık bir kırmızı gelmez."""
+    app = (pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js").read_text()
+    assert "red_sinifi_dagilimi" in app, (
+        "pano ayna RET SINIFI dağılımını okumuyor — kartın (a) ölçütü (`stop_vs_current` sıfıra "
+        "inmeli) hiçbir yüzeyde görünmüyor (YASA 6)")
+    assert "dolmama_orani" in app, (
+        "pano iç motorun `dolmama_orani`sını okumuyor — kart EXE-2026-001'in KILL ÖLÇÜTÜ "
+        "okuyucusuz ölçüm olarak duruyor (YASA 6)")
+    assert "kill_esigi" in app, (
+        "pano eşiği YÜKTEN okumuyor — eşik panoya sabit yazılırsa (0.40) analytics'teki değişiklik "
+        "ekrana yansımaz ve pano eski eşiği savunmayı sürdürür (C10 dersi: sabit sayı yasak)")
+    assert "ayrisan_n" in app, (
+        "pano iki-motor mutabakatını okumuyor — `ayrisan_n` kartın (c) ölçütü, ayrışma gizlenemez "
+        "(YASA 6)")
+
+
 def test_e2_ledger_rows_are_json_serialisable(sandbox_state):
     """Defter satırı JSONL'e yazılabilir olmalı — karar sözlüğü içinde numpy/Timestamp taşımaz."""
     d = BR.entry_order_decision(100.0, ref_price=99.5, atr=1.0)
