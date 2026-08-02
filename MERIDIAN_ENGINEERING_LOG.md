@@ -283,6 +283,11 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   Dikkat: rsync kodu diske indirir ama KOŞAN worker eski kalır — scheduler.py değişikliği ancak
   restart'la etkinleşir (2026-08-02 adım 3-4 dersi); o güne dek canlıda `takvim_yok` hâli olay
   defterinde sessiz kalmaya devam eder (pano tarafı zaten canlıda, e3edaf0 penceresiyle indi).
+  PENCERE-ÖNCESİ KONTROL: repo kökünde `sitecustomize.py` KALMAMIŞ olacak — hungry-jemison
+  oturumunun geçici bounds.yaml-yazarı teşhis kancası (sys.addaudithook; sahibi "koşum sonrası
+  silinir" beyanlı, 2026-08-02 21:23 doğumlu). rsync tüm repoyu taşır; dosya A1'e giderse canlı
+  kutuda her Python açılışına kanca biner (log yolu orada yok → sessiz no-op ama üretime teşhis
+  kodu taşınmış olur). Dry-run delta'sında `sitecustomize.py` görünürse DUR.
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
   operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
