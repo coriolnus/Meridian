@@ -164,6 +164,24 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   poll'de koşulsuz uyarı 288 satır/gün ederdi). Çivi: v175 (3 test; kırmızı-önce dört geri-alma
   senaryosunda fiilen doğrulandı). A1'e sıradaki bakım penceresiyle iner.
 
+- **PAZAR-AKŞAMI PENCERESİ KAPANDI — takvim_yok kalemi CANLIDA; `--uygula` BİLEREK atlandı
+  (2026-08-02 ~19:25 UTC, Rol-1, operatör talimatlı):** otoriter suite donmuş `6545c6a` tepesinde
+  **3969/0** (18:40 dk, ana checkout) + dagit kapıları yeşil (audit ✓ · lint-imports 5/5 KEPT ·
+  [1b] bounds/goal canlıyla BİREBİR). Dry-run delta'sı yalnız 2 lint-cache satırı çıkınca ölçüldü:
+  EDG-016 oturumunun 19:05 UTC `--uygula`sı, 18:30/18:37 UTC'de merge'lenmiş main çalışma ağacımızı
+  taşımıştı (rsync-tüm-repo sınıfı, bu kez İYİ huylu: taşınan ağaç TAM commit'liydi) —
+  scheduler.py A1-yazımı 19:05:15, servis başlangıcı 19:05:18 → KOŞAN worker yeni kodla doğdu.
+  O pencerenin kapı-suite'i bu ağacı kapsamıyordu; boşluğu bu oturumun post-hoc otoriter suite'i
+  (aynı içerik, 3969/0) kapattı. İkinci restart'ın kanıt desteği yoktu → `--uygula` atlandı (boş
+  işlem canlıda gereksiz kesinti). CANLI DOĞRULAMA: healthz 200 · scheduler_status ilerliyor
+  (19:05:50) · `akis_boslugu={"durum":"seans_disi","gun":"2026-08-02"}` — yeni üç-anahtarlı
+  minimal kopya sözleşmesi canlıda (v175 test-3'ün çivisi). `sitecustomize.py` kancası sahibi
+  hungry-jemison tarafından ~18:44 UTC'de silindi + yeniden doğrulandı — pencere-öncesi bekçi
+  maddesi görevini yaptı, kuyruk kaydıyla birlikte kapandı (KUYRUK BOŞ; kayıt bu commit'te
+  silindi). DERS (sınıf: paralel-oturum rsync'i): bir oturumun `--uygula`sı, başka oturumun az
+  önce merge'lediği main'i HABERSİZ taşıyabilir — pencereyi koşan oturum dağıtım ANINDAKİ main
+  tepesini kaydetmeli (EDG-016 kaydı b857f48 derken fiilen 6545c6a içeriği taşındı).
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
@@ -274,20 +292,6 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
-- **BEKLEYEN DAĞITIM KUYRUĞU (ilk kayıt 2026-08-02 akşam; güncelleme aynı gece: dal main'e merge
-  edildi — sahibi Rol-1; kuyruk boşalınca bu satır silinir):** tek kalem: takvim_yok zinciri
-  (`8dc7c8b` — scheduler kancası erken-dönüşü + süreç başına bir `gap_scan_calendar_unavailable`
-  + v175 çivisi; worktree turu xenodochial-chandrasekhar, main'e merge ile indi). EDG-016
-  penceresi (b857f48, dagit --uygula yeşil) bu kalemden ÖNCE koştu — kalem canlıda DEĞİL.
-  Kalan yol: otoriter suite DONMUŞ tepede → sıradaki bakım penceresiyle `./dagit.sh`.
-  Dikkat: rsync kodu diske indirir ama KOŞAN worker eski kalır — scheduler.py değişikliği ancak
-  restart'la etkinleşir (2026-08-02 adım 3-4 dersi); o güne dek canlıda `takvim_yok` hâli olay
-  defterinde sessiz kalmaya devam eder (pano tarafı zaten canlıda, e3edaf0 penceresiyle indi).
-  PENCERE-ÖNCESİ KONTROL: repo kökünde `sitecustomize.py` KALMAMIŞ olacak — hungry-jemison
-  oturumunun geçici bounds.yaml-yazarı teşhis kancası (sys.addaudithook; sahibi "koşum sonrası
-  silinir" beyanlı, 2026-08-02 21:23 doğumlu). rsync tüm repoyu taşır; dosya A1'e giderse canlı
-  kutuda her Python açılışına kanca biner (log yolu orada yok → sessiz no-op ama üretime teşhis
-  kodu taşınmış olur). Dry-run delta'sında `sitecustomize.py` görünürse DUR.
 - **DAĞITIM BLOKE — ÇÖZÜLDÜ (2026-08-02: yeşil suite 3752/0 donmuş tepede → pencere 14:00 UTC →
   adım-7 doğrulaması yeşil; ayrıntı §DAĞITIM PENCERESİ PLANI). Tarihçe aynen korunuyor:**
   operatör KOVA-B dağıtımını açtı; dagit.sh kapıları (audit+lint-imports) yeşildi ama dağıtım-öncesi
