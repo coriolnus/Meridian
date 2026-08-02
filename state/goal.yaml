@@ -88,14 +88,11 @@ limits:
   # TAŞINDI — davranış bit-bit değişmedi. Hermes bunları öneremez (guard.LIMIT_KEYS); değiştiren
   # yalnız operatördür. guard anahtar yoksa aynı varsayılanlara düşer (fail-safe).
   heat_hard_r: 5.0                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)
-  # ZARF GERİLİMİ, BİLEREK AÇIK BIRAKILDI: max_open_positions × max_position_r = 5×1,0 = 5,0R, yani
-  # sert tavan ilan edilen zarfın ALTINDADIR ve tam boyutta 5. pozisyon YAPISAL olarak imkânsızdır
-  # (ilan edilen "5 pozisyon" tam-konviksiyonda fiilen 4'tür). Ölçüldü: 390 planlık defterde ısı
-  # tavanının TEK bağlayıcı sert kısıt olduğu vaka 1 (2025-12-19/C, 4,58R, 4 açık pozisyon) —
-  # marjinal etki %0,26 ve yön muhafazakâr (risk EKLEYEMEZ, yalnız keser). Eşitlemek (4,5 → 5,0)
-  # RİSK ARTIRAN bir karardır ve OPERATÖRÜNDÜR: kod artık bu kararı sizin adınıza vermiyor, yalnız
-  # görünür kılıyor. Tutarlılık çivisi `heat_hard_r <= max_open_positions × max_position_r` (test
-  # test_kovab_dalga3_v166) yalnız "zarfı AŞMASIN" der; altında kalmak meşrudur.
+  # ZARF GERİLİMİ KAPANDI — OPERATÖR KARARI 2026-08-03 (d01ccb5): 4,5 → 5,0R, zarf aritmetiğine
+  # TAM EŞİT (5 poz × 1,0R); tam-boyutlu 5. pozisyon artık yapısal olarak mümkün. Tarihsel bağlam:
+  # 4,5R kod-mirası güvenlik payıydı; 390 planlık defterde tek-bağlayıcı vaka 1'di (4,58R —
+  # o vaka yeni tavanda geçerdi). RİSK-ARTIRAN bilinçli karar; kod vermiyor, operatör verdi.
+  # Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) eşitlikte sağlanır.
   heat_review_r: 3.5                   # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)
   corr_review: 0.85                    # adayın açık pozisyonlarla getiri korelasyonu → REVIEW
   # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
