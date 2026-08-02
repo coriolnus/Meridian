@@ -93,6 +93,17 @@ sudo cp deploy/oracle-a1/meridian-backup.timer       /etc/systemd/system/meridia
 # OnFailure hedefi: meridian.service ölürse operatöre haber verir. enable EDİLMEZ (oneshot,
 # yalnız OnFailure tetikler). Kanal kurulu değilse birim no-op'tur ve nedenini journal'a yazar.
 sudo cp deploy/oracle-a1/meridian-fail-notify.service /etc/systemd/system/meridian-fail-notify.service
+# ASILI-TİCK BEKÇİSİ (2026-08-02 küçük-kuyruk turu — BU ADIM EKSİKTİ).
+# Bekçi 2026-07-31'de CANLIDA elle kurulmuştu ve depoda hiç yoktu; dolayısıyla bu betik onu
+# KURMUYORDU. Sonucu: taze bir kurulum ya da `cutover.sh` (adım 4 bu betiği çağırır) panoyu
+# asılı-tick korumasız canlıya çıkarırdı — "canlılık != ilerleme" vakası (2026-07-30 21:14→22:27,
+# ölçülen sessizlik 73,1 dk) hiçbir bekçiye çarpmadan tekrarlanabilirdi.
+sudo cp deploy/oracle-a1/meridian-tick-watchdog.service /etc/systemd/system/meridian-tick-watchdog.service
+sudo cp deploy/oracle-a1/meridian-tick-watchdog.timer   /etc/systemd/system/meridian-tick-watchdog.timer
+# ÇALIŞTIRMA BİTİ: rsync tabanlı dağıtım (dagit.sh / push_code_a1.sh) izinleri her zaman
+# taşımayabilir; `Type=oneshot` bir ExecStart çalıştırılamazsa birim 203/EXEC ile düşer ve bekçi
+# SESSİZCE ölür. Her koşuda garanti altına alınır (`.dash.env` izin sabitlemesiyle aynı sınıf).
+sudo chmod +x deploy/oracle-a1/tick_watchdog.sh
 # PANO TOKEN'I — BİRİMDE DEĞİL, 0600'lük /opt/meridian/.dash.env'te (H3 tur-1/2):
 # meridian.service onu `EnvironmentFile=-/opt/meridian/.dash.env` ile okur; birim dosyası 0644'tür,
 # sır oraya YAZILMAZ. Dosya SUNUCUDA üretilir, dağıtımla TAŞINMAZ (dagit.sh rsync'i .dash.env'i
@@ -122,6 +133,29 @@ mkdir -p /home/ubuntu/backups     # yedek hedefi — timer ilk atışta var olma
 sudo systemctl daemon-reload
 sudo systemctl enable meridian meridian-barsarchive
 sudo systemctl enable --now meridian-backup.timer   # timer şimdi başlar; service'i o tetikler
+sudo systemctl enable --now meridian-tick-watchdog.timer
+
+# BEKÇİ KURULUM DOĞRULAMASI — "kurulu != çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
+# kuruluydu ve ilk test-ateşlemede IndentationError verdi). Burada ÜÇ ayrı gerçek ölçülür ve
+# hiçbiri diğerinin yerine geçmez: (a) ExecStart hedefi gerçekten ÇALIŞTIRILABİLİR mi, (b) timer
+# gerçekten AKTİF mi, (c) betik bir kez KOŞTURULDUĞUNDA beklenen satırı basıyor mu.
+# (c) BİLEREK VAR: eski gömülü sürüm systemd `$` ikamesi yüzünden hiçbir zaman restart edemiyordu
+# ve bunu YALNIZ çıktısına bakınca ("[tick-watchdog] ilerleme var (s)" — boş `${YAS}`) anlaşılıyordu.
+# Desen değil DURUM ölçülür: hüküm satırı yaşı SAYIYLA basmalı.
+if [ ! -x /opt/meridian/deploy/oracle-a1/tick_watchdog.sh ]; then
+  echo "!! tick-watchdog betiği çalıştırılabilir değil — bekçi 203/EXEC ile sessizce ölürdü"; exit 1
+fi
+sudo systemctl start meridian-tick-watchdog.service || true
+TICK_CIKTI="$(journalctl -u meridian-tick-watchdog.service -n 20 --no-pager 2>/dev/null | grep -o '\[tick-watchdog\].*' | tail -1)"
+TICK_TIMER="$(systemctl is-active meridian-tick-watchdog.timer 2>&1 || true)"
+echo "-- tick-watchdog: timer=$TICK_TIMER · son satır: ${TICK_CIKTI:-(YOK)}"
+if [ "$TICK_TIMER" != "active" ]; then
+  echo "!! meridian-tick-watchdog.timer AKTİF DEĞİL — asılı-tick koruması yok"; exit 1
+fi
+case "$TICK_CIKTI" in
+  *"ilerleme var ("[0-9]*|*"bayat"*|*"ÖLÇÜLEMEDİ"*|*"YAS lütfu"*) : ;;
+  *) echo "!! tick-watchdog beklenen hüküm satırını basmadı (systemd \$ ikamesi sınıfı?) — çıktı: ${TICK_CIKTI:-(YOK)}"; exit 1 ;;
+esac
 
 # 7) tohum + başlat
 #    KORUMA (serve.sh:16 ile BİREBİR): dolu bir state üzerine replay KOŞULMAZ. Eski sürüm bu kontrolü

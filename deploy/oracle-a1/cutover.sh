@@ -159,6 +159,14 @@ adim 6/6 "doğrulama"
     printf "%-24s %s\n" "$u" "$(systemctl is-active $u 2>&1 || true)"
   done
   printf "%-24s %s\n" "meridian-backup.timer" "$(systemctl is-active meridian-backup.timer 2>&1 || true)"
+  # ASILI-TİCK BEKÇİSİ (2026-08-02): kurulumu adım 4 içindeki deploy.sh yapar (birim kopyaları +
+  # enable --now + test-ateşleme). BURADA AYRI OLARAK ÖLÇÜLÜR, çünkü cutover doğrulama listesi
+  # operatörün gördüğü SON tablodur — orada olmayan bir koruma, olmadığı fark edilmeden canlıya
+  # çıkar (bu birimin depoya girmeden önce iki gün yaşadığı hâlin ta kendisi).
+  # DİKKAT: bu blok TEK TIRNAKLI bir uzak komut dizgisidir — içine kesme işareti YAZILAMAZ
+  # (dizgiyi kapatır ve betik sözdizimi hatasıyla düşer; bu satır o hatanın kendisiyle yazıldı).
+  printf "%-24s %s\n" "tick-watchdog.timer" "$(systemctl is-active meridian-tick-watchdog.timer 2>&1 || true)"
+  printf "%-24s %s\n" "tick-watchdog satır" "$(journalctl -u meridian-tick-watchdog.service -n 20 --no-pager 2>/dev/null | grep -o "\[tick-watchdog\].*" | tail -1 || echo YOK)"
   printf "%-24s %s\n" "redis-cli ping" "$(redis-cli ping 2>&1 | head -1)"
   printf "%-24s %s\n" "GET /healthz" "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/healthz || echo BAĞLANAMADI)"
   printf "%-24s %s\n" "GET /api/today" "$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/api/today || echo BAĞLANAMADI)"

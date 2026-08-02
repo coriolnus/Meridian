@@ -1444,7 +1444,9 @@ function gbAlarmSatiri(ab) {
   const d = ab.dagilim || {};
   return `<div class="gb-alarm${ab.asim_var ? " asim" : ""}">
     <span>alarm bütçesi · son 24 sa <b>${d.low ?? "—"}</b> low / <b>${d.high ?? "—"}</b> high</span>
-    <span>tepe <b>${ab.tepe_10dk ?? "—"}</b>/10dk (tavan ${ab.tavan_10dk ?? "—"})</span>
+    <span${ab.tepe_muafiyet_uygulandi ? ` title="${esc(ab.tepe_beyan || "")}"` : ""}>tepe <b>${
+      ab.tepe_10dk ?? "—"}</b>/10dk (tavan ${ab.tavan_10dk ?? "—"})${
+      ab.tepe_muafiyet_uygulandi ? ` <span class="ab-not">(restart-muafiyetli · ham ${ab.tepe_ham_10dk ?? "—"})</span>` : ""}</span>
     <span>duran <b>${ab.duran ?? "—"}</b> (tavan ${ab.tavan_duran ?? "—"})</span>
     <span>${ab.asim_var ? "▲ AŞIM" : "aşım yok"}</span>${bag}</div>`;
 }
@@ -1885,11 +1887,20 @@ function alarmButce(ab) {
   if (!ab) return "";
   const d = ab.dagilim || {}, t = ab.tepe_10dk, y = ab.yas_s;
   const tepeAsim = (ab.asim || {}).tepe, duranAsim = (ab.asim || {}).duran;
+  // RESTART MUAFİYETİ GÖRÜNÜR OLMAK ZORUNDA (küçük-kuyruk turu, 2026-08-02). `tepe_10dk` artık
+  // restart-sonrası 5 dk penceresindeki açılış patlamasını sayacın DIŞINDA bırakabiliyor (canlı
+  // ölçüm: ham 18 → muafiyetli 5, tavan 10). Alan telde vardı ama panoda YOKTU — yani pano
+  // "tepe 5, aşım yok" diyor, defterde 18 satır duruyordu. Sessiz maskeleme yasağı bir alanın
+  // JSON'da bulunmasıyla değil OKUNMASIYLA yerine gelir (YASA 6). Rozet sayıyı, `title` tam
+  // beyanı taşır; muafiyet UYGULANMADIYSA hiçbiri basılmaz — gürültü de bir yalandır.
+  const muaf = !!ab.tepe_muafiyet_uygulandi;
   // ROLE YOK: bu bir KPI, bir olay değil. Duyurulacak bir şey olduğunda onu sessiz hat söyler.
   return `<div class="alarmbutce${ab.asim_var ? " asim" : ""}">
     alarm bütçesi · son 24 sa: <b>${d.low ?? "—"}</b> low · <b>${d.high ?? "—"}</b> high ·
     <span class="ab-not">acil ölçülemez (üretici yok)</span> —
-    tepe <b>${t ?? "—"}</b>/10dk ${tepeAsim ? "▲" : ""}<span class="ab-not">(tavan ${ab.tavan_10dk ?? "—"})</span> ·
+    tepe <b>${t ?? "—"}</b>/10dk ${tepeAsim ? "▲" : ""}<span class="ab-not">(tavan ${ab.tavan_10dk ?? "—"})</span>${
+      muaf ? ` <span class="ab-not" title="${esc(ab.tepe_beyan || "")}">(restart-muafiyetli · ham ${
+        ab.tepe_ham_10dk ?? "—"})</span>` : ""} ·
     duran <b>${ab.duran ?? "—"}</b> ${duranAsim ? "▲" : ""}<span class="ab-not">(tavan ${ab.tavan_duran ?? "—"})</span>${
       ab.damgasiz ? ` · <span class="ab-not">${ab.damgasiz} damgasız satır sayıma girmedi</span>` : ""}${
       y ? ` · <span class="ab-not">${Math.round(y)} sn önce hesaplandı</span>` : ""}

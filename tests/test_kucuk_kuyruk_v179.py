@@ -25,6 +25,7 @@ CANLI SİSTEME DOKUNMAZ: SSH yok, `state/` yazımı yok (sandbox), depo dosyası
 from __future__ import annotations
 
 import json
+import shutil
 import os
 import pathlib
 import subprocess
@@ -207,6 +208,50 @@ def test_birim_execstart_dolar_isareti_tasimaz():
         pytest.fail("birimde ExecStart yok")
 
 
+def test_deploy_sh_bekciyi_KURAR():
+    """TAKİP KALEMİ (2026-08-02): `deploy.sh` bekçiyi kurmuyordu — bekçi 2026-07-31'de CANLIDA elle
+    doğmuş ve depoya hiç girmemişti. Taze kurulum ve `cutover.sh` (adım 4 bu betiği çağırır)
+    panoyu asılı-tick korumasız canlıya çıkarırdı."""
+    d = (BIRIMLER / "deploy.sh").read_text()
+    for parca in ("meridian-tick-watchdog.service /etc/systemd/system/",
+                  "meridian-tick-watchdog.timer   /etc/systemd/system/"):
+        assert parca in d, f"deploy.sh birimi kopyalamıyor: {parca}"
+    assert "enable --now meridian-tick-watchdog.timer" in d, "timer enable edilmiyor"
+    # ÇALIŞTIRMA BİTİ: rsync izni her zaman taşımaz; `Type=oneshot` 203/EXEC ile SESSİZCE ölür.
+    assert "chmod +x deploy/oracle-a1/tick_watchdog.sh" in d, "betiğin çalıştırma biti garanti edilmiyor"
+
+
+def test_deploy_sh_bekciyi_TEST_ATESLER():
+    """"Kurulu != çalışır" (fail-notify dersi: birim iki gün kuruluydu, ilk ateşlemede düştü).
+    Kurulum adımı üç ayrı gerçeği ölçmeli ve hiçbiri diğerinin yerine geçmemeli."""
+    d = (BIRIMLER / "deploy.sh").read_text()
+    assert "systemctl start meridian-tick-watchdog.service" in d, "birim test-ateşlenmiyor"
+    assert 'if [ ! -x /opt/meridian/deploy/oracle-a1/tick_watchdog.sh ]' in d, \
+        "ExecStart hedefinin çalıştırılabilirliği ölçülmüyor"
+    assert 'if [ "$TICK_TIMER" != "active" ]' in d, "timer aktifliği ölçülmüyor"
+    # Çıktı kapısı: eski gömülü sürümün ölü olduğu YALNIZ çıktısından ("...ilerleme var (s)")
+    # anlaşılıyordu. Hüküm satırı yaşı SAYIYLA basmazsa kurulum DURMALI.
+    assert '*"ilerleme var ("[0-9]*' in d, "hüküm satırı desen kapısı yok (systemd `$` ikamesi sınıfı)"
+
+
+def test_cutover_dogrulama_listesinde_bekci_VAR():
+    """Cutover doğrulama tablosu operatörün gördüğü SON tablodur; orada olmayan koruma,
+    olmadığı fark edilmeden canlıya çıkar."""
+    c = (BIRIMLER / "cutover.sh").read_text()
+    assert "meridian-tick-watchdog.timer" in c, "cutover doğrulama listesinde bekçi yok"
+    assert "tick-watchdog satır" in c, "cutover bekçinin hüküm satırını göstermiyor"
+
+
+@pytest.mark.parametrize("ad", ["deploy.sh", "cutover.sh", "tick_watchdog.sh", "bakim_h9.sh"])
+def test_dagitim_betikleri_sozdizimi_gecerli(ad):
+    """`bash -n` çivisi. GEREKÇE CANLI VAKADIR (bu turda yaşandı): cutover.sh'ın uzak komutları
+    TEK TIRNAKLI dizgilerdir ve içine yazılan tek bir kesme işareti ("adım 4'teki") dizgiyi
+    kapatıp betiği sözdizimi hatasıyla düşürdü. Böyle bir betik ancak BAKIM PENCERESİNDE,
+    canlı kesintinin ortasında patlardı — bu test onu masada yakalar."""
+    p = subprocess.run(["bash", "-n", str(BIRIMLER / ad)], capture_output=True, text=True)
+    assert p.returncode == 0, f"{ad} sözdizimi geçersiz: {p.stderr}"
+
+
 def test_timer_kadansi_esikten_kucuk():
     metin = TIMER.read_text()
     assert "OnUnitActiveSec=15min" in metin
@@ -266,18 +311,31 @@ def _kos(tmp_path, *, yas_s: int | None, ortam: dict | None = None,
     return p, (cagri.read_text() if cagri.exists() else "")
 
 
+def _yas_oku(stdout: str) -> int:
+    """Hüküm satırından yaşı SAYI olarak söker. Yoksa test düşer — çünkü eski gömülü sürümün
+    kusuru tam olarak burada sayı OLMAMASIydı (`(s)`)."""
+    import re as _re
+    m = _re.search(r"\((\d+)s / eşik (\d+)s\)", stdout)
+    assert m, f"yaş sayısı çıktıda yok (eski `$` ikamesi kusuru): {stdout!r}"
+    return int(m.group(1))
+
+
 def test_taze_damga_restart_etmez(tmp_path):
     p, cagrilar = _kos(tmp_path, yas_s=120)
     assert p.returncode == 0, p.stderr
-    assert "ilerleme var (12" in p.stdout or "ilerleme var (1" in p.stdout, p.stdout
+    assert "ilerleme var" in p.stdout, p.stdout
     assert "eşik 2700s" in p.stdout, f"eşik çıktıda beyan edilmiyor: {p.stdout}"
     assert "restart" not in cagrilar, f"taze damgada restart çağrıldı: {cagrilar}"
 
 
 def test_yasin_gercekten_okundugu__eski_gomulu_surumun_kusuru(tmp_path):
-    """Eski gömülü sürümün kanıtı `(s)` basmasıydı: `${YAS}` boş genişliyordu. Yeni sürüm SAYI basar."""
+    """Eski gömülü sürümün kanıtı `(s)` basmasıydı: `${YAS}` boş genişliyordu. Yeni sürüm SAYI basar.
+
+    TOLERANS 0..3 sn: damga saniye çözünürlüklüdür ve alt-süreç başlatma ölçülebilir zaman alır.
+    Sıfır toleranslı bir eşitlik, testi kendi gürültü kaynağına çevirirdi."""
     p, _ = _kos(tmp_path, yas_s=137)
-    assert "(137s" in p.stdout, f"yaş sayısı çıktıda yok (eski `$` ikamesi kusuru): {p.stdout!r}"
+    yas = _yas_oku(p.stdout)
+    assert 137 <= yas <= 140, f"okunan yaş beklenen aralıkta değil: {yas}"
 
 
 def test_bayat_damga_restart_eder(tmp_path):
@@ -452,6 +510,101 @@ def test_bozuk_damgali_restart_satiri_muafiyet_URETMEZ(sandbox_state):
     r = watchdog.alarm_budget()
     assert r["tepe_restart_n"] == 0
     assert r["tepe_10dk"] == 12, "bozuk damgalı restart satırı muafiyet üretti"
+
+
+APP_JS = REPO / "meridian" / "web" / "app.js"
+
+
+def test_pano_muafiyeti_GOSTERIR_iki_render_yerinde_de():
+    """YASA 6 pano-yüzü: alanın JSON'da bulunması onu OKUNMUŞ yapmaz. Muafiyet panoda görünmezse
+    pano 'tepe 5, aşım yok' derken defterde 18 satır durur — sessiz maskelemenin ta kendisi.
+    İKİ render yeri var (`gbAlarmSatiri` gözetim şeridi + `alarmButce` KPI satırı) ve ikisi de
+    aynı bütçeyi basıyor; birinde gösterip diğerinde göstermemek, panonun kendi içinde çelişmesi
+    olurdu (bu depoda 'iki kaynak, ayrışan iki yasa' diye adlandırılan baskın hata deseni)."""
+    js = APP_JS.read_text()
+    for fn in ("function gbAlarmSatiri(ab) {", "function alarmButce(ab) {"):
+        assert fn in js, f"render yeri kaybolmuş: {fn}"
+    # Rozet METNİ ve HAM sayı iki yerde de basılmalı; tam beyan `title`da taşınır.
+    assert js.count("restart-muafiyetli") == 2, \
+        f"rozet iki render yerinde de yok (sayım {js.count('restart-muafiyetli')})"
+    assert js.count("tepe_ham_10dk") == 2, "ham tepe iki render yerinde de basılmıyor"
+    assert js.count("tepe_beyan") == 2, "tam beyan `title` olarak taşınmıyor"
+    # KOŞULLU olmalı: muafiyet uygulanmadığında rozet basılmaz (gürültü de bir yalandır).
+    assert js.count("tepe_muafiyet_uygulandi") >= 2, "rozet koşulsuz basılıyor olabilir"
+    # CSP: rozet bir `title` özniteliğidir, satır içi işleyici DEĞİL (script-src 'self').
+    assert "onmouseover" not in js.split("function alarmButce")[1][:1200]
+
+
+def _fn_cikar(js: str, imza: str) -> str:
+    """`imza` ile başlayan fonksiyonu süslü-parantez eşleyerek söker (kaynak grep'i değil,
+    KOŞTURULABİLİR gövde elde etmek için)."""
+    i = js.index(imza)
+    a = js.index("{", i)
+    derinlik, j = 0, a
+    while j < len(js):
+        if js[j] == "{":
+            derinlik += 1
+        elif js[j] == "}":
+            derinlik -= 1
+            if derinlik == 0:
+                return js[i:j + 1]
+        j += 1
+    raise AssertionError(f"fonksiyon kapanmadı: {imza}")
+
+
+@pytest.mark.parametrize("imza,cagri", [
+    ("function gbAlarmSatiri(ab)", "gbAlarmSatiri"),
+    ("function alarmButce(ab)", "alarmButce"),
+])
+def test_pano_rozeti_GERCEKTEN_render_edilir(imza, cagri):
+    """KAYNAK GREP'İ DEĞİL, ÇIKTI. Bir alanın dosyada geçmesi onun BASILDIĞINI kanıtlamaz —
+    yanlış dala konmuş bir `${...}` da grep'i geçer. Fonksiyon node'da koşturulur ve iki hâl
+    ölçülür: muafiyet varken rozet+ham sayı+title ÇIKAR, yokken hiçbiri çıkmaz (gürültü de bir
+    yalandır). Tarayıcı açılmaz, yerel sunucu koşulmaz (çift-emir riski) — palette.js testinin
+    kurduğu desenle aynı."""
+    if shutil.which("node") is None:
+        pytest.skip("node yok — pano render ölçümü koşulamadı (kaynak çivileri ayrıca duruyor)")
+    js = APP_JS.read_text()
+    govde = _fn_cikar(js, imza)
+    muaflı = {"dagilim": {"low": 20, "high": 1}, "tepe_10dk": 5, "tepe_ham_10dk": 18,
+              "tavan_10dk": 10, "duran": 0, "tavan_duran": 10, "asim": {"tepe": False},
+              "asim_var": False, "tepe_muafiyet_uygulandi": True,
+              "tepe_beyan": "tepe: 5 (restart-muafiyetli) — ham 18"}
+    muafsız = {**muaflı, "tepe_10dk": 18, "tepe_muafiyet_uygulandi": False, "tepe_beyan": "tepe: 18"}
+    betik = (
+        "const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')"
+        ".replace(/\"/g,'&quot;');\n"
+        "const ALAN_ADI = {gozetim: 'Gözetim'};\n"
+        f"{govde}\n"
+        f"console.log(JSON.stringify({{muafli: {cagri}({json.dumps(muaflı)}), "
+        f"muafsiz: {cagri}({json.dumps(muafsız)})}}));\n")
+    p = subprocess.run(["node", "-e", betik], capture_output=True, text=True, timeout=60)
+    assert p.returncode == 0, f"render düştü: {p.stderr}"
+    cikti = json.loads(p.stdout)
+
+    assert "restart-muafiyetli" in cikti["muafli"], f"rozet basılmadı: {cikti['muafli']}"
+    assert "ham 18" in cikti["muafli"], "ham tepe basılmadı — muafiyetin sakladığı sayı görünmüyor"
+    assert 'title="tepe: 5 (restart-muafiyetli) &mdash; ham 18"' in cikti["muafli"].replace("—", "&mdash;"), \
+        f"tam beyan `title` olarak taşınmadı: {cikti['muafli']}"
+    assert ">5<" in cikti["muafli"] or ">5</b>" in cikti["muafli"], "muafiyetli tepe basılmadı"
+
+    assert "restart-muafiyetli" not in cikti["muafsiz"], \
+        f"muafiyet YOKKEN rozet basıldı (gürültü): {cikti['muafsiz']}"
+    assert "title=" not in cikti["muafsiz"].split("tepe")[1][:200], \
+        "muafiyet yokken beyan title'ı basıldı"
+
+
+def test_pano_beyani_KACISSIZ_basilir():
+    """`tepe_beyan` sunucudan gelen bir dizgedir ve `title=` içine girer — `esc()`süz basılırsa
+    öznitelik kaçışı olurdu. (Bu dosyadaki beyan bugün sabit metindir, ama bir sonraki turda
+    jeton adı taşımaya başlarsa kural çoktan yürürlükte olmalı.)"""
+    js = APP_JS.read_text()
+    for parca in js.split("tepe_beyan")[1:]:
+        onceki = js[:js.index("tepe_beyan")]
+        assert "esc(" in parca[:40] or "esc(ab.tepe_beyan" in js, \
+            "tepe_beyan kaçışsız basılıyor"
+        del onceki
+    assert js.count("esc(ab.tepe_beyan") == 2, "iki render yerinde de esc() yok"
 
 
 def test_beyan_alani_HER_KOSUDA_dolu(sandbox_state):
