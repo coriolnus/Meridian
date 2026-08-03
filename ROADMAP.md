@@ -246,11 +246,17 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   kalibrasyonu — gevşetme değil referans).
 
 ### WP-D — Veri Bütünlüğü 🔄
-- **DOĞRULANACAK (EDG-009 yan gözlemi):** 2026-07-30 BULGU-1 (hayalet-satır hacim şartı kaçağı)
-  artık üretilemiyor — depo kapısı GILD/CMCSA/DLTR/UNP satırlarını kendisi karantinaya alıyor
-  görünüyor; Rol-1 bağımsız teyidi bekliyor (teyitlenirse karantina-genişletme kalemi KAPANIR).
-- Karantina hacim-şartı genişletmesi (GILD-sınıfı %29 kaçak) · bars_integrity defteri (97 kalıcı
-  dikiş/kimlik kırılması — silme değil güvensiz-dönem dışlama, tüketici kablolu) · türetilmiş
+- **BULGU-1 ✅ TEYİT-TAM (2026-08-03 bağımsız yeniden-üretim — kanıt research/olcumler/
+  wpd_bulgu1_teyit/):** 4/4 vaka bugünkü kapıda KARANTİNA; evren geneli birebir (259 defter /
+  1.343.892 satır / yeni-kural 13 yakalar, eski 3); yeni kaçak %0 → karantina-genişletme kalemi
+  KAPANDI (uygulanacak kaçak yok). DÜZELTME: eski kaçak payı %29 değil **%77 (10/13)** — sayı
+  doğru, pay yanlıştı.
+- **bars_integrity ✅ ZATEN-SEVK (2026-07-31 adapters/data.py; teyit 2026-08-03 —
+  wpd_bars_integrity_teyit/):** defter 98 kırılma/61 sembol (eski "97" düzeltildi); kanonik
+  tüketiciler (component_ic/cf_backfill/trend_shadow) kablolu, 46.256 satır/57 sembol dışlanıyor,
+  ayrışma 0; 26 test yeşil. AÇIK BİLET (operatör kararı): `dataset.load` bilerek bağlanmadı —
+  walk-forward/prescreen/reflect kirli dönemi hâlâ görüyor.
+- türetilmiş
   artefaktların (component_ic/cf/eşik eğrileri) güvensiz-dönem-dışlamalı yeniden üretimi ·
   BMO/AMC alanının ileri-birikimi (data.py `time` alanı — EAP öldü, kalan değer blackout
   hassasiyeti; DÜŞÜK öncelik) · earnings kapsaması 194/251 + fail-open daraltma · 5.3 seans-içi
