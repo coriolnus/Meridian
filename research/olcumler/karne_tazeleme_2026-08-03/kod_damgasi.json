@@ -1,0 +1,23 @@
+{
+ "depo_meridian": {
+  "dosya_n": 93,
+  "sha256_16": "b9cb663ba54fdb4d",
+  "yol": "/Users/erdemozturk/AI-Trading/meridian"
+ },
+ "sandbox_guncel": {
+  "dosya_n": 93,
+  "sha256_16": "b9cb663ba54fdb4d",
+  "yol": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_guncel/meridian"
+ },
+ "sandbox_taban_505603b_kopyasi": {
+  "dosya_n": 91,
+  "sha256_16": "b7d617e91c09f23b",
+  "yol": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_taban/meridian"
+ },
+ "sandbox_atrsiz_tani_kolu": {
+  "dosya_n": 93,
+  "sha256_16": "52369ceada6e9df1",
+  "yol": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_atrsiz/meridian"
+ },
+ "not": "sandbox_guncel ile depo_meridian BAYT EŞİT olmalıdır (aynı sha). sandbox_atrsiz TEK SATIR farkla ayrılır: backtest.replay'de fill_entry'ye `atr=` geçirilmez (tanı kolu). sandbox_taban, karne_olcum ölçümünün HEAD 505603b kopyasıdır."
+}

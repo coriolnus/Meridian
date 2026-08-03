@@ -1,0 +1,1893 @@
+{
+ "taban": {
+  "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_taban/meridian/backtest.py",
+  "state": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_taban/state_taban",
+  "sure_sn": 1391.4,
+  "olcum_zamani": "2026-08-03T11:50:38+00:00",
+  "strategy_version": 3,
+  "goal_limits": {
+   "autonomy_level": 0,
+   "max_position_r": 1.0,
+   "max_open_positions": 5,
+   "max_daily_loss_pct": 3.0,
+   "max_sector_exposure_pct": 40.0,
+   "no_trade_before_bars": 3,
+   "kill_switch_file": "state/HALT"
+  },
+  "entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  },
+  "geometri": {
+   "is_start": "2022-01-01",
+   "oos_start": "2024-01-01",
+   "oos_end": "2026-04-30",
+   "holdout_end": "2026-07-30",
+   "folds": [
+    "2024-01-01",
+    "2024-10-01",
+    "2025-07-01",
+    "2026-04-30"
+   ]
+  },
+  "embargo": 10,
+  "n_sembol": 250,
+  "calendar": [
+   "2022-01-03",
+   "2026-07-29"
+  ],
+  "imza": {
+   "oos_score": 0.0579,
+   "para_search": 0.1605,
+   "n_trades_total": 201,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "trade_digest_confirm": "715385ddfbcf9c88b8d0a626de86d3e5fc5c44004c06cbd0504d40fcfffcf3e2",
+   "trade_digest_tum": "ba44ae938531423983f59dd0f94533feb5e452732475636dcb3f53542eb62422",
+   "plan_digest": "b8ee02d79929d9520434b5c274d067f04d76adc721ff75cd8e963fc6561e71ca",
+   "equity_digest": "8039eb1ef252e6c489639d75a0eef48f3c7ba785e8f72270c6272a36014112d9"
+  },
+  "para": {
+   "search": 0.1605,
+   "search_detail": {
+    "score": 0.1605,
+    "score_eski_yasa": 0.1759,
+    "n": 103,
+    "realized_usd": {
+     "n_islem": 103,
+     "n_pnl": 103,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": 6901.93,
+     "ham_oran": 0.160528,
+     "skor_usd": 0.1605,
+     "kirpildi": false,
+     "neden": null
+    },
+    "total_return": 0.069,
+    "span_days": 585.0,
+    "hedef_pencere": 0.42995,
+    "annual_target": 0.25,
+    "max_drawdown": 0.053,
+    "components": {
+     "para": 0.1605
+    },
+    "components_eski_yasa": {
+     "ret": 0.049,
+     "dd": 0.337,
+     "sharpe": 0.252
+    },
+    "law": "para_v3",
+    "yasa_metni": "ΔS = ret_c_v3(aday) − ret_c_v3(incumbent); ret_c_v3 = kıs(pencere_bileşik_getirisi / ((1+%25)^(span/365) − 1))",
+    "decides": true
+   },
+   "confirm_detail": {
+    "score": null,
+    "reason": "22/30 closed trades — score undefined (None, not 0.0)",
+    "n": 22,
+    "law": "para_v3",
+    "decides": true,
+    "realized_usd": {
+     "n_islem": 22,
+     "n_pnl": 22,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -3587.96,
+     "ham_oran": -0.08345,
+     "skor_usd": -0.0835,
+     "kirpildi": false,
+     "neden": null
+    }
+   }
+  },
+  "is_detail": {
+   "score": 0.0651,
+   "n": 60,
+   "min_sample": 30,
+   "total_return": -0.0141,
+   "realized_30d": -0.0006,
+   "max_drawdown": 0.0566,
+   "sharpe": -0.22,
+   "sharpe_measurable": true,
+   "avg_r": 0.037,
+   "win_rate": 0.383,
+   "components": {
+    "ret": -0.008,
+    "dd": 0.292,
+    "sharpe": -0.092
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "oos_detail": {
+   "score": 0.0579,
+   "n": 130,
+   "min_sample": 30,
+   "total_return": 0.0319,
+   "realized_30d": 0.0011,
+   "max_drawdown": 0.0717,
+   "sharpe": 0.226,
+   "sharpe_measurable": true,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "components": {
+    "ret": 0.016,
+    "dd": 0.104,
+    "sharpe": 0.094
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "full_detail": {
+   "score": 0.0748,
+   "n": 201,
+   "min_sample": 30,
+   "total_return": 0.0249,
+   "realized_30d": 0.0004,
+   "max_drawdown": 0.0634,
+   "sharpe": 0.112,
+   "sharpe_measurable": true,
+   "avg_r": 0.02,
+   "win_rate": 0.363,
+   "components": {
+    "ret": 0.006,
+    "dd": 0.208,
+    "sharpe": 0.046
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "holdout_detail": {
+   "score": null,
+   "n": 5,
+   "min_sample": 30,
+   "reason": "5/30 closed trades — score undefined (None, not 0.0)"
+  },
+  "oos_split": {
+   "search_start": "2024-01-11",
+   "search_end": "2025-08-18",
+   "span_days": 585,
+   "confirm_end": "2026-04-30"
+  },
+  "folds": [
+   {
+    "start": "2024-01-01",
+    "end": "2024-10-01",
+    "n": 57,
+    "avg_r": 0.0384
+   },
+   {
+    "start": "2024-10-01",
+    "end": "2025-07-01",
+    "n": 33,
+    "avg_r": 0.3301
+   },
+   {
+    "start": "2025-07-01",
+    "end": "2025-08-18",
+    "n": 6,
+    "avg_r": -0.186
+   }
+  ],
+  "fold_avg_r_mean": 0.0608,
+  "tail_risk": {
+   "horizon": 20,
+   "alpha": 0.95,
+   "n": 103,
+   "var_r": 6.045,
+   "cvar_r": 7.397,
+   "worst_r": 12.651,
+   "mean_r": 2.15
+  },
+  "equity_is": {
+   "olculdu": true,
+   "n_gun": 501,
+   "eq_ilk": 100000.0,
+   "eq_son": 100057.43,
+   "gunluk_vol": 0.003061,
+   "yillik_vol": 0.048587,
+   "gunluk_ort_getiri": 5.83e-06,
+   "mtm_max_dd": 0.056643,
+   "toplam_getiri": 0.000574
+  },
+  "equity_search": {
+   "olculdu": true,
+   "n_gun": 400,
+   "eq_ilk": 98680.15,
+   "eq_son": 106895.61,
+   "gunluk_vol": 0.004912,
+   "yillik_vol": 0.07797,
+   "gunluk_ort_getiri": 0.00021249,
+   "mtm_max_dd": 0.058151,
+   "toplam_getiri": 0.083253
+  },
+  "equity_oos": {
+   "olculdu": true,
+   "n_gun": 576,
+   "eq_ilk": 98680.15,
+   "eq_son": 102730.4,
+   "gunluk_vol": 0.004266,
+   "yillik_vol": 0.067725,
+   "gunluk_ort_getiri": 7.905e-05,
+   "mtm_max_dd": 0.071709,
+   "toplam_getiri": 0.041044
+  },
+  "equity_holdout": {
+   "olculdu": true,
+   "n_gun": 62,
+   "eq_ilk": 102753.6,
+   "eq_son": 102492.85,
+   "gunluk_vol": 0.000288,
+   "yillik_vol": 0.004575,
+   "gunluk_ort_getiri": -4.161e-05,
+   "mtm_max_dd": 0.003231,
+   "toplam_getiri": -0.002538
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 102492.85,
+   "gunluk_vol": 0.003645,
+   "yillik_vol": 0.057867,
+   "gunluk_ort_getiri": 2.815e-05,
+   "mtm_max_dd": 0.07197,
+   "toplam_getiri": 0.024929
+  },
+  "mtm_max_dd": 0.072,
+  "veri_kapilari": {
+   "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+   "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+   "bars_integrity_defteri_state_te_var": true,
+   "bars_integrity_defter_ozeti": {
+    "rev": 1,
+    "sembol_sayisi": 61,
+    "kirilma_sayisi": 98,
+    "dislanan_bar_toplam": 48735,
+    "uretildi": "2026-07-31T00:01:10"
+   },
+   "integrity_report": {
+    "file": "bars_integrity.json",
+    "ledger_symbols": 61,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "applied": {},
+    "rows_excluded": 0
+   },
+   "ghost_report": {
+    "dates": {
+     "2006-10-30": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "ALB"
+      ]
+     },
+     "2008-06-12": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "AVGO"
+      ]
+     },
+     "2011-12-01": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2011-12-09": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2012-01-20": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "EL"
+      ]
+     },
+     "2012-06-26": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "DLTR"
+      ]
+     },
+     "2013-07-15": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-08-02": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-12-18": {
+      "rows": 4,
+      "classes": {
+       "unadjusted_row": 4
+      },
+      "tickers": [
+       "CMCSA",
+       "GILD",
+       "TDG",
+       "CHD"
+      ]
+     },
+     "2014-06-06": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "UNP"
+      ]
+     },
+     "2018-11-22": {
+      "rows": 178,
+      "classes": {
+       "ghost_session": 178
+      },
+      "tickers": [
+       "CRM",
+       "ORCL",
+       "HD",
+       "NKE",
+       "MCD",
+       "LOW",
+       "JPM",
+       "BAC",
+       "GS",
+       "V",
+       "MA",
+       "AXP"
+      ]
+     },
+     "2025-05-26": {
+      "rows": 250,
+      "classes": {
+       "ghost_session": 250
+      },
+      "tickers": [
+       "AAPL",
+       "MSFT",
+       "NVDA",
+       "AVGO",
+       "AMD",
+       "CRM",
+       "ADBE",
+       "ORCL",
+       "GOOGL",
+       "META",
+       "NFLX",
+       "AMZN"
+      ]
+     }
+    },
+    "rows": 441,
+    "calendar": "XNYS",
+    "calendar_ok": true,
+    "refused": {},
+    "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+   }
+  },
+  "replay_defteri": {
+   "n": 201,
+   "net_usd": 2492.87,
+   "profit_factor": 1.0499,
+   "n_kazanan": 73,
+   "n_kaybeden": 128,
+   "friksiyon_usd": 2957.7
+  },
+  "fill_sonuclari": {
+   "dolu": 201,
+   "entry_missed_limit": 26,
+   "max_chase": 6,
+   "open_below_stop": 3,
+   "qty_zero": 1
+  }
+ },
+ "atrsiz": {
+  "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_atrsiz/meridian/backtest.py",
+  "state": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_atrsiz/state_atrsiz",
+  "sure_sn": 1055.4,
+  "olcum_zamani": "2026-08-03T12:13:45+00:00",
+  "strategy_version": 3,
+  "goal_limits": {
+   "autonomy_level": 0,
+   "max_position_r": 1.0,
+   "max_open_positions": 5,
+   "max_daily_loss_pct": 3.0,
+   "max_sector_exposure_pct": 40.0,
+   "no_trade_before_bars": 3,
+   "heat_hard_r": 5.0,
+   "heat_review_r": 3.5,
+   "corr_review": 0.85,
+   "kill_switch_file": "state/HALT"
+  },
+  "entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  },
+  "geometri": {
+   "is_start": "2022-01-01",
+   "oos_start": "2024-01-01",
+   "oos_end": "2026-04-30",
+   "holdout_end": "2026-07-30",
+   "folds": [
+    "2024-01-01",
+    "2024-10-01",
+    "2025-07-01",
+    "2026-04-30"
+   ]
+  },
+  "embargo": 10,
+  "n_sembol": 250,
+  "calendar": [
+   "2022-01-03",
+   "2026-07-29"
+  ],
+  "imza": {
+   "oos_score": 0.0579,
+   "para_search": 0.1605,
+   "n_trades_total": 202,
+   "oos_n": 130,
+   "search_n": 103,
+   "confirm_n": 22,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "sharpe": 0.226,
+   "max_drawdown": 0.0717,
+   "total_return": 0.0319,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "trade_digest_search": "9f6527cc0151f1662de340536da44a3fd7cb20381f9e5cd706920e22e1440c41",
+   "trade_digest_confirm": "715385ddfbcf9c88b8d0a626de86d3e5fc5c44004c06cbd0504d40fcfffcf3e2",
+   "trade_digest_tum": "f56e2c07dde02440160a9ad07187166d598650ebb9a6393c3c149950efff542b",
+   "plan_digest": "37885304a348289669c70fcb9564655e9793215720b0d8b7f2037fea9d986e61",
+   "equity_digest": "353c23360d9c7ead8b95706c37b215c53d31185390bfc9bf52e260976358c4d2"
+  },
+  "para": {
+   "search": 0.1605,
+   "search_detail": {
+    "score": 0.1605,
+    "score_eski_yasa": 0.1759,
+    "n": 103,
+    "realized_usd": {
+     "n_islem": 103,
+     "n_pnl": 103,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": 6901.93,
+     "ham_oran": 0.160528,
+     "skor_usd": 0.1605,
+     "kirpildi": false,
+     "neden": null
+    },
+    "total_return": 0.069,
+    "span_days": 585.0,
+    "hedef_pencere": 0.42995,
+    "annual_target": 0.25,
+    "max_drawdown": 0.053,
+    "components": {
+     "para": 0.1605
+    },
+    "components_eski_yasa": {
+     "ret": 0.049,
+     "dd": 0.337,
+     "sharpe": 0.252
+    },
+    "law": "para_v3",
+    "yasa_metni": "ΔS = ret_c_v3(aday) − ret_c_v3(incumbent); ret_c_v3 = kıs(pencere_bileşik_getirisi / ((1+%25)^(span/365) − 1))",
+    "decides": true
+   },
+   "confirm_detail": {
+    "score": null,
+    "reason": "22/30 closed trades — score undefined (None, not 0.0)",
+    "n": 22,
+    "law": "para_v3",
+    "decides": true,
+    "realized_usd": {
+     "n_islem": 22,
+     "n_pnl": 22,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -3587.96,
+     "ham_oran": -0.08345,
+     "skor_usd": -0.0835,
+     "kirpildi": false,
+     "neden": null
+    }
+   }
+  },
+  "is_detail": {
+   "score": 0.0651,
+   "n": 60,
+   "min_sample": 30,
+   "total_return": -0.0141,
+   "realized_30d": -0.0006,
+   "max_drawdown": 0.0566,
+   "sharpe": -0.22,
+   "sharpe_measurable": true,
+   "avg_r": 0.037,
+   "win_rate": 0.383,
+   "components": {
+    "ret": -0.008,
+    "dd": 0.292,
+    "sharpe": -0.092
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "oos_detail": {
+   "score": 0.0579,
+   "n": 130,
+   "min_sample": 30,
+   "total_return": 0.0319,
+   "realized_30d": 0.0011,
+   "max_drawdown": 0.0717,
+   "sharpe": 0.226,
+   "sharpe_measurable": true,
+   "avg_r": 0.012,
+   "win_rate": 0.354,
+   "components": {
+    "ret": 0.016,
+    "dd": 0.104,
+    "sharpe": 0.094
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "full_detail": {
+   "score": 0.0743,
+   "n": 202,
+   "min_sample": 30,
+   "total_return": 0.0248,
+   "realized_30d": 0.0004,
+   "max_drawdown": 0.0635,
+   "sharpe": 0.111,
+   "sharpe_measurable": true,
+   "avg_r": 0.019,
+   "win_rate": 0.361,
+   "components": {
+    "ret": 0.006,
+    "dd": 0.206,
+    "sharpe": 0.046
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "holdout_detail": {
+   "score": null,
+   "n": 6,
+   "min_sample": 30,
+   "reason": "6/30 closed trades — score undefined (None, not 0.0)"
+  },
+  "oos_split": {
+   "search_start": "2024-01-11",
+   "search_end": "2025-08-18",
+   "span_days": 585,
+   "confirm_end": "2026-04-30"
+  },
+  "folds": [
+   {
+    "start": "2024-01-01",
+    "end": "2024-10-01",
+    "n": 57,
+    "avg_r": 0.0384
+   },
+   {
+    "start": "2024-10-01",
+    "end": "2025-07-01",
+    "n": 33,
+    "avg_r": 0.3301
+   },
+   {
+    "start": "2025-07-01",
+    "end": "2025-08-18",
+    "n": 6,
+    "avg_r": -0.186
+   }
+  ],
+  "fold_avg_r_mean": 0.0608,
+  "tail_risk": {
+   "horizon": 20,
+   "alpha": 0.95,
+   "n": 103,
+   "var_r": 6.045,
+   "cvar_r": 7.397,
+   "worst_r": 12.651,
+   "mean_r": 2.15
+  },
+  "equity_is": {
+   "olculdu": true,
+   "n_gun": 501,
+   "eq_ilk": 100000.0,
+   "eq_son": 100057.43,
+   "gunluk_vol": 0.003061,
+   "yillik_vol": 0.048587,
+   "gunluk_ort_getiri": 5.83e-06,
+   "mtm_max_dd": 0.056643,
+   "toplam_getiri": 0.000574
+  },
+  "equity_search": {
+   "olculdu": true,
+   "n_gun": 400,
+   "eq_ilk": 98680.15,
+   "eq_son": 106895.61,
+   "gunluk_vol": 0.004912,
+   "yillik_vol": 0.07797,
+   "gunluk_ort_getiri": 0.00021249,
+   "mtm_max_dd": 0.058151,
+   "toplam_getiri": 0.083253
+  },
+  "equity_oos": {
+   "olculdu": true,
+   "n_gun": 576,
+   "eq_ilk": 98680.15,
+   "eq_son": 102730.4,
+   "gunluk_vol": 0.004266,
+   "yillik_vol": 0.067725,
+   "gunluk_ort_getiri": 7.905e-05,
+   "mtm_max_dd": 0.071709,
+   "toplam_getiri": 0.041044
+  },
+  "equity_holdout": {
+   "olculdu": true,
+   "n_gun": 62,
+   "eq_ilk": 102753.6,
+   "eq_son": 102481.38,
+   "gunluk_vol": 0.000288,
+   "yillik_vol": 0.004577,
+   "gunluk_ort_getiri": -4.345e-05,
+   "mtm_max_dd": 0.003379,
+   "toplam_getiri": -0.002649
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 102481.38,
+   "gunluk_vol": 0.003645,
+   "yillik_vol": 0.057867,
+   "gunluk_ort_getiri": 2.805e-05,
+   "mtm_max_dd": 0.072108,
+   "toplam_getiri": 0.024814
+  },
+  "mtm_max_dd": 0.0721,
+  "veri_kapilari": {
+   "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+   "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+   "bars_integrity_defteri_state_te_var": true,
+   "bars_integrity_defter_ozeti": {
+    "rev": 1,
+    "sembol_sayisi": 61,
+    "kirilma_sayisi": 98,
+    "dislanan_bar_toplam": 48735,
+    "uretildi": "2026-07-31T00:01:10"
+   },
+   "integrity_report": {
+    "file": "bars_integrity.json",
+    "ledger_symbols": 61,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "applied": {},
+    "rows_excluded": 0
+   },
+   "ghost_report": {
+    "dates": {
+     "2006-10-30": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "ALB"
+      ]
+     },
+     "2008-06-12": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "AVGO"
+      ]
+     },
+     "2011-12-01": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2011-12-09": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2012-01-20": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "EL"
+      ]
+     },
+     "2012-06-26": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "DLTR"
+      ]
+     },
+     "2013-07-15": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-08-02": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-12-18": {
+      "rows": 4,
+      "classes": {
+       "unadjusted_row": 4
+      },
+      "tickers": [
+       "CMCSA",
+       "GILD",
+       "TDG",
+       "CHD"
+      ]
+     },
+     "2014-06-06": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "UNP"
+      ]
+     },
+     "2018-11-22": {
+      "rows": 178,
+      "classes": {
+       "ghost_session": 178
+      },
+      "tickers": [
+       "CRM",
+       "ORCL",
+       "HD",
+       "NKE",
+       "MCD",
+       "LOW",
+       "JPM",
+       "BAC",
+       "GS",
+       "V",
+       "MA",
+       "AXP"
+      ]
+     },
+     "2025-05-26": {
+      "rows": 250,
+      "classes": {
+       "ghost_session": 250
+      },
+      "tickers": [
+       "AAPL",
+       "MSFT",
+       "NVDA",
+       "AVGO",
+       "AMD",
+       "CRM",
+       "ADBE",
+       "ORCL",
+       "GOOGL",
+       "META",
+       "NFLX",
+       "AMZN"
+      ]
+     }
+    },
+    "rows": 441,
+    "calendar": "XNYS",
+    "calendar_ok": true,
+    "refused": {},
+    "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+   }
+  },
+  "replay_defteri": {
+   "n": 202,
+   "net_usd": 2481.4,
+   "profit_factor": 1.0496,
+   "n_kazanan": 73,
+   "n_kaybeden": 129,
+   "friksiyon_usd": 2958.73
+  },
+  "fill_sonuclari": {
+   "dolu": 202,
+   "entry_missed_limit": 26,
+   "max_chase": 6,
+   "open_below_stop": 3,
+   "qty_zero": 1
+  }
+ },
+ "heat45": {
+  "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_guncel/meridian/backtest.py",
+  "state": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_guncel/state_heat45",
+  "sure_sn": 1476.6,
+  "olcum_zamani": "2026-08-03T11:52:51+00:00",
+  "strategy_version": 3,
+  "goal_limits": {
+   "autonomy_level": 0,
+   "max_position_r": 1.0,
+   "max_open_positions": 5,
+   "max_daily_loss_pct": 3.0,
+   "max_sector_exposure_pct": 40.0,
+   "no_trade_before_bars": 3,
+   "heat_hard_r": 4.5,
+   "heat_review_r": 3.5,
+   "corr_review": 0.85,
+   "kill_switch_file": "state/HALT"
+  },
+  "entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  },
+  "geometri": {
+   "is_start": "2022-01-01",
+   "oos_start": "2024-01-01",
+   "oos_end": "2026-04-30",
+   "holdout_end": "2026-07-30",
+   "folds": [
+    "2024-01-01",
+    "2024-10-01",
+    "2025-07-01",
+    "2026-04-30"
+   ]
+  },
+  "embargo": 10,
+  "n_sembol": 250,
+  "calendar": [
+   "2022-01-03",
+   "2026-07-29"
+  ],
+  "imza": {
+   "oos_score": 0.0196,
+   "para_search": -0.0037,
+   "n_trades_total": 147,
+   "oos_n": 75,
+   "search_n": 61,
+   "confirm_n": 13,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "sharpe": -0.043,
+   "max_drawdown": 0.0735,
+   "total_return": -0.0046,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "trade_digest_search": "3e054b7e23f0e59565064966e94be5dc063b8a9978ea664b7570e9574e93de04",
+   "trade_digest_confirm": "ef84d9c6ceb832d9c025a4146bb8e8670cefa9a64ba868ed803bc70f4b637812",
+   "trade_digest_tum": "4676800e30f1d90e2cb0820af20b9af99bec8a548f054d4aa02d0bc0a80c2ee5",
+   "plan_digest": "e907ac6864525bcf8c4474be7459ea6c084fda3c9cf06ce1a5d61201c3f55726",
+   "equity_digest": "5772bc9251a19d21e3d4e742534a4abd4a486233a7865ef57c6474566c33294f"
+  },
+  "para": {
+   "search": -0.0037,
+   "search_detail": {
+    "score": -0.0037,
+    "score_eski_yasa": 0.1133,
+    "n": 61,
+    "realized_usd": {
+     "n_islem": 61,
+     "n_pnl": 61,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -161.89,
+     "ham_oran": -0.003765,
+     "skor_usd": -0.0038,
+     "kirpildi": false,
+     "neden": null
+    },
+    "total_return": -0.0016,
+    "span_days": 585.0,
+    "hedef_pencere": 0.42995,
+    "annual_target": 0.25,
+    "max_drawdown": 0.0492,
+    "components": {
+     "para": -0.0037
+    },
+    "components_eski_yasa": {
+     "ret": -0.001,
+     "dd": 0.385,
+     "sharpe": -0.007
+    },
+    "law": "para_v3",
+    "yasa_metni": "ΔS = ret_c_v3(aday) − ret_c_v3(incumbent); ret_c_v3 = kıs(pencere_bileşik_getirisi / ((1+%25)^(span/365) − 1))",
+    "decides": true
+   },
+   "confirm_detail": {
+    "score": null,
+    "reason": "13/30 closed trades — score undefined (None, not 0.0)",
+    "n": 13,
+    "law": "para_v3",
+    "decides": true,
+    "realized_usd": {
+     "n_islem": 13,
+     "n_pnl": 13,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -443.34,
+     "ham_oran": -0.010311,
+     "skor_usd": -0.0103,
+     "kirpildi": false,
+     "neden": null
+    }
+   }
+  },
+  "is_detail": {
+   "score": 0.0651,
+   "n": 60,
+   "min_sample": 30,
+   "total_return": -0.0141,
+   "realized_30d": -0.0006,
+   "max_drawdown": 0.0566,
+   "sharpe": -0.22,
+   "sharpe_measurable": true,
+   "avg_r": 0.037,
+   "win_rate": 0.383,
+   "components": {
+    "ret": -0.008,
+    "dd": 0.292,
+    "sharpe": -0.092
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "oos_detail": {
+   "score": 0.0196,
+   "n": 75,
+   "min_sample": 30,
+   "total_return": -0.0046,
+   "realized_30d": -0.0002,
+   "max_drawdown": 0.0735,
+   "sharpe": -0.043,
+   "sharpe_measurable": true,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "components": {
+    "ret": -0.002,
+    "dd": 0.081,
+    "sharpe": -0.018
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "full_detail": {
+   "score": 0.0894,
+   "n": 147,
+   "min_sample": 30,
+   "total_return": -0.0118,
+   "realized_30d": -0.0002,
+   "max_drawdown": 0.0543,
+   "sharpe": -0.064,
+   "sharpe_measurable": true,
+   "avg_r": 0.008,
+   "win_rate": 0.354,
+   "components": {
+    "ret": -0.003,
+    "dd": 0.321,
+    "sharpe": -0.027
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "holdout_detail": {
+   "score": null,
+   "n": 6,
+   "min_sample": 30,
+   "reason": "6/30 closed trades — score undefined (None, not 0.0)"
+  },
+  "oos_split": {
+   "search_start": "2024-01-11",
+   "search_end": "2025-08-18",
+   "span_days": 585,
+   "confirm_end": "2026-04-30"
+  },
+  "folds": [
+   {
+    "start": "2024-01-01",
+    "end": "2024-10-01",
+    "n": 37,
+    "avg_r": -0.0319
+   },
+   {
+    "start": "2024-10-01",
+    "end": "2025-07-01",
+    "n": 20,
+    "avg_r": 0.0796
+   },
+   {
+    "start": "2025-07-01",
+    "end": "2025-08-18",
+    "n": 1,
+    "avg_r": -0.011
+   }
+  ],
+  "fold_avg_r_mean": 0.0122,
+  "tail_risk": {
+   "horizon": 20,
+   "alpha": 0.95,
+   "n": 61,
+   "var_r": 8.119,
+   "cvar_r": 9.438,
+   "worst_r": 16.97,
+   "mean_r": 0.162
+  },
+  "equity_is": {
+   "olculdu": true,
+   "n_gun": 501,
+   "eq_ilk": 100000.0,
+   "eq_son": 100057.43,
+   "gunluk_vol": 0.003061,
+   "yillik_vol": 0.048587,
+   "gunluk_ort_getiri": 5.83e-06,
+   "mtm_max_dd": 0.056643,
+   "toplam_getiri": 0.000574
+  },
+  "equity_search": {
+   "olculdu": true,
+   "n_gun": 400,
+   "eq_ilk": 98680.15,
+   "eq_son": 99488.32,
+   "gunluk_vol": 0.004189,
+   "yillik_vol": 0.066496,
+   "gunluk_ort_getiri": 2.931e-05,
+   "mtm_max_dd": 0.069632,
+   "toplam_getiri": 0.00819
+  },
+  "equity_oos": {
+   "olculdu": true,
+   "n_gun": 576,
+   "eq_ilk": 98680.15,
+   "eq_son": 99081.41,
+   "gunluk_vol": 0.003496,
+   "yillik_vol": 0.0555,
+   "gunluk_ort_getiri": 1.324e-05,
+   "mtm_max_dd": 0.073508,
+   "toplam_getiri": 0.004066
+  },
+  "equity_holdout": {
+   "olculdu": true,
+   "n_gun": 62,
+   "eq_ilk": 99104.61,
+   "eq_son": 98817.86,
+   "gunluk_vol": 0.000313,
+   "yillik_vol": 0.004969,
+   "gunluk_ort_getiri": -4.745e-05,
+   "mtm_max_dd": 0.00365,
+   "toplam_getiri": -0.002893
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 98817.86,
+   "gunluk_vol": 0.003207,
+   "yillik_vol": 0.050915,
+   "gunluk_ort_getiri": -5.2e-06,
+   "mtm_max_dd": 0.073901,
+   "toplam_getiri": -0.011821
+  },
+  "mtm_max_dd": 0.0739,
+  "veri_kapilari": {
+   "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+   "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+   "bars_integrity_defteri_state_te_var": true,
+   "bars_integrity_defter_ozeti": {
+    "rev": 1,
+    "sembol_sayisi": 61,
+    "kirilma_sayisi": 98,
+    "dislanan_bar_toplam": 48735,
+    "uretildi": "2026-07-31T00:01:10"
+   },
+   "integrity_report": {
+    "file": "bars_integrity.json",
+    "ledger_symbols": 61,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "applied": {},
+    "rows_excluded": 0
+   },
+   "ghost_report": {
+    "dates": {
+     "2006-10-30": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "ALB"
+      ]
+     },
+     "2008-06-12": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "AVGO"
+      ]
+     },
+     "2011-12-01": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2011-12-09": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2012-01-20": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "EL"
+      ]
+     },
+     "2012-06-26": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "DLTR"
+      ]
+     },
+     "2013-07-15": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-08-02": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-12-18": {
+      "rows": 4,
+      "classes": {
+       "unadjusted_row": 4
+      },
+      "tickers": [
+       "CMCSA",
+       "GILD",
+       "TDG",
+       "CHD"
+      ]
+     },
+     "2014-06-06": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "UNP"
+      ]
+     },
+     "2018-11-22": {
+      "rows": 178,
+      "classes": {
+       "ghost_session": 178
+      },
+      "tickers": [
+       "CRM",
+       "ORCL",
+       "HD",
+       "NKE",
+       "MCD",
+       "LOW",
+       "JPM",
+       "BAC",
+       "GS",
+       "V",
+       "MA",
+       "AXP"
+      ]
+     },
+     "2025-05-26": {
+      "rows": 250,
+      "classes": {
+       "ghost_session": 250
+      },
+      "tickers": [
+       "AAPL",
+       "MSFT",
+       "NVDA",
+       "AVGO",
+       "AMD",
+       "CRM",
+       "ADBE",
+       "ORCL",
+       "GOOGL",
+       "META",
+       "NFLX",
+       "AMZN"
+      ]
+     }
+    },
+    "rows": 441,
+    "calendar": "XNYS",
+    "calendar_ok": true,
+    "refused": {},
+    "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+   }
+  },
+  "replay_defteri": {
+   "n": 147,
+   "net_usd": -1182.15,
+   "profit_factor": 0.9646,
+   "n_kazanan": 52,
+   "n_kaybeden": 95,
+   "friksiyon_usd": 1735.61
+  },
+  "fill_sonuclari": {
+   "dolu": 147,
+   "entry_missed_limit": 23,
+   "max_chase": 3,
+   "open_below_stop": 3
+  }
+ },
+ "guncel": {
+  "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_guncel/meridian/backtest.py",
+  "state": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/karne_tazeleme/motor_guncel/state_guncel",
+  "sure_sn": 1488.7,
+  "olcum_zamani": "2026-08-03T11:53:04+00:00",
+  "strategy_version": 3,
+  "goal_limits": {
+   "autonomy_level": 0,
+   "max_position_r": 1.0,
+   "max_open_positions": 5,
+   "max_daily_loss_pct": 3.0,
+   "max_sector_exposure_pct": 40.0,
+   "no_trade_before_bars": 3,
+   "heat_hard_r": 5.0,
+   "heat_review_r": 3.5,
+   "corr_review": 0.85,
+   "kill_switch_file": "state/HALT"
+  },
+  "entry_law": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "tif": "day",
+   "version": "E1-v1"
+  },
+  "geometri": {
+   "is_start": "2022-01-01",
+   "oos_start": "2024-01-01",
+   "oos_end": "2026-04-30",
+   "holdout_end": "2026-07-30",
+   "folds": [
+    "2024-01-01",
+    "2024-10-01",
+    "2025-07-01",
+    "2026-04-30"
+   ]
+  },
+  "embargo": 10,
+  "n_sembol": 250,
+  "calendar": [
+   "2022-01-03",
+   "2026-07-29"
+  ],
+  "imza": {
+   "oos_score": 0.0196,
+   "para_search": -0.0037,
+   "n_trades_total": 147,
+   "oos_n": 75,
+   "search_n": 61,
+   "confirm_n": 13,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "sharpe": -0.043,
+   "max_drawdown": 0.0735,
+   "total_return": -0.0046,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "trade_digest_search": "3e054b7e23f0e59565064966e94be5dc063b8a9978ea664b7570e9574e93de04",
+   "trade_digest_confirm": "ef84d9c6ceb832d9c025a4146bb8e8670cefa9a64ba868ed803bc70f4b637812",
+   "trade_digest_tum": "4676800e30f1d90e2cb0820af20b9af99bec8a548f054d4aa02d0bc0a80c2ee5",
+   "plan_digest": "e907ac6864525bcf8c4474be7459ea6c084fda3c9cf06ce1a5d61201c3f55726",
+   "equity_digest": "5772bc9251a19d21e3d4e742534a4abd4a486233a7865ef57c6474566c33294f"
+  },
+  "para": {
+   "search": -0.0037,
+   "search_detail": {
+    "score": -0.0037,
+    "score_eski_yasa": 0.1133,
+    "n": 61,
+    "realized_usd": {
+     "n_islem": 61,
+     "n_pnl": 61,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -161.89,
+     "ham_oran": -0.003765,
+     "skor_usd": -0.0038,
+     "kirpildi": false,
+     "neden": null
+    },
+    "total_return": -0.0016,
+    "span_days": 585.0,
+    "hedef_pencere": 0.42995,
+    "annual_target": 0.25,
+    "max_drawdown": 0.0492,
+    "components": {
+     "para": -0.0037
+    },
+    "components_eski_yasa": {
+     "ret": -0.001,
+     "dd": 0.385,
+     "sharpe": -0.007
+    },
+    "law": "para_v3",
+    "yasa_metni": "ΔS = ret_c_v3(aday) − ret_c_v3(incumbent); ret_c_v3 = kıs(pencere_bileşik_getirisi / ((1+%25)^(span/365) − 1))",
+    "decides": true
+   },
+   "confirm_detail": {
+    "score": null,
+    "reason": "13/30 closed trades — score undefined (None, not 0.0)",
+    "n": 13,
+    "law": "para_v3",
+    "decides": true,
+    "realized_usd": {
+     "n_islem": 13,
+     "n_pnl": 13,
+     "n_eksik": 0,
+     "tam_kapsam": true,
+     "start_equity": 100000.0,
+     "span_days": 585.0,
+     "hedef_usd": 42995.22,
+     "annual_target": 0.25,
+     "birim": "USD",
+     "hukum_verir": false,
+     "kapsam": "PARA-v3'ün KIRPILMAMIŞ ikizi — karar skoru kıs([-1,+1]) olduğu için kırpılma bölgesinde paraya kördür; bu blok o körlüğü görünür kılar. Hiçbir kapı kararına girmez.",
+     "olculdu": true,
+     "pnl_usd": -443.34,
+     "ham_oran": -0.010311,
+     "skor_usd": -0.0103,
+     "kirpildi": false,
+     "neden": null
+    }
+   }
+  },
+  "is_detail": {
+   "score": 0.0651,
+   "n": 60,
+   "min_sample": 30,
+   "total_return": -0.0141,
+   "realized_30d": -0.0006,
+   "max_drawdown": 0.0566,
+   "sharpe": -0.22,
+   "sharpe_measurable": true,
+   "avg_r": 0.037,
+   "win_rate": 0.383,
+   "components": {
+    "ret": -0.008,
+    "dd": 0.292,
+    "sharpe": -0.092
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "oos_detail": {
+   "score": 0.0196,
+   "n": 75,
+   "min_sample": 30,
+   "total_return": -0.0046,
+   "realized_30d": -0.0002,
+   "max_drawdown": 0.0735,
+   "sharpe": -0.043,
+   "sharpe_measurable": true,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "components": {
+    "ret": -0.002,
+    "dd": 0.081,
+    "sharpe": -0.018
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "full_detail": {
+   "score": 0.0894,
+   "n": 147,
+   "min_sample": 30,
+   "total_return": -0.0118,
+   "realized_30d": -0.0002,
+   "max_drawdown": 0.0543,
+   "sharpe": -0.064,
+   "sharpe_measurable": true,
+   "avg_r": 0.008,
+   "win_rate": 0.354,
+   "components": {
+    "ret": -0.003,
+    "dd": 0.321,
+    "sharpe": -0.027
+   },
+   "targets": {
+    "target_return_30d": 0.07,
+    "max_drawdown": 0.08,
+    "min_sharpe": 1.2
+   }
+  },
+  "holdout_detail": {
+   "score": null,
+   "n": 6,
+   "min_sample": 30,
+   "reason": "6/30 closed trades — score undefined (None, not 0.0)"
+  },
+  "oos_split": {
+   "search_start": "2024-01-11",
+   "search_end": "2025-08-18",
+   "span_days": 585,
+   "confirm_end": "2026-04-30"
+  },
+  "folds": [
+   {
+    "start": "2024-01-01",
+    "end": "2024-10-01",
+    "n": 37,
+    "avg_r": -0.0319
+   },
+   {
+    "start": "2024-10-01",
+    "end": "2025-07-01",
+    "n": 20,
+    "avg_r": 0.0796
+   },
+   {
+    "start": "2025-07-01",
+    "end": "2025-08-18",
+    "n": 1,
+    "avg_r": -0.011
+   }
+  ],
+  "fold_avg_r_mean": 0.0122,
+  "tail_risk": {
+   "horizon": 20,
+   "alpha": 0.95,
+   "n": 61,
+   "var_r": 8.119,
+   "cvar_r": 9.438,
+   "worst_r": 16.97,
+   "mean_r": 0.162
+  },
+  "equity_is": {
+   "olculdu": true,
+   "n_gun": 501,
+   "eq_ilk": 100000.0,
+   "eq_son": 100057.43,
+   "gunluk_vol": 0.003061,
+   "yillik_vol": 0.048587,
+   "gunluk_ort_getiri": 5.83e-06,
+   "mtm_max_dd": 0.056643,
+   "toplam_getiri": 0.000574
+  },
+  "equity_search": {
+   "olculdu": true,
+   "n_gun": 400,
+   "eq_ilk": 98680.15,
+   "eq_son": 99488.32,
+   "gunluk_vol": 0.004189,
+   "yillik_vol": 0.066496,
+   "gunluk_ort_getiri": 2.931e-05,
+   "mtm_max_dd": 0.069632,
+   "toplam_getiri": 0.00819
+  },
+  "equity_oos": {
+   "olculdu": true,
+   "n_gun": 576,
+   "eq_ilk": 98680.15,
+   "eq_son": 99081.41,
+   "gunluk_vol": 0.003496,
+   "yillik_vol": 0.0555,
+   "gunluk_ort_getiri": 1.324e-05,
+   "mtm_max_dd": 0.073508,
+   "toplam_getiri": 0.004066
+  },
+  "equity_holdout": {
+   "olculdu": true,
+   "n_gun": 62,
+   "eq_ilk": 99104.61,
+   "eq_son": 98817.86,
+   "gunluk_vol": 0.000313,
+   "yillik_vol": 0.004969,
+   "gunluk_ort_getiri": -4.745e-05,
+   "mtm_max_dd": 0.00365,
+   "toplam_getiri": -0.002893
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 98817.86,
+   "gunluk_vol": 0.003207,
+   "yillik_vol": 0.050915,
+   "gunluk_ort_getiri": -5.2e-06,
+   "mtm_max_dd": 0.073901,
+   "toplam_getiri": -0.011821
+  },
+  "mtm_max_dd": 0.0739,
+  "veri_kapilari": {
+   "yukleyici": "dataset.load_cached (ağa çıkmaz, CSV yeniden yazmaz)",
+   "yukleyici_uyguladigi_kapilar": "data.sanitize_bars + data._window (load_cached gövdesi)",
+   "bars_integrity_defteri_state_te_var": true,
+   "bars_integrity_defter_ozeti": {
+    "rev": 1,
+    "sembol_sayisi": 61,
+    "kirilma_sayisi": 98,
+    "dislanan_bar_toplam": 48735,
+    "uretildi": "2026-07-31T00:01:10"
+   },
+   "integrity_report": {
+    "file": "bars_integrity.json",
+    "ledger_symbols": 61,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "applied": {},
+    "rows_excluded": 0
+   },
+   "ghost_report": {
+    "dates": {
+     "2006-10-30": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "ALB"
+      ]
+     },
+     "2008-06-12": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "AVGO"
+      ]
+     },
+     "2011-12-01": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2011-12-09": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "TDG"
+      ]
+     },
+     "2012-01-20": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "EL"
+      ]
+     },
+     "2012-06-26": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "DLTR"
+      ]
+     },
+     "2013-07-15": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-08-02": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "PINS"
+      ]
+     },
+     "2013-12-18": {
+      "rows": 4,
+      "classes": {
+       "unadjusted_row": 4
+      },
+      "tickers": [
+       "CMCSA",
+       "GILD",
+       "TDG",
+       "CHD"
+      ]
+     },
+     "2014-06-06": {
+      "rows": 1,
+      "classes": {
+       "unadjusted_row": 1
+      },
+      "tickers": [
+       "UNP"
+      ]
+     },
+     "2018-11-22": {
+      "rows": 178,
+      "classes": {
+       "ghost_session": 178
+      },
+      "tickers": [
+       "CRM",
+       "ORCL",
+       "HD",
+       "NKE",
+       "MCD",
+       "LOW",
+       "JPM",
+       "BAC",
+       "GS",
+       "V",
+       "MA",
+       "AXP"
+      ]
+     },
+     "2025-05-26": {
+      "rows": 250,
+      "classes": {
+       "ghost_session": 250
+      },
+      "tickers": [
+       "AAPL",
+       "MSFT",
+       "NVDA",
+       "AVGO",
+       "AMD",
+       "CRM",
+       "ADBE",
+       "ORCL",
+       "GOOGL",
+       "META",
+       "NFLX",
+       "AMZN"
+      ]
+     }
+    },
+    "rows": 441,
+    "calendar": "XNYS",
+    "calendar_ok": true,
+    "refused": {},
+    "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+   }
+  },
+  "replay_defteri": {
+   "n": 147,
+   "net_usd": -1182.15,
+   "profit_factor": 0.9646,
+   "n_kazanan": 52,
+   "n_kaybeden": 95,
+   "friksiyon_usd": 1735.61
+  },
+  "fill_sonuclari": {
+   "dolu": 147,
+   "entry_missed_limit": 23,
+   "max_chase": 3,
+   "open_below_stop": 3
+  }
+ }
+}

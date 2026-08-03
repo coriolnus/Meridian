@@ -122,12 +122,39 @@ VARIANTS: dict[str, dict] = {
 # Bu turda UYGULANAN ve UYGULANMAYAN kapılar SATIRA YAZILIR. "Hangi kapıyla ölçüldü" sorusu, kapının
 # kendisi kadar önemlidir (4b'nin `gate_inputs_as_of` dersi): eksik kapı, gölge setini canlıdan daha
 # CÖMERT gösterir ve fark "varyant iyi" diye okunur.
+# `earnings.in_blackout` YALNIZ CANLI TURDA uygulanır (kardeş-PIT düzeltmesi, 2026-08-03 — aşağıdaki
+# `_CANLI_TUR` bloğu): tohumlama bacağında kapı KONUŞMAZ ve satır bunu `olculemedi_seed` diye söyler.
 GATES_APPLIED = ("guard.classify_gate", "earnings.in_blackout")
 GATES_SKIPPED = {
     "mirror_busy": "aynada bekleyen emir/yetim kontrolü — varyantın ayna emri YOKTUR, kavram tanımsız",
     "shadow_veto": "terfili gölge modelin REVIEW vetosu — model terfili değilse canlıda da no-op; "
                    "terfi durumu güne bağlı olduğu için varyant setine sokmak ölçümü oynak yapardı",
 }
+
+# --- KARDEŞ-PIT ÇAPASI (2026-08-03) ---------------------------------------------------------------
+# `state/earnings.csv` bir İLERİ-PENCERE snapshot'ıdır (bugünden ~21 gün ileri, sembol başına 1,0
+# tarih): yalnız BUGÜNÜN turunun kararı için PIT'tir. `_judge` iki yerden çağrılır —
+#   (a) bu modülün kendi EOD turu (`record_cycle` → `_decide_variant`): tarih CANLI turun tarihidir,
+#       takvim PIT'tir, kapı aynen çalışır (`loop.daily_cycle` ile birebir);
+#   (b) `shadow_lifecycle._seed` (aynı kancanın içinden, GEÇMİŞ seanslar): tarih tarihseldir ve
+#       bugünün takvimini o karara uygulamak `backtest.replay`in 89d4497'de bıraktığı ihlalin ta
+#       kendisidir (kardeşi `cf_backfill.py`de aynı gün kapatıldı).
+# ÇAPA: turu açan tarih `record_cycle`ta damgalanır; `_judge` yalnız O tarihte takvimi konuşturur.
+# NEDEN TARİH KARŞILAŞTIRMASI DEĞİL DE ÇAPA: canlı EOD turu "bugün"ü değil SON KAPANMIŞ SEANSI
+# işler ve evren-kapsaması ertelemesi onu birkaç gün geriye alabilir (`loop._deferred_for_coverage`).
+# `date < bugün` kuralı o turları da tarihsel sayar ve CANLI davranışı değiştirirdi — düzeltmenin
+# tek sözü "canlı bit-bit korunur"ken bunu yapmak, kapatmaya çalıştığımız sınıfın aynısı olurdu.
+# ÇAPA YOKSA (`None`) DAVRANIŞ ESKİSİ: tur açılmamışsa (doğrudan `_judge` çağrısı) kimse "bu karar
+# tarihseldir" demiş değildir; ölçülmemiş bir yolda kapıyı sessizce kapatmak, bu turda kapatılan
+# uydurmanın ters yönlü hâli olurdu. Üretimde çapasız yol YOKTUR: `shadow_lifecycle.run_cycle`ın
+# tek çağıranı `record_cycle`tır ve çapa ondan ÖNCE damgalanır (yapısal test v185'te).
+_CANLI_TUR: dict = {"date": None}
+
+
+def _takvim_pit_mi(date) -> bool:
+    """Bu karar, elimizdeki takvimin PIT olduğu tur mu? (gerekçe: `_CANLI_TUR` bloğu)"""
+    capa = _CANLI_TUR.get("date")
+    return capa is None or str(date) == str(capa)
 
 
 def validate_knobs(bounds: dict) -> list[dict]:
@@ -223,7 +250,8 @@ def _plan_of(sig, date: str, sector: str, limits: dict, version: int) -> dict:
 
 
 def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regime: dict,
-           goal: dict, limits: dict, version: int, bk: dict) -> tuple[list, list, list]:
+           goal: dict, limits: dict, version: int, bk: dict,
+           eg: dict | None = None) -> tuple[list, list, list]:
     """Sinyal listesi → (yargılanan satırlar, silahlanan satırlar, silahlanan PLANLAR).
 
     KAPI YOLU BURADA TEK YERDE. v1 bunu CANLI kitabın projeksiyonuna karşı koşturur (karar
@@ -232,7 +260,14 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
 
     Üçüncü dönüş değeri (`armed_plans`) `[{"plan": {...}, "pivot": float}]` biçimindedir: pivot
     plan SÖZLÜĞÜNE konmaz, YAN haritada taşınır (`backtest.replay`in `armed_pivots` deseni ve aynı
-    gerekçe — pivot bir defter alanı değil `broker.fill_entry`e giden bir İCRA girdisidir)."""
+    gerekçe — pivot bir defter alanı değil `broker.fill_entry`e giden bir İCRA girdisidir).
+
+    `eg`: KAZANÇ-KAPISI SAYACI (2026-08-03, kardeş-PIT). Verilirse yerinde doldurulur; dönüş
+    ÜÇLÜSÜ DEĞİŞMEZ — `shadow_lifecycle` bu üçlüyü açıyor ve arity değişikliği ölçümle ilgisiz bir
+    kırmızı üretirdi (dosya-ayrıklık sözleşmesi: o dosyaya bu turda dokunulmuyor)."""
+    # Tur başına BİR kez: `_takvim_pit_mi` sembole değil TARİHE bakar (aday başına çağırmak aynı
+    # cevabı 250 kez üretirdi — `loop`taki "tur başına bir yüklem" kuralının aynısı).
+    pit = _takvim_pit_mi(date)
     sector_ct = dict(bk["sector_ct"])
     armed, judged, armed_plans = [], [], []
     slots = bk["max_open"] - bk["n_open"]
@@ -249,7 +284,19 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
                      "open_risk_r": open_risk + sum(float(a["size_r"]) for a in armed),
                      "max_corr": max_corr_of(sig.ticker)}
         verdict, reasons = guard.classify_gate(plan, portfolio, regime, goal, params)
-        bl = earnings.in_blackout(sig.ticker, date)
+        # ---- KARDEŞ-PIT DÜZELTMESİ (2026-08-03) — gerekçe `_CANLI_TUR` bloğunda. CANLI turda hiçbir
+        # şey değişmedi (aynı çağrı, aynı koşul, aynı sıra, aynı etiket); TARİHSEL (tohum) turda
+        # `in_blackout` HİÇ ÇAĞRILMIYOR: ne veto ne etiket. `earnings_blackout` orada False değil
+        # None — "karartma yok" ile "ölçemedik" aynı şey değildir ve False demek, bu turda
+        # `coverage:"known"` yalanıyla birlikte kapatılan uydurmanın ta kendisiydi.
+        if pit:
+            bl = earnings.in_blackout(sig.ticker, date)
+            _cov = "known" if earnings.known(sig.ticker) else "no_calendar_data"
+        else:
+            bl, _cov = None, "olculemedi_seed"
+        if eg is not None:
+            eg["plan"] = eg.get("plan", 0) + 1
+            eg["pit" if pit else "olculemedi_seed"] = eg.get("pit" if pit else "olculemedi_seed", 0) + 1
         if verdict != "NO_GO" and bl:
             verdict, reasons = "NO_GO", list(reasons) + ["kazanç öncesi karartma (earnings blackout)"]
         row = {"ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
@@ -259,8 +306,8 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
                "r_per_share": round(float(sig.r_per_share), 4) if sig.r_per_share else None,
                "size_r": plan["size_r"], "rr": plan["r_multiple_expected"],
                "rvol20": sig.rvol20, "verdict": verdict, "why": list(reasons)[:3],
-               "earnings_blackout": bool(bl),
-               "earnings_coverage": "known" if earnings.known(sig.ticker) else "no_calendar_data"}
+               "earnings_blackout": bool(bl) if bl is not None else None,
+               "earnings_coverage": _cov}
         if verdict != "NO_GO" and slots > 0:
             row["would_arm"] = True
             armed.append(row)
@@ -283,11 +330,15 @@ def _decide_variant(vid: str, spec: dict, date: str, tickers: list, *, tail_of, 
     devredilirler. Defter şeması DEĞİŞMEZ — bu iki alan diske hiç ulaşmaz."""
     params = {**eff, **spec["knobs"]}
     sigs, scan_failed = _signals(tickers, params, tail_of, rs_of)
+    # KAZANÇ-KAPISI SAYACI (kardeş-PIT, 2026-08-03) — satıra girer, `summarize` okur (YASA 6).
+    # Bu defterin satırları CANLI turdan doğduğu için burada `olculemedi_seed` 0 olmalıdır ve
+    # sayacın asıl işi budur: "0 plan etkilendi" beyanı, beyan değil ÖLÇÜM olarak taşınır.
+    eg: dict[str, int] = {}
     judged, armed, armed_plans = _judge(sigs, date, sector_of=sector_of, max_corr_of=max_corr_of,
                                         params=params, regime=regime, goal=goal, limits=limits,
-                                        version=version, bk=bk)
+                                        version=version, bk=bk, eg=eg)
     return {"variant": vid, "label": spec["label"], "knobs": dict(spec["knobs"]),
-            "_sigs": sigs, "_armed_plans": armed_plans,
+            "_sigs": sigs, "_armed_plans": armed_plans, "earnings_gate": eg,
             "signal_n": len(sigs), "would_arm_n": len(armed),
             "verdicts": {v: sum(1 for r in judged if r["verdict"] == v)
                          for v in ("GO", "REVIEW", "NO_GO")},
@@ -315,6 +366,11 @@ def record_cycle(date: str, tickers: list, *, tail_of, rs_of, sector_of, max_cor
     `write=False` testler için: satırlar üretilir, DEFTERE YAZILMAZ (canlı state'e yazan test yok)."""
     if not ENABLED:
         return None
+    # KARDEŞ-PIT ÇAPASI (2026-08-03) — turu AÇAN tarih burada damgalanır ve `_judge` yalnız bu
+    # tarihte takvimi konuşturur. Damga `_decide_variant` döngüsünden ve `_sl.run_cycle` (tohum
+    # bacağı ONUN İÇİNDE koşar) çağrısından ÖNCE atılmalıdır; sırası bozulursa tohum seansları
+    # kendilerini canlı sanar ve düzeltme sessizce geri alınır (yapısal test v185'te).
+    _CANLI_TUR["date"] = str(date)
     bad = validate_knobs(bounds)
     if bad:
         # ÖLÇÜLEMEYEN ÖLÇÜLMEMİŞ KALIR: tanımsız/aralık-dışı düğmeyle koşmak, "fark yok" diyen sahte
@@ -400,8 +456,13 @@ def summarize(rows: list[dict], days: int = 10) -> dict:
         vid = r.get("variant")
         p = per.setdefault(vid, {"label": r.get("label"), "knobs": r.get("knobs"), "days": 0,
                                  "signal_n": 0, "would_arm_n": 0, "only_variant_n": 0,
-                                 "only_live_n": 0, "shared_n": 0, "scan_failed_n": 0})
+                                 "only_live_n": 0, "shared_n": 0, "scan_failed_n": 0,
+                                 "earnings_olculemedi_n": 0})
         p["days"] += 1
+        # KARDEŞ-PIT SAYACININ OKUYUCUSU (YASA 6, 2026-08-03): kaç karar, kazanç-karartma kapısı
+        # KONUŞAMADAN alındı. Bu defter canlı turdan doğar, yani sayı 0 OLMALIDIR — 0'dan sapması
+        # tohum satırlarının karar defterine sızdığını söyler ve `render_summary` onu bağırır.
+        p["earnings_olculemedi_n"] += int((r.get("earnings_gate") or {}).get("olculemedi_seed") or 0)
         p["signal_n"] += int(r.get("signal_n") or 0)
         p["would_arm_n"] += int(r.get("would_arm_n") or 0)
         p["only_variant_n"] += len(r.get("only_variant") or [])
@@ -434,6 +495,9 @@ def render_summary(rows: list[dict], days: int = 10) -> str:
                    f"{p['shared_n']:>5}")
         if p["scan_failed_n"]:
             out.append(f"      TARAMA HATASI: {p['scan_failed_n']} sembol (ölçülemeyen ölçülmemiş kaldı)")
+        if p["earnings_olculemedi_n"]:
+            out.append(f"      KAZANÇ KAPISI KONUŞMADI: {p['earnings_olculemedi_n']} karar "
+                       "(tarihsel tarih — bugünün takvimi geçmiş karara UYGULANMAZ, kardeş-PIT)")
     out.append("  NOT: bu defterden ship yolu YOKTUR — canlıya geçiş yalnız OOS kapısından "
                "(prescreen/reflect) geçer.")
     return "\n".join(out)

@@ -1,0 +1,165 @@
+{
+ "walk_forward_2026-08-01": {
+  "kaynak": "research/olcumler/karne_olcum/RAPOR.md §1 + kol_tam_guncel.json (HEAD 505603b, 2026-08-01T13:44:32Z)",
+  "oos_score": 0.0579,
+  "para_search": 0.1605,
+  "is_score": 0.0651,
+  "holdout_score": null,
+  "n_trades_total": 201,
+  "oos_n": 130,
+  "search_n": 103,
+  "confirm_n": 22,
+  "avg_r": 0.012,
+  "win_rate": 0.354,
+  "sharpe": 0.226,
+  "max_drawdown": 0.0717,
+  "total_return": 0.0319,
+  "replay_defteri": {
+   "n": 201,
+   "net_usd": 2492.87,
+   "profit_factor": 1.0499,
+   "n_kazanan": 73,
+   "n_kaybeden": 128,
+   "friksiyon_usd": 2957.7
+  },
+  "equity_tam": {
+   "olculdu": true,
+   "n_gun": 1146,
+   "eq_ilk": 100000.0,
+   "eq_son": 102492.85,
+   "gunluk_vol": 0.003645,
+   "yillik_vol": 0.057867,
+   "gunluk_ort_getiri": 2.815e-05,
+   "mtm_max_dd": 0.07197,
+   "toplam_getiri": 0.024929
+  },
+  "equity_oos": {
+   "olculdu": true,
+   "n_gun": 576,
+   "eq_ilk": 98680.15,
+   "eq_son": 102730.4,
+   "gunluk_vol": 0.004266,
+   "yillik_vol": 0.067725,
+   "gunluk_ort_getiri": 7.905e-05,
+   "mtm_max_dd": 0.071709,
+   "toplam_getiri": 0.041044
+  },
+  "mtm_max_dd": 0.072,
+  "para_search_detail": {
+   "score": 0.1605,
+   "n": 103,
+   "total_return": 0.069,
+   "max_drawdown": 0.053,
+   "span_days": 585.0,
+   "hedef_pencere": 0.42995
+  },
+  "realized_usd": {
+   "pnl_usd": 6901.93,
+   "hedef_usd": 42995.22,
+   "ham_oran": 0.160528,
+   "kirpildi": false
+  }
+ },
+ "canli_karne_snapshot": {
+  "kaynak": "state/trades.jsonl (mtime 2026-07-23, 95/95 re-seed) + state/equity_curve.json; analytics.result_verdict / profit_waterfall SANDBOX KOPYASINDA koştu",
+  "n_islem": 95,
+  "net_usd": -5542.09,
+  "islem_basi_ort_usd": -58.34,
+  "ci": {
+   "lo": -137.75,
+   "hi": 14.53,
+   "seviye": 0.95,
+   "n": 95,
+   "blok": 5,
+   "B": 10000,
+   "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+   "sifiri_disliyor": false
+  },
+  "profit_factor": 0.5666,
+  "maks_dusus": 0.0804,
+  "kapali_islem_dd": 0.057,
+  "friksiyon_usd": 581.49,
+  "hukum": "SONUÇ: 0/4 sağlandı (0 zayıf, 4 sağlanmadı, 0 ölçülemedi) — para kanıtlanmadı",
+  "profit_waterfall_genel": {
+   "n": 95,
+   "n_mfe": 95,
+   "n_friksiyon": 95,
+   "n_verim": 94,
+   "sinyal_mfe_r": 0.9648,
+   "geri_verilen_r": -0.9854,
+   "friksiyon_r": 0.0215,
+   "net_r": -0.0421,
+   "ort_verim": -3.1499,
+   "toplam_verim": -0.0436
+  },
+  "live_expectancy_ceiling_durum": "olculemedi",
+  "live_expectancy_ceiling_neden": "v3 karne satırında `backtest_full.avg_r` YOK — backtest beklentisi ölçülmemiş, tavan hesaplanamaz",
+  "cap_mult": 0.5,
+  "scoreboard": {
+   "current_version": 3,
+   "versions": {
+    "4": {
+     "params": {
+      "entry.rs_rating_min": 70,
+      "entry.pivot_proximity_pct": 2.3,
+      "entry.min_volume_ratio": 1.5,
+      "entry.min_score": 60,
+      "exit.profit_target_r": 2.5,
+      "exit.time_stop_days": 15,
+      "exit.trail_atr_mult": 2.5,
+      "exit.breakeven_r": 1.0,
+      "stop_loss_atr_mult": 2.0,
+      "position_size_r": 1.0,
+      "regime.min_exposure_score": 20,
+      "exit.giveback_pct": 0.0,
+      "exit.chandelier_lookback": 0,
+      "entry.max_ext_atr": 0.0,
+      "entry.rs_dual_horizon": 0,
+      "exit.scale_out_r": 2.0,
+      "exit.scale_out_frac": 0.0,
+      "entry.w_prox": 0.15
+     },
+     "parent": null,
+     "live_score": -0.0089,
+     "backtest_full": {
+      "score": -0.0089,
+      "n": 95,
+      "min_sample": 30,
+      "total_return": -0.0554,
+      "realized_30d": -0.0013,
+      "max_drawdown": 0.057,
+      "sharpe": -1.025,
+      "sharpe_measurable": true,
+      "avg_r": -0.042,
+      "win_rate": 0.368,
+      "components": {
+       "ret": -0.019,
+       "dd": 0.287,
+       "sharpe": -0.427
+      },
+      "targets": {
+       "target_return_30d": 0.07,
+       "max_drawdown": 0.08,
+       "min_sharpe": 1.2
+      }
+     },
+     "n_trades": 95,
+     "live_since": "2026-07-23T09:17:18+00:00",
+     "source": "operator_override",
+     "note": "operatör tabanı yürürlükte (regime.min_exposure_score=20); re-seed provenansı korur",
+     "rolled_back": true
+    },
+    "3": {
+     "backtest_oos": 0.1245,
+     "baseline_verdict": "olculebilir",
+     "baseline_source": "parent_backfill",
+     "baseline_measured_at": "2026-07-26T20:06:41+00:00",
+     "baseline_n_trades": 103,
+     "baseline_span_days": 914,
+     "baseline_freq_ratio": 1.511,
+     "reinstated": true
+    }
+   }
+  }
+ }
+}

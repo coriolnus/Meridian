@@ -1,0 +1,151 @@
+{
+ "ozetler": [
+  {
+   "defter": "canli_snapshot_2026-07-30",
+   "n_satir": 7161,
+   "n_plan_satiri": 2173,
+   "n_near_miss": 4988,
+   "verdict": {
+    "REVIEW": 1060,
+    "NEAR_MISS": 4988,
+    "GO": 782,
+    "NO_GO": 331
+   },
+   "taken": 849,
+   "entered": 7053,
+   "n_r": 7053,
+   "ort_r": 0.045,
+   "kazanan_oran": 0.4422,
+   "toplam_r": 317.58,
+   "ilk_tarih": "2022-01-03",
+   "son_tarih": "2026-07-23",
+   "n_gun": 1011,
+   "exit_reason": {
+    "stop": 2674,
+    "stop_gap": 437,
+    "target": 605,
+    "time_stop": 3194,
+    "target_gap": 143
+   }
+  },
+  {
+   "defter": "cf_taban_ESKI_KOD",
+   "n_satir": 8689,
+   "n_plan_satiri": 3815,
+   "n_near_miss": 4874,
+   "verdict": {
+    "REVIEW": 1316,
+    "NEAR_MISS": 4874,
+    "GO": 828,
+    "NO_GO": 1671
+   },
+   "taken": 694,
+   "entered": 8502,
+   "n_r": 8502,
+   "ort_r": 0.0446,
+   "kazanan_oran": 0.4206,
+   "toplam_r": 379.35,
+   "ilk_tarih": "2022-01-03",
+   "son_tarih": "2026-07-27",
+   "n_gun": 1083,
+   "exit_reason": {
+    "stop": 3548,
+    "target": 961,
+    "target_gap": 222,
+    "stop_gap": 557,
+    "time_stop": 3214
+   }
+  },
+  {
+   "defter": "cf_guncel_KARDES_PIT",
+   "n_satir": 8689,
+   "n_plan_satiri": 3815,
+   "n_near_miss": 4874,
+   "verdict": {
+    "REVIEW": 1317,
+    "NEAR_MISS": 4874,
+    "GO": 828,
+    "NO_GO": 1670
+   },
+   "taken": 694,
+   "entered": 8502,
+   "n_r": 8502,
+   "ort_r": 0.0446,
+   "kazanan_oran": 0.4206,
+   "toplam_r": 379.35,
+   "ilk_tarih": "2022-01-03",
+   "son_tarih": "2026-07-27",
+   "n_gun": 1083,
+   "exit_reason": {
+    "stop": 3548,
+    "target": 961,
+    "target_gap": 222,
+    "stop_gap": 557,
+    "time_stop": 3214
+   }
+  }
+ ],
+ "ab_tek_degisken": {
+  "ortak_id": 8689,
+  "yalniz_taban": 0,
+  "yalniz_guncel": 0,
+  "farkli_satir_n": 1,
+  "farkli_satirlar": [
+   {
+    "id": "CF-2026-07-15-STLD-exhaustion_hammer",
+    "ticker": "STLD",
+    "date": "2026-07-15",
+    "taban_verdict": "NO_GO",
+    "guncel_verdict": "REVIEW",
+    "taban_taken": false,
+    "guncel_taken": false
+   }
+  ],
+  "taban_sayaci": {
+   "plan": 3839,
+   "eski_kod_takvim_konustu": 2
+  },
+  "guncel_sayaci": {
+   "plan": 3839,
+   "olculemedi_cf": 3839
+  }
+ },
+ "kosum_ozetleri": {
+  "cf_taban": {
+   "sessions": 1146,
+   "opened": 8763,
+   "resolved": 8689,
+   "still_open": 74,
+   "earnings_gate": {
+    "plan": 3839,
+    "eski_kod_takvim_konustu": 2
+   },
+   "sure_sn": 3440.9,
+   "bars_integrity": {
+    "ledger_symbols": 61,
+    "rows_excluded": 46256,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "uygulanan_sembol_n": 57
+   }
+  },
+  "cf_guncel": {
+   "sessions": 1146,
+   "opened": 8763,
+   "resolved": 8689,
+   "still_open": 74,
+   "earnings_gate": {
+    "plan": 3839,
+    "olculemedi_cf": 3839
+   },
+   "sure_sn": 3440.8,
+   "bars_integrity": {
+    "ledger_symbols": 61,
+    "rows_excluded": 46256,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "uygulanan_sembol_n": 57
+   }
+  }
+ }
+}

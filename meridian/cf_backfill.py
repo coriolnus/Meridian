@@ -18,7 +18,7 @@ from __future__ import annotations
 import pandas as pd
 
 from . import config, store, strategy as strat, regime as regime_mod, indicators as ind
-from . import guard, skills, obs, earnings, counterfactual as cf, loop
+from . import guard, skills, obs, counterfactual as cf, loop
 from . import broker as broker_mod
 from .backtest import SECTORS
 from .score import START_EQUITY
@@ -31,10 +31,14 @@ from .adapters import data as data_adapter
 _SIZE_FN = broker_mod.PaperBroker(START_EQUITY, 0.0, 0.0).size_position
 
 
-def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
+def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version, eg: dict | None = None):
     """Bir seansın P2+P3 çıktısını üret: (plans, armed_ids, dormant_sigs, near_miss, regime).
     daily_cycle'ın 264-545 satırlarını yansıtır; mirror-busy/shadow-veto/explore-arming ATLANIR
-    (bunlar SİLAHLANMAYI etkiler, cf TOPLAMAYI değil)."""
+    (bunlar SİLAHLANMAYI etkiler, cf TOPLAMAYI değil).
+
+    `eg`: KAZANÇ-KAPISI SAYACI (2026-08-03, kardeş-PIT düzeltmesi). Verilirse yerinde doldurulur —
+    dönüş beşlisi DEĞİŞMEZ (`tests/test_cf_backfill_v14.py` o biçime çakılı ve arity değişikliği
+    ölçümle ilgisiz bir kırmızı üretirdi). Boş bırakılırsa sayaç tutulmaz, davranış aynıdır."""
     # PERFORMANS: canlı daily_cycle her seans 250 sembolü validate_bars'tan geçirir (seansta 1 kez ucuz);
     # ~1000 tarihi seansta bu O(250×bar×seans) = felç. cf SIFIR-yetkili olduğundan pahalı per-sembol veri
     # kapısı DÜŞÜRÜLÜR — güncellik denetimi (d in index) + tarama NaN korumaları bozuk barı zaten eler.
@@ -81,7 +85,8 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
             candidates.append({"date": dstr, "sector": SECTORS.get(t, "?"), **sig.as_row()})
     candidates.sort(key=lambda c: c["score"], reverse=True)
 
-    # P3: kapı (düz portföy → per-aday intrinsik verdict). earnings blackout dahil; mirror/shadow atlanır.
+    # P3: kapı (düz portföy → per-aday intrinsik verdict). mirror/shadow atlanır; kazanç karartması
+    # bu motorda ÖLÇÜLEMEZ (aşağıdaki kardeş-PIT bloğu — PIT takvim yok, kapı KONUŞMAZ).
     plans, armed_ids = [], set()
     slots = int(goal["limits"]["max_open_positions"])
     # C12: Y3 alanları DÜZ kitapla da gönderilir. Kitap boş olduğu için `sector_notional` {} ve ısı
@@ -109,8 +114,21 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version):
         # desen; `plans` listesine ve cf defterine yazılan sözlük `plan`ın kendisidir).
         _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=START_EQUITY, size_fn=_SIZE_FN)}
         verdict, reasons = guard.classify_gate(_gate_plan, flat_pf, rj, goal, eff)
-        if verdict != "NO_GO" and earnings.in_blackout(c["ticker"], dstr):
-            verdict, reasons = "NO_GO", list(reasons) + ["kazanç öncesi karartma"]
+        # ---- KARDEŞ-PIT DÜZELTMESİ (2026-08-03) — `backtest.replay`in 89d4497'deki kararı 2'sinin
+        # BİREBİR KARDEŞİ. Burada eskiden `earnings.in_blackout(c["ticker"], dstr)` vardı ve `dstr`
+        # 2022→bugün aralığındaki TARİHSEL bir seanstı; `state/earnings.csv` ise PIT DEĞİL, bugünün
+        # ~21 günlük İLERİ-PENCERE snapshot'ı (sembol başına 1,0 tarih; geçmiş çapa biriktirmiyor).
+        # Yani bu satır "2023-03-14 kararına 2026-08-03 takvimini" uyguluyordu: cf defterinin karartma
+        # etkisi UYGULANMIŞ GİBİ taşınıyor, gerçekte ise seansların ezici çoğunluğunda `in_blackout`
+        # yapısal olarak False dönüyordu (ölçüldü: replay tarafında 390 planın 380'i, %97,4).
+        # ARTIK: bugünün takvimini geçmiş bir karara uygulayan yol TAMAMEN KAPALI — ne veto, ne etiket.
+        # NEDEN "DOĞRU TAKVİMLE" HESAPLAMIYORUZ: PIT kazanç takvimi bu depoda YOK; üretmeden veto
+        # koymak, ölçülmemiş bir kapıyı ölçülmüş gibi göstermek olurdu (UYDURMA YASAĞI).
+        # CANLI MOTOR ETKİLENMEZ: `loop.daily_cycle`ın karartma vetosu aynen durur (orada takvim
+        # PIT'tir — bugünün kararı bugünün takvimiyle verilir) ve bu modülün canlı yolu YOKTUR.
+        if eg is not None:
+            eg["plan"] = eg.get("plan", 0) + 1
+            eg["olculemedi_cf"] = eg.get("olculemedi_cf", 0) + 1
         plan["gate_verdict"], plan["gate_reasons"] = verdict, reasons
         plans.append(plan)
         # taken ≈ o gün silahlanacak olan: uyuyan yalnız keşif-GO; normal GO/REVIEW slot dahilinde
@@ -172,12 +190,16 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
         sessions = [d for d in sessions if str(d.date()) <= end]
 
     n_open = 0
+    # KAZANÇ-KAPISI SAYACI (2026-08-03, kardeş-PIT). YASA 6: üretilen kanıt TÜKETİLİR — bu sayaç
+    # `out`a girer, `cf_backfill_done` olayına yazılır ve defteri okuyan her yer "bu tabloda karartma
+    # etkisi SIFIRDIR, çünkü kapı hiç konuşmadı" bilgisini oradan görür. Sessiz sıfır değil, beyanlı.
+    eg: dict[str, int] = {}
     for i, d in enumerate(sessions):
         dstr = str(d.date())
         try:
             cf.advance(per, d, dstr)                        # önce önceki günleri ilerlet/çöz
             plans, armed_ids, dormant, nmiss, rj = _plans_for_session(
-                d, dstr, per, idx, params, by_regime, goal, version)
+                d, dstr, per, idx, params, by_regime, goal, version, eg)
             if rj is not None:
                 added = cf.collect(dstr, plans, armed_ids, dormant, time_stop, near_miss=nmiss,
                            regime=rj["regime"])   # tur 2: uyuyan/eşik-altı satırlar da rejim taşır
@@ -193,6 +215,8 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
     # evreninden DÖNEM düşürdüyse bu satır onu SAYIYLA söyler. Yazılmazsa "cf neden bu kadar az
     # satır üretti?" sorusu yine cevapsız kalırdı — bu dosyanın YASA 4 notunun aynı ailesi.
     out = {"sessions": len(sessions), "opened": n_open, "resolved": resolved,
-           "still_open": still_open, "bars_integrity": data_adapter.integrity_report()}
+           "still_open": still_open, "bars_integrity": data_adapter.integrity_report(),
+           # kaç plan, kazanç-karartma kapısı KONUŞAMADAN karar aldı (bkz. kardeş-PIT bloğu).
+           "earnings_gate": eg}
     obs.log("cf_backfill_done", **out)
     return out
