@@ -323,7 +323,15 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   tur adayı: sprint-çocuğu yetim/ölüm dedektörü). Faz B sonucu için sprint dağıtım-sonrası
   YENİDEN tetiklendi (sid 20260803-043330, CLI `sprint.start()` — token'sız yol; damga
   n_hyp_at_start=51 yerinde); faz-geçiş monitörü kurulu, B hükmü (shipped/no_clearing + ilk
-  sprint_runs.jsonl satırı) geldiğinde işlenecek.
+  sprint_runs.jsonl satırı) geldiğinde işlenecek. **B HÜKMÜ GELDİ (2026-08-03 11:05 UTC, temiz
+  çıkış):** Faz A n_v1=111/523 (ilk koşunun 115'iyle tutarlı bant; girdi birebir değil — barlar
+  gece tazelendi), Faz B **no_clearing_candidate** (incumbent_oos=0.0813, evaluated=2, cleared=0;
+  "bu veri diliminde v1 yerel-optimal") → shipped=false, Faz C yok. **`sprint_runs.jsonl`
+  MİGRASYONDAN BERİ İLK SATIRINI YAZDI** — mekanizma uçtan uca dönüyor; md.2 sayacının
+  kalibrasyon-noktası bacağı ancak bir aday kapıyı geçip C'de döngü kapatınca akar (bu, dürüst
+  bir "henüz yok", arıza değil). GÖZLEM (tur adayı, düşük öncelik): budget=12'ye karşı
+  evaluated=2 — koordinat inişi ilk turda iyileşme bulamayıp erken durdu; arama-verimliliği
+  sorusu ayrı bir ölçüm ister, bu turun kapsamı dışında.
 
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
