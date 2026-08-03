@@ -459,7 +459,10 @@ def test_D_prescreen_raporu_damgayi_TASIR():
     src = (SRC / "prescreen.py").read_text()
     assert src.count("kod_surumu_damgasi()") == 1, "damga aday başına yeniden alınıyor olabilir"
     assert 'damga = olcum_araclari.kod_surumu_damgasi()' in src
-    assert src.count('"kod_surumu": damga') == 2, "kısmi VE nihai rapor damgayı taşımalı"
+    # ÜÇ ÇIKIŞ YOLU, ÜÇ DAMGA (v182'de üçüncüsü eklendi): kısmi rapor · nihai rapor · guard'ın
+    # hepsini reddettiği ERKEN dönüş. Üçüncüsü kuyruğa kalıcı bir hata satırı bırakıyor ve
+    # damgasızken "hangi bounds/kod hâlinde reddedildi?" sorusu cevapsız kalıyordu.
+    assert src.count('"kod_surumu": damga') == 3, "üç rapor çıkışının hepsi damgayı taşımalı"
     # damga, canlı state'e DEĞİL rapora yazılır (prescreen'in kendi yasası)
     assert "canli_state_degisen_dosyalar" in src
 

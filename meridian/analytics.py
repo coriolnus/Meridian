@@ -2895,6 +2895,47 @@ def shadow_variant_summary(days: int = 10) -> dict:
 
 
 # ---- GÖLGE YASA v2'NİN PANO/API YÜZEYİ (3b) ----------------------------------------------------
+def _dd_veto_okumasi() -> dict:
+    """`DD_VETO_MARGIN` NASIL OKUNUR — tek cümlelik ilişki beyanı (WP-M borç kalemi, 2026-08-03).
+
+    NEDEN VAR. Marj panoda/kayıtlarda ÇIPLAK bir sayı olarak (0,04) duruyordu ve bir ölçüm
+    raporunda tam da korkulan biçimde okundu: MUTLAK bir M2M düşüşü (%7,2) bu sayıyla kıyaslanıp
+    'ihlal' yazıldı. Oysa 0,04 hiçbir zaman bir düşüş TAVANI değildi — `reflect._gate_eval`in
+    veto koşulu `candidate_dd > incumbent_dd + marj`dır, yani marj İKİ ADAY ARASINDAKİ FARKA
+    uygulanır ve tek yönlüdür. Mutlak okumanın çıpası AYRI bir sayıdır: `goal.max_drawdown`.
+
+    ORAN ÖLÇÜLÜR, YAZILMAZ: tavan dosyadan (goal.yaml) okunur ve oran her çağrıda hesaplanır.
+    Böylece operatör bir gün bütçeyi değiştirirse bu satır sessizce yalan söylemez. Tavan
+    okunamazsa alan None + `tavan_neden`dir (UYDURMA YASAĞI); marj yine yazılır çünkü marjın
+    kendisi koddaki sabittir ve okunamamış bir bütçe onu geçersiz kılmaz."""
+    from . import shadowlaw
+    marj = float(shadowlaw.DD_VETO_MARGIN)
+    tavan, oran, neden = None, None, None
+    try:
+        tavan = float(config.goal()["max_drawdown"])
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        neden = f"goal.max_drawdown okunamadı: {type(e).__name__}: {e}"
+    if tavan:
+        oran = round(marj / tavan, 4)
+    return {
+        "marj": marj,
+        "tip": "GÖRECE MARJ — mutlak düşüş tavanı DEĞİL",
+        "kural": "veto koşulu: candidate_dd > incumbent_dd + marj (reflect._gate_eval, TEK YÖNLÜ)",
+        "mutlak_tavan": tavan, "mutlak_tavan_kaynagi": "goal.max_drawdown",
+        "tavan_neden": neden,
+        "marj_tavan_orani": oran,
+        "beyan": (f"DD_VETO_MARGIN ({marj}) bir düşüş TAVANI DEĞİLDİR: mutlak düşüş bütçesi "
+                  f"`goal.max_drawdown`dır ("
+                  f"{'ölçülemedi — ' + str(neden) if tavan is None else tavan}"
+                  f"{'' if oran is None else f', marj onun ölçülen {oran} katı'}) ve marj YALNIZ "
+                  f"aday ile incumbent'ın düşüşleri ARASINDAKİ farka uygulanır. MUTLAK bir düşüşü "
+                  f"(ör. backtest.mtm_dd_veto'nun ölçtüğü M2M düşüşü) bu marjla kıyaslayan bir "
+                  f"rapor, göreli bir marjı mutlak eşik gibi okur — oradaki `ihlal` alanı bir kapı "
+                  f"hükmü değil marj-ölçekli bir işarettir ve mutlak okuma goal.max_drawdown'a "
+                  f"çıpalanmalıdır."),
+    }
+
+
 def shadow_law_row() -> dict:
     """Büyüklük yasası satırı — panonun tek kaynağı. **TERS GÖLGELEME** (PARA-v3, 2026-07-30).
 
@@ -2939,6 +2980,10 @@ def shadow_law_row() -> dict:
         "money_gate_margin": shadowlaw.MONEY_GATE_MARGIN,
         "gate_margin_eski": 0.02, "margin_scale": shadowlaw.MARGIN_MONEY_SCALE,
         "dd_veto_margin": shadowlaw.DD_VETO_MARGIN,
+        # ÇIPLAK SAYININ YANINDA OKUMA KURALI (WP-M, 2026-08-03): `dd_veto_margin` tek başına
+        # basıldığında mutlak bir düşüş tavanı gibi okunabiliyordu (ve bir raporda öyle okundu).
+        # İlişki beyanı artık sayının YANINDA durur; mutlak çıpa goal.yaml'dan ölçülür.
+        "dd_veto_okumasi": _dd_veto_okumasi(),
         # PARA payı: yasanın kendi çivisi — v3'te TEK terim olduğu için 1,0 olmak ZORUNDA
         "varyans_payi": {"eski": shadowlaw.MEASURED_V3["eski_paylar"],
                          "v3": shadowlaw.MEASURED_V3["v3_paylar"]},

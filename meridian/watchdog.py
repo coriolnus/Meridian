@@ -177,6 +177,13 @@ def production_report() -> dict:
         ("llm_calibration", _cal("llm_calibration.json", "n_pairs"), 1, "LLM görüş-sonuç çifti"),
         ("gate_calibration", _cal("gate_calibration.json", "n_measured"), 1, "kapı meta-ölçümü"),
     ]
+    # ASKIDA ≠ AÇ (2026-08-03, WP-M ölçek borcu turu). Bu dedektörün TEK ayrımı "üretti mi?"ydi ve
+    # kapı meta-kalibrasyonunda o soru YANLIŞ soruydu: mekanizma çift ÜRETİYOR ama birim borcu
+    # yüzünden onları SAYAMIYOR. `n_measured=0` görüp "aç" demek, bir ölçüm borcunu bir üretim
+    # arızası gibi raporlamaktı — operatör yanlış yerde arardı. `probgate` artık durumu adıyla
+    # yazıyor; bekçi onu OKUR ve üçüncü bir kova açar. Dosya yoksa/eski şemadaysa `durum` None'dır
+    # ve davranış BİREBİR eskisi gibi kalır (geriye uyum).
+    _gate_durum = (store.read_json("gate_calibration.json", {}) or {}).get("durum")
     # AYNA ÜRETKENLİĞİ (adapters.alpaca denetimi 2026-07-21): motor plan silahlandırıyor ama aynaya
     # tek emir gitmiyorsa bu 'sabır' değil ARIZADIR — eskiden hiçbir şey söylemezdi. Yalnız ayna
     # açıkken sorulur; iç broker modunda soru anlamsız (yanlış alarm üretmesin).
@@ -242,14 +249,22 @@ def production_report() -> dict:
         from . import obs
         obs.warn("mechanism_health_read_failed", error=f"{type(e).__name__}: {e}")
 
+    askida = []
     for name, n, need, note in checks:
-        if n is None or n == 0:
+        if name == "gate_calibration" and _gate_durum == "askida_olcek_borcu":
+            # Çift ÜRETİLİYOR ama birim borcu yüzünden eşleştirilemiyor: ne aç, ne sabırlı.
+            askida.append({"name": name, "have": n, "need": need, "note": note,
+                           "durum": _gate_durum,
+                           "beyan": (store.read_json("gate_calibration.json", {}) or {}
+                                     ).get("durum_beyan")})
+        elif n is None or n == 0:
             starved.append({"name": name, "note": note})          # HİÇ üretmemiş → hata şüphesi
         elif n < need:
             waiting.append({"name": name, "have": n, "need": need, "note": note})
         else:
             ok += 1
-    return {"starved": starved, "waiting": waiting, "ok": ok, "total": len(checks)}
+    return {"starved": starved, "waiting": waiting, "askida": askida, "ok": ok,
+            "total": len(checks)}
 
 
 def conservation_report(olaylar: list[dict] | None = None) -> dict:

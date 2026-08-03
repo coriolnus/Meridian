@@ -67,6 +67,71 @@ def _karar_girdisi(cur_score: float, par_score: float, wh: Optional[dict]) -> di
             "yontem": LEGACY_YONTEM}
 
 
+# ---- PARA İKİZİ: GERÇEKLEŞMENİN İKİNCİ CETVELİ (WP-M ölçek borcu, 2026-08-03) ------------------
+# NEDEN. `realized_delta` BİLEŞİK skordan (`score.score`) türer ve TÜREMEYE DEVAM EDER: geri-alma
+# hükmü ve `goal.rollback_if_worse_by` eşiği o birimde kalibre edildi, birimi değiştirmek eşiği
+# ölçümsüz değiştirmek olurdu. Ama `predicted_delta` PARA-v3 geçişinden beri `ret_c_v3` ölçeğinde
+# yazılıyor (`reflect._gate_eval` → `conf.mean_delta`) ve `probgate.refresh_meta_calibration` bu iki
+# sayıyı BÖLÜYORDU: para ÷ bileşik = birim karışımı (σ oranı ≈0,19 olduğundan oran ~5× şişerdi).
+# Karışım 2026-07-30'da ATLAMAYLA kapatıldı — ama atlama mekanizmayı MUHAFAZAKÂR yapmadı, ÖLDÜRDÜ:
+# para_v3 altında hiçbir YENİ çift sayılamaz, `n_measured` META_MIN_N'e asla ulaşamaz, `extra_p`
+# sonsuza dek 0 kalır; yani sistematik iyimserliği cezalandıran emniyet sessizce kapalıdır.
+#
+# BU BLOK O EMNİYETİ DİRİLTİR VE HÜKME DOKUNMAZ. Gerçekleşmenin PARA ölçeğindeki ikizi ÖLÇÜLÜR ve
+# `realized_detail` içine yazılır (`memory.writeback_outcome` sözlüğü olduğu gibi saklar → hipotez
+# şeması değişmez). Değişmeyenler: kapı kararı, geri-alma kararı, eşik, `realized_delta`ın kendisi.
+#
+# ÜÇ YOLDA ÖLÇÜLEMEZ VE ÜÇÜ DE ADIYLA YAZILIR (UYDURMA YASAĞI — None + neden):
+#   (1) Karar LIKE-FOR-LIKE replay çiftinden geldiyse: o çiftin iki tarafı replay'in ÜRETTİĞİ işlem
+#       listeleridir ve bu katmanda yokturlar. Elimizdeki canlı dilimlerden bir para farkı
+#       hesaplamak KARARIN ikizini vermez — başka bir şeyin ikizini verir ve fark sessizce
+#       başka bir soruyu cevaplardı.
+#   (2) Ebeveyn skoru YEDEKten geldiyse (`par_trades` < min_sample → karne `live_score`/
+#       `backtest_oos`, ya da kapı `incumbent_oos`): ebeveynin işlem listesi yok, para tarafı yok.
+#   (3) `money_score` None döndüyse: bilinmeyen skor, sıfır skor gibi okunamaz (§4).
+#
+# TEK PAYDA, İKİ TARAF: `hedef_pencere` span'e bağlıdır; her tarafı KENDİ span'iyle normalize etmek
+# iki FARKLI paydayla bölmek olurdu — `probgate._score_pair`in "payda dilimin uzunluğuyla
+# sabitlenir" kuralının aynısı. Span iki listenin BİRLEŞİMİNDEN türer ve kayda yazılır.
+def _para_ikizi(cur_trades: list, par_trades: list, goal: dict, karar: dict,
+                par_yedekten: bool) -> dict:
+    """Gerçekleşen farkın PARA-v3 ölçeğindeki ikizi. ÖLÇER, HÜKÜM VERMEZ; hiçbir kapıya girmez."""
+    ortak = {"birim": "PARA-v3 (shadowlaw.money_score / ret_c_v3)", "hukum_verir": False,
+             "karar_yontemi": karar.get("yontem"),
+             "kapsam": ("gerçekleşme tarafının İKİNCİ cetveli — `realized_delta` BİLEŞİK kalır ve "
+                        "geri-alma hükmünü o vermeye devam eder")}
+    bos = {**ortak, "olculdu": False, "delta_para": None, "cur_para": None, "par_para": None,
+           "span_days": None}
+    if karar.get("yontem") != LEGACY_YONTEM:
+        return {**bos, "neden": ("karar LIKE-FOR-LIKE replay çiftinden geldi; o çiftin işlem "
+                                 "listeleri bu katmanda YOK — canlı dilimlerden hesaplanacak bir "
+                                 "para farkı KARARIN ikizi olmazdı")}
+    if par_yedekten:
+        return {**bos, "neden": ("ebeveyn skoru YEDEKten geldi (par_trades < min_sample) — "
+                                 "ebeveynin işlem listesi yok, para tarafı ölçülemez")}
+    from . import shadowlaw
+    span = score_mod._span_days(list(cur_trades) + list(par_trades))
+    cur_para = shadowlaw.money_score(cur_trades, goal, span_days=span)
+    par_para = shadowlaw.money_score(par_trades, goal, span_days=span)
+    if cur_para is None or par_para is None:
+        return {**bos, "span_days": round(float(span), 1),
+                "neden": (f"money_score ölçülemedi (cur={cur_para}, par={par_para}) — bilinmeyen "
+                          f"skor sıfır sayılmaz")}
+    return {**ortak, "olculdu": True, "delta_para": round(float(cur_para) - float(par_para), 6),
+            "cur_para": cur_para, "par_para": par_para, "span_days": round(float(span), 1),
+            "neden": None}
+
+
+def _ikizi_yaz(detay: dict, cur_trades: list, par_trades: list, goal: dict, karar: dict,
+               par_yedekten: bool) -> dict:
+    """İkizi kayda koyar. `delta_para` ÜST DÜZEYdedir (tüketicisi `probgate` orada arar); ölçüm
+    kaydının geri kalanı `para_ikizi` bloğunda durur — değer İKİ yerde tutulmaz ki ayrışamasın."""
+    ikiz = _para_ikizi(cur_trades, par_trades, goal, karar, par_yedekten)
+    detay["delta_para"] = ikiz["delta_para"]
+    detay["para_ikizi"] = {k: v for k, v in ikiz.items() if k != "delta_para"}
+    return detay
+
+
 def _overturn_log(version: int, parent, ham_delta: float, karar: dict, wh: Optional[dict],
                   threshold: float) -> None:
     """SİMETRİK KIYAS GERİ ALMAYI ÇÜRÜTTÜ MÜ? Eski (asimetrik) kıyas "geri al" derken yenisi
@@ -121,6 +186,10 @@ def check_and_rollback(goal: Optional[dict] = None,
         return None  # not enough evidence yet — never roll back on noise
 
     par_trades = [t for t in trades if t.get("strategy_version") == parent]
+    # PARA İKİZİNİN ÖN KOŞULU (2026-08-03): ebeveyn skoru işlemlerden mi, YEDEKten mi geldi?
+    # Aşağıdaki yedek dallarından biri işlerse ebeveynin işlem listesi YOKTUR ve para tarafı
+    # ölçülemez — bayrak burada, karar dallarından ÖNCE donar.
+    _par_yedekten = len(par_trades) < int(goal["min_sample"])
     cur_score = score_mod.score(cur_trades, goal)
     par_score = score_mod.score(par_trades, goal) if len(par_trades) >= int(goal["min_sample"]) else None
 
@@ -174,6 +243,7 @@ def check_and_rollback(goal: Optional[dict] = None,
                                    ("verdict", "pencere", "would_have_skor", "canli_skor",
                                     "n_would_have", "n_canli", "cocuk_replay_skor",
                                     "motor_sapmasi", "neden")}
+        _ikizi_yaz(detay, cur_trades, par_trades, goal, karar, _par_yedekten)
         hyp = memory.writeback_outcome(version, realized_delta=karar["delta"],
                                        realized_detail=detay)
         if hyp:
@@ -309,6 +379,7 @@ def evaluate_outcomes(goal: Optional[dict] = None) -> Optional[dict]:
     if len(cur_trades) < int(goal["min_sample"]):
         return None
     par_trades = [t for t in trades if t.get("strategy_version") == parent]
+    _par_yedekten = len(par_trades) < int(goal["min_sample"])   # para ikizinin ön koşulu (bkz. _para_ikizi)
     cur_score = score_mod.score(cur_trades, goal)
     par_score = score_mod.score(par_trades, goal) if len(par_trades) >= int(goal["min_sample"]) else None
     if par_score is None and not ereg:           # scoreboard scores are GLOBAL — invalid vs a sliced cur
@@ -356,6 +427,7 @@ def evaluate_outcomes(goal: Optional[dict] = None) -> Optional[dict]:
                                ("verdict", "pencere", "would_have_skor", "canli_skor",
                                 "n_would_have", "n_canli", "cocuk_replay_skor",
                                 "motor_sapmasi", "neden")}
+    _ikizi_yaz(detay, cur_trades, par_trades, goal, karar, _par_yedekten)
     hyp = memory.writeback_outcome(version, realized_delta=delta, realized_detail=detay)
     if hyp and hyp.get("status") == "live":
         memory.update_status(hyp["id"], "live", market_regime=mreg)   # tag eval-window regime even on a neutral hold

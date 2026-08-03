@@ -47,6 +47,26 @@ META_FILE = "gate_calibration.json"
 META_MIN_N = 5             # bunun altında kanıt → ayar yok (gürültüyle eşik oynatılmaz)
 META_LOOKBACK = 8          # son bu kadar ölçülmüş ship'e bakılır
 
+# BİLEŞİK OLDUĞU **BİLİNEN** DAMGALAR — BEYAZ LİSTE (2026-08-03, Rol-1 kararı).
+# ESKİSİ: "damga GÜNCEL yasaya EŞİTSE atla" (`_law == shadowlaw.YASA_SURUMU`). O ölçüt yalnız
+# BUGÜNKÜ etiket için doğruydu: yasa etiketi bir gün `para_v4` olsaydı, `para_v3` damgalı bütün
+# satırlar sessizce yeniden BİLEŞİK gerçekleşmeyle bölünmeye başlardı — birim karışımı, hiçbir test
+# kırılmadan, tam olarak kapatıldığı biçimde geri gelirdi (dirilme-hatası sınıfı).
+# YENİSİ: ölçüt TERSİNE çevrildi. Sayılabilmek için damganın BİLEŞİK olduğu BİLİNMELİ. Bilinmeyen
+# bir damga "herhâlde bileşiktir" diye okunmaz; atlanır ve sayaçta ADIYLA görünür. Yeni bir yasa
+# sürümü geldiğinde varsayılan davranış SESSİZ KABUL değil, GÖRÜNÜR RET olur.
+#   None                — geçiş öncesi kayıt (damga alanı doğmamıştı) → bileşik
+#   "eski_bilesik_marj"  — açıkça eski yasa damgası → bileşik
+BILESIK_DAMGALAR: frozenset = frozenset({None, "eski_bilesik_marj"})
+
+# ÜÇ DURUM, ÜÇ FARKLI CÜMLE (2026-08-03). `extra_p = 0.0` bugüne kadar ÜÇ ayrı gerçeği aynı sayıyla
+# anlatıyordu: "ölçtüm, düzeltme gerekmedi" · "yeterli çift yok" · "çiftler var ama birim borcu
+# yüzünden sayılamıyor". Bir bekçi (watchdog.production_report) ilkini sağlık, ikincisini sabır,
+# üçüncüsünü ARIZA saymalı — ama üçü de aynı görünüyordu.
+DURUM_OLCULDU = "olculdu"                  # n ≥ META_MIN_N → extra_p gerçekten ölçüldü
+DURUM_KURAK = "kurak"                      # çift yetersiz ama mekanizma CANLI (atlanan yok)
+DURUM_ASKIDA = "askida_olcek_borcu"        # sayılamayan çift VAR — mekanizma askıda, kurak değil
+
 
 _META_WARNED = False
 
@@ -72,32 +92,55 @@ def refresh_meta_calibration() -> dict:
     """P5'te her döngü çağrılır. writeback_outcome'un ölçtüğü (predicted, realized) çiftlerinden
     medyan gerçekleşme oranını çıkarır; sistematik iyimserlikte extra_p yazar ve obs'a haber verir.
 
-    ÖLÇEK KARIŞIMI YASAĞI (PARA-v3, 2026-07-30 — bu tur eklendi). Oran `realized/predicted`'dır ve
-    İKİ TARAFIN AYNI BİRİMDE olmasına bağlıdır. Yasa geçişinden sonra bu artık kendiliğinden doğru
-    DEĞİL:
+    ÖLÇEK KARIŞIMI YASAĞI (PARA-v3, 2026-07-30). Oran `realized/predicted`'dır ve İKİ TARAFIN AYNI
+    BİRİMDE olmasına bağlıdır. Yasa geçişinden sonra bu kendiliğinden doğru DEĞİL:
         predicted_delta ← teyit diliminin ΔS'i, artık **PARA** ölçeğinde (`ret_c_v3`)
-        realized_delta  ← `rollback`ın canlı/ebeveyn skor farkı, HÂLÂ **BİLEŞİK** ölçekte
-    İkisini bölmek, birimleri farklı iki sayının oranını "gerçekleşme oranı" sanmaktı — ve bu tam
-    olarak "hata değil, MİKTAR DEĞİŞİMİ" sınıfı: hiçbir test kırılmaz, hiçbir istisna atılmaz, kapı
-    yalnız YANLIŞ yerde sıkışır ya da gevşer. σ(ΔS_v3)/σ(S_eski) ≈ 0,19 olduğundan oran sistematik
-    olarak ~5× ŞİŞERDİ → sahte bir "öngörüler fazlasıyla gerçekleşiyor" sinyali.
-    Bu yüzden çift, YALNIZ predicted tarafı realized tarafıyla AYNI ölçekteyse sayılır. Bugün bu,
-    geçiş ÖNCESİ kayıtlar demektir (damgası olmayan/`eski_bilesik_marj` olanlar). Mekanizmanın
-    PARA-v3 altında yeniden çalışması için `realized_delta`nın da para ölçeğinde ölçülmesi gerekir —
-    AÇIK ÖLÇÜM BORCU olarak çıktıda (`olcek_borcu`) ve ROADMAP'te yazılıdır. Bu arada davranış
-    MUHAFAZAKÂR: sayılabilir çift azalır, `extra_p` 0'a düşer, kapı taban çıtada (P_BASE) koşar."""
+        realized_delta  ← `rollback`ın canlı/ebeveyn skor farkı, **BİLEŞİK** ölçekte (ve öyle KALIR:
+                          geri-alma eşiği o birimde kalibre edildi)
+    İkisini bölmek, birimleri farklı iki sayının oranını "gerçekleşme oranı" sanmaktı — "hata değil,
+    MİKTAR DEĞİŞİMİ" sınıfı: hiçbir test kırılmaz, hiçbir istisna atılmaz, kapı yalnız YANLIŞ yerde
+    sıkışır ya da gevşer. σ(ΔS_v3)/σ(S_eski) ≈ 0,19 olduğundan oran ~5× ŞİŞERDİ.
+
+    PARA İKİZİ MEKANİZMAYI DİRİLTTİ (2026-08-03, Rol-1 kararı). 2026-07-30'un çözümü "para damgalı
+    çifti ATLA"ydı ve mekanizmayı muhafazakâr değil ÖLÜ yapıyordu: para_v3 altında hiçbir YENİ çift
+    sayılamıyor, `n_measured` META_MIN_N'e ulaşamıyor, `extra_p` sonsuza dek 0 kalıyordu — yani
+    sistematik iyimserliği cezalandıran emniyet sessizce kapalıydı. Artık `rollback` gerçekleşmenin
+    PARA ölçeğindeki ikizini de ölçüp `realized_detail.delta_para`ya yazıyor (hükme GİRMEZ) ve bu
+    fonksiyon her satırı KENDİ birimiyle eşleştiriyor:
+
+        damga ∈ BILESIK_DAMGALAR      → bileşik öngörü ÷ BİLEŞİK `realized_delta`
+        damga == shadowlaw.YASA_SURUMU → para öngörüsü ÷ PARA `realized_detail.delta_para`
+        damga BİLİNMİYOR               → SAYILMAZ (birim varsayılmaz), sayaçta adıyla görünür
+
+    Para ikizi ölçülemeyen satır (like-for-like replay yolu, ebeveyn yedekten geldi, min_sample
+    altı) da SAYILMAZ ve `atlama_dagilimi`nda görünür — ölçülemeyen bir sayı sıfır sayılmaz.
+    `extra_p` askıda/kurak durumda 0,0 KALIR; yer-tutucu bir ofset, ölçülmemiş bir eşik olurdu."""
     from . import store, obs, shadowlaw
     pairs, atlanan = [], 0
+    dagilim = {"para_ikizi_yok": 0, "bilinmeyen_damga": 0}
     for h in store.read_jsonl("hypotheses.jsonl"):
         pd_, rd_ = h.get("predicted_delta"), h.get("realized_delta")
         if pd_ is None or rd_ is None or abs(float(pd_)) < 1e-9 or float(pd_) <= 0:
             continue
         # predicted tarafının yasası: teyit diliminin damgası (yoksa geçiş öncesi = bileşik)
         _law = (h.get("backtest") or {}).get("confirm_yasa_surumu")
-        if _law == shadowlaw.YASA_SURUMU:
-            atlanan += 1          # PARA öngörüsü ÷ BİLEŞİK gerçekleşme = birim karışımı → sayılmaz
+        if _law in BILESIK_DAMGALAR:
+            pairs.append(float(rd_) / float(pd_))         # bileşik ÷ bileşik
             continue
-        pairs.append(float(rd_) / float(pd_))
+        if _law != shadowlaw.YASA_SURUMU:
+            # BİLİNMEYEN DAMGA: öngörünün birimi BİLİNMİYOR. "Herhâlde paradır" demek, yeni bir
+            # yasa sürümünün ilk gününde birim karışımını sessizce geri getirirdi.
+            atlanan += 1
+            dagilim["bilinmeyen_damga"] += 1
+            continue
+        _dp = (h.get("realized_detail") or {}).get("delta_para")
+        if _dp is None:
+            # PARA damgalı ama ikiz ÖLÇÜLEMEMİŞ (geçiş öncesi writeback ya da ölçülemez yol).
+            # `realized_delta` ile bölmek tam olarak yasaklanan karışım olurdu.
+            atlanan += 1
+            dagilim["para_ikizi_yok"] += 1
+            continue
+        pairs.append(float(_dp) / float(pd_))             # para ÷ para
     pairs = pairs[-META_LOOKBACK:]
     n = len(pairs)
     med = float(np.median(pairs)) if n else None
@@ -107,17 +150,33 @@ def refresh_meta_calibration() -> dict:
             extra = 0.05
         elif med < 0.5:
             extra = 0.02
+    # DURUM: "ölçtüm" · "kanıt birikmedi" · "birim borcu yüzünden sayamıyorum" AYRI cümlelerdir.
+    durum = (DURUM_OLCULDU if n >= META_MIN_N else (DURUM_ASKIDA if atlanan else DURUM_KURAK))
     prev = store.read_json(META_FILE, {})
     out = {"extra_p": extra, "median_ratio": round(med, 4) if med is not None else None,
            "n_measured": n, "rule": f"son {META_LOOKBACK} ship, medyan<0.25→+0.05, <0.5→+0.02",
            "olcek_karisimi_atlanan": atlanan,
-           "olcek_borcu": ("realized_delta BİLEŞİK ölçekte ölçülüyor (rollback), predicted_delta ise "
-                           "PARA-v3 ölçeğinde — para ölçeğinde öngörüler bu mekanizmaya ANCAK "
-                           "realized tarafı da para ölçeğinde ölçüldüğünde girebilir"
+           "atlama_dagilimi": dagilim,
+           "durum": durum,
+           "durum_beyan": {
+               DURUM_OLCULDU: (f"ÖLÇÜLDÜ — {n} çift (≥{META_MIN_N}); extra_p bu medyandan türedi"),
+               DURUM_KURAK: (f"KURAK — {n} çift var, eşik {META_MIN_N}. Mekanizma CANLI ve birim "
+                             f"borcu yüzünden atlanan satır YOK; eksik olan yalnız kanıt birikimi. "
+                             f"extra_p=0,0 'düzeltme gerekmedi' DEĞİL 'henüz ölçülemedi' demektir"),
+               DURUM_ASKIDA: (f"ASKIDA — {atlanan} çift birim borcu yüzünden SAYILAMADI "
+                              f"({dagilim}). Bu KURAKLIK DEĞİLDİR: çift üretiliyor ama "
+                              f"eşleştirilemiyor; extra_p=0,0 bir ölçüm sonucu değil, ölçümün "
+                              f"YAPILAMADIĞININ kaydıdır"),
+           }[durum],
+           "olcek_borcu": ("bu satırlarda öngörü tarafı PARA-v3 ölçeğinde ama gerçekleşmenin para "
+                           "ikizi (realized_detail.delta_para) YOK ya da damganın birimi bilinmiyor "
+                           "— bileşik `realized_delta` ile bölmek birim karışımı olurdu; "
+                           "ikizi rollback._para_ikizi yazar ve ölçülemediğinde nedenini beyan eder"
                            if atlanan else None)}
     store.write_json(META_FILE, out)
-    if extra != float(prev.get("extra_p", 0.0)):
-        obs.log("gate_meta_calibration", extra_p=extra, median_ratio=out["median_ratio"], n=n)
+    if extra != float(prev.get("extra_p", 0.0)) or durum != prev.get("durum"):
+        obs.log("gate_meta_calibration", extra_p=extra, median_ratio=out["median_ratio"], n=n,
+                durum=durum, atlanan=atlanan)
     return out
 
 

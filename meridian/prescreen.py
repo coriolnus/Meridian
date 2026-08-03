@@ -70,6 +70,7 @@ sınırları kodda dar tutulur:
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import pathlib
 import shutil
@@ -222,6 +223,13 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     # ortasında checkout yapılırsa iki rapor iki farklı SHA gösterirdi), hem de aday başına bir
     # `git` alt süreci koşmayalım.
     damga = olcum_araclari.kod_surumu_damgasi()
+    # ÜRETİM ZAMANI, DAMGANIN İKİNCİ YARISI (WP-M, 2026-08-03). SHA "hangi kod" sorusunu
+    # cevaplıyordu; "NE ZAMAN" sorusunun cevabı hâlâ raporun DIŞINDAYDI (dosya mtime'ı — kopyalanan,
+    # rsync'lenen, arşivden çıkarılan bir raporda mtime YENİDEN YAZILIR ve sessizce yalan söyler).
+    # Aynı SHA'da iki kez koşulmuş bir ön-eleme de yalnız SHA ile ayırt edilemez. Damgayla AYNI ANDA
+    # ve TEK KEZ donar (kısmi + nihai rapor aynı koşuyu adlandırsın); koşunun bitişi `sure_s` ile
+    # zaten yeniden kurulabildiği için ikinci bir bitiş damgası yazılmaz.
+    uretim_zamani = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     before = live_fingerprint(live)
     state = _sandbox(workdir, live)
     (workdir / FINGERPRINT_DOSYA).write_text(json.dumps({"before": before}))
@@ -265,8 +273,13 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             gecerli.append(a)
         log(f"[guard] {a['key']}  {'GEÇTİ' if not nedenler else 'RED ' + str(nedenler)}")
     if not gecerli:
+        # BAŞARISIZ KOŞU DA DAMGALANIR (WP-M, 2026-08-03): bu dal `kuyruk_geri_yaz`ın hata yoluna
+        # gider ve kuyrukta kalıcı bir satır bırakır. Damgasız bırakmak, "hangi bounds/kod hâlinde
+        # reddedildi?" sorusunu cevapsız bırakırdı — guard redleri tam olarak kod/bounds değişince
+        # anlam değiştiren kayıtlardır.
         return {"hata": "guard_hepsini_reddetti", "reddedilen": reddedilen,
-                "n_denenen": len(adaylar)}
+                "n_denenen": len(adaylar),
+                "kod_surumu": damga, "uretim_zamani": uretim_zamani}
 
     # K_PROBES BURADA DONDURULUR — `--resume` bu sayıyı DEĞİŞTİRMEZ (modül başlığı, kural 3).
     # Guard'ın reddettikleri sayılmaz: onlar kapıya hiç YOKLAMA göndermedi.
@@ -296,7 +309,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             {"incumbent": {"version": ver, "oos_score": inc["oos_score"], "n": inc_n,
                            "folds": [f.get("n") for f in inc["oos_folds"]]},
              "k_probes": k_probes, "adaylar": adaylar, "kalan": kalan,
-             "kod_surumu": damga},
+             "kod_surumu": damga, "uretim_zamani": uretim_zamani},
             indent=1, ensure_ascii=False))
 
     sonuc = []
@@ -410,6 +423,9 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         # İÇİNDE durur. Git yoksa/başarısızsa alan None + neden'dir (UYDURMA YASAĞI) — rapor yine
         # üretilir, çünkü damga bir ÖLÇÜM değil bir KİMLİKTİR ve yokluğu ölçümü geçersizleştirmez.
         "kod_surumu": damga,
+        # ÜRETİM ZAMANI (UTC, koşu BAŞLANGICI — damgayla aynı anda dondu). `sure_s` ile birlikte
+        # koşunun penceresi rapordan yeniden kurulur; dosya mtime'ına güvenmek gerekmez.
+        "uretim_zamani": uretim_zamani,
         "workdir": str(workdir), "sure_s": round(time.time() - t0, 1),
     }
     (workdir / SONUC_DOSYA).write_text(json.dumps(rapor, indent=1, ensure_ascii=False))
@@ -430,13 +446,23 @@ def kuyruk_ozeti(rapor: dict) -> dict:
     (bileşik `delta` yalnız rapor metriğidir ve tek başına yazılırsa okuyucu onu hüküm sanır);
     `motor_isliyor` "düğme replay motorunda ölü mü" ön koşulu — False ise 'geçmedi' bir ÇÜRÜTME
     DEĞİLDİR; `pencere_id` habersiz kıyas yasağının taşıyıcısı (R0 sayısıyla R1 sayısı yan yana
-    konamaz); `why` reddin gerekçesi. Ölçülemeyen alan None kalır ve None "0" demek DEĞİLDİR."""
+    konamaz); `why` reddin gerekçesi. Ölçülemeyen alan None kalır ve None "0" demek DEĞİLDİR.
+
+    KOD KİMLİĞİ ÖZETE DE GİRER (WP-M, 2026-08-03): tam damga (`kod_surumu`) `workdir`de kalır ama
+    kuyruk satırını okuyan (pano/analytics) "bu sonuç hangi kodla, ne zaman üretildi?" sorusunu
+    workdir'e gitmeden cevaplayabilmeli — kum havuzu silinmiş olabilir, satır kalıcıdır. Bu yüzden
+    KISA sha + üretim zamanı özete kopyalanır; git ölçülemediyse alan None'dır (damganın kendi
+    `git_neden`i tam raporda durur, burada tahmin yazılmaz)."""
     adaylar = rapor.get("adaylar") or []
+    _damga = rapor.get("kod_surumu") or {}
     return {
         "n_aday": len(adaylar),
         "k_probes": rapor.get("k_probes"),
         "workdir": rapor.get("workdir"),
         "sure_s": rapor.get("sure_s"),
+        "uretim_zamani": rapor.get("uretim_zamani"),
+        "kod_surumu_kisa": _damga.get("git_head_kisa"),
+        "kirli_agac": _damga.get("kirli_agac"),
         "pencere_id": (rapor.get("pencereler") or {}).get("pencere_id"),
         "adaylar": [{"knobs": a.get("knobs"), "passes": a.get("passes"),
                      "motor_isliyor": a.get("motor_isliyor"),
