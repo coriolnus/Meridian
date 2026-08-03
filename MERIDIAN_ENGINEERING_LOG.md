@@ -382,6 +382,17 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**KARNE-TAZELEME TURU (2026-08-03 ~11:20-13:05 UTC; operatör sorusu "backfill eski veriyle
+dönüyor, kâr-soru güncellensin"):** kardeş-PIT söküldü (cf_backfill tamamen tarihsel — çağrı+import
+gitti; shadow_variants _CANLI_TUR çapası — canlı EOD kapısı KORUNDU, seed bacağı olculemedi_seed;
+16 test) → determinizm-kapılı tazeleme ölçümü: GERİYE-DÖNÜK DEFTER TERSİNE DÖNDÜ — replay net
++2.493$→−1.182$, PARA-v3 0,1605→−0,0037, oos 0,0579→0,0196, n 201→147. TEK-DEĞİŞKEN ATIF: farkın
+TAMAMI E1 giriş-limitinin ATR bacağı (dolum 237→176); replay-PIT 1-plan/0-skor, ısı-5R 0, diğerleri
+yapısal 0. OKUMA: eski artı replay-dolum iyimserliğiydi; canlı-0,97-vs-Search-1,53 uyumsuzluğunun
+ana açıklaması. HÜKÜM: WP-E 🔴 en-öncelikli ölçüm (E1 grid'i BT-1 beklemez — 9b2cef4). Suite 0
+kırmızı → dagit 13:04, canlı md5-doğrulamalı (cf_backfill özdeş; in_blackout yalnız yorumda).
+Salt-ölçüm kanıtı: state parmak-izi 608-dosya/0-fark.
+
 **AÇIK-WP UYGULAMA DALGASI (2026-08-03 ~06:30-10:10 UTC, Rol-1 + 5 Opus ajanı; operatör mandası
 "açık bütün WP'leri uygula"):** 12 commit, suite SIFIR kırmızı (donmuş ağaç), dagit --uygula 10:03,
 bakım penceresinde OPS_NOTU fikstür-temizliği (TEST,2025-06-24 satırı düştü 195→194; takvim-yüklemi
