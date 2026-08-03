@@ -88,7 +88,18 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 ### WP0 — Keşif ve Uyum Matrisi ✅ (2026-07-31; 14 mekanizma kanıtlı; en riskli 3 boşluk: iki-motor
 icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
 
-### WP-E — İcra Gerçekliği 🕐 (BT-1 kolu inince başlar; kart: EXE-2026-001)
+### WP-E — İcra Gerçekliği 🔴 ÖNCELİK YÜKSELDİ (2026-08-03 karne-tazeleme bulgusu; kart: EXE-2026-001)
+- **BULGU (research/olcumler/karne_tazeleme_2026-08-03/):** güncel motorla geriye-dönük defter
+  TERSİNE DÖNDÜ — replay net +2.493$→−1.182$, PARA-v3 0,1605→−0,0037, oos 0,0579→0,0196, n 201→147.
+  TEK-DEĞİŞKEN ATIF: farkın TAMAMI E1 giriş-limitinin ATR bacağı (dolum 237→176; limit daralınca
+  kaçan dolumlar kârlı girişler). Diğer adaylar ölçülüp elendi: replay-PIT 1 plan/0 skor · ısı-5R
+  0 · fail-closed/turnover/kardeş-PIT yapısal 0. OKUMA: eski artı büyük ölçüde replay-dolum
+  iyimserliğiydi; canlı-ödeme-0,97-vs-Search-1,53 payda-uyumsuzluğunun ana açıklaması bu (E4
+  sorusunun yarısı kapandı). E1 varsayılan noktası (0,5·ATR, %1 tavan) ÖLÇÜLMEMİŞ bir seçimdi ve
+  defteri çeviriyor → E1 grid ölçümü (0,25/0,005 · 0,5/0,01 · 1,0/0,015 + limitsiz-MOO kolu)
+  programın EN ÖNCELİKLİ ölçümü; BT-1 beklemesi bu kalem için KALKTI (operatör "katı kural yok"
+  mandası; kart EXE-2026-001 grid'i zaten ön-kayıtlı). Şerhler raporda (bars_integrity dışlaması
+  yok · survivorship · +0,018 replay-iyimserliği · cf-sadakat +0,039R).
 - E1 iki-motor mutabakatı (iç MOO-tarzı vs ayna buy-stop GTC + gap-red kökü) + marketable stop-limit
   grid + gap-risk vetosu · E2 slipaj defteri (yüzey hazır, E1'e bağlı) · E3 kötümser maliyet bandı
   (açılış-spread ~20bps) → PARA-v3 net-kötümser sütun · E4 gece/gündüz PnL ayrıştırması (join;
