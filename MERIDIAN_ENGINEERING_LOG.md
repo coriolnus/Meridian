@@ -382,6 +382,19 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**E1 KARARI CANLIDA (2026-08-03 ~16:30 UTC; operatör "önerin neyse uygula"):** E1 grid ölçümü
+aynı gün koşuldu (EXE-2026-001 → measured; kanıt e1_grid_2026-08-03/; determinizm çift-kapılı):
+limit-bacağı MONOTON ZARARLI (A −7,2k · B −1,2k · C −2,9k$), tek artı kolon LİMİTSİZ
+(+2.957$/+1.959$-E3), kaçanlar sistematik kazanan; gap-bacağı replay'de yapısal-ölçülemez (canlı/
+gölge noktaları kayıtlı); skor-para ayrışması (PARA-v3 C>B, net$ B>C) kayıtlı — hüküm $-merceği.
+KARAR: execution_v2 100·ATR/%4 (=MAX_ENTRY_GAP_PCT dış zarfı; felaket-gap koruması kalır, bağlayan
+taraf artık dış zarf) + GERİ-DÖNÜŞ KAPISI dosyada (canlı-para geçişi E2 kanıtıyla yeniden hüküm
+ŞARTI). 14 test-çivisi iki ilkeyle süpürüldü (mekanizma=kart-yasası-override; yürürlük=yeni-olgu;
+2 dürüst ad-değişimi). Suite SIFIR kırmızı → dagit 16:27, goal.yaml bayt-özdeş kopyalandı, CANLI
+YASA DOĞRULANDI (entry_law: 100.0/0.04/marketable/day). BEKLENEN: yarınki açılıştan itibaren
+girişler zarf-içi koşulsuz dolar; entry_execution.jsonl (E2) İLK GERÇEK satırlarını yazar — izleme
+kalemi: ilk seans sonrası E2 defteri doğrulaması.
+
 **KARNE-TAZELEME TURU (2026-08-03 ~11:20-13:05 UTC; operatör sorusu "backfill eski veriyle
 dönüyor, kâr-soru güncellensin"):** kardeş-PIT söküldü (cf_backfill tamamen tarihsel — çağrı+import
 gitti; shadow_variants _CANLI_TUR çapası — canlı EOD kapısı KORUNDU, seed bacağı olculemedi_seed;
