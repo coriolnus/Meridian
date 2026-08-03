@@ -374,6 +374,23 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**AÇIK-WP UYGULAMA DALGASI (2026-08-03 ~06:30-10:10 UTC, Rol-1 + 5 Opus ajanı; operatör mandası
+"açık bütün WP'leri uygula"):** 12 commit, suite SIFIR kırmızı (donmuş ağaç), dagit --uygula 10:03,
+bakım penceresinde OPS_NOTU fikstür-temizliği (TEST,2025-06-24 satırı düştü 195→194; takvim-yüklemi
+canlıda None=sağlıklı; max_date 2026-08-13 — tazeleme dağıtım-sonrası kendiliğinden koşdu, WP-K
+izleme kalemi kapandı). KAPANANLAR: EDG-021 ölçüldü+hükümlü (kill#1 ŞÜPHEDE dalı; survivorship-yönü
+ilk sayı: hayatta +0,54 vs delist −1,46 @20) · WP2 turnover-kablolama doğrulama-kapanış (5dfca07
+zaten sevkti; default-0 bit-bit çivisi) · WP-M TAMAMI (probgate ÖLÜ-emniyet dirildi: para-ikizi +
+damga beyaz-listesi + durum-alanı; DD-veto ölçülü-oran; prescreen zaman-damgası) · WP-D çekirdeği
+(BULGU-1 teyit-tam %77-düzeltmesiyle; bars_integrity zaten-sevk teyidi 98/61; earnings TAKVİM-düzeyi
+fail-closed A1+A2 — 25-Tem 251-sembol-geçirgen sınıfı yapısal kapalı; replay-PIT ihlali söküldü) ·
+WP-H (dev-grubu DARALT-GÜVENLİ + dagit [0d] kapısı + [3] koşum-anı bayrak; H9-B flock-kapıya-indi +
+write_text; dash-token LoadCredential hazır-beklemede + api.py CREDENTIALS_DIRECTORY okuyucusu;
+certifi beyanı). AÇIK BİLETLER: cf_backfill.py:112 + shadow_variants.py:252 kardeş-PIT ·
+hermes ship_calibration askıda-farkındalığı · kapı-dışı yazım 4+7 yol taşıması · dataset.load↔
+bars_integrity (OPERATÖR) · token faz-1/2 etkinleştirme (OPERATÖR) · EDG-021 ikinci-koşum
+tanım-eşitleme (OPERATÖR).
+
 **PAZARTESİ-ÖNCESİ PENCERE (2026-08-03 04:20-04:23 UTC, Rol-1):** otoriter suite SIFIR kırmızı →
 dagit --uygula (state adımı: `limits.heat_hard_r` 4,5→5,0 CANLIYA kopyalandı — operatör kararı
 d01ccb5 artık motorda) → **TICK-WATCHDOG DİRİLDİ**: birimler /etc'ye, timer `active`, üç-ayaklı
