@@ -241,8 +241,8 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   2D R2 holdout rotasyonu (zamanı gelince) · A4 tahmin-isabeti bandı · KIYAS-KİRLENMESİ düzeltmesi
   (olay-penceresi-dışı kıyas — EAP yan bulgusu; tüm evren-medyanı ölçümleri etkileniyor) ·
   prescreen raporlarına kod-sürümü damgası · PK4/PK5 yol-tutarlılık kontrolleri ölçüm-şablonu
-  standardı · K-defteri↔kart senkronu (retro kartlar) · canlı-beklenti tavanı backtest×0,5 ve
-  <×0,4 süspansiyon kuralının config'e bağlanması · Chen-2022 t-hurdle dengeleme notu (K-cezası
+  standardı · K-defteri↔kart senkronu (retro kartlar) · ~~canlı-beklenti tavanı config'e bağlama~~ (2026-08-03 TEYİT: 5fe0c1e'de ZATEN kablolu —
+  config.live_expectancy_rule + analytics.live_expectancy_ceiling → pano; kayıt bayattı) · Chen-2022 t-hurdle dengeleme notu (K-cezası
   kalibrasyonu — gevşetme değil referans).
 
 ### WP-D — Veri Bütünlüğü 🔄
