@@ -153,7 +153,60 @@ class _NativeRoute(APIRoute):
 app.router.route_class = _NativeRoute
 
 WEB = Path(__file__).resolve().parent / "web"
-DASH_TOKEN = os.environ.get("MERIDIAN_DASH_TOKEN")  # required to reach the API over a network origin
+
+# ---- PANO TOKEN'I: systemd CREDENTIAL KANALI → ORTAM KANALI (WP-H/H3 tur-3, 2026-08-03) ---------
+CRED_DOSYA_ADI = "dash_token"  # `LoadCredential=dash_token:/etc/meridian/dash_token` ile aynı ad
+
+
+def _read_dash_token() -> str | None:
+    """Pano token'ını ÖNCE systemd credential dizininden, YOKSA ortamdan okur.
+
+    NEDEN İKİ KANAL (ve neden credential ÖNCE): `MERIDIAN_DASH_TOKEN` bugün süreç ORTAMINDA
+    duruyor, ve bu depoda ortam çocuklara AKAR — `serve.sh` uvicorn'u `env=os.environ` ile,
+    `hermes_composite` ajan alt süreçlerini devralınan ortamla doğurur. Yani token, pano
+    sürecinin VE her LLM ajan sürecinin `/proc/<pid>/environ`ında okunur hâlde. systemd'nin
+    `LoadCredential=`i sırrı ortama HİÇ koymaz: PID 1 olarak (sandbox'tan ÖNCE) okur,
+    `$CREDENTIALS_DIRECTORY` altına 0400 bir tmpfs dosyası bırakır, süreç bitince siler.
+    Gerekçenin tamamı: deploy/oracle-a1/meridian.service.d/50-dash-credential.conf.
+
+    İKİ KANAL AYNI ANDA CANLI OLABİLİR (geçişin faz 1'i) — o hâlde credential KAZANIR, çünkü
+    geçişin yönü ortamdan credential'a doğrudur; tersi, faz 2'de ortam kanalı kapandığında
+    davranışın SESSİZCE değişmesi demek olurdu.
+
+    BİÇİM TOLERANSI: credential kaynağı sözleşmede ÇIPLAK değerdir (`LoadCredential` dosyanın
+    TAMAMINI değer olarak taşır), ama operatörün `.dash.env` alışkanlığı `MERIDIAN_DASH_TOKEN=...`
+    biçimidir ve o dosyanın credential yoluna kopyalanması ÖNGÖRÜLEBİLİR bir kaza. Önek sessizce
+    yutulmaz, TANINIR: aksi hâlde token "ayarlı" görünür, kimlik doğrulaması hep 401 döner ve
+    operatör arızayı ağda arar. Aynı hoşgörü `dash_token_credential.sh::_token_oku`da da var —
+    iki taraf aynı biçimi kabul eder.
+
+    HİÇBİRİ YOKSA `None`: mevcut zorunlu-token kapısı (`_auth_posture_check` uyarısı ve
+    `_auth`ın no-op dalı) BİREBİR korunur. Bu okuyucu bir kanal ekler, bir yasa değiştirmez.
+    """
+    kdir = os.environ.get("CREDENTIALS_DIRECTORY")
+    if kdir:
+        try:
+            ham = (Path(kdir) / CRED_DOSYA_ADI).read_text(encoding="utf-8")
+        # Kanal GERÇEKTEN zorunluyken sessiz kalmayan yer systemd'nin KENDİSİDİR: `LoadCredential=`
+        # kaynak dosyası yoksa birim HİÇ başlamaz. Yani buradaki sessizlik bir arızayı gizlemez —
+        # gizleyebileceği tek durum "bu kurulumda credential kanalı yok"tur, ve onun doğru yanıtı
+        # zaten ortam kanalına düşmektir.
+        # sessiz-yutma: credential kanalı isteğe bağlı — dosya-yok/izin/kodlama hatası "bu kurulumda o kanal yok" demektir, ortama düşmek bugünkü davranışı birebir korur
+        except (OSError, ValueError):
+            ham = ""
+        # ÖNCE `strip()` SONRA ilk satır: `LoadCredential` dosyanın TAMAMINI taşır, sondaki yeni
+        # satır serbesttir (kaynağı `printf '%s\n'` yazıyor) — kırpılmazsa token'a görünmez bir
+        # `\n` yapışır ve `hmac.compare_digest` hep yanlış döner (en sinsi "ayarlı ama çalışmıyor").
+        satirlar = ham.strip().splitlines()
+        deger = satirlar[0].strip() if satirlar else ""
+        if deger.startswith("MERIDIAN_DASH_TOKEN="):
+            deger = deger[len("MERIDIAN_DASH_TOKEN="):].strip()
+        if deger:
+            return deger
+    return os.environ.get("MERIDIAN_DASH_TOKEN")
+
+
+DASH_TOKEN = _read_dash_token()  # required to reach the API over a network origin
 
 # Cross-origin access — OFF unless MERIDIAN_CORS_ORIGINS is set (comma-separated origins, or "*"). Lets a
 # frontend on ANOTHER origin (e.g. a local dashboard) call this agent's API. Only meaningful with a token.

@@ -16,6 +16,16 @@ dependencies = [
     "jinja2>=3.1",
     "websockets>=16.1",
     "redis>=8.0.1",
+    # BEYAN-DIŞI BAĞIMLILIK KAPATILDI (2026-08-03): `streamhealth._ssl_context` certifi'yi
+    # OPSİYONEL olarak import eder (ImportError → sistemin varsayılan CA bağlamı). Bugüne dek
+    # ÇALIŞIYORDU çünkü httpx→httpcore certifi'yi DOLAYLI çekiyor — yani TLS doğrulamamız başka
+    # bir paketin bağımlılık ağacına yaslanmıştı. httpx bir gün certifi'yi bırakırsa (ya da onu
+    # çekmeyen bir yolda kurulum yapılırsa) import sessizce düşer, `except ImportError` dalı
+    # devreye girer ve macOS framework Python'da CA'sız bir bağlamla akış TLS'i BOZULUR — hata
+    # "certifi yok" demez, bağlantı hatası gibi görünür. Bağımlılık DOLAYLI değil BEYANLIDIR.
+    # (streamhealth.py'ye dokunulmadı: opsiyonel import doğru davranıştır — bu satır onu
+    #  "opsiyonel ama garanti kurulu" hâline getirir.)
+    "certifi>=2024.7.4",
 ]
 
 [project.optional-dependencies]
