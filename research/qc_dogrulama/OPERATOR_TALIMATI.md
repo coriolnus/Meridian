@@ -1,5 +1,32 @@
 # EDG-2026-021 · OPERATÖR TALİMATI — QC doğrulama defterini koşturma (defter v2)
 
+## §0 — CANLI DURUM (2026-08-03 ~12:05 UTC, Rol-1 oturumu bıraktı)
+
+**QC projesi:** `Fat Apricot Koala` (id 34763939), Research notebook `research.ipynb`, çekirdek
+`Foundation-Py-Default` seçili ve çalışıyor.
+
+**YÜKLENMİŞ:** `defter_021.py` = v3 **parça A** (327 satır, kaydedildi/derlendi).
+**YÜKLENMEMİŞ:** parça B (`qc_defter_021_b.py`, 25.746 kr) ve parça C (`qc_defter_021_c.py`, 22.451 kr).
+**KİRLİ:** notebook'ta v2 turundan kalma hücreler + 4 sonda hücresi var — koşumdan ÖNCE silinmeli
+(ya da `Restart` + yalnız yeni hücreler koşulmalı).
+
+### Kalan üç adım (~3 dakika)
+1. QC IDE'de iki dosya oluştur (⌘⇧P → *Create: New File*): `defter_021b.py` ve `defter_021c.py`;
+   her birine yereldeki `qc_defter_021_b.py` / `_c.py` içeriğini yapıştır + ⌘S.
+   *(Dikkat: dosya-adı diyaloğu AÇIKKEN ⌘V basma — yapıştırma ad alanına gider. Önce OK'a bas.)*
+2. Notebook'taki TÜM hücreleri sil, tek hücre bırak ve şunu koy:
+   ```python
+   for _p in ("", "b", "c"):
+       exec(open(f"defter_021{_p}.py").read(), globals())
+   ```
+3. **Run All.** Beklenen: mini-sonda satır sayısı basar → panel dilimleri → PK → ölçüm → sonda
+   JSON. Sonucu `<<<SONUC_021_JSON_BASLANGIC>>>` ve `<<<SONUC_021_JSON_SON>>>` işaretleri ARASINDAN
+   kopyalayıp `research/olcumler/qc_dogrulama/sonuc_021.json` olarak kaydet (ya da sohbete yapıştır).
+
+**Mini-sonda 0 satır derse:** DUR metnindeki kontrol listesini izle — `QB_PANEL` taze mi, üzerinde
+`add_equity`/`set_start_date` çağrıldı mı. (Bu kural v2'nin canlı arızasının kök nedeniydi;
+bkz. `QC_API_ZEMIN_GERCEGI.md` "EK ÖLÇÜM".)
+
 > ⚠️ **v3 GÜNCELLEMESİ (2026-08-03) — bu belgenin §2/§3/§7 adımları BAYAT.**
 > Defter artık TEK dosya değil ÜÇ dosya (QC `.py` başına 32.000 karakter sınırı — ölçüldü):
 > `qc_defter_021_a.py` (15.708) · `_b.py` (25.746) · `_c.py` (22.451). Projeye üçü de yüklenir,
