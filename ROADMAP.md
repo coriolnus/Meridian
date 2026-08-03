@@ -232,12 +232,17 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   (peak_equity/derisk/açık pozisyonlar) kirletir; bundan böyle knob ölçümlerinde knob'u
   oos_start'ta devreye alan kol zorunlu (kanıt: EDG-005 tanısı — oosonly≡kapali bit-bit).
 - ~~PARA-v3 ①②~~ ✅ (①: 2026-08-01 + zincir-çivisi v178; ②: 2026-08-02 kapı-bacağı — ölçülür,
-  veto-bağlamaz [MERIDIAN_DD_MTM_VETO kapalı; bağlama = M2M-σ ölçüm kartı]). KALAN üç kayıt:
-  (i) probgate.refresh_meta_calibration birim-karışımı (PARA-öngörü÷BİLEŞİK-gerçekleşme → her
-  çift atlanan; rollback/memory dokunuşu + extra_p kararı — KARAR TURU); (ii) İZLEME: canlı
-  gate_calibration.json bayat (olcek_borcu anahtarları yok — 07-30'dan beri koşmamış olabilir);
-  (iii) DD_VETO_MARGIN'in raporda mutlak-eşik gibi okunması (goal.max_drawdown=0.08 ile ilişkisi
-  bir cümleyle netleşmeli) + ledgers.py:226 sözleşme cümlesine dd_mtm_* notu. · 2B blok-bootstrap CI standardı · 2C empirical-Bayes küçültme ·
+  veto-bağlamaz [MERIDIAN_DD_MTM_VETO kapalı; bağlama = M2M-σ ölçüm kartı]). ÜÇ KAYIT DA KAPANDI (2026-08-03 uygulama dalgası):
+  (i) ✅ probgate birim-karışımı — teşhis: mekanizma muhafazakâr değil ÖLÜYDÜ (para-v3 altında
+  yeni çift sayılamaz, extra_p yapısal 0). Rol-1 kararı SEÇENEK-1: rollback para-ikizi
+  (realized_detail.delta_para, tek payda span; hüküm BİLEŞİK kaldı — eşik satırı çivili) +
+  damga BEYAZ-LİSTESİ (bilinmeyen damga sayılmaz — para_v4-dirilme sınıfı ölü, negatif testli)
+  + durum alanı {olculdu/kurak/askida_olcek_borcu} (extra_p askıda/kurakta 0,0 kalır); watchdog
+  askıda≠starved ayrımı. 17 yeni test + 169 regresyon. AÇIK KUYRUK: hermes.py:644 ship_calibration
+  askıda-durumu beyne taşımıyor (ayrı tur). (ii) ✅ canlı gate_calibration izlemesi — yeni koşumda
+  durum alanıyla kendini beyan eder. (iii) ✅ DD_VETO_MARGIN okuma netliği — ledgers sözleşme notu
+  (dd_mtm_* ailesi dahil) + analytics._dd_veto_okumasi ölçülü-oran (marj/tavan her çağrıda; mutlak
+  çıpa goal.max_drawdown) → pano YASA-6 zinciri api.py:2279. · 2B blok-bootstrap CI standardı · 2C empirical-Bayes küçültme ·
   2D R2 holdout rotasyonu (zamanı gelince) · A4 tahmin-isabeti bandı · KIYAS-KİRLENMESİ düzeltmesi
   (olay-penceresi-dışı kıyas — EAP yan bulgusu; tüm evren-medyanı ölçümleri etkileniyor) ·
   prescreen raporlarına kod-sürümü damgası · PK4/PK5 yol-tutarlılık kontrolleri ölçüm-şablonu
