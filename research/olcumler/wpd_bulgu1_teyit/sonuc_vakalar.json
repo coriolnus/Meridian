@@ -1,0 +1,409 @@
+{
+  "sandbox_state": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/wpd_sandbox/state",
+  "vakalar": [
+    {
+      "ticker": "GILD",
+      "tarih": "2013-12-18",
+      "diskte_var": true,
+      "ham_satir": {
+        "date": "2013-12-18",
+        "open": 144.64,
+        "high": 147.36,
+        "low": 141.28,
+        "close": 147.2,
+        "volume": 8953730.0
+      },
+      "defter_bar": 5678,
+      "komsular": [
+        {
+          "date": "2013-12-16",
+          "open": 71.84,
+          "high": 72.48,
+          "low": 71.2,
+          "close": 71.52,
+          "volume": 12025395.0
+        },
+        {
+          "date": "2013-12-17",
+          "open": 71.84,
+          "high": 71.84,
+          "low": 69.12,
+          "close": 70.08,
+          "volume": 12247531.0
+        },
+        {
+          "date": "2013-12-18",
+          "open": 144.64,
+          "high": 147.36,
+          "low": 141.28,
+          "close": 147.2,
+          "volume": 8953730.0
+        },
+        {
+          "date": "2013-12-19",
+          "open": 73.12,
+          "high": 74.88,
+          "low": 72.96,
+          "close": 73.44,
+          "volume": 10040702.0
+        },
+        {
+          "date": "2013-12-20",
+          "open": 73.92,
+          "high": 75.2,
+          "low": 73.76,
+          "close": 74.72,
+          "volume": 14893352.0
+        }
+      ],
+      "olculen": {
+        "r": 2.1005,
+        "back": 0.4989,
+        "drr": 0.0479,
+        "kademe": "1_strict",
+        "hacim": 8953730.0,
+        "onceki_hacim": 12247531.0,
+        "hacim_oran": 0.7311,
+        "recip_|r*vr-1|": 0.5356,
+        "medyan_hacim_63": 9399040.0,
+        "surge_oran": 0.953,
+        "dolar_hacim": 1317989056.0
+      },
+      "yeni_kural_yakaladi": true,
+      "eski_kural_yakaladi": false,
+      "yeni_kural_toplam_satir": 1,
+      "eski_kural_toplam_satir": 0,
+      "yeni_kural_tarihler": [
+        "2013-12-18"
+      ],
+      "eski_kural_tarihler": [],
+      "sanitize_rapor": {
+        "ghost_session_dropped": 1,
+        "unadjusted_quarantined": 1
+      },
+      "kapi_sonrasi_satir_var_mi": false,
+      "kapi_hukmu": "KARANTİNA",
+      "bars_integrity_safe_start": "2006-01-04"
+    },
+    {
+      "ticker": "CMCSA",
+      "tarih": "2013-12-18",
+      "diskte_var": true,
+      "ham_satir": {
+        "date": "2013-12-18",
+        "open": 49.26,
+        "high": 50.3,
+        "low": 48.7,
+        "close": 50.27,
+        "volume": 12301588.0
+      },
+      "defter_bar": 5678,
+      "komsular": [
+        {
+          "date": "2013-12-16",
+          "open": 24.55,
+          "high": 24.81,
+          "low": 24.48,
+          "close": 24.62,
+          "volume": 19437752.0
+        },
+        {
+          "date": "2013-12-17",
+          "open": 24.81,
+          "high": 24.81,
+          "low": 24.37,
+          "close": 24.52,
+          "volume": 14590222.0
+        },
+        {
+          "date": "2013-12-18",
+          "open": 49.26,
+          "high": 50.3,
+          "low": 48.7,
+          "close": 50.27,
+          "volume": 12301588.0
+        },
+        {
+          "date": "2013-12-19",
+          "open": 24.99,
+          "high": 25.41,
+          "low": 24.99,
+          "close": 25.39,
+          "volume": 21741486.0
+        },
+        {
+          "date": "2013-12-20",
+          "open": 25.46,
+          "high": 25.65,
+          "low": 25.31,
+          "close": 25.47,
+          "volume": 33617420.0
+        }
+      ],
+      "olculen": {
+        "r": 2.0502,
+        "back": 0.5051,
+        "drr": 0.0355,
+        "kademe": "1_strict",
+        "hacim": 12301588.0,
+        "onceki_hacim": 14590222.0,
+        "hacim_oran": 0.8431,
+        "recip_|r*vr-1|": 0.7286,
+        "medyan_hacim_63": 19189476.0,
+        "surge_oran": 0.641,
+        "dolar_hacim": 618400828.8
+      },
+      "yeni_kural_yakaladi": true,
+      "eski_kural_yakaladi": false,
+      "yeni_kural_toplam_satir": 1,
+      "eski_kural_toplam_satir": 0,
+      "yeni_kural_tarihler": [
+        "2013-12-18"
+      ],
+      "eski_kural_tarihler": [],
+      "sanitize_rapor": {
+        "ghost_session_dropped": 1,
+        "unadjusted_quarantined": 1
+      },
+      "kapi_sonrasi_satir_var_mi": false,
+      "kapi_hukmu": "KARANTİNA",
+      "bars_integrity_safe_start": "2006-01-04"
+    },
+    {
+      "ticker": "DLTR",
+      "tarih": "2012-06-26",
+      "diskte_var": true,
+      "ham_satir": {
+        "date": "2012-06-26",
+        "open": 109.56,
+        "high": 111.39,
+        "low": 109.54,
+        "close": 110.98,
+        "volume": 855134.0
+      },
+      "defter_bar": 5678,
+      "komsular": [
+        {
+          "date": "2012-06-22",
+          "open": 54.33,
+          "high": 54.84,
+          "low": 54.05,
+          "close": 54.77,
+          "volume": 1498798.0
+        },
+        {
+          "date": "2012-06-25",
+          "open": 54.52,
+          "high": 54.88,
+          "low": 54.07,
+          "close": 54.77,
+          "volume": 1186818.0
+        },
+        {
+          "date": "2012-06-26",
+          "open": 109.56,
+          "high": 111.39,
+          "low": 109.54,
+          "close": 110.98,
+          "volume": 855134.0
+        },
+        {
+          "date": "2012-06-27",
+          "open": 55.59,
+          "high": 55.68,
+          "low": 53.295,
+          "close": 53.48,
+          "volume": 2913569.0
+        },
+        {
+          "date": "2012-06-28",
+          "open": 52.4,
+          "high": 52.43,
+          "low": 50.69,
+          "close": 52.18,
+          "volume": 4228893.0
+        }
+      ],
+      "olculen": {
+        "r": 2.0263,
+        "back": 0.4819,
+        "drr": 0.0236,
+        "kademe": "1_strict",
+        "hacim": 855134.0,
+        "onceki_hacim": 1186818.0,
+        "hacim_oran": 0.7205,
+        "recip_|r*vr-1|": 0.46,
+        "medyan_hacim_63": 1812560.0,
+        "surge_oran": 0.472,
+        "dolar_hacim": 94902771.3
+      },
+      "yeni_kural_yakaladi": true,
+      "eski_kural_yakaladi": false,
+      "yeni_kural_toplam_satir": 1,
+      "eski_kural_toplam_satir": 0,
+      "yeni_kural_tarihler": [
+        "2012-06-26"
+      ],
+      "eski_kural_tarihler": [],
+      "sanitize_rapor": {
+        "ghost_session_dropped": 1,
+        "unadjusted_quarantined": 1
+      },
+      "kapi_sonrasi_satir_var_mi": false,
+      "kapi_hukmu": "KARANTİNA",
+      "bars_integrity_safe_start": null
+    },
+    {
+      "ticker": "UNP",
+      "tarih": "2014-06-06",
+      "diskte_var": true,
+      "ham_satir": {
+        "date": "2014-06-06",
+        "open": 200.59,
+        "high": 202.62,
+        "low": 200.23,
+        "close": 201.86,
+        "volume": 2052398.0
+      },
+      "defter_bar": 5679,
+      "komsular": [
+        {
+          "date": "2014-06-04",
+          "open": 98.69,
+          "high": 99.12,
+          "low": 98.62,
+          "close": 98.92,
+          "volume": 2354774.0
+        },
+        {
+          "date": "2014-06-05",
+          "open": 99.18,
+          "high": 100.64,
+          "low": 98.9,
+          "close": 100.17,
+          "volume": 3493756.0
+        },
+        {
+          "date": "2014-06-06",
+          "open": 200.59,
+          "high": 202.62,
+          "low": 200.23,
+          "close": 201.86,
+          "volume": 2052398.0
+        },
+        {
+          "date": "2014-06-09",
+          "open": 101.75,
+          "high": 102.2,
+          "low": 100.82,
+          "close": 102.14,
+          "volume": 3371877.0
+        },
+        {
+          "date": "2014-06-10",
+          "open": 102.88,
+          "high": 102.96,
+          "low": 101.35,
+          "close": 102.42,
+          "volume": 3328697.0
+        }
+      ],
+      "olculen": {
+        "r": 2.0152,
+        "back": 0.506,
+        "drr": 0.0197,
+        "kademe": "1_strict",
+        "hacim": 2052398.0,
+        "onceki_hacim": 3493756.0,
+        "hacim_oran": 0.5874,
+        "recip_|r*vr-1|": 0.1838,
+        "medyan_hacim_63": 3493756.0,
+        "surge_oran": 0.587,
+        "dolar_hacim": 414297060.3
+      },
+      "yeni_kural_yakaladi": true,
+      "eski_kural_yakaladi": false,
+      "yeni_kural_toplam_satir": 1,
+      "eski_kural_toplam_satir": 0,
+      "yeni_kural_tarihler": [
+        "2014-06-06"
+      ],
+      "eski_kural_tarihler": [],
+      "sanitize_rapor": {
+        "ghost_session_dropped": 2,
+        "unadjusted_quarantined": 1
+      },
+      "kapi_sonrasi_satir_var_mi": false,
+      "kapi_hukmu": "KARANTİNA",
+      "bars_integrity_safe_start": "2006-10-25"
+    }
+  ],
+  "kural_sabitleri": {
+    "SPLIT_SUSPECT_RET": 0.35,
+    "UNADJ_REVERT_TOL": 0.1,
+    "UNADJ_STRICT_REVERT_TOL": 0.05,
+    "UNADJ_VOLUME_TOL": 0.1,
+    "UNADJ_VOL_SURGE_MIN": 1.5,
+    "UNADJ_VOL_WINDOW": 63,
+    "UNADJ_DOLLAR_VOL_FLOOR": 5000000.0
+  },
+  "takvim_yuklendi": true,
+  "ghost_report": {
+    "dates": {
+      "2012-06-26": {
+        "rows": 1,
+        "classes": {
+          "unadjusted_row": 1
+        },
+        "tickers": [
+          "DLTR"
+        ]
+      },
+      "2013-12-18": {
+        "rows": 2,
+        "classes": {
+          "unadjusted_row": 2
+        },
+        "tickers": [
+          "GILD",
+          "CMCSA"
+        ]
+      },
+      "2014-06-06": {
+        "rows": 1,
+        "classes": {
+          "unadjusted_row": 1
+        },
+        "tickers": [
+          "UNP"
+        ]
+      },
+      "2018-11-22": {
+        "rows": 1,
+        "classes": {
+          "ghost_session": 1
+        },
+        "tickers": [
+          "UNP"
+        ]
+      },
+      "2025-05-26": {
+        "rows": 4,
+        "classes": {
+          "ghost_session": 4
+        },
+        "tickers": [
+          "GILD",
+          "CMCSA",
+          "DLTR",
+          "UNP"
+        ]
+      }
+    },
+    "rows": 9,
+    "calendar": "XNYS",
+    "calendar_ok": true,
+    "refused": {},
+    "note": "takvimde seans OLMAYAN tarihlerin satırları düşürüldü (bellek içi); DİSKTEKİ CSV ancak bir sonraki yazımda ya da `python -m meridian.barrepair --uygula` ile temizlenir"
+  }
+}

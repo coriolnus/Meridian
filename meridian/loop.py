@@ -940,6 +940,31 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # P3 BLOĞUNUN DIŞINDA TANIMLANIR, İÇİNDE DEĞİL: blok `halted`/`data_bad`/slot koşuluna bağlıdır
     # ve koşmadığı turda sayaç TANIMSIZ kalırdı — `daily_cycle` olayı o turda NameError'la düşerdi.
     _kapsam_disi = 0         # bu turda karartma kapısının KONUŞAMADIĞI plan sayısı (beyanlı fail-open)
+    _takvim_dusen = 0        # …ve takvim güvenilmezliği yüzünden GO→REVIEW düşen plan sayısı
+    # TAKVİM GÜVENİLMEZLİĞİ — TUR BAŞINA BİR KEZ ÖLÇÜLÜR (2026-08-03, Rol-1 A1). Aday başına
+    # çağırmak `_load()`u aday sayısı kadar `stat()`latırdı; hüküm zaten TÜM sembolleri aynı anda
+    # bağladığı için tur başına tek ölçüm hem doğru hem ucuzdur. Sabit yerde tanımlanır (`_kapsam_disi`
+    # ile aynı gerekçe): P3 bloğu koşmadığı turda da `daily_cycle` olayı bu değeri okur.
+    _takvim_kusuru = None
+    try:
+        _takvim_kusuru = earnings.calendar_untrustworthy()
+    except Exception as e:
+        # YASA 4: yüklemin kendisi düşerse SESSİZCE "takvim sağlam" demek, kapatmak için yazdığımız
+        # kapıyı kendi hatamızla yeniden açmak olurdu. Davranış fail-open'a döner (bilinen, ölçülmüş
+        # eski hâl) ama arıza ADIYLA görünür.
+        obs.warn("earnings_calendar_health_check_failed", error=f"{type(e).__name__}: {e}",
+                 detail="takvim güvenilmezlik yüklemi koşamadı — karartma kapısı bu turda ESKİ "
+                        "davranışta (sembol-bazlı fail-open); GO→REVIEW düşürmesi UYGULANMADI")
+    if _takvim_kusuru:
+        # YASA 4 GEREKÇELİ OLAY: bu satır olmadan "bugün neden hiç GO yok?" sorusunun cevabı
+        # hiçbir defterde durmazdı. Tur başına BİR kez; plan başına tekrarlamak asıl sinyali gömerdi.
+        obs.warn("earnings_calendar_untrustworthy", date=dstr, **{k: v for k, v in _takvim_kusuru.items()
+                                                                  if k != "sebep"},
+                 sebep=_takvim_kusuru.get("sebep"),
+                 detail="karartma kapısı BU TURDA hiçbir sembolde konuşamıyor (takvim ufku karartma "
+                        "penceresini taşımıyor ya da son pencere kısmi geldi) — TÜM planlar karartma "
+                        "varsayılanına düştü: GO→REVIEW. NO_GO'lar değişmedi; kapının körlüğü bir "
+                        "sembolün suçu değildir, o yüzden red değil İNCELEME.")
     explore_mode = (not halted and not data_bad and rj["exposure_budget_pct"] <= 0)
     if not halted and not data_bad and (rj["exposure_budget_pct"] > 0 or explore_mode) \
             and len(b.positions) < limits["max_open_positions"]:
@@ -1086,6 +1111,24 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 if not _ek:
                     greasons = list(greasons) + [earnings.COVERAGE_NOTE]
                     _kapsam_disi += 1
+                # TAKVİM GÜVENİLMEZSE KAPI SEMBOLE DEĞİL TURA KAPANIR (2026-08-03, Rol-1 A1).
+                # Ölçüm ve iki bilinçli istisna `earnings.calendar_untrustworthy` blokunda.
+                # NEDEN NO_GO DEĞİL REVIEW: kapının kör olması bir SEMBOLÜN kusuru değildir; red
+                # etmek, bilgi yokluğunu kanıt sayıp planı gömmek olurdu (arming'in `gate_undefined`
+                # dersinin aynısı). REVIEW "insan/ikinci kapı baksın" der ve kararı KAYBETMEZ.
+                # NO_GO'ya DOKUNULMAZ: zaten reddedilmiş bir planı REVIEW'e ÇIKARMAK kapıyı
+                # gevşetmek olurdu — bu blok yalnız sıkıştırabilir.
+                if _takvim_kusuru:
+                    _tk_dusus = verdict == "GO"
+                    _checks.append({"check": "earnings_calendar_health", "passed": False,
+                                    "severity": "soft", "value": _takvim_kusuru.get("kod"),
+                                    "threshold": f"ileri_gun>={earnings.BLACKOUT_DAYS}",
+                                    "note": _takvim_kusuru.get("sebep")})
+                    if _tk_dusus:
+                        verdict = "REVIEW"
+                        greasons = list(greasons) + [
+                            earnings.CALENDAR_UNTRUSTWORTHY_NOTE.format(sebep=_takvim_kusuru.get("sebep"))]
+                        _takvim_dusen += 1
                 # SENKRON KORUMASI (v3 kriter-1): aynada bu hisse için hâlâ CANLI bir emir ya da motor
                 # yetimi pozisyon varken YENİ karar üretilmez — çifte maruziyet/karışık defter riski.
                 # Kaynak: son uzlaştırmanın anlık görüntüsü (her döngü sonunda tazelenir).
@@ -1401,7 +1444,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # (kapsamın aşınması) yalnız plan plan bakılarak görülebilirdi. `takvim_bos` üçüncü hâli taşır:
     # "57 sembol eksik" ile "takvim HİÇ yok" aynı sayıyla anlatılmaz.
     _kapsam = {"plan": len(plans), "kapsanan": len(plans) - _kapsam_disi, "kapsam_disi": _kapsam_disi,
-               "takvim_bos": not earnings._load()}
+               "takvim_bos": not earnings._load(),
+               # TAKVİM SAĞLIĞI AYNI SATIRDA (2026-08-03): "kaç planda kapı konuşamadı" ile "kapı
+               # BU TUR hiç konuşamadı" ayrı olgulardır ve ikincisi birincisini anlamsız kılar.
+               # Sayaç üretilip TÜKETİLİYOR (YASA 6): karne/pano bu alandan okur.
+               "takvim_guvenilmez": (_takvim_kusuru or {}).get("kod"),
+               "takvim_guvenilmez_sebep": (_takvim_kusuru or {}).get("sebep"),
+               "takvim_dusen_plan": _takvim_dusen}
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
             halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet,

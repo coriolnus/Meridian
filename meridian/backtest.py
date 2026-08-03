@@ -110,6 +110,11 @@ class BacktestResult:
     # taraf aynı sayacı `entry_exec.jsonl`in `karar` alanına yazıyor, replay tarafında karşılığı yoktu).
     # None = bu sonuç eski bir çağrıdan geliyor / sayaç hiç doldurulmadı; {} = doldu ve HİÇ ret olmadı.
     entry_rejects: dict = None
+    # 2026-08-03 (Rol-1 kararı 2): replay'de kazanç-karartması ÖLÇÜLEMEZ (PIT takvim yok) ve artık
+    # ölçülmüş GİBİ davranmıyor. Bu sayaç "kaç plan karartma kapısı KONUŞAMADAN karar aldı"yı taşır;
+    # None = eski bir çağrı, {} = doldu. Üretilen kanıt TÜKETİLİR (YASA 6): replay raporunu okuyan
+    # her yer, o tabloda karartma etkisinin SIFIR olduğunu buradan görür.
+    earnings_gate: dict = None
 
     def detail(self, goal: dict) -> dict:
         return score_mod.score_detail(self.trades, goal)
@@ -181,6 +186,10 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     # burada birikir; `BacktestResult.entry_rejects` iki motorun kaçırdığı dolumları kıyaslanabilir
     # kılar (canlı taraf aynı sayacı `entry_exec` defterine `karar` alanıyla zaten yazıyor).
     entry_rejects: dict[str, int] = {}
+    # Replay'de kazanç-kapısının SAYACI (2026-08-03, Rol-1 kararı 2). Gerekçe karar satırının
+    # yanında; burada yalnız kabı var. Boş kalırsa ({}) "hiç plan değerlendirilmedi" demektir ve
+    # bu, "kapı konuştu ve hiçbir şey bulmadı"dan farklı bir olgudur.
+    _eg: dict[str, int] = {}
     pending_exits: dict[str, str] = {}  # ticker -> reason, to execute at next open
     # regime-resolved params for INTRADAY consumers (scale_out): the regime known at D's intraday is
     # D-1's (computed at the prior CLOSE) — using flat `params` here silently ignored any
@@ -372,19 +381,41 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 # gate_checks'in 144/144 boş çıkmasıyla aynı desenin satır seviyesindeki hâli: kural
                 # aynı, kayıt farklı; "neden GO verdi?" sorusu tohum döneminde eksik cevaplanıyordu.
                 # Karar mantığı DEĞİŞMEDİ (aynı koşul, aynı sıra) — yalnız kanıt iki motorda da var.
-                # in_blackout arama yolunda (detay kapalı) yalnız gerektiğinde çağrılır: _load() her
-                # çağrıda stat() yapıyor, binlerce replay'de gereksiz sistem çağrısı istemeyiz.
-                _bl = (earnings.in_blackout(sig.ticker, str(d.date()))
-                       if (_det is not None or verdict != "NO_GO") else False)
-                _ek = earnings.known(sig.ticker)
+                #
+                # ---- REPLAY-PIT DÜZELTMESİ (2026-08-03, Rol-1 kararı 2) --------------------------
+                # ÖLÇÜLDÜ (research/olcumler/wpd_earnings_failopen/RAPOR.md §3c): bu satır
+                # `in_blackout(ticker, <2023 tarihli replay günü>)` çağırıyordu ama `earnings.csv`
+                # PIT DEĞİL — bugünün ileri-pencere snapshot'ı. 390 planın YALNIZ 10'unda takvimde
+                # plan tarihinden sonraki 0-5 gün içinde bir rapor tarihi vardı; yani 380 planda
+                # (%97,4) `in_blackout` zaten yapısal olarak False dönüyordu. Kapı canlıda diri,
+                # replay'de ÖLÜ — üstelik `coverage: "known"` etiketi bunu ÖRTÜYORDU: o etiket plan
+                # tarihindeki değil BUGÜNKÜ kapsamı yansıtıyordu, yani kayıt "kontrol edildi, temiz"
+                # diyordu ve bu bir YALANDI (UYDURMA YASAĞI).
+                #
+                # ARTIK: bugünün takvimini tarihsel bir plana uygulayan yol TAMAMEN KAPALI.
+                # `in_blackout` replay bacağında ÇAĞRILMIYOR (ne veto, ne etiket). Etiket dürüst:
+                # "olculemedi_replay". Sayaç `earnings_gate`te birikir ve raporda görünür.
+                #
+                # NEDEN VETOYU "DOĞRU TAKVİMLE" HESAPLAMIYORUZ: PIT kazanç takvimi bu depoda YOK
+                # (earnings.csv sembol başına 1,0 tarih tutuyor, geçmiş çapa biriktirmiyor). Onu
+                # üretmeden veto koymak, ölçülmemiş bir kapıyı ölçülmüş gibi göstermek olurdu.
+                # Kapının replay'de SIFIR etkisi olduğu artık YAZILI — sessiz sıfır değil, beyanlı.
+                #
+                # DİFERANSİYEL MOTOR NOTU (test_differential_v60'ın konusu): iki motor bundan böyle
+                # bu satırda BİLEREK ayrışıyor ve ayrışmanın adı var. Canlı motorda takvim PIT'tir
+                # (bugünün kararı bugünün takvimiyle verilir); replay'de değildir. "Aynı yasanın iki
+                # kopyası" kusuru DEĞİL bu — aynı yasanın uygulanamadığı yerde uygulanmış NUMARASI
+                # yapmayı bırakmak.
+                _bl = False
+                _ek = earnings.known(sig.ticker)     # yalnız BEYAN için (aşağıdaki nota girer)
+                _eg["plan"] = _eg.get("plan", 0) + 1
+                _eg["olculemedi_replay"] = _eg.get("olculemedi_replay", 0) + 1
                 if _det is not None:
-                    _det.append({"check": "earnings_blackout", "passed": not _bl, "severity": "hard",
+                    _det.append({"check": "earnings_blackout", "passed": True, "severity": "hard",
                                  "value": sig.ticker, "threshold": None,
-                                 "coverage": "known" if _ek else "no_calendar_data",
-                                 "note": ("kazanç öncesi karartma (earnings blackout)" if _bl
-                                          else (None if _ek else "kazanç takvimi YOK — kontrol edilemedi"))})
-                if verdict != "NO_GO" and _bl:
-                    verdict = "NO_GO"; greasons = list(greasons) + ["kazanç öncesi karartma (earnings blackout)"]
+                                 "coverage": "olculemedi_replay",
+                                 "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda "
+                                         "KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"})
                 # BEYANLI FAIL-OPEN NOTU — AYNI YASA, İKİ MOTOR (2026-08-01). Yukarıdaki 2026-07-22
                 # dersinin birebir tekrarı: kural iki motorda da uygulanıyor, KAYDI yalnız canlıda
                 # yazılsaydı `test_differential_v60` haklı olarak ayrışma derdi ve replay'den
@@ -432,7 +463,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
 
     return BacktestResult(trades=broker.closed, equity=equity_curve, params=params, start=start,
                           end=end, plan_log=plan_log, candidate_log=candidate_log,
-                          entry_rejects=entry_rejects)
+                          entry_rejects=entry_rejects, earnings_gate=_eg)
 
 
 def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:

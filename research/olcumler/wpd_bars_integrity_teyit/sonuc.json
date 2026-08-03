@@ -1,0 +1,51 @@
+{
+  "defter": {
+    "rev": 1,
+    "uretildi": "2026-07-31T00:01:10",
+    "sembol_sayisi": 61,
+    "kirilma_sayisi": 98,
+    "dislanan_bar_toplam": 48735,
+    "kural": {
+      "BREAK_UP": 1.9,
+      "BREAK_DN": 0.55,
+      "BREAK_OGAP_TOL": 0.1,
+      "BREAK_HL_NORMAL": 1.3,
+      "CORRUPT_HL_MAX": 3.0,
+      "PHANTOM_DOLLAR_VOL": 100000.0,
+      "PHANTOM_WINDOW": 63,
+      "UNADJ_REVERT_TOL": 0.1,
+      "beyan": "K1 ölçek dikişi · K2 bozuk kesit · K3 hayalet geçmiş (bkz. data.integrity_breaks)"
+    }
+  },
+  "evren": 251,
+  "sayaclar": {
+    "istenen": 251,
+    "dosya_yok": 1,
+    "yuklendi": 250,
+    "hayalet_dusen": 428,
+    "karantina_dusen": 13,
+    "defter_dislanan_satir": 46256,
+    "defter_etkilenen_sembol": 57,
+    "defterde_kayit_yok_tam_gecen": 193
+  },
+  "integrity_report": {
+    "file": "bars_integrity.json",
+    "ledger_symbols": 61,
+    "ledger_rev": 1,
+    "generated_at": "2026-07-31T00:01:10",
+    "rows_excluded": 46256
+  },
+  "integrity_report_applied_ilk10": {
+    "HON": 5657,
+    "DD": 5172,
+    "EQT": 3744,
+    "WBD": 2287,
+    "ABT": 2266,
+    "CTSH": 955,
+    "CI": 834,
+    "HLT": 771,
+    "ALB": 709,
+    "CMI": 709
+  },
+  "ayrisan": []
+}

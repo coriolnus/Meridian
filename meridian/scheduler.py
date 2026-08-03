@@ -767,7 +767,11 @@ def advance_once() -> dict:
             try:                             # kazanç takvimi: haftada bir tazele (PEAD çapası + karartma)
                 import datetime as _dt
                 wk = _dt.date.today().isocalendar()[:2]
-                if _state.get("earnings_week") != list(wk):
+                # PES-FRENİ ARTIK HAFTA DEĞİL GÜN (2026-08-03, Rol-1 A1b — aşağıdaki "İKİNCİSİ HÂLÂ
+                # AÇIK" maddesinin kapanışı): sabır sınırı korunur (günde en çok 5 deneme) ama fren
+                # ERTESİ GÜN açılır, 7 gün sonra değil.
+                _bugun = _dt.date.today().isoformat()
+                if _state.get("earnings_week") != list(wk) and _state.get("earnings_gaveup_day") != _bugun:
                     # öneri #5a: hafta bayrağı yalnız VERİ GELİNCE tüketilir — 429/kesintide eski kod
                     # haftayı boşa yakıyordu ve takvim 7 gün daha boş kalıyordu. Sınırlı sabır:
                     # haftada en çok 5 deneme, sonra pes edildiği LOGLANIR (sessiz açlık yok).
@@ -779,6 +783,7 @@ def advance_once() -> dict:
                         watchdog.beat("earnings_refresh")
                         _state["earnings_week"] = list(wk)
                         _state["earnings_attempts"] = 0
+                        _state.pop("earnings_gaveup_day", None)   # veri geldi → gün freni kalkar
                         obs.log("earnings_calendar_refreshed", rows=n)
                     elif att >= 5:
                         # ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI (sınıf avı, 2026-07-30) --------
@@ -801,17 +806,28 @@ def advance_once() -> dict:
                         # (2026-08-01): ileri pencere `REFRESH_FWD_DAYS` 14 → 21 (Nasdaq ucu
                         # ANAHTARSIZ ve gün-başına sorgulanıyor — kota maliyeti ≈ 0), marj 2 → 9
                         # gün. Yani bu dal pes etse bile ileri kapsama bir hafta daha dayanır.
-                        # İKİNCİSİ HÂLÂ AÇIK: pes ederken hafta damgasını YAKMAMAK — damga
-                        # yakıldığı sürece ardışık iki pes ileri kapsamayı yine 0'a indirir.
-                        _state["earnings_week"] = list(wk)
+                        # İKİNCİSİ DE UYGULANDI (2026-08-03, Rol-1 A1b): pes ederken HAFTA DAMGASI
+                        # ARTIK YAKILMIYOR. Eski satır (`earnings_week = wk`) haftayı tüketiyordu ve
+                        # ardışık iki pes ileri kapsamayı 0'a indiriyordu — yani sabır sınırı, tam da
+                        # korumaya çalıştığı kapıyı kapatıyordu. Yerine GÜN damgası: sabır sınırı
+                        # aynen korunur (günde en çok 5 deneme, sessiz açlık yok) ama fren ERTESİ GÜN
+                        # açılır. Kota etkisi yok — pes eden dal zaten satır getirmiyor; kazanılan şey
+                        # bir sonraki denemenin 7 gün değil 1 gün ötede olmasıdır.
+                        # NOT: bu dal artık takvimin KENDİSİNİ de bağlıyor — ileri kapsama karartma
+                        # ufkunun altına inerse `earnings.calendar_untrustworthy()` devreye girer ve
+                        # karar turu GO yerine REVIEW üretir (fail-open sessizce açık kalmaz).
+                        _state["earnings_gaveup_day"] = _bugun
                         _state["earnings_attempts"] = 0
                         _cov = earnings.coverage(list(REPLAY_UNIVERSE)) or {}
                         obs.warn("earnings_calendar_gave_up", attempts=att,
                                  blackout_days=getattr(earnings, "BLACKOUT_DAYS", None),
                                  marj_gun=_cov.get("marj_gun"), ileri_gun=_cov.get("ileri_gun"),
                                  ileri_kapsama_gun=_cov.get("future_dates"),
-                                 detail="FMP 5 denemede satır vermedi — takvim bu hafta boş kalacak; "
-                                        "ileri kapsama tükenirse karartma guard'ı FAIL-OPEN kapanır")
+                                 yeniden_deneme="yarın (hafta damgası YAKILMADI)",
+                                 detail="FMP 5 denemede satır vermedi — takvim bugün boş kalacak, "
+                                        "deneme YARIN sürer; ileri kapsama karartma ufkunun altına "
+                                        "inerse karar turu GO yerine REVIEW üretir "
+                                        "(earnings.calendar_untrustworthy)")
                     else:
                         _state["earnings_attempts"] = att
             except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez

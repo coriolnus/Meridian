@@ -56,6 +56,16 @@ LIVE_ONLY_GATE_CHECKS = {
     "mirror_busy",
     # GÖLGE VETO: yalnız TERFİLİ gölge model yüklüyken üretilir — replay modeli hiç yüklemez.
     "shadow_veto",
+    # TAKVİM SAĞLIĞI (2026-08-03, Rol-1 A1 + karar 2): "kazanç takvimi karartma ufkunu taşıyor mu?"
+    # sorusunun replay'de KARŞILIĞI YOKTUR ve olmaması bilinçlidir. Canlı motor bugünün kararını
+    # bugünün takvimiyle verir (takvim orada PIT'tir); replay bacağı ise 2026 takvimini 2023 tarihli
+    # bir plana uygulamayı TAMAMEN BIRAKTI (PIT kazanç takvimi bu depoda yok — ölçüldü:
+    # research/olcumler/wpd_earnings_failopen/RAPOR.md §3c, 390 planın yalnız 10'unda takvim
+    # konuşabiliyordu). Konuşmayan bir kapının sağlığını sormak anlamsızdır.
+    # Bu bir ŞEMA ayrışması değil KAPSAM farkıdır — `earnings_blackout` kanıt satırı İKİ motorda da
+    # üretilmeye devam eder (yukarıdaki 2026-07-22 dersi korunur), yalnız replay'in `coverage`
+    # değeri dürüst: "olculemedi_replay".
+    "earnings_calendar_health",
 }
 
 # Fiyat alanları: canlı satır `EntrySignal.as_row()` üzerinden geçtiği için 4 basamağa YUVARLANMIŞ,

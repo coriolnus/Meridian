@@ -1,0 +1,309 @@
+{
+  "kaynak": {
+    "earnings_csv": "/Users/erdemozturk/AI-Trading/state/earnings.csv",
+    "csv_mtime": "2026-07-30T01:10:30",
+    "not": "YEREL SNAPSHOT — canlı A1'deki takvim daha taze olabilir"
+  },
+  "S1_davranis": {
+    "kapsam_disi_ornek": "ABT",
+    "in_blackout(kapsam_disi, bilinen_bir_rapor_gunu)": false,
+    "known(kapsam_disi)": false,
+    "coverage_note(kapsam_disi)": "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)",
+    "bilinen_ornek": "AAPL",
+    "in_blackout(bilinen, kendi_rapor_gunu)": true,
+    "hukum": "veri yoksa False döner — kapı GEÇİRGEN (fail-open), karar yolu değişmez"
+  },
+  "S2_kapsam": {
+    "evren": 251,
+    "takvimde": 193,
+    "evren_kapsanan": 192,
+    "evren_kapsam_disi": 59,
+    "kapsam_disi_liste": [
+      "ABT",
+      "ADBE",
+      "ADI",
+      "ADSK",
+      "AVGO",
+      "AZO",
+      "BAC",
+      "BKR",
+      "BLK",
+      "BURL",
+      "C",
+      "CAG",
+      "CCL",
+      "COST",
+      "CRM",
+      "DAL",
+      "DE",
+      "DG",
+      "DLTR",
+      "EL",
+      "FDX",
+      "FISV",
+      "GE",
+      "GIS",
+      "GS",
+      "HD",
+      "HRL",
+      "INTU",
+      "ISRG",
+      "JNJ",
+      "JPM",
+      "KR",
+      "LOW",
+      "LULU",
+      "MDT",
+      "MKC",
+      "MRVL",
+      "MS",
+      "MU",
+      "NFLX",
+      "NKE",
+      "NVDA",
+      "ORCL",
+      "PANW",
+      "PEP",
+      "PGR",
+      "PLD",
+      "PNC",
+      "ROST",
+      "SNPS",
+      "STZ",
+      "TGT",
+      "TJX",
+      "TRV",
+      "UAL",
+      "UNH",
+      "USB",
+      "WFC",
+      "WMT"
+    ],
+    "takvimde_ama_evren_disi": [
+      "TEST"
+    ],
+    "BLACKOUT_DAYS": 5,
+    "coverage": {
+      "known_tickers": 193,
+      "future_dates": 69,
+      "max_date": "2026-08-13",
+      "inert": false,
+      "marj_gun": 9,
+      "ileri_gun": 10,
+      "saat_bilinen": 0,
+      "universe": 251,
+      "unknown": 59,
+      "covered_pct": 76.5
+    },
+    "takvim_bicimi": {
+      "toplam_tarih": 193,
+      "sembol_basina_tarih_dagilimi": {
+        "1": 193
+      },
+      "en_eski_tarih": "2025-06-24",
+      "en_yeni_tarih": "2026-08-13"
+    }
+  },
+  "S3_risk": {
+    "plan_defteri": {
+      "toplam": 390,
+      "gate_checks.coverage_dagilimi": {
+        "known": 320,
+        "no_calendar_data": 70
+      },
+      "verdict_dagilimi": {
+        "GO": 101,
+        "REVIEW": 250,
+        "NO_GO": 39
+      },
+      "gerekce_metninde_beyan": 0,
+      "karartma_vetosu_dusen_plan": 4
+    },
+    "GO_plan_kapsam_disi": 21,
+    "GO_plan_kapsanan": 80,
+    "GO_plan_kapsam_disi_ornek": [
+      {
+        "t": "NFLX",
+        "d": "2023-01-20",
+        "id": "P-2023-01-20-NFLX"
+      },
+      {
+        "t": "PANW",
+        "d": "2023-05-24",
+        "id": "P-2023-05-24-PANW"
+      },
+      {
+        "t": "C",
+        "d": "2024-01-03",
+        "id": "P-2024-01-03-C"
+      },
+      {
+        "t": "UAL",
+        "d": "2025-01-10",
+        "id": "P-2025-01-10-UAL"
+      },
+      {
+        "t": "KR",
+        "d": "2025-03-07",
+        "id": "P-2025-03-07-KR"
+      },
+      {
+        "t": "GS",
+        "d": "2025-06-27",
+        "id": "P-2025-06-27-GS"
+      },
+      {
+        "t": "ORCL",
+        "d": "2025-06-30",
+        "id": "P-2025-06-30-ORCL"
+      },
+      {
+        "t": "JPM",
+        "d": "2025-06-30",
+        "id": "P-2025-06-30-JPM"
+      },
+      {
+        "t": "ORCL",
+        "d": "2025-07-02",
+        "id": "P-2025-07-02-ORCL"
+      },
+      {
+        "t": "C",
+        "d": "2025-07-17",
+        "id": "P-2025-07-17-C"
+      },
+      {
+        "t": "JPM",
+        "d": "2025-09-19",
+        "id": "P-2025-09-19-JPM"
+      },
+      {
+        "t": "MU",
+        "d": "2025-10-16",
+        "id": "P-2025-10-16-MU"
+      },
+      {
+        "t": "JNJ",
+        "d": "2025-11-17",
+        "id": "P-2025-11-17-JNJ"
+      },
+      {
+        "t": "MDT",
+        "d": "2025-11-18",
+        "id": "P-2025-11-18-MDT"
+      },
+      {
+        "t": "DLTR",
+        "d": "2025-12-03",
+        "id": "P-2025-12-03-DLTR"
+      }
+    ],
+    "islem_defteri": {
+      "toplam": 95,
+      "kapsam_disi_sembolde": 25,
+      "kapsanan_sembolde": 70,
+      "kapsam_disi_semboller": [
+        "ADI",
+        "C",
+        "COST",
+        "CRM",
+        "DAL",
+        "DE",
+        "FDX",
+        "HD",
+        "KR",
+        "LOW",
+        "MDT",
+        "MRVL",
+        "NFLX",
+        "NVDA",
+        "ORCL",
+        "PANW",
+        "PGR",
+        "SNPS",
+        "TJX",
+        "UAL",
+        "WMT"
+      ],
+      "kapsam_disi_ornek": [
+        {
+          "t": "NFLX",
+          "ts_open": "2023-01-23",
+          "plan_id": "P-2023-01-20-NFLX"
+        },
+        {
+          "t": "NVDA",
+          "ts_open": "2023-03-20",
+          "plan_id": "P-2023-03-17-NVDA"
+        },
+        {
+          "t": "FDX",
+          "ts_open": "2023-03-20",
+          "plan_id": "P-2023-03-17-FDX"
+        },
+        {
+          "t": "COST",
+          "ts_open": "2023-04-21",
+          "plan_id": "P-2023-04-20-COST"
+        },
+        {
+          "t": "PANW",
+          "ts_open": "2023-05-25",
+          "plan_id": "P-2023-05-24-PANW"
+        },
+        {
+          "t": "DAL",
+          "ts_open": "2023-06-29",
+          "plan_id": "P-2023-06-28-DAL"
+        },
+        {
+          "t": "TJX",
+          "ts_open": "2023-08-17",
+          "plan_id": "P-2023-08-16-TJX"
+        },
+        {
+          "t": "SNPS",
+          "ts_open": "2023-10-11",
+          "plan_id": "P-2023-10-10-SNPS"
+        },
+        {
+          "t": "C",
+          "ts_open": "2024-01-04",
+          "plan_id": "P-2024-01-03-C"
+        },
+        {
+          "t": "CRM",
+          "ts_open": "2024-01-12",
+          "plan_id": "P-2024-01-11-CRM"
+        },
+        {
+          "t": "LOW",
+          "ts_open": "2024-02-28",
+          "plan_id": "P-2024-02-27-LOW"
+        },
+        {
+          "t": "UAL",
+          "ts_open": "2024-04-18",
+          "plan_id": "P-2024-04-17-UAL"
+        },
+        {
+          "t": "PGR",
+          "ts_open": "2024-08-16",
+          "plan_id": "P-2024-08-15-PGR"
+        },
+        {
+          "t": "WMT",
+          "ts_open": "2024-11-20",
+          "plan_id": "P-2024-11-19-WMT"
+        },
+        {
+          "t": "MRVL",
+          "ts_open": "2024-12-03",
+          "plan_id": "P-2024-12-02-MRVL"
+        }
+      ]
+    },
+    "kazanc_gununde_acildi_mi": null,
+    "kazanc_gunu_olcum_gerekcesi": "ÖLÇÜLEMEZ — UYDURMA YASAĞI. Kapsam-dışı sembolün takvimde HİÇ tarihi yok; geçmiş bir işlemin o sembolün kazanç gününe denk gelip gelmediğini söyleyecek PIT kazanç takvimi bu depoda YOK (earnings.csv ileri-pencere snapshot'ı, geçmiş çapa biriktirmiyor: 193 sembol × 193 tarih = sembol başına 1.0 tarih). Ölçmek için dış PIT kaynak (NASDAQ/FMP geçmiş takvim) gerekir — bu tur kapsam dışı."
+  }
+}

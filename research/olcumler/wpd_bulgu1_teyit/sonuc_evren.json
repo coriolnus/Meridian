@@ -1,0 +1,184 @@
+{
+  "toplam": {
+    "defter": 259,
+    "satir_ham": 1344332,
+    "satir_gecerli_seans": 1343892,
+    "a": 216,
+    "ab": 13,
+    "eski": 3,
+    "yeni": 13
+  },
+  "eski_kuralin_kacirdigi_ab": 10,
+  "eski_kacak_pay_pct": 76.9,
+  "yeni_kuralin_kacirdigi_ab": 0,
+  "yeni_kacak_pay_pct": 0.0,
+  "ab_satirlar": [
+    {
+      "t": "ALB",
+      "tarih": "2006-10-30",
+      "r": 0.5154,
+      "drr": 0.0311,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "AVGO",
+      "tarih": "2008-06-12",
+      "r": 2.0,
+      "drr": 0.0,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "CHD",
+      "tarih": "2013-12-18",
+      "r": 2.0196,
+      "drr": 0.0049,
+      "eski": true,
+      "yeni": true
+    },
+    {
+      "t": "CMCSA",
+      "tarih": "2013-12-18",
+      "r": 2.0502,
+      "drr": 0.0355,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "DLTR",
+      "tarih": "2012-06-26",
+      "r": 2.0263,
+      "drr": 0.0236,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "EL",
+      "tarih": "2012-01-20",
+      "r": 1.9974,
+      "drr": 0.0105,
+      "eski": true,
+      "yeni": true
+    },
+    {
+      "t": "GILD",
+      "tarih": "2013-12-18",
+      "r": 2.1005,
+      "drr": 0.0479,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "PINS",
+      "tarih": "2013-07-15",
+      "r": 2.0435,
+      "drr": 0.0,
+      "eski": true,
+      "yeni": true
+    },
+    {
+      "t": "PINS",
+      "tarih": "2013-08-02",
+      "r": 0.5758,
+      "drr": 0.0303,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "TDG",
+      "tarih": "2011-12-01",
+      "r": 1.6563,
+      "drr": 0.0625,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "TDG",
+      "tarih": "2011-12-09",
+      "r": 1.7378,
+      "drr": 0.0854,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "TDG",
+      "tarih": "2013-12-18",
+      "r": 0.5985,
+      "drr": 0.031,
+      "eski": false,
+      "yeni": true
+    },
+    {
+      "t": "UNP",
+      "tarih": "2014-06-06",
+      "r": 2.0152,
+      "drr": 0.0197,
+      "eski": false,
+      "yeni": true
+    }
+  ],
+  "yeni_yakalayip_eski_kaciran": [
+    {
+      "t": "ALB",
+      "tarih": "2006-10-30",
+      "r": 0.5154,
+      "drr": 0.0311
+    },
+    {
+      "t": "AVGO",
+      "tarih": "2008-06-12",
+      "r": 2.0,
+      "drr": 0.0
+    },
+    {
+      "t": "CMCSA",
+      "tarih": "2013-12-18",
+      "r": 2.0502,
+      "drr": 0.0355
+    },
+    {
+      "t": "DLTR",
+      "tarih": "2012-06-26",
+      "r": 2.0263,
+      "drr": 0.0236
+    },
+    {
+      "t": "GILD",
+      "tarih": "2013-12-18",
+      "r": 2.1005,
+      "drr": 0.0479
+    },
+    {
+      "t": "PINS",
+      "tarih": "2013-08-02",
+      "r": 0.5758,
+      "drr": 0.0303
+    },
+    {
+      "t": "TDG",
+      "tarih": "2011-12-01",
+      "r": 1.6563,
+      "drr": 0.0625
+    },
+    {
+      "t": "TDG",
+      "tarih": "2011-12-09",
+      "r": 1.7378,
+      "drr": 0.0854
+    },
+    {
+      "t": "TDG",
+      "tarih": "2013-12-18",
+      "r": 0.5985,
+      "drr": 0.031
+    },
+    {
+      "t": "UNP",
+      "tarih": "2014-06-06",
+      "r": 2.0152,
+      "drr": 0.0197
+    }
+  ],
+  "eski_yakalayip_yeni_kaciran": []
+}

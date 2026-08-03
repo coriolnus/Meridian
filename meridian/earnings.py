@@ -88,6 +88,12 @@ _CACHE_MTIME: float | None = None
 # {(TICKER, date): "bmo"|"amc"} — YALNIZ kaynağın SÖYLEDİĞİ satırlar. Söylemediği satır burada HİÇ
 # YOKTUR (uydurma yasağı: "bilinmiyor" bir değer değil, bir YOKLUKtur → report_time None döner).
 _TIMES: dict = {}
+# Son tazeleme penceresinin gün-kapsaması — SÜREÇ-İÇİ, BİLEREK DİSKE YAZILMAZ. Tek okuyucusu
+# `calendar_untrustworthy()` ve tek yazarı `refresh()`; ikisi de CANLI WORKER'ın aynı sürecinde
+# yaşar (scheduler tazeler, loop karar verir). Diske yazmak yeni bir state artefaktı ve onun
+# artefakt-graf yükümlülüğünü doğururdu; kazanç sıfır, çünkü süreç yeniden doğduğunda "ölçülmedi"
+# (None) demek zaten DOĞRU cevaptır — o süreç henüz hiçbir pencere görmedi.
+_LAST_WINDOW: dict = {}
 
 
 def _load() -> dict:
@@ -263,6 +269,14 @@ def refresh(tickers: list[str]) -> int:
     _gun: dict = {}
     fetched = _da.nasdaq_earnings_window(_s, _e, with_time=True, stats=_gun)
     _gun_dusen = _gun.get("dusen")
+    # PENCERENİN SAĞLIĞI KARAR YOLUNA BURADAN GEÇER (2026-08-03, Rol-1 A1). Eskiden bu ölçüm yalnız
+    # bir UYARI metnine giriyordu — yani kısmi pencere görünürdü ama hiçbir kapıyı bağlamıyordu.
+    # Kaydı `calendar_untrustworthy()` okur. `kapsama` None ise ölçülmedi demektir ve None hiçbir
+    # eşiği tetiklemez (bu modülün her yerinde aynı kural).
+    _LAST_WINDOW.clear()
+    _LAST_WINDOW.update({"kapsama": _gun.get("kapsama"), "dusen": _gun_dusen,
+                         "istenen": _gun.get("istenen"), "pencere": [_s, _e],
+                         "at": dt.date.today().isoformat()})
     if _gun_dusen:
         from . import obs
         obs.warn("earnings_refresh_window_partial", source="nasdaq",
@@ -662,6 +676,76 @@ def coverage(tickers: list | None = None) -> dict:
         out.update({"universe": len(uni), "unknown": len(unknown), "unknown_sample": unknown[:12],
                     "covered_pct": round(100 * (len(uni) - len(unknown)) / max(1, len(uni)), 1)})
     return out
+
+
+# --------------------------------------------------------------------------------------------------
+# TAKVİM GÜVENİLMEZLİĞİ — FAIL-CLOSED SEMBOLE DEĞİL, TAKVİME BAĞLI (2026-08-03, Rol-1 kararı A1)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN AYRIM (WP-D KALEM 3 raporu, research/olcumler/wpd_earnings_failopen/RAPOR.md):
+#   "194/251 kapsama" bir KORUMA ölçüsü DEĞİL — önümüzdeki ~4 haftada rapor veren sembol sayısıdır.
+#   Kapsam-dışı 59 sembolün büyük çoğunluğu raporu UFKUN ÖTESİNDE olduğu için bilinmiyor ve raporu
+#   4 hafta ötede olan bir sembol zaten 5 günlük karartmaya GİREMEZ. Bu yüzden "sembol bilinmiyor →
+#   karart" (seçenek A3) 390 planın 70'ini kilitler ve karşılığında neredeyse hiç risk kapatmaz.
+#
+# GERÇEK ARIZA BAŞKA BİR ŞEY ve CANLIDA GERÇEKLEŞTİ: 2026-07-25'te takvimde tek satır vardı
+# (`TEST,2025-06-24`) ve `MECHANISM_STALE` "karartma guard'ı fiilen kapalı (0 çıktı)" dedi — kapı
+# 59 sembolde değil, 251 SEMBOLÜN 251'İNDE geçirgendi. Ve `covered_pct` bunu GÖRÜNMEZ kılar
+# (0/251 iken bile bir yüzde üretir). Yani ölçü aleti, ölçmesi gereken arızaya kördü.
+#
+# BU YÜZDEN KAPI TAKVİME BAĞLANDI: "bu SEMBOLÜ bilmiyorum" fail-open kalır (beyanlı, COVERAGE_NOTE);
+# "bu TAKVİM karartma ufkunu taşıyamıyor" ise fail-closed olur ve TÜM sembolleri etkiler.
+#
+# ÜÇ SEBEP, ÜÇÜ DE ÖLÇÜLEBİLİR (tahmin yok):
+#   ufuk_tukendi  — `ileri_gun < BLACKOUT_DAYS`: takvim karartma penceresinin SONUNU göremiyor,
+#                   yani bugün karartmada olan bir sembolü kaçırıyor olabiliriz. (`inert`, yani
+#                   hiç gelecek tarih kalmaması, bunun ileri_gun=0 hâlidir; ayrı sebep adıyla
+#                   raporlanır çünkü operatöre farklı bir şey anlatır.)
+#   kismi_pencere — son tazeleme penceresinin gün-kapsaması EARNINGS_FMP_FALLBACK_COVERAGE altında:
+#                   kaçan gün-diliminde duyurulan bir rapor tarihi BİLİNMİYOR olabilir.
+#
+# İKİ ŞEY BİLEREK TETİKLEMİYOR:
+#   (1) TAKVİM DOSYASI HİÇ YOKSA. Modülün açılış sözleşmesi "No CSV -> no-op, so the gate is present
+#       and testable now and simply activates the day an earnings feed writes the file". Dosyanın
+#       hiç olmaması "kapı bozuldu" değil "kapı henüz silahlanmadı" demektir; onu fail-closed'a
+#       çevirmek taze kurulumu ve tüm replay/fikstür yollarını kilitlerdi — AYRI ve çok daha büyük
+#       bir karar. Bayat/eksik BİR TAKVİM ise arızadır ve tetikler (2026-07-25 vakası tam budur).
+#   (2) `kapsama` ÖLÇÜLMEMİŞSE (None). Süreç yeni doğmuş ve henüz pencere görmemiş olabilir;
+#       None bir sayı değildir, "eksik" diye okumak uydurma olurdu (bu modülün her yerinde aynı kural).
+CALENDAR_UNTRUSTWORTHY_NOTE = ("NOT: earnings_takvimi_guvenilmez — {sebep}; karartma kapısı BU TURDA "
+                               "HİÇBİR sembolde konuşamıyor, plan GO yerine REVIEW'e düştü")
+
+
+def last_refresh_window() -> dict:
+    """Son tazeleme penceresinin süreç-içi sağlık kaydı (bu süreçte hiç tazeleme olmadıysa boş)."""
+    return dict(_LAST_WINDOW)
+
+
+def calendar_untrustworthy(tickers: list | None = None) -> dict | None:
+    """TAKVİMİN KENDİSİ karartma ufkunu taşıyabiliyor mu? Taşıyorsa None (kapı normal çalışır).
+
+    Taşıyamıyorsa `{"sebep", "detay", ...}` döner ve ÇAĞIRAN o turda tüm sembolleri karartma
+    varsayılanına düşürür. Gerekçe ve iki bilinçli istisna yukarıdaki blokta.
+
+    TUR BAŞINA BİR KEZ ÇAĞRILMALI, aday başına değil: `coverage()` `_load()`u tetikler ve o her
+    çağrıda `stat()` yapar — 250 adaylık bir turda 250 sistem çağrısı, ölçtüğümüz şeye hiçbir şey
+    katmadan maliyet olurdu."""
+    if not (config.STATE / "earnings.csv").exists():
+        return None                      # kapı henüz SİLAHLANMADI — istisna (1), yukarıda gerekçeli
+    cov = coverage(tickers) or {}
+    ileri = cov.get("ileri_gun")
+    if ileri is not None and int(ileri) < BLACKOUT_DAYS:
+        return {"sebep": ("takvimde hiç gelecek tarih kalmadı" if cov.get("inert")
+                          else f"takvim yalnız {int(ileri)} gün ileri görüyor"),
+                "kod": "takvim_atil" if cov.get("inert") else "ufuk_tukendi",
+                "ileri_gun": int(ileri), "blackout_days": BLACKOUT_DAYS,
+                "max_date": cov.get("max_date"), "known_tickers": cov.get("known_tickers")}
+    kap = _LAST_WINDOW.get("kapsama")
+    if kap is not None and float(kap) < EARNINGS_FMP_FALLBACK_COVERAGE:
+        return {"sebep": f"son tazeleme penceresinin yalnız %{round(float(kap) * 100, 1)}'i geldi",
+                "kod": "kismi_pencere", "kapsama": float(kap),
+                "esik": EARNINGS_FMP_FALLBACK_COVERAGE, "dusen": _LAST_WINDOW.get("dusen"),
+                "pencere": _LAST_WINDOW.get("pencere"), "olculdu": _LAST_WINDOW.get("at")}
+    return None
 
 
 def blackout_radar(tickers: list, on_date: str) -> dict:
