@@ -46,6 +46,18 @@ Environment=HERMES_SEARCH_BUDGET=8
 #     birimi canlıya kopyalayan HER prosedür (deploy.sh:89 dahil) rotasyonu sessizce geri alırdı.
 #     Sır DOSYADA taşınır, birimde değil: `.dash.env` `dagit.sh` rsync'inden bilerek dışlanmıştır.
 EnvironmentFile=-/opt/meridian/.dash.env
+#     KALAN YÜZEY ve TUR-3 HAZIRLIĞI (2026-08-03): bu satır sırrı DOSYADAN çıkarıp SÜREÇ ORTAMINA
+#     koyar, ve bu depoda ortam ÇOCUKLARA AKAR (`serve.sh:51` uvicorn'u `env=os.environ` ile,
+#     `hermes_composite.py:341` ajan alt süreçlerini devralınan ortamla doğurur) — yani token her
+#     LLM alt sürecinin `/proc/<pid>/environ`ında duruyor. Yapısal kapanış systemd
+#     `LoadCredential`dır (sır ortama HİÇ girmez). Hazırlık VERSİYONDA, canlıda DEĞİL:
+#       meridian.service.d/50-dash-credential.conf  (faz 1: credential kanalını ekler)
+#       meridian.service.d/51-dash-env-kaldir.conf  (faz 2: bu satırı etkisizleştirir)
+#       dash_token_credential.sh                    (rotasyon + kurulum + farksal doğrulama)
+#     BU DOSYAYA `LoadCredential=` YAZILMADI ve yazılmamalı: kaynak dosya (/etc/meridian/dash_token)
+#     yokken systemd birimi BAŞLATMAZ, ve `deploy.sh:89` bu birimi her dağıtımda canlıya kopyalar —
+#     yani satır burada dururken koşacak İLK dağıtım panoyu düşürürdü. Drop-in'i kuran tek yer
+#     bakım penceresinde elle koşan `dash_token_credential.sh --faz1`dir.
 # --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------
 #     api._auth_posture_check bu değişkeni okur ve loopback DIŞI + parolasız hâlde süreci
 #     AÇMAYI REDDEDER. Eskiden ExecStart `--host 127.0.0.1` SABİTİYDİ ve bu değişkeni hiçbir

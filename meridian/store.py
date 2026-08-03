@@ -270,6 +270,25 @@ def _atomic_write(path: Path, data: str) -> None:
         pass
 
 
+# ================================================================================================
+# KADEME B (2026-08-03) — KİLİT ARTIK KAPININ İÇİNDE, ÇAĞIRANIN ELİNDE DEĞİL
+# ================================================================================================
+# ÖNCESİ: `_atomic_write` yalnız ATOMİKLİK veriyordu; flock'u ÇAĞIRAN alırdı (`update_json`,
+# `update_jsonl`, `merge_dated_jsonl`). Yani kilit bir SÖZLEŞMEydi, YAPISAL bir garanti değil —
+# ve bu depoda böyle sözleşmelerin nasıl bittiği ölçülmüştü: `update_scoreboard` kilitsiz yazıyordu
+# (bkz. karne yazım güvenliği notu). Çıplak `write_json` çağıran her yol aynı boşluktaydı.
+# Kilit KAPIYA indi: artık kilitsiz yazmak için store'u BYPASS etmek gerekir, ki [0c]/[0d] sınıfı
+# kapılar tam olarak onu görünür kılar.
+#
+# NEDEN `db_backed` DALINDA FLOCK YOK — İKİ KİLİT REJİMİ BİRBİRİNE KARIŞTIRILMAZ: DB'ye giden ad
+# zaten SQLite'ın süreçler-arası kilidiyle (WAL + `busy_timeout`, Kademe A) korunur. Üstüne flock
+# koymak ikinci bir kilit SIRASI doğururdu (flock→SQLite burada, SQLite→flock `dbmigrate`in tek
+# transaction'ında) ve iki farklı sırayla alınan iki kilit kilitlenmenin tanımıdır. Her ad TEK
+# rejimde yaşar: dosya arka ucu → flock, DB arka ucu → SQLite. Sınır `db_backed`tir.
+#
+# YENİDEN GİRİŞ GÜVENLİ: `_FileLock` RLock+derinlik taşır, yani `update_json` (kilidi ALMIŞ) →
+# `write_json` (aynı adı yeniden alır) zinciri kendini bloklamaz — bu zaten bugünkü sıcak yoldur.
+
 def write_json(name: str, obj: Any) -> Path:
     t0 = _time.perf_counter()
     payload = sanitize(obj)
@@ -278,7 +297,38 @@ def write_json(name: str, obj: Any) -> Path:
         _record_io((_time.perf_counter() - t0) * 1000.0)
         return storage.db_path()
     path = _path(name)
-    _atomic_write(path, json.dumps(payload, indent=2))
+    with file_lock(name):
+        _atomic_write(path, json.dumps(payload, indent=2))
+    _record_io((_time.perf_counter() - t0) * 1000.0)
+    return path
+
+
+def write_text(name: str, text: str) -> Path:
+    """JSON OLMAYAN metin defterleri için AYNI TEK KAPI — atomik tmp+fsync+rename + flock.
+
+    NEDEN VAR (Kademe B envanteri, 2026-08-03): `state/` altındaki her yazım JSON değildir ve
+    JSON olmayanlar kapının DIŞINDA kalmıştı. Ölçülen kapı-dışı yollar aynı iki sınıfa düşüyordu:
+
+      * ATOMİK OLMAYAN düz `write_text` — `memory.py` (`state/lessons.md`) ve `run.py`
+        (`state/history/scoreboard-*.json` arşivi). Düz yazım dosyayı önce KIRPAR: okuyucu tam o
+        anda gelirse yarım — hatta BOŞ — bir defter görür ve bu sessizce "ders yok" diye okunur.
+      * ATOMİK ama HER YERDE YENİDEN YAZILMIŞ kalıp — `config.dump_yaml`, `earnings.py` (×2),
+        `sprint_run._write_live_status`, `adapters/data._write_bars`, `auth._write`. Beşi de
+        mkstemp+replace'i elle kurar; hiçbirinde `fsync` YOKTUR (B1'in kapattığı sıfır-baytlık
+        dosya sınıfı bu kopyalarda hâlâ açık) ve hiçbiri flock ALMAZ. `auth._write` ayrıca SABİT
+        bir tmp adı (`.json.tmp`) kullanır: iki süreç aynı anda yazarsa aynı geçici dosyaya
+        yazarlar ve atomiklik iddiası orada biter.
+
+    Kapıyı JSON'a özgü bırakmak, "tek kapı" iddiasını dosya UZANTISINA bağlamak olurdu; oysa
+    korunan şey biçim değil DEFTERİN BÜTÜNLÜĞÜ. `write_json` ne veriyorsa bu da onu verir.
+
+    DÖNÜŞ: yazılan yol. DB arka ucu YOKTUR: bu adlar (lessons.md, earnings.csv, strategy.yaml)
+    varlık defteri değildir ve `storage`ta karşılıkları bulunmaz — `db_backed` dalı bilerek yok.
+    """
+    t0 = _time.perf_counter()
+    path = _path(name)
+    with file_lock(name):
+        _atomic_write(path, text)
     _record_io((_time.perf_counter() - t0) * 1000.0)
     return path
 
@@ -372,7 +422,8 @@ def write_jsonl(name: str, rows: list[dict]) -> None:
         storage.replace_rows(name, [sanitize(r) for r in rows])
         return
     path = _path(name)
-    _atomic_write(path, "".join(json.dumps(sanitize(r)) + "\n" for r in rows))
+    with file_lock(name):        # Kademe B — gerekçe write_json'ın üstündeki blokta
+        _atomic_write(path, "".join(json.dumps(sanitize(r)) + "\n" for r in rows))
 
 
 # ---- TAZELİK DAMGASI (dosya mtime'ının arka-uç bağımsız karşılığı) ------------------------------

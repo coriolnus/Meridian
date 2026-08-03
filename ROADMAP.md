@@ -319,9 +319,23 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 - **H11 ✅ KOD-HAZIR (tur-2; canlıya sonraki pencerede):** coordinate_descent_search süre-tavanı +
   kibar-iptal (YASA-4 olaylı) + warmup'ta sonda-başına çift nabız (warmup_sprint + hermes_poll —
   açlık-alarmı sınıfı ölür); HERMES_WARMUP_MAX_MIN=300 varsayılan; 17 test. Bekçi eşikleri değişmedi.
-- **AÇIK KARAR (tur-2 bulgusu):** A1'e dev-grubu kurulumu — dagit.sh [3] '--extra dev' 7 gereksiz
-  paketi canlıya taşıyor ve audit kapısını alakasız CVE'ye açıyor; daraltma kolu --no-default-groups,
-  önce A1 çalışma-yolu import taraması (sonraki pencere).
+- **DEV-GRUBU DARALTMA ✅ (2026-08-03):** ops/import_tarama.py (AST, geçişli dev-kümesi, kurulu-
+  metadata'dan eşleme) → HÜKÜM DARALT-GÜVENLİ (17 dev dağıtımının 0'ı çalışma yolunda, 95 dosya);
+  dagit.sh [0d] KAPISI oldu (dev-paketi-çalışma-yolunda ya da ölçülemedi → ENGEL) + [3] bayrağı
+  koşum-anında ölçer (--no-default-groups destekliyse o, değilse --no-dev'e düşer). YAN BULGU:
+  `certifi` beyan-dışı (streamhealth.py:84 opsiyonel import) — beyan kalemi mini-tura verildi.
+- **H9 KADEME-B ✅ ÇEKİRDEK (2026-08-03):** flock kapıya indi (write_json/write_jsonl kilidi
+  kendisi alır; write_text eklendi; db_backed dalında bilerek yok — çift-kilit kilitlenmesi;
+  events.jsonl append-only mezar-taşı testli). 14/14 + süreçler-arası flock kanıtı. AÇIK KUYRUK
+  (çağrı-noktası taşıma, ayrı tur): ATOMİK-DEĞİL 4 yol (memory.py:212 lessons.md · run.py:172 ·
+  hermes.py:1965 · skill_evolve.py:170) + fsync'siz/flock'suz kopya-kalıp 7 yol (auth._write
+  ayrıca sabit-tmp-adı — iki süreç çakışır); kapı hazır: store.write_text.
+- **DASH-TOKEN LoadCredential HAZIR-BEKLEMEDE (2026-08-03; etkinleştirme OPERATÖR bakım-penceresi):**
+  drop-in'ler deploy/oracle-a1/meridian.service.d/ (faz-1 LoadCredential, faz-2 ortam-kanalı-sıfır)
+  + dash_token_credential.sh (rotasyon/kurulum/doğrulama/geri-alma; faz-2 farksal ölçümlü).
+  LoadCredential ana birime BİLEREK yazılmadı (kaynak-dosya-yokken ilk dağıtım panoyu düşürürdü).
+  ÖLÇÜLEN YÜZEY: token bugün her LLM alt-sürecinin ortamında (serve.sh env-devri) — faz-2 kapatır;
+  api.py CREDENTIALS_DIRECTORY okuyucusu mini-turda.
 
 - **REDDEDİLDİ (bizim gerçekte):** Litestream/SQLite-PRAGMA/DuckLake (Meridian'da SQLite YOK —
   state dosya+Redis; el kitabının varsayımı yanlış) · Pandera (karantina-v2 + bars_integrity zaten

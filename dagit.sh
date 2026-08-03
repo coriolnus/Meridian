@@ -3,10 +3,11 @@
 # (dagitim_gece*.sh) yerine standart yol: her dağıtım BU sırayla geçer.
 #   [0] uv audit (tedarik-zinciri kapısı — kırmızıysa DAĞITIM YOK)
 #   [0c] lint-imports (mimari sözleşmeler — WP-H/H4; kırmızıysa DAĞITIM YOK)
+#   [0d] import taraması (dev-grubu daraltması hâlâ güvenli mi — WP-H; kırmızıysa DAĞITIM YOK)
 #   [1] rsync DRY-RUN (ne değişecek göster; yarım-iş/mtime tuzağına karşı GÖZLE onay)
 #   [1b] versiyonlu state farkı (goal.yaml + bounds.yaml canlı↔repo; kuru koşumda YALNIZ diff)
 #   [2] rsync (state/backups/.venv/.git HARİÇ)
-#   [3] uv sync --frozen
+#   [3] uv sync --frozen (dev grubu HARİÇ — [0d]'nin hükmüne dayanır)
 #   [4] bakım penceresi: durdur → versiyonlu state kopyası ([1b] KOPYALA dediyse) → başlat
 #   [5] doğrulama: servisler active + healthz 200 + son olay yaşı
 # Kullanım: ./dagit.sh            → dry-run'a kadar gider, ONAY İSTER
@@ -42,6 +43,22 @@ echo "=== [0c/5] lint-imports (mimari sözleşme kapısı) ==="
 uv run lint-imports || {
   echo "!! MİMARİ SÖZLEŞME KIRILDI — dağıtım İPTAL."
   echo "   Sözleşmeler: pyproject.toml [tool.importlinter]. İstisna eklemek bir borç kaydıdır."
+  exit 1
+}
+
+# [0d] DEV-DARALTMASI HÂLÂ GÜVENLİ Mİ? (WP-H, 2026-08-03). Adım [3] A1'e dev grubunu KURMAZ.
+# Bu daraltmanın tek dayanağı "çalışma yolunda sıfır dev-import" iddiasıydı ve o iddia bir kez,
+# elle, KAYITSIZ ölçülmüştü. Yarın `meridian/` içine bir `import hypothesis` girerse daraltma
+# canlıyı SESSİZCE düşürür — üstelik testler YEŞİL kalır (yerelde paket KURULUDUR), arıza yalnız
+# A1'de, süreç açılırken, bakım penceresi kapandıktan sonra görünür. Tam olarak [0c]'nin kapattığı
+# sınıf, başka bir kapıdan. Ölçüm ucuz (~1 sn) ve HÜKMÜ makine verir.
+# ÇIKIŞ KODU SÖZLEŞMESİ: 0 = daraltma güvenli · 1 = dev paketi çalışma yolunda · 2 = ölçülemedi.
+# 2 de ENGELDİR: ölçülemeyen daraltma 'güvenli' sayılmaz (fail-closed — bu depodaki genel yasa).
+echo "=== [0d/5] import taraması (dev-grubu daraltma kapısı) ==="
+uv run python ops/import_tarama.py --sessiz || {
+  echo "!! DEV-DARALTMASI ARTIK GÜVENLİ DEĞİL — dağıtım İPTAL."
+  echo "   Tam rapor: uv run python ops/import_tarama.py"
+  echo "   Ya import'u çalışma yolundan çıkar, ya paketi ANA bağımlılığa taşı (ikisi de bilinçli)."
   exit 1
 }
 
@@ -175,10 +192,24 @@ echo "=== [2/5] rsync ==="
 rsync -az --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/
 echo "  ✓"
 
-# [3] --no-dev (KARAR VERİLDİ 2026-08-01): dev grubu A1'e kurulmaz — çalışma yolunda sıfır
-# dev-import ölçüldü; audit kapısı artık alakasız dev-CVE'yle dağıtım bloklayamaz.
-echo "=== [3/5] uv sync --frozen ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv sync --frozen --no-dev -q && echo "  ✓"'
+# [3] DEV GRUBU A1'E KURULMAZ (karar 2026-08-01, ölçümü 2026-08-03'te kalıcılaştı): çalışma
+# yolunda sıfır dev-import — hüküm [0d]'de HER DAĞITIMDA yeniden ölçülür, burada yalnız uygulanır.
+# Kaldırılan 17 dağıtım (geçişli): pytest, hypothesis, import-linter+grimp, mutmut+libcst+textual…
+# Kazanç yalnız disk değil DENETİM YÜZEYİ: [0b] `uv audit` kapısı artık yalnız A1'de GERÇEKTEN
+# koşan koda ait CVE'lerle dağıtım bloklayabilir; bir test aracının CVE'si canlı dağıtımı durduramaz.
+#
+# BAYRAK KOŞUM ANINDA ÖLÇÜLÜR, VARSAYILMAZ. `--no-default-groups` semantik olarak daha dayanıklıdır:
+# `--no-dev` YALNIZ `dev` grubunu eler, yani `tool.uv.default-groups` yarın ikinci bir grupla
+# büyürse o grup A1'e SESSİZCE sızar (daraltma sanılan yerde daraltma olmaz). Ama o bayrağın
+# A1'deki uv sürümünde VAR OLDUĞU buradan görülemez ve olmayan bir bayrak dağıtımı bakım
+# penceresinin ortasında düşürürdü. Yardım çıktısına SORULUR; yoksa `--no-dev`e düşülür — bugün
+# ikisi de ÖLÇÜLEN aynı 17 paketi kaldırıyor (ops/import_tarama.py), yani düşüş bedava.
+SYNC_BAYRAK="--no-dev"
+if "${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; uv sync --help 2>/dev/null | grep -q -- "--no-default-groups"'; then
+  SYNC_BAYRAK="--no-default-groups"
+fi
+echo "=== [3/5] uv sync --frozen $SYNC_BAYRAK (dev grubu HARİÇ) ==="
+"${SSH[@]}" "export PATH=\"\$HOME/.local/bin:\$PATH\"; cd /opt/meridian && uv sync --frozen $SYNC_BAYRAK -q && echo '  ✓'"
 
 echo "=== [4/5] bakım penceresi ==="
 "${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive && echo "  ✓ durdu"'
