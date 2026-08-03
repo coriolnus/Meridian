@@ -43,11 +43,19 @@ fill: next_bar_open
 # Yasayı OKUYAN tek yer `broker.entry_law()`; iki motor da (iç `fill_entry` + ayna
 # `alpaca.submit_plan`) oradan okur — kopya yok.
 execution_v2:
-  # limit = tetik + min(limit_atr_mult·ATR14, limit_pct_cap·tetik). Kart grid'inin VARSAYILAN
-  # noktası. Diğer noktalar: (0.25, 0.005) ve (1.0, 0.015) — hangisinin daha iyi olduğu E2
-  # defteri dolduktan SONRA ölçülür; bugün seçim gerekçesi ölçüm değil VARSAYILANDIR ve öyle yazılı.
-  limit_atr_mult: 0.5
-  limit_pct_cap: 0.01
+  # limit = tetik + min(limit_atr_mult·ATR14, limit_pct_cap·tetik).
+  # OPERATÖR KARARI 2026-08-03 ("önerin neyse uygula" — E1 grid hükmü 413d141 üzerine):
+  # E1 bacağı BAĞLAMAZ hale getirildi (0,5·ATR/%1 → 100·ATR/%4). Ölçüm: grid'in üç noktası da
+  # geriye-dönük defterde ZARARLI ve monoton (−7,2k/−1,2k/−2,9k$), tek artı kolon limitsiz
+  # (+2.957$/+1.959$-E3); kaçan dolumlar sistematik kazanan. %4 = MAX_ENTRY_GAP_PCT dış zarfı —
+  # felaket-gap koruması KALIR (iki tavan çelişmez, sıkı olan bağlar; artık dış zarf bağlayan
+  # taraftır). AMAÇLANAN İKİNCİ ETKİ: paper dolumları E2 defterini (entry_execution.jsonl)
+  # GERÇEK veriyle doldurur — limitin gerçek değeri ilk kez ölçülür olur. GERİ-DÖNÜŞ KAPISI:
+  # canlıya-geçiş (autonomy_level>0) E2 kanıtıyla yeniden hüküm ŞARTINA bağlıdır; o hüküm
+  # verilmeden bu satırlar canlı-para moduna taşınamaz. Eski kart-varsayılanı (0.5, 0.01)
+  # broker.py modül-sabitlerinde yedek olarak durur (config yoksa yasa ona düşer).
+  limit_atr_mult: 100.0
+  limit_pct_cap: 0.04
   # gap davranışı: gönderim anında fiyat zaten tetiğin üstündeyse (buy-stop GEÇERSİZ — bugünkü
   # 95/95 reddin kökü) ne olacak? "marketable_limit" = limit fiyatlı emir (tavan yine limit),
   # "cancel" = gap-risk vetosu (emir gönderilmez, iç motor da doldurmaz).

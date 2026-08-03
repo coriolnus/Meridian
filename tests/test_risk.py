@@ -44,20 +44,30 @@ def test_size_mult_shrinks_risk():
 
 
 # ---------------- entry gap breaker ----------------
-def test_gap_up_above_trigger_is_skipped():
-    """E1 (WP-E, 2026-07-31) — İDDİA SIKILAŞTI. Eskiden tetiğin %2 üstünde açılan bir bar DOLARdI
-    (yalnız %4 max-chase bağlıyordu); artık `broker.entry_law` limit tavanı (varsayılan %1) daha
-    SIKI olan taraftır ve İKİ MOTORDA da bağlar. %4 chase tavanı dış zarf olarak yerinde kalır."""
+def test_gap_up_above_the_entry_envelope_is_skipped():
+    """Bu testin KORUDUĞU ŞEY: büyük bir gap-up KOVALANMAZ — açılış giriş zarfının üstündeyse dolum
+    YOKTUR ve sebebi adıyla kaydedilir (sessiz yutma yok).
+
+    ZARFIN YERİ İKİ KEZ TAŞINDI, korunan şey aynı kaldı (eski ad:
+    `test_gap_up_above_trigger_is_skipped`):
+      * WP-E (2026-07-31): `broker.entry_law` limit tavanı (%1) `MAX_ENTRY_GAP_PCT`ten (%4) SIKIydı,
+        bağlayan taraf limitti — tetiğin %2 üstünde açan bar `entry_missed_limit` ile düşerdi.
+      * OPERATÖR KARARI 2026-08-03 (goal.yaml `execution_v2`; kart EXE-2026-001 hükmü + ölçüm
+        research/olcumler/e1_grid_2026-08-03): limit tavanı %1 → %4, ATR bacağı 0,5 → 100 —
+        E1 bacağı artık BAĞLAMAZ, zarf `MAX_ENTRY_GAP_PCT`e (dış zarf) döndü. Yani %4 İÇİNDEKİ
+        tetik-üstü açılış artık DOLAR (kararın amaçlanan etkisi: kaçan dolumlar geriye-dönük
+        defterde sistematik kazanandı) ve iddia %4 eşiğine TAŞINDI; felaket-gap koruması KALDI."""
     b = broker.PaperBroker(equity=100_000, slippage_bps=0, commission_per_share=0.0)
     plan = {"id": "P1", "ticker": "X", "entry_trigger": 100.0, "stop": 95.0, "profit_target": 115.0, "size_r": 1.0}
     # opens 6% above the trigger (> MAX_ENTRY_GAP_PCT) -> no chase
-    assert b.fill_entry(plan, next_open=106.0, ts="2024-01-02", equity=100_000) is None
-    # opens 2% above the trigger -> LİMİT TAVANI (%1) reddeder, sebebi adıyla kaydedilir
     rej = {}
-    assert b.fill_entry(plan, next_open=102.0, ts="2024-01-02", equity=100_000, reject_out=rej) is None
-    assert rej["reason"] == broker.EV_MISSED_LIMIT
-    # tavanın ALTINDA açılış (%0.5) -> dolar
-    assert b.fill_entry(plan, next_open=100.5, ts="2024-01-02", equity=100_000) is not None
+    assert b.fill_entry(plan, next_open=106.0, ts="2024-01-02", equity=100_000, reject_out=rej) is None
+    assert rej["reason"] == "max_chase"
+    # zarfın BİR KURUŞ üstünde açılış -> hâlâ reddedilir (sınır DIŞARIDAN sınanır)
+    zarf = 100.0 * (1 + broker.MAX_ENTRY_GAP_PCT)
+    assert b.fill_entry(plan, next_open=zarf + 0.01, ts="2024-01-02", equity=100_000) is None
+    # zarfın İÇİNDE (%2) açan tetik-üstü bar -> ARTIK DOLAR (2026-08-03 kararı; eskiden %1 limiti keserdi)
+    assert b.fill_entry(plan, next_open=102.0, ts="2024-01-02", equity=100_000) is not None
 
 
 def test_gap_through_stop_is_skipped():

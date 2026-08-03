@@ -30,9 +30,25 @@ from meridian.broker import PaperBroker
 PLAN = {"id": "P-2026-07-31-AAA", "ticker": "AAA", "entry_trigger": 100.0, "stop": 95.0,
         "profit_target": 115.0, "size_r": 1.0}
 
+# OPERATÖR KARARI 2026-08-03 (goal.yaml `execution_v2` karar-yorumu; kart EXE-2026-001 hükmü + ölçüm
+# research/olcumler/e1_grid_2026-08-03): E1 giriş limiti BAĞLAMAZ hâle getirildi — 0,5·ATR/%1 →
+# 100·ATR/%4. YÜRÜRLÜKTE ATR bacağı hiçbir makul senaryoda bağlamaz ve %4 (= MAX_ENTRY_GAP_PCT)
+# bağlayan taraftır. Aşağıdaki MEKANİZMA testleri yasanın HESABINI sınar (min-of-two-caps, gap
+# yolları, kaçan dolumun ölçülmesi), YÜRÜRLÜĞÜNÜ değil — bu yüzden yasa kaynağı eski kart
+# varsayılanına AÇIKÇA sabitlenir. Yürürlük iddiası ayrı testtedir:
+# `test_e1_limit_cap_never_loosens_the_max_chase_ceiling`.
+KART_YASASI = {"limit_atr_mult": 0.5, "limit_pct_cap": 0.01}
+
 
 def _broker():
     return PaperBroker(equity=100_000.0, slippage_bps=0.0, commission_per_share=0.0)
+
+
+def _kart_yasasini_sabitle(monkeypatch):
+    """`fill_entry` yasayı argümandan DEĞİL `broker.entry_law()`tan okur; mekanizma testlerinde
+    yasa kaynağı burada kart varsayılanına sabitlenir (açık override, sessiz varsayım değil)."""
+    _asil = BR.entry_law
+    monkeypatch.setattr(BR, "entry_law", lambda override=None: _asil(override or KART_YASASI))
 
 
 # =================================================================================================
@@ -64,7 +80,10 @@ def test_e1_law_lives_in_exactly_one_place(sandbox_state):
     (100.0, 0.0, 101.0),      # ATR sıfır = ölçülemedi ile aynı dürüst muamele
 ])
 def test_e1_limit_formula_is_the_min_of_two_caps(sandbox_state, trigger, atr, beklenen):
-    assert BR.entry_limit_price(trigger, atr) == pytest.approx(beklenen)
+    # MEKANİZMA: hesap `min(mult·ATR, pct·tetik)` mi? Yasa kaynağı kart varsayılanına sabit
+    # (operatör kararı 2026-08-03 yürürlükteki bacağı 100·ATR/%4 yaptı — orada `min()` hiç ayırt
+    # etmez ve dört parametrenin dördü de aynı sayıya çökerdi, yani formül ölçülmez olurdu).
+    assert BR.entry_limit_price(trigger, atr, BR.entry_law(KART_YASASI)) == pytest.approx(beklenen)
 
 
 def test_e1_both_engines_agree_on_the_boundary_price(sandbox_state, monkeypatch):
@@ -100,14 +119,17 @@ def test_e1_both_engines_agree_on_the_boundary_price(sandbox_state, monkeypatch)
 
 
 def test_e1_gap_path_1_normal_trigger_is_a_stop_limit(sandbox_state):
-    d = BR.entry_order_decision(100.0, ref_price=99.0, atr=1.0)
+    # MEKANİZMA (gap yolu 1): yasa kaynağı kart varsayılanında sabit — ölçülen şey DAL SEÇİMİ ve
+    # limitin o dalda nasıl kurulduğu (operatör kararı 2026-08-03 yalnız tavanları değiştirdi).
+    d = BR.entry_order_decision(100.0, ref_price=99.0, atr=1.0, cfg=BR.entry_law(KART_YASASI))
     assert d["mode"] == "stop_limit" and d["olay"] == BR.EV_STOP_LIMIT
     assert d["gap_at_submit"] is False and d["limit"] == 100.5 and d["tif"] == "day"
 
 
 def test_e1_gap_path_2_price_above_trigger_becomes_a_marketable_limit(sandbox_state):
     """KÖK NEDEN: gönderim anında fiyat tetiğin ÜSTÜNDEyse buy-stop GEÇERSİZDİR."""
-    d = BR.entry_order_decision(100.0, ref_price=100.0, atr=1.0)
+    # MEKANİZMA (gap yolu 2): yasa kaynağı kart varsayılanında sabit — bkz. gap yolu 1.
+    d = BR.entry_order_decision(100.0, ref_price=100.0, atr=1.0, cfg=BR.entry_law(KART_YASASI))
     assert d["mode"] == "marketable_limit" and d["olay"] == BR.EV_GAP_MARKETABLE
     assert d["gap_at_submit"] is True and d["limit"] == 100.5
 
@@ -149,9 +171,13 @@ def test_e1_gap_at_submit_none_never_vetoes(sandbox_state, monkeypatch):
     assert b.fill_entry(PLAN, 100.2, "2026-08-01", 100_000.0, atr=1.0, gap_at_submit=None) is not None
 
 
-def test_e1_missed_limit_is_measured_not_swallowed(sandbox_state):
+def test_e1_missed_limit_is_measured_not_swallowed(sandbox_state, monkeypatch):
     """Açılış limitin üstündeyse dolum YOK — ama kaçan işlem ADLANDIRILIR ve aşımı bps ile ölçülür.
     Eski kod bu durumda ya doldurur (yasa yok) ya da sessizce None dönerdi (ölçüm yok)."""
+    # MEKANİZMA: ölçülen şey KAÇAN DOLUMUN ADLANDIRILMASI + aşım hesabı. Yasa kaynağı kart
+    # varsayılanına sabit (operatör kararı 2026-08-03: yürürlükte limit %4'tür ve bu bar dolardı —
+    # o zaman "kaçan dolum" mekanizması hiç koşmaz, yani ölçüm boşa düşerdi).
+    _kart_yasasini_sabitle(monkeypatch)
     rej: dict = {}
     b = _broker()
     assert b.fill_entry(PLAN, 102.0, "2026-08-01", 100_000.0, atr=1.0, reject_out=rej) is None
@@ -161,13 +187,31 @@ def test_e1_missed_limit_is_measured_not_swallowed(sandbox_state):
     assert rej["plan_id"] == PLAN["id"]          # cf defteriyle BİRLEŞTİRME anahtarı
 
 
-def test_e1_limit_cap_is_tighter_than_the_max_chase_ceiling(sandbox_state):
-    """İKİ TAVANIN İLİŞKİSİ: daima DAHA SIKI olan bağlar. Bugünkü yapılandırmada limit (%1)
-    chase tavanından (%4) sıkıdır — yani %4 dış zarftır ve iki tavan hiçbir yolda ÇELİŞMEZ."""
-    assert BR.entry_limit_price(100.0, None) < 100.0 * (1 + BR.MAX_ENTRY_GAP_PCT)
+def test_e1_limit_cap_never_loosens_the_max_chase_ceiling(sandbox_state):
+    """YÜRÜRLÜK ÇİVİSİ (eski ad: `test_e1_limit_cap_is_tighter_than_the_max_chase_ceiling`).
+
+    İKİ TAVANIN İLİŞKİSİ DEĞİŞMEDİ — daima DAHA SIKI olan bağlar — ama HANGİ tarafın sıktığı
+    değişti: OPERATÖR KARARI 2026-08-03 (goal.yaml `execution_v2`; kart EXE-2026-001 hükmü, ölçüm
+    research/olcumler/e1_grid_2026-08-03) limit tavanını %1 → %4'e çıkardı, yani limit tavanı artık
+    `MAX_ENTRY_GAP_PCT` DIŞ ZARFIYLA TAM EŞİTTİR ve bağlayan taraf dış zarftır.
+
+    Çivinin yönü bu yüzden `<=`: limit tavanı dış zarfı GEVŞETEMEZ (aşsaydı %4 felaket-gap koruması
+    sessizce ölürdü), eşit olabilir. Eşitlikte hangi kapının bağladığı da ölçülür: `fill_entry`te
+    chase kapısı limit kapısından ÖNCE koşar, dolayısıyla ret nedeni `max_chase` diye adlandırılır
+    — iki tavan ÇELİŞMEZ, yalnız adlandırma dış zarfa düşer."""
+    zarf = 100.0 * (1 + BR.MAX_ENTRY_GAP_PCT)
+    assert BR.entry_limit_price(100.0, None) <= zarf, \
+        "limit tavanı %4 chase zarfının ÜSTÜNE çıktı — dış zarf fiilen ölü, iki tavan çelişiyor"
+    assert BR.entry_limit_price(100.0, None) == pytest.approx(zarf), \
+        "yürürlükte iki tavan EŞİT olmalı (operatör kararı 2026-08-03: limit_pct_cap = MAX_ENTRY_GAP_PCT)"
+    # (a) zarfın ÜSTÜNDE açan bar: eşitlikte bağlayan taraf dış zarftır
     rej: dict = {}
-    _broker().fill_entry(PLAN, 103.0, "2026-08-01", 100_000.0, reject_out=rej)
-    assert rej["reason"] == BR.EV_MISSED_LIMIT, "chase tavanı limitten ÖNCE bağladı — sıralama ters"
+    assert _broker().fill_entry(PLAN, zarf + 0.01, "2026-08-01", 100_000.0, reject_out=rej) is None
+    assert rej["reason"] == "max_chase", f"eşitlikte dış zarf bağlamadı — sıralama ters: {rej!r}"
+    # (b) zarfın İÇİNDE açan tetik-ÜSTÜ bar artık DOLAR — kararın amaçlanan etkisi (kaçan dolumlar
+    # geriye-dönük defterde sistematik kazanandı; E1 grid'inin üç noktası da zararlıydı)
+    assert _broker().fill_entry(PLAN, 103.0, "2026-08-01", 100_000.0) is not None, \
+        "yürürlükte %4 zarfının içindeki tetik-üstü açılış dolmalı (E1 bacağı BAĞLAMAZ)"
 
 
 def test_e1_config_selects_the_grid_point_and_clamps_garbage(sandbox_state):

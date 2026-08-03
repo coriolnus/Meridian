@@ -189,9 +189,20 @@ def test_c11_golge_yan_haritasi_ATRyi_SINYALDEN_doldurur(seeded, monkeypatch):
         "yan harita ATR'siz kaldı — sinyalde ÖLÇÜLMÜŞ değer icra yoluna geçmiyor"
 
 
-def test_c11_atr_bacagi_limiti_GERCEKTEN_sikilastirir():
+def test_c11_atr_bacagi_limiti_GERCEKTEN_sikilastirir(monkeypatch):
     """AYRIŞMANIN BÜYÜKLÜĞÜ (pozitif kontrol): ATR bacağı bağladığında iki limit FARKLIDIR, yani
-    yukarıdaki kablo testleri boş bir farkı çivilemiyor."""
+    yukarıdaki kablo testleri boş bir farkı çivilemiyor.
+
+    MEKANİZMA TESTİ: ölçülen şey, ATR argümanı taşındığında limitin GERÇEKTEN daralabilmesidir —
+    hangi bacağın YÜRÜRLÜKTE bağladığı değil. OPERATÖR KARARI 2026-08-03 (goal.yaml `execution_v2`;
+    kart EXE-2026-001 hükmü + ölçüm research/olcumler/e1_grid_2026-08-03) yasayı 0,5·ATR/%1 →
+    100·ATR/%4 yaptı ve yürürlükte ATR bacağı BAĞLAMIYOR; orada `dar == genis` olur ve yukarıdaki
+    kablo testlerinin pozitif kontrolü ölçülemez hâle gelirdi. Yasa kaynağı bu yüzden eski kart
+    varsayılanına AÇIKÇA sabitlenir (`fill_entry` yasayı argümandan değil `entry_law()`tan okur)."""
+    _asil = BR.entry_law
+    monkeypatch.setattr(BR, "entry_law",
+                        lambda override=None: _asil(override or {"limit_atr_mult": 0.5,
+                                                                 "limit_pct_cap": 0.01}))
     law = BR.entry_law()
     dar = BR.entry_limit_price(100.0, 1.0, law)     # 0,5·ATR = 0,50 < %1·100
     genis = BR.entry_limit_price(100.0, None, law)  # yalnız yüzde tavanı

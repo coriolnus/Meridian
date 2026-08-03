@@ -40,6 +40,13 @@ from meridian.broker import PaperBroker
 
 MUT_SRC = pathlib.Path("meridian/mutation.py")
 
+# OPERATÖR KARARI 2026-08-03 (goal.yaml `execution_v2` karar-yorumu; kart EXE-2026-001 hükmü + ölçüm
+# research/olcumler/e1_grid_2026-08-03): E1 giriş limiti 0,5·ATR/%1 → 100·ATR/%4 yapıldı, yani
+# YÜRÜRLÜKTE ATR bacağı bağlamaz. Aşağıdaki iki POZİTİF KONTROL, kablonun taşıdığı ATR'nin limiti
+# DARALTABİLDİĞİNİ (bacağın dekor olmadığını) ölçer — bu bir MEKANİZMA iddiasıdır, yürürlük iddiası
+# değil — ve yasa kaynağı bu yüzden eski kart varsayılanına AÇIKÇA sabitlenir.
+KART_YASASI = {"limit_atr_mult": 0.5, "limit_pct_cap": 0.01}
+
 _SIMDI = dt.datetime(2026, 7, 27, 15, 40, 0, tzinfo=dt.timezone.utc)   # RTH içi (11:40 ET)
 _SEANS = "2026-07-27"
 
@@ -88,7 +95,9 @@ def test_c18_mutation_ATR_bacagi_GERCEKTEN_baglar(tmp_path, monkeypatch):
     cagrilar = _fill_casusu(monkeypatch)
     mutation.build_state(tmp_path / "baseline")
 
-    yasa = BR.entry_law()
+    # MEKANİZMA: yasa kaynağı kart varsayılanında sabit (bkz. KART_YASASI) — yürürlükteki 100·ATR/%4
+    # yasasında `min()` HİÇBİR ATR'yi ayırt etmez, yani ölçüm fikstürü değil kararı ölçerdi.
+    yasa = BR.entry_law(KART_YASASI)
     daraltan = 0
     for c in cagrilar:
         if c["atr"] is None:
@@ -211,13 +220,19 @@ def test_c18_golge_UC_HAL_ayri_cumle(sandbox_state, saat):
     assert "satır YOK" not in satir["atr_kaynak"], f"yanlış cümle: {satir['atr_kaynak']!r}"
 
 
-def test_c18_golge_ATR_limiti_BAGLAR_kacan_dolum_gorunur(sandbox_state, saat):
+def test_c18_golge_ATR_limiti_BAGLAR_kacan_dolum_gorunur(sandbox_state, saat, monkeypatch):
     """POZİTİF KONTROL + ASIL BULGU: dar ATR'de gölge artık canlının REDDEDECEĞİ dolumu YAZMIYOR.
 
     Aynı bar iki kez ölçülür: (a) yan tabloda dar bir ATR var → limit ATR bacağıyla kurulur ve
     açılış onun ÜSTÜNDE kalır → `blocked` + `red_nedeni=entry_missed_limit`; (b) tablo boş →
-    yalnız %1 tavanı → `would_submit`. Eski kod (b)'yi HER İKİ hâlde de yazıyordu."""
+    yalnız yüzde tavanı → `would_submit`. Eski kod (b)'yi HER İKİ hâlde de yazıyordu.
+
+    MEKANİZMA: ölçülen şey, yan tablodaki ATR'nin gölgenin dolum kararını GERÇEKTEN değiştirmesidir
+    (kablo canlı mı). Yasa kaynağı bu yüzden kart varsayılanına sabitlenir — yürürlükteki 100·ATR/%4
+    yasasında iki limit AYNI sayıdır, iki dal ayrışmaz ve kablonun kopması test edilemez olurdu."""
     plan = _plan()
+    _asil = BR.entry_law
+    monkeypatch.setattr(BR, "entry_law", lambda override=None: _asil(override or KART_YASASI))
     yasa = BR.entry_law()
     dar_atr = 0.2                                   # 0,5·0,2 = 0,10 < %1·105 = 1,05
     dar_limit = BR.entry_limit_price(plan["entry_trigger"], dar_atr, yasa)
