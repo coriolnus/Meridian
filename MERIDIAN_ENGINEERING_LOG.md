@@ -305,6 +305,26 @@ Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerç
   arka-uç değişimi onu sessizce deler; sandbox kuran her mekanizmada reset STORE katmanından test
   edilmeli.
 
+- **SPRINT TURU PENCERESİ KAPANDI + KABUL ÖLÇÜTÜ ÖLÇÜMLE TAMAM (2026-08-03 ~04:35 UTC, Rol-1,
+  operatör talimatlı "Faz B bitince koş, sabaha bırakma"; 23:30 kısıtı operatör kalemiyle
+  kaldırılmıştı):** otoriter suite donmuş `4dbe688` tepesinde **4133/0 (EXIT 0, 23:06 dk)**; tek
+  sonraki commit (a933a3e) günlük-yalnız → hüküm dağıtılan içeriğe birebir taşınır. `dagit.sh
+  --uygula` 04:31 UTC: kapılar yeşil (audit ✓ · lint 5/5 KEPT · [1b] bounds/goal BİREBİR), dry-run
+  delta YALNIZ 4 doküman/cache satırı — kod, 04:21 penceresiyle (tick-watchdog dirilişi turu) zaten
+  eşitlenmişti; restart + healthz 200 + üç birim aktif + v181/SKIP_COPY/test damgaları diskte
+  doğrulandı. KABUL ÖLÇÜTÜ (üç gösterge, iki bağımsız sprintte): (1) sandbox DB'siz doğdu ✓ (22:04
+  ve 04:33 koşuları; yalnız inert `meridian.db.yedek` kopyalanıyor — `storage.active()` görmez,
+  1,3M'lik SKIP_COPY boyut-kalemi olarak nota geçti); (2) Faz A gerçek yürüyüş ✓ (60 sn ölüm
+  imzası yerine 5s46d); (3) **nihai n_v1 = 115/523 seans** ✓ — min_sample'ın ~4 katı, "modern
+  giriş yasasında kuraklık" çatalı ölçümle KAPANDI (07-22 eski-yasa emsali 100'dü). YAN VAKA
+  (sınıf: paralel-oturum restart'ı koşan sprint çocuğunu keser — cgroup): 22:04 sprintinin Faz
+  B'si, 04:21 penceresinin restart'ıyla arama ORTASINDA öldü (pid 15110; sprint_runs.jsonl
+  doğmadan; status "search"te donuk kaldı — sessiz ölüm, hiçbir bekçi bunu ölçmüyor → sıradaki
+  tur adayı: sprint-çocuğu yetim/ölüm dedektörü). Faz B sonucu için sprint dağıtım-sonrası
+  YENİDEN tetiklendi (sid 20260803-043330, CLI `sprint.start()` — token'sız yol; damga
+  n_hyp_at_start=51 yerinde); faz-geçiş monitörü kurulu, B hükmü (shipped/no_clearing + ilk
+  sprint_runs.jsonl satırı) geldiğinde işlenecek.
+
 ## DAĞITIM PENCERESİ PLANI — TAMAMLANDI (2026-08-02; pencere 14:00 UTC, kapanış ~15:00 UTC)
 
 **Kapsam:** main tepesi (şu an 892bf75) + inecek v76 fikstür onarımı. İçerik: KOVA-B dalgaları
