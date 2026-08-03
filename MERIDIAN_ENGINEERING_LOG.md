@@ -354,6 +354,19 @@ günlüğe atılan HER commit aynı commit'te `ops/runbook_uret.py` koşulmazsa 
 (892bf75 bir kez kapattı, sonraki log commit'i yine açtı; bu commit'te yeniden kapatılıyor).
 DERS adayı: t3'ü kıran şey belge değil KADANS — log-edit + regen tek atomik alışkanlık olmalı.
 
+**PAZARTESİ-ÖNCESİ PENCERE (2026-08-03 04:20-04:23 UTC, Rol-1):** otoriter suite SIFIR kırmızı →
+dagit --uygula (state adımı: `limits.heat_hard_r` 4,5→5,0 CANLIYA kopyalandı — operatör kararı
+d01ccb5 artık motorda) → **TICK-WATCHDOG DİRİLDİ**: birimler /etc'ye, timer `active`, üç-ayaklı
+test-ateşleme geçti (ExecStart -x ✓ · timer ✓ · hüküm satırı sayı basıyor — ilk atışta YAS-lütfu
+dalı doğru çalıştı: "meridian 23s önce başladı (<300s) → hüküm VERİLMEDİ"). 3 Temmuz'dan beri ölü
+olan asılı-tick koruması piyasa açılışından ~9 saat önce yerinde. → **LITESTREAM AŞAMA-1 KURULDU**:
+sürüm-sabitli+sha256 kurulum, birim `active`, güvenlik skoru **2.0 OK**, replica çalışıyor
+(snapshot 358.908 B + "replica sync" txid eşleşmesi, /home/ubuntu/replica 1,1 MB); canlı DB
+bozulmadı. RPO günler→saniyeler (aynı-disk şerhi: medya arızası kapsanmaz — aşama-2 OCI bucket
+operatörde). Dört birim aktif: meridian · barsarchive · litestream · tick-watchdog.timer.
+SECCOMP NÖBETİ: 20 saatte 0 SIGSYS (H3-t2 penceresi temiz kapanıyor). AÇIK: LLM inceleme-kaydı
+hâlâ kota-kapılı (soğuma 3.853 s; dosya 2026-07-27'de) — dış-kota, kod tarafı hazır.
+
 **AĞ-KAPISI İNDİ — "CANLI-BEKÇİ YANLIŞ ALARMI" AÇIK #1 KAPANDI (2026-08-03 ~02:50 TR, Rol-1;
 devir hungry-jemison'dan):** birincil aday (soket-düzeyi autouse kapı) ölçümle kaldı: 13-dosya
 süpürmesi kapısız 37 dış TCP (4 IP) → kapılı 0; FAILED küme diff'i BOŞ (yama yetkisi doğmadı);
