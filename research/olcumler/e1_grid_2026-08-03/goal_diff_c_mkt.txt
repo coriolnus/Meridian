@@ -1,0 +1,4 @@
+-  limit_atr_mult: 0.5
++  limit_atr_mult: 1.0
+-  limit_pct_cap: 0.01
++  limit_pct_cap: 0.015

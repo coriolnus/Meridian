@@ -1,0 +1,1811 @@
+{
+ "olcum": "EXE-2026-001 · E1 icra grid",
+ "kart": "research/cards/EXE-2026-001-entry-execution.yaml (OKUNDU, DEĞİŞTİRİLMEDİ)",
+ "tablo": [
+  {
+   "kol": "a_mkt",
+   "etiket": "min(0,25·ATR14, %0,5) × marketable_limit",
+   "entry_law": {
+    "limit_atr_mult": 0.25,
+    "limit_pct_cap": 0.005,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 0.25,
+    "limit_pct_cap": 0.005,
+    "gap_behavior": "marketable_limit",
+    "tif": "day"
+   },
+   "cagri_n": 124,
+   "dolan_n": 81,
+   "dolmayan_n": 43,
+   "dolmama_orani": 0.3468,
+   "dolmama_orani_yalniz_limit": 0.3065,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.0532,
+   "ret_nedenleri": {
+    "entry_missed_limit": 38,
+    "max_chase": 2,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -7202.46,
+   "net_usd_kotumser": -7830.84,
+   "kotumser_ek_maliyet": 628.38,
+   "search_net_usd": -3770.33,
+   "search_net_usd_kotumser": -3897.08,
+   "para_v3_search": null,
+   "oos_score": null,
+   "is_score": 0.0557,
+   "holdout_score": null,
+   "n_trades_total": 81,
+   "oos_n": 18,
+   "search_n": 18,
+   "avg_r": null,
+   "win_rate": null,
+   "sharpe": null,
+   "total_return_oos": null,
+   "max_drawdown_islem_oos": null,
+   "mtm_max_dd_veto": 0.0853,
+   "mtm_max_dd_tam_pencere": 0.085341,
+   "tam_pencere_getiri": -0.072025,
+   "profit_factor": 0.7074,
+   "friksiyon_usd": 1259.87,
+   "search_pnl_usd": -3770.33,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 43,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 38,
+    "ort": 0.2265,
+    "medyan": 0.2849,
+    "toplam": 8.6074,
+    "min": -1.9667,
+    "maks": 2.372,
+    "poz_oran": 0.6053
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 38,
+    "ort": 0.0172,
+    "medyan": 0.021,
+    "toplam": 0.6545,
+    "min": -0.1216,
+    "maks": 0.1854,
+    "poz_oran": 0.6053
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 40,
+    "ort": 0.2084,
+    "medyan": 0.2849,
+    "toplam": 8.3367,
+    "min": -1.9667,
+    "maks": 2.372,
+    "poz_oran": 0.6
+   },
+   "skor_none_nedeni": "18/30 closed trades — score undefined (None, not 0.0)",
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 702,
+   "digest_tum": "35ade95809c1f406",
+   "digest_search": "87e6f9e59b201927",
+   "plan_digest": "7407193b0859f87d",
+   "equity_digest": "47bd7984c9ae325c",
+   "gap_gozlemi": {
+    "cagri": 124,
+    "gap_at_submit_none": 124,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1816.4,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "a_cnl",
+   "etiket": "min(0,25·ATR14, %0,5) × cancel",
+   "entry_law": {
+    "limit_atr_mult": 0.25,
+    "limit_pct_cap": 0.005,
+    "gap_behavior": "cancel",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 0.25,
+    "limit_pct_cap": 0.005,
+    "gap_behavior": "cancel",
+    "tif": "day"
+   },
+   "cagri_n": 124,
+   "dolan_n": 81,
+   "dolmayan_n": 43,
+   "dolmama_orani": 0.3468,
+   "dolmama_orani_yalniz_limit": 0.3065,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.0532,
+   "ret_nedenleri": {
+    "entry_missed_limit": 38,
+    "max_chase": 2,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -7202.46,
+   "net_usd_kotumser": -7830.84,
+   "kotumser_ek_maliyet": 628.38,
+   "search_net_usd": -3770.33,
+   "search_net_usd_kotumser": -3897.08,
+   "para_v3_search": null,
+   "oos_score": null,
+   "is_score": 0.0557,
+   "holdout_score": null,
+   "n_trades_total": 81,
+   "oos_n": 18,
+   "search_n": 18,
+   "avg_r": null,
+   "win_rate": null,
+   "sharpe": null,
+   "total_return_oos": null,
+   "max_drawdown_islem_oos": null,
+   "mtm_max_dd_veto": 0.0853,
+   "mtm_max_dd_tam_pencere": 0.085341,
+   "tam_pencere_getiri": -0.072025,
+   "profit_factor": 0.7074,
+   "friksiyon_usd": 1259.87,
+   "search_pnl_usd": -3770.33,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 43,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 38,
+    "ort": 0.2265,
+    "medyan": 0.2849,
+    "toplam": 8.6074,
+    "min": -1.9667,
+    "maks": 2.372,
+    "poz_oran": 0.6053
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 38,
+    "ort": 0.0172,
+    "medyan": 0.021,
+    "toplam": 0.6545,
+    "min": -0.1216,
+    "maks": 0.1854,
+    "poz_oran": 0.6053
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 40,
+    "ort": 0.2084,
+    "medyan": 0.2849,
+    "toplam": 8.3367,
+    "min": -1.9667,
+    "maks": 2.372,
+    "poz_oran": 0.6
+   },
+   "skor_none_nedeni": "18/30 closed trades — score undefined (None, not 0.0)",
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 702,
+   "digest_tum": "35ade95809c1f406",
+   "digest_search": "87e6f9e59b201927",
+   "plan_digest": "7407193b0859f87d",
+   "equity_digest": "47bd7984c9ae325c",
+   "gap_gozlemi": {
+    "cagri": 124,
+    "gap_at_submit_none": 124,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1796.5,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "b_mkt",
+   "etiket": "min(0,5·ATR14, %1,0) × marketable_limit  [MEVCUT VARSAYILAN]",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "marketable_limit",
+    "tif": "day"
+   },
+   "cagri_n": 176,
+   "dolan_n": 147,
+   "dolmayan_n": 29,
+   "dolmama_orani": 0.1648,
+   "dolmama_orani_yalniz_limit": 0.1307,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.2352,
+   "ret_nedenleri": {
+    "entry_missed_limit": 23,
+    "max_chase": 3,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -1182.15,
+   "net_usd_kotumser": -2045.61,
+   "kotumser_ek_maliyet": 863.46,
+   "search_net_usd": -161.89,
+   "search_net_usd_kotumser": -546.28,
+   "para_v3_search": -0.0037,
+   "oos_score": 0.0196,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 147,
+   "oos_n": 75,
+   "search_n": 61,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "sharpe": -0.043,
+   "total_return_oos": -0.0046,
+   "max_drawdown_islem_oos": 0.0735,
+   "mtm_max_dd_veto": 0.0739,
+   "mtm_max_dd_tam_pencere": 0.073901,
+   "tam_pencere_getiri": -0.011821,
+   "profit_factor": 0.9646,
+   "friksiyon_usd": 1735.61,
+   "search_pnl_usd": -161.89,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 29,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 23,
+    "ort": 0.2577,
+    "medyan": 0.2849,
+    "toplam": 5.9281,
+    "min": -1.5244,
+    "maks": 2.7396,
+    "poz_oran": 0.5217
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 23,
+    "ort": 0.0132,
+    "medyan": 0.0146,
+    "toplam": 0.3045,
+    "min": -0.1958,
+    "maks": 0.2278,
+    "poz_oran": 0.5217
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 26,
+    "ort": 0.2734,
+    "medyan": 0.3294,
+    "toplam": 7.1096,
+    "min": -1.5244,
+    "maks": 2.7396,
+    "poz_oran": 0.5769
+   },
+   "skor_none_nedeni": null,
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 639,
+   "digest_tum": "4676800e30f1d90e",
+   "digest_search": "3e054b7e23f0e595",
+   "plan_digest": "e907ac6864525bcf",
+   "equity_digest": "5772bc9251a19d21",
+   "gap_gozlemi": {
+    "cagri": 176,
+    "gap_at_submit_none": 176,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1741.8,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "b_cnl",
+   "etiket": "min(0,5·ATR14, %1,0) × cancel",
+   "entry_law": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "cancel",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "gap_behavior": "cancel",
+    "tif": "day"
+   },
+   "cagri_n": 176,
+   "dolan_n": 147,
+   "dolmayan_n": 29,
+   "dolmama_orani": 0.1648,
+   "dolmama_orani_yalniz_limit": 0.1307,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.2352,
+   "ret_nedenleri": {
+    "entry_missed_limit": 23,
+    "max_chase": 3,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -1182.15,
+   "net_usd_kotumser": -2045.61,
+   "kotumser_ek_maliyet": 863.46,
+   "search_net_usd": -161.89,
+   "search_net_usd_kotumser": -546.28,
+   "para_v3_search": -0.0037,
+   "oos_score": 0.0196,
+   "is_score": 0.0651,
+   "holdout_score": null,
+   "n_trades_total": 147,
+   "oos_n": 75,
+   "search_n": 61,
+   "avg_r": -0.015,
+   "win_rate": 0.333,
+   "sharpe": -0.043,
+   "total_return_oos": -0.0046,
+   "max_drawdown_islem_oos": 0.0735,
+   "mtm_max_dd_veto": 0.0739,
+   "mtm_max_dd_tam_pencere": 0.073901,
+   "tam_pencere_getiri": -0.011821,
+   "profit_factor": 0.9646,
+   "friksiyon_usd": 1735.61,
+   "search_pnl_usd": -161.89,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 29,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 23,
+    "ort": 0.2577,
+    "medyan": 0.2849,
+    "toplam": 5.9281,
+    "min": -1.5244,
+    "maks": 2.7396,
+    "poz_oran": 0.5217
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 23,
+    "ort": 0.0132,
+    "medyan": 0.0146,
+    "toplam": 0.3045,
+    "min": -0.1958,
+    "maks": 0.2278,
+    "poz_oran": 0.5217
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 26,
+    "ort": 0.2734,
+    "medyan": 0.3294,
+    "toplam": 7.1096,
+    "min": -1.5244,
+    "maks": 2.7396,
+    "poz_oran": 0.5769
+   },
+   "skor_none_nedeni": null,
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 639,
+   "digest_tum": "4676800e30f1d90e",
+   "digest_search": "3e054b7e23f0e595",
+   "plan_digest": "e907ac6864525bcf",
+   "equity_digest": "5772bc9251a19d21",
+   "gap_gozlemi": {
+    "cagri": 176,
+    "gap_at_submit_none": 176,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1758.8,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "c_mkt",
+   "etiket": "min(1,0·ATR14, %1,5) × marketable_limit",
+   "entry_law": {
+    "limit_atr_mult": 1.0,
+    "limit_pct_cap": 0.015,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 1.0,
+    "limit_pct_cap": 0.015,
+    "gap_behavior": "marketable_limit",
+    "tif": "day"
+   },
+   "cagri_n": 199,
+   "dolan_n": 180,
+   "dolmayan_n": 19,
+   "dolmama_orani": 0.0955,
+   "dolmama_orani_yalniz_limit": 0.0603,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.3045,
+   "ret_nedenleri": {
+    "entry_missed_limit": 12,
+    "max_chase": 4,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -2878.3,
+   "net_usd_kotumser": -3997.61,
+   "kotumser_ek_maliyet": 1119.31,
+   "search_net_usd": 2497.86,
+   "search_net_usd_kotumser": 1832.69,
+   "para_v3_search": 0.0581,
+   "oos_score": 0.0398,
+   "is_score": -0.006,
+   "holdout_score": null,
+   "n_trades_total": 180,
+   "oos_n": 111,
+   "search_n": 92,
+   "avg_r": 0.008,
+   "win_rate": 0.36,
+   "sharpe": 0.162,
+   "total_return_oos": 0.0155,
+   "max_drawdown_islem_oos": 0.074,
+   "mtm_max_dd_veto": 0.0745,
+   "mtm_max_dd_tam_pencere": 0.074526,
+   "tam_pencere_getiri": -0.028783,
+   "profit_factor": 0.9259,
+   "friksiyon_usd": 2249.19,
+   "search_pnl_usd": 2497.86,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 19,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 12,
+    "ort": -0.0848,
+    "medyan": -0.1267,
+    "toplam": -1.0174,
+    "min": -1.5244,
+    "maks": 0.9253,
+    "poz_oran": 0.4167
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 12,
+    "ort": -0.0214,
+    "medyan": -0.0092,
+    "toplam": -0.2571,
+    "min": -0.1958,
+    "maks": 0.0472,
+    "poz_oran": 0.4167
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 16,
+    "ort": -0.0131,
+    "medyan": 0.0086,
+    "toplam": -0.209,
+    "min": -1.5244,
+    "maks": 0.9253,
+    "poz_oran": 0.5
+   },
+   "skor_none_nedeni": null,
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 662,
+   "digest_tum": "f106441328df484c",
+   "digest_search": "1bec5530d8742e6a",
+   "plan_digest": "5d690d82dbfe31f8",
+   "equity_digest": "7566933c0d5089b0",
+   "gap_gozlemi": {
+    "cagri": 199,
+    "gap_at_submit_none": 199,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1746.8,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "c_cnl",
+   "etiket": "min(1,0·ATR14, %1,5) × cancel",
+   "entry_law": {
+    "limit_atr_mult": 1.0,
+    "limit_pct_cap": 0.015,
+    "gap_behavior": "cancel",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 1.0,
+    "limit_pct_cap": 0.015,
+    "gap_behavior": "cancel",
+    "tif": "day"
+   },
+   "cagri_n": 199,
+   "dolan_n": 180,
+   "dolmayan_n": 19,
+   "dolmama_orani": 0.0955,
+   "dolmama_orani_yalniz_limit": 0.0603,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.3045,
+   "ret_nedenleri": {
+    "entry_missed_limit": 12,
+    "max_chase": 4,
+    "open_below_stop": 3
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": -2878.3,
+   "net_usd_kotumser": -3997.61,
+   "kotumser_ek_maliyet": 1119.31,
+   "search_net_usd": 2497.86,
+   "search_net_usd_kotumser": 1832.69,
+   "para_v3_search": 0.0581,
+   "oos_score": 0.0398,
+   "is_score": -0.006,
+   "holdout_score": null,
+   "n_trades_total": 180,
+   "oos_n": 111,
+   "search_n": 92,
+   "avg_r": 0.008,
+   "win_rate": 0.36,
+   "sharpe": 0.162,
+   "total_return_oos": 0.0155,
+   "max_drawdown_islem_oos": 0.074,
+   "mtm_max_dd_veto": 0.0745,
+   "mtm_max_dd_tam_pencere": 0.074526,
+   "tam_pencere_getiri": -0.028783,
+   "profit_factor": 0.9259,
+   "friksiyon_usd": 2249.19,
+   "search_pnl_usd": 2497.86,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 19,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": true,
+    "n": 12,
+    "ort": -0.0848,
+    "medyan": -0.1267,
+    "toplam": -1.0174,
+    "min": -1.5244,
+    "maks": 0.9253,
+    "poz_oran": 0.4167
+   },
+   "kacan_limit_ret10": {
+    "olculdu": true,
+    "n": 12,
+    "ort": -0.0214,
+    "medyan": -0.0092,
+    "toplam": -0.2571,
+    "min": -0.1958,
+    "maks": 0.0472,
+    "poz_oran": 0.4167
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 16,
+    "ort": -0.0131,
+    "medyan": 0.0086,
+    "toplam": -0.209,
+    "min": -1.5244,
+    "maks": 0.9253,
+    "poz_oran": 0.5
+   },
+   "skor_none_nedeni": null,
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 662,
+   "digest_tum": "f106441328df484c",
+   "digest_search": "1bec5530d8742e6a",
+   "plan_digest": "5d690d82dbfe31f8",
+   "equity_digest": "7566933c0d5089b0",
+   "gap_gozlemi": {
+    "cagri": 199,
+    "gap_at_submit_none": 199,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1760.8,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  },
+  {
+   "kol": "ref_limitsiz",
+   "etiket": "REFERANS (grid dışı): koşulsuz-açılış — limit tavanı bağlamaz",
+   "entry_law": {
+    "limit_atr_mult": 1000.0,
+    "limit_pct_cap": 0.1,
+    "gap_behavior": "marketable_limit",
+    "tif": "day",
+    "version": "E1-v1"
+   },
+   "goal_execution_v2": {
+    "limit_atr_mult": 1000.0,
+    "limit_pct_cap": 0.1,
+    "gap_behavior": "marketable_limit",
+    "tif": "day"
+   },
+   "cagri_n": 168,
+   "dolan_n": 164,
+   "dolmayan_n": 4,
+   "dolmama_orani": 0.0238,
+   "dolmama_orani_yalniz_limit": 0.0,
+   "kill1_esik": 0.4,
+   "dolmama_esik_farki": -0.3762,
+   "ret_nedenleri": {
+    "open_below_stop": 2,
+    "max_chase": 2
+   },
+   "motor_sayaci_esit_mi": true,
+   "net_usd": 2957.02,
+   "net_usd_kotumser": 1958.81,
+   "kotumser_ek_maliyet": 998.21,
+   "search_net_usd": 4146.31,
+   "search_net_usd_kotumser": 3673.19,
+   "para_v3_search": 0.0965,
+   "oos_score": 0.0639,
+   "is_score": 0.0616,
+   "holdout_score": null,
+   "n_trades_total": 164,
+   "oos_n": 90,
+   "search_n": 72,
+   "avg_r": 0.049,
+   "win_rate": 0.389,
+   "sharpe": 0.294,
+   "total_return_oos": 0.0345,
+   "max_drawdown_islem_oos": 0.0718,
+   "mtm_max_dd_veto": 0.0723,
+   "mtm_max_dd_tam_pencere": 0.072292,
+   "tam_pencere_getiri": 0.02957,
+   "profit_factor": 1.0828,
+   "friksiyon_usd": 2009.15,
+   "search_pnl_usd": 4146.31,
+   "search_hedef_usd": 42995.22,
+   "kacan_n": 4,
+   "kacan_ufuk_eksik": 0,
+   "kacan_limit_r10": {
+    "olculdu": false,
+    "neden": "örneklem yok",
+    "n": 0
+   },
+   "kacan_limit_ret10": {
+    "olculdu": false,
+    "neden": "örneklem yok",
+    "n": 0
+   },
+   "kacan_tum_r10": {
+    "olculdu": true,
+    "n": 2,
+    "ort": 0.3364,
+    "medyan": 0.6642,
+    "toplam": 0.6728,
+    "min": 0.0086,
+    "maks": 0.6642,
+    "poz_oran": 1.0
+   },
+   "skor_none_nedeni": null,
+   "min_sample": 30,
+   "karartma_vetosu_plan_n": 0,
+   "plan_n": 619,
+   "digest_tum": "0d9976ddbf409db2",
+   "digest_search": "539fd4c64445c732",
+   "plan_digest": "62e0c03414e8a939",
+   "equity_digest": "62a30c58529f17f4",
+   "gap_gozlemi": {
+    "cagri": 168,
+    "gap_at_submit_none": 168,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "sure_sn": 1697.2,
+   "n_sembol": 250,
+   "calendar": [
+    "2022-01-03",
+    "2026-07-29"
+   ]
+  }
+ ],
+ "determinizm_kapisi": {
+  "birincil_b_mkt": {
+   "iddia": "b_mkt (mevcut varsayılan hücre) karne_tazeleme_2026-08-03 `guncel` kolunu BİREBİR üretmelidir: aynı motor, aynı state, aynı goal.yaml",
+   "digest_esit": true,
+   "skor_esit": true,
+   "b_mkt": {
+    "digest_tum": "4676800e30f1d90e",
+    "digest_search": "3e054b7e23f0e595",
+    "plan_digest": "e907ac6864525bcf",
+    "equity_digest": "5772bc9251a19d21",
+    "oos_score": 0.0196,
+    "para_v3_search": -0.0037,
+    "n_trades_total": 147,
+    "net_usd": -1182.15
+   },
+   "karne_tazeleme_guncel": {
+    "digest_tum": "4676800e30f1d90e",
+    "digest_search": "3e054b7e23f0e595",
+    "plan_digest": "e907ac6864525bcf",
+    "equity_digest": "5772bc9251a19d21",
+    "oos_score": 0.0196,
+    "para_v3_search": -0.0037,
+    "n_trades_total": 147,
+    "net_usd": -1182.15
+   }
+  },
+  "ikincil_ref_limitsiz": {
+   "iddia": "ref_limitsiz, karne_olcum `e1_oncesi_icra` kolunun BUGÜNKÜ motordaki karşılığıdır; fark BEKLENİR ve tek kalemdir: replay-PIT düzeltmesi (89d4497) — karne_tazeleme §3.1'de MMM tek işlemi olarak ölçüldü",
+   "ref_limitsiz_digest": {
+    "digest_tum": "0d9976ddbf409db2",
+    "digest_search": "539fd4c64445c732",
+    "plan_digest": "62e0c03414e8a939",
+    "equity_digest": "62a30c58529f17f4"
+   },
+   "karne_olcum_e1_oncesi_icra_digest": {
+    "digest_tum": "995f1d33a8b8a719",
+    "digest_search": "5a826091681e5980",
+    "equity_digest": "ea6777ea1b70bf08",
+    "plan_digest": "b5390efe9f241786"
+   },
+   "digest_esit": false,
+   "iddia_entry_missed_limit_sifir": 0,
+   "eski_motor_kolu": {
+    "amac": "karne_olcum `e1_oncesi_icra` kolunun BİREBİR yeniden üretimi: 505603b motoru + o ölçümün 2026-08-01 state'i + AYNI bayrak (limit_pct_cap 0,01→0,10). Eski motor replay'de `fill_entry`e atr GEÇİRMEZ, bu yüzden atr_mult atıldır.",
+    "motor": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/e1_grid/eski_motor/meridian/backtest.py",
+    "entry_law": {
+     "limit_atr_mult": 0.5,
+     "limit_pct_cap": 0.1,
+     "gap_behavior": "marketable_limit",
+     "tif": "day",
+     "version": "E1-v1"
+    },
+    "digest": {
+     "digest_tum": "995f1d33a8b8a719",
+     "digest_search": "5a826091681e5980",
+     "plan_digest": "b5390efe9f241786",
+     "equity_digest": "ea6777ea1b70bf08"
+    },
+    "karne_olcum_ile_digest_esit": true,
+    "skorlar": {
+     "oos_score": 0.0699,
+     "is_score": 0.0616,
+     "para_search": 0.0856,
+     "n_trades_total": 161,
+     "oos_n": 88,
+     "net_usd": 2804.21,
+     "dolum": [
+      161,
+      165
+     ],
+     "ret_nedenleri": {
+      "open_below_stop": 2,
+      "max_chase": 2
+     }
+    },
+    "karne_olcum_kayitli": {
+     "oos_score": 0.0699,
+     "is_score": 0.0616,
+     "para_v3_search": 0.0856,
+     "n_trades_total": 161,
+     "oos_n": 88
+    },
+    "MOTOR_FARKI_eski_vs_bugun": {
+     "n_trades_total": [
+      161,
+      164
+     ],
+     "oos_score": [
+      0.0699,
+      0.0639
+     ],
+     "is_score": [
+      0.0616,
+      0.0616
+     ],
+     "para_search": [
+      0.0856,
+      0.0965
+     ],
+     "net_usd": [
+      2804.21,
+      2957.02
+     ],
+     "karartma_vetosu_plan_n": [
+      1,
+      0
+     ],
+     "islem_kumesi": {
+      "yalniz_eski_n": 17,
+      "yalniz_bugun_n": 20,
+      "ortak_n": 144,
+      "yalniz_eski": [
+       "ADSK@2024-11-25",
+       "CEG@2024-09-24",
+       "EQT@2024-11-22",
+       "FANG@2024-03-18",
+       "GOOG@2025-11-26",
+       "GOOGL@2024-12-11",
+       "ISRG@2024-06-26",
+       "ISRG@2024-07-23",
+       "LHX@2025-07-25",
+       "LLY@2025-11-06",
+       "MRVL@2024-12-03",
+       "SPOT@2024-04-08",
+       "SPOT@2025-02-06",
+       "SYF@2024-07-18",
+       "UAL@2024-10-16",
+       "USB@2024-11-07",
+       "WBD@2025-07-24"
+      ],
+      "yalniz_bugun": [
+       "APO@2024-08-01",
+       "BKR@2024-07-30",
+       "BURL@2024-08-26",
+       "CBRE@2024-11-26",
+       "GS@2024-07-16",
+       "HWM@2024-11-21",
+       "JNJ@2025-10-02",
+       "LNG@2025-01-31",
+       "LYV@2024-11-13",
+       "MAR@2025-11-10",
+       "MMM@2026-07-22",
+       "MRVL@2024-12-16",
+       "NOC@2024-10-02",
+       "SPOT@2024-11-12",
+       "STLD@2024-03-18",
+       "VTR@2024-07-03",
+       "WBD@2025-07-25",
+       "WMB@2024-11-19",
+       "WMT@2025-10-15",
+       "XEL@2024-09-11"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "motor_damgasi": {
+  "sandbox_vs_depo_diff_rc": 0,
+  "sandbox_vs_depo_cikti": "",
+  "depo_vs_karne_tazeleme_motoru_diff_rc": 0,
+  "kod_damgasi": {
+   "depo_meridian": {
+    "dosya_n": 93,
+    "sha256_16": "a9336c4234f96fae",
+    "yol": "/Users/erdemozturk/AI-Trading/meridian"
+   },
+   "sandbox_motor": {
+    "dosya_n": 93,
+    "sha256_16": "a9336c4234f96fae",
+    "yol": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/e1_grid/meridian",
+    "bayt_esit_mi": true
+   },
+   "not": "TEK motor kopyası; kollar arası fark YALNIZ state_<kol>/goal.yaml execution_v2 bloğudur. Üretim kodu DEĞİŞTİRİLMEDİ, yama YOK.",
+   "kollar": {
+    "a_mkt": {
+     "limit_atr_mult": 0.25,
+     "limit_pct_cap": 0.005,
+     "gap_behavior": "marketable_limit",
+     "goal_degisen_satir_n": 2,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 0.25",
+      "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.005"
+     ]
+    },
+    "a_cnl": {
+     "limit_atr_mult": 0.25,
+     "limit_pct_cap": 0.005,
+     "gap_behavior": "cancel",
+     "goal_degisen_satir_n": 3,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 0.25",
+      "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.005",
+      "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+     ]
+    },
+    "b_mkt": {
+     "limit_atr_mult": 0.5,
+     "limit_pct_cap": 0.01,
+     "gap_behavior": "marketable_limit",
+     "goal_degisen_satir_n": 0,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": []
+    },
+    "b_cnl": {
+     "limit_atr_mult": 0.5,
+     "limit_pct_cap": 0.01,
+     "gap_behavior": "cancel",
+     "goal_degisen_satir_n": 1,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+     ]
+    },
+    "c_mkt": {
+     "limit_atr_mult": 1.0,
+     "limit_pct_cap": 0.015,
+     "gap_behavior": "marketable_limit",
+     "goal_degisen_satir_n": 2,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1.0",
+      "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.015"
+     ]
+    },
+    "c_cnl": {
+     "limit_atr_mult": 1.0,
+     "limit_pct_cap": 0.015,
+     "gap_behavior": "cancel",
+     "goal_degisen_satir_n": 3,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1.0",
+      "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.015",
+      "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+     ]
+    },
+    "ref_limitsiz": {
+     "limit_atr_mult": 1000.0,
+     "limit_pct_cap": 0.1,
+     "gap_behavior": "marketable_limit",
+     "goal_degisen_satir_n": 2,
+     "goal_satir_n": [
+      101,
+      101
+     ],
+     "goal_diff": [
+      "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1000.0",
+      "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.1"
+     ]
+    }
+   }
+  }
+ },
+ "gap_bacagi": {
+  "olcum": {
+   "a_mkt_vs_a_cnl": {
+    "digest_tum_esit": true,
+    "plan_digest_esit": true,
+    "equity_digest_esit": true,
+    "net_usd": [
+     -7202.46,
+     -7202.46
+    ],
+    "dolmama_orani": [
+     0.3468,
+     0.3468
+    ],
+    "entry_gap_veto_reddi": [
+     0,
+     0
+    ]
+   },
+   "b_mkt_vs_b_cnl": {
+    "digest_tum_esit": true,
+    "plan_digest_esit": true,
+    "equity_digest_esit": true,
+    "net_usd": [
+     -1182.15,
+     -1182.15
+    ],
+    "dolmama_orani": [
+     0.1648,
+     0.1648
+    ],
+    "entry_gap_veto_reddi": [
+     0,
+     0
+    ]
+   },
+   "c_mkt_vs_c_cnl": {
+    "digest_tum_esit": true,
+    "plan_digest_esit": true,
+    "equity_digest_esit": true,
+    "net_usd": [
+     -2878.3,
+     -2878.3
+    ],
+    "dolmama_orani": [
+     0.0955,
+     0.0955
+    ],
+    "entry_gap_veto_reddi": [
+     0,
+     0
+    ]
+   }
+  },
+  "gap_at_submit_dagilimi": {
+   "a_mkt": {
+    "cagri": 124,
+    "gap_at_submit_none": 124,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "a_cnl": {
+    "cagri": 124,
+    "gap_at_submit_none": 124,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "b_mkt": {
+    "cagri": 176,
+    "gap_at_submit_none": 176,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "b_cnl": {
+    "cagri": 176,
+    "gap_at_submit_none": 176,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "c_mkt": {
+    "cagri": 199,
+    "gap_at_submit_none": 199,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "c_cnl": {
+    "cagri": 199,
+    "gap_at_submit_none": 199,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   },
+   "ref_limitsiz": {
+    "cagri": 168,
+    "gap_at_submit_none": 168,
+    "gap_at_submit_true": 0,
+    "gap_at_submit_false": 0
+   }
+  },
+  "kaynak": "replay `fill_entry`e `gap_at_submit` GEÇİRMEZ (backtest.py:232-236 argüman listesi) → argüman None → `broker.fill_entry` gap vetosu dalına giremez. broker.py bunu BEYAN EDİLMİŞ kapsam farkı olarak yazar."
+ },
+ "kacan_dolum_eslesmesi": {
+  "a_mkt": {
+   "kacan_limit_n": 38,
+   "eslesen_n": 23,
+   "kapsama": 0.6053,
+   "toplam_r": 8.668,
+   "toplam_usd": 5016.25,
+   "ort_r": 0.3769,
+   "kazanan_n": 14,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "TRV",
+     "date": "2022-12-01",
+     "r": -1.005,
+     "usd": -888.28,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "MCHP",
+     "date": "2023-02-02",
+     "r": -0.007,
+     "usd": -5.91,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "COST",
+     "date": "2023-04-21",
+     "r": -1.005,
+     "usd": -688.14,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "MDT",
+     "date": "2023-04-24",
+     "r": 0.11,
+     "usd": 61.0,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "PANW",
+     "date": "2023-05-25",
+     "r": 1.815,
+     "usd": 623.52,
+     "exit_reason": "target_gap"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "BX",
+     "date": "2023-07-17",
+     "r": -0.255,
+     "usd": -192.73,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2023-07-19",
+     "r": -1.198,
+     "usd": -957.9,
+     "exit_reason": "stop_gap"
+    },
+    {
+     "ticker": "SHW",
+     "date": "2023-07-26",
+     "r": -0.257,
+     "usd": -150.34,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "CTSH",
+     "date": "2023-08-04",
+     "r": -0.449,
+     "usd": -182.88,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "BKNG",
+     "date": "2023-08-07",
+     "r": 0.528,
+     "usd": 206.53,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "EXPE",
+     "date": "2023-11-06",
+     "r": 1.944,
+     "usd": 654.42,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "TTWO",
+     "date": "2023-11-14",
+     "r": 0.35,
+     "usd": 153.16,
+     "exit_reason": "time_stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  },
+  "a_cnl": {
+   "kacan_limit_n": 38,
+   "eslesen_n": 23,
+   "kapsama": 0.6053,
+   "toplam_r": 8.668,
+   "toplam_usd": 5016.25,
+   "ort_r": 0.3769,
+   "kazanan_n": 14,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "TRV",
+     "date": "2022-12-01",
+     "r": -1.005,
+     "usd": -888.28,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "MCHP",
+     "date": "2023-02-02",
+     "r": -0.007,
+     "usd": -5.91,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "COST",
+     "date": "2023-04-21",
+     "r": -1.005,
+     "usd": -688.14,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "MDT",
+     "date": "2023-04-24",
+     "r": 0.11,
+     "usd": 61.0,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "PANW",
+     "date": "2023-05-25",
+     "r": 1.815,
+     "usd": 623.52,
+     "exit_reason": "target_gap"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "BX",
+     "date": "2023-07-17",
+     "r": -0.255,
+     "usd": -192.73,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2023-07-19",
+     "r": -1.198,
+     "usd": -957.9,
+     "exit_reason": "stop_gap"
+    },
+    {
+     "ticker": "SHW",
+     "date": "2023-07-26",
+     "r": -0.257,
+     "usd": -150.34,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "CTSH",
+     "date": "2023-08-04",
+     "r": -0.449,
+     "usd": -182.88,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "BKNG",
+     "date": "2023-08-07",
+     "r": 0.528,
+     "usd": 206.53,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "EXPE",
+     "date": "2023-11-06",
+     "r": 1.944,
+     "usd": 654.42,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "TTWO",
+     "date": "2023-11-14",
+     "r": 0.35,
+     "usd": 153.16,
+     "exit_reason": "time_stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  },
+  "b_mkt": {
+   "kacan_limit_n": 23,
+   "eslesen_n": 15,
+   "kapsama": 0.6522,
+   "toplam_r": 4.561,
+   "toplam_usd": 4014.58,
+   "ort_r": 0.3041,
+   "kazanan_n": 9,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MCHP",
+     "date": "2023-02-02",
+     "r": -0.007,
+     "usd": -5.91,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "SHW",
+     "date": "2023-07-26",
+     "r": -0.257,
+     "usd": -150.34,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "TTWO",
+     "date": "2023-11-14",
+     "r": 0.35,
+     "usd": 153.16,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "LRCX",
+     "date": "2024-01-25",
+     "r": 0.558,
+     "usd": 502.13,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "GE",
+     "date": "2024-02-14",
+     "r": 1.715,
+     "usd": 1385.31,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "NVDA",
+     "date": "2024-02-26",
+     "r": 2.097,
+     "usd": 1945.97,
+     "exit_reason": "target_gap"
+    },
+    {
+     "ticker": "MU",
+     "date": "2024-04-04",
+     "r": -0.881,
+     "usd": -635.72,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "ETN",
+     "date": "2024-04-04",
+     "r": -1.113,
+     "usd": -730.94,
+     "exit_reason": "stop_gap"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2024-08-01",
+     "r": 0.684,
+     "usd": 227.12,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "ORCL",
+     "date": "2025-07-03",
+     "r": 0.444,
+     "usd": 150.49,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2026-01-22",
+     "r": -0.004,
+     "usd": -0.6,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "ENPH",
+     "date": "2026-05-26",
+     "r": -0.975,
+     "usd": -180.84,
+     "exit_reason": "stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  },
+  "b_cnl": {
+   "kacan_limit_n": 23,
+   "eslesen_n": 15,
+   "kapsama": 0.6522,
+   "toplam_r": 4.561,
+   "toplam_usd": 4014.58,
+   "ort_r": 0.3041,
+   "kazanan_n": 9,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MCHP",
+     "date": "2023-02-02",
+     "r": -0.007,
+     "usd": -5.91,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "SHW",
+     "date": "2023-07-26",
+     "r": -0.257,
+     "usd": -150.34,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "TTWO",
+     "date": "2023-11-14",
+     "r": 0.35,
+     "usd": 153.16,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "LRCX",
+     "date": "2024-01-25",
+     "r": 0.558,
+     "usd": 502.13,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "GE",
+     "date": "2024-02-14",
+     "r": 1.715,
+     "usd": 1385.31,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "NVDA",
+     "date": "2024-02-26",
+     "r": 2.097,
+     "usd": 1945.97,
+     "exit_reason": "target_gap"
+    },
+    {
+     "ticker": "MU",
+     "date": "2024-04-04",
+     "r": -0.881,
+     "usd": -635.72,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "ETN",
+     "date": "2024-04-04",
+     "r": -1.113,
+     "usd": -730.94,
+     "exit_reason": "stop_gap"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2024-08-01",
+     "r": 0.684,
+     "usd": 227.12,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "ORCL",
+     "date": "2025-07-03",
+     "r": 0.444,
+     "usd": 150.49,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2026-01-22",
+     "r": -0.004,
+     "usd": -0.6,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "ENPH",
+     "date": "2026-05-26",
+     "r": -0.975,
+     "usd": -180.84,
+     "exit_reason": "stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  },
+  "c_mkt": {
+   "kacan_limit_n": 12,
+   "eslesen_n": 10,
+   "kapsama": 0.8333,
+   "toplam_r": 1.461,
+   "toplam_usd": 1336.24,
+   "ort_r": 0.1461,
+   "kazanan_n": 7,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "MDT",
+     "date": "2023-04-24",
+     "r": 0.11,
+     "usd": 61.0,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "LRCX",
+     "date": "2024-01-25",
+     "r": 0.558,
+     "usd": 502.13,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2024-04-04",
+     "r": -0.881,
+     "usd": -635.72,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2024-08-01",
+     "r": 0.684,
+     "usd": 227.12,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "HWM",
+     "date": "2025-01-21",
+     "r": 0.019,
+     "usd": 8.4,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2026-01-22",
+     "r": -0.004,
+     "usd": -0.6,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "ENPH",
+     "date": "2026-05-26",
+     "r": -0.975,
+     "usd": -180.84,
+     "exit_reason": "stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  },
+  "c_cnl": {
+   "kacan_limit_n": 12,
+   "eslesen_n": 10,
+   "kapsama": 0.8333,
+   "toplam_r": 1.461,
+   "toplam_usd": 1336.24,
+   "ort_r": 0.1461,
+   "kazanan_n": 7,
+   "ornekler": [
+    {
+     "ticker": "DE",
+     "date": "2022-11-23",
+     "r": 0.179,
+     "usd": 133.57,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "OMC",
+     "date": "2023-02-02",
+     "r": 1.404,
+     "usd": 1085.27,
+     "exit_reason": "target"
+    },
+    {
+     "ticker": "MDT",
+     "date": "2023-04-24",
+     "r": 0.11,
+     "usd": 61.0,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "AMZN",
+     "date": "2023-05-30",
+     "r": 0.367,
+     "usd": 135.91,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "LRCX",
+     "date": "2024-01-25",
+     "r": 0.558,
+     "usd": 502.13,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2024-04-04",
+     "r": -0.881,
+     "usd": -635.72,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "IRM",
+     "date": "2024-08-01",
+     "r": 0.684,
+     "usd": 227.12,
+     "exit_reason": "regime_flip"
+    },
+    {
+     "ticker": "HWM",
+     "date": "2025-01-21",
+     "r": 0.019,
+     "usd": 8.4,
+     "exit_reason": "time_stop"
+    },
+    {
+     "ticker": "MU",
+     "date": "2026-01-22",
+     "r": -0.004,
+     "usd": -0.6,
+     "exit_reason": "stop"
+    },
+    {
+     "ticker": "ENPH",
+     "date": "2026-05-26",
+     "r": -0.975,
+     "usd": -180.84,
+     "exit_reason": "stop"
+    }
+   ],
+   "uyari": "yol-bağımlı: limitsiz kolun portföy yolu farklıdır; eşleşmeyen kaçan planlar o kolda slot/ısı/eş-anlılık nedeniyle hiç açılmamış olabilir"
+  }
+ },
+ "kill1_dolmama_vs_esik": {
+  "esik": 0.4,
+  "tanim": "kart kill_criteria[0]: 'dolum oranını kabul edilebilir tutamıyorsa (dolmama >%40)'. Payda = fill_entry çağrısına ulaşan plan sayısı.",
+  "hucreler": {
+   "a_mkt": {
+    "dolmama_orani": 0.3468,
+    "esik_farki": -0.0532,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 124,
+    "dolmayan_n": 43,
+    "yalniz_limit_orani": 0.3065
+   },
+   "a_cnl": {
+    "dolmama_orani": 0.3468,
+    "esik_farki": -0.0532,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 124,
+    "dolmayan_n": 43,
+    "yalniz_limit_orani": 0.3065
+   },
+   "b_mkt": {
+    "dolmama_orani": 0.1648,
+    "esik_farki": -0.2352,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 176,
+    "dolmayan_n": 29,
+    "yalniz_limit_orani": 0.1307
+   },
+   "b_cnl": {
+    "dolmama_orani": 0.1648,
+    "esik_farki": -0.2352,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 176,
+    "dolmayan_n": 29,
+    "yalniz_limit_orani": 0.1307
+   },
+   "c_mkt": {
+    "dolmama_orani": 0.0955,
+    "esik_farki": -0.3045,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 199,
+    "dolmayan_n": 19,
+    "yalniz_limit_orani": 0.0603
+   },
+   "c_cnl": {
+    "dolmama_orani": 0.0955,
+    "esik_farki": -0.3045,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 199,
+    "dolmayan_n": 19,
+    "yalniz_limit_orani": 0.0603
+   },
+   "ref_limitsiz": {
+    "dolmama_orani": 0.0238,
+    "esik_farki": -0.3762,
+    "esigin_ustunde_mi": false,
+    "cagri_n": 168,
+    "dolmayan_n": 4,
+    "yalniz_limit_orani": 0.0
+   }
+  }
+ },
+ "olculemedi": {
+  "E2_gercek_slipaj": "None — canlı dolum verisi ister (fill − resmî açılış). Bu ölçüm replay defteridir; `alpaca_fill_price` 95/95 satırda YOK, `analytics.pessimistic_band_update` ampirik bandı hâlâ None döndürür (n_dolan eşiği dolmadı).",
+  "kaçan_planların_gerçek_getirisi": "None — kaçan plan HİÇ AÇILMADI; bu raporda yalnız (a) ham barlardan hipotetik ileri-getiri ve (b) limitsiz kolun yol-bağımlı defteri var."
+ }
+}

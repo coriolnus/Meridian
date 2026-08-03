@@ -1,0 +1,112 @@
+{
+ "depo_meridian": {
+  "dosya_n": 93,
+  "sha256_16": "a9336c4234f96fae",
+  "yol": "/Users/erdemozturk/AI-Trading/meridian"
+ },
+ "sandbox_motor": {
+  "dosya_n": 93,
+  "sha256_16": "a9336c4234f96fae",
+  "yol": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/e1_grid/meridian",
+  "bayt_esit_mi": true
+ },
+ "not": "TEK motor kopyası; kollar arası fark YALNIZ state_<kol>/goal.yaml execution_v2 bloğudur. Üretim kodu DEĞİŞTİRİLMEDİ, yama YOK.",
+ "kollar": {
+  "a_mkt": {
+   "limit_atr_mult": 0.25,
+   "limit_pct_cap": 0.005,
+   "gap_behavior": "marketable_limit",
+   "goal_degisen_satir_n": 2,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 0.25",
+    "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.005"
+   ]
+  },
+  "a_cnl": {
+   "limit_atr_mult": 0.25,
+   "limit_pct_cap": 0.005,
+   "gap_behavior": "cancel",
+   "goal_degisen_satir_n": 3,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 0.25",
+    "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.005",
+    "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+   ]
+  },
+  "b_mkt": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "marketable_limit",
+   "goal_degisen_satir_n": 0,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": []
+  },
+  "b_cnl": {
+   "limit_atr_mult": 0.5,
+   "limit_pct_cap": 0.01,
+   "gap_behavior": "cancel",
+   "goal_degisen_satir_n": 1,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+   ]
+  },
+  "c_mkt": {
+   "limit_atr_mult": 1.0,
+   "limit_pct_cap": 0.015,
+   "gap_behavior": "marketable_limit",
+   "goal_degisen_satir_n": 2,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1.0",
+    "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.015"
+   ]
+  },
+  "c_cnl": {
+   "limit_atr_mult": 1.0,
+   "limit_pct_cap": 0.015,
+   "gap_behavior": "cancel",
+   "goal_degisen_satir_n": 3,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1.0",
+    "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.015",
+    "-  gap_behavior: marketable_limit\n+  gap_behavior: cancel"
+   ]
+  },
+  "ref_limitsiz": {
+   "limit_atr_mult": 1000.0,
+   "limit_pct_cap": 0.1,
+   "gap_behavior": "marketable_limit",
+   "goal_degisen_satir_n": 2,
+   "goal_satir_n": [
+    101,
+    101
+   ],
+   "goal_diff": [
+    "-  limit_atr_mult: 0.5\n+  limit_atr_mult: 1000.0",
+    "-  limit_pct_cap: 0.01\n+  limit_pct_cap: 0.1"
+   ]
+  }
+ }
+}

@@ -22,6 +22,21 @@ success_metric: >
 kill_criteria:
   - "limit-offset hiçbir grid noktasında dolum oranını kabul edilebilir tutamıyorsa (dolmama >%40) tasarım geri döner"
   - "iki motor hizalanamıyorsa (yapısal engel) fark KALICI ölçüm olarak damgalanır, gizlenmez"
-k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [pending-S1]}
-status: registered
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [e1_grid/a_mkt, e1_grid/a_cancel, e1_grid/b_mkt, e1_grid/b_cancel, e1_grid/c_mkt, e1_grid/c_cancel]}
+status: measured   # 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
+# HÜKÜM (Rol-1): kill#1 TETİKLENMEDİ (hiçbir hücre dolmama>%40 değil; A 0,347 · B 0,165 · C 0,096).
+# ANA BULGU: limit-bacağı geriye-dönük defterde MONOTON ZARARLI — net$ A −7.202 · B −1.182 ·
+# C −2.878 · LİMİTSİZ +2.957 (E3-kötümserle de +1.959; iki maliyet modelinde de tek artı kolon).
+# Kaçan dolumlar sistematik KAZANAN (A hip.R_10 ort +0,23 · B +0,26; C'de kalan 12 kaçak ≈nötr).
+# SKOR-PARA AYRIŞMASI kayıtlı: PARA-v3 C(0,0581)>B(−0,0037) ama net$ B>C — hüküm $-merceğiyle.
+# GAP-BACAĞI REPLAY'DE ÖLÇÜLEMEDİ (yapısal: replay gap_at_submit geçirmez; mkt↔cancel bayt-aynı) —
+# ölçüm yeri canlı loop.py:824 + intraday_shadow.py:301; 6 hücre koşuldu, 3 ayrık sonuç ölçüldü.
+# OKUMA SINIRI: limitsiz kolonun artısı TAM DA E1'in korumak istediği varsayıma yaslanır (açılışta
+# 10bps'le dolum — replay dolum-iyimserliği bu kolonda en yüksek) ve E2 gerçek-slipaj defteri BOŞ
+# (state/entry_execution.jsonl yok; 95/95 satırda alpaca_fill_price yok) → karar verisi henüz yok.
+# ÖNERİ (karar OPERATÖRDE — execution_v2 goal.yaml'da, yalnız insan değiştirir): autonomy_level=0
+# (paper) iken limitsiz/geniş-tavana geçmek para riski TAŞIMAZ ve E2 defterini gerçek paper-dolum
+# verisiyle doldurur — retro-optimal davranış + limitin gerçek değerinin ölçümü aynı hamlede;
+# canlıya geçiş kapısında E2 kanıtıyla yeniden hükme bağlanır. Alternatif: yasayı koru + ayna-dolum
+# akışının neden boş olduğunu ayrıca teşhis et (E2'siz bu kart DoD (b) bacağı açık kalır).
 notes: "Bağımlılık: BT-1/SIP gece kolları broker/alpaca/loop'ta — WP-E ajanı onlar indikten sonra başlar."

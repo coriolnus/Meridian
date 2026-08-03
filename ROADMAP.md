@@ -97,8 +97,13 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   iyimserliğiydi; canlı-ödeme-0,97-vs-Search-1,53 payda-uyumsuzluğunun ana açıklaması bu (E4
   sorusunun yarısı kapandı). E1 varsayılan noktası (0,5·ATR, %1 tavan) ÖLÇÜLMEMİŞ bir seçimdi ve
   defteri çeviriyor → E1 grid ölçümü (0,25/0,005 · 0,5/0,01 · 1,0/0,015 + limitsiz-MOO kolu)
-  programın EN ÖNCELİKLİ ölçümü; BT-1 beklemesi bu kalem için KALKTI (operatör "katı kural yok"
-  mandası; kart EXE-2026-001 grid'i zaten ön-kayıtlı). Şerhler raporda (bars_integrity dışlaması
+  programın EN ÖNCELİKLİ ölçümü; BT-1 beklemesi bu kalem için KALKTI — ve AYNI GÜN KOŞULDU:
+  **E1 GRİD ✅ ÖLÇÜLDÜ (e1_grid_2026-08-03/): limit-bacağı MONOTON ZARARLI** (net$ A −7,2k · B −1,2k ·
+  C −2,9k · LİMİTSİZ +2.957$/+1.959$-E3; kaçanlar sistematik kazanan; kill#1 yok; gap-bacağı
+  replay'de yapısal-ölçülemez — canlı/gölge noktaları kayıtlı; skor-para ayrışması B/C kayıtlı).
+  KARAR OPERATÖRDE (execution_v2 = goal.yaml): Rol-1 önerisi paper'da limitsiz/geniş-tavan →
+  E2 defteri gerçek dolumla dolar (para riski 0, autonomy=0); canlı-geçiş kapısında E2 kanıtıyla
+  yeniden hüküm. Ayna-dolum akışının boşluğu (E2'nin öbür yarısı) ayrı teşhis kalemi. Şerhler raporda (bars_integrity dışlaması
   yok · survivorship · +0,018 replay-iyimserliği · cf-sadakat +0,039R).
 - E1 iki-motor mutabakatı (iç MOO-tarzı vs ayna buy-stop GTC + gap-red kökü) + marketable stop-limit
   grid + gap-risk vetosu · E2 slipaj defteri (yüzey hazır, E1'e bağlı) · E3 kötümser maliyet bandı
