@@ -340,8 +340,11 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 ### WP-QC — QuantConnect Entegrasyonu 🆕 (2026-08-03; docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md)
 - **İlke:** veri platformda serbest/çıkışta kilitli → QC = platform-içi ölçüm + LEAN-yerel motor;
   asla arşiv-kaynağı değil. Tüm ölçümler kart-disiplinli.
-- **FREE kuyruk (kart-önce, sırayla):** ① delist-kapsam testi (EDG-021 v2 defterinin H2'si zaten
-  ölçüyor) · ② EODHD earnings 1998+ tarihsel-dizi fizibilitesi (7-gün-pencere biçim riski) ·
+- **FREE kuyruk (kart-önce, sırayla):** ① delist-kapsam ✅ ÖLÇÜLDÜ (2026-08-03 EDG-021 v3 koşumu — DUR=None, PK geçti;
+  @20 fazla CI-0-içi → kill#1 dalı "ŞÜPHEDE-değerlendirme"; birincil şüpheli evren-kompozisyon
+  farkı [günlük üst-250 dilim-medyanı 0,0233 vs full_251 p75 0,0089]; survivorship-yönü ilk
+  sayı: hayatta +0,54 vs delist −1,46 @20 betimleyici; ikinci-koşum hakkı tanım-eşitleme —
+  operatör kararı; kart hükmü EDG-2026-021'de) · ② EODHD earnings 1998+ tarihsel-dizi fizibilitesi (7-gün-pencere biçim riski) ·
   ③ Quiver insider 2014+ derinlik (2021-öncesi legacy-alan ayrımı) · ④ Morningstar PIT-shares
   (delist isimlerde tarihçe; 45-gün yaklaşıklama şerhi) · ⑤ RETIRED_SYMBOLS çapraz-doğrulama
   (Security Master delist olayları + SPY constituents 2009+) · ⑥ Tiingo+SEC NLP ön-fizibilite

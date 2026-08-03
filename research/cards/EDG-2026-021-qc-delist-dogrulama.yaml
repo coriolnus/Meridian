@@ -37,7 +37,23 @@ guards:
   - "operatör koşum kanıtı: QC çıktısının TAM JSON'u research/olcumler/qc_dogrulama/'ya konur;
      hüküm kanıtla aynı commit'te"
 k_registry: {registered_at: "2026-08-03T00:40Z", trial_ids: [qc_dogrulama/turnover_ust20]}
-status: registered
+status: measured   # 2026-08-03 ~08:55 UTC — KOŞULDU (defter v3, QC FREE, DUR=None, PK GEÇTİ IC=0.0265 n=335k)
+# HÜKÜM (Rol-1, kill#1 DALI): @20 üst-%20 evren-fazlası +0,48% CI[−0,78%,+1,85%] · @10 +0,18%
+# CI[−0,55%,+0,92%] — İKİSİ DE CI-0-İÇİ → success karşılanmadı; kartın kendi lafzıyla OTOMATİK
+# KILL DEĞİL: "YAŞAYAN SİNYAL ŞÜPHEDE — Rol-1+operatör birlikte değerlendirir; evren/tanım
+# sapmaları önce elenir". ELENECEK BİRİNCİL SAPMA — EVREN-KOMPOZİSYON FARKI: bu evren GÜNLÜK
+# dolar-hacim üst-250 (delist dahil, SPX-vekili; SPX kesişim 152/503) ve dilim-medyan turnover21
+# 0,0233 — EDG-016'nın full_251 statik evreninde p75 0,0089 idi; yani buradaki üst-%20 bambaşka
+# (çok daha spekülatif) bir popülasyon — fark yalnız survivorship'e ATFEDİLEMEZ (JSON kiyas_notu
+# aynı beyanı taşır). İKİNCİ SAPMA: panel_zaman_kaymasi=1g (sinyal gecikmeli okundu; içsel tutarlı).
+# SURVIVORSHIP-YÖNÜ İLK SAYISINI ALDI (betimleyici, vekil-delist %18,6 sembol-payı):
+# @20 tüm +0,48 · hayatta +0,54 · delist −1,46 → delist-isimler dilimi AŞAĞI çeker; EDG-016
+# şerhinin yönü doğrulandı, büyüklüğü bu vekille hükme bağlanamaz. ALT-DÖNEM (betimleyici):
+# 2020 +1,67 · 2021 −0,38 · 2022 −1,03 — erken-pencere yüklü. İKİNCİ KOŞUM HAKKI (tanım-eşitleme):
+# statik-üyelik + EDG-016 dilim-eşikleriyle eşitlenmiş koşum OPERATÖRLE birlikte kararlaştırılır;
+# eşik-esnetme değildir. EDG-016 statüsü: YAŞAYAN KALIR; şerhi artık sayılı (aleyhte-önsel değil,
+# evren-farkı nedeniyle NÖTR-bilgilendirici). Kanıt: research/olcumler/qc_dogrulama/sonuc_021.json
+# + kosum_ciktisi_ham.txt (aynı commit).
 notes: >
   Operatör QC hesabını 2026-08-03'te açtı. Akış: (1) ajan defteri üretir →
   research/qc_dogrulama/qc_defter_021.py + OPERATOR_TALIMATI.md; (2) operatör QC Research'te

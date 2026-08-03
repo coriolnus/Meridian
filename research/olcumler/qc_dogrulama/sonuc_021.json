@@ -1,0 +1,754 @@
+{
+  "kart": "EDG-2026-021",
+  "aile": "qc_delist_dogrulama",
+  "defter_surumu": "3.0",
+  "defter_mimarisi": "TEK KAYNAK add_universe+universe_history ? list[Fundamental]; evren, fiyat, hacim, as-of hisse ayn� �a�r�dan. v1'in history(Fundamental)/CoarseFundamental/get_fundamental yollar� FREE hesapta BO� d�n�yor (QC_API_ZEMIN_GERCEGI.md) ? ��kar�ld�.",
+  "defter_sha256": null,
+  "defter_sha256_neden": "ko�an defter kendi kayna��n� okumaz; sha256 REPO taraf�nda al�n�r",
+  "rol": "�l��m defteri � SAYI �retir, H�K�M VERMEZ. E�ik i�ermez. H�k�m Rol-1'de.",
+  "kosum": {
+    "zaman_utc": "2026-08-03 08:43:02.223611Z",
+    "ortam": "QuantConnect Research (QuantBook)",
+    "api_yolu": {
+      "import": "AlgorithmImports",
+      "Resolution": "DAILY",
+      "qb_bar": "QuantBook() � yaln�z bar (history) �a�r�lar�",
+      "tarih_baglami": "KURULMADI (bilin�li) � set_start_date/set_end_date �rnek durumunu de�i�tiriyor ve v2'de evreni sessizce bo�altt�; semboller Fundamental'dan geldi�i i�in ticker ��z�m�ne gerek yok",
+      "evren": "TAZE QuantBook() + add_universe(secici) + universe_history",
+      "qb_panel": "QuantBook() � yaln�z universe_history (payla��lmaz)"
+    },
+    "fundamental_alan_sondasi": {
+      "price": 99.09,
+      "value": 99.09,
+      "adjusted_price": 95.036654187,
+      "price_factor": 0.9590943,
+      "split_factor": 1.0,
+      "price_scale_factor": 0.9590943,
+      "dollar_volume": 197615583.0,
+      "volume": 1994304,
+      "market_cap": 29765970000,
+      "has_fundamental_data": true,
+      "company_profile.shares_outstanding": 309000000,
+      "earning_reports.basic_average_shares.value": 314000000.0,
+      "security_reference.exchange_id": "NYS"
+    },
+    "determinizm_sinamasi": true,
+    "bellek_mb": {
+      "H4_oznitelikli": 113.3,
+      "H6_turnoverli": 122.3
+    }
+  },
+  "anahtarlar": {
+    "PENCERE_BAS": "2020-08-01 00:00:00",
+    "PENCERE_SON": "2026-07-28 00:00:00",
+    "EVREN_N": 250,
+    "UST_PCT": 0.2,
+    "UFUKLAR": [
+      10,
+      20
+    ],
+    "BLOK": 21,
+    "BOOT": 2000,
+    "BOOT_IC": 600,
+    "TOHUM": 20260801,
+    "MIN_KESIT": 50,
+    "MIN_DILIM": 30,
+    "MALIYET_BPS": 10.0,
+    "MALIYET_BPS_DUYARLILIK": 20.0,
+    "RVOL_PENCERE": 20,
+    "TURNOVER_PENCERE": 21,
+    "PK_CIVI": 0.064,
+    "PK_MERTEBE": 5.0,
+    "PANEL_CARPANI": 2,
+    "SPAN_TOLERANS": 2.0,
+    "SHARES_BAYAT_GUN": 200,
+    "TURNOVER_TAVAN": 1.0,
+    "CAPRAZ_SEMBOL": 6,
+    "CAPRAZ_TOL": 0.001,
+    "CAPRAZ_MAKS_ORAN": 0.005,
+    "CAPRAZ_BUYUK_TOL": 0.02,
+    "DELIST_TAMPON_GUN": 10,
+    "SONDA_GUN": 10,
+    "YIL_LIMIT": null,
+    "PARCA": 50
+  },
+  "DUR": null,
+  "pozitif_kontrol": {
+    "tanim": "rvol20 = hacim / SMA20(hacim), payda bug�n� i�erir (meridian.indicators)",
+    "olcum": "havuzlanm�� Spearman IC (rvol20, fwd20) � ayn� kesit kurallar�",
+    "yerel_civi": 0.064,
+    "mertebe_carpani": 5.0,
+    "beyan": "yerel �ivi kar��-olgusal katmanda �l��ld�; ��ARET ve MERTEBE aran�r (nokta e�itli�i de�il). H�k�m e�i�i DE��L, boru hatt� kap�s�.",
+    "n": 335043,
+    "n_gun": 1459,
+    "ic": 0.026522427833065892,
+    "ci": {
+      "lo": 0.003937663398066659,
+      "hi": 0.053164508290471396,
+      "seviye": 0.95,
+      "n_gun": 1459,
+      "blok": 21,
+      "B": 600,
+      "B_gecerli": 600,
+      "atlanan": 0,
+      "tohum": 20260801,
+      "sifir_disinda": true,
+      "neden": null
+    },
+    "bant": [
+      0.0128,
+      0.32
+    ],
+    "GECTI": true,
+    "neden": null
+  },
+  "evren": {
+    "beyan": "G�NL�K dolar-hacim �st-250 � DEL�ST DAH�L (ge�mi� g�n�n QC evren kesiti; o g�n borsada olan, bug�n olmayan isimler ܂ER�DED�R). Panel �st-500 ta��r; fazlas� pencere s�reklili�i TAMPONUDUR, �l��m sat�r� yaln�z evren_uye olanlard�r.",
+    "mini_sonda": {
+      "pencere_gun": 10,
+      "n_kayit": 3000,
+      "neden": null,
+      "beyan": "ayn� QB_PANEL �rne�i ve ayn� se�iciyle; panel �ekimiyle birebir ayn� yol"
+    },
+    "spx_uyelik_denemesi": {
+      "denendi": true,
+      "basarili": true,
+      "yol": "universe.etf(SPY)/universe_history",
+      "n_kesisim": 152,
+      "neden": null,
+      "karar": "kesi�im yaln�z TANIDIR; evren dolar-hacim �st-N vekilidir",
+      "qb": "TAZE QuantBook() � QB_PANEL kirletilmesin diye ayr� �rnek",
+      "n_spx": 503,
+      "n_son_gun_evren": 250
+    },
+    "panel_muhasebesi": {
+      "satir": 748998,
+      "gun": 1498,
+      "sembol": 4661,
+      "tarih_araligi": [
+        "2020-08-04",
+        "2026-07-28"
+      ],
+      "panel_ust_n": 500,
+      "olcum_evreni_ust_n": 250,
+      "evren_uye_satir": 374500,
+      "gunluk_evren_buyuklugu": {
+        "medyan": 250.0,
+        "min": 250,
+        "maks": 250
+      },
+      "fiyat_alani": "adjusted_price",
+      "hacim_dolu_satir": 748998,
+      "shares_kaynak_dagilimi": {
+        "0": 212179,
+        "1": 536317,
+        "2": 502
+      },
+      "shares_kaynak_kodlari": {
+        "0": "�l��lemedi (her iki alan da bo�/0) ? h�cre None",
+        "1": "company_profile.shares_outstanding � B�R�NC�L, nokta-zamanl� SEV�YE",
+        "2": "earning_reports.basic_average_shares.value � VEK�L, A�IRLIKLI ORTALAMA"
+      },
+      "dilim_muhasebesi": [
+        {
+          "dilim": "2020-08-01/2020-12-31",
+          "n_gun": 105,
+          "n_satir": 52500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2021-01-01/2021-12-31",
+          "n_gun": 251,
+          "n_satir": 125500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2022-01-01/2022-12-31",
+          "n_gun": 251,
+          "n_satir": 125500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2023-01-01/2023-12-31",
+          "n_gun": 250,
+          "n_satir": 125000,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2024-01-01/2024-12-31",
+          "n_gun": 251,
+          "n_satir": 125500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2025-01-01/2025-12-31",
+          "n_gun": 249,
+          "n_satir": 124500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        },
+        {
+          "dilim": "2026-01-01/2026-07-28",
+          "n_gun": 141,
+          "n_satir": 70500,
+          "n_ham_medyan": 500.0,
+          "neden": null
+        }
+      ],
+      "bellek_mb": 89.3
+    },
+    "kesit_muhasebesi": {
+      "gozlem_gunu_toplam": 1498,
+      "kesit_yeterli_gun": 1478,
+      "min_kesit": 50,
+      "kesit_buyuklugu": {
+        "medyan": 160.0,
+        "min": 133,
+        "maks": 184
+      },
+      "tarih_araligi": [
+        "2020-09-01",
+        "2026-07-28"
+      ],
+      "n_satir": 236723,
+      "n_sembol": 588,
+      "turnover21_dagilimi": {
+        "0.01": 0.0002793536294484512,
+        "0.25": 0.003576314775273204,
+        "0.5": 0.005514893215149641,
+        "0.75": 0.01024040300399065,
+        "0.99": 0.11681587249040604
+      },
+      "dilim_satir": 47948,
+      "dilim_sembol": 399
+    },
+    "shares_muhasebesi": {
+      "kaynak": "panel (universe_history): company_profile birincil, basic_average_shares vekil",
+      "shares_ham_dolu_hucre": 536819,
+      "shares_kaynak_dagilimi": {
+        "0": 212179,
+        "1": 536317,
+        "2": 502
+      },
+      "shares_kaynak_kodlari": {
+        "0": "�l��lemedi (her iki alan da bo�/0) ? h�cre None",
+        "1": "company_profile.shares_outstanding � B�R�NC�L, nokta-zamanl� SEV�YE",
+        "2": "earning_reports.basic_average_shares.value � VEK�L, A�IRLIKLI ORTALAMA"
+      },
+      "ffill_sonrasi_dolu_hucre": 536819,
+      "bayatlik_bekcisi_kapatti": 0,
+      "bayatlik_esik_gun": 200,
+      "bayatlik_medyan_gun": 0.0,
+      "fiziksel_bekci_kapatti": 614,
+      "fiziksel_tavan": 1.0,
+      "turnover21_dolu_hucre": 390449,
+      "as_of_beyani": "QC evren verisi g�n g�n teslim edilir; t sat�r� t g�n� bilinen de�er say�ld� (EDGAR filed<=t kar��l���). BA�IMSIZ DO�RULANMADI."
+    }
+  },
+  "fiyat_capraz_kontrol": {
+    "ornek_sembol": [
+      "ABBV",
+      "AAPL",
+      "TSM",
+      "SMH",
+      "ADBE",
+      "ADI"
+    ],
+    "fiyat_alani": "adjusted_price",
+    "tol": 0.001,
+    "maks_oran": 0.005,
+    "beyan": "g�nl�k GET�R� k�yas� (seviye de�il); kayma k=0,1,2,-1 taran�r",
+    "kosuldu": true,
+    "kayma_taramasi": {
+      "0": {
+        "n": 7038,
+        "sapan_oran": 0.9676044330775788,
+        "n_sapan_buyuk": 2932,
+        "maks_fark": 0.2767918400299426,
+        "fark_medyan": 0.016220008480814563
+      },
+      "1": {
+        "n": 7038,
+        "sapan_oran": 0.002273373117362887,
+        "n_sapan_buyuk": 0,
+        "maks_fark": 0.01756883096112527,
+        "fark_medyan": 0.0
+      },
+      "2": {
+        "n": 7032,
+        "sapan_oran": 0.967292377701934,
+        "n_sapan_buyuk": 2912,
+        "maks_fark": 0.2767918400299426,
+        "fark_medyan": 0.016157101518230466
+      },
+      "-1": {
+        "n": 7038,
+        "sapan_oran": 0.9640522875816994,
+        "n_sapan_buyuk": 2942,
+        "maks_fark": 0.19002274215187376,
+        "fark_medyan": 0.01609858099245215
+      }
+    },
+    "en_iyi_kayma": 1,
+    "en_iyi": {
+      "n": 7038,
+      "sapan_oran": 0.002273373117362887,
+      "n_sapan_buyuk": 0,
+      "maks_fark": 0.01756883096112527,
+      "fark_medyan": 0.0
+    },
+    "yeter": true
+  },
+  "tanimlar": {
+    "turnover21": "medyan21(hacim) / shares_outstanding(as-of t)",
+    "rvol20": "hacim(t)/SMA20(hacim)[t] � payda BUG�N� ܂ER�R (meridian.indicators)",
+    "dilim": "g�n i�i turnover21 y�zdelik r�tbesi > 0.8",
+    "taban": "AYNI G�N evren ortalamas� (ileri getirisi tan�ml� t�m evren �yeleri)",
+    "fwd_h": "px(t+h)/px(t) - 1",
+    "px_kaynagi": "panel adjusted_price (�apraz-kontrol GE�T�)",
+    "sureklilik_bekcisi": "sat�r-tabanl� pencere takvimde k?2.0 g�n� a�arsa h�cre �L��LEMEZ (panelden d�ߟp d�nen sembolde pencere sessizce uzamas�n diye)",
+    "ci": "21 ard���k g�zlem g�n� blok-bootstrap, %95, B=2000 (IC: 600), tohum=20260801; HEADLINE sat�r-a��rl�kl� g�n-blok (EDG-016 ile ayn�). �kincil okuma AYNI araca g�n-ortalamas� serisi verilerek �retilir (sat�r=g�n ? g�n-a��rl�kl�); v1'deki kanonik olcum_araclari.blok_bootstrap_ci kopyas� KARAKTER SINIRI nedeniyle ��kar�ld� � fark: tohum (20260801 vs 11) ve blok kural� (sabit 21 vs n^(1/3))",
+    "maliyet": "kart cost_model 10.0bps tek-y�n; 20.0bps BEYANLI DUYARLILIK",
+    "K_beyani": "kart grid'i TEK katman (K+=1): qc_turnover_ust20_fazlasi. Ufuk 10/20 horizon alan�d�r, K �arpan� DE��L. Alt-d�nem ve delist ayr��t�rmas� BET�MLEY�C�, CI TA�IMAZ."
+  },
+  "tanim_sapmalari": [
+    {
+      "alan": "shares_outstanding",
+      "kullanilan": "502 h�crede basic_average_shares vekili",
+      "neden": "company_profile bo�/0 idi; basic_average_shares A�IRLIKLI ORTALAMA'd�r ve EDG-016 bunu SEV�YE olarak REDDEDER"
+    },
+    {
+      "alan": "large_cap_suzgeci",
+      "kullanilan": "g�nl�k dolar-hacim �st-250 (delist dahil)",
+      "neden": "evren birebir SPX �yeli�i DE��L, s�zge�-vekilidir (kart�n izin verdi�i yol); SPX kesi�im tan�s�: 152"
+    },
+    {
+      "alan": "panel_zaman_kaymasi",
+      "kullanilan": "1 g�n",
+      "neden": "�znitelik ve ileri getiri ayn� indeksten kuruldu�u i�in �l��m i�sel tutarl� ve ileri-bak�� yok � sinyal bu kadar GEC�KMEL� okunmu� say�l�r"
+    },
+    {
+      "alan": "delist_tespiti",
+      "kullanilan": "panel-��k�� + ��k��-r�tbesi vekili",
+      "neden": "VEK�L: son panel g�n� panel sonundan >10 i� g�n� �nce biten VE o g�n dolar-hacim r�tbesi �st-250 i�inde olan semboller (kuyrukta solarak evrenden d��enler b�ylece elenir). QC map-file/Delisting olay� SORULMADI (API yolu �l��lmedi) ve ��k�� sonras� bar aranmad� � bu bir VEK�LD�R; ger�ek delist'i veri/likidite kesintisinden ya da evrenden d�ߟ�ten kesin AYIRAMAZ."
+    }
+  ],
+  "olcum": {
+    "ust20_evren_fazlasi": {
+      "10": {
+        "tanim": "g�n i�i turnover21 �st %20 dilimi; taban = AYNI G�N evren ortalamas� (delist DAH�L)",
+        "n_sembol_gun": 46834,
+        "n_gun": 1468,
+        "n_sembol": 363,
+        "dilim_turnover21_medyan": 0.023253198713064194,
+        "ham_getiri": {
+          "n": 46834,
+          "n_gun": 1468,
+          "ort": 0.008138455437733616,
+          "medyan": 0.0006160032062325627,
+          "std": 0.1488575691315197,
+          "pozitif_oran": 0.5020497928855105,
+          "lo": -0.0026398997679282633,
+          "hi": 0.019590409409891152,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "evren_fazlasi": {
+          "n": 46834,
+          "n_gun": 1468,
+          "ort": 0.0018308932876686906,
+          "medyan": -0.006823456380516291,
+          "std": 0.13597323200373795,
+          "pozitif_oran": 0.4690182346158773,
+          "lo": -0.005452313676094216,
+          "hi": 0.009183839706912675,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "evren_fazlasi_gun_agirlikli_CI": {
+          "n": 1468,
+          "n_gun": 1468,
+          "ort": 0.0017916821501640472,
+          "medyan": -0.00026988035604131943,
+          "std": 0.047799329801420605,
+          "pozitif_oran": 0.49659400544959126,
+          "lo": -0.0053985725443639115,
+          "hi": 0.009072955105144062,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "taban_ort": 0.006307562150064925
+      },
+      "20": {
+        "tanim": "g�n i�i turnover21 �st %20 dilimi; taban = AYNI G�N evren ortalamas� (delist DAH�L)",
+        "n_sembol_gun": 45988,
+        "n_gun": 1458,
+        "n_sembol": 343,
+        "dilim_turnover21_medyan": 0.023253198713064194,
+        "ham_getiri": {
+          "n": 45988,
+          "n_gun": 1458,
+          "ort": 0.01753938074030473,
+          "medyan": -0.0014977382961660624,
+          "std": 0.21573756081066425,
+          "pozitif_oran": 0.4955423153866226,
+          "lo": -0.0032425285674598132,
+          "hi": 0.038738243308584976,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "evren_fazlasi": {
+          "n": 45988,
+          "n_gun": 1458,
+          "ort": 0.004783129461073216,
+          "medyan": -0.01342315599322319,
+          "std": 0.19807200023595814,
+          "pozitif_oran": 0.46005479690354006,
+          "lo": -0.007840999733477997,
+          "hi": 0.01845927081809789,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "evren_fazlasi_gun_agirlikli_CI": {
+          "n": 1458,
+          "n_gun": 1458,
+          "ort": 0.004524877560051694,
+          "medyan": -0.001581341037490347,
+          "std": 0.07023760102107406,
+          "pozitif_oran": 0.49108367626886146,
+          "lo": -0.008124300296825584,
+          "hi": 0.018313484248811157,
+          "seviye": 0.95,
+          "sifir_disinda": false,
+          "blok": 21,
+          "B": 2000,
+          "B_gecerli": 2000,
+          "atlanan": 0,
+          "tohum": 20260801,
+          "n_sayi_olmayan_dusen": 0,
+          "yontem": "g�n-blok (moving) bootstrap � birim=21 ard���k g�n",
+          "beyan": "sifir_disinda AR�TMET�K: aral�k 0'� kaps�yor mu � h�k�m DE��L",
+          "neden": null
+        },
+        "taban_ort": 0.012756251279231514
+      }
+    }
+  },
+  "maliyet": {
+    "10": {
+      "kart_modeli_10bps": {
+        "bps": 10.0,
+        "brut": 0.0018308932876686906,
+        "net": 0.0008308932876686906,
+        "net_ci": {
+          "lo": -0.006452313676094216,
+          "hi": 0.008183839706912676,
+          "seviye": 0.95,
+          "sifir_disinda": false
+        },
+        "beyan": "maliyet SAB�T ? CI ayn� sabitle �telendi (bootstrap ko�ulmad�)"
+      },
+      "duyarlilik_20bps": {
+        "bps": 20.0,
+        "brut": 0.0018308932876686906,
+        "net": -0.00016910671233130942,
+        "net_ci": {
+          "lo": -0.007452313676094216,
+          "hi": 0.007183839706912675,
+          "seviye": 0.95,
+          "sifir_disinda": false
+        },
+        "beyan": "maliyet SAB�T ? CI ayn� sabitle �telendi (bootstrap ko�ulmad�)"
+      }
+    },
+    "20": {
+      "kart_modeli_10bps": {
+        "bps": 10.0,
+        "brut": 0.004783129461073216,
+        "net": 0.0037831294610732157,
+        "net_ci": {
+          "lo": -0.008840999733477996,
+          "hi": 0.01745927081809789,
+          "seviye": 0.95,
+          "sifir_disinda": false
+        },
+        "beyan": "maliyet SAB�T ? CI ayn� sabitle �telendi (bootstrap ko�ulmad�)"
+      },
+      "duyarlilik_20bps": {
+        "bps": 20.0,
+        "brut": 0.004783129461073216,
+        "net": 0.0027831294610732157,
+        "net_ci": {
+          "lo": -0.009840999733477997,
+          "hi": 0.016459270818097893,
+          "seviye": 0.95,
+          "sifir_disinda": false
+        },
+        "beyan": "maliyet SAB�T ? CI ayn� sabitle �telendi (bootstrap ko�ulmad�)"
+      }
+    }
+  },
+  "alt_donem_betimleyici": {
+    "beyan": "BET�MLEY�C� � kart grid'inde alt-d�nem baca�� yok; CI bilerek hesaplanmad� (K �arp�lmas�n).",
+    "ufuklar": {
+      "10": {
+        "2020": {
+          "n": 2745,
+          "n_gun": 85,
+          "fazla_ort": 0.016702049906835634,
+          "fazla_medyan": 0.002225629985332489,
+          "pozitif_oran": 0.5111111111111111
+        },
+        "2021": {
+          "n": 7873,
+          "n_gun": 251,
+          "fazla_ort": -0.003782399632276581,
+          "fazla_medyan": -0.015026798646431416,
+          "pozitif_oran": 0.43261780769719294
+        },
+        "2022": {
+          "n": 7861,
+          "n_gun": 251,
+          "fazla_ort": -0.010336364694562469,
+          "fazla_medyan": -0.010617552325129509,
+          "pozitif_oran": 0.45604884874697876
+        },
+        "2023": {
+          "n": 7999,
+          "n_gun": 250,
+          "fazla_ort": 0.006727556673604016,
+          "fazla_medyan": -0.002009870484471321,
+          "pozitif_oran": 0.49031128891111386
+        },
+        "2024": {
+          "n": 8125,
+          "n_gun": 251,
+          "fazla_ort": 0.0019842602355141514,
+          "fazla_medyan": -0.004821229726076126,
+          "pozitif_oran": 0.4707692307692308
+        },
+        "2025": {
+          "n": 8097,
+          "n_gun": 249,
+          "fazla_ort": 0.006015257925391231,
+          "fazla_medyan": -0.006132024340331554,
+          "pozitif_oran": 0.4768432752871434
+        },
+        "2026": {
+          "n": 4134,
+          "n_gun": 131,
+          "fazla_ort": 0.0078114515582188996,
+          "fazla_medyan": -0.008156760013662279,
+          "pozitif_oran": 0.47508466376390907
+        }
+      },
+      "20": {
+        "2020": {
+          "n": 2727,
+          "n_gun": 85,
+          "fazla_ort": 0.03627611438392144,
+          "fazla_medyan": 0.009075276553630829,
+          "pozitif_oran": 0.5225522552255225
+        },
+        "2021": {
+          "n": 7795,
+          "n_gun": 251,
+          "fazla_ort": -0.01060676012256466,
+          "fazla_medyan": -0.030822088941931725,
+          "pozitif_oran": 0.41090442591404747
+        },
+        "2022": {
+          "n": 7798,
+          "n_gun": 251,
+          "fazla_ort": -0.017045003445128364,
+          "fazla_medyan": -0.018966280855238438,
+          "pozitif_oran": 0.4492177481405489
+        },
+        "2023": {
+          "n": 7906,
+          "n_gun": 250,
+          "fazla_ort": 0.009103283985935143,
+          "fazla_medyan": -0.008145785890519619,
+          "pozitif_oran": 0.4669870984062737
+        },
+        "2024": {
+          "n": 8051,
+          "n_gun": 251,
+          "fazla_ort": 0.006188898573898596,
+          "fazla_medyan": -0.0077867284417152405,
+          "pozitif_oran": 0.47348155508632467
+        },
+        "2025": {
+          "n": 7970,
+          "n_gun": 249,
+          "fazla_ort": 0.014788899895988795,
+          "fazla_medyan": -0.014437233563512564,
+          "pozitif_oran": 0.4675031367628607
+        },
+        "2026": {
+          "n": 3741,
+          "n_gun": 121,
+          "fazla_ort": 0.025921761018201622,
+          "fazla_medyan": -0.009407665580511093,
+          "pozitif_oran": 0.4800855386260358
+        }
+      }
+    }
+  },
+  "delist_muhasebesi": {
+    "yontem": "VEK�L: son panel g�n� panel sonundan >10 i� g�n� �nce biten VE o g�n dolar-hacim r�tbesi �st-250 i�inde olan semboller (kuyrukta solarak evrenden d��enler b�ylece elenir). QC map-file/Delisting olay� SORULMADI (API yolu �l��lmedi) ve ��k�� sonras� bar aranmad� � bu bir VEK�LD�R; ger�ek delist'i veri/likidite kesintisinden ya da evrenden d�ߟ�ten kesin AYIRAMAZ.",
+    "beyan": "BET�MLEY�C� � CI hesaplanmad� (kay�tl� h�cre TEK). H�k�m baca�� de�ildir.",
+    "panel_sembol": 4661,
+    "cikis_muhasebesi": {
+      "erken_cikan": 3823,
+      "yuksek_rutbe_aday": 865,
+      "dusuk_rutbe_cikis": 2958
+    },
+    "delist_vekili_sembol": 865,
+    "delist_vekili_pay": 0.18558249302724736,
+    "kesit_delist_satir": 3362,
+    "kesit_satir": 236723,
+    "dilim_delist_satir": 1536,
+    "dilim_satir": 47948,
+    "dilim_delist_sembol": 34,
+    "delist_fwd_olculemeyen_satir": {
+      "10": 12511,
+      "20": 13720
+    },
+    "span_bekcisi_kapatti": {
+      "rvol20_span_kapatti": 160441,
+      "med_hacim21_span_kapatti": 161913,
+      "fwd10_span_kapatti": 159830,
+      "fwd20_span_kapatti": 161913
+    },
+    "ufuklar": {
+      "10": {
+        "tum": {
+          "n": 46834,
+          "n_sembol": 363,
+          "ort": 0.0018308932876686906,
+          "medyan": -0.006823456380516291,
+          "pozitif_oran": 0.4690182346158773
+        },
+        "yalniz_hayatta_kalanlar": {
+          "n": 45375,
+          "n_sembol": 336,
+          "ort": 0.0021018337322086015,
+          "medyan": -0.006781219621188939,
+          "pozitif_oran": 0.4690909090909091
+        },
+        "yalniz_sonradan_delist": {
+          "n": 1459,
+          "n_sembol": 27,
+          "ort": -0.006595373107806599,
+          "medyan": -0.007640997879207134,
+          "pozitif_oran": 0.46675805346127486
+        },
+        "survivorship_primi_vekili": 0.00027094044453991085,
+        "okuma": "prim_vekili > 0 ? delist isimleri fazlay� A�A�I �ekiyor, yani sa�kalan-evrende �l��len say� yukar� �arp�kt�. SAYIDIR, h�k�m de�il.",
+        "duyarlilik_delist_son_fiyattan_tasfiye": {
+          "n": 46911,
+          "ort": 0.0016289294347003633,
+          "beyan": "delist isminin son h g�n�nde bar yok ? fwd �l��lemez; bu sat�r o bo�lu�u 'son kapan��tan tasfiye' VARSAYIMIYLA doldurur. CI YOK, h�k�m baca�� DE��L."
+        }
+      },
+      "20": {
+        "tum": {
+          "n": 45988,
+          "n_sembol": 343,
+          "ort": 0.004783129461073216,
+          "medyan": -0.01342315599322319,
+          "pozitif_oran": 0.46005479690354006
+        },
+        "yalniz_hayatta_kalanlar": {
+          "n": 44560,
+          "n_sembol": 316,
+          "ort": 0.005404042053010302,
+          "medyan": -0.013379863929003477,
+          "pozitif_oran": 0.4600314183123878
+        },
+        "yalniz_sonradan_delist": {
+          "n": 1428,
+          "n_sembol": 27,
+          "ort": -0.014592126208896366,
+          "medyan": -0.014329020865261555,
+          "pozitif_oran": 0.46078431372549017
+        },
+        "survivorship_primi_vekili": 0.0006209125919370865,
+        "okuma": "prim_vekili > 0 ? delist isimleri fazlay� A�A�I �ekiyor, yani sa�kalan-evrende �l��len say� yukar� �arp�kt�. SAYIDIR, h�k�m de�il.",
+        "duyarlilik_delist_son_fiyattan_tasfiye": {
+          "n": 46096,
+          "ort": 0.004295587623413814,
+          "beyan": "delist isminin son h g�n�nde bar yok ? fwd �l��lemez; bu sat�r o bo�lu�u 'son kapan��tan tasfiye' VARSAYIMIYLA doldurur. CI YOK, h�k�m baca�� DE��L."
+        }
+      }
+    },
+    "dilim_delist_satir_pay": 0.03203470426295153,
+    "delist_dilime_yogunlasiyor_mu": {
+      "dilimdeki_delist_payi": 0.03203470426295153,
+      "kesitteki_delist_payi": 0.014202253266476008,
+      "okuma": "dilim pay� kesit pay�ndan B�Y�KSE y�ksek-turnover dilimi delist isimleri fazladan topluyor (EDG-016 �1 g�stergesi; yorum Rol-1)"
+    }
+  },
+  "kiyas_notu": {
+    "edg_016": {
+      "ust20_evren_fazlasi_10": 0.0031,
+      "ust20_evren_fazlasi_20": 0.00648,
+      "net_10bps_20": 0.00548,
+      "kaynak": "wp2_olcum/RAPOR_016.md (sa�kalan evren, full_251)"
+    },
+    "beyan": "EDG-016 say�lar� BURADA HESAPLANMADI, k�yas i�in ta��nd�. �ki �l��m FARKLI evrende yap�ld�; fark yaln�z survivorship'e atfedilemez."
+  },
+  "uyarilar": [],
+  "olculemedi": []
+}
