@@ -14,8 +14,12 @@ def _codes(issues):
 
 
 def test_completeness_gate_flags_zero_volume_and_gap():
-    today = dt.date.today()
-    dates = pd.to_datetime([today - dt.timedelta(days=x) for x in (40, 39, 5, 4, 3)])  # a big gap 39->5
+    # GERÇEK XNYS seansları kullanılır — takvim-göre tarih (bugün−N) haftanın gününe göre
+    # hafta-sonuna denk gelip hayalet-seans SERT bayrağını tetiliyordu (2026-08-04 Salı vakası:
+    # bugün−3 = Cumartesi). Testin konusu yumuşak bayraklar; fikstür takvim-temiz olmalı.
+    ses = sorted(d for d in data._sessions() if d <= dt.date.today().isoformat())
+    secili = [ses[-30], ses[-29], ses[-3], ses[-2], ses[-1]]   # büyük boşluk: −29 → −3
+    dates = pd.to_datetime(secili)
     df = pd.DataFrame({"date": sorted(dates), "open": [10, 10, 10, 10, 10], "high": [11, 11, 11, 11, 11],
                        "low": [9, 9, 9, 9, 9], "close": [10, 10, 10, 10, 10], "volume": [1e6, 0, 1e6, 1e6, 1e6]})
     ok, issues = data.validate_bars(df, "X")
