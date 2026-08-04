@@ -453,10 +453,33 @@ def _cols_to_row(name: str, rec: dict) -> dict:
 
 # ---- SATIR DEFTERLERİ --------------------------------------------------------------------------
 def _touch(conn, name: str, *, n: int, present: bool = True, env: dict | None = None) -> None:
+    """Varlık damgasını ilerlet. `env=None` → zarfa DOKUNMA (COALESCE). `env=dict` → MEVCUT zarfın
+    ÜSTÜNE BİRLEŞTİR.
+
+    NEDEN BİRLEŞTİRME (D3, 2026-08-04 — LATENT kusurun kapanışı). Buradaki `COALESCE(?, env_json)`
+    "None ise koru" demek istiyordu ama TEK env yazarı olan `do_write_series` env'i HER ZAMAN bir
+    dict olarak verir (`{}` bile `'{}'` yazılır) — yani koruma hiçbir zaman devreye girmiyordu ve
+    zarf her seri yazımında BÜTÜN OLARAK EZİLİYORDU. Eğrinin tek yazarı `run.py`dir ve o yalnız
+    `{"version", "points"}` yazar; `sermaye.uygula`nın koyduğu `reset_isaretleri` işareti onun
+    SAHİPLENDİĞİ bir anahtar değildir. Yani bir sonraki re-seed, kitapta patlamış olan aynı kusuru
+    (2026-08-04 vakası: sahibi olmadığı alanı ezen tam-belge yazarı) EĞRİDE tekrarlayacaktı.
+    Birleştirme, sahipliği yazarın kendi anahtarlarıyla sınırlar: yabancı zarf anahtarı yaşar,
+    sahiplenilen anahtar güncellenir (`version` yeni değerini alır — birleştirme dondurma değildir).
+    """
+    env_json = None
+    if env is not None:
+        mevcut: dict = {}
+        row = conn.execute("SELECT env_json FROM entity_meta WHERE entity=?", (name,)).fetchone()
+        if row and row["env_json"]:
+            try:
+                yuk = json.loads(row["env_json"])
+                mevcut = yuk if isinstance(yuk, dict) else {}
+            except json.JSONDecodeError:  # sessiz-yutma: eski zarf okunamadı — birleştirilecek bir şey YOK ve yeni zarf tam olarak yazılır; okunamayan zarfı korumak, bozuk baytları sonsuza kadar taşımak olurdu (aynı satır `read_series`te de ölçülüyor)
+                mevcut = {}
+        env_json = json.dumps({**mevcut, **env}, ensure_ascii=False)
     conn.execute("UPDATE entity_meta SET present=?, rev=rev+1, updated_at=?, n=?, "
                  "env_json=COALESCE(?, env_json) WHERE entity=?",
-                 (1 if present else 0, time.time(), int(n),
-                  json.dumps(env, ensure_ascii=False) if env is not None else None, name))
+                 (1 if present else 0, time.time(), int(n), env_json, name))
 
 
 def read_rows(name: str, limit: int | None = None) -> list[dict]:

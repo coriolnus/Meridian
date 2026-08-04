@@ -238,6 +238,67 @@ class Position:
     pivot: float = 0.0
 
 
+# =================================================================================================
+# KİTABIN BEYAN ÖLÇÜSÜ — TEK YASA, İKİ TÜKETİCİ (2026-08-04 "portföy sıfırlaması" vakası)
+# =================================================================================================
+# NE ÖLÇER: `portfolio.json`daki SERMAYE BEYANININ (`sermaye_resetleri`) büyüklüğü. Beyan, kitabın
+# tabanının defterin tabanından ne kadar ve NEDEN ayrıldığını söyleyen kayıttır; `recompute`in üç
+# kimliği (realized_pnl · cash_identity · equity_curve_tail) ofseti ondan okur. Kayıt kaybolursa
+# ofset 0'a düşer ve üç kimlik birden kırılır — canlıda tam olarak bu oldu (KOKNEDEN §1).
+#
+# NEDEN BURADA (leaf) YAŞIYOR: İKİ tüketicisi var — `loop._save_broker`ın yazım kapısı (D2) ve
+# `watchdog.monotonicity_report`ın monotonluk tabanı (D4). Ölçüyü iki yerde ayrı ayrı yazmak, bu
+# deponun adıyla kovaladığı kusurun ta kendisi olurdu ("aynı yasanın iki uygulaması"): biri
+# güncellenir, diğeri unutulur ve kapı ile dedektör AYNI olayda farklı şey söyler. `broker.py`
+# ikisinin de döngüsüz ithal edebildiği tek modüldür (watchdog → loop bir ithal halkası olurdu).
+# KAYITLARI OKUYAN TEK YER YİNE `sermaye.resetler`dir: burada ikinci bir okuyucu doğmaz, yalnız
+# TOPLAM alınır.
+
+# Kayıt-başına mutlak ofset toplamındaki karşılaştırma toleransı. Kayıtlar 2 ondalığa yuvarlı
+# yazılır; eşik kayan-nokta gürültüsünü eler, gerçek bir kaybı (en küçüğü sentlerce) elemez.
+BEYAN_TOL = 0.01
+
+
+def _abs_ofset(v) -> float:
+    try:
+        return abs(float(v))
+    except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — kayıt `n` sayacında GÖRÜNÜR ve kimlik kapısı onu saymaya devam eder; ölçülemeyen bir ofseti sayıya çevirmek UYDURMA olurdu, 0 katkı "bu kaydın büyüklüğü ölçülmedi" demektir
+        return 0.0
+
+
+def beyan_olcusu(pf: dict | None) -> dict:
+    """Kitabın beyan ölçüsü: `{"n": kayıt sayısı, "abs_ofset": Σ|ofset|, "ids": [...]}`.
+
+    TOPLAM NEDEN MUTLAK VE KAYIT BAŞINA: kayıtlar deftere yalnız EKLENİR, yani Σ|ofset| monoton
+    artan bir büyüklüktür ve bir ratchet tabanı olabilir. İşaretli toplam (`sermaye.ofset`)
+    monoton DEĞİLDİR — ters işaretli ikinci bir reset onu küçültür ve kapı o gün sahte alarm
+    üretirdi. `ids` ayrıca taşınır: sayı aynı kalıp kaydın DEĞİŞMESİ de bir kayıptır."""
+    from . import sermaye as _sm       # kayıtları okuyan TEK yer; burada ikinci bir okuyucu yok
+    kayitlar = _sm.resetler(pf if isinstance(pf, dict) else {})
+    return {"n": len(kayitlar),
+            "abs_ofset": round(sum(_abs_ofset(k.get("ofset")) for k in kayitlar), 2),
+            "ids": [str(k.get("id")) for k in kayitlar if k.get("id") is not None]}
+
+
+def beyan_gerilemesi(eski: dict, yeni: dict) -> dict | None:
+    """BEYAN YALNIZ EKLENEBİLİR. Gerileme varsa NEDENİYLE döner (alarm alanları hazır), yoksa None.
+
+    `watchdog.grant_amnesty` ailesinin aynı deseni: meşru bir küçülme YAZILI olmak zorundadır;
+    sessizce düşen bir beyan, üç gün sonra üç kırık kimlik olarak ortaya çıkar (teşhis maliyeti
+    bir kök-neden dosyasıdır)."""
+    ortak = {"eski_n": int(eski.get("n", 0)), "yeni_n": int(yeni.get("n", 0)),
+             "eski_ofset": float(eski.get("abs_ofset", 0.0)),
+             "yeni_ofset": float(yeni.get("abs_ofset", 0.0))}
+    if ortak["yeni_n"] < ortak["eski_n"]:
+        return {"neden": "kayit_sayisi_dustu", **ortak}
+    if ortak["yeni_ofset"] + BEYAN_TOL < ortak["eski_ofset"]:
+        return {"neden": "ofset_kuculdu", **ortak}
+    kayip = [i for i in (eski.get("ids") or []) if i not in set(yeni.get("ids") or [])]
+    if kayip:
+        return {"neden": "kayit_kayboldu", "kayip_id": kayip, **ortak}
+    return None
+
+
 class PaperBroker:
     def __init__(self, equity: float, slippage_bps: float, commission_per_share: float):
         self.start_equity = equity

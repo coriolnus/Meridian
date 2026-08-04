@@ -8,6 +8,7 @@ Runs on the VM in a detached tmux session (installed LAST, §7). Falls back to t
 proposer when HERMES_API_KEY is absent, so the loop is never dead."""
 from __future__ import annotations
 import argparse
+import calendar
 import json
 import os
 import sys
@@ -388,6 +389,29 @@ def brain_recovered(provider: str) -> None:
     def _mut(cur):
         return cur.pop(provider, None) is not None
     store.update_json(BRAIN_COOLDOWN_FILE, _mut, default={})
+
+
+def brain_pause(provider: str, reason: str, seconds: float) -> float:
+    """DÜZ (üstel OLMAYAN) kısa dinlenme: seriyi ARTIRMAZ ve var olan daha uzun bir cezayı KISALTMAZ.
+
+    NEDEN `brain_stand_down`DAN AYRI (2026-08-04 canlı vakası): o fonksiyonun ölçtüğü olgu
+    "sağlayıcı KOTAM BİTTİ dedi"dir ve cezanın üstel büyümesi oradan meşrudur. Burada ölçülen olgu
+    bambaşkadır: hat çalıştı, süreç koştu, model SUSTU. Susan bir modeli aynı üstel merdivene
+    bindirmek üç turda hattı 6 saat kilitliyordu — hem de kotası dolmamış BİRİNCİ modeli de
+    kapsayarak. Kısa pencere birinciyi bir sonraki turda yeniden denenebilir bırakır."""
+    def _mut(cur):
+        row = cur.get(provider) or {}
+        try:
+            mevcut = float(row.get("until") or 0)
+        except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
+            mevcut = 0.0
+        until = max(mevcut, time.time() + float(seconds))
+        cur[provider] = {**row, "until": until, "seconds": round(until - time.time(), 1),
+                         "streak": int(row.get("streak") or 0),   # seri ARTMAZ: bu bir kota cezası değil
+                         "reason": reason, "since": memory.now_iso()}
+        return True
+    doc = store.update_json(BRAIN_COOLDOWN_FILE, _mut, default={})
+    return max(0.0, float(doc[provider]["until"]) - time.time())
 
 
 def _rate_limited(exc: BaseException) -> tuple[bool, float | None]:
@@ -1402,6 +1426,31 @@ def _agent_unconfigured_sign(stdout: str, stderr: str) -> str | None:
     return None
 
 
+# ---- KOTA İMZALARI (v188, 2026-08-04) ----------------------------------------------------------
+# `_rate_limited` bir İSTİSNA sınıflandırır (httpx yolu); yerel ajan yolunda istisna YOKTUR — elde
+# yalnız bir süreç çıktısı vardır. Boş bir cevabın "kota bitti" mi yoksa "model sustu" mu olduğunu
+# ayıran tek DOĞRUDAN kanıt bu çıktıdaki imzadır. İkisini ayırmamak, susan bir modelin cezasını
+# kota cezası merdivenine bindiriyordu (canlı: `agent_call_empty ... cooldown_s=21600`).
+AGENT_QUOTA_SIGNS = ("too many requests", "resource_exhausted", "insufficient_quota",
+                     "quota", "rate limit", "rate_limit")
+
+
+def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
+    """Boş cevabın gövdesinde GERÇEK kota/oran-sınırı imzası var mı? Varsa imza, yoksa None.
+
+    `_agent_unconfigured_sign` ile aynı disiplin: YALNIZ boş-cevap yolunda çağrılır. Dolu bir
+    cevabın metni 'quota' kelimesini geçirebilir ve orada hiçbir arıza yoktur. 429/529 sayısı
+    KELİME SINIRIYLA aranır — oturum özetindeki bir süre/jeton sayısının içine gömülü '429'
+    kota sanılırsa, sınıflandırma tam da düzeltmeye çalıştığı hatayı üretirdi."""
+    import re as _re
+    hay = f"{stdout or ''}\n{stderr or ''}".lower()
+    for sign in AGENT_QUOTA_SIGNS:
+        if sign in hay:
+            return sign
+    m = _re.search(r"\b(429|529)\b", hay)
+    return m.group(1) if m else None
+
+
 # ---- CLI SESSİZ MODU (`-Q`) — SÜRÜM DERSİ, 2026-08-02 ------------------------------------------
 # KÖK NEDEN (canlı vaka): `-q` SESSİZLİK DEĞİL, SORGU bayrağıdır (`-q QUERY, --query QUERY`) —
 # sessiz mod AYRI bir bayraktır: `-Q, --quiet` ("suppress banner, spinner, and tool previews. Only
@@ -1463,6 +1512,19 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     if not bin_:
         return None
     rem = brain_cooldown("agent")
+    if rem > 0 and _pool_window_renewed():
+        # KOTA PENCERESİ YENİLENDİ (v188, 2026-08-04): elimizdeki soğuma DÜNKÜ havuz tükenmesinden
+        # kuruldu ve o işaret sağlayıcının son günlük sıfırlamasından ÖNCEYE ait — yani BUGÜNÜN
+        # kotası hakkında hiçbir şey söylemiyor. Canlıda görülen sonuç: taze kota penceresi hiç
+        # denenmeden yedek modele düşülüyor, yedek susunca 6 saat daha kilitleniyordu. İşaret
+        # temizlenir ve birinci GERÇEKTEN yoklanır; yoklama başarısızsa zincirin sonundaki
+        # sınıflandırma işareti yeniden kurar (mevcut davranış).
+        brain_recovered("agent")
+        obs.log("agent_pool_window_reset", kind=kind, iptal_edilen_soguma_s=round(rem, 1),
+                reset_utc_hour=POOL_QUOTA_RESET_UTC_HOUR,
+                detail="havuz-tükenme işareti son günlük kota sıfırlamasından ESKİ — soğuma "
+                       "kaldırıldı, birinci model gerçekten yoklanıyor")
+        rem = 0.0
     if rem > 0:
         # Ajanın kimlik havuzu 429 yemişti ve bunu KENDİ kaydında yazıyordu; yine de her turda yeni bir
         # süreç başlatılıyordu. Süreç başlatmadan dön: bilinen-ölü sağlayıcıyı dövmek kotayı geri getirmez.
@@ -1475,6 +1537,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         pass
     models = [m for m in dict.fromkeys([secrets.get("NOUS_MODEL"),
                                         secrets.get("NOUS_FALLBACK_MODEL")]) if m] or [None]
+    son_stdout = son_stderr = ""      # zincirin SON denemesinin ham çıktısı — boş-sınıfı tailde ayrılır
     for attempt, model in enumerate(models):
         if not _agent_budget_take(max_wait if attempt == 0 else 0.0):
             return None
@@ -1500,6 +1563,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # defterde `agent_call_empty` HİÇ yazmazdı. Boş stdout artık ölçütün parçası.
         empty = (out.returncode != 0 or not (out.stdout or "").strip()
                  or _agent_reply_missing(out.stdout))
+        son_stdout, son_stderr = out.stdout or "", out.stderr or ""
         tcalls = _agent_tool_calls(out.stdout)
         # (c) BOŞ CEVABIN İKİ SINIFI AYRIŞIR: imza varsa CLI ağa çıkmadan yapılandırma rehberi
         # bastı (yapılandırmasız), yoksa gerçekten cevapsız kalındı (kota/arka uç).
@@ -1539,14 +1603,36 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     # ama tried=1'di — NOUS_FALLBACK_MODEL hiç ayarlanmamıştı, yani "düşüş zinciri" tek elemanlıydı.
     # Yedeğin YOKLUĞU, yedeğin BAŞARISIZLIĞI gibi okunuyordu.
     exhausted = _pool_exhausted()
-    cooled = 0.0
-    if exhausted:
+    # BOŞ YEDEK ≠ BİTMİŞ KOTA (v188, 2026-08-04). Canlı satır: `agent_call kind=review
+    # model=tencent/hy3:free attempt=2 empty=true` → `agent_call_empty pool_exhausted="gemini"
+    # cooldown_s=21600`. İki olgu tek cezaya katlanmıştı: (i) havuzun kendi kaydı tükenmişlik
+    # diyordu, (ii) YEDEK model (başka bir üst-akış!) boş döndü. (ii) hakkında havuzun söyleyecek
+    # hiçbir şeyi yok: hat çalıştı, süreç koştu, model konuşmadı. Çıktıda kota imzası YOKSA cezayı
+    # üstel merdivene bindirmek 6 saatlik bir kilit üretiyor ve kotası dolmamış BİRİNCİ modeli de
+    # kapsıyordu. Ayrım imzaya dayanır — tahmine değil.
+    kota_imza = _agent_quota_sign(son_stdout, son_stderr)
+    yedek_sustu = len(models) > 1 and not kota_imza
+    cooled, sinif = 0.0, None
+    if exhausted and yedek_sustu:
+        sinif = "fallback_empty"
+        cooled = brain_pause("agent", f"fallback_empty:{kind}", BRAIN_COOLDOWN_BASE_S)
+    elif exhausted:
         # Havuzun kendi kaydı 'exhausted/429' diyor: rotasyon absorbe EDEMEZ (sağlayıcı başına tek
         # kimlik). Ajanı da soğumaya al, yoksa her poll yeni bir süreçle aynı duvara çarpar.
+        sinif = "pool_exhausted"
         cooled = brain_stand_down("agent", f"pool_exhausted:{exhausted}")
+    if yedek_sustu:
+        obs.warn("review_fallback_empty", kind=kind, model=models[-1] or "varsayılan",
+                 chain=len(models), pool_exhausted=exhausted, cooldown_s=round(cooled, 1),
+                 detail=f"yedek model boş döndü ve çıktıda KOTA İMZASI YOK — bu 'kota bitti' değil, "
+                        f"'hat çalıştı, model sustu' sınıfıdır. Bu yüzden üstel havuz cezası "
+                        f"(tavan {BRAIN_COOLDOWN_MAX_S} sn) YAZILMAZ; yalnız {BRAIN_COOLDOWN_BASE_S} "
+                        f"sn'lik düz yeniden-deneme penceresi kurulur ve BİRİNCİ model bir sonraki "
+                        f"turda yeniden denenebilir kalır.")
     obs.warn("agent_call_empty", kind=kind, tried=len(models), chain=len(models),
              fallback_model_configured=bool(secrets.get("NOUS_FALLBACK_MODEL")),
-             pool_exhausted=exhausted, cooldown_s=round(cooled, 1),
+             pool_exhausted=exhausted, cooldown_s=round(cooled, 1), cooldown_sinifi=sinif,
+             kota_imzasi=kota_imza,
              detail=f"model zinciri cevapsız (zincir uzunluğu {len(models)}) — kota/arka uç; "
                     f"deterministik yol devrede")
     return None
@@ -2139,6 +2225,65 @@ def integrations_status() -> dict:
 
 AGENT_AUTH_FILE = os.path.expanduser("~/.hermes/auth.json")
 POOL_EXHAUSTED_WINDOW_S = int(os.environ.get("HERMES_POOL_EXHAUSTED_WINDOW_S", "3600"))
+# GÜNLÜK KOTA SIFIRLAMA SINIRI (v188, 2026-08-04). Serbest katman kotası GÜNLÜKTÜR: her gün bu UTC
+# saatinde yenilenir ve o andan itibaren dünkü tükenme işareti BUGÜN hakkında hiçbir şey söylemez.
+# Saati koda gömmedik — sağlayıcıya göre değişir ve gömülü bir sayı yanlış sağlayıcıda SESSİZCE
+# yanlış kalırdı; dosyadaki diğer sağlayıcı ayarlarıyla aynı desen (env ile taşınır).
+POOL_QUOTA_RESET_UTC_HOUR = int(os.environ.get("HERMES_POOL_QUOTA_RESET_UTC_HOUR", "7"))
+# Havuz satırı `last_status_at` TAŞIMIYORSA tükenmeyi İLK GÖRDÜĞÜMÜZ an buraya çivilenir. Eskiden
+# zamansız işaret `_pool_exhausted`i SONSUZA DEK "tükenmiş" okutuyordu (`not last_status_at` dalı):
+# kota her gün yenilenirken işaret hiç eskimiyor, hat 6 saatte bir kendini yeniden kilitliyordu.
+POOL_SEEN_FILE = "pool_exhausted_seen.json"
+
+
+def _quota_reset_epoch(now: float | None = None) -> float:
+    """EN SON günlük kota-sıfırlama sınırı (epoch, UTC). Bu sınırdan ÖNCE konmuş bir tükenme
+    işareti geçmiş bir kota penceresine aittir ve bugünkü bir karara girmemelidir."""
+    now = time.time() if now is None else float(now)
+    t = time.gmtime(now)
+    boundary = float(calendar.timegm((t.tm_year, t.tm_mon, t.tm_mday,
+                                      POOL_QUOTA_RESET_UTC_HOUR, 0, 0, 0, 0, 0)))
+    return boundary if boundary <= now else boundary - 86400.0
+
+
+def _pool_seen_at(prov: str, now: float) -> float:
+    """Havuz tükenme işaretinin SON-TÜKENME-ZAMANI; havuz dosyası taşımıyorsa BİZİM ilk gözlem
+    anımız çivilenir (bir kez yazılır, sonraki okumalar aynı anı döndürür)."""
+    def _mut(cur):
+        if cur.get(prov):
+            return False
+        cur[prov] = now
+        return True
+    doc = store.update_json(POOL_SEEN_FILE, _mut, default={})
+    try:
+        return float(doc.get(prov) or now)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
+        return now
+
+
+def _pool_seen_clear(prov: str) -> None:
+    """İşaret düştü (havuz sağlandı ya da pencere yenilendi) — çivi kaldırılır ki bir sonraki
+    tükenme KENDİ zamanıyla damgalansın."""
+    store.update_json(POOL_SEEN_FILE, lambda cur: cur.pop(prov, None) is not None, default={})
+
+
+def _pool_window_renewed() -> bool:
+    """Ajan soğuması HAVUZ TÜKENMESİNDEN mi kuruldu ve o işaret son kota sıfırlamasından ÖNCE mi?
+
+    Üç koşul da aranır ve üçü de ayrı bir yanlış-pozitifi kapatır: (i) soğumanın nedeni havuz
+    tükenmesi değilse (ör. gerçek 429 merdiveni ya da başka bir ceza) DOKUNULMAZ; (ii) soğuma bu
+    kota penceresi İÇİNDE kurulduysa taze bilgidir, yoklama yapılmaz; (iii) havuz ŞU AN hâlâ
+    taze-tükenmiş diyorsa (bugün yeniden 429 yemiş) işaret geçerlidir."""
+    row = (store.read_json(BRAIN_COOLDOWN_FILE, {}) or {}).get("agent") or {}
+    if not str(row.get("reason") or "").startswith("pool_exhausted:"):
+        return False
+    try:
+        kuruldu = float(row.get("until") or 0) - float(row.get("seconds") or 0)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
+        return False
+    if not kuruldu or kuruldu > _quota_reset_epoch():
+        return False
+    return _pool_exhausted() is None
 
 
 def pool_health() -> dict:
@@ -2179,15 +2324,29 @@ def _agent_provider() -> str | None:
 
 def _pool_exhausted() -> str | None:
     """Ajanın sağlayıcısının havuzunda kullanılabilir TEK bir kimlik kalmadıysa sağlayıcı adı, yoksa
-    None. Yalnız YAKIN geçmişteki tükenme sayılır (pencere) — eski bir kayıt sonsuza dek bloklamasın."""
+    None. Tükenme işareti İKİ ölçütü birden geçmelidir: (1) yakın geçmişte konmuş olmalı (pencere),
+    (2) İÇİNDE BULUNDUĞUMUZ kota penceresine ait olmalı — yani son günlük sıfırlamadan SONRA.
+
+    (2) v188'de eklendi (canlı, 2026-08-04): dünkü işaret sıfırlamadan sonra da 'tükenmiş' okunuyor,
+    taze kota penceresi HİÇ denenmeden yedek modele düşülüyordu. Zamansız işaret (havuz satırında
+    `last_status_at` yok) daha da kötüsüydü: eski kod onu SONSUZA dek tükenmiş sayıyordu. Artık
+    ölçülemeyen zaman uydurulmaz da yok sayılmaz da — ilk gözlem anı çivilenir ve o eskir."""
     prov = _agent_provider()
     h = pool_health().get(str(prov or ""), None)
-    if not h or not h.get("keys") or h.get("healthy"):
+    if not h or not h.get("keys") or h.get("healthy") or not h.get("exhausted"):
+        if prov:
+            _pool_seen_clear(str(prov))
         return None
-    if h.get("exhausted") and (not h.get("last_status_at")
-                               or time.time() - float(h["last_status_at"]) < POOL_EXHAUSTED_WINDOW_S):
-        return str(prov)
-    return None
+    now = time.time()
+    try:
+        seen = float(h.get("last_status_at") or 0)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
+        seen = 0.0
+    seen = seen or _pool_seen_at(str(prov), now)
+    if seen <= _quota_reset_epoch(now) or now - seen >= POOL_EXHAUSTED_WINDOW_S:
+        _pool_seen_clear(str(prov))       # işaret bayat: bir sonraki tükenme kendi zamanıyla damgalanır
+        return None
+    return str(prov)
 
 
 def register_pool_key(provider: str, api_key: str, label: str = "meridian") -> dict:

@@ -1536,6 +1536,16 @@ def monotonicity_report(persist: bool = False, olaylar: list[dict] | None = None
         pf = store.read_json("portfolio.json", {}) or {}
         cur["book_date"] = str(pf.get("last_date") or "")
         cur["peak_equity"] = float(pf.get("peak_equity") or 0)
+        # SERMAYE BEYANI DA İLERİ-ONLY'DİR (D4, 2026-08-04 vakası). Kayıtlar deftere yalnız
+        # EKLENİR; sayı ya da kayıt-başına mutlak ofset toplamı düşüyorsa bir beyan SİLİNMİŞTİR.
+        # Canlıda bu kayıp ÜÇ GÜN sonra üç kırık `recompute` kimliği olarak göründü ve teşhis
+        # maliyeti bir kök-neden dosyası oldu; tabana bağlanınca aynı olay TEK döngüde bir
+        # gerileme satırıdır. Ölçü `broker.beyan_olcusu`dan gelir — yazım kapısıyla (loop
+        # `_save_broker`) AYNI ölçü, ikinci bir uygulama değil.
+        from .broker import beyan_olcusu as _beyan_olcusu
+        _b = _beyan_olcusu(pf)
+        cur["sermaye_reset_n"] = _b["n"]
+        cur["sermaye_ofset_abs"] = _b["abs_ofset"]
     except Exception as e:
         from . import obs
         obs.warn("monotonicity_source_unreadable", source="portfolio.json",

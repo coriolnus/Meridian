@@ -473,6 +473,25 @@ def _hotstate_off_once(key: str, where: str, reader: str) -> None:
 
 
 def _save_broker(b: PaperBroker, meta: dict) -> None:
+    """Kitabı diske yaz — SAHİPLENİLEN ALANLARI YAMALAYARAK, belgeyi EZEREK DEĞİL.
+
+    2026-08-04 VAKASI (research/olcumler/portfoy_sifirlama_2026-08-04/KOKNEDEN.md). Bu fonksiyon
+    `store.write_json(PORTFOLIO, st)` ile belgeyi TAM yazıyordu ve `st` SABİT 13 ANAHTARLIK bir
+    beyaz listeydi. Sonuç: listede olmayan her anahtar ilk noop-olmayan döngüde SESSİZCE yok
+    oluyordu. Canlıda yok olan şey, operatörün 2026-08-01'de yazdığı SERMAYE BEYANIYDI
+    (`sermaye_resetleri`) — beyan gidince `recompute` ofseti 0'a düştü ve üç kimlik birden kırıldı.
+    "Seçici sıfırlama" görüntüsü sıfırlamada değil, SERİLEŞTİRMENİN BEYAZ LİSTESİNDEYDİ.
+
+    NEDEN DAR BİR YAMA (`st["sermaye_resetleri"] = …`) DEĞİL: o, sınıfı bir kez daha ELLE kapatmak
+    olurdu — bir sonraki beyan anahtarını yazan kişi aynı tuzağa düşerdi. Yapısal kapı, sahipliği
+    yazarın KENDİ listesiyle sınırlamaktır: `update_json` diskteki belgeyi kilit altında okur,
+    üstüne yalnız aşağıdaki 13 alanı basar; yabancı anahtarlar (bugünkü beyan VE gelecekteki her
+    beyan) yerinde yaşar. Aynı aile: `health.py:239` çok-yazarlı nabız alanları, `storage._touch`
+    eğri zarfı.
+
+    RATCHET (D2): yazımdan ÖNCE, aynı kilit altında, beyan ölçüsü İKİ kaynakla kıyaslanır —
+    diskteki belge ve döngünün tur başında okuduğu `meta`. Ölçü düşüyorsa yazım REDDEDİLİR ve
+    alarm basılır: `_save_broker` bu kaybı çimentolayan yazar olamaz."""
     from dataclasses import asdict
     st = {"cash": b.cash, "realized_pnl": b.realized_pnl, "last_id": b._id,
           "positions": {t: asdict(p) for t, p in b.positions.items()},
@@ -496,8 +515,45 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
           MIRROR_EXIT_KEY: meta.get(MIRROR_EXIT_KEY, {})}
     # AYNI KİLİT: Hermes'in görüş damgası da portfolio.json'a yazıyor (ayrı iş parçacığı) —
     # ikisi de store.file_lock(PORTFOLIO) altında olmalı, yoksa biri diğerinin defterini ezer.
+    # `update_json` kilidi ZATEN alır (yeniden girişli); dıştaki `with` okuma+kıyas+yazımın TEK
+    # kritik bölge olmasını sağlar — kıyas ile yazım arasına başka bir yazar giremez.
     with store.file_lock(PORTFOLIO):
-        store.write_json(PORTFOLIO, st)
+        red: dict = {}
+
+        def _yama(doc):
+            if not isinstance(doc, dict):
+                # Diskteki belge sözlük değil (dış hasar). Korunacak yabancı anahtar YOKTUR;
+                # yazımı atlamak kitabın o turunu kaybettirirdi → aşağıda alarm + tam yazım.
+                red["neden"] = "belge_sozluk_degil"
+                return False
+            olculer = (("disk", BR.beyan_olcusu(doc)), ("dongu", BR.beyan_olcusu(meta)))
+            doc.update(st)                    # SAHİPLENİLEN alanlar; yabancılar YERİNDE kalır
+            yeni = BR.beyan_olcusu(doc)
+            for kaynak, eski in olculer:
+                g = BR.beyan_gerilemesi(eski, yeni)
+                if g:
+                    red.update({"kaynak": kaynak, **g})
+                    return False
+            return True
+
+        store.update_json(PORTFOLIO, _yama, {})
+        if red.get("neden") == "belge_sozluk_degil":
+            obs.alarm(obs.ALARM_DATA_QUALITY,
+                      "portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı",
+                      yazar="_save_broker", neden=red["neden"],
+                      detail="yama uygulanamadı; korunacak yabancı anahtar yok, kitap kaybolmasın "
+                             "diye tam yazım yapıldı (defterin önceki içeriği okunamıyordu)")
+            store.write_json(PORTFOLIO, st)
+        elif red:
+            # YAZIM REDDEDİLDİ — ve bu SESSİZ DEĞİL: kitap bu tur diske inmez, alarm operatöre
+            # kaybı AYNI DÖNGÜDE söyler. Kendi kendini iyileştirir: sonraki tur `meta`yı diskten
+            # yeniden okur, taban düşer ve yazımlar sürer (kalıcı kilitlenme değil, tek tur fren).
+            obs.alarm(obs.ALARM_DATA_QUALITY,
+                      "sermaye beyanı silinecekti — kitap yazımı REDDEDİLDİ",
+                      yazar="loop._save_broker", **red,
+                      detail="beyan yalnız EKLENEBİLİR (grant_amnesty ailesi): meşru bir küçülme "
+                             "YAZILI olmak zorundadır. Kitap bu tur yazılmadı; beyanı silen yazar "
+                             "aranmalı (KOKNEDEN 2026-08-04).")
     # SICAK KOPYA — DEVRE DIŞI (sadeleştirme turu, 2026-07-30). Bu satır pozisyonları `mrd:pos`a
     # yazıyordu ("intraday'de ms-latency erişim"). ÖLÇÜM: `hotstate.get_positions`ın PRODÜKSİYONDA
     # hiçbir çağıranı yok — yalnız testler okuyor. Yani katman YALNIZ-YAZILIRDI: her turda Redis'e
