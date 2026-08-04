@@ -211,6 +211,9 @@ READ_CALLS = frozenset({"read_json", "read_jsonl"})
 # okumayı yazan modüle sayar), ya dosya modülün KENDİ işletim durumudur (önbellek, alarm tekilleştirme,
 # iş kuyruğu) ve dışarıdan okunması zaten anlamsızdır.
 DECLARED_SINKS: dict[str, str] = {
+    "pool_exhausted_seen.json": "hermes kimlik-havuzu son-tükenme-zamanı çivisi (v188) — okuyucu "
+        "aynı modülde (_pool_seen_at, süreç-yeniden-başlatma sonrası kota-sıfırlama kıyası için "
+        "kalıcı olmak ZORUNDA); statik graf modül-içi okumayı göremiyor (finviz vakasındaki sınıf)",
     # NOT (2026-07-27): `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte

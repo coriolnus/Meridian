@@ -127,6 +127,26 @@ def test_D1_uctan_uca_kimlikler_bir_kaydetme_turundan_SONRA_yesil(sandbox_state)
     assert sermaye.ofset() == r["ofset"] != 0.0        # beyan ölçülebilir hâlde duruyor
 
 
+def test_D1_yama_SQLite_arka_ucunda_da_korur(db_sandbox):
+    """VAKANIN GERÇEK ZEMİNİ: canlı kitap 2026-07-31'den beri SQLite'tadır ve `do_write_doc`
+    `doc_json`u BÜTÜN OLARAK ezer (`ON CONFLICT … SET doc_json=excluded.doc_json`) — yani DB
+    katmanında hiçbir birleştirme YOKTUR. Korunan alan ne varsa YAZARIN elinden gelir; bu testin
+    ölçtüğü şey tam olarak odur."""
+    assert store.db_backed(loop.PORTFOLIO) is True, "test DB arka ucunda koşmuyor"
+    _tohumlu_dunya()
+    pf = store.read_json(loop.PORTFOLIO, {})
+    pf[sermaye.RESET_KEY] = [KAYIT]
+    store.write_json(loop.PORTFOLIO, pf)
+
+    b, meta = loop._load_broker()
+    b.cash = 100000.0
+    loop._save_broker(b, meta)
+
+    yeni = store.read_json(loop.PORTFOLIO, {})
+    assert yeni[sermaye.RESET_KEY][0]["id"] == KAYIT["id"]
+    assert yeni["cash"] == 100000.0
+
+
 def test_D1_sozluk_olmayan_belge_kitabi_yine_KALICI_kilar_ve_alarm_uretir(sandbox_state):
     """Diskteki belge sözlük DEĞİLSE (dış hasar) yama uygulanamaz. Yazımı sessizce ATLAMAK
     kitabın o turunu (nakit, pozisyonlar, dedup kümesi) kaybettirirdi; yapılan şey ALARM + tam

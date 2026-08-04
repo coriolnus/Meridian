@@ -1613,7 +1613,11 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     kota_imza = _agent_quota_sign(son_stdout, son_stderr)
     yedek_sustu = len(models) > 1 and not kota_imza
     cooled, sinif = 0.0, None
-    if exhausted and yedek_sustu:
+    if yedek_sustu:
+        # Kısa pencere havuzun durumundan BAĞIMSIZ kurulur ve bunun iki ayrı gerekçesi var:
+        # (i) havuz ne derse desin, susan yedek hakkında söylediği şey ölçülmemiştir; (ii) havuz
+        # işareti bayat olduğu için düştüğünde eski kod HİÇ soğuma yazmıyordu — yani (1) numaralı
+        # düzeltme tek başına, ölü bir zinciri her turda yeniden doğuran bir delik açardı.
         sinif = "fallback_empty"
         cooled = brain_pause("agent", f"fallback_empty:{kind}", BRAIN_COOLDOWN_BASE_S)
     elif exhausted:
@@ -2263,7 +2267,13 @@ def _pool_seen_at(prov: str, now: float) -> float:
 
 def _pool_seen_clear(prov: str) -> None:
     """İşaret düştü (havuz sağlandı ya da pencere yenilendi) — çivi kaldırılır ki bir sonraki
-    tükenme KENDİ zamanıyla damgalansın."""
+    tükenme KENDİ zamanıyla damgalansın.
+
+    ÖNCE KİLİTSİZ OKUMA: `_pool_exhausted` panonun her yoklamasında koşar ve SAĞLIKLI yol buradan
+    geçer. Koşulsuz `update_json` her yoklamada bir kilit dosyası doğurup boşuna G/Ç yapardı —
+    yazacak bir şey yokken kilit almak, ölçmediğimiz bir maliyeti sessizce ekler."""
+    if not (store.read_json(POOL_SEEN_FILE, {}) or {}).get(prov):
+        return
     store.update_json(POOL_SEEN_FILE, lambda cur: cur.pop(prov, None) is not None, default={})
 
 

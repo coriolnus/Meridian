@@ -540,7 +540,7 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
         if red.get("neden") == "belge_sozluk_degil":
             obs.alarm(obs.ALARM_DATA_QUALITY,
                       "portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı",
-                      yazar="_save_broker", neden=red["neden"],
+                      yazar="loop._save_broker", neden=red["neden"],
                       detail="yama uygulanamadı; korunacak yabancı anahtar yok, kitap kaybolmasın "
                              "diye tam yazım yapıldı (defterin önceki içeriği okunamıyordu)")
             store.write_json(PORTFOLIO, st)
