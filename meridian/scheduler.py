@@ -7,6 +7,7 @@ Dedupes on portfolio last_date; respects HALT; never advances on a non-session d
 from __future__ import annotations
 import datetime as dt
 import threading
+import time
 
 from . import config, store, health
 
@@ -31,6 +32,97 @@ def _now() -> str:
 
 def _persist() -> None:
     store.write_json(STATUS_FILE, {**_state, "updated": _now()})
+
+
+# ==================================================================================================
+# İLERLEME NABZI (v186, 2026-08-04) — bekçinin varsayımı "tick=ilerleme"ydi, gerçeği "tick=döngü SONU"
+# ==================================================================================================
+# ÖLÇÜLMÜŞ VAKA (A1 canlı, 2026-08-03 20:00→23:30 UTC): asılı-tick bekçisi
+# (`deploy/oracle-a1/tick_watchdog.sh`, eşik 2700 sn) Pazartesi EOD döngüsünü ÜÇ kez öldürdü ve
+# döngü her seferinde baştan başladı — aday kararları o akşam HİÇ üretilmedi. Döngü ASILI DEĞİLDİ:
+# `bar_source_upgrade` (408 sembol, Cuma seansı) + `bar_ghost_round_summary` (367 satırlık onarım
+# kuyruğu, 2006-2018 tarihleri, sembol başına tek tek FMP çekimleri) + kazanç takvimi tazelemesi
+# meşru-uzun bir işti ve İLERLİYORDU.
+#
+# KUSUR YERİ: `advance_once` `scheduler_status.updated`ı ancak DÖNERKEN yazar (`_persist`, her
+# çıkış dalında). Aradaki uzun blok boyunca damga HİÇ tazelenmez. Yani bekçinin okuduğu sinyal
+# "döngü ilerliyor" değil "döngü BİTTİ"ydi; iş 45 dakikayı aşınca sağlıklı bir süreç bayat sayıldı.
+#
+# NEDEN EŞİK DEĞİL NABIZ: eşiği yükseltmek bekçiyi GERÇEK asılmalara karşı da körleştirirdi —
+# bekçiyi var eden kurucu vaka (2026-07-30, 73,1 dk sessizlik) tam o pencerededir. Doğru düzeltme
+# sinyali gerçeğe uydurmaktır: uzun iş İLERLEDİĞİNİ söylesin.
+#
+# SÖZLEŞME (üç madde, üçü de bilerek):
+#   1. NABIZ = MEVCUT TİCK. Yeni bir dosya/biçim İCAT EDİLMEZ; `_persist()` çağrılır, yani bekçinin
+#      okuduğu `scheduler_status.updated` alanının ta kendisi tazelenir. Ek `nabiz` bloğu yalnız
+#      TEŞHİS içindir (hangi aşamada, kaçıncı nabız) ve hiçbir kapıyı beslemez.
+#   2. YALNIZ İLERLEME NABIZ ATAR. Çağrı YİNELEME BAŞINA yapılır; tek bir ağ çağrısında gerçekten
+#      ASILI kalan bir döngü hiçbir yineleme tamamlayamaz, nabız atmaz ve bekçi onu ESKİSİ GİBİ
+#      yeniden başlatır. Bekçinin yeteneği DARALMAZ, yalanı düzelir.
+#   3. YAZAN YALNIZ DÖNGÜNÜN KENDİ İŞ PARÇACIĞIDIR. Sahiplik `advance_once` içinde alınır ve
+#      `finally`de bırakılır; `threading.get_ident()` eşleşmeyen her çağrı SESSİZCE no-op'tur.
+#      Bu kapı olmadan `data.load_many` üzerinden geçen HER yol (replay tohumu, sprint alt
+#      süreçleri, havuz işçileri, danışma iş parçacıkları) canlı durum damgasını tazeleyebilir ve
+#      bekçi ölü bir zamanlayıcıyı ayakta sanardı — yani düzeltme, kapatmak istediği körlüğün daha
+#      kötüsünü üretirdi. ("Canlı worker koşarken state'e yazma" kuralı worker'ın KENDİSİ için
+#      geçerli değildir: statüyü zaten o yazıyor.)
+NABIZ_MIN_ARA_S = 30.0           # iki disk yazımı arasındaki EN AZ süre (bekçi eşiği 2700 sn — 90 kat pay)
+
+_nabiz_sahibi: int | None = None    # aktif döngünün iş parçacığı kimliği (None = koşan döngü yok)
+_nabiz_son: float = 0.0             # son yazımın monotonik damgası
+_nabiz_sayac: int = 0               # BU turda atılan nabız sayısı (teşhis)
+
+
+def _nabiz_sahiplen() -> None:
+    """Döngü başladı — nabız yetkisi BU iş parçacığına geçer. İlk nabız `NABIZ_MIN_ARA_S` sonra
+    atar: kısa/normal bir döngü (poll'lerin ezici çoğunluğu saniyeler sürer) hiç fazladan yazım
+    yapmaz, yani mevcut davranış değişmez."""
+    global _nabiz_sahibi, _nabiz_son, _nabiz_sayac
+    _nabiz_sahibi, _nabiz_son, _nabiz_sayac = threading.get_ident(), time.monotonic(), 0
+    # ÖNCEKİ TURUN AŞAMASI SİLİNİR: `nabiz` bloğu "ŞU ANKİ turda nerede olduğumuz"u anlatır. Kalıntı
+    # bırakmak, saatler önce bitmiş bir süpürmeyi hâlâ koşuyormuş gibi gösterirdi. (Bekçi bu alanı
+    # OKUMAZ — o `updated`a bakar; burada korunan şey teşhisin dürüstlüğüdür.) Bir döngü ortasında
+    # ÖLDÜRÜLÜRSE alan dosyada kalır ve son ilerlemenin adli izi olur.
+    _state.pop("nabiz", None)
+
+
+def _nabiz_birak() -> None:
+    global _nabiz_sahibi
+    _nabiz_sahibi = None
+
+
+def nabiz(asama: str, i: int | None = None, n: int | None = None) -> bool:
+    """UZUN İŞ İLERLİYOR — asılı-tick damgasını tazele. True = damga DİSKE yazıldı.
+
+    Yineleme başına çağrılmak üzere tasarlandı: yazım `NABIZ_MIN_ARA_S` ile kısılır, o yüzden
+    çağrının kısılan hâli bir `monotonic()` + iki karşılaştırmadır (408 sembollük bir turda ölçülemez
+    maliyet). Etiket (`i/n`) YALNIZ gerçekten yazarken kurulur — kısılan çağrıda f-string bile
+    üretilmez.
+
+    ASLA FIRLATMAZ: bu bir telemetri yazımıdır ve veri hattını düşürmesi, düzelttiği kusurdan çok
+    daha pahalı olurdu."""
+    global _nabiz_son, _nabiz_sayac
+    if _nabiz_sahibi is None or threading.get_ident() != _nabiz_sahibi:
+        return False                    # bu süreçte/iş parçacığında koşan bir döngü yok (bkz. madde 3)
+    simdi = time.monotonic()
+    if (simdi - _nabiz_son) < NABIZ_MIN_ARA_S:
+        return False
+    _nabiz_son = simdi
+    _nabiz_sayac += 1
+    _state["nabiz"] = {"asama": (f"{asama} {i}/{n}" if i is not None else str(asama))[:80],
+                       "at": _now(), "tur_ici": _nabiz_sayac}
+    try:
+        _persist()
+    except Exception as e:
+        try:
+            from . import obs as _obs_nb
+            _obs_nb.warn("tick_nabzi_yazilamadi", asama=str(asama), error=f"{type(e).__name__}: {e}",
+                         detail="ilerleme nabzı diske yazılamadı — uzun iş sürerken asılı-tick "
+                                "bekçisi bu döngüyü yine bayat sanıp yeniden başlatabilir")
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi de düştü — ikinci kanal YOK ve bir telemetri denemesi veri hattını asla düşüremez
+            pass
+        return False
+    return True
 
 
 # Yeniden başlatmada KORUNMASI gereken alanlar. Diğerleri (last_tick, cycles, started_at) o sürecin
@@ -264,6 +356,7 @@ def _repair_once_per_session(session: str) -> None:
     from . import obs
     from .adapters import data as _da
     _state["last_repair_session"] = session
+    nabiz("onarim_gecidi:sip")      # v186: üç ayak da ağ+disk süpürmesidir — aralarında nabız
     try:
         _state["last_sip_correction"] = _da.sip_correct_provisional()
     except Exception as e:
@@ -272,12 +365,14 @@ def _repair_once_per_session(session: str) -> None:
         obs.warn("sip_correction_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="geçmiş seansın temsilî barları konsolide sip barıyla düzeltilemedi — "
                         "massive grouped tek düzeltici olarak kaldı")
+    nabiz("onarim_gecidi:kapsama")
     try:
         _state["last_repair"] = _da.repair_coverage()
     except Exception as e:
         # YASA 4: onarım düşerse delik AÇIK kalır ve motor o seansı atlamaya devam eder — sessiz kalamaz.
         obs.warn("coverage_repair_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="eksik seans kapatılamadı; kapsama kapısı bu seansı reddetmeye devam edebilir")
+    nabiz("onarim_gecidi:hacim_kalibrasyonu")
     try:
         if _da.volume_calibration_stale():
             _state["last_volume_calibration"] = _da.calibrate_volume()
@@ -614,6 +709,9 @@ def advance_once() -> dict:
     if not _run_lock.acquire(blocking=False):
         return {"status": "busy"}
     try:
+        # v186: nabız yetkisi BU iş parçacığına (bkz. İLERLEME NABZI bloğu). `try`nin İÇİNDE:
+        # dışarıda olsaydı buradan fırlayan herhangi bir şey `_run_lock`u sonsuza dek tutardı.
+        _nabiz_sahiplen()
         _state["last_tick"] = _now()
         from . import watchdog
         watchdog.beat("scheduler_poll")
@@ -692,7 +790,9 @@ def advance_once() -> dict:
         # replay/yansıma load() kullanır, look-ahead karantinası için — bkz. dataset.load_live).
         # `session`: aynı-akşam bacağının kapısı — YALNIZ gerçekten KAPANMIŞ ve üstünden 16 dakika
         # geçmiş seans adı verilir (sip tarihsel penceresi + kısmî bar koruması, bkz. _leg_ready).
+        nabiz("bar_yukleme")            # v186: turun EN UZUN adımı — kendi içinde de nabız atar
         bars, index = dataset.load_live(use_cache=not fresh, session=_leg_ready(last_closed))
+        nabiz("bar_yukleme_bitti")
         if fresh:
             # Consume the once-per-session flag ONLY when the just-closed session's bar actually ARRIVED.
             # Sources publish EOD with lag; burning the flag on a fetch that returned yesterday's data
@@ -778,6 +878,7 @@ def advance_once() -> dict:
                     from . import earnings, obs, watchdog
                     from .adapters.data import REPLAY_UNIVERSE
                     att = _state.get("earnings_attempts", 0) + 1
+                    nabiz("kazanc_takvimi")   # v186: gün başına bir HTTP + nezaket beklemesi (~15 gün)
                     n = earnings.refresh(list(REPLAY_UNIVERSE))
                     if n > 0:
                         watchdog.beat("earnings_refresh")
@@ -1045,7 +1146,8 @@ def advance_once() -> dict:
         else:
             todo = [latest_bar] if latest_bar else []
         summary = {}
-        for s in todo:
+        for _i_s, s in enumerate(todo, 1):
+            nabiz("gunluk_dongu", _i_s, len(todo))   # v186: yetişme turunda seans başına bir nabız
             summary = loop.daily_cycle(bars, index, on_date=s)
             if len(todo) > 1:
                 from . import obs as _obs7
@@ -1056,6 +1158,7 @@ def advance_once() -> dict:
         _persist()
         return {"status": "advanced", "summary": summary, "sessions": todo}
     finally:
+        _nabiz_birak()         # v186: döngü bitti — nabız yetkisi HİÇBİR iş parçacığında değil
         _run_lock.release()
 
 

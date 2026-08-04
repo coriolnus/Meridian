@@ -175,12 +175,91 @@ class MassiveError(RuntimeError):
 
     `.reason` kısa ve makine-okunur ("HTTP 429", "ConnectTimeout"). URL/anahtar ASLA taşınmaz:
     anahtar Authorization başlığında gider ama httpx'in hata metni tam URL'i içerir ve o metin bir
-    gün loglanırsa sorgu parametreleri diske düşer."""
+    gün loglanırsa sorgu parametreleri diske düşer.
 
-    def __init__(self, reason: str, status: int | None = None):
+    `.kapi=True` → AĞA HİÇ ÇIKILMADI: bu yol bugün zaten yetki reddi aldı ve gün-içi kapı isteği
+    baştan reddetti (bkz. GÜN-İÇİ YETKİ KAPISI). Çağıran bunu, gerçekten atılıp patlamış bir
+    istekten AYIRT ETMEK zorundadır — aksi hâlde tek bir reddi çağrı sayısı kadar loglar."""
+
+    def __init__(self, reason: str, status: int | None = None, kapi: bool = False):
         super().__init__(f"massive isteği başarısız: {reason}")
         self.reason = reason
         self.status = status
+        self.kapi = bool(kapi)
+
+
+# ==================================================================================================
+# GÜN-İÇİ YETKİ KAPISI (v186, 2026-08-04) — 401/403 GEÇİCİ DEĞİLDİR, YENİDEN DENENMEZ
+# ==================================================================================================
+# ÖLÇÜM (state/events.jsonl, 2026-07-29 21:15:12Z → 23:51:08Z): AYNI seans (`date=2026-07-30`) için
+# 24 kez `massive_grouped_failed reason="HTTP 403"`. Ardışık damgalar arası ~300 sn — yani tam olarak
+# `FAIL_COOLDOWN_S`. Kanıt açık: 403 alan bir seans, soğuma penceresi dolar dolmaz YENİDEN soruluyor
+# ve bu, gün boyunca sonsuza kadar sürüyor.
+#
+# NEDEN YANLIŞ: `_get` 4xx'te geri çekilmeyi ZATEN doğru biçimde reddediyor ("401/403 geri çekilmeyle
+# çözülmez, hemen fırlatılır") — ama o hüküm yalnız TEK çağrının İÇİNDE geçerliydi. Çağrılar ARASINDA
+# hiçbir hafıza yoktu, dolayısıyla "geri çekilme çözmez" bilgisi her 5 dakikada bir unutuluyordu.
+# 403 bir kota/hız hatası (429) ya da sağlayıcı arızası (5xx) DEĞİLDİR: plan/yetki hükmüdür ve aynı
+# kaynağa aynı anahtarla yapılan ikinci istek TANIMI GEREĞİ aynı cevabı alır.
+#
+# ANAHTAR **YOL**DUR, KAPSAM DEĞİL — ve bu bilerek: bu sağlayıcıda 403 TARİHE bağlıdır (ücretsiz
+# katman ~2 yıl geçmiş verir, en taze seansları vermez). Kapıyı uç ailesine kilitlemek, 403 alan
+# TEK bir taze seans yüzünden onarım geçidinin ESKİ seanslarını da sormasını engellerdi — yani bir
+# gürültü düzeltmesi, çalışan bir onarım yolunu kapatırdı. Aynı yasanın kardeşi bu depoda zaten
+# yazılı: `alpaca.sip_allowed(d)` ("BUGÜNÜN seansı: sip 'recent' sayar, garantili 403").
+# DUYURU ise AİLEYE kilitlidir (`_kapsam`): 250 yol için 250 gerekçe satırı basmak, kapatmaya
+# çalıştığımız gürültünün ta kendisi olurdu.
+#
+# GÜN DÖNÜNCE BİR KEZ YENİDEN DENENİR (UTC gün damgası): plan yükseltilebilir, anahtar
+# değiştirilebilir — kalıcı bir "asla sorma" hükmü, düzelen bir dünyayı hiç fark etmezdi.
+# OPERATÖRÜN ELLE YOLU: pano "Test et" düğmesi (`ping`) kapıyı ATLAR ve başarılıysa defteri SİLER —
+# ölçmek isteyen bir insana önbellekten cevap vermek, ölçüm YAPMADAN "ölçtüm" demek olurdu.
+YETKI_RET_KODLARI = (401, 403)          # geri çekilme ÇÖZMEZ; gün içi de yeniden denemek çözmez
+_YETKI_RET: dict[str, tuple] = {}       # {istek yolu: (UTC gün, status)} — o gün bir daha SORULMAZ
+_YETKI_RET_DUYURULDU: dict[str, str] = {}   # {uç ailesi: UTC gün} — gerekçeli olay aile başına GÜNDE BİR
+
+
+def _bugun_utc() -> str:
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+
+
+def _kapsam(path: str) -> str:
+    """İstek yolunun UÇ AİLESİ: `/v2/aggs/grouped/locale/us/...` → `v2/aggs/grouped`,
+    `/v2/aggs/ticker/AAPL/range/...` → `v2/aggs/ticker`, `/v3/reference/tickers` → aynen.
+    Yalnız DUYURU tekilleştirmesi için; hükmün anahtarı yolun kendisidir (bkz. yukarıdaki gerekçe)."""
+    parcalar = [p for p in str(path).split("/") if p]
+    return "/".join(parcalar[:3]) if parcalar else "?"
+
+
+def _yetki_reddi_var(path: str) -> tuple | None:
+    """Bu YOL bugün yetki reddi aldı mı? Aldıysa (gün, status); almadıysa None."""
+    kayit = _YETKI_RET.get(path)
+    return kayit if (kayit and kayit[0] == _bugun_utc()) else None
+
+
+def _yetki_reddi_yaz(path: str, status: int | None) -> None:
+    """Reddi deftere geçir; uç ailesi için GÜNDE BİR gerekçeli olay bas (YASA 4)."""
+    gun = _bugun_utc()
+    _YETKI_RET[path] = (gun, status)
+    kapsam = _kapsam(path)
+    if _YETKI_RET_DUYURULDU.get(kapsam) == gun:
+        return
+    _YETKI_RET_DUYURULDU[kapsam] = gun
+    _warn("massive_yetki_reddi", kapsam=kapsam, status=status, gun=gun,
+          detail="401/403 plan/yetki hükmüdür, geçici arıza DEĞİL — aynı anahtarla atılan ikinci "
+                 "istek tanımı gereği aynı cevabı alır. Bu uç ailesinde REDDEDİLEN HER YOL bugün "
+                 "(UTC) bir daha sorulmaz; bar zinciri yedeklere (fmp → cboe → nasdaq) ve aynı-akşam "
+                 "Alpaca/IEX bacağına aynen düşer. Aynı ailenin sonraki redleri bu satırı "
+                 "TEKRARLAMAZ (yol başına tek deneme zaten kayıtlı); gün dönünce bir kez yeniden "
+                 "denenir, pano 'Test et' düğmesi kapıyı hemen atlar.")
+
+
+def _yetki_reddi_temizle() -> None:
+    """Defteri sil — YALNIZ kanıt değiştiğinde: başarılı bir elle `ping` (anahtar/plan artık çalışıyor)
+    ya da `reset_cache` (yeni seans kovalaması başlıyor / test)."""
+    _YETKI_RET.clear()
+    _YETKI_RET_DUYURULDU.clear()
 
 
 def _throttle() -> None:
@@ -200,16 +279,34 @@ def _throttle() -> None:
         _sleep(max(wait, 0.0))
 
 
-def _get(path: str, params: dict | None = None, timeout: float = 30.0) -> dict:
+def _get(path: str, params: dict | None = None, timeout: float = 30.0,
+         kapi_atla: bool = False) -> dict:
     """Tek GET: hız sınırı + 429/5xx'te üstel geri çekilme + sağlık muhasebesi.
 
     Anahtar `Authorization: Bearer` BAŞLIĞINDA gider, sorgu parametresinde DEĞİL — parametre olsaydı
     her hata metni ve her ara-vekil logu anahtarı taşırdı (FMP tarafında tam olarak bu yüzden
-    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır."""
+    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır — ve v186'dan beri
+    çağrılar ARASINDA da hatırlanır (bkz. GÜN-İÇİ YETKİ KAPISI).
+
+    `kapi_atla=True` YALNIZ operatörün elle tetiklediği ölçüm içindir (`ping`): bir insan "test et"
+    dediğinde önbellekten cevap vermek, ölçüm yapmadan ölçtüm demek olurdu."""
     key = secrets.get(KEY_NAME)
     if not key:
         _note_no_key()
         raise MassiveError("anahtar yok")
+    if not kapi_atla:
+        _ret = _yetki_reddi_var(path)
+        if _ret:
+            # AĞA ÇIKILMAZ ve `_throttle()` bile ÇAĞRILMAZ: reddedilen bir istek için 5/dk kovasından
+            # jeton yakmak, o jetona gerçekten ihtiyacı olan kolları (custom_bars, referans) bekletirdi.
+            # `calls`/`fails` SAYAÇLARI DA ARTMAZ: atılmamış bir isteği başarısız çağrı diye saymak,
+            # olmayan bir ölçümü deftere yazmak olurdu (uydurma yasağı). Kapının izi `last_error`da —
+            # ve o alanın DIŞ okuyucusu vardır (api._saglayici_satiri → pano "son_hata"), yani bu
+            # yazım YASA 6 anlamında tüketilir.
+            _kapi_reason = (f"HTTP {_ret[1]} yetki reddi — {_kapsam(path)} bu yol için {_ret[0]} "
+                            f"(UTC) boyunca yeniden denenmiyor")
+            _HEALTH.update({"ok": False, "last_error": _kapi_reason})
+            raise MassiveError(_kapi_reason, _ret[1], kapi=True)
     import datetime as _dt
     url = f"{BASE}/{path.lstrip('/')}"
     headers = {"Authorization": f"Bearer {key}", "Accept": "application/json"}
@@ -241,6 +338,10 @@ def _get(path: str, params: dict | None = None, timeout: float = 30.0) -> dict:
             status = getattr(getattr(e, "response", None), "status_code", status)
             reason = f"HTTP {status}"
             _HEALTH["fails"] += 1
+            if status in YETKI_RET_KODLARI:
+                # v186: hüküm bu ÇAĞRIYI değil GÜNÜ bağlar. Ölçüm: aynı seans için 24 kez, 300 sn
+                # arayla, tamamen boşuna (bkz. GÜN-İÇİ YETKİ KAPISI bloğu).
+                _yetki_reddi_yaz(path, status)
             break
         except Exception as e:
             reason = type(e).__name__
@@ -270,7 +371,11 @@ def grouped_daily(date: str, adjusted: bool = True, include_otc: bool = False) -
                  {"adjusted": "true" if adjusted else "false",
                   "include_otc": "true" if include_otc else "false"})
     except MassiveError as e:
-        _warn("massive_grouped_failed", date=date, reason=e.reason)
+        if not e.kapi:  # `kapi=True` → istek ATILMADI; gün-içi yetki kapısı ZATEN tek satırlık
+            # gerekçeli olayı bastı (`massive_yetki_reddi`). Aynı reddi çağrı başına yeniden basmak,
+            # canlıda ölçülen 24 satırlık gürültünün ta kendisi olurdu (YASA 4: sessizlik değil,
+            # TEKİLLEŞTİRME — hüküm defterde ve `_HEALTH["last_error"]`da duruyor).
+            _warn("massive_grouped_failed", date=date, reason=e.reason)
         return None
     rows = d.get("results") or []
     return [r for r in rows if isinstance(r, dict) and r.get("T")]
@@ -290,7 +395,8 @@ def custom_bars(ticker: str, start: str, end: str, multiplier: int = 1,
         d = _get(f"/v2/aggs/ticker/{ticker.upper()}/range/{int(multiplier)}/{timespan}/{start}/{end}",
                  {"adjusted": "true", "sort": "asc", "limit": 50000})
     except MassiveError as e:
-        _warn("massive_custom_bars_failed", ticker=ticker.upper(), reason=e.reason)
+        if not e.kapi:  # bkz. grouped_daily'deki aynı kapı — istek atılmadıysa olay ZATEN basıldı
+            _warn("massive_custom_bars_failed", ticker=ticker.upper(), reason=e.reason)
         return None
     return [r for r in (d.get("results") or []) if isinstance(r, dict)]
 
@@ -305,7 +411,8 @@ def all_tickers(limit: int = 1000, active: bool = True) -> list[dict] | None:
                  {"market": "stocks", "active": "true" if active else "false",
                   "limit": int(limit)})
     except MassiveError as e:
-        _warn("massive_all_tickers_failed", reason=e.reason)
+        if not e.kapi:  # bkz. grouped_daily'deki aynı kapı — istek atılmadıysa olay ZATEN basıldı
+            _warn("massive_all_tickers_failed", reason=e.reason)
         return None
     return [r for r in (d.get("results") or []) if isinstance(r, dict)]
 
@@ -508,9 +615,15 @@ def covers(start: str) -> bool:
 
 
 def reset_cache() -> None:
-    """Süreç-içi anlık görüntü memosunu (ve başarısızlık soğumasını) temizle — testler, gün dönümü."""
+    """Süreç-içi anlık görüntü memosunu (ve başarısızlık soğumasını) temizle — testler, gün dönümü.
+
+    YETKİ DEFTERİ DE SİLİNİR (v186) ve gerekçesi diğer ikisiyle AYNI DEĞİLDİR, o yüzden yazılı:
+    üretimdeki tek çağıran `scheduler.advance_once`ın "yeni seansın kovalaması BAŞLARKEN" dalıdır
+    (seans başına bir kez). Yani kapı yeni bir seansta bir kez daha ölçülür — "günde bir kez dene"
+    yasasının seans sınırındaki ikizi, ve ücreti tek bir istektir."""
     _MEM_SNAPSHOT.clear()
     _FAIL_AT.clear()
+    _yetki_reddi_temizle()
 
 
 # ---------------------------------------------------------------- yazım kapısı (ölçüm → karar)
@@ -764,7 +877,11 @@ def ping() -> dict:
     if not available():
         return {"ok": False, "detail": f"{KEY_NAME} girilmemiş"}
     try:
-        d = _get("/v3/reference/tickers", {"market": "stocks", "limit": 1}, timeout=12.0)
+        # KAPIYI ATLA (v186): operatör "Test et"e bastığında ölçüm İSTEMİŞTİR. Gün-içi yetki
+        # kapısından cevap vermek, hiç istek atmadan "ölçtüm" demek olurdu (uydurma yasağı) — ve
+        # tam da anahtar/plan DÜZELTİLDİKTEN sonra basılan düğme, düzelmeyi göremezdi.
+        d = _get("/v3/reference/tickers", {"market": "stocks", "limit": 1}, timeout=12.0,
+                 kapi_atla=True)
     except MassiveError as e:
         if e.status in (401, 403):
             return {"ok": False, "detail": "anahtar geçersiz/yetkisiz"}
@@ -776,6 +893,10 @@ def ping() -> dict:
     if not rows:
         return {"ok": False, "detail": "beklenmedik yanıt (anahtar geçersiz olabilir)"}
     ornek = str((rows[0] or {}).get("ticker") or "?")
+    # CANLI KANIT KAZANIR: anahtar/plan ŞU AN çalışıyor → bugünün yetki reddi defteri geçersizdir.
+    # Operatörün elindeki tek elle-sıfırlama yolu budur (aksi hâlde düzelttiği bir planın etkisini
+    # UTC gün dönene kadar göremezdi).
+    _yetki_reddi_temizle()
     return {"ok": True, "detail": f"bağlandı · örnek sembol {ornek} · mod: {mode()}"}
 
 

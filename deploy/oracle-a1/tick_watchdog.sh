@@ -36,6 +36,15 @@
 #     pencerelerde ateşlenir ve bu DOĞRUDUR: kadans damgaları ilerlememiştir, restart sonrası
 #     sonraki poll onları yeniden koşar.
 #
+# ============================ NABIZ SÖZLEŞMESİ (v186, 2026-08-04) =============================
+# Uzun süpürmeler (bar yükleme/onarım, sip düzeltmesi, hacim kalibrasyonu, kazanç takvimi, tarama)
+# artık YİNELEME BAŞINA bir İLERLEME NABZI atar ve nabız bu betiğin okuduğu damgayı tazeler
+# (`meridian/scheduler.py` → İLERLEME NABZI bloğu; nabız = `_persist()`, yeni bir biçim yok).
+# NEDENİ: 2026-08-03 20:00→23:30 UTC'de bu bekçi meşru-uzun bir EOD döngüsünü ÜÇ kez öldürdü —
+# döngü asılı değildi, damga yalnız döngü SONUNDA yazılıyordu. HÜKÜM: eşik YÜKSELTİLMEZ, NABIZ
+# EKLENİR. Gerçekten tek bir çağrıda asılan bir döngü hiçbir yinelemeyi bitiremez, nabız atmaz ve
+# aşağıdaki 2700 sn eşiği onu ESKİSİ GİBİ yakalar.
+#
 # ========================= SEANS FARKINDALIĞI: ÖLÇÜLDÜ, GEREKSİZ ==============================
 # Brief'in sorusu: hafta sonu tick yok — 45 dk sahte alarm üretir mi? ÖLÇÜM: HAYIR, ve bu yüzden
 # takvim/mcal bağı EKLENMEDİ (gereksiz bir bağımlılık uydurmak çözüm değildir).

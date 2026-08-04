@@ -65,6 +65,27 @@ _XCHECK_FLUSH_EVERY = 25       # 250'lik turda ~10 yazım (her sembolde bir değ
 _MASSIVE_MODE_LOGGED = False
 
 
+def _nabiz(asama: str, i: int | None = None, n: int | None = None) -> None:
+    """İLERLEME NABZI (v186, 2026-08-04) — asılı-tick bekçisine "bu süpürme İLERLİYOR" de.
+
+    Gerekçenin tamamı `scheduler.py`nin İLERLEME NABZI bloğundadır (canlı vaka: 2026-08-03 akşamı
+    bekçi meşru-uzun EOD döngüsünü üç kez öldürdü). Burada yalnız iki BİÇİM kararı yazılıdır:
+
+    GEÇ İMPORT, MODÜL BAŞINDA DEĞİL: `adapters.data` katman olarak zamanlayıcının ALTINDADIR
+    (zamanlayıcı bu modülü çağırır, tersi değil) ve modül başına `from .. import scheduler` yazmak
+    o yönü tersine çevirirdi. Kısılan çağrının maliyeti bir `sys.modules` aramasıdır; bu modüldeki
+    döngüler evren boyundadır (≤ birkaç yüz) ve her yinelemesinde ağ/disk işi yapar.
+
+    HÜKÜM ZAMANLAYICIDA: burası "ilerledim" der, "damgayı tazele" DEMEZ. Yazıp yazmamaya
+    `scheduler.nabiz` karar verir (30 sn kısma + iş parçacığı sahipliği) — yani replay tohumu,
+    sprint alt süreçleri ve havuz işçileri bu satırdan geçse bile canlı damgaya DOKUNAMAZ."""
+    try:
+        from .. import scheduler
+        scheduler.nabiz(asama, i, n)
+    except Exception:  # sessiz-yutma: nabız saf telemetridir — zamanlayıcı bu süreçte hiç yüklenmemiş olabilir (replay/sprint) ve bir damga denemesi veri hattını ASLA düşüremez
+        pass
+
+
 def _cache_path(ticker: str) -> Path:
     return _config.BARS / f"{ticker.lower().replace('.', '-')}.csv"
 
@@ -1631,16 +1652,19 @@ def sip_correct_provisional(tickers: list[str] | None = None,
     out["targets"] = sum(len(v) for v in targets.values())
     if not targets:
         return out
-    for d in sorted(targets)[-max(1, int(max_sessions)):]:
+    _hedef_seans = sorted(targets)[-max(1, int(max_sessions)):]
+    for _i_d, d in enumerate(_hedef_seans, 1):
         syms = sorted(set(targets[d]))
         out["asked_sessions"] += 1
+        _nabiz("sip_duzeltme:seans", _i_d, len(_hedef_seans))   # v186: sonraki satır ağa çıkar
         got = alpaca.sip_session_bars(syms, d)
         if got is None:
             # HÜKÜM YOK: istek atılamadı/patladı. Damga KALIR, massive nihai otorite olarak bekler.
             out["sessions"][d] = {"asked": len(syms), "corrected": 0, "verdict": "no_answer"}
             continue
         n = 0
-        for t in syms:
+        for _i_t, t in enumerate(syms, 1):
+            _nabiz("sip_duzeltme:bar", _i_t, len(syms))   # v186: `_overwrite_bar` sembol başına CSV yazar
             if _apply_sip_correction(t, d, got.get(t)):
                 n += 1
         out["corrected"] += n
@@ -1740,7 +1764,8 @@ def calibrate_volume(tickers: list[str] | None = None, days: int = VOLUME_CAL_DA
     if got is None:
         out["skipped"] = "veri ucu isteği başarısız (hüküm yok)"
         return out
-    for t in syms:
+    for _i_t, t in enumerate(syms, 1):
+        _nabiz("hacim_kalibrasyonu", _i_t, len(syms))   # v186: evren boyu CSV okuması
         rows = got.get(t) or []
         if not rows:
             out["unmeasured"].append(t)
@@ -1790,7 +1815,8 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
     from . import massive
     syms = [s.upper() for s in (tickers or ([INDEX_SYMBOL] + list(REPLAY_UNIVERSE)))]
     have: dict[str, set] = {}
-    for t in syms:
+    for _i_s, t in enumerate(syms, 1):
+        _nabiz("onarim:kapsama_taramasi", _i_s, len(syms))   # v186: evren boyu CSV okuması
         cp = _cache_path(t)
         if not cp.exists():
             continue
@@ -1804,6 +1830,7 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
         return out
     for i in range(max(1, int(sessions))):
         d = massive.last_session(back=i)
+        _nabiz("onarim:seans", i + 1, max(1, int(sessions)))   # v186: sonraki satır ağa çıkabilir
         out["sessions_checked"].append(d)
         cov = sum(1 for s in have.values() if d in s) / len(have)
         out["coverage"][d] = round(cov, 3)
@@ -1815,7 +1842,10 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
             out["repaired"][d] = 0
             continue
         n = 0
-        for t, dates in have.items():
+        for _i_r, (t, dates) in enumerate(have.items(), 1):
+            # v186: `_merge_repair_bar` sembol başına CSV okur + sanitize eder + YENİDEN YAZAR —
+            # eksik bir seansta bu, evren boyu bir disk süpürmesidir.
+            _nabiz("onarim:bar_birlestirme", _i_r, len(have))
             if d in dates:
                 continue
             bar = snap.get(t)
@@ -2453,7 +2483,12 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     """Load bars and DROP any ticker whose data fails the hard integrity gate (never trade on bad data)."""
     out: dict[str, pd.DataFrame] = {}
     failed, quarantined = [], []
-    for t in tickers:
+    _n_uni = len(tickers)
+    for _i_t, t in enumerate(tickers, 1):
+        # v186 NABIZ NOKTASI #1 (turun en uzunu): sembol başına tam zincir (massive → fmp → cboe →
+        # nasdaq → aynı-akşam bacağı) + hayalet süpürmesi + CSV yazımı. 2026-08-03 akşamı bekçiyi
+        # üç kez ateşleyen blok BURASIYDI (408 sembol, 367 satırlık onarım kuyruğu).
+        _nabiz("bar_yukleme", _i_t, _n_uni)
         try:
             df = load_bars(t, start, end, use_cache=use_cache)
         except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
@@ -2622,8 +2657,12 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
     burada yalnız SAYILIR."""
     out: dict[str, list] = {}
     _ok, _dusen, _gunler, _son_hata = 0, 0, [], None
-    for d in pd.bdate_range(start, end):
+    _gunler_tum = pd.bdate_range(start, end)
+    for _i_g, d in enumerate(_gunler_tum, 1):
         ds = str(d.date())
+        # v186: gün başına bir HTTP (3 deneme + geri çekilme) + `polite_delay` — pencere ~30 iş günü
+        # olduğunda bu blok tek başına dakikalarca sürer ve eski hâlde tek bir tick yazmazdı.
+        _nabiz("kazanc_takvimi:gun", _i_g, len(_gunler_tum))
         try:
             rows = ((_get_json(f"https://api.nasdaq.com/api/calendar/earnings?date={ds}", 20.0)
                      .json().get("data") or {}).get("rows")) or []

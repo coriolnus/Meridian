@@ -573,6 +573,17 @@ def _scan_debt_add(ticker: str, dstr: str) -> None:
     store.write_json(SCAN_DEBT_FILE, debts)
 
 
+def _nabiz(asama: str, i: int | None = None, n: int | None = None) -> None:
+    """İLERLEME NABZI (v186) — gerekçe `scheduler.py`nin İLERLEME NABZI bloğunda; biçim kararları
+    `adapters/data.py:_nabiz` ile AYNI (geç import, hüküm zamanlayıcıda). İki kopya değil iki
+    ÇAĞIRAN: hüküm veren tek fonksiyon `scheduler.nabiz`tır, buradaki yalnız onu güvenli çağırır."""
+    try:
+        from . import scheduler
+        scheduler.nabiz(asama, i, n)
+    except Exception:  # sessiz-yutma: nabız saf telemetridir — zamanlayıcı bu süreçte yüklü olmayabilir (replay/backtest/sprint) ve bir damga denemesi günlük döngüyü ASLA düşüremez
+        pass
+
+
 def _scan_debt_collect(per: dict, d, eff: dict) -> dict:
     """Barı SONRADAN gelen borçlar için kaçan seansı o günkü kuyruk + o günkü RS ile değerlendir.
     Dönüş: {seans: [(sinyal, ["geç_bar"]), ...]} — yalnız karşı-olgusal deftere gider (sıfır yetki)."""
@@ -988,7 +999,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # ancak kanıt biriktikten sonra OOS kapısından geçerek gelebilir.
             _rx = strat.relax_for_near_miss(eff)             # TEK KAYNAK (strategy.py) — cf_backfill ile aynı
             late_by_date = _scan_debt_collect(per, d, eff)   # barı sonradan gelenlerin kaçan kesişimleri
-            for t, df_t in per.items():
+            for _i_p, (t, df_t) in enumerate(per.items(), 1):
+                # v186 NABIZ: evren boyu tarama — sembol başına İKİ `scan_all` (sıkı + gevşek) ve
+                # her biri gösterge penceresi hesaplar. Ağ yok ama CPU var; uzun bir yetişme turunda
+                # bu blok tek başına bekçi eşiğini yiyebilir.
+                _nabiz("tarama", _i_p, len(per))
                 if t in b.positions or t in _quarantine:
                     continue
                 if d not in df_t.index:                      # güncellik: bu seansın barı henüz yok →
