@@ -106,6 +106,13 @@ ignore_imports = [
     # motorun sessizce ayrışmasına yol açardı (mirror_drift sınıfı). Refactor edilecekse yön:
     # yasa ortak bir `execution_law` modülüne iner, iki motor da ondan okur. BU TURDA YAPILMADI.
     "meridian.adapters.alpaca -> meridian.broker",
+    # ÖLÇÜLEN İKİNCİ İSTİSNA (2026-08-04, v186 nabız): `adapters/data.py::_nabiz` fonksiyon-İÇİ
+    # geç-import ile `scheduler.nabiz`ı çağırır — İLERLEME TELEMETRİSİ, veri değil (canlı vaka:
+    # bekçi meşru-uzun süpürmeyi 3 kez öldürdü; nabız süpürmenin İÇİNDEN atılmak zorunda).
+    # Çalışma-zamanı katman yönü KORUNUR: istisna-yutmalı, zamanlayıcı yüklü değilse no-op;
+    # lint statik sayımda fonksiyon-içini de kenar sayar. BORÇ/refactor yönü: scheduler init'te
+    # data.NABIZ_HOOK'a geri-çağrı enjekte eder, import tamamen kalkar. BU TURDA YAPILMADI.
+    "meridian.adapters.data -> meridian.scheduler",
 ]
 
 # ---- SÖZLEŞME 2: ÇEKİRDEK-ALTYAPI KATMANI ------------------------------------------------------
