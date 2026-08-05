@@ -144,6 +144,91 @@ def _eval_regime_of(variable: str) -> str | None:
     return regime if regime in config.VALID_REGIMES else None
 
 
+# ---- v189 (2026-08-05): ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
+# ÖLÇÜLEN VAKA (canlı A1, 2026-08-04/05, py-spy): EOD döngüsü iki gece üst üste BİTMEDİ; yığın
+# `scheduler.advance_once → arming.evaluate → _measure → _wf_cached → backtest.walk_forward →
+# replay → scan_entry` içinde AKTİF dönüyordu. Aşağıdaki üç kusur o yolun üzerindedir ve ÜÇÜ DE
+# birbirinden bağımsızdır (biri kapansa diğerleri kalırdı):
+#
+#   (a) ANAHTAR YASAYI TAŞIMIYORDU. Anahtar (sürüm, paramlar, rejim-tablosu, pencere, eval_regime)
+#       idi — `goal` YOKTU. 2026-08-03'te operatör `execution_v2`yi değiştirdi (limit
+#       min(0,5·ATR,%1) → min(100·ATR,%4)) ve o andan itibaren diskteki (`inc_cache.json`) ESKİ
+#       yasayla yürünmüş bir incumbent, YENİ yasayla yürünen bir adayın karşısına çıkabilir hâle
+#       geldi. Bu, `windows` ve `eval_regime`in anahtara eklenmesini gerektiren elma-armut
+#       kusurunun BİREBİR aynısıdır; yalnız değişkeni farklıdır ve bu kez değişkeni OPERATÖR
+#       değiştiriyor. Yasanın parmak izi artık anahtarın parçası: yasa değişince önbellek İSKA
+#       verir (bir kereye mahsus yeniden hesap) ve iki taraf ASLA farklı yasayla kıyaslanmaz.
+#       TUR-İÇİ PAYLAŞIM BOZULMAZ: yasa bir tur boyunca sabittir (`config.goal()` lru-önbellekli,
+#       dosya değişmez), yani aynı turdaki tekrar çağrılar AYNI anahtara düşer — tek hesap.
+#
+#   (b) AYNI ANAHTAR İKİ KEZ HESAPLANABİLİYORDU. `if key not in _INC_CACHE: hesapla` iki iş
+#       parçacığı arasında yarışa açıktı ve v189 bu yarışı GERÇEK kılıyor: `arming` ölçümü süre
+#       tavanını aşarsa arka planda SÜRMEYE devam eder; bir sonraki tur aynı anahtarı isteseydi
+#       İKİNCİ bir (canlıda ölçülen) 30+ dakikalık walk başlardı. Anahtar başına hesap kilidi:
+#       ikinci çağıran BEKLER ve birincinin sonucunu kullanır.
+#
+#   (c) HESAP SÜRERKEN BARLAR TAZELENEBİLİYORDU. `clear_wf_caches()` HER taze poll'de koşar
+#       (scheduler.py, `if fresh:` bloğu). Uzun bir walk sürerken temizlik geçerse, hesap bitince
+#       sözlüğe yazmak TEMİZLENMİŞ önbelleğe ESKİ barların sonucunu geri koymak olurdu — denetim
+#       #30'un ta kendisi, üstelik `clear_wf_caches`in kendi docstring'inde yasaklanmış hâliyle.
+#       Revizyon hesaptan ÖNCE okunur ve sonra kıyaslanır; değiştiyse sonuç ÇAĞIRANA döner (o tur
+#       kendi barlarıyla tutarlıdır) ama ÖNBELLEĞE YAZILMAZ.
+import hashlib as _hl
+import threading as _th
+
+_WF_KILITLERI: dict = {}          # anahtar -> RLock (hesap kilidi; bkz. (b))
+_WF_KILIT_GUARD = _th.Lock()
+
+
+def _wf_kilidi(key: str):
+    """Anahtar başına TEK kilit nesnesi. RLock (Lock değil): aynı iş parçacığının kazara yeniden
+    girmesi bugün mümkün değil ama olursa kilitlenme yerine (eski davranış olan) yeniden hesap
+    olur — bir teşhis yolu, süreci asla kilitlemez."""
+    with _WF_KILIT_GUARD:
+        lk = _WF_KILITLERI.get(key)
+        if lk is None:
+            lk = _WF_KILITLERI[key] = _th.RLock()
+        return lk
+
+
+def _wf_rev() -> int:
+    """Yürürlükteki bar revizyonu (`clear_wf_caches` her tazelemede artırır). Okunamazsa 0 döner ve
+    bu GÜVENLİDİR: hesap öncesi/sonrası aynı değeri (0) görür, yani okuma düşse davranış eski hâle
+    (koşulsuz yazım) döner — kayıt da düşmez (`_cache_warn` bir kez uyarır)."""
+    try:
+        return int(store.read_json(PROBE_REV_FILE, {}).get("rev", 0))
+    except Exception as e:
+        _cache_warn("wf_rev_read_failed", e)
+        return 0
+
+
+def _yasa_parmak(goal: dict) -> str:
+    """DEĞİŞMEZ sözleşmenin (goal.yaml) parmak izi. TÜM sözlük hash'lenir, seçilmiş alanlar DEĞİL:
+    "replay'i hangi anahtar etkiler" diye bir liste tutmak, bir gün eklenecek yeni bir icra
+    düğmesinde sessizce yanılırdı — bugün kapatılan kusur zaten TAM O SINIFTAN."""
+    try:
+        ham = json.dumps(goal or {}, sort_keys=True, default=str)
+    except Exception as e:
+        _cache_warn("yasa_parmak_serialize_failed", e)
+        ham = repr(goal)
+    return _hl.sha256(ham.encode("utf-8")).hexdigest()[:16]
+
+
+def _param_parmak(params: dict) -> tuple:
+    """Paramların anahtar-sıralı (ad, değer) demeti — SAYISAL değerlerde eski davranışla bit-bit
+    aynı (`round(float(x), 6)`). Sayısal OLMAYAN değer artık fırlatmıyor: #3 silahlanma ölçümünün
+    `entry.armed_extra` LİSTESİ `float()`e giremediği için aday walk'ları önbelleğe HİÇ
+    giremiyordu (her tur sıfırdan hesap); kararlı JSON metniyle temsil edilir."""
+    out = []
+    for k in sorted(params or {}, key=str):
+        x = params[k]
+        try:
+            out.append((str(k), round(float(x), 6)))
+        except (TypeError, ValueError):  # sessiz-yutma: sayısal OLMAYAN param bir hata değil bir TÜRDÜR (liste/metin) — burada yakalanan şey "float'a çevrilemedi" bilgisidir ve cevabı uyarı değil kararlı JSON temsilidir; uyarmak her aday walk'ında log seli üretirdi
+            out.append((str(k), json.dumps(x, sort_keys=True, default=str)))
+    return tuple(out)
+
+
 def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: dict | None = None,
                windows: tuple | None = None, eval_regime: str | None = None) -> dict:
     w = windows or _default_windows()
@@ -151,15 +236,34 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
     # collide with a production incumbent walked on dataset.* (the judge-found apples-to-oranges bug).
     # eval_regime is ALSO part of the key: a regime-sliced incumbent score must never collide with the
     # global incumbent score (same params, different grading population — same class of bug).
-    key = repr((version, tuple(sorted((k, round(float(x), 6)) for k, x in params.items())),
-                json.dumps(by_regime or {}, sort_keys=True), tuple(w[:4]) + (tuple(w[4]), w[5]), eval_regime))
+    # goal (yasa) parmak izi AYNI GEREKÇEYLE anahtarın parçası — bkz. yukarıdaki (a).
+    key = repr((version, _param_parmak(params),
+                json.dumps(by_regime or {}, sort_keys=True), tuple(w[:4]) + (tuple(w[4]), w[5]),
+                eval_regime, _yasa_parmak(goal)))
     _inc_disk_load()
-    if key not in _INC_CACHE:
-        _INC_CACHE[key] = backtest.walk_forward(
+    if key in _INC_CACHE:
+        return _INC_CACHE[key]
+    with _wf_kilidi(key):
+        if key in _INC_CACHE:      # kilidi beklerken BAŞKA iplik hesapladı → tek hesap, bkz. (b)
+            return _INC_CACHE[key]
+        _rev0 = _wf_rev()
+        sonuc = backtest.walk_forward(
             params, bars, index, goal, w[0], w[1], w[2], w[3], strategy_version=version,
             oos_folds=w[4], embargo_days=w[5], params_by_regime=by_regime, eval_regime=eval_regime)
-        _inc_disk_save()
-    return _INC_CACHE[key]
+        _rev1 = _wf_rev()
+        if _rev1 == _rev0:
+            _INC_CACHE[key] = sonuc
+            _inc_disk_save()
+        else:
+            try:
+                from . import obs as _obs_rev
+                _obs_rev.warn("wf_cache_rev_changed", rev_basta=_rev0, rev_simdi=_rev1,
+                              detail="walk-forward sürerken barlar tazelendi (clear_wf_caches) — "
+                                     "sonuç ÇAĞIRANA döner ama ÖNBELLEĞE YAZILMAZ (denetim #30: "
+                                     "eski barların walk'ı yeni barların adayıyla kıyaslanamaz)")
+            except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; ASIL koruma (önbelleğe yazmama) zaten uygulandı, bu satır yalnız onun ilanıdır
+                pass
+        return sonuc
 
 
 def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool) -> str:

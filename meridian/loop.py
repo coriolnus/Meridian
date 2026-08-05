@@ -269,6 +269,161 @@ def _armed_dropped_by_gate(meta: dict, dstr: str, gate: str) -> None:
 
 
 # ==================================================================================================
+# OPERATÖR ONAYI — REVIEW PLANININ TEK KOŞUL NOKTASI (v190, 2026-08-05)
+# ==================================================================================================
+# OPERATÖR ŞİKÂYETİ: "review edebiliyorum, işlem yapamıyorum". Ölçüm doğruladı: kapı REVIEW
+# hükmü verdiğinde pano planı GÖSTERİYOR ama operatörün elinde tek bir eylem yoktu — ve keşif
+# modunda (bütçe %0 ya da uyuyan kurulum) REVIEW planı HİÇ silahlanmıyor (aşağıdaki iki dal
+# `explore_pool`a YALNIZ GO alıyordu). Yani hüküm okunabiliyor, uygulanamıyordu.
+#
+# ONAY BİR OLAYDIR, HÜKÜM DEĞİL (UYDURMA YASAĞI): `gate_verdict` GERİYE DÖNÜK DEĞİŞMEZ — kapı o
+# an ne dediyse defterde o kalır; operatörün onayı planın YANINA kendi zaman damgası ve kanalıyla
+# yazılır (`operator_onayi`). Kapı istatistikleri (verdict_counts, kill ölçütleri, cf defteri) bu
+# yüzden KİRLENMEZ: onaylı bir REVIEW hâlâ bir REVIEW'dür ve öyle sayılır.
+#
+# NO_GO ASLA ONAYLANMAZ (mutlak): guard'ın sert kuralı bir bilgi eksikliği değil bir REDdir;
+# operatöre "bu reddi ez" düğmesi vermek kapının kendisini kaldırmak olurdu. Onay yalnız
+# "insan baksın" diyen hükmü kapatır, reddi değil.
+ONAY_ALANI = "operator_onayi"
+ONAY_KANALI = "pano"
+
+
+def operator_onayli(pl: dict) -> bool:
+    """Planda operatör onayı OLAYI var mı? (Alanın varlığı değil, damgası ölçülür.)"""
+    o = pl.get(ONAY_ALANI)
+    return bool(isinstance(o, dict) and o.get("ts"))
+
+
+def girise_uygun(pl: dict, verdict: str | None = None) -> bool:
+    """TEK KOŞUL NOKTASI: bu plan giriş kuyruğuna (silahlanma) girebilir mi?
+
+    GO → evet. REVIEW → YALNIZ operatör onayı varsa. NO_GO → ASLA, koşulsuz.
+
+    KAPI ATLANMAZ, OKUNUR: bu fonksiyon guard'ın hükmünü YENİDEN DEĞERLENDİRMEZ ve hiçbir kapıyı
+    devre dışı bırakmaz — silahlanma sonrası dolum yolundaki kapıların TAMAMI (HALT, devre kesici,
+    veri kalitesi, slot tavanı, de-risk çarpanı, E1 limit/gap yasası) aynen koşar. Buradaki tek
+    soru, planın o kapılara ULAŞIP ulaşmadığıdır."""
+    v = str(verdict if verdict is not None else (pl.get("gate_verdict") or ""))
+    if v == "NO_GO":
+        return False
+    return v == "GO" or (v == "REVIEW" and operator_onayli(pl))
+
+
+def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
+    """Panodan gelen "onayla ve arm et" niyeti — TEK YAZIM YOLU (uç nokta buradan geçer).
+
+    NEDEN api.py'DE DEĞİL BURADA: `trade_plans.jsonl`in yazar listesi `ledgers.CONTRACTS`ta
+    YAZILIDIR (loop/run/hermes). Uç noktanın deftere kendi eliyle yazması, o sözleşmenin var olma
+    sebebi olan "kimsenin haberi olmadan ikinci yazar" sınıfının yeni bir örneği olurdu. Uç nokta
+    niyeti bildirir, defterin yasası burada yaşar (`api_halt` → `health.set_halt` ile aynı desen).
+
+    İKİ YAZIM, İKİ DEFTER: (1) plan satırına onay damgası — kapı hükmü DEĞİŞMEDEN; (2) kitabın
+    silahlı kümesine plan — çünkü onay döngüden SONRA gelir ve `daily_cycle` aynı seansı yeniden
+    üretmez (`meta["last_date"] == dstr` → noop). Silahlı kümeye girmeyen bir onay, hiçbir şey
+    yapmayan bir düğme olurdu.
+
+    EMİR GÖNDERMEZ: bu çağrı aynaya (Alpaca) emir YOLLAMAZ. Plan giriş kuyruğuna girer; dolum bir
+    sonraki açılışta iç motorun kapılarından geçerek olur, aynaya gönderim ise mevcut TEK kapıdan
+    (`mirror_submit_armed`, pano düğmesi ya da döngünün kendisi). İkinci bir emir yolu açmıyoruz.
+
+    YARIŞ PENCERESİ, BEYANLI: `_save_broker` kitabı yazarken `armed`ı DÖNGÜNÜN belleğinden basar.
+    Onay tam bir döngü turunun ortasında gelirse bu ekleme o turun yazımıyla kaybolabilir (pencere
+    dar: döngü günde bir kez koşar). Kayıp sessiz değildir — onay damgası plan satırında KALIR,
+    pano rozeti onaylı gösterir ve plan silahlı kümede görünmez; ayrıca `daily_cycle` aynı seansı
+    yeniden işlerse onayı satırdan geri okur (`_onaylar` taşıması).
+
+    Dönüş sözleşmesi: {"ok", "kod", "neden", ...}. `kod` HTTP durumudur ve uç nokta onu AYNEN
+    kullanır: 404 (plan defterde yok) · 409 (onaylanamaz — sebebi `neden`de) · 200 (onaylandı)."""
+    rows = store.read_jsonl("trade_plans.jsonl")
+    plan = next((r for r in reversed(rows) if r.get("id") == plan_id), None)
+    if plan is None:
+        return {"ok": False, "kod": 404, "neden": f"plan defterde yok: {plan_id}"}
+    verdict = str(plan.get("gate_verdict") or "?")
+    if verdict == "NO_GO":
+        return {"ok": False, "kod": 409,
+                "neden": "NO_GO onaylanamaz — disiplin kapısının sert reddi MUTLAKTIR; "
+                         "onay yalnız 'insan baksın' diyen REVIEW hükmünü kapatır"}
+    if verdict != "REVIEW":
+        return {"ok": False, "kod": 409,
+                "neden": f"yalnız REVIEW planı onaylanır (bu planın kapı hükmü: {verdict})"}
+    pdate = str(plan.get("date") or "")
+    if not pdate:
+        return {"ok": False, "kod": 409,
+                "neden": "planın tarihi yok — seans geçerliliği ÖLÇÜLEMİYOR, onay verilmez"}
+    meta = store.read_json("portfolio.json", {}) or {}
+    book_at = str(meta.get("last_date") or "")
+    if book_at and pdate < book_at:
+        return {"ok": False, "kod": 409,
+                "neden": f"seansı geçmiş plan onaylanamaz (plan {pdate}, kitap {book_at}) — "
+                         f"planlar TEK SEANS geçerlidir; seviyeleri bayat, bir daha silahlanamaz"}
+    if health.halted():
+        return {"ok": False, "kod": 409,
+                "neden": "HALT aktif — yeni giriş silahlanmaz. Onaylasaydık plan bir sonraki turda "
+                         "kapı-dışı düşerdi (armed_dropped_halt); sessiz bir 'onaylandı' yerine "
+                         "dürüst bir ret: önce DEVAM et"}
+    ticker = plan.get("ticker")
+    if ticker in (meta.get("positions") or {}):
+        return {"ok": False, "kod": 409,
+                "neden": f"{ticker} zaten açık pozisyon — aynı isimde ikinci giriş yok"}
+    armed = list(meta.get("armed") or [])
+    zaten_silahli = any(a.get("id") == plan_id for a in armed)
+    _tavan = int(config.goal()["limits"]["max_open_positions"])
+    _acik = len(meta.get("positions") or {})
+    if not zaten_silahli and _acik + len(armed) >= _tavan:
+        return {"ok": False, "kod": 409,
+                "neden": f"slot yok: {_acik} açık + {len(armed)} silahlı, tavan {_tavan} "
+                         f"(max_open_positions) — onay kapıyı gevşetemez"}
+
+    zaten_onayli = operator_onayli(plan)
+    onay = (plan.get(ONAY_ALANI) if zaten_onayli
+            else {"ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                  "kanal": str(kanal)[:24]})
+    if not zaten_onayli:
+        def _onay_yaz(rows_: list) -> bool:
+            ch = False
+            for r in rows_:
+                if r.get("id") == plan_id and not r.get(ONAY_ALANI):
+                    r[ONAY_ALANI] = onay          # hüküm alanına DOKUNULMAZ (gate_verdict aynen)
+                    ch = True
+            return ch
+        store.update_jsonl("trade_plans.jsonl", _onay_yaz)
+
+    def _arm_yama(doc):
+        if not isinstance(doc, dict):
+            return False
+        arm = list(doc.get("armed") or [])
+        if any(a.get("id") == plan_id for a in arm):
+            return False                          # dedup: ikinci onay ikinci emir doğurmaz
+        arm.append({**plan, ONAY_ALANI: onay})
+        doc["armed"] = arm
+        return True
+
+    kitap = store.update_json("portfolio.json", _arm_yama, {})
+    # E1 İCRA YASASI VAR MI? `entry_law[plan_id]` sinyal barı kapanışında sabitlenmiş atr/ref_price
+    # taşır (as-of ihlali yok). YOKSA UYDURULMAZ: dolum yalnız yüzde tavanıyla kurulur ve bu satır
+    # operatöre BEYAN edilir — döngü v190'dan beri bu seansın REVIEW planlarının yasasını da tutar,
+    # yani yasa yokluğu ancak eski (v190 öncesi üretilmiş) planlarda görülür.
+    yasa_var = bool((kitap.get("entry_law") or {}).get(plan_id))
+    ev = obs.log("plan_operator_approved", plan_id=plan_id, ticker=ticker, date=pdate,
+                 gate_verdict=verdict, kanal=onay.get("kanal"), icra_yasasi=yasa_var,
+                 zaten_onayliydi=zaten_onayli, zaten_silahliydi=zaten_silahli,
+                 armed_n=len(kitap.get("armed") or []),
+                 detail="operatör REVIEW planını onayladı — kapı hükmü DEĞİŞMEDİ (onay bir "
+                        "olaydır); plan giriş kuyruğuna alındı, dolum kapıları (HALT/breaker/"
+                        "veri/slot/de-risk/E1 limit) aynen koşar")
+    return {"ok": True, "kod": 200, "plan_id": plan_id, "ticker": ticker, "date": pdate,
+            "gate_verdict": verdict, ONAY_ALANI: onay, "silahli": True,
+            "zaten_onayliydi": zaten_onayli, "zaten_silahliydi": zaten_silahli,
+            "icra_yasasi": yasa_var, "armed_n": len(kitap.get("armed") or []),
+            "ts": ev.get("ts"),
+            "not": (None if yasa_var else
+                    "E1 icra yasası (atr/ref_price) bu plan için defterde YOK — limit yalnız yüzde "
+                    "tavanıyla kurulur, ATR ölçülemedi (uydurulmadı)"),
+            "neden": "onaylandı — plan silahlı kuyruğa alındı; dolum bir sonraki açılışta, "
+                     "aynaya gönderim mevcut tek kapıdan (silahlı planları gönder)"}
+
+
+# ==================================================================================================
 # AYNAYA GÖNDERİM — TEK KAPI (C8, denetim 2026-08-02)
 # ==================================================================================================
 # BULGU: bu gövde YALNIZ `daily_cycle`ın içinde yaşıyordu ve panodaki "gönder" düğmesi
@@ -1115,6 +1270,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             for t in b.positions:
                 sector_ct[SECTORS.get(t, "?")] = sector_ct.get(SECTORS.get(t, "?"), 0) + 1
             slots = limits["max_open_positions"] - len(b.positions)
+            # OPERATÖR ONAYI TAŞINIR (v190). `merge_dated_jsonl` bu TARİHİN tüm satırlarını yeniden
+            # yazar; aynı seans yeniden işlenirse (re-seed sonu ya da elle tetik — monotonluk bekçisi
+            # EŞİT güne izin verir) operatörün onayı SESSİZCE silinir ve onaylı plan bir daha
+            # silahlanamazdı. Onay bir OLAYdır: yeniden üretilen satıra aynen taşınır, hüküm değişmez.
+            _onaylar = {r.get("id"): r.get(ONAY_ALANI)
+                        for r in store.read_jsonl("trade_plans.jsonl")
+                        if r.get("date") == dstr and r.get(ONAY_ALANI)}
             _plan_law: dict = {}     # plan_id → E1 icra kararı (aşağıda silahlananlar için saklanır)
             others_rets = [ind.returns_tail(per[o].loc[:d, "close"]) for o in b.positions if o in per]  # once/day
             # C12 (denetim 2026-08-02): Y3 NAV TAVANLARININ ÜRETİCİ TARAFI. `guard._y3_portfolio_caps`
@@ -1153,6 +1315,8 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         "dormant_setup": bool(c.get("dormant_setup")),
                         "profit_target": c["profit_target"], "strategy_version": version,
                         "skill_chain": [skills.screener_for(c.get("setup", "breakout_vcp")), "position-sizer", "pre-trade-discipline-gate"]}
+                if _onaylar.get(_pid):                  # v190: önceki turda verilmiş onay taşınır
+                    plan[ONAY_ALANI] = _onaylar[_pid]
                 _checks = []                            # Faz 3 (5b): yapılandırılmış karar ağacı
                 # C12: dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider — `armed_pivots`/`atr`
                 # yan haritalarıyla aynı gerekçe: `notional`/`risk_dollars` bir DEFTER alanı değil,
@@ -1255,14 +1419,19 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     **BR.entry_order_decision(float(c["entry_trigger"]), ref_price=_ref,
                                               atr=c.get("atr")),
                     "pivot": (_pv if _pv > 0 else None)}
+                # v190 TEK KOŞUL NOKTASI (`girise_uygun`): iki keşif dalı da eskiden `verdict == "GO"`
+                # yazıyordu ve operatörün REVIEW planına verdiği onayın hiçbir yolu yoktu — kapı
+                # "insan baksın" diyor, insan bakıyor, sonra hiçbir şey olmuyordu. Çıta GEVŞEMEDİ:
+                # onaysız REVIEW bu iki dalda hâlâ silahlanmaz, NO_GO hiçbir koşulda geçmez.
                 if plan["dormant_setup"]:
-                    # uyuyan kurulum: normal slot ASLA — yalnız keşif sondası (GO şartı, çıta yüksek)
-                    if verdict == "GO":
+                    # uyuyan kurulum: normal slot ASLA — yalnız keşif sondası (GO ya da operatör
+                    # onaylı REVIEW; boyut tavanı EXPLORE_MAX_R aynen bağlar)
+                    if girise_uygun(plan, verdict):
                         explore_pool.append(plan)
                 elif explore_mode:
-                    # KEŞİF: yalnız GO notu aday olur — silahlama döngü SONUNDA (havuzdan seçim).
-                    # REVIEW keşifte silahlanMAZ (çıta yüksek kalır).
-                    if verdict == "GO":
+                    # KEŞİF: GO ya da operatör-onaylı REVIEW aday olur — silahlama döngü SONUNDA
+                    # (havuzdan seçim). Onaysız REVIEW keşifte silahlanMAZ (çıta yüksek kalır).
+                    if girise_uygun(plan, verdict):
                         explore_pool.append(plan)
                 elif verdict != "NO_GO" and slots > 0:   # GO/REVIEW arm at L0; NO_GO never trades
                     meta["armed"].append(plan)
@@ -1309,8 +1478,16 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # Sınırlıdır (silahlı sayısı ≤ max_open_positions + keşif tavanı) → sonsuz büyüme yok.
             _prev_law = dict(meta.get("entry_law") or {})
             _prev_law.update(_plan_law)
-            meta["entry_law"] = {a["id"]: _prev_law[a["id"]] for a in meta["armed"]
-                                 if a.get("id") in _prev_law}
+            # v190: SİLAHLILARA EK OLARAK BU SEANSIN REVIEW PLANLARI DA YASASINI KORUR. Operatör
+            # onayı döngüden SONRA gelir; onaylanan plan ancak SİLAHLANMA ANINDAKİ (sinyal barı
+            # kapanışı) icra girdileriyle kuyruğa alınabilir. Yasa atılsaydı onaylı plan
+            # atr/ref_price'sız dolardı: aynı planda iki farklı limit tavanı ve kırılım teyidinin
+            # kaybı — C8'in kapattığı kusurun ta kendisi. SINIR KORUNUR: küme her seans SIFIRDAN
+            # kurulur (silahlı ≤ tavan + o seansın REVIEW planları), yani birikim yok.
+            _yasa_tut = {a["id"] for a in meta["armed"] if a.get("id")} | \
+                        {p2["id"] for p2 in plans
+                         if p2.get("gate_verdict") == "REVIEW" and p2.get("id")}
+            meta["entry_law"] = {pid: _prev_law[pid] for pid in _yasa_tut if pid in _prev_law}
             store.merge_dated_jsonl("trade_plans.jsonl", dstr, plans)
             try:                                   # öneri #1: günün TÜM planları + uyuyan ateşlemeler
                 from . import counterfactual       # karşı-olgusal deftere açılır (dönüş görmezden gelinir)
@@ -1522,6 +1699,14 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                "takvim_guvenilmez": (_takvim_kusuru or {}).get("kod"),
                "takvim_guvenilmez_sebep": (_takvim_kusuru or {}).get("sebep"),
                "takvim_dusen_plan": _takvim_dusen}
+    # BU SATIR PANONUN "DÜN GECE" KARTININ KAYNAĞIDIR (v190, YASA 6 zinciri):
+    # `api._son_dongu` olay defterinin KUYRUĞUNDAN bu satırı okur → `/api/today.son_dongu` → kart.
+    # Kart eskiden `/api/events`in SON 80 KAYDINDA bunu arıyordu; günde BİR yazılan bir olay, gün
+    # içindeki poll/uyarı satırlarıyla o pencereden taşınca kart "ölçülemedi" diyordu — oysa döngü
+    # koşmuştu. Düzeltme OKUYUCU tarafındadır (pencere yerine defterin kuyruğu); yeni bir durum
+    # dosyası AÇILMADI: döngünün yazdığı dosya kümesi bilinçli ve sınırlı bir listedir
+    # (test_loop_gaps_v48::test_loop_writes_only_declared_state_files) ve olgu ZATEN bu satırda
+    # yazılı — ikinci bir kopya, aynı olgunun iki sahibi demek olurdu.
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
             halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet,

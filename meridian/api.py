@@ -972,11 +972,92 @@ def summary(request: Request):
     }
 
 
+# ---- SON DÖNGÜ ÖZETİ: OLAY PENCERESİNDEN BAĞIMSIZ (v190) ---------------------------------------
+# KUSUR (operatör bulgusu): panonun "Dün gece" kartı `/api/events`in son 80 kaydında `daily_cycle`
+# arıyordu. Olay günde BİR kez yazılır; gün içindeki poll/uyarı satırları onu o pencereden taşırınca
+# kart "ölçülemedi" diyordu — döngü koşmuş olsa bile. Ölçüm değil PENCERE bozuktu.
+# DÜZELTME OKUYUCU TARAFINDA: aynı olgu (döngünün kendi `daily_cycle` kaydı) defterin KUYRUĞUNDAN
+# okunur — kaç olay yazıldığından bağımsız. İKİNCİ BİR DURUM DOSYASI AÇILMADI: döngünün yazdığı
+# dosya kümesi bilinçli ve sınırlı bir listedir (test_loop_gaps_v48) ve aynı olgunun ikinci bir
+# kopyası, iki sahipli bir gerçek demek olurdu. Yan fayda: düzeltme, canlıda ZATEN yazılmış
+# kayıtlarla anında çalışır — bir sonraki döngüyü beklemez.
+# TAM DOSYA OKUNMAZ: `events.jsonl` canlıda ~9 MB ve `/api/today` panonun en sık çağrılan ucu —
+# her istekte 9 MB ayrıştırmak, kusurun yerine bir performans kusuru koymak olurdu. İki kademeli
+# kuyruk + kısa ömürlü önbellek: günde bir değişen bir olguyu her istekte yeniden aramayız.
+_SON_DONGU_KUYRUK = (512_000, 4_000_000)   # ~4 gün / ~1 ay (canlı ölçüm: ~120 KB olay/gün)
+# ÖNBELLEK ANAHTARI ZAMAN DEĞİL DEFTERİN KENDİSİ (state yolu + boyut + mtime). Süreli bir önbellek
+# testlerde ve sandbox'larda BAŞKA bir state'in cevabını servis edebilirdi; dosya değişmediyse
+# cevabın değişmesi de imkânsızdır — `codelaw._src_stamp`/`ledgers.declared_writers` ile aynı desen.
+_SON_DONGU_ONBELLEK: dict = {"anahtar": None, "yuk": None}
+
+
+def _son_dongu_olaydan() -> dict | None:
+    """Olay defterinin SONUNDAN sınırlı bir kuyruk okur ve son `daily_cycle` satırını döndürür."""
+    p = Path(config.STATE) / "events.jsonl"
+    for kuyruk in _SON_DONGU_KUYRUK:
+        try:
+            boyut = p.stat().st_size
+            with open(p, "rb") as f:
+                if boyut > kuyruk:
+                    f.seek(boyut - kuyruk)
+                    f.readline()              # kuyruğun başındaki YARIM satır atılır
+                satirlar = f.read().decode("utf-8", "replace").splitlines()
+        except OSError:  # sessiz-yutma: defter yok/okunamıyor — çağıran bunu "ölçülemedi" olarak BEYAN eder (var:false + neden), uydurma özet üretmez
+            return None
+        for s in reversed(satirlar):
+            if '"daily_cycle"' not in s:
+                continue
+            try:
+                ev = json.loads(s)
+            except ValueError:  # sessiz-yutma: kırpılmış/bozuk tek satır — tarama bir sonraki satırla sürer, bozuk satır özet ÜRETEMEZ
+                continue
+            if isinstance(ev, dict) and ev.get("event") == "daily_cycle":
+                return ev
+        if boyut <= kuyruk:                   # defterin TAMAMI tarandı — ikinci kademe boşuna
+            return None
+    return None
+
+
+def _son_dongu() -> dict:
+    """Panonun "Dün gece" kartının kaynağı: son günlük döngünün KENDİ kaydı (pencere değil)."""
+    import datetime as _dt
+    try:
+        _st = (Path(config.STATE) / "events.jsonl").stat()
+        anahtar = (str(config.STATE), _st.st_size, _st.st_mtime_ns)
+    except OSError:  # sessiz-yutma: damga alınamadı — önbellek DEVRE DIŞI kalır (anahtar None), okuma yine yapılır; körlük cevabı değil yalnız hızı etkiler
+        anahtar = None
+    if anahtar is not None and _SON_DONGU_ONBELLEK["anahtar"] == anahtar:
+        doc = _SON_DONGU_ONBELLEK["yuk"]
+    else:
+        doc = _son_dongu_olaydan()
+        _SON_DONGU_ONBELLEK.update(anahtar=anahtar,
+                                   yuk=doc if isinstance(doc, dict) else None)
+    if not isinstance(doc, dict) or not doc.get("date"):
+        return {"var": False, "kaynak": None,
+                "neden": "günlük döngü kaydı yok — olay defterinin kuyruğunda `daily_cycle` satırı "
+                         "bulunamadı (döngü hiç koşmamış olabilir). 'Sıfır aday' DEĞİL: ölçülemedi."}
+    yas = None
+    try:
+        t0 = _dt.datetime.fromisoformat(str(doc.get("ts")))
+        if t0.tzinfo is None:
+            t0 = t0.replace(tzinfo=_dt.timezone.utc)
+        yas = round((_dt.datetime.now(_dt.timezone.utc) - t0).total_seconds() / 3600.0, 1)
+    except (TypeError, ValueError):  # sessiz-yutma: damga yok/biçimsiz — yaş None kalır ve pano "yaş ölçülemedi" yazar (0 saat DEĞİL)
+        yas = None
+    return {"var": True, "kaynak": "events.jsonl", "date": doc.get("date"), "ts": doc.get("ts"),
+            "yas_saat": yas, "candidates": doc.get("candidates"), "plans": doc.get("plans"),
+            "armed": doc.get("armed"), "regime": doc.get("regime"),
+            "open_positions": doc.get("open_positions"), "data_ok": doc.get("data_ok"),
+            "halted": doc.get("halted")}
+
+
 @app.get("/api/today")
 def api_today(request: Request):
     _auth(request)
     d = analytics.today()
     d["inbox_count"] = _inbox_count()
+    # SON DÖNGÜ — olay penceresinden BAĞIMSIZ (v190; gerekçe `_son_dongu` başlığında).
+    d["son_dongu"] = _son_dongu()
     d["latest_session"] = (store.read_json("portfolio.json", {}) or {}).get("last_date")
     # GERÇEK-CANLI SAYAÇ (BT-1, 2026-07-31). Panonun bugüne kadar gösterdiği "95 kapanmış işlem"
     # sayısı bir KARIŞIMDI: gövdesi replay tohumu (tek toplu yazım, bugünkü evrenle, survivorship'li)
@@ -2968,6 +3049,31 @@ def api_resume(request: Request):
         pass
     _diag_onbellek_bosalt("resume")
     return {"halted": False, "message": "HALT cleared."}
+
+
+@app.post("/api/plan/{plan_id}/onayla")
+def api_plan_onayla(plan_id: str, request: Request):
+    """REVIEW planına operatör onayı — "review edebiliyorum, işlem yapamıyorum" şikâyetinin kapısı.
+
+    YASA BURADA DEĞİL `loop.operator_onay_ver`DE: `trade_plans.jsonl`in yazar listesi
+    `ledgers.CONTRACTS`ta yazılıdır (loop/run/hermes) ve uç noktanın deftere kendi eliyle yazması,
+    o sözleşmenin var olma sebebi olan "haberi olmayan ikinci yazar" sınıfını yeniden açardı.
+    Uç nokta NİYETİ bildirir (`api_halt` → `health.set_halt` deseni), kararı ve yazımı yasa verir.
+
+    SÖZLEŞME: onay bir OLAYdır — `gate_verdict` GERİYE DÖNÜK DEĞİŞMEZ. NO_GO ASLA onaylanmaz;
+    seansı geçmiş plan onaylanmaz; HALT'ta onaylanmaz. Reddin sebebi 409 gövdesinde metin olarak
+    döner (sessiz "olmadı" yok). Bu uç EMİR GÖNDERMEZ: plan silahlı kuyruğa girer, aynaya gönderim
+    mevcut TEK kapıdan (`/api/alpaca/submit_armed` → `loop.mirror_submit_armed`) geçer."""
+    _auth(request)
+    from . import loop as _loop
+    res = _loop.operator_onay_ver(plan_id, kanal="pano")
+    if not res.get("ok"):
+        raise HTTPException(status_code=int(res.get("kod") or 409),
+                            detail=str(res.get("neden") or "onaylanamadı"))
+    # Defter GERÇEKTEN kıpırdadı (plan satırı + silahlı küme) → teşhis önbelleği düşer, yoksa pano
+    # onayı bastıktan sonra onay-öncesi kitabı geri okur ("hiçbir şey olmadı" hissi).
+    _diag_onbellek_bosalt("plan_operator_approved")
+    return res
 
 
 @app.post("/api/approvals/{approval_id}")

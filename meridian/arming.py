@@ -13,11 +13,100 @@ bilinçli bir insan kararıdır; momentum_burst emsali). Kapı kalırsa ölçül
 paramlar üzerinden aktığı için canlı döngüyle YARIŞMAZ (global ARMED_SETUPS'a dokunulmaz)."""
 from __future__ import annotations
 
+import datetime as _dt
+import hashlib
+import os
+import threading
+import time
+
 from . import config, store, obs
 
 REPORT_FILE = "arming_report.json"
 MIN_CF_ENTERED = 30        # kapı ölçümünü tetiklemek için kurulum başına en az girilmiş cf kaydı
 MIN_CF_AVG_R = 0.0         # ve cf ortalama R'si pozitif olmalı (negatif kanıtla walk yakmayız)
+
+# ================================================================================================
+# SÜRE TAVANI (v189, 2026-08-05) — "ölçüm turu bloke edemez"
+# ================================================================================================
+# ÖLÇÜLEN VAKA, TAHMİN DEĞİL. Canlı A1 olay defteri (`earnings_calendar_refreshed` → o turun
+# `arming_measured` olayı arası; ikisi `advance_once` içinde ARDIŞIK bloklardır):
+#     2026-07-23  31,0 dk · 2026-07-27  32,1 dk ve 66,0 dk · 2026-07-28  29,7 dk · 2026-07-29
+#     27,2 dk ve 27,3 dk   →  ve `deploy/oracle-a1/tick_watchdog.sh` başlığındaki iki ölçülmüş
+#     pencere (2026-07-31): 100,3 dk ve 84,6 dk, İKİSİ DE aynı iki olay arasında.
+# Yani bir arming turu (incumbent walk + aday walk) canlıda 27-100 DAKİKA sürüyor. Bu ölçümde
+# yerel doğrulama da var: tek `walk_forward` (2022-01-01→2026-07-30, 251 sembol) bu depoda ~10 dk.
+#
+# ÜÇ GERÇEĞİN KESİŞİMİ ASILMAYI ÜRETİYORDU (2026-08-04/05, iki gece üst üste EOD döngüsü bitmedi):
+#   1. Bu yol NABIZ ATMIYOR — `scheduler.nabiz` çağrısı yok, yani asılı-tick bekçisi (2700 sn,
+#      2026-08-02'de ONARILDI ve KALICI yapıldı) turu ölçümün ORTASINDA öldürüyor.
+#   2. `arming_week` damgası `scheduler._DURABLE` listesinde DEĞİL → yeniden başlatma damgayı
+#      siler ve bir sonraki taze poll ölçümü SIFIRDAN başlatır.
+#   3. Blok `daily_cycle`dan ÖNCEdir → ölçüm bitmeden karar turu HİÇ koşmaz.
+# Üçü birlikte bir CANLI KİLİT üretir: ölç → 45 dk'da öldürül → damga silinsin → yeniden ölç…
+# Karar yüzeyi (daily_cycle) hiç sıra alamaz. 2 ve 3 `scheduler.py`nin yüzeyidir; bu turda O DOSYA
+# AÇILMADI. 1 ve asıl kilit BURADAN kapatılır: ölçüm bir SÜRE TAVANIYLA koşar, tavan aşılırsa tur
+# "ölçülemedi" damgasıyla DEVAM EDER (döngü tamamlanır, daily_cycle sıra alır) ve hesap arka planda
+# sürüp bittiğinde raporu KENDİ işler — yani ölçüm İPTAL değil ERTELENMİŞ olur.
+#
+# KARAR YÜZEYİ FAIL-OPEN OLMAZ: bu modülün tek çıktısı bir RAPORDUR ve silahlanma zaten operatör
+# onayına bağlıdır. Tavan aşımı hiçbir kapıyı gevşetmez, hiçbir kurulumu silahlandırmaz; yalnız
+# "bu tur ölçemedik" der ve nedenini yazar (UYDURMA YASAĞI: ölçülemeyen sayı None + neden).
+SURE_TAVANI_ENV = "MERIDIAN_ARMING_TAVAN_S"
+# 600 sn = bekçi eşiğinin (2700 sn) ~%22'si. Türetimi: turun geri kalanı (bar yükleme + onarım
+# geçidi + kazanç takvimi + daily_cycle) canlıda tek başına 10-25 dk sürebiliyor; ölçüme bekçi
+# bütçesinin dörtte birinden fazlasını vermek, o turun TOPLAMINI yine eşiğin üstüne çıkarırdı.
+# Bu bir ARAMA EŞİĞİ DEĞİL bir işletim bütçesidir (hiçbir hüküm/kapı bu sayıyı okumaz).
+SURE_TAVANI_S = 600.0
+NABIZ_ARA_S = 15.0         # bekleyen tur, uçuştaki ölçüm YAŞADIĞI sürece bu aralıkla nabız atar
+
+_UCUS: dict = {}           # {"slot": {...}} — TEK uçuş: aynı anda en fazla bir arka plan ölçümü
+_UCUS_KILIT = threading.Lock()
+
+
+def _tavan_s() -> float:
+    """Yürürlükteki süre tavanı (env ile operatör değiştirebilir). Bozuk/negatif değer sessizce
+    geçmez, varsayılana düşer — `broker.entry_law` kelepçesiyle aynı yasa."""
+    try:
+        v = float(os.environ.get(SURE_TAVANI_ENV, SURE_TAVANI_S))
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz env değeri = yasa yok değil, varsayılan; yürürlükteki değer raporun `tavan_s` alanında YAZILI
+        return SURE_TAVANI_S
+    return v if v > 0 else SURE_TAVANI_S
+
+
+def _nabiz(asama: str) -> None:
+    """İLERLEME NABZI (v186 deseni) — biçim kararları `loop._nabiz` / `adapters.data._nabiz` ile
+    AYNI (fonksiyon-içi geç import, hüküm zamanlayıcıda, istisna yutulur).
+
+    NEDEN BURADA MEŞRU: nabız yalnız ölçüm ipliği YAŞARKEN ve yalnız SÜRE TAVANI dolana kadar
+    atılır — yani bekçiyi körleştirebileceği pencere yapısal olarak tavanla sınırlıdır. Gerçekten
+    tek bir çağrıda asılan bir süreç tavanı aşar, nabız DURUR ve bekçi onu eskisi gibi yakalar."""
+    try:
+        from . import scheduler
+        scheduler.nabiz(asama)
+    except Exception:  # sessiz-yutma: nabız saf telemetridir — zamanlayıcı bu süreçte yüklü olmayabilir (test/sprint/replay) ve bir damga denemesi ölçümü ASLA düşüremez
+        pass
+
+
+def _simdi() -> str:
+    return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
+
+
+def _bar_parmak(bars) -> str:
+    """Ölçümün HANGİ bar sürümüyle koştuğunun parmak izi (sembol · satır sayısı · son tarih).
+    Arka planda biten bir ölçüm rapora yazılırken bu damga da yazılır: sayıların hangi veriye ait
+    olduğu okunabilir olmalıdır (barlar arada tazelenmiş olabilir — denetim #30'un okuyucu tarafı)."""
+    h = hashlib.sha256()
+    try:
+        for t in sorted(bars or {}):
+            df = bars[t]
+            try:
+                son = df["date"].iloc[-1] if "date" in getattr(df, "columns", []) else df.index[-1]
+                h.update(f"{t}|{len(df)}|{son}|".encode("utf-8"))
+            except Exception:  # sessiz-yutma: tek sembolün biçimi beklenmedik — parmak izi TELEMETRİDİR, bir sembol yüzünden ölçüm düşemez; belirsizlik damgaya '?' olarak girer
+                h.update(f"{t}|?|?|".encode("utf-8"))
+    except Exception:  # sessiz-yutma: sözlük hiç gezilemedi (None/beklenmedik tip) — dürüst yanıt "ölçülemedi", uydurma bir damga değil
+        return "olculemedi"
+    return h.hexdigest()[:16]
 
 
 def setup_report() -> dict:
@@ -45,22 +134,146 @@ def _dormant_setups() -> list[str]:
     return [s for s in engine if s not in strat.ARMED_SETUPS]
 
 
+def _olculemedi(neden: str, **ek) -> dict:
+    """"ÖLÇÜLEMEDİ" terminali — `gate_undefined`in (ölçüm YAPILDI, sayı tanımsız) AKRABASI ama
+    AYNISI DEĞİL: burada ölçüm HİÇ tamamlanmadı. İkisini tek etikete toplamak, 2026-07-21 denetim
+    turunun kapattığı "ölçülemedi = reddedildi" hatasının yeni bir kopyası olurdu. Sayı alanları
+    None kalır (UYDURMA YASAĞI) ve `neden` her zaman yazılıdır."""
+    return {"status": "olculemedi", "neden": neden,
+            "search_p": None, "p_required": None,
+            "incumbent_oos": None, "candidate_oos": None, "fold_wins": None,
+            "tavan_s": _tavan_s(), **ek}
+
+
+def _isci(setup: str, bars, index, kutu: dict, parmak: str) -> None:
+    """ÖLÇÜM İPLİĞİ. Sonucu kutuya bırakır; tur onu tavan içinde ALMADIYSA (`devredildi`) raporu
+    KENDİSİ işler — yani tavan aşımı ölçümü İPTAL değil ERTELER."""
+    try:
+        sonuc = _measure(setup, bars, index)
+    except Exception as e:
+        sonuc = {"error": f"{type(e).__name__}: {e}"}      # eski davranışla aynı şekil
+    with _UCUS_KILIT:                     # ATOMİK: tur "devrettim" derken işçi "bitirdim" diyemez
+        kutu["sonuc"] = sonuc
+        kutu["bitti"] = True
+        devredildi = bool(kutu.get("devredildi"))
+    if devredildi:
+        _rapora_isle(setup, sonuc, parmak)
+
+
+def _rapora_isle(setup: str, sonuc: dict, parmak: str) -> None:
+    """Arka planda BİTEN ölçümü rapora işler. Çağıran tur çoktan döndü, yani raporu O yazdı; bu
+    yüzden dosya KİLİT ALTINDA oku-değiştir-yaz ile güncellenir (kayıp-güncelleme imkânsız).
+    Kayıt `arka_plan` ve `bar_parmak` damgalarını taşır: sayının hangi turda ve hangi bar
+    sürümüyle üretildiği okunabilir olmalıdır."""
+    kayit = {**sonuc, "arka_plan": True, "bar_parmak": parmak, "olculdu_at": _simdi()}
+    onceki: dict = {}
+
+    def _degistir(doc: dict) -> bool:
+        doc.setdefault("measurements", {})
+        onceki["status"] = (doc["measurements"].get(setup) or {}).get("status")
+        doc["measurements"][setup] = kayit
+        return True
+
+    try:
+        store.update_json(REPORT_FILE, _degistir, {})
+    except Exception as e:
+        # YASA 4: burada sessiz kalmak, SAATLERCE koşmuş bir ölçümün sonucunu yok etmek olurdu ve
+        # rapor "olculemedi" damgasında donardı — yani hesap yapıldı ama kimse öğrenemedi.
+        obs.warn("arming_arka_plan_yazilamadi", setup=setup, error=f"{type(e).__name__}: {e}",
+                 status=str(sonuc.get("status")),
+                 detail="tavanı aşıp arka planda biten arming ölçümü rapora İŞLENEMEDİ")
+        return
+    obs.log("arming_arka_plan_bitti", setup=setup, status=str(sonuc.get("status")),
+            bar_parmak=parmak,
+            detail="süre tavanı aşıldığı için devredilen ölçüm arka planda tamamlandı ve rapora işlendi")
+    if kayit.get("status") == "gate_passed" and onceki.get("status") != "gate_passed":
+        obs.alarm("ARMING_READY", f"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor",
+                  setup=setup, p=kayit.get("search_p"))
+
+
+def _ucus_setup() -> str | None:
+    """Şu an arka planda ölçülen kurulum (yoksa None). TEK UÇUŞ kuralı: ikinci bir ölçüm
+    başlatmak, canlıda 30+ dakikalık İKİ walk'ı aynı anda koşturmak demektir — asılmayı
+    çözerken CPU'yu ikiye bölmek, düzeltmeyi kendi kusuruna çevirirdi."""
+    with _UCUS_KILIT:
+        u = _UCUS.get("slot")
+        if not u:
+            return None
+        return None if u["kutu"].get("bitti") else str(u["setup"])
+
+
+def ucus_bekle(timeout: float | None = None) -> bool:
+    """Uçuştaki ölçüm ipliğini bekle. YALNIZ testler ve elle teşhis içindir (canlı tur ASLA
+    beklemez — tavanın var oluş sebebi budur). True = uçuşta iplik kalmadı."""
+    with _UCUS_KILIT:
+        u = _UCUS.get("slot")
+    if not u:
+        return True
+    u["th"].join(timeout)
+    return not u["th"].is_alive()
+
+
+def _sureli_olc(setup: str, bars, index, kalan: float) -> dict:
+    """Ölçümü AYRI bir iplikte koşturur ve en çok `kalan` saniye bekler.
+
+    NEDEN İPLİK: tavanın işe yaraması için ölçümün UÇUŞ HÂLİNDE bırakılabilmesi gerekir. Ölçümün
+    içi (`reflect._wf_cached` → `backtest.walk_forward` → `replay`) tek bir uzun çağrıdır ve bu
+    turda `backtest/strategy/scheduler` AÇILMADI — yani işbirlikçi bir iptal noktası koyacak
+    yüzey yok. `signal.setitimer` de kullanılamaz: zamanlayıcı ANA İPLİKTE koşmuyor. Geriye tek
+    dürüst seçenek kalır: turu serbest bırak, hesabı bırakma."""
+    kutu: dict = {}
+    parmak = _bar_parmak(bars)
+    th = threading.Thread(target=_isci, args=(setup, bars, index, kutu, parmak),
+                          name=f"arming-olcum-{setup}", daemon=True)
+    with _UCUS_KILIT:
+        _UCUS["slot"] = {"setup": setup, "th": th, "kutu": kutu, "parmak": parmak,
+                         "basladi": _simdi()}
+    th.start()
+    son = time.monotonic() + max(0.0, kalan)
+    while th.is_alive():
+        pay = son - time.monotonic()
+        if pay <= 0:
+            break
+        th.join(min(NABIZ_ARA_S, pay))
+        _nabiz(f"arming_olcum:{setup}")
+    with _UCUS_KILIT:
+        if kutu.get("bitti"):                      # tavan içinde bitti → ESKİ DAVRANIŞ, bit-bit
+            _UCUS.pop("slot", None)
+            return kutu["sonuc"]
+        kutu["devredildi"] = True                  # bitmedi → hesap sürer, raporu işçi işler
+    obs.warn("arming_sure_tavani_asildi", setup=setup, tavan_s=round(max(0.0, kalan), 1),
+             detail="kapı ölçümü tavanı aştı — TUR DEVAM EDİYOR (daily_cycle bloke olmaz); hesap "
+                    "arka planda sürüyor ve bittiğinde raporu kendisi işleyecek")
+    return _olculemedi("sure_tavani_asildi", devir="arka_plan")
+
+
 def evaluate(bars=None, index=None) -> dict:
     """Haftalık değerlendirme: eşiği geçen her uyuyan kurulum için kapı ölçümü. Dönen rapor
-    arming_report.json'a yazılır; loop/scheduler dönüşü görmezden gelir (yalnız sinyal)."""
+    arming_report.json'a yazılır; loop/scheduler dönüşü görmezden gelir (yalnız sinyal).
+
+    v189: ölçüm SÜRE TAVANIYLA koşar (bkz. dosya başındaki blok). Tavan aşılırsa o kurulum
+    "olculemedi" damgasını alır ve fonksiyon DÖNER — çağıran turun geri kalanı (özellikle
+    `daily_cycle`) sıraya girer."""
     rep = setup_report()
     out = {"checked_at": store.read_json("heartbeat.json", {}).get("ts"),
-           "cf_report": rep, "measurements": {},
+           "cf_report": rep, "measurements": {}, "tavan_s": _tavan_s(),
            "rule": f"cf n>={MIN_CF_ENTERED} ve ort.R>{MIN_CF_AVG_R} → kapı ölçümü; silahlanma operatör onayı"}
     eligible = [s for s in _dormant_setups()
                 if rep.get(s, {}).get("n", 0) >= MIN_CF_ENTERED
                 and rep.get(s, {}).get("avg_r", -1) > MIN_CF_AVG_R]
     prev = store.read_json(REPORT_FILE, {})
+    son = time.monotonic() + _tavan_s()            # TAVAN TÜM TURA aittir, ölçüm BAŞINA değil
     for setup in eligible:
-        try:
-            out["measurements"][setup] = _measure(setup, bars, index)
-        except Exception as e:
-            out["measurements"][setup] = {"error": f"{type(e).__name__}: {e}"}
+        ucus = _ucus_setup()
+        if ucus is not None:
+            out["measurements"][setup] = _olculemedi(
+                "onceki_tur_arka_planda", arka_plandaki=ucus)
+            continue
+        kalan = son - time.monotonic()
+        if kalan <= 0:
+            out["measurements"][setup] = _olculemedi("tur_tavani_doldu")
+            continue
+        out["measurements"][setup] = _sureli_olc(setup, bars, index, kalan)
     # eşiği geçemeyenlerin durumu da dürüstçe raporda (neden ölçülmedi görünür olsun)
     for setup in _dormant_setups():
         if setup not in out["measurements"]:
@@ -89,10 +302,15 @@ def _measure(setup: str, bars=None, index=None) -> dict:
     inc = reflect._wf_cached(params, int(cur.get("version", 1)), bars, index, goal,
                              cur.get("params_by_regime"), windows=w)
     cand_params = {**params, "entry.armed_extra": [setup]}
-    cand = reflect.backtest.walk_forward(cand_params, bars, index, goal, w[0], w[1], w[2], w[3],
-                                         strategy_version=int(cur.get("version", 1)),
-                                         oos_folds=list(w[4]), embargo_days=w[5],
-                                         params_by_regime=cur.get("params_by_regime"))
+    # ADAY WALK'I DA ÖNBELLEKTEN (v189): eskiden `backtest.walk_forward` DOĞRUDAN çağrılıyordu ve
+    # sebebi kazaydı — `_wf_cached`in anahtar kurucusu `float(x)` yaptığı için `entry.armed_extra`
+    # LİSTESİ TypeError fırlatırdı. Sonuç: aynı kurulumun aday walk'ı HER turda sıfırdan koşuyordu
+    # (canlıda ölçülen 27-100 dk'lık turun yarısı bu). Anahtar artık sayısal olmayan değeri de
+    # temsil ediyor; incumbent'la AYNI önbelleğe düşer (anahtar farkı `entry.armed_extra`dır,
+    # çakışma yapısal olarak imkânsız) ve tavan aşıp arka planda biten bir hesap, bir sonraki
+    # turda YENİDEN yapılmaz.
+    cand = reflect._wf_cached(cand_params, int(cur.get("version", 1)), bars, index, goal,
+                              cur.get("params_by_regime"), windows=w)
     passes, gate, why = reflect._gate_eval(inc, cand, k_probes=1)
     # ÖLÇÜLEMEDİ ≠ REDDEDİLDİ (denetim turu 7, 2026-07-21 — canlıda yakalandı):
     # momentum_burst raporda "gate_rejected" görünüyordu ama gerekçe "candidate OOS score undefined

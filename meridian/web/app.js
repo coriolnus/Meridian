@@ -799,7 +799,7 @@ const EYLEMLER = new Set([
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
   "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
-  "opSoftHalt", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
+  "opSoftHalt", "planOnayla", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
   "testKey", "toggleHalt", "toggleKs",
 ]);
 
@@ -1327,22 +1327,27 @@ RENDER.genel = async () => {
   // ÜÇ UÇ BEKLENİR, ÜÇÜ ARKADAN GELİR. Beklenenler sayfanın CÜMLESİNİ kuranlar (durum, döngü,
   // alarm); arkadan gelenler eğilim kartları. `/api/market` 260 CSV okur ve onu ilk boyamaya
   // zincirlemek, panonun açılış sayfasını en pahalı ucuna bağlamak olurdu.
-  const [t, d, ev] = await Promise.all([
-    j("/api/today"), j("/api/diagnostics").catch(() => ({})), j("/api/events").catch(() => null),
+  // `/api/events` ARTIK ÇEKİLMİYOR (v190): tek okuyucusu aşağıdaki "Dün gece" kartıydı ve o kart
+  // uçtan gelen SON DÖNGÜ ÖZETİNİ okuyor. Olay penceresi bir defterdir, bir ölçüm kaynağı değil.
+  const [t, d] = await Promise.all([
+    j("/api/today"), j("/api/diagnostics").catch(() => ({})),
   ]);
   if (d && d.sessiz_hat) { _DIAG = d; sessizHatGlobal(d.sessiz_hat); }
 
-  // ---- 1) DÜN GECE — son `daily_cycle` olayının KENDİ alanlarından. Olay yoksa uydurma yok:
-  //         "bu pencerede döngü olayı yok" ayrı bir cümledir ve "sıfır aday"dan başka bir şeydir.
-  const dc = ((ev || {}).events || []).find(e => e && e.event === "daily_cycle");
-  const geceGovde = dc
-    ? `<span class="gb-say">${esc(String(dc.date || "—"))}</span>
-       <p class="gb-alt"><b>${dc.candidates ?? "—"}</b> aday · <b>${dc.plans ?? "—"}</b> plan ·
-         <b>${dc.armed ?? "—"}</b> silahlı${dc.regime ? ` · ${esc(REGIME_TR[dc.regime] || dc.regime)}` : ""}</p>
-       <p class="gb-alt">${esc(relTime(dc.ts) || "")}${dc.data_ok === false ? ' · <span class="warn">veri kapısı kapalıydı</span>' : ""}</p>`
+  // ---- 1) DÜN GECE — son günlük döngünün KENDİ kaydından (`/api/today.son_dongu`).
+  //         ESKİ KUSUR (operatör bulgusu): kart, olay akışının son 80 kaydında `daily_cycle`
+  //         arıyordu. Olay günde BİR yazılır; gün içindeki poll/uyarı satırları onu pencereden
+  //         taşırınca kart "ölçülemedi" diyordu — oysa döngü koşmuştu. Ölçüm değil PENCERE
+  //         bozuktu. Kayıt yoksa hâlâ uydurma yok: sunucunun yazdığı NEDEN basılır.
+  const sd = t.son_dongu || null;
+  const geceGovde = (sd && sd.var)
+    ? `<span class="gb-say">${esc(String(sd.date || "—"))}</span>
+       <p class="gb-alt"><b>${sd.candidates ?? "—"}</b> aday · <b>${sd.plans ?? "—"}</b> plan ·
+         <b>${sd.armed ?? "—"}</b> silahlı${sd.regime ? ` · ${esc(REGIME_TR[sd.regime] || sd.regime)}` : ""}</p>
+       <p class="gb-alt">${sd.yas_saat == null ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
+           : `${trn(sd.yas_saat, 1)} saat önce`}${sd.data_ok === false ? ' · <span class="warn">veri kapısı kapalıydı</span>' : ""}</p>`
     : `<span class="gb-say mut">—</span>
-       <p class="gb-alt">Olay penceresinde (son 80 kayıt) günlük döngü olayı yok — döngü koşmadı
-         ya da olay penceresinin dışında kaldı. "Sıfır aday" DEĞİL: ölçülemedi.</p>`;
+       <p class="gb-alt">${esc((sd && sd.neden) || "günlük döngü özeti uçtan gelmedi — ölçülemedi.")}</p>`;
 
   // ---- 2) SERMAYENİN KÖKENİ — mevcut `sermayeKokenSatiri` yeniden kullanılır (ÖZET biçim).
   //         İkinci bir metin kurulsaydı biri güncellenip diğeri bayatlardı.
@@ -1546,6 +1551,98 @@ function staleBits(p) {
   const fate = p.traded ? "işleme dönüştü" : "emre dönüşmedi";
   return { badge, ctx: `<span class="reason" style="color:${p.traded ? "var(--tx2)" : "var(--amber)"}">${drift}${drift ? " · " : ""}${fate}</span>` };
 }
+// OPERATÖR ONAYI ROZETİ (v190). Onay bir OLAYdır: kapı etiketi (REVIEW) DEĞİŞMEZ, rozet onun
+// YANINDA durur. Damga MUTLAK yazılır ("5 Ağu 14:55") — "az önce" diyen bir onay, sayfa açık
+// kaldıkça saatlerce taze görünürdü. Damga okunamazsa saat UYDURULMAZ, rozet damgasız basılır.
+function onayRozeti(p) {
+  const o = p && p.operator_onayi;
+  if (!o || !o.ts) return "";
+  const t = mutlakTs(o.ts);
+  return `<span class="tag t-go" style="margin-left:6px"
+    title="Operatör bu REVIEW planını onayladı — kapı hükmü değişmedi, plan giriş kuyruğuna alındı${
+      o.kanal ? ` (kanal: ${esc(o.kanal)})` : ""}">operatör-onaylı${t ? ` · ${esc(t)}` : ""}</span>`;
+}
+// PLAN KAYDININ EYLEM BLOĞU (v190) — operatörün "review edebiliyorum, işlem yapamıyorum"
+// şikâyetinin kapandığı yer. Düğme YALNIZ REVIEW planında çizilir: GO zaten giriş kuyruğunda,
+// NO_GO ise ASLA onaylanamaz (guard'ın sert reddi mutlaktır; ona düğme çizmek, kapıyı ezilebilir
+// göstermek olurdu). Süresi dolmuş plan da onaylanamaz — sunucu da 409 verir, arayüz o reddi
+// önden söyler ki operatör ölü bir düğmeye basmasın.
+function planOnayBloguHTML(p) {
+  const id = String((p && p.id) || "");
+  if (!id) return "";
+  const o = p.operator_onayi;
+  if (o && o.ts) {
+    const t = mutlakTs(o.ts);
+    return `<p class="pd-warn" style="border-color:var(--green);color:var(--tx2)">
+      <b>Operatör onaylı${t ? ` · ${esc(t)}` : ""}</b>${o.kanal ? ` (${esc(o.kanal)})` : ""} —
+      kapı hükmü <b>${esc(p.gate_verdict || "?")}</b> olarak KALDI (onay bir olaydır, hüküm değil).
+      Plan giriş kuyruğunda; dolum bir sonraki açılışta, kapılar aynen koşar.</p>`;
+  }
+  if ((p.gate_verdict || "") !== "REVIEW") return "";
+  if (p.expired) return `<p class="hint">Süresi dolmuş bir plan onaylanamaz — seviyeleri bayat.</p>`;
+  return `<div style="margin:14px 0">
+    <button class="dlbtn" type="button" id="plan-onay-btn" data-act="planOnayla" data-a1="${esc(id)}">Onayla ve Arm Et</button>
+    <p class="hint" id="plan-onay-msg" style="margin:8px 0 0">İki adımlı onay: ilk basış niyet, ikinci basış karar.
+      Onay kapı hükmünü DEĞİŞTİRMEZ — planı giriş kuyruğuna alır; HALT/devre-kesici/veri/slot kapıları aynen koşar.</p></div>`;
+}
+// İKİ ADIMLI ONAY — ⌘K paletinin deseni (palette.js `onayIste`): yazan bir komut ilk basışta
+// ÇALIŞMAZ, önce bir onay adımına döner. Burada modal yerine düğmenin KENDİSİ onay adımına geçer
+// (çekmecenin içindeyiz; üstüne ikinci bir katman koymak odağı çekmeceden koparırdı). Zaman aşımı
+// niyeti unutur: yarım kalmış bir onay adımı, sonraki tıklamada sürpriz bir emre dönüşemez.
+let _PLAN_ONAY_ADIM = null, _PLAN_ONAY_ZAMAN = null;
+// Onay adımının GÖRSEL imzası satır içi verilir: `.armed` sınıfı yalnız kapak altındaki kademe
+// düğmelerine (`.ksgroup button.armed`) stillenmiştir; burada kullanılsaydı düğme adım değiştirir
+// ama HİÇBİR ŞEY değişmiş görünmezdi — sessiz bir durum değişimi, tam da kaçındığımız şey.
+const _ONAY_ADIM_STIL = { borderColor: "var(--amber)", color: "var(--amber)" };
+function _planOnayStil(btn, acik) {
+  if (!btn) return;
+  btn.style.borderColor = acik ? _ONAY_ADIM_STIL.borderColor : "";
+  btn.style.color = acik ? _ONAY_ADIM_STIL.color : "";
+}
+function _planOnayGeriAl(btn, msg) {
+  _PLAN_ONAY_ADIM = null;
+  _planOnayStil(btn, false);
+  if (btn) btn.textContent = "Onayla ve Arm Et";
+  if (msg) msg.textContent = "Onay adımı zaman aşımına uğradı — istersen yeniden bas.";
+}
+window.planOnayla = async (planId) => {
+  if (!planId) return;
+  const btn = $("plan-onay-btn"), msg = $("plan-onay-msg");
+  if (_PLAN_ONAY_ADIM !== planId) {
+    _PLAN_ONAY_ADIM = planId;
+    _planOnayStil(btn, true);
+    if (btn) btn.textContent = "Emin misin? — tekrar bas: ONAYLA ve ARM ET";
+    if (msg) msg.textContent = "Bu bir YAZMA eylemidir: plan giriş kuyruğuna girer ve bir sonraki açılışta dolabilir.";
+    clearTimeout(_PLAN_ONAY_ZAMAN);
+    _PLAN_ONAY_ZAMAN = setTimeout(() => { if (_PLAN_ONAY_ADIM === planId) _planOnayGeriAl(btn, msg); }, 8000);
+    return;
+  }
+  clearTimeout(_PLAN_ONAY_ZAMAN);
+  _PLAN_ONAY_ADIM = null;
+  _planOnayStil(btn, false);
+  if (btn) { btn.disabled = true; btn.textContent = "onaylanıyor…"; }
+  if (msg) msg.textContent = "gönderiliyor…";
+  try {
+    const r = await apiFetch("/api/plan/" + encodeURIComponent(planId) + "/onayla", { method: "POST" });
+    let body = {};
+    try { body = await r.json(); } catch (e) { body = {}; }
+    if (!r.ok) {
+      // SESSİZ "OLMADI" YOK: sunucunun 409/404 gerekçesi olduğu gibi basılır (NO_GO reddi,
+      // seansı geçmiş plan, HALT, slot yok…). Düğme geri gelir — karar operatörün.
+      if (msg) msg.innerHTML = `<span class="neg">Onaylanmadı (HTTP ${r.status}): ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`;
+      if (btn) { btn.disabled = false; btn.textContent = "Onayla ve Arm Et"; }
+      return;
+    }
+    if (msg) msg.innerHTML = `<span class="pos">✓ onaylandı — plan silahlı kuyrukta (${body.armed_n ?? "?"} silahlı emir).</span>
+      Dolum bir sonraki açılışta; aynaya göndermek için Ayarlar'daki "Silahlı planları Alpaca'ya gönder".
+      ${body.not ? `<br><span class="warn">${esc(body.not)}</span>` : ""}`;
+    if (btn) btn.remove();
+    refreshStatus();                     // şerit/rozet taze okusun (mutasyon yanıt önbelleğini zaten düşürdü)
+  } catch (e) {
+    if (msg) msg.innerHTML = `<span class="neg">${esc(String(e.message || e))}</span>`;
+    if (btn) { btn.disabled = false; btn.textContent = "Onayla ve Arm Et"; }
+  }
+};
 function planRowBrief(p) {
   const v = p.gate_verdict || "?";
   const reasons = (p.gate_reasons || []).join(" · ");
@@ -1557,7 +1654,7 @@ function planRowBrief(p) {
     <span class="mut">${esc(p.setup||'breakout_vcp')} · skor ${p.score??'—'}${reasons?` <span class="reason">${esc(reasons)}</span>`:''}${st.ctx ? "<br>" + st.ctx : ""}</span>
     <span class="mono-num">${p.r_multiple_expected??'—'}R</span>
     <span class="mono-num">${p.size_r??'—'}R</span>
-    <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${st.badge}</span></button>`;
+    <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${st.badge}${onayRozeti(p)}</span></button>`;
 }
 
 // ================= ADAYLAR (sinyaller) =================
@@ -1706,7 +1803,7 @@ function planRowFull(p) {
     <span class="chain">${esc((p.skill_chain||[]).join(" → "))}${st.ctx ? "<br>" + st.ctx : ""}</span>
     <span class="mono-num" style="font-size:11px">${trn(p.entry_trigger,1)}→${trn((p.targets&&p.targets[0]),1)}</span>
     <span class="mono-num">${p.r_multiple_expected??'—'}R</span>
-    <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${p.p_win_shadow!=null?`<span class="reason" style="display:block" title="Gölge model kanıtı — karar yetkisi yok, kalibre olana dek yalnız gösterge">gölge P(kazanç) %${Math.round(p.p_win_shadow*100)}</span>`:''}${(p.gate_reasons||[]).length?`<span class="reason" style="display:block">${esc(p.gate_reasons.join(' · '))}</span>`:''}</span></button>`;
+    <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${onayRozeti(p)}${p.p_win_shadow!=null?`<span class="reason" style="display:block" title="Gölge model kanıtı — karar yetkisi yok, kalibre olana dek yalnız gösterge">gölge P(kazanç) %${Math.round(p.p_win_shadow*100)}</span>`:''}${(p.gate_reasons||[]).length?`<span class="reason" style="display:block">${esc(p.gate_reasons.join(' · '))}</span>`:''}</span></button>`;
 }
 
 // ================= ÖĞRENME (ajan) =================
@@ -5267,6 +5364,7 @@ const RECORD_VIEW = {
           ${pdStat("BEKLENEN", p.r_multiple_expected == null ? "—" : p.r_multiple_expected + "R")}
           ${pdStat("BOYUT", p.size_r == null ? "—" : p.size_r + "R")}</div>
         ${p.expired ? `<p class="pd-warn">Bu sinyalin süresi doldu — planlar tek seans geçerlidir${p.age_days != null ? ` ve bu ${p.age_days} seans önce üretildi` : ""}. Bir daha silahlanamaz; ${p.traded ? "işleme dönüşmüştü" : "emre dönüşmedi"}.</p>` : ""}
+        ${planOnayBloguHTML(p)}
         <h3 class="pd-sub">Seviyeler</h3>
         ${pdRow("Tetik", p.entry_trigger == null ? "" : trn(p.entry_trigger, 2))}
         ${pdRow("Stop", p.stop == null ? "" : trn(p.stop, 2))}
