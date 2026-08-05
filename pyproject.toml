@@ -203,6 +203,12 @@ layers = [
     "meridian.guard",
     "meridian.indicators",
 ]
+ignore_imports = [
+    # v186 nabız telemetrisi (2026-08-04): strategy→earnings→data→SCHEDULER→loop→backtest dolaylı
+    # zinciri yalnız bu kenar üzerinden kuruluyor; kenar fonksiyon-içi geç-import + istisna-yutmalı
+    # İLERLEME NABZIDIR (veri/karar akışı değil). Gerekçe ve borç-yönü sözleşme-1'deki aynı kayıtta.
+    "meridian.adapters.data -> meridian.scheduler",
+]
 
 # ================================================================================================
 # MUTMUT — HAFTALIK MUTASYON TESTİ (WP-H/H5, 2026-07-31)
