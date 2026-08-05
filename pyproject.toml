@@ -189,6 +189,14 @@ layers = [
     "meridian.scheduler",
     "meridian.loop",
 ]
+ignore_imports = [
+    # v186 nabız telemetrisi (2026-08-04): iki kenar da fonksiyon-İÇİ geç-import + istisna-yutmalı
+    # İLERLEME NABZI — loop._nabiz (l.637) ve data._nabiz (l.83) yalnız scheduler.nabiz'ı çağırır
+    # (hüküm/kısma/sahiplik zamanlayıcıda). Çalışma-zamanı kadans yönü DEĞİŞMEZ; lint statik
+    # sayımda fonksiyon-içini kenar sayar. BORÇ: NABIZ_HOOK enjeksiyonu (sözleşme-1 kaydıyla aynı).
+    "meridian.loop -> meridian.scheduler",
+    "meridian.adapters.data -> meridian.scheduler",
+]
 
 # Deterministik karar çekirdeği: motorun LLM'siz, defter-yazmayan, saf hesap katmanı. Bu zincirin
 # döngüsüz kalması sözleşmenin en değerli parçası — bir gün `indicators` `strategy`yi import
@@ -204,9 +212,16 @@ layers = [
     "meridian.indicators",
 ]
 ignore_imports = [
-    # v186 nabız telemetrisi (2026-08-04): strategy→earnings→data→SCHEDULER→loop→backtest dolaylı
-    # zinciri yalnız bu kenar üzerinden kuruluyor; kenar fonksiyon-içi geç-import + istisna-yutmalı
-    # İLERLEME NABZIDIR (veri/karar akışı değil). Gerekçe ve borç-yönü sözleşme-1'deki aynı kayıtta.
+    # v187 D2-ratchet (2026-08-04): `broker.beyan_olcusu` (l.276) fonksiyon-İÇİ geç-import ile
+    # `sermaye.resetler`i okur — kayıtları okuyan TEK yer, ÖLÇÜ-okumasıdır (karar/veri akışı değil;
+    # ratchet kapısının iki yazım-kaynağını aynı fonksiyonla kıyaslaması için). Bu kenar olmadan
+    # strategy→earnings→data→alpaca→broker→sermaye→watchdog→hermes_runtime→reflect→backtest dolaylı
+    # zinciri kurulmuyor (öbür halkalar bu dalgadan önce de vardı ve tek başlarına zinciri kapatmaz).
+    # BORÇ/refactor yönü: beyan-ölçüsü sermaye modülüne iner, broker onu çağırır (yön düzelir).
+    "meridian.broker -> meridian.sermaye",
+    # v186 nabız (aynı gün): İKİNCİ paralel zincir strategy→earnings→data→SCHEDULER→loop→backtest —
+    # aynı telemetri-kenarı (data._nabiz l.83, fonksiyon-içi, istisna-yutmalı); gerekçe/borç
+    # sözleşme-1 ve kadans-sözleşmesindeki kayıtlarla AYNI (NABIZ_HOOK enjeksiyonu).
     "meridian.adapters.data -> meridian.scheduler",
 ]
 
