@@ -215,6 +215,30 @@ def test_dormant_kurulumlarin_hepsi_yine_terminal_alir(monkeypatch):
         assert out["measurements"].get(s, {}).get("status")
 
 
+def test_aday_walki_incumbentin_onbellegine_DUSMEZ(monkeypatch):
+    """v189 aday walk'ını da `_wf_cached`e taşıdı. RİSK: anahtar `entry.armed_extra`yı ayırmazsa
+    aday, incumbent'ın önbelleğinden servis edilir ve kapı SONSUZA KADAR "fark yok" der (sessiz
+    ölü kapı). Bu çivi tam o çökmeyi ölçer."""
+    from meridian import reflect as R, dataset
+    monkeypatch.setattr(dataset, "load", lambda **k: ({}, None))   # ağa çıkma (index=None dalı)
+    gorulen: list = []
+
+    def _wf(params, *a, **k):
+        gorulen.append(tuple(params.get("entry.armed_extra") or ()))
+        return {"oos_score": 0.3 if params.get("entry.armed_extra") else 0.1,
+                "oos_folds": [], "params": dict(params)}
+
+    monkeypatch.setattr(R.backtest, "walk_forward", _wf)
+    monkeypatch.setattr(R, "_gate_eval",
+                        lambda inc, cand, k_probes=1: (False, {"search_p": 0.4,
+                                                               "incumbent_oos": inc["oos_score"],
+                                                               "candidate_oos": cand["oos_score"],
+                                                               "fold_wins": "1/3"}, "P düşük"))
+    res = arming._measure("momentum_burst", bars={}, index=None)
+    assert gorulen == [(), ("momentum_burst",)], f"iki AYRI walk beklenirdi, görülen: {gorulen}"
+    assert res["incumbent_oos"] == 0.1 and res["candidate_oos"] == 0.3
+
+
 # ---------------- 3. ÇİVİ: hızlı yol bit-bit ---------------------------------------------------
 def test_tavan_icinde_biten_olcum_eski_davranisla_bit_bit(monkeypatch):
     _tek_uyuyan(monkeypatch)

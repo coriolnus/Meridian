@@ -1339,15 +1339,15 @@ RENDER.genel = async () => {
   //         arıyordu. Olay günde BİR yazılır; gün içindeki poll/uyarı satırları onu pencereden
   //         taşırınca kart "ölçülemedi" diyordu — oysa döngü koşmuştu. Ölçüm değil PENCERE
   //         bozuktu. Kayıt yoksa hâlâ uydurma yok: sunucunun yazdığı NEDEN basılır.
-  const sd = t.son_dongu || null;
-  const geceGovde = (sd && sd.var)
-    ? `<span class="gb-say">${esc(String(sd.date || "—"))}</span>
-       <p class="gb-alt"><b>${sd.candidates ?? "—"}</b> aday · <b>${sd.plans ?? "—"}</b> plan ·
-         <b>${sd.armed ?? "—"}</b> silahlı${sd.regime ? ` · ${esc(REGIME_TR[sd.regime] || sd.regime)}` : ""}</p>
-       <p class="gb-alt">${sd.yas_saat == null ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
-           : `${trn(sd.yas_saat, 1)} saat önce`}${sd.data_ok === false ? ' · <span class="warn">veri kapısı kapalıydı</span>' : ""}</p>`
+  const sonDongu = t.son_dongu || null;
+  const geceGovde = (sonDongu && sonDongu.var)
+    ? `<span class="gb-say">${esc(String(sonDongu.date || "—"))}</span>
+       <p class="gb-alt"><b>${sonDongu.candidates ?? "—"}</b> aday · <b>${sonDongu.plans ?? "—"}</b> plan ·
+         <b>${sonDongu.armed ?? "—"}</b> silahlı${sonDongu.regime ? ` · ${esc(REGIME_TR[sonDongu.regime] || sonDongu.regime)}` : ""}</p>
+       <p class="gb-alt">${sonDongu.yas_saat == null ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
+           : `${trn(sonDongu.yas_saat, 1)} saat önce`}${sonDongu.data_ok === false ? ' · <span class="warn">veri kapısı kapalıydı</span>' : ""}</p>`
     : `<span class="gb-say mut">—</span>
-       <p class="gb-alt">${esc((sd && sd.neden) || "günlük döngü özeti uçtan gelmedi — ölçülemedi.")}</p>`;
+       <p class="gb-alt">${esc((sonDongu && sonDongu.neden) || "günlük döngü özeti uçtan gelmedi — ölçülemedi.")}</p>`;
 
   // ---- 2) SERMAYENİN KÖKENİ — mevcut `sermayeKokenSatiri` yeniden kullanılır (ÖZET biçim).
   //         İkinci bir metin kurulsaydı biri güncellenip diğeri bayatlardı.

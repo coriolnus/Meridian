@@ -149,7 +149,13 @@ _DURABLE = ("last_refetch_session", "refetch_attempts", "last_processed", "last_
             # damga tutmak, üçünün ayrı ayrı kaydığı bir dünya varmış gibi yapmak olurdu.
             # `shadowlaw_drift` son ÖLÇÜMÜ taşır: yeniden başlatmada kaybolursa pano "hiç ölçülmedi"
             # der ve bir sonraki haftaya kadar öyle kalırdı (2000 replikasyon boşuna yanardı).
-            "y4_session", "last_y4", "validation_week", "shadowlaw_drift")
+            "y4_session", "last_y4", "validation_week", "shadowlaw_drift",
+            # ARMING + HAFTALIK KADANS DAMGALARI (2026-08-06, v189 teşhisi) — AYNI SINIF: bunlar
+            # kalıcı olmayınca her yeniden başlatma 27-100 dk'lık arming walk'ını ve haftalık
+            # öz-değerlendirme zincirini BAŞTAN tetikliyordu (canlı kanıt: 07-27/07-29 çift
+            # arming_measured; 08-05/06 iki gece süren ölç→öl→yeniden-ölç kilidi).
+            "arming_week", "selfreview_week", "orphan_sweep_week", "nous_eval_week",
+            "revision_week")
 
 # ---- SON TARİHLİ YENİDEN-DENEME MERDİVENİ (2026-07-30) -------------------------------------------
 # ESKİ YASA: 8 deneme × 300 sn = 40 dakika, sonra seans KALICI atlanır ve "SEANS ATLANDI" alarmı

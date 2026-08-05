@@ -147,17 +147,24 @@ def _eval_regime_of(variable: str) -> str | None:
 # ---- v189 (2026-08-05): ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
 # ÖLÇÜLEN VAKA (canlı A1, 2026-08-04/05, py-spy): EOD döngüsü iki gece üst üste BİTMEDİ; yığın
 # `scheduler.advance_once → arming.evaluate → _measure → _wf_cached → backtest.walk_forward →
-# replay → scan_entry` içinde AKTİF dönüyordu. Aşağıdaki üç kusur o yolun üzerindedir ve ÜÇÜ DE
-# birbirinden bağımsızdır (biri kapansa diğerleri kalırdı):
+# replay → scan_entry` içinde AKTİF dönüyordu.
+#
+# ASILMANIN KÖK NEDENİ BU DOSYADA DEĞİL (dürüstlük şartı): ölçüm MEŞRU-uzundu (canlıda 27-100 dk;
+# bkz. `arming.py` başlığındaki ölçüm dökümü), yol nabız atmıyordu ve bekçi turu 45 dk'da
+# öldürüyordu. Kilit `arming.py`deki SÜRE TAVANIYLA kırıldı. Aşağıdaki üç kusur o yolun ÜZERİNDE
+# bulundu ve üçü de bağımsızdır; (a) bir DOĞRULUK açığıdır (hız değil), (b) ve (c) ise tavanın
+# getirdiği arka-plan ipliğinin AÇTIĞI yeni yarışları kapatır.
 #
 #   (a) ANAHTAR YASAYI TAŞIMIYORDU. Anahtar (sürüm, paramlar, rejim-tablosu, pencere, eval_regime)
 #       idi — `goal` YOKTU. 2026-08-03'te operatör `execution_v2`yi değiştirdi (limit
-#       min(0,5·ATR,%1) → min(100·ATR,%4)) ve o andan itibaren diskteki (`inc_cache.json`) ESKİ
-#       yasayla yürünmüş bir incumbent, YENİ yasayla yürünen bir adayın karşısına çıkabilir hâle
-#       geldi. Bu, `windows` ve `eval_regime`in anahtara eklenmesini gerektiren elma-armut
-#       kusurunun BİREBİR aynısıdır; yalnız değişkeni farklıdır ve bu kez değişkeni OPERATÖR
-#       değiştiriyor. Yasanın parmak izi artık anahtarın parçası: yasa değişince önbellek İSKA
-#       verir (bir kereye mahsus yeniden hesap) ve iki taraf ASLA farklı yasayla kıyaslanmaz.
+#       min(0,5·ATR,%1) → min(100·ATR,%4)) ve ÖLÇÜLDÜ ki bu yasa dolum sayısını da skoru da
+#       değiştiriyor (aynı pencerede 157 vs 147 işlem, OOS 0,0572 vs 0,0221). Anahtarda yasa
+#       olmayınca ESKİ yasayla yürünmüş bir incumbent'ın YENİ yasadaki bir kıyasa girmesini
+#       ENGELLEYEN hiçbir şey yoktu. Açığın ÖMRÜ: süreç-içi `_INC_CACHE` süreç boyu yaşar; diskteki
+#       `inc_cache.json` ise bir sonraki `clear_wf_caches`e (taze poll) kadar. Yani pencere dardı
+#       ama SIFIR değildi — ve `windows`/`eval_regime`in anahtara eklenmesini gerektiren elma-armut
+#       kusurunun BİREBİR aynısı, bu kez değişkeni OPERATÖR değiştiriyor. Yasanın parmak izi artık
+#       anahtarın parçası: yasa değişince önbellek İSKA verir (bir kereye mahsus yeniden hesap).
 #       TUR-İÇİ PAYLAŞIM BOZULMAZ: yasa bir tur boyunca sabittir (`config.goal()` lru-önbellekli,
 #       dosya değişmez), yani aynı turdaki tekrar çağrılar AYNI anahtara düşer — tek hesap.
 #
@@ -205,7 +212,12 @@ def _wf_rev() -> int:
 def _yasa_parmak(goal: dict) -> str:
     """DEĞİŞMEZ sözleşmenin (goal.yaml) parmak izi. TÜM sözlük hash'lenir, seçilmiş alanlar DEĞİL:
     "replay'i hangi anahtar etkiler" diye bir liste tutmak, bir gün eklenecek yeni bir icra
-    düğmesinde sessizce yanılırdı — bugün kapatılan kusur zaten TAM O SINIFTAN."""
+    düğmesinde sessizce yanılırdı — bugün kapatılan kusur zaten TAM O SINIFTAN.
+
+    KARDEŞ KALEM, BU TURDA AÇILMADI (brief kapsamı `_wf_cached`ti): `_probe_key` (sprint sonda
+    önbelleği, `_PROBE_CACHE`) yasa parmak izini HÂLÂ taşımıyor — aynı sınıf açıklık, farklı
+    önbellek. Kapatılması `_PROBE_CACHE`in diskteki sürümünü de geçersizleştirir, o yüzden ayrı
+    bir hüküm ister (Rol-1)."""
     try:
         ham = json.dumps(goal or {}, sort_keys=True, default=str)
     except Exception as e:
@@ -229,17 +241,30 @@ def _param_parmak(params: dict) -> tuple:
     return tuple(out)
 
 
+def _wf_key(params: dict, version: int, goal: dict, by_regime: dict | None,
+            w: tuple, eval_regime: str | None) -> str:
+    """İncumbent önbellek anahtarı — TEK KAYNAK.
+
+    window IS part of the cache key — otherwise a sprint incumbent walked on shifted windows would
+    collide with a production incumbent walked on dataset.* (the judge-found apples-to-oranges bug).
+    eval_regime is ALSO part of the key: a regime-sliced incumbent score must never collide with the
+    global incumbent score (same params, different grading population — same class of bug).
+    goal (yasa) parmak izi AYNI GEREKÇEYLE anahtarın parçası — bkz. yukarıdaki (a).
+
+    FONKSİYON OLMASININ SEBEBİ ÖLÇÜLDÜ (2026-08-05): `prefill_incumbents` bu ifadenin ELLE
+    yazılmış bir KOPYASINI taşıyordu ve anahtar burada değişince kopya sessizce ıskalamaya başladı
+    (test `test_prefill_incumbents_...` kırmızı döndü: "hepsi önbellekte" iddiası 3 hesap saydı).
+    Aynı yasanın iki uygulaması deseninin bu depodaki N'inci vakası — kopya SİLİNDİ, iki çağıran
+    da buradan okur."""
+    return repr((version, _param_parmak(params),
+                 json.dumps(by_regime or {}, sort_keys=True), tuple(w[:4]) + (tuple(w[4]), w[5]),
+                 eval_regime, _yasa_parmak(goal)))
+
+
 def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: dict | None = None,
                windows: tuple | None = None, eval_regime: str | None = None) -> dict:
     w = windows or _default_windows()
-    # window IS part of the cache key — otherwise a sprint incumbent walked on shifted windows would
-    # collide with a production incumbent walked on dataset.* (the judge-found apples-to-oranges bug).
-    # eval_regime is ALSO part of the key: a regime-sliced incumbent score must never collide with the
-    # global incumbent score (same params, different grading population — same class of bug).
-    # goal (yasa) parmak izi AYNI GEREKÇEYLE anahtarın parçası — bkz. yukarıdaki (a).
-    key = repr((version, _param_parmak(params),
-                json.dumps(by_regime or {}, sort_keys=True), tuple(w[:4]) + (tuple(w[4]), w[5]),
-                eval_regime, _yasa_parmak(goal)))
+    key = _wf_key(params, version, goal, by_regime, w, eval_regime)
     _inc_disk_load()
     if key in _INC_CACHE:
         return _INC_CACHE[key]
@@ -1283,9 +1308,7 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
     _inc_disk_load()
     missing = []
     for er in variants:
-        key = repr((version, tuple(sorted((k, round(float(x), 6)) for k, x in params.items())),
-                    json.dumps(by_regime or {}, sort_keys=True),
-                    tuple(w[:4]) + (tuple(w[4]), w[5]), er))
+        key = _wf_key(params, version, goal, by_regime, w, er)   # TEK KAYNAK (bkz. `_wf_key`)
         (missing.append((key, er)) if key not in _INC_CACHE else None)
         cached += 1 if key in _INC_CACHE else 0
     if missing and os.environ.get("MERIDIAN_PARALLEL_PROBES") == "1" and len(missing) > 1:

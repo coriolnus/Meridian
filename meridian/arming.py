@@ -33,8 +33,21 @@ MIN_CF_AVG_R = 0.0         # ve cf ortalama R'si pozitif olmalı (negatif kanıt
 #     2026-07-23  31,0 dk · 2026-07-27  32,1 dk ve 66,0 dk · 2026-07-28  29,7 dk · 2026-07-29
 #     27,2 dk ve 27,3 dk   →  ve `deploy/oracle-a1/tick_watchdog.sh` başlığındaki iki ölçülmüş
 #     pencere (2026-07-31): 100,3 dk ve 84,6 dk, İKİSİ DE aynı iki olay arasında.
-# Yani bir arming turu (incumbent walk + aday walk) canlıda 27-100 DAKİKA sürüyor. Bu ölçümde
-# yerel doğrulama da var: tek `walk_forward` (2022-01-01→2026-07-30, 251 sembol) bu depoda ~10 dk.
+# Yani bir arming turu (incumbent walk + aday walk) canlıda 27-100 DAKİKA sürüyor. Yerel doğrulama:
+# tek `walk_forward` (2022-01-01→2026-07-30, 251 sembol, bu depo) 12,1 dk — tur = İKİ walk.
+#
+# İKİ HİPOTEZ ÖLÇÜLDÜ VE İKİSİ DE YANLIŞLANDI (kayda geçsin ki bir dahaki tur onları tekrar
+# kovalamasın):
+#   * "2026-08-03 icra yasası (limit min(0,5·ATR,%1) → min(100·ATR,%4)) replay'i AĞIRLAŞTIRDI":
+#     HAYIR, HAFİFLETTİ. Aynı pencerede yeni yasa 727,5 sn / 157 işlem / 148.771 `scan_entry`;
+#     eski yasa 1116,2 sn / 147 işlem / 152.848 `scan_entry`. Mekanizma: daha çok dolum → portföy
+#     daha sık dolu → `slots == 0` → o seans TARAMA HİÇ KOŞMUYOR. Yasa turu %35 KISALTTI.
+#     (Yan bulgu, kapı kararı DEĞİL: aynı koşumda OOS skor 0,0221 → 0,0572.)
+#   * "`_wf_cached` anahtarı goal/yasa özetini içerdiği için her çağrı önbellek ISKASI": HAYIR,
+#     anahtar yasayı HİÇ içermiyordu. Gerçek kusur tersiydi ve DOĞRULUK kusuruydu (bkz. reflect.py
+#     v189 bloğu (a)). Önbellek ıskasının GERÇEK sebebi başkaydı: ADAY walk'ı `_wf_cached`e hiç
+#     uğramıyordu (anahtar kurucusu `entry.armed_extra` listesinde TypeError fırlatırdı), yani
+#     turun yarısı her seferinde sıfırdan hesaplanıyordu.
 #
 # ÜÇ GERÇEĞİN KESİŞİMİ ASILMAYI ÜRETİYORDU (2026-08-04/05, iki gece üst üste EOD döngüsü bitmedi):
 #   1. Bu yol NABIZ ATMIYOR — `scheduler.nabiz` çağrısı yok, yani asılı-tick bekçisi (2700 sn,
