@@ -2003,6 +2003,84 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
     }
 
 
+# =============================================================================================
+# GÖLGE-FİT GÖRÜNÜRLÜĞÜ (v192, 2026-08-06 — operatör: "pano antrenman hiç koşmamış diyor")
+# =============================================================================================
+# ÖLÇÜLEN KUSUR BİR YALAN DEĞİL, BİR BİTİŞİKLİK KAZASI. Panonun kırmızı "HİÇ KOŞMADI" rozeti
+# `ogrenme.nabiz.shadow_fit`ten gelir ve o nabız `shadow_model.json:fit_attempt_ts`i ölçer —
+# damgayı YALNIZ `shadow_model.maybe_refit()` (zamanlayıcının seans-sonrası KADANSI) yazar.
+# Oysa canlıda fit'i atan taraf `refit_and_save()`tir (loop'un P5_LEARN kolu) ve o, deneme
+# damgasına HİÇ dokunmaz. Sonuç: kadans gerçekten hiç koşmamıştır (rozet DOĞRU), ama yanında
+# duran model taptazedir (canlı: 2026-08-05T22:10, n=2217, brier_train 0,2428) — ve kart bunu
+# hiçbir yerde YAZMAZ. Operatör iki cümleyi tek cümle sanıp "antrenman ölmüş" okur.
+#
+# BU BLOK ÜÇÜNCÜ BİR GERÇEK ÜRETMEZ, VAR OLANI GÖRÜNÜR KILAR: `training_status()` zaten
+# `son_fit_ts` (fit_ts ya da `_kaynak.generated`), `n_fit`, `brier_train` ve `terfi` demetini
+# taşıyordu; okuyucusu yoktu (YASA 6 borcu). Eklenen tek YENİ şey terfi HÜKMÜNÜN NEDENİdir ve o
+# da uydurulmaz: kuraklığın sınıfı `sieve` defterinin `shadow_model.terfi` aşamasından — yani
+# ölçümün kendisinden — okunur.
+_TERFI_ASAMA = "shadow_model.terfi"
+
+
+def _terfi_hukmu(terfi: dict | None, sieve_rep: dict | None) -> dict:
+    """Terfi neden oldu/olmadı — ÖLÇÜLMÜŞ neden, tahmin değil.
+
+    UYDURMA YASAĞI: ölçülemeyen hâl `karar="ÖLÇÜLEMEDİ"`dir, `"HAYIR"` DEĞİL. İkisi operatör için
+    bambaşka eylemlerdir: "hayır" modelin tabanı yenemediğini söyler (bilgi), "ölçülemedi" kıyas
+    verisinin hiç birikmediğini söyler (kuraklık — beklenecek şey var)."""
+    t = terfi or {}
+    n_live, esik = t.get("n_live"), t.get("promote_min_n")
+    live, taban = t.get("live_brier"), t.get("baseline_brier")
+    if t.get("promoted"):
+        return {"karar": "EVET", "sinif": "terfi_etti",
+                "neden": f"canlı Brier {live} < taban {taban} ({n_live} taze çiftte)"}
+    # Elenme sınıfı ÖLÇÜMDEN: `shadow_model.terfi` aşaması kaç satır aldı, kaçını neden düşürdü.
+    asama = ((sieve_rep or {}).get("stages") or {}).get(_TERFI_ASAMA) or {}
+    drops = asama.get("drops") or {}
+    en_cok = max(drops.items(), key=lambda kv: kv[1])[0] if drops else None
+    elenme = (f" · eleme defteri: {asama.get('in')} işlem girdi, {asama.get('out')} çift çıktı"
+              f"{f' (en çok: {en_cok})' if en_cok else ''}") if asama else ""
+    if live is None:
+        if n_live in (0, None):
+            return {"karar": "ÖLÇÜLEMEDİ", "sinif": "ornek_kurakligi",
+                    "neden": ("live_brier ÖLÇÜLEMEDİ — canlı kıyas çifti birikmedi: gölge tahmini "
+                              "damgalı bir plan henüz kapanmış bir işleme dönüşmedi" + elenme)}
+        return {"karar": "ÖLÇÜLEMEDİ", "sinif": "brier_olculemedi",
+                "neden": f"live_brier ölçülemedi ({n_live} çift var ama Brier hesaplanamadı)" + elenme}
+    if esik is not None and (n_live or 0) < esik:
+        return {"karar": "HAYIR", "sinif": "esik_dolmadi",
+                "neden": f"canlı çift {n_live}/{esik} — terfi eşiği dolmadı" + elenme}
+    if taban is None:
+        return {"karar": "ÖLÇÜLEMEDİ", "sinif": "taban_olculemedi",
+                "neden": "taban-oran Brier'i ölçülemedi — kıyas yapılamaz" + elenme}
+    return {"karar": "HAYIR", "sinif": "tabani_yenemedi",
+            "neden": f"canlı Brier {live} ≥ taban-oran Brier {taban} — model tabanı yenemedi "
+                     f"({n_live} taze çift)"}
+
+
+def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
+    """`analytics.learning_automation()` yükünü DÜRÜSTLÜK alanlarıyla zenginleştirir.
+
+    `nabiz.shadow_fit` KALDIRILMAZ (kadansın gerçekten koşmadığı doğrudur ve o borç ayrı bir turun
+    işidir — kanca `scheduler`da ve bu turun kalemi değil); yanına, aynı karta, MODELİN son fiili
+    fit'i konur. İki gerçek yan yana durduğunda operatör hangisinin ne olduğunu okuyabilir."""
+    out = dict(ogr or {})
+    an2 = out.get("antrenman") or {}
+    hukum = _terfi_hukmu(an2.get("terfi"), sieve_rep)
+    out["son_fit"] = {
+        "ts": an2.get("son_fit_ts"),
+        "n": an2.get("n_fit"), "n_real": an2.get("n_real"), "n_cf": an2.get("n_cf"),
+        "brier_train": an2.get("brier_train"),
+        "terfi": hukum,
+        # KADANS ≠ FİT: rozetin neyi ölçtüğü kartın kendi üstünde yazsın, dipnotta değil.
+        "beyan": ("`son_fit` MODELİN son fiilen kurulduğu andır (yazan: shadow_model.refit_and_save, "
+                  "çağıran loop.P5_LEARN). Kadans nabzındaki `antrenman kadansı` satırı ise "
+                  "zamanlayıcının seans-sonrası kancasını (maybe_refit) ölçer — ikisi AYRI "
+                  "mekanizmadır ve biri koşmadan diğeri koşabilir."),
+    }
+    return out
+
+
 # ---- /api/diagnostics KISA ÖMÜRLÜ YANIT ÖNBELLEĞİ (v181, 2026-08-03) -------------------------
 # CANLI ŞİKÂYET: "pano çok yavaşlamış" — ölçüm: bu uç 8,8-10,4 sn. Kökün ikinci yarısı: uç,
 # panonun HER anketinde ~60 üreticiyi (yedi bütünlük dedektörü, blok-bootstrap CI'lar, 61 JSONL +
@@ -2269,6 +2347,10 @@ def api_diagnostics(request: Request, taze: int = 0):
     # LİTERAL yazılır, `codelaw.artifact_graph` statik graf olduğu için sabitten türetilen adı
     # çözemez ve artefakt "okuyucusu yok" diye görünürdü.
     _vrep = store.read_json("validation_report.json", None)
+    # ELEME DEFTERİ TEK KEZ (v192): hem `sieve` satırı hem `ogrenme.son_fit`in terfi hükmü okuyor.
+    # İki çağrı iki okuma anı demektir ve aynı yanıtta "0 çift çıktı" ile "3 çift çıktı" gibi iki
+    # farklı gerçek doğabilirdi (`_wd_rep` ile bire bir aynı gerekçe, WP-P/P1).
+    _sieve_rep = __import__("meridian.sieve", fromlist=["report"]).report()
     # `_diag_onbellege_yaz`: taze yükü damgalar (hesaplama_ts + onbellekten=False) ve kutuya koyar.
     # SARMALAYICI RETURN'ÜN İÇİNDE: gövde fırlarsa hiçbir şey önbelleğe girmez — yarım/hatalı bir
     # teşhis 45 saniye boyunca servis edilemez.
@@ -2305,7 +2387,12 @@ def api_diagnostics(request: Request, taze: int = 0):
         # Neden mlops'un içinde DEĞİL: mlops kalibrasyon ÇIKTILARINI taşır (Brier, IC, kapı çanı);
         # burası o çıktıları ÜRETEN kadansların sağlığıdır. İkisini karıştırmak, "ölçüm kötü" ile
         # "ölçüm hiç koşmadı"yı aynı karta koymak olurdu — bu turun bulduğu kusurun ta kendisi.
-        "ogrenme": an.learning_automation(),
+        # `son_fit` zenginleştirmesi v192: kadans nabzı ile MODELİN son fiili fit'i AYRI iki
+        # gerçektir; kart ikisini yan yana göstermezse "antrenman hiç koşmamış" okunur (operatör
+        # şikâyeti 2026-08-06). Zenginleştirme YENİ ÖLÇÜM ÜRETMEZ — `training_status`ın okuyucusuz
+        # duran alanlarını (son_fit_ts/n_fit/brier_train) taşır ve terfi hükmünün NEDENİNİ eleme
+        # defterinden (sieve) okur.
+        "ogrenme": _ogrenme_blogu(an.learning_automation(), _sieve_rep),
         "gatekeeper": {"date": last_plan_date, "plans": gk_plans,
                        "arming": store.read_json("arming_report.json", {})},
         "reconcile": {"date": rc.get("date"), "api_ok": rc.get("api_ok"),
@@ -2579,7 +2666,7 @@ def api_diagnostics(request: Request, taze: int = 0):
         "ledger_contract": __import__("meridian.ledgers", fromlist=["report"]).report(),
         # ELEME MUHASEBESİ: "veri yok" ile "veri elendi" ayrı şeylerdir. Hangi satırın NEDEN
         # düştüğü sayılmazsa, sessiz eleme ekranda "henüz kanıt birikmedi" gibi okunur.
-        "sieve": __import__("meridian.sieve", fromlist=["report"]).report()})
+        "sieve": _sieve_rep})                 # tek okuma anı (v192) — yukarıda hesaplandı
 
 
 # ---------- Hermes (the reflection brain) ----------

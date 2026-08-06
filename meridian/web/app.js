@@ -4913,7 +4913,12 @@ async function opParcalar() {
     const o = d.ogrenme || null;
     if (!o) return "";
     const nb = o.nabiz || {}, an2 = o.antrenman || {}, kq = o.dolgu_kuyrugu, ex = o.eksen2;
-    const NABIZ_TR = { shadow_fit: "antrenman (gölge model fit)", axis2_cycle: "Eksen-2 üreteci",
+    // ETİKET v192'DE DÜZELTİLDİ (operatör: "pano antrenman hiç koşmamış diyor"). Bu satır MODELİN
+    // fit'ini DEĞİL, zamanlayıcının seans-sonrası KADANSINI (shadow_model.maybe_refit) ölçer.
+    // Eski etiket "antrenman (gölge model fit)" ikisini tek şey sanmaya davet ediyordu; canlıda
+    // kadans hiç koşmamışken model tazeydi ve kart bunu hiçbir yerde yazmıyordu. Fiilî fit artık
+    // ayrı bir satırda (`Son fit`, aşağıda) ve tarihiyle duruyor.
+    const NABIZ_TR = { shadow_fit: "antrenman KADANSI (seans-sonrası kanca)", axis2_cycle: "Eksen-2 üreteci",
                        opinion_backfill: "kanıt dolgusu kadansı" };
     const nabizRows = Object.entries(nb).map(([k, v]) => {
       const [lbl, kls] = v.hic_kosmadi ? ["HİÇ KOŞMADI", "t-no"]
@@ -4925,6 +4930,26 @@ async function opParcalar() {
         ${_chip(lbl, kls)}</div>`;
     }).join("");
     const terfi = an2.terfi || {};
+    // ---- SON FİT (v192) ----------------------------------------------------------------------
+    // Kartın en yüksek sesli satırı kadansın kırmızı "HİÇ KOŞMADI" rozetiydi ve yanında modelin
+    // TAZE olduğunu söyleyen tek bir satır yoktu. Bu satır o boşluğu kapatır: fit'in ANI, örneklem,
+    // eğitim Brier'i ve terfi HÜKMÜ + NEDENİ. Hüküm üç değerlidir (EVET / HAYIR / ÖLÇÜLEMEDİ):
+    // "hayır" tabanı yenememektir, "ölçülemedi" kıyas verisinin hiç birikmemesidir — operatörün
+    // eylemi ikisinde farklıdır, aynı kelimeyle yazılamaz.
+    const sonFitRow = (() => {
+      const sf = o.son_fit;
+      if (!sf) return "";
+      const hk = sf.terfi || {};
+      if (!sf.ts && sf.n == null)
+        return `<div class="srow"><span>Son fit</span><b class="warn">model hiç kurulmadı — fit kaydı YOK</b></div>`;
+      const karar = hk.karar === "EVET" ? '<span class="pos">EVET</span>'
+        : (hk.karar === "HAYIR" ? '<span class="warn">HAYIR</span>' : '<span class="mut">ÖLÇÜLEMEDİ</span>');
+      return `<div class="srow"><span>Son fit</span><b>${
+        sf.ts ? esc(String(sf.ts).replace("T", " ").slice(0, 16)) : '<span class="mut">tarih yok</span>'
+        } · n ${sf.n ?? "—"}${sf.n_real != null ? ` (gerçek ${sf.n_real} · cf ${sf.n_cf ?? 0})` : ""}${
+        sf.brier_train != null ? ` · Brier ${trn(sf.brier_train, 4)}` : ""} · terfi: ${karar}</b></div>
+        ${hk.neden ? `<p class="hint" style="margin-top:-4px">Terfi gerekçesi: ${esc(hk.neden)}</p>` : ""}`;
+    })();
     return `<div class="card rise"><h2 class="t">Öğrenme beslemesi <span class="tx3" style="font-weight:400">(kadansların sağlığı — çıktıları Bölüm 3'te)</span></h2>
       <div class="srow"><span>Kadans</span><b class="${o.son_kosu ? "" : "warn"}">${esc(o.durum || "—")}${
         o.son_kosu ? ` · son seans ${esc(String(o.son_kosu.session || "—"))} · ${esc(String(o.son_kosu.ts || "").replace("T", " ").slice(0, 16))}` : ""}</b></div>
@@ -4933,6 +4958,7 @@ async function opParcalar() {
         an2.brier_train != null ? ` · Brier ${trn(an2.brier_train, 4)}` : ""}` : `kurulmadı — asgari ${an2.min_fit_n ?? "—"} satır ister`}${
         an2.veri_seti_taze === false ? ' · <span class="warn">veri seti DEĞİŞTİ, fit bayat</span>'
         : (an2.veri_seti_taze === true ? ' · <span class="pos">veri seti taze</span>' : ' · <span class="mut">tazelik ölçülmedi</span>')}</b></div>
+      ${sonFitRow}
       <div class="srow"><span>Terfi</span><b>${terfi.promoted ? '<span class="pos">TERFİ ETTİ</span>' : "terfi yok"} · canlı çift ${
         terfi.n_live ?? 0}/${terfi.promote_min_n ?? "—"}${terfi.live_brier != null ? ` · Brier canlı ${trn(terfi.live_brier, 4)} vs taban ${trn(terfi.baseline_brier, 4)}` : ""}</b></div>
       ${an2.son_atlama_nedeni ? `<div class="srow"><span>Son atlama</span><b class="mut">${esc(String(an2.son_atlama_nedeni))}</b></div>` : ""}
@@ -4950,7 +4976,8 @@ async function opParcalar() {
         ${Object.entries(ex.kovalar).sort((a, b) => b[1] - a[1])
           .map(([k, n]) => `${esc(KOVA_TR[k] || k)}: ${n}`).join(" · ")}</p>` : ""}`
        : `<div class="srow"><span>Eksen-2 üreteci</span><b class="warn">durum defteri yazılmamış — kadans HİÇ koşmadı</b></div>`}
-      ${nabizRows ? `<h3 class="t" style="margin-top:16px">Kadans nabzı</h3>${nabizRows}` : ""}
+      ${nabizRows ? `<h3 class="t" style="margin-top:16px">Kadans nabzı</h3>${nabizRows}${
+        (o.son_fit || {}).beyan ? `<p class="hint">${esc(o.son_fit.beyan)}</p>` : ""}` : ""}
       ${o.bekci_notu ? `<p class="hint"><b>Bekçi notu:</b> ${esc(o.bekci_notu)}</p>` : ""}</div>`;
   })();
 

@@ -110,6 +110,13 @@ def test_spend_owns_only_its_ledger(sandbox_state):
 def test_watchdog_owns_only_its_beat_and_alarm_files(sandbox_state):
     from meridian import watchdog as wd
     assert _writes("meridian/watchdog.py") <= {wd.BEATS_FILE, wd.ALARMED_FILE,
+                                               # v192 alarm hijyeni: mekanizma-başına GÜNLÜK alarm
+                                               # sayacı (tavan + bastırma + askıda). Mandalın (ALARMED)
+                                               # yanına AYRI dosya: mandal "şu an bayat olan" kümesidir
+                                               # ve her koşuda tamamen yeniden yazılır; gün sayacı ise
+                                               # birikimlidir — tek dosyada birleştirmek sayacı her
+                                               # toparlanmada sıfırlardı (çırpınma tam oradan geliyordu)
+                                               wd.ALARM_GUNLUK_FILE,
                                                "integrity_alarmed.json", "monotonic_state.json",
                                                "bars_fingerprint.json", "ownership_state.json",
                                                # meşru küçülmenin yazılı affı (2026-07-22): re-seed
