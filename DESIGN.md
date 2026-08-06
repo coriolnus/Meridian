@@ -384,6 +384,18 @@ it is shown** (table vs. card vs. matrix vs. sparkline vs. chip vs. nothing at a
 section structure is open with it. "It already ships" is not a reason to preserve a form, a
 placement, or an inclusion.
 
+**Direction (operator, 2026-08-06):** the interface should be **as user-friendly as it can be**,
+designed against what platforms in this category — autonomous / algorithmic trading agents under
+human supervision — actually offer. **No new capability is to be invented: every component and
+every piece of data the design needs already exists in the system.** The work is recombination
+(what is asked, where it is answered, in what form), not new plumbing.
+
+Calibration, stated because it is a real tension: user-friendly here does not mean
+consumer-friendly. The user is one expert on long shifts, so friendliness is measured as *fewer
+steps to the answer, no hunting, states that never lie, an obvious next action, and mistakes
+that are recoverable* — not as reduced density, tutorials, or decorative reassurance. Density
+that earns its keep stays; density that hides the answer does not.
+
 The consequence for method: the system is inventoried by **job**, not by widget. For each item
 the record is *what question the operator is asking · which data answers it · where it lives
 today · in what form · what that form measurably buys*. The redesign then re-maps jobs →
