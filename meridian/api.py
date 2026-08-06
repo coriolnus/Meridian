@@ -1058,7 +1058,24 @@ def api_today(request: Request):
     d["inbox_count"] = _inbox_count()
     # SON DÖNGÜ — olay penceresinden BAĞIMSIZ (v190; gerekçe `_son_dongu` başlığında).
     d["son_dongu"] = _son_dongu()
-    d["latest_session"] = (store.read_json("portfolio.json", {}) or {}).get("last_date")
+    _pf = store.read_json("portfolio.json", {}) or {}
+    d["latest_session"] = _pf.get("last_date")
+    # ---- KİTABIN ÜÇ ÖZET SAYISI (v191 · pano "Durum" kartı) -----------------------------------
+    # NEDEN YENİ ALAN: "Durum · KİTAP" kartı dört sayıyı yan yana istiyor — sermaye, nakit,
+    # GERÇEKLEŞMİŞ K/Z ve GÜN BAŞI tabanı. İlk ikisi zaten uçta (`equity`, `sermaye_koken.
+    # gercek_canli_sermaye`); son ikisi kitapta VAR ama hiçbir uçtan servis edilmiyordu, yani
+    # pano "gün X%" derken tabanı gösteremiyordu. `day_pnl_pct` bir ORAN; tabanı olmadan operatör
+    # "neyin yüzdesi" sorusunu ekrandan cevaplayamaz.
+    #
+    # TÜRETME YOK, KİTAPTAN OKUMA VAR: `day_start_equity`i `equity/(1+day_pnl_pct)` diye HESAPLAMAK
+    # ikinci bir taban yasası doğururdu (kitabınki ile panonunki aynı gün ayrışabilirdi — bu
+    # deponun `sermaye.koken` docstring'inde yazılı "iki hesap" kusuru). Alan yoksa None kalır ve
+    # kart "ölçülmedi" yazar; 0.0 yazmak "gün başında sermaye sıfırdı" demek olurdu.
+    # BEYAN OFSETİ BURADA TEKRARLANMAZ: `sermaye_koken.ofset_usd/ayrisik/reset_tarihi` onu zaten
+    # taşıyor ve aynı sayının iki alanı, ilk düzenlemede sessizce ayrışır.
+    d["kitap"] = {"realized_pnl": _pf.get("realized_pnl"),
+                  "day_start_equity": _pf.get("day_start_equity"),
+                  "peak_equity": _pf.get("peak_equity")}
     # GERÇEK-CANLI SAYAÇ (BT-1, 2026-07-31). Panonun bugüne kadar gösterdiği "95 kapanmış işlem"
     # sayısı bir KARIŞIMDI: gövdesi replay tohumu (tek toplu yazım, bugünkü evrenle, survivorship'li)
     # ve satırlarda kaynak damgası yoktu — yani operatör "sistem 95 işlem yaptı" cümlesini okuyor,

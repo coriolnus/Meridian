@@ -274,6 +274,10 @@ const T = (label, key, right) => `<span class="term${right ? ' r' : ''}" data-ti
 // Tek kapı: openDrawer({title, eyebrow, bodyHTML, originEl}). `title`/`eyebrow` HAZIR HTML'dir
 // (çağıran esc'ler); bodyHTML da öyle. Esc kapatır ve odak geldiği öğeye döner.
 let _drawerOrigin = null;
+// SEÇİLİ İŞARETİN TEK SEÇİCİSİ. Açılış ve kapanış aynı listeyi okumak ZORUNDA: v191'de dördüncü
+// bir tıklanabilir yüzey (durum kartı) doğdu ve liste iki yerde elle tutulsaydı kart `.sel`
+// sınıfını ÜSTÜNDE bırakırdı — çekmece kapalıyken hâlâ "seçili" görünen bir kart.
+const _SECILI = ".pm-cell.sel,.rowbtn.sel,.durum-kart.sel";
 function openDrawer({ title, eyebrow, bodyHTML, originEl }) {
   const dr = $("plotdrawer"); if (!dr) return;
   dr.innerHTML = `
@@ -292,7 +296,7 @@ function closeDrawer() {
   const dr = $("plotdrawer"); if (!dr || !dr.classList.contains("open")) return;
   dr.classList.remove("open");
   document.body.classList.remove("drawer-open");
-  document.querySelectorAll(".pm-cell.sel,.rowbtn.sel").forEach(el => el.classList.remove("sel"));
+  document.querySelectorAll(_SECILI).forEach(el => el.classList.remove("sel"));
   const o = _drawerOrigin; _drawerOrigin = null;
   if (o && document.contains(o)) o.focus();
 }
@@ -329,7 +333,7 @@ function openRecord(el) {
   const entry = _REC.get(el.dataset.rk); if (!entry) return;
   const build = RECORD_VIEW[entry.kind]; if (!build) return;
   const v = build(entry.o); if (!v) return;
-  document.querySelectorAll(".pm-cell.sel,.rowbtn.sel").forEach(x => x.classList.remove("sel"));
+  document.querySelectorAll(_SECILI).forEach(x => x.classList.remove("sel"));
   el.classList.add("sel");
   openDrawer({ eyebrow: v.eyebrow, title: v.title, bodyHTML: v.body, originEl: el });
   // İŞLEM ÇEKMECESİNİN FİYAT SEYRİ (K1, 2026-07-30): çekmece SENKRON kurulur (istemcinin elindeki
@@ -1197,7 +1201,13 @@ function alanSayfasi(id, bolumler) {
   return async () => {
     const kap = $("page-" + id);
     const bas = kap && kap.querySelector(".alan-bas");
-    if (bas) bas.innerHTML = alanBasHTML(id);
+    // DURUM IZGARASI (v191) BAŞLIĞIN ALTINA GİRER — Koşu & Döngü ile Portföy & Emirler'in
+    // çakışan "sistem şu an nerede?" cevabı TEK yerde toplanır (gerekçe: `DURUM_SAYFALARI`).
+    // KAP İD'SİZ VE SORGUYLA BULUNUR: iki sayfanın da `.alan-bas`ı kendi ızgarasını taşır ve
+    // ikisi de DOM'da AYNI ANDA durur (gizli sayfa silinmez). Sabit bir `id` olsaydı `$()`
+    // her zaman belge sırasındaki İLKİNİ (kosu) döndürür, Portföy'ün ızgarası hiç dolmazdı.
+    if (bas) bas.innerHTML = alanBasHTML(id) + (DURUM_SAYFALARI.has(id)
+      ? `<div class="durum-izgara-kap"><p class="durum-dus mut">durum okunuyor…</p></div>` : "");
     // KAYIT DEFTERİ SAYFA BAŞINA BİR KEZ SIFIRLANIR (S2R-2 · SESSİZ KIRILMA AVI).
     // `recReset()` açık çekmeceyi kapatır ve `_REC` haritasını SİLER. S2R-1'de üç render onu
     // kendi gövdesinin başında çağırıyordu (brifing/adaylar/ajan) ve üçü de kendi sayfasının
@@ -1207,6 +1217,9 @@ function alanSayfasi(id, bolumler) {
     // silerdi. Sonuç GÖRÜNMEZ bir kırılma olurdu — satırlar ekranda durur, tıklanır, çekmece
     // "kayıt bulunamadı" ile açılırdı. Sıfırlama artık sıradan BAĞIMSIZ: kabuğun kendi işi.
     recReset();
+    // IZGARA `recReset`TEN SONRA ÇİZİLİR: kartların çekmece anahtarları (`rec()`) sıfırlamadan
+    // ÖNCE yazılsaydı, kabuk onları hemen siler ve dört kart da "kayıt bulunamadı" ile açılırdı.
+    if (bas) await durumIzgarasiCiz(bas.querySelector(".durum-izgara-kap"));
     for (const ad of bolumler) {
       if (!RENDER[ad]) continue;
       try {
@@ -1455,6 +1468,201 @@ function gbAlarmSatiri(ab) {
     <span>duran <b>${ab.duran ?? "—"}</b> (tavan ${ab.tavan_duran ?? "—"})</span>
     <span>${ab.asim_var ? "▲ AŞIM" : "aşım yok"}</span>${bag}</div>`;
 }
+
+// ==============================================================================================
+// DURUM KART-IZGARASI (v191) — "Koşu & Döngü" ile "Portföy & Emirler" ÇAKIŞMASININ KAPANIŞI
+// ----------------------------------------------------------------------------------------------
+// OPERATÖR BULGUSU (2026-08-06): "Koşu & Döngü ile Portföy ve Emirler çakışıyor, benzer şeyleri
+// gösteriyorlar; kartlara bölüp tıklayınca detay." Ölçülebilir hâli şuydu — AYNI SAYI İKİ SAYFADA:
+//   sermaye + gün K/Z + pozisyon sayısı  → brifing kahramanı (portföy) ve kenar şeridi
+//   silahlı emir + ayna durumu           → brifing kahramanı (portföy) + nextSessionCard + mutabakat
+//   günün planları (GO/REVIEW/NO_GO)     → brifing "Son sinyaller" (portföy) ve adaylar (koşu)
+//   rejim bütçesi + satış günü/FTD       → brifing "Risk" (portföy) ve kapılar (koşu)
+// Yani iki sayfa da "sistem şu an nerede?" sorusuna KENDİ yarım cevabını veriyordu.
+//
+// KARAR: dört kart, TEK tanım, iki sayfanın da başında. Kartlar bir ÖZETTİR; kartın alanlarının
+// bugün iki bölüme dağılmış ayrıntısı ÇEKMECEye iner (matrisin/planın kullandığı `rec()` +
+// `RECORD_VIEW` mekanizması — yeni bileşen İCAT EDİLMEDİ, aynı klavye ve odak sözleşmesi).
+//
+// NEDEN YENİ BİR SAYFA / BÖLÜM DEĞİL: `VIEWS` (yedi alan sayfası) ve `ALAN_BOLUMLERI` (yirmi
+// bölüm) ADR eşlemesine BİREBİR çivilidir (test_s2r1_kabuk_v155, test_s2r2_goc_v156). Izgara bir
+// bölüm DEĞİL, sayfanın KENDİ başlığının altındaki özet bandıdır — Öğrenme'nin `#ogrenme-eylem`
+// şeridiyle aynı mertebe: kabı `.alan-bolum` taşımaz, kendi soru cümlesini kurmaz (sayfanın
+// sorusunun ÖZETİDİR, ayrı bir soru değil).
+//
+// TEK KAYNAK KURALI: bir sayı YALNIZ bir kartta durur. Sermaye ② KİTAP'ta, pozisyon sayısı
+// ④ POZİSYONLAR'da, silahlı emir ③ EMİRLER'de, gecenin aday/plan sayıları ① SON DÖNGÜ'de.
+// Aynı sayının ikinci kopyası bir "hiyerarşi" gibi okunur; yoktur.
+const DURUM_SAYFALARI = new Set(["kosu", "portfoy"]);
+// Kart sayısı bir TASARIM BÜTÇESİdir (Genel Bakış'ın altı kartıyla aynı gerekçe): beşincisi
+// ızgarayı tek satırdan taşırır ve "tek bakış" iddiasını sessizce yer. Liste veri, şablon değil —
+// test onu sayabiliyor.
+const DURUM_KARTLARI = [
+  ["dongu",    "Son döngü"],
+  ["kitap",    "Kitap"],
+  ["emir",     "Emirler · ayna"],
+  ["pozisyon", "Pozisyonlar"],
+];
+const _DURUM_AD = Object.fromEntries(DURUM_KARTLARI);
+// TEK ÇIKIŞ: `durum-kart` sınıfı YALNIZ burada üretilir. Kart bir `<button>`dır — Tab ile gezilir,
+// Enter/Space ile açılır (tarayıcının kendi düğme sözleşmesi; H23 deseninde ikinci bir tuş
+// dinleyicisi yazmaya gerek yok). Çekmece bağı `rowAttrs` ile kurulur: kayıt defteri, odak
+// dönüşü ve Esc davranışı planla/matrisle AYNI.
+function durumKartHTML(anahtar, kayitK, govde, { nokta = "", ipucu = "" } = {}) {
+  const ad = _DURUM_AD[anahtar];
+  if (!ad) return "";                    // kayıtsız anahtar sessizce düşer, uydurma kart doğmaz
+  return `<button class="durum-kart" data-durum="${esc(anahtar)}"
+    ${rowAttrs(kayitK, `${ad} — durum kaydını aç`)}>
+    <span class="t">${esc(ad)}${nokta
+      ? ` <span class="durum-nokta ${esc(nokta)}" title="${esc(ipucu)}" aria-label="${esc(ipucu)}" role="img"></span>` : ""}</span>
+    <span class="durum-govde">${govde}</span>
+    <span class="durum-ac" aria-hidden="true">detay →</span></button>`;
+}
+// ---- ① SON DÖNGÜ — gecenin KENDİ kaydı (`/api/today.son_dongu`, v190) ------------------------
+// Sayılar olay PENCERESİNDEN değil döngünün kendi satırından gelir; kayıt yoksa sunucunun yazdığı
+// NEDEN basılır ("sıfır aday" DEĞİL, "ölçülemedi").
+function _durumDonguKarti(t) {
+  const sd = t.son_dongu || null;
+  const k = rec("durumDongu", { sd, regime: t.regime || {}, vc: t.verdict_counts || {},
+                                halted: t.halted, planDate: t.todays_plan_date,
+                                latestSession: t.latest_session });
+  if (!sd || !sd.var) {
+    return durumKartHTML("dongu", k,
+      `<span class="durum-say mut">—</span>
+       <span class="durum-alt">${esc((sd && sd.neden)
+         || "günlük döngü özeti uçtan gelmedi — ölçülemedi (sıfır aday DEĞİL).")}</span>`);
+  }
+  const kapali = sd.data_ok === false;
+  return durumKartHTML("dongu", k,
+    `<span class="durum-say">${esc(String(sd.date || "—"))}</span>
+     <span class="durum-alt"><b>${sd.candidates ?? "—"}</b> aday · <b>${sd.plans ?? "—"}</b> plan ·
+       <b>${sd.armed ?? "—"}</b> silahlı</span>
+     <span class="durum-alt">${sd.yas_saat == null
+       ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
+       : `${trn(sd.yas_saat, 1)} saat önce`} · ${sd.regime
+       ? esc(REGIME_TR[sd.regime] || sd.regime) : "rejim kaydı yok"}</span>
+     ${kapali ? `<span class="durum-alt warn">veri kapısı kapalıydı — o gece yeni alım yok</span>` : ""}`,
+    kapali ? { nokta: "uyari", ipucu: "veri kapısı kapalıydı" } : {});
+}
+// ---- ② KİTAP — sermaye · nakit · gerçekleşmiş · gün başı (+ beyan-ofset rozeti) ---------------
+// BEYAN ROZETİ YALNIZ BEYAN VARSA: `sermaye_koken.ayrisik` false iken rozet HİÇ çizilmez —
+// "ofset 0" yazmak, hiç yapılmamış bir beyanı yapılmış gibi göstermek olurdu.
+//
+// "GERÇEKLEŞMİŞ" GERÇEK-CANLI K/Z'DİR, DEFTER TOPLAMI DEĞİL — ve bu bir düzeltme değil bir YASA
+// (meridian/sermaye.py'nin var oluş sebebi). Canlı ölçüm: `portfolio.realized_pnl` bugün
+// −5.542,09$ ve bu sayının TAMAMI antrenman tohumundan (replay_seed) geliyor; gerçek-canlı işlem
+// sayısı SIFIR. O toplamı karta kırmızı basmak, operatöre bir antrenman artefaktını "sistemin
+// kaybı" diye okutmak olurdu — `sermaye.koken` docstring'inin adını koyduğu kusurun ta kendisi.
+// Defter toplamı ÇEKMECEDE, tohum ayrıştırmasının yanında durur.
+function _durumKitapKarti(t, s) {
+  const kk = t.sermaye_koken || {}, kb = t.kitap || {};
+  const k = rec("durumKitap", { t, s });
+  const beyan = kk.ayrisik
+    ? `<span class="tag t-vi" title="Sermaye tabanı BEYANLI olarak taşındı (portfolio.sermaye_resetleri); ofset kitapta yazılıdır">beyan-ofset ${
+        money(kk.ofset_usd)}${kk.reset_tarihi ? ` · ${esc(String(kk.reset_tarihi).slice(0, 10))}` : ""}</span>`
+    : "";
+  return durumKartHTML("kitap", k,
+    `<span class="durum-say ${SERMAYE_RENK[kk.renk] || ""}">${money(t.equity)}</span>
+     <span class="durum-alt">nakit <b>${money(kk.gercek_canli_sermaye)}</b> · gerçekleşmiş
+       <b class="${cls(kk.canli_pnl_usd)}">${kk.canli_pnl_usd == null
+         ? "—" : money(kk.canli_pnl_usd)}</b> <span class="tx3">(gerçek-canlı, ${
+         kk.canli_islem_n ?? "—"} işlem)</span></span>
+     <span class="durum-alt">gün başı ${kb.day_start_equity == null
+       ? `<b class="mut">ölçülmedi</b> — kitapta gün-başı tabanı yok`
+       : `<b>${money(kb.day_start_equity)}</b> · gün <span class="${cls(t.day_pnl_pct)}">${
+           isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span>`}</span>
+     ${beyan ? `<span class="durum-alt">${beyan}</span>` : ""}`);
+}
+// ---- ③ EMİRLER / AYNA — huni + akış + "gönderilecekte kaldı" -------------------------------
+// HUNİNİN ÜÇ BASAMAĞI AYNI PAYDADAN GELMEZ ve bu BEYAN EDİLİR: ilk ikisi ŞU ANKİ silahlı kümeden
+// (portfolio.armed × alpaca_submitted), üçüncüsü icra defterinin PENCERESİNDEN (E2 ölçümü, gün
+// sayısı yükte). Üçünü tek bir "3/2/1" gibi yazmak, farklı paydaları aynı huni sanmak olurdu.
+// SARI NOKTA "GÖNDERİLECEKTE KALDI" VAKASI İÇİN: silahlı ama ne aynada ne reddedilmiş bir plan,
+// bugüne kadar yalnız `nextSessionCard` satırındaki küçük bir çipte görünüyordu — bir bakışta değil.
+function _durumEmirKarti(t, d) {
+  const armed = t.armed_plans || [];
+  const sent = new Set(t.alpaca_submitted || []);
+  const gonderilen = armed.filter(p => sent.has(p.id)).length;
+  const ret = armed.filter(p => p.broker_status === "failed_broker_rejection").length;
+  const bekleyen = Math.max(0, armed.length - gonderilen - ret);
+  const rc = (d || {}).reconcile || {};
+  const slp = (((d || {}).icra || {}).slipaj) || {};
+  const dl = (slp.ayna || {}).dolum || {};
+  const acikRet = ((rc.failed_submissions || {}).open || []).length;
+  const akis = rc.stream_ok;                 // true / false / null(=hiç kanıt yok)
+  const k = rec("durumEmir", { t, armed, gonderilen, ret, bekleyen, rc, slp, dl, acikRet });
+  const dolanTxt = dl.n_dolan == null
+    ? `<b class="mut">—</b> <span class="tx3">(${esc(slp.durum || "icra defteri ölçüm vermedi")})</span>`
+    : `<b>${trn(dl.n_dolan)}</b> <span class="tx3">(son ${esc(String(slp.pencere_gun ?? "?"))} gün)</span>`;
+  const akisTxt = akis == null
+    ? `<span class="mut">ayna akışı ölçülmedi</span> — hiç kanıt yok (ayna hiç koşmamış olabilir)`
+    : akis ? "ayna akışı canlı"
+           : `<span class="neg">ayna akışı KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : ""}`;
+  return durumKartHTML("emir", k,
+    `<span class="durum-say">${trn(armed.length)} → ${trn(gonderilen)} → ${
+       dl.n_dolan == null ? "—" : trn(dl.n_dolan)}</span>
+     <span class="durum-alt">silahlı · aynaya gönderilmiş · dolan ${dolanTxt}</span>
+     <span class="durum-alt">${akisTxt}</span>
+     ${bekleyen ? `<span class="durum-alt warn"><b>${trn(bekleyen)}</b> plan gönderilecekte kaldı</span>` : ""}
+     ${acikRet ? `<span class="durum-alt"><span class="neg">${trn(acikRet)} açık broker reddi</span></span>` : ""}`,
+    bekleyen ? { nokta: "uyari", ipucu: `${bekleyen} silahlı plan aynaya gönderilmedi` }
+             : (akis === false ? { nokta: "kopuk", ipucu: "ayna akışı kopuk" } : {}));
+}
+// ---- ④ POZİSYONLAR — açık n · toplam ısı R · en yakın stop -----------------------------------
+// STOP MESAFESİ GİRİŞE GÖREDİR ve bu BEYANLIDIR: kitapta CARİ FİYAT yok (portfolio.positions
+// entry/stop/trail_stop taşır). "Cari fiyata mesafe" yazmak ölçmediğimiz bir şeyi ölçmüş gibi
+// göstermek olurdu; ölçtüğümüz şey girişten etkin stopa olan yüzdedir ve etiketi de onu söyler.
+function _durumPozisyonKarti(t) {
+  const pos = t.open_positions || [];
+  const k = rec("durumPozisyon", { t, pos });
+  // ISI ÖLÇÜLEMEZSE TOPLANMAZ: `size_r` taşımayan tek bir satır bile varsa toplam eksik olurdu ve
+  // eksik bir toplam, tam bir toplam gibi okunur.
+  const isiOlculdu = pos.every(p => p.size_r != null && Number.isFinite(Number(p.size_r)));
+  const isi = isiOlculdu ? pos.reduce((a, p) => a + Number(p.size_r), 0) : null;
+  const mesafe = _durumStopMesafeleri(pos);
+  const enYakin = mesafe.length ? Math.min(...mesafe.map(m => m.pay)) : null;
+  return durumKartHTML("pozisyon", k,
+    `<span class="durum-say">${trn(pos.length)}</span>
+     <span class="durum-alt">açık pozisyon · toplam ısı ${isi == null
+       ? `<b class="mut">ölçülemedi</b> (bazı satırda size_r yok)` : `<b>${trn(isi, 2)}R</b>`}</span>
+     <span class="durum-alt">en yakın stop ${enYakin == null
+       ? `<b class="mut">—</b> ${pos.length ? "(giriş/stop seviyesi okunamadı)" : "(açık pozisyon yok)"}`
+       : `<b>${pctf(enYakin, 1)}</b> <span class="tx3">girişin altında — kitapta cari fiyat yok</span>`}</span>`);
+}
+// Etkin stop = trail varsa trail, yoksa sert stop. İkisi de okunamazsa satır DÜŞER (0 sayılmaz).
+function _durumStopMesafeleri(pos) {
+  return (pos || []).map(p => {
+    const tr = Number(p.trail_stop), st = Number(p.stop), e = Number(p.entry);
+    const eff = Number.isFinite(tr) && tr > 0 ? tr : st;
+    if (!Number.isFinite(eff) || !Number.isFinite(e) || e <= 0) return null;
+    return { ticker: p.ticker, eff, entry: e, pay: (e - eff) / e };
+  }).filter(Boolean);
+}
+// ---- IZGARANIN KENDİSİ -----------------------------------------------------------------------
+// ÜÇ UCUN ÜÇÜ DE ÖNBELLEKLİ (`j`, 15 sn): aynı sayfadaki bölümler `/api/today` ve
+// `/api/diagnostics`i zaten okuyor, yani ızgara ağ'a fazladan çıkmaz.
+// HATA YUTULMAZ (YASA 4): ızgara düşerse kabında NE olduğunu yazar ve sayfanın bölümleri kendi
+// verilerini okumayı sürdürür — bir özet bandının düşmesi sayfayı düşürmez.
+function durumIzgarasiHTML(t, d, s) {
+  return `<div class="durum-izgara">${_durumDonguKarti(t)}${_durumKitapKarti(t, s)}` +
+         `${_durumEmirKarti(t, d)}${_durumPozisyonKarti(t)}</div>`;
+}
+async function durumIzgarasiCiz(kap) {
+  if (!kap) return;
+  let t, d, s;
+  try {
+    [t, d, s] = await Promise.all([
+      j("/api/today"),
+      j("/api/diagnostics").catch(() => null),
+      j("/api/summary").catch(() => null),
+    ]);
+  } catch (e) {
+    kap.innerHTML = `<p class="durum-dus">Durum kartları çizilemedi: ${esc(String(e))} —
+      sayfanın bölümleri kendi verilerini okumayı sürdürüyor.</p>`;
+    return;
+  }
+  kap.innerHTML = durumIzgarasiHTML(t, d, s);
+}
 // `bpAlpaca` BURADAN SİLİNDİ (2026-08-02, S2R-sonrası ölü-kod avı). Çağıranı YOKTU — göçten
 // ÖNCE de yoktu, yani S2R kırığı değil, "tanımlı ama ölü" sınıfıydı. YASA-6 kontrolü yapıldı:
 // okuduğu her alan (`account.connected/equity/buying_power/positions{symbol,qty,upl}/
@@ -1476,9 +1684,24 @@ RENDER.brifing = async () => {
   //     taşınamaz kılıyordu (S2R-2'nin çözdüğü şey buydu).
   // SELAMLAMA ERİDİ: sabah turunun evi artık Genel Bakış. Aynı cümleyi iki sayfada iki kez
   // okutmak yerine tarih/seans bilgisi bölüm altyazısına indi — bir katman az, aynı bilgi.
+  //
+  // ---- v191 GÖÇÜ: KAHRAMAN BLOĞU (`.hero`) VE "SON SİNYALLER" KARTI BU BÖLÜMDEN ÇIKTI ---------
+  // Operatör bulgusu: "Koşu & Döngü ile Portföy & Emirler çakışıyor". Ölçülen çakışmanın TAMAMI
+  // bu iki bloktaydı ve üçü de artık `durumIzgarasiHTML`in dört kartında (+ çekmecelerinde):
+  //   * kahraman sütun 1 (sermaye · gün K/Z · pozisyon sayısı · sermaye kökeni · eğri kıvılcımı)
+  //       → ② KİTAP kartı; eğri kıvılcımının evi zaten Genel Bakış ve `performans` bölümü.
+  //   * kahraman sütun 2 (rejim tavanı · açıktaki risk · satış günü/FTD)
+  //       → ④ POZİSYONLAR çekmecesi (risk) ve ① SON DÖNGÜ çekmecesi (rejim göstergeleri);
+  //         aynı sayılar Koşu & Döngü'nün `kapilar` bölümünde ZATEN tam hâliyle vardı.
+  //   * kahraman sütun 3 (zamanlayıcı · Hermes · LLM harcama) → Öğrenme'nin `hermes` bölümünde
+  //         zaten tam hâliyle var; "Ayna" satırı → ③ EMİRLER · AYNA kartı.
+  //   * "Son sinyaller" kartı → Koşu & Döngü'nün `adaylar` bölümü. AYNI plan listesiydi: biri
+  //         `planRowBrief`, diğeri `planRowFull` çiziyordu ve ikisi de aynı satırları açıyordu.
+  // BÖLÜMDE KALAN: silahlı emirlerin ve açık pozisyonların AYRINTI TABLOLARI. Kart bir sayıdır,
+  // bu tablolar o sayının satırlarıdır — ikisi aynı yerde durursa kart özet olmaktan çıkar.
   const [t, s, h] = await Promise.all([j("/api/today"), j("/api/summary"), j("/api/hermes").catch(() => null)]);
   SUMMARY = s;
-  const r = t.regime || {}, budget = r.exposure_budget_pct ?? 0, exposure = t.current_exposure_pct ?? 0;
+  const r = t.regime || {};
   const planDate = t.todays_plan_date || "";
   const sessionDate = r.date || planDate || "";
   const realISO = new Date().toISOString().slice(0, 10);
@@ -1486,60 +1709,25 @@ RENDER.brifing = async () => {
   const _hr = new Date().getHours();
   const greetWord = _hr < 5 ? "İyi geceler" : _hr < 12 ? "Günaydın" : _hr < 18 ? "İyi günler" : _hr < 23 ? "İyi akşamlar" : "İyi geceler";
   const staleSession = sessionDate && sessionDate !== realISO;
-  const hs = (h && h.status) || {}, sch = (h && h.scheduler) || {}, sp = (h && h.spend) || {};
-  const schOn = !!sch.active, hOn = !!hs.active, over = sp.over_budget;
-  const dotc = ok => ok ? "var(--green)" : "var(--amber)";
   const posRows = (t.open_positions || []).map(p => `<div class="trow" style="grid-template-columns:64px 1fr 88px 72px">
      <span class="tick">${esc(p.ticker)}</span><span class="mut">giriş ${trn(p.entry,2)} · stop ${trn(p.stop,2)}</span>
      <span class="mono-num">hedef ${trn(p.target,2)}</span><span class="mono-num">${p.qty} adet</span></div>`).join("");
-  const planRows = (t.todays_plans || []).map(planRowBrief).join("");
-  const hb = t.heartbeat || {};
 
   $("bugun-now").innerHTML = `
     ${spineHTML(t, h, null, (_DIAG || {}).hud)}
-    ${bolumBasHTML("brifing", "Kitap · şu an",
+    ${bolumBasHTML("brifing", "Kitap · ayrıntı",
       `${esc(greetWord)}, ${esc(OPERATOR)} · ${esc(realToday)}${
         staleSession ? ` · son seans <b style="color:var(--tx)">${esc(sessionDate)}</b>` : ""}`)}
 
-    <div class="hero rise"><div class="hero-grid">
-      <div class="hstat"><p class="l">Sermaye · kağıt defter</p>
-        <p class="big ${SERMAYE_RENK[(t.sermaye_koken || {}).renk] || ""}">${money(t.equity)}</p>
-        <p class="sub" style="margin-top:2px">${sermayeIbaresi(t.sermaye_koken)}</p>
-        <div id="eq-spark" style="margin-top:10px" aria-hidden="true"></div>
-        <p class="sub">gün <span class="${cls(t.day_pnl_pct)}">${isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span> · ${(t.open_positions || []).length} pozisyon · strateji ${onk("v", s.strategy_version)}</p>
-        ${sermayeKokenSatiri(t.sermaye_koken)}</div>
-      <div class="hstat"><p class="l">Risk</p>
-        <div class="srow"><span>Tavan (rejim bütçesi)</span><b style="color:${budget === 0 ? 'var(--amber)' : 'var(--tx)'}">%${budget}${budget === 0 ? " · kapalı" : ""}</b></div>
-        <div class="srow"><span>Açıktaki risk</span><b>%${exposure}</b></div>
-        <div class="bar" style="margin-top:2px"><i style="width:${Math.min(100, exposure)}%"></i></div>
-        <div class="srow" style="border:none;padding-bottom:0"><span>Satış günleri · FTD</span><b>${r.distribution_days ?? "—"} · ${r.ftd ? "var" : "yok"}</b></div></div>
-      <div class="hstat"><p class="l">Ajan</p>
-        <div class="srow"><span><span class="livedot" style="color:${dotc(schOn)}"></span>Zamanlayıcı</span><b>${schOn ? "aktif" : "kapalı"}</b></div>
-        <div class="srow"><span><span class="livedot" style="color:${dotc(hOn)}"></span>Hermes</span><b>${hOn ? esc(hs.brain || "aktif") + (hs.reflecting ? " · düşünüyor…" : "") : "pasif"}</b></div>
-        <div class="srow"><span>LLM harcama</span><b class="${over ? "neg" : ""}">$${sp.spent_usd ?? 0} / $${sp.budget_usd ?? "—"}</b></div>
-        <div class="srow" style="border:none;padding-bottom:0"><span>Ayna</span>
-          <b><button data-act="go" data-a1="portfoy#mutabakat" style="all:unset;cursor:pointer;border-bottom:1px dotted var(--tx2);color:${hb.mirror_drift ? "var(--red)" : "var(--tx)"}">${hb.mirror_drift ? "SAPMA → mutabakat masası" : "uyumlu → mutabakat masası"}</button></b></div></div>
-    </div></div>
-
     ${nextSessionCard(t)}
-
-    <!-- TAM GENİŞLİK (2026-07-22): "Son sinyaller" 5 SÜTUNLU bir tablo ve yarım genişlikli bir
-         yuvaya konmuştu. Sabit sütunlar (70+70+90+92 = 322px) çıkınca gerekçe metnine 79px kalıyor,
-         satır 247px yüksekliğe fırlıyor ve metinler iç içe geçmiş görünüyordu — operatörün "uzman
-         modunda metinler birbirine geçmiş" dediği tam buydu. Yanındaki "Açık pozisyonlar" kartı ise
-         tek satırlık; geniş tablo tam genişliğe, dar kart altına alındı. -->
-    <div class="card rise"><h2 class="t">${planDate ? `Son sinyaller · ${esc(planDate)}${t.latest_session && planDate < t.latest_session ? ` <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu (son seans ${esc(t.latest_session)})</span>` : ""}` : "Adaylar"}</h2>
-      ${planRows || `<div class="empty">Kapıyı geçen taze aday yok — dürüst boşluk.</div>`}</div>
-    <div class="card rise"><h2 class="t">Açık pozisyonlar (${(t.open_positions || []).length})</h2>
+    <!-- SAYIYI BAŞLIKTAN ÇIKARDIK (v191): açık pozisyon SAYISI ④ POZİSYONLAR kartının işidir.
+         Aynı sayıyı iki yerde göstermek, ikisinden birinin bayatlaması için yeterli bir sebep. -->
+    <div class="card rise"><h2 class="t">Açık pozisyonlar</h2>
       ${posRows || `<div class="empty">Açık pozisyon yok.</div>`}</div>`;
   buildSidebar(t, h);
   j("/api/alpaca").then(alp => {                         // yalnız ŞERİT sinyalleri için — ayna kartı mutabakat bölümünde
     const spn = $("triage-spine");
     if (spn) spn.outerHTML = spineHTML(t, h, alp.reconcile || {}, alp.stream || null);
-  }).catch(() => {});
-  j("/api/performance").then(p => {
-    const el = $("eq-spark"), pts = ((p.equity_curve || {}).points || []).slice(-40);
-    if (el && pts.length > 2) el.innerHTML = sparkline(pts.map(q => +q[1]));
   }).catch(() => {});
 };
 function staleBits(p) {
@@ -1643,19 +1831,12 @@ window.planOnayla = async (planId) => {
     if (btn) { btn.disabled = false; btn.textContent = "Onayla ve Arm Et"; }
   }
 };
-function planRowBrief(p) {
-  const v = p.gate_verdict || "?";
-  const reasons = (p.gate_reasons || []).join(" · ");
-  const st = staleBits(p);
-  const k = rec("plan", p);
-  return `<button ${rowAttrs(k, `${p.ticker} · ${p.setup || "plan"} · kapı ${v}. Planı aç.`)}
-    class="trow rowbtn" style="grid-template-columns:70px 1fr 70px 90px 92px">
-    <span class="tick">${esc(p.ticker)}</span>
-    <span class="mut">${esc(p.setup||'breakout_vcp')} · skor ${p.score??'—'}${reasons?` <span class="reason">${esc(reasons)}</span>`:''}${st.ctx ? "<br>" + st.ctx : ""}</span>
-    <span class="mono-num">${p.r_multiple_expected??'—'}R</span>
-    <span class="mono-num">${p.size_r??'—'}R</span>
-    <span style="text-align:right"><span class="tag ${TAG[v]||''}">${v}</span>${st.badge}${onayRozeti(p)}</span></button>`;
-}
+// `planRowBrief` SİLİNDİ (v191, "Son sinyaller" kartıyla birlikte). Tek çağıranı o karttı ve kart
+// Koşu & Döngü'deki `adaylar` bölümünün AYNISINI gösteriyordu — operatörün "benzer şeyleri
+// gösteriyorlar" şikâyetinin en birebir hâli. YASA-6 kontrolü yapıldı: okuduğu her alan
+// (`ticker/setup/score/gate_verdict/gate_reasons/r_multiple_expected/size_r` + `staleBits` ve
+// `onayRozeti` yüzeyleri) `planRowFull`da (adaylar bölümü, `_PHEAD` tablosu) ZATEN okunuyor —
+// tekil okuyucusu olduğu alan SIFIR. Çekmece kaydı da aynı: `rec("plan", …)` → `RECORD_VIEW.plan`.
 
 // ================= ADAYLAR (sinyaller) =================
 const _VORDER = { GO: 0, REVIEW: 1, NO_GO: 2 };
@@ -5231,6 +5412,137 @@ async function renderPlotMap() {
 // Her liste türü kendi kaydını AYNI çekmecede açar. Kural: UYDURMA YOK — burada gösterilen her
 // alan API paketinde zaten vardır; olmayan alan satırı hiç çizilmez (pdRow boş değeri düşürür).
 const RECORD_VIEW = {
+  // ---------------------------------------------------------------------------------------------
+  // 00 · DURUM KARTLARI (v191) — kartın ÖZETİ ekranda, AYRINTISI burada.
+  // Her çekmece, o kartın alanlarının bugüne kadar İKİ BÖLÜME dağılmış hâlini tek yerde toplar;
+  // ilgili bölüme giden bağ da çekmecededir (kartın üstünde ikinci bir bağ YOK — kart tek eylem).
+  // ---------------------------------------------------------------------------------------------
+  durumDongu(o) {
+    const sd = o.sd || {}, r = o.regime || {}, vc = o.vc || {};
+    if (!sd.var) {
+      return { eyebrow: "SON DÖNGÜ", title: "günlük döngü kaydı yok",
+        body: `<p class="pd-warn">${esc(sd.neden || "ölçülemedi — neden bildirilmedi")}</p>
+          <p class="mut">Bu bir <b>sıfır aday</b> raporu DEĞİLDİR: döngünün kendi satırı okunamadı.
+          Olay defteri kuyruğunda <code>daily_cycle</code> satırı bulunamıyor.</p>` };
+    }
+    return { eyebrow: "SON DÖNGÜ", title: `${esc(String(sd.date || "—"))} <span class="mut">×</span> gece turu`,
+      body: `<div class="pd-stats">
+          ${pdStat("ADAY", sd.candidates ?? "—")}${pdStat("PLAN", sd.plans ?? "—")}
+          ${pdStat("SİLAHLI", sd.armed ?? "—")}</div>
+        ${sd.data_ok === false ? `<p class="pd-warn">Veri kalitesi kapısı KAPALIYDI — o gece yeni alım
+          yapılmadı. Aday sayısı sıfırsa sebebi budur, kurulum yokluğu değil.</p>` : ""}
+        ${sd.halted ? `<p class="pd-warn">Sistem o turda DURDURULMUŞ durumdaydı.</p>` : ""}
+        <h3 class="pd-sub">Döngünün kendi kaydı</h3>
+        ${pdRow("Seans", esc(sd.date))}${pdRow("Damga", esc(sd.ts))}
+        ${pdRow("Yaş", sd.yas_saat == null
+          ? `<span class="mut">ölçülemedi — kayıtta zaman damgası yok</span>`
+          : `${trn(sd.yas_saat, 1)} saat önce`)}
+        ${pdRow("Rejim", sd.regime ? esc(REGIME_TR[sd.regime] || sd.regime) : "")}
+        ${pdRow("Açık pozisyon (o an)", sd.open_positions)}
+        ${pdRow("Kaynak", esc(sd.kaynak))}
+        <h3 class="pd-sub">Kapının hükmü · bugünkü plan defteri</h3>
+        ${pdRow("GO · REVIEW · NO_GO", `${vc.GO || 0} · ${vc.REVIEW || 0} · ${vc.NO_GO || 0}`)}
+        ${pdRow("Plan tarihi", esc(o.planDate))}${pdRow("İşlenen son seans", esc(o.latestSession))}
+        <h3 class="pd-sub">Rejimin ham göstergeleri</h3>
+        ${pdRow("Satış günleri", r.distribution_days)}
+        ${pdRow("FTD (takip günü)", r.ftd == null ? "" : (r.ftd ? "var" : "yok"))}
+        <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
+          data-a1="kosu#adaylar">Adaylar ve karar ağacı →</button></div>` };
+  },
+  durumKitap(o) {
+    const t = o.t || {}, kk = t.sermaye_koken || {}, kb = t.kitap || {}, df = t.defter || {};
+    const s = o.s || {};
+    return { eyebrow: "KİTAP", title: `${money(t.equity)} <span class="mut">×</span> kağıt defter`,
+      body: `<div class="pd-stats">
+          ${pdStat("SERMAYE", money(t.equity), SERMAYE_RENK[kk.renk] || "")}
+          ${pdStat("NAKİT", money(kk.gercek_canli_sermaye))}
+          ${pdStat("GÜN", isr(t.day_pnl_pct, pctf(t.day_pnl_pct)), cls(t.day_pnl_pct))}</div>
+        <h3 class="pd-sub">Kitabın tabanları</h3>
+        ${pdRow("Gün başı sermaye", kb.day_start_equity == null
+          ? `<span class="mut">ölçülmedi — kitapta alan yok (0 DEĞİL)</span>` : money(kb.day_start_equity))}
+        ${pdRow("Tepe sermaye", kb.peak_equity == null ? `<span class="mut">ölçülmedi</span>` : money(kb.peak_equity))}
+        ${pdRow("Nabız sermayesi", kk.nabiz_sermaye == null ? "" : money(kk.nabiz_sermaye))}
+        ${pdRow("Strateji sürümü", s.strategy_version == null ? "" : "v" + esc(String(s.strategy_version)))}
+        <h3 class="pd-sub">Sermayenin kökeni</h3>
+        <p class="hint">Karttaki "gerçekleşmiş" GERÇEK-CANLI K/Z'dir. Aşağıdaki defter toplamı
+        antrenman tohumunu (replay_seed) DA içerir — ikisi karıştırılırsa bir eğitim artefaktı
+        "sistemin kaybı" diye okunur (bu ayrımın var oluş sebebi budur).</p>
+        ${pdRow("Defter K/Z toplamı <span class=\"tx3\">(tohum dahil)</span>", kb.realized_pnl == null
+          ? `<span class="mut">ölçülmedi</span>`
+          : `<span class="${cls(kb.realized_pnl)}">${money(kb.realized_pnl)}</span>`)}
+        ${pdRow("Beyan ofseti", kk.ayrisik
+          ? `${money(kk.ofset_usd)}${kk.reset_tarihi ? ` · ${esc(String(kk.reset_tarihi).slice(0, 10))}` : ""}`
+          : `<span class="mut">beyan yok — sermaye tabanı hiç taşınmadı</span>`)}
+        ${sermayeKokenSatiri(kk, { ibareyle: true })}
+        <h3 class="pd-sub">Defterin kökeni</h3>
+        ${pdRow("Canlı-kâğıt satır", df.live_paper_n)}${pdRow("Antrenman tohumu satır", df.replay_seed_n)}
+        ${pdRow("Kökeni ölçülmemiş satır", df.belirsiz_n)}
+        <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
+          data-a1="portfoy#performans">Birikim ve eğri →</button></div>` };
+  },
+  durumEmir(o) {
+    const rc = o.rc || {}, dl = o.dl || {}, slp = o.slp || {}, ay = slp.ayna || {};
+    const akis = rc.stream_ok;
+    return { eyebrow: "EMİRLER · AYNA",
+      title: `${trn((o.armed || []).length)} silahlı <span class="mut">×</span> ${trn(o.gonderilen)} aynada`,
+      body: `<div class="pd-stats">
+          ${pdStat("SİLAHLI", trn((o.armed || []).length))}
+          ${pdStat("AYNAYA GİTTİ", trn(o.gonderilen))}
+          ${pdStat("BEKLEYEN", trn(o.bekleyen), o.bekleyen ? "warn" : "")}</div>
+        ${o.bekleyen ? `<p class="pd-warn">${trn(o.bekleyen)} plan <b>gönderilecekte kaldı</b>: silahlı,
+          ama ne aynaya ulaştı ne de broker reddetti. Gönderim kolunu Ayarlar'daki
+          "Silahlı planları Alpaca'ya gönder" çalıştırır.</p>` : ""}
+        ${o.acikRet ? `<p class="pd-warn">${trn(o.acikRet)} açık broker reddi var — kayıtları mutabakat
+          masasındaki ret defterinde açılır.</p>` : ""}
+        <h3 class="pd-sub">Ayna akışı</h3>
+        ${pdRow("Akış", akis == null
+          ? `<span class="mut">ölçülmedi — hiç kanıt yok (ayna hiç koşmamış olabilir)</span>`
+          : (akis ? `<span class="pos">canlı</span>`
+                  : `<span class="neg">KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : ""}`))}
+        ${pdRow("Kopuş başlangıcı", esc(rc.stream_down_since))}
+        ${pdRow("Son olay", esc(rc.stream_last_event_ts))}
+        ${akis === false ? pdRow("Son hata", esc(rc.stream_last_error)) : ""}
+        ${pdRow("Broker API", rc.api_ok == null ? "" : (rc.api_ok ? "erişilebilir" : `<span class="neg">erişilemiyor</span>`))}
+        <h3 class="pd-sub">Dolum ölçümü <span class="mut">(icra defteri penceresi)</span></h3>
+        ${pdRow("Dolan emir", dl.n_dolan == null
+          ? `<span class="mut">${esc(slp.durum || "ölçüm yok")}</span>`
+          : `${trn(dl.n_dolan)} · pencere ${esc(String(slp.pencere_gun ?? "?"))} gün`)}
+        ${pdRow("Dolum oranı", dl.dolum_orani == null ? "" : pctf(dl.dolum_orani, 1))}
+        ${pdRow("Ret oranı", ay.red_orani == null ? "" : pctf(ay.red_orani, 1))}
+        <p class="hint">Huninin ilk iki basamağı ŞU ANKİ silahlı kümeden, üçüncüsü icra defterinin
+        penceresinden gelir — aynı payda değildir ve bu yüzden ayrı etiketlenir.</p>
+        <p class="hint">Emirlerin SATIR SATIR dökümü (tetik/stop/hedef/boyut + ayna çipi) bu sayfanın
+        <b>Kitap · ayrıntı</b> bölümündeki "Sıradaki seans" tablosundadır — kart sayıyı, tablo
+        satırları taşır; ikisi aynı yerde dursa kart özet olmaktan çıkardı.</p>
+        <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
+          data-a1="portfoy#mutabakat">Mutabakat masası →</button></div>` };
+  },
+  durumPozisyon(o) {
+    const t = o.t || {}, pos = o.pos || [], r = t.regime || {};
+    const mes = _durumStopMesafeleri(pos).sort((a, b) => a.pay - b.pay);
+    // POZİSYON SATIRLARI BURADA TEKRARLANMAZ: tam tablo (giriş/stop/hedef/adet) bu sayfanın
+    // "Kitap · ayrıntı" bölümündedir. Çekmecenin taşıdığı şey o tabloda OLMAYAN ölçümdür —
+    // etkin stop mesafesi ve maruziyetin rejim tavanıyla kıyası.
+    const mesRows = mes.map(m => `<div class="srow"><span>${esc(m.ticker)}</span>
+        <b class="mono-num">${pctf(m.pay, 1)} · ${trn(m.eff, 2)}</b></div>`).join("");
+    return { eyebrow: "POZİSYONLAR",
+      title: `${trn(pos.length)} açık <span class="mut">×</span> kitap`,
+      body: `<div class="pd-stats">
+          ${pdStat("AÇIK", trn(pos.length))}
+          ${pdStat("AÇIKTAKİ RİSK", t.current_exposure_pct == null ? "—" : "%" + trn(t.current_exposure_pct, 1))}
+          ${pdStat("REJİM TAVANI", r.exposure_budget_pct == null ? "—" : "%" + trn(r.exposure_budget_pct),
+            r.exposure_budget_pct === 0 ? "warn" : "")}</div>
+        ${r.exposure_budget_pct === 0 ? `<p class="pd-warn">Rejim bütçesi <b>%0</b> — kapı bu rejimde
+          yeni pozisyon açtırmaz (keşif sondası hariç).</p>` : ""}
+        <p class="hint">Pozisyonların satır satır dökümü (giriş · stop · hedef · adet) bu sayfanın
+        <b>Kitap · ayrıntı</b> bölümünde; burada o tabloda olmayan ölçüm durur.</p>
+        <h3 class="pd-sub">Stop mesafesi <span class="mut">(girişe göre)</span></h3>
+        ${mesRows || `<p class="empty">ölçülemedi — giriş/stop seviyesi okunamadı</p>`}
+        <p class="hint">Kitapta CARİ FİYAT yok; mesafe girişten etkin stopa (trail varsa trail)
+        ölçülür. "Cari fiyata mesafe" yazmak ölçülmemiş bir sayı üretmek olurdu.</p>
+        <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
+          data-a1="kosu#kapilar">Rejim ve kapı ölçütleri →</button></div>` };
+  },
   // 0a · REDDEDİLEN GÖNDERİM — triyaj şeridinin işaret ettiği kayıt. Şeridin "N emir reddedildi"
   // cümlesi buraya iner; hangi hisse, broker ne dedi, hangi plandı, ne zaman.
   failsub(f) {

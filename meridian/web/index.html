@@ -642,6 +642,47 @@ main{min-width:0}
 .gb-alarm .gb-bag{margin-top:0;margin-left:auto;align-self:baseline}
 @media(max-width:980px){.gb-ust,.gb-trend{grid-template-columns:1fr}}
 
+/* ---- DURUM KART-IZGARASI (v191) — Koşu & Döngü + Portföy & Emirler'in ortak özet bandı -------
+   YENİ RENK JETONU YOK: kart gövdesi `.gb-kart` ile aynı üç jetondan (--card / --line-2 /
+   --r-card) kurulur, sayı `--mono` + tabular-nums, ikincil satır `--tx2`. Ayrım yalnız SAÇ TELİ
+   çizgi ve ton (Omega kuralı) — ızgara yeni bir görsel dil AÇMAZ, mevcut dili tekrar eder.
+
+   KART BİR DÜĞMEDİR ve bu Genel Bakış'tan BİLEREK ayrılır: orada kartın kendisi tıklanamaz
+   ("özet okurken yanlışlıkla sayfa değiştirmek en ucuz hata") çünkü eylem SAYFA DEĞİŞTİRMEKtir.
+   Burada eylem sayfayı DEĞİŞTİRMEZ: aynı ekranda bir çekmece açar, kaydırma yerinde kalır ve Esc
+   geri alır. Geri alınabilir bir eylem, kartın tamamını hedef yapmayı hak eder (Fitts). */
+.durum-izgara-kap{margin-top:var(--s6)}
+.durum-izgara{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s4)}
+.durum-kart{display:flex;flex-direction:column;min-width:0;text-align:left;font:inherit;color:inherit;
+  background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-card);
+  padding:var(--s5);cursor:pointer}
+.durum-kart:hover{border-color:var(--line)}
+.durum-kart:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* SEÇİLİ HÂL — çekmece hangi kartın kaydını gösteriyor? Renk DEĞİL kenar: `.pm-cell.sel` ile
+   aynı dil, ve seçim bir anomali değil bir konum bilgisidir. */
+.durum-kart.sel{border-color:var(--accent)}
+.durum-govde{flex:1 1 auto;min-width:0}
+.durum-say{font-family:var(--mono);font-size:clamp(18px,2.2vw,24px);font-weight:400;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;line-height:1.15;color:var(--tx);display:block}
+.durum-alt{display:block;font-size:12px;color:var(--tx2);line-height:1.55;
+  font-variant-numeric:tabular-nums;margin-top:var(--s2)}
+.durum-alt b{color:var(--tx);font-weight:500}
+.durum-ac{align-self:flex-start;margin-top:var(--s4);font-family:var(--mono);font-size:11px;
+  letter-spacing:.04em;color:var(--tx3)}
+.durum-kart:hover .durum-ac{color:var(--tx2)}
+/* ANOMALİ NOKTASI — renk YALNIZ burada ve yalnız ölçülmüş bir sapmada (P1/P2 alarm bütçesi):
+   "gönderilecekte kalmış plan" (amber) ve "ayna akışı kopuk" (kırmızı). PULS YOK: hareket bu
+   panoda ≤300ms ve yalnız-anomali kuralına bağlı, ve kalıcı bir nokta kalıcı bir hareket olurdu. */
+.durum-nokta{display:inline-block;width:7px;height:7px;border-radius:50%;vertical-align:middle;
+  margin-left:4px}
+.durum-nokta.uyari{background:var(--amber)}
+.durum-nokta.kopuk{background:var(--red)}
+.durum-dus{font-size:12px;color:var(--tx2);margin:0}
+/* Dört kart 1100px altında ikişerli, 640px altında tek kolon. Genel Bakış'takiyle aynı gerekçe:
+   dar ekranda kaydırma DÜRÜST hâldir, sıkıştırılmış dört sütun değil. */
+@media(max-width:1100px){.durum-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.durum-izgara{grid-template-columns:1fr}}
+
 /* ---- DURUM ŞERİDİ — the dateline band ruled across the sheet. A stamp square
    carries the state; calm is a ruled sentence you can read past, act is the
    loudest mark on the page. Not a fat colored margin. ---- */
@@ -854,8 +895,11 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* BAŞLIK MERTEBESİ (2026-07-27): kart başlıkları h3'tü ve üstlerinde hiç h2 yoktu — ağaç
    h1'den h3'e atlıyordu. Etiket biçimi (mono 11px indigo, kural altında) DEĞİŞMEZ; değişen
    yalnız etiketin mertebesi. Bu yüzden seçici tag'den sınıfa taşındı. */
-.card .t,.gb-kart .t{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:var(--label-track);
+.card .t,.gb-kart .t,.durum-kart .t{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent-2);text-transform:uppercase;letter-spacing:var(--label-track);
   margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line-2)}
+/* `.durum-kart .t` bir `<span>`dir (kart bir `<button>` ve düğmenin içine başlık koymak, ekran
+   okuyucuya "başlık mı, düğme mi?" diye sordurur). Blok davranışı bu yüzden burada verilir. */
+.durum-kart .t{display:block}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
 
 /* ---- the mounted sheet — the specimen laid on its card, with the mount's own
