@@ -834,8 +834,25 @@ def _cli() -> int:
                     help="haftalık değerlendirmeyi KOŞTUR (LLM çağrısı yapar)")
     ap.add_argument("--kuru", action="store_true",
                     help="--kosu: deftere ve kuyruğa YAZMA (yalnız çıktı)")
+    ap.add_argument("--boru", metavar="HAFTA", nargs="?", const="__son__",
+                    help="DEFTERDEKİ kabul edilmiş önerileri yönlendirme borusundan geçir "
+                         "(hafta verilmezse defterdeki SON hafta). Boru v192'de eklendi; ondan "
+                         "ÖNCE kabul edilmiş satırlar hiçbir yola bağlanmamıştı — bu tek-atışlık "
+                         "yol onları fiş/red kuyruklarına taşır. LLM ÇAĞIRMAZ, öneri ÜRETMEZ.")
     ap.add_argument("--json", action="store_true", help="çıktıyı JSON olarak ver")
     a = ap.parse_args()
+    if a.boru:
+        rows = store.read_jsonl(PROPOSALS_FILE)
+        if not rows:
+            print("defter BOŞ — yönlendirilecek öneri yok"); return 0
+        h = a.boru if a.boru != "__son__" else sorted({str(r.get("hafta") or "?") for r in rows})[-1]
+        kabul = [r for r in rows if str(r.get("hafta") or "?") == h]
+        # KURU KOŞUM VARSAYILAN DEĞİL, AMA `--kuru` ONURLANDIRILIR: bu yol canlı state'e yazar
+        # (fiş defteri) ve o yüzden ne yaptığı ÖNCE ekrana basılır.
+        out = boru(kabul, hafta=h, yaz=not a.kuru)
+        print(json.dumps({"hafta": h, "n_defter_satiri": len(kabul), **out},
+                         ensure_ascii=False, indent=1, default=str))
+        return 0
     if a.telemetri:
         from . import analytics
         print(json.dumps(analytics.system_telemetry(), ensure_ascii=False, indent=1, default=str))

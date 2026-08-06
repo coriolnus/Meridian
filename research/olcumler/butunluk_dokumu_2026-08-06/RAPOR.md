@@ -113,11 +113,33 @@ gölge-model terfi hattı.
 
 **Ölçüm:** `sieve.json` → `shadow_model.terfi: {in: 95, out: 0, drops: {piyasa:gölge_tahmini_damgalanmamış: 95}}`.
 
-95 kapanmış işlemin **hepsi** planına birleşti; hiçbirinin planında `p_win_shadow` damgası yoktu
-(damga 2026-07-21'de başladı, kapanan işlemler ondan eski). Elemenin sınıfı `piyasa:` — yani
-`sieve` bunu bilinçli olarak **BİLGİ** sayıyor, hata değil (kurt-masalı yasağı, sieve.py:178-185),
-ve bu DOĞRU hükümdür. Bütünlük kartında ihlal ÜRETMEZ. Rapora giriyor çünkü **operatörün gördüğü
-"öğrenme durmuş" hissinin kaynağı burası** ve sınıfı §3.1 ile birebir aynı: kuraklık, arıza değil.
+95 kapanmış işlemin **hepsi** planına birleşti; hiçbirinin planında `p_win_shadow` damgası yoktu.
+Defterlerden doğrudan sayım (aynı yedek):
+
+| ölçüm | değer |
+|---|---|
+| plan (toplam) | 400 |
+| `p_win_shadow` damgalı plan | **33** (damga penceresi 2026-07-21 → 2026-08-04) |
+| kapanmış işlem (`r_multiple` dolu) | 95 |
+| **damgalı VE kapanmış** | **0** |
+| terfi eşiği | 30 taze çift |
+
+Damga `loop.py:1381`de, plan kapıdan geçerken basılıyor ve **2026-07-21'de başladı**; kapanan 95
+işlemin tamamı ondan eski (defter 2026-07-23 re-seed'inden beri 95'te sabit — `monotonic_state`).
+Yani kesişim yapısal olarak boş ve sayaç **0/30'da duruyor, ilerlemiyor**: ilerlemesi için damgadan
+SONRA açılmış bir pozisyonun KAPANMASI gerekiyor.
+
+Elemenin sınıfı `piyasa:` — `sieve` bunu bilinçli olarak **BİLGİ** sayıyor, hata değil (kurt-masalı
+yasağı, sieve.py:178-185), ve bu DOĞRU hükümdür. Bütünlük kartında ihlal ÜRETMEZ. Rapora giriyor
+çünkü **operatörün gördüğü "öğrenme durmuş" hissinin kaynağı burası** ve sınıfı §3.1 ile birebir
+aynı: kuraklık, arıza değil.
+
+**KURAKLIĞIN GİZLİ ORTAĞI (günlükle bağ):** payda yenilenmiyorsa 30'a hiç ulaşılmaz, ve paydayı
+besleyen şey kapanan işlem sayısıdır. Günlükteki **DE-RISK RAMPASI** bulgusu (`broker.max_positions_at`
+incumbent'ta günlerin %92,4'ünde aktif, P3 kolunda %92 gün izin=1, işlem 71→28) ile **E1 giriş-limiti**
+tazelemesi (dolum 237→176) tam bu paydayı kısıyor. Yani gölge-model terfi kuraklığı bağımsız bir
+öğrenme arızası değil, **icra kısıtının öğrenme katmanındaki gölgesidir** — ikisi aynı kalemde
+izlenmeli.
 
 > **ÖNERİ D2:** ayrı bir uygulama gerekmiyor — bu turda `/api/diagnostics.ogrenme.son_fit.terfi`
 > alanı bu gerekçeyi eleme defterinden okuyup panoya taşıdı (İŞ 2). Kalan iş: aynı cümlenin

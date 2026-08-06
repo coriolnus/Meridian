@@ -252,6 +252,24 @@ def test_fis_defterinin_DIS_okuyucusu_var(sandbox_state):
     assert g["unread"] is False
 
 
+def test_cli_boru_defterdeki_ESKI_onerileri_yonlendirir(sandbox_state, olaylar, monkeypatch, capsys):
+    """Boru v192'de doğdu; ondan ÖNCE kabul edilmiş satırlar (canlı 2026-W32'nin üç `tasarim`
+    önerisi) hiçbir yola bağlanmamıştı. Tek-atışlık `--boru` onları taşır — LLM ÇAĞIRMADAN."""
+    _tohumla(sandbox_state)
+    store.append_jsonl(nous_eval.PROPOSALS_FILE,
+                       {"ts": "2026-08-04T00:28:00+00:00", "id": "N00002", "hafta": "2026-W32",
+                        "alan": "hotstate", "gozlem": "hotstate_down 7873",
+                        "oneri": "redis yeniden bağlanma stratejisini belgele",
+                        "beklenen_etki": "kesinti düşer", "onerilen_olcum": "hotstate_down",
+                        "oncelik": "orta", "sekil": "tasarim", "kanit_atifi": ["hotstate_down"],
+                        "kuyruk": "yol_yok"})
+    monkeypatch.setattr("sys.argv", ["nous_eval", "--boru"])
+    assert nous_eval._cli() == 0
+    cikti = json.loads(capsys.readouterr().out)
+    assert cikti["hafta"] == "2026-W32" and cikti["ozet"][nous_eval.YOL_FIS] == 1
+    assert store.read_json(nous_eval.FISLER_FILE, {})["fisler"][0]["anahtar"] == "N00002"
+
+
 def test_pano_fis_rozetini_CIZER(sandbox_state):
     appjs = (pathlib.Path("meridian") / "web" / "app.js").read_text()
     kod = "\n".join(l for l in appjs.splitlines() if not l.lstrip().startswith("//"))

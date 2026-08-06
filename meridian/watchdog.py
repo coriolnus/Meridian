@@ -122,7 +122,14 @@ def _hermes_askida() -> dict | None:
     kendi pencere/kota-sıfırlama testleri içinde), (2) beyin soğuma defteri (`brain_cooldown.json`;
     `agent` satırı yerel-ajan yolunu, sağlayıcı satırları doğrudan çağrıyı bağlar). Hiçbiri yoksa
     None döner ve mekanizma NORMAL bayatlık yoluna gider — yani bu sonda hiçbir gerçek arızayı
-    örtmez, yalnız sistemin kendi beyan ettiği bekleme hâlini alarmdan ayırır."""
+    örtmez, yalnız sistemin kendi beyan ettiği bekleme hâlini alarmdan ayırır.
+
+    `_pool_exhausted` ÖZEL AD, VE BİLEREK: onun tek kamusal sarmalayıcısı `hermes_runtime.status()`
+    ve o fonksiyon `trade_plans.jsonl` + `trades.jsonl` defterlerini baştan okur (dolgu-bekleyen
+    sayacı için). Bekçi sondası her bayat poll'da koşar; tam teşhis paketini çağırmak, bir bayrağı
+    okumak için iki büyük defteri taramak olurdu. Kırılganlığı beyan ediyoruz: `_pool_exhausted`in
+    imzası değişirse bu sonda `watchdog_askida_probe_failed` uyarısıyla DÜŞER ve fail-closed dalı
+    alarmı yeniden basar — sessiz bir bozulma yolu yok."""
     from . import hermes
     havuz = hermes._pool_exhausted()
     if havuz:
@@ -235,6 +242,10 @@ def check_and_alarm() -> None:
     now_stale = {x["name"] for x in rep["stale"]}
     doc = _gunluk_oku()
     mek = doc["mekanizmalar"]
+    kirli = False                             # sayaç DEĞİŞMEDİYSE yazma: bu fonksiyon 300 sn'lik
+                                              # poll'da koşuyor ve koşulsuz yazım günde 288 gereksiz
+                                              # atomik yazım + IO p95 gürültüsü ederdi (sakin bir
+                                              # sistemde defterde değişecek hiçbir şey yok)
 
     def _satir(ad: str) -> dict:
         row = mek.get(ad)
@@ -247,12 +258,14 @@ def check_and_alarm() -> None:
         satir = _satir(x["name"])
         satir["askida"] = int(satir.get("askida") or 0) + 1
         satir["son_askida_neden"] = x.get("neden")
+        kirli = True
     for x in rep["stale"]:
         ad = x["name"]
         if ad in alarmed:
             continue                          # HİSTEREZİS: aşım sürüyor, aynı olgu ikinci kez anlatılmaz
         satir = _satir(ad)
         satir["son_gap_h"] = x["gap_h"]
+        kirli = True
         if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
             # TEKİLLEŞTİRME TAVANI: bastırıldı ama KAYITLI — sayaç panoda görünür, hüküm kaybolmaz.
             satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
@@ -261,7 +274,10 @@ def check_and_alarm() -> None:
         obs.alarm("MECHANISM_STALE",
                   f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)",
                   mechanism=ad, gap_h=x["gap_h"])
-    store.write_json(ALARM_GUNLUK_FILE, doc)
+    # GÜN DÖNÜŞÜ DE BİR DEĞİŞİKLİKTİR: dünkü defter diskte kalırsa `api._alarm_gunluk` bugünün
+    # sayaçları yerine dünün tablosunu servis eder ("bugün 7 alarm" diye okunan dünkü sayı).
+    if kirli or store.read_json(ALARM_GUNLUK_FILE, {}).get("gun") != doc["gun"]:
+        store.write_json(ALARM_GUNLUK_FILE, doc)
     store.write_json(ALARMED_FILE, sorted(now_stale))
 
 
