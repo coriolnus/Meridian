@@ -139,11 +139,24 @@ def _warmup_sprint() -> None:
         # +0.01 ek marj ömür boyu açık kalıyordu) — hiçbir şey ship edemeyen bir turun kapıyı KALICI
         # olarak sıkması. Sıfır kayıt bir muafiyet değil, beyanın uygulanması: ship yetkisi olmayan
         # tur resmî soru sormaz.
-        res = reflect.coordinate_descent_search(bars, index, budget=int(os.environ.get("HERMES_WARMUP_BUDGET", "10")),
-                                                k_max=2, max_minutes=_tavan, on_probe=_nabiz,
-                                                record_session=False)
+        # BÜTÇE ARTIK SABİT DEĞİL (v190, 2026-08-06): `cleared: 0` ile biten her koşum bir sonrakini
+        # bir kademe genişletir, ilk clearing tabana döndürür, süre tavanına takılan koşum duvarı
+        # ÖLÇER. Yasa ve durum TEK YERDE (`hermes.warmup_budget`) — burada sayı yok, çağrı var.
+        _wb = hermes.warmup_budget()
+        res = reflect.coordinate_descent_search(bars, index, budget=int(_wb["budget"]),
+                                                k_max=int(_wb["k_max"]), max_minutes=_tavan,
+                                                on_probe=_nabiz, record_session=False)
         _wd8.beat("warmup_sprint")         # sonda HİÇ koşmadıysa da ısınma turladı: kadans nabzı düşmez
         _wd8.beat("hermes_poll")
+        try:
+            hermes.warmup_budget_feedback(res)   # sonuç merdivene işlenir (bir sonraki koşumun kolu)
+        except Exception as e:
+            # YASA 4: merdiven yazımı düşerse bütçe SESSİZCE tabanda donar ve "kural koşuyor"
+            # yanılsaması sürer. Ama koşumun KENDİSİ başarılıydı — kaydını bir defter hatasına
+            # kurban etmek, ölçülmüş bir sonucu telemetri arızasıyla silmek olurdu.
+            obs.warn("warmup_budget_feedback_failed", error=f"{type(e).__name__}: {e}",
+                     detail="ısınma bütçe merdiveni güncellenemedi — sonraki koşum aynı bütçeyle "
+                            "koşar (oto-ölçekleme bu tur ilerlemedi)")
         _state["last_warmup"] = {"at": _now(), "evaluated": res.get("evaluated"),
                                  "cleared": res.get("cleared"),
                                  "best": (res.get("best") or {}).get("variable"),
@@ -151,12 +164,18 @@ def _warmup_sprint() -> None:
                                  # 3'ü değerlendi, kalanı kesildi" aynı karta yazılamaz.
                                  "kesildi": bool(res.get("kesildi")),
                                  "sebep": res.get("sebep"), "tavan_dk": _tavan,
-                                 "kalan_sonda": res.get("kalan_sonda")}
+                                 "kalan_sonda": res.get("kalan_sonda"),
+                                 # MERDİVENİN HÂLİ PANODA GÖRÜNÜR: "40 sonda değerlendi" ile
+                                 # "taban×4 bütçesiyle 40 sonda değerlendi" aynı şey değildir —
+                                 # ikincisi kuralın çalıştığını da söyler (YASA 6: okuyucu /api/hermes).
+                                 "butce": _wb["budget"], "butce_carpani": _wb["carpan"],
+                                 "k_max": _wb["k_max"], "butce_formulu": _wb["formul"]}
         from . import obs
         obs.log("warmup_sprint", evaluated=res.get("evaluated"), cleared=res.get("cleared"),
                 best=(res.get("best") or {}).get("variable"),
                 kesildi=bool(res.get("kesildi")), tavan_dk=_tavan,
-                kalan_sonda=res.get("kalan_sonda"))
+                kalan_sonda=res.get("kalan_sonda"),
+                butce=_wb["budget"], butce_carpani=_wb["carpan"], k_max=_wb["k_max"])
     except Exception as e:
         _state["last_warmup"] = {"at": _now(), "error": type(e).__name__}
 

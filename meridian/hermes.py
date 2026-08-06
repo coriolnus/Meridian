@@ -1342,6 +1342,123 @@ def search_budget() -> dict:
                       "mekanizma arama olur, o gece kısılamaz")}
 
 
+# ==================================================================================================
+# ISINMA SPRİNTİ OTO-ÖLÇEKLEMESİ (v190, 2026-08-06 — operatör ops-kuralı, ÖLÇÜM DEĞİL: kart gerekmez)
+# ==================================================================================================
+# CANLI OLGU: `warmup_sprint` her ~4,4 saatte bir koşuyor ve serisi `evaluated 10→20→30,
+# cleared: 0, best: null`. Bütçe SABİTTİ (`hermes_runtime`de `HERMES_WARMUP_BUDGET` varsayılanı 10),
+# yani "hiçbir aday kapıyı geçmedi" olgusu bir sonraki koşumun HİÇBİR şeyini değiştirmiyordu:
+# mekanizma aynı duvara aynı hızla, süresiz olarak çarpıyordu.
+#
+# YASA — DETERMİNİSTİK, TEK YÖNLÜ, GERİ DÖNÜŞLÜ:
+#   cleared == 0            → çarpan ×2 (tavana kadar)   ve k_max bir kademe genişler
+#   cleared  > 0            → çarpan 1'e DÖNER (taban)   ve k_max tabana döner
+#   arama süre-tavanına takıldı (`kesildi`) → ÇARPAN BÜYÜMEZ; bir kademe geri iner ve o seviye
+#                              DUVAR olarak kaydedilir (bir daha üstüne çıkılmaz)
+#
+# TAVAN NEDEN "DUVAR" DİYE ÖLÇÜLÜR, SABİT SAYIYLA YAZILMAZ: brief'in tavanı "H11 süre-tavanı içinde
+# kalan maksimum"dur ve o sayı makineye, veri boyutuna ve önbellek sıcaklığına bağlıdır — burada bir
+# sayı UYDURMAK, tam da düzeltmeye çalıştığımız "sabit sihirli tavan" sınıfını geri getirirdi. Süre
+# tavanına takılan koşum, o makinede "fazla" nın ÖLÇÜMÜDÜR; merdiven onu duvar sayar. `WARMUP_SCALE_MAX`
+# yalnız mutlak bir emniyet bandıdır (ölçüm hiç gelmezse sonsuza dek büyümeyi engeller).
+#
+# DÜRÜST BEYAN — BU KURAL `cleared`I ARTIRMAYABİLİR (ölçüldü, 2026-08-06, yerel defter n=353 sonda):
+# sondaların %36'sı (128/353) incumbent'tan YÜKSEK OOS üretti ama yalnız 6'sı TAM KAPIYI geçti.
+# Yani `cleared: 0`ın bağlayıcı kısıtı "aday yok" değil KAPI'dır; üstelik kapıya giden K = planlanan
+# TOPLAM sonda sayısıdır (`reflect.coordinate_descent_search` → `_gate_eval(k_probes=total)`), yani
+# bütçeyi büyütmek kazananın-laneti cezasını da büyütür ve çıtayı YÜKSELTİR. Bu kuralın ölçülmüş
+# faydası `cleared` değil KAPSAMA'dır: ısınmanın asıl işi UCB önceliklerini ve sonda önbelleğini
+# ısıtmaktır (`record_session=False` — hiçbir şey ship etmez), ve geniş tarama onu doğrudan besler.
+WARMUP_BUDGET_BASE = 10          # `hermes_runtime._warmup_sprint`in bugünkü sabiti — taban AYNEN korunur
+WARMUP_SCALE_MAX = 8             # mutlak emniyet bandı: taban × 8'den öteye ölçüm olmadan çıkılmaz
+WARMUP_KMAX_BASE = 2             # bugünkü k_max
+WARMUP_KMAX_MAX = 4              # kademe tavanı (bounds adımının 4 katı = düğmenin uçları)
+WARMUP_SCALE_FILE = "warmup_scale.json"
+
+
+def warmup_budget() -> dict:
+    """ISINMA SPRİNTİNİN BU KOŞUMDAKİ BÜTÇESİ + kmax — türetimin TAMAMIYLA birlikte.
+
+    Taban `HERMES_WARMUP_BUDGET`tir (operatör kolu) ve artık SABİT DEĞİL TABANDIR: merdiven yalnız
+    yukarı, yalnız `cleared == 0` olgusuyla açılır ve ilk clearing'de tabana düşer.
+
+    NOT — `HERMES_SEARCH_BUDGET` BU YOLA GİRMEZ: o değişken `SEARCH_BUDGET` → `search_budget()`
+    üzerinden GERÇEK yansımanın (ship yetkili) arama tavanını besler. İkisini burada birleştirmek,
+    canlı birimin `HERMES_SEARCH_BUDGET=8` satırını ısınmanın tabanına sessizce taşırdı (10→8) —
+    yani bir dağıtım notu olmadan davranış değişirdi. Ayrık kalır; adlandırma operatör kalemi."""
+    st = store.read_json(WARMUP_SCALE_FILE, {}) or {}
+    ov = _env_override("HERMES_WARMUP_BUDGET")
+    taban = max(1, ov) if ov is not None else WARMUP_BUDGET_BASE
+    kaynak = "env:HERMES_WARMUP_BUDGET" if ov is not None else "varsayılan"
+    duvar = st.get("duvar")
+    carpan = max(1, int(st.get("carpan", 1) or 1))
+    carpan = min(carpan, int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX)
+    kademe = max(0, carpan.bit_length() - 1)          # ×1→0, ×2→1, ×4→2, ×8→3
+    k_max = min(WARMUP_KMAX_MAX, WARMUP_KMAX_BASE + kademe)
+    budget = taban * carpan
+    return {"taban": taban, "taban_kaynagi": kaynak, "carpan": carpan, "duvar": duvar,
+            "budget": budget, "k_max": k_max, "kademe": kademe,
+            # `reflect.coordinate_descent_search` plan kapağı: sonda genişliği bütçeden TÜRER
+            # (`probes[:max(budget*4, 40)]`) — burada ikinci bir genişlik sayısı tanımlamak, aynı
+            # yasanın iki yerde yaşayıp sessizce ayrışması demekti.
+            "sonda_tavani": max(budget * 4, 40),
+            "formul": f"taban {taban} ({kaynak}) × çarpan {carpan}"
+                      + (f" [duvar ×{duvar}]" if duvar else "") + f" = {budget}; "
+                      f"k_max {WARMUP_KMAX_BASE}+{kademe} = {k_max}",
+            "son": st.get("son")}
+
+
+def warmup_budget_feedback(res: dict | None) -> dict:
+    """Bir ısınma koşumunun sonucunu merdivene işle. Çağıran: `hermes_runtime._warmup_sprint`.
+
+    `res` = `coordinate_descent_search` dönüşü (`cleared`/`evaluated`/`kesildi`). None ya da hatalı
+    koşum merdivene DOKUNMAZ: ölçülemeyen bir koşumdan "temizlenemedi" hükmü çıkarmak, arızayı
+    bütçe kararına çevirmek olurdu (UYDURMA YASAĞI'nın bütçe tarafındaki hâli)."""
+    if not isinstance(res, dict):
+        return warmup_budget()
+    onceki = warmup_budget()
+    cleared = int(res.get("cleared") or 0)
+    kesildi = bool(res.get("kesildi"))
+    yeni, duvar, sebep = onceki["carpan"], onceki["duvar"], None
+    if kesildi:
+        # SÜRE TAVANI ÖLÇÜMDÜR: bu makinede bu genişlik H11 penceresine SIĞMADI. Bir kademe geri
+        # in ve seviyeyi duvar olarak çivile — aksi hâlde merdiven her turda aynı tavana çarpıp
+        # yarım ölçümler üretirdi (ve `kesildi` zaten K sayımını dürüst tutmak için sonda kırpar).
+        yeni = max(1, onceki["carpan"] // 2)
+        duvar = max(1, onceki["carpan"] // 2)
+        sebep = "sure_tavani"
+    elif cleared > 0:
+        yeni, sebep = 1, "cleared>0"
+    elif onceki["carpan"] < min(int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX):
+        yeni, sebep = min(onceki["carpan"] * 2,
+                          int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX), "cleared=0"
+
+    def _mut(st):
+        st["carpan"] = int(yeni)
+        st["duvar"] = int(duvar) if duvar else None
+        import datetime as _dtw
+        st["son"] = {"evaluated": res.get("evaluated"), "cleared": cleared, "kesildi": kesildi,
+                     "at": _dtw.datetime.now(_dtw.timezone.utc).isoformat(timespec="seconds")}
+        return True
+
+    store.update_json(WARMUP_SCALE_FILE, _mut, default={})
+    sonraki = warmup_budget()
+    if yeni != onceki["carpan"] or (duvar and duvar != onceki["duvar"]):
+        obs.log("warmup_budget_scaled", sebep=sebep, evaluated=res.get("evaluated"), cleared=cleared,
+                kesildi=kesildi, carpan_onceki=onceki["carpan"], carpan_yeni=sonraki["carpan"],
+                butce_onceki=onceki["budget"], butce_yeni=sonraki["budget"],
+                k_max_onceki=onceki["k_max"], k_max_yeni=sonraki["k_max"], duvar=sonraki["duvar"],
+                detail=("ısınma sprinti hiçbir adayı kapıdan geçiremedi — SONRAKİ koşumun bütçesi ve "
+                        "k_max'ı bir kademe genişletildi (deterministik ops kuralı; ilk clearing'de "
+                        "tabana döner)" if sebep == "cleared=0" else
+                        "ısınma bir aday temizledi — merdiven TABANA döndü; geniş tarama artık "
+                        "gerekmiyor ve geniş K kapıyı boşuna sıkardı" if sebep == "cleared>0" else
+                        "ısınma H11 süre tavanına takıldı: bu genişlik bu makinede pencereye SIĞMIYOR "
+                        "— kademe geri alındı ve seviye DUVAR olarak çivilendi (tavan uydurulmaz, "
+                        "ölçülür)"))
+    return sonraki
+
+
 def backfill_queue() -> dict:
     """DOLGU KUYRUĞUNUN KARNE SATIRI (YASA 6 tüketicisi: analytics + /api/diagnostics).
 
@@ -1451,6 +1568,77 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
     return m.group(1) if m else None
 
 
+# ---- HAM ÇIKTI ÖZETİ — KÖRLÜĞÜN SONU (v190, 2026-08-06) ----------------------------------------
+# CANLI VAKA: `agent_call kind=review model=gemini-3.5-flash attempt=1 empty=true tool_calls=-1`
+# → yedek de boş → `review_fallback_empty`. Defterde bu üç satırdan BAŞKA hiçbir şey yoktu ve
+# üçü de aynı şeyi söylüyordu: "boş". `-Q` altında `tool_calls=-1` YAPISALDIR (sessiz mod oturum
+# özetini bastırır), yani "empty" kararı fiilen `returncode != 0 or not stdout.strip()`e iner —
+# ve bu iki olgunun HİÇBİRİ deftere yazılmıyordu. Süreç ne dedi, hangi kodla öldü, stderr ne
+# taşıdı: hepsi yutuluyordu. Sınıflandırıcılar (`_agent_unconfigured_sign`, `_agent_quota_sign`)
+# çıktıyı OKUYOR ama SAKLAMIYORdu — yani hiçbir imzaya uymayan bir arıza sonsuza dek görünmezdi.
+# BU YÜZDEN ÖZET SIR SIZDIRMAZ: alt sürecin ortamında `MERIDIAN_DASH_TOKEN`/`GEMINI_API_KEY`
+# yaşıyor (birim `EnvironmentFile` + devralınan ortam) ve bir CLI hata mesajı bunları yankılayabilir.
+# Defter git-izsizdir ama panodan okunur; maskeleme DESENLE yapılır, gerçek sır değerleri OKUNMADAN
+# (sır okumak için `secrets.get` çağırmak, sızıntı yüzeyini teşhis uğruna genişletmek olurdu).
+_ANSI_RE = None
+_GIZLI_DESENLER = (
+    (r"(?i)\b(api[_-]?key|apikey|token|secret|password|passwd|bearer)\b\s*[:=]\s*\S+",
+     r"\1=«gizli»"),
+    (r"\b[A-Za-z0-9_\-]{32,}\b", "«uzun-jeton»"),          # AIza…/sk-…/JWT gövdesi: hepsi bu bantta
+)
+
+
+def _ham_ozet(metin: str | None, limit: int = 200) -> str:
+    """Alt süreç çıktısının DEFTERE YAZILABİLİR özeti: ANSI sökülür, satır sonları görünür tek
+    karaktere katlanır (tek satırlık olay alanı), sır DESENLERİ maskelenir, sonra kırpılır.
+
+    SIRA ÖNEMLİ — maskeleme kırpmadan ÖNCE: önce kırpsaydık 200. karakterde ikiye bölünen bir
+    anahtarın ilk yarısı maskesiz kalırdı (yarım sır da sırdır: alfabe + uzunluk bilgisi verir).
+    Kırpma sonrası uzunluk beyanı da kalır — "…(+N kr)" olmadan okuyucu kısa bir hatayı, kırpılmış
+    uzun bir hatadan ayırt edemez."""
+    import re as _re
+    global _ANSI_RE
+    if _ANSI_RE is None:
+        _ANSI_RE = _re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]")
+    t = _ANSI_RE.sub("", str(metin or ""))
+    t = t.replace("\r", " ").replace("\n", " ⏎ ").replace("\t", " ")
+    for desen, yerine in _GIZLI_DESENLER:
+        t = _re.sub(desen, yerine, t)
+    t = " ".join(t.split())
+    if len(t) <= limit:
+        return t
+    return t[:limit] + f"…(+{len(t) - limit} kr)"
+
+
+# ---- YEREL ÖN-UÇUŞ HATASI: BİLİNMEYEN SKILL (v190, 2026-08-06) ---------------------------------
+# ÖLÇÜLDÜ, TAHMİN EDİLMEDİ (yerel kurulum v0.18.2, 2026-08-06):
+#   `hermes chat --accept-hooks -Q -q "say hi" -s yok-boyle-bir-skill --model gemini-3.5-flash`
+#   → rc=1 · stdout="Error: Unknown skill(s): yok-boyle-bir-skill" · süre 0,9 sn · AĞA ÇIKMAZ.
+# Aynı koşumda GEÇERSİZ bir model adı (`--model gemini-9.9-yok-boyle-model`) rc=0 + DOLU cevap
+# üretti: CLI bilinmeyen modeli sessizce varsayılana düşürüyor. Yani canlı `empty=true` imzasının
+# kaynağı model adı OLAMAZ — ön-uçuş argüman hatası olabilir ve imzası birebir uyuyor:
+#   * rc!=0 → `empty=True` (stdout dolu olsa bile: "Error:" satırı cevap değildir),
+#   * `-Q` yüzünden oturum özeti yok → `tool_calls=-1`,
+#   * hata MODELDEN ÖNCE olduğu için zincirin İKİNCİ modeli de aynen düşer → `review_fallback_empty`,
+#   * çıktıda ne kota ne yapılandırma imzası var → eski kod hiçbir sınıfa koyamayıp "kota/arka uç" derdi.
+# BU KOTA DEĞİLDİR ve MODEL SUSMASI DA DEĞİLDİR: yerel bir liste bayatlamıştır (ajan küratörü
+# linkleri silebiliyor — bkz. `sync_agent_skills`). Ceza değil ONARIM ister.
+AGENT_UNKNOWN_SKILL_RE = r"[Uu]nknown skill\(s\):\s*([^\n\r]+)"
+
+
+def _agent_unknown_skills(stdout: str, stderr: str) -> list:
+    """Çıktı "bu skill'leri tanımıyorum" mu dedi? Dönüş: ADLAR (yoksa boş liste).
+
+    Ad listesi ÇIKTIDAN okunur, tahmin edilmez: hangi adın düştüğünü bilmeden ön-yükleme listesini
+    komple boşaltmak, çalışan skill'leri de cezalandırıp ajanı bilgisiz bırakırdı."""
+    import re as _re
+    m = _re.search(AGENT_UNKNOWN_SKILL_RE, f"{stdout or ''}\n{stderr or ''}")
+    if not m:
+        return []
+    ham = m.group(1).strip().rstrip(".")
+    return [p.strip() for p in ham.replace(";", ",").split(",") if p.strip()]
+
+
 # ---- CLI SESSİZ MODU (`-Q`) — SÜRÜM DERSİ, 2026-08-02 ------------------------------------------
 # KÖK NEDEN (canlı vaka): `-q` SESSİZLİK DEĞİL, SORGU bayrağıdır (`-q QUERY, --query QUERY`) —
 # sessiz mod AYRI bir bayraktır: `-Q, --quiet` ("suppress banner, spinner, and tool previews. Only
@@ -1538,6 +1726,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     models = [m for m in dict.fromkeys([secrets.get("NOUS_MODEL"),
                                         secrets.get("NOUS_FALLBACK_MODEL")]) if m] or [None]
     son_stdout = son_stderr = ""      # zincirin SON denemesinin ham çıktısı — boş-sınıfı tailde ayrılır
+    son_rc: int | None = None         # ve ÇIKIŞ KODU: `-Q` altında boşluk ölçütünün yarısı budur
     for attempt, model in enumerate(models):
         if not _agent_budget_take(max_wait if attempt == 0 else 0.0):
             return None
@@ -1563,13 +1752,45 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # defterde `agent_call_empty` HİÇ yazmazdı. Boş stdout artık ölçütün parçası.
         empty = (out.returncode != 0 or not (out.stdout or "").strip()
                  or _agent_reply_missing(out.stdout))
+        # ÖN-UÇUŞ ARGÜMAN HATASI ONARILIR, CEZALANDIRILMAZ (v190). Ölçülmüş imza: rc=1 + stdout
+        # "Error: Unknown skill(s): X" + 0,9 sn + AĞA ÇIKMAMA. Zincirin ikinci modeli aynı listeyle
+        # aynen düşerdi (hata modelden ÖNCE), yani bu satır olmadan tek bayat symlink hattı komple
+        # susturuyordu. Onarım: DÜŞEN adlar çıktıdan okunur, ön-yükleme listesinden çıkarılır ve
+        # çağrı BİR KEZ yeniden koşulur — bütçe iade edilerek, çünkü çağrı sağlayıcıya hiç gitmedi.
+        if empty and preload:
+            eksik = _agent_unknown_skills(out.stdout, out.stderr)
+            kalan = tuple(s for s in preload if s not in set(eksik))
+            if eksik and len(kalan) < len(preload):
+                iade = _agent_budget_refund(f"agent_skill_unknown:{kind}")
+                obs.warn("agent_skill_preload_unknown", kind=kind, eksik=list(eksik)[:12],
+                         n_eksik=len(eksik), n_kalan=len(kalan), attempt=attempt + 1,
+                         model=model or "varsayılan", returncode=out.returncode,
+                         butce_iade=iade, ham_stdout=_ham_ozet(out.stdout),
+                         detail=f"yerel CLI ön-yüklenen skill(ler)i tanımadı ({', '.join(eksik[:5])}) — "
+                                f"çağrı AĞA ÇIKMADI, bu kota DEĞİLDİR (soğuma yazılmaz, RPD iade "
+                                f"edilir). Düşen adlar listeden çıkarılıp çağrı bir kez yeniden "
+                                f"koşuluyor. KALICI ONARIM: `sync_agent_skills` symlink'leri "
+                                f"(ajan küratörü silmiş olabilir) ya da skills/ kataloğu.")
+                preload = kalan
+                if not _agent_budget_take(0.0):
+                    return None
+                cmd = _agent_chat_cmd(bin_, prompt, preload, model)
+                out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                                     env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+                empty = (out.returncode != 0 or not (out.stdout or "").strip()
+                         or _agent_reply_missing(out.stdout))
         son_stdout, son_stderr = out.stdout or "", out.stderr or ""
+        son_rc = out.returncode
         tcalls = _agent_tool_calls(out.stdout)
         # (c) BOŞ CEVABIN İKİ SINIFI AYRIŞIR: imza varsa CLI ağa çıkmadan yapılandırma rehberi
         # bastı (yapılandırmasız), yoksa gerçekten cevapsız kalındı (kota/arka uç).
         unconf = _agent_unconfigured_sign(out.stdout, out.stderr) if empty else None
         obs.log("agent_call", kind=kind, preloaded=len(preload), model=model or "varsayılan",
-                attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf))
+                attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf),
+                # `-Q` altında `tool_calls=-1` YAPISALDIR ve `empty` fiilen "rc!=0 ya da boş stdout"a
+                # iner — o iki olgu deftere yazılmadan hiçbir boş çağrı teşhis edilemez (v190).
+                returncode=out.returncode, stdout_kr=len(out.stdout or ""),
+                stderr_kr=len(out.stderr or ""))
         if unconf:
             # (d) bütçe iadesi + (c) SOĞUMA YAZILMAZ ve zincir DENENMEZ: yapılandırmasız bir CLI
             # ikinci modelde de yapılandırmasızdır — denemek ikinci bir süreci boşuna doğurur.
@@ -1637,6 +1858,10 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
              fallback_model_configured=bool(secrets.get("NOUS_FALLBACK_MODEL")),
              pool_exhausted=exhausted, cooldown_s=round(cooled, 1), cooldown_sinifi=sinif,
              kota_imzasi=kota_imza,
+             # HAM KANIT (v190) — bir daha KÖR kalmamak için. Bu üç alan olmadan defterdeki "boş"
+             # satırı hiçbir teşhis taşımıyordu: hangi çıkış kodu, süreç ne dedi, stderr ne taşıdı.
+             # Maskeleme desenle yapılır (bkz. `_ham_ozet`); gerçek sır değerleri OKUNMAZ.
+             returncode=son_rc, ham_stdout=_ham_ozet(son_stdout), ham_stderr=_ham_ozet(son_stderr),
              detail=f"model zinciri cevapsız (zincir uzunluğu {len(models)}) — kota/arka uç; "
                     f"deterministik yol devrede")
     return None

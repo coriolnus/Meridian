@@ -140,6 +140,14 @@ _DURABLE = ("last_refetch_session", "refetch_attempts", "last_processed", "last_
             # BAŞTAN koşturur. Antrenman ucuzdur ama dolgu her plan-günü için bir LLM çağrısı
             # yakar — bir gecede üç kez yeniden başlatılan bir pano, gecelik bütçeyi üç kez harcardı.
             "learn_session", "last_learn",
+            # DOLGU DAMGASI AYRIDIR ve bu bir tasarım kararıdır (v190, 2026-08-06). `learn_session`
+            # "kadans bu seans için koştu" der; `dolgu_session` "dolgu GERÇEKTEN başladı" der. Tek
+            # damga ikisini birden taşırken şu oluyordu: kadans anında hermes havuzu soğumadaysa
+            # `backfill_budget()` tavan 0 döndürüyor, dolgu HİÇ başlamıyor, ama damga yine de
+            # basıldığı için o seans bir daha DENENMİYORDU — "askıda" sessizce "bitti"ye dönüşüyordu.
+            # Kalıcılığın gerekçesi akranlarınınkiyle aynı: yeniden başlatma dolguyu (ve gecelik
+            # LLM bütçesini) baştan yakmamalı.
+            "dolgu_session",
             # TEMİZLİK TURU KADANSLARI (2026-07-30) — AYNI SINIF, AYNI GEREKÇE. Y4 toplaması FMP
             # kotası yakar (insider `/latest` akışı); haftalık üçlü (doğrulama raporu, massive
             # verify, yasa kayması) ise 2000 replikasyonluk bootstrap ve sembol-başına Massive
@@ -410,6 +418,78 @@ def _repair_once_per_session(session: str) -> None:
 LEARN_STEPS = ("antrenman", "eksen2", "dolgu")
 
 
+# ==================================================================================================
+# KANIT DOLGUSU — KADANSA BAĞLI AMA KENDİ DAMGASIYLA (v190, 2026-08-06)
+# ==================================================================================================
+# ÖLÇÜLMÜŞ KUSUR (canlı: "dolgu otomatik HİÇ koşmuyor, elle tetik çalışıyor"). Zincir eksik DEĞİLDİ —
+# `_learning_cadence` üçüncü adımı olarak dolguyu ZATEN çağırıyordu. Kusur damgadaydı:
+#   1. `backfill_budget()` hermes havuzu SOĞUMADAYKEN tavan 0 döndürür (doğru davranış: bilinen-ölü
+#      sağlayıcıyı dövmek kotayı geri getirmez);
+#   2. kadans bunu görüp dolguyu başlatmaz — ama `learn_session` damgasını YİNE DE basar;
+#   3. damga basıldığı için o seans bir daha denenmez → dolgu, havuz açıldıktan sonra bile
+#      o seans için bir daha KOŞMAZ.
+# Yani "askıda" sessizce "bitti"ye dönüşüyordu. Ve soğuma nadir DEĞİLDİ: boş-yanıt zinciri
+# (`review_fallback_empty` → `brain_pause`) her turda yeni bir pencere kuruyordu.
+# ÇÖZÜM ÜÇ PARÇA: (a) dolgunun KENDİ kalıcı damgası (`dolgu_session`, bkz. `_DURABLE`) ve o damga
+# YALNIZ dolgu gerçekten başlayınca basılır; (b) askıda kalış ADIYLA deftere düşer
+# (`dolgu_ertelendi`) — ve seans+sebep başına BİR KEZ (300 sn'lik poll'de koşulsuz uyarı 288
+# satır/gün ederdi: `gap_scan_calendar_unavailable` emsali, alarm hijyeni); (c) ertelenen dolgu
+# "current" dalında her poll yeniden yoklanır — havuz açıldığı ANDA aynı seans için koşar.
+# OPERATÖR KAPALI DÜĞMESİ ERTELEME DEĞİLDİR: `MERIDIAN_BACKFILL_MAX_DAYS=0` bilinçli bir kapatmadır;
+# onu ertelenmiş saymak, kapalı bir mekanizmayı sonsuza dek yeniden yoklamak olurdu.
+def _dolgu_kadansi(session: str) -> dict:
+    """Kanıt dolgusunun TEK tetik yeri. Dönüş: `{baslatildi, ertelendi, sebep, butce}`.
+
+    KOTA-FARKINDALIK BURADA BİTER: `backfill_budget()` zaten kalan kotadan ve havuz soğumasından
+    tavanı türetiyor; bu fonksiyon o tavanın SIFIR olmasının iki ayrı anlamını ayırır — operatör
+    kapattı (bitti) ve havuz askıda (ertelendi)."""
+    from . import obs
+    try:
+        from . import hermes as _h
+        bt = _h.backfill_budget()
+    except Exception as e:
+        obs.warn("opinion_backfill_cadence_failed", session=session, error=f"{type(e).__name__}: {e}",
+                 detail="görüş dolgusu tetiklenemedi — LLM kalibrasyonu beslenmiyor")
+        return {"error": f"{type(e).__name__}: {e}", "baslatildi": False, "ertelendi": True,
+                "sebep": "butce_okunamadi"}
+    if bt["tavan"] > 0:
+        try:
+            _h.backfill_opinions_async()   # tavan İÇERİDE türetilir (tek yer, tek formül)
+        except Exception as e:
+            obs.warn("opinion_backfill_cadence_failed", session=session,
+                     error=f"{type(e).__name__}: {e}",
+                     detail="görüş dolgusu tetiklenemedi — LLM kalibrasyonu beslenmiyor")
+            return {"error": f"{type(e).__name__}: {e}", "baslatildi": False, "ertelendi": True,
+                    "sebep": "tetikleme_hatasi", "butce": bt}
+        _state["dolgu_session"] = session   # DAMGA YALNIZ GERÇEKTEN BAŞLAYINCA (restart yeniden tetiklemesin)
+        _state.pop("_dolgu_ertelendi", None)
+        return {"baslatildi": True, "ertelendi": False, "tavan": bt["tavan"],
+                "formul": bt["formul"], "butce": bt}
+    operator_kapatti = str(bt.get("kaynak", "")).startswith("env:")
+    sebep = "operator_kapatti" if operator_kapatti else (
+        "havuz_askida" if bt.get("soguma_aktif") else "kota_tukendi")
+    # Kısılma kayda geçer; "başlatılmadı" ile "başlatıldı ve iş çıkmadı" ayrı hâllerdir.
+    obs.log("backfill_progress", islenen=0, tavan=0, kaynak=bt["kaynak"],
+            formul=bt["formul"], detail="kadans bütçe nedeniyle dolgu başlatmadı")
+    if operator_kapatti:
+        # Kapalı düğme: damga BASILIR (yeniden yoklama yok — operatör kapattı, arıza yok).
+        _state["dolgu_session"] = session
+        return {"baslatildi": False, "ertelendi": False, "sebep": sebep, "tavan": 0,
+                "formul": bt["formul"], "butce": bt}
+    damga = f"{session}:{sebep}"
+    if _state.get("_dolgu_ertelendi") != damga:
+        _state["_dolgu_ertelendi"] = damga
+        obs.log("dolgu_ertelendi", session=session, sebep=sebep,
+                agent_cooldown_s=bt.get("agent_cooldown_s"), kalan_kota=bt.get("kalan"),
+                formul=bt["formul"],
+                detail="hermes havuzu ASKIDA (ya da gün kotası bitti) — kanıt dolgusu bu seans için "
+                       "ERTELENDİ, iptal EDİLMEDİ: seans damgası basılmadı, havuz açılır açılmaz "
+                       "aynı seans için yeniden denenir. Bu satır seans+sebep başına BİR KEZ düşer "
+                       "(300 sn poll'de koşulsuz uyarı günde 288 satır ederdi).")
+    return {"baslatildi": False, "ertelendi": True, "sebep": sebep, "tavan": 0,
+            "formul": bt["formul"], "butce": bt}
+
+
 def _learning_cadence(session: str) -> dict:
     """Üç otomasyonu SIRAYLA koştur; her adım kendi korumasında (biri düşerse diğerleri yaşar).
 
@@ -439,22 +519,8 @@ def _learning_cadence(session: str) -> dict:
         obs.warn("axis2_cycle_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="Eksen-2 üreteci koşmadı — atıf kanıtı bir KARARA bağlanmıyor")
         out["eksen2"] = {"error": f"{type(e).__name__}: {e}"}
-    try:                                   # 3) DOLGU — bütçeli, asenkron, en eskiden yeniye
-        from . import hermes as _h
-        bt = _h.backfill_budget()
-        out["dolgu_butce"] = bt
-        if bt["tavan"] > 0:
-            _h.backfill_opinions_async()   # tavan İÇERİDE türetilir (tek yer, tek formül)
-            out["dolgu"] = {"baslatildi": True, "tavan": bt["tavan"], "formul": bt["formul"]}
-        else:
-            # Kısılma kayda geçer; "başlatılmadı" ile "başlatıldı ve iş çıkmadı" ayrı hâllerdir.
-            obs.log("backfill_progress", islenen=0, tavan=0, kaynak=bt["kaynak"],
-                    formul=bt["formul"], detail="kadans bütçe nedeniyle dolgu başlatmadı")
-            out["dolgu"] = {"baslatildi": False, "tavan": 0, "formul": bt["formul"]}
-    except Exception as e:
-        obs.warn("opinion_backfill_cadence_failed", session=session, error=f"{type(e).__name__}: {e}",
-                 detail="görüş dolgusu tetiklenemedi — LLM kalibrasyonu beslenmiyor")
-        out["dolgu"] = {"error": f"{type(e).__name__}: {e}"}
+    out["dolgu"] = _dolgu_kadansi(session)  # 3) DOLGU — bütçeli, asenkron, en eskiden yeniye
+    out["dolgu_butce"] = out["dolgu"].get("butce")
     _state["learn_session"] = session
     _state["last_learn"] = out
     # DEFTER: analytics/api bu dosyadan okur (YASA 6 — yazan scheduler, okuyan analytics).
@@ -1107,6 +1173,24 @@ def advance_once() -> dict:
                 from . import obs as _o
                 _o.warn("candidate_review_backlog_failed", error=f"{type(e).__name__}: {e}",
                         detail="bu seans görüşsüz kalabilir — LLM kalibrasyonu beslenmiyor")
+            # DOLGU TELAFİSİ (v190) — YUKARIDAKİ GÖRÜŞ TELAFİSİYLE AYNI SINIF, AYNI GEREKÇE.
+            # Öğrenme kadansı `fresh` dalında koşar ve bar geldiği anda o dal SESSİZLEŞİR; kadans
+            # anında hermes havuzu askıdaysa dolgu ertelenir ve `dolgu_session` damgası BASILMAZ.
+            # O erteleme burada — seanslar arası ~24 saatlik "current" dalında, her poll'de — ucuza
+            # yoklanır: `backfill_budget()` bir JSON okuması + soğuma kontrolüdür, havuz kapalıyken
+            # HİÇBİR süreç doğmaz. Havuz açıldığı ilk poll'de dolgu aynı seans için gerçekten koşar.
+            # KAPI `learn_session == last_closed`: kadans o seans için henüz koşmadıysa sıra dolgunun
+            # DEĞİLDİR (antrenman/Eksen-2 önce gelir — `_learning_cadence`in sıra gerekçesi).
+            try:
+                if last_closed and _state.get("learn_session") == last_closed \
+                        and _state.get("dolgu_session") != last_closed:
+                    _dolgu_kadansi(last_closed)
+            except Exception as e:
+                from . import obs as _od
+                _od.warn("dolgu_telafi_failed", session=last_closed,
+                         error=f"{type(e).__name__}: {e}",
+                         detail="ertelenmiş kanıt dolgusu yeniden denenemedi — kalibrasyon kuyruğu "
+                                "bu seans için erimeyebilir")
             # ÖĞRENME ANTRENMANI (sprint) KADANSI — 2026-07-30.
             # NEDEN TAM BURASI, `fresh` bloğunda DEĞİL: bu dal "işlenecek yeni seans YOK" dalıdır,
             # yani bu poll'de `loop.daily_cycle` KOŞMAYACAK. Sprint 4 işçiyle walk-forward açar;
