@@ -376,11 +376,19 @@ white — **is confirmed at 1.27**.
 *Adopted 2026-08-06 from the trading-platform brief, with three deviations named below. These
 outrank general web-design instinct; they do not outrank the binding Omega two-ground world.*
 
-**Redesign scope (operator mandate, 2026-08-06): no UI element is exempt.** Every visual and
-interaction element is open for redesign — the status strip, the command palette, the scoreboard
-matrix, the cell language, the cards, the navigation rail, the type, the tokens, the table
-layouts. "It already ships" is not a reason to preserve a form. What a shipped element may
-carry forward is its *value* (the problem it solved, measured), never its shape by default.
+**Redesign scope (operator mandate, 2026-08-06): no UI element is exempt, and neither is its
+place or its form.** Open for redesign: every visual and interaction element (status strip,
+command palette, scoreboard matrix, cell language, cards, navigation rail, type, tokens, table
+layouts) — *and* **which surface shows a given piece of information, and in what representation
+it is shown** (table vs. card vs. matrix vs. sparkline vs. chip vs. nothing at all). Page and
+section structure is open with it. "It already ships" is not a reason to preserve a form, a
+placement, or an inclusion.
+
+The consequence for method: the system is inventoried by **job**, not by widget. For each item
+the record is *what question the operator is asking · which data answers it · where it lives
+today · in what form · what that form measurably buys*. The redesign then re-maps jobs →
+surfaces → representations from scratch. A shipped element carries forward only its measured
+value, never its shape, its address, or its right to exist.
 
 What does **not** change is the product underneath, because a UI/UX redesign is not a category
 change: the single order path, the honesty laws (unmeasured ≠ 0, no undeclared denominators,

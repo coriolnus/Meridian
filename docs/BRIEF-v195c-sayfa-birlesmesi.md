@@ -1,3 +1,10 @@
+> **⚠ GEÇERSİZ — 2026-08-06 akşamı operatör kararıyla ASKIYA ALINDI.** v195 serisi durduruldu ve
+> yeniden-tasarım programı baştan başladı; ayrıca manda genişledi: "hiçbir UI öğesi muaf değil"
+> + "neyi nerede ve hangi biçimde gösterdiğin de değişebilir". Bu brief'in 5'li gruplaması artık
+> BAĞLAYICI DEĞİL — yeni bilgi mimarisi işe-göre envanterden (docs/BASELINE-2026-08-06.md)
+> türetilecek. Belge TARİHSEL KAYIT olarak duruyor: ölçülmüş adım-sayımları (② 8 tık→6, ③ 6 tık→2),
+> geri-uyum kısıtı (ROUTE_ALIAS) ve 23-test/6-dosya maliyeti hâlâ geçerli GİRDİLERDİR.
+
 # BRIEF — v195-c · Sayfa birleşmesi 7 → 5 (+ bağlı davranış kalemleri)
 
 **Durum:** operatör onayı alındı (2026-08-06, üç-soruluk shape turu) · **uygulama henüz YOK**
