@@ -466,6 +466,10 @@ def _dolgu_kadansi(session: str) -> dict:
         return {"baslatildi": True, "ertelendi": False, "tavan": bt["tavan"],
                 "formul": bt["formul"], "butce": bt}
     operator_kapatti = str(bt.get("kaynak", "")).startswith("env:")
+    # ÜÇÜNCÜ SINIF (`kota_tukendi`) BUGÜN ULAŞILAMAZDIR VE BU KAYDA GEÇER: `backfill_budget`
+    # türetimi `max(BACKFILL_MIN=1, …)` tabanı taşır, yani soğuma ve operatör kolu dışında tavan
+    # sıfıra inemez. Sınıf yine de ADIYLA duruyor — o taban bir gün düşerse "neden ertelendi"
+    # sorusunun cevabı `soguma_aktif=False` ile birlikte sessizce yanlış (havuz_askida) olurdu.
     sebep = "operator_kapatti" if operator_kapatti else (
         "havuz_askida" if bt.get("soguma_aktif") else "kota_tukendi")
     # Kısılma kayda geçer; "başlatılmadı" ile "başlatıldı ve iş çıkmadı" ayrı hâllerdir.
@@ -519,8 +523,12 @@ def _learning_cadence(session: str) -> dict:
         obs.warn("axis2_cycle_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="Eksen-2 üreteci koşmadı — atıf kanıtı bir KARARA bağlanmıyor")
         out["eksen2"] = {"error": f"{type(e).__name__}: {e}"}
-    out["dolgu"] = _dolgu_kadansi(session)  # 3) DOLGU — bütçeli, asenkron, en eskiden yeniye
-    out["dolgu_butce"] = out["dolgu"].get("butce")
+    _dolgu = _dolgu_kadansi(session)        # 3) DOLGU — bütçeli, asenkron, en eskiden yeniye
+    # Bütçe sözlüğü defterde TEK KOPYA durur: `dolgu` bloğunun içinde de taşımak, aynı türetimi iki
+    # yerde yayınlayıp okuyucuya "hangisi güncel" sorusunu sordurmak olurdu (analytics `son_kosu.dolgu`
+    # ile `dolgu_butce`yi ayrı ayrı servis ediyor).
+    out["dolgu_butce"] = _dolgu.pop("butce", None)
+    out["dolgu"] = _dolgu
     _state["learn_session"] = session
     _state["last_learn"] = out
     # DEFTER: analytics/api bu dosyadan okur (YASA 6 — yazan scheduler, okuyan analytics).
