@@ -190,6 +190,83 @@ night field is `#1c1a18` and the night ink is `#d4d0cb` — inside the `#1E1E1E`
 text envelope the handbook specifies, with the warm cast carried over so the two themes are
 recognisably the same product.
 
+### The role layer — five roles, five token families (D1, 2026-08-07)
+
+The table above is the **value layer**: each token is named after a *hue*. That naming was the
+defect. An audit on 2026-08-06 measured what a hue-named token costs once a codebase has run for
+a while: `--green` was carrying **at least four** distinct meanings, `--amber` **five**, `--red`
+**five**, and the mode chroma the Design rules reserve had **no channel at all**. A rule that
+reads `var(--red)` does not say which role it is playing, and a rule that does not say makes
+borrowing a second meaning free.
+
+So a second layer sits on top, named after *jobs*. **Component rules read only this layer**; the
+value layer exists solely to feed it. Both grounds define the identical set of names — a token
+present on one ground and absent on the other is a bug, not a shortcut, because the missing one
+is silently inherited and the rule then runs with the wrong ground's colour. That equality is
+nailed by test, not by eye (`tests/test_renk_rolleri_v197.py`).
+
+| Role | Token family | What it may carry | What it may never carry |
+|---|---|---|---|
+| 1 · Structure | *(none — `--bg`/`--card`/`--tx`/`--line`)* | ground, panel, rule, text | any hue at all |
+| 2 · Severity | `--sev-1` `--sev-2` `--sev-3` (+ `-t`, `-h`, `-h2`, `-damga`) | P1 act now · P2 needs a human · P3 nominal | anything that is not an alarm or risk level |
+| 3 · Direction | `--yon-arti` `--yon-eksi` (+ `-t`, `-h`, `-zemin`) | the sign of a P&L reading | a price level, a magnitude, a parameter |
+| 4 · Mode | `--mod-kagit` `--mod-canli` `--mod-kesif` (+ `-t`, `-h`) | paper / live / exploration | any other state |
+| 5 · Data scales | `--kap-*`, `--dv-*`, `--olcek-guven` (+ `-t`, `-h`) | coverage ramp, drift divergence, sample confidence | a verdict |
+
+Severity keeps the three measured hues from the value layer, so nothing in that channel moved.
+The other three families are new and were measured from scratch.
+
+**Direction is deliberately quieter than severity, and the constraint is numeric.** Direction is
+the *third* signal — the sign and the arrow arrive first — so its chroma must sit visibly below
+severity's, otherwise a profitable day competes for attention with a risk violation. The values
+were produced by holding each hue's OKLCh lightness (so contrast did not move) and cutting its
+chroma:
+
+| Ground | severity min chroma | direction max chroma | ratio |
+|---|---|---|---|
+| Daylight | 0.0917 (`--sev-2`) | 0.0588 | 0.64 |
+| Night | 0.1289 (`--sev-1`) | 0.0586 | 0.45 |
+
+**Mode owns a hue band, not a badge.** 310° (violet-magenta) is reserved permanently: no other
+token may enter 285–335°, and `--mod-*` may not resolve to a severity or direction token. Both
+halves are tested. The carrier is structural — a 3px band on the top edge of the page, driven by
+`body[data-mod]` — because the costliest accident in this domain is an operator who believes they
+are in the other mode, and a corner badge only works while it is in view. **Paper is achromatic**:
+the expected, safe state spends no chroma, which is how the reserved channel coexists with the
+"colour only on anomaly" law. Chroma belongs to the states that are expensive to misread — live,
+and exploration. There is a third band state, hatched: mode *unmeasured* does not fall back to
+"paper", because a stale "paper" on a live account is exactly the lie the fabrication ban exists
+to prevent.
+
+**Measured — role tokens, both grounds.** Each value against the bare surfaces and against its own
+10% tint over each surface (the ground a chip actually occupies); the figure quoted is the worst:
+
+| Token | Daylight | worst real ground | Night | worst real ground |
+|---|---|---|---|---|
+| `--yon-arti` | `#40654c` | **4.71** | `#8ab59c` | **5.10** |
+| `--yon-eksi` | `#784e4b` | **4.99** | `#d1a0a0` | **5.13** |
+| `--mod-canli` | `#723a96` | **5.35** | `#c598e7` | **5.03** |
+| `--mod-kesif` | `#635071` | **5.11** | `#b9a4ca` | **5.12** |
+| `--olcek-guven` | `#585450` | **5.32** | `#b0a9a0` | **5.02** |
+
+The matrix cell grounds moved with them, and moved the right way: lowering direction chroma
+shifts the cell ground less, so the figure sitting on it gained contrast rather than losing it —
+`--tx` on the positive cell measures 17.36 / 15.98 (daylight, over `bg` / `card`) and 9.89 / 8.82
+(night), with `--tx2` at 6.39 / 5.88 and 6.52 / 5.82.
+
+**Two non-text values were raised because 1.4.11 applies to them and not to a card edge.** The
+declared hairline deviation below covers borders that *decorate*; these two *identify*:
+
+| Element | Old | New | Daylight | Night |
+|---|---|---|---|---|
+| Thin-sample cell ring (`--olcek-guven-h`) | `--amber-h` @ .35 → 1.72–2.07 | ink @ **.45** | **3.12** | **3.03** |
+| Paper mode band (`--mod-kagit`) | — | opacity **.65** | **3.11** | **3.91** |
+
+The live mode band measures 7.25 / 7.45 and needs no floor. The mode chip's own inset hairline
+measures 1.70 / 1.92 and **stays inside the declared hairline deviation**: it is identified by its
+fill (5.72 / 5.61 for the text on it) and by the band, not by its border — the same reasoning the
+status chips already run on.
+
 ### Measured contrast — daylight ground
 
 Text tokens, against the flat surfaces they sit on, and against the **worst real composited

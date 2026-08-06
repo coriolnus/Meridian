@@ -1,0 +1,915 @@
+{
+ "kosulsuz": [],
+ "kosullu": [
+  {
+   "dosya": "app.js",
+   "satir": 365,
+   "sinif": "warn",
+   "kapi": "if/catch-blok",
+   "kod": "box.innerHTML = `<p class=\"hint warn\" style=\"margin:0\">Seri alınamadı: ${esc(String(e).slice(0, 90))}</p>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 705,
+   "sinif": "warn",
+   "kapi": "if/catch-satir",
+   "kod": "if (k.nabiz_ayrisik) parca.push(`<span class=\"warn\">nabız bayat — kitap ${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1121,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<p class=\"hint warn\">Pencere KESTİ: son ${a.window_lines || \"?\"} olay okundu ve en eskisi"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1128,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"pos\">uzak kanal bağlı</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1129,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"warn\">uzak kanal YOK — alarmlar yalnız burada birikiyor</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1173,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1474,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": `${trn(sonDongu.yas_saat, 1)} saat önce`}${sonDongu.data_ok === false ? ' · <span class=\"warn\">veri kapısı kapalıydı</span>' : \"\"}</p>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1512,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "(retN || []).length ? ` · <span class=\"neg\">${retN.length} emir reddedildi</span>` : \"\"}</p>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1571,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${m.stale_n ? `<span class=\"warn\">${m.stale_n} bayat</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1774,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<br><b class=\"warn\">veri kapısı kapalıydı — o gece yeni alım yok</b>` : \"\"}`,"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1842,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">ayna akışı KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : \"\"}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1853,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "bekleyen ? `<br><b class=\"warn\">${trn(bekleyen)}</b> plan gönderilecekte kaldı` : \"\"}${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 1854,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "acikRet ? `<br><span class=\"neg\">${trn(acikRet)} açık broker reddi</span>` : \"\"}`,"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2084,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "if (msg) msg.innerHTML = `<span class=\"neg\">Onaylanmadı (HTTP ${r.status}): ${esc(body.detail || \"sunucu sebep bildirmedi\")}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2088,
+   "sinif": "pos",
+   "kapi": "if/catch-satir",
+   "kod": "if (msg) msg.innerHTML = `<span class=\"pos\">✓ onaylandı — plan silahlı kuyrukta (${body.armed_n ?? \"?\"} silahlı emir).</span>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2090,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${body.not ? `<br><span class=\"warn\">${esc(body.not)}</span>` : \"\"}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2094,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "if (msg) msg.innerHTML = `<span class=\"neg\">${esc(String(e.message || e))}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2165,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "bayat ? ` <span class=\"warn\" style=\"letter-spacing:0;text-transform:none\">— BAYAT: ${esc(latestSignal)} seansı için görüş alınmadı</span>` : \"\"}</h2>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2171,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `Son sinyaller · ${esc(latestSignal)} <span class=\"warn\" style=\"letter-spacing:0;text-transform:none\">— süresi doldu; ${esc(d.latest_session)} seansından beri kapıyı ge"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2268,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<p class=\"hint warn\">Kırpma: son ${L.plans_shown} plan gösteriliyor (defterde ${L.plans_total}).</p>` : \"\"; })()}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2281,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<p class=\"hint warn\">Kırpma: son ${L.candidates_shown} aday (defterde ${L.candidates_total}).</p>` : \"\"; })()}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2357,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "const askTxt = ask ? ` · <span class=\"warn\" title=\"askıda: ${esc(asks.map(a => `${a.name} (${a.detay || a.neden || \"\"})`).join(\" · \"))}\">${ask} askıda</span>` : \"\";"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2647,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": (h.learn_halted ? `<span class=\"warn\">ÇEKİLİ</span>` : `<span class=\"pos\">serbest</span>`);"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2647,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": (h.learn_halted ? `<span class=\"warn\">ÇEKİLİ</span>` : `<span class=\"pos\">serbest</span>`);"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2654,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "HALTED ? `<span class=\"warn\">ÇEKİLİ</span>` : `<span class=\"pos\">serbest</span>`, \"\","
+  },
+  {
+   "dosya": "app.js",
+   "satir": 2654,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "HALTED ? `<span class=\"warn\">ÇEKİLİ</span>` : `<span class=\"pos\">serbest</span>`, \"\","
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3290,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"neg\">WS KOPUK${dur}</span>${rc.stream_flag && rc.stream_stale ? ' <span class=\"warn\">(nabız bayat)</span>' : \"\"}`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3290,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"neg\">WS KOPUK${dur}</span>${rc.stream_flag && rc.stream_stale ? ' <span class=\"warn\">(nabız bayat)</span>' : \"\"}`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3299,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "<div class=\"srow\"><span>Force-sync (bu tur)</span><b>strip ${fs.stripped ?? 0} · PATCH ${fs.trail_patched ?? 0}${fs.trail_failed ? ` · <span class=\"neg\">RET ${fs.trail_fa"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3726,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "bud != null && bud <= 0 ? ` · <span class=\"warn\">keşif modu</span>` : \"\"}`,"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3756,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${radar.empty ? `<p class=\"hint warn\">Takvim BOŞ — FMP kotası bekleniyor; boş liste \"karartma yok\" DEĞİLDİR.</p>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3779,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? ` <span class=\"warn\" style=\"letter-spacing:0;text-transform:none;font-weight:400\">— ${_yas} saat önce ölçüldü</span>` : \"\";"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3845,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "<div class=\"srow\" style=\"margin-top:10px\"><span>Kapı meta-kalibrasyonu</span><b>${gc2.extra_p ? `<span class=\"warn\">eşik +${gc2.extra_p}</span>` : \"ayar yok\"} · medyan ${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3854,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? ' · <span class=\"warn\">gürültüden ayrılmıyor</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3860,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `masada ort ${trn(ee.avg_left_r, 2)}R · en kötü: ${esc(ee.worst_reason)} (${trn(ee.worst_left_r, 2)}R)${ee.nudge_active ? ' · <span class=\"warn\">UCB dürtmesi AÇIK</span"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3866,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "return `<div class=\"srow\"><span>LLM görüş kalibrasyonu</span><b>${parts.length ? parts.join(\" · \") + (lc.promoted ? ' · <span class=\"pos\">TERFİLİ</span>' : \"\") : (lc.n_pa"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3872,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "+ `<div class=\"srow\"><span>Son görüş damgası</span><b>${lc.last_opinion_plan_date ? esc(lc.last_opinion_plan_date) : '<span class=\"warn\">— hiç yok</span>'}</b></div>`; })"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3889,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "return `<br>${wu.skip ? `<span class=\"warn\">${esc(S[wu.skip] || wu.skip)}</span>` : \"henüz sprint koşmadı\"}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3891,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "<br>ufuk: ${wu.horizon_ready ? '<b class=\"pos\">DOLU — yansıma hazır</b>' : \"birikiyor\"}</span></div>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3948,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "const not3 = !r3 ? \"\" : (an3 === true ? ' · <span class=\"pos\">anlamlı</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 3949,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": an3 === false ? ' · <span class=\"warn\">gürültüden ayrılmıyor</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4118,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${ev && ev.zayif ? `<p class=\"hint\" style=\"margin-top:4px\"><b class=\"warn\">ZAYIF</b> = eşik geçildi <b>ama</b> istatistiksel"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4184,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${(k.n ?? 0) < (es.n_min ?? 40) ? `<b class=\"warn\">n=${k.n ?? 0} &lt; ${es.n_min} — hüküm OLCULEMEDI.</b>` : \"\"}</p>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4202,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "<span class=\"tick\">${p.esik}${canli ? ' <span class=\"warn\" style=\"font-size:10px\">CANLI</span>' : \"\"}</span>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4307,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${tv.kural_uyari ? `<b class=\"warn\">${esc(tv.kural_uyari)}</b> · ` : \"\"}${(() => {"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4326,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${b.anlamli === false ? '· <span class=\"warn\">aralık sıfırı kapsıyor</span>' : \"\"}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4374,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "ısı olduğundan soğuk okunurdu). ${h.n_eksik ? `<b class=\"warn\">${h.n_eksik} pozisyon eksik alanlı — sayılmadı.</b>` : \"\"}</p>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4415,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"warn\">DSR ${trn(d.dsr, 6)} ≤ 0,95 → kâğıtta <code>dsr_dusuk: true</code> damgası (ship GEÇER); gerçek-para bağlamında RET</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4416,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"pos\">DSR ${trn(d.dsr, 6)} &gt; 0,95 → iki modda da geçer</span>`)}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4420,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"neg\">PBO ${pctf(p.pbo, 1)} ≥ %20 → İKİ MODDA DA RET</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4421,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"pos\">PBO ${pctf(p.pbo, 1)} &lt; %20 → geçer</span>`)}</b></div>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4608,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"warn\" title=\"tasarım önerisi fişlenmemiş — boru bu satırı işlemedi\">fişlenmedi</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4627,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${(p.devreden || []).length ? `<p class=\"hint\"><b class=\"warn\">DEVREDEN: ${p.devreden.length}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4630,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${p.kosu_durumu && p.kosu_durumu !== \"ayristirildi\" ? `<p class=\"hint\"><b class=\"warn\">"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4695,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${sh.tau2 === 0 ? `<b class=\"warn\">τ²=0: hücreler-arası yayılımın TAMAMI hücre-içi gürültüyle"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4723,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "<span class=\"warn\">Maliyet: ${esc(hr.oneri.maliyet)}</span></p>` : \"\"}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4820,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${tk.pit_serh ? `<p class=\"hint\" style=\"margin-top:10px\"><b class=\"warn\">PIT ŞERHİ (rakamdan ayrılamaz):</b>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4822,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<p class=\"hint\" style=\"margin-top:10px\"><b class=\"neg\">PIT ŞERHİ DEFTERDEN DÜŞMÜŞ.</b>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4870,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${bf2.events_read ?? 0} olay · ${bf2.frames_seen ?? 0} bar${bf2.pending ? ` · <span class=\"warn\">${bf2.pending} bekleyen</span>` : \"\"}</b></div>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4878,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${iq2.last_error ? `<div class=\"srow\"><span>Son hata</span><b class=\"neg\">${esc(iq2.last_error)}</b></div>` : \"\"}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4907,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "<div class=\"srow\"><span>Atomik yazım (IO)</span><b>${io.p95_ms != null ? `p50 ${trn(io.p50_ms, 1)} · p95 ${trn(io.p95_ms, 1)} ms` : (io.writes ? io.writes + \" yazım (p95 "
+  },
+  {
+   "dosya": "app.js",
+   "satir": 4964,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${quar ? `<p>${quar}</p><p class=\"hint warn\">Bu semboller %25 eşiğine bakılmaksızın taramadan DIŞLANDI (Faz 0 zorlaması).</p>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5085,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${cov.cells_applicable ? `<div class=\"srow\" style=\"margin-top:12px\"><span>Denetim kapsamı (${cov.components} bileşen × ${cov.patterns} desen)</span><b>${cov.cells_covered"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5099,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${mkt.last_bar_at ? `<div class=\"srow\"><span>Son kapanmış bar</span><b>${relTime(mkt.last_bar_at)}${mkt.last_bar_age_s > 180 ? ' · <span class=\"warn\">seyrek (piyasa kapal"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5100,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${mktDown && mkt.last_error ? `<div class=\"srow\"><span>Hata</span><b class=\"neg\">${esc(mkt.last_error)}</b></div>` : \"\"}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5104,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "<div class=\"srow\"><span>Okuma / yazma / hata</span><b>${hs.reads ?? 0} okuma · ${hs.writes ?? 0} yazma${hs.fails ? ` · <span class=\"neg\">${hs.fails} hata</span>` : \" · 0 "
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5105,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${hsDown ? `<div class=\"srow\"><span>Kopuk</span><b class=\"neg\">${hs.down_since ? relTime(hs.down_since) : \"—\"}${hs.last_error ? \" · \" + esc(hs.last_error) : \"\"}</b></div>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5145,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "p.son_hata ? `<br><span class=\"neg\">${esc(String(p.son_hata).slice(0, 110))}</span>` : \"\"}</span>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5191,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "const karar = hk.karar === \"EVET\" ? '<span class=\"pos\">EVET</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5192,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": (hk.karar === \"HAYIR\" ? '<span class=\"warn\">HAYIR</span>' : '<span class=\"mut\">ÖLÇÜLEMEDİ</span>');"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5205,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "an2.veri_seti_taze === false ? ' · <span class=\"warn\">veri seti DEĞİŞTİ, fit bayat</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5206,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": (an2.veri_seti_taze === true ? ' · <span class=\"pos\">veri seti taze</span>' : ' · <span class=\"mut\">tazelik ölçülmedi</span>')}</b></div>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5208,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "<div class=\"srow\"><span>Terfi</span><b>${terfi.promoted ? '<span class=\"pos\">TERFİ ETTİ</span>' : \"terfi yok\"} · canlı çift ${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5224,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": ": `<div class=\"srow\"><span>Eksen-2 üreteci</span><b class=\"warn\">durum defteri yazılmamış — kadans HİÇ koşmadı</b></div>`}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5430,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${iq.last_error ? `<div class=\"srow\"><span>Son hata</span><b class=\"neg\">${esc(iq.last_error)}</b></div>` : \"\"}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5452,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "${mkt.last_bar_at ? `<div class=\"srow\"><span>Son kapanmış bar</span><b>${relTime(mkt.last_bar_at)}${mkt.last_bar_age_s > 180 ? ' · <span class=\"warn\">seyrek (piyasa kapal"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5552,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "r.red_nedeni ? `<br><span class=\"warn\">broker kuralı: ${esc(redNedeni(r.red_nedeni))}</span>` : \"\"}${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5624,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "if (bekle) bekle.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5639,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"warn\">${sonuc.acked_n} kapatıldı · ${sonuc.unknown.length} anahtar tanınmadı (${esc((sonuc.unknown || []).join(\", \"))})</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5640,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"pos\">✓ ${msgYazi(sonuc)}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5651,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "if (msg) msg.innerHTML = r.intraday_armed ? '<span class=\"neg\">⚠ SİLAHLI (Faz 4b yok — yalnız hazırlık)</span>' : '<span class=\"pos\">✓ gözlem-modu (silahsız)</span>';"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5651,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "if (msg) msg.innerHTML = r.intraday_armed ? '<span class=\"neg\">⚠ SİLAHLI (Faz 4b yok — yalnız hazırlık)</span>' : '<span class=\"pos\">✓ gözlem-modu (silahsız)</span>';"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5655,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5873,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "<span class=\"chain\">${inv} beceri koştu${notRun ? ` · <span class=\"warn\">${notRun} beyan edildi KOŞMADI</span>` : \"\"}${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 5874,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "r.error ? ` · <span class=\"neg\">${esc(String(r.error).slice(0, 60))}</span>` : \"\"}</span>"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6060,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": (akis ? `<span class=\"pos\">canlı</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6061,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : \"\"}`))}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6065,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "${pdRow(\"Broker API\", rc.api_ok == null ? \"\" : (rc.api_ok ? \"erişilebilir\" : `<span class=\"neg\">erişilemiyor</span>`))}"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6362,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "<p class=\"hint\" style=\"margin-top:8px\">Kalibrasyon: ${L.calibration?.n||0} sonuç · isabet ${L.calibration?.hit_rate!=null?pctf(L.calibration.hit_rate,0):'—'} · sürüm v${S"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6362,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "<p class=\"hint\" style=\"margin-top:8px\">Kalibrasyon: ${L.calibration?.n||0} sonuç · isabet ${L.calibration?.hit_rate!=null?pctf(L.calibration.hit_rate,0):'—'} · sürüm v${S"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6608,
+   "sinif": "warn",
+   "kapi": "if/catch-satir",
+   "kod": "if (ls === \"no_ship_v1_stands\") echo = `<p class=\"hint\" style=\"margin-top:0\">Canlı durum: <b class=\"warn\">kapıyı geçen öneri yok — ${esc(lvTxt)} duruyor</b>. Antrenman bi"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6609,
+   "sinif": "pos",
+   "kapi": "if/catch-satir",
+   "kod": "else if (ls === \"shipped_awaiting_min_sample\") echo = `<p class=\"hint\" style=\"margin-top:0\">Canlı durum: <b class=\"pos\">${esc(lvTxt)} yayında</b> — işlem birikiyor.</p>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6846,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "const state = s.reflecting ? '<b class=\"pos\">düşünüyor…</b>' : (s.active ? '<b class=\"pos\">aktif · beklemede</b>' : '<b class=\"warn\">pasif</b>');"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6846,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "const state = s.reflecting ? '<b class=\"pos\">düşünüyor…</b>' : (s.active ? '<b class=\"pos\">aktif · beklemede</b>' : '<b class=\"warn\">pasif</b>');"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6846,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "const state = s.reflecting ? '<b class=\"pos\">düşünüyor…</b>' : (s.active ? '<b class=\"pos\">aktif · beklemede</b>' : '<b class=\"warn\">pasif</b>');"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6866,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "+ `${sq.best ? ` · <span class=\"pos\">en iyi ${esc(sq.best.variable)}</span>` : ''}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6906,
+   "sinif": "neg",
+   "kapi": "if/catch-satir",
+   "kod": "if (av.error) return `<div class=\"r\"><span>Sağlayıcı durumu</span><b class=\"neg\">ÖLÇÜLEMEDİ (${esc(av.error)})</b></div>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6924,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "? `<div class=\"r\"><span>Öneri katmanı</span><b class=\"neg\">DETERMİNİSTİK — LLM beyni yok</b></div>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6975,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; if (btn) btn.disabled = false; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6982,
+   "sinif": "pos",
+   "kapi": "if/catch-satir",
+   "kod": "if (msg) msg.innerHTML = `<span class=\"pos\">${esc(r.detail || 'başladı')}</span> — arka planda görüş biriktiriliyor; kalibrasyon güncellendikçe karnede görünür.`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6983,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; if (btn) btn.disabled = false; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6987,
+   "sinif": "warn",
+   "kapi": "if/catch-blok",
+   "kod": "if (!key) { if (msg) msg.innerHTML = '<span class=\"warn\">anahtar boş</span>'; return; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6992,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "if (msg) msg.innerHTML = r.ok ? `<span class=\"pos\">${esc(r.detail)}</span>` : `<span class=\"neg\">${esc(r.detail)}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6992,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "if (msg) msg.innerHTML = r.ok ? `<span class=\"pos\">${esc(r.detail)}</span>` : `<span class=\"neg\">${esc(r.detail)}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 6994,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7054,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"pos\">✓ ayarlı</span> <span class=\"tx3\">(${SRC_TR[st.source] || st.source || \"\"})${st.hint ? \" \" + esc(st.hint) : \"\"}</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7104,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "return `<div class=\"card rise\"><h2 class=\"t\">Alpaca kağıt hesabı ${acc.connected?'<span class=\"pos\" style=\"font-size:12px\">● bağlı</span>':'<span class=\"neg\">bağlı değil<"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7104,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "return `<div class=\"card rise\"><h2 class=\"t\">Alpaca kağıt hesabı ${acc.connected?'<span class=\"pos\" style=\"font-size:12px\">● bağlı</span>':'<span class=\"neg\">bağlı değil<"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7116,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "const bits = [`fiyat ${rc.mirror_drift ? '<b class=\"neg\">SAPMA</b>' : 'uyumlu'}`,"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7117,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": "`pozisyon ${rc.position_drift ? '<b class=\"neg\">SAPMA</b>' : 'uyumlu'}`]"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7118,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ".concat(fails ? [`<b class=\"neg\">${fails} reddedilen emir</b>`] : [])"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7224,
+   "sinif": "warn",
+   "kapi": "if/catch-onceki-satir",
+   "kod": "return `<span class=\"warn\">gönderilmedi — ${esc(r.detail || \"sunucu gerekçe bildirmedi\")}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7232,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"warn\">gönderim sayısı ölçülemedi — uç <code>submitted</code> alanını vermedi (0 DEĞİL)</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7233,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": ": (n ? `<span class=\"pos\">✓ ${trn(n)} emir gönderildi</span>` : `0 emir gönderildi`)];"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7236,
+   "sinif": "warn",
+   "kapi": "if/catch-satir",
+   "kod": "if (kopuk) parca.push(`<span class=\"warn\">${kopuk} ulaşılamadı — plan SİLAHLI kaldı</span>`);"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7237,
+   "sinif": "neg",
+   "kapi": "if/catch-satir",
+   "kod": "if (ret.length) parca.push(`<span class=\"neg\">${ret.length} ret: ${"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7255,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">✗ HTTP ${r.status} — ${esc(body.detail || \"sunucu sebep bildirmedi\")}</span>`);"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7261,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "alpMsgYaz(`<span class=\"neg\">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ölçülemedi;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7281,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "if (!val) { if (stat) stat.innerHTML = '<span class=\"neg\">önce anahtarı yapıştır</span>'; return; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7288,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (stat) stat.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7304,
+   "sinif": "warn",
+   "kapi": "ternary",
+   "kod": "const damga = ts ? ` · ${esc(ts)}` : ' · <span class=\"warn\">damga yok</span>';"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7305,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "el.innerHTML = la.ok ? `<span class=\"pos\">✓ ${esc(la.detail)}</span>${damga}`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7306,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">${esc(la.detail)}</span>${damga}`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7314,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (stat) stat.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7321,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "if (msg) msg.innerHTML = r.ok ? '<span class=\"pos\">✓ gönderildi — kanalını kontrol et</span>'"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7322,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">${esc(r.detail || \"kanal ayarlı değil\")}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7323,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (msg) msg.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7331,
+   "sinif": "pos",
+   "kapi": "ternary",
+   "kod": "? `<span class=\"pos\">✓ ${esc(r.detail || \"bağlandı\")}</span>`"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7332,
+   "sinif": "neg",
+   "kapi": "ternary",
+   "kod": ": `<span class=\"neg\">✕ ${esc(r.detail || \"başarısız\")}</span>`;"
+  },
+  {
+   "dosya": "app.js",
+   "satir": 7333,
+   "sinif": "neg",
+   "kapi": "if/catch-blok",
+   "kod": "} catch (e) { if (stat) stat.innerHTML = `<span class=\"neg\">${esc(e.message)}</span>`; }"
+  }
+ ]
+}

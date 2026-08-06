@@ -1,0 +1,76 @@
+çift                                             gündüz     gece   eşik  hüküm
+yon-arti · çıplak bg                               6.28     7.58    4.5  GEÇTİ
+yon-arti · kendi tinti /bg                         5.46     6.38    4.5  GEÇTİ
+yon-eksi · çıplak bg                               6.69     7.64    4.5  GEÇTİ
+yon-eksi · kendi tinti /bg                         5.79     6.42    4.5  GEÇTİ
+mod-canli · çıplak bg                              7.25     7.45    4.5  GEÇTİ
+mod-canli · kendi tinti /bg                        6.21     6.29    4.5  GEÇTİ
+mod-kesif · çıplak bg                              6.86     7.62    4.5  GEÇTİ
+mod-kesif · kendi tinti /bg                        5.93     6.41    4.5  GEÇTİ
+olcek-guven · çıplak bg                            7.15     7.46    4.5  GEÇTİ
+olcek-guven · kendi tinti /bg                      6.17     6.28    4.5  GEÇTİ
+yon-arti · çıplak bg2                              6.00     7.00    4.5  GEÇTİ
+yon-arti · kendi tinti /bg2                        5.23     5.84    4.5  GEÇTİ
+yon-eksi · çıplak bg2                              6.39     7.06    4.5  GEÇTİ
+yon-eksi · kendi tinti /bg2                        5.54     5.88    4.5  GEÇTİ
+mod-canli · çıplak bg2                             6.92     6.89    4.5  GEÇTİ
+mod-canli · kendi tinti /bg2                       5.95     5.76    4.5  GEÇTİ
+mod-kesif · çıplak bg2                             6.55     7.04    4.5  GEÇTİ
+mod-kesif · kendi tinti /bg2                       5.68     5.87    4.5  GEÇTİ
+olcek-guven · çıplak bg2                           6.83     6.89    4.5  GEÇTİ
+olcek-guven · kendi tinti /bg2                     5.91     5.75    4.5  GEÇTİ
+yon-arti · çıplak card                             5.76     6.82    4.5  GEÇTİ
+yon-arti · kendi tinti /card                       5.03     5.69    4.5  GEÇTİ
+yon-eksi · çıplak card                             6.14     6.88    4.5  GEÇTİ
+yon-eksi · kendi tinti /card                       5.33     5.72    4.5  GEÇTİ
+mod-canli · çıplak card                            6.64     6.71    4.5  GEÇTİ
+mod-canli · kendi tinti /card                      5.72     5.61    4.5  GEÇTİ
+mod-kesif · çıplak card                            6.29     6.87    4.5  GEÇTİ
+mod-kesif · kendi tinti /card                      5.46     5.71    4.5  GEÇTİ
+olcek-guven · çıplak card                          6.55     6.72    4.5  GEÇTİ
+olcek-guven · kendi tinti /card                    5.68     5.60    4.5  GEÇTİ
+yon-arti · çıplak card-2                           5.37     6.13    4.5  GEÇTİ
+yon-arti · kendi tinti /card-2                     4.71     5.10    4.5  GEÇTİ
+yon-eksi · çıplak card-2                           5.72     6.18    4.5  GEÇTİ
+yon-eksi · kendi tinti /card-2                     4.99     5.13    4.5  GEÇTİ
+mod-canli · çıplak card-2                          6.20     6.03    4.5  GEÇTİ
+mod-canli · kendi tinti /card-2                    5.35     5.03    4.5  GEÇTİ
+mod-kesif · çıplak card-2                          5.87     6.17    4.5  GEÇTİ
+mod-kesif · kendi tinti /card-2                    5.11     5.12    4.5  GEÇTİ
+olcek-guven · çıplak card-2                        6.11     6.04    4.5  GEÇTİ
+olcek-guven · kendi tinti /card-2                  5.32     5.02    4.5  GEÇTİ
+matris + hücre · tx /bg                           17.36     9.89    4.5  GEÇTİ
+matris + hücre · tx2 /bg                           6.39     6.52    4.5  GEÇTİ
+matris + hücre · yon-arti /bg                      5.62     6.63    4.5  GEÇTİ
+matris − hücre · tx /bg                           17.56    10.06    4.5  GEÇTİ
+matris − hücre · yon-eksi /bg                      6.05     6.80    4.5  GEÇTİ
+ince örneklem rozeti · guven /bg                   6.39     6.52    4.5  GEÇTİ
+ince örneklem ROZETİ (accent-tint dolgu) /bg       6.47     5.95    4.5  GEÇTİ
+ince örneklem KESİK kenar (UI) /bg                 3.17     3.18    3.0  GEÇTİ
+matris + hücre · tx /card                         15.98     8.82    4.5  GEÇTİ
+matris + hücre · tx2 /card                         5.88     5.82    4.5  GEÇTİ
+matris + hücre · yon-arti /card                    5.17     5.91    4.5  GEÇTİ
+matris − hücre · tx /card                         16.15     8.98    4.5  GEÇTİ
+matris − hücre · yon-eksi /card                    5.57     6.07    4.5  GEÇTİ
+ince örneklem rozeti · guven /card                 5.88     5.82    4.5  GEÇTİ
+ince örneklem ROZETİ (accent-tint dolgu) /card     6.47     5.95    4.5  GEÇTİ
+ince örneklem KESİK kenar (UI) /card               3.12     3.03    3.0  GEÇTİ
+.chain.sev-1 /bg                                   6.24     7.41    4.5  GEÇTİ
+.hint.sev-2 /bg                                    7.57     8.11    4.5  GEÇTİ
+.hint.guven /bg                                    7.15     7.46    4.5  GEÇTİ
+.chain.sev-1 /card                                 5.72     6.68    4.5  GEÇTİ
+.hint.sev-2 /card                                  6.94     7.30    4.5  GEÇTİ
+.hint.guven /card                                  6.55     6.72    4.5  GEÇTİ
+mod bandı · kâğıt (UI) /bg                         3.11     3.91    3.0  GEÇTİ
+mod bandı · canlı (UI) /bg                         7.25     7.45    3.0  GEÇTİ
+mod çipi canlı · metin /kendi tinti üstünde        5.72     5.61    4.5  GEÇTİ
+mod çipi canlı · saç teli (UI)                     1.70     1.92    3.0  KALDI
+keşif çerçevesi (UI) /bg                           3.40     4.40    3.0  GEÇTİ
+keşif çipi · metin /card                           5.46     5.71    4.5  GEÇTİ
+oturum çıkışı hover · tx /card-2                  16.60     9.15    4.5  GEÇTİ
+
+KROMA KISITI (yön < şiddet, her iki zeminde):
+  gunduz: şiddet min C=0.0917 · yön maks C=0.0588 · oran 0.64 GEÇTİ
+  gece: şiddet min C=0.1289 · yön maks C=0.0586 · oran 0.45 GEÇTİ
+
+EŞİK ALTI: [('mod çipi canlı · saç teli (UI)', 1.7, 1.92, 3.0)]

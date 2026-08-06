@@ -113,6 +113,82 @@
      o deseni GÖSTERİR (Ö8). */
   --violet:#3e3c39; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
+
+  /* ==========================================================================
+     ROL KATMANI — D1 (2026-08-07). BEŞ ROL, BEŞ AD KÜMESİ.
+     --------------------------------------------------------------------------
+     İKİ KATMANLI JETON SİSTEMİ. Yukarıdakiler DEĞER jetonlarıdır (--green /
+     --amber / --red: bir HUE'nun adı). Aşağıdakiler ROL jetonlarıdır (bir İŞİN
+     adı). BİLEŞEN KURALLARI YALNIZ ROL JETONU OKUR. Bir kuralın içinde
+     `var(--red)` görmek, o kuralın hangi rolü taşıdığını SÖYLEMEDİĞİ anlamına
+     gelir — ve ölçülen çürüme tam buradan geldi: 2026-08-06 denetiminde --green
+     ≥4, --amber ≥5, --red ≥5 ayrı rol taşıyordu (docs/BASELINE-2026-08-06.md §C).
+     Hue adıyla bağlanan bir kural, ikinci bir anlamı ödünç almayı ÜCRETSİZ kılar.
+
+     ROL 1 · YAPI — akromatik. Kendi jetonu yok, çünkü kendi kanalı zaten var:
+       --bg/--card/--tx/--line. KURAL: yapı hue TAŞIMAZ. Bir etiket, bir kimlik
+       dizesi ya da bir sayaç kromatik boyanıyorsa o bir sızıntıdır.
+
+     ROL 2 · ŞİDDET — --sev-1/2/3. YALNIZ alarm ve risk seviyesi.
+       sev-1 = P1, şimdi müdahale (durduruldu, kopuk, ret, yıkıcı kontrol)
+       sev-2 = P2, insan gerekiyor (bayat, aşım, REVIEW, silahlı)
+       sev-3 = P3, nominal (sakin, geçti, bağlı)
+       Kroma en yüksek burada. Başka HİÇBİR anlam bu kanalı kullanamaz.
+
+     ROL 3 · YÖN — --yon-arti/--yon-eksi. K/Z İŞARETİ, başka bir şey değil.
+       ÜÇÜNCÜ SİNYAL: işaret (+/−) ve ok önce gelir, hue yalnız pekiştirir.
+       KROMA ŞİDDETİN ALTINDA, ve bu ölçülmüş bir kısıttır (bkz. testler):
+         gündüz  yön C≤0,059  <  şiddet min C 0,0917 (--sev-2)
+         gece    yön C≤0,059  <  şiddet min C 0,1289 (--sev-1)
+       Gerekçe: kârlı bir gün, bir risk ihlaliyle dikkat için YARIŞAMAZ. Değerler
+       luminansı korunarak (aynı mürekkep bandı) kroması düşürülerek üretildi —
+       yani kontrast düşmedi, gürültü düştü.
+
+     ROL 4 · MOD — --mod-kagit/--mod-canli/--mod-kesif. AYRILMIŞ KANAL.
+       Hue 310° (mor-macenta) bu kanala kalıcı olarak ayrıldı ve BAŞKA HİÇBİR
+       ŞEY kullanamaz. Şiddet hue'ları (24° / 77° / 154°) ve veri-ölçek kutupları
+       (250° / 84°) bu banda girmez; girerse rol testi kırmızı yanar.
+       KÂĞIT AKROMATİKTİR: beklenen, güvenli durum kroma harcamaz ("renk yalnız
+       anomalide"). Kroma YALNIZ canlıya ve keşfe ait — yani yanlış okunduğunda
+       pahalı olan hâllere. Taşıyıcı YAPISALDIR (sayfanın üst kenar bandı,
+       `body[data-mod]`), köşe rozeti değil.
+
+     ROL 5 · VERİ ÖLÇEKLERİ — tek-hue sequential (--kap-*) + CVD-güvenli
+       diverging (--dv-*) + seri merdiveni (--accent/--violet/--tx3). Bu eksen
+       2026-08-06 denetiminde UYUYORDU ve DEĞİŞMEDİ. Bu tura eklenen tek şey
+       VERİ GÜVENİ (--olcek-guven): "ince örneklem" bir alarm değil bir güven
+       ölçüsüdür, o yüzden kehribardan alınıp bu role verildi — akromatik, ve
+       ikinci kanalı KESİK ÇİZGİ (renk körü okuyucu için hue yeterli değil).
+     ========================================================================== */
+  /* ROL 2 · ŞİDDET — değer katmanından devralınır; ölçümleri DESIGN.md'de. */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  /* ROL 3 · YÖN — ÖLÇÜLDÜ (research/olcumler/renk_rolleri_2026-08-07/):
+     --yon-arti #40654c L 0,471 C 0,0588 · en kötü gerçek zemin 4,71
+     --yon-eksi #784e4b L 0,470 C 0,0575 · en kötü gerçek zemin 4,99  (ikisi de AA) */
+  --yon-arti:#40654c; --yon-eksi:#784e4b;
+  --yon-arti-t:rgba(64,101,76,.10); --yon-eksi-t:rgba(120,78,75,.10);
+  --yon-arti-h:rgba(64,101,76,.35); --yon-eksi-h:rgba(120,78,75,.35);
+  /* Matris hücre zemini: yönün ıraksayan ölçeği. Alfa .08/.07 KORUNDU (ölçülmüş
+     sınır); yalnız hue şiddetten yöne taşındı, yani hücre rakamının (--tx)
+     kontrastı YÜKSELDİ — düşük kroma daha az zemin kaydırır. */
+  --yon-arti-zemin:rgba(64,101,76,.08); --yon-eksi-zemin:rgba(120,78,75,.07);
+  /* ROL 4 · MOD — ayrılmış hue 310°. ÖLÇÜLDÜ:
+     --mod-canli #723a96 C 0,150 · en kötü 5,35 · --mod-kesif #635071 C 0,057 · en kötü 5,11 */
+  --mod-kagit:var(--tx2); --mod-canli:#723a96; --mod-kesif:#635071;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(114,58,150,.10); --mod-kesif-t:rgba(99,80,113,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(114,58,150,.35); --mod-kesif-h:rgba(99,80,113,.35);
+  /* ROL 5 · VERİ GÜVENİ — akromatik; ayrım ikinci kanaldan (kesik çizgi) gelir. */
+  /* HALKA KENDİ ALFASINI ALIR (.45), --ink-h'yi (.30) DEĞİL: bu kenar bir SÜS değil,
+     "bu hücrenin örneklemi ince" bilgisinin taşıyıcısı — WCAG 2.2 1.4.11 metin-dışı 3:1
+     tam olarak bunu ister. Ölçüldü: .30 → 2,03 (gündüz) / 2,12 (gece), KALDI; .45 → 3,12
+     / 3,03, GEÇTİ. Kıyas için ESKİ kehribar halka (--amber-h .35) 1,72-2,07 ölçüyordu —
+     yani bu kalem yalnız rol sızıntısını değil, sessiz bir erişilebilirlik açığını da
+     kapatıyor. Kart/çip saç telleri beyanlı sapmada (1,09-1,83) KALIR: onlar dolgularıyla
+     tanınır, bu kenar ise TEK taşıyıcı. */
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(5,5,5,.45);
   /* NİTEL BANT MERDİVENİNİN ORTA BASAMAĞI (P3/B1). Bullet grafiğinin bantları eskiden
      --card-2 → --line → --line-2 → --tx3 → --tx2 idi; fiilen çizilen İLK İKİ-ÜÇ bandın
      adımı 1.09 ve 1.15'ti, yani "2-5 nitel aralık" iddiası ekranda tek tondu. Merdiven
@@ -147,7 +223,6 @@
   --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
   --scrim:rgba(5,5,5,.42);
   --green-stamp:rgba(12,106,59,.55);
-  --pm-pos:rgba(12,106,59,.08); --pm-neg:rgba(179,36,44,.07);
   --r-card:12px; --r-ctl:10px; --r-bar:2px;
   /* --r-pill KALDIRILDI (2026-07-27): tanımlıydı ama HİÇBİR kural onu kullanmıyordu.
      Belge "hap geometrisi" diye bir şey anlatıyordu, artefaktta karşılığı yoktu. */
@@ -248,8 +323,32 @@
      Sıcak-siyah, saf siyah değil — Warm Rule perdede de geçerli. */
   --scrim:rgba(10,9,8,.66);
   --green-stamp:rgba(76,195,138,.55);
-  --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
   --field:#7e776e;
+  /* ==========================================================================
+     ROL KATMANI · GECE — AD KÜMESİ GÜNDÜZLE BİREBİR AYNIDIR.
+     Bir zeminde tanımlı olup diğerinde olmayan bir rol jetonu BUG'dır ve testle
+     çivilenmiştir (tests/test_renk_rolleri_v197.py::test_iki_zeminde_ad_kumesi_esit).
+     Sebep ölçülmüş bir arıza sınıfı: eksik jeton ikinci temada sessizce miras
+     alınır, yani kural çalışır ama YANLIŞ zeminin rengiyle çalışır.
+     DEĞERLER TERS ÇEVİRİLEREK DEĞİL ÖLÇÜLEREK üretildi (Tint-Direction Rule).
+     ========================================================================== */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  /* YÖN · gece — ÖLÇÜLDÜ: --yon-arti #8ab59c C 0,0586 en kötü 5,10 ·
+     --yon-eksi #d1a0a0 C 0,0584 en kötü 5,13. Kroma gece şiddet minimumunun
+     (0,1289) %45'i — yani yön burada da şiddetin GÖRÜNÜR altında. */
+  --yon-arti:#8ab59c; --yon-eksi:#d1a0a0;
+  --yon-arti-t:rgba(138,181,156,.10); --yon-eksi-t:rgba(209,160,160,.10);
+  --yon-arti-h:rgba(138,181,156,.35); --yon-eksi-h:rgba(209,160,160,.35);
+  --yon-arti-zemin:rgba(138,181,156,.08); --yon-eksi-zemin:rgba(209,160,160,.07);
+  /* MOD · gece — aynı ayrılmış hue (310°), gece mürekkep bandında.
+     --mod-canli #c598e7 en kötü 5,03 · --mod-kesif #b9a4ca en kötü 5,12 */
+  --mod-kagit:var(--tx2); --mod-canli:#c598e7; --mod-kesif:#b9a4ca;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(197,152,231,.10); --mod-kesif-t:rgba(185,164,202,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(197,152,231,.35); --mod-kesif-h:rgba(185,164,202,.35);
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(212,208,203,.45);
   color-scheme:dark;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -282,7 +381,13 @@ h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-h
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}
 .mut{color:var(--tx2)} .tx3{color:var(--tx2)}
-.pos{color:var(--green)} .neg{color:var(--red)} .warn{color:var(--amber)}
+.pos{color:var(--yon-arti)} .neg{color:var(--yon-eksi)} .warn{color:var(--sev-2)}
+/* ROL SINIFLARI (D1): rolünü ADIYLA söyleyen sınıflar. `.pos/.neg` YÖN, `.warn`
+   ŞİDDET-2 kalır (baskın kullanımları bunlar); şiddetin üç kademesi, modun üç
+   hâli ve veri güveni artık KENDİ sınıflarını taşır ve ödünç almazlar. */
+.sev-1{color:var(--sev-1)} .sev-2{color:var(--sev-2)} .sev-3{color:var(--sev-3)}
+.guven{color:var(--olcek-guven)}
+.mod-kagit{color:var(--mod-kagit)} .mod-canli{color:var(--mod-canli)} .mod-kesif{color:var(--mod-kesif)}
 .mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
 /* one authored moment: content settles in, exponential ease-out, nothing else. */
 .rise{opacity:0;transform:translateY(6px);
@@ -295,7 +400,7 @@ a{color:inherit;text-decoration:none}
    bu renk bir ölçüm değil ama bir KAYIP anlatıyor (yapılmakta olan işin kesilmesi). */
 .side .sitem.cikis{border-bottom:none;border-top:1px solid var(--line-2);margin-top:var(--s3);
   padding-top:var(--s3);color:var(--tx2)}
-.side .sitem.cikis:hover{color:var(--red);background:var(--red-t)}
+.side .sitem.cikis:hover{color:var(--tx);background:var(--card-2)}
 .side .sitem.cikis .vis-label{font-weight:400}
 
 /* Tema anahtarı — çıkışla AYNI aile (oturum tercihi), o yüzden aynı ayırıcı çizginin altında.
@@ -340,11 +445,11 @@ a{color:inherit;text-decoration:none}
    kutu yan yana düşüyordu. */
 #gate-pw2-wrap{display:flex;flex-direction:column;gap:var(--s3)}
 #gate-pw2-wrap[hidden]{display:none}
-.gate-msg{font-size:13px;color:var(--red);min-height:1.2em;margin:0}
-.gate-msg.ok{color:var(--green)}
+.gate-msg{font-size:13px;color:var(--sev-1);min-height:1.2em;margin:0}
+.gate-msg.ok{color:var(--sev-3)}
 /* TLS uyarısı KIRMIZI: burada renk gerçekten bir kaybı anlatıyor — parolanın açık gitmesi.
    Money Rule'un istisnası değil, uygulaması. */
-.gate-tls{font-size:12px;line-height:1.45;color:var(--red);background:var(--red-t);
+.gate-tls{font-size:12px;line-height:1.45;color:var(--sev-1);background:var(--sev-1-t);
   border-radius:var(--r-ctl);padding:10px 12px;margin:var(--s2) 0 0}
 /* ---- accession header — the ruled top edge of the sheet ---- */
 /* OMEGA: bar sayfayla aynı ışıkta durur, üstünden geçen içeriği bulanıklaştırarak ayrılır.
@@ -375,7 +480,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 /* every reading in the header is a stamped chip: typewritten, ruled, square */
 .statuspill{display:inline-flex;align-items:center;gap:var(--s2);border:1px solid var(--line-2);background:var(--card);
   color:var(--tx2);font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:var(--r-ctl)}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--sev-3)}
 /* HAREKET KURALI (WP-P/P10, 2026-08-01): PULS YALNIZ ANOMALİ SİNYALİDİR.
    ESKİ KURAL `.dot.pulse{animation:pulse}` idi ve app.js sınıfı KOŞULSUZ basıyor
    (`"dot pulse" + (halted ? " halt" : stale ? " stale" : "")`) — yani sağlıklı sistemde de
@@ -384,12 +489,12 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
    SINIF ADLARI DEĞİŞMEDİ (app.js sözleşmesi korunur); animasyon yalnız `.stale`/`.halt`
    niteleyicisiyle BİRLİKTE çalışır. Sağlıklı nokta artık durağan yeşildir. */
 .dot.pulse.stale,.dot.pulse.halt{animation:pulse 2.6s infinite}
-.dot.stale{background:var(--amber)} .dot.halt{background:var(--red)}
+.dot.stale{background:var(--sev-2)} .dot.halt{background:var(--sev-1)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* the halt lever — the one control that stops the collection */
-.halt{border:1px solid var(--red);color:var(--red);background:transparent;padding:0 16px;
+.halt{border:1px solid var(--sev-1);color:var(--sev-1);background:transparent;padding:0 16px;
   border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;cursor:pointer;transition:var(--t)}
-.halt:hover{background:var(--red);color:var(--bg2)}
+.halt:hover{background:var(--sev-1);color:var(--bg2)}
 /* HUD ÜST-BAR ÖĞELERİ TEK YÜKSEKLİK: statuspill/KRİZ/HALT farklı padding+font yüzünden farklı
    yükseklikteydi ve üst bar hizasız görünüyordu. Ortak yükseklik hepsini aynı hizaya oturtur.
    DOKUNMA HEDEFİ (2026-07-27): 30px idi — HALT ve KRİZ yıkıcı yoldur ve 44px altında kalamaz.
@@ -477,7 +582,7 @@ nav.stuck{border-bottom-color:var(--accent);box-shadow:0 3px 0 -2px var(--line-2
 /* count stamps in the index */
 .pillc{background:var(--accent);color:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;
   border-radius:var(--r-ctl);font-variant-numeric:tabular-nums}
-.pillc.g{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.pillc.g{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 
 main{min-width:0}
@@ -648,7 +753,7 @@ main{min-width:0}
 .gb-alarm{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s2) var(--s3);margin-top:var(--s4);
   padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-bar);
   font-family:var(--mono);font-size:11px;color:var(--tx2);line-height:1.6}
-.gb-alarm.asim{border-color:var(--amber-h);color:var(--amber)}
+.gb-alarm.asim{border-color:var(--sev-2-h);color:var(--sev-2)}
 .gb-alarm .gb-bag{margin-top:0;margin-left:auto;align-self:baseline}
 @media(max-width:980px){.gb-ust,.gb-trend{grid-template-columns:1fr}}
 
@@ -685,8 +790,8 @@ main{min-width:0}
    dolgusu `currentColor` okur, `.pm-n` nötr kalır. 7px'lik anomali NOKTASI kaldırıldı: aynı
    sapmayı ikinci bir işaret diliyle tekrar anlatıyordu. PULS YOK — kalıcı bir hareket, hareket
    bütçesinin (P10) tamamını sürekli harcar. */
-.durum-kart.uyari{color:var(--amber)}
-.durum-kart.kopuk{color:var(--red)}
+.durum-kart.uyari{color:var(--sev-2)}
+.durum-kart.kopuk{color:var(--sev-1)}
 .durum-dus{font-size:12px;color:var(--tx2);margin:0}
 /* Dört kart 1100px altında ikişerli, 640px altında tek kolon. Genel Bakış'takiyle aynı gerekçe:
    dar ekranda kaydırma DÜRÜST hâldir, sıkıştırılmış dört sütun değil. */
@@ -701,15 +806,15 @@ main{min-width:0}
   font-size:14px;line-height:1.6;position:relative;background:var(--card)}
 /* Şerit artık Bugün'ün İLK öğesi — sayfanın tepesinde üst boşluğu olmaz. */
 .spine:first-child{margin-top:0}
-.spine::before{content:"";position:absolute;left:var(--s5);top:calc(var(--s4) + 7px);width:8px;height:8px;background:var(--green)}
+.spine::before{content:"";position:absolute;left:var(--s5);top:calc(var(--s4) + 7px);width:8px;height:8px;background:var(--sev-3)}
 .spine .msg{font-weight:600;font-size:14px;letter-spacing:-.005em;color:var(--tx)}
 .spine.calm{color:var(--tx2);background:transparent;border-top-color:var(--line);border-bottom-color:var(--line)}
-.spine.calm::before{background:var(--green-stamp)}
+.spine.calm::before{background:var(--sev-3-damga)}
 .spine.calm .msg{color:var(--tx2);font-weight:400}
-.spine.attn{background:var(--amber-t);border-top-color:var(--amber);border-bottom-color:var(--amber)}
-.spine.attn::before{background:var(--amber)}
-.spine.act{background:var(--red-t);border-top-color:var(--red);border-bottom-color:var(--red)}
-.spine.act::before{background:var(--red)}
+.spine.attn{background:var(--sev-2-t);border-top-color:var(--sev-2);border-bottom-color:var(--sev-2)}
+.spine.attn::before{background:var(--sev-2)}
+.spine.act{background:var(--sev-1-t);border-top-color:var(--sev-1);border-bottom-color:var(--sev-1)}
+.spine.act::before{background:var(--sev-1)}
 .spine .items{display:flex;gap:var(--s2) var(--s4);flex-wrap:wrap;font-size:13px;color:var(--tx2);align-items:center}
 /* DOKUNMA HEDEFİ: 99.6×21.8 idi. Şerit panonun tek zorunlu cümlesi ve bu düğmeler onun tek
    çıkışı — parmakla ıskalanamaz. Yazı çizgisi aynı kalır, kutu 44px'e açılır. */
@@ -749,8 +854,8 @@ main{min-width:0}
    figure, not a texture. A 3-trade mean cannot look as firm as a 55-trade one. */
 .pm-conf{position:relative;height:2px;background:var(--line);border-radius:var(--r-bar);overflow:hidden;margin-top:2px}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:var(--r-bar)}
-.pm-cell.pos{color:var(--green)} .pm-cell.neg{color:var(--red)}
-.pm-cell.pos{background:var(--pm-pos)} .pm-cell.neg{background:var(--pm-neg)}
+.pm-cell.pos{color:var(--yon-arti)} .pm-cell.neg{color:var(--yon-eksi)}
+.pm-cell.pos{background:var(--yon-arti-zemin)} .pm-cell.neg{background:var(--yon-eksi-zemin)}
 /* DEĞER ÖLÇÜSÜ ESNEK (v192): aynı sınıf artık matris hücresinde, durum kartında ve özet
    şeridinde çalışıyor; sabit 24px dar ekranda dört sütunlu şeridi taşırıyordu. Tavan aynı. */
 .pm-yield{position:relative;font-size:clamp(18px,2.2vw,24px);font-weight:500;letter-spacing:-.045em;
@@ -763,13 +868,14 @@ main{min-width:0}
    kimsenin fark etmediği bir sıra çakışmasıyla ölüydü. (0,2,0) ile kap yenilir.
    Matrisin `.pm-cell.pos` zemini bundan BAĞIMSIZ çalışır: o hücrenin tamamını boyar, bu yalnız
    değeri — ikisi çakışmaz, biri kesitin hükmü diğeri sayının işareti. */
-.pm-yield.pos{color:var(--green)} .pm-yield.neg{color:var(--red)} .pm-yield.warn{color:var(--amber)}
+.pm-yield.pos{color:var(--yon-arti)} .pm-yield.neg{color:var(--yon-eksi)} .pm-yield.warn{color:var(--sev-2)}
 .pm-n{position:relative;font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums}
 .pm-n b{color:var(--tx);font-weight:500}
 /* under-sown: the ochre stake a trials officer puts in a plot with too few rows */
-.pm-cell.thin{box-shadow:inset 0 0 0 1px var(--amber-h)}
+.pm-cell.thin{box-shadow:inset 0 0 0 1px var(--olcek-guven-h)}
 .pm-thin{position:relative;align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:700;
-  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--amber);background:var(--amber-t);padding:2px 6px;margin-top:2px}
+  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--olcek-guven);
+  background:var(--olcek-guven-t);border:1px dashed var(--olcek-guven-h);padding:1px 5px;margin-top:2px}
 /* never sown: bare worked earth, not a zero */
 .pm-unsown{background:var(--bg2)}
 .pm-none{font-family:var(--mono);font-size:11px;letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);opacity:.7}
@@ -777,7 +883,7 @@ main{min-width:0}
 button.pm-cell{width:100%;text-align:left;border:none;font:inherit;cursor:pointer;transition:var(--t)}
 button.pm-cell:hover{filter:brightness(1.25)}
 button.pm-cell.sel{box-shadow:inset 0 0 0 2px var(--accent)}
-button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--amber)}
+button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px var(--olcek-guven-h)}
 
 /* ---- PARSEL KAYDI — the drawer. The matrix is the interface, so a plot's record
    opens beside it; the operator never leaves the table. ---- */
@@ -803,8 +909,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .pd-stats .l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--tx2);margin-bottom:8px}
 .pd-stats .v{font-family:var(--mono);font-size:20px;font-weight:400;letter-spacing:-.04em;line-height:1}
 /* an under-sown plot says so in words, not just with a stake */
-.pd-warn{font-size:13px;line-height:1.65;color:var(--amber);background:var(--amber-t);
-  border:1px solid var(--amber-h2);padding:11px 13px;margin-bottom:var(--s5)}
+.pd-warn{font-size:13px;line-height:1.65;color:var(--sev-2);background:var(--sev-2-t);
+  border:1px solid var(--sev-2-h2);padding:11px 13px;margin-bottom:var(--s5)}
 .pd-sub{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
   color:var(--tx2);margin:var(--s5) 0 var(--s2);padding-bottom:7px;border-bottom:1px solid var(--line)}
 .pd-sub:first-of-type{margin-top:0}
@@ -994,11 +1100,19 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* rubber stamps: struck in the state's own ink, ruled, never a soft pill */
 .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);text-align:center;
   letter-spacing:var(--label-track);display:inline-block;text-transform:uppercase}
-.t-go{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
-.t-rv{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-h)}
-.t-no{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
+.t-go{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.t-rv{background:var(--sev-2-t);color:var(--sev-2);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
+.t-no{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--ink-h)}
 .chain{font-size:11px;color:var(--tx2);font-family:var(--mono)}
+/* ROL SINIFI KAPTAN SONRA GELİR (D1, 2026-08-07). Ölçüldü: `.chain` bu satırda, rol
+   sınıfları :377-383'te — AYNI özgüllükte (0,1,0) ve KAYNAK SIRASI gereği kap kazanıyordu.
+   Yani `class="chain neg"` basan iki emisyon (bütünlük parity satırları, beyansız yazar)
+   ekranda HİÇBİR ZAMAN renklenmiyordu: ihlal, uyumlu satırla aynı griydi. Bu, `.pm-yield`
+   için 2026-07 turunda belgelenen çakışmanın ta kendisi — orada da kural kaynakta canlı,
+   ekranda ölüydü. (0,2,0) ile kap yenilir. */
+.chain.sev-1{color:var(--sev-1)} .chain.sev-2{color:var(--sev-2)} .chain.sev-3{color:var(--sev-3)}
+.chain.guven{color:var(--olcek-guven)}
 .reason{font-size:11px;color:var(--tx2);margin-top:3px;line-height:1.5}
 .empty{color:var(--tx2);text-align:center;padding:var(--s8);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
 
@@ -1014,8 +1128,8 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .hyp .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:var(--s3)}
 .hyp .v{font-family:var(--mono);font-size:12px;color:var(--tx2);letter-spacing:.04em}
 .st{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:var(--r-ctl);letter-spacing:var(--label-track);text-transform:uppercase}
-.s-ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
-.s-rb{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
+.s-ok{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.s-rb{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .s-rj{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .hyp h3{font-family:var(--display);font-size:17px;margin-bottom:8px;font-weight:400;letter-spacing:-.008em;line-height:1.3}
 .hyp p{font-size:13px;color:var(--tx2);line-height:1.7;max-width:74ch}
@@ -1026,7 +1140,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* ---- the transcript — the raw plate, read as typed ---- */
 .pane{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--bg2);padding:var(--s6)}
 .mono{font-family:var(--mono);font-size:12px;line-height:2;color:var(--tx2);white-space:pre-wrap}
-.mono .k{color:var(--accent-2)} .mono .ok{color:var(--green)} .mono .w{color:var(--amber)} .mono .no{color:var(--red)} .mono .d{color:var(--tx2)}
+.mono .k{color:var(--accent-2)} .mono .ok{color:var(--sev-3)} .mono .w{color:var(--sev-2)} .mono .no{color:var(--sev-1)} .mono .d{color:var(--tx2)}
 .bignum{font-family:var(--mono);font-size:clamp(24px,6vw,28px);font-weight:400;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1;color:var(--tx)}
 
 /* ---- autonomy ladder — the rungs this collection has earned ---- */
@@ -1108,9 +1222,9 @@ code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);color:
 .crit{display:flex;align-items:flex-start;gap:var(--s3);padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
 .crit:last-child{border-bottom:none}
 .ck{width:18px;height:18px;border-radius:0;flex:none;display:grid;place-items:center;font-size:10px;margin-top:1px;font-family:var(--mono);font-weight:700}
-.ck.ok{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
+.ck.ok{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
 .ck.no{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
-.ck.man{background:var(--amber-t);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-h)}
+.ck.man{background:var(--sev-2-t);color:var(--sev-2);box-shadow:inset 0 0 0 1px var(--sev-2-h)}
 
 /* ---- markdown / lessons ---- */
 .searchbox{width:100%;font-family:var(--sans)}
@@ -1127,6 +1241,11 @@ svg text{font-family:var(--mono)}
 /* ---- plain-language layer: the buff annotation slip, the one warm material,
    pinned over the blue exactly where a hand wrote a note ---- */
 .hint{font-size:14px;color:var(--tx2);line-height:1.75;margin-top:12px;max-width:70ch}
+/* AYNI ÇAKIŞMA, İKİNCİ KAP: `class="hint warn"` basan altı emisyon (pencere kesildi, kırpma
+   uyarıları, boş takvim, kota) ekranda GRİ çıkıyordu — uyarı olduğunu söyleyen tek kanal
+   ölüydü. Rol sınıfı kaptan sonra gelmeli. */
+.hint.sev-1{color:var(--sev-1)} .hint.sev-2{color:var(--sev-2)} .hint.warn{color:var(--sev-2)}
+.hint.guven{color:var(--olcek-guven)}
 .term{border-bottom:1px solid var(--line-2);cursor:help;position:relative;text-transform:none}
 .term:hover,.term:focus-visible{color:var(--tx);border-color:var(--accent);outline:none}
 .term::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 9px);width:max-content;max-width:270px;
@@ -1171,11 +1290,53 @@ svg text{font-family:var(--mono)}
 kbd{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--line-2);
   border-radius:0;padding:2px 7px;color:var(--tx);font-weight:700}
 
+/* ============================================================================
+   ROL 4 · MOD KANALI — YAPISAL TAŞIYICI (D1, 2026-08-07)
+   ----------------------------------------------------------------------------
+   Design rules: "Mode must be legible from any pixel… a STRUCTURAL treatment —
+   not a corner badge — carries it, because the costliest accident class in this
+   domain is an operator who believes they are in the other mode."
+
+   TAŞIYICI: sayfanın üst kenarına oturan 3px'lik bir bant. HER MODDA VARDIR —
+   yani bir öğenin yokluğu asla "mod yok" diye okunmaz; bant yapıdır, KROMASI
+   moddur. Bu, "renk yalnız anomalide" kuralıyla çatışmaz çünkü:
+     kâğıt (L0, bugün)  → AKROMATİK (--mod-kagit). Beklenen, güvenli hâl kroma
+                          harcamaz; operatör onu görmek zorunda değil, ARAMAK
+                          zorunda da değil.
+     canlı (L1+)        → AYRILMIŞ KROMA (--mod-canli). Yanlış okunduğunda para
+                          kaybettiren tek hâl, kanalın tamamını alır.
+     ölçülemedi         → KESİK bant. "0" ya da "paper" DEĞİL: mod okunamadıysa
+                          ekran bunu söyler (UYDURMA YASAĞI'nın mod hattındaki
+                          karşılığı; app.js `modJetonu` aynı hükmü metinde verir).
+   Bant `position:fixed` ve `pointer-events:none` — hiçbir tıklamayı yemez.
+   `data-mod` özniteliği D0'ın açtığı MAKİNE kanalıdır; bu blok onu görsel kanala
+   bağlayan ilk kural, ikinci bir kaynak icat etmez.
+   ŞİDDET/YÖN HUE'LARI MODA ÖDÜNÇ VERİLMEZ ve tersi de geçerlidir: 310° bandı
+   yalnız buranın, ve test bunu kaynak taramasıyla çiviler.
+   ============================================================================ */
+body[data-mod]::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;z-index:200;
+  pointer-events:none;background:var(--mod-kagit);opacity:.65}
+/* OPAKLIK .65 ÖLÇÜLMÜŞ BİR TABANDIR, estetik bir tercih değil: .55'te bant gündüz zeminde
+   2,53 ölçtü — 1.4.11'in metin-dışı 3:1 eşiğinin ALTI, yani "hangi moddayım" sorusunun
+   yapısal cevabı gündüzde okunamıyordu. .65'te 3,11 (gündüz) / 3,91 (gece). Canlı bandı
+   zaten 7,25/7,45 — kroma taşıdığı için tabanı zorlamıyor. */
+body[data-mod="live"]::before{background:var(--mod-canli);opacity:1}
+body[data-mod="olculemedi"]::before{opacity:.9;background:repeating-linear-gradient(
+  90deg,var(--mod-kagit) 0 6px,transparent 6px 12px)}
+/* Mod jetonu (üst bar) MODLA aynı kanaldan konuşur — çip ile bandın rengi tek
+   kaynaktır. `t-vi` akromatik kalıbı korunur, yalnız canlı hâlde kanal açılır. */
+.tag[data-mod="live"]{background:var(--mod-canli-t);color:var(--mod-canli);
+  box-shadow:inset 0 0 0 1px var(--mod-canli-h)}
+.tag[data-mod="olculemedi"]{border:1px dashed var(--mod-kagit-h)}
+
 /* ---- Risk & müdahale okumaları + panel bileşenleri ---- */
 /* keşif modu: the sheet is marked as an unconfirmed exposure — a ruled orpiment
-   border on the plate, no halo. Colored glow was the discarded cockpit's device. */
+   border on the plate, no halo. Colored glow was the discarded cockpit's device.
+   D1 (2026-08-07): çerçevenin hue'su KEHRİBARDAN MOD KANALINA taşındı. Keşif bir
+   çalışma kipidir, bir alarm seviyesi değil — kehribarda dururken alarm bütçesinin
+   diliyle karışıyordu (baseline T7). Geometri ve opaklık DEĞİŞMEDİ. */
 body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:70;
-  border:2px solid var(--amber);opacity:.7}
+  border:2px solid var(--mod-kesif);opacity:.7}
 /* PULS KALDIRILDI (WP-P/P10): keşif modu bir ANOMALİ DEĞİL, operatörün seçtiği bir duruştur
    (≤0.25R sonda). Ekranın dört kenarında saatlerce nefes alan bir çerçeve, hareketi durum
    bildiriminin diline çeviriyordu — ve o dil bozulduğunda söylenecek bir şey kalmıyordu.
@@ -1187,9 +1348,9 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
   color:var(--tx2);font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:var(--r-ctl);
   font-variant-numeric:tabular-nums;white-space:nowrap}
 .hudchip b{color:var(--tx);font-weight:700;letter-spacing:-.02em}
-.hudchip.explore{border-color:var(--amber);color:var(--amber)}
-.hudchip .ld{width:6px;height:6px;border-radius:0;background:var(--green);display:inline-block}
-.hudchip .ld.bad{background:var(--red)} .hudchip .ld.warn{background:var(--amber)} .hudchip .ld.off{background:var(--tx2)}
+.hudchip.explore{border-color:var(--mod-kesif);color:var(--mod-kesif);background:var(--mod-kesif-t)}
+.hudchip .ld{width:6px;height:6px;border-radius:0;background:var(--sev-3);display:inline-block}
+.hudchip .ld.bad{background:var(--sev-1)} .hudchip .ld.warn{background:var(--sev-2)} .hudchip .ld.off{background:var(--tx2)}
 /* EMNİYET KAPAKLI KILL-SWITCH GRUBU — kapalıyken tek buton.
    ESKİDEN ÇIPLAK :hover AÇIYORDU (2026-07-27 düzeltmesi): imleç bardan geçerken "Flatten — TÜM
    pozisyonlar" paneli niyet gecikmesi olmadan içeriğin üstüne düşüyordu, ve :focus-within yüzünden
@@ -1197,17 +1358,17 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    gerçek bir düğme: yalnız TIKLAYINCA açılır, aria-expanded durumu söyler, kapalıyken maddeler
    display:none olduğu için ne sekme sırasında ne erişilebilirlik ağacında vardır. */
 .kswrap{position:relative}
-.kscover{border:1px solid var(--red);color:var(--red);background:transparent;padding:0 13px;
+.kscover{border:1px solid var(--sev-1);color:var(--sev-1);background:transparent;padding:0 13px;
   border-radius:var(--r-ctl);font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.1em;cursor:pointer}
-.kscover:hover{background:var(--red-t)}
-.kscover[aria-expanded="true"]{background:var(--red);color:var(--bg2)}
+.kscover:hover{background:var(--sev-1-t)}
+.kscover[aria-expanded="true"]{background:var(--sev-1);color:var(--bg2)}
 .ksgroup{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:60;background:var(--card);
-  border:1px solid var(--red);border-radius:var(--r-card);padding:var(--s3);min-width:280px}
+  border:1px solid var(--sev-1);border-radius:var(--r-card);padding:var(--s3);min-width:280px}
 .ksgroup.open{display:flex;flex-direction:column;gap:6px}
 .ksgroup button{text-align:left;font-size:13px;padding:8px 11px;min-height:44px;border-radius:var(--r-ctl);cursor:pointer;
   border:1px solid var(--line-2);background:var(--bg2);color:var(--tx);font-family:var(--sans)}
-.ksgroup button:hover{border-color:var(--red);color:var(--red)}
-.ksgroup button.armed{border-color:var(--amber);color:var(--amber)}
+.ksgroup button:hover{border-color:var(--sev-1);color:var(--sev-1)}
+.ksgroup button.armed{border-color:var(--sev-2);color:var(--sev-2)}
 /* yanıp sönen durum etiketleri (GHOST / DESYNC) */
 .blink{animation:blinkTag 1.1s steps(2,start) infinite}
 @keyframes blinkTag{50%{opacity:.25}}
@@ -1219,8 +1380,8 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .gatechain{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .gc{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:var(--r-ctl);
   letter-spacing:var(--label-track);cursor:default;text-transform:uppercase}
-.gc.p{background:var(--green-t);color:var(--green);box-shadow:inset 0 0 0 1px var(--green-h)}
-.gc.f{background:var(--red-t);color:var(--red);box-shadow:inset 0 0 0 1px var(--red-h)}
+.gc.p{background:var(--sev-3-t);color:var(--sev-3);box-shadow:inset 0 0 0 1px var(--sev-3-h)}
+.gc.f{background:var(--sev-1-t);color:var(--sev-1);box-shadow:inset 0 0 0 1px var(--sev-1-h)}
 .gc.arrow{background:none;color:var(--tx2);padding:0 1px;box-shadow:none}
 /* ÖLÇÜ ŞERİDİ — eskiden burada iki dairesel gauge vardı (deflasyon + sabır); ikisi de bullet
    graph'a çevrildi (2026-08-01). Gerekçe app.js'teki _bullet başlığında; özet: radyal kodlama
@@ -1298,8 +1459,8 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 /* SAPAN SEGMENT TAM SATIRI ALIR: açılımı bir sütuna sıkışırsa runbook ipucu okunmaz olur.
    `flex-basis` BURADA yazılır çünkü ızgaranın flex ÖĞESİ `.sh-seg`tir — içindeki `.sh-ac`ye
    yazmak sessizce hiçbir şey yapmaz (o bir flex öğesi değil). */
-.sessizhat .sh-sap{color:var(--amber);font-weight:700;white-space:normal;flex-basis:100%}
-.sessizhat .sh-sap.kritik{color:var(--red)}
+.sessizhat .sh-sap{color:var(--sev-2);font-weight:700;white-space:normal;flex-basis:100%}
+.sessizhat .sh-sap.kritik{color:var(--sev-1)}
 .sessizhat .sh-sap b{color:inherit;font-weight:700}
 /* AÇILIM sapan segmentin ALTINDA, tam genişlikte: ad + süre + runbook ipucu. Çekmece DEĞİL —
    bir tık ardına saklanan sapma, sessiz hattın kazandırdığı görünürlüğü geri alırdı. */
@@ -1325,7 +1486,7 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .alarmbutce{font-family:var(--mono);font-size:12px;color:var(--tx2);line-height:1.7;
   font-variant-numeric:tabular-nums;margin-bottom:var(--s4)}
 .alarmbutce b{font-weight:500;color:inherit}
-.alarmbutce.asim{color:var(--amber)}
+.alarmbutce.asim{color:var(--sev-2)}
 .alarmbutce.asim b{color:inherit;font-weight:700}
 .alarmbutce .ab-not{color:var(--tx2);font-weight:400}
 
@@ -1419,7 +1580,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
 @media(prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} .rise{opacity:1;transform:none;filter:none} }
 </style>
 </head>
-<body>
+<body data-mod="olculemedi">
 <!-- GİRİŞ KAPISI (2026-07-28). Panonun ÖNÜNDE durur, arkasındaki her şeyi `inert` yapar.
      Bu ekran bir güvenlik sınırı DEĞİLDİR — sınır sunucudadır (api._auth: oturum çerezi yoksa
      401). Buradaki iş, o sınırı operatöre anlaşılır bir kapı olarak sunmaktır. Ekranı DOM'dan
@@ -1454,7 +1615,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
     <div class="ksgroup" id="ksgroup" role="group" aria-label="Kriz kontrolleri">
       <button id="ks1" data-act="opSoftHalt">1 · Soft Halt — yeni giriş durur</button>
       <button data-act="opCancelOpen">2 · Cancel-Open — dolmamış girişler iptal</button>
-      <button data-act="opFlatten" style="border-color:var(--red);color:var(--red)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
+      <button data-act="opFlatten" style="border-color:var(--sev-1);color:var(--sev-1)">3 · Flatten ⚠ — TÜM pozisyonlar (NVDA dahil, çift onay)</button>
       <button id="ks4" data-act="opLearnHaltToggle">4 · Halt Learning — işlem sürer, ship durur</button>
     </div>
   </div>

@@ -1,0 +1,4 @@
+KOŞULSUZ (sızıntı adayı): 0
+KOŞULLU  (anomali dalı, meşru): 130
+TOPLAM literal emisyon: 130
+koşulsuz kırılım: {}
