@@ -1055,7 +1055,9 @@ def _son_dongu() -> dict:
 def api_today(request: Request):
     _auth(request)
     d = analytics.today()
-    d["inbox_count"] = _inbox_count()
+    # `inbox_count` AŞAĞIDA, `_enrich_stale_plans`TEN SONRA yazılır (v195-a): sayım artık onay
+    # bekleyen REVIEW planlarını da içeriyor ve o ölçüt `expired` alanına bakıyor — burada
+    # çağrılsaydı süresi dolmuş planlar da "onayını bekliyor" diye sayılırdı.
     # SON DÖNGÜ — olay penceresinden BAĞIMSIZ (v190; gerekçe `_son_dongu` başlığında).
     d["son_dongu"] = _son_dongu()
     _pf = store.read_json("portfolio.json", {}) or {}
@@ -1097,6 +1099,12 @@ def api_today(request: Request):
     from . import sermaye as _sr
     d["sermaye_koken"] = _sr.koken()
     _enrich_stale_plans(d.get("todays_plans") or [], d["latest_session"])
+    # ---- BEKLEYEN ONAY SAYIMI (v195-a · UX denetimi B2/Ö4) ------------------------------------
+    # SIRA ZORUNLU: damgalama `expired`e bakar, o alan hemen yukarıda yazıldı. TEK KAYNAK:
+    # `todays_plans` — sayaç da pano listesi de aynı damgalanmış listeyi okur, ikinci bir defter
+    # okuması YOK.
+    _onay_bekleyen_damgala(d.get("todays_plans") or [])
+    d["inbox_count"] = _inbox_count(d.get("todays_plans") or [])
     return d
 
 
@@ -3169,21 +3177,63 @@ def _enrich_stale_plans(plans: list, latest_session: str | None) -> None:
             pass
 
 
-def _inbox_count() -> int:
-    """Kenar çubuğu rozeti: gelen kutusundaki bekleyen karar sayısı (ucuz sayım)."""
+def _onay_bekleyen_damgala(planlar: list) -> int:
+    """Onay bekleyen REVIEW planlarını DAMGALAR (`onay_bekliyor`) ve sayar — TEK yasa, tek geçiş.
+
+    KUSUR (UX denetimi 2026-08-06, B2): Genel Bakış'ın "Bugün ne var" kartı `inbox_count` okuyordu
+    ve o sayım YALNIZ silahlanma ölçümü + skill revizyonu + Eksen-2 önerisini kapsıyordu. Operatörün
+    onayını bekleyen REVIEW planları HİÇ girmiyordu: üç plan onay beklerken açılış ekranı
+    "0 bekleyen onay — senden bir şey beklenmiyor" yazıyordu. Ölçülmüş bir gerçeğin yanlış
+    olumsuzlanması — None ≠ 0 yasasının kardeşi: 0 ≠ "yok".
+
+    NEDEN BAYRAK, NEDEN İKİNCİ BİR FİLTRE DEĞİL: aynı ölçütü hem burada hem panoda yazmak, aynı
+    sorunun iki cevabını üretirdi (biri `expired` bilir, diğeri bilmez — bu deponun tekrar eden
+    kusur sınıfı). Sunucu damgalar, pano YALNIZ bayrağı okur: sayaç ile liste ayrışamaz.
+
+    ÖLÇÜT ÜÇ KOŞULLU: kapı hükmü REVIEW · operatör onayı YOK · seansı geçmemiş (`expired`).
+      · GO onay beklemez (zaten giriş kuyruğunda), NO_GO ASLA onaylanamaz (guard'ın sert reddi).
+      · Onayın varlığı `loop.operator_onayli` ile ölçülür — alanın VARLIĞI değil DAMGASI (o yasanın
+        sahibi loop.py'dir; buraya kopyalanan ikinci bir tanım ilk düzenlemede ayrışırdı).
+      · `expired` `_enrich_stale_plans` tarafından yazılır; bu fonksiyon ONDAN SONRA çağrılmalıdır
+        (çağrı sırası api_today'de beyanlı). Süresi dolmuş plan onaylanamaz — uç da 409 verir.
+    """
+    from . import loop as _loop
+    n = 0
+    for p in planlar:
+        bekliyor = (str(p.get("gate_verdict") or "") == "REVIEW"
+                    and not _loop.operator_onayli(p)
+                    and not p.get("expired"))
+        p["onay_bekliyor"] = bekliyor
+        n += 1 if bekliyor else 0
+    return n
+
+
+def _inbox_count(planlar: list | None = None) -> int:
+    """Kenar çubuğu rozeti + "Bugün ne var" kartı: senden İŞ isteyen karar sayısı (ucuz sayım).
+
+    DÖRT KAYNAK (v195-a'da dördüncü eklendi): silahlanma kapısını geçen ölçüm · skill revizyon
+    taslağı · Eksen-2 önerisi · onay bekleyen REVIEW planı.
+
+    PLAN SAYIMI ÇAĞIRANDAN GELİR, DEFTERDEN DEĞİL: `todays_plans` zaten `analytics.today()`de
+    okundu ve damgalandı. Burada `trade_plans.jsonl`i ikinci kez okumak, aynı yanıtın içinde iki
+    okuma anı (ve iki farklı cevap) demek olurdu.
+    """
+    # PLAN SAYIMI TRY'IN DIŞINDA: aşağıdaki üç kaynaktan biri patlarsa ÖLÇÜLMÜŞ plan sayısı da
+    # sıfırlanmamalı — bir ölçümün hatası, başka bir ölçümün sonucunu silemez.
+    n_plan = sum(1 for p in (planlar or []) if p.get("onay_bekliyor"))
     try:
         from . import skill_evolve as _se, skills as _sk3
         ar = store.read_json("arming_report.json", {}) or {}
         n = sum(1 for m2 in (ar.get("measurements") or {}).values() if m2.get("status") == "gate_passed")
         n += len(_se.pending_drafts())
         n += len(_sk3.pending_recommendations())
-        return n
+        return n_plan + n
     except Exception as e:
         # YASA 4 (2026-07-21): burada sessizce 0 dönmek, operatörün gelen kutusunda BEKLEYEN kararlar
-        # varken rozetin "0" göstermesi demek — okunmamış onay = alınmamış karar. Rozet yine 0 döner
-        # (uç nokta 500 vermemeli) ama sebebi artık olay akışında.
+        # varken rozetin "0" göstermesi demek — okunmamış onay = alınmamış karar. Rozet yine sayıyı
+        # (plan tarafını) döner, sebebi artık olay akışında.
         obs.warn("inbox_count_failed", error=f"{type(e).__name__}: {e}")
-        return 0
+        return n_plan
 
 
 # ---------- write surface (operator intents only) ----------

@@ -319,7 +319,12 @@ a{color:inherit;text-decoration:none}
   border-radius:var(--r-card);padding:var(--s8);display:flex;flex-direction:column;gap:var(--s3)}
 .gate-h{font-family:var(--display);font-size:24px;font-weight:500;letter-spacing:-.02em;margin:0}
 .gate-sub{font-size:13px;color:var(--tx2);line-height:1.5;margin:0 0 var(--s3)}
-.gate-l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);
+/* 10px İMZASI BURAYA AİT DEĞİL (v195-a): bu sistemde 10px Label basamağı, RAKAMIN ÜSTÜNDEKİ
+   mono mikro-etiket idiomudur (`.bl-lab`, `.slabel`, karne hücreleri) — bir ölçümü adlandıran,
+   göz onu okumadan geçen etiket. Bir PAROLA alanının etiketi ise normal form metnidir: gözün
+   ona bakıp yazması gerekir ve girişte kullanıcının başka hiçbir bağlamı yoktur. Bir basamak
+   yukarı, Micro (11px). İdiom değişmedi — yalnız bu iki etiket kendi mertebesine taşındı. */
+.gate-l{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:var(--label-track);
   text-transform:uppercase;color:var(--tx2)}
 .gate-in{background:var(--bg);color:var(--tx);border:1px solid var(--field);
   border-radius:var(--r-ctl);padding:10px 13px;min-height:44px;font-family:var(--sans);font-size:14px}
@@ -507,7 +512,12 @@ main{min-width:0}
 /* Eski görünümün kendi başlığı ARTIK BİR BÖLÜM BAŞLIĞIDIR: sayfanın h1'i alan sayfasınındır.
    Mertebe JS'te düşürülür (app.js `_bolumBasliklariniIndir`); BOY da düşmeli, yoksa iki
    başlık aynı ağırlıkta görünür ve hiyerarşi yalnız DOM'da kalır — yani okunmaz. */
-.alan-bolum h2.ph,.alan-bolum h2.greet{font-family:var(--display);font-weight:500;font-size:19px;
+/* RAMPA BASAMAĞI, ARA DEĞER DEĞİL (v195-a): burada 19px yazıyordu ve 19 bu sistemin dokuz
+   basamaklı rampasında (10·11·12·13·14·17·20·24·28) YOK. Bir ara değer, "bölüm başlığı ile
+   sayfa başlığı arasında ÜÇÜNCÜ bir mertebe var" diye okunur — oysa mertebe farkı zaten ağırlık
+   ve boşlukla kuruluyor. 20px = Headline basamağı; sayfa başlığından (24px) hâlâ bir basamak
+   aşağıda, yani hiyerarşi korunuyor. */
+.alan-bolum h2.ph,.alan-bolum h2.greet{font-family:var(--display);font-weight:500;font-size:20px;
   letter-spacing:-.01em;line-height:1.2}
 
 /* ============================================================================
@@ -1237,7 +1247,11 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
    Sönük mürekkep: barla yarışırsa okuyucu hangisinin ölçüm olduğunu bilemez. */
 /* EKSENİN UÇ ETİKETLERİ — bunlar ölçeği NİCEL yapan tek şey. Sönük ve mono: barla yarışmazlar
    ama okunurlar (--tx2 kart üzerinde gündüz 6.91 · gece 6.72 — AA'nın çok üstünde). */
-.bl-ax{font-family:var(--mono);font-size:8px;fill:var(--tx2);letter-spacing:.02em}
+/* BOYUT RAMPADAN (v195-a): 8px hem rampanın (10·11·12·13·14·17·20·24·28) dışındaydı hem de
+   okunabilirlik tabanının altında — ve "sönük olsun" isteği boyutla değil MÜREKKEPLE (--tx2)
+   karşılanır. 10px = Label basamağı. Etiket SAYISI iki (sol uç 0, sağ uç ölçek tavanı) ve iki
+   uca yaslı; sıkışma olursa çözüm etiketi azaltmaktır, punto düşürmek değil. */
+.bl-ax{font-family:var(--mono);font-size:10px;fill:var(--tx2);letter-spacing:.02em}
 .bl-trend{display:flex;align-items:center;gap:var(--s2);margin-top:4px}
 .bl-trend svg{display:block;flex:none}
 .bl-trend-lab{font-family:var(--mono);font-size:10px;color:var(--tx2);letter-spacing:.04em}
@@ -1296,6 +1310,13 @@ body.explore-mode::after{content:"";position:fixed;inset:0;pointer-events:none;z
 .sessizhat .sh-sure{color:inherit;opacity:.85}
 .sessizhat .sh-ip{color:var(--tx2);font-weight:400}
 .sessizhat .sh-fazla{color:var(--tx2);font-weight:400;display:block}
+/* ASKIDA SATIRI (v195-a) — pencereyi aşmış ama sistemin KENDİ beyanıyla beklemeye alınmış
+   mekanizma. RENK YOK ve kalınlık YOK: askıda bir sapma değildir, `ok/total`da eksik görünen
+   sayının NEDENİdir. Kendi satırını alır (`flex-basis:100%`) çünkü ad+neden çifti sağlıklı
+   segmentlerin `nowrap` ritmine sığmaz; sarma serbest bırakılır ki uzun neden kırpılmasın.
+   `.sh-sap` ile aynı genişlik kuralını paylaşır ama TONUNU paylaşmaz — ayrım kasıtlıdır. */
+.sessizhat .sh-ask{flex-basis:100%;white-space:normal;color:var(--tx2);font-weight:400;opacity:.85}
+.sessizhat .sh-ask b{font-weight:500;color:inherit}
 
 /* ALARM BÜTÇESİ (WP-P/P2) — aynı sessizlik sözleşmesi: TEK kompakt satır, sönük.
    `.asim` YALNIZ ölçülen tavan aşıldığında (tepe/10dk ya da duran alarm) takılır. Dağılım

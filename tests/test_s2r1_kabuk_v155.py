@@ -200,7 +200,16 @@ def test_ogrenme_yoklamalari_HASH_e_bakmiyor():
 def _genel_kartlari() -> list[tuple[str, str, str]]:
     blok = re.search(r"const GENEL_KARTLARI = \[(.*?)\n\];", APPJS, re.S)
     assert blok, "GENEL_KARTLARI tanımlı değil — kompozisyon sözleşmesi şablona gömülmüş"
-    return re.findall(r'\["(\w+)",\s*"([^"]+)",\s*"(\w+)"\]', blok.group(1))
+    # HEDEF `sayfa` YA DA `sayfa#bolum` (v195-a): panonun geri kalanının adresleme dilinin aynısı.
+    # Çapaya izin vermek "tek bağ" kuralını GEVŞETMEZ — bağın SAYISI değil, indiği YER değişti.
+    return re.findall(r'\["(\w+)",\s*"([^"]+)",\s*"([\w#]+)"\]', blok.group(1))
+
+
+def _alan_bolumleri() -> dict[str, list[str]]:
+    blok = re.search(r"const ALAN_BOLUMLERI = \{(.*?)\n\};", APPJS, re.S)
+    assert blok, "ALAN_BOLUMLERI tanımlı değil"
+    return {alan: re.findall(r'"(\w+)"', ic)
+            for alan, ic in re.findall(r"(\w+):\s*\[(.*?)\]", blok.group(1))}
 
 
 def _render_genel() -> str:
@@ -232,9 +241,17 @@ def test_her_kart_TEK_bag_tasir():
 
 
 def test_kart_hedefleri_gercek_alan_sayfalaridir():
-    """Var olmayan bir rotaya işaret eden bir bağ, hiç işaret etmemekten kötüdür (v154 dersi)."""
+    """Var olmayan bir rotaya işaret eden bir bağ, hiç işaret etmemekten kötüdür (v154 dersi).
+
+    ÇAPA DA GERÇEK OLMAK ZORUNDA (v195-a): `go()` bulamadığı bir çapada SESSİZCE vazgeçer — yani
+    yanlış yazılmış bir `sayfa#bolum` hedefi hiçbir hata vermez, yalnız kaydırma olmaz."""
+    bolumler = _alan_bolumleri()
     for anahtar, _, hedef in _genel_kartlari():
-        assert hedef in ADR_SAYFALARI, f"{anahtar} kartı tanınmayan sayfaya bağlıyor: {hedef}"
+        sayfa, _sep, capa = hedef.partition("#")
+        assert sayfa in ADR_SAYFALARI, f"{anahtar} kartı tanınmayan sayfaya bağlıyor: {sayfa}"
+        if capa:
+            assert capa in bolumler.get(sayfa, []), (
+                f"{anahtar} kartı {sayfa} sayfasında olmayan bir bölüme çapalıyor: {capa}")
 
 
 def test_render_genel_kartlari_kayittan_cizer():

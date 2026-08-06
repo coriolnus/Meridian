@@ -799,7 +799,10 @@ window.temaDegistir = () => {
 // Geç bağlama bilinçli: fonksiyonlar bu noktadan SONRA da tanımlanıyor, o yüzden referans
 // değil AD tutuluyor ve çözümleme tıklama anında yapılıyor.
 const EYLEMLER = new Set([
-  "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaClose", "alpacaSubmit",
+  // alpacaClose v195-a'da DÜŞTÜ: yıkıcı ucun ikinci ve tek-onaylı yolu kapandı (bkz. Alpaca kartı).
+  // ADI BU YORUMDA TIRNAKSIZ YAZILIR — izin listesini okuyan test tırnaklı her adı KAYITLI sayar
+  // ve kaldırılmış bir eylem, kendi mezar taşı yüzünden "kayıtlı ama tanımsız" görünürdü.
+  "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaSubmit",
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
   "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
@@ -1344,16 +1347,24 @@ async function _aktifSayfayiCiz() {
 //
 // HER KART TEK BAĞ TAŞIR ve bağ ÜÇÜNCÜ ALANDIR. "Detay kart içinde YOK" kuralının uygulaması
 // budur: bir kart bir sayıyı gösterir, o sayının yaşadığı alan sayfasına gönderir, biter.
+// HEDEF `sayfa` YA DA `sayfa#bolum` OLABİLİR (v195-a): panonun her yerinde kullanılan adresleme
+// dilinin aynısı (`spineHTML`, `RECORD_VIEW`, ⌘K paleti). Kart hâlâ TEK bağ taşır — değişen şey
+// bağın nereye indiği: "Bugün ne var" kartı bekleyen ONAYI sayıyor, dolayısıyla bağı da onay
+// yüzeyine (Portföy & Emirler → onay kuyruğu) inmeli; sayfanın başına bırakıp "şimdi ara" demek
+// kartın kendi cümlesini yarıda keserdi.
 const GENEL_KARTLARI = [
-  // [anahtar,   başlık,               hedef alan sayfası]
+  // [anahtar,   başlık,               hedef alan sayfası (opsiyonel #bölüm çapası)]
   ["gece",     "Dün gece",             "kosu"],
   ["sermaye",  "Sermaye · köken",      "portfoy"],
-  ["bugun",    "Bugün ne var",         "portfoy"],
+  ["bugun",    "Bugün ne var",         "portfoy#onaylar"],
   ["equity",   "Sermaye eğrisi",       "portfoy"],
   ["karne",    "Karne",                "ogrenme"],
   ["kapsama",  "Kapsama",              "veri"],
 ];
-const _GB = Object.fromEntries(GENEL_KARTLARI.map(([k, ad, hedef]) => [k, { ad, hedef }]));
+// `sayfa` çapadan AYRI tutulur: bağın ETİKETİ alan sayfasının adıdır ("→ Portföy & Emirler"),
+// çapa değil. `ALAN_ADI["portfoy#onaylar"]` undefined olsaydı düğme ham adresi yazardı.
+const _GB = Object.fromEntries(GENEL_KARTLARI.map(([k, ad, hedef]) =>
+  [k, { ad, hedef, sayfa: String(hedef).split("#")[0] }]));
 // TEK ÇIKIŞ: `gb-kart` sınıfı ve `gb-bag` düğmesi YALNIZ burada üretilir. İkinci bir yerde
 // üretilseydi "kart başına tek bağ" kuralı sayılamaz bir vaat olurdu.
 function gbKart(anahtar, govde) {
@@ -1362,7 +1373,7 @@ function gbKart(anahtar, govde) {
   return `<section class="gb-kart rise" data-kart="${anahtar}">
     <h2 class="t">${esc(k.ad)}</h2>
     <div class="gb-govde">${govde}</div>
-    <button class="gb-bag" type="button" data-act="go" data-a1="${k.hedef}">→ ${esc(ALAN_ADI[k.hedef] || k.hedef)}</button>
+    <button class="gb-bag" type="button" data-act="go" data-a1="${k.hedef}">→ ${esc(ALAN_ADI[k.sayfa] || k.sayfa)}</button>
   </section>`;
 }
 // "—" ile "0" ASLA KARIŞMAZ (dürüstlük arayüzü): ölçülmemiş alan tire basar, nedeni yanında.
@@ -1414,11 +1425,21 @@ RENDER.genel = async () => {
   //         evi Gözetim'dir ve oraya alarm bütçesi satırı zaten bağlıyor.
   const silahliN = (t.armed_plans || []).length;
   const onayN = t.inbox_count == null ? null : (Number(t.inbox_count) || 0);
+  //         REVIEW KIRILIMI AYNI DAMGADAN OKUNUR (v195-a · B2/Ö4): `inbox_count` artık onay
+  //         bekleyen REVIEW planlarını da içeriyor (api._inbox_count) ve buradaki kırılım aynı
+  //         `onay_bekliyor` bayrağını sayar — pano İKİNCİ bir ölçüt kurmaz, yoksa kart ile rozet
+  //         aynı gün ayrışırdı. Liste HİÇ gelmediyse sayı UYDURULMAZ: "0 REVIEW" ile "plan defteri
+  //         uçtan gelmedi" aynı cümle değildir.
+  const planlar = Array.isArray(t.todays_plans) ? t.todays_plans : null;
+  const reviewN = planlar ? planlar.filter(p => p && p.onay_bekliyor).length : null;
   const retN = (((d || {}).reconcile || {}).failed_submissions || {}).open;
   const bugunGovde = `${_gbSay(silahliN, "silahlı emir")}
     <p class="gb-alt">${onayN == null
       ? "bekleyen onay <b>ölçülmedi</b> — gelen kutusu alanı uçtan gelmedi"
-      : `<b>${onayN}</b> bekleyen onay${onayN ? "" : " — senden bir şey beklenmiyor"}`}</p>
+      : `<b>${onayN}</b> bekleyen onay${onayN ? "" : " — senden bir şey beklenmiyor"}${
+          reviewN == null
+            ? ' · <span class="mut">REVIEW ölçülemedi — plan defteri uçtan gelmedi</span>'
+            : (reviewN ? ` · <b>${reviewN}</b> plan onayını bekliyor` : "")}`}</p>
     <p class="gb-alt">${silahliN ? "açılışta ateşlenecek" : "açılışta yeni tarama yapılır"}${
       (retN || []).length ? ` · <span class="neg">${retN.length} emir reddedildi</span>` : ""}</p>`;
 
@@ -2334,6 +2355,35 @@ function bayatSinif(tarih, referans) {
 // AÇILIMDA TAVAN VAR (4 satır): 11 bekçi birden geciktiğinde şerit bir listeye dönüşür ve Level-1
 // olmaktan çıkar. Kalan sayı YAZILIR ("+7 daha") — kırpma sessiz olamaz.
 const SH_ACILIM_TAVAN = 4;
+// ---- ASKIDA DALI (v195-a · B6/Ö7 · YASA 6) ---------------------------------------------------
+// ÖLÇÜLEN BOŞLUK: `api._sessiz_hat` bekçi segmentine `askida` ve `n_askida` YAZIYOR (v192) ama
+// `sessizHat()` YALNIZ `sapmalar`/`n_sapma` okuyordu. Şerit "bekçiler 15/17" diyor, eksik ikinin
+// nedeni yalnız HUD çipinin `title` ipucunda duruyordu: hover-only, klavyeyle erişilemez, ekran
+// okuyucuya kapalı. Üretilen bir alanın okuyucusu yok = YASA 6.
+//
+// ASKIDA SAPMA DEĞİLDİR VE SAPMA SAYILMAZ: şeridin hâli (`ok`/`sap`), `kritik` bayrağı ve
+// `n_sapma` sayımı bu daldan ETKİLENMEZ. Meşru bir beklemeyi (hermes kota soğuması, kimlik
+// havuzu tükenmesi) alarm rengine çevirmek, hattın var oluş sebebi olan alarm-hijyenini bozardı.
+// Satır sönük, tam genişlikte ve ADIYLA+NEDENİYLE yazılır; nedeni okunamıyorsa bunu söyler.
+function _shAskidaSatiri(segmentler) {
+  const hepsi = [];
+  let toplam = 0;
+  for (const s of segmentler || []) {
+    const l = s.askida || [];
+    if (!l.length && !s.n_askida) continue;
+    toplam += (s.n_askida ?? l.length);
+    for (const a of l) hepsi.push(a);
+  }
+  if (!toplam) return "";
+  const gosterilen = hepsi.slice(0, SH_ACILIM_TAVAN);
+  const kalan = toplam - gosterilen.length;
+  const parca = gosterilen.map(a => `<b>${esc(a.ad ?? "?")}</b> ${
+    esc(a.neden || a.detay || "neden bildirilmedi")}${a.sure ? ` · ${esc(a.sure)}` : ""}`);
+  // AÇILIM TAVANI SESSİZ KIRPMAZ (şeridin mevcut kuralı): kalan sayı yazılır.
+  return `<span class="sh-seg sh-ask">${toplam} askıda${
+    parca.length ? " · " + parca.join(" · ") : " — ad/neden uçtan gelmedi"}${
+    kalan > 0 ? ` · +${kalan} daha` : ""}</span>`;
+}
 // ---- RUNBOOK BAĞI (UIUX S1-T3) ---------------------------------------------------------------
 // J2 zinciri "alarm → teşhis → runbook → çözüm"un SON HALKASI. Bu tur öncesinde alarm satırları ve
 // sessiz-hat sapmaları bir hedef gösteremiyordu: runbook YOKTU. Artık `docs/RUNBOOK.md` var ve
@@ -2374,7 +2424,10 @@ function sessizHat(sh) {
   });
   // AYIRICI YALNIZ SAĞLIKLI ŞERİTTE: sapan segment kendi bloğunu açtığı için nokta ayırıcı
   // satırın ortasında öksüz kalırdı.
-  const govde = sh.saglikli ? segler.join('<span class="sh-sep">·</span>') : segler.join(" ");
+  // ASKIDA SATIRI AYIRICININ DIŞINDA: segment dizisine katılsaydı ardına bir "·" düşerdi ve
+  // nokta bir sonraki satırın başında öksüz kalırdı (kendi flex satırını alıyor).
+  const govde = (sh.saglikli ? segler.join('<span class="sh-sep">·</span>') : segler.join(" "))
+    + _shAskidaSatiri(sh.segmentler);
   // ARIA-LIVE DAR TUTULUR (ROADMAP §WP-P kararı: yalnız kritik alarm/kilit). Sağlıklı şerit
   // `role="status"` TAŞIMAZ — her yeniden çizimde "bekçiler 17/17" diye duyurulan bir satır,
   // görsel tarafta kapatılan gürültünün işitsel kopyası olurdu. Sapma varsa duyurulur.
@@ -6313,8 +6366,12 @@ function line(pts) {
 RENDER.onaylar = async () => {
   // Teşhis ucu merdivenin "neden L0?" satırı için okunur (faz6 kilit zinciri). Ön-yüklü + 15 sn
   // önbellekli; düşerse null gelir ve o satır dürüstçe hiç çizilmez.
-  const [a, s, dg] = await Promise.all([j("/api/approvals"), j("/api/summary"),
-                                        j("/api/diagnostics").catch(() => null)]);
+  // `/api/today` v195-a'da eklendi: bölümün KENDİ sorusu ("şu an benim onayımı bekleyen ne var?")
+  // REVIEW planlarını da kapsıyor ve onlar `todays_plans`ta yaşıyor. Uç zaten önbellekli (15 sn)
+  // ve Genel Bakış tarafından ısıtılmış oluyor — yeni bir ölçüm maliyeti yok.
+  const [a, s, dg, t] = await Promise.all([j("/api/approvals"), j("/api/summary"),
+                                           j("/api/diagnostics").catch(() => null),
+                                           j("/api/today").catch(() => null)]);
   const inbox = a.inbox || [];
   const TYPE_TR = { arming: ["SİLAHLANMA", "t-go"], skill_revision: ["REVİZYON", "t-rv"], skill_rec: ["EKSEN-2", "t-vi"] };
   const rows = inbox.map(it => {
@@ -6332,9 +6389,39 @@ RENDER.onaylar = async () => {
         ${it.note ? `<br><span class="hint" style="font-size:11px">${esc(it.note)}</span>` : ""}</span>
       <span style="display:flex;gap:6px">${btns}</span></div>`;
   }).join("");
+  // ---- ONAYINI BEKLEYEN REVIEW PLANLARI (v195-a · UX denetimi B4) ----------------------------
+  // ÖLÇÜLEN KUSUR: bölümün soru cümlesi "şu an benim onayımı bekleyen ne var?" idi ama yüzey
+  // YALNIZ `/api/approvals` gelen kutusunu çiziyordu; REVIEW planlarının onayı Koşu & Döngü →
+  // adaylar → satır çekmecesinin İÇİNDE yaşıyordu. Bölüm kendi sorusunu cevaplamıyordu.
+  //
+  // İKİNCİ ONAY YOLU AÇILMADI — ve bu kasıtlı: satırlar `planRowFull` ile çizilir, tıklama aynı
+  // `RECORD_VIEW.plan` çekmecesini açar ve onay düğmesi hâlâ TEK yerde (`planOnayBloguHTML`,
+  // iki adımlı). Buraya ikinci bir "Onayla" düğmesi koymak, aynı yazma eylemine ikinci bir kapı
+  // açmak olurdu — bu turda Alpaca kartından kaldırdığımız kusurun aynısı.
+  //
+  // SAYIM PANODA KURULMAZ: `onay_bekliyor` bayrağını sunucu damgalar (api._onay_bekleyen_damgala);
+  // burada REVIEW + onaysız + süresi-dolmamış ölçütünü yeniden yazsaydık kart ile bu liste aynı
+  // gün ayrışabilirdi.
+  const planlar = (t && Array.isArray(t.todays_plans)) ? t.todays_plans : null;
+  const bekleyen = planlar ? planlar.filter(p => p && p.onay_bekliyor) : null;
+  const planKart = `<div class="card rise"><h2 class="t">Onayını bekleyen planlar${
+      bekleyen == null ? "" : ` <span class="tx3" style="font-weight:400">(${bekleyen.length})</span>`}</h2>
+    <p class="hint" style="margin-top:0">Kapı <b>REVIEW</b> dediğinde karar sende kalır. Satıra bas:
+      plan kaydı açılır, onay düğmesi orada — <b>tek</b> onay yolu, iki adımlı. Onay kapı hükmünü
+      DEĞİŞTİRMEZ, planı giriş kuyruğuna alır.</p>
+    ${bekleyen == null
+      ? `<div class="empty">Plan defteri uçtan gelmedi — <b>ölçülemedi</b>. Bu "bekleyen onay yok"
+           DEĞİLDİR; <code>/api/today</code> okunamadı.</div>`
+      : (bekleyen.length
+          ? _PHEAD + bekleyen.map(planRowFull).join("")
+          : `<div class="empty">${planlar.length
+              ? `Bu seansta <b>${planlar.length}</b> plan üretildi; onayını bekleyen REVIEW yok
+                 (GO'lar zaten giriş kuyruğunda, NO_GO onaylanamaz).`
+              : "Bu seansta plan üretilmedi — dürüst boşluk."}</div>`)}</div>`;
   $("page-onaylar").innerHTML = bolumBasHTML("onaylar", "Onay kuyruğu · senden iş isteyenler",
     "Sistemin sana getirdiği her karar türü tek listede, kanıtıyla. Otonomi merdiveni de "
     + "burada: gerçek paraya bir ayarla değil, kanıtla geçilir.")
+    + planKart
     + `<div class="card rise"><h2 class="t">Gelen kutusu (${inbox.length})</h2>
       <p class="hint" style="margin-top:0">Adaylar (Koşu &amp; Döngü) bilgi verir; burası iş ister.</p>
       ${rows || '<div class="empty">Bekleyen karar yok — eşik dolduğunda burada belirir (bildirimi de düşer).</div>'}</div>
@@ -6850,6 +6937,34 @@ function keyField(name, label, desc, st, provider) {
       <input type="password" id="key-${name}" placeholder="anahtarı yapıştır…" autocomplete="new-password" spellcheck="false" autocapitalize="off">
       <button class="dlbtn" data-act="saveSecret" data-a1="${name}">Kaydet</button>${del}${test}</div></div>`;
 }
+// ---- AYNAYA GÖNDERİM GERİ BİLDİRİMİ (v195-a · UX denetimi B1/Ö1) -----------------------------
+// ÖLÇÜLEN KUSUR: `alpacaSubmit` her geri bildirim satırını `#alp-msg` üzerinden yazıyordu ve O
+// ÖĞE DİYE BİR ŞEY YOKTU (grep: 0 eşleşme; kardeşleri `#intraday-arm-msg`, `#fsub-msg`,
+// (Kimlik dizgisi bu yorumda TIRNAKSIZ anılır: kabın TEK kez üretildiğini sayan test, kendi
+//  mezar taşını ikinci bir üretim sanmamalı.)
+// `#plan-onay-msg` VARDI). Yani "Silahlı planları Alpaca'ya gönder" düğmesi ne "gönderiliyor…" ne
+// "N emir gönderildi" ne de hatayı yazıyordu — AMGN "onay→gönderim kopukluğu" vakasının mekanik
+// açıklaması budur.
+//
+// DÜZLEŞTİRMENİN İKİNCİ YOLU DA BU KARTTAN KALKTI (v195-a · B3/Ö3). Kartta "■ Tüm Alpaca
+// pozisyonlarını kapat" düğmesi vardı ve Kademe 3 · FLATTEN ile AYNI ucu (close_all, aynı onay
+// jetonu) çağırıyordu — ama TEK confirm ile, `opFlatten` ÇİFT onay isterken. Üstelik müdahale
+// paneli ekranda "üçü de aynı gövdeyi çağırır, ikinci bir yetki yolu yoktur" yazıyordu: dördüncü
+// yüzey vardı ve kapısı en zayıf olanıydı. Bir ucun kapısı, ona giden EN ZAYIF yolun kapısıdır.
+// Düğme kaldırıldı, yerine ADRES bırakıldı — yol kaybolmadı, yetki tek yerde toplandı.
+//
+// MESAJ NEDEN MODÜL DURUMU (kabın kendisi yetmez): başarılı gönderim `RENDER.ayarlar()` çağırıyor
+// ve o çizim kartı BAŞTAN yazıyor; üstelik `_alpacaSonra()` 1,4 sn sonra kartı İKİNCİ kez
+// değiştiriyor. Mesaj yalnız DOM'da yaşasaydı iki kez silinirdi — yani düzeltmenin kendisi
+// sessizce geri alınırdı. Sonuç KALICIDIR: şablon `_ALP_MSG`i okur, her yeniden çizim onu geri
+// koyar. Boş dize = "bu oturumda gönderim denenmedi" (uydurma bir başarı satırı değil).
+let _ALP_MSG = "";
+const ALP_GONDER_ETIKET = "Silahlı planları Alpaca'ya gönder";
+function alpMsgYaz(html) {
+  _ALP_MSG = html || "";
+  const m = $("alp-msg");
+  if (m) m.innerHTML = _ALP_MSG;
+}
 // Alpaca kartının HTML'i — RENDER.ayarlar'dan AYRILDI (2026-07-28) ki görünüm bu dış
 // çağrının arkasında beklemesin. Saf fonksiyon: veri girer, HTML çıkar, DOM'a dokunmaz.
 function _alpacaKartHTML(a) {
@@ -6879,9 +6994,13 @@ function _alpacaKartHTML(a) {
           })()}</div>
         ${posRows?`<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:60px 60px 1fr 90px"><span>HİSSE</span><span>ADET</span><span>GİRİŞ</span><span>K/Z</span></div>${posRows}</div>`:''}
         ${ordRows?`<div class="tbl" style="margin-top:8px"><div class="trow head" style="grid-template-columns:60px 1fr 90px"><span>HİSSE</span><span>EMİR</span><span>SEVİYE</span></div>${ordRows}</div>`:''}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button class="dlbtn" data-act="alpacaSubmit">Silahlı planları Alpaca'ya gönder</button>
-          <button class="dlbtn" data-act="alpacaClose">■ Tüm Alpaca pozisyonlarını kapat</button></div></div>`;
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">
+          <button class="dlbtn" data-act="alpacaSubmit">${esc(ALP_GONDER_ETIKET)}</button>
+          <span class="hint" id="alp-msg" style="margin:0">${_ALP_MSG}</span></div>
+        <p class="hint" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span>Pozisyon kapatma bu kartta <b>yok</b>: tek yolu <b>Kademe 3 · FLATTEN</b> ve o kol
+          çift onay ister.</span>
+          <button class="dlbtn" type="button" data-act="go" data-a1="kilitler#mudahale">Müdahale kademeleri →</button></p></div>`;
     }
   return "";
 }
@@ -6964,23 +7083,60 @@ RENDER.ayarlar = async () => {
   // yazımdan SONRA iniyordu; yarışı gizleyen tam da o yavaşlıktı.
   _alpacaSonra();
 };
+// GÖNDERİM SONUCU SATIRI — mutlu-yol YASAK. Uç `{ok, submitted, results[], detail}` döner ve
+// `results` her plan için ayrı bir hâl taşır: kabul, dedup (zaten aynada), gap-vetosu (BİZİM
+// kararımız — broker reddi değil, ret dağılımına yazılmaz), ulaşılamadı (plan SİLAHLI kalır) ve
+// broker reddi. Beşi tek "N gönderildi" cümlesine sıkıştırılırsa operatör, planının neden aynada
+// olmadığını ekrandan öğrenemez. `submitted` YOKSA "0" yazılmaz: ölçülemedi ≠ sıfır.
+function _alpSonucSatiri(r) {
+  if (r.ok === false)
+    return `<span class="warn">gönderilmedi — ${esc(r.detail || "sunucu gerekçe bildirmedi")}</span>`;
+  const rs = Array.isArray(r.results) ? r.results : [];
+  const dedup = rs.filter(x => x && x.dedup).length;
+  const veto = rs.filter(x => x && x.veto).length;
+  const kopuk = rs.filter(x => x && x.reachable === false).length;
+  const ret = rs.filter(x => x && !x.ok && !x.dedup && !x.veto && x.reachable !== false);
+  const n = r.submitted;
+  const parca = [n == null
+    ? `<span class="warn">gönderim sayısı ölçülemedi — uç <code>submitted</code> alanını vermedi (0 DEĞİL)</span>`
+    : (n ? `<span class="pos">✓ ${trn(n)} emir gönderildi</span>` : `0 emir gönderildi`)];
+  if (dedup) parca.push(`${dedup} dedup (zaten aynada)`);
+  if (veto) parca.push(`${veto} gap-vetosu (bizim kararımız, broker reddi değil)`);
+  if (kopuk) parca.push(`<span class="warn">${kopuk} ulaşılamadı — plan SİLAHLI kaldı</span>`);
+  if (ret.length) parca.push(`<span class="neg">${ret.length} ret: ${
+    esc(ret.map(x => `${x.ticker || "?"} — ${String(x.detail || "gerekçe bildirilmedi")}`)
+          .join(" · ").slice(0, 240))}</span>`);
+  if (!rs.length && r.detail) parca.push(esc(r.detail));      // ör. "silahlı plan yok"
+  return parca.join(" · ");
+}
 window.alpacaSubmit = async () => {
-  const m = $("alp-msg"); if (m) m.textContent = "gönderiliyor…";
-  try { const r = await apiFetch("/api/alpaca/submit_armed", { method: "POST" }).then(x => x.json());
-    if (m) m.innerHTML = `<span class="pos">${r.submitted||0} emir gönderildi</span>` + (r.detail?` · ${esc(r.detail)}`:'');
+  const _btn = () => document.querySelector('[data-act="alpacaSubmit"]');
+  const b0 = _btn();
+  if (b0) { b0.disabled = true; b0.textContent = "gönderiliyor…"; }
+  alpMsgYaz("gönderiliyor…");
+  try {
+    // HTTP DURUMU OKUNUR: eski hâl doğrudan `.json()`a geçiyordu, yani 401/500 bir yanıt gövdesi
+    // döndürdüğünde arayüz onu BAŞARI gibi okuyordu (`r.submitted||0` → "0 emir gönderildi").
+    const r = await apiFetch("/api/alpaca/submit_armed", { method: "POST" });
+    let body = {};
+    try { body = await r.json(); } catch (e) { body = {}; }
+    alpMsgYaz(r.ok ? _alpSonucSatiri(body)
+      : `<span class="neg">✗ HTTP ${r.status} — ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`);
+    // Kart tazelenir ama MESAJ HAYATTA KALIR: şablon `_ALP_MSG`i okuyor (bkz. beyanı).
     await RENDER.ayarlar(); revealActive();
-  } catch (e) { if (m) m.innerHTML = `<span class="neg">${esc(e.message)}</span>`; }
+  } catch (e) {
+    // AĞ HATASINDA "gönderilmedi" DEMEK UYDURMA OLURDU: istek uca ulaşmış ve emirler çıkmış
+    // olabilir; bilinen tek şey CEVABIN alınamadığıdır.
+    alpMsgYaz(`<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ölçülemedi;
+      emirler gitmiş olabilir, mutabakat bölümünden doğrula`);
+  } finally {
+    const b = _btn();
+    if (b && b.disabled) { b.disabled = false; b.textContent = ALP_GONDER_ETIKET; }
+  }
 };
-window.alpacaClose = async () => {
-  // YIKICI eylem: bekleyen TÜM emirleri iptal eder ve TÜM paper pozisyonları (senin elle açtıkların
-  // dahil) piyasa fiyatından düzleştirir — teyitsiz tek tık olamaz.
-  if (!confirm("Tüm Alpaca paper pozisyonlarını kapat?\n\nBekleyen TÜM emirler iptal edilir ve TÜM pozisyonlar (elle açtıkların dahil) piyasa fiyatından satılır. Bu geri alınamaz.")) return;
-  const m = $("alp-msg"); if (m) m.textContent = "kapatılıyor…";
-  try { const r = await apiFetch("/api/alpaca/close_all?confirm=FLATTEN-PAPER", { method: "POST" }).then(x => x.json());
-    if (m) m.innerHTML = r.ok ? '<span class="pos">✓ tüm pozisyonlar/emirler kapatıldı</span>' : `<span class="neg">${esc(r.detail||'hata')}</span>`;
-    await RENDER.ayarlar(); revealActive();
-  } catch (e) { if (m) m.innerHTML = `<span class="neg">${esc(e.message)}</span>`; }
-};
+// `window.alpacaClose` SİLİNDİ (v195-a · B3/Ö3). Gerekçesi kartın kendi şablonunda yazılı:
+// `/api/alpaca/close_all` artık panoda TEK yerden çağrılır — `opFlatten` (Kademe 3), çift onaylı.
+// Ad `EYLEMLER` izin listesinden de düştü; kalsaydı "kayıtlı ama tanımsız" bir eylem olurdu.
 async function _secretFetch(name, method, body) {
   const opt = { method, headers: {} };
   if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
