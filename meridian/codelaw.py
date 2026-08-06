@@ -262,6 +262,16 @@ DECLARED_SINKS: dict[str, str] = {
                                "sayılardan çıkar",
     "agent_tooluse.json": "hermes.integrations_status() okur; api /api/hermes → pano 'entegrasyonlar' "
                           "panelinde MCP araç kullanım oranı olarak görünür",
+    "warmup_scale.json": "hermes.warmup_budget()/warmup_budget_feedback() yazar ve okur (aynı modül "
+                         "→ statik graf göremez; `brain_cooldown.json` ile BİREBİR aynı sınıf). "
+                         "Isınma sprintinin bütçe merdiveni: çarpan + ÖLÇÜLEN duvar (H11 süre "
+                         "tavanına takılan genişlik). Kalıcı olmak ZORUNDA — merdiven koşumlar "
+                         "ARASINDA yaşar ve süreç yeniden başlatıldığında sıfırlanırsa kural her "
+                         "restart'ta tabandan başlar (yani hiç işlemez). DIŞ tüketici gerçek: "
+                         "hermes_runtime._warmup_sprint türetilen bütçeyi `last_warmup.butce/"
+                         "butce_carpani/k_max/butce_formulu` olarak hermes_status.json'a yazar → "
+                         "api /api/hermes 'warmup.last' → pano; yani 'kural koşuyor mu' sorusu "
+                         "dosyaya bakmadan cevaplanır (v193, 2026-08-06)",
     "oos_erosion.json": "oos_erosion.record() yazar, oos_erosion.report()/status() okur (aynı modül "
                         "→ statik graf göremez). DIŞ tüketici gerçek: api /api/diagnostics "
                         "mlops.oos_erosion → pano Edge kartı 'OOS aşınması' satırı (sorgu sayacı + "
