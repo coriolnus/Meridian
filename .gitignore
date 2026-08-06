@@ -40,3 +40,7 @@ mutants/
 
 # mutasyon ham logları — üretilmiş artefakt (rapor .md versiyonlanır, ham log versiyonlanmaz)
 docs/mutasyon/.*.ham.log
+
+# Claude harness skill artefaktları (repo dışı araç-katmanı; 2026-08-06)
+.agents/
+skills-lock.json
