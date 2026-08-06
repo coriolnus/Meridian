@@ -128,12 +128,12 @@ GECE = {_css_adi(tk)[2:]: _literal(tk)
 # katmanın ÖLÇÜTÜ farklıdır (değer jetonu ham renk literali taşır, rol jetonu çoğunlukla
 # bir `var()` alias'ıdır) ve ikisini tek kovaya atmak, "tema katmanında renk olmayan jeton
 # yok" ölçümünü sessizce gevşetirdi.
-ROL_GUNDUZ = {_css_adi(tk)[2:]: _literal(tk)
-              for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gunduz")}
-ROL_GECE = {_css_adi(tk)[2:]: _literal(tk)
-            for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gece")}
+# Rol tarafında jetonun KENDİSİ de tutulur (alias zinciri `cozulen-deger`i okumayı gerektirir);
+# ad→literal sözlüğü ondan TÜRETİLİR, ikinci bir kavrayışla yeniden kurulmaz.
 ROL_TK_GUNDUZ = {_css_adi(tk)[2:]: tk for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gunduz")}
 ROL_TK_GECE = {_css_adi(tk)[2:]: tk for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gece")}
+ROL_GUNDUZ = {ad: _literal(tk) for ad, tk in ROL_TK_GUNDUZ.items()}
+ROL_GECE = {ad: _literal(tk) for ad, tk in ROL_TK_GECE.items()}
 
 # CSS'in İKİ bloğunun tokens.json'daki KARŞILIĞI. `:root{}` üç katmanın toplamıdır
 # (temel + gündüz değer + gündüz rol), gece override'ı İKİ RENK katmanının (temel gece

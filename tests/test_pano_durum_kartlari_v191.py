@@ -385,12 +385,17 @@ def test_izgara_YENI_RENK_JETONU_acmaz():
     ikinci bir anlamı ödünç almayı ÜCRETSİZ kılıyordu."""
     blok = _govde("/* ---- DURUM KART-IZGARASI (v191)", "@media(max-width:1100px)", INDEX)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", blok), f"ham renk değeri: {blok}"
+    # JETON ADI GEÇEN BİR YORUM, KULLANILAN JETON DEĞİLDİR (dosyanın kendi kuralı, bkz. CSS_KOD):
+    # bu bloğun yorumları jeton adlarını düzyazıda sayıyor ("--card / --line-2 / --r-card"), ve
+    # D1 sonrası hangi KATMANIN okunduğu tam olarak burada ölçülüyor — ölçüm yorumdan beslenirse
+    # kural hue'ya geri dönse bile test yeşil kalırdı.
+    blok_kod = re.sub(r"/\*.*?\*/", "", blok, flags=re.S)
     for jeton in ("--card", "--line-2", "--r-card", "--mono", "--tx2", "--tx3", "--sev-2", "--sev-1"):
-        assert jeton in blok, f"{jeton} jetonu kullanılmıyor — değer başka yerden geliyor olabilir"
+        assert jeton in blok_kod, f"{jeton} jetonu kullanılmıyor — değer başka yerden geliyor olabilir"
     # Ham hex kadar sessiz bir geri düşüş: kuralın hue adına geri bağlanması. Yasağın GENEL
     # hâli test_renk_rolleri_v197::test_bilesen_kurallari_ham_hue_okumaz'dadır; burada ızgaraya
     # özgü mesajıyla tekrarlanır, çünkü bu bloğun sözleşmesi bu dosyada okunuyor.
-    assert not re.search(r"var\(\s*--(green|amber|red)\b", blok), \
+    assert not re.search(r"var\(\s*--(green|amber|red)\b", blok_kod), \
         "ızgara kuralı hue adına geri bağlanmış — kural hangi ROLÜ taşıdığını söylemiyor"
 
 
