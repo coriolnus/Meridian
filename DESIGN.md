@@ -373,8 +373,26 @@ white — **is confirmed at 1.27**.
 
 ## Typography
 
-**Display / Body Font:** Geist (with `system-ui`, `-apple-system`, `Segoe UI`)
-**Label / Figure Font:** Geist Mono (with `ui-monospace`, `SFMono-Regular`)
+**Display / Body Font:** Geist (with `system-ui`, `-apple-system`, `Segoe UI`) — *incumbent, not a
+commitment; a typeface change is open (operator, 2026-08-06). The functional bar any replacement
+must clear is in PRODUCT.md's brand block.*
+**Label / Figure Font:** Geist Mono (with `ui-monospace`, `SFMono-Regular`) — same status.
+
+### Type scale
+
+Nine steps, and no others. This list is the ramp; the Ramp Rule below states it as law.
+
+| Step | Size | Role |
+|---|---|---|
+| Label | `font-size: 10px` | mono micro-label above a figure; status badges (UPPERCASE, 0.16em) |
+| Micro | `font-size: 11px` | dense table meta, chip text, secondary row detail |
+| Small | `font-size: 12px` | table cells and controls in dense grids |
+| Compact | `font-size: 13px` | default UI text in cards and drawers |
+| Body | `font-size: 14px` | running prose and roomy table cells |
+| Title | `font-size: 17px` | card titles |
+| Headline | `font-size: 20px` | section and drawer titles |
+| Grid figure | `font-size: 24px` | the figure inside a dense matrix cell (weight steps to 500) |
+| Display / Figure | `font-size: 28px` | the largest heading on a view; the headline number in a stat card |
 
 **Character:** One family and its monospace sibling, nothing else, in both themes. The pairing
 does all its work through weight and tracking: headings are *medium* (500), never bold, and figures
