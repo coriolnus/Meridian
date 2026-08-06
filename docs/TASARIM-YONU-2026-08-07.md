@@ -123,3 +123,53 @@ doğrulama. `bolder`/`delight`/`overdrive` bu üründe **koşulmaz** (dopamin ve
 **Bitiş ölçütü:** `audit` sıfır P0/P1 · `critique` AI-slop PASS · üç kanonik görevin ölçülmüş
 adım sayısı düşmüş · tam klavye turu faresiz · **ve sistemin ürettiği hiçbir bilgi "üretiliyor
 ama görünmüyor" kovasında kalmıyor.**
+
+---
+
+## 7. TAM KUYRUK — hiçbir öneri sıradışı kalmıyor (2026-08-07 denetimi)
+
+Operatör sorusu üzerine sayıldı: etüdün **22 FIRSAT** satırından yalnız C1'in onu yüzeylere
+yerleşmişti; **on beşi ve Bölüm B'nin detaylandırılmamış modül adayları sıraya GİRMEMİŞTİ.**
+Kapatıldı — tam kuyruk aşağıda, statüsüyle.
+
+### D3-a · C1'in on işi (yerleşti, §3'teki yüzeylerde) ✅ sırada
+Reddedilen-karar karnesi · emir yaşam-döngüsü · gece maliyet karnesi · canlı zaman çizelgesi ·
+rollback sicili · regresyon kırılımı · denetim izi · "bugün neden hiçbir şey olmadı" ·
+çıkış-nedeni kırılımı · skor olgunlaşması.
+
+### D3-b · Kalan on beş FIRSAT (YENİ — sıraya alındı)
+| # | İş | Yüzey | Not |
+|---|---|---|---|
+| F1 | **Kâğıdın nerede yalan söylediğini bilme** | ③ | kâğıt-canlı ayrışması; L1'e geçişin ön-şartı |
+| F2 | **Canlı-backtest sapmasının kökünü adlandırma** | ④ | E1/E2 hattımızın tam kalbi |
+| F3 | **İptali olmayan aksiyondan önce ön-uçuş** (IBKR WhatIf deseni) | ②/⑤ | onay öncesi sonuç önizlemesi |
+| F4 | **Tek kararı adım adım geri sarma** | ② | denetim izinin yürütülebilir hâli |
+| F5 | Yinelenen arızaları taksonomiye kümeleme | ③ | alarm gürültüsünün kökü |
+| F6 | Arızalı koşuları hedefli filtreyle bulma | ③/④ | kayıtlı sorgular |
+| F7 | Ajanın izlediği yolu graf olarak görme | ④ | ham-iz defterinin (C2-2) görünümü |
+| F8 | "Neden çalışmıyor" ayrımı (durum sözlüğü) | ③ | arıza-sınıfı ayrımı |
+| F9 | Eylemsizliğin nedeni — kilit/kapı düzeyinde | ② | C1#8'in kapı-düzeyi derinleşmesi |
+| F10 | Kapasite/doygunluk | ② | slot/ısı doygunluğu |
+| F11 | Kesinti anını getiriyle aynı eksende görme | ④ | kesinti ↔ performans bağı |
+| F12 | Kesintiye dayanıklılığı önceden ayarlama | ⑤ | eşik/yeniden-deneme yapılandırması |
+| F13 | Örneklem derinliğini açarken bedelini beyan etme | ④ | K-cezası şeffaflığı |
+| F14 | İki kademeli eşik + NO_DATA hâli | ③ | uyarı/alarm ayrımı + veri-yok |
+| F15 | Stratejinin dönem dönem neyi tuttuğu | ④ | tahsis tarihçesi |
+| (F16) | Emri kimin koyduğunu ayırma (`clientId`) | — | **bugün tek yol var → uygulanabilir değil**, kayda geçti |
+
+### D3-c · Modüller — beşi + Bölüm B'nin ek adayları
+| Modül | Statü |
+|---|---|
+| C2-1 ajan telemetrisi (S) | 🔄 yazılıyor |
+| C2-2 ham iz defteri (M) | 🔄 yazılıyor |
+| C2-3 vaka sabitleme (M) | 🔄 yazılıyor |
+| C2-4 ikinci motor diferansiyeli — LEAN (L) | 📋 sırada (QC hesabı gerekmez) |
+| C2-5 delist-dahil evren arşivi (L) | 📋 sırada — **Massive kararına bağlı** + kart ZORUNLU |
+| B-ek: bar-içi dolum varsayımını sınama | 📋 sırada (E2 hattına bitişik) |
+| B-ek: bakiyenin işlem-dışı nedenle değişmesi | 📋 sırada |
+| B-ek: latency dağılımı / darboğaz | 📋 sırada (C2-1 telemetrisi üstüne) |
+| B-ek: üretim izini farklı model/prompt ile yeniden koşturma | 📋 sırada (C2-2 üstüne) |
+| B-ek: ajan koşusunu duraklatıp onayla/düzelt/reddet | 📋 **kart-şartlı** — ajan yetkisine dokunur, operatör hükmü ister |
+
+**Kural:** bu kuyruktaki hiçbir kalem "sonra bakarız" diye düşmez; düşecekse gerekçesi yazılır
+(F16'da olduğu gibi).
