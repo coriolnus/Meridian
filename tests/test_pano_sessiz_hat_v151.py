@@ -58,8 +58,12 @@ def test_sessiz_hat_api_alani_uretiliyor():
 def test_bekci_raporu_TEK_KEZ_hesaplanir():
     """Aynı yanıtta iki okuma anı = iki farklı "kaç bekçi gecikti" cevabı. `watchdog.report()`
     doğrudan çağrısı diagnostics dönüşünde KALMAMALI."""
-    assert '"watchdog": _wd_rep,' in API
+    # v192: yük `_wd_rep`i genişletiyor (`alarm_gunluk` günlük alarm sayacı) — ama HÂLÂ TEK
+    # hesaplanmış rapordan türüyor. Sözleşme "alan eklenemez" değil, "ikinci bir okuma anı
+    # doğamaz"dır; çivi o yüzden `report()` ÇAĞRI SAYISINI ölçer, dizgeyi değil.
+    assert "_wd_rep" in API and '"watchdog": {**_wd_rep' in API
     assert '"watchdog": __import__("meridian.watchdog", fromlist=["report"]).report()' not in API
+    assert API.count("_wd.report()") == 1, "bekçi raporu birden çok kez hesaplanıyor"
 
 
 def test_sessiz_hat_saglikliyken_TEK_SONUK_SATIR():
