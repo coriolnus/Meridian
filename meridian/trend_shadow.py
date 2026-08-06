@@ -64,6 +64,10 @@ EQUITY_CAP = 2500          # ~10 yıl günlük M2M; kırpma SAYILIR (equity_duse
 CLOSED_CAP = 500           # kapanan işlem kuyruğu; kırpma SAYILIR (closed_toplam)
 CATCHUP_MAX = 40           # bu kadar seanstan büyük boşluk UYARI üretir (yine de işlenir)
 DELIST_GRACE = 10          # tutulan sembolün son barı bu kadar seans geride kaldıysa "no_data"
+# İLERİ-DOLDURMA BAYRAĞININ KOLON ADI (v196/KALEM-2). Alt çizgi bilerek: bu bir PİYASA kolonu
+# değil, hücrenin KÖKENİ hakkında bir şerh. Kolon `_dilim`de üretilir ve `_karar` onu sayarak
+# kararın kendi bayrağını yazar — böylece "hangi karar hangi doldurmayla alındı" cevaplanabilir.
+DOLDU_KOL = "_dolduruldu"
 
 PIT_SERH = (
     "KALICI PIT ŞERHİ (EDG-2026-009 hükmü, Rol-1, 2026-07-31): bu kolun ölçülen +13,1p/yıl "
@@ -168,7 +172,24 @@ def _bayat_mi(bar_tarihi, s, mpos: dict) -> bool:
 def _dilim(per: dict, semboller, tail: pd.DatetimeIndex) -> dict:
     """Şasinin `build_panel` semantiği, kuyruk penceresinde: her sembol ANA TAKVİME yeniden
     indekslenir ve KENDİ ÖMRÜ İÇİNDE ffill edilir (listelenmeden önce/sonrası NaN kalır —
-    bakma-ileri yok, engine.py:55-61)."""
+    bakma-ileri yok, engine.py:55-61).
+
+    HÜCRE DÜZEYİNDE KÖKEN BAYRAĞI (v196/KALEM-2 · BASELINE-2026-08-06 T12). Bu ffill EKRANA
+    ULAŞIYOR — sıralama buradan çıkıyor, karar oradan, defter oradan, `api.py`nin `trend_kitabi`
+    alanı da oradan. Doldurma sınırlı ve docstring'de dürüstçe belgelenmişti, ama ETİKETSİZDİ:
+    web katmanında "dolduruldu" dizesi SIFIR kez geçiyordu, yani okuyucu ileri-taşınmış bir
+    kapanışla ölçülmüş bir kapanışı aynı mürekkeple okuyordu. Design rules: *"Null renders as an
+    explicit gap with a reason — never interpolated."* Doldurmanın kendisi meşru (şasi ile birebir
+    aynı semantik); ETİKETSİZ olması değildi.
+
+    BAYRAK VERİNİN YANINDA DURUR, AYRI BİR SÖZLÜKTE DEĞİL: ikinci bir nesne dönmek hem imzayı
+    (ve dış çağıranları) kırardı, hem de maske ile veri iki ayrı yerde yaşasaydı ilk düzenlemede
+    ayrışırdı — bu deponun tekrar eden kusur sınıfı. `DOLDU_KOL` alt çizgiyle başlar: bir PİYASA
+    kolonu değil, bir köken şerhidir.
+
+    MASKE FFILL'DEN ÖNCE ALINIR: doldurulduktan sonra doldurulmuş hücre ölçülmüş hücreden ayırt
+    edilemez. Sonra ömür penceresine kırpılır — ömür DIŞINDA kalan NaN'lar doldurulmadı, sayılmaz.
+    """
     out = {}
     for t in semboller:
         df = per.get(t)
@@ -178,9 +199,21 @@ def _dilim(per: dict, semboller, tail: pd.DatetimeIndex) -> dict:
         fv, lv = r["close"].first_valid_index(), r["close"].last_valid_index()
         if fv is None:
             continue
+        bosluk = r["close"].isna()                       # ffill'den ÖNCE: doldurulacak hücreler
+        omur = pd.Series(False, index=r.index)
+        omur.loc[fv:lv] = True
         r.loc[fv:lv] = r.loc[fv:lv].ffill()
+        r[DOLDU_KOL] = bosluk & omur                     # ffill'den SONRA: maskenin kendisi dolmaz
         out[t] = r
     return out
+
+
+def dolduruldu_n(r) -> int:
+    """Bir dilim karesinde ileri-doldurulmuş hücre sayısı. Bayrak kolonu yoksa 0 — bu bir
+    'ölçülemedi' değil, 'bu kare `_dilim`den geçmedi' hâlidir (çağıranlar hepsi geçirir)."""
+    if r is None or DOLDU_KOL not in getattr(r, "columns", []):
+        return 0
+    return int(r[DOLDU_KOL].sum())
 
 
 def _atr(r: pd.DataFrame):
@@ -310,7 +343,21 @@ def _icra(kitap: dict, xd, per: dict, mpos: dict) -> None:
 
 def _isaretle(kitap: dict, s, per: dict) -> list:
     """GÜNLÜK M2M + chandelier tepe takibi. Barı olmayan sembol için ŞASİNİN ffill'i uygulanır
-    (son bilinen kapanış); atlanan sembol SAYILIR ve olayla duyurulur — sessiz boşluk yok."""
+    (son bilinen kapanış); atlanan sembol SAYILIR ve olayla duyurulur — sessiz boşluk yok.
+
+    SATIR DÜZEYİNDE KÖKEN BAYRAĞI (v196/KALEM-2): olay defterine yazılan sayı bir OLAYdır, satırın
+    kendisinde durmuyordu — yani eğrideki bir noktaya bakıp "bu değer ölçüldü mü, taşındı mı"
+    sorusu ekrandan da defterden de cevaplanamıyordu. Bayrak artık SATIRIN İÇİNDE: `dolduruldu` =
+    o seans kendi barı olmadığı için SON BİLİNEN KAPANIŞLA işaretlenen pozisyon sayısı.
+
+    ÜÇ HÂL AYIRT EDİLEBİLİR OLMAK ZORUNDA ve alan HER YENİ SATIRDA yazılır (0 olsa bile):
+      * `dolduruldu` yok      → satır bu bayraktan ÖNCE yazıldı; doldurma ÖLÇÜLEMEZ (uydurma yok)
+      * `dolduruldu` == 0     → ölçüldü, hiçbir pozisyon taşınmadı
+      * `dolduruldu` > 0      → ölçüldü, N pozisyon ileri taşındı
+    SCHEMA BİLEREK ARTIRILMADI: `run_cycle` şema uyuşmazlığında kitabı SIFIRDAN doğuruyor
+    (`yeni_kitap()`), yani bir sürüm artışı CANLI gölge-defteri silerdi. Eski satırların bayraksız
+    kalması bir kusur değil ölçülmüş bir sınırdır ve `ozet()` onu ADIYLA dışarı verir.
+    """
     v = kitap["cash"]
     eksik = []
     for t, p in kitap["positions"].items():
@@ -326,7 +373,8 @@ def _isaretle(kitap: dict, s, per: dict) -> list:
         lc = p.get("last_close")
         if lc:
             v += p["shares"] * lc
-    kitap["equity"].append({"date": str(s.date()), "equity": round(float(v), 2)})
+    kitap["equity"].append({"date": str(s.date()), "equity": round(float(v), 2),
+                            "dolduruldu": len(eksik)})
     if len(kitap["equity"]) > EQUITY_CAP:
         kitap["sayaclar"]["equity_dusen"] = int(kitap["sayaclar"].get("equity_dusen", 0)) + (
             len(kitap["equity"]) - EQUITY_CAP)
@@ -351,6 +399,7 @@ def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni
 
     tutulan = list(kitap["positions"])
     dilim = _dilim(per, sorted(set(uni) | set(tutulan)), tail)
+    dolu = {t: dolduruldu_n(r) for t, r in dilim.items() if dolduruldu_n(r)}
     atr_son = {}
     for t, r in dilim.items():
         a = _atr(r)
@@ -405,24 +454,50 @@ def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni
     kalan = [t for t in tutulan if t not in cikan]
     slots = N_SLOTS - len(kalan)
     entries = [t for t in picks if t not in kitap["positions"]][:max(slots, 0)] if slots > 0 else []
+    # KARARIN KÖKEN BAYRAĞI (v196/KALEM-2). Sıralama penceresinde kaç hücre İLERİ DOLDURULDU ve
+    # kaç sembol en az bir doldurulmuş hücre taşıdı — karar nesnesinin İÇİNDE, ayrı bir defterde
+    # değil. Ayrı yazılsaydı ilk düzenlemede karardan ayrışır ve "hangi karar hangi doldurmayla
+    # alındı" sorusu cevapsız kalırdı. `dolduruldu_sembol` sıralamaya GİREN sembol sayısı değildir:
+    # pencerede doldurulmuş hücresi olan sembol sayısıdır (aday olmayanlar da dahil) — çünkü ffill
+    # sıralamanın PAYDASINI da (kimin p1/p12'si var) etkiler.
     return {"date": str(rd.date()), "exits": to_close, "entries": entries,
-            "aday": len(picks), "en_iyi": picks[:N_SLOTS]}
+            "aday": len(picks), "en_iyi": picks[:N_SLOTS],
+            "dolduruldu": int(sum(dolu.values())), "dolduruldu_sembol": len(dolu)}
 
 
 # ---------------------------------------------------------------- dış yüzey
 def ozet(kitap: dict | None) -> dict:
-    """daily_cycle olayının + panonun okuduğu ÖZET. Kitap yoksa 'doğmadı' der (boş kart dürüsttür)."""
+    """daily_cycle olayının + panonun okuduğu ÖZET. Kitap yoksa 'doğmadı' der (boş kart dürüsttür).
+
+    DOLDURMA KÖKENİ RAKAMLA BİRLİKTE ÇIKAR (v196/KALEM-2, T12). `equity` alanı EĞRİNİN SON
+    SATIRIDIR ve o satır ileri-doldurulmuş olabilir; şerhi ayrı bir uca koymak, rakamı şerhsiz
+    okutmanın en kolay yoluydu (aynı gerekçe `pit_serh` için de yazılı — bu kartın kendi dersi).
+      son_dolduruldu    → BASILAN sayının kendi bayrağı: o seans kaç pozisyon taşındı
+                          (None = satır bayraktan önce yazıldı, ÖLÇÜLEMEZ — 0 DEĞİL)
+      dolduruldu_gun    → eğride en az bir pozisyonu taşınmış seans sayısı
+      dolduruldu_olcumsuz → bayraksız (eski) satır sayısı; sessizce 0'a katlanmaz
+      karar_dolduruldu  → bekleyen ay-sonu kararının sıralama penceresindeki doldurulmuş hücre
+                          sayısı (None = bekleyen karar yok ya da karar bayraktan önce alındı)
+    """
     if not kitap:
         return {"var": False, "pozisyon": 0, "equity": None}
     eq = kitap.get("equity") or []
     son = eq[-1]["equity"] if eq else None
     ilk = eq[0]["equity"] if eq else None
+    # `in` TESTİ ŞART, `get(...) or 0` DEĞİL: ikincisi "ölçüldü, sıfır" ile "bayrak yok"u aynı
+    # piksele düşürürdü — bu deponun ÖLÇÜLEMEDİ≠0 yasasının tam ihlali.
+    son_satir = eq[-1] if eq else {}
+    bekleyen = kitap.get("pending") or {}
     return {"var": True, "pozisyon": len(kitap.get("positions") or {}),
             "equity": son, "nakit": round(float(kitap.get("cash") or 0.0), 2),
             "getiri_pct": (round((son / ilk - 1.0) * 100.0, 3) if son and ilk else None),
             "kapanan": int((kitap.get("sayaclar") or {}).get("closed_toplam", 0)),
             "last_session": kitap.get("last_session"), "last_run": kitap.get("last_run"),
-            "gun": len(eq), "pit_serh": kitap.get("pit_serh")}
+            "gun": len(eq), "pit_serh": kitap.get("pit_serh"),
+            "son_dolduruldu": (int(son_satir["dolduruldu"]) if "dolduruldu" in son_satir else None),
+            "dolduruldu_gun": sum(1 for r in eq if int(r.get("dolduruldu") or 0) > 0),
+            "dolduruldu_olcumsuz": sum(1 for r in eq if "dolduruldu" not in r),
+            "karar_dolduruldu": (int(bekleyen["dolduruldu"]) if "dolduruldu" in bekleyen else None)}
 
 
 def run_cycle(bars: dict, index, on_date: str | None = None) -> dict:

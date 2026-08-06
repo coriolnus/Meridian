@@ -1478,6 +1478,12 @@ def api_secrets(request: Request):
     from . import hermes as _hm_defaults
     return {"secrets": secrets_mod.status(),
             "live_enabled": config.live_enabled(),
+            # MOD ÖLÇÜMDEN GELİR (v196/KALEM-1). Panonun "Güvenlik durumu" kartı modu KODA ÇAKILMIŞ
+            # bir dizeden ("paper") basıyordu: modun doğruluğunu iddia eden kart, `MERIDIAN_MODE=live`
+            # olduğu gün sessizce yanlış söylerdi. `live_enabled` bunu KAPATMAZ — o bayrak iki
+            # koşulun VE'sidir (mod + risk kabulü); "mod live ama risk kabulü yok" hâlinde
+            # `live_enabled` false döner ve kart yine "paper" derdi. İki alan iki ayrı soruya cevap.
+            "mode": config.MODE,
             "autonomy_level": config.limits()["autonomy_level"],
             "model_defaults": {"GEMINI_MODEL": _hm_defaults.GEMINI_DEFAULT_MODEL,
                                "NOUS_MODEL": getattr(_hm_defaults, "NOUS_DEFAULT_MODEL", None)},

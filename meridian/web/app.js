@@ -383,15 +383,64 @@ const pdRow = (l, v) => v == null || v === "" ? "" : `<div class="srow"><span>${
 const nav = $("nav");
 addEventListener("scroll", () => nav.classList.toggle("stuck", scrollY > 20));
 
+// ---- MOD JETONU — KOŞULSUZ KANAL (v196/KALEM-1) ----------------------------------------------
+// ÖLÇÜLEN KUSUR (BASELINE-2026-08-06 §B.9 / T3): mod YALNIZ sağlıklı dalda basılıyordu.
+// `t.halted` → "DURDURULDU", `t.stale` → "gecikmiş · N sn": her iki hâlde de "paper" hecesi
+// DOM'DAN TAMAMEN KAYBOLUYORDU. Yani mod, tam da sistem bozukken görünmez oluyordu — ve bu
+// alandaki en pahalı kaza sınıfı operatörün YANLIŞ MODDA olduğunu sanmasıdır; o yanılgı en çok
+// bir arıza anında doğar. Kusur bir görüntü tercihi değil, bir güvenlik-görünürlüğü kusurudur.
+//
+// MOD BİR DURUM DEĞİLDİR, bu yüzden durum CÜMLESİNİN İÇİNDE taşınamaz: cümle üç dala ayrılıyor,
+// mod ise dalsızdır. Ayrı bir jeton, sabit yerde, DÖRT HÂLDE DE (sağlıklı · halted · stale ·
+// veri-yok) basılır. `#statuspill` zaten `role=status aria-live=polite` — jeton ekran okuyucuya
+// da düşer, ikinci bir ARIA kanalı açılmaz.
+//
+// YENİ DİL/RENK YOK: jeton panonun MEVCUT `_chip` reçetesidir ve `t-vi` — bu panonun "hüküm yok"
+// kanalı, akromatik (`--accent-tint`/`--accent-2`). Mod kroması bu turda AÇILMADI (T4 ayrı bir
+// kalem ve `index.html` bu turda yazılabilir değil): paper/live ayrımı METNİN KENDİSİYLE taşınır
+// ve `.tag` zaten `text-transform:uppercase` basar. `data-mod` özniteliği ayrı bir makine kanalı
+// (yapısal test + mod kroması açıldığında CSS kancası) — bugün hiçbir rengi tetiklemez.
+//
+// SABİT DİZE YOK: mod ÖLÇÜMDEN gelir (`/api/today.mode` ← `config.MODE`). "paper" kelimesini koda
+// çakmak, `MERIDIAN_MODE=live` olduğu gün panoyu yalancı yapardı — ve o yalan sessiz olurdu.
+// ÖLÇÜLEMEYEN MOD UYDURULMAZ: uç düştüğünde ya da alan boş geldiğinde jeton "MOD ÖLÇÜLEMEDİ" der.
+// SON BİLİNEN MODU HATIRLAYIP BASMAK (ffill) BİLEREK YAPILMADI: bu turun KALEM 2'de kapattığı
+// kusur sınıfının ta kendisi, üstelik burada bedeli daha ağır — bayat bir "paper", canlı hesapta
+// operatöre "kâğıttayım" dedirtir.
+const MOD_OLCULEMEDI = "MOD ÖLÇÜLEMEDİ";
+function modJetonu(mod) {
+  const m = (mod == null || String(mod).trim() === "") ? null : String(mod).trim().toLowerCase();
+  const beyan = m ? `emir yolu modu: ${m} (ölçüm: /api/today.mode ← config.MODE)`
+                  : "mod ÖLÇÜLEMEDİ — uç okunamadı ya da `mode` alanı boş geldi; son bilinen mod BASILMAZ";
+  return `<span class="tag t-vi" data-mod="${esc(m || "olculemedi")}" title="${esc(beyan)}">${
+    esc(m || MOD_OLCULEMEDI)}</span> `;
+}
+// AYNI CÜMLE İKİNCİ KEZ DUYURULMAZ: `#statuspill` bir `aria-live` bölgesidir ve şerit 15 sn'de bir
+// yeniden yazılıyor. HALT hâlinde metin sabittir ("DURDURULDU"); onu her turda yeniden yazmak ekran
+// okuyucuya aynı cümleyi dakikada dört kez okuturdu — alarm yorgunluğunun en ucuz kaynağı.
+let _DURUM_HTML = "";
+function durumYaz(html) {
+  if (html === _DURUM_HTML) return;
+  _DURUM_HTML = html;
+  $("statustext").innerHTML = html;
+}
+
 async function refreshStatus() {
   let t;
   try { t = await j("/api/today"); }
-  catch (e) { $("pulse").className = "dot halt"; $("statustext").textContent = "bağlantı yok"; return {}; }
+  catch (e) {
+    $("pulse").className = "dot halt";
+    // VERİ-YOK DALI DA MODU TAŞIR: jeton DOM'dan düşmez, ölçülemediğini SÖYLER.
+    durumYaz(modJetonu(null) + "bağlantı yok");
+    return {};
+  }
   HALTED = t.halted;
-  const pulse = $("pulse"), txt = $("statustext");
+  const pulse = $("pulse");
   pulse.className = "dot pulse" + (t.halted ? " halt" : (t.stale ? " stale" : ""));
   const age = t.heartbeat_age_seconds == null ? "—" : Math.round(t.heartbeat_age_seconds) + " sn önce";
-  txt.textContent = t.halted ? "DURDURULDU" : (t.stale ? `gecikmiş · ${age}` : `canlı · paper · ${onk("L", t.autonomy_level)} · ${age}`);
+  // Durum cümlesinden "paper" ÇIKARILDI — aynı gerçeği iki yerde yazmak, ilk düzenlemede ayrışır.
+  const durum = t.halted ? "DURDURULDU" : (t.stale ? `gecikmiş · ${age}` : `canlı · ${onk("L", t.autonomy_level)} · ${age}`);
+  durumYaz(modJetonu(t.mode) + esc(durum));
   const hb = $("haltbtn");
   hb.textContent = t.halted ? "DEVAM" : "HALT";
   hb.title = t.halted ? "Devam et: yeni alımlara tekrar izin ver" : "Acil durdur: yeni hiçbir alım yapılmaz";
@@ -749,7 +798,8 @@ async function buildSidebar(today, x) {
       <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${hb.mirror_drift ? "neg" : "pos"}">${hb.mirror_drift ? "sapma" : "ayna uyumlu"}</b></div>
       <div class="r"><span>Sermaye</span><b class="${SERMAYE_RENK[(today.sermaye_koken || {}).renk] || ""}">${money(today.equity)}</b></div>
       ${sermayeKokenSatiri(today.sermaye_koken, { kisa: true, ibareyle: true })}
-      <div class="r"><span>Otonomi</span><b>${onk("L", today.autonomy_level)} · paper</b></div>
+      <div class="r"><span>Otonomi</span><b>${onk("L", today.autonomy_level)} · ${
+        esc(today.mode || MOD_OLCULEMEDI)}</b></div>
       <div class="r"><span>Nabız</span><b class="${today.stale ? 'warn' : 'pos'}">${today.stale ? 'gecikmiş' : 'canlı'}</b></div>
     </div>
     <p class="slab">GÖRÜNÜM</p>${items}
@@ -1496,11 +1546,12 @@ RENDER.genel = async () => {
     MARKET_N = m.n; MARKET_STALE = m.stale_n;
     const el = $("gb-kapsama");
     if (!el) return;
-    const n = m.n || 0, taze = n - (m.stale_n || 0);
+    const n = m.n || 0, taze = m.stale_n == null ? null : n - m.stale_n;
     el.innerHTML = n
-      ? `<span class="gb-say">${pctf(taze / n, 1)}</span>
-         <p class="gb-alt"><b>${taze}</b>/${n} sembolün barı <b>${esc(m.as_of || "—")}</b> seansında ·
-           ${m.stale_n ? `<span class="warn">${m.stale_n} bayat</span>` : "bayat yok"}</p>`
+      ? `<span class="gb-say${taze == null ? " mut" : ""}">${taze == null ? "—" : pctf(taze / n, 1)}</span>
+         <p class="gb-alt"><b>${taze == null ? "—" : taze}</b>/${n} sembolün barı <b>${esc(m.as_of || "—")}</b> seansında ·
+           ${m.stale_n ? `<span class="warn">${m.stale_n} bayat</span>`
+             : (m.stale_n === 0 ? "bayat yok" : "bayat sayısı ÖLÇÜLMEDİ")}</p>`
       : `<span class="gb-say mut">—</span><p class="gb-alt">evren boş okundu — kapsama hesaplanamaz</p>`;
   }).catch(() => {
     const el = $("gb-kapsama");
@@ -2322,6 +2373,40 @@ function _chip(txt, cls) { return `<span class="tag ${cls}">${esc(txt)}</span>`;
 // neden belirsiz olduğunu YALNIZ çağıran bilir (sim dilim mi, onarılmış bar mı, havuz mu).
 function belirsiz(icerik, beyan) {
   return `<span class="belirsiz" title="${esc(beyan)}">${icerik}</span>`;
+}
+
+// ---- İLERİ-DOLDURMA İŞARETİ (v196/KALEM-2 · BASELINE-2026-08-06 T12) --------------------------
+// ÖLÇÜLEN KUSUR: `trend_shadow.py`nin ffill'i (sıralama penceresi) ve `_isaretle`in
+// son-bilinen-kapanış taşıması EKRANA ULAŞIYORDU (`api.py` → `trend_kitabi` → Öğrenme#gölge), ama
+// web katmanında "dolduruldu"/"ffill"/"ileri taşındı" dizesi SIFIR kez geçiyordu. Yani ileri
+// taşınmış bir kapanışla ölçülmüş bir kapanış AYNI MÜREKKEPLE yazılıyordu. Design rules:
+// *"Null renders as an explicit gap with a reason — never interpolated."* Doldurmanın kendisi
+// meşru ve şasiyle birebir aynı semantik; ETİKETSİZ olması değildi.
+//
+// YENİ DİL AÇILMADI: işaret, P5'in MEVCUT belirsizlik kanalıdır (`belirsiz()` — kesik alt çizgi +
+// ZORUNLU beyan) ve panonun MEVCUT `_chip` rozetidir (`t-vi`: akromatik "hüküm yok" jetonu).
+// RENK YOK ve bu bir kısıt değil bir hüküm — `belirsiz()`in kendi gerekçesi: renk bu panoda
+// ÖLÇÜMÜN kanalı; doldurma bir ölçüm değil, ölçümün KÖKENİ hakkında bir şerhtir.
+//
+// SÖZLEŞME (test edilir): DOLDURULMUŞ değer işaret TAŞIR, doldurulmamış TAŞIMAZ. Üçüncü hâl
+// (kaynakta bayrak yok → doldurma ÖLÇÜLEMEZ) rozetle SÖYLENİR; sessizce "doldurulmadı" sayılmaz,
+// çünkü o katlama tam olarak ÖLÇÜLEMEDİ≠0 yasasının ihlalidir.
+function _dolduruldu(icerik, n) {
+  if (n == null) return `${icerik} ${_chip("DOLDURMA ÖLÇÜLEMEDİ", "t-vi")}`;
+  if (!n) return icerik;                      // ölçüldü, taşıma yok — TEMİZ HÜCREYE SÜS BASILMAZ
+  return belirsiz(icerik, `İLERİ DOLDURULDU: bu seansta ${n} pozisyonun kendi barı yoktu; değer `
+    + `SON BİLİNEN KAPANIŞLA taşındı (şasi ffill'i, trend_shadow._isaretle) — ölçülmüş bir kapanış değil.`)
+    + " " + _chip("İLERİ DOLDURULDU", "t-vi");
+}
+// Eğrinin TAMAMI için doldurma muhasebesi. Tek hücrenin bayrağı "bu sayı taşındı mı" der; bu satır
+// "defterin ne kadarı taşımayla yürüdü" der — ikisi ayrı soru ve ikisi de rakamın yanında durmalı.
+function _dolduranSeanslar(tk) {
+  const g = tk.dolduruldu_gun, o = tk.dolduruldu_olcumsuz, k = tk.karar_dolduruldu;
+  if (g == null && o == null) return "";      // uç bu alanları servis etmiyor — satır UYDURULMAZ
+  return `<div class="srow"><span>İleri doldurulan seans</span><b class="mono-num">${
+    g == null ? '<span class="mut">ölçülemedi</span>' : `${trn(g)} seans`}${
+    o ? ` <span class="mut">· ${trn(o)} satır bayraktan önce yazıldı — doldurma ÖLÇÜLEMEZ</span>` : ""}${
+    k != null ? ` <span class="mut">· bekleyen kararın sıralama penceresinde ${trn(k)} doldurulmuş hücre</span>` : ""}</b></div>`;
 }
 
 // ---- BAYATLIK SOLMASI (WP-P/P5) --------------------------------------------------------------
@@ -3316,7 +3401,7 @@ async function opParcalar() {
     const pen = esc(String(slp2.pencere_gun ?? "?"));
     if (String(slp2.durum || "").includes("defter boş")) return `${bas}
       <div class="srow"><span>Defter</span><b class="mut">${esc(slp2.durum)}</b></div>
-      <div class="srow"><span>Defterdeki satır</span><b class="mono-num">${trn(slp2.n_defter ?? 0)}</b></div>
+      <div class="srow"><span>Defterdeki satır</span><b class="mono-num">${trn(slp2.n_defter)}</b></div>
       <p class="hint">Nedeni yük kendi söylüyor; pano ikinci bir açıklama uydurmaz. Boş defterden
         oran/ortalama ÜRETİLMEZ: "%0 ret" ya da "0,0 bps" yazmak "slipaj yok" demek olurdu.
         Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p></div>`;
@@ -3331,7 +3416,9 @@ async function opParcalar() {
     // BOŞ SÖZLÜK SATIR BASMAZ: "0 kayıt" ile "kova hiç yok" ayrımı başlıkta zaten yapıldı.
     const dagRows = dag => Object.entries(dag || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
       `<div class="srow"><span>${esc(ICRA_TR[k] || k)}</span><b class="mono-num">${trn(n)}</b></div>`).join("");
-    const stopN = (ay.red_sinifi_dagilimi || {}).stop_vs_current || 0;
+    // `|| 0` KALDIRILDI (v196/KALEM-3, kademe 3): alan yükte yoksa bu satır "0 · ölçüt karşılandı"
+    // yazıyordu — ÖLÇÜLMEMİŞ bir kill ölçütünü GEÇMİŞ gibi okutuyordu. `trn()` null'da zaten "—".
+    const stopN = (ay.red_sinifi_dagilimi || {}).stop_vs_current;
     const dm = ic.dolmama_orani, ke = ic.kill_esigi;   // ikisi de YÜKTEN — eşik burada sabit değil
     const asildi = (dm != null && ke != null && dm > ke);
     const ayr = mt.ayrisan || [];
@@ -3351,15 +3438,15 @@ async function opParcalar() {
       ozetHucre("Ayna · ret oranı", {
         deger: ay.red_orani == null ? null : pctf(ay.red_orani, 1),
         degerSinif: ay.red_orani == null ? "" : (ay.red_orani > 0 ? "neg" : ""),
-        oran: ay.red_orani, payda: `gönderim denemesi (${trn(ay.n ?? 0)})`,
+        oran: ay.red_orani, payda: `gönderim denemesi (${trn(ay.n)})`,
         meta: ay.red_orani == null ? "gönderim denemesi yok — oran tanımsız"
-          : `${trn(ay.n ?? 0)} denemede · <code>stop_vs_current</code> ${trn(stopN)}`,
+          : `${trn(ay.n)} denemede · <code>stop_vs_current</code> ${trn(stopN)}`,
         rozet: ay.red_orani == null ? "ÖLÇÜLEMEDİ" : (azOrnek(ay.n) ? "AZ ÖRNEK" : "") }),
       ozetHucre("Dolum oranı", {
         deger: dl.dolum_orani == null ? null : pctf(dl.dolum_orani, 1),
         oran: dl.dolum_orani, payda: "gönderilen emir",
         meta: dl.dolum_orani == null ? "gönderilen emir yok — oran tanımsız"
-          : `${trn(dl.n_dolan ?? 0)} dolan · pencere ${pen} gün`,
+          : `${trn(dl.n_dolan)} dolan · pencere ${pen} gün`,
         rozet: dl.dolum_orani == null ? "ÖLÇÜLEMEDİ" : "" }),
       ozetHucre("İç motor · dolmama", {
         deger: dm == null ? null : pctf(dm, 1),
@@ -3369,14 +3456,14 @@ async function opParcalar() {
         oran: (dm == null || ke == null || !ke) ? null : dm / ke,
         payda: ke == null ? "" : `kill eşiği (${pctf(ke, 0)}) · yükten okunur`,
         meta: dm == null ? "iç motor satırı yok — ölçülmedi"
-          : `${trn(ic.n ?? 0)} satır · ${asildi ? "kill ölçütü AŞILDI (EXE-2026-001)" : "eşiğin altında"}`,
+          : `${trn(ic.n)} satır · ${asildi ? "kill ölçütü AŞILDI (EXE-2026-001)" : "eşiğin altında"}`,
         rozet: dm == null ? "ÖLÇÜLEMEDİ" : (azOrnek(ic.n) ? "AZ ÖRNEK" : "") }),
       ozetHucre("İki motor · ayrışan", {
         // AYRIŞMA SAYISI PAYDASIYLA ANLAM KAZANIR: ortak plan yoksa iki motor hiç karşılaştırılmadı
         // ve "0 ayrışma" yazmak "ikisi hizalı" demek olurdu — ölçülmemiş bir uyum iddiası.
-        deger: mt.ortak_plan_n == null ? null : trn(mt.ayrisan_n ?? 0),
+        deger: mt.ortak_plan_n == null ? null : trn(mt.ayrisan_n),
         degerSinif: mt.ayrisan_n ? "warn" : "",
-        oran: mt.ortak_plan_n ? (mt.ayrisan_n ?? 0) / mt.ortak_plan_n : null,
+        oran: (mt.ortak_plan_n && mt.ayrisan_n != null) ? mt.ayrisan_n / mt.ortak_plan_n : null,
         payda: mt.ortak_plan_n ? `ortak plan (${trn(mt.ortak_plan_n)})` : "",
         meta: mt.ortak_plan_n
           ? `${trn(mt.ortak_plan_n)} ortak planda · ${mt.ayrisan_n ? "iki motor hizalanmadı" : "ayrışma yok"}`
@@ -3384,34 +3471,35 @@ async function opParcalar() {
         rozet: mt.ortak_plan_n ? "" : "ÖLÇÜLEMEDİ" }),
     ], "İcra gerçekliğinin bölüm özeti");
     return `${bas}${_ozet}
-      <div class="srow"><span>Pencere</span><b class="mono-num">${pen} gün · pencerede ${trn(slp2.n ?? 0)} satır · defterde ${trn(slp2.n_defter ?? 0)}</b></div>
+      <div class="srow"><span>Pencere</span><b class="mono-num">${pen} gün · pencerede ${trn(slp2.n)} satır · defterde ${trn(slp2.n_defter)}</b></div>
       <p class="hint">Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p>
 
-      <h3 class="t" style="margin-top:16px">Ayna · gönderim &amp; ret (${trn(ay.n ?? 0)})</h3>
+      <h3 class="t" style="margin-top:16px">Ayna · gönderim &amp; ret (${trn(ay.n)})</h3>
       <div class="srow"><span>Ret oranı <span class="tx3">(payda: gönderim denemesi)</span></span>
         <b class="${ay.red_orani == null ? "mut" : (ay.red_orani > 0 ? "neg" : "pos")}">${ay.red_orani == null ? "— gönderim denemesi yok" : pctf(ay.red_orani, 1)}</b></div>
       <div class="srow"><span>Kartın (a) ölçütü · <code>stop_vs_current</code></span>
-        <b class="${stopN ? "neg" : "pos"}">${trn(stopN)}${stopN ? " — sıfıra inmeli" : " · ölçüt karşılandı"}</b></div>
+        <b class="${stopN ? "neg" : (stopN === 0 ? "pos" : "mut")}">${trn(stopN)}${
+          stopN ? " — sıfıra inmeli" : (stopN === 0 ? " · ölçüt karşılandı" : " — ölçülmedi (alan yükte yok)")}</b></div>
       ${dagRows(ay.karar_dagilimi)}
       ${dagRows(ay.red_sinifi_dagilimi)}
-      <div class="srow"><span>Dolum</span><b class="mono-num">${trn(dl.n_dolan ?? 0)} dolan · oran ${dl.dolum_orani == null ? '<span class="mut">— gönderilen emir yok</span>' : pctf(dl.dolum_orani, 1)}</b></div>
+      <div class="srow"><span>Dolum</span><b class="mono-num">${trn(dl.n_dolan)} dolan · oran ${dl.dolum_orani == null ? '<span class="mut">— gönderilen emir yok</span>' : pctf(dl.dolum_orani, 1)}</b></div>
       <div class="srow"><span>Dolum − resmî açılış</span><b class="mono-num">${fmtBps(dl.fill_vs_resmi_acilis_bps)}</b></div>
       <div class="srow"><span>Dolum − limit</span><b class="mono-num">${fmtBps(dl.fill_vs_limit_bps)}</b></div>
       <p class="hint">Limite sıfır yakınlık tavanın BAĞLADIĞINI, belirgin negatif ise yasanın para
         bıraktığını söyler — ikisi de kart grid'inin ölçüm girdisidir, karar değil.</p>
 
-      <h3 class="t" style="margin-top:16px">İç motor · kill ölçütü (${trn(ic.n ?? 0)})</h3>
+      <h3 class="t" style="margin-top:16px">İç motor · kill ölçütü (${trn(ic.n)})</h3>
       <div class="srow"><span>Dolmama oranı</span>
         <b class="${dm == null ? "mut" : (asildi ? "neg" : "pos")}">${dm == null ? "— ölçülmedi (iç motor satırı yok)" : pctf(dm, 1)}${dm == null ? "" : (asildi ? " · kill ölçütü aşıldı (kart EXE-2026-001)" : " · eşiğin altında")}</b></div>
       <div class="srow"><span>Kill eşiği <span class="tx3">(yükten okunur)</span></span>
         <b class="${ke == null ? "mut" : "mono-num"}">${ke == null ? "— eşik yükte yok" : pctf(ke, 0)}</b></div>
       <div class="srow"><span>Kaçan limit · gap vetosu · dolan</span>
-        <b class="mono-num">${trn(ic.kacan_limit_n ?? 0)} · ${trn(ic.gap_veto_n ?? 0)} · ${trn(ic.n_dolan ?? 0)}</b></div>
+        <b class="mono-num">${trn(ic.kacan_limit_n)} · ${trn(ic.gap_veto_n)} · ${trn(ic.n_dolan)}</b></div>
       <div class="srow"><span>Dolum − resmî açılış <span class="tx3">(iç motor)</span></span><b class="mono-num">${fmtBps(ic.fill_vs_resmi_acilis_bps)}</b></div>
       ${dagRows(ic.karar_dagilimi)}
 
       <h3 class="t" style="margin-top:16px">İki motor mutabakatı</h3>
-      <div class="srow"><span>Ortak plan</span><b class="mono-num">${trn(mt.ortak_plan_n ?? 0)}</b></div>
+      <div class="srow"><span>Ortak plan</span><b class="mono-num">${trn(mt.ortak_plan_n)}</b></div>
       <div class="srow"><span>Ayrışan plan</span>
         <b class="${mt.ayrisan_n ? "warn" : "pos"}">${mt.ayrisan_n ? trn(mt.ayrisan_n) + " — iki motor hizalanmadı" : "ayrışma yok"}</b></div>
       ${ayrRows ? `<div class="tbl" style="margin-top:8px">${ayrRows}</div>` : ""}
@@ -3720,7 +3808,8 @@ async function opParcalar() {
                 // diyordu; bu, deflate==None'dan uydurulmuş bir gerekçe ve YANLIŞ vaatti (defterde
                 // ship vardı, üstelik alan yalnız teyidi geçen ship yolunda yazılıyor).
                 const w = ml.deflate_why || {};
-                const n = w.n_hypotheses ?? 0;
+                const n = w.n_hypotheses;
+                if (n == null) return "hipotez sayısı ÖLÇÜLMEDİ — halkanın boş kalma gerekçesi bilinmiyor";
                 if (!n) return "defterde hipotez yok — ilk aramada dolmaya başlar";
                 const red = Object.entries(w.by_status || {}).filter(([s]) => s.startsWith("rejected"))
                   .sort((a, b) => b[1] - a[1]);
@@ -4697,8 +4786,9 @@ async function opParcalar() {
       <div class="srow"><span>Açık pozisyon / kapanan işlem</span><b>${tk.pozisyon ?? 0} pozisyon ·
         <span class="mut">${tk.kapanan ?? 0} kapandı · ${tk.gun ?? 0} gün eğri</span></b></div>
       <div class="srow"><span>Sanal özsermaye</span><b>${tk.equity == null ? '<span class="mut">ölçülmedi — eğri boş</span>'
-        : `${money(tk.equity)} <span class="mut">· nakit ${money(tk.nakit)}${
+        : `${_dolduruldu(money(tk.equity), tk.son_dolduruldu)} <span class="mut">· nakit ${money(tk.nakit)}${
           tk.getiri_pct != null ? ` · defter başından beri ${isr(tk.getiri_pct, "%" + trn(tk.getiri_pct, 3))}` : ""}</span>`}</b></div>
+      ${_dolduranSeanslar(tk)}
       ${tk.pit_serh ? `<p class="hint" style="margin-top:10px"><b class="warn">PIT ŞERHİ (rakamdan ayrılamaz):</b>
         ${esc(tk.pit_serh)}</p>`
         : `<p class="hint" style="margin-top:10px"><b class="neg">PIT ŞERHİ DEFTERDEN DÜŞMÜŞ.</b>
@@ -4812,7 +4902,8 @@ async function opParcalar() {
       return `<div class="srow"><span>Veri dönmeyen sembol</span><b class="${cn ? "warn" : ""}">${cn} doğrulanmış${sp ? ` · ${sp} şüpheli (kaynak hatası)` : ""}${cn ? ": " + nd.confirmed_no_data.slice(0, 5).join(", ") : ""}</b></div>`; })()}
     ${(() => { const ud = d.universe_drift; if (!ud) return "";
       // ENDEKSTEN DÜŞEN İSİM: elle bakımlı evrende ölü sembol var mı — üretiliyordu, panoda düşüyordu.
-      return `<div class="srow"><span>Evren sapması</span><b class="${ud.n_stale ? "warn" : (ud.status === "ok" ? "pos" : "")}">${ud.status === "unknown" ? `bilinmiyor (${esc(ud.reason || "kaynak yok")})` : `${ud.n_stale || 0} endeksten düşen${ud.n_stale ? ": " + (ud.stale || []).slice(0, 5).join(", ") : " — liste temiz"}`}</b></div>`; })()}
+      return `<div class="srow"><span>Evren sapması</span><b class="${ud.n_stale ? "warn" : (ud.n_stale === 0 && ud.status === "ok" ? "pos" : "")}">${ud.status === "unknown" ? `bilinmiyor (${esc(ud.reason || "kaynak yok")})` : (ud.n_stale == null ? "sapma sayısı ÖLÇÜLMEDİ — bu satır 'liste temiz' DEMEZ"
+             : `${trn(ud.n_stale)} endeksten düşen${ud.n_stale ? ": " + (ud.stale || []).slice(0, 5).join(", ") : " — liste temiz"}`)}</b></div>`; })()}
     ${(() => { const mx = pl.massive_crosscheck || {}; if (!mx.compared) return "";
       // MASSIVE ÇAPRAZ-KONTROL (K1, 2026-07-30): `massive_crosscheck.json` her canlı turda
       // birikiyordu ve ÜRETİMDE hiç okunmuyordu — beyan edilen okuyucu `crosscheck_report()`in tek
@@ -5260,14 +5351,17 @@ function _gapRows(g) {
     return `<div class="srow"><span>Seans-içi boşluk</span>
       <b class="mut">${esc(cumle)}${ek ? ` · ${esc(ek)}` : ""} ${_chip(cip, "t-vi")}</b></div>`;
   }
-  const n = g.bosluk_sayisi ?? 0, pen = g.pencere || {};
+  const n = g.bosluk_sayisi, pen = g.pencere || {};
   const satir = (g.bosluklar || []).slice(0, 4).map(b =>
     `<div class="trow" style="grid-template-columns:78px 108px 1fr">
        <span class="tick">${esc(b.sembol || "AKIŞ")}</span>
        <span class="mono-num">${esc(String(b.baslangic).slice(11, 16))}–${esc(String(b.bitis).slice(11, 16))}Z</span>
        <span class="chain mut">${b.eksik_dk} dk eksik · beklenen ${b.beklenen} / gelen ${b.gelen}</span></div>`).join("");
   return `<div class="srow"><span>Seans-içi boşluk <span class="tx3">(son ${pen.beklenen_dk ?? "?"} beklenen dk)</span></span>
-      <b class="${n ? "neg" : "pos"}">${n ? `${n} boşluk · ${g.sembol ?? 0} sembol akıyor` : `boşluk yok · ${g.gelen_bar ?? 0} bar / ${g.sembol ?? 0} sembol`}</b></div>
+      <b class="${n ? "neg" : (n === 0 ? "pos" : "mut")}">${
+        n ? `${trn(n)} boşluk · ${trn(g.sembol)} sembol akıyor`
+          : (n === 0 ? `boşluk yok · ${trn(g.gelen_bar)} bar / ${trn(g.sembol)} sembol`
+                     : "boşluk sayısı ÖLÇÜLMEDİ — bu satır 'boşluk yok' DEMEZ")}</b></div>
     ${satir ? `<div class="tbl" style="margin-top:8px">${satir}</div>` : ""}`;
 }
 
@@ -6049,7 +6143,7 @@ const RECORD_VIEW = {
     const rows = (c.recent || []).map(t => `<div class="trow" style="grid-template-columns:58px 1fr 60px">
         <span class="tick">${esc(t.ticker || "—")}</span>
         <span class="mut">${esc(t.closed || "")} · ${t.bars ?? "—"} bar · ${esc(EXIT_TR[t.exit] || t.exit || "—")}</span>
-        <span class="mono-num ${cls(t.r)}">${(t.r || 0) > 0 ? "+" : ""}${Number(t.r || 0).toFixed(2)}R</span>
+        <span class="mono-num ${cls(t.r)}">${t.r == null ? "—" : isr(t.r, trn(t.r, 2)) + "R"}</span>
       </div>`).join("");
     return { eyebrow: "KESİT DETAYI",
       title: `${esc(row.setup)} <span class="mut">×</span> ${esc(rg)}`,
@@ -6562,7 +6656,7 @@ function eylemKutu(baslik, amac, durum, durumSinif, kontrol, ipucuId, ayar) {
 }
 function eylemSeridi(d) {
   const s = d.status || {}, sp = d.sprint || {}, it = d.integrations || {};
-  const pend = it.backfill_pending || 0;
+  const pend = it.backfill_pending;
   const inpStil = "background:var(--card);border:1px solid var(--field);color:var(--tx);border-radius:var(--r-ctl);padding:3px 6px;min-height:44px";
 
   // 1 · DÜŞÜN — beyni elle çalıştır
@@ -6595,7 +6689,7 @@ function eylemSeridi(d) {
     <div class="rise eylem-serit" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:20px;align-items:stretch">
       ${eylemKutu("1 · Düşün", "Beyin, kapanan işlemlere bakıp tek değişkenli bir öneri üretir. Öneri kapıya girer; kapı reddedebilir.", dusunDurum, s.reflecting || s.active ? "pos" : "warn", dusun, "hbtn-msg")}
       ${eylemKutu("2 · Antrenman", "Kum havuzunda aday strateji arar ve ileriye dönük ölçer. Canlı defter dokunulmaz.", antDurum, sp.active ? "pos" : "", antrenman, "sprint-msg", antAyar)}
-      ${eylemKutu("3 · Kanıt dolgusu", `Sonucu bilinen ama görüşü olmayan ${pend || 0} geçmiş plana toplu görüş aldırır (sonuç gizli — geleceğe bakmaz). Kalibrasyon aylar yerine günlerde anlamlılığa ulaşır.`, pend ? `${pend} plan bekliyor` : "bekleyen yok", pend ? "warn" : "", dolgu, "backfill-msg")}
+      ${eylemKutu("3 · Kanıt dolgusu", `Sonucu bilinen ama görüşü olmayan ${trn(pend)} geçmiş plana toplu görüş aldırır (sonuç gizli — geleceğe bakmaz). Kalibrasyon aylar yerine günlerde anlamlılığa ulaşır.`, pend ? `${trn(pend)} plan bekliyor` : (pend === 0 ? "bekleyen yok" : "kuyruk ÖLÇÜLMEDİ"), pend ? "warn" : "", dolgu, "backfill-msg")}
     </div>`;
 }
 // ---- YEDEK ANAHTAR HAVUZU — DETAY KATMANINA İNDİ (S2R-2 "soruya hizmet" denetimi) ------------
@@ -6625,7 +6719,7 @@ function intCard(it) {
   const chip = (on, label) => `<span class="term" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line-2);border-radius:var(--r-ctl);font-family:var(--mono);font-size:11px">
     <span style="width:7px;height:7px;border-radius:var(--r-bar);background:${on ? 'var(--green)' : 'var(--tx3)'}"></span>${label}</span>`;
   const pool = Object.entries(it.pool_keys || {}).map(([p, n]) => `${esc(p)}·${n}`).join(" ") || "yok";
-  const pend = it.backfill_pending || 0;
+  const pend = it.backfill_pending;
   // ---- DETAY KATMANINA İNDİ (S2R-2) ----------------------------------------------------------
   // MCP/koruma-hook/fallback/prompt-cache çipleri BAĞLANTI TESİSATIDIR: "makine ne öğreniyor?"
   // sorusuna cevap vermezler, "beyin nasıl kurulmuş"a verirler. Ama `integrations.mcp`,
@@ -6640,7 +6734,7 @@ function intCard(it) {
       ${chip(it.prompt_cache === "1h", "prompt cache " + esc(it.prompt_cache || "—"))}
       ${chip((it.pool_keys && Object.keys(it.pool_keys).length) > 0, "havuz: " + pool)}</div>
     <div class="acct" style="margin-top:14px">
-      <div class="r"><span>Görüş dolgusu bekleyen</span><b>${pend} plan</b></div>
+      <div class="r"><span>Görüş dolgusu bekleyen</span><b>${trn(pend)} plan</b></div>
       ${it.tool_use ? `<div class="r"><span>MCP araç kullanımı</span><b>${it.tool_use.with_tools}/${it.tool_use.calls} çağrı · ${it.tool_use.total_tools} araç</b></div>` : ''}</div>
     <p class="hint">Görüş dolgusu düğmesi sayfanın başındaki eylem şeridinde.</p>`);
 }
@@ -6807,7 +6901,7 @@ RENDER.hermes = async () => {
         <p class="hint" style="margin-top:12px">${d.autostart ? 'Uygulama açılınca otomatik başlar (yerel).' : 'Otomatik başlatma kapalı.'} · Düğmeler yukarıdaki eylem şeridinde.</p></div>
       <div class="card"><h2 class="t">Harcama (bu ay)</h2>
         <div class="acct" style="margin-top:4px">
-          <div class="r"><span>Harcanan</span><b class="${over ? 'neg' : ''}">$${sp.spent_usd ?? 0}</b></div>
+          <div class="r"><span>Harcanan</span><b class="${over ? 'neg' : ''}">${money(sp.spent_usd)}</b></div>
           <div class="r"><span>Aylık bütçe</span><b>$${sp.budget_usd ?? '—'}</b></div>
           <div class="r"><span>Kalan</span><b class="${over ? 'neg' : 'pos'}">$${sp.remaining_usd ?? '—'}</b></div>
           <div class="r"><span>Çağrı sayısı</span><b>${sp.calls_this_month ?? 0}</b></div>
@@ -7062,7 +7156,11 @@ RENDER.ayarlar = async () => {
     + `<div class="card rise" style="border-color:${d.live_enabled ? 'var(--red)' : 'var(--line-2)'}">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
         <b>· Güvenlik durumu</b>
-        <span class="tx3">Canlı işlem: <b class="${d.live_enabled ? 'neg' : 'pos'}">${d.live_enabled ? 'AÇIK' : 'kapalı'}</b> · Otonomi: <b>${onk("L", d.autonomy_level)}</b> · Mod: <b>paper</b></span></div>
+        <span class="tx3">Canlı işlem: <b class="${d.live_enabled ? 'neg' : 'pos'}">${d.live_enabled ? 'AÇIK' : 'kapalı'}</b> · Otonomi: <b>${onk("L", d.autonomy_level)}</b> · Mod: ${
+          /* SABİT "paper" KALDIRILDI (v196/KALEM-1): GÜVENLİK DURUMU kartı modu KODA ÇAKILMIŞ bir
+             dizeden okuyordu — yani `MERIDIAN_MODE=live` olduğu gün, modun doğruluğunu iddia eden
+             kartın kendisi "paper" yazmaya devam ederdi. Alan artık uçtan ölçülür. */
+          modJetonu(d.mode)}</span></div>
       <p class="hint" style="margin-top:8px">${esc(d.note || '')} Canlı yalnızca iki güvenlik bayrağı (MERIDIAN_MODE=live + MERIDIAN_I_ACCEPT_RISK=true) elle ayarlanır ve otonomi ≥ L1 olursa açılır — bu ekran bunları değiştirmez.</p></div>
     ${alpacaCard}
     ${groups}
