@@ -1581,11 +1581,20 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
 # Defter git-izsizdir ama panodan okunur; maskeleme DESENLE yapılır, gerçek sır değerleri OKUNMADAN
 # (sır okumak için `secrets.get` çağırmak, sızıntı yüzeyini teşhis uğruna genişletmek olurdu).
 _ANSI_RE = None
+# ÜÇ DESEN, ÜÇ AYRI SIZINTI BİÇİMİ (ölçülmüş biçimler; sıra ÖNEMLİ — genelden özele):
+#   (1) ADLI ATAMA: `GEMINI_API_KEY=…` / `dash_token: …`. Ad `\b`ın içinde kalabilir (GEMINI_API_KEY'de
+#       `API_KEY`ten önce word-boundary YOKTUR) — bu yüzden ad çevresi `[\w.\-]*` ile emilir. Ad
+#       KORUNUR: hangi sırrın yankılandığını bilmek teşhistir, değerini bilmek sızıntıdır.
+#   (2) `Authorization: Bearer <jeton>` — burada ayraç `:`/`=` değil BOŞLUKTUR, (1) yakalayamaz.
+#   (3) ÇIPLAK JETON: ≥24 karakterlik sözcük. HEM harf HEM rakam ŞARTI var, çünkü şartsız desen
+#       uzun bir İNGİLİZCE sözcüğü ya da yol parçasını da maskeler ve hata mesajını okunmaz yapardı —
+#       maskeleme teşhisi öldürürse, körlüğü kapatmak yerine yer değiştirmiş oluruz.
 _GIZLI_DESENLER = (
-    (r"(?i)\b(api[_-]?key|apikey|token|secret|password|passwd|bearer)\b\s*[:=]\s*\S+",
+    (r"(?i)\b([\w.\-]*(?:api[_-]?key|apikey|token|secret|password|passwd)[\w.\-]*)\s*[:=]\s*\S+",
      r"\1=«gizli»"),
-    (r"\b[A-Za-z0-9_\-]{32,}\b", "«uzun-jeton»"),          # AIza…/sk-…/JWT gövdesi: hepsi bu bantta
+    (r"(?i)\bbearer\s+\S+", "Bearer «gizli»"),
 )
+_JETON_RE = r"[A-Za-z0-9_\-]{24,}"
 
 
 def _ham_ozet(metin: str | None, limit: int = 200) -> str:
@@ -1604,6 +1613,10 @@ def _ham_ozet(metin: str | None, limit: int = 200) -> str:
     t = t.replace("\r", " ").replace("\n", " ⏎ ").replace("\t", " ")
     for desen, yerine in _GIZLI_DESENLER:
         t = _re.sub(desen, yerine, t)
+    t = _re.sub(_JETON_RE,
+                lambda m: ("«uzun-jeton»" if (any(c.isdigit() for c in m.group(0))
+                                              and any(c.isalpha() for c in m.group(0)))
+                           else m.group(0)), t)
     t = " ".join(t.split())
     if len(t) <= limit:
         return t
