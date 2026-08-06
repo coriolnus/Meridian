@@ -12,14 +12,31 @@ Solo operator (the project owner) — the only user of every surface (dashboard,
 workflow diagram). Not multi-tenant; no external investors, clients, or team members view this
 system.
 
+**Canonical top tasks (operator-confirmed 2026-08-06; measured from a week of real use — every
+future UI decision is scored against these three):**
+
+1. **10-second health check** — "is the system healthy, what happened last night?" (last cycle:
+   date · candidates/plans/armed · age; book; alarms) without scrolling or page-hopping.
+2. **Approve & arm** — review a REVIEW-verdict plan, approve it, arm it, and *see* that it reached
+   the broker mirror (armed → submitted → filled funnel). The approval flow (REVIEW → operator
+   onay → single mirror-submit gate; NO_GO can never be approved) is a permanent core control.
+3. **Alarm/violation triage** — from an alarm to its cause and disposition in ≤2 clicks, on one
+   page, without external documents.
+
 ## Product Purpose
 
-Meridian is a self-improving, paper-trading US-equity research agent. It screens the S&P 500,
+Meridian is a self-improving, paper-trading US-equity trading agent. It screens the S&P 500,
 plans swing-momentum trades, sizes and enters them on paper, grades every closed trade, and
-rewrites its own strategy inside a fixed, code-enforced sandbox. Success means proving whether an
-agent can learn a genuine trading edge honestly — not shipping a working money-maker. It is
-explicitly a research system, not financial advice, and cannot trade real money at its shipped
-autonomy level (L0).
+rewrites its own strategy inside a fixed, code-enforced sandbox.
+
+**Success (operator decision 2026-08-06, supersedes the earlier "research proof, not a
+money-maker" framing): the system makes money — profitability is the primary success criterion.**
+The honest-measurement machinery (pre-registered cards, walk-forward gates, K-penalties,
+kill-lists, calibration) is the *instrument* that makes a claimed edge trustworthy; it is
+non-negotiable as method, but it is the means, not the goal. It remains a paper system today —
+not financial advice — and real-money trading is still gated behind the autonomy ladder (L0 now)
+plus an evidence gate: the E1 execution-law decision (2026-08-03) may only carry into live-money
+mode after re-judgment on real fill data (E2 ledger).
 
 ## Positioning
 
@@ -55,6 +72,24 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
   consequential control, not decoration.
 - No fabricated data, testimonials, or performance claims — every number shown must trace to real
   state files under `state/`.
+- **Durable product facts added 2026-08-06 (all shipped and live):**
+  - **Operator approval flow:** REVIEW-verdict plans carry an "Onayla ve Arm Et" action (two-step
+    confirm); approval is recorded as an *event* (verdicts are never rewritten), the plan enters
+    the armed queue, and submission goes through the single existing mirror gate. NO_GO is
+    unapprovable by construction. Expired-session plans are unapprovable.
+  - **Capital-reset declarations:** the operator may reset paper capital via `meridian.sermaye`;
+    the declaration (`sermaye_resetleri` ledger with offset) is part of the book's identity —
+    accounting checks read through it, and the persistence layer must never drop undeclared keys
+    (patch-writes, ratchet guard, monotonic wiring; incident 2026-08-04).
+  - **Honesty-of-absence UI law (extends the no-fabrication rule):** a metric that was not
+    measured renders as "ÖLÇÜLEMEDİ"/"VERİ YOK" with a reason — never as 0; evidence bars carry
+    a declared denominator or are not drawn; colour appears only on anomaly/significance
+    (EEMUA alarm budget ≤10/day; per-mechanism daily dedupe; quota-suspension renders as
+    "askıda", not as staleness alarms).
+  - **NOUS suggestion pipe:** weekly self-evaluation suggestions are auto-routed — parameter
+    suggestions into the (gated) learning queue, design suggestions into a visible fiş queue,
+    constitutional-core suggestions to a plain refusal. The constitutional core (Katman D) is
+    never automatable.
 
 ## Brand Commitments
 
