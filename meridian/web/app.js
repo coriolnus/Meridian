@@ -1236,6 +1236,40 @@ function alanSayfasi(id, bolumler) {
     _bolumBasliklariniIndir(kap);
   };
 }
+// ---- SATIR-DÜZEYİ YALITIM — yukarıdaki bölüm çerçevesinin KÜÇÜK KARDEŞİ ----------------------
+// Bölüm çerçevesi (`alanSayfasi`) hatayı bir SAYFAdan bir BÖLÜMe küçültür. Bu, aynı küçültmeyi bir
+// adım daha götürür: bir SATIRIN çizimi patlarsa o satır dürüst bir "ÖLÇÜLEMEDİ" satırına döner ve
+// listenin GERİ KALANI çizilir.
+//
+// NEDEN VAR (2026-08-06 canlı vakası, operatör ekran görüntüsü): müdahale bölümünün TEK satır
+// üreticisi çalışma zamanında patladı ve bölüm çerçevesi devreye girdi — yani dört müdahale
+// kolunun DÖRDÜ birden ekrandan silindi ve yerlerine tek bir "Bölüm yüklenemedi" kutusu geldi.
+// HALT/FLATTEN kollarının bulunduğu bir listede bu, tek bir çizim kusurunun panonun en yüksek
+// bahisli düğmelerini görünmez yapması demektir. Bölüm çerçevesi doğru davrandı; eksik olan,
+// ondan bir mertebe küçük olan bu kaptı.
+//
+// UYDURMA YASAĞI KORUNUR: guard hiçbir durumu tahmin ETMEZ ("kapalı"/"serbest" yazmaz). Söylediği
+// tek şey ölçemediği ve NEREDE ölçemediğidir — None ≠ 0. YASA 4 (sessiz-yutma yasağı) da yerinde:
+// hata yutulmaz, satırın kendi gövdesine yazılır ve konsola da düşer.
+// YENİ SINIF AÇILMAZ: satır mevcut `.kol-satir` / `.kol-durum` / `.hint` / `.mut` kurallarını
+// kullanır — olmayan bir sınıf yazmak ileride aranacak bir hayalet bırakırdı.
+function satirKoru(alan, uret) {
+  try {
+    const s = uret();
+    // BOŞ/DİZGİ-OLMAYAN DÖNÜŞ DE BİR ŞEKİL KUSURUDUR: `innerHTML`e "undefined" yazmak, sessizce
+    // bozuk bir satır çizmek olurdu — ekranda durur, hiçbir şey söylemez.
+    if (typeof s !== "string" || !s) throw new TypeError("satır üreticisi dizgi döndürmedi");
+    return s;
+  } catch (e) {
+    console.error("satır çizilemedi:", alan, e);
+    return `
+    <div class="kol-satir">
+      <div><b>ÖLÇÜLEMEDİ</b> · veri-şekli beklenmedik (alan: ${esc(alan)})
+        <p class="hint" style="margin:2px 0 0">${esc(String((e && e.message) || e))}</p></div>
+      <div class="kol-durum"><span class="mut">ölçülemedi</span></div>
+    </div>`;
+  }
+}
 // ---- S2R-2 · BÖLÜM → SAYFA EŞLEMESİ (içerik göçünün TEK kaydı) -------------------------------
 // SIRA BİR SÖZLEŞMEDİR: liste hem çizim sırasını hem DOM sırasını belirler ve "en kritik üstte"
 // kuralının ölçülebilir hâlidir. Her sayfa kendi soru cümlesine hizmet SIRASIYLA okunur.
@@ -2430,13 +2464,24 @@ RENDER.mudahale = async () => {
   const d = await j("/api/diagnostics").catch(() => null);
   const h = (d || {}).hud || {};
   const olculdu = !!d;
+  // TEHLİKE İŞARETİ SATIR İÇİ, YENİ SINIF DEĞİL: ".dlbtn.tehlike" diye bir kural yok ve olmayan
+  // bir sınıf yazmak, ileride "neden kırmızı değil?" diye aranacak bir hayalet bırakır. Panonun
+  // mevcut deseni zaten satır içi (bkz. skillRev "Reddet").
+  //
+  // BU AÇIKLAMA ŞABLONUN DIŞINDA DURUR — ve bu, canlı bir arızanın düzeltmesidir (2026-08-06).
+  // Aynı cümle daha önce şablonun İÇİNDE bir HTML yorumuydu ve sınıf adını TERS TIRNAK içinde
+  // yazıyordu. Ters tırnak şablon değişmezini KAPATIR: `.dlbtn.tehlike` bir üye erişimine, onu
+  // izleyen ikinci ters tırnak da ETİKETLİ ŞABLON (tagged template) çağrısına dönüşür. Yani
+  // "şablon-metni ⟨ters tırnak⟩ .dlbtn.tehlike ⟨ters tırnak⟩ devam-metni" dizisi,
+  // ("şablon-metni").dlbtn.tehlike`devam-metni` diye ayrıştırılır;
+  // "şablon-metni".dlbtn undefined olduğu için `.tehlike` okuması ÇALIŞMA ZAMANINDA patlar:
+  // "TypeError: undefined is not an object". `node --check` bunu YAKALAMAZ — sözdizimi geçerli,
+  // kusur anlamda. Bölüm çerçevesi devreye girdi ve dört müdahale kolunun DÖRDÜ birden ekrandan
+  // silindi. KURAL: şablon değişmezinin içine ters tırnak YAZILMAZ (testte çivili).
   const kol = (no, ad, ne, durum, sinif, eylem, etiket, tehlike) => `
     <div class="kol-satir">
       <div><b>${esc(no)} · ${esc(ad)}</b><p class="hint" style="margin:2px 0 0">${ne}</p></div>
       <div class="kol-durum ${sinif || ""}">${durum}</div>
-      <!-- TEHLİKE İŞARETİ SATIR İÇİ, YENİ SINIF DEĞİL: `.dlbtn.tehlike` diye bir kural yok ve
-           olmayan bir sınıf yazmak, ileride "neden kırmızı değil?" diye aranacak bir hayalet
-           bırakır. Panonun mevcut deseni zaten satır içi (bkz. skillRev "Reddet"). -->
       <button class="dlbtn"${tehlike ? ' style="border-color:var(--red);color:var(--red)"' : ""}
         data-act="${eylem}">${esc(etiket)}</button>
     </div>`;
@@ -2448,15 +2493,19 @@ RENDER.mudahale = async () => {
     "Dört kademe, artan sertlikte. Aynı kollar üst bardaki <b>KRİZ ⚠</b> kapağının altında ve "
     + "⌘K komut paletinde de yaşar — üçü de aynı gövdeyi çağırır, ikinci bir yetki yolu yoktur.")
     + `<div class="card rise" id="mudahale-kollar">
-    ${kol("Kademe 1", "Soft Halt", "Yeni emir girişi durur; açık pozisyonlar yönetilmeye devam eder.",
+    ${satirKoru("Kademe 1 · Soft Halt", () =>
+      kol("Kademe 1", "Soft Halt", "Yeni emir girişi durur; açık pozisyonlar yönetilmeye devam eder.",
       HALTED ? `<span class="warn">ÇEKİLİ</span>` : `<span class="pos">serbest</span>`, "",
-      "opSoftHalt", HALTED ? "DEVAM et" : "Soft Halt", false)}
-    ${kol("Kademe 2", "Cancel-Open", "Yalnız DOLMAMIŞ giriş emirleri iptal edilir; koruyucu stop/hedef bacaklarına dokunulmaz.",
-      `<span class="mut">anlık eylem</span>`, "", "opCancelOpen", "İptal et", false)}
-    ${kol("Kademe 3", "Flatten", "Alpaca kağıt hesabındaki TÜM pozisyonlar piyasadan kapatılır, tüm emirler iptal edilir — elle açtıkların dahil. Çift onay ister.",
-      `<span class="mut">anlık eylem</span>`, "", "opFlatten", "FLATTEN ⚠", true)}
-    ${kol("Kademe 4", "Halt Learning", "İşlemler DEVAM eder; Hermes yeni strateji sürümü ship EDEMEZ. Rollback güvenlik olarak açık kalır.",
-      lh, "", "opLearnHaltToggle", h.learn_halted ? "Kaldır" : "Ship'i durdur", false)}
+      "opSoftHalt", HALTED ? "DEVAM et" : "Soft Halt", false))}
+    ${satirKoru("Kademe 2 · Cancel-Open", () =>
+      kol("Kademe 2", "Cancel-Open", "Yalnız DOLMAMIŞ giriş emirleri iptal edilir; koruyucu stop/hedef bacaklarına dokunulmaz.",
+      `<span class="mut">anlık eylem</span>`, "", "opCancelOpen", "İptal et", false))}
+    ${satirKoru("Kademe 3 · Flatten", () =>
+      kol("Kademe 3", "Flatten", "Alpaca kağıt hesabındaki TÜM pozisyonlar piyasadan kapatılır, tüm emirler iptal edilir — elle açtıkların dahil. Çift onay ister.",
+      `<span class="mut">anlık eylem</span>`, "", "opFlatten", "FLATTEN ⚠", true))}
+    ${satirKoru("Kademe 4 · Halt Learning", () =>
+      kol("Kademe 4", "Halt Learning", "İşlemler DEVAM eder; Hermes yeni strateji sürümü ship EDEMEZ. Rollback güvenlik olarak açık kalır.",
+      lh, "", "opLearnHaltToggle", h.learn_halted ? "Kaldır" : "Ship'i durdur", false))}
     <p class="hint" style="margin-top:12px">HALT (üst bardaki kırmızı düğme) Kademe 1 ile AYNI
       kolu çeker — iki ad, tek mekanizma. Kademe 3 geri alınamaz.</p></div>`;
 };
