@@ -376,6 +376,17 @@ white — **is confirmed at 1.27**.
 *Adopted 2026-08-06 from the trading-platform brief, with three deviations named below. These
 outrank general web-design instinct; they do not outrank the binding Omega two-ground world.*
 
+**Redesign scope (operator mandate, 2026-08-06): no UI element is exempt.** Every visual and
+interaction element is open for redesign — the status strip, the command palette, the scoreboard
+matrix, the cell language, the cards, the navigation rail, the type, the tokens, the table
+layouts. "It already ships" is not a reason to preserve a form. What a shipped element may
+carry forward is its *value* (the problem it solved, measured), never its shape by default.
+
+What does **not** change is the product underneath, because a UI/UX redesign is not a category
+change: the single order path, the honesty laws (unmeasured ≠ 0, no undeclared denominators,
+no fabrication), the two grounds with daylight default, the no-dopamine rule, CSP-self, and the
+Turkish interface. Those bound the *content*; the *form* is fully open.
+
 - **Surface class: supervision console for an autonomous paper-trading agent.** Operator
   decision 2026-08-06: Meridian does **not** get manual order entry. Orders exist only on one
   path — agent plans → gates → operator approval of REVIEW verdicts → the single mirror-submit
