@@ -386,9 +386,18 @@ placement, or an inclusion.
 
 **Direction (operator, 2026-08-06):** the interface should be **as user-friendly as it can be**,
 designed against what platforms in this category — autonomous / algorithmic trading agents under
-human supervision — actually offer. **No new capability is to be invented: every component and
-every piece of data the design needs already exists in the system.** The work is recombination
-(what is asked, where it is answered, in what form), not new plumbing.
+human supervision — actually offer. The starting assumption is that the components and data the design needs already exist, so the
+first pass is recombination — what is asked, where it is answered, in what form. **But new
+modules are permitted (operator, 2026-08-06): a valuable job is never dropped merely because
+today's data does not cover it.** It is carried as a candidate with its cost (derivable from
+existing state / needs an external source / needs a new data path) and Rol-1 decides which get
+built.
+
+Two limits survive that permission. A new module may never open a second order path, resurrect
+a dopamine pattern, imply real money while the ladder says paper, or fabricate what was not
+measured — those are product laws, not budget questions. And a module that makes an *edge
+claim* (asserting a signal earns money) still requires a pre-registered card; pure view and
+derivation modules do not.
 
 Calibration, stated because it is a real tension: user-friendly here does not mean
 consumer-friendly. The user is one expert on long shifts, so friendliness is measured as *fewer
