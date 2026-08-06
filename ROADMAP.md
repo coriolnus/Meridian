@@ -449,8 +449,13 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   taşkın-toplama.
 - **P3 Gauge yasağı ✅:** mevcut 2 gauge → bullet-graph + gömülü-trend + beklenen-aralık bandı
   (Few spesifikasyonu; tek-hue yoğunluk aralıkları).
-- **P4 Tipografi ✅ (slashed-zero ölçülüp-gereksiz):** slashed-zero + sağa-hizalı sabit ondalık taraması; Geist KORUNUR
-  (bilinçli-bastırılmış operatör kararı — el kitabının Inter önerisi REDDEDİLDİ).
+- **P4 Tipografi ✅ (slashed-zero ölçülüp-gereksiz):** slashed-zero + sağa-hizalı sabit ondalık taraması.
+  **DÜZELTME 2026-08-06 (operatör): "Geist KORUNUR" bir YASA DEĞİL.** 2026-08-01'de reddedilen şey
+  el kitabının *Inter* önerisiydi; bu, Geist'i dokunulmaz yapmaz — Geist bugünkü YÜRÜRLÜKTEKİdir,
+  bağlayıcı taahhüt değildir. Yazı-tipi değişimi AÇIK kalem (ayrı `typeset` turu). Değişmeyen:
+  jeton sözlüğü tekliği, iki-zemin, geometri/ölçek/gölgesizlik ve işlevsel çıta (kendi-barındırma
+  [CSP dış font-host'a izin vermez] · açık lisans · tam Türkçe aksan · gerçek tabular rakam ·
+  eşlenik mono · iki zeminde küçük-punto okunabilirlik/halation).
 - **P5 Belirsizlik ✅ (renksiz kanal):** onarım-dolgu/imputation hücrelerinde belirsizlik-görseli +
   bayatlık-solması standardı (Sarma/Kay).
 - **P6 ✅ TAM (gündüz turu 2026-08-02 indi — 9 yüzey tek-katsayı, sıfır saf beyaz; 148-çift yeniden-ölçüm, 0 hüküm değişimi):** #000/#FFF → koyu-gri zemin + kırık-beyaz metin (halation);

@@ -118,6 +118,14 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
   - Concrete token values, per-theme, with measured contrast ratios: `DESIGN.md`.
   - Confirmed 2026-07-27 and unchanged: **all three surfaces convert** (landing, dashboard,
     workflow) and **all seven Omega section patterns** are adopted.
+  - **Typeface is NOT frozen (operator, 2026-08-06).** Geist + Geist Mono is the *incumbent*,
+    inherited from the Omega measurement — not a binding commitment. A typeface change is open
+    for consideration; what stays binding is the rest of this block (one token vocabulary, two
+    grounds, geometry/scale/zero-shadow invariants) and the functional requirements any
+    replacement must meet: self-hosted (CSP allows no external font host), open license,
+    complete Turkish diacritics (ı/İ/ş/ğ/ç/ö/ü), true tabular figures for dense numeric tables,
+    a matching mono sibling for measured values, and legibility at small sizes on both grounds
+    (night ground: no halation on off-white glyphs).
   - Measured from the live preview at `omega.nextjsshop-preview.workers.dev`, not guessed:
     type **Geist + Geist Mono** (identical to what Meridian already loads — no font migration);
     ground `#ffffff`, warm bone panels `#f8f5f2` / `#fbfaf8` / `#f1ece8`, cool chip `#f3f3f3`;
