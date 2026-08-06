@@ -24,6 +24,15 @@ alanının içinde optimize ediyordu.
      `_kuyruga_yaz`tır, ilk satırı şekil denetimidir, ve çekirdek-şekilli bir deneme SESSİZCE
      DÜŞMEZ — `CekirdekIhlali` fırlatır ve AUTHORITY_CHANGE alarmı basar.
 
+OTOMATİK YÖNLENDİRME BORUSU (v192, 2026-08-06): haftalık koşunun SONUNDA `boru()` üç şeklin
+ÜÇÜNÜ DE bir yola bağlar — (a) parametre → Katman C'nin composite kuyruğu (yeni yol AÇILMADI,
+mevcut köprünün sonucu okunur), (b) tasarim → FİŞ (`nous_fisler.json` + `nous_oneri_fisi` olayı;
+otomatik uygulama yolu YOK, görünür operatör kalemi VAR), (c) cekirdek_hakkinda → sade
+`nous_oneri_red_anayasal` olayı. Katman D'nin sözü DEĞİŞMEDİ: kuyruk yolu hâlâ yapısal olarak
+kapalıdır, boru `hermes_composite.enqueue`ı ÇAĞIRMAZ ve (c) sınıfında `CekirdekIhlali`
+FIRLATILMAZ — o istisna köprünün yanlış yönlendirmesinin (bir KOD HATASININ) işaretidir, anayasanın
+normal işleyişinin değil.
+
 YASA: HÂKİM KENDİ YASASINI YAZAMAZ. Bu modül hiçbir şeyi UYGULAMAZ. En fazla yaptığı şey, bir
 parametre demetini ÖLÇÜM SIRASINA sokmaktır — ship yolu yine kapı + operatördür ve tek-değişken
 yasası kaldırılmamıştır. Çekirdek hakkında KONUŞABİLİR (ve konuşması istenir: kör nokta oradadır),
@@ -389,6 +398,128 @@ def _bounds() -> dict:
 
 
 # =================================================================================================
+# OTOMATİK YÖNLENDİRME BORUSU (v192, 2026-08-06 — operatör: "öneriler duruyor, kimse işlemiyor")
+# =================================================================================================
+# ÖLÇÜLEN KUSUR (canlı defter, 2026-W32): üç öneri kabul edildi, ÜÇÜ DE `sekil="tasarim"`, ÜÇÜNÜN DE
+# `kuyruk="yol_yok"`. Yani kalite kapısı çalıştı, defter yazıldı, pano gösterdi — ve sonra HİÇBİR ŞEY
+# olmadı. Katman C yalnız `parametre` şeklini taşıyordu; diğer iki şekil için "yol yok" bir DURUM
+# etiketi değil bir ÇIKMAZ sokaktı: öneri deftere düşüyor, hiçbir kuyruğa girmiyor, hiçbir olay
+# üretmiyor, operatörün önüne bir iş kalemi olarak ÇIKMIYOR. `skill_revisions.json` dersinin aynısı:
+# sessiz bir kuyruk kuyruk değil çöplüktür.
+#
+# BORU ÜÇ SINIFI DA BİR YOLA BAĞLAR — ve üçü AYRI yollardır (tek yola katlamak Katman D'yi silerdi):
+#   (a) parametre        → hermes composite kuyruğu. YENİ KOD YOK: yolu `koprule`/`_kuyruga_yaz`
+#                          zaten kuruyor (kapı hakem, H4 bütçesi içinde, elle ağırlık YAZILMAZ).
+#                          Boru burada yalnız SONUCU okur ve sayar — ikinci bir enqueue çağrısı
+#                          aynı öneriyi iki ölçüm sırasına sokardı.
+#   (b) tasarim          → FİŞ. Kod/doküman/mimari önerisinin otomatik uygulama yolu YOKTUR ve
+#                          olmamalıdır; ama "yol yok" ile "operatörün kuyruğunda" arasında dağlar
+#                          kadar fark var. Fiş = görünür iş kalemi: `nous_fisler.json` + olay.
+#   (c) cekirdek_hakkinda→ ANAYASAL RED. `CekirdekIhlali` FIRLATILMAZ ve ALARM BASILMAZ: o istisna
+#                          bir KOD HATASININ (köprünün yanlış yönlendirmesinin) işaretidir — burada
+#                          ise sistem DOĞRU çalışıyor, yalnızca sınıf kapalı. Anayasanın normal
+#                          işleyişini alarm diye raporlamak, bu turun kapattığı alarm-yorgunluğu
+#                          kusurunun ta kendisi olurdu. Sade bir olay yazılır; docstring'in Katman-D
+#                          sözü (kuyruk yolu YAPISAL olarak kapalı) DEĞİŞMEDEN durur.
+#
+# OTOMATİK UYGULAMA (c) SINIFINA ASLA DOKUNMAZ: boru hiçbir sınıf için kod/parametre UYGULAMAZ —
+# en fazla yaptığı şey bir kalemi görünür bir kuyruğa koymaktır. `hermes_composite.enqueue` çağrısı
+# bu modülde HÂLÂ yalnız `_kuyruga_yaz` içindedir (AST çivisi) ve boru onu ÇAĞIRMAZ.
+FISLER_FILE = "nous_fisler.json"
+
+OLAY_FIS = "nous_oneri_fisi"
+OLAY_RED_ANAYASAL = "nous_oneri_red_anayasal"
+
+YOL_KUYRUK = "hermes_kuyrugu"       # (a) bounds-içi düğme → composite_queue (gölge/prescreen ölçümü)
+YOL_FIS = "fis"                     # (b) kod/doküman/mimari → operatör kuyruğu
+YOL_RED = "anayasal_red"            # (c) CORE/Katman-D → yalnız rapor
+
+
+def _fis_anahtari(o: dict, hafta: str) -> str:
+    """Fişin kimliği. Öneri id'si (N00001) varsa odur; `yaz=False` kuru koşumda id henüz atanmamış
+    olur ve o hâlde hafta+alan kullanılır — anahtarsız bir fiş her koşuda yeniden doğardı."""
+    return str(o.get("id") or f"{hafta}:{o.get('alan')}")
+
+
+def _fis_yaz(satirlar: list[dict]) -> dict:
+    """Fişleri kuyruğa ekle (anahtar bazında TEKİL). Aynı öneri iki koşuda iki fiş üretmez."""
+    def _mut(cur):
+        if not isinstance(cur.get("fisler"), list):
+            cur["fisler"] = []
+        var = {str(f.get("anahtar")) for f in cur["fisler"] if isinstance(f, dict)}
+        eklendi = 0
+        for s in satirlar:
+            if str(s["anahtar"]) in var:
+                continue
+            cur["fisler"].append(s)
+            var.add(str(s["anahtar"]))
+            eklendi += 1
+        cur["guncellendi"] = _now()
+        cur["n"] = len(cur["fisler"])
+        return bool(eklendi) or True        # `guncellendi` her koşuda tazelenir
+    return store.update_json(FISLER_FILE, _mut, {"fisler": [], "n": 0})
+
+
+def boru(kabul: list, *, hafta: str, yaz: bool = True) -> dict:
+    """ÜÇ SINIFI YÖNLENDİREN OTOMATİK BORU. Haftalık koşunun SONUNDA çalışır.
+
+    ŞEKİL BURADA DA YENİDEN TÜRETİLİR (`sekil_sinifla`) — modülün kendi yasası "beynin etiketine
+    güvenilmez" ve o yasa TEK bir yerde değil HER yerde geçerlidir (`koprule`nin aynı notu). Boru
+    dışarıdan da çağrılabilir ve o hâlde `o["sekil"]` hâlâ modelin etiketi olabilirdi.
+
+    DÖNÜŞ: {"ozet": {...sayaçlar...}, "kalemler": [{"anahtar", "yol", "alan", "sekil", ...}]}."""
+    fisler, kalemler = [], []
+    ozet = {"n": len(kabul), YOL_KUYRUK: 0, YOL_FIS: 0, YOL_RED: 0, "yazildi": bool(yaz)}
+    for o in kabul:
+        sekil, isaretler = sekil_sinifla(o)
+        if sekil != o.get("sekil"):
+            o["sekil"], o["cekirdek_isaretleri"] = sekil, isaretler
+        anahtar = _fis_anahtari(o, hafta)
+        if sekil == "cekirdek_hakkinda":
+            # (c) KATMAN D — RED. İstisna YOK, alarm YOK: sistem doğru çalışıyor, sınıf kapalı.
+            ozet[YOL_RED] += 1
+            kalemler.append({"anahtar": anahtar, "yol": YOL_RED, "alan": o.get("alan"),
+                             "sekil": sekil, "cekirdek_isaretleri": isaretler[:6]})
+            o["yol"] = YOL_RED
+            obs.log(OLAY_RED_ANAYASAL, hafta=hafta, anahtar=anahtar,
+                    alan=str(o.get("alan"))[:120], oncelik=o.get("oncelik"),
+                    cekirdek_isaretleri=isaretler[:6],
+                    detail=("Katman D: çekirdek (kapı yasaları · guard · PROTECTED · risk vetoları) "
+                            "hakkındaki öneri YALNIZ rapora gider. Otomatik uygulama bu sınıfa ASLA "
+                            "dokunmaz; öneri metni defterde durur ve Rol-1/operatör tüketir."))
+            continue
+        if sekil == "parametre":
+            # (a) KÖPRÜ ZATEN KOŞTU — boru burada YALNIZ SONUCU OKUR. İkinci bir enqueue, aynı
+            # öneriyi iki ölçüm sırasına sokar ve H4 bütçesini iki kez harcardı.
+            ozet[YOL_KUYRUK] += 1
+            o["yol"] = YOL_KUYRUK
+            kalemler.append({"anahtar": anahtar, "yol": YOL_KUYRUK, "alan": o.get("alan"),
+                             "sekil": sekil, "kuyruk": o.get("kuyruk"),
+                             "kuyruk_id": o.get("kuyruk_id")})
+            continue
+        # (b) TASARIM → FİŞ.
+        ozet[YOL_FIS] += 1
+        o["yol"] = YOL_FIS
+        satir = {"anahtar": anahtar, "ts": _now(), "hafta": hafta, "id": o.get("id"),
+                 "alan": o.get("alan"), "oneri": str(o.get("oneri") or "")[:900],
+                 "gozlem": str(o.get("gozlem") or "")[:900],
+                 "beklenen_etki": str(o.get("beklenen_etki") or "")[:500],
+                 "onerilen_olcum": str(o.get("onerilen_olcum") or "")[:500],
+                 "oncelik": o.get("oncelik"), "sekil": sekil, "durum": "fislendi",
+                 "kanit_atifi": o.get("kanit_atifi")}
+        fisler.append(satir)
+        kalemler.append({"anahtar": anahtar, "yol": YOL_FIS, "alan": o.get("alan"),
+                         "sekil": sekil, "oncelik": o.get("oncelik")})
+        obs.log(OLAY_FIS, hafta=hafta, anahtar=anahtar, alan=str(o.get("alan"))[:120],
+                oncelik=o.get("oncelik"), yazildi=bool(yaz),
+                detail=("tasarım/kod/doküman önerisi FİŞLENDİ — otomatik uygulama yolu YOK "
+                        "(ve olmamalı); operatör kuyruğunda görünür bir iş kalemi olarak durur."))
+    if yaz and fisler:
+        _fis_yaz(fisler)
+    return {"ozet": ozet, "kalemler": kalemler}
+
+
+# =================================================================================================
 # ⑤ GERİ BESLEME: ÖNCEKİ ÖNERİLERİN AKIBETİ (H1 deseninin mekanizma-düzeyi ikizi)
 # =================================================================================================
 def onceki_akibet(n_hafta: int = 2, hafta: str | None = None) -> dict:
@@ -586,15 +717,22 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
                   "sekil_dagilimi": _say(kabul, "sekil"), "oncelik_dagilimi": _say(kabul, "oncelik"),
                   "n_kuyruk": len(kopru["kuyruga_giren"]), "devreden": kopru["devreden"],
                   "slot": kopru["slot"], "haftalik_butce": kopru["haftalik_butce"]})
+    # DEFTER ÖNCE, BORU SONRA (v192): fiş satırı önerinin `id`sini taşımalı ve o kimlik burada,
+    # `_oneri_kaydet` içinde doğuyor. Ters sıra fişleri kimliksiz bırakır ve iki koşum aynı öneri
+    # için iki fiş üretirdi (tekilleştirme anahtarı kimliktir).
     if yaz:
         for o in kabul:
             _oneri_kaydet(o, h, kayit)
+    brs = boru(kabul, hafta=h, yaz=yaz)
+    kayit["boru"] = brs["ozet"]
+    if yaz:
         _kosu_kaydet(kayit)
     obs.log("nous_eval_done", hafta=h, beyin=kayit["beyin"], uretilen=ayr["n_uretilen"],
             kabul=len(kabul), dusen=ayr["n_dusen"], kuyruk=len(kopru["kuyruga_giren"]),
-            devreden=len(kopru["devreden"]), yazildi=bool(yaz))
+            devreden=len(kopru["devreden"]), yazildi=bool(yaz),
+            boru=brs["ozet"])
     return {"kosu": kayit, "kabul": kabul, "dusenler": ayr["dusenler"], "telemetri": tel,
-            "akibet": ak, "kopru": kopru}
+            "akibet": ak, "kopru": kopru, "boru": brs}
 
 
 def _say(rows: list, alan: str) -> dict:

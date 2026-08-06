@@ -2081,6 +2081,26 @@ def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
     return out
 
 
+def _nous_fisler(limit: int = 12) -> dict:
+    """Nous öneri FİŞLERİ — otomatik yönlendirme borusunun (b) sınıfının operatör kuyruğu.
+
+    Boş defter SAHTE bir "her şey işlendi" göstermez: `durum` alanı ayrımı taşır ("fiş yok" ≠
+    "boru hiç koşmadı"). `anahtar` alanı önerinin kimliğidir — pano rozeti bu alanla eşler."""
+    doc = store.read_json("nous_fisler.json", None)
+    if doc is None:
+        return {"durum": "defter_yok", "n": 0, "fisler": [], "anahtarlar": [],
+                "rol": ("boru henüz hiç koşmadı (haftalık nous_eval kadansının sonunda çalışır) — "
+                        "'fiş yok' DEĞİL, 'defter hiç yazılmadı'")}
+    fisler = [f for f in (doc.get("fisler") or []) if isinstance(f, dict)]
+    acik = [f for f in fisler if str(f.get("durum") or "fislendi") == "fislendi"]
+    return {"durum": "dolu" if fisler else "bos", "n": len(fisler), "n_acik": len(acik),
+            "guncellendi": doc.get("guncellendi"),
+            "anahtarlar": [str(f.get("anahtar")) for f in fisler],
+            "fisler": list(reversed(fisler))[:limit],
+            "rol": ("FİŞ = kod/doküman/mimari önerisinin GÖRÜNÜR operatör kalemi. Otomatik uygulama "
+                    "yolu YOKTUR ve olmayacaktır — fiş bir onay değil, bir kuyruk kaydıdır.")}
+
+
 # ---- /api/diagnostics KISA ÖMÜRLÜ YANIT ÖNBELLEĞİ (v181, 2026-08-03) -------------------------
 # CANLI ŞİKÂYET: "pano çok yavaşlamış" — ölçüm: bu uç 8,8-10,4 sn. Kökün ikinci yarısı: uç,
 # panonun HER anketinde ~60 üreticiyi (yedi bütünlük dedektörü, blok-bootstrap CI'lar, 61 JSONL +
@@ -2544,6 +2564,16 @@ def api_diagnostics(request: Request, taze: int = 0):
                   # 12 üreticiyi (bootstrap CI'lar dahil) çağırır ve her pano isteğinde yeniden
                   # hesaplanması saf bir maliyet olurdu — paketin tüketicisi prompt ve `--ozet`.
                   "improvement_proposals": an.improvement_proposals_status(),
+                  # NOUS ÖNERİ FİŞLERİ (v192, otomatik yönlendirme borusu). DOSYA ADI LİTERAL
+                  # yazılır ve okuma DIŞ modülde (burada) yapılır — `codelaw.artifact_graph`
+                  # "kendi yazdığını kendi okuyan tüketici değildir" der; `nous_eval` içinden
+                  # okunsaydı defter `artifact_unread` olarak görünürdü (aynı gerekçe:
+                  # analytics.improvement_proposals_status).
+                  # NİYE AYRI DEFTER: `improvement_proposals.jsonl` KABUL EDİLENLERİN kaydıdır ve
+                  # sözleşmesi "akıbet alanı YOKTUR" der (akıbet zamanla değişir, damga yalan
+                  # söyler). Fiş ise operatörün İŞ KALEMİdir; durumu zamanla değişir ve kendi
+                  # defterinde yaşamak zorundadır.
+                  "nous_fisler": _nous_fisler(),
                   # Y3 REJİM/RİSK DÖRTLÜSÜ (3b): dördü de DEFAULT-OFF. VIX bacağı ayrıca `veri_yok`
                   # (Massive 403 / FMP boş — doğrulandı 2026-07-30) ve knob açılsa bile karar üretmez.
                   "y3_entry_gates": _y3_gate_row(),
