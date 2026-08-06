@@ -438,6 +438,29 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   optimizasyonuna devir (kart disipliniyle uyumsuz) · ML-eğitim taşıma (Train kotası sembolik) ·
   Benzinga ($120 — Tiingo FREE dururken) · FREE'de lean-cli (sözleşme ihlali).
 
+### WP-UX — YENİDEN-TASARIM PROGRAMI 🔴 AKTİF (2026-08-07; yön: docs/TASARIM-YONU-2026-08-07.md — operatör onaylı, BAĞLAYICI)
+- **Girdi ölçümleri (bitti):** BASELINE-2026-08-06 (25 bulgu, 4×cid-4; araç kör noktası: detect
+  app.js'in 7.511 satırında 0 bulgu) · PATTERN-ETUDU-2026-08-06 (11 platform, 81 iş; 22 FIRSAT,
+  6 modül adayı, 10 yasaya-aykırı desen elendi) · UX-SADELESTIRME-DENETIMI (23 Nielsen bulgusu).
+  HÜKÜM: pano eksik değil BAĞLANTISIZ — dürüstlükte kategoride önde, birleştirmede geride.
+- **D0 acil doğruluk** 🔄: mod her durumda görünür (halted/stale'de kayboluyordu — güvenlik
+  görünürlüğü) · ffill rozeti · 162 `?? 0` triyajı.
+- **D1 jetonlar + beş renk rolü** 📋: mod KENDİ kanalını alır; şiddet yalnız şiddet; veri-güveni
+  ve keşif-modu şiddetten çıkar; 164 koşulsuz pos/neg/warn temizlenir.
+- **D2 kart sözleşmesi + yeni IA** 📋: ①Bugün ②Karar ③Sağlık ④Öğrenme ⑤Kilitler; olay yüzeyleri
+  çekmece olarak; runbook.html EMİLİR (dördüncü dünya ölür), workflow.html EMEKLİ (canlı zaman
+  çizelgesine devrolur), landing.html KALIR+onarılır (1,53:1 sızıntısı).
+- **D3 fırsat yüzeyleri + modüller** 📋: C1'in on işi (reddedilen-karar karnesi 4.988 satır ·
+  emir yaşam-döngüsü · /api/spend'in SIFIR web çağıranı · canlı zaman çizelgesi · rollback
+  sicili [app.js'te "rollback" 0 kez] · regresyon kırılımı · denetim izi · "bugün neden hiçbir
+  şey olmadı" · çıkış-nedeni kırılımı [stop_gap 1.973R] · skor olgunlaşması) + ALTI MODÜL
+  (operatör: hepsi yazılır; delist-arşivi Massive kararına bağlı + kart ZORUNLU).
+- **D4 yazı tipi** 📋: Geist EMEKLİ (Impeccable bulgusu, operatör kararı); aday DESIGN.md'nin
+  Geist için kurduğu binary-ölçüm standardıyla seçilir (Türkçe aksan · tabular · mono eşlenik ·
+  halation · kendi-barındırma/CSP).
+- **D5 sertleştirme** 📋 · **D6 doğrulama** 📋 (audit/critique önce-sonra, on ilke kanıtlı, devir).
+- Kapı: her dalgada kapsam testleri → tek otoriter suite → tek dagit → canlı doğrulama.
+
 ### WP-P — Pano/Operatör Arayüzü (2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası
 + finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)
 - **ZATEN VAR:** tabular-nums (19 kullanım) · dürüstlük-UI (None≠0 = YASA, provenance rozetleri,
