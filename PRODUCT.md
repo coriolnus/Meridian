@@ -72,6 +72,11 @@ L1 every-order-approved live → L2 autonomous live), never toggled by the agent
   consequential control, not decoration.
 - No fabricated data, testimonials, or performance claims — every number shown must trace to real
   state files under `state/`.
+- **No manual order entry (operator decision 2026-08-06).** A UI/UX redesign does not change
+  what Meridian is. Orders exist on exactly one path — agent plans → gates → operator approval
+  of REVIEW verdicts → the single mirror-submit gate. Design work may restyle, regroup, or
+  re-sequence that path; it may never add a second one (an order ticket, a chart-side order
+  widget, a quick-trade control). The two-engine execution law depends on the single path.
 - **Durable product facts added 2026-08-06 (all shipped and live):**
   - **Operator approval flow:** REVIEW-verdict plans carry an "Onayla ve Arm Et" action (two-step
     confirm); approval is recorded as an *event* (verdicts are never rewritten), the plan enters

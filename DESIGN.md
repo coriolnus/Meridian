@@ -371,6 +371,47 @@ and the top bar comment cites 5.64 for loss-on-white where the measurement is **
 comment's historical claim — that loss measured 1.27:1 on the old dark bar `rgba(8,9,10,.72)` over
 white — **is confirmed at 1.27**.
 
+## Design rules
+
+*Adopted 2026-08-06 from the trading-platform brief, with three deviations named below. These
+outrank general web-design instinct; they do not outrank the binding Omega two-ground world.*
+
+- **Surface class: supervision console for an autonomous paper-trading agent.** Operator
+  decision 2026-08-06: Meridian does **not** get manual order entry. Orders exist only on one
+  path — agent plans → gates → operator approval of REVIEW verdicts → the single mirror-submit
+  gate. A second order path is forbidden by construction (E1 two-engine law: both engines read
+  `broker.entry_law()`). Density, precision and state honesty outrank visual appeal.
+- **Gray-first, with five colour roles that never bleed into each other:** (1) structure —
+  achromatic; (2) risk/alarm severity — high chroma, three hues, used for nothing else;
+  (3) direction — P&L sign, low chroma, CVD-safe, and always the *third* signal after sign and
+  arrow; (4) **mode chrome** — reserved permanently for paper-vs-live and used for nothing else;
+  (5) data scales — single-hue sequential and CVD-safe diverging, never rainbow. There is no
+  brand accent colour in the product UI.
+- **Mode must be legible from any pixel.** Today the system is paper (L0). When the autonomy
+  ladder moves to L1, a structural treatment — not a corner badge — carries it, because the
+  costliest accident class in this domain is an operator who believes they are in the other mode.
+- **Forbidden:** gradients, glassmorphism, decorative shadows, gradient text, hero imagery,
+  illustration, nested rounded cards, celebratory motion, sound, gamification of any kind.
+- **Motion:** ≤300ms, anomaly-signalling only, always inside a `prefers-reduced-motion` guard.
+- Backgrounds are never `#000`; text is never `#FFF`.
+- **Numerics:** tabular figures, right-aligned, fixed decimals per column, explicit currency.
+- **Charts:** bars and bullet graphs. Radial gauges, donuts and pie charts are forbidden.
+- **Null renders as an explicit gap with a reason** — never `0`, never interpolated, never blank.
+
+**Three deviations from the source brief, and why:**
+
+1. **Radius stays on the Omega scale (10px control radius, the black-pill idiom), not 0/2px.**
+   Radius is geometry, and geometry is identical across the two grounds by binding decision;
+   flattening it would reopen the visual world rather than tighten the console. The brief's
+   0/2px belongs to an ISA-101 canvas Meridian did not adopt.
+2. **`slashed-zero` is not declared.** Measured: the current mono bakes the slash into the
+   default glyph and exposes no `zero` feature, so the declaration is inert — writing it would
+   be work that reads as done but changes nothing. Re-verify if the typeface changes.
+3. **Two grounds stay, daylight default.** The brief assumes a dark-only canvas; the binding
+   decision (2026-07-31, operator) is two grounds with daylight as default and night as a
+   low-light shift choice. The brief's colour-*role* architecture is ground-agnostic and is
+   adopted in full; its specific dark canvas values are not.
+
 ## Typography
 
 **Display / Body Font:** Geist (with `system-ui`, `-apple-system`, `Segoe UI`) — *incumbent, not a
