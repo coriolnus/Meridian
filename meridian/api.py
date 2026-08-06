@@ -1913,13 +1913,21 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
     b_sapma += [{"ad": n, "sure": None, "detay": "kurulumdan beri hiç koşmadı",
                  "ipucu": "nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama)"}
                 for n in never[:4]]
+    # ASKIDA (v192): pencereyi aşmış AMA sistemin kendi beyanıyla beklemeye alınmış mekanizma
+    # (hermes kota soğuması / kimlik havuzu tükenmesi). SAPMA DEĞİLDİR — sessiz hattın kırmızısını
+    # meşru bir beklemeyle boyamak, hattın anlamını yine alarm-yorgunluğuna çevirirdi. Ama GİZLİ de
+    # değildir: `ok/total` oranında eksik görünen mekanizmanın nedeni burada yazar.
+    askida = list(wd.get("askida") or [])
     segmentler.append({
         "ad": "bekçiler", "saglikli": not b_sapma,
         # KRİTİK = "hiç koşmadı". watchdog.report'un kendi ifadesiyle en yüksek sesli hâl:
         # geciken bir mekanizma yavaşlamıştır, hiç koşmamış bir mekanizma KABLOLANMAMIŞTIR.
         "kritik": bool(never),
         "ozet": (f"{wd.get('ok')}/{toplam}" if toplam is not None else "—"),
-        "n_sapma": len(stale) + len(never), "sapmalar": b_sapma})
+        "n_sapma": len(stale) + len(never), "sapmalar": b_sapma,
+        "askida": [{"ad": a.get("name"), "neden": a.get("neden"), "detay": a.get("detay"),
+                    "sure": _sure_metni((a.get("gap_h") or 0) * 3600.0)} for a in askida[:4]],
+        "n_askida": len(askida)})
 
     # ---- 2) KİLİTLER ---------------------------------------------------------------------------
     # Normal konum "kapalı". Açık bir kol bir arıza DEĞİL bir DURUM olabilir (operatör eliyle

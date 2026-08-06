@@ -46,6 +46,12 @@ def test_notify_whitelist_and_cooldown(seeded_sandbox, monkeypatch):
 
 
 def test_watchdog_stale_transition_alarms_once(seeded_sandbox, monkeypatch):
+    """DAVRANIŞ v192'DE DARALDI (alarm hijyeni turu, 2026-08-06). Eski sözleşme "toparlanıp yeniden
+    bayatlarsa YENİ alarm" diyordu ve doğruydu — ta ki canlı defter pencere sınırında SALINAN bir
+    mekanizma görene dek: `hermes_poll` 24 saatte 112 satır yazdı (0,5 sa pencere, 0,5-0,7 sa nabız).
+    Yeni sözleşme: histerezis AYNEN durur, üstüne mekanizma başına GÜNLÜK TAVAN gelir. Yeniden
+    bayatlama hâlâ MEŞRU bir olaydır ama aynı UTC günü içinde ikinci kez telefona düşmez; ertesi gün
+    yeniden duyulur (test_alarm_hijyeni_v192 gün-dönümü çivisi). Bastırma sessiz değil, sayaçta."""
     alarms = []
     monkeypatch.setattr(obs, "alarm", lambda tok, msg, **kw: alarms.append((tok, kw.get("mechanism"))))
     store.write_json(watchdog.BEATS_FILE, {"scheduler_poll": time.time() - 3600})   # pencere 30 dk → bayat
@@ -56,7 +62,9 @@ def test_watchdog_stale_transition_alarms_once(seeded_sandbox, monkeypatch):
     watchdog.check_and_alarm()
     store.write_json(watchdog.BEATS_FILE, {"scheduler_poll": time.time() - 3600})   # yine bayat
     watchdog.check_and_alarm()
-    assert alarms.count(("MECHANISM_STALE", "scheduler_poll")) == 2       # yeni bayatlama yine görünür
+    assert alarms.count(("MECHANISM_STALE", "scheduler_poll")) == 1       # AYNI GÜN: tavan 1
+    gunluk = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})["mekanizmalar"]["scheduler_poll"]
+    assert gunluk["alarm"] == 1 and gunluk["bastirilan"] == 1             # bastırma KAYITLI
 
 
 # ---------------- #2: öz-değerlendirme ----------------

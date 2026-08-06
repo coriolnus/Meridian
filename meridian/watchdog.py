@@ -84,12 +84,90 @@ def beat(name: str) -> None:
         obs.warn("watchdog_beat_write_failed", mechanism=name, error=f"{type(e).__name__}: {e}")
 
 
+# ============ ASKIDA-FARKINDALIK (v192, 2026-08-06 — operatör alarm-hijyeni şikâyeti) ============
+# CANLI KANIT (24 sa, Rol-1 ölçümü): alarm defterinin ~112 satırı tek bir cümleydi —
+# "MECHANISM_STALE hermes_poll 0,5-0,7 sa (pencere 0,5)". İki AYRI kusur onu üretiyordu ve ikisi de
+# bu blokta kapanıyor:
+#
+#   (a) ASKIDA ≠ GECİKMİŞ. `hermes_poll` nabzı, hermes ipliği kota soğumasındayken ya da kimlik
+#       havuzu tükenmişken SEYREKLEŞİR — mekanizma ölü değil, BEKLEMEYE ALINMIŞTIR (v188 tam bu
+#       hâli `brain_cooldown.json` + `_pool_exhausted` ile yazıyor). Onu "gecikti" diye alarmlamak,
+#       sistemin kendi bildirdiği bilinen ve MEŞRU bir hâli arıza diye operatöre yollamaktır.
+#       Emsal aynı dosyada: `production_report` kapı meta-kalibrasyonunu `askida` kovasına ayırıyor
+#       (WP-M ölçek borcu turu) — "sayamıyorum" ile "üretmiyorum" ayrımının bekçi tarafındaki ikizi.
+#       ÖNEMLİ: askıda olan mekanizma OK sayılmaz; kendi kovasında görünür (panoda dürüst kalır),
+#       yalnız ALARM üretmez.
+#
+#   (b) HİSTEREZİS + GÜNLÜK TEKİLLEŞTİRME. Mandal (ALARMED_FILE) yalnız "şu an bayat olanlar"ı
+#       tutuyordu: pencere sınırında salınan bir mekanizma (0,5 sa pencerede 0,5-0,7 sa'lık nabız)
+#       her toparlanışta mandaldan düşüyor, her yeniden aşımda YENİ alarm yazıyordu — çırpınma
+#       (flapping) alarm-yorgunluğunun ders kitabı hâli. ROADMAP WP-P'nin EEMUA 191 bütçesi
+#       ≤10 alarm/gün yazar; tek mekanizma tek başına 112 yazıyordu. Kural: aynı mekanizma, aynı
+#       UTC günü, EN FAZLA `GUNLUK_ALARM_TAVANI` kez. Eşik-aşımı sürerken tekrar yok (mandal, eski
+#       davranış); kapanıp yeniden aşmak hâlâ MEŞRU bir yeni olaydır ama günlük tavana tabidir.
+#       Bastırılan her satır SESSİZ DEĞİL: `ALARM_GUNLUK_FILE` sayacına yazılır ve `report()` onu
+#       dışarı verir — bastırma kayda geçmezse bekçi kendi körlüğünü hijyen sanardı.
+GUNLUK_ALARM_TAVANI = 1                  # mekanizma başına / UTC günü başına azami MECHANISM_STALE
+ALARM_GUNLUK_FILE = "watchdog_alarm_gunluk.json"
+
+# Askıda-sondası olan mekanizmalar. Sonda YALNIZ mekanizma zaten pencereyi aşmışken koşar (pano her
+# poll'da report() çağırır — kota/havuz dosyalarını boşuna okumak pahalıya gelir).
+_ASKIDA_SONDALARI = ("hermes_poll",)
+
+
+def _hermes_askida() -> dict | None:
+    """hermes ipliği BEKLEMEYE mi alındı? {neden, detay, kalan_s} ya da None (askıda değil).
+
+    İki kaynak, ikisi de v188'in yazdığı yerler: (1) kimlik havuzu tükenmesi (`_pool_exhausted` —
+    kendi pencere/kota-sıfırlama testleri içinde), (2) beyin soğuma defteri (`brain_cooldown.json`;
+    `agent` satırı yerel-ajan yolunu, sağlayıcı satırları doğrudan çağrıyı bağlar). Hiçbiri yoksa
+    None döner ve mekanizma NORMAL bayatlık yoluna gider — yani bu sonda hiçbir gerçek arızayı
+    örtmez, yalnız sistemin kendi beyan ettiği bekleme hâlini alarmdan ayırır."""
+    from . import hermes
+    havuz = hermes._pool_exhausted()
+    if havuz:
+        return {"neden": "havuz_tukendi", "kalan_s": None,
+                "detay": f"kimlik havuzunda kullanılabilir kimlik yok (sağlayıcı: {havuz})"}
+    try:
+        saglayicilar = ["agent", *hermes.brain_order()]
+    except Exception as e:                       # sonda kendi arızasını YUTMAZ (aşağıda uyarılır)
+        raise RuntimeError(f"brain_order okunamadı: {type(e).__name__}: {e}") from e
+    defter = store.read_json(hermes.BRAIN_COOLDOWN_FILE, {}) or {}
+    en_uzun, kim, gerekce = 0.0, None, None
+    for p in saglayicilar:
+        rem = hermes.brain_cooldown(p)
+        if rem > en_uzun:
+            en_uzun, kim = rem, p
+            gerekce = (defter.get(p) or {}).get("reason")
+    if en_uzun <= 0:
+        return None
+    return {"neden": "kota_sogumasi", "kalan_s": round(en_uzun, 1),
+            "detay": f"beyin soğumada: {kim} — {round(en_uzun / 60, 1)} dk kaldı"
+                     + (f" ({gerekce})" if gerekce else "")}
+
+
+def _askida_mi(name: str) -> dict | None:
+    """Mekanizma için askıda-sondası. Sonda DÜŞERSE askıda SAYILMAZ (fail-closed: ölçemediğim bir
+    beklemeyi 'meşru bekleme' diye alarmı bastırmak, bekçinin var olma sebebini silerdi) ve düşüş
+    obs'a yazılır — YASA 4."""
+    if name not in _ASKIDA_SONDALARI:
+        return None
+    try:
+        return _hermes_askida()
+    except Exception as e:
+        from . import obs
+        obs.warn("watchdog_askida_probe_failed", mechanism=name, error=f"{type(e).__name__}: {e}")
+        return None                          # ölçülemedi → normal bayatlık yolu (alarm BASILIR)
+
+
 def report() -> dict:
-    """{stale: [{name, gap_h, expected_h}], ok: n, never: [adlar]} — teşhis paneli buradan okur.
-    Hiç damgalanmamış mekanizma 'never' listesinde (kurulumdan beri hiç koşmadı — en yüksek sesli hal)."""
+    """{stale: [{name, gap_h, expected_h}], askida: [...], ok: n, never: [adlar]} — teşhis paneli
+    buradan okur. Hiç damgalanmamış mekanizma 'never' listesinde (kurulumdan beri hiç koşmadı — en
+    yüksek sesli hal). Penceresini aşmış AMA sistemin kendi beyanıyla beklemeye alınmış mekanizma
+    `askida` listesindedir: ne OK'tir ne alarmlıktır (v192)."""
     beats = store.read_json(BEATS_FILE, {})
     now = _now()
-    stale, never, ok = [], [], 0
+    stale, never, askida, ok = [], [], [], 0
     for name, max_gap in EXPECTED.items():
         ts = beats.get(name)
         if ts is None:
@@ -101,30 +179,99 @@ def report() -> dict:
             never.append(name)                 # bozuk damga = hiç yok say (dürüst en-kötü varsayım)
             continue
         if gap > max_gap:
-            stale.append({"name": name, "gap_h": round(gap / 3600, 1),
-                          "expected_h": round(max_gap / 3600, 1)})
+            satir = {"name": name, "gap_h": round(gap / 3600, 1),
+                     "expected_h": round(max_gap / 3600, 1)}
+            sus = _askida_mi(name)
+            if sus:
+                askida.append({**satir, **sus})
+            else:
+                stale.append(satir)
         else:
             ok += 1
     stale.sort(key=lambda x: -x["gap_h"])
-    return {"stale": stale, "never": never, "ok": ok, "total": len(EXPECTED)}
+    askida.sort(key=lambda x: -x["gap_h"])
+    return {"stale": stale, "never": never, "askida": askida, "ok": ok, "total": len(EXPECTED),
+            "bastirilan": _gunluk_ozet()}
 
 
 ALARMED_FILE = "watchdog_alarmed.json"
 
 
+def _bugun(now: float | None = None) -> str:
+    """UTC gün damgası. `_now()` üzerinden okunur ki testler saati çivileyebilsin."""
+    return dt.datetime.fromtimestamp(now if now is not None else _now(),
+                                     dt.timezone.utc).strftime("%Y-%m-%d")
+
+
+def _gunluk_oku() -> dict:
+    """Günlük alarm defteri; gün döndüyse SIFIRLANIR (dünün tavanı bugünü susturamaz).
+
+    BOZUK ŞEMA TAZE DEFTERE DÖNER: bu sayaç bir HİJYEN aracıdır, karar kaynağı değil. Bozuk bir
+    dosya yüzünden `check_and_alarm` istisna atsaydı bekçi tam da var olma sebebini (haber vermek)
+    kaybederdi — üstelik çağıran scheduler poll'u da yanında götürürdü."""
+    doc = store.read_json(ALARM_GUNLUK_FILE, {})
+    if not isinstance(doc, dict) or doc.get("gun") != _bugun() \
+            or not isinstance(doc.get("mekanizmalar"), dict):
+        return {"gun": _bugun(), "mekanizmalar": {}}
+    return doc
+
+
+def _gunluk_ozet() -> dict:
+    """{mekanizma: {alarm, bastirilan}} — panoya "kaç alarm yazıldı, kaçı tavana takıldı" dürüstlüğü.
+    Bastırma sayısı görünmezse hijyen ile körlük ayırt edilemez."""
+    try:
+        doc = _gunluk_oku()
+    except Exception:  # sessiz-yutma: yalnız RAPOR süsü; defter okunamazsa alarm yolu kendi okumasını yapar ve kayıt kaybolmaz
+        return {}
+    return {"gun": doc.get("gun"),
+            "mekanizmalar": {k: {"alarm": int(v.get("alarm") or 0),
+                                 "bastirilan": int(v.get("bastirilan") or 0),
+                                 "askida": int(v.get("askida") or 0)}
+                             for k, v in (doc.get("mekanizmalar") or {}).items()
+                             if isinstance(v, dict)}}
+
+
 def check_and_alarm() -> None:
     """v11 #1 — bayat-GEÇİŞ alarmı: bir mekanizma penceresini İLK aştığında bir kez MECHANISM_STALE
     (bildirim beyaz-listesinde → telefona düşer); toparlanınca kayıt silinir ki bir sonraki bayatlama
-    yine görünsün. Her poll'da ucuz; bekçi felsefesi aynı — yalnız haber verir."""
+    yine görünsün. Her poll'da ucuz; bekçi felsefesi aynı — yalnız haber verir.
+
+    v192 İKİ EK KAPI: (1) askıda mekanizma `report()`ta zaten `stale` dışındadır → alarm yok,
+    sayaç var; (2) aynı mekanizma-aynı UTC günü en fazla `GUNLUK_ALARM_TAVANI` alarm — çırpınan
+    pencere sınırı bir günü 112 satırla dolduramaz (EEMUA ≤10/gün bütçesi, ROADMAP WP-P)."""
     from . import obs
     rep = report()
     alarmed = set(store.read_json(ALARMED_FILE, []))
     now_stale = {x["name"] for x in rep["stale"]}
+    doc = _gunluk_oku()
+    mek = doc["mekanizmalar"]
+
+    def _satir(ad: str) -> dict:
+        row = mek.get(ad)
+        if not isinstance(row, dict):         # bozuk tek satır defterin tamamını düşürmez
+            row = {}
+            mek[ad] = row
+        return row
+
+    for x in rep["askida"]:
+        satir = _satir(x["name"])
+        satir["askida"] = int(satir.get("askida") or 0) + 1
+        satir["son_askida_neden"] = x.get("neden")
     for x in rep["stale"]:
-        if x["name"] not in alarmed:
-            obs.alarm("MECHANISM_STALE",
-                      f"mekanizma gecikti: {x['name']} — {x['gap_h']} sa (pencere {x['expected_h']} sa)",
-                      mechanism=x["name"], gap_h=x["gap_h"])
+        ad = x["name"]
+        if ad in alarmed:
+            continue                          # HİSTEREZİS: aşım sürüyor, aynı olgu ikinci kez anlatılmaz
+        satir = _satir(ad)
+        satir["son_gap_h"] = x["gap_h"]
+        if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
+            # TEKİLLEŞTİRME TAVANI: bastırıldı ama KAYITLI — sayaç panoda görünür, hüküm kaybolmaz.
+            satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
+            continue
+        satir["alarm"] = int(satir.get("alarm") or 0) + 1
+        obs.alarm("MECHANISM_STALE",
+                  f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)",
+                  mechanism=ad, gap_h=x["gap_h"])
+    store.write_json(ALARM_GUNLUK_FILE, doc)
     store.write_json(ALARMED_FILE, sorted(now_stale))
 
 

@@ -2225,10 +2225,15 @@ function renderHUD(d) {
     h.explore_mode ? `<span class="hudchip explore">· KEŞİF MODU · ≤0.25R sonda</span>` : "",
     `<span class="hudchip" title="zamanlayıcının bir sonraki döngüsüne kalan"><span class="ld ${sch.updated ? "" : "off"}"></span>döngü <b id="hud-count">${sch.updated ? "…" : "—"}</b></span>`,
     `<span class="hudchip" title="${esc(wsTip)}"><span class="ld ${wsCls}"></span>WS ${h.stream_ok === false ? `<b class='neg'>KOPUK</b>${wsDown ? ` · ${wsDown}` : ""}` : (h.stream_ok ? "canlı" + wsAgeTxt : "—")}</span>`,
+    // ASKIDA ÜÇÜNCÜ HÂLDİR (v192): penceresini aşmış ama sistemin kendi beyanıyla beklemeye alınmış
+    // mekanizma ne "geciken"dir ne de `ok` sayılır — sessizce kaybolursa rozet `ok/total`ı eksik
+    // gösterip nedenini söylemez. Adıyla ve nedeniyle görünür; rozet rengini BOZMAZ (alarm değil).
     (() => { const wd = (d.watchdog || {}); const st = (wd.stale || []).length, nv = (wd.never || []).length;
-      if (!st && !nv) return `<span class="hudchip" title="tüm periyodik mekanizmalar penceresinde"><span class="ld"></span>bekçi <b>${wd.ok ?? "—"}/${wd.total ?? "—"}</b></span>`;
+      const asks = (wd.askida || []), ask = asks.length;
+      const askTxt = ask ? ` · <span class="warn" title="askıda: ${esc(asks.map(a => `${a.name} (${a.detay || a.neden || ""})`).join(" · "))}">${ask} askıda</span>` : "";
+      if (!st && !nv) return `<span class="hudchip" title="tüm periyodik mekanizmalar penceresinde"><span class="ld"></span>bekçi <b>${wd.ok ?? "—"}/${wd.total ?? "—"}</b>${askTxt}</span>`;
       const worst = (wd.stale || [])[0];
-      return `<span class="hudchip" title="geciken mekanizmalar"><span class="ld ${nv ? "bad" : "warn"}"></span>bekçi <b class="${nv ? "neg" : "warn"}">${st + nv} geciken</b>${worst ? ` · ${esc(worst.name)} ${trn(worst.gap_h, 1)}sa` : ""}</span>`; })(),
+      return `<span class="hudchip" title="geciken mekanizmalar"><span class="ld ${nv ? "bad" : "warn"}"></span>bekçi <b class="${nv ? "neg" : "warn"}">${st + nv} geciken</b>${worst ? ` · ${esc(worst.name)} ${trn(worst.gap_h, 1)}sa` : ""}${askTxt}</span>`; })(),
     `<span class="hudchip" title="atomik yazım gecikmesi (son 200 yazım p95)"><span class="ld ${ioBad ? "warn" : ""}"></span>IO <b>${io.p95_ms != null ? trn(io.p95_ms, 1) + " ms" : (io.p50_ms != null ? trn(io.p50_ms, 1) + " ms·p50" : "—")}</b></span>`,
   ].filter(Boolean).join("");
   syncNavHeight();   // rozetler barın yüksekliğini değiştirir; shell dolgusu onu takip etmeli
