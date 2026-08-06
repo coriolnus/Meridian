@@ -1470,6 +1470,89 @@ function gbAlarmSatiri(ab) {
 }
 
 // ==============================================================================================
+// HÜCRE ANATOMİSİ (v192) — PANONUN TEK SAYI DİLİ
+// ----------------------------------------------------------------------------------------------
+// OPERATÖR BULGUSU (2026-08-06, ekran görüntüsüyle): setup×rejim karne matrisi ("Hangi uygulama,
+// hangi koşulda?") bir sayıyı ANLATMANIN çalışan biçimini bulmuştu — büyük tabular değer, altında
+// kanıtın gücünü taşıyan ince çubuk, altında örneklem/payda satırı, gerekirse bej bir uyarı çipi,
+// veri yoksa harf-aralıklı "VERİ YOK". Panonun geri kalanı ise aynı sayıları üç ayrı dille
+// yazıyordu (`.durum-say`+`.durum-alt`, `.mcard`, `.srow`) ve hiçbiri KANITIN GÜCÜNÜ taşımıyordu:
+// 3 işlemlik bir ortalama ile 55 işlemlik bir ortalama ekranda BİRBİRİNİN AYNI görünüyordu.
+//
+// BU BLOK YENİ BİR DİL AÇMAZ, VAR OLANI ORTAKLAŞTIRIR. Sınıflar matrisin kendi sınıflarıdır ve
+// tek yerde tanımlıdır: `.pm-yield` (değer), `.pm-conf` (kanıt/durum çubuğu), `.pm-n` (meta),
+// `.pm-thin` (rozet), `.pm-none` (boş hücre), kap `.pm-cell`. İkinci bir hücre sınıfı ailesi
+// açmak, ilk düzenlemede iki dilin ayrışması demekti (bkz. `.km-*`nin BİLEREK ayrı olma gerekçesi
+// — orası ayrı bir SEMANTİK; burası aynı semantiğin ikinci kopyası olurdu).
+//
+// ÇUBUĞUN PAYDASI BEYAN EDİLİR — SÖZLEŞME. Bir çubuk "ne kadar dolu" der; neyin paydası olduğu
+// yazmıyorsa okur onu kendi uydurduğu bir tavana göre okur. `hucreGovde` paydasız çubuk ÇİZMEZ:
+// `payda` boşsa çubuk hiç doğmaz (uydurma dolulukla "ölçtük" hissi verilmez) ve payda hem
+// `data-payda` özniteliğinde hem `title`da durur.
+// ---------------------------------------------------------------------------------------------
+// KANIT ÇUBUĞUNUN LOG ÖLÇEĞİ — matristen çıkarıldı, artık TEK tanım. 55 işlemlik hücre neredeyse
+// dolu, 3 işlemlik hücre üçte bir. `KANIT_TAVAN_N` bir EŞİK DEĞİL bir GÖRÜNTÜ ÖLÇEĞİdir: hiçbir
+// karar, hiçbir kapı bu sayıya bağlı değildir (C10 dersi "eşik panoya sabit yazılmaz" kuralı
+// hükümler içindir; bir çizim skalası hüküm değildir ve payda satırında adıyla yazar).
+const KANIT_TAVAN_N = 61;
+const kanitOrani = n => (!n || !Number.isFinite(Number(n))) ? null
+  : Math.min(1, Math.log10(Number(n) + 1) / Math.log10(KANIT_TAVAN_N));
+// "AZ ÖRNEK" EŞİĞİ — matrisin kendi kuralı (`c.n < 10`), v192'de tek tanıma çıkarıldı. Bir
+// GÖRÜNÜRLÜK kuralıdır, bir kapı değil: hiçbir karar bu sayıda değişmez, yalnız rozet doğar.
+const AZ_ORNEK_N = 10;
+const azOrnek = n => n != null && Number.isFinite(Number(n)) && Number(n) < AZ_ORNEK_N;
+// ORAN → ÇUBUK. `oran` 0..1; sınır dışı değer kırpılır (negatif bir "doluluk" çizilemez).
+// AYRI BİR "0 ÇUBUK" HÂLİ YOKTUR: oran 0 ise çubuk ÇİZİLİR ve boş görünür (ölçüldü, sıfır çıktı);
+// oran null ise çubuk HİÇ doğmaz (ölçülemedi). İkisi ekranda ayırt edilebilir olmak zorunda.
+function hucreCubuk(oran, payda) {
+  if (oran == null || !Number.isFinite(Number(oran)) || !payda) return "";
+  const y = Math.max(0, Math.min(100, Math.round(100 * Number(oran))));
+  return `<span class="pm-conf" aria-hidden="true" data-payda="${esc(payda)}"` +
+    ` title="çubuk paydası: ${esc(payda)}" style="--conf:${y}%"><i></i></span>`;
+}
+// HÜCRENİN GÖVDESİ — dört katman, hepsi isteğe bağlı ama SIRASI sabit:
+//   deger  → büyük tabular-mono sayı (null/"" ise BOŞ HÜCRE dalı: "VERİ YOK", uydurma sıfır YOK)
+//   oran   → kanıt/durum çubuğu (payda beyanlı; paydasız çizilmez)
+//   meta   → küçük ikinci satır ("33 işlem · %36 tutan" biçimi) — HTML kabul eder, çağıran kaçırır
+//   rozet  → bej küçük-caps çip ("AZ VERİ" · "ÖLÇÜLEMEDİ" · "BEKLİYOR" · "SERMAYE-RESET")
+// `degerSinif` YALNIZ anomali/para renginde dolar (`pos`/`neg`/`warn`); nötr değer renksizdir.
+function hucreGovde(o) {
+  o = o || {};
+  const meta = o.meta ? `<span class="pm-n">${o.meta}</span>` : "";
+  const rozet = o.rozet ? `<span class="pm-thin">${esc(o.rozet)}</span>` : "";
+  // BOŞ HÜCRE: matrisin "ekilmemiş parsel"i. Sıfır BASILMAZ — "ölçtük, sıfır çıktı" ile
+  // "ölçemedik" aynı piksele düşerse pano bir bilgi taşımaz, bir izlenim taşır.
+  if (o.deger == null || o.deger === "") return `<span class="pm-none">veri yok</span>${meta}${rozet}`;
+  return `<span class="pm-yield mono-num${o.degerSinif ? " " + esc(o.degerSinif) : ""}">${o.deger}</span>`
+    + hucreCubuk(o.oran, o.payda) + meta + rozet;
+}
+// HÜCRENİN SESLİ HÂLİ — aynı gövdeden TÜRETİLİR, ikinci kez YAZILMAZ.
+// NEDEN GEREKLİ: `rowAttrs` düğmeye bir `aria-label` koyar ve o etiket düğmenin içindeki metnin
+// YERİNE geçer. Durum kartları bugüne dek yalnız "Son döngü — durum kaydını aç" diye
+// duyuruluyordu: ekran okuyucu kullanan operatör bandın DÖRT SAYISININ hiçbirini duymuyordu.
+// Matris bu kusuru kendi hücresinde zaten çözmüştü (`plotCell`in adı ortalamayı, örneklemi ve
+// "az örnek"i cümleyle söyler); v192 aynı çözümü bandın tamamına taşır. Etiket gövdeden türediği
+// için AYRIŞAMAZ — meta değiştiğinde sesli hâli de değişir.
+function hucreSesli(o) {
+  o = o || {};
+  const duz = h => String(h == null ? "" : h)
+    .replace(/<br\s*\/?>/gi, " · ").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  return [o.deger == null || o.deger === "" ? "veri yok" : duz(o.deger), duz(o.meta), duz(o.rozet)]
+    .filter(Boolean).join(" · ");
+}
+// ÖZET ŞERİDİ — bölüm-içi sayısal özetlerin kabı. Kap `.pm-grid` ile AYNI reçete (1px saç teli
+// ızgara, hücre zemini `--bg`); hücre `.pm-cell`, etiketi `.pm-sectlabel`. DÖRT HÜCRE bir
+// bütçedir (durum bandının dört kartıyla aynı gerekçe): beşincisi şeridi tek satırdan taşırır.
+// ŞERİT TIKLANMAZ: bu hücrelerin çekmece kaydı yoktur ve bir `<button>` olmayan hücre klavye
+// sırasına girmez — tıklanabilir görünüp hiçbir şey açmayan yüzey üretilmez.
+function ozetHucre(etiket, o) {
+  return `<div class="pm-cell"><span class="pm-sectlabel">${esc(etiket)}</span>${hucreGovde(o)}</div>`;
+}
+function ozetSerit(hucreler, adlandirma) {
+  return `<div class="ozet-serit" role="group" aria-label="${esc(adlandirma)}">${hucreler.join("")}</div>`;
+}
+
+// ==============================================================================================
 // DURUM KART-IZGARASI (v191) — "Koşu & Döngü" ile "Portföy & Emirler" ÇAKIŞMASININ KAPANIŞI
 // ----------------------------------------------------------------------------------------------
 // OPERATÖR BULGUSU (2026-08-06): "Koşu & Döngü ile Portföy ve Emirler çakışıyor, benzer şeyleri
@@ -1508,16 +1591,32 @@ const _DURUM_AD = Object.fromEntries(DURUM_KARTLARI);
 // Enter/Space ile açılır (tarayıcının kendi düğme sözleşmesi; H23 deseninde ikinci bir tuş
 // dinleyicisi yazmaya gerek yok). Çekmece bağı `rowAttrs` ile kurulur: kayıt defteri, odak
 // dönüşü ve Esc davranışı planla/matrisle AYNI.
-function durumKartHTML(anahtar, kayitK, govde, { nokta = "", ipucu = "" } = {}) {
+//
+// GÖVDE ARTIK BİR HÜCREDİR (v192): `.durum-say`/`.durum-alt` ikilisi kaldırıldı ve yerine matrisin
+// hücre anatomisi (`hucreGovde`) geçti. Kazanç bir estetik değil bir BİLGİ kanalı: eski gövdede
+// hiçbir sayı KANITININ GÜCÜNÜ taşımıyordu — "3 saat önce" ile "31 saat önce", "3 silahlıdan
+// 3'ü gitti" ile "3'ünden 0'ı gitti" aynı ağırlıkta okunuyordu.
+//
+// ANOMALİ NOKTASI KALDIRILDI, RENK KANALI TEK. Nokta ayrı bir işaret dili açıyordu (kartın
+// başlığında 7px'lik bir daire) ve aynı sapmayı rozet/renk ile birlikte İKİ KEZ anlatıyordu.
+// Artık matrisin kuralı burada da geçerli: sapma varsa HÜCRENİN MÜREKKEBİ renklenir
+// (`.durum-kart.uyari` amber · `.durum-kart.kopuk` kırmızı) ve sapmanın adı düğmenin
+// `aria-label`ına girer — okuyucu için nokta zaten hiçbir zaman yeterli değildi.
+function durumKartHTML(anahtar, kayitK, hucre, { anomali = "", anomaliNe = "" } = {}) {
   const ad = _DURUM_AD[anahtar];
   if (!ad) return "";                    // kayıtsız anahtar sessizce düşer, uydurma kart doğmaz
-  return `<button class="durum-kart" data-durum="${esc(anahtar)}"
-    ${rowAttrs(kayitK, `${ad} — durum kaydını aç`)}>
-    <span class="t">${esc(ad)}${nokta
-      ? ` <span class="durum-nokta ${esc(nokta)}" title="${esc(ipucu)}" aria-label="${esc(ipucu)}" role="img"></span>` : ""}</span>
-    <span class="durum-govde">${govde}</span>
+  return `<button class="durum-kart${anomali ? " " + esc(anomali) : ""}" data-durum="${esc(anahtar)}"
+    ${rowAttrs(kayitK, `${ad}: ${hucreSesli(hucre)}${anomaliNe ? ` — ${anomaliNe}` : ""}. Durum kaydını aç.`)}>
+    <span class="t">${esc(ad)}</span>
+    <span class="durum-govde">${hucreGovde(hucre)}</span>
     <span class="durum-ac" aria-hidden="true">detay →</span></button>`;
 }
+// Döngü tazelik çubuğunun penceresi. EŞİK DEĞİL GÖRÜNTÜ PENCERESİ: hiçbir kapı, hiçbir alarm bu
+// sayıya bağlı değil — çubuk "bugünün turu mu?" sorusunu gözle okutur ve payda ekranda yazar.
+const DONGU_TAZELIK_SAAT = 24;
+// Gün-içi K/Z çubuğunun bandı (fraksiyon). Yine bir ÇİZİM ÖLÇEĞİ: `max_daily_loss_pct` gibi bir
+// HÜKÜM uçtan gelmiyor ve panoya sabit yazılamaz (C10); band adıyla ekranda durur, karar taşımaz.
+const KITAP_KZ_BANT = 0.02;
 // ---- ① SON DÖNGÜ — gecenin KENDİ kaydı (`/api/today.son_dongu`, v190) ------------------------
 // Sayılar olay PENCERESİNDEN değil döngünün kendi satırından gelir; kayıt yoksa sunucunun yazdığı
 // NEDEN basılır ("sıfır aday" DEĞİL, "ölçülemedi").
@@ -1527,22 +1626,30 @@ function _durumDonguKarti(t) {
                                 halted: t.halted, planDate: t.todays_plan_date,
                                 latestSession: t.latest_session });
   if (!sd || !sd.var) {
-    return durumKartHTML("dongu", k,
-      `<span class="durum-say mut">—</span>
-       <span class="durum-alt">${esc((sd && sd.neden)
-         || "günlük döngü özeti uçtan gelmedi — ölçülemedi (sıfır aday DEĞİL).")}</span>`);
+    // BOŞ HÜCRE DALI: değer YOK → "VERİ YOK". Rozet ölçülemeyişi ADIYLA söyler ve sunucunun
+    // kendi nedeni meta satırında durur — pano ikinci bir açıklama uydurmaz.
+    return durumKartHTML("dongu", k, { deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: esc((sd && sd.neden)
+        || "günlük döngü özeti uçtan gelmedi — ölçülemedi (sıfır aday DEĞİL).") });
   }
   const kapali = sd.data_ok === false;
-  return durumKartHTML("dongu", k,
-    `<span class="durum-say">${esc(String(sd.date || "—"))}</span>
-     <span class="durum-alt"><b>${sd.candidates ?? "—"}</b> aday · <b>${sd.plans ?? "—"}</b> plan ·
-       <b>${sd.armed ?? "—"}</b> silahlı</span>
-     <span class="durum-alt">${sd.yas_saat == null
-       ? "yaş ölçülemedi (döngü kaydında zaman damgası yok)"
-       : `${trn(sd.yas_saat, 1)} saat önce`} · ${sd.regime
-       ? esc(REGIME_TR[sd.regime] || sd.regime) : "rejim kaydı yok"}</span>
-     ${kapali ? `<span class="durum-alt warn">veri kapısı kapalıydı — o gece yeni alım yok</span>` : ""}`,
-    kapali ? { nokta: "uyari", ipucu: "veri kapısı kapalıydı" } : {});
+  // ÜÇLÜ TEK DEĞERDİR ve basamakları AYNI kayıttan gelir (döngünün kendi satırı) — ③'ün
+  // `→` hunisiyle karışmasın diye ayraç `·`: o huninin üç basamağı ÜÇ AYRI paydadan gelir.
+  const bas = v => v == null ? "—" : trn(v);
+  return durumKartHTML("dongu", k, {
+    deger: `${bas(sd.candidates)} · ${bas(sd.plans)} · ${bas(sd.armed)}`,
+    // TAZELİK ÇUBUĞU: dolu = bu turun kaydı taze. Yaş ölçülemezse çubuk HİÇ çizilmez —
+    // "0 saat önce" varsayıp dolu bir çubuk basmak, ölçülmemiş bir tazeliği ölçülmüş göstermekti.
+    oran: sd.yas_saat == null ? null
+      : Math.max(0, 1 - Number(sd.yas_saat) / DONGU_TAZELIK_SAAT),
+    payda: `tazelik · ${DONGU_TAZELIK_SAAT} saatlik pencere`,
+    meta: `aday · plan · silahlı<br>${esc(String(sd.date || "—"))} · ${sd.yas_saat == null
+      ? `<b class="mut">yaş ölçülemedi</b> (döngü kaydında zaman damgası yok)`
+      : `${trn(sd.yas_saat, 1)} saat önce`} · ${sd.regime
+      ? esc(REGIME_TR[sd.regime] || sd.regime) : "rejim kaydı yok"}${kapali
+      ? `<br><b class="warn">veri kapısı kapalıydı — o gece yeni alım yok</b>` : ""}`,
+    rozet: sd.yas_saat == null ? "ÖLÇÜLEMEDİ" : "" },
+    kapali ? { anomali: "uyari", anomaliNe: "veri kapısı kapalıydı" } : {});
 }
 // ---- ② KİTAP — sermaye · nakit · gerçekleşmiş · gün başı (+ beyan-ofset rozeti) ---------------
 // BEYAN ROZETİ YALNIZ BEYAN VARSA: `sermaye_koken.ayrisik` false iken rozet HİÇ çizilmez —
@@ -1557,21 +1664,32 @@ function _durumDonguKarti(t) {
 function _durumKitapKarti(t, s) {
   const kk = t.sermaye_koken || {}, kb = t.kitap || {};
   const k = rec("durumKitap", { t, s });
+  // ROZET YALNIZ BEYAN VARSA: `kk.ayrisik` false iken çip HİÇ doğmaz. Ofsetin kendisi meta
+  // satırında durur — rozet "dikkat, bu taban taşındı" der, rakamı meta söyler.
   const beyan = kk.ayrisik
-    ? `<span class="tag t-vi" title="Sermaye tabanı BEYANLI olarak taşındı (portfolio.sermaye_resetleri); ofset kitapta yazılıdır">beyan-ofset ${
-        money(kk.ofset_usd)}${kk.reset_tarihi ? ` · ${esc(String(kk.reset_tarihi).slice(0, 10))}` : ""}</span>`
+    ? `<br><span title="Sermaye tabanı BEYANLI olarak taşındı (portfolio.sermaye_resetleri); ofset kitapta yazılıdır">beyan-ofset <b>${
+        money(kk.ofset_usd)}</b>${kk.reset_tarihi ? ` · ${esc(String(kk.reset_tarihi).slice(0, 10))}` : ""}</span>`
     : "";
-  return durumKartHTML("kitap", k,
-    `<span class="durum-say ${SERMAYE_RENK[kk.renk] || ""}">${money(t.equity)}</span>
-     <span class="durum-alt">nakit <b>${money(kk.gercek_canli_sermaye)}</b> · gerçekleşmiş
-       <b class="${cls(kk.canli_pnl_usd)}">${kk.canli_pnl_usd == null
-         ? "—" : money(kk.canli_pnl_usd)}</b> <span class="tx3">(gerçek-canlı, ${
-         kk.canli_islem_n ?? "—"} işlem)</span></span>
-     <span class="durum-alt">gün başı ${kb.day_start_equity == null
-       ? `<b class="mut">ölçülmedi</b> — kitapta gün-başı tabanı yok`
-       : `<b>${money(kb.day_start_equity)}</b> · gün <span class="${cls(t.day_pnl_pct)}">${
-           isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span>`}</span>
-     ${beyan ? `<span class="durum-alt">${beyan}</span>` : ""}`);
+  return durumKartHTML("kitap", k, {
+    deger: t.equity == null ? null : money(t.equity),
+    // PARA RENGİ (Money Rule) — kökene göre: `sermaye_koken.renk` zaten "poz/neg/nötr" hükmünü
+    // taşıyor ve pano ikinci bir işaret kuralı KURMAZ.
+    degerSinif: SERMAYE_RENK[kk.renk] || "",
+    // GÜN-İÇİ K/Z BANDI: çubuk günün hareketinin bandın neresinde olduğunu gösterir. Gün K/Z
+    // ölçülmediyse çubuk YOK — "%0" çizmek "gün düz geçti" demek olurdu.
+    oran: t.day_pnl_pct == null ? null
+      : Math.min(1, Math.abs(Number(t.day_pnl_pct)) / KITAP_KZ_BANT),
+    payda: `gün içi K/Z · ±${pctf(KITAP_KZ_BANT, 0)} bandı`,
+    meta: `nakit <b>${money(kk.gercek_canli_sermaye)}</b> · gerçekleşmiş <b class="${cls(kk.canli_pnl_usd)}">${
+        kk.canli_pnl_usd == null ? "—" : money(kk.canli_pnl_usd)}</b> <span class="tx3">(gerçek-canlı, ${
+        kk.canli_islem_n ?? "—"} işlem)</span><br>gün başı ${kb.day_start_equity == null
+      ? `<b class="mut">ölçülmedi</b> — kitapta gün-başı tabanı yok`
+      : `<b>${money(kb.day_start_equity)}</b> · gün <span class="${cls(t.day_pnl_pct)}">${
+          isr(t.day_pnl_pct, pctf(t.day_pnl_pct))}</span>`}${beyan}`,
+    // İKİ ROZET SIRAYLA, TEK SLOT: beyan-ofseti ölçülemeyişten ÖNCE gelir — sermaye okunuyorsa
+    // operatörün bilmesi gereken ilk şey tabanın taşınmış olmasıdır. Sermaye hiç okunamadıysa
+    // (boş hücre) rozet ölçülemeyişi söyler; iki çipi yan yana basmak şeridi gürültüye çevirirdi.
+    rozet: kk.ayrisik ? "SERMAYE-RESET" : (t.equity == null ? "ÖLÇÜLEMEDİ" : "") });
 }
 // ---- ③ EMİRLER / AYNA — huni + akış + "gönderilecekte kaldı" -------------------------------
 // HUNİNİN ÜÇ BASAMAĞI AYNI PAYDADAN GELMEZ ve bu BEYAN EDİLİR: ilk ikisi ŞU ANKİ silahlı kümeden
@@ -1598,15 +1716,21 @@ function _durumEmirKarti(t, d) {
     ? `<span class="mut">ayna akışı ölçülmedi</span> — hiç kanıt yok (ayna hiç koşmamış olabilir)`
     : akis ? "ayna akışı canlı"
            : `<span class="neg">ayna akışı KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : ""}`;
-  return durumKartHTML("emir", k,
-    `<span class="durum-say">${trn(armed.length)} → ${trn(gonderilen)} → ${
-       dl.n_dolan == null ? "—" : trn(dl.n_dolan)}</span>
-     <span class="durum-alt">silahlı · aynaya gönderilmiş · dolan ${dolanTxt}</span>
-     <span class="durum-alt">${akisTxt}</span>
-     ${bekleyen ? `<span class="durum-alt warn"><b>${trn(bekleyen)}</b> plan gönderilecekte kaldı</span>` : ""}
-     ${acikRet ? `<span class="durum-alt"><span class="neg">${trn(acikRet)} açık broker reddi</span></span>` : ""}`,
-    bekleyen ? { nokta: "uyari", ipucu: `${bekleyen} silahlı plan aynaya gönderilmedi` }
-             : (akis === false ? { nokta: "kopuk", ipucu: "ayna akışı kopuk" } : {}));
+  return durumKartHTML("emir", k, {
+    deger: `${trn(armed.length)} → ${trn(gonderilen)} → ${dl.n_dolan == null ? "—" : trn(dl.n_dolan)}`,
+    // ÇUBUK YALNIZ İLK İKİ BASAMAĞIN ORANIDIR ve paydası bunu söyler. Üçüncü basamağı (dolan)
+    // aynı çubuğa katmak, farklı paydaları tek doluluğa toplamak olurdu — huninin kendi
+    // beyanının (üç payda ayrıdır) çubukta çiğnenmesi.
+    // Silahlı küme boşsa payda YOK: çubuk çizilmez, "%100 gönderildi" gibi okunacak dolu bir
+    // çubuk üretmek sıfır paydadan bir oran uydurmaktı.
+    oran: armed.length ? gonderilen / armed.length : null,
+    payda: "aynaya gönderim oranı · payda: silahlı plan",
+    meta: `silahlı → aynaya gönderilmiş → dolan ${dolanTxt}<br>${akisTxt}${
+      bekleyen ? `<br><b class="warn">${trn(bekleyen)}</b> plan gönderilecekte kaldı` : ""}${
+      acikRet ? `<br><span class="neg">${trn(acikRet)} açık broker reddi</span>` : ""}`,
+    rozet: bekleyen ? "BEKLİYOR" : "" },
+    bekleyen ? { anomali: "uyari", anomaliNe: `${bekleyen} silahlı plan aynaya gönderilmedi` }
+             : (akis === false ? { anomali: "kopuk", anomaliNe: "ayna akışı kopuk" } : {}));
 }
 // ---- ④ POZİSYONLAR — açık n · toplam ısı R · en yakın stop -----------------------------------
 // STOP MESAFESİ GİRİŞE GÖREDİR ve bu BEYANLIDIR: kitapta CARİ FİYAT yok (portfolio.positions
@@ -1621,13 +1745,29 @@ function _durumPozisyonKarti(t) {
   const isi = isiOlculdu ? pos.reduce((a, p) => a + Number(p.size_r), 0) : null;
   const mesafe = _durumStopMesafeleri(pos);
   const enYakin = mesafe.length ? Math.min(...mesafe.map(m => m.pay)) : null;
-  return durumKartHTML("pozisyon", k,
-    `<span class="durum-say">${trn(pos.length)}</span>
-     <span class="durum-alt">açık pozisyon · toplam ısı ${isi == null
-       ? `<b class="mut">ölçülemedi</b> (bazı satırda size_r yok)` : `<b>${trn(isi, 2)}R</b>`}</span>
-     <span class="durum-alt">en yakın stop ${enYakin == null
-       ? `<b class="mut">—</b> ${pos.length ? "(giriş/stop seviyesi okunamadı)" : "(açık pozisyon yok)"}`
-       : `<b>${pctf(enYakin, 1)}</b> <span class="tx3">girişin altında — kitapta cari fiyat yok</span>`}</span>`);
+  // TAVAN ORANI YÜKTEN OKUNUR, PANOYA SABİT YAZILMAZ (C10 dersi). Isının R cinsinden sert tavanı
+  // (`goal.heat_hard_r`) hiçbir uçtan servis edilmiyor; onu panoya "5,0R" diye gömmek, panonun
+  // ölçmediği bir hükmü kendi ağzıyla iddia etmesi olurdu ve zarf değiştiği gün pano sessizce
+  // eski tavanı savunmaya devam ederdi. Çubuk bu yüzden YÜKTE VAR OLAN zarfı ölçer: açık riskin
+  // rejim maruziyet bütçesine oranı. Bütçe yoksa çubuk çizilmez ve meta nedeni söyler.
+  const reg = t.regime || {};
+  const butce = Number(reg.exposure_budget_pct);
+  const acik = Number(t.current_exposure_pct);
+  const zarf = (Number.isFinite(butce) && butce > 0 && Number.isFinite(acik)) ? acik / butce : null;
+  return durumKartHTML("pozisyon", k, {
+    // DEĞER ISIDIR: "kaç pozisyon" bir sayım, "ne kadar risk açıkta" bir HÜKÜM. Isı ölçülemezse
+    // hücre boş çizilir — eksik bir toplam, tam bir toplam gibi okunur.
+    deger: isi == null ? null : `${trn(isi, 2)}R`,
+    oran: zarf, payda: butce > 0
+      ? `açık risk / rejim maruziyet tavanı (%${trn(butce, 1)})` : "",
+    meta: `<b>${trn(pos.length)}</b> açık pozisyon · açık risk ${Number.isFinite(acik)
+        ? `<b>%${trn(acik, 1)}</b>` : `<b class="mut">ölçülmedi</b>`} ${butce > 0
+        ? `· tavan %${trn(butce, 1)}` : `· <span class="mut">rejim tavanı yükte yok</span>`}<br>en yakın stop ${
+      enYakin == null
+        ? `<b class="mut">—</b> ${pos.length ? "(giriş/stop seviyesi okunamadı)" : "(açık pozisyon yok)"}`
+        : `<b>${pctf(enYakin, 1)}</b> <span class="tx3">girişin altında — kitapta cari fiyat yok</span>`}${
+      isi == null ? `<br><b class="mut">toplam ısı ölçülemedi</b> (bazı satırda size_r yok)` : ""}`,
+    rozet: isi == null ? "ÖLÇÜLEMEDİ" : "" });
 }
 // Etkin stop = trail varsa trail, yoksa sert stop. İkisi de okunamazsa satır DÜŞER (0 sayılmaz).
 function _durumStopMesafeleri(pos) {
@@ -1906,6 +2046,53 @@ RENDER.adaylar = async () => {
     <div class="card rise"><h2 class="t">${d.latest_session && latestSignal && latestSignal < d.latest_session
         ? `Son sinyaller · ${esc(latestSignal)} <span class="warn" style="letter-spacing:0;text-transform:none">— süresi doldu; ${esc(d.latest_session)} seansından beri kapıyı geçen taze aday yok</span>`
         : `Bir sonraki açılış için${latestSignal ? ` · ${esc(latestSignal)} kapanışından` : ''}`} <span class="tx3" style="font-weight:400">(${nextActionable.length})</span></h2>
+      ${/* ---- BÖLÜM ÖZETİ · HÜCRE ŞERİDİ (v192) ------------------------------------------------
+            Kapının çıktısı bugüne kadar YALNIZ aşağıdaki `.g2` panosunda, tek boşluklu bir mono
+            listede duruyordu ("GO ....... 3"). O liste okunabilir ama TARTILAMAZ: 3 GO'nun 4
+            plandan mı 120 plandan mı geldiği aynı satırda görünmüyordu. Şerit her hükmü kendi
+            PAYDASIYLA (o seansın plan sayısı) çizer; huni hücresinin paydası ise adaydır ve bu
+            iki payda AYRI olduğu için iki ayrı çubukta durur, tek bir "oran" gibi toplanmaz.
+            SATIR TABLOLARI DEĞİŞMEDİ: aşağıdaki plan/eleme tabloları yoğun-uzman düzenidir ve
+            hücreleşseydi bir tabloda 40 hücre eden bir ızgaraya dönerdi. */""}
+      ${(() => {
+        // ŞERİDİN KAPSAMI KARTIN KAPSAMIDIR — SON SEANS. Defter penceresinin tamamını (`vc`,
+        // `plans`) bu kartın içine özet diye koymak, başlığı "bir sonraki açılış" olan bir
+        // kutuya yüz yirmi günlük bir dağılım basmak olurdu: aynı kutuda iki farklı payda, ve
+        // hangisinin okunduğu ancak kaynağa bakınca anlaşılırdı. Pencere dağılımı aşağıdaki
+        // `.g2` panosunda kendi başlığıyla durmayı sürdürüyor.
+        const sPlan = latestSignal ? plans.filter(p => String(p.date) === String(latestSignal)) : [];
+        const sAday = latestSignal
+          ? (d.candidates || []).filter(c => String(c.date) === String(latestSignal)).length : 0;
+        const nP = sPlan.length;
+        const svc = {};
+        sPlan.forEach(p => svc[p.gate_verdict] = (svc[p.gate_verdict] || 0) + 1);
+        // ÜÇ HÜKÜM SAYIMDIR, ÖLÇÜM DEĞİL: `svc` planların üstünde sayılıyor, yani 0 gerçekten
+        // "ölçtük, sıfır çıktı"dır ve `?? 0` bir uydurma değil. Payda YOKSA (hiç plan yok) çubuk
+        // çizilmez ve DEĞER de basılmaz — sıfır paydadan oran üretmek bu panonun reddettiği şey.
+        const h = (etiket, n, sinif) => ozetHucre(etiket, {
+          deger: nP ? trn(n) : null, degerSinif: nP && sinif ? sinif : "",
+          oran: nP ? n / nP : null, payda: `seansın planı (${nP})`,
+          meta: nP ? `%${Math.round(100 * n / nP)} · ${nP} planın ${n} tanesi`
+                   : "bu seansta plan üretilmedi — payda kurulamadı",
+          // ROZET YOK: payda sıfır olduğunda ORAN tanımsızdır ama "plan üretilmedi" ÖLÇÜLMÜŞ bir
+          // olgudur. Buraya "ÖLÇÜLEMEDİ" çipi basmak, ölçülmüş bir boşluğu ölçülememiş gibi
+          // göstermek olurdu — rozet kelimeleri yalnız GERÇEKTEN okunamayan alanlara ayrılır
+          // (kapılar şeridinde `bud == null`, mutabakat şeridinde `red_orani == null` gibi).
+          rozet: azOrnek(nP) && nP ? "AZ ÖRNEK" : "" });
+        return ozetSerit([
+          ozetHucre("Tarama → plan", {
+            deger: sAday ? `${trn(sAday)} → ${trn(nP)}` : null,
+            oran: sAday ? nP / sAday : null, payda: `seansın tarama adayı (${sAday})`,
+            meta: sAday ? `${esc(latestSignal || "—")} · aday → kapıya giren plan`
+                        : "bu seansta tarama adayı yok — huninin paydası kurulamadı",
+            rozet: "" }),
+          // RENK YALNIZ ELEMEDE: GO/REVIEW bir hüküm dağılımıdır, bir sapma değil — yeşile
+          // boyamak "iyi gidiyor" okuması üretirdi ve pano o cümleyi kurmaz.
+          h("Kapıdan geçen · GO", svc.GO ?? 0, ""),
+          h("İncelemeye düşen", svc.REVIEW ?? 0, ""),
+          h("Elenen · NO_GO", svc.NO_GO ?? 0, "warn"),
+        ], "Disiplin kapısının bu seanstaki hüküm dağılımı");
+      })()}
       ${gateLegend()}
       ${nextActionable.length ? _PHEAD + nextActionable.map(planRowFull).join("")
         : (rejToday.length
@@ -3046,7 +3233,50 @@ async function opParcalar() {
         <span class="chain mut">${esc(String(a.plan_id || "—").slice(0, 14))}</span>
         <span class="chain">ayna: ${esc(ICRA_TR[a.ayna] || a.ayna || "—")} · dolum ${a.ayna_fill != null ? trn(a.ayna_fill, 2) : "yok"}</span>
         <span class="chain">iç: ${esc(ICRA_TR[a.ic] || a.ic || "—")}</span></div>`).join("");
-    return `${bas}
+    // ---- MUTABAKAT · BÖLÜM ÖZETİ · HÜCRE ŞERİDİ (v192) ---------------------------------------
+    // Masanın dört hükmü aşağıda otuz `srow`un içine dağılmış durumda ve satır satır okunmadan
+    // görünmüyorlar. Şerit dördünü açar; AŞAĞIDAKİ TABLOLAR AYNEN KALIR — bu bölüm bir teşhis
+    // masasıdır ve satırların hepsi hücreleşseydi ekran otuz hücreye dönerdi ("özet" değil, ikinci
+    // bir tablo). Her çubuğun paydası AYRI ve her biri kendi paydasını yazar: ret oranının paydası
+    // gönderim denemesi, dolumun paydası gönderilen emir, kill ölçütününki EŞİĞİN KENDİSİ
+    // (yükten okunur, panoda sabit değil), ayrışmanınki ortak plan.
+    const _ozet = ozetSerit([
+      ozetHucre("Ayna · ret oranı", {
+        deger: ay.red_orani == null ? null : pctf(ay.red_orani, 1),
+        degerSinif: ay.red_orani == null ? "" : (ay.red_orani > 0 ? "neg" : ""),
+        oran: ay.red_orani, payda: `gönderim denemesi (${trn(ay.n ?? 0)})`,
+        meta: ay.red_orani == null ? "gönderim denemesi yok — oran tanımsız"
+          : `${trn(ay.n ?? 0)} denemede · <code>stop_vs_current</code> ${trn(stopN)}`,
+        rozet: ay.red_orani == null ? "ÖLÇÜLEMEDİ" : (azOrnek(ay.n) ? "AZ ÖRNEK" : "") }),
+      ozetHucre("Dolum oranı", {
+        deger: dl.dolum_orani == null ? null : pctf(dl.dolum_orani, 1),
+        oran: dl.dolum_orani, payda: "gönderilen emir",
+        meta: dl.dolum_orani == null ? "gönderilen emir yok — oran tanımsız"
+          : `${trn(dl.n_dolan ?? 0)} dolan · pencere ${pen} gün`,
+        rozet: dl.dolum_orani == null ? "ÖLÇÜLEMEDİ" : "" }),
+      ozetHucre("İç motor · dolmama", {
+        deger: dm == null ? null : pctf(dm, 1),
+        degerSinif: asildi ? "neg" : "",
+        // ÇUBUK EŞİĞE GÖRE DOLAR: tam dolu çubuk = kill ölçütü. Eşik yükte yoksa çubuk çizilmez —
+        // paydası olmayan bir "doluluk" okuru kendi uydurduğu tavana göre okutur.
+        oran: (dm == null || ke == null || !ke) ? null : dm / ke,
+        payda: ke == null ? "" : `kill eşiği (${pctf(ke, 0)}) · yükten okunur`,
+        meta: dm == null ? "iç motor satırı yok — ölçülmedi"
+          : `${trn(ic.n ?? 0)} satır · ${asildi ? "kill ölçütü AŞILDI (EXE-2026-001)" : "eşiğin altında"}`,
+        rozet: dm == null ? "ÖLÇÜLEMEDİ" : (azOrnek(ic.n) ? "AZ ÖRNEK" : "") }),
+      ozetHucre("İki motor · ayrışan", {
+        // AYRIŞMA SAYISI PAYDASIYLA ANLAM KAZANIR: ortak plan yoksa iki motor hiç karşılaştırılmadı
+        // ve "0 ayrışma" yazmak "ikisi hizalı" demek olurdu — ölçülmemiş bir uyum iddiası.
+        deger: mt.ortak_plan_n == null ? null : trn(mt.ayrisan_n ?? 0),
+        degerSinif: mt.ayrisan_n ? "warn" : "",
+        oran: mt.ortak_plan_n ? (mt.ayrisan_n ?? 0) / mt.ortak_plan_n : null,
+        payda: mt.ortak_plan_n ? `ortak plan (${trn(mt.ortak_plan_n)})` : "",
+        meta: mt.ortak_plan_n
+          ? `${trn(mt.ortak_plan_n)} ortak planda · ${mt.ayrisan_n ? "iki motor hizalanmadı" : "ayrışma yok"}`
+          : "ortak plan yok — iki motor karşılaştırılamadı",
+        rozet: mt.ortak_plan_n ? "" : "ÖLÇÜLEMEDİ" }),
+    ], "İcra gerçekliğinin bölüm özeti");
+    return `${bas}${_ozet}
       <div class="srow"><span>Pencere</span><b class="mono-num">${pen} gün · pencerede ${trn(slp2.n ?? 0)} satır · defterde ${trn(slp2.n_defter ?? 0)}</b></div>
       <p class="hint">Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p>
 
@@ -3256,7 +3486,53 @@ async function opParcalar() {
       <span><span class="tick">${esc(pln.ticker)}</span><br><span class="tag ${TAG[pln.verdict] || "t-vi"}" style="margin-top:4px">${esc(pln.verdict || "?")}</span>${pln.exploration ? " " + _chip("keşif", "t-rv") : ""}</span>
       <span class="gatechain">${chips || '<span class="chain">karar ağacı kaydı yok (eski plan)</span>'}</span></button>`;
   }).join("");
+  // ---------- KAPILAR · BÖLÜM ÖZETİ · HÜCRE ŞERİDİ (v192) --------------------------------------
+  // Bölümün dört sayısı dört ayrı yerde ve dört ayrı biçimdeydi: bütçe rejim satırının sonunda,
+  // karartma sayısı bir cümlenin içinde, silahlanma ölçümü etiket-çiplerinde, plan sayısı bir
+  // başlıkta. Hiçbirinin PAYDASI yazmıyordu — "3 kurulum kapı geçti" kaç kurulumdan? Şerit dördünü
+  // aynı dille ve paydalarıyla açar; ayrıntı tabloları AŞAĞIDA aynen durur (yoğun-uzman düzeni).
+  const _ar = (gk.arming || {}).measurements || {};
+  const _arK = Object.keys(_ar);
+  const _arGecen = _arK.filter(x => _ar[x].status === "gate_passed").length;
+  const _radarN = (radar.blackout || []).length;
+  const _radarEvren = Number(radar.known_tickers);
+  const _planN = (gk.plans || []).length;
+  const _planGO = (gk.plans || []).filter(p => p.verdict === "GO").length;
+  const s2Ozet = ozetSerit([
+    // BÜTÇE YALNIZ CANLI REJİM İÇİN TANIMLI: rejim okunamıyorsa hücre BOŞ çizilir, "%0" değil —
+    // %0 bütçe GERÇEK bir hâldir (keşif moduna düşürür) ve "ölçemedik" ile aynı piksele düşemez.
+    ozetHucre("Rejim bütçesi", {
+      deger: bud == null ? null : "%" + trn(bud),
+      oran: bud == null ? null : Math.max(0, Math.min(100, bud)) / 100,
+      payda: "sermayenin tamamı (%100)",
+      meta: `canlı rejim: <b>${reg.regime ? esc(REGIME_TR[reg.regime] || reg.regime) : "okunamadı"}</b>${
+        bud != null && bud <= 0 ? ` · <span class="warn">keşif modu</span>` : ""}`,
+      rozet: bud == null ? "ÖLÇÜLEMEDİ" : "" }),
+    // TAKVİM BOŞSA SAYI BASILMAZ: "0 karartma" ile "takvim gelmedi" AYRI şeylerdir ve bu ayrım
+    // aşağıdaki uyarı satırının zaten var olma sebebi.
+    ozetHucre("Karartma radarı", {
+      deger: radar.empty ? null : trn(_radarN),
+      oran: (radar.empty || !Number.isFinite(_radarEvren) || !_radarEvren) ? null : _radarN / _radarEvren,
+      payda: Number.isFinite(_radarEvren) && _radarEvren ? `takvimdeki sembol (${trn(_radarEvren)})` : "",
+      meta: radar.empty ? "takvim BOŞ — FMP kotası bekleniyor; boş liste \"karartma yok\" DEĞİLDİR"
+        : `bugün karartmada · takvimde ${trn(_radarEvren)} sembol`,
+      rozet: radar.empty ? "ÖLÇÜLEMEDİ" : "" }),
+    ozetHucre("Uyuyan kurulumlar", {
+      deger: _arK.length ? `${trn(_arGecen)} / ${trn(_arK.length)}` : null,
+      oran: _arK.length ? _arGecen / _arK.length : null,
+      payda: `ölçülen uyuyan kurulum (${_arK.length})`,
+      meta: _arK.length ? "silahlanma kapısını geçen · onay bekleyen"
+        : "silahlanma ölçümü yükte yok — ölçüm YOK demektir, \"uyuyan kurulum yok\" demek değil",
+      rozet: _arK.length ? "" : "ÖLÇÜLEMEDİ" }),
+    ozetHucre("Karar ağacı", {
+      deger: _planN ? `${trn(_planGO)} / ${trn(_planN)}` : null,
+      oran: _planN ? _planGO / _planN : null, payda: `seansın planı (${_planN})`,
+      meta: _planN ? `${esc(gk.date || "tarih yok")} · kapıdan geçen · üretilen plan`
+        : "bu seans plan üretilmedi — kapının hüküm vereceği satır yok",
+      rozet: azOrnek(_planN) && _planN ? "AZ ÖRNEK" : "" }),
+  ], "Risk ve rejim kapılarının bölüm özeti");
   const s2 = `<div class="card rise"><h2 class="t">Bölüm 2 · Risk & rejim kapıları</h2>
+    ${s2Ozet}
     ${regimes}
     <p class="hint">Bütçe yalnız CANLI rejim için tanımlıdır (rejim-koşullu motor) — diğer satırlar dürüstçe "aktif değil" der; %0 bütçe · keşif moduna düşer.</p>
     <h3 class="t" style="margin-top:16px">Karartma radarı</h3>
@@ -5359,19 +5635,22 @@ function plotCell(c, setup, regime, si, ri) {
   if (!c) return `<div class="pm-cell pm-unsown">${tag}` +
       `<span class="vis-label">${esc(setup)} · ${esc(rg)}:</span>` +
       `<span class="pm-none">veri yok</span></div>`;
-  const sc = signClass(c.mean_r, c.n), thin = c.n < 10;
-  // örneklem gücü: log ölçekli güven çubuğu. 55 işlemlik hücre neredeyse dolu,
-  // 3 işlemlik hücre üçte bir — ortalamanın ne kadar sağlam olduğu gözle okunur.
-  const conf = Math.min(100, Math.round(100 * Math.log10(c.n + 1) / Math.log10(61)));
+  const sc = signClass(c.mean_r, c.n), thin = azOrnek(c.n);
+  // örneklem gücü: log ölçekli güven çubuğu (`kanitOrani`, v192'de TEK tanıma çıkarıldı — aynı
+  // ölçek artık özet şeritlerinde de kullanılıyor ve iki kopya ilk düzenlemede ayrışırdı).
+  // 55 işlemlik hücre neredeyse dolu, 3 işlemlik hücre üçte bir.
   const k = rec("plot", { si, ri });
   // HÜCRE BİR DÜĞMEDİR VE ÖYLE DUYURULUR: eskiden butonun üstüne role="gridcell" yazılıydı ve
   // bu buton rolünü EZİYORDU — yardımcı teknoloji hücreyi basılabilir olarak hiç anmıyordu.
+  // RENK HÜCRE KABINDA (`.pm-cell.pos/.neg`) durur, değerin kendi sınıfında değil: matriste renk
+  // zemini de boyar (gürültü bandının DIŞI), durum kartlarında yalnız mürekkebi.
   return `<button ${rowAttrs(k, `${setup} · ${rg}: ortalama ${c.mean_r}R, ${c.n} işlem, %${Math.round(c.hit * 100)} tutan${thin ? ", az örnek" : ""}${sc ? "" : ", gürültü bandında"}. Kaydı aç.`)}
-      class="pm-cell ${sc}${thin ? ' thin' : ''}" style="--conf:${conf}%" data-s="${si}" data-r="${ri}">
-    ${tag}<span class="pm-yield mono-num">${c.mean_r > 0 ? '+' : ''}${c.mean_r.toFixed(2)}R</span>
-    <span class="pm-conf" aria-hidden="true"><i></i></span>
-    <span class="pm-n">${c.n} işlem · %${Math.round(c.hit * 100)} tutan</span>
-    ${thin ? `<span class="pm-thin">az örnek</span>` : ''}</button>`;
+      class="pm-cell ${sc}${thin ? ' thin' : ''}" data-s="${si}" data-r="${ri}">
+    ${tag}${hucreGovde({
+      deger: `${c.mean_r > 0 ? '+' : ''}${c.mean_r.toFixed(2)}R`,
+      oran: kanitOrani(c.n), payda: `işlem sayısı · log ölçek, n=${KANIT_TAVAN_N} dolu`,
+      meta: `${c.n} işlem · %${Math.round(c.hit * 100)} tutan`,
+      rozet: thin ? "az örnek" : "" })}</button>`;
 }
 
 async function renderPlotMap() {
@@ -5844,13 +6123,42 @@ function riskCard(kelly, tail, slip, veto) {
   const slipTxt = slip.measured_bps == null
     ? `<span class="mut">— ayna hiç dolmadı (n=${slip.n ?? 0})</span>`
     : `<b class="${Math.abs(slip.measured_bps) > (slip.assumed_bps ?? 0) ? "warn" : "pos"}">${esc(String(slip.measured_bps))} bps</b>`;
+  // ÖZET ŞERİDİ HÜCRELEŞTİ (v192). Eski `.mcard` döşemesi dört sayıyı büyük ve RENKLİ basıyordu
+  // ama hiçbirinin ÖRNEKLEMİNİ göstermiyordu: 12 işlemlik bir Kelly ile 300 işlemlik bir Kelly
+  // ekranda birbirinin aynıydı ve renk (yeşil/kırmızı) o farkı görünmez kılarken bir güven
+  // duygusu üretiyordu. Artık her hücre kendi kanıt çubuğunu taşır ve RENK yalnız örneklem
+  // "az örnek" eşiğinin ÜSTÜNDEYKEN verilir — matrisin kuralının aynısı, tek fark bandın adı.
+  // ÖLÇÜLEMEDİ ≠ SIFIR: arka uç eşiğin altında None döner ve hücre BOŞ çizilir ("VERİ YOK").
+  const kn = kelly.n, tn = tail.n;
+  const kelPayda = `örneklem · log ölçek, n=${KANIT_TAVAN_N} dolu`;
   return `<div class="card rise"><h2 class="t">Boyut tavanı · kuyruk riski · ölçülen friksiyon
       <span class="tx3" style="font-weight:400">(hepsi DANIŞMAN — hiçbiri kapıya bağlı değil)</span></h2>
-    <div class="mrow">
-      ${mc("Kelly tavanı (tam)", fk == null ? "—" : (fk >= 0 ? "+" : "") + fk, fk == null ? null : (fk >= 0 ? "var(--green)" : "var(--red)"), `isabet ${pctf(kelly.win_rate, 0)} · K/Z ${num(kelly.win_loss_ratio)}`)}
-      ${mc("Yarım Kelly", num(hk), null, `n=${kelly.n ?? "—"} · sabit-R değişmez`)}
-      ${mc("VaR (%95)", num(tail.var_r, "R"), "var(--amber)", `${tail.horizon ?? "—"} işlem ufku`)}
-      ${mc("CVaR (%95)", num(tail.cvar_r, "R"), "var(--red)", `en kötü ${num(tail.worst_r, "R")}`)}</div>
+    ${ozetSerit([
+      ozetHucre("Kelly tavanı (tam)", {
+        deger: fk == null ? null : (fk >= 0 ? "+" : "") + fk,
+        degerSinif: (fk == null || azOrnek(kn)) ? "" : (fk >= 0 ? "pos" : "neg"),
+        oran: kanitOrani(kn), payda: kelPayda,
+        meta: `isabet ${pctf(kelly.win_rate, 0)} · K/Z ${num(kelly.win_loss_ratio)} · n=${kn ?? "—"}`,
+        rozet: azOrnek(kn) ? "AZ ÖRNEK" : "" }),
+      ozetHucre("Yarım Kelly", {
+        deger: hk == null ? null : String(hk), oran: kanitOrani(kn), payda: kelPayda,
+        meta: `n=${kn ?? "—"} · sabit-R değişmez`,
+        rozet: azOrnek(kn) ? "AZ ÖRNEK" : "" }),
+      ozetHucre("VaR (%95)", {
+        deger: tail.var_r == null ? null : tail.var_r + "R",
+        oran: kanitOrani(tn), payda: kelPayda,
+        meta: `${tail.horizon ?? "—"} işlem ufku · n=${tn ?? "—"}`,
+        rozet: azOrnek(tn) ? "AZ ÖRNEK" : "" }),
+      // CVaR ÇUBUĞU BURADA ÖRNEKLEM DEĞİL ŞİDDET TAŞIR ve paydası bunu söyler: beklenen kuyruk
+      // kaybının, görülen EN KÖTÜ yola oranı. İki farklı payda aynı şeritte olabilir — yeter ki
+      // her çubuk kendi paydasını yazsın; yazmayan çubuk hiç çizilmez.
+      ozetHucre("CVaR (%95)", {
+        deger: tail.cvar_r == null ? null : tail.cvar_r + "R",
+        oran: (tail.cvar_r == null || !tail.worst_r) ? null : tail.cvar_r / tail.worst_r,
+        payda: tail.worst_r ? `en kötü yol (${tail.worst_r}R)` : "",
+        meta: `en kötü ${num(tail.worst_r, "R")} · n=${tn ?? "—"}`,
+        rozet: azOrnek(tn) ? "AZ ÖRNEK" : "" }),
+    ], "Boyut tavanı ve kuyruk riski özeti")}
     <p class="hint" style="margin-top:8px">
       Ölçülen slipaj: ${slipTxt} · varsayılan <b>${esc(String(slip.assumed_bps ?? "—"))} bps</b> (goal.slippage_bps)
       ${slip.measured_bps == null ? " — ayna dolu satır üretmeye başlayınca sabit varsayım ilk kez ölçüme karşı sınanır." : ""}

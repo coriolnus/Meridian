@@ -661,22 +661,22 @@ main{min-width:0}
 /* SEÇİLİ HÂL — çekmece hangi kartın kaydını gösteriyor? Renk DEĞİL kenar: `.pm-cell.sel` ile
    aynı dil, ve seçim bir anomali değil bir konum bilgisidir. */
 .durum-kart.sel{border-color:var(--accent)}
-.durum-govde{flex:1 1 auto;min-width:0}
-.durum-say{font-family:var(--mono);font-size:clamp(18px,2.2vw,24px);font-weight:400;letter-spacing:-.04em;
-  font-variant-numeric:tabular-nums;line-height:1.15;color:var(--tx);display:block}
-.durum-alt{display:block;font-size:12px;color:var(--tx2);line-height:1.55;
-  font-variant-numeric:tabular-nums;margin-top:var(--s2)}
-.durum-alt b{color:var(--tx);font-weight:500}
+/* GÖVDE = MATRİSİN HÜCRESİ (v192). `.durum-say`/`.durum-alt` ikilisi SİLİNDİ: aynı işi yapan
+   ikinci bir sayı dili idi ve kanıtın gücünü (çubuk) hiç taşımıyordu. Yerleşim `.pm-cell`in
+   kendisiyle aynı — dikey yığın, 5px ritim; içerik sınıfları `.pm-yield`/`.pm-conf`/`.pm-n`/
+   `.pm-thin`/`.pm-none` ve hepsi matrisin bloğunda TEK kez tanımlı. */
+.durum-govde{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px}
 .durum-ac{align-self:flex-start;margin-top:var(--s4);font-family:var(--mono);font-size:11px;
   letter-spacing:.04em;color:var(--tx3)}
 .durum-kart:hover .durum-ac{color:var(--tx2)}
-/* ANOMALİ NOKTASI — renk YALNIZ burada ve yalnız ölçülmüş bir sapmada (P1/P2 alarm bütçesi):
-   "gönderilecekte kalmış plan" (amber) ve "ayna akışı kopuk" (kırmızı). PULS YOK: hareket bu
-   panoda ≤300ms ve yalnız-anomali kuralına bağlı, ve kalıcı bir nokta kalıcı bir hareket olurdu. */
-.durum-nokta{display:inline-block;width:7px;height:7px;border-radius:50%;vertical-align:middle;
-  margin-left:4px}
-.durum-nokta.uyari{background:var(--amber)}
-.durum-nokta.kopuk{background:var(--red)}
+/* ANOMALİ RENGİ — renk YALNIZ burada ve yalnız ölçülmüş bir sapmada (P1/P2 alarm bütçesi):
+   "gönderilecekte kalmış plan" (amber) ve "ayna akışı kopuk" (kırmızı). Kanal MATRİSİNKİYLE
+   AYNI (`.pm-cell.pos/.neg`): sapma hücrenin MÜREKKEBİNİ renklendirir — `.pm-yield` ve çubuğun
+   dolgusu `currentColor` okur, `.pm-n` nötr kalır. 7px'lik anomali NOKTASI kaldırıldı: aynı
+   sapmayı ikinci bir işaret diliyle tekrar anlatıyordu. PULS YOK — kalıcı bir hareket, hareket
+   bütçesinin (P10) tamamını sürekli harcar. */
+.durum-kart.uyari{color:var(--amber)}
+.durum-kart.kopuk{color:var(--red)}
 .durum-dus{font-size:12px;color:var(--tx2);margin:0}
 /* Dört kart 1100px altında ikişerli, 640px altında tek kolon. Genel Bakış'takiyle aynı gerekçe:
    dar ekranda kaydırma DÜRÜST hâldir, sıkıştırılmış dört sütun değil. */
@@ -741,8 +741,21 @@ main{min-width:0}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:var(--r-bar)}
 .pm-cell.pos{color:var(--green)} .pm-cell.neg{color:var(--red)}
 .pm-cell.pos{background:var(--pm-pos)} .pm-cell.neg{background:var(--pm-neg)}
-.pm-yield{position:relative;font-size:24px;font-weight:500;letter-spacing:-.045em;line-height:1;color:currentColor}
-.pm-n{position:relative;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
+/* DEĞER ÖLÇÜSÜ ESNEK (v192): aynı sınıf artık matris hücresinde, durum kartında ve özet
+   şeridinde çalışıyor; sabit 24px dar ekranda dört sütunlu şeridi taşırıyordu. Tavan aynı. */
+.pm-yield{position:relative;font-size:clamp(18px,2.2vw,24px);font-weight:500;letter-spacing:-.045em;
+  line-height:1.15;color:currentColor}
+/* DEĞERİN KENDİ RENGİ HÜCRENİNKİNİ YENER — ve bunun bir kuralı OLMAK ZORUNDA (2026-08-06'da
+   ölçüldü). `.pos/.neg/.warn` yardımcıları stylesheet'in başında (0,1,0) tanımlı; değerin kabı
+   (önce `.durum-say`, şimdi `.pm-yield`) AŞAĞIDA ve AYNI özgüllükte `color` bildiriyor, yani
+   kaynak sırası gereği kap kazanıyordu. Sonuç sessizdi: `SERMAYE_RENK` kartın sayısına yeşil/
+   kırmızı veriyordu ve ekranda HİÇBİR ZAMAN görünmüyordu — para kuralının tek görünür kanalı,
+   kimsenin fark etmediği bir sıra çakışmasıyla ölüydü. (0,2,0) ile kap yenilir.
+   Matrisin `.pm-cell.pos` zemini bundan BAĞIMSIZ çalışır: o hücrenin tamamını boyar, bu yalnız
+   değeri — ikisi çakışmaz, biri kesitin hükmü diğeri sayının işareti. */
+.pm-yield.pos{color:var(--green)} .pm-yield.neg{color:var(--red)} .pm-yield.warn{color:var(--amber)}
+.pm-n{position:relative;font-size:12px;color:var(--tx2);line-height:1.55;font-variant-numeric:tabular-nums}
+.pm-n b{color:var(--tx);font-weight:500}
 /* under-sown: the ochre stake a trials officer puts in a plot with too few rows */
 .pm-cell.thin{box-shadow:inset 0 0 0 1px var(--amber-h)}
 .pm-thin{position:relative;align-self:flex-start;font-family:var(--mono);font-size:10px;font-weight:700;
@@ -789,18 +802,39 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    uymuyordu — ölü bir anahtar. Telefonda çekmece tam genişliktir ve aria-modal'dır; arkasındaki
    sayfanın kaymaya devam etmesi kaydı okurken sayfayı altından çekiyordu. Artık zemin sabitlenir. */
 @media(max-width:560px){.pdrawer{width:100%} body.drawer-open{overflow:hidden}}
-.pm-sectlabel{display:none}
+/* HÜCRE ETİKETİ — TEK GÖRSEL TANIM, iki görünürlük bağlamı (v192). Görünüm bildirimi eskiden
+   YALNIZ 760px medya sorgusunun içindeydi; özet şeridi onu masaüstünde de gösterdiği için ikinci
+   bir kopya yazmak gerekirdi ve iki kopya ilk düzenlemede ayrışırdı. Kural artık burada, tek
+   yerde; görünürlük bağlama göre açılıyor. Matriste masaüstünde GİZLİ kalır (konumu satır/sütun
+   başlıklarından okunur), telefonda ve özet şeridinde her hücre kendi adını taşır. */
+.pm-sectlabel{display:none;position:relative;font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:2px}
+.ozet-serit .pm-sectlabel{display:block}
 .pm-foot{margin-top:var(--s3);font-size:12px;color:var(--tx2);line-height:1.6;max-width:78ch}
+/* ---- ÖZET ŞERİDİ (v192) — bölüm-içi sayısal özetlerin hücre kabı ---------------------------
+   NEDEN `.pm-grid`İN AYNI REÇETESİ: bunlar da hücre; tek fark satır/sütun başlığı olmaması ve
+   çekmece açmaması. `.km-*` gibi AYRI bir aile açmak burada YANLIŞ olurdu — `.km-*` ayrı çünkü
+   ayrı bir SEMANTİK (sıralı kapsama ölçeği); bu şerit matrisin semantiğinin ta kendisi (değer +
+   kanıt çubuğu + payda). Kap kendi marjını taşır: blok ritmi ailesine (`:is(.card,.g2,.mrow,…)`)
+   GİRMEZ, çünkü şerit bir bölüm bloğu değil, bir kartın İÇ özet başlığıdır. */
+.ozet-serit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line-2);margin-top:var(--s4)}
+.ozet-serit>*{background:var(--bg)}
+.ozet-serit .pm-cell{min-height:0;padding:var(--s4)}
+@media(max-width:900px){.ozet-serit{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ozet-serit{grid-template-columns:1fr}}
 @media(max-width:760px){
   .pm-grid{grid-template-columns:1fr;border:none;background:none;gap:0}
   .pm-corner{display:none}
   .pm-sect{display:none}
   /* on a phone the map reads strip by strip; each cell names its own section */
   .pm-strip{border-top:1px solid var(--line-2);padding:var(--s4) 0;background:none}
-  .pm-cell{min-height:0;border-bottom:1px solid var(--line);padding:var(--s4) var(--s4)}
+  /* KURAL `.pm-grid`E ÇİVİLİ: ızgara telefonda çerçevesine veda edip satır-ayracına döner, ama
+     özet şeridi 1px'lik saç-teli ızgarasını KORUR — kapsız bir `.pm-cell` kuralı oraya ikinci
+     bir alt çizgi basar ve şerit çift çizgili görünürdü. */
+  .pm-grid .pm-cell{min-height:0;border-bottom:1px solid var(--line);padding:var(--s4) var(--s4)}
   .pm-conf{margin-top:4px}
-  .pm-sectlabel{display:block;position:relative;font-family:var(--mono);font-size:10px;font-weight:700;
-    letter-spacing:var(--label-track);text-transform:uppercase;color:var(--tx2);margin-bottom:2px}
+  .pm-grid .pm-sectlabel{display:block}
 }
 
 /* ---- P9 · KAPSAMA ISI-MATRİSİ (2026-08-02) ------------------------------------------------

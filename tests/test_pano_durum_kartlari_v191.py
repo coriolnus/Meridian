@@ -1,11 +1,22 @@
-"""v191 — DURUM KART-IZGARASI: "Koşu & Döngü ile Portföy & Emirler çakışıyor" bulgusunun kapanışı.
+"""v191/v192 — DURUM KART-IZGARASI + HÜCRE ANATOMİSİ.
 
 OPERATÖR BULGUSU (2026-08-06): "Koşu & Döngü ile Portföy ve Emirler çakışıyor, benzer şeyleri
 gösteriyorlar; kartlara bölüp tıklayınca detay."
 
-Bu dosyanın ölçtüğü kusur sınıfı TEK ve adı ÇİFT-KAYNAK: aynı gerçek iki yüzeyden anlatılır, ikisi
-ayrı kodda yaşar, biri güncellenir diğeri bayatlar — ve operatör hangisinin doğru olduğunu ekrandan
-öğrenemez. Dört ölçülmüş biçimi vardı:
+İKİNCİ TUR — v192 (aynı gün, ekran görüntüsüyle): "durum bandını ve iki sayfanın bölüm içeriklerini
+panodaki MEVCUT setup×rejim karne matrisinin hücre-mimarisine çevir." Ölçülen kusur sınıfı bu turda
+ÇİFT-KAYNAK değil, ÇİFT-DİL: aynı büyüklük (bir ölçüm ve onun kanıt gücü) panoda üç ayrı biçimde
+yazılıyordu — `.durum-say`+`.durum-alt`, `.mcard` döşemesi, `.srow` satırı — ve ÜÇÜNDEN HİÇBİRİ
+örneklemi/paydayı taşımıyordu. Yalnız matris taşıyordu (`.pm-conf` güven rayı): 3 işlemlik bir
+ortalama ile 55 işlemlik bir ortalama orada birbirine benzemiyordu, panonun geri kalanında ise
+benziyordu. v192 matrisin dilini ORTAKLAŞTIRIR; ikinci bir hücre ailesi AÇMAZ.
+
+Bu dosyanın §9 bölümü o anatominin sözleşmesini çivi ler: çubuk paydasız çizilmez, ölçülemeyen
+değer "VERİ YOK" dalına düşer (uydurma sıfır yok), rozet koşulludur, sınıflar TEK yerde tanımlıdır.
+
+BİRİNCİ TUR — v191 (§1-§8). Ölçülen kusur sınıfının adı ÇİFT-KAYNAK: aynı gerçek iki yüzeyden
+anlatılır, ikisi ayrı kodda yaşar, biri güncellenir diğeri bayatlar — ve operatör hangisinin doğru
+olduğunu ekrandan öğrenemez. Dört ölçülmüş biçimi vardı:
 
   A) SERMAYE/GÜN K/Z/POZİSYON SAYISI — Portföy'ün kahraman bloğunda ve kenar şeridinde.
   B) GÜNÜN PLANLARI — Portföy'ün "Son sinyaller" kartında (`planRowBrief`) ve Koşu'nun `adaylar`
@@ -34,6 +45,9 @@ APIPY = (SRC / "meridian" / "api.py").read_text()
 # ("eski hâl şuydu, neden çakışmaydı"). O gerekçe kaynakta durmalı ama "hâlâ orada" diye
 # okunmamalı — yoksa doğru davranan bir silme kendi belgesi yüzünden düşer (v139/v155 deseni).
 KOD = "\n".join(l for l in APPJS.splitlines() if not l.lstrip().startswith("//"))
+# CSS tarafında da aynı ayrım: v192 sildiği her kuralı gerekçesiyle yazıyor ("`.durum-say` SİLİNDİ,
+# çünkü …"). O gerekçe kalmalı ama BİLDİRİM sanılmamalı.
+CSS_KOD = re.sub(r"/\*.*?\*/", "", INDEX, flags=re.S)
 
 # Kart gövdeleri ve çekmece kurucuları — testlerin çoğu bu dar bölgeye bakar.
 _KART_GOVDE = {
@@ -133,10 +147,12 @@ def test_kart_bir_dugme_ve_ortak_kayit_baglayicisini_kullanir():
     """Klavye sözleşmesi (H23): kart `<button>` olduğu için Tab ile gezilir ve Enter/Space
     tarayıcının kendi düğme davranışıyla açılır — ikinci bir tuş dinleyicisi YAZILMAZ.
     `rowAttrs` odak dönüşünü, `aria-label`i ve `data-rk` bağını planla/matrisle AYNI yapar."""
-    govde = _govde("function durumKartHTML(", "\n// ---- ① SON DÖNGÜ")
-    assert '<button class="durum-kart"' in govde
+    govde = _govde("function durumKartHTML(", "\n// Döngü tazelik çubuğunun penceresi")
+    assert '<button class="durum-kart' in govde
     assert "rowAttrs(kayitK" in govde, "kart kendi bağını icat ediyor — ortak kayıt defteri atlandı"
     assert 'role="button"' not in govde, "düğme yerine role=button — klavye sözleşmesi ikiye ayrıldı"
+    # v192: gövde artık `hucreGovde` ile kurulur — kart kendi sayı dilini yazmaz.
+    assert "hucreGovde(hucre)" in govde, "kart gövdesi ortak hücre anatomisinden geçmiyor"
 
 
 def test_secili_isaretin_seçicisi_TEK_yerde():
@@ -266,7 +282,9 @@ def test_gonderilecekte_kalan_plan_bir_bakista_gorunur():
     satır okuyan görürdü."""
     g = _govde("function _durumEmirKarti(", "\n// ---- ④ POZİSYONLAR")
     assert "bekleyen" in g and "gönderilecekte kaldı" in g
-    assert 'nokta: "uyari"' in g, "bekleyen plan varken kartta anomali noktası yok"
+    # v192: anomali NOKTASI kaldırıldı, kanal tek — hücrenin mürekkebi renklenir ve rozet doğar.
+    assert 'anomali: "uyari"' in g, "bekleyen plan varken kartta anomali rengi yok"
+    assert 'rozet: bekleyen ? "BEKLİYOR"' in g, "bekleyen plan varken rozet çipi doğmuyor"
 
 
 # =================================================================================================
@@ -365,20 +383,38 @@ def test_izgara_YENI_RENK_JETONU_acmaz():
 
 
 def test_sayilar_tabular_nums():
-    """P4: hizalı sabit ondalık. Bir kartın sayısı komşusuyla dikey hizada okunmalı."""
-    blok = _govde("/* ---- DURUM KART-IZGARASI (v191)", "@media(max-width:1100px)", INDEX)
-    assert blok.count("font-variant-numeric:tabular-nums") >= 2
+    """P4: hizalı sabit ondalık. Bir kartın sayısı komşusuyla dikey hizada okunmalı.
+
+    v192'de bu bildirim kartın KENDİ bloğundan çıktı ve hücre sınıflarına taşındı — çünkü aynı
+    sayıyı artık matris, durum kartı ve özet şeridi ORTAK sınıflarla basıyor. Kural hâlâ tek
+    yerde; ölçüldüğü yer değişti, gevşemedi."""
+    for sinif in (".mono-num{", ".pm-n{"):
+        kural = _govde(sinif, "}", CSS_KOD)
+        assert "font-variant-numeric:tabular-nums" in kural, f"{sinif} tabular-nums taşımıyor"
+    # Ve kart gövdesi gerçekten o sınıflardan geçiyor (`hucreGovde` `pm-yield mono-num` basar).
+    assert '<span class="pm-yield mono-num' in _govde("function hucreGovde(", "\n// ÖZET ŞERİDİ")
 
 
-def test_anomali_noktasi_renk_ve_hareket_butcesini_bozmaz():
-    """P1/P2: renk YALNIZ anomalide, ve P10: kalıcı bir puls kalıcı bir hareket olurdu. Nokta iki
-    ölçülmüş sapmada doğar (gönderilecekte kalan plan · kopuk akış) ve HİÇ animasyonu yoktur."""
-    blok = _govde(".durum-nokta{", "\n.durum-dus{", INDEX)
+def test_anomali_rengi_ve_hareket_butcesini_bozmaz():
+    """P1/P2: renk YALNIZ anomalide, ve P10: kalıcı bir puls kalıcı bir hareket olurdu.
+
+    v192'de kanal TEKE indi. Eskiden aynı sapma İKİ dille anlatılıyordu: başlıktaki 7px'lik
+    `.durum-nokta` ve gövdedeki uyarı satırı. Artık matrisin kuralı burada da geçerli — sapma
+    hücrenin MÜREKKEBİNİ renklendirir (`.durum-kart.uyari` / `.durum-kart.kopuk`), adı düğmenin
+    `aria-label`ına girer (nokta zaten okuyucuya hiçbir şey söylemiyordu) ve rozet çipi doğar."""
+    assert ".durum-nokta" not in CSS_KOD, "anomali noktası CSS'te kalmış — iki işaret dili sürüyor"
+    assert "durum-nokta" not in KOD, "anomali noktası JS'te kalmış"
+    for kural in (".durum-kart.uyari{color:var(--amber)}", ".durum-kart.kopuk{color:var(--red)}"):
+        assert kural in INDEX, f"anomali renk kuralı yok: {kural}"
+    blok = _govde(".durum-kart.uyari{", "\n.durum-dus{", INDEX)
     assert "animation" not in blok and "blink" not in blok
     g = _govde("function _durumEmirKarti(", "\n// ---- ④ POZİSYONLAR")
-    assert 'nokta: "kopuk"' in g and 'nokta: "uyari"' in g
-    # Sağlıklı hâlde nokta HİÇ çizilmez — "yeşil nokta" bir alarm bütçesi kalemidir.
-    assert 'nokta: "iyi"' not in APPJS and 'nokta: "yesil"' not in APPJS
+    assert 'anomali: "kopuk"' in g and 'anomali: "uyari"' in g
+    # Sağlıklı hâlde renk HİÇ verilmez — "yeşil kart" bir alarm bütçesi kalemidir.
+    assert 'anomali: "iyi"' not in APPJS and 'anomali: "yesil"' not in APPJS
+    # Sapmanın ADI ekrandan da okunur: düğmenin erişilebilir adına girer.
+    kart = _govde("function durumKartHTML(", "\n// Döngü tazelik çubuğunun penceresi")
+    assert "anomaliNe" in kart and "rowAttrs(kayitK" in kart
 
 
 def test_izgara_dis_kaynak_cekmez():
@@ -400,3 +436,244 @@ def test_kart_odak_halkasi_var():
     """Klavye kullanıcısı hangi kartta olduğunu GÖRMELİ. `:focus-visible` olmadan Tab gezinmesi
     görünmez bir imleçle yapılır."""
     assert ".durum-kart:focus-visible{outline:2px solid var(--accent)" in INDEX
+
+
+# =================================================================================================
+# 9) HÜCRE ANATOMİSİ (v192) — PANONUN TEK SAYI DİLİ
+# =================================================================================================
+# Ölçülen kusur: aynı büyüklük panoda üç ayrı biçimde yazılıyordu ve ÜÇÜNDEN HİÇBİRİ kanıtın
+# gücünü taşımıyordu. Bu bölüm anatominin sözleşmesini çivi ler; gevşerse hücre dili ikiye ayrılır
+# ve ayrılma sessizdir (iki dil de "çalışır" görünür).
+
+# Bölüm-içi özet şeritlerinin YAŞADIĞI dört bölge. Şerit BİR ÖZETTİR: satır tabloları (plan,
+# eleme, ret, ayrışma) yoğun-uzman düzeni olarak AYNEN kalır — hepsi hücreleşseydi "özet" değil
+# ikinci bir tablo doğardı ve bu turun kazancı tam tersine dönerdi.
+_SERIT_BOLGELERI = {
+    "performans · riskCard": ("function riskCard(kelly, tail, slip, veto) {",
+                              "\n// çıkış nedenleri"),
+    "adaylar":               ("RENDER.adaylar = async () => {", "\nfunction planRowFull(p) {"),
+    "kapilar · s2":          ("  const s2Ozet = ozetSerit([", "\n  const s2 = "),
+    "mutabakat · sIcra":     ("    const _ozet = ozetSerit([", "\n    return `${bas}${_ozet}"),
+}
+
+
+def _serit_hucre_sayilari() -> list[int]:
+    """Her `ozetSerit([...])` çağrısındaki ÜST DÜZEY girdi sayısı.
+
+    Neden ayraç yürüyüşü, neden regex değil: girdiler `ozetHucre(etiket, {…})` çağrılarıdır ve
+    içleri virgül doludur — düz bir `split(",")` dört hücreyi otuz sanardı. `//` yorumları
+    nötrlenir çünkü bu turun yorumları Türkçe düzyazı ve içlerinde virgül var; dizgiler
+    KORUNUR, zira her dizgi virgülü derinlik ≥2'dedir (bir çağrının içindedir)."""
+    kaynak = re.sub(r"^(\s*)//[^\n]*$", r"\1", APPJS, flags=re.M)
+    kaynak = re.sub(r"([^:])//[^\n]*$", r"\1", kaynak, flags=re.M)
+    out, i = [], 0
+    while (i := kaynak.find("ozetSerit([", i)) != -1:
+        j = kaynak.index("[", i)
+        derinlik, bas, parcalar, k = 0, j + 1, [], j
+        while k < len(kaynak):
+            c = kaynak[k]
+            if c in "([{":
+                derinlik += 1
+            elif c in ")]}":
+                derinlik -= 1
+                if derinlik == 0:
+                    break
+            elif c == "," and derinlik == 1:
+                parcalar.append(kaynak[bas:k]); bas = k + 1
+            k += 1
+        son = kaynak[bas:k].strip()
+        if son:
+            parcalar.append(son)
+        out.append(len([p for p in parcalar if p.strip()]))
+        i = k
+    return out
+
+
+def test_serit_basina_DORT_hucre_butcesi():
+    """Dört, durum bandının dört kartıyla AYNI gerekçeyle dörttür: beşinci hücre şeridi tek
+    satırdan taşırır ve "tek bakışta özet" iddiasını sessizce yer. CSS de dört sütuna çivili
+    (`repeat(4,…)`), yani beşinci hücre eklendiği gün ızgara ikinci satıra sarkardı ve bunu
+    ancak gözle gören fark ederdi — test onu sayabilsin diye bu ölçüm var."""
+    sayilar = _serit_hucre_sayilari()
+    assert len(sayilar) == len(_SERIT_BOLGELERI), f"beyan edilmemiş şerit: {sayilar}"
+    assert sayilar == [4] * len(_SERIT_BOLGELERI), f"şerit başına hücre sayısı: {sayilar}"
+
+
+def test_hucre_dili_TEK_yerde_tanimli():
+    """İkinci bir kopya ilk düzenlemede ayrışır ve ayrışma GÖZLE görülmez: iki dil de çizer."""
+    for fn in ("kanitOrani", "azOrnek"):
+        assert KOD.count(f"const {fn} = ") == 1, f"{fn} tek tanımlı değil"
+    for fn in ("hucreCubuk", "hucreGovde", "ozetHucre", "ozetSerit"):
+        assert KOD.count(f"function {fn}(") == 1, f"{fn} tek tanımlı değil"
+    # Eski ikinci dil GERÇEKTEN düştü — ne CSS'te ne JS'te bir kalıntısı var.
+    for eski in (".durum-say", ".durum-alt", "durum-say", "durum-alt"):
+        assert eski not in CSS_KOD, f"CSS'te eski sayı dili kalmış: {eski}"
+    assert "durum-say" not in KOD and "durum-alt" not in KOD, "JS eski sayı dilini basmayı sürdürüyor"
+
+
+def test_hucre_sinifları_MATRISIN_sinifları_ve_tek_kez_tanimli():
+    """Yeni bir sınıf ailesi AÇILMADI. `.km-*` bilerek ayrıdır (ayrı semantik: sıralı kapsama
+    ölçeği); burada semantik matrisin ta kendisi — değer + kanıt çubuğu + payda + rozet."""
+    # TABAN KURAL SÜTUN 0'DA YAZILIR, medya-sorgusu ezmeleri girintilidir (dosyanın kendi
+    # düzeni). Sayım tabana bakar: bir sınıfın İKİ taban kuralı olması, kazananın kaynak
+    # sırasına bağlı olması demektir ve bu bu depoda ölçülmüş bir kusur (S2R-3 `.mrow` vakası).
+    for sinif in (".pm-yield{", ".pm-conf{", ".pm-n{", ".pm-thin{", ".pm-none{", ".pm-sectlabel{"):
+        n = len(re.findall(r"^%s" % re.escape(sinif), CSS_KOD, re.M))
+        assert n == 1, f"{sinif} CSS'te {n} taban kuralı taşıyor"
+    govde = _govde("function hucreGovde(", "\n// ÖZET ŞERİDİ")
+    for sinif in ("pm-yield mono-num", "pm-n", "pm-thin", "pm-none"):
+        assert sinif in govde, f"hücre gövdesi `{sinif}` basmıyor — dil ayrışmış"
+    assert 'class="pm-cell"' in _govde("function ozetHucre(", "\nfunction ozetSerit(")
+
+
+def test_cubuk_PAYDASIZ_cizilmez():
+    """Bir çubuk "ne kadar dolu" der. Neyin paydası olduğu yazmıyorsa okur onu KENDİ uydurduğu
+    bir tavana göre okur — ve bu, ölçülmemiş bir doluluğu ölçülmüş göstermenin en sessiz yolu."""
+    fn = _govde("function hucreCubuk(", "\n// HÜCRENİN GÖVDESİ")
+    assert "|| !payda) return \"\"" in fn, "payda boşken çubuk yine de çiziliyor"
+    assert 'data-payda="${esc(payda)}"' in fn, "payda makine-okunur biçimde beyan edilmiyor"
+    assert "çubuk paydası:" in fn, "payda insan-okunur biçimde (title) beyan edilmiyor"
+    # ÖLÇÜLDÜ-SIFIR ile ÖLÇÜLEMEDİ ayrı: oran 0 çubuğu ÇİZER (boş görünür), null HİÇ çizmez.
+    assert "oran == null" in fn, "ölçülemeyen oran ile sıfır oran aynı kovaya düşüyor"
+
+
+def test_VERI_YOK_dali_uydurma_sifir_basmaz():
+    """Matrisin "ekilmemiş parsel"i. Değer yoksa hücre harf-aralıklı gri "VERİ YOK" der; `0`
+    basmak "ölçtük, sıfır çıktı" demek olurdu ve o cümle YANLIŞ olurdu."""
+    govde = _govde("function hucreGovde(", "\n// ÖZET ŞERİDİ")
+    m = re.search(r'if \(o\.deger == null \|\| o\.deger === ""\) return `<span class="pm-none">',
+                  govde)
+    assert m, "boş hücre dalı yok ya da koşulu gevşemiş"
+    # Boş dalda DEĞER hiç basılmaz — `.pm-yield` yalnız dolu dalda doğar.
+    bos_dal = govde[m.start():]
+    assert "pm-yield" not in bos_dal.split("\n")[0], "boş hücre yine de bir değer basıyor"
+    # Ve boş hücrenin görünümü matrisle AYNI kuralı okur.
+    assert ".pm-none{" in CSS_KOD and "text-transform:uppercase" in _govde(".pm-none{", "}", CSS_KOD)
+
+
+def test_dort_kartin_dordu_de_hucre_anatomisinden_gecer():
+    """Kart artık kendi sayı dilini yazmaz: değer + (payda beyanlı) çubuk + meta + rozet."""
+    beklenen_payda = {
+        "dongu":    "tazelik",                    # bugün-mü tazeliği · 24 saatlik pencere
+        "kitap":    "gün içi K/Z",                # gün-içi K/Z bandı
+        "emir":     "silahlı plan",               # aynaya gönderim oranı
+        "pozisyon": "rejim maruziyet tavanı",     # açık riskin zarfa oranı
+    }
+    for ad, (bas, bit) in _KART_GOVDE.items():
+        g = _govde(bas, bit)
+        assert re.search(r'durumKartHTML\("%s", k, \{' % ad, g), \
+            f"{ad} kartı hücre nesnesiyle çağrılmıyor (eski HTML dizgisi mi kaldı?)"
+        assert "deger:" in g and "meta:" in g, f"{ad} kartında hücre anatomisi eksik"
+        assert "oran:" in g and "payda:" in g, f"{ad} kartında çubuk ya da paydası yok"
+        assert beklenen_payda[ad] in g, \
+            f"{ad} kartının çubuk paydası beyan edilmiyor (beklenen: {beklenen_payda[ad]})"
+
+
+def test_rozet_kosullu_dogar_ve_kelimesi_beyanlidir():
+    """Rozet bir UYARIDIR ("bu sayıyı okurken şunu bil"), bir süs değil. Koşulsuz basılan bir
+    rozet ilk bakışta bilgi taşır, ikinci bakışta gürültü olur ve üçüncüde görülmez."""
+    beklenen = {
+        "dongu":    ('rozet: sd.yas_saat == null ? "ÖLÇÜLEMEDİ"', "ÖLÇÜLEMEDİ"),
+        "kitap":    ('rozet: kk.ayrisik ? "SERMAYE-RESET"', "SERMAYE-RESET"),
+        "emir":     ('rozet: bekleyen ? "BEKLİYOR"', "BEKLİYOR"),
+        "pozisyon": ('rozet: isi == null ? "ÖLÇÜLEMEDİ"', "ÖLÇÜLEMEDİ"),
+    }
+    for ad, (ifade, kelime) in beklenen.items():
+        g = _govde(*_KART_GOVDE[ad])
+        assert ifade in g, f"{ad} kartının rozeti koşullu doğmuyor: {kelime}"
+    # Matrisin kendi rozeti ("az örnek") ve şeritlerinki AYNI çip sınıfını kullanır.
+    assert 'rozet: thin ? "az örnek"' in _govde("function plotCell(", "\nasync function renderPlotMap()")
+
+
+def test_kanit_olcegi_TEK_ve_matris_onu_kullanir():
+    """Log ölçek eskiden `plotCell`in içindeydi; özet şeritleri de aynı ölçeği kullanıyor ve
+    ikinci bir kopya, iki yüzeyde AYNI n'in farklı doluluk çizmesi demek olurdu."""
+    pc = _govde("function plotCell(", "\nasync function renderPlotMap()")
+    assert "kanitOrani(c.n)" in pc, "matris ortak kanıt ölçeğini kullanmıyor"
+    assert "Math.log10" not in pc, "matris kendi log ölçeğini yeniden yazıyor"
+    assert KOD.count("Math.log10(") == 2, "log ölçeği birden fazla yerde hesaplanıyor"
+    # "AZ ÖRNEK" eşiği de tek yerde ve bir KAPI DEĞİL: hiçbir karar bu sayıda değişmez.
+    assert "const AZ_ORNEK_N = 10;" in KOD and "azOrnek(c.n)" in pc
+
+
+def test_dort_bolumun_ozet_seridi_var_ve_TIKLANMAZ():
+    """İş emrinin ikinci maddesi: iki sayfanın bölüm-içi sayısal özet başlıkları hücreleşir.
+    Şerit TIKLANMAZ — bu hücrelerin çekmece kaydı yoktur ve tıklanabilir görünüp hiçbir şey
+    açmayan bir yüzey, panonun en ucuz yalanıdır."""
+    for ad, (bas, bit) in _SERIT_BOLGELERI.items():
+        g = _govde(bas, bit)
+        assert "ozetSerit([" in g, f"{ad}: bölüm özeti hücreleşmemiş"
+        assert g.count("ozetHucre(") >= 1, f"{ad}: şeritte hücre yok"
+    # Şerit hücresi ne düğmedir ne kayıt bağı taşır.
+    hucre = _govde("function ozetHucre(", "\nfunction ozetSerit(")
+    assert "<button" not in hucre and "rowAttrs" not in hucre and "rec(" not in hucre
+    # Şerit yalnız bu dört bölgede kurulur; beşinci bir çağrı yeni bir yüzey demektir ve
+    # o yüzeyin de paydalarının denetlenmesi gerekir.
+    assert KOD.count("ozetSerit([") == len(_SERIT_BOLGELERI), \
+        "beyan edilmemiş bir özet şeridi var — _SERIT_BOLGELERI'ne ekle (paydaları da denetlenmeli)"
+    # Her şerit erişilebilir bir adla duyurulur (dört sayı bir GRUPTUR, dört rastgele kutu değil).
+    assert KOD.count('role="group" aria-label="${esc(adlandirma)}"') == 1
+    for g in (_govde(*v) for v in _SERIT_BOLGELERI.values()):
+        assert re.search(r"\], \"[^\"]+\"\)", g), "şerit adlandırılmadan kuruluyor"
+
+
+def test_ozet_seridi_matrisin_recetesini_tekrar_eder():
+    """Kap `.pm-grid` ile AYNI reçete (1px saç teli ızgara, hücre zemini `--bg`). Ayrı bir kap
+    dili, ilk düzenlemede iki farklı hücre çerçevesi demekti."""
+    blok = _govde(".ozet-serit{", "\n@media(max-width:760px){", CSS_KOD)
+    assert "grid-template-columns:repeat(4,minmax(0,1fr))" in blok, "dört hücre bütçesi çivili değil"
+    assert "gap:1px" in blok and "background:var(--line)" in blok, "saç teli ızgara reçetesi değil"
+    assert ".ozet-serit>*{background:var(--bg)}" in blok
+    # Dar ekran dalları: dörtten ikiye, ikiden tek kolona (matrisin kendi kuralıyla aynı gerekçe).
+    assert "@media(max-width:900px){.ozet-serit{grid-template-columns:repeat(2,minmax(0,1fr))}}" in INDEX
+    assert "@media(max-width:560px){.ozet-serit{grid-template-columns:1fr}}" in INDEX
+    # Omega kuralı + CSP: yeni renk jetonu yok, dış kaynak yok, hareket yok.
+    assert not re.search(r"#[0-9a-fA-F]{3,8}\b", blok), f"ham renk değeri: {blok}"
+    assert "url(" not in blok and "@import" not in blok and "http" not in blok
+    assert "animation" not in blok and "transition" not in blok
+
+
+def test_degerin_KENDI_rengi_hucrenin_rengini_YENER():
+    """SESSİZ SIRA ÇAKIŞMASI (2026-08-06'da ölçüldü, v191'den beri açıktı). `.pos/.neg/.warn`
+    yardımcıları stylesheet'in BAŞINDA (0,1,0); değerin kabı (v191'de `.durum-say`, v192'de
+    `.pm-yield`) AŞAĞIDA ve AYNI özgüllükte `color` bildiriyordu — kaynak sırası gereği kap
+    kazanıyordu. Yani `SERMAYE_RENK` kartın sayısına yeşil/kırmızı VERİYORDU ve ekranda hiç
+    görünmüyordu: para kuralının tek görünür kanalı, hiçbir testin bakmadığı bir sıra
+    çakışmasıyla ölüydü. Bu ölçüm o kanalı canlı tutar."""
+    for kural in (".pm-yield.pos{color:var(--green)}", ".pm-yield.neg{color:var(--red)}",
+                  ".pm-yield.warn{color:var(--amber)}"):
+        assert kural in INDEX, f"değer rengi kuralı yok: {kural}"
+    # Kural `.pm-yield` taban kuralından SONRA gelmeli (aynı özgüllükte olsaydı sıra yine kaybettirirdi
+    # — burada özgüllük 0,2,0 olduğu için yenmesi garanti, ama sıra da doğru olsun).
+    assert CSS_KOD.index(".pm-yield.pos{") > CSS_KOD.index(".pm-yield{")
+    # Ve kart gerçekten bu kanalı kullanıyor: sermaye kökeninin hükmü değerin sınıfına gidiyor.
+    g = _govde(*_KART_GOVDE["kitap"])
+    assert "degerSinif: SERMAYE_RENK[kk.renk]" in g, "para rengi değere bağlanmamış"
+
+
+def test_kartin_SAYISI_ekran_okuyucuya_da_ulasir():
+    """`rowAttrs` düğmeye bir `aria-label` koyar ve o etiket düğmenin İÇİNDEKİ metnin YERİNE
+    geçer. v191'de etiket yalnız "Son döngü — durum kaydını aç" diyordu: ekran okuyucu kullanan
+    operatör bandın dört sayısının HİÇBİRİNİ duymuyordu — bir "özet bandı"nın tam olarak
+    duyurmadığı şey. Matris bunu kendi hücresinde zaten çözmüştü; v192 çözümü banda taşır.
+
+    ETİKET GÖVDEDEN TÜRER, ikinci kez YAZILMAZ: elle yazılmış bir cümle meta değiştiği gün
+    sessizce bayatlardı ve bayatlığı YALNIZ ekran okuyucu kullanan görebilirdi."""
+    assert KOD.count("function hucreSesli(") == 1
+    fn = _govde("function hucreSesli(", "\n// ÖZET ŞERİDİ")
+    assert "o.deger" in fn and "o.meta" in fn and "o.rozet" in fn, \
+        "sesli hâl gövdenin üç katmanını da taşımıyor"
+    assert 'replace(/<[^>]*>/g, "")' in fn, "meta'nın HTML'i sesli hâle sızıyor"
+    assert "veri yok" in fn, "boş hücre sesli hâlde de boş olduğunu söylemiyor"
+    kart = _govde("function durumKartHTML(", "\n// Döngü tazelik çubuğunun penceresi")
+    assert "hucreSesli(hucre)" in kart, "kartın erişilebilir adı hâlâ yalnız başlığı söylüyor"
+
+
+def test_hucre_etiketi_TEK_gorsel_tanim_iki_baglam():
+    """`.pm-sectlabel` görünümü eskiden YALNIZ 760px medya sorgusunun içindeydi. Özet şeridi onu
+    masaüstünde de gösterdiği için ikinci bir kopya gerekirdi — ve iki kopya ayrışırdı."""
+    kural = _govde(".pm-sectlabel{", "}", CSS_KOD)
+    assert "display:none" in kural and "text-transform:uppercase" in kural, \
+        "etiket görünümü taban kuralda değil"
+    assert ".ozet-serit .pm-sectlabel{display:block}" in INDEX, "şeritte etiket görünmüyor"
+    assert ".pm-grid .pm-sectlabel{display:block}" in INDEX, "telefonda matris etiketi düştü"
