@@ -1,0 +1,11649 @@
+{
+ "AtkinsonHyperlegibleMono-VF": {
+  "file": "AtkinsonHyperlegibleMono-VF.ttf",
+  "bytes": 53960,
+  "family": "Atkinson Hyperlegible Mono ExtraLight",
+  "subfamily": "Regular",
+  "version": "Version 2.001",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 380,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    200.0,
+    200.0,
+    800.0
+   ]
+  },
+  "named_instances": 7,
+  "os2_version": 4,
+  "sxHeight": 496,
+  "sCapHeight": 668,
+  "usWeightClass": 200,
+  "x_at_10px": 4.96,
+  "x_at_11px": 5.456,
+  "x_at_12px": 5.952,
+  "x_at_13px": 6.448,
+  "x_at_28px": 13.888,
+  "cap_at_10px": 6.68,
+  "cap_at_11px": 7.348,
+  "cap_at_12px": 8.016,
+  "cap_at_13px": 8.684,
+  "cap_at_28px": 18.704,
+  "ascender_hhea": 984,
+  "descender_hhea": -316,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 10,
+    "adv": 632
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 632
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 1,
+    "pts": 75,
+    "adv": 632
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 1,
+    "pts": 83,
+    "adv": 632
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 64,
+    "adv": 632
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 55,
+    "adv": 632
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 1,
+    "pts": 64,
+    "adv": 632
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 1,
+    "pts": 64,
+    "adv": 632
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 64,
+    "adv": 632
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 632
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 48,
+    "adv": 632
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 46,
+    "adv": 632
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 632,
+   "1": 632,
+   "2": 632,
+   "3": 632,
+   "4": 632,
+   "5": 632,
+   "6": 632,
+   "7": 632,
+   "8": 632,
+   "9": 632
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 632,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "frac",
+   "locl",
+   "ordn",
+   "sups",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 632,
+    "n_contours": 3,
+    "n_pts": 42,
+    "bbox": [
+     64,
+     -13,
+     568,
+     683
+    ],
+    "w": 504,
+    "h": 696,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       64,
+       -13,
+       568,
+       683
+      ],
+      "w": 504,
+      "h": 696
+     },
+     {
+      "pts": 12,
+      "bbox": [
+       118,
+       35,
+       453,
+       534
+      ],
+      "w": 335,
+      "h": 499
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       180,
+       138,
+       514,
+       635
+      ],
+      "w": 334,
+      "h": 497
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 632,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     41,
+     -12,
+     591,
+     680
+    ],
+    "w": 550,
+    "h": 692,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       41,
+       -12,
+       591,
+       680
+      ],
+      "w": 550,
+      "h": 692
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       98,
+       36,
+       534,
+       632
+      ],
+      "w": 436,
+      "h": 596
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 632,
+    "n_contours": 1,
+    "n_pts": 14,
+    "bbox": [
+     120,
+     0,
+     522,
+     668
+    ],
+    "w": 402,
+    "h": 668,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       120,
+       0,
+       522,
+       668
+      ],
+      "w": 402,
+      "h": 668
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 632,
+    "n_contours": 1,
+    "n_pts": 15,
+    "bbox": [
+     124,
+     0,
+     528,
+     708
+    ],
+    "w": 404,
+    "h": 708,
+    "contours": [
+     {
+      "pts": 15,
+      "bbox": [
+       124,
+       0,
+       528,
+       708
+      ],
+      "w": 404,
+      "h": 708
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 632,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     143,
+     0,
+     489,
+     668
+    ],
+    "w": 346,
+    "h": 668,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       143,
+       0,
+       489,
+       668
+      ],
+      "w": 346,
+      "h": 668
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 632,
+    "n_contours": 2,
+    "n_pts": 23,
+    "bbox": [
+     115,
+     0,
+     529,
+     695
+    ],
+    "w": 414,
+    "h": 695,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       115,
+       0,
+       529,
+       496
+      ],
+      "w": 414,
+      "h": 496
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       263,
+       599,
+       359,
+       695
+      ],
+      "w": 96,
+      "h": 96
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 632,
+    "n_contours": 1,
+    "n_pts": 10,
+    "bbox": [
+     115,
+     0,
+     529,
+     496
+    ],
+    "w": 414,
+    "h": 496,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       115,
+       0,
+       529,
+       496
+      ],
+      "w": 414,
+      "h": 496
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 632,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     143,
+     0,
+     489,
+     827
+    ],
+    "w": 346,
+    "h": 827,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       143,
+       0,
+       489,
+       668
+      ],
+      "w": 346,
+      "h": 668
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       271,
+       737,
+       361,
+       827
+      ],
+      "w": 90,
+      "h": 90
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 13,
+   "bbox": [
+    180,
+    138,
+    514,
+    635
+   ],
+   "w": 334,
+   "h": 497,
+   "aspect_h_over_w": 1.49,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 504,
+   "O_w": 550,
+   "delta": -46,
+   "delta_px_at_10": -0.46
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    15
+   ],
+   "w": [
+    402,
+    404
+   ],
+   "h": [
+    668,
+    708
+   ],
+   "w_delta": -2,
+   "w_delta_px_at_10": 0.02
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    12
+   ],
+   "w": [
+    402,
+    346
+   ],
+   "w_delta": 56,
+   "w_delta_px_at_10": 0.56
+  }
+ },
+ "AtkinsonHyperlegibleNext-VF": {
+  "file": "AtkinsonHyperlegibleNext-VF.ttf",
+  "bytes": 114552,
+  "family": "Atkinson Hyperlegible Next",
+  "subfamily": "Regular",
+  "version": "Version 2.001",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 392,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    200.0,
+    400.0,
+    800.0
+   ]
+  },
+  "named_instances": 7,
+  "os2_version": 4,
+  "sxHeight": 496,
+  "sCapHeight": 668,
+  "usWeightClass": 400,
+  "x_at_10px": 4.96,
+  "x_at_11px": 5.456,
+  "x_at_12px": 5.952,
+  "x_at_13px": 6.448,
+  "x_at_28px": 13.888,
+  "cap_at_10px": 6.68,
+  "cap_at_11px": 7.348,
+  "cap_at_12px": 8.016,
+  "cap_at_13px": 8.684,
+  "cap_at_28px": 18.704,
+  "ascender_hhea": 984,
+  "descender_hhea": -316,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 6,
+    "adv": 252
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 392
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 1,
+    "pts": 78,
+    "adv": 471
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 1,
+    "pts": 84,
+    "adv": 592
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 65,
+    "adv": 558
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 54,
+    "adv": 694
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 1,
+    "pts": 65,
+    "adv": 485
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 1,
+    "pts": 64,
+    "adv": 645
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 64,
+    "adv": 548
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 714
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 540
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 45,
+    "adv": 690
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 648,
+   "1": 407,
+   "2": 548,
+   "3": 576,
+   "4": 614,
+   "5": 588,
+   "6": 598,
+   "7": 510,
+   "8": 615,
+   "9": 595
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 59,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "frac",
+   "locl",
+   "ordn",
+   "pnum",
+   "sups",
+   "tnum"
+  ],
+  "has_tnum": true,
+  "has_zero": false,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 648,
+    "n_contours": 3,
+    "n_pts": 42,
+    "bbox": [
+     60,
+     -12,
+     588,
+     682
+    ],
+    "w": 528,
+    "h": 694,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       60,
+       -12,
+       588,
+       682
+      ],
+      "w": 528,
+      "h": 694
+     },
+     {
+      "pts": 12,
+      "bbox": [
+       151,
+       62,
+       443,
+       501
+      ],
+      "w": 292,
+      "h": 439
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       211,
+       180,
+       497,
+       608
+      ],
+      "w": 286,
+      "h": 428
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 714,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     44,
+     -12,
+     670,
+     680
+    ],
+    "w": 626,
+    "h": 692,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       44,
+       -12,
+       670,
+       680
+      ],
+      "w": 626,
+      "h": 692
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       140,
+       67,
+       574,
+       601
+      ],
+      "w": 434,
+      "h": 534
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 407,
+    "n_contours": 1,
+    "n_pts": 10,
+    "bbox": [
+     35,
+     0,
+     297,
+     668
+    ],
+    "w": 262,
+    "h": 668,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       35,
+       0,
+       297,
+       668
+      ],
+      "w": 262,
+      "h": 668
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 262,
+    "n_contours": 1,
+    "n_pts": 13,
+    "bbox": [
+     68,
+     0,
+     242,
+     708
+    ],
+    "w": 174,
+    "h": 708,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       68,
+       0,
+       242,
+       708
+      ],
+      "w": 174,
+      "h": 708
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 392,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     55,
+     0,
+     337,
+     668
+    ],
+    "w": 282,
+    "h": 668,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       55,
+       0,
+       337,
+       668
+      ],
+      "w": 282,
+      "h": 668
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 252,
+    "n_contours": 2,
+    "n_pts": 19,
+    "bbox": [
+     25,
+     0,
+     190,
+     714
+    ],
+    "w": 165,
+    "h": 714,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       25,
+       0,
+       178,
+       496
+      ],
+      "w": 153,
+      "h": 496
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       66,
+       590,
+       190,
+       714
+      ],
+      "w": 124,
+      "h": 124
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 252,
+    "n_contours": 1,
+    "n_pts": 6,
+    "bbox": [
+     25,
+     0,
+     178,
+     496
+    ],
+    "w": 153,
+    "h": 496,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       25,
+       0,
+       178,
+       496
+      ],
+      "w": 153,
+      "h": 496
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 392,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     55,
+     0,
+     337,
+     848
+    ],
+    "w": 282,
+    "h": 848,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       55,
+       0,
+       337,
+       668
+      ],
+      "w": 282,
+      "h": 668
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       142,
+       740,
+       250,
+       848
+      ],
+      "w": 108,
+      "h": 108
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 13,
+   "bbox": [
+    211,
+    180,
+    497,
+    608
+   ],
+   "w": 286,
+   "h": 428,
+   "aspect_h_over_w": 1.5,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 528,
+   "O_w": 626,
+   "delta": -98,
+   "delta_px_at_10": -0.98
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    10,
+    13
+   ],
+   "w": [
+    262,
+    174
+   ],
+   "h": [
+    668,
+    708
+   ],
+   "w_delta": 88,
+   "w_delta_px_at_10": 0.88
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    10,
+    12
+   ],
+   "w": [
+    262,
+    282
+   ],
+   "w_delta": -20,
+   "w_delta_px_at_10": 0.2
+  }
+ },
+ "Chivo-VF": {
+  "file": "Chivo-VF.ttf",
+  "bytes": 160636,
+  "family": "Chivo Medium",
+  "subfamily": "Regular",
+  "version": "Version 2.002",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 875,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    100.0,
+    500.0,
+    900.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 511,
+  "sCapHeight": 686,
+  "usWeightClass": 500,
+  "x_at_10px": 5.11,
+  "x_at_11px": 5.621,
+  "x_at_12px": 6.132,
+  "x_at_13px": 6.643,
+  "x_at_28px": 14.308,
+  "cap_at_10px": 6.86,
+  "cap_at_11px": 7.546,
+  "cap_at_12px": 8.232,
+  "cap_at_13px": 8.918,
+  "cap_at_28px": 19.208,
+  "ascender_hhea": 940,
+  "descender_hhea": -250,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 272
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 16,
+    "adv": 400
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 93,
+    "adv": 545
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 84,
+    "adv": 638
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 100,
+    "adv": 578
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 67,
+    "adv": 687
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 62,
+    "adv": 557
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 68,
+    "adv": 672
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 47,
+    "adv": 593
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 55,
+    "adv": 702
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 42,
+    "adv": 622
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 29,
+    "adv": 683
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 615,
+   "1": 615,
+   "2": 615,
+   "3": 615,
+   "4": 615,
+   "5": 615,
+   "6": 615,
+   "7": 615,
+   "8": 615,
+   "9": 615
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 615,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 49,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "lnum",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "sinf",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": true,
+  "has_onum": true,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "cpsp",
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 615,
+    "n_contours": 2,
+    "n_pts": 39,
+    "bbox": [
+     63,
+     -10,
+     551,
+     696
+    ],
+    "w": 488,
+    "h": 706,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       63,
+       -10,
+       551,
+       696
+      ],
+      "w": 488,
+      "h": 706
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       181,
+       81,
+       433,
+       605
+      ],
+      "w": 252,
+      "h": 524
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 702,
+    "n_contours": 2,
+    "n_pts": 47,
+    "bbox": [
+     58,
+     -10,
+     645,
+     695
+    ],
+    "w": 587,
+    "h": 705,
+    "contours": [
+     {
+      "pts": 24,
+      "bbox": [
+       58,
+       -10,
+       645,
+       695
+      ],
+      "w": 587,
+      "h": 705
+     },
+     {
+      "pts": 23,
+      "bbox": [
+       188,
+       86,
+       515,
+       599
+      ],
+      "w": 327,
+      "h": 513
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 615,
+    "n_contours": 1,
+    "n_pts": 14,
+    "bbox": [
+     86,
+     0,
+     553,
+     696
+    ],
+    "w": 467,
+    "h": 696,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       86,
+       0,
+       553,
+       696
+      ],
+      "w": 467,
+      "h": 696
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 268,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     74,
+     0,
+     190,
+     720
+    ],
+    "w": 116,
+    "h": 720,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       74,
+       0,
+       190,
+       720
+      ],
+      "w": 116,
+      "h": 720
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 400,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     58,
+     0,
+     342,
+     686
+    ],
+    "w": 284,
+    "h": 686,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       58,
+       0,
+       342,
+       686
+      ],
+      "w": 284,
+      "h": 686
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 278,
+    "n_contours": 2,
+    "n_pts": 8,
+    "bbox": [
+     78,
+     0,
+     200,
+     720
+    ],
+    "w": 122,
+    "h": 720,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       81,
+       0,
+       197,
+       511
+      ],
+      "w": 116,
+      "h": 511
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       78,
+       626,
+       200,
+       720
+      ],
+      "w": 122,
+      "h": 94
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 272,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     78,
+     0,
+     194,
+     511
+    ],
+    "w": 116,
+    "h": 511,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       78,
+       0,
+       194,
+       511
+      ],
+      "w": 116,
+      "h": 511
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 400,
+    "n_contours": 2,
+    "n_pts": 16,
+    "bbox": [
+     58,
+     0,
+     342,
+     873
+    ],
+    "w": 284,
+    "h": 873,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       58,
+       0,
+       342,
+       686
+      ],
+      "w": 284,
+      "h": 686
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       147,
+       769,
+       252,
+       873
+      ],
+      "w": 105,
+      "h": 104
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 488,
+   "O_w": 587,
+   "delta": -99,
+   "delta_px_at_10": -0.99
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    4
+   ],
+   "w": [
+    467,
+    116
+   ],
+   "h": [
+    696,
+    720
+   ],
+   "w_delta": 351,
+   "w_delta_px_at_10": 3.51
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    12
+   ],
+   "w": [
+    467,
+    284
+   ],
+   "w_delta": 183,
+   "w_delta_px_at_10": 1.83
+  }
+ },
+ "ChivoMono-VF": {
+  "file": "ChivoMono-VF.ttf",
+  "bytes": 123880,
+  "family": "Chivo Mono Medium",
+  "subfamily": "Regular",
+  "version": "Version 1.008",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 873,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    100.0,
+    500.0,
+    900.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 511,
+  "sCapHeight": 686,
+  "usWeightClass": 500,
+  "x_at_10px": 5.11,
+  "x_at_11px": 5.621,
+  "x_at_12px": 6.132,
+  "x_at_13px": 6.643,
+  "x_at_28px": 14.308,
+  "cap_at_10px": 6.86,
+  "cap_at_11px": 7.546,
+  "cap_at_12px": 8.232,
+  "cap_at_13px": 8.918,
+  "cap_at_28px": 19.208,
+  "ascender_hhea": 940,
+  "descender_hhea": -250,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 2,
+    "pts": 10,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 16,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 80,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 86,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 94,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 65,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 64,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 67,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 42,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 55,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 43,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 27,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "lnum",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "sinf",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": true,
+  "has_onum": true,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "cpsp",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 39,
+    "bbox": [
+     56,
+     -10,
+     544,
+     696
+    ],
+    "w": 488,
+    "h": 706,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       56,
+       -10,
+       544,
+       696
+      ],
+      "w": 488,
+      "h": 706
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       174,
+       81,
+       426,
+       605
+      ],
+      "w": 252,
+      "h": 524
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 47,
+    "bbox": [
+     31,
+     -10,
+     569,
+     696
+    ],
+    "w": 538,
+    "h": 706,
+    "contours": [
+     {
+      "pts": 24,
+      "bbox": [
+       31,
+       -10,
+       569,
+       696
+      ],
+      "w": 538,
+      "h": 706
+     },
+     {
+      "pts": 23,
+      "bbox": [
+       157,
+       86,
+       444,
+       600
+      ],
+      "w": 287,
+      "h": 514
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 14,
+    "bbox": [
+     81,
+     0,
+     548,
+     696
+    ],
+    "w": 467,
+    "h": 696,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       81,
+       0,
+       548,
+       696
+      ],
+      "w": 467,
+      "h": 696
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 10,
+    "bbox": [
+     71,
+     0,
+     534,
+     721
+    ],
+    "w": 463,
+    "h": 721,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       71,
+       0,
+       366,
+       721
+      ],
+      "w": 295,
+      "h": 721
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       71,
+       0,
+       534,
+       87
+      ],
+      "w": 463,
+      "h": 87
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     98,
+     0,
+     502,
+     686
+    ],
+    "w": 404,
+    "h": 686,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       98,
+       0,
+       502,
+       686
+      ],
+      "w": 404,
+      "h": 686
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 14,
+    "bbox": [
+     92,
+     0,
+     555,
+     718
+    ],
+    "w": 463,
+    "h": 718,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       92,
+       0,
+       387,
+       511
+      ],
+      "w": 295,
+      "h": 511
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       92,
+       0,
+       555,
+       87
+      ],
+      "w": 463,
+      "h": 87
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       269,
+       615,
+       373,
+       718
+      ],
+      "w": 104,
+      "h": 103
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 10,
+    "bbox": [
+     92,
+     0,
+     555,
+     511
+    ],
+    "w": 463,
+    "h": 511,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       92,
+       0,
+       387,
+       511
+      ],
+      "w": 295,
+      "h": 511
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       92,
+       0,
+       555,
+       87
+      ],
+      "w": 463,
+      "h": 87
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 16,
+    "bbox": [
+     98,
+     0,
+     502,
+     873
+    ],
+    "w": 404,
+    "h": 873,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       98,
+       0,
+       502,
+       686
+      ],
+      "w": 404,
+      "h": 686
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       245,
+       769,
+       350,
+       873
+      ],
+      "w": 105,
+      "h": 104
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 488,
+   "O_w": 538,
+   "delta": -50,
+   "delta_px_at_10": -0.5
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 2,
+  "i_contours": 3,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    2
+   ],
+   "pts": [
+    14,
+    10
+   ],
+   "w": [
+    467,
+    463
+   ],
+   "h": [
+    696,
+    721
+   ],
+   "w_delta": 4,
+   "w_delta_px_at_10": 0.04
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    12
+   ],
+   "w": [
+    467,
+    404
+   ],
+   "w_delta": 63,
+   "w_delta_px_at_10": 0.63
+  }
+ },
+ "Geist-VF": {
+  "file": "Geist-VF.ttf",
+  "bytes": 169056,
+  "family": "Geist",
+  "subfamily": "Regular",
+  "version": "Version 1.800",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 975,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    100.0,
+    400.0,
+    900.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 530,
+  "sCapHeight": 710,
+  "usWeightClass": 400,
+  "x_at_10px": 5.3,
+  "x_at_11px": 5.83,
+  "x_at_12px": 6.36,
+  "x_at_13px": 6.89,
+  "x_at_28px": 14.84,
+  "cap_at_10px": 7.1,
+  "cap_at_11px": 7.81,
+  "cap_at_12px": 8.52,
+  "cap_at_13px": 9.23,
+  "cap_at_28px": 19.88,
+  "ascender_hhea": 1005,
+  "descender_hhea": -295,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 244
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 8,
+    "adv": 270
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 71,
+    "adv": 520
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 75,
+    "adv": 640
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 63,
+    "adv": 594
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 55,
+    "adv": 700
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 546
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 57,
+    "adv": 703
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 38,
+    "adv": 573
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 42,
+    "adv": 739
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 30,
+    "adv": 575
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 29,
+    "adv": 689
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 663,
+   "1": 384,
+   "2": 619,
+   "3": 613,
+   "4": 615,
+   "5": 626,
+   "6": 593,
+   "7": 524,
+   "8": 604,
+   "9": 593
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 57,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dlig",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "subs",
+   "sups",
+   "tnum"
+  ],
+  "has_tnum": true,
+  "has_zero": false,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 663,
+    "n_contours": 2,
+    "n_pts": 32,
+    "bbox": [
+     50,
+     -16,
+     613,
+     726
+    ],
+    "w": 563,
+    "h": 742,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       50,
+       -16,
+       613,
+       726
+      ],
+      "w": 563,
+      "h": 742
+     },
+     {
+      "pts": 15,
+      "bbox": [
+       140,
+       68,
+       523,
+       642
+      ],
+      "w": 383,
+      "h": 574
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 739,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     45,
+     -16,
+     694,
+     726
+    ],
+    "w": 649,
+    "h": 742,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       45,
+       -16,
+       694,
+       726
+      ],
+      "w": 649,
+      "h": 742
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       135,
+       68,
+       604,
+       642
+      ],
+      "w": 469,
+      "h": 574
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 384,
+    "n_contours": 1,
+    "n_pts": 11,
+    "bbox": [
+     40,
+     0,
+     274,
+     710
+    ],
+    "w": 234,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 11,
+      "bbox": [
+       40,
+       0,
+       274,
+       710
+      ],
+      "w": 234,
+      "h": 710
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 267,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     80,
+     0,
+     243,
+     710
+    ],
+    "w": 163,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       0,
+       243,
+       710
+      ],
+      "w": 163,
+      "h": 710
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 270,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     92,
+     0,
+     178,
+     710
+    ],
+    "w": 86,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       92,
+       0,
+       178,
+       710
+      ],
+      "w": 86,
+      "h": 710
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 244,
+    "n_contours": 2,
+    "n_pts": 8,
+    "bbox": [
+     78,
+     0,
+     166,
+     711
+    ],
+    "w": 88,
+    "h": 711,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       80,
+       0,
+       164,
+       530
+      ],
+      "w": 84,
+      "h": 530
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       78,
+       613,
+       166,
+       711
+      ],
+      "w": 88,
+      "h": 98
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 244,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     80,
+     0,
+     164,
+     530
+    ],
+    "w": 84,
+    "h": 530,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       80,
+       0,
+       164,
+       530
+      ],
+      "w": 84,
+      "h": 530
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 270,
+    "n_contours": 2,
+    "n_pts": 8,
+    "bbox": [
+     91,
+     0,
+     179,
+     891
+    ],
+    "w": 88,
+    "h": 891,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       92,
+       0,
+       178,
+       710
+      ],
+      "w": 86,
+      "h": 710
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       91,
+       793,
+       179,
+       891
+      ],
+      "w": 88,
+      "h": 98
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 563,
+   "O_w": 649,
+   "delta": -86,
+   "delta_px_at_10": -0.86
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    11,
+    12
+   ],
+   "w": [
+    234,
+    163
+   ],
+   "h": [
+    710,
+    710
+   ],
+   "w_delta": 71,
+   "w_delta_px_at_10": 0.71
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    11,
+    4
+   ],
+   "w": [
+    234,
+    86
+   ],
+   "w_delta": 148,
+   "w_delta_px_at_10": 1.48
+  }
+ },
+ "GeistMono-VF": {
+  "file": "GeistMono-VF.ttf",
+  "bytes": 171948,
+  "family": "Geist Mono",
+  "subfamily": "Regular",
+  "version": "Version 1.701",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 1159,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    100.0,
+    400.0,
+    900.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 530,
+  "sCapHeight": 710,
+  "usWeightClass": 400,
+  "x_at_10px": 5.3,
+  "x_at_11px": 5.83,
+  "x_at_12px": 6.36,
+  "x_at_13px": 6.89,
+  "x_at_28px": 14.84,
+  "cap_at_10px": 7.1,
+  "cap_at_11px": 7.81,
+  "cap_at_12px": 8.52,
+  "cap_at_13px": 9.23,
+  "cap_at_28px": 19.88,
+  "ascender_hhea": 1005,
+  "descender_hhea": -295,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 13,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 16,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 73,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 75,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 63,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 55,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 38,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 42,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 30,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 27,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "locl",
+   "numr",
+   "ordn",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "subs",
+   "sups"
+  ],
+  "has_tnum": false,
+  "has_zero": false,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 38,
+    "bbox": [
+     50,
+     -16,
+     550,
+     726
+    ],
+    "w": 500,
+    "h": 742,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       120,
+       98,
+       480,
+       612
+      ],
+      "w": 360,
+      "h": 514
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       50,
+       -16,
+       550,
+       726
+      ],
+      "w": 500,
+      "h": 742
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       140,
+       68,
+       460,
+       642
+      ],
+      "w": 320,
+      "h": 574
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     38,
+     -16,
+     562,
+     726
+    ],
+    "w": 524,
+    "h": 742,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       38,
+       -16,
+       562,
+       726
+      ],
+      "w": 524,
+      "h": 742
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       128,
+       68,
+       472,
+       642
+      ],
+      "w": 344,
+      "h": 574
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 15,
+    "bbox": [
+     60,
+     0,
+     540,
+     710
+    ],
+    "w": 480,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 11,
+      "bbox": [
+       98,
+       0,
+       370,
+       710
+      ],
+      "w": 272,
+      "h": 710
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       60,
+       0,
+       540,
+       84
+      ],
+      "w": 480,
+      "h": 84
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 16,
+    "bbox": [
+     60,
+     0,
+     540,
+     710
+    ],
+    "w": 480,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       30,
+       357,
+       710
+      ],
+      "w": 277,
+      "h": 680
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       60,
+       0,
+       540,
+       74
+      ],
+      "w": 480,
+      "h": 74
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     80,
+     0,
+     520,
+     710
+    ],
+    "w": 440,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       0,
+       520,
+       710
+      ],
+      "w": 440,
+      "h": 710
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     80,
+     0,
+     560,
+     711
+    ],
+    "w": 480,
+    "h": 711,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       80,
+       0,
+       560,
+       530
+      ],
+      "w": 480,
+      "h": 530
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       285,
+       613,
+       373,
+       711
+      ],
+      "w": 88,
+      "h": 98
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 13,
+    "bbox": [
+     80,
+     0,
+     560,
+     530
+    ],
+    "w": 480,
+    "h": 530,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       80,
+       0,
+       560,
+       530
+      ],
+      "w": 480,
+      "h": 530
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 16,
+    "bbox": [
+     80,
+     0,
+     520,
+     891
+    ],
+    "w": 440,
+    "h": 891,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       0,
+       520,
+       710
+      ],
+      "w": 440,
+      "h": 710
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       255,
+       793,
+       343,
+       891
+      ],
+      "w": 88,
+      "h": 98
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 17,
+   "bbox": [
+    140,
+    68,
+    460,
+    642
+   ],
+   "w": 320,
+   "h": 574,
+   "aspect_h_over_w": 1.79,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 500,
+   "O_w": 524,
+   "delta": -24,
+   "delta_px_at_10": -0.24
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    2,
+    2
+   ],
+   "pts": [
+    15,
+    16
+   ],
+   "w": [
+    480,
+    480
+   ],
+   "h": [
+    710,
+    710
+   ],
+   "w_delta": 0,
+   "w_delta_px_at_10": 0.0
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    15,
+    12
+   ],
+   "w": [
+    480,
+    440
+   ],
+   "w_delta": 40,
+   "w_delta_px_at_10": 0.4
+  }
+ },
+ "NotoSans-VF": {
+  "file": "NotoSans-VF.ttf",
+  "bytes": 2049096,
+  "family": "Noto Sans",
+  "subfamily": "Regular",
+  "version": "Version 2.015",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 4515,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    100.0,
+    400.0,
+    900.0
+   ],
+   "wdth": [
+    62.5,
+    100.0,
+    100.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 536,
+  "sCapHeight": 714,
+  "usWeightClass": 400,
+  "x_at_10px": 5.36,
+  "x_at_11px": 5.896,
+  "x_at_12px": 6.432,
+  "x_at_13px": 6.968,
+  "x_at_28px": 15.008,
+  "cap_at_10px": 7.14,
+  "cap_at_11px": 7.854,
+  "cap_at_12px": 8.568,
+  "cap_at_13px": 9.282,
+  "cap_at_28px": 19.992,
+  "ascender_hhea": 1069,
+  "descender_hhea": -293,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 258
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 339
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 68,
+    "adv": 479
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 73,
+    "adv": 549
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 71,
+    "adv": 615
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 51,
+    "adv": 728
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 55,
+    "adv": 480
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 57,
+    "adv": 632
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 61,
+    "adv": 605
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 61,
+    "adv": 781
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 50,
+    "adv": 618
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 46,
+    "adv": 731
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 572,
+   "1": 572,
+   "2": 572,
+   "3": 572,
+   "4": 572,
+   "5": 572,
+   "6": 572,
+   "7": 572,
+   "8": 572,
+   "9": 572
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 572,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 44,
+  "gsub_features": [
+   "aalt",
+   "abvs",
+   "akhn",
+   "blwf",
+   "blws",
+   "c2sc",
+   "case",
+   "ccmp",
+   "cjct",
+   "dnom",
+   "frac",
+   "half",
+   "liga",
+   "lnum",
+   "locl",
+   "nukt",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "pres",
+   "psts",
+   "rkrf",
+   "rphf",
+   "rtlm",
+   "salt",
+   "sinf",
+   "smcp",
+   "ss03",
+   "ss04",
+   "ss06",
+   "ss07",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": true,
+  "has_onum": true,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "abvm",
+   "blwm",
+   "dist",
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 572,
+    "n_contours": 2,
+    "n_pts": 35,
+    "bbox": [
+     49,
+     -10,
+     523,
+     725
+    ],
+    "w": 474,
+    "h": 735,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       49,
+       -10,
+       523,
+       725
+      ],
+      "w": 474,
+      "h": 735
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       137,
+       65,
+       434,
+       650
+      ],
+      "w": 297,
+      "h": 585
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 781,
+    "n_contours": 2,
+    "n_pts": 35,
+    "bbox": [
+     61,
+     -10,
+     720,
+     725
+    ],
+    "w": 659,
+    "h": 735,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       61,
+       -10,
+       720,
+       725
+      ],
+      "w": 659,
+      "h": 735
+     },
+     {
+      "pts": 16,
+      "bbox": [
+       156,
+       68,
+       625,
+       646
+      ],
+      "w": 469,
+      "h": 578
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 572,
+    "n_contours": 1,
+    "n_pts": 14,
+    "bbox": [
+     89,
+     0,
+     355,
+     714
+    ],
+    "w": 266,
+    "h": 714,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       89,
+       0,
+       355,
+       714
+      ],
+      "w": 266,
+      "h": 714
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 258,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     85,
+     0,
+     173,
+     760
+    ],
+    "w": 88,
+    "h": 760,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       85,
+       0,
+       173,
+       760
+      ],
+      "w": 88,
+      "h": 760
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 339,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     40,
+     0,
+     298,
+     714
+    ],
+    "w": 258,
+    "h": 714,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       40,
+       0,
+       298,
+       714
+      ],
+      "w": 258,
+      "h": 714
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 258,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     78,
+     0,
+     181,
+     737
+    ],
+    "w": 103,
+    "h": 737,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       85,
+       0,
+       173,
+       536
+      ],
+      "w": 88,
+      "h": 536
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       78,
+       625,
+       181,
+       737
+      ],
+      "w": 103,
+      "h": 112
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 258,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     85,
+     0,
+     173,
+     536
+    ],
+    "w": 88,
+    "h": 536,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       85,
+       0,
+       173,
+       536
+      ],
+      "w": 88,
+      "h": 536
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 339,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     40,
+     0,
+     298,
+     915
+    ],
+    "w": 258,
+    "h": 915,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       40,
+       0,
+       298,
+       714
+      ],
+      "w": 258,
+      "h": 714
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       119,
+       803,
+       222,
+       915
+      ],
+      "w": 103,
+      "h": 112
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 474,
+   "O_w": 659,
+   "delta": -185,
+   "delta_px_at_10": -1.85
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    4
+   ],
+   "w": [
+    266,
+    88
+   ],
+   "h": [
+    714,
+    760
+   ],
+   "w_delta": 178,
+   "w_delta_px_at_10": 1.78
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    12
+   ],
+   "w": [
+    266,
+    258
+   ],
+   "w_delta": 8,
+   "w_delta_px_at_10": 0.08
+  }
+ },
+ "NotoSansMono-VF": {
+  "file": "NotoSansMono-VF.ttf",
+  "bytes": 1708408,
+  "family": "Noto Sans Mono",
+  "subfamily": "Regular",
+  "version": "Version 2.014",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 3920,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    100.0,
+    400.0,
+    900.0
+   ],
+   "wdth": [
+    62.5,
+    100.0,
+    100.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 536,
+  "sCapHeight": 714,
+  "usWeightClass": 400,
+  "x_at_10px": 5.36,
+  "x_at_11px": 5.896,
+  "x_at_12px": 6.432,
+  "x_at_13px": 6.968,
+  "x_at_28px": 15.008,
+  "cap_at_10px": 7.14,
+  "cap_at_11px": 7.854,
+  "cap_at_12px": 8.568,
+  "cap_at_13px": 9.282,
+  "cap_at_28px": 19.992,
+  "ascender_hhea": 1069,
+  "descender_hhea": -293,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 10,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 68,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 71,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 69,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 51,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 54,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 61,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 62,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 50,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "c2sc",
+   "ccmp",
+   "dnom",
+   "frac",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "rtlm",
+   "smcp",
+   "ss03",
+   "subs",
+   "sups",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": true,
+  "has_ss01": false,
+  "has_locl": true,
+  "has_case": false,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 37,
+    "bbox": [
+     60,
+     -10,
+     540,
+     724
+    ],
+    "w": 480,
+    "h": 734,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       60,
+       -10,
+       540,
+       724
+      ],
+      "w": 480,
+      "h": 734
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       126,
+       100,
+       458,
+       626
+      ],
+      "w": 332,
+      "h": 526
+     },
+     {
+      "pts": 15,
+      "bbox": [
+       144,
+       69,
+       459,
+       645
+      ],
+      "w": 315,
+      "h": 576
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 36,
+    "bbox": [
+     45,
+     -10,
+     555,
+     726
+    ],
+    "w": 510,
+    "h": 736,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       45,
+       -10,
+       555,
+       726
+      ],
+      "w": 510,
+      "h": 736
+     },
+     {
+      "pts": 16,
+      "bbox": [
+       137,
+       70,
+       463,
+       646
+      ],
+      "w": 326,
+      "h": 576
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 20,
+    "bbox": [
+     97,
+     0,
+     520,
+     714
+    ],
+    "w": 423,
+    "h": 714,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       97,
+       0,
+       369,
+       714
+      ],
+      "w": 272,
+      "h": 714
+     },
+     {
+      "pts": 6,
+      "bbox": [
+       133,
+       0,
+       520,
+       70
+      ],
+      "w": 387,
+      "h": 70
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 10,
+    "bbox": [
+     80,
+     0,
+     540,
+     760
+    ],
+    "w": 460,
+    "h": 760,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       80,
+       0,
+       540,
+       760
+      ],
+      "w": 460,
+      "h": 760
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     110,
+     0,
+     490,
+     714
+    ],
+    "w": 380,
+    "h": 714,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       110,
+       0,
+       490,
+       714
+      ],
+      "w": 380,
+      "h": 714
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 23,
+    "bbox": [
+     80,
+     0,
+     540,
+     760
+    ],
+    "w": 460,
+    "h": 760,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       80,
+       0,
+       540,
+       536
+      ],
+      "w": 460,
+      "h": 536
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       244,
+       633,
+       370,
+       760
+      ],
+      "w": 126,
+      "h": 127
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 10,
+    "bbox": [
+     80,
+     0,
+     540,
+     536
+    ],
+    "w": 460,
+    "h": 536,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       80,
+       0,
+       540,
+       536
+      ],
+      "w": 460,
+      "h": 536
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     110,
+     0,
+     490,
+     938
+    ],
+    "w": 380,
+    "h": 938,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       110,
+       0,
+       490,
+       714
+      ],
+      "w": 380,
+      "h": 714
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       236,
+       811,
+       362,
+       938
+      ],
+      "w": 126,
+      "h": 127
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 4,
+   "bbox": [
+    126,
+    100,
+    458,
+    626
+   ],
+   "w": 332,
+   "h": 526,
+   "aspect_h_over_w": 1.58,
+   "kind": "SLASH (diagonal, few points, tall)"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 480,
+   "O_w": 510,
+   "delta": -30,
+   "delta_px_at_10": -0.3
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    20,
+    10
+   ],
+   "w": [
+    423,
+    460
+   ],
+   "h": [
+    714,
+    760
+   ],
+   "w_delta": -37,
+   "w_delta_px_at_10": 0.37
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    20,
+    12
+   ],
+   "w": [
+    423,
+    380
+   ],
+   "w_delta": 43,
+   "w_delta_px_at_10": 0.43
+  }
+ },
+ "Overpass-VF": {
+  "file": "Overpass-VF.ttf",
+  "bytes": 318700,
+  "family": "Overpass",
+  "subfamily": "Regular",
+  "version": "Version 4.000",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2000,
+  "numGlyphs": 1351,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    100.0,
+    400.0,
+    900.0
+   ]
+  },
+  "named_instances": 9,
+  "os2_version": 4,
+  "sxHeight": 1022,
+  "sCapHeight": 1400,
+  "usWeightClass": 400,
+  "x_at_10px": 5.11,
+  "x_at_11px": 5.621,
+  "x_at_12px": 6.132,
+  "x_at_13px": 6.643,
+  "x_at_28px": 14.308,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 1766,
+  "descender_hhea": -766,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 508
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 17,
+    "adv": 566
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 67,
+    "adv": 938
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 76,
+    "adv": 1198
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 62,
+    "adv": 1126
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 61,
+    "adv": 1376
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 1000
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 65,
+    "adv": 1294
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 55,
+    "adv": 1116
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 68,
+    "adv": 1460
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 47,
+    "adv": 1126
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 1378
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1284,
+   "1": 746,
+   "2": 1224,
+   "3": 1204,
+   "4": 1242,
+   "5": 1242,
+   "6": 1194,
+   "7": 1044,
+   "8": 1222,
+   "9": 1194
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 55,
+  "gsub_features": [
+   "aalt",
+   "calt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "cpsp",
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1284,
+    "n_contours": 2,
+    "n_pts": 44,
+    "bbox": [
+     152,
+     -24,
+     1132,
+     1424
+    ],
+    "w": 980,
+    "h": 1448,
+    "contours": [
+     {
+      "pts": 23,
+      "bbox": [
+       152,
+       -24,
+       1132,
+       1424
+      ],
+      "w": 980,
+      "h": 1448
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       332,
+       140,
+       948,
+       1262
+      ],
+      "w": 616,
+      "h": 1122
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1460,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     136,
+     -24,
+     1324,
+     1424
+    ],
+    "w": 1188,
+    "h": 1448,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       136,
+       -24,
+       1324,
+       1424
+      ],
+      "w": 1188,
+      "h": 1448
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       316,
+       140,
+       1144,
+       1262
+      ],
+      "w": 828,
+      "h": 1122
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 746,
+    "n_contours": 1,
+    "n_pts": 10,
+    "bbox": [
+     80,
+     0,
+     488,
+     1400
+    ],
+    "w": 408,
+    "h": 1400,
+    "contours": [
+     {
+      "pts": 10,
+      "bbox": [
+       80,
+       0,
+       488,
+       1400
+      ],
+      "w": 408,
+      "h": 1400
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 524,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     176,
+     0,
+     350,
+     1444
+    ],
+    "w": 174,
+    "h": 1444,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       176,
+       0,
+       350,
+       1444
+      ],
+      "w": 174,
+      "h": 1444
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 566,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     196,
+     0,
+     370,
+     1400
+    ],
+    "w": 174,
+    "h": 1400,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       196,
+       0,
+       370,
+       1400
+      ],
+      "w": 174,
+      "h": 1400
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 508,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     146,
+     0,
+     364,
+     1428
+    ],
+    "w": 218,
+    "h": 1428,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       168,
+       0,
+       342,
+       1022
+      ],
+      "w": 174,
+      "h": 1022
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       146,
+       1208,
+       364,
+       1428
+      ],
+      "w": 218,
+      "h": 220
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 508,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     168,
+     0,
+     342,
+     1022
+    ],
+    "w": 174,
+    "h": 1022,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       168,
+       0,
+       342,
+       1022
+      ],
+      "w": 174,
+      "h": 1022
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 566,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     182,
+     0,
+     402,
+     1796
+    ],
+    "w": 220,
+    "h": 1796,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       196,
+       0,
+       370,
+       1400
+      ],
+      "w": 174,
+      "h": 1400
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       182,
+       1576,
+       402,
+       1796
+      ],
+      "w": 220,
+      "h": 220
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 980,
+   "O_w": 1188,
+   "delta": -208,
+   "delta_px_at_10": -1.04
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    10,
+    4
+   ],
+   "w": [
+    408,
+    174
+   ],
+   "h": [
+    1400,
+    1444
+   ],
+   "w_delta": 234,
+   "w_delta_px_at_10": 1.17
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    10,
+    4
+   ],
+   "w": [
+    408,
+    174
+   ],
+   "w_delta": 234,
+   "w_delta_px_at_10": 1.17
+  }
+ },
+ "OverpassMono-VF": {
+  "file": "OverpassMono-VF.ttf",
+  "bytes": 258800,
+  "family": "Overpass Mono Light",
+  "subfamily": "Regular",
+  "version": "Version 4.000",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2000,
+  "numGlyphs": 1801,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    300.0,
+    300.0,
+    700.0
+   ]
+  },
+  "named_instances": 5,
+  "os2_version": 4,
+  "sxHeight": 1022,
+  "sCapHeight": 1400,
+  "usWeightClass": 300,
+  "x_at_10px": 5.11,
+  "x_at_11px": 5.621,
+  "x_at_12px": 6.132,
+  "x_at_13px": 6.643,
+  "x_at_28px": 14.308,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 1766,
+  "descender_hhea": -766,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 3,
+    "pts": 12,
+    "adv": 1232
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 4,
+    "pts": 25,
+    "adv": 1232
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 70,
+    "adv": 1232
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 74,
+    "adv": 1232
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 61,
+    "adv": 1232
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 58,
+    "adv": 1232
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 54,
+    "adv": 1232
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 63,
+    "adv": 1232
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 56,
+    "adv": 1232
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 68,
+    "adv": 1232
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 1232
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 1232
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1232,
+   "1": 1232,
+   "2": 1232,
+   "3": 1232,
+   "4": 1232,
+   "5": 1232,
+   "6": 1232,
+   "7": 1232,
+   "8": 1232,
+   "9": 1232
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 1232,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "calt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1232,
+    "n_contours": 3,
+    "n_pts": 57,
+    "bbox": [
+     136,
+     -24,
+     1096,
+     1424
+    ],
+    "w": 960,
+    "h": 1448,
+    "contours": [
+     {
+      "pts": 23,
+      "bbox": [
+       136,
+       -24,
+       1096,
+       1424
+      ],
+      "w": 960,
+      "h": 1448
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       282,
+       102,
+       946,
+       1298
+      ],
+      "w": 664,
+      "h": 1196
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       490,
+       572,
+       742,
+       824
+      ],
+      "w": 252,
+      "h": 252
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1232,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     166,
+     -24,
+     1066,
+     1424
+    ],
+    "w": 900,
+    "h": 1448,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       166,
+       -24,
+       1066,
+       1424
+      ],
+      "w": 900,
+      "h": 1448
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       312,
+       102,
+       920,
+       1298
+      ],
+      "w": 608,
+      "h": 1196
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 1232,
+    "n_contours": 2,
+    "n_pts": 10,
+    "bbox": [
+     200,
+     0,
+     1032,
+     1408
+    ],
+    "w": 832,
+    "h": 1408,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       240,
+       0,
+       688,
+       1408
+      ],
+      "w": 448,
+      "h": 1408
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       200,
+       0,
+       1032,
+       134
+      ],
+      "w": 832,
+      "h": 134
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 1232,
+    "n_contours": 3,
+    "n_pts": 12,
+    "bbox": [
+     234,
+     0,
+     968,
+     1444
+    ],
+    "w": 734,
+    "h": 1444,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       546,
+       0,
+       686,
+       1444
+      ],
+      "w": 140,
+      "h": 1444
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       264,
+       0,
+       968,
+       126
+      ],
+      "w": 704,
+      "h": 126
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       234,
+       1318,
+       686,
+       1444
+      ],
+      "w": 452,
+      "h": 126
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 1232,
+    "n_contours": 3,
+    "n_pts": 12,
+    "bbox": [
+     212,
+     0,
+     1020,
+     1400
+    ],
+    "w": 808,
+    "h": 1400,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       546,
+       0,
+       686,
+       1400
+      ],
+      "w": 140,
+      "h": 1400
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       212,
+       0,
+       1020,
+       132
+      ],
+      "w": 808,
+      "h": 132
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       212,
+       1268,
+       1020,
+       1400
+      ],
+      "w": 808,
+      "h": 132
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 1232,
+    "n_contours": 4,
+    "n_pts": 25,
+    "bbox": [
+     296,
+     0,
+     1000,
+     1420
+    ],
+    "w": 704,
+    "h": 1420,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       578,
+       40,
+       718,
+       1022
+      ],
+      "w": 140,
+      "h": 982
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       296,
+       0,
+       1000,
+       126
+      ],
+      "w": 704,
+      "h": 126
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       296,
+       896,
+       648,
+       1022
+      ],
+      "w": 352,
+      "h": 126
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       556,
+       1232,
+       740,
+       1420
+      ],
+      "w": 184,
+      "h": 188
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 1232,
+    "n_contours": 3,
+    "n_pts": 12,
+    "bbox": [
+     296,
+     0,
+     1000,
+     1022
+    ],
+    "w": 704,
+    "h": 1022,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       578,
+       40,
+       718,
+       1022
+      ],
+      "w": 140,
+      "h": 982
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       296,
+       0,
+       1000,
+       126
+      ],
+      "w": 704,
+      "h": 126
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       296,
+       896,
+       648,
+       1022
+      ],
+      "w": 352,
+      "h": 126
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 1232,
+    "n_contours": 4,
+    "n_pts": 25,
+    "bbox": [
+     212,
+     0,
+     1020,
+     1798
+    ],
+    "w": 808,
+    "h": 1798,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       546,
+       0,
+       686,
+       1400
+      ],
+      "w": 140,
+      "h": 1400
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       212,
+       0,
+       1020,
+       132
+      ],
+      "w": 808,
+      "h": 132
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       212,
+       1268,
+       1020,
+       1400
+      ],
+      "w": 808,
+      "h": 132
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       524,
+       1610,
+       708,
+       1798
+      ],
+      "w": 184,
+      "h": 188
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 13,
+   "bbox": [
+    490,
+    572,
+    742,
+    824
+   ],
+   "w": 252,
+   "h": 252,
+   "aspect_h_over_w": 1.0,
+   "kind": "DOT/nokta (compact)"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 960,
+   "O_w": 900,
+   "delta": 60,
+   "delta_px_at_10": 0.3
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 3,
+  "i_contours": 4,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 4,
+  "I_contours": 3,
+  "one_vs_l": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    10,
+    12
+   ],
+   "w": [
+    832,
+    734
+   ],
+   "h": [
+    1408,
+    1444
+   ],
+   "w_delta": 98,
+   "w_delta_px_at_10": 0.49
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    10,
+    12
+   ],
+   "w": [
+    832,
+    808
+   ],
+   "w_delta": 24,
+   "w_delta_px_at_10": 0.12
+  }
+ },
+ "Recursive-VF": {
+  "file": "Recursive-VF.ttf",
+  "bytes": 2379132,
+  "family": "Recursive Sans Linear Light",
+  "subfamily": "Regular",
+  "version": "Version 1.085",
+  "license_url": null,
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 1304,
+  "isFixedPitch_post": false,
+  "axes": {
+   "MONO": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "CASL": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "wght": [
+    300.0,
+    300.0,
+    1000.0
+   ],
+   "slnt": [
+    -15.0,
+    0.0,
+    0.0
+   ],
+   "CRSV": [
+    0.0,
+    0.5,
+    1.0
+   ]
+  },
+  "named_instances": 64,
+  "os2_version": 4,
+  "sxHeight": 526,
+  "sCapHeight": 700,
+  "usWeightClass": 300,
+  "x_at_10px": 5.26,
+  "x_at_11px": 5.786,
+  "x_at_12px": 6.312,
+  "x_at_13px": 6.838,
+  "x_at_28px": 14.728,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 950,
+  "descender_hhea": -250,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 44,
+    "adv": 350
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 4,
+    "pts": 78,
+    "adv": 500
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "uni015F",
+    "contours": 2,
+    "pts": 111,
+    "adv": 550
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "uni015E",
+    "contours": 2,
+    "pts": 125,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 140,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 3,
+    "pts": 114,
+    "adv": 650
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 94,
+    "adv": 500
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 107,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 76,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 74,
+    "adv": 650
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 4,
+    "pts": 100,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 4,
+    "pts": 101,
+    "adv": 650
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 10,
+  "gsub_features": [
+   "aalt",
+   "afrc",
+   "case",
+   "ccmp",
+   "dlig",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "rvrn",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "ss12",
+   "ss20",
+   "sups",
+   "titl",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 67,
+    "bbox": [
+     75,
+     -20,
+     525,
+     720
+    ],
+    "w": 450,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       75,
+       -20,
+       525,
+       720
+      ],
+      "w": 450,
+      "h": 740
+     },
+     {
+      "pts": 25,
+      "bbox": [
+       125,
+       27,
+       475,
+       673
+      ],
+      "w": 350,
+      "h": 646
+     },
+     {
+      "pts": 22,
+      "bbox": [
+       96,
+       122,
+       485,
+       591
+      ],
+      "w": 389,
+      "h": 469
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 650,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     75,
+     -20,
+     575,
+     720
+    ],
+    "w": 500,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       75,
+       -20,
+       575,
+       720
+      ],
+      "w": 500,
+      "h": 740
+     },
+     {
+      "pts": 23,
+      "bbox": [
+       125,
+       27,
+       525,
+       673
+      ],
+      "w": 400,
+      "h": 646
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 93,
+    "bbox": [
+     90,
+     0,
+     550,
+     710
+    ],
+    "w": 460,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 56,
+      "bbox": [
+       98,
+       10,
+       360,
+       710
+      ],
+      "w": 262,
+      "h": 700
+     },
+     {
+      "pts": 37,
+      "bbox": [
+       90,
+       0,
+       550,
+       47
+      ],
+      "w": 460,
+      "h": 47
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 350,
+    "n_contours": 1,
+    "n_pts": 60,
+    "bbox": [
+     60,
+     0,
+     288,
+     750
+    ],
+    "w": 228,
+    "h": 750,
+    "contours": [
+     {
+      "pts": 60,
+      "bbox": [
+       60,
+       0,
+       288,
+       750
+      ],
+      "w": 228,
+      "h": 750
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 500,
+    "n_contours": 3,
+    "n_pts": 60,
+    "bbox": [
+     80,
+     0,
+     420,
+     700
+    ],
+    "w": 340,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       222,
+       20,
+       281,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       80,
+       0,
+       420,
+       47
+      ],
+      "w": 340,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       80,
+       653,
+       420,
+       700
+      ],
+      "w": 340,
+      "h": 47
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 350,
+    "n_contours": 2,
+    "n_pts": 62,
+    "bbox": [
+     50,
+     0,
+     237,
+     756
+    ],
+    "w": 187,
+    "h": 756,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       50,
+       0,
+       220,
+       526
+      ],
+      "w": 170,
+      "h": 526
+     },
+     {
+      "pts": 18,
+      "bbox": [
+       157,
+       676,
+       237,
+       756
+      ],
+      "w": 80,
+      "h": 80
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 350,
+    "n_contours": 1,
+    "n_pts": 44,
+    "bbox": [
+     50,
+     0,
+     220,
+     526
+    ],
+    "w": 170,
+    "h": 526,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       50,
+       0,
+       220,
+       526
+      ],
+      "w": 170,
+      "h": 526
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 500,
+    "n_contours": 4,
+    "n_pts": 78,
+    "bbox": [
+     80,
+     0,
+     420,
+     888
+    ],
+    "w": 340,
+    "h": 888,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       210,
+       808,
+       290,
+       888
+      ],
+      "w": 80,
+      "h": 80
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       222,
+       20,
+       281,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       80,
+       0,
+       420,
+       47
+      ],
+      "w": 340,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       80,
+       653,
+       420,
+       700
+      ],
+      "w": 340,
+      "h": 47
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 22,
+   "bbox": [
+    96,
+    122,
+    485,
+    591
+   ],
+   "w": 389,
+   "h": 469,
+   "aspect_h_over_w": 1.21,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 450,
+   "O_w": 500,
+   "delta": -50,
+   "delta_px_at_10": -0.5
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 4,
+  "I_contours": 3,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    460,
+    228
+   ],
+   "h": [
+    710,
+    750
+   ],
+   "w_delta": 232,
+   "w_delta_px_at_10": 2.32
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    460,
+    340
+   ],
+   "w_delta": 120,
+   "w_delta_px_at_10": 1.2
+  }
+ },
+ "RecursiveMonoLinear-VF": {
+  "file": "RecursiveMonoLinear-VF.ttf",
+  "bytes": 497716,
+  "family": "Recursive Sans Linear Light",
+  "subfamily": "Regular",
+  "version": "Version 1.085",
+  "license_url": null,
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 1304,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    300.0,
+    300.0,
+    1000.0
+   ]
+  },
+  "named_instances": 0,
+  "os2_version": 4,
+  "sxHeight": 526,
+  "sCapHeight": 700,
+  "usWeightClass": 300,
+  "x_at_10px": 5.26,
+  "x_at_11px": 5.786,
+  "x_at_12px": 6.312,
+  "x_at_13px": 6.838,
+  "x_at_28px": 14.728,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 950,
+  "descender_hhea": -250,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 44,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 4,
+    "pts": 78,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "uni015F",
+    "contours": 2,
+    "pts": 111,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "uni015E",
+    "contours": 2,
+    "pts": 125,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 140,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 3,
+    "pts": 114,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 94,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 107,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 76,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 74,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 4,
+    "pts": 100,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 4,
+    "pts": 101,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "afrc",
+   "case",
+   "ccmp",
+   "dlig",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "rvrn",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "ss12",
+   "ss20",
+   "sups",
+   "titl",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 67,
+    "bbox": [
+     75,
+     -20,
+     525,
+     720
+    ],
+    "w": 450,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       75,
+       -20,
+       525,
+       720
+      ],
+      "w": 450,
+      "h": 740
+     },
+     {
+      "pts": 25,
+      "bbox": [
+       125,
+       27,
+       475,
+       673
+      ],
+      "w": 350,
+      "h": 646
+     },
+     {
+      "pts": 22,
+      "bbox": [
+       96,
+       122,
+       485,
+       591
+      ],
+      "w": 389,
+      "h": 469
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     67,
+     -20,
+     533,
+     720
+    ],
+    "w": 466,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       67,
+       -20,
+       533,
+       720
+      ],
+      "w": 466,
+      "h": 740
+     },
+     {
+      "pts": 23,
+      "bbox": [
+       117,
+       27,
+       483,
+       673
+      ],
+      "w": 366,
+      "h": 646
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 93,
+    "bbox": [
+     90,
+     0,
+     540,
+     710
+    ],
+    "w": 450,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 56,
+      "bbox": [
+       98,
+       10,
+       360,
+       710
+      ],
+      "w": 262,
+      "h": 700
+     },
+     {
+      "pts": 37,
+      "bbox": [
+       90,
+       0,
+       540,
+       47
+      ],
+      "w": 450,
+      "h": 47
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 60,
+    "bbox": [
+     80,
+     0,
+     520,
+     750
+    ],
+    "w": 440,
+    "h": 750,
+    "contours": [
+     {
+      "pts": 60,
+      "bbox": [
+       80,
+       0,
+       520,
+       750
+      ],
+      "w": 440,
+      "h": 750
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 60,
+    "bbox": [
+     90,
+     0,
+     510,
+     700
+    ],
+    "w": 420,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       272,
+       20,
+       331,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       90,
+       0,
+       510,
+       47
+      ],
+      "w": 420,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       90,
+       653,
+       510,
+       700
+      ],
+      "w": 420,
+      "h": 47
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 62,
+    "bbox": [
+     90,
+     0,
+     345,
+     756
+    ],
+    "w": 255,
+    "h": 756,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       90,
+       0,
+       330,
+       526
+      ],
+      "w": 240,
+      "h": 526
+     },
+     {
+      "pts": 18,
+      "bbox": [
+       265,
+       676,
+       345,
+       756
+      ],
+      "w": 80,
+      "h": 80
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 44,
+    "bbox": [
+     90,
+     0,
+     330,
+     526
+    ],
+    "w": 240,
+    "h": 526,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       90,
+       0,
+       330,
+       526
+      ],
+      "w": 240,
+      "h": 526
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 4,
+    "n_pts": 78,
+    "bbox": [
+     90,
+     0,
+     510,
+     888
+    ],
+    "w": 420,
+    "h": 888,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       260,
+       808,
+       340,
+       888
+      ],
+      "w": 80,
+      "h": 80
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       272,
+       20,
+       331,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       90,
+       0,
+       510,
+       47
+      ],
+      "w": 420,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       90,
+       653,
+       510,
+       700
+      ],
+      "w": 420,
+      "h": 47
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 22,
+   "bbox": [
+    96,
+    122,
+    485,
+    591
+   ],
+   "w": 389,
+   "h": 469,
+   "aspect_h_over_w": 1.21,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 450,
+   "O_w": 466,
+   "delta": -16,
+   "delta_px_at_10": -0.16
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 4,
+  "I_contours": 3,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    450,
+    440
+   ],
+   "h": [
+    710,
+    750
+   ],
+   "w_delta": 10,
+   "w_delta_px_at_10": 0.1
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    450,
+    420
+   ],
+   "w_delta": 30,
+   "w_delta_px_at_10": 0.3
+  }
+ },
+ "RecursiveSansLinear-VF": {
+  "file": "RecursiveSansLinear-VF.ttf",
+  "bytes": 502208,
+  "family": "Recursive Sans Linear Light",
+  "subfamily": "Regular",
+  "version": "Version 1.085",
+  "license_url": null,
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 1304,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    300.0,
+    300.0,
+    1000.0
+   ]
+  },
+  "named_instances": 0,
+  "os2_version": 4,
+  "sxHeight": 526,
+  "sCapHeight": 700,
+  "usWeightClass": 300,
+  "x_at_10px": 5.26,
+  "x_at_11px": 5.786,
+  "x_at_12px": 6.312,
+  "x_at_13px": 6.838,
+  "x_at_28px": 14.728,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 950,
+  "descender_hhea": -250,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 44,
+    "adv": 350
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 4,
+    "pts": 78,
+    "adv": 500
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "uni015F",
+    "contours": 2,
+    "pts": 111,
+    "adv": 550
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "uni015E",
+    "contours": 2,
+    "pts": 125,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 140,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 3,
+    "pts": 114,
+    "adv": 650
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 94,
+    "adv": 500
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 107,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 76,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 74,
+    "adv": 650
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 4,
+    "pts": 100,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 4,
+    "pts": 101,
+    "adv": 650
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 10,
+  "gsub_features": [
+   "aalt",
+   "afrc",
+   "case",
+   "ccmp",
+   "dlig",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "rvrn",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "ss12",
+   "ss20",
+   "sups",
+   "titl",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 67,
+    "bbox": [
+     75,
+     -20,
+     525,
+     720
+    ],
+    "w": 450,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 20,
+      "bbox": [
+       75,
+       -20,
+       525,
+       720
+      ],
+      "w": 450,
+      "h": 740
+     },
+     {
+      "pts": 25,
+      "bbox": [
+       125,
+       27,
+       475,
+       673
+      ],
+      "w": 350,
+      "h": 646
+     },
+     {
+      "pts": 22,
+      "bbox": [
+       96,
+       122,
+       485,
+       591
+      ],
+      "w": 389,
+      "h": 469
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 650,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     75,
+     -20,
+     575,
+     720
+    ],
+    "w": 500,
+    "h": 740,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       75,
+       -20,
+       575,
+       720
+      ],
+      "w": 500,
+      "h": 740
+     },
+     {
+      "pts": 23,
+      "bbox": [
+       125,
+       27,
+       525,
+       673
+      ],
+      "w": 400,
+      "h": 646
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 93,
+    "bbox": [
+     90,
+     0,
+     550,
+     710
+    ],
+    "w": 460,
+    "h": 710,
+    "contours": [
+     {
+      "pts": 56,
+      "bbox": [
+       98,
+       10,
+       360,
+       710
+      ],
+      "w": 262,
+      "h": 700
+     },
+     {
+      "pts": 37,
+      "bbox": [
+       90,
+       0,
+       550,
+       47
+      ],
+      "w": 460,
+      "h": 47
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 350,
+    "n_contours": 1,
+    "n_pts": 60,
+    "bbox": [
+     60,
+     0,
+     288,
+     750
+    ],
+    "w": 228,
+    "h": 750,
+    "contours": [
+     {
+      "pts": 60,
+      "bbox": [
+       60,
+       0,
+       288,
+       750
+      ],
+      "w": 228,
+      "h": 750
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 500,
+    "n_contours": 3,
+    "n_pts": 60,
+    "bbox": [
+     80,
+     0,
+     420,
+     700
+    ],
+    "w": 340,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       222,
+       20,
+       281,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       80,
+       0,
+       420,
+       47
+      ],
+      "w": 340,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       80,
+       653,
+       420,
+       700
+      ],
+      "w": 340,
+      "h": 47
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 350,
+    "n_contours": 2,
+    "n_pts": 62,
+    "bbox": [
+     50,
+     0,
+     237,
+     756
+    ],
+    "w": 187,
+    "h": 756,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       50,
+       0,
+       220,
+       526
+      ],
+      "w": 170,
+      "h": 526
+     },
+     {
+      "pts": 18,
+      "bbox": [
+       157,
+       676,
+       237,
+       756
+      ],
+      "w": 80,
+      "h": 80
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 350,
+    "n_contours": 1,
+    "n_pts": 44,
+    "bbox": [
+     50,
+     0,
+     220,
+     526
+    ],
+    "w": 170,
+    "h": 526,
+    "contours": [
+     {
+      "pts": 44,
+      "bbox": [
+       50,
+       0,
+       220,
+       526
+      ],
+      "w": 170,
+      "h": 526
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 500,
+    "n_contours": 4,
+    "n_pts": 78,
+    "bbox": [
+     80,
+     0,
+     420,
+     888
+    ],
+    "w": 340,
+    "h": 888,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       210,
+       808,
+       290,
+       888
+      ],
+      "w": 80,
+      "h": 80
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       222,
+       20,
+       281,
+       680
+      ],
+      "w": 59,
+      "h": 660
+     },
+     {
+      "pts": 20,
+      "bbox": [
+       80,
+       0,
+       420,
+       47
+      ],
+      "w": 340,
+      "h": 47
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       80,
+       653,
+       420,
+       700
+      ],
+      "w": 340,
+      "h": 47
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 22,
+   "bbox": [
+    96,
+    122,
+    485,
+    591
+   ],
+   "w": 389,
+   "h": 469,
+   "aspect_h_over_w": 1.21,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 450,
+   "O_w": 500,
+   "delta": -50,
+   "delta_px_at_10": -0.5
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 4,
+  "I_contours": 3,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    460,
+    228
+   ],
+   "h": [
+    710,
+    750
+   ],
+   "w_delta": 232,
+   "w_delta_px_at_10": 2.32
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    93,
+    60
+   ],
+   "w": [
+    460,
+    340
+   ],
+   "w_delta": 120,
+   "w_delta_px_at_10": 1.2
+  }
+ },
+ "RedHatMono-VF": {
+  "file": "RedHatMono-VF.ttf",
+  "bytes": 68356,
+  "family": "Red Hat Mono",
+  "subfamily": "Regular",
+  "version": "Version 1.030",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 441,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    300.0,
+    400.0,
+    700.0
+   ]
+  },
+  "named_instances": 5,
+  "os2_version": 4,
+  "sxHeight": 488,
+  "sCapHeight": 700,
+  "usWeightClass": 400,
+  "x_at_10px": 4.88,
+  "x_at_11px": 5.368,
+  "x_at_12px": 5.856,
+  "x_at_13px": 6.344,
+  "x_at_28px": 13.664,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 1018,
+  "descender_hhea": -305,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 19,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 1,
+    "pts": 66,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 1,
+    "pts": 67,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 61,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 50,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 1,
+    "pts": 52,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 1,
+    "pts": 53,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 47,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 47,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "calt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "locl",
+   "numr",
+   "ordn",
+   "sinf",
+   "ss01",
+   "ss02",
+   "subs",
+   "sups",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 39,
+    "bbox": [
+     42,
+     -11,
+     558,
+     711
+    ],
+    "w": 516,
+    "h": 722,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       42,
+       -11,
+       558,
+       711
+      ],
+      "w": 516,
+      "h": 722
+     },
+     {
+      "pts": 11,
+      "bbox": [
+       115,
+       147,
+       396,
+       646
+      ],
+      "w": 281,
+      "h": 499
+     },
+     {
+      "pts": 11,
+      "bbox": [
+       204,
+       54,
+       485,
+       553
+      ],
+      "w": 281,
+      "h": 499
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     37,
+     -11,
+     563,
+     711
+    ],
+    "w": 526,
+    "h": 722,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       37,
+       -11,
+       563,
+       711
+      ],
+      "w": 526,
+      "h": 722
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       115,
+       59,
+       485,
+       641
+      ],
+      "w": 370,
+      "h": 582
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 11,
+    "bbox": [
+     84,
+     0,
+     535,
+     700
+    ],
+    "w": 451,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 11,
+      "bbox": [
+       84,
+       0,
+       535,
+       700
+      ],
+      "w": 451,
+      "h": 700
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 19,
+    "bbox": [
+     75,
+     -10,
+     529,
+     727
+    ],
+    "w": 454,
+    "h": 737,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       75,
+       -10,
+       529,
+       727
+      ],
+      "w": 454,
+      "h": 737
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     80,
+     0,
+     520,
+     700
+    ],
+    "w": 440,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       0,
+       520,
+       700
+      ],
+      "w": 440,
+      "h": 700
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 32,
+    "bbox": [
+     75,
+     -10,
+     529,
+     728
+    ],
+    "w": 454,
+    "h": 738,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       230,
+       604,
+       356,
+       728
+      ],
+      "w": 126,
+      "h": 124
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       75,
+       -10,
+       529,
+       488
+      ],
+      "w": 454,
+      "h": 498
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 19,
+    "bbox": [
+     75,
+     -10,
+     529,
+     488
+    ],
+    "w": 454,
+    "h": 498,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       75,
+       -10,
+       529,
+       488
+      ],
+      "w": 454,
+      "h": 498
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     80,
+     0,
+     520,
+     940
+    ],
+    "w": 440,
+    "h": 940,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       80,
+       0,
+       520,
+       700
+      ],
+      "w": 440,
+      "h": 700
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       237,
+       816,
+       363,
+       940
+      ],
+      "w": 126,
+      "h": 124
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 11,
+   "bbox": [
+    115,
+    147,
+    396,
+    646
+   ],
+   "w": 281,
+   "h": 499,
+   "aspect_h_over_w": 1.78,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 516,
+   "O_w": 526,
+   "delta": -10,
+   "delta_px_at_10": -0.1
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    11,
+    19
+   ],
+   "w": [
+    451,
+    454
+   ],
+   "h": [
+    700,
+    737
+   ],
+   "w_delta": -3,
+   "w_delta_px_at_10": 0.03
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    11,
+    12
+   ],
+   "w": [
+    451,
+    440
+   ],
+   "w_delta": 11,
+   "w_delta_px_at_10": 0.11
+  }
+ },
+ "RedHatText-VF": {
+  "file": "RedHatText-VF.ttf",
+  "bytes": 97332,
+  "family": "Red Hat Text",
+  "subfamily": "Regular",
+  "version": "Version 1.030",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 450,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    300.0,
+    400.0,
+    700.0
+   ]
+  },
+  "named_instances": 5,
+  "os2_version": 4,
+  "sxHeight": 488,
+  "sCapHeight": 700,
+  "usWeightClass": 400,
+  "x_at_10px": 4.88,
+  "x_at_11px": 5.368,
+  "x_at_12px": 5.856,
+  "x_at_13px": 6.344,
+  "x_at_28px": 13.664,
+  "cap_at_10px": 7.0,
+  "cap_at_11px": 7.7,
+  "cap_at_12px": 8.4,
+  "cap_at_13px": 9.1,
+  "cap_at_28px": 19.6,
+  "ascender_hhea": 1018,
+  "descender_hhea": -305,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 223
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 17,
+    "adv": 253
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 1,
+    "pts": 63,
+    "adv": 452
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 1,
+    "pts": 66,
+    "adv": 623
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 62,
+    "adv": 582
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 55,
+    "adv": 799
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 1,
+    "pts": 52,
+    "adv": 509
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 1,
+    "pts": 57,
+    "adv": 726
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 580
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 68,
+    "adv": 810
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 48,
+    "adv": 552
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 712
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 660,
+   "1": 307,
+   "2": 600,
+   "3": 600,
+   "4": 618,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 619
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 46,
+  "gsub_features": [
+   "aalt",
+   "calt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "ss02",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 660,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     57,
+     -11,
+     603,
+     711
+    ],
+    "w": 546,
+    "h": 722,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       57,
+       -11,
+       603,
+       711
+      ],
+      "w": 546,
+      "h": 722
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       130,
+       54,
+       530,
+       646
+      ],
+      "w": 400,
+      "h": 592
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 810,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     57,
+     -11,
+     753,
+     711
+    ],
+    "w": 696,
+    "h": 722,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       57,
+       -11,
+       753,
+       711
+      ],
+      "w": 696,
+      "h": 722
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       135,
+       59,
+       675,
+       641
+      ],
+      "w": 540,
+      "h": 582
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 307,
+    "n_contours": 1,
+    "n_pts": 7,
+    "bbox": [
+     41,
+     0,
+     225,
+     700
+    ],
+    "w": 184,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 7,
+      "bbox": [
+       41,
+       0,
+       225,
+       700
+      ],
+      "w": 184,
+      "h": 700
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 223,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     75,
+     0,
+     148,
+     737
+    ],
+    "w": 73,
+    "h": 737,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       75,
+       0,
+       148,
+       737
+      ],
+      "w": 73,
+      "h": 737
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 253,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     88,
+     0,
+     165,
+     700
+    ],
+    "w": 77,
+    "h": 700,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       88,
+       0,
+       165,
+       700
+      ],
+      "w": 77,
+      "h": 700
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 222,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     58,
+     0,
+     164,
+     713
+    ],
+    "w": 106,
+    "h": 713,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       74,
+       0,
+       147,
+       488
+      ],
+      "w": 73,
+      "h": 488
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       58,
+       609,
+       164,
+       713
+      ],
+      "w": 106,
+      "h": 104
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 223,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     75,
+     0,
+     148,
+     488
+    ],
+    "w": 73,
+    "h": 488,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       75,
+       0,
+       148,
+       488
+      ],
+      "w": 73,
+      "h": 488
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 253,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     73,
+     0,
+     179,
+     925
+    ],
+    "w": 106,
+    "h": 925,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       88,
+       0,
+       165,
+       700
+      ],
+      "w": 77,
+      "h": 700
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       73,
+       821,
+       179,
+       925
+      ],
+      "w": 106,
+      "h": 104
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 546,
+   "O_w": 696,
+   "delta": -150,
+   "delta_px_at_10": -1.5
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    7,
+    4
+   ],
+   "w": [
+    184,
+    73
+   ],
+   "h": [
+    700,
+    737
+   ],
+   "w_delta": 111,
+   "w_delta_px_at_10": 1.11
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    7,
+    4
+   ],
+   "w": [
+    184,
+    77
+   ],
+   "w_delta": 107,
+   "w_delta_px_at_10": 1.07
+  }
+ },
+ "RedditMono-VF": {
+  "file": "RedditMono-VF.ttf",
+  "bytes": 203908,
+  "family": "Reddit Mono",
+  "subfamily": "Regular",
+  "version": "Version 1.014",
+  "license_url": "https://openfontlicense.org/",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2048,
+  "numGlyphs": 1106,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    200.0,
+    400.0,
+    900.0
+   ]
+  },
+  "named_instances": 6,
+  "os2_version": 4,
+  "sxHeight": 1060,
+  "sCapHeight": 1474,
+  "usWeightClass": 400,
+  "x_at_10px": 5.176,
+  "x_at_11px": 5.693,
+  "x_at_12px": 6.211,
+  "x_at_13px": 6.729,
+  "x_at_28px": 14.492,
+  "cap_at_10px": 7.197,
+  "cap_at_11px": 7.917,
+  "cap_at_12px": 8.637,
+  "cap_at_13px": 9.356,
+  "cap_at_28px": 20.152,
+  "ascender_hhea": 2068,
+  "descender_hhea": -592,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 2,
+    "pts": 8,
+    "adv": 1152
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 4,
+    "pts": 25,
+    "adv": 1152
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 63,
+    "adv": 1152
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 68,
+    "adv": 1152
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 78,
+    "adv": 1152
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 53,
+    "adv": 1152
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 49,
+    "adv": 1152
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 49,
+    "adv": 1152
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 1152
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 1152
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 57,
+    "adv": 1152
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 47,
+    "adv": 1152
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1152,
+   "1": 1152,
+   "2": 1152,
+   "3": 1152,
+   "4": 1152,
+   "5": 1152,
+   "6": 1152,
+   "7": 1152,
+   "8": 1152,
+   "9": 1152
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 1152,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "cv01",
+   "cv02",
+   "cv03",
+   "cv04",
+   "cv05",
+   "cv06",
+   "cv07",
+   "cv08",
+   "cv09",
+   "cv10",
+   "cv11",
+   "cv12",
+   "cv13",
+   "cv14",
+   "cv15",
+   "cv16",
+   "cv17",
+   "cv18",
+   "dlig",
+   "dnom",
+   "frac",
+   "lnum",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": true,
+  "has_onum": true,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "cpsp",
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1152,
+    "n_contours": 3,
+    "n_pts": 42,
+    "bbox": [
+     100,
+     -16,
+     1052,
+     1490
+    ],
+    "w": 952,
+    "h": 1506,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       100,
+       -16,
+       1052,
+       1490
+      ],
+      "w": 952,
+      "h": 1506
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       280,
+       148,
+       872,
+       1326
+      ],
+      "w": 592,
+      "h": 1178
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       178,
+       354,
+       972,
+       1120
+      ],
+      "w": 794,
+      "h": 766
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1152,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     68,
+     -16,
+     1084,
+     1490
+    ],
+    "w": 1016,
+    "h": 1506,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       68,
+       -16,
+       1084,
+       1490
+      ],
+      "w": 1016,
+      "h": 1506
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       248,
+       148,
+       905,
+       1326
+      ],
+      "w": 657,
+      "h": 1178
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 1152,
+    "n_contours": 2,
+    "n_pts": 12,
+    "bbox": [
+     196,
+     0,
+     988,
+     1474
+    ],
+    "w": 792,
+    "h": 1474,
+    "contours": [
+     {
+      "pts": 8,
+      "bbox": [
+       228,
+       0,
+       710,
+       1474
+      ],
+      "w": 482,
+      "h": 1474
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       196,
+       0,
+       988,
+       164
+      ],
+      "w": 792,
+      "h": 164
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 1152,
+    "n_contours": 1,
+    "n_pts": 18,
+    "bbox": [
+     348,
+     -16,
+     1024,
+     1540
+    ],
+    "w": 676,
+    "h": 1556,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       348,
+       -16,
+       1024,
+       1540
+      ],
+      "w": 676,
+      "h": 1556
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 1152,
+    "n_contours": 3,
+    "n_pts": 12,
+    "bbox": [
+     180,
+     0,
+     972,
+     1474
+    ],
+    "w": 792,
+    "h": 1474,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       486,
+       0,
+       666,
+       1474
+      ],
+      "w": 180,
+      "h": 1474
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       180,
+       0,
+       972,
+       160
+      ],
+      "w": 792,
+      "h": 160
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       180,
+       1314,
+       972,
+       1474
+      ],
+      "w": 792,
+      "h": 160
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 1152,
+    "n_contours": 3,
+    "n_pts": 21,
+    "bbox": [
+     216,
+     0,
+     764,
+     1490
+    ],
+    "w": 548,
+    "h": 1490,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       544,
+       0,
+       716,
+       1060
+      ],
+      "w": 172,
+      "h": 1060
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       216,
+       904,
+       716,
+       1060
+      ],
+      "w": 500,
+      "h": 156
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       504,
+       1230,
+       764,
+       1490
+      ],
+      "w": 260,
+      "h": 260
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 1152,
+    "n_contours": 2,
+    "n_pts": 8,
+    "bbox": [
+     216,
+     0,
+     716,
+     1060
+    ],
+    "w": 500,
+    "h": 1060,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       544,
+       0,
+       716,
+       1060
+      ],
+      "w": 172,
+      "h": 1060
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       216,
+       904,
+       716,
+       1060
+      ],
+      "w": 500,
+      "h": 156
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 1152,
+    "n_contours": 4,
+    "n_pts": 25,
+    "bbox": [
+     180,
+     0,
+     972,
+     1838
+    ],
+    "w": 792,
+    "h": 1838,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       486,
+       0,
+       666,
+       1474
+      ],
+      "w": 180,
+      "h": 1474
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       180,
+       0,
+       972,
+       160
+      ],
+      "w": 792,
+      "h": 160
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       180,
+       1314,
+       972,
+       1474
+      ],
+      "w": 792,
+      "h": 160
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       444,
+       1578,
+       704,
+       1838
+      ],
+      "w": 260,
+      "h": 260
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 4,
+   "bbox": [
+    178,
+    354,
+    972,
+    1120
+   ],
+   "w": 794,
+   "h": 766,
+   "aspect_h_over_w": 0.96,
+   "kind": "UNKNOWN mark - inspect render"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 952,
+   "O_w": 1016,
+   "delta": -64,
+   "delta_px_at_10": -0.312
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 2,
+  "i_contours": 3,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 4,
+  "I_contours": 3,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    12,
+    18
+   ],
+   "w": [
+    792,
+    676
+   ],
+   "h": [
+    1474,
+    1556
+   ],
+   "w_delta": 116,
+   "w_delta_px_at_10": 0.566
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    3
+   ],
+   "pts": [
+    12,
+    12
+   ],
+   "w": [
+    792,
+    792
+   ],
+   "w_delta": 0,
+   "w_delta_px_at_10": 0.0
+  }
+ },
+ "RedditSans-VF": {
+  "file": "RedditSans-VF.ttf",
+  "bytes": 262060,
+  "family": "Reddit Sans",
+  "subfamily": "Regular",
+  "version": "Version 1.014",
+  "license_url": "https://openfontlicense.org/",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2048,
+  "numGlyphs": 1079,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    200.0,
+    400.0,
+    900.0
+   ]
+  },
+  "named_instances": 6,
+  "os2_version": 4,
+  "sxHeight": 1060,
+  "sCapHeight": 1474,
+  "usWeightClass": 400,
+  "x_at_10px": 5.176,
+  "x_at_11px": 5.693,
+  "x_at_12px": 6.211,
+  "x_at_13px": 6.729,
+  "x_at_28px": 14.492,
+  "cap_at_10px": 7.197,
+  "cap_at_11px": 7.917,
+  "cap_at_12px": 8.637,
+  "cap_at_13px": 9.356,
+  "cap_at_28px": 20.152,
+  "ascender_hhea": 2068,
+  "descender_hhea": -592,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 462
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 17,
+    "adv": 558
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 67,
+    "adv": 888
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 71,
+    "adv": 1138
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 78,
+    "adv": 1208
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 56,
+    "adv": 1532
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 52,
+    "adv": 996
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 54,
+    "adv": 1360
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 1192
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 68,
+    "adv": 1630
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 57,
+    "adv": 1168
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 48,
+    "adv": 1400
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1332,
+   "1": 790,
+   "2": 1172,
+   "3": 1162,
+   "4": 1216,
+   "5": 1192,
+   "6": 1192,
+   "7": 1078,
+   "8": 1220,
+   "9": 1192
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 57,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "cv01",
+   "cv02",
+   "cv03",
+   "cv04",
+   "cv05",
+   "cv06",
+   "cv07",
+   "cv08",
+   "cv09",
+   "cv10",
+   "cv11",
+   "cv12",
+   "cv13",
+   "cv14",
+   "cv15",
+   "cv16",
+   "cv17",
+   "cv18",
+   "dlig",
+   "dnom",
+   "frac",
+   "liga",
+   "lnum",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": true,
+  "has_onum": true,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "cpsp",
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1332,
+    "n_contours": 2,
+    "n_pts": 38,
+    "bbox": [
+     132,
+     -16,
+     1200,
+     1490
+    ],
+    "w": 1068,
+    "h": 1506,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       132,
+       -16,
+       1200,
+       1490
+      ],
+      "w": 1068,
+      "h": 1506
+     },
+     {
+      "pts": 19,
+      "bbox": [
+       312,
+       148,
+       1020,
+       1326
+      ],
+      "w": 708,
+      "h": 1178
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1630,
+    "n_contours": 2,
+    "n_pts": 42,
+    "bbox": [
+     90,
+     -16,
+     1540,
+     1490
+    ],
+    "w": 1450,
+    "h": 1506,
+    "contours": [
+     {
+      "pts": 21,
+      "bbox": [
+       90,
+       -16,
+       1540,
+       1490
+      ],
+      "w": 1450,
+      "h": 1506
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       270,
+       148,
+       1360,
+       1326
+      ],
+      "w": 1090,
+      "h": 1178
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 790,
+    "n_contours": 1,
+    "n_pts": 8,
+    "bbox": [
+     132,
+     0,
+     606,
+     1474
+    ],
+    "w": 474,
+    "h": 1474,
+    "contours": [
+     {
+      "pts": 8,
+      "bbox": [
+       132,
+       0,
+       606,
+       1474
+      ],
+      "w": 474,
+      "h": 1474
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 504,
+    "n_contours": 1,
+    "n_pts": 19,
+    "bbox": [
+     142,
+     -16,
+     440,
+     1540
+    ],
+    "w": 298,
+    "h": 1556,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       142,
+       -16,
+       440,
+       1540
+      ],
+      "w": 298,
+      "h": 1556
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 558,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     188,
+     0,
+     368,
+     1474
+    ],
+    "w": 180,
+    "h": 1474,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       188,
+       0,
+       368,
+       1474
+      ],
+      "w": 180,
+      "h": 1474
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 462,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     102,
+     0,
+     362,
+     1490
+    ],
+    "w": 260,
+    "h": 1490,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       146,
+       0,
+       318,
+       1060
+      ],
+      "w": 172,
+      "h": 1060
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       102,
+       1230,
+       362,
+       1490
+      ],
+      "w": 260,
+      "h": 260
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 462,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     146,
+     0,
+     318,
+     1060
+    ],
+    "w": 172,
+    "h": 1060,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       146,
+       0,
+       318,
+       1060
+      ],
+      "w": 172,
+      "h": 1060
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 558,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     162,
+     0,
+     422,
+     1838
+    ],
+    "w": 260,
+    "h": 1838,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       188,
+       0,
+       368,
+       1474
+      ],
+      "w": 180,
+      "h": 1474
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       162,
+       1578,
+       422,
+       1838
+      ],
+      "w": 260,
+      "h": 260
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 1068,
+   "O_w": 1450,
+   "delta": -382,
+   "delta_px_at_10": -1.865
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    8,
+    19
+   ],
+   "w": [
+    474,
+    298
+   ],
+   "h": [
+    1474,
+    1556
+   ],
+   "w_delta": 176,
+   "w_delta_px_at_10": 0.859
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    8,
+    4
+   ],
+   "w": [
+    474,
+    180
+   ],
+   "w_delta": 294,
+   "w_delta_px_at_10": 1.436
+  }
+ },
+ "SourceCodePro-VF": {
+  "file": "SourceCodePro-VF.ttf",
+  "bytes": 212340,
+  "family": "Source Code Pro ExtraLight",
+  "subfamily": "Regular",
+  "version": "Version 1.026;hotconv 1.1.0;makeotfexe 2.6.0",
+  "license_url": "https://openfontlicense.org",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 1568,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    200.0,
+    200.0,
+    900.0
+   ]
+  },
+  "named_instances": 8,
+  "os2_version": 4,
+  "sxHeight": 478,
+  "sCapHeight": 660,
+  "usWeightClass": 200,
+  "x_at_10px": 4.78,
+  "x_at_11px": 5.258,
+  "x_at_12px": 5.736,
+  "x_at_13px": 6.214,
+  "x_at_28px": 13.384,
+  "cap_at_10px": 6.6,
+  "cap_at_11px": 7.26,
+  "cap_at_12px": 7.92,
+  "cap_at_13px": 8.58,
+  "cap_at_28px": 18.48,
+  "ascender_hhea": 984,
+  "descender_hhea": -273,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 6,
+    "adv": 600
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 25,
+    "adv": 600
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "uni015F",
+    "contours": 2,
+    "pts": 61,
+    "adv": 600
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "uni015E",
+    "contours": 2,
+    "pts": 64,
+    "adv": 600
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 106,
+    "adv": 600
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 52,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 48,
+    "adv": 600
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 49,
+    "adv": 600
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 600
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 600
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 48,
+    "adv": 600
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 51,
+    "adv": 600
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 600,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "case",
+   "ccmp",
+   "cv01",
+   "cv02",
+   "cv04",
+   "cv06",
+   "cv07",
+   "cv08",
+   "cv09",
+   "cv10",
+   "cv11",
+   "cv12",
+   "cv14",
+   "cv15",
+   "cv16",
+   "cv17",
+   "dnom",
+   "frac",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "salt",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "subs",
+   "sups",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": true,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "ccmp",
+   "frac",
+   "mark",
+   "mkmk",
+   "size"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 600,
+    "n_contours": 3,
+    "n_pts": 45,
+    "bbox": [
+     84,
+     -12,
+     516,
+     652
+    ],
+    "w": 432,
+    "h": 664,
+    "contours": [
+     {
+      "pts": 15,
+      "bbox": [
+       84,
+       -12,
+       516,
+       652
+      ],
+      "w": 432,
+      "h": 664
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       116,
+       16,
+       484,
+       624
+      ],
+      "w": 368,
+      "h": 608
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       248,
+       274,
+       352,
+       390
+      ],
+      "w": 104,
+      "h": 116
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     56,
+     -12,
+     544,
+     672
+    ],
+    "w": 488,
+    "h": 684,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       56,
+       -12,
+       544,
+       672
+      ],
+      "w": 488,
+      "h": 684
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       90,
+       18,
+       510,
+       642
+      ],
+      "w": 420,
+      "h": 624
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 14,
+    "bbox": [
+     112,
+     0,
+     520,
+     640
+    ],
+    "w": 408,
+    "h": 640,
+    "contours": [
+     {
+      "pts": 14,
+      "bbox": [
+       112,
+       0,
+       520,
+       640
+      ],
+      "w": 408,
+      "h": 640
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 19,
+    "bbox": [
+     94,
+     -12,
+     532,
+     722
+    ],
+    "w": 438,
+    "h": 734,
+    "contours": [
+     {
+      "pts": 19,
+      "bbox": [
+       94,
+       -12,
+       532,
+       722
+      ],
+      "w": 438,
+      "h": 734
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 12,
+    "bbox": [
+     112,
+     0,
+     488,
+     660
+    ],
+    "w": 376,
+    "h": 660,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       112,
+       0,
+       488,
+       660
+      ],
+      "w": 376,
+      "h": 660
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 19,
+    "bbox": [
+     100,
+     0,
+     390,
+     684
+    ],
+    "w": 290,
+    "h": 684,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       100,
+       0,
+       376,
+       478
+      ],
+      "w": 276,
+      "h": 478
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       310,
+       600,
+       390,
+       684
+      ],
+      "w": 80,
+      "h": 84
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 600,
+    "n_contours": 1,
+    "n_pts": 6,
+    "bbox": [
+     100,
+     0,
+     376,
+     478
+    ],
+    "w": 276,
+    "h": 478,
+    "contours": [
+     {
+      "pts": 6,
+      "bbox": [
+       100,
+       0,
+       376,
+       478
+      ],
+      "w": 276,
+      "h": 478
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 600,
+    "n_contours": 2,
+    "n_pts": 25,
+    "bbox": [
+     112,
+     0,
+     488,
+     794
+    ],
+    "w": 376,
+    "h": 794,
+    "contours": [
+     {
+      "pts": 12,
+      "bbox": [
+       112,
+       0,
+       488,
+       660
+      ],
+      "w": 376,
+      "h": 660
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       266,
+       724,
+       334,
+       794
+      ],
+      "w": 68,
+      "h": 70
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 13,
+   "bbox": [
+    248,
+    274,
+    352,
+    390
+   ],
+   "w": 104,
+   "h": 116,
+   "aspect_h_over_w": 1.12,
+   "kind": "DOT/nokta (compact)"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 432,
+   "O_w": 488,
+   "delta": -56,
+   "delta_px_at_10": -0.56
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    19
+   ],
+   "w": [
+    408,
+    438
+   ],
+   "h": [
+    640,
+    734
+   ],
+   "w_delta": -30,
+   "w_delta_px_at_10": 0.3
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    14,
+    12
+   ],
+   "w": [
+    408,
+    376
+   ],
+   "w_delta": 32,
+   "w_delta_px_at_10": 0.32
+  }
+ },
+ "SourceSans3-VF": {
+  "file": "SourceSans3-VF.ttf",
+  "bytes": 646340,
+  "family": "Source Sans 3 ExtraLight",
+  "subfamily": "Regular",
+  "version": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0",
+  "license_url": "http://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 1000,
+  "numGlyphs": 2478,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    200.0,
+    200.0,
+    900.0
+   ]
+  },
+  "named_instances": 8,
+  "os2_version": 4,
+  "sxHeight": 478,
+  "sCapHeight": 660,
+  "usWeightClass": 200,
+  "x_at_10px": 4.78,
+  "x_at_11px": 5.258,
+  "x_at_12px": 5.736,
+  "x_at_13px": 6.214,
+  "x_at_28px": 13.384,
+  "cap_at_10px": 6.6,
+  "cap_at_11px": 7.26,
+  "cap_at_12px": 7.92,
+  "cap_at_13px": 8.58,
+  "cap_at_28px": 18.48,
+  "ascender_hhea": 1024,
+  "descender_hhea": -400,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 222
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 17,
+    "adv": 232
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "uni015F",
+    "contours": 2,
+    "pts": 61,
+    "adv": 400
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "uni015E",
+    "contours": 2,
+    "pts": 64,
+    "adv": 516
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 4,
+    "pts": 106,
+    "adv": 480
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 53,
+    "adv": 600
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 48,
+    "adv": 446
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 49,
+    "adv": 562
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 532
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 60,
+    "adv": 648
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 48,
+    "adv": 524
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 51,
+    "adv": 630
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 472,
+   "1": 472,
+   "2": 472,
+   "3": 472,
+   "4": 472,
+   "5": 472,
+   "6": 472,
+   "7": 472,
+   "8": 472,
+   "9": 472
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 472,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 48,
+  "gsub_features": [
+   "aalt",
+   "c2sc",
+   "case",
+   "ccmp",
+   "cv01",
+   "cv02",
+   "cv03",
+   "cv04",
+   "cv05",
+   "cv06",
+   "cv07",
+   "cv08",
+   "cv09",
+   "cv10",
+   "cv11",
+   "cv12",
+   "cv13",
+   "cv14",
+   "cv15",
+   "cv16",
+   "cv17",
+   "cv18",
+   "cv19",
+   "dlig",
+   "dnom",
+   "frac",
+   "hlig",
+   "liga",
+   "locl",
+   "numr",
+   "onum",
+   "ordn",
+   "pnum",
+   "salt",
+   "sinf",
+   "smcp",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "subs",
+   "sups",
+   "titl",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": true,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk",
+   "size"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 472,
+    "n_contours": 2,
+    "n_pts": 30,
+    "bbox": [
+     50,
+     -12,
+     422,
+     652
+    ],
+    "w": 372,
+    "h": 664,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       50,
+       -12,
+       422,
+       652
+      ],
+      "w": 372,
+      "h": 664
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       82,
+       16,
+       390,
+       624
+      ],
+      "w": 308,
+      "h": 608
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 648,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     56,
+     -12,
+     592,
+     672
+    ],
+    "w": 536,
+    "h": 684,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       56,
+       -12,
+       592,
+       672
+      ],
+      "w": 536,
+      "h": 684
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       90,
+       18,
+       558,
+       642
+      ],
+      "w": 468,
+      "h": 624
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 472,
+    "n_contours": 1,
+    "n_pts": 13,
+    "bbox": [
+     86,
+     0,
+     410,
+     640
+    ],
+    "w": 324,
+    "h": 640,
+    "contours": [
+     {
+      "pts": 13,
+      "bbox": [
+       86,
+       0,
+       410,
+       640
+      ],
+      "w": 324,
+      "h": 640
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 230,
+    "n_contours": 1,
+    "n_pts": 18,
+    "bbox": [
+     96,
+     -8,
+     170,
+     722
+    ],
+    "w": 74,
+    "h": 730,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       96,
+       -8,
+       170,
+       722
+      ],
+      "w": 74,
+      "h": 730
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 232,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     100,
+     0,
+     132,
+     660
+    ],
+    "w": 32,
+    "h": 660,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       100,
+       0,
+       132,
+       660
+      ],
+      "w": 32,
+      "h": 660
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 222,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     78,
+     0,
+     142,
+     670
+    ],
+    "w": 64,
+    "h": 670,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       96,
+       0,
+       126,
+       478
+      ],
+      "w": 30,
+      "h": 478
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       78,
+       600,
+       142,
+       670
+      ],
+      "w": 64,
+      "h": 70
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 222,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     96,
+     0,
+     126,
+     478
+    ],
+    "w": 30,
+    "h": 478,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       96,
+       0,
+       126,
+       478
+      ],
+      "w": 30,
+      "h": 478
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 232,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     82,
+     0,
+     150,
+     794
+    ],
+    "w": 68,
+    "h": 794,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       100,
+       0,
+       132,
+       660
+      ],
+      "w": 32,
+      "h": 660
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       82,
+       724,
+       150,
+       794
+      ],
+      "w": 68,
+      "h": 70
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 372,
+   "O_w": 536,
+   "delta": -164,
+   "delta_px_at_10": -1.64
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    13,
+    18
+   ],
+   "w": [
+    324,
+    74
+   ],
+   "h": [
+    640,
+    730
+   ],
+   "w_delta": 250,
+   "w_delta_px_at_10": 2.5
+  },
+  "one_vs_I": {
+   "contours": [
+    1,
+    1
+   ],
+   "pts": [
+    13,
+    4
+   ],
+   "w": [
+    324,
+    32
+   ],
+   "w_delta": 292,
+   "w_delta_px_at_10": 2.92
+  }
+ },
+ "SplineSans-VF": {
+  "file": "SplineSans-VF.ttf",
+  "bytes": 146896,
+  "family": "Spline Sans",
+  "subfamily": "Regular",
+  "version": "Version 1.001",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2000,
+  "numGlyphs": 520,
+  "isFixedPitch_post": false,
+  "axes": {
+   "wght": [
+    300.0,
+    400.0,
+    700.0
+   ]
+  },
+  "named_instances": 5,
+  "os2_version": 4,
+  "sxHeight": 1091,
+  "sCapHeight": 1454,
+  "usWeightClass": 400,
+  "x_at_10px": 5.455,
+  "x_at_11px": 6.0,
+  "x_at_12px": 6.546,
+  "x_at_13px": 7.091,
+  "x_at_28px": 15.274,
+  "cap_at_10px": 7.27,
+  "cap_at_11px": 7.997,
+  "cap_at_12px": 8.724,
+  "cap_at_13px": 9.451,
+  "cap_at_28px": 20.356,
+  "ascender_hhea": 1927,
+  "descender_hhea": -473,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 1,
+    "pts": 4,
+    "adv": 537
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 17,
+    "adv": 529
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 70,
+    "adv": 1008
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 69,
+    "adv": 1151
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 3,
+    "pts": 70,
+    "adv": 1147
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 55,
+    "adv": 1441
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 54,
+    "adv": 1080
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 55,
+    "adv": 1366
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 56,
+    "adv": 1146
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 61,
+    "adv": 1485
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 50,
+    "adv": 1143
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 51,
+    "adv": 1321
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1188,
+   "1": 788,
+   "2": 1078,
+   "3": 1113,
+   "4": 1097,
+   "5": 1109,
+   "6": 1105,
+   "7": 1029,
+   "8": 1186,
+   "9": 1106
+  },
+  "digits_uniform_width": false,
+  "digit_advance": null,
+  "monospaced_all_latin": false,
+  "latin_advance_variants": 64,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dnom",
+   "frac",
+   "liga",
+   "locl",
+   "numr",
+   "ordn",
+   "pnum",
+   "salt",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "subs",
+   "sups",
+   "tnum",
+   "zero"
+  ],
+  "has_tnum": true,
+  "has_zero": true,
+  "has_pnum": true,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "kern",
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1188,
+    "n_contours": 2,
+    "n_pts": 34,
+    "bbox": [
+     91,
+     -30,
+     1097,
+     1483
+    ],
+    "w": 1006,
+    "h": 1513,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       91,
+       -30,
+       1097,
+       1483
+      ],
+      "w": 1006,
+      "h": 1513
+     },
+     {
+      "pts": 17,
+      "bbox": [
+       284,
+       144,
+       904,
+       1309
+      ],
+      "w": 620,
+      "h": 1165
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1485,
+    "n_contours": 2,
+    "n_pts": 35,
+    "bbox": [
+     105,
+     -30,
+     1380,
+     1483
+    ],
+    "w": 1275,
+    "h": 1513,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       105,
+       -30,
+       1380,
+       1483
+      ],
+      "w": 1275,
+      "h": 1513
+     },
+     {
+      "pts": 18,
+      "bbox": [
+       298,
+       143,
+       1188,
+       1310
+      ],
+      "w": 890,
+      "h": 1167
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 788,
+    "n_contours": 2,
+    "n_pts": 20,
+    "bbox": [
+     83,
+     0,
+     578,
+     1454
+    ],
+    "w": 495,
+    "h": 1454,
+    "contours": [
+     {
+      "pts": 5,
+      "bbox": [
+       386,
+       0,
+       578,
+       1454
+      ],
+      "w": 192,
+      "h": 1454
+     },
+     {
+      "pts": 15,
+      "bbox": [
+       83,
+       1140,
+       432,
+       1454
+      ],
+      "w": 349,
+      "h": 314
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 518,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     166,
+     0,
+     352,
+     1555
+    ],
+    "w": 186,
+    "h": 1555,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       166,
+       0,
+       352,
+       1555
+      ],
+      "w": 186,
+      "h": 1555
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 529,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     169,
+     0,
+     360,
+     1454
+    ],
+    "w": 191,
+    "h": 1454,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       169,
+       0,
+       360,
+       1454
+      ],
+      "w": 191,
+      "h": 1454
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 551,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     144,
+     0,
+     407,
+     1531
+    ],
+    "w": 263,
+    "h": 1531,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       181,
+       0,
+       369,
+       1085
+      ],
+      "w": 188,
+      "h": 1085
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       144,
+       1260,
+       407,
+       1531
+      ],
+      "w": 263,
+      "h": 271
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 537,
+    "n_contours": 1,
+    "n_pts": 4,
+    "bbox": [
+     174,
+     0,
+     363,
+     1091
+    ],
+    "w": 189,
+    "h": 1091,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       174,
+       0,
+       363,
+       1091
+      ],
+      "w": 189,
+      "h": 1091
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 529,
+    "n_contours": 2,
+    "n_pts": 17,
+    "bbox": [
+     139,
+     0,
+     389,
+     1863
+    ],
+    "w": 250,
+    "h": 1863,
+    "contours": [
+     {
+      "pts": 4,
+      "bbox": [
+       169,
+       0,
+       360,
+       1454
+      ],
+      "w": 191,
+      "h": 1454
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       139,
+       1599,
+       389,
+       1863
+      ],
+      "w": 250,
+      "h": 264
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 0,
+  "zero_mark": null,
+  "zero_vs_O_width": {
+   "zero_w": 1006,
+   "O_w": 1275,
+   "delta": -269,
+   "delta_px_at_10": -1.345
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 1,
+  "i_contours": 2,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    20,
+    4
+   ],
+   "w": [
+    495,
+    186
+   ],
+   "h": [
+    1454,
+    1555
+   ],
+   "w_delta": 309,
+   "w_delta_px_at_10": 1.545
+  },
+  "one_vs_I": {
+   "contours": [
+    2,
+    1
+   ],
+   "pts": [
+    20,
+    4
+   ],
+   "w": [
+    495,
+    191
+   ],
+   "w_delta": 304,
+   "w_delta_px_at_10": 1.52
+  }
+ },
+ "SplineSansMono-VF": {
+  "file": "SplineSansMono-VF.ttf",
+  "bytes": 118744,
+  "family": "Spline Sans Mono",
+  "subfamily": "Regular",
+  "version": "Version 1.004",
+  "license_url": "https://scripts.sil.org/OFL",
+  "license_desc": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht",
+  "upem": 2000,
+  "numGlyphs": 555,
+  "isFixedPitch_post": true,
+  "axes": {
+   "wght": [
+    300.0,
+    400.0,
+    700.0
+   ]
+  },
+  "named_instances": 5,
+  "os2_version": 4,
+  "sxHeight": 1091,
+  "sCapHeight": 1454,
+  "usWeightClass": 400,
+  "x_at_10px": 5.455,
+  "x_at_11px": 6.0,
+  "x_at_12px": 6.546,
+  "x_at_13px": 7.091,
+  "x_at_28px": 15.274,
+  "cap_at_10px": 7.27,
+  "cap_at_11px": 7.997,
+  "cap_at_12px": 8.724,
+  "cap_at_13px": 9.451,
+  "cap_at_28px": 20.356,
+  "ascender_hhea": 1927,
+  "descender_hhea": -473,
+  "lineGap_hhea": 0,
+  "turkish": {
+   "ı": {
+    "cp": "U+0131",
+    "desc": "i noktasiz (dotless i)",
+    "in_cmap": true,
+    "glyph": "dotlessi",
+    "contours": 3,
+    "pts": 17,
+    "adv": 1200
+   },
+   "İ": {
+    "cp": "U+0130",
+    "desc": "I noktali (dotted capital I)",
+    "in_cmap": true,
+    "glyph": "Idotaccent",
+    "contours": 2,
+    "pts": 31,
+    "adv": 1200
+   },
+   "ş": {
+    "cp": "U+015F",
+    "desc": "s cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "scedilla",
+    "contours": 2,
+    "pts": 73,
+    "adv": 1200
+   },
+   "Ş": {
+    "cp": "U+015E",
+    "desc": "S cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Scedilla",
+    "contours": 2,
+    "pts": 71,
+    "adv": 1200
+   },
+   "ğ": {
+    "cp": "U+011F",
+    "desc": "g breve kucuk",
+    "in_cmap": true,
+    "glyph": "gbreve",
+    "contours": 5,
+    "pts": 111,
+    "adv": 1200
+   },
+   "Ğ": {
+    "cp": "U+011E",
+    "desc": "G breve buyuk",
+    "in_cmap": true,
+    "glyph": "Gbreve",
+    "contours": 2,
+    "pts": 54,
+    "adv": 1200
+   },
+   "ç": {
+    "cp": "U+00E7",
+    "desc": "c cedilla kucuk",
+    "in_cmap": true,
+    "glyph": "ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 1200
+   },
+   "Ç": {
+    "cp": "U+00C7",
+    "desc": "C cedilla buyuk",
+    "in_cmap": true,
+    "glyph": "Ccedilla",
+    "contours": 2,
+    "pts": 56,
+    "adv": 1200
+   },
+   "ö": {
+    "cp": "U+00F6",
+    "desc": "o umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "odieresis",
+    "contours": 4,
+    "pts": 56,
+    "adv": 1200
+   },
+   "Ö": {
+    "cp": "U+00D6",
+    "desc": "O umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Odieresis",
+    "contours": 4,
+    "pts": 54,
+    "adv": 1200
+   },
+   "ü": {
+    "cp": "U+00FC",
+    "desc": "u umlaut kucuk",
+    "in_cmap": true,
+    "glyph": "udieresis",
+    "contours": 3,
+    "pts": 49,
+    "adv": 1200
+   },
+   "Ü": {
+    "cp": "U+00DC",
+    "desc": "U umlaut buyuk",
+    "in_cmap": true,
+    "glyph": "Udieresis",
+    "contours": 3,
+    "pts": 51,
+    "adv": 1200
+   }
+  },
+  "turkish_all_present": true,
+  "digit_advances": {
+   "0": 1200,
+   "1": 1200,
+   "2": 1200,
+   "3": 1200,
+   "4": 1200,
+   "5": 1200,
+   "6": 1200,
+   "7": 1200,
+   "8": 1200,
+   "9": 1200
+  },
+  "digits_uniform_width": true,
+  "digit_advance": 1200,
+  "monospaced_all_latin": true,
+  "latin_advance_variants": 1,
+  "gsub_features": [
+   "aalt",
+   "case",
+   "ccmp",
+   "dlig",
+   "dnom",
+   "frac",
+   "locl",
+   "numr",
+   "ordn",
+   "salt",
+   "sinf",
+   "ss01",
+   "ss02",
+   "ss03",
+   "ss04",
+   "ss05",
+   "ss06",
+   "ss07",
+   "ss08",
+   "ss09",
+   "ss10",
+   "ss11",
+   "ss12",
+   "ss14",
+   "ss15",
+   "ss16",
+   "ss17",
+   "ss18",
+   "ss19",
+   "subs",
+   "sups",
+   "zero"
+  ],
+  "has_tnum": false,
+  "has_zero": true,
+  "has_pnum": false,
+  "has_lnum": false,
+  "has_onum": false,
+  "has_ss01": true,
+  "has_locl": true,
+  "has_case": true,
+  "gpos_features": [
+   "mark",
+   "mkmk"
+  ],
+  "glyphs": {
+   "zero": {
+    "glyph": "zero",
+    "adv": 1200,
+    "n_contours": 3,
+    "n_pts": 51,
+    "bbox": [
+     96,
+     -30,
+     1104,
+     1483
+    ],
+    "w": 1008,
+    "h": 1513,
+    "contours": [
+     {
+      "pts": 17,
+      "bbox": [
+       96,
+       -30,
+       1104,
+       1483
+      ],
+      "w": 1008,
+      "h": 1513
+     },
+     {
+      "pts": 21,
+      "bbox": [
+       283,
+       136,
+       917,
+       1317
+      ],
+      "w": 634,
+      "h": 1181
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       502,
+       593,
+       698,
+       868
+      ],
+      "w": 196,
+      "h": 275
+     }
+    ]
+   },
+   "O": {
+    "glyph": "O",
+    "adv": 1200,
+    "n_contours": 2,
+    "n_pts": 28,
+    "bbox": [
+     84,
+     -30,
+     1116,
+     1483
+    ],
+    "w": 1032,
+    "h": 1513,
+    "contours": [
+     {
+      "pts": 15,
+      "bbox": [
+       84,
+       -30,
+       1116,
+       1483
+      ],
+      "w": 1032,
+      "h": 1513
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       275,
+       144,
+       926,
+       1309
+      ],
+      "w": 651,
+      "h": 1165
+     }
+    ]
+   },
+   "one": {
+    "glyph": "one",
+    "adv": 1200,
+    "n_contours": 3,
+    "n_pts": 25,
+    "bbox": [
+     69,
+     0,
+     1109,
+     1454
+    ],
+    "w": 1040,
+    "h": 1454,
+    "contours": [
+     {
+      "pts": 8,
+      "bbox": [
+       554,
+       71,
+       749,
+       1454
+      ],
+      "w": 195,
+      "h": 1383
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       148,
+       0,
+       1109,
+       167
+      ],
+      "w": 961,
+      "h": 167
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       69,
+       1070,
+       572,
+       1454
+      ],
+      "w": 503,
+      "h": 384
+     }
+    ]
+   },
+   "l": {
+    "glyph": "l",
+    "adv": 1200,
+    "n_contours": 1,
+    "n_pts": 23,
+    "bbox": [
+     114,
+     -15,
+     1076,
+     1556
+    ],
+    "w": 962,
+    "h": 1571,
+    "contours": [
+     {
+      "pts": 23,
+      "bbox": [
+       114,
+       -15,
+       1076,
+       1556
+      ],
+      "w": 962,
+      "h": 1571
+     }
+    ]
+   },
+   "I": {
+    "glyph": "I",
+    "adv": 1200,
+    "n_contours": 1,
+    "n_pts": 18,
+    "bbox": [
+     158,
+     0,
+     1042,
+     1454
+    ],
+    "w": 884,
+    "h": 1454,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       158,
+       0,
+       1042,
+       1454
+      ],
+      "w": 884,
+      "h": 1454
+     }
+    ]
+   },
+   "i": {
+    "glyph": "i",
+    "adv": 1200,
+    "n_contours": 4,
+    "n_pts": 30,
+    "bbox": [
+     200,
+     0,
+     1091,
+     1587
+    ],
+    "w": 891,
+    "h": 1587,
+    "contours": [
+     {
+      "pts": 9,
+      "bbox": [
+       579,
+       26,
+       769,
+       1091
+      ],
+      "w": 190,
+      "h": 1065
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       230,
+       0,
+       1091,
+       151
+      ],
+      "w": 861,
+      "h": 151
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       200,
+       921,
+       769,
+       1091
+      ],
+      "w": 569,
+      "h": 170
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       523,
+       1283,
+       815,
+       1587
+      ],
+      "w": 292,
+      "h": 304
+     }
+    ]
+   },
+   "dotlessi": {
+    "glyph": "dotlessi",
+    "adv": 1200,
+    "n_contours": 3,
+    "n_pts": 17,
+    "bbox": [
+     200,
+     0,
+     1091,
+     1091
+    ],
+    "w": 891,
+    "h": 1091,
+    "contours": [
+     {
+      "pts": 9,
+      "bbox": [
+       579,
+       26,
+       769,
+       1091
+      ],
+      "w": 190,
+      "h": 1065
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       230,
+       0,
+       1091,
+       151
+      ],
+      "w": 861,
+      "h": 151
+     },
+     {
+      "pts": 4,
+      "bbox": [
+       200,
+       921,
+       769,
+       1091
+      ],
+      "w": 569,
+      "h": 170
+     }
+    ]
+   },
+   "Idotaccent": {
+    "glyph": "Idotaccent",
+    "adv": 1200,
+    "n_contours": 2,
+    "n_pts": 31,
+    "bbox": [
+     158,
+     0,
+     1042,
+     1877
+    ],
+    "w": 884,
+    "h": 1877,
+    "contours": [
+     {
+      "pts": 18,
+      "bbox": [
+       158,
+       0,
+       1042,
+       1454
+      ],
+      "w": 884,
+      "h": 1454
+     },
+     {
+      "pts": 13,
+      "bbox": [
+       458,
+       1588,
+       738,
+       1877
+      ],
+      "w": 280,
+      "h": 289
+     }
+    ]
+   }
+  },
+  "zero_extra_contours": 1,
+  "zero_mark": {
+   "pts": 13,
+   "bbox": [
+    502,
+    593,
+    698,
+    868
+   ],
+   "w": 196,
+   "h": 275,
+   "aspect_h_over_w": 1.4,
+   "kind": "DOT/nokta (compact)"
+  },
+  "zero_vs_O_width": {
+   "zero_w": 1008,
+   "O_w": 1032,
+   "delta": -24,
+   "delta_px_at_10": -0.12
+  },
+  "dotlessi_correct": true,
+  "dotlessi_contours": 3,
+  "i_contours": 4,
+  "Idotaccent_correct": true,
+  "Idotaccent_contours": 2,
+  "I_contours": 1,
+  "one_vs_l": {
+   "contours": [
+    3,
+    1
+   ],
+   "pts": [
+    25,
+    23
+   ],
+   "w": [
+    1040,
+    962
+   ],
+   "h": [
+    1454,
+    1571
+   ],
+   "w_delta": 78,
+   "w_delta_px_at_10": 0.39
+  },
+  "one_vs_I": {
+   "contours": [
+    3,
+    1
+   ],
+   "pts": [
+    25,
+    18
+   ],
+   "w": [
+    1040,
+    884
+   ],
+   "w_delta": 156,
+   "w_delta_px_at_10": 0.78
+  }
+ }
+}

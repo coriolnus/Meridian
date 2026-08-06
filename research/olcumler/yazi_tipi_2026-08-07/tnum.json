@@ -1,0 +1,2368 @@
+{
+ "AtkinsonHyperlegibleMono-VF": {
+  "default_advances": {
+   "0": 632,
+   "1": 632,
+   "2": 632,
+   "3": 632,
+   "4": 632,
+   "5": 632,
+   "6": 632,
+   "7": 632,
+   "8": 632,
+   "9": 632
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 632,
+    "1": 632,
+    "2": 632,
+    "3": 632,
+    "4": 632,
+    "5": 632,
+    "6": 632,
+    "7": 632,
+    "8": 632,
+    "9": 632
+   },
+   "uniform_after": true,
+   "value_after": [
+    632
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "AtkinsonHyperlegibleNext-VF": {
+  "default_advances": {
+   "0": 648,
+   "1": 407,
+   "2": 548,
+   "3": 576,
+   "4": 614,
+   "5": 588,
+   "6": 598,
+   "7": 510,
+   "8": 615,
+   "9": 595
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 632,
+    "1": 632,
+    "2": 632,
+    "3": 632,
+    "4": 632,
+    "5": 632,
+    "6": 632,
+    "7": 632,
+    "8": 632,
+    "9": 632
+   },
+   "uniform_after": true,
+   "value_after": [
+    632
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": null,
+  "lnum": null,
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "Chivo-VF": {
+  "default_advances": {
+   "0": 615,
+   "1": 615,
+   "2": 615,
+   "3": 615,
+   "4": 615,
+   "5": 615,
+   "6": 615,
+   "7": 615,
+   "8": 615,
+   "9": 615
+  },
+  "default_uniform": true,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 615,
+    "1": 615,
+    "2": 615,
+    "3": 615,
+    "4": 615,
+    "5": 615,
+    "6": 615,
+    "7": 615,
+    "8": 615,
+    "9": 615
+   },
+   "uniform_after": true,
+   "value_after": [
+    615
+   ],
+   "INERT_for_digits": true
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 615,
+    "1": 615,
+    "2": 615,
+    "3": 615,
+    "4": 615,
+    "5": 615,
+    "6": 615,
+    "7": 615,
+    "8": 615,
+    "9": 615
+   },
+   "uniform_after": true,
+   "value_after": [
+    615
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 615,
+    "1": 615,
+    "2": 615,
+    "3": 615,
+    "4": 615,
+    "5": 615,
+    "6": 615,
+    "7": 615,
+    "8": 615,
+    "9": 615
+   },
+   "uniform_after": true,
+   "value_after": [
+    615
+   ],
+   "INERT_for_digits": true
+  },
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "ChivoMono-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "Geist-VF": {
+  "default_advances": {
+   "0": 663,
+   "1": 384,
+   "2": 619,
+   "3": 613,
+   "4": 615,
+   "5": 626,
+   "6": 593,
+   "7": 524,
+   "8": 604,
+   "9": 593
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": null,
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 663,
+    "1": 384,
+    "2": 619,
+    "3": 613,
+    "4": 615,
+    "5": 626,
+    "6": 593,
+    "7": 524,
+    "8": 604,
+    "9": 593
+   },
+   "uniform_after": false,
+   "value_after": [
+    384,
+    524,
+    593,
+    604,
+    613,
+    615,
+    619,
+    626,
+    663
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 663,
+    "1": 384,
+    "2": 619,
+    "3": 613,
+    "4": 615,
+    "5": 626,
+    "6": 593,
+    "7": 524,
+    "8": 604,
+    "9": 593
+   },
+   "uniform_after": false,
+   "value_after": [
+    384,
+    524,
+    593,
+    604,
+    613,
+    615,
+    619,
+    626,
+    663
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "GeistMono-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": null,
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "NotoSans-VF": {
+  "default_advances": {
+   "0": 572,
+   "1": 572,
+   "2": 572,
+   "3": 572,
+   "4": 572,
+   "5": 572,
+   "6": 572,
+   "7": 572,
+   "8": 572,
+   "9": 572
+  },
+  "default_uniform": true,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 572,
+    "1": 572,
+    "2": 572,
+    "3": 572,
+    "4": 572,
+    "5": 572,
+    "6": 572,
+    "7": 572,
+    "8": 572,
+    "9": 572
+   },
+   "uniform_after": true,
+   "value_after": [
+    572
+   ],
+   "INERT_for_digits": true
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 572,
+    "1": 572,
+    "2": 572,
+    "3": 572,
+    "4": 572,
+    "5": 572,
+    "6": 572,
+    "7": 572,
+    "8": 572,
+    "9": 572
+   },
+   "uniform_after": true,
+   "value_after": [
+    572
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 572,
+    "1": 572,
+    "2": 572,
+    "3": 572,
+    "4": 572,
+    "5": 572,
+    "6": 572,
+    "7": 572,
+    "8": 572,
+    "9": 572
+   },
+   "uniform_after": true,
+   "value_after": [
+    572
+   ],
+   "INERT_for_digits": true
+  },
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "NotoSansMono-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": null,
+  "ss02": null,
+  "cv01": null
+ },
+ "Overpass-VF": {
+  "default_advances": {
+   "0": 1284,
+   "1": 746,
+   "2": 1224,
+   "3": 1204,
+   "4": 1242,
+   "5": 1242,
+   "6": 1194,
+   "7": 1044,
+   "8": 1222,
+   "9": 1194
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 1232,
+    "1": 1232,
+    "2": 1232,
+    "3": 1232,
+    "4": 1232,
+    "5": 1232,
+    "6": 1232,
+    "7": 1232,
+    "8": 1232,
+    "9": 1232
+   },
+   "uniform_after": true,
+   "value_after": [
+    1232
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 1284,
+    "1": 746,
+    "2": 1224,
+    "3": 1204,
+    "4": 1242,
+    "5": 1242,
+    "6": 1194,
+    "7": 1044,
+    "8": 1222,
+    "9": 1194
+   },
+   "uniform_after": false,
+   "value_after": [
+    746,
+    1044,
+    1194,
+    1204,
+    1222,
+    1224,
+    1242,
+    1284
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1284,
+    "1": 746,
+    "2": 1224,
+    "3": 1204,
+    "4": 1242,
+    "5": 1242,
+    "6": 1194,
+    "7": 1044,
+    "8": 1222,
+    "9": 1194
+   },
+   "uniform_after": false,
+   "value_after": [
+    746,
+    1044,
+    1194,
+    1204,
+    1222,
+    1224,
+    1242,
+    1284
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": null,
+  "cv01": null
+ },
+ "OverpassMono-VF": {
+  "default_advances": {
+   "0": 1232,
+   "1": 1232,
+   "2": 1232,
+   "3": 1232,
+   "4": 1232,
+   "5": 1232,
+   "6": 1232,
+   "7": 1232,
+   "8": 1232,
+   "9": 1232
+  },
+  "default_uniform": true,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1232,
+    "1": 1232,
+    "2": 1232,
+    "3": 1232,
+    "4": 1232,
+    "5": 1232,
+    "6": 1232,
+    "7": 1232,
+    "8": 1232,
+    "9": 1232
+   },
+   "uniform_after": true,
+   "value_after": [
+    1232
+   ],
+   "INERT_for_digits": true
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 1232,
+    "1": 1232,
+    "2": 1232,
+    "3": 1232,
+    "4": 1232,
+    "5": 1232,
+    "6": 1232,
+    "7": 1232,
+    "8": 1232,
+    "9": 1232
+   },
+   "uniform_after": true,
+   "value_after": [
+    1232
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1232,
+    "1": 1232,
+    "2": 1232,
+    "3": 1232,
+    "4": 1232,
+    "5": 1232,
+    "6": 1232,
+    "7": 1232,
+    "8": 1232,
+    "9": 1232
+   },
+   "uniform_after": true,
+   "value_after": [
+    1232
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": null,
+  "cv01": null
+ },
+ "Recursive-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "RecursiveMonoLinear-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "RecursiveSansLinear-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "RedHatMono-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.slash"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "RedHatText-VF": {
+  "default_advances": {
+   "0": 660,
+   "1": 307,
+   "2": 600,
+   "3": 600,
+   "4": 618,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 619
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 660,
+    "1": 307,
+    "2": 600,
+    "3": 600,
+    "4": 618,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 619
+   },
+   "uniform_after": false,
+   "value_after": [
+    307,
+    600,
+    618,
+    619,
+    660
+   ],
+   "INERT_for_digits": true
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 660,
+    "1": 307,
+    "2": 600,
+    "3": 600,
+    "4": 618,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 619
+   },
+   "uniform_after": false,
+   "value_after": [
+    307,
+    600,
+    618,
+    619,
+    660
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 660,
+    "1": 307,
+    "2": 600,
+    "3": 600,
+    "4": 618,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 619
+   },
+   "uniform_after": false,
+   "value_after": [
+    307,
+    600,
+    618,
+    619,
+    660
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "RedditMono-VF": {
+  "default_advances": {
+   "0": 1152,
+   "1": 1152,
+   "2": 1152,
+   "3": 1152,
+   "4": 1152,
+   "5": 1152,
+   "6": 1152,
+   "7": 1152,
+   "8": 1152,
+   "9": 1152
+  },
+  "default_uniform": true,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": true
+  },
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1152,
+    "1": 1152,
+    "2": 1152,
+    "3": 1152,
+    "4": 1152,
+    "5": 1152,
+    "6": 1152,
+    "7": 1152,
+    "8": 1152,
+    "9": 1152
+   },
+   "uniform_after": true,
+   "value_after": [
+    1152
+   ],
+   "INERT_for_digits": true
+  }
+ },
+ "RedditSans-VF": {
+  "default_advances": {
+   "0": 1332,
+   "1": 790,
+   "2": 1172,
+   "3": 1162,
+   "4": 1216,
+   "5": 1192,
+   "6": 1192,
+   "7": 1078,
+   "8": 1220,
+   "9": 1192
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 1246,
+    "1": 1246,
+    "2": 1246,
+    "3": 1246,
+    "4": 1246,
+    "5": 1246,
+    "6": 1246,
+    "7": 1246,
+    "8": 1246,
+    "9": 1246
+   },
+   "uniform_after": true,
+   "value_after": [
+    1246
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 1332,
+    "1": 790,
+    "2": 1172,
+    "3": 1162,
+    "4": 1216,
+    "5": 1192,
+    "6": 1192,
+    "7": 1078,
+    "8": 1220,
+    "9": 1192
+   },
+   "uniform_after": false,
+   "value_after": [
+    790,
+    1078,
+    1162,
+    1172,
+    1192,
+    1216,
+    1220,
+    1332
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1332,
+    "1": 790,
+    "2": 1172,
+    "3": 1162,
+    "4": 1216,
+    "5": 1192,
+    "6": 1192,
+    "7": 1078,
+    "8": 1220,
+    "9": 1192
+   },
+   "uniform_after": false,
+   "value_after": [
+    790,
+    1078,
+    1162,
+    1172,
+    1192,
+    1216,
+    1220,
+    1332
+   ],
+   "INERT_for_digits": true
+  },
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1332,
+    "1": 790,
+    "2": 1172,
+    "3": 1162,
+    "4": 1216,
+    "5": 1192,
+    "6": 1192,
+    "7": 1078,
+    "8": 1220,
+    "9": 1192
+   },
+   "uniform_after": false,
+   "value_after": [
+    790,
+    1078,
+    1162,
+    1172,
+    1192,
+    1216,
+    1220,
+    1332
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1332,
+    "1": 790,
+    "2": 1172,
+    "3": 1162,
+    "4": 1216,
+    "5": 1192,
+    "6": 1192,
+    "7": 1078,
+    "8": 1220,
+    "9": 1192
+   },
+   "uniform_after": false,
+   "value_after": [
+    790,
+    1078,
+    1162,
+    1172,
+    1192,
+    1216,
+    1220,
+    1332
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1332,
+    "1": 790,
+    "2": 1172,
+    "3": 1162,
+    "4": 1216,
+    "5": 1192,
+    "6": 1192,
+    "7": 1078,
+    "8": 1220,
+    "9": 1192
+   },
+   "uniform_after": false,
+   "value_after": [
+    790,
+    1078,
+    1162,
+    1172,
+    1192,
+    1216,
+    1220,
+    1332
+   ],
+   "INERT_for_digits": true
+  }
+ },
+ "SourceCodePro-VF": {
+  "default_advances": {
+   "0": 600,
+   "1": 600,
+   "2": 600,
+   "3": 600,
+   "4": 600,
+   "5": 600,
+   "6": 600,
+   "7": 600,
+   "8": 600,
+   "9": 600
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.a"
+    ]
+   },
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 600,
+    "1": 600,
+    "2": 600,
+    "3": 600,
+    "4": 600,
+    "5": 600,
+    "6": 600,
+    "7": 600,
+    "8": 600,
+    "9": 600
+   },
+   "uniform_after": true,
+   "value_after": [
+    600
+   ],
+   "INERT_for_digits": true
+  }
+ },
+ "SourceSans3-VF": {
+  "default_advances": {
+   "0": 472,
+   "1": 472,
+   "2": 472,
+   "3": 472,
+   "4": 472,
+   "5": 472,
+   "6": 472,
+   "7": 472,
+   "8": 472,
+   "9": 472
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.0s"
+    ]
+   },
+   "advances_after": {
+    "0": 472,
+    "1": 472,
+    "2": 472,
+    "3": 472,
+    "4": 472,
+    "5": 472,
+    "6": 472,
+    "7": 472,
+    "8": 472,
+    "9": 472
+   },
+   "uniform_after": true,
+   "value_after": [
+    472
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 472,
+    "1": 472,
+    "2": 472,
+    "3": 472,
+    "4": 472,
+    "5": 472,
+    "6": 472,
+    "7": 472,
+    "8": 472,
+    "9": 472
+   },
+   "uniform_after": true,
+   "value_after": [
+    472
+   ],
+   "INERT_for_digits": true
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 472,
+    "1": 472,
+    "2": 472,
+    "3": 472,
+    "4": 472,
+    "5": 472,
+    "6": 472,
+    "7": 472,
+    "8": 472,
+    "9": 472
+   },
+   "uniform_after": true,
+   "value_after": [
+    472
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 472,
+    "1": 472,
+    "2": 472,
+    "3": 472,
+    "4": 472,
+    "5": 472,
+    "6": 472,
+    "7": 472,
+    "8": 472,
+    "9": 472
+   },
+   "uniform_after": true,
+   "value_after": [
+    472
+   ],
+   "INERT_for_digits": true
+  }
+ },
+ "SplineSans-VF": {
+  "default_advances": {
+   "0": 1188,
+   "1": 788,
+   "2": 1078,
+   "3": 1113,
+   "4": 1097,
+   "5": 1109,
+   "6": 1105,
+   "7": 1029,
+   "8": 1186,
+   "9": 1106
+  },
+  "default_uniform": false,
+  "tnum": {
+   "feature_present": true,
+   "digits_substituted": 10,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.tf"
+    ],
+    "1": [
+     "one",
+     "one.tf"
+    ],
+    "2": [
+     "two",
+     "two.tf"
+    ],
+    "3": [
+     "three",
+     "three.tf"
+    ],
+    "4": [
+     "four",
+     "four.tf"
+    ],
+    "5": [
+     "five",
+     "five.tf"
+    ],
+    "6": [
+     "six",
+     "six.tf"
+    ],
+    "7": [
+     "seven",
+     "seven.tf"
+    ],
+    "8": [
+     "eight",
+     "eight.tf"
+    ],
+    "9": [
+     "nine",
+     "nine.tf"
+    ]
+   },
+   "advances_after": {
+    "0": 1156,
+    "1": 1156,
+    "2": 1156,
+    "3": 1156,
+    "4": 1156,
+    "5": 1156,
+    "6": 1156,
+    "7": 1156,
+    "8": 1156,
+    "9": 1156
+   },
+   "uniform_after": true,
+   "value_after": [
+    1156
+   ],
+   "INERT_for_digits": false
+  },
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.ss03"
+    ]
+   },
+   "advances_after": {
+    "0": 1188,
+    "1": 788,
+    "2": 1078,
+    "3": 1113,
+    "4": 1097,
+    "5": 1109,
+    "6": 1105,
+    "7": 1029,
+    "8": 1186,
+    "9": 1106
+   },
+   "uniform_after": false,
+   "value_after": [
+    788,
+    1029,
+    1078,
+    1097,
+    1105,
+    1106,
+    1109,
+    1113,
+    1186,
+    1188
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 4,
+   "substitutions": {
+    "1": [
+     "one",
+     "one.ss01"
+    ],
+    "2": [
+     "two",
+     "two.ss01"
+    ],
+    "4": [
+     "four",
+     "four.ss01"
+    ],
+    "7": [
+     "seven",
+     "seven.ss01"
+    ]
+   },
+   "advances_after": {
+    "0": 1188,
+    "1": 667,
+    "2": 1078,
+    "3": 1113,
+    "4": 1071,
+    "5": 1109,
+    "6": 1105,
+    "7": 1019,
+    "8": 1186,
+    "9": 1106
+   },
+   "uniform_after": false,
+   "value_after": [
+    667,
+    1019,
+    1071,
+    1078,
+    1105,
+    1106,
+    1109,
+    1113,
+    1186,
+    1188
+   ],
+   "INERT_for_digits": false
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1188,
+    "1": 788,
+    "2": 1078,
+    "3": 1113,
+    "4": 1097,
+    "5": 1109,
+    "6": 1105,
+    "7": 1029,
+    "8": 1186,
+    "9": 1106
+   },
+   "uniform_after": false,
+   "value_after": [
+    788,
+    1029,
+    1078,
+    1097,
+    1105,
+    1106,
+    1109,
+    1113,
+    1186,
+    1188
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ },
+ "SplineSansMono-VF": {
+  "default_advances": {
+   "0": 1200,
+   "1": 1200,
+   "2": 1200,
+   "3": 1200,
+   "4": 1200,
+   "5": 1200,
+   "6": 1200,
+   "7": 1200,
+   "8": 1200,
+   "9": 1200
+  },
+  "default_uniform": true,
+  "tnum": null,
+  "zero": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.zero"
+    ]
+   },
+   "advances_after": {
+    "0": 1200,
+    "1": 1200,
+    "2": 1200,
+    "3": 1200,
+    "4": 1200,
+    "5": 1200,
+    "6": 1200,
+    "7": 1200,
+    "8": 1200,
+    "9": 1200
+   },
+   "uniform_after": true,
+   "value_after": [
+    1200
+   ],
+   "INERT_for_digits": false
+  },
+  "lnum": null,
+  "ss01": {
+   "feature_present": true,
+   "digits_substituted": 1,
+   "substitutions": {
+    "0": [
+     "zero",
+     "zero.ss01"
+    ]
+   },
+   "advances_after": {
+    "0": 1200,
+    "1": 1200,
+    "2": 1200,
+    "3": 1200,
+    "4": 1200,
+    "5": 1200,
+    "6": 1200,
+    "7": 1200,
+    "8": 1200,
+    "9": 1200
+   },
+   "uniform_after": true,
+   "value_after": [
+    1200
+   ],
+   "INERT_for_digits": false
+  },
+  "ss02": {
+   "feature_present": true,
+   "digits_substituted": 0,
+   "substitutions": {},
+   "advances_after": {
+    "0": 1200,
+    "1": 1200,
+    "2": 1200,
+    "3": 1200,
+    "4": 1200,
+    "5": 1200,
+    "6": 1200,
+    "7": 1200,
+    "8": 1200,
+    "9": 1200
+   },
+   "uniform_after": true,
+   "value_after": [
+    1200
+   ],
+   "INERT_for_digits": true
+  },
+  "cv01": null
+ }
+}
