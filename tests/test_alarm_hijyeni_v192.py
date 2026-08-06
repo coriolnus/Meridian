@@ -208,18 +208,32 @@ def test_cirpinma_ayni_gunde_TEK_alarm_uretir(sandbox_state, saat, alarmlar, mon
     assert satir["alarm"] == 1 and satir["bastirilan"] == 11      # bastırma SAYILDI, yutulmadı
 
 
-def test_bastirma_sayaci_RAPORDA_gorunur(sandbox_state, saat, alarmlar, monkeypatch):
-    """Bastırma panoya çıkmazsa hijyen ile körlük ayırt edilemez."""
+def test_bastirma_sayaci_PANOYA_cikar(sandbox_state, saat, alarmlar, monkeypatch):
+    """Bastırma panoya çıkmazsa hijyen ile körlük ayırt edilemez: "bugün 1 alarm" ile "1 alarm +
+    111 bastırıldı" aynı ekranda aynı şeye benzemez.
+
+    SAYACIN DIŞ OKUYUCUSU api.py'DİR (codelaw: kendi yazdığını kendi okuyan modül tüketici
+    sayılmaz) — ve tek istekte TEK okuma anı olsun diye `report()` onu taşımaz."""
+    from meridian import api
     _sogumasiz(monkeypatch)
     for _ in range(3):
         _bayatla(saat, "scheduler_poll", 3600)
         watchdog.check_and_alarm()
         _tazele(saat, "scheduler_poll")
         watchdog.check_and_alarm()
-    rep = watchdog.report()
-    ozet = rep["bastirilan"]["mekanizmalar"]["scheduler_poll"]
-    assert ozet["alarm"] == 1 and ozet["bastirilan"] == 2
-    assert rep["bastirilan"]["gun"] == "2026-08-06"
+    assert "bastirilan" not in watchdog.report()          # tek okuma anı sözleşmesi
+    ag = api._alarm_gunluk()
+    assert ag["gun"] == "2026-08-06" and ag["durum"] == "dolu"
+    assert ag["mekanizmalar"]["scheduler_poll"]["alarm"] == 1
+    assert ag["mekanizmalar"]["scheduler_poll"]["bastirilan"] == 2
+    assert ag["n_alarm"] == 1 and ag["n_bastirilan"] == 2
+    assert ag["tavan"] == watchdog.GUNLUK_ALARM_TAVANI
+
+
+def test_alarm_gunluk_defter_yoksa_SIFIR_uydurmaz(sandbox_state):
+    from meridian import api
+    ag = api._alarm_gunluk()
+    assert ag["durum"] == "defter_yok" and ag["gun"] is None   # "0 alarm" ile "defter yok" ayrı
 
 
 def test_gun_donunce_yeni_alarm_MESRU(sandbox_state, saat, alarmlar, monkeypatch):

@@ -2081,6 +2081,36 @@ def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
     return out
 
 
+def _alarm_gunluk() -> dict:
+    """v192 alarm hijyeninin GÜNLÜK sayacı — bekçi defterinin DIŞ okuyucusu burasıdır.
+
+    Dosya adı LİTERAL yazılır: `codelaw.artifact_graph` "kendi yazdığını kendi okuyan modül tüketici
+    sayılmaz" der ve sayaç `watchdog.py` içinde okunsaydı defter `artifact_unread` olurdu.
+
+    NİYE PANOYA ÇIKAR: bastırma görünmezse hijyen ile KÖRLÜK ayırt edilemez. "Bugün 1 alarm" ile
+    "bugün 1 alarm + 111 bastırıldı" aynı ekranda aynı şeye benzerse, tavanın kendisi bir sonraki
+    turun gizli arızası olur."""
+    doc = store.read_json("watchdog_alarm_gunluk.json", None)
+    if not isinstance(doc, dict):
+        return {"gun": None, "mekanizmalar": {}, "n_alarm": 0, "n_bastirilan": 0,
+                "durum": "defter_yok",
+                "beyan": "bugün hiç mekanizma-gecikme alarmı üretilmedi (defter yazılmadı)"}
+    mek = {k: {"alarm": int((v or {}).get("alarm") or 0),
+               "bastirilan": int((v or {}).get("bastirilan") or 0),
+               "askida": int((v or {}).get("askida") or 0),
+               "son_askida_neden": (v or {}).get("son_askida_neden")}
+           for k, v in (doc.get("mekanizmalar") or {}).items() if isinstance(v, dict)}
+    return {"gun": doc.get("gun"), "mekanizmalar": mek, "durum": "dolu",
+            "n_alarm": sum(v["alarm"] for v in mek.values()),
+            "n_bastirilan": sum(v["bastirilan"] for v in mek.values()),
+            "n_askida": sum(v["askida"] for v in mek.values()),
+            "tavan": __import__("meridian.watchdog",
+                                fromlist=["GUNLUK_ALARM_TAVANI"]).GUNLUK_ALARM_TAVANI,
+            "beyan": ("mekanizma başına GÜNLÜK alarm tavanı (v192). Tavana takılan satır SESSİZ "
+                      "DEĞİL sayılıdır; 'askıda' ise alarm hiç üretmeyen MEŞRU bekleme hâlidir "
+                      "(hermes kota soğuması / kimlik havuzu tükenmesi).")}
+
+
 def _nous_fisler(limit: int = 12) -> dict:
     """Nous öneri FİŞLERİ — otomatik yönlendirme borusunun (b) sınıfının operatör kuyruğu.
 
@@ -2619,7 +2649,10 @@ def api_diagnostics(request: Request, taze: int = 0):
                              "ticks": warm_ticks % _wep, "every": _wep,
                              "skip": hstat.get("_warm_skip"), "polled": bool(hstat.get("last_poll")),
                              "horizon_ready": hstat.get("horizon_ready")}},
-        "watchdog": _wd_rep,
+        # `alarm_gunluk` v192'de EKLENDİ: bekçi raporu "şu an ne bayat" der, günlük sayaç "bugün kaç
+        # alarm yazıldı, kaçı tavana takıldı, kaçı askıdaydı" der. İkincisi olmadan alarm hijyeni
+        # ölçülemez — ve ölçülmeyen bir susturma, susturmanın kendisinden daha tehlikelidir.
+        "watchdog": {**_wd_rep, "alarm_gunluk": _alarm_gunluk()},
         # SESSİZ HAT (WP-P/P1) — bekçi + kilit + tazelik TEK Level-1 toplaması. `_wd_rep` AYNI
         # NESNEDİR: bekçi raporunu ikinci kez çağırmak, aynı yanıtta "bekçi 17/17" ile
         # "sessiz hat 16/17" gibi iki farklı gerçek doğurabilirdi (iki ayrı okuma anı).

@@ -128,17 +128,19 @@ def _hermes_askida() -> dict | None:
     if havuz:
         return {"neden": "havuz_tukendi", "kalan_s": None,
                 "detay": f"kimlik havuzunda kullanılabilir kimlik yok (sağlayıcı: {havuz})"}
-    try:
-        saglayicilar = ["agent", *hermes.brain_order()]
-    except Exception as e:                       # sonda kendi arızasını YUTMAZ (aşağıda uyarılır)
-        raise RuntimeError(f"brain_order okunamadı: {type(e).__name__}: {e}") from e
-    defter = store.read_json(hermes.BRAIN_COOLDOWN_FILE, {}) or {}
+    # SOĞUMA DEFTERİ DOĞRUDAN OKUNMAZ — `brain_availability()` üzerinden sorulur. İki gerekçe:
+    # (1) o fonksiyon yerel-ajan soğumasını nous ayağına ZATEN katlıyor (hermes._provider_cooldown);
+    # (2) `brain_cooldown.json` `codelaw.DECLARED_SINKS`te "yalnız hermes okur" beyanıyla duruyor —
+    # buradan `store.read_json` ile okumak o beyanı sessizce bayatlatırdı (stale_sink ihlali).
+    durum = hermes.brain_availability() or {}
     en_uzun, kim, gerekce = 0.0, None, None
-    for p in saglayicilar:
-        rem = hermes.brain_cooldown(p)
+    for p, row in durum.items():
+        rem = float((row or {}).get("cooling_s") or 0)
         if rem > en_uzun:
-            en_uzun, kim = rem, p
-            gerekce = (defter.get(p) or {}).get("reason")
+            en_uzun, kim, gerekce = rem, p, (row or {}).get("reason")
+    ajan = float(hermes.brain_cooldown("agent"))
+    if ajan > en_uzun:
+        en_uzun, kim, gerekce = ajan, "agent", "yerel ajan havuzu soğumada"
     if en_uzun <= 0:
         return None
     return {"neden": "kota_sogumasi", "kalan_s": round(en_uzun, 1),
@@ -190,8 +192,11 @@ def report() -> dict:
             ok += 1
     stale.sort(key=lambda x: -x["gap_h"])
     askida.sort(key=lambda x: -x["gap_h"])
-    return {"stale": stale, "never": never, "askida": askida, "ok": ok, "total": len(EXPECTED),
-            "bastirilan": _gunluk_ozet()}
+    # GÜNLÜK SAYAÇ BURADAN DÖNMEZ (bilinçli): `watchdog_alarm_gunluk.json`ın DIŞ okuyucusu
+    # `api.py`dir (codelaw: kendi yazdığını kendi okuyan tüketici sayılmaz). Raporun içine de
+    # koymak aynı dosyayı tek istekte İKİ AYRI ANDA okumak olurdu — panoda iki farklı "kaç alarm
+    # bastırıldı" cevabı doğabilirdi (WP-P/P1 dersi).
+    return {"stale": stale, "never": never, "askida": askida, "ok": ok, "total": len(EXPECTED)}
 
 
 ALARMED_FILE = "watchdog_alarmed.json"
@@ -214,21 +219,6 @@ def _gunluk_oku() -> dict:
             or not isinstance(doc.get("mekanizmalar"), dict):
         return {"gun": _bugun(), "mekanizmalar": {}}
     return doc
-
-
-def _gunluk_ozet() -> dict:
-    """{mekanizma: {alarm, bastirilan}} — panoya "kaç alarm yazıldı, kaçı tavana takıldı" dürüstlüğü.
-    Bastırma sayısı görünmezse hijyen ile körlük ayırt edilemez."""
-    try:
-        doc = _gunluk_oku()
-    except Exception:  # sessiz-yutma: yalnız RAPOR süsü; defter okunamazsa alarm yolu kendi okumasını yapar ve kayıt kaybolmaz
-        return {}
-    return {"gun": doc.get("gun"),
-            "mekanizmalar": {k: {"alarm": int(v.get("alarm") or 0),
-                                 "bastirilan": int(v.get("bastirilan") or 0),
-                                 "askida": int(v.get("askida") or 0)}
-                             for k, v in (doc.get("mekanizmalar") or {}).items()
-                             if isinstance(v, dict)}}
 
 
 def check_and_alarm() -> None:

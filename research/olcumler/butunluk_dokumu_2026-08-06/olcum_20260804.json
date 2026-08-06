@@ -1,0 +1,506 @@
+{
+ "olcum_ts": "2026-08-06T15:24:33+00:00",
+ "kaynak": "/private/tmp/claude-501/-Users-erdemozturk-AI-Trading/70939c98-2d7b-4bea-aa38-9223f540792e/scratchpad/a1full",
+ "integrity": {
+  "production": {
+   "starved": [
+    {
+     "name": "llm_calibration",
+     "note": "LLM görüş-sonuç çifti"
+    }
+   ],
+   "waiting": [],
+   "askida": [],
+   "ok": 8,
+   "total": 9
+  },
+  "conservation": {
+   "ok": false,
+   "plans": 400,
+   "traded": 95,
+   "no_fill": 5,
+   "replay_era": 242,
+   "live_start": "2026-07-10",
+   "unexplained": 7,
+   "rows": [
+    {
+     "id": "P-2026-07-23-CSX-momentum_burst",
+     "date": "2026-07-23",
+     "ticker": "CSX",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-23-UNP-momentum_burst",
+     "date": "2026-07-23",
+     "ticker": "UNP",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-23-NSC-momentum_burst",
+     "date": "2026-07-23",
+     "ticker": "NSC",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-23-RTX-momentum_burst",
+     "date": "2026-07-23",
+     "ticker": "RTX",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-24-PKG-momentum_burst",
+     "date": "2026-07-24",
+     "ticker": "PKG",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-27-ROK-exhaustion_hammer",
+     "date": "2026-07-27",
+     "ticker": "ROK",
+     "verdict": "REVIEW"
+    },
+    {
+     "id": "P-2026-07-31-PANW-exhaustion_hammer",
+     "date": "2026-07-31",
+     "ticker": "PANW",
+     "verdict": "REVIEW"
+    }
+   ]
+  },
+  "determinism": {
+   "ok": true,
+   "appended": 0,
+   "shrunk": 0,
+   "rev_bumped": false
+  },
+  "coherence": {
+   "stale": [
+    {
+     "artifact": "scoreboard.json",
+     "behind_h": 47.7
+    }
+   ],
+   "ok": 13,
+   "absent": [],
+   "total": 14
+  },
+  "monotonicity": {
+   "ok": true,
+   "regressions": [],
+   "amnestied": [],
+   "tracked": 11
+  },
+  "ownership": {
+   "ok": true,
+   "lost": []
+  },
+  "parity": {
+   "rows": [
+    {
+     "check": "universe_coverage",
+     "ok": false,
+     "detail": "165 seans evren kapsaması yetersiz olduğu için ATLANDI (son: 2026-07-29 %17) — kaynak yayınlamıyor"
+    },
+    {
+     "check": "evidence_source",
+     "ok": true,
+     "detail": "kalibrasyon: gerçek 95 / simüle 2121 (kapalı işlem 95)"
+    },
+    {
+     "check": "cf_fidelity_join",
+     "ok": true,
+     "detail": "95/95 işlem cf ile birleştirilebilir kimlik taşıyor"
+    },
+    {
+     "check": "cf_fidelity_quality",
+     "ok": true,
+     "detail": "n=89 korelasyon=0.935 sapma=0.039R"
+    },
+    {
+     "check": "llm_pair_join",
+     "ok": true,
+     "detail": "görüş damgalı plan=4 (kapanmış 0) · çift=0"
+    },
+    {
+     "check": "ledger_contract:trades",
+     "ok": true,
+     "detail": "trades.jsonl: sözleşmeye uyuyor (95 satır)"
+    },
+    {
+     "check": "ledger_contract:trade_plans",
+     "ok": true,
+     "detail": "trade_plans.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "ledger_contract:counterfactuals",
+     "ok": true,
+     "detail": "counterfactuals.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "ledger_contract:candidates",
+     "ok": true,
+     "detail": "candidates.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "ledger_contract:hypotheses",
+     "ok": true,
+     "detail": "hypotheses.jsonl: sözleşmeye uyuyor (51 satır)"
+    },
+    {
+     "check": "ledger_contract:events",
+     "ok": true,
+     "detail": "events.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "ledger_contract:spend",
+     "ok": true,
+     "detail": "spend.jsonl: sözleşmeye uyuyor (31 satır)"
+    },
+    {
+     "check": "ledger_contract:pipeline_runs",
+     "ok": true,
+     "detail": "pipeline_runs.jsonl: sözleşmeye uyuyor (89 satır)"
+    },
+    {
+     "check": "ledger_contract:shadow_variants",
+     "ok": true,
+     "detail": "shadow_variants.jsonl: sözleşmeye uyuyor (20 satır)"
+    },
+    {
+     "check": "ledger_contract:validation_ledger",
+     "ok": true,
+     "detail": "validation_ledger.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "ledger_contract:intraday_decisions",
+     "ok": true,
+     "detail": "intraday_decisions.jsonl: sözleşmeye uyuyor (200 satır)"
+    },
+    {
+     "check": "event_ledger_domination",
+     "ok": true,
+     "detail": "en sık olay `intraday_gap_detected` defterin %24'i — pencereler sağlam"
+    },
+    {
+     "check": "intraday_damga:intraday_decisions",
+     "ok": true,
+     "detail": "intraday_decisions.jsonl: 500 satır — üç damga tutuyor (karar barın kapanışından sonra)"
+    },
+    {
+     "check": "intraday_damga:intraday_shadow_orders",
+     "ok": true,
+     "detail": "intraday_shadow_orders.jsonl: defter boş — denetlenecek satır yok (damga iddiası henüz sınanamıyor)"
+    },
+    {
+     "check": "yeniden_hesap:ledger_matches_bars",
+     "ok": true,
+     "detail": "95 işlemin girişi kendi barının açılışıyla birebir  [A=trades.jsonl `entry` alanı · B=adapters.data.load_bars açılışı]"
+    },
+    {
+     "check": "yeniden_hesap:realized_pnl",
+     "ok": true,
+     "detail": "broker muhasebesi -5,542.09$ · defter toplamı -5,542.09$  [A=portfolio.realized_pnl · B=Σ trades.pnl_dollars + sermaye reset ofseti]"
+    },
+    {
+     "check": "yeniden_hesap:cash_identity",
+     "ok": true,
+     "detail": "nakit 94,457.91$ · kimlik 94,457.91$ (açık pozisyon yok)  [A=portfolio.cash · B=başlangıç + Σ pnl_dollars + sermaye reset ofseti]"
+    },
+    {
+     "check": "yeniden_hesap:equity_curve_tail",
+     "ok": true,
+     "detail": "eğri sonu 94,457.91$ · kitap nakdi 94,457.91$  [A=equity_curve.json[-1] + sermaye reset ofseti · B=portfolio.cash]"
+    },
+    {
+     "check": "yeniden_hesap:cf_conservation",
+     "ok": true,
+     "detail": "açık 52 · çözülmüş 7198 (tekil 7198)  [A=cf_open.json · B=counterfactuals.jsonl]"
+    },
+    {
+     "check": "yeniden_hesap:calibration_denominator",
+     "ok": true,
+     "detail": "kalibrasyon n_cf=2121 · kaynakta uygun satır=2121  [A=score_calibration.n_cf · B=counterfactuals.jsonl yeniden sayım]"
+    },
+    {
+     "check": "yeniden_hesap:calibration_real_denominator",
+     "ok": true,
+     "detail": "kalibrasyon n_real=95 · kapanmış gerçek işlem=95  [A=score_calibration.n_real · B=trades.jsonl yeniden sayım]"
+    },
+    {
+     "check": "yeniden_hesap:hypothesis_ids",
+     "ok": true,
+     "detail": "en büyük kimlik H00051 · satır 51 · tekil 51  [A=max(id) · B=len(hypotheses.jsonl)]"
+    },
+    {
+     "check": "yeniden_hesap:regime_label_quality",
+     "ok": true,
+     "detail": "kanıt satırlarının %0'i rejimsiz  [A=counterfactuals.jsonl regime alanı · B=VALID_REGIMES sayımı]"
+    },
+    {
+     "check": "yeniden_hesap:bounds_respected",
+     "ok": true,
+     "detail": "0/400 plan risk boyutu sınırların dışında  [A=trade_plans.size_r · B=bounds.yaml position_size_r]"
+    },
+    {
+     "check": "yeniden_hesap:orphan_state_files",
+     "ok": false,
+     "detail": "7 dosya diskte var ama hiçbir modül okumuyor: auth.json, bounds.yaml.bak-202608021652, earnings.csv.20260803T100416Z.bak, earnings.csv.sedbak, goal.yaml.bak-202608021652 — üretilip tüketilmeyen kanıt  [A=state/*.json* + kök *.json* + state/ dizin-ve-diğer-uzantı listesi · B=codelaw.artifact_graph okuyucuları]"
+    },
+    {
+     "check": "eleme:component_ic.eslesme:sema_elemesi",
+     "ok": false,
+     "detail": "'component_ic.eslesme': 7 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×7). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "check": "eleme:threshold_curve.eslesme:sema_elemesi",
+     "ok": false,
+     "detail": "'threshold_curve.eslesme': 7 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×7). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "check": "brain_availability",
+     "ok": true,
+     "detail": "hazır sağlayıcı: nous, gemini"
+    },
+    {
+     "check": "brain_chain_distinct",
+     "ok": false,
+     "detail": "[['gemini', 'nous']] AYNI model kimliğiyle çağrılıyor (gemini-3.5-flash) — zincirin yedekli olduğu ÖLÇÜLMEMİŞTİR; tek kota tüm ayakları birden düşürür. Operatör kaldıracı: Claude anahtarı ekle ya da NOUS_MODEL'i Google dışı bir modele çevir. · nous modu: local_agent · ajan sağlayıcısı: gemini"
+    },
+    {
+     "check": "alarm_delivery",
+     "ok": false,
+     "detail": "13 alarm TESLİM EDİLEMEDİ (BROKER_REJECT×4, DATA_QUALITY×3, MECHANISM_STALE×136, ROLLBACK×1) — bildirim kanalı yapılandırılmamış (Telegram/webhook). Dedektörler çalışıyor ama kimse duymuyor. · ack: operator@2026-08-03T18:05:02+00:00"
+    },
+    {
+     "check": "notify_channel",
+     "ok": false,
+     "detail": "uzak bildirim kanalı YOK — pano açılmadan operatöre ulaşan hiçbir yol yok; alarmlar yalnız yerel gelen kutusunda birikir · son okundu: 2026-08-03T18:05:02+00:00"
+    },
+    {
+     "check": "measured_edge",
+     "ok": true,
+     "detail": "2/3 rejimde ölçülen ort. R negatif (trend_up:0.113, chop:-0.127, high_vol:-0.035)"
+    }
+   ],
+   "ok": false,
+   "n_cycles": 2
+  }
+ },
+ "ozet": {
+  "starved": [
+   "llm_calibration"
+  ],
+  "askida": [],
+  "conservation_unexplained": 7,
+  "coherence_stale": [
+   {
+    "artifact": "scoreboard.json",
+    "behind_h": 47.7
+   }
+  ],
+  "monotonicity_regressions": [],
+  "ownership_lost": [],
+  "parity_dusen": [
+   "universe_coverage",
+   "yeniden_hesap:orphan_state_files",
+   "eleme:component_ic.eslesme:sema_elemesi",
+   "eleme:threshold_curve.eslesme:sema_elemesi",
+   "brain_chain_distinct",
+   "alarm_delivery",
+   "notify_channel"
+  ]
+ },
+ "latch": [
+  "conservation",
+  "parity:brain_chain_distinct",
+  "parity:eleme:component_ic.eslesme:sema_elemesi",
+  "parity:eleme:threshold_curve.eslesme:sema_elemesi",
+  "parity:universe_coverage",
+  "parity:yeniden_hesap:orphan_state_files",
+  "stale:scoreboard.json",
+  "starved:fmp_source",
+  "starved:llm_calibration",
+  "starved:sp500_membership"
+ ],
+ "defter": {
+  "satir": 34215,
+  "son_ts": "2026-08-04T23:28:53+00:00"
+ },
+ "alarm": {
+  "jetonlar": {
+   "MECHANISM_STALE": 161,
+   "DATA_QUALITY": 4,
+   "BROKER_REJECT": 4,
+   "ROLLBACK": 1
+  },
+  "mechanism_stale_dagilimi": {
+   "hermes_poll": 110,
+   "parity": 12,
+   "server_process": 10,
+   "warmup_sprint": 10,
+   "coherence": 9,
+   "conservation": 2,
+   "?": 2,
+   "sp500_membership": 1,
+   "fmp_source": 1,
+   "cf_fidelity": 1,
+   "self_review": 1,
+   "llm_calibration": 1,
+   "earnings_calendar": 1
+  },
+  "gun_x_mekanizma": {
+   "2026-07-20|hermes_poll": 5,
+   "2026-07-20|server_process": 1,
+   "2026-07-21|cf_fidelity": 1,
+   "2026-07-21|coherence": 1,
+   "2026-07-21|conservation": 1,
+   "2026-07-21|fmp_source": 1,
+   "2026-07-21|hermes_poll": 7,
+   "2026-07-21|sp500_membership": 1,
+   "2026-07-22|?": 2,
+   "2026-07-22|coherence": 3,
+   "2026-07-22|hermes_poll": 5,
+   "2026-07-22|self_review": 1,
+   "2026-07-22|server_process": 4,
+   "2026-07-23|hermes_poll": 14,
+   "2026-07-23|llm_calibration": 1,
+   "2026-07-23|parity": 1,
+   "2026-07-23|server_process": 5,
+   "2026-07-23|warmup_sprint": 1,
+   "2026-07-24|hermes_poll": 4,
+   "2026-07-24|warmup_sprint": 1,
+   "2026-07-25|coherence": 3,
+   "2026-07-25|conservation": 1,
+   "2026-07-25|earnings_calendar": 1,
+   "2026-07-26|hermes_poll": 7,
+   "2026-07-26|warmup_sprint": 1,
+   "2026-07-27|hermes_poll": 6,
+   "2026-07-27|warmup_sprint": 1,
+   "2026-07-28|hermes_poll": 8,
+   "2026-07-28|parity": 1,
+   "2026-07-28|warmup_sprint": 1,
+   "2026-07-29|coherence": 1,
+   "2026-07-29|hermes_poll": 7,
+   "2026-07-29|parity": 2,
+   "2026-07-30|hermes_poll": 10,
+   "2026-07-30|warmup_sprint": 1,
+   "2026-07-31|hermes_poll": 5,
+   "2026-07-31|parity": 4,
+   "2026-08-01|hermes_poll": 10,
+   "2026-08-01|warmup_sprint": 1,
+   "2026-08-02|hermes_poll": 8,
+   "2026-08-02|warmup_sprint": 1,
+   "2026-08-03|hermes_poll": 7,
+   "2026-08-03|warmup_sprint": 1,
+   "2026-08-04|coherence": 1,
+   "2026-08-04|hermes_poll": 7,
+   "2026-08-04|parity": 4,
+   "2026-08-04|warmup_sprint": 1
+  },
+  "gap_dagilimi": {
+   "hermes_poll|0.5": 68,
+   "hermes_poll|0.6": 27,
+   "hermes_poll|0.7": 4,
+   "warmup_sprint|8.0": 4,
+   "hermes_poll|1.1": 2,
+   "hermes_poll|1.4": 2,
+   "warmup_sprint|8.1": 2,
+   "hermes_poll|1.3": 1,
+   "hermes_poll|4.6": 1,
+   "warmup_sprint|8.2": 1,
+   "hermes_poll|2.1": 1,
+   "warmup_sprint|16.1": 1,
+   "hermes_poll|9.3": 1,
+   "hermes_poll|1.8": 1,
+   "hermes_poll|1.5": 1,
+   "warmup_sprint|10.4": 1,
+   "hermes_poll|3.2": 1,
+   "warmup_sprint|8.4": 1
+  }
+ },
+ "damgalar": {
+  "scoreboard.json": "2026-07-31T10:56:02+00:00",
+  "hypotheses.jsonl": "2026-08-02T10:36:19+00:00",
+  "self_review.json": "2026-08-04T21:28:07+00:00",
+  "score_calibration.json": "2026-08-04T21:47:54+00:00",
+  "near_miss.json": "2026-08-04T21:48:21+00:00",
+  "trades.jsonl": "2026-07-31T10:56:02+00:00",
+  "trade_plans.jsonl": "2026-08-04T21:47:52+00:00",
+  "counterfactuals.jsonl": "2026-08-04T21:47:44+00:00"
+ },
+ "eleme": {
+  "llm_opinion_calibration.gercek": {
+   "in": 95,
+   "out": 0,
+   "drops": {
+    "piyasa:llm_görüşü_yok": 95
+   },
+   "ts": "2026-08-04T21:47:54+00:00"
+  },
+  "shadow_model.terfi": {
+   "in": 95,
+   "out": 0,
+   "drops": {
+    "piyasa:gölge_tahmini_damgalanmamış": 95
+   },
+   "ts": "2026-08-04T21:47:54+00:00"
+  },
+  "component_ic.eslesme": {
+   "in": 2216,
+   "out": 2209,
+   "drops": {
+    "sema:bar_yok:tarih": 7
+   },
+   "ts": "2026-08-04T21:48:14+00:00"
+  },
+  "threshold_curve.eslesme": {
+   "in": 2216,
+   "out": 2209,
+   "drops": {
+    "sema:bar_yok:tarih": 7
+   },
+   "ts": "2026-08-04T21:48:20+00:00"
+  }
+ },
+ "llm_calibration": {
+  "n_pairs": 0,
+  "cf_pairs": 1,
+  "n_plans_with_opinion": 4,
+  "last_opinion_plan_date": "2026-07-27"
+ },
+ "shadow_model": {
+  "n_fit": 2216,
+  "brier_train": 0.2428,
+  "fit_ts": null,
+  "fit_attempt_ts": null,
+  "fit_fingerprint_var": false,
+  "kaynak_generated": "2026-08-04T21:47:54+00:00",
+  "promotion": {
+   "n_live": 0,
+   "live_brier": null,
+   "baseline_brier": null,
+   "base_rate": null,
+   "promoted": false,
+   "rule": ">=30 taze çiftte canlı Brier < taban-oran Brier → yalnız REVIEW vetosu (P<0.35)",
+   "_kaynak": {
+    "n_total": 0,
+    "generated": "2026-08-04T21:47:54+00:00",
+    "source": "yalnız-gerçek",
+    "n_real": 0,
+    "n_cf": 0,
+    "stages": [
+     "shadow_model.terfi"
+    ]
+   }
+  }
+ },
+ "brain_cooldown": {
+  "agent": {
+   "until": 1785893934.4779463,
+   "seconds": 21600,
+   "streak": 13,
+   "reason": "pool_exhausted:gemini",
+   "since": "2026-08-04T19:38:54+00:00"
+  }
+ }
+}

@@ -4370,11 +4370,28 @@ async function opParcalar() {
   // KALİTE KAPISI SAYISI KARTIN İÇİNDE: düşürülen öneri sayısı gizlenirse "beyin 4 öneri üretti"
   // ile "9 üretti, 5'i kanıt-atıfsız düştü" aynı görünür — ve ikincisi beynin karnesi hakkında
   // birincisinden çok daha fazla şey söyler.
+  // OTOMATİK YÖNLENDİRME BORUSU (v192): 2026-W32'de üç öneri de `sekil=tasarim` + `kuyruk=yol_yok`
+  // idi — yani kabul edildi, deftere yazıldı, panoda göründü ve SONRA HİÇBİR ŞEY olmadı. Boru üç
+  // şekli üç AYRI yola bağlar; kart o yolu satır başına gösterir: kuyruk id'si (parametre),
+  // FİŞLENDİ rozeti (tasarım) ya da KATMAN D (çekirdek — yalnız rapor, otomatik uygulama YOK).
   const sNous = (() => {
     const p = ml.improvement_proposals || null;
     if (!p) return "";
+    const fis = ml.nous_fisler || {};
+    const fisAnahtar = new Set(fis.anahtarlar || []);
     const rozet = { yuksek: "t-no", orta: "t-rv", dusuk: "t-go" };
     const sekilRozet = { parametre: "t-go", tasarim: "t-rv", cekirdek_hakkinda: "t-no" };
+    // YOL HÜCRESİ: "kuyruk" sütunu yalnız parametre şeklini anlatabiliyordu; diğer iki şekilde
+    // `yol_yok` yazıyordu ve o kelime bir çıkmaz sokağı bir durum gibi gösteriyordu.
+    const yolHucre = (o) => {
+      if (o.sekil === "cekirdek_hakkinda")
+        return `<span class="mut" title="Katman D: kapı yasaları/guard/PROTECTED/vetolar hakkındaki öneri YALNIZ rapora gider — otomatik uygulama bu sınıfa ASLA dokunmaz">KATMAN D · yalnız rapor</span>`;
+      if (o.sekil === "tasarim")
+        return fisAnahtar.has(String(o.id))
+          ? `${_chip("FİŞLENDİ", "t-rv")}<br><span class="mut" title="operatör kuyruğunda görünür iş kalemi — otomatik uygulama yolu YOK">operatör kuyruğu</span>`
+          : `<span class="warn" title="tasarım önerisi fişlenmemiş — boru bu satırı işlemedi">fişlenmedi</span>`;
+      return `${esc(o.kuyruk || "—")}${o.kuyruk_id ? `<br><code>${esc(o.kuyruk_id)}</code>` : ""}`;
+    };
     if (p.durum !== "dolu") {
       return `<div class="card rise"><h2 class="t">Sistem önerileri ${_chip("Katman B/C/D", "t-rv")}</h2>
         <p class="empty">${esc(p.durum || "")}</p>
@@ -4398,7 +4415,7 @@ async function opParcalar() {
         Koşu durumu: ${esc(p.kosu_durumu)}</b> — şablon öneri ÜRETİLMEZ (uydurma yasağı).</p>` : ""}
       ${!(p.oneriler || []).length ? `<p class="hint">Bu hafta kabul edilmiş öneri yok.</p>` : `
       <table class="tbl"><thead><tr><th>öncelik</th><th>şekil</th><th>alan</th><th>gözlem → öneri</th>
-        <th>kuyruk</th></tr></thead>
+        <th>yol</th></tr></thead>
       <tbody>${(p.oneriler || []).map(o => `<tr>
         <td>${_chip(esc(o.oncelik || "?"), rozet[o.oncelik] || "t-rv")}</td>
         <td>${_chip(esc(o.sekil || "?"), sekilRozet[o.sekil] || "t-rv")}</td>
@@ -4409,8 +4426,11 @@ async function opParcalar() {
           · ölçüm: ${esc(String(o.onerilen_olcum || "").slice(0, 120))}</span>
           <br><span class="mut">atıf: ${esc((o.kanit_atifi || []).join(", ").slice(0, 120))}</span></td>
         <td class="${o.kuyruk === "evet" ? "pos" : o.kuyruk === "devredildi" ? "warn" : "mut"}">
-          ${esc(o.kuyruk || "—")}${o.kuyruk_id ? `<br><code>${esc(o.kuyruk_id)}</code>` : ""}</td>
+          ${yolHucre(o)}</td>
         </tr>`).join("")}</tbody></table>`}
+      ${fis.durum === "defter_yok" ? `<p class="hint"><b class="mut">Fiş defteri yok</b> — ${esc(fis.rol || "")}</p>`
+        : `<p class="hint"><b>Fiş kuyruğu:</b> ${fis.n_acik ?? 0} açık / ${fis.n ?? 0} toplam${
+          fis.guncellendi ? ` · son ${esc(String(fis.guncellendi).replace("T", " ").slice(0, 16))}` : ""} — ${esc(fis.rol || "")}</p>`}
       <p class="hint">Şekil dağılımı: ${Object.entries(p.sekil_dagilimi || {}).map(([k, v]) =>
         `${esc(k)}=${v}`).join(" · ") || "—"}.
         <b>${esc(p.rol || "")}</b></p></div>`;
