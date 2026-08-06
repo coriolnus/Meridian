@@ -1,0 +1,91 @@
+{
+ "aciklama": "Beyanlı sermaye reset'i (SR-20260801T151429+0000) kitaptan SİLİNDİ: loop._save_broker tam-belge yazımı 13-anahtarlık beyaz listeyle serileştiriyordu ve sermaye_resetleri o listede yoktu. Beyan gidince recompute ofseti 0'a düştü, üç MAKULLÜK kimliği birden kırıldı (2026-08-04T01:16:13); geceki defter-toplamı onarımı YANLIŞ YÖNLÜYDÜ (operatör kararını geri aldı), doğru onarım R1 betiğiyle D1'den SONRA yapıldı.",
+ "ad": "sermaye_beyani_silinmesi",
+ "kareler": {
+  "onarim": {
+   "defter": {},
+   "dosya_n": 1,
+   "durum": {
+    "portfolio.json": {
+     "bayt": 12223,
+     "maskelenen": 0,
+     "sha256": "0c170f8cee852de9d3e28dc20449c21d9a366eb7549b31bcc5b60e6c359c8eb8"
+    }
+   },
+   "kaynak": "backups/a1/state-2026-08-05.tar.gz",
+   "pencere": {
+    "baslangic": null,
+    "bitis": null
+   }
+  },
+  "oncesi": {
+   "defter": {
+    "events.jsonl": {
+     "alinan": 20,
+     "bayt": 16536,
+     "dosya": "olaylar.jsonl",
+     "kaynak_satir": 30869,
+     "maskelenen": 0,
+     "pencereli": true,
+     "sha256": "562bbc047963e2f608a3a9b92464d963f03b0115be67a2466e169956ed5450ca",
+     "zamansiz_atlanan": 0
+    },
+    "trades.jsonl": {
+     "alinan": 95,
+     "bayt": 56097,
+     "dosya": "defter/trades.jsonl",
+     "kaynak_satir": 95,
+     "maskelenen": 0,
+     "pencereli": false,
+     "sha256": "bc1fce558495f3506b1946d4860c39cb1e33e479214277edb1854b97fb4a8d2e",
+     "zamansiz_atlanan": 0
+    }
+   },
+   "dosya_n": 3,
+   "durum": {
+    "portfolio.json": {
+     "bayt": 1409,
+     "maskelenen": 0,
+     "sha256": "104abe3bca3f1d170b2239111e0e9bca1c03cf902df8fb1061a2215994da0565"
+    }
+   },
+   "kaynak": "backups/a1/state-2026-08-02.tar.gz",
+   "pencere": {
+    "baslangic": "2026-08-01T15:14",
+    "bitis": "2026-08-01T15:15"
+   }
+  },
+  "yanlis_onarim": {
+   "defter": {
+    "events.jsonl": {
+     "alinan": 9,
+     "bayt": 3884,
+     "dosya": "olaylar.jsonl",
+     "kaynak_satir": 34215,
+     "maskelenen": 0,
+     "pencereli": true,
+     "sha256": "32e3855a5e2afbea60bbd7aa08cb03424359aff700db4f39492b62f3cfe91c66",
+     "zamansiz_atlanan": 0
+    }
+   },
+   "dosya_n": 2,
+   "durum": {
+    "portfolio.json": {
+     "bayt": 881,
+     "maskelenen": 0,
+     "sha256": "c3fe30ce329b87d3a8bf45ee92bb20a2160e8c210f91fcbf8362ad18654ca9fd"
+    }
+   },
+   "kaynak": "backups/a1/state-2026-08-04.tar.gz",
+   "pencere": {
+    "baslangic": "2026-08-04T01:16",
+    "bitis": "2026-08-04T01:17"
+   }
+  }
+ },
+ "kok_neden": "research/olcumler/portfoy_sifirlama_2026-08-04/KOKNEDEN.md",
+ "maskeleme": "meridian.agent_telemetry.sirlari_maskele(ciplak_jeton=False) + gizli_ad (TEK KAYNAK). İki kural: (a) anahtarı sır adı olan değer tamamen «gizli», (b) metinde yalnız ÇAPALI desenler (ad=<değer>, Bearer <jeton>). Çıplak-jeton sezgisi KAPALI — yapılandırılmış veride yanlış pozitif üretiyordu (ölçüldü: plan_id maskelenmişti). Metnin biçimi/uzunluğu DEĞİŞTİRİLMEZ; her dosyanın `maskelenen` sayacı kaç maske uygulandığını söyler (sessiz maskeleme yok)",
+ "surum": 1,
+ "tarih": "2026-08-04",
+ "uretici": "ops/vaka_sabitle.py"
+}

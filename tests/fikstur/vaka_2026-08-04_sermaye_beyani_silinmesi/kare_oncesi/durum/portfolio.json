@@ -1,0 +1,58 @@
+{
+ "alpaca_submitted": [],
+ "armed": [],
+ "broker_rejected": [
+  {
+   "date": "2026-07-23",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-23-UNP",
+   "ticker": "UNP"
+  },
+  {
+   "date": "2026-07-23",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-23-NSC",
+   "ticker": "NSC"
+  },
+  {
+   "date": "2026-07-23",
+   "detail": "qty rounds to 0",
+   "plan_id": "P-2026-07-23-TMO-momentum_burst",
+   "ticker": "TMO"
+  },
+  {
+   "date": "2026-07-27",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-27-RTX",
+   "ticker": "RTX"
+  }
+ ],
+ "cash": 100000.0,
+ "day_start_equity": 100000.0,
+ "entry_law": {},
+ "last_date": "2026-07-31",
+ "last_id": 95,
+ "peak_equity": 100000.0,
+ "pending_exits": {},
+ "positions": {},
+ "realized_pnl": 0.0,
+ "sermaye_resetleri": [
+  {
+   "arac": "meridian.sermaye",
+   "belirsiz_islem_n": 0,
+   "canli_islem_n": 0,
+   "gerekce": "operatör talimatı 2026-08-01: tohum-PnL gerçek-canlı sermayeden ayrıştırıldı",
+   "id": "SR-20260801T151429+0000",
+   "ofset": 5542.09,
+   "onceki_cash": 94457.91,
+   "onceki_peak_equity": 102520.45,
+   "onceki_realized_pnl": -5542.09,
+   "tarih": "2026-08-01T15:14:29+00:00",
+   "tohum_etkisi_usd": -5542.09,
+   "tohum_islem_n": 95,
+   "yeni_cash": 100000.0,
+   "yeni_peak_equity": 100000.0,
+   "yeni_realized_pnl": 0.0
+  }
+ ]
+}

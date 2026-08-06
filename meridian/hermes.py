@@ -16,6 +16,7 @@ import threading
 import time
 
 from . import config, store, memory, reflect, health, obs, secrets
+from . import agent_telemetry as _at        # D3 modül 1+2: çağrı telemetrisi + ham iz + MASKELEME
 
 MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 
@@ -247,15 +248,28 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
         return None
     client = anthropic.Anthropic(api_key=api_key)
     _fmt = ({"type": "json_schema", "schema": schema} if schema else {"type": "text"})
-    resp = client.messages.create(
-        model=MODEL, max_tokens=max_tokens,
-        thinking={"type": "adaptive"},
-        output_config={"effort": "high", "format": _fmt},
-        # cache the fully-static system prompt (two-axis briefing) so it isn't billed at full input price
-        # every reflection — the standby loop fires far more often than the 5-min cache TTL.
-        system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
-        messages=[{"role": "user", "content": user}],
-    )
+    # SÜRE ÖLÇÜMÜ (D3 modül 1, `tasiyici="http"`): zincirin bu bacağında alt süreç YOKTUR, yani
+    # `-Q`/araç sayısı gibi olgular da yoktur (`arac_cagri_n=None` = ÖLÇÜLEMEDİ). Ölçülen tek şey
+    # duvar süresidir ve o da "gece koşusu neden 40 dk sürdü" sorusunun bu bacaktaki payıdır.
+    _kr = _at.Kronometre()
+    try:
+        resp = client.messages.create(
+            model=MODEL, max_tokens=max_tokens,
+            thinking={"type": "adaptive"},
+            output_config={"effort": "high", "format": _fmt},
+            # cache the fully-static system prompt (two-axis briefing) so it isn't billed at full input price
+            # every reflection — the standby loop fires far more often than the 5-min cache TTL.
+            system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
+            messages=[{"role": "user", "content": user}],
+        )
+    except BaseException as e:
+        # İSTİSNA DA BİR SONUÇTUR: 429/529/ağ kopması bugün yalnız `_rate_limited` sınıflamasına
+        # gidiyor ve SÜRESİ hiçbir yerde yazmıyordu. Satır yazılır, istisna AYNEN yukarı gider.
+        _at.kaydet(kind=note, model=MODEL, deneme=1, alt=0, sure_ms=_kr.dur(),
+                   sonuc_sinifi=_at.SINIF_BOS, tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None,
+                   istem=user, stderr=f"{type(e).__name__}: {e}", istisna=type(e).__name__)
+        raise
+    _kr.dur()
     try:                                             # meter the call — cost is only known after it returns
         u = getattr(resp, "usage", None)
         if u is not None:
@@ -265,6 +279,10 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         pass
     text = next((b.text for b in resp.content if b.type == "text"), None)
+    _at.kaydet(kind=note, model=MODEL, deneme=1, alt=0, sure_ms=_kr.ms,
+               sonuc_sinifi=(_at.SINIF_DOLU if text else _at.SINIF_BOS),
+               tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None, istem=user, stdout=text,
+               stop_reason=str(getattr(resp, "stop_reason", "") or "") or None)
     if not text:
         # 200 döndü ama metin bloğu yok: yalnız araç/düşünme bloğu ya da durdurma sebebi. "Başarılı"
         # sayılıp sessizce None dönmek, tam da kalibrasyonun neden hiç çift biriktirmediğinin cevabıydı.
@@ -1580,47 +1598,21 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
 # yaşıyor (birim `EnvironmentFile` + devralınan ortam) ve bir CLI hata mesajı bunları yankılayabilir.
 # Defter git-izsizdir ama panodan okunur; maskeleme DESENLE yapılır, gerçek sır değerleri OKUNMADAN
 # (sır okumak için `secrets.get` çağırmak, sızıntı yüzeyini teşhis uğruna genişletmek olurdu).
-_ANSI_RE = None
-# ÜÇ DESEN, ÜÇ AYRI SIZINTI BİÇİMİ (ölçülmüş biçimler; sıra ÖNEMLİ — genelden özele):
-#   (1) ADLI ATAMA: `GEMINI_API_KEY=…` / `dash_token: …`. Ad `\b`ın içinde kalabilir (GEMINI_API_KEY'de
-#       `API_KEY`ten önce word-boundary YOKTUR) — bu yüzden ad çevresi `[\w.\-]*` ile emilir. Ad
-#       KORUNUR: hangi sırrın yankılandığını bilmek teşhistir, değerini bilmek sızıntıdır.
-#   (2) `Authorization: Bearer <jeton>` — burada ayraç `:`/`=` değil BOŞLUKTUR, (1) yakalayamaz.
-#   (3) ÇIPLAK JETON: ≥24 karakterlik sözcük. HEM harf HEM rakam ŞARTI var, çünkü şartsız desen
-#       uzun bir İNGİLİZCE sözcüğü ya da yol parçasını da maskeler ve hata mesajını okunmaz yapardı —
-#       maskeleme teşhisi öldürürse, körlüğü kapatmak yerine yer değiştirmiş oluruz.
-_GIZLI_DESENLER = (
-    (r"(?i)\b([\w.\-]*(?:api[_-]?key|apikey|token|secret|password|passwd)[\w.\-]*)\s*[:=]\s*\S+",
-     r"\1=«gizli»"),
-    (r"(?i)\bbearer\s+\S+", "Bearer «gizli»"),
-)
-_JETON_RE = r"[A-Za-z0-9_\-]{24,}"
+#
+# GÖVDE TAŞINDI (D3 modül 2, 2026-08-07): desenler ve uygulama artık `agent_telemetry`de yaşıyor,
+# çünkü HAM İZ DEFTERİ de aynı maskelemeyi ister ve İKİNCİ BİR UYGULAMA YASAKTIR — iki kopya
+# sessizce ayrışır, ayrışan taraf sızdırır. Bu ad ve imza KORUNDU: v193 sözleşmesi (`_ham_ozet`
+# 200 karakterde beyanlı kırpar, maskeleme kırpmadan ÖNCE koşar) buradan sınanıyor ve `_agent_call`
+# ile `agent_skill_preload_unknown` yolları bu adı çağırıyor.
 
 
 def _ham_ozet(metin: str | None, limit: int = 200) -> str:
-    """Alt süreç çıktısının DEFTERE YAZILABİLİR özeti: ANSI sökülür, satır sonları görünür tek
-    karaktere katlanır (tek satırlık olay alanı), sır DESENLERİ maskelenir, sonra kırpılır.
+    """Alt süreç çıktısının DEFTERE YAZILABİLİR özeti — gövde: `agent_telemetry.maskele`.
 
-    SIRA ÖNEMLİ — maskeleme kırpmadan ÖNCE: önce kırpsaydık 200. karakterde ikiye bölünen bir
-    anahtarın ilk yarısı maskesiz kalırdı (yarım sır da sırdır: alfabe + uzunluk bilgisi verir).
-    Kırpma sonrası uzunluk beyanı da kalır — "…(+N kr)" olmadan okuyucu kısa bir hatayı, kırpılmış
-    uzun bir hatadan ayırt edemez."""
-    import re as _re
-    global _ANSI_RE
-    if _ANSI_RE is None:
-        _ANSI_RE = _re.compile(r"\x1b\[[0-9;?]*[a-zA-Z]")
-    t = _ANSI_RE.sub("", str(metin or ""))
-    t = t.replace("\r", " ").replace("\n", " ⏎ ").replace("\t", " ")
-    for desen, yerine in _GIZLI_DESENLER:
-        t = _re.sub(desen, yerine, t)
-    t = _re.sub(_JETON_RE,
-                lambda m: ("«uzun-jeton»" if (any(c.isdigit() for c in m.group(0))
-                                              and any(c.isalpha() for c in m.group(0)))
-                           else m.group(0)), t)
-    t = " ".join(t.split())
-    if len(t) <= limit:
-        return t
-    return t[:limit] + f"…(+{len(t) - limit} kr)"
+    ANSI sökülür, satır sonları görünür tek karaktere katlanır (tek satırlık olay alanı), sır
+    DESENLERİ maskelenir, sonra kırpılır. SIRA ÖNEMLİ (maskeleme kırpmadan ÖNCE): önce kırpsaydık
+    200. karakterde ikiye bölünen bir anahtarın ilk yarısı maskesiz kalırdı — yarım sır da sırdır."""
+    return _at.maskele(metin, limit)
 
 
 # ---- YEREL ÖN-UÇUŞ HATASI: BİLİNMEYEN SKILL (v190, 2026-08-06) ---------------------------------
@@ -1707,7 +1699,18 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 timeout: int = 300, max_wait: float = 0.0) -> str | None:
     """TÜM yerel-ajan çağrılarının tek kapısı (#1): skill senkronu + -s ön-yükleme + oran bütçesi +
     model düşüş zinciri (NOUS_MODEL → NOUS_FALLBACK_MODEL; boş oturumda bir kez düşer). None = çağrı
-    yapılamadı/cevapsız — çağıran fail-open davranır. Ham stdout döner; parse çağıranın işi."""
+    yapılamadı/cevapsız — çağıran fail-open davranır. Ham stdout döner; parse çağıranın işi.
+
+    TELEMETRİ (D3 modül 1, 2026-08-07): KOŞAN HER ALT SÜREÇ ölçülür ve `agent_calls.jsonl`e bir
+    satır düşer — süre, deneme no, alt-koşum no (onarım yeniden-koşumları), model, araç sayısı,
+    çıktı boyutu, sonuç sınıfı. Süre ÖLÇÜM ANINDA yazılır: iki olay damgasının farkı çağrının
+    süresi DEĞİLDİR (arada bütçe bekleyişi, skill senkronu ve süreç doğuşu vardır). Aynı koşumun
+    tam stdout+stderr'ı sır-maskeli olarak `agent_traces.jsonl`e iner (modül 2) ve iki defter
+    `iz_id` ile birleşir.
+
+    ÇAĞRI YAPILMADAN dönülen üç yol (ikili yok · soğuma · bütçe reddi) deftere YAZILMAZ ve bu
+    bilinçlidir: süresi olmayan bir şeyin "çağrı süresi" satırı, ortalamayı sessizce aşağı çeker.
+    O üç hâl zaten kendi olaylarını basıyor (`agent_call_cooldown`, `agent_budget_denied`)."""
     import subprocess
     bin_ = _hermes_bin()
     if not bin_:
@@ -1740,24 +1743,58 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                                         secrets.get("NOUS_FALLBACK_MODEL")]) if m] or [None]
     son_stdout = son_stderr = ""      # zincirin SON denemesinin ham çıktısı — boş-sınıfı tailde ayrılır
     son_rc: int | None = None         # ve ÇIKIŞ KODU: `-Q` altında boşluk ölçütünün yarısı budur
+
+    def _kos(cmd_, *, deneme: int, alt: int):
+        """Alt süreci KOŞ ve SÜRESİNİ ölç. Dönüş: (CompletedProcess, süre_ms).
+
+        ZAMAN AŞIMI DA BİR ÖLÇÜMDÜR: `subprocess.run(timeout=…)` `TimeoutExpired` fırlatır ve bu
+        istisna bugüne dek defterde HİÇ görünmüyordu (çağıranlar onu yukarıda yutuyor). Takılan
+        çağrı tam da C2-1'in cevaplamak istediği soruydu — satır yazılır, sonra istisna AYNEN
+        yukarı gider (davranış değişmez)."""
+        kr = _at.Kronometre()
+        with kr:
+            try:
+                out_ = subprocess.run(cmd_, capture_output=True, text=True, timeout=timeout,
+                                      env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+            except subprocess.TimeoutExpired as e:
+                _at.kaydet(kind=kind, model=model, deneme=deneme, alt=alt, sure_ms=kr.dur(),
+                           sonuc_sinifi=_at.SINIF_ZAMAN_ASIMI, returncode=None,
+                           arac_cagri_n=None, on_yukleme_n=len(preload), istem=prompt,
+                           stdout=(e.stdout if isinstance(e.stdout, str) else None),
+                           stderr=(e.stderr if isinstance(e.stderr, str) else None),
+                           zaman_asimi_s=timeout)
+                raise
+        return out_, kr.ms
+
+    def _telemetri(out_, sure_ms: float, *, deneme: int, alt: int, sinif: str) -> None:
+        """Bir koşumun telemetri + ham iz satırlarını yaz (sınıf ÇAĞIRANDA bilinir)."""
+        tc = _agent_tool_calls(out_.stdout)
+        _at.kaydet(kind=kind, model=model, deneme=deneme, alt=alt, sure_ms=sure_ms,
+                   sonuc_sinifi=sinif, returncode=out_.returncode,
+                   # -1 = ÖLÇÜLEMEDİ (`-Q` özeti bastırır) → deftere None yazılır, 0 DEĞİL.
+                   arac_cagri_n=(tc if tc >= 0 else None),
+                   on_yukleme_n=len(preload), istem=prompt,
+                   stdout=out_.stdout, stderr=out_.stderr)
+
     for attempt, model in enumerate(models):
         if not _agent_budget_take(max_wait if attempt == 0 else 0.0):
             return None
+        alt = 0                       # onarım yeniden-koşumlarının sayacı (aynı deneme içinde)
         # --accept-hooks: config'teki hooks_auto_accept ile birlikte koruma hook'unu başsız çağrıda
         # otomatik onaylar (aksi halde 'not allowlisted' → hook ateşlemez, savunma sessizce ölürdü).
         cmd = _agent_chat_cmd(bin_, prompt, preload, model)
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                             env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+        out, sure_ms = _kos(cmd, deneme=attempt + 1, alt=alt)
         if QUIET_FLAG in cmd and _cli_unknown_flag(out):
             # GERİYE-UYUM (tek atımlık): `-Q` tanımayan bir CLI sürümü. Bayrak hatası AĞA ÇIKMAZ
             # (argparse `main()`den önce düşer) → (d) gereği bütçe iade edilir ve düşüm yeniden alınır.
+            _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt, sinif=_at.SINIF_CLI_BAYRAK)
             _agent_budget_refund("cli_flag_unsupported")
             _quiet_flag_unsupported_warn(out)
             if not _agent_budget_take(0.0):
                 return None
+            alt += 1
             cmd = _agent_chat_cmd(bin_, prompt, preload, model)     # artık `-Q`suz (bayrak öğrenildi)
-            out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                                 env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+            out, sure_ms = _kos(cmd, deneme=attempt + 1, alt=alt)
         # BOŞLUK ÖLÇÜTÜ `-Q` İLE GENİŞLEDİ (ölçüldü, cli.py tek-sorgu sessiz kolu): sessiz modda
         # stdout YALNIZ son cevabı taşır — ne banner, ne "Messages: N" özeti. Yani
         # `_agent_reply_missing` sinyalini kaybeder ve cevapsız bir koşum (rc=0 + boş stdout,
@@ -1774,6 +1811,8 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
             eksik = _agent_unknown_skills(out.stdout, out.stderr)
             kalan = tuple(s for s in preload if s not in set(eksik))
             if eksik and len(kalan) < len(preload):
+                _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
+                           sinif=_at.SINIF_ON_UCUS_SKILL)
                 iade = _agent_budget_refund(f"agent_skill_unknown:{kind}")
                 obs.warn("agent_skill_preload_unknown", kind=kind, eksik=list(eksik)[:12],
                          n_eksik=len(eksik), n_kalan=len(kalan), attempt=attempt + 1,
@@ -1787,9 +1826,9 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 preload = kalan
                 if not _agent_budget_take(0.0):
                     return None
+                alt += 1
                 cmd = _agent_chat_cmd(bin_, prompt, preload, model)
-                out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
-                                     env={**os.environ, "NO_COLOR": "1", "TERM": "dumb"})
+                out, sure_ms = _kos(cmd, deneme=attempt + 1, alt=alt)
                 empty = (out.returncode != 0 or not (out.stdout or "").strip()
                          or _agent_reply_missing(out.stdout))
         son_stdout, son_stderr = out.stdout or "", out.stderr or ""
@@ -1798,8 +1837,15 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # (c) BOŞ CEVABIN İKİ SINIFI AYRIŞIR: imza varsa CLI ağa çıkmadan yapılandırma rehberi
         # bastı (yapılandırmasız), yoksa gerçekten cevapsız kalındı (kota/arka uç).
         unconf = _agent_unconfigured_sign(out.stdout, out.stderr) if empty else None
+        _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
+                   sinif=(_at.SINIF_YAPILANDIRMASIZ if unconf
+                          else (_at.SINIF_BOS if empty else _at.SINIF_DOLU)))
         obs.log("agent_call", kind=kind, preloaded=len(preload), model=model or "varsayılan",
                 attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf),
+                # SÜRE OLAYA DA KONUR (D3 modül 1): `agent_calls.jsonl` tam ölçümü taşır ama olay
+                # defterini tek başına okuyan biri (canlı journal takibi) süreyi orada da görmeli —
+                # aksi halde iki damganın farkını "çağrı süresi" sanma hatası geri döner.
+                sure_ms=round(sure_ms, 1), alt_kosum=alt,
                 # `-Q` altında `tool_calls=-1` YAPISALDIR ve `empty` fiilen "rc!=0 ya da boş stdout"a
                 # iner — o iki olgu deftere yazılmadan hiçbir boş çağrı teşhis edilemez (v190).
                 returncode=out.returncode, stdout_kr=len(out.stdout or ""),
@@ -2020,17 +2066,26 @@ def _gemini_call(user: str, *, note: str) -> str | None:
         headers["x-goog-api-key"] = key
     else:
         headers["Authorization"] = f"Bearer {secrets.get('GEMINI_OAUTH_TOKEN')}"
-    r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                   headers=headers,
-                   json={"system_instruction": {"parts": [{"text": SYSTEM}]},
-                         "contents": [{"role": "user", "parts": [{"text": user}]}],
-                         # düşünce bütçesi AÇIKÇA kapalı: yoksa düşünce tokenları üretim tavanını yer
-                         # ve cevap JSON'un ortasında kesilir (ölçüm: GEMINI_THINKING_BUDGET yorumu).
-                         "generationConfig": {"response_mime_type": "application/json",
-                                              "thinkingConfig": {"thinkingBudget": GEMINI_THINKING_BUDGET},
-                                              "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS}},
-                   timeout=120.0)
-    r.raise_for_status()
+    # SÜRE ÖLÇÜMÜ (D3 modül 1, `tasiyici="http"`) — bkz. `_claude_text`teki aynı blok.
+    _kr = _at.Kronometre()
+    try:
+        r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                       headers=headers,
+                       json={"system_instruction": {"parts": [{"text": SYSTEM}]},
+                             "contents": [{"role": "user", "parts": [{"text": user}]}],
+                             # düşünce bütçesi AÇIKÇA kapalı: yoksa düşünce tokenları üretim tavanını yer
+                             # ve cevap JSON'un ortasında kesilir (ölçüm: GEMINI_THINKING_BUDGET yorumu).
+                             "generationConfig": {"response_mime_type": "application/json",
+                                                  "thinkingConfig": {"thinkingBudget": GEMINI_THINKING_BUDGET},
+                                                  "maxOutputTokens": GEMINI_MAX_OUTPUT_TOKENS}},
+                       timeout=120.0)
+        r.raise_for_status()
+    except BaseException as e:
+        _at.kaydet(kind=note, model=model, deneme=1, alt=0, sure_ms=_kr.dur(),
+                   sonuc_sinifi=_at.SINIF_BOS, tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None,
+                   istem=user, stderr=f"{type(e).__name__}: {e}", istisna=type(e).__name__)
+        raise
+    _kr.dur()
     d = r.json()
     um = d.get("usageMetadata") or {}
     from . import spend
@@ -2038,7 +2093,12 @@ def _gemini_call(user: str, *, note: str) -> str | None:
     # cevapta hiç bulunmaz → 0). Maliyet formülü DEĞİŞMEDİ; bkz. spend.record notu.
     spend.record(um.get("promptTokenCount", 0), um.get("candidatesTokenCount", 0), model,
                  note=note, thought_tokens=um.get("thoughtsTokenCount", 0))
-    return _gemini_text(d) or None        # metin yoksa nedeni _gemini_text zaten işaretledi
+    metin = _gemini_text(d) or None       # metin yoksa nedeni _gemini_text zaten işaretledi
+    _at.kaydet(kind=note, model=model, deneme=1, alt=0, sure_ms=_kr.ms,
+               sonuc_sinifi=(_at.SINIF_DOLU if metin else _at.SINIF_BOS),
+               tasiyici=_at.TASIYICI_HTTP, arac_cagri_n=None, istem=user, stdout=metin,
+               returncode=r.status_code)
+    return metin
 
 
 def _propose_gemini() -> dict | None:
@@ -2434,6 +2494,18 @@ def integrations_status() -> dict:
         out["fallback"] = f"{fb[0]['provider']}·{fb[0]['model']}" if fb else None
     except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
         pass
+    try:
+        # ÇAĞRI TELEMETRİSİ (D3 modül 1) — YASA 6'nın DIŞ OKUYUCUSU BURASIDIR ve okuma bilerek
+        # BURADA yapılır: `codelaw.artifact_graph` yalnız `store.read_jsonl(<sabit>)` çağrısını
+        # görür, `agent_telemetry.ozet()`in içindeki okumayı göremez. Yani defteri "dış tüketicisi
+        # var" yapan şey tam olarak bu satırdır — muafiyet değil, gerçek bir tüketici.
+        # Bu alan `/api/hermes` gövdesinde AKAR; pano KARTI D3-UI dalgasının işidir (bkz.
+        # TASARIM-YONU §3 ④ Öğrenme yüzeyi) — veri hazır, çizim henüz yok.
+        out["agent_calls"] = _at.ozet(store.read_jsonl(_at.CAGRI_DEFTERI, limit=_at.OZET_ORNEK))
+    except Exception as e:
+        # YASA 4: sessizce atlanırsa pano "hiç ajan çağrısı yok" diye okur — oysa ölçüm okunamadı.
+        obs.warn("agent_telemetry_ozet_unavailable", error=f"{type(e).__name__}: {e}",
+                 detail="çağrı telemetrisi özeti ÜRETİLEMEDİ — alan yazılmadı (0 DEĞİL)")
     tu = store.read_json("agent_tooluse.json", None)          # #4: MCP araç kullanım oranı
     if tu and (tu.get("calls") or tu.get("olculemeyen")):
         # `olculemeyen` AYRI YAYINLANIR (2026-08-02, `-Q` sonrası): sessiz mod oturum özetini

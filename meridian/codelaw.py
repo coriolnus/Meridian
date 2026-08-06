@@ -262,6 +262,21 @@ DECLARED_SINKS: dict[str, str] = {
                                "sayılardan çıkar",
     "agent_tooluse.json": "hermes.integrations_status() okur; api /api/hermes → pano 'entegrasyonlar' "
                           "panelinde MCP araç kullanım oranı olarak görünür",
+    # NOT (D3, 2026-08-07): KARDEŞ defter `agent_calls.jsonl` BİLEREK burada DEĞİLDİR. Onun DIŞ
+    # okuyucusu gerçektir ve statik graf onu görür: `hermes.integrations_status()` satırları
+    # `store.read_jsonl(_at.CAGRI_DEFTERI, ...)` ile KENDİ okur, yorumu `agent_telemetry.ozet()`e
+    # verir. Muafiyet yerine gerçek tüketici tercih edildi — YASA 6'nın kaçış yolu, kapatabildiğin
+    # yerde kullanılmaz.
+    "agent_traces.jsonl": "HAM AJAN İZİ (D3 modül 2, C2-2): çağrı başına tam stdout+stderr, "
+                          "sır-maskeli, akış başına 8.000 karakter tavanlı ve 300 satırlık halkasal "
+                          "budamalı. Tüketicisi `agent_telemetry.iz_oku()` (aynı modül → statik graf "
+                          "göremez) ve `ops/vaka_sabitle.py` (fikstür dondurucusu; `meridian/` "
+                          "DIŞINDA, tarama kapsamı dışı). HAM SATIRLAR PANOYA BİLEREK TAŞINMAZ: "
+                          "~5 MB'lık ham izi HTTP gövdesine koymak hem maliyet hem sızıntı "
+                          "yüzeyidir; panoya çıkan şey defterin DOLULUĞUdur "
+                          "(`agent_telemetry.ozet()['iz']` → hermes.integrations_status → "
+                          "/api/hermes), yani 'budama işliyor mu' sorusu dosyaya bakmadan "
+                          "cevaplanır. Defter teşhis içindir: aranır, özetlenmez",
     "warmup_scale.json": "hermes.warmup_budget()/warmup_budget_feedback() yazar ve okur (aynı modül "
                          "→ statik graf göremez; `brain_cooldown.json` ile BİREBİR aynı sınıf). "
                          "Isınma sprintinin bütçe merdiveni: çarpan + ÖLÇÜLEN duvar (H11 süre "

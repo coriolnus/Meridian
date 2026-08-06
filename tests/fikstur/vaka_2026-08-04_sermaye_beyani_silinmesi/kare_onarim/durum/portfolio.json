@@ -1,0 +1,592 @@
+{
+ "alpaca_submitted": [
+  "P-2026-08-05-BKNG",
+  "P-2026-08-05-EMR",
+  "P-2026-08-05-NUE"
+ ],
+ "armed": [
+  {
+   "date": "2026-08-05",
+   "dormant_setup": false,
+   "entry_trigger": 274.57,
+   "gate_checks": [
+    {
+     "check": "exposure_budget",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">0",
+     "value": 60
+    },
+    {
+     "check": "max_open_positions",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<5",
+     "value": 0
+    },
+    {
+     "check": "sector_cap",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "%40",
+     "value": 1
+    },
+    {
+     "check": "daily_loss_breaker",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">-%3",
+     "value": 0.0
+    },
+    {
+     "check": "position_size",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=1.0R",
+     "value": 0.89
+    },
+    {
+     "check": "rr_floor",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=2.0",
+     "value": 2.5
+    },
+    {
+     "check": "heat_hard",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=5.0R",
+     "value": 0.89
+    },
+    {
+     "check": "sector_stacking",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "0",
+     "value": 0
+    },
+    {
+     "check": "heat_review",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=3.5R",
+     "value": 0.89
+    },
+    {
+     "check": "correlation",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=0.85",
+     "value": 0.0
+    },
+    {
+     "check": "leading_sector",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "financials,consumer,materials",
+     "value": "materials"
+    },
+    {
+     "check": "rr_marginal",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=2.3",
+     "value": 2.5
+    },
+    {
+     "check": "score_band",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=70",
+     "value": 89
+    },
+    {
+     "check": "earnings_blackout",
+     "coverage": "known",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "NUE"
+    },
+    {
+     "check": "mirror_busy",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "NUE"
+    },
+    {
+     "check": "shadow_veto",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=0.35",
+     "value": 0.441
+    }
+   ],
+   "gate_reasons": [],
+   "gate_verdict": "GO",
+   "id": "P-2026-08-05-NUE",
+   "p_win_shadow": 0.441,
+   "profit_target": 317.4867,
+   "r_multiple_expected": 2.5,
+   "regime_at_plan": "trend_up",
+   "score": 89,
+   "sector": "materials",
+   "setup": "breakout_vcp",
+   "side": "long",
+   "size_r": 0.89,
+   "skill_chain": [
+    "vcp-screener",
+    "position-sizer",
+    "pre-trade-discipline-gate"
+   ],
+   "stop": 257.4033,
+   "strategy_version": 3,
+   "targets": [
+    317.4867
+   ],
+   "ticker": "NUE"
+  },
+  {
+   "date": "2026-08-05",
+   "dormant_setup": false,
+   "entry_trigger": 162.16,
+   "gate_checks": [
+    {
+     "check": "exposure_budget",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">0",
+     "value": 60
+    },
+    {
+     "check": "max_open_positions",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<5",
+     "value": 1
+    },
+    {
+     "check": "sector_cap",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "%40",
+     "value": 1
+    },
+    {
+     "check": "daily_loss_breaker",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">-%3",
+     "value": 0.0
+    },
+    {
+     "check": "position_size",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=1.0R",
+     "value": 0.74
+    },
+    {
+     "check": "rr_floor",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=2.0",
+     "value": 2.5
+    },
+    {
+     "check": "heat_hard",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=5.0R",
+     "value": 1.63
+    },
+    {
+     "check": "sector_stacking",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "0",
+     "value": 0
+    },
+    {
+     "check": "heat_review",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=3.5R",
+     "value": 1.63
+    },
+    {
+     "check": "correlation",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=0.85",
+     "value": 0.0
+    },
+    {
+     "check": "leading_sector",
+     "note": "'industrials' bugünün lider sektörlerinde değil (financials, consumer, materials)",
+     "passed": false,
+     "severity": "soft",
+     "threshold": "financials,consumer,materials",
+     "value": "industrials"
+    },
+    {
+     "check": "rr_marginal",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=2.3",
+     "value": 2.5
+    },
+    {
+     "check": "score_band",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=70",
+     "value": 74
+    },
+    {
+     "check": "earnings_blackout",
+     "coverage": "known",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "EMR"
+    },
+    {
+     "check": "mirror_busy",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "EMR"
+    },
+    {
+     "check": "shadow_veto",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=0.35",
+     "value": 0.472
+    }
+   ],
+   "gate_reasons": [
+    "'industrials' bugünün lider sektörlerinde değil (financials, consumer, materials)"
+   ],
+   "gate_verdict": "REVIEW",
+   "id": "P-2026-08-05-EMR",
+   "p_win_shadow": 0.472,
+   "profit_target": 186.3503,
+   "r_multiple_expected": 2.5,
+   "regime_at_plan": "trend_up",
+   "score": 74,
+   "sector": "industrials",
+   "setup": "breakout_vcp",
+   "side": "long",
+   "size_r": 0.74,
+   "skill_chain": [
+    "vcp-screener",
+    "position-sizer",
+    "pre-trade-discipline-gate"
+   ],
+   "stop": 152.4839,
+   "strategy_version": 3,
+   "targets": [
+    186.3503
+   ],
+   "ticker": "EMR"
+  },
+  {
+   "date": "2026-08-05",
+   "dormant_setup": false,
+   "entry_trigger": 207.03,
+   "gate_checks": [
+    {
+     "check": "exposure_budget",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">0",
+     "value": 60
+    },
+    {
+     "check": "max_open_positions",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<5",
+     "value": 2
+    },
+    {
+     "check": "sector_cap",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "%40",
+     "value": 1
+    },
+    {
+     "check": "daily_loss_breaker",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">-%3",
+     "value": 0.0
+    },
+    {
+     "check": "position_size",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=1.0R",
+     "value": 0.7
+    },
+    {
+     "check": "rr_floor",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=2.0",
+     "value": 2.5
+    },
+    {
+     "check": "heat_hard",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": "<=5.0R",
+     "value": 2.33
+    },
+    {
+     "check": "sector_stacking",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "0",
+     "value": 0
+    },
+    {
+     "check": "heat_review",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=3.5R",
+     "value": 2.33
+    },
+    {
+     "check": "correlation",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "<=0.85",
+     "value": 0.0
+    },
+    {
+     "check": "leading_sector",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": "financials,consumer,materials",
+     "value": "consumer"
+    },
+    {
+     "check": "rr_marginal",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=2.3",
+     "value": 2.5
+    },
+    {
+     "check": "score_band",
+     "note": null,
+     "passed": true,
+     "severity": "soft",
+     "threshold": ">=70",
+     "value": 70
+    },
+    {
+     "check": "earnings_blackout",
+     "coverage": "known",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "BKNG"
+    },
+    {
+     "check": "mirror_busy",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": null,
+     "value": "BKNG"
+    },
+    {
+     "check": "shadow_veto",
+     "note": null,
+     "passed": true,
+     "severity": "hard",
+     "threshold": ">=0.35",
+     "value": 0.481
+    }
+   ],
+   "gate_reasons": [],
+   "gate_verdict": "GO",
+   "id": "P-2026-08-05-BKNG",
+   "p_win_shadow": 0.481,
+   "profit_target": 245.7619,
+   "r_multiple_expected": 2.5,
+   "regime_at_plan": "trend_up",
+   "score": 70,
+   "sector": "consumer",
+   "setup": "breakout_vcp",
+   "side": "long",
+   "size_r": 0.7,
+   "skill_chain": [
+    "vcp-screener",
+    "position-sizer",
+    "pre-trade-discipline-gate"
+   ],
+   "stop": 191.5372,
+   "strategy_version": 3,
+   "targets": [
+    245.7619
+   ],
+   "ticker": "BKNG"
+  }
+ ],
+ "broker_rejected": [
+  {
+   "date": "2026-07-23",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-23-UNP",
+   "ticker": "UNP"
+  },
+  {
+   "date": "2026-07-23",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-23-NSC",
+   "ticker": "NSC"
+  },
+  {
+   "date": "2026-07-23",
+   "detail": "qty rounds to 0",
+   "plan_id": "P-2026-07-23-TMO-momentum_burst",
+   "ticker": "TMO"
+  },
+  {
+   "date": "2026-07-27",
+   "detail": "stop price must be greater than current price",
+   "plan_id": "P-2026-07-27-RTX",
+   "ticker": "RTX"
+  }
+ ],
+ "cash": 100000.0,
+ "day_start_equity": 100000.0,
+ "entry_law": {
+  "P-2026-08-05-BKNG": {
+   "atr": 7.7464,
+   "gap_at_submit": true,
+   "gap_behavior": "marketable_limit",
+   "law": "E1-v1",
+   "limit": 215.3112,
+   "limit_bps": 400.0,
+   "mode": "marketable_limit",
+   "offset_kaynak": "pct_cap",
+   "olay": "entry_gap_marketable",
+   "pivot": 204.61,
+   "ref_kaynak": "son_kapanis",
+   "ref_price": 207.03,
+   "tif": "day",
+   "trigger": 207.03
+  },
+  "P-2026-08-05-EMR": {
+   "atr": 4.8381,
+   "gap_at_submit": true,
+   "gap_behavior": "marketable_limit",
+   "law": "E1-v1",
+   "limit": 168.6464,
+   "limit_bps": 400.0,
+   "mode": "marketable_limit",
+   "offset_kaynak": "pct_cap",
+   "olay": "entry_gap_marketable",
+   "pivot": 159.48,
+   "ref_kaynak": "son_kapanis",
+   "ref_price": 162.16,
+   "tif": "day",
+   "trigger": 162.16
+  },
+  "P-2026-08-05-NUE": {
+   "atr": 8.5833,
+   "gap_at_submit": true,
+   "gap_behavior": "marketable_limit",
+   "law": "E1-v1",
+   "limit": 285.5528,
+   "limit_bps": 400.0,
+   "mode": "marketable_limit",
+   "offset_kaynak": "pct_cap",
+   "olay": "entry_gap_marketable",
+   "pivot": 274.42,
+   "ref_kaynak": "son_kapanis",
+   "ref_price": 274.57,
+   "tif": "day",
+   "trigger": 274.57
+  }
+ },
+ "last_date": "2026-08-05",
+ "last_id": 95,
+ "mirror_exit_pending": {},
+ "peak_equity": 100000.0,
+ "pending_exits": {},
+ "positions": {},
+ "realized_pnl": 0.0,
+ "sermaye_resetleri": [
+  {
+   "arac": "meridian.sermaye",
+   "belirsiz_islem_n": 0,
+   "canli_islem_n": 0,
+   "gerekce": "operatör talimatı 2026-08-01: tohum-PnL gerçek-canlı sermayeden ayrıştırıldı",
+   "id": "SR-20260801T151429+0000",
+   "ofset": 5542.09,
+   "onceki_cash": 94457.91,
+   "onceki_peak_equity": 102520.45,
+   "onceki_realized_pnl": -5542.09,
+   "tarih": "2026-08-01T15:14:29+00:00",
+   "tohum_etkisi_usd": -5542.09,
+   "tohum_islem_n": 95,
+   "yeni_cash": 100000.0,
+   "yeni_peak_equity": 100000.0,
+   "yeni_realized_pnl": 0.0
+  }
+ ]
+}

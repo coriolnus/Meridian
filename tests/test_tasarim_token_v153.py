@@ -24,6 +24,26 @@ Bu dosya o iki kuralı ölçer, ve üçüncüsünü ekler:
                     bayatlar ve test bunu söyler; sessizce eskimiş bir denetim
                     raporu, hiç yapılmamış bir denetimden daha kötüdür.
 
+D1 · ÜÇÜNCÜ KATMAN (2026-08-07) — dosyanın SÖZLEŞMESİ değişmedi, MİMARİSİ değişti.
+Jeton sistemi hue-adlı tek renk katmanından İKİ katmana taşındı:
+
+    temel  →  tema-bağımsız ölçüler (tipografi, boşluk, yarıçap, süre) — renk YOK
+    tema   →  DEĞER katmanı: bir HUE'nun adı (--green / --amber / --red)
+    rol    →  ROL katmanı: bir İŞİN adı (--sev-1/2/3, --yon-arti/eksi,
+              --mod-kagit/canli/kesif, --olcek-guven) — bileşen kuralları YALNIZ
+              bunu okur (kanıt: research/olcumler/renk_rolleri_2026-08-07/).
+
+Bu dosyanın ölçtüğü kusur sınıfı — "jeton katmanının SESSİZCE ayrışması" — üçüncü
+katmanla BÜYÜDÜ, küçülmedi: artık iki renk katmanı iki temada birden tutarlı olmak
+zorunda. O yüzden aşağıdaki eş-kayıt karşılaştırmaları `tema`ya DEĞİL, `tema + rol`
+toplamına bakar; yalnız `tema`ya bakan bir ölçüm 62 rol jeton-kaydını (2×31) hiç
+görmezdi ve görmediği şey tam olarak bu dosyanın var olma sebebidir.
+
+Rol katmanının ÖLÇÜM sözleşmesi (kroma sınırları, rol ayrıklığı, emisyon tavanı,
+yeni jetonların AA'sı) tests/test_renk_rolleri_v197.py'dedir. Burada ölçülen şey
+o mimarinin KAYIT bütünlüğü: tokens.json ↔ CSS eş-kaydı ve alias zincirinin
+tek-gerçekliliği.
+
 Testler KAYNAĞA bakar (repo deseni: test_pano_turu_v139, test_pano_sessiz_hat_v151).
 """
 from __future__ import annotations
@@ -93,19 +113,55 @@ def _literal(tk) -> str:
     return tk["$extensions"]["org.meridian.css"]["literal"]
 
 
+def _cozulen(tk) -> str:
+    """Rol jetonunun var() zincirinin UCUNDAKİ değer (tokens.json'ın kendi beyanı).
+    Değer katmanında böyle bir alan yoktur: orada literal zaten çözülmüş hâldir."""
+    return tk["$extensions"]["org.meridian.css"].get("cozulen-deger")
+
+
 TEMEL = {_css_adi(tk)[2:]: _literal(tk) for yol, tk in TOKEN_LISTESI if yol[0] == "temel"}
 GUNDUZ = {_css_adi(tk)[2:]: _literal(tk)
           for yol, tk in TOKEN_LISTESI if yol[:2] == ("tema", "gunduz")}
 GECE = {_css_adi(tk)[2:]: _literal(tk)
         for yol, tk in TOKEN_LISTESI if yol[:2] == ("tema", "gece")}
+# D1 (2026-08-07) · ROL KATMANI. Ayrı bir sözlük olarak durur, `tema`ya KATILMAZ: iki
+# katmanın ÖLÇÜTÜ farklıdır (değer jetonu ham renk literali taşır, rol jetonu çoğunlukla
+# bir `var()` alias'ıdır) ve ikisini tek kovaya atmak, "tema katmanında renk olmayan jeton
+# yok" ölçümünü sessizce gevşetirdi.
+ROL_GUNDUZ = {_css_adi(tk)[2:]: _literal(tk)
+              for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gunduz")}
+ROL_GECE = {_css_adi(tk)[2:]: _literal(tk)
+            for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gece")}
+ROL_TK_GUNDUZ = {_css_adi(tk)[2:]: tk for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gunduz")}
+ROL_TK_GECE = {_css_adi(tk)[2:]: tk for yol, tk in TOKEN_LISTESI if yol[:2] == ("rol", "gece")}
+
+# CSS'in İKİ bloğunun tokens.json'daki KARŞILIĞI. `:root{}` üç katmanın toplamıdır
+# (temel + gündüz değer + gündüz rol), gece override'ı İKİ RENK katmanının (temel gece
+# bloğunda TEKRARLANMAZ — bkz. test_temel_katman_TEMADAN_BAGIMSIZ). Eş-kayıt ölçümleri
+# bu toplamları kullanır; tek bir katmanı unutmak, unutulan katmanın sürüklenmesini
+# ölçülmez kılardı ve bu dosyanın ölçtüğü kusur sınıfı tam olarak odur.
+GUNDUZ_HEPSI = {**GUNDUZ, **ROL_GUNDUZ}
+GECE_HEPSI = {**GECE, **ROL_GECE}
+
+# Rol jetonunun adı bir İŞİN adıdır ve bu önekle taşınır (değer jetonu HİÇBİRİNİ taşımaz).
+ROL_ONEK = ("sev-", "yon-", "mod-", "olcek-")
 
 
 # =============================== Ç1 · EŞ-KAYIT ===============================
 def test_tokens_json_UC_KATMAN_ve_TEK_dosya():
     """Yapı beyanı kaynakta durmalı: bir okuyucu tema temsilini dosyanın kendisinden
     öğrenebilmeli, bir commit mesajından değil."""
-    assert set(TOKENS) >= {"temel", "tema", "$description", "$extensions"}
+    # D1'e kadar iki katman vardı (temel + tema) ve testin adı zaten "ÜÇ KATMAN" diyordu —
+    # üçüncüsü `$description`/`$extensions` beyan bloğuydu. D1'den beri üçüncü bir JETON
+    # katmanı da var (`rol`) ve o katman bu listede DURMAK ZORUNDA: bir okuyucu dosyanın
+    # kaç katmanı olduğunu dosyanın kendisinden öğrenemezse, katmanı sessizce kaldırmak
+    # ya da eklemek serbest kalır.
+    assert set(TOKENS) >= {"temel", "tema", "rol", "$description", "$extensions"}
     assert set(TOKENS["tema"]) >= {"gunduz", "gece"}
+    assert set(TOKENS["rol"]) >= {"gunduz", "gece"}, \
+        "rol katmanı zemin başına yazılmamış — bir zeminde tanımsız rol ötekinden MİRAS alınır"
+    assert len(TOKENS["rol"].get("$description", "")) >= 200, \
+        "rol katmanı NE OLDUĞUNU söylemeden kurulmuş — iki katmanlı sistemin gerekçesi kaynakta durmalı"
     beyan = TOKENS["$extensions"]["org.meridian"]
     assert "tema-temsili" in beyan and len(beyan["tema-temsili"]) >= 200, \
         "tema temsili BEYAN EDİLMEDEN kurulmuş — DTCG'nin tema yapısı yok, seçim gerekçe ister"
@@ -114,29 +170,42 @@ def test_tokens_json_UC_KATMAN_ve_TEK_dosya():
 
 
 def test_her_CSS_jetonu_tokens_jsonda_BIRE_BIR():
-    """Sürüklenmenin birinci yönü: CSS'te olup jetonda olmayan."""
+    """Sürüklenmenin birinci yönü: CSS'te olup jetonda olmayan.
+
+    D1'den beri `:root{}` ÜÇ katmanın toplamıdır; karşılaştırma da öyle olmak zorunda.
+    Yalnız `temel|tema`ya bakan bir ölçüm 31 rol jetonunu "kayıtsız" ilan ederdi (yanlış
+    kırmızı), ya da — daha kötüsü — o kayıtları hiç açmadan yeşil verirdi."""
     css_hepsi = set(ROOT)
-    json_hepsi = set(TEMEL) | set(GUNDUZ)
+    json_hepsi = set(TEMEL) | set(GUNDUZ_HEPSI)
     eksik = css_hepsi - json_hepsi
     assert not eksik, f"CSS :root'ta olup tokens.json'da olmayan jeton: {sorted(eksik)}"
     for ad, deger in ROOT.items():
-        kayit = TEMEL.get(ad, GUNDUZ.get(ad))
+        kayit = TEMEL.get(ad, GUNDUZ_HEPSI.get(ad))
         assert kayit == deger, \
             f"--{ad}: CSS {deger!r} ↔ tokens.json {kayit!r} — jeton katmanı ayrışmış"
 
 
 def test_gece_blogu_BIRE_BIR():
+    """Aynı ölçüm gece bloğu için. Gece override'ı İKİ renk katmanı taşır (değer + rol):
+    `--sev-1:var(--red)` satırı gece bloğunda da AYRICA yazılıdır, çünkü bir zeminde
+    tanımsız kalan rol jetonu ötekinden miras alınır — kural çalışır ama YANLIŞ zeminin
+    rengiyle. Kayıt tarafında bunun karşılığı `rol.gece`dir ve burada ölçülür."""
     for ad, deger in GECE_OV.items():
-        assert GECE.get(ad) == deger, \
-            f"--{ad} (gece): CSS {deger!r} ↔ tokens.json {GECE.get(ad)!r}"
+        assert GECE_HEPSI.get(ad) == deger, \
+            f"--{ad} (gece): CSS {deger!r} ↔ tokens.json {GECE_HEPSI.get(ad)!r}"
 
 
 def test_tokens_jsonda_CSSte_OLMAYAN_jeton_YOK():
     """Sürüklenmenin ikinci yönü: silinmiş bir jetonun kayıtta hayalet kalması.
-    Bu, kaldırılmış bir kararı hâlâ yürürlükteymiş gibi göstermek olurdu."""
-    fazla = (set(TEMEL) | set(GUNDUZ)) - set(ROOT)
+    Bu, kaldırılmış bir kararı hâlâ yürürlükteymiş gibi göstermek olurdu.
+
+    D1 BU YÖNÜ FİİLEN KULLANDI: `--pm-pos`/`--pm-neg` tokens.json'da duran ama CSS'te
+    karşılığı OLMAYAN iki hayalet kayıttı (matris hücre zemini artık --yon-*-zemin).
+    Ölçüm rol katmanını da kapsamazsa, bir sonraki hayalet 31 jetonluk bir katmanın
+    içinde saklanabilir."""
+    fazla = (set(TEMEL) | set(GUNDUZ_HEPSI)) - set(ROOT)
     assert not fazla, f"tokens.json'da olup CSS'te olmayan jeton: {sorted(fazla)}"
-    fazla_gece = set(GECE) - set(GECE_OV)
+    fazla_gece = set(GECE_HEPSI) - set(GECE_OV)
     assert not fazla_gece, f"gece katmanında karşılığı olmayan jeton: {sorted(fazla_gece)}"
 
 
@@ -151,28 +220,83 @@ def test_temel_katman_TEMADAN_BAGIMSIZ():
 def test_gece_TAM_palet_hicbir_renk_jetonu_YARIM_KALMAZ():
     """--nav-bg ARIZASININ KAPISI. O jeton bir kuralın içinde sabit rgba idi, gece
     dönmüyordu ve üst barda HALT kırmızısı 1.27:1'e düşüyordu. Kural: renk taşıyan
-    her jeton İKİ temaya birden girer. Eksikse burada durur."""
+    her jeton İKİ temaya birden girer. Eksikse burada durur.
+
+    D1 SONRASI KURAL AYNI, KAPSAMI İKİ KATLI: hem DEĞER katmanı (--green) hem ROL
+    katmanı (--sev-3) iki temaya birden girer. Rol jetonunun çoğu bir alias'tır ama
+    alias'ın KENDİSİ zemin başına yazılır — tek zeminde tanımlı bir rol, ötekinde
+    sessizce miras alınır ve kural yanlış zeminin rengiyle çalışır. Yani --nav-bg
+    arıza sınıfının rol katmanındaki birebir aynası. İDDİA KORUNDU, yalnız hangi
+    katmanın nereye karşılık geldiği düzeltildi."""
     assert set(GUNDUZ) == set(GECE), \
-        f"tema katmanları ayrışıyor: {sorted(set(GUNDUZ) ^ set(GECE))}"
-    assert set(GUNDUZ) == set(GECE_OV), \
-        ("gündüz renk katmanı ile CSS'in gece override kümesi ayrışıyor "
-         f"(GECE bloğunda karşılığı olmayan renk jetonu): {sorted(set(GUNDUZ) ^ set(GECE_OV))}")
-    # ölçülmüş sayım — beyan kaynakta dursun.
-    # 36 → 45 (WP-P/P9, 2026-08-02): --band-2 (nitel bant merdiveninin orta basamağı) +
-    # --kap-1..4 (tek-hue sequential kapsama rampası) + --dv-n2/n1/p1/p2 (CVD-güvenli
-    # diverging sapma skalası). Dokuzu da İKİ temaya birden girdi — bu testin varlık sebebi.
-    assert len(GUNDUZ) == 45 and len(TEMEL) == 23 and len(ROOT) == 68, \
-        f"jeton sayımı değişmiş: temel {len(TEMEL)} · renk {len(GUNDUZ)} · toplam {len(ROOT)}"
+        f"DEĞER (tema) katmanları ayrışıyor: {sorted(set(GUNDUZ) ^ set(GECE))}"
+    assert set(ROL_GUNDUZ) == set(ROL_GECE), \
+        f"ROL katmanları ayrışıyor: {sorted(set(ROL_GUNDUZ) ^ set(ROL_GECE))}"
+    assert set(GUNDUZ_HEPSI) == set(GECE_OV), \
+        ("gündüz renk katmanları (değer+rol) ile CSS'in gece override kümesi ayrışıyor "
+         f"(GECE bloğunda karşılığı olmayan renk jetonu): {sorted(set(GUNDUZ_HEPSI) ^ set(GECE_OV))}")
+    # ÖLÇÜLMÜŞ SAYIM — hangi katman kaç jeton getiriyor, beyan kaynakta dursun:
+    #   temel  23  tema-bağımsız ölçüler (tipografi/boşluk/yarıçap/süre/ease) — D1'de DEĞİŞMEDİ.
+    #   tema   43  DEĞER katmanı, zemin başına. 36 → 45 (WP-P/P9, 2026-08-02: --band-2 nitel
+    #              bant orta basamağı + --kap-1..4 sequential kapsama rampası + --dv-n2/n1/p1/p2
+    #              CVD-güvenli diverging skalası) → 43 (D1, 2026-08-07: --pm-pos/--pm-neg
+    #              HAYALET kayıtlardı — tokens.json'da vardı, CSS'te yoktu; matrisin hücre
+    #              zeminini artık --yon-arti-zemin/--yon-eksi-zemin taşıyor ve o ikisi ROL
+    #              katmanında doğdu, yani sayı `tema`dan `rol`e TAŞINDI, kaybolmadı).
+    #   rol    31  D1'in yeni katmanı, zemin başına ve İKİ ZEMİNDE AYNI AD KÜMESİ:
+    #              şiddet 11 (--sev-1/2/3 · -t/-h · --sev-2-h2 · --sev-3-damga)
+    #            + yön     8 (--yon-arti/eksi · -t/-h/-zemin)
+    #            + mod     9 (--mod-kagit/canli/kesif · -t/-h)
+    #            + ölçek   3 (--olcek-guven · -t/-h)
+    # CSS :root  = 23 temel + 43 değer + 31 rol = 97   (68 → 97)
+    # CSS gece   =            43 değer + 31 rol = 74   (45 → 74; `temel` gece bloğunda YOK)
+    assert (len(TEMEL) == 23 and len(GUNDUZ) == 43 and len(ROL_GUNDUZ) == 31
+            and len(ROOT) == 97 and len(GECE_OV) == 74), \
+        (f"jeton sayımı değişmiş: temel {len(TEMEL)} · değer {len(GUNDUZ)} · rol "
+         f"{len(ROL_GUNDUZ)} · :root {len(ROOT)} · gece {len(GECE_OV)}")
 
 
 def test_renk_jetonlarinin_HEPSI_renk_TEMEL_jetonlarin_HICBIRI_degil():
     """Katman ayrımı ANLAMLI olmalı: `tema` altında renk olmayan bir şey varsa ya da
-    `temel` altında renk varsa, bölünme keyfîdir ve bir sonraki turda çöker."""
+    `temel` altında renk varsa, bölünme keyfîdir ve bir sonraki turda çöker.
+
+    D1 SONRASI BÖLÜNME ÜÇ YÖNLÜ ve her yönün kendi ölçütü var — çünkü katmanları AYIRAN
+    şey artık yalnız "renk mi değil mi" değil, ADIN NE SÖYLEDİĞİ:
+
+      temel — renk YOK (ölçü/süre/tipografi).
+      tema  — hepsi ham renk literali, ve adı bir HUE'nun adıdır: rol öneki TAŞIMAZ.
+      rol   — adı bir İŞİN adıdır: --sev-/--yon-/--mod-/--olcek- öneki ZORUNLU, ve
+              ekranda bir renge çözülür (literali ya doğrudan renk ya bir var() zinciri).
+
+    Rol jetonlarını `tema` ölçütüyle sınamak YANLIŞ olurdu: `--sev-1:var(--red)` bir renk
+    LİTERALİ değildir ama ekranda bir renktir. Bu yüzden rol tarafında ölçüt literale
+    değil ÇÖZÜLEN DEĞERE bakar (zincirin CSS'te gerçekten kapandığı ayrıca ölçülür:
+    test_ROL_alias_zinciri_TEK_gercek_soyler)."""
     renk = re.compile(r"#[0-9a-fA-F]{6}|rgba?\(")
     for ad, lit in GUNDUZ.items():
         assert renk.match(lit), f"`tema` katmanında renk olmayan jeton: --{ad} = {lit!r}"
     for ad, lit in TEMEL.items():
         assert not renk.match(lit), f"`temel` katmanında renk jetonu: --{ad} = {lit!r}"
+    # ROL KATMANI — çözülen değer bir renk (ya da `transparent`: "bu rol kroma HARCAMAZ"
+    # bilinçli bir hükümdür, --mod-kagit'in tinti; ölçülemeyen bir boşluk değil).
+    for tablo, zemin in ((ROL_TK_GUNDUZ, "gündüz"), (ROL_TK_GECE, "gece")):
+        for ad, tk in tablo.items():
+            coz = _cozulen(tk)
+            assert coz is not None, f"--{ad} ({zemin}): rol jetonu çözülen değerini BEYAN ETMİYOR"
+            assert renk.match(coz) or coz == "transparent", \
+                f"`rol` katmanında renge çözülmeyen jeton: --{ad} ({zemin}) = {coz!r}"
+    # ADLANDIRMA — katmanı ayıran ikinci kanal. Rol öneksiz bir rol jetonu ya da rol önekli
+    # bir değer jetonu, iki katmanı ADIYLA birbirine karıştırırdı; o karışma sessizdir,
+    # çünkü ikisi de "çalışan" bir renk üretir.
+    for ad in ROL_GUNDUZ:
+        assert ad.startswith(ROL_ONEK), f"rol jetonunun adı bir İŞİN adı değil: --{ad}"
+    for ad in set(GUNDUZ) | set(TEMEL):
+        assert not ad.startswith(ROL_ONEK), f"değer/ölçü jetonu rol adı taşıyor: --{ad}"
+    # Ve ad kümeleri AYRIK: aynı ad iki katmanda dursaydı eş-kayıt karşılaştırmalarındaki
+    # `{**a, **b}` birini sessizce yutar, yutulan kaydın sürüklenmesi hiç ölçülmezdi.
+    assert not (set(TEMEL) & set(GUNDUZ)), f"temel↔tema ad çakışması: {sorted(set(TEMEL) & set(GUNDUZ))}"
+    assert not (set(TEMEL) & set(ROL_GUNDUZ)), f"temel↔rol ad çakışması: {sorted(set(TEMEL) & set(ROL_GUNDUZ))}"
+    assert not (set(GUNDUZ) & set(ROL_GUNDUZ)), f"tema↔rol ad çakışması: {sorted(set(GUNDUZ) & set(ROL_GUNDUZ))}"
 
 
 # =============================== Ç1b · DTCG ŞEMASI ===============================
@@ -213,7 +337,12 @@ def test_DTCG_semasi_gecerli():
             f"{p}: açıklamasız jeton — okuyucusuz yazım yok (YASA 6)"
         assert "$extensions" in tk and "org.meridian.css" in tk["$extensions"], \
             f"{p}: CSS eş-kaydı yok — eş-doğrulama yolu bu alan olmadan kurulamaz"
-    assert sayac == 68 + 45, f"jeton sayımı {sayac} (beklenen 113 = 23 temel + 2×45 renk)"
+    # 113 → 171 (D1, 2026-08-07). Ayrışım yukarıdaki tam-palet ölçümüyle AYNI ve orada
+    # gerekçelendirildi: 23 temel (tema-bağımsız) + 2×43 değer (tema, zemin başına) +
+    # 2×31 rol (D1'in üçüncü katmanı, zemin başına). Sayı bir BÜTÇE değil bir MUHASEBEdir:
+    # burada tutmayan bir toplam, DTCG ağacına eş-kayıtsız bir dal eklendiğini söyler.
+    assert sayac == 23 + 2 * 43 + 2 * 31, \
+        f"jeton sayımı {sayac} (beklenen 171 = 23 temel + 2×43 değer + 2×31 rol)"
 
 
 def test_takma_adlar_COZULUYOR():
@@ -241,7 +370,13 @@ def _renk_coz(lit):
 
 def test_DTCG_degeri_CSS_LITERALINDEN_yeniden_uretilebilir():
     """$value ile literal ayrı ayrı elle güncellenebilir; ayrışırlarsa dosya iki
-    farklı gerçeği aynı anda söyler. İkisi arasındaki bağ da ölçülür."""
+    farklı gerçeği aynı anda söyler. İkisi arasındaki bağ da ölçülür.
+
+    KAPSAM: bu ölçüm `$type` taşıyan jetonlara bakar — yani `temel` + `tema`. Rol katmanı
+    tipsizdir (bir rolün TİPİ yoktur; taşıdığı değerin tipi vardır) ve orada bağ farklı
+    kurulur: `literal` bir var() zinciridir, `$value` o zincirin ucudur. O bağ AYRI ve
+    aynı sıkılıkta ölçülür — bkz. test_ROL_alias_zinciri_TEK_gercek_soyler. Rol katmanını
+    burada sessizce geçmek, 62 jeton kaydını ölçüsüz bırakmak olurdu."""
     for yol, tk, tip in _gez(TOKENS):
         lit, v, p = None, tk["$value"], ".".join(yol)
         lit = tk["$extensions"]["org.meridian.css"]["literal"]
@@ -267,6 +402,49 @@ def test_DTCG_degeri_CSS_LITERALINDEN_yeniden_uretilebilir():
         elif tip == "shadow":
             assert lit == "none" and v == [], \
                 f"{p}: gölge geri gelmiş — Omega'da box-shadow:none ölçülmüş bir karardır"
+
+
+# =========================== Ç1c · ROL ALIAS ZİNCİRİ (D1) ===========================
+def _coz_css(deger: str, tablo: dict) -> str:
+    """CSS'in `var(--x)` zincirini tabloda yürü — tarayıcının fiilen yaptığı iş budur."""
+    d = deger.strip()
+    for _ in range(8):
+        m = re.fullmatch(r"var\(\s*--([a-z0-9-]+)\s*\)", d)
+        if not m:
+            return d
+        assert m.group(1) in tablo, f"var(--{m.group(1)}) tanımsız — zincir kopuk"
+        d = tablo[m.group(1)].strip()
+    raise AssertionError(f"var() zinciri kapanmıyor (döngü?): {deger!r}")
+
+
+def test_ROL_alias_zinciri_TEK_gercek_soyler():
+    """Rol katmanının Ç1 ÖLÇÜMÜ. Bir rol jetonu ÜÇ yerde birden konuşur:
+
+        CSS       --sev-1:var(--red)
+        literal   "var(--red)"          (aynı ifade, kayıtta)
+        $value    "#b3242c"             (o zincirin UCU, kayıtta ayrıca yazılı)
+
+    Üçü elle güncellenebilir. Ayrıştıkları anda dosya aynı jeton hakkında iki farklı
+    gerçek söyler ve HİÇBİRİ ekranı yanlış göstermez — yalnız kayıt yalan söyler; yani
+    tam olarak bu dosyanın kovaladığı sessiz sürüklenme. Zincir CSS'in KENDİ tablosunda
+    yürütülür: `--sev-1` gündüz --red'e, gecede BAŞKA bir --red'e çözülür ve iki zeminin
+    ucu farklı olmak ZORUNDADIR (aynı olsaydı tema dönmüyordu demektir)."""
+    for tk_tablo, css_tablo, zemin in ((ROL_TK_GUNDUZ, ROOT, "gündüz"),
+                                       (ROL_TK_GECE, dict(ROOT, **GECE_OV), "gece")):
+        for ad, tk in tk_tablo.items():
+            lit, coz = _literal(tk), _cozulen(tk)
+            assert _coz_css(lit, css_tablo) == coz, \
+                (f"--{ad} ({zemin}): literal {lit!r} CSS'te "
+                 f"{_coz_css(lit, css_tablo)!r}'e çözülüyor, kayıt {coz!r} diyor")
+            assert tk["$value"] == coz, \
+                f"--{ad} ({zemin}): $value {tk['$value']!r} ↔ çözülen değer {coz!r} ayrışmış"
+    # TEMA GERÇEKTEN DÖNÜYOR MU: kroma taşıyan her rol jetonunun iki zemindeki ucu farklı
+    # olmalı. Aynı olsaydı jeton gece bloğunda YAZILI ama İŞLEVSİZ olurdu — ad kümesi
+    # eşitliği testi böyle bir jetonu yakalayamazdı (adı var, değeri dönmüyor).
+    ayni = [ad for ad in ROL_TK_GUNDUZ
+            if _cozulen(ROL_TK_GUNDUZ[ad]) == _cozulen(ROL_TK_GECE[ad])
+            and _cozulen(ROL_TK_GUNDUZ[ad]) != "transparent"]
+    assert not ayni, f"rol jetonu iki zeminde AYNI değere çözülüyor (tema dönmüyor): {ayni}"
 
 
 # =============================== Ç3 · HAM RENK LİNTİ ===============================
@@ -345,7 +523,11 @@ def test_lint_KENDINI_KANITLAR():
 def _rgba(deger, tema):
     d, tablo = deger.strip(), (dict(ROOT, **GECE_OV) if tema == "gece" else ROOT)
     for _ in range(8):
-        m = re.fullmatch(r"--([a-z0-9-]+)", d)
+        # D1'den beri bir jetonun değeri BAŞKA bir jetona `var()` ile bağlı olabilir
+        # (rol katmanı: `--sev-1:var(--red)`). İki biçim de yürünür — yoksa rol adıyla
+        # yazılmış bir çivi satırı "renk değil" diye düşerdi ve düşme sebebi mimari
+        # olurdu, ölçüm değil.
+        m = re.fullmatch(r"--([a-z0-9-]+)", d) or re.fullmatch(r"var\(\s*--([a-z0-9-]+)\s*\)", d)
         if not m:
             break
         d = tablo[m.group(1)].strip()
@@ -414,8 +596,17 @@ def test_rapordaki_KONTRAST_RAKAMLARI_yeniden_uretilebilir():
 
 def test_para_renkleri_EN_KOTU_GERCEK_ZEMINDE_AA_kalir():
     """Jeton yeniden-değerleme turu geldiğinde (gündüz beyazı) bu üç renk AA altına
-    düşerse pano parayı okunamaz yazıyor demektir. Eşik SONRADAN düşürülemez."""
-    en_kotu = {"--green": "--green-t", "--amber": "--amber-t", "--red": "--red-t"}
+    düşerse pano parayı okunamaz yazıyor demektir. Eşik SONRADAN düşürülemez.
+
+    D1 SONRASI OKUNAN KATMAN DEĞİŞTİ, EŞİK DEĞİŞMEDİ. Ekranda fiilen çizilen jeton artık
+    ROL jetonudur (`.durum-kart.uyari{color:var(--sev-2)}`); --green/--amber/--red yalnız
+    o rollerin BUGÜNKÜ kaynağıdır. Ölçüm rolü izler, çünkü kırılma bu depoda tam olarak
+    şöyle olurdu: bir rol başka bir hue'ya yeniden bağlanır, ekran değişir, ama hue'yu
+    ölçen test yeşil kalır. Bugün üçü de alias olduğu için SAYILAR AYNI (gündüz 4.72 /
+    5.57 / 4.59 · gece 5.31 / 5.39 / 5.01) — iddia zayıflamadı, adresi düzeldi.
+    YÖN ve MOD rollerinin AA'sı tests/test_renk_rolleri_v197.py §7'de ölçülür; buraya
+    ikinci bir kopya koymak, ilk düzenlemede ayrışacak iki eşik demek olurdu."""
+    en_kotu = {"--sev-3": "--sev-3-t", "--sev-2": "--sev-2-t", "--sev-1": "--sev-1-t"}
     for tema in ("gunduz", "gece"):
         for ink, tint in en_kotu.items():
             zc = _yigin(["--card-2", tint], tema)
@@ -425,10 +616,16 @@ def test_para_renkleri_EN_KOTU_GERCEK_ZEMINDE_AA_kalir():
 
 def test_odak_halkasi_HER_ZEMINDE_3_1():
     """WCAG 2.2 2.4.11/1.4.11: odak göstergesi görünür OLMAK ZORUNDA. Bu pano
-    klavye-öncelikli tasarlandı; halka kaybolursa gezinme kaybolur."""
+    klavye-öncelikli tasarlandı; halka kaybolursa gezinme kaybolur.
+
+    ZEMİN LİSTESİ ROL ADLARIYLA YAZILIR (D1): halkanın üstüne bindiği tint'ler bileşen
+    kurallarında rol jetonudur. Matrisin hücre zemini de listeye girdi — o zemin D1'de
+    `--pm-pos`/`--pm-neg`ten `--yon-*-zemin`e taşındı ve `.pm-cell` odaklanabilir bir
+    düğmedir; adı "HER ZEMİNDE" olan bir ölçümün onu atlaması adın kendisini yalanlardı."""
     for tema in ("gunduz", "gece"):
         for zemin in (["--bg"], ["--card"], ["--card-2"], ["--accent-tint"],
-                      ["--card-2", "--red-t"], ["--card-2", "--amber-t"]):
+                      ["--card-2", "--sev-1-t"], ["--card-2", "--sev-2-t"],
+                      ["--card-2", "--yon-arti-zemin"], ["--card-2", "--yon-eksi-zemin"]):
             assert _oran(_rgba("--accent", tema), _yigin(zemin, tema)) >= 3.0, \
                 f"odak halkası {tema}/{zemin} üzerinde 3:1 altında"
 

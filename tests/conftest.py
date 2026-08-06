@@ -742,6 +742,21 @@ def sandbox_state(tmp_path, monkeypatch):
     _clear_module_caches()
 
 
+@pytest.fixture
+def vaka(sandbox_state):
+    """DONDURULMUŞ CANLI VAKA yükleyicisi (D3 modül 3, 2026-08-07): `vaka("<ad>")` → `tests.vaka.Vaka`.
+
+    `ops/vaka_sabitle.py` bir canlı arızayı `tests/fikstur/vaka_<tarih>_<ad>/` altına dondurur;
+    bu fikstür onu bir teste geri yükler. `sandbox_state`e BAĞLIDIR ve bu bir kolaylık değil bir
+    KAPIDIR: `Vaka.state_kur()` `store` üzerinden yazar, yani sandbox yoksa CANLI `state/`e
+    yazardı. Bağımlılığı buraya koymak, çağıranın unutmasını yapısal olarak imkânsız kılar.
+
+    Yükleme sırasında manifestteki sha256'lar diskle karşılaştırılır — elle düzenlenmiş bir
+    fikstür ADIYLA düşer (bkz. `tests/vaka.py` başlığı)."""
+    from .vaka import yukle
+    return yukle
+
+
 def make_bars(n=320, seed=7, trend=0.0006, breakout_at=None):
     """Deterministic OHLCV with an optional clean breakout near the end."""
     rng = np.random.default_rng(seed)

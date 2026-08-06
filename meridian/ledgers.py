@@ -294,6 +294,34 @@ CONTRACTS: dict[str, Contract] = {
         note="4b GÖLGE defteri — emir yolu BİLEREK yok. `gate_inputs_as_of` zorunlu: kapı "
              "girdilerinin hangi ana ait olduğu yazılmazsa 'look-ahead yok' iddiası "
              "DOĞRULANAMAZ (bugüne kadar repo genelinde tek geçtiği yer yazıldığı satırdı)"),
+
+    # AJAN TELEMETRİSİ + HAM İZ (D3 modül 1/2, 2026-08-07). İki defter DOĞUŞTA sözleşmeye giriyor:
+    # 2026-07-21'in yedi hatasının altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
+    # defterde (4a/4b) bir kez daha açılmıştı — üçüncü kez açılmasın diye alanlar burada, defterin
+    # ilk satırı yazılmadan önce çivilendi.
+    "agent_calls.jsonl": Contract(
+        required=("ts", "iz_id", "tasiyici", "kind", "model", "deneme", "alt", "sure_ms",
+                  "sonuc_sinifi"),
+        writers=("agent_telemetry.py",),
+        key="iz_id",
+        consumers=("hermes", "agent_telemetry"),
+        note="`sure_ms` ÖLÇÜM ANINDA yazılır ve ZORUNLUDUR — bu defterin var olma sebebi odur "
+             "(iki olay damgasının farkı çağrı süresi DEĞİLDİR: arada bütçe bekleyişi, skill "
+             "senkronu ve süreç doğuşu vardır). `arac_cagri_n` İSTEĞE BAĞLI ve None OLABİLİR: "
+             "`-Q` sessiz modu CLI oturum özetini bastırır, yani araç sayısı ÖLÇÜLEMEZ — "
+             "UYDURMA YASAĞI gereği 0 yazılmaz, alan None kalır ve `arac_neden` nedeni taşır. "
+             "`iz_id` ham iz defteriyle birleştirme anahtarıdır"),
+    "agent_traces.jsonl": Contract(
+        required=("ts", "iz_id", "kind", "sonuc_sinifi", "stdout", "stderr", "ham_kr",
+                  "tavan_kr", "kirpildi"),
+        writers=("agent_telemetry.py",),
+        key="iz_id",
+        consumers=("agent_telemetry", "ops/vaka_sabitle.py"),
+        note="HAM İZ: `stdout`/`stderr` SIR-MASKELİdir (agent_telemetry.maskele — tek kaynak) ve "
+             "akış başına 8.000 karakterde BEYANLI kırpılır; `ham_kr` kırpma ÖNCESİ gerçek "
+             "uzunluğu, `kirpildi` ise kırpılıp kırpılmadığını taşır — beyansız bir kırpma, kısa "
+             "bir hatayı kırpılmış uzun bir hatadan ayırt edilemez yapardı. Defter 300 satırlık "
+             "HALKADIR: eski satırlar düşer ve düşüş `agent_trace_pruned` olayıyla duyurulur"),
 }
 
 _WRITE_CALLS = ("write_json", "write_jsonl", "append_jsonl", "merge_dated_jsonl",

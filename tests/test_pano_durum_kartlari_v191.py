@@ -375,11 +375,23 @@ def test_portfolio_json_TEK_kez_okunur():
 # =================================================================================================
 def test_izgara_YENI_RENK_JETONU_acmaz():
     """Omega kuralı: ayrım saç teli çizgi ve tondan gelir. Yeni bir hex, panonun görsel dilini
-    ikiye böler ve WCAG ölçümü olmayan bir renk doğurur."""
+    ikiye böler ve WCAG ölçümü olmayan bir renk doğurur.
+
+    D1 (2026-08-07) — LİSTE ROL ADLARIYLA YAZILIR. İddia aynı ("ızgara yeni bir görsel dil
+    açmaz, mevcut dili tekrar eder"); değişen, mevcut dilin ADIdır. Jeton mimarisi iki
+    katmana ayrıldı: DEĞER katmanı bir hue'nun adını taşır (--amber), ROL katmanı bir işin
+    adını (--sev-2 = "insan gerekiyor"). Bileşen kuralları YALNIZ rol katmanını okur, çünkü
+    denetim aynı hue'nun beş ayrı işe koşulduğunu ölçtü ve hue adıyla bağlanan bir kural
+    ikinci bir anlamı ödünç almayı ÜCRETSİZ kılıyordu."""
     blok = _govde("/* ---- DURUM KART-IZGARASI (v191)", "@media(max-width:1100px)", INDEX)
     assert not re.search(r"#[0-9a-fA-F]{3,8}\b", blok), f"ham renk değeri: {blok}"
-    for jeton in ("--card", "--line-2", "--r-card", "--mono", "--tx2", "--tx3", "--amber", "--red"):
+    for jeton in ("--card", "--line-2", "--r-card", "--mono", "--tx2", "--tx3", "--sev-2", "--sev-1"):
         assert jeton in blok, f"{jeton} jetonu kullanılmıyor — değer başka yerden geliyor olabilir"
+    # Ham hex kadar sessiz bir geri düşüş: kuralın hue adına geri bağlanması. Yasağın GENEL
+    # hâli test_renk_rolleri_v197::test_bilesen_kurallari_ham_hue_okumaz'dadır; burada ızgaraya
+    # özgü mesajıyla tekrarlanır, çünkü bu bloğun sözleşmesi bu dosyada okunuyor.
+    assert not re.search(r"var\(\s*--(green|amber|red)\b", blok), \
+        "ızgara kuralı hue adına geri bağlanmış — kural hangi ROLÜ taşıdığını söylemiyor"
 
 
 def test_sayilar_tabular_nums():
@@ -401,10 +413,16 @@ def test_anomali_rengi_ve_hareket_butcesini_bozmaz():
     v192'de kanal TEKE indi. Eskiden aynı sapma İKİ dille anlatılıyordu: başlıktaki 7px'lik
     `.durum-nokta` ve gövdedeki uyarı satırı. Artık matrisin kuralı burada da geçerli — sapma
     hücrenin MÜREKKEBİNİ renklendirir (`.durum-kart.uyari` / `.durum-kart.kopuk`), adı düğmenin
-    `aria-label`ına girer (nokta zaten okuyucuya hiçbir şey söylemiyordu) ve rozet çipi doğar."""
+    `aria-label`ına girer (nokta zaten okuyucuya hiçbir şey söylemiyordu) ve rozet çipi doğar.
+
+    D1 (2026-08-07): iki kural ROL katmanına bağlandı. Bu, anomali kanalının en doğru
+    ifadesi — `.uyari` ile `.kopuk` zaten bir HUE değil bir ŞİDDET söylüyordu ("insan
+    gerekiyor" / "şimdi müdahale"), ve artık jetonun adı da onu söylüyor: --sev-2 / --sev-1.
+    ÖLÇÜLEN DEĞER AYNI (rol bugün ilgili hue'ya alias); değişen, kuralın hangi işi taşıdığını
+    beyan etmesi."""
     assert ".durum-nokta" not in CSS_KOD, "anomali noktası CSS'te kalmış — iki işaret dili sürüyor"
     assert "durum-nokta" not in KOD, "anomali noktası JS'te kalmış"
-    for kural in (".durum-kart.uyari{color:var(--amber)}", ".durum-kart.kopuk{color:var(--red)}"):
+    for kural in (".durum-kart.uyari{color:var(--sev-2)}", ".durum-kart.kopuk{color:var(--sev-1)}"):
         assert kural in INDEX, f"anomali renk kuralı yok: {kural}"
     blok = _govde(".durum-kart.uyari{", "\n.durum-dus{", INDEX)
     assert "animation" not in blok and "blink" not in blok
@@ -639,9 +657,17 @@ def test_degerin_KENDI_rengi_hucrenin_rengini_YENER():
     `.pm-yield`) AŞAĞIDA ve AYNI özgüllükte `color` bildiriyordu — kaynak sırası gereği kap
     kazanıyordu. Yani `SERMAYE_RENK` kartın sayısına yeşil/kırmızı VERİYORDU ve ekranda hiç
     görünmüyordu: para kuralının tek görünür kanalı, hiçbir testin bakmadığı bir sıra
-    çakışmasıyla ölüydü. Bu ölçüm o kanalı canlı tutar."""
-    for kural in (".pm-yield.pos{color:var(--green)}", ".pm-yield.neg{color:var(--red)}",
-                  ".pm-yield.warn{color:var(--amber)}"):
+    çakışmasıyla ölüydü. Bu ölçüm o kanalı canlı tutar.
+
+    D1 (2026-08-07) — ÜÇ KURAL İKİ AYRI ROLE AYRILDI ve bu ayrım bu testin iddiasını
+    KESKİNLEŞTİRİR. `.pos`/`.neg` bir K/Z İŞARETİdir → YÖN rolü (--yon-arti/--yon-eksi),
+    kroması bilerek şiddetin altında: kârlı bir gün bir risk ihlaliyle dikkat için
+    yarışamaz. `.warn` ise bir işaret değil bir ALARM'dır → ŞİDDET rolü (--sev-2). Eskiden
+    üçü de aynı hue kovasından (green/red/amber) geliyordu ve "para işareti" ile "uyarı"
+    ekranda aynı ağırlıkta bağırıyordu. Kanalın canlılığı iddiası aynen duruyor; kanal
+    artık İKİ kanal olduğunu da söylüyor."""
+    for kural in (".pm-yield.pos{color:var(--yon-arti)}", ".pm-yield.neg{color:var(--yon-eksi)}",
+                  ".pm-yield.warn{color:var(--sev-2)}"):
         assert kural in INDEX, f"değer rengi kuralı yok: {kural}"
     # Kural `.pm-yield` taban kuralından SONRA gelmeli (aynı özgüllükte olsaydı sıra yine kaybettirirdi
     # — burada özgüllük 0,2,0 olduğu için yenmesi garanti, ama sıra da doğru olsun).
