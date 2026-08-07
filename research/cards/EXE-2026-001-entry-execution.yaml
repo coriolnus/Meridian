@@ -23,7 +23,10 @@ success_metric: >
 kill_criteria:
   - "limit-offset hiçbir grid noktasında dolum oranını kabul edilebilir tutamıyorsa (dolmama >%40) tasarım geri döner"
   - "iki motor hizalanamıyorsa (yapısal engel) fark KALICI ölçüm olarak damgalanır, gizlenmez"
-k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [e1_grid/a_mkt, e1_grid/a_cancel, e1_grid/b_mkt, e1_grid/b_cancel, e1_grid/c_mkt, e1_grid/c_cancel]}
+k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [e1_grid/a_mkt, e1_grid/a_cancel,
+  e1_grid/b_mkt, e1_grid/b_cancel, e1_grid/c_mkt, e1_grid/c_cancel, e1_grid/ref_limitsiz]}
+# K += 1 (2026-08-07, R2): `ref_limitsiz` kart-DIŞI referans koldu; İŞLETİM NOKTASINA terfi
+# ettirilince bir KARAR olur ve K defterine girer. Grid hücresi eklenmedi, referans terfi etti.
 status: measured   # 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
 # HÜKÜM (Rol-1): kill#1 TETİKLENMEDİ (hiçbir hücre dolmama>%40 değil; A 0,347 · B 0,165 · C 0,096).
 # ANA BULGU: limit-bacağı geriye-dönük defterde MONOTON ZARARLI — net$ A −7.202 · B −1.182 ·
@@ -101,3 +104,53 @@ revizyonlar:
       kabul etmez, `gtc`ye düşer). Dosyanın yalan söylememesi için satırın temizlenmesi ayrı bir
       SSoT kalemidir (state/goal.yaml git-izli, dagit [1b] canlıya kopyalar) — bu turda
       DOKUNULMADI.
+
+  - id: "EXE-2026-001-R2"
+    tarih: "2026-08-07"
+    alan: "parameter_grid → limit_offset (işletim noktası)"
+    degisim: >
+      Yürürlükteki işletim noktası, kartın `B` hücresinden (`min(0,5·ATR14; %1,0)` — modül
+      varsayılanı `ENTRY_LIMIT_ATR_MULT=0,5` / `ENTRY_LIMIT_PCT_CAP=0,01`) `state/goal.yaml →
+      execution_v2`de `limit_atr_mult: 100,0` / `limit_pct_cap: 0,04`e alınmıştır. Bu değerlerle
+      limit tavanı `min(100·ATR; %4·fiyat)` olur ve ATR bacağı hiçbir gerçek barda bağlamaz;
+      geriye BAĞLAYAN TEK TAVAN olarak `MAX_ENTRY_GAP_PCT = %4` (broker.py:17) kalır.
+    k_etkisi: >
+      GRİDE YENİ HÜCRE EKLENMEDİ. Bu nokta ölçümde ZATEN koşuldu: `ref_limitsiz` kolu
+      (`limit_atr_mult=1000`, `limit_pct_cap=0,10` → limit tetik×1,10 > max_chase tetik×1,04)
+      tam da "limit bağlamaz, %4 chase bağlar" rejimidir ve yürürlükteki yapılandırma bu rejimin
+      İÇİNDEDİR — sayısal değerler farklı, DAVRANIŞ AYNI (ikisinde de limit tavanı ölü, bağlayan
+      max_chase). Ancak `ref_limitsiz` kart-DIŞI bir REFERANS koldu ve `k_registry.trial_ids`
+      içinde YOKTU; bir referans kolu İŞLETİM NOKTASINA terfi ettirmek bir karardır ve sayılır:
+      **K += 1** (`e1_grid/ref_limitsiz` trial_ids'e eklendi). kill_criteria DEĞİŞMEDİ.
+    ne_olculdu: >
+      Kartın KENDİ grid'i (2026-08-03, research/olcumler/e1_grid_2026-08-03/RAPOR_e1.md; R1
+      geometrisi, 250 sembol, 2022-01-03→2026-07-29). Net $ (replay defteri, 10bps):
+        A = min(0,25·ATR14; %0,5)  -> -7.202,46   (dolmama %34,68)
+        B = min(0,50·ATR14; %1,0)  -> -1.182,15   (dolmama %16,48)   <- ESKİ İŞLETİM NOKTASI
+        C = min(1,00·ATR14; %1,5)  -> -2.878,30   (dolmama  %9,55)
+        REF·limitsiz (limit ölü)   -> +2.957,02   (dolmama  %2,38)   <- YENİ İŞLETİM NOKTASI
+      E3 kötümser ikizde de tek artı kolon REF: +1.958,81 (B: -2.045,61). Yani limit bacağı
+      İKİ maliyet modelinde de MONOTON ZARARLI ve sıkılaştıkça kötüleşiyor.
+    kok_neden: >
+      Limit tavanının maliyeti işlem BAŞINA değil, ATLANAN İŞLEMLERDE birikiyor. Dar tavan
+      ödül/risk oranını korur ama fiyat tetiği geçip kaçtığında girişi tümden düşürür
+      (`entry_missed_limit`: A'da 38, B'de 23, C'de 12, REF'te 0). Ölçüm, atlanan bu işlemlerin
+      toplam değerinin, kovalayarak girmenin ödül/risk aşınmasından BÜYÜK olduğunu söylüyor.
+      Canlı doğrulama (2026-08-06 dört pozisyon): AMGN +1,78% · EMR +1,60% · BKNG +1,55%
+      kovalandı, ödül/risk 2,50'den sırasıyla 1,50 / 1,76 / 1,90'a indi; NUE tetiğin ALTINDA
+      doldu (2,63'e YÜKSELDİ). B işletim noktasında bu dördün ÜÇÜ hiç açılmayacaktı.
+    olcum_etkisi: >
+      `counterfactual.advance` AYNI `MAX_ENTRY_GAP_PCT` sabitini okur (broker.py:75-80 notu),
+      dolayısıyla karşı-olgusal defter bu işletim noktasıyla tutarlı kalır — canlı ile cf
+      "aynı stratejiyi ölçüyor" hâli KORUNDU. Kartın DoD ölçütleri (a)/(b)/(c) değişmedi;
+      `dolmama_orani` beklenen aralığı B'nin %16,48'inden REF'in %2,38'ine kayar ve bu
+      kill#1 eşiğinden (>%40) UZAKLAŞIR, ona yaklaşmaz.
+    durustluk_beyani: >
+      BU KAYIT GERİYE DÖNÜKTÜR VE ÖYLE OKUNMALIDIR. Yapılandırma bu değerleri zaten taşıyordu;
+      Rol-1 bunu 2026-08-07'de canlı `entry_law()` çıktısını okurken FARK ETTİ ve ancak ondan
+      SONRA kartla karşılaştırdı. Yani bu revizyon bir ön-kayıt DEĞİL, mevcut bir sapmanın
+      BEYANIDIR. Eşik sonradan sonuca uydurulmadı — grid 2026-08-03'te, sapma fark edilmeden
+      ÖNCE koşulmuştu ve hükmü o gün yazılmıştı; bu revizyon yalnız "işletim noktası artık
+      hangi kolon" sorusunu kayda geçirir. Rol-1'in ilk okuması ("kanıtsız sapma") YANLIŞTI:
+      kanıt kartın kendi içindeydi ve sapma kanıtın işaret ettiği YÖNDEYDİ.
+    operator_hukmu: "operatör 2026-08-07: böyle kalsın (işletim noktası REF·limitsiz rejimi)"
