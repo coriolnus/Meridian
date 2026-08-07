@@ -654,6 +654,204 @@ def events_since(days: int, limit_hint: int | None = None,
     return [e for e in rows if not e.get("ts") or str(e["ts"]) >= since]
 
 
+# ---- EVREN KAPSAMASI: ŞU AN ile GEÇMİŞİN AYRILMASI (v206, 2026-08-07) --------------------------
+# ÖLÇÜLEN ÇELİŞKİ (canlı A1, 2026-08-07): satır "165 seans evren kapsaması yetersiz olduğu için
+# ATLANDI (son: 2026-07-29 %17) — kaynak yayınlamıyor" diyordu. Aynı defterde ölçülen gerçek:
+#   * 165 sayısı OLAY sayısıdır, SEANS sayısı değil — yerel defter kopyasında 165 olay yalnız
+#     YEDİ ayrık seansa aitti ve 159'u TEK seansa (2026-07-15) düşmüştü. O 159, scheduler'ın
+#     `_rehydrate` düzeltmesinden (2026-07-22, scheduler.py:185) önceki tavan-unutma fırtınasıdır:
+#     bir sayaç kusurunun kalıntısı, ikinci bir sayaç kusuru tarafından "165 seans" diye okunmuş.
+#   * son atlanan seans 2026-07-29 — hükmün verildiği günden DOKUZ gün önce. Aradaki seanslarda
+#     ölçülen kapsama 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 0,996 idi (canlı
+#     `session_deferred_for_coverage` olayları). Yani BUGÜN kapsama sorunu YOK.
+# Kusurun sınıfı: KALICI KIRMIZI. Bu deponun `alarm_delivery` satırında 2026-07-26'da tam olarak
+# aynı hastalık tedavi edilmişti ("_toplam kümülatiftir ve azalmaz; satır bir kez kırmızıya
+# döndüğünde sonsuza dek kırmızı kalıyordu... Kalıcı kırmızı bir dedektör, hiç olmayan bir
+# dedektörle aynıdır") — reçete de aynıdır: HÜKÜM güncel pencereye bakar, KÜMÜLATİF SAYI ayrı bir
+# alanda GÖRÜNÜR kalır ve ihlal ÜRETMEZ. İyileşme "hiç olmadı"ya çevrilmez; yalnız bayrak düşer.
+#
+# PENCERE NEDEN "SON N SEANS", NEDEN N=5: pencere DUVAR SAATİ değil SEANS sayar, çünkü kusurun
+# yarısı tam olarak olay-sayısını-seans-sanmaktı; 159 olaylık tek bir fırtına, seans ekseninde
+# bir (1) seanstır. N ise bekçinin uydurduğu bir sayı DEĞİL, motorun kendi yasasıdır:
+# `loop.UNIVERSE_LAG_MAX_D` (=5) motorun bir seansın barını kovalamayı sürdürdüğü ufuktur — o
+# ufkun ötesinde motor zaten pes etmiştir, yani orası TARİHTİR. Eşik de aynı yerden okunur
+# (`loop.UNIVERSE_MIN_COVERAGE`) — scheduler.py:890'daki "tek yasa, tek ölçüm" ile aynı gerekçe.
+KAPSAMA_PENCERE_SEANS = 5        # yedek beyan; asıl kaynak loop.UNIVERSE_LAG_MAX_D
+KAPSAMA_ESIK = 0.90              # yedek beyan; asıl kaynak loop.UNIVERSE_MIN_COVERAGE
+
+# Hangi olay hangi ALANDA seans kimliğini taşır. Adlar `event` ya da (alarma yükseltilmiş imzada)
+# `kind` alanından okunur — K1'in dersi: yalnız yeni imzayı okumak dedektörü geçmişe kör bırakır.
+_KAPSAMA_SEANS_ALANI: dict[str, str] = {
+    "session_bar_never_published":    "session",        # İHLAL: seans atlandı
+    "universe_coverage_low":          "date",           # İHLAL: hiçbir yakın seansta kapsama yok
+    "session_deferred_for_coverage":  "index_session",  # SAĞLIKLI: T+1 ertelemesi (tasarım gereği)
+    "session_bar_arrived_late":       "session",        # SAĞLIKLI: merdiven geç barı yakaladı
+    "daily_cycle":                    "date",           # SAĞLIKLI: seans gerçekten işlendi
+}
+_KAPSAMA_IHLAL = ("session_bar_never_published", "universe_coverage_low")
+
+
+def _yuzde(oran: float) -> str:
+    """Ölçülen oranı yüzde olarak yazar. `:.0f` KULLANILMAZ: ölçülen 0,996'yı "%100" diye yazmak,
+    tam kapsamayı KANITLANMAMIŞKEN iddia etmektir (bu dosyanın kovaladığı sınıfın küçük hâli)."""
+    return f"%{100 * float(oran):.4g}"
+
+
+def _kapsama_penceresi() -> tuple[int, float]:
+    """Hüküm penceresi (seans) ve kapsama eşiği — İKİSİ DE motorun kendi sabitlerinden okunur."""
+    try:
+        from . import loop as _lp
+        return (max(1, int(getattr(_lp, "UNIVERSE_LAG_MAX_D", KAPSAMA_PENCERE_SEANS))),
+                float(getattr(_lp, "UNIVERSE_MIN_COVERAGE", KAPSAMA_ESIK)))
+    except Exception as e:
+        # YASA 4: sessiz-yutma DEĞİL. Motor sabitleri okunamazsa bekçi susmaz, kendi BEYANLI
+        # yedeğiyle hüküm verir ve bunu duyurur — pencereyi ölçemeyen bir bekçi, penceresi
+        # olmayan bir bekçiden daha tehlikelidir (sessizce başka bir yasaya göre hüküm verirdi).
+        from . import obs
+        obs.warn("kapsama_penceresi_okunamadi", error=f"{type(e).__name__}: {e}",
+                 detail="motor sabitleri (UNIVERSE_LAG_MAX_D/MIN_COVERAGE) okunamadı — bekçi "
+                        "watchdog'daki beyanlı yedek değerlerle hüküm veriyor")
+        return KAPSAMA_PENCERE_SEANS, KAPSAMA_ESIK
+
+
+def _kapsama_satiri(olaylar: list[dict]) -> dict:
+    """`universe_coverage` satırı: HÜKÜM güncel pencereden, TARİH ayrı alandan.
+
+    Sözleşmeler:
+      * ÖLÇÜLEMEDİ ≠ 0 ≠ TEMİZ. Pencerede hiç kapsama kanıtı yoksa sayılar None döner ve metin
+        "ÖLÇÜLEMEDİ" der — "işlenen seanslar tam evreni gördü" cümlesi kanıtsız KURULMAZ.
+      * Bekçi ZAYIFLAMAZ: güncel penceredeki her ihlal hâlâ ok=False üretir. Seans kimliği OLMAYAN
+        bir ihlal olayı GÜNCEL sayılır — tarihlendiremediğimiz bir ihlali "geçmiş" saymak, ölçemediğimiz
+        şeyi lehimize yorumlamak olurdu.
+      * Tarihsel sayı KAYBOLMAZ ama İHLAL ÜRETMEZ; ayrıca AYRIK SEANS ile OLAY SAYISI ayrı ayrı
+        yazılır (kusurun ta kendisi bu ikisini birbirine karıştırmaktı)."""
+    pencere_n, esik = _kapsama_penceresi()
+
+    kanit: list[tuple[str, dict]] = []
+    for e in olaylar:
+        ad = str(e.get("event") or "")
+        if ad not in _KAPSAMA_SEANS_ALANI:
+            ad = str(e.get("kind") or "")          # alarma yükseltilmiş imza adı `kind`'da taşır
+            if ad not in _KAPSAMA_SEANS_ALANI:
+                continue
+        kanit.append((ad, e))
+
+    def _seans(ad: str, e: dict) -> str | None:
+        v = e.get(_KAPSAMA_SEANS_ALANI[ad])
+        return str(v) if v else None
+
+    def _kapsama(e: dict) -> float | None:
+        for alan in ("universe_coverage", "coverage"):
+            v = e.get(alan)
+            if v is not None:
+                try:
+                    return float(v)
+                except (TypeError, ValueError):
+                    # sessiz-yutma: ayrıştırılamayan bir ÖLÇÜ, ölçünün YOKLUĞUdur — None döner ve
+                    # metin o cümleyi hiç kurmaz. Uyarı basılmaz çünkü bu dal bozuk satır BAŞINA
+                    # ateşlenir: tek bozuk defter satırı, alarm bütçesini tek başına yakabilirdi
+                    # (EEMUA). Bozukluk zaten defter sözleşmesi dedektörünün (`ledger_contract`)
+                    # işidir; burada yapılacak tek dürüst şey, olmayan ölçüyü UYDURMAMAKtır.
+                    return None
+        return None
+
+    # Seans ekseni: ISO tarihler sözlüksel sıralamada kronolojiktir (obs tek yazar, tek biçim).
+    seanslar = sorted({s for ad, e in kanit if (s := _seans(ad, e))})
+    pencere = set(seanslar[-pencere_n:])
+
+    guncel, tarihsel = [], []
+    for ad, e in kanit:
+        if ad not in _KAPSAMA_IHLAL:
+            continue
+        s = _seans(ad, e)
+        (guncel if (s is None or s in pencere) else tarihsel).append((ad, e, s))
+
+    # TARİHSEL MUHASEBE: ayrık seans ve olay sayısı AYRI. (165 olay = 7 seans; 159'u tek seansta.)
+    _ihl_hepsi = guncel + tarihsel
+    _ayrik = sorted({s for _a, _e, s in _ihl_hepsi if s})
+    _seanssiz = sum(1 for _a, _e, s in _ihl_hepsi if not s)
+    _guncel_seans = sorted({s for _a, _e, s in guncel if s})
+
+    ok = not guncel
+    satir: dict = {
+        "check": "universe_coverage", "ok": ok,
+        "pencere_seans": pencere_n, "kapsama_esigi": esik,
+        "guncel_ihlal_seans": len(_guncel_seans) + sum(1 for _a, _e, s in guncel if not s),
+        "guncel_ihlal_olay": len(guncel),
+        "tarihsel_ihlal_seans": len(_ayrik) + _seanssiz,
+        "tarihsel_ihlal_olay": len(_ihl_hepsi),
+        "tarihsel_son_seans": (_ayrik[-1] if _ayrik else None),
+        "olculemedi": False,
+    }
+
+    if not kanit:
+        # ÖLÇÜLEMEDİ: kapsamayı konuşan tek bir satır bile yok. Bu "temiz" DEĞİLDİR.
+        satir.update(olculemedi=True, guncel_ihlal_seans=None, guncel_ihlal_olay=None,
+                     tarihsel_ihlal_seans=None, tarihsel_ihlal_olay=None,
+                     detail=(f"ÖLÇÜLEMEDİ: defter penceresinde tek bir kapsama kanıtı yok "
+                             f"(atlama/erteleme/işlenmiş seans) — kapsama hükmü VERİLEMEDİ, "
+                             f"'temiz' DEĞİL; hüküm penceresi son {pencere_n} seans, "
+                             f"eşik {_yuzde(esik)}"))
+        return satir
+
+    # SON ÖLÇÜLEN KAPSAMA: pencerenin en yeni, kapsama TAŞIYAN kanıtı. (Metin bunu uydurmaz —
+    # ölçü yoksa cümle de kurulmaz.)
+    _son_olcum = None
+    for ad, e in kanit:
+        s, c = _seans(ad, e), _kapsama(e)
+        if c is not None and (s is None or s in pencere):
+            _son_olcum = (s, c, ad)
+    satir["son_olculen_kapsama"] = None if _son_olcum is None else _son_olcum[1]
+
+    # TARİHSEL GÖVDE: sayı GÖRÜNÜR kalır, ama ETİKETİ hükme göre değişir. Güncel pencerede ihlal
+    # varken bu toplamın bir kısmı ZATEN güncel ihlaldir; ona toptan "İHLAL DEĞİL" demek, az önce
+    # düzelttiğimiz karıştırmanın simetrik hâli olurdu.
+    _tarih_govde = (f"{len(_ayrik) + _seanssiz} ayrık seans / {len(_ihl_hepsi)} alarm satırı"
+                    + (f", sonuncusu {_ayrik[-1]}" if _ayrik else "")) if _ihl_hepsi else ""
+    _tarih_notu = (f" · DEFTER TOPLAMI (30 günlük okuma penceresi): {_tarih_govde}"
+                   if _tarih_govde else "")
+    _olcum_notu = ""
+    if _son_olcum is not None:
+        _olcum_notu = (f", son ölçülen kapsama {_yuzde(_son_olcum[1])}"
+                       + (f" ({_son_olcum[0]})" if _son_olcum[0] else ""))
+
+    if guncel:
+        _atlanan = [s for _a, _e, s in guncel if _a == "session_bar_never_published"]
+        _dusuk = [(_e, s) for _a, _e, s in guncel if _a == "universe_coverage_low"]
+        parcalar = []
+        if _atlanan:
+            _u = sorted({s for s in _atlanan if s})
+            # LİSTE KIRPILIRSA BUNU SÖYLE: "4 seans ATLANDI (a, b, c)" okuyucuya dördüncüyü
+            # arattırır ve sayının yanlış olduğunu düşündürür — kırpma GÖRÜNÜR olmalı.
+            _gos = ("…, " if len(_u) > 3 else "") + ", ".join(_u[-3:])
+            parcalar.append(f"{len(_u) or len(_atlanan)} seans ATLANDI"
+                            + (f" ({_gos})" if _u else " (seans kimliği YOK)"))
+        if _dusuk:
+            _ue = sorted({s for _e, s in _dusuk if s})
+            _c = _kapsama(_dusuk[-1][0])
+            parcalar.append(f"{len(_ue) or len(_dusuk)} seansta kapsama yetersiz"
+                            + (f" (son: {_ue[-1]} {_yuzde(_c)})" if _ue and _c is not None else ""))
+        # KAYNAK İDDİASI ÖLÇÜMDEN TÜRER: "kaynak yayınlamıyor" ancak GÜNCEL pencerede atlama
+        # varsa kurulabilir — ve o zaman bile geçmiş zamanla, çünkü ölçtüğümüz şey o seanslardır.
+        satir["detail"] = (f"GÜNCEL (son {pencere_n} seans): " + " · ".join(parcalar)
+                           + (" — bu seanslarda kaynak barı yayınlamadı" if _atlanan else "")
+                           + _olcum_notu + _tarih_notu)
+        return satir
+
+    # GÜNCEL PENCERE TEMİZ. Tarih varsa görünür kalır, bayrak DÜŞER.
+    # PENCERENİN YAŞI YAZILIR: kanıt akışı durursa (motor sustuysa) pencere DONAR ve yeşil kalır —
+    # bu davranış eski hükümde de vardı, ama görünmezdi. Motorun ölümü başka dedektörlerin işi
+    # (nabız/mekanizma sağlığı); burada yapılacak dürüst şey, hükmün hangi güne dayandığını
+    # SÖYLEMEKTİR. Yeni bir eşik/alarm icat edilmez (alarm bütçesi yasası).
+    satir["detail"] = (f"GÜNCEL (son {pencere_n} seans, son kanıt "
+                       f"{seanslar[-1] if seanslar else 'seanssız'}): kapsama ihlali YOK — "
+                       f"{len(pencere)} seansta evren eşiği ({_yuzde(esik)}) tuttu"
+                       + (f"{_olcum_notu}; kaynak YAYINLIYOR" if _son_olcum is not None else "")
+                       + (f" · TARİHSEL (hüküm penceresinin DIŞINDA, İHLAL DEĞİL): {_tarih_govde}"
+                          if _tarih_govde else ""))
+    return satir
+
+
 def parity_report(olaylar: list[dict] | None = None) -> dict:
     """Canlı üretim oranları ile beklenen oranların kıyası. Her satır: {check, ok, detail}.
 
@@ -668,31 +866,16 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     # 1) EVREN KAPSAMASI — kararların alındığı seans evreni gerçekten görüyor mu?
     #    (bulunan hatanın ta kendisi: %18'lik yanlı kesitte karar)
     # TARİH TABANLI PENCERE (K1): satır limiti bu kontrolü kör ediyordu — bkz. events_since().
-    _cov_ev = events_since(30, olaylar=olaylar)
-    defer = [e for e in _cov_ev
-             if e.get("event") in ("session_deferred_for_coverage", "universe_coverage_low")]
-    low = [e for e in defer if e.get("event") == "universe_coverage_low"]
     # SEANS ATLAMA — DEDEKTÖRÜN KÖR NOKTASI KAPATILIYOR (K1, 2026-07-30). Bu kontrol yalnız
     # `universe_coverage_low`a bakıyordu ve o olay canlıda 0 kez ateşlenmiş; bu yüzden ok=True
-    # diyordu. Oysa `session_bar_never_published` 164 kez düşmüş: motor 164 seansı kapsama
+    # diyordu. Oysa `session_bar_never_published` 164 kez düşmüş: motor o seansları kapsama
     # yüzünden TERK ETMİŞ ve dedektör "işlenen seanslar tam evreni gördü" diye rapor veriyordu.
-    # İKİ İMZA BİRDEN okunur: tarihsel 164 satır `event` adıyla yazıldı (warn dönemi), K1'den
+    # İKİ İMZA BİRDEN okunur: tarihsel satırlar `event` adıyla yazıldı (warn dönemi), K1'den
     # sonraki satırlar DATA_QUALITY alarmı olduğu için adı `kind` alanında taşıyor. Yalnız yeni
     # imzayı okumak dedektörü geçmişe kör bırakırdı — `failed_broker_rejection` dersinin tersi.
-    skipped = [e for e in _cov_ev
-               if e.get("event") == "session_bar_never_published"
-               or e.get("kind") == "session_bar_never_published"]
-    _cov_ok = not low and not skipped
-    if skipped:
-        _det = (f"{len(skipped)} seans evren kapsaması yetersiz olduğu için ATLANDI (son: "
-                f"{skipped[-1].get('session')} %{100*float(skipped[-1].get('universe_coverage') or 0):.0f}) "
-                f"— kaynak yayınlamıyor")
-    elif low:
-        _det = (f"{len(low)} seansta evren kapsaması yetersizdi (son: "
-                f"{low[-1].get('date')} %{100*float(low[-1].get('coverage', 0)):.0f})")
-    else:
-        _det = "işlenen seanslar tam evreni gördü"
-    rows.append({"check": "universe_coverage", "ok": _cov_ok, "detail": _det})
+    # HÜKÜM ile TARİH v206'da AYRILDI (bkz. `_kapsama_satiri`): okuma penceresi (30 gün) tarihi
+    # taşımayı sürdürür, `ok` yalnız son N SEANSA bakar.
+    rows.append(_kapsama_satiri(events_since(30, olaylar=olaylar)))
 
     # 2) TARAMA VERİMİ — tam kapsamalı seanslarda hiç aday çıkmıyorsa bu 'seçicilik' değil şüphe
     if len(recent) >= PARITY_MIN_SESSIONS:
