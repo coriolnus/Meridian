@@ -257,7 +257,29 @@ h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-h
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}
 .mut{color:var(--tx2)}
-.pos{color:var(--green)} .neg{color:var(--red)}
+/* ROL SINIFI (D5, 2026-08-07) — burada `.pos{color:var(--green)}` ve `.neg{color:var(--red)}`
+   duruyordu ve İKİSİ DE YANLIŞTI, ama AYRI AYRI. Kullanımlar sayıldı, tahmin edilmedi:
+
+     `.neg` — SIFIR kullanıcı. landing.js:108 `" neg"` üretiyor ama HER ZAMAN `pm-cell`e
+       ekleyerek (`'<div class="pm-cell' + cls + '"'`), yani eşleşen kural 0-2-0 özgüllüğüyle
+       `.pm-cell.neg`tir; çıplak 0-1-0 kuralı hiçbir öğeyi boyamıyordu. Ölü kural SİLİNDİ.
+     `.pos` — TEK kullanıcı ve o da YÖN DEĞİLDİ: "bağlı" rozeti (Alpaca · paper, aşağıda).
+       "bağlı" ROL 2'nin ŞİDDET-3'ü (nominal: sakin, geçti, bağlı) — index.html :root'un kendi
+       tanımı. Yani `--yon-arti`ya çevirmek bir rol sızıntısını başkasıyla değiştirirdi.
+       Sınıf ADI da yalan söylüyordu: aynı ad panoda YÖN, burada DURUM demek oluyordu.
+       Kullanım index.html:436'nın rol sınıfına taşındı; `.pos` de böylece sıfır kullanıcıya
+       düştü ve o da SİLİNDİ. Matris hücreleri gerçekten yöndür — `.pm-cell.pos/.neg`
+       (aşağıda) `--yon-*` okumaya devam eder, dokunulmadı.
+
+   ÖLÇÜM (WCAG 2.x, docs/kontrast-denetimi.md §1 yöntemi). Zemin KURALDAN okundu, tahminle
+   değil: `.acct .r b` kendi zeminini boyamaz, `.acct` ve `.main` de boyamaz — ilk boyayan ata
+   `.app{background:var(--bg)}`, opak, yığında alfa yok. `--sev-3` iki temada da `--green`e
+   çözülür, yani PİKSEL DEĞİŞMEDİ; değişen yalnız hue'nun hangi rolden geldiği.
+     gündüz  #0c6a3b · --bg #fbf9f8 → 6,37  (12px mono, eşik 4,5 → AA)
+     gece    #4cc38a · --bg #1c1a18 → 7,83  (AA)
+   Rakam D5 ZEMİNİNDE yeniden alındı: bu turdan önce `--bg` saf beyazdı ve aynı mürekkep
+   6,69 ölçüyordu — 0,32'lik farkı taşıyan zemin turu, ölçümü bayatlatan turdu. */
+.sev-3{color:var(--sev-3)}
 .mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--s6)}
 section[id]{scroll-margin-top:88px}
@@ -667,7 +689,9 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
       <div class="main">
         <div class="acct">
           <p class="slab">HESAP</p>
-          <div class="r"><span>Alpaca · paper</span><b class="pos">bağlı</b></div>
+          <!-- "bağlı" bir DURUMdur, K/Z işareti değil: ŞİDDET-3 (nominal). Gerekçe ve ölçüm
+               `.sev-3` kuralının yanında; sınıf adı index.html:436 ile aynı. -->
+          <div class="r"><span>Alpaca · paper</span><b class="sev-3">bağlı</b></div>
         </div>
         <span class="slabel"><span class="d"></span>KURULUM × REJİM</span>
         <p class="greet">Hangi uygulama, hangi koşulda?</p>

@@ -38,7 +38,15 @@ ile kapatılan alanlardadır. Bu yüzden (a) düzeltmelerinin çoğu bir EKLEME 
 | — **(b) güvenli** | **44** |
 | Bu turda DÜZELTİLEN (a) | **30** |
 | **KUYRUKTA KALAN (a)** | **137** |
-| `app.js` kalan eşleşme (düzeltme SONRASI) | **181** |
+| `app.js` kalan eşleşme (düzeltme SONRASI) | **177** |
+
+**KUYRUK ÖDEMESİ — v207 (2026-08-07), 4 satır.** Eksen-2 kartının dört `?? 0`ı
+(`app.js:5185 #0`, `5186 #0`, `5186 #1`, `5187 #0` — kuyruk tablosunda **ÖDENDİ (v207)** olarak
+işaretli) o turda kaldırıldı: satır `.ozet-serit` hücrelerine taşındı ve yokluk artık `ölçülemedi`
+diye ADIYLA yazılıyor, hücre `ÖLÇÜLEMEDİ` rozetine düşüyor. Bu yüzden bugünkü dosya **177** ölçer.
+Üstteki **211 / 167 / 44 / 30 / 137** sayıları 2026-08-06 triyajının DONMUŞ anlık görüntüsüdür ve
+değişmez (bir ölçüm kaydı sonradan yeniden yazılmaz); ödenen her satır buraya EKLENEREK sayılır.
+**Kuyrukta bugün kalan (a): 137 − 4 = 133.**
 
 **Kapsam dışı ama beyan edilir** (bu turda yazılabilir değil, düzeltilmedi — toplam depo 215):
 `landing.js:47` ×2 (`hypotheses_total`/`hypotheses_shipped` → landing metnine), `landing.js:66`
@@ -209,10 +217,10 @@ Satır numaraları **bugünkü** (düzeltme sonrası) `app.js`ten.
 | `app.js:5176` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `terfi.n_live ?? 0}/${terfi.promote_min_n ?? "—"}${terfi.live_brier != null ? ` · Brier canlı ${trn(terfi.live_brier, …` |
 | `app.js:5178` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `${kq ? `<div class="srow"><span>Kanıt dolgusu kuyruğu</span><b>${kq.dolgulanabilir_gun ?? 0} gün · ${` |
 | `app.js:5179` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `kq.dolgulanabilir_satir ?? 0} satır dolgulanabilir · gece tavanı ${kq.gece_tavani ?? "—"}${` |
-| `app.js:5185` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `${ex ? `<div class="srow"><span>Eksen-2 üreteci</span><b>${ex.uretilen ?? 0} üretildi · ${` |
-| `app.js:5186` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.kaydedilen ?? 0} kaydedildi · ${ex.bekleyen_toplam ?? 0} bekleyen · ${` |
-| `app.js:5186` #1 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.kaydedilen ?? 0} kaydedildi · ${ex.bekleyen_toplam ?? 0} bekleyen · ${` |
-| `app.js:5187` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.otomatik_uygulanan ?? 0} otomatik uygulandı</b></div>` |
+| `app.js:5185` #0 | `?? 0` | a | **ÖDENDİ (v207)** — sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `${ex ? `<div class="srow"><span>Eksen-2 üreteci</span><b>${ex.uretilen ?? 0} üretildi · ${` |
+| `app.js:5186` #0 | `?? 0` | a | **ÖDENDİ (v207)** — sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.kaydedilen ?? 0} kaydedildi · ${ex.bekleyen_toplam ?? 0} bekleyen · ${` |
+| `app.js:5186` #1 | `?? 0` | a | **ÖDENDİ (v207)** — sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.kaydedilen ?? 0} kaydedildi · ${ex.bekleyen_toplam ?? 0} bekleyen · ${` |
+| `app.js:5187` #0 | `?? 0` | a | **ÖDENDİ (v207)** — sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `ex.otomatik_uygulanan ?? 0} otomatik uygulandı</b></div>` |
 | `app.js:5394` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `<div class="srow"><span>İzlenen sembol / işlenen olay</span><b>${iq.watched ?? 0} sembol · ${iq.events_handled ?? 0} …` |
 | `app.js:5394` #1 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `<div class="srow"><span>İzlenen sembol / işlenen olay</span><b>${iq.watched ?? 0} sembol · ${iq.events_handled ?? 0} …` |
 | `app.js:5395` #0 | `?? 0` | a | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | `<div class="srow"><span>Yazılan ölçüm / tetik-geçişi</span><b>${iq.decisions_written ?? 0} ölçüm · ${dec.fired ?? 0} …` |
