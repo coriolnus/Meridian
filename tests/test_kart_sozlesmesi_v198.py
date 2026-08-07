@@ -73,7 +73,16 @@ def _olcum_modulu():
 #            halefi; iki emisyon, biri teşhis ucu okunamadığındaki DÜRÜST BOŞLUK dalı)
 #   ogrenme 39 · kilitler 5 (değişmedi)
 # RATCHET KORUNUYOR: taşınan kart sayılmaz, DOĞAN kart bu satırda gerekçesiyle beyan edilir.
-KART_TABANI = {"karar": 21, "saglik": 14, "ogrenme": 39, "kilitler": 5}
+# D3-UI'DA BEYANLI GÜNCELLENDİ (2026-08-07) — C1'in on işi on YENİ kart doğurdu ve ONU (yalnız onu)
+# bu satır kaydeder. Ratchet'in istediği tam olarak bu: sessizce eklenmesin, BEYANLA eklensin.
+#   karar   21 → 26  (+5: retkarne · eylemsizlik · emiryasam · cikis · denetim)
+#   saglik  14 → 15  (+1: cizelge:damga — mekanizma nabız damgaları uca açıldı)
+#   ogrenme 39 → 43  (+4: maliyet · rollback · regresyon · olgunlasma)
+#   kilitler 5 →  5  (değişmedi — ⑤'e iş düşmedi)
+# ONUNUN DA KAPAĞI VAR: bütçesi zaten aşılmış üç yüzeye kapaksız kart eklemek "ilk bakışta düşen
+# yük"ü on kart büyütmek olurdu. Kapak sayıları `KAPAK_TABANI`nın TABANINI aşıyor (test `>=`);
+# yeni kapakların kendisi `tests/test_firsat_yuzeyleri_v200.py`de tek tek çivilendi.
+KART_TABANI = {"karar": 26, "saglik": 15, "ogrenme": 43, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.

@@ -1155,8 +1155,16 @@ def api_market(request: Request):
 
 @app.get("/api/agent")
 def api_agent(request: Request):
+    """Sürüm ekseninin kanonik yüzeyi: karne defteri + hipotezler + kalibrasyon.
+
+    D3-UI'DA İKİ OKUMA EKLENDİ (C1-5, C1-6) VE İKİSİ DE BURAYA AİT: rollback sicili ile regresyon
+    kırılımı `scoreboard.versions` üstünde yaşar, o da bu ucun ana yükü. Ayrı bir uca koymak,
+    aynı defteri iki uçtan servis etmek olurdu. `analytics.agent_view()` DEĞİŞTİRİLMEDİ —
+    zenginleştirme uç katmanında, yalnız okuma."""
     _auth(request)
-    return analytics.agent_view()
+    return {**analytics.agent_view(),
+            "rollback": _rollback_sicili(),        # C1-5: "kendini gerçekten geri alıyor mu?"
+            "regresyon": _regresyon_kirilimi()}    # C1-6: "neyi düzeltti, NEYİ BOZDU"
 
 
 @app.get("/api/memory")
@@ -2258,6 +2266,499 @@ def _diag_onbellek_bosalt(neden: str) -> None:
         pass
 
 
+# ==============================================================================================
+# D3-UI · FIRSAT YÜZEYLERİ (C1'in on işi) — OKUYUCUSUZ DEFTERLERİN UÇ TARAFI
+# ----------------------------------------------------------------------------------------------
+# ÖLÇÜLEN KUSUR SINIFI (docs/PATTERN-ETUDU-2026-08-06.md §C1): "veri üretiliyor ama panoda
+# görünmüyor". Aşağıdaki yardımcıların hepsi YALNIZ OKUR — hiçbiri state'e yazmaz, hiçbiri yeni
+# bir ölçüm ÜRETMEZ; diskte zaten duran defterleri panonun okuyabileceği şekle sokar.
+#
+# NEDEN YENİ BİR "/api/firsat" KOVASI AÇILMADI: bu deponun kendi kuralı ("iki uç aynı alanı iki
+# farklı şekilde servis edemez") tematik ev demektir. Her ölçüm KANONİK ucunun içine girer:
+#   near_miss   → /api/diagnostics `mlops` (kardeşleri exit_efficiency + mae_profile; üçü de P5)
+#   emir yaşamı → /api/diagnostics `reconcile` (emrin gerçekte ne olduğu — icra ailesi)
+#   eylemsizlik → /api/diagnostics `risk`     (bütçe/karartma/erteleme aynı ailenin üç yüzü)
+#   çizelge     → /api/diagnostics `cizelge`  (bekçi raporunun yanı; damgalar aynı dosyadan)
+#   rollback    → /api/agent `rollback`       (karne defteri orada)
+#   regresyon   → /api/agent `regresyon`      (sürüm ekseni orada)
+#   maliyet     → /api/hermes `spend_detay`   (K1'in kanonik spend yüzeyi — /api/spend EMEKLİ)
+# TEK İSTİSNA denetim izi: `/api/audit_trail` AYRI bir uçtur çünkü SORGULANABİLİR olmak zorunda
+# (etüdün kendi hükmü: "çözüm tavanı kaldırmak değil, sorgulanabilir kılmak"). Sorgu parametresi
+# taşıyan bir okuma, 45 sn önbellekli bir teşhis yükünün içine giremez.
+#
+# UYDURMA YASAĞI HER YARDIMCININ İÇİNDE: ölçülemeyen her dal `{"var": False, "neden": "<≥20
+# karakter gerekçe>"}` döndürür. Boş sözlük ya da sıfır DÖNDÜRÜLMEZ — pano onu "ölçüldü, çıkmadı"
+# diye çizerdi ve tam olarak bu turun kapattığı sınıf odur.
+# ==============================================================================================
+def _olculemedi(neden: str) -> dict:
+    """ÖLÇÜLEMEDİ dalının TEK biçimi. Tek yerde durur ki pano tek bir şekil tanısın."""
+    return {"var": False, "neden": neden}
+
+
+def _near_miss_karne() -> dict:
+    """C1-1 · Reddedilen kararların karnesi — `near_miss.json`ın İLK uç tüketicisi.
+
+    KÜNYE ZORUNLU VE BURADA TAŞINIR: defter `source: "yalnız-simüle"` / `n_real: 0` damgasını
+    taşıyor. Künyeyi düşürüp yalnız sayıları servis etmek, simüle bir kanıtı gerçek kanıt gibi
+    göstermek olurdu (R8). Pano onu okumak ZORUNDA kalsın diye `_kaynak` aynı yükte gider."""
+    doc = store.read_json("near_miss.json", None)
+    if not isinstance(doc, dict):
+        return _olculemedi("near_miss.json okunamadı — kapının reddettiklerinin karnesi bu turda "
+                           "ölçülemedi (P5 kalibrasyonu hiç koşmamış olabilir). 'Ret yok' DEĞİL.")
+    kovalar = doc.get("buckets") or {}
+    if not kovalar:
+        return _olculemedi("near_miss defteri var ama `buckets` boş — hangi kapının ne reddettiği "
+                           "ölçülemedi; kova kırılımı olmadan karne bir sayıya iner ve yalan söyler.")
+    # KOVALAR SIRALANIR: en çok reddeden üstte (kaldıraç sırası). Sıralama bir HÜKÜM değil bir
+    # okuma kolaylığı; hiçbir eşik buna bağlı değil.
+    satirlar = []
+    for ad, k in kovalar.items():
+        if not isinstance(k, dict):
+            continue
+        rej = k.get("by_regime") or {}
+        satirlar.append({
+            "blocked_by": ad, "n": k.get("n"), "entered": k.get("entered"),
+            "n_r": k.get("n_r"), "avg_r": k.get("avg_r"),
+            "rejim": [{"rejim": r, "n_r": (v or {}).get("n_r"), "avg_r": (v or {}).get("avg_r")}
+                      for r, v in sorted(rej.items(), key=lambda t: -((t[1] or {}).get("n_r") or 0))],
+        })
+    satirlar.sort(key=lambda s: -(s["n"] or 0))
+    return {"var": True, "resolved_total": doc.get("resolved_total"),
+            "kaynak": doc.get("_kaynak") or None, "kovalar": satirlar,
+            # KARŞI-OLGUSAL DEFTERİN BOYU: karnenin paydası burada. `ledgers.cf_resolved` ile AYNI
+            # sayıdır ve iki kez okunmaz — teşhis yükü onu zaten hesaplıyor, burada TEKRARLANMAZ.
+            "cf_defteri": "ledgers.cf_resolved"}
+
+
+def _emir_yasam() -> dict:
+    """C1-2 · Onaylanan planın emir yaşam-döngüsü izi — `mirror_orders.json`ın ilk panosal okuyucusu.
+
+    BUGÜNE KADAR: dosya yalnız `_stream_view` (akış sağlığı) için okunuyordu; coid başına
+    `status`/`filled_qty`/`filled_avg_price` panoya HİÇ ulaşmıyordu — yani "onayım aynaya ulaştı
+    mı, KAÇA doldu?" sorusunun cevabı diskte duruyor, ekranda yoktu.
+
+    PLANLANAN ↔ GERÇEKLEŞEN: `trade_plans.entry_trigger` ile dolum fiyatı yan yana konur ve fark
+    emir-başına slipaj olarak beyan edilir. Fiyatın kendisi ÜRETİLMEZ: iki alandan biri yoksa
+    `slipaj_bps` None kalır (0.0 yazmak "slipaj yoktu" demek olurdu)."""
+    mirror = store.read_json("mirror_orders.json", None)
+    if not isinstance(mirror, dict):
+        return _olculemedi("mirror_orders.json okunamadı — emir yaşam-döngüsü bu turda ölçülemedi; "
+                           "ayna defteri yoksa 'emir yok' değil 'bakamadık' doğru cümledir.")
+    emirler = mirror.get("orders") or {}
+    if not emirler:
+        return {"var": True, "n": 0, "satirlar": [], "durum_dagilim": {},
+                "updated": mirror.get("updated"), "last_event_ts": mirror.get("last_event_ts"),
+                "bos_neden": "ayna defteri OKUNDU ve içinde emir yok — bu bir ÖLÇÜMdür "
+                             "(silahlanan plan aynaya hiç gitmemiş ya da defter döndürülmüş)."}
+    planlar = {p.get("id"): p for p in store.read_jsonl("trade_plans.jsonl")}
+    satirlar, dagilim = [], {}
+    for coid, o in emirler.items():
+        if not isinstance(o, dict):
+            continue
+        st = str(o.get("status") or "?")
+        dagilim[st] = dagilim.get(st, 0) + 1
+        pln = planlar.get(coid) or {}
+        tetik, dolum = pln.get("entry_trigger"), o.get("filled_avg_price")
+        slipaj = None
+        try:
+            if tetik is not None and dolum is not None and float(tetik) > 0:
+                slipaj = round(10_000 * (float(dolum) - float(tetik)) / float(tetik), 1)
+        except (TypeError, ValueError):  # sessiz-yutma: sağlayıcı dizgisi sayıya dönmedi — slipaj ÖLÇÜLEMEDİ olarak kalır (None), uydurma 0.0 yazılmaz ve satırın geri kalanı yine servis edilir
+            slipaj = None
+        satirlar.append({
+            "coid": coid, "symbol": o.get("symbol"), "side": o.get("side"),
+            "status": st, "event": o.get("event"),
+            "filled_qty": o.get("filled_qty"), "filled_avg_price": dolum,
+            "order_id": o.get("order_id"), "updated": o.get("updated"),
+            "plan_entry_trigger": tetik, "slipaj_bps": slipaj,
+            # PLANIN KİMLİĞİ: coid bir plan id'siyle eşleşmiyorsa bu emir plandan doğmamıştır
+            # (tatbikat/elle gönderim). Ayrımı SÖYLEMEK zorundayız — sessizce planlı saymak
+            # denetim izini kirletirdi.
+            "plan_var": bool(pln),
+        })
+    satirlar.sort(key=lambda s: str(s.get("updated") or ""), reverse=True)
+    return {"var": True, "n": len(satirlar), "satirlar": satirlar[:40],
+            "gosterilen": min(40, len(satirlar)), "durum_dagilim": dagilim,
+            "updated": mirror.get("updated"), "last_event_ts": mirror.get("last_event_ts")}
+
+
+def _eylemsizlik(hb: dict, rj: dict, gk_plans: list, radar) -> dict:
+    """C1-8 · "Bugün neden hiçbir şey olmadı" — eylemsizliğin ADI, tek yerde toplanmış.
+
+    HİÇBİR ALAN BURADA HESAPLANMAZ: dördü de çağıranın elinde zaten var (heartbeat, regime,
+    gatekeeper planları, karartma radarı) ve ikinci kez okunmaları iki farklı gerçek riski
+    doğururdu. Buranın işi TOPLAMAK ve nedeni ADLANDIRMAK.
+
+    NEDEN SIRALIDIR: ilk eşleşen neden "birincil" olur. Sıra kaldıraç sırası değil ZORLAYICILIK
+    sırasıdır — halt bir tercih değil bir durdurmadır; bütçe sıfırı bir tasarım kararıdır."""
+    olaylar = obs.recent(3000)
+    say = {}
+    for e in olaylar:
+        k = e.get("event")
+        if k in ("session_deferred_for_coverage", "finviz_unavailable", "dormant_setup",
+                 "scan_debt", "regime_budget_trigger"):
+            say[k] = say.get(k, 0) + 1
+    son_erteleme = next((e for e in reversed(olaylar)
+                         if e.get("event") == "session_deferred_for_coverage"), None)
+    butce = hb.get("exposure_budget_pct", rj.get("exposure_budget_pct"))
+    verdict = {}
+    for p in gk_plans or []:
+        v = str(p.get("verdict") or "?")
+        verdict[v] = verdict.get(v, 0) + 1
+    kapi_nedenleri = {}
+    for p in gk_plans or []:
+        for r in (p.get("reasons") or []):
+            ad = str(r).split(":")[0][:40]
+            kapi_nedenleri[ad] = kapi_nedenleri.get(ad, 0) + 1
+    # RADAR bir liste ya da sözlük olabilir (üretici sürümüne göre); ikisini de SAYABİLİRİZ ama
+    # şeklini UYDURAMAYIZ — tanımadığımız şekilde sayı None kalır.
+    karartma_n = len(radar) if isinstance(radar, (list, dict)) else None
+    nedenler = []
+    if health.halted():
+        nedenler.append({"ad": "HALT", "aciklama": "sistem durdurulmuş — yeni risk alınmaz",
+                         "kanit": "health.halted() = True"})
+    try:
+        _b = float(butce)
+    except (TypeError, ValueError):  # sessiz-yutma: bütçe alanı hiç gelmediyse EŞİK DENENMEZ; bilinmeyeni "sıfır bütçe" saymak eylemsizliğe yanlış ad takardı
+        _b = None
+    if _b is not None and _b <= 0:
+        nedenler.append({"ad": "REJİM BÜTÇESİ 0", "aciklama": "rejim maruziyet bütçesi sıfır — "
+                                                              "bugün yeni risk açılmaz (tasarım)",
+                         "kanit": f"exposure_budget_pct = {butce}"})
+    if son_erteleme is not None:
+        nedenler.append({"ad": "SEANS ERTELENDİ", "aciklama": str(son_erteleme.get("detail") or "")[:160],
+                         "kanit": f"session_deferred_for_coverage · son 3000 olayda "
+                                  f"{say.get('session_deferred_for_coverage', 0)} kez · "
+                                  f"kapsama {son_erteleme.get('coverage')}"})
+    if karartma_n:
+        nedenler.append({"ad": "KAZANÇ KARARTMASI", "aciklama": "karartma penceresindeki sembol var",
+                         "kanit": f"blackout_radar · {karartma_n} kayıt"})
+    return {"var": True, "exposure_budget_pct": butce,
+            "birincil": nedenler[0] if nedenler else None,
+            "nedenler": nedenler,
+            "neden_yok_aciklama": (None if nedenler else
+                                   "ölçülen dört zorlayıcı nedenden HİÇBİRİ yok — eylemsizliğin "
+                                   "sebebi bu dörtlüde DEĞİL; kapı kararlarına bakılmalı."),
+            "verdict_counts": verdict, "gate_reasons": kapi_nedenleri,
+            "olay_sayaci": say, "olay_penceresi": len(olaylar),
+            "halted": health.halted(), "learn_halted": health.learn_halted(),
+            "data_ok": hb.get("data_ok")}
+
+
+def _hat_cizelgesi(wd: dict, sched: dict) -> dict:
+    """C1-4 · Gece hattının CANLI zaman çizelgesi — damgalar nihayet uca açılıyor.
+
+    D2-b `saglik#cizelge` yüzeyini kurarken şunu BEYAN ETMİŞTİ: "'bu adım saat 03:12'de koştu'
+    bilgisi bu uçtan GELMİYOR — adım başına damga `state/mechanism_beats.json`da var ama panoya
+    açılmamış. Damgaların uca açılması D3-UI'ın işi." Bu fonksiyon o borcu kapatır.
+
+    UYDURMA YOK, TÜRETME DE YOK: damga dosyada epoch olarak duruyor ve OLDUĞU GİBİ taşınır
+    (ISO'ya çevrilir, çünkü panonun geri kalanı ISO okur). Damgası olmayan mekanizma için saat
+    ÜRETİLMEZ — `beat: None` gider ve pano "kendi damgası yok" der."""
+    import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
+    beats = store.read_json("mechanism_beats.json", None)
+    damgalar = {}
+    if isinstance(beats, dict):
+        for ad, ts in beats.items():
+            try:
+                damgalar[ad] = _dt.datetime.fromtimestamp(
+                    float(ts), _dt.timezone.utc).isoformat(timespec="seconds")
+            except (TypeError, ValueError, OSError, OverflowError):  # sessiz-yutma: bozuk/aralık-dışı epoch — o mekanizmanın damgası ÖLÇÜLEMEDİ kalır (anahtar hiç yazılmaz), diğerleri servis edilir
+                continue
+    # KOŞU DEFTERİ: `pipeline_runs.jsonl` her skill koşusuna başlangıç/bitiş damgası yazıyor —
+    # yani hattın P-adımları için GERÇEK saat ve GERÇEK süre burada. Son 40 satır: bir gecenin
+    # tamamı ~15 satır, iki-üç gece görünür kalsın diye.
+    kosular = []
+    for r in store.read_jsonl("pipeline_runs.jsonl")[-40:]:
+        kosular.append({k: r.get(k) for k in
+                        ("run_id", "pipeline", "started", "finished", "status", "error")}
+                       | {"skills_invoked": len(r.get("skills_invoked") or []),
+                          "skills_declared_not_run": len(r.get("skills_declared_not_run") or []),
+                          "skills_skipped": len(r.get("skills_skipped") or []),
+                          "artifacts": len(r.get("artifacts") or [])})
+    kosular.reverse()
+    # LLM ÇAĞRILARI: gecenin üçüncü ekseni. Pencere SINIRLI ve bu SÖYLENİR — `olay_penceresi`
+    # yükle birlikte gider ki pano "son N olayda" diye yazabilsin. Boş liste "çağrı yapılmadı"
+    # DEĞİLDİR, "bu pencerede görülmedi"dir; ayrımı pano cümlesi taşır.
+    olaylar = obs.recent(3000)
+    cagri = [{"ts": e.get("ts"), "kind": e.get("kind"), "model": e.get("model"),
+              "attempt": e.get("attempt"), "empty": e.get("empty"),
+              "tool_calls": e.get("tool_calls")}
+             for e in olaylar if e.get("event") in ("agent_call", "agent_call_empty")][-30:]
+    cagri.reverse()
+    # DÖNGÜNÜN KENDİ KAYDI: `daily_cycle` GÜNDE BİR yazılır ve gün içindeki poll satırları onu
+    # her olay penceresinden taşırır — v190'ın ölçtüğü kusurun ta kendisi ("kart 'ölçülemedi'
+    # diyordu, döngü koşmuş olsa bile; ölçüm değil PENCERE bozuktu"). Bu yüzden çizelgenin
+    # çıpası `_son_dongu()`dur: defterin KUYRUĞUNDAN pencereden bağımsız okur ve ÖNBELLEKLİDİR
+    # (aynı istekte /api/today de onu çağırır — dosya damgası değişmediyse ikinci ayrıştırma yok).
+    # Pencerede görülen ek döngü satırları ZENGİNLEŞTİRME olarak eklenir, çıpanın YERİNE geçmez.
+    pencere_dongu = [{"ts": e.get("ts"), "date": e.get("date"), "regime": e.get("regime"),
+                      "candidates": e.get("candidates"), "plans": e.get("plans"),
+                      "armed": e.get("armed"), "open_positions": e.get("open_positions"),
+                      "data_ok": e.get("data_ok"), "halted": e.get("halted")}
+                     for e in olaylar if e.get("event") == "daily_cycle"][-8:]
+    pencere_dongu.reverse()
+    return {"var": True, "damgalar": damgalar,
+            "damga_neden_yok": (None if damgalar else
+                                "mechanism_beats.json okunamadı ya da boş — adım saatleri bu "
+                                "turda ölçülemedi; bekçi penceresi yine de raporlanıyor."),
+            "kosular": kosular, "cagrilar": cagri,
+            "son_dongu": _son_dongu(), "donguler": pencere_dongu,
+            "olay_penceresi": len(olaylar),
+            "scheduler_updated": sched.get("updated"),
+            "bekci_ok": wd.get("ok"), "bekci_total": wd.get("total")}
+
+
+def _spend_detay() -> dict:
+    """C1-3 · Gece koşusunun maliyet ve token karnesi.
+
+    NEDEN /api/spend'E YENİ TÜKETİCİ BAĞLANMADI: o uç K1'de EMEKLİ edildi ve kaynağın kendi
+    kuralı yazıyor — "bu uçlara YENİ tüketici bağlanmaz; kanonik yüzey /api/hermes `spend`".
+    Kırılım o yüzden kanonik ucun içine, `spend.summary()`nin YANINA girer. Aynı defter iki uçtan
+    iki farklı şekilde servis edilmez; yalnız kanonik olan zenginleşir.
+
+    HESAP YOK, TOPLAM VAR: `cost_usd`/`in_tokens`/`out_tokens` satırlarda ZATEN yazılı; burada
+    yalnız gruplanıyor. Alanı hiç taşımayan satır o toplama girmez ve `olculemeyen_satir` ile
+    sayılır — eksik alanı 0 saymak "bedava çağrı" demek olurdu."""
+    import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
+    rows = store.read_jsonl("spend.jsonl")
+    if not rows:
+        return _olculemedi("spend.jsonl boş ya da okunamadı — gece maliyeti bu turda ölçülemedi. "
+                           "'Maliyet sıfır' DEĞİL: ölçüm defteri hiç yazılmamış olabilir.")
+    ay = _dt.datetime.now(_dt.timezone.utc).isoformat()[:7]
+    bu_ay = [r for r in rows if str(r.get("ts", ""))[:7] == ay]
+    olculemeyen = 0
+
+    def _topla(kume):
+        nonlocal olculemeyen
+        c = {"n": 0, "in_tokens": 0, "out_tokens": 0, "cost_usd": 0.0, "thought_tokens": 0}
+        for r in kume:
+            c["n"] += 1
+            if r.get("cost_usd") is None:
+                olculemeyen += 1
+            for alan in ("in_tokens", "out_tokens", "cost_usd", "thought_tokens"):
+                try:
+                    c[alan] += float(r.get(alan) or 0)
+                except (TypeError, ValueError):  # sessiz-yutma: dizgi/None token alanı — o SATIR toplama katılmaz ve `olculemeyen_satir` sayacı ayrıca beyan edilir; toplamın kendisi bozulmaz
+                    continue
+        c["cost_usd"] = round(c["cost_usd"], 4)
+        return c
+
+    def _grup(anahtar):
+        out = {}
+        for r in rows:
+            k = str(r.get(anahtar) or "—")
+            out.setdefault(k, []).append(r)
+        return sorted(({"ad": k, **_topla(v)} for k, v in out.items()),
+                      key=lambda d: (-d["cost_usd"], -d["n"]))
+
+    # KOL = `note` alanının ilk sözcüğü ("reflect (gemini)" → "reflect"). Ham `note`u anahtar
+    # yapmak her sağlayıcı için ayrı bir kol doğururdu; soru "hangi KOL yedi" (reflect/proposal/
+    # backfill), "hangi model yedi" ayrı satırda zaten var.
+    kollar = {}
+    for r in rows:
+        kol = str(r.get("note") or "—").split("(")[0].strip() or "—"
+        kollar.setdefault(kol, []).append(r)
+    gun = {}
+    for r in rows:
+        gun.setdefault(str(r.get("ts", ""))[:10] or "—", []).append(r)
+    return {"var": True, "toplam": _topla(rows), "bu_ay": _topla(bu_ay), "ay": ay,
+            "modeller": _grup("model"),
+            "kollar": sorted(({"ad": k, **_topla(v)} for k, v in kollar.items()),
+                             key=lambda d: (-d["cost_usd"], -d["n"])),
+            "gunler": [{"gun": g, **_topla(v)} for g, v in sorted(gun.items())][-14:],
+            "son": list(reversed(rows[-20:])),
+            "olculemeyen_satir": olculemeyen, "satir_n": len(rows)}
+            # KOTA DEFTERLERİ (`agent_budget.json` / `agent_tooluse.json`) BİLEREK BURADA DEĞİL.
+            # İlk yazımda taşınıyorlardı ve bu YASA 6'nın kendi ihlaliydi: kartın hiçbir satırı
+            # onları ÇİZMİYORDU — yani uç, okuyucusu olmayan iki alan üretecekti. Üstelik
+            # `agent_tooluse.json` `codelaw.DECLARED_SINKS`te "iç okuyucusu var" diye muaf ve
+            # buradan okumak o muafiyeti sessizce bayatlatırdı (test_codelaw_v59 ölçtü).
+            # Kota YÜZÜ ayrı bir iştir (C2-1 ajan telemetrisi); bu kart harcamayı ölçer.
+
+
+def _rollback_sicili() -> dict:
+    """C1-5 · Otomatik geri-almanın sicili — PRODUCT.md'nin açık vaadinin İLK panosal kanıtı.
+
+    ÖLÇÜLEN KUSUR: `app.js` içinde "rollback" kelimesi SIFIR kez geçiyordu. Vaadin görünmezliği
+    vaadi ölçülemez yapar. Sicil ÜÇ kaynaktan derlenir ve üçü de bugün diskte duruyor:
+      * `scoreboard.versions[].rolled_back / reinstated / source` — hangi sürüm geri alındı
+      * `learning_loop_open.json` — şu an AÇIK bir öğrenme döngüsü var mı (boş sözlük = yok)
+      * olay defteri `rollback_like_for_like_overturn` + `learning_loop_open` — çürütme kaydı
+
+    HİÇBİRİ ÜRETİLMEZ: dosya yoksa dal ÖLÇÜLEMEDİ döner. "Hiç rollback olmadı" ile "bakamadık"
+    aynı piksele düşemez — bu turun kapattığı sınıfın ta kendisi."""
+    sb = store.read_json("scoreboard.json", None)
+    if not isinstance(sb, dict) or not isinstance(sb.get("versions"), dict):
+        return _olculemedi("scoreboard.json okunamadı ya da `versions` taşımıyor — geri-alma "
+                           "sicili bu turda ölçülemedi; 'hiç geri alınmadı' DEĞİL.")
+    surumler = []
+    for v, info in sorted((sb.get("versions") or {}).items(), key=lambda t: -int(t[0])):
+        if not isinstance(info, dict):
+            continue
+        surumler.append({
+            "version": v, "rolled_back": info.get("rolled_back"),
+            "reinstated": info.get("reinstated"), "source": info.get("source"),
+            "note": info.get("note"), "parent": info.get("parent"),
+            "live_score": info.get("live_score"), "backtest_oos": info.get("backtest_oos"),
+            "baseline_verdict": info.get("baseline_verdict"),
+            "baseline_source": info.get("baseline_source"),
+            "baseline_n_trades": info.get("baseline_n_trades"),
+            "n_trades": info.get("n_trades"), "live_since": info.get("live_since"),
+            "guncel": str(v) == str(sb.get("current_version")),
+        })
+    acik = store.read_json("learning_loop_open.json", None)
+    olaylar = obs.recent(3000)
+    kayitlar = [{"ts": e.get("ts"), "event": e.get("event"), "version": e.get("version"),
+                 "parent": e.get("parent"), "reason": e.get("reason"),
+                 "detay": {k: v for k, v in e.items()
+                           if k not in ("ts", "level", "event", "version", "parent", "reason")}}
+                for e in olaylar
+                if str(e.get("event") or "").startswith(("rollback", "learning_loop"))][-20:]
+    kayitlar.reverse()
+    return {"var": True, "current_version": sb.get("current_version"), "surumler": surumler,
+            "geri_alinan_n": sum(1 for s in surumler if s["rolled_back"]),
+            "acik_dongu": acik if isinstance(acik, dict) else None,
+            "acik_dongu_neden": (None if isinstance(acik, dict) else
+                                 "learning_loop_open.json okunamadı — AÇIK döngü olup olmadığı "
+                                 "ölçülemedi (boş sözlük 'açık döngü yok' demektir, bu ondan farklı)."),
+            "olaylar": kayitlar, "olay_penceresi": len(olaylar),
+            "esik": (config.goal() or {}).get("rollback_if_worse_by")}
+
+
+def _regresyon_kirilimi() -> dict:
+    """C1-6 · "Bu sürüm neyi düzeltti, NEYİ BOZDU" — toplam skorun gizlediği tek şey.
+
+    ÖLÇÜLEBİLİR OLANIN SINIRI BURADA YAZILI. `trades.jsonl` satırları `strategy_version` damgası
+    TAŞIYOR — yani sürüm × rejim ve sürüm × çıkış-nedeni kırılımı GERÇEKTEN ölçülebilir. Ama iki
+    şey ölçülemez ve söylenir:
+      * Sürümlerin çoğunda örneklem 30'un altında; dilim ortalaması bir HÜKÜM değil bir GÖZLEMdir
+        ve `az_ornek` bayrağıyla taşınır (eşik `IC_MIN_SAMPLE` DEĞİL — o sıralama korelasyonunun
+        eşiği; burada kullanılan `AZ` yalnız bir görünürlük çizgisi, hiçbir karar ona bağlı değil).
+      * `hypotheses` tahmin↔gerçekleşen çiftinde `realized_delta` yalnız kapanmış döngülerde var.
+    UYDURMA YOK: n=0 dilim hiç yazılmaz, ortalama None kalır."""
+    trades = store.read_jsonl("trades.jsonl")
+    if not trades:
+        return _olculemedi("trades.jsonl boş — sürüm başına regresyon kırılımı ölçülemedi; "
+                           "kapanmış işlem olmadan 'neyi bozdu' sorusunun paydası kurulamaz.")
+    AZ = 10        # yalnız GÖRÜNÜRLÜK çizgisi (app.js `AZ_ORNEK_N` ile aynı sayı, aynı gerekçe)
+
+    def _ort(xs):
+        xs = [float(x) for x in xs if isinstance(x, (int, float))]
+        return round(sum(xs) / len(xs), 3) if xs else None
+
+    surum = {}
+    for t in trades:
+        v = t.get("strategy_version")
+        if v is None:
+            continue
+        s = surum.setdefault(str(v), {"n": 0, "r": [], "rejim": {}, "cikis": {}, "setup": {}})
+        s["n"] += 1
+        s["r"].append(t.get("r_multiple"))
+        for eksen, alan in (("rejim", "regime"), ("cikis", "exit_reason"), ("setup", "setup")):
+            k = str(t.get(alan) or "—")
+            d = s[eksen].setdefault(k, [])
+            d.append(t.get("r_multiple"))
+    cikti = []
+    for v, s in sorted(surum.items(), key=lambda t: -int(t[0]) if t[0].isdigit() else 0):
+        def _dilim(d):
+            return sorted(({"ad": k, "n": len(xs), "avg_r": _ort(xs), "az_ornek": len(xs) < AZ}
+                           for k, xs in d.items()), key=lambda x: -x["n"])
+        cikti.append({"version": v, "n": s["n"], "avg_r": _ort(s["r"]),
+                      "az_ornek": s["n"] < AZ,
+                      "rejim": _dilim(s["rejim"]), "cikis": _dilim(s["cikis"]),
+                      "setup": _dilim(s["setup"])})
+    # DÜZELTTİ/BOZDU: ardışık iki sürüm arasında dilim-başına delta. En az iki sürüm gerekir —
+    # tek sürümde "neyi bozdu" sorusunun karşılaştırma tarafı YOKTUR ve uydurulamaz.
+    fark = None
+    if len(cikti) >= 2:
+        yeni, eski = cikti[0], cikti[1]
+        eski_rejim = {d["ad"]: d for d in eski["rejim"]}
+        kalemler = []
+        for d in yeni["rejim"]:
+            o = eski_rejim.get(d["ad"])
+            if not o or d["avg_r"] is None or o["avg_r"] is None:
+                kalemler.append({"ad": d["ad"], "delta_r": None,
+                                 "neden": "karşılaştırma dilimi yok ya da ortalama ölçülemedi"})
+                continue
+            kalemler.append({"ad": d["ad"], "delta_r": round(d["avg_r"] - o["avg_r"], 3),
+                             "n_yeni": d["n"], "n_eski": o["n"],
+                             "az_ornek": d["az_ornek"] or o["az_ornek"]})
+        fark = {"yeni": yeni["version"], "eski": eski["version"], "rejim": kalemler}
+    hip = []
+    for h in store.read_jsonl("hypotheses.jsonl")[-12:]:
+        g = h.get("backtest") or {}
+        hip.append({"id": h.get("id"), "variable": h.get("variable"), "status": h.get("status"),
+                    "version_to": h.get("version_to"), "version_from": h.get("version_from"),
+                    "predicted_delta": h.get("predicted_delta"),
+                    "realized_delta": h.get("realized_delta"),
+                    "reject_reasons": h.get("reject_reasons") or [],
+                    "candidate_oos": g.get("candidate_oos"), "dsr": (g.get("dsr") or {}).get("dsr"),
+                    "dsr_dusuk": g.get("dsr_dusuk"), "ship_modu": g.get("ship_modu")})
+    hip.reverse()
+    return {"var": True, "surumler": cikti, "fark": fark, "hipotezler": hip,
+            "az_ornek_esigi": AZ, "islem_n": len(trades),
+            "sinir": "Kırılım YALNIZ `strategy_version` damgalı kapanmış işlemlerden türer. "
+                     "Damgasız satır hiçbir sürüme yazılmaz; dilim n'i küçükse `az_ornek` "
+                     "bayrağı taşır ve bir hüküm değil bir gözlemdir."}
+
+
+# ---- C1-7 · DENETİM İZİNİN TAMAMI — SORGULANABİLİR UÇ -----------------------------------------
+# ETÜDÜN KENDİ HÜKMÜ (§C1-7): "Tavanların kendisi bir performans kararıydı — çözüm tavanı
+# kaldırmak değil, SORGULANABİLİR kılmak." `/api/signals` 390 planın son 120'sini veriyor ve
+# tavanı dürüstçe beyan ediyor; eksik olan, defterin TAMAMI üstünde soru sorabilmekti.
+#
+# NEDEN AYRI UÇ: sorgu parametresi taşır. `/api/diagnostics` 45 sn önbelleklidir ve parametreli
+# bir okuma o kutuya giremez (ilk sorgunun cevabı ikinci sorguya servis edilirdi — sessiz ve
+# teşhisi zor). YALNIZ OKUMA: hiçbir dal state'e dokunmaz.
+@app.get("/api/audit_trail")
+def api_audit_trail(request: Request, sembol: str = "", verdict: str = "", limit: int = 60):
+    """Plan defterinin TAMAMI üstünde filtrelenebilir denetim izi + sembol ekseni özeti."""
+    _auth(request)
+    limit = max(1, min(400, int(limit or 60)))
+    hepsi = store.read_jsonl("trade_plans.jsonl")
+    sembol_u = (sembol or "").strip().upper()
+    verdict_u = (verdict or "").strip().lower()
+    sayim, verdict_sayim = {}, {}
+    for p in hepsi:
+        t = str(p.get("ticker") or "—")
+        v = str(p.get("gate_verdict") or "—")
+        s = sayim.setdefault(t, {"ticker": t, "n": 0, "verdicts": {}, "ilk": None, "son": None})
+        s["n"] += 1
+        s["verdicts"][v] = s["verdicts"].get(v, 0) + 1
+        d = p.get("date")
+        if d:
+            s["ilk"] = min(s["ilk"] or d, d)
+            s["son"] = max(s["son"] or d, d)
+        verdict_sayim[v] = verdict_sayim.get(v, 0) + 1
+    secili = [p for p in hepsi
+              if (not sembol_u or str(p.get("ticker") or "").upper() == sembol_u)
+              and (not verdict_u or str(p.get("gate_verdict") or "").lower() == verdict_u)]
+    satirlar = [{"date": p.get("date"), "ticker": p.get("ticker"), "setup": p.get("setup"),
+                 "score": p.get("score"), "verdict": p.get("gate_verdict"),
+                 "reasons": p.get("gate_reasons") or [],
+                 "checks": p.get("gate_checks") or [],
+                 "entry_trigger": p.get("entry_trigger"), "id": p.get("id"),
+                 "exploration": bool(p.get("exploration")),
+                 "llm_veto": bool(p.get("llm_veto"))}
+                for p in secili[-limit:]]
+    satirlar.reverse()
+    return {
+        "sorgu": {"sembol": sembol_u or None, "verdict": verdict_u or None, "limit": limit},
+        # TAVAN BEYANI KORUNUR — ama artık PAYDAYLA: kaç satır eşleşti, kaçı gösterildi.
+        "defter": {"plans_total": len(hepsi), "eslesen": len(secili),
+                   "gosterilen": len(satirlar), "limit": limit},
+        "satirlar": satirlar,
+        "verdict_sayim": verdict_sayim,
+        "semboller": sorted(sayim.values(), key=lambda s: -s["n"])[:60],
+        "sembol_n": len(sayim),
+        # DEFTER BOŞSA UYDURMA YOK: pano bunu okuyup ÖLÇÜLEMEDİ dalına girer.
+        "neden": (None if hepsi else
+                  "trade_plans.jsonl boş ya da okunamadı — denetim izi bu turda ölçülemedi; "
+                  "'hiç plan kurulmadı' DEĞİL."),
+    }
+
+
 @app.get("/api/diagnostics")
 def api_diagnostics(request: Request, taze: int = 0):
     """Faz 1 — Teşhis API'si: diskte zaten duran tüm operasyon telemetrisini TEK uçta toplar.
@@ -2355,6 +2856,12 @@ def api_diagnostics(request: Request, taze: int = 0):
                  "llm_opinion": pln.get("llm_opinion"), "llm_veto": bool(pln.get("llm_veto"))}
                 for pln in all_plans if pln.get("date") == last_plan_date][:12]
     hb = store.read_json("heartbeat.json", {})
+    # TEK OKUMA ANI (v192 deseni): `regime.json` ve karartma radarı AŞAĞIDA İKİ tüketici tarafından
+    # okunuyor — `risk.regime`/`risk.blackout_radar` ve eylemsizlik özeti (C1-8). İkisini ayrı ayrı
+    # çağırmak aynı yanıtın içinde iki farklı gerçek doğurabilirdi (radar takvim tazelemesiyle
+    # değişir) ve radar evren boyunda bir hesap — bedeli ikiye katlamanın karşılığı yok.
+    _rejim_doc = store.read_json("regime.json", {})
+    _radar = earnings.blackout_radar(list(REPLAY_UNIVERSE), today)
     warm_ticks = int(hstat.get("_warm_ticks") or 0)
     try:
         from .hermes_runtime import WARMUP_EVERY_POLLS as _wep
@@ -2468,7 +2975,12 @@ def api_diagnostics(request: Request, taze: int = 0):
                       # AÇIK / KAPATILMIŞ AYRIMI (2026-07-27): şeridi besleyen sayı yalnız `open`.
                       # Kapatılanlar pakette KALIR (tarihçe silinmez, sesi kısılır) — /api/alpaca
                       # aynı ayrımı uygular, iki uç aynı alanı iki farklı şekilde servis edemez.
-                      "failed_submissions": health.split_rejections(rc.get("failed_submissions"))},
+                      "failed_submissions": health.split_rejections(rc.get("failed_submissions")),
+                      # EMİR YAŞAM-DÖNGÜSÜ (D3-UI · C1-2): `mirror_orders.json` bugüne kadar yalnız
+                      # `_stream_view` için okunuyordu — coid başına status/filled_qty/
+                      # filled_avg_price panoya HİÇ ulaşmıyordu. Evi `reconcile`: "emrin gerçekte
+                      # ne olduğu" ailesi (partial_fills/failed_submissions ile aynı sözlük).
+                      "emir_yasam": _emir_yasam()},
         # ---- İCRA GERÇEKLİĞİ (WP-E, kart EXE-2026-001, 2026-07-31) — YASA 6 ZİNCİRİ ------------
         # Üç ölçüm de bugüne kadar HİÇBİR uçtan servis edilmiyordu, çünkü ikisi bugün doğdu ve
         # üçüncüsü (gece/gündüz) hiç sorulmamıştı. Neden `mlops` içinde DEĞİL: mlops öğrenme
@@ -2485,8 +2997,8 @@ def api_diagnostics(request: Request, taze: int = 0):
             # ayrılmış hâli + kaynak damgası (training ayrı) × tutuş dilimi çapraz tablosu.
             "gece_gunduz": an.night_day_split(),
         },
-        "risk": {"regime": store.read_json("regime.json", {}),
-                 "blackout_radar": earnings.blackout_radar(list(REPLAY_UNIVERSE), today),
+        "risk": {"regime": _rejim_doc,
+                 "blackout_radar": _radar,
                  # KAZANÇ TAKVİMİNİN PIT BİRİKİM DEFTERİ (D, 2026-08-01) — `earnings.csv` tek anlık
                  # görüntüdür ve her tazeleme geçmişi EZER; defter "bu tarihler bu fetch gününde
                  # biliniyordu"yu biriktirir. DIŞ OKUYUCU BURASIDIR (YASA 6): sayaç panoya çıkar,
@@ -2497,11 +3009,22 @@ def api_diagnostics(request: Request, taze: int = 0):
                  # HAFTALIK, yani ~52 satır/yıl — anket başına birkaç ms'lik ayrıştırma.
                  "earnings_pit": earnings.snapshot_stats(
                      store.read_jsonl("history/earnings_snapshots.jsonl")),
-                 "halted": health.halted(), "learn_halted": health.learn_halted()},
+                 "halted": health.halted(), "learn_halted": health.learn_halted(),
+                 # "BUGÜN NEDEN HİÇBİR ŞEY OLMADI" (D3-UI · C1-8). Alanların HEPSİ bu blokta ZATEN
+                 # vardı (bütçe, karartma radarı, halt) ama hiçbiri eylemsizliğin ADI olarak
+                 # okunmuyordu — pano dürüsttü ("aday yok") ve NEDENSİZDİ. Dört kaynak ÇAĞIRANIN
+                 # elinden geçer (hb/regime/gk_plans/radar); ikinci kez okunsalardı aynı yanıtta
+                 # iki farklı gerçek doğardı.
+                 "eylemsizlik": _eylemsizlik(hb, _rejim_doc, gk_plans, _radar)},
         "mlops": {"recent_hypotheses": diffs, "deflate": an.deflate_stats(),
                   "deflate_why": an.deflate_why(), "gate_hist": last_hist,
                   "llm_calibration": store.read_json("llm_calibration.json", {}),
                   "exit_efficiency": store.read_json("exit_efficiency.json", None),
+                  # REDDEDİLEN KARARLARIN KARNESİ (D3-UI · C1-1): `near_miss.json`ın İLK uç
+                  # tüketicisi. Kardeşleri `exit_efficiency` ve `mae_profile` ile AYNI üretici
+                  # (P5 kalibrasyonları) — evi de bu yüzden burası. Künye (`yalnız-simüle`,
+                  # `n_real: 0`) yükle BİRLİKTE gider; ayrılırsa simüle kanıt gerçek gibi okunur.
+                  "near_miss": _near_miss_karne(),
                   "gate_calibration": store.read_json("gate_calibration.json", {}),
                   "score_calibration": store.read_json("score_calibration.json", None),
                   # ---- KENAR SAĞLIĞI (2026-07-27): dört ölçüt TEK yükte, çünkü pano Bölüm 3'te tek
@@ -2667,6 +3190,13 @@ def api_diagnostics(request: Request, taze: int = 0):
         # alarm yazıldı, kaçı tavana takıldı, kaçı askıdaydı" der. İkincisi olmadan alarm hijyeni
         # ölçülemez — ve ölçülmeyen bir susturma, susturmanın kendisinden daha tehlikelidir.
         "watchdog": {**_wd_rep, "alarm_gunluk": _alarm_gunluk()},
+        # CANLI ZAMAN ÇİZELGESİ (D3-UI · C1-4) — BEKÇİNİN YANINDA, İÇİNDE DEĞİL. Bekçi raporu
+        # "geciken var mı?" der; çizelge "adım adım NE ZAMAN koştu?" der. İkisi aynı dosyadan
+        # (mechanism_beats.json) beslenir ama farklı soruların cevabıdır; `watchdog` içine
+        # gömmek, gecikme raporunu bir zaman serisiyle şişirmek olurdu.
+        # D2-b'NİN BEYANLI BORCU BURADA KAPANIYOR: "adım başına damga … panoya açılmamış.
+        # Damgaların uca açılması D3-UI'ın işi" (app.js `RENDER.cizelge` başlığı).
+        "cizelge": _hat_cizelgesi(_wd_rep, sched),
         # SESSİZ HAT (WP-P/P1) — bekçi + kilit + tazelik TEK Level-1 toplaması. `_wd_rep` AYNI
         # NESNEDİR: bekçi raporunu ikinci kez çağırmak, aynı yanıtta "bekçi 17/17" ile
         # "sessiz hat 16/17" gibi iki farklı gerçek doğurabilirdi (iki ayrı okuma anı).
@@ -2755,6 +3285,12 @@ def api_hermes(request: Request):
     hyps = memory.all_hypotheses()
     from . import hermes as _hm
     return {"status": hermes_runtime.status(), "spend": spend.summary(),
+            # GECE MALİYET/TOKEN KARNESİ (D3-UI · C1-3). `spend.summary()` aylık TOPLAMI verir;
+            # "hangi kol yedi, hangi model yedi, hangi gece?" sorusu çağrı-başına kırılım ister ve
+            # o kırılım `spend.jsonl`de ZATEN yazılı, hiçbir uçtan servis edilmiyordu.
+            # NEDEN /api/spend'E BAĞLANMADI: o uç K1'de EMEKLİ ("bu uçlara YENİ tüketici bağlanmaz
+            # — kanonik yüzey /api/hermes `spend`"). Kırılım o yüzden kanonik ucun İÇİNDE doğar.
+            "spend_detay": _spend_detay(),
             "autostart": os.environ.get("MERIDIAN_AUTOSTART_HERMES") == "1",
             "recent": list(reversed(hyps))[:8],
             "skill_recommendations": skills.pending_recommendations(),   # Axis-2 (operator applies)

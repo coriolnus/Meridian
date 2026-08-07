@@ -365,8 +365,15 @@ DECLARED_SINKS: dict[str, str] = {
     "watchdog_alarmed.json": "alarm tekilleştirme durumu — aynı alarmın her turda yeniden basılmasını "
                              "engeller; dışarıya çıkan şey alarmın kendisidir",
     "integrity_alarmed.json": "aynı disiplin, bütünlük alarmları için",
-    "mechanism_beats.json": "mekanizma nabızları (hangi mekanizma en son ne zaman çalıştı); watchdog "
-                            "bayatlık kararını buradan verir ve sonucu integrity_report ile dışarı taşır",
+    # NOT (D3-UI, 2026-08-07): `mechanism_beats.json` buradan ÇIKARILDI ve gerekçesi bu listenin
+    # KENDİ kuralıdır ("muafiyet işi bittikten sonra da yerinde dursaydı liste kimsenin bakmadığı
+    # çöplüğe dönerdi" — aynı gerekçeyle monotonic_state, finviz_universe ve learning_loop_open
+    # çıkmıştı). Beyan doğruydu: nabızları yalnız `watchdog` okuyor, dışarıya taşınan şey
+    # `integrity_report`ın GECİKME hükmüydü — yani "bu adım saat 03:12'de koştu" bilgisi hiçbir
+    # uçtan gelmiyordu. D2-b bunu bir BORÇ olarak yazdı (app.js `RENDER.cizelge`: "adım başına
+    # damga mechanism_beats.json'da var ama panoya açılmamış"); D3-UI borcu kapattı:
+    # `api._hat_cizelgesi` dosyayı DOĞRUDAN okur, `/api/diagnostics` `cizelge` alanıyla servis
+    # eder, pano `firsatCizelgeIzi` kartında gerçek saatiyle çizer. Zincir tam, muafiyet gereksiz.
     # NOT (2026-08-01): `monotonic_state.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu yalnız
     # kendi modülündeydi (watchdog.monotonicity_report), statik graf onu "dış okuyucusu yok" diye
     # görüyordu. Artık DIŞ bir okuyucusu var: `sermaye._peak_affi` affın `was` değerini dedektörün

@@ -878,7 +878,7 @@ const EYLEMLER = new Set([
   // ve kaldırılmış bir eylem, kendi mezar taşı yüzünden "kayıtlı ama tanımsız" görünürdü.
   "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaSubmit",
   "olayAc",
-  "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
+  "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "denetimAra", "filterLessons", "go",
   "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
   "opSoftHalt", "planOnayla", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
@@ -1772,6 +1772,22 @@ const KART_KAYDI = {
   "mutabakat:icra":     { alan: "karar",   bolum: "mutabakat" },
   "mutabakat:band":     { alan: "karar",   bolum: "mutabakat" },
   "mutabakat:gecegun":  { alan: "karar",   bolum: "mutabakat" },
+  // ---- D3-UI · FIRSAT YÜZEYLERİ (C1'in on işi) --------------------------------------------
+  // HEPSİ KAPAK ALTINA GİRER VE BU BİLİNÇLİ: on yeni kart, bütçesi zaten aşılmış üç yüzeye
+  // ekleniyor. Kapaksız eklemek "ilk bakışta düşen yük"ü on kart büyütmek olurdu — sözleşmenin
+  // ölçtüğü tam olarak o. Kapalı özet her birinde kartın KENDİ cümlesini taşır (kapı 1/2/3);
+  // dikkat isteyen bir kart (rozet ya da `warn`) kendiliğinden AÇIK doğar, yani bir anomali
+  // kapak yüzünden gizlenemez.
+  "kapilar:retkarne":   { alan: "karar",   bolum: "kapilar" },      // C1-1
+  "kapilar:eylemsizlik":{ alan: "karar",   bolum: "kapilar" },      // C1-8
+  "mutabakat:emiryasam":{ alan: "karar",   bolum: "mutabakat" },    // C1-2
+  "performans:cikis":   { alan: "karar",   bolum: "performans" },   // C1-9
+  "adaylar:denetim":    { alan: "karar",   bolum: "adaylar" },      // C1-7
+  "cizelge:damga":      { alan: "saglik",  bolum: "cizelge" },      // C1-4
+  "hermes:maliyet":     { alan: "ogrenme", bolum: "hermes" },       // C1-3
+  "ajan:rollback":      { alan: "ogrenme", bolum: "ajan" },         // C1-5
+  "ajan:regresyon":     { alan: "ogrenme", bolum: "ajan" },         // C1-6
+  "karne:olgunlasma":   { alan: "ogrenme", bolum: "karne" },        // C1-10
 };
 // KART BÜTÇESİ — alan sayfası başına YAZILI tavan. BİRİMİ: "ilk çizimde AÇIK doğan kart".
 // Toplam kart sayısı DEĞİL: bu turda hiçbir kart silinmiyor (silme kararı D2-b/IA turunda,
@@ -2460,7 +2476,16 @@ RENDER.adaylar = async () => {
   // AWAIT ŞART: ateşle-unut çağrılırsa go()'nun revealActive'i matrisin `.rise`'ından ÖNCE koşar
   // ve matris `.in` sınıfını hiç alamaz — DOM'da var ama görünmez olur (bkz. RENDER.brifing notu).
   await renderPlotMap();
-  const d = await j("/api/signals");
+  // DENETİM İZİ AYRI UÇTAN (C1-7): `/api/signals` defterin SON 120 satırını verir ve tavanı
+  // beyan eder; `/api/audit_trail` defterin TAMAMI üstünde sayar ve sorgu alır. İkisi aynı
+  // defteri farklı SORU için okur — biri "sırada ne var", diğeri "geçmişte ne karar verdim".
+  // Sorgu durumu modül düzeyinde tutulur (`_DENETIM_SEMBOL`), çünkü bölüm yeniden çizildiğinde
+  // filtrenin kaybolması operatörün yazdığı sorguyu sessizce silmek olurdu.
+  const [d, at] = await Promise.all([
+    j("/api/signals"),
+    j("/api/audit_trail" + (_DENETIM_SEMBOL ? "?sembol=" + encodeURIComponent(_DENETIM_SEMBOL) : ""))
+      .catch(() => null),
+  ]);
   const plans = (d.plans || []).slice()
     .sort((a, b) => (_VORDER[a.gate_verdict] ?? 3) - (_VORDER[b.gate_verdict] ?? 3)
                     || String(b.date).localeCompare(String(a.date)));
@@ -2627,7 +2652,8 @@ ${Object.entries(bySkill).map(([k, n]) => `  ${esc(k).padEnd(26, ' ')} ${n}`).jo
           return (L.candidates_total && L.candidates_shown && L.candidates_total > L.candidates_shown)
             ? `<p class="hint warn">Kırpma: son ${L.candidates_shown} aday (defterde ${L.candidates_total}).</p>` : ""; })()}
        <div class="trow head" style="grid-template-columns:78px 66px 1fr 60px 60px 90px"><span>TARİH</span><span>HİSSE</span><span>KAYNAK</span><span>${T("SKOR", "skor")}</span><span>${T("RS", "rs")}</span><span>SEKTÖR</span></div>
-       ${candRows || `<div class="empty">Aday yok.</div>`}`)}`;
+       ${candRows || `<div class="empty">Aday yok.</div>`}`)}
+    ${firsatDenetimIzi(at)}`;
   // ONAY KUYRUĞU ARTIK BURADAN ÇAĞRILMIYOR (S2R-2): ADR'deki evi Portföy & Emirler ve kabı da
   // oraya taşındı. S2R-1'de kap `#page-adaylar`ın İÇİNDE olduğu için alias'ı Koşu'ya bakmak
   // zorundaydı; bölünme o borcu kapattı.
@@ -6159,13 +6185,18 @@ RENDER.cizelge = async () => {
   const bas = bolumBasHTML("cizelge", "Gece hattı · canlı zaman çizelgesi",
     "Boru hattının statik resmi (<code>/workflow</code>) EMEKLİ: adımlar buraya taşındı ve "
     + "bekçinin ölçtüğü gecikmeyle birlikte okunuyor. Bir adımın <b>ne zaman</b> koştuğu "
-    + "(damga başına saat) henüz uca açılmadı — o yüzden burada yazmıyor; uydurulmuyor da.");
+    + "(mekanizma başına nabız damgası) D3-UI'da uca açıldı ve <b>aşağıdaki kartta</b> gerçek "
+    + "saatiyle yazıyor; damgası olmayan adım için saat hâlâ ÜRETİLMEZ.");
   if (!d) {
     return void ($("page-cizelge").innerHTML = bas + `<div class="card rise">
       <h2 class="t">Hattın adımları</h2>
       <p class="mut">Teşhis ucu okunamadı — adımların gecikmesi <b>ölçülemedi</b>. Hattın yapısı
         aşağıda yine de duruyor; sayı yerine hiçbir şey yazılmaz.</p>
-      ${HAT_ADIMLARI.map(([ad, ne]) => _hatSatiri(ad, ne, [], {})).join("")}</div>`);
+      ${HAT_ADIMLARI.map(([ad, ne]) => _hatSatiri(ad, ne, [], {})).join("")}</div>`
+      // DAMGA KARTI KOPUK DALDA DA ÇİZİLİR: uç düştüyse kart YOK OLMAZ, "ölçülemedi + neden"
+      // der. Kartın yokluğu bir bilgi taşımaz — operatör onu "bu tur damga yoktu" mu yoksa
+      // "bu kart hiç yazılmamış" mı diye okuyacağını bilemezdi.
+      + firsatCizelgeIzi(null));
   }
   $("page-cizelge").innerHTML = bas + `<div class="card rise">
     <h2 class="t">Hattın adımları <span class="tx3" style="font-weight:400">(${
@@ -6179,8 +6210,615 @@ RENDER.cizelge = async () => {
     <p class="hint" style="margin-top:12px">Geciken bir adımın teşhisi bir tık ötede:
       <b>${esc(OLAY_YUZEYLERI.besleme.ad)}</b> olay yüzeyi.</p>
     <div style="margin-top:10px"><button class="dlbtn" type="button" data-act="olayAc"
-      data-a1="besleme">Besleme olay yüzeyini aç →</button></div></div>`;
+      data-a1="besleme">Besleme olay yüzeyini aç →</button></div></div>`
+    // D3-UI · C1-4: yukarıdaki tablo hattın YAPISIdır (hangi adım, ne yapar, geciken var mı);
+    // aşağıdaki kart ZAMANdır (hangi adım saat kaçta koştu, ne kadar sürdü). Yukarıdaki başlığın
+    // "damgalar henüz uca açılmadı" cümlesi ARTIK GEÇERSİZ — bu turda açıldı ve altyazı da
+    // buna göre yeniden yazıldı.
+    + firsatCizelgeIzi((d || {}).cizelge);
 };
+
+// ==============================================================================================
+// D3-UI · FIRSAT YÜZEYLERİ (C1'in on işi) — "ÜRETİLİYOR AMA GÖRÜNMÜYOR" KOVASININ KAPANIŞI
+// ----------------------------------------------------------------------------------------------
+// ÖLÇÜLEN KUSUR SINIFI (docs/PATTERN-ETUDU-2026-08-06.md §C1, 22 FIRSAT satırının onu): sistemin
+// ÜRETTİĞİ bilgi diskte duruyor, panoda karşılığı YOK. Üç örnek, üçü de bu turda ölçüldü:
+//   * `near_miss.json` 4.988 çözülmüş satır — hiçbir uç tüketicisi yoktu, app.js'te adı geçmiyordu
+//   * `app.js` içinde "rollback" kelimesi SIFIR kez geçiyordu (PRODUCT.md'nin AÇIK vaadi)
+//   * `/api/spend` ucunun web tarafında SIFIR çağıranı vardı
+//
+// BU BLOK YENİ BİR DİL AÇMAZ. Her kart `.pm-*` hücre dilini (v192) ve kart sözleşmesini (v198)
+// kullanır: `katKart(anahtar)` + `kartOzeti({deger, oran, payda, meta, rozet})`. Yeni sınıf,
+// yeni renk, yeni bileşen YOK — on iş var olan sözleşmenin üstüne oturur.
+//
+// HER KART TEK `class="card"` EMİSYONU: ölçülemedi dalı kartın İÇİNDE yaşar, ayrı bir kart
+// doğurmaz. Gerekçe iki katlı: (a) kart bütçesi statik emisyon sayar (`say_kart.py`) ve iki
+// dallı bir kart bütçeyi iki kez yer; (b) "veri yok" ekranda bir KART olarak durmalı — kartın
+// yokluğu bir bilgi taşımaz, kartın içindeki gerekçe taşır.
+//
+// YENİ EYLEM YÜZEYİ AÇILMADI (tek emir-yolu yasası): on kartın hiçbirinde POST yok. Tek etkileşim
+// denetim izinin SEMBOL FİLTRESİdir ve o bir OKUMA sorgusudur (`/api/audit_trail`, GET).
+// ----------------------------------------------------------------------------------------------
+// ÖLÇÜLEMEDİ DALININ TEK BİÇİMİ. Uydurma yasağının bu bloktaki uygulaması: uç bir alanı hiç
+// vermediyse kart "0" ya da boş bir tablo çizmez — NEDENİ yazar. Gerekçe ≥20 karakter olmak
+// zorunda çünkü `kartOzeti`nin 3b kapısı bunu ölçüyor (YASA 4 ile aynı ölçü) ve kısa bir gerekçe
+// özeti düşürüp kartı katlanamaz yapar — yani kusur SESSİZ kalmaz, sözleşme onu görünür kılar.
+function firsatBos(neden, ipucu) {
+  return `<p class="mut" style="margin-top:2px"><b>ÖLÇÜLEMEDİ</b> — ${esc(neden)}</p>`
+    + (ipucu ? `<p class="hint" style="margin-top:6px">${ipucu}</p>` : "");
+}
+// KÜNYE ÇİPİ — bir defterin kanıt SINIFI. `_kaynak.source` "yalnız-simüle" ise o defterin sayıları
+// GERÇEK kanıt değildir ve öyle okunursa R8'e düşer (etüdün C1-1 dürüstlük şartı). Çip metinle
+// konuşur, renkle değil: kanıt sınıfı bir ŞİDDET seviyesi değildir (D1'in beş rolü).
+function firsatKunye(k) {
+  if (!k) return `<span class="tag t-vi">KÜNYE YOK</span>`;
+  const real = k.n_real, cf = k.n_cf;
+  return `<span class="tag t-vi" title="${esc("üretildi: " + (k.generated == null ? "ölçülemedi" : k.generated))}">${
+    esc(String(k.source == null ? "kaynak beyansız" : k.source).toUpperCase())} · gerçek ${
+    real == null ? "—" : trn(real)} / simüle ${cf == null ? "—" : trn(cf)}</span>`;
+}
+
+// ---- C1-1 · REDDEDİLEN KARARLARIN KARNESİ (② karar#kapilar) ----------------------------------
+// OPERATÖRÜN SORUSU: "Bu eşik doğru mu? Reddettiklerim ne yapardı?" Bir kapı ancak REDDETTİKLERİYLE
+// yargılanabilir; kabul edilenlerin karnesi (parsel matrisi) zaten vardı, reddedilenlerinki
+// HİÇBİR yerde yoktu. Defter: `near_miss.json` → kova (`blocked_by`) × rejim.
+// KÜNYE ZORUNLU VE ÜSTTE: defter `yalnız-simüle` (n_real: 0). Sayıları künyesiz göstermek,
+// karşı-olgusal bir tahmini gerçekleşmiş kâr gibi okutmak olurdu.
+function firsatRetKarnesi(ml) {
+  const nm = (ml || {}).near_miss;
+  const kovalar = (nm && nm.var) ? (nm.kovalar || []) : [];
+  const en = kovalar.length ? kovalar[0] : null;
+  // ÖZETİN DEĞERİ: en çok reddeden kovanın kaç kararı tuttuğu. Çubuğun paydası BEYANLI ve o
+  // paydanın kendisi bir kanıt ölçeğidir (log, `kanitOrani`) — bir eşik değil.
+  const ozet = !en
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: (nm && nm.neden) ? esc(nm.neden)
+          : "near_miss defteri panoya ulaşmadı — kapının reddettiklerinin karnesi ölçülemedi." })
+    : kartOzeti({ deger: trn(nm.resolved_total), oran: kanitOrani(en.n), payda: "en büyük kovanın reddi",
+        degerSinif: (en.avg_r != null && en.avg_r > 0) ? "warn" : "",
+        meta: `${kovalar.length} kova · en büyüğü <b>${esc(en.blocked_by)}</b> (${trn(en.n)} ret · ort. ${
+          en.avg_r == null ? "—" : isr(en.avg_r, trn(en.avg_r, 3)) + "R"})`,
+        rozet: (en.avg_r != null && en.avg_r > 0) ? "KAPI PARA BIRAKIYOR" : "" });
+  const satir = k => {
+    const rej = (k.rejim || []).slice(0, 4).map(r =>
+      `<span class="tag t-vi" title="${esc(REGIME_TR[r.rejim] || r.rejim)}">${esc(REGIME_TR[r.rejim] || r.rejim)} ${
+        trn(r.n_r)}${r.avg_r == null ? "" : " · " + isr(r.avg_r, trn(r.avg_r, 2)) + "R"}</span>`).join(" ");
+    return `<div class="trow" style="grid-template-columns:120px 68px 68px 80px 1fr">
+      <span class="chain">${esc(k.blocked_by)}</span>
+      <span class="mono-num">${trn(k.n)}</span>
+      <span class="mono-num mut">${trn(k.entered)}</span>
+      <span class="mono-num ${cls(k.avg_r)}">${k.avg_r == null ? "—" : isr(k.avg_r, trn(k.avg_r, 3)) + "R"}</span>
+      <span>${rej}</span></div>`;
+  };
+  return `<div class="card rise"${katKart("kapilar:retkarne")}>
+    <h2 class="t">Reddedilen kararların karnesi <span class="tx3" style="font-weight:400">(kapı masada para bırakıyor mu?)</span></h2>
+    ${ozet}
+    ${!kovalar.length ? firsatBos((nm && nm.neden) ? nm.neden
+        : "near_miss defteri bu turda okunamadı — kapının reddettikleri ölçülemedi ('ret yok' DEĞİL).",
+        "Defter P5 kalibrasyonunda üretilir; hat o adıma gelmediyse karne de doğmaz.")
+      : `<p class="hint" style="margin-top:0">${firsatKunye(nm.kaynak)} — <b>${trn(nm.resolved_total)}</b> çözülmüş
+           karşı-olgusal satır. Bu tablo <b>ne olurdu</b>yu ölçer, <b>ne oldu</b>yu değil: hiçbir satırı
+           gerçekleşmiş kâr/zarar olarak okuma.</p>
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:120px 68px 68px 80px 1fr">
+             <span>KAPI (blocked_by)</span><span>RET</span><span>GİRERDİ</span><span>ORT. R</span><span>REJİM KIRILIMI</span></div>
+           ${kovalar.map(satir).join("")}</div>
+         <p class="hint" style="margin-top:10px">Pozitif bir <b>ORT. R</b>, o kapının sistematik olarak
+           kazanan kurulum elediğini söyler — eşiği değiştirmeden ÖNCE ön-kayıt kartı gerekir
+           (ölçüm ≠ hüküm).</p>`}</div>`;
+}
+
+// ---- C1-8 · "BUGÜN NEDEN HİÇBİR ŞEY OLMADI" (② karar#kapilar) --------------------------------
+// Pano bugüne kadar DÜRÜSTTÜ ("bu seansta tarama adayı yok") ama NEDENSİZDİ; oysa nedeni taşıyan
+// alanların hepsi elde: rejim maruziyet bütçesi, karartma radarı, kapsama için ertelenen seans,
+// halt bayrakları, kapı gerekçeleri. Bu kart onları TEK CÜMLEYE indirir ve kanıtını yanına koyar.
+// NEDEN "BİRİNCİL" DİYE ADLANDIRILIYOR: sebeplerin birden çoğu aynı anda doğru olabilir; ilk
+// yazan ZORLAYICI olandır (halt bir tercih değil, durdurmadır) ve sırayı uç belirler, pano değil.
+function firsatEylemsizlik(rk) {
+  const e = (rk || {}).eylemsizlik;
+  const bir = (e && e.var) ? e.birincil : null;
+  const vc = (e && e.verdict_counts) ? e.verdict_counts : {};
+  const toplamPlan = Object.values(vc).reduce((a, b) => a + Number(b), 0);
+  const ozet = !e
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis ucu eylemsizlik bloğunu vermedi — nedenin kendisi ölçülemedi, 'neden yok' DEĞİL." })
+    : kartOzeti(bir
+        ? { deger: bir.ad, degerSinif: "", meta: `${esc(bir.kanit)} · son seansta ${trn(toplamPlan)} plan yargılandı`,
+            rozet: e.halted ? "HALT" : "" }
+        : { deger: "NEDEN BULUNAMADI", meta: `${trn(toplamPlan)} plan yargılandı · ölçülen dört zorlayıcı nedenin hiçbiri yok`,
+            rozet: "KAPI KARARLARINA BAK" });
+  const nedenSatir = n => `<div class="srow" style="align-items:flex-start">
+    <span><b>${esc(n.ad)}</b><p class="hint" style="margin:2px 0 0;max-width:56ch">${esc(n.aciklama)}</p></span>
+    <span class="hint mono-num" style="text-align:right;max-width:34ch">${esc(n.kanit)}</span></div>`;
+  const kapiSatir = Object.entries((e && e.gate_reasons) ? e.gate_reasons : {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 6)
+    .map(([ad, n]) => `<div class="trow" style="grid-template-columns:1fr 60px">
+      <span class="chain">${esc(ad)}</span><span class="mono-num">${trn(n)}</span></div>`).join("");
+  return `<div class="card rise"${katKart("kapilar:eylemsizlik")}>
+    <h2 class="t">Bugün neden hiçbir şey olmadı? <span class="tx3" style="font-weight:400">(bozuk mu, tasarım mı?)</span></h2>
+    ${ozet}
+    ${!e ? firsatBos("teşhis ucu `risk.eylemsizlik` bloğunu vermedi — eylemsizliğin nedeni bu turda ölçülemedi.",
+        "Alanlar (bütçe, karartma, erteleme, halt) tek uçtan gelir; uç düştüyse hiçbiri türetilemez.")
+      : `<div class="srow"><span>Rejim maruziyet bütçesi</span>
+           <b class="mono-num">${e.exposure_budget_pct == null ? "ölçülemedi" : pctf(Number(e.exposure_budget_pct) / 100, 0)}</b></div>
+         ${(e.nedenler || []).map(nedenSatir).join("")}
+         ${e.neden_yok_aciklama ? `<p class="hint">${esc(e.neden_yok_aciklama)}</p>` : ""}
+         <div class="srow"><span>Son seansın kapı hükmü</span><b class="mono-num">${
+           Object.entries(vc).map(([k, v]) => `${esc(k)} ${trn(v)}`).join(" · ") || "plan yok"}</b></div>
+         ${kapiSatir ? `<div class="tbl" style="margin-top:10px">
+             <div class="trow head" style="grid-template-columns:1fr 60px"><span>KAPI GEREKÇESİ</span><span>PLAN</span></div>
+             ${kapiSatir}</div>` : ""}
+         <p class="hint" style="margin-top:10px">Olay sayaçları son <b>${trn(e.olay_penceresi)}</b> olayda ölçüldü:
+           ${Object.entries(e.olay_sayaci || {}).map(([k, v]) => `${esc(k)} <b>${trn(v)}</b>`).join(" · ") || "sayaç yok"}.
+           Pencerede görülmemek "hiç olmadı" DEĞİLDİR.</p>`}</div>`;
+}
+
+// ---- C1-2 · EMİR YAŞAM-DÖNGÜSÜ İZİ (② karar#mutabakat) ---------------------------------------
+// UX denetiminin B1 bulgusu: onaydan sonraki son bacak HİÇBİR kalıcı geri bildirim taşımıyordu —
+// yalnız geçici bir çekmece mesajı. Panoya ulaşan tek şey TOPLAM huniydi ("silahlı → gönderilmiş
+// → dolan", üç paydası ayrı olduğu beyanlı). `mirror_orders.json` coid başına status/filled_qty/
+// **filled_avg_price** taşıyor ve panoya HİÇ ulaşmıyordu.
+// SLİPAJ TÜRETİLİR AMA UYDURULMAZ: planın `entry_trigger`ı ile dolum fiyatı ikisi de varsa bps
+// hesaplanır; biri yoksa hücre boş kalır — 0 bps "slipaj yoktu" demek olurdu.
+function firsatEmirYasam(rc) {
+  const ey = (rc || {}).emir_yasam;
+  const sat = (ey && ey.var) ? (ey.satirlar || []) : [];
+  const dolan = sat.filter(o => String(o.status).toLowerCase() === "filled").length;
+  const slipajli = sat.filter(o => o.slipaj_bps != null);
+  const ortSlipaj = slipajli.length
+    ? slipajli.reduce((a, o) => a + Number(o.slipaj_bps), 0) / slipajli.length : null;
+  const ozet = !ey
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "ayna emir defteri panoya ulaşmadı — onayın hangi emre döndüğü ölçülemedi." })
+    : (!ey.n
+      ? kartOzeti({ deger: 0, meta: `${esc(String(ey.bos_neden == null ? "ayna defteri okundu, içinde emir yok" : ey.bos_neden))}` })
+      : kartOzeti({ deger: trn(ey.n), oran: kanitOrani(ey.n), payda: "ayna defterindeki emir",
+          meta: `${trn(dolan)} dolan · ${Object.entries(ey.durum_dagilim || {}).map(([k, v]) => `${esc(k)} ${trn(v)}`).join(" · ")}`,
+          rozet: slipajli.length ? "" : "SLİPAJ ÖLÇÜLEMEDİ" }));
+  const satir = o => `<div class="trow" style="grid-template-columns:64px 52px 92px 74px 84px 78px 1fr">
+    <span class="tick">${esc(String(o.symbol == null ? "?" : o.symbol))}</span>
+    <span class="chain mut">${esc(String(o.side == null ? "—" : o.side))}</span>
+    ${_chip(String(o.status).toUpperCase(), String(o.status).toLowerCase() === "filled" ? "t-go" : "t-vi")}
+    <span class="mono-num">${o.filled_qty == null ? "—" : trn(o.filled_qty)}</span>
+    <span class="mono-num">${o.filled_avg_price == null ? "—" : money(o.filled_avg_price)}</span>
+    <span class="mono-num mut">${o.plan_entry_trigger == null ? "—" : money(o.plan_entry_trigger)}</span>
+    <span class="mono-num ${cls(o.slipaj_bps == null ? null : -Number(o.slipaj_bps))}">${
+      o.slipaj_bps == null ? '<span class="mut">slipaj ölçülemedi</span>' : trn(o.slipaj_bps, 1) + " bps"}${
+      o.plan_var ? "" : ' <span class="tag t-vi">PLANSIZ</span>'}</span></div>`;
+  return `<div class="card rise"${katKart("mutabakat:emiryasam")}>
+    <h2 class="t">Emir yaşam-döngüsü <span class="tx3" style="font-weight:400">(onayım aynaya ulaştı mı, kaça doldu?)</span></h2>
+    ${ozet}
+    ${!ey ? firsatBos("teşhis ucu `reconcile.emir_yasam` bloğunu vermedi — emrin son bacağı ölçülemedi.",
+        "Bugüne kadar panoya yalnız TOPLAM huni ulaşıyordu; emir-başına iz bu blokla açıldı.")
+      : (!ey.n ? firsatBos(String(ey.bos_neden == null ? "ayna defterinde emir yok" : ey.bos_neden),
+          "Bu bir ÖLÇÜMdür: defter okundu ve boş çıktı — okunamamış olmakla aynı şey değil.")
+        : `<div class="tbl" style="margin-top:10px">
+             <div class="trow head" style="grid-template-columns:64px 52px 92px 74px 84px 78px 1fr">
+               <span>HİSSE</span><span>YÖN</span><span>DURUM</span><span>DOLAN</span><span>DOLUM $</span><span>PLAN $</span><span>SLİPAJ</span></div>
+             ${sat.map(satir).join("")}</div>
+           <p class="hint" style="margin-top:10px">Defterde <b>${trn(ey.n)}</b> emir var, <b>${trn(ey.gosterilen)}</b>
+             gösteriliyor (tavan beyanlı). Slipaj = (dolum − plan tetiği)/plan tetiği; ölçülen ortalama
+             <b>${ortSlipaj == null ? "—" : trn(ortSlipaj, 1) + " bps"}</b>, paydası <b>${trn(slipajli.length)}</b>
+             emir. Son ayna olayı: <b>${esc(String(ey.last_event_ts == null ? "ölçülemedi" : ey.last_event_ts))}</b>.</p>`)}</div>`;
+}
+
+// ---- C1-9 · ÇIKIŞ NEDENİ KIRILIMI (② karar#performans) ---------------------------------------
+// Panoda bugüne kadar YALNIZ İKİ SAYI vardı (`avg_left_r` + en kötü neden). Defter (`exit_efficiency
+// .reasons`) çıkış mekanizması başına n / MFE / gerçekleşen R / MASADA BIRAKILAN R taşıyor ve
+// kategorinin standardı (FT `/stats`) tam olarak bu tablodur — Meridian'ın verisi daha zengin.
+// "MASADA BIRAKILAN" BİR KAYIP DEĞİL BİR FARKTIR: MFE ile gerçekleşen arasındaki mesafe. Renk
+// yalnız en kötü satırda doğar (anomali), her satırda değil.
+function firsatCikisNedeni(ml) {
+  const ee = (ml || {}).exit_efficiency;
+  const reasons = (ee && ee.reasons) ? ee.reasons : null;
+  const satirlar = reasons ? Object.entries(reasons)
+    .map(([ad, v]) => ({ ad, ...v })).sort((a, b) => Number(b.left_r) - Number(a.left_r)) : [];
+  const enKotu = satirlar.length ? satirlar[0] : null;
+  const ozet = !satirlar.length
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "çıkış verimliliği defteri panoya ulaşmadı — hangi mekanizmanın para bıraktığı ölçülemedi." })
+    : kartOzeti({ deger: trn(ee.avg_left_r, 3) + "R", degerSinif: "warn",
+        oran: kanitOrani(ee.n), payda: "çıkış kaydı (gerçek + simüle)",
+        meta: `${trn(satirlar.length)} mekanizma · en kötü <b>${esc(enKotu.ad)}</b> ${
+          trn(enKotu.left_r, 3)}R (n=${trn(enKotu.n)})`,
+        rozet: azOrnek(enKotu.n) ? "AZ VERİ" : "" });
+  const satir = (r, i) => `<div class="trow" style="grid-template-columns:118px 60px 60px 80px 84px 80px">
+    <span class="chain">${esc(EXIT_TR[r.ad] == null ? r.ad : EXIT_TR[r.ad])}</span>
+    <span class="mono-num">${trn(r.n)}</span>
+    <span class="mono-num mut">${trn(r.n_cf)}</span>
+    <span class="mono-num">${r.avg_mfe_r == null ? "—" : trn(r.avg_mfe_r, 3) + "R"}</span>
+    <span class="mono-num ${cls(r.avg_realized_r)}">${r.avg_realized_r == null ? "—" : isr(r.avg_realized_r, trn(r.avg_realized_r, 3)) + "R"}</span>
+    <span class="mono-num${i === 0 ? " warn" : ""}">${r.left_r == null ? "—" : trn(r.left_r, 3) + "R"}</span></div>`;
+  return `<div class="card rise"${katKart("performans:cikis")}>
+    <h2 class="t">Çıkış nedeni kırılımı <span class="tx3" style="font-weight:400">(hangi mekanizma masada para bırakıyor?)</span></h2>
+    ${ozet}
+    ${!satirlar.length ? firsatBos("`exit_efficiency.reasons` bu turda okunamadı — çıkış mekanizmalarının karnesi ölçülemedi.",
+        "Defter P5 kalibrasyonunda üretilir; panoda bugüne dek yalnız iki özet sayı görünüyordu.")
+      : `<p class="hint" style="margin-top:0">${firsatKunye(ee._kaynak)} · toplam <b>${trn(ee.n)}</b> çıkış kaydı.
+           <b>MASADA</b> = ortalama MFE − gerçekleşen R; bir kayıp değil, çıkış kuralının ödediği FARK.</p>
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:118px 60px 60px 80px 84px 80px">
+             <span>ÇIKIŞ NEDENİ</span><span>N</span><span>N·SİM</span><span>ORT. MFE</span><span>GERÇEKLEŞEN</span><span>MASADA</span></div>
+           ${satirlar.map(satir).join("")}</div>
+         <p class="hint" style="margin-top:10px">Sıra <b>masada bırakılan R</b>'ye göre; en üstteki satır
+           reformun ilk adresidir. Değişiklik ön-kayıt kartı ister — bu tablo ölçümdür, hüküm değil.</p>`}</div>`;
+}
+
+// ---- C1-7 · DENETİM İZİNİN TAMAMI (② karar#adaylar) ------------------------------------------
+// Pano bugüne kadar "denetim izi" iddiasında bulunuyor ama defterin ÜÇTE BİRİNİ gösteriyordu
+// (`plans_shown: 120` / 390). Tavan BEYANLIYDI, yani dürüsttü — ama iş cevaplanmıyordu:
+// "AAPL'de son altı ayda kaç plan kuruldu, kaçı NO_GO oldu, neden?"
+// ÇÖZÜM TAVANI KALDIRMAK DEĞİL SORGULANABİLİR KILMAK (etüdün kendi hükmü): sembol ekseni defterin
+// TAMAMI üstünde sayılır, satırlar filtreyle gelir ve her iki payda da ekranda yazar.
+// FİLTRE BİR EYLEM YÜZEYİ DEĞİLDİR: GET sorgusu, tek emir-yolu yasasına dokunmaz.
+function firsatDenetimIzi(at) {
+  const D = (at && at.defter) ? at.defter : null;
+  const vc = (at && at.verdict_sayim) ? at.verdict_sayim : {};
+  const toplam = Object.values(vc).reduce((a, b) => a + Number(b), 0);
+  const noGo = vc.NO_GO;
+  const ozet = !D
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: (at && at.neden) ? esc(at.neden)
+          : "denetim izi ucu okunamadı — plan defterinin tamamı bu turda sorgulanamadı." })
+    : kartOzeti({ deger: trn(D.plans_total), oran: kanitOrani(D.plans_total), payda: "defterdeki plan",
+        meta: `${trn(at.sembol_n)} sembol · ${Object.entries(vc).map(([k, v]) => `${esc(k)} ${trn(v)}`).join(" · ")}`,
+        rozet: (noGo != null && toplam > 0 && noGo / toplam > 0.5) ? "ÇOĞU NO_GO" : "" });
+  // GERÇEK `<button>`, `role="button"` TAŞIYAN BİR DIV DEĞİL. Panonun klavye delegasyonu yalnız
+  // `[data-rk][role="button"]` için Enter/Space dinliyor (çekmece satırları); `data-act` taşıyan
+  // bir div klavyeyle HİÇ çalışmazdı — yani tıklanabilir görünüp faresiz operatöre kapalı bir
+  // yüzey doğardı (bu deponun `ozetHucre`de adıyla yasakladığı sınıf). Satırın içeriği yalnız
+  // `<span>`, yani buton içerik modeline uyuyor (aynı desen: plan satırları, `_PHEAD` tablosu).
+  const semSatir = s => `<button type="button" class="trow rowbtn"
+      style="grid-template-columns:64px 54px 1fr 150px" data-act="denetimAra" data-a1="${esc(s.ticker)}"
+      aria-label="${esc(s.ticker)} denetim izini filtrele — ${trn(s.n)} plan">
+    <span class="tick">${esc(s.ticker)}</span><span class="mono-num">${trn(s.n)}</span>
+    <span class="chain mut">${Object.entries(s.verdicts || {}).map(([k, v]) => `${esc(k)} ${trn(v)}`).join(" · ")}</span>
+    <span class="mono-num mut">${esc(String(s.ilk == null ? "—" : s.ilk))} → ${esc(String(s.son == null ? "—" : s.son))}</span></button>`;
+  const planSatir = p => `<div class="trow" style="grid-template-columns:82px 58px 118px 48px 82px 1fr">
+    <span class="mono-num">${esc(String(p.date == null ? "—" : p.date))}</span>
+    <span class="tick">${esc(String(p.ticker == null ? "?" : p.ticker))}</span>
+    <span class="chain mut">${esc(String(p.setup == null ? "—" : p.setup))}</span>
+    <span class="mono-num">${p.score == null ? "—" : trn(p.score)}</span>
+    ${_chip(String(p.verdict == null ? "—" : p.verdict), p.verdict === "GO" ? "t-go" : (p.verdict === "NO_GO" ? "t-no" : "t-vi"))}
+    <span class="chain mut">${esc((p.reasons || []).join(" · ").slice(0, 120)) || "gerekçe yazılmamış"}</span></div>`;
+  const sorgu = (at && at.sorgu) ? at.sorgu : {};
+  return `<div class="card rise"${katKart("adaylar:denetim")}>
+    <h2 class="t">Denetim izi · defterin tamamı <span class="tx3" style="font-weight:400">(bu sembolde geçmişte ne karar verdim?)</span></h2>
+    ${ozet}
+    ${!D ? firsatBos((at && at.neden) ? at.neden
+        : "`/api/audit_trail` okunamadı — plan defteri bu turda sorgulanamadı ('plan yok' DEĞİL).",
+        "Bu uç defterin TAMAMI üstünde sayar; sinyal listesinin 120'lik tavanı burada geçerli değil.")
+      : `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0">
+           <label class="hint" for="denetim-ara">Sembol filtresi</label>
+           <input id="denetim-ara" class="searchbox" type="search" placeholder="AAPL" maxlength="10"
+             value="${esc(String(sorgu.sembol == null ? "" : sorgu.sembol))}"
+             data-act="denetimAra" data-act-on="input" aria-label="Denetim izinde sembol ara">
+           <span class="hint">defterde <b>${trn(D.plans_total)}</b> plan · sorgu <b>${trn(D.eslesen)}</b>
+             satır eşledi · <b>${trn(D.gosterilen)}</b> gösteriliyor (tavan ${trn(D.limit)})</span></div>
+         <div class="tbl">
+           <div class="trow head" style="grid-template-columns:82px 58px 118px 48px 82px 1fr">
+             <span>TARİH</span><span>HİSSE</span><span>KURULUM</span><span>SKOR</span><span>HÜKÜM</span><span>GEREKÇE</span></div>
+           ${(at.satirlar || []).map(planSatir).join("") || `<div class="empty">Bu sorguya uyan plan yok — defter okundu, eşleşme çıkmadı.</div>`}</div>
+         ${detayKatmani("Sembol ekseni · defterin TAMAMI üstünde sayım",
+             "Tavan burada geçerli değil: sayımlar 390 satırın hepsinden gelir. Satıra tıklamak filtreyi kurar.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:64px 54px 1fr 150px">
+                  <span>HİSSE</span><span>PLAN</span><span>HÜKÜM KIRILIMI</span><span>İLK → SON</span></div>
+                ${(at.semboller || []).map(semSatir).join("")}</div>
+              <p class="hint" style="margin-top:8px">İlk 60 sembol gösteriliyor; defterde <b>${
+                trn(at.sembol_n)}</b> ayrı sembol var.</p>`)}`}</div>`;
+}
+// SORGU EYLEMİ — YALNIZ OKUMA. `data-act` izin listesine kayıtlıdır (`EYLEMLER`) ve tek yaptığı
+// GET sorgusunu yenileyip bölümü yeniden çizmektir. POST yok, state'e dokunma yok.
+// GECİKTİRME (debounce) ŞART: `data-act-on="input"` her tuş vuruşunda tetikler ve filtresiz bir
+// çağrı defterin tamamını okur — her harfte bir istek, ağı da sunucuyu da gereksiz yorar.
+let _DENETIM_ZAMAN = null, _DENETIM_SEMBOL = "";
+window.denetimAra = (sembol) => {
+  const el = document.getElementById("denetim-ara");
+  _DENETIM_SEMBOL = String(sembol === undefined ? (el ? el.value : "") : sembol).trim().toUpperCase();
+  if (el && sembol !== undefined) el.value = _DENETIM_SEMBOL;
+  clearTimeout(_DENETIM_ZAMAN);
+  _DENETIM_ZAMAN = setTimeout(() => {
+    RENDER.adaylar().then(() => {
+      // ODAK KORUNUR: bölüm yeniden çizildiğinde kutu yeni bir DOM düğümüdür ve odak kaybolurdu —
+      // yani operatör her harften sonra kutunun dışına düşerdi. İmleç de sona alınır.
+      const yeni = document.getElementById("denetim-ara");
+      if (yeni) { yeni.focus(); yeni.setSelectionRange(yeni.value.length, yeni.value.length); }
+      revealActive(true);
+    }).catch(e => console.error("denetim izi yenilenemedi:", e));
+  }, 260);
+};
+
+// ---- C1-4 · CANLI ZAMAN ÇİZELGESİ · DAMGALAR (③ saglik#cizelge) ------------------------------
+// D2-b ÇİZELGE YÜZEYİNİ KURDU VE BİR BORÇ BEYAN ETTİ: "'bu adım saat 03:12'de koştu' bilgisi bu
+// uçtan GELMİYOR — adım başına damga `state/mechanism_beats.json`da var ama panoya açılmamış.
+// Damgaların uca açılması D3-UI'ın işi." Bu kart o borcu kapatır: damgalar artık uçtan geliyor
+// (`diagnostics.cizelge.damgalar`) ve GERÇEK saatle yazılıyor.
+// UYDURMA YOK: damgası olmayan mekanizma için saat üretilmez — satır "kendi damgası yok" der.
+// Koşu defteri (`pipeline_runs.jsonl`) P-adımlarının GERÇEK süresini taşır ve o da buraya iner.
+function firsatCizelgeIzi(cz) {
+  const D = (cz && cz.var) ? (cz.damgalar || {}) : null;
+  const adlar = D ? Object.keys(D).sort((a, b) => String(D[b]).localeCompare(String(D[a]))) : [];
+  const kosular = (cz && cz.var) ? (cz.kosular || []) : [];
+  const sd = (cz && cz.son_dongu) ? cz.son_dongu : null;
+  const sure = r => {
+    if (!r.started || !r.finished) return null;
+    const a = Date.parse(r.started), b = Date.parse(r.finished);
+    return (Number.isFinite(a) && Number.isFinite(b)) ? Math.max(0, Math.round((b - a) / 1000)) : null;
+  };
+  const ozet = !cz
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis ucu `cizelge` bloğunu vermedi — adım damgaları bu turda okunamadı." })
+    : kartOzeti(adlar.length
+        ? { deger: trn(adlar.length), oran: kanitOrani(adlar.length), payda: "damgalı mekanizma",
+            meta: `${trn(kosular.length)} koşu kaydı · en taze damga <b>${esc(String(D[adlar[0]]).slice(11, 19))}</b> (${esc(adlar[0])})`,
+            rozet: (sd && sd.var === false) ? "DÖNGÜ KAYDI YOK" : "" }
+        : { deger: null, rozet: "ÖLÇÜLEMEDİ",
+            meta: String(cz.damga_neden_yok == null ? "mekanizma damgaları okunamadı — adım saatleri ölçülemedi." : cz.damga_neden_yok) });
+  const damgaSatir = ad => `<div class="trow" style="grid-template-columns:1fr 168px">
+    <span class="chain">${esc(ad)}</span>
+    <span class="mono-num">${esc(String(D[ad]).replace("T", " ").slice(0, 19))}Z</span></div>`;
+  const kosuSatir = r => {
+    const s = sure(r);
+    return `<div class="trow" style="grid-template-columns:128px 150px 62px 74px 1fr">
+      <span class="chain">${esc(String(r.pipeline == null ? "?" : r.pipeline))}</span>
+      <span class="mono-num">${esc(String(r.started == null ? "—" : String(r.started).replace("T", " ").slice(0, 19)))}</span>
+      <span class="mono-num">${s == null ? '<span class="mut">—</span>' : trn(s) + " sn"}</span>
+      ${_chip(String(r.status == null ? "—" : r.status).toUpperCase(), r.status === "ok" ? "t-go" : "t-vi")}
+      <span class="chain mut">${trn(r.skills_invoked)} koştu · ${trn(r.skills_declared_not_run)} beyan-edilip-koşmadı · ${
+        trn(r.artifacts)} artefakt${r.error ? " · " + esc(String(r.error).slice(0, 60)) : ""}</span></div>`;
+  };
+  return `<div class="card rise"${katKart("cizelge:damga")}>
+    <h2 class="t">Adım damgaları · gerçek saat <span class="tx3" style="font-weight:400">(karar adım adım nasıl oluştu?)</span></h2>
+    ${ozet}
+    ${!cz ? firsatBos("teşhis ucu `cizelge` bloğunu vermedi — adım saatleri bu turda ölçülemedi.",
+        "Yukarıdaki adım listesi (yapı) yine duruyor; eksik olan saat, uydurulmuyor.")
+      : `${sd && sd.var ? `<div class="srow"><span>Son günlük döngü</span>
+             <b class="mono-num">${esc(String(sd.date))} · ${trn(sd.candidates)} aday → ${trn(sd.plans)} plan → ${
+               trn(sd.armed)} silahlı${sd.yas_saat == null ? "" : ` · ${trn(sd.yas_saat, 1)} sa önce`}</b></div>`
+           : `<div class="srow"><span>Son günlük döngü</span><b class="mut">${
+               esc(String((sd && sd.neden) ? sd.neden : "döngü kaydı ölçülemedi"))}</b></div>`}
+         ${adlar.length ? `<div class="tbl" style="margin-top:10px">
+             <div class="trow head" style="grid-template-columns:1fr 168px"><span>MEKANİZMA</span><span>SON NABIZ (UTC)</span></div>
+             ${adlar.map(damgaSatir).join("")}</div>`
+           : firsatBos(String(cz.damga_neden_yok == null ? "mekanizma damgaları okunamadı" : cz.damga_neden_yok))}
+         ${detayKatmani("Koşu defteri · adım başına gerçek süre",
+             "`pipeline_runs.jsonl` her skill koşusuna başlangıç/bitiş damgası yazar — süre TÜRETİLMEZ, ölçülür.",
+             kosular.length ? `<div class="tbl">
+                 <div class="trow head" style="grid-template-columns:128px 150px 62px 74px 1fr">
+                   <span>BORU HATTI</span><span>BAŞLANGIÇ (UTC)</span><span>SÜRE</span><span>DURUM</span><span>SKİLLER</span></div>
+                 ${kosular.map(kosuSatir).join("")}</div>`
+               : firsatBos("koşu defteri boş okundu — adım süreleri bu turda ölçülemedi."))}
+         <p class="hint" style="margin-top:10px">LLM çağrıları son <b>${trn(cz.olay_penceresi)}</b> olayda
+           <b>${trn((cz.cagrilar || []).length)}</b> kez görüldü. Pencerede görülmemek "çağrı yapılmadı" DEĞİLDİR.</p>`}</div>`;
+}
+
+// ---- C1-3 · GECE MALİYET VE TOKEN KARNESİ (④ ogrenme#hermes) ---------------------------------
+// ÖLÇÜLEN KUSUR: `/api/spend` ucunun web tarafında SIFIR çağıranı vardı; panoya ulaşan tek şey
+// aylık toplam ve `over_budget` bayrağıydı. Model kırılımı, kol kırılımı, gece-başına maliyet:
+// hiçbiri yoktu. Beyin bütçesi dolduğunda sistem ücretsiz yola düşüyor ve bu geçişin maliyeti
+// yalnız ikili bir bayrakla görünüyordu.
+// KANONİK UÇ KORUNDU: kırılım `/api/hermes` `spend_detay`den gelir (K1 hükmü — `/api/spend`
+// EMEKLİ ve ona yeni tüketici bağlanmaz). Kova değişmedi, İÇİ zenginleşti.
+function firsatMaliyetKarnesi(d) {
+  const sd = (d || {}).spend_detay, sp = (d || {}).spend;
+  const t = (sd && sd.var) ? sd.toplam : null;
+  const ozet = !t
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: (sd && sd.neden) ? esc(sd.neden)
+          : "harcama defteri panoya ulaşmadı — gecenin maliyeti ölçülemedi ('bedava' DEĞİL)." })
+    : kartOzeti({ deger: money(t.cost_usd), oran: kanitOrani(t.n), payda: "kayıtlı LLM çağrısı",
+        meta: `${trn(t.n)} çağrı · ${trn(t.in_tokens)} giriş / ${trn(t.out_tokens)} çıkış token · ${
+          trn((sd.modeller || []).length)} model`,
+        rozet: (sp && sp.over_budget) ? "BÜTÇE DOLDU" : (sd.olculemeyen_satir ? "EKSİK ALANLI SATIR" : "") });
+  const grupSatir = g => `<div class="trow" style="grid-template-columns:1fr 54px 96px 96px 78px">
+    <span class="chain">${esc(g.ad)}</span><span class="mono-num">${trn(g.n)}</span>
+    <span class="mono-num mut">${trn(g.in_tokens)}</span><span class="mono-num mut">${trn(g.out_tokens)}</span>
+    <span class="mono-num">${money(g.cost_usd)}</span></div>`;
+  const gunSatir = g => `<div class="trow" style="grid-template-columns:96px 54px 96px 78px">
+    <span class="mono-num">${esc(g.gun)}</span><span class="mono-num">${trn(g.n)}</span>
+    <span class="mono-num mut">${trn(g.in_tokens + g.out_tokens)}</span>
+    <span class="mono-num">${money(g.cost_usd)}</span></div>`;
+  return `<div class="card rise"${katKart("hermes:maliyet")}>
+    <h2 class="t">Gece maliyet ve token karnesi <span class="tx3" style="font-weight:400">(bu düşünme ne tuttu?)</span></h2>
+    ${ozet}
+    ${!t ? firsatBos((sd && sd.neden) ? sd.neden
+        : "`spend_detay` bloğu uçtan gelmedi — çağrı-başına maliyet bu turda ölçülemedi.",
+        "Aylık toplam ve bütçe bayrağı yukarıdaki durum kartında; eksik olan KIRILIM.")
+      : `<div class="srow"><span>Bu ay (${esc(sd.ay)})</span>
+           <b class="mono-num">${money(sd.bu_ay.cost_usd)} · ${trn(sd.bu_ay.n)} çağrı${
+             sp && sp.budget_usd != null ? ` · bütçe ${money(sp.budget_usd)}` : ""}</b></div>
+         ${sd.olculemeyen_satir ? `<div class="srow"><span>Maliyet alanı olmayan satır</span>
+             <b class="mono-num warn">${trn(sd.olculemeyen_satir)}/${trn(sd.satir_n)}</b></div>` : ""}
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:1fr 54px 96px 96px 78px">
+             <span>MODEL</span><span>ÇAĞRI</span><span>GİRİŞ TOKEN</span><span>ÇIKIŞ TOKEN</span><span>MALİYET</span></div>
+           ${(sd.modeller || []).map(grupSatir).join("")}</div>
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:1fr 54px 96px 96px 78px">
+             <span>KOL (note)</span><span>ÇAĞRI</span><span>GİRİŞ TOKEN</span><span>ÇIKIŞ TOKEN</span><span>MALİYET</span></div>
+           ${(sd.kollar || []).map(grupSatir).join("")}</div>
+         ${detayKatmani("Gece gece · son 14 gün",
+             "Defterin gün kırılımı: hangi gece kaç çağrı ve kaç dolar. Satır yoksa o gün hiç çağrı YAZILMAMIŞ demektir.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:96px 54px 96px 78px">
+                  <span>GÜN</span><span>ÇAĞRI</span><span>TOPLAM TOKEN</span><span>MALİYET</span></div>
+                ${(sd.gunler || []).map(gunSatir).join("")}</div>`)}
+         <p class="hint" style="margin-top:10px">Maliyet defteri <b>${trn(sd.satir_n)}</b> satır.
+           Ücretsiz yola düşen çağrılar <b>$0,00</b> yazar ve bu bir ÖLÇÜMdür — alanı hiç taşımayan
+           satırlar ayrıca <b>${trn(sd.olculemeyen_satir)}</b> olarak sayılır, sıfır sayılmaz.</p>`}</div>`;
+}
+
+// ---- C1-5 · ROLLBACK SİCİLİ (④ ogrenme#ajan) -------------------------------------------------
+// PRODUCT.md'nin AÇIK VAADİ ("underperforming versions auto-rollback") ve konumlandırmanın dört
+// sütunundan biri. Panoda karşılığı YOKTU: `app.js` içinde "rollback" kelimesi SIFIR kez geçiyordu.
+// Bir vaadin görünmezliği, vaadin kendisini ölçülemez yapar.
+function firsatRollbackSicili(rb) {
+  const S = (rb && rb.var) ? (rb.surumler || []) : null;
+  const geri = S ? S.filter(v => v.rolled_back) : [];
+  const acik = (rb && rb.acik_dongu) ? Object.keys(rb.acik_dongu).length : null;
+  const ozet = !S
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: (rb && rb.neden) ? esc(rb.neden)
+          : "karne defteri okunamadı — geri-alma sicili ölçülemedi ('hiç geri alınmadı' DEĞİL)." })
+    : kartOzeti({ deger: trn(geri.length), oran: kanitOrani(S.length), payda: "kayıtlı sürüm",
+        meta: `${trn(S.length)} sürüm · yürürlükte <b>v${esc(String(rb.current_version))}</b>${
+          rb.esik == null ? "" : ` · eşik ${trn(rb.esik, 3)}`}`,
+        rozet: (acik != null && acik > 0) ? "AÇIK ÖĞRENME DÖNGÜSÜ" : "" });
+  const satir = v => `<div class="trow" style="grid-template-columns:52px 96px 84px 74px 1fr">
+    <span class="chain">v${esc(String(v.version).padStart(2, "0"))}${v.guncel ? " ●" : ""}</span>
+    ${_chip(v.rolled_back ? "GERİ ALINDI" : (v.reinstated ? "GERİ GETİRİLDİ" : "yürürlükte kaldı"),
+            v.rolled_back ? "t-no" : "t-vi")}
+    <span class="mono-num">${v.live_score == null ? (v.backtest_oos == null ? "—" : trn(v.backtest_oos, 4)) : trn(v.live_score, 4)}</span>
+    <span class="mono-num mut">${v.n_trades == null ? "—" : trn(v.n_trades) + " işlem"}</span>
+    <span class="chain mut">${esc(String(v.note == null ? (v.source == null ? "gerekçe yazılmamış" : v.source) : v.note).slice(0, 110))}</span></div>`;
+  const olaySatir = o => `<div class="trow" style="grid-template-columns:150px 1fr">
+    <span class="mono-num">${esc(String(o.ts == null ? "—" : String(o.ts).replace("T", " ").slice(0, 19)))}</span>
+    <span class="chain mut">${esc(o.event)}${o.version == null ? "" : ` · v${esc(String(o.version))}`}${
+      o.reason ? " · " + esc(String(o.reason).slice(0, 90)) : ""}</span></div>`;
+  return `<div class="card rise"${katKart("ajan:rollback")}>
+    <h2 class="t">Rollback sicili <span class="tx3" style="font-weight:400">(kendini gerçekten geri alıyor mu?)</span></h2>
+    ${ozet}
+    ${!S ? firsatBos((rb && rb.neden) ? rb.neden
+        : "karne defteri (`scoreboard.json`) okunamadı — geri-alma sicili bu turda ölçülemedi.",
+        "Vaat PRODUCT.md'de yazılı; kanıtı bu kartta yaşar. Kartın boş olması vaadin yanlış olduğunu DEĞİL, ölçemediğimizi söyler.")
+      : `<div class="srow"><span>Açık öğrenme döngüsü</span><b class="mono-num">${
+           rb.acik_dongu == null ? esc(String(rb.acik_dongu_neden))
+             : (acik ? `${trn(acik)} kayıt AÇIK` : "açık döngü YOK (defter okundu, boş)")}</b></div>
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:52px 96px 84px 74px 1fr">
+             <span>SÜRÜM</span><span>HÜKÜM</span><span>SKOR</span><span>ÖRNEKLEM</span><span>GEREKÇE / KAYNAK</span></div>
+           ${S.map(satir).join("")}</div>
+         ${(rb.olaylar || []).length ? detayKatmani("Çürütme kayıtları · olay defteri",
+             "`rollback_*` ve `learning_loop_*` olayları: hükmün ne zaman ve neden verildiği.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:150px 1fr"><span>ZAMAN (UTC)</span><span>OLAY</span></div>
+                ${rb.olaylar.map(olaySatir).join("")}</div>
+              <p class="hint" style="margin-top:8px">Son <b>${trn(rb.olay_penceresi)}</b> olay tarandı.</p>`)
+           : `<p class="hint" style="margin-top:10px">Son <b>${trn(rb.olay_penceresi)}</b> olayda çürütme kaydı
+                görülmedi — bu "hiç olmadı" DEĞİL, "bu pencerede yok" demektir.</p>`}`}</div>`;
+}
+
+// ---- C1-6 · REGRESYON KIRILIMI (④ ogrenme#ajan) ----------------------------------------------
+// "v3→v4 net iyileşme mi, yoksa bir yerde kazanıp başka yerde mi kaybettim?" Toplam skorun
+// gizlediği TEK şey budur. Kaynak: `trades.jsonl` satırlarındaki `strategy_version` damgası —
+// yani kırılım gerçekten ölçülebilir, türetilmiyor.
+// SINIR AÇIK YAZILIR: dilim örneklemi küçükse satır `AZ` rozeti taşır ve bir HÜKÜM değil bir
+// GÖZLEMdir; tek sürümlü bir defterde "neyi bozdu" sorusunun karşılaştırma tarafı YOKTUR.
+function firsatRegresyon(rg) {
+  const S = (rg && rg.var) ? (rg.surumler || []) : null;
+  const f = (rg && rg.var) ? rg.fark : null;
+  const bozan = f ? (f.rejim || []).filter(k => k.delta_r != null && k.delta_r < 0) : [];
+  const duzelten = f ? (f.rejim || []).filter(k => k.delta_r != null && k.delta_r > 0) : [];
+  const ozet = !S
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: (rg && rg.neden) ? esc(rg.neden)
+          : "işlem defteri sürüm damgası taşımıyor — regresyon kırılımı ölçülemedi." })
+    : kartOzeti(f
+        ? { deger: `${trn(duzelten.length)}↑ / ${trn(bozan.length)}↓`,
+            degerSinif: bozan.length ? "warn" : "",
+            oran: kanitOrani(rg.islem_n), payda: "sürüm damgalı kapanmış işlem",
+            meta: `v${esc(String(f.eski))} → v${esc(String(f.yeni))} · ${trn((f.rejim || []).length)} rejim dilimi karşılaştırıldı`,
+            rozet: bozan.length ? "REGRESYON VAR" : "" }
+        : { deger: trn(S.length), oran: kanitOrani(rg.islem_n), payda: "sürüm damgalı kapanmış işlem",
+            meta: `${trn(rg.islem_n)} işlem tek sürümde toplanıyor — karşılaştırma tarafı yok`,
+            rozet: "KIYAS YOK" });
+  const dilimSatir = (d, etiket) => `<div class="trow" style="grid-template-columns:120px 54px 82px 1fr">
+    <span class="chain">${esc(etiket === "rejim" ? (REGIME_TR[d.ad] == null ? d.ad : REGIME_TR[d.ad]) : (EXIT_TR[d.ad] == null ? d.ad : EXIT_TR[d.ad]))}</span>
+    <span class="mono-num">${trn(d.n)}</span>
+    <span class="mono-num ${cls(d.avg_r)}">${d.avg_r == null ? "—" : isr(d.avg_r, trn(d.avg_r, 3)) + "R"}</span>
+    <span>${d.az_ornek ? '<span class="tag t-vi">AZ ÖRNEK</span>' : ""}</span></div>`;
+  const farkSatir = k => `<div class="trow" style="grid-template-columns:120px 92px 84px 1fr">
+    <span class="chain">${esc(REGIME_TR[k.ad] == null ? k.ad : REGIME_TR[k.ad])}</span>
+    <span class="mono-num ${cls(k.delta_r)}">${k.delta_r == null ? "—" : isr(k.delta_r, trn(k.delta_r, 3)) + "R"}</span>
+    <span class="mono-num mut">${k.n_yeni == null ? "—" : `${trn(k.n_yeni)} / ${trn(k.n_eski)}`}</span>
+    <span class="chain mut">${k.delta_r == null ? esc(String(k.neden == null ? "ölçülemedi" : k.neden))
+      : (k.az_ornek ? "az örneklem — gözlem, hüküm değil" : "")}</span></div>`;
+  return `<div class="card rise"${katKart("ajan:regresyon")}>
+    <h2 class="t">Bu sürüm neyi düzeltti, neyi BOZDU? <span class="tx3" style="font-weight:400">(regresyon kırılımı)</span></h2>
+    ${ozet}
+    ${!S ? firsatBos((rg && rg.neden) ? rg.neden
+        : "`trades.jsonl` sürüm kırılımı üretmedi — regresyon bu turda ölçülemedi.",
+        "Kırılım YALNIZ `strategy_version` damgalı kapanmış işlemlerden türer; damgasız satır hiçbir sürüme yazılmaz.")
+      : `${f ? `<div class="tbl" style="margin-top:10px">
+             <div class="trow head" style="grid-template-columns:120px 92px 84px 1fr">
+               <span>REJİM</span><span>Δ ORT. R</span><span>N (yeni/eski)</span><span>NOT</span></div>
+             ${(f.rejim || []).map(farkSatir).join("")}</div>
+           <p class="hint" style="margin-top:8px">v${esc(String(f.eski))} → v${esc(String(f.yeni))}:
+             <b>${trn(duzelten.length)}</b> dilim iyileşti, <b>${trn(bozan.length)}</b> dilim bozuldu.
+             Toplam skor bu ayrımı GİZLER.</p>`
+         : `<p class="hint" style="margin-top:0">Defterde karşılaştırılabilir ikinci bir sürüm yok —
+              "neyi bozdu" sorusunun kıyas tarafı ÖLÇÜLEMEZ. Aşağıdaki kırılım tek sürümün kendi
+              dilimleridir; bir öncekiyle farkı değil.</p>`}
+         ${S.map(v => detayKatmani(`v${String(v.version).padStart(2, "0")} · ${v.n} işlem · ort. ${
+             v.avg_r == null ? "ölçülemedi" : v.avg_r + "R"}`,
+             "Dilim ortalaması bir hüküm değil bir gözlemdir; örneklem eşiğin altındaysa satır AZ ÖRNEK rozeti taşır.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:120px 54px 82px 1fr">
+                  <span>REJİM</span><span>N</span><span>ORT. R</span><span></span></div>
+                ${(v.rejim || []).map(d => dilimSatir(d, "rejim")).join("")}</div>
+              <div class="tbl" style="margin-top:10px">
+                <div class="trow head" style="grid-template-columns:120px 54px 82px 1fr">
+                  <span>ÇIKIŞ NEDENİ</span><span>N</span><span>ORT. R</span><span></span></div>
+                ${(v.cikis || []).map(d => dilimSatir(d, "cikis")).join("")}</div>`)).join("")}
+         <p class="hint" style="margin-top:10px">${esc(String(rg.sinir))}</p>`}</div>`;
+}
+
+// ---- C1-10 · SKORUN OLGUNLAŞMA GÖSTERGESİ (④ ogrenme#karne) ----------------------------------
+// Meridian DOĞRU davranıyor (n < min_sample'da skor `None`) ama operatöre MESAFEYİ söylemiyordu;
+// "ölçülemedi" kalıcı bir duvar gibi okunuyordu. Numerai'nin 20D2L deseni: skor gün gün olgunlaşır
+// ve olgunlaşmanın kendisi gösterilir.
+// HİÇBİR EŞİK PANODA SABİTLENMEZ: `min_sample` hedeften, ufuk kapısı beyin durumundan, merdiven
+// ölçütleri `/api/summary`den okunur. Sayı burada YAZILI OLSAYDI, hedef değiştiği gün pano yalan
+// söylerdi (C10 dersi).
+function firsatOlgunlasma(sd, hz, ladder, cf) {
+  const n = (sd || {}).n, min = (sd || {}).min_sample;
+  const kalan = (n != null && min != null) ? Math.max(0, Number(min) - Number(n)) : null;
+  const oran = (n != null && min != null && Number(min) > 0)
+    ? Math.min(1, Number(n) / Number(min)) : null;
+  const ap = (ladder || {}).auto_progress;
+  const ozet = (n == null || min == null)
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "skor ayrıntısı (`score_detail.n` / `min_sample`) uçtan gelmedi — olgunlaşma mesafesi ölçülemedi." })
+    : kartOzeti({ deger: `${trn(n)}/${trn(min)}`, oran: oran, payda: "hedefin min_sample'ı",
+        meta: kalan === 0 ? `örneklem eşiği DOLDU · skor ${(sd.score == null ? "hâlâ ölçülemedi (başka kapı)" : trn(sd.score, 4))}`
+          : `<b>${trn(kalan)}</b> kapanmış işlem daha gerekiyor · skor şu an ${sd.score == null ? "ölçülemedi" : trn(sd.score, 4)}`,
+        rozet: kalan === 0 ? "" : "OLGUNLAŞIYOR" });
+  const kapi = (ad, hazir, metin) => `<div class="srow"><span>${esc(ad)}</span>
+    <b class="mono-num">${hazir === null ? '<span class="mut">ölçülemedi</span>' : metin}</b></div>`;
+  return `<div class="card rise"${katKart("karne:olgunlasma")}>
+    <h2 class="t">Skorun olgunlaşması <span class="tx3" style="font-weight:400">(bu sayı ne zaman güvenilir olacak?)</span></h2>
+    ${ozet}
+    ${(n == null || min == null)
+      ? firsatBos("`score_detail` panoya ulaşmadı — skorun eşiğe mesafesi bu turda ölçülemedi.",
+          "'Ölçülemedi' doğru bir cevaptır; MESAFESİZ olması kusurdu — mesafe bu kartın işi.")
+      : `${kapi("Örneklem kapısı", n != null,
+            `${trn(n)}/${trn(min)} kapanmış işlem${kalan === 0 ? " · DOLDU" : ` · ${trn(kalan)} kaldı`}`)}
+         ${kapi("Ufuk kapısı (rejim dilimi)", hz == null ? null : true,
+            hz == null ? "" : (hz.ready ? "hazır"
+              : `${trn(hz.trades)}/${trn(hz.trades_needed)} işlem · ${trn(hz.span_days)}/${trn(hz.min_days)} gün${
+                  hz.regime ? ` · ${esc(REGIME_TR[hz.regime] == null ? hz.regime : REGIME_TR[hz.regime])}` : ""}`))}
+         ${kapi("Otonomi merdiveni (L0→L1)", ap == null ? null : true,
+            ap == null ? "" : `${trn(ap.met)}/${trn(ap.total)} ölçüt karşılandı`)}
+         ${kapi("Karşı-olgusal sadakat kesişimi", cf == null ? null : true,
+            cf == null ? "" : `${trn(cf.n)} kesişim kaydı${
+              cf.corr == null ? " · korelasyon ölçülemedi" : ` · korelasyon ${trn(cf.corr, 3)}`}`)}
+         <p class="hint" style="margin-top:10px">Eşiklerin hiçbiri burada SABİT yazılı değil: örneklem
+           eşiği hedeften (<code>goal.min_sample</code>), ufuk kapısı beyin durumundan, merdiven
+           <code>/api/summary</code>'den okunur. Eşik değişirse bu kart onunla birlikte değişir.</p>
+         ${(ladder && ladder.l0_to_l1) ? detayKatmani("L0 → L1 ölçütleri · tek tek",
+             "Merdivenin ölçütleri; `manual` bayraklı olanlar operatör kalemidir, ajan onları kendi "
+             + "kapatamaz. MESAFE sütunu üreticinin kendi `detail` metnidir — burada TÜRETİLMEZ.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:1fr 96px 118px 74px">
+                  <span>ÖLÇÜT</span><span>DURUM</span><span>MESAFE</span><span>KİM</span></div>
+                ${ladder.l0_to_l1.map(k => `<div class="trow" style="grid-template-columns:1fr 96px 118px 74px">
+                    <span class="chain">${esc(String(k.label == null ? (k.criterion == null ? "—" : k.criterion) : k.label))}</span>
+                    ${_chip(k.met === true ? "KARŞILANDI" : (k.met === false ? "bekliyor" : "ölçülemedi"),
+                            k.met === true ? "t-go" : "t-vi")}
+                    <span class="mono-num mut">${k.detail == null ? "ölçülemedi" : esc(String(k.detail))}</span>
+                    <span class="chain mut">${k.manual ? "operatör" : "ajan"}</span></div>`).join("")}</div>`) : ""}`}</div>`;
+}
 
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------
 // Emirlerin AYNASI kitabın yanında durur: "iç defterim brokerinkiyle aynı mı?" sorusu, "kitap
@@ -6194,7 +6832,10 @@ RENDER.mutabakat = async () => {
     + "buraya iner. Altında <b>E2 icra gerçekliği</b> (ret sınıfı, dolumun bps faturası, iç "
     + "motorun kill ölçütü, iki motorun mutabakatı), <b>E3 kötümser band</b> (yürürlükteki "
     + "varsayım + defterden ampirik ölçüm) ve <b>E4 gece/gündüz</b> (kâr hangi bacaktan geldi).")
-    + p.s1 + p.sIcra + p.sBand + p.sGeceG;
+    // EMİR YAŞAM-DÖNGÜSÜ MASANIN HEMEN ARDINDA (C1-2): `s1` "iç defterim brokerinkiyle aynı mı?"
+    // der; bu kart "benim onayım hangi emre döndü ve KAÇA doldu?" der. İkincisi birincisinin
+    // satır düzeyidir — araya E2/E3/E4 girseydi soru iki kaydırma uzağa düşerdi.
+    + p.s1 + firsatEmirYasam((_DIAG || {}).reconcile) + p.sIcra + p.sBand + p.sGeceG;
 };
 
 // ---- KOŞU & DÖNGÜ · KAPILAR (ADR: "kapıdan ne geçti") ----------------------------------------
@@ -6202,9 +6843,17 @@ RENDER.mutabakat = async () => {
 // altında durunca "neden bu geçti, şu elendi" tek kaydırmada okunur.
 RENDER.kapilar = async () => {
   const p = await opParcalar();
+  // TEŞHİS YÜKÜ ZATEN ELDE: `opParcalar()` onu AZ ÖNCE okudu ve `_DIAG`e yazdı. İkinci bir
+  // `j("/api/diagnostics")` çağrısı JCACHE sayesinde ağa çıkmazdı ama yine de aynı yanıtın iki
+  // kopyasını taşırdı — ve iki kopya, ilk düzenlemede ayrışır (bu deponun tekrar eden kusuru).
+  const d = _DIAG;
   $("page-kapilar").innerHTML = bolumBasHTML("kapilar", "Disiplin kapısı · karar ağacı",
     "Rejim bütçesi, karartma radarı, uyuyan kurulumların silahlanma ölçümü ve plan başına "
-    + "karar ağacı. Her satır açılır: hangi ölçüt hangi değerle hangi eşiğe çarptı.") + p.s2;
+    + "karar ağacı. Her satır açılır: hangi ölçüt hangi değerle hangi eşiğe çarptı. Altında "
+    + "kapının <b>reddettiklerinin karnesi</b> ve <b>bugün neden hiçbir şey olmadığı</b>.") + p.s2
+    // SIRA: önce eylemsizlik (bugünün sorusu), sonra ret karnesi (eşiğin sorusu). Operatör
+    // sayfaya "bugün ne oldu?" diye gelir; "eşiğim doğru mu?" ikinci sıradaki sorudur.
+    + firsatEylemsizlik((d || {}).risk) + firsatRetKarnesi((d || {}).mlops);
 };
 
 // ---- VERİ SAĞLIĞI · HATTIN İÇ SAĞLIĞI --------------------------------------------------------
@@ -6608,7 +7257,9 @@ RENDER.ajan = async () => {
   // `/api/state/snapshot`, `/api/debug_export`, `/halt` ve `notifyTest`in TEK yüzeyi oydu.
   $("ajan-own").innerHTML = bolumBasHTML("ajan", "Hipotez defteri",
     "Beyin ne önerdi, kapı ne dedi, gerçekte ne oldu — üçü yan yana. Her satır açılır: kapı "
-    + "kaydı, OOS sayıları ve eleme gerekçesi çekmecede.")
+    + "kaydı, OOS sayıları ve eleme gerekçesi çekmecede. Sürüm ekseninin iki karnesi de burada: "
+    + "<b>rollback sicili</b> (kendini geri alıyor mu?) ve <b>regresyon kırılımı</b> (neyi "
+    + "düzeltti, neyi BOZDU).")
     + `<div class="card rise"${katKart("ajan:surumler")}><h2 class="t">Strateji sürümleri (v01 → …)</h2>
       ${kartOzeti(!versions.length ? {
         deger: null, rozet: "ÖLÇÜLEMEDİ",
@@ -6620,6 +7271,8 @@ RENDER.ajan = async () => {
             return son.changed_variable ? ` · son değişen <b>${esc(son.changed_variable)}</b>` : "";
           })()}` })}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${timeline || '<span class="mut">yalnızca v01</span>'}</div></div>
+    ${firsatRollbackSicili(d.rollback)}
+    ${firsatRegresyon(d.regresyon)}
     ${skillAttrCard(d.skill_attribution)}
     <div class="lstack rise" style="margin-top:16px">${cards || '<div class="empty">Henüz tahmin yok.</div>'}</div>`;
   // ALT RENDER ZİNCİRİ SÖKÜLDÜ (S2R-2): hermes/skiller/hafiza artık kardeş bölümler ve sıralarını
@@ -7288,13 +7941,18 @@ const RECORD_VIEW = {
 // "hangi rejimde ne verdi" tam olarak karnenin sorusudur.
 // AYNI UÇ, İKİ TÜKETİCİ: ikisi de `/api/performance` okur, yanıt 15 sn önbelleklidir.
 RENDER.performans = async () => {
-  const d = await j("/api/performance");
+  // ÇIKIŞ VERİMLİLİĞİ TEŞHİS UCUNDA YAŞIYOR (`mlops.exit_efficiency`), performans ucunda değil.
+  // İkinci istek JCACHE'ten döner (aynı sayfada `mutabakat`/`brifing` onu zaten çekti); düşerse
+  // null gelir ve kart ÖLÇÜLEMEDİ dalına girer — sayfanın geri kalanı çizilmeye devam eder.
+  const [d, dg] = await Promise.all([j("/api/performance"), j("/api/diagnostics").catch(() => null)]);
   const eq = (d.equity_curve && d.equity_curve.points) || [];
   $("page-performans").innerHTML = bolumBasHTML("performans", "Birikim · para eğrisi ve defter",
-    "Bugüne kadar ne biriktiği: eğri, boyut tavanı, kuyruk riski, ölçülen friksiyon ve kapanmış "
-    + "işlemlerin tek tek hesabı. Karne (öğreniyor mu?) Öğrenme sayfasında.")
+    "Bugüne kadar ne biriktiği: eğri, boyut tavanı, kuyruk riski, ölçülen friksiyon, <b>çıkış "
+    + "nedeni kırılımı</b> ve kapanmış işlemlerin tek tek hesabı. Karne (öğreniyor mu?) Öğrenme "
+    + "sayfasında.")
     + `<div class="card rise"><h2 class="t">Para eğrisi (paper)</h2>${line(eq)}</div>
     ${riskCard(d.kelly, d.tail_risk, d.slippage_measured, d.benchmark_veto_tally)}
+    ${firsatCikisNedeni((dg || {}).mlops)}
     <div class="card rise"><h2 class="t">Son işlemler · tek tek hesap (${d.n_trades ?? 0} toplam)</h2>
       <div class="trow head" style="grid-template-columns:78px 60px 1fr 64px 96px 96px"><span>KAPANIŞ</span><span>HİSSE</span><span>ÇIKIŞ NEDENİ</span><span>R</span><span>REJİM</span><span style="text-align:right">AYNA</span></div>
       ${tradeRows(d.recent_trades || [])}</div>`;
@@ -7315,11 +7973,16 @@ RENDER.performans = async () => {
 // ne görüyor?" — yan yana durunca kendini geliştirme döngüsü tek bakışta okunur). Göç o
 // bitişikliği BOZMADI, ikisini birlikte taşıdı.
 RENDER.karne = async () => {
-  const [L0, p, a, op] = await Promise.all([
+  // BEŞİNCİ KAYNAK: `/api/summary` — otonomi merdiveni (`ladder`) YALNIZ orada servis ediliyor ve
+  // C1-10'un "L0→L1 ne kadar kaldı" bacağı ondan besleniyor. Global `SUMMARY` KULLANILMAZ: onu
+  // `RENDER.brifing` (② Karar) yazıyor, yani ④ Öğrenme'ye doğrudan gelen bir operatörde null olur
+  // ve kart sessizce "ölçülemedi" derdi — ölçüm değil OKUMA YOLU bozuk olurdu (v190'ın dersi).
+  const [L0, p, a, op, sum] = await Promise.all([
     j("/api/hermes").then(x => x || {}).catch(() => null),
     j("/api/performance").catch(() => null),
     j("/api/agent").catch(() => null),
     opParcalar().catch(() => null),
+    j("/api/summary").catch(() => null),
   ]);
   const sd = (p || {}).score_detail || {};
   const regRows = Object.entries((p || {}).per_regime || {}).map(([r, v]) => `<div class="trow" style="grid-template-columns:120px 50px 70px 70px 70px">
@@ -7343,7 +8006,8 @@ RENDER.karne = async () => {
       ${regimeTriggerRows(L.regime_budget_triggers, L.status_counts, L.overfit_suspects)}</div>`;
   $("page-karne").innerHTML = bolumBasHTML("karne", "Karne · öğreniyor mu?",
     "Hükmün kendisi: kaç değişiklik yayınlandı, kaçı tuttu, kaçı geri alındı; kâğıt defterin "
-    + "notu; rejim ve araç başına kırılım; tahminlerin kalibrasyonu.")
+    + "notu; rejim ve araç başına kırılım; tahminlerin kalibrasyonu. Skor 'ölçülemedi' diyorsa "
+    + "<b>ne kadar kaldığı</b> da burada yazar.")
     + karneKart
     + `<div class="mrow rise">
       ${mc("Başarı notu", sd.score, cls(sd.score) === 'pos' ? 'var(--green)' : cls(sd.score) === 'neg' ? 'var(--red)' : 'inherit', "−1…+1")}
@@ -7360,6 +8024,8 @@ RENDER.karne = async () => {
     <div class="card rise"><h2 class="t">Kalibrasyon — tahmin mi tuttu?</h2>
       ${a ? scatter(a.calibration_scatter) : '<div class="empty">Ajan ucu okunamadı.</div>'}
       ${a && a.calibration && a.calibration.n ? `<p class="scatter-note" style="color:var(--tx2)">Brier <b>${a.calibration.brier}</b> (düşük iyi) · isabet <b>${pctf(a.calibration.hit_rate, 0)}</b> · ${a.calibration.n} sonuçlanan tahmin</p>` : ''}</div>
+    ${firsatOlgunlasma(sd, ((L0 || {}).status || {}).horizon, (sum || {}).ladder,
+                       ((_DIAG || {}).pipeline || {}).cf_fidelity)}
     ${op ? op.sHermes + op.sNous
          : `<div class="card rise"><div class="empty">Hermes karnesi ve sistem önerileri ölçülemedi — teşhis ucu okunamadı. Bu boşluk "karne boş" DEĞİL, ölçüm YOK demektir.</div></div>`}`;
 };
@@ -7935,6 +8601,7 @@ RENDER.hermes = async () => {
     <div class="card rise"><h2 class="t">Son parametre önerileri</h2>
       <div class="lstack" style="margin-top:10px">${cards || '<div class="empty">Henüz öneri yok — "Şimdi düşün"e bas.</div>'}</div></div>
     ${op ? op.s3 + op.sOzDeg + op.sCark : `<div class="card rise"><div class="empty">MLOps, öz-değerlendirme ve öğrenme çarkı ölçülemedi — teşhis ucu okunamadı. Bu boşluk "mekanizma yok" DEĞİL, ölçüm YOK demektir.</div></div>`}
+    ${firsatMaliyetKarnesi(d)}
     ${havuzKutusuHTML()}
     ${intCard(d.integrations)}`;
   if (d.sprint && d.sprint.active) _scheduleSprintPoll();        // live progress while a sprint runs
