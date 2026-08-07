@@ -151,14 +151,46 @@ def test_baslik_ici_kod_gomulmedi():
 
 
 @pytest.mark.parametrize("dosya", ["ON_KAYIT.md", "olcum.html", "olcum_sonucu.json",
-                                   "baslik_olcum.html", "ornek_metin.json"])
+                                   "baslik_olcum.html", "ornek_metin.json",
+                                   "baslik_ornegi.json", "en_dar_h1_araligi.html",
+                                   "korpus_uret.py"])
 def test_kanit_zinciri_depoda(dosya):
     """EDG-016 dersi (MERIDIAN_ENGINEERING_LOG): bir hüküm, kanıtı + ÜRETEN KODU depoda
     değilse tekrar-üretilemez bir iddiadır. Ölçüm scratchpad'de yaşarsa silindiği gün
-    DESIGN.md'deki sayılar dayanaksız kalır."""
+    DESIGN.md'deki sayılar dayanaksız kalır.
+
+    `korpus_uret.py` listeye SONRADAN girdi ve girmesi gereken asıl dosya oydu: ilk turda
+    harness'lar depodaydı ama onları besleyen korpus çıkarımı satır-içi heredoc'tu — yani
+    kanıt vardı, kanıtı ÜRETEN kod yoktu. Tam da EDG-016'nın sınıfı."""
     assert (OLCUM / dosya).exists(), (
         f"D6 kanıt zinciri kopuk: {dosya} yok. DESIGN.md'nin tip rampası hükmü bu "
-        "dosyalara dayanıyor (ön-kayıt + harness + sonuç)."
+        "dosyalara dayanıyor (ön-kayıt + üretici + harness + sonuç)."
+    )
+
+
+def test_korpus_ureticisi_artefaktlari_birebir_uretiyor():
+    """Üreticinin VARLIĞI yetmez — ÜRETTİĞİ şey ölçülen şey olmalı. Betik yeniden koşar ve
+    üç artefaktın commit'li hâliyle SHA-256 karşılaştırılır.
+
+    Bu test `docs/RUNBOOK.md` değişince DÜŞER ve düşmesi DOĞRUDUR: o zaman DESIGN.md'deki
+    D6 sayıları artık yürürlükteki belgeye ait değildir ve ölçüm yenilenmelidir. Düşen bu
+    test 'betiği düzelt' demez, 'ölçümü tazele' der."""
+    import hashlib
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("korpus_uret", OLCUM / "korpus_uret.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    ayrisan = []
+    for ad, icerik in mod.uretilenler().items():
+        diskte = (OLCUM / ad).read_text(encoding="utf-8")
+        if hashlib.sha256(icerik.encode()).hexdigest() != hashlib.sha256(diskte.encode()).hexdigest():
+            ayrisan.append(ad)
+    assert not ayrisan, (
+        f"korpus artefaktları üreticiyle ayrıştı: {ayrisan}. `docs/RUNBOOK.md` değiştiyse "
+        "D6 ölçümü o belgeye ait DEĞİLDİR — yeniden koş, sonra DESIGN.md'yi güncelle. "
+        "Kontrol: python research/olcumler/tipografi_rampa_2026-08-07/korpus_uret.py --kontrol"
     )
 
 
