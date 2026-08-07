@@ -1,26 +1,43 @@
-# `conservation.unexplained = 14` — kök neden ölçümü (Rol-1, 2026-08-07)
+# `conservation.unexplained = 14` — kök neden (Rol-1, 2026-08-07)
 
-**Okuyucu:** bu bulguyu koda çevirecek ajan + operatör. (YASA 6)
+**Okuyucu:** bu bulguyu koda çevirecek ajan + operatör (§4'te operatör kararı var). (YASA 6)
 
-## 0. Önce kendi hipotezimin çürütülmesi
+**HÜKÜM TEK CÜMLE:** uyuyan-kurulum (`dormant_setup`) yolu **yazıp bırakıyor** — 31 plan
+üretti, **0 işlem** çıktı, ve kapıda ölmeyen 14'ünün hiçbir terminal kaydı yok.
+`unexplained = 31 − 17 NO_GO = 14`. Hesap tam kapanıyor.
 
-`universe_coverage` kusurunu (v206: "165 seans" aslında 165 OLAY) kapattıktan sonra
-`conservation.unexplained`'i **"aynı kümülatif sayaç sınıfı"** diye işaretlemiştim.
-**Bu hipotez YANLIŞ çıktı ve geri alınıyor.**
+---
 
-`watchdog.py:423-524` okundu. `conservation_report()` bir sayaç DEĞİL, her koşuda
-sıfırdan kurulan bir **nüfus sayımı**: pencere satır değil TARİH tabanlı ve en eski
-plana kadar açılıyor (`_gun = max(30, (bugün − en_eski).days + 2)`), `live_start`
-pencereden değil **defterin tamamından** okunuyor (C6, 2026-08-02), ölçüm arızaları
-(`conservation_plan_date_unparsable`, `conservation_cf_fate_unavailable`) sessizce
-yutulmuyor ve pencereyi **daraltmıyor, genişletiyor**. Yani rapor, benim ona
-yakıştırdığım kusurun tam tersini yapacak biçimde yazılmış.
+## 0. Önce ÜÇ hipotezimin çürütülmesi
 
-Alarm gerçek. Kusur raporda değil, **raporun ölçtüğü şeyde**.
+Bu bölüm silinmiyor: yanlış hipotezleri kaydetmek, onları koda çevirmemenin tek güvencesi.
 
-## 1. Canlı ölçüm (A1, 2026-08-07)
+**Hipotez 1 — "`universe_coverage` ile aynı kümülatif sayaç sınıfı".** ÇÜRÜTÜLDÜ.
+`watchdog.py:423-524` okundu: `conservation_report()` bir sayaç değil, her koşuda sıfırdan
+kurulan **nüfus sayımı**. Penceresi satır değil TARİH tabanlı ve en eski plana kadar açık;
+`live_start` pencereden değil **defterin tamamından** okunuyor (C6, 2026-08-02); ölçüm
+arızaları (`conservation_plan_date_unparsable`, `conservation_cf_fate_unavailable`) sessizce
+yutulmuyor ve pencereyi **daraltmıyor, genişletiyor**. Rapor, ona yakıştırdığım kusurun
+tam tersini yapacak biçimde yazılmış.
 
-`conservation_report()` salt-okunur koşuldu:
+**Hipotez 2 — "iki kimlik şeması, iki yazıcı aynı anda canlı".** ÇÜRÜTÜLDÜ.
+Tek yazıcı, tek koşul — `loop.py:1307-1308` ve `cf_backfill.py:101-102`:
+```python
+_pid = (f"P-{dstr}-{c['ticker']}-{c.get('setup','')}" if c.get("dormant_setup")
+        else f"P-{dstr}-{c['ticker']}")
+```
+Ölçüm: uzun kimlikli plan **n=31**, bunların `dormant_setup` dolu olanı **31**. Yani
+kimlik biçimi `dormant_setup`'ı kusursuz kodluyor. Şema dikişi YOK; uzun biçimin yalnız
+2026-07/08'de görünmesi, özelliğin o tarihte doğmuş olmasından.
+
+**Hipotez 3 — "K1'in BROKER_REJECT düzeltmesi 4'te 1 işliyor".** ÇÜRÜTÜLDÜ.
+4 red KISA kimlikli (normal) planlara ait ve o planların **hiçbiri** açıklanamayanlar
+listesinde değil — `broker_status: failed_broker_rejection` taşıyorlar ve açıklanıyorlar.
+`watchdog.py:465-472` yorumu ölçümle çelişmiyor. **O bölüm bu belgeden kaldırıldı.**
+
+---
+
+## 1. Canlı ölçüm (A1, salt-okunur, 2026-08-07)
 
 | alan | değer |
 |---|---|
@@ -32,78 +49,73 @@ Alarm gerçek. Kusur raporda değil, **raporun ölçtüğü şeyde**.
 | `live_start` | 2026-07-10 |
 | **`unexplained`** | **14** |
 
-Hüküm dağılımı — payda 408: `REVIEW` 258 · `GO` 103 · `NO_GO` 47.
-Raporun gösterdiği 8 satırın **hepsi `REVIEW`**. Bu tesadüf değil, imza.
+## 2. Kök neden — uyuyan yol yazıp bırakıyor
 
-## 2. SINIF A — kimlik şeması dikişi (ölçüldü, 2 plan)
-
-Plan defterinde **aynı plan iki kez** yazılı, iki ayrı kimlik şeması altında:
-
-| kısa kimlik | uzun kimlik | tarih | hüküm | aynı ticker/giriş? |
-|---|---|---|---|---|
-| `P-2026-07-21-MMM` | `P-2026-07-21-MMM-episodic_pivot` | 2026-07-21 | NO_GO | evet / evet |
-| `P-2026-07-23-NSC` | `P-2026-07-23-NSC-momentum_burst` | 2026-07-23 | REVIEW | evet / evet |
-| `P-2026-07-23-UNP` | `P-2026-07-23-UNP-momentum_burst` | 2026-07-23 | REVIEW | evet / evet |
-
-Şema dikişinin tarihi ölçüldü — **iki yazıcı AYNI ANDA canlı**:
-
-- KISA biçim: 2023-01 → 2026-08 kesintisiz (2026-07'de n=9, 2026-08'de n=4 — **hâlâ yazıyor**)
-- UZUN biçim: yalnız 2026-07 (n=24) ve 2026-08 (n=7)
-
-**Sonuç:** broker reddi KISA ikize kaydedildi, UZUN ikizin hiçbir terminal kaydı yok
-ve sessiz kayıp sayılıyor. MMM çifti kapıda `NO_GO` olduğu için elenir; geriye
-**NSC ve UNP** kalır.
-
-### 2b. Kod yorumu ölçümle çelişiyor
-
-`watchdog.py:465-472` (K1, 2026-07-30) şunu iddia ediyor:
-
-> "canlıdaki 4 red (UNP/NSC/TMO/RTX) `dropped` kümesine hiç giremiyor" → düzeltildi.
-
-Ölçüm: canlıda **tam 4 `BROKER_REJECT` olayı** var ve düzeltme **yalnız 1'inde** işliyor.
-
-| olay `plan_id` | plan defteri kimliği | `dropped`'a girer mi |
+| | UYUYAN (`dormant_setup`) | NORMAL |
 |---|---|---|
-| `P-2026-07-23-UNP` | `…-UNP-momentum_burst` | ✗ bağlanamıyor |
-| `P-2026-07-23-NSC` | `…-NSC-momentum_burst` | ✗ bağlanamıyor |
-| `P-2026-07-23-TMO-momentum_burst` | aynısı | ✓ düşüyor |
-| `P-2026-07-27-RTX` | `P-2026-07-23-RTX-…` (başka gün) | ✗ |
+| plan sayısı | 31 | 377 |
+| **işleme dönen** | **0 — %0,0** | 95 — %25,2 |
+| olay taşıyan | 3 (%9,7) | 6 (%1,6) |
+| `broker_status` alanı olan | 1 | 3 |
+| hüküm dağılımı | NO_GO 17 · REVIEW 13 · **GO 1** | NO_GO 30 · REVIEW 245 · GO 102 |
 
-TMO **kontrol vakası**: aynı alarm, aynı gün, tam kimliği taşıdığı için rapordan
-düşüyor. Dal ölü değil — dal **çalışıyor**, ama `dropped`'a yazdığı kimlik plan
-defterinin kimliğiyle uyuşmuyor. Yorumun "düzeltildi" beyanı 4/4 değil **1/4**.
+**Hesap tam kapanıyor:** 31 uyuyan − 17 kapıda ölen (NO_GO, terminal ve kayıtlı)
+= **14** = `unexplained`. Raporun gösterdiği 8 satırın **8'i de** uyuyan.
 
-## 3. SINIF B — terminal yolu olmayan REVIEW (geri kalan ~12)
+**En sert rakam:** uyuyan yolda **bir plan GO hükmü aldı ve yine de işleme dönmedi.**
+Kapı onu geçirdi, arkasında onu tüketen bir şey yok.
 
-CSX · RTX · PKG · ROK · PANW · NUE ve diğerleri: **hiçbir kimlik biçimi altında
-sıfır olay**. Hepsi `REVIEW`.
+Yani uyuyan-kurulum özelliği **önden bağlı, arkadan bağsız**: plan üretiliyor, kapıdan
+hüküm alıyor, sonra hiçbir şey — silahlanma yok, emir yok, düşürüldü olayı yok, süre
+dolumu olayı yok. Korunum bekçisi bunu **doğru yakalamış**; yanlış teşhis bendeydi.
 
-`REVIEW` = "insan gerekiyor". 258 REVIEW planın 67'si işleme dönmüş. Geri kalanın
-büyük kısmı bir terminal kayıt bırakıyor; bu ~12'si bırakmıyor.
+### 2b. İkizler kopya DEĞİL
 
-**Bağlantı (ölçülmedi, hipotez olarak işaretlenir):** operatöre teslim edilememiş
-33 alarm ve eksik bildirim kanalı açık kalem olarak duruyor. Bir REVIEW planı insanı
-bekliyorsa ve insan hiç haberdar olmuyorsa, planın sessizce sönmesi beklenen sonuçtur.
-Bu **doğrulanmadı** — bildirim kanalının bu 12 plana dokunup dokunmadığı ölçülmeli.
-Doğrulanırsa, eksik bildirim kanalının defterde **ölçülebilir bir bedeli** var demektir.
+Üç ticker'da hem normal hem uyuyan plan var. Bunlar aynı planın iki kaydı değil,
+**aynı isimde farklı kurulum hipotezi**:
 
-## 4. Hüküm — ne yapılacak
+| ticker | normal `setup` / stop | uyuyan `setup` / stop |
+|---|---|---|
+| MMM (07-21) | `breakout_vcp` / 160,97 | `episodic_pivot` / 167,78 |
+| NSC (07-23) | `breakout_vcp` / 333,55 | `momentum_burst` / 341,13 |
+| UNP (07-23) | `breakout_vcp` / 290,48 | `momentum_burst` / 301,09 |
 
-1. **Kimlik şemasını tekilleştir.** İki yazıcının ikisi de canlı; hangisinin kanon
-   olduğu seçilmeli ve diğeri susturulmalı. Kanon seçilmeden yapılan her düzeltme
-   dikişi kapatmaz, üstünü örter.
-2. **`dropped` eşleşmesini kimlik-biçimine dayanıksız yap** — olay `plan_id`'si plan
-   kimliğinin öneki ise eşleş (ya da tersi). Bu bir yama; asıl çözüm (1).
-3. **`watchdog.py:465-472` yorumunu dürüstleştir.** "4 red düzeltildi" ölçümle
-   çelişiyor; ölçülen 1/4. YASA: test korumuyorsa iddia yazılmaz.
-4. **REVIEW için terminal yol tanımla.** Bir REVIEW planı ya işleme dönmeli, ya
-   düşürüldüğü OLAYLA kaydedilmeli, ya da süresi dolduğunda bir olay bırakmalı.
-   Şu an üçü de olmayan bir yol var ve sessiz kayıp tam oradan geliyor.
-5. **Bildirim kanalı bağını ÖLÇ** (§3 hipotezi) — doğrulanana kadar iddia edilmez.
+Normal ikizler broker reddiyle terminal; uyuyan ikizler askıda. Kimlik ekinin varlık
+sebebi tam bu çakışma — ve o iş görüyor.
+
+## 3. Ne YAPILMAYACAK (operatör kararı, otonom uygulanmaz)
+
+Uyuyan planları silahlanma/emir yoluna **bağlamak, sistemin NE ALIP SATTIĞINI değiştirir.**
+31 planın 1'i GO hükmü almış; o yolu açmak canlı sermayeyi yeni bir sinyal ailesine maruz
+bırakır. **Bu karar operatörde** — otonom yetki çerçevesi içinde değil.
+
+Operatörün seçmesi gereken:
+- **(a)** uyuyan planlar icraya bağlanacak → yeni sinyal ailesi canlıya girer, ön-kayıt
+  kartı + kill-list + eşik gerekir (ölçüm disiplini, CLAUDE.md §3)
+- **(b)** uyuyan planlar **tavsiye niteliğinde** kalacak → o zaman kapının GO vermesi
+  yanıltıcı; ayrı bir hüküm ya da ayrı bir defter gerekir
+- **(c)** özellik geri alınacak
+
+## 4. Ne YAPILACAK (gözlemlenebilirlik — güvenli, otonom)
+
+Hangi karar verilirse verilsin bunlar doğru:
+
+1. **Uyuyan plana terminal kayıt.** Süresi dolan / tüketilmeyen uyuyan plan bir OLAY
+   bırakmalı (`dormant_plan_lapsed` benzeri, `plan_id` ile). Şu an sessizce sönüyor
+   ve bekçi bunu haklı olarak "sessiz kayıp" sayıyor.
+2. **Bekçi uyuyan planı AYRI saysın.** `unexplained: 14` bugün "14 plan kayıtsız kayboldu"
+   diye okunuyor; gerçek okuma "uyuyan yolun tüketilmeyen 14 planı". Aynı sayı, bambaşka
+   hüküm — `universe_coverage`'ta düzelttiğimiz sınıfın kardeşi (v206): sayı doğru,
+   **etiketi** yanlış. Rapor `dormant_unconsumed` kovasını ayrı döndürmeli.
+3. **`0/31` panoda görünsün.** Bir özelliğin sıfır çıktı üretmesi, üretiyormuş gibi
+   görünmesinden iyidir. Uyuyan yolun işleme-dönme oranı ölçülüp beyan edilmeli
+   (payda-beyanlı: `0 / 31`).
 
 ## 5. Ölçüm izleri
 
-- `watchdog.conservation_report()` — A1, salt-okunur, `/opt/meridian/.venv`
-- `trade_plans.jsonl` (408) · `events.jsonl` (plan_id taşıyan 9 ayrık kimlik) · `trades.jsonl`
-- Betikler: `scratchpad/korunum_kok.py`, `scratchpad/ikiz.py` (stdin'den koşuldu; canlıya dosya yazılmadı)
-- Yetim kimlik (olayda var / planda yok) = **0** — ilk hipotezimdi, çürütüldü.
+- `watchdog.conservation_report()` — A1 `/opt/meridian/.venv`, salt-okunur
+- `trade_plans.jsonl` (408) · `trades.jsonl` · `events.jsonl` (plan_id taşıyan 9 ayrık kimlik)
+- Betikler: `scratchpad/{korunum_kok,ikiz,uyuyan,uyuyan_kader}.py` — stdin'den koşuldu,
+  **canlıya dosya yazılmadı**, state'e dokunulmadı
+- Erişim: `ssh -i ~/.ssh/oci-a1.key` (dagit.sh:16 kanonu). `~/Documents/OCI/...` yolu
+  macOS gizlilik korumasına takılıyor — kullanma.
