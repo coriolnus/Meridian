@@ -32,10 +32,16 @@ KOD = "\n".join(l for l in APPJS.splitlines() if not l.lstrip().startswith("//")
 # index.html'in <style> bloğu — düzen sözleşmesi orada yaşıyor.
 CSS = re.search(r"<style>(.*?)</style>", INDEX, re.S).group(1)
 
-# ADR docs/UIUX-S2R-REDESIGN.md "Hedef IA" başlığının yedilisi, EKRANDAKİ SIRAYLA.
-# Sıra çivilidir çünkü çıplak 1-7 tuşları VIEWS sırasından türüyor: liste karışırsa kas
+# BAĞLAYICI IA — docs/TASARIM-YONU-2026-08-07.md §3'ün BEŞ YÜZEYİ, EKRANDAKİ SIRAYLA.
+# Sıra çivilidir çünkü çıplak 1-5 tuşları VIEWS sırasından türüyor: liste karışırsa kas
 # hafızası sessizce yanlış sayfaya gider.
-ADR_SAYFALARI = ["genel", "veri", "kosu", "portfoy", "ogrenme", "gozetim", "kilitler"]
+# ÇİVİ TAŞINDI, SÖKÜLMEDİ (D2-b): S2R'nin yedilisi iki birleşmeyle beşe indi
+# (kosu+portfoy → karar, veri+gozetim → saglik, genel → bugun). Kural aynı kural.
+ADR_SAYFALARI = ["bugun", "karar", "saglik", "ogrenme", "kilitler"]
+# ESKİ ALAN SAYFALARI — bugün birer alias. Kapları YOK (yüzeyleri birleşti), yani alias
+# doğrulaması bölüm alias'ından AYRI bir sınıftır (aşağıda ikisi de ölçülür).
+ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar", "portfoy": "karar",
+                 "veri": "saglik", "gozetim": "saglik"}
 
 # S2R-1 öncesi on iki çizilebilir yüzey. Hiçbiri düşmez; her biri bir eve TAŞINIR.
 ESKI_GORUNUMLER = ["brifing", "performans", "adaylar", "onaylar", "market", "intraday",
@@ -72,7 +78,7 @@ def _kural(secici: str) -> str:
 # 1) YEDİ ROTA — var, sıralı, çizilebilir
 # =================================================================================================
 def test_yedi_rota_ADR_sirasiyla_var():
-    """Yedi sayfa, ADR'nin sırasıyla. Sıra bir zevk meselesi değil: çıplak 1-7 tuşları
+    """Beş yüzey, yön belgesinin sırasıyla. Sıra bir zevk meselesi değil: çıplak 1-5 tuşları
     `VIEWS.findIndex` ile bu listeden türüyor."""
     assert [v for v, _ in _views()] == ADR_SAYFALARI
 
@@ -98,26 +104,33 @@ def test_page_sinifi_YALNIZ_yedi_yeni_sayfada():
     görünmeyen içeriği okurdu."""
     sayfalar = re.findall(r'<section class="page[^"]*" id="page-(\w+)"', INDEX)
     assert sorted(sayfalar) == sorted(ADR_SAYFALARI), \
-        f"`.page` taşıyan kaplar yeni yediliyle aynı değil: {sorted(sayfalar)}"
+        f"`.page` taşıyan kaplar beş yüzeyle aynı değil: {sorted(sayfalar)}"
     assert INDEX.count('class="page active"') == 1, "birden fazla (ya da hiç) açılış sayfası"
 
 
 def test_varsayilan_rota_tek_yerde_ve_genel():
     """Üç yerde ('baslat', ray, R tuşu) elle yazılmış bir varsayılan, üç ayrı yere kayabilir."""
-    assert 'const VARSAYILAN_ROTA = "genel";' in APPJS
+    assert 'const VARSAYILAN_ROTA = "bugun";' in APPJS
     assert '|| "brifing"' not in APPJS, "eski varsayılan rota bir yerde elle kalmış"
+    assert '|| "genel"' not in APPJS, "eski varsayılan rota bir yerde elle kalmış"
 
 
 # =================================================================================================
 # 2) ALIAS KATMANI — 12/12, ve alias'ın gittiği yerde içerik GERÇEKTEN var
 # =================================================================================================
 def test_alias_haritasi_eski_on_ikiyi_TAM_kapsar():
+    """ÇİVİ GENİŞLEDİ, GEVŞEMEDİ (D2-b): alias artık İKİ sınıf taşır ve ikisi de TAM kapsanır —
+    eski on iki GÖRÜNÜM (bugün birer bölüm) ve eski beş ALAN SAYFASI (yüzeyleri birleşti).
+    İkinci sınıf olmadan `kosu#adaylar` / `portfoy#mutabakat` biçimindeki her eski adres —
+    RUNBOOK bağları, çekmece çipleri, operatörün yer imleri — kırık bağa düşerdi."""
     alias = _sozluk("ROUTE_ALIAS")
-    assert sorted(alias) == sorted(ESKI_GORUNUMLER), (
-        f"alias'ı olmayan / fazladan alias'lanmış görünüm: "
-        f"{sorted(set(alias) ^ set(ESKI_GORUNUMLER))}")
+    beklenen = set(ESKI_GORUNUMLER) | set(ESKI_SAYFALAR)
+    assert sorted(alias) == sorted(beklenen), (
+        f"alias'ı olmayan / fazladan alias'lanmış adres: {sorted(set(alias) ^ beklenen)}")
     hedefler = set(alias.values())
     assert hedefler <= set(ADR_SAYFALARI), f"tanınmayan alias hedefi: {hedefler - set(ADR_SAYFALARI)}"
+    for eski, yeni in ESKI_SAYFALAR.items():
+        assert alias[eski] == yeni, f"eski sayfa {eski} → {yeni} çözülmüyor (kırık derin bağ)"
 
 
 def test_alias_hedefi_iceriğin_GERCEKTEN_durdugu_sayfadir():
@@ -136,6 +149,11 @@ def test_alias_hedefi_iceriğin_GERCEKTEN_durdugu_sayfadir():
         for kap in re.findall(r'id="page-(\w+)"', p)[1:]:
             ev[kap] = m.group(1)
     for eski, hedef in alias.items():
+        if eski in ESKI_SAYFALAR:
+            # SAYFA ALIASI: kabı YOKTUR (yüzeyi birleşti). Ölçülecek şey hedefin GERÇEK bir
+            # yüzey olması — çapa kısmı (`kosu#adaylar`) go()'nun çapa dalıyla ayrıca çözülür.
+            assert f'id="page-{hedef}"' in INDEX, f"sayfa alias'ı {eski} → {hedef} boşa gidiyor"
+            continue
         assert eski in ev, f"#page-{eski} kabı hiçbir alan sayfasının içinde değil — içerik kayıp"
         assert ev[eski] == hedef, (
             f"alias {eski} → {hedef} diyor ama kap {ev[eski]} sayfasının içinde: "
@@ -156,8 +174,8 @@ def test_alias_ve_alan_bolumleri_ayni_gercegi_soyler():
     blok = re.search(r"const ALAN_BOLUMLERI = \{(.*?)\n\};", APPJS, re.S).group(1)
     for alan, liste in re.findall(r"^\s*(\w+):\s*\[([^\]]*)\]", blok, re.M):
         for bolum in re.findall(r'"(\w+)"', liste):
-            if bolum not in alias:
-                continue                      # S2R-2'nin yeni bölümü — eski yer imi yok
+            if bolum not in alias or bolum in ESKI_SAYFALAR:
+                continue                      # yeni bölüm ya da sayfa alias'ı — eski yer imi yok
             assert alias[bolum] == alan, \
                 f"{bolum} kabuk tarafından {alan} altında çiziliyor ama alias'ı {alias[bolum]}"
 
@@ -213,7 +231,7 @@ def _alan_bolumleri() -> dict[str, list[str]]:
 
 
 def _render_genel() -> str:
-    return _govde("RENDER.genel = async () => {", "\n// ALARM BÜTÇESİ TEK SATIR")
+    return _govde("RENDER.bugun = async () => {", "\n// ALARM BÜTÇESİ TEK SATIR")
 
 
 def test_genel_bakis_kart_butcesi_alti_kartla_sinirli():
@@ -334,7 +352,7 @@ def test_g_kisayollari_yedi_sayfayi_kapsar():
     esleme = _sozluk("GIT_KISAYOL")
     assert sorted(esleme.values()) == sorted(ADR_SAYFALARI), \
         f"g-eşlemesi yeni IA ile ayrışmış: {sorted(set(esleme.values()) ^ set(ADR_SAYFALARI))}"
-    assert len(set(esleme)) == 7, "iki sayfa aynı harfi paylaşıyor"
+    assert len(set(esleme)) == len(ADR_SAYFALARI), "iki yüzey aynı harfi paylaşıyor"
 
 
 def test_palet_gorunum_hedefleri_COZULEBILIR():

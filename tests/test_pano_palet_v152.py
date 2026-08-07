@@ -347,8 +347,13 @@ def test_yazma_komutlari_dogru_gorunume_gotururu(kaynak):
     # göçünden sonra o sayfalar beş-yedi bölümlü; komutun yazdığı düğme (#hbtn-msg, #bp-alerts,
     # #fsub-msg) sayfanın ortasında kalıyordu. Hedefler artık BÖLÜM ÇAPASI taşıyor. Ölçülen kural
     # aynı: her yazma komutu, sonucunu göreceği yüzeye götürmeli.
-    for beklenen in ('gorunum: "ogrenme#hermes"', 'gorunum: "gozetim"',
-                     'gorunum: "kilitler#mudahale"', 'gorunum: "portfoy#failsub"'):
+    #
+    # ÇİVİ BİR KEZ DAHA TAŞINDI (D2-b, 2026-08-07): yüzeyler beşe indi. `gozetim` artık bir
+    # ALIAS — komutu doğru sayfaya götürürdü ama pano kendi içinde eski dili konuşurdu ve
+    # çapasız olduğu için gelen kutusu yine sayfanın ortasında kalırdı. Hedefler güncel ve
+    # ÇAPALI: `saglik#operasyon`, `karar#failsub`.
+    for beklenen in ('gorunum: "ogrenme#hermes"', 'gorunum: "saglik#operasyon"',
+                     'gorunum: "kilitler#mudahale"', 'gorunum: "karar#failsub"'):
         assert beklenen in kaynak, f"{beklenen} bağlaması kayıp"
 
 

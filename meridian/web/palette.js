@@ -191,6 +191,10 @@
   /* ==========================================================================
      BÖLÜM ÇAPALARI — YİRMİSİ DE (S2R-3, 2026-08-02)
      --------------------------------------------------------------------------
+     D2-b GÜNCELLEMESİ (2026-08-07): yüzey sütunu beş yüzeye çevrildi ve
+     `cizelge` (workflow.html'in halefi) yirmi birinci satır olarak girdi.
+     Bölüm ADI ve anahtar kelimeleri DEĞİŞMEDİ — taşınan şey bölümün evi.
+
      ÖLÇÜLEN EKSİK: S2R-2 panoyu yedi sayfa / YİRMİ bölüm hâline getirdi ama
      palet yalnız BEŞ bölüme gidebiliyordu (karne · kapilar · mudahale ·
      intraemir · veriboru) + `#failsub`. Kalan on beş bölümün adı paletde HİÇ
@@ -211,31 +215,34 @@
      çapa YOK (`el("page-"+id)` kapısı bunu çalışma anında da doğrular).
      ========================================================================== */
   var SAYFA_ADI = {
-    veri: "Veri Sağlığı", kosu: "Koşu & Döngü", portfoy: "Portföy & Emirler",
-    ogrenme: "Öğrenme", gozetim: "Gözetim & Alarmlar", kilitler: "Kilitler & Yapılandırma"
+    karar: "Karar", saglik: "Sağlık", ogrenme: "Öğrenme", kilitler: "Kilitler"
   };
   var BOLUMLER = [
-    /* [bölüm id, sayfa, palet adı, anahtar kelimeler] */
-    ["market", "veri", "Piyasa · izlenen evren",
-      ["piyasa", "evren", "sembol", "universe", "tazelik", "kapanis"]],
-    ["intraday", "veri", "Seans-içi akış",
-      ["intraday", "akis", "bar", "stream", "redis", "bosluk", "dakika"]],
-    ["veriboru", "veri", "Veri hattı · karantina · bütünlük",
-      ["karantina", "butunluk", "veri", "hat", "dedektor", "saglayici", "bekci"]],
-    ["adaylar", "kosu", "Tarama hattı · adaylar",
+    /* [bölüm id, yüzey, palet adı, anahtar kelimeler] */
+    ["adaylar", "karar", "Tarama hattı · adaylar",
       ["aday", "tarama", "sinyal", "plan", "candidate", "elenen"]],
-    ["kapilar", "kosu", "Disiplin kapısı · karar ağacı",
+    ["kapilar", "karar", "Disiplin kapısı · karar ağacı",
       ["kapi", "gate", "karar", "matris", "eleme", "rejim", "karartma"]],
-    ["brifing", "portfoy", "Kitap · şu an",
-      ["kitap", "pozisyon", "sermaye", "equity", "brifing", "bugun"]],
-    ["onaylar", "portfoy", "Onay kuyruğu · senden iş isteyenler",
+    ["onaylar", "karar", "Onay kuyruğu · senden iş isteyenler",
       ["onay", "kuyruk", "approve", "bekleyen", "karar"]],
-    ["mutabakat", "portfoy", "Mutabakat masası",
+    ["brifing", "karar", "Kitap · şu an",
+      ["kitap", "pozisyon", "sermaye", "equity", "brifing", "bugun"]],
+    ["mutabakat", "karar", "Mutabakat masası",
       ["mutabakat", "ayna", "broker", "ghost", "hwm", "dolum", "reconcile"]],
-    ["intraemir", "portfoy", "Seans-içi silahlanma · gölge icra",
+    ["intraemir", "karar", "Seans-içi silahlanma · gölge icra",
       ["intraday", "golge", "silah", "arm", "tetik", "icra"]],
-    ["performans", "portfoy", "Birikim · para eğrisi ve defter",
+    ["performans", "karar", "Birikim · para eğrisi ve defter",
       ["performans", "egri", "birikim", "islem", "trade", "dusus", "kelly"]],
+    ["operasyon", "saglik", "Alarmlar · bekçiler · olay günlüğü",
+      ["alarm", "bekci", "olay", "gozetim", "butce", "gelen kutusu", "nabiz"]],
+    ["cizelge", "saglik", "Gece hattı · canlı zaman çizelgesi",
+      ["cizelge", "hat", "boru", "pipeline", "adim", "workflow", "akis semasi", "kadans"]],
+    ["veriboru", "saglik", "Veri hattı · karantina · bütünlük",
+      ["karantina", "butunluk", "veri", "hat", "dedektor", "saglayici", "bekci"]],
+    ["market", "saglik", "Piyasa · izlenen evren",
+      ["piyasa", "evren", "sembol", "universe", "tazelik", "kapanis"]],
+    ["intraday", "saglik", "Seans-içi akış",
+      ["intraday", "akis", "bar", "stream", "redis", "bosluk", "dakika"]],
     ["karne", "ogrenme", "Karne · öğreniyor mu?",
       ["karne", "ogrenme", "skor", "hukum", "kalibrasyon", "rejim"]],
     ["golge", "ogrenme", "Gölge kollar · kâğıt defter",
@@ -250,8 +257,6 @@
       ["skill", "arac", "beceri", "katki", "emekli"]],
     ["hafiza", "ogrenme", "Hafıza · çıkarılan dersler",
       ["hafiza", "ders", "lesson", "memory", "cikarim"]],
-    ["operasyon", "gozetim", "Alarmlar · bekçiler · olay günlüğü",
-      ["alarm", "bekci", "olay", "gozetim", "butce", "gelen kutusu", "nabiz"]],
     ["mudahale", "kilitler", "Müdahale kademeleri",
       ["kademe", "kol", "halt", "mudahale", "kilit", "flatten", "cancel"]],
     ["ayarlar", "kilitler", "Yapılandırma · API anahtarları",
@@ -306,10 +311,10 @@
     var s = document.querySelector(".sitem.on");
     if (s && s.dataset.p) return s.dataset.p;
     var h = (location.hash || "").slice(1);
-    /* Son çare AÇILIŞ SAYFASIDIR ve o sayfa S2R-1'de "genel" oldu (app.js VARSAYILAN_ROTA).
+    /* Son çare AÇILIŞ SAYFASIDIR ve o sayfa D2-b'de "bugun" oldu (app.js VARSAYILAN_ROTA).
        Eski ad burada kalsaydı yalnız bu dalda — ne ray çizilmiş ne hash yazılmış anın
        içinde — palet "yenile"yi yanlış sayfaya uygulardı: nadir, sessiz ve teşhisi zor. */
-    return h || "genel";
+    return h || "bugun";
   }
   /* Bir eylemi çalıştırmadan ÖNCE ilgili görünüme geç. Sebep ölçüldü, tercih
      değil: app.js'in eylemleri sonuçlarını sayfaya ait bir düğüme yazıyor
@@ -425,19 +430,19 @@
       });
     }
 
-    /* BÖLÜM ÇAPALARI (S2R-2). S2R-1'de tek gerçek çapa `#failsub`ti ve o da eski
-       `operasyon` görünümüne bağlıydı; içerik göçüyle ret defteri Portföy'ün
-       `mutabakat` bölümüne taşındı. Artık her bölüm başlığı bir çapa taşıyor
+    /* BÖLÜM ÇAPALARI (S2R-2, D2-b'de beş yüzeye taşındı). S2R-1'de tek gerçek çapa
+       `#failsub`ti ve o da eski `operasyon` görünümüne bağlıydı; içerik göçüyle ret
+       defteri `mutabakat` bölümüne taşındı (bugün ② Karar'ın altında). Her bölüm başlığı bir çapa taşıyor
        (`bolumBasHTML` → `id="<bolum>"`), yani palet sayfanın TEPESİNE değil
        aranan bölüme götürebiliyor. Uydurulmuş çapa YOK: her biri app.js'te
        gerçekten üretilen bir id. */
     if (el("page-mutabakat")) {
       K.push({
         id: "git:failsub", grup: "Gezinme", ad: "Reddedilen emirler",
-        altyazi: "Portföy & Emirler → mutabakat masası → ret kaydı bloğuna kaydır ve odakla",
+        altyazi: "Karar → mutabakat masası → ret kaydı bloğuna kaydır ve odakla",
         anahtarlar: ["ret", "reject", "broker", "emir", "hata", "mutabakat"],
         yazma: false,
-        calistir: function () { return gorunumeGec("portfoy#failsub"); }
+        calistir: function () { return gorunumeGec("karar#failsub"); }
       });
     }
     BOLUMLER.forEach(function (r) {
@@ -503,7 +508,7 @@
         altyazi: acacak ? "Otonom intraday emir kapısını kaldıran hazırlık bayrağı. Faz 4b yok — şu an emir göndermez."
                         : "Gözlem-moduna döner: yalnız ölçüm, emir yok.",
         anahtarlar: ["intraday", "arm", "silah", "gozlem"],
-        yazma: true, tehlike: true, yerliOnay: acacak, gorunum: "portfoy#intraemir",
+        yazma: true, tehlike: true, yerliOnay: acacak, gorunum: "karar#intraemir",
         fn: "intradayArm", arg: acacak
       });
     } else {
@@ -512,7 +517,7 @@
         altyazi: "Silahlama durumu yalnız Intraday çizildiğinde okunabilir — palet tahmin etmez, seni oraya götürür.",
         anahtarlar: ["intraday", "arm", "silah", "gozlem"],
         yazma: false,
-        calistir: function () { return gorunumeGec("portfoy#intraemir"); }
+        calistir: function () { return gorunumeGec("karar#intraemir"); }
       });
     }
 
@@ -521,13 +526,13 @@
       id: "act:ackalerts", grup: "Onay kuyruğu", ad: "Uyarıları okundu işaretle",
       altyazi: "Bugün → uyarı gelen kutusu; sunucu sınırı yeniden çekilir.",
       anahtarlar: ["uyari", "alert", "ack", "okundu", "gelen kutusu"],
-      yazma: true, gorunum: "gozetim", fn: "ackAlerts"
+      yazma: true, gorunum: "saglik#operasyon", fn: "ackAlerts"
     });
     K.push({
       id: "act:ackrejects", grup: "Onay kuyruğu", ad: "Tüm reddedilen emirleri kapat",
       altyazi: "Açık broker retlerinin tamamı kapatılır; şerit uyarısı düşer.",
       anahtarlar: ["ret", "reject", "kapat", "ack", "broker"],
-      yazma: true, gorunum: "portfoy#failsub", fn: "ackRejectAll"
+      yazma: true, gorunum: "karar#failsub", fn: "ackRejectAll"
     });
 
     /* ---- ÖĞRENME --------------------------------------------------------- */

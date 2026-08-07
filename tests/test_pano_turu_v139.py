@@ -59,7 +59,9 @@ def test_dolgulu_rozet_yalniz_gercek_inbox_ile():
     # "Koşu & Döngü" alan sayfasının altında bir BÖLÜM ve rozet o sayfanın maddesinde duruyor.
     # Kural değişmedi — dolgulu rozet YALNIZ ölçülmüş gelen kutusuyla yazılır; değişen tek şey
     # rozetin hangi ray maddesine bastığı.
-    assert 'const dolgulu = id === "kosu" && rozet === "inbox"' in APPJS
+    # ÇİVİ TAŞINDI (D2-b): rozetin yüzeyi `kosu`+`portfoy` birleşmesiyle `karar` oldu — onay
+    # kuyruğu ve adaylar aynı zincirin iki halkası. Kural değişmedi.
+    assert 'const dolgulu = id === "karar" && rozet === "inbox"' in APPJS
     assert "class=\"pillc${dolgulu ? '' : ' q'}\"" in APPJS
 
 

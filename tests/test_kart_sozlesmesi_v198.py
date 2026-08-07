@@ -67,11 +67,20 @@ def _olcum_modulu():
 # baseline'ın devraldığı üç sayıyı bağımsız olarak yeniden üretiyor: Öğrenme 39, Gözetim 3,
 # Kilitler 5. Bu tablo bir HEDEF değil bir FOTOĞRAFtır: sessizce kart eklenmesin diye çivilidir.
 # Değiştirmek serbesttir — ama BEYANLI, yani bu satırı düzenleyerek.
-KART_TABANI = {"veri": 9, "kosu": 4, "portfoy": 17, "ogrenme": 39, "gozetim": 3, "kilitler": 5}
+# D2-b'DE BEYANLI GÜNCELLENDİ (2026-08-07). Yüzeyler birleşti ve tek yeni bölüm eklendi:
+#   karar  = kosu 4 + portfoy 17            = 21  (kart TAŞINDI, doğmadı)
+#   saglik = veri 9 + gozetim 3 + cizelge 2 = 14  (+2: canlı zaman çizelgesi — `workflow.html`in
+#            halefi; iki emisyon, biri teşhis ucu okunamadığındaki DÜRÜST BOŞLUK dalı)
+#   ogrenme 39 · kilitler 5 (değişmedi)
+# RATCHET KORUNUYOR: taşınan kart sayılmaz, DOĞAN kart bu satırda gerekçesiyle beyan edilir.
+KART_TABANI = {"karar": 21, "saglik": 14, "ogrenme": 39, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.
-KAPAK_TABANI = {"veri": 4, "kosu": 0, "portfoy": 3, "ogrenme": 18, "gozetim": 0, "kilitler": 0}
+# D2-b: yüzeyler birleşti — taban da BİRLEŞTİ, düşmedi (veri 4 + gozetim 0 → saglik 4;
+# kosu 0 + portfoy 3 → karar 3; ogrenme 18 aynen). Kapaklı kart sayısı bir SÖZLEŞME TABANIDIR:
+# bir kartın kapağı sökülürse bu satır düşer.
+KAPAK_TABANI = {"saglik": 4, "karar": 3, "ogrenme": 18, "kilitler": 0}
 
 
 # ==============================================================================================

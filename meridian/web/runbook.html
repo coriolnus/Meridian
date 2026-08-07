@@ -110,6 +110,14 @@ h2:target{border-left:2px solid var(--tx3);padding-left:12px;margin-left:-14px}
 /* "yazılmadı" işareti SAYFANIN TEK RENKLİ ÖĞESİDİR. Renk burada bir süs değil, bir eksiğin
    adıdır: çözülmüş bir satırla aynı tonda duran bir boşluk, olmayan bir boşluktur. */
 .yok{color:var(--uyari)}
+/* YÖNLENDİRME KUTUSU (D2-b): içerik panoya taşındı. Kendi rengi YOK — bu sayfada renk yalnız
+   "yazılmadı" işaretine ayrılmış ve bir yönlendirme bir eksik değildir. Ayrımı ÇERÇEVE ve
+   ZEMİN taşır, hue değil. Geometri yine evin ölçeğinden (2px). */
+.tasindi{border:1px solid var(--line);background:var(--bg2);padding:14px 18px;margin:8px 0 28px;
+         border-radius:2px;max-width:82ch}
+.tasindi p{margin:6px 0}
+.tasindi p:first-child{margin-top:0}
+.tasindi p:last-child{margin-bottom:0}
 :focus-visible{outline:2px solid var(--tx2);outline-offset:2px}
 @media print{ nav.toc,.ust{display:none} .wrap{grid-template-columns:1fr} }
 </style>
@@ -118,12 +126,39 @@ h2:target{border-left:2px solid var(--tx3);padding-left:12px;margin-left:-14px}
 <header class="ust">
   <b>Meridian · Operasyon Runbook</b>
   <span class="yol">docs/RUNBOOK.md</span>
-  <a href="/#operasyon">← panoya dön</a>
-  <a href="/workflow">karar hattı şeması</a>
+  <a href="/#saglik">← panoya dön</a>
 </header>
 <div class="wrap">
   <nav class="toc" aria-label="Bölümler"><!--RUNBOOK-TOC--></nav>
-  <main><!--RUNBOOK-GOVDE--></main>
+  <main>
+    <!-- ====================================================================================
+      İÇERİK PANOYA TAŞINDI (D2-b, 2026-08-07). Bu sayfa artık BİRİNCİL teşhis yüzeyi DEĞİL.
+
+      NEDEN: alarmdan teşhise giden yol panoyu terk ediyordu (denetim B14). "Ne oldu" burada,
+      "değerler şimdi ne" panoda, "ne yapmalıyım" üçüncü yerdeydi — üstelik operatörün en
+      tedirgin olduğu anda ve dördüncü bir görsel dünyada (kendi jetonları, ölçülen 3,50:1).
+      Runbook içeriği panonun OLAY YÜZEYLERİNE emildi: ③ Sağlık → alarm satırı → `teşhis ↗`.
+      Her olay yüzeyi dört bölümü tek çekmecede taşır: ne oldu · değerler ŞİMDİ ne · runbook
+      adımları · mevcut eylemler.
+
+      NEDEN SİLİNMEDİ: (1) `docs/RUNBOOK.md`nin tam metni hâlâ burada okunuyor ve derin çapa
+      bağları (`/runbook#mirror_drift`) dışarıda yer imi olarak duruyor olabilir — kırık bağ
+      bırakmak, taşımanın bedelini okura ödetmek olurdu. (2) Silme D5'in işi ve orada bağ
+      denetimiyle birlikte yapılır. Bu tur yalnız YÖNLENDİRME bırakır.
+
+      YER TUTUCULAR AYNEN KORUNUR: `meridian/api.py::runbook()` bunları arar ve bulamazsa
+      SESSİZ BOŞ SAYFA yerine hata döner. Aşağıdaki iki yorum silinemez.
+    ===================================================================================== -->
+    <div class="tasindi" role="note">
+      <p><b>Bu sayfanın içeriği panoya taşındı.</b> Teşhis artık panoyu terk etmiyor:
+        <b>③ Sağlık → alarm satırı → <code>teşhis ↗</code></b> bir
+        <b>olay yüzeyi</b> açar — ne oldu, değerler ŞİMDİ ne, runbook adımları ve mevcut
+        eylemler aynı çekmecede.</p>
+      <p>Aşağıdaki tam metin <b>kaynak belge</b> olarak yerinde duruyor
+        (<code>docs/RUNBOOK.md</code>); eski derin bağlar kırılmasın diye bu sayfa
+        korunuyor. <a href="/#saglik">Panodaki Sağlık yüzeyine git →</a></p>
+    </div>
+<!--RUNBOOK-GOVDE--></main>
 </div>
 </body>
 </html>

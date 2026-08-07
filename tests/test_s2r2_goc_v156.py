@@ -43,20 +43,26 @@ CSS = re.search(r"<style>(.*?)</style>", INDEX, re.S).group(1)
 # yazılmıştır. Kaynaktan TÜRETİLMEZ — türetilseydi test "kod kendine uyuyor mu?" diye sorardı ve
 # bir bölümü yanlış eve taşımak testi yeşil bırakırdı.
 # SIRA DA İDDİANIN PARÇASI: "en kritik üstte" ancak sıra ölçülebilirse bir sözleşmedir.
+# D2-b GÜNCELLEMESİ (2026-08-07): yön belgesi §3'ün beş yüzeyi bağlayıcı oldu ve iki birleşme
+# yapıldı — kosu+portfoy → karar, veri+gozetim → saglik. İDDİA TAŞINDI, SÖKÜLMEDİ: sıra hâlâ
+# testin KENDİ iddiasıdır ve kaynaktan türetilmez. Yeni sıra yüzeyin sorusuna hizmet sırasıdır
+# (② ne önerildi → neden geçti → onay → ne oldu → mutabakat → seans-içi → birikim;
+#  ③ önce bozulan → hattın çizelgesi → hattın iç sağlığı → evren → akış).
 ADR_HARITASI: dict[str, list[str]] = {
-    "veri":     ["market", "intraday", "veriboru"],
-    "kosu":     ["adaylar", "kapilar"],
-    "portfoy":  ["brifing", "onaylar", "mutabakat", "intraemir", "performans"],
+    "karar":    ["adaylar", "kapilar", "onaylar", "brifing", "mutabakat", "intraemir", "performans"],
+    "saglik":   ["operasyon", "cizelge", "veriboru", "market", "intraday"],
     "ogrenme":  ["karne", "golge", "bilesenic", "hermes", "ajan", "skiller", "hafiza"],
-    "gozetim":  ["operasyon"],
     "kilitler": ["mudahale", "ayarlar"],
 }
+# Eski beş ALAN SAYFASI — bugün yalnız birer alias (kapları yok, yüzeyleri birleşti).
+ESKI_SAYFALAR = {"genel": "bugun", "kosu": "karar", "portfoy": "karar",
+                 "veri": "saglik", "gozetim": "saglik"}
 ESKI_GORUNUMLER = ["brifing", "performans", "adaylar", "onaylar", "market", "intraday",
                    "ajan", "hermes", "skiller", "hafiza", "operasyon", "ayarlar"]
 # S2R-2'de doğan sekiz bölüm. Hiçbiri bir eski yer imi DEĞİL: alias almazlar (bkz. ROUTE_ALIAS
 # yorumu), çapaları `<sayfa>#<bölüm>` biçiminde çalışır.
 YENI_BOLUMLER = ["veriboru", "kapilar", "mutabakat", "intraemir",
-                 "karne", "golge", "bilesenic", "mudahale"]
+                 "karne", "golge", "bilesenic", "mudahale", "cizelge"]
 
 
 def _sozluk(ad: str) -> dict[str, str]:
@@ -133,8 +139,8 @@ def test_hicbir_bolum_kabi_page_sinifi_tasimaz():
     """`go()` aktifliği `.page` üzerinden çeviriyor. Yirmi bölüm kabından biri `.page` olsaydı
     gizli bir bölüm 'aktif' kalır ve j/k gezinmesi görünmeyen satırları sayardı."""
     sayfalar = re.findall(r'<section class="page[^"]*" id="page-(\w+)"', INDEX)
-    assert sorted(sayfalar) == sorted(["genel"] + list(ADR_HARITASI)), \
-        f"`.page` taşıyan kaplar yedi alan sayfasıyla aynı değil: {sorted(sayfalar)}"
+    assert sorted(sayfalar) == sorted(["bugun"] + list(ADR_HARITASI)), \
+        f"`.page` taşıyan kaplar beş yüzeyle aynı değil: {sorted(sayfalar)}"
 
 
 def test_eski_on_iki_render_SILINMEDI():
@@ -149,8 +155,9 @@ def test_yeni_bolumler_alias_almaz():
     `#mutabakat` yer imini destekliyormuş gibi yapmak olurdu; ve alias listesi bir kez "bölüm
     listesi" sanılmaya başlayınca eski hash'lerin hangileri olduğu ölçülemez hâle gelir."""
     alias = _sozluk("ROUTE_ALIAS")
-    assert sorted(alias) == sorted(ESKI_GORUNUMLER), \
-        f"alias listesi eski on ikiden ayrışmış: {sorted(set(alias) ^ set(ESKI_GORUNUMLER))}"
+    beklenen = set(ESKI_GORUNUMLER) | set(ESKI_SAYFALAR)
+    assert sorted(alias) == sorted(beklenen), \
+        f"alias listesi eski adres kümesinden ayrışmış: {sorted(set(alias) ^ beklenen)}"
     for b in YENI_BOLUMLER:
         assert b not in alias, f"{b} yeni bir bölüm, eski bir yer imi değil — alias almamalı"
 
@@ -161,6 +168,13 @@ def test_alias_hedefi_kabin_GERCEKTEN_durdugu_sayfadir():
     alias = _sozluk("ROUTE_ALIAS")
     ev = _dom_evleri()
     for eski, hedef in alias.items():
+        if eski in ESKI_SAYFALAR:
+            # SAYFA ALIASI (D2-b): kabı yok — yüzeyi birleşti. Ölçülen şey hedefin GERÇEK bir
+            # `.page` olması; çapa (`kosu#adaylar`) go()'nun çapa dalıyla ayrıca çözülür ve
+            # aşağıdaki `test_ic_hedeflerin_HEPSI_cozulebilir` onu ölçer.
+            assert ESKI_SAYFALAR[eski] == hedef, f"sayfa alias'ı kaymış: {eski} → {hedef}"
+            assert f'id="page-{hedef}"' in INDEX, f"sayfa alias'ı {eski} → {hedef} boşa gidiyor"
+            continue
         assert eski in ev, f"#page-{eski} kabı hiçbir alan sayfasının içinde değil"
         assert ev[eski][0] == hedef, (
             f"alias {eski} → {hedef} diyor ama kap {ev[eski][0]} sayfasının içinde")
@@ -173,12 +187,12 @@ def test_onaylar_adaylardan_AYRILDI():
     """S2R-1'in birinci beyanlı borcu. Kuyruk `#page-adaylar`ın İÇİNDEYDİ ve `RENDER.adaylar`
     onu kendi gövdesinden çağırıyordu; ikisi de kırılmadan alias Portföy'e bakamazdı."""
     ev = _dom_evleri()
-    assert ev["onaylar"][0] == "portfoy", "onay kuyruğu hâlâ Koşu & Döngü'nün altında"
-    assert ev["adaylar"][0] == "kosu"
+    assert ev["onaylar"][0] == "karar", "onay kuyruğu kendi kabında değil"
+    assert ev["adaylar"][0] == "karar"
     adaylar = _govde("RENDER.adaylar = async () => {", "\nfunction planRowFull(p) {")
     assert "RENDER.onaylar()" not in adaylar, \
         "adaylar hâlâ onaylar'ı kendi gövdesinden çağırıyor — sıra gizli kalır, taşınamaz"
-    assert _sozluk("ROUTE_ALIAS")["onaylar"] == "portfoy"
+    assert _sozluk("ROUTE_ALIAS")["onaylar"] == "karar"
 
 
 def test_intraday_akis_ve_emir_olarak_bolundu():
@@ -189,7 +203,7 @@ def test_intraday_akis_ve_emir_olarak_bolundu():
     ikisinde birden yazılsaydı operatör aynı tabloyu iki sayfada iki kez okurdu."""
     assert "async function intraParcalar()" in APPJS, "intraday tek gövde olarak duruyor"
     ev = _dom_evleri()
-    assert ev["intraday"][0] == "veri" and ev["intraemir"][0] == "portfoy"
+    assert ev["intraday"][0] == "saglik" and ev["intraemir"][0] == "karar"
     akis = _govde("RENDER.intraday = async () => {", "\n// EMİR / SİLAHLAMA YARISI")
     emir = _govde("RENDER.intraemir = async () => {", "\n};")
     assert re.search(r"p\.s3 \+ p\.s4", akis), "akış yarısı s3+s4 yazmıyor"
@@ -434,8 +448,8 @@ def test_sessiz_hat_cipleri_BOLUM_capasina_gider():
     hedefler = set(re.findall(r'"([a-z]+(?:#[a-z]+)?)"\]\)', fn))
     for eski in ("performans", "ayarlar", "operasyon#failsub", "onaylar", "ajan"):
         assert f'"{eski}"]' not in fn, f"şerit hâlâ eski hedefe bakıyor: {eski}"
-    assert "portfoy#failsub" in fn, "ret çipi mutabakat masasının ret bloğuna gitmiyor"
-    assert "portfoy#mutabakat" in fn, "ayna sapması mutabakat masasına gitmiyor"
+    assert "karar#failsub" in fn, "ret çipi mutabakat masasının ret bloğuna gitmiyor"
+    assert "karar#mutabakat" in fn, "ayna sapması mutabakat masasına gitmiyor"
     assert "kilitler#mudahale" in fn, "HALT/devre kesici müdahale kollarına gitmiyor"
     assert "ogrenme#hermes" in fn, "Hermes bütçesi beyin bölümüne gitmiyor"
     assert hedefler, "şeritte hiç hedef kalmamış"
@@ -444,7 +458,7 @@ def test_sessiz_hat_cipleri_BOLUM_capasina_gider():
 def test_ic_hedeflerin_HEPSI_cozulebilir():
     """Var olmayan bir rotaya işaret eden bir bağ, hiç işaret etmemekten kötüdür (v154 dersi).
     `data-a1` hedefleri ve palet komutları YEDİ SAYFA ∪ ALIAS ∪ BÖLÜM ÇAPASI kümesine düşmeli."""
-    sayfalar = set(["genel"] + list(ADR_HARITASI))
+    sayfalar = set(["bugun"] + list(ADR_HARITASI))
     bolumler = {b for bl in ADR_HARITASI.values() for b in bl}
     alias = set(_sozluk("ROUTE_ALIAS"))
     # Bölüm başlığı çapası + app.js'in ürettiği tek elle-yazılmış çapa (`id="failsub"`).

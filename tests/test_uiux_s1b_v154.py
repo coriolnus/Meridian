@@ -283,53 +283,71 @@ def test_t3_md_render_kacis_yapar():
 
 
 # ==================================================================================
-# T3-d — ALARM → RUNBOOK BAĞI (pano tarafı)
+# T3-d — ALARM → TEŞHİS BAĞI (pano tarafı)
+# ----------------------------------------------------------------------------------
+# ÇİVİ TAŞINDI (D2-b, 2026-08-07): bağın HEDEFİ değişti, VARLIĞI değil. `runbookHref`/
+# `runbookLink` `/runbook#<ad>` üretiyordu ve o sayfa panoya EMİLDİ (olay yüzeyleri).
+# Kural aynı kuraldır ve bir kademe SERTLEŞTİ: eskiden bağ panoyu terk edebiliyordu,
+# artık edemez. Ölçülen üç şey de yerinde: (1) iki tüketici de bağlı, (2) bağ <button>'ın
+# İÇİNE girmiyor, (3) ad → sınıf çözümlemesi TEK yerde ve dönüşümsüz.
 # ==================================================================================
 
 def test_t3_pano_bag_yardimcilari_var():
-    assert "function runbookHref(" in KOD_JS and "function runbookLink(" in KOD_JS
-    assert '"/runbook#"' in KOD_JS, "bağ /runbook çapasına gitmiyor"
+    assert "function olayBagi(" in KOD_JS and "function olaySinifi(" in KOD_JS
+    assert "const OLAY_YUZEYLERI = {" in KOD_JS, "olay yüzeyi kayıt defteri yok"
+    assert "function runbookHref(" not in KOD_JS and "function runbookLink(" not in KOD_JS, \
+        "emekli edilen runbook bağı hâlâ kodda — okuyucusu kalmamış yazım (YASA 6)"
+    assert '"/runbook#"' not in KOD_JS, "pano hâlâ terk edilen yüzeye bağ kuruyor"
 
 
 def test_t3_alarm_satiri_ve_sessizhat_bagli():
     """İKİ TÜKETİCİ DE BAĞLI OLMALI (brief: alarm satırları + sessiz-hat sapma satırları)."""
     alarm = KOD_JS[KOD_JS.index("function alertsInbox("):]
     alarm = alarm[:alarm.index("window.ackAlerts")]
-    assert "runbookLink(g.token)" in alarm, "alarm satırında runbook bağı yok"
+    assert "olayBagi(g.token)" in alarm, "alarm satırında teşhis bağı yok"
 
     sh = KOD_JS[KOD_JS.index("function sessizHat("):]
     sh = sh[:sh.index("function alarmButce(")]
-    assert "runbookLink(x.ad" in sh, "sessiz-hat sapma satırında runbook bağı yok"
+    assert "olayBagi(x.ad" in sh, "sessiz-hat sapma satırında teşhis bağı yok"
+    assert "s.ad" in sh, "sessiz-hat bağı SEGMENTİ geçirmiyor — sınıf çözümlemesi yarım kalır"
 
 
 def test_t3_alarm_bagi_butonun_icine_girmemis():
-    """`<a>` bir `<button>`ın içerik modeline GİRMEZ: iç içe etkileşimli öğe hem geçersiz HTML
-    hem 'hangisine bastım' belirsizliğidir. Bağ satırın YANINA konur, İÇİNE değil."""
+    """Bağ bir `<button>`dır ve iç içe düğme de geçersizdir: satırın kendisi zaten bir
+    `<button>` (kaydı açar). Bağ satırın YANINA konur, İÇİNE değil."""
     alarm = KOD_JS[KOD_JS.index("function alertsInbox("):]
     alarm = alarm[:alarm.index("window.ackAlerts")]
     m = re.search(r"const rows = groups\.map\(\(?g[^)]*\)? => \{(.*?)\}\)\.join", alarm, re.S)
     assert m, "alarm satırı üretici bloğu bulunamadı — testin çıpası kaynakla ayrışmış"
     satir = m.group(1)
     govde = satir[satir.index("return"):]
-    assert govde.index("</button>") < govde.index("runbookLink("), (
-        "runbook bağı <button> KAPANMADAN önce yerleştirilmiş — iç içe etkileşimli öğe")
+    assert govde.index("</button>") < govde.index("olayBagi("), (
+        "teşhis bağı <button> KAPANMADAN önce yerleştirilmiş — iç içe etkileşimli öğe")
 
 
 def test_t3_capa_kurali_tek_ve_donusumsuz():
-    """Pano çapası = adın küçük harfli hâli; SLUG YOK. İkinci bir slug kuralı doğsaydı
-    üreticideki kuralla ayrışır ve bağlar sessizce ölü bağa dönerdi."""
-    fn = KOD_JS[KOD_JS.index("function runbookHref("):]
-    fn = fn[:fn.index("function runbookLink(")]
-    assert ".toLowerCase()" in fn
-    assert "replace(" not in fn, "çapa kuralına bir dönüşüm sızmış — üreticiyle ayrışır"
+    """Ad → sınıf çözümlemesi TEK yerde ve DÖNÜŞÜMSÜZ: jeton adı yalnız büyük harfe çevrilir,
+    slug'lanmaz. İkinci bir kural doğsaydı üreticinin adlarıyla ayrışır ve bağlar sessizce
+    yanlış yüzey açardı — yanlış bir olay yüzeyi ölü bağdan pahalıdır."""
+    fn = KOD_JS[KOD_JS.index("function olaySinifi("):]
+    fn = fn[:fn.index("function olayYuzeyiHTML(")]
+    assert ".toUpperCase()" in fn
+    assert "replace(" not in fn, "çözümlemeye bir dönüşüm sızmış — üreticiyle ayrışır"
+    assert "return null;" in fn, "eşleşmeyen ad sessizce bir yüzeye atanıyor olabilir"
 
-    # PARİTE: panonun üretebileceği HER çapa belgede karşılık bulmalı (ölü bağ yok).
-    uretilebilir = ([a["jeton"].lower() for a in U.alarm_envanteri()]
-                    + [m["ad"].lower() for m in U.mekanizma_envanteri()]
-                    + [s["ad"].lower() for s in U.sessizhat_envanteri()[0]])
-    capalar = _capalar()
-    olu = sorted({c for c in uretilebilir if c not in capalar})
-    assert not olu, f"panonun kurabileceği ÖLÜ bağ(lar): {olu}"
+    # PARİTE: `obs.py`nin ürettiği HER alarm jetonunun bir olay yüzeyi sınıfı OLMALI.
+    # Eskiden bu parite "runbook belgesinde bir çapa var mı?" diye ölçülüyordu; artık
+    # "panoda bir yüzeyi var mı?" diye ölçülür — aynı kusur sınıfı, daha yakın hedef.
+    blok = re.search(r"const OLAY_YUZEYLERI = \{(.*?)\n\};", KOD_JS, re.S)
+    assert blok, "OLAY_YUZEYLERI tanımlı değil"
+    kapsanan = set()
+    for dizi in re.findall(r"jetonlar:\s*\[([^\]]*)\]", blok.group(1)):
+        kapsanan |= set(re.findall(r'"([A-Z_]+)"', dizi))
+    jetonlar = {a["jeton"] for a in U.alarm_envanteri()}
+    assert not (jetonlar - kapsanan), \
+        f"olay yüzeyi OLMAYAN alarm jeton(lar)ı: {sorted(jetonlar - kapsanan)}"
+    assert not (kapsanan - jetonlar), \
+        f"var olmayan jetona yüzey açılmış: {sorted(kapsanan - jetonlar)}"
 
 
 def test_t3_palet_runbook_komutu_gercek_hedefe_gidiyor():
@@ -368,7 +386,12 @@ def test_t4_g_esleme_tum_gorunumleri_kapsar():
     # o yüzeylerin adları kelimenin tam anlamıyla "Veri Sağlığı", "Gözetim & Alarmlar" ve
     # "Öğrenme" oldu, yani harf ile hedef arasındaki bağ artık bir yorum satırı okumadan kuruluyor.
     # 'b' (Bugün) yerini 'g' (Genel Bakış) aldı: açılış sayfası odur.
-    for tus, hedef in (("d", "veri"), ("a", "gozetim"), ("r", "ogrenme"), ("g", "genel")):
+    # ÇİVİ TAŞINDI (D2-b, 2026-08-07): iş emrinin veri/alarm/araştırma üçlüsünün YÜZEYLERİ
+    # birleşti — veri ve alarm artık tek yüzeydir (③ Sağlık) ve araştırma ④ Öğrenme'dir.
+    # Sözleşmenin kendisi değişmedi: her yüzeyin harfi KENDİ ADINDAN gelir, bir yorum satırı
+    # okumadan kurulabilir. 'b' açılış yüzeyi (① Bugün), 's' sağlık, 'o' öğrenme, 'k' karar.
+    for tus, hedef in (("b", "bugun"), ("k", "karar"), ("s", "saglik"),
+                       ("o", "ogrenme"), ("y", "kilitler")):
         assert esleme.get(tus) == hedef, f"g {tus} → {esleme.get(tus)} (beklenen {hedef})"
 
 
@@ -408,7 +431,8 @@ def test_t4_harita_g_tuslarini_yaziyor():
     assert "PAGE_MAP.map(([k, n, d, g])" in ov, "harita 4. sütunu (g tuşu) çizmiyor"
     for beklenen in ("⌘K", "Sayfa atlama öneki", "Esc"):
         assert beklenen in ov, f"kısayol haritasında eksik: {beklenen}"
-    assert "/runbook" in ov, "harita runbook yüzeyini duyurmuyor"
+    assert "olay yüzeyi" in ov, "harita olay yüzeylerini duyurmuyor"
+    assert "/runbook" not in ov, "harita hâlâ panoyu terk eden bir yüzeyi duyuruyor"
 
 
 def test_t4_global_soru_isareti_haritayi_aciyor():

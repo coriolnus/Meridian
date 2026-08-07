@@ -163,8 +163,10 @@ def test_statik_sekme_kablolari():
     yer imi KIRILMAMALI, yani alias'ı olmalı. Alias olmasaydı bu tur, kaydedilmiş bir bağlantıyı
     sessizce ölü bağa çevirirdi."""
     js = APP_JS.read_text()
-    assert '["veri", "Veri Sağlığı"]' in js, "VIEWS'te veri sağlığı alan sayfası yok"
-    assert re.search(r"const ROUTE_ALIAS = \{.*?\bmarket: \"veri\"", js, re.S), \
+    # ÇİVİ TAŞINDI (D2-b, 2026-08-07): "Veri Sağlığı" yüzeyi ③ Sağlık'la BİRLEŞTİ (TASK ③'ün
+    # ölçülen yolu iki sayfaya yayılıyordu). Ölçülen şey değişmedi: evren yüzeyi erişilebilir mi?
+    assert '["saglik", "Sağlık"]' in js, "VIEWS'te Sağlık yüzeyi yok"
+    assert re.search(r"const ROUTE_ALIAS = \{.*?\bmarket: \"saglik\"", js, re.S), \
         "eski #market yer imi yeni evine yönlenmiyor"
     assert "RENDER.market" in js and "RAIL_ICON" in js and "veri:" in js
     assert 'id="page-market"' in INDEX_HTML.read_text(), "index.html'de bölüm kabı yok"
@@ -180,7 +182,7 @@ def test_klavye_haritasi_VIEWS_ten_turer():
     ÇİVİ TAŞINDI (S2R-1): açıklama satırı artık `market`in değil, evi olan `veri` sayfasının."""
     js = APP_JS.read_text()
     assert "const PAGE_MAP = VIEWS.map(" in js
-    assert "veri:" in js.split("const PAGE_DESC = {")[1].split("};")[0], "PAGE_DESC.veri yok"
+    assert "saglik:" in js.split("const PAGE_DESC = {")[1].split("};")[0], "PAGE_DESC.saglik yok"
 
 
 # =================================================================================================

@@ -296,7 +296,8 @@ def test_bugun_kartinin_bagi_ONAY_YUZEYINE_iner():
     """Kart bekleyen ONAYI sayıyorsa bağı da onay yüzeyine inmeli; sayfanın başına bırakıp
     "şimdi ara" demek kartın kendi cümlesini yarıda keser."""
     blok = re.search(r"const GENEL_KARTLARI = \[(.*?)\n\];", APPJS, re.S).group(1)
-    assert '["bugun",    "Bugün ne var",         "portfoy#onaylar"]' in blok
+    # ÇİVİ TAŞINDI (D2-b): onay kuyruğunun yüzeyi ② Karar oldu; çapa aynen korundu.
+    assert '["bugun",    "Bugün ne var",         "karar#onaylar"]' in blok
     # Bağ SAYISI değişmedi: kart hâlâ tek bağ taşır (v155 sözleşmesi).
     fn = _govde("function gbKart(anahtar, govde) {", '\n// "—" ile "0"')
     assert fn.count("data-act=") == 1

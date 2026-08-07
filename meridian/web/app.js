@@ -1,50 +1,49 @@
 // Meridian dashboard — sabah brifingi. Read-model client, matches meridian-landing.html. No build step.
 // Plain-Turkish glossary + hover tooltips + always-visible captions so a low-finance-literacy reader can follow.
 const OPERATOR = "Erdem";
-// ---- YEDİ ALAN SAYFASI (S2R-1, 2026-08-02 — ADR: docs/UIUX-S2R-REDESIGN.md) ------------------
-// Kademeli giydirme panoyu DAHA karmaşık hissettirdi: on iki görünüm, üçü gömülü bölüm, ve aynı
-// soruya iki yerden cevap. ADR kararı "redesign replaces": iş emrinin hedef IA'sı (§3) ŞİMDİ
-// kurulur. Sıra ekrandaki sırayla aynıdır ve çıplak 1-7 tuşları bu sıradan türer.
-//   Genel Bakış           → dün gece ne oldu, bugün ne var, sistem sakin mi?   (J1'in evi)
-//   Veri Sağlığı          → izlediğim veri sağlam mı?
-//   Koşu & Döngü          → gece döngüsü ne yaptı, kapıdan ne geçti?
-//   Portföy & Emirler     → kitap nerede?
-//   Öğrenme               → makine ne öğreniyor?
-//   Gözetim & Alarmlar    → sistem sağlıklı mı; değilse NE ve NEREDE?
-//   Kilitler & Yapılandırma → hangi kollar çekili, sistem nasıl kurulu?
+// ---- BEŞ YÜZEY (D2-b, 2026-08-07 — bağlayıcı IA: docs/TASARIM-YONU-2026-08-07.md §3) ---------
+// S2R-1/2'nin YEDİ alan sayfası, işten değil widget'tan türemişti: "Veri Sağlığı" ile "Gözetim &
+// Alarmlar" aynı görevin (TASK ③: alarmdan nedene) iki yarısıydı ve operatör zinciri iki sayfaya
+// yayarak yürüyordu (denetim B12). "Koşu & Döngü" ile "Portföy & Emirler" ise aynı durum
+// ızgarasını İKİ KEZ çiziyordu (`DURUM_SAYFALARI` iki elemanlıydı — v191 çakışmayı bir bantla
+// örttü, kökünü çözmedi). Yeni yapı İŞTEN türer ve beş yüzeydir:
+//   ① Bugün   → sağlıklı mı, dün gece ne oldu, benden ne bekleniyor?
+//   ② Karar   → ne önerildi, neden geçti/geçmedi, ne oldu?
+//   ③ Sağlık  → veri ve işleyiş güvenilir mi; bir şey bozulduysa ne yapmalıyım?
+//   ④ Öğrenme → ajan öğreniyor mu, neyi düzeltti, neyi bozdu, kaça mal oldu?
+//   ⑤ Kilitler→ ajanın yetkisi ne, sınırları nerede, nasıl durdururum?
+// Sıra ekrandaki sırayla aynıdır ve çıplak 1-5 tuşları bu sıradan türer.
 const VIEWS = [
-  ["genel", "Genel Bakış"], ["veri", "Veri Sağlığı"], ["kosu", "Koşu & Döngü"],
-  ["portfoy", "Portföy & Emirler"], ["ogrenme", "Öğrenme"], ["gozetim", "Gözetim & Alarmlar"],
-  ["kilitler", "Kilitler & Yapılandırma"],
+  ["bugun", "Bugün"], ["karar", "Karar"], ["saglik", "Sağlık"],
+  ["ogrenme", "Öğrenme"], ["kilitler", "Kilitler"],
 ];
-// ---- ESKİ ON İKİ GÖRÜNÜM → YENİ EVİ (12/12, hiçbiri düşmez) ----------------------------------
-// Eski yer imleri, derin bağlantılar ve sayfa-içi `data-a1="<eski id>"` hedefleri KIRILMAZ:
+// ---- ESKİ ADRESLER → YENİ EVİ (17/17, hiçbiri düşmez) ----------------------------------------
+// Eski yer imleri, derin bağlantılar, `docs/RUNBOOK.md` bağları ve çekmece çipleri KIRILMAZ:
 // hepsi yeni yüzeyine yönlenir ve içerik oraya TAŞINMIŞTIR (silinmemiştir).
 //
-// S2R-2'DE TEK-EV UZLAŞMALARI ÇÖZÜLDÜ. S2R-1 iki yerde bilinçli bir borç bırakmıştı ve ikisi de
-// artık kapandı:
-//   * `onaylar` (onay kuyruğu) ADR'de Portföy&Emirler'e aittir; DOM'da `#page-adaylar`ın İÇİNDE
-//     olduğu için alias'ı Koşu'ya bakmak ZORUNDAYDI. Kap bölündü — kuyruk kendi `.alan-bolum`u
-//     olarak Portföy'e taşındı, alias da onunla birlikte.
-//   * `intraday` ADR'de iki yarıya bölünür. Bölünme yapıldı: AKIŞ yarısı (`#page-intraday`) Veri
-//     Sağlığı'nda kaldı, SİLAHLANMA/EMİR yarısı yeni `#page-intraemir` kabıyla Portföy'e gitti.
-//     Alias eski `#intraday` yer imini AKIŞ yarısına götürür — o kap, o addaki içeriğin çoğunu
-//     (marketstream + dayanıklı tetik + Redis + boşluk taraması) taşımayı sürdürüyor.
-// ALIAS BİR ESKİ-HASH SÖZLÜĞÜDÜR, bölüm listesi DEĞİL: S2R-2'nin sekiz yeni bölümü (mutabakat,
-// kapilar, veriboru, intraemir, karne, golge, bilesenic, mudahale) buraya GİRMEZ — hiçbiri bir
-// eski yer imi değil. Onların evi ALAN_BOLUMLERI'dir ve çapaları `<sayfa>#<bölüm>` biçiminde
-// çalışır (bkz. go()'nun çapa dalı).
+// ALIAS SÖZLÜĞÜ ARTIK İKİ SINIF TAŞIR ve ikisi de "eski adres"tir — bölüm listesi DEĞİL:
+//   (a) BÖLÜM ALIASI — eski on iki GÖRÜNÜM adı. Bugün birer `.alan-bolum` kabıdır ve hedefi o
+//       kabın İÇİNDE durduğu yüzeydir (`#page-<eski>` gerçekten orada). `<eski>` tek başına
+//       yazıldığında sayfa açılır; `<eski>#<bölüm>` biçimi go()'nun çapa dalıyla çözülür.
+//   (b) SAYFA ALIASI — S2R'nin BEŞ eski alan sayfası (genel/veri/kosu/portfoy/gozetim). Bunların
+//       artık bir DOM kabı yoktur: yüzeyleri birleşti. Alias, `kosu#adaylar` / `portfoy#mutabakat`
+//       / `gozetim#failsub` / `veri#veriboru` biçimindeki YÜZLERCE eski adresi (RUNBOOK bağları,
+//       çekmece çipleri, operatörün yer imleri) yeni yüzeye taşır — çapa aynen korunur.
+// S2R-2'nin sekiz yeni bölümü (mutabakat, kapilar, veriboru, intraemir, karne, golge, bilesenic,
+// mudahale) ve D2-b'nin `cizelge`si buraya GİRMEZ: hiçbiri bir eski yer imi değil. Onların evi
+// ALAN_BOLUMLERI'dir.
 const ROUTE_ALIAS = {
-  brifing: "portfoy", performans: "portfoy", onaylar: "portfoy",
-  adaylar: "kosu",
-  market: "veri", intraday: "veri",
+  // (a) eski on iki görünüm → bugün bir bölüm
+  brifing: "karar", performans: "karar", onaylar: "karar", adaylar: "karar",
+  market: "saglik", intraday: "saglik", operasyon: "saglik",
   ajan: "ogrenme", hermes: "ogrenme", skiller: "ogrenme", hafiza: "ogrenme",
-  operasyon: "gozetim",
   ayarlar: "kilitler",
+  // (b) eski beş alan sayfası → yeni yüzey (D2-b birleşmesi)
+  genel: "bugun", kosu: "karar", portfoy: "karar", veri: "saglik", gozetim: "saglik",
 };
 // Hash yoksa ya da tanınmıyorsa açılan sayfa. TEK YERDE: üç ayrı yerde ("baslat", "buildSidebar",
 // R tuşu) elle "brifing" yazılıydı ve bu tur onları ayrı ayrı kaydırabilirdi.
-const VARSAYILAN_ROTA = "genel";
+const VARSAYILAN_ROTA = "bugun";
 // ÖĞRENME YÜZEYİ AÇIK MI? Sprint ve Hermes yoklamaları bunu `location.hash.includes("ajan")` ile
 // soruyordu ve S2R-1 o cümleyi SESSİZCE yanlışladı: hash artık "#ogrenme". Yoklama hiç dönmez,
 // canlı arama ilerlemesi ekranda donar ve hiçbir yerde hata görünmez — tam olarak bu deponun
@@ -61,7 +60,7 @@ const ALAN_ADI = Object.fromEntries(VIEWS);
 // Cümle ekrana çıktığı an bir DENETİM ÇIPASI olur: bir blok eklerken "bu, bu sorunun cevabı mı?"
 // diye sorulacak yer, o bloğun eklendiği ekranın kendi başlığıdır.
 //
-// YİRMİ YEDİ GİRDİ (S2R-2): yedi ALAN SAYFASI + yirmi BÖLÜM. Bölümler de kendi sorusunu taşır,
+// YİRMİ ALTI GİRDİ (D2-b): beş YÜZEY + yirmi bir BÖLÜM. Bölümler de kendi sorusunu taşır,
 // çünkü "ekrana dök" riski tam olarak orada doğuyor — bir sayfaya bir bölüm daha eklemek, yeni
 // bir sayfa açmaktan çok daha ucuz görünür.
 //
@@ -78,14 +77,12 @@ const ALAN_ADI = Object.fromEntries(VIEWS);
 // TEK KAYNAK BURASIDIR. WP0'ın "Ek-A" listesi bu sözlüğün kendisidir; belgeye kopyalanan bir
 // ikinci liste, ilk düzenlemede sessizce ayrışırdı.
 const EKRAN_SORUSU = {
-  // --- yedi alan sayfası (cümleler ADR'nin sayfa tanımlarından) ---
-  genel:      "Bu ekran şunu cevaplar: dün gece ne oldu, bugün ne var, sistem sakin mi?",
-  veri:       "Bu ekran şunu cevaplar: baktığım veri sağlam mı — kapsama, tazelik ve akış ne durumda?",
-  kosu:       "Bu ekran şunu cevaplar: gece döngüsü ne yaptı — hangi seans işlendi, kapıdan ne geçti?",
-  portfoy:    "Bu ekran şunu cevaplar: kitap nerede — pozisyonlar, silahlı emirler ve sermaye ne durumda?",
-  ogrenme:    "Bu ekran şunu cevaplar: makine ne öğreniyor — karne, hipotez defteri ve kalibrasyon ne diyor?",
-  gozetim:    "Bu ekran şunu cevaplar: sistem sağlıklı mı; değilse NE ve NEREDE?",
-  kilitler:   "Bu ekran şunu cevaplar: hangi kollar çekili ve sistem nasıl yapılandırılmış?",
+  // --- beş yüzey (cümleler yön belgesinin §3 tablosundan, BİREBİR) ---
+  bugun:      "Bu ekran şunu cevaplar: sağlıklı mı, dün gece ne oldu, benden ne bekleniyor?",
+  karar:      "Bu ekran şunu cevaplar: ne önerildi, neden geçti/geçmedi, ne oldu?",
+  saglik:     "Bu ekran şunu cevaplar: veri ve işleyiş güvenilir mi; bir şey bozulduysa ne yapmalıyım?",
+  ogrenme:    "Bu ekran şunu cevaplar: ajan öğreniyor mu — neyi düzeltti, neyi bozdu, kaça mal oldu?",
+  kilitler:   "Bu ekran şunu cevaplar: ajanın yetkisi ne, sınırları nerede, nasıl durdururum?",
   // --- eski on iki görünüm, artık bölüm ---
   brifing:    "Bu bölüm şunu cevaplar: kitap şu an nerede — sermaye, risk ve açık pozisyonlar ne durumda?",
   adaylar:    "Bu bölüm şunu cevaplar: gece döngüsü ne önerdi — kapıdan ne geçti, ne elendi?",
@@ -108,6 +105,8 @@ const EKRAN_SORUSU = {
   golge:      "Bu bölüm şunu cevaplar: kâğıt üstünde koşan gölge kollar ne veriyor?",
   bilesenic:  "Bu bölüm şunu cevaplar: bir kenar var mı, hangi bileşenden geliyor, büyüyor mu?",
   mudahale:   "Bu bölüm şunu cevaplar: elimde hangi durdurma kolu var ve hangisi şu an çekili?",
+  // --- D2-b'nin tek yeni bölümü: workflow.html'in halefi ---
+  cizelge:    "Bu bölüm şunu cevaplar: gece hattı hangi adımdan geçti — hangisi penceresinde, hangisi geciken?",
 };
 // SÖNÜK VE TEK SATIR (iş emri: "başlık-altı tek sönük satır"). Kendi CSS sınıfı YOK — bu tur
 // paralel koşuyor ve index.html'in <style>'ı başka bir hattın alanı; satır mevcut `.hint`
@@ -652,22 +651,21 @@ const RAIL_ICON = {
   // Düğmenin üstündeki etiket de hedefi söyler, yani ikon ile yazı aynı şeyi anlatır.
   tema_gece: _ico('<path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/>'),
   tema_gunduz: _ico('<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>'),
-  // ---- YEDİ ALAN SAYFASI (S2R-1). Anahtarlar VIEWS kimlikleridir; eski altı glif korundu ve
-  //      yeni evine taşındı (piyasa→veri, gösterge→gözetim, defter→öğrenme, sürgü→kilitler),
-  //      üç yeni silüet eklendi. Hiçbiri diğerine benzemez — 20px'te ayırt edilebilirlik ölçütü.
-  // Genel Bakış — dört bölmeli tek pencere: kokpitin kendisi
-  genel: _ico('<rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 12h17M12 3.5v17"/>'),
-  // Veri Sağlığı — iki mum: izlenen evrenin kendisi (kapanış barları)
-  veri: _ico('<path d="M8 3.5v17M16 3.5v17"/><rect x="5.5" y="7" width="5" height="8" rx="1"/><rect x="13.5" y="10" width="5" height="7" rx="1"/>'),
-  // Koşu & Döngü — kapanan halka: her gece bir tur
-  kosu: _ico('<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 3.8v3.6h-3.6"/>'),
-  // Portföy & Emirler — defterin kapağı: kitabın durduğu yer
-  portfoy: _ico('<rect x="3.5" y="6.5" width="17" height="13" rx="1.5"/><path d="M8.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h4A1.5 1.5 0 0 1 15.5 5v1.5"/><path d="M3.5 12h17"/>'),
-  // Öğrenme — açık defter
+  // ---- BEŞ YÜZEY (D2-b). Anahtarlar VIEWS kimlikleridir. Yüzeyler birleşince glif de birleşti:
+  //      kokpit penceresi ①'e, gece halkası ②'ye (döngünün çıktısı KARARdır), kadran ③'e (sorunun
+  //      kendisi "sağlıklı mı"), defter ④'te, sürgü ⑤'te kaldı. Mum (eski `veri`) ve defter kapağı
+  //      (eski `portfoy`) EMEKLİ: okuyucusu kalmayan bir glif, okunmayan bir yazımdır (YASA 6) —
+  //      taşıdıkları sorular ③ ve ②'nin gliflerinin altında yaşıyor.
+  //      Hiçbiri diğerine benzemez — 20px'te ayırt edilebilirlik ölçütü.
+  // ① Bugün — dört bölmeli tek pencere: kokpitin kendisi
+  bugun: _ico('<rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 12h17M12 3.5v17"/>'),
+  // ② Karar — kapanan halka: her gece bir tur, turun sonunda bir karar
+  karar: _ico('<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.5 3.8v3.6h-3.6"/>'),
+  // ③ Sağlık — kadranlı gösterge: sistem sağlıklı mı?
+  saglik: _ico('<path d="M4 18a8 8 0 1 1 16 0"/><path d="M4 18h16"/><path d="m12 18 4-5"/>'),
+  // ④ Öğrenme — açık defter
   ogrenme: _ico('<path d="M12 7.5C12 6 10 4.5 6.5 4.5H4v13h2.5c3.5 0 5.5 1.5 5.5 3"/><path d="M12 7.5C12 6 14 4.5 17.5 4.5H20v13h-2.5c-3.5 0-5.5 1.5-5.5 3"/>'),
-  // Gözetim & Alarmlar — kadranlı gösterge: sistem sağlıklı mı?
-  gozetim: _ico('<path d="M4 18a8 8 0 1 1 16 0"/><path d="M4 18h16"/><path d="m12 18 4-5"/>'),
-  // Kilitler & Yapılandırma — sürgülü ayarlar
+  // ⑤ Kilitler — sürgülü ayarlar
   kilitler: _ico('<path d="M4 7.5h8.5M17.5 7.5H20M4 16.5h4.5M13.5 16.5H20"/><circle cx="15" cy="7.5" r="2.5"/><circle cx="11" cy="16.5" r="2.5"/>'),
 };
 
@@ -741,10 +739,10 @@ async function buildSidebar(today, x) {
   const planN = today.pending_count == null ? null : (Number(today.pending_count) || 0);
   const ROZET_TR = { inbox: "bekleyen karar", plan: "kurulan plan", aday: "aday" };
   const rozet = inboxN ? "inbox" : (inboxN == null && planN ? "plan" : "aday");
-  // ROZET ARTIK "kosu" ÜSTÜNDE (S2R-1): onay kuyruğu ve adaylar Koşu & Döngü'nün altında yaşıyor.
+  // ROZET ARTIK "karar" ÜSTÜNDE (D2-b): onay kuyruğu ve adaylar aynı yüzeyin ardışık iki bölümü.
   // Rozet içeriğin GERÇEKTEN durduğu maddede olmalı — başka bir maddeye basmak, sayıyı gördüğü
   // yerde bulamayan bir operatör üretirdi.
-  const badges = { kosu: rozet === "inbox" ? inboxN : (rozet === "plan" ? planN : adayN) };
+  const badges = { karar: rozet === "inbox" ? inboxN : (rozet === "plan" ? planN : adayN) };
   const LOOP_TR = { no_hypotheses: "henüz fikir yok", no_ship_v1_stands: "kapı geçilmedi",
                     shipped_awaiting_min_sample: "sonuç birikiyor", closing: "döngü kapanıyor",
                     closed_learning: "öğreniyor", closed_weak_cal: "zayıf kalibre" };
@@ -754,29 +752,40 @@ async function buildSidebar(today, x) {
   // Alt satır = o ALAN SAYFASININ tek satırlık CANLI özeti (S2R-1: anahtarlar yedi yeni kimlik).
   // Birleşen sayfaların özetleri de birleşti: Portföy sermayeyi ve pozisyonu taşır, Öğrenme araç
   // sayısını, Veri Sağlığı evren ve bayatlık sayısını.
+  // BEŞ YÜZEY, BEŞ ÖZET (D2-b). Birleşen sayfaların özetleri de birleşti ve birleşirken TEKRAR
+  // AYIKLANDI: eski `subs.gozetim` "ayna uyumlu/SAPMA" yazıyordu, eski `subs.portfoy` sermayeyi ve
+  // pozisyonu; ikisi aynı yüzeye düşseydi şerit satırı beş parçaya çıkardı. Kural: bir yüzeyin
+  // özeti EN FAZLA dört parça ve her parça o yüzeyin KENDİ sorusunun bir kelimesi.
   const subs = {
-    // Genel Bakış'ın özeti sayfanın KENDİ cümlesidir: sakin mi, senden bir şey mi bekliyor?
+    // ① Bugün'ün özeti sayfanın KENDİ cümlesidir: sakin mi, senden bir şey mi bekliyor?
     // Sayı tekrarı YOK — aynı rakamı hem şeritte hem kartta göstermek, ikisini de zayıflatır.
-    genel: [today.halted ? "DURDURULDU" : (hb.breaker_tripped ? "kesici tetikli" : "sakin"),
-            today.stale ? "nabız gecikmiş" : null],
-    // Piyasa özeti /api/market'ten gelir. Genel Bakış onu ARKA PLANDA çeker ve bu iki alanı
-    // doldurur; hiç ölçülmediyse satır dürüstçe kısalır — tahmini bir sayı yazmak uydurma olurdu.
-    veri: [MARKET_N != null ? `${MARKET_N} hisse` : null,
-           MARKET_STALE ? `${MARKET_STALE} bayat bar` : null,
-           today.data_ok === false ? "veri kapısı KAPALI" : null],
-    kosu: [rozet === "inbox" ? `${inboxN} bekleyen karar`
-           : (rozet === "plan" ? `${planN} kurulan plan · gelen kutusu ölçülmedi` : null),
-           ...(adayN ? [vc.GO ? `${vc.GO} GO` : null, vc.REVIEW ? `${vc.REVIEW} REVIEW` : null,
-                        vc.NO_GO ? `${vc.NO_GO} NO_GO` : null] : ["sinyal yok"])],
-    portfoy: [today.equity != null ? money(today.equity) : null,
-              REGIME_TR[(today.regime || {}).regime] || null, `${posN} pozisyon`,
-              today.day_pnl_pct != null ? `gün ${pctf(today.day_pnl_pct, 1)}` : null],
+    // P4 TEKİLLEŞTİRMESİ: "nabız gecikmiş" BURADAN DÜŞTÜ (üçüncü kopyaydı). Nabzın tazeliği
+    // `#statuspill`de YAŞIYLA birlikte duruyor ve sessiz hattın `veri` segmenti sapmayı adıyla
+    // açıyor; şeritte üçüncü kez, üstelik süresiz yazmak sinyali seyreltiyordu.
+    bugun: [today.halted ? "DURDURULDU" : (hb.breaker_tripped ? "kesici tetikli" : "sakin")],
+    // ② Karar: gecenin çıktısı (bekleyen karar + kapı kırılımı) ve o kararın düştüğü kitap.
+    karar: [rozet === "inbox" ? `${inboxN} bekleyen karar`
+            : (rozet === "plan" ? `${planN} kurulan plan · gelen kutusu ölçülmedi` : null),
+            ...(adayN ? [vc.GO ? `${vc.GO} GO` : null, vc.REVIEW ? `${vc.REVIEW} REVIEW` : null,
+                         vc.NO_GO ? `${vc.NO_GO} NO_GO` : null] : ["sinyal yok"]),
+            `${posN} pozisyon`],
+    // ③ Sağlık: evren/tazelik özeti /api/market'ten gelir. ① onu ARKA PLANDA çeker ve bu iki
+    // alanı doldurur; hiç ölçülmediyse satır dürüstçe kısalır — tahmini bir sayı uydurma olurdu.
+    // "ayna uyumlu/SAPMA" BURADAN DÜŞTÜ (P6 tekilleştirmesi): aynanın tek evi mutabakat masası.
+    saglik: [MARKET_N != null ? `${MARKET_N} hisse` : null,
+             MARKET_STALE ? `${MARKET_STALE} bayat bar` : null,
+             today.data_ok === false ? "veri kapısı KAPALI" : "veri temiz"],
     ogrenme: [hb.version ? `v${hb.version}` : null,
               hst.reflecting ? "düşünüyor…" : (LOOP_TR[learn.loop_state] || null),
               x && x.skill_count ? `${x.skill_count} araç` : null],
-    gozetim: [hb.mirror_drift ? "ayna SAPMA" : "ayna uyumlu",
-              today.data_ok === false ? "veri kapısı KAPALI" : "veri temiz"],
-    kilitler: [today.halted ? "HALT çekili" : "kol yok", onk("L", today.autonomy_level)],
+    // P7 + P10 TEKİLLEŞTİRMESİ (D2-b · baseline §2):
+    //   * "HALT çekili" BURADAN DÜŞTÜ (dördüncü kopyaydı). Durdurmanın evi üçtür ve üçü de
+    //     AYRI ROL taşır: `#statuspill` her-an bandı, triyaj şeridi yalnız çekiliyken çalan
+    //     alarm (adresiyle), `kilitler#mudahale` kolun kendi durumu. Ray dördüncü bir kopyaydı.
+    //   * OTONOMİ SEVİYESİ BURAYA GELDİ, `.acct` kutusundan çıktı. Üç kopyası vardı; kalan iki
+    //     rolden biri budur, çünkü "ajanın yetkisi ne?" TAM OLARAK ⑤'in sorusudur. `.acct` bir
+    //     broker/sermaye kutusudur ve otonomi oraya bir yorum satırıyla açıklanacak kadar uzaktı.
+    kilitler: [onk("L", today.autonomy_level)],
   };
   // Hangi görünüm açık? Şerit her tazelemede yeniden kurulduğu için go()'nun yazdığı
   // aria-current siliniyordu — aktiflik yalnız BİÇİMLE anlatılıyordu, ekran okuyucuya hiç
@@ -788,8 +797,8 @@ async function buildSidebar(today, x) {
     const b = badges[id];
     // Rozetin ADI olur: çıplak "1" ekran okuyucuda hiçbir şey demiyordu. Ad, sayının NEYİ
     // saydığını da söyler — dolgulu rozet bekleyen KARAR, sönük rozet aday ya da kurulan plandır.
-    const dolgulu = id === "kosu" && rozet === "inbox";
-    const rozetAdi = id === "kosu" ? ROZET_TR[rozet] : "aday";
+    const dolgulu = id === "karar" && rozet === "inbox";
+    const rozetAdi = id === "karar" ? ROZET_TR[rozet] : "aday";
     const badge = b ? `<span class="pillc${dolgulu ? '' : ' q'}" role="img" aria-label="${
         esc(label)}, ${b} ${rozetAdi}">${b}</span>` : "";
     const sub = (subs[id] || []).filter(Boolean).join(" · ");
@@ -811,8 +820,10 @@ async function buildSidebar(today, x) {
       <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${hb.mirror_drift ? "neg" : "pos"}">${hb.mirror_drift ? "sapma" : "ayna uyumlu"}</b></div>
       <div class="r"><span>Sermaye</span><b class="${SERMAYE_RENK[(today.sermaye_koken || {}).renk] || ""}">${money(today.equity)}</b></div>
       ${sermayeKokenSatiri(today.sermaye_koken, { kisa: true, ibareyle: true })}
-      <div class="r"><span>Otonomi</span><b>${onk("L", today.autonomy_level)} · ${
-        esc(today.mode || MOD_OLCULEMEDI)}</b></div>
+      <!-- MOD HER DURUMDA GÖRÜNÜR (Dalga-0 hükmü) — bu satır o yüzden kalır. Otonomi seviyesi
+           ⑤'in ray özetine taşındı (P10 tekilleştirmesi): bu kutu hesabın kutusudur, yetkinin
+           değil, ve aynı harf 200 piksel arayla üç kez basılıyordu. -->
+      <div class="r"><span>Mod</span><b>${esc(today.mode || MOD_OLCULEMEDI)}</b></div>
       <div class="r"><span>Nabız</span><b class="${today.stale ? 'warn' : 'pos'}">${today.stale ? 'gecikmiş' : 'canlı'}</b></div>
     </div>
     <p class="slab">GÖRÜNÜM</p>${items}
@@ -866,6 +877,7 @@ const EYLEMLER = new Set([
   // ADI BU YORUMDA TIRNAKSIZ YAZILIR — izin listesini okuyan test tırnaklı her adı KAYITLI sayar
   // ve kaldırılmış bir eylem, kendi mezar taşı yüzünden "kayıtlı ama tanımsız" görünürdü.
   "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaSubmit",
+  "olayAc",
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "filterLessons", "go",
   "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
@@ -945,14 +957,17 @@ window.cikisYap = async () => {
 function spineHTML(t, h, rc, ws) {
   const hb = t.heartbeat || {};   // breaker/mirror sinyalleri heartbeat'in İÇİNDE yaşar — düz t.* okumak
   const acts = [], attn = [];     // iki kritik sinyali sessizce köreltiyordu
-  // ---- İÇ HEDEFLER S2R-2'DE YENİ EVLERİNE ÇEVRİLDİ (S2R-1'in beyanlı borcu) ------------------
+  // ---- İÇ HEDEFLER D2-b'DE BEŞ YÜZEYE ÇEVRİLDİ (S2R-2'nin adresleri korunuyor) ---------------
   // Bu şerit panonun en yüksek sesli yüzeyi ve her çipi bir ADRESTİR. S2R-1'de adresler eski
   // görünüm adlarıydı ("performans", "ayarlar", "operasyon#failsub"); alias sayesinde doğru
   // SAYFAYA gidiyorlardı ama sayfanın BAŞINA bırakıyorlardı — operatör "3 emir reddedildi"
   // çipine basıp beş bölümlük bir sayfanın tepesine düşüyordu. Artık bölüm çapasına gider.
+  // D2-b'de yüzey adı değişti (`portfoy#` → `karar#`, `veri#` → `saglik#`); ESKİ adres yazan
+  // her dış bağ ROUTE_ALIAS'ın (b) sınıfıyla çözülmeye devam eder — burada YENİSİ yazılır ki
+  // panonun kendi içinde tek adres dili kalsın.
   if (t.halted) acts.push(["sistem DURDURULDU — sağ üstten DEVAM", "kilitler#mudahale"]);
   if (hb.breaker_tripped) acts.push(["günlük kayıp devre kesici tetikli", "kilitler#mudahale"]);
-  if (hb.mirror_drift || (rc && (rc.mirror_drift || rc.position_drift))) acts.push(["Alpaca aynasında sapma var", "portfoy#mutabakat"]);
+  if (hb.mirror_drift || (rc && (rc.mirror_drift || rc.position_drift))) acts.push(["Alpaca aynasında sapma var", "karar#mutabakat"]);
   // REDDEDİLEN EMİR ARTIK KAYDA GİDER (2026-07-27). Eskiden hedef "ayarlar" idi ve oradaki
   // karşılık tek bir cansız cümleydi: hangi hisse, broker ne dedi, şimdi ne yapılmalı —
   // hiçbiri yanıtlanmıyordu. Ürünün var olma nedeni olan an, en zayıf desteğe sahipti.
@@ -961,21 +976,29 @@ function spineHTML(t, h, rc, ws) {
   // Şeridin tek sorusu "ŞU AN müdahale gerekiyor mu?"dur; beş günlük, görülmüş bir ret o soruya
   // "evet" diyemez — ve kalıcı bir kırmızı, hiç kırmızı olmamakla aynı bilgiyi taşır.
   const _fsOpen = ((rc || {}).failed_submissions || {}).open || [];
-  if (_fsOpen.length) acts.push([`${_fsOpen.length} emir reddedildi`, "portfoy#failsub"]);
-  if (rc && ((rc.positions || {}).engine_orphans || []).length) acts.push(["motor yetimi pozisyon", "portfoy#mutabakat"]);
-  if ((t.pending_count || 0) > 0 && t.autonomy_level >= 1) acts.push([`${t.pending_count} onay bekliyor`, "portfoy#onaylar"]);
+  if (_fsOpen.length) acts.push([`${_fsOpen.length} emir reddedildi`, "karar#failsub"]);
+  if (rc && ((rc.positions || {}).engine_orphans || []).length) acts.push(["motor yetimi pozisyon", "karar#mutabakat"]);
+  // P9 / N1 TEKİLLEŞTİRMESİ (D2-b · baseline §2 + §4). Bu satır `pending_count > 0 &&
+  // autonomy_level >= 1` koşuluyla "N onay bekliyor" basıyordu ve İKİ ayrı kusur taşıyordu:
+  //   (a) ÖLÜ KOL — sistem L0'da; koşul kurulduğundan beri bir kez bile ateşlemedi.
+  //   (b) YANLIŞ AD — `pending_count` o seans KURULAN PLAN sayısıdır ve `analytics.py`nin kendi
+  //       yorumu "kimseden bir şey istemez" diyor; onay bekleyen sayaç `inbox_count`tur.
+  // Yani şerit, hiç çalışmayan bir kolda yanlış adlandırılmış bir sayıyı vaat ediyordu. "Bugün
+  // ne bekliyor?" sorusunun TEK evi ① Bugün'ün "Bugün ne var" kartıdır (`inbox_count` + REVIEW
+  // kırılımı, aynı `onay_bekliyor` bayrağından). Kol SİLİNDİ, sayı taşınmadı — çünkü taşınacak
+  // doğru bir sayı yoktu.
   // Bayatlığın SÜRESİ yazılır: "gecikmiş" bir bayrak, "9 sa gecikmiş" bir karardır (bekle mi,
   // zamanlayıcıya bak mı). Süre API'nin kendi alanından gelir; yoksa yazılmaz.
   const _hbAge = sureTR(t.heartbeat_age_seconds);
-  if (t.stale) attn.push([`nabız gecikmiş${_hbAge ? ` · ${_hbAge}` : ""} — zamanlayıcıyı kontrol et`, "gozetim"]);
-  if (rc && rc.api_ok === false) attn.push(["broker API'sine erişilemiyor — ayna körlemesine", "portfoy#mutabakat"]);
+  if (t.stale) attn.push([`nabız gecikmiş${_hbAge ? ` · ${_hbAge}` : ""} — zamanlayıcıyı kontrol et`, "saglik#cizelge"]);
+  if (rc && rc.api_ok === false) attn.push(["broker API'sine erişilemiyor — ayna körlemesine", "karar#mutabakat"]);
   // Bu uyarı BUGÜNE KADAR HİÇ ÇIKMADI: `rc` broker_reconcile.json'dır ve o dosyada `stream_ok`
   // anahtarı YOKTUR — `undefined === false` hep yanlış. Yani akış koptuğunda şerit sessiz kalıyordu;
   // sessizlik "sorun yok" diye okunur. Akış sağlığı artık AYRI parametreyle gelir (ws) ve dürüsttür.
   const _wsDown = wsDownFor(ws);
   if (ws && ws.stream_ok === false)
-    attn.push([`yürütme akışı koptu${_wsDown ? ` · ${_wsDown}` : ""} — dolumlar gecikmeli görünür`, "portfoy#mutabakat"]);
-  if (t.data_ok === false) attn.push(["veri kalitesi kapısı kapalı — bugün yeni alım yok", "veri#veriboru"]);
+    attn.push([`yürütme akışı koptu${_wsDown ? ` · ${_wsDown}` : ""} — dolumlar gecikmeli görünür`, "karar#mutabakat"]);
+  if (t.data_ok === false) attn.push(["veri kalitesi kapısı kapalı — bugün yeni alım yok", "saglik#veriboru"]);
   if (((h || {}).spend || {}).over_budget) attn.push(["Hermes bütçesi doldu — ücretsiz beyinde", "ogrenme#hermes"]);
   // HİÇBİR UYARI BAŞKA BİR UYARININ VARLIĞI YÜZÜNDEN DÜŞMEZ (2026-07-27).
   // Eski kod iki kez susuyordu. (1) `simple ? [] : attn` — varsayılan Basit görünümde sarı
@@ -1156,7 +1179,7 @@ function alertsInbox(a) {
       <span class="etxt"><span class="tag t-no">${esc(g.token)}</span>
         ${g.n > 1 ? `<b>×${g.n}</b>` : ""} <span class="sev-1">${esc(g.message || "")}</span></span>
       <span class="etime">${relTime(g.last_ts)}</span></button>` +
-      runbookLink(g.token) + `</div>`;
+      olayBagi(g.token) + `</div>`;
   }).join("");
   return head + trunc + rows + btn;
 }
@@ -1221,18 +1244,14 @@ const RENDER = {};
 // çevirseydik aynı cümleyi 24px'te ve 12px'te iki kez okuturduk ve ikincisi — asıl denetim
 // çıpası olan sönük satır — süs gibi görünürdü.
 const ALAN_BAS = {
-  genel:    ["GENEL BAKIŞ · SABAH TURU", "Dün gece", "ve bugün.", ""],
-  veri:     ["VERİ SAĞLIĞI", "Kapsama", "ve tazelik.",
-             "İzlenen evren, bar tazeliği, seans-içi akış ve veri hattının bütünlüğü."],
-  kosu:     ["KOŞU & DÖNGÜ", "Gece döngüsü", "ve çıktısı.",
-             "Kanıt matrisi, kapıdan geçen adaylar ve kapının kendi karar ağacı."],
-  portfoy:  ["PORTFÖY & EMİRLER", "Kitap", "ve emirler.",
-             "Sermaye, açık pozisyonlar, onay kuyruğu, broker mutabakatı ve birikim."],
-  ogrenme:  ["ÖĞRENME", "Defter", "ve kalibrasyon.",
+  bugun:    ["① BUGÜN · SABAH TURU", "Dün gece", "ve bugün.", ""],
+  karar:    ["② KARAR", "Ne önerildi", "ve ne oldu?",
+             "Adaylar, disiplin kapısı, onay kuyruğu, kitap, broker mutabakatı, seans-içi emir ve birikim."],
+  saglik:   ["③ SAĞLIK", "Veri", "ve işleyiş.",
+             "Alarmlar ve olay yüzeyleri, gece hattının çizelgesi, veri hattı, izlenen evren ve seans-içi akış."],
+  ogrenme:  ["④ ÖĞRENME", "Defter", "ve kalibrasyon.",
              "Karne, gölge kollar, bileşen kalibrasyonu, hipotez defteri, beceriler ve dersler."],
-  gozetim:  ["GÖZETİM & ALARMLAR", "Gözetim", "ve alarmlar.",
-             "Alarm gelen kutusu, alarm bütçesi, kadans nabzı ve olay günlüğü."],
-  kilitler: ["KİLİTLER & YAPILANDIRMA", "Kollar", "ve yapılandırma.",
+  kilitler: ["⑤ KİLİTLER", "Kollar", "ve yapılandırma.",
              "Müdahale kademeleri, bayraklar, anahtarlar ve oturum tercihleri."],
 };
 function alanBasHTML(id) {
@@ -1354,21 +1373,26 @@ function satirKoru(alan, uret) {
 // başka bir sayfaya almak, onu çağıran gövdeyi düzenlemeyi gerektiriyordu. S2R-2'de o zincirler
 // SÖKÜLDÜ — her bölüm kendi kabına yazar, sırayı YALNIZ bu tablo söyler.
 //
-// NEDEN BU SIRA (sayfa sorusuna hizmet sırası):
-//   veri     : evren/tazelik önce (sorunun kendisi), sonra canlı akış, en sonda hattın iç sağlığı
-//   kosu     : gecenin ÇIKTISI önce (adaylar), sonra o çıktıyı üreten kapının karar ağacı
-//   portfoy  : kitabın hâli → senden iş isteyen kuyruk → brokerle mutabakat → seans-içi emir
-//              kapısı → birikim (en yavaş değişen en altta)
+// D2-b'DE İKİ BİRLEŞME OLDU ve sıra ONLARIN ANLATISINDAN türer:
+//   kosu + portfoy → karar   : "ne önerildi, neden geçti/geçmedi, ne oldu?" tek zincir.
+//   veri + gozetim → saglik  : TASK ③'ün (alarmdan nedene) ölçülen yolu iki sayfaya yayılıyordu.
+//
+// NEDEN BU SIRA (yüzeyin sorusuna hizmet sırası):
+//   karar    : ne önerildi (adaylar) → neden geçti/geçmedi (kapilar) → senden ne isteniyor
+//              (onaylar) → ne oldu: kitap (brifing) → emir gerçekten aynaya ulaştı mı (mutabakat)
+//              → seans-içi emir kapısı (intraemir) → birikim (en yavaş değişen en altta)
+//   saglik   : bir şey bozulduysa ÖNCE o (operasyon: alarm gelen kutusu + olay yüzeyleri) →
+//              gece hattı hangi adımda (cizelge) → hattın iç sağlığı (veriboru) → izlenen evren
+//              (market) → seans-içi akış (intraday)
 //   ogrenme  : karne (hüküm) → gölge kollar → bileşen kalibrasyonu → beyin/sprint → hipotez
 //              defteri → araçlar → dersler   (ADR'nin Öğrenme hiyerarşisi birebir)
-//   gozetim  : tek bölüm — alarm gelen kutusu, bütçe, kadans nabzı, olay günlüğü
 //   kilitler : kollar önce (acil olan), yapılandırma sonra
+// ① Bugün BU TABLODA YOK ve bu bilinçli: bölümü yoktur, tek ekranlık kart kompozisyonudur
+// (`GENEL_KARTLARI` kendi bütçesini taşır). Kabuk onu `alanSayfasi` ile çizmez.
 const ALAN_BOLUMLERI = {
-  veri:     ["market", "intraday", "veriboru"],
-  kosu:     ["adaylar", "kapilar"],
-  portfoy:  ["brifing", "onaylar", "mutabakat", "intraemir", "performans"],
+  karar:    ["adaylar", "kapilar", "onaylar", "brifing", "mutabakat", "intraemir", "performans"],
+  saglik:   ["operasyon", "cizelge", "veriboru", "market", "intraday"],
   ogrenme:  ["karne", "golge", "bilesenic", "hermes", "ajan", "skiller", "hafiza"],
-  gozetim:  ["operasyon"],
   kilitler: ["mudahale", "ayarlar"],
 };
 for (const [alan, bolumler] of Object.entries(ALAN_BOLUMLERI)) RENDER[alan] = alanSayfasi(alan, bolumler);
@@ -1424,18 +1448,23 @@ async function _aktifSayfayiCiz() {
 // yüzeyine (Portföy & Emirler → onay kuyruğu) inmeli; sayfanın başına bırakıp "şimdi ara" demek
 // kartın kendi cümlesini yarıda keserdi.
 const GENEL_KARTLARI = [
-  // [anahtar,   başlık,               hedef alan sayfası (opsiyonel #bölüm çapası)]
-  ["gece",     "Dün gece",             "kosu"],
-  ["sermaye",  "Sermaye · köken",      "portfoy"],
-  ["bugun",    "Bugün ne var",         "portfoy#onaylar"],
-  ["equity",   "Sermaye eğrisi",       "portfoy"],
+  // [anahtar,   başlık,               hedef yüzey (opsiyonel #bölüm çapası)]
+  ["gece",     "Dün gece",             "karar#adaylar"],
+  ["sermaye",  "Sermaye · köken",      "karar#brifing"],
+  ["bugun",    "Bugün ne var",         "karar#onaylar"],
+  ["equity",   "Sermaye eğrisi",       "karar#performans"],
   ["karne",    "Karne",                "ogrenme"],
-  ["kapsama",  "Kapsama",              "veri"],
+  ["kapsama",  "Kapsama",              "saglik#market"],
 ];
-// `sayfa` çapadan AYRI tutulur: bağın ETİKETİ alan sayfasının adıdır ("→ Portföy & Emirler"),
-// çapa değil. `ALAN_ADI["portfoy#onaylar"]` undefined olsaydı düğme ham adresi yazardı.
+// `sayfa` çapadan AYRI tutulur: bağın ETİKETİ yüzeyin adıdır ("→ Karar"), çapa değil.
+// `ALAN_ADI["karar#onaylar"]` undefined olsaydı düğme ham adresi yazardı.
+//
+// ÇAPA DA ETİKETE GİRER (D2-b): beş yüzeye inince altı kartın DÖRDÜ aynı yüzeye bakar oldu ve
+// dördü de "→ Karar" yazsaydı bağ ayırt edici olmaktan çıkardı — okur hangi kartın nereye
+// indiğini ancak basarak öğrenirdi. Çapa ADRESTEN türer; ikinci bir bölüm-adı listesi AÇILMAZ
+// (palette.js'in `BOLUMLER` tablosuyla ayrışırdı — v160'ın çivilediği sınıf).
 const _GB = Object.fromEntries(GENEL_KARTLARI.map(([k, ad, hedef]) =>
-  [k, { ad, hedef, sayfa: String(hedef).split("#")[0] }]));
+  [k, { ad, hedef, sayfa: String(hedef).split("#")[0], capa: String(hedef).split("#")[1] || "" }]));
 // TEK ÇIKIŞ: `gb-kart` sınıfı ve `gb-bag` düğmesi YALNIZ burada üretilir. İkinci bir yerde
 // üretilseydi "kart başına tek bağ" kuralı sayılamaz bir vaat olurdu.
 function gbKart(anahtar, govde) {
@@ -1444,14 +1473,15 @@ function gbKart(anahtar, govde) {
   return `<section class="gb-kart rise" data-kart="${anahtar}">
     <h2 class="t">${esc(k.ad)}</h2>
     <div class="gb-govde">${govde}</div>
-    <button class="gb-bag" type="button" data-act="go" data-a1="${k.hedef}">→ ${esc(ALAN_ADI[k.sayfa] || k.sayfa)}</button>
+    <button class="gb-bag" type="button" data-act="go" data-a1="${k.hedef}">→ ${
+      esc(ALAN_ADI[k.sayfa] || k.sayfa)}${k.capa ? ` <span class="tx3">· ${esc(k.capa)}</span>` : ""}</button>
   </section>`;
 }
 // "—" ile "0" ASLA KARIŞMAZ (dürüstlük arayüzü): ölçülmemiş alan tire basar, nedeni yanında.
 const _gbSay = (v, birim) => v == null ? `<span class="gb-say mut">—</span>`
   : `<span class="gb-say">${trn(v)}</span>${birim ? `<span class="gb-alt" style="display:inline;margin-left:6px">${esc(birim)}</span>` : ""}`;
 
-RENDER.genel = async () => {
+RENDER.bugun = async () => {
   recReset();
   // ÜÇ UÇ BEKLENİR, ÜÇÜ ARKADAN GELİR. Beklenenler sayfanın CÜMLESİNİ kuranlar (durum, döngü,
   // alarm); arkadan gelenler eğilim kartları. `/api/market` 260 CSV okur ve onu ilk boyamaya
@@ -1522,8 +1552,8 @@ RENDER.genel = async () => {
   // (yukarıda `sessizHatGlobal` besledi). ADR'nin "BAŞKA HİÇBİR ŞEY" kuralı gereği triyaj şeridi
   // de bu sayfada YOK — onun sorusu ("senden bir şey bekliyor mu?") burada "Bugün ne var"
   // kartının işidir ve iki yerden aynı şeyi söylemek, ikisini de zayıflatırdı.
-  $("page-genel").innerHTML = `
-    <div class="alan-bas">${alanBasHTML("genel")}</div>
+  $("page-bugun").innerHTML = `
+    <div class="alan-bas">${alanBasHTML("bugun")}</div>
     ${gbAlarmSatiri((d || {}).alarm_butcesi)}
     <div class="gb-ust">
       ${gbKart("gece", geceGovde)}
@@ -1583,8 +1613,8 @@ RENDER.genel = async () => {
 // ÖZETLENEREK yazılır: tam kırılım Gözetim & Alarmlar'ın işi, buradaki iş "bugün bu bütçe
 // aşıldı mı?" sorusunu tek satırda kapatmak.
 function gbAlarmSatiri(ab) {
-  const hedef = "gozetim", bag = `<button class="gb-bag" type="button" data-act="go" data-a1="${hedef}">→ ${
-    esc(ALAN_ADI[hedef])}</button>`;
+  const hedef = "saglik#operasyon", bag = `<button class="gb-bag" type="button" data-act="go" data-a1="${hedef}">→ ${
+    esc(ALAN_ADI.saglik)} <span class="tx3">· alarmlar</span></button>`;
   if (!ab) return `<div class="gb-alarm">alarm bütçesi · <b>ölçülmedi</b> — teşhis ucu bu alanı vermedi${bag}</div>`;
   const d = ab.dagilim || {};
   return `<div class="gb-alarm${ab.asim_var ? " asim" : ""}">
@@ -1733,15 +1763,15 @@ const KART_KAYDI = {
   "hafiza:dersler":     { alan: "ogrenme", bolum: "hafiza" },
   "ajan:surumler":      { alan: "ogrenme", bolum: "ajan" },
   "ajan:beceri":        { alan: "ogrenme", bolum: "ajan" },
-  // ---- VERİ SAĞLIĞI (§5.3 önceliği 3) ----
-  "veriboru:karantina": { alan: "veri",    bolum: "veriboru" },
-  "veriboru:butunluk":  { alan: "veri",    bolum: "veriboru" },
-  "veriboru:redis":     { alan: "veri",    bolum: "veriboru" },
-  "veriboru:saglayici": { alan: "veri",    bolum: "veriboru" },
-  // ---- PORTFÖY & EMİRLER (§5.3 önceliği 4; `s1` mutabakat masasının ANA cevabı, katlanmaz) ----
-  "mutabakat:icra":     { alan: "portfoy", bolum: "mutabakat" },
-  "mutabakat:band":     { alan: "portfoy", bolum: "mutabakat" },
-  "mutabakat:gecegun":  { alan: "portfoy", bolum: "mutabakat" },
+  // ---- ③ SAĞLIK (§5.3 önceliği 3; eski "veri" yüzeyi D2-b'de buraya birleşti) ----
+  "veriboru:karantina": { alan: "saglik",  bolum: "veriboru" },
+  "veriboru:butunluk":  { alan: "saglik",  bolum: "veriboru" },
+  "veriboru:redis":     { alan: "saglik",  bolum: "veriboru" },
+  "veriboru:saglayici": { alan: "saglik",  bolum: "veriboru" },
+  // ---- ② KARAR (§5.3 önceliği 4; `s1` mutabakat masasının ANA cevabı, katlanmaz) ----
+  "mutabakat:icra":     { alan: "karar",   bolum: "mutabakat" },
+  "mutabakat:band":     { alan: "karar",   bolum: "mutabakat" },
+  "mutabakat:gecegun":  { alan: "karar",   bolum: "mutabakat" },
 };
 // KART BÜTÇESİ — alan sayfası başına YAZILI tavan. BİRİMİ: "ilk çizimde AÇIK doğan kart".
 // Toplam kart sayısı DEĞİL: bu turda hiçbir kart silinmiyor (silme kararı D2-b/IA turunda,
@@ -1751,12 +1781,14 @@ const KART_KAYDI = {
 // bütçe uğruna kapatmak demek olurdu ve bu sözleşme o an bir güvenlik açığına dönerdi. Aşım
 // `.alan-bas`taki kontrol satırında sayıyla yazılır ve ŞİDDET RENGİ TAŞIMAZ (renk yalnız
 // anomalide; bütçe aşımı bir sapma değil bir tasarım borcudur).
+// D2-b'DE TAVANLAR BİRLEŞMEDİ, TAŞINDI. Bütçenin birimi "ilk bakışta düşen yük"tür ve bir okurun
+// bir ekranda tutabildiği kart sayısı iki yüzey birleşti diye İKİYE KATLANMAZ — bütçeleri toplamak
+// (4+6=10, 6+3=9) sözleşmeyi birleşmenin kendisiyle gevşetmek olurdu. Denetim §7.1'in yazdığı
+// hedef sayı alınır; ölçülen aşım ekranda `.kk-butce` satırında SAYIYLA beyan edilir.
 const KART_BUTCESI = {
-  veri:     6,   // 9 kart · üçü bölümün ana cevabı (evren, intraday akışı, hattın özeti)
-  kosu:     4,   // 4 kart · zaten bütçede; gecenin çıktısı + kapı ağacı
-  portfoy:  6,   // 17 kart · kitap + kuyruk + mutabakatın ana masası açık, gerisi kapak altında
+  karar:    6,   // 21 kart (eski kosu 4 + portfoy 17) · kitap + kuyruk + mutabakatın ana masası
+  saglik:   6,   // 12 kart (eski veri 9 + gozetim 3) + çizelge · alarm kutusu ve evren ana cevap
   ogrenme:  6,   // 39 kart · karne (sayfanın 1. bölümü) açık; altı bölüm kapak altında
-  gozetim:  3,   // 3 kart · zaten bütçede
   kilitler: 5,   // 5 kart · müdahale kolları hiçbir koşulda kapak altına girmez
 };
 // KURUCUNUN SON TURDA KURDUĞU KAPAK SAYISI — TEK OKUYUCUSU `_katKontrolCiz` (kontrol yalnız
@@ -1998,8 +2030,8 @@ document.addEventListener("click", e => {
 // bugün iki bölüme dağılmış ayrıntısı ÇEKMECEye iner (matrisin/planın kullandığı `rec()` +
 // `RECORD_VIEW` mekanizması — yeni bileşen İCAT EDİLMEDİ, aynı klavye ve odak sözleşmesi).
 //
-// NEDEN YENİ BİR SAYFA / BÖLÜM DEĞİL: `VIEWS` (yedi alan sayfası) ve `ALAN_BOLUMLERI` (yirmi
-// bölüm) ADR eşlemesine BİREBİR çivilidir (test_s2r1_kabuk_v155, test_s2r2_goc_v156). Izgara bir
+// NEDEN YENİ BİR SAYFA / BÖLÜM DEĞİL: `VIEWS` (beş yüzey) ve `ALAN_BOLUMLERI` (yirmi bir bölüm)
+// yön belgesinin §3 tablosuna BİREBİR çivilidir (test_s2r1_kabuk_v155, test_ia_v199). Izgara bir
 // bölüm DEĞİL, sayfanın KENDİ başlığının altındaki özet bandıdır — Öğrenme'nin `#ogrenme-eylem`
 // şeridiyle aynı mertebe: kabı `.alan-bolum` taşımaz, kendi soru cümlesini kurmaz (sayfanın
 // sorusunun ÖZETİDİR, ayrı bir soru değil).
@@ -2007,7 +2039,11 @@ document.addEventListener("click", e => {
 // TEK KAYNAK KURALI: bir sayı YALNIZ bir kartta durur. Sermaye ② KİTAP'ta, pozisyon sayısı
 // ④ POZİSYONLAR'da, silahlı emir ③ EMİRLER'de, gecenin aday/plan sayıları ① SON DÖNGÜ'de.
 // Aynı sayının ikinci kopyası bir "hiyerarşi" gibi okunur; yoktur.
-const DURUM_SAYFALARI = new Set(["kosu", "portfoy"]);
+//
+// D2-b'DE KÜME TEKE İNDİ ve bu, v191 bandının KÖKÜNÜN kapanmasıdır: ızgara iki sayfada çiziliyordu
+// çünkü "sistem şu an nerede?" sorusu iki sayfaya bölünmüştü. Sayfalar birleşince ızgara da tek
+// yerde doğar — `durumIzgarasiCiz` çağrısı ikiden BİRE indi (denetim §7.1'in ölçülen kazancı).
+const DURUM_SAYFALARI = new Set(["karar"]);
 // Kart sayısı bir TASARIM BÜTÇESİdir (Genel Bakış'ın altı kartıyla aynı gerekçe): beşincisi
 // ızgarayı tek satırdan taşırır ve "tek bakış" iddiasını sessizce yer. Liste veri, şablon değil —
 // test onu sayabiliyor.
@@ -2143,10 +2179,14 @@ function _durumEmirKarti(t, d) {
   const dolanTxt = dl.n_dolan == null
     ? `<b class="mut">—</b> <span class="tx3">(${esc(slp.durum || "icra defteri ölçüm vermedi")})</span>`
     : `<b>${trn(dl.n_dolan)}</b> <span class="tx3">(son ${esc(String(slp.pencere_gun ?? "?"))} gün)</span>`;
-  const akisTxt = akis == null
-    ? `<span class="mut">ayna akışı ölçülmedi</span> — hiç kanıt yok (ayna hiç koşmamış olabilir)`
-    : akis ? "ayna akışı canlı"
-           : `<span class="neg">ayna akışı KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : ""}`;
+  // P5 TEKİLLEŞTİRMESİ (D2-b · baseline §2): "WS akıyor mu?" DÖRT yerde yazılıyordu — HUD çipi,
+  // bu kart, `spineHTML` ve mutabakat masasının kendi satırı. Değerin TEK EVİ mutabakat masasıdır
+  // (durum + kesinti süresi + son tur + poll aralığı + son hata, hepsi bir arada). Bu kart artık
+  // yalnız ANOMALİ hâlinde konuşur — çünkü o zaman cümle bir tekrar değil, kartın taşıdığı
+  // "kopuk" rozetinin GEREKÇESİdir. Sağlıklı/ölçülmemiş hâlde kart değeri tekrarlamaz, ADRES verir.
+  const akisTxt = akis === false
+    ? `<span class="neg">ayna akışı KOPUK</span>${wsDownFor(rc) ? ` · ${esc(wsDownFor(rc))}` : ""}`
+    : `<span class="tx3">akışın hâli mutabakat masasında (tek ev)</span>`;
   return durumKartHTML("emir", k, {
     deger: `${trn(armed.length)} → ${trn(gonderilen)} → ${dl.n_dolan == null ? "—" : trn(dl.n_dolan)}`,
     // ÇUBUK YALNIZ İLK İKİ BASAMAĞIN ORANIDIR ve paydası bunu söyler. Üçüncü basamağı (dolan)
@@ -2656,15 +2696,13 @@ function renderHUD(d) {
     h.explore_mode ? `<span class="hudchip explore">· KEŞİF MODU · ≤0.25R sonda</span>` : "",
     `<span class="hudchip" title="zamanlayıcının bir sonraki döngüsüne kalan"><span class="ld ${sch.updated ? "" : "off"}"></span>döngü <b id="hud-count">${sch.updated ? "…" : "—"}</b></span>`,
     `<span class="hudchip" title="${esc(wsTip)}"><span class="ld ${wsCls}"></span>WS ${h.stream_ok === false ? `<b class='neg'>KOPUK</b>${wsDown ? ` · ${wsDown}` : ""}` : (h.stream_ok ? "canlı" + wsAgeTxt : "—")}</span>`,
-    // ASKIDA ÜÇÜNCÜ HÂLDİR (v192): penceresini aşmış ama sistemin kendi beyanıyla beklemeye alınmış
-    // mekanizma ne "geciken"dir ne de `ok` sayılır — sessizce kaybolursa rozet `ok/total`ı eksik
-    // gösterip nedenini söylemez. Adıyla ve nedeniyle görünür; rozet rengini BOZMAZ (alarm değil).
-    (() => { const wd = (d.watchdog || {}); const st = (wd.stale || []).length, nv = (wd.never || []).length;
-      const asks = (wd.askida || []), ask = asks.length;
-      const askTxt = ask ? ` · <span class="warn" title="askıda: ${esc(asks.map(a => `${a.name} (${a.detay || a.neden || ""})`).join(" · "))}">${ask} askıda</span>` : "";
-      if (!st && !nv) return `<span class="hudchip" title="tüm periyodik mekanizmalar penceresinde"><span class="ld"></span>bekçi <b>${wd.ok ?? "—"}/${wd.total ?? "—"}</b>${askTxt}</span>`;
-      const worst = (wd.stale || [])[0];
-      return `<span class="hudchip" title="geciken mekanizmalar"><span class="ld ${nv ? "bad" : "warn"}"></span>bekçi <b class="${nv ? "neg" : "warn"}">${st + nv} geciken</b>${worst ? ` · ${esc(worst.name)} ${trn(worst.gap_h, 1)}sa` : ""}${askTxt}</span>`; })(),
+    // BEKÇİ ÇİPİ D2-b'DE DÜŞTÜ (P3 tekilleştirmesi · baseline §2). "Bekçiler ne durumda?" İKİ
+    // yerde yazılıydı: bu çip (lamba + `ok/total`) ve sessiz hattın `bekçiler` segmenti. İkisi
+    // aynı `_wd_rep` nesnesinden besleniyordu ve çip HER ZAMAN konuşuyordu — sağlıklıyken bile.
+    // Sessiz hat aynı gerçeği DAHA İYİ taşıyor: sağlıklıyken tek kelime, saparken geciken
+    // mekanizmanın ADIYLA, SÜRESİYLE ve artık `teşhis ↗` olay yüzeyiyle birlikte. Ayrıntının
+    // tam hâli (on yedi mekanizmanın hepsi, adım adım) ③ Sağlık'ın `cizelge` bölümünde.
+    // Askıda hâli de orada adıyla ve nedeniyle duruyor — bu çiple birlikte hiçbir şey düşmedi.
     `<span class="hudchip" title="atomik yazım gecikmesi (son 200 yazım p95)"><span class="ld ${ioBad ? "warn" : ""}"></span>IO <b>${io.p95_ms != null ? trn(io.p95_ms, 1) + " ms" : (io.p50_ms != null ? trn(io.p50_ms, 1) + " ms·p50" : "—")}</b></span>`,
   ].filter(Boolean).join("");
   syncNavHeight();   // rozetler barın yüksekliğini değiştirir; shell dolgusu onu takip etmeli
@@ -2794,28 +2832,312 @@ function _shAskidaSatiri(segmentler) {
     parca.length ? " · " + parca.join(" · ") : " — ad/neden uçtan gelmedi"}${
     kalan > 0 ? ` · +${kalan} daha` : ""}</span>`;
 }
-// ---- RUNBOOK BAĞI (UIUX S1-T3) ---------------------------------------------------------------
-// J2 zinciri "alarm → teşhis → runbook → çözüm"un SON HALKASI. Bu tur öncesinde alarm satırları ve
-// sessiz-hat sapmaları bir hedef gösteremiyordu: runbook YOKTU. Artık `docs/RUNBOOK.md` var ve
-// `/runbook` onun okuyucusu; her sapma/alarm adı orada bir bölüm ÇAPASIDIR.
+// ---- RUNBOOK BAĞI (UIUX S1-T3) — D2-b'DE EMEKLİ ---------------------------------------------
+// `runbookHref`/`runbookLink` SİLİNDİ, taşındığı için. İkisi de `/runbook#<ad>` üretiyordu ve o
+// sayfa artık panonun İÇİNE emildi (aşağıdaki olay yüzeyleri). Bir bağ, hedefi "içerik buradan
+// taşındı" diyen bir yönlendirmeye çıkıyorsa artık bir adres değil bir dolambaçtır — okuyucusu
+// kalmamış bir fonksiyonu bırakmak da YASA 6 ihlali olurdu. Halefi: `olayBagi(ad, sınıf, segment)`.
+// Çapa kuralının kendisi (ad = küçük harfli jeton) `olaySinifi()` içinde korunuyor.
+
+// ==============================================================================================
+// OLAY YÜZEYLERİ (Tier-4, D2-b) — `runbook.html` PANOYA EMİLDİ
+// ----------------------------------------------------------------------------------------------
+// ÖLÇÜLEN KUSUR (denetim B14 + baseline §3.3): alarmdan teşhise giden yol PANOYU TERK EDİYORDU.
+// `runbookLink` bir <a href="/runbook#…"> idi; basan operatör dördüncü bir görsel dünyaya
+// (kendi jetonları, Roboto, ölçülen 3,50:1 kontrast) düşüyor, panonun canlı değerlerini
+// ARKASINDA bırakıyordu. Yani "ne oldu" bir sayfada, "değerler şimdi ne" başka sayfada,
+// "ne yapmalıyım" üçüncü yerdeydi — üstelik operatörün en tedirgin olduğu anda.
 //
-// ÇAPA KURALI TEK VE DÖNÜŞÜMSÜZ: çapa = adın küçük harfli hâli. Bekçi mekanizmaları ve sessiz-hat
-// sapma adları zaten küçük harf (`scheduler_poll`, `nabız`), alarm jetonları BÜYÜK harf
-// (`MECHANISM_STALE`) ve üretici onları `.lower()` ile yazıyor — tek `toLowerCase()` üçünü de
-// karşılar. Slug'lama YOK: burada bir slug kuralı olsaydı üreticidekiyle ikiye ayrılır ve biri
-// sessizce bayatlardı (bu deponun tekrar eden kusur sınıfı). Türkçe harf çapada AYNEN durur;
-// `encodeURIComponent` yalnız URL katmanını güvenceye alır, tarayıcı fragmanı çözüp eşleştirir.
+// OLAY YÜZEYİ BİR SAYFA DEĞİLDİR: herhangi bir alarmdan açılan TAM ÇEKMECEdir ve DÖRT bölümü
+// tek yerde taşır — (1) ne oldu · (2) değerler ŞİMDİ ne · (3) runbook adımları · (4) mevcut
+// eylemler. Yeni bileşen İCAT EDİLMEDİ: aynı `openDrawer` deseni, aynı odak tuzağı, aynı Esc
+// sözleşmesi (v191'in `RECORD_VIEW` kararının birebir tekrarı).
 //
-// BAĞ ASLA "BİLDİĞİM BİR ŞEY VAR" DEMEZ: hedefte o ad için yazılmış bir girdi olmayabilir —
-// runbook o durumda "runbook girdisi henüz yazılmadı" der. Yani bağ bir VAAT değil, bir ADRES.
-function runbookHref(ad) {
-  return "/runbook#" + encodeURIComponent(String(ad ?? "").toLowerCase());
+// UYDURMA YASAĞI BURADA EN SERT UYGULANIR. Adımlar `docs/RUNBOOK.md`den EMİLDİ ve o belge çoğu
+// jeton için "runbook girdisi henüz yazılmadı" diyor — bu yüzey o boşluğu DOLDURMAZ, ADIYLA
+// yazar. Bir olay yüzeyinin bilmediği bir çözümü varmış gibi davranması, olay anında
+// yapılabilecek en pahalı yalandır.
+//
+// TEK EMİR-YOLU KORUNUR: "mevcut eylemler" YENİ bir kol açmaz. Hepsi `data-act="go"` ile
+// kolun/masanın GERÇEKTEN yaşadığı bölüme götürür. Çekmeceye bir HALT düğmesi koymak, panoda
+// ikinci bir emir yüzeyi açmak olurdu.
+const OLAY_YUZEYLERI = {
+  besleme: {
+    ad: "Besleme kopuk / bayat",
+    ozet: "Nabız ya da periyodik bir mekanizma penceresini aştı — sistem ölçüyor mu, ölçmüyor mu?",
+    jetonlar: ["HEARTBEAT_STALE", "MECHANISM_STALE"],
+    neOldu: "Bir mekanizma beklenen sessizlik penceresini aştı. Bekçi (`meridian/watchdog.py`) " +
+            "YALNIZ GÖZLEMDİR: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı etkilemez — " +
+            "penceresi aşılınca sessiz hattın <b>bekçiler</b> segmenti açılır ve MECHANISM_STALE " +
+            "ateşlenir. Nabız defteri: <code>state/mechanism_beats.json</code> (ad → son damga).",
+    kaynak: "meridian/obs.py · meridian/watchdog.py::EXPECTED",
+    degerler: d => {
+      const wd = (d || {}).watchdog || {}, sch = (d || {}).scheduler || {};
+      const st = wd.stale || [], nv = wd.never || [], ask = wd.askida || [];
+      return [
+        ["Penceresinde", wd.ok == null ? null : `${wd.ok}/${wd.total ?? "—"} mekanizma`],
+        ["Geciken", st.length ? st.map(x => `${x.name} · ${trn(x.gap_h, 1)}sa (pencere ${trn(x.expected_h, 1)}sa)`).join("<br>") : (st.length === 0 ? "yok" : null)],
+        ["Hiç koşmamış", nv.length ? nv.join(", ") : "yok"],
+        ["Askıda (beyanlı)", ask.length ? ask.map(a => `${a.name} · ${esc(a.neden || a.detay || "neden bildirilmedi")}`).join("<br>") : "yok"],
+        ["Zamanlayıcı son tur", sch.updated ? `${String(sch.updated).slice(11, 19)} · her ${sch.poll_seconds ?? "—"} sn` : null],
+      ];
+    },
+    adimlar: [
+      "Hangi mekanizmanın konuştuğu yukarıdaki <b>Geciken</b> satırında ADIYLA yazılı — bekçi raporu adı ve gecikmeyi birlikte verir.",
+      "Askıdaki bir mekanizma ne OK'tir ne alarmlıktır: sistemin kendi beyanıyla beklemeye alınmıştır ve nedeni satırında durur.",
+      "Kaydın tamamı: alarm satırına bas → çekmece; diskte <code>state/events.jsonl</code>.",
+    ],
+    cozum: null,
+    eylemler: [["Gece hattının çizelgesi →", "saglik#cizelge"],
+               ["Alarm gelen kutusu →", "saglik#operasyon"]],
+  },
+  mutabakat: {
+    ad: "Mutabakat çatışması",
+    ozet: "İç defter ile brokerin defteri aynı şeyi söylemiyor — hayalet, sapma, ret ya da PATCH reddi.",
+    jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC"],
+    neOldu: "İç sim dolumu ile gerçek Alpaca dolumu toleransın ötesinde ayrıştı (MIRROR_DRIFT), " +
+            "broker iç defterin yürüteceği bir emri reddetti (BROKER_REJECT) ya da takip-stop " +
+            "PATCH'i reddedildi ve iç HWM ile broker stopu ayrıştı (TRAIL_DESYNC). " +
+            "MIRROR_DRIFT'i <b>altı</b> kod yolu ateşliyor (ayna çıkışı kapatılamadı · ayna " +
+            "pozisyonu kayıp · adet sapması · motor yetimi · çıkış yetimi · dolum sapması); " +
+            "hangisinin konuştuğu olay kaydındaki <code>detail</code> alanından okunur.",
+    kaynak: "meridian/obs.py · meridian/loop.py · meridian/mirror_stream.py",
+    degerler: d => {
+      const rc = (d || {}).reconcile || {}, fs = rc.failed_submissions || {};
+      const sure = wsDownFor(rc);
+      return [
+        ["Broker API", rc.api_ok == null ? null : (rc.api_ok ? "erişilebilir" : "ERİŞİLEMİYOR")],
+        ["Yürütme akışı", rc.stream_ok == null ? null
+          : (rc.stream_ok ? "canlı" : `KOPUK${sure ? ` · ${esc(sure)}` : ""}`)],
+        ["Hayalet emir", (rc.ghosts || []).length ? (rc.ghosts || []).map(g => esc(g.symbol || "?")).join(", ") : "yok"],
+        ["Açık broker reddi", (fs.open || []).length || "yok"],
+        ["Motor yetimi", ((rc.positions || {}).engine_orphans || []).length || "yok"],
+        ["Force-sync (bu tur)", (rc.force_sync || {}).stripped == null ? null
+          : `strip ${rc.force_sync.stripped} · PATCH ${rc.force_sync.trail_patched ?? 0}`],
+      ];
+    },
+    adimlar: [
+      "Sapmanın hangi kod yolundan geldiği olay kaydının <code>detail</code> alanındadır — alarm satırının çekmecesi tam kaydı taşır.",
+      "Hayalet emir = Alpaca'da canlı ama yerel izi (armed/submitted/mirror) olmayan emir; masadaki dedektör onları adıyla listeler.",
+      "Ret defteri KALICI retleri taşır; ağ arızası ve gönderim bacağının kendi istisnası o deftere HİÇ girmez — onlar yalnız olay akışında görünür.",
+    ],
+    cozum: null,
+    eylemler: [["Mutabakat masası →", "karar#mutabakat"],
+               ["Reddedilen emir kaydı →", "karar#failsub"]],
+  },
+  kill: {
+    ad: "Kill-switch tetiklendi",
+    ozet: "Bir durdurma kolu çekildi ya da kendiliğinden tetiklendi — yeni alım yolu kapalı.",
+    jetonlar: ["HALT_ACTIVE", "CIRCUIT_BREAKER", "ROLLBACK"],
+    neOldu: "HALT_ACTIVE panodan çekilen acil durdurmadır (<code>meridian/api.py</code> — " +
+            "\"HALT via dashboard\"); CIRCUIT_BREAKER günlük kayıp devre kesicisidir; ROLLBACK " +
+            "bir sürümün geri alınmasıdır. Üçünün ortak sonucu aynı: yeni alım yapılmaz, " +
+            "mevcut açık pozisyonlar yönetilmeye devam eder.",
+    kaynak: "meridian/obs.py · meridian/api.py · meridian/health.py",
+    degerler: (d, t) => {
+      const hb = (t || {}).heartbeat || {}, rc = (d || {}).reconcile || {};
+      return [
+        ["HALT", (t || {}).halted == null ? null : ((t || {}).halted ? "ÇEKİLİ" : "serbest")],
+        ["Devre kesici", hb.breaker_tripped == null ? null : (hb.breaker_tripped ? "TETİKLİ" : "tetiklenmedi")],
+        ["Öğrenme durdurma", rc.learn_halted == null ? null : (rc.learn_halted ? "ÇEKİLİ" : "serbest")],
+        ["Veri kalitesi kapısı", (t || {}).data_ok == null ? null : ((t || {}).data_ok ? "açık" : "KAPALI — bugün yeni alım yok")],
+        ["Otonomi", (t || {}).autonomy_level == null ? null : onk("L", (t || {}).autonomy_level)],
+      ];
+    },
+    adimlar: [
+      "Kolun kim tarafından ve ne zaman çekildiği olay defterindedir — panodaki olay akışı satırı kaydın tamamını açar.",
+      "HALT geri alınabilir (üst bardaki DEVAM); kademe 3 (flatten) GERİ ALINAMAZ ve kendi onay kapısını taşır.",
+      "Devre kesici kendiliğinden tetiklenir: geri açmadan önce günün kayıp nedenini okumak, kolu geri itmekten önce gelir.",
+    ],
+    cozum: null,
+    eylemler: [["Müdahale kademeleri →", "kilitler#mudahale"],
+               ["Kitap · şu an →", "karar#brifing"]],
+  },
+  butunluk: {
+    ad: "Bütünlük ihlali",
+    ozet: "Veri ya da defter kendi sözleşmesini çiğnedi: sessiz mutasyon, gerileme, ezilen alan, kaynak uyuşmazlığı.",
+    jetonlar: ["DATA_QUALITY", "GOAL_FAILURE"],
+    neOldu: "DATA_QUALITY'yi <b>on üç</b> kod yolu ateşliyor; en sertleri bütünlük " +
+            "dedektörlerinden gelir: <b>SESSİZ BAR MUTASYONU</b> (bar determinizmi), " +
+            "<b>GERİLEME</b> (ileri-only olması gereken bir alan geri gitti), <b>ALAN EZİLDİ</b> " +
+            "(bir kez dolu olan alan şimdi kayıp), <b>BAR KAYNAK UYUŞMAZLIĞI</b> (iki sağlayıcı " +
+            "aynı kapanışta anlaşmıyor), <b>SEANS ATLANDI</b>. GOAL_FAILURE ayrı bir sınıftır: " +
+            "mekanizma çalıştı ve sonuç sözleşmenin başarısızlık eşiğinin altında " +
+            "(<code>goal.yaml::failure_below</code>).",
+    kaynak: "meridian/obs.py · meridian/watchdog.py · meridian/adapters/data.py · meridian/loop.py",
+    degerler: d => {
+      const pl = (d || {}).pipeline || {}, wd = (d || {}).watchdog || {};
+      const kar = pl.quarantine || [];
+      const rep = wd.conservation_report || {};
+      return [
+        ["Karantina", kar.length ? kar.join(", ") : "boş"],
+        ["Son başarılı tazeleme", pl.last_refetch_session || null],
+        ["Tazeleme sabrı", pl.refetch_attempts == null ? null : `${pl.refetch_attempts}/${pl.refetch_max ?? 8} deneme`],
+        ["cf sadakati (sim↔gerçek)", pl.cf_fidelity ? `r=${pl.cf_fidelity.corr ?? "—"} · n=${pl.cf_fidelity.n ?? "—"}` : null],
+        ["Muhafaza raporu", rep.unexplained == null ? null : `açıklanamayan ${rep.unexplained}`],
+      ];
+    },
+    adimlar: [
+      "Hangi dedektörün konuştuğu olay kaydının <code>detail</code> alanındadır; bütünlük bölümü aynı dedektörleri satır satır listeler.",
+      "Karantinaya alınan sembol o seans HİÇ işlem üretmez — boş bir aday listesi bu yüzden bir arıza değil bir SONUÇ olabilir.",
+      "ÖLÇÜLEMEDİ ile İHLAL aynı şey değildir: bekçinin <code>olculemedi</code>/<code>detector_failed</code> hâlleri ihlal diye okunmaz.",
+    ],
+    cozum: null,
+    eylemler: [["Veri hattı · bütünlük →", "saglik#veriboru"],
+               ["İzlenen evren →", "saglik#market"]],
+  },
+  yetki: {
+    ad: "Yetki değişimi / silahlanma kararı",
+    ozet: "Bir mekanizmanın yetkisi açıldı-kapandı ya da silahlanma eşiği karşılandı: karar SENDE.",
+    jetonlar: ["ARMING_READY", "AUTHORITY_CHANGE"],
+    neOldu: "ARMING_READY: silahlanma eşiği karşılandı ve operatör kararı bekleniyor. " +
+            "AUTHORITY_CHANGE: bir mekanizmanın yetkisi açıldı ya da geri alındı. İkisi de bir " +
+            "ARIZA DEĞİL bir KARAR ÇAĞRISIDIR — bu yüzden şiddet dili taşımaz ve kendi sınıfında durur.",
+    kaynak: "meridian/obs.py",
+    degerler: (d, t) => [
+      ["Bekleyen onay", (t || {}).inbox_count == null ? null : (t || {}).inbox_count],
+      ["Kurulan plan", (t || {}).pending_count == null ? null : (t || {}).pending_count],
+      ["Silahlı emir", ((t || {}).armed_plans || []).length],
+      ["Otonomi", (t || {}).autonomy_level == null ? null : onk("L", (t || {}).autonomy_level)],
+    ],
+    adimlar: [
+      "Silahlanma eşiğinin hangi ölçümle karşılandığı onay kuyruğundaki kaydın içindedir — karar satırı kendi kanıtını taşır.",
+      "Yetki değişimi bir OLAYDIR ve geri alınabilir; hangi mekanizmanın yetkisinin değiştiği olay kaydında adıyla yazılıdır.",
+    ],
+    cozum: null,
+    eylemler: [["Onay kuyruğu →", "karar#onaylar"],
+               ["Otonomi ve sınırlar →", "kilitler#ayarlar"]],
+  },
+  kota: {
+    ad: "Ajan / beyin kotası",
+    ozet: "Düşünen beyin bütçesini ya da çağrı kotasını doldurdu — öneri hattı daralır, kapı değişmez.",
+    // JETONU YOK ve bu BEYAN EDİLİR: sınıf bir alarm jetonundan değil, teşhis ucunun ölçtüğü
+    // kota alanlarından doğuyor. Boş bir liste burada bir eksik değil, bir ölçüm sonucudur.
+    jetonlar: [],
+    neOldu: "Ajan çağrı bütçesi (RPM/RPD) ya da LLM harcama bütçesi doldu. Bu bir ARIZA değildir: " +
+            "kapı hiçbir koşulda LLM'e bağlı değildir ve beyin yalnız ÖNERİR/SIRALAR. Sonucu " +
+            "şudur — ikinci görüş ve keşif sıralaması o tur için gelmez; kararlar deterministik " +
+            "kapının kendi ölçütleriyle alınmaya devam eder.",
+    kaynak: "meridian/hermes.py (AGENT_RPM / AGENT_RPD) · state/agent_budget.json",
+    degerler: d => {
+      const ml = (d || {}).mlops || {}, ac = ml.agent_calls || {};
+      return [
+        ["Çağrı kotası", ac.rpm_limit == null ? null : `${ac.rpm_limit}/dk · ${ac.rpd_limit ?? "—"}/gün`],
+        ["Bugünkü çağrı", ac.day == null ? null : ac.day],
+        ["Bütçe günü", ac.date || null],
+        ["Beceri kapsaması", (ml.agent_skills || {}).ok == null ? null : `${ml.agent_skills.ok}/${ml.agent_skills.total ?? "—"}`],
+      ];
+    },
+    adimlar: [
+      "Bütçenin dolduğu tur, sprint/yoklama satırında görünür; harcamanın kırılımı beyin bölümündedir.",
+      "Kota dolduğunda pano SUSMAZ: öneri gelmediği tur, kararın kapıdan geldiğini söyleyen satır yerinde kalır.",
+    ],
+    cozum: null,
+    eylemler: [["Düşünen beyin · sprint →", "ogrenme#hermes"],
+               ["Ajan telemetrisi →", "ogrenme#ajan"]],
+  },
+};
+// JETON → SINIF: TÜRETİLİR, elle yazılmaz. İkinci bir liste ilk düzenlemede ayrışırdı ve bir
+// alarm jetonu iki yüzeye birden düşerdi (ya da hiçbirine — sessiz kayıp).
+const OLAY_JETON = (() => {
+  const m = {};
+  for (const [sinif, y] of Object.entries(OLAY_YUZEYLERI))
+    for (const j of y.jetonlar) m[j] = sinif;
+  return m;
+})();
+// SESSİZ-HAT SEGMENTİ → SINIF. Segment adları `api.py::_sessiz_hat`ın kendi adlarıdır
+// (bekçiler · kilitler · veri) ve sapma adları o segmentin İÇİNDEN gelir (mekanizma adı,
+// `nabız`, `veri_kalitesi`, `devre_kesici`). Ad-düzeyi istisnalar önce bakılır.
+const OLAY_AD_ESLEME = { "nabız": "besleme", "veri_kalitesi": "butunluk", "devre_kesici": "kill" };
+const OLAY_SEGMENT = { "bekçiler": "besleme", "kilitler": "kill", "veri": "butunluk" };
+// ÇÖZÜMLEME TEK YERDE. Eşleşmeyen bir ad SESSİZCE bir yüzeye ATANMAZ — `null` döner ve çağıran
+// dürüst "sınıfı yok" hâlini çizer. Yanlış bir olay yüzeyi, hiç olay yüzeyi olmamasından pahalıdır.
+function olaySinifi(ad, segment) {
+  const a = String(ad ?? "");
+  if (OLAY_YUZEYLERI[a]) return a;
+  if (OLAY_AD_ESLEME[a]) return OLAY_AD_ESLEME[a];
+  if (OLAY_JETON[a.toUpperCase()]) return OLAY_JETON[a.toUpperCase()];
+  if (segment && OLAY_SEGMENT[segment]) return OLAY_SEGMENT[segment];
+  return null;
 }
-function runbookLink(ad, sinif) {
+// ---- ÇEKMECE GÖVDESİ — DÖRT BÖLÜM, HEP AYNI SIRA ---------------------------------------------
+// Sıra bir sözleşmedir: ne oldu → değerler ŞİMDİ → runbook adımları → mevcut eylemler. Operatör
+// olay anında aynı yerde aynı şeyi bulmalı; sıranın olaydan olaya değişmesi, aramayı her seferinde
+// baştan başlatırdı.
+function olayYuzeyiHTML(sinif, ad) {
+  const y = OLAY_YUZEYLERI[sinif];
+  if (!y) return null;
+  const d = _DIAG || {}, t = SUMMARY || {};
+  // DEĞERLER ŞİMDİ: `null` = ÖLÇÜLEMEDİ ve nedeni yazılır (0 DEĞİL). Satırın kendisi düşmez —
+  // düşseydi "bu alan yok" ile "bu alan ölçülemedi" aynı görünürdü.
+  let satirlar = [];
+  try {
+    satirlar = (y.degerler ? y.degerler(d, t) : []) || [];
+  } catch (e) {
+    // YASA 4: yutma yok. Şekil beklenmedikse çekmece bunu yazar ve konsola düşer.
+    console.error("olay yüzeyi · değer okunamadı:", sinif, e);
+    satirlar = [["Değerler", null]];
+  }
+  const olculdu = _DIAG ? "" : `<p class="hint">Teşhis paketi bu oturumda HİÇ çekilmedi — aşağıdaki
+    satırlar boş değil, <b>ölçülmedi</b>. Sağlık yüzeyi bir kez çizildiğinde dolar.</p>`;
+  const degerHTML = satirlar.map(([et, v]) => pdRow(esc(et), v == null
+    ? `<span class="mut">ölçülemedi — teşhis ucu bu alanı vermedi</span>` : v)).join("");
+  const adimHTML = (y.adimlar || []).map(s => `<li>${s}</li>`).join("");
+  const eylemHTML = (y.eylemler || []).map(([et, adres]) =>
+    `<button class="dlbtn" type="button" data-act="go" data-a1="${esc(adres)}">${esc(et)}</button>`).join(" ");
+  return {
+    eyebrow: "OLAY YÜZEYİ",
+    title: `${esc(y.ad)}${ad && ad !== sinif ? ` <span class="mut">×</span> ${esc(String(ad))}` : ""}`,
+    body: `<p class="hint" style="margin-top:0">${esc(y.ozet)}</p>
+      <h3 class="pd-sub">1 · Ne oldu</h3>
+      <p>${y.neOldu}</p>
+      <p class="hint">kaynak: <code>${esc(y.kaynak)}</code>${
+        y.jetonlar.length ? ` · jeton: ${y.jetonlar.map(j => `<code>${esc(j)}</code>`).join(" · ")}`
+                          : " · bu sınıfın kendi alarm jetonu YOK — ölçümden doğar"}</p>
+      <h3 class="pd-sub">2 · Değerler şimdi ne</h3>
+      ${olculdu}${degerHTML}
+      <h3 class="pd-sub">3 · Runbook adımları</h3>
+      <ul class="pd-adim">${adimHTML}</ul>
+      ${y.cozum
+        ? `<p>${y.cozum}</p>`
+        : `<p class="pd-warn">Çözüm/betik girdisi <b>henüz yazılmadı</b> — onaylı kaynaklarda
+             (betik başlıkları · mühendislik günlüğü) bu sınıfın adı literal olarak geçmiyor.
+             Eşleşme iddiası olmadan yön verilmez; hüküm operatöründür. <span class="mut">(Bu
+             satır <code>docs/RUNBOOK.md</code>in kendi beyanıdır, panonun bir eksiği değil.)</span></p>`}
+      <h3 class="pd-sub">4 · Mevcut eylemler</h3>
+      <p class="hint">Yeni bir kol AÇILMAZ: aşağıdakiler kolun/masanın gerçekten yaşadığı bölüme
+        götürür (tek emir-yolu sözleşmesi).</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${eylemHTML}</div>`,
+  };
+}
+// TEK KAPI. `ad` bir alarm jetonu, bir sessiz-hat sapma adı ya da doğrudan bir sınıf kimliği
+// olabilir; `segment` yalnız sessiz-hattan gelirken dolu olur.
+window.olayAc = (ad, segment) => {
+  const sinif = olaySinifi(ad, segment);
+  const v = sinif && olayYuzeyiHTML(sinif, ad);
+  if (v) return openDrawer({ eyebrow: v.eyebrow, title: v.title, bodyHTML: v.body });
+  // DÜRÜST BOŞLUK: sınıfı olmayan bir ad için uydurma bir yüzey açılmaz. Ne bilindiği yazılır.
+  openDrawer({
+    eyebrow: "OLAY YÜZEYİ",
+    title: `${esc(String(ad ?? "—"))} <span class="mut">×</span> sınıfı yok`,
+    bodyHTML: `<p class="pd-warn">Bu ad için yazılmış bir olay yüzeyi <b>yok</b>: jeton
+        haritasında (${Object.keys(OLAY_JETON).length} jeton) ve sessiz-hat eşlemesinde karşılığı
+        bulunamadı.</p>
+      <p class="mut">Kaydın tamamı yerinde duruyor: alarm satırının kendi çekmecesi ham olayı
+        açar, diskte <code>state/events.jsonl</code>.</p>
+      <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
+        data-a1="saglik#operasyon">Alarm gelen kutusu →</button></div>`,
+  });
+};
+// OLAY BAĞI — `runbookLink`in halefi. Panoyu TERK ETMEZ: aynı çekmeceyi açar.
+function olayBagi(ad, sinif, segment) {
   if (!ad) return "";
-  return `<a class="${sinif || "rb-link"}" href="${runbookHref(ad)}"` +
-         ` title="Runbook: ${esc(String(ad))}" style="font-size:11px;color:var(--tx2);` +
-         `text-decoration:underline;text-underline-offset:2px;white-space:nowrap">runbook ↗</a>`;
+  const s = olaySinifi(ad, segment);
+  return `<button class="${sinif || "rb-link"}" type="button" data-act="olayAc"` +
+         ` data-a1="${esc(String(ad))}"${segment ? ` data-a2="${esc(segment)}"` : ""}` +
+         ` title="Olay yüzeyi: ${esc(s ? OLAY_YUZEYLERI[s].ad : String(ad))}"` +
+         ` style="font-size:11px;color:var(--tx2);background:none;border:0;padding:0;cursor:pointer;` +
+         `text-decoration:underline;text-underline-offset:2px;white-space:nowrap">teşhis ↗</button>`;
 }
 function sessizHat(sh) {
   if (!sh) return "";
@@ -2827,7 +3149,7 @@ function sessizHat(sh) {
         x.sure ? ` <span class="sh-sure">${esc(x.sure)}</span>` : ""}${
         x.detay ? ` <span class="sh-ip">· ${esc(x.detay)}</span>` : ""}${
         x.ipucu ? ` <span class="sh-ip">· ${esc(x.ipucu)}</span>` : ""}${
-        x.ad ? ` ${runbookLink(x.ad, "sh-rb")}` : ""}</span>`).join("");
+        x.ad ? ` ${olayBagi(x.ad, "sh-rb", s.ad)}` : ""}</span>`).join("");
     return `<span class="sh-seg sh-sap${s.kritik ? " kritik" : ""}">${esc(s.ad)} <b>${esc(s.ozet ?? "—")}</b>
       <span class="sh-ac">${satirlar}${kalan > 0
         ? `<span class="sh-fazla">+${kalan} daha — tam liste bu kartın kendi bölümünde</span>` : ""}</span></span>`;
@@ -5748,8 +6070,9 @@ RENDER.operasyon = async () => {
   const p = await opParcalar();
   $("page-operasyon").innerHTML = `
     ${bolumBasHTML("operasyon", "Alarmlar · bekçiler · olay günlüğü",
-      "Alarm gelen kutusu runbook'a bağlıdır; sessiz hat sayfanın üstünde her an canlıdır. "
-      + "Müdahale kolları Kilitler &amp; Yapılandırma'da (ve ⌘K'da).")}
+      "Her alarm satırının <b>teşhis ↗</b> düğmesi bir <b>olay yüzeyi</b> açar: ne oldu, değerler "
+      + "şimdi ne, runbook adımları ve mevcut eylemler tek çekmecede (runbook panoya emildi). "
+      + "Sessiz hat sayfanın üstünde her an canlıdır; müdahale kolları ⑤ Kilitler'de (ve ⌘K'da).")}
     ${p.alarm}
     <div class="card rise"><h2 class="t">Alarm gelen kutusu</h2>
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
@@ -5764,6 +6087,99 @@ RENDER.operasyon = async () => {
   j("/api/events").then(ev => {
     const el = $("bp-events"); if (el) el.innerHTML = eventsFeed((ev.events || []).slice(0, 8));
   }).catch(() => { const el = $("bp-events"); if (el) el.innerHTML = '<div class="empty">olay kaydı okunamadı</div>'; });
+};
+
+// ==============================================================================================
+// ③ SAĞLIK · GECE HATTININ CANLI ZAMAN ÇİZELGESİ — `workflow.html`in HALEFİ (D2-b · C1#4)
+// ----------------------------------------------------------------------------------------------
+// EMEKLİ EDİLEN ŞEY: `workflow.html` (306 satır) statik bir boru-hattı RESMİydi — panodan sıfır iç
+// bağ alıyordu (baseline §3.3), kendi jeton dünyasını taşıyordu ve gösterdiği her sayı elle
+// yazılmıştı ("250 sembollük evren", "min_exposure_score 40→20"). Bir resim bayatladığında bunu
+// kimseye söylemez; bir enstrüman söyler. Resmin cevapladığı soru ("gece hattı neden geçiyor?")
+// burada GERÇEK veriyle cevaplanır.
+//
+// ADIMLAR RESİMDEN EMİLDİ, SAYILARI EMİLMEDİ. Taşınan şey hattın YAPISIdır (hangi adım, ne yapar,
+// hangi mekanizma nabız atar); resimdeki nicel iddialar bilerek DIŞARIDA bırakıldı — onların canlı
+// karşılığı zaten kendi bölümlerinde yaşıyor ve buraya kopyalamak yeni bir bayatlama yüzeyi açardı.
+//
+// CANLI OLAN NE, ÖLÇÜLEMEYEN NE (dürüstlük sınırı, D3-UI'a devredilen kalem):
+//   * Bekçi raporu YALNIZ GECİKENLERİ adlandırır (`stale`/`never`/`askida`); penceresinde olanlar
+//     yalnız bir SAYIdır (`ok`/`total`). Yani "bu adım saat 03:12'de koştu" bilgisi bu uçtan
+//     GELMİYOR — adım başına damga `state/mechanism_beats.json`da var ama panoya açılmamış.
+//   * Bu yüzden çizelge her adım için ya ÖLÇÜLMÜŞ gecikmeyi yazar, ya da "penceresinde" der,
+//     ya da "kendi damgası yok" der. Uydurma saat YOK. Damgaların uca açılması D3-UI'ın işi.
+// BEKÇİNİN HER MEKANİZMASI BU TABLODA (sayı `watchdog.EXPECTED`ten okunur, buraya YAZILMAZ): bir mekanizmayı çizelgeye koymamak, geciktiğinde
+// operatörün onu hattın neresinde arayacağını bilememesi demekti.
+const HAT_ADIMLARI = [
+  // [adım adı, ne yapar, nabzı atan mekanizma(lar) — watchdog.EXPECTED adları]
+  ["Zamanlayıcı poll", "Uyanır, bekçiyi damgalar, kapanmış seans arar; iki poll arasına birden çok seans sığarsa hepsini sırayla işler.", ["scheduler_poll"]],
+  ["Veri kalitesi kapısı", "Bozuk barlı sembol karantinaya alınır; endeks kapanışı bağımsız kaynakla çapraz doğrulanır. Kötü veri asla işlem üretmez.", ["crosscheck"]],
+  ["P1 · Rejim + bütçe", "Endeksten rejim ve maruziyet bütçesi. Kendi bekçi damgası YOK — döngünün içinde koşar.", []],
+  ["P2 · Tarama", "Evren taranır; her sembolde dört ekran birden değerlendirilir. Gölge-gevşek tarama eşik-altını deftere yazar.", []],
+  ["P3 · Plan + kapı", "Aday → plan → deterministik kapı (R:R, sektör, ısı, korelasyon, kazanç karartması, ayna-meşgul). Kapı yasadır.", []],
+  ["Düşünen beyin", "İkinci görüş ve keşif slot sıralaması. Yalnız önerir/sıralar — kapıya dokunamaz.", ["hermes_poll", "warmup_sprint"]],
+  ["Silahlanma değerlendirmesi", "Silahlanma eşiği haftalık ölçülür; eşik karşılanırsa ARMING_READY ile operatör kararı istenir.", ["arming_eval"]],
+  ["Kâğıt ayna + mutabakat", "Silahlanan her plan brackete çevrilip aynaya gider; her döngü hayalet/sapma/ret denetimi koşar.", ["mirror_reconcile"]],
+  ["P4 · Dolum + taşıma", "Ertesi açılışta tetik görülürse dolum; bar yayınlanmamışsa plan olaylı bir seans taşınır. Kendi damgası YOK.", []],
+  ["P5 · Kalibrasyonlar", "Gölge model, skor IC, çıkış verimliliği, LLM görüş kalibrasyonu, cf sadakati, near-miss karnesi.", ["p5_calibrations"]],
+  ["Karşı-olgusal defter", "Günün planları + uyuyan ateşlemeler + eşik-altı + geç-bar satırları ilerletilir; hiçbir karar bu deftere bakmaz.", ["cf_advance"]],
+  ["Öğrenme kadansı", "Seans sonrası gölge fit, Eksen-2 turu, kanıt dolgusu ve antrenman sprinti.", ["shadow_fit", "axis2_cycle", "opinion_backfill", "sprint_cadence"]],
+  ["Takvim ve dış veri", "Kazanç takvimi tazelemesi ve Y4 toplama (insider delta + short interest).", ["earnings_refresh", "y4_collect"]],
+  ["Kanıt raporları", "Haftalık doğrulama raporu, Massive tutarlılık ölçümü ve MEASURED_V3 kayma bekçisi.", ["validation_report", "massive_verify", "shadowlaw_drift"]],
+];
+// TEK ÇIKIŞ: adım satırı YALNIZ burada üretilir. Renk YOK — geciken bir adım rozetini metinle
+// taşır (renk yalnız anomalide kuralı burada da geçerli; gecikme bir ŞİDDET seviyesi değil,
+// bekçinin ölçtüğü bir SÜREdir ve alarm sınıfı ayrı bir yüzeyde yaşıyor).
+function _hatSatiri(ad, ne, mekler, wd) {
+  const stale = wd.stale || [], never = wd.never || [], askida = wd.askida || [];
+  const bul = (liste, m) => liste.find(x => (x.name || x) === m);
+  const notlar = mekler.map(m => {
+    const s = bul(stale, m);
+    if (s) return `<b>${esc(m)}</b> · ${trn(s.gap_h, 1)}sa sessiz (pencere ${trn(s.expected_h, 1)}sa)`;
+    if (never.includes(m)) return `<b>${esc(m)}</b> · kurulumdan beri hiç koşmadı`;
+    const a = bul(askida, m);
+    if (a) return `<b>${esc(m)}</b> · askıda — ${esc(a.neden || a.detay || "neden bildirilmedi")}`;
+    return `<b>${esc(m)}</b> · penceresinde`;
+  });
+  const durum = mekler.length
+    ? notlar.join("<br>")
+    : `<span class="mut">bu adımın kendi bekçi damgası YOK — geciktiğini söyleyecek bağımsız
+       bir nabız yok, döngünün kendi kaydından okunur</span>`;
+  return `<div class="srow" style="align-items:flex-start">
+    <span><b>${esc(ad)}</b><p class="hint" style="margin:2px 0 0;max-width:64ch">${esc(ne)}</p></span>
+    <span class="hint" style="text-align:right;max-width:38ch">${durum}</span></div>`;
+}
+RENDER.cizelge = async () => {
+  // Teşhis paketi bu sayfada `operasyon` bölümünde ZATEN çekiliyor (çizim SIRAYLA, `alanSayfasi`).
+  // Yine de bağımsız okunur: sıraya bağlı bir okuma, sıra değiştiği gün sessizce boşalırdı.
+  let d = _DIAG;
+  if (!d) { try { d = await j("/api/diagnostics"); _DIAG = d; } catch (e) { d = null; } }
+  const wd = (d || {}).watchdog || {}, sch = (d || {}).scheduler || {};
+  const gecikenN = (wd.stale || []).length + (wd.never || []).length;
+  const bas = bolumBasHTML("cizelge", "Gece hattı · canlı zaman çizelgesi",
+    "Boru hattının statik resmi (<code>/workflow</code>) EMEKLİ: adımlar buraya taşındı ve "
+    + "bekçinin ölçtüğü gecikmeyle birlikte okunuyor. Bir adımın <b>ne zaman</b> koştuğu "
+    + "(damga başına saat) henüz uca açılmadı — o yüzden burada yazmıyor; uydurulmuyor da.");
+  if (!d) {
+    return void ($("page-cizelge").innerHTML = bas + `<div class="card rise">
+      <h2 class="t">Hattın adımları</h2>
+      <p class="mut">Teşhis ucu okunamadı — adımların gecikmesi <b>ölçülemedi</b>. Hattın yapısı
+        aşağıda yine de duruyor; sayı yerine hiçbir şey yazılmaz.</p>
+      ${HAT_ADIMLARI.map(([ad, ne]) => _hatSatiri(ad, ne, [], {})).join("")}</div>`);
+  }
+  $("page-cizelge").innerHTML = bas + `<div class="card rise">
+    <h2 class="t">Hattın adımları <span class="tx3" style="font-weight:400">(${
+      HAT_ADIMLARI.length} adım · ${wd.total ?? "—"} bekçi mekanizması)</span></h2>
+    <p class="hint" style="margin-top:0">Bekçi ${wd.ok == null ? "<b>ölçülemedi</b>" : `<b>${wd.ok}/${
+      wd.total ?? "—"}</b> mekanizmayı penceresinde`} buldu${gecikenN ? ` · <b>${gecikenN}</b> geciken` : ""}${
+      sch.updated ? ` · zamanlayıcı son tur <b>${esc(String(sch.updated).slice(11, 19))}</b>` : ""}.
+      Penceresinde olanlar bekçi raporunda ADLA gelmez (yalnız sayıyla) — "penceresinde" ibaresi
+      bu yüzden bir çıkarımdır ve satırında böyle yazar.</p>
+    ${HAT_ADIMLARI.map(([ad, ne, m]) => _hatSatiri(ad, ne, m, wd)).join("")}
+    <p class="hint" style="margin-top:12px">Geciken bir adımın teşhisi bir tık ötede:
+      <b>${esc(OLAY_YUZEYLERI.besleme.ad)}</b> olay yüzeyi.</p>
+    <div style="margin-top:10px"><button class="dlbtn" type="button" data-act="olayAc"
+      data-a1="besleme">Besleme olay yüzeyini aç →</button></div></div>`;
 };
 
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------
@@ -6567,7 +6983,7 @@ const RECORD_VIEW = {
         ${pdRow("Satış günleri", r.distribution_days)}
         ${pdRow("FTD (takip günü)", r.ftd == null ? "" : (r.ftd ? "var" : "yok"))}
         <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
-          data-a1="kosu#adaylar">Adaylar ve karar ağacı →</button></div>` };
+          data-a1="karar#adaylar">Adaylar ve karar ağacı →</button></div>` };
   },
   durumKitap(o) {
     const t = o.t || {}, kk = t.sermaye_koken || {}, kb = t.kitap || {}, df = t.defter || {};
@@ -6598,7 +7014,7 @@ const RECORD_VIEW = {
         ${pdRow("Canlı-kâğıt satır", df.live_paper_n)}${pdRow("Antrenman tohumu satır", df.replay_seed_n)}
         ${pdRow("Kökeni ölçülmemiş satır", df.belirsiz_n)}
         <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
-          data-a1="portfoy#performans">Birikim ve eğri →</button></div>` };
+          data-a1="karar#performans">Birikim ve eğri →</button></div>` };
   },
   durumEmir(o) {
     const rc = o.rc || {}, dl = o.dl || {}, slp = o.slp || {}, ay = slp.ayna || {};
@@ -6631,11 +7047,15 @@ const RECORD_VIEW = {
         ${pdRow("Ret oranı", ay.red_orani == null ? "" : pctf(ay.red_orani, 1))}
         <p class="hint">Huninin ilk iki basamağı ŞU ANKİ silahlı kümeden, üçüncüsü icra defterinin
         penceresinden gelir — aynı payda değildir ve bu yüzden ayrı etiketlenir.</p>
-        <p class="hint">Emirlerin SATIR SATIR dökümü (tetik/stop/hedef/boyut + ayna çipi) bu sayfanın
-        <b>Kitap · ayrıntı</b> bölümündeki "Sıradaki seans" tablosundadır — kart sayıyı, tablo
-        satırları taşır; ikisi aynı yerde dursa kart özet olmaktan çıkardı.</p>
+        <p class="hint">Emirlerin SATIR SATIR dökümü (tetik/stop/hedef/boyut + ayna çipi) aynı
+        yüzeyin <b>Kitap · ayrıntı</b> bölümündeki "Sıradaki seans" tablosundadır — kart sayıyı,
+        tablo satırları taşır; ikisi aynı yerde dursa kart özet olmaktan çıkardı. P1
+        tekilleştirmesi: iki biçim (rozet ve oran çubuğu) ARTIK AYNI YÜZEYDE ve aralarında bir
+        adres var; sayının kendisi tek yerde (bu kart), satırın kimliği tek yerde (tablo).</p>
+        <div style="margin-top:10px"><button class="dlbtn" type="button" data-act="go"
+          data-a1="karar#brifing">Sıradaki seans tablosu →</button></div>
         <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
-          data-a1="portfoy#mutabakat">Mutabakat masası →</button></div>` };
+          data-a1="karar#mutabakat">Mutabakat masası →</button></div>` };
   },
   durumPozisyon(o) {
     const t = o.t || {}, pos = o.pos || [], r = t.regime || {};
@@ -6661,7 +7081,7 @@ const RECORD_VIEW = {
         <p class="hint">Kitapta CARİ FİYAT yok; mesafe girişten etkin stopa (trail varsa trail)
         ölçülür. "Cari fiyata mesafe" yazmak ölçülmemiş bir sayı üretmek olurdu.</p>
         <div style="margin-top:14px"><button class="dlbtn" type="button" data-act="go"
-          data-a1="kosu#kapilar">Rejim ve kapı ölçütleri →</button></div>` };
+          data-a1="karar#kapilar">Rejim ve kapı ölçütleri →</button></div>` };
   },
   // 0a · REDDEDİLEN GÖNDERİM — triyaj şeridinin işaret ettiği kayıt. Şeridin "N emir reddedildi"
   // cümlesi buraya iner; hangi hisse, broker ne dedi, hangi plandı, ne zaman.
@@ -7668,16 +8088,20 @@ function _alpacaKartHTML(a) {
           <div class="r"><span>Hesap sermayesi</span><b>$${acc.equity!=null?trn(acc.equity,2):'—'}</b></div>
           <div class="r"><span>Nakit / alım gücü</span><b>$${acc.cash!=null?trn(acc.cash,0):'—'} / $${acc.buying_power!=null?trn(acc.buying_power,0):'—'}</b></div>
           <div class="r"><span>Açık pozisyon / emir</span><b>${(acc.positions||[]).length} / ${(acc.open_orders||[]).length}</b></div>
-          ${(() => {  // Phase-1 uzlaştırma telemetrisi — CANLI: ayna sapması yalnız state dosyasında kalmasın
+          ${(() => {
+            // P6 TEKİLLEŞTİRMESİ (D2-b · baseline §2): "Ayna sapması var mı?" İKİ yerde, İKİ
+            // FARKLI SÖZCÜKLE yazılıyordu — durum ızgarasının "sapma/ayna uyumlu" satırı ve
+            // burası ("fiyat SAPMA · pozisyon SAPMA"), üstelik farklı sayfalarda ve aynı
+            // `rc.mirror_drift` alanından. İki sözcük dağarcığı aynı gerçeği iki ayrı olay gibi
+            // gösteriyordu. Değerin TEK EVİ mutabakat masasıdır; bu kart artık sapmayı
+            // TEKRARLAMAZ, ADRES verir — harici pozisyon gibi YALNIZ burada olan bilgi kalır.
             const rc = a.reconcile || {};
             if (!rc.date) return '';
-            const drift = rc.mirror_drift || rc.position_drift;
-            const fails = ((rc.failed_submissions || {}).open || []).length;   // yalnız AÇIK retler
-            const bits = [`fiyat ${rc.mirror_drift ? '<b class="neg">SAPMA</b>' : 'uyumlu'}`,
-                          `pozisyon ${rc.position_drift ? '<b class="neg">SAPMA</b>' : 'uyumlu'}`]
-              .concat(fails ? [`<b class="neg">${fails} reddedilen emir</b>`] : [])
-              .concat(((rc.positions||{}).external||[]).length ? [`harici: ${esc(((rc.positions||{}).external||[]).join(', '))}`] : []);
-            return `<div class="r"><span>Ayna uzlaştırma (${esc(rc.date)})</span><b class="${drift?'neg':'pos'}">${bits.join(' · ')}</b></div>`;
+            const harici = ((rc.positions || {}).external || []);
+            return `<div class="r"><span>Ayna uzlaştırma (${esc(rc.date)})</span>
+              <b>${harici.length ? `harici: ${esc(harici.join(', '))} · ` : ''}<button class="dlbtn"
+                type="button" data-act="go" data-a1="karar#mutabakat"
+                style="min-height:0;padding:2px 8px;font-size:11px">mutabakat masası →</button></b></div>`;
           })()}</div>
         ${posRows?`<div class="tbl" style="margin-top:10px"><div class="trow head" style="grid-template-columns:60px 60px 1fr 90px"><span>HİSSE</span><span>ADET</span><span>GİRİŞ</span><span>K/Z</span></div>${posRows}</div>`:''}
         ${ordRows?`<div class="tbl" style="margin-top:8px"><div class="trow head" style="grid-template-columns:60px 1fr 90px"><span>HİSSE</span><span>EMİR</span><span>SEVİYE</span></div>${ordRows}</div>`:''}
@@ -8061,34 +8485,28 @@ async function baslat() {
 // hiç yazmıyordu. Yani yardım paneli var olmayan kısayolları belgeliyordu. Tuş numarası
 // artık görünümün VIEWS içindeki sırasıdır; ikisi ayrışamaz.
 const PAGE_DESC = {
-  genel: "dün gece · sermayenin kökeni · bugün ne var · alarm bütçesi · üç mini-trend — hepsi özet, detay alan sayfasında",
-  veri: "izlenen evren · bar tazeliği · seans-içi akış ve boşluklar · karantina, bütünlük, sıcak katman",
-  kosu: "kurulum × rejim matrisi · gece döngüsünün adayları · disiplin kapısının karar ağacı",
-  portfoy: "sermaye ve kökeni · açık pozisyonlar · onay kuyruğu · broker mutabakatı · seans-içi silahlanma · eğri ve işlemler",
+  bugun: "dün gece · sermayenin kökeni · bugün ne var · alarm bütçesi · üç mini-trend — hepsi özet, detay yüzeyde",
+  karar: "adaylar · disiplin kapısı · onay kuyruğu · kitap ve pozisyonlar · broker mutabakatı · seans-içi emir · eğri ve işlemler",
+  saglik: "alarm gelen kutusu ve olay yüzeyleri · gece hattının çizelgesi · karantina/bütünlük · izlenen evren · seans-içi akış",
   ogrenme: "karne · gölge kollar · bileşen IC + EB · beyin ve sprint · hipotez defteri · beceriler · dersler",
-  gozetim: "alarm gelen kutusu · alarm bütçesi · kadans nabzı ve bekçi notu · olay günlüğü",
   kilitler: "müdahale kademeleri · güvenlik durumu · API anahtarları · Alpaca aynası · dışa aktarım · sözlük",
 };
 // ---- 'g' ÖNEKLİ SAYFA ATLAMA (UIUX S1-T4, S2R-1'de yeni IA'ya çekildi) ------------------------
 // İş emri Program X `g d / g a / g r` diyor; WP0 İ6 bunu şiddet-2 borç saydı (1-7 vardı, g yoktu).
-// ESKİ EŞLEME BİR UZLAŞMAYDI: iş emrinin adları (veri/alarm/araştırma) panonun adları değildi ve
-// `g d` "Piyasa"ya, `g a` "Operasyon"a gidiyordu — harf ile hedef arasındaki bağ ancak bir yorum
-// satırı okunarak kuruluyordu. Yeni IA o uzlaşmayı gereksiz kıldı; harfler ARTIK SAYFANIN ADINDAN
-// geliyor ve iş emrinin üçlüsü kelimenin tam anlamıyla yerine oturdu:
-//   g g → Genel Bakış        g d → Veri Sağlığı  (iş emrinin "veri"si, artık gerçekten veri)
-//   g k → Koşu & Döngü       g p → Portföy & Emirler
-//   g r → Öğrenme            (iş emrinin "araştırma"sı)
-//   g a → Gözetim & Alarmlar (iş emrinin "alarm"ı, artık gerçekten alarm sayfası)
-//   g y → Kilitler & Yapılandırma
-// Yedi sayfanın YEDİSİ de kapsanır: dördünü bağlayıp üçünü dışarıda bırakmak, "hangileri var"
+// HARFLER SAYFANIN ADINDAN GELİR ve D2-b'de beş yüzeye indi:
+//   g b → ① Bugün           g k → ② Karar
+//   g s → ③ Sağlık          g o → ④ Öğrenme
+//   g y → ⑤ Kilitler
+// Beş yüzeyin BEŞİ de kapsanır: bir kısmını bağlayıp gerisini dışarıda bırakmak, "hangileri var"
 // sorusunu her seferinde deneyerek cevaplatırdı — kısayolun amacı tam da bunu bitirmek.
+// ESKİ HARFLER (d/p/a/r) DÜŞTÜ: sayfaları düştü. Yarım kalan bir `g d`, tanınmayan tuş dalına
+// düşer ve SESSİZCE iptal olur (yanlış sayfaya gitmekten iyi) — bkz. aşağıdaki önek kipi.
 //
-// NEDEN ÖNEK: `d`, `a`, `r` tek başına ALINAMAZ — `r` zaten "yenile", `k`/`j` satır gezinmesi.
+// NEDEN ÖNEK: `b`, `s`, `o` tek başına ALINAMAZ — `r` zaten "yenile", `k`/`j` satır gezinmesi.
 // Önek bir ayrı kip açar ve o kipte tek tuş TÜKETİLİR; yani `g k` satır gezinmesini tetiklemez.
-// `g g` de çalışır: önek kipi keydown'ın EN BAŞINDA çözülüyor, yani ikinci `g` yeni bir önek
-// başlatmaz, hedef olarak tüketilir.
-const GIT_KISAYOL = { g: "genel", d: "veri", k: "kosu", p: "portfoy",
-                      r: "ogrenme", a: "gozetim", y: "kilitler" };
+// `g g` gerekmez artık (Bugün'ün harfi `b`); `g` iki kez basılırsa ikinci `g` tanınmayan tuştur
+// ve dizi sessizce iptal olur.
+const GIT_KISAYOL = { b: "bugun", k: "karar", s: "saglik", o: "ogrenme", y: "kilitler" };
 // Önek SÜRESİZ AÇIK KALAMAZ: yarım bırakılmış bir `g`, dakikalar sonra basılan `r`yi sayfa
 // atlamasına çevirirdi — kullanıcının hiç istemediği bir eylem, hiç beklemediği anda.
 const G_PENCERE_MS = 1500;
@@ -8119,15 +8537,16 @@ function kbdOverlay(show) {
     ${PAGE_MAP.map(([k, n, d, g]) => `<div class="krow"><kbd>${k}</kbd>${
       g ? `<kbd>${esc(g)}</kbd>` : ""}<b>${esc(n)}</b><span>${esc(d)}</span></div>`).join("")}
     <div class="krow"><kbd>g</kbd><b>Sayfa atlama öneki</b><span>g + harf (yukarıdaki ikinci sütun) · ${G_PENCERE_MS / 1000} sn içinde</span></div>
-    <div class="krow"><kbd>⌘K</kbd><b>Komut paleti</b><span>Ctrl+K de olur · yedi sayfa <b>ve yirmi bölümün tamamı</b> · sembol · müdahale · öğrenme eylemleri</span></div>
-    <div class="krow"><kbd>#</kbd><b>Bölüm çapası</b><span>her bölüm başlığı bir adrestir (<code>portfoy#mutabakat</code>) — ⌘K aranan bölüme kaydırır, sayfanın tepesine değil</span></div>
+    <div class="krow"><kbd>⌘K</kbd><b>Komut paleti</b><span>Ctrl+K de olur · beş yüzey <b>ve yirmi bir bölümün tamamı</b> · sembol · müdahale · öğrenme eylemleri</span></div>
+    <div class="krow"><kbd>#</kbd><b>Bölüm çapası</b><span>her bölüm başlığı bir adrestir (<code>karar#mutabakat</code>) — ⌘K aranan bölüme kaydırır, sayfanın tepesine değil</span></div>
     <div class="krow"><kbd>J</kbd><b>Sonraki satır</b><span>kayıt satırları arasında aşağı</span></div>
     <div class="krow"><kbd>K</kbd><b>Önceki satır</b><span>yukarı · Enter kaydı açar</span></div>
     <div class="krow"><kbd>R</kbd><b>Yenile</b><span>aktif sayfayı yeniden yükler</span></div>
     <div class="krow"><kbd>?</kbd><b>Bu panel</b><span>Esc ile kapanır</span></div>
     <div class="krow"><kbd>Esc</kbd><b>Kapat / iptal</b><span>çekmece · palet · bu panel · yarım kalmış g öneki</span></div>
-    <p class="hint" style="margin-top:14px">Alarm ve sessiz-hat satırlarındaki <b>runbook ↗</b> bağı
-      teşhis belgesine gider (<a href="/runbook">/runbook</a>) — panodan ayrılır.</p>
+    <p class="hint" style="margin-top:14px">Alarm ve sessiz-hat satırlarındaki <b>teşhis ↗</b> düğmesi
+      artık panoyu TERK ETMEZ: aynı çekmece deseninde bir <b>olay yüzeyi</b> açar — ne oldu, değerler
+      şimdi ne, runbook adımları ve mevcut eylemler tek yerde (D2-b · runbook emilimi).</p>
     <button type="button" class="dlbtn" style="margin-top:16px" data-act="kbdOverlay" data-a1="false">Kapat</button></div>`;
   ov.addEventListener("click", e => { if (e.target === ov) kbdOverlay(false); });
   ov.addEventListener("keydown", e => {

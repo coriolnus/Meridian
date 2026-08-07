@@ -965,6 +965,13 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .pd-sub{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:var(--label-track);text-transform:uppercase;
   color:var(--tx2);margin:var(--s5) 0 var(--s2);padding-bottom:7px;border-bottom:1px solid var(--line)}
 .pd-sub:first-of-type{margin-top:0}
+/* OLAY YÜZEYİ · RUNBOOK ADIMLARI (D2-b). Yeni bir bileşen DEĞİL: çekmecenin kendi gövde
+   ölçeğinde numarasız bir liste. Kendi rengi, kendi yazı tipi, kendi yarıçapı YOK — jetonlardan
+   ne alıyorsa `.pd-body`nin geri kalanı da onu alıyor. `runbook.html`in emilmesiyle doğdu:
+   teşhis adımları artık ayrı bir görsel dünyada değil, değerlerin bir ekran altında. */
+.pd-adim{margin:var(--s2) 0 0;padding-left:20px;font-size:13px;line-height:1.65;color:var(--tx2)}
+.pd-adim li{margin:6px 0}
+.pd-adim li b{color:var(--tx)}
 /* body.drawer-open GERÇEK BİR KURAL (2026-07-27): JS bu sınıfı açıp kapatıyordu ama HİÇBİR kurala
    uymuyordu — ölü bir anahtar. Telefonda çekmece tam genişliktir ve aria-modal'dır; arkasındaki
    sayfanın kaymaya devam etmesi kaydı okurken sayfayı altından çekiyordu. Artık zemin sabitlenir. */
@@ -1699,36 +1706,27 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
          hem burada hem app.js'in ALAN_BOLUMLERI tablosunda AYNI. Bölünen üç görünüm
          (onaylar, intraday, operasyon) yeni evlerine gitti; sekiz yeni kap doğdu.
 
-         KURAL: `.page` YALNIZ yedi alan sayfasındadır. Bölüm kapları `.page` DEĞİL
+         D2-b'DE YÜZEY SAYISI BEŞE İNDİ (yön belgesi §3, bağlayıcı). İki birleşme:
+         `kosu`+`portfoy` → `karar`, `veri`+`gozetim` → `saglik`. HİÇBİR BÖLÜM KABI
+         SİLİNMEDİ — yalnız hangi `.page`in çocuğu oldukları değişti; eski adresler
+         (`kosu#…`, `portfoy#…`, `veri#…`, `gozetim#…`) ROUTE_ALIAS ile çözülür.
+
+         KURAL: `.page` YALNIZ beş yüzeydedir. Bölüm kapları `.page` DEĞİL
          (`go()` aktifliği `.page` üzerinden çeviriyor — iç içe iki `.page` olsaydı
          gizli bir bölüm "aktif" kalır ve j/k gezinmesi görünmeyen satırları sayardı).
          ============================================================================ -->
 
-    <!-- 1 · GENEL BAKIŞ — J1'in evi. Tek ekran, kaydırmasız; her kart bir ÖZET ve tek
-         bir "→ alan sayfası" bağı taşır. Detay burada YOK: detayın yeri alan sayfası. -->
-    <section class="page active" id="page-genel"></section>
+    <!-- ① BUGÜN — J1'in evi. Tek ekran, kaydırmasız; her kart bir ÖZET ve tek
+         bir "→ yüzey · bölüm" bağı taşır. Detay burada YOK: detayın yeri yüzeydir. -->
+    <section class="page active" id="page-bugun"></section>
 
-    <!-- 2 · VERİ SAĞLIĞI — evren/tazelik → canlı akış → hattın iç sağlığı. -->
-    <section class="page" id="page-veri">
-      <div class="alan-bas"></div>
-      <!-- PİYASA = izlenen evrenin TAMAMI tek bakışta. Her sayı EOD kapanış verisidir,
-           canlı fiyat DEĞİL: son seans başlıkta yazar, barı geride kalan semboller
-           adıyla sayılır. -->
-      <div class="alan-bolum" id="page-market"></div>
-      <!-- INTRADAY'İN AKIŞ YARISI (S2R-2): marketstream + dayanıklı tetik + Redis +
-           seans-içi boşluk taraması. Emir/silahlama yarısı Portföy'e gitti. -->
-      <div class="alan-bolum" id="page-intraday"></div>
-      <!-- Eski Operasyon'un veri kolu: karantina, bütünlük dedektörleri, defter
-           sözleşmesi, eleme muhasebesi, sıcak katman, sağlayıcı adaptörleri. -->
-      <div class="alan-bolum" id="page-veriboru"></div>
-    </section>
-
-    <!-- 3 · KOŞU & DÖNGÜ — gecenin ÇIKTISI önce, o çıktıyı üreten kapı sonra. -->
-    <section class="page" id="page-kosu">
+    <!-- ② KARAR — "ne önerildi, neden geçti/geçmedi, ne oldu?" TEK ZİNCİR:
+         adaylar → kapı → onay → kitap → mutabakat → seans-içi emir → birikim. -->
+    <section class="page" id="page-karar">
       <div class="alan-bas"></div>
       <!-- ADAYLAR = kanıt (kurulum × rejim matrisi) + sistemin ÖNERDİĞİ + elenenler.
            Matris burada süs değil kararın DAYANAĞI: bir adayın kurulumu bu rejimde
-           bugüne dek ne verdi? Onay kuyruğu S2R-2'de Portföy'e taşındı. -->
+           bugüne dek ne verdi? -->
       <div class="alan-bolum" id="page-adaylar">
         <div id="plotmap"></div>
         <div id="adaylar-now" style="margin-top:var(--s12)"></div>
@@ -1736,14 +1734,10 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
       <!-- Eski Operasyon "Bölüm 2 · Risk & rejim kapıları": rejim bütçesi, karartma
            radarı, uyuyan kurulumlar, plan başına karar ağacı matrisi. -->
       <div class="alan-bolum" id="page-kapilar"></div>
-    </section>
-
-    <!-- 4 · PORTFÖY & EMİRLER — kitap → onay kuyruğu → mutabakat → seans-içi emir → birikim. -->
-    <section class="page" id="page-portfoy">
-      <div class="alan-bas"></div>
-      <div class="alan-bolum" id="page-brifing"><div id="bugun-now"></div></div>
-      <!-- ONAY KUYRUĞU (S2R-2): ADR'deki evi burası; S2R-1'de `#page-adaylar`ın içindeydi. -->
+      <!-- ONAY KUYRUĞU (S2R-2): S2R-1'de `#page-adaylar`ın içindeydi; artık kapıdan
+           HEMEN SONRA — "senden ne isteniyor" zincirin üçüncü halkası. -->
       <div class="alan-bolum" id="page-onaylar"></div>
+      <div class="alan-bolum" id="page-brifing"><div id="bugun-now"></div></div>
       <!-- Eski Operasyon "Bölüm 1 · Mutabakat masası" — sessiz hattın `emir reddedildi`
            çipi buraya (`#failsub`) iner. -->
       <div class="alan-bolum" id="page-mutabakat"></div>
@@ -1752,7 +1746,30 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
       <div class="alan-bolum" id="page-performans"></div>
     </section>
 
-    <!-- 5 · ÖĞRENME — en büyük sadeleşme. ADR hiyerarşisi birebir:
+    <!-- ③ SAĞLIK — "bir şey bozulduysa ne yapmalıyım?" ÖNCE alarm (olay yüzeyleri
+         buradan açılır), sonra gece hattının çizelgesi, sonra hattın iç sağlığı,
+         izlenen evren ve seans-içi akış. TASK ③'ün iki sayfaya yayılan yolu kapandı. -->
+    <section class="page" id="page-saglik">
+      <div class="alan-bas"></div>
+      <!-- ALARM GELEN KUTUSU + bütçe + kadans nabzı + olay günlüğü. Her alarm satırı
+           bir OLAY YÜZEYİ açar (tam çekmece) — runbook.html buraya emildi. -->
+      <div class="alan-bolum" id="page-operasyon"></div>
+      <!-- CANLI ZAMAN ÇİZELGESİ (D2-b · C1#4) — `workflow.html`in halefi. Statik boru
+           hattı resmi yerine gece hattının ADIMLARI + bekçinin ölçtüğü gecikme. -->
+      <div class="alan-bolum" id="page-cizelge"></div>
+      <!-- Eski Operasyon'un veri kolu: karantina, bütünlük dedektörleri, defter
+           sözleşmesi, eleme muhasebesi, sıcak katman, sağlayıcı adaptörleri. -->
+      <div class="alan-bolum" id="page-veriboru"></div>
+      <!-- PİYASA = izlenen evrenin TAMAMI tek bakışta. Her sayı EOD kapanış verisidir,
+           canlı fiyat DEĞİL: son seans başlıkta yazar, barı geride kalan semboller
+           adıyla sayılır. -->
+      <div class="alan-bolum" id="page-market"></div>
+      <!-- INTRADAY'İN AKIŞ YARISI (S2R-2): marketstream + dayanıklı tetik + Redis +
+           seans-içi boşluk taraması. Emir/silahlama yarısı ②'de. -->
+      <div class="alan-bolum" id="page-intraday"></div>
+    </section>
+
+    <!-- ④ ÖĞRENME — en büyük sadeleşme. ADR hiyerarşisi birebir:
          karne → gölge kollar → bileşen-IC(+EB) → beyin/sprint → hipotez defteri →
          beceriler → dersler. -->
     <section class="page" id="page-ogrenme">
@@ -1770,13 +1787,7 @@ footer .disc{max-width:640px;margin:10px auto 0;line-height:1.75}
       <div class="alan-bolum" id="page-hafiza"></div>
     </section>
 
-    <!-- 6 · GÖZETİM & ALARMLAR — alarm gelen kutusu, bütçe, kadans nabzı, olay günlüğü. -->
-    <section class="page" id="page-gozetim">
-      <div class="alan-bas"></div>
-      <div class="alan-bolum" id="page-operasyon"></div>
-    </section>
-
-    <!-- 7 · KİLİTLER & YAPILANDIRMA — kollar önce (acil olan), yapılandırma sonra. -->
+    <!-- ⑤ KİLİTLER — kollar önce (acil olan), yapılandırma sonra. -->
     <section class="page" id="page-kilitler">
       <div class="alan-bas"></div>
       <!-- MÜDAHALE KADEMELERİ (S2R-2): üst bardaki KRİZ kapağı ve ⌘K KALIR; kollar

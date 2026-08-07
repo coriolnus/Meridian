@@ -102,7 +102,10 @@ def test_izgara_YALNIZ_cakisan_iki_sayfada():
     büyütürdü; Genel Bakış'ın kendi altı kartı zaten aynı soruların 60 saniyelik hâli."""
     m = re.search(r'const DURUM_SAYFALARI = new Set\(\[([^\]]*)\]\);', APPJS)
     assert m, "DURUM_SAYFALARI tanımlı değil"
-    assert sorted(re.findall(r'"(\w+)"', m.group(1))) == ["kosu", "portfoy"]
+    # ÇİVİ TAŞINDI (D2-b): çakışan İKİ sayfa BİRLEŞTİ (kosu+portfoy → karar), yani ızgaranın
+    # var oluş sebebi olan çakışma KÖKÜNDEN kapandı ve `durumIzgarasiCiz` çağrısı ikiden bire
+    # indi. Kural aynı kural ve bir kademe SERTLEŞTİ: ızgara TEK yüzeyde çizilir.
+    assert sorted(re.findall(r'"(\w+)"', m.group(1))) == ["karar"]
 
 
 def test_izgara_TEK_yerde_uretilir():
@@ -214,8 +217,14 @@ def test_olculmeyen_alan_sifir_yazmaz():
     g = _govde("function _durumEmirKarti(", "\n// ---- ④ POZİSYONLAR")
     assert "dl.n_dolan == null" in g, "dolan emir ölçülemediğinde tire yerine sayı basılıyor"
     assert "slp.durum" in g, "ölçüm yoksa SEBEP basılmıyor — uydurma boşluk"
-    assert "rc.stream_ok" in g and "akis == null" in g, \
+    # ÇİVİ TAŞINDI (D2-b · P5 tekilleştirmesi): akışın DEĞERİ artık bu kartta yazmıyor —
+    # tek evi mutabakat masası. Kart yalnız ANOMALİ hâlinde konuşur, çünkü o zaman cümle
+    # taşıdığı "kopuk" rozetinin gerekçesidir. Ölçülen şey aynı kaldı: üçüncü hâl (hiç kanıt
+    # yok) KOPUK ile aynı kovaya DÜŞMEZ — `akis === false` üçlü ayrımı koruyan tek testtir.
+    assert "rc.stream_ok" in g and "akis === false" in g, \
         "akış üçüncü hâli (hiç kanıt yok) KOPUK ile aynı kovaya düşüyor"
+    assert "mutabakat masasında (tek ev)" in g, \
+        "P5 tekilleştirmesi geri alınmış — akışın değeri ikinci kez yazılıyor"
 
     g = _govde("function _durumPozisyonKarti(", "\n// Etkin stop =")
     assert "isiOlculdu" in g and "ölçülemedi" in g, \

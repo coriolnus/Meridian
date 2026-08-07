@@ -167,6 +167,13 @@ h1{font-family:var(--display);font-weight:600;letter-spacing:-.022em;line-height
 header{max-width:1240px;margin:0 auto var(--s6)}
 header h1{font-size:clamp(24px,3.4vw,28px);color:var(--tx)}
 header p{color:var(--tx2);font-size:13px;margin-top:var(--s3);line-height:1.7;max-width:72ch}
+/* EMEKLİLİK NOTU (D2-b): kendi hue'su YOK — bu sayfanın kodladığı her şey siluetle taşınıyor
+   ve bir yönlendirme bir ölçüm değildir. Ayrımı hairline çerçeve ve bir kademe zemin taşır. */
+.tasindi{border:1px solid var(--line);background:var(--bg2);padding:14px 18px;
+         margin-top:var(--s4);border-radius:10px;max-width:72ch}
+.tasindi p{margin:6px 0}
+.tasindi p:first-child{margin-top:0}
+.tasindi p:last-child{margin-bottom:0}
 /* a version stamp: mono, ruled, square-ish — an identifier, not a badge */
 .yeni{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;
   color:var(--tx2);background:var(--card-2);border:1px solid var(--line-2);border-radius:var(--r-ctl);
@@ -286,7 +293,27 @@ svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 </head>
 <body>
 <header>
-  <h1>Meridian · Günlük Karar Hattı <span class="yeni">2026-07-20 SÜRÜMÜ</span></h1>
+  <h1>Meridian · Günlük Karar Hattı <span class="yeni">EMEKLİ</span></h1>
+  <!-- ======================================================================================
+    EMEKLİ (D2-b, 2026-08-07 — yön belgesi §1). Bu sayfa STATİK BİR RESİMDİ ve resmin
+    cevapladığı soru ("gece hattı neden geçiyor?") artık CANLI ENSTRÜMANLA cevaplanıyor:
+    pano → ③ Sağlık → "Gece hattı · canlı zaman çizelgesi" (`saglik#cizelge`).
+
+    ÖLÇÜLEN GEREKÇE: panodan SIFIR iç bağ alıyordu (baseline §3.3) ve gösterdiği her nicel
+    iddia elle yazılmıştı — bir resim bayatladığında bunu kimseye söylemez, bir enstrüman
+    söyler. Adımların YAPISI çizelgeye taşındı; sayıları BİLEREK taşınmadı (canlı karşılıkları
+    kendi bölümlerinde yaşıyor).
+
+    NEDEN SİLİNMEDİ: silme D5'in işi ve orada bağ denetimiyle birlikte yapılır. Bu tur yalnız
+    yönlendirme bırakır — dışarıda kalmış bir yer imi kırık bağa düşmesin diye.
+  ======================================================================================= -->
+  <div class="tasindi" role="note">
+    <p><b>Bu şema emekli oldu; içeriği panonun canlı zaman çizelgesine taşındı.</b>
+      Aşağıdaki resim <b>2026-07-20 sürümüdür</b> ve o günden beri tazelenmiyor — sayılarını
+      güncel sanma.</p>
+    <p>Canlı hâli: <a href="/#saglik">③ Sağlık → Gece hattı · canlı zaman çizelgesi →</a>
+      (her adımın yanında bekçinin ÖLÇTÜĞÜ gecikme durur).</p>
+  </div>
   <p>Kapanış sonrası tek döngünün tam akışı — bugünkü darboğaz turunda eklenen mekanizmalar
   <span class="yeni">YENİ</span> rozetiyle işaretli. Düğüme tıkla: yalnız o düğümün bağlantıları kalır;
   boşluğa tıkla: sıfırla. Üzerine gel: ayrıntı.</p>

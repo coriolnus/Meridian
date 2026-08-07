@@ -325,3 +325,130 @@ yüzey de, bitişip var olmayan ada dönüşen giriş de kırmızı verir.
 - **Kalan ham px boşluk değerleri app.js'te duruyor** (kart İÇİ `margin-top:8px/10px` gibi
   satırlar). Bu tur BLOK ritmini kapattı; kart-içi mikro ritim ayrı bir tur ve ayrı bir ölçüm
   ister — ikisini aynı commit'e koymak, kırılma hâlinde hangisinin kırdığını ölçülemez kılardı.
+
+---
+
+# Ek D — **S2R-4 REVİZYONU: yedi sayfa → beş yüzey** (D2-b, 2026-08-07, uygulandı)
+
+**Statü:** bu ek, yukarıdaki "Hedef IA (12 görünüm → 1+6+detay)" bölümünü **yürürlükten
+kaldırır**. Üstteki metin tarihsel kayıt olarak yerinde bırakılmıştır (S2R-1/2/3'ün gerekçeleri
+oradan okunur); **bağlayıcı IA artık `docs/TASARIM-YONU-2026-08-07.md` §3'tür.**
+
+## D.1 · Hangi sayfa neden birleşti
+
+| Yeni yüzey | Birleşen | Ölçülen gerekçe |
+|---|---|---|
+| **① Bugün** | `genel` (yeniden adlandırıldı) | Ad, ekranın işini söylemiyordu: "Genel Bakış" bir kap adı, "Bugün" bir iştir. Kart kompozisyonu ve altı-kart bütçesi AYNEN korundu. |
+| **② Karar** | `kosu` + `portfoy` | Durum ızgarası (`DURUM_SAYFALARI`) **tek tanımdı, iki sayfada çiziliyordu** — v191 çakışmayı bir bantla örtmüş, kökünü çözmemişti. Birleşme `durumIzgarasiCiz` çağrısını **ikiden bire** düşürdü ve "aynı sayı iki sayfada" sınıfını yapısal olarak kapattı. |
+| **③ Sağlık** | `veri` + `gozetim` | TASK ③'ün (alarmdan nedene ve dispozisyona) ölçülen yolu **iki sayfaya** yayılıyordu (denetim B12). Birleşme alarm → ihlal → veri kaynağı zincirini tek yüzeyde tutar. |
+| **④ Öğrenme** | (değişmedi) | 39 kart taşıyor ve hiçbiri diğer dört yüzeyin sorusuna hizmet etmiyor. Çözümü birleşme değil **katlama** (v198 kart sözleşmesi). |
+| **⑤ Kilitler** | (değişmedi) | Adı kısaldı; kapsamı aynı. |
+
+**Sıra sözleşmesi korundu ve genişledi:** ② içinde zincir *ne önerildi → neden geçti/geçmedi →
+senden ne isteniyor → ne oldu → aynaya ulaştı mı → seans-içi → birikim*; ③ içinde *önce bozulan →
+hattın çizelgesi → hattın iç sağlığı → evren → akış*. Sıra `ALAN_BOLUMLERI` + `index.html` DOM
+dizilimi + `palette.js` tablosunda **üç yerde aynı** ve test onu üçünde birden karşılaştırıyor.
+
+## D.2 · Ölçülen kart sayıları (D2-a yöntemi, aynı betik)
+
+| Yüzey | Toplam kart | Kapaklı | Bütçe | Not |
+|---|---|---|---|---|
+| ② Karar | **21** (kosu 4 + portfoy 17) | 3 | 6 | kart TAŞINDI, doğmadı |
+| ③ Sağlık | **14** (veri 9 + gozetim 3 + çizelge 2) | 4 | 6 | +2 doğan kart: canlı zaman çizelgesi |
+| ④ Öğrenme | 39 | 18 | 6 | değişmedi |
+| ⑤ Kilitler | 5 | 0 | 5 | değişmedi |
+
+**Bütçeler toplanmadı, taşındı.** Bir okurun bir ekranda tutabildiği kart sayısı iki yüzey
+birleşti diye ikiye katlanmaz; toplamak (4+6=10, 6+3=9) sözleşmeyi birleşmenin kendisiyle
+gevşetmek olurdu. Aşım gizlenmez: `.kk-butce` satırında **sayıyla** ve **şiddet rengi taşımadan**
+yazılır (renk yalnız anomalide).
+
+## D.3 · "BAŞKA HİÇBİR ŞEY" kuralının triyaj şeridi lehine revizyonu
+
+S2R-1'in ADR'si ① için *"altı kart ve BAŞKA HİÇBİR ŞEY"* diyordu; triyaj şeridi bu yüzden ①'e
+alınmamıştı. **Yön belgesi §3 şeridi açıkça ①'e yerleştiriyor** ("sessiz-hat · triyaj şeridi ·
+son döngü · kitap · alarm bütçesi"). Revizyonun gerekçesi ölçüldü, tercih değil:
+
+- Şerit bir KART DEĞİLDİR — `<main>`in ilk çocuğudur ve **her yüzeyde aynı yerde** durur; kart
+  bütçesini yemez (ölçüm: `.gb-kart` sayımı 6'da kalır, test onu sayıyor).
+- Şeridin cevapladığı soru ("şu an senden bir şey bekleniyor mu?") ①'in soru cümlesinin
+  **üçüncü yarısıdır** ("benden ne bekleniyor?"). Kural bu yüzden şöyle daraldı:
+  **① yeni bir KART almaz; şerit ve sessiz hat kart değildir.**
+
+## D.4 · Geri uyum — 17/17 alias, iki sınıf
+
+`ROUTE_ALIAS` artık **iki sınıf** taşır ve ikisi de "eski adres"tir:
+
+| Sınıf | Girdi | Neden |
+|---|---|---|
+| (a) **bölüm aliası** — 12 | eski on iki görünüm adı | bugün birer `.alan-bolum`; kabı gerçekten hedef yüzeyin içinde |
+| (b) **sayfa aliası** — 5 | `genel · kosu · portfoy · veri · gozetim` | kabı YOK (yüzeyi birleşti); `kosu#adaylar` / `portfoy#mutabakat` / `gozetim#failsub` / `veri#veriboru` biçimindeki her eski derin adres bununla çözülür |
+
+`go()` çapayı **önce** ayırır, alias'ı **sonra** uygular — sıra bozulursa `portfoy#mutabakat`
+hiç çözülmez ve `test_ia_v199::test_eski_derin_adresler_capasiyla_birlikte_cozulur` bunu çiviler.
+**Pano kendi içinde YENİ adres dilini konuşur:** alias bir geçiş katmanıdır, ikinci bir dil değil
+(ayrı test).
+
+## D.5 · Olay yüzeyleri (Tier-4) ve `runbook.html`in emilmesi
+
+`runbook.html` **birincil teşhis yüzeyi olmaktan çıktı**. İçeriği panonun olay yüzeylerine
+emildi: ③ Sağlık → alarm satırı → `teşhis ↗` → **tam çekmece**, dört bölümlü ve sırası sabit:
+*1 · ne oldu · 2 · değerler ŞİMDİ ne · 3 · runbook adımları · 4 · mevcut eylemler.*
+
+- **Yeni bileşen yok:** aynı `openDrawer` kapısı, aynı odak tuzağı, aynı Esc sözleşmesi.
+- **Tek emir-yolu korundu:** "mevcut eylemler" yalnız kolun gerçekten yaşadığı bölüme *götürür*;
+  çekmecede HALT/FLATTEN düğmesi YOKTUR (test bunu yasaklıyor).
+- **Uydurma yasağı:** `docs/RUNBOOK.md` çoğu jeton için "runbook girdisi henüz yazılmadı" diyor
+  ve yüzey o boşluğu **doldurmaz, adıyla yazar**. Ölçülemeyen değer `0` basmaz.
+- **12/12 jeton kapsandı:** altı sınıf (`besleme · mutabakat · kill · butunluk · yetki · kota`)
+  `obs.py`nin on iki jetonunun **hepsini** ve yalnız onları taşıyor; jeton→sınıf haritası
+  **türetilir**, elle yazılmaz.
+- **Dosya SİLİNMEDİ:** derin çapa bağları (`/runbook#mirror_drift`) dışarıda yer imi olabilir.
+  Sayfa "içerik panoya taşındı" yönlendirmesi bıraktı ve `<!--RUNBOOK-TOC-->` /
+  `<!--RUNBOOK-GOVDE-->` yer tutucuları korundu (`api.py::runbook()` onları arıyor). **Silme
+  D5'te, bağ denetimiyle.**
+
+## D.6 · `workflow.html` emekli — halefi ③'ün canlı zaman çizelgesi
+
+Statik boru-hattı resmi panodan **sıfır iç bağ** alıyordu (baseline §3.3) ve gösterdiği her nicel
+iddia elle yazılmıştı. Halefi `saglik#cizelge`: hattın **adımları** (`HAT_ADIMLARI`, liste-veri)
++ bekçinin **ölçtüğü** gecikme. Dürüstlük sınırı yazılı: bekçi raporu yalnız GECİKENLERİ
+adlandırır, penceresinde olanlar bir SAYIdır — bu yüzden "bu adım 03:12'de koştu" **yazmıyor** ve
+uydurulmuyor da; damgaların uca açılması D3-UI'ın kalemi. Bekçinin **her** mekanizmasının
+çizelgede bir evi var (test `watchdog.EXPECTED`ten okuyup karşılaştırıyor).
+
+## D.7 · Tekilleştirilen yinelenen çiftler (baseline §2)
+
+| # | Soru | Ne yapıldı | Tek ev |
+|---|---|---|---|
+| P1 | Emir aynaya ulaştı mı? | İki biçim (rozet · oran çubuğu) artık **aynı yüzeyde** ve aralarında adres var | sayı: ③ EMİRLER kartı · satır kimliği: "Sıradaki seans" tablosu |
+| P2 | Alarm bütçesi aşıldı mı? | **Bırakıldı** — özet(①, tek satır + adres) ile kırılım(③) farklı mertebedir, kopya değil | ③ `operasyon` |
+| P3 | Bekçiler ne durumda? | **HUD çipi kaldırıldı** | sessiz hat `bekçiler` segmenti (adlarıyla) + ③ `cizelge` (17 mekanizma) |
+| P4 | Nabız taze mi? | **Ray özetinden kaldırıldı** | `#statuspill` (yaşıyla) + sessiz hat `veri` segmenti |
+| P5 | WS akıyor mu? | Durum kartı artık **yalnız anomalide** konuşur (rozetin gerekçesi), sağlıklı hâlde adres verir | ② `mutabakat` masası satırı |
+| P6 | Ayna sapması var mı? | **Ray özetinden ve Ayarlar kartından kaldırıldı** (ikincisi adres verir) | ② `mutabakat` masası |
+| P7 | Sistem durduruldu mu? | **Ray özetinden kaldırıldı** (dördüncü kopyaydı) | banner `#statuspill` · alarm: triyaj şeridi (koşullu) · kol: ⑤ `mudahale` |
+| P8 | Hangi kesitte kaç işlem? | **Bırakıldı** — matris hücresi ile satır listesi aynı bölümde, farklı kesit | ④ `karne` |
+| P9 | Bugün ne bekliyor? | Şeridin **ölü kolu silindi** (N1: `autonomy_level >= 1` L0'da hiç ateşlemedi ve `pending_count` yanlış adlandırılmıştı) | ① "Bugün ne var" kartı (`inbox_count` + REVIEW) |
+| P10 | Otonomi seviyesi ne? | **`.acct` kutusundan kaldırıldı**, ⑤'in ray özetine taşındı (mod satırı kaldı — Dalga-0 hükmü) | `#statuspill` + ⑤ ray özeti |
+
+## D.8 · Test çivileri — taşındı, sökülmedi
+
+`docs/UX-SADELESTIRME-DENETIMI-2026-08-06.md` §7.3 maliyeti **23 test fonksiyonu / 6 dosya**
+diye ölçmüştü. Fiilî: **7 dosyada 34 fonksiyon** yeniden ifade edildi (üçü ölçüm dışıydı:
+`test_pano_palet_v152`, `test_pano_turu_v139`, `test_v195a_quickwin`) + **yeni
+`tests/test_ia_v199.py` (25 test)**. Hiçbir çivi zayıflatılmadı; her biri yeni gerçekle yeniden
+yazıldı ve gerekçesi test gövdesinde duruyor (*"ÇİVİ TAŞINDI …"* deseni).
+
+Ayrıca `research/olcumler/kart_sozlesmesi_2026-08-07/say_kart.py` artık `ALAN_BOLUMLERI`yi
+**app.js'ten türetiyor**: ikinci bir elle liste, IA değiştiği gün ölçüm betiğini `KeyError`e
+düşürdü — ölçümün yöntemi değil, girdisinin kaynağı düzeltildi.
+
+## D.9 · Yapılmadı, bilerek
+
+- **Kart silme yok.** D2-a'nın "kapak almayan bölümler" kuyruğu (Öğrenme'nin 21 kartı, ②'nin 14
+  kartı) yerinde; silme bir İÇERİK kararıdır ve D3-UI'ın kalemi.
+- **Çizelgenin adım-başına DAMGASI bağlanmadı** — uçta yok (yalnız gecikenler adlandırılıyor).
+  D3-UI'a devredildi; bu turda yüzey ve yerleşim kuruldu, sayı uydurulmadı.
+- **Yazı tipi ve tipografi değişmedi** (Geist, D4'ün kalemi). `runbook.html` ve `workflow.html`in
+  kendi jeton blokları ve type-ramp sapmaları da bu yüzden yerinde — ikisi D5'te siliniyor.

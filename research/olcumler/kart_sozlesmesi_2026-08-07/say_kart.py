@@ -40,16 +40,17 @@ from pathlib import Path
 KOK = Path(__file__).resolve().parents[3]
 APPJS = KOK / "meridian" / "web" / "app.js"
 
-# Alan sayfası → bölümler. app.js'teki `ALAN_BOLUMLERI` ile BİREBİR; ayrışırsa test kırmızıya döner
-# (test_kart_sozlesmesi_v198.py aynı tabloyu kaynaktan okuyup karşılaştırır).
-ALAN_BOLUMLERI = {
-    "veri":     ["market", "intraday", "veriboru"],
-    "kosu":     ["adaylar", "kapilar"],
-    "portfoy":  ["brifing", "onaylar", "mutabakat", "intraemir", "performans"],
-    "ogrenme":  ["karne", "golge", "bilesenic", "hermes", "ajan", "skiller", "hafiza"],
-    "gozetim":  ["operasyon"],
-    "kilitler": ["mudahale", "ayarlar"],
-}
+# Yüzey → bölümler. KAYNAKTAN TÜRETİLİR (D2-b, 2026-08-07): eskiden bu tablo burada ELLE
+# duruyordu ve app.js'in `ALAN_BOLUMLERI`si ile "birebir olmalı" diye BEYAN ediliyordu. IA
+# değiştiği gün beyan yalanlandı ve ölçüm betiği var olmayan sayfaları saymaya çalıştı
+# (KeyError). İkinci bir liste tutmanın bedeli budur; artık tek kaynak app.js'in kendisi.
+# Ölçümün YÖNTEMİ değişmedi — yalnız girdisi artık ölçtüğü şeyden okunuyor.
+def _alan_bolumleri(kaynak: str) -> dict[str, list[str]]:
+    blok = re.search(r"const ALAN_BOLUMLERI = \{(.*?)\n\};", kaynak, re.S)
+    if not blok:
+        raise SystemExit("app.js'te ALAN_BOLUMLERI bulunamadı — ölçüm girdisi yok")
+    return {alan: re.findall(r'"(\w+)"', liste)
+            for alan, liste in re.findall(r"^\s*(\w+):\s*\[([^\]]*)\]", blok.group(1), re.M)}
 PAYLASIMLI = {"opParcalar", "intraParcalar"}
 _TANIM = re.compile(
     r"^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)"
@@ -100,7 +101,9 @@ def _parca_haritasi(satirlar, bloklar, fn):
 
 
 def olc(kaynak: str | None = None):
-    satirlar, bloklar = _yukle(kaynak)
+    metin = kaynak if kaynak is not None else APPJS.read_text()
+    ALAN_BOLUMLERI = _alan_bolumleri(metin)
+    satirlar, bloklar = _yukle(metin)
     OP = _parca_haritasi(satirlar, bloklar, "opParcalar")
     INTRA = _parca_haritasi(satirlar, bloklar, "intraParcalar")
     adlar = set(bloklar)
@@ -191,7 +194,13 @@ def main():
     fazla = sorted(set(kullanim) - set(kayit))
     if fazla:
         print("KULLANILIYOR AMA KAYITSIZ (kapak almaz):", ", ".join(fazla))
-    hedef = Path(__file__).resolve().parent / "kart_sayimi.json"
+    # ÇIKTI YOLU ARTIK ARGÜMAN (D2-b, 2026-08-07). Sabit yol, betiği ikinci kez koşan her turun
+    # ÖNCEKİ TURUN FOTOĞRAFINI EZMESİ demekti — ve tam olarak bu oldu: D2-b koşumu D2-a'nın
+    # `kart_sayimi.json`unu üstüne yazdı (D2-a'nın insan-okur kaydı `kart_sayimi.txt`te ve ADR
+    # Ek D.2 tablosunda duruyor; JSON `git checkout` ile geri alınabilir). Bir ölçüm artefaktı
+    # dönemine ait olmalı: yol verilmezse eski davranış korunur, verilirse tur kendi dosyasına yazar.
+    hedef = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent / "kart_sayimi.json"
+    hedef.parent.mkdir(parents=True, exist_ok=True)
     hedef.write_text(json.dumps({"sayfa": sonuc, "kayit": kayit, "kullanim": kullanim},
                                 ensure_ascii=False, indent=1))
     print(f"\nyazıldı: {hedef}")

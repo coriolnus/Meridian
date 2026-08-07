@@ -336,7 +336,9 @@ def test_palet_bolum_tablosu_ALAN_BOLUMLERI_ile_BIREBIR():
     assert olculen == beklenen, (
         "palet bölüm tablosu ALAN_BOLUMLERI'nden ayrışmış:\n"
         f"  palet: {olculen}\n  app.js: {beklenen}")
-    assert len(olculen) == 20, f"yirmi bölüm beklenirken {len(olculen)}"
+    # D2-b: yirmi birinci bölüm `cizelge` (workflow.html'in halefi) girdi. Sayı ÇİVİLİ kalır —
+    # bir bölümün paletten sessizce düşmesi, o odanın haritadan silinmesi demektir.
+    assert len(olculen) == 21, f"yirmi bir bölüm beklenirken {len(olculen)}"
     assert set(sayfa_adi) == set(_alan_bolumleri()), "sayfa adları eşlemesi ayrışmış"
 
 
@@ -385,8 +387,8 @@ def test_kisayol_paneli_BOLUM_CAPASINI_anlatiyor():
     """`?` haritası panonun tek keşif yüzeyi. Yirmi bölüme ⌘K ile gidilebildiği orada yazmıyorsa
     özellik fiilen yok: kimse denemez (Nielsen İ6 — hatırlamaya zorlama)."""
     panel = _govde('ov.innerHTML = `<div class="kbd-panel">', "\n  ov.addEventListener")
-    assert "yirmi bölüm" in panel, "kısayol panelinde bölüm kapsamı yazılı değil"
-    assert "portfoy#mutabakat" in panel, "bölüm çapası biçimi örneklenmemiş"
+    assert "yirmi bir bölüm" in panel, "kısayol panelinde bölüm kapsamı yazılı değil"
+    assert "karar#mutabakat" in panel, "bölüm çapası biçimi örneklenmemiş"
 
 
 # =================================================================================================
