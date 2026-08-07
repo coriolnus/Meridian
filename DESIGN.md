@@ -39,6 +39,31 @@ typography:
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "-0.011em"
+  compact:
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.45
+    letterSpacing: "-0.008em"
+  small:
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: "-0.005em"
+  micro:
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.35
+    letterSpacing: "0em"
+  grid-figure:
+    fontFamily: "'Recursive Mono', ui-monospace, SFMono-Regular, monospace"
+    fontSize: "24px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "-0.03em"
+    fontFeature: "tabular-nums"
   label:
     fontFamily: "'Recursive Mono', ui-monospace, SFMono-Regular, monospace"
     fontSize: "10px"
