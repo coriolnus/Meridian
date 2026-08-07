@@ -486,6 +486,11 @@ _SERIT_BOLGELERI = {
     "adaylar":               ("RENDER.adaylar = async () => {", "\nfunction planRowFull(p) {"),
     "kapilar · s2":          ("  const s2Ozet = ozetSerit([", "\n  const s2 = "),
     "mutabakat · sIcra":     ("    const _ozet = ozetSerit([", "\n    return `${bas}${_ozet}"),
+    # BEŞİNCİ BÖLGE (v207, 2026-08-07) — Eksen-2 üretecinin "0 üretildi"si. Dört paydasız sayı
+    # (`0 üretildi · 0 kaydedildi · 0 bekleyen · 0 otomatik uygulandı`) bir BAŞARISIZLIK gibi
+    # okunuyordu; oysa ölçüm KANIT YOKLUĞU diyor (67 skillin 60'ı gerçek katmanda hiç ölçülmemiş).
+    # Deftere yazılmasının bedeli aşağıdaki payda denetimidir — `_EKSEN2_PAYDALARI`.
+    "ogrenme · eksen2":      ("    const eksen2Blok = (() => {", "\n      const miDetay = "),
 }
 
 
@@ -647,6 +652,103 @@ def test_dort_bolumun_ozet_seridi_var_ve_TIKLANMAZ():
     assert KOD.count('role="group" aria-label="${esc(adlandirma)}"') == 1
     for g in (_govde(*v) for v in _SERIT_BOLGELERI.values()):
         assert re.search(r"\], \"[^\"]+\"\)", g), "şerit adlandırılmadan kuruluyor"
+
+
+# -------------------------------------------------------------------------------------------------
+# BEŞİNCİ ŞERİDİN PAYDA DENETİMİ (v207) — defterin VARLIK SEBEBİ
+# -------------------------------------------------------------------------------------------------
+# `_SERIT_BOLGELERI`ne bir satır eklemek bir kauçuk damga DEĞİLDİR: yukarıdaki testin kendi hükmü
+# "o yüzeyin de paydalarının denetlenmesi gerekir" der. Beşinci şerit Eksen-2 üretecinin dört
+# sayısını taşıyor ve dördünün paydası AYNI DEĞİL — bu denetim tam olarak o farkı çiviler.
+#
+# ÖLÇÜLEN AYRIM (v207 raporu): üretimin paydası KATALOG DEĞİLDİR. Canlıda 67 skillin 60'ı gerçek
+# katmanda hiç ölçülmemiş, 5'i motor içi; hüküm verilebilen 2. "0/67" üretecin altmış yedi skilde
+# başarısız olduğunu söylerdi — oysa altmış beşinde ölçüm YOK, yani hüküm kurulamaz. Payda 2'dir.
+_EKSEN2_PAYDALARI = {
+    # hücre adı → (oran ifadesi, payda ifadesi). İkisi de KAYNAKTAN çivilenir: payda metnini
+    # sunucu kurup istemci geçiriyorsa (hücre 1) o da burada yazılı olmalı, yoksa payda sessizce
+    # başka bir sayıya kayabilir ve çubuk aynı görünmeye devam eder.
+    "Kanıt tabanı":   ("oran: olculemedi ? null : oz.oran",
+                       'payda: olculemedi ? "" : oz.payda'),
+    "Üretilen öneri": ("oran: paydaVar && uretilen != null ? Math.min(1, uretilen / oz.olculen) : null",
+                       'payda: paydaVar ? `hüküm verilebilen skill (${trn(oz.olculen)})` : ""'),
+}
+# PAYDASI OLMAYAN İKİ HÜCRE — ve paydasızlıkları BİLEREK. `hucreCubuk` paydasız çubuk çizmez;
+# burada bir adım daha ileri gidilir: bu iki hücre `oran` DA vermez, yani uydurma bir tavana
+# göre doluluk çizme ihtimali kaynakta kapalıdır.
+#   bekleyen öneri     → kuyruğun tavanı YOKTUR (kaç öneri "tam" sayılır? tanımsız).
+#   motor-içi aşan     → yükte motor-içi skill sayısı yoktur; `korumali` kovası PROTECTED'tır,
+#                        ENGINE_IMPLEMENTED ile aynı küme DEĞİL — payda uydurmak olurdu.
+_EKSEN2_PAYDASIZ = ("Bekleyen öneri", "Motor-içi eşiği aşan")
+
+
+def _hucre_dilimi(bolge: str, ad: str) -> str:
+    """`ozetHucre("<ad>", { … })` çağrısının nesne gövdesi (ayraç yürüyüşü — iç virgüller yüzünden
+    düz bölme yanlış keser, `_serit_hucre_sayilari` ile aynı gerekçe)."""
+    i = bolge.index(f'ozetHucre("{ad}"')
+    j = bolge.index("{", i)
+    derinlik, k = 0, j
+    while k < len(bolge):
+        c = bolge[k]
+        if c in "([{":
+            derinlik += 1
+        elif c in ")]}":
+            derinlik -= 1
+            if derinlik == 0:
+                return bolge[j:k + 1]
+        k += 1
+    raise AssertionError(f"{ad}: hücre gövdesi kapanmıyor")
+
+
+def test_eksen2_seridinin_DORT_PAYDASI_denetlendi():
+    """Beşinci şeridin bedeli. Çubuk taşıyan iki hücrenin paydası ADIYLA yazılı; taşımayan iki
+    hücre `oran` da vermiyor (paydasızlık bir unutma değil, bir hüküm)."""
+    bolge = _govde(*_SERIT_BOLGELERI["ogrenme · eksen2"])
+    adlar = re.findall(r'ozetHucre\("([^"]+)"', bolge)
+    assert adlar == ["Kanıt tabanı", "Üretilen öneri", "Bekleyen öneri", "Motor-içi eşiği aşan"], adlar
+    for ad, (oran, payda) in _EKSEN2_PAYDALARI.items():
+        g = _hucre_dilimi(bolge, ad)
+        assert oran in g, f"{ad}: oran ifadesi değişmiş — payda denetimi bayatladı\n{g}"
+        assert payda in g, f"{ad}: çubuk paydası beyan edilmiyor (beklenen: {payda})\n{g}"
+    for ad in _EKSEN2_PAYDASIZ:
+        g = _hucre_dilimi(bolge, ad)
+        assert "oran:" not in g and "payda:" not in g, \
+            f"{ad}: paydasız olması gereken hücreye çubuk girmiş — tavanı yok, uydurulamaz\n{g}"
+
+
+def test_uretim_paydasi_KATALOG_DEGIL_hukum_verilebilen():
+    """ÇEKİRDEK AYRIM. Üretim çubuğu katalog sayısına (67) bölünseydi, ölçülmemiş 65 skill
+    üretecin BAŞARISIZLIĞI gibi sayılırdı. Payda hüküm verilebilen skilldir (canlıda 2)."""
+    g = _hucre_dilimi(_govde(*_SERIT_BOLGELERI["ogrenme · eksen2"]), "Üretilen öneri")
+    assert "uretilen / oz.olculen" in g, "üretim oranının paydası `olculen` değil"
+    assert "oz.toplam_skill" not in g, "üretim hücresi KATALOG sayısına bölüyor — 65 ölçülmemiş "\
+                                       "skill başarısızlık sayılır"
+    # Payda 0 ise çubuk HİÇ doğmaz: bölünecek taban yokken doluluk uydurulamaz.
+    assert "paydaVar" in g
+    assert "const paydaVar = !olculemedi && oz.olculen > 0;" in KOD
+
+
+def test_eksen2_seridi_OLCULEMEDI_dalinda_PAYDA_IDDIA_ETMIYOR():
+    """Ölçülemeyen hâlde payda bir İDDİAdır ve iddia edilecek bir şey yoktur: `payda` boş dizgiye,
+    `oran` null'a düşer — `hucreCubuk` ikisinde de çubuk çizmez."""
+    g = _hucre_dilimi(_govde(*_SERIT_BOLGELERI["ogrenme · eksen2"]), "Kanıt tabanı")
+    assert 'payda: olculemedi ? "" : oz.payda' in g
+    assert "oran: olculemedi ? null : oz.oran" in g
+    assert 'rozet: olculemedi ? "ÖLÇÜLEMEDİ" : ""' in g, "ölçülemeyen hâl rozetsiz kalıyor"
+
+
+def test_kanit_tabani_paydasini_SUNUCU_kuruyor():
+    """Payda metni sunucuda kurulur (`api._eksen2_ozeti`) — pano ikinci bir cümle kurmaz, yoksa
+    aynı gerçeğin iki metni doğar ve biri bayatlar (bu deponun tekrar eden kusur sınıfı).
+    Sunucu tarafı da sayıyı UYDURMAZ: payda kova toplamından gelir."""
+    from meridian import api
+    oz = api._eksen2_ozeti({"kovalar": {"gercek_katman_olculmemis": 57, "korumali": 5,
+                                        "gercek_katman_olculmemis_cf_dolu": 3,
+                                        "esik_araliginda": 1, "ornek_yetersiz_cf_de_yetersiz": 1}})
+    assert oz["payda"] == "katalogda beyan edilen skill sayısı (67)"
+    assert oz["oran"] == round(2 / 67, 4), "çubuk oranı payda ile aynı tabandan gelmiyor"
+    # Ölçülemeyen hâlde payda İDDİA EDİLMEZ (None — boş dizgi de değil, 0 hiç değil).
+    assert api._eksen2_ozeti({"kovalar": {}})["payda"] is None
 
 
 def test_ozet_seridi_matrisin_recetesini_tekrar_eder():

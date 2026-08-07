@@ -6028,6 +6028,9 @@ async function opParcalar() {
     // Eski etiket "antrenman (gölge model fit)" ikisini tek şey sanmaya davet ediyordu; canlıda
     // kadans hiç koşmamışken model tazeydi ve kart bunu hiçbir yerde yazmıyordu. Fiilî fit artık
     // ayrı bir satırda (`Son fit`, aşağıda) ve tarihiyle duruyor.
+    // v207 DÜZELTMESİ: rozet DOĞRU okuyordu ama okuduğu damga SİLİNMİŞTİ — kadans 2026-08-06'da
+    // koşup eğitmişti; `ShadowTradeOutcomeModel.save()` üstüne yazarak damgayı yok ediyordu.
+    // Kırmızı rozet artık yalnız GERÇEKTEN damga yokken çıkar; ayrımı `Son deneme` satırı taşır.
     const NABIZ_TR = { shadow_fit: "antrenman KADANSI (seans-sonrası kanca)", axis2_cycle: "Eksen-2 üreteci",
                        opinion_backfill: "kanıt dolgusu kadansı" };
     const nabizRows = Object.entries(nb).map(([k, v]) => {
@@ -6054,11 +6057,106 @@ async function opParcalar() {
         return `<div class="srow"><span>Son fit</span><b class="guven">model hiç kurulmadı — fit kaydı YOK</b></div>`;
       const karar = hk.karar === "EVET" ? '<span class="pos">EVET</span>'
         : (hk.karar === "HAYIR" ? '<span class="warn">HAYIR</span>' : '<span class="mut">ÖLÇÜLEMEDİ</span>');
+      // TARİHİN KAYNAĞI YAZILIR (v207). `kaynak:"kunye"` = fit'in kendi damgası (`fit_ts`) YOK,
+      // tarih kayıt künyesinden ÇIKARILDI. v207 öncesi canlının hâli tam olarak buydu ve ayrımı
+      // yazmayan bir tarih, çıkarımı damga gibi gösterirdi.
+      const kaynakNotu = sf.kaynak === "kunye"
+        ? ' <span class="mut" style="font-size:12px">(fit damgası yok — künyeden)</span>' : "";
       return `<div class="srow"><span>Son fit</span><b>${
-        sf.ts ? esc(String(sf.ts).replace("T", " ").slice(0, 16)) : '<span class="mut">tarih yok</span>'
+        sf.ts ? esc(String(sf.ts).replace("T", " ").slice(0, 16)) + kaynakNotu : '<span class="mut">tarih yok</span>'
         } · n ${sf.n ?? "—"}${sf.n_real != null ? ` (gerçek ${sf.n_real} · cf ${sf.n_cf ?? 0})` : ""}${
         sf.brier_train != null ? ` · Brier ${trn(sf.brier_train, 4)}` : ""} · terfi: ${karar}</b></div>
         ${hk.neden ? `<p class="hint" style="margin-top:-4px">Terfi gerekçesi: ${esc(hk.neden)}</p>` : ""}`;
+    })();
+    // ---- SON DENEME (v207) -------------------------------------------------------------------
+    // FİT ile DENEME AYRI OLGUDUR ve bu satır ayrımı ekrana koyar. v207 öncesi canlıda
+    // `fit_attempt_ts` BOŞTU — pano da (damgayı doğru okuduğu için) kırmızı "HİÇ KOŞMADI"
+    // basıyordu; oysa kadans dün koşup EĞİTMİŞTİ (scheduler_status: fitted=true, n_fit=2217).
+    // Kök `save()`in üstüne-yazması olduğu için düzeltme damganın kendisindeydi, bu satırda değil;
+    // satır ise "denendi ama fit gerekmedi" hâlinin "hiç koşmadı" diye okunmasını engeller.
+    const sonDenemeRow = (() => {
+      const sd = o.son_deneme;
+      if (!sd) return "";
+      if (!sd.damga_var)
+        return `<div class="srow"><span>Son deneme</span><b class="warn">damga YOK — fit hiç denenmedi</b></div>`;
+      return `<div class="srow"><span>Son deneme</span><b>${
+        esc(String(sd.ts).replace("T", " ").slice(0, 16))} · <span class="mut">${
+        sd.atlama_nedeni ? esc(String(sd.atlama_nedeni)) : "fit edildi"}</span></b></div>`;
+    })();
+    // ---- EKSEN-2: "0 ÜRETİLDİ"NİN NEDENİ (v207) ----------------------------------------------
+    // ESKİ SATIR: "0 üretildi · 0 kaydedildi · 0 bekleyen · 0 otomatik uygulandı". Dört sıfır,
+    // paydasız, yan yana — bir BAŞARISIZLIK gibi okunuyordu. Ölçüm başka söylüyor (canlı teşhis
+    // kovaları): 67 skillin 60'ı gerçek katmanda HİÇ ölçülmemiş, 5'i motor içi; hüküm verilebilen
+    // 2. Üreteç kanıt olmayan yerde öneri ÜRETMEZ — doğru okuma KANIT YOKLUĞUdur.
+    //
+    // ŞERİT O DÖRT SAYININ KENDİSİDİR, YANINA EKLENEN BEŞİNCİ BİR ŞEY DEĞİL: aynı sayılar kart
+    // sözleşmesinin (D2-a) hücre dilinde — büyük değer + PAYDA-BEYANLI çubuk + meta — yeniden
+    // yazıldı. Paydayı ekrana koymak burada bütün farkı yaratıyor: üretimin paydası 67 DEĞİL,
+    // hüküm verilebilen 2'dir. "0/67" üretecin 67 skilde başarısız olduğunu söylerdi; oysa 65'inde
+    // ölçüm yok, yani hüküm kurulamaz. DÖRT HÜCRE `.ozet-serit`in ızgara bütçesidir (4 sütun).
+    const eksen2Blok = (() => {
+      if (!ex) return `<div class="srow"><span>Eksen-2 üreteci</span><b class="warn">durum defteri yazılmamış — kadans HİÇ koşmadı</b></div>`;
+      const oz = ex.ozet || null;
+      const olculemedi = !oz || oz.durum !== "dolu";
+      const mi = oz ? oz.motor_ici_esik_asan : null;
+      const kv = Object.entries(ex.kovalar || {}).sort((a, b) => b[1] - a[1]);
+      const dokum = kv.map(([k, n]) => `${esc(KOVA_TR[k] || k)}: ${n}`).join(" · ");
+      const uretilen = ex.uretilen ?? null;
+      // ÜRETİMİN PAYDASI: hüküm verilebilen skill. Sıfırsa payda YOKTUR (çubuk çizilmez) —
+      // bölünecek bir taban olmadan doluluk uydurulamaz.
+      const paydaVar = !olculemedi && oz.olculen > 0;
+      // `?? 0` TRİYAJI (v196 kuyruğu, sınıf (a)): bu bloğun DÖRT `?? 0`ı raporun kuyruğundaydı —
+      // "0 kaydedildi" ile "kaydedilen sayısı yükte yok" aynı piksele düşüyordu. Dördü de bu turda
+      // ödendi: yokluk artık ADIYLA yazılır ve hücre `ÖLÇÜLEMEDİ` rozetine düşer.
+      const say = v => v == null ? "ölçülemedi" : trn(v);
+      const serit = ozetSerit([
+        ozetHucre("Kanıt tabanı", {
+          deger: olculemedi ? null : `${trn(oz.olculen)} / ${trn(oz.toplam_skill)}`,
+          oran: olculemedi ? null : oz.oran,
+          payda: olculemedi ? "" : oz.payda,
+          meta: olculemedi
+            ? esc(oz ? oz.neden : "Eksen-2 teşhis kovaları yükte YOK — üretecin sessizliği ÖLÇÜLEMEDİ, kanıt yokluğu İLAN EDİLEMEZ")
+            : `hüküm verilebilen skill / katalog · <b>${trn(oz.olculmemis)}</b> gerçek katmanda hiç ölçülmemiş · <b>${trn(oz.korumali)}</b> motor içi (aday değil)`,
+          rozet: olculemedi ? "ÖLÇÜLEMEDİ" : "" }),
+        ozetHucre("Üretilen öneri", {
+          deger: uretilen == null ? null : trn(uretilen),
+          oran: paydaVar && uretilen != null ? Math.min(1, uretilen / oz.olculen) : null,
+          payda: paydaVar ? `hüküm verilebilen skill (${trn(oz.olculen)})` : "",
+          meta: uretilen == null ? "üreteç bu turda hiç rapor vermedi — üretim ÖLÇÜLEMEDİ"
+            : `<b>${say(ex.kaydedilen)}</b> kaydedildi · <b>${say(ex.otomatik_uygulanan)}</b> otomatik uygulandı${
+               paydaVar ? "" : " · payda YOK: hüküm verilebilen skill sayısı 0"}`,
+          rozet: uretilen == null ? "ÖLÇÜLEMEDİ" : "" }),
+        ozetHucre("Bekleyen öneri", {
+          // PAYDASIZ BİLEREK: bekleyen kuyruğun tavanı YOKTUR; uydurma bir tavana göre doluluk
+          // çizmek, `hucreCubuk`un paydasız-çubuk yasağının tam olarak yasakladığı şey.
+          deger: ex.bekleyen_toplam == null ? null : trn(ex.bekleyen_toplam),
+          meta: ex.bekleyen_toplam == null
+            ? "bekleyen öneri sayısı yükte YOK — kuyruk derinliği ÖLÇÜLEMEDİ"
+            : `senin onayını bekliyor · bu turda <b>${say(ex.kaydedilen)}</b> yeni kayıt`,
+          rozet: ex.bekleyen_toplam == null ? "ÖLÇÜLEMEDİ" : "" }),
+        ozetHucre("Motor-içi eşiği aşan", {
+          // null ≠ boş liste: "aşan yok" ÖLÇÜLMÜŞ bir sıfırdır, "defter okunamadı" bir körlüktür.
+          deger: mi == null ? null : trn(mi.length),
+          meta: mi == null
+            ? "Eksen-2 durum defteri okunamadı — aşan skill sayısı ÖLÇÜLEMEDİ (0 DEĞİL)"
+            : (mi.length
+               ? `${mi.map(x => `<b>${esc(String(x.skill))}</b>`).join(" · ")} — eşiği aştı, bayrak BİLEREK yazılmadı`
+               : "0 motor-içi skill eşiği aştı — ölçüldü, sıfır çıktı"),
+          rozet: mi == null ? "ÖLÇÜLEMEDİ" : "" }),
+      ], "Eksen-2 üretecinin kanıt tabanı ve çıktısı");
+      // MOTOR-İÇİ KARARININ GEREKÇESİ: bayrak yazmamak bir ihmal değil, yazılı bir karardır.
+      const miDetay = (mi && mi.length)
+        ? `<p class="hint">${mi.map(x => `<b>${esc(String(x.skill))}</b>${
+            x.cf_avg_r != null ? ` (cf ${trn(x.n_cf)} örnekte ${trn(x.cf_avg_r, 2)}R${
+              x.avg_r != null ? ` · gerçek ${trn(x.n)} işlemde ${trn(x.avg_r, 2)}R` : ""})` : ""}`).join(" · ")
+          } kanıt eşiğini AŞTI ama motor-içi: registry'ye <code>shadow</code> yazmak davranışı
+          DEĞİŞTİRMEZ (motor bayraktan bağımsız koşar), yazmak ise davranış değişmeden kayıt
+          üretirdi. Gerçek aksiyon knob/kapı düzeyindedir.</p>` : "";
+      return `<h3 class="t" style="margin-top:16px">Eksen-2 üreteci</h3>
+      ${serit}
+      ${olculemedi ? "" : `<p class="hint">${esc(oz.neden)}</p>`}
+      ${dokum ? `<p class="hint">Skiller hangi kolda elendi: ${dokum}</p>` : ""}
+      ${miDetay}`;
     })();
     return `<div class="card rise"><h2 class="t">Öğrenme beslemesi <span class="tx3" style="font-weight:400">(kadansların sağlığı — çıktıları Bölüm 3'te)</span></h2>
       <div class="srow"><span>Kadans</span><b class="${o.son_kosu ? "" : "warn"}">${esc(o.durum || "—")}${
@@ -6069,9 +6167,9 @@ async function opParcalar() {
         an2.veri_seti_taze === false ? ' · <span class="warn">veri seti DEĞİŞTİ, fit bayat</span>'
         : (an2.veri_seti_taze === true ? ' · <span class="pos">veri seti taze</span>' : ' · <span class="mut">tazelik ölçülmedi</span>')}</b></div>
       ${sonFitRow}
+      ${sonDenemeRow}
       <div class="srow"><span>Terfi</span><b>${terfi.promoted ? '<span class="pos">TERFİ ETTİ</span>' : "terfi yok"} · canlı çift ${
         terfi.n_live ?? 0}/${terfi.promote_min_n ?? "—"}${terfi.live_brier != null ? ` · Brier canlı ${trn(terfi.live_brier, 4)} vs taban ${trn(terfi.baseline_brier, 4)}` : ""}</b></div>
-      ${an2.son_atlama_nedeni ? `<div class="srow"><span>Son atlama</span><b class="mut">${esc(String(an2.son_atlama_nedeni))}</b></div>` : ""}
       ${kq ? `<div class="srow"><span>Kanıt dolgusu kuyruğu</span><b>${kq.dolgulanabilir_gun ?? 0} gün · ${
         kq.dolgulanabilir_satir ?? 0} satır dolgulanabilir · gece tavanı ${kq.gece_tavani ?? "—"}${
         kq.tahmini_gece != null ? ` → ~${kq.tahmini_gece} gece` : ""}</b></div>
@@ -6079,13 +6177,7 @@ async function opParcalar() {
         kq.en_eski ? ` · ${esc(kq.en_eski)} → ${esc(kq.en_yeni)}` : ""}</b></div>
       <p class="hint">${esc(kq.beyan || "")}</p>`
        : `<div class="srow"><span>Kanıt dolgusu kuyruğu</span><b class="mut">ölçülemedi — kuyruk okuması istisna verdi (olay akışında)</b></div>`}
-      ${ex ? `<div class="srow"><span>Eksen-2 üreteci</span><b>${ex.uretilen ?? 0} üretildi · ${
-        ex.kaydedilen ?? 0} kaydedildi · ${ex.bekleyen_toplam ?? 0} bekleyen · ${
-        ex.otomatik_uygulanan ?? 0} otomatik uygulandı</b></div>
-      ${Object.keys(ex.kovalar || {}).length ? `<p class="hint">Skiller hangi kolda elendi:
-        ${Object.entries(ex.kovalar).sort((a, b) => b[1] - a[1])
-          .map(([k, n]) => `${esc(KOVA_TR[k] || k)}: ${n}`).join(" · ")}</p>` : ""}`
-       : `<div class="srow"><span>Eksen-2 üreteci</span><b class="warn">durum defteri yazılmamış — kadans HİÇ koşmadı</b></div>`}
+      ${eksen2Blok}
       ${nabizRows ? `<h3 class="t" style="margin-top:16px">Kadans nabzı</h3>${nabizRows}${
         (o.son_fit || {}).beyan ? `<p class="hint">${esc(o.son_fit.beyan)}</p>` : ""}` : ""}
       ${o.bekci_notu ? `<p class="hint"><b>Bekçi notu:</b> ${esc(o.bekci_notu)}</p>` : ""}</div>`;

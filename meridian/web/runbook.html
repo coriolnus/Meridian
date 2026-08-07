@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Tema, stilden ÖNCE ve senkron — bkz. theme.js başlığı. -->
+<script src="/theme.js"></script>
 <title>Meridian · Operasyon Runbook</title>
+<!-- YAZI TİPİ KENDİ-BARINDIRILIR (D5, 2026-08-07). Aynı origin, aynı iki dosya, aynı adlar —
+     yani "ağ yokken de açılır" sözleşmesi KORUNUR; bunlar CDN değil, bu sunucunun kendi
+     baytları (meridian/api.py::/fonts/{ad}). Bkz. index.html § YAZI TİPİ. -->
+<link rel="preload" href="/fonts/recursive-sans-vf.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/recursive-mono-vf.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- ==========================================================================================
   RUNBOOK YÜZEYİ (UIUX S1-T3, 2026-08-01) — `docs/RUNBOOK.md`'nin PANODAKİ OKUYUCUSU (YASA 6).
@@ -14,13 +21,30 @@
   kuralını bozardı. Ayrıca teşhis anında panonun 15 sn'lik poll'ünün altında metin okumak
   istemezsin. Bu sayfa panodan AYRILIR — tıpkı /workflow ve /landing gibi.
 
-  NEDEN KENDİ STİLİ (index.html'in <style>'ına dokunulmaz). Bu tur paralel koşuyor: jeton/tema
-  katmanı BAŞKA bir hattın alanı. Bu sayfanın index.html'in değişkenlerine bağlanması, iki
-  hattı tek dosyada çakıştırırdı. Burada kendi kendine yeten, ~120 satırlık bir sayfa var:
-  dış font yok, dış betik yok, CDN yok — SSH tüneli arkasında ve ağ yokken de açılır.
+  KENDİ JETON SÖZLÜĞÜ KALDIRILDI (D5, 2026-08-07). Bu blok "NEDEN KENDİ STİLİ" başlığını
+  taşıyordu ve gerekçesi şuydu: "bu tur paralel koşuyor, jeton/tema katmanı BAŞKA bir hattın
+  alanı". O tur KAPANDI; gerekçenin süresi doldu (denetim N9 tam bunu soruyordu) ve bedeli
+  ölçüldü — bu sayfa dördüncü bir görsel dünyaydı: kendi 9 renkli paleti, `Roboto` yığını,
+  `--tx3:#8a8580` kendi zemininde **3,50:1** (AA ALTI, denetim T10), soğuk saç telleri
+  `rgba(0,0,0,.10)` (Warm Rule ihlali) ve operatörün tema anahtarına BAĞLANMAMIŞ bir zemin.
+  Sonuncusu en pahalısıydı: operatör panoda gündüzü seçtiyse ama işletim sistemi karanlıksa,
+  pano aydınlık runbook karanlık açılıyordu — yani "aynı üründe iki dünya", olay anında.
 
-  NEDEN SIFIR JAVASCRIPT (ve nasıl doluyor). Dağıtım CSP'si `script-src 'self'`; satır içi
-  betik ve satır içi işleyici BLOKLANIR. Üç seçenek vardı:
+  ARTIK ÜÇ YÜZEYLE AYNI TAKIM. Aşağıdaki iki `:root` bloğu index.html'in bloklarının BİREBİR
+  kopyasıdır (rol katmanı dahil) ve `tests/test_jeton_birligi_v208.py` dört yüzeyi karşılaştırıp
+  ayrışan her jetonu adıyla raporlar. Yerel adlar kanona eşlendi: `--font`→`--sans`,
+  `--kod`→`--accent-tint`, `--uyari`→`--sev-2` (ŞİDDET-2: "insan gerekiyor" — yazılmamış bir
+  runbook girdisi tam olarak budur), ve iki saç teli GÜÇLERİNE göre yerleşti: eski `--line`
+  (%10, güçlü) → `--line-2`, eski `--line2` (%6, sönük) → `--line`.
+
+  "AĞ YOKKEN DE AÇILIR" SÖZLEŞMESİ KORUNDU. Sayfa hâlâ hiçbir dış origin'e gitmiyor: yazı tipi
+  bu sunucunun kendi baytları (`/fonts/*.woff2`, aynı origin, preload'lı), tema seçici
+  `/theme.js`. CDN yok, üçüncü taraf yok — SSH tüneli arkasında ve internet yokken açılır.
+
+  NEDEN SIFIR SAYFA MANTIĞI (ve nasıl doluyor). Dağıtım CSP'si `script-src 'self'`; satır içi
+  betik ve satır içi işleyici BLOKLANIR. Sayfanın KENDİ mantığı hâlâ sıfır JS'tir — tek betik
+  `/theme.js` ve o yalnız `data-theme` niteliğini kurar, içerik üretmez, veri çekmez; kapatılsa
+  sayfa gündüz zemininde eksiksiz okunur. Gövde için üç seçenek vardı:
     (a) ayrı bir /runbook.js + /api/runbook ucu + istemci tarafı markdown ayrıştırıcı,
     (b) üretim anında HTML gömme (docs/RUNBOOK.md ile sessizce ayrışabilir),
     (c) SUNUCUDA render: `/runbook` rotası md'yi ISTEK ANINDA okur ve aşağıdaki yer
@@ -30,23 +54,130 @@
   hiç doğmaz. Yer tutucular AYNEN korunmalı; `meridian/api.py::runbook()` bunları arar ve
   bulamazsa SESSİZ BOŞ SAYFA yerine hata döner.
 
-  TEMA: `prefers-color-scheme`. Panonun `theme.js`'i BİLEREK yüklenmiyor — o dosya paralel
-  hattın alanı ve bu sayfanın onun sözleşmesine bağlanması gereksiz bir bağ olurdu.
+  TEMA: `theme.js` (D5, 2026-08-07). Bu satır "TEMA: `prefers-color-scheme`. Panonun
+  `theme.js`'i BİLEREK yüklenmiyor" diyordu; o karar yukarıda emekli edildi. `theme.js`
+  operatörün AÇIK seçimini (localStorage) okur ve seçim yoksa sistem tercihini TOHUM olarak
+  alır — yani eski `prefers-color-scheme` davranışı kaybolmaz, üstüne operatörün kararı gelir.
+  Dört yüzey tek tercihi okur; kopyalanan tercih ayrışan tercihtir.
 =========================================================================================== -->
 <style>
-:root{
-  --bg:#fbfaf9; --bg2:#f4f2f0; --tx:#1b1a19; --tx2:#5f5c58; --tx3:#8a8580;
-  --line:rgba(0,0,0,.10); --line2:rgba(0,0,0,.06); --kod:#f0edea; --uyari:#8a5a00;
-  --font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+/* ============================ YAZI TİPİ · KENDİ-BARINDIRMA (D5, 2026-08-07) ============================
+   Recursive Sans Linear + Recursive Mono Linear, SIL OFL 1.1. Bildirim üç yüzeyle BİREBİR AYNI
+   olmak zorundadır (index.html § YAZI TİPİ; çivi tests/test_yazitipi_v201.py): aynı iki dosya
+   aynı adla istenir, yoksa tarayıcı aynı yüzü iki kez indirir. Bu sayfa `--mono`yu 2026-08-07'ye
+   kadar hiç YÜKLEMİYORDU — `ui-monospace`e düşüyordu, yani docs/RUNBOOK.md'nin komutları ve jeton
+   adları panodakinden BAŞKA bir yüzle çiziliyordu.
+   ==================================================================================================== */
+@font-face{
+  font-family:'Recursive Sans';
+  src:url('/fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    /* Saf siyah YOK (iş emri Program V): ISA-101 çizgisinde yumuşak koyu griler.
-       Vurgu rengi de yok — bu sayfada renk yalnız "yazılmadı" işaretini taşır. */
-    --bg:#17181a; --bg2:#1d1f21; --tx:#e6e4e1; --tx2:#a3a09c; --tx3:#77746f;
-    --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.06); --kod:#232527; --uyari:#d8a657;
-  }
+@font-face{
+  font-family:'Recursive Mono';
+  src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}
+/* ============================================================================
+   JETON TAKIMI — index.html'in BİREBİR KOPYASI (D5, 2026-08-07).
+   Bu sayfanın KENDİ 11+9 jetonluk sözlüğü buradaydı ve dördüncü bir görsel dünya
+   kuruyordu (gerekçe ve ölçümler yukarıdaki belge bloğunda). Değerler index'ten
+   KOPYALANDI, burada yeniden değerlenmedi; ölçümleri index.html'in kendi
+   bloklarında ve docs/kontrast-denetimi.md'de durur.
+   Çivi: tests/test_jeton_birligi_v208.py.
+   ============================================================================ */
+:root{
+  --sans:'Recursive Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --display:var(--sans);
+  --mono:'Recursive Mono',ui-monospace,SFMono-Regular,monospace;
+  --serif:var(--sans);
+  /* spacing — one 4px base */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
+  /* YÜZEYLER — OMEGA merdiveni, sıcak kemik paneller. SAF BEYAZ YOK. */
+  --bg:#fbf9f8; --bg2:#f5f4f2; --card:#f2efed; --card-2:#ece7e3; --raise:#fbf9f8;
+  --slip:#ece7e3; --slip-ink:#050505;
+  /* hairlines, not boxes — sıcak gri, nötr değil (bu sayfanın eski saç telleri SOĞUKTU) */
+  --line:#e2deda; --line-2:#d4cfca;
+  --tx:#050505; --tx2:#585450; --tx3:#686562;
+  --accent:#050505; --accent-2:#050505; --accent-tint:#eeeeee;
+  /* DEĞER KATMANI — bir HUE'nun adı. */
+  --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
+  --violet:#3e3c39; --violet2:#050505; --blue:#050505;
+  --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
+  /* ROL KATMANI (D1) — bir İŞİN adı. Bu sayfada YALNIZ --sev-2 basılır ("yazılmadı" işareti);
+     kanonun tamamı yine de burada, çünkü eksik jeton ikinci temada sessizce miras alınır. */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  --yon-arti:#40654c; --yon-eksi:#784e4b;
+  --yon-arti-t:rgba(64,101,76,.10); --yon-eksi-t:rgba(120,78,75,.10);
+  --yon-arti-h:rgba(64,101,76,.35); --yon-eksi-h:rgba(120,78,75,.35);
+  --yon-arti-zemin:rgba(64,101,76,.08); --yon-eksi-zemin:rgba(120,78,75,.07);
+  --mod-kagit:var(--tx2); --mod-canli:#723a96; --mod-kesif:#635071;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(114,58,150,.10); --mod-kesif-t:rgba(99,80,113,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(114,58,150,.35); --mod-kesif-h:rgba(99,80,113,.35);
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(5,5,5,.45);
+  --band-2:#979491;
+  --kap-1:rgba(5,5,5,.06); --kap-2:rgba(5,5,5,.14);
+  --kap-3:rgba(5,5,5,.23); --kap-4:rgba(5,5,5,.30);
+  --dv-n2:rgba(46,82,122,.22); --dv-n1:rgba(46,82,122,.10);
+  --dv-p1:rgba(134,106,46,.10); --dv-p2:rgba(134,106,46,.22);
+  --nav-bg:rgba(251,249,248,.82);
+  --green-h:rgba(12,106,59,.35); --amber-h:rgba(110,74,0,.35); --red-h:rgba(179,36,44,.35);
+  --amber-h2:rgba(110,74,0,.40);
+  --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
+  --scrim:rgba(5,5,5,.42);
+  --green-stamp:rgba(12,106,59,.55);
+  --r-card:12px; --r-ctl:10px; --r-bar:2px;
+  --elev:none;
+  --label-size:10px; --label-track:.16em;
+  --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
+  --max:1180px;
+  --field:#86817d;
+  color-scheme:light;
+}
+/* ============================================================================
+   GECE ZEMİNİ — index.html'in gece bloğunun BİREBİR KOPYASI. Saf siyah YOK
+   (zemin #1c1a18): eski blok da bunu istiyordu ("ISA-101 çizgisinde yumuşak koyu
+   griler"), ama KENDİ değerleriyle — yani aynı hüküm iki yerde iki kez yazılıydı.
+   AD KÜMESİ GÜNDÜZLE BİREBİR AYNIDIR. Çivi: tests/test_jeton_birligi_v208.py.
+   ============================================================================ */
+:root[data-theme="gece"]{
+  --bg:#1c1a18; --bg2:#232120; --card:#262320; --card-2:#2f2b27; --raise:#38342f;
+  --slip:#2f2b27; --slip-ink:#d4d0cb;
+  --line:#38342f; --line-2:#4a453f;
+  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#95928f;
+  --accent:#d4d0cb; --accent-2:#e8e4df; --accent-tint:#302c28;
+  --green:#4cc38a; --amber:#e0a82e; --red:#f58b8f;
+  --violet:#b1afad; --violet2:#d4d0cb; --blue:#d4d0cb;
+  --green-t:rgba(76,195,138,.10); --amber-t:rgba(224,168,46,.10); --red-t:rgba(245,139,143,.10);
+  --band-2:#676665;
+  --kap-1:rgba(212,208,203,.06); --kap-2:rgba(212,208,203,.14);
+  --kap-3:rgba(212,208,203,.23); --kap-4:rgba(212,208,203,.30);
+  --dv-n2:rgba(138,168,200,.22); --dv-n1:rgba(138,168,200,.10);
+  --dv-p1:rgba(198,176,122,.10); --dv-p2:rgba(198,176,122,.22);
+  --nav-bg:rgba(28,26,24,.82);
+  --green-h:rgba(76,195,138,.35); --amber-h:rgba(224,168,46,.35); --red-h:rgba(245,139,143,.35);
+  --amber-h2:rgba(224,168,46,.40);
+  --ink-h:rgba(212,208,203,.30); --ink-h-soft:rgba(212,208,203,.18);
+  --scrim:rgba(10,9,8,.66);
+  --green-stamp:rgba(76,195,138,.55);
+  --field:#7e776e;
+  /* ROL KATMANI · GECE — ad kümesi gündüzle birebir aynı. */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  --yon-arti:#8ab59c; --yon-eksi:#d1a0a0;
+  --yon-arti-t:rgba(138,181,156,.10); --yon-eksi-t:rgba(209,160,160,.10);
+  --yon-arti-h:rgba(138,181,156,.35); --yon-eksi-h:rgba(209,160,160,.35);
+  --yon-arti-zemin:rgba(138,181,156,.08); --yon-eksi-zemin:rgba(209,160,160,.07);
+  --mod-kagit:var(--tx2); --mod-canli:#c598e7; --mod-kesif:#b9a4ca;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(197,152,231,.10); --mod-kesif-t:rgba(185,164,202,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(197,152,231,.35); --mod-kesif-h:rgba(185,164,202,.35);
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(212,208,203,.45);
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -56,22 +187,28 @@ html{-webkit-text-size-adjust:100%}
      · "uzun metin 15px ister" savı ÜRÜNÜN KENDİSİ tarafından çürütüldü — aynı runbook metni
        D2-b'den beri panonun olay yüzeylerinde 14px'te okunuyor (`.md`/`.hint`), ve bu sayfa
        kendi notunda kendini arşiv metnine indirgemiş durumda.
-     · x-yüksekliği kaybı ölçüldü: 7,896px -> 7,369px; panonun kendi uzun-metin ölçütüne
-       (`.md`, Recursive 14px = 7,448px) göre fark yalnız −0,079px.
-   TELAFİ İCAT EDİLMEDİ, EVDEN ALINDI: 1.8/72ch değerleri `index.html`in `.md` kuralının
-   birebir aynısıdır — bu yüzeyin kendi uzun-metin spesifikasyonunu icat etmesine son. */
-body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--font);
+     · Bedel: x-yüksekliği 7,98px -> 7,448px (−0,532px, %-6,7). Kazanç: bu satır artık
+       panonun uzun-metin sözleşmesinin (`index.html` `.md`) BİREBİR aynısı.
+   TELAFİ İCAT EDİLMEDİ, EVDEN ALINDI: 1.8/72ch değerleri `.md` kuralından kopyalandı.
+
+   D5 İLE BİRLEŞTİRME NOTU (merge, 2026-08-07): D6 ölçümü D5'ten ÖNCEKİ ağaçta koştu, yani
+   gövde o gün `system-ui` yığınıyla çiziliyordu ve aday spesifikasyon 92 CPL ölçmüştü.
+   D5 yüzü Recursive'e çevirdi; ölçüm koşumunun `OLCUT` satırı ZATEN tam bu bileşimdi
+   (14px/1.8/72ch · Recursive) ve **78 CPL** ölçmüştü. Yani bugün yürürlükte olan sayı 92
+   değil 78'dir ve o sayı ölçülmüştür — yeniden ölçüm gerekmedi, ölçümün doğru satırı
+   okunmalıydı. Ayrıntı: DESIGN.md § "runbook.html on the ramp". */
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);
      font-size:14px;line-height:1.8;font-variant-numeric:tabular-nums}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px;display:grid;
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px 96px;display:grid;
       grid-template-columns:minmax(0,1fr);gap:0}
 @media (min-width:1000px){ .wrap{grid-template-columns:250px minmax(0,1fr);gap:44px} }
 
 /* ---- üst bar: tek dönüş yolu. Panoya dönmek bir kısayol değil, sayfanın sözleşmesi ---- */
-.ust{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+.ust{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line-2);
      padding:14px 24px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
 .ust b{font-weight:600;letter-spacing:-.01em}
 .ust .yol{font-family:var(--mono);font-size:11px;color:var(--tx3)}
-.ust a{color:var(--tx2);text-decoration:none;border-bottom:1px solid var(--line);font-size:13px}
+.ust a{color:var(--tx2);text-decoration:none;border-bottom:1px solid var(--line-2);font-size:13px}
 .ust a:hover,.ust a:focus-visible{color:var(--tx);border-bottom-color:var(--tx2)}
 
 /* ---- içindekiler: 50 bölümlük bir belgede gezinme bir süs değil, kullanılabilirlik ---- */
@@ -101,7 +238,7 @@ main{min-width:0;padding-top:28px}
 h1{font-size:28px;line-height:1.25;letter-spacing:-.02em;margin:44px 0 12px;font-weight:600}
 h1:first-child{margin-top:8px}
 h2{font-size:20px;line-height:1.3;letter-spacing:-.01em;margin:36px 0 8px;font-weight:600;
-   padding-top:10px;border-top:1px solid var(--line2)}
+   padding-top:10px;border-top:1px solid var(--line)}
 h3{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);
    margin:18px 0 6px;font-weight:600}
 /* ÖLÇÜ (max-width) DA EVDEN: `.md` 72ch diyor. `ul` de 72ch'e iner — ölçülen korpusun
@@ -112,31 +249,37 @@ p{margin:10px 0;max-width:72ch}
 ul{margin:8px 0;padding-left:22px;max-width:72ch}
 li{margin:4px 0}
 li ul{margin:2px 0}
-hr{border:0;border-top:1px solid var(--line);margin:44px 0}
-blockquote{margin:14px 0;padding:10px 16px;border-left:2px solid var(--line);
+hr{border:0;border-top:1px solid var(--line-2);margin:44px 0}
+blockquote{margin:14px 0;padding:10px 16px;border-left:2px solid var(--line-2);
            background:var(--bg2);color:var(--tx2);max-width:82ch}
 blockquote p{margin:4px 0}
 /* YARIÇAP EVİN ÖLÇEĞİNDEN (DESIGN.md: 2px · 10px · 12px — "dördüncü yarıçap yok").
-   Bu sayfa kendi stil sayfasını taşır ama kendi GEOMETRİSİNİ icat etmez: sayfa bağımsız
-   olsun diye jetonlardan kopmak, sistemin ölçeğinden de kopmak anlamına gelmez. */
-/* GÖRELİ ÖLÇÜLER SABİT RAMPA BASAMAĞINA ÇEVRİLDİ (.86em/.92em -> 12px/13px).
+   D5, 2026-08-07: ölçek artık ADIYLA okunuyor. Bu satırlar 2px/10px'i SAYIYLA yazıyordu ve
+   doğru sayıydı; ama sayı, jeton değiştiğinde sessizce ayrışır — "aynı ölçek" bir tesadüf
+   olarak değil bir bağ olarak duruyor. */
+/* GÖRELİ ÖLÇÜLER SABİT RAMPA BASAMAĞINA ÇEVRİLDİ (D6: .86em/.92em -> 12px/13px).
    Rampa Kuralı lafzen yalnız SABİT font-size'ları bağlar, ama T10 bu ikisini de bulgu
    sayıyordu ve haklıydı: ölçüldüğünde ikisi de zaten bir rampa basamağına NİŞAN ALIYORDU —
    gövde 14px'te .86em = 12,04px ve .92em = 12,88px. Yani değer doğruydu, BEYAN belirsizdi;
    sabitlemek yaklaşığı kesin ve linte okunur yapar, görünümü 0,04/0,12px oynatır.
+   NOT — YARIÇAP değil ÖLÇÜ: üstteki D5 dersi ("sayı yerine ad") burada TERSİNE işliyor ve
+   bu bir çelişki değil. Yarıçap bir JETONA bağlıdır (`--r-bar`), o yüzden adıyla anılır;
+   tip ölçüsü bir RAMPA BASAMAĞIDIR ve rampanın jetonu yoktur — DESIGN.md onu dokuz sayı
+   olarak tanımlar. Ada bağlanacak bir şey yokken ada bağlamak, olmayan bir sözleşme icat
+   etmek olurdu.
    BAŞLIK İÇİ `code` AYRI ELE ALINDI: kaynakta 15 `##` başlığının tamamı baştan sona bir kod
    parçasıdır (`## \`ops/kapilar.sh\``); sabit 12px onları gövde ölçüsüne düşürüp başlık
    olmaktan çıkarırdı. 17px = 20px'lik h2'nin bir alt rampa basamağı (eski .86em davranışı
    20px'te 17,2px verirdi — fiilen aynı yer, artık rampada). h1/h3'te kod geçmiyor (ölçüldü). */
-code{font-family:var(--mono);font-size:12px;background:var(--kod);padding:1px 5px;
-     border-radius:2px;color:var(--tx)}
+code{font-family:var(--mono);font-size:12px;background:var(--accent-tint);padding:1px 5px;
+     border-radius:var(--r-bar);color:var(--tx)}
 h2 code{font-size:17px}
-pre{background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:14px 16px;
+pre{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:14px 16px;
     overflow-x:auto;margin:12px 0}
 pre code{background:none;padding:0;font-size:12px;line-height:1.55;white-space:pre}
 strong{font-weight:600;color:var(--tx)}
 em{font-style:normal;color:var(--tx3);font-size:13px}
-a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+a{color:var(--tx);text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
 a:hover,a:focus-visible{text-decoration-color:var(--tx2)}
 :target{scroll-margin-top:72px}
 /* Çapayla gelinen bölüm KENDİNİ SÖYLER: pano "/runbook#nabız" der ve operatör 1148 satırın
@@ -146,17 +289,23 @@ a:hover,a:focus-visible{text-decoration-color:var(--tx2)}
    TEK bir şeye ayrılmıştır ve aşağıda duruyor. */
 h2:target{border-left:2px solid var(--tx3);padding-left:12px;margin-left:-14px}
 /* "yazılmadı" işareti SAYFANIN TEK RENKLİ ÖĞESİDİR. Renk burada bir süs değil, bir eksiğin
-   adıdır: çözülmüş bir satırla aynı tonda duran bir boşluk, olmayan bir boşluktur. */
-.yok{color:var(--uyari)}
+   adıdır: çözülmüş bir satırla aynı tonda duran bir boşluk, olmayan bir boşluktur.
+   ROLÜYLE OKUNUYOR (D5): jeton `--uyari` idi — bir HUE'nun ("kehribar") yerel adı. Artık
+   `--sev-2`, yani ŞİDDET-2: "insan gerekiyor". Yazılmamış bir runbook girdisi tam olarak
+   budur ve kroma bu role zaten ayrılmıştır; hue adıyla bağlanmış bir kural, ikinci bir
+   anlamı ödünç almayı ücretsiz kılıyordu. */
+.yok{color:var(--sev-2)}
 /* YÖNLENDİRME KUTUSU (D2-b): içerik panoya taşındı. Kendi rengi YOK — bu sayfada renk yalnız
    "yazılmadı" işaretine ayrılmış ve bir yönlendirme bir eksik değildir. Ayrımı ÇERÇEVE ve
-   ZEMİN taşır, hue değil. Geometri yine evin ölçeğinden (2px). */
-.tasindi{border:1px solid var(--line);background:var(--bg2);padding:14px 18px;margin:8px 0 28px;
-         border-radius:2px;max-width:82ch}
+   ZEMİN taşır, hue değil. Geometri yine evin ölçeğinden (--r-bar). */
+.tasindi{border:1px solid var(--line-2);background:var(--bg2);padding:14px 18px;margin:8px 0 28px;
+         border-radius:var(--r-bar);max-width:82ch}
 .tasindi p{margin:6px 0}
 .tasindi p:first-child{margin-top:0}
 .tasindi p:last-child{margin-bottom:0}
-:focus-visible{outline:2px solid var(--tx2);outline-offset:2px}
+/* ODAK HALKASI üç yüzeyle aynı reçete (--accent, 2px, offset 2px): klavyeyle gezen operatör
+   sayfa değiştirdiğinde odağın NEREDE olduğunu iki farklı işaretten öğrenmez. */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}
 @media print{ nav.toc,.ust{display:none} .wrap{grid-template-columns:1fr} }
 </style>
 </head>

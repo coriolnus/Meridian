@@ -766,23 +766,30 @@ the runbook needed to be *larger than the console's own long-form class*, which 
 | Criterion (frozen before measuring) | Result |
 |---|---|
 | **K1** — is this same runbook text already read at ≤14px on a primary surface? | **Yes.** Since D2-b the runbook's four sections are rendered inside the console's event surfaces at 14px, and the page's own note demotes it to archival full text. The "long-form needs 15px" claim is refuted by the product itself. |
-| **K2** — candidate line length | 92 CPL. Outside the imported 45–75 band, but the tiebreak was pre-registered: the product-relative leg wins, and 92 ≥ benchmark 78 − 5. **Pass, with a finding — below.** |
-| **K3** — candidate x-height vs benchmark | 7.369px vs 7.448px = **−0.079px**, against a 0.5px tolerance anchored on the −0.11px cap-height loss this system already knowingly ships. **Pass.** |
+| **K2** — candidate line length | 92 CPL *as measured, on the pre-D5 `system-ui` tree*; **78 CPL in the face that now ships** (see below). Outside the imported 45–75 band either way, but the tiebreak was pre-registered: the product-relative leg wins, and both values clear benchmark 78 − 5. **Pass, with a finding — below.** |
+| **K3** — candidate x-height vs benchmark | 7.369px vs 7.448px = **−0.079px** as measured, against a 0.5px tolerance anchored on the −0.11px cap-height loss this system already knowingly ships. **Pass** — and post-D5 the gap is **exactly 0**, since the candidate and the benchmark are now the same face at the same size. |
 
 **Ruling: `14px / 1.8 / 72ch`** — the ramp's Body step, with line-height and measure taken from
-`.md` rather than invented. The x-height cost against the old `15px` is real and is **−0.527px
-(−6.7%)**; what it buys is that the runbook stops being a fourth typographic world. No deviation
-was recorded in this document, because none was earned.
+`.md` rather than invented. The x-height cost against the old `15px` is real: **7.98px → 7.448px,
+−0.532px (−6.7%)**, in the Recursive that now ships. What it buys is that the runbook stops being a
+separate typographic world — at 14px in the house face it is not *like* the console's long-form
+prose, it **is** the console's long-form prose. No deviation was recorded in this document, because
+none was earned.
 
 **Heading ladder: `28 / 20`.** Four candidates were measured by the separation a ladder actually
 delivers — cap-height difference in px, not ratio:
 
 | Ladder | h1↔h2 | h2↔body | on ramp |
 |---|---|---|---|
-| `26/18/15` (old) | 5.64px | 2.11px | no |
-| `24/20/14` | 2.82px | 4.23px | yes |
-| `24/17/14` | 4.93px | 2.11px | yes |
-| **`28/20/14`** | **5.64px** | **4.23px** | **yes** |
+| `26/18/15` (old) | 5.69px | 2.10px | no |
+| `24/20/14` | 2.88px | 4.20px | yes |
+| `24/17/14` | 4.98px | 2.10px | yes |
+| **`28/20/14`** | **5.69px** | **4.20px** | **yes** |
+
+*Figures are Recursive, the face that ships. The original run measured the same four ladders in
+`system-ui` — the tree D6 was cut from — and got 5.64 / 2.11, 2.82 / 4.23, 4.93 / 2.11, 5.64 / 4.23:
+the same ordering, within 0.05px. The ladder decision was never face-sensitive, which is worth
+knowing the next time a face changes.*
 
 `28/20` dominates: it holds the old h1↔h2 separation *exactly* and doubles h2↔body — and that
 second number is the `flat-type-hierarchy` finding at `docs/BASELINE-2026-08-06.md:92`, since an
@@ -802,16 +809,27 @@ i.e. they were already aiming at ramp steps 12 and 13 without saying so. They ar
 heading): all 15 code-carrying headings in the source are `##` and are code end-to-end, so a flat
 12px would have demoted them out of the ladder.
 
-**Finding this round did not close — line length.** Every spec measured runs long: 99.6 CPL before,
-92 CPL after, and the console's own `.md` benchmark sits at **78**. The move improves the number
-without bringing it into the conventional 45–75 band, and `max-width` in `ch` is why — `ch` is the
-advance of `0`, and Turkish lowercase is far narrower than a digit. It is also **face-dependent**:
-the identical CSS (`14px/1.8/72ch`) yields **92 CPL in the system stack and 78 in Recursive**, an
-18% difference. So the outstanding token round on this surface will move line length on its own,
-and any attempt to fix the measure should happen *after* that, not before it.
+**Line length: measured long, and the number that governs is 78.** Every spec runs longer than the
+conventional 45–75 band, and `max-width` in `ch` is why — `ch` is the advance of `0`, and Turkish
+lowercase is far narrower than a digit, so `72ch` buys well over 72 characters. It is also strongly
+**face-dependent**: the identical CSS (`14px/1.8/72ch`) measured **92 CPL in the system stack and
+78 in Recursive**, an 18% spread.
 
-**Still open on this surface, and not touched here:** `runbook.html` remains on its own colour
-dictionary, cold hairlines and `prefers-color-scheme` — the rest of T10. This round was type only.
+*Which of those two is the live number was settled by the merge, not by a new measurement.* D6 was
+measured on a tree that predated D5, where this surface still drew in `system-ui` — so its candidate
+row read 92. D5 then landed and moved the surface to Recursive, which is exactly the run's `OLCUT`
+row: `14px/1.8/72ch` in Recursive, **78 CPL**, x-height **7.448px**. The shipping configuration was
+already one of the four specs measured, so the correction was to read the right row, not to re-run
+the harness. **Live: 78 CPL** — still above the band, and the closest this surface has been to it.
+
+Fixing the remaining gap means narrowing the measure below `72ch`, which would put the runbook
+*under* the console's own `.md` and is a change to the house long-form spec rather than to this
+page. Out of scope here, and it should stay one decision rather than two.
+
+**T10 is now closed on both legs.** D5 (`11bdc02`) took the colour dictionary, the cold hairlines,
+the Roboto stack and `prefers-color-scheme`; D6 takes the type ramp. The two rounds were measured
+independently and against different trees, which is why this section originally recorded the colour
+leg as outstanding — it was, from where D6 stood.
 
 **The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. The
 declaration is defensive, not decorative: it is inert on Recursive Mono itself (no `tnum` feature,

@@ -2252,12 +2252,91 @@ def _terfi_hukmu(terfi: dict | None, sieve_rep: dict | None) -> dict:
                      f"({n_live} taze çift)"}
 
 
+# =============================================================================================
+# EKSEN-2'NİN "0 ÜRETİLDİ"Sİ — DOĞRU SAYI, GÖRÜNMEYEN NEDEN (v207, 2026-08-07)
+# =============================================================================================
+# ÖLÇÜM (Rol-1, canlı `last_learn.eksen2.teshis.sayim`): gercek_katman_olculmemis 57 · korumali 5 ·
+# gercek_katman_olculmemis_cf_dolu 3 · esik_araliginda 1 · ornek_yetersiz_cf_de_yetersiz 1. Yani
+# 67 skillin 60'ı üretimde HİÇ koşmamış, 5'i motor-içi (aday bile değil), ölçülmüş olan 2.
+# Üreteç kanıt olmayan yerde öneri üretmiyor — bu DOĞRU davranıştır.
+#
+# KUSUR ÜRETEÇTE DEĞİL OKUMADA: pano satırı "0 üretildi · 0 kaydedildi · 0 bekleyen · 0 otomatik
+# uygulandı" diyordu ve dört sıfır bir BAŞARISIZLIK gibi okunuyordu. Doğru okuma KANIT YOKLUĞUdur
+# ve o okuma ancak kovalar ÖZETE bağlanınca doğar: değer = ölçülen/toplam, çubuğun paydası beyan
+# edilen skill sayısı, meta kova dökümü.
+#
+# ÜÇÜNCÜ BİR GERÇEK ÜRETİLMEZ. Kovalar `skills.axis2_diagnosis()`in ÖLÇÜMÜDÜR; burada yalnız
+# SINIFLANDIRILIR. Sınıflandırma kova adlarının kendi anlamından çıkar (`axis2_diagnosis` dal
+# yapısı): `gercek_katman_olculmemis*` = avg_r None (ölçülmemiş), `korumali` = motor içi, geri
+# kalan HER kova `avg_r is not None` dalından gelir, yani ÖLÇÜLMÜŞTÜR. Yarın doğacak bir kova adı
+# da bu kurala uyar — sabit bir ad listesi tutmak, yeni kovayı sessizce yanlış saymak olurdu.
+_EKSEN2_OLCULMEMIS_ONEK = "gercek_katman_olculmemis"
+_EKSEN2_KORUMALI = "korumali"
+_AXIS2_DEFTERI = "axis2_status.json"      # LİTERAL ad (codelaw.artifact_graph okuyabilsin)
+
+
+def _eksen2_ozeti(ex: dict | None) -> dict:
+    """Sıfır üretimin NEDENİ — kova sayımından türetilmiş özet.
+
+    UYDURMA YASAĞI: kovalar yükte yoksa `durum="ÖLÇÜLEMEDİ"` ve bütün sayılar None döner —
+    0 DEĞİL. "67 skillin 2'si ölçüldü" ile "kaç skill olduğunu bilmiyoruz" aynı ekranda aynı
+    şeye benzeyemez."""
+    kv = (ex or {}).get("kovalar")
+    if not isinstance(kv, dict) or not kv:
+        return {"durum": "ÖLÇÜLEMEDİ", "toplam_skill": None, "olculen": None,
+                "olculmemis": None, "korumali": None, "oran": None, "payda": None, "dokum": [],
+                "motor_ici_esik_asan": None,
+                "neden": ("Eksen-2 teşhis kovaları yükte YOK — üretecin sessizliği ÖLÇÜLEMEDİ. "
+                          "Bu bir 'kanıt yok' hükmü değildir: hükmü verecek sayım okunamadı.")}
+    sayim = {str(k): int(v) for k, v in kv.items() if isinstance(v, (int, float))}
+    toplam = sum(sayim.values())
+    olculmemis = sum(n for k, n in sayim.items() if k.startswith(_EKSEN2_OLCULMEMIS_ONEK))
+    korumali = sayim.get(_EKSEN2_KORUMALI, 0)
+    olculen = toplam - olculmemis - korumali
+    return {
+        "durum": "dolu",
+        "toplam_skill": toplam, "olculen": olculen,
+        "olculmemis": olculmemis, "korumali": korumali,
+        # ÇUBUK PAYDASI BEYANLI (kart sözleşmesi D2-a kapı 2): paydası yazılmayan bir doluluk,
+        # okurun kendi uydurduğu tavana göre okunur.
+        "oran": (round(olculen / toplam, 4) if toplam else None),
+        "payda": f"katalogda beyan edilen skill sayısı ({toplam})",
+        "dokum": sorted(sayim.items(), key=lambda kv_: (-kv_[1], kv_[0])),
+        "motor_ici_esik_asan": None,      # `_eksen2_motor_ici` doldurur (ayrı defterden okunur)
+        "neden": (f"{toplam} skillin {olculmemis}'i gerçek katmanda HİÇ ölçülmemiş, {korumali}'i "
+                  f"motor-içi (aday değil); hüküm verilebilir olan {olculen}. Üreteç kanıt "
+                  f"olmayan yerde öneri ÜRETMEZ — '0 üretildi' bir arıza değil, KANIT YOKLUĞUdur."),
+    }
+
+
+def _eksen2_motor_ici() -> list | None:
+    """MOTOR-İÇİ EŞİĞİ AŞANLAR — `analytics.learning_automation()` bu kolu yayınlamıyor.
+
+    NEDEN GÖRÜNMELİ: kanıt eşiğini aşan bir motor-içi skill için `skills.auto_shadow_from_evidence`
+    BİLEREK bayrak yazmaz (motor bayraktan bağımsız koşar; yazmak "invoked yalanı"nın ters yönü
+    olurdu). Bu bir KARARDIR ve karar görünmezse, ölçüm hiç olmamış gibi okunur. Canlıda bugün
+    `pullback-screener` bu koldadır ve pano hiçbir yerinde yazmıyordu.
+
+    Defter okunamazsa `None` döner (boş liste DEĞİL): "aşan yok" ile "bakamadık" ayrı hâllerdir."""
+    ax = store.read_json(_AXIS2_DEFTERI, None)
+    if not isinstance(ax, dict):
+        return None
+    mi = (ax.get("otomatik") or {}).get("motor_ici_esik_asan")
+    return mi if isinstance(mi, list) else None
+
+
 def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
     """`analytics.learning_automation()` yükünü DÜRÜSTLÜK alanlarıyla zenginleştirir.
 
-    `nabiz.shadow_fit` KALDIRILMAZ (kadansın gerçekten koşmadığı doğrudur ve o borç ayrı bir turun
-    işidir — kanca `scheduler`da ve bu turun kalemi değil); yanına, aynı karta, MODELİN son fiili
-    fit'i konur. İki gerçek yan yana durduğunda operatör hangisinin ne olduğunu okuyabilir."""
+    `nabiz.shadow_fit` KALDIRILMAZ; yanına, aynı karta, MODELİN son fiilî fit'i ve son DENEMESİ
+    konur. Üç gerçek yan yana durduğunda operatör hangisinin ne olduğunu okuyabilir.
+
+    v192 NOTU DÜZELTİLDİ (v207): burada eskiden "kadansın gerçekten koşmadığı doğrudur" yazıyordu.
+    2026-08-07 ölçümü bunu YANLIŞLADI — kadans 2026-08-06T20:13'te koşup EĞİTMİŞTİ
+    (`scheduler_status.last_learn.antrenman.fitted=True, n_fit=2217`); damgası
+    `ShadowTradeOutcomeModel.save()`in üstüne-yazması yüzünden SİLİNMİŞTİ. Kusur rozette değil
+    damgadaydı ve düzeltmesi `shadow_model.py`de. Eski cümleyi bırakmak, çürütülmüş bir hükmü
+    kodda yaşatmak olurdu."""
     out = dict(ogr or {})
     an2 = out.get("antrenman") or {}
     hukum = _terfi_hukmu(an2.get("terfi"), sieve_rep)
@@ -2266,12 +2345,37 @@ def _ogrenme_blogu(ogr: dict, sieve_rep: dict | None) -> dict:
         "n": an2.get("n_fit"), "n_real": an2.get("n_real"), "n_cf": an2.get("n_cf"),
         "brier_train": an2.get("brier_train"),
         "terfi": hukum,
+        # DAMGA MI, ÇIKARIM MI (v207): `kunye` değeri "fit_ts damgası YOK, tarih künyeden
+        # çıkarıldı" demektir — v207 öncesi canlının hâli buydu ve ayrımı yazmayan bir tarih,
+        # çıkarımı damga gibi gösterirdi.
+        "kaynak": an2.get("son_fit_kaynak"),
         # KADANS ≠ FİT: rozetin neyi ölçtüğü kartın kendi üstünde yazsın, dipnotta değil.
-        "beyan": ("`son_fit` MODELİN son fiilen kurulduğu andır (yazan: shadow_model.refit_and_save, "
-                  "çağıran loop.P5_LEARN). Kadans nabzındaki `antrenman kadansı` satırı ise "
-                  "zamanlayıcının seans-sonrası kancasını (maybe_refit) ölçer — ikisi AYRI "
-                  "mekanizmadır ve biri koşmadan diğeri koşabilir."),
+        # BEYAN v207'DE DÜZELTİLDİ: v192 "damgayı yalnız maybe_refit yazar" diyordu ve bu artık
+        # YANLIŞ — damga fiilin yanına (refit_and_save) taşındı, yani fit'i kim atarsa atsın
+        # deneme damgası düşer. Eski metni bırakmak, düzeltilmiş bir kusuru panoda yaşatmaktı.
+        "beyan": ("`son_fit` MODELİN son fiilen KURULDUĞU andır (`fit_ts`). Yanındaki `son deneme` "
+                  "(`fit_attempt_ts`) fit DENENDİĞİ andır ve fit edilmeyen denemeler de "
+                  "(veri seti değişmedi · eşik altı) oraya damga bırakır. İkisi AYRI olgudur: "
+                  "deneme ilerlerken fit yerinde kalabilir. Damgayı `shadow_model.refit_and_save` "
+                  "atar — kadans (maybe_refit) da, loop.P5_LEARN de o yoldan geçer."),
     }
+    # ---- SON DENEME (v207) --------------------------------------------------------------------
+    # Fit ile DENEME panoda ayrı okunmak zorunda: "kadans koştu, veri değişmemişti" ile "kadans
+    # hiç koşmadı" tek satıra sıkışırsa sessiz bir duruş taze görünür (kadans nabzının ölçtüğü
+    # damga tam olarak budur).
+    out["son_deneme"] = {
+        "ts": an2.get("son_deneme_ts"),
+        "atlama_nedeni": an2.get("son_atlama_nedeni"),
+        "damga_var": bool(an2.get("son_deneme_ts")),
+    }
+    # ---- EKSEN-2 ÖZETİ (v207) -----------------------------------------------------------------
+    ex = out.get("eksen2")
+    if isinstance(ex, dict):
+        ex = dict(ex)
+        ozet = _eksen2_ozeti(ex)
+        ozet["motor_ici_esik_asan"] = _eksen2_motor_ici()
+        ex["ozet"] = ozet
+        out["eksen2"] = ex
     return out
 
 

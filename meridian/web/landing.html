@@ -26,8 +26,12 @@
   Vercel's own faces"; Geist is retired (overused-typeface list) and the successor
   was chosen by measurement across nine OFL pairs, not by taste — see
   docs/YAZI-TIPI-OLCUMU-2026-08-07.md. The page no longer touches any third-party
-  origin. #ffffff ground, surfaces that step by four
-  or five points of luminance instead of by shadow, 1px borders at 7-13% white,
+  origin. GROUND CORRECTED 2026-08-07 (D5): this line said "#ffffff ground" and that
+  was true of THIS FILE only because the daylight-token round (WP-P/P9, 2026-08-02)
+  had never reached it — index.html moved to the warm off-white #fbf9f8 and this
+  surface stayed pure white. It is now #fbf9f8, copied from index; see the JETON
+  TAKIMI block below. Surfaces still step by
+  luminance instead of by shadow, 1px borders at 7-13% white,
   6-8px radii, 150ms ease-out. Indigo #050505 is interaction and nothing else; it
   never colours a measurement. Every figure is Recursive Mono with tabular numerals so
   a column of numbers reads as a column. The ground is flat — no wash, no image.
@@ -100,6 +104,36 @@
   src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
   font-weight:400 700; font-style:normal; font-display:block;
 }
+/* ============================================================================
+   JETON TAKIMI — index.html'in BİREBİR KOPYASI (D5, 2026-08-07).
+   ----------------------------------------------------------------------------
+   BURADA BİR İDDİA VARDI VE ÖLÇÜM ONU ÇÜRÜTTÜ. Aşağıdaki gece bloğunun başlığı
+   "index.html ile AYNI değer takımı … bir jeton burada değişecekse ÜÇÜNDE birden
+   değişir" diyordu. 2026-08-07 ölçümü (yorumlar sıyrılmış :root blokları):
+     gündüz 59 jeton (index 97) · 13 DEĞER ayrışmış — --bg saf beyazda kalmıştı,
+       yani WP-P/P9 turu (2026-08-02, dokuz yüzey jetonu 0.9523 ile birlikte indi)
+       index'e uygulandı, bu iki yüzeye UYGULANMADI
+     gece 36 jeton (index 74) · 2 değer ayrışmış (--tx3, --violet: B1/B6
+       düzeltmeleri de gelmemişti — üç basamaklı mürekkep merdiveni ve ayrı seri
+       rengi burada hâlâ tek basamaktı)
+     ROL KATMANININ TAMAMI (40 jeton, D1) EKSİKTİ
+     --pm-pos/--pm-neg: rol katmanı öncesi yön sözlüğü, YALNIZ bu iki yüzeyde
+       hayatta kalmıştı (index'te yerini --yon-*-zemin aldı)
+   Yorumun UYARDIĞI hata, yorumun kendisi yazılıyken çoktan gerçekleşmişti.
+
+   NEDEN ÇÜRÜDÜ: iddia ÖLÇÜLMÜYORDU. Bir yorum kapı değildir; kapı testtir.
+   ARTIK ÖLÇÜLÜYOR: tests/test_jeton_birligi_v208.py dört yüzeyin (index ·
+   landing · workflow · runbook) gündüz ve gece :root jeton KÜMESİNİ ve
+   DEĞERLERİNİ karşılaştırır ve ayrışan her jetonu ADIYLA raporlar. Bir jeton
+   burada değişecekse DÖRDÜNDE birden değişir — ve bu cümle artık yazılı
+   olduğu için değil, ölçüldüğü için doğru.
+
+   REFERANS index.html'dir ve o dosya bu turda BAŞKA bir hattın alanı: değerler
+   oradan KOPYALANDI, burada yeniden değerlenmedi. Her jetonun ölçümü (kontrast,
+   kroma sınırları, merdiven adımları) index.html'in kendi bloklarında ve
+   docs/kontrast-denetimi.md'de durur; burada TEKRARLANMAZ — tekrarlanan bir
+   ölçüm, sessizce ayrışan ikinci bir kayıttır.
+   ============================================================================ */
 :root{
   --sans:'Recursive Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --display:var(--sans);
@@ -107,69 +141,99 @@
   --serif:var(--sans);
   /* spacing — one 4px base */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
-  /* OMEGA (2026-07-27): açık zemin, sıcak kemik paneller. Ayrım YALNIZ saç teli + ton farkıyla —
-     referansta ölçüldü, her kartta box-shadow:none. Token ADLARI değişmez. */
-  --bg:#ffffff; --bg2:#fbfaf8; --card:#f8f5f2; --card-2:#f1ece8; --raise:#ffffff;
-  --slip:#f1ece8; --slip-ink:#050505;
+  /* YÜZEYLER — OMEGA merdiveni, sıcak kemik paneller. Ayrım YALNIZ saç teli + ton farkıyla
+     (referansta ölçüldü: her kartta box-shadow:none). SAF BEYAZ YOK. */
+  --bg:#fbf9f8; --bg2:#f5f4f2; --card:#f2efed; --card-2:#ece7e3; --raise:#fbf9f8;
+  --slip:#ece7e3; --slip-ink:#050505;
   /* hairlines, not boxes — sıcak gri, nötr değil */
-  --line:#e7e3df; --line-2:#d9d4cf;
-  --tx:#050505; --tx2:#585450; --tx3:#585450;
+  --line:#e2deda; --line-2:#d4cfca;
+  --tx:#050505; --tx2:#585450; --tx3:#686562;
   /* OMEGA'DA ETKİLEŞİM RENGİ YOKTUR: birincil eylem siyah haptır. Renk yalnız ÖLÇÜME aittir. */
-  --accent:#050505; --accent-2:#050505; --accent-tint:#f3f3f3;
-  /* semantic — these mean money, so they are never decoration.
-     Açık zemin ölçümü (yeniden ölçüldü 2026-08-01): eski değerler burada 1.83-3.37:1'e
-     düşüyordu. Yeniler, her rengin KENDİ %10 tinti üzerinde — çipin fiilen oturduğu zemin —
-     en kötü gerçek bileşikte AA geçiyor: yeşil 4.88, kehribar 5.80, kırmızı 4.78.
-     Önceki yorum 4.60/5.90/5.59 diyordu; o üçlü yeniden üretilemedi. */
+  --accent:#050505; --accent-2:#050505; --accent-tint:#eeeeee;
+  /* DEĞER KATMANI — bir HUE'nun adı. Bunlar parayı anlatır, süs değildir. */
   --green:#0c6a3b; --amber:#6e4a00; --red:#b3242c;
-  --violet:#050505; --violet2:#050505; --blue:#050505;
+  --violet:#3e3c39; --violet2:#050505; --blue:#050505;
   --green-t:rgba(12,106,59,.10); --amber-t:rgba(110,74,0,.10); --red-t:rgba(179,36,44,.10);
-  --r-card:12px; --r-ctl:10px; --r-bar:2px;
-  --elev:none;
-  --label-size:10px; --label-track:.16em;
-  --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
-  --max:1180px;
+  /* ROL KATMANI (D1) — bir İŞİN adı. Bileşen kuralları YALNIZ bunu okur; hue adıyla bağlanan
+     bir kural, ikinci bir anlamı ödünç almayı ücretsiz kılar. Beş rolün tanımı, kroma
+     sınırları ve ölçümleri index.html'in :root bloğunda. */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  --yon-arti:#40654c; --yon-eksi:#784e4b;
+  --yon-arti-t:rgba(64,101,76,.10); --yon-eksi-t:rgba(120,78,75,.10);
+  --yon-arti-h:rgba(64,101,76,.35); --yon-eksi-h:rgba(120,78,75,.35);
+  --yon-arti-zemin:rgba(64,101,76,.08); --yon-eksi-zemin:rgba(120,78,75,.07);
+  --mod-kagit:var(--tx2); --mod-canli:#723a96; --mod-kesif:#635071;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(114,58,150,.10); --mod-kesif-t:rgba(99,80,113,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(114,58,150,.35); --mod-kesif-h:rgba(99,80,113,.35);
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(5,5,5,.45);
+  --band-2:#979491;
+  --kap-1:rgba(5,5,5,.06); --kap-2:rgba(5,5,5,.14);
+  --kap-3:rgba(5,5,5,.23); --kap-4:rgba(5,5,5,.30);
+  --dv-n2:rgba(46,82,122,.22); --dv-n1:rgba(46,82,122,.10);
+  --dv-p1:rgba(134,106,46,.10); --dv-p2:rgba(134,106,46,.22);
   /* Saç telleri ve perdeler JETONDUR — kural içinde sabit rgba() tema değişimine tepki vermez.
-     Bkz. index.html'deki uzun gerekçe. */
-  --nav-bg:rgba(255,255,255,.82);
+     Bkz. index.html'deki uzun gerekçe (--nav-bg vakası). */
+  --nav-bg:rgba(251,249,248,.82);
   --green-h:rgba(12,106,59,.35); --amber-h:rgba(110,74,0,.35); --red-h:rgba(179,36,44,.35);
   --amber-h2:rgba(110,74,0,.40);
   --ink-h:rgba(5,5,5,.30); --ink-h-soft:rgba(5,5,5,.18);
   --scrim:rgba(5,5,5,.42);
   --green-stamp:rgba(12,106,59,.55);
-  --pm-pos:rgba(12,106,59,.08); --pm-neg:rgba(179,36,44,.07);
-  /* ALAN KENARI — WCAG 2.2 1.4.11 (metin dışı 3:1). Saç telleri bilerek 1.1-1.5 arasında
-     (beyanlı sapma: kart ve çip DOLGUSUYLA tanınır, kenarıyla değil). Ama METİN GİRİŞİ öyle
-     değil: kutunun nerede başladığını gösteren TEK şey kenarıdır — DESIGN.md'nin "tek gerçek
-     maruziyet" dediği yer burasıydı. Bu yüzden form kontrolleri --line-2'yi DEĞİL bu jetonu
-     kullanır. Ölçüldü: gündüz en kötü gerçek zeminde 3.36, gece 3.25. */
-  --field:#8a8580;
+  --r-card:12px; --r-ctl:10px; --r-bar:2px;
+  --elev:none;
+  --label-size:10px; --label-track:.16em;
+  --ease:cubic-bezier(.16,1,.3,1); --t:.15s; --t-rise:.34s;
+  --max:1180px;
+  /* ALAN KENARI — WCAG 2.2 1.4.11 (metin dışı 3:1): form kontrolleri --line-2'yi DEĞİL bunu
+     kullanır, çünkü kutunun nerede başladığını gösteren TEK şey kenarıdır. */
+  --field:#86817d;
   color-scheme:light;
-
 }
 /* ============================================================================
-   GECE ZEMİNİ (2026-08-01) — index.html ile AYNI değer takımı.
-   Üç yüzey tek tercih okur (theme.js); değerler ayrışırsa operatör aynı üründe
-   iki dünya görür. Bir jeton burada değişecekse ÜÇÜNDE birden değişir.
-   Gerekçe ve ölçümler: DESIGN.md § Colors, index.html § gece bloğu.
+   GECE ZEMİNİ — index.html'in gece bloğunun BİREBİR KOPYASI.
+   Dört yüzey tek tercih okur (theme.js); değerler ayrışırsa operatör aynı üründe
+   iki dünya görür — ve 2026-08-07'ye kadar tam olarak öyleydi (yukarıdaki kayıt).
+   AD KÜMESİ GÜNDÜZLE BİREBİR AYNIDIR: bir zeminde tanımlı olup diğerinde olmayan
+   jeton, ikinci temada sessizce YANLIŞ zeminin rengiyle çalışır.
+   Çivi: tests/test_jeton_birligi_v208.py. Ölçümler: index.html § gece bloğu.
    ============================================================================ */
 :root[data-theme="gece"]{
   --bg:#1c1a18; --bg2:#232120; --card:#262320; --card-2:#2f2b27; --raise:#38342f;
   --slip:#2f2b27; --slip-ink:#d4d0cb;
   --line:#38342f; --line-2:#4a453f;
-  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#b0a9a0;
+  --tx:#d4d0cb; --tx2:#b0a9a0; --tx3:#95928f;
   --accent:#d4d0cb; --accent-2:#e8e4df; --accent-tint:#302c28;
   --green:#4cc38a; --amber:#e0a82e; --red:#f58b8f;
-  --violet:#d4d0cb; --violet2:#d4d0cb; --blue:#d4d0cb;
+  --violet:#b1afad; --violet2:#d4d0cb; --blue:#d4d0cb;
   --green-t:rgba(76,195,138,.10); --amber-t:rgba(224,168,46,.10); --red-t:rgba(245,139,143,.10);
+  --band-2:#676665;
+  --kap-1:rgba(212,208,203,.06); --kap-2:rgba(212,208,203,.14);
+  --kap-3:rgba(212,208,203,.23); --kap-4:rgba(212,208,203,.30);
+  --dv-n2:rgba(138,168,200,.22); --dv-n1:rgba(138,168,200,.10);
+  --dv-p1:rgba(198,176,122,.10); --dv-p2:rgba(198,176,122,.22);
   --nav-bg:rgba(28,26,24,.82);
   --green-h:rgba(76,195,138,.35); --amber-h:rgba(224,168,46,.35); --red-h:rgba(245,139,143,.35);
   --amber-h2:rgba(224,168,46,.40);
   --ink-h:rgba(212,208,203,.30); --ink-h-soft:rgba(212,208,203,.18);
   --scrim:rgba(10,9,8,.66);
   --green-stamp:rgba(76,195,138,.55);
-  --pm-pos:rgba(76,195,138,.08); --pm-neg:rgba(245,139,143,.07);
   --field:#7e776e;
+  /* ROL KATMANI · GECE — ad kümesi gündüzle birebir aynı. */
+  --sev-1:var(--red);   --sev-1-t:var(--red-t);   --sev-1-h:var(--red-h);
+  --sev-2:var(--amber); --sev-2-t:var(--amber-t); --sev-2-h:var(--amber-h); --sev-2-h2:var(--amber-h2);
+  --sev-3:var(--green); --sev-3-t:var(--green-t); --sev-3-h:var(--green-h);
+  --sev-3-damga:var(--green-stamp);
+  --yon-arti:#8ab59c; --yon-eksi:#d1a0a0;
+  --yon-arti-t:rgba(138,181,156,.10); --yon-eksi-t:rgba(209,160,160,.10);
+  --yon-arti-h:rgba(138,181,156,.35); --yon-eksi-h:rgba(209,160,160,.35);
+  --yon-arti-zemin:rgba(138,181,156,.08); --yon-eksi-zemin:rgba(209,160,160,.07);
+  --mod-kagit:var(--tx2); --mod-canli:#c598e7; --mod-kesif:#b9a4ca;
+  --mod-kagit-t:transparent; --mod-canli-t:rgba(197,152,231,.10); --mod-kesif-t:rgba(185,164,202,.10);
+  --mod-kagit-h:var(--line-2); --mod-canli-h:rgba(197,152,231,.35); --mod-kesif-h:rgba(185,164,202,.35);
+  --olcek-guven:var(--tx2); --olcek-guven-t:var(--accent-tint); --olcek-guven-h:rgba(212,208,203,.45);
   color-scheme:dark;
 }
 
@@ -193,7 +257,29 @@ h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-h
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-ctl)}
 .mut{color:var(--tx2)}
-.pos{color:var(--green)} .neg{color:var(--red)}
+/* ROL SINIFI (D5, 2026-08-07) — burada `.pos{color:var(--green)}` ve `.neg{color:var(--red)}`
+   duruyordu ve İKİSİ DE YANLIŞTI, ama AYRI AYRI. Kullanımlar sayıldı, tahmin edilmedi:
+
+     `.neg` — SIFIR kullanıcı. landing.js:108 `" neg"` üretiyor ama HER ZAMAN `pm-cell`e
+       ekleyerek (`'<div class="pm-cell' + cls + '"'`), yani eşleşen kural 0-2-0 özgüllüğüyle
+       `.pm-cell.neg`tir; çıplak 0-1-0 kuralı hiçbir öğeyi boyamıyordu. Ölü kural SİLİNDİ.
+     `.pos` — TEK kullanıcı ve o da YÖN DEĞİLDİ: "bağlı" rozeti (Alpaca · paper, aşağıda).
+       "bağlı" ROL 2'nin ŞİDDET-3'ü (nominal: sakin, geçti, bağlı) — index.html :root'un kendi
+       tanımı. Yani `--yon-arti`ya çevirmek bir rol sızıntısını başkasıyla değiştirirdi.
+       Sınıf ADI da yalan söylüyordu: aynı ad panoda YÖN, burada DURUM demek oluyordu.
+       Kullanım index.html:436'nın rol sınıfına taşındı; `.pos` de böylece sıfır kullanıcıya
+       düştü ve o da SİLİNDİ. Matris hücreleri gerçekten yöndür — `.pm-cell.pos/.neg`
+       (aşağıda) `--yon-*` okumaya devam eder, dokunulmadı.
+
+   ÖLÇÜM (WCAG 2.x, docs/kontrast-denetimi.md §1 yöntemi). Zemin KURALDAN okundu, tahminle
+   değil: `.acct .r b` kendi zeminini boyamaz, `.acct` ve `.main` de boyamaz — ilk boyayan ata
+   `.app{background:var(--bg)}`, opak, yığında alfa yok. `--sev-3` iki temada da `--green`e
+   çözülür, yani PİKSEL DEĞİŞMEDİ; değişen yalnız hue'nun hangi rolden geldiği.
+     gündüz  #0c6a3b · --bg #fbf9f8 → 6,37  (12px mono, eşik 4,5 → AA)
+     gece    #4cc38a · --bg #1c1a18 → 7,83  (AA)
+   Rakam D5 ZEMİNİNDE yeniden alındı: bu turdan önce `--bg` saf beyazdı ve aynı mürekkep
+   6,69 ölçüyordu — 0,32'lik farkı taşıyan zemin turu, ölçümü bayatlatan turdu. */
+.sev-3{color:var(--sev-3)}
 .mono-num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 var(--s6)}
 section[id]{scroll-margin-top:88px}
@@ -318,8 +404,14 @@ h1 .g{color:var(--tx2)}
    figure, not a texture. A 3-trade mean cannot look as firm as a 55-trade one. */
 .pm-conf{position:relative;height:2px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:2px}
 .pm-conf i{display:block;height:100%;width:var(--conf,50%);background:currentColor;opacity:.85;border-radius:2px}
-.pm-cell.pos{color:var(--green);background:var(--pm-pos)}
-.pm-cell.neg{color:var(--red);background:var(--pm-neg)}
+/* YÖN ROLÜ, HUE ADI DEĞİL (D5, 2026-08-07). Bu iki kural --green/--red mürekkebini ve
+   --pm-pos/--pm-neg zeminini okuyordu. --pm-* rol katmanı ÖNCESİNİN yön sözlüğüydü ve
+   D1'de index.html'te yerini --yon-*-zemin'e bıraktı; bu yüzeyde emekli edilmeden kaldı,
+   yani aynı ürünün iki yüzeyi K/Z işaretini iki farklı sözlükten boyuyordu. Kural artık
+   index.html:956-957 ile aynı jetonları okur: kroma yönde şiddetin ALTINDADIR (ölçülmüş
+   kısıt), ve alfa .08/.07 KORUNDU — değişen yalnız hue'nun hangi rolden geldiği. */
+.pm-cell.pos{color:var(--yon-arti);background:var(--yon-arti-zemin)}
+.pm-cell.neg{color:var(--yon-eksi);background:var(--yon-eksi-zemin)}
 .pm-yield{position:relative;font-size:24px;font-weight:500;letter-spacing:-.045em;line-height:1;color:currentColor}
 .pm-n{position:relative;font-size:12px;color:var(--tx2);font-variant-numeric:tabular-nums}
 /* no trades here: a quieter ground and a word, not a zero */
@@ -597,7 +689,9 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
       <div class="main">
         <div class="acct">
           <p class="slab">HESAP</p>
-          <div class="r"><span>Alpaca · paper</span><b class="pos">bağlı</b></div>
+          <!-- "bağlı" bir DURUMdur, K/Z işareti değil: ŞİDDET-3 (nominal). Gerekçe ve ölçüm
+               `.sev-3` kuralının yanında; sınıf adı index.html:436 ile aynı. -->
+          <div class="r"><span>Alpaca · paper</span><b class="sev-3">bağlı</b></div>
         </div>
         <span class="slabel"><span class="d"></span>KURULUM × REJİM</span>
         <p class="greet">Hangi uygulama, hangi koşulda?</p>

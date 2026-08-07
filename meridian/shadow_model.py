@@ -27,6 +27,49 @@ _LAST_SPLIT: dict = {"n_real": None, "n_cf": None}
 MIN_FIT_N = 40                      # bunun altında model kurulmaz — gürültü ezberi olur
 FEATURES_NOTE = "score/100, r_multiple_expected, regime one-hot (VALID_REGIMES)"
 
+# ==================================================================================================
+# ANTRENMAN DAMGALARI — İKİ AYRI OLGU, İKİ AYRI DAMGA (v207, 2026-08-07)
+# ==================================================================================================
+# ÖLÇÜLEN KUSUR (Rol-1, canlı): `scheduler_status.last_learn.antrenman` =
+# {fitted: True, n_fit: 2217, brier_train: 0.2428, ts: 2026-08-06T20:13:37} — kadans DÜN KOŞTU VE
+# EĞİTTİ. Aynı anda `shadow_model.json` → fit_attempt_ts=None, fit_ts=None, n_fit=2219. Pano da
+# (haklı olarak, çünkü damgayı okuyor) kırmızı "HİÇ KOŞMADI" basıyordu. Yani v192'nin teşhisi
+# ("kadans gerçekten hiç koşmadı, rozet DOĞRU") ÖLÇÜMLE ÇÜRÜDÜ: kadans koştu, damgası SİLİNDİ.
+#
+# KÖK NEDEN — `save()` bir ÜSTÜNE-YAZMAYDI. `store.write_json` dosyayı tümüyle değiştirir; `save()`
+# ona sıfırdan kurulmuş bir sözlük veriyordu ve o sözlükte dört damganın hiçbiri yoktu. Sıralama:
+#     maybe_refit()  → damgaları yazar (fit_attempt_ts, fit_ts, fit_fingerprint)
+#     loop.P5_LEARN  → refit_and_save() → save() → DÖRDÜNÜ DE SİLER
+# İki n_fit'in farkı (2217 ↔ 2219) bunun doğrudan kanıtıdır: dosyayı EN SON yazan taraf kadans
+# değil, iki satır daha görmüş olan P5_LEARN kolu ve o kol damgasızdı.
+#
+# İKİNCİL ZARAR: silinen `fit_fingerprint` yüzünden `maybe_refit`in "veri_seti_degismedi" kapısı
+# HİÇ kapanmıyordu — kadans her seans yeniden fit ediyordu. Damgayı düzeltmek o kapıyı da geri
+# açar; bu bir yan etki değil, damganın asıl işlevidir.
+#
+# SÖZLEŞME (bu turda yazıya geçti):
+#   fit_attempt_ts  — HER DENEME. Fit edilsin ya da edilmesin: "veri_seti_degismedi" dalı da,
+#                     eşik-altı dalı da, yarıda kalan bir fit de damga bırakır.
+#   fit_ts          — YALNIZ BAŞARILI FİT (model kuruldu, katsayı yazıldı).
+# İkisi AYRI olgudur ve panoda ayrı okunur: "kadans koştu ama gerek yoktu" ile "model taze" aynı
+# cümle değildir, "kadans hiç koşmadı" ile hiç değildir.
+_DAMGA_ALANLARI = ("fit_attempt_ts", "fit_ts", "fit_fingerprint", "fit_skip_reason")
+
+
+def _simdi() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+
+def _damga_yaz(**alanlar) -> None:
+    """Durum defterine OKU-BİRLEŞTİR-YAZ. Tek kapı: damga yazan her yol buradan geçer, yoksa
+    `save()`in eski kusuru (üstüne-yazma) başka bir çağrı yolunda yeniden doğar."""
+    st = store.read_json(STATE_FILE, {}) or {}
+    if not isinstance(st, dict):        # bozuk defter: damga yazımı sessizce YUTULMAZ
+        obs.warn("shadow_state_bozuk", tip=type(st).__name__,
+                 detail="shadow_model.json sözlük değil — damga taze bir sözlüğe yazıldı")
+        st = {}
+    store.write_json(STATE_FILE, {**st, **alanlar})
+
 
 class ShadowTradeOutcomeModel:
     """fit → predict_proba → brier → save/load. Katsayılar + standardizasyon durumu tek JSON'da."""
@@ -181,7 +224,18 @@ class ShadowTradeOutcomeModel:
     def save(self) -> None:
         if self.w is None:
             return
-        store.write_json(STATE_FILE, {
+        # OKU-BİRLEŞTİR-YAZ — ÜSTÜNE-YAZ DEĞİL (v207 kökü, yukarıdaki damga sözleşmesi). Eski hâl
+        # `write_json`e SIFIRDAN kurulmuş bir sözlük veriyordu; `write_json` tam bir üstüne-yazma
+        # olduğu için bu çağrı dört kadans damgasını (`_DAMGA_ALANLARI`) birden siliyordu. Model
+        # alanları yine TAM yazılır — korunan yalnız bu defterin DİĞER sahibinin (kadans damgaları
+        # + `promotion`) yazdıklarıdır. Kaynak künyesi (`PROV_KEY`) bu fit'inkiyle EZİLİR: onu
+        # korumak, yeni bir eğitim setini eski künyeyle etiketlemek olurdu.
+        mevcut = store.read_json(STATE_FILE, {}) or {}
+        if not isinstance(mevcut, dict):
+            obs.warn("shadow_state_bozuk", tip=type(mevcut).__name__,
+                     detail="shadow_model.json sözlük değil — model taze bir sözlüğe kaydedildi")
+            mevcut = {}
+        store.write_json(STATE_FILE, {**mevcut,
             "w": self.w.tolist(), "mu": self.mu.tolist(), "sd": self.sd.tolist(),
             "n_fit": self.n_fit, "brier_train": self.brier_train,
             "features": FEATURES_NOTE, "mode": "shadow",
@@ -251,17 +305,41 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def refit_and_save(cls) -> "ShadowTradeOutcomeModel":
+        """FİT DENEMESİNİN TA KENDİSİ — ve bu yüzden DAMGAYI ATAN YER BURASI (v207).
+
+        Damga eskiden yalnız `maybe_refit`te yazılıyordu; oysa canlıda fit'i atan iki yol var
+        (kadans + `loop.P5_LEARN`) ve ikincisi damgasızdı. Damgayı çağıranın değil FİİLİN yanına
+        koymak, üçüncü bir çağıran doğduğunda da damgayı garanti eder — bu tur zaten "damga
+        çağırana asılıydı" kusurunun ikinci nüksüdür.
+
+        Deneme damgası fit'ten ÖNCE atılır: fit yarıda kalırsa (bozuk defter, bellek) defterde
+        "denendi ama bitmedi" yazar. Sessiz bir yarım fit, hiç denenmemiş gibi okunamaz (YASA 4)."""
+        now = _simdi()
+        # Parmak izi fit'ten ÖNCE alınır: kaydedilen izin, FİİLEN eğitilen veri setinin izi olması
+        # gerekir. Fit bittikten sonra almak, o sırada düşmüş yeni bir satırı "görüldü" saymak olurdu.
+        fp = dataset_fingerprint()
+        _damga_yaz(fit_attempt_ts=now, fit_skip_reason="fit_basladi_bitmedi")
         m = cls().fit()
         if m.w is not None:
             m.save()
             promo = cls.evaluate_promotion()
             st = store.read_json(STATE_FILE, {})
-            was = bool(st.get("promotion", {}).get("promoted"))
-            store.write_json(STATE_FILE, {**st, "promotion": promo})
+            was = bool((st.get("promotion") or {}).get("promoted"))
+            # BAŞARILI FİT: `fit_ts` AYRICA basılır. `fit_attempt_ts` zaten yukarıda basıldı ve
+            # burada aynı ana eşitlenir — ikisinin AYRI alan olması, bir sonraki başarısız
+            # denemede `fit_attempt_ts`in ilerleyip `fit_ts`in yerinde kalmasını sağlar.
+            store.write_json(STATE_FILE, {**st, "promotion": promo, "fit_ts": now,
+                                          "fit_attempt_ts": now, "fit_fingerprint": fp,
+                                          "fit_skip_reason": None})
             obs.log("shadow_model_fit", n=m.n_fit, brier_train=m.brier_train,
                     live_brier=promo["live_brier"], promoted=promo["promoted"])
             if promo["promoted"] and not was:
                 obs.log("shadow_model_promoted", detail="canlı Brier taban-oranı yendi — REVIEW vetosu aktif")
+        else:
+            # DENENDİ, KURULAMADI. `fit_ts` DOKUNULMAZ (önceki başarılı fit hâlâ geçerli bir
+            # olgudur); ilerleyen tek şey deneme damgası ve atlama nedeni. Parmak izi de
+            # yazılmaz — yoksa kurulamamış bir fit veri setini "işlendi" ilan ederdi.
+            _damga_yaz(fit_attempt_ts=now, fit_skip_reason=f"esik_alti(min_n={MIN_FIT_N})")
         return m
 
     @classmethod
@@ -332,6 +410,12 @@ def training_status() -> dict:
         "n_cf": (st.get(sieve.PROV_KEY) or {}).get("n_cf"),
         "brier_train": st.get("brier_train"),
         "son_fit_ts": st.get("fit_ts") or (st.get(sieve.PROV_KEY) or {}).get("generated"),
+        # DAMGA MI, ÇIKARIM MI? `son_fit_ts` iki kaynaktan gelebiliyor ve ikisi aynı güvende
+        # DEĞİL: `fit_ts` fit'in kendi damgasıdır, künyedeki `generated` ise kaydın yazıldığı
+        # andır (damga silinmişse tek kalan iz — v207 öncesi canlıda tam olarak bu oluyordu).
+        # Kaynağı yazmadan ikisini tek alanda sunmak, çıkarımı damga gibi göstermek olurdu.
+        "son_fit_kaynak": ("damga" if st.get("fit_ts")
+                           else ("kunye" if (st.get(sieve.PROV_KEY) or {}).get("generated") else None)),
         "son_deneme_ts": st.get("fit_attempt_ts"),
         "son_atlama_nedeni": st.get("fit_skip_reason"),
         "veri_seti_taze": taze,
@@ -358,7 +442,7 @@ def maybe_refit(*, force: bool = False) -> dict:
 
     YETKİ: hiçbiri yeni. `refit_and_save` neyi yapıyorsa o yapılır (kaydet + `evaluate_promotion`);
     terfinin tek sonucu bugün de `shadow_veto`dur."""
-    now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    now = _simdi()
     fp = dataset_fingerprint()
     st = store.read_json(STATE_FILE, {}) or {}
     kurulu = bool(st.get("w"))
@@ -366,23 +450,20 @@ def maybe_refit(*, force: bool = False) -> dict:
     if not force and kurulu and onceki == fp:
         # DENEME DAMGASI YİNE YAZILIR: "kadans koştu ama gerek yoktu" ile "kadans hiç koşmadı"
         # ayrı hâllerdir ve karne ikisini ayırt edemezse sessiz bir duruş taze görünür.
-        store.write_json(STATE_FILE, {**st, "fit_attempt_ts": now,
-                                      "fit_skip_reason": "veri_seti_degismedi"})
+        # BU DAL FİT ÇAĞIRMAZ, dolayısıyla damgayı `refit_and_save` atamaz — kadansın kendi
+        # damgasını attığı TEK yer burasıdır (v207'de diğer iki dal fiilin yanına taşındı).
+        _damga_yaz(fit_attempt_ts=now, fit_skip_reason="veri_seti_degismedi")
         return {"fitted": False, "reason": "veri_seti_degismedi", "n_fit": st.get("n_fit"),
                 "promoted": (st.get("promotion") or {}).get("promoted"), "ts": now}
+    # DAMGALARI ARTIK `refit_and_save` ATAR (v207): fit'i o yapıyor, deneme onun denemesi. Burada
+    # ikinci kez yazmak iki `now` arasında sahte bir fark üretir ve — daha kötüsü — damganın
+    # KADANSA ait olduğu izlenimini sürdürürdü; oysa canlıdaki kusur tam olarak buydu (fit'i atan
+    # ikinci çağıran, `loop.P5_LEARN`, damgasızdı ve `save()` kadansınkini siliyordu).
     m = ShadowTradeOutcomeModel.refit_and_save()
     if m.w is None:
-        # MIN_FIT_N altında kaldı (ya da veri seti boş). `fit()` zaten `shadow_model_skip` yazdı;
-        # burada durum dosyasına da düşer, yoksa karne "neden kurulmadı"yı bilemez.
-        st2 = store.read_json(STATE_FILE, {}) or {}
-        store.write_json(STATE_FILE, {**st2, "fit_attempt_ts": now,
-                                      "fit_skip_reason": f"esik_alti(min_n={MIN_FIT_N})"})
         obs.log("shadow_fit_cadence", fitted=False, reason="esik_alti", min_n=MIN_FIT_N)
         return {"fitted": False, "reason": "esik_alti", "min_fit_n": MIN_FIT_N, "ts": now}
-    st2 = store.read_json(STATE_FILE, {}) or {}
-    store.write_json(STATE_FILE, {**st2, "fit_fingerprint": fp, "fit_ts": now,
-                                  "fit_attempt_ts": now, "fit_skip_reason": None})
-    promo = (st2.get("promotion") or {})
+    promo = (store.read_json(STATE_FILE, {}) or {}).get("promotion") or {}
     obs.log("shadow_fit_cadence", fitted=True, n=m.n_fit, brier_train=m.brier_train,
             n_live=promo.get("n_live"), promoted=promo.get("promoted"),
             detail="seans-sonrası antrenman kadansı — bar varışından BAĞIMSIZ koştu")
