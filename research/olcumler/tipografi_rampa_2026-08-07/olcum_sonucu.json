@@ -1,0 +1,49 @@
+{
+  "koşum": "2026-08-07, Chrome (Browser pane), dpr 2, ekran 1710x1112",
+  "korpus": {"kaynak": "docs/RUNBOOK.md", "blok": 151, "karakter": 56249,
+             "not": "gerçek Türkçe gövde metni — paragraflar + liste maddeleri; başlık/tablo/kod bloğu hariç"},
+  "yazi_tipi_yuklendi": true,
+  "govde_spesifikasyonlari": {
+    "MEVCUT":       {"px":15,"satir_yuksekligi":1.65,"olcu_ch":78,"yuz":"system-ui yığını",
+                     "x_yuksekligi_px":7.896,"cap_px":10.569,"cpl_medyan":99.6,"cpl_ortalama":99.7,
+                     "olcu_render_px":737.0,"toplam_satir":640,"korpus_yuksekligi_px":15840},
+    "SADECE_BOYUT": {"px":14,"satir_yuksekligi":1.65,"olcu_ch":78,"yuz":"system-ui yığını",
+                     "x_yuksekligi_px":7.369,"cap_px":9.864,"cpl_medyan":98.0,"cpl_ortalama":98.3,
+                     "toplam_satir":645,"korpus_yuksekligi_px":14895},
+    "ADAY":         {"px":14,"satir_yuksekligi":1.8,"olcu_ch":72,"yuz":"system-ui yığını",
+                     "x_yuksekligi_px":7.369,"cap_px":9.864,"cpl_medyan":92.0,"cpl_ortalama":91.1,
+                     "olcu_render_px":634.9,"toplam_satir":683,"korpus_yuksekligi_px":17208},
+    "OLCUT":        {"px":14,"satir_yuksekligi":1.8,"olcu_ch":72,"yuz":"Recursive Sans (index.html .md birebir)",
+                     "x_yuksekligi_px":7.448,"cap_px":9.800,"cpl_medyan":78.0,"cpl_ortalama":77.9,
+                     "olcu_render_px":604.8,"toplam_satir":750,"korpus_yuksekligi_px":18896}
+  },
+  "hukum_olcutleri": {
+    "K1_ayni_metin_14pxte_okunuyor": {"sonuc":"GEÇTİ","kanit":"D2-b olay yüzeyleri: app.js:3111 adımlar, .hint 14px (index.html:1380) / .md 14px (index.html:1368); runbook.html'in kendi .tasindi notu sayfayı arşiv metnine indirgiyor"},
+    "K2a_ithal_band_45_75":  {"sonuc":"DÜŞTÜ","olculen":92.0},
+    "K2b_urune_goreli":      {"sonuc":"GEÇTİ","olculen":92.0,"esik":73.0,
+                              "not":"ön-kayıt: çelişirse ürüne-göreli bacak kazanır"},
+    "K3_x_yuksekligi":       {"sonuc":"GEÇTİ","fark_px":-0.079,"tolerans_px":0.5}
+  },
+  "baslik_merdiveni": {
+    "MEVCUT_26_18_15": {"h1_h2_cap_ayrimi_px":5.64,"h2_govde_cap_ayrimi_px":2.11,"rampada":false},
+    "A_24_20_14":      {"h1_h2_cap_ayrimi_px":2.82,"h2_govde_cap_ayrimi_px":4.23,"rampada":true},
+    "B_24_17_14":      {"h1_h2_cap_ayrimi_px":4.93,"h2_govde_cap_ayrimi_px":2.11,"rampada":true},
+    "C_28_20_14":      {"h1_h2_cap_ayrimi_px":5.64,"h2_govde_cap_ayrimi_px":4.23,"rampada":true}
+  },
+  "display_28px_mesruiyeti": {
+    "kural":"DESIGN.md — Display 28px: 'the largest heading on a view; one per view'",
+    "h1_sayisi":7,
+    "en_dar_h1_h1_kaynak_satir_araligi":44,
+    "en_dar_h1_h1_render_px_ADAY":1189,
+    "en_dar_h1_h1_render_px_MEVCUT":1208,
+    "olcum_makinesinin_ekran_yuksekligi_px":1112,
+    "hukum":"1189px > 1112px — bu makinede iki h1 aynı görünüme ASLA sığmaz; kural sağlanıyor",
+    "sinir_vakasi":"viewport yüksekliği >1189px olan ekranlarda belgenin İLK iki h1'i (başlık + 'Alarmlar') aynı görünümü paylaşabilir — altı aralıktan yalnız biri"
+  },
+  "yeni_bulgu_satir_uzunlugu": {
+    "gozlem":"CPL her spesifikasyonda geleneksel 45-75 uzun-metin bandının DIŞINDA",
+    "MEVCUT":99.6, "ADAY":92.0, "OLCUT_panonun_kendi_md_si":78.0,
+    "yuz_bagimliligi":"AYNI CSS (14px/1.8/72ch) system yığınında 92, Recursive'de 78 CPL — %18 fark",
+    "sonuc":"bu tur 99,6 -> 92 iyileştiriyor ama BANDA SOKMUYOR; D5 yazı-tipi geçişi tek başına 92 -> 78'e taşır"
+  }
+}

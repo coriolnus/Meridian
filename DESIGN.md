@@ -733,12 +733,85 @@ any surface:
 | `index.html` | 7 | `16→20` … `24→28` | the console's fluid type stays **inside the ramp's own band**; only the endpoints 16 / 18 / 26 are off-step |
 | `workflow.html` | 1 | `24→28` | |
 | `landing.html` | 6 | `23→38` … `40→58` | the only surface that goes **above** the ramp's top step, and the only one that should: a persuasion page opens on a hero claim, which is a job the console does not have. Its own direction contract has said so since it was written ("*plus the clamp() display steps*") |
+| `runbook.html` | 0 | — | **added 2026-08-07 (D6) — see the correction directly below** |
+
+> **That inventory counted three surfaces and said "any surface". It was wrong when it was
+> written.** `runbook.html` is the fourth surface and it carried **three** off-ramp fixed
+> literals — `15px` body, `26px` h1, `18px` h2 — at the moment the row above claimed none
+> existed. The table was not measured across the surface set it quantified over; it was
+> measured across the three surfaces its author had in hand. The claim is corrected here rather
+> than quietly edited, because the failure is the interesting part: *an inventory that names its
+> scope in the row and its quantifier in the sentence will drift the moment a fourth surface
+> exists.* The row is now present and the literals are gone (D6, below).
 
 > **A tool will report this as a violation, and the report is half right.** The machine-readable
 > `typography:` block at the head of this file declares six *roles* (28 / 20 / 17 / 14 / 10), not
 > the nine-step ramp, so a linter that reads it as the scale flags `11px`, `12px` and `13px` — all
 > three legal ramp steps — alongside the genuinely off-step `36px`. Read the nine-step table above
 > as the ramp; the front-matter block is the hierarchy, not the scale.
+
+#### `runbook.html` on the ramp, and why the body did *not* get a deviation (2026-08-07, D6)
+
+The runbook is the one genuine long-form reading surface in the product — 1148 source lines of
+Turkish operational prose, read at the worst possible moment. It ran at `15px/1.65/78ch` with a
+`26/18` heading ladder, none of it on the ramp and none of it explained. The obvious defence was
+available and was taken seriously: *long-form wants a bigger body than a console does, so record
+the deviation instead of destroying the reading.* **It was tested and it lost.** Pre-registration,
+harness and numbers: `research/olcumler/tipografi_rampa_2026-08-07/`.
+
+The benchmark was not imported. `index.html:1368` already ships the product's own long-form prose
+spec — `.md { font-size:14px; line-height:1.8; max-width:72ch }` — so the question became whether
+the runbook needed to be *larger than the console's own long-form class*, which is answerable.
+
+| Criterion (frozen before measuring) | Result |
+|---|---|
+| **K1** — is this same runbook text already read at ≤14px on a primary surface? | **Yes.** Since D2-b the runbook's four sections are rendered inside the console's event surfaces at 14px, and the page's own note demotes it to archival full text. The "long-form needs 15px" claim is refuted by the product itself. |
+| **K2** — candidate line length | 92 CPL. Outside the imported 45–75 band, but the tiebreak was pre-registered: the product-relative leg wins, and 92 ≥ benchmark 78 − 5. **Pass, with a finding — below.** |
+| **K3** — candidate x-height vs benchmark | 7.369px vs 7.448px = **−0.079px**, against a 0.5px tolerance anchored on the −0.11px cap-height loss this system already knowingly ships. **Pass.** |
+
+**Ruling: `14px / 1.8 / 72ch`** — the ramp's Body step, with line-height and measure taken from
+`.md` rather than invented. The x-height cost against the old `15px` is real and is **−0.527px
+(−6.7%)**; what it buys is that the runbook stops being a fourth typographic world. No deviation
+was recorded in this document, because none was earned.
+
+**Heading ladder: `28 / 20`.** Four candidates were measured by the separation a ladder actually
+delivers — cap-height difference in px, not ratio:
+
+| Ladder | h1↔h2 | h2↔body | on ramp |
+|---|---|---|---|
+| `26/18/15` (old) | 5.64px | 2.11px | no |
+| `24/20/14` | 2.82px | 4.23px | yes |
+| `24/17/14` | 4.93px | 2.11px | yes |
+| **`28/20/14`** | **5.64px** | **4.23px** | **yes** |
+
+`28/20` dominates: it holds the old h1↔h2 separation *exactly* and doubles h2↔body — and that
+second number is the `flat-type-hierarchy` finding at `docs/BASELINE-2026-08-06.md:92`, since an
+operator arriving on `/runbook#<anchor>` lands on an **h2**, never an h1.
+
+**28px here does not break the Display rule, and that was measured rather than argued.** The rule
+reserves 28px for "the largest heading on a view; one per view". The document has 7 `h1`s; the
+**narrowest** rendered gap between two of them is **1189px**, against a full screen height of
+1112px on the measuring machine — two of them cannot occupy one view. *Boundary, stated because it
+is real:* on a viewport taller than 1189px the document's first two `h1`s (the title and
+"Alarmlar") can share a view. One of six gaps, and the pair is a title plus its first part divider.
+
+**The relative sizes are gone too.** `.86em`/`.92em` did not violate the Ramp Rule's letter, which
+binds *fixed* sizes — but measured at the new body they resolved to **12.04px** and **12.88px**,
+i.e. they were already aiming at ramp steps 12 and 13 without saying so. They are now literal.
+`code` inside an `h2` is the one case that needed its own rule (`17px`, one step under the
+heading): all 15 code-carrying headings in the source are `##` and are code end-to-end, so a flat
+12px would have demoted them out of the ladder.
+
+**Finding this round did not close — line length.** Every spec measured runs long: 99.6 CPL before,
+92 CPL after, and the console's own `.md` benchmark sits at **78**. The move improves the number
+without bringing it into the conventional 45–75 band, and `max-width` in `ch` is why — `ch` is the
+advance of `0`, and Turkish lowercase is far narrower than a digit. It is also **face-dependent**:
+the identical CSS (`14px/1.8/72ch`) yields **92 CPL in the system stack and 78 in Recursive**, an
+18% difference. So the outstanding token round on this surface will move line length on its own,
+and any attempt to fix the measure should happen *after* that, not before it.
+
+**Still open on this surface, and not touched here:** `runbook.html` remains on its own colour
+dictionary, cold hairlines and `prefers-color-scheme` — the rest of T10. This round was type only.
 
 **The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. The
 declaration is defensive, not decorative: it is inert on Recursive Mono itself (no `tnum` feature,

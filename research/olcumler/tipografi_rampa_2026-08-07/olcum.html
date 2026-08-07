@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>D6 · runbook tip rampası ölçümü</title>
+<!-- ÖLÇÜM KOŞUMU — ön-kaydı ON_KAYIT.md'de, eşikler ORADA donduruldu.
+     Bu sayfa hüküm VERMEZ, yalnız sayı üretir. Gerçek `docs/RUNBOOK.md` metniyle koşar. -->
+<style>
+  @font-face{font-family:RecursiveSans;src:url("fonts/recursive-sans-vf.woff2") format("woff2-variations");
+             font-weight:400 700;font-style:normal;font-display:block}
+  html,body{margin:0;background:#fbfaf9;color:#1b1a19}
+  /* Ölçüm kapları ekranda görünür — ölçülen şey gerçekten çizilen şeydir. */
+  .kap{position:absolute;left:-99999px;top:0}
+  #cikti{font:12px ui-monospace,monospace;white-space:pre;padding:16px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="kaplar"></div>
+<pre id="cikti">ölçülmedi</pre>
+<script>
+/* ---- ön-kayıtta donmuş dört spesifikasyon ---- */
+const YIGIN_MEVCUT = 'ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const YIGIN_OLCUT  = 'RecursiveSans';
+const SPEC = {
+  MEVCUT:      {px:15, lh:1.65, ch:78, font:YIGIN_MEVCUT},
+  SADECE_BOYUT:{px:14, lh:1.65, ch:78, font:YIGIN_MEVCUT},
+  ADAY:        {px:14, lh:1.80, ch:72, font:YIGIN_MEVCUT},
+  OLCUT:       {px:14, lh:1.80, ch:72, font:YIGIN_OLCUT},
+};
+
+/* x-yüksekliği / cap-yüksekliği: canvas mürekkep kutusu — yazı-tipi metriklerinin
+   beyanı değil, RASTERİN kendisi. */
+function inkYuksekligi(harf, px, font){
+  const c = document.createElement("canvas").getContext("2d");
+  c.font = `400 ${px}px ${font}`;
+  const m = c.measureText(harf);
+  return {ust:m.actualBoundingBoxAscent, ilerleme:m.width};
+}
+
+/* Bir bloğun DOLU satırlarındaki karakter sayısı.
+   Satır kutuları Range.getClientRects()'ten gelir; son satır (kırık/ragged) ikili
+   aramayla bulunup ATILIR — ortalamayı aşağı çeken tek şey odur. */
+function bloktaCPL(dugum, metin){
+  const r = document.createRange();
+  r.selectNodeContents(dugum);
+  const kutular = Array.from(r.getClientRects()).filter(k => k.width > 0.5);
+  if (kutular.length < 2) return null;
+  const sonUst = kutular[kutular.length-1].top;
+  const konum = (i) => { const q = document.createRange();
+    q.setStart(dugum, i); q.setEnd(dugum, Math.min(i+1, metin.length));
+    const k = q.getClientRects(); return k.length ? k[k.length-1].top : -1; };
+  let lo = 0, hi = metin.length - 1;              // son satırın İLK karakterini ara
+  while (lo < hi){ const orta = (lo+hi) >> 1;
+    if (konum(orta) >= sonUst - 0.5) hi = orta; else lo = orta + 1; }
+  const doluKarakter = lo, doluSatir = kutular.length - 1;
+  return {cpl: doluKarakter / doluSatir, satir: kutular.length,
+          genislik: kutular[0].width, karakter: metin.length};
+}
+
+async function kos(){
+  const metinler = await (await fetch("ornek_metin.json")).json();
+  await document.fonts.load("400 14px RecursiveSans");
+  await document.fonts.ready;
+  const yuklendi = document.fonts.check("400 14px RecursiveSans");
+
+  const sonuc = {yazi_tipi_yuklendi: yuklendi, blok_sayisi: metinler.length,
+                 toplam_karakter: metinler.reduce((a,b)=>a+b.length,0), spec:{}};
+
+  for (const [ad, s] of Object.entries(SPEC)){
+    const kap = document.createElement("div");
+    kap.className = "kap";
+    kap.style.cssText = `font-family:${s.font};font-size:${s.px}px;line-height:${s.lh};` +
+                        `max-width:${s.ch}ch;font-variant-numeric:tabular-nums`;
+    document.getElementById("kaplar").appendChild(kap);
+
+    const cpller = [], p_yukseklikleri = [];
+    let toplamSatir = 0;
+    for (const t of metinler){
+      const p = document.createElement("p");
+      p.style.margin = "0";
+      p.textContent = t;
+      kap.appendChild(p);
+      const o = bloktaCPL(p.firstChild, t);
+      if (o){ cpller.push(o.cpl); toplamSatir += o.satir; }
+      p_yukseklikleri.push(p.getBoundingClientRect().height);
+    }
+    const sirali = cpller.slice().sort((a,b)=>a-b);
+    const medyan = sirali[Math.floor(sirali.length/2)];
+    const x = inkYuksekligi("x", s.px, s.font);
+    const H = inkYuksekligi("H", s.px, s.font);
+    const sifir = inkYuksekligi("0", s.px, s.font);
+
+    sonuc.spec[ad] = {
+      px:s.px, satir_yuksekligi:s.lh, olcu_ch:s.ch,
+      x_yuksekligi_px:  +x.ust.toFixed(3),
+      cap_yuksekligi_px:+H.ust.toFixed(3),
+      ch_ilerlemesi_px: +sifir.ilerleme.toFixed(3),
+      olcu_px:          +(sifir.ilerleme * s.ch).toFixed(1),
+      cpl_medyan:       +medyan.toFixed(1),
+      cpl_ortalama:     +(cpller.reduce((a,b)=>a+b,0)/cpller.length).toFixed(1),
+      cpl_min:          +sirali[0].toFixed(1),
+      cpl_max:          +sirali[sirali.length-1].toFixed(1),
+      olculen_blok:     cpller.length,
+      toplam_satir:     toplamSatir,
+      satir_kutusu_px:  +(s.px*s.lh).toFixed(2),
+      korpus_yuksekligi_px: Math.round(p_yukseklikleri.reduce((a,b)=>a+b,0)),
+    };
+    kap.remove();
+  }
+  document.getElementById("cikti").textContent = JSON.stringify(sonuc, null, 1);
+  window.__SONUC = sonuc;
+}
+kos().catch(e => { document.getElementById("cikti").textContent = "ÖLÇÜLEMEDİ: " + e.message + "\n" + e.stack; });
+</script>
+</body>
+</html>

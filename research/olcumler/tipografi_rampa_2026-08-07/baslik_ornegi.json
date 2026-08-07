@@ -1,0 +1,10 @@
+{
+ "h1": "Alarmlar",
+ "h2a": "HEARTBEAT_STALE",
+ "h2b": "`ops/kapilar.sh`",
+ "govde": [
+  "Neden ayrı bir sınıf: Tokens matched by deploy/monitoring.sh log filters. Keep these strings stable. *(kaynak: `meridian/obs.py`)*",
+  "Kodda `obs.alarm` ateşleme yeri BULUNAMADI — jeton tanımlı ama hiçbir yol onu üretmiyor. Bu bir bulgudur: ya mekanizma kablolanmamış, ya jeton emekli.",
+  "Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`."
+ ]
+}

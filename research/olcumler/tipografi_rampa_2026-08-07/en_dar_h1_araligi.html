@@ -1,0 +1,31 @@
+<h1>Meridian · Operasyon Runbook</h1>
+<blockquote>
+<p><strong>ÜRETİLMİŞ DOSYA — ELLE DÜZENLEME YAPMA.</strong> Kaynağı koddur; elle yazılan her satır</p>
+<p>bir sonraki üretimde silinir. Yeniden üret: <code>python ops/runbook_uret.py</code></p>
+<p>· bayat mı diye sor: <code>python ops/runbook_uret.py --kontrol</code></p>
+</blockquote>
+<p>Bu belgenin panodaki okuyucusu <strong><code>/runbook</code></strong> sayfasıdır (YASA 6). Pano alarm satırları ve sessiz-hat sapmaları buradaki bölüm çapalarına (<code>/runbook#&lt;ad&gt;</code>) bağlanır.</p>
+<h2>Kaynak sözleşmesi ve eşleştirme kuralı</h2>
+<p>Onaylı kaynaklar (WP0 §6.3, operatör onayı) — bunların DIŞINDA hiçbir yerden içerik alınmaz:</p>
+<ul>
+<li><code>ops/*.sh</code> ve <code>deploy/oracle-a1/*.sh</code> <strong>başlık yorumları</strong> (shebang&#x27;dan sonraki ilk <code>#</code> bloğu)</li>
+<li><code>MERIDIAN_ENGINEERING_LOG.md</code> → “AÇIK KALANLAR…” · “KALICI RİSKLER…” · “BU OTURUMDA BULUNAN…”</li>
+<li>envanter kaynakları: <code>meridian/obs.py</code> (ALARM_ sabitleri) · <code>meridian/watchdog.py</code></li>
+<p>(EXPECTED pencereleri + <code>beat()</code> nabız yerleri) · <code>meridian/api.py::_sessiz_hat</code> (sapma adları ve runbook ipuçları) · <code>obs.alarm(...)</code> ateşleme yerleri</p>
+</ul>
+<p><strong>Kapsam dışı, bilerek:</strong> <code>deploy/*.sh</code> (üst düzey, <code>monitoring.sh</code> dahil) onaylı kümede değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.</p>
+<p><strong>Eşleştirme kuralı — LİTERAL AD GEÇİŞİ.</strong> Bir bölüme betik/günlük maddesi ancak o metinde bölümün adı harfi harfine geçiyorsa iliştirilir. Anlamsal/bulanık eşleştirme YOK: bir alarmı yanlış betiğe bağlamak, hiç bağlamamaktan kötüdür. Kaynağı olmayan alan “<strong>runbook girdisi henüz yazılmadı</strong>” der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulacak bir boşluk değil.</p>
+<p><strong>Üretim damgası yoktur, bilerek:</strong> belge zaman damgası taşısaydı her koşu diff üretir ve “kodla ayrıştı mı” sorusu ölçülemez olurdu. Aynı kaynaktan aynı metin çıkar.</p>
+<p>---</p>
+<h2>Envanter özeti</h2>
+<ul>
+<li><strong>12 alarm jetonu</strong> (<code>meridian/obs.py</code>) — hepsi bildirim beyaz-listesinde</li>
+<p>(<code>NOTIFY_TOKENS</code> ALARM_ sabitlerinden TÜRETİLİR, elle liste değil)</p>
+<li><strong>17 bekçi mekanizması</strong> (<code>meridian/watchdog.py::EXPECTED</code>)</li>
+<li><strong>5 sessiz-hat sapma adı</strong> (<code>meridian/api.py::_sessiz_hat</code>; bekçi segmentinin</li>
+<p>adları değişkendir ve yukarıdaki mekanizma listesinden gelir)</p>
+<li><strong>15 ops betiği</strong> başlığıyla okundu</li>
+<li><strong>48 günlük maddesi</strong> üç bölümden toplandı</li>
+</ul>
+<p>---</p>
+<h1>Alarmlar</h1>

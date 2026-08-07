@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>D6 · başlık merdiveni</title>
+<!-- İKİNCİ KOŞUM: gövde hükmü verildikten sonra başlık merdiveni.
+     Gerçek `docs/RUNBOOK.md` başlıklarıyla, runbook.html'in gerçek kuralları (kenar çizgisi,
+     boşluk, ağırlık) korunarak. Ölçülen: h1/h2 cap-yüksekliği AYRIMI — merdivenin işi budur. -->
+<style>
+  @font-face{font-family:RecursiveSans;src:url("/fonts/recursive-sans-vf.woff2") format("woff2-variations");
+             font-weight:400 700;font-style:normal;font-display:block}
+  :root{--bg:#fbfaf9;--tx:#1b1a19;--tx2:#5f5c58;--tx3:#8a8580;
+        --line:rgba(0,0,0,.10);--line2:rgba(0,0,0,.06);--kod:#f0edea;
+        --font:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--font)}
+  .satir{display:flex;gap:0;align-items:flex-start}
+  .sut{flex:1;padding:20px 26px;border-right:1px solid var(--line)}
+  .sut:last-child{border-right:0}
+  .bas{font:700 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+       color:var(--tx3);padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  /* runbook.html'in GERÇEK kuralları — yalnız font-size değişkenleri oynuyor */
+  h1{line-height:1.25;letter-spacing:-.02em;margin:44px 0 12px;font-weight:600}
+  h1:first-of-type{margin-top:8px}
+  h2{line-height:1.3;letter-spacing:-.01em;margin:36px 0 8px;font-weight:600;
+     padding-top:10px;border-top:1px solid var(--line2)}
+  p{margin:10px 0}
+  code{font-family:var(--mono);background:var(--kod);padding:1px 5px;border-radius:2px}
+  #cikti{font:12px/1.5 var(--mono);white-space:pre;padding:16px;border-top:2px solid var(--tx)}
+</style>
+</head>
+<body>
+<div class="satir" id="satir"></div>
+<pre id="cikti">ölçülmedi</pre>
+<script>
+const ORNEK = JSON.parse(document.getElementById("ornek").textContent);
+/* Aday merdivenler. `body` hükmü ilk koşumdan geldi: 14px.
+   h3 (12px) zaten rampada — sabit tutulur, değişken değil. */
+const ADAYLAR = [
+  {ad:"MEVCUT (rampa dışı)", h1:26, h2:18, gov:15, lh:1.65, ch:78, kod:".86em"},
+  {ad:"A · 24/20",           h1:24, h2:20, gov:14, lh:1.8,  ch:72, kod:"17px"},
+  {ad:"B · 24/17",           h1:24, h2:17, gov:14, lh:1.8,  ch:72, kod:"14px"},
+  {ad:"C · 28/20",           h1:28, h2:20, gov:14, lh:1.8,  ch:72, kod:"17px"},
+];
+function cap(px, harf){                       // rasterin mürekkep kutusu
+  const c = document.createElement("canvas").getContext("2d");
+  c.font = `600 ${px}px ${getComputedStyle(document.body).fontFamily}`;
+  return c.measureText(harf).actualBoundingBoxAscent;
+}
+const satir = document.getElementById("satir");
+const rapor = [];
+for (const a of ADAYLAR){
+  const sut = document.createElement("div");
+  sut.className = "sut";
+  sut.innerHTML =
+    `<div class="bas">${a.ad}</div>` +
+    `<h1>${ORNEK.h1}</h1>` +
+    `<h2>${ORNEK.h2a}</h2>` +
+    `<p>${ORNEK.govde[0].replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\(([^)]+)\)\*/g,"$1")}</p>` +
+    `<h2><code>${ORNEK.h2b.replace(/`/g,"")}</code></h2>` +
+    `<p>${ORNEK.govde[2].replace(/`([^`]+)`/g,"<code>$1</code>")}</p>`;
+  sut.style.fontSize = a.gov + "px";
+  sut.style.lineHeight = a.lh;
+  satir.appendChild(sut);
+  sut.querySelectorAll("h1").forEach(e => e.style.fontSize = a.h1+"px");
+  sut.querySelectorAll("h2").forEach(e => e.style.fontSize = a.h2+"px");
+  sut.querySelectorAll("p").forEach(e => e.style.maxWidth = a.ch+"ch");
+  sut.querySelectorAll("code").forEach(e => e.style.fontSize = a.kod);
+  const c1 = cap(a.h1,"A"), c2 = cap(a.h2,"H"), cg = cap(a.gov,"H");
+  rapor.push({aday:a.ad, h1_px:a.h1, h2_px:a.h2, govde_px:a.gov,
+    h1_cap:+c1.toFixed(2), h2_cap:+c2.toFixed(2),
+    h1_h2_cap_ayrimi_px:+(c1-c2).toFixed(2),
+    h2_govde_cap_ayrimi_px:+(c2-cg).toFixed(2),
+    h1_h2_orani:+(a.h1/a.h2).toFixed(3), h2_govde_orani:+(a.h2/a.gov).toFixed(3),
+    rampada: [a.h1,a.h2,a.gov].every(v => [10,11,12,13,14,17,20,24,28].includes(v))});
+}
+document.getElementById("cikti").textContent = JSON.stringify(rapor, null, 1);
+window.__BASLIK = rapor;
+</script>
+</body>
+</html>
