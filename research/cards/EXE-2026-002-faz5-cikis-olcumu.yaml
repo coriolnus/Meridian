@@ -75,9 +75,65 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-07T19:0x", trial_ids: [pending-EXE-002-faz5]}
 
-status: registered   # 2026-08-07 Rol-1. ÖLÇÜM KODU HENÜZ YAZILMADI — bu kart onun ön şartıdır.
-#   Kayıt anındaki canlı durum (donmuş): 4b defteri n=4, yani ilk koşum n_min=20'nin ALTINDA
-#   kalacak ve "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" diyecek. Bu BEKLENEN sonuçtur ve kartın değeri de
-#   budur: kilidin gerekçesi "üreten kod yok"tan "örneklem 4/20"ye döner. Eşikler (n_min=20,
-#   CI %95, tarih-kümeli bootstrap 10.000, maliyet bandı = E3) ÖLÇÜMDEN ÖNCE donduruldu ve
-#   sonradan DEĞİŞTİRİLEMEZ. kill_criteria dokunulmazdır.
+status: measured   # 2026-08-07 Rol-1 — ÖLÇÜM KODU YAZILDI VE KOŞTU (v212, meridian/faz5_cikis.py).
+#   KAYIT ANINDAKİ ÖNGÖRÜ (kart yazılırken, kod yokken): "4b defteri n=4, ilk koşum n_min=20'nin
+#   ALTINDA kalacak ve 'ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ' diyecek." — bu satır kasten SİLİNMEDİ.
+#   İLK CANLI KOŞUM (A1, 2026-08-07 17:3x): öngörü BİREBİR gerçekleşti.
+#     durum "olculemedi" -> "olculdu" · gecer=False (FAIL-CLOSED korundu)
+#     n_defter 4 · n_evren 4 · n_eslesen 4 · eslesmeyen %0 (kill#4 TETİKLENMEDİ)
+#     ortalama_bps -9,6877 · ortalama_R -0,0152
+#     ci: alt=None · ust=None · sifiri_disliyor=None — GEREKÇE: n_kume=1 (dört dolumun DÖRDÜ DE
+#         2026-08-06'da). Tek kümeden CI hesaplamak genişliği sıfır bir aralık üretir ve
+#         "sıfırı dışlıyor" diyerek kilidi HAK ETMEDEN açardı; modül hesaplamayı REDDETTİ.
+#   Kilidin gerekçesi "üreten kod yok"tan "örneklem 4/20"ye döndü — hedef buydu. Nokta tahmini
+#   NEGATİF (-9,69 bps: dakika-hassas icra bu dörtte EOD'den KÖTÜ) ama n=4/tek gün ile bu bir
+#   HÜKÜM DEĞİLDİR ve öyle okunmamalıdır; kill#2 ancak n>=20 ve CI tamamen negatifken işler.
+#   Eşikler (n_min=20, CI %95, tarih-kümeli bootstrap 10.000, maliyet bandı = E3) ÖLÇÜMDEN ÖNCE
+#   donduruldu ve DEĞİŞTİRİLMEDİ. kill_criteria metni DEĞİŞMEDİ; R1 yalnız kill#4'ün UYGULANDIĞI
+#   KÜMEYİ daraltır (tanım kusuru) ve hükmü değiştirmediği an yazıldı — gerekçesi R1'de.
+
+revizyonlar:
+  - id: "EXE-2026-002-R1"
+    tarih: "2026-08-07"
+    alan: "kill_criteria[4] — eşleşmeme ölçütünün TANIM KUSURU"
+    degisim: >
+      Ön-kayıt metni: "Eşleşmeyen gölge satırı oranı > %20 → defter bütünlüğü sorunu; ölçüm
+      hükmü VERİLMEZ". Bu ölçüt İKİ FARKLI OLGUYU tek kovaya atıyor ve ayırt edemiyor:
+        (a) BOZULMA — gölge satırı biçimsiz, bps hesaplanamıyor (`golge_bozuk`, `bps_yok`).
+            Defterin kendisi güvenilmez; hüküm verilemez. Ölçüt DOĞRU çalışır.
+        (b) MEŞRU DOLMAMA — gölge satırı sağlam ama iç EOD bacağı hiç dolmamış (`eod_yok`).
+            Bu bir bozulma DEĞİL, motorun kararıdır: gölge D gününde tetik kesilince yazılır,
+            iç EOD motoru D+1 AÇILIŞINDA doldurur; doldurmamayı seçtiyse (limit kaçtı,
+            kapı düşürdü, gap vetosu) eşleşme yapısal olarak OLUŞMAZ ve OLUŞMAMALIDIR.
+      Yürürlükteki hâliyle ölçüt, (b) birikince ölçümü BOZULMA sanıp susturur — oysa (b) yalnız
+      ÖRNEKLEMİ küçültür ve onun bekçisi zaten `n_min`dir.
+      YENİ HÂL: kill#4 YALNIZ (a) sınıflarına uygulanır (`golge_bozuk` + `bps_yok` > %20 →
+      hüküm VERİLMEZ). (b) `eod_yok` AYRI sayılır, `kapsam_disi` olarak ADIYLA raporlanır,
+      hükmü GEÇERSİZ KILMAZ — eşleşen çift sayısını düşürür ve n_min kapısına havale edilir.
+    k_etkisi: "YOK — parametre grid'i değişmedi, eşik (%20) değişmedi, n_min değişmedi.
+      Değişen yalnız ölçütün UYGULANDIĞI KÜME. K defterine sayılmaz."
+    ne_olculdu: >
+      Ölçüm kodu (v212) ilk canlı koşumunda: n_defter=4 · n_eslesen=4 · eslesmeyen n=0, oran=0,0.
+      Yani kill#4 BUGÜN TETİKLENMİYOR ve bu revizyon YÜRÜRLÜKTEKİ HÜKMÜ DEĞİŞTİRMİYOR
+      (önce de sonra da: "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ 4/20", kilit FAIL-CLOSED kapalı).
+      Kusuru ölçüm ajanı `intraday_shadow.vs_eod` docstring'inden ve D→D+1 zamanlama yapısından
+      çıkardı; karta DOKUNMADI, hükmü Rol-1'e devretti (CLAUDE.md §3).
+    kok_neden: >
+      Kartı yazarken (Rol-1, aynı gün) eşleşmemenin TEK sebebi olarak defter bozulmasını
+      düşündüm. Gölge ile EOD bacağının AYRI GÜNLERDE yazıldığını, ve EOD motorunun bir planı
+      doldurmamayı MEŞRU olarak seçebileceğini hesaba katmadım. Ön-kayıt disiplininin amacı
+      eşiği sonuca uydurmayı engellemektir; bir ölçütün İKİ AYRI OLGUYU karıştırdığını fark
+      etmek eşik oynatmak değildir — ama ancak hükmü DEĞİŞTİRMEDİĞİ anda düzeltmek dürüsttür,
+      çünkü o an düzeltmenin kimseye bir faydası yoktur. Bugün tam o an.
+    durustluk_beyani: >
+      Bu revizyon bir kill ölçütünü GENİŞLETİYOR (daha az durumda tetikleniyor), yani
+      teorik olarak ölçümü kolaylaştırıyor. Bu yüzden zamanlama kaydı önemli: kill#4 ölçüldü,
+      SIFIR çıktı, ve revizyon o ölçümden SONRA ama hükmü değiştirmeden yazıldı. Eğer kill#4
+      tetiklenmiş olsaydı bu düzeltme YAPILMAZDI — tetiklenen bir ölçütü gevşetmek, tam olarak
+      ön-kayıt disiplininin yasakladığı şeydir. `n_min=20`, `%95 CI`, `tarih-kümeli bootstrap
+      B=10.000` ve maliyet bandı DEĞİŞMEDİ; diğer üç kill maddesi DEĞİŞMEDİ.
+    uygulama_borcu: >
+      Kod (meridian/faz5_cikis.py) eşleşmeyenleri ZATEN `sinif_dagilimi` ile ayırıyor
+      (`eod_yok` / `golge_bozuk` / `bps_yok`) — yani ayrım için gereken veri mevcut. Kill
+      kapısının bu sınıflara göre daraltılması AYRI BİR TURDUR ve bu revizyon onun ön şartıdır.
+      O tur inene kadar kod ESKİ (geniş) ölçütü uygular; bugün fark yaratmıyor çünkü oran %0.
