@@ -681,6 +681,40 @@ default; weight is the *remedy* held in reserve if halation is ever reported.
 No half-steps, no `15px` because something looked slightly small. If a new element needs a size
 that isn't on the ramp, it needs a different element.
 
+**The Ramp Rule's one exception: fluid display type.** *Written down 2026-08-07 (D5). It was
+already the practice on every surface and it was written nowhere in this document — an unwritten
+exception is indistinguishable from a violation, and the next audit would either delete working
+type or quietly widen the rule.* A **heading or a headline figure** may be declared fluid with
+`clamp(min, vw, max)` instead of a fixed step. Such a declaration is **one ramp step that
+interpolates**: its two endpoints are viewport arithmetic, not chosen sizes, so they are not
+required to land on a step. Everything else stays exactly as the Ramp Rule says it.
+
+Three bounds, so this cannot become a way in for arbitrary sizes:
+
+1. **Display roles only** — headings and the headline figure of a stat card. Never body text, a
+   table cell, a label, a chip or a control. Those are read at a fixed distance in a fixed density
+   and have no reason to breathe with the viewport.
+2. **Every *fixed* `font-size` is still a ramp step, with no exception at all.** A bare `15px` is
+   as illegal as it ever was; wrapping it in a `clamp()` that does not interpolate does not launder it.
+3. **No `clamp()` minimum below 16px.** The exception exists to let large type shrink gracefully,
+   never to reach *under* the ramp — 10px is the floor of this system and the fluid path may not
+   go around it.
+
+Measured inventory, 2026-08-07 — fourteen fluid declarations, and no off-ramp *fixed* literal on
+any surface:
+
+| Surface | Fluid declarations | Range | Note |
+|---|---|---|---|
+| `index.html` | 7 | `16→20` … `24→28` | the console's fluid type stays **inside the ramp's own band**; only the endpoints 16 / 18 / 26 are off-step |
+| `workflow.html` | 1 | `24→28` | |
+| `landing.html` | 6 | `23→38` … `40→58` | the only surface that goes **above** the ramp's top step, and the only one that should: a persuasion page opens on a hero claim, which is a job the console does not have. Its own direction contract has said so since it was written ("*plus the clamp() display steps*") |
+
+> **A tool will report this as a violation, and the report is half right.** The machine-readable
+> `typography:` block at the head of this file declares six *roles* (28 / 20 / 17 / 14 / 10), not
+> the nine-step ramp, so a linter that reads it as the scale flags `11px`, `12px` and `13px` — all
+> three legal ramp steps — alongside the genuinely off-step `36px`. Read the nine-step table above
+> as the ramp; the front-matter block is the hierarchy, not the scale.
+
 **The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. The
 declaration is defensive, not decorative: it is inert on Recursive Mono itself (no `tnum` feature,
 alignment already structural at 600/1000) and load-bearing on the `ui-monospace` fallback. Never

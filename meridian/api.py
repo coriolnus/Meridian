@@ -496,6 +496,51 @@ def palettejs(request: Request):
     return _statik(request, "palette.js", "application/javascript")
 
 
+# ---- YAZI TİPİ SUNUMU (D5, 2026-08-07) -------------------------------------------------------
+# VAKA: D4 turu Recursive'i kendi-barındırmaya aldı — `meridian/web/fonts/` altına iki `.woff2`,
+# üç yüzeye yerel yollu `@font-face`, ve CSP'den `fonts.googleapis.com` + `fonts.gstatic.com`
+# DÜŞTÜ. Ama sunum yolu açılmadı: `/fonts/recursive-sans-vf.woff2` ve `/fonts/recursive-mono-vf.woff2`
+# ölçülerek 404 dönüyordu (tests/test_yazitipi_v201.py'nin KATI xfail'i bunu çivilemişti; o blok
+# bu turda gerçek teste çevrildi). `@font-face` yolu tek başına bir VAAT'tir — dosyanın diskte
+# olması da öyle; sunulan şey rotadır. Rota olmadan dağıtım üç yüzeyi de sistem yüzüne düşürürdü
+# ve CSP `font-src 'self'` olduğu için "CDN'den gelsin" kaçışı da yok (ki olmaması SERTLEŞTİRME).
+#
+# NEDEN MONTAJ DEĞİL: yukarıdaki not (satır 469) `StaticFiles` montajını BİLEREK reddediyor —
+# montaj WEB dizinine düşen her taslağı/yedeği/.orig'i sessizce yayına açar. O hüküm burada da
+# geçerli, hatta daha sert: bir `fonts/` montajı, dizine düşen HER baytı (ölçüm turunun ara TTF'leri,
+# lisans dışı bir kesit, bir `.orig`) yayına açardı. Bunun yerine SUNULAN AD KÜMESİ KAYNAKTA
+# LİTERALDİR: aşağıdaki iki dize dışında hiçbir şey 200 alamaz.
+#
+# DİZİN-DIŞI ERİŞİM (path traversal) BURADA BİR FİLTRE İŞİ DEĞİL: `..`, kodlanmış ayraç, mutlak yol,
+# sembolik bağ — hiçbiri "temizlenmiyor", çünkü hiçbiri KÜMEYE GİREMİYOR. Tam-eşleşme bir izin
+# listesi, kara listeden farklı olarak yeni bir kaçış biçimi keşfedildiğinde de kapalı kalır.
+# Testle çivili: tests/test_font_rotasi_v202.py.
+#
+# ÖNBELLEK — `immutable` DEĞİL, ve bu bir tercih değil bir düzeltme: dosya adları SÜRÜMSÜZDÜR
+# (`recursive-sans-vf.woff2`, hash'siz). `Cache-Control: immutable, max-age=1y` ancak adın içeriği
+# adreslediği yerde doğrudur; burada bir sonraki yazı tipi turu AYNI ADLA farklı bayt dağıtır ve
+# `immutable` o baytları tarayıcıda bir yıl boyunca ulaşılmaz kılardı — "dagit'ten sonra değişikliği
+# göremedim" vakasının (yukarıdaki önbellek sözleşmesi) tam olarak yazı tipi hâli. Bu yüzden
+# fontlar da öteki varlıklarla AYNI yasayı okur: içerik-sha256 ETag + `no-cache, must-revalidate`
+# + eşleşmede gövdesiz 304. Doğrulama isteği başına maliyet ~0 bayt, bayatlama penceresi SIFIR.
+_FONT_DOSYALARI = frozenset({"recursive-sans-vf.woff2", "recursive-mono-vf.woff2"})
+
+
+@app.get("/fonts/{ad}")
+def fontlar(request: Request, ad: str):
+    """Kendi-barındırılan Recursive kesitleri. YALNIZ literal iki ad; başka her şey 404."""
+    if ad not in _FONT_DOSYALARI:
+        # `_statik`in 404 gövdesiyle AYNI dili konuşur ama AYNI CÜMLEYİ kurmaz: orada teşhis
+        # "dağıtım eksik", burada "böyle bir yazı tipi YOK" — istenen ad hiç sunulmuyor, diskte
+        # olup olmaması sonucu değiştirmiyor. İkisini aynı metne bağlamak operatörü yanlış yere
+        # (rsync'e) bakmaya gönderirdi.
+        return JSONResponse({"error": "not_found", "path": f"fonts/{ad}",
+                             "detail": "sunulan yazı tipi kümesinde YOK — bu rota yalnız "
+                                       "kaynakta literal olarak sayılan kesitleri sunar"},
+                            status_code=404, headers=_NOCACHE)
+    return _statik(request, f"fonts/{ad}", "font/woff2")
+
+
 @app.get("/landing", response_class=HTMLResponse)
 def landing(request: Request):
     """The original marketing landing page — the design reference the dashboard is cut from.

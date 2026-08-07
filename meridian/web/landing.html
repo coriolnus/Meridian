@@ -219,7 +219,18 @@ nav.stuck{border-bottom-color:var(--line-2)}
 /* ---- one control grammar: the indigo lever (a hand acts) or a raised hairline surface ---- */
 .btn-f,.btn-g,.btn-o{font-family:var(--sans);border-radius:var(--r-ctl);cursor:pointer;transition:var(--t);
   display:inline-flex;align-items:center;justify-content:center;letter-spacing:-.011em;line-height:1.2}
-.btn-f{background:var(--accent);border:1px solid var(--accent);color:#fff;font-weight:600;font-size:14px;padding:12px 20px}
+/* DOLGU ÜSTÜ MÜREKKEP JETONDAN GELİR (2026-08-07). Burada ham `#fff` duruyordu ve GECEDE
+   ÖLÇÜLDÜ: gece `--accent:#d4d0cb` üzerine `#ffffff` = 1,53:1 — birincil eylem düğmesinin
+   yazısı kendi dolgusunun üzerinde KAYBOLUYORDU (docs/BASELINE-2026-08-06.md §B.5, T1).
+   Kusur sınıfı yeni değil: aynı şey üst barda bir kez yaşandı (--nav-bg, 1,27:1) ve hüküm
+   o zaman yazıldı — "renk taşıyan hiçbir değer kuralın içinde YAZILMAZ, jetondan gelir",
+   çünkü sabit bir renk ikinci temaya TEPKİ VERMEZ. --bg2 seçildi (yeni bir ad değil):
+   index.html dolgu-üstü mürekkebi tam bu jetonla yazar (.gate-btn, .pillc, .dlbtn.primary,
+   .skip) ve gece bloğunun "üç yüzey TEK değer takımı okur" şartı yeni bir jetonu bu dosyaya
+   tek başına sokmayı yasaklar. ÖLÇÜM (WCAG 2.x, --accent üzerinde): gündüz 20,38 → 19,54 ·
+   gece 1,53 → 10,45. Gündüzdeki 0,84'lük düşüş saf beyazdan kemik beyazına geçmenin bedelidir
+   ve AAA'nın çok üstünde kalır; gece AA-altından AAA'ya çıkar. */
+.btn-f{background:var(--accent);border:1px solid var(--accent);color:var(--bg2);font-weight:600;font-size:14px;padding:12px 20px}
 .btn-f:hover{filter:brightness(.92)}
 .btn-g{background:var(--card);border:1px solid var(--line-2);color:var(--tx);font-weight:500;font-size:14px;padding:12px 20px}
 .btn-g:hover{background:var(--card-2)}
@@ -268,7 +279,9 @@ h1 .g{color:var(--tx2)}
 /* the full name never leaves the document — the rail only shrinks its presentation */
 .vis-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
   clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-.pillc{background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;font-weight:600;
+/* Aynı kusur, aynı düzeltme (yukarıdaki .btn-f gerekçesi). Bu rozet 10px mono taşıyor, yani
+   gecedeki 1,53:1 burada daha da pahalıydı: küçük boy zaten kontrast payını yiyor. */
+.pillc{background:var(--accent);color:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:600;
   padding:1px 5px;border-radius:var(--r-ctl);font-variant-numeric:tabular-nums}
 .pillc.q{background:transparent;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--line-2)}
 .main{padding:var(--s6) var(--s6) var(--s8)}

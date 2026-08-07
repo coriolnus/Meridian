@@ -21,7 +21,10 @@ ya `research/olcumler/yazi_tipi_2026-08-07/web_fonts_build.json` (üretim kaydı
 D4'te tarayıcı teyit turu ZORUNLU". Tur koşuldu ve iki hükmü DEĞİŞTİRDİ (bkz.
 `test_isim_cakismasi_BLOKE_EDICI_DEGILDI` ve `test_bir_ile_l_TARAYICIDA_geistten_iyi`).
 
-Ağ istemez, tarayıcı istemez, fontTools istemez — hepsi diskten okunur.
+Ağ istemez, tarayıcı istemez, fontTools istemez. Neredeyse hepsi diskten okunur; TEK istisna
+Ç6'daki sunum kapısıdır — o blok `TestClient` ile SÜREÇ-İÇİ (ASGI) gerçek istek atar, çünkü
+"rota yazılmış" ile "doğru baytlar geliyor" iki ayrı iddiadır ve ilki ikincisini kanıtlamaz.
+Süreç-içi istek hâlâ ağ değildir: sokete çıkmaz, dış bağımlılığı yoktur.
 """
 import json
 import pathlib
@@ -523,26 +526,125 @@ def test_TABULAR_RULE_korundu_ve_slashed_zero_YASAGI_gerekcesiyle_tasindi():
     assert "inert" in tipo.lower(), "`zero` özelliğinin ATIL olduğu kayda geçmemiş"
 
 
-# ===================== Ç6 · SUNUM KAPISI (DEVREDİLEN KALEM) =====================
+# ===================== Ç6 · SUNUM KAPISI (KAPANDI — D5, 2026-08-07) =====================
+#
+# BU BLOK BİR TUR BOYUNCA `xfail(strict=True)` İDİ ve gerekçesi buydu: `/fonts/*.woff2` ölçülerek
+# 404 dönüyordu (karşılaştırma için `/theme.js` → 200), çünkü depoda `StaticFiles` montajı BİLEREK
+# yok ve `/fonts` için ad-ad bir rota yazılmamıştı; `meridian/api.py` de o turun yazma sınırının
+# DIŞINDAYDI. KATI olması bilinçliydi: rota eklendiği an XPASS ile kırılıp bu bloğun gerçek bir
+# teste dönüştürülmesini zorlasın diye. Rota D5'te eklendi (`meridian/api.py`, `/fonts/{ad}` +
+# literal izin listesi) ve blok aşağıda gerçek teste dönüştürüldü. Devir kaydı burada duruyor ki
+# "bu neden bir xfail'di" sorusu tarihe değil, kayda sorulsun.
+#
+# İŞ BÖLÜMÜ: rotanın KENDİ sözleşmesi (izin listesi, dizin-dışı erişim, ETag/304, önbellek yasası)
+# `tests/test_font_rotasi_v202.py`de ölçülür. Burada YALNIZ tipografi sözleşmesinin kendi sorusu
+# var: bu yüzeylerin İSTEDİĞİ yüz gerçekten geliyor mu.
 
-@pytest.mark.xfail(strict=True, reason=(
-    "DEVREDİLEN, BİLİNEN AÇIK — ve VARSAYIM DEĞİL, ÖLÇÜLDÜ. TestClient ile gerçek istek "
-    "atıldı (2026-08-07): `/fonts/recursive-sans-vf.woff2` → **404**, "
-    "`/fonts/recursive-mono-vf.woff2` → **404**, karşılaştırma için `/theme.js` → 200. "
-    "Sebep: depoda `StaticFiles` montajı BİLEREK yok (api.py:469 — montaj, WEB dizinine düşen "
-    "her taslağı yayına açar), statik varlıklar AD AD yönlendirilir ve `/fonts` için böyle bir "
-    "rota yazılmamış. Yani dosyayı meridian/web/fonts/ altına koymak TEK BAŞINA yetmez; rota "
-    "eklenene kadar üç yüzey de sistem yüzüne düşer. `meridian/api.py` bu turun yazma sınırının "
-    "DIŞINDA (brief: `meridian/*.py` YASAK), o yüzden burada ÇİVİLENİYOR, sessizce "
-    "geçilmiyor. STRICT: rota eklendiği an XPASS ile kırılır ve bu bloğun gerçek bir teste "
-    "dönüştürülmesini zorlar."))
 def test_api_py_fonts_rotasi_TANIMLI():
     """Font dosyalarının bir SUNUM YOLU olmalı — `@font-face` yolu tek başına bir vaat değil."""
     api = (KOK / "meridian" / "api.py").read_text(encoding="utf-8")
     assert re.search(r'@app\.get\(\s*["\']/fonts/', api), (
-        "api.py'de /fonts rotası yok. Önerilen biçim (depo sözleşmesine uygun, montaj YOK):\n"
+        "api.py'de /fonts rotası yok. Biçim (depo sözleşmesine uygun, montaj YOK):\n"
         '    @app.get("/fonts/{ad}")\n'
         "    def fontlar(request: Request, ad: str):\n"
         '        if ad not in {"recursive-sans-vf.woff2", "recursive-mono-vf.woff2"}:\n'
         '            return JSONResponse({"error": "not_found"}, status_code=404)\n'
         '        return _statik(request, f"fonts/{ad}", "font/woff2")')
+
+
+def test_IKI_KESIT_de_GERCEKTEN_sunuluyor(sandbox_state):
+    """Rotanın VARLIĞI değil, ÇALIŞTIĞI ölçülür — TestClient ile gerçek istek.
+
+    Yukarıdaki test kaynağa bakar ve bir rotanın YAZILDIĞINI söyler. Yazılmış bir rota yanlış
+    yola bağlanmış, yanlış dosyayı okuyor ya da izin listesi yüzünden kendi dosyalarını
+    reddediyor olabilir — üçü de kaynakta "rota var" diye okunur. Bu turun kapattığı açığın
+    ölçüsü 200'dür, `@app.get` dizesi değil.
+
+    `sandbox_state` ZORUNLU: `TestClient(app)` uygulamayı ayağa kaldırır ve açılış yolu canlı
+    `state/events.jsonl`e yazar."""
+    from fastapi.testclient import TestClient
+
+    from meridian.api import app
+    with TestClient(app) as c:
+        for dosya in (SANS_DOSYA, MONO_DOSYA):
+            r = c.get(f"/fonts/{dosya}")
+            assert r.status_code == 200, (
+                f"/fonts/{dosya} → {r.status_code}. Yazı tipi kendi-barındırılıyor ve CSP "
+                f"`font-src 'self'`; bu yol 200 dönmezse üç yüzey de sistem yüzüne düşer.")
+            assert r.headers.get("content-type", "").split(";")[0] == "font/woff2"
+            assert r.content == (FONTLAR / dosya).read_bytes(), \
+                f"/fonts/{dosya}: sunulan baytlar diskteki dosya DEĞİL"
+
+        # DİZİN-DIŞI ERİŞİM — burada YALNIZ sınıfın kapalı olduğu gösterilir; biçim biçim
+        # matrisi (kodlanmış ayraç, boş bayt, harf duyarlılığı, yönlendirme hedefi)
+        # tests/test_font_rotasi_v202.py'de. `OFL.txt` seçildi çünkü o dosya AYNI DİZİNDE
+        # GERÇEKTEN VAR ve okunabilir: "diskte var" ile "yayında" arasındaki farkın canlı örneği.
+        assert (FONTLAR / "OFL.txt").is_file(), "OFL.txt yok — bu iddia bir şey ölçmüyor"
+        for kacak in ("OFL.txt", "../api.py", "..%2f..%2fapi.py"):
+            assert c.get(f"/fonts/{kacak}", follow_redirects=False).status_code != 200, (
+                f"/fonts/{kacak} sunuldu. Rota izin listesiyle çalışmalı: montaj YOK, yani "
+                f"dizindeki her bayt yayında DEĞİL.")
+
+
+# ===================== Ç7 · RAMPA İSTİSNASI (clamp) — D5, 2026-08-07 =====================
+#
+# NİYE VAR. `landing.html`in yön sözleşmesi bir tur boyunca "her literal font-size rampadadır,
+# ARTI clamp() display basamakları" diyordu; `DESIGN.md`in Ramp Rule'u ise "dokuz boy vardır ve
+# başka yok" diyordu. İki belge, iki yasa — ve aradaki fark hiçbir yerde YAZILI DEĞİLDİ. Yazılı
+# olmayan bir istisna ile bir ihlal ekranda birbirinin aynısıdır: bir sonraki denetim ya çalışan
+# tipografiyi siler ya kuralı sessizce genişletir. İstisna D5'te DESIGN.md § Typography'ye açıkça
+# yazıldı; bu blok onu üç yerden birden çiviler (belge · yüzeyler · sınır).
+#
+# ÖLÇÜLDÜ, VARSAYILMADI: bu turda üç yüzeyin TAMAMI tarandı. Rampa dışına düşen HER değer bir
+# `clamp()` uç noktasıdır; çıplak (sabit) tek bir rampa-dışı literal YOKTUR.
+
+RAMPA = {10, 11, 12, 13, 14, 17, 20, 24, 28}
+# `clamp()` alt sınırı için taban. Bugünkü en küçük alt sınır 16px (index.html `.kk-ozet
+# .pm-yield`); istisna büyük tipin küçülmesi içindir, rampanın ALTINA inmek için DEĞİL.
+CLAMP_TABAN = 16
+
+
+def _font_boylari(ad: str) -> list[str]:
+    return [v.strip() for v in re.findall(r"font-size\s*:\s*([^;}\n]+)", _yorumsuz(_oku(ad)))]
+
+
+def test_DESIGN_md_clamp_ISTISNASINI_ACIKCA_yaziyor():
+    """İstisna belgede AÇIK olmalı — örtük bir istisna, kayıtsız bir istisnadır."""
+    tipo = DESIGN.read_text(encoding="utf-8").split("## Typography", 1)[1].split("\n## ", 1)[0]
+    assert "clamp(" in tipo, (
+        "DESIGN.md § Typography `clamp()` istisnasını yazmıyor. Üç yüzey de akışkan display "
+        "tipi kullanıyor; belge bunu tanımıyorsa Ramp Rule ile artefakt çelişir.")
+    assert re.search(r"Ramp Rule.{0,400}?exception", tipo, re.S | re.I), \
+        "istisna Ramp Rule'a BAĞLANMAMIŞ — ayrı duran bir paragraf kuralı düzeltmez"
+
+
+@pytest.mark.parametrize("ad", YUZEYLER)
+def test_rampa_disi_her_boy_YALNIZCA_clamp_icinde(ad):
+    """Çıplak rampa-dışı literal YOK. İstisna `clamp()`le sınırlıdır, kuralı yutmaz.
+
+    Asıl korunan şey burada: "landing'de zaten 36px var" cümlesi, bir sonraki turda çıplak bir
+    `15px`in gerekçesi olamasın. `clamp()` içindeki uç nokta viewport aritmetiğidir; kuralın
+    dışında kalan tek şey odur."""
+    for boy in _font_boylari(ad):
+        disi = [int(x) for x in re.findall(r"(\d+)px", boy) if int(x) not in RAMPA]
+        if not disi:
+            continue
+        assert boy.startswith("clamp("), (
+            f"{ad}: `font-size:{boy}` rampa dışı {disi} ve `clamp()` DEĞİL. Sabit her boy "
+            f"rampanın dokuz basamağından biri olmalı (DESIGN.md § Typography).")
+
+
+@pytest.mark.parametrize("ad", YUZEYLER)
+def test_clamp_alt_siniri_RAMPANIN_ALTINA_inmez(ad):
+    """Hiçbir `clamp()` alt sınırı 16px'in altına inemez.
+
+    İstisnanın kaçış yoluna dönüşme biçimi tam olarak budur: `clamp(9px,…)` yazıp "akışkan
+    tip serbest" demek. İstisna BÜYÜK tipin küçülmesi içindir; rampanın tabanı (10px) etrafından
+    dolaşmak için değil."""
+    for boy in _font_boylari(ad):
+        if not boy.startswith("clamp("):
+            continue
+        pxler = [int(x) for x in re.findall(r"(\d+)px", boy)]
+        assert pxler and min(pxler) >= CLAMP_TABAN, (
+            f"{ad}: `font-size:{boy}` alt sınırı {min(pxler)}px — istisnanın tabanı "
+            f"{CLAMP_TABAN}px (DESIGN.md § Typography, üç sınırın üçüncüsü).")

@@ -75,9 +75,23 @@ def test_p1c_public_get_allowlist():
     # Maruziyet yeni değil — dosya, index.html'in içindeki kodun CSP (`script-src 'self'`)
     # yüzünden dışarı taşınmış hâli. Paletin KENDİSİ de oturum kapalıyken açılmayı
     # reddediyor (palette.js: kapiAcik) — yani betiğin okunabilmesi bir yüzey açmıyor.
+    # /fonts/{ad} (2026-08-07, D5 — kendi-barındırılan Recursive kesitleri): STATİK BETİKLERLE
+    # AYNI SINIF, ve YETKİ İSTEYEMEZ. Gerekçe iki katmanlı:
+    #   (a) MARUZİYET YENİ DEĞİL — bu iki dosya bir tur öncesine kadar `fonts.gstatic.com`dan,
+    #       yani kimlik doğrulaması olmayan bir ÜÇÜNCÜ TARAFtan iniyordu. Kendi-barındırmaya
+    #       geçiş maruziyeti AZALTTI (sıfır dış origin, `font-src 'self'`); bu satır o
+    #       azalmanın kaydıdır, yeni bir kapı açılmasının değil.
+    #   (b) 401 VEREN BİR YAZI TİPİ, GİRİŞ EKRANINI ÇİZİLEMEZ HÂLE GETİRİR: `/landing` ve giriş
+    #       kapısı oturum AÇILMADAN önce çizilir ve `@font-face`i o anda ister. Yetki isteseydi
+    #       üç yüzey de sistem yüzüne düşerdi — ve CSP `font-src 'self'` olduğu için bir CDN
+    #       kaçışı da yok. Aynı gerekçe `/app.js` ve `/palette.js` için zaten bu listede yazılı.
+    # SIZDIRDIĞI VERİ: yok. State okumaz, sorgu almaz; `_statik` ile diskten sabit dosya döner
+    # ve sunulan ad kümesi KAYNAKTA LİTERALDİR (`api._FONT_DOSYALARI`, iki ad) — yol parametresi
+    # bir dizin gezintisi yüzeyi DEĞİL, kapalı bir izin listesidir. Çivileri:
+    # tests/test_font_rotasi_v202.py (dizin-dışı erişim matrisi + montaj yasağı).
     allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js", "/palette.js",
              "/landing", "/workflow", "/healthz", "/metrics", "/halt",
-             "/api/public/summary"} | set(api.KIMLIK_UCLARI)
+             "/api/public/summary", "/fonts/{ad}"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"
 
