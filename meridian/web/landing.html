@@ -6,9 +6,10 @@
 <!-- Tema, stilden ÖNCE ve senkron — bkz. theme.js başlığı. -->
 <script src="/theme.js"></script>
 <title>Meridian · Ajan tarar, sen karar verirsin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- YAZI TİPİ KENDİ-BARINDIRILIR (D4, 2026-08-07). Google Fonts CDN'ine giden `preconnect` +
+     `stylesheet` üçlüsü KALDIRILDI ve CSP'den iki dış host DÜŞTÜ — bkz. index.html. -->
+<link rel="preload" href="/fonts/recursive-sans-vf.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/recursive-mono-vf.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- ============================================================================
   DIRECTION CONTRACT — Meridian, tanıtım sayfası (landing)
@@ -20,11 +21,15 @@
   boxes, one restrained indigo that means "interactive", and semantic
   green/amber/red that mean money. Structure comes from rules and spacing, never
   from containers.
-  OWN-WORLD: Geist and Geist Mono — Vercel's own faces, the canon's actual voice
-  rather than an approximation of it. #ffffff ground, surfaces that step by four
+  OWN-WORLD (type revised 2026-08-07, D4): Recursive Sans Linear + Recursive Mono
+  Linear, SIL OFL 1.1, SELF-HOSTED. This line used to read "Geist and Geist Mono —
+  Vercel's own faces"; Geist is retired (overused-typeface list) and the successor
+  was chosen by measurement across nine OFL pairs, not by taste — see
+  docs/YAZI-TIPI-OLCUMU-2026-08-07.md. The page no longer touches any third-party
+  origin. #ffffff ground, surfaces that step by four
   or five points of luminance instead of by shadow, 1px borders at 7-13% white,
   6-8px radii, 150ms ease-out. Indigo #050505 is interaction and nothing else; it
-  never colours a measurement. Every figure is Geist Mono with tabular numerals so
+  never colours a measurement. Every figure is Recursive Mono with tabular numerals so
   a column of numbers reads as a column. The ground is flat — no wash, no image.
   MODE: PERSUASION. The first screen answers three questions in seconds — what is
   this, why does it matter, what do I do. The offer never hides behind decoration:
@@ -79,10 +84,26 @@
   to: parsel → işlem, ekilmemiş → veri yok.
 ============================================================================ -->
 <style>
+/* ============================ YAZI TİPİ · KENDİ-BARINDIRMA (D4, 2026-08-07) ============================
+   Recursive Sans Linear + Recursive Mono Linear, SIL OFL 1.1. Gerekçenin tamamı — `block` seçimi,
+   eksen aralığı, ölçülen boyut — index.html'in aynı bloğunda; burada TEKRARLANMAZ ama bildirim
+   BİREBİR AYNI olmak zorundadır (tests/test_yazitipi_v201.py bunu çiviler): üç yüzey aynı iki
+   dosyayı aynı adla ister, yoksa tarayıcı aynı yüzü iki kez indirir.
+   ==================================================================================================== */
+@font-face{
+  font-family:'Recursive Sans';
+  src:url('/fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}
+@font-face{
+  font-family:'Recursive Mono';
+  src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}
 :root{
-  --sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --sans:'Recursive Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --display:var(--sans);
-  --mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace;
+  --mono:'Recursive Mono',ui-monospace,SFMono-Regular,monospace;
   --serif:var(--sans);
   /* spacing — one 4px base */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
@@ -155,14 +176,12 @@
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 /* the canon's ground is flat: one near-black, no wash, no image */
-/* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ.
-   Bu iki özellik Inter sözleşmesidir ve önceki görsel dünyadan kalmıştı. Google Fonts'un
-   servis ettiği GERÇEK derlemede (üretimde yüklenen dosya) tarayıcıda yan yana basıldı:
-   Geist Sans ve Geist Mono'da glifler özellikli ve özelliksiz BİREBİR AYNI çıktı —
-   çift katlı 'a' çift katlı kaldı, rakamlar değişmedi, genişlikler aynı.
-   Etkisi olmayan bir bildirim, yapılmış bir iş izlenimi verir; uydurma yasağının
-   tipografik hâli. Aynı sebeple 'slashed-zero' da EKLENMEZ: Geist Mono'da `zero`
-   özelliği yok, ama eğik çizgi zaten varsayılan glifin içinde (yukarıda görüldü). */
+/* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ. Etkisi olmayan bir bildirim,
+   yapılmış bir iş izlenimi verir; uydurma yasağının tipografik hâli.
+   'slashed-zero' DA EKLENMEZ — yazı tipi değişti, gerekçe DEĞİŞMEDİ (D4, 2026-08-07):
+   Recursive'de `zero` özelliği VAR ama ATIL (`zero → zero.slash` eşliyor, iki glifin
+   konturları birebir aynı). Eğik çizgi zaten varsayılan glifte — ve Geist'ten farklı olarak
+   SANS'ta da. Gerekçenin tamamı index.html'in aynı bloğunda. */
 body{background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased;
   letter-spacing:-.011em}
 h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-height:1.18}

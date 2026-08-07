@@ -8,9 +8,15 @@
      boyamadan önce koymak zorunda, yoksa gece vardiyasında her açılış beyaz bir flaşla başlar.
      Harici dosya, çünkü dağıtım CSP'si `script-src 'self'` — satır içi script bloklanır. -->
 <script src="/theme.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- YAZI TİPİ KENDİ-BARINDIRILIR (D4, 2026-08-07). Bu üç satır bir <link rel="stylesheet">
+     DEĞİL: Google Fonts CDN'ine giden `preconnect` + `stylesheet` üçlüsü KALDIRILDI ve
+     `deploy/Caddyfile`'ın CSP'sinden `fonts.googleapis.com` (style-src) ile
+     `fonts.gstatic.com` (font-src) DÜŞTÜ. Yani bu değişiklik bir maliyet değil bir
+     SERTLEŞTİRME: pano artık hiçbir üçüncü-taraf origin'e bağlanmıyor.
+     `preload` CRUCIAL ve `crossorigin` ZORUNLU: font istekleri her zaman CORS kipindedir,
+     öznitelik olmadan tarayıcı dosyayı İKİ KEZ indirir (biri preload, biri @font-face). -->
+<link rel="preload" href="/fonts/recursive-sans-vf.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/recursive-mono-vf.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- ============================================================================
   DIRECTION CONTRACT — Meridian
@@ -23,16 +29,26 @@
   It refuses the thing that makes dashboards look designed-by-committee: the
   card grid. Structure comes from rules and spacing, not containers.
   OWN-WORLD (revised 2026-07-27 — OMEGA): the operator chose a reference,
-  nextjsshop.com/templates/omega, and it is converted to here in full. Geist and
-  Geist Mono carry over unchanged — Omega loads the same two faces, so the type
-  did not move. What moved is the ground: #ffffff with warm bone panels
+  nextjsshop.com/templates/omega, and it is converted to here in full.
+  TYPE MOVED, 2026-08-07 (D4): the Omega conversion had carried Geist and Geist
+  Mono over unchanged because the reference loaded the same two faces. Geist is
+  now RETIRED — it is on the overused-typeface list, and the replacement was
+  chosen by measurement, not taste: RECURSIVE Sans Linear + Recursive Mono
+  Linear (SIL OFL 1.1), SELF-HOSTED. The ruling and the nine-candidate pool are
+  in docs/YAZI-TIPI-OLCUMU-2026-08-07.md; the browser confirmation round is in
+  research/olcumler/yazi_tipi_2026-08-07/tarayici/. What the change buys, in
+  measured terms: a mono `1`/`l` pair the browser separates better than Geist's
+  (raster difference 1.00 vs 0.92 at 10px), a slashed zero in the SANS as well
+  as the mono, structural tabular figures in BOTH faces, and — the reason it is
+  a hardening rather than a cost — TWO third-party origins dropped out of the
+  CSP. What moved before that is the ground: #ffffff with warm bone panels
   (#f8f5f2 / #f1ece8) and warm hairlines (#e7e3df), 12px card radii, full-pill
   controls, and NO SHADOW ANYWHERE — separation is hairline plus tone, measured
   off the reference where every card is box-shadow:none. There is no interaction
   colour: the primary action is a black pill, which sharpens the old rule into
   something stricter — colour now belongs to measurement ALONE, and the only
   colours left are green/amber/red, revalued for a light ground (see :root).
-  Figures are always Geist Mono with tabular numerals so a column of numbers
+  Figures are always Recursive Mono with tabular numerals so a column of numbers
   reads as a column. Omega's own muted grey #8f8b86 was NOT taken: it measures
   3.12:1 on its own bone panel and the reference uses it at 10px, so this build
   uses #585450 (7.50:1 on paper, 5.47:1 at its worst real composited ground)
@@ -62,10 +78,42 @@
   reading that was Uzman-only is now simply visible.
 ============================================================================ -->
 <style>
+/* ============================ YAZI TİPİ · KENDİ-BARINDIRMA (D4, 2026-08-07) ============================
+   Recursive Sans Linear + Recursive Mono Linear, SIL OFL 1.1 (github.com/arrowtype/recursive).
+   Ölçüm ve hüküm: docs/YAZI-TIPI-OLCUMU-2026-08-07.md · tarayıcı teyidi:
+   research/olcumler/yazi_tipi_2026-08-07/tarayici/ · lisans metni: /fonts/OFL.txt.
+   Üretim: research/olcumler/yazi_tipi_2026-08-07/build_web_fonts.py (yeniden üretilebilir).
+
+   `font-weight:400 700` — DEĞİŞKEN eksen aralığı, tek bir statik ağırlık değil. Dosyanın
+   `wght` ekseni bu aralığa DARALTILDI çünkü üç yüzeyin 174 `font-weight` bildiriminin tamamı
+   400/500/600/700; tam eksen (300-1000) 117,9 KB, daraltılmış 79,3 KB (ölçüldü).
+
+   `font-display:block` — ve `swap` DEĞİL, bilerek. Üçünün de bozulma biçimi ölçülü:
+     swap     → yedek yüzle çizer, sonra DEĞİŞTİRİR. Bu panonun her sayısı tabular mono'dur;
+                takas anında rakam sütunu YATAY KAYAR. Okunmakta olan bir sütunun kayması,
+                boş bir sütunun bir an geç gelmesinden kötüdür.
+     optional → ~100 ms tanır, yetişmezse O SAYFA AÇILIŞI BOYUNCA yedekte kalır. Operatörün
+                saatlerce açık tuttuğu bir konsolda "yanlış yüzle açıldı ve öyle kaldı".
+     block    → ~3 sn görünmez metin, sonra DOĞRU yüz. Beklemek yanlış çizmekten iyidir.
+   Bedeli sınırlı ve ölçülü: dosyalar AYNI origin'de (79,3 KB toplam), `preload` ile ayrıştırma
+   anında istenir, ve `_NOCACHE` başlığı `no-cache` olduğu için tarayıcı kopyayı SAKLAR — soğuk
+   önbellek dışında blok penceresi hiç açılmaz. HALT yüzeyi (`/halt`) bu yüzü HİÇ kullanmaz
+   (api.py kendi `system-ui`siyle çizer), yani acil durum yüzeyi bu kararın kapsamında değil.
+   ==================================================================================================== */
+@font-face{
+  font-family:'Recursive Sans';
+  src:url('/fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}
+@font-face{
+  font-family:'Recursive Mono';
+  src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700; font-style:normal; font-display:block;
+}
 :root{
-  --sans:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --sans:'Recursive Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --display:var(--sans);
-  --mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace;
+  --mono:'Recursive Mono',ui-monospace,SFMono-Regular,monospace;
   --serif:var(--sans);
   /* spacing — one 4px base */
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
@@ -357,22 +405,22 @@
    1381px, 375px'te 753px ölçüldü, yani sayfa yana kayıyordu. `clip` seçildi, `hidden` değil:
    hidden bir kaydırma bağlamı yaratır ve kenar şeridinin position:sticky'sini öldürürdü. */
 html{scroll-behavior:smooth;overflow-x:clip}
-/* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ.
-   Bu iki özellik Inter sözleşmesidir ve önceki görsel dünyadan kalmıştı. Google Fonts'un
-   servis ettiği GERÇEK derlemede (üretimde yüklenen dosya) tarayıcıda yan yana basıldı:
-   Geist Sans ve Geist Mono'da glifler özellikli ve özelliksiz BİREBİR AYNI çıktı —
-   çift katlı 'a' çift katlı kaldı, rakamlar değişmedi, genişlikler aynı.
-   Etkisi olmayan bir bildirim, yapılmış bir iş izlenimi verir; uydurma yasağının
-   tipografik hâli. Aynı sebeple 'slashed-zero' da EKLENMEZ: Geist Mono'da `zero`
-   özelliği yok, ama eğik çizgi zaten varsayılan glifin içinde (yukarıda görüldü).
+/* 'cv11','ss01' KALDIRILDI (2026-08-01) — ÖLÇÜLDÜ, ÖLÜYDÜ. Bu iki özellik Inter
+   sözleşmesidir ve önceki görsel dünyadan kalmıştı; Geist'te tarayıcıda yan yana basıldı ve
+   özellikli/özelliksiz çıktı BİREBİR AYNIYDI. Etkisi olmayan bir bildirim, yapılmış bir iş
+   izlenimi verir; uydurma yasağının tipografik hâli.
 
-   WP-P/P4 (2026-08-01) BU HÜKMÜ YENİDEN AÇTI VE YİNE KAPATTI. İş emri "slashed-zero'yu
-   sayısal yüzeylerde aç" diyordu; kaynakta duran ölçüm bunun NO-OP olacağını söylüyor
-   (2026-08-01, üretimde yüklenen Google Fonts derlemesinde tarayıcıda yan yana basıldı).
-   `font-feature-settings:'zero'` eklemek, ölçülmüş olarak ETKİSİZ bir bildirimi
-   "tipografi denetimi yapıldı" diye kayda geçirmek olurdu — tam olarak yukarıdaki
-   cümlenin yasakladığı şey. Hedef (0 ile O'yu ayırmak) zaten SAĞLANIYOR: Geist Mono'nun
-   varsayılan sıfırı eğik çizgili. Bu blok, hükmün üçüncü kez açılmaması için burada. */
+   'slashed-zero' DA EKLENMEZ — ve YAZI TİPİ DEĞİŞTİ, GEREKÇE DEĞİŞMEDİ (D4, 2026-08-07).
+   Hüküm Geist için üç kez açılıp üç kez kapanmıştı ("özellik yok, çizgi zaten varsayılan
+   glifte"). Recursive'de durum bir adım daha ince ve YİNE aynı sonuca çıkıyor: `zero`
+   özelliği VAR ama ATIL — GSUB `zero → zero.slash` eşlemesi taşıyor, ancak iki glifin
+   konturları BİREBİR AYNI. Yani bildirim yazılsaydı yine hiçbir piksel değişmezdi.
+   Hedef (0 ile O'yu ayırmak) zaten sağlanıyor ve bu tarayıcıda doğrulandı: 10px'te 6×
+   büyütmede sıfırın eğik çizgisi ayrık okunuyor — ve Geist'ten farklı olarak SANS'ta da
+   (research/olcumler/yazi_tipi_2026-08-07/tarayici/04_yakinlastirma_6x.png).
+   `tabular-nums` bildirimi ise KALIR: Recursive'de de atıldır (hizalama yapısal, her rakam
+   600/1000 — tarayıcıda ölçüldü) ama `ui-monospace` yedeğinde iş görür. Bu blok, hükmün
+   dördüncü kez açılmaması için burada. */
 body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;
   letter-spacing:-.011em}
 h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.02em;line-height:1.18}

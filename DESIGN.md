@@ -16,37 +16,37 @@ colors:
   loss: "#b3242c"
 typography:
   display:
-    fontFamily: "Geist, system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "28px"
     fontWeight: 500
     lineHeight: 1.18
     letterSpacing: "-0.02em"
   headline:
-    fontFamily: "Geist, system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "20px"
     fontWeight: 500
     lineHeight: 1.18
     letterSpacing: "-0.02em"
   title:
-    fontFamily: "Geist, system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "17px"
     fontWeight: 500
     lineHeight: 1.25
     letterSpacing: "-0.02em"
   body:
-    fontFamily: "Geist, system-ui, -apple-system, 'Segoe UI', sans-serif"
+    fontFamily: "'Recursive Sans', system-ui, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "14px"
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "-0.011em"
   label:
-    fontFamily: "'Geist Mono', ui-monospace, SFMono-Regular, monospace"
+    fontFamily: "'Recursive Mono', ui-monospace, SFMono-Regular, monospace"
     fontSize: "10px"
     fontWeight: 700
     lineHeight: 1
     letterSpacing: "0.16em"
   figure:
-    fontFamily: "'Geist Mono', ui-monospace, SFMono-Regular, monospace"
+    fontFamily: "'Recursive Mono', ui-monospace, SFMono-Regular, monospace"
     fontSize: "28px"
     fontWeight: 400
     lineHeight: 1
@@ -531,10 +531,19 @@ Turkish interface. Those bound the *content*; the *form* is fully open.
 
 ## Typography
 
-**Display / Body Font:** Geist (with `system-ui`, `-apple-system`, `Segoe UI`) — *incumbent, not a
-commitment; a typeface change is open (operator, 2026-08-06). The functional bar any replacement
-must clear is in PRODUCT.md's brand block.*
-**Label / Figure Font:** Geist Mono (with `ui-monospace`, `SFMono-Regular`) — same status.
+**Display / Body Font:** **Recursive Sans Linear** (with `system-ui`, `-apple-system`, `Segoe UI`)
+**Label / Figure Font:** **Recursive Mono Linear** (with `ui-monospace`, `SFMono-Regular`)
+
+Both **self-hosted** from `/fonts/recursive-{sans,mono}-vf.woff2` — SIL Open Font License 1.1,
+upstream `github.com/arrowtype/recursive` v1.085, licence text shipped at `meridian/web/fonts/OFL.txt`.
+Variable weight axis, **400–700**. No third-party origin is contacted for type, and the deployment
+CSP now says so: `font-src 'self'` with no host list.
+
+*Settled 2026-08-07 (D4). Geist was the incumbent and is **retired** — it is on the overused-typeface
+list, and the operator opened the change on 2026-08-06. The successor was chosen by measuring nine
+OFL sans+mono pairs against the seven-point bar in `docs/TASARIM-YONU-2026-08-07.md` §5; the full
+pool, the eliminations and the evidence are in `docs/YAZI-TIPI-OLCUMU-2026-08-07.md`. The browser
+confirmation round that ruling demanded is in `research/olcumler/yazi_tipi_2026-08-07/tarayici/`.*
 
 ### Type scale
 
@@ -552,63 +561,105 @@ Nine steps, and no others. This list is the ramp; the Ramp Rule below states it 
 | Grid figure | `font-size: 24px` | the figure inside a dense matrix cell (weight steps to 500) |
 | Display / Figure | `font-size: 28px` | the largest heading on a view; the headline number in a stat card |
 
-**Character:** One family and its monospace sibling, nothing else, in both themes. The pairing
-does all its work through weight and tracking: headings are *medium* (500), never bold, and figures
-are *regular* (400) at large sizes — a big number here is large and light, not heavy. Mono is
-reserved for two jobs only: micro-labels and anything numeric.
+**Character:** One family and its monospace sibling, nothing else, in both themes. With Recursive
+that sentence is literally true rather than approximately true: the mono is not a companion family,
+it is **the same variable file at `MONO 1`** — one design, two cuts, so the pairing cannot drift.
+The pairing does all its work through weight and tracking: headings are *medium* (500), never bold,
+and figures are *regular* (400) at large sizes — a big number here is large and light, not heavy.
+Mono is reserved for two jobs only: micro-labels and anything numeric.
 
-### The numeric-typography requirement, and how Geist Mono meets it
+### The numeric-typography requirement, and how Recursive meets it
 
 The requirement is a **capability**, not a font name. A console that updates numbers in place needs
-figures that do not jitter, and glyphs that cannot be misread at 10–11px. Geist Mono was kept
-rather than migrated to Inter / IBM Plex, and the decision rests on a direct inspection of the
-font binary (`GeistMono-Medium.ttf` v1.401, `unitsPerEm` 1000, 846 glyphs):
+figures that do not jitter, and glyphs that cannot be misread at 10–11px. This table is the same
+instrument the Geist entry used — read off the binary, not off the foundry's page — re-run against
+the two faces that actually ship (`recursive-{sans,mono}-vf.woff2`, `unitsPerEm` 1000, 356 glyphs
+and 260 mapped codepoints per face, `wght` 400–700), with a **browser** column the Geist table never
+had.
 
 | Requirement | Finding | Evidence |
 |---|---|---|
-| Figures do not shift width | **Met, structurally.** Every digit has advance width 600/1000 — the family is genuinely monospaced, so a column of numbers is already a column. | `hmtx` advance = 600 for all of `0`–`9` |
-| `tabular-nums` feature | **Absent as a feature.** The GSUB feature list is `aalt case ccmp dnom frac liga locl numr ordn sinf ss01 ss02 ss03 ss04 ss06 ss07 ss08 ss09 subs sups` — there is no `tnum`. The CSS declaration is inert *for this face* and is kept only because it still governs the `ui-monospace` / `SFMono-Regular` fallbacks. | GSUB FeatureList, 20 unique tags |
-| Disambiguated zero | **Met by default, no feature needed.** `zero` (gid 477) has **three** contours where `O` (gid 74) has two; the extra contour is a 4-point parallelogram spanning x[124,476] y[101,609] across the counter — a **slash, baked into the default glyph**. | `glyf` contour dump |
-| `slashed-zero` feature | **Absent — and unnecessary.** There is no `zero` feature in GSUB, because the slash is not optional. **Do not declare `font-variant-numeric: slashed-zero` and expect it to do anything.** | GSUB FeatureList |
-| `0` vs `O` | **Separated.** Slash present, and `0` is narrower (outer bowl 504 units vs 528). | contour bounding boxes |
-| `1` vs `I` | **Separated at the top.** `I` is one contour with a full-width crossbar (444 units wide); `1` is a flagged stem plus a 488-unit foot serif. | 12 pts / 1 contour vs 15 pts / 2 contours |
-| `1` vs `l` | **Weak — not certifiable.** Both are two contours, both 710 units tall, both with a 488-unit foot serif. The measured differences are a 15-unit stem offset (**0.15 px at 10px**) and a 14-unit foot-bar height difference (**0.14 px**), plus one extra outline point. | contour dump |
-| Small-size metrics | x-height 532/1000 → **5.32 px at 10px**, 5.85 px at 11px. Cap height 710/1000 → 7.10 px / 7.81 px. | `OS/2` v4 `sxHeight`, `sCapHeight` |
+| Figures do not shift width | **Met, structurally — and in *both* faces.** Every digit has advance width 600/1000 in the mono **and** in the sans, at 400, 500 and 700. A column of numbers is already a column even when it is set in body type. Geist met this in the mono only. | `hmtx` advance = 600 for all of `0`–`9`, sampled at three weights through `HVAR`; re-measured in the browser (`measureText` of each digit → one distinct width per face) |
+| `tabular-nums` feature | **Absent as a feature — and unnecessary.** There is no `tnum` in GSUB because the alignment is structural. The CSS declaration is inert *for these faces* and is kept only because it still governs the `ui-monospace` / `SFMono-Regular` fallbacks. *(Identical situation to Geist Mono; the Tabular Rule below is unchanged.)* | GSUB FeatureList |
+| Disambiguated zero | **Met by default, no feature needed, in *both* faces.** `zero` has three contours where `O` has two; the extra contour spans x[96,485] y[122,591] — a slash corner-to-corner across the counter, baked into the default glyph. **Geist's *sans* had no such mark** (`zero` 2 contours, no `zero` feature): the old `0`/`O` separation rested entirely on "every figure is mono". | `glyf` contour dump; browser raster at 13 and 28px |
+| `slashed-zero` feature | **Present but inert. Do not declare it.** GSUB does carry `zero → zero.slash`, but the two glyphs' contours are **byte-for-byte the same shape** — the substitution changes nothing. Geist's version of this trap was an absent feature; Recursive's is a present-but-empty one, which is worse to trust and identical to obey. | GSUB lookup resolution + contour comparison of both glyphs |
+| `0` vs `O` | **Separated.** Slash present, and `0` is 16 units narrower (0.16 px at 10px). Browser raster difference at 28px: **0.66** in the sans (0 = indistinguishable, 1 = no shared ink). | contour bounding boxes; `tarayici/olcum_sonucu.json` |
+| `1` vs `I` | **Separated at both ends.** `1` is 2 contours (angled flag, no foot serif); `I` is **3** (top *and* bottom serifs). | contour dump |
+| `1` vs `l` | **Separated — the one place Recursive measurably beats Geist.** `1` = 2 contours / 93 points / 710 units tall; `l` = **1 contour** / 60 points / **750 units** tall, with a curved right foot. In the browser, at the sizes that matter: raster difference **1.00 at 10px** and **0.82 at 28px**, against Geist Mono's **0.92** and **0.57** measured the same way in the same run. | contour dump; browser raster diff, Chrome 148 headless, dpr 1 |
+| Small-size metrics | x-height 532/1000 → **5.32 px at 10px**, 5.85 px at 11px. Cap height 700/1000 → **7.00 px** / 7.70 px. | `OS/2` v4 `sxHeight`, `sCapHeight`, read at `wght` 400 |
+| Turkish at 10px | **Met, and this is a Turkish product.** `ö`/`ü` keep two separate dots, `ğ`'s breve stays curved and detached, `ş`/`ç` cedillas stay readable — at 10px, on both grounds. The signature idiom (mono 10px/700 UPPERCASE) renders `IŞIK İĞNE ÇÖZÜM ÜSTÜNDE ĞAZI` cleanly. Four of the nine candidates failed exactly here. | 6× pixel-zoom of the real browser raster, `tarayici/04_yakinlastirma_6x.png` |
 
-**Ruling: Geist Mono is kept.** The two properties that actually matter for a money console —
-non-shifting figures and an unmistakable zero — are met by the font's construction rather than by
-optional features, which is a stronger guarantee than a feature flag. There is no font migration.
+**Ruling: Recursive Sans Linear + Recursive Mono Linear, self-hosted.** The two properties that
+actually matter for a money console — non-shifting figures and an unmistakable zero — are again met
+by the font's *construction* rather than by optional features, which is the stronger guarantee, and
+they are now met in the sans as well as the mono.
 
-**What the earlier pass could not measure, and how it was settled.** Two things were left open
-when this section was first written; both were closed on 2026-08-01 by rendering in a browser
-rather than by reading the font binary.
+#### What the change cost and what it bought — measured, both directions
 
-1. **The `1`/`l` pair at real rendering size.** Geometry put the two glyphs within a fifth of a
-   pixel of each other at 10px, and geometry could not decide whether they are *perceptually*
-   separable. A render-and-observe test settled it — see below.
-2. **The Google-served build — now measured, in the browser.** The earlier pass could only
-   inspect the local Vercel/Raycast build v1.401 and flagged the Google `geistmono/v6` subset as
-   unverified. It has since been tested where it actually matters: rendered by the browser, from
-   Google, at the sizes the interface uses.
+Losses are real and are stated first. Metrics are at `wght` 400, the weight body text uses; the
+Geist column is `Geist-VF` read the same way.
 
-**Both open font questions are closed, and both closed against the declaration:**
+| Lost | Geist | Recursive | Δ |
+|---|---|---|---|
+| Cap height at 10px | 7.10 px | 7.00 px | **−0.10 px** |
+| Cap height at 11px | 7.81 px | 7.70 px | −0.11 px |
+| Shipped bytes, both faces | 54.1 KB *(measured on an equivalent subset, `docs/YAZI-TIPI-OLCUMU-2026-08-07.md` §3.7 — not the bytes Google actually served, which were never captured)* | **79.3 KB** | +25.2 KB, one-time, same-origin |
 
-- **`cv11` and `ss01` do nothing, in either family.** The same string was set twice — once plain,
-  once with `font-feature-settings:'cv11','ss01'` — in Geist Sans and Geist Mono, at 40px, and
-  the renderings were **identical**: the double-storey `a` stayed double-storey, the digits did
-  not change, and the advance widths matched to three decimals (Sans 488.234 both ways, Mono
-  566.883 both ways). `cv11` is an Inter convention that survived the move off Inter. **Both
-  declarations were deleted from all three surfaces on 2026-08-01.** A declaration that changes
-  nothing still reads as work done — the typographic form of claiming an unmeasured number.
-- **`1` versus `l` is legible at 10–11px, and the exposure was never where it looked.** Rendered
-  at 10, 11, 12, 13, 16 and 28px: `1` carries an angled flag and a full-width foot bar, `l` a
-  narrower top flag and a curved right foot, `I` two crossbars. They are tight at 10px but they
-  are distinct. More to the point, **`--label-size` mono is `text-transform: uppercase` by rule**,
-  so a lowercase `l` never renders at 10px in this interface at all; the pair can only meet in
-  `code` and drawer identifiers, which are set at 12px or larger. The earlier instruction to
-  avoid mixed-case identifiers in mono is lifted.
-- The `0` slash was confirmed visually at every size, which independently re-confirms that
-  `slashed-zero` would be redundant even if the feature existed.
+| Gained | Geist | Recursive |
+|---|---|---|
+| `1` vs `l` in the mono, browser raster diff at 10px | 0.92 | **1.00** |
+| Slashed `0` in the **sans** | none — 2 contours, no `zero` feature | present in the default glyph |
+| Structural tabular figures in the **sans** | no (`tnum` required) | yes (600/1000, three weights) |
+| Mono relationship | separate family (Geist / Geist Mono) | **same file, `MONO` axis** |
+| Third-party origins contacted for type | 2 (`fonts.googleapis.com`, `fonts.gstatic.com`) | **0** |
+| Behaviour with no egress (tunnel, closed network) | falls back to system faces | correct type, always |
+
+> **x-height did not move, and the ruling document says it did.** `docs/YAZI-TIPI-OLCUMU-2026-08-07.md`
+> §6 books a −0.04 px x-height loss. That figure compares Geist at `wght` 400 against Recursive at
+> its **file default of 300**, which is not a weight this interface ever renders. Measured at 400
+> against 400: Geist 530/1000, Recursive **532/1000** — the shipped faces are 0.02 px *taller* at
+> 10px. The loss column above is corrected accordingly and the cap-height loss, which is real,
+> stands.
+
+#### What the browser round settled (2026-08-07)
+
+The ruling document was explicit that its renders were Pillow/FreeType and that a browser round was
+mandatory before adoption. It was run, against the actual shipped files, and it **changed two
+conclusions** — which is the reason the round exists.
+
+1. **The "blocking" name collision was not blocking.** Both pinned cuts carried the same
+   `nameID 1` and PostScript name (`Recursive-SansLinearLight`), and the ruling predicted that
+   self-hosting them would collapse the two families and lose the mono. Tested directly: loaded
+   under two `@font-face` families, the colliding pair still resolved to **two distinct faces**
+   (`i`≠`M` in one, `i`=`M` in the other). A CSS-declared family name overrides the binary's own,
+   so that path was never at risk. **The cuts were renamed anyway** — a `MONO 1` instance that
+   calls itself "Sans Linear Light" is a binary lying about itself, and the lie would surface in
+   `local()` matching, font managers and devtools — but it is recorded as *correctness*, not as a
+   rescue.
+2. **Geist's `1`/`l` was never "identical", and this section already said so.** The ruling calls the
+   pair `birebir aynı`, reading advance width and contour count. Advance width cannot separate
+   anything in a monospaced face — every glyph is 600 — so that measure was answering a different
+   question. Measured as ink instead, Geist's pair differs by 0.92 at 10px: tight, but distinct,
+   exactly as the 2026-08-01 browser round recorded. Recursive's 1.00 is a real improvement over a
+   real baseline, not a rescue from a defect.
+
+**Still standing from the Geist era, unchanged:**
+
+- **`cv11` and `ss01` do nothing.** Set twice at 40px, plain and with
+  `font-feature-settings:'cv11','ss01'`, the renderings were identical to three decimals. `cv11` is
+  an Inter convention that survived the move off Inter. Both declarations were deleted from all
+  three surfaces on 2026-08-01 and must not come back. A declaration that changes nothing still
+  reads as work done — the typographic form of claiming an unmeasured number.
+- **The lowercase `l` barely renders here anyway.** `--label-size` mono is `text-transform:
+  uppercase` by rule, so the `1`/`l` pair can only meet in `code` and drawer identifiers, set at
+  12px or larger. Mixed-case identifiers in mono remain permitted.
+- **`font-display` is `block`, not `swap`.** `swap` paints in a fallback and then substitutes, and
+  on this surface the substitution moves a tabular column sideways mid-read; `optional` can leave a
+  session-long console in the wrong face after one slow start. `block` fails by making the reader
+  wait, which is the only one of the three failures that does not show a wrong number in a right-
+  looking column. The window is bounded: 79.3 KB, same origin, `preload`ed, and held in the HTTP
+  cache by the `no-cache` revalidation contract. `/halt` is unaffected — it draws in `system-ui`
+  from `api.py` and never loads these faces.
 
 ### Hierarchy
 - **Display** (500, 28px, 1.18, −0.02em): the largest heading on a view; one per view.
@@ -630,10 +681,12 @@ default; weight is the *remedy* held in reserve if halation is ever reported.
 No half-steps, no `15px` because something looked slightly small. If a new element needs a size
 that isn't on the ramp, it needs a different element.
 
-**The Tabular Rule.** Every figure is Geist Mono, and every figure declares `tabular-nums`. The
-declaration is defensive, not decorative: it is inert on Geist Mono itself (no `tnum` feature,
-alignment already structural) and load-bearing on the `ui-monospace` fallback. Never rely on
-`slashed-zero` — the slash is already in the default glyph and the feature does not exist.
+**The Tabular Rule.** Every figure is Recursive Mono, and every figure declares `tabular-nums`. The
+declaration is defensive, not decorative: it is inert on Recursive Mono itself (no `tnum` feature,
+alignment already structural at 600/1000) and load-bearing on the `ui-monospace` fallback. Never
+rely on `slashed-zero` — the slash is already in the default glyph, and the `zero` feature that does
+exist substitutes one glyph for an identically shaped one. *The rule's text is the same rule it was
+under Geist; only the font name and the reason the feature is inert have changed.*
 
 **The Label-Above Rule.** A figure never appears without a mono micro-label above it naming what
 it measures. A bare number on this desk is an unlabelled instrument.
@@ -969,7 +1022,7 @@ uncertainty.
 - **Do** measure a new colour against its own composited ground, in both themes, before shipping.
 - **Do** put a mono 10px uppercase label at `0.16em` above every figure.
 - **Do** pick sizes from the ramp: 10 · 11 · 12 · 13 · 14 · 17 · 20 · 24 · 28 px.
-- **Do** set figures in Geist Mono with `tabular-nums`, weight 400 at large sizes.
+- **Do** set figures in Recursive Mono with `tabular-nums`, weight 400 at large sizes.
 - **Do** build depth from the tonal ramp and 1px warm hairlines.
 - **Do** show sample size next to any average — the confidence bar or an explicit `n`.
 - **Do** give every interactive control a 44px minimum touch target.
@@ -993,8 +1046,12 @@ uncertainty.
 - **Don't** set a heading bolder than 500 or a large figure bolder than 400.
 - **Don't** invent a type size that isn't on the ramp.
 - **Don't** add a fourth radius. There are three — 2px, 10px, 12px — and no pill.
-- **Don't** promise `slashed-zero`. Geist Mono has no `zero` feature; the slash is already in the
-  default glyph.
+- **Don't** promise `slashed-zero`. Recursive Mono's `zero` feature exists but substitutes an
+  identically shaped glyph; the slash is already in the default one. (Geist had no such feature at
+  all — the trap changed shape, the answer did not.)
+- **Don't** load a typeface — or any asset — from a third-party origin. Both faces are self-hosted
+  under `/fonts/`, and the deployment CSP is `font-src 'self'` with no host list. A `<link>` to a
+  font CDN does not just add a dependency; it requires widening the CSP to admit it.
 - **Don't** declare a font feature without rendering it both ways first. `cv11` and `ss01` sat on
   `body` for months and did nothing.
 - **Don't** justify the night theme as "easier to read". It is a low-light ergonomics choice and

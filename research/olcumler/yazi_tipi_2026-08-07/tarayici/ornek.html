@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recursive — tarayıcı teyidi (D4)</title>
+<!--
+  TARAYICI TEYİT SAYFASI — ölçüm raporunun §7/2 maddesi ("ZORUNLU").
+  Rapor'un render'ları Pillow/FreeType idi. Bu sayfa AYNI dizileri GERÇEK tarayıcıda,
+  GERÇEK dağıtım dosyalarıyla (meridian/web/fonts/*.woff2) basar.
+  `serve.sh` KOŞMAZ (CLAUDE.md §5): sayfa `python3 -m http.server` ile bu klasörden servis
+  edilir; Meridian uygulaması hiç yüklenmez, hiçbir /api/* ucu çağrılmaz.
+  Zemin değerleri PRODUCT.md brand block'tan (gündüz #fbf9f8 / gece #1E1E1E).
+-->
+<style>
+/* YOLLAR ÜRETİMDEKİ YOLLARIN AYNISI (`/fonts/...`): sayfa, `meridian/web/` dizinini kökü
+   sayan geçici bir statik sunucudan servis edilir, yani burada sınanan URL biçimi canlıda
+   kullanılanın birebir aynısıdır — `file://` göreli yolu değil. */
+@font-face{font-family:'Recursive Sans';src:url('/fonts/recursive-sans-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+@font-face{font-family:'Recursive Mono';src:url('/fonts/recursive-mono-vf.woff2') format('woff2');
+  font-weight:400 700;font-style:normal;font-display:block}
+:root{--sans:'Recursive Sans',system-ui,sans-serif;--mono:'Recursive Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+.zemin{padding:22px 26px}
+.gunduz{background:#fbf9f8;color:#050505}
+.gece{background:#1E1E1E;color:#D4D4D4}
+.gunduz .mut{color:#585450} .gece .mut{color:#a09a94}
+h2{font-family:var(--sans);font-weight:500;font-size:20px;letter-spacing:-.02em;margin:0 0 14px}
+section{margin-bottom:20px}
+.l{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+   margin:0 0 7px;opacity:.85}
+.satir{display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin-bottom:5px}
+.satir b{font-family:var(--mono);font-size:10px;font-weight:700;opacity:.55;min-width:34px}
+.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.s{font-family:var(--sans)}
+.s10{font-size:10px} .s11{font-size:11px} .s12{font-size:12px} .s13{font-size:13px}
+.s14{font-size:14px} .s17{font-size:17px} .s20{font-size:20px} .s24{font-size:24px} .s28{font-size:28px}
+.w4{font-weight:400} .w5{font-weight:500} .w6{font-weight:600} .w7{font-weight:700}
+table{border-collapse:collapse;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px}
+td{padding:2px 12px 2px 0;text-align:right}
+td.ad{text-align:left;font-weight:700;font-size:10px;letter-spacing:.16em;opacity:.6}
+.cetvel{display:inline-block;width:1px;height:1.1em;vertical-align:-.15em;margin-left:0}
+.gunduz .cetvel{background:#c9312e} .gece .cetvel{background:#ff6b66}
+.buyuk{font-size:28px;font-weight:400;letter-spacing:-.04em;font-family:var(--mono);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<div class="zemin gunduz" id="gunduz">
+  <h2>GÜNDÜZ ZEMİNİ · Recursive Sans + Recursive Mono (self-host, woff2)</h2>
+
+  <section>
+    <p class="l">1 · rampanın dokuz basamağı — mono, 0/O 1/l/I ayırt-etme dizisi</p>
+    <div class="satir"><b>10</b><span class="m s10 w4">0O1lI Il1O0 · 0123456789</span><span class="m s10 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>11</b><span class="m s11 w4">0O1lI Il1O0 · 0123456789</span><span class="m s11 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>12</b><span class="m s12 w4">0O1lI Il1O0 · 0123456789</span><span class="m s12 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>13</b><span class="m s13 w4">0O1lI Il1O0 · 0123456789</span><span class="m s13 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>14</b><span class="m s14 w4">0O1lI Il1O0 · 0123456789</span><span class="m s14 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>17</b><span class="m s17 w4">0O1lI Il1O0</span><span class="m s17 w7">0O1lI Il1O0</span></div>
+    <div class="satir"><b>20</b><span class="m s20 w4">0O1lI Il1O0</span><span class="m s20 w7">0O1lI Il1O0</span></div>
+    <div class="satir"><b>24</b><span class="m s24 w5">0O1lI Il1O0</span></div>
+    <div class="satir"><b>28</b><span class="m s28 w4">0O1lI Il1O0</span></div>
+  </section>
+
+  <section>
+    <p class="l">2 · İMZA İDİOMU — mono 10px/700 UPPERCASE 0.16em, gerçek Türkçe etiketler</p>
+    <div class="satir">
+      <span class="l" style="margin:0">AÇIK RİSK</span><span class="l" style="margin:0">GÜNLÜK KÂR</span>
+      <span class="l" style="margin:0">ÖLÇÜLEMEDİ</span><span class="l" style="margin:0">SIĞ ÖRNEKLEM</span>
+      <span class="l" style="margin:0">DÜŞÜŞ EŞİĞİ</span><span class="l" style="margin:0">İŞLEM GEÇMİŞİ</span>
+    </div>
+  </section>
+
+  <section>
+    <p class="l">3 · TÜRKÇE AKSAN SINAVI — ıİşŞğĞçÇöÖüÜ, 10/11/12/13/17/20/24/28px</p>
+    <div class="satir"><b>10</b><span class="s s10 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>11</b><span class="s s11 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>12</b><span class="s s12 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>13</b><span class="s s13 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>17</b><span class="s s17 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ</span></div>
+    <div class="satir"><b>20</b><span class="s s20 w5">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ</span></div>
+    <div class="satir"><b>24</b><span class="s s24 w5">ıİşğçöüŞĞÇÖÜ</span></div>
+    <div class="satir"><b>28</b><span class="s s28 w5">ıİşğçöüŞĞÇÖÜ</span></div>
+    <div class="satir"><b>M10</b><span class="m s10 w7">IŞIK İĞNE ÇÖZÜM ÜSTÜNDE ĞAZI</span><span class="m s10 w4">ışık iğne çözüm üstünde ğazı</span></div>
+  </section>
+
+  <section>
+    <p class="l">4 · RAKAM SÜTUNU HİZASI — sağ kenarda kırmızı cetvel; tabular ise sütun kıpırdamaz</p>
+    <table>
+      <tr><td class="ad">SERMAYE</td><td>1 118 034,10<span class="cetvel"></span></td><td class="w7">+11,80</td><td>%18,3</td></tr>
+      <tr><td class="ad">AÇIK RİSK</td><td>0,00<span class="cetvel"></span></td><td class="w7">−0,04</td><td>%0,0</td></tr>
+      <tr><td class="ad">GÜNLÜK</td><td>−11 118,88<span class="cetvel"></span></td><td class="w7">+118,10</td><td>%1,1</td></tr>
+      <tr><td class="ad">DÜŞÜŞ</td><td>888 888,88<span class="cetvel"></span></td><td class="w7">−888,88</td><td>%88,8</td></tr>
+      <tr><td class="ad">ÖRNEKLEM</td><td>101 010,11<span class="cetvel"></span></td><td class="w7">+10,01</td><td>%10,1</td></tr>
+    </table>
+    <div class="satir" style="margin-top:9px"><b>28</b><span class="buyuk">1 118 034,10</span><span class="buyuk">0,00</span><span class="buyuk">−11,88</span></div>
+  </section>
+
+  <section>
+    <p class="l">5 · SANS SIFIRI (raporun iddiası: sans'ta da eğik çizgi var) — 28px sans vs mono</p>
+    <div class="satir"><b>SANS</b><span class="s s28 w4">0O 1lI 0O1lI</span><b>MONO</b><span class="m s28 w4">0O 1lI 0O1lI</span></div>
+  </section>
+</div>
+
+<div class="zemin gece" id="gece">
+  <h2>GECE ZEMİNİ · aynı diziler, aynı boylar (halation okuması)</h2>
+
+  <section>
+    <p class="l">1 · rampanın dokuz basamağı — mono, 0/O 1/l/I</p>
+    <div class="satir"><b>10</b><span class="m s10 w4">0O1lI Il1O0 · 0123456789</span><span class="m s10 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>11</b><span class="m s11 w4">0O1lI Il1O0 · 0123456789</span><span class="m s11 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>12</b><span class="m s12 w4">0O1lI Il1O0 · 0123456789</span><span class="m s12 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>13</b><span class="m s13 w4">0O1lI Il1O0 · 0123456789</span><span class="m s13 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>14</b><span class="m s14 w4">0O1lI Il1O0 · 0123456789</span><span class="m s14 w7">0O1lI Il1O0 · 0123456789</span></div>
+    <div class="satir"><b>17</b><span class="m s17 w4">0O1lI Il1O0</span><span class="m s17 w7">0O1lI Il1O0</span></div>
+    <div class="satir"><b>20</b><span class="m s20 w4">0O1lI Il1O0</span><span class="m s20 w7">0O1lI Il1O0</span></div>
+    <div class="satir"><b>24</b><span class="m s24 w5">0O1lI Il1O0</span></div>
+    <div class="satir"><b>28</b><span class="m s28 w4">0O1lI Il1O0</span></div>
+  </section>
+
+  <section>
+    <p class="l">2 · İMZA İDİOMU — mono 10px/700 UPPERCASE 0.16em</p>
+    <div class="satir">
+      <span class="l" style="margin:0">AÇIK RİSK</span><span class="l" style="margin:0">GÜNLÜK KÂR</span>
+      <span class="l" style="margin:0">ÖLÇÜLEMEDİ</span><span class="l" style="margin:0">SIĞ ÖRNEKLEM</span>
+      <span class="l" style="margin:0">DÜŞÜŞ EŞİĞİ</span><span class="l" style="margin:0">İŞLEM GEÇMİŞİ</span>
+    </div>
+  </section>
+
+  <section>
+    <p class="l">3 · TÜRKÇE AKSAN SINAVI — gece zemininde</p>
+    <div class="satir"><b>10</b><span class="s s10 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>11</b><span class="s s11 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>12</b><span class="s s12 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>13</b><span class="s s13 w4">ö o ü u ğ g ş s ç c ı i İ I — ıİşğçöüŞĞÇÖÜ · şığır güncelleştirilemeyebilecekleşmiş</span></div>
+    <div class="satir"><b>M10</b><span class="m s10 w7">IŞIK İĞNE ÇÖZÜM ÜSTÜNDE ĞAZI</span><span class="m s10 w4">ışık iğne çözüm üstünde ğazı</span></div>
+  </section>
+
+  <section>
+    <p class="l">4 · RAKAM SÜTUNU HİZASI — gece</p>
+    <table>
+      <tr><td class="ad">SERMAYE</td><td>1 118 034,10<span class="cetvel"></span></td><td class="w7">+11,80</td><td>%18,3</td></tr>
+      <tr><td class="ad">AÇIK RİSK</td><td>0,00<span class="cetvel"></span></td><td class="w7">−0,04</td><td>%0,0</td></tr>
+      <tr><td class="ad">GÜNLÜK</td><td>−11 118,88<span class="cetvel"></span></td><td class="w7">+118,10</td><td>%1,1</td></tr>
+      <tr><td class="ad">DÜŞÜŞ</td><td>888 888,88<span class="cetvel"></span></td><td class="w7">−888,88</td><td>%88,8</td></tr>
+      <tr><td class="ad">ÖRNEKLEM</td><td>101 010,11<span class="cetvel"></span></td><td class="w7">+10,01</td><td>%10,1</td></tr>
+    </table>
+    <div class="satir" style="margin-top:9px"><b>28</b><span class="buyuk">1 118 034,10</span><span class="buyuk">0,00</span><span class="buyuk">−11,88</span></div>
+  </section>
+
+  <section>
+    <p class="l">5 · SANS SIFIRI — gece, 28px</p>
+    <div class="satir"><b>SANS</b><span class="s s28 w4">0O 1lI 0O1lI</span><b>MONO</b><span class="m s28 w4">0O 1lI 0O1lI</span></div>
+  </section>
+</div>
+
+</body>
+</html>

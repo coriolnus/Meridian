@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>6× yakınlaştırma — gerçek tarayıcı rasteri (D4)</title>
+<!--
+  Ölçüm turunun `*_zoom4x.png` sayfalarının TARAYICI karşılığı. Metin 10/11/12/13px'te
+  canvas'a GERÇEK punto boyunda basılır, sonra o raster `imageSmoothingEnabled=false` ile
+  6× büyütülür — yani büyütülen şey harf değil PİKSELdir. Vektörü büyütmek (transform:scale)
+  soruyu kaçırırdı: sorulan şey "28px'te güzel mi", "10px'te hangi piksel yanıyor".
+-->
+<style>
+@font-face{font-family:'Recursive Sans';src:url('/fonts/recursive-sans-vf.woff2') format('woff2');font-weight:400 700;font-display:block}
+@font-face{font-family:'Recursive Mono';src:url('/fonts/recursive-mono-vf.woff2') format('woff2');font-weight:400 700;font-display:block}
+</style>
+<style>
+body{margin:0;font-family:ui-monospace,monospace;font-size:11px}
+.blok{padding:14px 18px}
+.gunduz{background:#fbf9f8;color:#050505}
+.gece{background:#1E1E1E;color:#D4D4D4}
+h3{font:700 12px ui-monospace,monospace;letter-spacing:.14em;margin:0 0 8px;opacity:.7}
+canvas{display:block;image-rendering:pixelated;margin-bottom:6px}
+.et{font:700 10px ui-monospace,monospace;letter-spacing:.1em;opacity:.55;margin:8px 0 3px}
+</style>
+</head>
+<body>
+<div class="blok gunduz" id="g"><h3>GÜNDÜZ · 6× (piksel büyütme)</h3></div>
+<div class="blok gece" id="k"><h3>GECE · 6× (piksel büyütme)</h3></div>
+<script src="yakinlastir.js"></script>
+</body>
+</html>

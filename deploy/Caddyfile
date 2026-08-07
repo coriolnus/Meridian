@@ -57,7 +57,25 @@ meridian.ORNEK-ALAN-ADIN.com {
 		#
 		# style-src'deki `unsafe-inline` AYRI ve hâlâ açık bir borç: app.js DOM'u satır içi
 		# stil taşıyan şablon dizgileriyle üretiyor, kaldırmak app.js'in yeniden yazılması demek.
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		#
+		# ---- İKİ DIŞ HOST DÜŞTÜ (D4, 2026-08-07) — SERTLEŞTİRME, MALİYET DEĞİL ----
+		# ÖNCE:  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
+		#        font-src  'self' https://fonts.gstatic.com
+		# SONRA: style-src 'self' 'unsafe-inline'
+		#        font-src  'self'
+		# NEDEN VARDILAR: üç yüzey de Geist'i Google Fonts CDN'inden çekiyordu, ve CSP tam olarak
+		# bunu barındırmak için genişletilmişti. Yani `docs/TASARIM-YONU-2026-08-07.md` §5'in
+		# "CSP dış font-host'a izin vermez" cümlesi BEYANDI, ölçüm değil — ihlal ediliyordu.
+		# NEDEN GİTTİLER: yazı tipi değişti (Geist emekli, Recursive Sans/Mono Linear, SIL OFL 1.1)
+		# ve yenisi KENDİ-BARINDIRILIYOR: `meridian/web/fonts/*.woff2`, toplam 79,3 KB, aynı origin.
+		# KAZANÇ ölçülebilir ve yalnız gizlilik değil: her açılışta iki ek DNS + iki TLS el sıkışması
+		# + render-blocking bir CSS isteği ölür; üçüncü bir tarafın panoya kod/font enjekte
+		# edebileceği yüzey ortadan kalkar; ve pano ağ kısıtlı bir ortamda (SSH tüneli, kapalı
+		# çıkış) DOĞRU YÜZLE açılır — eskiden CDN'e ulaşamayınca sistem yüzüne düşerdi.
+		# BU İKİ HOST'U GERİ EKLEME. Eklemek zorunda kaldıysan bir yere `<link>`li bir CDN yazı
+		# tipi geri gelmiş demektir; çözüm başlığı gevşetmek değil, dosyayı `meridian/web/fonts/`
+		# altına koymak ve `@font-face`i yerel yolla yazmak. Çivi: tests/test_yazitipi_v201.py.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 		# Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler. Görünmez bir iframe
 		# içinde başka bir sayfaya gömülmeleri gerçek bir senaryo.

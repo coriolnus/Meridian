@@ -6,7 +6,7 @@
    ============================================================================ */
 
 // ic: düğüm işaretleri artık ÇİZİLMİYOR — kanonda doymuş emoji kaçak bir tuhaflık.
-// Tipi Geist Mono kategori etiketi taşıyor. Alanlar veride korundu, hiçbir şey silinmedi.
+// Tipi Recursive Mono kategori etiketi taşıyor. Alanlar veride korundu, hiçbir şey silinmedi.
 const N = [
  {id:"poll",  t:"trigger",x:520,y:0,   ic:"⏱️",lb:"Zamanlayıcı poll",sb:"300 sn'de bir · bekçi nabzı",
   tip:"scheduler.advance_once: her 300 saniyede uyanır, bekçiyi damgalar, kapanmış seans arar. Seans başına en fazla 1 ağ tazelemesi."},
