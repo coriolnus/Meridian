@@ -5837,8 +5837,19 @@ async function opParcalar() {
   // ÖLÇÜLEMEYEN DEDEKTÖR SAYISI BAŞLIKTA DA GÖRÜNÜR: yedi satırın içinde tek bir nötr çipi
   // kaçırmak kolaydır ve "7 desen temiz" izlenimi tam da bu kaçışla doğar.
   const patOlcumsuz = Object.keys(PAT_TR).filter(k => ig[k] && _patOlculemedi(ig[k]));
+  // KOLON GENİŞLİĞİ ÖLÇÜLDÜ, SEÇİLMEDİ (v205, 2026-08-07). Bindirmeyi `.trow > *` sınıf kuralı
+  // kapatıyor (index.html) — ama SARMALAMA da bir maliyettir ve bu panelde maliyet İSTİSNA değil
+  // KURAL olurdu. `r.check` evreni kaynaktan sayıldı (watchdog.py: 18 düz ad + `yeniden_hesap:`
+  // önekli 13 recompute satırı + `eleme:{aşama}:{kural}` çarpımı = 97 olası ad; medyan 38 karakter,
+  // en uzunu 54 = `eleme:llm_opinion_calibration.gercek:sema_orani_yuksek`). 190px'te bu evrenin
+  // %84'ü taşıyordu — yani neredeyse HER satır iki satıra sarardı ve "yoğun uzman defteri" düzeni
+  // sarma yüzünden bozulurdu. Ölçülen diz noktası 340px'te: 320→340px arası tek-satır oranı
+  // %39'dan %63'e sıçrıyor (medyan kümesi 38 karakter ≈ 330px orada geçiyor). Kalan %37 sarar —
+  // kırpılmaz, bindirmez. Kolon genişliği SABİT kalır (minmax/max-content DEĞİL): her `.trow`
+  // KENDİ ızgara kabıdır, içeriğe uyan bir kolon satırdan satıra farklı genişlik alır ve defterin
+  // sütun hizası — bu tablonun tek okuma dayanağı — dağılırdı.
   const parityBad = ((ig.parity || {}).rows || []).filter(r => !r.ok).map(r =>
-    `<div class="trow" style="grid-template-columns:190px 1fr">
+    `<div class="trow" style="grid-template-columns:340px 1fr">
       <span class="tick">${esc(r.check)}</span><span class="chain sev-1">${esc(r.detail || "")}</span></div>`).join("");
   const lcRows = Object.entries(lc.detail || {}).map(([nm, v]) => {
     const viol = Object.entries(v.violations || {}).map(([k, n]) => `${k} ×${n}`).join(" · ");

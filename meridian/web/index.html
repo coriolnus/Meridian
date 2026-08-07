@@ -1186,6 +1186,37 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* ---- the register — ruled rows of recorded specimens ---- */
 .trow{display:grid;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
 .trow:last-child{border-bottom:none}
+/* ---- TAŞMA SÖZLEŞMESİ (v205, 2026-08-07) — TEK KURAL, 102 EMİSYON ---------------------------
+   ÖLÇÜLEN KUSUR (operatör ekran görüntüsü): "Makullük ihlalleri" panelinde dedektör adı sağdaki
+   açıklamanın ÜSTÜNE biniyordu. Ölçülen üç ad ve 190px'lik kolondaki taşmaları (14px Recursive
+   Mono, advance 600/1000 upem — research/olcumler/yazi_tipi_2026-08-07 ile ÖLÇÜLDÜ, tahmin değil;
+   letter-spacing .02em ile karakter başına 8,68px):
+     yeniden_hesap:orphan_state_files            32 kar. = 278px  → +88px
+     eleme:component_ic.eslesme:sema_elemesi     39 kar. = 338px  → +149px
+     eleme:threshold_curve.eslesme:sema_elemesi  42 kar. = 365px  → +175px
+   KÖK BİR KURALIN YANLIŞLIĞI DEĞİL, BİR KURALIN YOKLUĞU. İki varsayılan üst üste bindi:
+     (1) `min-width:auto` — ızgara ÖĞESİNİN otomatik en küçük boyutu içeriğinin min-content'idir;
+         esnek (1fr/auto) kolonlar bu yüzden içeriğin altına inemez ve satırı karttan taşırır.
+     (2) `overflow-wrap:normal` — kırılma fırsatı OLMAYAN bir jeton hiç sarmalanmaz. Bu adlarda
+         kırılma fırsatı yok: UAX#14'e göre `_` AL sınıfı, `:` ve `.` IS sınıfı — hiçbiri satır
+         sonu vermez. Yani ad tek bir kırılmaz jetondur; SABİT px'lik kolonda öğe kutusu 190px
+         kalır, İÇERİK kutunun dışına boyanır ve komşu kolonun metnine karışır.
+   BU YÜZDEN DÜZELTME SATIRDA DEĞİL SINIFTA: app.js'te 102 `.trow` ızgara emisyonu ve 304 sabit
+   px kolon var; ölçüldü — HİÇBİRİNDE taşma kuralı yoktu (ne overflow-wrap, ne min-width:0, ne
+   word-break). Tek satırı yamamak, aynı kusuru 101 yerde açık bırakırdı.
+   `> *` SEÇİCİSİ SINIF LİSTESİNE TERCİH EDİLDİ: sabit kolonlara düşen çocukların sayımı
+   (sınıfsız 141 · .mono-num 75 · .tick 31 · .mut 29 · .chain 16 · .num 4 · .etime 2 · .tag 1)
+   en kalabalık kovanın SINIFSIZ olduğunu gösteriyor — sınıf sayan bir kural onları ıskalardı.
+   `overflow-wrap` DEVRALINIR, dolayısıyla iç içe geçmiş çocuklar (ör. `<span><span class="tick">`)
+   da kapsanır; `min-width` devralınmaz, o yüzden öğenin KENDİSİNDE durur.
+   KIRPMA DEĞİL SARMALAMA — ölçülü bir bedel: `text-overflow:ellipsis` satır yüksekliğini hiç
+   büyütmezdi ama adı KISALTIRDI, ve bu panelin açık sözleşmesi (app.js:5809-5812) "operatörün
+   panodan okuduğu ad ile obs günlüğünde greplediği ad AYNI olmalı"dır. Yarım ad greplenemez.
+   `anywhere` (`break-word` değil) seçildi çünkü yalnız o, öğenin min-content katkısını da
+   düşürür — esnek kolonların daralabilmesi buna bağlı. Bedeli jeton ORTASINDAN kırmaktır; yukarıda
+   ölçüldüğü gibi bu adlarda meşru kırılma noktası olmadığı için seçenek zaten "jeton ortası" ile
+   "okunamaz bindirme" arasındaydı. */
+.trow > *{min-width:0;overflow-wrap:anywhere}
 /* ---- SATIR = KONTROL. Matrisin hücresi neyse defterin satırı da odur: basınca o kaydın
    tam hâli yandaki çekmecede açılır. Tek mekanizma, dört liste (işlem · plan · hipotez ·
    olay). Satır bir kutu KAZANMAZ — kural ve hizası aynı kalır, yalnız basılabilir olur. ---- */
