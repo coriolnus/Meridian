@@ -16,8 +16,10 @@ Bu dosya o iki kuralı ölçer, ve üçüncüsünü ekler:
                     = kırmızı.
   Ç2 · TAM PALET  — bir renk jetonu iki temaya birden girmezse kırmızı. --nav-bg
                     sınıfının kapısı burasıdır.
-  Ç3 · HAM RENK   — index.html/app.js/palette.js/theme.js'te jeton dışı renk yok.
-                    Allowlist BOŞ ve bu ölçüldü (bkz. IZIN_VERILEN).
+  Ç3 · HAM RENK   — ALTI yüzeyde jeton dışı renk yok: index.html · landing.html ·
+                    workflow.html · app.js · palette.js · theme.js. Allowlist BOŞ ve
+                    bu ölçüldü (bkz. IZIN_VERILEN). Kapsam 2026-08-07'de dörtten altıya
+                    çıktı; sebebi orada, ölçülmüş bir arıza vakasıyla yazılı.
 
   Ç4 · KONTRAST   — docs/kontrast-denetimi.md'nin çivi tablosundaki her rakam
                     KAYNAKTAN yeniden hesaplanır. Bir jeton değerlenirse rapor
@@ -55,6 +57,14 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent.parent
 WEB = SRC / "meridian" / "web"
 INDEX = (WEB / "index.html").read_text()
+# Ç3'ÜN KAPSAMI (2026-08-07). Bu iki yüzey bir yıl boyunca ham-renk lintinin DIŞINDAYDI ve
+# maliyeti ölçüldü: `landing.html`in `.btn-f` (birincil eylem düğmesi) ve `.pillc` (sayaç
+# rozeti) kurallarında `color:#fff` sabit yazılıydı; gece zemininde `--accent:#d4d0cb`
+# üzerinde 1,53:1 ediyordu (docs/BASELINE-2026-08-06.md §B.5 / T1) — yani düğmenin yazısı
+# kendi dolgusunda kayboluyordu. Kusur sınıfı --nav-bg'nin BİREBİR aynısı; onu yakalayan lint
+# vardı, bu yüzeye BAKMIYORDU. Kapsam boşluğu, ölçümün kendisi kadar sessiz bir arıza sebebidir.
+LANDING = (WEB / "landing.html").read_text()
+WORKFLOW = (WEB / "workflow.html").read_text()
 APPJS = (WEB / "app.js").read_text()
 PALETTE = (WEB / "palette.js").read_text()
 THEME = (WEB / "theme.js").read_text()
@@ -63,14 +73,21 @@ RAPOR = (SRC / "docs" / "kontrast-denetimi.md").read_text()
 
 
 # =============================== KAYNAK OKUMA ===============================
-def _css() -> str:
-    """index.html'in YALNIZ CSS'i, yorumlar ayıklanmış. Belge metni kural sanılmasın
-    (v139/v151'in aynı kuralı: bu dosyada her karar GEREKÇESİYLE yazılıyor)."""
-    css = INDEX[INDEX.index("<style>") + 7:INDEX.index("</style>")]
+def _css(kaynak: str) -> str:
+    """Bir HTML yüzeyinin YALNIZ CSS'i, yorumlar ayıklanmış. Belge metni kural sanılmasın
+    (v139/v151'in aynı kuralı: bu dosyada her karar GEREKÇESİYLE yazılıyor).
+
+    PARAMETRELEŞTİ (2026-08-07): `INDEX` globaline sabitti ve o sabitlik, Ç3'ün kapsamını
+    tek yüzeye çivileyen şeydi. Artık kaynak metin argümandır; her yüzey KENDİ metniyle
+    çağırır."""
+    css = kaynak[kaynak.index("<style>") + 7:kaynak.index("</style>")]
     return re.sub(r"/\*.*?\*/", "", css, flags=re.S)
 
 
-CSS = _css()
+# Ç1/Ç2/Ç4 (eş-kayıt · tam palet · kontrast çivisi) YALNIZ index.html'in jeton katmanına
+# bakar: tokens.json'ın eş-kaydı odur, öteki iki yüzeyin değil. `CSS` bu yüzden index'e bağlı
+# KALIR — Ç3'ün kapsam genişlemesi bu üç ölçümün kapsamını DEĞİŞTİRMEZ, ve karıştırılmamalı.
+CSS = _css(INDEX)
 
 
 def _blok(sel: str) -> str:
@@ -448,10 +465,36 @@ def test_ROL_alias_zinciri_TEK_gercek_soyler():
 
 
 # =============================== Ç3 · HAM RENK LİNTİ ===============================
-# ALLOWLIST BOŞ VE BU ÖLÇÜLDÜ (2026-08-01): dört yüzeyin tamamı tarandı, jeton
-# blokları dışında TEK ham renk çıkmadı. Boş bir liste bir eksiklik değil bir bulgu:
-# jeton sözleşmesi bugün fiilen %100 tutuyor. Buraya bir satır eklemek, ≥20 karakter
-# gerekçe yazmayı GEREKTİRİR (YASA 4) — istisna sessizce büyüyemez.
+# KAPSAM: DÖRT → ALTI YÜZEY (2026-08-07). Kapsam boşluğu bir yıl açıktı ve BEDELİ ÖLÇÜLDÜ —
+# landing.html'in `.btn-f`/`.pillc` kurallarındaki `color:#fff` gecede 1,53:1 (§B.5/T1). O iki
+# satır 2026-08-07'de `var(--bg2)`ye çevrildi (ölçüldü: gündüz 19,54 · gece 10,45), ama
+# DÜZELTME LİNT DEĞİLDİR: aynı satırı yarın tekrar yazan bir el, ölçülmeyen bir yüzeyde yine
+# sessiz kalırdı. Kapatılan şey o el değil, o yüzeyin ölçüsüzlüğü.
+#
+# ALLOWLIST BOŞ VE BU YENİDEN ÖLÇÜLDÜ (2026-08-07, altı yüzeyin tamamı): jeton blokları ve
+# yorumlar dışında TEK ham renk çıkmadı — landing.html 0, workflow.html 0, ötekiler 0. Boş bir
+# liste bir eksiklik değil bir bulgu: jeton sözleşmesi bugün fiilen %100 tutuyor. Buraya bir
+# satır eklemek ≥20 karakter gerekçe yazmayı GEREKTİRİR (YASA 4) — istisna sessizce büyüyemez.
+#
+# BEYANLI KAPSAM DIŞI (sessiz-yutma işareti, YASA 4). Üç şey bu lintin DIŞINDA kalır ve
+# üçü de bilinçlidir; yazılmasaydı, dışarıda kalışları ölçülmemiş bir boşluk olurdu:
+#   1) JETON BLOKLARI (`:root{}` + gece override'ı) — jeton TANIMI meşru ham renk taşır;
+#      linte girseydi sözleşmenin kendisi ihlal sayılırdı. index.html'in blokları Ç1'de
+#      tokens.json'a karşı çivilenir. AMA landing/workflow'unkiler HİÇBİR YERDE ölçülmüyor
+#      ve BUGÜN İNDEX'TEN AYRIŞMIŞ DURUMDA (ölçüldü 2026-08-07: gündüzde 13 jeton DEĞER
+#      olarak farklı — --card, --card-2, --line-2, --tx3, --nav-bg, --violet …; gecede 2;
+#      ayrıca index'in 40 jetonu — rol katmanının tamamı — o iki yüzeyde hiç yok). Bu, tam
+#      da bu dosyanın kovaladığı sürüklenme sınıfıdır, yalnız başka bir yüzeyde; landing.html
+#      kendi gece bloğunun başında "index.html ile AYNI değer takımı" YAZAR ve bu cümle
+#      bugün DOĞRU DEĞİLDİR. Ç3 o bloğu linte sokmaz (sokmamalı) — ama boşluk burada ADIYLA
+#      duruyor ki dışlama, sürüklenmeyi aklayan sessiz bir kapı olmasın. Hükmü Rol-1 verir.
+#   2) YORUMLAR (`/* */` ve `<!-- -->`) — bkz. `_yorumsuz_html` gerekçesi.
+#   3) meridian/web'in kalan üç dosyası: landing.js · workflow.js (ikisi de ölçüldü, ham renk
+#      YOK) ve runbook.html (ölçüldü: kural gövdelerinde 9 ham renk — kendi koyu paletini
+#      taşıyor, `gece` bloğu ve theme.js bağı YOK, yani jeton sözleşmesine hiç girmemiş bir
+#      yüzey). Onu bu linte sokmak bir ölçüm değil bir HÜKÜM olurdu ("runbook jeton
+#      sistemine dahildir") ve o hüküm verilmedi. Sayı burada dursun: bulunmamış değil,
+#      bulunmuş ve kapsam dışı bırakılmıştır.
 IZIN_VERILEN: dict[str, str] = {}
 
 _HEX = re.compile(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b")
@@ -465,10 +508,33 @@ def _yorumsuz_js(s: str) -> str:
     return re.sub(r"/\*.*?\*/", "", s, flags=re.S)
 
 
-def _css_govdeleri() -> str:
+def _yorumsuz_html(s: str) -> str:
+    """HTML yorumları ayıklanmış belge metni.
+
+    AYIKLAMA ZORUNLUDUR VE BUNUN NEDENİ ÖLÇÜLDÜ (2026-08-07). landing.html'de `#fff`/`#ffffff`
+    kaba grep'i ÜÇ yer verir ve üçü de ihlal DEĞİLDİR — ama üçü ÜÇ FARKLI mekanizmayla dışarıda
+    kalır ve karıştırılmamaları gerekir:
+      · sat. 29  `#ffffff ground` — baştaki DIRECTION CONTRACT (HTML yorumu). Zaten dilim
+        sınırının dışında: belge dilimi `</style>`ten BAŞLAR, `<style>` öncesi baş bölge
+        hiçbir dilime girmez (index.html'in bir yıldır aldığı muamele; kasıtlı).
+      · sat. 112 `--bg:#ffffff` — `:root{}` jeton TANIMI. `_css_govdeleri` bloğu keser.
+      · sat. 222-223 — `.btn-f` DÜZELTMESİNİ ANLATAN CSS yorumu ("burada ham `#fff` duruyordu
+        … `#ffffff` = 1,53:1"). BUNU YALNIZ YORUM AYIKLAMASI dışarıda tutar. Ayıklama olmasaydı
+        arızayı KAYDA GEÇEN cümle arızanın kendisi sayılırdı — gerekçe yazmayı cezalandıran bir
+        lint, ve bu depoda gerekçe yazmak zorunludur (YASA 6).
+    Bedeli de beyan edilir: yorum içine gizlenmiş bir ham renk GÖRÜNMEZ — ama yorum ekrana
+    çizilmez, yani ölçülen kusur sınıfının (ikinci temada sessizce kırılan renk) dışındadır.
+    Ayıklamanın İKİ YÖNDE de doğru çalıştığı ölçülür: test_lint_KENDINI_KANITLAR yorum içine
+    de, yorumların ARASINA da renk enjekte eder ve yalnız ikincisinin ısırdığını sınar."""
+    return re.sub(r"<!--.*?-->", "", s, flags=re.S)
+
+
+def _css_govdeleri(css: str) -> str:
     """CSS'in YALNIZ bildirim gövdeleri, jeton blokları çıkarılmış.
-    Seçiciler dışarıda kalır — yoksa `#gate-pw2-wrap` gibi bir id seçicisi renk sanılır."""
-    css = CSS
+    Seçiciler dışarıda kalır — yoksa `#gate-pw2-wrap` gibi bir id seçicisi renk sanılır.
+
+    PARAMETRELEŞTİ (2026-08-07): `CSS` globaline (yani index.html'e) sabitti. Kapsamı altı
+    yüzeye çıkaran değişikliğin tek yapısal engeli buydu."""
     for sel in (":root{", ':root[data-theme="gece"]'):
         i = css.index(sel)
         j = css.index("{", i)
@@ -483,22 +549,55 @@ def _ham_renkler(metin: str) -> list:
                   {"named:" + a for a in _ADLI.findall(metin)})
 
 
-def _yuzeyler() -> dict:
+# Üç HTML yüzeyi TEK sözlükte durur ki kapsam bir VERİ olsun, koda serpiştirilmiş bir alışkanlık
+# değil: yeni bir yüzey eklemek buraya bir satır yazmaktır ve pozitif kontrol (aşağıda) o satırı
+# otomatik olarak dişler. Kapsamın kodda dağınık durması, 2026-08-07'ye kadar landing/workflow'un
+# unutulmasının mekanik sebebiydi.
+HTML_KAYNAK = {
+    "index.html": INDEX,
+    "landing.html": LANDING,
+    "workflow.html": WORKFLOW,
+}
+
+
+def _html_yuzeyleri(ad: str, kaynak: str) -> dict:
+    """Bir HTML yüzeyinin İKİ lint dilimi. Dilimler AYRIK ve bu ölçülür:
+       · `<style>` içi kural gövdeleri (jeton blokları + yorumlar ayıklanmış)
+       · `</style>` sonrası belge gövdesi — satır-içi `style="…"` buradan yakalanır."""
     return {
-        "index.html <style> (jeton blokları hariç)": _css_govdeleri(),
-        "index.html gövdesi (satır içi stil)": INDEX[INDEX.index("</style>"):],
-        "app.js": _yorumsuz_js(APPJS),
-        "palette.js": _yorumsuz_js(PALETTE),
-        "theme.js": _yorumsuz_js(THEME),
+        f"{ad} <style> (jeton blokları hariç)": _css_govdeleri(_css(kaynak)),
+        f"{ad} gövdesi (satır içi stil)": _yorumsuz_html(kaynak[kaynak.index("</style>"):]),
     }
 
 
-def test_ham_renk_YOK_dort_yuzeyde():
+def _yuzeyler(html_kaynak: dict | None = None) -> dict:
+    """Lint'in taradığı yüzeylerin tamamı. `html_kaynak` YALNIZ pozitif kontrol içindir:
+    sentetik olarak kirletilmiş bir kaynakla çağrılır ve lintin kırmızıya döndüğü ölçülür."""
+    yuzey = {}
+    for ad, kaynak in (html_kaynak or HTML_KAYNAK).items():
+        yuzey.update(_html_yuzeyleri(ad, kaynak))
+    yuzey["app.js"] = _yorumsuz_js(APPJS)
+    yuzey["palette.js"] = _yorumsuz_js(PALETTE)
+    yuzey["theme.js"] = _yorumsuz_js(THEME)
+    return yuzey
+
+
+def test_ham_renk_YOK_alti_yuzeyde():
     """Renk taşıyan hiçbir değer kuralın içine YAZILMAZ, jetondan gelir. Aksi hâlde
-    ikinci tema sessizce kırılır — bu tam olarak --nav-bg'de yaşandı."""
+    ikinci tema sessizce kırılır — bu tam olarak --nav-bg'de, sonra bir kez daha
+    landing.html'in `.btn-f`/`.pillc` kurallarında yaşandı (gece 1,53:1).
+
+    ESKİ ADI: test_ham_renk_YOK_dort_yuzeyde (2026-08-01 → 2026-08-07). Ad, kapsam dörtten
+    altıya çıkınca gerçeğe uyduruldu: yanlış bir ad, kapsamı okumadan varsayan bir okuyucu
+    üretir — kapsam boşluğunun bir yıl fark edilmemesinin sebeplerinden biri tam olarak buydu.
+    İzlenebilirlik için eski ad burada duruyor."""
     for ad, metin in _yuzeyler().items():
         bulunan = [h for h in _ham_renkler(metin) if h not in IZIN_VERILEN]
         assert not bulunan, f"{ad}: jeton dışı ham renk {bulunan}"
+    # KAPSAM SAYIMI — altı yüzey, dokuz dilim (üç HTML × 2 + üç JS). Sessizce daralan bir
+    # kapsam yeşil verir; ölçümün kendisi kadar sayısı da çivilenir.
+    assert len(HTML_KAYNAK) == 3 and len(_yuzeyler()) == 9, \
+        f"kapsam değişmiş: {len(HTML_KAYNAK)} HTML yüzeyi · {len(_yuzeyler())} dilim"
 
 
 def test_allowlist_ISTISNALARI_GEREKCESIZ_OLAMAZ():
@@ -508,15 +607,82 @@ def test_allowlist_ISTISNALARI_GEREKCESIZ_OLAMAZ():
         assert len(gerekce) >= 20, f"{renk}: gerekçe {len(gerekce)} karakter (≥20 gerekli)"
 
 
+_TUZAK = "#ff00aa"
+
+
+def _enjekte_kural(kaynak: str) -> str:
+    """`</style>`'ın hemen ÖNÜNE, İKİ YORUMUN ARASINA sentetik bir kural sok.
+    Yorumların arasına konması bilinçli: yorum ayıklayıcısı açgözlü olsaydı (`.*` yerine
+    `.*?` yazılmasaydı) iki yorumun ARASINDAKİ gerçek ihlali de siler ve lint kendi
+    körlüğünü üretirdi — ölçüldü (2026-08-07): açgözlü desen bu parçadan `.zz-tuzak{…}`
+    kuralını komple yutuyor. (Bugün o mutasyon zaten import anında patlar, çünkü açgözlü
+    desen jeton bloklarını da siler ve `_css_govdeleri` onları bulamaz; buradaki enjeksiyon
+    o kazaya BAĞLI KALMAMAK içindir — jeton blokları bir gün taşınırsa tek kalan diş bu olur.)"""
+    i = kaynak.index("</style>")
+    return kaynak[:i] + f"\n/* önce */\n.zz-tuzak{{color:{_TUZAK}}}\n/* sonra */\n" + kaynak[i:]
+
+
+def _enjekte_satirici(kaynak: str) -> str:
+    """Belge gövdesine satır-içi stil sok — CSS dosyasına hiç uğramadan renk taşımanın yolu."""
+    return kaynak + f'\n<div style="background:{_TUZAK}"></div>\n'
+
+
+def _enjekte_yorum(kaynak: str) -> str:
+    """Aynı rengi YORUMUN İÇİNE koy (hem CSS hem HTML yorumu). Bu bir ihlal DEĞİLDİR ve
+    yakalanmamalıdır; `.btn-f` düzeltmesini ANLATAN not tam olarak bu biçimdedir."""
+    i = kaynak.index("</style>")
+    return (kaynak[:i] + f"\n/* düzeltme notu: burada ham {_TUZAK} duruyordu */\n" + kaynak[i:]
+            + f"\n<!-- tarih notu: {_TUZAK} 2026-08-07'de kaldırıldı -->\n")
+
+
 def test_lint_KENDINI_KANITLAR():
     """Kıramayan bir lint, yeşil veren bir süstür. Enjekte edilmiş bir ham renk
-    yakalanmıyorsa yukarıdaki üç test hiçbir şey ölçmüyor demektir."""
+    yakalanmıyorsa yukarıdaki üç test hiçbir şey ölçmüyor demektir.
+
+    KAPSAM GENİŞLEDİYSE KANIT DA GENİŞLER (2026-08-07). Bir yüzeyi `_yuzeyler()`e yazmak,
+    onun TARANDIĞINI kanıtlamaz: çıkarma boru hattı (yorum ayıklama · jeton bloğu kesme ·
+    `{…}` gövde toplama) o yüzeyde sessizce boş metin üretirse lint YALANCI YEŞİL verir ve
+    yeni kapsam bir süs olur. Bu yüzden aşağıda yüzey BAŞINA diş ölçülür: kaynağa sentetik
+    bir ham renk enjekte edilir ve tam O DİLİMİN kırmızıya döndüğü sınanır."""
     for tuzak in ("color:#ff00aa", "background:rgba(1,2,3,.5)", "border-color:white"):
         assert _ham_renkler("x{" + tuzak + "}"), f"lint bu tuzağı kaçırıyor: {tuzak}"
     # ve YANLIŞ POZİTİF vermemeli
     for temiz in ("white-space:nowrap", "#gate-pw2-wrap{display:none}",
                   "color:var(--tx)", "background:transparent", "fill:currentColor"):
         assert not _ham_renkler(temiz), f"lint yanlış pozitif: {temiz}"
+
+    # ---- YÜZEY BAŞINA DİŞ: her HTML yüzeyinin İKİ dilimi de ayrı ayrı ısırmalı ----
+    for ad, kaynak in HTML_KAYNAK.items():
+        kural_dilim = f"{ad} <style> (jeton blokları hariç)"
+        govde_dilim = f"{ad} gövdesi (satır içi stil)"
+
+        y = _yuzeyler({**HTML_KAYNAK, ad: _enjekte_kural(kaynak)})
+        assert _TUZAK in _ham_renkler(y[kural_dilim]), \
+            f"{kural_dilim}: kural gövdesine enjekte edilen ham renk lint'ten KAÇIYOR"
+        assert _TUZAK not in _ham_renkler(y[govde_dilim]), \
+            (f"{govde_dilim}: <style> içine sokulan renk BELGE dilimine sızıyor — iki dilim "
+             "ayrık değil, yani birinin yeşili ötekinin ölçüsü sanılabilir")
+
+        y = _yuzeyler({**HTML_KAYNAK, ad: _enjekte_satirici(kaynak)})
+        assert _TUZAK in _ham_renkler(y[govde_dilim]), \
+            f"{govde_dilim}: satır-içi stile enjekte edilen ham renk lint'ten KAÇIYOR"
+        assert _TUZAK not in _ham_renkler(y[kural_dilim]), \
+            f"{kural_dilim}: belge gövdesindeki renk KURAL dilimine sızıyor"
+
+        # Ve yorum ayıklaması İKİ YÖNDE de doğru: ihlali yutmaz (yukarıda), gerekçeyi
+        # ihlal saymaz (burada). İkincisi olmadan bu depoda ölçüm YAZILAMAZDI.
+        y = _yuzeyler({**HTML_KAYNAK, ad: _enjekte_yorum(kaynak)})
+        assert _TUZAK not in _ham_renkler(y[kural_dilim]), \
+            f"{kural_dilim}: CSS YORUMUNDAKİ renk ihlal sayılıyor — düzeltmeyi anlatan not kırmızı verir"
+        assert _TUZAK not in _ham_renkler(y[govde_dilim]), \
+            f"{govde_dilim}: HTML YORUMUNDAKİ renk ihlal sayılıyor"
+
+    # Enjeksiyon yalnız HEDEF yüzeyi kirletmeli: ötekiler temiz kalmazsa `_yuzeyler()` kaynak
+    # sızdırıyor demektir ve tek bir kirli yüzey dokuz dilimi birden kırmızıya boyardı.
+    kirli = _yuzeyler({**HTML_KAYNAK, "landing.html": _enjekte_kural(LANDING)})
+    lekeli = [d for d, m in kirli.items() if _TUZAK in _ham_renkler(m)]
+    assert lekeli == ["landing.html <style> (jeton blokları hariç)"], \
+        f"enjeksiyon yüzeyler arasında sızıyor: {lekeli}"
 
 
 # =============================== Ç4 · KONTRAST ÇİVİSİ ===============================
