@@ -15,6 +15,10 @@ BU DOSYA NEYİ ÇİVİLER — DOKUZ YASA, HER BİRİ AYRI BİR TESTLE:
   Y7 BROKER DÜŞÜK    · emir YOK + NEDEN (sessiz başarı SAHTE olurdu)
   Y8 DENETİM İZİ     · her gönderim olay bırakır (plan_id/sembol/adet/seviye/onaylayan) — YASA 6
   Y9 ONAYSIZ EMİR YOK· EN ÖNEMLİ ÇİVİ; jeton VE tura özel öneri kimliği olmadan hiçbir POST doğmaz
+  Y10 BASIŞ KAYDI    · Y8'in eksik yarısı (2026-08-07): Y8 yalnız GÖNDERİMİ kaydediyordu, oysa
+                       kayda değer asıl vaka REDDEDİLEN onaydır. Uç düzeyinde HER dal (onaysız /
+                       bayat kimlik / ölçülemedi / gerçek gönderim) tek satır bırakır; satır jeton
+                       TAŞIMAZ ve alt katmanın emir satırlarını ÇOĞALTMAZ.
 artı: KISMİ BAŞARI DÜRÜST ("2/4 gönderildi + 2 neden", "tamam" DEĞİL) ve PANO (adet ayrışması
 görünür, satır içi betik yok — CSP `script-src 'self'`).
 
@@ -31,6 +35,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 import pathlib
 import re
 import textwrap
@@ -566,6 +571,153 @@ def test_Y9e_uc_yetkisiz_cagriyi_REDDEDER(sandbox_state, monkeypatch):
         # POZİTİF KONTROL: doğru token 401 DEĞİL
         assert c.get("/api/alpaca/koruma",
                      headers={"x-meridian-token": "V211-TOKEN"}).status_code != 401
+
+
+# =================================================================================================
+# Y10 · BASIŞ KAYDI — UÇ DÜZEYİ DENETİM İZİ (Y8'in eksik yarısı)
+# -------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN BOŞLUK (2026-08-07): Y8 "her GÖNDERİM olay bırakır" der ve tutar — ama ucun dallarının
+# çoğu sessizdi. Onaysız çağrı, ölçüm düşükken dönen tur, gönderilecek öneri kalmamış tur ve
+# JETONSUZ gelen bayat kimlik hiçbir yere düşmüyordu; tek kayıtlı ret (`koruma_onay_bayat`) yalnız
+# jeton DOĞRUYKEN yazılıyordu. Oysa "korumam neden kurulmadı" sorusu tam da o dallarda sorulur.
+# İZ UÇTA, O YÜZDEN ÇAĞRI DA UÇTAN: aşağıdaki testler `api.koruma_kur()`u doğrudan çağırmaz —
+# HTTP'den geçerler, çünkü ölçülen şey ucun yazdığı satırdır.
+# =================================================================================================
+IZ_TOKEN = "V211-IZ-TOKEN"
+IZ_OLAYI = "koruma_kur_istegi"
+
+
+@pytest.fixture
+def uc(ayna, monkeypatch):
+    """Yetkili istemci. Parola KURULMAMIŞ + betik jetonu → `_koruma_onaylayan` "betik-tokeni" der;
+    yani "kim bastı" alanı da uydurma değil ÖLÇÜLMÜŞ bir değerle sınanır."""
+    from fastapi.testclient import TestClient
+    monkeypatch.setattr(api, "DASH_TOKEN", IZ_TOKEN)
+    monkeypatch.setattr(api.auth, "password_set", lambda: False)
+    return TestClient(api.app)
+
+
+def _bas(c, onay=alpaca.KORUMA_ONAY_JETONU, oneri_id=""):
+    """Operatör düğmeye BASAR (panonun gövdesiyle birebir: {onay, oneri_id})."""
+    return c.post("/api/alpaca/koruma_kur", json={"onay": onay, "oneri_id": oneri_id},
+                  headers={"x-meridian-token": IZ_TOKEN})
+
+
+def _oku(c, yol):
+    return c.get(yol, headers={"x-meridian-token": IZ_TOKEN})
+
+
+def test_Y10_UC_HER_dalda_bir_basis_kaydi_birakir(uc, monkeypatch, sahte_oco):
+    """ÜÇ DAL, ÜÇ SATIR — ve her satır aynı dört soruyu cevaplar: hangi öneriye, onay VAR mıydı,
+    kaç/kaç gitti, nerede bitti. Reddedilen basış kaydedilmezse "bu neden olmadı" sorusunun
+    kaynağı yoktur; çıplak duran bir pozisyonun karşısında sorulan soru tam olarak odur."""
+    _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
+    taze = api.koruma_onerileri()["oneri_id"]
+    assert _bas(uc, onay="", oneri_id=taze).status_code == 200                    # (a) onaysız
+    assert _bas(uc, oneri_id="bayat-kimlik").status_code == 200                   # (b) bayat kimlik
+    assert _bas(uc, oneri_id=taze).status_code == 200                             # (c) gerçek gönderim
+    ev = _olaylar(IZ_OLAYI)
+    assert [e["sonuc"] for e in ev] == ["onaysiz-kuru-kosu", "bayat-oneri-kimligi", "gonderildi"], \
+        f"dal jetonları yanlış ya da bir dal SESSİZ: {[e.get('sonuc') for e in ev]}"
+    assert [e["onay_verildi"] for e in ev] == [False, True, True], "onay bayrağı dalları ayırmıyor"
+    assert [e["gonderilen"] for e in ev] == [0, 0, 4], "gönderim sayısı basış kaydında yanlış"
+    assert [e["toplam"] for e in ev] == [4, 4, 4], "öneri sayısı basış kaydında yanlış"
+    assert [e["oneri_id"] for e in ev] == [taze, "bayat-kimlik", taze], "hangi öneriye basıldı yazmıyor"
+    assert {e["onaylayan"] for e in ev} == {"betik-tokeni"}, "kim bastı yazmıyor"
+    assert all(e["ozet"] for e in ev), "sonuç özeti BOŞ — satır 'ne oldu'yu taşımıyor"
+    # POZİTİF KONTROL: (c) gerçekten emir gönderdi (üç satır da 'hiçbir şey olmadı' değil)
+    assert len(sahte_oco.cagrilar) == 4
+
+
+def test_Y10b_OLCULEMEDI_dalinda_toplam_None_yazilir_0_DEGIL(uc, monkeypatch, sahte_oco):
+    """`koruma_kur` ölçüm kapısında geri döner ve "kaç öneri gönderilmeliydi" HİÇ hesaplanmaz.
+    Oraya 0 yazmak, korumasız pozisyon olmadığını iddia etmek olurdu — defterdeki 0, ölçülmüş bir
+    0'dan ayırt edilemez. `gonderilen` ise ÖLÇÜLÜDÜR: emir yüzeyine hiç girilmedi, gerçekten 0."""
+    _sap(monkeypatch, [], [])
+    monkeypatch.setattr(alpaca, "transport", lambda: {"ok": False, "error": "ReadTimeout: positions"})
+    assert _bas(uc, oneri_id="x").status_code == 200
+    e = _olaylar(IZ_OLAYI)[-1]
+    assert e["sonuc"] == "olculemedi"
+    assert e["toplam"] is None, f"ölçülemeyen sayı {e['toplam']!r} yazıldı (UYDURMA)"
+    assert e["gonderilen"] == 0 and not sahte_oco.cagrilar
+    assert "ReadTimeout" in e["ozet"], "arızanın NEDENİ basış kaydında yok"
+    # POZİTİF KONTROL: taşıma sağlamken aynı alan gerçek bir sayı taşır (None her hâlde değil)
+    monkeypatch.setattr(alpaca, "transport", lambda: {"ok": True, "error": ""})
+    _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
+    _bas(uc, oneri_id="x")
+    assert _olaylar(IZ_OLAYI)[-1]["toplam"] == 4
+
+
+def test_Y10c_gonderilecek_oneri_kalmadiginda_da_iz_var(uc, monkeypatch, sahte_oco):
+    """İDEMPOTANS DALI DA BİR BASIŞTIR: ikinci kez onaylayan operatör "hiçbir şey olmadı" cevabını
+    alır ve o cevabın da bir kaydı olmalı — yoksa düğmeye basılıp basılmadığı bilinemez."""
+    korumali = [_parent("EMR", "P-1-EMR", 37,
+                        legs=[_bacak("EMR", 37, "stop", "new", coid="sl-live", stop=133.0)])]
+    _sap(monkeypatch, [_poz("EMR", 37, fiyat=140.0)], korumali)
+    taze = api.koruma_onerileri()["oneri_id"]
+    _bas(uc, oneri_id=taze)
+    e = _olaylar(IZ_OLAYI)[-1]
+    assert e["sonuc"] == "gonderilecek-oneri-yok" and e["toplam"] == 0 and e["gonderilen"] == 0
+    assert not sahte_oco.cagrilar
+
+
+def test_Y10d_iz_JETONU_TASIMAZ_yanlis_kutuya_yapistirilsa_bile(uc, monkeypatch, sahte_oco):
+    """Jeton bir sır değil ama bir YETKİ İŞARETİDİR (ucun kendi docstring'i): deftere düşen bir
+    yetki işareti, kaydı okuyan herkesin TEKRAR OYNATABİLECEĞİ bir onaydır. Yalnız "biz yazmıyoruz"
+    demek yetmez — operatör jetonu YANLIŞ KUTUYA (`oneri_id`) yapıştırdığında da yazılmamalı."""
+    _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
+    taze = api.koruma_onerileri()["oneri_id"]
+    _bas(uc, oneri_id=taze)                                    # doğru kullanım (emirler gider)
+    _bas(uc, oneri_id=alpaca.KORUMA_ONAY_JETONU)               # jeton YANLIŞ kutuda
+    ev = _olaylar(IZ_OLAYI)
+    assert len(ev) == 2 and ev[1]["sonuc"] == "bayat-oneri-kimligi"
+    for e in ev:
+        assert alpaca.KORUMA_ONAY_JETONU not in json.dumps(e, ensure_ascii=False), \
+            f"basış kaydı jetonu taşıyor — onay TEKRAR OYNATILABİLİR: {e}"
+    assert "jeton-gizlendi" in ev[1]["oneri_id"], "yanlış kutudaki jeton maskelenmedi"
+    # DEFTERİN TAMAMI — alt katmanın `koruma_onay_bayat` uyarısı da jetonu yazmamalı
+    defter = (config.STATE / "events.jsonl").read_text()
+    assert alpaca.KORUMA_ONAY_JETONU not in defter, "jeton olay defterinin BAŞKA bir satırında"
+    # POZİTİF KONTROL: maske gerçek bir öneri kimliğini BOZMUYOR (iddia her hâlde geçmiyor)
+    assert ev[0]["oneri_id"] == taze
+
+
+def test_Y10e_uc_izi_alt_katman_olaylarini_COGALTMAZ(uc, monkeypatch, sahte_oco):
+    """Dört öneri gönderen bir tur beş satır bırakır (4 gönderim + 1 tur özeti). Uç satırı bunlara
+    BİR TANE daha ekler — dört değil: bu satır GÖNDERİMİN değil BASMANIN kaydıdır. Emir alanlarını
+    (plan_id/ticker/stop/hedef) taşısaydı aynı olgunun ikinci bir kopyası olurdu."""
+    _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
+    taze = api.koruma_onerileri()["oneri_id"]
+    _bas(uc, oneri_id=taze)
+    assert len(sahte_oco.cagrilar) == 4
+    assert len(_olaylar("koruma_oco_gonderildi")) == 4, "alt katman emir satırları kayboldu"
+    assert len(_olaylar("koruma_kur_ozet")) == 1, "tur özeti çoğaldı ya da kayboldu"
+    ev = _olaylar(IZ_OLAYI)
+    assert len(ev) == 1, f"dört emir için {len(ev)} uç satırı — çağrı başına TEK satır olmalı"
+    for alan in ("plan_id", "ticker", "adet", "stop", "hedef", "tif"):
+        assert alan not in ev[0], f"uç izi emir alanı `{alan}` taşıyor — alt katmanın kopyası"
+
+
+def test_Y10f_izin_OKUYUCUSU_var_api_events_onu_gercekten_gosterir(uc, monkeypatch, sahte_oco):
+    """YASA 6 ÖLÇÜMÜ — okuyucusuz yazım yok. Bu satırın okuyucusu `/api/events` (obs.recent(80)) ve
+    panonun "Olay akışı · son 8" kartıdır; iddia edilmiyor, ÇAĞRILIP ölçülüyor.
+
+    ÖLÇÜLEN SINIR AYNI TESTTE YAZILI: `/api/audit_trail` bu izi GÖRMEZ — o uç `trade_plans.jsonl`
+    defterini sorgular (plan ekseni), olay defterini değil. Denetim izini orada arayan biri onu
+    bulamayacak; kaydın evi olay akışıdır."""
+    _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
+    taze = api.koruma_onerileri()["oneri_id"]
+    _bas(uc, oneri_id=taze)
+    r = _oku(uc, "/api/events")
+    assert r.status_code == 200
+    satir = next((e for e in r.json()["events"] if e.get("event") == IZ_OLAYI), None)
+    assert satir is not None, "basış kaydı olay ucunda GÖRÜNMÜYOR — okuyucusuz yazım (YASA 6)"
+    assert satir["sonuc"] == "gonderildi" and satir["onay_verildi"] is True
+    assert satir["level"] == "info", "basış kaydı bir alarm değil; seviye info olmalı"
+    at = _oku(uc, "/api/audit_trail")
+    assert at.status_code == 200
+    assert IZ_OLAYI not in json.dumps(at.json(), ensure_ascii=False), \
+        "ÖLÇÜM DEĞİŞTİ: /api/audit_trail artık olay defterini de okuyor — bu testin beyanı eskidi"
 
 
 # =================================================================================================

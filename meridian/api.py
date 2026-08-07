@@ -4009,6 +4009,21 @@ def _koruma_oneri_id(gonderilecek: list, rep: dict) -> str:
     return hashlib.sha256(govde.encode("utf-8")).hexdigest()[:16]
 
 
+def _koruma_iz_maskele(s, sinir: int = 200) -> str:
+    """Denetim satırına giden HER ham metin buradan geçer: onay jetonu maskelenir, uzunluk kırpılır.
+
+    JETON BİR SIR DEĞİL AMA BİR YETKİ İŞARETİDİR (ucun kendi docstring'i bunu yazıyor): kayda
+    düşen bir yetki işareti, defteri okuyan herkesin TEKRAR OYNATABİLECEĞİ bir onaydır. Aşağıdaki
+    alanlar operatörün gönderdiği HAM gövdeden türüyor — jetonu yanlış kutuya (`oneri_id`)
+    yapıştıran bir çağrı onu deftere yazdırabilmemeli. Kırpma ikinci iştir ve aynı sebeple burada:
+    ham metin sınırsız uzunlukta gelebilir ve tek bir POST defteri şişirebilir.
+
+    `KORUMA-` öneki taşıyan coid'ler (`P-…KORUMA-20260807-1230-EMR`) YANLIŞLIKLA maskelenmez:
+    jetonun tamamı `KORUMA-KUR`dur ve coid'de `KORUMA-`den sonra rakam gelir."""
+    from .adapters import alpaca
+    return str(s or "").replace(alpaca.KORUMA_ONAY_JETONU, "«jeton-gizlendi»")[:max(1, sinir)]
+
+
 def koruma_kur(onay: str = "", oneri_id: str = "", onaylayan: str = "?") -> dict:
     """ONAY SONRASI İCRA — her çıplak motor pozisyonuna TEK OCO. Kısmi başarı DÜRÜST raporlanır.
 
@@ -4047,7 +4062,8 @@ def koruma_kur(onay: str = "", oneri_id: str = "", onaylayan: str = "?") -> dict
                               "detail": "onay bekliyor — gönderilmedi"} for s in gonderilecek]}
     # KAPI 3 — öneri kimliği (TURA ÖZEL onay)
     if not oneri_id or oneri_id != rap.get("oneri_id"):
-        obs.warn("koruma_onay_bayat", verilen=str(oneri_id)[:32], olculen=str(rap.get("oneri_id")),
+        obs.warn("koruma_onay_bayat", verilen=_koruma_iz_maskele(oneri_id, 32),
+                 olculen=str(rap.get("oneri_id")),
                  detail="onay, ölçülen öneriden BAŞKA bir listeye verilmiş — emir gönderilmedi")
         return {**out, "bayat_onay": True,
                 "detail": (f"öneri kimliği eşleşmedi (onay={str(oneri_id)[:16] or 'yok'} · "
@@ -4091,6 +4107,26 @@ def koruma_kur(onay: str = "", oneri_id: str = "", onaylayan: str = "?") -> dict
             "detail": "" if not dusen else f"{len(dusen)} öneri gönderilemedi — pozisyon çıplak kaldı"}
 
 
+def _koruma_kur_sonucu(res: dict) -> str:
+    """İcranın hangi DALDA bittiği — tek jeton, denetim satırının omurgası.
+
+    Dallar `koruma_kur`un KAPI SIRASIYLA okunur ve sıra bir üslup tercihi değildir: ölçüm düşükse
+    uç jeton kapısına hiç varmaz, o yüzden "ölçülemedi" her şeyin önündedir; jeton yoksa öneri
+    kimliği hiç denenmez, o yüzden "kuru koşu" bayatlıktan öncedir. Sıra ters olsaydı satır,
+    çağrının GERÇEKTE nerede durduğunu değil, okuyucunun sandığı yeri yazardı."""
+    if res.get("olculemedi"):
+        return "olculemedi"
+    if res.get("dry_run"):
+        return "onaysiz-kuru-kosu"
+    if res.get("bayat_onay"):
+        return "bayat-oneri-kimligi"
+    if not res.get("toplam"):
+        return "gonderilecek-oneri-yok"
+    if res.get("ok"):
+        return "gonderildi"
+    return "kismi-ya-da-dusuk"
+
+
 def _koruma_onaylayan(request: Request) -> str:
     """Onayı KİM verdi — ölçülebilen tek gerçek: hangi kimlik yolundan geldiği. Bir kullanıcı adı
     UYDURULMAZ (bu depoda tek-operatör kimliği var, kişi adı taşıyan bir alan yok)."""
@@ -4118,16 +4154,54 @@ async def api_alpaca_koruma_kur(request: Request):
     JETON GÖVDEDE, SORGUDA DEĞİL (`close_all`ın `?confirm=` deseninden BİLEREK ayrılır): sorgu
     dizeleri sunucu loglarına, tarayıcı geçmişine ve `Referer` başlığına düşer — `api._auth`ın
     2026-07-28'de `?token=`i kaldırma gerekçesinin aynısı. Buradaki jeton bir sır değil ama bir
-    YETKİ işaretidir ve log'a düşen bir yetki işareti, tekrar oynatılabilir bir onaydır."""
+    YETKİ işaretidir ve log'a düşen bir yetki işareti, tekrar oynatılabilir bir onaydır.
+
+    UÇ DÜZEYİ DENETİM İZİ (2026-08-07, v211'in eksik yarısı). v211 Y8 "her GÖNDERİM olay bırakır"
+    der ve o çivi tutuyor — ama bu ucun dallarının ÇOĞU hiçbir yere düşmüyordu: onaysız çağrı
+    (kuru koşu), ölçüm düşükken dönen tur, gönderilecek öneri kalmamış tur ve JETONSUZ gelen bayat
+    kimlik. Kalan tek kayıtlı ret (`koruma_onay_bayat`) yalnız jeton DOĞRUYKEN yazılıyordu.
+    Oysa bu ucun cevapladığı soru "operatörün yaptığı her değişiklik kayıtlı mı"dır ve asıl kayda
+    değer vaka REDDEDİLEN onaydır: düğmeye BASILDIĞI hiçbir yerde yazmıyorsa "bu neden olmadı"
+    sorusunun kaynağı yoktur — ve o soru, çıplak duran bir pozisyonun karşısında sorulur.
+
+    ÇOĞALTMA YOK: alt katman (`koruma_kur`) emir BAŞINA satır yazar (`koruma_oco_gonderildi` /
+    `koruma_oco_dusuru`) ve tur özetini bırakır (`koruma_kur_ozet`). Buradaki iz onların kopyası
+    değildir — HTTP çağrısı başına TEK satırdır, emir alanı (plan_id/stop/hedef/ticker) TAŞIMAZ ve
+    tek soruyu cevaplar: "operatör bastı, ne oldu". Dört öneriyi gönderen bir tur beş satır bırakır
+    (4 gönderim + 1 tur özeti), buna bir tane daha eklenmez — bu satır GÖNDERİMİN değil BASMANIN
+    kaydıdır ve gönderim hiç olmadığında da vardır.
+
+    SEVİYE TEK: hepsi `obs.log`. Reddedilen onayı `warn`a çıkarmak cazipti ve BİLEREK yapılmadı —
+    bayat kimlik için uyarı ZATEN var (`koruma_onay_bayat`) ve aynı olguyu iki seviyede yazmak,
+    gelen kutusunda tek bir basışı iki ayrı olay gibi gösterirdi. Bu satır bir alarm değil, bir
+    BASIŞ KAYDIDIR; anormallik sinyali alt katmanın işidir."""
     _auth(request)
+    from .adapters import alpaca
     try:
         body = await request.json()
     except Exception:  # sessiz-yutma: gövdesiz/bozuk JSON = onay YOK; aşağıdaki kapı bunu kuru koşu olarak raporlar
         body = {}
     if not isinstance(body, dict):
         body = {}
-    res = koruma_kur(onay=str(body.get("onay") or ""), oneri_id=str(body.get("oneri_id") or ""),
-                     onaylayan=_koruma_onaylayan(request))
+    onay = str(body.get("onay") or "")
+    oneri_id = str(body.get("oneri_id") or "")
+    onaylayan = _koruma_onaylayan(request)
+    # ONAY VERİLDİ Mİ — JETONUN KENDİSİ DEĞİL, KARŞILAŞTIRMANIN SONUCU. Bir bool tekrar
+    # oynatılamaz. Sonucun `dry_run`ından TÜRETİLMEZ: ölçüm düşükken uç jeton kapısına hiç varmaz
+    # ve o dalda `dry_run` False döner — türetilen bayrak orada "onay vardı" diye UYDURURDU.
+    onay_verildi = bool(onay) and onay == alpaca.KORUMA_ONAY_JETONU
+    res = koruma_kur(onay=onay, oneri_id=oneri_id, onaylayan=onaylayan)
+    sonuc = _koruma_kur_sonucu(res)
+    # TOPLAM ÖLÇÜLEMEDİ DALINDA None — 0 DEĞİL. `koruma_kur` ölçüm kapısında geri döner ve "kaç
+    # öneri gönderilmeliydi" hiç hesaplanmaz; oraya 0 yazmak, korumasız pozisyon olmadığını iddia
+    # etmek olurdu (`koruma_onerileri` de aynı dalda `gonderilebilir: None` döndürüyor).
+    # `gonderilen` ise HER dalda ölçülüdür: emir yüzeyine hiç girilmeyen dallarda gerçekten 0'dır.
+    obs.log("koruma_kur_istegi",
+            oneri_id=_koruma_iz_maskele(oneri_id, 64) or "—", onay_verildi=onay_verildi,
+            onaylayan=onaylayan, sonuc=sonuc,
+            gonderilen=res.get("gonderilen"),
+            toplam=(None if sonuc == "olculemedi" else res.get("toplam")),
+            ozet=_koruma_iz_maskele(res.get("ozet") or res.get("detail") or "", 240))
     if res.get("gonderilen"):
         _diag_onbellek_bosalt("koruma_kur")
     return res
