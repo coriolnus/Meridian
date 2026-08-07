@@ -1,0 +1,83 @@
+card_id: EXE-2026-002
+family: faz5_cikis_dakika_hassas_icra_kazanci
+thesis: >
+  Faz-6 kilit zincirinin ③ numaralı kilidi (`health.faz5_cikisi`) bugün SABİT `False` /
+  `olculemedi` yazılı ve gerekçesi kendi kodunda duruyor: "Faz-5 çıkış ölçümünü (dakika-hassas
+  icranın CI'lı kazancı) ÜRETEN kod yok". Merdivendeki DÖRT kapalı kilidin ÜÇÜ (edge 1/5,
+  sonuç 0/4, DSR 1e-06) kanıt eksikliğinden kapalı — yani kârlı işlem geçmişi ister ve kodla
+  açılamaz. Bu kilit TEK istisnadır: kapalı olma sebebi ölçümün olmaması. Bu kart o ölçümü
+  ön-kayıt altına alır.
+  TEZ: gün-sonu (EOD) icrası yerine dakika-hassas icra, girişi tetik seviyesine daha yakın
+  yakalayarak ölçülebilir bir kazanç üretir. Kazanç maliyet bandını aşmıyorsa Faz-4b'nin
+  silahlanma bacağını yazmak GEREKÇESİZDİR.
+
+evidence_refs:
+  - "canlı 4b defteri state/intraday_shadow_orders.jsonl (2026-08-07 itibarıyla n=4)"
+  - "canlı 4a defteri state/intraday_decisions.jsonl (7.541 satır; DAKİKA BARI değerlendirmesi —
+     emre dönebilecek karar DEĞİL. Rol-1 2026-08-07'de bu paydayı bir kez yanlış okudu ve
+     '7.541 karardan 4 emir' diye tıkanıklık sandı; kart bu yanlış paydayı yasaklar)"
+  - "meridian/health.py:147-158 (kilidin kendi eksiklik beyanı)"
+  - "ROADMAP §3.5 faz merdiveni: 4a saha kanıtı → 4b gölge → Faz 5 → Faz 6 beş kilit"
+
+universe: >
+  4b gölge defterinde dolum üretmiş HER plan; eşleşme anahtarı `plan_id`. Alt-örnek seçimi YOK
+  (seçim serbestliği K'ya yazılırdı). Evren daralt­ma tek koşul: karşılığı iç EOD defterinde
+  bulunamayan gölge satırı EŞLEŞMEZ olarak sayılır ve ADIYLA raporlanır — sessizce düşürülmez.
+
+features_asof: >
+  Eşleştirilmiş (paired) fark, plan başına:
+    kazanc_bps = (eod_fill − golge_sim_fill) / eod_fill × 10000     [uzun taraf; kısa taraf işaret ters]
+    kazanc_R   = (eod_fill − golge_sim_fill) × qty / risk_dollars
+  Her iki bacak da YALNIZ t ve öncesini kullanır (gölge satırı `bar_open`/`entry_trigger`
+  ile, EOD satırı kendi kapanışıyla). İleri-bakış yok.
+
+horizon: "giriş anı — bu bir İCRA ölçümüdür, getiri ölçümü DEĞİLDİR; tutma ufku bu karta girmez"
+
+parameter_grid:
+  yok: "tek tanım, tek formül, tek eşleştirme kuralı — grid YOK; K += 1 (bu ölçümün kendisi)"
+
+cost_model: pessimistic_band_v2   # E3; kazanç bu bandı AŞMAK zorunda (aşağıda success_metric)
+
+# ---------------------------------------------------------------------------------------------
+# METODOLOJİK SINIR — ÖLÇÜMDEN ÖNCE BEYAN EDİLİR, SONRADAN YUMUŞATILAMAZ
+# ---------------------------------------------------------------------------------------------
+# 4b'nin `sim_fill`i GÖZLENMİŞ BİR DOLUM DEĞİLDİR: `sim_price_rule: max(bar_open, entry_trigger)`
+# kuralıyla ÜRETİLMİŞ bir modeldir. İç EOD dolumu da simülasyondur. Yani birincil karşılaştırma
+# MODEL-MODEL'dir ve ölçtüğü şey ZAMANLAMA etkisidir, gerçek icra kalitesi değildir.
+# Bir modeli gerçek dolumla kıyaslamak modeli KAYIRIR (modelin kendi varsayımı lehine sonuç
+# üretir), o yüzden birincil hüküm iki simülasyon arasında kurulur — ikisi de AYNI maliyet
+# modelini taşır, fark yalnız zamanlamadan gelir.
+# GERÇEKLİK ÇAPASI AYRI RAPORLANIR: aynı planların Alpaca ayna dolumları (gerçek) ile gölge
+# sim_fill farkı, n izin verdiğinde İKİNCİ ve AYRI bir satır olarak yazılır. O satır bu kartın
+# hükmünü VERMEZ; modelin gerçeğe ne kadar yakın olduğunu beyan eder.
+# ---------------------------------------------------------------------------------------------
+
+success_metric: >
+  BİRİNCİL (kilidi açan hüküm): eşleştirilmiş `kazanc_bps` ortalamasının %95 CI'si
+  SIFIRI DIŞLAR *ve* ALT SINIRI maliyet bandının üstündedir. CI yöntemi TARİH-KÜMELİ
+  bootstrap, 10.000 yeniden örnekleme (aynı gün dolan planlar aynı açılışı paylaşır —
+  bağımsız sayılamaz). İKİNCİL (raporlanır, kilidi açmaz): `kazanc_R` ortalaması ve CI'si.
+  ASGARİ ÖRNEKLEM: n_min = 20 eşleşmiş çift. n < 20 iken hüküm "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ"
+  olur ve kilit KAPALI kalır; bu bir başarısızlık değil, ölçülmüş bir yetersizliktir ve
+  `durum` alanı `olculemedi`den `olculdu`ya geçer. AYRIM ÖNEMLİDİR: bugünkü kilit "kod yok"
+  diyor, ölçüm yazıldıktan sonra "örneklem yok" diyecek — ikincisi zamanla kendiliğinden dolar,
+  birincisi dolmaz.
+
+kill_criteria:
+  - "n >= 20 iken CI sıfırı İÇERİYOR → dakika-hassas icranın ölçülebilir kazancı YOK; Faz-4b
+     silahlanma bacağı bu kanıtla GEREKÇELENDİRİLEMEZ ve yazılmaz. Kilit kapalı kalır."
+  - "n >= 20 iken CI tamamen NEGATİF → dakika-hassas icra EOD'den KÖTÜ; 4b bir maliyettir,
+     faz merdiveni burada DURUR ve 4b gölge kolu emekliliğe aday olur."
+  - "CI pozitif ama ALT SINIR maliyet bandının altında → kazanç masrafı karşılamıyor; kilit
+     kapalı kalır, 'anlamlı ama işe yaramaz' olarak arşivlenir."
+  - "Eşleşmeyen gölge satırı oranı > %20 → defter bütünlüğü sorunu; ölçüm hükmü VERİLMEZ,
+     önce eşleştirme kırılması kök-neden turuna gider."
+
+k_registry: {registered_at: "2026-08-07T19:0x", trial_ids: [pending-EXE-002-faz5]}
+
+status: registered   # 2026-08-07 Rol-1. ÖLÇÜM KODU HENÜZ YAZILMADI — bu kart onun ön şartıdır.
+#   Kayıt anındaki canlı durum (donmuş): 4b defteri n=4, yani ilk koşum n_min=20'nin ALTINDA
+#   kalacak ve "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" diyecek. Bu BEKLENEN sonuçtur ve kartın değeri de
+#   budur: kilidin gerekçesi "üreten kod yok"tan "örneklem 4/20"ye döner. Eşikler (n_min=20,
+#   CI %95, tarih-kümeli bootstrap 10.000, maliyet bandı = E3) ÖLÇÜMDEN ÖNCE donduruldu ve
+#   sonradan DEĞİŞTİRİLEMEZ. kill_criteria dokunulmazdır.
