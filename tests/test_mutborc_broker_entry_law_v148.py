@@ -27,7 +27,13 @@ HEDEFLENEN MUTANT SINIFLARI (hayatta kalan 46'nın 35'i)
  S7  tif beyaz-liste/okuma/yazımı bozulur (68 .lower()→.upper(), 69 str(None), 70 .get(None,…),
      72 .get(""), 74/75 anahtar dizgesi, 80/81 "gtc" dizgesi, 83/84 yazım anahtarı) → E1
  S8  tif beyaz-listesinin "day" ucu bozulur (78 "XXdayXX", 79 "DAY") → E2
-     (yalnız ENTRY_TIF varsayılanı "day" DIŞINA alınınca gözlenebilir; bkz. E2 gerekçesi)
+     GÜNCELLEME (E1-v2, 2026-08-07): beyaz-listenin "day" UCU KALDIRILDI (`ENTRY_TIF_ALLOWED =
+     ("gtc",)`), yani S8 sınıfının hedefi artık YOK — mutantların öldürüleceği bir dal kalmadı,
+     dalın KENDİSİ silindi. E2 bu yüzden ters yöne çevrildi: artık "day KABUL EDİLİYOR mu?" değil
+     "day REDDEDİLİYOR mu?" ölçülüyor. Gerekçe (kart revizyonu EXE-2026-001-R1): Alpaca
+     bracket'ında `time_in_force` TEKTİR ve koruma bacaklarına da uygulanır; DAY, dolmuş
+     pozisyonların stop'unu her seans kapanışında öldürüyordu (canlı ölçüm 2026-08-06
+     20:00-20:02Z, dört pozisyon çıplak). Korumanın ömrü bir arama değişkeni değildir.
 
 ------------------------------------------------------------------------------------------------
 EŞDEĞER — ÖLDÜRÜLEMEZ (11 mutant; test yazılmadı, gerekçe burada)
@@ -62,7 +68,7 @@ from meridian import config
 
 
 VARSAYILAN = {"limit_atr_mult": 0.5, "limit_pct_cap": 0.01,
-              "gap_behavior": "marketable_limit", "tif": "day", "version": "E1-v1"}
+              "gap_behavior": "marketable_limit", "tif": "gtc", "version": "E1-v2"}
 
 
 # =============================== A — varsayılan sözleşme =========================================
@@ -77,7 +83,7 @@ def test_a1_varsayilan_sozlesme_anahtar_kumesi_ve_degerleri():
     assert law == VARSAYILAN
     # yasanın kart grid'indeki VARSAYILAN noktası — buradaki bir değişim kart olmadan gelmez
     assert (BR.ENTRY_LIMIT_ATR_MULT, BR.ENTRY_LIMIT_PCT_CAP) == (0.5, 0.01)
-    assert (BR.GAP_MARKETABLE, BR.GAP_VETO, BR.ENTRY_TIF) == ("marketable_limit", "cancel", "day")
+    assert (BR.GAP_MARKETABLE, BR.GAP_VETO, BR.ENTRY_TIF) == ("marketable_limit", "cancel", "gtc")
 
 
 # =============================== B — limit_atr_mult =============================================
@@ -108,7 +114,7 @@ def test_b4_atr_mult_bozuk_deger_varsayilanda_kalir():
     """YASA 4 sessiz-yutma: biçimsiz düğme yasayı yok etmez, varsayılana düşer."""
     for kotu in ("abc", None, [], {}, object()):
         law = BR.entry_law({"limit_atr_mult": kotu})
-        assert law["limit_atr_mult"] == 0.5 and law["version"] == "E1-v1"
+        assert law["limit_atr_mult"] == 0.5 and law["version"] == "E1-v2"
 
 
 # =============================== C — limit_pct_cap ==============================================
@@ -175,20 +181,26 @@ def test_e1_tif_gtc_uygulanir_normalize_edilerek():
     assert BR.entry_law({"tif": "Gtc"})["tif"] == "gtc"
 
 
-def test_e2_tif_day_beyaz_listede_varsayilandan_bagimsiz(monkeypatch):
-    """S8(78, 79): beyaz-listenin 'day' ucu, ENTRY_TIF varsayılanı da 'day' olduğu için normalde
-    GÖZLENEMEZ — 'kabul edip day yazmak' ile 'reddedip varsayılan day'de kalmak' aynı çıktıyı verir.
-    Varsayılanı geçici olarak 'gtc'ye alıp beyaz-listeyi tek başına sınıyoruz: config 'day' derse
-    yasa 'day' UYGULAMALIDIR, varsayılana geri düşmemelidir."""
-    monkeypatch.setattr(BR, "ENTRY_TIF", "gtc")
-    assert BR.entry_law({})["tif"] == "gtc"                    # varsayılan gerçekten değişti
-    assert BR.entry_law({"tif": "day"})["tif"] == "day"        # beyaz liste 'day'i KABUL ediyor
-    assert BR.entry_law({"tif": " DAY "})["tif"] == "day"      # normalize edilerek
+def test_e2_tif_day_ARTIK_REDDEDILIR_varsayilandan_bagimsiz(monkeypatch):
+    """S8 TERSİNE ÇEVRİLDİ (E1-v2, 2026-08-07): 'day' beyaz-listeden ÇIKARILDI, çünkü bracket'ta
+    `time_in_force` TEKTİR ve KORUMA bacaklarına da uygulanır — DAY, dolmuş bir pozisyonun stop'unu
+    her seans kapanışında öldürüyordu (canlı ölçüm 2026-08-06 20:00-20:02Z, dört pozisyon çıplak;
+    kart revizyonu EXE-2026-001-R1). Bu iddia varsayılan 'gtc' iken de GÖZLENEBİLİRDİR ama tek
+    başına ayrıştırıcı değildir ('reddedip gtc'de kalmak' ile 'kabul edip gtc yazmak' karışır);
+    o yüzden varsayılan geçici olarak 'day'e alınır ve config 'day' derken bile yasanın 'gtc'
+    demediği DEĞİL, listenin 'day'i hiç tanımadığı ölçülür."""
+    assert BR.entry_law({"tif": "day"})["tif"] == "gtc"        # yürürlükteki varsayılanla
+    assert BR.entry_law({"tif": " DAY "})["tif"] == "gtc"
+    monkeypatch.setattr(BR, "ENTRY_TIF", "day")               # KELEPÇE ÖLÇÜMÜ: varsayılan bozulsa
+    assert BR.entry_law({"tif": "gtc"})["tif"] == "gtc", \
+        "beyaz-listenin TEK ucu ('gtc') çalışmıyor — liste tümden ölü olabilir (pozitif kontrol)"
+    assert "day" not in BR.ENTRY_TIF_ALLOWED, "'day' beyaz-listeye geri sızdı — koruma seans-ömürlü"
 
 
 def test_e3_tif_beyaz_liste_disi_reddedilir():
-    for kotu in ("opg", "cls", "ioc", "fok", "", "  ", None, 5, ["day"]):
-        assert BR.entry_law({"tif": kotu})["tif"] == "day"
+    """'day' artık bu listenin bir üyesidir: reddedilen değerler varsayılana (gtc) düşer."""
+    for kotu in ("day", "DAY", " Day ", "opg", "cls", "ioc", "fok", "", "  ", None, 5, ["day"]):
+        assert BR.entry_law({"tif": kotu})["tif"] == "gtc"
 
 
 # =============================== F — config yolu (override=None) ================================
@@ -201,14 +213,19 @@ def test_f1_config_execution_v2_blogu_gercekten_okunur(monkeypatch):
         "limit_atr_mult": 0.75, "limit_pct_cap": 0.03, "gap_behavior": "cancel", "tif": "gtc"}})
     law = BR.entry_law()
     assert law == {"limit_atr_mult": 0.75, "limit_pct_cap": 0.03,
-                   "gap_behavior": "cancel", "tif": "gtc", "version": "E1-v1"}
+                   "gap_behavior": "cancel", "tif": "gtc", "version": "E1-v2"}
 
 
 def test_f2_config_bloktaki_tek_alan_digerlerini_varsayilanda_birakir(monkeypatch):
     """Kısmi blok: yalnız yazılan alan değişir, yazılmayanlar varsayılanda kalır (blok bir
-    'hepsi ya da hiçbiri' anahtarı değildir)."""
-    monkeypatch.setattr(config, "goal", lambda: {"execution_v2": {"tif": "gtc"}})
-    assert BR.entry_law() == dict(VARSAYILAN, tif="gtc")
+    'hepsi ya da hiçbiri' anahtarı değildir).
+
+    ÖLÇÜLEN ALAN 'tif'TEN 'gap_behavior'A TAŞINDI (E1-v2): tif'in tek geçerli değeri artık
+    varsayılanın kendisi ('gtc'), yani o alanla kurulan bu test AYRIŞTIRICI OLMAKTAN ÇIKARDI —
+    kısmi bloğun okunmadığı bir dünyada da geçerdi. Ölçtüğü şey korunsun diye gerçekten
+    varsayılandan FARKLI olabilen bir alanla kuruldu."""
+    monkeypatch.setattr(config, "goal", lambda: {"execution_v2": {"gap_behavior": "cancel"}})
+    assert BR.entry_law() == dict(VARSAYILAN, gap_behavior="cancel")
 
 
 def test_f3_config_okunamazsa_yasa_yok_olmaz_varsayilana_duser(monkeypatch):

@@ -1989,8 +1989,12 @@ def ownership_report(persist: bool = False) -> dict:
 # korumasız. `state/portfolio.json` dört pozisyon için stop BEYAN EDİYORDU (NUE 257,4033 ·
 # EMR 152,4839 · BKNG 191,5372 · AMGN 389,4209); broker'da hiçbirinin karşılığı yoktu. Kök neden
 # ölçüldü: bracket TIF'i emrin TAMAMINA (giriş + iki koruma bacağına) uygulanır ve E1 yasası
-# (`broker.ENTRY_TIF = "day"`, kart EXE-2026-001) TIF'i GTC'den DAY'e çekerken yalnız GİRİŞ
-# bacağının bayat-tetik sorununu gerekçelendirmişti. Sonuç, olay defterinde saniyesiyle duruyor:
+# (o gün `broker.ENTRY_TIF = "day"`, kart EXE-2026-001) TIF'i GTC'den DAY'e çekerken yalnız GİRİŞ
+# bacağının bayat-tetik sorununu gerekçelendirmişti. → AYNI GÜN DÜZELTİLDİ: E1-v2 ile TIF GTC'ye
+# döndü ve `day` beyaz-listeden çıkarıldı (kart revizyonu EXE-2026-001-R1); bayat tetik artık
+# günlük `cancel_open_entries()` kadansıyla kesiliyor. Bu bekçi yine de gerekli — yasa yalnız
+# BUNDAN SONRA gönderilen bracket'ları bağlar, ve "koruma var mı" sorusu TIF'ten bağımsızdır.
+# Sonuç, olay defterinde saniyesiyle duruyor:
 # giriş 2026-08-06 13:32-13:33Z'de doldu, koruma bacakları AYNI GÜN 20:00:16 / 20:01:34 /
 # 20:02:06 / 20:02:31Z'de (kapanış 20:00Z) `expired` + OCO kardeşi `canceled` oldu.
 #

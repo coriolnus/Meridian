@@ -47,9 +47,14 @@ def test_submit_plan_sizes_bracket_and_posts_paper(sandbox_state, monkeypatch):
     # EXE-2026-001 hükmü + ölçüm research/olcumler/e1_grid_2026-08-03). Bu test GERÇEK yapılandırmayı
     # okur, o yüzden beklenti yeni yasadan türetildi: 20 · 1,04 = 20,8 (= MAX_ENTRY_GAP_PCT zarfı).
     assert b["side"] == "buy" and b["type"] == "limit" and b["limit_price"] == 20.8
-    assert b["time_in_force"] == "day"           # GTC bayat tetik taşıyordu (kart EXE-2026-001)
+    # TIF: "day" → "gtc" (E1-v2, kart revizyonu EXE-2026-001-R1, 2026-08-07). Alpaca bracket'ında
+    # `time_in_force` TEKTİR ve emrin TAMAMINA uygulanır — aşağıdaki take_profit/stop_loss
+    # bacaklarının ömrü de bu alandır. DAY'ken koruma bacakları seans kapanışında EXPIRED/CANCELED
+    # oluyor ve pozisyon geceyi ÇIPLAK geçiriyordu (canlı ölçüm 2026-08-06 20:00-20:02Z).
+    # Bayat-tetik koruması kaybolmadı: `loop.daily_cycle` dolmamış girişleri kendi iptal ediyor.
+    assert b["time_in_force"] == "gtc"
     assert b["take_profit"]["limit_price"] == 26.0 and b["stop_loss"]["stop_price"] == 18.0
-    assert res["law"]["mode"] == "marketable_limit" and res["law"]["law"] == "E1-v1"
+    assert res["law"]["mode"] == "marketable_limit" and res["law"]["law"] == "E1-v2"
 
 
 def test_submit_plan_uses_stop_limit_when_price_is_still_below_the_trigger(sandbox_state, monkeypatch):

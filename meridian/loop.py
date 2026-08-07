@@ -228,13 +228,27 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
                        "red_detay": {"kapi": gate, **extra}})
 
 
-def _cancel_mirror_entries(dstr: str, gate: str) -> dict:
-    """HALT/breaker: aynadaki DOLMAMIŞ giriş emirlerini de kapat (C23 önerisi).
+# İKİ ÇAĞIRAN, İKİ OLAY ADI (v210, 2026-08-07): aynı iptal YOLU iki FARKLI olguyu anlatır.
+# HALT/breaker "motor durduruldu, ayna da dursun" der; günlük kadans "bu emrin seansı bitti, tetiği
+# bayatladı" der. Tek adla yazılsalardı olay defterini okuyan her gece "HALT oldu" sanardı — ve o
+# okuma UYDURMA olurdu (YASA 6: okuyucusuz/yanlış-okunan yazım yok).
+EV_MIRROR_ENTRIES_CANCELLED = "mirror_entries_cancelled"        # HALT/breaker kapısı (C23)
+EV_STALE_ENTRIES_CANCELLED = "mirror_stale_entries_cancelled"   # günlük kadans — bayat tetik (v210)
+
+
+def _cancel_mirror_entries(dstr: str, gate: str, *, olay: str = EV_MIRROR_ENTRIES_CANCELLED,
+                           detail: str = "HALT/breaker: aynadaki dolmamış giriş emirleri "
+                                         "kapatıldı (sahiplik önekli)") -> dict:
+    """Aynadaki DOLMAMIŞ giriş emirlerini kapat — İKİ çağıranın ORTAK yolu (C23 + v210).
 
     Eskiden HALT yalnız İÇ tarafı durduruyordu; ayna emri D-1 akşamından TIF=day ile canlıydı ve
     HALT onu iptal etmiyordu — iç motor "bugün giriş yok" derken ayna dolabiliyordu. Sahiplik
     süzgeci adaptörün İÇİNDE (`cancel_open_entries`: yalnız ENGINE_COID_PREFIX önekli, yalnız
-    DOLMAMIŞ emirler; dolmuş parent'ın koruma bacaklarına DOKUNULMAZ)."""
+    DOLMAMIŞ emirler; dolmuş parent'ın koruma bacaklarına DOKUNULMAZ).
+
+    `olay`/`detail` ÇAĞIRANIN beyanıdır: mekanizma aynı, ANLATI farklı (bkz. yukarıdaki iki sabit).
+    Varsayılanlar HALT/breaker dalınındır — yani bu turdan önceki tek çağıranın davranışı birebir
+    korunur."""
     if config.BROKER != "alpaca_paper":
         return {"skipped": f"broker={config.BROKER}"}
     try:
@@ -242,14 +256,53 @@ def _cancel_mirror_entries(dstr: str, gate: str) -> dict:
         if not alpaca.paper_available():
             return {"skipped": "paper_available()=False"}
         res = alpaca.cancel_open_entries()
-        obs.log("mirror_entries_cancelled", gate=gate, date=dstr,
+        obs.log(olay, gate=gate, date=dstr,
                 cancelled=len(res.get("cancelled") or []), kept=len(res.get("kept") or []),
-                foreign=len(res.get("foreign") or []),
-                detail="HALT/breaker: aynadaki dolmamış giriş emirleri kapatıldı (sahiplik önekli)")
+                foreign=len(res.get("foreign") or []), detail=detail)
         return res
     except Exception as e:
         obs.warn("mirror_entry_cancel_failed", error=f"{type(e).__name__}: {e}", gate=gate)
         return {"ok": False, "detail": f"{type(e).__name__}: {e}"}
+
+
+# ==================================================================================================
+# BAYAT TETİK ARTIK TIF'e HAVALE EDİLEMEZ (v210, 2026-08-07) — GÜNLÜK KADANS İPTALİ
+# ==================================================================================================
+# NEDEN DOĞDU: `broker.ENTRY_TIF` DAY iken bayat-tetik korumasını BROKER yapıyordu — dolmamış giriş
+# emri seans kapanışında kendiliğinden sönüyordu. Ama Alpaca bracket'ında `time_in_force` TEKTİR ve
+# emrin TAMAMINA uygulanır: aynı DAY, DOLMUŞ pozisyonların koruma bacaklarını da her akşam
+# öldürüyordu (ölçüm: 2026-08-06 20:00-20:02Z, dört pozisyon çıplak). TIF GTC'ye alındı; koruma
+# artık yaşıyor — ve bayat-tetik koruması bu fonksiyonla motorun kendi eline geçti.
+# YETKİ GENİŞLEMESİ DEĞİL: iptal yine adaptörün denetlenmiş yolundan geçer — yalnız
+# ENGINE_COID_PREFIX önekli (operatörün emri `foreign`, dokunulmaz), yalnız `filled_qty=0`
+# (dolmuş parent `kept`), koruma bacaklarına ASLA. Yani bu çağrı, DAY'in körlemesine yaptığı işin
+# yalnız DOĞRU YARISINI yapar.
+def _cancel_stale_entry_orders(dstr: str) -> dict:
+    """Günlük kadans: bir SEANS için silahlanmış, o seansta dolmamış giriş emirlerini geri çek.
+
+    NE ZAMAN: `daily_cycle`ta, o seansın dolum kararları verildikten SONRA ve yeni planlar
+    silahlanıp aynaya gönderilmeden ÖNCE. Bu sıra zorunludur — daha erken çağrılsa bugünün
+    kararı bir emri iptal ederdi, daha geç çağrılsa BU AKŞAM gönderilen taze emirleri keserdi.
+
+    KAPI-KOŞULSUZ (HALT/breaker/veri/kısma dallarında da koşar): kapı kapalıysa `meta["armed"]`
+    zaten boşaltılıyor, yani iç motor o planları KALICI olarak düşürüyor. Aynadaki GTC emri
+    yaşamaya devam etseydi iç defterin düşürdüğü bir planı ayna doldurabilirdi — loop.py'nin
+    kendi adını koyduğu "motor yetimi"/split-brain sınıfı, üstelik artık süresiz. HALT dalında
+    `_armed_dropped_by_gate` zaten iptal ettiği için bu çağrı o gün 0 iptal bulur ve olay defteri
+    bunu dürüstçe yazar (iki ayrı ad, iki ayrı satır).
+
+    KAPSAM SINIRI — BEYANLI (TIF=day'e göre TEK davranış farkı): `daily_cycle` seansı İŞLEMEDEN
+    dönerse (`no dates` / `waiting_for_universe` / `refused_regressive`) bu kadans koşmaz ve GTC
+    emri o seansı aşar; DAY'de emir kendiliğinden sönerdi. BİLİNÇLİ: o dallarda iç motor kararını
+    HENÜZ VERMEMİŞTİR ve silahlı küme duruyordur — emri geri çekmek "iç taraf doldurur, aynada
+    emir yok" ayrışmasını üretirdi, yani hatanın ters yönünü. Kalan risk bayat tetiğin bir seans
+    daha yaşamasıdır ve tavanı zaten `_carry_armed_without_bar`ın tek-seans taşıma yasasıdır.
+    `noop` dalı (bu seans zaten işlendi) da BİLEREK dışarıda: kadans o gün ZATEN koştu, ve döngü
+    300 sn'de bir uyandığı için oraya bağlamak her poll'de bir broker iptal turu demek olurdu."""
+    return _cancel_mirror_entries(
+        dstr, "gunluk_kadans", olay=EV_STALE_ENTRIES_CANCELLED,
+        detail="günlük kadans: seansı biten dolmamış giriş emirleri geri çekildi — bayat tetik "
+               "sonraki seansa taşınmaz. Koruma bacakları YAŞAR (dolmuş parent `kept` altında).")
 
 
 def _armed_dropped_by_gate(meta: dict, dstr: str, gate: str) -> None:
@@ -1085,6 +1138,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         else:
             _armed_dropped_by_gate(meta, dstr, _kapi)
         meta["armed"] = carried
+        # v210 — BAYAT TETİK KADANSI. Buranın SEBEBİ: (1) yukarıdaki blok bu seansın dolum
+        # kararlarını VERDİ (dolan doldu, dolmayan `entry_missed_limit`/kapı damgasıyla düştü),
+        # yani hâlâ dolmamış duran her motor giriş emri artık bayattır; (2) yeni planların
+        # üretimi/silahlanması ve `mirror_submit_armed` HENÜZ koşmadı (P3, aşağıda) — bu akşam
+        # gönderilecek TAZE emirler bu iptalden etkilenmez; (3) `carried` (barı yayınlanmamış plan)
+        # dahil, DÜN silahlanıp bugün de dolmamış GTC girişleri bu çağrı kapsar. TIF=day iken bu
+        # temizliği broker yapıyordu (ve yaparken korumayı da kesiyordu) — motorun kendi işi oldu.
+        # `carried` İÇİN DAVRANIŞ DEĞİŞMEDİ: iptal edilen emri `reconcile_broker_state` (1.2)
+        # DEAD görüp planı silahlı kümeden düşürür — TIF=day'de emir aynı akşam `expired` olduğu
+        # için o düşürme ZATEN oluyordu. Yani bu satır taşıma mekanizmasını bozmuyor, onun
+        # bugünkü fiilî sonucunu aynen sürdürüyor.
+        _cancel_stale_entry_orders(dstr)
 
     # C19 (denetim 2026-08-02) — GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
     # ve KAPANIŞ markıyla yapılıyordu (`b.equity(_marks(per, d))`); okuma tarafı ise D+1'in AÇILIŞ

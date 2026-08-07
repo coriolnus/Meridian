@@ -60,8 +60,15 @@ execution_v2:
   # 95/95 reddin kökü) ne olacak? "marketable_limit" = limit fiyatlı emir (tavan yine limit),
   # "cancel" = gap-risk vetosu (emir gönderilmez, iç motor da doldurmaz).
   gap_behavior: marketable_limit
-  # TIF: GTC bir sonraki seansa BAYAT tetik taşır (seviye sinyal barı kapanışına sabitli).
-  tif: day
+  # TIF (E1-v2, 2026-08-07 — ÖNCEKİ DEĞER `day` İDİ): bracket'ta `time_in_force` TEKTİR ve
+  # emrin TAMAMINA — giriş + iki KORUMA bacağına — uygulanır. `day` seçmek, dolmuş bir
+  # pozisyonun stop'unu her seans kapanışında öldürüyordu; canlı ölçüm 2026-08-06
+  # 20:00-20:02Z'de dört pozisyonu çıplak buldu. Bayat tetik gerekçesi ÇÜRÜMEDİ — aracı
+  # değişti: dolmamış giriş artık günlük kadansta `cancel_open_entries()` ile iptal edilir
+  # (o mekanizma dolmuş parent'ın koruma bacaklarına DOKUNMAZ, alpaca.py:354 yasası).
+  # Kart revizyonu: EXE-2026-001-R1. `day` beyaz-listeden ÇIKARILDI — bu satır `day` yazsa
+  # bile yasa artık kabul etmez (broker.ENTRY_TIF_ALLOWED), yani değeri burada da dürüst tut.
+  tif: gtc
 
 # ---------------------------------------------------------------------------------------------
 # E3 — KÖTÜMSER MALİYET BANDI (WP-E, 2026-07-31). NEDEN VAR: yürürlükteki friksiyon modeli

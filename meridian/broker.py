@@ -42,8 +42,33 @@ DERISK_FLOOR_DD = 0.08     # at/beyond this drawdown from peak, take no new size
 #   3. GAP     : gönderim anında referans fiyat tetiğin ÜSTÜNDEyse buy-stop GEÇERSİZDİR (bugünkü
 #                retlerin kökü). Kart grid'inin iki noktası: `marketable_limit` (varsayılan —
 #                limit fiyatlı emir, tavan yine limit) veya `cancel` (gap-risk vetosu).
-#   4. TIF     : DAY. GTC bir sonraki seansa BAYAT TETİK taşır (sinyal barı kapanışına sabitlenmiş
-#                bir seviye iki gün sonra artık o kurulumu temsil etmez) — kartta gerekçeli değişim.
+#   4. TIF     : GTC — ve bu bir tercih değil KELEPÇEDİR (E1-v2, 2026-08-07).
+#                MEKANİZMA: Alpaca bracket'ında `time_in_force` alanı TEKTİR ve emrin TAMAMINA
+#                uygulanır. Giriş bacağı için seçtiğimiz ömür, KORUMA bacaklarının (take-profit +
+#                stop-loss) da ömrüdür — ikisi ayrı ayrı seçilemez, çünkü ayrı ayrı gönderilmez.
+#                ÖLÇÜLEN SONUÇ (canlı A1, 2026-08-06 20:00-20:02Z): `ENTRY_TIF="day"` yüzünden dört
+#                motor pozisyonunun `limit sell` bacağı EXPIRED, OCO kardeşi `stop sell` CANCELED
+#                oldu; dördü de gece boyunca ÇIPLAK kaldı. Hiçbir motor çağrısı iptal etmedi —
+#                broker'ın gün-sonu sona-ermesi öldürdü. Yani DAY yalnız girişi seans-ömürlü
+#                yapmıyordu, DOLMUŞ bir pozisyonun stop'unu da her akşam siliyordu.
+#                SİSTEMİN KENDİ YASASININ İHLALİ: `alpaca.cancel_open_entries` belgesi "dolmuş
+#                parent'lara DOKUNULMAZ — koruyucu bacakları canlı pozisyonu koruyor; onları iptal
+#                etmek pozisyonu çıplak bırakır (yasak)" der. `tif=day` tam o yasağı her gece
+#                broker üzerinden uyguluyordu; kod tarafında hiç görünmeyen bir ihlal.
+#                ESKİ GEREKÇE — SİLİNMEDİ, SINIRI BEYAN EDİLDİ: "DAY. GTC bir sonraki seansa BAYAT
+#                TETİK taşır (sinyal barı kapanışına sabitlenmiş bir seviye iki gün sonra artık o
+#                kurulumu temsil etmez)". Bu cümle GİRİŞ bacağı için hâlâ doğrudur; kusuru
+#                eksikliğiydi — çıkış bacağının TIF'ini ne bu blok ne kart EXE-2026-001 HİÇ
+#                konuşmuyordu, dolayısıyla korumanın ömrü hiç kimsenin kararı olmadan girişin
+#                yan etkisi olarak belirlendi.
+#                BAYAT TETİK NEREYE GİTTİ: TIF'e HAVALE EDİLEMEZ, motorun kendi eline alındı.
+#                `loop.daily_cycle` her turda, yeni planlar silahlanmadan ÖNCE
+#                `alpaca.cancel_open_entries()` çağırır (yalnız motor önekli emirler, yalnız
+#                `filled_qty=0` girişler, dolmuş parent'ın koruma bacaklarına DOKUNMADAN). Koruma
+#                körelmiş bir aletten (emrin tamamını kesen bracket TIF'i) hedefli bir alete taşındı.
+#                "day" BEYAZ-LİSTEDEN ÇIKARILDI (unutulmadı — kaldırıldı; bkz. ENTRY_TIF_ALLOWED):
+#                tek bir TIF alanı olduğu sürece `execution_v2.tif: day` yazan bir yapılandırma
+#                korumayı seans-ömürlü yapar. Bu bir arama değişkeni değil, bir emniyet sınırıdır.
 #
 # %4 MAX-CHASE İLE İLİŞKİSİ (kart: "ikisinin ilişkisini yorumla belgele"): ikisi AYNI YÖNDE iki
 # tavandır ve DAİMA DAHA SIKI OLAN BAĞLAR. Bugünkü yapılandırmada limit tavanı (%1) chase
@@ -54,10 +79,16 @@ DERISK_FLOOR_DD = 0.08     # at/beyond this drawdown from peak, take no new size
 # kalır: "girseydik ne olurdu?" sorusunun paydası icra yasasıyla daralmamalı).
 ENTRY_LIMIT_ATR_MULT = 0.5     # kart grid'inin VARSAYILAN noktası: min(0.5·ATR14, %1.0)
 ENTRY_LIMIT_PCT_CAP = 0.01
-ENTRY_TIF = "day"
+ENTRY_TIF = "gtc"
+# TIF BEYAZ-LİSTESİ — TEK NOKTA (E1-v2, 2026-08-07). "day" bu listeden ÇIKARILDI: madde 4'teki
+# ölçülen vaka, DAY'in koruma bacaklarını her seans kapanışında öldürdüğünü gösterdi. Liste
+# `entry_law`in kelepçesidir: yapılandırma "day" dese bile yasa onu KABUL ETMEZ ve `ENTRY_TIF`e
+# düşer — çünkü korumanın ömrü bir arama değişkeni değildir. Yürürlükteki değer her gönderimde
+# E2 defterine (`entry_execution.jsonl` → `tif`) yazıldığı için bu kelepçenin okuyucusu vardır.
+ENTRY_TIF_ALLOWED = ("gtc",)
 GAP_MARKETABLE = "marketable_limit"   # varsayılan: limit fiyatlı emir, tavan = limit
 GAP_VETO = "cancel"                   # gap-risk vetosu: emir hiç gönderilmez, iç motor da doldurmaz
-ENTRY_LAW_VERSION = "E1-v1"
+ENTRY_LAW_VERSION = "E1-v2"
 
 # olay adları — İKİ motor da bu adları kullanır (grep'lenebilir tek sözlük)
 EV_STOP_LIMIT = "entry_stop_limit"          # normal tetik: fiyat hâlâ tetiğin altında
@@ -97,7 +128,11 @@ def entry_law(override: dict | None = None) -> dict:
             pass
         if str(raw.get("gap_behavior", "")).strip() in (GAP_MARKETABLE, GAP_VETO):
             cfg["gap_behavior"] = str(raw["gap_behavior"]).strip()
-        if str(raw.get("tif", "")).strip().lower() in ("day", "gtc"):
+        # TIF: beyaz-liste ARTIK TEK UÇLU (`ENTRY_TIF_ALLOWED`). Listede olmayan bir değer —
+        # "day" dahil — sessizce varsayılana düşer; `gap_behavior` dalıyla birebir aynı desen.
+        # Bu düşüş bir kayıp değil KELEPÇEdir: yürürlükteki TIF her gönderimde E2 defterine
+        # yazıldığı için "config'te day yazıyordu ama gtc gönderildi" hâli kayıttan okunur.
+        if str(raw.get("tif", "")).strip().lower() in ENTRY_TIF_ALLOWED:
             cfg["tif"] = str(raw["tif"]).strip().lower()
     return cfg
 

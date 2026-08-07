@@ -10,6 +10,7 @@ evidence_refs: [Cooper-Cliff-Gulen 2008, Bogousslavsky-Muravyev 2023 JFM, Lou-Po
   WP0 matrisi mek.4/13 (broker.py:127-197, alpaca.py:289-300, broker_reconcile failed_submissions)]
 universe: full_251
 features_asof: "emir parametreleri plan anında (sinyal barı kapanışı) sabitlenir; as-of ihlali yok"
+# ÖN-KAYIT METNİ AYNEN DURUYOR (silinmez); TIF bacağı 2026-08-07'de revize edildi → revizyonlar[0]
 horizon: "giriş emri: ertesi seans; TIF=DAY (GTC'den değişim — gap'te taşınan emir ertesi gün bayat tetik taşır)"
 parameter_grid:
   limit_offset: ["min(0.5*ATR14, %1.0)", "min(0.25*ATR14, %0.5)", "min(1.0*ATR14, %1.5)"]  # 3 kombinasyon → K+=3
@@ -40,3 +41,63 @@ status: measured   # 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: resear
 # canlıya geçiş kapısında E2 kanıtıyla yeniden hükme bağlanır. Alternatif: yasayı koru + ayna-dolum
 # akışının neden boş olduğunu ayrıca teşhis et (E2'siz bu kart DoD (b) bacağı açık kalır).
 notes: "Bağımlılık: BT-1/SIP gece kolları broker/alpaca/loop'ta — WP-E ajanı onlar indikten sonra başlar."
+
+# =================================================================================================
+# REVİZYONLAR — EKLENİR, ÜZERİNE YAZILMAZ. Yukarıdaki ön-kayıt metni (thesis/horizon/grid/kill)
+# olduğu gibi durur; her revizyon NE ÖLÇÜLDÜ + NEDEN DEĞİŞTİ ile ayrı bir girdidir.
+# =================================================================================================
+revizyonlar:
+  - id: "EXE-2026-001-R1"
+    tarih: "2026-08-07"
+    alan: "horizon → TIF"
+    degisim: "TIF=DAY → TIF=GTC (broker.ENTRY_TIF; ENTRY_LAW_VERSION E1-v1 → E1-v2)"
+    k_etkisi: "YOK — TIF kart `parameter_grid`inde HİÇ olmadı (grid: limit_offset × gap_davranisi,
+      3×2). Bu bir grid noktası eklemesi değil, bir EMNİYET SINIRI düzeltmesidir; K defterine
+      sayılmaz ve kill_criteria'ya DOKUNULMADI."
+    ne_olculdu: >
+      Canlı A1 hesabı, 2026-08-06 20:00-20:02Z: dört motor pozisyonunun koruma bacakları öldü —
+      `limit sell` EXPIRED + OCO kardeşi `stop sell` CANCELED. Hiçbir motor çağrısı iptal etmedi;
+      Alpaca'nın gün-sonu sona-ermesi öldürdü. Dört pozisyon gece boyunca ÇIPLAK kaldı. Ertesi gün
+      broker'da 5 açık pozisyon / 0 açık emir ölçüldü, `portfolio.json` ise dördü için hâlâ stop
+      BEYAN EDİYORDU (defter ile broker ayrıştı, hiçbir dedektör görmedi — `reconcile_broker_state`
+      o gece 4 MIRROR_DRIFT alarmı bastı, hepsi ADET sapması).
+    kok_neden: >
+      Alpaca bracket'ında `time_in_force` alanı TEKTİR ve emrin TAMAMINA (parent + TP + SL)
+      uygulanır. `broker.ENTRY_TIF="day"` yalnız GİRİŞ bacağını düşünerek seçilmişti, ama aynı
+      alan koruma bacaklarının da ömrünü belirliyordu. Kartın kendi metni bu boşluğun kanıtıdır:
+      `horizon` satırı yalnız "giriş emri"ni konuşur, ÇIKIŞ bacağının TIF'i bu kartta HİÇ
+      tartışılmadı — yani korumanın ömrü hiç kimsenin verdiği bir karar değil, giriş kararının
+      beyan edilmemiş yan etkisiydi. Sonuç, deponun KENDİ yazılı yasasının ihlaliydi:
+      `alpaca.cancel_open_entries` belgesi "dolmuş parent'lara DOKUNULMAZ — koruyucu bacakları
+      canlı pozisyonu koruyor; onları iptal etmek pozisyonu çıplak bırakır (yasak)" der; `tif=day`
+      tam o yasağı her gece broker üzerinden uyguluyordu.
+    eski_gerekce_hukmu: >
+      "GTC bir sonraki seansa BAYAT TETİK taşır (sinyal barı kapanışına sabitlenmiş bir seviye iki
+      gün sonra artık o kurulumu temsil etmez)" — GİRİŞ bacağı için ÇÜRÜTÜLMEDİ, geçerliliğini
+      koruyor. Değişen, o riskin ARACIdır: bayat tetik artık TIF'e havale edilmiyor.
+    yeni_mekanizma: >
+      (1) `broker.ENTRY_TIF="gtc"` ve `ENTRY_TIF_ALLOWED=("gtc",)` — "day" beyaz-listeden
+      ÇIKARILDI (unutulmadı, kaldırıldı): tek TIF alanı olduğu sürece `execution_v2.tif: day`
+      yazan bir yapılandırma korumayı yeniden seans-ömürlü yapardı; korumanın ömrü bir arama
+      değişkeni değildir. (2) Bayat tetik koruması `loop.daily_cycle`a taşındı: her turda, o
+      seansın dolum kararları verildikten SONRA ve yeni planlar silahlanmadan ÖNCE
+      `alpaca.cancel_open_entries()` çağrılır (olay: `mirror_stale_entries_cancelled`, HALT
+      yolunun `mirror_entries_cancelled` olayından AYRI ad). O yol yalnız ENGINE_COID_PREFIX
+      önekli ve yalnız `filled_qty=0` emirlere dokunur; dolmuş parent'ın koruma bacaklarına ASLA.
+      Yani DAY'in körlemesine yaptığı işin yalnız DOĞRU YARISI yapılıyor.
+    olcum_etkisi: >
+      DoD ölçütleri (a)/(b)/(c) ve kill_criteria DEĞİŞMEDİ. E2 defteri (`entry_execution.jsonl`)
+      `tif` alanını her gönderimde yazdığı için yeni yasanın yürürlüğü kayıttan doğrulanabilir;
+      `dolmama_orani` paydası bu revizyondan etkilenmez (giriş emrinin YAŞAM SÜRESİ değişti, dolum
+      yasası — limit tavanı ve gap davranışı — aynen duruyor). AÇIK İZLEME KALEMİ: GTC girişin
+      gün-içi bekleme penceresi denetim kaydındaki "dolum-penceresi asimetrisi" bulgusunu
+      genişletebilir; günlük iptal kadansı o pencereyi bir seansla SINIRLAR, ama asimetrinin
+      kendisi hâlâ ayrı bir ölçüm kalemidir.
+    kapsam_disi_beyan: >
+      Bu revizyon 2026-08-06 gecesi çıplak kalan pozisyonları KORUMAZ. Onlar için koruma emri
+      göndermek OPERATÖRÜN işidir; hiçbir otomatik yol bu turda emir göndermedi/iptal etmedi.
+    yurulukteki_yapilandirma_notu: >
+      `state/goal.yaml → execution_v2.tif: day` satırı bu revizyondan sonra ÖLÜ METİNDİR (yasa onu
+      kabul etmez, `gtc`ye düşer). Dosyanın yalan söylememesi için satırın temizlenmesi ayrı bir
+      SSoT kalemidir (state/goal.yaml git-izli, dagit [1b] canlıya kopyalar) — bu turda
+      DOKUNULMADI.

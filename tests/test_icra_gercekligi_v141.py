@@ -123,7 +123,11 @@ def test_e1_gap_path_1_normal_trigger_is_a_stop_limit(sandbox_state):
     # limitin o dalda nasıl kurulduğu (operatör kararı 2026-08-03 yalnız tavanları değiştirdi).
     d = BR.entry_order_decision(100.0, ref_price=99.0, atr=1.0, cfg=BR.entry_law(KART_YASASI))
     assert d["mode"] == "stop_limit" and d["olay"] == BR.EV_STOP_LIMIT
-    assert d["gap_at_submit"] is False and d["limit"] == 100.5 and d["tif"] == "day"
+    # TIF: "day" → "gtc" (E1-v2, 2026-08-07). Bracket'ta `time_in_force` TEKTİR ve KORUMA
+    # bacaklarına da uygulanır; DAY, dolmuş pozisyonların stop'unu her seans kapanışında
+    # öldürüyordu (ölçüm: 2026-08-06 20:00-20:02Z, dört pozisyon çıplak). Kart revizyonu
+    # EXE-2026-001-R1. Bu satırın ölçtüğü DAL SEÇİMİ değişmedi.
+    assert d["gap_at_submit"] is False and d["limit"] == 100.5 and d["tif"] == "gtc"
 
 
 def test_e1_gap_path_2_price_above_trigger_becomes_a_marketable_limit(sandbox_state):
