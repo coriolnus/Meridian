@@ -27,6 +27,34 @@ meridian.ORNEK-ALAN-ADIN.com {
 	tls senin@eposta.com
 
 	# --- Güvenlik başlıkları ---
+	#
+	# ############################################################################################
+	# ##  BU BLOĞUN BÜYÜK KISMI ARTIK ATIL — POLİTİKA `meridian/api.py`'DE (v203, 2026-08-07).  ##
+	# ############################################################################################
+	#
+	# NE OLDU: bu başlıklar YALNIZ burada tanımlıydı ve **A1'de Caddy hiç koşmuyor**
+	# (`systemctl is-active caddy` → inactive; `/etc/caddy/Caddyfile` YOK). Ölçüm:
+	# `curl -D- http://127.0.0.1:8080/` → HİÇBİR güvenlik başlığı yok. Yani "CSP-self yasası" diye
+	# anılan şey üretimde hiçbir başlıkla zorlanmıyordu; testler doğruydu, yasa yoktu.
+	#
+	# NEREYE GİTTİ: `meridian/api.py` → `GUVENLIK_BASLIKLARI` sözlüğü + `GuvenlikBasliklariMiddleware`.
+	# Gerekçenin tamamı (hangi direktif neden öyle, hangi borç açık) oraya SADAKATLE taşındı.
+	# Uygulama katmanı, vekilin var olup olmamasından bağımsız olarak her isteğe aynı yasayı yazar.
+	#
+	# NEDEN YORUMA ALINDI, NEDEN SİLİNMEDİ: Caddy'de `header <ad> <değer>` bir SET'tir — vekil
+	# etkinleştirilseydi buradaki kopya uygulamanınkini SESSİZCE EZERDİ, ve iki canlı tanım zamanla
+	# ayrışan iki yasa demektir (bu deponun baskın hata deseni). Yoruma alınmış hâlleri ise ATIL bir
+	# REFERANS kopyasıdır: `tests/test_guvenlik_basliklari_v203.py` bu satırlardaki değerleri
+	# api.py'deki sözlükle DİZE EŞİTLİĞİYLE karşılaştırır, yani sürüklenme testte kırılır.
+	#
+	# CADDY BİR GÜN DEVREYE ALINIRSA: aşağıdaki beş satırı AÇMA. Uygulamanın yazdığı başlıklar
+	# `reverse_proxy` üzerinden olduğu gibi geçer; açmak yalnızca ikinci bir sürüklenme kaynağı ve
+	# sessiz bir zayıflatma ihtimali ekler. Değiştirilecek şey varsa api.py'deki sözlüktedir.
+	#
+	# BURADA KALAN İKİ KALEM VEKİLE AİT ve bilerek AÇIK: `Strict-Transport-Security` yalnız TLS'i
+	# sonlandıran katmanın bilebileceği bir şeydir (uygulama loopback'te düz HTTP konuşur; orada
+	# gönderilen HSTS'i tarayıcı zaten yok sayar), `-Server` ise vekilden geçen yanıttan sunucu
+	# parmak izini siler.
 	header {
 		# HSTS: tarayıcı bu alan adına bir daha ASLA http ile gitmesin. preload YOK —
 		# preload listesine girmek geri alınamaz ve tek operatörlü bir kurulumda gereksiz risk.
@@ -75,18 +103,19 @@ meridian.ORNEK-ALAN-ADIN.com {
 		# BU İKİ HOST'U GERİ EKLEME. Eklemek zorunda kaldıysan bir yere `<link>`li bir CDN yazı
 		# tipi geri gelmiş demektir; çözüm başlığı gevşetmek değil, dosyayı `meridian/web/fonts/`
 		# altına koymak ve `@font-face`i yerel yolla yazmak. Çivi: tests/test_yazitipi_v201.py.
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		# ATIL REFERANS — canlı tanım `meridian/api.py::GUVENLIK_BASLIKLARI`. AÇMA (yukarıdaki not).
+		# Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 		# Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler. Görünmez bir iframe
 		# içinde başka bir sayfaya gömülmeleri gerçek bir senaryo.
-		X-Frame-Options "DENY"
-		X-Content-Type-Options "nosniff"
+		# X-Frame-Options "DENY"
+		# X-Content-Type-Options "nosniff"
 
 		# Referrer: URL'lerde artık sır yok (?token= kaldırıldı) ama yol adları da bilgi taşır.
-		Referrer-Policy "no-referrer"
+		# Referrer-Policy "no-referrer"
 
 		# Tarayıcı yetenekleri: panonun hiçbirine ihtiyacı yok.
-		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+		# Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
 
 		# Sunucu parmak izini azalt
 		-Server

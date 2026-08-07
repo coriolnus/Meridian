@@ -89,8 +89,23 @@ def test_p1c_public_get_allowlist():
     # ve sunulan ad kümesi KAYNAKTA LİTERALDİR (`api._FONT_DOSYALARI`, iki ad) — yol parametresi
     # bir dizin gezintisi yüzeyi DEĞİL, kapalı bir izin listesidir. Çivileri:
     # tests/test_font_rotasi_v202.py (dizin-dışı erişim matrisi + montaj yasağı).
+    # /halt.js (2026-08-07, v203 — güvenlik başlıkları uygulama katmanına taşındı): `/halt` sayfası
+    # ZATEN bu listede ve yetkisiz; bu satır o sayfanın KENDİ betiğidir, yani MARUZİYET BİREBİR
+    # AYNI — değişen tek şey kodun hangi yanıtta durduğu. Kod bir tur öncesine kadar `/halt`
+    # gövdesinin İÇİNDE, aynı yetkisiz yanıtta, satır içi bir `<script>` olarak duruyordu.
+    # ÇIKARMA SEBEBİ GÜVENLİK ve tam olarak `/landing.js` + `/workflow.js` satırlarındaki sebep:
+    # CSP artık GERÇEKTEN gönderiliyor (`meridian/api.py::GUVENLIK_BASLIKLARI`; daha önce yalnız
+    # deploy/Caddyfile'da tanımlıydı ve A1'de Caddy koşmadığı için hiç zorlanmıyordu) ve
+    # `script-src 'self'` gövdeli blokları BLOKLAR — bırakılsaydı ACİL DURDURMA düğmesi canlıda
+    # sessizce ölürdü (sayfa çizilir, tıklanır, hiçbir şey olmaz).
+    # YETKİ İSTEYEMEZ: `/halt` telefon için, oturum düşmüşken açılabilmesi gereken panik yüzeyidir;
+    # betiği 401 alsaydı sayfa tam da ihtiyaç anında ölü açılırdı. Yazma yetkisi zaten `/api/halt`
+    # ucundadır (`_auth`lı POST) — bu betik yalnız o uca fetch atar.
+    # SIZDIRDIĞI VERİ: yok. State okumaz, sorgu almaz, sır TAŞIMAZ (token'ı çalışma anında
+    # tarayıcıdaki URL'den okur); gövdesi `api._HALT_JS` sabitidir.
+    # Çivileri: tests/test_guvenlik_basliklari_v203.py (Ç5 — gövdeli script yok + betik sunuluyor).
     allow = {"/", "/app.js", "/theme.js", "/landing.js", "/workflow.js", "/palette.js",
-             "/landing", "/workflow", "/healthz", "/metrics", "/halt",
+             "/landing", "/workflow", "/healthz", "/metrics", "/halt", "/halt.js",
              "/api/public/summary", "/fonts/{ad}"} | set(api.KIMLIK_UCLARI)
     public = {r["path"] for r in _routes() if r["verb"] == "GET" and not r["authed"]}
     assert public <= allow, f"beklenmedik yetkisiz GET: {public - allow}"

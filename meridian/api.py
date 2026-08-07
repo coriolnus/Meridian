@@ -219,6 +219,133 @@ if _CORS:
                  detail="CORS enabled but MERIDIAN_DASH_TOKEN unset — API is cross-origin AND unauthenticated")
 
 
+# ---- GÜVENLİK BAŞLIKLARI — UYGULAMA KATMANI (v203, 2026-08-07) --------------------------------
+# ÖLÇÜLEN BOŞLUK, varsayılan DEĞİL. Canlı A1'de `curl -D- http://127.0.0.1:8080/` HİÇBİR güvenlik
+# başlığı döndürmüyordu: ne `Content-Security-Policy`, ne `X-Frame-Options`, ne
+# `X-Content-Type-Options`. Sebep tek cümlede: bu başlıklar YALNIZ `deploy/Caddyfile`'da tanımlıydı
+# ve **A1'de Caddy koşmuyor** (`systemctl is-active caddy` → inactive; `/etc/caddy/Caddyfile` yok).
+# Yani depo boyunca "CSP-self yasası" diye anılan — ve ÜÇ ayrı test dosyasının (test_web_csp_uyum,
+# test_yazitipi_v201, test_font_rotasi_v202) gerekçesini dayadığı — şey üretimde hiçbir başlıkla
+# ZORLANMIYORDU. Testler doğruydu; yasa yoktu. Bu deponun en sık kusur sınıfı: kurulu ≠ çalışır.
+#
+# NEDEN UYGULAMA KATMANI TEK KAYNAK (ve vekil değil): ters vekil bir DAĞITIM TERCİHİDİR — bugün
+# yok, yarın Caddy olur, öbür gün nginx ya da bir yük dengeleyici olur. Uygulamanın güvenlik
+# duruşu o tercihten BAĞIMSIZ olmalı: başlığı uygulamanın kendisi yazarsa loopback'ten, SSH
+# tünelinden, docker-compose'tan, `serve.sh`ten ve bir gün vekilden gelen her istek AYNI politikayı
+# görür. Vekile bağlı bir yasa, vekil olmayan her ortamda SESSİZCE yoktur — ve bugün tam olarak o
+# durumdayız. Vekilde kalması GEREKEN iki kalem `deploy/Caddyfile`'da AÇIK kaldı, gerekçesi orada:
+# `Strict-Transport-Security` (TLS'i sonlandıran katmanın bilgisi; düz HTTP'de tarayıcı zaten yok
+# sayar) ve `-Server` (aşağıda "AÇIK BORÇ" notu).
+#
+# ÇAKIŞMA/ZAYIFLATMA: Caddy'nin `header <ad> <değer>` biçimi SET'tir, yani üstteki vekil kopyası
+# uygulamanınkini SESSİZCE değiştirir. İki canlı tanım, zamanla ayrışan iki yasa demektir. Bu
+# yüzden Caddyfile'daki beş satır YORUMA ALINDI: değerleri ATIL bir REFERANS kopyası olarak durur
+# (gerekçe metniyle birlikte) ve `tests/test_guvenlik_basliklari_v203.py` iki kaynağı DİZE
+# EŞİTLİĞİYLE çiviler — biri değişip öteki kalırsa test kırılır. (Yan kazanç: Caddyfile'ı okuyan
+# ESKİ iki bekçi — test_web_csp_uyum ve test_yazitipi_v201 — artık ATIL kopyayı ölçüyor, yani tek
+# başlarına api.py'nin gevşemesini göremezlerdi; o boşluğu kapatan şey bu dize-eşitliği kapısıdır.)
+#
+# ---- CSP: DİREKTİFLER CADDYFILE'DAN SADAKATLE TAŞINDI, HİÇBİRİ UYDURULMADI ----
+# `script-src 'self'` — GERÇEKTEN karşılanıyor (2026-08-01'de iki arıza kapatıldı: landing.html +
+#   workflow.html satır içi `<script>` taşıyordu → landing.js/workflow.js'e alındı; app.js'te 34 +
+#   index.html'de 6 = 40 satır içi olay özniteliği vardı → olay delegasyonuna çevrildi, `data-act`
+#   KAYITLI izin listesinden çözülür). BU DİREKTİFE `'unsafe-inline'` GERİ EKLENMEZ; eklemek
+#   zorunda kalındıysa bir yere satır içi işleyici geri gelmiş demektir ve çözüm eylemi kaydetmek.
+#   Çivi: tests/test_web_csp_uyum.py.
+# `style-src 'self' 'unsafe-inline'` — AYRI ve hâlâ AÇIK bir borç: app.js DOM'u satır içi stil
+#   taşıyan şablon dizgileriyle üretiyor; kaldırmak app.js'in yeniden yazılması demek. Beyanlıdır,
+#   gizlenmez.
+# `font-src 'self'` — D4 sertleştirmesi (2026-08-07): `fonts.googleapis.com` ve `fonts.gstatic.com`
+#   DÜŞTÜ, çünkü Recursive artık kendi-barındırılıyor (`meridian/web/fonts/*.woff2`, 79,3 KB, aynı
+#   origin). BU İKİ HOST GERİ EKLENMEZ; bir CDN yazı tipi geri geldiyse çözüm başlığı gevşetmek
+#   değil dosyayı `meridian/web/fonts/` altına koymaktır. Çivi: tests/test_yazitipi_v201.py.
+#
+# HANGİ YANITLARA GİDER — HEPSİNE, ve bu bir sadakat kararı: Caddy'nin `header` bloğu içerik tipine
+# BAKMAZ, o sunucudan çıkan her yanıta yazar. Aynısını yapmak "HTML mi?" diye dallanan bir sezgiden
+# daha az sürprizlidir (bir yeni rota yanlış `media_type` verdiğinde politikayı kaybetmez). JSON,
+# CSV, `font/woff2` ve gövdesiz 304'ler de başlığı alır: CSP bir BELGE bağlamı politikasıdır,
+# belge olmayan yanıtlarda tarayıcı onu zaten yok sayar — yani maliyet birkaç yüz bayt, kazanç tek
+# yasa. `X-Content-Type-Options: nosniff` ise API yanıtlarında BAĞIMSIZ olarak değerlidir.
+#
+# AÇIK BORÇ — `-Server` TAŞINMADI (YASA 4: sessiz yutma yok). Caddy'nin `-Server`ı yanıttan sunucu
+# parmak izini siler; bizim yanıtlarımızda o başlığı ASGI SUNUCUSU yazıyor (`server: uvicorn`),
+# uygulama değil. Middleware'den silmek mümkün ama yanlış katman: uvicorn'un kendi anahtarı var
+# (`server_header=False` / `--no-server-header`) ve doğru yer `serve.sh`/systemd birimidir — ikisi
+# de bu turun yazma sınırının DIŞINDA. Yarım taşımak yerine adı konularak açık bırakıldı.
+CSP_POLITIKASI = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; "
+    "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
+    "form-action 'self'"
+)
+
+# TEK KAYNAK. `deploy/Caddyfile`'daki karşılıkları yorumdadır ve testle bu sözlüğe çivilidir.
+GUVENLIK_BASLIKLARI: dict[str, str] = {
+    "Content-Security-Policy": CSP_POLITIKASI,
+    # Tıklama hırsızlığı: HALT ve Flatten tek tıkla iş gören düğmeler; görünmez bir iframe içinde
+    # başka bir sayfaya gömülmeleri gerçek bir senaryo. `frame-ancestors 'none'` modern tarayıcıda
+    # zaten yeter, XFO eski olanlar için yanında durur (ikisi çelişmiyor, aynı şeyi söylüyorlar).
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    # URL'lerde artık sır yok (`?token=` 2026-07-28'de kaldırıldı) ama yol adları da bilgi taşır.
+    "Referrer-Policy": "no-referrer",
+    # Tarayıcı yetenekleri: panonun hiçbirine ihtiyacı yok.
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=()",
+}
+
+_GB_BAYT: list[tuple[bytes, bytes]] = [
+    (ad.lower().encode("latin-1"), deger.encode("latin-1"))
+    for ad, deger in GUVENLIK_BASLIKLARI.items()
+]
+_GB_ADLAR: frozenset[bytes] = frozenset(ad for ad, _ in _GB_BAYT)
+
+
+class GuvenlikBasliklariMiddleware:
+    """Her HTTP yanıtına `GUVENLIK_BASLIKLARI`nı yazan SAF ASGI middleware'i.
+
+    NEDEN `@app.middleware("http")` (BaseHTTPMiddleware) DEĞİL: o katman yanıtı bir
+    `StreamingResponse`a sarar. Bu dosyanın statik yolu tam da gövde-akışı ve gövdesizlik
+    üzerine kurulu — `FileResponse` (app.js 518 KB, iki `.woff2`) ve `Response(status_code=304)`.
+    Saf ASGI sarıcısı `http.response.start` mesajının BAŞLIK LİSTESİNE dokunur, gövdeye HİÇ
+    dokunmaz: ETag pazarlığı, 304'ün gövdesizliği ve `Content-Length` aynen korunur.
+
+    SET semantiği (ekle-eğer-yoksa DEĞİL): Caddy'nin `header` yönergesi de SET'tir, yani aynı
+    davranış. Sonucu: hiçbir rota kendi yanıtına daha GEVŞEK bir politika yazarak buradaki yasayı
+    delemez. Bu bir kısıt değil, kaynağın TEK olmasının ta kendisi.
+
+    KAPSAM SINIRI, dürüstçe ve ÖLÇÜLEREK (varsayılmadı — starlette 1.3.1'de üç yollu bir sonda
+    koşuldu): Starlette `ServerErrorMiddleware`i kullanıcı middleware yığınının DIŞINDA kurar
+    (`build_middleware_stack`), yani YAKALANMAMIŞ bir istisnanın ürettiği çıplak 500 bu sarıcıdan
+    GEÇMEZ. Ölçüm: normal 200 → CSP VAR · `HTTPException` (418) → CSP VAR · `raise RuntimeError`
+    → 500, CSP YOK. Yani `HTTPException` yolları (401/404/detaylı 500) kapsamdadır; kapsam dışı
+    kalan tek şey çerçevenin kendi `Internal Server Error` yanıtıdır — sabit metin, `text/plain`,
+    hiç kullanıcı verisi taşımaz, yani kaçırılan başlığın orada somut bir saldırı yüzeyi yoktur.
+    Kapatmanın tek yolu ASGI uygulamasını dışarıdan sarmaktır (`uvicorn`a verilen nesneyi
+    değiştirmek) ve o, `serve.sh`/systemd katmanının kalemidir. Çerçeve kısıtıdır, gizlenmiyor.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":       # lifespan/websocket: başlık kavramı yok
+            await self.app(scope, receive, send)
+            return
+
+        async def _send(mesaj):
+            if mesaj["type"] == "http.response.start":
+                mesaj["headers"] = [
+                    (ad, deger) for ad, deger in mesaj["headers"] if ad.lower() not in _GB_ADLAR
+                ] + _GB_BAYT
+            await send(mesaj)
+
+        await self.app(scope, receive, _send)
+
+
+# CORS'tan SONRA eklenir → yığında ONDAN DIŞTA kalır (Starlette `add_middleware`i başa ekler ve
+# listeyi ters kurar). Sonuç: CORS'un kendi kısa-devre yaptığı preflight yanıtları da başlığı alır.
+app.add_middleware(GuvenlikBasliklariMiddleware)
+
+
 def _autostart():
     """When the operator opens the app locally (serve.sh sets the flags), bring the Hermes standby brain
     AND the paper-advance scheduler up automatically. Both off by default so tests/imports never spawn
@@ -3567,23 +3694,62 @@ def api_alpaca_close_all(request: Request, confirm: str = ""):
 
 
 # ---------- Batch N: ops & UX ----------
+# ---- /halt SATIR İÇİ BETİĞİ DIŞARI ALINDI (v203, 2026-08-07) ---------------------------------
+# ÖLÇÜLEN VE KAPATILAN GERİLEME. Bu sayfa gövdeli bir `<script>` taşıyordu ve `script-src 'self'`
+# onu — `<script src>` olmayan HER bloğu — BLOKLAR. Başlık bugüne dek hiçbir yerde zorlanmadığı
+# için (Caddy koşmuyor; yukarıdaki "GÜVENLİK BAŞLIKLARI" notu) arıza görünmüyordu; politikayı
+# uygulama katmanına almak onu ANINDA görünür kılardı: sayfa çizilir, dev kırmızı düğme durur,
+# ve TIKLAYINCA HİÇBİR ŞEY OLMAZ. Acil durdurma yüzeyinde sessizce ölü bir düğme, bu depoda
+# üretilebilecek en kötü tek arızadır — panonun geri kalanı ölse "pano bozuk" denir, burada
+# operatör "durdurdum" sanır.
+#
+# İKİ YOL VARDI ve seçilmeyeni de yazılı kalsın: (a) /halt'a CSP'yi `'sha256-…'` kaynağıyla
+# genişleterek göndermek — `'unsafe-inline'` değil, yani sözleşmeyi ihlal etmezdi, AMA o sayfayı
+# ötekilerden AYRI bir politikaya bağlardı: iki politika, zamanla ayrışan iki yasa, ve "birebir
+# Caddyfile" ölçümü tam da orada anlamını yitirirdi. (b) betiği aynı-origin bir rotaya almak —
+# `script-src 'self'`i GERÇEKTEN karşılamak. (b) seçildi; bu, landing.html ve workflow.html için
+# 2026-08-01'de verilen kararın ve tests/test_web_csp_uyum.py'nin söylediğinin AYNISI.
+#
+# NEDEN DOSYA DEĞİL SABİT: `meridian/web/` altına yeni bir üretim dosyası bu turun yazma sınırının
+# dışında; ayrıca sayfanın kendisi de bu dosyada üretiliyor — HTML burada, betiği orada olsaydı
+# ikisi ayrı yerde bayatlayabilirdi. `_statik`in disk-bağlı ETag/304 makinesi burada YOK ve
+# taklit de edilmedi (600 baytlık bir sabit için ikinci bir önbellek yasası yazmak, kazandığından
+# çok sürükleme üretir); `_NOCACHE` HTML'in kendisiyle aynıdır, yani ikisi birlikte bayatlar.
+_HALT_JS = """const t=new URLSearchParams(location.search).get('token');const H=t?{'x-meridian-token':t}:{};
+async function hit(p){document.getElementById('s').textContent='...';const r=await fetch(p,{method:'POST',headers:H});
+document.getElementById('s').textContent=r.ok?(p.includes('resume')?'DEVAM edildi':'DURDURULDU'):'hata '+r.status;
+const b=document.getElementById('b');if(p.includes('halt')){b.textContent='▶ DEVAM';b.className='g';b.onclick=()=>hit('/api/resume')}
+else{b.textContent='■ HALT';b.className='';b.onclick=()=>hit('/api/halt')}}
+document.getElementById('b').onclick=()=>hit('/api/halt');"""
+
+
+@app.get("/halt.js")
+def mobile_halt_js():
+    """`/halt` sayfasının betiği — aynı origin, yani `script-src 'self'` altında ÇALIŞIR.
+
+    `/halt` gibi yetkisizdir ve olması gereken de budur: betiğin kendisi bir sır taşımaz (token'ı
+    çalışma anında sayfanın URL'inden okur), ve arkasına bir kapı konsaydı acil durdurma sayfası
+    kimlik doğrulamadan önce ölü açılırdı."""
+    return PlainTextResponse(_HALT_JS, media_type="application/javascript", headers=_NOCACHE)
+
+
 @app.get("/halt", response_class=HTMLResponse)
 def mobile_halt():
-    """#44 — a standalone, phone-friendly panic page. One giant button → POST /api/halt. Self-contained;
-    reads the token from ?token= so it works over the tunnel. No dependency on the SPA."""
+    """#44 — a standalone, phone-friendly panic page. One giant button → POST /api/halt.
+    Reads the token from ?token= so it works over the tunnel. No dependency on the SPA.
+
+    "Self-contained" ARTIK TAM DOĞRU DEĞİL ve cümle bu yüzden düzeltildi (v203): betik
+    `/halt.js`ten gelir. Bağımlılık AYNI ORIGIN'de, aynı süreçte, aynı dosyada üretilen tek bir
+    rotadır — SPA'ya, diske ya da bir dış host'a bağlanmaz — ama "hiçbir şey istemez" demek
+    yanlış olurdu: o rota düşerse düğme ölür (çivisi tests/test_guvenlik_basliklari_v203.py Ç5)."""
     return HTMLResponse("""<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Meridian — HALT</title><style>body{margin:0;background:#0b0b0f;color:#eee;font-family:system-ui;
 display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:24px}
 button{width:78vw;max-width:420px;height:34vh;border:none;border-radius:24px;font-size:8vw;font-weight:800;
 color:#fff;background:#c0362c;box-shadow:0 8px 40px rgba(192,54,44,.4)}button:active{transform:scale(.97)}
 #s{font-size:16px;color:#9aa}.g{background:#1c7a3f!important}</style>
-<h2>Meridian · acil durdur</h2><button id=b>■ HALT</button><div id=s>hazır</div><script>
-const t=new URLSearchParams(location.search).get('token');const H=t?{'x-meridian-token':t}:{};
-async function hit(p){document.getElementById('s').textContent='...';const r=await fetch(p,{method:'POST',headers:H});
-document.getElementById('s').textContent=r.ok?(p.includes('resume')?'DEVAM edildi':'DURDURULDU'):'hata '+r.status;
-const b=document.getElementById('b');if(p.includes('halt')){b.textContent='▶ DEVAM';b.className='g';b.onclick=()=>hit('/api/resume')}
-else{b.textContent='■ HALT';b.className='';b.onclick=()=>hit('/api/halt')}}
-document.getElementById('b').onclick=()=>hit('/api/halt');</script>""", headers=_NOCACHE)
+<h2>Meridian · acil durdur</h2><button id=b>■ HALT</button><div id=s>hazır</div>
+<script src="/halt.js"></script>""", headers=_NOCACHE)
 
 
 @app.get("/api/state/snapshot")
