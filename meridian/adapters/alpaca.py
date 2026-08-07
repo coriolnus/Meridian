@@ -593,6 +593,113 @@ def replace_order_stop(order_id: str, new_stop: float, cur_stop: float | None = 
         return {"ok": False, "detail": f"{type(e).__name__}: {e}"}
 
 
+# ==================================================================================================
+# KORUMANIN YENİDEN KURULMASI (v211) — ÇIPLAK KALAN POZİSYONA **OCO**
+# ==================================================================================================
+# NEDEN VAR (canlı vaka, A1 2026-08-07): dört motor pozisyonu broker'da KORUMASIZ duruyor ve açık
+# emir SIFIR. Kök neden ölçüldü — bracket TIF'i emrin TAMAMINA uygulanır, `day` koruma bacaklarını
+# her seans kapanışında öldürüyordu. E1-v2 TIF'i `gtc`ye çekti (d47060b) ama o düzeltme YALNIZ
+# BUNDAN SONRA gönderilen bracket'ları bağlar; hâlihazırda çıplak duran pozisyonlar için bu depoda
+# hiçbir yol yoktu. `watchdog.koruma_report()` (v209) onları GÖRÜYOR ama görmek düzeltmek değildir:
+# bekçi haber verir, dokunmaz. Bu fonksiyon o boşluğun İCRA ucudur.
+#
+# ⚠ NEDEN OCO, NEDEN "İKİ AYRI EMİR" DEĞİL — BU BİR TASARIM TERCİHİ DEĞİL, BİR RİSK YASASI:
+# hesapta `shorting_enabled=true`. Bağsız bir stop + bağsız bir limit gönderilirse hedef dolduğu an
+# pozisyon kapanır ama stop CANLI kalır; fiyat sonradan stop'a inince o stop TETİKLENİR ve elde
+# olmayan hisseyi satar — yani AÇIĞA SATIŞ açar. Ortaya çıkan hâl "korumasız"dan farklı ve daha
+# kötü bir risktir: koruma diye kurulan mekanizmanın kendisi ters yönde bir pozisyon üretir.
+# OCO (one-cancels-other) iki bacağı broker tarafında birbirine bağlar: biri dolduğunda öteki
+# İPTAL edilir. Bu yüzden aşağıdaki gövde `order_class="oco"` ile TEK istek gönderir ve bu modülde
+# iki bacağı ayrı ayrı gönderen bir yol BİLEREK yoktur.
+#
+# TIF `gtc` (E1-v2 yasası): `day` tam da bu vakanın kök nedeniydi. Sabit burada TEKRAR yazılmaz —
+# `broker.PROTECTIVE_TIF` yok, ama `ENTRY_TIF`ten de TÜRETİLMEZ: giriş bacağının TIF'i bilinçli
+# olarak `day` olabilir (bayat tetik yasası, kart EXE-2026-001) ve koruma onu MİRAS ALMAMALIDIR.
+# İki ayrı gerçek, iki ayrı sabit.
+KORUMA_TIF = "gtc"
+# ONAY JETONU — `CLOSE_ALL_CONFIRM` ile aynı gerekçe (A3): hiçbir otomatik yol (döngü, ajan, bekçi)
+# bu kapıdan kazayla geçemez. Jetonu YALNIZ operatörün panodaki tuşu taşır.
+KORUMA_ONAY_JETONU = "KORUMA-KUR"
+
+
+def koruma_coid(symbol: str, when=None) -> str:
+    """Koruma OCO'sunun birleştirme anahtarı — A2 önekini TAŞIR (sahiplik kanıtı, A3).
+
+    DAKİKA ÇÖZÜNÜRLÜĞÜ BİLİNÇLİ ve iki yönlü tartıldı. Alpaca aynı `client_order_id`yi ikinci kez
+    kabul etmez; yani anahtar ne kadar kaba olursa broker tarafında o kadar güçlü bir İKİNCİ
+    idempotans katmanı doğar. Gün çözünürlüğü seçilseydi o katman en güçlü hâline gelirdi — ama
+    aynı gün içinde koruma bir kez iptal edilip yeniden kurulmak istendiğinde yol KAPANIRDI ve bu,
+    tam da "korumayı yeniden kuran yol" diye yazılan mekanizmanın kendi amacını yemesi olurdu.
+    Dakika, çift-tıklamayı (asıl kaza sınıfı) yakalar, meşru yeniden kurmayı engellemez.
+    BİRİNCİL idempotans bu değildir: o, gönderim öncesi canlı koruma denetimidir (api katmanı)."""
+    stamp = (when or _dt.datetime.now(_dt.timezone.utc)).strftime("%Y%m%d-%H%M")
+    return f"{ENGINE_COID_PREFIX}KORUMA-{stamp}-{str(symbol).upper()}"
+
+
+def submit_protective_oco(symbol: str, qty: float, stop_loss: float, take_profit: float,
+                          client_order_id: str | None = None) -> dict:
+    """Çıplak bir UZUN pozisyona koruma kur: TEK OCO satış emri (stop bacağı + hedef bacağı).
+
+    ÇAĞIRANIN GETİRMESİ GEREKENLER ve bu sınırın KENDİ reddettikleri (kural çağıranda değil
+    SINIRDA yaşasın diye — `replace_order_stop`un A4 dersi):
+      * `qty` > 0 ve BROKER'ın söylediği adet olmalı. Bu fonksiyon adedi kendisi ölçmez, ama
+        0/negatif/biçimsiz bir adedi de göndermez.
+      * `stop_loss` < `take_profit`. Ters ya da eşit seviyeler bir koruma değil, anında dolacak
+        bir emirdir; Alpaca da reddederdi — ama reddi burada ÖLÇÜLÜ bir gerekçeyle almak, ağa
+        çıkıp sağlayıcı diliyle bir hata metni toplamaktan iyidir.
+      * `client_order_id` A2 önekini TAŞIMAK ZORUNDA. Öneksiz bir emir mutabakat için GÖRÜNMEZDİR:
+        dolduğunda 'motor yetimi' bile sayılmaz, operatörün kendi emri gibi 'external' altına
+        düşer (A3 sahipliği kaybolur). `submit_bracket` bu durumda yalnız UYARIYOR; burada
+        REDDEDİLİR, çünkü bu yol operatör onayıyla tek seferlik çalışır ve bir sonraki turda
+        "kim gönderdi?" sorusunun cevabı yalnız bu önektir.
+
+    Dönüş: {ok, order|detail, reachable}. `reachable=False` YALNIZ taşıma düştüğünde — 4xx bir
+    REDdir ve broker ULAŞILABİLİRdir (`submit_bracket` ile aynı ayrım; çağıran bunları farklı
+    raporlar, biri "gitmedi", öteki "reddedildi")."""
+    sym = str(symbol or "").strip().upper()
+    if not sym:
+        return {"ok": False, "detail": "sembol verilmedi", "reachable": True}
+    try:
+        q = abs(float(qty))
+        sl, tp = float(stop_loss), float(take_profit)
+    except (TypeError, ValueError):  # sessiz-yutma: istisna SESSİZCE yutulmaz, REDDE çevrilir — üç ham değer gerekçede aynen döner ve emir GİTMEZ; ikinci bir uyarı kanalı, çağıranın zaten okuduğu `detail`i tekrarlardı
+        return {"ok": False, "detail": f"biçimsiz sayı (qty={qty!r} stop={stop_loss!r} "
+                                       f"hedef={take_profit!r})", "reachable": True}
+    if q <= 0:
+        return {"ok": False, "detail": "qty<=0 — BROKER adedi okunamadı; uydurma adet gönderilmez",
+                "reachable": True}
+    if not (sl > 0 and tp > 0):
+        return {"ok": False, "detail": f"seviye ≤0 (stop={sl} hedef={tp})", "reachable": True}
+    if sl >= tp:
+        return {"ok": False, "detail": f"stop hedefin ÜSTÜNDE/EŞİT (stop={sl} hedef={tp}) — bu bir "
+                                       f"koruma değil, anında dolacak bir emir", "reachable": True}
+    coid = str(client_order_id or koruma_coid(sym))
+    if not coid.startswith(ENGINE_COID_PREFIX):
+        return {"ok": False, "reachable": True,
+                "detail": f"client_order_id '{ENGINE_COID_PREFIX}' önekini taşımıyor ({coid[:40]}) — "
+                          f"sahipliği kanıtlanamayan emir gönderilmez (A2/A3)"}
+    body = {"symbol": sym, "qty": str(int(q) if float(q).is_integer() else q), "side": "sell",
+            "type": "limit", "time_in_force": KORUMA_TIF, "order_class": "oco",
+            "take_profit": {"limit_price": round(tp, 2)},
+            "stop_loss": {"stop_price": round(sl, 2)},
+            "client_order_id": coid}
+    try:
+        r = httpx.post(f"{_paper_base()}/v2/orders", headers=_headers(), json=body, timeout=15)
+        _note(True)                      # cevap geldi: 4xx bile olsa broker ULAŞILABİLİR
+        if r.status_code >= 400:
+            try:
+                det = r.json().get("message", f"HTTP {r.status_code}")
+            except Exception:  # sessiz-yutma: gövde JSON değil (sağlayıcı HTML/boş dönebilir); durum kodu tek başına yeterli kanıttır
+                det = f"HTTP {r.status_code}"
+            return {"ok": False, "detail": str(det)[:200], "reachable": True, "coid": coid}
+        return {"ok": True, "order": r.json(), "coid": coid, "reachable": True}
+    except Exception as e:
+        # ULAŞILAMADI ≠ REDDEDİLDİ: emir uca varmış ve kabul edilmiş DE olabilir. Çağıran bu satırı
+        # "gönderilmedi" diye raporlarsa sessizce yalan söyler — ölçülen tek şey CEVABIN alınamadığı.
+        _note(False, f"submit_protective_oco: {type(e).__name__}: {e}")
+        return {"ok": False, "detail": f"{type(e).__name__}: {e}", "reachable": False, "coid": coid}
+
+
 def close_all(confirm: str = "") -> dict:
     """Cancel open orders + flatten all PAPER positions. Operator panic control for the mirror account.
 

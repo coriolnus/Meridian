@@ -879,7 +879,8 @@ const EYLEMLER = new Set([
   "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaSubmit",
   "olayAc",
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "denetimAra", "filterLessons", "go",
-  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod", "mktChip",
+  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod",
+  "korumaKur", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
   "opSoftHalt", "planOnayla", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
   "testKey", "toggleHalt", "toggleKs",
@@ -1772,6 +1773,14 @@ const KART_KAYDI = {
   "mutabakat:icra":     { alan: "karar",   bolum: "mutabakat" },
   "mutabakat:band":     { alan: "karar",   bolum: "mutabakat" },
   "mutabakat:gecegun":  { alan: "karar",   bolum: "mutabakat" },
+  // ---- v211 · KORUMANIN YENİDEN KURULMASI --------------------------------------------------
+  // NEDEN MUTABAKAT MASASI: kartın taşıdığı asıl tuzak bir MUTABAKAT tuzağıdır — iç defterin
+  // adedi ile broker'ın adedi AYRIŞIK ve emir broker'ınkini kullanıyor. "İç defterim brokerinkiyle
+  // aynı mı?" sorusunun evi burasıdır; kartı Kilitler'e koymak onu bir kola çevirir ve ayrışmayı
+  // sorunun sorulduğu yerden koparırdı.
+  // KAPAK ALTINDA AMA GİZLENEMEZ: çıplak pozisyon varken özet bir ROZET taşır, rozet `data-dikkat`
+  // doğurur ve kurucu kartı oturum hafızasını EZEREK açar. Yani kapak yalnız TEMİZ günlerde kapalı.
+  "mutabakat:koruma":   { alan: "karar",   bolum: "mutabakat" },
   // ---- D3-UI · FIRSAT YÜZEYLERİ (C1'in on işi) --------------------------------------------
   // HEPSİ KAPAK ALTINA GİRER VE BU BİLİNÇLİ: on yeni kart, bütçesi zaten aşılmış üç yüzeye
   // ekleniyor. Kapaksız eklemek "ilk bakışta düşen yük"ü on kart büyütmek olurdu — sözleşmenin
@@ -6927,14 +6936,203 @@ function firsatOlgunlasma(sd, hz, ladder, cf) {
 // Emirlerin AYNASI kitabın yanında durur: "iç defterim brokerinkiyle aynı mı?" sorusu, "kitap
 // nerede?" sorusunun ayrılmaz parçasıdır. Gözetim'de dururken operatör sapmayı ancak alarm
 // sayfasına giderek görüyordu — yani pozisyonlara bakarken aynanın hâlini bilmiyordu.
+// ==============================================================================================
+// KORUMANIN YENİDEN KURULMASI (v211) — ÖNERİ KARTI + TURA ÖZEL ONAY KAPISI
+// ----------------------------------------------------------------------------------------------
+// ÖLÇÜLEN BOŞLUK (canlı A1, 2026-08-07): dört motor pozisyonu broker'da KORUMASIZ, açık emir sıfır.
+// `watchdog.koruma_report()` bunu v209'dan beri GÖRÜYOR, panoda üç uç vardı (oku · gir · düzleştir)
+// ve "korumayı yeniden kur" YOKTU. Bu kart o boşluğun operatör tarafıdır: sistem ÖNERİR, insan
+// ONAYLAR, emir ondan sonra çıkar.
+//
+// ⚠ KARTIN ASIL İŞİ BİR TUZAĞI GÖRÜNÜR KILMAK. İç defter (portfolio.json) o gün 33/43/64/54 adet
+// diyordu, broker 22/22/37/25. Emir BROKER adedini kullanır — çünkü defterin adediyle satış emri
+// göndermek ELDE OLMAYAN hisseyi satmaktır ve `shorting_enabled=true` hesapta bu, koruma diye
+// açılmış bir AÇIK POZİSYON demektir. Bu ayrışma ekranda görünmezse operatör yanlış sayıyı doğru
+// sanar; o yüzden hem satır içinde (`defter …`) hem de tablonun üstünde AÇIKÇA yazılır.
+//
+// ONAY KALICI DEĞİL, TURA ÖZEL: düğme `oneri_id` taşır — o an ölçülmüş listenin (sembol/adet/stop/
+// hedef) özeti. Sunucu icra anında listeyi YENİDEN ölçer ve özet tutmazsa emir GÖNDERMEZ. Yani bir
+// onay yalnız GÖRÜLEN dünyayı kapsar; ekranda dört satır varken beşinci doğduysa onay düşer.
+// Kalıcı bir "koruma otomatik kurulsun" anahtarı BİLEREK yoktur: o anahtar, ilk gün verilen onayı
+// yarının bilinmeyen defterine uygulardı.
+let _KORUMA_SON = null;      // en son ÇİZİLEN öneri yükü — onay diyaloğu ekrandakini okur, ağı değil
+let _KORUMA_MSG = "";        // sonuç satırı: `_ALP_MSG` deseni (yeniden çizim onu SİLMEZ)
+// Onay jetonu SUNUCUDA da tanımlı (`alpaca.KORUMA_ONAY_JETONU`) ve KASITLI olarak bir sır DEĞİL:
+// işi sırrı korumak değil, KAZAYI önlemek — jetonsuz bir çağrı kuru koşudur, hiçbir şeye dokunmaz
+// (`close_all`ın CLOSE_ALL_CONFIRM deseni). Gerçek yetki kapısı `_auth` + `oneri_id` eşleşmesidir.
+const KORUMA_ONAY_JETONU = "KORUMA-KUR";
+function korumaMsgYaz(html) {
+  _KORUMA_MSG = html || "";
+  const m = $("koruma-msg");
+  if (m) m.innerHTML = _KORUMA_MSG;
+}
+// Bir öneri satırı. STOP VE HEDEF NÖTR: bir fiyat SEVİYESİ bir sonuç değildir (D1 · T5), koşulsuz
+// kırmızı/yeşil taşıyamaz. Renk yalnız iki yerde doğar ve ikisi de anomali: adet ayrışması ve
+// "gönderilmez" gerekçesi.
+function korumaSatirHTML(s) {
+  const adet = s.broker_adet == null ? '<span class="pm-none">ölçülemedi</span>'
+    : `<b class="mono-num">${trn(s.broker_adet)}</b>`;
+  const defter = s.defter_adet == null
+    ? '<span class="tx3">defter: kayıt yok</span>'
+    : (s.adet_ayrisik ? `<span class="tx3 warn">defter ${trn(s.defter_adet)} ✗</span>`
+                      : `<span class="tx3">defter ${trn(s.defter_adet)}</span>`);
+  const say = (v, d = 2) => v == null ? '<span class="pm-none">—</span>'
+    : `<span class="mono-num">${trn(v, d)}</span>`;
+  const uz = s.stop_uzakligi == null ? '<span class="pm-none">ölçülemedi</span>'
+    : `<span class="mono-num">${pctf(s.stop_uzakligi, 1)}</span>`;
+  const durum = s.gonderilir
+    ? '<span class="tx3">gönderilecek</span>'
+    : `<span class="tx3 warn">${esc(s.neden || "gerekçe bildirilmedi")}</span>`;
+  return `<div class="trow" style="grid-template-columns:62px 108px 76px 76px 76px 84px">
+      <span class="tick">${esc(s.ticker)}</span>
+      <span>${adet} ${defter}</span>
+      ${say(s.stop)}${say(s.hedef)}${say(s.son_fiyat)}${uz}
+    </div><div class="trow" style="grid-template-columns:1fr">${durum}</div>`;
+}
+function korumaKurmaKarti(k) {
+  const bas = ozet => `<div class="card rise"${katKart("mutabakat:koruma")}><h2 class="t">Koruma · çıplak pozisyonlar
+    <span class="tx3" style="font-weight:400">(OCO önerisi — onay operatörde)</span></h2>${ozet}`;
+  // ÖLÇÜLEMEDİ ≠ 0 — iki ayrı dal, iki ayrı cümle. "0 çıplak pozisyon" ile "broker okunamadı"
+  // aynı piksele düşerse sessiz bir arıza temizlik diye okunur (koruma_report'un 3. sözleşmesi).
+  if (!k || k.olculemedi || k.ok == null) {
+    const neden = (k && k.neden) || "uç yanıt vermedi (/api/alpaca/koruma)";
+    return `${bas(kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: `Broker durumu okunamadı — açık pozisyonların koruma hâli BİLİNMİYOR ("korumasız 0" DEĞİL). ${esc(neden)}` }))}
+      <p class="hint"><span class="mut">Koruma durumu <b>ölçülemedi</b>; bu "korumasız pozisyon yok"
+        demek değildir. Gerekçe: ${esc(neden)}</span></p>
+      <p class="hint">Ölçüm dönmeden hiçbir emir üretilmez — ölçemediğimiz bir dünyaya emir
+        göndermek, koruma kurduğumuzu <b>sanmak</b> olurdu.</p></div>`;
+  }
+  // `|| 0` YOK (v196 triyajının sınıfı): "uç bu alanı vermedi" ile "ölçtük, sıfır çıktı" aynı
+  // piksele düşemez — hele bu kartta: "0 korumasız" bir güvence cümlesidir ve uydurulamaz.
+  // Üç sayının biri bile okunamıyorsa kart ÖLÇÜLEMEDİ dalına düşer.
+  const say = v => Number.isFinite(Number(v)) ? Number(v) : null;
+  const n = say(k.korumasiz), t = say(k.toplam), g = say(k.gonderilebilir);
+  if (n == null || t == null || g == null) {
+    return `${bas(kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: "Uç sayıları eksik verdi (korumasız/toplam/öneri) — koruma durumu ölçülemedi; bu \"korumasız 0\" DEĞİL." }))}
+      <p class="hint"><span class="mut">Uç <code>/api/alpaca/koruma</code> sayıları eksik döndürdü;
+        pano eksik alanı sıfıra çevirmez.</span></p></div>`;
+  }
+  const oran = (t > 0 && k.payda_beyani) ? Math.max(0, Math.min(1, n / t)) : null;
+  const ozet = kartOzeti({
+    deger: `${trn(n)} / ${trn(t)}`,
+    degerSinif: n > 0 ? "warn" : "",
+    oran, payda: k.payda_beyani || "",
+    meta: `${trn(t)} motor pozisyonu · ${trn(n)} korumasız · ${trn(g)} öneri hazır`,
+    rozet: g > 0 ? "ONAY BEKLİYOR" : "",
+  });
+  const satirlar = (k.satirlar || []);
+  const disi = (k.motor_disi_satirlar || []);
+  const ayrisik = satirlar.filter(s => s.adet_ayrisik);
+  const head = `<div class="trow head" style="grid-template-columns:62px 108px 76px 76px 76px 84px">
+      <span>HİSSE</span><span>SAT ADET</span><span>STOP</span><span>HEDEF</span><span>SON</span>
+      <span>STOPA UZAKLIK</span></div>`;
+  return `${bas(ozet)}
+    <p class="hint" style="margin-top:0">Broker'da <b>canlı koruyucu stop'u olmayan</b> motor
+      pozisyonları. Emir <b>tek OCO</b> olarak gider (stop + hedef birbirine bağlı): bağsız iki emir
+      gönderilse hedef dolduktan sonra stop canlı kalır ve tetiklendiğinde <b>açığa satış</b> açardı —
+      korumasızlıktan <i>farklı</i> ve daha kötü bir risk. TIF <code>gtc</code> (E1-v2): <code>day</code>
+      bacakları her kapanışta öldüren kök nedendi.</p>
+    ${ayrisik.length ? `<p class="hint sev-1"><b>ADET AYRIŞMASI —
+      ${trn(ayrisik.length)} sembol:</b> iç defter ile broker farklı adet söylüyor
+      (${esc(ayrisik.map(s => `${s.ticker} defter ${trn(s.defter_adet)} ↔ broker ${trn(s.broker_adet)}`).join(" · "))}).
+      Emir <b>BROKER</b> adedini kullanır — defterin fazla adediyle satmak elde olmayan hisseyi
+      satmak, yani açık pozisyon açmak olurdu.</p>` : `<p class="hint"><span class="mut">Adet kaynağı:
+      <b>broker</b> (<code>alpaca.positions</code>). İç defter yalnız görünürlük için gösterilir.</span></p>`}
+    ${satirlar.length ? `<div class="tbl" style="margin-top:8px">${head}${satirlar.map(korumaSatirHTML).join("")}</div>`
+      : `<p class="hint"><span class="mut">Motor pozisyonu yok — payda 0, öneri de yok.</span></p>`}
+    ${disi.length ? `<p class="hint" style="margin-top:8px"><span class="mut">Motor-DIŞI pozisyon
+      (${esc(disi.map(s => `${s.ticker} ${trn(s.broker_adet)}`).join(" · "))}): operatörün kendi emri.
+      Görünür, ama bu yol onlara <b>asla</b> emir üretmez — A3 sahiplik sınırı.</span></p>` : ""}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center">
+      ${g > 0 ? `<button class="dlbtn" type="button" data-act="korumaKur"
+        data-a1="${esc(k.oneri_id || "")}">▲ Korumayı kur — ${trn(g)} OCO (onay iste)</button>`
+        : `<span class="hint" style="margin:0">Gönderilecek öneri yok.</span>`}
+      <span class="hint" id="koruma-msg" style="margin:0">${_KORUMA_MSG}</span></div>
+    <p class="hint" style="margin-top:8px"><span class="mut">Onay <b>bu listeye</b> verilir
+      (kimlik <code>${esc(k.oneri_id || "—")}</code>), kalıcı bir anahtara değil. Sunucu gönderim
+      anında listeyi yeniden ölçer; ekrandaki tablo o an değişmişse emir <b>gitmez</b> ve tazeleme
+      istenir. Aynı sembolde canlı koruma varsa emir üretilmez (idempotans), mevcut bir stop varsa
+      öneri yalnız <b>yukarı</b> taşıyabilir (A4).</span></p></div>`;
+}
+// TURA ÖZEL ONAY — iki kapı: insan diyaloğu + sunucudaki kimlik eşleşmesi.
+// Diyalog EKRANDAKİ yükü okur (`_KORUMA_SON`), ağı yeniden sormaz: operatörün onayladığı şey
+// gördüğü şey olmalı. Sunucu ayrıca kendi ölçümüyle karşılaştırır — ikisi ayrışırsa emir gitmez.
+window.korumaKur = async (oneriId) => {
+  const k = _KORUMA_SON;
+  const sat = ((k && k.satirlar) || []).filter(s => s.gonderilir);
+  if (!sat.length) { korumaMsgYaz('<span class="warn">gönderilecek öneri kalmadı — listeyi tazele</span>'); return; }
+  const dokum = sat.map(s => `  ${s.ticker}  SAT ${s.broker_adet} adet  ·  stop ${s.stop}  ·  hedef ${s.hedef}`
+    + (s.adet_ayrisik ? `   [defter ${s.defter_adet} diyor — BROKER adedi kullanılıyor]` : "")).join("\n");
+  if (!confirm(`KORUMAYI KUR — ${sat.length} adet OCO emri (stop + hedef, birbirine bağlı)\n\n`
+    + `${dokum}\n\nAdet BROKER'dan alınır (iç defterden değil). TIF gtc.\n`
+    + `Onay yalnız BU listeye verilir; liste değiştiyse emir gönderilmez.`)) return;
+  const _btn = () => document.querySelector('[data-act="korumaKur"]');
+  const b0 = _btn(); const etiket = b0 ? b0.textContent : "";
+  if (b0) { b0.disabled = true; b0.textContent = "gönderiliyor…"; }
+  korumaMsgYaz("gönderiliyor…");
+  try {
+    const r = await apiFetch("/api/alpaca/koruma_kur", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ onay: KORUMA_ONAY_JETONU, oneri_id: oneriId || (k && k.oneri_id) || "" }),
+    });
+    let body = {};
+    try { body = await r.json(); } catch (e) { body = {}; }
+    korumaMsgYaz(r.ok ? _korumaSonucSatiri(body)
+      : `<span class="neg">✗ HTTP ${r.status} — ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`);
+    await _aktifSayfayiCiz();
+  } catch (e) {
+    // AĞ HATASINDA "gönderilmedi" DEMEK UYDURMA OLURDU: istek uca varmış ve emirler çıkmış olabilir.
+    korumaMsgYaz(`<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ÖLÇÜLEMEDİ;
+      emirler gitmiş olabilir, kartı tazeleyip koruma durumunu doğrula`);
+  } finally {
+    const b = _btn();
+    if (b && b.disabled) { b.disabled = false; b.textContent = etiket || "▲ Korumayı kur"; }
+  }
+};
+// KISMİ BAŞARI DÜRÜST YAZILIR: "2/4 gönderildi + 2 neden" der, "tamam" DEMEZ. Tek bir "gönderildi"
+// cümlesi, hâlâ çıplak duran iki pozisyonu ekrandan silerdi.
+function _korumaSonucSatiri(r) {
+  if (r.dry_run) return `<span class="warn">onaysız çağrı — hiçbir emir gönderilmedi</span>`;
+  if (r.bayat_onay) return `<span class="warn">${esc(r.detail || "öneri değişti — emir gönderilmedi")}</span>`;
+  if (r.olculemedi) return `<span class="warn">${esc(r.detail || "ölçülemedi — emir gönderilmedi")}</span>`;
+  const sat = Array.isArray(r.satirlar) ? r.satirlar : [];
+  const dusen = sat.filter(x => x && !x.ok);
+  const bas = r.gonderilen == null
+    ? `<span class="warn">gönderim sayısı ölçülemedi — uç <code>gonderilen</code> alanını vermedi (0 DEĞİL)</span>`
+    : `${r.gonderilen ? '<span class="pos">✓</span> ' : ""}${trn(r.gonderilen)}/${trn(r.toplam)} koruma gönderildi`;
+  // TERNARY, `if (…) return` DEĞİL — ve bu bir üslup tercihi değil bir ÖLÇÜM sözleşmesi: renk-rolü
+  // tarayıcısı (`research/olcumler/renk_rolleri_2026-08-07/tara_emisyon.py`) bir emisyonun anomali
+  // dalında olduğunu geriye yürüyerek anlar ve erken-çıkışlı bir `return` deseninde kapıyı
+  // GÖREMEZ; koşullu bir renk KOŞULSUZ sayılır ve tavan-0 kuralı boşuna kırmızıya döner.
+  return dusen.length
+    ? `${bas} · <span class="neg">${trn(dusen.length)} gönderilemedi (pozisyon ÇIPLAK): ${
+        esc(dusen.map(x => `${x.ticker || "?"} — ${String(x.detail || "gerekçe bildirilmedi")}`).join(" · ").slice(0, 240))}</span>`
+    : bas;
+}
+
 RENDER.mutabakat = async () => {
-  const p = await opParcalar();
+  // İKİ UÇ PARALEL: koruma ölçümü BROKER'a çıkar (`/api/alpaca/koruma` → positions+orders) ve
+  // ölçüm 1-1,5 sn sürebilir; `opParcalar()`ın arkasına zincirlenseydi masanın tamamı onu
+  // beklerdi. Ölçüm DÜŞERSE kart kaybolmaz — `null` gelir ve kart "ÖLÇÜLEMEDİ + neden" dalını
+  // çizer. Sessizce kaybolan bir risk kartı, kartın hiç olmamasından beterdir: operatör
+  // "korumasız pozisyon yok" sanır.
+  const [p, kor] = await Promise.all([
+    opParcalar(),
+    j("/api/alpaca/koruma").catch(() => null),
+  ]);
+  _KORUMA_SON = kor;
   $("page-mutabakat").innerHTML = bolumBasHTML("mutabakat", "Mutabakat masası",
     "Broker API'si, yürütme akışı, hayalet emirler, HWM ikizleri, parçalı dolum, reddedilen "
     + "gönderimler ve kapıda düşen silahlı planlar. Sessiz hattın <b>emir reddedildi</b> çipi "
     + "buraya iner. Altında <b>E2 icra gerçekliği</b> (ret sınıfı, dolumun bps faturası, iç "
     + "motorun kill ölçütü, iki motorun mutabakatı), <b>E3 kötümser band</b> (yürürlükteki "
     + "varsayım + defterden ampirik ölçüm) ve <b>E4 gece/gündüz</b> (kâr hangi bacaktan geldi).")
+    // KORUMA KARTI EN BAŞTA (v211): masanın öteki kartları "ne oldu?" diye sorar; bu kart
+    // "şu anda korumasız param var mı, ve düzeltmek için neye basmalıyım?" diye sorar. Açık bir
+    // riskin cevabı, geçmişin muhasebesinin ALTINDA duramaz.
+    + korumaKurmaKarti(kor)
     // EMİR YAŞAM-DÖNGÜSÜ MASANIN HEMEN ARDINDA (C1-2): `s1` "iç defterim brokerinkiyle aynı mı?"
     // der; bu kart "benim onayım hangi emre döndü ve KAÇA doldu?" der. İkincisi birincisinin
     // satır düzeyidir — araya E2/E3/E4 girseydi soru iki kaydırma uzağa düşerdi.

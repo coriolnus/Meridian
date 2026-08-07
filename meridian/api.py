@@ -2520,7 +2520,9 @@ def _diag_onbellek_bosalt(neden: str) -> None:
         bu ikisine DELEGE eder, bu yüzden AYRICA çağırmaz (tek halt yolu sözleşmesi — o ucun notu).
       * bayraklar: `/api/control/learn_halt` → hud.learn_halted · `/api/intraday-arm` → intraday.*
       * icra: `/api/alpaca/submit_armed`, `/api/alpaca/close_all`, `/api/control/cancel_open`
-        → reconcile.*, ledgers, mirror akışı
+        → reconcile.*, ledgers, mirror akışı · `/api/alpaca/koruma_kur` (v211) → koruma bekçisi
+        (`watchdog.koruma_report`) aynı zarfta yaşıyor ve OCO gönderimi çıplak sayısını DÜŞÜRÜR;
+        yalnız GERÇEKTEN emir gittiyse düşürülür (kuru koşu/bayat onay zarfa dokunmaz)
       * gelen kutusu/bildirim: `/api/alerts/ack`, `/api/broker_reject/ack` → sessiz_hat,
         reconcile.failed_submissions · `/api/notify/test` → alarm_butcesi
       * kadanslar: `/api/scheduler/advance`, `/api/hermes/reflect`,
@@ -3794,6 +3796,340 @@ def api_alpaca_close_all(request: Request, confirm: str = ""):
     # KURU KOŞU DEĞİL: onay jetonu yoksa bu uç yalnız NE YAPACAĞINI raporlar, hiçbir şeye dokunmaz.
     if res.get("ok") and not res.get("dry_run", False):
         _diag_onbellek_bosalt("alpaca_close_all")
+    return res
+
+
+# ==================================================================================================
+# KORUMAYI YENİDEN KURAN YOL (v211) — ÖNERİ ÜRETİCİ + ONAY KAPISI + İCRA
+# --------------------------------------------------------------------------------------------------
+# EKSİK MEKANİZMA (canlı A1, 2026-08-07): panoda üç uç vardı — `/api/alpaca` (oku),
+# `submit_armed` (gir), `close_all` (düzleştir). "Korumayı yeniden kur" YOKTU. `watchdog
+# .koruma_report()` (v209) çıplak motor pozisyonlarını GÖRÜYOR ama bekçi haber verir, düzeltmez;
+# aradaki boşluğu tek dolduran şey operatörün elle Alpaca arayüzüne gitmesiydi.
+#
+# YETKİ ŞEKLİ — OPERATÖR KARARI (2026-08-07): "emri SİSTEM gönderir, operatör PANODAN onaylar".
+# O yüzden bu blok İKİYE bölünmüştür ve bölünme bir üslup tercihi değil, yetkinin kendisidir:
+#   `koruma_onerileri()` — SALT OKUMA. Broker'a yalnız GET atar, hiçbir emir üretmez, çağrılması
+#                          hiçbir yan etki bırakmaz. Pano bunu okur.
+#   `koruma_kur()`       — İCRA. Yalnız operatörün taşıdığı onay jetonu VE o ölçüme ait öneri
+#                          kimliğiyle çalışır. İkisinden biri eksikse HİÇBİR emir çıkmaz.
+#
+# ONAY NEDEN "TURA ÖZEL" (kalıcı bir anahtar/toggle DEĞİL): kalıcı bir izin bayrağı, ilk gün
+# verilen onayı yarının bilinmeyen dünyasına uygular. Buradaki onay bir DURUMA bağlanır —
+# `oneri_id`, o an ölçülmüş önerinin (sembol/adet/stop/hedef listesinin) özetidir. Operatör ne
+# gördüyse onu onaylar; icra anında dünya değiştiyse (adet kaydı, koruma çoktan kuruldu, yeni bir
+# çıplak pozisyon doğdu) özet DEĞİŞİR, eşleşme düşer ve emir GİTMEZ. Bayat bir onayla emir
+# göndermek, onay almamaktan farksız olurdu.
+#
+# HALT BU YOLU KAPATMAZ — VE BU BİLİNÇLİ. `/api/alpaca/submit_armed` HALT'ta reddeder çünkü o YENİ
+# RİSK ALIR. Bu yol var olan riski AZALTIR: çıplak bir pozisyona stop koymak, acil durdurma
+# sırasında yapılacak şeyin ta kendisidir. Kademe-2 (`cancel_open_entries`) zaten aynı ayrımı
+# yapıyor — dolu pozisyonların koruma bacaklarına DOKUNMUYOR.
+KORUMA_KART_SEV = "sev-1"
+# Emir listesi tavanı — `watchdog.KORUMA_EMIR_TAVANI` ile AYNI gerekçe (sahiplik kanıtı tavanın
+# dışında kalabilir) ama İKİNCİ BİR OKUMA: bu modül bekçinin `rows`unu kullanır, bekçi ise emir
+# FİYATLARINI döndürmez ve `watchdog.py` bu turda yazma kapsamı dışındadır (v209 dokunulmaz).
+# A4 denetimi (mevcut stop'un ÜSTÜNE çıkma) fiyatsız yapılamaz, o yüzden emirler burada bir kez
+# daha OKUNUR. Bedeli beyanlıdır: tur başına bir fazla GET; kazancı, korumayı düşürmenin arka
+# kapısının kapalı kalması.
+KORUMA_EMIR_TAVANI = 500
+
+
+def _koruma_sayi(v):
+    """Sayıya çevir; çevrilemeyen değer None (0 DEĞİL). Bir stop seviyesi "okunamadı" ile "sıfır"
+    aynı şey değildir: sıfır bir stop, hiç stop olmamasıdır."""
+    try:
+        f = float(v)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; None dönmek ÖLÇÜLEMEDİ dalıdır ve satırın `neden`inde görünür — uydurma bir seviye üretilmez
+        return None
+    return f if f == f and f not in (float("inf"), float("-inf")) else None
+
+
+def _koruma_canli_stop_seviyeleri(ords: list) -> dict:
+    """Sembol → broker'da CANLI duran koruyucu stop'ların EN YÜKSEĞİ (A4'ün tabanı).
+
+    `watchdog._koruma_duz` ile aynı düzleştirme yapılır (bracket bacakları `legs` altındadır) ama
+    o özel ada dokunulmaz — bekçi modülü bu turda salt okunur ve özel bir yardımcıya bağlanmak,
+    v209'un iç düzenini bu dosyanın sözleşmesi hâline getirirdi.
+
+    EN YÜKSEĞİ alınır çünkü soru "bu pozisyonun bugünkü koruma seviyesi ne?"dir; iki canlı stop
+    varsa etkin koruma yüksekte olandır ve yeni öneri ONUN üstüne çıkmak zorundadır."""
+    from .adapters import alpaca
+    canli = set(alpaca._LIVE_ORDER_STATES)
+    out: dict = {}
+    duz = []
+    for o in (ords or []):
+        if not isinstance(o, dict):
+            continue
+        duz.append(o)
+        for leg in (o.get("legs") or []):
+            if isinstance(leg, dict):
+                duz.append(leg)
+    for o in duz:
+        if str(o.get("type", "")).lower() not in ("stop", "stop_limit", "trailing_stop"):
+            continue
+        if str(o.get("status", "")).lower() not in canli:
+            continue
+        sym = str(o.get("symbol") or "")
+        sev = _koruma_sayi(o.get("stop_price"))
+        if not sym or sev is None or sev <= 0:
+            continue
+        out[sym] = max(out.get(sym, 0.0), sev)
+    return out
+
+
+def koruma_onerileri() -> dict:
+    """Çıplak MOTOR pozisyonları için OCO önerileri — SALT OKUMA, hiçbir emir göndermez.
+
+    KAYNAKLAR ve her birinin NEDEN o kaynak olduğu:
+      · çıplak listesi → `watchdog.koruma_report()` (v209). Yeniden yazılmaz: ikinci bir "koruma
+        var mı?" tanımı, ilk düzenlemede bekçininkinden ayrışır ve pano ile alarm iki farklı
+        gerçeği anlatmaya başlardı.
+      · ADET → BROKER (`koruma_report` satırlarındaki `adet`, kaynağı `alpaca.positions()`).
+        İÇ DEFTERDEN ASLA: canlı ölçüm defterin 33/43/64/54 dediği yerde broker'ın 22/22/37/25
+        dediğini gösterdi. Defterin adediyle satış emri göndermek, ELDE OLMAYAN hisseyi satmaktır
+        — yani `shorting_enabled` hesapta bir açık pozisyon açmak.
+      · STOP/HEDEF → `state/portfolio.json`. Broker'da bu seviyelerin karşılığı YOK (bacaklar
+        öldü); kitabın beyan ettiği seviye tek kayıttır. Kayıt yoksa satır ÖLÇÜLEMEDİ olur —
+        uydurma bir stop, korumasızlıktan beterdir (yanlış yerde bir güven).
+      · SON FİYAT → broker pozisyon satırının `current_price`ı (aynı okumadan gelir, ikinci bir
+        fiyat kaynağı açılmaz).
+
+    ÖLÇÜLEMEDİ ≠ 0: broker okunamazsa `ok=None`, `olculemedi=True`, `neden` dolu ve öneri listesi
+    BOŞ döner. "0 öneri" ile "ölçemedim" aynı ekrana düşerse operatör sessiz bir arızayı temizlik
+    sanır."""
+    from . import watchdog
+    from .adapters import alpaca
+    rep = watchdog.koruma_report()
+    out = {"ok": None, "olculemedi": True, "kapsam_disi": bool(rep.get("kapsam_disi")),
+           "neden": rep.get("neden") or "", "sev": KORUMA_KART_SEV,
+           "payda_beyani": rep.get("payda_beyani") or "", "korumasiz": rep.get("korumasiz"),
+           "toplam": rep.get("toplam"), "satirlar": [], "motor_disi_satirlar": [],
+           "gonderilebilir": None, "oneri_id": None,
+           "onay_jetonu_gerekli": True,
+           "adet_kaynagi": "BROKER (alpaca.positions) — iç defter YALNIZ görünürlük için gösterilir"}
+    # İKİ AYRI GERÇEK, İKİ AYRI DAL — tek satırda `or`lanmaz. `kapsam_disi` bir YAPILANDIRMA hâli
+    # (ayna kapalı, sorunun referansı yok), `ok is None` bir ARIZA hâli (broker okunamadı). İki
+    # sözlük okumasını tek `or` ifadesinde birleştirmek, şema-takası tarayıcısının
+    # (test_parity_v56) kovaladığı "iki ad tek alan" desenine BENZER — ve benzemek yetmez: o desen
+    # bu depoda gerçek bir şema ayrışmasının izidir, ona benzeyen her satır elle tartışılır.
+    # (Deseni bu yorumda ÖRNEKLEMEK bile tarayıcıyı tetikliyordu; ölçüldü ve cümleyle anlatıldı.)
+    if rep.get("kapsam_disi"):
+        return out
+    if rep.get("ok") is None:
+        return out
+    ords = alpaca.orders(status="all", limit=KORUMA_EMIR_TAVANI, nested=True)
+    if not alpaca.transport()["ok"]:
+        return {**out, "neden": "emir listesi okunamadı (A4 denetimi fiyatsız yapılamaz): "
+                                + (alpaca.transport().get("error") or "alpaca transport down")[:160]}
+    mevcut = _koruma_canli_stop_seviyeleri(ords)
+    # Broker pozisyon satırı — `current_price` yalnız burada var (koruma_report onu taşımaz).
+    fiyat = {}
+    for p in (alpaca.positions() or []):
+        sym = str(p.get("symbol") or "")
+        if sym:
+            fiyat[sym] = _koruma_sayi(p.get("current_price"))
+    if not alpaca.transport()["ok"]:
+        return {**out, "neden": "pozisyon listesi okunamadı: "
+                                + (alpaca.transport().get("error") or "alpaca transport down")[:160]}
+    defter = (store.read_json("portfolio.json", {}) or {}).get("positions") or {}
+
+    satirlar, disi = [], []
+    for r in (rep.get("rows") or []):
+        sym = str(r.get("ticker") or "")
+        broker_adet = _koruma_sayi(r.get("adet")) or 0.0
+        d = defter.get(sym) if isinstance(defter, dict) else None
+        defter_adet = _koruma_sayi((d or {}).get("qty")) if isinstance(d, dict) else None
+        # KİTABIN BEYAN ETTİĞİ KORUMA SEVİYESİ. `trail_stop` iz süren stop'tur ve sert stop'un
+        # ÜSTÜNDE olabilir; ikisinin BÜYÜĞÜ alınır çünkü A4 "koruma gevşetilmez" der — küçüğünü
+        # seçmek, kitabın kendi yükselttiği korumayı aynada geri indirmek olurdu.
+        sert = _koruma_sayi((d or {}).get("stop")) if isinstance(d, dict) else None
+        iz = _koruma_sayi((d or {}).get("trail_stop")) if isinstance(d, dict) else None
+        stop = max([x for x in (sert, iz) if x is not None], default=None)
+        hedef = _koruma_sayi((d or {}).get("target")) if isinstance(d, dict) else None
+        son = fiyat.get(sym)
+        mstop = mevcut.get(sym)
+        satir = {
+            "ticker": sym, "motor": bool(r.get("motor")), "korumali": bool(r.get("korumali")),
+            "kismi": bool(r.get("kismi")), "kapsanan": r.get("kapsanan"),
+            "broker_adet": broker_adet, "defter_adet": defter_adet,
+            "adet_ayrisik": bool(defter_adet is not None and abs(defter_adet - broker_adet) > 1e-9),
+            "stop": stop, "hedef": hedef, "son_fiyat": son, "mevcut_stop": mstop,
+            # STOPA UZAKLIK: (son − stop)/son. Son fiyat yoksa ÖLÇÜLEMEDİ — "0 uzaklık" yazmak
+            # stopun dibinde duran bir pozisyon iddiası olurdu.
+            "stop_uzakligi": ((son - stop) / son) if (son and son > 0 and stop is not None) else None,
+            "gonderilir": False, "neden": "",
+        }
+        if not satir["motor"]:
+            # A3: motor sahibi olmadığı pozisyona emir göndermez. GÖRÜNÜR olur, öneri ÜRETMEZ.
+            satir["neden"] = ("motor-DIŞI pozisyon (operatörün kendi emri) — A3 sahiplik sınırı: "
+                              "bu satır için emir ÜRETİLMEZ, yalnız görünürlük")
+            disi.append(satir)
+            continue
+        if satir["korumali"]:
+            # İDEMPOTANS: canlı koruma zaten var. İkinci kez onaylamak ikinci koruma kurmaz.
+            satir["neden"] = "broker'da CANLI koruma zaten var — ikinci emir gönderilmez (idempotans)"
+        elif broker_adet <= 0:
+            satir["neden"] = "BROKER adedi 0/okunamadı — uydurma adetle satış emri gönderilmez"
+        elif stop is None or hedef is None:
+            eksik = " + ".join([a for a, v in (("stop", stop), ("hedef", hedef)) if v is None])
+            satir["neden"] = (f"iç defterde {eksik} YOK (portfolio.json.positions[{sym}]) — "
+                              f"seviye ÖLÇÜLEMEDİ, uydurulmaz")
+        elif stop >= hedef:
+            satir["neden"] = (f"kitabın stop'u hedefin üstünde/eşit (stop={stop:g} hedef={hedef:g}) — "
+                              f"OCO kurulamaz, defter satırı denetlenmeli")
+        elif mstop is not None and stop <= mstop:
+            # A4 — ARKA KAPI KAPALI: bu yol var olan bir korumayı DÜŞÜREMEZ.
+            satir["neden"] = (f"mevcut canlı stop {mstop:g}, önerilen {stop:g} — koruma yalnız "
+                              f"YUKARI taşınır (A4), gevşetme reddedildi")
+        else:
+            satir["gonderilir"] = True
+            satir["neden"] = ""
+        satirlar.append(satir)
+
+    gonderilecek = [s for s in satirlar if s["gonderilir"]]
+    return {**out, "ok": True, "olculemedi": False, "neden": "",
+            "satirlar": satirlar, "motor_disi_satirlar": disi,
+            "gonderilebilir": len(gonderilecek),
+            "oneri_id": _koruma_oneri_id(gonderilecek, rep)}
+
+
+def _koruma_oneri_id(gonderilecek: list, rep: dict) -> str:
+    """Önerinin PARMAK İZİ — onayın bağlandığı şey. Boş öneri için de üretilir (boşluk da bir hâldir).
+
+    İçeriğe giren her alan bir GEREKÇEyle girer: sembol/adet/stop/hedef, operatörün ekranda GÖRÜP
+    onayladığı dört sayıdır — biri değiştiyse onay artık başka bir şeye verilmiş demektir. Çıplak
+    sayısı ve payda da girer: yeni bir çıplak pozisyon doğduysa ya da biri korunduysa ekrandaki
+    cümle değişmiştir ve eski onay o cümleyi kapsamaz."""
+    import hashlib
+    govde = json.dumps(
+        {"satirlar": [[s["ticker"], s["broker_adet"], s["stop"], s["hedef"]] for s in gonderilecek],
+         "korumasiz": rep.get("korumasiz"), "toplam": rep.get("toplam")},
+        sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(govde.encode("utf-8")).hexdigest()[:16]
+
+
+def koruma_kur(onay: str = "", oneri_id: str = "", onaylayan: str = "?") -> dict:
+    """ONAY SONRASI İCRA — her çıplak motor pozisyonuna TEK OCO. Kısmi başarı DÜRÜST raporlanır.
+
+    ÜÇ KAPI, SIRASIYLA (hepsi geçilmeden hiçbir HTTP POST'u doğmaz):
+      1. ÖLÇÜM — broker okunamıyorsa emir YOK + neden. "Sessiz başarı" burada SAHTE olurdu:
+         ölçemediğimiz bir dünyaya emir göndermek, koruma kurduğumuzu SANMAMIZ demektir.
+      2. ONAY JETONU — jetonsuz çağrı KURU KOŞUdur: ne göndereceğini raporlar, hiçbir şeye
+         dokunmaz (`close_all` ile aynı desen, A3).
+      3. ÖNERİ KİMLİĞİ — jeton doğru olsa bile kimlik EŞLEŞMEK zorunda. Eşleşmezse operatörün
+         onayladığı liste ile şu an gönderilecek liste FARKLIDIR; emir gitmez.
+
+    "2/4 gönderildi + 2 neden" der, "tamam" DEMEZ: dönen `ok` yalnız TÜM öneriler gittiğinde
+    True'dur ve `satirlar` her satırın kendi sonucunu taşır."""
+    from .adapters import alpaca
+    rap = koruma_onerileri()
+    out = {"ok": False, "gonderilen": 0, "toplam": 0, "satirlar": [], "ozet": "", "detail": "",
+           "dry_run": False, "olculemedi": bool(rap.get("olculemedi")),
+           "neden": rap.get("neden") or "", "oneri_id": rap.get("oneri_id"),
+           "sev": KORUMA_KART_SEV}
+    # KAPI 1 — ölçüm. İki dal AYRI (bkz. `koruma_onerileri` içindeki aynı gerekçe): arıza ile
+    # yapılandırma hâli tek `or` ifadesinde birleştirilmez.
+    olcum_yok = bool(rap.get("olculemedi"))
+    if not olcum_yok:
+        olcum_yok = bool(rap.get("kapsam_disi"))
+    if olcum_yok:
+        return {**out, "detail": "ÖLÇÜLEMEDİ — emir gönderilmedi: "
+                                 + (rap.get("neden") or "broker durumu okunamadı")}
+    gonderilecek = [s for s in rap.get("satirlar") or [] if s.get("gonderilir")]
+    out["toplam"] = len(gonderilecek)
+    # KAPI 2 — onay jetonu (kuru koşu)
+    if onay != alpaca.KORUMA_ONAY_JETONU:
+        return {**out, "dry_run": True,
+                "detail": "onay jetonu YOK — hiçbir emir gönderilmedi (kuru koşu)",
+                "satirlar": [{"ticker": s["ticker"], "adet": s["broker_adet"], "stop": s["stop"],
+                              "hedef": s["hedef"], "ok": None,
+                              "detail": "onay bekliyor — gönderilmedi"} for s in gonderilecek]}
+    # KAPI 3 — öneri kimliği (TURA ÖZEL onay)
+    if not oneri_id or oneri_id != rap.get("oneri_id"):
+        obs.warn("koruma_onay_bayat", verilen=str(oneri_id)[:32], olculen=str(rap.get("oneri_id")),
+                 detail="onay, ölçülen öneriden BAŞKA bir listeye verilmiş — emir gönderilmedi")
+        return {**out, "bayat_onay": True,
+                "detail": (f"öneri kimliği eşleşmedi (onay={str(oneri_id)[:16] or 'yok'} · "
+                           f"ölçüm={rap.get('oneri_id')}) — ekrandaki liste onaydan sonra DEĞİŞTİ; "
+                           f"hiçbir emir gönderilmedi, listeyi tazeleyip yeniden onayla")}
+    if not gonderilecek:
+        return {**out, "detail": "gönderilecek öneri yok — çıplak motor pozisyonu bulunamadı"}
+
+    satirlar, gonderilen = [], 0
+    for s in gonderilecek:
+        coid = alpaca.koruma_coid(s["ticker"])
+        res = alpaca.submit_protective_oco(s["ticker"], s["broker_adet"], s["stop"], s["hedef"],
+                                           client_order_id=coid)
+        kayit = {"ticker": s["ticker"], "adet": s["broker_adet"], "stop": s["stop"],
+                 "hedef": s["hedef"], "plan_id": coid, "ok": bool(res.get("ok")),
+                 "reachable": res.get("reachable", True),
+                 "detail": str(res.get("detail") or "")[:200]}
+        satirlar.append(kayit)
+        if res.get("ok"):
+            gonderilen += 1
+            # DENETİM İZİ (YASA 6): bu satırın okuyucusu olay defteri ve gelen kutusudur — "kim,
+            # neyi, hangi adetle, hangi seviyeye, hangi onayla" sorusu kayıttan cevaplanabilmeli.
+            obs.log("koruma_oco_gonderildi", plan_id=coid, ticker=s["ticker"],
+                    adet=s["broker_adet"], stop=s["stop"], hedef=s["hedef"],
+                    tif=alpaca.KORUMA_TIF, onaylayan=onaylayan, oneri_id=oneri_id,
+                    adet_kaynagi="broker")
+        else:
+            obs.warn("koruma_oco_dusuru", plan_id=coid, ticker=s["ticker"], adet=s["broker_adet"],
+                     stop=s["stop"], hedef=s["hedef"], onaylayan=onaylayan,
+                     reachable=res.get("reachable", True), hata=kayit["detail"],
+                     detail="koruma OCO'su gönderilemedi — pozisyon HÂLÂ çıplak")
+    ozet = f"{gonderilen}/{len(gonderilecek)} gönderildi"
+    dusen = [k for k in satirlar if not k["ok"]]
+    if dusen:
+        ozet += " · " + " · ".join(f"{k['ticker']}: {k['detail'] or 'gerekçe bildirilmedi'}"
+                                   for k in dusen)
+    obs.log("koruma_kur_ozet", gonderilen=gonderilen, toplam=len(gonderilecek),
+            onaylayan=onaylayan, oneri_id=oneri_id)
+    return {**out, "ok": gonderilen == len(gonderilecek) and gonderilen > 0,
+            "gonderilen": gonderilen, "satirlar": satirlar, "ozet": ozet,
+            "detail": "" if not dusen else f"{len(dusen)} öneri gönderilemedi — pozisyon çıplak kaldı"}
+
+
+def _koruma_onaylayan(request: Request) -> str:
+    """Onayı KİM verdi — ölçülebilen tek gerçek: hangi kimlik yolundan geldiği. Bir kullanıcı adı
+    UYDURULMAZ (bu depoda tek-operatör kimliği var, kişi adı taşıyan bir alan yok)."""
+    try:
+        if auth.verify_session(request.cookies.get(auth.COOKIE_NAME)):
+            return "pano-oturumu"
+        if request.headers.get("x-meridian-token"):
+            return "betik-tokeni"
+    except Exception:  # sessiz-yutma: kimlik yolu okunamadı — denetim izi "bilinmiyor" der, uydurma bir onaylayan yazmaz
+        return "bilinmiyor"
+    return "kimliksiz-yerel"
+
+
+@app.get("/api/alpaca/koruma")
+def api_alpaca_koruma(request: Request):
+    """Çıplak motor pozisyonları + OCO önerileri. SALT OKUMA — çağrılması emir üretmez."""
+    _auth(request)
+    return koruma_onerileri()
+
+
+@app.post("/api/alpaca/koruma_kur")
+async def api_alpaca_koruma_kur(request: Request):
+    """Onaylanmış koruma OCO'larını gönder. Gövde: {onay, oneri_id}.
+
+    JETON GÖVDEDE, SORGUDA DEĞİL (`close_all`ın `?confirm=` deseninden BİLEREK ayrılır): sorgu
+    dizeleri sunucu loglarına, tarayıcı geçmişine ve `Referer` başlığına düşer — `api._auth`ın
+    2026-07-28'de `?token=`i kaldırma gerekçesinin aynısı. Buradaki jeton bir sır değil ama bir
+    YETKİ işaretidir ve log'a düşen bir yetki işareti, tekrar oynatılabilir bir onaydır."""
+    _auth(request)
+    try:
+        body = await request.json()
+    except Exception:  # sessiz-yutma: gövdesiz/bozuk JSON = onay YOK; aşağıdaki kapı bunu kuru koşu olarak raporlar
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    res = koruma_kur(onay=str(body.get("onay") or ""), oneri_id=str(body.get("oneri_id") or ""),
+                     onaylayan=_koruma_onaylayan(request))
+    if res.get("gonderilen"):
+        _diag_onbellek_bosalt("koruma_kur")
     return res
 
 

@@ -82,7 +82,14 @@ def _olcum_modulu():
 # ONUNUN DA KAPAĞI VAR: bütçesi zaten aşılmış üç yüzeye kapaksız kart eklemek "ilk bakışta düşen
 # yük"ü on kart büyütmek olurdu. Kapak sayıları `KAPAK_TABANI`nın TABANINI aşıyor (test `>=`);
 # yeni kapakların kendisi `tests/test_firsat_yuzeyleri_v200.py`de tek tek çivilendi.
-KART_TABANI = {"karar": 26, "saglik": 15, "ogrenme": 43, "kilitler": 5}
+# v211'DE BEYANLI GÜNCELLENDİ (2026-08-07) — TEK yeni kart, gerekçesi risk:
+#   karar   26 → 27  (+1: mutabakat:koruma — çıplak motor pozisyonlarına OCO önerisi + onay kapısı)
+# NEDEN DOĞDU: canlı ölçümde dört motor pozisyonu broker'da korumasızdı ve panoda "korumayı yeniden
+# kur" diye bir yüzey YOKTU (oku · gir · düzleştir vardı). Kart mutabakat masasına girdi, çünkü
+# taşıdığı asıl bulgu bir mutabakat bulgusudur: iç defter 33/43/64/54 der, broker 22/22/37/25 der
+# ve emir BROKER adedini kullanır. Kapak altındadır ama GİZLENEMEZ: çıplak pozisyon varken özet
+# rozet taşır, rozet `data-dikkat` doğurur ve kurucu oturum hafızasını EZEREK kartı açar.
+KART_TABANI = {"karar": 27, "saglik": 15, "ogrenme": 43, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.
