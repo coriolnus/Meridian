@@ -87,9 +87,13 @@ def set_intraday_arm(on: bool) -> bool:
 #                       İKİSİNE bakar — R birimi geniş stopa yapısal önyargılı olduğu için tek
 #                       merceğe bırakılamaz)
 #   3. faz5_cikisi    — dakikalık kanıt katmanı: 4a saha verisi + "dakika-hassas icra ne
-#                       kazandırırdı" CI'lı ölçümü. İKİNCİSİNİ ÜRETEN KOD HENÜZ YOK, o yüzden bu
-#                       kilit bugün ÖLÇÜLEMEDİ → FAIL-CLOSED (kapalı). "Ölçüm yok" ile "ölçüldü ve
-#                       geçti" arasındaki farkı silmek, tam olarak bu zincirin engellediği şeydir.
+#                       kazandırırdı" CI'lı ölçümü. İKİNCİSİ 2026-08-07'de YAZILDI
+#                       (`faz5_cikis.cikis_olcumu`, ön-kayıt kartı EXE-2026-002): eşleştirilmiş
+#                       (plan_id) gölge-vs-EOD farkı, TARİH-KÜMELİ bootstrap %95 CI, E3 maliyet
+#                       bandı eşiği, n_min=20. Kilit hâlâ kapalı olabilir ama artık ÖLÇÜLMÜŞ bir
+#                       gerekçeyle kapalıdır. "Ölçüm yok" ile "ölçüldü ve geçti" arasındaki farkı
+#                       silmek, tam olarak bu zincirin engellediği şeydir — `durum` alanı ikisini
+#                       ayırmaya devam eder (`olculemedi` = defter boş / kill#4 eşleştirme kırığı).
 #   4. operator_onayi — `state/INTRADAY_ARM` (elle touch / panodaki tuş). Hiçbir otomatik yol
 #                       (döngü/ajan/bekçi) açamaz; ROADMAP §3.5'in "5.1 runtime (Oracle taşıma)"
 #                       ön şartı da OPERATÖR TARAFINDA olduğu için bu kilidin içinde taşınır —
@@ -144,18 +148,35 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
                      "SONUÇ hükmü: dört DOLAR ölçütünün DÖRDÜ de sağlandı",
                      None if s_p >= s_n else (sonuc.get("verdict") or "dolar hükmü sağlanmadı"))
 
-    # FAZ-5: 4a saha satırı SAYILIR (ölçülebilir), CI'lı icra-kazanç ölçümü ise ÜRETİLMİYOR. İkinci
-    # parça olmadan kilit AÇILAMAZ ve bu bir eksiklik BEYANIdır — "4a satırı geldi" cümlesini
-    # "Faz 5 çıktı" diye okumak, ön şartı sonucun yerine koymak olurdu.
+    # FAZ-5: 4a saha satırı SAYILIR (ölçülebilir) + dakika-hassas icranın CI'lı kazanç ÖLÇÜMÜ.
+    # 2026-08-07'ye kadar bu kilit SABİT `False`/`olculemedi` yazıyordu ve gerekçesi "ölçümü ÜRETEN
+    # kod yok"tu. Ölçüm artık var (`faz5_cikis.cikis_olcumu`, ön-kayıt kartı EXE-2026-002) ve kilit
+    # GERÇEK bir hesaba bağlı. Kilidin kapalı kalması bir başarısızlık değil: kapalılığın GEREKÇESİ
+    # "üreten kod yok"tan ölçülmüş bir cümleye ("örneklem n/20", "CI sıfırı içeriyor", "kill#4
+    # eşleştirme kırılması") döndü — ikincisi zamanla kendiliğinden dolar, birincisi dolmaz.
+    # HÜKÜM BURADA YENİDEN YAZILMAZ: eşikler ve kill listesi kartta donduruldu ve tek gövdede
+    # (`faz5_cikis`) yaşar; ikinci bir eşik kopyası, iki hükmün sessizce ayrışması demekti.
+    # GEÇ IMPORT — `edge`/`sonuc`/`trio` üçlüsüyle AYNI desen (bkz. fonksiyon başı).
+    from . import faz5_cikis as _f5
     n_4a = len(store.read_jsonl("intraday_decisions.jsonl"))
-    n_4b = len(store.read_jsonl("intraday_shadow_orders.jsonl"))
-    k_faz5 = _kilit(False, "olculemedi",
-                    {"intraday_decisions_n": n_4a, "intraday_shadow_orders_n": n_4b,
-                     "cikis_olcumu": None},
-                    "Faz-5 çıkışı: 4a saha verisi + dakika-hassas icra kazancının CI'lı ölçümü",
-                    ("Faz-5 çıkış ölçümünü (dakika-hassas icranın CI'lı kazancı) ÜRETEN kod yok — "
-                     f"4a defteri {n_4a} satır, 4b gölge defteri {n_4b} satır. Ölçüm yokken kilit "
-                     "FAIL-CLOSED kapalıdır (ROADMAP §3.5: Faz 5 ⬜, ön şart 4a verisi)"))
+    _golge = store.read_jsonl("intraday_shadow_orders.jsonl")
+    # ÖLÇÜM ÇAĞRISI SARILI — gerekçe SISTEM-DENETIMI-2026-08-02 §891'de yazılı: `/api/diagnostics`
+    # bu zinciri TEK `return {...}` içinde korumasız çağırıyor ve buradan sızan bir istisna
+    # Operasyon sayfasının TAMAMINI karartır (sessiz_hat, watchdog, alarm bütçesi dahil — yani bir
+    # şey bozukken operatörün bakacağı satırlar da onunla gider). Yakalayıcı SESSİZ DEĞİL: istisna
+    # sınıfı+mesajı kilidin `neden`ine taşınır ve kilit FAIL-CLOSED kapalı kalır.
+    try:
+        _h = _f5.cikis_olcumu(rows=_golge)
+    except Exception as _e:
+        _h = {"gecer": False, "durum": "olculemedi", "olcum": None,
+              "esik": f"Faz-5 çıkış ölçümü (kart {_f5.KART})",
+              "neden": (f"Faz-5 çıkış ölçümü ÇAĞRIDA DÜŞTÜ: {type(_e).__name__}: {_e} — kilit "
+                        "FAIL-CLOSED kapalıdır (ölçülemeyen kilit KAPALIdır)")}
+    k_faz5 = _kilit(_h["gecer"], _h["durum"],
+                    {"intraday_decisions_n": n_4a, "intraday_shadow_orders_n": len(_golge),
+                     "cikis_olcumu": _h["olcum"]},
+                    "Faz-5 çıkışı: 4a saha verisi + " + _h["esik"],
+                    _h["neden"])
 
     armed = intraday_armed()
     k_op = _kilit(armed, "olculdu", {"intraday_arm": armed},
