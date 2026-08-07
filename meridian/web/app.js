@@ -1305,6 +1305,9 @@ function alanSayfasi(id, bolumler) {
       }
     }
     _bolumBasliklariniIndir(kap);
+    // KART SÖZLEŞMESİ (v198) EN SONDA: bütün bölümler yazıldıktan sonra tek geçişte kapak kurulur.
+    // Bölüm bazlı kurmak, sayfanın bütçesini bölüm bölüm saymak olurdu — bütçe SAYFANIN.
+    katKurulumu(kap, id);
   };
 }
 // ---- SATIR-DÜZEYİ YALITIM — yukarıdaki bölüm çerçevesinin KÜÇÜK KARDEŞİ ----------------------
@@ -1675,6 +1678,310 @@ function ozetHucre(etiket, o) {
 function ozetSerit(hucreler, adlandirma) {
   return `<div class="ozet-serit" role="group" aria-label="${esc(adlandirma)}">${hucreler.join("")}</div>`;
 }
+
+// ==============================================================================================
+// KART SÖZLEŞMESİ (v198 · D2-a) — KATLANIR KART, `.pm-*` HÜCRE DİLİNİN ÜSTÜNE
+// ----------------------------------------------------------------------------------------------
+// ÖLÇÜLEN KUSUR (docs/BASELINE-2026-08-06.md §3.2): kart sayısı beş alan sayfasının HİÇBİRİNDE
+// bir bütçe değil. Ölçülen asimetri: Öğrenme 39 kart, Gözetim 3 — on üç kat. Bütçesi olan iki
+// yüzey (`GENEL_KARTLARI` 6, `DURUM_KARTLARI` 4) bunu LİSTE-VERİ olarak tutup teste saydırdığı
+// için tutuyor; alan sayfalarında böyle bir liste yoktu, dolayısıyla sayılamıyordu da.
+//
+// SIRA KASITLI (D2-a, yeni IA'dan ÖNCE): sözleşmesiz bir sayfa birleşmesi, yoğun iki sayfayı tek
+// sütuna dizip yükü ikiye katlardı. Önce kartın kapağı, sonra sayfaların birleşmesi.
+//
+// ÜÇÜNCÜ DİL İCAT EDİLMEZ. Kapalı özet `hucreGovde(o)` çıktısıdır — `.pm-yield` / `.pm-conf`
+// (payda beyanlı) / `.pm-n` / `.pm-thin` / `.pm-none`. v192'nin ortaklaştırdığı hücre dili
+// aynen kullanılır; `.kk-*` sınıfları YALNIZ kapağın kendisini (düğme, ok, gövde kabı) taşır,
+// tek bir sayı biçimi tanımlamaz.
+//
+// YAPI KODA DEĞİL MAKİNEYE YAZILIR. Kartlar yirmi dört ayrı yerde şablon-değişmezi olarak
+// üretiliyor; başlık/özet/gövde üçlüsünü o yirmi dört yere elle yazmak, sözleşmenin yirmi dört
+// kopyası demekti (ve ilk düzenlemede ayrışırdı). Bunun yerine emisyon yeri İKİ İŞARET koyar —
+//   `katKart(anahtar)` → kartın etiketine `data-kart` özniteliği
+//   `kartOzeti(o)`     → `<h2 class="t">`ten HEMEN SONRA `.kk-ozet` hücresi
+// ve kapağın TAMAMINI (düğme, aria, gövde kabı, hafıza, ok) tek bir kurucu (`katKurulumu`)
+// çizim sonrası DOM üstünde kurar. Sözleşme böylece TEK yerde yaşar ve testle sayılabilir.
+//
+// KAPALI ÖZETİN ÜÇ KAPISI (denetimin can damarı — `docs/UX-SADELESTIRME-DENETIMI-2026-08-06.md`
+// §5.1). Özet "içeride önemli bir şey var mı?"yı kartı AÇMADAN cevaplamak ZORUNDADIR; cevaplamayan
+// bir özet katlamayı yük azaltmaktan çıkarıp TIK ARTIRAN bir süse çevirir. Bu yüzden:
+//   1. `deger` var — ya da `.pm-none` "veri yok" + NEDENİ,
+//   2. `oran` verildiyse `payda` BEYANLI (paydasız çubuk çizilmez — `hucreCubuk`un kuralı),
+//   3. `meta` en fazla iki satır; DEĞER varsa içinde en az bir SAYI, değer yoksa en az bir
+//      GEREKÇE (≥20 karakter — YASA 4'ün gerekçe uzunluğuyla aynı ölçü).
+// Üçünden biri kurulamıyorsa `kartOzeti` BOŞ DÖNER ve kurucu o kartı katlamaz. Özetsiz kartın
+// açık kalması bir kusur değil bir BULGUdur: gizlenecek değil, sayılacak bir şeydir (aşağıdaki
+// `_KAT_OZETSIZ` tam olarak onu sayar).
+// ----------------------------------------------------------------------------------------------
+// KART KAYIT DEFTERİ — anahtar → {alan, bolum}. `GENEL_KARTLARI`/`DURUM_KARTLARI` ile AYNI
+// gerekçe: liste VERİ olduğu sürece test onu sayabilir, şablona gömülü olduğu sürece sayamaz.
+// Kayıtsız bir anahtar sessizce düşer (uydurma kart doğmaz — `gbKart`/`durumKartHTML` deseni).
+// `bolum` ZORUNLU: "sayfanın 1. bölümü açık başlar" kuralı ancak bölüm bilinirse uygulanabilir.
+const KART_KAYDI = {
+  // ---- ÖĞRENME (39 kartın en kalabalık yüzeyi; §5.3 önceliği 2) ----
+  "golge:trend":        { alan: "ogrenme", bolum: "golge" },
+  "golge:varyant":      { alan: "ogrenme", bolum: "golge" },
+  "bilesenic:edge":     { alan: "ogrenme", bolum: "bilesenic" },
+  "bilesenic:sonuc":    { alan: "ogrenme", bolum: "bilesenic" },
+  "bilesenic:isi":      { alan: "ogrenme", bolum: "bilesenic" },
+  "bilesenic:selale":   { alan: "ogrenme", bolum: "bilesenic" },
+  "bilesenic:y3":       { alan: "ogrenme", bolum: "bilesenic" },
+  "skiller:revizyon":   { alan: "ogrenme", bolum: "skiller" },
+  "skiller:kosular":    { alan: "ogrenme", bolum: "skiller" },
+  "skiller:kategori":   { alan: "ogrenme", bolum: "skiller" },
+  "hafiza:dersler":     { alan: "ogrenme", bolum: "hafiza" },
+  "ajan:surumler":      { alan: "ogrenme", bolum: "ajan" },
+  "ajan:beceri":        { alan: "ogrenme", bolum: "ajan" },
+  // ---- VERİ SAĞLIĞI (§5.3 önceliği 3) ----
+  "veriboru:karantina": { alan: "veri",    bolum: "veriboru" },
+  "veriboru:butunluk":  { alan: "veri",    bolum: "veriboru" },
+  "veriboru:redis":     { alan: "veri",    bolum: "veriboru" },
+  "veriboru:saglayici": { alan: "veri",    bolum: "veriboru" },
+  // ---- PORTFÖY & EMİRLER (§5.3 önceliği 4; `s1` mutabakat masasının ANA cevabı, katlanmaz) ----
+  "mutabakat:icra":     { alan: "portfoy", bolum: "mutabakat" },
+  "mutabakat:band":     { alan: "portfoy", bolum: "mutabakat" },
+  "mutabakat:gecegun":  { alan: "portfoy", bolum: "mutabakat" },
+};
+// KART BÜTÇESİ — alan sayfası başına YAZILI tavan. BİRİMİ: "ilk çizimde AÇIK doğan kart".
+// Toplam kart sayısı DEĞİL: bu turda hiçbir kart silinmiyor (silme kararı D2-b/IA turunda,
+// gerekçeyle). Bütçenin ölçtüğü şey ekrana ilk bakışta düşen YÜK.
+//
+// TAVAN AŞILDIĞINDA KART GİZLENMEZ — BEYAN EDİLİR. Zorla kapatmak, dikkat isteyen bir kartı
+// bütçe uğruna kapatmak demek olurdu ve bu sözleşme o an bir güvenlik açığına dönerdi. Aşım
+// `.alan-bas`taki kontrol satırında sayıyla yazılır ve ŞİDDET RENGİ TAŞIMAZ (renk yalnız
+// anomalide; bütçe aşımı bir sapma değil bir tasarım borcudur).
+const KART_BUTCESI = {
+  veri:     6,   // 9 kart · üçü bölümün ana cevabı (evren, intraday akışı, hattın özeti)
+  kosu:     4,   // 4 kart · zaten bütçede; gecenin çıktısı + kapı ağacı
+  portfoy:  6,   // 17 kart · kitap + kuyruk + mutabakatın ana masası açık, gerisi kapak altında
+  ogrenme:  6,   // 39 kart · karne (sayfanın 1. bölümü) açık; altı bölüm kapak altında
+  gozetim:  3,   // 3 kart · zaten bütçede
+  kilitler: 5,   // 5 kart · müdahale kolları hiçbir koşulda kapak altına girmez
+};
+// KURUCUNUN SON TURDA KURDUĞU KAPAK SAYISI — TEK OKUYUCUSU `_katKontrolCiz` (kontrol yalnız
+// katlanır kart varsa doğar). YAZILAN TEK ŞEY BU: `acik`/`dikkat`/`ozetsiz` gibi sayaçları burada
+// tutmak, okuyucusu olmayan bir durum yazmak olurdu (YASA 6) — ve bayatlardı da, çünkü bütçe
+// satırı bu sayıları EKRANDAKİ DOM'dan sayıyor.
+let _KAT_KATLANIR = 0;
+
+// EMİSYON YERİNİN BİRİNCİ İŞARETİ. `<div class="card rise"${katKart("golge:trend")}>` biçiminde
+// kullanılır — öznitelik parçası döner, HTML değil. Kayıtsız anahtar BOŞ döner ve kart eski
+// hâlinde (katlanmaz) kalır: yanlış yazılmış bir anahtar sessizce ekrandan kart silmez.
+//
+// `alt` — AYNI KAYITTAN ÇOĞALAN KARTLAR İÇİN AYIRICI. Araç kütüphanesi kategorileri gibi bir
+// `.map()` çıktısında kart sayısı VERİDEN gelir; kayıt defterine kategori adı yazılamaz (yarın
+// yeni kategori doğar). Kayıt anahtarı AİLEyi, `alt` ise örneği adlandırır — kapağın kimliği
+// (`id`, oturum hafızası) ikisinin birleşimidir, yoksa on kategori tek hafıza gözünü paylaşırdı.
+function katKart(anahtar, alt) {
+  if (!KART_KAYDI[anahtar]) return "";
+  return ` data-kart="${esc(anahtar)}"` + (alt ? ` data-kart-alt="${esc(String(alt))}"` : "");
+}
+// EMİSYON YERİNİN İKİNCİ İŞARETİ — kapalı özet. `<h2 class="t">…</h2>` ile gövde ARASINA yazılır.
+// ÜÇ KAPI BURADA UYGULANIR; kapıdan geçemeyen özet BOŞ döner ve kart katlanmaz.
+function kartOzeti(o) {
+  o = o || {};
+  const degerVar = !(o.deger == null || o.deger === "");
+  // Meta HTML kabul eder (`<b>`, `<br>`); kapılar DÜZ metin üstünde ölçülür.
+  const metaDuz = String(o.meta == null ? "" : o.meta).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  // KAPI 3a — iki satır tavanı. `<br>` sayısı 1'i geçerse özet artık bir özet değil, bir gövdedir.
+  if ((String(o.meta == null ? "" : o.meta).match(/<br\s*\/?>/gi) || []).length > 1) return "";
+  // KAPI 2 — oran verildiyse payda BEYANLI olmalı. `hucreCubuk` paydasız çubuk zaten çizmez;
+  // burada bir adım daha ileri gidilir: paydasız bir oran, ÖZETİN kendisini düşürür (yarım
+  // kanıtla "içeride önemli bir şey var mı?" sorusu cevaplanmış sayılamaz).
+  if (o.oran != null && !o.payda) return "";
+  // KAPI 1 + 3b — değer VARSA meta en az bir sayı taşır; değer YOKSA meta bir GEREKÇEdir.
+  if (degerVar) { if (!/\d/.test(metaDuz)) return ""; }
+  else if (metaDuz.length < 20) return "";
+  // DİKKAT İŞARETİ ÖZETTEN TÜRER, ayrıca yazılmaz: rozet (ölçülemeyen/sapan hâl) ya da ŞİDDET
+  // sınıfı. Kurucu bunu okuyup kartı AÇIK doğurur — ve oturum hafızasını EZER.
+  // `neg` BİLEREK DIŞARIDA: o YÖN rolüdür (K/Z işareti), ŞİDDET değil (D1'in beş renk rolü).
+  // Negatif bir sayı bir sapma değildir; "en zayıf araç −0,2R" her gün negatiftir ve onu dikkat
+  // saymak kapağı fiilen kaldırır — sözleşme de o an anlamını yitirirdi.
+  const dikkat = !!o.rozet || o.degerSinif === "warn";
+  return `<span class="kk-ozet"${dikkat ? ' data-dikkat="1"' : ""}>${hucreGovde(o)}</span>`;
+}
+
+// ---- OTURUM HAFIZASI -------------------------------------------------------------------------
+// `sessionStorage`, `localStorage` DEĞİL (denetim §5.2): geçen haftanın açık kartı bu sabahın
+// bakışını yönetmemeli. Depolama erişimi try/catch'lidir — özel kipte `sessionStorage`a dokunmak
+// istisna atar ve bir kapak mekanizması yüzünden sayfanın tamamı çizilmemeliydi.
+const _katAnahtar = (alan, kart) => `mrd-kart:${alan}:${kart}`;
+function _katHatirla(alan, kart) {
+  try { return sessionStorage.getItem(_katAnahtar(alan, kart)); } catch (e) { return null; }
+}
+function _katYaz(alan, kart, acik) {
+  try { sessionStorage.setItem(_katAnahtar(alan, kart), acik ? "1" : "0"); } catch (e) { /* depolama yok: hafıza kaybı kabul, çizim kaybı değil */ }
+}
+// AÇ/KAPA — tek yer. `aria-expanded` ve `hidden` BİRLİKTE değişir: biri ekran okuyucunun, diğeri
+// düzenin hâli; ayrışırlarsa pano gören ile duyan operatöre farklı şey söyler.
+function _katDurumYaz(kart, acik) {
+  const dugme = kart.querySelector(":scope > .t > .kk-dugme");
+  const govde = kart.querySelector(":scope > .kk-govde");
+  if (!dugme || !govde) return;
+  kart.dataset.katAcik = acik ? "1" : "0";
+  dugme.setAttribute("aria-expanded", acik ? "true" : "false");
+  govde.hidden = !acik;
+}
+function katKapak(kart) {
+  if (!kart || kart.dataset.kat === "hayir") return;
+  const acik = kart.dataset.katAcik !== "1";
+  _katDurumYaz(kart, acik);
+  _katYaz(kart.dataset.katAlan || "", kart.dataset.katKimlik || "", acik);
+  _katKontrolTazele();
+}
+// ---- KURUCU --------------------------------------------------------------------------------
+// Çizimden SONRA koşar (`alanSayfasi`in son adımı). İki kez koşarsa hiçbir şey bozulmaz:
+// `data-kat-kuruldu` işaretli kartlara dokunmaz (bölüm bazlı yeniden çizimler bunu tetikler).
+function katKurulumu(kok, alan) {
+  if (!kok) return;
+  const ilkBolum = (ALAN_BOLUMLERI[alan] || [])[0] || "";
+  let katlanir = 0;
+  const ozetsiz = [];
+  kok.querySelectorAll(".card").forEach(kart => {
+    if (kart.dataset.katKuruldu === "1") {
+      if (kart.dataset.kat === "evet") katlanir++;
+      return;
+    }
+    kart.dataset.katKuruldu = "1";
+    const anahtar = kart.dataset.kart || "";
+    const kayit = KART_KAYDI[anahtar];
+    const bas = kart.querySelector(":scope > h2.t");
+    const ozet = kart.querySelector(":scope > .kk-ozet");
+    // YOĞUN-UZMAN MUAFİYETİ ve KAYITSIZ KART: ikisi de açık kalır. Muafiyet denetimin kuralı —
+    // satırlarıyla zaten "içinde ne var" sorusunu cevaplayan tablo cezalandırılmaz.
+    if (!kayit || !bas || kart.dataset.kat === "hayir") return;
+    // SÖZLEŞMENİN ÇİVİSİ: özet üretilemeyen kart COLLAPSE ALMAZ. Boş özetli bir kapak yükü
+    // azaltmaz, tık artırır.
+    if (!ozet) { kart.dataset.kat = "hayir"; kart.dataset.katNeden = "özet üretilemedi"; ozetsiz.push(anahtar); return; }
+
+    // KİMLİK = kayıt anahtarı + (varsa) örnek ayırıcısı. `id` DOM'da tek olmak zorunda
+    // (`aria-controls` ona bağlanıyor); oturum hafızası da aynı kimliği kullanır.
+    const kimlik = anahtar + (kart.dataset.kartAlt ? ":" + kart.dataset.kartAlt : "");
+    kart.dataset.katKimlik = kimlik;
+    const id = "kk-" + kimlik.replace(/[^\w-]+/g, "-");
+    const dugme = document.createElement("button");
+    dugme.type = "button";
+    dugme.className = "kk-dugme";
+    dugme.id = id + "-bas";
+    dugme.setAttribute("aria-controls", id);
+    // BAŞLIK METNİ TAŞINIR, KOPYALANMAZ: kart başlıklarının bir kısmı çip/alt-etiket taşıyor
+    // (`_chip(...)`, `<span class="tx3">`); metni yeniden yazmak o parçaları düşürürdü.
+    const ad = document.createElement("span");
+    ad.className = "kk-ad";
+    while (bas.firstChild) ad.appendChild(bas.firstChild);
+    dugme.appendChild(ad);
+    // DURUM ROZETİ BAŞLIĞA TAŞINIR (kopya değil, aynı düğüm): rozet YALNIZ ölçülemeyen/sapan
+    // hâlde doğar ve kapalı kartta da görünmesi gerekir.
+    const rozet = ozet.querySelector(".pm-thin");
+    if (rozet) dugme.appendChild(rozet);
+    const ok = document.createElement("span");
+    ok.className = "kk-ok";
+    ok.setAttribute("aria-hidden", "true");
+    dugme.appendChild(ok);
+    bas.appendChild(dugme);
+
+    // GÖVDE: özetten SONRAKİ her şey tek kaba iner. `role="region"` + `aria-labelledby` ile
+    // düğmeye bağlanır; `aria-controls` düğmede zaten var.
+    const govde = document.createElement("div");
+    govde.className = "kk-govde";
+    govde.id = id;
+    // ADSIZ BİR `region` LANDMARK OLARAK DUYURULMAZ: adı düğmeden gelir (aynı düğüm, ikinci bir
+    // etiket metni yazılmaz — ayrışamaz).
+    govde.setAttribute("role", "region");
+    govde.setAttribute("aria-labelledby", dugme.id);
+    let n = ozet.nextSibling;
+    while (n) { const s = n.nextSibling; govde.appendChild(n); n = s; }
+    kart.appendChild(govde);
+
+    kart.classList.add("kat-kart");
+    kart.dataset.kat = "evet";
+    kart.dataset.katAlan = alan;
+    katlanir++;
+
+    // AÇIK/KAPALI HÜKMÜ — sıra sözleşmedir:
+    //   varsayılan KAPALI → sayfanın 1. bölümü AÇIK → oturum hafızası → DİKKAT hafızayı EZER.
+    const dikkat = ozet.dataset.dikkat === "1" || kart.dataset.katDikkat != null
+      || kart.classList.contains("uyari") || kart.classList.contains("kopuk");
+    const hatirlanan = _katHatirla(alan, kimlik);
+    let acik = hatirlanan == null ? (kayit.bolum === ilkBolum) : hatirlanan === "1";
+    let ezildi = false;
+    // OTURUM HAFIZASI BİR ALARMI GİZLEYEBİLSEYDİ BU SÖZLEŞME BİR GÜVENLİK AÇIĞI OLURDU.
+    if (dikkat && !acik) { acik = true; ezildi = hatirlanan != null; }
+    _katDurumYaz(kart, acik);
+    if (ezildi) {
+      const not = document.createElement("p");
+      not.className = "hint kk-not";
+      not.textContent = "kapalı hatırlanmıştı — sapma geldiği için açıldı";
+      kart.insertBefore(not, govde);
+    }
+  });
+  // YASA 4: bulgu sessizce yutulmaz. Özet üretemeyen kart bir tasarım bulgusudur ve kapak
+  // ALMAZ — ekranda bütçe satırında sayılır, konsolda ADIYLA yazılır.
+  if (ozetsiz.length) console.warn("kart sözleşmesi · özet üretilemedi (kapak verilmedi):", ozetsiz.join(", "));
+  _KAT_KATLANIR = katlanir;
+  _katKontrolCiz(kok);
+}
+// ---- SAYFA BAŞINA TEK GLOBAL KONTROL ---------------------------------------------------------
+// Denetim §5.2: "tek tek 39 kart açmak bir görev değil bir ceza." Kontrol `.alan-bas`ın içine
+// girer; `alanSayfasi` her çizimde orayı yeniden yazdığı için bayat kalamaz.
+// KATLANIR KART YOKSA KONTROL DE YOK: hiçbir şeyi açmayan bir düğme, ekranda duran bir yalandır.
+function _katKontrolCiz(kok) {
+  const bas = kok.querySelector(".alan-bas");
+  if (!bas) return;
+  const eski = bas.querySelector(".kk-kontrol");
+  if (eski) eski.remove();
+  if (!_KAT_KATLANIR) return;
+  const kap = document.createElement("div");
+  kap.className = "kk-kontrol";
+  kap.innerHTML = `<button type="button" class="kk-hepsi" data-kk-hepsi="ac">hepsini aç ⌄</button>` +
+    `<button type="button" class="kk-hepsi" data-kk-hepsi="kapat">hepsini kapat ⌃</button>` +
+    `<span class="kk-butce mut" aria-live="polite"></span>`;
+  bas.appendChild(kap);
+  _katKontrolTazele();
+}
+// BÜTÇE BEYANI — sayıyla, renksiz. Aşım gizlenmez ve şiddet rengi de almaz (renk yalnız anomalide).
+function _katKontrolTazele() {
+  const sayfa = document.querySelector(".page.active");
+  const el = sayfa && sayfa.querySelector(".kk-butce");
+  if (!el) return;
+  // SAYFA KİMLİĞİ DOM'DAN OKUNUR, modül durumundan DEĞİL. Modülde tutulan sayı en son KURULAN
+  // sayfaya aittir; geçiş ağı beklemediği için (`go()`) arka planda başka bir sayfa çizilebilir
+  // ve o fotoğraf ekrandakine ait olmayabilir — bütçe satırı BAŞKA bir sayfanın tavanını
+  // yazardı. Aynı gerekçe sayaçlar için de geçerli: hepsi ekrandaki DOM'dan sayılır.
+  const alan = sayfa.id.replace(/^page-/, "");
+  const acik = sayfa.querySelectorAll('.card:not([data-kat="evet"]), .card[data-kat="evet"][data-kat-acik="1"]').length;
+  const toplam = sayfa.querySelectorAll(".card").length;
+  const ozetsiz = sayfa.querySelectorAll('.card[data-kart][data-kat="hayir"]').length;
+  const butce = KART_BUTCESI[alan];
+  const parca = [`${acik}/${toplam} kart açık`];
+  if (butce == null) parca.push("bütçe ÖLÇÜLEMEDİ — bu sayfa için tavan yazılmamış");
+  else {
+    parca.push(`bütçe ${butce}`);
+    if (acik > butce) parca.push(`tavan ${acik - butce} kart aşıldı — kart silinmedi, beyan edildi`);
+  }
+  if (ozetsiz) parca.push(`${ozetsiz} kart özet üretemedi (kapak yok)`);
+  el.textContent = parca.join(" · ");
+}
+// TIKLAMA TEK DELEGE DİNLEYİCİDE. Satır içi öznitelik YOK (CSP `script-src 'self'` satır içi olay
+// özniteliklerini de bloklar) ve `EYLEMLER` izin listesine yeni ad da girmiyor: o liste DOM'a
+// `data-act` sokabilen birine global fonksiyon açmamak için var; kapak mekanizması global
+// fonksiyon çağırmıyor, kendi düğmesini kendi tanıyor.
+document.addEventListener("click", e => {
+  const hepsi = e.target.closest(".kk-hepsi");
+  if (hepsi) {
+    const ac = hepsi.dataset.kkHepsi === "ac";
+    const sayfa = hepsi.closest(".page") || document;
+    sayfa.querySelectorAll('.card[data-kat="evet"]').forEach(k => {
+      _katDurumYaz(k, ac);
+      _katYaz(k.dataset.katAlan || "", k.dataset.katKimlik || "", ac);
+    });
+    _katKontrolTazele();
+    return;
+  }
+  const dugme = e.target.closest(".kk-dugme");
+  if (dugme) katKapak(dugme.closest(".card"));
+});
 
 // ==============================================================================================
 // DURUM KART-IZGARASI (v191) — "Koşu & Döngü" ile "Portföy & Emirler" ÇAKIŞMASININ KAPANIŞI
@@ -3274,7 +3581,13 @@ async function opParcalar() {
       <!-- D1 · gerçekleşen R koşulsuz yeşil, açık R koşulsuz kehribardı. İkisi de BÜYÜKLÜK,
            hiçbiri hüküm: kısmi dolumda riskin ne kadarının kapandığını, ne kadarının açıkta
            kaldığını söylerler. "Açık risk var" bir alarm seviyesi değildir — alarm, açık riskin
-           TAVANI aştığı yerde doğar ve o ayrı bir satırdır (`.alarmbutce.asim`, --sev-2). -->
+           TAVANI aştığı yerde doğar ve o ayrı bir satırdır (.alarmbutce.asim, --sev-2).
+           TERS TIRNAK YOK — jeton/seçici adları burada TIRNAKSIZ yazılır. Bu yorum bir ŞABLON
+           DEĞİŞMEZİNİN İÇİNDE ve oradaki her ters tırnak şablonu erkenden kapatır. Ölçüldü
+           (2026-08-07, node): iki ters tırnak pfills ifadesini bir özellik erişimine çeviriyor
+           ve kısmi dolum VARKEN çalışma zamanında TypeError atıyordu; istisna opParcalar()'ı
+           düşürür, yani ondan beslenen ALTI bölüm birden "Bölüm yüklenemedi"ye iner —
+           node --check bunu GÖRMEZ. Kural test_pano_mudahale_satiri_v194'te çivili. -->
       <span class="mono-num">gerçekleşen ${trn(pf.realized_risk_r, 2)}R</span>
       <span class="mono-num">açık ${trn(pf.open_risk_r, 2)}R</span></div>`).join("");
   const s1 = `<div class="card rise"><h2 class="t">Bölüm 1 · Mutabakat masası</h2>
@@ -3412,16 +3725,21 @@ async function opParcalar() {
   // olurdu. Ölçülemeyen her yerde "—" + NEDEN yazar.
   const sIcra = (() => {
     const slp2 = (d.icra || {}).slipaj;   // dosya idiyomu: `|| {}` zinciri, opsiyonel-zincir yok
-    const bas = `<div class="card rise"><h2 class="t">İcra gerçekliği
-      <span class="tx3" style="font-weight:400">(E2 slipaj defteri · kart EXE-2026-001)</span></h2>`;
+    // BAŞLIK BİR FONKSİYON, DİZGİ DEĞİL: üç dalın üçü de AYNI başlığı basar ama KAPALI ÖZETİ
+    // dala göre değişir (ölçüm yok / defter boş / ölçüldü) ve özet başlığın hemen ardında durmak
+    // zorunda. Üç yere üç kez yazmak, sözleşmenin üç kopyası olurdu.
+    const kartBas = ozet => `<div class="card rise"${katKart("mutabakat:icra")}><h2 class="t">İcra gerçekliği
+      <span class="tx3" style="font-weight:400">(E2 slipaj defteri · kart EXE-2026-001)</span></h2>${ozet}`;
     // ÜÇ HÂL AYRI (`_gapRows` / kapı bloğu deseni): yük YOK (ölçüm okunamadı) ≠ defter BOŞ
     // (ölçüldü, satır düşmedi) ≠ dolu. Birincisi arıza, ikincisi durum — aynı kutuya sığmazlar.
-    if (!slp2 || !Object.keys(slp2).length) return `${bas}
+    if (!slp2 || !Object.keys(slp2).length) return `${kartBas(kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: "teşhis yükünde <code>icra.slipaj</code> yok — E2 ölçümü okunamadı (\"icra temiz\" DEĞİL)." }))}
       <p class="hint"><span class="mut">Ölçüm okunamadı — E2 özeti teşhis yükünde yok
         (<code>icra.slipaj</code>). Bu kutu <b>ölçüm YOK</b> demektir, "icra temiz" demek
         değildir.</span></p></div>`;
     const pen = esc(String(slp2.pencere_gun ?? "?"));
-    if (String(slp2.durum || "").includes("defter boş")) return `${bas}
+    if (String(slp2.durum || "").includes("defter boş")) return `${kartBas(kartOzeti({ deger: null, rozet: "DEFTER BOŞ",
+      meta: `${esc(slp2.durum)} · defterde ${trn(slp2.n_defter)} satır — boş defterden oran ÜRETİLMEZ ("%0 ret" yazmak "slipaj yok" demek olurdu).` }))}
       <div class="srow"><span>Defter</span><b class="mut">${esc(slp2.durum)}</b></div>
       <div class="srow"><span>Defterdeki satır</span><b class="mono-num">${trn(slp2.n_defter)}</b></div>
       <p class="hint">Nedeni yük kendi söylüyor; pano ikinci bir açıklama uydurmaz. Boş defterden
@@ -3492,6 +3810,20 @@ async function opParcalar() {
           : "ortak plan yok — iki motor karşılaştırılamadı",
         rozet: mt.ortak_plan_n ? "" : "ÖLÇÜLEMEDİ" }),
     ], "İcra gerçekliğinin bölüm özeti");
+    // KAPALI ÖZET (v198) — ŞERİDİN DÖRT HÜCRESİNDEN BİRİ SEÇİLİR, beşinci bir sayı UYDURULMAZ.
+    // Seçilen: AYNA RET ORANI. Gerekçe: kartın sorusu "emir gerçekten gitti mi?" ve o sorunun ilk
+    // kapısı brokerin reddi; dolum/kill/ayrışma o kapıdan GEÇENLERİ ölçer. Payda aynı: gönderim
+    // denemesi. Kart açıldığında dört hücrenin dördü de yerinde durur — özet onların yerini
+    // almaz, hangisinin bakılmayı hak ettiğini söyler.
+    const bas = kartBas(kartOzeti({
+      deger: ay.red_orani == null ? null : pctf(ay.red_orani, 1),
+      degerSinif: ay.red_orani == null ? "" : (ay.red_orani > 0 ? "warn" : ""),
+      oran: ay.red_orani, payda: `gönderim denemesi (${trn(ay.n)})`,
+      meta: ay.red_orani == null
+        ? "gönderim denemesi yok — ret oranı tanımsız; defter dolu ama ayna bacağı ölçülemedi."
+        : `${trn(ay.n)} denemede · dolum ${dl.dolum_orani == null ? "ölçülemedi" : pctf(dl.dolum_orani, 1)} · ${
+            asildi ? "iç motor kill ölçütü AŞILDI" : `${trn(mt.ayrisan_n)} plan ayrıştı`} · pencere ${pen} gün`,
+      rozet: ay.red_orani == null ? "ÖLÇÜLEMEDİ" : (asildi ? "KILL ÖLÇÜTÜ AŞILDI" : (azOrnek(ay.n) ? "AZ ÖRNEK" : "")) }));
     return `${bas}${_ozet}
       <div class="srow"><span>Pencere</span><b class="mono-num">${pen} gün · pencerede ${trn(slp2.n)} satır · defterde ${trn(slp2.n_defter)}</b></div>
       <p class="hint">Kaynak: <code>${esc(slp2.kaynak || "—")}</code></p>
@@ -3541,9 +3873,11 @@ async function opParcalar() {
   // alanı sözleşmeyi kendi ağzıyla söyler, pano onu kendi cümlesiyle yeniden yazmaz.
   const sBand = (() => {
     const kb = (d.icra || {}).kotumser_band;   // dosya idiyomu: `|| {}` zinciri, opsiyonel-zincir yok
-    const bas = `<div class="card rise"><h2 class="t">Kötümser maliyet bandı
+    const bas = `<div class="card rise"${katKart("mutabakat:band")}><h2 class="t">Kötümser maliyet bandı
       <span class="tx3" style="font-weight:400">(E3 · yürürlük + ampirik ölçüm)</span></h2>`;
     if (!kb || !Object.keys(kb).length) return `${bas}
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis yükünde <code>icra.kotumser_band</code> yok — E3 ölçümü okunamadı (\"band yerinde\" DEĞİL)." })}
       <p class="hint"><span class="mut">Ölçüm okunamadı — E3 özeti teşhis yükünde yok
         (<code>icra.kotumser_band</code>). Bu kutu <b>ölçüm YOK</b> demektir, "maliyet bandı
         yerinde" demek değildir.</span></p></div>`;
@@ -3554,7 +3888,21 @@ async function opParcalar() {
                     yok: ["BAND YOK", "t-no"] };
     const [tlbl, tkls] = TABAN[String(yr.taban || "")] || [String(yr.taban || "—"), "t-no"];
     const amp = kb.ampirik_bps;   // None ≠ 0: ölçülmemiş bandı "0,0 bps" basmak "maliyet yok" derdi
+    // KAPALI ÖZET (v198): kartın sorusu "hangi VARSAYIMLA faturalıyoruz ve o varsayım sınandı
+    // mı?" — değer yürürlükteki ek maliyet, çubuğun paydası ise ASGARİ ÖRNEKLEM (yükten okunur,
+    // panoya sabit yazılmaz — C10). İlerleme çubuğu "ampirik taban ne kadar yaklaştı"yı söyler;
+    // asgari yükte yoksa çubuk çizilmez.
     return `${bas}
+      ${kartOzeti({
+        deger: yr.ek_bps_giris == null ? null : `${trn(yr.ek_bps_giris, 2)} bps`,
+        oran: (kb.min_n && kb.n_olculen != null) ? Math.min(1, kb.n_olculen / kb.min_n) : null,
+        payda: kb.min_n ? `asgari örneklem (${trn(kb.min_n)} dolum · yükten)` : "",
+        meta: yr.ek_bps_giris == null
+          ? `yürürlükteki ek maliyet yükte yok — band ölçülemedi; taban ${esc(tlbl)}, ampirik ${trn(kb.n_dolan)} dolan satır.`
+          : `taban ${esc(tlbl)} · ölçülmüş dolum ${trn(kb.n_olculen)}/${trn(kb.min_n)}${
+              amp == null ? " · ampirik band henüz kurulmadı" : ` · ampirik ${trn(amp, 2)} bps`}`,
+        degerSinif: String(yr.taban || "") === "yok" ? "warn" : "",
+        rozet: String(yr.taban || "") === "yok" ? "BAND YOK" : (amp == null ? "AMPİRİK YOK" : "") })}
       <h3 class="t">Yürürlükteki band ${_chip(tlbl, tkls)}</h3>
       <div class="srow"><span>Ek maliyet <span class="tx3">(giriş bacağına)</span></span>
         <b class="mono-num">${trn(yr.ek_bps_giris, 2)} bps</b></div>
@@ -3598,15 +3946,19 @@ async function opParcalar() {
   // bacağı yok" demek olurdu.
   const sGeceG = (() => {
     const gg = (d.icra || {}).gece_gunduz;
-    const bas = `<div class="card rise"><h2 class="t">Gece / gündüz ayrıştırması
+    const bas = `<div class="card rise"${katKart("mutabakat:gecegun")}><h2 class="t">Gece / gündüz ayrıştırması
       <span class="tx3" style="font-weight:400">(E4 · tutuş yolunun iki bacağı)</span></h2>`;
     if (!gg || !Object.keys(gg).length) return `${bas}
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis yükünde <code>icra.gece_gunduz</code> yok — E4 ölçümü okunamadı (\"bacaklar dengeli\" DEĞİL)." })}
       <p class="hint"><span class="mut">Ölçüm okunamadı — E4 özeti teşhis yükünde yok
         (<code>icra.gece_gunduz</code>). Bu kutu <b>ölçüm YOK</b> demektir, "bacaklar dengeli"
         demek değildir.</span></p></div>`;
     // ÜÇ HÂL AYRI (`_gapRows` deseni): yük YOK (yukarısı) ≠ ölçülemedi (`neden_bos` — yük nedenini
     // KENDİ söyler) ≠ ölçüldü. Ortadaki hâlde tek bir bacak yüzdesi bile uydurulmaz.
     if (gg.neden_bos) return `${bas}
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: `${esc(gg.neden_bos)} · defterde ${trn(gg.n)} işlem, ${trn(gg.n_olculemeyen)} ölçülemeyen — bacak payı ÜRETİLMEZ.` })}
       <div class="srow"><span>Durum</span><b class="mut">${esc(gg.neden_bos)}</b></div>
       <div class="srow"><span>Defterdeki işlem · ölçülemeyen</span>
         <b class="mono-num">${trn(gg.n ?? 0)} · ${trn(gg.n_olculemeyen ?? 0)}</b></div>
@@ -3629,7 +3981,19 @@ async function opParcalar() {
         <span class="mono-num num">${pctf(c.islem, 2)}${ince
           ? ' <span class="mut">· ince</span>' : ""}</span></div>`;
     }).join("");
+    // KAPALI ÖZET (v198): kartın sorusu "kâr hangi bacaktan geldi?" — değer GECENİN PAYI,
+    // paydası ölçülebilen defter satırı. İki bacak ~0 ise pay TANIMSIZDIR ve çubuk çizilmez
+    // (kartın kendi kuralı, özete aynen taşındı).
     return `${bas}
+      ${kartOzeti({
+        deger: gn.gece_payi == null ? null : pctf(gn.gece_payi, 2),
+        oran: gn.gece_payi == null ? null : Math.max(0, Math.min(1, Number(gn.gece_payi))),
+        payda: gn.gece_payi == null ? "" : `ölçülebilen işlem (${trn(gg.n)})`,
+        meta: gn.gece_payi == null
+          ? `iki bacak ~0 — gecenin payı tanımsız; defterde ${trn(gg.n)} işlem, ${trn(gg.n_olculemeyen)} ölçülemeyen.`
+          : `gece ${pctf(gn.gece, 2)} · gündüz ${pctf(gn.gunduz, 2)} · icra farkı ${pctf(gn.icra_farki, 2)}${
+              gg.n_olculemeyen ? ` · ${trn(gg.n_olculemeyen)} satır ölçülemedi` : ""}`,
+        rozet: gn.gece_payi == null ? "PAY TANIMSIZ" : (azOrnek(gg.n) ? "AZ ÖRNEK" : "") })}
       <h3 class="t">Genel <span class="tx3">(ölçülebilen tüm satırlar)</span></h3>
       <div class="srow"><span>Gece bacağı <span class="tx3">(önceki kapanış → açılış)</span></span>
         <b class="mono-num">${pctf(gn.gece, 2)}</b></div>
@@ -4120,7 +4484,18 @@ async function opParcalar() {
       paya girmez — kuzey yıldızı gürültüyle yanamaz.</p>` : ""}
     ${ev && ev.unmeasured ? `<p class="hint" style="margin-top:4px">${ev.unmeasured} ölçüt <b>ölçülemedi</b> (örneklem eşiği dolmadı) —
       bu bir başarısızlık DEĞİL, henüz cevaplanmamış bir sorudur; aşağıdaki satırlar hangisi olduğunu söyler.</p>` : ""}`;
-  const sEdge = `<div class="card rise"><h2 class="t">Edge sağlığı · beş ölçüt</h2>
+  // KAPALI ÖZET (v198): kuzey yıldızının kendi paydası zaten beş — çubuk onu okur, uydurma bir
+  // tavan kurmaz. ÖLÇÜLEMEYEN ölçüt sayısı meta'da ADIYLA durur: "3/5 geçti" cümlesi, ikisinin
+  // ölçülemediği bilgisinden koparılırsa bir başarısızlık gibi okunur (kartın kendi şerhi).
+  const sEdge = `<div class="card rise"${katKart("bilesenic:edge")}><h2 class="t">Edge sağlığı · beş ölçüt</h2>
+    ${kartOzeti(!ev ? {
+      deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: "/api/diagnostics <code>edge_verdict</code> alanı boş — hüküm üretilmedi (0/5 geçti DEĞİL)." }
+    : { deger: `${ev.passed}/5`, oran: ev.passed / 5, payda: "ölçüt (kuzey yıldızı)",
+        degerSinif: ev.zayif || ev.unmeasured ? "warn" : "",
+        meta: `${esc(ev.verdict || "")}${ev.unmeasured ? ` · ${ev.unmeasured} ölçüt ölçülemedi` : ""}${
+          ev.zayif ? " · zayıf ölçüt var" : ""}`,
+        rozet: ev.unmeasured ? "ÖLÇÜLEMEYEN VAR" : (ev.zayif ? "ZAYIF" : "") })}
     ${evSatir}
     <p class="hint">Her ölçütün yanında VERİ KAYNAĞI durur: <b>gerçek</b> = kapanmış canlı işlem · <b>sim</b> = karşı-olgusal defter
     (alınmamış hipotetik giriş) · <b>karışım</b> = ikisi tek havuzda. Ölçülmemiş olan "0" değil <b>ölçülmedi</b> yazar.</p>
@@ -4260,7 +4635,9 @@ async function opParcalar() {
   // Faz 6 silahlanması İKİ hükme birden bakar. Bu kart EDGE'i GEVŞETMEZ — paydası ayrı, cümlesi ayrı.
   const sSonuc = (() => {
     const rv = ml.result_verdict || null;
-    if (!rv) return `<div class="card rise"><h2 class="t">Sonuç hükmü · dolar merceği</h2>
+    if (!rv) return `<div class="card rise"${katKart("bilesenic:sonuc")}><h2 class="t">Sonuç hükmü · dolar merceği</h2>
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "/api/diagnostics <code>result_verdict</code> alanı boş — dolar merceği hükmü üretilmedi (0/4 DEĞİL)." })}
       <p class="empty">Hüküm henüz servis edilmiyor — /api/diagnostics <code>result_verdict</code> alanı boş.</p></div>`;
     const c = rv.criteria || {};
     const ton = rv.passed === 4 ? "pos" : rv.zayif ? "warn" : rv.unmeasured ? "warn" : "neg";
@@ -4311,7 +4688,15 @@ async function opParcalar() {
           return kk.length ? `Kural kaynağı: <code>${esc(kk.map(([k, v]) => `${k}=${v}`).join(" · "))}</code>. ` : "";
         })()}${tv.durum === "olculemedi" ? "" : `Olası hâller: ${esc((tv.durumlar || []).join(" / "))}.`}</p>`;
     })();
-    return `<div class="card rise"><h2 class="t">Sonuç hükmü · dolar merceği ${_chip("EDGE'in ikizi", "t-rv")}</h2>
+    // KAPALI ÖZET (v198): payda EDGE'inkinden AYRIDIR (4, 5 değil) — "EDGE'in ikizi" çipinin
+    // özetteki karşılığı budur. Tavan satırı BİLEREK metaya girmez: o bir ölçüt değil bir kolon
+    // ve paydayı 4'te tutma kuralı özete de aynen taşınır.
+    return `<div class="card rise"${katKart("bilesenic:sonuc")}><h2 class="t">Sonuç hükmü · dolar merceği ${_chip("EDGE'in ikizi", "t-rv")}</h2>
+      ${kartOzeti({ deger: `${rv.passed}/4`, oran: rv.passed / 4, payda: "ölçüt (dolar merceği)",
+        degerSinif: rv.zayif || rv.unmeasured ? "warn" : "",
+        meta: `${esc(rv.verdict || "")}${rv.unmeasured ? ` · ${rv.unmeasured} ölçüt ölçülemedi` : ""}${
+          b.n != null ? ` · n=${b.n}` : ""}`,
+        rozet: rv.unmeasured ? "ÖLÇÜLEMEYEN VAR" : (rv.zayif ? "ZAYIF" : "") })}
       <div class="srow" style="margin-top:2px"><span>HÜKÜM ${_chip(`${rv.passed}/4 geçti`, "t-rv")}</span>
         <b class="${ton}">${esc(rv.verdict)}</b></div>
       ${serit}
@@ -4361,7 +4746,18 @@ async function opParcalar() {
     const h = ml.portfolio_heat || null, v = ml.validation_trio || null;
     const d = v ? v.dsr_canli : null, p = v ? v.pbo : null;
     const isiTon = h == null || h.isi_pct == null ? "mut" : (h.isi_pct > 8 ? "warn" : "");
-    return `<div class="card rise"><h2 class="t">Portföy ısısı + doğrulama ${_chip("gösterge", "t-rv")}</h2>
+    // KAPALI ÖZET (v198): kartın ilk cümlesi masadaki AÇIK RİSKtir; payda özsermayedir ve
+    // beyan edilir (ısı yüzdesi zaten o paydanın oranı). Isı ölçülemediyse çubuk çizilmez.
+    return `<div class="card rise"${katKart("bilesenic:isi")}><h2 class="t">Portföy ısısı + doğrulama ${_chip("gösterge", "t-rv")}</h2>
+      ${kartOzeti(!h || h.isi_pct == null ? {
+        deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "/api/diagnostics <code>portfolio_heat</code> ısıyı vermedi — masadaki açık risk ölçülemedi (0$ DEĞİL)." }
+      : { deger: money(h.acik_risk_dolar), degerSinif: isiTon,
+          oran: Math.max(0, Number(h.isi_pct) / 100), payda: "özsermaye (NAV)",
+          meta: `NAV ${trn(h.isi_pct, 3)}% · ${trn(h.n_pozisyon)} pozisyon${
+            h.n_eksik ? ` · ${h.n_eksik} pozisyon eksik alanlı, sayılmadı` : ""}${
+            !v ? " · doğrulama üçlüsü servis edilmiyor" : ""}`,
+          rozet: h.n_eksik ? "EKSİK ALAN" : "" })}
       ${!h ? `<p class="empty">Isı henüz servis edilmiyor.</p>` : `
       <div class="srow"><span>Masadaki açık risk ${_chip("YALNIZ GÖSTERGE", "t-rv")}</span>
         <b class="${isiTon}">${money(h.acik_risk_dolar)} · NAV ${trn(h.isi_pct, 3)}%
@@ -4566,7 +4962,18 @@ async function opParcalar() {
   const sGolgeVaryant = (() => {
     const sv = ml.shadow_variants || null;
     if (!sv) return "";
-    return `<div class="card rise"><h2 class="t">Gölge-varyant portföyleri ${_chip("kâğıt defter", "t-rv")}</h2>
+    // KAPALI ÖZET (v198): değer AYRIŞAN varyant sayısıdır, payda ÇOKLU-KARŞILAŞTIRMA PAYDASI
+    // (`k_variants`) — şerh rakamdan ayrılamaz kuralı özette de geçerli: "3 varyant ayrıştı"
+    // cümlesi k=12 paydasından koparılırsa seçim yanlılığı görünmez olur.
+    const _ayrisan = Object.values(sv.kumulatif_ayrisma || {}).filter(x => x).length;
+    return `<div class="card rise"${katKart("golge:varyant")}><h2 class="t">Gölge-varyant portföyleri ${_chip("kâğıt defter", "t-rv")}</h2>
+      ${kartOzeti(sv.n_satir ? {
+        deger: `${_ayrisan}/${sv.k_variants ?? "—"}`,
+        oran: sv.k_variants ? _ayrisan / sv.k_variants : null,
+        payda: sv.k_variants ? "varyant (çoklu-karşılaştırma paydası)" : "",
+        meta: `${sv.n_satir} defter satırı · ${_ayrisan} varyant kümülatif ayrışma taşıyor` }
+      : { deger: null, rozet: "ÖLÇÜLEMEDİ",
+          meta: esc(sv.durum || "varyant defteri satır üretmedi — durum gerekçesi de gelmedi (0 ayrışma DEĞİL).") })}
       ${sv.n_satir ? `
       <table class="tbl"><thead><tr><th>varyant</th><th>son karar</th><th class="num">sinyal / silahlanır</th><th class="num">kümülatif ayrışma</th></tr></thead>
       <tbody>${Object.entries(sv.son_karar || {}).map(([k, v]) => `<tr><td><code>${esc(k)}</code>
@@ -4661,8 +5068,18 @@ async function opParcalar() {
     const y = ml.y3_entry_gates || null;
     if (!y) return "";
     const sma = y.spy_sma_gate || {}, vix = y.vix_backwardation_gate || {}, caps = y.portfolio_caps || {};
-    return `<div class="card rise"><h2 class="t">Y3 rejim/risk dörtlüsü
+    // KAPALI ÖZET (v198): dörtlünün KAÇI fiilen karar yolunda? İki piyasa bacağı EDG-005 ile
+    // göstergeye indi, iki portföy tavanı default-OFF. Payda dörtlünün kendisi; değer, kapalı
+    // olanın sayısı DEĞİL karar yolunda ETKİN olanın sayısıdır — "dörtlü var" ile "dördü de
+    // etkisiz" aynı piksele düşemez.
+    const _y3Etkin = (caps.sector_cap_pct ? 1 : 0) + (caps.heat_cap_pct ? 1 : 0);
+    return `<div class="card rise"${katKart("bilesenic:y3")}><h2 class="t">Y3 rejim/risk dörtlüsü
         ${_chip("piyasa bacakları: GÖSTERGE (kapı değil)", "t-rv")}</h2>
+      ${kartOzeti({ deger: `${_y3Etkin}/4`, oran: _y3Etkin / 4, payda: "Y3 kolu (dörtlü)",
+        meta: `2 piyasa bacağı gösterge (karar yolunda değil) · ${2 - _y3Etkin} portföy tavanı KAPALI${
+          sma.hukum ? ` · SPY ${esc(sma.hukum)}` : ""}`,
+        rozet: sma.hukum === "altinda" ? "SPY SMA ALTINDA" : "",
+        degerSinif: sma.hukum === "altinda" ? "warn" : "" })}
       <div class="srow"><span>SPY ${sma.window ?? 200}-SMA göstergesi
         <span class="mut">(karar yolunda DEĞİL — ${esc((sma.knob_emekli || {}).karar || "EDG-2026-005")})</span></span>
         <b class="${sma.hukum === "altinda" ? "warn" : "mut"}">${sma.hukum
@@ -4738,7 +5155,9 @@ async function opParcalar() {
   // KALICILAŞMASIdır — tek seferlik bir elde-hesap bir hafta sonra kimsenin bakmadığı yerde eskir.
   const sSelale = (() => {
     const wf = ml.profit_waterfall || null;
-    if (!wf || !wf.genel) return `<div class="card rise"><h2 class="t">Kâr şelalesi · sinyal → çıkış → friksiyon → net</h2>
+    if (!wf || !wf.genel) return `<div class="card rise"${katKart("bilesenic:selale")}><h2 class="t">Kâr şelalesi · sinyal → çıkış → friksiyon → net</h2>
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "şelale ölçülemedi — kapanmış işlem yetersiz; boş tablo \"kayıp yok\" DEĞİLDİR." })}
       <p class="empty">Şelale henüz ölçülemedi — en az birkaç kapanmış işlem gerekir. Boş tablo "kayıp yok" DEĞİLDİR.</p></div>`;
     const g = wf.genel;
     // BAR GENİŞLİĞİ MUTLAK DEĞERE GÖRE, EN BÜYÜK BACAK %100: bacaklar R cinsinden ve işaretli;
@@ -4767,7 +5186,19 @@ async function opParcalar() {
         <span class="mono-num ${cls(v.net_r)}">${v.net_r == null ? "—" : (v.net_r > 0 ? "+" : "") + trn(v.net_r, 2) + "R"}</span>
         <span class="chain">çıkış verimi ${v.toplam_verim == null ? "tanımsız (MFE≤0)" : pctf(v.toplam_verim, 0)}
           <span class="mut">(toplulaştırılmış ΣR/ΣMFE)</span></span></div>`).join("");
-    return `<div class="card rise"><h2 class="t">Kâr şelalesi · sinyal → çıkış → friksiyon → net</h2>
+    // KAPALI ÖZET (v198): kartın tek cümlesi NET R'dir; kanıtın gücü kapanmış işlem sayısıdır
+    // (`wf.n`) ve payda ekranda yazar. ÇIKIŞ VERİMİ metada durur — "net +0,1R" cümlesi, MFE'nin
+    // ne kadarının geri verildiği bilgisinden koparılırsa kartın kendi sorusunu cevaplamaz.
+    return `<div class="card rise"${katKart("bilesenic:selale")}><h2 class="t">Kâr şelalesi · sinyal → çıkış → friksiyon → net</h2>
+      ${kartOzeti({
+        deger: g.net_r == null ? null : `${g.net_r > 0 ? "+" : ""}${trn(g.net_r, 3)}R`,
+        degerSinif: g.net_r == null ? "" : cls(g.net_r),
+        oran: kanitOrani(wf.n), payda: "kapanmış işlem",
+        meta: g.net_r == null
+          ? "net R ölçülmedi — özdeşliğin bacakları kurulamadı; sıfır kâr DEĞİL, ölçüm yok."
+          : `n=${wf.n} · çıkış verimi ${g.toplam_verim == null ? "tanımsız (MFE≤0)" : pctf(g.toplam_verim, 0)}${
+              g.friksiyon_r == null ? "" : ` · friksiyon ${trn(g.friksiyon_r, 3)}R`}`,
+        rozet: azOrnek(wf.n) ? "AZ VERİ" : "" })}
       <p class="hint">İşlem başına ortalama, R cinsinden. Özdeşlik: <code>${esc(wf.ozdeslik || "")}</code>${
         wf.ozdeslik_farki != null ? ` · artık ${trn(wf.ozdeslik_farki, 4)}` : ""} · n=${wf.n}.</p>
       ${bacaklar.map(bar).join("")}
@@ -4797,14 +5228,31 @@ async function opParcalar() {
   // aynı görsel dile sokmak, kartı bir kazanç tablosu gibi okuturdu.
   const sTrend = (() => {
     const tk = d.trend_kitabi || null;
-    if (!tk) return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap</h2>
+    if (!tk) return `<div class="card rise"${katKart("golge:trend")}><h2 class="t">Trend kolu · canlı gölge-kitap</h2>
+      ${kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "/api/diagnostics <code>trend_kitabi</code> alanı boş — defterin hâli ölçülemedi (kitap yok DEĞİL)." })}
       <p class="empty">Özet servis edilmiyor — /api/diagnostics <code>trend_kitabi</code> alanı boş.</p></div>`;
-    if (!tk.var) return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap ${_chip("DOĞMADI", "t-vi")}</h2>
+    if (!tk.var) return `<div class="card rise"${katKart("golge:trend")}><h2 class="t">Trend kolu · canlı gölge-kitap ${_chip("DOĞMADI", "t-vi")}</h2>
+      ${kartOzeti({ deger: null, rozet: "DOĞMADI",
+        meta: "state/trend_book.json henüz yazılmadı — ilk giriş ilk ay-sonunda olur (pozisyon 0 DEĞİL)." })}
       <p class="hint" style="margin-top:0">Defter (<code>state/trend_book.json</code>) henüz yazılmadı — kitap
       GEÇMİŞSİZ doğar ve ilk giriş ilk AY-SONUNDA olur. Bu bir arıza değil, kolun dürüst başlangıç hâlidir;
       "pozisyon 0" ile "defter yok" AYNI cümle değildir ve burada ikincisi yazıyor.</p></div>`;
-    return `<div class="card rise"><h2 class="t">Trend kolu · canlı gölge-kitap
+    return `<div class="card rise"${katKart("golge:trend")}><h2 class="t">Trend kolu · canlı gölge-kitap
         ${_chip("SANAL · SIFIR YETKİ", "t-rv")}</h2>
+      ${kartOzeti({
+        // Değer SANAL özsermayedir ve ffill damgasını YANINDA taşır — özet, kartın kendi
+        // dürüstlük şerhini kaybederek kısalamaz. Renk YOK: bu defter sıfır yetkili, canlı
+        // P&L'in görsel diline sokulmaz (kartın kendi kuralı, aynen özete taşındı).
+        deger: tk.equity == null ? null : _dolduruldu(money(tk.equity), tk.son_dolduruldu),
+        oran: kanitOrani(tk.kapanan), payda: "kapanan işlem",
+        meta: tk.equity == null
+          ? "eğri boş — sanal özsermaye ölçülmedi (sıfır DEĞİL); defter doğdu, ilk bar bekleniyor."
+          : `${trn(tk.pozisyon)} pozisyon · ${trn(tk.kapanan)} kapandı · ${trn(tk.gun)} gün eğri`,
+        // PIT şerhi defterden düşmüşse bu bir SAPMAdır: rakamlar şerhsiz okunmamalı ve kart
+        // kapağın altında kalmamalı. Rozet dikkat işaretidir; kurucu kartı açık doğurur.
+        rozet: tk.pit_serh ? "" : "PIT ŞERHİ DÜŞMÜŞ",
+        degerSinif: tk.pit_serh ? "" : "warn" })}
       <p class="hint" style="margin-top:0">EDG-2026-009'un hükümlü incumbent kolu (chandelier çıkış × N=10 × 12-1 momentum)
         canlı barlar üzerinde <b>sanal</b> bir defterde ileri yürütülüyor. Ölçüm DEĞİL — ölçülmüş bir hükmün
         canlı birikimi; emir yolu <b>import bile edilmiyor</b>.</p>
@@ -4885,7 +5333,20 @@ async function opParcalar() {
   const xc = pl.crosscheck || {}, io = pl.io || {};
   const xcCls = xc.status === "diverged" ? "neg" : (xc.status === "ok" ? "pos" : "warn");
   const quar = (pl.quarantine || []).map(t => _chip(t, "t-no")).join(" ");
-  const s4 = `<div class="card rise"><h2 class="t">Bölüm 4 · Veri hattı & karantina</h2>
+  // KAPALI ÖZET (v198): bölümün kendi sorusu "hat sağlam mı?" — özet KARANTİNAdaki sembol
+  // sayısını ve sabır sayacını taşır. `?? 0` YOK: sabır sayacı ölçülemediyse çubuk çizilmez
+  // (payda var ama pay yok) ve meta nedenini yazar.
+  const _sabirMax = pl.refetch_max || 8;
+  const _sabirN = Number.isFinite(Number(pl.refetch_attempts)) ? Number(pl.refetch_attempts) : null;
+  const _karantinaN = (pl.quarantine || []).length;
+  const s4 = `<div class="card rise"${katKart("veriboru:karantina")}><h2 class="t">Bölüm 4 · Veri hattı & karantina</h2>
+    ${kartOzeti({
+      deger: _karantinaN, degerSinif: _karantinaN ? "warn" : "",
+      oran: _sabirN == null ? null : _sabirN / _sabirMax, payda: `EOD sabır adımı (${_sabirMax})`,
+      meta: _sabirN == null
+        ? `karantinada ${_karantinaN} sembol · EOD sabır sayacı ölçülemedi (0 deneme DEĞİL) · SPY çapraz-doğrulama ${esc(xc.status || "—")}`
+        : `karantinada ${_karantinaN} sembol · EOD sabır ${_sabirN}/${_sabirMax} · SPY çapraz-doğrulama ${esc(xc.status || "—")}`,
+      rozet: _karantinaN ? "KARANTİNA" : (xc.status === "diverged" ? "SPY SAPMASI" : "") })}
     <div class="gaugewrap">
       ${(() => {
         // Burada karşılaştırma ölçüsü GERÇEKTEN var: `refetch_max` bir eşiktir — o sayıda
@@ -5052,8 +5513,26 @@ async function opParcalar() {
     : `<span class="tag ${_ageS >= 15 ? "t-vi" : "t-go"}" style="font-weight:400;font-size:10px;margin-left:8px"
         title="Rapor 20 sn'lik önbellekten okunur; bu sayı kaç saniye önce hesaplandığını söyler (0 = bu istekte).">${
         _ageS <= 0 ? "şu an hesaplandı" : `${esc(String(_ageS))} sn önce hesaplandı`}</span>`;
-  const s5 = `<div class="card rise"><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (7 desen)${
+  // KAPALI ÖZET (v198). ÜÇ DURUM ÜÇ SAYIYA ÇEVRİLİR ve payda UYGULANABİLİR desendir — yani
+  // ölçülemeyen dedektörler paydadan DÜŞER, paya girmez. "7 desen temiz" izlenimi tam olarak
+  // burada doğuyordu: ölçemeyen bir dedektörü temiz saymak, bu kartın kapattığı kusurun ta
+  // kendisi. Kart B11'in kökü (tek kartta beş alt başlık); BÖLÜNMESİ D2-b'ye kalıyor — bu tur
+  // sözleşmeyi kurar, içeriği bölmez.
+  const _patKeys = Object.keys(PAT_TR).filter(k => ig[k]);
+  const _patTemiz = _patKeys.filter(k => _patDurum(k, ig[k]) === "temiz").length;
+  const _patIhlal = _patKeys.filter(k => _patDurum(k, ig[k]) === "ihlal").length;
+  const _patUyg = _patTemiz + _patIhlal;
+  const s5 = `<div class="card rise"${katKart("veriboru:butunluk")}><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (7 desen)${
       patOlcumsuz.length ? " " + _chip(`${patOlcumsuz.length} DEDEKTÖR ÖLÇEMEDİ`, "t-vi") : ""}${ageBadge}</h2>
+    ${kartOzeti(!_patKeys.length ? {
+      deger: null, rozet: "ÖLÇÜLEMEDİ",
+      meta: "/api/diagnostics <code>integrity</code> hiçbir desen döndürmedi — dedektörler koşmadı (temiz DEĞİL)." }
+    : { deger: `${_patTemiz} → ${_patIhlal}`, degerSinif: _patIhlal ? "warn" : "",
+        oran: _patUyg ? _patTemiz / _patUyg : null,
+        payda: _patUyg ? `uygulanabilir desen (${_patUyg})` : "",
+        meta: `${_patIhlal} desen düşüyor · ${patOlcumsuz.length} dedektör ölçemedi${
+          _ageS == null ? "" : ` · ${_ageS <= 0 ? "şu an hesaplandı" : esc(String(_ageS)) + " sn önce hesaplandı"}`}`,
+        rozet: _patIhlal ? `${_patIhlal} İHLAL` : (patOlcumsuz.length ? "ÖLÇEMEYEN DEDEKTÖR" : "") })}
     ${patRows || '<p class="hint">Bütünlük raporu yok.</p>'}
     ${patOlcumsuz.length ? `<p class="hint">Bu turda hüküm veremeyen dedektör: <b>${
       esc(patOlcumsuz.map(k => PAT_TR[k]).join(", "))}</b> (watchdog <code>olculemedi</code>/<code>detector_failed</code>).
@@ -5098,8 +5577,19 @@ async function opParcalar() {
     <div class="srow"><span>Akan bar / abone sembol</span><b>${mkt.bars_seen ?? 0} bar · ${mkt.subscribed ?? 0} sembol</b></div>
     ${mkt.last_bar_at ? `<div class="srow"><span>Son kapanmış bar</span><b>${relTime(mkt.last_bar_at)}${mkt.last_bar_age_s > 180 ? ' · <span class="warn">seyrek (piyasa kapalı olabilir)</span>' : ""}</b></div>` : ""}
     ${mktDown && mkt.last_error ? `<div class="srow"><span>Hata</span><b class="neg">${esc(mkt.last_error)}</b></div>` : ""}`;
-  const s6 = `<div class="card rise"><h2 class="t">Bölüm 6 · Redis sıcak katman <span class="tx3" style="font-weight:400">(intraday)</span>
+  // KAPALI ÖZET (v198): iki akış (Redis + piyasa-veri) tek satırda. Payda "izlenen akış (2)" —
+  // uydurma bir tavan değil, kartın kendi kapsamı. "henüz denenmedi" hâli ne bağlı ne kopuktur
+  // ve paya girmez; meta onu adıyla söyler.
+  const _akisBagli = (hsOk ? 1 : 0) + (mktOk ? 1 : 0);
+  const _akisKopuk = (hsDown ? 1 : 0) + (mktDown ? 1 : 0);
+  const s6 = `<div class="card rise"${katKart("veriboru:redis")}><h2 class="t">Bölüm 6 · Redis sıcak katman <span class="tx3" style="font-weight:400">(intraday)</span>
       ${_chip(hsOk ? "BAĞLI" : (hsDown ? "KOPUK" : "—"), hsOk ? "t-go" : (hsDown ? "t-no" : "t-vi"))}</h2>
+    ${kartOzeti({ deger: `${_akisBagli}/2`, degerSinif: _akisKopuk ? "warn" : "",
+      oran: _akisBagli / 2, payda: "izlenen akış (Redis + piyasa-verisi)",
+      meta: `Redis ${hsOk ? "bağlı" : (hsDown ? "KOPUK" : "denenmedi")} · piyasa akışı ${
+        mktOk ? "canlı" : (mktDown ? "KOPUK" : "başlamadı")} · ${trn(hs.reads)} okuma / ${trn(hs.writes)} yazma${
+        hs.fails ? ` · ${hs.fails} hata` : ""}`,
+      rozet: _akisKopuk ? "AKIŞ KOPUK" : "" })}
     <div class="srow"><span>Bağlantı</span><b class="${hsOk ? "pos" : (hsDown ? "neg" : "")}">${hsOk ? "bağlı · yanıt veriyor" : (hsDown ? "erişilemiyor — dosyaya düşülüyor" : "henüz denenmedi")}</b></div>
     <div class="srow"><span>Okuma / yazma / hata</span><b>${hs.reads ?? 0} okuma · ${hs.writes ?? 0} yazma${hs.fails ? ` · <span class="neg">${hs.fails} hata</span>` : " · 0 hata"}</b></div>
     ${hsDown ? `<div class="srow"><span>Kopuk</span><b class="neg">${hs.down_since ? relTime(hs.down_since) : "—"}${hs.last_error ? " · " + esc(hs.last_error) : ""}</b></div>` : ""}
@@ -5145,7 +5635,22 @@ async function opParcalar() {
           p.son_hata ? `<br><span class="neg">${esc(String(p.son_hata).slice(0, 110))}</span>` : ""}</span>
         ${_chip(lbl, kls)}</div>`;
     }).join("");
-    return `<div class="card rise"><h2 class="t">Sağlayıcı sağlığı <span class="tx3" style="font-weight:400">(${satirlar.length} adaptör · kapsam: ${esc(blok.kapsam || "—")})</span></h2>
+    // KAPALI ÖZET (v198). PAYDA "ÇAĞRILAN adaptör": bu süreçte hiç çağrılmamış bir adaptör ne
+    // sağlıklı ne arızalıdır ve paydaya girerse oran yalan söyler — kartın kendi beyanı zaten
+    // bunu söylüyordu ("sayaçlar süreç-içidir"), özet o beyanı ödünç alır.
+    const _sagCagrili = satirlar.filter(p => !p.olculemedi && p.ok != null);
+    const _sagIyi = _sagCagrili.filter(p => p.ok === true).length;
+    const _sagKotu = _sagCagrili.filter(p => p.ok === false).length;
+    const _sagOlcum = satirlar.filter(p => p.olculemedi).length;
+    return `<div class="card rise"${katKart("veriboru:saglayici")}><h2 class="t">Sağlayıcı sağlığı <span class="tx3" style="font-weight:400">(${satirlar.length} adaptör · kapsam: ${esc(blok.kapsam || "—")})</span></h2>
+      ${kartOzeti(!_sagCagrili.length ? {
+        deger: null, rozet: _sagOlcum ? "ÖLÇÜLEMEDİ" : "ÇAĞRI YOK",
+        meta: `${satirlar.length} adaptörün hiçbiri bu süreçte çağrılmadı — sağlık ölçülemedi (arıza DEĞİL); ${_sagOlcum} adaptörde sağlık okuması istisna verdi.` }
+      : { deger: `${_sagIyi}/${_sagCagrili.length}`, degerSinif: _sagKotu ? "warn" : "",
+          oran: _sagIyi / _sagCagrili.length, payda: "çağrılan adaptör",
+          meta: `${_sagKotu} adaptörde son çağrı başarısız · ${satirlar.length - _sagCagrili.length} adaptör hiç çağrılmadı${
+            _sagOlcum ? ` · ${_sagOlcum} ölçülemedi` : ""}`,
+          rozet: _sagKotu ? "SON ÇAĞRI BAŞARISIZ" : "" })}
       ${rows || '<div class="empty">Sağlayıcı satırı üretilmedi.</div>'}
       <p class="hint">${esc(blok.beyan || "")}</p></div>`;
   })();
@@ -5688,7 +6193,16 @@ RENDER.ajan = async () => {
   $("ajan-own").innerHTML = bolumBasHTML("ajan", "Hipotez defteri",
     "Beyin ne önerdi, kapı ne dedi, gerçekte ne oldu — üçü yan yana. Her satır açılır: kapı "
     + "kaydı, OOS sayıları ve eleme gerekçesi çekmecede.")
-    + `<div class="card rise"><h2 class="t">Strateji sürümleri (v01 → …)</h2>
+    + `<div class="card rise"${katKart("ajan:surumler")}><h2 class="t">Strateji sürümleri (v01 → …)</h2>
+      ${kartOzeti(!versions.length ? {
+        deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "karne defterinde sürüm satırı yok — ölçülemedi (v01'de duruyor DEĞİL)." }
+      : { deger: "v" + String(sb.current_version ?? versions[versions.length - 1][0]).padStart(2, "0"),
+          oran: kanitOrani(versions.length), payda: "kayıtlı sürüm",
+          meta: `${versions.length} sürüm kayıtlı${(() => {
+            const son = versions[versions.length - 1][1] || {};
+            return son.changed_variable ? ` · son değişen <b>${esc(son.changed_variable)}</b>` : "";
+          })()}` })}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${timeline || '<span class="mut">yalnızca v01</span>'}</div></div>
     ${skillAttrCard(d.skill_attribution)}
     <div class="lstack rise" style="margin-top:16px">${cards || '<div class="empty">Henüz tahmin yok.</div>'}</div>`;
@@ -5727,7 +6241,19 @@ function skillAttrCard(attr) {
       <span class="mono-num mut">${s.n_cf || 0}</span>
       <span class="mono-num" style="color:${cfc}">${s.cf_avg_r == null ? '—' : (s.cf_avg_r > 0 ? '+' : '') + s.cf_avg_r}R</span></div>`;
   };
-  return `<div class="card rise"><h2 class="t">Beceri katkısı — hangi araç işe yarıyor? <span class="tx3" style="font-weight:400">(en zayıf üstte)</span></h2>
+  // KAPALI ÖZET (v198): kartın kendi cümlesi "en zayıf üstte" — özet de onu söyler. Değer EN
+  // ZAYIF halkanın ortalama R'si, kanıt çubuğunun paydası o halkanın kapanmış işlem sayısı.
+  // Negatif değer YÖN rolündedir (şiddet değil): kartı kendiliğinden açmaz.
+  const en = skills[0] || {};
+  const ozet = kartOzeti(en.avg_r == null
+    ? { deger: null, meta: `${skills.length} araç listeleniyor ama en zayıfının ortalama R'si ölçülemedi — kapanmış işlem yok.`,
+        rozet: "ÖLÇÜLEMEDİ" }
+    : { deger: `${en.avg_r > 0 ? "+" : ""}${en.avg_r}R`, degerSinif: en.avg_r > 0 ? "pos" : "neg",
+        oran: kanitOrani(en.n), payda: "kapanmış işlem (en zayıf araç)",
+        meta: `${skills.length} araç ölçüldü · en zayıf <b>${esc(en.skill || "—")}</b> · n=${trn(en.n)}`,
+        rozet: azOrnek(en.n) ? "AZ VERİ" : "" });
+  return `<div class="card rise"${katKart("ajan:beceri")}><h2 class="t">Beceri katkısı — hangi araç işe yarıyor? <span class="tx3" style="font-weight:400">(en zayıf üstte)</span></h2>
+    ${ozet}
     <div class="tbl" style="margin-top:10px">
       <div class="trow head" style="grid-template-columns:1fr 46px 60px 64px 56px 70px"><span>ARAÇ</span><span>N</span><span>İSABET</span><span>ORT. R</span><span>N·SİM</span><span>SİM R</span></div>
       ${skills.map(row).join('')}</div></div>`;
@@ -5749,9 +6275,20 @@ function scatter(pts) {
 RENDER.hafiza = async () => {
   const d = await j("/api/memory");
   window._lessons = d.lessons_md;
+  // KAPALI ÖZET (v198): "içeride önemli bir şey var mı?" — kaç yazılı ders var, kaç başlık
+  // altında. Sayılar DOSYANIN KENDİSİNDEN türer; uç bu alanı hiç vermediyse ÖLÇÜLEMEDİ dalı
+  // çalışır ve "0 ders" YAZILMAZ (ölçemedik ile boş dosya aynı piksele düşemez).
+  const _dSatir = d.lessons_md == null ? null : String(d.lessons_md).split("\n");
+  const _dersN = _dSatir ? _dSatir.filter(l => /^- /.test(l)).length : null;
+  const _dersBaslik = _dSatir ? _dSatir.filter(l => /^#{1,2}\s/.test(l)).length : 0;
   $("page-hafiza").innerHTML = bolumBasHTML("hafiza", "Hafıza · çıkarılan dersler",
     "Ajanın kendi geçmişinden damıttığı, kalıcı yazılı dersler.")
-    + `<div class="card rise"><h2 class="t">lessons.md</h2>
+    + `<div class="card rise"${katKart("hafiza:dersler")}><h2 class="t">lessons.md</h2>
+      ${kartOzeti(_dSatir == null ? {
+        deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "/api/memory <code>lessons_md</code> alanı gelmedi — ölçülemedi (ders yok DEĞİL)." }
+      : { deger: _dersN, oran: kanitOrani(_dersN), payda: "yazılı ders",
+          meta: `${_dersBaslik} başlık · ${_dSatir.length} satır` })}
       <input class="searchbox" id="lsearch" placeholder="derslerde ara…" data-act="filterLessons" data-act-on="input"/>
       <div class="md" id="lessons" style="margin-top:14px">${mdToHtml(d.lessons_md)}</div></div>`;
 };
@@ -5814,7 +6351,14 @@ RENDER.skiller = async () => {
   };
   const cats = Object.entries(byCat).sort().map(([cat, list]) => {
     const rows = list.sort().map(satir).join("");
-    return `<div class="card rise"><h2 class="t">${esc(cat)} (${list.length})</h2>${rows}</div>`;
+    // KAPALI ÖZET (v198): kategori kartı "bu rafta kaç araç var, kaçı FİİLEN aktif kipte?"
+    // sorusunu satırları okutmadan cevaplar. Payda BEYANLI: rafın kendi araç sayısı.
+    const aktifKip = list.filter(([, i]) => i.mode === "active" && !i.shadow).length;
+    const golge = list.filter(([, i]) => i.shadow).length;
+    return `<div class="card rise"${katKart("skiller:kategori", cat)}><h2 class="t">${esc(cat)} (${list.length})</h2>
+      ${kartOzeti({ deger: `${aktifKip}/${list.length}`, oran: list.length ? aktifKip / list.length : null,
+        payda: "raftaki araç", meta: `${aktifKip} aktif kip · ${list.length - aktifKip - golge} hazır${golge ? ` · ${golge} gölge` : ""}` })}
+      ${rows}</div>`;
   }).join("");
   // Emekli rafı: hâl etiketi + gerekçe + (varsa) hangi araca birleştiği. Satırın tamamı kayıttan
   // gelir; alan yoksa hücre boş kalır, uydurma gerekçe yazılmaz.
@@ -5836,7 +6380,9 @@ RENDER.skiller = async () => {
         yalnız aktifleri sayar — bir aracın var olması onun koştuğu anlamına gelmez.</p>
       ${emekliRows}</div></details>` : "";
   const revs = d.revisions || [];
-  const revCard = revs.length ? `<div class="card rise" style="border-color:var(--amber)"><h2 class="t">Revizyon taslakları · onayın bekleniyor (${revs.length})</h2>
+  const revCard = revs.length ? `<div class="card rise" style="border-color:var(--amber)"${katKart("skiller:revizyon")}><h2 class="t">Revizyon taslakları · onayın bekleniyor (${revs.length})</h2>
+    ${kartOzeti({ deger: revs.length, rozet: "ONAY BEKLİYOR",
+      meta: `${revs.length} taslak · ${esc(revs.map(r => r.skill).slice(0, 3).join(", "))}${revs.length > 3 ? " …" : ""}` })}
     ${revs.map(r => `<div class="trow" style="grid-template-columns:1fr auto auto">
       <span><b>${esc(r.skill)}</b><br><span class="chain">${esc(r.rationale || "gerekçe yok")} · kanıt: n=${r.evidence?.n} ort ${r.evidence?.avg_r}R</span></span>
       <button class="dlbtn" data-act="skillRev" data-a1="${esc(r.skill)}" data-a2="apply">Onayla</button>
@@ -5861,7 +6407,9 @@ RENDER.skiller = async () => {
 // beceri") bir YETENEK değil bir İDDİA olur.
 function runsCard(runs) {
   runs = runs || [];
-  if (!runs.length) return `<div class="card rise"><h2 class="t">Pipeline koşuları</h2>
+  if (!runs.length) return `<div class="card rise"${katKart("skiller:kosular")}><h2 class="t">Pipeline koşuları</h2>
+    ${kartOzeti({ deger: null,
+      meta: "pipeline_runs.jsonl'de satır yok — ilk skill hattı koştuğunda ölçüm başlar (0 koşu DEĞİL: defter henüz açılmadı)." })}
     <div class="empty">Henüz koşu satırı yok — ilk skill pipeline'ı koştuğunda burada görünür.</div></div>`;
   const rows = runs.slice(0, 12).map(r => {
     const inv = (r.skills_invoked || []).length, notRun = (r.skills_declared_not_run || []).length;
@@ -5874,7 +6422,19 @@ function runsCard(runs) {
         r.error ? ` · <span class="neg">${esc(String(r.error).slice(0, 60))}</span>` : ""}</span>
       <span><span class="tag ${r.status === "ok" ? "t-go" : "t-no"}">${esc(String(r.status || "—"))}</span></span></div>`;
   }).join("");
-  return `<div class="card rise"><h2 class="t">Pipeline koşuları <span class="tx3" style="font-weight:400">(pipeline_runs.jsonl · en yeni ${Math.min(12, runs.length)})</span></h2>
+  // KAPALI ÖZET (v198): defterin TEK ölçtüğü körlük kanıtı — "beyan edildi, koşmadı". Payda
+  // BEYANLI ve gerçek: gösterilen koşularda beyan edilen toplam beceri. Beyan sıfırsa oran
+  // ÇİZİLMEZ (paydasız çubuk yok) ve meta nedenini yazar.
+  const _kosan = runs.slice(0, 12).reduce((s, r) => s + (r.skills_invoked || []).length, 0);
+  const _kosmayan = runs.slice(0, 12).reduce((s, r) => s + (r.skills_declared_not_run || []).length, 0);
+  const _beyan = _kosan + _kosmayan;
+  return `<div class="card rise"${katKart("skiller:kosular")}><h2 class="t">Pipeline koşuları <span class="tx3" style="font-weight:400">(pipeline_runs.jsonl · en yeni ${Math.min(12, runs.length)})</span></h2>
+    ${kartOzeti({ deger: `${_kosan}/${_beyan || "—"}`,
+      oran: _beyan ? _kosan / _beyan : null, payda: _beyan ? "beyan edilen beceri" : "",
+      degerSinif: _kosmayan ? "warn" : "",
+      meta: _beyan ? `${Math.min(12, runs.length)} koşu · ${_kosmayan} beceri beyan edildi KOŞMADI`
+                   : `${Math.min(12, runs.length)} koşu · hiçbiri beceri beyan etmemiş — oran tanımsız`,
+      rozet: _kosmayan ? "BEYAN≠KOŞU" : "" })}
     <div class="trow head" style="grid-template-columns:118px 130px 64px 1fr 74px"><span>NE ZAMAN</span><span>HAT</span><span>SÜRE</span><span>BECERİ KULLANIMI</span><span>DURUM</span></div>
     ${rows}
     <p class="hint" style="margin-top:8px">"beyan edildi KOŞMADI" satırı önemlidir: bir hat becerileri

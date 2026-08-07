@@ -211,7 +211,11 @@ def test_URETICI_TUKETICI_ALAN_ADLARI_ayni():
 def test_kac_dedektorun_olcemedigi_BASLIKTA_gorunur():
     """Yedi satırın içinde tek bir nötr çipi kaçırmak kolaydır; 'yedi desen temiz' izlenimi tam
     da bu kaçışla doğar. Sayı kartın başlığında da durur."""
-    s5 = _govde('const s5 = `<div class="card rise"><h2 class="t">Bölüm 5', "\n  // ------")
+    # ÇAPA v198'DE GENİŞLEDİ: kart etiketine kart sözleşmesinin `data-kart` işareti girdi
+    # (`katKart("veriboru:butunluk")`). Çapa `class="card rise"` ile `<h2` arasını artık
+    # SABİT saymaz — aradaki öznitelik parçası büyüyebilir, kartın kimliği başlıkta.
+    s5 = _govde('const s5 = `<div class="card rise"${katKart("veriboru:butunluk")}><h2 class="t">Bölüm 5',
+                "\n  // ------")
     assert "patOlcumsuz" in s5, "ölçülemeyen dedektör sayısı kart başlığında görünmüyor"
     assert "const patOlcumsuz" in KOD
 

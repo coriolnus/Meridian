@@ -79,11 +79,12 @@ def test_sessiz_hat_saglikliyken_TEK_SONUK_SATIR():
 
 def test_renk_YALNIZ_sapan_segmentte():
     """Şeridin tamamını boyamak 'hepsi bozuk' der ve toplamanın ayırt etme gücünü siler."""
-    assert re.search(r"\.sessizhat \.sh-sap\{[^}]*var\(--amber\)", CSS)
-    assert re.search(r"\.sessizhat \.sh-sap\.kritik\{[^}]*var\(--red\)", CSS)
+    # D1 (v197): hue-adlı jeton → ROL jetonu. İddia aynen: sapan segment ŞİDDET rengi taşır.
+    assert re.search(r"\.sessizhat \.sh-sap\{[^}]*var\(--sev-2\)", CSS)
+    assert re.search(r"\.sessizhat \.sh-sap\.kritik\{[^}]*var\(--sev-1\)", CSS)
     # `.sessizhat` kök kuralı bir para rengi TAŞIMAMALI
     kok = re.search(r"\.sessizhat\{([^}]*)\}", CSS).group(1)
-    for jeton in ("--amber", "--red", "--green"):
+    for jeton in ("--amber", "--red", "--green", "--sev-1", "--sev-2", "--sev-3"):
         assert jeton not in kok, f"sessiz hattın kök kuralı {jeton} taşıyor — sağlıklı şerit renkli"
 
 
@@ -154,9 +155,10 @@ def test_uyari_TONU_yalniz_olculen_tavan_asiminda():
     "aşım" hükmü kurulamaz — kurulsaydı ölçülemeyen bir şey hakkında hüküm olurdu."""
     assert '"asim_var": bool(asim["tepe"] or asim["duran"])' in WATCHDOG
     assert 'ab.asim_var ? " asim" : ""' in APPJS
-    assert re.search(r"\.alarmbutce\.asim\{[^}]*var\(--amber\)", CSS)
+    # D1 (v197): rol jetonu — aşım ŞİDDET kanalında (hue adı değil).
+    assert re.search(r"\.alarmbutce\.asim\{[^}]*var\(--sev-2\)", CSS)
     kok = re.search(r"\.alarmbutce\{([^}]*)\}", CSS).group(1)
-    for jeton in ("--amber", "--red", "--green"):
+    for jeton in ("--amber", "--red", "--green", "--sev-1", "--sev-2", "--sev-3"):
         assert jeton not in kok, f"alarm bütçesi satırı sapma yokken {jeton} taşıyor"
 
 

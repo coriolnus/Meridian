@@ -1,0 +1,26 @@
+KART SAYIMI — 2026-08-07 · D2-a kart sözleşmesi (statik emisyon atfı)
+betik: say_kart.py · yöntem ve sınırları betiğin başlığında yazılı
+
+ÖNCE = sözleşme öncesi ekranda AÇIK doğan kart (kapak yoktu, hepsi açıktı)
+SONRA = kapak kurulduktan sonra varsayılan AÇIK doğan kart
+        (= toplam − kapaklı; kapaklılar KAPALI doğar, dikkat/1. bölüm istisnaları hariç)
+
+sayfa       toplam  kapaklı   ÖNCE  SONRA  bütçe   aşım
+veri             9        4      9      5      6      0
+kosu             4        0      4      4      4      0
+portfoy         17        3     17     14      6      8
+ogrenme         39       18     39     21      6     15
+gozetim          3        0      3      3      3      0
+kilitler         5        0      5      5      5      0
+Σ               77       25     77     52
+
+kayıt defteri: 20 anahtar · kullanım: 20 anahtar · ölü kayıt: 0 · kayıtsız kullanım: 0
+
+KAPAK ALMAYAN BÖLÜMLER (D2-b kuyruğu — kart SİLİNMEDİ, kapak verilmedi):
+  ogrenme/karne 11 · ogrenme/hermes 10   (Öğrenme'nin kalan 21 kartı)
+  portfoy: brifing 3 · onaylar 4 · intraemir 3 · performans 3   (14 kart)
+  veri: market 2 · intraday 2 · veriboru/sIntra 1 (detay katmanında)   (5 kart)
+  kosu 4 · gozetim 3 · kilitler 5   (bütçelerinin altında, kapak gerekmedi)
+
+BEYAN: bütçe aşımı ekranda `.kk-butce` satırında SAYIYLA yazılır ve şiddet rengi taşımaz.
+Kart silme kararı bu turda ALINMADI (D2-b/IA turu).

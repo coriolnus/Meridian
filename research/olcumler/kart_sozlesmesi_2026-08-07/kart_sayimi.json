@@ -1,0 +1,304 @@
+{
+ "sayfa": {
+  "veri": {
+   "toplam": 9,
+   "bolumler": {
+    "market": {
+     "toplam": 2,
+     "direkt": 2,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "intraday": {
+     "toplam": 2,
+     "direkt": 0,
+     "parca": 2,
+     "parcalar": [
+      "p.s3=1",
+      "p.s4=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "veriboru": {
+     "toplam": 5,
+     "direkt": 0,
+     "parca": 5,
+     "parcalar": [
+      "p.s4=1",
+      "p.s5=1",
+      "p.s6=1",
+      "p.sIntra=1",
+      "p.sSag=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    }
+   },
+   "kapakli": 4,
+   "kapaksiz": 5
+  },
+  "kosu": {
+   "toplam": 4,
+   "bolumler": {
+    "adaylar": {
+     "toplam": 3,
+     "direkt": 3,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "kapilar": {
+     "toplam": 1,
+     "direkt": 0,
+     "parca": 1,
+     "parcalar": [
+      "p.s2=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    }
+   },
+   "kapakli": 0,
+   "kapaksiz": 4
+  },
+  "portfoy": {
+   "toplam": 17,
+   "bolumler": {
+    "brifing": {
+     "toplam": 3,
+     "direkt": 1,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 2,
+     "kaynak": [
+      "nextSessionCard"
+     ]
+    },
+    "onaylar": {
+     "toplam": 4,
+     "direkt": 3,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 1,
+     "kaynak": [
+      "ladderCard"
+     ]
+    },
+    "mutabakat": {
+     "toplam": 4,
+     "direkt": 0,
+     "parca": 4,
+     "parcalar": [
+      "p.s1=1",
+      "p.sBand=1",
+      "p.sGeceG=1",
+      "p.sIcra=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "intraemir": {
+     "toplam": 3,
+     "direkt": 0,
+     "parca": 3,
+     "parcalar": [
+      "p.s1=1",
+      "p.s2=1",
+      "p.s5=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "performans": {
+     "toplam": 3,
+     "direkt": 2,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 1,
+     "kaynak": [
+      "riskCard"
+     ]
+    }
+   },
+   "kapakli": 3,
+   "kapaksiz": 14
+  },
+  "ogrenme": {
+   "toplam": 39,
+   "bolumler": {
+    "karne": {
+     "toplam": 11,
+     "direkt": 7,
+     "parca": 4,
+     "parcalar": [
+      "op.sHermes=2",
+      "op.sNous=2"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "golge": {
+     "toplam": 4,
+     "direkt": 0,
+     "parca": 4,
+     "parcalar": [
+      "p.sGolgeVaryant=1",
+      "p.sTrend=3"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "bilesenic": {
+     "toplam": 7,
+     "direkt": 0,
+     "parca": 7,
+     "parcalar": [
+      "p.sDogrulama=1",
+      "p.sEdge=1",
+      "p.sSelale=2",
+      "p.sSonuc=2",
+      "p.sY3=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "hermes": {
+     "toplam": 10,
+     "direkt": 5,
+     "parca": 3,
+     "parcalar": [
+      "op.s3=1",
+      "op.sCark=1",
+      "op.sOzDeg=1"
+     ],
+     "yardimci": 2,
+     "kaynak": [
+      "eylemKutu",
+      "eylemSeridi",
+      "sprintCard"
+     ]
+    },
+    "ajan": {
+     "toplam": 2,
+     "direkt": 1,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 1,
+     "kaynak": [
+      "skillAttrCard"
+     ]
+    },
+    "skiller": {
+     "toplam": 4,
+     "direkt": 2,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 2,
+     "kaynak": [
+      "runsCard"
+     ]
+    },
+    "hafiza": {
+     "toplam": 1,
+     "direkt": 1,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 0,
+     "kaynak": []
+    }
+   },
+   "kapakli": 18,
+   "kapaksiz": 21
+  },
+  "gozetim": {
+   "toplam": 3,
+   "bolumler": {
+    "operasyon": {
+     "toplam": 3,
+     "direkt": 2,
+     "parca": 1,
+     "parcalar": [
+      "p.sOgr=1"
+     ],
+     "yardimci": 0,
+     "kaynak": []
+    }
+   },
+   "kapakli": 0,
+   "kapaksiz": 3
+  },
+  "kilitler": {
+   "toplam": 5,
+   "bolumler": {
+    "mudahale": {
+     "toplam": 1,
+     "direkt": 1,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 0,
+     "kaynak": []
+    },
+    "ayarlar": {
+     "toplam": 4,
+     "direkt": 3,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 1,
+     "kaynak": [
+      "_alpacaKartHTML"
+     ]
+    }
+   },
+   "kapakli": 0,
+   "kapaksiz": 5
+  }
+ },
+ "kayit": {
+  "golge:trend": "ogrenme",
+  "golge:varyant": "ogrenme",
+  "bilesenic:edge": "ogrenme",
+  "bilesenic:sonuc": "ogrenme",
+  "bilesenic:isi": "ogrenme",
+  "bilesenic:selale": "ogrenme",
+  "bilesenic:y3": "ogrenme",
+  "skiller:revizyon": "ogrenme",
+  "skiller:kosular": "ogrenme",
+  "skiller:kategori": "ogrenme",
+  "hafiza:dersler": "ogrenme",
+  "ajan:surumler": "ogrenme",
+  "ajan:beceri": "ogrenme",
+  "veriboru:karantina": "veri",
+  "veriboru:butunluk": "veri",
+  "veriboru:redis": "veri",
+  "veriboru:saglayici": "veri",
+  "mutabakat:icra": "portfoy",
+  "mutabakat:band": "portfoy",
+  "mutabakat:gecegun": "portfoy"
+ },
+ "kullanim": {
+  "mutabakat:icra": 1,
+  "mutabakat:band": 1,
+  "mutabakat:gecegun": 1,
+  "bilesenic:edge": 1,
+  "bilesenic:sonuc": 2,
+  "bilesenic:isi": 1,
+  "golge:varyant": 1,
+  "bilesenic:y3": 1,
+  "bilesenic:selale": 2,
+  "golge:trend": 3,
+  "veriboru:karantina": 1,
+  "veriboru:butunluk": 1,
+  "veriboru:redis": 1,
+  "veriboru:saglayici": 1,
+  "ajan:surumler": 1,
+  "ajan:beceri": 1,
+  "hafiza:dersler": 1,
+  "skiller:kategori": 1,
+  "skiller:revizyon": 1,
+  "skiller:kosular": 2
+ }
+}

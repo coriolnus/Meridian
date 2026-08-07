@@ -665,6 +665,57 @@ main{min-width:0}
 .detay-kat .dk-govde > .card > .t:first-child{margin-top:0}
 .detay-kat .dk-neden{margin-top:0;color:var(--tx3);max-width:80ch}
 
+/* ============================================================================
+   KART SÖZLEŞMESİ (v198 · D2-a) — KATLANIR KARTIN KAPAĞI
+   ----------------------------------------------------------------------------
+   ÜÇÜNCÜ DİL YOK. Kapalı özetin İÇERİĞİ `.pm-yield`/`.pm-conf`/`.pm-n`/
+   `.pm-thin`/`.pm-none` ile yazılır ve o sınıflar matrisin bloğunda TEK kez
+   tanımlıdır. Buradaki `.kk-*` kuralları yalnız KAPAĞIN kendisini taşır:
+   başlık düğmesi, ok, özetin yerleşimi, gövde kabı. Yeni renk jetonu YOK —
+   düğme `.card .t`nin rengini/izini MİRAS alır (`font:inherit`).
+
+   OK `.detay-kat > summary::before` DESENİNİN AYNISI (▸/▾). İkinci bir kapak
+   işareti icat etmek, panoda iki farklı "burada bir şey gizli" dili demekti.
+
+   HAREKET: `--t` jetonu (≤200ms) ve `prefers-reduced-motion` guard'ı belgenin
+   sonundaki global sıfırlamada (`*{transition:none!important}`) zaten var;
+   burada ikinci bir sorgu yazmak aynı kuralı iki yerde tutmak olurdu. */
+.kat-kart > .t{margin-bottom:0;padding-bottom:var(--s3)}
+.kat-kart[data-kat-acik="1"] > .t{margin-bottom:var(--s4)}
+.kk-dugme{display:flex;width:100%;align-items:center;gap:var(--s2);min-height:32px;
+  background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;
+  letter-spacing:inherit;text-transform:inherit;text-align:left;cursor:pointer}
+.kk-dugme:hover{color:var(--tx)}
+.kk-dugme:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kk-ad{flex:1 1 auto;min-width:0}
+/* Rozet başlığa TAŞINDIĞI için (kopya değil) kendi `.pm-thin` kuralını korur;
+   burada yalnız hizası verilir — `.pm-cell` içinde `align-self:flex-start`tı. */
+.kat-kart > .t .pm-thin{align-self:center;flex:none}
+.kk-ok{flex:none;font-size:10px;color:var(--tx3);line-height:1}
+.kk-ok::before{content:"\25B8"}
+.kat-kart[data-kat-acik="1"] .kk-ok::before{content:"\25BE"}
+/* KAPALI ÖZET HER İKİ HÂLDE DE GÖRÜNÜR (açıkken de): denetimin çizimi böyle —
+   açılan kart özeti kaybetmez, altına detayını ekler. Yerleşim `.durum-govde`
+   ile aynı reçete: dikey yığın, 5px ritim. */
+.kk-ozet{display:flex;flex-direction:column;gap:5px;min-width:0;padding-top:var(--s3)}
+.kk-ozet .pm-yield{font-size:clamp(16px,1.7vw,20px)}
+/* Hafızayı ezen kuralın BEYANI — sapma bir katmanın altında saklanamaz, ve
+   kartın neden kendiliğinden açıldığı ekrandan okunabilmeli. Renk taşımaz:
+   bu bir sapma değil, sapmanın GEREKÇESİdir. */
+.kk-not{margin-top:var(--s2);color:var(--tx3)}
+.kk-govde{padding-top:var(--s4);margin-top:var(--s4);border-top:1px solid var(--line)}
+.kk-govde > :is(.card,.g2,.mrow,.hero,.gloss,.detay-kat):first-child{margin-top:0}
+/* SAYFA BAŞINA TEK GLOBAL KONTROL + BÜTÇE BEYANI. `.alan-bas`ın içinde durur.
+   Bütçe aşımı SAYIYLA yazılır, RENKLE değil: renk kanalı yalnız anomalinindir
+   ve bir tasarım borcu anomali değildir. */
+.kk-kontrol{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);margin-top:var(--s5)}
+.kk-hepsi{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--tx2);
+  background:none;border:none;padding:4px 0;border-bottom:1px solid var(--line-2);
+  cursor:pointer;min-height:24px}
+.kk-hepsi:hover{color:var(--tx);border-bottom-color:var(--accent)}
+.kk-hepsi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kk-butce{font-family:var(--mono);font-size:11px;line-height:1.6}
+
 /* MÜDAHALE KOLLARI — üç kolon: ne yapar / şu anki hâli / düğme. Kapağın altındaki
    dört düğme aynı işi yapıyor ama orada hiçbir DURUM okunmuyordu; bu satırın var
    olma sebebi orta kolon. */
