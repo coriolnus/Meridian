@@ -37,7 +37,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **14 ops betiği** başlığıyla okundu
+- **15 ops betiği** başlığıyla okundu
 - **48 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -837,6 +837,37 @@ ELLE KOŞU:  bash ops/pull-a1-backups.sh          (ağ ister; ajan koşumlarınd
 
 AĞ DIŞI HİÇBİR ŞEYE DOKUNMAZ: yalnız okur (rsync pull) ve YEREL hedef dizine yazar. A1'de hiçbir
 dosya değişmez, hiçbir servis durdurulmaz/başlatılmaz.
+```
+
+## `ops/state_yetim_temizle.sh` {#ops-state-yetim-temizle-sh}
+
+```
+state_yetim_temizle.sh — `state/` içindeki YEDEK ARTIKLARINI `backups/state/`e TAŞIR (silmez).
+
+NEDEN VAR (MAKULLÜK bulgusu 1, 2026-08-07). `yeniden_hesap:orphan_state_files` canlıda 7 dosya
+sayıyordu ve ALTISI bizim artığımızdı: `dagit.sh` versiyonlu state kopyasının yedeğini
+`state/` İÇİNE yazıyordu (yani dedektörün taradığı dizine), bir de bakım penceresindeki bir
+`sed` iki dosya bırakmıştı. Kaynak `dagit.sh`ta onarıldı (yedek artık `backups/state/`e gider);
+bu betik ONARIMDAN ÖNCE DOĞMUŞ artıkları toplar.
+
+TAŞIR, SİLMEZ. Bu dosyalar GERİ DÖNÜŞ KOPYALARIDIR: `goal.yaml.bak-202608021652`, canlı motorun
+o dağıtımdan önceki yazılı yasasıdır. Silmek, geri dönüş yolunu kesmek olurdu. Taşımak dedektörü
+susturmaya YETER (tarama `state/` dizinine bakar) ve kanıtı korur.
+
+YALNIZ YEDEK SONEKLİ DOSYALAR — CANLI ARTEFAKT ASLA. Desen listesi ÖLÇÜLDÜ, uydurulmadı: canlıda
+görülen artıkların tamamı bu üç sonektendir. Özellikle `auth.json` bu betikle TAŞINMAZ: dedektör
+onu da orphan sayıyor ama o bir yedek değil, panonun CANLI kimlik dosyasıdır (kararı: kod
+tarafında beyan — `codelaw.DECLARED_SINKS`). Taşınsaydı operatör panosuna giremezdi.
+
+KURU KOŞU VARSAYILAN. Argümansız çağrı hiçbir şeye dokunmaz; yalnız ne yapılacağını yazar.
+
+KULLANIM
+bash ops/state_yetim_temizle.sh                 # A1'e SSH, kuru koşu (varsayılan)
+bash ops/state_yetim_temizle.sh --uygula        # A1'de TAŞI (bakım penceresinde)
+bash ops/state_yetim_temizle.sh --yerel <kök>   # SSH yok: verilen kökte çalış (test/host-içi)
+
+CANLI WORKER: bu betik defterlere YAZMAZ, yalnız yedek dosyalarını YENİDEN ADLANDIRIR. Yine de
+bakım penceresinde koşulması istenir — bir yedeği okurken taşımak (nadir de olsa) yarış üretir.
 ```
 
 ## `ops/stop-worker.sh` {#ops-stop-worker-sh}

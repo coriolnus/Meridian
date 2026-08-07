@@ -307,6 +307,21 @@ DECLARED_SINKS: dict[str, str] = {
                            "analytics/loop dosyaya değil SINIFA bakar — durum sınıfın iç meselesidir",
     "sp500_constituents.json": "endeks bileşen listesinin ağ önbelleği; tüketici adapters.constituents "
                                "erişimcileridir, dosya değil",
+    # BEYAN, "OKUYUCUSU YOK" DEĞİL "STATİK GRAF GÖREMİYOR" DİYOR — okuyucu ÖLÇÜLDÜ (2026-08-07).
+    # `yeniden_hesap:orphan_state_files` bu dosyayı 7 yetimden biri sayıyordu; ölçüm hükmü şu:
+    # okuyucusu VAR ve canlı yolun tam ortasında. Tarayıcının körlüğü sınıfsal — `artifact_graph`
+    # yalnız `store.read_*`/`write_*` çağrılarını görür, auth kendi dosya erişimini kullanır
+    # (`_auth_file().read_text()`), tıpkı `secrets.json` gibi. Beyan edilmeseydi dedektör her turda
+    # gerçek olmayan bir bulgu bağırır, gerçek bir yetim o gürültüde kaybolurdu.
+    "auth.json": "PANONUN KİMLİK DOSYASI — scrypt parola tuzu+özeti (`algo`) ve oturum imza anahtarı "
+                 "(`key`). YAZAN: auth.set_password/rotate_key/issue_session (→ `auth._write`, 0600 "
+                 "atomik) ve `python -m meridian.auth_cli set`. OKUYAN: `auth._read()` — "
+                 "password_set/verify_password/verify_session/issue_session hepsi oradan geçer; DIŞ "
+                 "tüketici api.py'dir ve dolaylıdır (erişimci fonksiyon sınıfı): `_auth` bağımlılığı "
+                 "her korumalı uçta `auth.verify_session(cookie)` çağırır (api.py:420), /api/login "
+                 "`verify_password`+`issue_session`, /api/auth/status `password_set`. Yani dosya "
+                 "okunmasa 51 uç 401 dönerdi — ölü değil, panonun kapısı. `secrets.json` ile AYNI "
+                 "sınıf (recompute.accessor_read): store.* dışından okunuyor, statik graf göremiyor",
 
     # --- Y4 veri katmanı (ROADMAP §3.4): TÜKETİCİ BİLİNÇLİ OLARAK ERTELENDİ ---------------------
     # Bu dört artefaktın bugünkü tüketicisi adaptörlerin KENDİ CLI'ı ve v117 testleridir; loop/api/cf

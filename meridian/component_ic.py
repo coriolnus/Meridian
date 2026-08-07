@@ -303,6 +303,48 @@ def forward_returns(df: pd.DataFrame) -> dict:
     return {h: close.shift(-h) / close - 1.0 for h in HORIZONS}
 
 
+# ---- ÇERÇEVEDE OLMAYAN TARİHİN SINIFI: BUG MU, BEYAN EDİLMİŞ DIŞLAMA MI? (2026-08-07) -----------
+# ÖLÇÜLDÜ, VARSAYILMADI. MAKULLÜK paneli iki ihlal bağırıyordu — `eleme:component_ic.eslesme:
+# sema_elemesi` ve `eleme:threshold_curve.eslesme:sema_elemesi` — ikisi de aynı cümleyle: "7 satır
+# VERİ SÖZLEŞMESİ yüzünden elendi, bu bir piyasa filtresi DEĞİL yazılım hatasıdır". Yedi satırın
+# kimliği çıkarıldı (research/olcumler/makulluk_2026-08-07/): YEDİSİ DE `DD`, yedisi de cf katmanı,
+# tarihler 2022-11-10 … 2024-07-31. `DD`nin `bars_integrity` kaydı `guvenli_baslangic: 2025-11-04`
+# diyor; yani barlar ham önbellekte VAR ama `adapters.data.measurement_bars` o tarihten öncesini
+# ÖLÇÜM ÇERÇEVESİNDEN BİLEREK ÇIKARIYOR (çözülmemiş ölçek/kimlik kırılması — `measurement_bars`
+# gerekçesinde adı geçen HON/DD çifti).
+#
+# HÜKÜM: bu bir veri sözleşmesi hatası DEĞİLDİR. Satır beklenen alanı TAŞIYOR (ticker + tarih
+# yerinde); çerçeve o barı taşımıyor ve TAŞIMAMASI KARARDIR. `sema:` demek, bekçinin her turda
+# olmayan bir hata için kırmızı yakması demekti — sieve'in kendi yazılı gerekçesiyle birebir çelişir
+# ("dedektör kurt masalı anlatmamalı: operatör kırmızıyı yok saymayı öğrenir, sonra GERÇEK bir
+# `sema:` ihlali de görünmez olur").
+#
+# BEKÇİ ZAYIFLATILMADI — İKİYE AYRILDI. Ledger'ın dışladığı tarih `piyasa:` (meşru, beyanlı,
+# SAYILAN filtre; panonun eleme tablosunda "piyasa filtresi N" olarak görünür ve künyedeki aşama
+# listesinden okunur). Ledger'ın SÖYLEMEDİĞİ bir eksik tarih — takvim boşluğu, hayalet seans, bozuk
+# defter satırı — HÂLÂ `sema:bar_yok:tarih`tir ve ihlal üretir. Yani gerçek arıza sınıfı için
+# dedektörün dişi yerinde durur; susan yalnız yanlış alarm.
+DISLAMA_NEDENI = "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi"
+
+
+def butunluk_disladi(ticker: str, dstr: str) -> bool:
+    """Bu (sembol, tarih) çifti ölçüm çerçevesinden BÜTÜNLÜK DEFTERİ tarafından mı düşürüldü?
+
+    Kural DEFTERDEN okunur, burada yeniden yazılmaz: `measurement_bars` da aynı `safe_start`
+    eşiğiyle kırpıyor (`date >= guvenli_baslangic`). İkinci bir yerde ikinci bir eşik tanımlamak,
+    bu depoda adı konmuş hata sınıfı olurdu (aynı yasanın iki kopyası zamanla ayrışır).
+    Defterde kayıt yoksa None döner → kısıt yok → dışlama iddiası KURULAMAZ (False)."""
+    from .adapters import data as data_adapter
+    ss = data_adapter.safe_start(ticker)
+    return bool(ss and str(dstr)[:10] < str(ss))
+
+
+def eslesme_nedeni(ticker: str, dstr: str) -> str:
+    """Çerçevede olmayan bir tarihin ELEME NEDENİ — tek tanım, iki tüketici (`forward_returns` ile
+    aynı gerekçe: eşleştirme yasası iki dosyaya kopyalanırsa biri sessizce eski sınıfta kalır)."""
+    return DISLAMA_NEDENI if butunluk_disladi(ticker, dstr) else "sema:bar_yok:tarih"
+
+
 def _bars_taban() -> dict:
     """Bu tablonun üretildiği bar tabanının damgası (`bars_integrity` defterinin bu turdaki etkisi).
 
@@ -480,7 +522,7 @@ def component_ic(write: bool = True) -> dict | None:
                 sv.drop("sema:bar_yok:sembol"); continue
             d = pd.Timestamp(dstr)
             if d not in frame.index:
-                sv.drop("sema:bar_yok:tarih"); continue
+                sv.drop(eslesme_nedeni(ticker, dstr)); continue   # bkz. `eslesme_nedeni` bloğu
             satir = frame.loc[d]
             rsv = (rs_map.get(d) or {}).get(ticker)
             if rsv is None:

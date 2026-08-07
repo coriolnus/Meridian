@@ -220,20 +220,34 @@ echo "=== [4/5] bakım penceresi ==="
 #   * başlatmadan SONRA olsaydı yeni süreç ESKİ yapılandırmayla açılır, dosya sonradan değişir ve
 #     etkisi bir sonraki restart'a kadar GÖRÜNMEZDİ — tam olarak bu adımın kapattığı sessizlik.
 # Hüküm [1b]'de verildi; burada yalnız UYGULANIR (karar ile icra ayrı yerlerde durur).
+#
+# YEDEK NEREYE YAZILIR — `backups/state/`, `state/` DEĞİL (2026-08-07, MAKULLÜK bulgusu 1).
+# Buradaki `cp` yedeği `state/$_sf.bak-$_damga` diye, yani DEDEKTÖRÜN TARADIĞI DİZİNİN İÇİNE
+# yazıyordu. Sonucu ölçüldü: `yeniden_hesap:orphan_state_files` canlıda 7 dosya sayıyordu ve
+# altısı bu satırın (ve bir bakım-penceresi `sed`inin) artığıydı — her dağıtım kartı bir satır
+# daha kalabalıklaştırıyor, gerçek bir "üretilip tüketilmeyen kanıt" bulgusu o gürültüde
+# kayboluyordu. Dedektörün desenini gevşetmek YANLIŞ onarım olurdu (bekçiyi kör etmek); doğru
+# onarım artığın KAYNAĞINI taşımaktır — yedek hâlâ alınır, yalnız yeri değişir.
+# `backups/` rsync'ten HARİÇTİR (satır 18): yedekler dağıtımla ne ezilir ne silinir, ve A1'de kalır.
+# GERİ DÖNÜŞ YOLU AYNEN DURUYOR — yalnız adresi değişti:
+#   ssh … "cp -p /opt/meridian/backups/state/goal.yaml.bak-<damga> /opt/meridian/state/goal.yaml"
 if [[ -n "${STATE_KOPYALA// /}" ]]; then
   _damga="$(date -u +%Y%m%d%H%M)"
+  _yedek_dizin="/opt/meridian/backups/state"
+  "${SSH[@]}" "mkdir -p $_yedek_dizin"
   for _sf in $STATE_KOPYALA; do
     # GERİ ALINABİLİRLİK ÖNCE: birim migrasyonunun (adım 6) dersi — üstüne yazmadan önce yedekle.
-    "${SSH[@]}" "cp -p /opt/meridian/state/$_sf /opt/meridian/state/$_sf.bak-$_damga"
+    "${SSH[@]}" "cp -p /opt/meridian/state/$_sf $_yedek_dizin/$_sf.bak-$_damga"
     scp -q -i "$KEY" "$REPO/state/$_sf" ubuntu@"$IP":/opt/meridian/state/"$_sf"
     # KOPYALANDIĞI DOĞRULANIR, VARSAYILMAZ: uzak dosya yerel dosyayla BAYT-ÖZDEŞ mi? (`cmp` ile —
     # iki tarafta farklı md5 araçları aramaya gerek yok, karşılaştırma tek yerde yapılır.)
     if "${SSH[@]}" "cat /opt/meridian/state/$_sf" | cmp -s - "$REPO/state/$_sf"; then
-      echo "  ✓ state/$_sf CANLIYA KOPYALANDI (yedek: state/$_sf.bak-$_damga) — bayt-özdeş doğrulandı"
+      echo "  ✓ state/$_sf CANLIYA KOPYALANDI (yedek: backups/state/$_sf.bak-$_damga) — bayt-özdeş doğrulandı"
     else
-      echo "  !! state/$_sf kopyalandı AMA doğrulanamadı — yedek: state/$_sf.bak-$_damga"
+      echo "  !! state/$_sf kopyalandı AMA doğrulanamadı — yedek: backups/state/$_sf.bak-$_damga"
       echo "     DAĞITIM DURDU (servisler DURMUŞ hâlde): yapılandırma belirsizken başlatmak, hangi"
-      echo "     yasayla koştuğu bilinmeyen bir motor demektir. Yedeği geri koy ya da elle eşitle."
+      echo "     yasayla koştuğu bilinmeyen bir motor demektir. Yedeği geri koy ya da elle eşitle:"
+      echo "     ssh ubuntu@$IP \"cp -p $_yedek_dizin/$_sf.bak-$_damga /opt/meridian/state/$_sf\""
       exit 1
     fi
   done
@@ -246,4 +260,20 @@ fi
 echo "=== [5/5] doğrulama ==="
 "${SSH[@]}" 'curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz;
   tail -1 /opt/meridian/state/events.jsonl | head -c 200; echo'
+
+# ARTIK BEKÇİSİ (2026-08-07). Bu betiğin yedeği artık `state/` dışına düşüyor — ama `state/`e
+# yedek bırakan TEK yol bu değildi: canlıda `earnings.csv.sedbak` ve `earnings.csv.<damga>.bak`
+# bir bakım penceresindeki elle `sed`den kalmıştı. Onların kaynağı bir betik değil bir ALIŞKANLIK,
+# yani kodla kapatılamaz — GÖRÜNÜR kılınabilir. Burada yalnız SORULUR (salt okuma, hiçbir şey
+# taşınmaz): pencere kapanırken artık varsa operatör onu aynı oturumda görür, bir hafta sonra
+# makullük kartında değil.
+echo "--- state/ artık kontrolü (salt okuma) ---"
+_ARTIK="$("${SSH[@]}" "find /opt/meridian/state -maxdepth 1 -type f \\( -name '*.bak-*' -o -name '*.sedbak' -o -name '*.bak' \\) 2>/dev/null | sed 's|.*/||' | sort" || true)"
+if [[ -z "${_ARTIK// /}" ]]; then
+  echo "  ✓ state/ temiz — yedek artığı yok"
+else
+  echo "$_ARTIK" | sed 's/^/  · /'
+  echo "  ⚠ yedek artığı VAR → orphan_state_files dedektörü bunları sayar."
+  echo "    Temizlik (TAŞIR, silmez): bash ops/state_yetim_temizle.sh   # kuru koşu; sonra --uygula"
+fi
 echo "=== DAĞITIM TAMAM ==="

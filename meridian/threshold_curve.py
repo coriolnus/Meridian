@@ -138,7 +138,11 @@ def build() -> dict | None:
                 sv.drop("sema:bar_yok:sembol"); continue
             d = pd.Timestamp(dstr)
             if d not in frame.index:
-                sv.drop("sema:bar_yok:tarih"); continue
+                # AYNI KÖK, AYNI YASA (2026-08-07): bu aşama `component_ic` ile BİREBİR aynı
+                # çerçeveyi (cic._load_universe) ve aynı satırları görüyor, bu yüzden aynı 7 satırı
+                # (hepsi DD, bütünlük defterinin dışladığı 2025-11-04 öncesi) düşürüyordu. Sınıflama
+                # tek yerde: `cic.eslesme_nedeni` — gerekçe orada yazılı.
+                sv.drop(cic.eslesme_nedeni(ticker, dstr)); continue
             sv.keep()
             satir = frame.loc[d]
             gozlem.append((katman, skor,
