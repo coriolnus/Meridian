@@ -279,6 +279,16 @@ def check_and_alarm() -> None:
     if kirli or store.read_json(ALARM_GUNLUK_FILE, {}).get("gun") != doc["gun"]:
         store.write_json(ALARM_GUNLUK_FILE, doc)
     store.write_json(ALARMED_FILE, sorted(now_stale))
+    # #8 KORUMA (v209): bu poll'un kadansı (300 sn) bir RİSK kalemi için doğru olan kadanstır —
+    # `check_integrity_and_alarm` günde bir kez koşar ve korumasız bir pozisyonu bir SONRAKİ seansa
+    # taşırdı. Kendi try'ı var: koruma dedektörünün arızası mekanizma bekçisini GÖTÜREMEZ (aynı
+    # yalıtım disiplini `integrity_report._tut`ta yazılı).
+    try:
+        check_koruma_and_alarm()
+    except Exception as e:
+        obs.warn("koruma_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="koruma bekçisi bu poll'da hüküm veremedi — mekanizma bekçisi koştu; "
+                        "ölçülemeyen hüküm 'koruma var' sayılmaz")
 
 
 # =============================================================================================
@@ -1970,3 +1980,245 @@ def ownership_report(persist: bool = False) -> dict:
     if persist:
         store.write_json(OWNERSHIP_FILE, cur)
     return {"ok": not lost, "lost": lost}
+
+
+# =============================================================================================
+# #8 KORUMA — "elimde pozisyon var; BROKER'DA canlı bir stop'u var mı?" (v209, 2026-08-07)
+# =============================================================================================
+# VAKA (canlı A1, ölçüm 2026-08-07): broker'da 5 açık pozisyon, açık emir SIFIR — beşi de
+# korumasız. `state/portfolio.json` dört pozisyon için stop BEYAN EDİYORDU (NUE 257,4033 ·
+# EMR 152,4839 · BKNG 191,5372 · AMGN 389,4209); broker'da hiçbirinin karşılığı yoktu. Kök neden
+# ölçüldü: bracket TIF'i emrin TAMAMINA (giriş + iki koruma bacağına) uygulanır ve E1 yasası
+# (`broker.ENTRY_TIF = "day"`, kart EXE-2026-001) TIF'i GTC'den DAY'e çekerken yalnız GİRİŞ
+# bacağının bayat-tetik sorununu gerekçelendirmişti. Sonuç, olay defterinde saniyesiyle duruyor:
+# giriş 2026-08-06 13:32-13:33Z'de doldu, koruma bacakları AYNI GÜN 20:00:16 / 20:01:34 /
+# 20:02:06 / 20:02:31Z'de (kapanış 20:00Z) `expired` + OCO kardeşi `canceled` oldu.
+#
+# NEDEN HİÇBİR DEDEKTÖR GÖRMEDİ — bu bölümün var olma sebebi:
+#   * `loop.reconcile_broker_state` ADET sapmasını ölçüyor (o gece 4 MIRROR_DRIFT alarmı bastı) ve
+#     KORUMA'yı hiç sormuyordu: dört alarm ötüyordu ama hiçbiri "bu pozisyonlar çıplak" demiyordu.
+#   * Aynı fonksiyonun trailing-stop senkronu (1.2c) canlı OLMAYAN stop bacağını `continue` ile
+#     SESSİZCE atlıyor — koruma bacağına dokunan tek kod, bacağın YOK olduğunu fark etmiyor.
+#   * `alpaca._naked()` yalnız DAR vakayı bilir ("kapatma düştü, bacak iptal edilmişti").
+# Yani soru hiç sorulmamıştı. Bu dedektör onu sorar ve HÜKÜM VERİR.
+#
+# SAHİPLİK KANITI BACAKTA DEĞİL PARENT'TA (alpaca.py:411 dersi): koruma bacaklarının
+# `client_order_id`si Alpaca üretimidir, `is_engine_order` onlarda HER ZAMAN False döner. "Canlı
+# stop var mı" sorusu bu yüzden önek süzgeciyle SORULAMAZ — süzseydik her pozisyon çıplak görünür,
+# dedektör de kurt masalı anlatırdı. Önek yalnız POZİSYONUN kime ait olduğunu ayırmakta kullanılır.
+KORUMA_SEV = "sev-1"                 # P1: bu bir RİSK kalemidir, gözlemlenebilirlik değil
+KORUMA_PAYDA_BEYANI = "korumasız / toplam MOTOR pozisyonu (motor-dışı pozisyonlar AYRI sayılır)"
+_KORUMA_TIPLERI = ("stop", "stop_limit", "trailing_stop")   # koruyucu emir tipleri
+_KORUMA_TOL = 1e-6                   # kesirli hisse yuvarlamasını eler, gerçek açığı elemez
+KORUMA_EMIR_TAVANI = 200             # `close_engine_position` ile AYNI tavan (tek okuma disiplini)
+# MANDAL SÜREÇ-İÇİDİR, DİSKE YAZILMAZ. Gerekçesi obs.py:101-104'ün `_SUPPRESS_LOGGED` kaydıyla
+# BİREBİR aynı: diske yazsaydık ikinci bir defter yüzeyi doğardı — üstelik yazanı da okuyanı da bu
+# dosya olan, yani `parity:artifact_unread`in tanımına giren bir yüzey. Süreç yeniden başlarsa
+# korumasız pozisyon başına BİR fazla alarm satırı düşer; bu, satır SELİNDEN (288/gün) iyidir ve
+# KAYBEDİLEN bir alarmdan kat kat iyidir.
+_KORUMA_ALARMED: set = set()
+
+
+def _koruma_duz(ords: list) -> list:
+    """Emirleri DÜZLEŞTİR: üst düzey emirler + `nested=True`nin parent altına astığı bacaklar.
+
+    `nested=True` ZORUNLU (aynı gerekçe `alpaca.orders` docstring'inde yazılı): düz listede bracket
+    üç ayrı satıra bölünür ve `legs` boş gelir; nested'da ise DOLMUŞ bir parent'ın canlı koruma
+    bacakları YALNIZ `legs` altında görünür. Yalnız üst düzeye bakan bir dedektör, korumanın
+    varlığını tam da bracket doldurduktan sonra — yani korumanın ÖNEM KAZANDIĞI anda — kaçırırdı."""
+    out = []
+    for o in (ords or []):
+        if not isinstance(o, dict):
+            continue
+        out.append(o)
+        for leg in (o.get("legs") or []):
+            if isinstance(leg, dict):
+                out.append(leg)
+    return out
+
+
+def _koruma_adet(v) -> float:
+    """Adet alanı → mutlak float. Okunamayan adet 0'dır ve bu FAIL-CLOSED yöndür: koruma kapsaması
+    BÜYÜMEZ (`alpaca._filled_qty` ile aynı yasa) — ölçülemeyen bir stop, koruyan bir stop değildir."""
+    try:
+        return abs(float(v or 0.0))
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan raporun `not_okunan` sayacında GÖRÜNÜR; 0 dönmek korumayı azaltır, uydurmaz
+        return 0.0
+
+
+def koruma_report() -> dict:
+    """#8 — HER açık broker pozisyonu için broker'da CANLI koruyucu stop var mı?
+
+    SÖZLEŞME (dördü de bilinçli):
+      1. `ok` DÖNER. Hüküm vermeyen bir dedektör bakanı hiçbir şey öğrenmeden geçirir
+         (`conservation_report`ın 2026-07-22'de öğrendiği ders, bu dosyanın :518'i).
+      2. PAYDA BEYANLI: `korumasiz / toplam` + `payda_beyani` metni. Paydasız bir sayı ("3 korumasız")
+         okuyucuya risk oranını söylemez.
+      3. BROKER OKUNAMAZSA `ok=None` + `neden` — **0 DEĞİL**. "0 korumasız" ile "ölçemedim" aynı şey
+         değildir ve burada bu ayrım HAYATİDİR: `alpaca.positions()/orders()` arıza hâlinde de []
+         döner (A1 sözleşmesi), yani boş listeye bakıp "hiç pozisyon yok, her şey yolunda" demek
+         tam olarak arızayı temizlik diye raporlamak olurdu.
+      4. MOTOR-DIŞI POZİSYONLAR AYRI SAYILIR: operatörün kendi NVDA'sı motorun sorumluluğu DEĞİLDİR
+         (A3 sahiplik sınırı) ama GÖRÜNMEZ de olmamalıdır — `ok` hükmünü etkilemez, kendi sayacıyla
+         raporlanır.
+
+    KISMİ KAPSAMA KORUMASIZDIR: canlı stopların toplam adedi pozisyon adedinin ALTINDAysa satır
+    `korumali=False` + `kismi=True` ile sayılır. "Yarısı korunuyor" bir güvenlik hâli değil, ölçülmüş
+    bir açıktır; yukarı yuvarlamak dedektörü yalancı yapardı.
+
+    SALT OKUMA: bu fonksiyon broker'a YALNIZ GET atar (`positions`, `orders`). Emir gönderme/iptal
+    bu dosyanın yetkisinde DEĞİLDİR — bekçi haber verir, düzeltmez (modül başlığı)."""
+    out = {"ok": None, "olculemedi": True, "neden": "", "kapsam_disi": False,
+           "korumasiz": None, "toplam": None, "payda_beyani": KORUMA_PAYDA_BEYANI,
+           "korumasiz_semboller": [], "rows": [],
+           "motor_disi": None, "motor_disi_korumasiz": None, "motor_disi_semboller": [],
+           "emir_tavani_dolu": False, "sev": KORUMA_SEV}
+    from . import config as _cfg
+    if getattr(_cfg, "BROKER", "internal") != "alpaca_paper":
+        # KAPSAM DIŞI ≠ ÖLÇÜLEMEDİ: ayna hiç yokken "broker'daki stop" sorusunun REFERANSI yoktur
+        # (iç motorun stop'unu simülatörün kendisi uygular). Alarm katmanı bu dalda SUSAR — ama
+        # `ok` yine None'dır, çünkü "koruma var" hükmü de verilmiş değildir.
+        return {**out, "kapsam_disi": True,
+                "neden": f"broker={getattr(_cfg, 'BROKER', '?')} — aynada pozisyon yok, "
+                         f"broker-tarafı koruma sorusunun referansı yok"}
+    from .adapters import alpaca
+    if not alpaca.paper_available():
+        return {**out, "neden": "Alpaca kimliği/erişimi yok (paper_available()=False) — broker'daki "
+                                "koruma ÖLÇÜLEMEDİ ('korumasız 0' DEĞİL)"}
+    apos = alpaca.positions()
+    if not alpaca.transport()["ok"]:
+        # A1: [] burada "pozisyon yok" DEĞİL, ARIZA. Bu dalın olmaması, tam da broker düştüğünde
+        # dedektörün "0 pozisyon, 0 korumasız, temiz" demesi anlamına gelirdi.
+        return {**out, "neden": "pozisyon listesi okunamadı: "
+                                + (alpaca.transport().get("error") or "alpaca transport down")[:160]}
+    ords = alpaca.orders(status="all", limit=KORUMA_EMIR_TAVANI, nested=True)
+    if not alpaca.transport()["ok"]:
+        return {**out, "neden": "emir listesi okunamadı: "
+                                + (alpaca.transport().get("error") or "alpaca transport down")[:160]}
+    # TAVAN DOLDUYSA SAHİPLİK KANITI EKSİK OLABİLİR — sessiz kalmaz, satırla beyan edilir: dolmuş
+    # bir motor emri tavanın dışında kaldıysa pozisyon 'motor-dışı' görünür ve YANLIŞ payda üretir.
+    out["emir_tavani_dolu"] = len(ords or []) >= KORUMA_EMIR_TAVANI
+    duz = _koruma_duz(ords)
+
+    # SAHİPLİK: kanıt "bir P- emri var" değil "bir P- emri DOLDU"dur (close_engine_position ile
+    # AYNI yasa — iki yerde iki farklı sahiplik tanımı, bu deponun kovaladığı kusurun kendisi olurdu).
+    motor_semboller = {str(o.get("symbol")) for o in duz
+                       if alpaca.is_engine_order(o)
+                       and (alpaca._filled_qty(o) > 0
+                            or str(o.get("status", "")).lower() in ("filled", "partially_filled"))}
+
+    canli = set(alpaca._LIVE_ORDER_STATES)   # TEK SÖZLÜK: canlı emir durumlarını burada ikinci kez
+                                             # tanımlamak, iki tanımın kayması demek olurdu
+    korumasiz, motor_disi_korumasiz, rows = 0, 0, []
+    for p in (apos or []):
+        sym = str(p.get("symbol") or "")
+        if not sym:
+            continue
+        adet = _koruma_adet(p.get("qty"))
+        yon = str(p.get("side") or "long").lower()
+        # UZUN pozisyonu SATIŞ stop'u korur, KISA pozisyonu ALIŞ stop'u. Bugün motor yalnız uzun
+        # açıyor; yönü sabit yazsaydık ileride bir kısa pozisyon KORUNUYOR görünürdü (yanlış yönde
+        # bir stop, korumasızlıktan beterdir: koruma sanılır).
+        koruyan_yon = "buy" if yon == "short" else "sell"
+        kapsanan, emir_ids = 0.0, []
+        for o in duz:
+            if str(o.get("symbol")) != sym:
+                continue
+            if str(o.get("side", "")).lower() != koruyan_yon:
+                continue
+            if str(o.get("type", "")).lower() not in _KORUMA_TIPLERI:
+                continue
+            if str(o.get("status", "")).lower() not in canli:
+                continue
+            kapsanan += _koruma_adet(o.get("qty")) - _koruma_adet(o.get("filled_qty"))
+            # YALNIZ BROKER `id`si: `client_order_id` bunun EŞ ADI DEĞİL, BAŞKA bir kimliktir
+            # (biri broker'ın, diğeri bizim) ve koruma bacaklarında zaten Alpaca üretimi bir
+            # UUID'dir. "Biri yoksa öbürü" yazmak iki kimliği tek alana yığmak olurdu —
+            # `test_parity_v56::no_undeclared_field_alias` tam bu sınıfı kovalıyor.
+            emir_ids.append(str(o.get("id") or "?")[:36])
+        korumali = bool(adet > 0 and kapsanan + _KORUMA_TOL >= adet)
+        motor = sym in motor_semboller
+        row = {"ticker": sym, "adet": adet, "yon": yon, "motor": motor,
+               "korumali": korumali, "kapsanan": round(kapsanan, 6),
+               "kismi": bool(not korumali and kapsanan > 0), "stop_emirleri": emir_ids,
+               "neden": ("" if korumali else
+                         ("broker'da CANLI koruyucu stop YOK" if kapsanan <= 0 else
+                          f"stop yalnız {kapsanan:g}/{adet:g} adedi kapsıyor"))}
+        rows.append(row)
+        if not korumali:
+            if motor:
+                korumasiz += 1
+            else:
+                motor_disi_korumasiz += 1
+    motor_rows = [r for r in rows if r["motor"]]
+    disi = [r["ticker"] for r in rows if not r["motor"]]
+    return {**out, "ok": korumasiz == 0, "olculemedi": False, "neden": "",
+            "korumasiz": korumasiz, "toplam": len(motor_rows),
+            "korumasiz_semboller": sorted(r["ticker"] for r in motor_rows if not r["korumali"]),
+            "rows": rows, "motor_disi": len(disi),
+            "motor_disi_korumasiz": motor_disi_korumasiz, "motor_disi_semboller": sorted(disi)}
+
+
+def check_koruma_and_alarm() -> dict:
+    """#8'in alarm geçişi — korumasız pozisyon başına BİR kez, sev-1. Raporu DÖNDÜRÜR (test + çağıran).
+
+    JETON SEÇİMİ BEYANLI VE EKSİK: `obs.NOTIFY_TOKENS` yalnız `obs.py`deki `ALARM_*` sabitlerinden
+    TÜRETİLİR (obs.py:98) — listede olmayan yeni bir jeton yazılır ama operatörün telefonuna HİÇ
+    ULAŞMAZ. Bu tur `obs.py` yazım kapsamı dışında olduğu için mevcut ve teslim edilen en yakın
+    sınıf kullanılır: `MIRROR_DRIFT` ("ayna kitabın söylediği şey değil") — `loop._mirror_exit_sync`
+    çıplak pencereyi ZATEN bu jetonla anlatıyor, yani sınıf birliği de korunuyor.
+    BEDELİ ÖLÇÜLÜ: jeton başına 6 saatlik susturma penceresi (obs._NOTIFY_MIN_GAP_S) ADET SAPMASI
+    alarmlarıyla PAYLAŞILIR — gürültülü bir mutabakat gecesi bu alarmın TESLİMATINI bastırabilir
+    (defter satırı ve pano yine yazılır). Ayrı bir `NAKED_POSITION` jetonu OPERATÖR KARARIDIR ve
+    `obs.py`ye bir satır ekler; bu tur ölçüldü ve raporlandı, uygulanmadı.
+
+    `kind="korumasiz_pozisyon"` + `sev` alanları satırda taşınır: gelen kutusu ve pano bu iki alanla
+    ayırt eder — jeton paylaşılsa da OLGU karışmaz."""
+    from . import obs
+    rep = koruma_report()
+    if rep.get("kapsam_disi"):
+        # Ayna kapalı: alarm YOK (referansı olmayan bir soruyu her poll'da alarmlamak, EEMUA
+        # bütçesini bir yapılandırma hâliyle doldurmak olurdu). Mandal da temizlenir ki ayna
+        # yeniden açıldığında ilk korumasızlık YENİDEN alarmlansın.
+        _KORUMA_ALARMED.clear()
+        return rep
+    simdi = set()
+    if rep.get("ok") is None:
+        # ÖLÇÜLEMEDİ DE BİR HÜKÜMDÜR (YASA 4) — ve 'temiz' DEĞİLDİR. Kendi jetonu var: ölçüm geri
+        # geldiğinde GERÇEK bir korumasızlık kendi jetonuyla yeniden alarmlanabilsin.
+        tok = "koruma_olculemedi"
+        simdi.add(tok)
+        if tok not in _KORUMA_ALARMED:
+            obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                      f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} "
+                      f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)",
+                      kind="koruma_olculemedi", sev=KORUMA_SEV, olculemedi=True)
+    else:
+        for r in rep.get("rows") or []:
+            if r.get("korumali"):
+                continue
+            tok = ("korumasiz:" if r.get("motor") else "korumasiz_disi:") + r["ticker"]
+            simdi.add(tok)
+            if tok in _KORUMA_ALARMED:
+                continue
+            if r.get("motor"):
+                obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                          f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da "
+                          f"canlı koruyucu stop YOK — {r['neden']} "
+                          f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)",
+                          kind="korumasiz_pozisyon", sev=KORUMA_SEV, ticker=r["ticker"],
+                          adet=r["adet"], kapsanan=r["kapsanan"], kismi=r["kismi"],
+                          korumasiz=rep["korumasiz"], toplam=rep["toplam"],
+                          payda_beyani=rep["payda_beyani"])
+            else:
+                # MOTOR-DIŞI: `ok` hükmüne GİRMEZ (A3 — motor sahibi olmadığı pozisyonu koruyamaz,
+                # koruma emri göndermek operatörün işi) ama GÖRÜNÜR olur; seviye WARN, çünkü bu
+                # motorun kendi riski değildir ve operatörün alarm bütçesini sev-1 ile yemez.
+                obs.warn("korumasiz_motor_disi_pozisyon", ticker=r["ticker"], adet=r["adet"],
+                         kapsanan=r["kapsanan"], kind="korumasiz_pozisyon",
+                         detail="motor-DIŞI pozisyonun broker'da canlı stop'u yok — motorun "
+                                "sorumluluğu DEĞİL (A3 sahiplik sınırı), yalnız görünürlük")
+    # MANDAL: düzelen jeton düşer, yeniden bozulursa YENİDEN alarmlanır (integrity_alarmed deseni).
+    _KORUMA_ALARMED.clear()
+    _KORUMA_ALARMED.update(simdi)
+    return rep
