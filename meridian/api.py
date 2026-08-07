@@ -4192,6 +4192,16 @@ async def api_alpaca_koruma_kur(request: Request):
     onay_verildi = bool(onay) and onay == alpaca.KORUMA_ONAY_JETONU
     res = koruma_kur(onay=onay, oneri_id=oneri_id, onaylayan=onaylayan)
     sonuc = _koruma_kur_sonucu(res)
+    # CÜMLE DALDAN SEÇİLİR, `or` İLE TAKAS EDİLMEZ. `ozet` ve `detail` iki AYRI olgudur:
+    # `ozet` yalnız icra dalında doğar ve "kaç/kaç + hangi sembol neden düştü" der; `detail` ise
+    # emir GİTMEDİĞİNDE nedeni yazar (icra dalında çoğu zaman boştur). İkisini `x.get(a) or
+    # x.get(b)` diye birleştirmek, bu deponun şema-takası tarayıcısının (test_parity_v56) tam da
+    # kovaladığı desendir — ve o desen burada gerçek bir belirsizlik üretirdi: satırı okuyan,
+    # cümlenin hangi olgudan geldiğini bilemezdi.
+    if sonuc in ("gonderildi", "kismi-ya-da-dusuk"):
+        cumle = res.get("ozet")
+    else:
+        cumle = res.get("detail")
     # TOPLAM ÖLÇÜLEMEDİ DALINDA None — 0 DEĞİL. `koruma_kur` ölçüm kapısında geri döner ve "kaç
     # öneri gönderilmeliydi" hiç hesaplanmaz; oraya 0 yazmak, korumasız pozisyon olmadığını iddia
     # etmek olurdu (`koruma_onerileri` de aynı dalda `gonderilebilir: None` döndürüyor).
@@ -4201,7 +4211,7 @@ async def api_alpaca_koruma_kur(request: Request):
             onaylayan=onaylayan, sonuc=sonuc,
             gonderilen=res.get("gonderilen"),
             toplam=(None if sonuc == "olculemedi" else res.get("toplam")),
-            ozet=_koruma_iz_maskele(res.get("ozet") or res.get("detail") or "", 240))
+            ozet=_koruma_iz_maskele(cumle, 240))
     if res.get("gonderilen"):
         _diag_onbellek_bosalt("koruma_kur")
     return res
