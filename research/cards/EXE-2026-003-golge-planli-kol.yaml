@@ -61,3 +61,35 @@ status: registered   # 2026-08-09 Rol-1. Ölçüm kodu HENÜZ YAZILMADI — kart
 #   Eşikler (40 dolum/20 seans, n_min=40, CI %95, tarih-kümeli B=10.000, p95 +%10 tavanı)
 #   ÖLÇÜMDEN ÖNCE donduruldu. kill_criteria dokunulmaz. Silahli kol davranışı bu kartın
 #   HİÇBİR maddesiyle değişmez — genişletme yalnız yeni kol ekler.
+
+revizyonlar:
+  - id: "EXE-2026-003-R1"
+    tarih: "2026-08-09"
+    alan: "features_asof eşleşme anahtarı + kol etiketi tanımı (İKİ TANIM NETLEŞMESİ; eşik/kill DEĞİŞMEDİ)"
+    degisim: >
+      (1) EŞLEŞME ANAHTARI GERÇEĞE UYDU: kart "eşleşme anahtarı plan_id" yazmıştı; ölçüm
+      cf defterinde plan_id ALANININ HİÇ OLMADIĞINI gösterdi (7161 satırda 0 kayıt).
+      Uygulanan anahtar: plan_id'den türetilen (gün, ticker) + `entry_trigger` ikinci eleği +
+      "ölçüm-özdeş belirsizlik" kuralı (çok-adaylı 157 anahtarın 157'sinde kopyalar AYNI
+      fiyatı taşıyor — ölçüldü; belirsizlik `cf_aday_n` alanıyla satırda beyanlı).
+      Gerçek korpus kanıtı: 2102/2102 dolmuş plan satırı eşleşti.
+      (2) KOL ETİKETİ TANIMI: kart "kol etiketi ZORUNLU: silahli · planli" derken kill#3
+      silahli şemada HERHANGİ bir farkı yasaklıyor — iki hüküm aynı anda diskte tutulamaz.
+      ÇÖZÜM (kill#3 dokunulmaz sayıldı): planli satır etiketi DİSKTE taşır; silahli satırın
+      etiketi OKUMA ANINDA (`kollar()`) basılır, diske yazılmaz. Silahli şema bayt-özdeş
+      kaldı (sha256 önce/sonra birebir — W2 kanıtı).
+    k_etkisi: "YOK — grid yok, eşikler (40 dolum/20 seans · n_min=40 · %95 CI · B=10.000 ·
+      p95 +%10) ve dört kill maddesi DEĞİŞMEDİ. İki değişiklik de TANIM netleşmesi: biri
+      kartın yanlış veri varsayımını ölçülen gerçekle değiştirir, diğeri kartın iki hükmü
+      arasındaki çelişkiyi kill#3 lehine çözer."
+    durustluk_beyani: >
+      Bu revizyon ölçüm koştuktan SONRA yazıldı ama hiçbir eşiği sonuca uydurmuyor: ikincil
+      hat hiçbir hüküm/kilit beslemiyor (kartın kendi sınırı) ve birincil başarı ölçütü
+      (planli kol hacmi + silahli bayt-özdeşliği) anahtar seçiminden bağımsız. cf'te `side`
+      alanı olmadığı için formülün kısa-taraf işareti UYGULANAMADI — long varsayımı koda
+      GÖMÜLMEDİ, satırda beyanlı sınır olarak duruyor.
+    acik_kalemler_rol1: >
+      ledgers.CONTRACTS kaydı (sözleşmesiz-defter sınıfı) · watchdog.INTRADAY_STAMP_LEDGERS
+      kapsamı (W1'e iletildi) · test_intraday_shadow_v105:301 eskiyen gerekçe metni · ikincil
+      hattın panoya bağlanması (bilinçli bağlanmadı — kilit yanında ikinci bps sayısı tek
+      "kazanç" gibi okunurdu; bağlama kararı ayrı revizyon ister).

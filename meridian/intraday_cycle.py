@@ -15,8 +15,14 @@ kuraklığına rehin kalıyordu. Artık ilgi kümesi GÜNÜN PLAN ÜRETİMİNİN
 YETKİ FARKI KAYBOLMADI — SATIRDA ETİKET OLARAK DURUR: `eod_armed` alanının anlamı BİREBİR aynıdır
 ("bu plan portfolio.json.armed içinde mi"), yanına `plan_source` ("armed" / "planned") eklendi.
 Silahsız bir planın tetik geçişini ÖLÇMEK, onu silahlandırmak değildir: bu dosya hâlâ hiçbir emir
-göndermez ve INTRADAY_ARM bayrağına dokunmaz. 4b gölge kancası da BİLEREK yalnız SİLAHLI planlarda
-çalışır (aşağıda) — gölge defterinin nüfusu değişmedi, `vs_eod` eşleştirmesi bozulmadı.
+göndermez ve INTRADAY_ARM bayrağına dokunmaz.
+
+4B GÖLGE ARTIK İKİ KOLLU (kart EXE-2026-003, v217 — 2026-08-09). 2026-07-30'da gölge kancası
+BİLEREK yalnız SİLAHLI planda çalışıyordu; gerekçe `vs_eod` eşleştirmesinin sulanmamasıydı ve o
+gerekçe kalkmadı, ÇÖZÜLDÜ: yeni kol (`kol: planli`) AYRI BİR DEFTERE yazıyor
+(`intraday_shadow.PLANLI_ORDERS_FILE`), silahli kolun defteri ve onu okuyan iki ölçüm (`vs_eod`,
+`faz5_cikis`/EXE-2026-002) bayt düzeyinde DEĞİŞMEDİ. Yeni kolun `store.append_jsonl` çağrısı bu
+dosyadadır; hesabı gölge katmanı yapar (gerekçe kancanın yanında yazılı).
 
 GÖLGE KATMANI (Faz 4b, 2026-07-27): tetik KESİLDİĞİNDE `intraday_shadow.record` çağrılır ve o anın
 TAM icra kararı (kapılar + boyutlandırma + emir niyeti) hesaplanıp kendi defterine yazılır. Sıfır
@@ -81,6 +87,10 @@ class IntradayConsumer:
         self.decisions_armed = 0
         self.decisions_planned = 0
         self.shadow_written = 0          # Faz 4b gölge satırı sayacı (kanca çalıştı mı görünür olsun)
+        # İKİ KOL, İKİ SAYAÇ (kart EXE-2026-003 kill#3): `shadow_written` SİLAHLI kolun sayısıdır ve
+        # panoda o adla okunuyor (app.js "gölge kararı"). Yeni kolu ona eklemek, silahli kolun
+        # sayımını değiştirmek olurdu — kartın derhal geri alma sebebi.
+        self.shadow_planli_written = 0
         self.skipped = {"session": 0, "halt": 0, "stale": 0, "no_bars": 0}
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
@@ -214,10 +224,8 @@ class IntradayConsumer:
         # GÖLGE (Faz 4b): tetik kesildiyse TAM icra kararını hesapla ve KENDİ defterine yaz.
         # Hata gölgede kalır: ölçüm katmanının arızası gözlem hattını düşüremez (gözlem satırı
         # yukarıda ZATEN yazıldı) — ama sessiz de kalmaz, sayaç + uyarı ile görünür.
-        # NÜFUS BİLEREK DARALTILDI (2026-07-30): gözlem tüm planlara açıldı ama gölge YALNIZ SİLAHLI
-        # planda çalışır. Gerekçe ölçümün geçerliliğidir: `intraday_shadow.vs_eod` gölge dolumunu
-        # GERÇEK EOD dolumuyla eşleştirir; silahlanmamış bir plan EOD'de hiç dolmaz, o yüzden her
-        # satırı `n_unpaired`e düşer ve "gölge-vs-EOD friksiyon farkı" ölçümünü sulandırırdı.
+        # SİLAHLI KOL — 2026-07-27'den beri aynı, v217'de BAYT DÜZEYİNDE değişmedi. `vs_eod` ve
+        # EXE-2026-002'nin gerçek-çift hattı YALNIZ bu kolun defterini okur.
         if fired and is_armed_plan:
             try:
                 from . import intraday_shadow
@@ -226,6 +234,31 @@ class IntradayConsumer:
             except Exception as e:
                 self.last_error = f"shadow: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_failed", ticker=tk, error=self.last_error)
+        # PLANLI KOL (kart EXE-2026-003, v217): tetiği kesilen ama SİLAHLANMAMIŞ GO/REVIEW planları.
+        # NÜFUS 2026-07-30'da BİLEREK daraltılmıştı ve gerekçesi doğruydu: silahlanmamış plan iç
+        # EOD defterinde hiç dolmaz, o yüzden gölge satırı `vs_eod`ta `n_unpaired`e düşer ve
+        # "gölge-vs-EOD friksiyon farkı" ölçümünü sulandırırdı. O gerekçe KALKMADI, ÇÖZÜLDÜ:
+        # yeni kol AYRI BİR DEFTERE yazıyor, yani silahli kolun defteri de onu okuyan iki ölçüm
+        # (`vs_eod`, `faz5_cikis`) de bu satırları HİÇ GÖRMÜYOR. Kazanılan şey nüfustur: dakika-
+        # hassas icra sorusu, sıfır ek pazar riskiyle çok daha geniş bir örneklemden ölçülebilir.
+        #
+        # YAZIM NEDEN BURADA: `intraday_shadow` modülünün TEK lağımı `ORDERS_FILE`dır ve bu bir
+        # çividir (test_intraday_shadow_v105::test_statik_hicbir_emir_yolu_yok) — silahli kolun
+        # bayt-değişmezliğinin bir parçası. Nüfus kararını (hangi plan, hangi kol) zaten bu dosya
+        # veriyor; ikinci defter de o kararın yanında yaşıyor. Hesap gölge katmanında, yazım burada.
+        # SIRA: önce diske, SONRA tekilleştirme işareti — ters sırada bir yazım hatası planı
+        # "yazıldı" sayardı ve o plan o seans bir daha hiç denenmezdi.
+        elif fired and plan is not None:
+            try:
+                from . import intraday_shadow
+                satir = intraday_shadow.planli_satir(plan, last, as_of)
+                if satir is not None:
+                    store.append_jsonl(intraday_shadow.PLANLI_ORDERS_FILE, satir)
+                    intraday_shadow.planli_yazildi(satir)
+                    self.shadow_planli_written += 1
+            except Exception as e:
+                self.last_error = f"shadow_planli: {type(e).__name__}: {e}"[:160]
+                obs.warn("intraday_shadow_planli_failed", ticker=tk, error=self.last_error)
         # Faz 4a: gözlem tamam, KARAR YOK. Bayrak açık olsa bile Faz 4b (gerçek silahlanma) HENÜZ YOK —
         # sessizce silahlamak yerine GÖRÜNÜR bir uyarı (operatör bayrağı erken açtıysa yanlış beklenti kurmasın).
         if armed:
@@ -251,12 +284,14 @@ def health() -> dict:
         return {"ok": None, "enabled": ENABLED, "armed": _health.intraday_armed(),
                 "events_handled": 0, "decisions_written": 0, "watched": 0, "watched_planned": 0,
                 "decisions_armed": 0, "decisions_planned": 0, "shadow_written": 0,
+                "shadow_planli_written": 0,
                 "skipped": {}, "last_decision_at": None, "last_error": None, "mode": "observe"}
     c = _CONSUMER
     return {"ok": True, "enabled": ENABLED, "armed": _health.intraday_armed(),
             "events_handled": c.events_handled, "decisions_written": c.decisions_written,
             "watched": c.watched, "watched_planned": c.watched_planned,
             "decisions_armed": c.decisions_armed, "decisions_planned": c.decisions_planned,
-            "shadow_written": c.shadow_written, "skipped": dict(c.skipped),
+            "shadow_written": c.shadow_written,
+            "shadow_planli_written": c.shadow_planli_written, "skipped": dict(c.skipped),
             "last_decision_at": c.last_decision_at, "last_error": c.last_error or None,
             "mode": "arm" if _health.intraday_armed() else "observe"}
