@@ -219,6 +219,10 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   Faz-5 turunda karar sayıları `neden` metnine yazıldı (operatör "4/20"yi görüyor) ama bu bir
   yama; kilit ölçümlerinin kendi kartı yok. Beyan bayatlamasın diye test var (`"k.olcum" not in
   appjs` — pano okumaya başladığı gün kırılır).
+- **app.js 409-yutması (B-6 turunun ölçtüğü açık kalem):** `apiFetch` 4xx'te throw etmiyor,
+  `applySkillRec` boş `catch` ile yutuyor → L1'de onay-kapısı reddi PANODA GÖRÜNMEZ olur
+  (operatör basar, hiçbir şey olmaz). Mekanizma düzeyinde YASA 4 tamam (olay+gerekçe defterde),
+  operatör yüzeyinde değil. EV_TR kalemiyle aynı app.js turuna girer.
 - **`EV_TR`de `koruma_*` çevirisi YOK:** v209/v211 olayları panoda HAM olay adıyla görünüyor
   (tam alanlar tıklanan çekmecede). Cümleye çevirmek `app.js` turu.
 - **Faz-5 örneklem (kendiliğinden dolar):** kilit artık `durum: olculdu` · "ÖRNEKLEM YETERSİZ
@@ -261,9 +265,9 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
     yalnız hata METNİNDE geçiyor; kapatılamaz bir şeyi düğme gibi beyan ediyor. Rol-1 doğruladı.
   · **✅ B-4 (KAPANDI d1c40e9, v214 `stale_claims()`):** `sieve.json` muafiyet beyanı BAYAT'tı — "tek okuyucusu kendi testi" diyor, oysa
     `api.py:3202→2232` üzerinden TERFİ HÜKMÜNE giriyor; `stale_sinks` bunu yapısal göremiyor.
-  · **B-5 (ORTA):** `state/intraday_bars/<gün>.jsonl` tek gerçek ölü yazım (canlı sıcak yolda her
+  · **✅ B-5 (KAPANDI 4d09028, Rol-1 hükmü: yazım SÖKÜLMEDİ):** `state/intraday_bars/<gün>.jsonl` ölü yazımdı (canlı sıcak yolda her
     dakika) — tarihli f-string ad DECLARED_SINKS'e giremiyor; mimari karar Rol-1/operatörde.
-  · **B-6/B-7:** `approvals.jsonl` onay defterini hiçbir kapı okumuyor (uyuyan-yol ailesi, L1'de
+  · **✅ B-6 (KAPANDI f253929, v215) / ✅ B-7 (KAPANDI 4d09028):** `approvals.jsonl` onay defterini hiçbir kapı okumuyordu (uyuyan-yol ailesi, L1'de
     patlar) · `shadow_trades.jsonl` tek tüketici bir CLI bayrağı.
   · Taze canlı sayım: uyuyan plan 31→**32** (0 işlem, 1 GO — oran değişmedi). ÖLÇÜLEMEYENLER
     raporda adıyla (7 kalem; en önemlisi: KATMAN-4 alan merceği yalnız `dormant_setup`a
