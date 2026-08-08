@@ -1376,15 +1376,198 @@ def api_skills(request: Request):
     return reg
 
 
+# =================================================================================================
+# ONAY KAPISI (B-6 kapaması, v215) — onay defterini UYGULAMA YOLUNA bağlar
+# =================================================================================================
+# ÖLÇÜLEN KUSUR (docs/ARTEFAKT-TARAMASI-2026-08-07.md · B-6). `approvals.jsonl`in YAZARI vardı
+# (`POST /api/approvals/{id}`, aşağıda) ve OKUYUCUSU vardı (`GET /api/approvals` → panonun "Canlı
+# emir onayları" kartı) — ama okuyan DAVRANMIYORDU. Hiçbir uygulama yolu deftere bakmıyordu, yani
+# L1'e geçildiği gün operatörün kararı icraya bağlı OLMAYACAKTI: "onayla" yazmayan bir öneri de
+# uygulanabilirdi, "reddet" yazan bir satır da hiçbir şeyi durdurmazdı. `dormant_setup` ile aynı
+# sınıf — defter var, okuyucu var, DAVRANIŞSAL tüketici yok. Kusur L1 günü DOĞMAYACAK, GÖRÜNECEKTİ.
+#
+# EŞLEŞME ANAHTARI — ÖLÇEREK SEÇİLDİ, İCAT EDİLMEDİ. Yazıcı `approval_id`yi URL yolundan HARFİ
+# HARFİNE alır (hiçbir şema dayatmaz), yani anahtarı yazıcı tarafı TANIMLAMIYOR. Sistemde
+# onaylanabilir öğelere kimlik BASAN tek yer `GET /api/approvals` gelen kutusudur ve orada üç kalıp
+# vardır: `arming:{setup}` · `rev:{skill}` · `rec:{skill}`. Anahtar bu yüzden GELEN KUTUSU
+# KİMLİĞİdir: operatörün EKRANDA gördüğü dizge, onayladığı dizge ve kapının aradığı dizge aynı olur.
+# Dizge artık `onay_kimligi()`den ÇIKAR ve gelen kutusu da onu çağırır — iki yerde iki üretim,
+# önek bir gün değiştiğinde kapıyı sessizce ayrıştırırdı.
+#
+# KAPININ GİRDİĞİ YOLLAR (ölçüm: bu iki uç, gelen kutusunun EYLEMLİ iki türünü uygulayan TEK
+# yollardır — `apply_skill_action`/`apply_revision` çağıran başka bir HTTP yüzeyi yok):
+#   * `POST /api/skills/revision` action=apply → `skill_evolve.apply_revision`  (kimlik `rev:{skill}`)
+#   * `POST /api/skills/apply`                → `skills.apply_skill_action`     (kimlik `rec:{skill}`)
+#
+# KAPI GİRMEYEN YOLLAR VE NEDENLERİ (sessiz muafiyet yok — hepsi burada yazılı):
+#   * `arming:{setup}` gelen kutusu öğesi: `actions: []`. Silahlanma bir KOD değişikliğidir
+#     (`ARMED_SETUPS`) — uygulayan bir çalışma-zamanı yolu YOKTUR, dolayısıyla kapılacak bir çağrı
+#     da yoktur. Kimlik yine de `onay_kimligi` üretir ki yarın bir yol açılırsa anahtar hazır olsun.
+#   * `POST /api/approvals/{id}`: ÖLÇÜLDÜ — onay ve uygulama AYNI UÇTA DEĞİL. Uç yalnız deftere
+#     satır yazar (+ ders damıtır); hiçbir şey uygulamaz. Kapı oraya konsaydı uç kendi kendini
+#     onaylatırdı.
+#   * `POST /api/skills/revision` action=reject: RET hiçbir şeyi YÜRÜRLÜĞE KOYMAZ — taslağı siler,
+#     yani sistemin yapacağı işi AZALTIR. Reddi onaya bağlamak, güvenli yönü tören şartına
+#     bağlamak olurdu; ayrıca defterde `reject` yazan bir kararın uygulanması zaten budur.
+#   * HALT / acil durdurma ailesi — `POST /api/halt`, `/api/control/halt`, `/api/control/learn_halt`,
+#     `/api/control/cancel_open`, `/api/alpaca/close_all`: hepsi VAR OLAN riski AZALTIR. Deponun
+#     zaten yazılı ilkesi (api.py, `koruma_kur` bloğu): "submit_armed YENİ RİSK ALIR, bu yol var
+#     olan riski AZALTIR". Riski azaltan eylemin onay beklemesi, acil durdurmayı onay kuyruğunun
+#     arkasına koymak demektir — kapının kendisi bir arıza olurdu.
+#   * `POST /api/alpaca/koruma_kur`: riski AZALTIR (çıplak pozisyona stop koyar) VE zaten kendi
+#     DURUMA-BAĞLI onay jetonuna sahiptir (`onay` + `oneri_id`). İkinci bir kapı, aynı eylem için
+#     iki hüküm demekti.
+#   * `POST /api/alpaca/submit_armed` ve `POST /api/plan/{id}/onayla`: emirlerin onayı BU DEFTERDE
+#     DEĞİL. O yol ayrıdır, gerçektir ve davranışsaldır: `loop.operator_onay_ver` → plan satırına
+#     onay damgası → `loop.girise_uygun` → silahlı küme. B-6 kaydının kendi "ayırt edici notu" bu
+#     karışıklığı açıkça yasaklıyor. Buraya `approvals.jsonl` kapısı koymak, çalışan bir onay
+#     mekanizmasının üstüne İKİNCİ bir onay yolu açmak olurdu (app.js:8470'in reddettiği desen).
+#   * `skills.auto_shadow_from_evidence` (skills.py:499, süreç-içi, HTTP değil): operatör kararı
+#     DEĞİLDİR — gelen kutusunda kimliği yoktur (`pending: False` yazar), dolayısıyla ona ait bir
+#     onay satırı HİÇBİR ZAMAN var olamaz; kapı oraya konsaydı L1'de H5 döngüsünü kalıcı ve
+#     açılamaz biçimde dondururdu. Ayrıca tek yönlüdür (yalnız `shadow`, PROTECTED hariç, koşu
+#     başına en çok 1) — kanıtı negatif çıkan bir skill'i incelemeye almak, kullanmayı bırakma
+#     yönüdür.
+#
+# NEDEN `shadow` DA KAPILI (uç tarafında): skill bayrakları PAZAR riskine dokunmaz — `shadow` da
+# `activate` de deterministik motoru DEĞİŞTİRMEZ (motor LLM skill'i hiç çalıştırmaz). Yani
+# "riski azaltan eylem" istisnası bu aileye HİÇ uygulanmaz; iki yön de operatör kararıdır ve iki
+# yön de kayıtlı olmalıdır. `shadow`u muaf tutmak, gelen kutusunun önerilerinin neredeyse tamamı
+# `shadow` olduğu için kapıyı ATIL bırakırdı.
+APPROVALS_LEDGER = "approvals.jsonl"
+
+# Gelen kutusu tür kodu → kimlik öneki. `api_approvals` bu sözlükten geçer; kapı da öyle.
+ONAY_ONEK = {"arming": "arming", "skill_revision": "rev", "skill_rec": "rec"}
+
+
+def onay_kimligi(tur: str, ad: str) -> str:
+    """Gelen kutusu öğesinin KİMLİĞİ — hem listeleyen uç hem kapı buradan üretir (tek kaynak).
+
+    Bilinmeyen tür SESSİZCE geçilmez: `KeyError` yerine tanınabilir bir dizge üretmek, yarın
+    eklenen bir türün kapıya `None:x` diye görünmesi ve eşleşmeyi sessizce imkânsız kılması olurdu.
+    """
+    if tur not in ONAY_ONEK:
+        raise KeyError(f"bilinmeyen gelen kutusu türü: {tur!r} — ONAY_ONEK'e ekle")
+    return f"{ONAY_ONEK[tur]}:{ad}"
+
+
+def _onay_defteri_karari(kimlik: str) -> dict:
+    """`approvals.jsonl`da `kimlik` için EN SON operatör kararı — FAIL-CLOSED okuma.
+
+    DÖNÜŞ: {"karar": "approve"|"reject"|"bozuk"|None, "bozuk": int, "atfedilemeyen": int,
+            "okunamadi": str|None}
+
+    SIRA DOSYA SIRASIDIR, `ts` DEĞİL: defter salt-ekleme yazılır, yani dosya sırası zaman sırasıdır.
+    `ts` alanına sıralama yükü bindirmek, biçimi bozuk ya da eksik bir damganın sıralamayı sessizce
+    ters çevirmesi demekti (onayı reddin ÖNÜNE geçirebilirdi). Operatör önce onaylayıp sonra
+    reddederse SON satır kazanır — kararın kendisi bir olaydır ve son karar yürürlüktedir.
+
+    BOZUK SATIR = ONAY YOK (fail-closed, brief madde 4). Üç ayrı bozukluk sınıfı ayrı sayılır:
+      * `atfedilemeyen`: satır sözlük değil ya da `id` okunabilir bir dizge değil → KİMSEYE onay
+        vermez. Başkasının onayını da İPTAL ETMEZ: kime ait olduğu bilinmeyen bir satırı "bu ret
+        olabilir" diye herkesin üstüne yürütmek, tek bozuk satırla defteri kalıcı olarak
+        kullanılamaz kılardı. Sayısı olaya taşınır, yani defterin kirliliği GÖRÜNÜR.
+      * `bozuk`: `id` EŞLEŞİYOR ama `decision` okunamıyor (dizge değil / approve|reject dışında) →
+        o kimliğin hükmü "bozuk" olur ve kapı REDDEDER. Atfedilebilen bir satırı yorumlayamamak,
+        tam olarak "okunamayan onay = onay YOK" halidir.
+      * `okunamadi`: defterin kendisi okunamadı (G/Ç, bozuk depo) → onay YOK.
+    JSON olarak hiç ayrıştırılamayan satırları `store.read_jsonl` zaten atar ve bir kez
+    `jsonl_rows_skipped` uyarısı bırakır — o sınıfın izi orada, bu kapının gördüğü küme ise
+    ayrıştırılabilmiş ama şeması bozuk satırlardır.
+    """
+    try:
+        satirlar = store.read_jsonl(APPROVALS_LEDGER)
+    except Exception as e:
+        return {"karar": None, "bozuk": 0, "atfedilemeyen": 0,
+                "okunamadi": f"{type(e).__name__}: {e}"[:120]}
+    karar, bozuk, atfedilemeyen = None, 0, 0
+    for r in satirlar:
+        if not isinstance(r, dict):
+            atfedilemeyen += 1
+            continue
+        rid = r.get("id")
+        if not isinstance(rid, str) or not rid:
+            atfedilemeyen += 1
+            continue
+        if rid != kimlik:
+            continue
+        d = r.get("decision")
+        if not isinstance(d, str) or d.strip().lower() not in ("approve", "reject"):
+            bozuk += 1
+            karar = "bozuk"
+            continue
+        karar = d.strip().lower()
+    return {"karar": karar, "bozuk": bozuk, "atfedilemeyen": atfedilemeyen, "okunamadi": None}
+
+
+# Kapının reddederken yazdığı gerekçeler. YASA 4: her sessiz-olmayan ret ≥20 karakter gerekçe
+# taşır ve gerekçe HTTP gövdesine de düşer — operatör "neden olmadı"yı olay akışını açmadan görür.
+_ONAY_RET_NEDEN = {
+    None: ("onay defterinde bu öneriye ait KARAR YOK — L1+'ta uygulama, `POST /api/approvals/{id}` "
+           "ile yazılmış bir `approve` satırı gerektirir (fail-closed)"),
+    "reject": ("onay defterindeki SON karar `reject` — operatör bu öneriyi reddetmiş; uygulama "
+               "yapılmadı (kararı değiştirmek için yeni bir `approve` satırı yaz)"),
+    "bozuk": ("onay defterinde bu kimliğe ait satır var ama `decision` alanı OKUNAMIYOR — "
+              "okunamayan onay onay DEĞİLDİR (fail-closed); satırı düzelt ya da yeniden onayla"),
+}
+
+
+def _onay_kapisi(kimlik: str, *, yol: str, **ek) -> dict:
+    """L1+ UYGULAMA KAPISI: defterde `approve` satırı yoksa uygulama YAPILMAZ.
+
+    L0-NÖTRLÜK BİR YAN ETKİ DEĞİL, FONKSİYONUN İLK SATIRI: `autonomy_level < 1` iken kapı deftere
+    HİÇ BAKMAZ, hiçbir olay yazmaz, hiçbir istisna atmaz ve her zaman `gecti=True` döner. Yani
+    bugünkü canlı (L0 kâğıt) yolda tek bir dosya okuması bile eklenmez — davranış BİREBİR aynıdır
+    ve regresyon yüzeyi sıfırdır. Kapı YALNIZ L1'de bağlar; zaten L1'de doğacak kusur içindir.
+
+    TEKRAR OYNATMA SINIRI BEYANLIDIR: onay KİMLİĞE bağlıdır, öneri ÖRNEĞİNE değil — `rec:foo` için
+    yazılmış bir `approve`, sonraki bir `reject` gelene kadar `rec:foo`nun sonraki uygulamalarını
+    da yetkilendirir. `koruma_kur`daki gibi bir DURUM özetine (`oneri_id`) bağlamak daha sıkı
+    olurdu ama bugün gelen kutusu öğelerinin taşıdığı böyle bir özet YOK; uydurmak, bu depoda
+    yasak olan "eşiği sonradan seç" hamlesinin aynısı olurdu. Sıkılaştırma bir ölçüm kartına bağlı.
+    """
+    lvl = config.limits()["autonomy_level"]
+    if lvl < 1:
+        return {"gecti": True, "gerekli": False, "seviye": lvl, "kimlik": kimlik, "neden": ""}
+    d = _onay_defteri_karari(kimlik)
+    if d["okunamadi"]:
+        neden = (f"onay defteri OKUNAMADI ({d['okunamadi']}) — okunamayan defter onay içermez; "
+                 f"uygulama reddedildi (fail-closed)")
+    elif d["karar"] == "approve":
+        obs.log("approval_gate_passed", kimlik=kimlik, yol=yol, seviye=lvl,
+                atfedilemeyen=d["atfedilemeyen"], **ek)
+        return {"gecti": True, "gerekli": True, "seviye": lvl, "kimlik": kimlik, "neden": ""}
+    else:
+        neden = _ONAY_RET_NEDEN[d["karar"]]
+    # KİMLİK GEREKÇENİN İÇİNDE: 409 gövdesi operatörün gördüğü TEK metin olabilir ve "onay yok"
+    # cümlesi, NEYİ onaylayacağını söylemiyorsa yarım bir cevaptır. Aranan dizge burada yazılıdır
+    # ki operatör onu doğrudan `POST /api/approvals/{id}`ye geçirebilsin.
+    neden = f"[{kimlik}] {neden}"
+    obs.warn("approval_missing_refused", kimlik=kimlik, yol=yol, seviye=lvl,
+             karar=str(d["karar"] or "yok"), bozuk=d["bozuk"], atfedilemeyen=d["atfedilemeyen"],
+             neden=neden, **ek)
+    return {"gecti": False, "gerekli": True, "seviye": lvl, "kimlik": kimlik, "neden": neden}
+
+
 @app.post("/api/skills/revision")
 async def api_skill_revision(request: Request):
     """v10 #5 — skill revizyon taslağı: operatör onayı (apply) ya da ret (reject). Taslaklar ajan
-    tarafından yazılır ama YALNIZ burada, insan kararıyla yürürlüğe girer."""
+    tarafından yazılır ama YALNIZ burada, insan kararıyla yürürlüğe girer.
+
+    v215 (B-6): `apply` kolu L1+'ta ONAY DEFTERİNE bakar (`rev:{skill}`); `reject` kolu bakmaz —
+    ret hiçbir şeyi yürürlüğe koymaz. Gerekçeler `_onay_kapisi` bloğunda yazılı."""
     _auth(request)
     body = await request.json()
     skill, action = str(body.get("skill") or ""), str(body.get("action") or "")
     from . import skill_evolve
     if action == "apply":
+        kapi = _onay_kapisi(onay_kimligi("skill_revision", skill),
+                            yol="skill_evolve.apply_revision")
+        if not kapi["gecti"]:
+            # 409, 403 DEĞİL: kimlik doğrulandı (`_auth` geçildi), yetki de yerinde — çakışan şey
+            # DÜNYANIN DURUMU (defterde onay yok/ret var). Kardeş operatör-reddi
+            # `/api/plan/{id}/onayla` da aynı kodu ve aynı "neden gövdede metin" desenini kullanır.
+            raise HTTPException(status_code=409, detail=kapi["neden"])
         out = skill_evolve.apply_revision(skill)
         _diag_onbellek_bosalt("skill_revision_apply")
         return out
@@ -1398,7 +1581,10 @@ async def api_skill_revision(request: Request):
 @app.post("/api/skills/apply")
 async def api_skills_apply(request: Request):
     """Apply a reversible Axis-2 skill action (shadow/activate). Operator-gated — the deterministic
-    backtest cannot validate LLM-skill impact, so a human approves what the brain recommends."""
+    backtest cannot validate LLM-skill impact, so a human approves what the brain recommends.
+
+    v215 (B-6): L1+'ta "insan onaylar" artık bir NİYET değil bir KAYIT — kapı, uygulamadan önce
+    onay defterinde `rec:{skill}` için `approve` satırı arar. L0'da davranış birebir aynıdır."""
     _auth(request)
     from . import skills
     try:
@@ -1406,6 +1592,13 @@ async def api_skills_apply(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="expected JSON {skill, action}")
     skill, action = (body or {}).get("skill"), (body or {}).get("action")
+    # KAPI `apply_skill_action`DAN ÖNCE, İÇİNDE DEĞİL: aynı fonksiyonu süreç-içi otomatik yol da
+    # çağırıyor (`skills.auto_shadow_from_evidence`) ve o yolun gelen kutusunda kimliği YOK — kapıyı
+    # fonksiyonun içine koymak L1'de o döngüyü kalıcı olarak dondururdu (gerekçe: kapı bloğu).
+    kapi = _onay_kapisi(onay_kimligi("skill_rec", str(skill or "")),
+                        yol="skills.apply_skill_action", eylem=str(action or "")[:20])
+    if not kapi["gecti"]:
+        raise HTTPException(status_code=409, detail=kapi["neden"])
     res = skills.apply_skill_action(skill or "", action or "")
     if res.get("ok"):
         obs.log("skill_action_applied", skill=skill, action=action)
@@ -4381,7 +4574,11 @@ def api_pipeline_runs(request: Request):
 def api_approvals(request: Request):
     """v11 #4 — BİRLEŞİK GELEN KUTUSU: onay bekleyen HER karar türü tek listede (otonomi
     seviyesinden bağımsız): kapıyı geçmiş silahlanma ölçümleri, skill revizyon taslakları,
-    Eksen-2 önerileri, (L1+) canlı emir onayları. Her öğe: kanıt + yapılabilir eylem."""
+    Eksen-2 önerileri, (L1+) canlı emir onayları. Her öğe: kanıt + yapılabilir eylem.
+
+    KİMLİKLER `onay_kimligi()`DEN ÇIKAR (v215, B-6): aynı dizgeyi L1 onay kapısı da arıyor. Burada
+    satır içi `f"rev:{...}"` kurmak, kimliği İKİ yerde üretmek ve önek değiştiği gün kapıyı sessizce
+    ayrıştırmak olurdu. Dizgeler DEĞİŞMEDİ — üretim yeri tekleşti."""
     _auth(request)
     from . import skill_evolve as _se
     inbox = []
@@ -4389,25 +4586,27 @@ def api_approvals(request: Request):
     for setup, m in (ar.get("measurements") or {}).items():
         if m.get("status") == "gate_passed":
             rep = (ar.get("cf_report") or {}).get(setup) or {}
-            inbox.append({"type": "arming", "id": f"arming:{setup}", "title": f"Kurulum silahlanmaya hazır: {setup}",
+            inbox.append({"type": "arming", "id": onay_kimligi("arming", setup),
+                          "title": f"Kurulum silahlanmaya hazır: {setup}",
                           "evidence": f"kapı GEÇTİ · P={m.get('search_p')} · onay P={m.get('confirm_p', '—')} · "
                                       f"cf n={rep.get('n')} ort {rep.get('avg_r')}R",
                           "actions": [],
                           "note": "Silahlanma kod değişikliğidir (ARMED_SETUPS) — onayını Claude'a söyle."})
     for r in _se.pending_drafts():
         ev = r.get("evidence") or {}
-        inbox.append({"type": "skill_revision", "id": f"rev:{r['skill']}", "title": f"Revizyon taslağı: {r['skill']}",
+        inbox.append({"type": "skill_revision", "id": onay_kimligi("skill_revision", r["skill"]),
+                      "title": f"Revizyon taslağı: {r['skill']}",
                       "evidence": f"{esc_ev(r.get('rationale'))} · kanıt n={ev.get('n')} ort {ev.get('avg_r')}R",
                       "actions": ["apply", "reject"], "skill": r["skill"]})
     from . import skills as _sk2
     for rec in _sk2.pending_recommendations():
-        inbox.append({"type": "skill_rec", "id": f"rec:{rec.get('skill')}",
+        inbox.append({"type": "skill_rec", "id": onay_kimligi("skill_rec", str(rec.get("skill"))),
                       "title": f"Eksen-2: {rec.get('skill')} → {rec.get('action')}",
                       "evidence": rec.get("rationale") or "", "actions": ["apply"],
                       "skill": rec.get("skill"), "action": rec.get("action")})
     lvl = config.limits()["autonomy_level"]
     return {"level": lvl, "inbox": inbox,
-            "pending": store.read_jsonl("approvals.jsonl") if lvl >= 1 else [],
+            "pending": store.read_jsonl(APPROVALS_LEDGER) if lvl >= 1 else [],
             "note": "Gelen kutusu her seviyede aktif; canlı emir onayları yalnız L1+."}
 
 
@@ -4580,14 +4779,24 @@ def api_plan_onayla(plan_id: str, request: Request):
 
 @app.post("/api/approvals/{approval_id}")
 async def api_approve(approval_id: str, request: Request):
+    """Operatörün onay/ret kararını deftere yazar. YALNIZ YAZAR — hiçbir şey uygulamaz.
+
+    v215 (B-6) ile bu satır artık BAĞLAYICI: `approval_id`, `GET /api/approvals` gelen kutusunun
+    `id` alanıyla AYNI dizge olmalıdır (`onay_kimligi()`: `rev:{skill}` · `rec:{skill}` ·
+    `arming:{setup}`) — L1+ uygulama kapıları (`_onay_kapisi`) o kimlikle bu deftere bakar.
+    Tanınmayan bir kimliğe yazılan karar hiçbir yolu açmaz; kapı fail-closed'dır.
+
+    `decision` yalnız `approve` ya da `reject` olarak OKUNUR. Uç bunu burada DAYATMAZ (defter bir
+    olay kaydıdır ve operatörün yazdığı ham karar aynen saklanır); okunamayan bir karar kapıda
+    "onay YOK" sayılır ve nedeni olay akışına düşer (`approval_missing_refused`)."""
     _auth(request)
     if config.limits()["autonomy_level"] < 1:
         raise HTTPException(status_code=403, detail="approvals are L1+ only; system is L0 paper")
     body = await request.json()
     decision = body.get("decision")
     reason = body.get("reason", "")
-    store.append_jsonl("approvals.jsonl", {"id": approval_id, "decision": decision,
-                                           "reason": reason, "ts": memory.now_iso()})
+    store.append_jsonl(APPROVALS_LEDGER, {"id": approval_id, "decision": decision,
+                                          "reason": reason, "ts": memory.now_iso()})
     # Operatör kararı OLAY defterine de düşer: onay/ret, alarmların ve döngü olaylarının yanında
     # tek bir zaman çizgisinde okunabilmeli (N/A sorgusu, 2026-07-21).
     obs.log("approval_decision", approval_id=approval_id, decision=str(decision)[:40],
