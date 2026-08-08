@@ -273,6 +273,52 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
     raporda adıyla (7 kalem; en önemlisi: KATMAN-4 alan merceği yalnız `dormant_setup`a
     uygulandı, plan defterinin ~20 kontrol alanı BİR SONRAKİ KOVANIN konusu).
 
+### WP-N — Kanıt-Hızı Programı 🔴 AKTİF (2026-08-09; operatör onaylı sıra: N1→N2→N3→N4, N5 serpiştirilir)
+
+**TEŞHİS (ölçülü):** darboğaz kod değil KANIT ÜRETİM HIZI. Faz-6'nın kapalı üç kilidi kârlı
+işlem geçmişi istiyor (kodla açılabilecek kilit kalmadı — WP-L); Eksen-2 67 skill'in 2'sini
+ölçebilmiş; Faz-5 4/20 çiftte; E3 ampirik bandı örneklem bekliyor; gölge modeli n_live=0
+yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt musluğu bu.
+
+- **N1 — Bildirim jetonu ayrımı ✅ KOD TARAFI / 🔒 KANAL OPERATÖRDE:** `NAKED_POSITION`
+  jetonu (obs.py NOTIFY_TOKENS) + koruma alarmının `MIRROR_DRIFT`ten ayrılması — bugün ikisi
+  aynı 6 saatlik susturma penceresini paylaşıyor; korumasız-pozisyon gecesi sev-1 alarmlar
+  bastı ve operatöre HİÇBİRİ ulaşmadı (33 teslim edilmemiş alarm birikmiş). Jeton ayrımı kanal
+  gelmeden de değerli (susturma ayrışır). KANAL (Telegram bot token / webhook URL) operatörün
+  tek parçası — teslim zinciri hazır, kanal boş (WP-O §6.1).
+- **N2 — Gölge kapsam genişletme (kart EXE-2026-003):** 4b bugün yalnız SİLAHLANMIŞ planların
+  gölge dolumunu yazıyor (6 seansta 4). Genişletme: tetiği kesilen PLANLI (silahlanmamış)
+  GO/REVIEW planları da gölge dolumu yazar, `kol: planli|silahli` etiketiyle AYRIK.
+  **ROL-1 DÜZELTMESİ (ilk öneri metnindeki hesap yanlıştı):** bu genişletme Faz-5 kilidinin
+  n_min'ini DOĞRUDAN doldurmaz — kilidin çifti gerçek-iç-dolum ister ve silahlanmamış planın
+  iç dolumu YOKTUR (R1'in kapsam_disi kovasına düşerler). Ölçeği veren İKİNCİL eşleştirmedir:
+  gölge(dakika-sim) × cf(EOD-sim) — İKİ SİMÜLASYON, aynı maliyet modeli, fark yalnız zamanlama
+  (EXE-2026-002'nin kendi onayladığı metodoloji). cf tüm adayları kapsadığı için örneklem
+  ~7 bin satırlık havuzdan beslenir. Bu ikincil hat KİLİDİ AÇMAZ (kilit gerçek-çift ister);
+  birikip gerçek-çift hattıyla UYUŞURSA kilidin kanıt kaynağını genişletme önerisi ayrı bir
+  kart revizyonu olarak OPERATÖRE gider. cf'nin çıkış-sadakati kusuru bu ölçümü KİRLETMEZ —
+  bu bir GİRİŞ ölçümü, çıkış modeli işe karışmıyor.
+  Skill gölge rotasyonu (57 ölçülmemiş skill, haftada N) AYRI kart — N2'den sonra açılır.
+- **N3 — Sermaye bekçileri → WP-S SB-4 + SB-3 (referans):** damgasız-yazım bekçisi (kitap
+  `store` dışından değişebiliyor ve kimse görmüyor — denetim tabanı) + `taban_kaymasi` satırı.
+- **N4 — cf çıkış-yasası sadakati 🔒 BAKIM PENCERESİ ŞARTLI (en pahalı, en değerli):** 6 çıkış
+  tipi modellenecek + TÜM cf tarihi yeniden koşulacak (saatler, state'e yazar → canlı worker
+  koşarken YAPILMAZ). %96'lık skor havuzundaki +0,039R iyimserlik kapanır; Eksen-2/terfi/edge
+  hükümlerinin ortak zemini temizlenir. Kendi ön-kayıt kartıyla gider; pencereyi operatör açar.
+- **N5 — Görünürlük turu (tek app.js turu, araya serpiştirilir):** 409-yutması (L1 reddi
+  panoda görünmez — operatör basar, hiçbir şey olmaz) + `EV_TR` koruma_* çevirileri +
+  `k.olcum`un çizilmesi (beş kilit) + hermes telemetri kartı ("veri hazır, çizim yok").
+  Dördü aynı dosyada; WP-S2 kalemlerinin icra turu.
+- **N6 — DEVİR TATBİKATI (6. kova; DAĞITIMLAR BİTİNCE koşar — operatör onayı 2026-08-09):**
+  BAĞLAMSIZ bir ajan (oturum hafızası YOK, yalnız depo + salt-okunur canlı) "sistem haritası +
+  ilk 10 risk" çıkarır; girişi deponun kendi devir sözleşmesi (CLAUDE.md → MERIDIAN_ENGINEERING_LOG).
+  Rol-1 çıktıyı BİLİNEN bulgu defteriyle (2026-08-07/09 turları = bilinen-pozitif seti) kıyaslar:
+  (a) bilinenleri BULAMADIĞI yerler = depo onboarding'inin/tek-kaynak haritasının boşluğu —
+  belge borcu olarak açılır; (b) bizim listemizde OLMAYIP bulduğu şeyler = bizim körlüğümüz —
+  şiddetine göre dalgaya girer. Çıktı: docs/DEVIR-TATBIKATI belgesi + Rol-1 fark hükmü.
+  SIRA GEREKÇESİ: dağıtım #2'den SONRA — tatbikat iyileştirilmiş durumu denetlesin ki bulduğu
+  her boşluk GERÇEK kalan boşluk olsun, bu gece zaten kapatılmış bir şeyin gölgesi değil.
+
 ### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
 - **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
   DÜŞTÜ: karşı-olgu kolları kapının OOS doğrudan etkisinin SIFIR olduğunu (55 bloke gün, 0

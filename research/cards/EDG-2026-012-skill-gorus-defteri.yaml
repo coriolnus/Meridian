@@ -1,0 +1,64 @@
+card_id: EDG-2026-012
+family: skill_gorus_defteri_aktif_kume
+thesis: >
+  Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10)
+  aday seçimi ve ötesinde ölçülebilir katkısı olup olmadığı bilinmiyor, çünkü skill'ler hiç
+  koşmuyor ve Eksen-2 kanıtsız öneri üretmeyi (doğru olarak) reddediyor. Bu kart kısır döngüyü
+  GÖLGE tarafında kırar: skill'ler yapılandırılmış GÖRÜŞ yazar, yüzey başına bir ÇÖZÜCÜ görüşü
+  gerçekleşen sonuçla puanlar, terfi/emeklilik kararı yüzey-başına kanıtla operatöre gider.
+  Görüş defterinin davranışsal tüketicisi İLK GÜNDEN bellidir: Eksen-2 + operatör kararları
+  (uyuyan-yol dersi: önden bağlı arkadan bağsız yüzey İNŞA EDİLMEZ).
+
+evidence_refs:
+  - "canlı sayım 2026-08-09: kayıt defterinde 36 retired:true; klasör 31 aktif + _emekli 38;
+     katalog 67 düz (Ç3 — catalog() retired alanını düşürüyor; bu kartın ön şartı o düzeltme)"
+  - "aktif-korumasız kümenin ilk kanıtları: vcp-screener n=91 avg_r=0,0 · pullback-screener
+     cf n=21 avg_r=-0,968 — beklenti parlak değil; bu katmanın değeri terfi kadar EMEKLİLİK"
+  - "docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md (Ç3) · docs/ARTEFAKT-TARAMASI-2026-08-07.md (yöntem)"
+
+universe: >
+  YALNIZ aktif + korumasız + deterministik (LLM-çağırmayan) skill'ler; küme ölçüm anında
+  yaşam-döngüsü-farkında kaynaktan türetilir. Emekli/birleşik/kapalı kayıtlar `arsiv` kovasına
+  AYRI düşer ve "ölçülmemiş" SAYILMAZ (Ç3 etiket düzeltmesi bu kartla aynı turda).
+
+features_asof: >
+  Görüş satırı: (skill, ts, yuzey, hedef, skor|karar, gerekce_ozeti). Yüzeyler ŞEMADA beş
+  (aday-uretec, aday-siralayici, cikis, rejim, boyut) ama BU KARTIN ölçtüğü yalnız çözücüsü
+  hazır iki yüzey: aday-siralayici (çözücü: cf + gerçek R, rank-IC) ve cikis (çözücü:
+  exit_efficiency). Diğer üç yüzey çözücüleri yazıldıkça AYRI kartla açılır — bu kartla DEĞİL.
+  Görüşler yalnız t ve öncesi veriyle üretilir; ileri-bakış yok.
+
+horizon: "cf/exit_efficiency ufuklarıyla aynı; bu kart kendi ufuk tanımı İCAT ETMEZ"
+
+parameter_grid:
+  yok: "grid yok — tek şema, iki çözücü. K += 1 (katmanın kendisi). Skill-başına test ÇOKLUK
+    düzeltmesiyle ele alınır (aşağıda), K defterine skill-başına yazılmaz (component_ic emsali:
+    tarama ailesi tek K, FDR içeride)."
+
+cost_model: pessimistic_band_v2   # sıralayıcı hükmü maliyet-sonrası R üstünden okunur
+
+success_metric: >
+  Yüzey-başına, skill-başına: tarih-kümeli bootstrap %95 CI + Benjamini-Hochberg FDR q=0.10
+  (aile = o yüzeydeki tüm aktif-korumasız skill'ler). TERFİ ADAYI: FDR-sağkalan VE etki eşiği
+  |rank-IC| >= 0.05 (sıralayıcı) ya da çıkış-katkısı > 0 CI-altı (çıkış) VE n_min = 30 görüş.
+  n < 30 → "ÖLÇÜLDÜ — ÖRNEKLEM YETERSİZ" (skill-başına; kova adıyla raporlanır).
+  HİÇBİR TERFİ OTOMATİK DEĞİL: FDR-sağkalanlar operatöre kanıtla gider (motor-içi bayrak
+  yazımı yasağı aynen — 2026-08-06 eksen2 kararının devamı).
+
+kill_criteria:
+  - "görüş üretimi canlı döngü p95 süresini +%10'dan fazla artırırsa katman KAPATILIR (gözlem
+     icrayı yavaşlatamaz — EXE-2026-003 ile aynı yasa)"
+  - "40 seansta hiçbir skill FDR-sağkalan değilse katman ARŞİVLENİR ve sonuç 'aktif kümede
+     ölçülebilir görüş-katkısı yok' diye kayda geçer — bu bir başarısızlık değil HÜKÜMDÜR;
+     defter kalır, yazım durur"
+  - "bir skill 3 ardışık pencerede FDR-sağkalan NEGATİF çıkarsa Eksen-2'ye EMEKLİLİK önerisi
+     düşer (terfi değil — bu katman iki yönlü keser)"
+  - "çözücü girdisi (cf/exit_efficiency) kendi bekçisinde bayat/bozuk işaretliyse o yüzeyin
+     hükmü VERİLMEZ (çöp-girdi çöp-hüküm zinciri kapalı)"
+
+k_registry: {registered_at: "2026-08-09T01:1x", trial_ids: [pending-EDG-012-gorus-v1]}
+
+status: registered   # 2026-08-09 Rol-1. Ölçüm kodu HENÜZ YAZILMADI — kart ön şart.
+#   Eşikler (FDR q=0.10 · |rank-IC|>=0.05 · n_min=30 · p95 +%10 · 40 seans kuruma · 3 pencere
+#   negatif→emeklilik) ÖLÇÜMDEN ÖNCE donduruldu; kill_criteria dokunulmaz. Beş yüzeyin ŞEMASI
+#   bu kartta, ölçümü yalnız İKİ yüzeyde — kalan üçü çözücüleriyle birlikte AYRI kart ister.

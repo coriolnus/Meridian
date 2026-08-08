@@ -1,0 +1,63 @@
+card_id: EXE-2026-003
+family: golge_kapsam_genisletme_planli_kol
+thesis: >
+  4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4
+  satır). Tetiği kesilen ama silahlanmamış GO/REVIEW planları da gölge dolumu yazarsa, dakika-
+  hassas icra sorusu iki simülasyonun (gölge dakika-sim × cf EOD-sim) eşleştirilmesiyle çok
+  daha geniş bir örneklemden ölçülebilir — sıfır ek pazar riskiyle. Bu kart o genişletmeyi ve
+  İKİNCİL eşleştirme hattını ön-kayıt altına alır.
+  AÇIK SINIR (Rol-1'in kendi düzeltmesi, kayda geçer): bu genişletme EXE-2026-002 kilidinin
+  n_min'ini DOLDURMAZ — kilit gerçek-iç-dolum çifti ister, silahlanmamış planın iç dolumu
+  yoktur. İkincil hat kilidi AÇMAZ; destekleyici kanıt üretir. Kaynak genişletme önerisi ancak
+  iki hat UYUŞURSA ve ayrı bir kart revizyonuyla operatöre gider.
+
+evidence_refs:
+  - "EXE-2026-002 (+R1): metodolojik sınır — model-model karşılaştırma, fark yalnız zamanlama"
+  - "canlı 4a defteri: intraday_decisions planlı (eod_armed=false) planları ZATEN izliyor
+     (fired alanı) — mekanizmanın yarısı mevcut, yazım tarafı eksik"
+  - "cf defteri ~7 bin satır; giriş dolumu simüle ediyor (no_fill* durumları dahil)"
+  - "analytics.py:1380 cf çıkış-sadakati kusuru: BU ÖLÇÜMÜ KİRLETMEZ — giriş ölçümüdür,
+     çıkış modeli işe karışmaz (WP-N N4 ayrı kalem)"
+
+universe: >
+  Tetiği seans içinde kesilen TÜM planlı GO/REVIEW planları (silahlanmışlar mevcut davranışla
+  aynen devam eder). Kol etiketi ZORUNLU: `kol: silahli` (bugünkü davranış, değişmez) ·
+  `kol: planli` (yeni). EXE-2026-002'nin gerçek-çift hattı YALNIZ silahli kolu okumaya devam
+  eder — kirlilik testle çivilenir.
+
+features_asof: >
+  Gölge dolum kuralı DEĞİŞMEZ: `sim_price_rule: max(bar_open, entry_trigger)` — silahli kolla
+  birebir aynı (iki kol arasında kural farkı, kol karşılaştırmasını anlamsız kılardı).
+  İkincil eşleştirme: kazanc_bps = (cf_giris_fiyati − golge_sim_fill) / cf_giris_fiyati × 10⁴,
+  eşleşme anahtarı plan_id, tarih-kümeli bootstrap B=10.000 (EXE-2026-002 ile aynı).
+
+horizon: "giriş anı — icra ölçümü; tutma ufku karta girmez (EXE-2026-002 ile aynı sınır)"
+
+parameter_grid:
+  yok: "tek genişletme, tek kural, grid yok — K += 1 (kol ekleme kararının kendisi)"
+
+cost_model: pessimistic_band_v2   # E3 — iki bacak da aynı modeli taşır
+
+success_metric: >
+  BİRİNCİL (bu kartın kendi hükmü): planli kol 20 seansta ≥ 40 gölge dolumu üretir VE
+  silahli kolun mevcut yazımı bayt-düzeyinde etkilenmez (önce/sonra şema + EXE-2026-002
+  gerçek-çift hattı değişmez). İKİNCİL (raporlanır, kilit AÇMAZ): gölge×cf eşleşmiş farkın
+  %95 CI'si (tarih-kümeli); n_min=40 çift (iki simülasyon arası ölçüm gerçek-çiftten ucuz
+  olduğu için eşik EXE-2026-002'nin iki katı — gevşek değil, SIKI yönde fark).
+
+kill_criteria:
+  - "planli kol yazımı canlı sıcak yolda ölçülebilir gecikme yaratıyorsa (p95 döngü süresi
+     +%10'dan fazla artarsa) kol kapatılır — gözlem, icrayı yavaşlatamaz"
+  - "20 seansta < 10 planli dolum → tetik-kesme planlı planlarda nadir demektir; kol düşük
+     değerli, arşivlenir (yazım durur, defter kalır)"
+  - "silahli kolun şemasında/sayımında HERHANGİ bir fark → derhal geri alınır; mevcut ölçüm
+     zinciri (EXE-2026-002) kirletilmez"
+  - "gölge×cf hattı ile gerçek-çift hattı 40+ çiftte TERS işaret verirse iki hat da
+     raporlanmaya devam eder ama kaynak-genişletme önerisi GÜNDEMDEN DÜŞER"
+
+k_registry: {registered_at: "2026-08-09T00:2x", trial_ids: [pending-EXE-003-planli-kol]}
+
+status: registered   # 2026-08-09 Rol-1. Ölçüm kodu HENÜZ YAZILMADI — kart ön şart.
+#   Eşikler (40 dolum/20 seans, n_min=40, CI %95, tarih-kümeli B=10.000, p95 +%10 tavanı)
+#   ÖLÇÜMDEN ÖNCE donduruldu. kill_criteria dokunulmaz. Silahli kol davranışı bu kartın
+#   HİÇBİR maddesiyle değişmez — genişletme yalnız yeni kol ekler.
