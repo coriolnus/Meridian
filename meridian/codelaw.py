@@ -443,6 +443,74 @@ DECLARED_SINKS: dict[str, str] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# BEYAN EDİLEBİLİRLİĞİN İKİ BOŞLUĞU (v215, 2026-08-08) — B-5 ve B-7
+# ---------------------------------------------------------------------------
+# `DECLARED_SINKS`in anahtarı bir ARTEFAKT ADIDIR ve o ad `unread` listesinden gelir. Bu iki şeyi
+# yapısal olarak beyan EDİLEMEZ kılıyordu:
+#   (B-5) TARİHLİ AD. `bararchive.archive_frame` `f"{ARCHIVE_DIR}/{day}.jsonl"` yazar; ad hiç
+#         çözülmez, `artifacts`a girmez, `DECLARED_SINKS`e yazılan satır ölü bir muafiyet olur
+#         (üstelik anahtar hiç eşleşmediği için kimse fark etmez). `bararchive.py`nin kendi
+#         başlığı bu sapmayı 2026-07-27'de Rol-1'e RAPORLAMIŞTI — yani bilinen, yazılı bir boşluk.
+#   (B-7) DIŞ OKUYUCUSU OLAN ama o okuyucusu YALNIZ BİR CLI BAYRAĞINDAN çağrılan defter.
+#         `unread` False olduğu için `DECLARED_SINKS`e konamaz: anında `stale_sinks` ihlali olurdu.
+# İkisi için iki AYRI kayıt açıldı. Ayrı olmalarının sebebi kozmetik değil: üçünün İDDİASI ve
+# dolayısıyla ÇÜRÜME ŞARTI farklıdır (bkz. `declared_claims`).
+
+#: DESEN BEYANI (B-5). Anahtar, `_joined_glob` tarafından KODDAN TÜRETİLEN şekildir — elle yazılan
+#: bir glob değil. Değer yapısaldır (düz metin değil), çünkü B-4'ün dersi şuydu: serbest metne
+#: gömülü iddia sessizce çürür. `sinanamaz` alanı ZORUNLUDUR ya da iddia SINANIR.
+DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
+    "intraday_bars/*.jsonl": {
+        "sinif": "gelecek_tuketici",
+        "gerekce": "DAKİKALIK BAR ARŞİVİ — Faz-5/6 KANIT KORPUSU. YAZAN: `bararchive.archive_frame` "
+                   "(bararchive.py:111, `store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)`), "
+                   "çağıranı `hotstate` — CANLI SICAK YOL, dakikalık. BUGÜN TÜKETİCİSİ YOK ve bu "
+                   "ÖLÇÜLMÜŞ bir karardır, ihmal değil: intraday hattı (hotstate → mrd:bars) "
+                   "uçucudur (~2 seans TTL), 'dakika-hassas icra EOD'dan gerçekten iyi mi?' sorusu "
+                   "ancak geçmiş çerçeveler biriktikten SONRA cevaplanabilir ve bugün başlamayan "
+                   "birikim üç ay sonra da üç aylık olmaz. SINIRSIZ DEĞİL: `bararchive._retention` "
+                   "ARCHIVE_KEEP_DAYS (120 takvim günü) üstünü siler ve silinenleri SAYAR — yani "
+                   "bu bir çöp yığını değil, süreli bir korpus. ADLANDIRILMIŞ GELECEK TÜKETİCİ: "
+                   "Faz-5/6 kanıt korpusu, kart ailesi EXE-2026-002 — dakika-hassas icra ölçümü "
+                   "genişlerse ham bar kaynağı bu arşivdir. ROL-1 HÜKMÜ (2026-08-08): yazım "
+                   "SÖKÜLMEZ; tarayıcıyı memnun etmek için veri silinmez.",
+        "sinanamaz": "GELECEK-ZAMAN İDDİASI. 'Faz-5/6 bunu okuyacak' bugünkü çağrı analiziyle "
+                     "sınanamaz — sınanabilir olsaydı zaten bir tüketici olurdu. Bu satır o "
+                     "sınanamazlığı AÇIK EDER; `declared_claims` iddiayı test etmeye ÇALIŞMAZ ve "
+                     "onu `unverifiable_claims` kovasında ADIYLA raporlar. Sessiz muafiyet ile "
+                     "farkı budur: sınanamayan iddia gizlenmez, işaretlenir. DEVİR ŞARTI: Faz-5/6 "
+                     "ölçümü arşivi okuduğu gün BU SATIR KALDIRILMALI ve gerçek tüketici yazılmalı.",
+    },
+}
+
+#: ÇAĞIRANI İNSAN OLAN DEFTER (B-7). §6.1 disiplini: "çağıranı YOK" ile "çağıranı İNSAN" ayrı
+#: şeylerdir ve taramanın kendisi bu ayrımı korudu. Bu kayıt `DECLARED_SINKS`ten AYRIDIR çünkü
+#: buradaki artefaktın DIŞ okuyucusu VARDIR (`unread` False) — `DECLARED_SINKS`e konsa anında
+#: `stale_sinks` ihlali olurdu. İddia SINANABİLİR ve sınanır: `cli` alanındaki modül+bayrak
+#: gerçekten var mı, ve okuyucu o bayrağın kolundan erişilebiliyor mu.
+HUMAN_INVOKED_SINKS: dict[str, dict[str, str]] = {
+    "shadow_trades.jsonl": {
+        "sinif": "cagirani_insan",
+        "cli": "meridian.shadow_variants --karne",
+        "gerekce": "GÖLGE-v2 YAŞAM-DÖNGÜSÜ İŞLEM DEFTERİ. YAZAN: `shadow_lifecycle` "
+                   "(shadow_lifecycle.py:574, `TRADES_FILE` sabiti satır 73'te) — modülün başlığı "
+                   "SIFIR YETKİ bloğudur: canlı portfolio/trades/trade_plans'a ve aynaya HİÇBİR yol "
+                   "çıkmaz, buradaki para sayıları bir KANIT HIZLANDIRICISIDIR, onay değil. OKUYAN: "
+                   "`shadow_variants._load_books` (shadow_variants.py:607) — DIŞ modüldür, bu yüzden "
+                   "`unread` False'tur ve artefakt bir ihlal DEĞİLDİR. BEYANIN SEBEBİ o okuyucunun "
+                   "TEK ÇAĞIRANIDIR: `shadow_variants.main()`in `--karne` kolu, yani ÇAĞIRAN BİR "
+                   "İNSANDIR; hiçbir üretim yolu (loop/scheduler/api/pano) bu defteri okumaz. "
+                   "'Çağıranı yok' ile 'çağıranı insan' aynı şey değildir — birincisi ihlal, "
+                   "ikincisi bir karardır; ama KAYITSIZ kalırsa ikisi ayırt edilemez, bu satır tam "
+                   "olarak o ayrımı kayda geçirir. DEVİR ŞARTI: kardeşi `shadow_variants.jsonl` "
+                   "2026-07-30'da `analytics.shadow_variant_summary` → `/api/diagnostics` → pano "
+                   "devrini aldı ve muafiyetten ÇIKTI; bu defter o devri aldığı gün BU SATIR DA "
+                   "KALDIRILMALI.",
+    },
+}
+
+
 def _module_consts(tree: ast.Module) -> dict[str, str]:
     """Modül düzeyindeki string sabitleri (ledgers.declared_writers'daki çalışan öncül taklit
     edildi): `_EVENTS = "events.jsonl"` gibi adların çözülmemesi, yazarı görünmez yapardı."""
@@ -505,7 +573,9 @@ def _looks_like_artifact(s: str) -> bool:
 # "hepsini görüyorum" bir iddia değil temennidir.
 
 #: `unresolved` kovaları — her biri ADLANDIRILMIŞ bir körlük sınıfıdır, sessiz `continue` değil.
-UNRESOLVED_REASONS = ("konumsal_arg_yok", "ad_cozulemedi", "artefakt_adi_degil")
+#: `desen_beyanli`: ad hâlâ ÇÖZÜLEMİYOR (tarihli f-string) ama ŞEKLİ türetildi ve o şekil
+#: `DECLARED_SINK_PATTERNS`te gerekçesiyle beyanlı — "çözüldü" değil, "sahiplenildi".
+UNRESOLVED_REASONS = ("konumsal_arg_yok", "ad_cozulemedi", "artefakt_adi_degil", "desen_beyanli")
 
 
 def _base_shape(b: ast.AST) -> str:
@@ -530,6 +600,38 @@ def _callee(n: ast.Call) -> tuple[str | None, str]:
     if isinstance(f, ast.Name):
         return f.id, "ciplak_ad"          # `from .store import read_json` → `read_json(...)`
     return None, f"cozulemeyen_sekil:{type(f).__name__}"
+
+
+def _joined_glob(a: ast.AST, consts: dict, gconsts: dict) -> str | None:
+    """Tarihli/dinamik bir f-string adından ŞEKİL türetir: sabit parçalar korunur, çözülebilen
+    değişkenler değerine, çözülemeyenler `*`a döner.
+        f"{ARCHIVE_DIR}/{day}.jsonl"  →  "intraday_bars/*.jsonl"
+
+    NEDEN TÜRETİLİYOR, ELLE YAZILMIYOR (v215 tasarım kararı): desen anahtarı KODDAN ÖLÇÜLÜR.
+    İnsan bir glob yazsaydı, kod değiştiğinde glob sessizce yanlış kalırdı — B-4'ün hastalığının
+    aynısı, bu sefer desen katmanında. Türetilmiş anahtar, ad şekli değiştiği an eşleşmeyi
+    bırakır ve dosya yeniden `ad_cozulemedi`ye düşer. Yani beyan otomatik olarak BAYATLAR."""
+    if not isinstance(a, ast.JoinedStr):
+        return None
+    parts: list[str] = []
+    for v in a.values:
+        if isinstance(v, ast.Constant) and isinstance(v.value, str):
+            parts.append(v.value)
+        elif isinstance(v, ast.FormattedValue):
+            inner = v.value
+            got = None
+            if isinstance(inner, ast.Name):
+                got = consts.get(inner.id) or gconsts.get(inner.id)
+            elif isinstance(inner, ast.Attribute):
+                got = gconsts.get(inner.attr)
+            parts.append(got if got else "*")
+        else:
+            parts.append("*")
+    glob = "".join(parts)
+    # ard arda düşen `*`ları tekille: `**` bir şey anlatmaz, `*` anlatır
+    while "**" in glob:
+        glob = glob.replace("**", "*")
+    return glob if _looks_like_artifact(glob) else None
 
 
 _GRAPH_CACHE: dict = {}
@@ -597,10 +699,19 @@ def artifact_graph(root: str = "meridian") -> dict:
             elif isinstance(a, ast.Attribute):
                 name = gconsts.get(a.attr)
             if name is None or not _looks_like_artifact(name):
-                unresolved.append({**site, "arg": ast.dump(a)[:80],
-                                   "arg_kind": type(a).__name__,
-                                   "reason": ("ad_cozulemedi" if name is None
-                                              else "artefakt_adi_degil")})
+                # ÇÖZÜLEMEDİ — ama ŞEKLİ türetilebilir mi? `f"{ARCHIVE_DIR}/{day}.jsonl"` gibi bir
+                # ad `intraday_bars/*.jsonl` desenine iner; o desen beyanlıysa artefakt SAHİPLİDİR.
+                # Desen eşleşmesi bir AF DEĞİLDİR: ad hâlâ `unresolved`da kalır ve sayılır, yalnız
+                # kovası "sahipsiz körlük"ten "beyanlı desen"e döner. Beyansız tarihli ad hâlâ
+                # `ad_cozulemedi`dir — desteğin genel af olmadığının yapısal çivisi budur.
+                glob = _joined_glob(a, consts, gconsts)
+                sebep = ("desen_beyanli" if glob in DECLARED_SINK_PATTERNS else
+                         "ad_cozulemedi" if name is None else "artefakt_adi_degil")
+                kayit = {**site, "arg": ast.dump(a)[:80], "arg_kind": type(a).__name__,
+                         "reason": sebep}
+                if glob:
+                    kayit["pattern"] = glob
+                unresolved.append(kayit)
                 continue
             rec = arts.setdefault(name, {"writers": set(), "readers": set(),
                                          "writer_sites": [], "reader_sites": []})
@@ -620,13 +731,23 @@ def artifact_graph(root: str = "meridian") -> dict:
 
     unread = [k for k, v in out.items() if v["unread"]]
     by_reason: dict[str, int] = {r: 0 for r in UNRESOLVED_REASONS}
+    desen_yerleri: dict[str, list[str]] = {}
     for u in unresolved:
         by_reason[u["reason"]] = by_reason.get(u["reason"], 0) + 1
+        if u["reason"] == "desen_beyanli":
+            desen_yerleri.setdefault(u["pattern"], []).append(
+                f"{u['file'].rsplit('/', 1)[-1]}:{u['line']}")
+    # BEYANI OLUP KODDA KARŞILIĞI KALMAYAN DESEN — ölü muafiyetin desen katmanındaki karşılığı.
+    # `DECLARED_SINKS`in "stale_sinks"i ile aynı disiplin: beyan, işi bitince kalmaz.
+    orphan_patterns = sorted(set(DECLARED_SINK_PATTERNS) - set(desen_yerleri))
     _res = {"artifacts": out,
             "unresolved": unresolved,
             # KÖRLÜĞÜN SAYIMI (v214): "kaç tane göremedim" sorusunun tek satırlık cevabı.
             "unresolved_by_reason": by_reason,
             "access_patterns": dict(sorted(patterns.items())),
+            # DESEN KATMANI (v215, B-5): hangi beyanlı desen kodda nerede karşılanıyor.
+            "declared_patterns": {k: sorted(v) for k, v in sorted(desen_yerleri.items())},
+            "orphan_patterns": orphan_patterns,
             "unread": sorted(unread),
             "declared_sinks": sorted(k for k in unread if k in DECLARED_SINKS),
             "violations": sorted(k for k in unread if k not in DECLARED_SINKS),
@@ -759,17 +880,59 @@ def _call_index(mods: dict) -> dict[tuple[str, str], list[str]]:
     return idx
 
 
+def _argparse_flags(tree: ast.AST) -> set[str]:
+    """Bu modülün argparse ile TANIMLADIĞI bayraklar. `--karne` beyanının çürümesi, bayrağın
+    kaldırılmasıyla OLMALI — o yüzden iddia metne değil bu kümeye bakar."""
+    out: set[str] = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) \
+                and n.func.attr == "add_argument":
+            for a in n.args:
+                if isinstance(a, ast.Constant) and isinstance(a.value, str) \
+                        and a.value.startswith("-"):
+                    out.add(a.value)
+    return out
+
+
+def _reach_in_module(tree: ast.AST, artifact: str, consts: dict, gconsts: dict) -> set[str]:
+    """`artifact`ı okuyan fonksiyonlar + `_HOP` sıçrama uzaktaki modül-içi sarmalayıcıları."""
+    defs = _func_index(tree)
+    reach = {fn for fn, nodes in defs.items()
+             if any(_reads_artifact(nd, artifact, consts, gconsts) for nd in nodes)}
+    for _ in range(_HOP):                      # BİLEREK SIĞ — bkz. yukarıdaki sınır notu
+        reach |= {fn for fn, nodes in defs.items()
+                  if any(_called_names(nd) & reach for nd in nodes)}
+    return reach
+
+
 _CLAIMS_CACHE: dict = {}
 
 
-def declared_claims(root: str = "meridian", declared: dict[str, str] | None = None) -> list[dict]:
-    """Her `DECLARED_SINKS` beyanı için: iddiası ne, GERÇEK dış erişimcisi kim, iddia ayakta mı.
+def declared_claims(root: str = "meridian", declared: dict[str, str] | None = None,
+                    patterns: dict[str, dict] | None = None,
+                    human: dict[str, dict] | None = None) -> list[dict]:
+    """ÜÇ beyan kaydının birlikte denetimi. Her kaydın İDDİASI farklıdır, dolayısıyla ÇÜRÜME
+    ŞARTI da farklıdır — tek bir "bayat mı" sorusu üçünü birden ölçemez:
 
-    `stale_claim=True` demek: beyan "üretimde okuyucusu yok" diyor AMA başka bir modül, okumayı
-    içeren (ya da bir sıçrama uzaktaki) fonksiyonu ÇAĞIRIYOR. Bu, `stale_sinks`in göremediği
-    sınıftır — muafiyet bayatlamış ama grafik bayrağı hâlâ yanıyor."""
-    decl = DECLARED_SINKS if declared is None else declared
-    if declared is None:
+      kind="sink"    (`DECLARED_SINKS`)         iddia: "üretimde okuyucusu yok".
+                     ÇÜRÜR: başka bir modül, okumayı içeren (ya da bir sıçrama uzaktaki)
+                     fonksiyonu çağırıyorsa. `stale_sinks`in göremediği sınıf budur.
+      kind="pattern" (`DECLARED_SINK_PATTERNS`) iddia: sınıfa göre değişir.
+                     `sinanamaz` alanı varsa iddia GELECEK-ZAMANLIDIR, test EDİLMEZ ve
+                     `unverifiable=True` ile ADIYLA raporlanır. Alan YOKSA beyan sınanabilirliğini
+                     hiç söylememiş demektir → ÇÜRÜK sayılır. Sessizlik yapısal olarak imkânsız.
+      kind="human"   (`HUMAN_INVOKED_SINKS`)    iddia: "tek tüketici şu CLI bayrağı".
+                     ÇÜRÜR: modül yoksa, bayrak argparse'ta yoksa, okuyucu `main`den
+                     erişilemiyorsa, ya da artefaktın dış okuyucusu hiç yoksa (yanlış kayıt).
+    """
+    # ENJEKSİYON = YALITIM. Üçünden BİRİ verildiyse diğerleri de BOŞ sayılır, canlı kayıtlara
+    # düşmez. Aksi hâlde sentetik bir `root` ile tek kayıt sınanırken canlı desen/CLI beyanları
+    # o ağaçta karşılıksız kalıp sahte "çürük" üretirdi — dedektörün kendi testini kirletmesi.
+    _canli = declared is None and patterns is None and human is None
+    decl = DECLARED_SINKS if _canli else (declared or {})
+    pats = DECLARED_SINK_PATTERNS if _canli else (patterns or {})
+    hum = HUMAN_INVOKED_SINKS if _canli else (human or {})
+    if _canli:
         _key = (root, _src_stamp(root))
         _hit = _CLAIMS_CACHE.get(_key)
         if _hit is not None:
@@ -796,32 +959,89 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
             if m not in mods:
                 continue
             tree, _path = mods[m]
-            stem, consts, defs = m[:-3], _module_consts(tree), _func_index(tree)
-            reach = {fn for fn, nodes in defs.items()
-                     if any(_reads_artifact(nd, art, consts, gconsts) for nd in nodes)}
-            for _ in range(_HOP):                      # BİLEREK SIĞ — bkz. yukarıdaki sınır notu
-                reach |= {fn for fn, nodes in defs.items()
-                          if any(_called_names(nd) & reach for nd in nodes)}
-            for fn in reach:
+            stem, consts = m[:-3], _module_consts(tree)
+            for fn in _reach_in_module(tree, art, consts, gconsts):
                 # kendi modülünden gelen çağrı tüketici DEĞİLDİR (grafiğin `external_readers`
                 # kuralıyla aynı disiplin: kendi yazdığını kendi okuyan modül sayılmaz)
                 yerler = sorted(s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:"))
                 if yerler:
                     accessors[f"{stem}.{fn}"] = yerler
-        out.append({"artifact": art, "claim_patterns": claim,
+        out.append({"kind": "sink", "artifact": art, "claim_patterns": claim,
                     "claims_no_prod_reader": bool(claim),
-                    "host_modules": host_mods,
+                    "host_modules": host_mods, "unverifiable": None,
                     "external_accessors": {k: sorted(v) for k, v in sorted(accessors.items())},
                     "stale_claim": bool(claim) and bool(accessors)})
-    if declared is None:
+
+    # --- kind="pattern" (B-5): sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------
+    kod_desenleri = graph["declared_patterns"]
+    for pat, spec in pats.items():
+        sinanamaz = (spec or {}).get("sinanamaz")
+        yerler = kod_desenleri.get(pat, [])
+        nedenler = []
+        if not sinanamaz and not (spec or {}).get("cli"):
+            nedenler.append("sinanabilirlik_beyan_edilmemis")
+        if not yerler:
+            # beyan var, kodda o şekilde yazan kimse yok → ölü muafiyet (stale_sinks emsali)
+            nedenler.append("desen_kodda_yok")
+        out.append({"kind": "pattern", "artifact": pat, "claim_patterns": [],
+                    "claims_no_prod_reader": False, "host_modules": yerler,
+                    # SINANAMAZ İDDİA GİZLENMEZ, İŞARETLENİR: gelecek-zaman iddiası bugünkü çağrı
+                    # analiziyle test edilemez; edilemediği için YOK SAYILMAZ, adıyla raporlanır.
+                    "unverifiable": sinanamaz,
+                    "external_accessors": {}, "stale_reasons": nedenler,
+                    "stale_claim": bool(nedenler)})
+
+    # --- kind="human" (B-7): "çağıranı İNSAN" iddiası CLI düzeyinde sınanır ----------------
+    for art, spec in hum.items():
+        cli = (spec or {}).get("cli") or ""
+        modul, _, bayrak = cli.partition(" ")
+        stem = modul.split(".")[-1]
+        dosya = f"{stem}.py"
+        nedenler, erisimciler = [], {}
+        if not cli:
+            nedenler.append("cli_beyan_edilmemis")
+        elif dosya not in mods:
+            nedenler.append(f"cli_modulu_yok:{modul}")
+        else:
+            tree, _p = mods[dosya]
+            if bayrak not in _argparse_flags(tree):
+                nedenler.append(f"cli_bayragi_yok:{bayrak}")
+            consts = _module_consts(tree)
+            reach = _reach_in_module(tree, art, consts, gconsts)
+            if not reach:
+                nedenler.append("okuyucu_bu_modulde_yok")
+            elif "main" not in reach:
+                # okuyucu var ama CLI girişinden erişilemiyor → "çağıranı insan" iddiası yanlış
+                nedenler.append("okuyucu_main_kolundan_erisilemiyor")
+            erisimciler = {f"{stem}.{fn}": sorted(idx.get((stem, fn), [])) for fn in sorted(reach)}
+        info = graph["artifacts"].get(art) or {}
+        if info and info.get("unread"):
+            # dış okuyucusu YOK — bu kayda değil `DECLARED_SINKS`e ait (yanlış dosyalanmış beyan)
+            nedenler.append("dis_okuyucu_yok_DECLARED_SINKS_e_ait")
+        out.append({"kind": "human", "artifact": art, "claim_patterns": [],
+                    "claims_no_prod_reader": False, "host_modules": sorted(info.get("readers", [])),
+                    "unverifiable": None, "cli": cli, "external_accessors": erisimciler,
+                    "stale_reasons": nedenler, "stale_claim": bool(nedenler)})
+
+    if _canli:
         _CLAIMS_CACHE.clear()
         _CLAIMS_CACHE[(root, _src_stamp(root))] = out
     return copy.deepcopy(out)
 
 
-def stale_claims(root: str = "meridian", declared: dict[str, str] | None = None) -> list[dict]:
+def stale_claims(root: str = "meridian", declared: dict[str, str] | None = None,
+                 patterns: dict[str, dict] | None = None,
+                 human: dict[str, dict] | None = None) -> list[dict]:
     """Yalnız ÇÜRÜTÜLMÜŞ beyanlar. Boş olmalı; dolu ise bir muafiyet gerçeği örtüyor demektir."""
-    return [c for c in declared_claims(root, declared) if c["stale_claim"]]
+    return [c for c in declared_claims(root, declared, patterns, human) if c["stale_claim"]]
+
+
+def unverifiable_claims(root: str = "meridian") -> list[dict]:
+    """SINANAMAYAN ama BEYAN EDİLMİŞ iddialar — gelecek-zamanlı tüketici sözleri. Bu liste bir
+    muafiyet değil bir BORÇ DEFTERİDİR: her satır, bugün ölçülemeyen bir vaattir ve devir şartı
+    kendi metninde yazılıdır. Boş olması gerekmez; GÖRÜNMEZ olması yasaktır."""
+    return [{"artifact": c["artifact"], "kind": c["kind"], "neden": c["unverifiable"]}
+            for c in declared_claims(root) if c.get("unverifiable")]
 
 
 def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
@@ -851,7 +1071,13 @@ def report(root: str = "meridian") -> dict:
             # GÖRÜYORUM"un sayımıdır; kapsam bilinmeden sıfır-ihlal iddiası vakumdur.
             "unresolved_by_reason": graph["unresolved_by_reason"],
             "store_access_patterns": graph["access_patterns"],
+            # DESEN BEYANLARI (v215, B-5): tarihli/dinamik adın SAHİPLENİLDİĞİ yer.
+            "declared_patterns": graph["declared_patterns"],
+            "orphan_patterns": graph["orphan_patterns"],
             # ÇÜRÜTÜLMÜŞ MUAFİYET BEYANLARI (v214, B-4) — `stale_sinks`in yapısal kör noktası.
+            # Üç kaydı da kapsar: sink · pattern · human (v215).
             "stale_claims": [c["artifact"] for c in curuk],
+            # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri (v215, B-5).
+            "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(root)],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED}

@@ -149,7 +149,7 @@ def test_her_unresolved_kaydinin_ADI_VAR_ve_kovalar_sayiliyor(tmp_path):
 
     assert set(g["unresolved_by_reason"]) == set(codelaw.UNRESOLVED_REASONS)
     assert g["unresolved_by_reason"] == {"ad_cozulemedi": 2, "artefakt_adi_degil": 1,
-                                         "konumsal_arg_yok": 1}
+                                         "konumsal_arg_yok": 1, "desen_beyanli": 0}
     assert sum(g["unresolved_by_reason"].values()) == len(g["unresolved"])
     for u in g["unresolved"]:
         assert u["reason"] in codelaw.UNRESOLVED_REASONS
@@ -279,11 +279,183 @@ def test_canli_agacta_curutulmus_muafiyet_beyani_YOK():
 def test_iddia_eden_her_beyan_kayit_altinda():
     """"Üretimde okuyucusu yok" diyen beyanlar SAYILABİLİR olmalı — sessiz bir iddia denetlenemez."""
     hepsi = codelaw.declared_claims()
-    assert len(hepsi) == len(codelaw.DECLARED_SINKS)
+    assert len([c for c in hepsi if c["kind"] == "sink"]) == len(codelaw.DECLARED_SINKS)
+    assert len(hepsi) == (len(codelaw.DECLARED_SINKS) + len(codelaw.DECLARED_SINK_PATTERNS)
+                          + len(codelaw.HUMAN_INVOKED_SINKS))
     iddialilar = [c["artifact"] for c in hepsi if c["claims_no_prod_reader"]]
     assert iddialilar == ["insider_signals.json"], iddialilar
     # ve iddiası doğru: bu dosyayı gerçekten HİÇBİR yer okumuyor (yazar bile)
     assert codelaw.artifact_graph()["artifacts"]["insider_signals.json"]["readers"] == []
+
+
+# ---------------------------------------------------------------------------
+# B-5 — DESEN BEYANI: TARİHLİ AD ARTIK SAHİPLENİLEBİLİR (v215)
+# ---------------------------------------------------------------------------
+
+def test_desen_koddan_TURETILIR_elle_yazilmaz():
+    """Tasarım kararının çivisi: desen anahtarı `ast.JoinedStr`den ÖLÇÜLÜR. Sabit parçalar durur,
+    çözülebilen değişken değerine, çözülemeyen `*`a döner."""
+    tree = ast.parse("ARCHIVE_DIR = 'intraday_bars'\n"
+                     "def f(day):\n"
+                     "    store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', {})\n")
+    arg = [n.args[0] for n in ast.walk(tree)
+           if isinstance(n, ast.Call) and getattr(n.func, "attr", None) == "append_jsonl"][0]
+    consts = codelaw._module_consts(tree)
+    assert codelaw._joined_glob(arg, consts, {}) == "intraday_bars/*.jsonl"
+    # artefakt uzantısı taşımayan bir f-string desen ÜRETMEZ (gürültü olurdu)
+    yok = ast.parse("f'{a}/{b}.txt'").body[0].value
+    assert codelaw._joined_glob(yok, {}, {}) is None
+
+
+def test_intraday_bars_DECLARED_gorunuyor_desen_katmaninda():
+    """B-5'in ölçülen hükmü: yazım SÖKÜLMEDİ, beyan katmanı açıldı. Tarihli ad hâlâ ÇÖZÜLEMİYOR
+    (artefakt sözlüğüne girmiyor) ama artık SAHİPSİZ değil."""
+    g = codelaw.artifact_graph()
+    assert g["declared_patterns"] == {"intraday_bars/*.jsonl": ["bararchive.py:111"]}
+    assert g["orphan_patterns"] == [], "kodda karşılığı olmayan desen beyanı: ölü muafiyet"
+
+    kayit = [u for u in g["unresolved"] if u["file"].endswith("bararchive.py")]
+    assert len(kayit) == 1 and kayit[0]["reason"] == "desen_beyanli"
+    assert kayit[0]["pattern"] == "intraday_bars/*.jsonl"
+    # AF DEĞİL: ad hâlâ çözülemedi, hâlâ `unresolved`da sayılıyor, artefakt olmadı
+    assert not [a for a in g["artifacts"] if a.startswith("intraday_bars")]
+    assert sum(g["unresolved_by_reason"].values()) == len(g["unresolved"])
+
+
+def test_desensiz_tarihli_ad_HALA_yakalaniyor(tmp_path):
+    """DESTEĞİN GENEL AF OLMADIĞININ ÇİVİSİ: beyanı olmayan bir tarihli ad `desen_beyanli`ye
+    DÜŞMEZ; `ad_cozulemedi` olarak sayılmaya devam eder."""
+    (tmp_path / "yeni.py").write_text(
+        "from . import store\n"
+        "KLASOR = 'yeni_arsiv'\n"
+        "def f(gun):\n"
+        "    store.append_jsonl(f'{KLASOR}/{gun}.jsonl', {})\n")
+    g = codelaw.artifact_graph(str(tmp_path))
+    u = g["unresolved"][0]
+    assert u["reason"] == "ad_cozulemedi", g["unresolved"]
+    assert u["pattern"] == "yeni_arsiv/*.jsonl", "şekil türetildi ama beyan yok — doğru davranış"
+    assert g["declared_patterns"] == {}
+    assert g["unresolved_by_reason"]["desen_beyanli"] == 0
+
+
+def test_GELECEK_tuketici_iddiasi_yanlis_pozitif_uretmez():
+    """B-5 (3): "Faz-5/6 okuyacak" bugünkü çağrı analiziyle SINANAMAZ. Mekanizma bunu bilir:
+    iddiayı test etmeye çalışıp yanlış-pozitif üretmez, ama SESSİZ de kalmaz — adıyla raporlar."""
+    kayit = [c for c in codelaw.declared_claims()
+             if c["artifact"] == "intraday_bars/*.jsonl"][0]
+    assert kayit["kind"] == "pattern"
+    assert kayit["stale_claim"] is False, kayit.get("stale_reasons")
+    assert kayit["unverifiable"], "sınanamazlık gerekçesi yazılmamış"
+    assert "intraday_bars/*.jsonl" in codelaw.report()["unverifiable_claims"]
+
+    spec = codelaw.DECLARED_SINK_PATTERNS["intraday_bars/*.jsonl"]
+    for kanit in ("bararchive.py:111", "_retention", "EXE-2026-002"):
+        assert kanit in spec["gerekce"], f"beyan ölçülen olguyu anmıyor: {kanit}"
+    assert "KALDIRILMALI" in spec["sinanamaz"], "devir şartı yazılmamış"
+
+
+def test_sinanabilirligini_SOYLEMEYEN_desen_beyani_curuktur():
+    """Sessizlik yapısal olarak imkânsız: bir desen beyanı ya sınanabilir bir tüketici (`cli`)
+    gösterir ya da NEDEN sınanamadığını yazar. İkisi de yoksa beyan çürüktür."""
+    curuk = codelaw.stale_claims(declared={}, human={},
+                                 patterns={"intraday_bars/*.jsonl": {"gerekce": "sadece laf"}})
+    assert [c["stale_reasons"] for c in curuk] == [["sinanabilirlik_beyan_edilmemis"]]
+
+
+def test_kodda_karsiligi_kalmayan_desen_beyani_curuktur():
+    """`stale_sinks` emsali, desen katmanında: muafiyet işi bitince kalmaz."""
+    curuk = codelaw.stale_claims(declared={}, human={},
+                                 patterns={"hayalet/*.jsonl": {"gerekce": "x", "sinanamaz": "y"}})
+    assert [c["stale_reasons"] for c in curuk] == [["desen_kodda_yok"]]
+
+
+# ---------------------------------------------------------------------------
+# B-7 — "ÇAĞIRANI YOK" ile "ÇAĞIRANI İNSAN" AYRI ŞEYLERDİR (v215)
+# ---------------------------------------------------------------------------
+
+def test_shadow_trades_CLI_tuketicisi_olculdu():
+    """Zincir ÖLÇÜLDÜ: yazan `shadow_lifecycle`, okuyan `shadow_variants._load_books`, ve o
+    okuyucunun TEK çağıranı `main()`in `--karne` kolu — yani bir İNSAN."""
+    g = codelaw.artifact_graph()
+    info = g["artifacts"]["shadow_trades.jsonl"]
+    assert info["writers"] == ["shadow_lifecycle.py"]
+    assert info["external_readers"] == ["shadow_variants.py"]
+    assert info["unread"] is False, "dış okuyucusu var — DECLARED_SINKS'e ait DEĞİL"
+
+    kayit = [c for c in codelaw.declared_claims()
+             if c["artifact"] == "shadow_trades.jsonl"][0]
+    assert kayit["kind"] == "human" and kayit["stale_claim"] is False, kayit.get("stale_reasons")
+    assert kayit["cli"] == "meridian.shadow_variants --karne"
+    # ÜRETİM YOLU YOK: okuyucuyu da CLI girişini de hiçbir `meridian/` modülü çağırmıyor
+    assert kayit["external_accessors"] == {"shadow_variants._load_books": [],
+                                           "shadow_variants.main": []}
+    spec = codelaw.HUMAN_INVOKED_SINKS["shadow_trades.jsonl"]
+    assert spec["sinif"] == "cagirani_insan"
+    for kanit in ("shadow_lifecycle.py:574", "_load_books", "--karne", "SIFIR YETKİ"):
+        assert kanit in spec["gerekce"], f"beyan ölçülen olguyu anmıyor: {kanit}"
+
+
+def test_CLI_kaldirilirsa_beyan_CURUR_sentetik():
+    """POZİTİF KONTROL: "tüketici şu CLI" iddiası fonksiyon/betik düzeyinde sınanır. Bayrak,
+    modül ya da `main` bağı düşerse beyan ÇÜRÜR — sessiz kalmaz."""
+    for spec, beklenen in (
+        ({"cli": "meridian.shadow_variants --yokbayrak"}, "cli_bayragi_yok:--yokbayrak"),
+        ({"cli": "meridian.olmayan_modul --karne"}, "cli_modulu_yok:meridian.olmayan_modul"),
+        ({"gerekce": "cli alanı hiç yok"}, "cli_beyan_edilmemis"),
+    ):
+        curuk = codelaw.stale_claims(declared={}, patterns={},
+                                     human={"shadow_trades.jsonl": spec})
+        assert len(curuk) == 1 and beklenen in curuk[0]["stale_reasons"], (spec, curuk)
+
+
+def test_okuyucu_main_kolundan_erisilemezse_beyan_curur(tmp_path):
+    """"Çağıranı insan" iddiasının çekirdeği: okuyucu CLI girişinden ERİŞİLEBİLİR olmalı.
+    Okuma varsa ama `main` ona ulaşmıyorsa iddia yanlıştır."""
+    (tmp_path / "yazar.py").write_text(
+        "from . import store\n"
+        "def yaz(r):\n"
+        "    store.append_jsonl('defter.jsonl', r)\n")
+    (tmp_path / "okur.py").write_text(
+        "from . import store\n"
+        "def _yukle():\n"
+        "    return store.read_jsonl('defter.jsonl')\n"
+        "def main(argv=None):\n"
+        "    import argparse\n"
+        "    p = argparse.ArgumentParser()\n"
+        "    p.add_argument('--karne', action='store_true')\n"
+        "    return 0\n")          # <-- main `_yukle`yi ÇAĞIRMIYOR
+    curuk = codelaw.stale_claims(str(tmp_path), declared={}, patterns={},
+                                 human={"defter.jsonl": {"cli": "meridian.okur --karne"}})
+    assert [c["stale_reasons"] for c in curuk] == [["okuyucu_main_kolundan_erisilemiyor"]]
+
+
+def test_dis_okuyucusu_olmayan_defter_bu_kayda_ait_degil(tmp_path):
+    """Kayıtların ayrık olmasının sebebi: `unread` bir defter `DECLARED_SINKS`e aittir. Yanlış
+    dosyalanmış beyan sessizce 'geçerli' görünemez."""
+    (tmp_path / "tek.py").write_text(
+        "from . import store\n"
+        "def _yukle():\n"
+        "    return store.read_jsonl('defter.jsonl')\n"
+        "def yaz(r):\n"
+        "    store.append_jsonl('defter.jsonl', r)\n"
+        "def main(argv=None):\n"
+        "    import argparse\n"
+        "    p = argparse.ArgumentParser()\n"
+        "    p.add_argument('--karne', action='store_true')\n"
+        "    return _yukle()\n")
+    curuk = codelaw.stale_claims(str(tmp_path), declared={}, patterns={},
+                                 human={"defter.jsonl": {"cli": "meridian.tek --karne"}})
+    assert [c["stale_reasons"] for c in curuk] == [["dis_okuyucu_yok_DECLARED_SINKS_e_ait"]]
+
+
+def test_canli_agacta_hicbir_kayit_curuk_degil():
+    """ASIL YASA, üç kayıt için birden: sink · pattern · human."""
+    curuk = codelaw.stale_claims()
+    assert curuk == [], "çürük beyan: " + "; ".join(
+        f"{c['kind']}:{c['artifact']} ← {c.get('stale_reasons') or sorted(c['external_accessors'])}"
+        for c in curuk)
+    kinds = {c["kind"] for c in codelaw.declared_claims()}
+    assert kinds == {"sink", "pattern", "human"}, kinds
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +474,18 @@ def test_ihlal_seti_GERILEMEDI():
     assert g["violations"] == [] and g["stale_sinks"] == []
     assert r["unresolved_artifact_calls"] >= 21, "görünürlük geriledi (kör sınıf geri gelmiş olabilir)"
     assert len(codelaw.DECLARED_SINKS) == 36, "muafiyet listesi büyümüş/küçülmüş — gerekçesini yaz"
+    # v215: iki yeni kayıt AÇIK ve SAYILI. Beyan eklemek serbest değil, gerekçelidir.
+    assert len(codelaw.DECLARED_SINK_PATTERNS) == 1 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
+    assert r["stale_claims"] == [] and r["orphan_patterns"] == []
     assert r["ok"] is True, r
+
+
+def test_her_yeni_beyanin_gerekcesi_bir_cumleden_uzun():
+    """`test_her_beyanin_turkce_bir_gerekcesi_var` disiplini iki yeni kayda da uygulanır."""
+    for kayit in (codelaw.DECLARED_SINK_PATTERNS, codelaw.HUMAN_INVOKED_SINKS):
+        for ad, spec in kayit.items():
+            assert spec.get("sinif"), f"{ad}: sınıf yazılmamış"
+            assert len(spec.get("gerekce", "")) >= 30, f"{ad}: gerekçe bir cümle bile değil"
 
 
 def test_pozitif_kontrol_iki_yasa_da_hala_yakaliyor():
