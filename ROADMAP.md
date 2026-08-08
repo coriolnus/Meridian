@@ -247,9 +247,13 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
     `schema_version`) — tek eşleşme `guard.py:15-17 GOAL_KEYS` üyeliği, değeri kimse okumuyor.
     K1'in (2026-07-30) bulduğu `explore_rate`/`kill_switch_file` sınıfının kaçmış dördü.
     `backtest_gate: true` en ağırı: kapı sözü veriyor, davranış yok. Rol-1 doğruladı.
-  · **B-2 (YÜKSEK):** YASA-6 bekçisinin `_store()` kör noktası (`codelaw.py:486` yalnız
-    `ast.Attribute`) — insider/shortinterest/massive'in 9 çağrısı grafikte YOK ve körlük hiçbir
-    sayaçta görünmüyor; `massive_verify.json` fiilen emniyet anahtarı ve haritada yok.
+  · **B-2 (YÜKSEK → İKİ ALT İDDİA ÇÜRÜDÜ, ÇEKİRDEK DOĞRU ÇIKTI VE KAPANDI, v214):** "9 çağrı
+    grafikte yok" YANLIŞTI (dokuzunun biçimi zaten çözülüyordu — filtre tabanı sorgulamıyordu);
+    "massive_verify haritada yok" YANLIŞTI (hep oradaydı). DOĞRU çekirdek: tarayıcı ÇÖZEMEDİĞİNİ
+    SAYMIYORDU — gerçek kör sınıf `store.py` içi 6 çıplak-ad çağrısıydı. Kapama: her erişim ya
+    çözülür ya adlandırılmış `UNRESOLVED_REASONS` kovasına düşer + `access_patterns` census;
+    unresolved 15→21 (körlük görünür oldu). Rapora DÜZELTME bloğu eklendi; ders: kalibrasyon
+    yalnız bilinen-pozitifleri sınıyordu, bilinen-NEGATİF kapısı da gerekir.
   · **B-3 (ORTA):** `one_variable_only` YAPIŞIK düğme — kural koşulsuz (`guard.py:134`), anahtar
     yalnız hata METNİNDE geçiyor; kapatılamaz bir şeyi düğme gibi beyan ediyor. Rol-1 doğruladı.
   · **B-4 (ORTA):** `sieve.json` muafiyet beyanı BAYAT — "tek okuyucusu kendi testi" diyor, oysa

@@ -549,3 +549,32 @@ değişmez sözleşmesinde dört beyansız ölü düğme var, ve YASA-6 bekçisi
 desenine kördür — yani bugünkü "sıfır ihlal" hükmü ölçülmemiş bir kapsam üzerine kuruludur.
 `dormant_setup` ve `approvals.jsonl` aynı aileyi paylaşır: **karar KAYDEDİLİYOR, kimse o kaydı
 okuyup DAVRANMIYOR.**
+
+---
+
+## DÜZELTME (aynı gece — bekçi turu v214'ün ölçümüyle; Rol-1 bağımsız doğruladı)
+
+**B-2'nin iki alt iddiası ÇÜRÜDÜ:**
+1. "9 çağrı grafikte hiç görünmüyor" — YANLIŞ. Dokuzunun AST biçimi
+   `Attribute(value=Call(_store()), attr=read_json|write_json)` ve `codelaw.py:486` filtresi
+   yalnız `n.func`'a baktığı için tabanı hiç sorgulamıyordu → dokuzu da ZATEN çözülüyordu.
+2. "`massive_verify.json` haritada yok" — YANLIŞ. Yazar (`massive.py:856`) ve okuyucusuyla
+   (`massive.py:632`) hep haritadaydı.
+
+**Doğru çıkan çekirdek (ve kapatılan):** tarayıcı ÇÖZEMEDİĞİNİ SAYMIYORDU. Gerçek kör
+sınıflar başka yerdeydi: `store.py`'nin kendi içindeki 6 ÇIPLAK-AD çağrısı (hiçbir sayaçta
+yoktu) + kwargs-only çağrı biçimi (bugün 0 örnek, kapı yapısal olarak açıktı). Kapama:
+her erişim ya çözülür ya `UNRESOLVED_REASONS` kovasına düşer (`konumsal_arg_yok ·
+ad_cozulemedi · artefakt_adi_degil`), `access_patterns` census'u rapora çıkar
+(`cagri:_store()` = 9 artık adıyla ölçülü). unresolved 15 → 21 (körlük GÖRÜNÜR oldu, artmadı).
+
+**B-4 mekanizması üç çürük beyan buldu** — biri bu taramanın bulduğu (`sieve.json`), ikisi
+taramada HİÇ YOKTU (görünür olmuş eski borç): `insider_trades.json` "DIŞ tüketici ertelendi"
+(gerçek: `scheduler._y4_collect` → sağlayıcı kartı) · `short_interest.json` "tüketici CLI +
+testler" (gerçek: aynı yol). Üçünün metni ölçülen gerçekle tazelendi; `stale_claims()` artık
+`report()["ok"]`a bağlı.
+
+**Ders (bu belgenin kendi yöntemine):** tarama, bekçinin körlüğünü İDDİA ederken kendi
+körlüğünü üretti — çağrı biçimini AST'de doğrulamadan "görünmüyor" dedi. Kalibrasyon kapısı
+bilinen-pozitifleri sınıyordu; bilinen-NEGATİF (zaten görünen bir çağrıyı "kör" sanma) için
+kapı yoktu. Bir sonraki kovada kalibrasyon iki yönlü olmalı.

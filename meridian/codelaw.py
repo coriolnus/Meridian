@@ -18,6 +18,17 @@ iki YAPISAL taşıyıcı buldu; bu modül ikisini de kaynak koddan, çalışma z
 
 Bu modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz. Yalnız "şu satırda sinyal
 üretmeyen bir yakalayıcı var" ve "şu defteri kimse okumuyor" der.
+
+v214 (2026-08-08) — BEKÇİNİN KENDİ ÜZERİNE İKİ EK. İkisi de aynı cümlenin sonucudur: *bir bekçinin
+kendi körlüğünü bilmemesi, bekçiliğin tersidir.*
+  (a) GÖREMEDİĞİNİ SAY. `artifact_graph` artık her `store` okuma/yazma çağrısını ya çözer ya da
+      ADLANDIRILMIŞ bir `unresolved` kovasına yazar (`unresolved_by_reason`), ve gördüğü her
+      erişim biçimini sayar (`access_patterns`). Eskiden iki sınıf HİÇBİR SAYACA girmiyordu:
+      çıplak-ad çağrısı (`read_json(...)`) ve konumsal argümansız çağrı.
+  (b) BEYANIN KENDİSİNİ DENETLE. `declared_claims()` bir muafiyet metninin "üretimde okuyucusu
+      yok" iddiasını FONKSİYON-ÇAĞRI düzeyinde sınar. `stale_sinks` bunu yapısal olarak
+      yapamıyordu: tetikleyicisi `unread` bayrağıdır ve okuma yazarla aynı modüldeyse bayrak
+      hiç düşmez — `sieve.json` beyanı tam bu delikte 6 ay bayat kaldı.
 """
 from __future__ import annotations
 
@@ -335,18 +346,33 @@ DECLARED_SINKS: dict[str, str] = {
     #     filtresi kapıya bağlanırsa, hiç ölçülmemiş bir kısıt canlı stratejiyi daraltmış olur.
     # Beyan bu yüzden burada duruyor: erteleme yazılı, gerekçeli ve süresi ölçülebilir. Tüketici
     # bağlandığı gün bu satırlar KALDIRILMALI — yoksa `stale_sinks` ihlali olarak geri döner.
-    "insider_trades.json": "Form 4 ham defteri (artımlı; su işareti + kapsam burada). Okuyucusu aynı "
-                           "modüldeki insider.ozet()/durum() — statik graf aynı-modül okumayı göremez. "
-                           "DIŞ tüketici ertelendi: 3 yıllık sınıflama penceresi dolmadan bağlanamaz "
-                           "(FMP search ucu ücretsiz planda 402; bkz. yukarıdaki gerekçe)",
+    # BEYAN TAZELENDİ (2026-08-08, B-4 mekanizması ölçtü): "DIŞ tüketici ertelendi" cümlesi
+    # ÇÜRÜTÜLDÜ — `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
+    "insider_trades.json": "Form 4 ham defteri (artımlı; su işareti + kapsam burada). Okuma "
+                           "`insider.defter_oku()` içindedir (insider.py:281, aynı modül → statik "
+                           "graf göremez); sarmalayıcıları `ozet()`/`durum()`. DIŞ ÇAĞIRAN ÖLÇÜLDÜ "
+                           "(2026-08-08): `scheduler._y4_collect` seans başına bir kez "
+                           "`insider.ozet()` ve `insider.durum()` çağırır, sonucu "
+                           "`scheduler_status.json`a düşer ve "
+                           "panonun sağlayıcı kartını besler — yani defterin DOLULUĞU dosyaya "
+                           "bakmadan görünür. Hâlâ yok olan şey bir KARAR tüketicisidir (kapı/filtre): "
+                           "3 yıllık sınıflama penceresi dolmadan bağlanamaz (FMP `search` ucu "
+                           "ücretsiz planda 402; bkz. yukarıdaki blok)",
     "insider_signals.json": "sembol-başına fırsatçı net alım özeti. Bugünkü tüketici CLI + "
                             "tests/test_insider_v117.py; loop/api bağlantısı `kapsam.siniflama_hazir_mi` "
                             "True olana kadar BİLİNÇLİ olarak ertelendi — bugün bağlanan bir okuyucu "
                             "`siniflanamadi` dolu bir dosyayı sinyal sanardı",
+    # BEYAN TAZELENDİ (2026-08-08, B-4): "bugünkü tüketici CLI + testler" ÇÜRÜTÜLDÜ —
+    # `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
     "short_interest.json": "FINRA kısa pozisyon özeti + bayatlık damgası (yayın tarihi, gecikme, "
-                           "bayat_mi). Bugünkü tüketici CLI + tests/test_shortinterest_v117.py; kaçınma "
-                           "filtresi olarak kapıya bağlanması, karşı-olgusal defterde 'filtreli vs "
-                           "filtresiz' ÖLÇÜLDÜKTEN sonraki tura ertelendi",
+                           "bayat_mi). Okuma `shortinterest.durum()` içindedir "
+                           "(aynı modül → statik graf göremez). DIŞ ÇAĞIRAN "
+                           "ÖLÇÜLDÜ (2026-08-08): `scheduler._y4_collect` seans başına bir kez "
+                           "`shortinterest.durum()` çağırır ve sonucu "
+                           "`scheduler_status.json` üzerinden panonun sağlayıcı kartına taşır — "
+                           "bayatlık damgası dosyaya bakmadan görünür. Hâlâ yok olan şey bir KARAR "
+                           "tüketicisidir: kaçınma filtresi olarak kapıya bağlanması, karşı-olgusal "
+                           "defterde 'filtreli vs filtresiz' ÖLÇÜLDÜKTEN sonraki turun işidir",
     "short_interest_float.json": "float/sharesOutstanding önbelleği (FMP profile, sembol başına 1 istek "
                                  "olduğu için TAVANLI ve kalıcı). Okuyucusu aynı modüldeki "
                                  "shortinterest.ozet() — SI%float paydası; dosya kendi başına bir "
@@ -399,10 +425,21 @@ DECLARED_SINKS: dict[str, str] = {
     "ownership_state.json": "sahiplik dedektörünün önceki ölçümü — aynı gerekçe",
     "bars_fingerprint.json": "bar dosyalarının parmak izi; determinizm dedektörünün karşılaştırma tabanı",
 
-    # --- paralel iş kolu (bu turda düzenlenemeyen dosyalar) ---
-    "sieve.json": "eleme muhasebesi, sieve.py iş kolunun ürünü. ŞU AN tek okuyucusu kendi testidir "
-                  "(tests/test_sieve_v58.py); panoya bağlanması o iş kolunun işi — burada beyan "
-                  "ediliyor ki 'kimse okumuyor' gerçeği kayıt altında kalsın, sessizce değil",
+    # --- eleme muhasebesi: BEYAN 2026-08-08'de GERÇEKLE DEĞİŞTİRİLDİ (B-4) ---------------------
+    "sieve.json": "eleme muhasebesi (sieve.py iş kolunun ürünü). DIŞ TÜKETİCİ GERÇEK ve bir KARAR "
+                  "GİRDİSİDİR — ölçüldü 2026-08-08. Zincir: `store.read_json` çağrısı "
+                  "`sieve.stages()` içindedir (aynı modül → statik graf göremez), sarmalayıcısı "
+                  "`sieve.report()`, ve onu ÜÇ dış modül çağırır: `api.api_diagnostics` (sonuç "
+                  "`api._ogrenme_blogu` → `api._terfi_hukmu`'ne girer ve TERFİ HÜKMÜNÜN gerekçe "
+                  "metnini belirler), `mutation.detector_red` (mutasyon kapısının kırmızı kümesine "
+                  "`sieve:<asama>:<kural>` satırları), `watchdog.parity_report` (bütünlük raporunun "
+                  "`eleme:` satırları). SATIR NUMARASI BİLEREK YAZILMADI: bu beyanın hastalığı "
+                  "bayatlamaktı; `api.py` haftalık yüzlerce satır kayıyor ve çivilenmiş bir satır "
+                  "numarası ikinci bir bayat iddia üretirdi — `declared_claims()` zaten "
+                  "modül.fonksiyon düzeyinde doğruluyor. ESKİ BEYAN BAYATTI: panoya hiç bağlı "
+                  "olmadığını söylüyordu ve `stale_sinks` bunu YAPISAL olarak göremezdi — "
+                  "tetikleyicisi `unread` bayrağıdır, tek `store` okuması aynı modülde olduğu için "
+                  "`unread` True kalıyor ve muafiyet 'geçerli' görünüyordu",
 }
 
 
@@ -445,6 +482,56 @@ def _looks_like_artifact(s: str) -> bool:
     return s.endswith((".json", ".jsonl"))
 
 
+# ---------------------------------------------------------------------------
+# TARAYICININ KENDİ KÖRLÜĞÜNÜN ADLANDIRILMASI (v214, 2026-08-08)
+# ---------------------------------------------------------------------------
+# ÖLÇÜM ÖNCE, HÜKÜM SONRA. Denetim (ARTEFAKT-TARAMASI-2026-08-07, B-2) `_store().read_json(...)`
+# desenini "grafikte HİÇ görünmüyor" diye kaydetmişti. ÖLÇÜLDÜ (2026-08-08) ve bu YANLIŞ çıktı:
+# o çağrıların AST şekli `Call(func=Attribute(value=Call(func=Name('_store')), attr='read_json'))`
+# ve eski filtre yalnız `isinstance(n.func, ast.Attribute)` diye sorup TABANA hiç bakmadığı için
+# dokuzunun da adı çözülüyordu — hepsi writer_sites/reader_sites'ta duruyordu
+# (insider.py:281,637 · shortinterest.py:210,353,392 · massive.py:555,564,632,856), `massive_verify.json`
+# dâhil. Bulgunun ASIL çekirdeği ise doğrudur ve tam olarak buradadır: **tarayıcı ÇÖZEMEDİĞİ
+# deseni saymıyordu.** Ölçülen gerçek kör sınıflar:
+#   (1) `func` bir `ast.Name` — `from .store import read_json` sonrası ÇIPLAK ad çağrısı. Filtre
+#       `isinstance(n.func, ast.Attribute)` dediği için 6 gerçek çağrı (store.py:225,228,235,238,
+#       416,417 — `update_json`/`update_jsonl`/`merge_dated_jsonl` içleri) ne artefakta, ne
+#       `unresolved`a, ne `UNSCANNED`e düşüyordu: HİÇBİR SAYAÇTA yoktu.
+#   (2) konumsal argümanı olmayan çağrı (`store.write_json(name=...)`): `n.args` boş → `continue`.
+#       Bugün 0 örnek var, ama kapı YAPISALDI; sıfır örnek "kapalı" demek değildir.
+# Bir bekçinin kendi körlüğünü BİLMEMESİ bekçiliğin tersidir. Artık her `store` okuma/yazma
+# çağrısı ya ÇÖZÜLÜR ya da ADLANDIRILMIŞ bir `unresolved` kovasına düşer; ayrıca her erişimin
+# TABAN BİÇİMİ sayılır (`access_patterns`), çünkü "hangi biçimleri görüyorum" ölçülmeden
+# "hepsini görüyorum" bir iddia değil temennidir.
+
+#: `unresolved` kovaları — her biri ADLANDIRILMIŞ bir körlük sınıfıdır, sessiz `continue` değil.
+UNRESOLVED_REASONS = ("konumsal_arg_yok", "ad_cozulemedi", "artefakt_adi_degil")
+
+
+def _base_shape(b: ast.AST) -> str:
+    """Erişimin TABAN biçimi: `store.` → `ad:store`, `_store().` → `cagri:_store()`,
+    `self._st.` → `oznitelik:_st`. Rapora çıkar; hangi desenin kaç kez göründüğü ölçülür."""
+    if isinstance(b, ast.Name):
+        return f"ad:{b.id}"
+    if isinstance(b, ast.Call):
+        inner, _ = _callee(b)
+        return f"cagri:{inner or '?'}()"
+    if isinstance(b, ast.Attribute):
+        return f"oznitelik:{b.attr}"
+    return f"diger:{type(b).__name__}"
+
+
+def _callee(n: ast.Call) -> tuple[str | None, str]:
+    """(çağrılan fonksiyonun sade adı, erişim deseni). Ad çözülemezse (Subscript, lambda, ...)
+    `None` döner ve desen yine ADLANDIRILIR — çözülemeyen şekil de sayılabilir olmalı."""
+    f = n.func
+    if isinstance(f, ast.Attribute):
+        return f.attr, _base_shape(f.value)
+    if isinstance(f, ast.Name):
+        return f.id, "ciplak_ad"          # `from .store import read_json` → `read_json(...)`
+    return None, f"cozulemeyen_sekil:{type(f).__name__}"
+
+
 _GRAPH_CACHE: dict = {}
 
 
@@ -472,6 +559,7 @@ def artifact_graph(root: str = "meridian") -> dict:
     gconsts = _global_consts(root)
     arts: dict[str, dict[str, Any]] = {}
     unresolved: list[dict] = []
+    patterns: dict[str, int] = {}      # görülen HER `store` erişim deseninin sayımı
 
     for f in _py_files(root):
         try:
@@ -483,12 +571,22 @@ def artifact_graph(root: str = "meridian") -> dict:
         consts = _module_consts(tree)
         mod = f.name
         for n in ast.walk(tree):
-            if not (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.args):
+            if not isinstance(n, ast.Call):
                 continue
-            attr = n.func.attr
+            attr, base = _callee(n)
             role = ("writer" if attr in WRITE_CALLS else
                     "reader" if attr in READ_CALLS else None)
             if role is None:
+                continue
+            # BURADAN AŞAĞISI BİR `store` ERİŞİMİDİR. Hiçbir çıkış yolu sessiz olamaz: ya artefakt
+            # grafiğine, ya ADLI bir `unresolved` kovasına gider (v214 — yukarıdaki blok).
+            patterns[base] = patterns.get(base, 0) + 1
+            site = {"file": str(f), "line": n.lineno, "call": attr, "role": role, "base": base}
+            if not n.args:
+                # kwargs-only / argümansız çağrı: ad HİÇ yok. Eskiden `n.args` filtrede olduğu için
+                # sessizce düşüyordu — çözülemeyen erişim, sayılmayan erişim demekti.
+                unresolved.append({**site, "arg": "<konumsal-arg-yok>",
+                                   "arg_kind": "yok", "reason": "konumsal_arg_yok"})
                 continue
             a = n.args[0]
             name = None
@@ -499,8 +597,10 @@ def artifact_graph(root: str = "meridian") -> dict:
             elif isinstance(a, ast.Attribute):
                 name = gconsts.get(a.attr)
             if name is None or not _looks_like_artifact(name):
-                unresolved.append({"file": str(f), "line": n.lineno, "call": attr,
-                                   "role": role, "arg": ast.dump(a)[:80]})
+                unresolved.append({**site, "arg": ast.dump(a)[:80],
+                                   "arg_kind": type(a).__name__,
+                                   "reason": ("ad_cozulemedi" if name is None
+                                              else "artefakt_adi_degil")})
                 continue
             rec = arts.setdefault(name, {"writers": set(), "readers": set(),
                                          "writer_sites": [], "reader_sites": []})
@@ -519,8 +619,14 @@ def artifact_graph(root: str = "meridian") -> dict:
                      "unread": bool(writers) and not external}
 
     unread = [k for k, v in out.items() if v["unread"]]
+    by_reason: dict[str, int] = {r: 0 for r in UNRESOLVED_REASONS}
+    for u in unresolved:
+        by_reason[u["reason"]] = by_reason.get(u["reason"], 0) + 1
     _res = {"artifacts": out,
             "unresolved": unresolved,
+            # KÖRLÜĞÜN SAYIMI (v214): "kaç tane göremedim" sorusunun tek satırlık cevabı.
+            "unresolved_by_reason": by_reason,
+            "access_patterns": dict(sorted(patterns.items())),
             "unread": sorted(unread),
             "declared_sinks": sorted(k for k in unread if k in DECLARED_SINKS),
             "violations": sorted(k for k in unread if k not in DECLARED_SINKS),
@@ -528,6 +634,194 @@ def artifact_graph(root: str = "meridian") -> dict:
     _GRAPH_CACHE.clear()
     _GRAPH_CACHE[_key] = _res
     return copy.deepcopy(_res)
+
+
+# ---------------------------------------------------------------------------
+# (6b) BEYANIN KENDİSİNİN DENETİMİ — "YANLIŞ MUAFİYET" SINIFI (v214, 2026-08-08)
+# ---------------------------------------------------------------------------
+# YAPISAL DELİK (denetim B-4). `stale_sinks` tek bir sinyale bakar:
+#     stale_sinks = [k for k in DECLARED_SINKS if k in out and not out[k]["unread"]]
+# Yani bir muafiyetin bayatladığını ancak GRAFİK dış okuyucu görürse anlar. `sieve.json` tam bu
+# deliğe düşmüştü: beyanı "panoya bağlı değil, tek okuyucusu kendi testi" diyordu; gerçekte
+# `api.py:3202` `sieve.report()` çağırıyor ve sonuç TERFİ HÜKMÜNÜ belirliyordu. Grafik bunu
+# göremez çünkü tek `store` okuması `sieve.py:148`'dedir (aynı modül) → `external_readers` boş →
+# `unread` True → muafiyet "geçerli" görünür. Tetikleyici yanlış sinyale bağlıydı.
+#
+# KAPAMA (asgari, bilerek dar): beyan METNİNİN İDDİASI, FONKSİYON-ÇAĞRI düzeyinde doğrulanır.
+# Bir beyan "bu artefaktı üretim kodunda kimse okumuyor" diyorsa (aşağıdaki desenler), tarayıcı
+# okumayı İÇEREN fonksiyonu ve onu çağıran modül-içi sarmalayıcıyı bulur, sonra BAŞKA bir
+# `meridian/` modülünün o fonksiyonu çağırıp çağırmadığına bakar. Çağırıyorsa iddia ÇÜRÜKTÜR.
+#
+# AŞIRIYA KAÇMAMA SINIRI — BİLİNÇLİ: bu TAM bir çağrı grafiği DEĞİLDİR. Modül içinde yalnız
+# `_HOP` (=1) sıçrama izlenir. Ölçüldü: 1 sıçrama `report()` → `stages()` zincirini yakalar;
+# sınırsız fixpoint 35 beyanın 28'ini "dış erişimci var" diye işaretliyordu (modülün neredeyse
+# her fonksiyonu okumaya erişiyor) — yani gürültü. Dedektörün işi ihbar etmek değil, YANLIŞ BEYANI
+# yakalamaktır; yakalayamadığı derin zincirler `unread`/`stale_sinks`'in alanında kalır.
+_HOP = 1
+
+#: "Üretim kodunda okuyucusu yok" İDDİASININ metin biçimleri. Liste DAR tutulur: bir beyanın
+#: "aynı modül → statik graf göremez" demesi bir iddia DEĞİL, grafiğin sınırının tarifidir ve
+#: buraya girmez. Buraya yalnız DAVRANIŞSAL bir yokluk iddiası girer.
+CLAIM_NO_PROD_READER = (
+    re.compile(r"tek\s+okuyucu(?:su)?[^.;]{0,80}test", re.I),            # "tek okuyucusu kendi testi"
+    re.compile(r"tüketici(?:si)?[^.;]{0,80}tests?/", re.I),              # "tüketici ... tests/test_x.py"
+    re.compile(r"dış\s+(?:tüketici|okuyucu)[^.;]{0,80}ertelen", re.I),   # "DIŞ tüketici ertelendi"
+    re.compile(r"(?:loop|api|pano)[^.;]{0,40}bağlant[^.;]{0,80}ertelen", re.I),
+    re.compile(r"okuyucu(?:su)?\s+yok", re.I),
+    re.compile(r"kimse\s+okumuyor", re.I),
+)
+
+
+def _func_index(tree: ast.AST) -> dict[str, list]:
+    """Nitelenmemiş fonksiyon adı → düğümler (sınıf içindekiler dâhil; ad çakışırsa hepsi)."""
+    out: dict[str, list] = {}
+
+    def visit(n: ast.AST) -> None:
+        for ch in ast.iter_child_nodes(n):
+            if isinstance(ch, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                out.setdefault(ch.name, []).append(ch)
+            visit(ch)
+
+    visit(tree)
+    return out
+
+
+def _called_names(node: ast.AST) -> set[str]:
+    return {c for c in (_callee(n)[0] for n in ast.walk(node) if isinstance(n, ast.Call)) if c}
+
+
+def _reads_artifact(node: ast.AST, artifact: str, consts: dict, gconsts: dict) -> bool:
+    """Bu fonksiyonun GÖVDESİ `artifact`ı okuyan bir `store` çağrısı içeriyor mu?"""
+    for n in ast.walk(node):
+        if not (isinstance(n, ast.Call) and n.args):
+            continue
+        fname, _ = _callee(n)
+        if fname not in READ_CALLS:
+            continue
+        a = n.args[0]
+        if isinstance(a, ast.Constant) and a.value == artifact:
+            return True
+        if isinstance(a, ast.Name) and (consts.get(a.id) or gconsts.get(a.id)) == artifact:
+            return True
+        if isinstance(a, ast.Attribute) and gconsts.get(a.attr) == artifact:
+            return True
+    return False
+
+
+def _call_index(mods: dict) -> dict[tuple[str, str], list[str]]:
+    """(hedef modül kökü, fonksiyon adı) → ['çağıran.py:satır', ...] — TÜM ağaç için TEK geçiş.
+
+    Çözülen çağrı biçimleri: `_sv.report()` (takma adlı import), `meridian.sieve.report()`,
+    `from .sieve import report` sonrası `report()`, ve `__import__("meridian.sieve",
+    fromlist=["report"]).report()`. SONUNCUSU api.py'nin GERÇEK biçimidir — görülmeseydi B-4
+    yine sessiz kalırdı, yani bu satır bulgunun kendisidir.
+
+    NEDEN İNDEKS: beyan başına tüm ağacı yeniden yürümek 36× maliyetti (ölçüldü: 9,6 sn).
+    Tek geçişte 0,6 sn. `report()` test/ops yolundadır ama 9 saniyelik bir bekçi koşturulmaz,
+    koşturulmayan bekçi de bekçi değildir."""
+    stems = {m[:-3] for m in mods}
+    idx: dict[tuple[str, str], list[str]] = {}
+    for om, (otree, _p) in mods.items():
+        alias: dict[str, str] = {}       # yerel ad → modül kökü
+        imported: dict[str, str] = {}    # doğrudan ithal edilen fonksiyon → modül kökü
+        for n in ast.walk(otree):
+            if isinstance(n, ast.ImportFrom):
+                st = n.module.split(".")[-1] if n.module else None
+                for a in n.names:
+                    if st in stems:
+                        imported[a.asname or a.name] = st
+                    if a.name in stems:
+                        alias[a.asname or a.name] = a.name
+            elif isinstance(n, ast.Import):
+                for a in n.names:
+                    last = a.name.split(".")[-1]
+                    if last in stems:
+                        alias[a.asname or a.name.split(".")[0]] = last
+        for c in ast.walk(otree):
+            if not isinstance(c, ast.Call):
+                continue
+            f, st, nm = c.func, None, None
+            if isinstance(f, ast.Attribute):
+                b, nm = f.value, f.attr
+                if isinstance(b, ast.Name):
+                    st = alias.get(b.id)
+                elif isinstance(b, ast.Attribute):
+                    st = b.attr if b.attr in stems else None
+                elif isinstance(b, ast.Call) and isinstance(b.func, ast.Name) \
+                        and b.func.id == "__import__" and b.args \
+                        and isinstance(b.args[0], ast.Constant):
+                    cand = str(b.args[0].value).split(".")[-1]
+                    st = cand if cand in stems else None
+            elif isinstance(f, ast.Name):
+                st, nm = imported.get(f.id), f.id
+            if st and nm:
+                idx.setdefault((st, nm), []).append(f"{om}:{c.lineno}")
+    return idx
+
+
+_CLAIMS_CACHE: dict = {}
+
+
+def declared_claims(root: str = "meridian", declared: dict[str, str] | None = None) -> list[dict]:
+    """Her `DECLARED_SINKS` beyanı için: iddiası ne, GERÇEK dış erişimcisi kim, iddia ayakta mı.
+
+    `stale_claim=True` demek: beyan "üretimde okuyucusu yok" diyor AMA başka bir modül, okumayı
+    içeren (ya da bir sıçrama uzaktaki) fonksiyonu ÇAĞIRIYOR. Bu, `stale_sinks`in göremediği
+    sınıftır — muafiyet bayatlamış ama grafik bayrağı hâlâ yanıyor."""
+    decl = DECLARED_SINKS if declared is None else declared
+    if declared is None:
+        _key = (root, _src_stamp(root))
+        _hit = _CLAIMS_CACHE.get(_key)
+        if _hit is not None:
+            return copy.deepcopy(_hit)
+
+    gconsts = _global_consts(root)
+    mods: dict[str, tuple] = {}
+    for f in _py_files(root):
+        try:
+            mods[f.name] = (ast.parse(f.read_text()), f)
+        except (SyntaxError, OSError) as e:
+            _note_unscanned(f, e, "declared_claims")
+
+    graph = artifact_graph(root)
+    idx = _call_index(mods)
+    out: list[dict] = []
+    for art, gerekce in decl.items():
+        claim = [r.pattern for r in CLAIM_NO_PROD_READER if r.search(gerekce)]
+        info = graph["artifacts"].get(art) or {}
+        host_mods = sorted({s.split(":")[0] for s in info.get("reader_sites", [])}) \
+            or sorted(info.get("writers", []))
+        accessors: dict[str, list[str]] = {}
+        for m in host_mods:
+            if m not in mods:
+                continue
+            tree, _path = mods[m]
+            stem, consts, defs = m[:-3], _module_consts(tree), _func_index(tree)
+            reach = {fn for fn, nodes in defs.items()
+                     if any(_reads_artifact(nd, art, consts, gconsts) for nd in nodes)}
+            for _ in range(_HOP):                      # BİLEREK SIĞ — bkz. yukarıdaki sınır notu
+                reach |= {fn for fn, nodes in defs.items()
+                          if any(_called_names(nd) & reach for nd in nodes)}
+            for fn in reach:
+                # kendi modülünden gelen çağrı tüketici DEĞİLDİR (grafiğin `external_readers`
+                # kuralıyla aynı disiplin: kendi yazdığını kendi okuyan modül sayılmaz)
+                yerler = sorted(s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:"))
+                if yerler:
+                    accessors[f"{stem}.{fn}"] = yerler
+        out.append({"artifact": art, "claim_patterns": claim,
+                    "claims_no_prod_reader": bool(claim),
+                    "host_modules": host_mods,
+                    "external_accessors": {k: sorted(v) for k, v in sorted(accessors.items())},
+                    "stale_claim": bool(claim) and bool(accessors)})
+    if declared is None:
+        _CLAIMS_CACHE.clear()
+        _CLAIMS_CACHE[(root, _src_stamp(root))] = out
+    return copy.deepcopy(out)
+
+
+def stale_claims(root: str = "meridian", declared: dict[str, str] | None = None) -> list[dict]:
+    """Yalnız ÇÜRÜTÜLMÜŞ beyanlar. Boş olmalı; dolu ise bir muafiyet gerçeği örtüyor demektir."""
+    return [c for c in declared_claims(root, declared) if c["stale_claim"]]
 
 
 def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
@@ -547,9 +841,17 @@ def report(root: str = "meridian") -> dict:
     sil = silent_handlers(root)
     ann = annotated_handlers(root)
     graph = artifact_graph(root)
+    curuk = stale_claims(root)
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
             "unresolved_artifact_calls": len(graph["unresolved"]),
+            # KÖRLÜĞÜN ADI ve SAYISI (v214): "kaç çağrıyı çözemedim, hangi sınıftan" — sessiz
+            # `continue` yerine sayılabilir kova. `access_patterns` ise "hangi erişim biçimlerini
+            # GÖRÜYORUM"un sayımıdır; kapsam bilinmeden sıfır-ihlal iddiası vakumdur.
+            "unresolved_by_reason": graph["unresolved_by_reason"],
+            "store_access_patterns": graph["access_patterns"],
+            # ÇÜRÜTÜLMÜŞ MUAFİYET BEYANLARI (v214, B-4) — `stale_sinks`in yapısal kör noktası.
+            "stale_claims": [c["artifact"] for c in curuk],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
-            "ok": not sil and not graph["violations"] and not UNSCANNED}
+            "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED}
