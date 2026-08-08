@@ -225,6 +225,19 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   (4/20)". Nokta tahmini −9,69 bps ama `n_kume=1` (dört dolum tek gün) olduğu için CI
   HESAPLANMADI ve `sifiri_disliyor: null`. Kill#2 ancak n≥20 VE CI tamamen negatifken işler.
   Bu kalem KOD İSTEMEZ, İŞLEM İSTER.
+- **"BEYAN VAR, ÜRETİCİ/TÜKETİCİ YOK" sınıf taraması (2026-08-07 operatör sorusu üzerine;
+  grep-turu yapıldı, sistematik tur AÇIK):** Faz-5 kilidi bu sınıfın bir örneğiydi ("üreten kod
+  yok") ve kapandı. Grep'in bulduğu KALAN örnekler: ① `docs/RUNBOOK.md` 31 girdi "henüz
+  yazılmadı" (görünür-bilinçli ama borç gerçek) · ② hermes çağrı telemetrisi — veri `/api/hermes`te
+  AKIYOR, pano kartı YOK (`hermes.py:2503`, D3-UI kalemi; `k.olcum` borcuyla aynı aile) ·
+  ③ cf çıkış-yasası sapması (`analytics.py:1380`): 6 çıkış tipi cf'te modellenmiyor, ölçülmüş
+  iyimserlik +0,039R, cf satırları skor havuzunun %96'sı — "ayrı turun işi" denmiş, tur hiç
+  açılmamış. DÜRÜST (iş gerektirmeyen) dallar ayrıldı: E3 ampirik bandı ve `_olcut(olculemedi)`
+  dalları örneklem bekliyor, sabit taş değil. SINIR BEYANI: grep yalnız İTİRAF EDİLMİŞ borcu
+  bulur — bugünün en tehlikeli vakaları (uyuyan-yol tüketicisizliği, koruma yeniden-kurma
+  yolunun hiç olmaması) BEYANSIZDI ve `codelaw.artifact_graph`tan da kaçtı (defter yazılıyordu,
+  okuyucusu vardı; eksik DAVRANIŞSAL tüketiciydi). Sistematik tur = artefakt/bayrak envanterini
+  yürüyüp her birine "üreticin kim, seni kim OKUYOR, okuyan DAVRANIYOR mu?" sormak.
 
 ### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
 - **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
