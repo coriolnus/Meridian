@@ -138,7 +138,30 @@ if (_qs.has("token")) localStorage.setItem("meridian_token", _qs.get("token"));
 const API_BASE = (localStorage.getItem("meridian_api") || "").replace(/\/+$/, "");   // "" = same origin
 const API_TOKEN = localStorage.getItem("meridian_token") || "";
 const _JC = new Map();   // yanıt önbelleği — apiFetch mutasyonda siler, bkz. aşağı
-function apiFetch(path, opts = {}) {
+// ---- HTTP HATASI BİR İSTİSNADIR (v219 · 409-YUTMASI) -----------------------------------------
+// ÖLÇÜLEN KUSUR: `apiFetch` HER yanıtı olduğu gibi döndürüyordu ve çağıranların çoğu `r.ok`a hiç
+// bakmıyordu. L1'de uygulama kapısı (`api._onay_kapisi`) bir uygulamayı reddederken 409 + gövdede
+// `[kimlik] <en az 20 karakter gerekçe>` yazıyor — pano bunu HİÇ okumuyordu. `applySkillRec`'in
+// boş `catch`i ile birleşince ölçülen davranış şuydu: operatör "Uygula"ya basar, sunucu
+// gerekçesiyle REDDEDER, ekranda HİÇBİR ŞEY olmaz. Bir onay kapısının en pahalı hâli, sessizce
+// reddeden hâlidir: kapı çalışıyordur ama operatör onun çalıştığını asla öğrenemez.
+//
+// SÖZLEŞME: 2xx dışındaki her yanıt `ApiHata` olarak FIRLAR. Gövdedeki `detail` mesajın İÇİNE
+// girer (operatörün gördüğü tek metin o olabilir) ve `status`/`detay`/`govde` alanları çağırana
+// AÇIK kalır — kimi yüzeyin 409'u (dünyanın durumu) 500'den (arıza) ayırması gerekir, kimisinin
+// de ağ kopması ile sunucu reddini: ilkinde `status` vardır, ikincisinde YOKTUR ve bu ayrım
+// "emir gitmiş olabilir" cümlesinin kurulup kurulmayacağını belirler.
+class ApiHata extends Error {
+  constructor(status, detay, govde, yol) {
+    super(`HTTP ${status} — ${detay || "sunucu sebep bildirmedi"}`);
+    this.name = "ApiHata";
+    this.status = status;
+    this.detay = detay || "";
+    this.govde = govde;
+    this.yol = yol;
+  }
+}
+async function apiFetch(path, opts = {}) {
   const headers = Object.assign({}, opts.headers || {});
   if (API_TOKEN) headers["x-meridian-token"] = API_TOKEN;         // authenticate every network call
   // MUTASYON ÖNBELLEĞİ DÜŞÜRÜR: "Şimdi düşün" gibi bir eylemden sonra kod RENDER.ajan()'ı
@@ -146,8 +169,58 @@ function apiFetch(path, opts = {}) {
   // gösterirdi — kullanıcıya "hiçbir şey olmadı" dedirtir. GET dışı her istek defteri siler.
   const m = (opts.method || "GET").toUpperCase();
   if (m !== "GET") _JC.clear();
-  return fetch(API_BASE + path, Object.assign({}, opts, { headers }))
-    .then(r => (typeof _yetkisizYakala === "function" ? _yetkisizYakala(r) : r));
+  const ham0 = await fetch(API_BASE + path, Object.assign({}, opts, { headers }));
+  // 401 KAPISI ÖNCE: oturum düştüyse kapak her koşulda açılır — fırlatma onu atlamamalı.
+  const r = (typeof _yetkisizYakala === "function" ? _yetkisizYakala(ham0) : ham0);
+  if (r.ok) return r;
+  // TEK İSTİSNA — `hamYanit`. Bir yüzeyin durum kodunu KENDİSİ okuması, o yüzeyin kendi
+  // hükmüyse (v195-a: `alpacaSubmit` 401/500 gövdesini "0 emir gönderildi" diye okumasın diye
+  // durumu SATIRINDA okur ve mesajı kalıcı `_ALP_MSG` durumuna yazar) bayrak AÇIKÇA verilir.
+  // Bayrak bir gevşeklik değil bir BEYANdır: muafiyet sayılabilir olur ve sessizce yayılamaz
+  // (kaç yerde kullanıldığı testte çivilidir).
+  if (opts.hamYanit) return r;
+  // GÖVDE BİR KEZ OKUNUR, HAM METİN KORUNUR: JSON olmayan bir hata gövdesinde (vekil 502'si,
+  // HTML hata sayfası) `detail` yoktur ama gövdenin kendisi operatörün elindeki TEK ipucudur.
+  let ham = "";
+  try { ham = await r.text(); }
+  catch (e) { ham = ""; }   // YASA 4 · işaretli yutma: gövde okunamadı; durum kodu YİNE DE fırlar, sessiz başarı YOK
+  let govde = null;
+  try { govde = ham ? JSON.parse(ham) : null; }
+  catch (e) { govde = null; }   // YASA 4 · işaretli yutma: gövde JSON değil; ham metin aşağıda gerekçe olarak kalır
+  const d = govde ? govde.detail : null;
+  // 422'de FastAPI `detail`i bir LİSTE verir — dizgeye çevrilmezse "[object Object]" basılırdı.
+  const detay = (typeof d === "string" && d) ? d
+    : (d != null ? JSON.stringify(d) : (ham ? ham.slice(0, 300) : ""));
+  throw new ApiHata(r.status, detay, govde, path);
+}
+// ---- EYLEM HATASININ YÜZEYİ — SESSİZ DAL YOK (v219 · YASA 4 pano yüzeyi) ---------------------
+// Panonun yazma yolları (onayla · uygula · reddet · başlat · durdur) bugüne dek ÜÇ ayrı biçimde
+// bitiyordu: kimi hatayı kendi mesaj kutusuna yazıyor, kimi `alert` ediyor, kimi de BOŞ `catch`e
+// düşürüyordu. Üçüncüsü ölçülen kusurun ta kendisi ve en pahalısı: reddedilen bir onay, hiç
+// gönderilmemiş bir istekle ekranda AYNI görünüyordu.
+// TEK GÖVDE: mesaj kutusu VARSA oraya yazılır (sayfa yeniden çizilmeden okunabilsin diye), YOKSA
+// `alert` düşer. Hiçbir dal sessiz değildir — dönüş değeri hangi dalın koştuğunu söyler.
+// GEREKÇE KIRPILMAZ, KİMLİK ÖNEKİ KORUNUR: sunucu 409'u `[kimlik] <gerekçe>` biçiminde yazıyor ve
+// o önek operatörün `POST /api/approvals/{id}`ye geçireceği DİZGEnin ta kendisidir.
+function eylemHatasiYaz(hedef, e, onEk) {
+  const metin = String((e && e.message) || e || "bilinmeyen hata");
+  const kutu = (typeof hedef === "string") ? $(hedef) : (hedef || null);
+  if (kutu) {
+    kutu.innerHTML = `<span class="neg">✗ ${esc(metin)}</span>${onEk ? ` <span class="hint">${esc(onEk)}</span>` : ""}`;
+    return true;
+  }
+  alert((onEk ? onEk + "\n\n" : "") + metin);   // kutusu olmayan yüzey SESSİZ KALAMAZ
+  return false;
+}
+// SATIR BAŞINA MESAJ KUTUSU — İD İLE DEĞİL ÖZNİTELİKLE, VE AKTİF SAYFANIN İÇİNDEN.
+// Gizli sayfa DOM'dan silinmez ("gizli sayfa silinmez", alanSayfasi beyanı) ve aynı beceri iki
+// yüzeyde birden listelenebilir (Onaylar gelen kutusu + Öğrenme öneri kartı). Sabit bir `id`
+// olsaydı `getElementById` belge sırasındaki İLKİNİ döndürür, ret mesajı OPERATÖRÜN BAKMADIĞI
+// sayfaya yazılırdı — sessiz yutmanın en ikna edici taklidi.
+function eylemKutusu(anahtar) {
+  const sayfa = document.querySelector(".page.active") || document;
+  const a = String(anahtar == null ? "" : anahtar).replace(/["\\\]]/g, "");
+  return a ? sayfa.querySelector(`[data-eylem-msg="${a}"]`) : null;
 }
 // ---- KISA ÖMÜRLÜ YANIT ÖNBELLEĞİ + BOŞTA ÖN-YÜKLEME (2026-07-28) ---------------------------
 // Ölçüm: pano, işlem döngüsü ve Hermes beyniyle AYNI Python sürecinde koşuyor
@@ -167,10 +240,11 @@ const JCACHE_TTL_MS = 15000;       // sunucunun kendi bütünlük TTL'i 20 sn �
 const j = async u => {
   const hit = _JC.get(u);
   if (hit && (performance.now() - hit.t) < JCACHE_TTL_MS) return hit.p;
-  const p = apiFetch(u).then(r => {
-    if (!r.ok) throw new Error(u + " → HTTP " + r.status);
-    return r.json();
-  }).catch(e => { _JC.delete(u); throw e; });   // hata önbellekte KALMAZ
+  // `!r.ok` KONTROLÜ BURADAN KALKTI (v219): `apiFetch` artık 2xx dışını `ApiHata` olarak
+  // FIRLATIYOR ve o hata gövdedeki `detail`i taşıyor — buradaki eski kontrol yalnız durum kodunu
+  // basıyordu ("→ HTTP 409"), yani sunucunun gerekçesini tam da bu katman siliyordu.
+  const p = apiFetch(u).then(r => r.json())
+    .catch(e => { _JC.delete(u); throw e; });   // hata önbellekte KALMAZ
   _JC.set(u, { t: performance.now(), p });
   return p;
 };
@@ -475,7 +549,11 @@ function sessizHatGlobal(sh) {
 }
 async function toggleHalt() {
   if (!HALTED && !confirm("Acil durdur (HALT)?\n\nBir sonraki muma kadar YENİ hiçbir alım yapılmaz. Mevcut pozisyonlar yönetilmeye devam eder. İstediğinde 'DEVAM' ile açarsın.")) return;
-  await apiFetch(HALTED ? "/api/resume" : "/api/halt", { method: "POST" });
+  // BU KOLUN SESSİZ DÜŞMESİ EN PAHALISI (v219): operatör "durdurdum" sanıp ekrandan ayrılırsa
+  // sistem çalışmaya devam eder. `apiFetch` artık fırlatıyor; hata KAPAK MESAJIYLA yüzeye çıkar
+  // ve şerit tazelenmez — yani rozet eski hâlinde kalarak da "olmadı" der.
+  try { await apiFetch(HALTED ? "/api/resume" : "/api/halt", { method: "POST" }); }
+  catch (e) { eylemHatasiYaz(null, e, (HALTED ? "DEVAM" : "DURDURMA") + " isteği sunucuya işlenemedi — kol ÇEKİLMEDİ."); return; }
   await refreshStatus();
   const active = document.querySelector(".sitem.on")?.dataset.p || VARSAYILAN_ROTA;
   if (RENDER[active]) await RENDER[active]();
@@ -1066,6 +1144,31 @@ const EV_TR = {
   duplicate_trade_suppressed: e => `Mükerrer işlem satırı engellendi: ${e.ticker || ""}`,
   warmup_coverage_short: e => `Isınma verisi kısa: ${e.ticker} (${e.first_bar || ""}'den başlıyor)`,
   scheduler_started: () => `Zamanlayıcı başladı`,
+  // ---- ONAY KAPISI + KORUMA AİLESİ (v219) ----------------------------------------------------
+  // PANONUN EN YÜKSEK BAHİSLİ DOKUZ OLAYI ham adla akıyordu: `approval_missing_refused` bir
+  // operatör reddidir, `koruma_oco_dusuru` çıplak kalmış bir pozisyondur — ikisi de akışta
+  // `koruma_oco_dusuru` diye, İngilizce-benzeri bir mono jeton olarak geçiyordu.
+  // ADLAR VE ALANLAR UÇTAN ÖLÇÜLDÜ, VARSAYILMADI: `api.py` ve `watchdog.py` içindeki
+  // `obs.log(...)`/`obs.warn(...)` çağrılarının BİREBİR anahtarları (kimlik/yol/seviye/neden ·
+  // ticker/adet/stop/hedef/hata · gonderilen/toplam · verilen/olculen · error). Alan yoksa
+  // UYDURULMAZ: cümle o parçayı hiç yazmaz ya da "?" basar.
+  approval_gate_passed: e => `Onay kapısı GEÇTİ — [${e.kimlik || "?"}] için defterde onay var`
+    + ` (L${e.seviye ?? "?"} · ${e.yol || "yol yazılmamış"})`,
+  approval_missing_refused: e => `ONAY KAPISI REDDETTİ — ${e.neden
+    || `[${e.kimlik || "?"}] için defterde 'approve' satırı yok (karar: ${e.karar || "yok"})`}`,
+  approval_decision: e => `Onay defterine karar yazıldı: ${e.approval_id || "?"} → ${e.decision || "?"}`
+    + ` · ${e.has_reason ? "gerekçeli" : "gerekçesiz"}`,
+  koruma_kur_istegi: e => `Koruma kurma isteği — ${e.onay_verildi ? "ONAYLI" : "onaysız (kuru koşu)"}`
+    + ` · sonuç ${e.sonuc || "?"} · ${e.gonderilen ?? "?"}/${e.toplam ?? "?"} gönderildi`,
+  koruma_oco_gonderildi: e => `Koruma OCO gönderildi: ${e.ticker || "?"} ${e.adet ?? "?"} adet`
+    + ` · stop ${e.stop ?? "—"} / hedef ${e.hedef ?? "—"} (adet kaynağı: ${e.adet_kaynagi || "?"})`,
+  koruma_oco_dusuru: e => `Koruma OCO'su GİTMEDİ: ${e.ticker || "?"} — pozisyon HÂLÂ çıplak`
+    + `${e.hata ? " · " + e.hata : ""}`,
+  koruma_kur_ozet: e => `Koruma turu bitti — ${e.gonderilen ?? "?"}/${e.toplam ?? "?"} OCO gönderildi`,
+  koruma_onay_bayat: e => `Koruma onayı BAYAT — onay ölçülenden BAŞKA bir listeye verilmiş`
+    + ` (ölçülen ${e.olculen || "?"}); hiçbir emir gönderilmedi`,
+  koruma_dedektoru_dustu: e => `Koruma dedektörü düştü: ${e.error || "sebep yazılmamış"}`
+    + ` — bu poll'da hüküm YOK ("koruma var" sayılmaz)`,
 };
 // Akışın NE KADARDIR kopuk olduğu — "kopuk" ile "43 dakikadır kopuk" operatör için aynı şey değil:
 // ilki bir bayrak, ikincisi bir karar (bekle mi, ayna kapansın mı).
@@ -1794,6 +1897,9 @@ const KART_KAYDI = {
   "adaylar:denetim":    { alan: "karar",   bolum: "adaylar" },      // C1-7
   "cizelge:damga":      { alan: "saglik",  bolum: "cizelge" },      // C1-4
   "hermes:maliyet":     { alan: "ogrenme", bolum: "hermes" },       // C1-3
+  // v219 · W4-N5: `agent_calls` defterinin İLK pano okuyucusu (hermes.py'nin "veri hazır, çizim
+  // yok" beyanı bu kartla kapanır). Kapak altında: Öğrenme yüzeyinin bütçesi zaten aşılmış.
+  "hermes:telemetri":   { alan: "ogrenme", bolum: "hermes" },
   "ajan:rollback":      { alan: "ogrenme", bolum: "ajan" },         // C1-5
   "ajan:regresyon":     { alan: "ogrenme", bolum: "ajan" },         // C1-6
   "karne:olgunlasma":   { alan: "ogrenme", bolum: "karne" },        // C1-10
@@ -2447,16 +2553,14 @@ window.planOnayla = async (planId) => {
   if (btn) { btn.disabled = true; btn.textContent = "onaylanıyor…"; }
   if (msg) msg.textContent = "gönderiliyor…";
   try {
+    // v219: `!r.ok` dalı BURADAN KALKTI ama cümlesi kalktı DEĞİL — `apiFetch` artık aynı gerekçeyi
+    // `ApiHata.message` içinde ("HTTP 409 — <sunucunun kendi cümlesi>") fırlatıyor ve aşağıdaki
+    // `catch` onu basıyor. SESSİZ "OLMADI" YOK: NO_GO reddi, seansı geçmiş plan, HALT, slot yok…
+    // hepsi sunucunun kendi metniyle görünür. Düğme geri gelir — karar operatörün.
     const r = await apiFetch("/api/plan/" + encodeURIComponent(planId) + "/onayla", { method: "POST" });
     let body = {};
-    try { body = await r.json(); } catch (e) { body = {}; }
-    if (!r.ok) {
-      // SESSİZ "OLMADI" YOK: sunucunun 409/404 gerekçesi olduğu gibi basılır (NO_GO reddi,
-      // seansı geçmiş plan, HALT, slot yok…). Düğme geri gelir — karar operatörün.
-      if (msg) msg.innerHTML = `<span class="neg">Onaylanmadı (HTTP ${r.status}): ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`;
-      if (btn) { btn.disabled = false; btn.textContent = "Onayla ve Arm Et"; }
-      return;
-    }
+    try { body = await r.json(); }
+    catch (e) { body = {}; }   // YASA 4 · işaretli yutma: 2xx gövdesi JSON değil; aşağıdaki alanlar "?" basar, uydurma sayı YOK
     if (msg) msg.innerHTML = `<span class="pos">✓ onaylandı — plan silahlı kuyrukta (${body.armed_n ?? "?"} silahlı emir).</span>
       Dolum bir sonraki açılışta; aynaya göndermek için Ayarlar'daki "Silahlı planları Alpaca'ya gönder".
       ${body.not ? `<br><span class="warn">${esc(body.not)}</span>` : ""}`;
@@ -3235,9 +3339,11 @@ function _bar(pct, color) {
   return `<div class="bar"><i style="width:${w}%${color ? `;background:var(--${color})` : ""}"></i></div>`;
 }
 async function _ctl(path, body) {
+  // v219: `!r.ok → throw new Error(path + " → HTTP " + status)` KALKTI. O satır sunucunun
+  // gerekçesini (409/403 gövdesindeki `detail`) siliyor ve yerine yalnız durum kodunu koyuyordu;
+  // `apiFetch` artık gerekçenin kendisini fırlatıyor ve çağıranların `alert`i onu basıyor.
   const r = await apiFetch(path, { method: "POST", headers: { "content-type": "application/json" },
                                    body: body ? JSON.stringify(body) : "{}" });
-  if (!r.ok) throw new Error(path + " → HTTP " + r.status);
   return r.json();
 }
 // MÜDAHALE KOLLARI — ÜÇ YÜZEY, TEK GÖVDE (S2R-2).
@@ -3252,7 +3358,10 @@ async function _ctl(path, body) {
 // GÖRÜNMEYEN bir sayfayı tazelemek olurdu.
 window.opSoftHalt = async () => {
   if (!HALTED && !confirm("Kademe 1 — Soft Halt?\n\nYeni emir girişi durur; mevcut pozisyonlar yönetilmeye devam eder.")) return;
-  await apiFetch(HALTED ? "/api/resume" : "/api/halt", { method: "POST" });
+  // `toggleHalt` ile AYNI gerekçe (v219): sessizce düşen bir durdurma kolu, çekilmiş sanılan bir
+  // koldur. Kardeş kollar (`opLearnHalt`, `opCancelOpen`) zaten `_ctl` + `alert` yolundaydı.
+  try { await apiFetch(HALTED ? "/api/resume" : "/api/halt", { method: "POST" }); }
+  catch (e) { eylemHatasiYaz(null, e, (HALTED ? "DEVAM" : "DURDURMA") + " isteği sunucuya işlenemedi — kol ÇEKİLMEDİ."); return; }
   await refreshStatus(); await _aktifSayfayiCiz();
 };
 window.opLearnHalt = async (on) => {
@@ -6761,6 +6870,104 @@ function firsatMaliyetKarnesi(d) {
            satırlar ayrıca <b>${trn(sd.olculemeyen_satir)}</b> olarak sayılır, sıfır sayılmaz.</p>`}</div>`;
 }
 
+// ---- HERMES ÇAĞRI TELEMETRİSİ (④ ogrenme#hermes · v219 iş 4) --------------------------------
+// ÖLÇÜLEN KUSUR: `hermes.integrations_status()` (hermes.py) `agent_calls` alanını /api/hermes
+// gövdesine KOYUYOR ve bunu kendi yorumunda beyan ediyordu — "veri hazır, çizim henüz yok".
+// Yani defterin YASA-6 tüketicisi bir API alanıydı, bir OKUYUCU değil: `agent_telemetry.ozet()`
+// her istekte hesaplanıp tele gidiyor, panoda hiçbir piksele dönüşmüyordu. Kartın cevapladığı
+// soru defterin kendi docstring'inde yazılı: "gece koşusu neden 40 dk sürdü, hangi çağrı takıldı".
+//
+// BAŞLIK SAYISI SÜRE DEĞİL SINIF: "kaç çağrı KULLANILABİLİR cevap getirdi". Süre bir maliyettir
+// ama boş dönen bir çağrı bir ARIZAdır ve p95 onu göstermez (boş cevap hızlı döner). Payda
+// pencerede ÖLÇÜLEN çağrıdır; pencere dışında kalan satırlar ayrıca yazılır — boş bir özet,
+// "hiç çağrı olmadı" ile "hepsi pencerenin dışında" arasındaki farkı söyleyemezse yanlış güven
+// üretir (`ozet()`in kendi beyanı).
+// ÖLÇÜLEMEDİ ≠ 0: `arac.ort` null ise oran ÇİZİLMEZ ve nedeni yazılır (`-Q` sessiz mod CLI
+// oturum özetini bastırır); ölçülemeyenleri paydaya katmak oranı sessizce seyreltirdi.
+function hermesTelemetriKarti(it) {
+  const t = (it || {}).agent_calls || null;
+  const sinif = (t && t.sinif) || {};
+  // `n` UYDURULMAZ: alan yoksa özet ÖLÇÜLEMEDİ dalına düşer. `?? 0` yazmak, gelmemiş bir
+  // ölçümü "sıfır çağrı" diye okutmak olurdu — bu turun kapattığı sınıfın ta kendisi.
+  const n = (t && Number.isFinite(t.n)) ? t.n : null;
+  // `sinif` bir SAYIM sözlüğüdür (`ozet()` anahtarı yalnız gördükçe açar): pencere ÖLÇÜLDÜYSE
+  // anahtarın yokluğu "o sınıfta çağrı YOK" demektir ve bu TÜRETİLMİŞ değil ÖLÇÜLMÜŞ bir
+  // sıfırdır. Pencere ölçülemediyse sıfır da yoktur — null kalır.
+  const dolu = Number.isFinite(sinif.dolu) ? sinif.dolu : (n == null ? null : 0);
+  const bosumsu = (n == null || dolu == null) ? null : (n - dolu);   // dolu OLMAYAN her sınıf: boş · yapılandırmasız · bayrak · skill · zaman aşımı
+  const pencereSaat = (t && t.pencere_s) ? Math.round(t.pencere_s / 3600) : null;
+  const sure = (t && t.sure_ms) || {};
+  const arac = (t && t.arac) || {};
+  const iz = (t && t.iz) || {};
+  // İKİ AYRI BOŞLUK, TEK DAL: özet blok HİÇ gelmemiş olabilir (uç düştü) ya da gelmiş ama
+  // sayacı taşımıyor olabilir (özet üretilemedi). İkisi de "0 çağrı" DEĞİLDİR ve gerekçeleri ayrı.
+  const olculemedi = !t || n == null;
+  const ozet = olculemedi
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: t ? "`agent_calls` bloğu geldi ama çağrı sayacı (`n`) yok — özet ÜRETİLEMEDİ; "
+                + "bu 'hiç ajan çağrısı olmadı' DEĞİLDİR."
+                : "çağrı telemetrisi özeti /api/hermes gövdesinde YOK — defter okunamadı ya da özet "
+                + "üretilemedi; bu 'hiç ajan çağrısı olmadı' DEĞİLDİR." })
+    : kartOzeti({ deger: `${trn(dolu)}/${trn(n)}`,
+        oran: n ? dolu / n : null,
+        payda: n ? `pencerede ölçülen ajan çağrısı${pencereSaat ? ` (son ${trn(pencereSaat)} sa)` : ""}` : "",
+        degerSinif: bosumsu ? "warn" : "",
+        meta: n
+          ? `p50 ${trn(sure.p50)} ms · p95 ${trn(sure.p95)} ms · en yavaş ${trn(sure.max)} ms${
+              t.pencere_disi ? ` · ${trn(t.pencere_disi)} satır pencere DIŞI` : ""}`
+          : `pencerede ÇAĞRI YOK · ${trn(t.pencere_disi)} satır pencerenin dışında kaldı — "hiç çağrı olmadı" ile "hepsi eski" AYNI ŞEY DEĞİLDİR`,
+        rozet: bosumsu ? "BOŞ DÖNEN ÇAĞRI" : "" });
+  const dagilimSatir = (ad, adet) => `<div class="trow" style="grid-template-columns:1fr 64px 74px">
+    <span class="chain">${esc(ad)}</span><span class="mono-num">${trn(adet)}</span>
+    <span class="mono-num mut">${n ? pctf(adet / n, 0) : "—"}</span></div>`;
+  return `<div class="card rise"${katKart("hermes:telemetri")}>
+    <h2 class="t">Ajan çağrı telemetrisi <span class="tx3" style="font-weight:400">(gece koşusu neden uzadı, hangi çağrı takıldı?)</span></h2>
+    ${ozet}
+    ${olculemedi ? firsatBos(t
+        ? "`agent_calls` bloğu geldi ama çağrı sayacı yok — pencerede kaç çağrı olduğu ölçülemedi."
+        : "`integrations.agent_calls` bloğu uçtan gelmedi — çağrı-başına süre ve sonuç sınıfı bu turda ölçülemedi.",
+        "Kota ve bütçe satırları yukarıdaki durum kartında; eksik olan ÇAĞRININ KENDİSİ (süre, sonuç sınıfı, taşıyıcı).")
+      : `<div class="srow"><span>Pencere</span><b class="mono-num">${
+           pencereSaat ? `son ${trn(pencereSaat)} sa` : "tüm defter"} · ${trn(n)} satır sayıldı${
+           t.pencere_disi ? ` · ${trn(t.pencere_disi)} satır dışarıda` : ""}</b></div>
+         <div class="srow"><span>Toplam süre (pencerede)</span><b class="mono-num">${
+           sure.toplam == null ? "—" : `${trn(sure.toplam)} ms`}</b></div>
+         <div class="srow"><span>Araç çağrısı (ortalama)</span><b class="mono-num">${
+           arac.ort == null ? "ÖLÇÜLEMEDİ" : trn(arac.ort, 2)}</b></div>
+         ${arac.olculemeyen ? `<p class="hint" style="margin-top:2px">${trn(arac.olculemeyen)} çağrıda
+            araç sayısı ÖLÇÜLEMEDİ (<code>-Q</code> sessiz mod oturum özetini bastırır) ve ortalama
+            YALNIZ ölçülen ${trn(arac.olculen)} çağrının içinden alındı — ölçülemeyeni paydaya katmak
+            oranı sessizce seyreltirdi.</p>` : ""}
+         ${(t.en_yavas) ? `<div class="srow"><span>En yavaş çağrı</span><b class="mono-num">${
+            trn(t.en_yavas.sure_ms)} ms · ${esc(String(t.en_yavas.kind || "?"))} · ${
+            esc(String(t.en_yavas.model || "model yazılmamış"))} · ${esc(String(t.en_yavas.sonuc_sinifi || "?"))}</b></div>`
+          : `<p class="hint" style="margin-top:2px">En yavaş çağrı yok — pencerede süre taşıyan satır bulunamadı.</p>`}
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:1fr 64px 74px">
+             <span>SONUÇ SINIFI</span><span>ÇAĞRI</span><span>PAY</span></div>
+           ${Object.entries(sinif).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
+             || `<div class="empty" style="font-size:12px">pencerede sınıflanmış çağrı yok</div>`}</div>
+         ${detayKatmani("Model ve taşıyıcı kırılımı · iz defteri",
+             "Aynı pencerenin ikinci kesiti: hangi model kaç kez çağrıldı ve çağrı hangi taşıyıcıdan "
+             + "gitti (yerel ajan CLI'ı mı, doğrudan HTTP mi). İz defteri satırı OKUNMADAN yalnız BAYT "
+             + "damgasıyla ölçülür — satır sayısı türetilmez.",
+             `<div class="tbl">
+                <div class="trow head" style="grid-template-columns:1fr 64px 74px">
+                  <span>MODEL</span><span>ÇAĞRI</span><span>PAY</span></div>
+                ${Object.entries((t.model) || {}).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
+                  || `<div class="empty" style="font-size:12px">model alanı taşıyan satır yok</div>`}</div>
+              <div class="tbl" style="margin-top:10px">
+                <div class="trow head" style="grid-template-columns:1fr 64px 74px">
+                  <span>TAŞIYICI</span><span>ÇAĞRI</span><span>PAY</span></div>
+                ${Object.entries((t.tasiyici) || {}).sort((a, b) => b[1] - a[1]).map(([ad, adet]) => dagilimSatir(ad, adet)).join("")
+                  || `<div class="empty" style="font-size:12px">taşıyıcı alanı taşıyan satır yok</div>`}</div>
+              <div class="srow" style="margin-top:10px"><span>Ham iz defteri</span><b class="mono-num">${
+                iz.bayt == null ? "—" : `${trn(Math.round(iz.bayt / 1000))} KB`}${
+                iz.disk_tavani_mb == null ? "" : ` / ${trn(iz.disk_tavani_mb, 2)} MB türetilmiş tavan`}</b></div>
+              <p class="hint" style="margin-top:6px">${esc(String(iz.beyan || "iz defteri beyanı gelmedi"))}</p>`)}
+         <p class="hint" style="margin-top:10px">${esc(String(t.beyan || "özet beyanı gelmedi"))}</p>`}</div>`;
+}
+
 // ---- C1-5 · ROLLBACK SİCİLİ (④ ogrenme#ajan) -------------------------------------------------
 // PRODUCT.md'nin AÇIK VAADİ ("underperforming versions auto-rollback") ve konumlandırmanın dört
 // sütunundan biri. Panoda karşılığı YOKTU: `app.js` içinde "rollback" kelimesi SIFIR kez geçiyordu.
@@ -7078,14 +7285,18 @@ window.korumaKur = async (oneriId) => {
       body: JSON.stringify({ onay: KORUMA_ONAY_JETONU, oneri_id: oneriId || (k && k.oneri_id) || "" }),
     });
     let body = {};
-    try { body = await r.json(); } catch (e) { body = {}; }
-    korumaMsgYaz(r.ok ? _korumaSonucSatiri(body)
-      : `<span class="neg">✗ HTTP ${r.status} — ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`);
+    try { body = await r.json(); }
+    catch (e) { body = {}; }   // YASA 4 · işaretli yutma: 2xx gövdesi JSON değil; aşağıdaki satır "ölçülemedi" der, "gönderildi" DEMEZ
+    korumaMsgYaz(_korumaSonucSatiri(body));
     await _aktifSayfayiCiz();
   } catch (e) {
-    // AĞ HATASINDA "gönderilmedi" DEMEK UYDURMA OLURDU: istek uca varmış ve emirler çıkmış olabilir.
-    korumaMsgYaz(`<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ÖLÇÜLEMEDİ;
-      emirler gitmiş olabilir, kartı tazeleyip koruma durumunu doğrula`);
+    // İKİ HÂL AYRIŞTIRILIR (v219): sunucu CEVAP VERDİYSE (`e.status` var) reddin gerekçesi
+    // bilinir ve "emirler gitmiş olabilir" cümlesi kurulmaz — o cümle uydurma olurdu. Yalnız
+    // AĞ koptuğunda (durum kodu YOK) sonuç gerçekten ölçülemez ve belirsizlik yazılır.
+    korumaMsgYaz(e && e.status
+      ? `<span class="neg">✗ ${esc(String(e.message))}</span> — sunucu REDDETTİ; emir gönderilmedi`
+      : `<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ÖLÇÜLEMEDİ;
+         emirler gitmiş olabilir, kartı tazeleyip koruma durumunu doğrula`);
   } finally {
     const b = _btn();
     if (b && b.disabled) { b.disabled = false; b.textContent = etiket || "▲ Korumayı kur"; }
@@ -7754,7 +7965,10 @@ RENDER.skiller = async () => {
     ${kartOzeti({ deger: revs.length, rozet: "ONAY BEKLİYOR",
       meta: `${revs.length} taslak · ${esc(revs.map(r => r.skill).slice(0, 3).join(", "))}${revs.length > 3 ? " …" : ""}` })}
     ${revs.map(r => `<div class="trow" style="grid-template-columns:1fr auto auto">
-      <span><b>${esc(r.skill)}</b><br><span class="chain">${esc(r.rationale || "gerekçe yok")} · kanıt: n=${r.evidence?.n} ort ${r.evidence?.avg_r}R</span></span>
+      <span><b>${esc(r.skill)}</b><br><span class="chain">${esc(r.rationale || "gerekçe yok")} · kanıt: n=${r.evidence?.n} ort ${r.evidence?.avg_r}R</span>
+        <!-- SATIRIN KENDİ MESAJ KUTUSU (v219): onay kapısının reddi (409) BU satırda görünür.
+             İd değil öznitelik — aynı beceri Onaylar yüzeyinde de listeleniyor ve iki id çakışırdı. -->
+        <p class="hint" data-eylem-msg="${esc(r.skill)}" style="margin:6px 0 0"></p></span>
       <button class="dlbtn" data-act="skillRev" data-a1="${esc(r.skill)}" data-a2="apply">Onayla</button>
       <button class="dlbtn" style="border-color:var(--red);color:var(--red)" data-act="skillRev" data-a1="${esc(r.skill)}" data-a2="reject">Reddet</button></div>`).join("")}
     <p class="hint">Taslak ajan tarafından ölçülmüş zayıflık kanıtıyla yazıldı (skills/&lt;ad&gt;/SKILL.md.v2-draft). Onay eski sürümü arşivler; karne sıfırdan ölçülür.</p></div>` : "";
@@ -7812,9 +8026,24 @@ function runsCard(runs) {
 }
 window.skillRev = async (skill, action) => {
   if (action === "apply" && !confirm(`'${skill}' revizyonu yürürlüğe girsin mi?\n\nEski sürüm arşivlenir; skill karnesi bu tarihten itibaren yeni içerikle ölçülür.`)) return;
-  try { await apiFetch("/api/skills/revision", { method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ skill, action }) }); } catch (e) { alert("Hata: " + e); }
-  await RENDER.skiller(); revealActive();
+  // ÜÇ KUSUR BİRDEN DÜZELDİ (v219). (1) `alert("Hata: " + e)` HİÇ TETİKLENMİYORDU: `apiFetch`
+  // 409'da fırlatmıyordu, yani onay kapısının reddi hiçbir yere düşmüyordu. (2) Hata OLSA BİLE
+  // gövde `RENDER.skiller()` çağırıyordu — yeniden çizim mesajı silerdi. (3) Düğme Onaylar
+  // yüzeyinde de var ve orada `RENDER.skiller()` GÖRÜNMEYEN bir bölümü tazelemek demekti
+  // (S2R-2'nin `_ackRejects`te yazılı dersi). Tazeleme artık aktif sayfaya bağlı ve YALNIZ
+  // başarıda koşuyor.
+  const kutu = eylemKutusu(skill);
+  if (kutu) kutu.innerHTML = `<span class="mut">${action === "apply" ? "uygulanıyor" : "reddediliyor"}…</span>`;
+  try {
+    await apiFetch("/api/skills/revision", { method: "POST", headers: { "content-type": "application/json" },
+                                             body: JSON.stringify({ skill, action }) });
+  } catch (e) {
+    eylemHatasiYaz(kutu, e, (e && e.status === 409)
+      ? "ONAY KAPISI REDDETTİ — onay defterinde bu revizyon kimliği için 'approve' satırı yok (ya da 'reject' var); revizyon YÜRÜRLÜĞE GİRMEDİ (fail-closed)."
+      : "revizyon işlenemedi — taslak durumunu tazeleyip doğrula.");
+    return;
+  }
+  await _aktifSayfayiCiz();
 };
 const mc = (l, v, col, sub) => `<div class="mcard"><p class="l">${l}</p><p class="v" style="color:${col || 'inherit'}">${v ?? '—'}</p>${sub ? `<p class="s">${sub}</p>` : ''}</div>`;
 
@@ -8460,7 +8689,8 @@ RENDER.onaylar = async () => {
     return `<div class="trow" style="grid-template-columns:96px 1fr auto;align-items:start">
       <span class="tag ${kls}">${lbl}</span>
       <span><b style="font-size:13px">${esc(it.title)}</b><br><span class="chain">${esc(it.evidence || "")}</span>
-        ${it.note ? `<br><span class="hint" style="font-size:11px">${esc(it.note)}</span>` : ""}</span>
+        ${it.note ? `<br><span class="hint" style="font-size:11px">${esc(it.note)}</span>` : ""}
+        ${it.skill ? `<p class="hint" data-eylem-msg="${esc(it.skill)}" style="margin:6px 0 0"></p>` : ""}</span>
       <span style="display:flex;gap:6px">${btns}</span></div>`;
   }).join("");
   // ---- ONAYINI BEKLEYEN REVIEW PLANLARI (v195-a · UX denetimi B4) ----------------------------
@@ -8598,17 +8828,33 @@ function _scheduleSprintPoll() {
   clearTimeout(_sprintTimer);
   _sprintTimer = setTimeout(async () => {
     if (!_ogrenmeAcik()) return;
-    try { await RENDER.hermes(); revealActive(true); } catch (e) {}   // re-render picks up fresh sprint status + re-arms poll if still active
+    // re-render picks up fresh sprint status + re-arms poll if still active
+    try { await RENDER.hermes(); revealActive(true); }
+    catch (e) {   // YASA 4 · işaretli yutma: bir POLL turu düşmesi bir olay değildir (sayfa değişmiş,
+                  // uç kısa süre meşgul olabilir). Sessiz kalmaz — yoklama yeniden kurulur ve bir
+                  // sonraki tur ya çizer ya da aynı yerden yine dener; durum kutusu ekranda kalır.
+      _scheduleSprintPoll();
+    }
   }, 5000);
 }
 window.sprintStart = async () => {
   const budget = +(($("sprint-budget") || {}).value || 12), k_max = +(($("sprint-kmax") || {}).value || 3);
   const btn = $("sprint-start"); if (btn) { btn.disabled = true; btn.textContent = "başlatılıyor… (kum havuzu kuruluyor)"; }
-  try { await apiFetch("/api/sprint/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ budget, k_max }) }); } catch (e) {}
+  // BOŞ `catch` KALKTI (v219): düşen bir başlatma düğmeyi süresiz "başlatılıyor…"da bırakıyordu —
+  // ekranda çalışıyormuş gibi görünen, aslında hiç başlamamış bir antrenman.
+  try { await apiFetch("/api/sprint/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ budget, k_max }) }); }
+  catch (e) {
+    eylemHatasiYaz("sprint-msg", e, "antrenman BAŞLAMADI — kum havuzu kurulmadı.");
+    if (btn) { btn.disabled = false; btn.textContent = "Antrenmanı başlat"; }
+    return;
+  }
   setTimeout(() => { if (_ogrenmeAcik()) RENDER.hermes().then(() => revealActive(true)); }, 800);
 };
 window.sprintStop = async () => {
-  try { await apiFetch("/api/sprint/stop", { method: "POST" }); } catch (e) {}
+  // BOŞ `catch` KALKTI (v219): "Durdur"a basıp koşmaya devam eden bir antrenman, operatörün
+  // durdurduğunu sandığı bir antrenmandır.
+  try { await apiFetch("/api/sprint/stop", { method: "POST" }); }
+  catch (e) { eylemHatasiYaz("sprint-msg", e, "antrenman DURMADI — koşmaya devam ediyor olabilir."); return; }
   setTimeout(() => { if (_ogrenmeAcik()) RENDER.hermes().then(() => revealActive(true)); }, 800);
 };
 
@@ -8826,7 +9072,8 @@ RENDER.hermes = async () => {
     const applyable = rc.action === "shadow" || rc.action === "activate";
     return `<div class="hyp"><div class="top"><span class="v">${esc(rc.skill)}</span><span class="st ${rc.action === 'shadow' ? 's-rb' : 's-ok'}">${esc(ACT_TR[rc.action] || rc.action)}</span></div>
       <p>${esc(rc.rationale || '')}</p>
-      ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>`
+      ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>
+        <p class="hint" data-eylem-msg="${esc(rc.skill)}" style="margin:6px 0 0"></p>`
                   : '<p class="hint" style="margin-top:4px">Bilgi amaçlı — bu araca daha çok yaslan.</p>'}</div>`;
   }).join("");
   $("ogrenme-eylem").innerHTML = eylemSeridi(d);
@@ -8903,14 +9150,31 @@ RENDER.hermes = async () => {
       <div class="lstack" style="margin-top:10px">${cards || '<div class="empty">Henüz öneri yok — "Şimdi düşün"e bas.</div>'}</div></div>
     ${op ? op.s3 + op.sOzDeg + op.sCark : `<div class="card rise"><div class="empty">MLOps, öz-değerlendirme ve öğrenme çarkı ölçülemedi — teşhis ucu okunamadı. Bu boşluk "mekanizma yok" DEĞİL, ölçüm YOK demektir.</div></div>`}
     ${firsatMaliyetKarnesi(d)}
+    ${hermesTelemetriKarti(d.integrations)}
     ${havuzKutusuHTML()}
     ${intCard(d.integrations)}`;
   if (d.sprint && d.sprint.active) _scheduleSprintPoll();        // live progress while a sprint runs
   if (d.status && d.status.reflecting) _hermesReflectPoll();     // live probe progress while a search runs
 };
 window.applySkillRec = async (skill, action) => {
-  try { await apiFetch("/api/skills/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ skill, action }) });
-    await RENDER.hermes(); revealActive(true); } catch (e) {}
+  // BOŞ `catch` KALKTI — BU TURUN ÖLÇÜLEN KUSURUNUN MERKEZİ (v219). L1'de uygulama kapısı
+  // `rec:{beceri}` kimliği için onay defterine bakar ve onay yoksa 409 + gövdede ≥20 karakterlik
+  // `[kimlik] gerekçe` döner (api.py `_ONAY_RET_NEDEN`). Eski gövde o reddi yutuyordu: operatör
+  // "Uygula"ya basıyor, sunucu gerekçesiyle reddediyor, EKRANDA HİÇBİR ŞEY OLMUYORDU. Kimlik
+  // gerekçenin İÇİNDE geliyor ve operatörün `POST /api/approvals/{id}`ye geçireceği dizge o —
+  // bu yüzden metin kırpılmadan basılır.
+  const kutu = eylemKutusu(skill);
+  if (kutu) kutu.innerHTML = `<span class="mut">uygulanıyor…</span>`;
+  try {
+    await apiFetch("/api/skills/apply", { method: "POST", headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ skill, action }) });
+  } catch (e) {
+    eylemHatasiYaz(kutu, e, (e && e.status === 409)
+      ? "ONAY KAPISI REDDETTİ — onay defterinde bu öneri kimliği için 'approve' satırı yok (ya da 'reject' var); eylem UYGULANMADI (fail-closed)."
+      : "eylem uygulanamadı — beceri durumunu tazeleyip doğrula.");
+    return;   // TAZELEME YOK: yeniden çizim mesajı siler ve ret yine görünmez olurdu
+  }
+  await _aktifSayfayiCiz();   // düğme Onaylar'da da var — sabit `RENDER.hermes()` görünmeyen sayfayı tazelerdi
 };
 window.hermesReflect = async () => {
   const btn = $("hbtn-reflect"), msg = $("hbtn-msg");
@@ -8952,8 +9216,11 @@ function _hermesReflectPoll() {
   }, 8000);
 }
 window.hermesCtl = async (action) => {
-  try { await apiFetch("/api/hermes/" + action, { method: "POST" }); await RENDER.hermes(); revealActive(true); }
-  catch (e) {}
+  // BOŞ `catch` KALKTI (v219): "Başlat"/"Durdur" düğmesi sunucu reddettiğinde de aynı görünüyordu
+  // ve beynin gerçek hâli yalnız bir sonraki tazelemede ortaya çıkıyordu.
+  try { await apiFetch("/api/hermes/" + action, { method: "POST" }); }
+  catch (e) { eylemHatasiYaz("hbtn-msg", e, `beyin kontrolü UYGULANMADI (${String(action || "?")}).`); return; }
+  await RENDER.hermes(); revealActive(true);
 };
 
 // ================= ayarlar / anahtarlar =================
@@ -9200,18 +9467,25 @@ window.alpacaSubmit = async () => {
   try {
     // HTTP DURUMU OKUNUR: eski hâl doğrudan `.json()`a geçiyordu, yani 401/500 bir yanıt gövdesi
     // döndürdüğünde arayüz onu BAŞARI gibi okuyordu (`r.submitted||0` → "0 emir gönderildi").
-    const r = await apiFetch("/api/alpaca/submit_armed", { method: "POST" });
+    // v219: DURUM BU SATIRDA OKUNMAYA DEVAM EDİYOR (`hamYanit`) — v195-a hükmü bu yüzeyin
+    // kendi hükmüdür: sonuç cümlesi kalıcı `_ALP_MSG` durumuna yazılır ve iki yeniden çizimden
+    // sağ çıkar; fırlatılan bir hata `finally`den önce o durumu kuramazdı.
+    const r = await apiFetch("/api/alpaca/submit_armed", { method: "POST", hamYanit: true });
     let body = {};
-    try { body = await r.json(); } catch (e) { body = {}; }
+    try { body = await r.json(); }
+    catch (e) { body = {}; }   // YASA 4 · işaretli yutma: gövde JSON değil; satır sayı uydurmaz, "—" basar
     alpMsgYaz(r.ok ? _alpSonucSatiri(body)
       : `<span class="neg">✗ HTTP ${r.status} — ${esc(body.detail || "sunucu sebep bildirmedi")}</span>`);
     // Kart tazelenir ama MESAJ HAYATTA KALIR: şablon `_ALP_MSG`i okuyor (bkz. beyanı).
     await RENDER.ayarlar(); revealActive();
   } catch (e) {
-    // AĞ HATASINDA "gönderilmedi" DEMEK UYDURMA OLURDU: istek uca ulaşmış ve emirler çıkmış
-    // olabilir; bilinen tek şey CEVABIN alınamadığıdır.
-    alpMsgYaz(`<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ölçülemedi;
-      emirler gitmiş olabilir, mutabakat bölümünden doğrula`);
+    // İKİ HÂL AYRIŞTIRILIR (v219 · `korumaKur` ile aynı gerekçe): sunucu CEVAP VERDİYSE reddin
+    // gerekçesi bilinir ve emir GİTMEMİŞTİR. AĞ koptuysa (durum kodu YOK) istek uca ulaşmış ve
+    // emirler çıkmış olabilir — bilinen tek şey CEVABIN alınamadığıdır.
+    alpMsgYaz(e && e.status
+      ? `<span class="neg">✗ ${esc(String(e.message))}</span> — sunucu REDDETTİ; emir gönderilmedi`
+      : `<span class="neg">✗ ${esc(String((e && e.message) || e))}</span> — sonuç ölçülemedi;
+         emirler gitmiş olabilir, mutabakat bölümünden doğrula`);
   } finally {
     const b = _btn();
     if (b && b.disabled) { b.disabled = false; b.textContent = ALP_GONDER_ETIKET; }
@@ -9223,8 +9497,10 @@ window.alpacaSubmit = async () => {
 async function _secretFetch(name, method, body) {
   const opt = { method, headers: {} };
   if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  // v219: elle `detail` çıkarma BURADAN KALKTI — `apiFetch` gövdedeki gerekçeyi zaten mesaja
+  // koyuyor ve o çıkarımın BOŞ `catch`i (gövde JSON değilse sessizce durum koduna düşerdi) tek
+  // yerde, işaretli olarak yaşıyor. İkinci bir kopya ilk düzenlemede ayrışırdı.
   const r = await apiFetch("/api/secrets/" + encodeURIComponent(name), opt);
-  if (!r.ok) { let m = "HTTP " + r.status; try { m = (await r.json()).detail || m; } catch (e) {} throw new Error(m); }
   return r.json();
 }
 window.saveSecret = async (name) => {
@@ -9296,6 +9572,99 @@ const FAZ6_TR = { edge_kaniti: "EDGE kanıtı", sonuc_hukmu: "SONUÇ hükmü", f
 //   · FAZ-6 beş kilidi (health.faz6_kilitleri) — gerçek-para/silahlanma ÖN-KOŞULU, fail-closed.
 // İkincisi kapalıyken merdivenin ilerlememesi bir ARIZA DEĞİL, tasarımdır — ve bu cümle panoda
 // hiçbir yerde yazmıyordu. Zincir yoksa satır hiç çizilmez (uydurma yok).
+// ---- KİLİDİN `olcum` SÖZLÜĞÜ — PANONUN İLK OKUYUCUSU (v219 · iş 3) --------------------------
+// ÖLÇÜLEN KUSUR: `health.faz6_kilitleri` her kilit için `{gecer, durum, olcum, esik, neden}`
+// üretiyor ve pano bugüne kadar YALNIZ `esik` + `neden` çiziyordu (ikisi de bir `title=`
+// ipucunun içinde). `olcum` sözlüğünün — n, ortalama bps, %95 CI, eşleşmeyen oranı, DSR,
+// pencere kimliği — hiçbir pano okuyucusu YOKTU. `test_faz5_cikis_v212`nin C-YASA6 testi bunu
+// bir çiviyle kayda geçirmişti ("pano `olcum`u okumuyor, o yüzden karar sayıları `neden`
+// metnine de yazılır") ve o çivi bilerek "pano okumaya başladığı gün kırılsın" diye kondu.
+// Bu tur onu kırar: sayı artık bir CÜMLENİN İÇİNDEN değil, ÖLÇÜMÜN KENDİSİNDEN okunuyor.
+//
+// DÖRT HÜCRE, BEŞ KİLİT: hücreler kilide göre değil SORUYA göre sabittir (ölçülen · örneklem ·
+// aralık · defter). Bir kilidin o sorusu yoksa hücre "veri yok" + GEREKÇE basar, SIFIR BASMAZ —
+// ÖLÇÜLEMEDİ ≠ 0 bu yüzeyin tek kuralı. Çubuk yalnız paydası BEYAN EDİLEBİLDİĞİNDE doğar
+// (`hucreCubuk`un kendi kapısı): tavanı olmayan bir sayacın (n_trials, defter satırı) doluluğu
+// çizilemez, çünkü çizilen doluluk uydurma bir tavana göre okunurdu.
+const _F6_BOS = n => ({ deger: null, meta: n });
+function kilitOlcumHucreleri(ad, k) {
+  const o = (k || {}).olcum;
+  const olculemedi = (k || {}).durum === "olculemedi";
+  // RENK YALNIZ ANOMALİDE (D1'in beş rolü): KAPALI bir kilit anomali DEĞİLDİR — zincir
+  // fail-closed'dır ve kapalılık tasarımın kendisi. Anomali olan, ÖLÇÜLEMEYEN kilittir.
+  const rz = olculemedi ? "ÖLÇÜLEMEDİ" : "";
+  const sf = olculemedi ? "warn" : "";
+  if (o == null) {
+    const n = "ölçüm sözlüğü uçtan GELMEDİ — alanın yokluğu 'sıfır' değil 'ölçülemedi' demektir";
+    return { olculen: { deger: null, meta: n, rozet: rz }, orneklem: _F6_BOS(n),
+             aralik: _F6_BOS(n), defter: _F6_BOS(n) };
+  }
+  // (a) EDGE / SONUÇ hükmü — `olcum` bir DİZGEdir: "geçen/toplam ölçüt".
+  if (typeof o === "string") {
+    const m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(o);
+    const gecen = m ? +m[1] : null, tum = m ? +m[2] : null;
+    return {
+      olculen: { deger: esc(o), degerSinif: sf, rozet: rz,
+                 oran: tum ? gecen / tum : null, payda: tum ? `${tum} ölçüt (HEPSİ geçmeli)` : "",
+                 meta: tum ? `${gecen} ölçüt geçti · ${tum - gecen} kaldı` : "hüküm dizgesi ayrıştırılamadı" },
+      orneklem: _F6_BOS("bu kilit ÖLÇÜT sayar, örneklem taşımaz — `olcum` alanında n yoktur"),
+      aralik: _F6_BOS("aralık yok: hüküm geçti/kaldı sayımıdır, nokta tahmini + CI üretmez"),
+      defter: _F6_BOS("defter satırı yok: hüküm `analytics` hesabından gelir, satır saymaz"),
+    };
+  }
+  // (b) OPERATÖR ONAYI — tek boole; ölçülebilir bir büyüklüğü YOK ve bu beyan edilir.
+  if ("intraday_arm" in o) {
+    return {
+      olculen: { deger: o.intraday_arm ? "SİLAHLI" : "SİLAHSIZ", degerSinif: o.intraday_arm ? "warn" : "",
+                 rozet: rz, meta: "state/INTRADAY_ARM · 1 bayrak (elle açılır, hiçbir otomatik yol açamaz)" },
+      orneklem: _F6_BOS("örneklem yok: bu kilit bir OPERATÖR kararıdır, bir ölçüm değil"),
+      aralik: _F6_BOS("aralık yok: bir bayrağın belirsizlik aralığı olmaz (0 ya da 1)"),
+      defter: { deger: "INTRADAY_ARM", meta: "kaynak: state/INTRADAY_ARM — 1 dosyanın varlığı" },
+    };
+  }
+  // (c) DSR — nokta tahmin + pencere kimliği + deneme sayısı.
+  if ("dsr" in o) {
+    return {
+      olculen: { deger: o.dsr == null ? null : trn(o.dsr, 4), degerSinif: sf, rozet: rz,
+                 meta: o.dsr == null ? "DSR ÖLÇÜLEMEDİ — yürürlükteki pencerede hesap kurulamadı (0 DEĞİL)"
+                                     : `deflated Sharpe · eşik ${esc(String(k.esik || "").slice(0, 60))}` },
+      orneklem: { deger: o.n_trials == null ? null : trn(o.n_trials),
+                  meta: o.n_trials == null ? "deneme sayısı yazılmamış — DSR'nin paydası bilinmiyor"
+                                           : "denenmiş aday (DSR düzeltmesinin girdisi)" },
+      aralik: _F6_BOS("aralık yok: DSR bir NOKTA tahminidir, bu ölçümde CI üretilmez"),
+      defter: { deger: o.pencere_id ? esc(String(o.pencere_id)) : null,
+                meta: o.pencere_id ? "yürürlükteki holdout penceresi (rotasyon kimliği)"
+                                   : "pencere kimliği gelmedi — hangi holdout'ta ölçüldüğü BİLİNMİYOR" },
+    };
+  }
+  // (d) FAZ-5 ÇIKIŞI — bu turun en kalabalık ölçümü (kart EXE-2026-002).
+  const c = o.cikis_olcumu || null;
+  const ci = c ? c.ci : null;
+  const es = c ? c.eslesmeyen : null;
+  const band = c && c.maliyet_bandi ? c.maliyet_bandi.ek_bps_giris : null;
+  return {
+    olculen: { deger: (c && c.ortalama_bps != null) ? `${trn(c.ortalama_bps, 1)} bps` : null,
+               degerSinif: sf, rozet: rz,
+               meta: (c && c.ortalama_bps != null)
+                 ? `eşleştirilmiş gölge−EOD farkı · E3 maliyet bandı ${trn(band, 1)} bps`
+                 : "ortalama ÖLÇÜLEMEDİ — eşleşmiş çift yok ya da hüküm kill listesinde durdu (0 DEĞİL)" },
+    orneklem: { deger: (c && c.n_eslesen != null) ? `${trn(c.n_eslesen)}/${trn(c.n_min)}` : null,
+                oran: (c && c.n_eslesen != null && c.n_min) ? c.n_eslesen / c.n_min : null,
+                payda: (c && c.n_min) ? `asgari eşleşmiş çift (n_min=${trn(c.n_min)})` : "",
+                meta: (c && c.n_eslesen != null)
+                  ? `${trn(c.n_eslesen)} eşleşmiş çift${es ? ` · eşleşmeyen ${trn(es.n)} (%${trn(100 * es.oran, 1)}, kill eşiği %${trn(100 * es.kill_esigi, 0)})` : ""}`
+                  : "eşleşmiş çift sayısı yok — defter/evren boş ya da eşleştirme kırık (kill#4)" },
+    aralik: { deger: (ci && ci.alt != null && ci.ust != null) ? `[${trn(ci.alt, 1)} · ${trn(ci.ust, 1)}]` : null,
+              meta: (ci && ci.alt != null)
+                ? `%${trn(100 * ci.seviye, 0)} CI · ${esc(String(ci.yontem || "yöntem yazılmamış"))} · B=${trn(ci.B)} · ${trn(ci.n_kume)} tarih kümesi`
+                : `aralık KURULAMADI — ${esc(String((ci && ci.neden) || "CI için yeterli tarih kümesi yok; aralıksız ortalama hüküm veremez"))}` },
+    defter: { deger: (o.intraday_shadow_orders_n == null) ? null
+                : `${trn(o.intraday_shadow_orders_n)}${c && c.n_evren != null ? `/${trn(c.n_evren)}` : ""}`,
+              meta: (o.intraday_shadow_orders_n == null)
+                ? "gölge defteri satır sayısı gelmedi — evren ölçülemedi"
+                : `4b gölge defteri satırı${c && c.n_evren != null ? " / DOLUM üretmiş satır (evren)" : ""} · 4a saha kaydı ${trn(o.intraday_decisions_n)}` },
+  };
+}
 function faz6Satiri(f) {
   if (!f || !(f.adlar || []).length) return "";
   const cips = f.adlar.map(ad => {
@@ -9306,6 +9675,25 @@ function faz6Satiri(f) {
   }).join(" ");
   const kapali = f.adlar.filter(ad => !((f.kilitler || {})[ad] || {}).gecer)
     .map(ad => FAZ6_TR[ad] || ad);
+  // ÖLÇÜM BLOĞU DETAY KATMANINDA: kilit çipi bir BAKIŞ yüzeyidir ("kaç/beş açık?"); beş kilidin
+  // yirmi hücresi o bakışı boğardı. Katman kapalı doğar ama GİZLEMEZ — açan operatör kilidin
+  // kapalılığının SAYISINI görür, "×" ile bir tooltip'i değil.
+  const olcumBloklari = f.adlar.map(ad => {
+    const k = (f.kilitler || {})[ad] || {};
+    const h = kilitOlcumHucreleri(ad, k);
+    return `<div style="margin-top:12px">
+      <p class="hint" style="margin:0 0 6px"><b>${esc(FAZ6_TR[ad] || ad)}</b>
+        <span class="mut">· ${esc(k.durum === "olculemedi" ? "ÖLÇÜLEMEDİ" : "ölçüldü")} ·
+        ${k.gecer ? "AÇIK" : "KAPALI"}</span></p>
+      ${ozetSerit([
+        ozetHucre("Ölçülen", h.olculen),
+        ozetHucre("Örneklem", h.orneklem),
+        ozetHucre("Aralık", h.aralik),
+        ozetHucre("Defter", h.defter),
+      ], "Faz-6 kilit ölçümü")}
+      <p class="hint" style="margin:6px 0 0"><b>Eşik:</b> ${esc(k.esik || "eşik yazılmamış")}</p>
+      ${k.neden ? `<p class="hint" style="margin:2px 0 0"><b>Gerekçe:</b> ${esc(k.neden)}</p>` : ""}</div>`;
+  }).join("");
   return `<div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
     <h3 class="t" style="font-size:13px">Gerçek-para tarafındaki ikinci kapı — Faz-6 kilit zinciri
       <span class="tx3" style="font-weight:400">(${f.n_acik ?? 0}/${f.n_kilit ?? 5} açık)</span></h3>
@@ -9313,8 +9701,12 @@ function faz6Satiri(f) {
       ve gerçek para AYRICA bu beş kilidi ister ve zincir <b>fail-closed</b>'dır: ölçülemeyen kilit
       KAPALI sayılır. Merdivenin burada durması bir arıza değil, kuralın kendisidir.</p>
     <p class="hint" style="margin-top:8px">${cips}</p>
-    ${kapali.length ? `<p class="hint"><b>Şu an kapalı:</b> ${esc(kapali.join(", "))} — çipin üstünde
-      her kilidin eşiği ve ölçülen gerekçesi yazılıdır.</p>` : ""}</div>`;
+    ${kapali.length ? `<p class="hint"><b>Şu an kapalı:</b> ${esc(kapali.join(", "))} — aşağıdaki
+      katman her kilidin EŞİĞİNİ, GEREKÇESİNİ ve ÖLÇÜLEN sayılarını açar.</p>` : ""}
+    ${detayKatmani("Kilit ölçümleri — beşinin de sayıları",
+      "`health.faz6_kilitleri[*].olcum` sözlüğü. Dört hücre kilide göre değil SORUYA göre sabittir; "
+      + "bir kilidin o sorusu yoksa hücre 'veri yok' + gerekçe basar, sıfır basmaz.",
+      olcumBloklari)}</div>`;
 }
 function ladderCard(L, faz6) {
   if (!L) return "";
@@ -9393,23 +9785,21 @@ $("gate-form").addEventListener("submit", async e => {
   }
   btn.disabled = true; msg.className = "gate-msg"; msg.textContent = "denetleniyor…";
   try {
-    const r = await apiFetch(kurulum ? "/api/setup-password" : "/api/login",
+    await apiFetch(kurulum ? "/api/setup-password" : "/api/login",
       { method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ password: pw }) });
-    if (!r.ok) {
-      // Sunucunun kendi cümlesi gösterilir (401 "parola hatalı", 429 kilit süresi, 400 kısa
-      // parola). Kendi metnimizi uydurmak, kilit süresi gibi GERÇEK bilgiyi saklardı.
-      const d = await r.json().catch(() => ({}));
-      msg.textContent = d.detail || `giriş başarısız (HTTP ${r.status})`;
-      btn.disabled = false; return;
-    }
     _oturumAcik = true;
     _PAROLA_KURULU = true;
     msg.className = "gate-msg ok"; msg.textContent = "girildi";
     kapiyiKapat();
     await baslat();
   } catch (err) {
-    msg.textContent = "sunucuya ulaşılamadı — çalışıyor mu?";
+    // İKİ HÂL AYRI CÜMLEDİR (v219): sunucu CEVAP VERDİYSE kendi cümlesi gösterilir (401 "parola
+    // hatalı", 429 kilit süresi, 400 kısa parola) — kilit süresi gibi GERÇEK bilgiyi kendi
+    // metnimizle örtmek, kapıyı okunamaz yapardı. Durum kodu yoksa gerçekten ulaşılamamıştır.
+    msg.textContent = (err && err.status)
+      ? (err.detay || `giriş başarısız (HTTP ${err.status})`)
+      : "sunucuya ulaşılamadı — çalışıyor mu?";
   } finally { btn.disabled = false; }
 });
 

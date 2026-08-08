@@ -452,16 +452,34 @@ def test_C_liste_KIRPMASI_beyanli_sayaclar_TAM(sandbox_state):
     assert e["adlar_kirpildi"] == 10 and e["sinif_dagilimi"] == {"eod_yok": 60}
 
 
-def test_C_YASA6_panonun_OKUDUGU_alanlar_sayiyi_tasiyor(sandbox_state):
-    """YASA 6 — OKUYUCUSUZ YAZIM YOK, ÖLÇÜLEREK. Pano (app.js) kilit çipinde YALNIZ `esik` ve
-    `neden` alanlarını çiziyor; `olcum` sözlüğünün BUGÜN hiçbir pano okuyucusu YOKTUR (bu, beş
-    kilidin HEPSİ için geçerli, bu turdan önce de öyleydi — pano turu ayrı). Bu yüzden ölçümün
-    KARAR SAYILARI `neden`/`esik` metnine de yazılır: aksi hâlde operatör panoda "×" görür ve
-    kaç/20 olduğunu ASLA öğrenemezdi."""
+def test_C_YASA6_pano_olcum_sozlugunu_GERCEKTEN_ciziyor(sandbox_state):
+    """YASA 6 — OKUYUCUSUZ YAZIM YOK, ÖLÇÜLEREK.
+
+    ESKİ BEYAN (v212, 2026-08-07): "pano kilit çipinde YALNIZ `esik`+`neden` çiziyor; `olcum`
+    sözlüğünün hiçbir pano okuyucusu YOK". Çivi bilerek TERS kurulmuştu (`"k.olcum" not in
+    appjs`) — "pano okumaya başladığı gün kırılsın, beyan bayatlamasın" diye.
+
+    v219 (DALGA W4-N5) onu kırdı ve çivi YÖN DEĞİŞTİRDİ: `faz6Satiri` artık beş kilidin her
+    birinin `olcum` sözlüğünü dört hücrelik bir özet şeridine çiziyor (`kilitOlcumHucreleri`).
+    Yeni hüküm: ölçüm GERÇEKTEN çiziliyor mu — ve `neden`/`esik` metni ikinci okuyucu geldi
+    diye SAYIYI BIRAKMIYOR mu? İkincisi hâlâ gerekli: çipin `title=` ipucu ile katmanı açmayan
+    operatörün gördüğü tek metin odur.
+
+    (Davranış tarafı — hücrelerin ÖLÇÜLEMEDİ≠0 ve payda-beyanı kuralları — Node'da
+    `tests/test_gorunurluk_v219.py`de koşturulur; burada YALNIZ okuyucunun VARLIĞI çivilenir.)"""
     appjs = (SRC / "web" / "app.js").read_text()
     assert "k.esik" in appjs and "k.neden" in appjs, "pano kilit çipi esik/neden okumuyor"
-    assert "k.olcum" not in appjs, (
-        "pano artık `olcum` sözlüğünü de okuyor — bu testin BEYANI bayatlamış, güncellenmeli")
+    # (1) OKUYUCU VAR ve kilit sözlüğünden besleniyor.
+    assert "function kilitOlcumHucreleri(" in appjs, "kilit ölçümünün pano okuyucusu YOK"
+    govde = appjs[appjs.index("function kilitOlcumHucreleri("):appjs.index("function faz6Satiri(")]
+    assert "(k || {}).olcum" in govde, "okuyucu kilidin `olcum` sözlüğünü almıyor"
+    # (2) BU MODÜLÜN ürettiği alanlar gerçekten okunuyor (hayalet alan değil).
+    for alan in ("cikis_olcumu", "n_eslesen", "n_min", "ortalama_bps", "eslesmeyen", "kill_esigi"):
+        assert alan in govde, f"pano `{alan}` alanını okumuyor — ölçüm yarım çiziliyor"
+    # (3) ÖLÇÜLEMEDİ ≠ 0: değeri olmayan hücre gerekçe yazar, sıfır yazmaz.
+    assert "deger: null" in govde and "0 DEĞİL" in govde, "ölçülemeyen dal sıfıra çöküyor"
+    # (4) ÜRETİCİ ÇAĞRILIYOR — çizilmeyen bir üretici, okumamakla aynı şeydir.
+    assert "kilitOlcumHucreleri(ad, k)" in appjs, "üretici kilit zincirinde çağrılmıyor"
 
     golge, eod = _kazanc_seti(n_gun=2, gun_basi=2, bps=30.0)
     _defter(golge)
