@@ -24,11 +24,43 @@ from fastapi.testclient import TestClient
 
 from meridian import api, config, obs, skills, store
 from meridian import skill_evolve as se
+from meridian.adapters import alpaca
 
 
 # ---------------------------------------------------------------------------------------------
 # fikstürler
 # ---------------------------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def _alpaca_tasima_kaydi_geri_alinir():
+    """`alpaca._TRANSPORT` MODÜL-GLOBALİDİR ve bu dosya kontrol uçlarına POST atıyor — bir uç
+    broker'a uzanırsa (`/api/control/cancel_open` → `alpaca.cancel_open_entries`) adaptör
+    `_note(False, ...)` ile kaydı `ok=False`a çeker ve BU TEST BİTTİKTEN SONRA da öyle kalır.
+
+    NEDEN ÖLÇÜLDÜ (2026-08-08, otoriter suite kırmızısı): `loop.reconcile_broker_state`
+    `alpaca.orders`/`positions` yamalanmış OLSA BİLE `alpaca.transport()["ok"]`i ayrıca sınar
+    (loop.py:1942, 1976) ve False görünce mutabakatı ERKEN döndürür. Sonuç: `test_regime_patch`
+    ve `test_robustness_patch` yalıtımda yeşil, bu dosyanın ARDINDAN kırmızı — klasik sıra
+    bağımlılığı. `conftest._MUTABLE_GLOBALS` yalnız `backtest.SECTORS`ı gözlüyor, yani bekçi bu
+    sızıntıya KÖRDÜ; kaydı bu dosya kendi kirletiyorsa kendi de geri almalı.
+
+    YERİNDE geri yüklenir (yeni dict ATANMAZ): adaptörün `_note`u globali kapatma yoluyla tutar,
+    yeni bir nesne bağlamak sıfırlamayı hiçbir şeye dokunmamış hale getirirdi (conftest'in
+    `_fmp._HEALTH` dersinin aynısı).
+
+    `obs._SUPPRESS_LOGGED` AYNI SINIFTAN ve aynı gerekçeyle burada: `/api/halt` bir ALARM ateşler,
+    alarm da jeton başına 6 saatlik SUSTURMA penceresini bu sözlüğe yazar. Bugün bir kırmızı
+    üretmiyor (ölçüldü: bisect'te `/api/halt` temiz çıktı) ama bırakılan pencere, bildirim
+    davranışını ölçen bir sonraki testi kendi kurmadığı bir susturmayla karşılaştırırdı —
+    kaydedilmemiş bir sıra bağımlılığı. İki kayıt da bu dosyanın açtığı, bu dosyanın kapattığı."""
+    onceki_tasima = dict(alpaca._TRANSPORT)
+    onceki_susturma = dict(obs._SUPPRESS_LOGGED)
+    yield
+    alpaca._TRANSPORT.clear()
+    alpaca._TRANSPORT.update(onceki_tasima)
+    obs._SUPPRESS_LOGGED.clear()
+    obs._SUPPRESS_LOGGED.update(onceki_susturma)
+
+
 def _istemci(monkeypatch):
     # `with` KULLANILMAZ: lifespan `_autostart()`i koşturur (zamanlayıcı/Hermes/ayna akışı).
     monkeypatch.setattr(api, "DASH_TOKEN", None)
@@ -331,8 +363,16 @@ def test_L1_revizyon_RETTI_onay_beklemez(sandbox_state, tmp_path, monkeypatch):
 def test_L1_riski_azaltan_yollar_onay_beklemez(sandbox_state, monkeypatch, yol):
     """HALT/acil-durdurma ailesi VAR OLAN riski azaltır. Deponun yazılı ilkesi (`koruma_kur`
     bloğu): "submit_armed YENİ RİSK ALIR, bu yol var olan riski AZALTIR". Acil durdurmayı bir
-    onay kuyruğunun arkasına koymak, kapının kendisini arızaya çevirirdi."""
+    onay kuyruğunun arkasına koymak, kapının kendisini arızaya çevirirdi.
+
+    BROKER ÇAĞRISI YAMALIDIR ÇÜNKÜ ÖLÇÜLEN ŞEY BROKER DEĞİL: soru "kapı bu yolu bloke ediyor mu"dur
+    ve cevabı uç, `alpaca`ya varmadan ÖNCE verir. Yamasız hâlde `/api/control/cancel_open` gerçek
+    HTTP denemesi yapıyordu; `_dis_ag_kapali` onu kesiyor, adaptör `_note(False, ...)` ile
+    `alpaca._TRANSPORT`i `ok=False`a çekiyor ve o kayıt test bitince de öyle kalıyordu (yukarıdaki
+    fikstürün kaydettiği kırmızı). Ağa hiç çıkmamak, geri almaktan iyidir."""
     _seviye(monkeypatch, 1)
+    monkeypatch.setattr(alpaca, "cancel_open_entries",
+                        lambda: {"ok": True, "cancelled": [], "kept": [], "foreign": []})
     c = _istemci(monkeypatch)
     r = c.post(yol, json={"on": True})
     assert r.status_code != 409, f"{yol} onay kapısına takıldı — riski azaltan yol bloke"
