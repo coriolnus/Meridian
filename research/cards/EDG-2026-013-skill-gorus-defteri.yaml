@@ -1,4 +1,4 @@
-card_id: EDG-2026-012
+card_id: EDG-2026-013
 family: skill_gorus_defteri_aktif_kume
 thesis: >
   Aktif skill kümesinin (yaşam-döngüsü-farkında kaynaktan okunur; sabit sayı YAZILMAZ — C10)
@@ -56,9 +56,14 @@ kill_criteria:
   - "çözücü girdisi (cf/exit_efficiency) kendi bekçisinde bayat/bozuk işaretliyse o yüzeyin
      hükmü VERİLMEZ (çöp-girdi çöp-hüküm zinciri kapalı)"
 
-k_registry: {registered_at: "2026-08-09T01:1x", trial_ids: [pending-EDG-012-gorus-v1]}
+k_registry: {registered_at: "2026-08-09T01:1x", trial_ids: [pending-EDG-013-gorus-v1]}
 
 status: registered   # 2026-08-09 Rol-1. Ölçüm kodu HENÜZ YAZILMADI — kart ön şart.
 #   Eşikler (FDR q=0.10 · |rank-IC|>=0.05 · n_min=30 · p95 +%10 · 40 seans kuruma · 3 pencere
 #   negatif→emeklilik) ÖLÇÜMDEN ÖNCE donduruldu; kill_criteria dokunulmaz. Beş yüzeyin ŞEMASI
 #   bu kartta, ölçümü yalnız İKİ yüzeyde — kalan üçü çözücüleriyle birlikte AYRI kart ister.
+
+# KİMLİK DÜZELTMESİ (2026-08-09, Rol-1): kart EDG-2026-012 olarak doğdu; o kimlik
+# EDG-2026-012-net-issuance.yaml'da ZATEN kullanılıyordu (Rol-1 kayıt sırasında kontrol
+# etmedi — W3 ajanı yakaladı). K defteri kart kimliğinden okunur; çakışma iki denemeyi tek
+# K'ya katlardı. Yeni kimlik EDG-2026-013; eşik/kill/içerik DEĞİŞMEDİ.

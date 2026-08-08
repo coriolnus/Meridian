@@ -1640,16 +1640,49 @@ def _realized_drawdown() -> dict:
 
     İKİ HÜKÜM TEK KAYNAKTAN OKUR: `result_verdict` (maks düşüş ölçütü) ve `edge_verdict` (kuyruk
     ölçütünün ilk bacağı) aynı fonksiyonu çağırır. İki ayrı hesap olsaydı iki hüküm aynı olgu
-    hakkında farklı şey söyleyebilirdi."""
+    hakkında farklı şey söyleyebilirdi.
+
+    ---- SERİ, KAPSADIĞI DÖNEMLE ETİKETLENİR (Ç1, 2026-08-09) -----------------------------------
+    ÖLÇÜLEN KUSUR (docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §4.1, canlı A1 2026-08-08 21:52Z):
+    `equity_curve.json`ın son noktası **2026-07-20 / 94.457,91$** — yani 19 gün geride VE 1 Ağustos
+    sermaye resetinden ÖNCEKİ tabanda. Bu bir arıza değil TASARIM: eğrinin tek canlı yazarları
+    `run.replay_seed` / `sermaye.uygula` / `mutation`dır ve `ledgerstamp.seed_boundary()` onu
+    DOĞRU okur — son nokta TOHUM SINIRIDIR. Kusur İKİNCİ TÜKETİCİDEYDİ: burası aynı noktaları
+    "GÜNCEL piyasaya-göre eğri" sanıp %8,04'ü hükme sokuyordu ve o sayı `EDGE_MAXDD_MAX`ı (0,08)
+    kıl payı aşarak bir Faz-6 KİLİDİNİ düşürüyordu. Yani canlı kâğıt döneminin (2026-07-21 →)
+    m2m düşüşü hükümde HİÇ yokken, tohum döneminin düşüşü güncelmiş gibi sayılıyordu.
+
+    DÜZELTME İLKESİ — EŞİĞE DOKUNULMADI: `EDGE_MAXDD_MAX`/`RESULT_MAXDD_MAX` bir hane bile
+    oynamadı. Değişen tek şey, serinin KAPSADIĞI DÖNEMİN ölçülmesi:
+      * seri kitabın işlediği seansı KAPSIYORSA → m2m bacağı ölçülür, davranış BİREBİR eskisi gibi;
+      * KAPSAMIYORSA → m2m bacağı **ÖLÇÜLEMEDİ**'dir. Bayat seriyle "kötüsü" HESAPLANMAZ, ama
+        görülen sayı da GİZLENMEZ: `bayat_seri_dd` alanında ADIYLA durur (değeri saklamak hükmü
+        denetlenemez yapardı — `_olcut`un aynı yasası);
+      * kitabın seansı OKUNAMIYORSA (analitik fikstürleri, defterisiz sandbox) dönem kapsaması
+        ÖLÇÜLEMEZ ve seri bayat SAYILMAZ — kuramadığımız bir dönemin dışında olmakla suçlamak,
+        dedektörün kendi körlüğünü bulguya çevirmek olurdu.
+    `max_dd` m2m bacağı ölçülemediğinde bir **ALT SINIRDIR** (`max_dd_alt_sinir=True`): ölçülmeyen
+    bacak 0 SAYILMAZ, "bilinmiyor" sayılır — ve tüketiciler (`edge_verdict`, `result_verdict`)
+    eşiği geçen bir ALT SINIRI "geçti" diye okuyamaz (bkz. oradaki hüküm kuralı).
+
+    DÖNEMİN REFERANSI KİTAPTIR (`portfolio.last_date`), defter değil: `trades.jsonl`in son kapanış
+    tarihi bir işlemin kapandığı gündür, motorun BUGÜN hangi seansta olduğunu söylemez; eğrinin
+    kapsaması gereken şey ikincisidir."""
     trades = _trades()
     kapali = score_mod.max_drawdown(score_mod.equity_curve(trades)) if trades else None
-    gunluk, n_gun = None, 0
+    gunluk, n_gun, seri_donem = None, 0, None
+    m2m_durum, m2m_neden = "yok", "günlük piyasaya-göre eğri diskte yok"
     try:
         pts = (store.read_json("equity_curve.json", None) or {}).get("points") or []
         seri = [float(v) for _, v in pts]
         n_gun = len(seri)
+        if pts:
+            seri_donem = [str(pts[0][0]), str(pts[-1][0])]
         if len(seri) >= 2:
             gunluk = score_mod.max_drawdown(seri)
+            m2m_durum, m2m_neden = "olculdu", ""
+        elif pts:
+            m2m_neden = "eğride 2'den az nokta var — düşüş hesaplanamaz"
     except (TypeError, ValueError, KeyError) as e:
         # YASA 4: günlük eğri okunamazsa düşüş SESSİZCE küçülür (yalnız kapanmış eğri kalır) ve
         # her iki hüküm de hak etmediği bir "SAGLANDI" alabilir. Davranış aynı (kapanmışa düş),
@@ -1658,14 +1691,43 @@ def _realized_drawdown() -> dict:
         obs.warn("mtm_curve_unreadable", error=f"{type(e).__name__}: {e}",
                  detail="günlük piyasaya-göre eğri okunamadı — maks düşüş yalnız kapanmış "
                         "işlemlerden ölçüldü (açık pozisyon düşüşü GİZLİ kalır)")
+        m2m_durum, m2m_neden = "okunamadi", f"eğri okunamadı: {type(e).__name__}"
+
+    # ---- DÖNEM KAPSAMASI ----------------------------------------------------------------------
+    defter_seansi = str((store.read_json("portfolio.json", {}) or {}).get("last_date") or "") or None
+    bayat_seri_dd, donem_kapsami = None, "olculemedi"
+    if seri_donem and defter_seansi:
+        donem_kapsami = "kapsiyor" if seri_donem[1] >= defter_seansi else "kapsamiyor"
+    if donem_kapsami == "kapsamiyor" and gunluk is not None:
+        bayat_seri_dd = round(gunluk, 4)
+        gunluk = None
+        m2m_durum = "donem_disi"
+        m2m_neden = (f"seri {seri_donem[0]} → {seri_donem[1]} dönemini kapsıyor; kitap "
+                     f"{defter_seansi} seansını işledi — CANLI döneme ait m2m serisi YOK, "
+                     f"bayat seriyle 'kötüsü' hesaplanmaz (o serinin düşüşü: {bayat_seri_dd})")
+
     adaylar = [x for x in (kapali, gunluk) if x is not None]
+    kaynak = ("kapanmış işlem eğrisi ile günlük piyasaya-göre eğrinin KÖTÜ olanı"
+              if gunluk is not None else
+              ("yalnız kapanmış işlem eğrisi — günlük eğri okunamadı" if m2m_durum == "okunamadi"
+               else f"yalnız kapanmış işlem eğrisi — günlük m2m bacağı ÖLÇÜLEMEDİ ({m2m_neden})"))
     return {"max_dd": None if not adaylar else round(max(adaylar), 4),
             "kapali_islem_dd": None if kapali is None else round(kapali, 4),
             "gunluk_m2m_dd": None if gunluk is None else round(gunluk, 4),
             "n_islem": len(trades), "n_gun": n_gun,
-            "kaynak": ("kapanmış işlem eğrisi ile günlük piyasaya-göre eğrinin KÖTÜ olanı"
-                       if gunluk is not None else
-                       "yalnız kapanmış işlem eğrisi — günlük eğri okunamadı")}
+            # ÖLÇÜLEMEYEN BACAK 0 DEĞİL: `max_dd` o hâlde bir ALT SINIRDIR ve tüketiciler bunu
+            # okumak ZORUNDADIR — eşiği geçen bir alt sınır "geçti" hükmü doğurmaz.
+            # KAPSAM BEYANI (bilinçli, dar): bayrak YALNIZ `donem_dısı` hâlinde kalkar — yani
+            # VAR OLAN bir seri YANLIŞ DÖNEMİ anlatırken. "Eğri hiç yok" ve "eğri okunamadı"
+            # hâlleri AYNI SINIFTAN olsa da bu turda DEĞİŞTİRİLMEDİ: ikisi de zaten kendi
+            # gerekçeleriyle beyanlı (YASA 4 uyarısı + `kaynak` metni) ve bugünkü hükümlerin
+            # tabanı onların üstünde duruyor; bayrağı oraya genişletmek Ç1'in ölçtüğü kusuru
+            # değil, hüküm tabanının tamamını oynatırdı. Ölçülen kusur BAYAT SERİDİR.
+            "max_dd_alt_sinir": bool(m2m_durum == "donem_disi"),
+            "m2m_durum": m2m_durum, "m2m_neden": m2m_neden,
+            "seri_donem": seri_donem, "defter_seansi": defter_seansi,
+            "donem_kapsami": donem_kapsami, "bayat_seri_dd": bayat_seri_dd,
+            "kaynak": kaynak}
 
 
 # ---- BLOK BOOTSTRAP (Hafta 3a) ----------------------------------------------------------------
@@ -1931,6 +1993,9 @@ def edge_verdict() -> dict:
     kuyruk_kaynak = "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
     kuyruk_ek = {"n": len(_rs), "max_dd": dd["max_dd"], "dd_kaynak": dd["kaynak"],
                  "kapali_islem_dd": dd["kapali_islem_dd"], "gunluk_m2m_dd": dd["gunluk_m2m_dd"],
+                 "max_dd_alt_sinir": dd["max_dd_alt_sinir"], "m2m_durum": dd["m2m_durum"],
+                 "m2m_neden": dd["m2m_neden"], "seri_donem": dd["seri_donem"],
+                 "defter_seansi": dd["defter_seansi"], "bayat_seri_dd": dd["bayat_seri_dd"],
                  "cvar5_r": (cv or {}).get("cvar5_r"), "var5_r": (cv or {}).get("var5_r"),
                  "kuyruk_n": (cv or {}).get("kuyruk_n"), "en_kotu_r": (cv or {}).get("en_kotu_r"),
                  "isaret": (cv or {}).get("isaret"),
@@ -1941,10 +2006,27 @@ def edge_verdict() -> dict:
     if len(_rs) < EDGE_TAIL_N_MIN or dd["max_dd"] is None or cv is None:
         kuyruk = _olcut("olculemedi", _kdeger, kuyruk_esik, kuyruk_kaynak, **kuyruk_ek)
     else:
-        _dd_ok = dd["max_dd"] <= EDGE_MAXDD_MAX
+        # ALT SINIR HÜKMÜ (Ç1, 2026-08-09) — EŞİĞE DOKUNULMADI, OKUMA DÜRÜSTLEŞTİRİLDİ.
+        # m2m bacağı ölçülemediğinde `max_dd` KAPANMIŞ bacaktan gelen bir ALT SINIRDIR; gerçek
+        # düşüş bundan yalnız KÖTÜ olabilir (yasanın kendisi "kötü olanı" der). Üç hâl:
+        #   * alt sınır eşiği ZATEN AŞIYORSA → hüküm KESİNDİR: kaldı (eksik bacak iyileştiremez);
+        #   * CVaR bacağı düşüyorsa → yine KESİN: kaldı (bağlaç VE, biri diğerini affetmez);
+        #   * alt sınır eşiğin altında AMA yalnız alt sınırsa → "geçti" DENEMEZ, ÖLÇÜLEMEDİ.
+        # Ölçülmeyen bacağı 0 saymak tam olarak bugüne kadarki sessiz kusurdu; onu "kaldı" saymak
+        # ise ölçülmemiş bir başarısızlık UYDURMAK olurdu (3. ve 4. ölçütün aynı sınırı).
+        _dd_asti = dd["max_dd"] > EDGE_MAXDD_MAX
         _cv_ok = cv["cvar5_r"] >= EDGE_CVAR5_MIN_R
-        kuyruk = _olcut("gecti" if (_dd_ok and _cv_ok) else "kaldi", _kdeger,
-                        kuyruk_esik, kuyruk_kaynak, dd_bacagi=bool(_dd_ok),
+        _alt = bool(dd["max_dd_alt_sinir"])
+        if _dd_asti or not _cv_ok:
+            _durum = "kaldi"
+        elif _alt:
+            _durum = "olculemedi"
+        else:
+            _durum = "gecti"
+        # `dd_bacagi` ÜÇ DEĞERLİ OLDU: True (ölçüldü, geçti) / False (ölçüldü, aştı) / None
+        # (ölçülemedi — pano `null`ı zaten "mut" rengiyle çiziyor, app.js:4944 üçlü dalı hazır).
+        kuyruk = _olcut(_durum, _kdeger, kuyruk_esik, kuyruk_kaynak,
+                        dd_bacagi=(False if _dd_asti else (None if _alt else True)),
                         cvar_bacagi=bool(_cv_ok), **kuyruk_ek)
 
     criteria = {"skor_sonuc": skor, "spy_ustu": spy, "tahmin_isabeti": ph_olcut,
@@ -2242,13 +2324,26 @@ def result_verdict() -> dict:
     dd = _realized_drawdown()
     dd_esik = f"gerçekleşen maks düşüş <= {RESULT_MAXDD_MAX} (n >= {RESULT_N_MIN})"
     dd_ek = {"n": n, "kapali_islem_dd": dd["kapali_islem_dd"], "gunluk_m2m_dd": dd["gunluk_m2m_dd"],
-             "n_gun": dd["n_gun"], "dd_kaynak": dd["kaynak"], "anlamlilik_hesabi": False}
+             "n_gun": dd["n_gun"], "dd_kaynak": dd["kaynak"],
+             "max_dd_alt_sinir": dd["max_dd_alt_sinir"], "m2m_durum": dd["m2m_durum"],
+             "m2m_neden": dd["m2m_neden"], "seri_donem": dd["seri_donem"],
+             "defter_seansi": dd["defter_seansi"], "bayat_seri_dd": dd["bayat_seri_dd"],
+             "anlamlilik_hesabi": False}
     if not yeterli or dd["max_dd"] is None:
         dd_olcut = _olcut("olculemedi", dd["max_dd"], dd_esik,
                           "kapanmış işlem + günlük piyasaya-göre sermaye eğrisi", **dd_ek)
     else:
-        dd_olcut = _olcut("gecti" if dd["max_dd"] <= RESULT_MAXDD_MAX else "kaldi", dd["max_dd"],
-                          dd_esik, "kapanmış işlem + günlük piyasaya-göre sermaye eğrisi", **dd_ek)
+        # ALT SINIR HÜKMÜ — EDGE'in kuyruk bacağıyla BİREBİR aynı kural (Ç1, 2026-08-09).
+        # İki hüküm aynı olgu hakkında farklı şey söyleyemez: `_realized_drawdown` tek kaynaktı,
+        # okuma kuralı da tek olmak zorunda.
+        if dd["max_dd"] > RESULT_MAXDD_MAX:
+            _dur = "kaldi"
+        elif dd["max_dd_alt_sinir"]:
+            _dur = "olculemedi"
+        else:
+            _dur = "gecti"
+        dd_olcut = _olcut(_dur, dd["max_dd"], dd_esik,
+                          "kapanmış işlem + günlük piyasaya-göre sermaye eğrisi", **dd_ek)
 
     # --- 4) TOPLAM NET PnL vs ÖDENEN FRİKSİYON --------------------------------------------------
     net = round(sum(pnls), 2) if n else None

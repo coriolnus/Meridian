@@ -423,6 +423,14 @@ DECLARED_SINKS: dict[str, str] = {
     # kalırdı. Muafiyet işi bittikten sonra da yerinde dursaydı liste "kimsenin bakmadığı çöplüğe"
     # dönerdi (bu sözlüğün kendi kuralı; aynı gerekçeyle finviz_universe ve learning_loop_open çıktı).
     "ownership_state.json": "sahiplik dedektörünün önceki ölçümü — aynı gerekçe",
+    "entity_damga.json": "damgasız-yazım dedektörünün önceki ölçümü (SB-4, 2026-08-09): izlenen "
+                         "belgenin (rev/updated_at) damgası + içerik sha256'sı. `watchdog."
+                         "kitap_damga_report` yazar ve okur — aynı modül, yani statik graf DIŞ "
+                         "okuyucu göremez; `watchdog_alarmed`/`ownership_state` ile BİREBİR aynı "
+                         "sınıf ve aynı gerekçe. Dışarıya çıkan şey dosya DEĞİL, DATA_QUALITY "
+                         "alarmıdır: 'kitap bu tur store kapısı DIŞINDAN değişti'. Kalıcı olmak "
+                         "ZORUNDA — kıyas iki POLL ARASINDADIR (300 sn) ve süreç yeniden başlarsa "
+                         "bellek-içi bir taban 2026-08-04 sınıfı bir yazımı sessizce yutardı",
     "bars_fingerprint.json": "bar dosyalarının parmak izi; determinizm dedektörünün karşılaştırma tabanı",
 
     # --- eleme muhasebesi: BEYAN 2026-08-08'de GERÇEKLE DEĞİŞTİRİLDİ (B-4) ---------------------

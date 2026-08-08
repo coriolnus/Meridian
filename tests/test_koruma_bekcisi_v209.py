@@ -239,7 +239,13 @@ def test_korumasiz_pozisyon_sev1_alarmi_uretir_ve_MANDALLANIR(ayna, monkeypatch)
     assert len(al) == 4, f"dört korumasız pozisyon, {len(al)} alarm"
     a = next(x for x in al if x.get("ticker") == "NUE")
     assert a["sev"] == "sev-1" and a["kind"] == "korumasiz_pozisyon"
-    assert a["alarm"] == obs.ALARM_MIRROR_DRIFT     # teslim edilen jeton sınıfı (NOTIFY_TOKENS)
+    # JETON AYRIMI (N1, 2026-08-09): v209 burada `MIRROR_DRIFT`i ÖDÜNÇ alıyordu ve bedelini kendi
+    # docstring'ine yazmıştı — `obs._maybe_notify`in 6 saatlik susturma penceresi JETON BAŞINADIR,
+    # yani gürültülü bir mutabakat gecesinde ADET SAPMASI alarmları bu sev-1 alarmın TESLİMATINI
+    # bastırabiliyordu. Ödünç bitti; `obs.ALARM_NAKED_POSITION` `NOTIFY_TOKENS` türetmesine
+    # kendiliğinden girer (obs.py:98). Pencerenin ARTIK paylaşılmadığının davranışsal çivisi:
+    # tests/test_dalga_w1_v216.py::test_N1_iki_alarm_ARTIK_AYNI_susturma_penceresini_paylasmaz
+    assert a["alarm"] == obs.ALARM_NAKED_POSITION    # teslim edilen jeton sınıfı (NOTIFY_TOKENS)
     assert a["korumasiz"] == 4 and a["toplam"] == 4 and a["payda_beyani"]
     assert "KORUMASIZ POZİSYON" in str(a.get("message", "")) + str(a.get("event", ""))
     # MANDAL: aynı olgu ikinci poll'da TEKRAR anlatılmaz

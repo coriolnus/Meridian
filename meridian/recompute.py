@@ -251,6 +251,40 @@ def report(deep: bool = False) -> dict:
                                 else " — panoda gösterilen eğri kitabı temsil ETMİYOR"),
                              "equity_curve.json[-1] + sermaye reset ofseti", "portfolio.cash"))
 
+    # 3b) TABAN KAYMASI — kitabın ZIMNİ tabanı, BEYAN EDİLMİŞ tabanla aynı mı? (SB-3, 2026-08-09)
+    #    A: realized_pnl − Σ trades.pnl_dollars  (kitabın zımni tabanı — "defterin dışından gelen $")
+    #    B: sermaye.ofset()                      (beyan edilmiş taban — operatörün YAZILI kaydı)
+    #
+    #    NE EKLER: yukarıdaki üç kimlik tabanı hep bir DÜZELTME TERİMİ olarak taşıyordu; hiçbiri onu
+    #    ADIYLA YAYIMLAMIYORDU. "Kitabın tabanı bugün kaç dolar ve bunun ne kadarı beyanlı?"
+    #    sorusunun makine-okunur bir cevabı yoktu — 2026-08-04 soruşturmasının ilk yarısı tam olarak
+    #    bu sayıyı elle yeniden kurmakla geçti.
+    #
+    #    NE EKLEMEZ — VE BU BEYAN EDİLİYOR (B3 önerisinin ölçülen kusuru): bu satır 2026-08-04'ün
+    #    TERS ONARIMINI YAKALAYAMAZ ve yakalayamadığı için susturulmuyor, adlandırılıyor. O gün
+    #    beyan ZATEN silinmişti (ofset 0) ve onarım kitabı defterin eski tabanına çekerken
+    #    DENKLEMİN İKİ TARAFINI birlikte taşıdı: A = 0, B = 0 → satır YEŞİL. Bu bir uygulama hatası
+    #    değil YAPISAL bir sınırdır — tek bir ANIN kimliği, iki tarafı birlikte kaydıran bir yazımı
+    #    tanım gereği göremez (`tests/test_bayat_sermaye_koku_v213.py::test_ters_onarilmis_kitap_
+    #    uc_kimligi_de_YESIL_birakir` aynı olguyu üç kimlik için çiviliyor).
+    #    O VAKAYI YAKALAYAN SATIR BAŞKA BİR YERDE VE VAR: `watchdog.monotonicity_report`ın
+    #    `sermaye_taban` sayacı AYNI büyüklüğü ZAMAN İÇİNDE izler; zımni taban normal işletimde
+    #    SABİTTİR (kapanan her işlem iki tarafı eşit artırır) ve yalnız bir beyanla YÜKSELİR, yani
+    #    düşmesi tanım gereği beyansız bir taban kaymasıdır. 08-04'te 5.542,09 → 0,0 düşerdi.
+    #    Bu satır o sayacın YAYIMLANMIŞ hâlidir: dedektör orada, okunabilirlik burada.
+    if trades:
+        a = round(_f(pf.get("realized_pnl")) - sum(_f(t.get("pnl_dollars")) for t in trades), 2)
+        b = round(_ofs, 2)
+        rows.append(_row("taban_kaymasi", abs(a - b) <= MONEY_TOL, a, b,
+                         f"kitabın zımni tabanı {a:,.2f}$ · beyanlı taban {b:,.2f}$"
+                         + ("" if abs(a - b) <= MONEY_TOL
+                            else f" — {abs(a-b):,.2f}$ BEYANSIZ taban: kitabın defterden sapan "
+                                 f"kısmını açıklayan bir kayıt YOK")
+                         + "  · bu satır TEK ANIN kimliğidir; tabanın ZAMAN İÇİNDE kaymasını "
+                           "`watchdog.monotonicity_report.sermaye_taban` izler",
+                         "portfolio.realized_pnl − Σ trades.pnl_dollars",
+                         "sermaye.ofset() (portfolio.sermaye_resetleri)"))
+
     # 4) KARNE ↔ DEFTER — karnedeki işlem sayısı defterin uzunluğuna eşit mi?
     #    Karne, terfi/geri-alma kararlarının dayanağı: yanlış n, yanlış skor demektir.
     sb = store.read_json("scoreboard.json", {}) or {}

@@ -24,6 +24,11 @@ import meridian.scheduler as _sch_mod
 import meridian.adapters.constituents as _con_mod
 import meridian.adapters.shortinterest as _si_mod
 import meridian.adapters.fmp as _fmp_mod
+# v215 SINIF-KAPAMASI (2026-08-09): iki modül daha. Marjinal ithal maliyeti ÖLÇÜLDÜ — dördünün
+# 0,215 sn'sinin üstüne 0,0008 sn (ikisi de zaten `config`/`httpx` üzerinden dolaylı yüklüydü) ve
+# ikisinin de modül düzeyinde G/Ç yan etkisi yok.
+import meridian.adapters.alpaca as _alp_mod
+import meridian.obs as _obs_mod
 
 # (modül, öznitelik) — hepsi SÖZLÜK ve hepsi YERİNDE sıfırlanır (clear+update): yeni bir dict
 # atamak, o sözlüğe başka modüllerden tutulan referansları koparır ve sıfırlama hiçbir şeye
@@ -48,6 +53,24 @@ _MODUL_DURUMLARI = (
     # yalnız o mekanizmanın bugün ateşlediği bir testin bulunmuş olması.
     (_con_mod, "_HEALTH"),
     (_si_mod, "_HEALTH"),
+    # alpaca._TRANSPORT — KANITLI VAKA, OTORİTER SUITE KIRMIZISI (2026-08-08). `tests/
+    # test_onay_kapisi_v215.py` kontrol uçlarına POST atıyor; bir uç broker'a uzanınca adaptör
+    # `_note(False, …)` ile taşıma kaydını `ok=False`a çekiyor ve kayıt DOSYA BİTİNCE de öyle
+    # kalıyordu. `loop.reconcile_broker_state` `alpaca.orders`/`positions` YAMALANMIŞ OLSA BİLE
+    # `alpaca.transport()["ok"]`i AYRICA sınar (loop.py:1942, 1976) → `test_regime_patch` ve
+    # `test_robustness_patch` yalıtımda yeşil, v215'in ARDINDAN kırmızı. v215 kendi dosya-yerel
+    # fikstürüyle kendi kirini geri alıyor (ve almalı — açan kapatır), ama SINIF orada kapanmaz:
+    # taşıma kaydını kirleten bir SONRAKİ dosya aynı fikstürü yeniden yazmak zorunda kalırdı.
+    # Kaynağa taşındı; `scheduler._state`in 2026-08-02'de izlediği yolun aynısı.
+    (_alp_mod, "_TRANSPORT"),
+    # obs._SUPPRESS_LOGGED — AYNI SINIF, KANIT DÜZEYİ FARKLI ve bu beyan edilir: bir kırmızı test
+    # GÖZLENMEDİ (v215 ölçtü, `/api/halt` bisect'te temiz çıktı). Mekanizma yine de birebir aynı:
+    # her alarm jeton başına 6 saatlik SUSTURMA penceresini bu sözlüğe yazar (obs.py:148-152), yani
+    # alarm ateşleyen bir test, bildirim davranışını ölçen bir SONRAKİ testi kendi kurmadığı bir
+    # susturmayla karşılaştırır. `tests/test_alarm_delivery_v71.py:177` bunu bugün tek satırlık bir
+    # `monkeypatch.setattr(obs, "_SUPPRESS_LOGGED", {})` ile kendi başına çözüyor — yani sızıntı
+    # zaten BİLİNİYOR, yalnız tek yerden kapatılmamıştı.
+    (_obs_mod, "_SUPPRESS_LOGGED"),
 )
 _MODUL_DURUMU0 = {f"{m.__name__}.{a}": dict(getattr(m, a)) for m, a in _MODUL_DURUMLARI}
 

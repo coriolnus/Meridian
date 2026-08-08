@@ -45,6 +45,17 @@ ALARM_AUTHORITY = "AUTHORITY_CHANGE"       # bir mekanizmanın yetkisi açıldı
 # sınıfıdır: DATA_QUALITY "veri bozuk" der, MECHANISM_STALE "mekanizma üretmiyor" der — ikisi de
 # "mekanizma çalıştı ve sonuç sözleşmenin başarısızlık eşiğinin altında" demez.
 ALARM_GOAL_FAILURE = "GOAL_FAILURE"        # realized_30d < goal.failure_below — sözleşme hükmü
+# KORUMASIZ POZİSYON KENDİ JETONUNU HAK EDER (N1, 2026-08-09 — operatör kararı; v209'da ölçülüp
+# ertelenmişti). `watchdog.check_koruma_and_alarm` v209'da MIRROR_DRIFT jetonunu ÖDÜNÇ alıyordu
+# çünkü o tur `obs.py` yazım kapsamı dışındaydı ve listede olmayan bir jeton yazılıp operatöre HİÇ
+# ulaşmazdı (NOTIFY_TOKENS türetmesi, aşağıda). Ödüncün BEDELİ o gün ölçülmüş ve docstring'e
+# yazılmıştı: `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa), yani gürültülü bir
+# mutabakat gecesinde ADET SAPMASI alarmları pencereyi doldurup KORUMASIZ POZİSYON alarmının
+# TESLİMATINI bastırabiliyordu. İki olgu ayrı: "ayna kitabın söylediği adette değil" bir MUHASEBE
+# sapmasıdır, "pozisyonun broker'da canlı stop'u yok" bir SERMAYE riskidir (sev-1) ve birincisi
+# ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu
+# kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır.
+ALARM_NAKED_POSITION = "NAKED_POSITION"    # açık pozisyonun broker'da canlı koruyucu stop'u YOK
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"
