@@ -178,26 +178,26 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   (`ENTRY_TIF_ALLOWED`), bayat tetik günlük `cancel_open_entries()` kadansına taşındı. v209
   koruma bekçisi (300 sn, sev-1, payda-beyanlı) + v211 operatör-onaylı OCO yeniden-kurma yolu.
   Operatör 08-07'de panodan onayladı; dört pozisyonda OCO/gtc doğrulandı.
-- **🔴 B4 — DAMGASIZ YAZIM BEKÇİSİ (Rol-1 önerisi, EN ÖNCELİKLİ):** ölçüldü ki `portfolio.json`
+- **🔴 SB-4 — DAMGASIZ YAZIM BEKÇİSİ (Rol-1 önerisi, EN ÖNCELİKLİ):** ölçüldü ki `portfolio.json`
   `store` kapısı DIŞINDAN değişebiliyor — 08-04'teki kitap yazımında `entity_meta.rev` hiç
   ilerlemedi (o gün yalnız iki `_save_broker`, ikisi de kanıtlı). Yani denetim zincirinin bir
   deliği var ve bugün onu gören hiçbir şey yok. Tasarım: tur başı/sonu `entity_stamp` kıyası →
   "kitap bu tur DIŞARIDAN değişti" alarmı. **Bu kalem bir sermaye kalemi değil, bir DENETİM
   kalemidir** — kitap izsiz değişebiliyorsa hiçbir sermaye ölçümü kendi tabanına güvenemez.
-- **🔴 B3 — `taban_kaymasi` satırı (en ucuz, B4'ten hemen sonra):** `recompute`e dördüncü satır
+- **🔴 SB-3 — `taban_kaymasi` satırı (en ucuz, SB-4'ten hemen sonra):** `recompute`e dördüncü satır
   `realized_pnl − (Σ trades + ofset)`; + `monotonicity_report` tabanına beyan ölçüsü. 08-04
   vakasında bu satır olsaydı ters onarım ANINDA görünürdü.
-- **📋 B1 — plan başına BOYUT MAKBUZU:** `eq_kaynak` (eq_now|nabiz) · `eq_now` · `peak` ·
+- **📋 SB-1 — plan başına BOYUT MAKBUZU:** `eq_kaynak` (eq_now|nabiz) · `eq_now` · `peak` ·
   `size_mult` · `kitap_rev` · `beyan_n/ofset`. `entry_law` deseniyle, `_save_broker`ın 14. anahtarı.
   Gerekçe: 08-05 sapmasını çözmek üç ayrı deftere bakmayı gerektirdi; makbuz tek satırda söylerdi.
-- **📋 B2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** `boyutlama_tabani` / `derisk_carpani` /
+- **📋 SB-2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** `boyutlama_tabani` / `derisk_carpani` /
   `sermaye_kaynagi` / `kitap_kaydi` / `beyan_kaydi` / `icra` / `olculemedi`. Ölçülen gerekçe:
   08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı ve HİÇBİRİ sebebi adlandırmadı — belirti görüldü,
   sınıf söylenmedi. Aynı jeton koruma alarmıyla da paylaşılıyor (6 saatlik susturma penceresi
   ortak) → ayrı `NAKED_POSITION` jetonu operatör kalemi (obs.py NOTIFY_TOKENS, bir satır).
 - **ÖLÇÜLEMEDİ (kapanmadı, beyanlı):** 08-04 kitap yazımını KİM yaptı. Kanıtın yokluğu ölçüldü
   (damgasız). Dışlananlar: replay_seed · iade betiği · ikinci `sermaye --uygula` · migrated
-  kopyası · dağıtım/restart/litestream · hermes/api/arm yamaları. B4 bu soruyu GELECEKTE
+  kopyası · dağıtım/restart/litestream · hermes/api/arm yamaları. SB-4 bu soruyu GELECEKTE
   cevaplanabilir kılar; geçmiş vaka için kanıt yok ve uydurulmayacak.
 - **🔒 OPERATÖR — melez pozisyonlar:** iç defter 54/64/43/33, ayna 25/37/22/22 (ayna hedef riskin
   ~%49'unu taşıyor; taban yerinde olsaydı 51/76/45/45 giderdi). Korumalar DOĞRU tarafa (broker
@@ -243,7 +243,10 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   KAPISI 3/3 — ama İKİ YÖNTEM ONARIMINDAN SONRA (ilk koşu 1/3; alan-düzeyi merceği + taint
   yayılımı eklendi; raporda beyanlı). Sayım: `davranissal` 92 · `yalniz-gorunurluk` 14 (13 meşru,
   1 şüpheli) · `tuketicisiz` 1 · `ureticisisiz` 0. Sistem BÜYÜK ORANDA KABLOLU — bulgular kenarda:
-  · **B-1 (YÜKSEK):** `goal.yaml`'da 4 beyansız ölü düğme (`backtest_gate`/`session_tz`/`style`/
+  (NUMARALAMA NOTU: buradaki B-1..B-7 TARAMA bulgularıdır; WP-S'teki B1-B4 bayat-sermaye turunun
+  BEKÇİ önerileridir — iki ayrı dizi, çakışma tesadüfi. Bekçi dizisi bundan sonra SB-1..SB-4
+  diye anılır.)
+  · **✅ B-1 (KAPANDI 426b998):** `goal.yaml`'da 4 beyansız ölü düğme (`backtest_gate`/`session_tz`/`style`/
     `schema_version`) — tek eşleşme `guard.py:15-17 GOAL_KEYS` üyeliği, değeri kimse okumuyor.
     K1'in (2026-07-30) bulduğu `explore_rate`/`kill_switch_file` sınıfının kaçmış dördü.
     `backtest_gate: true` en ağırı: kapı sözü veriyor, davranış yok. Rol-1 doğruladı.
@@ -254,9 +257,9 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
     çözülür ya adlandırılmış `UNRESOLVED_REASONS` kovasına düşer + `access_patterns` census;
     unresolved 15→21 (körlük görünür oldu). Rapora DÜZELTME bloğu eklendi; ders: kalibrasyon
     yalnız bilinen-pozitifleri sınıyordu, bilinen-NEGATİF kapısı da gerekir.
-  · **B-3 (ORTA):** `one_variable_only` YAPIŞIK düğme — kural koşulsuz (`guard.py:134`), anahtar
+  · **✅ B-3 (KAPANDI 426b998, K1 deyimiyle beyanlandı):** `one_variable_only` YAPIŞIK düğme — kural koşulsuz (`guard.py:134`), anahtar
     yalnız hata METNİNDE geçiyor; kapatılamaz bir şeyi düğme gibi beyan ediyor. Rol-1 doğruladı.
-  · **B-4 (ORTA):** `sieve.json` muafiyet beyanı BAYAT — "tek okuyucusu kendi testi" diyor, oysa
+  · **✅ B-4 (KAPANDI d1c40e9, v214 `stale_claims()`):** `sieve.json` muafiyet beyanı BAYAT'tı — "tek okuyucusu kendi testi" diyor, oysa
     `api.py:3202→2232` üzerinden TERFİ HÜKMÜNE giriyor; `stale_sinks` bunu yapısal göremiyor.
   · **B-5 (ORTA):** `state/intraday_bars/<gün>.jsonl` tek gerçek ölü yazım (canlı sıcak yolda her
     dakika) — tarihli f-string ad DECLARED_SINKS'e giremiyor; mimari karar Rol-1/operatörde.
