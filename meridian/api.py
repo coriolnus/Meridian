@@ -1373,6 +1373,14 @@ def api_skills(request: Request):
     # `skills_declared_not_run` BİLEREK taşınıyor: "beyan edildi ama koşmadı" tam olarak Hermes'in
     # 14 düğmede dönmesiyle aynı sınıf bir körlük kanıtıdır ve yalnız bu defterde ölçülüyor.
     reg["recent_runs"] = list(reversed(store.read_jsonl("pipeline_runs.jsonl")[-12:]))
+    # GÖRÜŞ DEFTERİ (EDG-2026-019) — skill katmanının kanıt yüzeyi Eksen-2'nin YANINDA durur:
+    # önerilerin (`recommendations`) neden 0 olduğunu söyleyen sayım ile o boşluğu doldurmaya
+    # çalışan ölçüm aynı ekranda okunmazsa, ikisi de ayrı ayrı anlamsız görünür.
+    reg["gorus_defteri"] = _eksen2_gorus()
+    # ENVANTER (Ç3): "kaç skill var?" sorusunun paydası da yükte dursun — pano hiçbir yerde
+    # sabit sayı yazmasın (C10). `counts.total` kayıt TOPLAMIDIR (aktif+arşiv) ve tek başına
+    # yaşam döngüsünü gizler; `envanter` üç paydayı da ayrı ayrı taşır.
+    reg["envanter"] = skills.envanter()
     return reg
 
 
@@ -2463,8 +2471,16 @@ def _terfi_hukmu(terfi: dict | None, sieve_rep: dict | None) -> dict:
 # yapısı): `gercek_katman_olculmemis*` = avg_r None (ölçülmemiş), `korumali` = motor içi, geri
 # kalan HER kova `avg_r is not None` dalından gelir, yani ÖLÇÜLMÜŞTÜR. Yarın doğacak bir kova adı
 # da bu kurala uyar — sabit bir ad listesi tutmak, yeni kovayı sessizce yanlış saymak olurdu.
+#
+# PAYDA DÜZELTİLDİ (Ç3, 2026-08-09). Yukarıdaki ölçüm (`gercek_katman_olculmemis 57` / payda 67)
+# DOĞRU SAYILMIŞ ama YANLIŞ ETİKETLENMİŞTİ: `skills.catalog()` kayıt defterinin BİLDİĞİ `retired`
+# alanını düşürüyordu, yani 36 ARŞİV kaydı da "ölçülmemiş aktif skill" gibi sayılıyordu. Panonun
+# okuduğu şey "67 skillin 60'ı hiç koşmamış" idi; ölçülen gerçek ise "31 AKTİF skillin 24'ü hiç
+# koşmamış"tır. Aradaki fark bir yuvarlama değil, olmayan bir kusurun sürekli raporlanmasıydı.
+# Payda artık `arsiv` kovası DÜŞÜLEREK kurulur ve SABİT YAZILMAZ (C10): kova sayımından türer.
 _EKSEN2_OLCULMEMIS_ONEK = "gercek_katman_olculmemis"
 _EKSEN2_KORUMALI = "korumali"
+_EKSEN2_ARSIV = "arsiv"                   # `skills.ARSIV` ile AYNI ad — kova adı sözleşmedir
 _AXIS2_DEFTERI = "axis2_status.json"      # LİTERAL ad (codelaw.artifact_graph okuyabilsin)
 
 
@@ -2472,17 +2488,23 @@ def _eksen2_ozeti(ex: dict | None) -> dict:
     """Sıfır üretimin NEDENİ — kova sayımından türetilmiş özet.
 
     UYDURMA YASAĞI: kovalar yükte yoksa `durum="ÖLÇÜLEMEDİ"` ve bütün sayılar None döner —
-    0 DEĞİL. "67 skillin 2'si ölçüldü" ile "kaç skill olduğunu bilmiyoruz" aynı ekranda aynı
-    şeye benzeyemez."""
+    0 DEĞİL. "31 aktif skillin 2'si ölçüldü" ile "kaç skill olduğunu bilmiyoruz" aynı ekranda aynı
+    şeye benzeyemez.
+
+    PAYDA = AKTİF KÜME (Ç3). `arsiv` kovası ne bölene ne paydaya girer; AYRI bir sayı olarak
+    taşınır ki "emekli edildi" ile "ölçülmedi" bir daha tek rakamda birleşmesin."""
     kv = (ex or {}).get("kovalar")
     if not isinstance(kv, dict) or not kv:
         return {"durum": "ÖLÇÜLEMEDİ", "toplam_skill": None, "olculen": None,
-                "olculmemis": None, "korumali": None, "oran": None, "payda": None, "dokum": [],
+                "olculmemis": None, "korumali": None, "arsiv": None, "kayit_toplam": None,
+                "oran": None, "payda": None, "dokum": [],
                 "motor_ici_esik_asan": None,
                 "neden": ("Eksen-2 teşhis kovaları yükte YOK — üretecin sessizliği ÖLÇÜLEMEDİ. "
                           "Bu bir 'kanıt yok' hükmü değildir: hükmü verecek sayım okunamadı.")}
     sayim = {str(k): int(v) for k, v in kv.items() if isinstance(v, (int, float))}
-    toplam = sum(sayim.values())
+    kayit_toplam = sum(sayim.values())                 # kayıt defterinin TAMAMI (aktif + arşiv)
+    arsiv = sayim.get(_EKSEN2_ARSIV, 0)
+    toplam = kayit_toplam - arsiv                      # PAYDA: yalnız aktif küme
     olculmemis = sum(n for k, n in sayim.items() if k.startswith(_EKSEN2_OLCULMEMIS_ONEK))
     korumali = sayim.get(_EKSEN2_KORUMALI, 0)
     olculen = toplam - olculmemis - korumali
@@ -2490,15 +2512,95 @@ def _eksen2_ozeti(ex: dict | None) -> dict:
         "durum": "dolu",
         "toplam_skill": toplam, "olculen": olculen,
         "olculmemis": olculmemis, "korumali": korumali,
+        # ARŞİV AYRI SAYIDIR, PAYDANIN DIŞINDA: kütüphanenin büyüklüğü de görünsün ama hükme
+        # karışmasın. İkisi tek rakama katlanırsa yaşam döngüsü bir daha okunamaz.
+        "arsiv": arsiv, "kayit_toplam": kayit_toplam,
         # ÇUBUK PAYDASI BEYANLI (kart sözleşmesi D2-a kapı 2): paydası yazılmayan bir doluluk,
-        # okurun kendi uydurduğu tavana göre okunur.
+        # okurun kendi uydurduğu tavana göre okunur. Sayı KOVA SAYIMINDAN türer — panoya da
+        # buraya da SABİT yazılmaz (C10 dersi: 2026-07-30 arşivi "66 skill" yazısını bir gecede
+        # yalana çevirmişti).
         "oran": (round(olculen / toplam, 4) if toplam else None),
-        "payda": f"katalogda beyan edilen skill sayısı ({toplam})",
+        "payda": f"AKTİF skill sayısı ({toplam}) — arşiv ({arsiv}) hariç, kayıt toplamı {kayit_toplam}",
         "dokum": sorted(sayim.items(), key=lambda kv_: (-kv_[1], kv_[0])),
         "motor_ici_esik_asan": None,      # `_eksen2_motor_ici` doldurur (ayrı defterden okunur)
-        "neden": (f"{toplam} skillin {olculmemis}'i gerçek katmanda HİÇ ölçülmemiş, {korumali}'i "
-                  f"motor-içi (aday değil); hüküm verilebilir olan {olculen}. Üreteç kanıt "
-                  f"olmayan yerde öneri ÜRETMEZ — '0 üretildi' bir arıza değil, KANIT YOKLUĞUdur."),
+        "neden": (f"{toplam} AKTİF skillin {olculmemis}'i gerçek katmanda HİÇ ölçülmemiş, "
+                  f"{korumali}'i motor-içi (aday değil); hüküm verilebilir olan {olculen}. "
+                  f"Ayrıca {arsiv} kayıt ARŞİVDE (emekli/birleştirilmiş) — ölçülmemiş değil, "
+                  f"ölçülecek olmayan. Üreteç kanıt olmayan yerde öneri ÜRETMEZ — '0 üretildi' "
+                  f"bir arıza değil, KANIT YOKLUĞUdur."),
+    }
+
+
+_GORUS_DEFTERI = "skill_gorusleri.jsonl"       # LİTERAL adlar (codelaw.artifact_graph çözebilsin)
+_GORUS_DURUM = "skill_gorus_durum.json"
+
+
+def _gorus_defter_hacmi() -> dict:
+    """Görüş defterinin HACMİ — rapordan BAĞIMSIZ, doğrudan defterden okunur.
+
+    NEDEN AYRI BİR OKUMA. `rapor()` bir HÜKÜMDÜR ve hüküm verilemeyebilir: girdi bekçisi bir
+    yüzeyi kapatırsa (kill#4) ya da örneklem n_min'in altındaysa rapor o yüzey için boş döner.
+    O anda "defter boş" ile "defter dolu ama hüküm yok" ekranda aynı şeye benzerdi. Hacim
+    sayacı bu ikisini ayırır: kaç satır YAZILDI sorusunun cevabı hükümden bağımsızdır.
+
+    HAM SATIR TAŞIMAZ: defter süresiz büyür (canlı kaynaklarda bugün ~4400 satır); uç yükü
+    onunla birlikte büyüyemez. Yalnız yüzey × skill sayımı ve tarih aralığı çıkar."""
+    satirlar = store.read_jsonl(_GORUS_DEFTERI)
+    hacim: dict[str, dict[str, int]] = {}
+    tarihler = []
+    for s in satirlar:
+        y, sk = str(s.get("yuzey") or "?"), str(s.get("skill") or "?")
+        hacim.setdefault(y, {})[sk] = hacim.setdefault(y, {}).get(sk, 0) + 1
+        if s.get("tarih"):
+            tarihler.append(str(s["tarih"]))
+    return {"n": len(satirlar), "yuzey_skill": {y: dict(sorted(v.items())) for y, v in sorted(hacim.items())},
+            "ilk_tarih": (min(tarihler) if tarihler else None),
+            "son_tarih": (max(tarihler) if tarihler else None)}
+
+
+def _eksen2_gorus() -> dict:
+    """GÖRÜŞ DEFTERİNİN OKUMA ALANI (EDG-2026-019, 2026-08-09) — defterin DAVRANIŞSAL tüketicisi.
+
+    NEDEN İLK GÜNDEN BAĞLI. `dormant_setup` dersi: önden bağlı arkadan bağsız bir yüzey (31 plan /
+    0 işlem) inşa edilmez. Görüş defteri yazılmaya başlar başlamaz okuyucusu da olmalı, yoksa
+    kanıt birikir ve hiçbir karara girmez — bu deponun en sık ölçülen arıza sınıfı.
+
+    NE TAŞIR: kova sayımı, yüzey-başına FDR künyesi, terfi/emeklilik ADAY listeleri ve kill#1'in
+    p95 ölçümü. NE TAŞIMAZ: ham görüş satırları (defter süresiz büyür) ve HİÇBİR eylem düğmesi —
+    terfi otomatik değildir, bu alan da bir onay yüzeyi DEĞİLDİR.
+
+    Defter okunamazsa `durum="ÖLÇÜLEMEDİ"` (boş rapor DEĞİL): "hiç görüş yok" ile "bakamadık"
+    aynı ekranda aynı şeye benzeyemez."""
+    try:
+        from . import skill_gorus as _sg
+        r = _sg.rapor()
+    except Exception as e:
+        # HÜKÜM ÜRETİLEMEDİ AMA DEFTER OKUNABİLİR: hacim sayacı ayrı bir okumadır ve ayakta kalır.
+        # "Hiç görüş yok" ile "hüküm kurulamadı" aynı ekranda aynı şeye benzeyemez.
+        return {"durum": "ÖLÇÜLEMEDİ", "neden": f"{type(e).__name__}: {e}",
+                "defter_n": None, "kova_sayimi": None, "yuzeyler": None,
+                "terfi_adaylari": None, "emeklilik_isaretleri": None, "kill_p95": None,
+                "hacim": _gorus_defter_hacmi()}
+    d = store.read_json(_GORUS_DURUM, None)
+    return {
+        "durum": "dolu", "kart": r.get("kart"), "neden": None,
+        "defter_n": r.get("defter_n"), "hacim": _gorus_defter_hacmi(),
+        "kova_sayimi": r.get("kova_sayimi"),
+        "evren": (r.get("evren") or {}).get("sayim"),
+        "girdi_bekcisi": r.get("girdi_bekcisi"),
+        "yuzeyler": {y: {k: v[k] for k in ("durum", "neden", "fdr", "metrik", "skiller")
+                         if k in v} for y, v in (r.get("yuzeyler") or {}).items()},
+        "terfi_adaylari": r.get("terfi_adaylari"), "emeklilik_isaretleri": r.get("emeklilik_isaretleri"),
+        "esikler": r.get("esikler"),
+        # KILL#1 ÖLÇÜMÜ AYRI DEFTERDEN: `rapor()` saf okumadır ve süre ölçmez; süre kadansın
+        # kendi damgasıdır. İkisini tek çağrıya katlamak, panonun her açılışında ölçüm koşturmak
+        # ve o ölçümü "canlı kadans süresi" diye raporlamak olurdu.
+        "kill_p95": ((d or {}).get("kill_p95") if isinstance(d, dict) else None),
+        "son_kadans": ({"ts": d.get("ts"), "sure_ms": d.get("sure_ms"),
+                        "sure_p95_ms": d.get("sure_p95_ms"),
+                        "yazilan": (d.get("toplama") or {}).get("yazilan")}
+                       if isinstance(d, dict) else None),
+        "beyan": r.get("beyan"),
     }
 
 

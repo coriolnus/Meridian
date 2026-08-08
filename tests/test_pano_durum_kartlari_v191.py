@@ -491,6 +491,14 @@ _SERIT_BOLGELERI = {
     # okunuyordu; oysa ölçüm KANIT YOKLUĞU diyor (67 skillin 60'ı gerçek katmanda hiç ölçülmemiş).
     # Deftere yazılmasının bedeli aşağıdaki payda denetimidir — `_EKSEN2_PAYDALARI`.
     "ogrenme · eksen2":      ("    const eksen2Blok = (() => {", "\n      const miDetay = "),
+    # ALTINCI BÖLGE (v219, 2026-08-08) — FAZ-6 kilitlerinin `olcum` sözlüğü. Beş kilidin ölçüm
+    # sözlüğünün bugüne dek HİÇBİR pano okuyucusu yoktu (yalnız `esik` + `neden`, ikisi de bir
+    # `title=` ipucunun içinde); `test_faz5_cikis_v212`nin C-YASA6 çivisi tam olarak bunu kayda
+    # geçiriyordu. Şerit BEŞ KİLİT İÇİN TEK emisyondur (`.map()` içinde) ve dört hücresi kilide
+    # göre değil SORUYA göre sabittir — bedeli aşağıdaki payda denetimidir (`_KILIT_PAYDALARI`,
+    # davranış tarafı `tests/test_gorunurluk_v219.py`).
+    "kilitler · faz6 olcum": ("  const olcumBloklari = f.adlar.map(ad => {",
+                              "\n  return `<div style=\"margin-top:18px"),
 }
 
 
@@ -740,13 +748,28 @@ def test_eksen2_seridi_OLCULEMEDI_dalinda_PAYDA_IDDIA_ETMIYOR():
 def test_kanit_tabani_paydasini_SUNUCU_kuruyor():
     """Payda metni sunucuda kurulur (`api._eksen2_ozeti`) — pano ikinci bir cümle kurmaz, yoksa
     aynı gerçeğin iki metni doğar ve biri bayatlar (bu deponun tekrar eden kusur sınıfı).
-    Sunucu tarafı da sayıyı UYDURMAZ: payda kova toplamından gelir."""
+    Sunucu tarafı da sayıyı UYDURMAZ: payda kova toplamından gelir.
+
+    PAYDA METNİ Ç3'TE DÜZELTİLDİ (2026-08-09, EDG-2026-019 turu). Eski metin "katalogda beyan
+    edilen skill sayısı (67)" idi ve 67 kayıt TOPLAMIydı — içinde 36 ARŞİV kaydı vardı, çünkü
+    `skills.catalog()` kayıt defterinin bildiği `retired` alanını düşürüyordu. Sayı doğru
+    sayılmış ama yanlış etiketlenmişti; payda artık AKTİF kümedir ve arşiv AYRI bir sayı olarak
+    durur. Bu testin iddiası değişmedi (payda sunucuda kurulur, uydurulmaz) — ölçtüğü metin
+    düzeldi ve altına arşivin paydadan DÜŞÜLDÜĞÜNÜ çivileyen ikinci bir hâl eklendi."""
     from meridian import api
     oz = api._eksen2_ozeti({"kovalar": {"gercek_katman_olculmemis": 57, "korumali": 5,
                                         "gercek_katman_olculmemis_cf_dolu": 3,
                                         "esik_araliginda": 1, "ornek_yetersiz_cf_de_yetersiz": 1}})
-    assert oz["payda"] == "katalogda beyan edilen skill sayısı (67)"
+    assert oz["payda"] == "AKTİF skill sayısı (67) — arşiv (0) hariç, kayıt toplamı 67"
     assert oz["oran"] == round(2 / 67, 4), "çubuk oranı payda ile aynı tabandan gelmiyor"
+    # ARŞİV PAYDADAN DÜŞER: aynı kovalar + 36 arşiv kaydı → payda 67 DEĞİL 31 olmalı, yoksa
+    # emekli edilmiş bir kayıt "ölçülmemiş aktif skill" diye sayılmaya geri döner.
+    oz2 = api._eksen2_ozeti({"kovalar": {"gercek_katman_olculmemis": 22, "korumali": 5,
+                                         "gercek_katman_olculmemis_cf_dolu": 2,
+                                         "esik_araliginda": 1, "ornek_yetersiz_cf_de_yetersiz": 1,
+                                         "arsiv": 36}})
+    assert oz2["toplam_skill"] == 31 and oz2["arsiv"] == 36 and oz2["kayit_toplam"] == 67
+    assert oz2["oran"] == round(2 / 31, 4)
     # Ölçülemeyen hâlde payda İDDİA EDİLMEZ (None — boş dizgi de değil, 0 hiç değil).
     assert api._eksen2_ozeti({"kovalar": {}})["payda"] is None
 

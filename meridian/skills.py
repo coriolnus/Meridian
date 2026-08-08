@@ -191,6 +191,84 @@ def _skill_descriptions() -> dict:
     return out
 
 
+# ==================================================================================================
+# YAŞAM DÖNGÜSÜ — TEK YER (Ç3 kökü, 2026-08-09)
+# ==================================================================================================
+# ÖLÇÜLMÜŞ KUSUR. Kayıt defteri `retired: true` alanını 2026-07-30 denetiminden beri TAŞIYOR (36
+# kayıt) ama `catalog()` o alanı ÇIKTIYA GEÇİRMİYORDU. Katalog 67 satırı DÜZ döküyordu; yani
+# katalogtan beslenen HER tüketici (Eksen-2 teşhisi, pano özeti, hermes brifingi) arşivi canlı skill
+# sanıyordu. Sayı doğruydu, ETİKET yanlıştı — "gercek_katman_olculmemis 57" satırının 36'sı fiilen
+# ARŞİVDİ ve arşivin ölçülmemiş olması bir körlük değil, TANIMDIR.
+#
+# ALAN GEÇİRİLİR VE AYRIM TEK YERDEN OKUNUR. İki kova adı burada sabittir ve her tüketici bu iki
+# yardımcıdan geçer; `info.get("retired")` sınamasını her çağıranın kendi başına yazması, aynı
+# ayrımın altı ayrı yerde altı farklı biçimde bozulması demekti (`_SCREENER_BY_SETUP` yıldızı
+# vakasının aynısı).
+AKTIF, ARSIV = "aktif", "arsiv"
+
+
+def yasam_dongusu(info: dict | None) -> str:
+    """Kayıt satırının yaşam döngüsü kovası: `arsiv` (emekli/birleştirilmiş) ya da `aktif`.
+
+    Kayıtta OLMAYAN bir ad `aktif` sayılır ve bu bilinçlidir: klasörü `skills/` altında duran ama
+    deftere hiç girmemiş bir skill, ARŞİVLENMİŞ değildir — kayıt eksiğidir ve `envanter()` onu
+    `kayitsiz_klasor` diye ADIYLA raporlar."""
+    return ARSIV if (info or {}).get("retired") else AKTIF
+
+
+def aktif_katalog(cat: list[dict] | None = None) -> list[dict]:
+    """Katalogun YALNIZ aktif kesiti — karar/öneri üreten her kol buradan okur.
+
+    Arşiv kayıtları `enabled=False` olduğu için bugünkü kollar onları zaten eliyordu; ama ELEME
+    ile TANIM AYRI şeylerdir. Arşiv "aday olup elenen" değil "aday hiç olmayan"dır ve bu ayrım
+    kovaların adına yansımadıkça sayım doğru, etiket yanlış kalır."""
+    return [c for c in (catalog() if cat is None else cat) if c.get("yasam_dongusu") != ARSIV]
+
+
+def envanter() -> dict:
+    """KLASÖR ↔ KAYIT ENVANTERİ — "kaç skill var?" sorusunun tek ölçülmüş cevabı.
+
+    NEDEN VAR. Aynı kütüphane üç ayrı sayıyla anılıyordu (38 / 37 / 36) ve üçü de farklı bir şeyi
+    sayıyordu: `ls skills/_emekli` DOSYA sayar (README.md dâhil), dizin sayımı GİT-İZSİZ boş bir
+    mezar taşını (`skills/_emekli/shadow`) da sayar, kayıt defteri ise gerçek arşiv KAYITLARINI.
+    Sayılar çelişmiyordu; PAYDALARI farklıydı ve hiçbiri yazılı değildi. Bu fonksiyon üç paydayı da
+    ölçer ve farkı ADIYLA döker — bir daha tahminle tartışılmasın diye.
+
+    SAF OKUMA: hiçbir şeye yazmaz, hiçbir kaydı düzeltmez."""
+    reg = registry().get("skills", {})
+    kayit_aktif = sorted(k for k, v in reg.items() if yasam_dongusu(v) == AKTIF)
+    kayit_arsiv = sorted(k for k, v in reg.items() if yasam_dongusu(v) == ARSIV)
+    base = config.SKILLS
+    ars = base / "_emekli"
+    def _dizinler(p):
+        return sorted(d.name for d in p.iterdir() if d.is_dir()) if p.exists() else []
+    def _skillli(p):
+        return sorted(d.name for d in p.iterdir() if d.is_dir() and (d / "SKILL.md").exists()) \
+            if p.exists() else []
+    klasor_aktif = [a for a in _skillli(base) if not a.startswith("_")]
+    klasor_aktif_dizin = [a for a in _dizinler(base) if not a.startswith("_")]
+    arsiv_dizin, arsiv_skillli = _dizinler(ars), _skillli(ars)
+    girdi_sayisi = len(list(ars.iterdir())) if ars.exists() else 0
+    return {
+        "kayit": {"toplam": len(reg), "aktif": len(kayit_aktif), "arsiv": len(kayit_arsiv)},
+        "klasor": {"aktif_dizin": len(klasor_aktif_dizin), "aktif_skill_md": len(klasor_aktif),
+                   "arsiv_girdi": girdi_sayisi, "arsiv_dizin": len(arsiv_dizin),
+                   "arsiv_skill_md": len(arsiv_skillli)},
+        "fark": {
+            # Her sapma ADIYLA çıkar: bir sayı diğerinden büyükse SEBEBİ okunabilsin.
+            "arsiv_dizin_ama_kayitsiz": sorted(set(arsiv_dizin) - set(kayit_arsiv)),
+            "kayitli_arsiv_ama_dizinsiz": sorted(set(kayit_arsiv) - set(arsiv_dizin)),
+            "arsiv_dizin_skill_md_yok": sorted(set(arsiv_dizin) - set(arsiv_skillli)),
+            "kayitsiz_klasor": sorted(set(klasor_aktif) - set(reg)),
+            "kayitli_aktif_klasorsuz": sorted(set(kayit_aktif) - set(klasor_aktif)),
+            "arsiv_disi_girdi": max(0, girdi_sayisi - len(arsiv_dizin)),   # README.md gibi dosyalar
+        },
+        "hukum": ("DOĞRU ENVANTER = KAYIT DEFTERİ ∩ KLASÖR. Aktif küme kayıt ve klasörde AYNI "
+                  "sayıdaysa sayı ölçülmüştür; ayrışıyorsa `fark` alanı hangi tarafın eksik "
+                  "olduğunu söyler. `ls` çıktısı bir envanter DEĞİLDİR: dosya sayar."),
+    }
+
+
 def catalog() -> list[dict]:
     """The full skill library as Hermes should see it: name, one-line purpose (SKILL.md), category /
     mode / key-requirements (registry), and LIVE performance (attribution — n, win_rate, avg_r). This
@@ -208,6 +286,11 @@ def catalog() -> list[dict]:
             "category": info.get("category"), "enabled": bool(info.get("enabled")),
             "mode": info.get("mode"), "shadow": bool(info.get("shadow")),
             "pipeline": info.get("pipeline"), "protected": name in PROTECTED,
+            # YAŞAM DÖNGÜSÜ ARTIK ÇIKTIDA (Ç3, 2026-08-09). Kayıt defteri bunu BİLİYORDU ve katalog
+            # düşürüyordu; düşen alan, arşivi canlı sanan bir teşhis kovası ve 67'lik bir pano
+            # paydası üretti. İki alan birden taşınır: ham `retired` (kaynağın kendi dili) ve
+            # `yasam_dongusu` (tüketicinin okuduğu kova adı) — ikisi TEK yardımcıdan türer.
+            "retired": bool(info.get("retired")), "yasam_dongusu": yasam_dongusu(info),
             "requires": [k.upper() for k in ("fmp", "alpaca") if info.get(k) == "req"],
             "n": a.get("n", 0), "win_rate": a.get("win_rate"), "avg_r": a.get("avg_r"),
             # CF KATMANI DA TAŞINIR (H5, 2026-07-30). `skill_attribution` bu iki alanı ZATEN
@@ -253,7 +336,8 @@ def recommend_from_attribution(min_n: int = 8) -> list[dict]:
     (`_cf_arm`). cf-destekli bir öneri `kanit: "gercek+cf"` taşır ve rationale'inde cf payını
     AÇIKÇA yazar — kanıt türü şeffaf olmadan operatör iki farklı sertlikteki iddiayı aynı sanardı."""
     recs = []
-    for s in catalog():
+    for s in aktif_katalog():          # ARŞİV ADAY DEĞİL (Ç3): `enabled=False` zaten eliyordu ama
+                                       # eleme ile TANIM ayrı şeydir — arşiv aday HİÇ olmaz
         if s["protected"] or s["avg_r"] is None:
             continue
         gercek_kol = (s["n"] or 0) >= min_n
@@ -431,7 +515,8 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
     pipeline damgasının bu kararı EZMESİ demekti (audit #19 kayıp-güncelleme deseni)."""
     from . import obs
     uygulanan, advisory, atlanan, dogrulama, motor_ici = [], [], [], [], []
-    for s in catalog():
+    for s in aktif_katalog():          # ARŞİV: ne otomatik karar adayı ne eşik doğrulaması adayı —
+                                       # emekli bir kaydın gölge bayrağı bir KARAR değil bir kalıntıdır
         ad = s["name"]
         if s["protected"]:
             continue                                  # PROTECTED: aday HİÇ olmaz, mutlak kural
@@ -562,13 +647,23 @@ def axis2_diagnosis(min_n: int = 8) -> dict:
 
     "0 öneri" tek başına iki BAMBAŞKA hâli aynı gösterir: (1) kanıt var ama eşiği geçmiyor,
     (2) kanıt hiç ölçülmemiş. İkisini ayırmak için her skill bir KOVAYA düşer ve kova adı sebebin
-    kendisidir. Hiçbir şey UYGULAMAZ, hiçbir eşiği DEĞİŞTİRMEZ."""
+    kendisidir. Hiçbir şey UYGULAMAZ, hiçbir eşiği DEĞİŞTİRMEZ.
+
+    ÜÇÜNCÜ HÂL AYRILDI (Ç3, 2026-08-09): `arsiv`. Emekli/birleştirilmiş kayıtlar "ölçülmemiş"
+    DEĞİLDİR — ölçülecek bir şeyleri YOKTUR, çünkü zincirde üyelikleri yok ve klasörleri
+    `skills/_emekli/` altında. Eskiden hepsi `gercek_katman_olculmemis` kovasına düşüyordu ve o
+    kova, 36 arşiv kaydıyla şişmiş hâlde "üretecin körlüğü" diye okunuyordu. Sayı doğruydu,
+    ETİKET yanlıştı; ve yanlış etiket, olmayan bir kusuru sürekli rapor eden bir alarmdır."""
     kova: dict[str, list] = {}
     for s in catalog():
         ad, n, avg = s["name"], (s.get("n") or 0), s.get("avg_r")
         satir = {"skill": ad, "n": n, "avg_r": avg,
                  "n_cf": s.get("n_cf") or 0, "cf_avg_r": s.get("cf_avg_r")}
-        if s["protected"]:
+        if s.get("yasam_dongusu") == ARSIV:
+            # EN BAŞTA: arşiv, `protected`ten de önce gelir. Bir gün emekliye ayrılan korumalı bir
+            # kayıt olursa onun kovası da "korumalı aday" değil ARŞİV olmalıdır.
+            k = ARSIV
+        elif s["protected"]:
             k = "korumali"
         elif avg is None:
             # GERÇEK KATMAN BOŞ. Bu bir "nötr" değil bir ÖLÇÜLMEMİŞLİKTİR ve cf katmanı doluysa
@@ -593,6 +688,11 @@ def axis2_diagnosis(min_n: int = 8) -> dict:
         kova.setdefault(k, []).append(satir)
     return {"kovalar": {k: v for k, v in sorted(kova.items())},
             "sayim": {k: len(v) for k, v in sorted(kova.items())},
+            # PAYDA KAYNAĞI ÇIKTIDA (Ç3 · C10): pano paydayı SABİT YAZMAZ, buradan okur. `arsiv`
+            # kovası paydanın DIŞINDADIR — "ölçülmüş / aktif küme" oranı, arşivi bölene de paydaya
+            # da katmaz. Sayı burada üretilir çünkü kovaları üreten dal yapısı burada.
+            "arsiv_kova": ARSIV,
+            "aktif_payda": sum(len(v) for k, v in kova.items() if k != ARSIV),
             "esik": {"min_n": min_n, "shadow_avg_r": -0.15, "lean_in_avg_r": 0.30,
                      # BEYAN GÜNCELLENDİ (2026-07-30 temizlik turu): cf katmanı ARTIK OKUNUYOR —
                      # ama yalnız ÖRNEKLEM kolunda. Eski metin ("cf OKUNMUYOR") artık yanlış
@@ -604,7 +704,9 @@ def axis2_diagnosis(min_n: int = 8) -> dict:
             "beyan": ("shadow/lean_in EŞİKLERİ bu turda DEĞİŞTİRİLMEDİ (−0,15 / +0,30); değişen "
                       "yalnız ÖRNEKLEM kapısıdır ve o da cf'yi hükme değil uygunluğa sokar. "
                       "`gercek_katman_olculmemis_cf_dolu` kovası hâlâ kalan körlüğü ölçer: gerçek "
-                      "katman HİÇ ölçülmemişse (avg_r None) cf kolu da açılamaz — bilerek")}
+                      "katman HİÇ ölçülmemişse (avg_r None) cf kolu da açılamaz — bilerek. "
+                      "`arsiv` kovası AYRIDIR ve paydaya girmez (Ç3): emekli kayıt ölçülmemiş "
+                      "değil, ölçülecek olmayan kayıttır.")}
 
 
 def axis2_cycle(apply: bool = True) -> dict:

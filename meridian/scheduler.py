@@ -415,7 +415,7 @@ def _repair_once_per_session(session: str) -> None:
 # NE YAPMAZ. Yeni bir yetki İCAT ETMEZ. Antrenmanın sonucu `shadow_model.evaluate_promotion`ın
 # yazılı kuralı ve tek etkisi `shadow_veto`dur; dolgu geçmişe görüş damgalar (look-ahead yok);
 # Eksen-2 kadansı `skills`in KENDİ eşiklerini kullanır. Üçü de bugünkü karar sınırlarının içinde.
-LEARN_STEPS = ("antrenman", "eksen2", "dolgu")
+LEARN_STEPS = ("antrenman", "eksen2", "gorus", "dolgu")
 
 
 # ==================================================================================================
@@ -502,8 +502,15 @@ def _learning_cadence(session: str) -> dict:
     dolgu (TEK kota tüketicisi — ötekiler onun artığıyla değil, o ötekilerin artığıyla koşsun).
 
     DOLGU ASENKRONDUR: gün başına bir LLM çağrısı × tavan kadar gün, poll'ü dakikalarca bloklardı
-    (`review_candidates_async` ile aynı gerekçe ve aynı sözleşme — Thread döner)."""
+    (`review_candidates_async` ile aynı gerekçe ve aynı sözleşme — Thread döner).
+
+    GÖRÜŞ DEFTERİ EKSEN-2'DEN SONRA (EDG-2026-019, 2026-08-09): o da deterministik ve KOTASIZ,
+    yani Eksen-2 ile aynı emsalden geçer; dolgunun ÖNÜNDE durur çünkü tek kota tüketicisi dolgudur.
+    Adımın süresi ÖLÇÜLÜR (`oncesi_ms`) — kartın kill#1'i "gözlem icrayı yavaşlatamaz" der ve
+    ölçülmeyen bir gecikme, olmayan bir gecikme sayılamaz."""
+    import time as _time
     from . import obs, watchdog
+    _t0 = _time.perf_counter()
     out: dict = {"session": session, "ts": _now()}
     try:                                   # 1) ANTRENMAN — veri seti değiştiyse fit + terfi hükmü
         from . import shadow_model as _sm
@@ -523,7 +530,16 @@ def _learning_cadence(session: str) -> dict:
         obs.warn("axis2_cycle_failed", session=session, error=f"{type(e).__name__}: {e}",
                  detail="Eksen-2 üreteci koşmadı — atıf kanıtı bir KARARA bağlanmıyor")
         out["eksen2"] = {"error": f"{type(e).__name__}: {e}"}
-    _dolgu = _dolgu_kadansi(session)        # 3) DOLGU — bütçeli, asenkron, en eskiden yeniye
+    try:                                   # 3) GÖRÜŞ DEFTERİ — deterministik, kotasız, terfisiz
+        from . import skill_gorus as _sg
+        out["gorus"] = _sg.kadans(oncesi_ms=(_time.perf_counter() - _t0) * 1000.0)
+    except Exception as e:
+        # YASA 4: defter yazılmazsa skill katmanının kanıtı BİRİKMEZ ve "40 seansta sağkalan yok"
+        # kill'i, ölçüm hiç koşmadığı için ateşlerdi — susan bir ölçüm, olumsuz bir hükme dönüşür.
+        obs.warn("skill_gorus_cadence_failed", session=session, error=f"{type(e).__name__}: {e}",
+                 detail="görüş defteri koşmadı — skill katmanının kanıtı birikmiyor")
+        out["gorus"] = {"error": f"{type(e).__name__}: {e}"}
+    _dolgu = _dolgu_kadansi(session)        # 4) DOLGU — bütçeli, asenkron, en eskiden yeniye
     # Bütçe sözlüğü defterde TEK KOPYA durur: `dolgu` bloğunun içinde de taşımak, aynı türetimi iki
     # yerde yayınlayıp okuyucuya "hangisi güncel" sorusunu sordurmak olurdu (analytics `son_kosu.dolgu`
     # ile `dolgu_butce`yi ayrı ayrı servis ediyor).
@@ -536,6 +552,8 @@ def _learning_cadence(session: str) -> dict:
     obs.log("learning_cadence", session=session,
             antrenman=(out.get("antrenman") or {}).get("fitted"),
             eksen2_kaydedilen=len((out.get("eksen2") or {}).get("kaydedilen") or []),
+            gorus_yazilan=((out.get("gorus") or {}).get("toplama") or {}).get("yazilan"),
+            gorus_sure_ms=(out.get("gorus") or {}).get("sure_ms"),
             dolgu=(out.get("dolgu") or {}).get("baslatildi"),
             detail="seans-sonrası öğrenme kadansı — bar varışından BAĞIMSIZ koştu")
     return out
