@@ -238,6 +238,29 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   yolunun hiç olmaması) BEYANSIZDI ve `codelaw.artifact_graph`tan da kaçtı (defter yazılıyordu,
   okuyucusu vardı; eksik DAVRANIŞSAL tüketiciydi). Sistematik tur = artefakt/bayrak envanterini
   yürüyüp her birine "üreticin kim, seni kim OKUYOR, okuyan DAVRANIYOR mu?" sormak.
+- **✅ SİSTEMATİK TUR KOŞULDU (2026-08-07 gece, dördüncü kova — `docs/ARTEFAKT-TARAMASI-2026-08-07.md`,
+  551 satır):** 107 artefakt + 5 bayrak + 53 config anahtarı + 13 kapı-dışı kalem. KALİBRASYON
+  KAPISI 3/3 — ama İKİ YÖNTEM ONARIMINDAN SONRA (ilk koşu 1/3; alan-düzeyi merceği + taint
+  yayılımı eklendi; raporda beyanlı). Sayım: `davranissal` 92 · `yalniz-gorunurluk` 14 (13 meşru,
+  1 şüpheli) · `tuketicisiz` 1 · `ureticisisiz` 0. Sistem BÜYÜK ORANDA KABLOLU — bulgular kenarda:
+  · **B-1 (YÜKSEK):** `goal.yaml`'da 4 beyansız ölü düğme (`backtest_gate`/`session_tz`/`style`/
+    `schema_version`) — tek eşleşme `guard.py:15-17 GOAL_KEYS` üyeliği, değeri kimse okumuyor.
+    K1'in (2026-07-30) bulduğu `explore_rate`/`kill_switch_file` sınıfının kaçmış dördü.
+    `backtest_gate: true` en ağırı: kapı sözü veriyor, davranış yok. Rol-1 doğruladı.
+  · **B-2 (YÜKSEK):** YASA-6 bekçisinin `_store()` kör noktası (`codelaw.py:486` yalnız
+    `ast.Attribute`) — insider/shortinterest/massive'in 9 çağrısı grafikte YOK ve körlük hiçbir
+    sayaçta görünmüyor; `massive_verify.json` fiilen emniyet anahtarı ve haritada yok.
+  · **B-3 (ORTA):** `one_variable_only` YAPIŞIK düğme — kural koşulsuz (`guard.py:134`), anahtar
+    yalnız hata METNİNDE geçiyor; kapatılamaz bir şeyi düğme gibi beyan ediyor. Rol-1 doğruladı.
+  · **B-4 (ORTA):** `sieve.json` muafiyet beyanı BAYAT — "tek okuyucusu kendi testi" diyor, oysa
+    `api.py:3202→2232` üzerinden TERFİ HÜKMÜNE giriyor; `stale_sinks` bunu yapısal göremiyor.
+  · **B-5 (ORTA):** `state/intraday_bars/<gün>.jsonl` tek gerçek ölü yazım (canlı sıcak yolda her
+    dakika) — tarihli f-string ad DECLARED_SINKS'e giremiyor; mimari karar Rol-1/operatörde.
+  · **B-6/B-7:** `approvals.jsonl` onay defterini hiçbir kapı okumuyor (uyuyan-yol ailesi, L1'de
+    patlar) · `shadow_trades.jsonl` tek tüketici bir CLI bayrağı.
+  · Taze canlı sayım: uyuyan plan 31→**32** (0 işlem, 1 GO — oran değişmedi). ÖLÇÜLEMEYENLER
+    raporda adıyla (7 kalem; en önemlisi: KATMAN-4 alan merceği yalnız `dormant_setup`a
+    uygulandı, plan defterinin ~20 kontrol alanı BİR SONRAKİ KOVANIN konusu).
 
 ### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
 - **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
