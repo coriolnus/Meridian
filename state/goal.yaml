@@ -1,5 +1,12 @@
 # state/goal.yaml — IMMUTABLE. Hermes may NEVER edit this file.
 # Written by intake on 2026-07-14. Any change is a human action, not an agent action.
+# schema_version / style / session_tz: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması
+# dördüncü kova, 2026-08-07; docs/ARTEFAKT-TARAMASI-2026-08-07.md B-1; explore_rate ile aynı
+# sınıf, K1'in 2026-07-30 taramasından kaçmış üçü). Tek eşleşmeleri guard.py GOAL_KEYS üyelik
+# seti (drift koruması — değeri değerlendirmez). DİKKAT ad çakışması: kodda görünen
+# `storage.schema_version()` bir DB fonksiyonudur, BU anahtar değil. Saat dilimi gerçekte
+# barclock/exchange_calendars'tan gelir; stil hiçbir kapıya bağlı değildir. Bu üçünü
+# değiştirmek hiçbir davranışı değiştirmez.
 schema_version: 1
 universe: "S&P 500"
 style: "swing_momentum"
@@ -20,7 +27,18 @@ failure_below: -0.04
 # learning
 reflection_every: 5
 min_sample: 30
+# one_variable_only: YAPIŞIK DÜĞME — kural KOŞULSUZ uygulanır (guard.py:134 `len(changes)!=1`
+# reddi), bu anahtarın DEĞERİNİ hiçbir kod okumaz; ad yalnız hata METNİNDE geçer (artefakt
+# taraması B-3, 2026-08-07). `false` yazmak tek-değişken yasasını GEVŞETMEZ — ve bu İYİDİR
+# (yasa yumuşak olmamalı); yalan olan, kapatılamaz bir şeyin düğme gibi durması. Bu satır o
+# yalanı düzeltir: düğme değil, yasanın BEYANIDIR.
 one_variable_only: true
+# backtest_gate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması B-1'in EN AĞIRI: bir
+# KAPI sözü verir, hiçbir davranışı yoktur; tek eşleşme GOAL_KEYS üyeliği). Gerçek geri-test
+# kapıları başka yerde yaşar ve bu anahtara bakmaz: DSR/PBO ship-yolu sertliği (validation),
+# guard.classify_gate, Faz-6 kilit zinciri (health.faz6_kilitleri). `false` yazmak hiçbir
+# kapıyı açmaz/kapamaz. Gerçek bir kapıya bağlanması ayrı ve bilinçli bir karardır — bağlanana
+# kadar bu satır bir düğme değil, tarihî bir niyet kaydıdır.
 backtest_gate: true
 rollback_if_worse_by: 0.10
 # explore_rate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). Tek eşleşmesi
