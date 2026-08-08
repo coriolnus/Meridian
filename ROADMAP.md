@@ -101,9 +101,18 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   **E1 GRİD ✅ ÖLÇÜLDÜ (e1_grid_2026-08-03/): limit-bacağı MONOTON ZARARLI** (net$ A −7,2k · B −1,2k ·
   C −2,9k · LİMİTSİZ +2.957$/+1.959$-E3; kaçanlar sistematik kazanan; kill#1 yok; gap-bacağı
   replay'de yapısal-ölçülemez — canlı/gölge noktaları kayıtlı; skor-para ayrışması B/C kayıtlı).
-  KARAR OPERATÖRDE (execution_v2 = goal.yaml): Rol-1 önerisi paper'da limitsiz/geniş-tavan →
-  E2 defteri gerçek dolumla dolar (para riski 0, autonomy=0); canlı-geçiş kapısında E2 kanıtıyla
-  yeniden hüküm. Ayna-dolum akışının boşluğu (E2'nin öbür yarısı) ayrı teşhis kalemi. Şerhler raporda (bars_integrity dışlaması
+  ~~KARAR OPERATÖRDE~~ **✅ KARAR VERİLDİ (2026-08-07, kart `EXE-2026-001-R2`, K += 1):** işletim
+  noktası REF·limitsiz rejimi — `execution_v2` canlıda `limit_atr_mult: 100,0` / `limit_pct_cap:
+  0,04`, yani limit tavanı hiçbir gerçek barda bağlamıyor ve bağlayan tek şey `MAX_ENTRY_GAP_PCT
+  = %4`. Bu ÖLÇÜLMEMİŞ dördüncü bir nokta DEĞİL: grid'in `ref_limitsiz` kolu da (`1000·ATR/%10`
+  → limit tetik×1,10 > max_chase tetik×1,04) tam bu rejimdi — sayılar farklı, DAVRANIŞ AYNI.
+  Rol-1 bunu önce "kanıtsız sapma" diye okudu ve YANILDI; kanıt kartın kendi grid'indeydi.
+  Canlı doğrulama (08-06, dört pozisyon): AMGN +1,78% · EMR +1,60% · BKNG +1,55% kovalandı,
+  ödül/risk 2,50→1,50/1,76/1,90 indi; NUE tetiğin ALTINDA doldu (2,63). **Eski B noktasında bu
+  dördün ÜÇÜ hiç açılmayacaktı** — ölçüm, atlanan işlemlerin maliyetinin kovalama aşınmasından
+  BÜYÜK olduğunu söylüyor (`entry_missed_limit`: A 38 · B 23 · C 12 · REF 0).
+  `counterfactual.advance` AYNI sabiti okuduğu için canlı ile cf hâlâ aynı stratejiyi ölçüyor.
+  E2 defteri gerçek dolumla dolmaya devam eder; canlı-geçiş kapısında E2 kanıtıyla yeniden hüküm. Ayna-dolum akışının boşluğu (E2'nin öbür yarısı) ayrı teşhis kalemi. Şerhler raporda (bars_integrity dışlaması
   yok · survivorship · +0,018 replay-iyimserliği · cf-sadakat +0,039R).
 - E1 iki-motor mutabakatı (iç MOO-tarzı vs ayna buy-stop GTC + gap-red kökü) + marketable stop-limit
   grid + gap-risk vetosu · E2 slipaj defteri (yüzey hazır, E1'e bağlı) · E3 kötümser maliyet bandı
@@ -155,6 +164,67 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   ölçümde).
 - 3.3 text/analist PEAD 🔒 veri bileti (analist-tahmin/NLP; proxy yasak). EMİLDİ: eski Y6
   transkript-LLM skoru (aynı text-veri ailesi; look-ahead disiplini şartıyla aynı bilete bağlı).
+
+### WP-S — Sermaye/Defter Bütünlüğü + Koruma 🔴 AKTİF (2026-08-07 gecesi; kaynak: canlı risk turu)
+
+**BU WP'NİN DOĞUŞ SEBEBİ:** 2026-08-06 gecesi dört motor pozisyonu KORUMASIZ kaldı ve sistem
+bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de aynı sınıfın örneği —
+**sistem doğru çalışıyor ama kendini yanlış anlatıyor.** Ayrıntı: `docs/KORUNUM-KOK-2026-08-07.md`,
+`docs/BAYAT-SERMAYE-KOK-2026-08-07.md`, kartlar `EXE-2026-001-R1/R2`, `EXE-2026-002` (+R1).
+
+- **✅ KAPANDI — koruma ölmüyor (E1-v2, v209-v211, canlıda doğrulandı):** bracket TIF'i emrin
+  TAMAMINA uygulanıyordu; `day` seçimi dolmuş pozisyonun stop'unu her kapanışta öldürüyordu
+  (ölçüm: 08-06 20:00-20:02Z, dört pozisyon çıplak). TIF `gtc`, `day` beyaz-listeden ÇIKARILDI
+  (`ENTRY_TIF_ALLOWED`), bayat tetik günlük `cancel_open_entries()` kadansına taşındı. v209
+  koruma bekçisi (300 sn, sev-1, payda-beyanlı) + v211 operatör-onaylı OCO yeniden-kurma yolu.
+  Operatör 08-07'de panodan onayladı; dört pozisyonda OCO/gtc doğrulandı.
+- **🔴 B4 — DAMGASIZ YAZIM BEKÇİSİ (Rol-1 önerisi, EN ÖNCELİKLİ):** ölçüldü ki `portfolio.json`
+  `store` kapısı DIŞINDAN değişebiliyor — 08-04'teki kitap yazımında `entity_meta.rev` hiç
+  ilerlemedi (o gün yalnız iki `_save_broker`, ikisi de kanıtlı). Yani denetim zincirinin bir
+  deliği var ve bugün onu gören hiçbir şey yok. Tasarım: tur başı/sonu `entity_stamp` kıyası →
+  "kitap bu tur DIŞARIDAN değişti" alarmı. **Bu kalem bir sermaye kalemi değil, bir DENETİM
+  kalemidir** — kitap izsiz değişebiliyorsa hiçbir sermaye ölçümü kendi tabanına güvenemez.
+- **🔴 B3 — `taban_kaymasi` satırı (en ucuz, B4'ten hemen sonra):** `recompute`e dördüncü satır
+  `realized_pnl − (Σ trades + ofset)`; + `monotonicity_report` tabanına beyan ölçüsü. 08-04
+  vakasında bu satır olsaydı ters onarım ANINDA görünürdü.
+- **📋 B1 — plan başına BOYUT MAKBUZU:** `eq_kaynak` (eq_now|nabiz) · `eq_now` · `peak` ·
+  `size_mult` · `kitap_rev` · `beyan_n/ofset`. `entry_law` deseniyle, `_save_broker`ın 14. anahtarı.
+  Gerekçe: 08-05 sapmasını çözmek üç ayrı deftere bakmayı gerektirdi; makbuz tek satırda söylerdi.
+- **📋 B2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** `boyutlama_tabani` / `derisk_carpani` /
+  `sermaye_kaynagi` / `kitap_kaydi` / `beyan_kaydi` / `icra` / `olculemedi`. Ölçülen gerekçe:
+  08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı ve HİÇBİRİ sebebi adlandırmadı — belirti görüldü,
+  sınıf söylenmedi. Aynı jeton koruma alarmıyla da paylaşılıyor (6 saatlik susturma penceresi
+  ortak) → ayrı `NAKED_POSITION` jetonu operatör kalemi (obs.py NOTIFY_TOKENS, bir satır).
+- **ÖLÇÜLEMEDİ (kapanmadı, beyanlı):** 08-04 kitap yazımını KİM yaptı. Kanıtın yokluğu ölçüldü
+  (damgasız). Dışlananlar: replay_seed · iade betiği · ikinci `sermaye --uygula` · migrated
+  kopyası · dağıtım/restart/litestream · hermes/api/arm yamaları. B4 bu soruyu GELECEKTE
+  cevaplanabilir kılar; geçmiş vaka için kanıt yok ve uydurulmayacak.
+- **🔒 OPERATÖR — melez pozisyonlar:** iç defter 54/64/43/33, ayna 25/37/22/22 (ayna hedef riskin
+  ~%49'unu taşıyor; taban yerinde olsaydı 51/76/45/45 giderdi). Korumalar DOĞRU tarafa (broker
+  adedine) kuruldu. Farkın kapatılıp kapatılmayacağı operatör kararı.
+- **🔒 OPERATÖR — uyuyan kurulum yolu:** `dormant_setup` 31 plan üretti, **0 işlem** çıktı, biri
+  GO hükmü aldı ve yine işleme dönmedi (kapı geçirdi, arkasında tüketen yok). `conservation.
+  unexplained = 14` = 31 uyuyan − 17 NO_GO; hesap tam kapanıyor. İcraya bağlamak SİSTEMİN NE
+  ALIP SATTIĞINI değiştirir → ön-kayıt kartı + kill-list gerekir. Seçenekler: (a) icraya bağla,
+  (b) tavsiye kalsın ama kapı GO vermesin, (c) geri al. Gözlemlenebilirlik tarafı (terminal
+  olay · `dormant_unconsumed` ayrı kovası · panoda payda-beyanlı `0/31`) otonom yapılabilir.
+
+### WP-S2 — Ölçüm/Görünürlük Borçları 📋 (2026-08-07; hepsi BEYANLI, hiçbiri sessiz değil)
+- **kill#4 uygulama borcu (kart `EXE-2026-002-R1` ön şartı):** kod eşleşmeyenleri ZATEN
+  `sinif_dagilimi` ile ayırıyor (`eod_yok`/`golge_bozuk`/`bps_yok`); kill kapısının yalnız
+  BOZULMA sınıflarına daraltılması ayrı tur. Bugün fark yaratmıyor (oran %0), o yüzden acil değil
+  — ama `eod_yok` biriktiği gün ölçüm haksız yere susar.
+- **`k.olcum` panoda ÇİZİLMİYOR — BEŞ kilidin hepsi için, bu turdan önce de öyleydi.** `app.js`
+  yalnız `k.esik` + `k.neden` okuyor; tam yük `/api/diagnostics` JSON'ında SERVİS EDİLİYOR.
+  Faz-5 turunda karar sayıları `neden` metnine yazıldı (operatör "4/20"yi görüyor) ama bu bir
+  yama; kilit ölçümlerinin kendi kartı yok. Beyan bayatlamasın diye test var (`"k.olcum" not in
+  appjs` — pano okumaya başladığı gün kırılır).
+- **`EV_TR`de `koruma_*` çevirisi YOK:** v209/v211 olayları panoda HAM olay adıyla görünüyor
+  (tam alanlar tıklanan çekmecede). Cümleye çevirmek `app.js` turu.
+- **Faz-5 örneklem (kendiliğinden dolar):** kilit artık `durum: olculdu` · "ÖRNEKLEM YETERSİZ
+  (4/20)". Nokta tahmini −9,69 bps ama `n_kume=1` (dört dolum tek gün) olduğu için CI
+  HESAPLANMADI ve `sifiri_disliyor: null`. Kill#2 ancak n≥20 VE CI tamamen negatifken işler.
+  Bu kalem KOD İSTEMEZ, İŞLEM İSTER.
 
 ### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
 - **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
@@ -287,6 +357,19 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
 - Y5 meta-labeling (tetik: işlem birikimi — WP-R rampayı serbestleştirirse hızlanır) · Y7 ML
   sıralama (tetik: evren genişlemesi WP-U) · intraday 4a saha kanıtı (tetik: ilk silahlı plan) →
   4b gölge → Faz 5 kanıt → Faz 6 BEŞ KİLİT (değişmedi) · 6.1 guard-ret oranı izleme.
+- **MERDİVEN DURUMU ÖLÇÜLDÜ (2026-08-07, canlı):** 4a defteri 7.541 satır — ama bu DAKİKA BARI
+  değerlendirmesidir, "emre dönebilecek karar" DEĞİL (Rol-1 bu paydayı bir kez yanlış okuyup
+  "tıkanıklık" sandı; kart `EXE-2026-002` yanlış paydayı adıyla yasaklıyor). 4b gölge defteri
+  4 dolum. Faz-6 zinciri **1/5** — açık olan tek kilit operatör onayı (`INTRADAY_ARM`).
+- **✅ Faz-5 kilidi artık ÖLÇÜYOR (v212, kart `EXE-2026-002` + R1):** `durum` `olculemedi` →
+  `olculdu`. Gerekçe "üreten kod yok"tan "ÖRNEKLEM YETERSİZ (4/20)"ya döndü — birincisi hiç
+  dolmaz, ikincisi işlem biriktikçe KENDİLİĞİNDEN dolar. Ölçüm: n_eşleşen 4/4 (kill#4 %0),
+  ortalama −9,69 bps / −0,015R; CI **hesaplanmadı** çünkü `n_kume=1` (dört dolum tek gün) —
+  tek kümeden aralık üretmek genişliği sıfır bir CI verip kilidi HAK ETMEDEN açardı.
+  Tarih-kümeli bootstrap ayrıştırıcı testle kanıtlandı (aynı gün ikizlenen gözlemde kümeli
+  aralık %0 değişiyor, düz bootstrap %30 daralıyor). **Bu kalem KOD İSTEMEZ, İŞLEM İSTER.**
+- Kalan üç kapalı kilit (edge 1/5 · sonuç 0/4 · DSR 1e-06) KANIT eksikliğinden kapalı; kodla
+  açılamaz, kârlı işlem geçmişi ister. Merdivende kodla açılabilecek kilit KALMADI.
 
 ### WP-O — Operatör Kalemleri → §6 (envanter §6.1; bu plandaki 🔒 biletlerin sahipleri orada:
 bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı [öncelik düşük — aile hükmü zayıf] ·
