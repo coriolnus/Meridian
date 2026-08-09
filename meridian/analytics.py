@@ -2514,6 +2514,19 @@ def portfolio_heat() -> dict:
 # YASA 6: `validation.py` aday getiri defterini YAZAR; onu BAŞKA bir modülden okuyan taraf burasıdır
 # (statik artefakt grafı, kendi yazdığını kendi okuyan modülü tüketici saymaz). Pano bu fonksiyonu
 # /api/diagnostics üzerinden görür.
+#
+# K-CEZASI KALİBRASYONU — DENGELEME REFERANSI (WP-M M9, 2026-08-10; GEVŞETME DEĞİL). Bu dosyanın
+# K-cezası okumaları (`validation_trio`nun DSR n_trials'ı; `dead_families`in "K büyür → p_required
+# yükselir" beyanı; cezanın kendisi `probgate.p_required_for`) bilinçli olarak SIKI gelenektedir
+# (Harvey-Liu-Zhu 2016 "kesitte t>3" ailesi; DSR da [Bailey & López de Prado] aynı damar).
+# Literatürün DENGELEME bacağı da adresli dursun: Andrew Y. Chen (2022), "Do t-Statistic Hurdles
+# Need to Be Raised?" — yayımlanmış kesit-öngörücü popülasyonunda yanlış-keşif oranının sanılandan
+# KÜÇÜK olduğunu, çıtayı körce yükseltmenin bedelinin kaçırılan gerçek edge (yanlış-red) olduğunu,
+# hurdle seçiminin iki hata türü arasında bir DENGE olduğunu savunur. BU NOT BİR GEVŞETME DEĞİLDİR:
+# hiçbir eşik/formül değişmedi (eşik sonradan değişmez; kill-list dokunulmaz) — not, K-cezası
+# şeffaflığının METODOLOJİ bacağıdır (yüzey bacağı: pano/F13, WP-UX). Künye bellekten yazıldı
+# (yazar/yıl/başlıkta eminiz); yayın yeri/nihai sürüm için operatör literatür doğrulaması gerekir
+# (UYDURMA YASAĞI şerhi — doğrulanmadan künyeye dergi/cilt EKLENMEZ).
 def validation_trio() -> dict:
     """DSR / PBO / sorgu sayacı YAN YANA — panonun "doğrulama" satırının tek kaynağı.
 
