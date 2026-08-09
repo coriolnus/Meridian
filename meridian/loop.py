@@ -2006,7 +2006,7 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak) -> tuple[st
         f_eqn  = float(fill_eq_now)
         f_peak = float(fill_peak) if fill_peak is not None else START_EQUITY
         f_mult = derisk_mult(f_eqn, f_peak)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError):  # sessiz-yutma: dolum-anı eq_now/peak sayı DEĞİL (biçimsiz/None) — çarpan yeniden üretilemez; hüküm UYDURULMAZ, `olculemedi`ye düşer (dönüşteki neden bunu söyler)
         return "olculemedi", "dolum-anı eq_now/peak sayıya çevrilemedi — çarpan yeniden üretilemedi"
     # sermaye_kaynagi: nabız KANALI + bayatlık. KANAL-özgü kök, generic taban kıyasından ÖNCE gelir
     # (canlı AMGN bacağı: pano dalı `eq_now` almaz, boyutu bayat nabızdan okur — §6).
