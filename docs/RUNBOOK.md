@@ -42,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
 - **15 ops betiği** başlığıyla okundu
-- **48 günlük maddesi** üç bölümden toplandı
+- **61 günlük maddesi** üç bölümden toplandı
 
 ---
 
@@ -64,8 +64,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `HEARTBEAT_STALE` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **HEARTBEAT_STALE kurtarma (WP-P, 2026-08-10):** jeton bugün ÜRETİCİSİZ — tek üreticisi eski `run.py` worker döngüsüydü, emekli (beyan: meridian/run.py:34). Yeni bir kaydı görmek "eski bir yapı koşuyor" demektir: `state/events.jsonl` kaydının sürecini/sürümünü doğrula (A1'de `journalctl -u meridian`). Döngü canlılığının gerçek bekçileri: A1 `meridian-tick-watchdog.timer` (deploy/oracle-a1/tick_watchdog.sh — scheduler damgası 45 dk bayatlarsa restart) + yerelde `ops/keepalive.sh` (healthz 60 sn'de bir; üst üste 2 ölü → süreci diriltir).
 
 ## ROLLBACK {#rollback}
 
@@ -82,8 +81,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ROLLBACK` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **ROLLBACK kurtarma (WP-P, 2026-08-10):** iki hâl, olay `detail`inden ayrılır. (a) rollback.py:253 = geri alma UYGULANDI (çocuk ebeveynden `rollback_if_worse_by` kadar kötü) — eylem gerekmez, kayıttaki from_version/to_version + karar_* alanları hükmün kanıtı. (b) rollback.py:221 = geri alma BAŞARISIZ: `state/history/vNNNN.yaml` ebeveyn anlık görüntüsü yok, KÖTÜ sürüm CANLI kalıyor. Kurtarma: dosyayı state yedeğinden geri koy (Mac `backups/a1/` — ops/pull-a1-backups.sh çeker; A1 `/home/ubuntu/backups/state-*.tar.gz`) — bakım penceresinde (canlı worker koşarken state'e yazılmaz); dosya gelince sonraki değerlendirme (loop.py:1717) geri almayı kendiliğinden yeniden dener.
 
 ## CIRCUIT_BREAKER {#circuit_breaker}
 
@@ -99,8 +97,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `CIRCUIT_BREAKER` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **CIRCUIT_BREAKER kurtarma (WP-P, 2026-08-10):** tetik loop.py:1108 — OPEN işaretli günlük PnL `goal.limits.max_daily_loss_pct` eşiğini aştı (health.py:293); o gün yeni giriş yok (giriş kapısındaki `not breaker` şartı, loop.py:198 beyanı), pozisyon yönetimi sürer. ELLE KOL YOK — bilinçli: kesici dosya değil heartbeat alanıdır (`breaker_tripped`) ve bir sonraki seansta kendiliğinden sıfırlanır (`devre_kesici` sapmasının ipucuyla aynı hüküm; day_start_equity her işlenen barda tazelenir, loop.py:1221). Operatör: günün kayıp nedenini oku (pano kill yüzeyi → Kitap · şu an); ertesi seans sıfırlanmadıysa risk defterine bak.
 
 ## DATA_QUALITY {#data_quality}
 
@@ -130,8 +127,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `DATA_QUALITY` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **DATA_QUALITY kurtarma (WP-P, 2026-08-10):** 15 yol tek sınıf değildir — önce olay `detail`inden alt sınıfı ayır. Kapı hâli (loop.py:1068, `data_halt` → heartbeat `data_ok=False`; `veri_kalitesi` sapması aynı olgu): o gün yeni giriş kapalı, karantinadaki sembol işlem üretmez, tazeleme sabrı kendiliğinden dener — pano Sağlık → Veri hattı · bütünlük (saglik#veriboru) + `state/data_quality.json`. Elle onarımlı bilinen alt sınıflar: pano token'ı ASCII-dışı (api.py:40) → A1 `.dash.env` rotasyonu (deploy/oracle-a1/dash_token_credential.sh); sermaye beyanı kaybı (loop.py:806 reddin kaydı) → iade betiği ops/sermaye_beyani_iade.py.
 
 ## HALT_ACTIVE {#halt_active}
 
@@ -147,8 +143,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `HALT_ACTIVE` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **HALT_ACTIVE kurtarma (WP-P, 2026-08-10):** tek tetik api.py:4873 — panodan `/api/halt` (health.set_halt → `state/HALT`; bir sonraki muma kadar yeni alım yok, mevcut pozisyonlar yönetilir). Arıza değil OPERATÖR EYLEMİNİN kaydıdır: kolu kimin/ne zaman çektiği olay defterinde. Geri alma yine panodan: sağ üst DEVAM (Kademe 1 Soft Halt kolu) → `POST /api/resume`; telefonda `/panic` sayfası aynı halt/devam çiftini taşır (`soft_halt` sapması aynı kolu gösterir).
 
 ## MIRROR_DRIFT {#mirror_drift}
 
@@ -169,8 +164,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `MIRROR_DRIFT` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **MIRROR_DRIFT kurtarma (WP-P, 2026-08-10):** altı yolun ayrımı olaydaki `drift_sinifi` alanındadır. Kendi kendine onarım: çıkış-yetimi kuyruğu her döngü yeniden dener (loop.py:146 — tavansız, sessiz terk yok); trail senkronu yalnız yukarı PATCH'ler. Operatör: Mutabakat masası (pano karar#mutabakat) — hayalet/yetim/adet satırları; alarm "pozisyon ÇIPLAK" diyorsa önce koruma kur (çıplak-pozisyon prosedürü). Kalıcı split_brain/motor_yetimi/adet sapmasında hüküm operatöründür: iç defter tek gerçek (loop.py:563 beyanı), broker tarafını elle düzeltmek domain kararıdır.
 
 ## BROKER_REJECT {#broker_reject}
 
@@ -188,8 +182,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `BROKER_REJECT` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **BROKER_REJECT kurtarma (WP-P, 2026-08-10):** üç hâl: (a) ulaşım yok (loop.py:564) — ayna atlanır, planlar SİLAHLI kalır, sonraki tur kendiliğinden dener; Alpaca erişimini/anahtarları doğrula (mutabakat "Broker API" satırı; sırlar A1 `.env` — deploy/oracle-a1/RUNBOOK.md Bölüm C). (b) gerçek ret (loop.py:645) — plan silahlı kümeden DÜŞER (`failed_broker_rejection` damgası, kendiliğinden geri gelmez); ret nedeni/sınıfı panoda Reddedilen emir kaydı (karar#failsub) — yeniden kurma kararı operatöründür. (c) akış reti (mirror_stream.py:158) aynı masada görünür.
 
 ## TRAIL_DESYNC {#trail_desync}
 
@@ -205,8 +198,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `TRAIL_DESYNC` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **TRAIL_DESYNC kurtarma (WP-P, 2026-08-10):** tetik loop.py:1885 (çağrı loop.py:2233) — iç iz süren stop yükseldi, aynadaki stop bacağının PATCH'i reddedildi; broker'da ESKİ (daha alçak) stop duruyor: pozisyon korumasız değil, koruması BAYAT. Senkron her mutabakat turunda yeniden dener (sayaç: mutabakat masası Force-sync satırı). Operatör: ret `detail`indeki broker nedenine bak; ret sürüyorsa stop bacağının emir durumunu Alpaca tarafında doğrula — bacak ölü/iptalse iş çıplak-pozisyon prosedürüne düşer.
 
 ## MECHANISM_STALE {#mechanism_stale}
 
@@ -237,6 +229,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 - `ops/keepalive.sh` — gövdesinde `obs.alarm('MECHANISM_STALE')` ateşliyor (satır 46); bu betik jetonun KURTARMA YÖNETİCİSİDİR.
   - Betik özeti: Meridian keepalive — kullanıcı-oturumu süpervizörü (launchd, ~/Documents'a TCC engeli yüzünden …
+- **KALICI RİSKLER / DERSLER** → **MECHANISM_STALE kurtarma (WP-P, 2026-08-10):** ilk soru "hangi mekanizma" — ad olay `detail`inde; RUNBOOK'un o mekanizma bölümü nabzı kimin attığını söyler, son damga `state/mechanism_beats.json`. Bekçi YALNIZ gözlemdir, yeniden başlatmaz. Ölü sunucu hâlinin kurtarma yöneticisi yerelde `ops/keepalive.sh` (healthz 2× ölü → diriltir + bu jetonu yazar), A1'de `meridian-tick-watchdog.timer`. ÜRETMİYOR/DÜŞTÜ/BAYAT-TÜREV hâlleri mekanizmanın kendi bölümünden teşhis edilir; toplu görünüm pano Sağlık → gece hattı çizelgesi (saglik#cizelge).
 
 ## ARMING_READY {#arming_ready}
 
@@ -253,8 +246,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ARMING_READY` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **ARMING_READY kurtarma (WP-P, 2026-08-10):** tetik arming.py:203/299 — uyuyan kurulum kapıyı geçti; arıza değil KARAR ÇAĞRISI. Kanıt: pano Onay kuyruğu (karar#onaylar) + `state/arming_report.json`. Panelde uygulanacak eylem BİLEREK yok (`actions: []` — api.py:1438 beyanı): silahlanma bir KOD değişikliğidir, icra yolu `strategy.py:995 ARMED_SETUPS` listesine kurulumu eklemektir (mühendislik turu, operatör onayıyla). Kapı geçişi icra zorunluluğu doğurmaz (arming.py docstring: "kapı GEÇSE bile ARMED_SETUPS değişmez") — reddetmek de meşru bir hüküm.
 
 ## AUTHORITY_CHANGE {#authority_change}
 
@@ -272,8 +264,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `AUTHORITY_CHANGE` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **AUTHORITY_CHANGE kurtarma (WP-P, 2026-08-10):** iki hâl. (a) analytics.py:1172 — LLM danışman yetkisi eşikle KENDİLİĞİNDEN açıldı/geri alındı (yetki yalnız REVIEW + karşı dolum vetosu); onay gerekmez, doğrulama yeter: olay alanları promoted/r_gap/n + `state/llm_calibration.json`; sınırlar pano Otonomi ve sınırlar (kilitler#ayarlar). (b) nous_eval.py:312 — çekirdek-şekilli öneri kuyruğa sokulmaya çalışıldı: alarmın kendi beyanıyla KOD HATASIDIR (köprü yanlış yönlendirdi) → operatör eylemi yok, mühendislik turu açılır.
 
 ## GOAL_FAILURE {#goal_failure}
 
@@ -290,8 +281,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `GOAL_FAILURE` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **AÇIK KALANLAR (bilinçli, sahipli)** → **GOAL_FAILURE kurtarması KOD-TÜRETİLEMEZ — operatör domain kararı gerekir (WP-P, 2026-08-10, bilinçli açık):** tetik watchdog.py:1696 — `goal_failure_report` (watchdog.py:1647): 30g gerçekleşen getiri `goal.yaml failure_below` eşiğinin altında (mandallı — düşüşte bir kez; örneklem min_sample altındaysa hüküm None, alarm yok). Bu sözleşmenin BAŞARISIZLIK HÜKMÜdür; onu "kurtaracak" betik/endpoint yoktur ve olmamalıdır — deneyin akıbeti (durdur / param revizyonu / goal.yaml değişikliği) operatör mandasıdır. Kontrol: olay alanları realized_30d/threshold/n + pano bütünlük yüzeyi; goal.yaml İZLİ (dagit [1b] SSoT), değişiklik ayrı turdur.
 
 ## NAKED_POSITION {#naked_position}
 
@@ -309,8 +299,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `NAKED_POSITION` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **NAKED_POSITION kurtarma (WP-P, 2026-08-10):** tetik watchdog.py:2286 (motor pozisyonunda canlı koruyucu stop YOK — sev-1; pozisyon başına bir kez mandallı) ve watchdog.py:2273 (ÖLÇÜLEMEDİ: broker okunamadı — "korumasız 0" DEĞİL, önce erişimi düzelt). Kurtarma panodan: Mutabakat masası → Koruma · çıplak pozisyonlar kartı (taze ölçüm `GET /api/alpaca/koruma`) → koruma-onayı `POST /api/alpaca/koruma_kur` (onay jetonu + oneri_id; jetonsuz çağrı KURU KOŞU, bayat oneri_id emri düşürür) her çıplak motor pozisyonuna TEK OCO kurar; HALT bu yolu kapatmaz (koruma_kur bloğu beyanı).
 
 ---
 
@@ -667,8 +656,7 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `soft_halt` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **HALT_ACTIVE kurtarma (WP-P, 2026-08-10):** tek tetik api.py:4873 — panodan `/api/halt` (health.set_halt → `state/HALT`; bir sonraki muma kadar yeni alım yok, mevcut pozisyonlar yönetilir). Arıza değil OPERATÖR EYLEMİNİN kaydıdır: kolu kimin/ne zaman çektiği olay defterinde. Geri alma yine panodan: sağ üst DEVAM (Kademe 1 Soft Halt kolu) → `POST /api/resume`; telefonda `/panic` sayfası aynı halt/devam çiftini taşır (`soft_halt` sapması aynı kolu gösterir).
 
 ## halt_learning {#halt_learning}
 
@@ -697,8 +685,7 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `devre_kesici` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **CIRCUIT_BREAKER kurtarma (WP-P, 2026-08-10):** tetik loop.py:1108 — OPEN işaretli günlük PnL `goal.limits.max_daily_loss_pct` eşiğini aştı (health.py:293); o gün yeni giriş yok (giriş kapısındaki `not breaker` şartı, loop.py:198 beyanı), pozisyon yönetimi sürer. ELLE KOL YOK — bilinçli: kesici dosya değil heartbeat alanıdır (`breaker_tripped`) ve bir sonraki seansta kendiliğinden sıfırlanır (`devre_kesici` sapmasının ipucuyla aynı hüküm; day_start_equity her işlenen barda tazelenir, loop.py:1221). Operatör: günün kayıp nedenini oku (pano kill yüzeyi → Kitap · şu an); ertesi seans sıfırlanmadıysa risk defterine bak.
 
 ## nabız {#nabız}
 
@@ -726,8 +713,7 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `veri_kalitesi` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **DATA_QUALITY kurtarma (WP-P, 2026-08-10):** 15 yol tek sınıf değildir — önce olay `detail`inden alt sınıfı ayır. Kapı hâli (loop.py:1068, `data_halt` → heartbeat `data_ok=False`; `veri_kalitesi` sapması aynı olgu): o gün yeni giriş kapalı, karantinadaki sembol işlem üretmez, tazeleme sabrı kendiliğinden dener — pano Sağlık → Veri hattı · bütünlük (saglik#veriboru) + `state/data_quality.json`. Elle onarımlı bilinen alt sınıflar: pano token'ı ASCII-dışı (api.py:40) → A1 `.dash.env` rotasyonu (deploy/oracle-a1/dash_token_credential.sh); sermaye beyanı kaybı (loop.py:806 reddin kaydı) → iade betiği ops/sermaye_beyani_iade.py.
 
 ---
 
@@ -1137,6 +1123,7 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 - **Yama-değil-çözüm borçları:** IEX hacim kalibrasyon oranları İLK T+1 düzeltmesine kadar boş (yedek katman o gece kör — bilinçli, damgalı) · emekli-sembol modülü A1'de diskte ama koşan süreçte değil (yarınki restart'a kadar payda 259) · monitörün başarı koşulu last_processed bekliyor (bu gece 07-29+07-30 birlikte işlenebilir — yorumda dikkat).
 - **Operatör kalemleri:** bildirim kanal kimliği (TELEGRAM_*/MERIDIAN_WEBHOOK_URL — girilene dek fail-notify beyanlı no-op) · NOUS_MODEL · FISV/PSKY halef kararı · Faz-6/silahlanma onayları · 1.4 karar kapısı.
 - **Ölçüm borçları:** hotstate_down çırpınması temiz Redis'te yeniden ölçülecek · R1 damgaları + PBO tabanı birikiyor (taban 0/204) · Katman C saha kanıtı · gölge-v2 kitaplarının ilk satırları.
+- **GOAL_FAILURE kurtarması KOD-TÜRETİLEMEZ — operatör domain kararı gerekir (WP-P, 2026-08-10, bilinçli açık):** tetik watchdog.py:1696 — `goal_failure_report` (watchdog.py:1647): 30g gerçekleşen getiri `goal.yaml failure_below` eşiğinin altında (mandallı — düşüşte bir kez; örneklem min_sample altındaysa hüküm None, alarm yok). Bu sözleşmenin BAŞARISIZLIK HÜKMÜdür; onu "kurtaracak" betik/endpoint yoktur ve olmamalıdır — deneyin akıbeti (durdur / param revizyonu / goal.yaml değişikliği) operatör mandasıdır. Kontrol: olay alanları realized_30d/threshold/n + pano bütünlük yüzeyi; goal.yaml İZLİ (dagit [1b] SSoT), değişiklik ayrı turdur.
 
 ## KALICI RİSKLER / DERSLER {#kalici-riskler}
 
@@ -1147,6 +1134,18 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 - classifier/API kesintilerinde: salt-okuma araçlarla devam + zamanlayıcılı yeniden deneme.
 - pytest `-qq` tuzağı (2026-08-02): pyproject `addopts = "-q"` zaten veriyor; komuta fazladan `-q` eklemek `-qq` yapar ve "N passed" özet satırını TAMAMEN bastırır — yeşil koşu hiçbir şey basmaz, triyaj `grep -E "FAILED|ERROR"` + özet satırı ikisine birden bakar. pytest'i `-q`suz çağır.
 - venv ana repo kökünde (`/Users/erdemozturk/AI-Trading/.venv`, py3.12 + pytest); worktree'lerde YOK ve sistem `python3` (3.14 homebrew) pytest içermez → testler `.venv/bin/python -m pytest` ile.
+- **HEARTBEAT_STALE kurtarma (WP-P, 2026-08-10):** jeton bugün ÜRETİCİSİZ — tek üreticisi eski `run.py` worker döngüsüydü, emekli (beyan: meridian/run.py:34). Yeni bir kaydı görmek "eski bir yapı koşuyor" demektir: `state/events.jsonl` kaydının sürecini/sürümünü doğrula (A1'de `journalctl -u meridian`). Döngü canlılığının gerçek bekçileri: A1 `meridian-tick-watchdog.timer` (deploy/oracle-a1/tick_watchdog.sh — scheduler damgası 45 dk bayatlarsa restart) + yerelde `ops/keepalive.sh` (healthz 60 sn'de bir; üst üste 2 ölü → süreci diriltir).
+- **ROLLBACK kurtarma (WP-P, 2026-08-10):** iki hâl, olay `detail`inden ayrılır. (a) rollback.py:253 = geri alma UYGULANDI (çocuk ebeveynden `rollback_if_worse_by` kadar kötü) — eylem gerekmez, kayıttaki from_version/to_version + karar_* alanları hükmün kanıtı. (b) rollback.py:221 = geri alma BAŞARISIZ: `state/history/vNNNN.yaml` ebeveyn anlık görüntüsü yok, KÖTÜ sürüm CANLI kalıyor. Kurtarma: dosyayı state yedeğinden geri koy (Mac `backups/a1/` — ops/pull-a1-backups.sh çeker; A1 `/home/ubuntu/backups/state-*.tar.gz`) — bakım penceresinde (canlı worker koşarken state'e yazılmaz); dosya gelince sonraki değerlendirme (loop.py:1717) geri almayı kendiliğinden yeniden dener.
+- **CIRCUIT_BREAKER kurtarma (WP-P, 2026-08-10):** tetik loop.py:1108 — OPEN işaretli günlük PnL `goal.limits.max_daily_loss_pct` eşiğini aştı (health.py:293); o gün yeni giriş yok (giriş kapısındaki `not breaker` şartı, loop.py:198 beyanı), pozisyon yönetimi sürer. ELLE KOL YOK — bilinçli: kesici dosya değil heartbeat alanıdır (`breaker_tripped`) ve bir sonraki seansta kendiliğinden sıfırlanır (`devre_kesici` sapmasının ipucuyla aynı hüküm; day_start_equity her işlenen barda tazelenir, loop.py:1221). Operatör: günün kayıp nedenini oku (pano kill yüzeyi → Kitap · şu an); ertesi seans sıfırlanmadıysa risk defterine bak.
+- **DATA_QUALITY kurtarma (WP-P, 2026-08-10):** 15 yol tek sınıf değildir — önce olay `detail`inden alt sınıfı ayır. Kapı hâli (loop.py:1068, `data_halt` → heartbeat `data_ok=False`; `veri_kalitesi` sapması aynı olgu): o gün yeni giriş kapalı, karantinadaki sembol işlem üretmez, tazeleme sabrı kendiliğinden dener — pano Sağlık → Veri hattı · bütünlük (saglik#veriboru) + `state/data_quality.json`. Elle onarımlı bilinen alt sınıflar: pano token'ı ASCII-dışı (api.py:40) → A1 `.dash.env` rotasyonu (deploy/oracle-a1/dash_token_credential.sh); sermaye beyanı kaybı (loop.py:806 reddin kaydı) → iade betiği ops/sermaye_beyani_iade.py.
+- **HALT_ACTIVE kurtarma (WP-P, 2026-08-10):** tek tetik api.py:4873 — panodan `/api/halt` (health.set_halt → `state/HALT`; bir sonraki muma kadar yeni alım yok, mevcut pozisyonlar yönetilir). Arıza değil OPERATÖR EYLEMİNİN kaydıdır: kolu kimin/ne zaman çektiği olay defterinde. Geri alma yine panodan: sağ üst DEVAM (Kademe 1 Soft Halt kolu) → `POST /api/resume`; telefonda `/panic` sayfası aynı halt/devam çiftini taşır (`soft_halt` sapması aynı kolu gösterir).
+- **MIRROR_DRIFT kurtarma (WP-P, 2026-08-10):** altı yolun ayrımı olaydaki `drift_sinifi` alanındadır. Kendi kendine onarım: çıkış-yetimi kuyruğu her döngü yeniden dener (loop.py:146 — tavansız, sessiz terk yok); trail senkronu yalnız yukarı PATCH'ler. Operatör: Mutabakat masası (pano karar#mutabakat) — hayalet/yetim/adet satırları; alarm "pozisyon ÇIPLAK" diyorsa önce koruma kur (çıplak-pozisyon prosedürü). Kalıcı split_brain/motor_yetimi/adet sapmasında hüküm operatöründür: iç defter tek gerçek (loop.py:563 beyanı), broker tarafını elle düzeltmek domain kararıdır.
+- **BROKER_REJECT kurtarma (WP-P, 2026-08-10):** üç hâl: (a) ulaşım yok (loop.py:564) — ayna atlanır, planlar SİLAHLI kalır, sonraki tur kendiliğinden dener; Alpaca erişimini/anahtarları doğrula (mutabakat "Broker API" satırı; sırlar A1 `.env` — deploy/oracle-a1/RUNBOOK.md Bölüm C). (b) gerçek ret (loop.py:645) — plan silahlı kümeden DÜŞER (`failed_broker_rejection` damgası, kendiliğinden geri gelmez); ret nedeni/sınıfı panoda Reddedilen emir kaydı (karar#failsub) — yeniden kurma kararı operatöründür. (c) akış reti (mirror_stream.py:158) aynı masada görünür.
+- **TRAIL_DESYNC kurtarma (WP-P, 2026-08-10):** tetik loop.py:1885 (çağrı loop.py:2233) — iç iz süren stop yükseldi, aynadaki stop bacağının PATCH'i reddedildi; broker'da ESKİ (daha alçak) stop duruyor: pozisyon korumasız değil, koruması BAYAT. Senkron her mutabakat turunda yeniden dener (sayaç: mutabakat masası Force-sync satırı). Operatör: ret `detail`indeki broker nedenine bak; ret sürüyorsa stop bacağının emir durumunu Alpaca tarafında doğrula — bacak ölü/iptalse iş çıplak-pozisyon prosedürüne düşer.
+- **MECHANISM_STALE kurtarma (WP-P, 2026-08-10):** ilk soru "hangi mekanizma" — ad olay `detail`inde; RUNBOOK'un o mekanizma bölümü nabzı kimin attığını söyler, son damga `state/mechanism_beats.json`. Bekçi YALNIZ gözlemdir, yeniden başlatmaz. Ölü sunucu hâlinin kurtarma yöneticisi yerelde `ops/keepalive.sh` (healthz 2× ölü → diriltir + bu jetonu yazar), A1'de `meridian-tick-watchdog.timer`. ÜRETMİYOR/DÜŞTÜ/BAYAT-TÜREV hâlleri mekanizmanın kendi bölümünden teşhis edilir; toplu görünüm pano Sağlık → gece hattı çizelgesi (saglik#cizelge).
+- **ARMING_READY kurtarma (WP-P, 2026-08-10):** tetik arming.py:203/299 — uyuyan kurulum kapıyı geçti; arıza değil KARAR ÇAĞRISI. Kanıt: pano Onay kuyruğu (karar#onaylar) + `state/arming_report.json`. Panelde uygulanacak eylem BİLEREK yok (`actions: []` — api.py:1438 beyanı): silahlanma bir KOD değişikliğidir, icra yolu `strategy.py:995 ARMED_SETUPS` listesine kurulumu eklemektir (mühendislik turu, operatör onayıyla). Kapı geçişi icra zorunluluğu doğurmaz (arming.py docstring: "kapı GEÇSE bile ARMED_SETUPS değişmez") — reddetmek de meşru bir hüküm.
+- **AUTHORITY_CHANGE kurtarma (WP-P, 2026-08-10):** iki hâl. (a) analytics.py:1172 — LLM danışman yetkisi eşikle KENDİLİĞİNDEN açıldı/geri alındı (yetki yalnız REVIEW + karşı dolum vetosu); onay gerekmez, doğrulama yeter: olay alanları promoted/r_gap/n + `state/llm_calibration.json`; sınırlar pano Otonomi ve sınırlar (kilitler#ayarlar). (b) nous_eval.py:312 — çekirdek-şekilli öneri kuyruğa sokulmaya çalışıldı: alarmın kendi beyanıyla KOD HATASIDIR (köprü yanlış yönlendirdi) → operatör eylemi yok, mühendislik turu açılır.
+- **NAKED_POSITION kurtarma (WP-P, 2026-08-10):** tetik watchdog.py:2286 (motor pozisyonunda canlı koruyucu stop YOK — sev-1; pozisyon başına bir kez mandallı) ve watchdog.py:2273 (ÖLÇÜLEMEDİ: broker okunamadı — "korumasız 0" DEĞİL, önce erişimi düzelt). Kurtarma panodan: Mutabakat masası → Koruma · çıplak pozisyonlar kartı (taze ölçüm `GET /api/alpaca/koruma`) → koruma-onayı `POST /api/alpaca/koruma_kur` (onay jetonu + oneri_id; jetonsuz çağrı KURU KOŞU, bayat oneri_id emri düşürür) her çıplak motor pozisyonuna TEK OCO kurar; HALT bu yolu kapatmaz (koruma_kur bloğu beyanı).
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle) {#bu-oturumda-bulunan}
 
