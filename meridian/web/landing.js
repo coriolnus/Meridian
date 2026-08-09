@@ -19,6 +19,27 @@ addEventListener('scroll',paint,{passive:true});paint();
 
 /* ---------------------------------------------------------------- */
 
+/* ÖLÇÜLEN — MANŞET: canlı/tohum AYRI (v223 KALEM 6'nın pano bacağı). Eskiden tek "kapanmış işlem 96"
+   vardı; 96 replay TOHUMU (training, survivorship'li) DAHİL ham toplam, GERÇEK canlı 1 — manşet
+   yanıltıyordu. Artık canlı n + ortalama R ÖNDE, tohum İKİNCİL (mut). $ P&L uç sözleşmesi gereği YOK
+   (canlı sonuç yalnız R-multiple, uç bilerek $ vermez). Hiçbir sayı sabit yazılmaz — hepsi
+   /api/public/summary'den okunur (C10; landing "uydurma rakam" geçmişi). SAF FONKSİYON: Node'da
+   doğrulanır (test_dalga2_entegrasyon_v226). */
+function olculenSatiri(d) {
+  var live = d.live || {}, liveN = d.closed_trades_live, seedN = d.closed_trades_seed;
+  var ortR = live.mean_r != null ? (live.mean_r > 0 ? "+" : "") + live.mean_r.toFixed(2) + "R" : null;
+  return '<div class="hyp"><div class="top"><span class="v">ölçülen</span></div>' +
+    '<div class="meta">' +
+    '<span>canlı işlem <b>' + (liveN != null ? liveN : "—") + '</b>' +
+      (ortR ? ' · ortalama <b>' + ortR + '</b>' : "") + '</span>' +
+    '<span class="mut">tohum (replay) <b>' + (seedN != null ? seedN : "—") + '</b></span>' +
+    '<span>başarı notu <b style="color:var(--' + ((d.score || 0) > 0 ? "green" : "red") + ')">' +
+    (d.score != null ? d.score : "—") + '</b></span>' +
+    '<span>denenen değişken <b>' + (d.variables_tried != null ? d.variables_tried : "—") + '</b></span>' +
+    '<span>sürüm <b>v' + (d.strategy_version != null ? d.strategy_version : "—") + '</b></span>' +
+    '</div></div>';
+}
+
 /* ÖĞRENME DEFTERİ — CANLI. Bu blok daha önce elle yazılmış dört sürüm kaydının yerini aldı;
    o kayıtlar state/ ile çelişiyordu (sayfa iki hipotezin kâr ettiğini söylüyordu, gerçekte
    hiçbiri kapıyı geçmemişti). Kural: sayı gelmezse sayı GÖSTERİLMEZ — asla yer tutucuya
@@ -60,14 +81,7 @@ addEventListener('scroll',paint,{passive:true});paint();
           '<span class="st ' + (k === "shipped" || k === "promoted" || k === "accepted" ? "s-ok" : "s-rj") + '">' +
           by[k] + ' hipotez</span></div></div>');
       });
-      rows.push('<div class="hyp"><div class="top"><span class="v">ölçülen</span></div>' +
-        '<div class="meta">' +
-        '<span>kapanmış işlem <b>' + (d.closed_trades != null ? d.closed_trades : "—") + '</b></span>' +
-        '<span>başarı notu <b style="color:var(--' + ((d.score || 0) > 0 ? "green" : "red") + ')">' +
-        (d.score != null ? d.score : "—") + '</b></span>' +
-        '<span>denenen değişken <b>' + (d.variables_tried != null ? d.variables_tried : "—") + '</b></span>' +
-        '<span>sürüm <b>v' + (d.strategy_version != null ? d.strategy_version : "—") + '</b></span>' +
-        '</div></div>');
+      rows.push(olculenSatiri(d));
       var l = document.getElementById("pub-ledger");
       if (l) l.innerHTML = rows.join("");
 
@@ -87,8 +101,12 @@ addEventListener('scroll',paint,{passive:true});paint();
       /* matrisin örneklem dipnotu CANLI (K1): "31 kapanmış işlem" sabit yazılıydı, defterde 95 var */
       var mf = document.getElementById("pub-matrix-foot");
       if (mf && d.closed_trades != null) {
-        mf.textContent = d.closed_trades + " kapanmış işlemden hesaplandı. "
-          + "Ortalama R, işlem başına riske göre getiri.";
+        // Matrisin paydası TÜM defter (tohum dahil) — o yüzden ham `closed_trades` DOĞRU sayıdır;
+        // ama "hepsi canlı" sanılmasın diye tohum-dahil olduğu + canlı alt-kümesi AÇIKÇA yazılır
+        // (manşetle aynı ayrım; ikisi de uçtan, sabit sayı yok).
+        mf.textContent = d.closed_trades + " kapanmış işlemden hesaplandı"
+          + (d.closed_trades_live != null ? " (tohum dahil; canlı " + d.closed_trades_live + ")" : "")
+          + ". Ortalama R, işlem başına riske göre getiri.";
       }
 
       /* ürün maketindeki matris: gerçek kurulum × rejim verisi */

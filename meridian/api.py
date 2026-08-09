@@ -4097,6 +4097,13 @@ def api_alpaca_submit_armed(request: Request):
                 list(doc.get("alpaca_submitted") or []) + sorted(gonderilen)))[-200:]
             doc["armed"] = [p for p in (doc.get("armed") or []) if p.get("id") not in dusen]
             doc["broker_rejected"] = meta.get("broker_rejected", doc.get("broker_rejected", []))
+            # SB-1 PANO BACAĞI (2026-08-09): `mirror_submit_armed` `meta["size_law"]` makbuzunu plan
+            # başına ÜRETİR (loop.py:592) ama bu uç onu yalnız `alpaca_submitted`/`armed`/`broker_rejected`
+            # ile yamalıyordu — makbuz restart'ı ATLAYAMIYORDU (döngü bacağı `_save_broker`ın 14.
+            # anahtarıyla zaten kalıcı; pano bacağının eşdeğeri eksikti — 08-06 AMGN pano/nabız vakası).
+            # `broker_rejected` ile AYNI kilit-altı desen: meta'nın makbuzu diskteki belgeye basılır,
+            # meta boşsa diskteki mevcut makbuz KORUNUR (tam-belge yazımı YASAK, yabancı anahtarlar yaşar).
+            doc["size_law"] = meta.get("size_law", doc.get("size_law", {}))
             return True
         store.update_json("portfolio.json", _yama, {})
     obs.log("alpaca_submit_armed_endpoint", ok=res.get("ok"), submitted=res.get("submitted"),

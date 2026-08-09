@@ -2876,6 +2876,30 @@ setInterval(pollHUD, 20000); pollHUD();
 // Faz 2: /api/diagnostics tek ucundan beslenir. Her satır CANLI; veri yoksa dürüstçe "yok" der.
 function _chip(txt, cls) { return `<span class="tag ${cls}">${esc(txt)}</span>`; }
 
+// CANLILIK (dalga-2 `diagnostics.liveness`, KALEM 3) — kadans NABZI "dişli döndü mü" der; canlılık
+// "dişlinin ürettiği İŞ yaşıyor mu" der. Sahte-yeşil sınıfının pano yüzü: sprint pid'i ölü + faz
+// takılıyken nabız taze kalır, hipotez defteri günlerce donukken kadans her seans nabız atar.
+// `watchdog.liveness_report` GERÇEĞİ ölçüp BEYAN eder — bu blok o beyanı çizer (üretmez, uydurmaz).
+// ÜÇ HÂL (koştu / koşmadı / ölçülemedi) — bu bir DURUM/sağlık göstergesi, o yüzden SEV JETONU (yön
+// DEĞİL) taşır ve RENK YALNIZ ANOMALİDE:
+//   ok===true  → canlı  (sessiz/yeşil, t-go)
+//   ok===false → anomali (orphan/stall — t-no, dikkat çeker)
+//   ok==null   → ÖLÇÜLEMEDİ (t-vi akromatik; 'koşuyor' DEMEZ — ÖLÇÜLEMEDİ≠0, YASA 4)
+// Cümle (N-gün sayısı dahil) SUNUCUDAN gelir; pano tarafında sabit sayı yazılmaz (C10 ruhu).
+function canlilikBloku(lv) {
+  if (!lv) return "";
+  const bacak = (etiket, x, anomaliLbl) => {
+    if (!x) return "";
+    const [lbl, kls] = x.ok == null ? ["ÖLÇÜLEMEDİ", "t-vi"]
+      : (x.ok === false ? [anomaliLbl, "t-no"] : ["canlı", "t-go"]);
+    return `<div class="srow"><span>${esc(etiket)}</span><b>${_chip(lbl, kls)} <span class="mut" style="font-weight:400">${esc(x.beyan || "")}</span></b></div>`;
+  };
+  const sp = bacak("sprint canlılığı", lv.sprint, "KOŞMADI");
+  const lr = bacak("öğrenme canlılığı", lv.learning, "DURDU");
+  if (!sp && !lr) return "";
+  return `<h3 class="t" style="margin-top:16px">Canlılık <span class="tx3" style="font-weight:400">(kadans nabzı değil — üretilen iş yaşıyor mu)</span></h3>${sp}${lr}`;
+}
+
 // ---- BELİRSİZLİK KODLAMASI (WP-P/P5, 2026-08-01) ---------------------------------------------
 // KUSUR SINIFI: bu panoda ONARILMIŞ/SİMÜLE bir hücre ile ölçülmüş bir hücre AYNI mürekkeple
 // yazılıyordu. Köken bilgisi vardı (künye `_kaynak`, `n_cf`, `sadakat` şerhleri) ama METİN olarak,
@@ -6344,6 +6368,7 @@ async function opParcalar() {
       ${eksen2Blok}
       ${nabizRows ? `<h3 class="t" style="margin-top:16px">Kadans nabzı</h3>${nabizRows}${
         (o.son_fit || {}).beyan ? `<p class="hint">${esc(o.son_fit.beyan)}</p>` : ""}` : ""}
+      ${canlilikBloku(d.liveness)}
       ${o.bekci_notu ? `<p class="hint"><b>Bekçi notu:</b> ${esc(o.bekci_notu)}</p>` : ""}</div>`;
   })();
 
