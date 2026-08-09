@@ -12,6 +12,8 @@
 <li><code>MERIDIAN_ENGINEERING_LOG.md</code> → “AÇIK KALANLAR…” · “KALICI RİSKLER…” · “BU OTURUMDA BULUNAN…”</li>
 <li>envanter kaynakları: <code>meridian/obs.py</code> (ALARM_ sabitleri) · <code>meridian/watchdog.py</code></li>
 <p>(EXPECTED pencereleri + <code>beat()</code> nabız yerleri) · <code>meridian/api.py::_sessiz_hat</code> (sapma adları ve runbook ipuçları) · <code>obs.alarm(...)</code> ateşleme yerleri</p>
+<li><code>ops/*.sh</code> ve <code>deploy/oracle-a1/*.sh</code> <strong>gövdesindeki <code>obs.alarm(...)</code> ateşlemeleri</strong>:</li>
+<p>bir betik gövdesinde bir jetonu ateşliyorsa o jetonun <strong>kurtarma yöneticisidir</strong> ve jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör. <code>ops/keepalive.sh</code> → <code>MECHANISM_STALE</code>)</p>
 </ul>
 <p><strong>Kapsam dışı, bilerek:</strong> <code>deploy/*.sh</code> (üst düzey, <code>monitoring.sh</code> dahil) onaylı kümede değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.</p>
 <p><strong>Eşleştirme kuralı — LİTERAL AD GEÇİŞİ.</strong> Bir bölüme betik/günlük maddesi ancak o metinde bölümün adı harfi harfine geçiyorsa iliştirilir. Anlamsal/bulanık eşleştirme YOK: bir alarmı yanlış betiğe bağlamak, hiç bağlamamaktan kötüdür. Kaynağı olmayan alan “<strong>runbook girdisi henüz yazılmadı</strong>” der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulacak bir boşluk değil.</p>
@@ -27,5 +29,3 @@
 <li><strong>15 ops betiği</strong> başlığıyla okundu</li>
 <li><strong>48 günlük maddesi</strong> üç bölümden toplandı</li>
 </ul>
-<p>---</p>
-<h1>Alarmlar</h1>

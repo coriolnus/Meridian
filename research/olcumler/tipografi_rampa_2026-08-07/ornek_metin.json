@@ -1,6 +1,7 @@
 [
  "Bu belgenin panodaki okuyucusu **`/runbook`** sayfasıdır (YASA 6). Pano alarm satırları ve sessiz-hat sapmaları buradaki bölüm çapalarına (`/runbook#<ad>`) bağlanır.",
  "(EXPECTED pencereleri + `beat()` nabız yerleri) · `meridian/api.py::_sessiz_hat` (sapma adları ve runbook ipuçları) · `obs.alarm(...)` ateşleme yerleri",
+ "bir betik gövdesinde bir jetonu ateşliyorsa o jetonun **kurtarma yöneticisidir** ve jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör. `ops/keepalive.sh` → `MECHANISM_STALE`)",
  "**Kapsam dışı, bilerek:** `deploy/*.sh` (üst düzey, `monitoring.sh` dahil) onaylı kümede değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.",
  "**Eşleştirme kuralı — LİTERAL AD GEÇİŞİ.** Bir bölüme betik/günlük maddesi ancak o metinde bölümün adı harfi harfine geçiyorsa iliştirilir. Anlamsal/bulanık eşleştirme YOK: bir alarmı yanlış betiğe bağlamak, hiç bağlamamaktan kötüdür. Kaynağı olmayan alan “**runbook girdisi henüz yazılmadı**” der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulacak bir boşluk değil.",
  "**Üretim damgası yoktur, bilerek:** belge zaman damgası taşısaydı her koşu diff üretir ve “kodla ayrıştı mı” sorusu ölçülemez olurdu. Aynı kaynaktan aynı metin çıkar.",
@@ -39,7 +40,7 @@
  "`meridian/selfreview.py:103` → mesaj şablonu: `f\"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)\"`",
  "`meridian/watchdog.py:274` → mesaj şablonu: `f\"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)\"`",
  "`meridian/watchdog.py:1728` → mesaj şablonu: `f\"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu\"`",
- "**runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `MECHANISM_STALE` adı literal olarak geçmiyor.",
+ "`ops/keepalive.sh` — gövdesinde `obs.alarm('MECHANISM_STALE')` ateşliyor (satır 46); bu betik jetonun KURTARMA YÖNETİCİSİDİR.",
  "`meridian/arming.py:203` → mesaj şablonu: `f\"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor\"`",
  "`meridian/arming.py:299` → mesaj şablonu: `f\"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor\"`",
  "**runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ARMING_READY` adı literal olarak geçmiyor.",

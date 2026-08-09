@@ -134,6 +134,17 @@ def _live_fingerprint() -> dict:
                         stack.append(e.path)
                     elif e.is_file(follow_symlinks=False):
                         rel = e.path.removeprefix(base)
+                        # MUAFİYET — YALNIZ `.locks/*.lock` (2026-08-09): `store.file_lock` süreçler
+                        # arası flock için `state/.locks/<ad>.lock` dosyasını `os.open` ile açar;
+                        # yazım kancaları `builtins.open`/`store.*`/`Path.write_*`i sarar ama `os.open`ı
+                        # SARMAZ (doğru — kilit veri değil), yani katman 1 kilidi hiç görmez. STATE
+                        # DIŞINA yazan bir sandbox testi (sprint history'si mutlak yolla geçer,
+                        # config.dump_yaml fallback'i) kilit adını CANLI `_state()/.locks`e düşürür;
+                        # bu GEÇİCİ bir flock artefaktıdır, kalıcı state DEĞİLDİR ve kancalara
+                        # görünmemesi BEKLENEN davranıştır. SINIR DAR: yalnız `.locks/` altındaki
+                        # `.lock` dosyaları elenir — gerçek CANLI state değişimi hâlâ yakalanır.
+                        if rel.startswith(".locks" + _os.sep) and rel.endswith(".lock"):
+                            continue
                         # İZLİ İKİLİ İÇERİKLE, GERİ KALAN HER ŞEY mtime İLE (gerekçe yukarıda).
                         # Karşılaştırma GÖRELİ YOL üzerindedir: yalnız KÖKteki bounds/goal.yaml
                         # muaftır — bir alt dizinde aynı adı taşıyan dosya git-izli değildir ve

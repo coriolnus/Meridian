@@ -321,6 +321,6 @@ def dump_yaml(obj: dict, path: Path) -> None:
     from . import store
     try:
         name = str(Path(path).relative_to(STATE))
-    except ValueError:                # STATE dışı yol (ör. sprint sandbox history'si) — mutlak yolla gir
+    except ValueError:  # sessiz-yutma: STATE dışı yol (sprint sandbox history'si, sprint.py:208) — relative_to bilerek ValueError atar, yol mutlak geçer; hata YUTULMUYOR, bilinçli fallback ve veri kaybı yok
         name = str(path)
     store.write_text(name, yaml.safe_dump(obj, sort_keys=False))
