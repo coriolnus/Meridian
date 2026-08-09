@@ -211,20 +211,46 @@ def test_meridian_hermes_dizini_yazilabilir_TUR1_REGRESYONU():
 
 
 def test_hermes_yolu_kaynakla_dogrulaniyor_kargo_kult_degil():
-    """Yol 'olsun diye' değil, KOD oraya yazdığı için açık — kaynak-çivili kanıt."""
-    from meridian import hermes
+    """Yol 'olsun diye' değil, KOD oraya yazdığı için açık — kaynak-çivili kanıt.
+
+    H9 KADEME C (kapı-dışı taşıma): `_write_env` ve `config_ensure_integrations` elle kurdukları
+    mkstemp+os.replace'i BIRAKTI ve atomikliği `store.write_text` KAPISINA delege etti. Yazım HÂLÂ
+    ~/.hermes'e gidiyor — yalnız atomiklik artık kapının içinde. Yani `ReadWritePaths=~/.hermes`
+    kargo-kült DEĞİL, ŞART olmaya devam ediyor. Test o gerçeği ÜÇ uçtan çivileler: (1) hedef yol
+    ~/.hermes (home) altında, (2) yazım store kapısından geçiyor, (3) o kapı GERÇEKTEN atomik
+    (store'da mkstemp+os.replace duruyor). Atomiklik satır-içinden kayboldu diye ReadWritePaths
+    daraltılırsa, delege edilmiş ama kaybolmamış bir yazım sessizce EROFS'a çarpardı."""
+    from meridian import hermes, store
 
     assert hermes.AGENT_SKILLS_DIR.endswith("/.hermes/skills")
     assert hermes.AGENT_CONFIG.endswith("/.hermes/config.yaml")
 
     gemini = inspect.getsource(hermes.sync_local_agent_gemini)
+    # (1) HEDEF ~/.hermes ALTINDA: env_path, home = expanduser("~/.hermes")'ten türer.
     assert 'os.path.expanduser("~/.hermes")' in gemini
-    assert "mkstemp(dir=home)" in gemini and "os.replace(tmp, env_path)" in gemini, (
+    assert 'env_path = os.path.join(home, ".env")' in gemini, (
+        "sync_local_agent_gemini artık env_path'i ~/.hermes (home) altından türetmiyorsa "
+        "ReadWritePaths daraltılabilir — bu testi ve birim yorumunu birlikte güncelle")
+    # (2) YAZIM STORE KAPISINDAN (H9 Kademe C): elle mkstemp+os.replace yerine store.write_text.
+    assert "store.write_text(env_path" in gemini, (
         "sync_local_agent_gemini artık ~/.hermes'e yazmıyorsa ReadWritePaths daraltılabilir — "
         "bu testi ve birim yorumunu birlikte güncelle")
 
+    # config.yaml da AYNI kapıdan ~/.hermes'e yazar (H9 Kademe C). Burada `mkstemp` aramak artık
+    # kargo-kült olurdu: taşımadan sonra o sözcük yalnız YORUMDA kaldı, KODDA değil — bu testin
+    # adı (kaynakla doğrula, yorumla değil) tam da onu yasaklar. Atomiklik kapıda ölçülür (aşağıda).
     cfg = inspect.getsource(hermes.config_ensure_integrations)
-    assert "AGENT_CONFIG" in cfg and "mkstemp" in cfg and "copy2" in cfg
+    assert "AGENT_CONFIG" in cfg and "store.write_text(AGENT_CONFIG" in cfg and "copy2" in cfg
+
+    # (3) KAPININ ATOMİKLİĞİ: store.write_text → _atomic_write (mkstemp + os.replace + fsync).
+    # Atomiklik satır-içinden buraya TAŞINDI, kaybolmadı. Kapı atomikliğini yitirirse hermes'in
+    # ~/.hermes yazımı yarım kalır — ReadWritePaths hâlâ gerekli ama 'atomik yazar' iddiası çöker.
+    assert "_atomic_write" in inspect.getsource(store.write_text), (
+        "store.write_text artık _atomic_write kapısından geçmiyor — atomiklik zinciri koptu")
+    aw = inspect.getsource(store._atomic_write)
+    assert "mkstemp" in aw and "os.replace" in aw, (
+        "store._atomic_write artık atomik değil (mkstemp+os.replace yok) — hermes'in ~/.hermes'e "
+        "yazımı yarım kalabilir")
 
     sk = inspect.getsource(hermes.sync_agent_skills)
     assert "makedirs(AGENT_SKILLS_DIR" in sk and "os.symlink" in sk
