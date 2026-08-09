@@ -1,0 +1,281 @@
+{
+  "kart": "EXE-2026-004 (cf_cikis_sadakati) AŞAMA 1 — ÖLÇÜM",
+  "eslesme_tanilari": {
+    "n_trades_total": 95,
+    "n_trades_with_r": 95,
+    "n_cf_total": 7161,
+    "n_cf_entered_with_r_CONSUMER_VISIBLE": 2106,
+    "n_cf_entered_near_miss_EXCLUDED": 4947,
+    "n_matched": 92,
+    "match_via_date_ticker_setup": 92,
+    "match_via_date_ticker": 0,
+    "n_unmatched_real": 3,
+    "unmatched_real_ornekler": [
+      {
+        "plan_id": "P-2024-12-05-WMT",
+        "setup": "breakout_vcp",
+        "plan_date": "2024-12-05",
+        "ticker": "WMT",
+        "neden": "cf_ikizi_yok"
+      },
+      {
+        "plan_id": "P-2025-05-08-ROK",
+        "setup": "breakout_vcp",
+        "plan_date": "2025-05-08",
+        "ticker": "ROK",
+        "neden": "cf_ikizi_yok"
+      },
+      {
+        "plan_id": "P-2026-05-22-ENPH",
+        "setup": "breakout_vcp",
+        "plan_date": "2026-05-22",
+        "ticker": "ENPH",
+        "neden": "cf_ikizi_yok"
+      }
+    ],
+    "n_fidelity_unmeasurable_cf": 2014
+  },
+  "foundation_sadakat": {
+    "n_matched_pairs": 92,
+    "cf_minus_real_R": {
+      "mean": 0.0373,
+      "ci_low": -0.0371,
+      "ci_high": 0.1201,
+      "n": 92,
+      "n_cluster": 87,
+      "ci_excludes_0": false
+    },
+    "median": -0.005,
+    "n_cf_optimistic_pos": 32,
+    "n_identical_lt_0.001": 3,
+    "min": -0.999,
+    "max": 2.235,
+    "cf_uses_only_exits": [
+      "stop_gap",
+      "target_gap",
+      "stop",
+      "target",
+      "time_stop"
+    ],
+    "exit_reason_crosstab": {
+      "real=time_stop|cf=time_stop": 33,
+      "real=stop|cf=stop": 29,
+      "real=stop|cf=time_stop": 15,
+      "real=stop_gap|cf=stop_gap": 7,
+      "real=target|cf=target": 4,
+      "real=target_gap|cf=target_gap": 1,
+      "real=regime_flip|cf=time_stop": 1,
+      "real=stop_gap|cf=stop": 1,
+      "real=regime_flip|cf=stop": 1
+    },
+    "yorum": "cf_minus_real_R.ci_excludes_0 = iyimserlik 0'dan AYIRT EDİLEBİLİR; False ise matched-pair iyimserliği ÖLÇÜLEBİLİR SAPMA DEĞİL"
+  },
+  "metric_a_shadow_model_kalibrasyon": {
+    "fits": {
+      "real_only": {
+        "n": 95,
+        "brier_train": 0.2257
+      },
+      "cf_only": {
+        "n": 2106,
+        "brier_train": 0.2435
+      },
+      "real_plus_cf": {
+        "n": 2201,
+        "brier_train": 0.2431
+      },
+      "canli_dogrulama": {
+        "n_fit": 2201,
+        "brier_train": 0.2431,
+        "n_real": 95,
+        "n_cf": 2106,
+        "not": "real+cf fit'i canlı n_fit/brier_train'e yakın olmalı (ayna teyidi)"
+      }
+    },
+    "eval_on_95_real": {
+      "real_only": {
+        "n": 95,
+        "brier": 0.2257,
+        "mean_pred": 0.3685,
+        "win_rate": 0.3684,
+        "calib_gap": 0.0001
+      },
+      "cf_only": {
+        "n": 95,
+        "brier": 0.2337,
+        "mean_pred": 0.4193,
+        "win_rate": 0.3684,
+        "calib_gap": 0.0509
+      },
+      "real_plus_cf": {
+        "n": 95,
+        "brier": 0.2323,
+        "mean_pred": 0.4142,
+        "win_rate": 0.3684,
+        "calib_gap": 0.0458
+      }
+    },
+    "calib_gap_ci_cf_only": {
+      "mean": 0.0509,
+      "ci_low": -0.0505,
+      "ci_high": 0.1489,
+      "n": 95,
+      "n_cluster": 89,
+      "ci_excludes_0": false
+    },
+    "calib_gap_ci_real_plus_cf": {
+      "mean": 0.0458,
+      "ci_low": -0.0541,
+      "ci_high": 0.1417,
+      "n": 95,
+      "n_cluster": 89,
+      "ci_excludes_0": false
+    },
+    "cf_marginal_mean_pred_shift": 0.0457,
+    "label_flip_on_matched": {
+      "agree_win": 32,
+      "agree_loss": 50,
+      "cf_win_real_loss": 8,
+      "cf_loss_real_win": 2
+    },
+    "label_flip_mcnemar": {
+      "p_value": 0.1094,
+      "n_discordant": 10,
+      "b": 8,
+      "c": 2
+    },
+    "olculebilir_sapma": false,
+    "sapma_gerekce": "cf-only calib_gap=0.0509 CI=-0.0505..0.1489 (exclude0=False); real-only(in-sample)=0.0001; real+cf calib_gap=0.0458 CI=-0.0541..0.1417; cf marjinal ort-tahmin kaymasi=0.0457; etiket-çevrimi McNemar p=0.1094 (cf_win_real_loss=8 vs cf_loss_real_win=2); NOKTA-KESTİRİMLER tutarlı iyimser AMA anlamlılık: gap_sig=False, mcn_sig=False. UYARI: real-only calib_gap İÇ-ÖRNEKLEMdir (95 gerçek eğitimde) → ~0 beklenir, kıyas için cf-only örneklem-dışıdır."
+  },
+  "metric_b_skor_kalibrasyon": {
+    "rank_ic": {
+      "havuz_real_plus_cf": {
+        "rank_ic": -0.0098,
+        "n": 2201,
+        "neden_None": null
+      },
+      "gercek": {
+        "rank_ic": 0.0492,
+        "n": 95,
+        "neden_None": null
+      },
+      "cf": {
+        "rank_ic": -0.011,
+        "n": 2106,
+        "neden_None": null
+      },
+      "not": "tüketici (pano/evidence_pack) HAVUZ rank_ic'i okur; cf 22:1 boğar (analytics.py:876) — havuz≈cf ise skor sinyali fiilen cf'in"
+    },
+    "matched_quintile_leak": [
+      {
+        "quintile": 1,
+        "n": 18,
+        "score_lo": 61.0,
+        "score_hi": 77.0,
+        "cf_avg_R": -0.267,
+        "real_avg_R": -0.172,
+        "cf_minus_real": -0.095
+      },
+      {
+        "quintile": 2,
+        "n": 18,
+        "score_lo": 77.0,
+        "score_hi": 80.0,
+        "cf_avg_R": -0.251,
+        "real_avg_R": -0.262,
+        "cf_minus_real": 0.011
+      },
+      {
+        "quintile": 3,
+        "n": 19,
+        "score_lo": 81.0,
+        "score_hi": 84.0,
+        "cf_avg_R": 0.373,
+        "real_avg_R": 0.264,
+        "cf_minus_real": 0.109
+      },
+      {
+        "quintile": 4,
+        "n": 18,
+        "score_lo": 84.0,
+        "score_hi": 87.0,
+        "cf_avg_R": 0.37,
+        "real_avg_R": 0.194,
+        "cf_minus_real": 0.176
+      },
+      {
+        "quintile": 5,
+        "n": 19,
+        "score_lo": 87.0,
+        "score_hi": 95.0,
+        "cf_avg_R": -0.173,
+        "real_avg_R": -0.158,
+        "cf_minus_real": -0.015
+      }
+    ],
+    "olculebilir_sapma": false,
+    "sapma_gerekce": "havuz rank_ic=-0.0098 (n=2201), gercek=0.0492 (n=95), cf=-0.011 (n=2106); foundation cf−real ort=0.0373 CI=-0.0371..0.1201"
+  },
+  "metric_c_uyuyan_silahlanma": {
+    "dormant_setups": [
+      "momentum_burst",
+      "episodic_pivot"
+    ],
+    "per_setup": [
+      {
+        "setup": "momentum_burst",
+        "cf_n": 1080,
+        "cf_avg_r": 0.0921,
+        "n_real_trades": 0,
+        "esik_uygun": true,
+        "esik_kurali": "cf_n>=30 & cf_avg_r>0.0 (arming.py:274-276)",
+        "avg_r_margin_over_0": 0.0921,
+        "per_setup_iyimserlik": null,
+        "per_setup_iyimserlik_neden_None": "dormant setupta gerçek işlem n=0 → matched-pair iyimserliği ÖLÇÜLEMEZ",
+        "vekil_havuz_iyimserlik_nokta": 0.0373,
+        "vekil_havuz_iyimserlik_CI_ust": 0.1201,
+        "esik_flip_nokta_vekille": false,
+        "esik_flip_CI_ust_vekille": true
+      },
+      {
+        "setup": "episodic_pivot",
+        "cf_n": 1,
+        "cf_avg_r": 0.991,
+        "n_real_trades": 0,
+        "esik_uygun": false,
+        "esik_kurali": "cf_n>=30 & cf_avg_r>0.0 (arming.py:274-276)",
+        "avg_r_margin_over_0": 0.991,
+        "per_setup_iyimserlik": null,
+        "per_setup_iyimserlik_neden_None": "dormant setupta gerçek işlem n=0 → matched-pair iyimserliği ÖLÇÜLEMEZ",
+        "vekil_havuz_iyimserlik_nokta": 0.0373,
+        "vekil_havuz_iyimserlik_CI_ust": 0.1201,
+        "esik_flip_nokta_vekille": false,
+        "esik_flip_CI_ust_vekille": false
+      }
+    ],
+    "olculebilir_sapma": null,
+    "sapma_gerekce": "eşik-uygun dormant setup(lar): ['momentum_burst']; havuz iyimserlik vekili nokta=0.0373 CI-üst=0.1201; nokta-vekil flip=False, CI-üst-vekil flip=True. momentum_burst marjı (+0.092) havuz-iyimserlik NOKTASINI (+0.042) aşar ama CI-ÜSTÜNÜ (+0.124) AŞMAZ → false-trigger nokta-vekille kurulmaz, CI-üst-vekille dışlanamaz. UYARI: per-setup iyimserlik ÖLÇÜLEMEZ (dormant setuplarda gerçek işlem 0); bu bir vekil marj testidir.",
+    "kritik_kisit": "dormant setuplar (momentum_burst, episodic_pivot) GERÇEK işlem taşımaz (trades.jsonl: yalnız breakout_vcp/pullback) → tam da metrik (c)'nin ilgili setuplarında per-setup çıkış-sadakati matched-pair ile ÖLÇÜLEMEZ"
+  },
+  "hukum_onerisi_ROL1_KARARI_DEGIL": {
+    "olculebilir_sapma": {
+      "a": false,
+      "b": false,
+      "c": null
+    },
+    "matched_pair_CI_olculebilir": true,
+    "matched_pair_CI": {
+      "mean": 0.0373,
+      "ci_low": -0.0371,
+      "ci_high": 0.1201,
+      "ci_excludes_0": false
+    },
+    "underpowered_null": true,
+    "kill1_kosulu_literal_saglandi": false,
+    "asama2_esigine_ulasildi": false,
+    "olculemedi_olcut_sayisi": 1,
+    "ozet": "AŞAMA-2 eşiğine ULAŞILMADI: hiçbir tüketici ölçütü ESTABLISHED (gürültüden ayırt edilebilir) sapma göstermedi. (a) shadow_model + (b) skor kalibrasyonu underpowered-null (nokta iyimser, CI 0'ı içerir); (c) uyuyan silahlanma ÖLÇÜLEMEDİ (eşik-uygun momentum_burst'ün per-setup iyimserliği 0 gerçek işlemle ölçülemez; marjı havuz-iyimserlik CI-üstünün altında). Kill#1 (cf bilinçli-basit kalır) LİTERAL uygun ama 'iyimserlik zararsız' AFFİRMATİF kanıtı YOK — Rol-1 ya underpowered-null'ı kabul edip Kill#1 arşivler ya da daha çok GERÇEK işlem birikene dek yeniden-ölçüm bekletir.",
+    "sonuc": "OLCULEMEDI_KISMI_ASAMA2_ESIGINE_ULASILMADI",
+    "mantik": "kart: üç ölçütten HERHANGİ biri ölçülebilir sapma → AŞAMA-2; ÜÇÜ de sapma göstermezse → KILL#1; matched-pair CI ölçülemez/aşırı geniş → ÖLÇÜLEMEDİ (UYDURMA YASAĞI: 0/zorlama-hüküm değil). Nokta-kestirim tutarlı iyimser (+0.0373R) ama CI [-0.0371,0.1201] 0'ı içerir ve üst sınır maddi-harm bölgesinde → 'zararsız' AFFİRMATİF DEĞİL; harm ÖLÇÜLEMEDİ. Rol-1 kararı."
+  }
+}

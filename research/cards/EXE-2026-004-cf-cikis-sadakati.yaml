@@ -71,7 +71,38 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-09T13:0x", trial_ids: [pending-EXE-004-asama1-olcum]}
 
-status: registered   # 2026-08-09 Rol-1. ÖLÇÜM KODU YAZILMADI — bu kart ön şart.
+status: measured_partial   # 2026-08-09 Rol-1 — AŞAMA 1 ÖLÇÜLDÜ; Aşama-2 eşiğine ULAŞILMADI (eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ).
+
+verdict_asama1:   # 2026-08-09 Rol-1 hükmü — ölçüm ajanı karta DOKUNMADI.
+  sonuc: "OLCULEMEDI_KISMI — Aşama-2 eşiğine ulaşılmadı; 'iyimserlik zararsız' AFFİRMATİF DEĞİL (underpowered)."
+  n_eslesme: >
+    92 (95 gerçek işlemin 92'si; 3'ü near_miss ikiz). Tüketici-görünür cf evreni 2106 (near_miss
+    VARSAYILAN dışlı — counterfactual.py:247-254; canlı n_cf=2106 + kart '~2100 dolan' ile BİREBİR;
+    4947 near_miss satırı hiçbir tüketici görmez). Sadakat-ölçülemez kovası 2014 satır.
+  foundation_sadakat: >
+    cf_R−gercek_R ort +0,0373R, tarih-kümeli (89 küme) bootstrap %95 CI [−0,037, +0,120] → 0 İÇERİR
+    (kart +0,039R ile örtüşür). Medyan −0,005; 32/92 iyimser; ort birkaç uç değerden (maks +2,235).
+    Mekanizma görünür: 15 çift real=stop|cf=time_stop, 2 real=regime_flip (cf'in modelleyemediği çıkış tipleri).
+  olcut_a_shadow_kalibrasyon: "YOK/underpowered — cf-only calib_gap +0,051, CI [−0,051,+0,149] → 0 içerir; McNemar p=0,109. Ayna canlı modeli bit-bit üretti (brier_train 0,2431 özdeş). Yön iyimser, büyüklük gürültüde."
+  olcut_b_skor_kalibrasyon: "YOK/underpowered — rank_ic havuz −0,010 ≈ cf −0,011 (cf gerçeği 22:1 boğuyor); eşleşmiş sızma sistematik DEĞİL. Foundation CI 0 içerdiği için 'sistematik fazla-tahmin' ölçülemez."
+  olcut_c_uyuyan_silahlanma: >
+    ÖLÇÜLEMEDİ — dormant setuplarda (momentum_burst, episodic_pivot) GERÇEK işlem 0 → per-setup
+    matched-pair kurulamaz (92 eşleşmenin hepsi armed setup). momentum_burst marj +0,092 havuz-iyimserlik
+    NOKTASINI (+0,037) aşıyor AMA CI-ÜSTÜNÜ (+0,120) aşmıyor → false-trigger ne kurulur ne dışlanır.
+    KALICI boşluk: dormant→icra bağlanmadıkça (uyuyan-kurulum-yolu operatör kararı) ölçüt-c hiç ölçülemez.
+  hukum: >
+    AŞAMA-2 (dört çıkış tipi modelleme + cf yeniden-koşum) TETİKLENMEZ — üç ölçütün hiçbiri gürültüden
+    ayırt edilebilir zarar göstermedi. cf BİLİNÇLİ-BASİT KALIR (counterfactual.py felsefesi korunur).
+    AMA Kill#1'in "iyimserlik zararsız, ARŞİVLE" lafzı UYGULANMAZ: null UNDERPOWERED (n=92; tüm CI'ler 0
+    içeriyor AMA nokta-kestirimler tutarlı ~+0,04R iyimser, üst sınır +0,120R MADDİ-HARM bölgesinde) —
+    "zararsız" AFFİRMATİF değil, ÖLÇÜLEMEDİ≠0. Kart ARŞİVLENMEZ, YENİDEN-ÖLÇÜM için DONDURULUR.
+  yeniden_olcum_esigi: >
+    (donduruldu, ölçüm-öncesi): gerçek işlem 95 → ~200'e ulaşınca (foundation CI kabaca yarıya iner)
+    YA DA momentum_burst dormant setup GERÇEK işlem üretince (ölçüt-c ölçülebilir olur) → Aşama-1 TEKRAR.
+    O tekrarda established zarar çıkarsa Aşama-2 tetiklenir; çıkmazsa affirmatif-zararsız hükmü mümkün olur.
+  artefakt: "research/olcumler/cf_cikis_sadakati_2026-08-09/ (olcum_cf_sadakat.py · sonuc.json); Meridian İTHAL EDİLMEDİ, tüketici mantığı satır-atıflı aynalandı, canlı state YAZILMADI (git temiz + mtime)."
+
+status_eski: registered   # 2026-08-09 Rol-1. ÖLÇÜM KODU YAZILMADI — bu kart ön şart.
 #   BENİM (Rol-1) GECE BRIEF HATAM DÜZELTİLDİ VE KAYDA GEÇTİ: N4'ü "körce 6 çıkış tipi ekle,
 #   +0,039R'yi kapat" diye tanımlamıştım. İKİ HATA: (1) sayı yanlıştı — eksik 4 tip (ölçüldü),
 #   (2) cf'in çıkış-basitliğinin BİLİNÇLİ tasarım olduğunu (seçilim kalitesi, sıfır yetki)
