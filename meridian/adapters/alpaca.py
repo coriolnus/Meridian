@@ -602,9 +602,23 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     (loop._mirror_exit_sync) bunu ALARM'a çevirir ve bir sonraki döngüde yeniden dener. Bu pencere
     sessiz DEĞİLDİR.
 
-    Dönüş: {ok, owned, cancelled[], closed_qty, naked, reachable, detail}."""
+    KORUMA AİLESİ (B4, teşhis 2026-08-10 — 08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
+    süzgeci v211'in BAĞIMSIZ koruma OCO'sunu (coid `P-KORUMA-…`, plan_id DEĞİL) görmüyordu; canlı
+    satış bacakları hisseleri rehin tutarken DELETE her turda reddediliyor ve çıkış sonsuz
+    `cikis_yetimi` dönüyordu. Artık kapatmadan önce AYNI SEMBOLÜN koruma-sınıfı emirleri de iptal
+    edilir. Sınıf hükmü TEK yerden okunur (`coid_sinifi` — v220 aile+yön, v221 grup kemerleri;
+    ikinci bir süzgeç YAZILMAZ) ve `yabanci` sınıfı yine dokunulmazdır (A3).
+
+    İPTAL→KAPAT SIRASI (B4 davranış sözleşmesi — Alpaca'nın redd semantiğinden BAĞIMSIZ doğru sıra):
+    bir iptal denemesi başarısız görünürse kapatma DENENMEZ. Önce açık-emir listesinden doğrulanır
+    (iptali düşen emir gerçekten hâlâ canlı mı — 422 "zaten dolmuş/iptal" yarışı burada aklanır);
+    hâlâ canlıysa `cancel_failed: True` ile dönülür, DELETE hiç yapılmaz: yarım-durum (rehinli
+    hisseyle redd turu ya da yarı-sökülmüş koruma) üretmek yerine alarm + bir sonraki tur yeniden
+    dener (kuyruk zaten yeniden dener, loop._mirror_exit_sync).
+
+    Dönüş: {ok, owned, cancelled[], closed_qty, naked, cancel_failed, reachable, detail}."""
     out = {"ok": False, "owned": False, "cancelled": [], "closed_qty": 0.0,
-           "naked": False, "reachable": True, "detail": ""}
+           "naked": False, "cancel_failed": False, "reachable": True, "detail": ""}
     sym = str(symbol or "").strip()
     if not sym:
         return {**out, "detail": "sembol verilmedi"}
@@ -613,9 +627,15 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
         # A1 deseni: [] burada "emir yok" DEĞİL, arıza. Arızada sahiplik doğrulanamaz → dokunma.
         return {**out, "reachable": False,
                 "detail": transport().get("error") or "alpaca transport down"}
+    # SAHİPLİK ADAYLARI: koruma-sınıfı emirler parents'a GİRMEZ (B4). İki gerekçe: (a) plan_id=None
+    # çağrıda dolmuş bir koruma SATIŞI `filled` listesine düşüp owned_qty'yi şişirirdi — satış dolumu
+    # uzun pozisyonun sahiplik KANITI değildir (kanıt = dolmuş GİRİŞ, aşağıdaki docstring yasası);
+    # (b) koruma iptali kendi adımında (1b) kendi `kind` etiketiyle yapılır ki `naked` hesabı ve olay
+    # dökümü dürüst kalsın.
     parents = [o for o in (ords or [])
                if str(o.get("symbol")) == sym and is_engine_order(o)
-               and (plan_id is None or str(o.get("client_order_id")) == str(plan_id))]
+               and (plan_id is None or str(o.get("client_order_id")) == str(plan_id))
+               and coid_sinifi(o)[0] != SINIF_KORUMA]
     filled = [o for o in parents
               if _filled_qty(o) > 0 or str(o.get("status", "")).lower() in ("filled", "partially_filled")]
     if not parents:
@@ -632,6 +652,46 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
             if str(leg.get("status", "")).lower() in _LIVE_ORDER_STATES and leg.get("id"):
                 res = cancel_order(str(leg["id"]))
                 out["cancelled"].append({"id": str(leg["id"]), "kind": "leg", "ok": bool(res.get("ok"))})
+
+    # 1b) KORUMA AİLESİ (B4): aynı sembolün koruma-SINIFI emirleri — v211 bağımsız OCO'su dahil.
+    # Hüküm `coid_sinifi`den (v220/v221 kemerleri): `P-KORUMA-` ailesi + koruma-kardeşli OCO grubu +
+    # motor SELL. Yalnız kapatılacak pozisyonu rehin tutan CANLI kayıtlar iptal edilir; `yabanci`
+    # (operatörün kendi emri) bu süzgece hiç girmez — A3 korunur.
+    for o in (ords or []):
+        if str(o.get("symbol")) != sym or coid_sinifi(o)[0] != SINIF_KORUMA:
+            continue
+        if str(o.get("status", "")).lower() in _LIVE_ORDER_STATES and o.get("id"):
+            res = cancel_order(str(o["id"]))
+            out["cancelled"].append({"id": str(o["id"]), "kind": "koruma",
+                                     "coid": o.get("client_order_id"), "ok": bool(res.get("ok"))})
+        for leg in (o.get("legs") or []):
+            if str(leg.get("status", "")).lower() in _LIVE_ORDER_STATES and leg.get("id"):
+                res = cancel_order(str(leg["id"]))
+                out["cancelled"].append({"id": str(leg["id"]), "kind": "koruma_leg",
+                                        "ok": bool(res.get("ok"))})
+
+    # 1c) İPTAL→KAPAT KAPISI (B4): iptali düşen emir varsa, kapatmayı denemeden ÖNCE açık-emir
+    # listesinden doğrula. "İptal düştü" iki ayrı olguyu örter: (a) emir gerçekten canlı kaldı —
+    # kapatma rehin yüzünden reddedilir ve pozisyon yarı-sökülmüş korumayla kalır → DENEME;
+    # (b) emir aradan dolmuş/iptal olmuş (422 yarışı) — artık rehin yok → kapatma güvenle sürer.
+    _dusen = [c["id"] for c in out["cancelled"] if not c.get("ok")]
+    if _dusen:
+        acik = orders(status="open", limit=200, nested=True)
+        if not transport()["ok"]:
+            return {**out, "reachable": False, "cancel_failed": True, "naked": _naked(out),
+                    "detail": "iptal sonucu doğrulanamadı (açık emir listesi okunamadı) — "
+                              "kapatma DENENMEDİ; sonraki tur yeniden dener"}
+        _canli_ids: set = set()
+        for o in (acik or []):
+            for kayit in [o] + list(o.get("legs") or []):
+                if str(kayit.get("status", "")).lower() in _LIVE_ORDER_STATES and kayit.get("id"):
+                    _canli_ids.add(str(kayit["id"]))
+        _hala = sorted(set(_dusen) & _canli_ids)
+        if _hala:
+            return {**out, "cancel_failed": True, "naked": _naked(out),
+                    "detail": f"{len(_hala)} emir iptali başarısız ve emir hâlâ CANLI — kapatma "
+                              f"DENENMEDİ (iptal→kapat sırası, B4: yarım-durum üretilmez); "
+                              f"sonraki tur yeniden dener"}
 
     # 2) Pozisyon: gerçekten var mı, ve kaçı BİZİM?
     apos = positions()
@@ -673,8 +733,10 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
 
 
 def _naked(out: dict) -> bool:
-    """Koruma bacağı BAŞARIYLA iptal edildi mi? (kapatma düşerse pozisyon çıplak kalır)"""
-    return any(c.get("kind") == "leg" and c.get("ok") for c in (out.get("cancelled") or []))
+    """Koruma bacağı BAŞARIYLA iptal edildi mi? (kapatma düşerse pozisyon çıplak kalır)
+    `koruma`/`koruma_leg` de sayılır (B4): v211 OCO'sunun iptali de pozisyonu aynı şekilde soyar."""
+    return any(c.get("kind") in ("leg", "koruma", "koruma_leg") and c.get("ok")
+               for c in (out.get("cancelled") or []))
 
 
 def asset_tradable(symbol: str) -> bool | None:
@@ -744,6 +806,49 @@ def exit_fill_price(order: dict) -> float | None:
                 return float(leg["filled_avg_price"])
             except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
                 return None
+    return None
+
+
+def koruma_fill(order: dict) -> dict | None:
+    """Koruma emrinde DOLMUŞ bacağı bul — B3'ün okuma ucu (`exit_fill_price`in koruma kardeşi).
+
+    `exit_fill_price` YETMEZ, çünkü o yalnız `legs[]`e bakar; koruma OCO'sunda ise (ölçüm v221,
+    canlı 2026-08-09) HEDEF bacağı primary'nin KENDİSİDİR (limit, coid `P-KORUMA-…`) ve stop bacağı
+    `legs[0]`dadır. İki dolum şekli iki ayrı yerde yaşar:
+      * hedef doldu → primary `filled`, fiyat primary'nin `filled_avg_price`ında;
+      * stop doldu  → primary OCO gereği `canceled`a düşer, dolum `legs[0]`da.
+    Ayrıca `canceled` + `filled_qty>0` hâli (kısmi dolum sonrası OCO artığının iptali) de bir
+    DOLUMDUR — yalnız statüye bakmak onu kaçırırdı.
+
+    SINIF HÜKMÜ BURADA VERİLMEZ: emrin koruma olup olduğuna `coid_sinifi` karar verir (tek hüküm
+    noktası, v220 yasası); bu fonksiyon yalnız verilen emrin İÇİNDEN dolumu okur.
+
+    Dönüş: dolum yoksa None; varsa
+      {"bacak": "stop"|"hedef"|None, "price": float|None, "neden": str, "filled_qty": float,
+       "status": str}
+    UYDURMA YASAĞI: fiyat okunamıyorsa `price=None` + `neden` (0 DEĞİL); bacak tipi okunamıyorsa
+    `bacak=None` + neden — çağıran ikisinde de kitaba İŞLEMEZ, alarmda nedeni taşır."""
+    if not isinstance(order, dict):
+        return None
+    for kayit in [order] + list(order.get("legs") or []):
+        st = str(kayit.get("status", "")).lower()
+        dolan = _filled_qty(kayit)
+        if st not in ("filled", "partially_filled") and dolan <= 0:
+            continue
+        typ = str(kayit.get("type") or "").lower()
+        bacak = "stop" if typ.startswith("stop") else ("hedef" if typ == "limit" else None)
+        ham = kayit.get("filled_avg_price")
+        try:
+            price = float(ham) if ham not in (None, "") else None
+        except (TypeError, ValueError):  # sessiz-yutma DEĞİL: None + aşağıdaki `neden` alanına düşer, çağıran alarmda taşır
+            price = None
+        nedenler = []
+        if price is None:
+            nedenler.append(f"filled_avg_price okunamadı (ham={str(ham)[:24]!r})")
+        if bacak is None:
+            nedenler.append(f"bacak tipi okunamadı (type={typ!r})")
+        return {"bacak": bacak, "price": price, "neden": "; ".join(nedenler),
+                "filled_qty": dolan, "status": st}
     return None
 
 

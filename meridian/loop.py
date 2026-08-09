@@ -187,6 +187,9 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
                   + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else ""),
                   ticker=t, plan_id=info.get("plan_id"), tries=info["tries"],
                   naked=info["naked"], owned=info["owned"], detail=info["son_detay"],
+                  # B4: iptal→kapat kapısı — True ise kapatma hiç DENENMEDİ (koruma/bacak iptali
+                  # düştü ve emir hâlâ canlı); yarım-durum yerine bu turu alarmla geçirdik.
+                  cancel_failed=bool(res.get("cancel_failed")),
                   drift_sinifi="cikis_yetimi")
     meta[MIRROR_EXIT_KEY] = kalan
     return out
@@ -1706,7 +1709,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                         # SB-2: DOLUM anının boyut tabanı — iç motor bu `eq_now`la
                                         # doldurdu (yukarıda :1114). Adet sapması sınıflandırması bunu
                                         # SB-1 gönderim makbuzuyla kıyaslar (drift_sinifi).
-                                        fill_eq_now=eq_now)
+                                        fill_eq_now=eq_now,
+                                        # B3: koruma-OCO dolumu kitaba kapanış olarak işlenebilsin
+                                        # diye kitabın kendisi geçilir (_save_broker aşağıda, kapanış
+                                        # aynı turda kalıcılaşır).
+                                        broker=b)
     except Exception as e:
         obs.warn("reconcile_failed", error=f"{type(e).__name__}: {e}")
     _entry_exec_trim()
@@ -2038,10 +2045,88 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak) -> tuple[st
                           "taşımadığından ayrım YAPILAMADI (SB-1 makbuz genişletme AYRI kalem)")
 
 
+# ==================================================================================================
+# KORUMA-OCO DOLUMU → KİTAP KAPANIŞI (B3, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
+# ==================================================================================================
+# BULGU: koruma OCO'sunun (v211, coid `P-KORUMA-…`) bir bacağı DOLUNCA pozisyon aynada gerçekten
+# kapanıyor; ama mutabakat yalnız `by_coid[plan_id]` ile eşleştiğinden bu dolumu göremiyor, sembolü
+# her tur YANLIŞ sınıfla (`split_brain`) alarmlıyor ve kapanış hiçbir deftere işlenmiyordu — iç
+# kitap günler sonra kendi bar-simülasyonuyla (farklı gün/fiyat) kapanıyor, GERÇEK çıkış fiyatı
+# kayboluyordu. İKİ-MOTOR YASASINA AYKIRI DEĞİL: yasa, aynanın TELEMETRİSİ iç simülasyonun karar
+# fiyatlarını değiştirmesin der; burada olan şey karar değil OLGUDUR — pozisyon artık YOK ve onu
+# açık tutmak simülasyon değil hayalet yönetmek olurdu. Kitaplama yine iç kitabın KENDİ maliyet
+# modelinden geçer (`close_position` raw fiyata slipajı kendisi uygular — dokunuş çıkışlarıyla
+# aynı desen); GERÇEK dolum satıra `alpaca_fill_price` olarak ayrıca yazılır ve `mirror_divergence`
+# model↔gerçek farkını ölçer.
+def _koruma_dolumu_bul(all_orders: list, sym: str) -> dict | None:
+    """Sembolün KORUMA-SINIFI emirlerinde dolmuş bacak ara. Sınıf hükmü `alpaca.coid_sinifi`den
+    (v220 aile+yön, v221 grup kemerleri — süzgeç KOPYALANMAZ, yeniden kullanılır); dolum okuma
+    `alpaca.koruma_fill`den. İlk dolum döner; yoksa None."""
+    from .adapters import alpaca
+    for o in (all_orders or []):
+        if str(o.get("symbol")) != sym:
+            continue
+        if alpaca.coid_sinifi(o)[0] != alpaca.SINIF_KORUMA:
+            continue
+        kf = alpaca.koruma_fill(o)
+        if kf is not None:
+            return {**kf, "coid": o.get("client_order_id")}
+    return None
+
+
+def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> None:
+    """Koruma dolumunu KİTABA işle + DOĞRU sınıfla alarmla (split_brain değil `koruma_dolumu`).
+
+    Çıkış tipi dolan bacağa göre `koruma_stop` / `koruma_hedef` — çıkış-tipi sözlüğü AÇIKTIR
+    (tüketiciler group-by okur: analytics.py:1349 `by_reason.setdefault`, api.py:1693; sabit bir
+    enum yok — `CF_SIM_EXITS` yalnız CF simülasyon çıkışlarının listesidir), yeni ad kendi kovasını
+    açar ve görünür kalır.
+
+    UYDURMA YASAĞI: fiyat ya da bacak tipi okunamıyorsa kitaba İŞLENMEZ (0/varsayım yok) — alarm
+    nedeni taşır, koruma emri pencerede durdukça bir sonraki tur yeniden denenir. `broker` yoksa
+    (eski imzalı çağıran / pano force-sync) yine yalnız sınıflandırılır. YASA-4: her işlenemeyen
+    dal nedeniyle birlikte seslidir; YASA-6: kayıt hem MIRROR_DRIFT olayına hem
+    `broker_reconcile.json.positions.koruma_dolumu`ya düşer (pano + bekçi okuyucuları mevcut)."""
+    bacak, fiyat = kd.get("bacak"), kd.get("price")
+    reason = {"stop": "koruma_stop", "hedef": "koruma_hedef"}.get(bacak)
+    neden = str(kd.get("neden") or "")
+    islendi = False
+    if fiyat is None:
+        neden = neden or "dolum fiyatı legs'ten okunamadı"
+    elif reason is None:
+        neden = neden or "dolan bacağın tipi okunamadı — çıkış tipi seçilemez"
+    elif broker is None:
+        neden = "iç kitap erişimi yok (broker geçilmedi) — kapanış bir sonraki günlük tura kaldı"
+    elif sym not in getattr(broker, "positions", {}):
+        neden = "iç kitapta pozisyon bulunamadı (anlık görüntü ile kitap ayrışmış olabilir)"
+    else:
+        row = broker.close_position(sym, float(fiyat), reason, dstr)
+        sim = float(row.get("exit") or 0.0)
+        row["alpaca_fill_price"] = round(float(fiyat), 4)          # GERÇEK dolum — telemetri (1.3 simetriği)
+        row["mirror_divergence"] = round(abs(float(fiyat) - sim) / sim, 5) if sim else 0.0
+        _persist_trade(row)
+        islendi = True
+        # AYNA-KAPATMA KUYRUĞUNA BİLEREK YAZILMAZ (`_mirror_exit_enqueue` yok): pozisyonu aynada
+        # kapatan ZATEN koruma dolumu — kuyruğa yazmak var olmayan pozisyonu kapatmaya çalışıp
+        # sahte deneme/alarm turu üretirdi.
+    out["positions"]["koruma_dolumu"].append(
+        {"ticker": sym, "bacak": bacak, "fiyat": fiyat, "coid": kd.get("coid"),
+         "exit_tipi": reason, "kitap": "kapatildi" if islendi else f"islenmedi: {neden}"})
+    fiyat_s = "None" if fiyat is None else f"{float(fiyat):g}"
+    obs.alarm(obs.ALARM_MIRROR_DRIFT,
+              f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, "
+              f"fiyat={fiyat_s})"
+              + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi
+                 else f" — kitaba İŞLENEMEDİ: {neden}"),
+              ticker=sym, drift_sinifi="koruma_dolumu", bacak=bacak, fiyat=fiyat,
+              coid=kd.get("coid"), islendi=islendi, neden=neden or None)
+
+
 def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                            open_positions: dict | None = None,
                            opens: dict | None = None,
-                           fill_eq_now: float | None = None) -> dict:
+                           fill_eq_now: float | None = None,
+                           broker=None) -> dict:
     """Phase 1 reconciliation — bring the internal book into agreement with the Alpaca PAPER mirror.
 
       * strip locally-armed plans whose Alpaca order is DEAD (rejected/canceled/expired) so the internal
@@ -2059,9 +2144,15 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
 
     `fill_eq_now` (SB-2): DOLUM anının boyut tabanı (iç motorun `daily_cycle`de kullandığı `eq_now`).
     ADET sapması (1.2b) tespit edilince SB-1 boyut makbuzuyla kıyaslanıp `drift_sinifi` türetilir.
-    OPSİYONELdir (varsayılan None) — eski çağıranlar bozulmaz; None ise sınıf `olculemedi` olur."""
+    OPSİYONELdir (varsayılan None) — eski çağıranlar bozulmaz; None ise sınıf `olculemedi` olur.
+
+    `broker` (B3, teşhis 2026-08-10): iç kitabın kendisi (PaperBroker). Koruma-OCO dolumu tespit
+    edilince pozisyon kapanışını kitaba İŞLEMEK için gerekir. OPSİYONELdir — eski çağıranlar
+    bozulmaz; None ise koruma dolumu yine DOĞRU SINIFLANIR (split_brain değil `koruma_dolumu`)
+    ama kitaba işlenemez ve alarm bunu nedeniyle söyler (bir sonraki günlük tur işler)."""
     out = {"checked": False, "stripped": [], "drift": [],
-           "positions": {"missing_on_alpaca": [], "qty_drift": [], "external": []}}
+           "positions": {"missing_on_alpaca": [], "qty_drift": [], "external": [],
+                         "koruma_dolumu": []}}
     # ATLAMA DA BİR SONUÇTUR. Bu iki dal HİÇBİR ŞEY YAZMADAN dönüyordu: broker_reconcile.json dünkü
     # içeriğiyle diskte kalıyor, pano onu GÜNCEL mutabakat sanıp okuyordu — "kontrol edilmedi" ile
     # "kontrol edildi, temiz" ayırt edilemiyordu. Arıza dalı (aşağıda) zaten api_ok=False yazıyor;
@@ -2141,6 +2232,16 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         ap = a_by_sym.get(sym)
         if ap is None:
             if sym not in alive_order_syms:
+                # B3 (teşhis 2026-08-10): "iç açık + aynada ne pozisyon ne canlı emir" İKİ ayrı
+                # olgunun ortak görüntüsüdür ve ikisi ayrı sınıftır:
+                #   koruma_dolumu → sembolün KORUMA-sınıfı emri (yapısal kemerler: coid_sinifi,
+                #                   v220/v221) DOLMUŞ — pozisyon aynada korumayla KAPANDI; kitaba
+                #                   kapanış işlenir (aşağıdaki yardımcı), split_brain DEĞİL.
+                #   split_brain   → koruma dolumu da yok: gerçek durum ayrışması (eski davranış).
+                kd = _koruma_dolumu_bul(all_orders, sym)
+                if kd is not None:
+                    _koruma_dolumu_isle(kd, sym, out, dstr, broker)
+                    continue
                 out["positions"]["missing_on_alpaca"].append(sym)
                 # SB-2: SABİT sınıf — sizing/sermaye sapması DEĞİL, durum ayrışması (iç açık, aynada
                 # ne pozisyon ne emir). Sizing taksonomisi uymaz; brief-sanction ile ADI konur.
