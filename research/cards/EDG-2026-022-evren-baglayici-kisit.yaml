@@ -1,0 +1,59 @@
+card_id: EDG-2026-022
+family: evren_baglayici_kisit
+thesis: >
+  Sistemin kârlılık darboğazı "dar evren → az aday → az işlem → az kanıt" diye okunuyor ve WP-U'nun
+  gerekçesi bu. AMA rakip bir kök neden ÖLÇÜLDÜ (WP-U keşfi, docs/KESIF-WP-U-2026-08-09.md):
+  de-risk rampası günlerin ~%92'sinde açık pozisyonu 1'e kısıyor (ROADMAP:425). Yani işlem
+  üretimini bağlayan şey EVREN (aday havuzu) DEĞİL, `eff_max_open` de-risk tavanı OLABİLİR.
+  TEZ: replay defterinde her seans için ÖLÇ — işlem sayısını hangi kısıt bağlıyor: (A) aday
+  havuzu açık slottan AZ mı (→ evren bağlıyor, genişletme değerli) yoksa (B) aday havuzu
+  eff_max_open tavanından FAZLA mı (→ de-risk bağlıyor, evren genişletmek işe yaramaz).
+  DEĞERİ: bu ölçüm FINVIZ_API_KEY harcamasını (operatör-blok) DE-RISK eder — evren bağlamıyorsa
+  token parası boşa gider; bağlıyorsa harcama kanıtlı gerekçe kazanır.
+
+evidence_refs:
+  - "WP-U keşfi: evren=251=REPLAY_UNIVERSE, FINVIZ 3.746 kez ölü, de-risk %92 gün 1-pozisyon"
+  - "altyapı HAZIR (keşif ölçtü): backtest plan_log (armed/reddedilen), eff_max_open (backtest.py:225),
+     candidate_log (aday havuzu) — yeni bar/veri GEREKMEZ, mevcut replay defterinden türer"
+  - "de-risk rampası: broker.derisk_mult + eff_max_open (ROADMAP:425 %92 gün 1-pozisyon)"
+
+universe: >
+  Mevcut replay defterinin TAMAMI (251 sembol, 2022-01→2026-07). Her seans bir gözlem. Alt-örnek
+  YOK. Rejim ayrımı raporlanır (bull/bear/chop günlerinde kısıt değişir mi) ama hüküm havuz geneli.
+
+features_asof: >
+  Seans başına üç sayı, hepsi o seansın defterinden (ileri-bakış yok):
+    aday_n     = o seans üretilen tam-şekilli aday sayısı (candidate_log)
+    acik_slot  = eff_max_open − mevcut açık pozisyon (o seans fiilen kaç yeni pozisyona yer var)
+    silahli_n  = fiilen silahlanan plan (plan_log armed)
+  KISIT SINIFI: aday_n <= acik_slot → `evren_bagladi` (havuz slottan az, daha çok aday işe yarardı)
+              · aday_n > acik_slot → `derisk_bagladi` (havuz yeterli, tavan kesiyor)
+              · acik_slot <= 0 → `tavan_sifir` (de-risk pozisyonu tümden kapatmış — %92 vakası)
+
+parameter_grid:
+  yok: "tek tanım, tek sınıflama kuralı — grid YOK. K += 1 (bu ölçümün kendisi)"
+
+cost_model: yok   # bu bir KISIT-teşhisi, getiri ölçümü değil; maliyet modeli girmez
+
+success_metric: >
+  Havuz genelinde kısıt-sınıf DAĞILIMI (evren_bagladi / derisk_bagladi / tavan_sifir yüzdeleri),
+  tarih-kümeli bootstrap %95 CI. HÜKÜM: `evren_bagladi` oranı baskınsa (CI ile >%50) evren
+  genişletmesi (FINVIZ) kanıtlı değerli. `derisk_bagladi` + `tavan_sifir` baskınsa (birlikte
+  CI >%50) evren genişletmek işe YARAMAZ — asıl kaldıraç de-risk rampası/eff_max_open, ve
+  FINVIZ harcaması bu kanıt olmadan GEREKÇESİZ. Rejim kırılımı ayrıca raporlanır.
+
+kill_criteria:
+  - "candidate_log / plan_log eksik ya da eff_max_open replay'de yeniden üretilemiyorsa → hüküm
+     VERİLMEZ, `olculemedi` (backtest altyapısı yeterli değil demektir, ölçüm aracı turu gerekir)"
+  - "her iki kısıt da baskın DEĞİLSE (ikisi de CI-içi belirsiz) → ÜÇÜNCÜ kısıt (kapı reddi /
+     veri kalitesi / sermaye) aranır; 'evren vs de-risk' ikilisi yanlış çerçeve demektir"
+  - "rejim kırılımı sınıfı TERSİNE çeviriyorsa (bull'da evren, bear'da de-risk gibi) tek havuz
+     hükmü YANILTICI — rejim-koşullu hüküm yazılır, tek sayı değil"
+
+k_registry: {registered_at: "2026-08-09T14:3x", trial_ids: [pending-EDG-022-kisit-teshisi]}
+
+status: registered   # 2026-08-09 Rol-1 — ölçüm kodu YAZILMADI, bu kart ön şart.
+#   WP-U keşfinin en değerli otonom kalemi: operatör-bloğu YOK, yeni bar GEREKMEZ, altyapı hazır.
+#   Bu kart FINVIZ token kararını (en büyük operatör-blok) kanıta oturtur — evren gerçekten
+#   bağlayıcı kısıt mı, yoksa de-risk rampası mı? "Önce ölç, sonra harca" disiplini. Eşikler
+#   (kısıt-sınıf kuralı, CI %95, tarih-kümeli bootstrap, rejim kırılımı) ölçümden önce donduruldu.
