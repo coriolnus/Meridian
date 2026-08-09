@@ -351,34 +351,152 @@ def cancel_order(order_id: str) -> dict:
         return {"ok": False, "detail": f"{type(e).__name__}: {e}"}
 
 
+# ==================================================================================================
+# SÜPÜRÜCÜNÜN SINIF SÖZLÜĞÜ (v220) — "DOLMAMIŞ MOTOR EMRİ" ≠ "GİRİŞ EMRİ"
+# ==================================================================================================
+# VAKA (canlı A1, 2026-08-07 20:32:39Z): operatörün v211 yoluyla kurduğu DÖRT bağımsız koruma
+# OCO'su (`P-KORUMA-20260807-1623-{AMGN,BKNG,EMR,NUE}`) günlük kadansın süpürmesinde iptal edildi;
+# olay defteri `cancelled:4, kept:0, foreign:0` yazdı ve aynı satırın metni "Koruma bacakları YAŞAR"
+# diyordu. Katil bu fonksiyondu: koruma OCO'su A2/A3 gereği `P-` önekini TAŞIR (sahiplik kanıtı —
+# bilinçli) ve doğası gereği DOLMAMIŞtır, yani eski iki ölçütün (önek + `filled_qty=0`) ikisini de
+# sağlıyordu. Fonksiyonun "dolmuş parent'ın koruma bacaklarına DOKUNULMAZ" güvencesi ise yalnız
+# BRACKET'A BAĞLI bacakları (`legs[]`) tanıyordu; v211'in BAĞIMSIZ koruma OCO'su bu fonksiyon
+# yazılırken YOKTU. Sonuç bir kaza değil YAPISAL bir çarpışmaydı: koruma her kurulduğunda bir
+# sonraki süpürmede ölüyordu.
+#
+# İKİ KEMER, İKİSİ DE — biri ötekinin yedeği DEĞİL, ikisi iki AYRI olguyu tutuyor:
+#   YÖN KEMERİ  : bu motorun GİRİŞ emri BUY'dur. VARSAYILMADI, ÖLÇÜLDÜ — emir üreten tek giriş
+#                 yolu `submit_bracket`tir (`"side": "buy"`, gövde sabiti) ve `submit_plan` ondan
+#                 geçer; bu modülde ikinci bir giriş göndericisi yoktur (v220 kaynak-düzeyi
+#                 çivisi). SELL bir emir bu sistemde giriş OLAMAZ → süpürülemez.
+#   AİLE KEMERİ : `koruma_coid()` ailesi (`P-KORUMA-`) AÇIK DIŞLAMADIR. Yön kemeri tek başına
+#                 yetmez: yarın kısa tarafa koruma kurulursa koruyucu bacak BUY-stop olur ve yön
+#                 kemerinden GEÇER; aile kemeri onu yine tutar. Tersi de doğru: koruma coid'i
+#                 taşımayan (ör. gelecekteki bir çıkış/scale-out) bir SELL emrini yön kemeri tutar.
+# YÖNÜ OKUNAMAYAN EMİR (alan yok/boş) BEYANLI ÜÇÜNCÜ HÂLDİR: yön kemeri onu tutmaz, `giris`
+# sayılır ve eski ölçütlere (dolmamış + açık statü) düşer. Gerekçe: Alpaca her emirde `side`
+# döndürür — alanın yokluğu üretimde bir olgu değil, fikstür/kısmi-cevap hâlidir; orada
+# fail-closed davranmak süpürücüyü sessizce ÖLÜ hâle getirirdi (bayat tetik bir daha hiç
+# kesilmezdi). Sahiplik ve koruma kanıtı bu dalda AİLE kemerine ve `filled_qty`ye kalır.
+KORUMA_COID_ONEK = f"{ENGINE_COID_PREFIX}KORUMA-"   # `koruma_coid()` ile TEK kaynak (aşağıda kullanılır)
+GIRIS_EMRI_YONU = "buy"                             # long-only motor: giriş = alış (submit_bracket gövdesi)
+SINIF_GIRIS, SINIF_KORUMA, SINIF_YABANCI = "giris", "koruma", "yabanci"
+# Süpürmenin SINIF DÖKÜMÜ olayı. NEDEN AYRI BİR SATIR: iptalin olayını çağıran yazıyor
+# (`loop._cancel_mirror_entries` → `mirror_stale_entries_cancelled`) ve o satır yalnız SAYI taşıyor
+# — 08-07'de "cancelled:4" derken NEYİ iptal ettiğini söylemiyordu (devir tatbikatı §4 bu boşluğu
+# "ölçülemedi" diye kayda geçirdi: `cancelled[]` içeriği olaya yazılmalı). Çağıranlar bu turda
+# dokunulmaz kapsamda; dürüstlük bu yüzden İPTALİ YAPAN katmanda yaşıyor — hangi uç çağırırsa
+# çağırsın (döngü, pano tuşu, kopuş devre kesicisi) döküm aynı yerden düşer.
+EV_SUPURME_SINIFLARI = "mirror_cancel_sinif_dokumu"
+
+
+def is_koruma_order(o: dict) -> bool:
+    """Bu emir KORUMA ailesinden mi? (`koruma_coid()` üretimi — önek İKİ yerde yazılmaz, kayar)"""
+    return str((o or {}).get("client_order_id") or "").startswith(KORUMA_COID_ONEK)
+
+
+def coid_sinifi(o: dict) -> tuple[str, str]:
+    """Bir emrin SINIFI + gerekçesi: (`giris` | `koruma` | `yabanci`, neden).
+
+    Süpürücünün bir emir hakkındaki hükmü TEK yerde verilir: hem iptal kararı hem olay defterindeki
+    döküm bu fonksiyondan okur. İki ayrı yerde iki ayrı hüküm, tam da 08-07'de yaşanan "kod bir şey
+    yapıyor, olay başka bir şey anlatıyor" ayrışmasını üretirdi."""
+    if not is_engine_order(o):
+        return SINIF_YABANCI, "motor öneki YOK — operatörün kendi emri (A3): dokunulmaz"
+    if is_koruma_order(o):
+        return SINIF_KORUMA, f"koruma ailesi ({KORUMA_COID_ONEK}…) — aile kemeri: süpürülmez"
+    yon = str((o or {}).get("side") or "").lower()
+    if yon and yon != GIRIS_EMRI_YONU:
+        return SINIF_KORUMA, (f"yön '{yon}' — long-only motorda giriş emri '{GIRIS_EMRI_YONU}'dur; "
+                              f"bu emir giriş OLAMAZ (yön kemeri)")
+    return SINIF_GIRIS, ""
+
+
+def _supurme_dokumunu_yaz(out: dict) -> None:
+    """Süpürmenin SINIF DÖKÜMÜNÜ olay defterine yaz — 08-07'nin okunamayan satırının panzehiri.
+
+    NE ZAMAN YAZILIR: süpürme bir KORUMA sınıfı emirle KARŞILAŞTIĞINDA. Koşulun gerekçesi
+    ölçülebilir: satırın taşıdığı yeni bilgi ("dokunmadım ve şunlara dokunmadım") ancak koruma
+    sınıfı defterde varken doğar; koruma yokken çağıranın kendi satırı (cancelled/kept/foreign
+    sayıları) ile bu satır aynı şeyi iki kez söylerdi. 08-07 şekli — koruma defterde, süpürücü
+    çalışıyor — TAM olarak bu koşulun içidir.
+
+    İÇERİK: üç sınıfın sayımı + İPTAL EDİLENLERİN coid'leri. Coid listesi bilerek var: devir
+    tatbikatı "iptal edilen 4 emir tam olarak o dört koruma bacağıydı" cümlesinin bir ÇIKARIM
+    olduğunu, çünkü olayda liste bulunmadığını yazdı. Liste 12 ile sınırlı — defter satırı
+    şişirmeden kimliği taşır."""
+    siniflar = out.get("siniflar") or {}
+    if not siniflar.get(SINIF_KORUMA):
+        return
+    try:
+        from .. import obs
+        obs.log(EV_SUPURME_SINIFLARI,
+                giris=int(siniflar.get(SINIF_GIRIS, 0)),
+                koruma=int(siniflar.get(SINIF_KORUMA, 0)),
+                yabanci=int(siniflar.get(SINIF_YABANCI, 0)),
+                cancelled=len(out.get("cancelled") or []),
+                iptal_coidler=[str(c.get("coid") or "?")[:48]
+                               for c in (out.get("cancelled") or [])][:12],
+                korunan_coidler=[str(k.get("coid") or "?")[:48]
+                                 for k in (out.get("kept") or [])
+                                 if k.get("sinif") == SINIF_KORUMA][:12],
+                detail="süpürücü koruma sınıfı emirlerle karşılaştı ve DOKUNMADI — iptal edilenler "
+                       "yalnız `giris` sınıfıdır (yön + aile kemeri, v220)")
+    except Exception:  # sessiz-yutma: defter kanalı düştü — ikinci kanal yok ve İPTAL KARARI zaten verilmiş durumda; kayıt denemesi süpürmenin sonucunu düşüremez (obs._emit'in kendi yasasıyla aynı)
+        pass
+
+
 def cancel_open_entries() -> dict:
-    """Faz 3 (5a-2) Cancel-Open: YALNIZ henüz DOLMAMIŞ giriş emirlerini (filled_qty=0, canlı parent)
+    """Faz 3 (5a-2) Cancel-Open: YALNIZ henüz DOLMAMIŞ GİRİŞ emirlerini (filled_qty=0, canlı parent)
     iptal eder. Kısmen/tam dolmuş parent'lara DOKUNULMAZ — onların koruyucu bacakları (stop/hedef)
     canlı pozisyonu koruyor; onları iptal etmek pozisyonu çıplak bırakır (yasak, mirror_stream ile
-    aynı ilke). Dönen: {cancelled:[...], kept:[...], foreign:[...]}.
+    aynı ilke). Dönen: {cancelled:[...], kept:[...], foreign:[...], siniflar:{...}}.
 
     SAHİPLİK (A3, denetim 2026-07-21): bu kağıt hesap yalnız motorun değil — operatörün kendi
     emirleri de burada. Eskiden bu fonksiyon AÇIK olan HER dolmamış emri iptal ediyordu; panodaki
     tek tuş operatörün elle girdiği emri de sessizce siliyordu. Artık yalnız ENGINE_COID_PREFIX
-    taşıyan (motorun gönderdiği) emirlere dokunur; yabancılar `foreign` altında sayılır."""
-    out = {"ok": True, "cancelled": [], "kept": [], "foreign": []}
+    taşıyan (motorun gönderdiği) emirlere dokunur; yabancılar `foreign` altında sayılır.
+
+    KORUMA (v220, canlı vaka 2026-08-07 — yukarıdaki blok): sahiplik ve terminallik ölçütleri bir
+    emrin GİRİŞ olduğunu KANITLAMAZ. Süpürme adayı olabilmek için emir ayrıca `giris` SINIFINDAN
+    olmalıdır (yön kemeri + aile kemeri, `coid_sinifi`). Koruma sınıfı emirler `kept` altına
+    `sinif: koruma` etiketiyle düşer — sayılırlar, GÖRÜNÜRLER, ama süpürülmezler.
+
+    YALNIZ TOPLU SÜPÜRÜCÜ BAĞLANIR: `cancel_order` tek-emir ucudur ve operatörün elle iptal hakkı
+    oradan geçer — koruma kemeri oraya KONULMADI, konsaydı operatör kendi kurduğu korumayı panodan/
+    CLI'den kaldıramazdı (A3'ün ters yönden ihlali)."""
+    out = {"ok": True, "cancelled": [], "kept": [], "foreign": [],
+           "siniflar": {SINIF_GIRIS: 0, SINIF_KORUMA: 0, SINIF_YABANCI: 0}}
     try:
         for o in orders(status="open", limit=100, nested=True):
             st = str(o.get("status", "")).lower()
             filled = float(o.get("filled_qty") or 0)
             sym = o.get("symbol")
-            if not is_engine_order(o):
-                out["foreign"].append({"symbol": sym, "status": st})   # operatörün emri — DOKUNMA
+            sinif, gerekce = coid_sinifi(o)
+            out["siniflar"][sinif] = out["siniflar"].get(sinif, 0) + 1
+            if sinif == SINIF_YABANCI:
+                out["foreign"].append({"symbol": sym, "status": st,
+                                       "sinif": sinif})            # operatörün emri — DOKUNMA
+                continue
+            if sinif == SINIF_KORUMA:
+                # KORUMA: dolmamış olması onu giriş YAPMAZ. `kept`e gerekçesiyle düşer ki olay
+                # defterini okuyan "neden iptal edilmedi" sorusunu satırdan cevaplayabilsin.
+                out["kept"].append({"symbol": sym, "status": st, "filled_qty": filled,
+                                    "coid": o.get("client_order_id"), "sinif": sinif,
+                                    "neden": gerekce})
                 continue
             if filled <= 0 and st in ("new", "accepted", "pending_new", "held"):
                 res = cancel_order(o.get("id"))
                 out["cancelled"].append({"symbol": sym, "coid": o.get("client_order_id"),
-                                         "ok": res.get("ok")})
+                                         "ok": res.get("ok"), "sinif": sinif})
             else:
-                out["kept"].append({"symbol": sym, "status": st, "filled_qty": filled})
+                out["kept"].append({"symbol": sym, "status": st, "filled_qty": filled,
+                                    "coid": o.get("client_order_id"), "sinif": sinif,
+                                    "neden": "dolmuş/kısmi parent — koruma bacakları canlı"})
     except Exception as e:
-        out = {"ok": False, "detail": f"{type(e).__name__}: {e}", "cancelled": [], "kept": [],
-               "foreign": []}
+        return {"ok": False, "detail": f"{type(e).__name__}: {e}", "cancelled": [], "kept": [],
+                "foreign": [], "siniflar": {SINIF_GIRIS: 0, SINIF_KORUMA: 0, SINIF_YABANCI: 0}}
+    _supurme_dokumunu_yaz(out)
     return out
 
 
@@ -631,9 +749,13 @@ def koruma_coid(symbol: str, when=None) -> str:
     aynı gün içinde koruma bir kez iptal edilip yeniden kurulmak istendiğinde yol KAPANIRDI ve bu,
     tam da "korumayı yeniden kuran yol" diye yazılan mekanizmanın kendi amacını yemesi olurdu.
     Dakika, çift-tıklamayı (asıl kaza sınıfı) yakalar, meşru yeniden kurmayı engellemez.
-    BİRİNCİL idempotans bu değildir: o, gönderim öncesi canlı koruma denetimidir (api katmanı)."""
+    BİRİNCİL idempotans bu değildir: o, gönderim öncesi canlı koruma denetimidir (api katmanı).
+
+    ÖNEK BİR SÖZLEŞMEDİR (v220): `KORUMA_COID_ONEK` aynı zamanda toplu süpürücünün AİLE KEMERİdir
+    (`cancel_open_entries` → `coid_sinifi`). Bu yüzden burada elle yazılmaz, sabitten türetilir —
+    iki yerde iki metin, 08-07'de dört korumayı öldüren çarpışmanın sessizce geri gelmesi olurdu."""
     stamp = (when or _dt.datetime.now(_dt.timezone.utc)).strftime("%Y%m%d-%H%M")
-    return f"{ENGINE_COID_PREFIX}KORUMA-{stamp}-{str(symbol).upper()}"
+    return f"{KORUMA_COID_ONEK}{stamp}-{str(symbol).upper()}"
 
 
 def submit_protective_oco(symbol: str, qty: float, stop_loss: float, take_profit: float,
