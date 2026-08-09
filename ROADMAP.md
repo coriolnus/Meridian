@@ -722,11 +722,10 @@ OB-2 systemd exit-143 → OB-1 N1 kanal → OB-4 restart→PBO (M2) damgalama ç
 çıkış-sadakati (EXE-2026-004 Aşama-2, saatler, state'e yazar) aynı pencerede.
 
 **YENİ OPERATÖR BLOKLARI (WP turlarından toplandı — eski §6 numaralı listesi + envanter tablosu altta):**
-- **OB-2 systemd `SuccessExitStatus=143` daemon-reload (P2; N1 kanal-açılışında P1 ön-şart):** birim
-  dosyasına YAZILI (`meridian.service:82`, v225) ama CANLI systemd hâlâ boş `SuccessExitStatus=` ile
-  koşuyor → her restart exit-143 ile "FAILED" (son 3 günde 6 kez; fail-notify NO-OP kurtarıyor).
-  daemon-reload + bakım penceresi + elle test-ateşleme. N1 kanalı açılmadan ÖNCE inmeli, yoksa her
-  restart "FAILED" bildirir. (`docs/KESIF-WP-HD` §H10; `docs/SABAH-TRIYAJI-2026-08-09.md` §0.)
+- **OB-2 systemd `SuccessExitStatus=143` — ✅ YAPILDI (2026-08-09, operatör):** canlı `SuccessExitStatus=143`
+  doğrulandı (`Result=success`, active/running, NRestarts=0). Artık restart exit-143'ü "FAILED" SAYMIYOR →
+  N1 kanalı açılınca temiz-durdurma yanlış-alarm boğmayacak (gerçek çöküş SIGKILL=137/SIGSEGV=139 HÂLÂ
+  OnFailure'a gider — satır temiz-durdurmayı susturur, arızayı değil). Bu N1 kanalının (OB-1) ön-şartıydı, kalktı.
 - **DASH-TOKEN LoadCredential faz-1 etkinleştirme (bakım penceresi):** drop-in'ler HAZIR
   (`deploy/oracle-a1/meridian.service.d/`, faz-1 LoadCredential + faz-2 ortam-kanalı-sıfır) +
   `dash_token_credential.sh` (rotasyon/kurulum/doğrulama/geri-alma). Ana birime BİLEREK yazılmadı
@@ -734,6 +733,11 @@ OB-2 systemd exit-143 → OB-1 N1 kanal → OB-4 restart→PBO (M2) damgalama ç
 - **ajan-git MEKANİK kapısı (süreç/araç kararı):** gece 2 ajan `git stash` koşup hasar verdi (hayalet
   dizin süpürüldü). Yasak yalnız CLAUDE.md sözleşmesi; `dagit.sh` yalnız DAĞITIMI kapıyor; `git stash`ın
   pre-stash kancası YOK → kapı ancak PATH-shim/wrapper'la mekanikleşir. Karar operatörde.
+- **C2-4 LEAN CLI `lean login` (QC kimlik — fizibilite 2026-08-09):** toolchain ✅ (colima+docker+lean 1.0.227
+  kurulu/çalışıyor, healthz-dışı yerel) AMA `lean init` QC `User id`+`API token` İSTİYOR (`~/.lean/credentials`)
+  → LEAN CLI yolu KİMLİK-bloklu (ben giremem). Operatör `lean login` (QC Fat Apricot Koala) yaparsa CLI tam-impl
+  açılır. ALTERNATİF (kimliksiz): CLI'sız dotnet-engine (LEAN Apache-2.0 local, QC'siz) — ama LEAN monorepo
+  git-clone + dotnet-build = **L-boyut ayrı tur** (§1 C2-4). Karar: `lean login` (kolay) mı, dotnet-engine (bağımsız) mı.
 
 **EKSİK OPERATÖR ENVANTERİ (eski §6 — kanonik liste 1-11 + §6.1 tablosu; numaralar korunur):**
 
