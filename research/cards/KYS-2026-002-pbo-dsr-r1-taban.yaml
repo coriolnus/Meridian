@@ -47,6 +47,27 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-10T00:2x", trial_ids: [pending-KYS-002-r1-taban]}
 
-status: registered   # 2026-08-10 Rol-1 — ölçüm kodu YAZILMADI; kart ön şart. M2'nin restart-bloğu kalktı,
+status: measured_partial   # 2026-08-10 Rol-1 — PBO yarısı ÖLÇÜLDÜ, DSR yarısı kill#2 (araç turu).
+
+verdict:   # 2026-08-10 Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
+  pbo_taban: >
+    R1 penceresi PBO = 0.6286 (motorun kendi pbo_cscv'si; n_aday=179, n_gozlem=207, 8 blok, 70 kombinasyon,
+    ort_oos_sira=0.4018; deterministik — iki koşum aynı md5; ship-yolu girdisiyle birebir kesit doğrulandı).
+    KAPI TABLOSU: PBO 0.6286 > 0.20 → paper BLOKLAR + gerçek-para BLOKLAR. OKUMA (taban, yeni hüküm değil):
+    seçim süreci CSCV ölçütünde aşırı-uydurma bölgesinde — sert kapı damgalamayla birlikte İLK KEZ gerçek
+    iş yapıyor (aday kâğıda inmez). Bu, kapının 2026-07-30 fail-closed tasarımının amaçlanan davranışı;
+    taban değeri ileriki metodoloji ölçümlerine referans çizgisi.
+  dsr_taban: >
+    ÖLÇÜLEMEDİ (kill#2 — yalnız DSR yarısı): donmuş kopya kapının _ret girdi serisini (pnl/START_EQUITY,
+    reflect.py:559) taşımıyor; defterdeki `seri` (kapanış-günü, r_multiple) ölçek-eşdeğerliği VARSAYILMADI,
+    motorun _moments'ıyla ÖLÇÜLDÜ ve REDDEDİLDİ (112 satırda Sharpe sapması medyan 0.0131 > yuvarlama ~1e-4).
+    Basitleştirilmiş ikame kart gereği yasak → hesap durdu. Bağlam: kapının kendi son değerlendirmesinde de
+    damgalı DSR None (2026-08-09, n_trials=97) — kapı da o an ölçememiş. ARAÇ BORCU: taze küme-DSR için _ret
+    serisinin donmuş çekime taşınması (defter şemasına pnl-serisi damgası YA DA işlem-düzeyi pnl'li yeni çekim)
+    → ROADMAP §2 önerisi olarak kayıtlı; araç inince DSR yarısı yeniden ölçülür.
+  m2_hukmu: "M2 borcunun PBO yarısı KAPANDI (ilk gerçek taban kayıtlı); DSR yarısı araç-şartlı AÇIK."
+  artefakt: "research/olcumler/kys002_pbo_dsr_taban_2026-08-10/ (olc_*.py · sonuc.json · canli_kopya/ 383-satır donmuş kanıt)"
+
+status_eski: registered   # 2026-08-10 Rol-1 — ölçüm kodu YAZILMADI; kart ön şart. M2'nin restart-bloğu kalktı,
 #   taban artık ölçülebilir. Eşik İCAT EDİLMEZ: kapının kendi donuk eşikleri referans; bu kart yalnız
 #   İLK GERÇEK taban değerlerini kayda geçirir. Kimlik tekilliği doğrulandı (KYS-002 boştu).

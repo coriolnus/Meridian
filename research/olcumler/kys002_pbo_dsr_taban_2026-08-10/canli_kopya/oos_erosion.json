@@ -1,0 +1,129 @@
+{
+  "windows": {
+    "1121311afe27be61": {
+      "queries": 1,
+      "first_seen": "2026-07-28T21:34:03+00:00",
+      "last_seen": "2026-07-28T21:34:03+00:00",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2023-07-01",
+        "oos_end": "2025-12-31",
+        "holdout_end": "2026-07-10",
+        "fold_law": "n_dengeli",
+        "folds": [
+          "2023-07-02",
+          "2024-02-06",
+          "2024-07-30",
+          "2025-04-01"
+        ]
+      },
+      "arsiv": "arsiv_R0",
+      "arsiv_tarihi": "2026-07-30",
+      "arsiv_beyan": "i\u00e7erik DE\u011e\u0130\u015eMED\u0130 (retro damga yasa\u011f\u0131) \u2014 yaln\u0131z ar\u015fiv i\u015fareti eklendi; bu sat\u0131r\u0131n say\u0131s\u0131 y\u00fcr\u00fcrl\u00fckteki pencereyle KAR\u015eILA\u015eTIRILAMAZ"
+    },
+    "720a577fcbb1e54c": {
+      "queries": 554,
+      "first_seen": "2026-07-28T22:46:17+00:00",
+      "last_seen": "2026-07-30T14:04:30+00:00",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2023-07-01",
+        "oos_end": "2025-12-31",
+        "holdout_end": "2026-07-10",
+        "fold_law": "n_dengeli",
+        "folds": [
+          "2023-07-02",
+          "2024-01-18",
+          "2024-07-18",
+          "2025-04-01"
+        ]
+      },
+      "arsiv": "arsiv_R0",
+      "arsiv_tarihi": "2026-07-30",
+      "arsiv_beyan": "i\u00e7erik DE\u011e\u0130\u015eMED\u0130 (retro damga yasa\u011f\u0131) \u2014 yaln\u0131z ar\u015fiv i\u015fareti eklendi; bu sat\u0131r\u0131n say\u0131s\u0131 y\u00fcr\u00fcrl\u00fckteki pencereyle KAR\u015eILA\u015eTIRILAMAZ"
+    },
+    "cc7de47dd0c26a01": {
+      "queries": 2,
+      "first_seen": "2026-07-30T17:27:26+00:00",
+      "last_seen": "2026-07-30T18:20:18+00:00",
+      "pencere_id": "R1",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2024-01-01",
+        "oos_end": "2026-04-30",
+        "holdout_end": "2026-07-30",
+        "fold_law": "n_dengeli",
+        "folds": [
+          "2024-01-01",
+          "2024-04-04",
+          "2024-11-22",
+          "2025-08-18"
+        ]
+      }
+    },
+    "622629abcc684ce8": {
+      "queries": 65,
+      "first_seen": "2026-07-31T02:52:49+00:00",
+      "last_seen": "2026-08-01T00:07:08+00:00",
+      "pencere_id": "R1",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2024-01-01",
+        "oos_end": "2026-04-30",
+        "holdout_end": "2026-07-30",
+        "fold_law": "n_dengeli",
+        "folds": [
+          "2024-01-01",
+          "2024-06-03",
+          "2024-11-20",
+          "2025-08-18"
+        ]
+      }
+    },
+    "6fd0d009012aaf0a": {
+      "queries": 50,
+      "first_seen": "2026-08-01T01:28:15+00:00",
+      "last_seen": "2026-08-02T10:36:18+00:00",
+      "pencere_id": "R1",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2024-01-01",
+        "oos_end": "2026-04-30",
+        "holdout_end": "2026-07-30",
+        "fold_law": "n_dengeli",
+        "folds": [
+          "2024-01-01",
+          "2024-06-03",
+          "2024-11-12",
+          "2025-08-18"
+        ]
+      }
+    },
+    "a5f205eccc82cabb": {
+      "queries": 71,
+      "first_seen": "2026-08-01T04:38:13+00:00",
+      "last_seen": "2026-08-09T20:14:22+00:00",
+      "pencere_id": "R1",
+      "pencere": {
+        "is_start": "2022-01-01",
+        "oos_start": "2024-01-01",
+        "oos_end": "2026-04-30",
+        "holdout_end": "2026-07-30",
+        "fold_law": "n_dengeli_taban_tutmadi",
+        "folds": [
+          "2024-01-01",
+          "2024-10-01",
+          "2025-07-01",
+          "2026-04-30"
+        ]
+      }
+    }
+  },
+  "sayac_baslangici": "2026-07-28T21:34:03+00:00",
+  "beyan": "ge\u00e7mi\u015f sorgular geriye d\u00f6n\u00fck damgalanmad\u0131 (retro damga yasa\u011f\u0131) \u2014 saya\u00e7 bu dosyan\u0131n ilk yaz\u0131m\u0131ndan itibaren sayar",
+  "arsiv_gecis": {
+    "pencere_id": "R1",
+    "tarih": "2026-07-30",
+    "isaretlenen": 2
+  }
+}

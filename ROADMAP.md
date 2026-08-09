@@ -99,7 +99,7 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 | **WP-U** Evren/PIT | 🔶 aktif (stratejik ana cephe) | survivorship-serbest evren · PIT üyelik · delist-bar | EDG-022 ölçüldü→FINVIZ gerekçesiz (§4) · PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ operatörde (§3) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
 | **WP-S** Sermaye/Koruma | 🔴 aktif | koruma×süpürücü · sermaye defter bütünlüğü · boyut makbuzu | koruma DAVRANIŞSAL EOD kanıtı (Pazartesi 13:30 UTC+) · SB-2 `drift_sinifi` · melez pozisyonlar + dormant setup icra (operatör §3) | `adapters/alpaca.py` · `store.py` · `obs.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) |
 | **WP-S2** Ölçüm/Görünürlük Borçları | 📋 aktif | beyanlı ölçüm/görünürlük borçları | kill#4 uygulama (kill kapısı yalnız BOZULMA sınıflarına) · sistematik artefakt turu (envanter yürüme) · systemd + ajan-git (§3) | `api.py` · `web/app.js` · `guard.py` | EXE-2026-002-R1 |
-| **WP-M** Metodoloji/Yasa | 📋 aktif | ölçüm altyapısının kendisi | ~~M1~~ **✅ ZATEN ARŞİV (KYS-001 kill#1, 2026-08-02: yanlılık pratik-önemsiz <10bps CI-0-içi; keşif bayat kayda güvendi, kart otoritesi kapattı — 2026-08-10)** · **M2 ölçümde (KYS-002)** · M7/M8/M9 ucuz-tur · M11 · 2B/2C/2D/A4 | `analytics` · `reflect` · `dataset` | KYS-2026-001(ARŞİV) · KYS-2026-002 |
+| **WP-M** Metodoloji/Yasa | 📋 aktif | ölçüm altyapısının kendisi | ~~M1~~ **✅ ZATEN ARŞİV (KYS-001 kill#1, 2026-08-02: yanlılık pratik-önemsiz <10bps CI-0-içi; keşif bayat kayda güvendi, kart otoritesi kapattı — 2026-08-10)** · **M2 PBO-yarısı ✅ ÖLÇÜLDÜ (KYS-002, 2026-08-10): R1 tabanı PBO=0.6286 → kapı her iki modda BLOKLAR (ilk gerçek taban; kapı damgalamayla gerçek iş yapıyor); DSR-yarısı araç-şartlı (kill#2, §2 önerisi)** · M7/M8/M9 ucuz-tur (ajan uçtu) · M11 · 2B/2C/2D/A4 | `analytics` · `reflect` · `dataset` | KYS-2026-001(ARŞİV) · KYS-2026-002(measured_partial) |
 | **WP-D** Veri Bütünlüğü | 🔄 aktif | karantina/bütünlük kapıları · türetilmiş artefaktlar | türetilmiş artefakt güvensiz-dönem-dışlamalı yeniden üretim · seans-içi boşluk tespiti · earnings kapsama+fail-open · `dataset.load↔bars_integrity` bağlama (operatör §3) | `adapters/data.py` | — |
 | **WP-H** Mühendislik Dayanıklılığı | 🟡 H9 bitti | sürüm kontrolü · atomik yazım · sertleştirme | **H9 A/B/C ✅ İNDİ (2026-08-10, 12 kapı-dışı yazım store kapısına; `auth._write` zero-byte-lockout kök kusuru kapandı; `_write_bars` hot-path dosya-başına kilit)** · AÇIK: H3 tur-2 seccomp · LoadCredential+OCI aktivasyon (operatör §3) | `store.py` · `auth.py` · `hermes.py` · `deploy/` | — |
 | **WP-QC** QuantConnect | 🆕 aktif | platform-içi ölçüm + LEAN yerel motor (asla arşiv-kaynağı değil) | **toolchain ✅ (colima+docker+lean 1.0.227 kuruldu 2026-08-10)**; C2-4 `lean init` QC-login-bloklu (§3) VEYA dotnet-CLI'sız L-boyut · **⑤ RETIRED 7/8 ✅ (§4)** · FREE fizibilite ②③④⑥⑦ · notebook koşumu (operatör §3) | `research/qc_dogrulama/` | EDG-2026-021/022 |
@@ -720,6 +720,13 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    TEK temiz aday olarak işaretledi (F5 indi; F3/F4/F11/F12 backend, F9/F10/F13 zaten yüzeyde, F6/F7
    viz, F15 defter yok). ÖN ŞART: kanonik bir durum-okuyucu — yoksa dağınık alan sentezi UYDURMA riski
    (önce okuyucu tanımı). *gerekçe: YASA-6 (durum dağınık) · boyut: M · bağımlılık: kanonik durum-okuyucu · öncelik: orta.*
+
+4. **DSR girdi-serisi donmuş-çekim aracı (KYS-002 kill#2'nin araç borcu, 2026-08-10)** — kapının taze
+   küme-DSR'ı `_ret` (pnl/START_EQUITY, reflect.py:559) serisini ister; validation_ledger `seri`si
+   (kapanış-günü, r_multiple) ölçek-eşdeğer DEĞİL (ölçüldü: Sharpe sapması medyan 0.0131). İki yol:
+   defter şemasına pnl-serisi damgası (yazar reflect, okuyucu ölçüm-çekimleri) YA DA işlem-düzeyi pnl'li
+   yeni donmuş-çekim betiği. Araç inince KYS-002 DSR-yarısı yeniden ölçülür. *gerekçe: M2'nin DSR yarısı
+   ölçülemiyor · boyut: S-M · bağımlılık: reflect şema kararı (Rol-1) · öncelik: orta.*
 
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
