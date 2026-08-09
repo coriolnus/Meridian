@@ -381,9 +381,11 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   kalibrasyonu — gevşetme değil referans).
 - **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-M — salt-ölçüm; gece kapananlar v196/v214/
   kart-tekillik düşülmüş):** **11 kalem gerçekten açık** (9 metodoloji/yasa + **PBO/DSR tabanı** [M2,
-  M2: damgalama ARTIK ÇALIŞIYOR — canlı **831/833 `pencere_id:R1`** (bu gecenin dağıtım restart'ları başlattı;
-  eski "0/204 damgasız → NO-OP" BAYAT, 2026-08-10 Rol-1 canlı ölçümü). Sert PBO kapısı NO-OP DEĞİL artık,
-  taban ÖLÇÜLEBİLİR → **M2 restart-bloğu KALKTI**; kalan otonom = canlı PBO/DSR taban değerini ölç] +
+  M2: damgalama ARTIK ÇALIŞIYOR — kanonik canlı `validation_ledger` **383 satır = 204 damgasız (R1-öncesi,
+  retro-damga yasağı gereği sonsuza dek None) + 179 R1-damgalı (R1-sonrası TÜM yeni satırlar)**; oos_erosion
+  4 pencere R1 (2026-08-10 Rol-1 salt-okunur canlı ölçüm; önceki gece "831/833" SAYIM HATASIYDI — sprint-sandbox
+  kopyalarını da sayıyordu, düzeltildi). Eski "0/204 → NO-OP" dönem bitti: yeni akış %100 damgalı → **M2
+  restart-bloğu KALKTI**; kalan otonom = R1 popülasyonunda PBO/DSR taban HESABI (ölçüm kodu → KART gerekir)] +
   **araç-kör-nokta artığı** [M11: KATMAN-4 alan merceği plan defterinin ~20 kontrol alanına genişlemedi]).
   EN YÜKSEK KALDIRAÇ = **M1 KIYAS-KİRLENMESİ** (olay-penceresi-dışı kıyas — TÜM evren-medyanı ölçümlerini
   etkiliyor; yeni WP-K aile ölçümlerinin tabanını temizler). Öneri sıra: bakım penceresinde OB-2 systemd
@@ -696,10 +698,10 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan öneri §1'e taşınır + Task açılır.
 Ölçüm önerileri karta (§4) dönüşür; operatör kararı gerektirenler §3'e geçer.
 
-1. **dagit rsync exclude genişletme** — dagit rsync exclude'una `research/olcumler/*/seanslar.json` +
-   `*.stderr.log` + `state/` eklenir. `.gitignore` rsync'i ETKİLEMİYOR (dagit kendi exclude listesini
-   kullanır), ham ölçüm verisi canlıya gidiyor (~446KB, zararsız — canlı okumaz — ama ideal değil).
-   *gerekçe: temiz dağıtım yüzeyi · boyut: S · bağımlılık: yok · öncelik: düşük.*
+1. ~~**dagit rsync exclude genişletme**~~ → **✅ YAPILDI (2026-08-10, dagit.sh:18):** üç kapsamlı desen
+   eklendi (`research/olcumler/*/seanslar.json` · `*/run.stderr.log` · `*/state`), tarihli gerekçe yorumda;
+   v204 testi ekleme-toleranslı (yalnız 'backups' varlığını sabitler). Özet `sonuc.json`+`olcum*.py` taşınmaya
+   devam eder. *(Öneri-akış yaşam döngüsü: §2'den kapanan ilk madde.)*
 
 2. **Gözlemlenebilirlik/dağıtım iyileştirme adayları (2026-08-02 canlı vaka; tam metin §6 snapshot'ta korunur)** —
    hermes-CLI kalemleri a-e (servis açılışında senkron-doğrulama · pano senkron-sonuç zaman-damgası ·
