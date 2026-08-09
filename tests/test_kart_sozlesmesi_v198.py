@@ -93,7 +93,17 @@ def _olcum_modulu():
 #   ogrenme 43 → 44  (+1: hermes:telemetri — `agent_calls` defterinin İLK pano okuyucusu;
 #                     hermes.py:2503'ün "veri hazır, çizim henüz yok" beyanını KAPATIR)
 # Kapak altında: `KAPAK_TABANI` ogrenme 18 → ÖLÇÜLEN 23, taban KORUNUYOR.
-KART_TABANI = {"karar": 27, "saglik": 15, "ogrenme": 44, "kilitler": 5}
+# v229'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W-UX D3-b) — ÜÇ yeni FIRSAT kartı (docs/TASARIM-
+# YONU-2026-08-07 §7'nin F1/F2/F14'ü); hepsi kapak altında, üçü de "üretiliyor ama görünmüyor"
+# kovasından bir kalem kapatır ve UÇTAN okur (uydurma rakam yasağı):
+#   saglik  15 → 17  (+2: veriboru:kagitcanli [F1 · kâğıt-canlı ayrışması, /api/public/summary'nin
+#                     ledgerstamp ayrımının İLK pano okuyucusu] · operasyon:esik [F14 · iki kademeli
+#                     eşik + NO_DATA, `esikHal`in canlı vitrini])
+#   ogrenme 44 → 45  (+1: bilesenic:sapma [F2 · canlı-backtest sapmasının kökü — E2 defterinin
+#                     limit-bacağı ölçümü + iç-motor totoloji-beyanı])
+#   karar 27 · kilitler 5 (değişmedi — bu üç yüzey ③/④'e düştü)
+# Kapak altında: `KAPAK_TABANI` saglik 4→ÖLÇÜLEN 7, ogrenme 18→ÖLÇÜLEN 24 — tabanlar KORUNUYOR.
+KART_TABANI = {"karar": 27, "saglik": 17, "ogrenme": 45, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.

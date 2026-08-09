@@ -1919,6 +1919,13 @@ const KART_KAYDI = {
   "ajan:rollback":      { alan: "ogrenme", bolum: "ajan" },         // C1-5
   "ajan:regresyon":     { alan: "ogrenme", bolum: "ajan" },         // C1-6
   "karne:olgunlasma":   { alan: "ogrenme", bolum: "karne" },        // C1-10
+  // ---- D3-b · FIRSAT YÜZEYLERİ (F1/F2/F14) — kalan on beş FIRSAT'ın üçü -------------------
+  // Üçü de kapak altına girer (bütçesi aşılmış üç yüzeye ekleniyor); kapalı özet kartın KENDİ
+  // cümlesini taşır ve dikkat isteyen hâl (canlı şişme · defter boş · alarm eşiği) rozetle
+  // AÇIK doğar — anomali kapak yüzünden gizlenemez.
+  "veriboru:kagitcanli":{ alan: "saglik",  bolum: "veriboru" },     // F1 · kâğıt-canlı ayrışması
+  "bilesenic:sapma":    { alan: "ogrenme", bolum: "bilesenic" },    // F2 · canlı-backtest sapması kökü
+  "operasyon:esik":     { alan: "saglik",  bolum: "operasyon" },    // F14 · iki kademeli eşik + NO_DATA
 };
 // KART BÜTÇESİ — alan sayfası başına YAZILI tavan. BİRİMİ: "ilk çizimde AÇIK doğan kart".
 // Toplam kart sayısı DEĞİL: bu turda hiçbir kart silinmiyor (silme kararı D2-b/IA turunda,
@@ -6392,6 +6399,7 @@ RENDER.operasyon = async () => {
       + "şimdi ne, runbook adımları ve mevcut eylemler tek çekmecede (runbook panoya emildi). "
       + "Sessiz hat sayfanın üstünde her an canlıdır; müdahale kolları ⑤ Kilitler'de (ve ⌘K'da).")}
     ${p.alarm}
+    ${firsatEsikPaneli(_DIAG)}
     <div class="card rise"><h2 class="t">Alarm gelen kutusu</h2>
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
     ${p.sOgr}
@@ -7210,6 +7218,228 @@ function firsatOlgunlasma(sd, hz, ladder, cf) {
                     <span class="chain mut">${k.manual ? "operatör" : "ajan"}</span></div>`).join("")}</div>`) : ""}`}</div>`;
 }
 
+// ==============================================================================================
+// D3-b · FIRSAT YÜZEYLERİ (F1/F2/F14) — kalan on beş FIRSAT'ın üçü (docs/TASARIM-YONU-2026-08-07 §7)
+// ----------------------------------------------------------------------------------------------
+// Üçü de MEVCUT sözleşmenin üstüne oturur: `.pm-*` hücre dili (v192), kart sözleşmesi (v198),
+// ÖLÇÜLEMEDİ≠0 (v191/v196) ve D1'in beş renk rolü. Yeni jeton, yeni renk, yeni bileşen YOK —
+// üçü de "üretiliyor ama görünmüyor" kovasından bir kalem kapatır ve UÇTAN OKUR (uydurma rakam
+// yasağı; landing-fabricated-figures dersi). Veri bacakları wave-2'de indi; bu blok PANO bacağıdır.
+
+// ---- F14 · İKİ KADEMELİ EŞİK + NO_DATA — panonun TEK üç-hâl dili ------------------------------
+// ÖLÇÜLEN KUSUR: eşikli göstergeler panoda ÜÇ ayrı biçimde konuşuyordu — kimi `warn` (sev-2), kimi
+// elle `n >= mx ? "sev-1" : n/mx > 0.6 ? "sev-2" : "accent"` (app.js:5899), kimi renksiz. ÜÇ HÂL
+// (uyarı / alarm / ölçülemedi) her göstergede AYNI olmalı; bu fonksiyon o dili TEK yerde kurar ve
+// başka göstergeler de onu okuyabilsin diye SAF tutulur (Node'da davranış olarak ölçülür).
+// D1 ROL KATMANI: uyarı → --sev-2 ("insan gerekiyor") · alarm → --sev-1 ("şimdi müdahale"). Renk
+// YALNIZ bu iki hâlde doğar; "iyi" renksizdir (yeşil bir alarm bütçesi kalemidir) ve "ölçülemedi"
+// bir ŞİDDET DEĞİLDİR — sönüktür, çünkü ölçememek bir alarm seviyesi değil bir veri boşluğudur.
+// NO_DATA ≠ 0: değer null/boş/sonsuz ise hâl "olculemedi"dir ve eşik HİÇ sınanmaz (0, sınırı
+// geçmiş sayılmaz — "ölçtük, sıfır çıktı" ile "ölçemedik" aynı kovaya düşemez).
+function esikHal(deger, o) {
+  o = o || {};
+  const n = Number(deger);
+  if (deger == null || deger === "" || !Number.isFinite(n))
+    return { durum: "olculemedi", sev: "", etiket: "ÖLÇÜLEMEDİ" };
+  // `yon`: "yuksek" (büyük değer kötü — sayı YUKARI geçince tetikler) / "dusuk" (küçük değer kötü).
+  const yuksek = String(o.yon == null ? "yuksek" : o.yon) !== "dusuk";
+  const gecti = esik => (esik == null || !Number.isFinite(Number(esik))) ? false
+    : (yuksek ? n >= Number(esik) : n <= Number(esik));
+  // ALARM ÖNCE SINANIR: iki eşik de geçildiyse daha şiddetli hâl kazanır (alarm eşiği uyarıdan
+  // daha uçtadır — yuksek'te büyük, dusuk'te küçük — sıra bu yüzden alarm→uyarı).
+  if (gecti(o.alarm)) return { durum: "alarm", sev: "sev-1", etiket: "ALARM" };
+  if (gecti(o.uyari)) return { durum: "uyari", sev: "sev-2", etiket: "UYARI" };
+  return { durum: "iyi", sev: "", etiket: "" };
+}
+// EŞİK SATIRI — bir göstergenin değeri + üç-hâl etiketi TEK `.srow`da. Etiket METİNle konuşur
+// (renk üçüncü kanal, D1); "iyi" hâl SESSİZdir (etiketsiz), "ölçülemedi" sönük ve NEDENLİdir
+// (`olcumsuz` beyanı — "0 DEĞİL"). Değerin rengi de aynı rol jetonundan gelir (sev-1/sev-2).
+function esikSatiri(etiket, deger, o) {
+  o = o || {};
+  const h = esikHal(deger, o);
+  const deg = h.durum === "olculemedi"
+    ? `<span class="mut">${esc(o.olcumsuz == null ? "ölçülemedi (0 DEĞİL)" : o.olcumsuz)}</span>`
+    : `<span class="mono-num${h.sev ? " " + h.sev : ""}">${o.bicim ? o.bicim(deger) : trn(deger)}</span>`;
+  const et = h.etiket
+    ? ` <span class="${h.durum === "olculemedi" ? "tx3" : h.sev}" style="font-weight:600">${h.etiket}</span>`
+    : "";
+  return `<div class="srow"><span>${esc(etiket)}${
+    o.esikNot ? ` <span class="tx3" style="font-weight:400">${esc(o.esikNot)}</span>` : ""}</span><b>${deg}${et}</b></div>`;
+}
+
+// ---- F1 · KÂĞIDIN NEREDE YALAN SÖYLEDİĞİ (③ saglik#veriboru) ---------------------------------
+// OPERATÖRÜN SORUSU (L1'e geçişin ÖN-ŞARTI): "Canlı kanıt ne kadar?" `/api/public/summary` 96
+// "kapanmış işlem" diyordu ve gövdesi replay TOHUMU (training, survivorship'li); GERÇEK canlı
+// yalnız N. Ayrım wave-2'de ledgerstamp'ten indi (closed_trades_live/seed, live{n,mean_r}) —
+// pano onu ÜÇÜNCÜ kez KURMAZ, uçtan OKUR (landing ile aynı sayı; uydurma rakam yasağı). HANGİ
+// METRİK KÂĞITTA ŞİŞİK: ham toplam (closed_trades) tohumla şişer, canlı satır onu paylaşmaz —
+// çubukların paydası her ikisi için de HAM TOPLAM, yani şişme GÖZLE ölçülür. $ P&L dışarı verilmez.
+function firsatKagitCanli(ps) {
+  const p = ps && typeof ps === "object" ? ps : null;
+  const liveN = p ? (p.live && p.live.n != null ? p.live.n : p.closed_trades_live) : null;
+  const seedN = p ? (p.seed && p.seed.n != null ? p.seed.n : p.closed_trades_seed) : null;
+  const belN  = p ? p.closed_trades_belirsiz : null;
+  const hamN  = p ? p.closed_trades : null;
+  const meanR = p && p.live ? p.live.mean_r : null;
+  const payVar = hamN != null && Number.isFinite(Number(hamN)) && Number(hamN) > 0;   // çubuk paydası
+  const sisik  = liveN != null && seedN != null && Number(liveN) < Number(seedN);
+  const canliOran = (payVar && liveN != null) ? Number(liveN) / Number(hamN) : null;
+  const ozet = !p
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "/api/public/summary okunamadı — canlı/tohum ayrımı bu turda ÖLÇÜLEMEDİ ('canlı kanıt yok' DEĞİL)." })
+    : kartOzeti({ deger: liveN == null ? null : trn(liveN),
+        oran: canliOran, payda: payVar ? `kapanmış işlem (${trn(hamN)})` : "",
+        meta: `defter toplamı <b>${trn(hamN)}</b> · tohum <b>${trn(seedN)}</b>${
+          belN ? ` · belirsiz ${trn(belN)}` : ""} · canlı ort. ${
+          meanR == null ? "ölçülemedi" : isr(meanR, trn(meanR, 3)) + "R"}`,
+        rozet: liveN == null ? "ÖLÇÜLEMEDİ" : (sisik ? "KÂĞIT ŞİŞİK" : "") });
+  // DÖRT SATIRLI KIRILIM (ozetSerit DEĞİL — şerit sayısı v226 tabanında 6 kalır; yeni şerit
+  // BEYANI gerekmedi). CANLI + TOHUM'un PAYI ham toplama göre yazılır (payda başlıkta ve alt
+  // hintte ADIYLA beyanlı); BELİRSİZ + HAM TOPLAM PAYSIZdır — kendileri bir sayıdır, uydurma
+  // tavana bölünemez ("—" basar). Kırılım payda denetimi test_wpux_d3b_v229'da (F1 bölümü).
+  // PAY = parçanın (canlı/tohum/belirsiz) HAM TOPLAM içindeki payı. `paysiz` satırlar (ham toplam
+  // = paydanın KENDİSİ) "—" basar: bir sayının kendine oranını yazmak boş bir tavan uydurmaktır.
+  const pay = (n, paysiz) => (!paysiz && payVar && n != null && Number.isFinite(Number(n))) ? pctf(Number(n) / Number(hamN), 0) : "—";
+  const satir = (ad, n, not, vurgu, paysiz) => `<div class="trow" style="grid-template-columns:132px 62px 74px 1fr">
+    <span class="chain${vurgu ? "" : " mut"}">${esc(ad)}</span>
+    <span class="mono-num">${n == null ? "—" : trn(n)}</span>
+    <span class="mono-num mut">${pay(n, paysiz)}</span>
+    <span class="hint" style="margin:0">${not}</span></div>`;
+  return `<div class="card rise"${katKart("veriboru:kagitcanli")}>
+    <h2 class="t">Kâğıt-canlı ayrışması <span class="tx3" style="font-weight:400">(canlı kanıt ne kadar? — kâğıt nerede yalan söylüyor?)</span></h2>
+    ${ozet}
+    ${!p ? firsatBos("/api/public/summary okunamadı — canlı defter ile tohumun ayrıştığı yer ölçülemedi.",
+        "Bu uç kimlik doğrulamasızdır (tanıtım yüzeyiyle aynı sayı); okunamıyorsa ayrım da türetilemez.")
+      : `<p class="hint" style="margin-top:0">Ledgerstamp ayrımı (landing ile aynı kaynak): defter
+           <b>${trn(hamN)}</b> işlemin <b>${trn(seedN)}</b>'i replay TOHUMU, gerçek canlı yalnız
+           <b>${trn(liveN)}</b>. "Kapanmış işlem" manşeti bu yüzden kâğıtta ŞİŞİKtir — L1'e geçiş
+           kararı canlı satıra bakar, ham toplama değil.</p>
+         <div class="tbl" style="margin-top:10px">
+           <div class="trow head" style="grid-template-columns:132px 62px 74px 1fr">
+             <span>KAYNAK</span><span>N</span><span>PAY (ham)</span><span>NOT</span></div>
+           ${satir("Canlı işlem", liveN, meanR == null ? "gerçek kanıt · ort. R ölçülemedi" : `gerçek kanıt · ort. ${isr(meanR, trn(meanR, 3))}R`, true)}
+           ${satir("Tohum (replay)", seedN, "training · survivorship'li — canlı kanıt SAYILMAZ", true)}
+           ${satir("Belirsiz", belN, "kaynak damgası sınıflanamadı (canlı/tohum değil)", false)}
+           ${satir("Ham toplam", hamN, "tohum DAHİL — kâğıdın şiştiği sayı budur", false, true)}</div>
+         <p class="hint" style="margin-top:10px">PAY sütunu parçaların (canlı / tohum / belirsiz)
+           AYNI paydadan (ham toplam ${trn(hamN)}) payıdır — canlı payın küçüklüğü doğrudan görünür.
+           HAM TOPLAM paydanın KENDİSİ olduğu için paysızdır ("—"). $ P&L bu uçtan DIŞARI VERİLMEZ;
+           canlı sonuç R-multiple olarak taşınır (uç sözleşmesi).</p>`}</div>`;
+}
+
+// ---- F2 · CANLI-BACKTEST SAPMASININ KÖKÜ (④ ogrenme#bilesenic) -------------------------------
+// E1/E2 HATTININ KALBİ. Karne-tazeleme (2026-08-03) ölçtü: replay defteri +2.493$ → −1.182$'a
+// döndü ve farkın TAMAMI E1 giriş-limitinin ATR bacağıydı (dolum 237→176). "Canlı ödeme neden
+// geri-testten sapıyor?" sorusunun KÖKÜ budur — ve E2 defteri (`entry_execution.jsonl`) onu satır
+// satır ölçer. Kart sapmayı ADLANDIRIR, sayı ŞİŞİRMEZ:
+//   * GERÇEK sapma = LİMİT bacağı (`ayna.dolum.fill_vs_limit_bps`): yasa tavanı bağladı mı?
+//   * TOTOLOJİ = iç motorun `fill_vs_resmi_acilis_bps`i None (dolum açılıştan SABİT slippage ile
+//     türer — kendi kendini ölçer). Yazar (loop) satıra None + BEYAN bırakır; kart 0 basmaz,
+//     beyanı SURFACE eder. Bu "E2'nin ölçtüğü gerçek sapma + totoloji-beyanı"nın tam kendisidir.
+// HÜKÜM AZ ÖRNEKTEN UYDURULMAZ: sunucunun `yorum`u n_dolan eşiğine bağlı — pano onu OKUR, ikinci
+// hüküm KURMAZ. Bu kart mutabakat masasının icra kartından AYRIDIR: orası "ayna gönderdi mi/doldu
+// mu" (operasyon); burası "geri-test neden yalan söyledi" (öğrenme) — aynı defter, ayrı soru.
+function firsatSapmaKoku(slp) {
+  const s = slp && typeof slp === "object" ? slp : null;
+  const dl = s && s.ayna && typeof s.ayna.dolum === "object" ? s.ayna.dolum : {};
+  const ic = s && typeof s.ic_motor === "object" ? s.ic_motor : {};
+  const limit  = dl.fill_vs_limit_bps && typeof dl.fill_vs_limit_bps === "object" ? dl.fill_vs_limit_bps : null;
+  const acilis = dl.fill_vs_resmi_acilis_bps && typeof dl.fill_vs_resmi_acilis_bps === "object" ? dl.fill_vs_resmi_acilis_bps : null;
+  const icBeyan = ic.fill_vs_resmi_acilis_beyan != null ? String(ic.fill_vs_resmi_acilis_beyan) : null;
+  const nDolan = dl.n_dolan != null ? dl.n_dolan : null;
+  const limOrt = limit && limit.ort != null ? limit.ort : null;
+  const defterBos = s != null && String(s.durum == null ? "" : s.durum).includes("defter boş");
+  const bosHal = !s || defterBos || nDolan == null || Number(nDolan) === 0;
+  const dagilim = (b, ad) => {
+    if (!b || b.ort == null) return `<div class="srow"><span>${esc(ad)}</span><b><span class="pm-none">ölçülemedi</span></b></div>`;
+    return `<div class="srow"><span>${esc(ad)}</span><b><span class="mono-num">${trn(b.ort, 1)} bps</span> <span class="tx3" style="font-weight:400">medyan ${
+      trn(b.medyan, 1)} · p90 ${trn(b.p90, 1)} · n=${trn(b.n)}${b.n_olculemeyen ? ` · ${trn(b.n_olculemeyen)} ölçülemeyen` : ""}</span></b></div>`;
+  };
+  const ozet = !s
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis ucu `icra.slipaj` bloğunu vermedi — canlı-backtest sapması bu turda ÖLÇÜLEMEDİ (0 bps DEĞİL)." })
+    : (bosHal
+      ? kartOzeti({ deger: null, rozet: "DEFTER BOŞ",
+          meta: `E2 defteri henüz dolum yazmadı${nDolan == null ? "" : ` (${trn(nDolan)} dolum)`} — ilk satır ilk ayna döngüsünde düşer. Sapma ölçülemedi, 0 bps DEĞİL.` })
+      : kartOzeti({ deger: limOrt == null ? null : trn(limOrt, 1) + " bps",
+          oran: kanitOrani(nDolan), payda: `dolum (${trn(nDolan)})`,
+          meta: "limit-bacağı ORTALAMASI (gerçek sapma) · iç motorun açılış-bacağı TOTOLOJİK (None)",
+          rozet: limOrt == null ? "ÖLÇÜLEMEDİ" : "" }));
+  return `<div class="card rise"${katKart("bilesenic:sapma")}>
+    <h2 class="t">Canlı-backtest sapmasının kökü <span class="tx3" style="font-weight:400">(canlı ödeme neden geri-testten sapıyor? · E1/E2 hattı)</span></h2>
+    ${ozet}
+    ${!s ? firsatBos("teşhis ucu `icra.slipaj` (E2 defteri) bloğunu vermedi — sapmanın kökü ölçülemedi.",
+        "E1/E2 hattının kalbi: canlı ödeme ile geri-test farkı bu defterde satır satır ölçülür.")
+      : (bosHal
+        ? firsatBos(String(s.durum == null ? "E2 defteri boş — dolum yok" : s.durum),
+            "Bu bir ÖLÇÜMdür: defter doğdu ve ilk dolumu bekliyor — okunamamış olmakla aynı şey değil.")
+        : `<p class="hint" style="margin-top:0">Kök (E1 kararı, 2026-08-03): replay geri-testi
+             giriş-limitinin ATR bacağını modellemiyordu — canlıda dolumlar düştü ve "kâğıt kâr"ın
+             ana kaynağı buydu. GERÇEK sapma bir tahmin DEĞİL, E2 defterinin CANLI ölçümüdür ve iki
+             bacakta durur:</p>
+           ${dagilim(limit, "Limit-bacağı (GERÇEK sapma) — yasa tavanı bağladı mı?")}
+           ${dagilim(acilis, "Açılış-bacağı (açılış mikroyapısı) — ayna")}
+           <div class="srow"><span>İç motor · açılış-bacağı <span class="tx3" style="font-weight:400">(totoloji)</span></span>
+             <b>${belirsiz('<span class="pm-none">None — beyanlı</span>', icBeyan == null ? "iç motorun açılış-bacağı beyanı yükte yok" : icBeyan)}</b></div>
+           <p class="hint" style="margin-top:6px">İç motorun açılış-bacağı değeri <b>None</b>'dır (0 bps
+             DEĞİL): dolum açılıştan SABİT slippage ile türer, yani kendi kendini ölçer — totoloji.
+             ${icBeyan == null ? "" : "Yazarın beyanı yukarıdaki kesik-çizgide."} GERÇEK sapma yukarıdaki
+             LİMİT bacağıdır; sayıyı şişirmemek için totolojik bacak ölçülmez, BEYAN edilir.</p>
+           ${dl.yorum == null ? "" : `<p class="hint" style="margin-top:10px">${esc(String(dl.yorum))}</p>`}`)}</div>`;
+}
+
+// ---- F14 · İKİ KADEMELİ EŞİK PANELİ (③ saglik#operasyon) -------------------------------------
+// `esikHal`in canlı vitrini: sağlık göstergeleri TEK üç-hâl dilinde (uyarı sev-2 / alarm sev-1 /
+// ölçülemedi sönük). Dört gösterge, dördü de _DIAG'dan OKUNUR (uydurma yok); eşikler burada SABİT
+// yazılı DEĞİL göstergenin kendi ölçeğinden türer (EOD sabır tavanı `refetch_max` gibi — C10 dersi
+// hükümler içindir, bir görünürlük eşiği hüküm değildir ve satırında ADIYLA yazar).
+function firsatEsikPaneli(d) {
+  const D = d && typeof d === "object" ? d : null;
+  const wd = D && typeof D.watchdog === "object" ? D.watchdog : {};
+  const pl = D && typeof D.pipeline === "object" ? D.pipeline : {};
+  const geciken = D ? ((wd.stale || []).length + (wd.never || []).length) : null;
+  const nd = pl.symbol_no_data && typeof pl.symbol_no_data === "object" ? pl.symbol_no_data : {};
+  const veriYok = D ? (nd.confirmed_no_data || []).length : null;
+  const ud = pl.universe_drift && typeof pl.universe_drift === "object" ? pl.universe_drift : null;
+  const sapan = ud ? ud.n_stale : null;                    // null = ÖLÇÜLMEDİ (uydurma 0 yok)
+  const mx = pl.refetch_max != null && Number.isFinite(Number(pl.refetch_max)) ? Number(pl.refetch_max) : null;
+  const sabir = Number.isFinite(Number(pl.refetch_attempts)) ? Number(pl.refetch_attempts) : null;
+  const kalemler = [
+    { ad: "Geciken bekçi mekanizması", deger: geciken, o: { uyari: 1, alarm: 3, esikNot: "uyarı ≥1 · alarm ≥3", olcumsuz: "bekçi raporu okunamadı" } },
+    { ad: "Veri dönmeyen sembol (doğrulanmış)", deger: veriYok, o: { uyari: 1, alarm: 5, esikNot: "uyarı ≥1 · alarm ≥5", olcumsuz: "no-data taraması yok" } },
+    { ad: "Endeksten düşen sembol (evren sapması)", deger: sapan, o: { uyari: 1, alarm: 3, esikNot: "uyarı ≥1 · alarm ≥3", olcumsuz: (ud && ud.status === "unknown") ? "sapma sayısı ÖLÇÜLMEDİ ('liste temiz' DEĞİL)" : "evren sapması okunamadı" } },
+    { ad: "EOD sabır sayacı", deger: sabir, o: { uyari: mx == null ? null : mx * 0.6, alarm: mx,
+        esikNot: mx == null ? "tavan ölçülemedi" : `uyarı ≥${trn(mx * 0.6, 1)} · alarm ≥${trn(mx)}`,
+        olcumsuz: "deneme sayacı ölçülemedi (0 deneme DEĞİL)", bicim: v => mx == null ? trn(v) : `${trn(v)}/${trn(mx)}` } },
+  ];
+  const haller = D ? kalemler.map(k => esikHal(k.deger, k.o)) : [];
+  const nAlarm = haller.filter(h => h.durum === "alarm").length;
+  const nUyari = haller.filter(h => h.durum === "uyari").length;
+  const nOlc = haller.filter(h => h.durum === "olculemedi").length;
+  const nIyi = haller.length - nAlarm - nUyari - nOlc;
+  const ozet = !D
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis ucu okunamadı — eşikli göstergelerin hiçbiri bu turda ölçülemedi ('hepsi iyi' DEĞİL)." })
+    : kartOzeti({ deger: `${nAlarm + nUyari}/${haller.length}`, degerSinif: nAlarm ? "warn" : "",
+        oran: haller.length ? (nAlarm + nUyari) / haller.length : null,
+        payda: `eşikli gösterge (${haller.length})`,
+        meta: `${nAlarm} alarm · ${nUyari} uyarı · ${nIyi} iyi · ${nOlc} ölçülemedi`,
+        rozet: nAlarm ? `${nAlarm} ALARM` : (nUyari ? `${nUyari} UYARI` : (nOlc ? "KISMEN ÖLÇÜLEMEDİ" : "")) });
+  return `<div class="card rise"${katKart("operasyon:esik")}>
+    <h2 class="t">Eşik durumu · iki kademe + veri-yok <span class="tx3" style="font-weight:400">(uyarı / alarm / ölçülemedi — tek dil)</span></h2>
+    ${ozet}
+    ${!D ? firsatBos("teşhis ucu okunamadı — eşikli göstergeler ölçülemedi.",
+        "Dört gösterge de tek uçtan (`/api/diagnostics`) gelir; uç düştüyse hiçbiri türetilemez.")
+      : `<p class="hint" style="margin-top:0">Her gösterge AYNI üç hâli konuşur:
+           <b class="sev-2">UYARI</b> (insan gerekiyor) · <b class="sev-1">ALARM</b> (şimdi müdahale) ·
+           <span class="mut">ölçülemedi</span> (0 DEĞİL). Eşikler göstergenin kendi ölçeğinden gelir,
+           panoya sabit yazılmaz.</p>
+         ${kalemler.map(k => esikSatiri(k.ad, k.deger, k.o)).join("")}
+         <p class="hint" style="margin-top:10px">Bu panel eşik dilini TEK yerde (<code>esikHal</code>)
+           kurar; aynı üç hâl artık başka göstergelere de aynı jetonlarla uygulanabilir (D1 rol
+           katmanı: uyarı→--sev-2, alarm→--sev-1). Renk YALNIZ bu iki hâlde; "iyi" sessizdir.</p>`}</div>`;
+}
+
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------
 // Emirlerin AYNASI kitabın yanında durur: "iç defterim brokerinkiyle aynı mı?" sorusu, "kitap
 // nerede?" sorusunun ayrılmaz parçasıdır. Gözetim'de dururken operatör sapmayı ancak alarm
@@ -7445,9 +7675,13 @@ RENDER.kapilar = async () => {
 // hepsi "baktığım veri sağlam mı?" sorusunun cevabı ve hiçbiri "sistem sağlıklı mı?" değil.
 RENDER.veriboru = async () => {
   const p = await opParcalar();
+  // F1 · kâğıt-canlı ayrımı KİMLİK-DOĞRULAMASIZ uçtan gelir (landing ile aynı sayı; ayrı ve dar
+  // uç, DASH_TOKEN'dan bağımsız). Arkadan okunur — düşerse kart "ölçülemedi + neden" der (YASA 4).
+  const ps = await j("/api/public/summary").catch(() => null);
   $("page-veriboru").innerHTML = bolumBasHTML("veriboru", "Veri hattı · karantina · bütünlük",
-    "Hattın kendi sağlığı: karantina odası, yedi bütünlük deseni, defter sözleşmesi, eleme "
-    + "muhasebesi, Redis sıcak katmanı ve sağlayıcı adaptörleri.")
+    "Hattın kendi sağlığı: canlı/tohum defter ayrımı, karantina odası, yedi bütünlük deseni, defter "
+    + "sözleşmesi, eleme muhasebesi, Redis sıcak katmanı ve sağlayıcı adaptörleri.")
+    + firsatKagitCanli(ps)
     + p.s4 + p.s5 + p.s6 + p.sSag
     // ---- DETAY KATMANINA İNDİ (S2R-2 "soruya hizmet" denetimi) --------------------------------
     // Bu kart Faz-4a gözleminin ÖZETİdir ve ayrıntısı artık Portföy'ün `intraemir` bölümünde
@@ -7467,11 +7701,14 @@ RENDER.veriboru = async () => {
 // kâr şelalesi + sistem önerileri) "makine ne öğreniyor?" sorusunun sayısal cevabıdır; Operasyon
 // sayfasında dururken hiç kimse onları öğrenme kanıtı olarak okumuyordu.
 RENDER.bilesenic = async () => {
-  const p = await opParcalar();
+  const p = await opParcalar();               // _DIAG'ı da doldurur (F2 `icra.slipaj`ı oradan okur)
   $("page-bilesenic").innerHTML = bolumBasHTML("bilesenic", "Kenar ölçümleri · bileşen IC + EB",
     "Skor→sonuç IC'si, SPY-üstü, tahmin isabeti, rejim başına kenar, kuyruk riski; skorun dört "
-    + "ham parçası ve empirik-Bayes ikizi; dolar merceği, doğrulama üçlüsü ve kâr şelalesi.")
-    + p.sEdge + p.sSonuc + p.sSelale + p.sDogrulama + p.sY3;
+    + "ham parçası ve empirik-Bayes ikizi; dolar merceği, doğrulama üçlüsü, kâr şelalesi ve "
+    + "canlı-backtest sapmasının kökü (E1/E2 hattı).")
+    // F2 · sEdge→sSonuc (hüküm ikizi) BİTİŞİK KALIR (v102 çivisi); sapma kökü sonuç hükmünden SONRA
+    // okunur — "kenar gerçek mi?"nin ardından "canlı ödeme neden geri-testten sapıyor?".
+    + p.sEdge + p.sSonuc + firsatSapmaKoku(((_DIAG || {}).icra || {}).slipaj) + p.sSelale + p.sDogrulama + p.sY3;
 };
 
 // ---- ÖĞRENME · GÖLGE KOLLAR ------------------------------------------------------------------

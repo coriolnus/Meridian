@@ -1,25 +1,30 @@
 {
  "sayfa": {
   "karar": {
-   "toplam": 21,
+   "toplam": 27,
    "bolumler": {
     "adaylar": {
-     "toplam": 3,
+     "toplam": 4,
      "direkt": 3,
      "parca": 0,
      "parcalar": [],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 1,
+     "kaynak": [
+      "firsatDenetimIzi"
+     ]
     },
     "kapilar": {
-     "toplam": 1,
+     "toplam": 3,
      "direkt": 0,
      "parca": 1,
      "parcalar": [
       "p.s2=1"
      ],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 2,
+     "kaynak": [
+      "firsatEylemsizlik",
+      "firsatRetKarnesi"
+     ]
     },
     "onaylar": {
      "toplam": 4,
@@ -42,7 +47,7 @@
      ]
     },
     "mutabakat": {
-     "toplam": 4,
+     "toplam": 6,
      "direkt": 0,
      "parca": 4,
      "parcalar": [
@@ -51,8 +56,11 @@
       "p.sGeceG=1",
       "p.sIcra=1"
      ],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 2,
+     "kaynak": [
+      "firsatEmirYasam",
+      "korumaKurmaKarti"
+     ]
     },
     "intraemir": {
      "toplam": 3,
@@ -67,42 +75,47 @@
      "kaynak": []
     },
     "performans": {
+     "toplam": 4,
+     "direkt": 2,
+     "parca": 0,
+     "parcalar": [],
+     "yardimci": 2,
+     "kaynak": [
+      "firsatCikisNedeni",
+      "riskCard"
+     ]
+    }
+   },
+   "kapakli": 9,
+   "kapaksiz": 18
+  },
+  "saglik": {
+   "toplam": 17,
+   "bolumler": {
+    "operasyon": {
+     "toplam": 4,
+     "direkt": 2,
+     "parca": 1,
+     "parcalar": [
+      "p.sOgr=1"
+     ],
+     "yardimci": 1,
+     "kaynak": [
+      "firsatEsikPaneli"
+     ]
+    },
+    "cizelge": {
      "toplam": 3,
      "direkt": 2,
      "parca": 0,
      "parcalar": [],
      "yardimci": 1,
      "kaynak": [
-      "riskCard"
+      "firsatCizelgeIzi"
      ]
-    }
-   },
-   "kapakli": 3,
-   "kapaksiz": 18
-  },
-  "saglik": {
-   "toplam": 14,
-   "bolumler": {
-    "operasyon": {
-     "toplam": 3,
-     "direkt": 2,
-     "parca": 1,
-     "parcalar": [
-      "p.sOgr=1"
-     ],
-     "yardimci": 0,
-     "kaynak": []
-    },
-    "cizelge": {
-     "toplam": 2,
-     "direkt": 2,
-     "parca": 0,
-     "parcalar": [],
-     "yardimci": 0,
-     "kaynak": []
     },
     "veriboru": {
-     "toplam": 5,
+     "toplam": 6,
      "direkt": 0,
      "parca": 5,
      "parcalar": [
@@ -112,8 +125,10 @@
       "p.sIntra=1",
       "p.sSag=1"
      ],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 1,
+     "kaynak": [
+      "firsatKagitCanli"
+     ]
     },
     "market": {
      "toplam": 2,
@@ -135,22 +150,24 @@
      "kaynak": []
     }
    },
-   "kapakli": 4,
+   "kapakli": 7,
    "kapaksiz": 10
   },
   "ogrenme": {
-   "toplam": 39,
+   "toplam": 45,
    "bolumler": {
     "karne": {
-     "toplam": 11,
+     "toplam": 12,
      "direkt": 7,
      "parca": 4,
      "parcalar": [
       "op.sHermes=2",
       "op.sNous=2"
      ],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 1,
+     "kaynak": [
+      "firsatOlgunlasma"
+     ]
     },
     "golge": {
      "toplam": 4,
@@ -164,7 +181,7 @@
      "kaynak": []
     },
     "bilesenic": {
-     "toplam": 7,
+     "toplam": 8,
      "direkt": 0,
      "parca": 7,
      "parcalar": [
@@ -174,11 +191,13 @@
       "p.sSonuc=2",
       "p.sY3=1"
      ],
-     "yardimci": 0,
-     "kaynak": []
+     "yardimci": 1,
+     "kaynak": [
+      "firsatSapmaKoku"
+     ]
     },
     "hermes": {
-     "toplam": 10,
+     "toplam": 12,
      "direkt": 5,
      "parca": 3,
      "parcalar": [
@@ -186,20 +205,24 @@
       "op.sCark=1",
       "op.sOzDeg=1"
      ],
-     "yardimci": 2,
+     "yardimci": 4,
      "kaynak": [
       "eylemKutu",
       "eylemSeridi",
+      "firsatMaliyetKarnesi",
+      "hermesTelemetriKarti",
       "sprintCard"
      ]
     },
     "ajan": {
-     "toplam": 2,
+     "toplam": 4,
      "direkt": 1,
      "parca": 0,
      "parcalar": [],
-     "yardimci": 1,
+     "yardimci": 3,
      "kaynak": [
+      "firsatRegresyon",
+      "firsatRollbackSicili",
       "skillAttrCard"
      ]
     },
@@ -222,7 +245,7 @@
      "kaynak": []
     }
    },
-   "kapakli": 18,
+   "kapakli": 24,
    "kapaksiz": 21
   },
   "kilitler": {
@@ -271,7 +294,22 @@
   "veriboru:saglayici": "saglik",
   "mutabakat:icra": "karar",
   "mutabakat:band": "karar",
-  "mutabakat:gecegun": "karar"
+  "mutabakat:gecegun": "karar",
+  "mutabakat:koruma": "karar",
+  "kapilar:retkarne": "karar",
+  "kapilar:eylemsizlik": "karar",
+  "mutabakat:emiryasam": "karar",
+  "performans:cikis": "karar",
+  "adaylar:denetim": "karar",
+  "cizelge:damga": "saglik",
+  "hermes:maliyet": "ogrenme",
+  "hermes:telemetri": "ogrenme",
+  "ajan:rollback": "ogrenme",
+  "ajan:regresyon": "ogrenme",
+  "karne:olgunlasma": "ogrenme",
+  "veriboru:kagitcanli": "saglik",
+  "bilesenic:sapma": "ogrenme",
+  "operasyon:esik": "saglik"
  },
  "kullanim": {
   "mutabakat:icra": 1,
@@ -288,6 +326,21 @@
   "veriboru:butunluk": 1,
   "veriboru:redis": 1,
   "veriboru:saglayici": 1,
+  "kapilar:retkarne": 1,
+  "kapilar:eylemsizlik": 1,
+  "mutabakat:emiryasam": 1,
+  "performans:cikis": 1,
+  "adaylar:denetim": 1,
+  "cizelge:damga": 1,
+  "hermes:maliyet": 1,
+  "hermes:telemetri": 1,
+  "ajan:rollback": 1,
+  "ajan:regresyon": 1,
+  "karne:olgunlasma": 1,
+  "veriboru:kagitcanli": 1,
+  "bilesenic:sapma": 1,
+  "operasyon:esik": 1,
+  "mutabakat:koruma": 1,
   "ajan:surumler": 1,
   "ajan:beceri": 1,
   "hafiza:dersler": 1,
