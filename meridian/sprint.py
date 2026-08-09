@@ -80,6 +80,14 @@ def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
+# Bir sprint FAZININ terminal (bitmiş/durmuş) mi yoksa hâlâ "koşuyor" gibi mi okunacağını TEK
+# yerde tanımlar. `sprint_run` bu fazları yazar (baseline/search/candidate → koşuyor; done/stopped/
+# error → terminal); `start()` 'starting' (koşuyor), `stop()` 'stopping' (terminal) yazar. Orphan
+# göstergesi (aşağıda, status()) bu kümeyi kullanır: ölü pid + TERMİNAL faz NORMALDİR (iş bitti),
+# ölü pid + terminal-OLMAYAN faz ise YARIDA KALMIŞ (orphan) bir sprinttir.
+_TERMINAL_PHASES = frozenset({"done", "stopped", "stopping", "error"})
+
+
 def status() -> dict:
     st = store.read_json(STATUS_FILE, {})
     pid, alive = st.get("pid"), False
@@ -96,6 +104,17 @@ def status() -> dict:
             alive = True
         except (OSError, ValueError):  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             alive = False
+    # ORPHAN GÖSTERGESİ (v224): pid KAYITLI ama ÖLÜ ve faz TERMİNAL DEĞİL → sprint YARIDA KALDI.
+    # Ölçülen kusur (2026-08-09 triyajı, kalem 2): pid 96924 ölü, phase='baseline', progress
+    # 281/527, dosya yaşı 42,6 sa. `active` (=alive) ZATEN False idi; ama okuyucu (pano) `phase`+
+    # `progress`ten "%53 koşuyor" çiziyordu — yani `active` tek başına "koşuyor mu?"yu yanıtlamıyor,
+    # çünkü DONMUŞ bir faz/ilerleme canlıymış gibi taşınıyor. Bu bayrak o ayrımı SPRINT.PY
+    # KATMANINDA dürüstleştirir (Ajan B panoda bunu okuyup yansıtır — çakışma yok). Ölü pid +
+    # TERMİNAL faz NORMALDİR (done/stopped/…: iş bitti) → orphan DEĞİL. Faz YOKSA "koşuyor" gibi de
+    # okunmaz → orphan DEĞİL (zombie-reap testi v45 o hâli yalnız `active False` diye çiviler).
+    # SPRINT DİRİLTİLMEZ: bu SALT bir gösterge; kadans/LLM kotası ayrı bir operatör kalemidir.
+    faz = st.get("phase")
+    orphan = bool(pid) and not alive and faz is not None and faz not in _TERMINAL_PHASES
     # YASA 6 (2026-07-21): sprint_run.py her aramadan sonra `sprint_runs.jsonl`'a satır yazıyordu ve
     # KOD İÇİNDE HİÇBİR OKUYUCUSU YOKTU — üretildi, kimse tüketmedi; yedi desenli bütünlük raporunun
     # panoya hiç bağlanmamasıyla aynı kusur. Son koşular buradan durumun içine girer (pano zaten
@@ -122,7 +141,12 @@ def status() -> dict:
         _canli = store.read_jsonl("sprint_runs.jsonl", limit=5)
         if _canli:
             _runs, _kaynak = _canli, "canli"
-    return {**st, "active": alive, "runs": _runs,
+    return {**st, "active": alive, "orphan": orphan,
+            "orphan_note": (None if not orphan else
+                            f"pid {pid} ÖLÜ ama faz '{faz}' terminal değil — sprint YARIDA KALDI "
+                            f"(orphan): süreç yok, ilerleme donmuş, 'koşuyor' DEĞİL. Kadans/kota "
+                            f"ayrı operatör kalemidir; bu gösterge DİRİLTMEZ."),
+            "runs": _runs,
             "runs_ledger": ("var" if _runs else "YOK"), "runs_kaynak": _kaynak,
             "runs_note": (None if _runs else
                           "hiçbir kum havuzunda sprint_runs.jsonl yok — sprint arama fazına hiç "
@@ -396,8 +420,20 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     now = now or dt.datetime.now()
     hyps = memory.all_hypotheses()
     son = st.get("started_at")
+    # GÜN BACAĞI ARTIK ENJEKTE `now`DAN TÜRER (v224 — "kararın ânı" seam'i kapatıldı). `son`
+    # (started_at) her zaman tz-AWARE UTC'dir (`_now()`); gün farkı ancak KARŞILAŞTIRILABİLİR bir
+    # MUTLAK anla hesaplanabilir. Çağıran tz-aware bir `now` verdiyse karar ânı ODUR ve gün bacağı
+    # onu kullanır → karar test-edilebilir olur, saat ve gün bacakları TEK ana dayanır.
+    # NAIVE ya da VERİLMEMİŞ `now` mutlak bir ana denk düşmez (aware `son`dan çıkarılırsa TypeError
+    # olurdu) → gerçek UTC saatine düşülür. Bu geri-düşüş DAVRANIŞ-NÖTRDÜR: üretimde `now=None →
+    # dt.datetime.now()` (naive yerel) olduğundan `gun_ref` BİREBİR eski ifadeye
+    # (`dt.datetime.now(utc)`) eşittir — hiçbir üretim çağıranı değişmez. v159 mesafe-çivisi de
+    # naive SABİT bir tarih enjekte ettiğinden AYNI geri-düşüşe girer ve yeşil kalır. Naive `now`u
+    # UTC sanıp çevirmek (`.replace`/`.astimezone`) HEM üretim nötrlüğünü HEM v159'u bozardı — o
+    # yüzden bilinçle YAPILMIYOR (ayrım "aware mı" sorusudur, bir dönüştürme değil).
+    gun_ref = now if now.tzinfo is not None else dt.datetime.now(dt.timezone.utc)
     try:
-        gun = (dt.datetime.now(dt.timezone.utc) - dt.datetime.fromisoformat(str(son))).days
+        gun = (gun_ref - dt.datetime.fromisoformat(str(son))).days
     except (TypeError, ValueError):  # sessiz-yutma: sonuç KAYDA GEÇİYOR (gun=None → "hiç koşmadı" tetiği) — bilgi kaybolmaz
         gun = None
     taze = len(hyps) - int(st.get("n_hyp_at_start") or 0)

@@ -1169,6 +1169,22 @@ const EV_TR = {
     + ` (ölçülen ${e.olculen || "?"}); hiçbir emir gönderilmedi`,
   koruma_dedektoru_dustu: e => `Koruma dedektörü düştü: ${e.error || "sebep yazılmamış"}`
     + ` — bu poll'da hüküm YOK ("koruma var" sayılmaz)`,
+  // ---- SÜPÜRÜCÜ AİLESİ (v220/v221 · KALEM 10) --------------------------------------------------
+  // Dolmamış giriş süpürücüsünün olayları ham adla akıyordu; v220 `siniflar`/`foreign` dökümünü,
+  // v221 grup kemerini EKLEDİ ama olay çekmecesinde OKUYUCUSU yoktu (YASA-6). Adlar UÇTAN ölçüldü:
+  // `alpaca.EV_SUPURME_SINIFLARI` (adapters/alpaca.py) · `api.control_cancel_open` (api.py) ·
+  // `loop.EV_STALE_ENTRIES_CANCELLED`/`EV_MIRROR_ENTRIES_CANCELLED` (loop.py). RENK YOK: bunlar
+  // obs.log BİLGİ olayı (koruma DOKUNULMADIĞINI raporlar), anomali değil — akışta `mut` çizilir.
+  // Ölçülemeyen sayı UYDURULMAZ (?? 0 / ?? "?"), iç virgül dolu diye çeviri düz metindir.
+  mirror_cancel_sinif_dokumu: e => `Süpürücü sınıf dökümü — ${e.cancelled ?? 0} giriş iptal edildi`
+    + ` · sınıflar: giriş ${e.giris ?? 0} · koruma ${e.koruma ?? 0} (dokunulmadı) · yabancı ${e.yabanci ?? 0}`
+    + ((e.korunan_coidler || []).length ? " · korunan bacak: " + (e.korunan_coidler || []).length : ""),
+  control_cancel_open: e => `Cancel-Open (pano tuşu) — ${e.cancelled ?? 0} giriş iptal · ${e.kept ?? 0} korundu`
+    + `${e.ok === false ? " · İŞLEM DÜŞTÜ" : ""}`,
+  mirror_stale_entries_cancelled: e => `Bayat tetik süpürüldü (günlük kadans) — ${e.cancelled ?? 0} giriş iptal`
+    + ` · ${e.kept ?? 0} korundu · ${e.foreign ?? 0} yabancı (dokunulmadı)`,
+  mirror_entries_cancelled: e => `HALT/breaker süpürücüsü — ${e.cancelled ?? 0} ayna girişi iptal`
+    + ` · ${e.kept ?? 0} korundu · ${e.foreign ?? 0} yabancı`,
 };
 // Akışın NE KADARDIR kopuk olduğu — "kopuk" ile "43 dakikadır kopuk" operatör için aynı şey değil:
 // ilki bir bayrak, ikincisi bir karar (bekle mi, ayna kapansın mı).
@@ -3387,7 +3403,22 @@ window.opLearnHalt = async (on) => {
 window.opCancelOpen = async () => {
   if (!confirm("Kademe 2 — Cancel Open?\n\nYalnız DOLMAMIŞ giriş emirleri iptal edilir. Dolu pozisyonların koruyucu stop/hedef bacaklarına DOKUNULMAZ.")) return;
   try { const r = await _ctl("/api/control/cancel_open");
-    alert(`İptal: ${(r.cancelled || []).length} · Korunan: ${(r.kept || []).length}`);
+    // SINIF DÖKÜMÜ OKUNUR (v220/v221, KALEM 10 — YASA-6: `alpaca.cancel_open_entries` bu alanları
+    // ÜRETİR, okuyucusu buydu). Süpürücü her açık emri `giris`/`koruma`/`yabanci` sınıflar ve YALNIZ
+    // `giris`i iptal eder; salt "İptal: 4 · Korunan: 4" satırı korumanın DOKUNULMADIĞINI göstermiyordu.
+    // `siniflar` yoksa UYDURULMAZ (?? 0): eski sunucu yanıtı da yalanmış gibi renklenmesin.
+    const s = r.siniflar || {};
+    const kept = r.kept || [];
+    const korumaBacak = kept.filter(k => k.sinif === "koruma");
+    const satir = [
+      `İptal (giriş): ${(r.cancelled || []).length} · Korunan: ${kept.length}`,
+      `Sınıf dökümü — giriş ${s.giris ?? 0} · koruma ${s.koruma ?? 0} · yabancı ${s.yabanci ?? 0}`,
+      korumaBacak.length
+        ? `Koruma bacağı DOKUNULMADI (${korumaBacak.length}): ${(korumaBacak[0].neden || "—").slice(0, 120)}`
+        : "",
+      (r.foreign || []).length ? `Yabancı (operatör emri, dokunulmadı): ${(r.foreign || []).length}` : "",
+    ].filter(Boolean);
+    alert(satir.join("\n"));
   } catch (e) { alert("Hata: " + e); }
   await _aktifSayfayiCiz();
 };

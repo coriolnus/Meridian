@@ -3896,12 +3896,27 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
         "dolum_orani": (round(len(dolan) / gonderilen, 4) if gonderilen else None),
         "fill_vs_resmi_acilis_bps": _bps_ozet([r.get("fill_vs_resmi_acilis_bps") for r in dolan]),
         "fill_vs_limit_bps": _bps_ozet([r.get("fill_vs_limit_bps") for r in dolan]),
-        "yorum": ("fill_vs_limit_bps ≈ 0 → limit BAĞLADI (tavanda dolduk); belirgin NEGATİF → "
-                  "yasa para bıraktı, tavan gevşetilebilir (kart grid'inin ölçüm girdisi)"),
+        # KALEM 4 (2026-08-09): "tavan gevşetilebilir" bir HÜKÜMdür ve n_dolan<BAND_MIN_N iken
+        # SUSTURULUR — dört dolumla "tavan gevşetilebilir" demek az örnekten hüküm uydurmaktır
+        # (UYDURMA YASAĞI). Dağılım yine gösterilir; yalnız HÜKÜM cümlesi ampirik eşiğe bağlanır
+        # (aynı eşik E3 ampirik bandının BAND_MIN_N'i — tek eşik, iki okuyucu).
+        "yorum": (
+            ("fill_vs_limit_bps ≈ 0 → limit BAĞLADI (tavanda dolduk); belirgin NEGATİF → "
+             "yasa para bıraktı, tavan gevşetilebilir (kart grid'inin ölçüm girdisi)")
+            if len(dolan) >= BAND_MIN_N else
+            (f"n_dolan={len(dolan)} < {BAND_MIN_N} — HÜKÜM YOK: dağılım gösterilir ama tavan "
+             f"hükmü verilemez (ampirik eşik {BAND_MIN_N} dolum). Az örnekten hüküm UYDURULMAZ "
+             f"(UYDURMA YASAĞI); hüküm cümlesi bu örneklemde SUSTURULDU")),
     }
     # --- 3) İÇ MOTOR: dolum / kaçan işlem ------------------------------------------------------
     ic_karar = _sayac(ic, "karar")
     ic_dolan = [r for r in ic if r.get("karar") == "fill"]
+    # KALEM 4 (2026-08-09): iç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir (dolum açılıştan
+    # sabit slippage ile türer) → yazar (loop) satıra None + beyan bırakır. Özet o beyanı satırdan
+    # SURFACE eder (modül-bağımsız: analytics loop'u import etmez). `_bps_ozet` None'ları paydadan
+    # düşürür (ort=None, n_olculemeyen=n) — 0 basmaz. `fill_vs_limit_bps` (limit-bacağı) AYRIDIR.
+    _ic_beyan = next((r.get("fill_vs_resmi_acilis_beyan") for r in ic_dolan
+                      if r.get("fill_vs_resmi_acilis_beyan")), None)
     out["ic_motor"].update({
         "karar_dagilimi": ic_karar,
         "n_dolan": len(ic_dolan),
@@ -3911,6 +3926,7 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
         "gap_veto_n": ic_karar.get("entry_gap_veto", 0),
         "kill_esigi": 0.40,
         "fill_vs_resmi_acilis_bps": _bps_ozet([r.get("fill_vs_resmi_acilis_bps") for r in ic_dolan]),
+        "fill_vs_resmi_acilis_beyan": _ic_beyan,   # totoloji: yazar None + beyan bıraktı (KALEM 4)
     })
     # --- 4) KAPIDA DÜŞEN SİLAHLI PLANLAR (BETİMLEYİCİ SAYIM — ORAN/EŞİK YOK) -------------------
     # `motor="kapi"` satırlarını yazan `loop._armed_drop_row`tur: plan silahlıydı, kapı kapalıydı,

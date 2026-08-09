@@ -34,14 +34,30 @@ MIRROR_DRIFT_TOL = 0.005   # >0.5% gap between internal sim fill and actual Alpa
 # ayrıca E3 kalibratörü (analytics.pessimistic_band_update) ampirik bandı buradan üretir.
 ENTRY_LEDGER = "entry_execution.jsonl"
 ENTRY_LEDGER_CAP = 4000    # satır tavanı — defter büyür, sonsuza dek değil
+# KALEM 4 (2026-08-09): iç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir — dolum fiyatı
+# açılıştan SABİT slippage ile türetilir (broker.fill_entry: base_fill = açılış × (1+slippage_bps/1e4)
+# + modellenmiş likidite etkisi), gerçek bir piyasa dolumu değildir. Açılışa göre bps ölçmek tanımı
+# gereği slippage_bps sabitini geri üretir. UYDURMA YASAĞI + ÖLÇÜLEMEDİ≠0 → satıra None + bu beyan
+# yazılır (E1 grid'i EXE-2026-001 bu bacağı KAPSAMAZ; o `fill_vs_limit_bps` limit-bacağını ölçer).
+IC_ACILIS_TOTOLOJI_BEYAN = (
+    "ÖLÇÜLEMEDİ: iç-motor dolumu açılıştan SABİT slippage ile türetiliyor "
+    "(base_fill = açılış × (1+slippage_bps/1e4) + likidite etkisi), gerçek piyasa dolumu DEĞİL — "
+    "resmî açılışa göre bps tanımı gereği slippage_bps sabitini yeniden üretir (totoloji, ölçüm değil)")
 
 
 def _entry_exec_write(row: dict) -> None:
     """E2 defterine tek satır. ASLA döngüyü bozmaz (ölçüm katmanı kararı bloklamaz), ama sessizce
-    de kaybolmaz: yazım düşerse olay defterine uyarı düşer."""
+    de kaybolmaz: yazım düşerse olay defterine uyarı düşer.
+
+    KİLİT (KALEM 8, 2026-08-09): append `file_lock(ENTRY_LEDGER)` altında. `store.append_jsonl`in
+    dosya dalı KİLİTSİZdir (store.py) ve aynı deftere `_entry_exec_trim`/`_patch_entry_slippage`
+    OKU-DEĞİŞTİR-YAZ uygular; kilit olmadan bir trim/patch, araya düşen bir append'i EZERDİ (write
+    tüm defteri yeniden yazar). Üç E2 yazarı da aynı kilidi paylaşır — `_save_broker`ın PORTFOLIO
+    deseninin aynısı; kilit süreç-içi RLock + süreçler-arası flock (store._FileLock)."""
     try:
-        store.append_jsonl(ENTRY_LEDGER, {"ts": dt.datetime.now(dt.timezone.utc)
-                                          .isoformat(timespec="seconds"), **row})
+        with store.file_lock(ENTRY_LEDGER):
+            store.append_jsonl(ENTRY_LEDGER, {"ts": dt.datetime.now(dt.timezone.utc)
+                                              .isoformat(timespec="seconds"), **row})
     except Exception as e:
         obs.warn("entry_exec_ledger_write_failed", error=f"{type(e).__name__}: {e}",
                  plan_id=row.get("plan_id"), ticker=row.get("ticker"))
@@ -74,11 +90,15 @@ def _reject_class(detail, veto=None, reachable=None) -> str:
 
 
 def _entry_exec_trim() -> None:
-    """Tavanı aşan defteri en yeni ENTRY_LEDGER_CAP satıra indirir (döngü sonunda, ucuz)."""
+    """Tavanı aşan defteri en yeni ENTRY_LEDGER_CAP satıra indirir (döngü sonunda, ucuz).
+
+    KİLİT (KALEM 8): oku-değiştir-yaz TEK kritik bölge — read ile write `file_lock(ENTRY_LEDGER)`
+    altında; araya bir append/patch girip yeni satırı kaybettiremez."""
     try:
-        rows = store.read_jsonl(ENTRY_LEDGER)
-        if len(rows) > ENTRY_LEDGER_CAP:
-            store.write_jsonl(ENTRY_LEDGER, rows[-ENTRY_LEDGER_CAP:])
+        with store.file_lock(ENTRY_LEDGER):
+            rows = store.read_jsonl(ENTRY_LEDGER)
+            if len(rows) > ENTRY_LEDGER_CAP:
+                store.write_jsonl(ENTRY_LEDGER, rows[-ENTRY_LEDGER_CAP:])
     except Exception as e:
         obs.warn("entry_exec_ledger_trim_failed", error=f"{type(e).__name__}: {e}")
 
@@ -522,6 +542,11 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
         obs.warn("mirror_submit_skipped", kaynak=source, n=len(meta.get("armed") or []),
                  detail="ALPACA_PAPER_KEY yok — ayna gönderimi atlandı, planlar SİLAHLI kaldı")
         return {**out, "detail": "Alpaca paper anahtarları yok"}
+    # SB-1 (KALEM 5): boyut makbuzunun `eq_kaynak` alanı — çarpanın PAYININ HANGİ DAL'dan geldiği.
+    # Döngü kendi `eq_now`unu geçirir ("eq_now"); pano düğmesi geçirmez ve nabızdan okunur ("nabiz").
+    # BAYAT-SERMAYE vakasında 6 Ağustos AMGN bacağı tam olarak bayat NABIZDAN boyutlandı — makbuz
+    # bu ayrımı tek alanda söyler. Fallback `eq_now`u yeniden atamadan ÖNCE yakalanır.
+    _eq_kaynak = "eq_now" if eq_now is not None else "nabiz"
     if eq_now is None:
         _hb = store.read_json(health.HEARTBEAT, {}) or {}
         if _hb.get("equity") is None:
@@ -543,6 +568,12 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
         out["equity"] = eq
         submitted, sent, rejected, kept = set(meta.get("alpaca_submitted", [])), 0, [], []
         vetoed: list = []              # E1 gap-risk vetosu — ret DEĞİL, kendi kararımız
+        # SB-1 (KALEM 5): kitabın o anki KİMLİĞİ — makbuzdaki `kitap_rev`. Bir sonraki tur dolum
+        # anındaki rev ile kıyaslanırsa "kitap gönderim↔dolum arasında DEĞİŞTİ Mİ" (bayat-sermaye
+        # sınıfı) tek bakışta okunur. Arka-uç bağımsız: DB'de entity rev, dosyada boyut damgası —
+        # ikisi de yalnız İÇERİK değişince değişen bir sayaç (store.stamp). `peak` de bir kez okunur.
+        _kitap_rev = store.stamp(PORTFOLIO)[1]
+        _peak = meta.get("peak_equity", START_EQUITY)
         for pl in meta["armed"]:
             if pl["id"] in submitted:
                 kept.append(pl)
@@ -552,8 +583,17 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
             # E1: ayna İÇ MOTORLA AYNI icra girdilerini alır — ATR ve referans fiyat
             # yan tablodan (silahlanma anında sabitlendi), yasa `broker.entry_law`dan.
             _lw = (meta.get("entry_law") or {}).get(pl.get("id")) or {}
-            res = alpaca.submit_plan(pl, eq,   # mirror the SAME drawdown de-risk as the internal fill (#50)
-                                     size_mult=derisk_mult(eq_now, meta.get("peak_equity", START_EQUITY)),
+            _smult = derisk_mult(eq_now, _peak)   # mirror the SAME drawdown de-risk as the internal fill (#50)
+            # SB-1 (KALEM 5) — BOYUT MAKBUZU: plan başına, çarpanın ÜÇ girdisi (eq_now · peak ·
+            # size_mult) + hangi daldan geldiği (eq_kaynak) + kitabın kimliği (kitap_rev). Yeni defter/
+            # gerçek kaynağı YOK: meta["size_law"] `_save_broker`ın 14. anahtarı olarak kalıcılaşır.
+            # Gönderim SONUCUNDAN bağımsız yazılır — reddedilen/veto edilen planın da boyut TABANI
+            # kanıttır (bayat-sermaye turunda sapmayı çözmek üç deftere bakmayı gerektirmişti).
+            meta.setdefault("size_law", {})[pl.get("id")] = {
+                "eq_kaynak": _eq_kaynak, "eq_now": round(float(eq_now), 2),
+                "peak": round(float(_peak), 2), "size_mult": round(float(_smult), 4),
+                "kitap_rev": _kitap_rev}
+            res = alpaca.submit_plan(pl, eq, size_mult=_smult,
                                      atr=_lw.get("atr"), ref_price=_lw.get("ref_price"))
             out["results"].append({"ticker": pl.get("ticker"), **res})
             _law_out = res.get("law") or _lw
@@ -693,7 +733,7 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
     NEDEN DAR BİR YAMA (`st["sermaye_resetleri"] = …`) DEĞİL: o, sınıfı bir kez daha ELLE kapatmak
     olurdu — bir sonraki beyan anahtarını yazan kişi aynı tuzağa düşerdi. Yapısal kapı, sahipliği
     yazarın KENDİ listesiyle sınırlamaktır: `update_json` diskteki belgeyi kilit altında okur,
-    üstüne yalnız aşağıdaki 13 alanı basar; yabancı anahtarlar (bugünkü beyan VE gelecekteki her
+    üstüne yalnız aşağıdaki 14 alanı basar; yabancı anahtarlar (bugünkü beyan VE gelecekteki her
     beyan) yerinde yaşar. Aynı aile: `health.py:239` çok-yazarlı nabız alanları, `storage._touch`
     eğri zarfı.
 
@@ -720,7 +760,13 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
           "peak_equity": meta.get("peak_equity", START_EQUITY),
           # C9: aynada kapatılamamış çıkışlar RESTART'I ATLATMALI. Kaybolursa iç defteri kapalı,
           # aynası açık bir pozisyon sessizce kalıcı yetim olur — bu bulgunun ta kendisi.
-          MIRROR_EXIT_KEY: meta.get(MIRROR_EXIT_KEY, {})}
+          MIRROR_EXIT_KEY: meta.get(MIRROR_EXIT_KEY, {}),
+          # SB-1 (KALEM 5; docs/BAYAT-SERMAYE-KOK-2026-08-07.md §8 B1): plan başına BOYUT MAKBUZU —
+          # RESTART'I ATLATMALI (entry_law ile aynı gerekçe, 14. sahiplenilen anahtar). Bayat-sermaye
+          # turunun bekçisi: 08-05 aynanın yarım boyutlu emrini çözmek ÜÇ ayrı deftere (portfolio /
+          # events / trade_plans) bakmayı gerektirmişti; makbuz boyut kararının girdilerini TEK
+          # satırda söyler (eq_kaynak · eq_now · peak · size_mult · kitap_rev). Yazan: mirror_submit_armed.
+          "size_law": meta.get("size_law", {})}
     # AYNI KİLİT: Hermes'in görüş damgası da portfolio.json'a yazıyor (ayrı iş parçacığı) —
     # ikisi de store.file_lock(PORTFOLIO) altında olmalı, yoksa biri diğerinin defterini ezer.
     # `update_json` kilidi ZATEN alır (yeniden girişli); dıştaki `with` okuma+kıyas+yazımın TEK
@@ -1103,9 +1149,15 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                              "gap_at_submit": _lw.get("gap_at_submit"),
                              "resmi_acilis": round(_open, 4)}
                     if _pos is not None:
+                        # KALEM 4 — İÇ-MOTOR TOTOLOJİSİ: `_pos.entry` açılıştan SABİT slippage ile
+                        # türetilir (broker.fill_entry), yani resmî açılışa göre bps ölçmek
+                        # slippage_bps sabitini geri üretir — bir ÖLÇÜM değil totoloji. None + beyan
+                        # (bkz. IC_ACILIS_TOTOLOJI_BEYAN). `fill_vs_limit_bps` AYRIDIR (dolum limit
+                        # TAVANINA göre; E1 grid EXE-2026-001 tam onu ölçer) ve KALIR.
                         _entry_exec_write({**_base, "karar": "fill", "fill": round(_pos.entry, 4),
                                            "qty": _pos.qty,
-                                           "fill_vs_resmi_acilis_bps": _bps(_pos.entry, _open),
+                                           "fill_vs_resmi_acilis_bps": None,
+                                           "fill_vs_resmi_acilis_beyan": IC_ACILIS_TOTOLOJI_BEYAN,
                                            "fill_vs_limit_bps": _bps(_pos.entry, _lw.get("limit"))})
                     else:
                         _reason = _rej.get("reason") or "bilinmiyor"
@@ -1859,39 +1911,46 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
     Resmî açılış yoksa (bar gelmemiş) o bps None kalır — açılışı dolum fiyatıyla ikame etmek,
     ölçmek istediğimiz farkı tanımı gereği sıfır yapardı."""
     out = {"eslesen": 0, "yazilan": 0, "acilis_yok": 0}
-    try:
-        rows = store.read_jsonl(ENTRY_LEDGER)
-    except Exception as e:
-        obs.warn("entry_exec_ledger_read_failed", error=f"{type(e).__name__}: {e}")
-        return out
-    changed = False
-    for r in rows:
-        if r.get("motor") != "ayna" or r.get("fill") is not None:
-            continue
-        o = by_coid.get(r.get("plan_id"))
-        af = _entry_fill_price(o) if o else None
-        if af is None:
-            continue
-        out["eslesen"] += 1
-        op = (opens or {}).get(r.get("ticker"))
-        if op is None:
-            op = r.get("resmi_acilis")
-        if op is None:
-            out["acilis_yok"] += 1
-        r["fill"] = round(af, 4)
-        r["fill_qty"] = o.get("filled_qty")
-        r["fill_status"] = str(o.get("status", "")).lower()
-        r["resmi_acilis"] = (round(float(op), 4) if op is not None else None)
-        r["fill_vs_resmi_acilis_bps"] = _bps(af, op)
-        r["fill_vs_limit_bps"] = _bps(af, r.get("limit"))
-        r["fill_kaydedildi"] = dstr
-        changed = True
-        out["yazilan"] += 1
-    if changed:
+    # KİLİT (KALEM 8, 2026-08-09): read_jsonl → (değiştir) → write_jsonl TEK kritik bölge, hepsi
+    # `file_lock(ENTRY_LEDGER)` altında. Eskiden read KİLİTSİZdi ve write kendi kilidini AYRI
+    # alıyordu; ikisinin arasına aynı deftere düşen bir append/patch, write tüm defteri yeniden
+    # yazınca EZİLİYORDU (kayıp-güncelleme). `write_jsonl`in mkstemp+os.replace'i ATOMİKLİK verir
+    # (yarım/boş dosya yok) ama oku-değiştir-yaz'ı SERİALİZE ETMEZ — eski "atomik" yorumu yanlışlıkla
+    # ikincisini ima ediyordu; iki AYRI garanti, kayıp-güncelleme kapısı kilittir.
+    with store.file_lock(ENTRY_LEDGER):
         try:
-            store.write_jsonl(ENTRY_LEDGER, rows)     # atomik (mkstemp + os.replace)
+            rows = store.read_jsonl(ENTRY_LEDGER)
         except Exception as e:
-            obs.warn("entry_exec_ledger_patch_failed", error=f"{type(e).__name__}: {e}")
+            obs.warn("entry_exec_ledger_read_failed", error=f"{type(e).__name__}: {e}")
+            return out
+        changed = False
+        for r in rows:
+            if r.get("motor") != "ayna" or r.get("fill") is not None:
+                continue
+            o = by_coid.get(r.get("plan_id"))
+            af = _entry_fill_price(o) if o else None
+            if af is None:
+                continue
+            out["eslesen"] += 1
+            op = (opens or {}).get(r.get("ticker"))
+            if op is None:
+                op = r.get("resmi_acilis")
+            if op is None:
+                out["acilis_yok"] += 1
+            r["fill"] = round(af, 4)
+            r["fill_qty"] = o.get("filled_qty")
+            r["fill_status"] = str(o.get("status", "")).lower()
+            r["resmi_acilis"] = (round(float(op), 4) if op is not None else None)
+            r["fill_vs_resmi_acilis_bps"] = _bps(af, op)
+            r["fill_vs_limit_bps"] = _bps(af, r.get("limit"))
+            r["fill_kaydedildi"] = dstr
+            changed = True
+            out["yazilan"] += 1
+        if changed:
+            try:
+                store.write_jsonl(ENTRY_LEDGER, rows)   # kilit altında — oku-değiştir-yaz serialize
+            except Exception as e:
+                obs.warn("entry_exec_ledger_patch_failed", error=f"{type(e).__name__}: {e}")
     return out
 
 

@@ -305,6 +305,21 @@ def check_and_alarm() -> None:
         obs.warn("mutabakat_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="mutabakat tazelik bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
                         "'ayna görünümü taze' sayılmaz")
+    # KALEM 3 + KALEM 7 (v223): canlılık (sprint orphan / öğrenme durması) ve evren-denetimi
+    # sessiz-bozulma dedektörleri. İkisi de bu poll'un kadansında, HER BİRİ KENDİ try'ında —
+    # birinin arızası diğerini ve mekanizma bekçisini GÖTÜREMEZ (aynı yalıtım disiplini yukarıda).
+    try:
+        check_liveness_and_alarm()
+    except Exception as e:
+        obs.warn("canlilik_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="canlılık bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
+                        "'sprint/öğrenme koşuyor' sayılmaz")
+    try:
+        check_universe_and_alarm()
+    except Exception as e:
+        obs.warn("evren_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="evren denetimi bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
+                        "'evren sapması yok' sayılmaz")
 
 
 # =============================================================================================
@@ -2562,4 +2577,213 @@ def check_mutabakat_and_alarm() -> dict:
                       skip_reason=rep.get("skip_reason"))
     _MUTABAKAT_ALARMED.clear()
     _MUTABAKAT_ALARMED.update(simdi)
+    return rep
+
+
+# =============================================================================================
+# CANLILIK BEKÇİSİ (v223, KALEM 3 — "sistem ölü ama panoda çalışıyor" / sahte-yeşil sınıfı)
+#
+# KÖK: `mechanism_beats.json`daki `sprint_cadence`/`shadow_fit`/`axis2_cycle` NABZI, KADANS
+# KONTROLÜNÜN attığı damgadır — "kadans turu çalıştı" der, "sprint çocuğu canlı" ya da "yeni
+# hipotez üretildi" DEMEZ. Canlı kanıt (2026-08-09 triyajı): sprint pid'i 2 gündür ölü, faz
+# 'baseline'da takılı (281/527) ama kadans nabzı taze olduğu için pano mekanizmayı "penceresinde"
+# sayıyordu; hipotez defteri 166 sa donuk ama öğrenme kadansı her seans nabız atıyordu. Bu, gece
+# kapatılan kadans-damgası (v207) sınıfının kardeşi: GÖSTERGE yanlış damgayı okuyor.
+#
+# BU BEKÇİ SPRINT'İ/ÖĞRENMEYİ DİRİLTMEZ (o ayrı bir iş) — yalnız GERÇEK canlılığı ölçüp BEYAN eder:
+# "koşuyor" yalnız gerçekten koşuyorken; aksi halde "N gündür KOŞMADI". Kadans nabzına (`report()`)
+# DOKUNULMAZ: o "dişli zamanında döndü mü" sorusunun DOĞRU cevabıdır; eksik olan "dişlinin ürettiği
+# iş canlı mı" sorusuydu ve o AYRI bir göstergedir (iki soruyu birbirine karıştırmak v207'nin ta
+# kendisiydi). sprint.py/loop.py'ye DOKUNULMAZ — yalnız artefakt/`status()` OKUNUR.
+# =============================================================================================
+
+SPRINT_ORPHAN_STALE_H = 3 * 24        # pid canlı görünse de durum bu kadar bayatsa: pid yeniden-kullanım şüphesi
+LEARNING_STALL_H = 7 * 24             # bu kadar süredir YENİ hipotez yok → öğrenme durdu (triyaj eşiği; hafta sonunu kapsar)
+# TERMİNAL FAZLAR: sprint DURMUŞ ve bunu DÜRÜSTÇE söylüyor (orphan DEĞİL). Kaynak: app.js
+# `SPRINT_PHASE_TR` sözlüğü — "in-progress" fazlar (starting/baseline/search/candidate) canlılık
+# İDDİA EDER; terminal fazlar (done/stopped/…) etmez, boş faz da (hiç koşmamış) etmez.
+_SPRINT_TERMINAL_PHASES = frozenset({"done", "stopped", "stopping", "error", "idle", ""})
+
+
+def _iso_ts(s) -> float | None:
+    """ISO damgayı UTC epoch'a çevir; ayrıştırılamazsa None (uydurma yok). Naive damga UTC sayılır."""
+    try:
+        d = dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    except (TypeError, ValueError):  # sessiz-yutma: sonuç None'a çevrilir ve çağıran onu ÖLÇÜLEMEDİ diye beyan eder — bozuk bir damga "taze" sayılamaz
+        return None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=dt.timezone.utc)
+    return d.timestamp()
+
+
+def _sprint_liveness() -> dict:
+    """sprint ÇOCUĞU gerçekten koşuyor mu? sprint.py'ye DOKUNULMAZ: yalnız `status()` okunur
+    (pid yoklaması — os.kill — orada) ve `sprint_status.json` yaşı ölçülür. `active` tek başına
+    yetmez: os.kill(pid,0) yeniden kullanılan/zombie bir pid'de de başarılı olabilir, o yüzden
+    canlılık durum-tazeliğiyle ÇAPRAZ doğrulanır."""
+    from . import obs
+    try:
+        from . import sprint
+        st = sprint.status()
+        status_file = getattr(sprint, "STATUS_FILE", "sprint_status.json")
+    except Exception as e:
+        obs.warn("liveness_sprint_probe_dustu", error=f"{type(e).__name__}: {e}")
+        return {"ok": None, "olculemedi": True,
+                "beyan": f"sprint canlılığı ÖLÇÜLEMEDİ ({type(e).__name__}) — 'koşuyor' DEMEZ"}
+    active = bool(st.get("active"))
+    phase = str(st.get("phase") or "")
+    mt = store.mtime(status_file)
+    age_h = None if mt is None else round((_now() - mt) / 3600, 1)
+    terminal = phase in _SPRINT_TERMINAL_PHASES
+    stale = age_h is not None and age_h > SPRINT_ORPHAN_STALE_H
+    genuinely_running = active and not stale
+    orphaned = (not genuinely_running) and (not terminal)
+    if genuinely_running:
+        return {"ok": True, "orphaned": False, "active": active, "phase": phase, "age_h": age_h,
+                "beyan": f"sprint KOŞUYOR (faz={phase or '—'}"
+                         + (f", durum {age_h} sa önce güncellendi)" if age_h is not None else ")")}
+    if orphaned:
+        gun = "?" if age_h is None else round(age_h / 24, 1)
+        neden = ("çocuk süreç ÖLÜ (pid yok)" if not active
+                 else f"pid canlı ama durum {age_h} sa bayat (pid yeniden-kullanım şüphesi)")
+        return {"ok": False, "orphaned": True, "active": active, "phase": phase, "age_h": age_h,
+                "beyan": (f"sprint {gun} gündür KOŞMADI — {neden}, faz='{phase}' terminal DEĞİL: "
+                          f"kadans nabzı atıyor ama antrenman durmuş (pano 'koşuyor' sanmasın)")}
+    return {"ok": True, "orphaned": False, "active": active, "phase": phase, "age_h": age_h,
+            "beyan": (f"sprint boşta (faz={phase or 'kapalı'})"
+                      + (f", son güncelleme {age_h} sa önce" if age_h is not None else ""))}
+
+
+def _learning_liveness() -> dict:
+    """Öğrenme döngüsü GERÇEKTEN yeni bir şey üretiyor mu? shadow_fit/axis2_cycle NABZI her seans
+    atar; ama hipotez defteri günlerce donuk kalabilir ("kadans koşuyor" ≠ "öğrenme ilerliyor").
+    En taze hipotezin YARATILMA damgasını (`ts`, memory.record) ölçer — durum güncellemeleri
+    (`status_ts`) yaşı tazelemesin diye dosya mtime'ı DEĞİL kayıt damgası kullanılır."""
+    from . import obs
+    try:
+        hyps = store.read_jsonl("hypotheses.jsonl")
+    except Exception as e:
+        obs.warn("liveness_learning_probe_dustu", error=f"{type(e).__name__}: {e}")
+        return {"ok": None, "olculemedi": True,
+                "beyan": f"öğrenme canlılığı ÖLÇÜLEMEDİ ({type(e).__name__}) — 'taze' DEMEZ"}
+    n = len(hyps)
+    if n == 0:
+        # HİÇ hipotez yok = 'durdu' DEĞİL; ayrı bir hâl (production_report bunu 'starved' der).
+        return {"ok": True, "stalled": False, "n": 0,
+                "beyan": "henüz hiç hipotez yok — 'durdu' değil, hiç başlamadı (bkz. production starved)"}
+    tslist = [t for t in (_iso_ts(h.get("ts")) for h in hyps) if t is not None]
+    if not tslist:
+        return {"ok": None, "olculemedi": True, "n": n,
+                "beyan": "hipotez kayıt damgası (ts) ayrıştırılamadı — öğrenme yaşı ÖLÇÜLEMEDİ, 'taze' DEMEZ"}
+    age_h = round((_now() - max(tslist)) / 3600, 1)
+    stalled = age_h > LEARNING_STALL_H
+    gun = round(age_h / 24, 1)
+    if stalled:
+        return {"ok": False, "stalled": True, "n": n, "age_h": age_h,
+                "beyan": (f"öğrenme DURDU — {gun} gündür yeni hipotez yok (son kayıt {age_h} sa önce, "
+                          f"eşik {LEARNING_STALL_H // 24} gün): kadans nabzı atıyor ama defter donuk")}
+    return {"ok": True, "stalled": False, "n": n, "age_h": age_h,
+            "beyan": f"öğrenme ilerliyor — en taze hipotez {age_h} sa önce"}
+
+
+def liveness_report() -> dict:
+    """KALEM 3: sprint çocuğu + öğrenme döngüsü GERÇEKTEN canlı mı — kadans nabzından bağımsız,
+    ölçülüp BEYAN edilerek. Teşhis paneli/Rol-1 kartı buradan okur; alarm geçişi
+    `check_liveness_and_alarm`da. Yalnız GÖZLEM: hiçbir şeyi diriltmez."""
+    return {"sprint": _sprint_liveness(), "learning": _learning_liveness()}
+
+
+_LIVENESS_ALARMED: set = set()
+
+
+def check_liveness_and_alarm() -> dict:
+    """KALEM 3 alarm geçişi — sprint orphan / öğrenme durması bayatlık başına BİR kez (mandal),
+    `MECHANISM_STALE`. Toparlanınca jeton düşer, yeniden bozulunca yeniden alarm. ÖLÇÜLEMEDİ ≠ 0:
+    ölçülemeyen canlılık 'koşuyor' sayılmaz, kendi jetonuyla ayrıca duyurulur (YASA 4).
+
+    JETON `MECHANISM_STALE` (yeni ALARM_ sabiti DEĞİL): obs.py bu turda yazım kapsamı dışında ve
+    NOTIFY_TOKENS yalnız var olan `ALARM_*` sabitlerini kapsar — listede olmayan bir jeton operatöre
+    hiç ulaşmazdı (v209 KORUMASIZ-ödünç dersi). "Mekanizma üretmiyor/bayatladı" bu jetonun tam
+    tanımıdır (bütünlük dedektörleri de aynısını kullanır)."""
+    from . import obs
+    rep = liveness_report()
+    sp, lr = rep.get("sprint") or {}, rep.get("learning") or {}
+    simdi = set()
+    if sp.get("ok") is None:
+        tok = "sprint_liveness_olculemedi"
+        simdi.add(tok)
+        if tok not in _LIVENESS_ALARMED:
+            obs.alarm("MECHANISM_STALE", f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}",
+                      kind="sprint_liveness", olculemedi=True)
+    elif sp.get("orphaned"):
+        tok = "sprint_orphaned"
+        simdi.add(tok)
+        if tok not in _LIVENESS_ALARMED:
+            obs.alarm("MECHANISM_STALE", f"SPRINT ORPHAN: {sp.get('beyan')}",
+                      kind="sprint_liveness", age_h=sp.get("age_h"), phase=sp.get("phase"))
+    if lr.get("ok") is None:
+        tok = "learning_liveness_olculemedi"
+        simdi.add(tok)
+        if tok not in _LIVENESS_ALARMED:
+            obs.alarm("MECHANISM_STALE", f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}",
+                      kind="learning_stalled", olculemedi=True)
+    elif lr.get("stalled"):
+        tok = "learning_stalled"
+        simdi.add(tok)
+        if tok not in _LIVENESS_ALARMED:
+            obs.alarm("MECHANISM_STALE", f"ÖĞRENME DURDU: {lr.get('beyan')}",
+                      kind="learning_stalled", age_h=lr.get("age_h"))
+    _LIVENESS_ALARMED.clear()
+    _LIVENESS_ALARMED.update(simdi)
+    return rep
+
+
+# =============================================================================================
+# EVREN DENETİMİ BEKÇİSİ (v223, KALEM 7 — universe-unknown SESSİZ bozulma)
+#
+# KÖK: `loop._universe_drift_check` → `constituents.universe_drift()` üyelik kaynağı çalışmayınca
+# (lxml ImportError / FMP 402 / finviz kapalı) `status: "unknown"` yazar ve loop YALNIZ `status=="ok"
+# && n_stale` iken alarm eder — yani "ÖLÇEMEDİM" hâli SESSİZ kalır. Pano satırı unknown'ı GÖSTERİR
+# ama alarm yoktur: sessiz bozulma. "unknown" ≠ "sapma yok"; bu, determinism `olculemedi` dalının
+# (`check_integrity_and_alarm`) evren-tarafındaki ikizidir.
+#
+# loop.py'ye DOKUNULMAZ (unknown'ı loop üretir): burada yalnız `universe_drift.json` OKUNUR ve
+# ÖLÇÜLEMEDİ bir sev-2 alarma (`DATA_QUALITY`) çevrilir. Jeton `DATA_QUALITY` çünkü bu bir bilgi-
+# katmanı ölçüm arızasıdır (determinism `olculemedi`nin AYNI jetonu), bir mekanizma bayatlığı değil.
+# =============================================================================================
+
+_UNIVERSE_ALARMED: set = set()
+
+
+def universe_audit_report() -> dict:
+    """`universe_drift.json`ın canlılık hükmü. `status=="unknown"` → ÖLÇÜLEMEDİ (alarm sebebi);
+    'ok'/'yok' → bilgi. loop.py yazar, bu OKUR (YASA 6 dış tüketici — kendi yazdığını okumaz)."""
+    doc = store.read_json("universe_drift.json", None)
+    if not isinstance(doc, dict):
+        return {"status": "yok", "olculemedi": False,
+                "beyan": "universe_drift.json yok — evren denetimi hiç koşmamış (alarm değil, bilgi)"}
+    if doc.get("status") == "unknown":
+        return {"status": "unknown", "olculemedi": True, "reason": doc.get("reason"),
+                "date": doc.get("date"),
+                "beyan": (f"EVREN DENETİMİ ÖLÇÜLEMEDİ: {doc.get('reason') or 'üyelik kaynağı yok'} "
+                          f"— 'sapma yok' DEMEZ (endeksten düşen ölü isim sorusu cevapsız)")}
+    return {"status": doc.get("status"), "olculemedi": False, "n_stale": doc.get("n_stale"),
+            "beyan": f"evren denetimi ölçüldü (status={doc.get('status')}, n_stale={doc.get('n_stale')})"}
+
+
+def check_universe_and_alarm() -> dict:
+    """KALEM 7 alarm geçişi — evren denetimi 'unknown'a düşünce sev-2 `DATA_QUALITY` (ÖLÇÜLEMEDİ),
+    bayatlık başına BİR kez (mandal). Toparlanınca (kaynak geri gelince) jeton düşer, yeniden
+    unknown'a düşünce yeniden alarm. Bekçi felsefesi: yalnız haber verir, kaynağı KURMAZ."""
+    from . import obs
+    rep = universe_audit_report()
+    simdi = set()
+    if rep.get("olculemedi"):
+        tok = "universe_audit_olculemedi"
+        simdi.add(tok)
+        if tok not in _UNIVERSE_ALARMED:
+            obs.alarm("DATA_QUALITY", rep.get("beyan"),
+                      kind="universe_drift", olculemedi=True, reason=rep.get("reason"))
+    _UNIVERSE_ALARMED.clear()
+    _UNIVERSE_ALARMED.update(simdi)
     return rep

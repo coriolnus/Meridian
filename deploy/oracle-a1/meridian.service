@@ -70,6 +70,16 @@ Environment=MERIDIAN_BIND_HOST=127.0.0.1
 # uv PATH'i (deploy.sh uv'yi ~/.local/bin veya ~/.cargo/bin'e kurar)
 Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/ubuntu/.local/bin/uv run uvicorn meridian.api:app --host ${MERIDIAN_BIND_HOST} --port 8080 --log-level warning
+# HER `systemctl restart`/`stop` OnFailure'ı YANLIŞ ATEŞLİYORDU (triyaj Kalem 1, 2026-08-09). systemd
+# durdurmada ana sürece SIGTERM yollar; ExecStart'taki ana süreç `uv run`dır ve çocuğu (uvicorn)
+# SIGTERM'le ölünce KENDİSİ 143 (128+15) EXIT KODUYLA çıkar — sürecin SIGTERM SİNYALİYLE ölmesi değil.
+# Varsayılan SuccessExitStatus SIGTERM/SIGINT/SIGPIPE/SIGHUP SİNYALLERİYLE ölmeyi temiz sayar
+# (systemd.service(5)) ama `uv`nin PROPAGE ETTİĞİ 143 EXIT KODUNU saymaz → birim "failed" → yukarıdaki
+# OnFailure=meridian-fail-notify HER dağıtımda ateşler. N1 bildirim kanalı açılınca (triyaj operatör-
+# sorusu 1) GERÇEK arıza bu gürültüde boğulurdu; kanal AÇILMADAN düzeltilmesi bu yüzden bir KAPI.
+# 143'ü yalnız SIGTERM üretir; gerçek çöküş başka kodla (bozuk venv/dolu disk) ya da SIGKILL=137/
+# SIGSEGV=139 ile düşer ve OnFailure'a giden yolu KAPATMAZ — bu satır temiz durdurmayı susturur, arızayı DEĞİL.
+SuccessExitStatus=143
 Restart=always
 RestartSec=10
 # çöküş sonrası taze-veri çekimiyle healthz ~10dk 503 dönebilir — normal

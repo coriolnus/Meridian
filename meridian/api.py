@@ -696,6 +696,19 @@ def api_public_summary():
     hyp = store.read_jsonl("hypotheses.jsonl")
     trades = store.read_jsonl("trades.jsonl")
     hb = store.read_json("heartbeat.json", {})
+    # ---- TOHUM/CANLI AYRIMI (v223, KALEM 6) ----------------------------------------------------
+    # Bu özet 96 "kapanmış işlem" diyordu ve landing onu manşete taşıyordu; oysa gövdesi replay
+    # TOHUMU (training, survivorship'li) ve GERÇEK canlı yalnız 1 işlem. Ayrım defterin KAYNAK
+    # DAMGASINDAN okunur (ledgerstamp — learning_scorecard'ın da paydası, panonun "gerçek canlıyı
+    # göster, defter toplamını DEĞİL" doktriniyle aynı; v191 test_gerceklesmis_KZ_karti). Sabit sayı
+    # YAZILMAZ (C10). $ P&L dışarı verilmez (uç sözleşmesi); canlı sonuç R-multiple olarak taşınır —
+    # `matrix`in ve `score`un zaten kamuya açtığı araştırma metriğiyle aynı sınıf, hesap verisi değil.
+    from . import ledgerstamp as _ls
+    _defter = _ls.counts(trades)
+    _live_rows = _ls.split(trades)[_ls.LIVE_PAPER]
+    _live_rs = [float(t["r_multiple"]) for t in _live_rows if t.get("r_multiple") is not None]
+    _live_sum_r = round(sum(_live_rs), 4) if _live_rs else None
+    _live_mean_r = round(sum(_live_rs) / len(_live_rs), 4) if _live_rs else None
     # Skill kütüphanesi sayıları — sermaye/pozisyon verisi değil, kamuya açık envanter gerçeği.
     # Tanıtım sayfasındaki eski sabit "66 skill" yazısının yerine bu gider: 2026-07-30 arşivi
     # (68 klasör → 31 canlı) sabit sayıyı bir gecede yalana çevirmişti. Salt okunur.
@@ -710,8 +723,22 @@ def api_public_summary():
         "mode": hb.get("mode"),
         "autonomy_level": hb.get("autonomy_level"),
         "strategy_version": hb.get("version"),
+        # KALEM 6 (v223): ham toplam GERİYE UYUM için kalır (matrix paydası da bu) AMA artık tek
+        # başına DURMAZ — tohum/canlı ayrımı ve payda beyanı yanında. Halka açık yüzey yanıltmasın.
         "closed_trades": len(trades),
+        "closed_trades_live": _defter["live_paper_n"],
+        "closed_trades_seed": _defter["replay_seed_n"],
+        "closed_trades_belirsiz": _defter["belirsiz_n"],
+        "closed_trades_kapsam": _defter["kapsam"],
+        "live": {"n": _defter["live_paper_n"], "sum_r": _live_sum_r, "mean_r": _live_mean_r,
+                 "note": ("canlı kâğıt döngünün kapattığı işlem; R-multiple (riske göre getiri), "
+                          "$ P&L uç sözleşmesi gereği dışarı verilmez")},
+        "seed": {"n": _defter["replay_seed_n"],
+                 "note": "replay tohumu (training, survivorship'li) — canlı kanıt SAYILMAZ"},
         "score": hb.get("score"),
+        "score_kapsam": ("başarı notu (score) state/heartbeat'ten gelen strateji kompozitidir; "
+                         "closed_trades TOHUM DAHİL ham toplamdır — canlı kanıt için "
+                         "closed_trades_live'a bakılır"),
         "hypotheses_total": len(hyp),
         "hypotheses_by_status": by_status,
         "hypotheses_shipped": shipped,
@@ -3455,7 +3482,7 @@ def api_diagnostics(request: Request, taze: int = 0):
     # BEKÇİ RAPORU TEK KEZ (WP-P/P1): hem `watchdog` satırı hem sessiz hat okuyor. İki çağrı iki
     # okuma anı demektir ve aynı yanıtta iki farklı "kaç bekçi gecikti" cevabı doğabilirdi.
     _wd = __import__("meridian.watchdog",
-                     fromlist=["report", "alarm_budget_cached"])
+                     fromlist=["report", "alarm_budget_cached", "liveness_report"])
     _wd_rep = _wd.report()
     _alarm_rep, _alarm_age = _wd.alarm_budget_cached()
     _intra = __import__("meridian.intraday_cycle", fromlist=["health"]).health()
@@ -3763,6 +3790,12 @@ def api_diagnostics(request: Request, taze: int = 0):
         # alarm yazıldı, kaçı tavana takıldı, kaçı askıdaydı" der. İkincisi olmadan alarm hijyeni
         # ölçülemez — ve ölçülmeyen bir susturma, susturmanın kendisinden daha tehlikelidir.
         "watchdog": {**_wd_rep, "alarm_gunluk": _alarm_gunluk()},
+        # CANLILIK (v223, KALEM 3): kadans nabzı ("dişli döndü mü") ≠ canlılık ("dişlinin ürettiği
+        # iş yaşıyor mu"). `watchdog` (report) sprint_cadence/shadow_fit'i penceresinde sayabilir
+        # AMA sprint çocuğu ölü / hipotez defteri donuk olabilir — o sahte-yeşil bu satırda
+        # GERÇEĞE bağlanır (sprint orphan + öğrenme durması, ölçülüp BEYAN edilerek). Alarm geçişi
+        # `check_liveness_and_alarm` (300 sn poll); bu satır teşhis paneline okunur.
+        "liveness": _wd.liveness_report(),
         # CANLI ZAMAN ÇİZELGESİ (D3-UI · C1-4) — BEKÇİNİN YANINDA, İÇİNDE DEĞİL. Bekçi raporu
         # "geciken var mı?" der; çizelge "adım adım NE ZAMAN koştu?" der. İkisi aynı dosyadan
         # (mechanism_beats.json) beslenir ama farklı soruların cevabıdır; `watchdog` içine
