@@ -20,6 +20,20 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 
 ## 1. ŞİMDİ (2026-07-31 sabah ~03:15 — GECE VARDİYASI İNDİ; operatör uyuyor, tam-yetki programı)
 
+> **GÜNCEL DURUM — 2026-08-09 ~09:00 UTC (GECE+SABAH DÖRT DAĞITIM İNDİ, son commit `964696b`):**
+> Sistem canlı ve sağlıklı — broker `alpaca_paper`, birimler active, otoriter suite YEŞİL (v196
+> son iki kırmızıyı kapadı). **4 motor pozisyonu KORUMALI:** broker'da 4 açık `P-KORUMA-…-0835`
+> OCO (gtc, sınıf=koruma — NUE/EMR/BKNG/AMGN, submit 08:35:44Z). Gecenin+sabahın dört dağıtımı:
+> WP-N kanıt-hızı dalgası (v216-v219) · koruma×süpürücü kök düzeltmesi (v220+v221) · dalga-2
+> sahte-yeşil avı (v222-v226) · null-sıfır kapısı (v196). Koruma kalemi (WP-S) canlıda
+> ARTEFAKTTAN doğrulandı (alpaca.py yerel↔canlı md5 birebir + 4 OCO broker'da); davranışsal
+> EOD-süpürme kanıtı Pazartesi 13:30 UTC sonrası ilk gerçek süpürmede. **EN ACİL OPERATÖR KALEMİ:
+> BİLDİRİM KANALI (N1)** — token boş, fail-notify her koşuda NO-OP; teslim edilmemiş sev-1
+> birikmiş (korumasız 40 · MIRROR_DRIFT 34 · NAKED_POSITION 8). BAĞ: kanal açılmadan ÖNCE systemd
+> exit-143 (WP-S2) düzeltilmeli, yoksa her restart "FAILED" bildirir. Ayrıntı:
+> `docs/SABAH-TRIYAJI-2026-08-09.md` + `docs/DEVIR-TATBIKATI-2026-08-09.md`.
+> _(Aşağıdaki 2026-07-31 gece-vardiyası kaydı tarihçe olarak korunmuştur.)_
+
 - **GECE DALGASI CANLIDA (03:00 dağıtımı):** WP-E icra turu (iki-motor tek yasası `broker.entry_law`,
   marketable stop-limit + gap-yolları, E2 slipaj defteri, E3 kötümser bant, E4 gece/gündüz) ·
   SIP-geçmiş-yasası (ilk canlı kanıt: `alpaca_sip_skipped_current_session`) · pano 8-kalemi ·
@@ -172,14 +186,28 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
 **sistem doğru çalışıyor ama kendini yanlış anlatıyor.** Ayrıntı: `docs/KORUNUM-KOK-2026-08-07.md`,
 `docs/BAYAT-SERMAYE-KOK-2026-08-07.md`, kartlar `EXE-2026-001-R1/R2`, `EXE-2026-002` (+R1).
 
-- **⟳ YENİDEN AÇILDI (2026-08-09, N6 tatbikatı buldu — kapanış ARTEFAKTTAN doğrulanmamıştı):**
+- **✅ KAPANDI — koruma×süpürücü çarpışması KÖK DÜZELTME (v220+v221, 2026-08-09, CANLIDA ARTEFAKTTAN DOĞRULANDI):**
+  süpürücü (`cancel_open_entries`, alpaca.py:481-487) korumayı artık YAPISAL tanıyor — **iki kemer,
+  tek hüküm noktası:** limit bacağı P-KORUMA AİLE kemeri (`KORUMA_COID_ONEK` öneki, v220) + stop
+  bacağı OCO GRUP kemeri (grup üyeliğinden türer, yön değil — v221); ayrıca long-only YÖN kemeri
+  (satış-yönlü emir giriş olamaz). Koruma sınıfı emir `kept`e `sinif:koruma` gerekçesiyle düşer —
+  süpürülmez. KANIT: `alpaca.py` yerel↔canlı md5 BİREBİR (`549b78e…`); broker'da **4 açık koruma
+  OCO'su** (`P-KORUMA-20260809-0835-{NUE,EMR,BKNG,AMGN}`, gtc, sınıf=koruma, accepted/held);
+  dağıtım #4 korumayı BOZMADI. Operatör 08:35'te panodan onayladı (İLK deneme tarayıcı önbelleğinden
+  ulaşmadı — sıfır POST izi; İKİNCİ geçti). **AÇIK-DAVRANIŞSAL:** fixli süpürücü GERÇEK bir EOD
+  süpürmesinde HENÜZ koşmadı (piyasa Cuma'dan kapalı) — mantık+md5+broker doğrulandı, ilk davranışsal
+  kanıt Pazartesi 13:30 UTC sonrası (`docs/SABAH-TRIYAJI-2026-08-09.md` §0/§iv). "Bir kalem ancak
+  artefaktı canlıda doğrulanınca ✅" dersi TUTTU — bağlamsız N6 devir tatbikatı önceki "✅ KAPANDI"
+  beyanının yalanını ARTEFAKTTAN yakalayıp bu çarpışmayı yeniden açmıştı.
+- **~~⟳ YENİDEN AÇILDI (2026-08-09, N6 tatbikatı buldu — kapanış ARTEFAKTTAN doğrulanmamıştı)~~ → yukarıda ✅ (tarihçe):**
   operatörün v211'le kurduğu 4 bağımsız koruma OCO'su (coid `P-KORUMA-…`) 2026-08-07T20:32:39Z'de
   `cancel_open_entries()` tarafından SÜPÜRÜLDÜ — koruma emri süpürücünün gözünde "dolmamış motor
   girişi" (P- öneki + açık + filled_qty=0); "koruma bacağına dokunmaz" güvencesi yalnız BRACKET'A
   BAĞLI bacağı tanıyordu, v211'in bağımsız OCO'su o fonksiyon yazılırken yoktu. Broker'da 0 açık
   emir / 5 korumasız pozisyon; 16 sev-1 alarmı kanalsızlıktan teslim edilemedi. KÖK DÜZELTME
-  UÇUŞTA (v220: yön kemeri + P-KORUMA aile dışlaması + olay coid-sınıfı + idempotans çivisi).
-  DERS ROADMAP DİSİPLİNİNE: bir kalem ancak ürettiği artefakt canlıda doğrulanınca ✅ olur.
+  ~~UÇUŞTA~~ İNDİ (v220: yön kemeri + P-KORUMA aile dışlaması + olay coid-sınıfı + idempotans
+  çivisi; v221: OCO grup kemeri). DERS ROADMAP DİSİPLİNİNE: bir kalem ancak ürettiği artefakt
+  canlıda doğrulanınca ✅ olur.
   (Önceki metin aşağıda, tarihçe olarak duruyor:)
 - **~~✅ KAPANDI~~ — koruma ölmüyor (E1-v2, v209-v211, canlıda doğrulandı):** bracket TIF'i emrin
   TAMAMINA uygulanıyordu; `day` seçimi dolmuş pozisyonun stop'unu her kapanışta öldürüyordu
@@ -187,17 +215,19 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   (`ENTRY_TIF_ALLOWED`), bayat tetik günlük `cancel_open_entries()` kadansına taşındı. v209
   koruma bekçisi (300 sn, sev-1, payda-beyanlı) + v211 operatör-onaylı OCO yeniden-kurma yolu.
   Operatör 08-07'de panodan onayladı; dört pozisyonda OCO/gtc doğrulandı.
-- **🔴 SB-4 — DAMGASIZ YAZIM BEKÇİSİ (Rol-1 önerisi, EN ÖNCELİKLİ):** ölçüldü ki `portfolio.json`
+- **✅ SB-4 — DAMGASIZ YAZIM BEKÇİSİ (KAPANDI v216, dağıtım #2 — içerik-sha≠damga parmak izi, 08-04 fikstürlü; Rol-1 önerisiydi, EN ÖNCELİKLİydi):** ölçüldü ki `portfolio.json`
   `store` kapısı DIŞINDAN değişebiliyor — 08-04'teki kitap yazımında `entity_meta.rev` hiç
   ilerlemedi (o gün yalnız iki `_save_broker`, ikisi de kanıtlı). Yani denetim zincirinin bir
   deliği var ve bugün onu gören hiçbir şey yok. Tasarım: tur başı/sonu `entity_stamp` kıyası →
   "kitap bu tur DIŞARIDAN değişti" alarmı. **Bu kalem bir sermaye kalemi değil, bir DENETİM
   kalemidir** — kitap izsiz değişebiliyorsa hiçbir sermaye ölçümü kendi tabanına güvenemez.
-- **🔴 SB-3 — `taban_kaymasi` satırı (en ucuz, SB-4'ten hemen sonra):** `recompute`e dördüncü satır
+- **✅ SB-3 — `taban_kaymasi` satırı (KAPANDI v216 — ters-onarım gerilemesi çivili; en ucuzdu, SB-4'ten hemen sonra):** `recompute`e dördüncü satır
   `realized_pnl − (Σ trades + ofset)`; + `monotonicity_report` tabanına beyan ölçüsü. 08-04
   vakasında bu satır olsaydı ters onarım ANINDA görünürdü.
-- **📋 SB-1 — plan başına BOYUT MAKBUZU:** `eq_kaynak` (eq_now|nabiz) · `eq_now` · `peak` ·
-  `size_mult` · `kitap_rev` · `beyan_n/ofset`. `entry_law` deseniyle, `_save_broker`ın 14. anahtarı.
+- **✅ SB-1 — plan başına BOYUT MAKBUZU (KAPANDI v222 `_save_broker` 14. anahtar `size_law` + v226 pano-bacağı `_yama` kalıcılık, dağıtım #4):** `eq_kaynak` (eq_now|nabiz) · `eq_now` · `peak` ·
+  `size_mult` · `kitap_rev` · `beyan_n/ofset`. `entry_law` deseniyle, `_save_broker`ın 14. anahtarı;
+  reddedilen planda da yazılır. v226 `api.py._yama` bacağı makbuzun restart'ı atlatmasını sağladı
+  (loop bacağı zaten kalıcıydı, eksik olan pano/nabız bacağıydı — 08-06 AMGN vakası).
   Gerekçe: 08-05 sapmasını çözmek üç ayrı deftere bakmayı gerektirdi; makbuz tek satırda söylerdi.
 - **📋 SB-2 — `MIRROR_DRIFT`e `drift_sinifi` alanı:** `boyutlama_tabani` / `derisk_carpani` /
   `sermaye_kaynagi` / `kitap_kaydi` / `beyan_kaydi` / `icra` / `olculemedi`. Ölçülen gerekçe:
@@ -223,17 +253,19 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   `sinif_dagilimi` ile ayırıyor (`eod_yok`/`golge_bozuk`/`bps_yok`); kill kapısının yalnız
   BOZULMA sınıflarına daraltılması ayrı tur. Bugün fark yaratmıyor (oran %0), o yüzden acil değil
   — ama `eod_yok` biriktiği gün ölçüm haksız yere susar.
-- **`k.olcum` panoda ÇİZİLMİYOR — BEŞ kilidin hepsi için, bu turdan önce de öyleydi.** `app.js`
-  yalnız `k.esik` + `k.neden` okuyor; tam yük `/api/diagnostics` JSON'ında SERVİS EDİLİYOR.
+- **✅ `k.olcum` panoda ÇİZİLİYOR (KAPANDI v219 — "beş kilidin `olcum`'u nihayet çiziliyor").** Borç neydi: `app.js`
+  yalnız `k.esik` + `k.neden` okuyordu; tam yük `/api/diagnostics` JSON'ında SERVİS EDİLİYORDU ama çizilmiyordu.
   Faz-5 turunda karar sayıları `neden` metnine yazıldı (operatör "4/20"yi görüyor) ama bu bir
-  yama; kilit ölçümlerinin kendi kartı yok. Beyan bayatlamasın diye test var (`"k.olcum" not in
-  appjs` — pano okumaya başladığı gün kırılır).
-- **app.js 409-yutması (B-6 turunun ölçtüğü açık kalem):** `apiFetch` 4xx'te throw etmiyor,
-  `applySkillRec` boş `catch` ile yutuyor → L1'de onay-kapısı reddi PANODA GÖRÜNMEZ olur
-  (operatör basar, hiçbir şey olmaz). Mekanizma düzeyinde YASA 4 tamam (olay+gerekçe defterde),
-  operatör yüzeyinde değil. EV_TR kalemiyle aynı app.js turuna girer.
-- **`EV_TR`de `koruma_*` çevirisi YOK:** v209/v211 olayları panoda HAM olay adıyla görünüyor
-  (tam alanlar tıklanan çekmecede). Cümleye çevirmek `app.js` turu.
+  yamaydı; kilit ölçümlerinin kendi kartı yoktu. v219 beş kilit için `k.olcum`'u çizdi (eski
+  "beyan bayatlamasın" testi — `"k.olcum" not in appjs` — pano okumaya başlayınca güncellendi).
+- **✅ app.js 409-yutması (KAPANDI v219 — boş `catch` 6→0):** borç neydi: `apiFetch` 4xx'te throw etmiyordu,
+  `applySkillRec` boş `catch` ile yutuyordu → L1'de onay-kapısı reddi PANODA GÖRÜNMEZ oluyordu
+  (operatör basar, hiçbir şey olmaz). Mekanizma düzeyinde YASA 4 zaten tamamdı (olay+gerekçe defterde),
+  operatör yüzeyinde değildi. v219 boş catch'leri 6→0 indirdi; N5 app.js turunun parçası.
+- **✅ `EV_TR`de `koruma_*` + süpürücü çevirileri (KAPANDI v219 dokuz olay çevirisi + v225 opCancelOpen `siniflar` dökümü):** borç neydi: v209/v211 olayları panoda HAM olay adıyla görünüyordu
+  (tam alanlar tıklanan çekmecede). v219 dokuz olayı ÖLÇÜLMÜŞ adlarla cümleye çevirdi; v225 pano
+  `opCancelOpen` sonucunda süpürücü sınıf dökümünü (giriş/koruma/yabancı) + 4 süpürücü olay
+  çevirisini gösteriyor. N5 app.js turu.
 - **Faz-5 örneklem (kendiliğinden dolar):** kilit artık `durum: olculdu` · "ÖRNEKLEM YETERSİZ
   (4/20)". Nokta tahmini −9,69 bps ama `n_kume=1` (dört dolum tek gün) olduğu için CI
   HESAPLANMADI ve `sifiri_disliyor: null`. Kill#2 ancak n≥20 VE CI tamamen negatifken işler.
@@ -281,6 +313,29 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   · Taze canlı sayım: uyuyan plan 31→**32** (0 işlem, 1 GO — oran değişmedi). ÖLÇÜLEMEYENLER
     raporda adıyla (7 kalem; en önemlisi: KATMAN-4 alan merceği yalnız `dormant_setup`a
     uygulandı, plan defterinin ~20 kontrol alanı BİR SONRAKİ KOVANIN konusu).
+- **✅ ÖLÜ-MEKANİZMA AVININ BEŞİNCİ KOVASI KOŞULDU (2026-08-09 gece — `docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md`):**
+  dördüncü kova TÜKETİCİSİZ YAZIM (ölü kopya) avlamıştı; beşincisi ÇOK-YAZARLI GERÇEK (ayrık kopya)
+  avlar — "aynı gerçeği başka kim bildiğini iddia ediyor, o kopya bugün ne diyor?". 22 gerçek-ailesi
+  yüründü, kalibrasyon İLK KOŞUDA 3/3 ve iki-yönlü kapı iki yanlış-pozitifi fiilen durdurdu
+  (commit `f456b56`). Salt ölçüm+belge; `meridian/` altında dosya değişmedi.
+
+- **🆕 YENİ AÇIK KALEMLER (2026-08-09, devir tatbikatı + sabah triyajı hasadı — `docs/SABAH-TRIYAJI-2026-08-09.md`):**
+  · **systemd `daemon-reload` (P2, kanal-açılışında P1):** `SuccessExitStatus=143` birim dosyasına
+    YAZILDI (v225) ama CANLI systemd hâlâ boş `SuccessExitStatus=` ile koşuyor — birim dosyası
+    değişikliği reload+restart bekliyor ("kurulu ≠ çalışır" doktrini). N1 bildirim kanalı açılmadan
+    ÖNCE inmeli, yoksa her restart "FAILED" sayılıp OnFailure bildirir. Bakım penceresi + elle
+    test-ateşleme. *Kalem 1 (SABAH TRİYAJI en ucuz + kanal-kapılayan).*
+  · **skill görüş canlı-kanıt (P3, ölçüm-borcu):** N2b/EDG-2026-019 kod indi (v218) ama R-figürleri
+    kuru-koşu (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi); birkaç EOD penceresi +
+    EDG-2026-019 ölçüm kodu bekliyor.
+  · **ajan-git MEKANİK kapısı (P2, süreç/araç kararı — operatör):** gece 2 ajan `git stash` koşup
+    hasar verdi (hayalet dizin süpürüldü). Yasak yalnız CLAUDE.md sözleşmesi; `dagit.sh` yalnız
+    DAĞITIMI kapıyor. `git stash`ın pre-stash kancası YOK → kapı ancak PATH-shim/wrapper'la
+    mekanikleşir. Karar operatörde.
+  · **kill#4 uygulama (AÇIK — yukarıdaki borç):** kill kapısının yalnız BOZULMA sınıflarına
+    daraltılması (kart `EXE-2026-002-R1`); bugün etki %0, `eod_yok` biriktiği gün ölçüm haksız susar.
+  · **SB-2 `drift_sinifi` (AÇIK — WP-S):** MIRROR_DRIFT alarmına sebep-adlandırma alanı; 08-05'te
+    dört alarm bastı, hiçbiri sebebi söylemedi.
 
 ### WP-N — Kanıt-Hızı Programı 🔴 AKTİF (2026-08-09; operatör onaylı sıra: N1→N2→N3→N4, N5 serpiştirilir)
 
@@ -289,13 +344,13 @@ işlem geçmişi istiyor (kodla açılabilecek kilit kalmadı — WP-L); Eksen-2
 ölçebilmiş; Faz-5 4/20 çiftte; E3 ampirik bandı örneklem bekliyor; gölge modeli n_live=0
 yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt musluğu bu.
 
-- **N1 — Bildirim jetonu ayrımı ✅ KOD TARAFI / 🔒 KANAL OPERATÖRDE:** `NAKED_POSITION`
+- **N1 — Bildirim jetonu ayrımı ✅ KOD TARAFI (v216 — NAKED_POSITION jetonu obs.py NOTIFY_TOKENS'a ayrıldı; jeton pini `7f91178`'de beyanla büyüdü) / 🔒 KANAL OPERATÖRDE:** `NAKED_POSITION`
   jetonu (obs.py NOTIFY_TOKENS) + koruma alarmının `MIRROR_DRIFT`ten ayrılması — bugün ikisi
   aynı 6 saatlik susturma penceresini paylaşıyor; korumasız-pozisyon gecesi sev-1 alarmlar
   bastı ve operatöre HİÇBİRİ ulaşmadı (33 teslim edilmemiş alarm birikmiş). Jeton ayrımı kanal
   gelmeden de değerli (susturma ayrışır). KANAL (Telegram bot token / webhook URL) operatörün
   tek parçası — teslim zinciri hazır, kanal boş (WP-O §6.1).
-- **N2 — Gölge kapsam genişletme (kart EXE-2026-003):** 4b bugün yalnız SİLAHLANMIŞ planların
+- **N2 — Gölge kapsam genişletme ✅ KOD İNDİ (v217, kart EXE-2026-003 + R1 — gölge planlı-kol):** silahlı kol bayt-özdeş kaldı, planlı (silahlanmamış) kol AYRI defterde `kol: planli|silahli` etiketiyle (karışım kill#4'ü ateşlerdi, ölçülüp kanıtlandı). Tasarım metni: 4b bugün yalnız SİLAHLANMIŞ planların
   gölge dolumunu yazıyor (6 seansta 4). Genişletme: tetiği kesilen PLANLI (silahlanmamış)
   GO/REVIEW planları da gölge dolumu yazar, `kol: planli|silahli` etiketiyle AYRIK.
   **ROL-1 DÜZELTMESİ (ilk öneri metnindeki hesap yanlıştı):** bu genişletme Faz-5 kilidinin
@@ -308,17 +363,33 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
   kart revizyonu olarak OPERATÖRE gider. cf'nin çıkış-sadakati kusuru bu ölçümü KİRLETMEZ —
   bu bir GİRİŞ ölçümü, çıkış modeli işe karışmıyor.
   Skill gölge rotasyonu (57 ölçülmemiş skill, haftada N) AYRI kart — N2'den sonra açılır.
-- **N3 — Sermaye bekçileri → WP-S SB-4 + SB-3 (referans):** damgasız-yazım bekçisi (kitap
-  `store` dışından değişebiliyor ve kimse görmüyor — denetim tabanı) + `taban_kaymasi` satırı.
+- **N2b — Skill görüş defteri + yaşam-döngüsü ⚠️ KOD İNDİ / CANLI KANIT BEKLİYOR (v218, kart EDG-2026-019):**
+  skill yaşam-döngüsü dürüstlüğü + görüş defteri v1 katmanı indi (İLK koşusunda iki yönlü kesti).
+  AMA terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te
+  YENİDEN-ÜRETİLEMEDİ: `eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi, kadans bu adımı KOŞMADI —
+  KURU-KOŞU. Doğrulama birkaç EOD penceresi + EDG-2026-019 ölçüm kodu bekliyor (uydurulmaz:
+  ölçülemedi — bkz. `docs/SABAH-TRIYAJI-2026-08-09.md` §iii.7/§iv). 57 ölçülmemiş skill rotasyonu
+  bu hatta bağlı.
+- **N3 — Sermaye bekçileri ✅ İNDİ (WP-S SB-4 + SB-3, v216):** damgasız-yazım bekçisi (kitap
+  `store` dışından değişebiliyor ve kimse görmüyor — denetim tabanı) + `taban_kaymasi` satırı;
+  ikisi de v216'da indi (bkz. WP-S SB-4/SB-3 ✅).
 - **N4 — cf çıkış-yasası sadakati 🔒 BAKIM PENCERESİ ŞARTLI (en pahalı, en değerli):** 6 çıkış
   tipi modellenecek + TÜM cf tarihi yeniden koşulacak (saatler, state'e yazar → canlı worker
   koşarken YAPILMAZ). %96'lık skor havuzundaki +0,039R iyimserlik kapanır; Eksen-2/terfi/edge
   hükümlerinin ortak zemini temizlenir. Kendi ön-kayıt kartıyla gider; pencereyi operatör açar.
-- **N5 — Görünürlük turu (tek app.js turu, araya serpiştirilir):** 409-yutması (L1 reddi
-  panoda görünmez — operatör basar, hiçbir şey olmaz) + `EV_TR` koruma_* çevirileri +
-  `k.olcum`un çizilmesi (beş kilit) + hermes telemetri kartı ("veri hazır, çizim yok").
-  Dördü aynı dosyada; WP-S2 kalemlerinin icra turu.
-- **N6 — DEVİR TATBİKATI (6. kova; DAĞITIMLAR BİTİNCE koşar — operatör onayı 2026-08-09):**
+- **N5 — Görünürlük turu ✅ İNDİ (v219 + v225 + v226):** 409-yutması (boş catch 6→0, v219) +
+  `EV_TR` koruma_*/süpürücü çevirileri (v219 dokuz olay + v225 `siniflar` dökümü) +
+  `k.olcum`un çizilmesi (beş kilit, v219) + hermes telemetri kartı (v219, İLK pano okuyucusu) +
+  liveness kartı (v226). WP-S2 görünürlük borçlarının icra turu; hepsi app.js/api.py gösterim ailesinde.
+- **N6 — DEVİR TATBİKATI ✅ KOŞTU (6. kova, 2026-08-09 01:20-02:10 UTC — `docs/DEVIR-TATBIKATI-2026-08-09.md`):**
+  bağlamsız devralan ajan sistem haritası + ilk 10 risk çıkardı. **KRİTİK BULGU:** önceki koruma
+  "✅ KAPANDI" beyanı artefakttan doğrulanmamıştı — koruma×süpürücü çarpışmasını yeniden açtı
+  (`68ea173`), kök düzeltme v220+v221'le indi (bkz. WP-S ✅). Bağlam-sahibi SABAH TRİYAJI
+  (`docs/SABAH-TRIYAJI-2026-08-09.md`) 13 kalemi dağıtımlardan SONRA yeniden ölçtü: **13/13 gerçek,
+  0 çürük**; kapsamdaki P1=0 (tek gerçek sermaye-P1 çıplak pozisyon v220 ile kapandı). Fark hükmü:
+  tatbikatın bulduğu bilinen-dışı kalemler (systemd exit-143, sprint orphan, dual-source) dalgaya/
+  WP-S2'ye girdi. _(Aşağıdaki tasarım metni tarihçe olarak korunmuştur:)_
+- **~~N6 — DEVİR TATBİKATI (tasarım; 6. kova; DAĞITIMLAR BİTİNCE koşar — operatör onayı 2026-08-09)~~:**
   BAĞLAMSIZ bir ajan (oturum hafızası YOK, yalnız depo + salt-okunur canlı) "sistem haritası +
   ilk 10 risk" çıkarır; girişi deponun kendi devir sözleşmesi (CLAUDE.md → MERIDIAN_ENGINEERING_LOG).
   Rol-1 çıktıyı BİLİNEN bulgu defteriyle (2026-08-07/09 turları = bilinen-pozitif seti) kıyaslar:
@@ -761,6 +832,27 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-09 ~09:00 GECE+SABAH DÖRT DAĞITIM İNDİ (v216→v196, son `964696b`):** WP-N kanıt-hızı
+  dalgası (v216-v219) + koruma×süpürücü kök düzeltmesi (v220+v221) + dalga-2 sahte-yeşil avı
+  (v222-v226) + null-sıfır kapısı (v196). Sistem paper/sağlıklı, otoriter suite yeşil, 4 pozisyon
+  korumalı. Kapsam hasadı `docs/SABAH-TRIYAJI-2026-08-09.md` (13/13 gerçek kalem, 0 çürük).
+- **2026-08-09 KORUMA ARKI KAPANDI — E1-v2 → N6 çarpışma → v220+v221 kök düzeltme:** E1-v2 (v209-v211,
+  TIF gtc + `cancel_open_entries` kadansı) korumayı ölmez kılmıştı; N6 devir tatbikatı v211'in
+  bağımsız OCO'sunun 08-07'de süpürüldüğünü ARTEFAKTTAN yakaladı → çarpışma yeniden açıldı; v220
+  (P-KORUMA aile kemeri + yön kemeri) + v221 (OCO grup kemeri) süpürücüye korumayı YAPISAL tanıttı.
+  CANLIDA md5+broker doğrulandı (4 OCO); davranışsal EOD kanıtı Pazartesi.
+- **2026-08-09 N6 DEVİR TATBİKATI KOŞTU — "✅ KAPANDI" yalanı ARTEFAKTTAN yakalandı:** bağlamsız
+  ajan (oturum hafızası yok, salt-okunur canlı) devralmayı denedi, koruma kapanış beyanının
+  doğrulanmadığını buldu. Ders: bir kalem ancak artefaktı canlıda doğrulanınca ✅.
+  `docs/DEVIR-TATBIKATI-2026-08-09.md`.
+- **2026-08-09 DALGA-2 SAHTE-YEŞİL AVI (v222-v226) + v196:** "doğru çalışıyor ama kendini yanlış
+  anlatıyor" sınıfının son kalıntıları — liveness ölçümü (sprint orphan + öğrenme durması),
+  tohum/canlı karne ayrımı, E2 totoloji+kilit, SB-1 boyut makbuzu, universe-unknown alarmı;
+  v196 null-sıfır kapısı dalga-2'nin 15 yeni guard'ını SINIFLADI (15/15 meşru, tavan 181→192).
+- **2026-08-09 WP-N W1 (v216) SERMAYE BEKÇİLERİ + KARTLAR:** SB-4 damgasız-yazım + SB-3
+  `taban_kaymasi` indi (WP-S N3); NAKED_POSITION jetonu ayrıldı (N1 kod); gölge planlı-kol
+  (v217, EXE-2026-003) + skill görüş defteri (v218, EDG-2026-019 — figürler kuru-koşu) kartları
+  indi. Ölü-mekanizma avının beşinci kovası: `docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md`.
 - **2026-08-03 OPERATÖR MANDASI — STRATEJİDE TABU YOK:** "katı hiçbir kural yok; değişmesi
   gereken değişir, kalkması gereken kalkar." Hiçbir strateji bileşeni (çıkış/boyutlama/skor/
   evren/ufuk/yaşayan sinyaller dahil) dokunulmaz değildir; QC-ders hükümleri ve sonraki tüm
