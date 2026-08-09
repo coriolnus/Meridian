@@ -95,7 +95,7 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 | WP | durum | kapsam | açık kalemler | dosya-sınırı | kanıt-kartı |
 |---|---|---|---|---|---|
 | **WP-E** İcra Gerçekliği | 🔴 aktif | iki-motor icra sadakati · E1 giriş · E2 slipaj defteri | E2 defteri accrues → canlı-geçiş kapısında yeniden hüküm · ayna-dolum akışı boşluğu (ayrı teşhis) · E3/E4/E5 örneklem bekliyor | `broker.entry_law` · `adapters/alpaca.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 |
-| **WP2** Referans-Verisi | 🔓 kilit açık | EDGAR PIT fundamentals adayları | turnover özniteliği skor-bileşeni kablolama + knob bounds default-0 (öğrenme ölçer, gölge-önce; elle ağırlık YOK) | skor bileşeni + `bounds.yaml` | EDG-2026-016(SUCCESS) · 012/013/014 |
+| **WP2** Referans-Verisi | 🟢 borç yok | EDGAR PIT fundamentals adayları | ~~turnover kablolama~~ **✅ ZATEN İNMİŞ (5dfca07, 2026-08-03; 2026-08-10 doğrulama 58/0)** — açık borç YOK; yeni PIT-aday özniteliği ancak KART-önce açılır | skor bileşeni + `bounds.yaml` | EDG-2026-016(SUCCESS) · 012/013/014 |
 | **WP-U** Evren/PIT | 🔶 aktif (stratejik ana cephe) | survivorship-serbest evren · PIT üyelik · delist-bar | EDG-022 ölçüldü→FINVIZ gerekçesiz (§4) · PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ operatörde (§3) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
 | **WP-S** Sermaye/Koruma | 🔴 aktif | koruma×süpürücü · sermaye defter bütünlüğü · boyut makbuzu | koruma DAVRANIŞSAL EOD kanıtı (Pazartesi 13:30 UTC+) · SB-2 `drift_sinifi` · melez pozisyonlar + dormant setup icra (operatör §3) | `adapters/alpaca.py` · `store.py` · `obs.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) |
 | **WP-S2** Ölçüm/Görünürlük Borçları | 📋 aktif | beyanlı ölçüm/görünürlük borçları | kill#4 uygulama (kill kapısı yalnız BOZULMA sınıflarına) · sistematik artefakt turu (envanter yürüme) · systemd + ajan-git (§3) | `api.py` · `web/app.js` · `guard.py` | EXE-2026-002-R1 |
@@ -153,8 +153,13 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
   "PIT'siz ASLA" yasası filed-tabanlı as-of ile İLK KEZ meşru sağlandı · **2.6 EDG-016 ✅ SUCCESS —
   YENİ YAŞAYAN SİNYAL: turnover ana-etkisi** (@20 net +0,55% CI-0-dışı; artık üç yöntemle sağ;
   q5 monoton; survivorship-şerhi kalıcı). 2.2/EDG-013 arşive DEVREDİLDİ (etkileşim-tezi düştü).
-  SIRADAKİ ADIM 📋: turnover özniteliği skor-bileşeni olarak kablolanır + knob bounds'a default-0
-  (öğrenme döngüsü ölçer, gölge-önce; elle ağırlık YOK) — ayrı implementasyon turu.
+  ~~SIRADAKİ ADIM 📋: turnover kablolama~~ → **✅ ZATEN İNMİŞ (`5dfca07`, log:414 2026-08-03 dalgası) —
+  2026-08-10 doğrulama turu sözleşmeyi kaynak-doğruladı (58/0):** indicators.py:156 `turnover21` (kart
+  formülü birebir) · strategy.py:452 bileşik-skor terimi (w_to>0 ∧ not-None; ölçülemeyende FAIL-OPEN) ·
+  `entry.w_turnover` bounds.yaml:46 {0–0.40}, strategy.yaml TAŞIMIYOR → canlı etki 0 (default-0 bit-bit
+  regresyonlu, test_turnover_kablolama_v149) · gölge-okuyucu üç kanal (component_ic + hermes arama-uzayı
+  [canlı ret kanıtı: `hermes_bg_proposal_rejected variable=entry.w_turnover`] + shadow_variants). Bu tur
+  ROADMAP bayattı, kod gerçeği önde — kalem KAPANDI; **WP2'de kablolama borcu kalmadı** (öğrenme ölçer).
 
 
 ### WP-U — Evren/PIT Cephesi 🔶 (araştırma indi 2026-07-31; stratejik ana cephe)
