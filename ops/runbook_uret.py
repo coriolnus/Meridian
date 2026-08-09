@@ -15,9 +15,15 @@ ONAYLI KAYNAK SÖZLEŞMESİ (WP0 §6.3 — operatör onayı):
      `meridian/obs.py` ALARM_ sabitleri · `meridian/watchdog.py` EXPECTED sözlüğü ·
      `meridian/api.py::_sessiz_hat` sapma adları/ipuçları · `obs.alarm(...)` ateşleme
      yerleri · `watchdog.beat("...")` nabız yerleri.
+  4. `ops/*.sh` ve `deploy/oracle-a1/*.sh` GÖVDESİNDEKİ `obs.alarm('JETON'...)` ateşlemeleri
+     (seçenek C — WP0 §6.3 uzantısı, operatör onayı): bir betik GÖVDESİNDE bir jetonu
+     ateşliyorsa o jetonun KURTARMA YÖNETİCİSİDİR (ör. `ops/keepalive.sh` ölü sunucuyu
+     diriltir ve `MECHANISM_STALE` yazar) ve jetonun Çözüm alanına eşlenir. Başlık (madde 1)
+     betiğin NE OLDUĞUNU söyler; gövde ateşlemesi hangi ALARMI ele aldığını — iki AYRI boyut,
+     ve ikincisi başlıkta jetonun adı geçmese de (keepalive'de geçmez) koddan türer.
 
 SÖZLEŞME DIŞI KAYNAK YOK. `deploy/*.sh` (üst düzey; monitoring.sh dahil) bilerek DIŞARIDA —
-onaylı küme yukarıdaki üç maddedir. Bu sınır belgede de yazar; sessiz bir kapsam genişlemesi,
+onaylı küme yukarıdaki DÖRT maddedir. Bu sınır belgede de yazar; sessiz bir kapsam genişlemesi,
 "runbook'un kaynağı ne" sorusunu bir daha cevaplanamaz hale getirirdi.
 
 UYDURMA YASAĞI (anayasa 1'in bu dosyadaki karşılığı). Bir alanın kaynağı yoksa o alan
@@ -290,6 +296,46 @@ def betik_basliklari() -> list[dict]:
     return out
 
 
+def betik_govde_atesleme() -> dict[str, list[dict]]:
+    """Onaylı betik kümesinin GÖVDESİNDE `obs.alarm('JETON'...)` ateşleyen betikler →
+    {jeton: [{yol, satirlar}]} (yol sırasında; satırlar dosya sırasında).
+
+    NEDEN AYRI BİR ONAYLI KAYNAK BOYUTU (seçenek C). `betik_basliklari` betiğin BAŞLIK
+    yorumunu okur — betiğin NE OLDUĞUNU. Ama bir betik GÖVDESİNDE bir jetonu `obs.alarm(...)`
+    ile ateşliyorsa, o alarmı doğuran koşulu betik ZATEN ele alıyordur: `ops/keepalive.sh`
+    ölü sunucuyu diriltir ve `MECHANISM_STALE` yazar. Yani betik o jetonun KURTARMA
+    YÖNETİCİSİDİR ve jetonun Çözüm/betik alanına eşlenmesi GERÇEK bir bağdır — üstelik jetonun
+    adı BAŞLIKTA geçmediğinden (keepalive başlığında `MECHANISM_STALE` yoktur) yalnız başlık
+    taranırken bu bağ GÖRÜNMEZ kalıyordu; boş bir Çözüm alanı doğuruyordu.
+
+    KURAL — LİTERAL AD GEÇİŞİ: `obs.alarm(` + tırnaklı jeton deseni, betiğin GÖVDESİNDE
+    (başlık `#` bloğunun ALTINDA) ve YORUM OLMAYAN bir satırda. Yorumu dışlamak, gövdede sözü
+    geçen ama ateşlenmeyen bir jetonu (ör. `# eskiden obs.alarm('X') vardı`) kurtarma
+    yöneticisi diye UYDURMAKTAN korur — anayasa 1. Bulanık/anlamsal eşleştirme yoktur; bir
+    jetonun gövde ateşlemesi yoksa Çözüm alanı boş kalır (o boşluk elle içerik borcudur, ayrı
+    bir turdur — üretici var olmayan bir kurtarma betiği İCAT ETMEZ)."""
+    desen = re.compile(r"""obs\.alarm\(\s*['"]([A-Z_0-9]+)['"]""")
+    ham: dict[str, dict[str, list[int]]] = {}
+    for desen_yol in BETIK_KUMESI:
+        for p in sorted(KOK.glob(desen_yol)):
+            satirlar = p.read_text(encoding="utf-8").splitlines()
+            # Başlık bloğunu ATLA — betik_basliklari ile AYNI sınır: shebang + ilk bitişik `#`
+            # bloğu başlıktır, gövde ondan sonra başlar. İki fonksiyon aynı sınırı görmezse
+            # bir jeton hem başlık hem gövde kanalından çift sayılabilirdi.
+            i = 1 if satirlar and satirlar[0].startswith("#!") else 0
+            while i < len(satirlar) and satirlar[i].startswith("#"):
+                i += 1
+            for j in range(i, len(satirlar)):
+                if satirlar[j].lstrip().startswith("#"):  # gövde YORUMU ateşleme değildir
+                    continue
+                for jeton in desen.findall(satirlar[j]):
+                    ham.setdefault(jeton, {}).setdefault(
+                        str(p.relative_to(KOK)), []).append(j + 1)
+    return {jeton: [{"yol": yol, "satirlar": satir_nolari}
+                    for yol, satir_nolari in yollar.items()]
+            for jeton, yollar in ham.items()}
+
+
 def log_maddeleri() -> list[dict]:
     """`MERIDIAN_ENGINEERING_LOG.md`'nin üç bölümündeki madde imli girdiler → [{bolum, metin}].
 
@@ -363,6 +409,17 @@ def _sure(saniye: int) -> str:
     return f"{saniye // 60} dk"
 
 
+def _baslik_ozeti(baslik: str) -> str:
+    """Betik başlığının İLK satırı (+ devamı varsa `…`). Kurtarma yöneticisi bağının yanına
+    betiğin NE OLDUĞUNU koyar; başlığın TAMAMINI Çözüm alanına dökmek bölümü bir kod dökümüne
+    çevirirdi ve başlığın tamamı zaten [Betik dizini] bölümünde duruyor. İlk satır + `…`
+    (kesme değil, devam işareti): özetin eksik olduğu okuyucuya dürüstçe söylenir."""
+    satirlar = [s for s in baslik.splitlines() if s.strip()]
+    if not satirlar:
+        return ""
+    return satirlar[0].strip() + (" …" if len(satirlar) > 1 else "")
+
+
 def _bolum(ad: str, capa: str, belirti: list[str], teshis: list[str], cozum: list[str]) -> list[str]:
     """Tek bölümün gövdesi. ÜÇ ALAN SABİT ve hiçbiri atlanmaz: boş bir alan `YAZILMADI`
     cümlesini taşır. Alanı hiç yazmamak, "burada söylenecek bir şey yok" ile "burası
@@ -398,6 +455,8 @@ def uret() -> str:
     atesleme = atesleme_yerleri()
     nabizlar = nabiz_yerleri()
     betikler = betik_basliklari()
+    betik_govde = betik_govde_atesleme()
+    baslik_yollari = {b["yol"]: b["baslik"] for b in betikler}
     log = log_maddeleri()
 
     p: list[str] = []
@@ -420,6 +479,10 @@ def uret() -> str:
         "- envanter kaynakları: `meridian/obs.py` (ALARM_ sabitleri) · `meridian/watchdog.py`",
         "  (EXPECTED pencereleri + `beat()` nabız yerleri) · `meridian/api.py::_sessiz_hat`",
         "  (sapma adları ve runbook ipuçları) · `obs.alarm(...)` ateşleme yerleri",
+        "- `ops/*.sh` ve `deploy/oracle-a1/*.sh` **gövdesindeki `obs.alarm(...)` ateşlemeleri**:",
+        "  bir betik gövdesinde bir jetonu ateşliyorsa o jetonun **kurtarma yöneticisidir** ve",
+        "  jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör.",
+        "  `ops/keepalive.sh` → `MECHANISM_STALE`)",
         "",
         "**Kapsam dışı, bilerek:** `deploy/*.sh` (üst düzey, `monitoring.sh` dahil) onaylı kümede",
         "değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.",
@@ -491,6 +554,17 @@ def uret() -> str:
         cozum = []
         for b in _eslesen_betikler(jeton, betikler):
             cozum.append(f"`{b['yol']}` — başlığında `{jeton}` geçiyor.")
+        # SEÇENEK C — GÖVDE ATEŞLEMESİ: betik gövdesinde bu jetonu obs.alarm ile ateşliyorsa
+        # KURTARMA YÖNETİCİSİDİR. Başlıkta ad geçmese de (keepalive'de geçmez) bağ koddan
+        # gerçektir; bu, jetonun boş kalan Çözüm alanını GERÇEK bir kaynaktan kapatır.
+        for atesleyen in betik_govde.get(jeton, []):
+            yol = atesleyen["yol"]
+            satir = ", ".join(str(n) for n in atesleyen["satirlar"])
+            cozum.append(f"`{yol}` — gövdesinde `obs.alarm('{jeton}')` ateşliyor (satır {satir}); "
+                         f"bu betik jetonun KURTARMA YÖNETİCİSİDİR.")
+            ozet = _baslik_ozeti(baslik_yollari.get(yol, ""))
+            if ozet:
+                cozum.append(f"  Betik özeti: {ozet}")
         for m in _eslesen_log(jeton, log):
             cozum.append(f"**{m['bolum']}** → {m['metin']}")
         p += _bolum(jeton, jeton.lower(), belirti, teshis, cozum)

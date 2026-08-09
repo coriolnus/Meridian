@@ -16,6 +16,10 @@ Onaylı kaynaklar (WP0 §6.3, operatör onayı) — bunların DIŞINDA hiçbir y
 - envanter kaynakları: `meridian/obs.py` (ALARM_ sabitleri) · `meridian/watchdog.py`
   (EXPECTED pencereleri + `beat()` nabız yerleri) · `meridian/api.py::_sessiz_hat`
   (sapma adları ve runbook ipuçları) · `obs.alarm(...)` ateşleme yerleri
+- `ops/*.sh` ve `deploy/oracle-a1/*.sh` **gövdesindeki `obs.alarm(...)` ateşlemeleri**:
+  bir betik gövdesinde bir jetonu ateşliyorsa o jetonun **kurtarma yöneticisidir** ve
+  jetonun Çözüm alanına eşlenir — başlıkta adı geçmese bile koddan türer (ör.
+  `ops/keepalive.sh` → `MECHANISM_STALE`)
 
 **Kapsam dışı, bilerek:** `deploy/*.sh` (üst düzey, `monitoring.sh` dahil) onaylı kümede
 değil. Sessiz bir kapsam genişlemesi yerine sınır burada yazılı duruyor.
@@ -231,8 +235,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `MECHANISM_STALE` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- `ops/keepalive.sh` — gövdesinde `obs.alarm('MECHANISM_STALE')` ateşliyor (satır 46); bu betik jetonun KURTARMA YÖNETİCİSİDİR.
+  - Betik özeti: Meridian keepalive — kullanıcı-oturumu süpervizörü (launchd, ~/Documents'a TCC engeli yüzünden …
 
 ## ARMING_READY {#arming_ready}
 

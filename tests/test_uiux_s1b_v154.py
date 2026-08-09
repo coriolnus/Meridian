@@ -152,16 +152,58 @@ def test_t3_uydurma_yok_civisi_sentinel_ifadesi():
 
 
 def test_t3_betik_iddiasi_dogrulanabilir():
-    """“`X` — başlığında `Y` geçiyor” diyen HER satır DOĞRU olmalı.
+    """HER betik-eşleşme iddiası DOĞRU olmalı — iki kanıt biçiminde de.
 
     Bu, uydurma yasağının bu dosyadaki en sert biçimi: belge bir betiği bir alarma bağladığında
-    o bağın kanıtı betiğin KENDİ başlığında durmalı. Bulanık/anlamsal eşleştirme yapılsaydı bu
-    test yazılamazdı — ve yazılamayan bir iddia, denetlenemeyen bir iddiadır."""
+    o bağın kanıtı DOSYANIN KENDİSİNDE durmalı. Bulanık/anlamsal eşleştirme yapılsaydı bu test
+    yazılamazdı — ve yazılamayan bir iddia, denetlenemeyen bir iddiadır. İki kanıt biçimi:
+      (a) BAŞLIK: “`X.sh` — başlığında `Y` geçiyor” → jeton betiğin başlık yorumunda durmalı.
+      (b) GÖVDE (seçenek C): “`X.sh` — gövdesinde `obs.alarm('Y')` ateşliyor” → betik gerçekten
+          o jetonu GÖVDESİNDE (yorum-dışı satırda) ateşlemeli; yoksa uydurma bir KURTARMA
+          YÖNETİCİSİDİR. Betik ÜRETİCİDEN BAĞIMSIZ yeniden okunur ki test üreticinin değil
+          dosyanın kanıtını görsün."""
     basliklar = {b["yol"]: b["baslik"] for b in U.betik_basliklari()}
     iddialar = re.findall(r"`([^`]+\.sh)` — başlığında `([^`]+)` geçiyor\.", RUNBOOK_MD)
     for yol, ad in iddialar:
         assert yol in basliklar, f"belge var olmayan bir betiğe işaret ediyor: {yol}"
         assert ad in basliklar[yol], f"YANLIŞ İDDİA: `{ad}` {yol} başlığında geçmiyor"
+
+    govde_iddialar = re.findall(
+        r"`([^`]+\.sh)` — gövdesinde `obs\.alarm\('([A-Z_0-9]+)'\)` ateşliyor", RUNBOOK_MD)
+    for yol, jeton in govde_iddialar:
+        assert yol in basliklar, f"belge var olmayan bir betiğe işaret ediyor: {yol}"
+        satirlar = (SRC / yol).read_text().splitlines()
+        gercek = any(re.search(rf"obs\.alarm\(\s*['\"]{re.escape(jeton)}['\"]", s)
+                     for s in satirlar if not s.lstrip().startswith("#"))
+        assert gercek, f"UYDURMA KURTARMA YÖNETİCİSİ: {yol} gövdesinde `obs.alarm('{jeton}')` YOK"
+
+
+def test_t3_govde_atesleme_kurtarma_yoneticisini_eslestirir():
+    """Seçenek C: bir betik GÖVDESİNDE `obs.alarm('JETON')` ateşliyorsa o betik jetonun
+    KURTARMA YÖNETİCİSİ olarak Çözüm/betik alanına girer — başlıkta ad geçmese BİLE.
+
+    ÇİVİLİ GERÇEK BAĞ: `ops/keepalive.sh` gövdesinde `obs.alarm('MECHANISM_STALE')` ateşler
+    (ölü sunucuyu diriltir) ama BAŞLIĞINDA 'MECHANISM_STALE' GEÇMEZ. Yani yalnız başlık
+    taransaydı bu bağ görünmez, MECHANISM_STALE'in Çözüm alanı boş kalırdı (WP0 borcu). Gövde
+    boyutu tam olarak bu boşluğu GERÇEK bir kaynaktan kapatır; test hem bağı hem 'başlıkta
+    geçmiyor' farkını çivi haline getirir — fark olmasaydı gövde boyutu gereksiz olurdu."""
+    govde = U.betik_govde_atesleme()
+    assert "MECHANISM_STALE" in govde, "gövde ateşleme taraması MECHANISM_STALE'i bulmadı"
+    yollar = {a["yol"] for a in govde["MECHANISM_STALE"]}
+    assert "ops/keepalive.sh" in yollar, f"keepalive.sh gövde bağı yok: {yollar}"
+
+    basliklar = {b["yol"]: b["baslik"] for b in U.betik_basliklari()}
+    assert "MECHANISM_STALE" not in basliklar["ops/keepalive.sh"], (
+        "keepalive.sh başlığında MECHANISM_STALE geçiyor — bu vakada gövde boyutu gereksiz olurdu; "
+        "testin var oluş sebebi tam olarak başlık↔gövde farkıdır")
+
+    # MECHANISM_STALE'in Çözüm/betik alanı ARTIK boş değil.
+    sec = RUNBOOK_MD[RUNBOOK_MD.index("## MECHANISM_STALE {#mechanism_stale}"):]
+    sec = sec[:sec.index("\n## ", 1)]
+    cozum = sec[sec.index("### Çözüm / betik"):]
+    assert "`ops/keepalive.sh` — gövdesinde `obs.alarm('MECHANISM_STALE')` ateşliyor" in cozum, (
+        "keepalive.sh MECHANISM_STALE Çözüm alanına girmemiş")
+    assert U.YAZILMADI not in cozum, "MECHANISM_STALE Çözüm alanı hâlâ 'yazılmadı' diyor"
 
 
 def test_t3_kapsam_disi_kaynak_sizmamis():
@@ -181,6 +223,10 @@ def test_t3_kapsam_disi_kaynak_sizmamis():
     assert bolum_yollari == set(yollar), f"betik bölümleri kaynak kümesiyle ayrışmış: {bolum_yollari ^ set(yollar)}"
     assert not re.search(r"`deploy/(?!oracle-a1/)[^`]+\.sh` — başlığında", RUNBOOK_MD), (
         "kapsam dışı bir betikten içerik iddiası üretilmiş")
+    # Gövde boyutu (seçenek C) da aynı kapsamla sınırlı: kapsam dışı bir betikten gövde-ateşleme
+    # iddiası da üretilmemeli — betik_govde_atesleme yalnız BETIK_KUMESI'ni tarar.
+    assert not re.search(r"`deploy/(?!oracle-a1/)[^`]+\.sh` — gövdesinde", RUNBOOK_MD), (
+        "kapsam dışı bir betikten gövde-ateşleme iddiası üretilmiş")
     assert "Kapsam dışı, bilerek" in RUNBOOK_MD, "kapsam sınırı belgede beyan edilmemiş"
 
 
