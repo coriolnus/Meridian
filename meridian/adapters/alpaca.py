@@ -840,7 +840,7 @@ def koruma_fill(order: dict) -> dict | None:
         ham = kayit.get("filled_avg_price")
         try:
             price = float(ham) if ham not in (None, "") else None
-        except (TypeError, ValueError):  # sessiz-yutma DEĞİL: None + aşağıdaki `neden` alanına düşer, çağıran alarmda taşır
+        except (TypeError, ValueError):  # sessiz-yutma: fiyat parse edilemedi -> None + `neden` alanı; çağıran alarmda taşır, kitaba İŞLENMEZ (uydurma yasağı: 0 yazılmaz)
             price = None
         nedenler = []
         if price is None:
