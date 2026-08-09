@@ -98,7 +98,7 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 | **WP2** Referans-Verisi | 🟢 borç yok | EDGAR PIT fundamentals adayları | ~~turnover kablolama~~ **✅ ZATEN İNMİŞ (5dfca07, 2026-08-03; 2026-08-10 doğrulama 58/0)** — açık borç YOK; yeni PIT-aday özniteliği ancak KART-önce açılır | skor bileşeni + `bounds.yaml` | EDG-2026-016(SUCCESS) · 012/013/014 |
 | **WP-U** Evren/PIT | 🔶 aktif (stratejik ana cephe) | survivorship-serbest evren · PIT üyelik · delist-bar | EDG-022 ölçüldü→FINVIZ gerekçesiz (§4) · PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ operatörde (§3) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
 | **WP-S** Sermaye/Koruma | 🔴 aktif | koruma×süpürücü · sermaye defter bütünlüğü · boyut makbuzu | koruma DAVRANIŞSAL EOD kanıtı (Pazartesi 13:30 UTC+) · SB-2 `drift_sinifi` · melez pozisyonlar + dormant setup icra (operatör §3) | `adapters/alpaca.py` · `store.py` · `obs.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) |
-| **WP-S2** Ölçüm/Görünürlük Borçları | 📋 aktif | beyanlı ölçüm/görünürlük borçları | kill#4 uygulama (kill kapısı yalnız BOZULMA sınıflarına) · sistematik artefakt turu (envanter yürüme) · systemd + ajan-git (§3) | `api.py` · `web/app.js` · `guard.py` | EXE-2026-002-R1 |
+| **WP-S2** Ölçüm/Görünürlük Borçları | 📋 aktif | beyanlı ölçüm/görünürlük borçları | ~~artefakt turu~~ **✅ TUR BİTTİ (2026-08-10, docs/TUR-WPS2-ARTEFAKT): 163 SAĞLAM/1 ŞÜPHELİ/0 BAYAT; yasa 0 ihlal, kart→kanıt 24/24; 'provenance ÖLÜ-ADAY' iddiası Rol-1 doğrulamasında ÇÜRÜDÜ (conftest.py:846 koşullu yazar); tek eylem .locks budama→§2-5** · kill#4 uygulama · ajan-git (§3) | `api.py` · `web/app.js` · `guard.py` | EXE-2026-002-R1 |
 | **WP-M** Metodoloji/Yasa | 📋 aktif | ölçüm altyapısının kendisi | ~~M1~~ **✅ ZATEN ARŞİV (KYS-001 kill#1, 2026-08-02: yanlılık pratik-önemsiz <10bps CI-0-içi; keşif bayat kayda güvendi, kart otoritesi kapattı — 2026-08-10)** · **M2 PBO-yarısı ✅ ÖLÇÜLDÜ (KYS-002, 2026-08-10): R1 tabanı PBO=0.6286 → kapı her iki modda BLOKLAR (ilk gerçek taban; kapı damgalamayla gerçek iş yapıyor); DSR-yarısı araç-şartlı (kill#2, §2 önerisi)** · M7/M8/M9 ucuz-tur (ajan uçtu) · M11 · 2B/2C/2D/A4 | `analytics` · `reflect` · `dataset` | KYS-2026-001(ARŞİV) · KYS-2026-002(measured_partial) |
 | **WP-D** Veri Bütünlüğü | 🔄 aktif | karantina/bütünlük kapıları · türetilmiş artefaktlar | türetilmiş artefakt güvensiz-dönem-dışlamalı yeniden üretim · seans-içi boşluk tespiti · earnings kapsama+fail-open · `dataset.load↔bars_integrity` bağlama (operatör §3) | `adapters/data.py` | — |
 | **WP-H** Mühendislik Dayanıklılığı | 🟡 H9 bitti | sürüm kontrolü · atomik yazım · sertleştirme | **H9 A/B/C ✅ İNDİ (2026-08-10, 12 kapı-dışı yazım store kapısına; `auth._write` zero-byte-lockout kök kusuru kapandı; `_write_bars` hot-path dosya-başına kilit)** · AÇIK: H3 tur-2 seccomp · LoadCredential+OCI aktivasyon (operatör §3) | `store.py` · `auth.py` · `hermes.py` · `deploy/` | — |
@@ -727,6 +727,12 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    defter şemasına pnl-serisi damgası (yazar reflect, okuyucu ölçüm-çekimleri) YA DA işlem-düzeyi pnl'li
    yeni donmuş-çekim betiği. Araç inince KYS-002 DSR-yarısı yeniden ölçülür. *gerekçe: M2'nin DSR yarısı
    ölçülemiyor · boyut: S-M · bağımlılık: reflect şema kararı (Rol-1) · öncelik: orta.*
+
+5. **`.locks/` pytest-yollu kilit birikintisi budaması (WP-S2 turu bulgusu, 2026-08-10)** — test koşuları
+   oturum-düzeyi tmp yolları hash'lenmiş kilit dosyaları bırakıyor (tur ölçtü: tek AST koşusu bile +2;
+   25→27 birikiyor, budama yok). DİKKAT: flock semantiği — canlı tutulan kilidi silmek dışlamayı kırar;
+   güvenli budama = non-blocking flock alınabilen + eski dosyalar (ops betiği ya da conftest teardown).
+   *gerekçe: sınırsız birikinti · boyut: S (flock-dikkatli) · bağımlılık: yok · öncelik: düşük.*
 
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
