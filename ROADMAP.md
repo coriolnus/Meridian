@@ -451,6 +451,16 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
 - Sonrası: PIT-evrenli G1 mid-cap ölçümü (üyelik verisi hazır; bar kısıtı yalnız delist-isimleri
   etkiler — sağ-kalan mid-cap'lerle ÜST-SINIR ölçümü yine mümkün, yanlılık beyanlı) → B-9 (tetik:
   trend kolu ship) · 13F önceliklendirme katmanı.
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-U-2026-08-09.md`, salt-ölçüm + plan):** canlı evren **251 =
+  REPLAY_UNIVERSE** (aynı küme, fark YOK — "251" zaten `REPLAY_UNIVERSE`'ün kendisi). FINVIZ evren-
+  genişletme kolu **%100 ÖLÜ** — `finviz_unavailable` **3.746** / `finviz_universe` (başarılı keşif)
+  **0** (2026-07-14→08-09), `FINVIZ_API_KEY` YOK → evren kalıcı 251. **RAKİP KÖK:** de-risk rampası
+  günlerin **%92**'sinde pozisyonu 1'e kısıyor (ROADMAP:425) → **"evren +X → işlem +Y" ÖLÇÜLEMEDİ**
+  (bilerek uydurulmuyor: aday-havuzu mu, tavan mı bağlıyor belirsiz). ÖNERİ **EDG-2026-022** ("Evren
+  bağlayıcı kısıt mı?" — OTONOM/bloksuz; altyapı hazır: `backtest.py` candidate_log + eff_max_open +
+  plan_log; yeni bar GEREKMEZ): FINVIZ harcamasını **DE-RISK eder** (evren bağlamıyorsa para boşa).
+  PIT fundamentals **EDGAR'la ÇÖZÜLÜ** (evrene bağlı otonom kol, blok değil). Delist-bar: 703 çıkıştan
+  yalnız 12'si arşivde barlı (%1,71); EDG-016 penceresi %96,57 sıfır-bar (kaynak kararı §6-9'da).
 
 ### WP-K — Kurulum/Aile Genişletme
 - **Trend-kolu RAFİNE ✅ ÖLÇÜLDÜ (2026-07-31, kart EDG-009, K=4; pozitif kontrol 0.000000 farkla):**
@@ -478,6 +488,12 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
   (ρ=0,95). WP-K'da ölçülmemiş hipotez KALMADI.** ⚠ İZLEME→ÖĞRENME: canlı skorun kesit-içi
   sıralaması kısa ufukta kanıtsız/ters (rs-negatif bulgusuyla tutarlı) — knob kararı öğrenme
   döngüsünün/operatörün; kanıt vcp_olcum'da.
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-K):** kendi kuyruğunda **ölçülmemiş hipotez
+  YOK** (VCP-DECOMPOSE ile tükendi). 3 artık kalem açık: **G5 in-play** (EDG-011 ASKI SÜRER — "t'de
+  BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz + PIT defteri 0 satır + canlı `earnings.csv` bayat,
+  FMP-402'ye bağlı) · **G6 koşullu-kısa** (RAF; EDG-005 karşı-gözlemi) · **EDG-021 2. koşum** (tanım-
+  eşitleme, operatör — §6). Genişleme hattı (transkript-LLM/13F + WP-QC (b)-kovası [354 idio-skew /
+  16 overnight / 269+125 mevsimsellik] + bileşen-ders Ek-B ①-⑤) kart-önce, WP-QC/HEDEF-5'te park.
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
 - **YENİ (EDG-010'dan, ders #3): ölçütler HAM getiri okuyamaz** — success/kill her zaman
@@ -508,6 +524,13 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
   standardı · K-defteri↔kart senkronu (retro kartlar) · ~~canlı-beklenti tavanı config'e bağlama~~ (2026-08-03 TEYİT: 5fe0c1e'de ZATEN kablolu —
   config.live_expectancy_rule + analytics.live_expectancy_ceiling → pano; kayıt bayattı) · Chen-2022 t-hurdle dengeleme notu (K-cezası
   kalibrasyonu — gevşetme değil referans).
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-M — salt-ölçüm; gece kapananlar v196/v214/
+  kart-tekillik düşülmüş):** **11 kalem gerçekten açık** (9 metodoloji/yasa + **PBO/DSR tabanı** [M2,
+  restart-şartlı: canlı 0/204, `pencere_id` damgasız 124/124 → sert PBO kapısı canlıda NO-OP] +
+  **araç-kör-nokta artığı** [M11: KATMAN-4 alan merceği plan defterinin ~20 kontrol alanına genişlemedi]).
+  EN YÜKSEK KALDIRAÇ = **M1 KIYAS-KİRLENMESİ** (olay-penceresi-dışı kıyas — TÜM evren-medyanı ölçümlerini
+  etkiliyor; yeni WP-K aile ölçümlerinin tabanını temizler). Öneri sıra: bakım penceresinde OB-2 systemd
+  → OB-1 kanal → OB-4 restart→PBO damgalama (M2) çapraz-kaldıraç; sonra M7/M8/M9 ucuz, sonra M1 çekirdek.
 
 ### WP-D — Veri Bütünlüğü 🔄
 - **BULGU-1 ✅ TEYİT-TAM (2026-08-03 bağımsız yeniden-üretim — kanıt research/olcumler/
@@ -556,6 +579,17 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   canary/shadow = gölge-v2 + paper-lock · DST-lite yarısı = replay_seed + deterministik backtest ·
   snapshot testleri = çivi dizisi · yedek zinciri = VM-tar + Mac-pull · takvim/UTC = takvim kapısı ·
   iç dead-man = 17 bekçi + tick-watchdog + fail-notify.
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-HD-2026-08-09.md`, salt-ölçüm — WP-H + WP-D):** WP-H çekirdeği
+  büyük oranda KAPALI; kalan tek adlı OTONOM iş = **H9 Kademe-B ~11 kapı-dışı yazımın** `store.write_text`/
+  kilitli-append'e taşınması (kapı HAZIR `store.py:306`). En tehlikeli tekil: **`auth._write` SABİT-TMP-
+  ADI** (`auth.py:87-96` — iki süreç aynı `.json.tmp`'ye yazar, atomiklik iddiası biter); sonra kırpma-
+  sınıfı düz yazımlar `memory.py:212` lessons.md + `run.py:172` scoreboard. systemd `SuccessExitStatus=143`
+  birim dosyasında YAZILI (`meridian.service:82`) ama **CANLIDA DEĞİL** — A1 /etc birimi 08-02 tarihli,
+  her restart exit-143 ile "FAILED" (son 3 günde 6 kez, fail-notify NO-OP kurtarıyor); **N1 bildirim
+  kanalının ÖN-ŞARTI** (daemon-reload + bakım penceresi + elle test-ateşleme — §6). H10 aşama-2 = saf
+  OCI-bucket operatör-bloğu (§6-10). **WP-D'de otonom kod deliği KALMADI gibi** (bars_integrity sevk+
+  kablolu, seans-içi boşluk dedektörü kurulu); açık kalan iki kalem OPERATÖR-bloklu (`dataset.load↔
+  bars_integrity` bağlama = kapsam kararı + FMP planı). POZİTİF: E2 defteri kilit-8 kod düzeyinde kapanmış görünüyor.
 - **H1 Hypothesis invariant paketi ✅ (2026-07-31 tur-2):** 20 property / 5 yasa bölümü (sanitize,
   depo-roundtrip diferansiyeli, kayıpsızlık durum-makinesi, takvim kapısı, defter damgası).
   İLK GÜN GERÇEK KUSUR: SQLite REAL −0.0 işaret kaybı (latent, canlıda 0 örnek; _isaretli_sifir
@@ -693,28 +727,55 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 - **RED:** canlı katman (sıfır yeni yetenek) · log/scrape dışa-aktarım (ToS) · K-grid'i QC
   optimizasyonuna devir (kart disipliniyle uyumsuz) · ML-eğitim taşıma (Train kotası sembolik) ·
   Benzinga ($120 — Tiingo FREE dururken) · FREE'de lean-cli (sözleşme ihlali).
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-QC-2026-08-09.md`, salt-ölçüm + plan):** FREE QC hesabı **ZATEN
+  AÇIK** (2026-08-03 — proje `Fat Apricot Koala`; hesap-açma bloğu KALKMIŞ, kalan tek blok operatörün
+  defteri KOŞMASI, EDG-021 boru hattı hazır — §6-11). En düşük-bloklu kalem **⑤ RETIRED çapraz-doğrulama**:
+  yerel yarısı BU TURDA koşuldu, **8/8** emekli sembol (ANSS/DFS/FI/HES/IPG/K/PARA/WBA) SP500-üyeliğiyle
+  tutarlı; tek QC-adımı 1-hücrelik Security Master delist-olayı sondası (EDG-021'in ölçmediği erişim yolu,
+  ②-④'ün delist-vekilini gerçeğe taşır). **C2-4 LEAN "hesapsız"** (Apache-2.0, dotnet/docker CLI'sız) AMA
+  "sıfır-kurulum DEĞİL" — bu makinede **dotnet YOK, docker YOK** (makine-kurulum bloğu, operatör-hesap
+  değil; boyut L, ayrı tur). **⑦ VIX/SPX** FREE ama ToS **platform-İÇİ** — canlı `regime.py` VIX kapısını
+  AÇMAZ ("kısmen çözülebilir" = ölçüm-içi bağlam, canlı-kapı değil); ekleme K-grid'i ÇARPAR, ön-kayıtta beyan.
 
 ### WP-UX — YENİDEN-TASARIM PROGRAMI 🔴 AKTİF (2026-08-07; yön: docs/TASARIM-YONU-2026-08-07.md — operatör onaylı, BAĞLAYICI)
 - **Girdi ölçümleri (bitti):** BASELINE-2026-08-06 (25 bulgu, 4×cid-4; araç kör noktası: detect
   app.js'in 7.511 satırında 0 bulgu) · PATTERN-ETUDU-2026-08-06 (11 platform, 81 iş; 22 FIRSAT,
   6 modül adayı, 10 yasaya-aykırı desen elendi) · UX-SADELESTIRME-DENETIMI (23 Nielsen bulgusu).
   HÜKÜM: pano eksik değil BAĞLANTISIZ — dürüstlükte kategoride önde, birleştirmede geride.
-- **D0 acil doğruluk** 🔄: mod her durumda görünür (halted/stale'de kayboluyordu — güvenlik
-  görünürlüğü) · ffill rozeti · 162 `?? 0` triyajı.
-- **D1 jetonlar + beş renk rolü** 📋: mod KENDİ kanalını alır; şiddet yalnız şiddet; veri-güveni
-  ve keşif-modu şiddetten çıkar; 164 koşulsuz pos/neg/warn temizlenir.
-- **D2 kart sözleşmesi + yeni IA** 📋: ①Bugün ②Karar ③Sağlık ④Öğrenme ⑤Kilitler; olay yüzeyleri
-  çekmece olarak; runbook.html EMİLİR (dördüncü dünya ölür), workflow.html EMEKLİ (canlı zaman
-  çizelgesine devrolur), landing.html KALIR+onarılır (1,53:1 sızıntısı).
-- **D3 fırsat yüzeyleri + modüller** 📋: C1'in on işi (reddedilen-karar karnesi 4.988 satır ·
-  emir yaşam-döngüsü · /api/spend'in SIFIR web çağıranı · canlı zaman çizelgesi · rollback
-  sicili [app.js'te "rollback" 0 kez] · regresyon kırılımı · denetim izi · "bugün neden hiçbir
-  şey olmadı" · çıkış-nedeni kırılımı [stop_gap 1.973R] · skor olgunlaşması) + ALTI MODÜL
-  (operatör: hepsi yazılır; delist-arşivi Massive kararına bağlı + kart ZORUNLU).
-- **D4 yazı tipi** 📋: Geist EMEKLİ (Impeccable bulgusu, operatör kararı); aday DESIGN.md'nin
-  Geist için kurduğu binary-ölçüm standardıyla seçilir (Türkçe aksan · tabular · mono eşlenik ·
-  halation · kendi-barındırma/CSP).
-- **D5 sertleştirme** 📋 · **D6 doğrulama** 📋 (audit/critique önce-sonra, on ilke kanıtlı, devir).
+- **GİT OTORİTESİ DÜZELTMESİ (2026-08-09 — AŞAĞIDAKİ D0-D6 İŞARETLERİ BAYATTI):** D0-D6 dalgalarının
+  HEPSİ git'te İNDİ; hash'ler tek tek doğrulandı (D2-D6 2026-08-07, D3-b `6bb2bb9` 2026-08-09 16:45).
+  Kalan AÇIK: **D3-c altı modül** (delist-arşivi/C2-5 Massive kararına bağlı + kart ZORUNLU) +
+  **D3-b F3-F13/F15** yüzeyleri. NOT: `docs/KESIF-WP-MKP-2026-08-09.md` §0 "WP-UX D0-D6 İNMEDİ" dedi —
+  o BAYAT bu ROADMAP'e güvendi (git yasağı) ve ~16:30'da ölçtü; **git ÇÜRÜTTÜ** ve bu düzeltme onu kapatır.
+- ~~**D0 acil doğruluk** 🔄~~ → **✅ İNDİ (v196 `c59dfcc`, 2026-08-07):** mod dört durumda da ölçümden
+  basılır · ffill hücre-düzeyinde etiketli · `?? 0` triyajı 30/167 düzeltildi (137 listeli kuyrukta —
+  D-serisi dışı kalıntı kuyruk, `?? 0` çıcır tavanı 181). Özgün: mod halted/stale'de kayboluyordu.
+- ~~**D1 jetonlar + beş renk rolü** 📋~~ → **✅ İNDİ (v197 `6025d82` + çivi `0220e6b` + D2-a `07deab7`):**
+  iki katmanlı jeton mimarisi (hue adı bileşende YOK); mod KENDİ yapısal kanalını aldı; koşulsuz emisyon
+  15→0; D1 çivi 7 kırmızı kapandı (iddialar zayıflatılmadan); D1 şablon-içi ters-tırnak P0'ı D2-a kapadı.
+- ~~**D2 kart sözleşmesi + yeni IA** 📋~~ → **✅ İNDİ (D2-a v198 `07deab7` + D2-b v199 `c0d8238`):**
+  tek kapak anatomisi (özet=hucreGovde), açık kart 77→52; 7 sayfa→5 yüzey (işe göre), 6 olay yüzeyi
+  (obs 12 jetonun 12'si), 8 yinelenen çift tekilleşti, 1220 test yeşil. Özgün IA: ①Bugün ②Karar ③Sağlık
+  ④Öğrenme ⑤Kilitler; runbook.html EMİLİR, workflow.html EMEKLİ, landing.html KALIR+onarılır (1,53:1).
+- **D3 fırsat yüzeyleri + modüller** 🔄 KISMİ İNDİ: D3-UI **✅ (v200 `ac86de9`)** — C1'in on işi 10/10
+  defter→uç→pano zinciri TAM, "üretiliyor ama görünmüyor" kovası kapandı · D3-arka üç modül **✅ (v197
+  `7b9158a`)** — ajan telemetrisi + ham-iz defteri + vaka sabitleme · D3-b F1/F2/F14 **✅ (v229 `6bb2bb9`,
+  2026-08-09)** — kâğıt-canlı ayrışması + sapma kökü + iki-kademeli eşik+NO_DATA. **AÇIK:** D3-b F3-F13/F15
+  yüzeyleri + **D3-c ALTI MODÜL** (operatör: hepsi yazılır; delist-arşivi/C2-5 Massive kararına bağlı +
+  kart ZORUNLU). Özgün C1 on işi: reddedilen-karar karnesi 4.988 satır · emir yaşam-döngüsü · /api/spend
+  SIFIR web çağıranı · canlı zaman çizelgesi · rollback sicili · regresyon kırılımı · denetim izi ·
+  "bugün neden hiçbir şey olmadı" · çıkış-nedeni kırılımı [stop_gap 1.973R] · skor olgunlaşması.
+- ~~**D4 yazı tipi** 📋~~ → **✅ İNDİ (ölçüm `f8097d0` + uygulama v201 `9cd27de`):** kazanan Recursive
+  (Sans+Mono Linear, OFL, binary-ölçümle); üç yüzeyde KENDİ-BARINDIRMALI, CSP SERTLEŞTİ (Google origin
+  düştü). Geist EMEKLİ (operatör kararı) uygulandı.
+- ~~**D5 sertleştirme** 📋~~ → **✅ İNDİ (git otoritesinde "D5 jeton birliği", v208 `11bdc02` + merge
+  `4560362`):** dört yüzey tek sözlük — landing/workflow rol katmanının 40 jetonu + runbook kendi paleti
+  tekilleşti; CPL hükmü 92→78 düzeltildi.
+- ~~**D6 doğrulama** 📋 (audit/critique önce-sonra, on ilke kanıtlı, devir)~~ → **✅ İNDİ (git otoritesinde
+  "D6 tip rampası", `b71f65b` + `64009ca`):** runbook tip rampası gövde-sapması ÖLÇÜLDÜ ve ÇÜRÜTÜLDÜ
+  (15/26/18→14/28/20px, telafi panonun KENDİ .md'sinden); D6 kanıt zinciri kapatıldı (korpusu ÜRETEN kod
+  da depoda — EDG-016 sınıfı). D6 hükmü t3 korpus-tazeleme kadansında TUTUYOR (`d993bd1`/`e278466`/`8ce3123`:
+  satır kaymaları hükmü değiştirmedi, 7 aile yeşil).
 - Kapı: her dalgada kapsam testleri → tek otoriter suite → tek dagit → canlı doğrulama.
 
 ### WP-P — Pano/Operatör Arayüzü (2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası
@@ -748,6 +809,13 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
 - **RED/UYARLANDI:** APCA-birincil (red) · Inter (red — Geist kalır) · skeleton yaygınlaştırma
   (red — Viget karşı-kanıtı) · ARIA-live genişletme (dar: yalnız kritik alarm/kilit — tek görüşür
   operatör) · Doherty 400ms (Nielsen 0.1/1/10 esas) · P8 confirmed-state zaten mimaride (E1/mutabakat).
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-P):** yüzey programı **P1-P10 KAPALI**.
+  WP-UX'ten AYRI TEK canlı borç = `docs/RUNBOOK.md` **32 "runbook girdisi henüz yazılmadı"** (P-A —
+  HEARTBEAT_STALE/ROLLBACK/CIRCUIT_BREAKER/MIRROR_DRIFT/NAKED_POSITION… alarmlarının Çözüm/betik
+  prosedürü boş; kaynak-sözleşmeli/oto-üretilmiş `ops/runbook_uret.py`, kapatmak GERÇEK prosedür yazmayı
+  ister — yüzey değil içerik). İkinci rol: **WP-P ≠ WP-UX** — WP-P = gereksinim/doktrin (HP-HMI/ISA-101/
+  EEMUA-191/Few-Tufte kontrol-odası) = **WP-UX D6 kabul çıtası**; WP-UX = yüzey/icra. WP-P yüzey işi
+  YENİDEN AÇILMAZ (WP-UX aynı yüzeyleri düzenler).
 
 ### SIRALAMA (güncel): mevcut dalga (BT-1→WP-E · WP-D-r2 · 1.2/1.4) → sabah konsolidasyon+dağıtım →
 **WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
@@ -806,6 +874,24 @@ Medhat-Schmeling bizde replike olmadı) · knob-bileşik çıkış paketleri mev
 7. **FMP plan yükseltmesi (Y4):** ücretsiz planda Form-4 ucunun sayfalaması ve `search` ucu KAPALI
    (ölçüldü 2026-07-30 — aşağıdaki tabloda `insider` satırı). Yükseltme, 3 yıllık sınıflama
    penceresini beklemeden açar; yükseltilmezse pencere ancak zamanla dolar.
+8. **FINVIZ_API_KEY (evren genişletme) — ÖNCE EDG-2026-022 (2026-08-09 keşfi):** Elite token evreni
+   251'in üstüne çıkarır AMA satın almadan ÖNCE **EDG-2026-022** ("Evren bağlayıcı kısıt mı?" — otonom
+   kart, `docs/KESIF-WP-U`) ölçmeli: işlem üretimini bağlayan aday-havuzu mu, yoksa de-risk tavanı
+   (`eff_max_open`, günlerin %92'sinde 1 pozisyon) mu? Evren bağlamıyorsa FINVIZ parası boşa gider.
+   Kanıt: `finviz_unavailable` 3.746 / `finviz_universe` 0. (§6.1 `FINVIZ_API_KEY` satırıyla aynı token.)
+9. **Massive/QC delist-bar kaynağı kararı (2026-08-09 keşfi):** survivorship-serbest evrenin TEK meşru
+   yolu — RAKİP DEĞİL TAMAMLAYICI: **(a) QC platform-içi ölçüm** (BEDAVA; ToS barı dışarı ÇIKARAMAZ →
+   yerel arşiv boşluğu ÖLÇÜLÜR, DOLMAZ) VEYA **(b) Massive plan yükseltmesi** (yerel arşivin tek meşru
+   derin-tarih yolu; grouped bugün 403 + plan ~2 ay derinlik → 2004+ arşiv yeniden-üretilemez KALINTI).
+   %96,57 delist boşluğu + EDG-018 açılışı buna bağlı. `docs/KESIF-WP-U` §4-B2 / `docs/KESIF-WP-QC`.
+10. **OCI Object Storage bucket + S3-uyumlu anahtar:** H10 Litestream **aşama-2** (off-box PITR).
+    Always-Free 20GB yeter; gelene dek RPO = aynı-disk (medya/bölge arızası kapsanmaz). `docs/KESIF-WP-HD` §H10.
+11. **QC FREE defter koşumu (EDG-021 boru hattı, 2026-08-09 keşfi):** FREE hesap AÇIK (2026-08-03);
+    kalan tek blok operatörün notebook'u KOŞMASIDIR (ajan defteri yazar → operatör koşar → Rol-1 hüküm).
+    Kuyruk başı = **⑤ RETIRED çapraz-doğrulama** (yerel yarısı 8/8 tutarlı; tek QC-adımı 1-hücrelik
+    Security Master delist-olayı sondası). Ayrıca **EDG-021 2. koşum** tanım-eşitleme hakkı operatörde
+    (@20 fazla CI-0-içi; WP-K K3). Katman yükseltmesi (Researcher Seat $10/ay) yalnız ölçüm-OTOMASYONU
+    için — elle koşumda GEREKMEZ. `docs/KESIF-WP-QC` §4-5.
 
 ### 6.1 OPERATÖR KALEMİ ENVANTERİ (temizlik turu 2026-07-30 — ölü-mekanizma avının üçüncü kovası)
 
@@ -832,6 +918,21 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 
 ## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
 
+- **2026-08-09 DÖRT-CEPHE KEŞİF TURU + BAKIM PENCERESİ ONAYI (commit `068a580`):** operatör onayıyla
+  dört büyük cephede SALT-ÖLÇÜM keşfi koşuldu (git yasaklı, canlı salt-okunur, `meridian/` dokunulmadı) —
+  `docs/KESIF-WP-{U,QC,HD,MKP}-2026-08-09.md`. Her cephede küçük otonom çekirdek + büyük operatör-bloğu;
+  en değerli bulgu: **FINVIZ'e para harcamadan ÖNCE "evren bağlayıcı mı" ölçülmeli (EDG-2026-022)**.
+  ÖZET: WP-U evren=251=REPLAY_UNIVERSE, FINVIZ %100 ölü · WP-QC FREE hesap açık, ⑤ en düşük blok, LEAN
+  dotnet/docker yok · WP-H H9 kapı-dışı yazım (auth._write) + systemd-143 CANLI DEĞİL (N1 ön-şartı) ·
+  WP-MKP WP-M 11 açık / WP-K hipotez yok / WP-P P1-P10 kapalı (tek borç RUNBOOK 32 prosedür). **BAKIM
+  PENCERESİ ONAYLANDI:** OB-2 systemd exit-143 daemon-reload → OB-1 N1 kanal → OB-4 restart→PBO (M2)
+  damgalama çapraz-kaldıraç; N4 cf çıkış-sadakati (saatler, state'e yazar) aynı pencerede. Bloklar §6-8..11.
+- **2026-08-09 WP-UX D0-D6 BAYAT-KAYIT DÜZELTİLDİ (git otoritesiyle):** ROADMAP D0🔄/D1-D6📋 gösteriyordu
+  ama git D0-D6'nın HEPSİNİN indiğini kanıtladı — v196 `c59dfcc` (D0) · v197 `6025d82` (D1) · v198 `07deab7`
+  + v199 `c0d8238` (D2) · v200 `ac86de9` + v197 `7b9158a` (D3-UI/arka) · v201 `9cd27de` (D4) · v208 `11bdc02`/
+  `4560362` (D5) · `b71f65b`/`64009ca` (D6) · v229 `6bb2bb9` 16:45 (D3-b F1/F2/F14). Hash'ler doğrulandı.
+  `KESIF-WP-MKP` §0 "D0-D6 inmedi" bayat-ROADMAP'e güvenmişti (git yasağı, ~16:30 ölçüm), git ÇÜRÜTTÜ.
+  Kalan açık: D3-c altı modül + D3-b F3-F13/F15.
 - **2026-08-09 ~09:00 GECE+SABAH DÖRT DAĞITIM İNDİ (v216→v196, son `964696b`):** WP-N kanıt-hızı
   dalgası (v216-v219) + koruma×süpürücü kök düzeltmesi (v220+v221) + dalga-2 sahte-yeşil avı
   (v222-v226) + null-sıfır kapısı (v196). Sistem paper/sağlıklı, otoriter suite yeşil, 4 pozisyon
