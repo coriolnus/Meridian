@@ -1,0 +1,211 @@
+{
+ "kart": "EDG-2026-022",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg022_evren_kisit_2026-08-09/olcum.py",
+ "motor": "/Users/erdemozturk/AI-Trading/meridian/backtest.py",
+ "motor_yamasiz": true,
+ "olcum_zamani": "2026-08-09T15:27:47+00:00",
+ "sure_sn": 1162.7,
+ "replay": {
+  "start": "2022-01-01",
+  "end": "2026-07-30",
+  "strategy_version": 3,
+  "params": {
+   "entry.rs_rating_min": 70,
+   "entry.pivot_proximity_pct": 2.3,
+   "entry.min_volume_ratio": 1.5,
+   "entry.min_score": 60,
+   "exit.profit_target_r": 2.5,
+   "exit.time_stop_days": 15,
+   "exit.trail_atr_mult": 2.5,
+   "exit.breakeven_r": 1.0,
+   "stop_loss_atr_mult": 2.0,
+   "position_size_r": 1.0,
+   "regime.min_exposure_score": 40,
+   "exit.giveback_pct": 0.0,
+   "exit.chandelier_lookback": 0,
+   "entry.max_ext_atr": 0.0,
+   "entry.rs_dual_horizon": 0,
+   "exit.scale_out_r": 2.0,
+   "exit.scale_out_frac": 0.0,
+   "entry.w_prox": 0.15
+  },
+  "params_by_regime": {
+   "trend_up": {},
+   "trend_down": {},
+   "chop": {},
+   "high_vol": {}
+  },
+  "n_sembol": 251,
+  "n_endeks_satir": 1403,
+  "max_open": 5,
+  "no_trade_before": 3,
+  "derisk": "derisk_mult: full<=3%dd, lineer→0 @8%dd; eff_max_open=round(5·m)"
+ },
+ "kill1": {
+  "eff_max_open_kalici_defterde": false,
+  "eff_max_open_nereden": "motor yeniden koşuldu; max_positions_at çağrısında yakalandı",
+  "aday_n_kaynak": "tarama kancası n_sinyal (CAPSIZ) == plan_log tarih-sayımı",
+  "aday_n_candidate_log_capli": true,
+  "candidate_log_cap": 5,
+  "frame_okunamadi": 0,
+  "tekrar_tarih": [],
+  "scan_vs_plan_uyusmazlik_n": 0,
+  "scan_vs_plan_uyusmaz_ornek": [],
+  "gecerli": true
+ },
+ "betim": {
+  "n_seans_tum": 1147,
+  "dd_aktif_gt3pct_n": 734,
+  "dd_aktif_pct": 63.99,
+  "eff_max_open_lt5_n": 724,
+  "eff_max_open_lt5_pct": 63.12,
+  "eff_max_open_eq1_n": 276,
+  "eff_max_open_eq1_pct": 24.06,
+  "eff_max_open_eq0_n": 0,
+  "eff_max_open_eq0_pct": 0.0,
+  "acik_slot_le0_n": 389,
+  "acik_slot_le0_pct": 33.91,
+  "tavan_sifir_ve_rejim0_ortusme_n": 15
+ },
+ "tasnif_tum_seans": {
+  "n": 1147,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 56,
+    "pct": 4.88
+   },
+   "evren_bagladi": {
+    "n": 231,
+    "pct": 20.14
+   },
+   "isinma": {
+    "n": 3,
+    "pct": 0.26
+   },
+   "rejim_kapali": {
+    "n": 468,
+    "pct": 40.8
+   },
+   "tavan_sifir": {
+    "n": 389,
+    "pct": 33.91
+   }
+  }
+ },
+ "birincil_payda_aciklama": "kartın 3 sınıfı (tavan_sifir+evren+derisk). isinma (gösterge ısınması, bar_i<no_trade_before) ve rejim_kapali (exposure_budget=0) evren/de-risk ikilisine girmez → çıkarıldı, ama tasnif_tum_seans'ta görünür (alt-örnek değil, tam tasnif).",
+ "birincil": {
+  "n": 676,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 56,
+    "pct": 8.28
+   },
+   "evren_bagladi": {
+    "n": 231,
+    "pct": 34.17
+   },
+   "tavan_sifir": {
+    "n": 389,
+    "pct": 57.54
+   }
+  }
+ },
+ "ci95_tarih_kumeli": {
+  "tavan_sifir": {
+   "lo": 0.5081,
+   "hi": 0.6372,
+   "orta": 0.5754
+  },
+  "evren_bagladi": {
+   "lo": 0.2786,
+   "hi": 0.4127,
+   "orta": 0.3416
+  },
+  "derisk_bagladi": {
+   "lo": 0.0609,
+   "hi": 0.1078,
+   "orta": 0.0824
+  },
+  "derisk+tavan": {
+   "lo": 0.5873,
+   "hi": 0.7214,
+   "orta": 0.6584
+  },
+  "_n_ay_kume": 42
+ },
+ "ci95_capped5_variant": {
+  "tavan_sifir": {
+   "lo": 0.5081,
+   "hi": 0.6372,
+   "orta": 0.5754
+  },
+  "evren_bagladi": {
+   "lo": 0.2786,
+   "hi": 0.4127,
+   "orta": 0.3416
+  },
+  "derisk_bagladi": {
+   "lo": 0.0609,
+   "hi": 0.1078,
+   "orta": 0.0824
+  },
+  "derisk+tavan": {
+   "lo": 0.5873,
+   "hi": 0.7214,
+   "orta": 0.6584
+  },
+  "_n_ay_kume": 42
+ },
+ "capped5_aciklama": "kart aday_n kaynağını 'candidate_log' diye adlandırır AMA candidate_log backtest.py:333'te top-5 CAPLIdır → aday_n<=5 yapay tavanı evren_bagladi'yı ŞİŞİRİR. Doğru kaynak plan_log/tarama (capsiz). Bu varyant kartın literal kaynağının yanlılığını gösterir.",
+ "rejim_kirilim": {
+  "chop": {
+   "n": 77,
+   "dagilim": {
+    "derisk_bagladi": {
+     "n": 2,
+     "pct": 2.6
+    },
+    "evren_bagladi": {
+     "n": 41,
+     "pct": 53.25
+    },
+    "tavan_sifir": {
+     "n": 34,
+     "pct": 44.16
+    }
+   },
+   "baskin": "evren_bagladi"
+  },
+  "trend_up": {
+   "n": 599,
+   "dagilim": {
+    "derisk_bagladi": {
+     "n": 54,
+     "pct": 9.02
+    },
+    "evren_bagladi": {
+     "n": 190,
+     "pct": 31.72
+    },
+    "tavan_sifir": {
+     "n": 355,
+     "pct": 59.27
+    }
+   },
+   "baskin": "tavan_sifir"
+  }
+ },
+ "success_metric_okuma": {
+  "evren_ci": {
+   "lo": 0.2786,
+   "hi": 0.4127,
+   "orta": 0.3416
+  },
+  "derisk_arti_tavan_ci": {
+   "lo": 0.5873,
+   "hi": 0.7214,
+   "orta": 0.6584
+  },
+  "kural": "evren CI>%50 → FINVIZ değerli; (derisk+tavan) CI>%50 → FINVIZ boşa gider"
+ }
+}

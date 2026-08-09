@@ -52,7 +52,28 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-09T14:3x", trial_ids: [pending-EDG-022-kisit-teshisi]}
 
-status: registered   # 2026-08-09 Rol-1 — ölçüm kodu YAZILMADI, bu kart ön şart.
+status: measured   # 2026-08-09 Rol-1 — ölçüm KOŞULDU + hüküm işlendi (eşikler ölçümden ÖNCE donmuştu, DEĞİŞMEDİ).
+
+verdict:   # 2026-08-09 Rol-1 hükmü — ölçüm ajanı karta DOKUNMADI; hüküm Rol-1'in (ölçüm disiplini).
+  kill1: "GEÇERLİ — altyapı yeterli (eff_max_open motor-yeniden-koşumla; aday_n CAPSIZ plan_log==tarama; scan-plan uyuşmazlık 0)"
+  ana_hukum: >
+    de-risk+tavan BİRLİKTE %65.84 (CI 58.73–72.14, tamamı >%50) BASKIN → success_metric kuralınca
+    FINVIZ token harcaması GEREKÇESİZ. evren_bagladi %34.17 (CI 27.86–41.27, tamamı <%50) — evren
+    bağlayıcı kısıt DEĞİL. Bağlayan: tavan_sifir %57.54 (de-risk pozisyonu TÜMDEN kapatmış) +
+    derisk_bagladi %8.28. Asıl kaldıraç DE-RISK RAMPASI/eff_max_open, evren genişletme DEĞİL.
+  rejim_kosullu: >
+    KILL#3 TETİKLENDİ (sınıf rejimle TERSE dönüyor → tek-havuz hükmü tek başına yanıltıcı):
+    trend_up (n=599) tavan_sifir baskın %59.27 (de-risk bağlar) · chop (n=77) evren_bagladi baskın
+    %53.25 (evren bağlar). REJİM-KOŞULLU: genel + trend_up'ta de-risk baskın → FINVIZ gerekçesiz;
+    chop'ta evren baskın AMA chop nadir (%6.7 seans). FINVIZ genel gerekçesiz; chop-özel evren ayrı+küçük.
+  kaynak_nuansi: >
+    kart aday_n'i "candidate_log" diye adlandırdı; candidate_log backtest.py:333'te top-5 CAPLI
+    (aday_n<=5 evren_bagladi'yı ŞİŞİRİRDİ). Ölçüm doğru kaynağı (plan_log/tarama, CAPSIZ) kullandı +
+    capped5 varyantını raporladı (ikisi özdeş → cap hükmü değiştirmiyor). Kartın literal kaynak-adı
+    kusurluydu; kanon capsiz ölçüm. Rol-1 not: kart yazımımda "candidate_log" demem yanlıştı, ölçüm düzeltti.
+  artefakt: "research/olcumler/edg022_evren_kisit_2026-08-09/ (olcum.py · sonuc.json · seanslar.json); 1162,7 sn, motor YAMASIZ v3, 251 sembol, 2022-01→2026-07, 1147 seans, 42 ay-kümesi tarih-kümeli bootstrap"
+
+status_eski: registered   # 2026-08-09 Rol-1 — ölçüm kodu YAZILMADI, bu kart ön şart.
 #   WP-U keşfinin en değerli otonom kalemi: operatör-bloğu YOK, yeni bar GEREKMEZ, altyapı hazır.
 #   Bu kart FINVIZ token kararını (en büyük operatör-blok) kanıta oturtur — evren gerçekten
 #   bağlayıcı kısıt mı, yoksa de-risk rampası mı? "Önce ölç, sonra harca" disiplini. Eşikler
