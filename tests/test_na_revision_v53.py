@@ -122,7 +122,22 @@ def test_watchdog_owns_only_its_beat_and_alarm_files(sandbox_state):
                                                # meşru küçülmenin yazılı affı (2026-07-22): re-seed
                                                # gibi KASITLI yeniden kurulumları sessiz kayıptan
                                                # ayırır; gerekçesiz af geçersizdir
-                                               wd.AMNESTY_FILE}
+                                               wd.AMNESTY_FILE,
+                                               # SB-4 damgasız-yazım bekçisinin ÖNCEKİ ÖLÇÜMÜ
+                                               # (2026-08-09): izlenen belgenin (rev/updated_at)
+                                               # damgası + içerik sha256'sı. `ownership_state.json`
+                                               # ve `monotonic_state.json` ile BİREBİR aynı sınıf —
+                                               # bir dedektörün "önceki durum" tabanı; sahibi de
+                                               # okuyucusu da watchdog'dur ve kalıcı olmak ZORUNDA
+                                               # (kıyas iki poll ARASINDADIR; bellek-içi bir taban
+                                               # süreç yeniden başlayınca 2026-08-04 sınıfı bir
+                                               # yazımı sessizce yutardı).
+                                               # ÇAPRAZ REFERANS: aynı gerekçe `codelaw.
+                                               # DECLARED_SINKS["entity_damga.json"]`te yazılı —
+                                               # YASA 6 tarafı orada, SAHİPLİK tarafı burada
+                                               # kapanır; iki kapı aynı artefaktın iki ayrı
+                                               # sorusunu sorar ("kim okuyor" ve "kim yazıyor").
+                                               wd.DAMGA_FILE}
 
 
 def test_no_module_writes_another_modules_file():
