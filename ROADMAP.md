@@ -103,7 +103,7 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 | **WP-D** Veri Bütünlüğü | 🔄 aktif | karantina/bütünlük kapıları · türetilmiş artefaktlar | türetilmiş artefakt güvensiz-dönem-dışlamalı yeniden üretim · seans-içi boşluk tespiti · earnings kapsama+fail-open · `dataset.load↔bars_integrity` bağlama (operatör §3) | `adapters/data.py` | — |
 | **WP-H** Mühendislik Dayanıklılığı | 📋 aktif | sürüm kontrolü · atomik yazım · sertleştirme | H9 Kademe-B/C çağrı-noktası taşıma (~11 kapı-dışı; **`auth._write` sabit-tmp EN TEHLİKELİ**) · H3 tur-2 seccomp · LoadCredential + OCI aktivasyon (operatör §3) | `store.py` · `auth.py` · `memory.py` · `run.py` · `deploy/` | — |
 | **WP-QC** QuantConnect | 🆕 aktif | platform-içi ölçüm + LEAN yerel motor (asla arşiv-kaynağı değil) | LEAN yerel kurulum (bu makinede dotnet/docker YOK — makine bloğu, boyut L) · FREE fizibilite kuyruğu ②③④⑥⑦ · notebook koşumu + tier (operatör §3) | `research/qc_dogrulama/` | EDG-2026-021 |
-| **WP-UX** Yeniden-Tasarım | 🔴 aktif | pano yüzey/IA yeniden-tasarımı (D0-D6; D0-D6 ✅ §6) | **D3-c ALTI MODÜL** (delist-arşivi/C2-5 Massive kararına bağlı + kart ZORUNLU) · **D3-b F3-F13/F15** yüzeyleri | `web/app.js` · `api.py` | D6 çıtası = WP-P doktrini |
+| **WP-UX** Yeniden-Tasarım | 🟡 frontend~bitti | pano yüzey/IA (D0-D6 ✅ §6; **F5 ✅ v230**) | frontend temiz-yetim AÇIK yok — kalan F-kartlar: backend(F3/F4/F11/F12) · zaten-yüzeyde(F9/F10/F13) · viz(F6/F7) · okuyucu-gerekli(F8→§2, F15) · D3-c: C2-1/2/3 ✅, **C2-4**(Task-4)/**C2-5**(operatör)/6.çalışma AÇIK | `web/app.js` · `api.py` | harita: §1 WP-UX detay |
 | **WP-P** Pano/Operatör Arayüzü | 📋 aktif (P1-P10 ✅) | kontrol-odası doktrini (ISA-101/EEMUA-191/Few-Tufte) + RUNBOOK | `docs/RUNBOOK.md` **32 "prosedür henüz yazılmadı"** (GERÇEK prosedür yazımı — yüzey değil içerik) · WP-P yüzey işi WP-UX'e devredildi | `docs/RUNBOOK.md` · `ops/runbook_uret.py` | — |
 | **WP-L** Öğrenme/Ölçek Merdiveni | 📋 tetik-şartlı | meta-labeling → ML sıralama → Faz-6 BEŞ KİLİT | kodla açılabilir kilit YOK; işlem birikimi / evren genişlemesi / operatör bekler · Faz-6 INTRADAY_ARM operatörde (§3) | — | — |
 
@@ -601,6 +601,22 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   kart ZORUNLU). Özgün C1 on işi: reddedilen-karar karnesi 4.988 satır · emir yaşam-döngüsü · /api/spend
   SIFIR web çağıranı · canlı zaman çizelgesi · rollback sicili · regresyon kırılımı · denetim izi ·
   "bugün neden hiçbir şey olmadı" · çıkış-nedeni kırılımı [stop_gap 1.973R] · skor olgunlaşması.
+- **D3-b F5 ✅ İNDİ (v230, 2026-08-09) + KAPSAM YENİDEN-SINIFLANDIRMASI (WP-UX ajanı KANITLADI):** F5
+  alarm-taksonomisi (`watchdog.alarm_gunluk` YASA-6 boşluğu, F1/F2/F14 sınıfı — v192'den üretiliyor,
+  hiç okunmuyordu) indi. Nominal "12 F-kart + 6 D3-c modül" frontend dosya-sınırından (app.js, api.py YOK)
+  ÇOK büyük; kanıtlı gerçek harita:
+  - **(a) frontend-inebilir + temiz yetim veri: YALNIZ F5 ✅** (indi).
+  - **(b) BACKEND gerekli (ayrı WP, api.py — WP-UX değil):** F3 pre-flight/what-if · F4 decision-rewind ·
+    F11 outage↔return time-series-join · F12 pre-tuning (config.py yazar).
+  - **(c) ZATEN yüzeyde → çift-kaynak riski (v191'in savaştığı şey; KAPANDI say):** F9 gate/lock
+    (`gatekeeper.plans[].gate_reasons` planRowFull'da) · F10 capacity (`portfolio_heat` app.js:5289) ·
+    F13 K-penalty (`deflate` app.js:4719).
+  - **(d) viz/etkileşim (ayrı özellik):** F6 saved-queries · F7 agent-path graph (C2-2 v197 zaten indi).
+  - **(e) kanonik okuyucu gerekli (uydurmadan inemez):** F8 status-dictionary (→ §2 öneri, en iyi aday) ·
+    F15 allocation-history (per-period defter okuyucusu YOK).
+  - **D3-c modüller:** C2-1/C2-2/C2-3 ✅ DONE (v197 "D3-arka"); AÇIK: **C2-4 LEAN** (Task-4, LEAN yok) ·
+    **C2-5 delist-arşiv** (operatör Massive-kararına bağlı + kart ZORUNLU, veri yok) · 6. çalışma adayı.
+  → **WP-UX FRONTEND kısmı ESASEN BİTTİ**; kalanlar backend WP'leri / operatör-blok / viz-özelliği.
 - ~~**D4 yazı tipi** 📋~~ → **✅ İNDİ (ölçüm `f8097d0` + uygulama v201 `9cd27de`):** kazanan Recursive
   (Sans+Mono Linear, OFL, binary-ölçümle); üç yüzeyde KENDİ-BARINDIRMALI, CSP SERTLEŞTİ (Google origin
   düştü). Geist EMEKLİ (operatör kararı) uygulandı.
@@ -689,6 +705,12 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    `candidate_review_empty_parse` uyarısı) + dagit versiyonlu-state adımı (diff-göster + onaylı-kopya;
    goal/bounds git-izli ama diğer versiyonlu state için). *gerekçe: canlı vaka kökenli sessiz-ölüm/
    görünürlük boşlukları · boyut: S-M · bağımlılık: bakım penceresi · öncelik: düşük-orta.*
+
+3. **F8 pano durum-sözlüğü (WP-UX kalan F-kartlarının en iyi frontend adayı)** — dağınık `durum`
+   alanlarını tek kanonik sözlükte toplar. WP-UX ajanı (2026-08-09) F3-F15 içinden frontend-inebilir
+   TEK temiz aday olarak işaretledi (F5 indi; F3/F4/F11/F12 backend, F9/F10/F13 zaten yüzeyde, F6/F7
+   viz, F15 defter yok). ÖN ŞART: kanonik bir durum-okuyucu — yoksa dağınık alan sentezi UYDURMA riski
+   (önce okuyucu tanımı). *gerekçe: YASA-6 (durum dağınık) · boyut: M · bağımlılık: kanonik durum-okuyucu · öncelik: orta.*
 
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
