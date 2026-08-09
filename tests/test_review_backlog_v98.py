@@ -90,11 +90,25 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
     `failure_below` hükmü tanımlandığı 2026-07-14'ten beri hiçbir kod tarafından ölçülmüyordu —
     deney başarısız olsa bunu söyleyecek tek satır yoktu (watchdog.goal_failure_report). Hüküm
     kendi sınıfıdır: DATA_QUALITY "veri bozuk", MECHANISM_STALE "mekanizma üretmiyor" der; ikisi de
-    "mekanizma çalıştı, sonuç sözleşmenin başarısızlık eşiğinin altında" demez."""
+    "mekanizma çalıştı, sonuç sözleşmenin başarısızlık eşiğinin altında" demez.
+
+    NAKED_POSITION 2026-08-09 kasıtlı kapsam kararı (12 → 13, DALGA W1 / N1 jeton ayrımı, 5df1657):
+    `watchdog.check_koruma_and_alarm` (v209) korumasız-pozisyon alarmını `MIRROR_DRIFT` jetonuyla
+    basıyordu ve bunun BEDELİ o gün ölçülüp kendi docstring'ine yazılmıştı — `obs._maybe_notify`in
+    6 saatlik susturma penceresi JETON BAŞINADIR, yani gürültülü bir mutabakat gecesinde ADET
+    SAPMASI alarmları bu sev-1 alarmın TESLİMATINI bastırabiliyordu. İki olgu ayrı sınıftır: "ayna
+    kitabın söylediği adette değil" bir MUHASEBE sapması, "pozisyonun broker'da canlı stop'u yok"
+    bir SERMAYE riskidir; birincisi ikincisini susturamaz. Kapsam BÜYÜDÜ (yeni bir alarm sınıfı
+    operatöre ulaşıyor), daralmadı; teslim zinciri değişmedi — `NOTIFY_TOKENS` türetmesi jetonu
+    `obs.py`ye eklendiği an kendiliğinden kapsıyor. Bu literalin güncellenmesi o kararın kaydıdır."""
     assert obs.NOTIFY_TOKENS == {
         "ARMING_READY", "TRAIL_DESYNC", "DATA_QUALITY", "CIRCUIT_BREAKER", "MIRROR_DRIFT",
         "BROKER_REJECT", "MECHANISM_STALE", "HALT_ACTIVE", "ROLLBACK", "HEARTBEAT_STALE",
-        "AUTHORITY_CHANGE", "GOAL_FAILURE"}
+        "AUTHORITY_CHANGE", "GOAL_FAILURE",
+        # N1 (2026-08-09): korumasız pozisyon artık MIRROR_DRIFT'in susturma penceresini
+        # PAYLAŞMIYOR — gerekçe yukarıda, davranışsal çivi
+        # tests/test_dalga_w1_v216.py::test_N1_iki_alarm_ARTIK_AYNI_susturma_penceresini_paylasmaz
+        "NAKED_POSITION"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():

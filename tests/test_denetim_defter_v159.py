@@ -98,27 +98,95 @@ def test_c15_baska_sprintin_damgasi_TASINMAZ(sprint_sandbox):
     assert "n_hyp_at_start" not in st, "başka sprintin tabanı devralındı — ölçülmemiş sayı"
 
 
-def test_c15_maybe_start_tabani_sifirlanmaz_tetik_her_gece_yanmaz(sprint_sandbox, monkeypatch):
-    """ASIL SONUÇ: çocuk yazımından sonra `should_run` HAFTALIK DİSİPLİNİ korumalı.
+# --------------------------------------------------------------------------------------------
+# TAKVİM BOMBASI SÖKÜLDÜ (2026-08-09) — ÖLÇÜLEN KÖK, İKİ KATMANLI
+#
+# Aşağıdaki kadans testi 2026-08-08'e kadar yeşildi ve 09'da KOD DEĞİŞMEDEN kırmızıya döndü.
+# Sebep bir regresyon değil, testin GERÇEK DUVAR SAATİNE bağlı olmasıydı:
+#
+#   (1) `_child_payload` `started_at`i SABİT bir takvim ânından alıyor ("2026-08-02T00:11:00Z") ve
+#       çocuk yazımı ebeveynin `started_at`ini EZİYOR. Testin kendi `simdi = dt.datetime.now(...)`
+#       yazımı bu yüzden ÖLÜYDÜ — docstring "sprint BUGÜN koştu (gun=0)" diyordu ama fiilen koşan
+#       kurulum hiçbir zaman gun=0 olmadı. İki gerçek bir aradaydı ve kimse ikisini kıyaslamadı.
+#   (2) `sprint.should_run` `gun` bacağını ENJEKTE EDİLEN `now`dan DEĞİL, `dt.datetime.now(utc)`
+#       ile gerçek saatten hesaplıyor (ÖLÇÜM: sprint.py:400). `now=` parametresi YALNIZ `saat`/
+#       `pencere` bacağını taşır (sprint.py:405, 415). Yani testin tarihi çivilediği SANILAN yer
+#       tarihi hiç çivilemiyordu.
+#
+# İkisi birleşince `gun = bugün − 2026-08-02` her gün BİR ARTIYOR: 08-08'de 6 (< 7 → tetik_yok,
+# yeşil), 08-09'da 7 (>= SPRINT_STALE_DAYS → `haftalik_taban` MEŞRU yandı, kırmızı). Test bir
+# invariant değil, BİR HAFTALIK GERİ SAYIM ölçüyordu.
+#
+# ÇÖZÜM — MESAFEYİ ÇİVİLE, TAKVİMİ DEĞİL. Üretim kodu bu turda dokunulmaz, ve `now=` bacağı (2)
+# yüzünden `gun`ü zaten taşıyamıyor. Küresel bir saat şimi (`dt.datetime` yamalamak) tek seçenek
+# DEĞİL ve daha pahalı olurdu: stdlib'i test süresince mutasyona uğratır, `should_run`un çağırdığı
+# her şey (auto_config, status) o sahte saati görürdü. Onun yerine fikstür `started_at`i GERÇEK
+# ŞİMDİYE GÖRE geriye alır. Kadansın eşiği (`SPRINT_STALE_DAYS`) zaten bir TAKVİM TARİHİ değil bir
+# MESAFEDİR; sınanan şeyi doğrudan çivilemek, etrafındaki saati taklit etmekten dürüsttür.
+# --------------------------------------------------------------------------------------------
+def _taban(gecen_gun: int) -> str:
+    """`started_at` damgası: ŞİMDİDEN tam `gecen_gun` gün geride.
 
-    Kurulum canlı ölçümün birebir kopyasıdır: 41 hipotez, damga 41, sprint BUGÜN koştu (gun=0),
-    saat gece penceresinde. Kusurlu kodda `taze = 41 − 0 = 41 ≥ 5` → "taze_aday_birikimi" ile
-    tetik yanardı."""
+    YARIM GÜN YASTIK BİLEREK: `should_run` farkı `.days` ile TABANA YUVARLAR, yani `gecen_gun`
+    günlük düz bir fark testin kendi koşum süresi kadar (ε) fazla olur ve `.days` yine `gecen_gun`
+    verir — ama yastıksız bir kurulum, "ε neden sorun değil" sorusunu her okuyucuya yeniden
+    sordurur. 12 saatlik yastıkla hüküm ε'a hiç bağlı olmaz: 6g12s → `.days == 6`, 7g12s → 7."""
+    an = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=gecen_gun, hours=12)
+    return an.isoformat(timespec="seconds")
+
+
+def _c15_kadans_karari(sprint_sandbox, monkeypatch, gecen_gun: int) -> dict:
+    """Canlı ölçümün birebir kopyası, TEK değişkeni son sprintin üstünden geçen gün sayısı:
+    41 hipotez, damga 41, saat gece penceresinde, çocuk yazımı yapılmış.
+
+    `started_at` İKİ KEZ yazılır ve ikisi de gerekli: ebeveyn kaydına (should_run'ın okuduğu yer)
+    ve çocuk payload'ına (yazım ebeveyninkini ezer — kusurun ta kendisi). Yalnız birini vermek,
+    sökülen bombanın diğer yarısını yerinde bırakırdı."""
     from meridian import hermes
     monkeypatch.setattr(hermes, "SEARCH_PROGRESS", {}, raising=False)
     (sprint_sandbox / "hypotheses.jsonl").write_text(
         "".join(json.dumps({"id": f"H{i:05d}"}) + "\n" for i in range(41)))
-    simdi = dt.datetime.now(dt.timezone.utc)
-    store.write_json(sprint.STATUS_FILE, {**PARENT_STAMP,
-                                          "started_at": simdi.isoformat(timespec="seconds")})
+    taban = _taban(gecen_gun)
+    store.write_json(sprint.STATUS_FILE, {**PARENT_STAMP, "started_at": taban})
 
     # ÇOCUK YAZIMI — kusurun tetiklendiği an
-    sprint_run._write_live_status(_child_payload(phase="baseline", progress=8, total=520, n_v1=0))
+    sprint_run._write_live_status(_child_payload(phase="baseline", progress=8, total=520,
+                                                 n_v1=0, started_at=taban))
 
-    karar = sprint.should_run(now=dt.datetime(2026, 8, 2, 23, 30))   # pencere İÇİNDE (22→06)
+    # `now` YALNIZ SAATİ taşır (sprint.py:405/415) — 23:00 pencere İÇİNDE (22→06). Gün bacağını
+    # taşımadığı ölçüldü; tarih burada bir çivi DEĞİLDİR ve öyleymiş gibi okunmamalı.
+    return sprint.should_run(now=dt.datetime(2026, 8, 2, 23, 30))
+
+
+def test_c15_maybe_start_tabani_sifirlanmaz_tetik_her_gece_yanmaz(sprint_sandbox, monkeypatch):
+    """ASIL SONUÇ: çocuk yazımından sonra `should_run` HAFTALIK DİSİPLİNİ korumalı.
+
+    Kusurlu kodda `taze = 41 − 0 = 41 ≥ 5` → haftalık taban dolmadan "taze_aday_birikimi" ile
+    tetik yanardı. Taban 6 GÜN: eşiğin (7) hemen ALTINDA, yani tetiği tutan tek şey damganın
+    hayatta kalması."""
+    karar = _c15_kadans_karari(sprint_sandbox, monkeypatch, gecen_gun=6)
+    assert karar["gecen_gun"] == 6, f"taban kaymış — takvim bağımlılığı geri gelmiş olabilir: {karar}"
     assert karar["taze_hipotez"] == 0, f"taban sıfırlandı: {karar}"
     assert karar["kos"] is False, f"tetik yandı: {karar}"
     assert karar["sebep"].startswith("tetik_yok"), karar["sebep"]
+
+
+def test_c15_haftalik_taban_7_GUNDE_yanar_ama_sebebi_TAZE_BIRIKIM_DEGIL(sprint_sandbox, monkeypatch):
+    """ÇİVİNİN İKİNCİ YÖNÜ — bomba sınıfı bir daha kurulmasın diye.
+
+    Tek yönlü bir çivi ("kos False olsun") kadansı BÜSBÜTÜN ölü bir hâle karşı kör kalırdı: damga
+    korumasının haftalık tetiği de susturması aynı testi yeşil bırakırdı. Burası tetiğin GERÇEKTEN
+    yandığını ölçer ve asıl ayrımı yapar: 7. günde `kos` True olmalı ama sebebi `haftalik_taban`
+    OLMALI, `taze_aday_birikimi` OLMAMALI — C15 kusuru tam olarak ikincisini üretiyordu.
+
+    `taze_hipotez == 0` burada da çivilidir ve asıl kanıt odur: tetik yandığı hâlde taban HÂLÂ 41
+    okunuyor, yani sprint meşru bir haftalık kadansla başlıyor, sıfırlanmış bir sayaçla değil."""
+    karar = _c15_kadans_karari(sprint_sandbox, monkeypatch, gecen_gun=7)
+    assert karar["gecen_gun"] == 7, f"taban kaymış: {karar}"
+    assert karar["taze_hipotez"] == 0, f"damga düştü — tetik doğru sebeple yanmıyor: {karar}"
+    assert karar["kos"] is True, f"haftalık taban dolmuşken kadans susuyor: {karar}"
+    assert karar["sebep"] == "haftalik_taban", \
+        f"tetik yandı ama YANLIŞ sebeple — C15 kusurunun imzası budur: {karar['sebep']}"
 
 
 # ==================================================================================================

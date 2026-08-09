@@ -6,6 +6,7 @@ Temizliğin asıl amacı bir SAYIM değil DÜRÜSTLÜK: zincirde durup hiç koş
 
 Bu dosya uygulamanın geri dönmediğini kanıtlar:
   C1 arşiv gerçekten arşiv — klasör `skills/_emekli/` altında, canlı yolda değil, SİLİNMEMİŞ
+     (C1c AYRI SINIF: `HAYALET` — hiç skill olmamış boş/izsiz dizin; onun YOKLUĞU beklenir)
   C2 kayıt dürüstlüğü — emekli/birleştirilen kayıt kapalı, zincirsiz, gerekçeli
   C3 anahtar-kapısı emekliyi DİRİLTMEZ — `reconcile_enablement` `retired` kaydı atlar
   C4 zincir dürüstlüğü — arşivlenen ad hiçbir PIPELINES zincirinde yok; zincirdeki her ad canlı
@@ -36,11 +37,30 @@ RETIRED = (
     "cot-contrarian-detector", "dividend-growth-pullback-screener", "downtrend-duration-analyzer",
     "edge-signal-aggregator", "kanchi-dividend-review-monitor", "kanchi-dividend-sop",
     "kanchi-dividend-us-tax-accounting", "news-reaction-failure-analyzer", "options-strategy-advisor",
-    "pair-trade-screener", "scenario-analyzer", "sector-analyst", "shadow", "skill-designer",
+    "pair-trade-screener", "scenario-analyzer", "sector-analyst", "skill-designer",
     "skill-idea-miner", "skill-integration-tester", "stanley-druckenmiller-investment",
     "stockbee-20pct-study", "technical-analyst", "trader-memory-core", "us-stock-analysis",
     "value-dividend-screener",
 )
+# --- HAYALET: ARŞİVLENMİŞ SKILL DEĞİL, ARŞİVDE DURAN BOŞ DİZİN (2026-08-09) ---------------------
+# `shadow` bu listede 2026-07-30'dan beri duruyordu ve BAŞTAN BERİ yanlış yerdeydi. Ölçüm
+# (W3 envanter turu, `skills.envanter()` + docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §245/§405):
+# dizin BOŞTU (SKILL.md yok), kayıt defterinde KARŞILIĞI YOKTU ve GİT-İZSİZDİ — yani hiçbir
+# zaman bir skill olmadı, arşivlenmiş de olamazdı. Zaten aşağıdaki C2 onu tek başına ayrı bir
+# dala almak zorunda kalmıştı ("kayıt girdisi uydurulmamalı"): manifest, kendi istisnasıyla
+# kusuru ilan ediyordu ama sınıfı düzeltmiyordu.
+#
+# GİT-İZSİZLİĞİN BEDELİ ÖDENDİ. MERIDIAN_ENGINEERING_LOG.md:378 bunu bir bulgu olarak kayda
+# geçmişti: "BOŞ ve git-izsiz dizin, yalnız Mac diskinde; 'taşındı-silinmedi' güvencesi git'ten
+# yeniden üretilemiyor". 2026-08-09'da dizin diskten kayboldu ve git'te izi olmadığı için
+# NEYİN sildiği kanıtlanamaz — tam da o notun uyardığı hâl. Mekanizma ispatlanamayacağı için
+# burada mekanizmaya değil ÖLÇÜLEN GERÇEĞE hükmedilir.
+#
+# SINIF: hayaletin VARLIĞI değil YOKLUĞU beklenir. Girdi sessizce silinmiyor — geri gelirse
+# haber olsun diye kendi çivisiyle duruyor (aşağıda `test_c1c_hayalet_...`). Bu aynı zamanda
+# 38↔37↔36 üçlemesinin kaynağıydı: `ls` 38 (README dâhil), dizin sayımı 37 (hayalet dâhil),
+# gerçek arşiv 36. Hayalet gidince üçleme 37↔36↔36'ya indi ve iki payda örtüştü.
+HAYALET = ("shadow",)
 # kaynak → çekirdek sezgisinin katlandığı hedef (kayıt defterindeki `merged_into` değeri).
 # 14'ü canlı bir skill; breakout-trade-planner'ın hedefi bir BELGE, çünkü doğal hedefi
 # (position-sizer) PROTECTED beşlisinde ve bu turda korumalı dosyalara dokunulmadı.
@@ -98,13 +118,45 @@ def test_c1b_archive_has_an_index_and_live_count_matches():
         assert (SKILLS_DIR / d / "SKILL.md").exists(), f"{d} klasöründe SKILL.md yok"
 
 
+@pytest.mark.parametrize("name", sorted(HAYALET))
+def test_c1c_hayalet_arsivde_YOKTUR_ve_skill_SAYILMAZ(name):
+    """HAYALET ÇİVİSİ — C1'in tersi: burada YOKLUK beklenir, varlık değil.
+
+    C1 "taşındı, silinmedi" der ve bu 36 gerçek arşiv kaydı için DOĞRUDUR. `shadow` o güvencenin
+    kapsamına hiç girmiyordu: taşınacak bir skill yoktu — SKILL.md'siz, kayıtsız, git-izsiz BOŞ
+    bir dizindi (ölçüm: `skills.envanter()` fark kovaları `arsiv_dizin_ama_kayitsiz` +
+    `arsiv_dizin_skill_md_yok`; docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §245).
+
+    NEDEN GİRDİ SİLİNMİYOR DA ÇİVİLENİYOR. İki ayrı şeyi birden korumak gerekiyor:
+      (1) hayalet bir SKILL SAYILMAMALI — kayıt defterine girdi UYDURULMAMALI (eski C2 dalının
+          söylediği şey buydu, artık burada ve tek yerde),
+      (2) hayalet GERİ GELİRSE haber olmalı — izsiz boş bir dizin arşivde yeniden belirirse
+          38↔37↔36 belirsizliği de onunla birlikte geri gelir. Girdiyi sessizce listeden silmek,
+          o belirsizliğin bir daha sessizce doğmasına izin vermekti.
+    Bu test kırmızıya dönerse yapılacak şey tartışmak değil ölçmek: dizin boş ve izsizse
+    `rmdir`; İÇİNDE bir şey varsa o zaman gerçek bir skill doğmuş demektir ve `RETIRED`/`MERGED`
+    tablosuna GEREKÇESİYLE yazılır."""
+    yol = ARCHIVE / name
+    assert not yol.exists(), (
+        f"hayalet geri geldi: {yol} — boş/izsizse `rmdir` ile temizlenmeli, doluysa gerçek bir "
+        f"skill olarak RETIRED/MERGED tablosuna gerekçesiyle yazılmalı "
+        f"(içerik: {sorted(p.name for p in yol.iterdir()) if yol.is_dir() else 'dizin değil'})")
+    assert not (SKILLS_DIR / name).exists(), f"{name} canlı skill yolunda belirdi"
+    assert name not in live_registry(), f"{name} kayıt defterine girdi — hayalete kayıt uydurulmaz"
+    # Sızıntı korumaları: `ARCHIVED`dan çıktığı için oradaki toplu sınamalar artık onu görmüyor;
+    # aynı güvenceler burada ADIYLA sürdürülür (kapsam daralmasın diye).
+    assert name not in {n for chain in sk.PIPELINES.values() for n in chain}, \
+        f"{name} bir boru hattı zincirinde — hayalet zincire giremez"
+    assert name not in {c["name"] for c in sk.catalog()}, f"{name} katalog taramasına girdi"
+
+
 # ---------- C2: kayıt dürüstlüğü ----------
 def test_c2_archived_registry_entries_are_disabled_unchained_and_reasoned():
     reg = live_registry()
     for name in sorted(ARCHIVED):
-        if name == "shadow":
-            assert name not in reg, "shadow boş klasör artığıydı; kayıt girdisi uydurulmamalı"
-            continue
+        # `shadow` istisnası KALDIRILDI: artık `HAYALET` sınıfında ve `ARCHIVED`da değil, yani
+        # burada bir dal gerekmiyor. İstisnayı bırakmak ölü bir muafiyet olurdu (bu deponun
+        # "envanter ÇÜRÜMESİN" kuralı); hükmü `test_c1c_hayalet_...` veriyor.
         info = reg[name]                                   # kayıt SİLİNMEZ: dürüst envanter + geri dönüş
         assert info.get("retired") is True, f"{name}: retired damgası yok"
         assert info.get("retired_folder") == f"skills/_emekli/{name}"
