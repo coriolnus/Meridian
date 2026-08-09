@@ -294,6 +294,46 @@ CONTRACTS: dict[str, Contract] = {
         note="4b GÖLGE defteri — emir yolu BİLEREK yok. `gate_inputs_as_of` zorunlu: kapı "
              "girdilerinin hangi ana ait olduğu yazılmazsa 'look-ahead yok' iddiası "
              "DOĞRULANAMAZ (bugüne kadar repo genelinde tek geçtiği yer yazıldığı satırdı)"),
+    # 4B'NİN İKİNCİ KOLU (kart EXE-2026-003, v217/60181a1) — DOĞDUĞU DALGADA DEĞİL, BİR TUR SONRA
+    # sözleşmeye giriyor ve bu bir kayıttır: yukarıdaki iki defter için yazılan "sözleşmesiz defter
+    # deseni üçüncü kez açılmasın" cümlesi, üçüncü defterde bir tur boyunca AÇIK KALDI. Sınıf
+    # kapanmıyor, sayacı ilerliyor: yeni defter doğduğu commit'te buraya da satır ister.
+    #
+    # ALANLAR DİSKTEN DEĞİL YAZARDAN ÖLÇÜLDÜ (defter henüz 0 satır; UYDURMA YASAĞI): satırı
+    # `intraday_shadow._satir()` (intraday_shadow.py:384-408) kurar, `intraday_cycle` (intraday_
+    # cycle.py:256) diske yazar. Ölçülen tam anahtar kümesi silahli kolun ALTIN SATIRIYLA
+    # (26 anahtar, test_golge_planli_kol_v217.ALTIN_ANAHTARLAR) BİREBİR aynıdır, ARTI tek fark:
+    # `kol` (intraday_shadow.py:411). Tek gövde, tek şema.
+    #
+    # `kol` NEDEN ZORUNLU: bu defterin varlık sebebi nüfus ayrımıdır (silahlanmamış GO/REVIEW
+    # planları). Etiket düşerse iki kol tek havuzda okunabilir hâle gelir — kartın kill#4'ünün
+    # (Faz-5 kilidini "ölçüldü"den geri alan eşleşmeme oranı) tam olarak kaçındığı karışım.
+    # Silahli kolun satırına ise `kol` EKLENMEZ (kill#3: şemasında fark → geri al) ve bu yüzden
+    # alan YALNIZ bu sözleşmede zorunludur, kardeşinde değil.
+    #
+    # ÜÇ DAMGA + `gate_inputs_as_of` kardeş sözleşmeyle AYNI GEREKÇEYLE zorunludur: look-ahead
+    # denetimini `watchdog.intraday_stamp_report()` yapar ve bu defter onun taradığı
+    # `INTRADAY_STAMP_LEDGERS` kümesindedir (watchdog.py:1567-1568).
+    #
+    # `consumers` ÖLÇÜLDÜ, W2'nin önerisinden İKİ NOKTADA AYRIŞTI: (a) `watchdog` EKLENDİ — damga
+    # denetimi defteri gerçekten okuyor (watchdog.py:1582); (b) `api` YAZILMADI — pano yolu
+    # (api.py:3475) YALNIZ silahli defteri okur, planli kol henüz uca çıkmıyor. Belgeleme alanı
+    # olması onu bir dilek listesine çevirmez: yazılmayan tüketici, YASA-6 borcunun kaydıdır.
+    "intraday_shadow_planli_orders.jsonl": Contract(
+        required=("plan_id", "ticker", "date", "status", "kol", "sim_fill", "decision_as_of",
+                  "bar_t", "close_ts", "gate_inputs_as_of"),
+        # YAZAR `intraday_shadow.py` DEĞİLDİR ve bu bilinçlidir: o modülün TEK lağımı `ORDERS_FILE`
+        # olarak çivilenmiştir (test_intraday_shadow_v105::test_statik_hicbir_emir_yolu_yok) —
+        # silahli kolun bayt-değişmezliğinin bir parçası. Hesap gölge katmanında, yazım burada.
+        writers=("intraday_cycle.py",),
+        key="plan_id", key_format=PLAN_ID_RE,
+        consumers=("intraday_shadow", "watchdog"),
+        note="4b GÖLGENİN PLANLI KOLU — silahlanmamış GO/REVIEW planının tetiği kesildiğinde "
+             "'ne olurdu'. SIFIR YETKİ, sıfır ek pazar riski. AYRI DEFTER OLMASI ÖLÇÜLMÜŞ BİR "
+             "ZORUNLULUKTUR: `faz5_cikis` ve `vs_eod` gölge defterini kol süzgeci OLMADAN okur ve "
+             "silahlanmamış plan iç EOD defterinde hiç dolmaz — aynı deftere yazılsalardı hepsi "
+             "`eod_yok`a düşer, eşleşmeme %20 tavanını aşar ve Faz-5 kilidi 'ölçüldü'den "
+             "'ölçülemedi'ye GERİ ALINIRDI (kart EXE-2026-003 kill#4)"),
 
     # AJAN TELEMETRİSİ + HAM İZ (D3 modül 1/2, 2026-08-07). İki defter DOĞUŞTA sözleşmeye giriyor:
     # 2026-07-21'in yedi hatasının altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
@@ -370,18 +410,73 @@ def _src_stamp(root: str) -> tuple:
     return (len(ps), max((q.stat().st_mtime_ns for q in ps), default=0))
 
 
+def _modul_sabitleri(tree: ast.Module) -> dict[str, str]:
+    """Modül SEVİYESİNDEKİ dizgi sabitleri (`AD = "dosya.jsonl"`). İki biçim: düz atama ve
+    tür-notlu atama. Gövde içi atamalar BİLEREK dışarıda — koşullu/döngü içinde kurulan bir ad
+    statik olarak tek bir dosyaya çözülemez ve "çözdüm" demek uydurma olurdu."""
+    consts: dict[str, str] = {}
+    for n in tree.body:
+        if isinstance(n, ast.Assign) and isinstance(n.value, ast.Constant) \
+                and isinstance(n.value.value, str):
+            for t in n.targets:
+                if isinstance(t, ast.Name):
+                    consts[t.id] = n.value.value
+        elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) \
+                and isinstance(n.value, ast.Constant) and isinstance(n.value.value, str):
+            consts[n.target.id] = n.value.value
+    return consts
+
+
+def _kardes_modul_baglari(tree: ast.Module) -> dict[str, str]:
+    """Yerel ad → KARDEŞ MODÜL adı. Yalnız paket-içi biçimler: `from . import x`,
+    `from . import x as y`, `from .x import ...` (sonuncusu ad bağlamaz, atlanır).
+
+    Takma ad (`as`) ONURLANDIRILIR: `f.stem`e bakıp "adı modül adıdır" varsaymak, aynı adı taşıyan
+    bir YEREL değişkeni modül sanma riskini açardı — çözümleyicinin sessizce yanlış dosyaya
+    bağlanması, hiç çözememesinden pahalıdır (yanlış bir yazar beyanı doğru sanılır)."""
+    bag: dict[str, str] = {}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.ImportFrom) and n.level == 1 and n.module is None:
+            for al in n.names:
+                bag[al.asname or al.name] = al.name
+    return bag
+
+
 def declared_writers(root: str = "meridian") -> dict[str, set]:
     """Statik tarama: hangi modül hangi deftere YAZIYOR (sabit adları da çözer).
 
     ÖNBELLEKLİ (2026-07-28): tüm kaynağı ast ile ayrıştırır ve /api/diagnostics'ten her
     Operasyon açılışında iki kez çağrılıyordu (ölçüm: 0,87 sn). Sonuç yalnız kaynağa bağlı;
-    damga kaynak mtime'ıdır, kod değişince önbellek kendiliğinden düşer."""
+    damga kaynak mtime'ıdır, kod değişince önbellek kendiliğinden düşer.
+
+    KARDEŞ-MODÜL SABİTİ DE ÇÖZÜLÜR (W2 devri, 2026-08-09). Önceki tarayıcı yalnız LİTERAL ve
+    AYNI DOSYADAKİ sabiti çözüyordu; `store.append_jsonl(intraday_shadow.PLANLI_ORDERS_FILE, …)`
+    biçimi (defterin adı bir modülde, yazımı başka bir modülde) taramadan sessizce düşüyordu.
+    Bu bir kolaylık eklemesi değil, sözleşmenin ÇALIŞMA ŞARTIDIR: o biçim çözülmezse `writers`
+    beyanı doğrulanamaz — "beyan edilip yazmayan" yanlış-pozitifi doğar ve kaçınmanın tek yolu
+    beyanı YANLIŞ yazmak olurdu (defteri yazmayan modülü yazar ilan etmek). Yani tarayıcı körken
+    sözleşme, kendisini susturmak için yalan söylemeye zorluyordu.
+
+    KAPSAM ÖLÇÜLDÜ, GENİŞLEMEDİ: ağaçta bu biçimin tam 4 örneği var ve üçü (`notify.ACK_FILE`,
+    `health.REJECT_ACK_FILE`, `data.INTEGRITY_FILE`) CONTRACTS'ta olmayan defterlere gidiyor —
+    yani ekleme HİÇBİR mevcut sözleşmenin yazar kümesini değiştirmedi (ölçüm: yeni tarayıcı ile
+    eski tarayıcının CONTRACTS kesişimi birebir aynı). İkinci düzey (`a.b.C`) BİLEREK çözülmez:
+    paket-içi kardeş bağı tek adımlıktır, zincir çözmek "nereye kadar" sorusunu açardı.
+
+    İKİ VARSAYIM, İKİSİ DE ÖLÇÜLDÜ: (1) sabit tablosu modül DOSYA ADIYLA anahtarlanır ve ağaçta
+    `__init__.py` dışında yinelenen dosya adı YOKTUR (yinelense, iki farklı alt paketin aynı adlı
+    sabiti karışırdı); (2) maliyet — soğuk tarama 0,625 sn (ölçüm 2026-08-09; ikinci ast.walk
+    içeri-import'ları da görsün diye eklendi, `tree.body` taraması onları kaçırırdı), sıcak yol
+    önbellekten ~1 ms. Önbellek damgası kaynak mtime'ı olduğu için ölçüm yalnız kod değişince
+    yeniden ödenir."""
     _key = (root, _src_stamp(root))
     _hit = _WRITERS_CACHE.get(_key)
     if _hit is not None:
         return {k: set(v) for k, v in _hit.items()}   # çağıran set'leri mutasyona uğratabilir
 
-    out: dict[str, set] = {}
+    # İKİ GEÇİŞ: kardeş modülün sabitini okuyabilmek için önce TÜM modüllerin sabit tablosu.
+    agac: dict[pathlib.Path, ast.Module] = {}
+    sabitler: dict[str, dict[str, str]] = {}
     for f in pathlib.Path(root).rglob("*.py"):
         try:
             tree = ast.parse(f.read_text())
@@ -391,22 +486,25 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
             # kaydedilir ve report() tarafından dışarı verilir.
             UNPARSED[f.name] = f"{type(e).__name__}: {e}"
             continue
-        consts = {}
-        for n in tree.body:
-            if isinstance(n, ast.Assign) and isinstance(n.value, ast.Constant) \
-                    and isinstance(n.value.value, str):
-                for t in n.targets:
-                    if isinstance(t, ast.Name):
-                        consts[t.id] = n.value.value
-            elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) \
-                    and isinstance(n.value, ast.Constant) and isinstance(n.value.value, str):
-                consts[n.target.id] = n.value.value
+        agac[f] = tree
+        sabitler[f.stem] = _modul_sabitleri(tree)
+
+    out: dict[str, set] = {}
+    for f, tree in agac.items():
+        consts = sabitler[f.stem]
+        moduller = _kardes_modul_baglari(tree)
         for n in ast.walk(tree):
             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) \
                     and n.func.attr in _WRITE_CALLS and n.args:
                 a = n.args[0]
-                name = (a.value if isinstance(a, ast.Constant) and isinstance(a.value, str)
-                        else consts.get(a.id) if isinstance(a, ast.Name) else None)
+                if isinstance(a, ast.Constant) and isinstance(a.value, str):
+                    name = a.value
+                elif isinstance(a, ast.Name):
+                    name = consts.get(a.id)
+                elif isinstance(a, ast.Attribute) and isinstance(a.value, ast.Name):
+                    name = sabitler.get(moduller.get(a.value.id, ""), {}).get(a.attr)
+                else:
+                    name = None
                 if name in CONTRACTS:
                     out.setdefault(name, set()).add(f.name)
     _WRITERS_CACHE.clear()

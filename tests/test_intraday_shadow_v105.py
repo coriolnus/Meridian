@@ -300,9 +300,24 @@ def test_kanca_intraday_cycle_icinde_KABLOLU():
     src = inspect.getsource(intraday_cycle.IntradayConsumer._handle_symbol)
     assert "intraday_shadow.record" in src, "tetik-geçişinde gölge çağrılmıyor"
     # SÖZLEŞME SIKILAŞTI (sadeleştirme turu, 2026-07-30): 4a gözlemi GÜNÜN TÜM PLANLARINA açıldı,
-    # gölge ise BİLEREK yalnız SİLAHLI planda çalışır. Gerekçe ölçümün geçerliliğidir: silahlanmamış
-    # bir plan EOD'de hiç dolmaz, o yüzden her gölge satırı `vs_eod`ta `n_unpaired`e düşer ve
-    # "gölge-vs-EOD friksiyon farkı" ölçümünü sulandırırdı. Kilit iki koşulu birlikte arar.
+    # `intraday_shadow.record` ise BİLEREK yalnız SİLAHLI planda çağrılır. Gerekçe ölçümün
+    # geçerliliğidir: silahlanmamış bir plan EOD'de hiç dolmaz, o yüzden onun satırı `vs_eod`ta
+    # `n_unpaired`e düşer ve "gölge-vs-EOD friksiyon farkı" ölçümünü sulandırırdı.
+    #
+    # METİN TAZELENDİ (v219 devri, 2026-08-09) — ÖLÇÜLEN GERÇEK ARTIK İKİ KOLLU. Eski hâli "gölge
+    # yalnız silahlı planda ÇALIŞIR" diyordu; v217'den (kart EXE-2026-003, 60181a1) beri bu cümle
+    # KATMAN için yanlış, bu ASSERT için doğru. Ayrımı yapan şey defterdir:
+    #   * SİLAHLI KOL — `if fired and is_armed_plan:` → `intraday_shadow.record` →
+    #     `intraday_shadow_orders.jsonl`. Aşağıdaki çivi TAM OLARAK bunu tutar ve tutmaya devam
+    #     eder; `vs_eod` ile `faz5_cikis` YALNIZ bu defteri okur.
+    #   * PLANLI KOL — `elif fired and plan is not None:` → `intraday_shadow.planli_satir` →
+    #     AYRI defter (`intraday_shadow_planli_orders.jsonl`). Yukarıdaki 2026-07-30 gerekçesi
+    #     KALKMADI, ÇÖZÜLDÜ: ayrı defter olduğu için silahli kolun nüfusuna tek satır bile
+    #     karışmıyor, yani sulandırma riski kaynağında yok.
+    # Bu testin kapsamı DEĞİŞMEDİ ve genişletilmedi: silahli kolun kablosunu çivler. Planli kolun
+    # kendi çivileri `tests/test_golge_planli_kol_v217.py`dedir (altın satır + ayrık defter +
+    # kill#4 kirlenmezliği); bu dosyanın onlara İKİNCİ bir kopyasını yazması, iki çivinin zamanla
+    # ayrışması demek olurdu.
     assert "if fired and is_armed_plan:" in src, \
         "gölge yalnız tetik KESİLDİĞİNDE ve SİLAHLI planda çağrılmalı"
 

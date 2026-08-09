@@ -462,6 +462,47 @@ def test_canli_agacta_hicbir_kayit_curuk_degil():
 # GERİLEME YOK — YASA-6 GEVŞEMEDİ
 # ---------------------------------------------------------------------------
 
+# MUAFİYET TABANI — SAYI-PIN'İN HALEFİ (v219'da BEYANLI kuruldu, 2026-08-09).
+#
+# ÖNCESİ `len(DECLARED_SINKS) == 36` idi ve o pin YANLIŞ ŞEYİ ölçüyordu. Bir sayı iki zıt olayı
+# aynı kırmızıya katlar: (a) yeni bir muafiyet AÇILDI — tartışılması gereken şey, (b) bir muafiyet
+# KAPANDI (artefakta gerçek dış okuyucu geldi) — kutlanması gereken şey. W1 turu (a)'yı yaptı ve
+# pin, meşru bir beyan yüzünden kırmızıya döndü: bakım maliyeti tam da doğru davranışa biniyordu.
+# Daha kötüsü, sayı EŞLENİK bir değişimi (bir muafiyet kapanırken başka biri açılırsa) HİÇ
+# görmezdi — 36 = 36 kalır, liste sessizce başkalaşırdı.
+#
+# HALEF: adlandırılmış TABAN + tek yönlü kıyas. `SINK_TABANI - DECLARED_SINKS` boş olmalıdır, yani
+# TABANDAN EKSİLEN her ad bir GERİLEMEDİR ve adıyla rapor edilir. EKLEME ihlal DEĞİLDİR (yeni
+# mekanizma yeni lağım getirebilir) ama sessiz de değildir: eklenen ad bu listede DURMADIĞI sürece
+# taban ile kod arasındaki fark testin hata mesajında değil, bu satırın DÜZENLENMEMİŞ olmasında
+# görünür. v198 `KART_TABANI` deseninin ta kendisi: "değiştirmek serbest, ama bu satırı düzenleyerek".
+#
+# EKLEMENİN İKİNCİ KAPISI BAŞKA BİR TESTTEDİR ve gevşemedi: `test_codelaw_v59.
+# test_her_beyanin_turkce_bir_gerekcesi_var` her muafiyetten >=30 karakterlik Türkçe bir gerekçe
+# ister; `test_beyan_edilen_lagimlarin_hepsi_hala_lagim` de bayat muafiyeti (`stale_sinks`) düşürür.
+# Yani "bedava muafiyet" yolu bu değişiklikle AÇILMIYOR — kapı yerinde, ölçüsü düzeldi.
+#
+# v219'DA BEYANLI GÜNCELLENDİ (2026-08-09) — TEK yeni muafiyet, ölçülen 36 → 37:
+#   +1 `entity_damga.json` (W1/SB-4, 5df1657) — bayat-sermaye bekçisinin "kitap `store` kapısı
+#      DIŞINDAN değişti" damgası. Okuyucusu yazarla AYNI modüldedir (dedektör kendi önceki
+#      ölçümünü okur), o yüzden `unread` tetiklenir ve muafiyet beyanı ŞART.
+# W3'ün `skill_gorusleri.jsonl` defteri BU LİSTEYE GİRMEDİ ve girmemeliydi: ÖLÇÜLDÜ, dış okuyucusu
+# VAR (`api.py:2548`; artifact_graph `unread: False` diyor). Muafiyet listesi bir kaçış yoludur ve
+# kapatılabilen yerde kullanılmaz (test_ajan_telemetri_v197'nin aynı hükmü).
+SINK_TABANI = frozenset({
+    "agent_tooluse.json", "agent_traces.jsonl", "approvals.jsonl", "auth.json",
+    "bar_source_seams.json", "bars_fingerprint.json", "bars_source.json", "brain_cooldown.json",
+    "composite_budget.json", "entity_damga.json", "fmp_usage.json", "hypothesis_id_hwm.json",
+    "inc_cache.json", "insider_signals.json", "insider_trades.json", "integrity_alarmed.json",
+    "integrity_audit_log.json", "massive_crosscheck.json", "massive_grouped_last.json",
+    "massive_verify.json", "monotonic_amnesty.json", "notify_sent.json", "oos_erosion.json",
+    "ownership_state.json", "pool_exhausted_seen.json", "probe_cache.json", "regime_trigger.json",
+    "scan_debt.json", "short_interest.json", "short_interest_float.json", "sieve.json",
+    "skill_recommendations.jsonl", "skill_revisions.json", "sp500_constituents.json",
+    "sprint_status.json", "warmup_scale.json", "watchdog_alarmed.json",
+})
+
+
 def test_ihlal_seti_GERILEMEDI():
     """Sözleşme: değişiklik sonrası bekçinin bulduğu ihlal sayısı DÜŞMEYECEK. Tur öncesi ÖLÇÜLEN
     taban (2026-08-08): 104 artefakt · 0 `violations` · 0 `stale_sinks` · 0 işaretsiz sessiz
@@ -473,11 +514,32 @@ def test_ihlal_seti_GERILEMEDI():
     assert len(g["artifacts"]) >= 104, "artefakt sayısı düştü: grafik daraldı"
     assert g["violations"] == [] and g["stale_sinks"] == []
     assert r["unresolved_artifact_calls"] >= 21, "görünürlük geriledi (kör sınıf geri gelmiş olabilir)"
-    assert len(codelaw.DECLARED_SINKS) == 36, "muafiyet listesi büyümüş/küçülmüş — gerekçesini yaz"
+    # GERİLEME KIYASI (sayı-pin'in halefi, yukarıdaki beyan): tabandan EKSİLEN muafiyet ihlaldir.
+    eksilen = SINK_TABANI - set(codelaw.DECLARED_SINKS)
+    assert not eksilen, (
+        f"muafiyet tabanından ad(lar) düşmüş: {sorted(eksilen)}. Bir muafiyet KAPANDIYSA "
+        "(artefakta gerçek dış okuyucu geldi ya da artefakt öldü) bu dosyadaki `SINK_TABANI` "
+        "BEYANLA güncellenir — sessiz düşüş, muafiyetin neden kalktığını kayıtsız bırakır.")
     # v215: iki yeni kayıt AÇIK ve SAYILI. Beyan eklemek serbest değil, gerekçelidir.
     assert len(codelaw.DECLARED_SINK_PATTERNS) == 1 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
     assert r["stale_claims"] == [] and r["orphan_patterns"] == []
     assert r["ok"] is True, r
+
+
+def test_muafiyet_tabani_KODLA_AYNI_KUMEDIR():
+    """Tabanın ikinci yarısı: EKLEME ihlal değildir ama BEYANSIZ kalamaz. Bu test kırmızıya
+    döndüğünde yapılacak şey kodu geri almak DEĞİL, yukarıdaki `SINK_TABANI` blokunu yeni adla ve
+    GEREKÇESİYLE düzenlemektir (v198 `KART_TABANI` ratchet'i ile birebir aynı sözleşme).
+
+    NEDEN İKİ AYRI TEST: yön ayrımı bir teşhis kararıdır. Yukarıdaki `test_ihlal_seti_GERILEMEDI`
+    bir GÜVENLİK gerilemesidir (kapanmış bir muafiyet kayıtsız yeniden açılabilir); bu ise bir
+    KAYIT borcudur. İkisi tek assert'te toplansaydı, meşru bir eklemenin kırmızısı "bekçi geriledi"
+    diye okunurdu — v214'ün sayı-pin'inde tam olarak bu oldu."""
+    olculen = set(codelaw.DECLARED_SINKS)
+    assert olculen == SINK_TABANI, (
+        f"muafiyet listesi tabandan ayrıştı — beyansız eklenen: {sorted(olculen - SINK_TABANI)}; "
+        f"beyansız düşen: {sorted(SINK_TABANI - olculen)}. Ekleme MEŞRU olabilir; `SINK_TABANI` "
+        "blokunu gerekçesiyle düzenle.")
 
 
 def test_her_yeni_beyanin_gerekcesi_bir_cumleden_uzun():

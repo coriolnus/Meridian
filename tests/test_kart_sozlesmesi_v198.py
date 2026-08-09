@@ -89,13 +89,25 @@ def _olcum_modulu():
 # taşıdığı asıl bulgu bir mutabakat bulgusudur: iç defter 33/43/64/54 der, broker 22/22/37/25 der
 # ve emir BROKER adedini kullanır. Kapak altındadır ama GİZLENEMEZ: çıplak pozisyon varken özet
 # rozet taşır, rozet `data-dikkat` doğurur ve kurucu oturum hafızasını EZEREK kartı açar.
-KART_TABANI = {"karar": 27, "saglik": 15, "ogrenme": 43, "kilitler": 5}
+# v219'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W4 · 93ae96a) — TEK yeni kart:
+#   ogrenme 43 → 44  (+1: hermes:telemetri — `agent_calls` defterinin İLK pano okuyucusu;
+#                     hermes.py:2503'ün "veri hazır, çizim henüz yok" beyanını KAPATIR)
+# Kapak altında: `KAPAK_TABANI` ogrenme 18 → ÖLÇÜLEN 23, taban KORUNUYOR.
+KART_TABANI = {"karar": 27, "saglik": 15, "ogrenme": 44, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.
 # D2-b: yüzeyler birleşti — taban da BİRLEŞTİ, düşmedi (veri 4 + gozetim 0 → saglik 4;
 # kosu 0 + portfoy 3 → karar 3; ogrenme 18 aynen). Kapaklı kart sayısı bir SÖZLEŞME TABANIDIR:
 # bir kartın kapağı sökülürse bu satır düşer.
+# v219 ÖLÇÜMÜ (2026-08-09) — DÖRT ALANIN DA KAPAK SAYISI ÖLÇÜLDÜ, taban DEĞİŞMEDİ:
+#   karar 9 (taban 3) · saglik 5 (taban 4) · ogrenme 23 (taban 18) · kilitler 0 (taban 0).
+# TABAN NEDEN YÜKSELTİLMİYOR: bu satırın işi "kapak sökülmesin"dir, "kapak sayısı artsın" değil.
+# Ölçüleni tabana çekmek, kapaklı bir kartın MEŞRU şekilde açılmasını (bir kart dikkat ister hâle
+# gelirse yüzeye çıkar) sessizce yasaklardı — `test_butce_asimi_GIZLENMEZ_beyan_edilir`in
+# korumaya çalıştığı şeyin tam tersi. Ölçüm buraya KAYIT olarak yazılır: taban ile gerçek
+# arasındaki açıklık artık görünür ve bir sonraki tur "18 hâlâ anlamlı bir taban mı" diye
+# sorabilir — sayı, sorulmamış bir soru olarak kalmaz.
 KAPAK_TABANI = {"saglik": 4, "karar": 3, "ogrenme": 18, "kilitler": 0}
 
 

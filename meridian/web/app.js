@@ -3032,15 +3032,28 @@ const OLAY_YUZEYLERI = {
   },
   mutabakat: {
     ad: "Mutabakat çatışması",
-    ozet: "İç defter ile brokerin defteri aynı şeyi söylemiyor — hayalet, sapma, ret ya da PATCH reddi.",
-    jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC"],
+    ozet: "İç defter ile brokerin defteri aynı şeyi söylemiyor — hayalet, sapma, ret, PATCH reddi ya da korumasız pozisyon.",
+    // NAKED_POSITION BU YÜZEYE ÖLÇÜMLE GELDİ (v219, 2026-08-09). W1'e (5df1657) kadar korumasız-
+    // pozisyon alarmı MIRROR_DRIFT jetonunu ÖDÜNÇ alıyordu — yani olgu ZATEN bu yüzeyde yaşıyordu
+    // ve jeton ayrılınca yüzeysiz kaldı (v154 parite testi bunu yakaladı). Kendi bölümünü açmak
+    // olguyu taşıdığı masadan koparırdı: teşhis kartı (`mutabakat:koruma`) mutabakat masasında,
+    // `karar#mutabakat` altında duruyor ve aşağıdaki "Mutabakat masası" eylemi zaten oraya gidiyor.
+    jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC", "NAKED_POSITION"],
     neOldu: "İç sim dolumu ile gerçek Alpaca dolumu toleransın ötesinde ayrıştı (MIRROR_DRIFT), " +
             "broker iç defterin yürüteceği bir emri reddetti (BROKER_REJECT) ya da takip-stop " +
             "PATCH'i reddedildi ve iç HWM ile broker stopu ayrıştı (TRAIL_DESYNC). " +
             "MIRROR_DRIFT'i <b>altı</b> kod yolu ateşliyor (ayna çıkışı kapatılamadı · ayna " +
             "pozisyonu kayıp · adet sapması · motor yetimi · çıkış yetimi · dolum sapması); " +
-            "hangisinin konuştuğu olay kaydındaki <code>detail</code> alanından okunur.",
-    kaynak: "meridian/obs.py · meridian/loop.py · meridian/mirror_stream.py",
+            "hangisinin konuştuğu olay kaydındaki <code>detail</code> alanından okunur. " +
+            "<b>NAKED_POSITION</b> bu ailenin en pahalı hâlidir: açık bir motor pozisyonunun " +
+            "broker'da CANLI koruyucu stop'u yok — iç defter 'korunuyor' der, broker demez. " +
+            "İki ayrı olguyu taşır ve <code>kind</code> alanı onları ayırır: " +
+            "<code>korumasiz_pozisyon</code> (ölçtük, koruma YOK) ile " +
+            "<code>koruma_olculemedi</code> (broker okunamadı — bu 'korumasız 0' DEĞİL). " +
+            "Jeton W1'e kadar MIRROR_DRIFT'ten ÖDÜNÇTÜ ve ödüncün bedeli ölçülmüştü: susturma " +
+            "penceresi jeton başınadır, yani gürültülü bir adet-sapması gecesi bir sermaye " +
+            "riskinin teslimatını bastırabiliyordu.",
+    kaynak: "meridian/obs.py · meridian/loop.py · meridian/mirror_stream.py · meridian/watchdog.py::check_koruma_and_alarm",
     degerler: d => {
       const rc = (d || {}).reconcile || {}, fs = rc.failed_submissions || {};
       const sure = wsDownFor(rc);
@@ -3059,6 +3072,8 @@ const OLAY_YUZEYLERI = {
       "Sapmanın hangi kod yolundan geldiği olay kaydının <code>detail</code> alanındadır — alarm satırının çekmecesi tam kaydı taşır.",
       "Hayalet emir = Alpaca'da canlı ama yerel izi (armed/submitted/mirror) olmayan emir; masadaki dedektör onları adıyla listeler.",
       "Ret defteri KALICI retleri taşır; ağ arızası ve gönderim bacağının kendi istisnası o deftere HİÇ girmez — onlar yalnız olay akışında görünür.",
+      "Korumasız pozisyonun sayıları YUKARIDA DEĞİL, mutabakat masasındaki <b>Koruma · çıplak pozisyonlar</b> kartındadır: bu çekmece teşhis paketini okur, koruma ölçümü ise ayrı ve TAZE bir uçtan gelir (<code>/api/alpaca/koruma</code>) — 45 sn önbellekli bir sayıyı sermaye riski diye göstermek, eskimiş bir güvence cümlesi yazmak olurdu.",
+      "O karttaki \"korumasız 0\" bir GÜVENCE cümlesidir ve yalnız ölçüm döndüyse yazılır; broker okunamadıysa kart ÖLÇÜLEMEDİ der ve hiçbir emir üretilmez.",
     ],
     cozum: null,
     eylemler: [["Mutabakat masası →", "karar#mutabakat"],
