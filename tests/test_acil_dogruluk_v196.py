@@ -456,7 +456,17 @@ def test_web_katmaninda_dolduruldu_dizesi_ARTIK_VAR():
 # CIRCIR (ratchet). Sayı bir HEDEF değil bir TAVANDIR: bu turda 211'den 181'e indi ve bir daha
 # yükselmemeli. Yeni bir `?? 0` eklemek isteyen, önce bu satırı DEĞİŞTİRMEK ve gerekçesini
 # yazmak zorunda kalır — sessizce geri sızmasın diye.
-NULLSIFIR_TAVAN = 181
+#
+# BİLİNÇLİ GÜNCELLEME — v-dalga2 (2026-08-09): 181 → 192 (körce DEĞİL; kapının kendi kuralı işledi).
+# Dalga-2 (01ba684 + ff55a18) süpürücü ailesine 15 yeni `?? 0` guard'ı ekledi: olay çekmecesi EV_TR
+# (`app.js:1179-1187`) + iptal tuşu sınıf dökümü (`app.js:3439`). ON BEŞİ de ELLE (b) SINIFLANDI —
+# hepsi ÜRETİCİ-GARANTİLİ bölümleme sayaçlarıdır (YASA-6, uçtan doğrulandı: alpaca.py:487-491 ·
+# api.py:2045 · loop.py:280-281 HER olayda koşulsuz int(...)/len(...) basar, boş kova KAYNAKTA 0'a
+# düşer = ÖLÇÜLMÜŞ sıfır, bu deponun zaten (b) saydığı biriktirici/bölümleme deseni). Hiçbiri
+# liveness/manşet ölçülemedi-dalına sızmadı (manşet `!= null` üçlemesi kullanır, `?? 0` değil).
+# `opCancelOpen`inki AYRICA v225 (test_dalga2_kucukler_v225.py:190) tarafından ZORUNLU. Satır satır:
+# research/olcumler/nullsifir_triyaj_2026-08-06/RAPOR.md §7. Frozen 211/167/44/30/137 DEĞİŞMEDİ.
+NULLSIFIR_TAVAN = 192
 
 
 def test_nullsifir_sayisi_CIRCIRI_asmiyor():

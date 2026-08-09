@@ -38,15 +38,30 @@ ile kapatılan alanlardadır. Bu yüzden (a) düzeltmelerinin çoğu bir EKLEME 
 | — **(b) güvenli** | **44** |
 | Bu turda DÜZELTİLEN (a) | **30** |
 | **KUYRUKTA KALAN (a)** | **137** |
-| `app.js` kalan eşleşme (düzeltme SONRASI) | **177** |
+| `app.js` kalan eşleşme (düzeltme SONRASI) | **192** |
 
 **KUYRUK ÖDEMESİ — v207 (2026-08-07), 4 satır.** Eksen-2 kartının dört `?? 0`ı
 (`app.js:5185 #0`, `5186 #0`, `5186 #1`, `5187 #0` — kuyruk tablosunda **ÖDENDİ (v207)** olarak
 işaretli) o turda kaldırıldı: satır `.ozet-serit` hücrelerine taşındı ve yokluk artık `ölçülemedi`
-diye ADIYLA yazılıyor, hücre `ÖLÇÜLEMEDİ` rozetine düşüyor. Bu yüzden bugünkü dosya **177** ölçer.
-Üstteki **211 / 167 / 44 / 30 / 137** sayıları 2026-08-06 triyajının DONMUŞ anlık görüntüsüdür ve
-değişmez (bir ölçüm kaydı sonradan yeniden yazılmaz); ödenen her satır buraya EKLENEREK sayılır.
+diye ADIYLA yazılıyor, hücre `ÖLÇÜLEMEDİ` rozetine düşüyor. Bu yüzden v207 SONRASI dosya **177**
+ölçtü (dalga-2 EKLENTİSİ aşağıda: bugünkü dosya **192**). Üstteki **211 / 167 / 44 / 30 / 137**
+sayıları 2026-08-06 triyajının DONMUŞ anlık görüntüsüdür ve değişmez (bir ölçüm kaydı sonradan
+yeniden yazılmaz); ödenen/eklenen her satır buraya EKLENEREK sayılır.
 **Kuyrukta bugün kalan (a): 137 − 4 = 133.**
+
+**DALGA-2 EKLENTİSİ — v-dalga2 (2026-08-09), +15 satır, HEPSİ (b).** Dalga-2 (01ba684 + ff55a18)
+süpürücü ailesine 15 yeni `?? 0` guard'ı ekledi (olay çekmecesi EV_TR `app.js:1179-1187` + iptal
+tuşu sınıf dökümü `app.js:3439`); dosya **177 → 192** ölçtü. On beşi de ELLE (b) SINIFLANDI —
+körce tavan yükseltme DEĞİL. Gerekçe: hepsi ÜRETİCİ-GARANTİLİ bölümleme sayaçlarıdır, YASA-6 ile
+uçtan doğrulandı — `alpaca.py:487-491` (`giris`/`koruma`/`yabanci`/`cancelled`), `api.py:2045`
+(`cancelled`/`kept`), `loop.py:280-281` (`cancelled`/`kept`/`foreign`) HER olayda koşulsuz
+`int(...)`/`len(...)` basar ve boş kova KAYNAKTA 0'a düşer (ÖLÇÜLMÜŞ sıfır — bu deponun §5'te zaten
+(b) saydığı "biriktirici tohumu / bölümleme" deseni). Hiçbiri liveness/manşet ölçülemedi-dalına
+sızmadı (manşet `!= null` üçlemesi kullanır, `?? 0` DEĞİL; landing `olculenSatiri` de öyle).
+`opCancelOpen`inki AYRICA v225 (`test_dalga2_kucukler_v225.py:190`) tarafından ZORUNLU kılınır —
+kaldırmak o testi kırardı. Satır satır §7'de. Frozen **211 / 167 / 44 / 30 / 137** DEĞİŞMEZ; bu 15
+AYRI bir ölçüm turudur. **Bugün toplam (b): 44 + 15 = 59.** `NULLSIFIR_TAVAN` 181 → 192 (v196,
+beyanlı).
 
 **Kapsam dışı ama beyan edilir** (bu turda yazılabilir değil, düzeltilmedi — toplam depo 215):
 `landing.js:47` ×2 (`hypotheses_total`/`hypotheses_shipped` → landing metnine), `landing.js:66`
@@ -333,4 +348,42 @@ düzeltilmedi — sessizce (b)'ye gömülmesin diye adıyla yazıldı.
 |---|---|---|
 | Ö1 | Düzeltmelerin ÇALIŞAN DOM'daki etkisi | Uygulamayı yerelde YÜKLEMEK yasak: `app.js` `localStorage.meridian_api`yi okur ve yükleme canlı A1 ucuna gidebilir. Doğrulama bu yüzden YAPISALdır — şablon dilimleri Node'da fikstürle koşturulur (`tests/test_acil_dogruluk_v196.py`), artı `node --check` ve kapsam testleri. |
 | Ö2 | Kuyruktaki 137 (a)'nın canlıda KAÇININ fiilen `undefined` gördüğü | Canlı state okunmadı (canlı worker koşuyor olabilir; state'e dokunulmadı). Sınıflandırma KOD YOLU üzerinden yapıldı, gözlenen sıklık üzerinden değil — yani kuyruk bir risk listesidir, bir arıza listesi değil. |
+
+## 7. DALGA-2 EKİ — 15 yeni (b), v-dalga2 (2026-08-09)
+
+Dalga-2'nin (01ba684 + ff55a18) `app.js`e eklediği 15 `?? 0` guard'ının satır-satır sınıflandırması.
+Sınıf sütunu **`b-d2`** = "(b), dalga-2 turu" — 2026-08-06 sayımının DONMUŞ tablolarına (§4/§5)
+karışmasın diye AYRI imle yazıldı; bu 15 satır o sayımın parçası değildir. Hepsi süpürücü/iptal
+ailesinden; yokluk anlamı "uç bu alanı hiç göndermedi" DEĞİL, "o kovada ölçülmüş sıfır"dır —
+üretici bölümlemeyi HER olayda basar ve boş kovayı KAYNAKTA 0'a düşürür (YASA-6, uçtan doğrulandı).
+
+| dosya:satır | ifade | sınıf | gerekçe | üretici (YASA-6) |
+|---|---|---|---|---|
+| `app.js:1179` #0 | `?? 0` | b-d2 | sınıf-dökümü olayı: iptal edilen giriş SAYACI; olay ancak süpürme koşunca doğar (sayım yapılmıştır) | `alpaca.py:491` `cancelled=len(...)` |
+| `app.js:1180` #0 | `?? 0` | b-d2 | bölümleme kovası `giris` — boş kova = ölçülmüş 0 | `alpaca.py:488` `giris=int(...)` |
+| `app.js:1180` #1 | `?? 0` | b-d2 | bölümleme kovası `koruma` — boş kova = ölçülmüş 0 | `alpaca.py:489` `koruma=int(...)` |
+| `app.js:1180` #2 | `?? 0` | b-d2 | bölümleme kovası `yabanci` — boş kova = ölçülmüş 0 | `alpaca.py:490` `yabanci=int(...)` |
+| `app.js:1182` #0 | `?? 0` | b-d2 | cancel-open (pano tuşu) olayı: iptal SAYACI | `api.py:2045` `cancelled=len(...)` |
+| `app.js:1182` #1 | `?? 0` | b-d2 | cancel-open olayı: korunan SAYACI | `api.py:2046` `kept=len(...)` |
+| `app.js:1184` #0 | `?? 0` | b-d2 | bayat-kadans süpürücüsü: iptal SAYACI | `loop.py:280` `cancelled=len(...)` |
+| `app.js:1185` #0 | `?? 0` | b-d2 | bayat-kadans: korunan SAYACI | `loop.py:280` `kept=len(...)` |
+| `app.js:1185` #1 | `?? 0` | b-d2 | bayat-kadans: yabancı SAYACI (operatör emri, dokunulmadı) | `loop.py:281` `foreign=len(...)` |
+| `app.js:1186` #0 | `?? 0` | b-d2 | HALT/breaker süpürücüsü: iptal SAYACI | `loop.py:280` `cancelled=len(...)` |
+| `app.js:1187` #0 | `?? 0` | b-d2 | HALT/breaker: korunan SAYACI | `loop.py:280` `kept=len(...)` |
+| `app.js:1187` #1 | `?? 0` | b-d2 | HALT/breaker: yabancı SAYACI | `loop.py:281` `foreign=len(...)` |
+| `app.js:3439` #0 | `?? 0` | b-d2 | `opCancelOpen` sınıf dökümü `giris` — TAZE API yanıtı, `siniflar` hep başlatılı; v225:190 ZORUNLU | `alpaca.py:523,536` |
+| `app.js:3439` #1 | `?? 0` | b-d2 | `opCancelOpen` sınıf dökümü `koruma` — a.g. | `alpaca.py:523,536` |
+| `app.js:3439` #2 | `?? 0` | b-d2 | `opCancelOpen` sınıf dökümü `yabanci` — a.g. | `alpaca.py:523,536` |
+
+**Karşı-kanıt / `daily_cycle` ayrımı (kayda geçer, sessiz kalmasın):** §4 kuyruğundaki
+`daily_cycle`/`hermes_search_done` olay çevirileri (`app.js:1014`/`1020`) YAPISAL olarak aynı görünür
+ama (a) sınıfındadır. Fark üreticidedir: bu 15 süpürücü guard'ı TEK bir bölümleme fonksiyonunun
+ürünüdür (olayın var olması = sayımın yapılmış olması) ve kovalar + toplam HER SEFERİNDE birlikte
+basılır; `daily_cycle` alanları ise aşama-koşulludur. Sınır yine de dürüstçe dursun: bu 15 için tek
+gözlemlenmemiş `undefined` yolu v220 ÖNCESİ eski `obs.log` olaylarının replay'idir — canlı akış değil.
+
+**Landing (kapsam dışı, `app.js` sayımına GİRMEZ):** `landing.js:36` `(d.score || 0)` bir RENK
+kapısıdır (DOM'a sayı basmaz) → (b); dalga-2'de eski `ölçülen` satırından yeni `olculenSatiri()`
+fonksiyonuna TAŞINDI, yeni bir guard değil (§1'deki eski `landing.js:66` kaydının yeni yeri).
+v196 tavanı yalnız `app.js` ölçer; landing bu teste girmez, sayım değişmez.
 
