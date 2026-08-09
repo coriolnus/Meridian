@@ -103,7 +103,15 @@ def _olcum_modulu():
 #                     limit-bacağı ölçümü + iç-motor totoloji-beyanı])
 #   karar 27 · kilitler 5 (değişmedi — bu üç yüzey ③/④'e düştü)
 # Kapak altında: `KAPAK_TABANI` saglik 4→ÖLÇÜLEN 7, ogrenme 18→ÖLÇÜLEN 24 — tabanlar KORUNUYOR.
-KART_TABANI = {"karar": 27, "saglik": 17, "ogrenme": 45, "kilitler": 5}
+# v230'DA BEYANLI GÜNCELLENDİ (2026-08-09, dalga W-UX D3-b devamı) — TEK yeni FIRSAT kartı (docs/
+# TASARIM-YONU-2026-08-07 §7'nin F5'i); kapak altında, "üretiliyor ama görünmüyor" kovasından bir
+# kalem kapatır ve UÇTAN okur (uydurma rakam yasağı):
+#   saglik  17 → 18  (+1: operasyon:alarmkok [F5 · yinelenen arıza taksonomisi — `watchdog.alarm_gunluk`ın
+#                     İLK pano okuyucusu; v192 sayacı UCA çıkıyordu ama `test_bastirma_sayaci_PANOYA_cikar`
+#                     "dış okuyucusu api.py'dir" der → pano çizmiyordu, YASA 6 boşluğu])
+#   karar 27 · ogrenme 45 · kilitler 5 (değişmedi — F5 ③'e düştü)
+# Kapak altında: `KAPAK_TABANI` saglik ÖLÇÜLEN 7→8, taban 4 KORUNUYOR (`>=`).
+KART_TABANI = {"karar": 27, "saglik": 18, "ogrenme": 45, "kilitler": 5}
 # Bu turda kapağa geçirilen kart sayısı — UX denetimi §5.3'ün 2/3/4 numaralı öncelikleri.
 # Öncelik 1 (Bölüm 5'i beşe bölmek) bir İÇERİK kararıdır ve D2-b'ye bırakıldı; bu tur sözleşmeyi
 # kurar, kart bölmez. Sayı bir TABAN: düşerse (kapak sökülürse) test kırmızıya döner.

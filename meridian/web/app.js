@@ -1926,6 +1926,12 @@ const KART_KAYDI = {
   "veriboru:kagitcanli":{ alan: "saglik",  bolum: "veriboru" },     // F1 · kâğıt-canlı ayrışması
   "bilesenic:sapma":    { alan: "ogrenme", bolum: "bilesenic" },    // F2 · canlı-backtest sapması kökü
   "operasyon:esik":     { alan: "saglik",  bolum: "operasyon" },    // F14 · iki kademeli eşik + NO_DATA
+  // ---- D3-b · F5 (v230, 2026-08-09) — YİNELENEN ARIZA TAKSONOMİSİ ------------------------------
+  // `watchdog.alarm_gunluk`ın İLK pano okuyucusu. v192 sayacı UCA (`api._alarm_gunluk`) çıkıyordu ama
+  // pano çizmiyordu: `test_alarm_hijyeni_v192::test_bastirma_sayaci_PANOYA_cikar` "sayacın dış
+  // okuyucusu api.py'dir" der — yani sayı üretiliyordu, GÖRÜNMÜYORDU (YASA 6; F1/F2/F14 ile aynı kova).
+  // Kapak altında; bastırma varsa özet rozetiyle AÇIK doğar (anomali kapak yüzünden gizlenemez).
+  "operasyon:alarmkok": { alan: "saglik",  bolum: "operasyon" },    // F5 · alarm gürültüsünün kökü
 };
 // KART BÜTÇESİ — alan sayfası başına YAZILI tavan. BİRİMİ: "ilk çizimde AÇIK doğan kart".
 // Toplam kart sayısı DEĞİL: bu turda hiçbir kart silinmiyor (silme kararı D2-b/IA turunda,
@@ -6402,6 +6408,7 @@ RENDER.operasyon = async () => {
     ${firsatEsikPaneli(_DIAG)}
     <div class="card rise"><h2 class="t">Alarm gelen kutusu</h2>
       <div id="bp-alerts"><div class="empty">yükleniyor…</div></div></div>
+    ${firsatAlarmTaksonomi(((_DIAG || {}).watchdog || {}).alarm_gunluk)}
     ${p.sOgr}
     <div class="card rise"><h2 class="t">Olay akışı · son 8</h2>
       <div id="bp-events"><div class="empty">yükleniyor…</div></div></div>`;
@@ -7438,6 +7445,84 @@ function firsatEsikPaneli(d) {
          <p class="hint" style="margin-top:10px">Bu panel eşik dilini TEK yerde (<code>esikHal</code>)
            kurar; aynı üç hâl artık başka göstergelere de aynı jetonlarla uygulanabilir (D1 rol
            katmanı: uyarı→--sev-2, alarm→--sev-1). Renk YALNIZ bu iki hâlde; "iyi" sessizdir.</p>`}</div>`;
+}
+
+// ---- F5 · YİNELENEN ARIZALARI TAKSONOMİYE KÜMELEME (③ saglik#operasyon) -----------------------
+// OPERATÖRÜN SORUSU (docs/TASARIM-YONU-2026-08-07 §7 · F5): "Alarm gürültüsünün kökü ne — hangi
+// mekanizma tekrar tekrar bağırıyor ve ne kadarı BASTIRILDI?" `watchdog.alarm_gunluk` v192'den beri
+// mekanizma başına GÜNLÜK {alarm · bastırılan · askıda} sayacını yazıyordu ve PANO OKUYUCUSU YOKTU:
+// `test_alarm_hijyeni_v192::test_bastirma_sayaci_PANOYA_cikar` "sayacın DIŞ okuyucusu api.py'dir"
+// diyordu — yani sayı UCA çıkıyordu ama hiçbir yüzey onu çizmiyordu (YASA 6 boşluğu; "üretiliyor ama
+// görünmüyor" kovası, F1/F2/F14 ile aynı sınıf). Bu kart o defteri TAKSONOMİ olarak açar ve UÇTAN
+// OKUR (uydurma rakam yasağı): her satır bir mekanizma (arıza sınıfı), üç sayı bir arada.
+// NEDEN BASTIRMA GÖRÜNMELİ (üretici beyanı): "bugün 1 alarm" ile "1 alarm + 111 bastırıldı" ekranda
+// aynı şeye benzerse tavanın kendisi bir sonraki turun gizli arızası olur. ASKIDA ≠ BASTIRILAN:
+// askıda alarm hiç üretmeyen MEŞRU bir beklemedir (hermes kota soğuması / kimlik havuzu), bastırma
+// ise üretilecek alarmın günlük tavanla susturulmasıdır — ikisi AYRI kovada sayılır, ayrı yazılır.
+// RENK YOK: taksonomi bir ŞİDDET DEĞİL bir SAYIMdır (D1 — renk yalnız anomalide); bastırma çok
+// olduğunda dikkat özet ROZETİYLE (kapağı açan `data-dikkat`) taşınır, satır mürekkebiyle DEĞİL.
+function firsatAlarmTaksonomi(ag) {
+  const a = ag && typeof ag === "object" ? ag : null;
+  const bosDefter = a != null && String(a.durum == null ? "" : a.durum) === "defter_yok";
+  const mek = a && a.mekanizmalar && typeof a.mekanizmalar === "object" ? a.mekanizmalar : {};
+  // SIRA: en gürültülü mekanizma ÜSTTE (alarm + bastırılan toplamı) — taksonominin işi KÖKÜ
+  // göstermek; alfabetik sıra kökü listenin ortasına gömerdi. `gurultu` sayı-güvenli (ölçülemeyen
+  // hücreyi sıralamada 0 sayar; DÜŞÜMDE değil — display trn ile üçüncü hâli korur).
+  const gurultu = m => { const al = Number((m || {}).alarm), ba = Number((m || {}).bastirilan);
+    return (Number.isFinite(al) ? al : 0) + (Number.isFinite(ba) ? ba : 0); };
+  const adlar = Object.keys(mek).sort((x, y) => gurultu(mek[y]) - gurultu(mek[x]));
+  const nAlarm = a ? a.n_alarm : null;
+  const nBast  = a ? a.n_bastirilan : null;
+  const nAsk   = a && a.n_askida != null ? a.n_askida : null;
+  const tavan  = a && a.tavan != null ? a.tavan : null;
+  const ozet = !a
+    ? kartOzeti({ deger: null, rozet: "ÖLÇÜLEMEDİ",
+        meta: "teşhis ucu `watchdog.alarm_gunluk` bloğunu vermedi — alarm taksonomisi bu turda ÖLÇÜLEMEDİ (0 alarm DEĞİL)." })
+    : (bosDefter
+      ? kartOzeti({ deger: null, rozet: "DEFTER YAZILMADI",
+          meta: String(a.beyan == null ? "bugün hiç mekanizma-gecikme alarmı üretilmedi (defter yazılmadı) — '0 alarm' DEĞİL, 'defter yok'." : a.beyan) })
+      : kartOzeti({ deger: nAlarm == null ? null : trn(nAlarm),
+          meta: `${trn(adlar.length)} mekanizma${nBast == null ? "" : ` · <b>${trn(nBast)}</b> bastırıldı`}${
+            nAsk == null ? "" : ` · ${trn(nAsk)} askıda`}${tavan == null ? "" : ` · mekanizma başına günlük tavan ${trn(tavan)}`}`,
+          rozet: nAlarm == null ? "ÖLÇÜLEMEDİ" : (nBast ? `${trn(nBast)} BASTIRILDI` : "") }));
+  // SATIR: sayaçlar UÇTAN gelir ve api hepsini int garantiler; `trn` ölçülen sıfırı "0" (sönük),
+  // gerçekten yok olanı "—" basar (uydurma yasağı — `?? 0`/`|| 0` YOK). `mut` yalnız sıfır/boş
+  // hücreyi söndürür (renk yalnız anomalide; sıfır bir şiddet değil bir ölçümdür).
+  const satir = ad => {
+    const m = mek[ad] || {};
+    const bast = m.bastirilan, ask = m.askida;
+    const neden = ask && m.son_askida_neden != null ? String(m.son_askida_neden) : "";
+    return `<div class="trow" style="grid-template-columns:158px 58px 82px 62px 1fr">
+      <span class="chain">${esc(ad)}</span>
+      <span class="mono-num">${trn(m.alarm)}</span>
+      <span class="mono-num${bast ? "" : " mut"}">${trn(bast)}</span>
+      <span class="mono-num${ask ? "" : " mut"}">${trn(ask)}</span>
+      <span class="hint" style="margin:0">${neden ? esc(neden) : ""}</span></div>`;
+  };
+  return `<div class="card rise"${katKart("operasyon:alarmkok")}>
+    <h2 class="t">Alarm taksonomisi · yinelenen arızanın kökü <span class="tx3" style="font-weight:400">(hangi mekanizma bağırıyor · ne kadarı bastırıldı?)</span></h2>
+    ${ozet}
+    ${!a ? firsatBos("teşhis ucu `watchdog.alarm_gunluk` bloğunu vermedi — alarm taksonomisi ölçülemedi.",
+        "Bu defterin dış okuyucusu tek uçtur (`/api/diagnostics` watchdog.alarm_gunluk); uç düştüyse taksonomi türetilemez.")
+      : (bosDefter
+        ? firsatBos(String(a.beyan == null ? "bugün mekanizma-gecikme alarm defteri yazılmadı" : a.beyan),
+            "Bu bir ÖLÇÜMdür: defter bugün hiç yazılmadı — '0 alarm' ile 'defter yok' aynı kovaya düşmez (üçüncü hâl).")
+        : (!adlar.length
+          ? firsatBos("defter dolu okundu ama mekanizma satırı yok — bu turda taksonomi kümelenemedi.",
+              "Sayaç bugün bir mekanizmayı hiç damgalamadı; küme boş, ama bu bir ÖLÇÜM (defter var).")
+          : `<p class="hint" style="margin-top:0">Her satır bir mekanizma (arıza sınıfı), en gürültülü üstte.
+               <b>ALARM</b> üretilen · <b>BASTIRILDI</b> günlük tavana takılıp susturulan (SESSİZ DEĞİL,
+               sayılı) · <b>ASKIDA</b> alarm hiç üretmeyen MEŞRU bekleme (hermes kota soğuması / kimlik
+               havuzu). Bastırma ile askıda AYRI kovadır; ikisi karışırsa hijyen ile körlük ayırt edilemez.</p>
+             <div class="tbl" style="margin-top:10px">
+               <div class="trow head" style="grid-template-columns:158px 58px 82px 62px 1fr">
+                 <span>MEKANİZMA</span><span>ALARM</span><span>BASTIRILDI</span><span>ASKIDA</span><span>SON ASKIDA NEDENİ</span></div>
+               ${adlar.map(satir).join("")}</div>
+             <p class="hint" style="margin-top:10px">Toplam <b>${trn(nAlarm)}</b> alarm${
+               nBast ? ` · <b>${trn(nBast)}</b> bastırıldı` : " · bastırma yok"}${
+               nAsk ? ` · ${trn(nAsk)} askıda` : ""}. Bastırma tavanı mekanizma BAŞINADIR (küresel değil):
+               bir mekanizmanın çırpınması diğerini susturmaz. $ ya da ham defter satırı bu karttan DIŞARI
+               VERİLMEZ; taksonomi yalnız sayımdır.</p>`))}</div>`;
 }
 
 // ---- PORTFÖY · MUTABAKAT MASASI (ADR: "dolum akışı/mutabakat … reddedilen emirler") ----------
