@@ -364,7 +364,8 @@ def cancel_order(order_id: str) -> dict:
 # yazılırken YOKTU. Sonuç bir kaza değil YAPISAL bir çarpışmaydı: koruma her kurulduğunda bir
 # sonraki süpürmede ölüyordu.
 #
-# İKİ KEMER, İKİSİ DE — biri ötekinin yedeği DEĞİL, ikisi iki AYRI olguyu tutuyor:
+# İKİ KEMER, İKİSİ DE — biri ötekinin yedeği DEĞİL, ikisi iki AYRI olguyu tutuyor (v221'de ÜÇÜNCÜ
+# bir GRUP KEMERİ eklendi — `coid_sinifi` üstündeki bloğa bakın; OCO stop bacağının kör noktası):
 #   YÖN KEMERİ  : bu motorun GİRİŞ emri BUY'dur. VARSAYILMADI, ÖLÇÜLDÜ — emir üreten tek giriş
 #                 yolu `submit_bracket`tir (`"side": "buy"`, gövde sabiti) ve `submit_plan` ondan
 #                 geçer; bu modülde ikinci bir giriş göndericisi yoktur (v220 kaynak-düzeyi
@@ -395,17 +396,70 @@ def is_koruma_order(o: dict) -> bool:
     return str((o or {}).get("client_order_id") or "").startswith(KORUMA_COID_ONEK)
 
 
-def coid_sinifi(o: dict) -> tuple[str, str]:
+# ==================================================================================================
+# ÜÇÜNCÜ KEMER (v221) — OCO/BRACKET GRUBUNUN BİR BACAĞI KORUMA İSE GRUBUN TAMAMI KORUMA
+# ==================================================================================================
+# ÖLÇÜM (canlı A1 paper, salt-okuma GET, 2026-08-09; VARSAYILMADI): `koruma_kur` dört OCO gönderdi
+# ve her biri `orders(status="open", nested=True)` yanıtında ŞÖYLE görünüyor —
+#   ÜST DÜZEY (primary): LİMİT bacağı · coid `P-KORUMA-20260809-0835-{SYM}` · side=sell · type=limit
+#                        · order_class=oco · status=accepted
+#   legs[0] (nested)   : STOP bacağı · coid = Alpaca UUID'si · side=sell · type=stop
+#                        · order_class=oco · status=held
+# BAĞ YAPISI = SALT `legs[]` İÇERME BAĞI (+ paylaşılan `order_class=oco`). `parent_order_id` alanı
+# yanıtta BOŞ; stop bacağının parent'a geri-referansı YOK. `nested=False` (düz) çekimde stop bacağı
+# HİÇ görünmüyor (bracket'ın aksine — o düzde 3 satıra bölünür); yani stop bacağı YALNIZ primary'nin
+# `legs[]`'i altından erişilebilir. Kemer bu ölçülen yapıya dayanır — "aynı sembolde iki sell" gibi
+# KIRILGAN bir çıkarıma DEĞİL (yarın aynı sembolde iki ayrı koruma olabilirdi; içerme bağı yapısaldır).
+#
+# KÖK NEDEN — STOP BACAĞI NEDEN `yabanci` DÜŞÜYORDU (hüküm sırası, ölçüldü): v220 `coid_sinifi`
+# SAHİPLİK KAPISINI (`is_engine_order`) EN BAŞA koyuyordu. Stop bacağının coid'i Alpaca UUID'si →
+# `is_engine_order` False → fonksiyon YÖN KEMERİNE ULAŞMADAN `yabanci` dönüyordu. Oysa stop bacağı
+# SELL'dir ve yön kemeri ("SELL giriş olamaz → koruma") onu tutmalıydı; kapı sırası buna izin
+# vermiyordu. Sonuç bugün ZARARSIZ (stop bacağı `legs` altında, süpürücüye ÜST DÜZEY aday olarak hiç
+# çıkmaz; ayrıca `yabanci` de süpürülmez) AMA iki bacak İKİ FARKLI SEBEPLE korunuyordu ve stop bacağı
+# "operatörün emri" (A3) diye YANLIŞ etiketleniyordu — bir dürüstlük/kör-nokta kusuru.
+#
+# NEDEN GRUP KEMERİ, NEDEN KÖR HÜKÜM-SIRASI DEĞİL: yön kemerini sahiplik kapısından ÖNCE almak
+# (kaba çözüm) stop bacağını düzeltirdi AMA operatörün KENDİ satış emrini (P- öneksiz, ör. kendi
+# NVDA'sını satması) da `koruma` sayardı — A3'ün TERS yönden ihlali (bizim olmayanı 'bizim koruma'
+# etiketlemek). Yön kemeri bu yüzden BİLİNÇLİ olarak motor-emrine-kapsamlıdır. Doğru sebep bacağın
+# YÖNÜ değil GRUP ÜYELİĞİdir: kardeşi (`P-KORUMA-` limit bacağı) korumadır. Bu yüzden ÜÇÜNCÜ kemer
+# grup-farkındalığıdır; grup kemeri sahiplik kapısından ÖNCE gelir AMA YALNIZ doğrulanmış bir koruma
+# kardeşi varken — koruma kardeşi olmayan gerçek operatör emri yine `yabanci` düşer (A3 KORUNUR).
+def coid_sinifi(o: dict, grup_koruma: bool = False) -> tuple[str, str]:
     """Bir emrin SINIFI + gerekçesi: (`giris` | `koruma` | `yabanci`, neden).
 
     Süpürücünün bir emir hakkındaki hükmü TEK yerde verilir: hem iptal kararı hem olay defterindeki
     döküm bu fonksiyondan okur. İki ayrı yerde iki ayrı hüküm, tam da 08-07'de yaşanan "kod bir şey
-    yapıyor, olay başka bir şey anlatıyor" ayrışmasını üretirdi."""
-    if not is_engine_order(o):
-        return SINIF_YABANCI, "motor öneki YOK — operatörün kendi emri (A3): dokunulmaz"
+    yapıyor, olay başka bir şey anlatıyor" ayrışmasını üretirdi.
+
+    ÜÇ KEMER, ÖNCELİK SIRASIYLA (her biri AYRI bir olguyu tutar — biri ötekinin yedeği değil):
+      1. AİLE KEMERİ : `is_koruma_order(o)` — `P-KORUMA-` coid'i taşıyan emir (açık dışlama).
+      2. GRUP KEMERİ : emir bir OCO/bracket grubunun üyesi VE grubun bir bacağı koruma ailesinden
+                       (v221). Emrin KENDİ coid'i Alpaca UUID'si olsa BİLE grup koruma sayılır.
+                       Sinyal iki yoldan gelir: (a) emrin KENDİ `legs[]`'inde bir koruma bacağı varsa
+                       (üst düzey emir kendi kendine yeter — hangi bacağın damgayı taşıdığını
+                       VARSAYMAZ); (b) `grup_koruma=True` — bir bacağı TEK BAŞINA sınıflarken çağıran
+                       bunu geçirir, çünkü bacağın parent'a geri-referansı YOKTUR (bkz. yukarıdaki
+                       ölçüm) ve grup sinyalini kardeşi elinde tutan çağıran taşır.
+      3. YÖN KEMERİ  : MOTOR emri ve side != buy → long-only motorda giriş BUY'dur; giriş OLAMAZ.
+
+    Grup kemeri SAHİPLİK KAPISINDAN (motor öneki) ÖNCE gelir ama YALNIZ doğrulanmış bir koruma
+    kardeşi varken: OCO'nun UUID'li stop bacağı böyle korunur (kimliği Alpaca'nındır, operatörün
+    DEĞİL); koruma kardeşi OLMAYAN gerçek bir operatör emri yine `yabanci` düşer (A3 KORUNUR)."""
+    o = o or {}
+    # GRUP SİNYALİ: emrin KENDİ legs[]'inde bir koruma bacağı mı var (üst düzey emir kendi kendine
+    # yeter) YA DA çağıran doğrulanmış bir koruma kardeşi olduğunu mu söyledi (bacağı tek başına
+    # sınıflarken). Yalnız BİR düzey içerme okunur — Alpaca OCO/bracket'ı tek düzey yuvalar.
+    grup_koruma = bool(grup_koruma) or any(is_koruma_order(l) for l in (o.get("legs") or []))
     if is_koruma_order(o):
         return SINIF_KORUMA, f"koruma ailesi ({KORUMA_COID_ONEK}…) — aile kemeri: süpürülmez"
-    yon = str((o or {}).get("side") or "").lower()
+    if grup_koruma:
+        return SINIF_KORUMA, ("OCO/bracket grubunun bir bacağı koruma ailesinden — grup kemeri "
+                              "(v221): bu bacağın coid'i Alpaca UUID'si olsa da grubun TAMAMI koruma")
+    if not is_engine_order(o):
+        return SINIF_YABANCI, "motor öneki YOK — operatörün kendi emri (A3): dokunulmaz"
+    yon = str(o.get("side") or "").lower()
     if yon and yon != GIRIS_EMRI_YONU:
         return SINIF_KORUMA, (f"yön '{yon}' — long-only motorda giriş emri '{GIRIS_EMRI_YONU}'dur; "
                               f"bu emir giriş OLAMAZ (yön kemeri)")
@@ -472,6 +526,12 @@ def cancel_open_entries() -> dict:
             st = str(o.get("status", "")).lower()
             filled = float(o.get("filled_qty") or 0)
             sym = o.get("symbol")
+            # GRUP KEMERİ (v221): `nested=True` her OCO/bracket'ın bacaklarını `o["legs"]` altında
+            # getirir (ZORUNLU — düz çekimde OCO stop bacağı hiç görünmez, ölçüm 2026-08-09) ve
+            # `coid_sinifi` üst düzey emri KENDİ bacaklarına bakarak sınıflar: grubun bir bacağı
+            # `P-KORUMA-` ise üst düzey emir, coid'i aile öneki taşımasa da `koruma` düşer, süpürülmez.
+            # Süpürücü YALNIZ ÜST DÜZEYDE işlem/sayım yapar (bacaklar `legs` altında; v220 sınıf
+            # dökümü sayıları KORUNUR) — grup-farkındalığı hükmü bozmayan, kör noktayı kapatan katman.
             sinif, gerekce = coid_sinifi(o)
             out["siniflar"][sinif] = out["siniflar"].get(sinif, 0) + 1
             if sinif == SINIF_YABANCI:
