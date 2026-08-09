@@ -381,7 +381,9 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   kalibrasyonu — gevşetme değil referans).
 - **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-M — salt-ölçüm; gece kapananlar v196/v214/
   kart-tekillik düşülmüş):** **11 kalem gerçekten açık** (9 metodoloji/yasa + **PBO/DSR tabanı** [M2,
-  restart-şartlı: canlı 0/204, `pencere_id` damgasız 124/124 → sert PBO kapısı canlıda NO-OP] +
+  M2: damgalama ARTIK ÇALIŞIYOR — canlı **831/833 `pencere_id:R1`** (bu gecenin dağıtım restart'ları başlattı;
+  eski "0/204 damgasız → NO-OP" BAYAT, 2026-08-10 Rol-1 canlı ölçümü). Sert PBO kapısı NO-OP DEĞİL artık,
+  taban ÖLÇÜLEBİLİR → **M2 restart-bloğu KALKTI**; kalan otonom = canlı PBO/DSR taban değerini ölç] +
   **araç-kör-nokta artığı** [M11: KATMAN-4 alan merceği plan defterinin ~20 kontrol alanına genişlemedi]).
   EN YÜKSEK KALDIRAÇ = **M1 KIYAS-KİRLENMESİ** (olay-penceresi-dışı kıyas — TÜM evren-medyanı ölçümlerini
   etkiliyor; yeni WP-K aile ölçümlerinin tabanını temizler). Öneri sıra: bakım penceresinde OB-2 systemd
