@@ -1,9 +1,35 @@
 # MERIDIAN YOL HARİTASI — tek kaynak
 
 Koda gömülü faz planlarını, oturum kararlarını ve operatör tercihlerini TEK dosyada toplar; yeni
-faz/iş kalemi buraya işlenir, "konuşmada kaldı" diye kaybolmaz. **Düzen (2026-07-29 yeniden
-örgütleme):** §1-3 yaşayan plan (yalnız KALAN işler), §4-6 kurallar ve kayıtlar, §7 karar günlüğü
-(tamamlananlar tek satır + tarih; ayrıntı oturum kayıtlarında). Tur notları §7'nin tepesine eklenir.
+faz/iş kalemi buraya işlenir, "konuşmada kaldı" diye kaybolmaz. **Düzen (2026-08-09 yeniden
+örgütleme — §0-6 mimarisi, operatör onaylı):** işler birbirine girmez, her bilginin TEK doğru yeri
+vardır. §0 sözleşme + yasalar + kuzey yıldızı · §1 aktif WP'ler (açık cepheler) · §2 öneri havuzu
+(backlog) · §3 operatör blokları · §4 kanıt/kartlar · §5 karar günlüğü (kronolojik, yeni giriş EN
+ÜSTE) · §6 arşiv (tamamlanan WP'ler + oturum snapshot'ları). _(Bu tur öncesi düzen §1-7 idi; taşıma
+haritası §5'in tepesindeki 2026-08-09 kaydında.)_
+
+---
+
+## §0 SÖZLEŞME — nasıl okunur, yasalar, kuzey yıldızı
+
+**NASIL OKUNUR — her iş türü nereye yazılır (TEK doğru yer):**
+- Yeni fikir / iyileştirme önerisi → **§2 ÖNERİ HAVUZU** (biçim: gerekçe · tahmini boyut · bağımlılık · öncelik).
+- Olgunlaşan / başlanan açık cephe → **§1 AKTİF WP** (biçim: durum · kapsam · açık kalemler · dosya-sınırı · kanıt-kartı bağı) + Task açılır.
+- Operatör kararı / kimliği / parası / bakım penceresi bekleyen → **§3 OPERATÖR BLOKLARI**.
+- Ölçüm ön-kaydı / hüküm → **§4 KANIT/KARTLAR** (`research/cards/` indeksi; kartsız ölçüm kodu yok).
+- Neden-kaydı (kronolojik, tarihli) → **§5 KARAR GÜNLÜĞÜ** (yeni giriş EN ÜSTE).
+- Tamamlanan WP / bayat status snapshot → **§6 ARŞİV** (tarihçe-koru; silme yok).
+- Bir bilginin nereye gideceği belirsizse **§5'e not düşülür, SİLİNMEZ**.
+
+**YAŞAM DÖNGÜSÜ:** öneri (§2) → olgunlaşınca §1'e taşınır + Task açılır → bitince §6'ya arşivlenir;
+kartı §4'te, kararı §5'te, operatör kalemi §3'te kalır. §1'deki her WP'nin NET SINIRı vardır
+(dosya-ayrıklık sözleşmesi); açık kalanı §1'de, tarihçesi §6'da.
+
+**DURUM İŞARETLERİ (§1/§4/§6 boyunca):** ✅ kapalı · 🔄 koşuyor · 🕐 kuyruk · 🔒 bağımlı/bilet ·
+📋 sırada · 🔴 aktif/öncelik · 🔶 aktif araştırma · 🆕 yeni · 🔓 kilit açık.
+
+
+### KUZEY YILDIZI (EDGE VERDICT + SONUÇ HÜKMÜ + yönetici ilke + operatör tercihleri)
 
 **Kuzey yıldızı:** EDGE VERDICT — BEŞ ölçüt (gerçek-katman IC + SPY-üstü + tahmin isabeti + rejim
 edge + **KUYRUK**, 5. ölçüt 2026-07-30'da indi). Canlı hüküm: **"1/5 sağlandı (1 zayıf, 2
@@ -16,9 +42,39 @@ Operatör tercihleri (2026-07-27 röportajı): eksenler sıralı değil ÖRGÜL�
 gövdesi replay+cf yoğunluğu, gerçek/sim etiketi her yerde açık; kalibrasyon yetkileri eşik dolunca
 otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 
----
+### YASALAR VE KESİŞEN KURALLAR (anayasal — tüm işleri bağlar)
 
-## 1. ŞİMDİ (2026-07-31 sabah ~03:15 — GECE VARDİYASI İNDİ; operatör uyuyor, tam-yetki programı)
+- **NOUS SİSTEM-DEĞERLENDİRME KATMANI (kalıcı anayasal kayıt — WP-konsolidasyonunda düşmüştü,
+  F4 sürüklenme testi yakaladı, geri kondu):** Katman A-D haftalık öz-değerlendirme; **Katman D
+  anayasal çekirdek KAPALIDIR** — hakim kendi yasasına dokunamaz (CORE_FILES/CORE_CONCEPTS,
+  CekirdekIhlali + AUTHORITY_CHANGE alarmı, AST çivisi; nous_eval docstring'i ile aynı söz).
+
+- **Ölçüm-önce:** hiçbir değişiklik ölçümsüz canlıya girmez; kapı (reflect._gate_eval) TEK hakem;
+  knob hipotezleri tek-değişken (guard), mimari reform beyanlı bileşik ölçümle (k_probes = denenen).
+- **YASA 4** sessiz yutma yasak (kaçış: `# sessiz-yutma: <neden>`) · **YASA 6** üretilen her alanın
+  dış tüketicisi olmalı (okuma api.py üzerinden pano) · **UYDURMA YASAĞI** ölçülemeyen None kalır;
+  alan adları canlı dosyadan doğrulanır; retro damga yok.
+- **Canlı güvenlik:** state/'i yalnız worker yazar; ölçümler sandbox kopyada (config.STATE
+  yönlendirme + mtime parmak izi kanıtı); restart'ı operatör koşar (`./ops/stop-worker.sh && ./serve.sh`).
+- **Süreç:** turda tek konsolide-brief'li tek Opus implementasyon ajanı; tam suite turda BİR kez,
+  ÖN PLANDA senkron (ajan-içi waiter/arka plan bekleyici YASAK — iki kez arıza çıkardı); uzun
+  deterministik işler ana oturumdan harness-izlemeli arka planda; hermes SYSTEM statik (AST çivili).
+- **Okuma düzeltmeleri:** replay iyimserliği ölçüldü ~+0.018 (motor sapması) — backtest skorları bu
+  düzeltmeyle okunur · R-birimi geniş stopa yapısal önyargılı (boyut R-nötr küçülür, kazanan R'leri
+  daralır) — çıkış reformu kararları Hafta 3'ün dolar merceğini bekler · McLean-Pontiff: yayınlanmış
+  etkinin en fazla YARISI beklenir · cf sadakat sınırı: cf.advance yalnız stop/target/time_stop
+  simüle eder (trail/BE/chandelier/giveback/regime_flip/scale_out ve komisyon/ADV/impact YOK —
+  makine-okunur sabitlerle beyanlı, v108 canlı-kaynak testi çivili).
+
+_Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §1 GÜNCEL DURUM'dadır (bayat referans, tarihçe)._
+### SIRALAMA (güncel): mevcut dalga (BT-1→WP-E · WP-D-r2 · 1.2/1.4) → sabah konsolidasyon+dağıtım →
+**WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
+Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
+
+## §1 AKTİF WP'ler — açık cepheler
+
+_Aşağıdaki GÜNCEL DURUM anlık yönelim; ardından uniform ÖZET TABLOSU (her WP tek biçim); sonra WP
+detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kalır; tamamlanan WP'ler §6'da._
 
 > **GÜNCEL DURUM — 2026-08-09 ~09:00 UTC (GECE+SABAH DÖRT DAĞITIM İNDİ, son commit `964696b`):**
 > Sistem canlı ve sağlıklı — broker `alpaca_paper`, birimler active, otoriter suite YEŞİL (v196
@@ -34,73 +90,24 @@ otomatik açılır; tempo çağrı-üzerine + kritik anlar.
 > `docs/SABAH-TRIYAJI-2026-08-09.md` + `docs/DEVIR-TATBIKATI-2026-08-09.md`.
 > _(Aşağıdaki 2026-07-31 gece-vardiyası kaydı tarihçe olarak korunmuştur.)_
 
-- **GECE DALGASI CANLIDA (03:00 dağıtımı):** WP-E icra turu (iki-motor tek yasası `broker.entry_law`,
-  marketable stop-limit + gap-yolları, E2 slipaj defteri, E3 kötümser bant, E4 gece/gündüz) ·
-  SIP-geçmiş-yasası (ilk canlı kanıt: `alpaca_sip_skipped_current_session`) · pano 8-kalemi ·
-  BT-1 damga-migrasyonu UYGULANDI (95/95 `replay_seed`, gerçek-canlı sayaç 0'dan başladı) ·
-  round-2 karantina (8 defter onarıldı) + `bars_integrity.json` (61 sembol) · regime `entry_gates`
-  üretici düzeltmesi (SMA/VIX kapıları İLK KEZ ateşleyebilir durumda; knob'lar kapalı, tarih
-  birikiyor) · tick-progress bekçisi (asılı-tick sınıfına) · Suite: **~2.900 test, 0 kırmızı.**
-- **GECENİN ÖLÇÜM HÜKÜMLERİ:** 52wh ARŞİV · volshock ARŞİV (canlı eşik aklandı; ham rvol20 anlamlı)
-  · MAX ARŞİV (yön ters — yüksek-MAX bizde İYİ) · EAP ARŞİV (güç-yeterli) · WP3.1 4/4 birinci-el
-  (CMP birebir → insider arşivi kesinleşti; ToM YENİ KART ölçümde) · trend kolu YAŞIYOR (rafine
-  bekliyor) · KOŞUYOR: WP-R rampa-P3 (K=4) + SMA/ToM ikizleri.
-- **E4 İLK OKUMA (tohum-etiketli):** kaybın %84'ü GECE bacağında; tek pozitif dilim (8-15g)
-  kazancını GÜNDÜZDEN yapıyor; giriş-gap p90 +100bps → %1 limit tavanı bağlayıcı olacak.
-- **A1:** ilk tam-anayasa tick'i ilerliyor (IEX bacağı 252/253 teslim; onarım soğuma-içi-bekleme
-  kokusu sabah listesinde); monitör-v2 + 3sa-gevşetilmiş bekçi nöbette.
-- **Operatöre sabah kalemleri:** MNST 2005 ×0,48 bütünlük yorumu · delist-bar kararı (QuantConnect
-  vs Massive planı) · bildirim kanalı · FMP planı · VIX kaynağı · shares-outstanding kaynağı.
-- **DENETİM KUYRUĞU (2026-08-02 gecesi; kaynak `docs/SISTEM-DENETIMI-2026-08-02.md`):** KOVA A
-  **9/9 İNDİ** (d50b03b defter+kadans · 395920e veri-hattı · 8a38248 gözetim; 44 yeni test, hepsi
-  kırmızı-önce/canlı-kopya doğrulamalı). **KOVA B 16/16 İNDİ (2026-08-02 gündüz, operatör onayıyla — üç dalga):**
-  90a6663 icra-güvenlik (C9/C23/C8) · 6020fa0 yapı (C3/C5) · 84fcf69 öğrenme-politika (C14/C16/C17) ·
-  9b8327e küçükler (C1/C25) · 0a4453f iki-motor (C11/C18/C13/C19) · 6aba956 dalga-3 (C24/C12) ·
-  0170cc0 borçlar + takip hükümleri (v76 fikstürü, Y3 ölçülemedi-notu). Dağıtıldı 14:00/14:30 UTC;
-  birim migrasyonu yapıldı. 25 bulgunun 25'i kapalı ya da bilinçli-beyanlı.
-- **Hermes-CLI yapılandırma dersi (2026-08-02, canlı vaka):** A1 taşınmasında ~/.hermes yapılandırması
-  taşınmadı (hiçbir kanalın parçası değildi), senkron tek-atımlık olduğundan kendini onarmadı, hiçbir
-  bekçi "yerel ajan yapılandırılmış mı" ölçmüyordu — LLM ikinci-görüşü 6 gün sessiz öldü. Kalemler:
-  (a) servis açılışında senkron-doğrulama (GEMINI_API_KEY dolu + CLI modelsiz → yeniden senkron + olay);
-  (b) pano senkron-sonucu zaman-damgalı (bayat OSError vakası); (c) bekçi: agent_call boş-serisi
-  "kota" ile "yapılandırmasız"ı ayırt etsin; (d) RPD bütçesi ağa HİÇ çıkmamış çağrıyı saymasın —
-  canlı vaka: ölü zincir 150/150'yi 06:19'da yaktı, gerçek Gemini kotası el değmemişken inceleme
-  tüm gün bütçe-reddi yedi (sayaç korumaya çalıştığını ölçmüyor); (e) `review_candidates` dolu cevabın
-  filtreden sıfır görüşle çıktığı hâlde OLAYSIZ None dönüyor (hermes.py ~2109) — ham cevabın ilk
-  ~300 karakteriyle bir `candidate_review_empty_parse` uyarısı gerekir (2026-08-02 canlı vaka:
-  Gemini dolu cevap verdi, kayıt yok, sebep görünmez).
-- **VERSİYONLU-STATE DAĞITIM BOŞLUĞU (2026-08-02 akşam, canlı doğrulandı — KRİTİK SINIF):**
-  bounds.yaml/goal.yaml versiyonda AMA rsync state/'i dışlar → hiçbir dağıtım bunları canlıya
-  taşımıyor. Canlıda w_turnover YOK (sıfır turnover-örneklemesinin C15'ten bağımsız İKİNCİ kök
-  nedeni — knob hiç doğmamış), heat_hard_r YOK (guard fail-safe aynı değerlerde; sahiplik canlıda
-  gerçekleşmemiş). ÇÖZÜM toplu pencerede: canlı↔repo diff (canlıda repo-dışı satır varsa DUR) →
-  worker durmuşken scp → doğrulama. KALICI KALEM: dagit'e versiyonlu-state adımı (diff-göster +
-  onaylı-kopya) eklenmeli.
-- **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
-  yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
-  `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
-  sıfırlamıyor (test_regime_patch sıraya-bağlı düşüş — kısmi `-k` seçimlerinde; tam suite düzeninde
-  görünmez) · pano `_patOK/_patNote` `dedektor_dustu/olculemedi` bilmiyor (düşen dedektör yeşil
-  görünür — S2R-3/app.js kalemi) · mutation.py `dedektor_dustu`yu okumuyor.
+### AKTİF WP ÖZET TABLOSU (uniform biçim: durum · kapsam · açık kalemler · dosya-sınırı · kanıt-kartı)
 
-## 2. DURUM PANOSU (2026-07-31 sabah)
+| WP | durum | kapsam | açık kalemler | dosya-sınırı | kanıt-kartı |
+|---|---|---|---|---|---|
+| **WP-E** İcra Gerçekliği | 🔴 aktif | iki-motor icra sadakati · E1 giriş · E2 slipaj defteri | E2 defteri accrues → canlı-geçiş kapısında yeniden hüküm · ayna-dolum akışı boşluğu (ayrı teşhis) · E3/E4/E5 örneklem bekliyor | `broker.entry_law` · `adapters/alpaca.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 |
+| **WP2** Referans-Verisi | 🔓 kilit açık | EDGAR PIT fundamentals adayları | turnover özniteliği skor-bileşeni kablolama + knob bounds default-0 (öğrenme ölçer, gölge-önce; elle ağırlık YOK) | skor bileşeni + `bounds.yaml` | EDG-2026-016(SUCCESS) · 012/013/014 |
+| **WP-U** Evren/PIT | 🔶 aktif (stratejik ana cephe) | survivorship-serbest evren · PIT üyelik · delist-bar | EDG-022 ölçüldü→FINVIZ gerekçesiz (§4) · PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ operatörde (§3) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
+| **WP-S** Sermaye/Koruma | 🔴 aktif | koruma×süpürücü · sermaye defter bütünlüğü · boyut makbuzu | koruma DAVRANIŞSAL EOD kanıtı (Pazartesi 13:30 UTC+) · SB-2 `drift_sinifi` · melez pozisyonlar + dormant setup icra (operatör §3) | `adapters/alpaca.py` · `store.py` · `obs.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) |
+| **WP-S2** Ölçüm/Görünürlük Borçları | 📋 aktif | beyanlı ölçüm/görünürlük borçları | kill#4 uygulama (kill kapısı yalnız BOZULMA sınıflarına) · sistematik artefakt turu (envanter yürüme) · systemd + ajan-git (§3) | `api.py` · `web/app.js` · `guard.py` | EXE-2026-002-R1 |
+| **WP-M** Metodoloji/Yasa | 📋 aktif | ölçüm altyapısının kendisi | 11 kalem açık — EN YÜKSEK: **M1 kıyas-kirlenmesi** · PBO/DSR tabanı (M2, restart-şartlı) · araç-kör-nokta (M11) · 2B/2C/2D/A4/prescreen-damga/K-senkron | `analytics` · `reflect` · `dataset` | KYS-2026-001 |
+| **WP-D** Veri Bütünlüğü | 🔄 aktif | karantina/bütünlük kapıları · türetilmiş artefaktlar | türetilmiş artefakt güvensiz-dönem-dışlamalı yeniden üretim · seans-içi boşluk tespiti · earnings kapsama+fail-open · `dataset.load↔bars_integrity` bağlama (operatör §3) | `adapters/data.py` | — |
+| **WP-H** Mühendislik Dayanıklılığı | 📋 aktif | sürüm kontrolü · atomik yazım · sertleştirme | H9 Kademe-B/C çağrı-noktası taşıma (~11 kapı-dışı; **`auth._write` sabit-tmp EN TEHLİKELİ**) · H3 tur-2 seccomp · LoadCredential + OCI aktivasyon (operatör §3) | `store.py` · `auth.py` · `memory.py` · `run.py` · `deploy/` | — |
+| **WP-QC** QuantConnect | 🆕 aktif | platform-içi ölçüm + LEAN yerel motor (asla arşiv-kaynağı değil) | LEAN yerel kurulum (bu makinede dotnet/docker YOK — makine bloğu, boyut L) · FREE fizibilite kuyruğu ②③④⑥⑦ · notebook koşumu + tier (operatör §3) | `research/qc_dogrulama/` | EDG-2026-021 |
+| **WP-UX** Yeniden-Tasarım | 🔴 aktif | pano yüzey/IA yeniden-tasarımı (D0-D6; D0-D6 ✅ §6) | **D3-c ALTI MODÜL** (delist-arşivi/C2-5 Massive kararına bağlı + kart ZORUNLU) · **D3-b F3-F13/F15** yüzeyleri | `web/app.js` · `api.py` | D6 çıtası = WP-P doktrini |
+| **WP-P** Pano/Operatör Arayüzü | 📋 aktif (P1-P10 ✅) | kontrol-odası doktrini (ISA-101/EEMUA-191/Few-Tufte) + RUNBOOK | `docs/RUNBOOK.md` **32 "prosedür henüz yazılmadı"** (GERÇEK prosedür yazımı — yüzey değil içerik) · WP-P yüzey işi WP-UX'e devredildi | `docs/RUNBOOK.md` · `ops/runbook_uret.py` | — |
+| **WP-L** Öğrenme/Ölçek Merdiveni | 📋 tetik-şartlı | meta-labeling → ML sıralama → Faz-6 BEŞ KİLİT | kodla açılabilir kilit YOK; işlem birikimi / evren genişlemesi / operatör bekler · Faz-6 INTRADAY_ARM operatörde (§3) | — | — |
 
-| Eksen | Durum | % |
-|---|---|---|
-| Çalışma ortamı (A1 7/24 + bekçiler + yedek zinciri) | canlı; tick-bekçisi + fail-notify + VM-dışı yedek | 95 |
-| Veri hattı (aynı-akşam IEX + sip-sabah + onarım + takvim/karantina/bütünlük kapıları) | canlıda; delist-bar kısıtı açık | 90 |
-| İcra sadakati (iki-motor tek yasası + E2 defteri) | KOD canlıda; ilk gerçek emir sınavı bugünkü seans | 70 |
-| Ölçüm yönetişimi (kartlar + K + DSR/PBO + donmuş holdout + kod-damgası) | işliyor; skor kartı 39/100 → yeniden puanlama bekliyor | 85 |
-| Öğrenme otomasyonu (sprint/dolgu/Eksen-2/karne) | kadanslar canlı; ilk tam gece verisi birikiyor | 80 |
-| Edge envanteri | 9 aile ölçülmüş-arşiv · 1 YAŞIYOR (trend) · 3 ölçümde (rampa-P3, SMA, ToM) | — |
-| Pano dürüstlüğü | 8 kalem canlıda; operatör doğrulaması bekliyor | 85 |
-| Gerçek-canlı kanıt | n=0 (damga sonrası dürüst sayaç) — birikim bugün başlıyor | 0 |
-
-## 3. PLAN — WP KONSOLİDASYONU (2026-07-31 gece; tüm plan tek yapıda — iş emri + eski §3.0-3.5 birleşik.
-Ön-kayıt kartları: `research/cards/` (kartsız ölçüm kodu yok). Durum: ✅ kapalı · 🔄 koşuyor · 🕐 kuyruk · 🔒 bağımlı/bilet · 📋 sırada)
-
-### WP0 — Keşif ve Uyum Matrisi ✅ (2026-07-31; 14 mekanizma kanıtlı; en riskli 3 boşluk: iki-motor
-icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
+### AKTİF WP DETAYLARI (tam metin — kapanan alt-kalemler ✅ tarihçe olarak korunur)
 
 ### WP-E — İcra Gerçekliği 🔴 ÖNCELİK YÜKSELDİ (2026-08-03 karne-tazeleme bulgusu; kart: EXE-2026-001)
 - **BULGU (research/olcumler/karne_tazeleme_2026-08-03/):** güncel motorla geriye-dönük defter
@@ -135,23 +142,6 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
 - EMİLDİ: eski Y2 TCA/shortfall defteri (=E2/E3) · canlı-TCA rezervasyonu (canlıya geçişte,
   denetim YÜ-1) · payda-uyumsuzluğu sorusu (canlı ödeme 0,97 vs Search-OOS 1,53 — E4+E1 açıklayacak).
 
-### WP1 — Yalnız-OHLCV Adayları
-- 1.2 52w-high ✅ ARŞİV (9/9 hücre anlamsız; VCP'den bağımsız ama bilgisiz ρ=-0.036; panel tanısı
-  aralık-kısıtını dışladı) · 1.4 hacim-şoku ✅ ARŞİV (bant hayalet-artefaktı değil AMA 0/18 hücre
-  ham rvol20'yi geçemedi — ham rvol20 @20 IC 0.065 ANLAMLI; canlı eşik kalır). TORUN-KART ADAYI:
-  rvol≥2.5 bölgesi +1.61% anlamlı-pozitif, üçgen form onu sıfırlıyor — form-revizyonu YENİ ön-kayıtla
-  (ölçüm-sonrası-seçim yasağına uyuldu). BT-2 hasar tespiti: 5/63 hücre anlamlılık DEĞİŞTİRDİ
-  (sınırda hasar); 2018 hayaleti bu pencereye değmiyor — uzun-geçmiş artefaktları aklanmadı.
-- 1.3 MAX-filtresi ✅ ARŞİV (2026-07-31: yön TERS — yüksek-MAX bizde @20 +1,46pp iyi; eleme
-  hedef-çıkışların %28'ini keserdi; kill×2). **1.1 residual momentum ✅ ARŞİV (2026-07-31, kart
-  EDG-007, K=2): 6/6 hücre CI-0-içi + artımlı katkı yok — yapısal örtüşme (residmom≈rawmom ρ=0,625,
-  üst-terzil örtüşmesi %83); aile kapalı, torun yok. Yan kazanım: FF3 günlük faktörler repo'da
-  (research/ff_factors/, damgalı+doğrulanmış) — 1.5 için altyapı hazır.** **1.5 vol-scaling overlay ✅ ARŞİV (2026-07-31, EDG-008, K=2, kill#3): iki pencere de yönsüz;
-  tasarım dersi — IS-çapalı sigma_hedef düşük-vol OOS'ta kaldıraç-artırıcıya döner, ısı-rampasıyla
-  çifte-kısma; torun (yalnız-kıs m<=1) tetik-şartlı: yüksek-vol penceresi birikince.**
-- EMİLDİ: eski G2 skor-inşası S1/S2 adayları (rvolband/min_rvol çekirdeği) → 1.4'ün kart hükmüne
-  bağlandı (iki ayrı ölçüm değil) · eski G7 vol-hedefleme → 1.5'in portföy-bacağı olarak, ısı
-  tavanıyla birlikte POZİTİF-EV ÖNKOŞULLU (denetim RS-1).
 
 ### WP2 — Basit Referans-Verisi Adayları 🔓 KİLİT AÇILDI (2026-08-01 — EDGAR, operatörsüz)
 - 2.4 EAP ✅ KAPALI (güç-yeterli). **2.1 ✅ ÇÖZÜLDÜ: SEC EDGAR companyfacts PIT verisi repo'da**
@@ -166,18 +156,39 @@ icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
   SIRADAKİ ADIM 📋: turnover özniteliği skor-bileşeni olarak kablolanır + knob bounds'a default-0
   (öğrenme döngüsü ölçer, gölge-önce; elle ağırlık YOK) — ayrı implementasyon turu.
 
-### WP3 — Doğrulama ve Ek-Veri Aileleri
-- 3.2 insider yeniden-kaydı ✅ KAPALI: gerçek CMP ayrımıyla ölçüldü, pozitif-kontrollü sıfır →
-  kalıcı arşiv (iş emrinin kendi kill-eşiği).
-- 3.1 kaynak-doğrulama ✅ TAMAM (2026-07-31 gece — 4/4 birinci-el): CMP tanımı BİZİMKİYLE
-  BİREBİR (insider arşivi GÜÇLENDİ; 2025 replikasyonu etki yarıya inmiş diyor — sıfırımız decay'le
-  tutarlı) · Moskowitz-Grinblatt: en-büyük-quintile'da da var AMA Grundy-Martin itirazı (VW +
-  1-ay gecikme sağlamlık protokolü ŞART — ileride kart açılırsa protokole gömülü) · Meursault
-  PEAD.txt: etki büyük-cap'te sönmüyor ama transkript+NLP ister → veri bileti (FMP transkriptleri
-  VAR, NLP altyapısı YOK) · McConnell-Xu ToM: DOĞRULANDI+replike → KART AÇILDI (EDG-2026-006,
-  ölçümde).
-- 3.3 text/analist PEAD 🔒 veri bileti (analist-tahmin/NLP; proxy yasak). EMİLDİ: eski Y6
-  transkript-LLM skoru (aynı text-veri ailesi; look-ahead disiplini şartıyla aynı bilete bağlı).
+
+### WP-U — Evren/PIT Cephesi 🔶 (araştırma indi 2026-07-31; stratejik ana cephe)
+- **ÜYELİK ÇÖZÜLDÜ (ücretsiz):** S&P500 tarihî üyelik 1996→bugün repo'da
+  (`research/pit_universe/sp500_uyelik_tarihi.csv`, 2.719 satır, MIT — fja05680). S&P400/600 için
+  hazır ücretsiz set BULUNAMADI (yfiua desteklemiyor — araştırma iddiası düzeltildi); alternatif:
+  SEC 13(f) resmî listesi (2004Q1→, likidite-evreni; CUSIP→ticker emeği).
+- **SERT KISIT (2026-08-02 SAYILANDI — EDG-018 kapı ölçümü):** delist-bar boşluğu ölçüldü:
+  endeksten çıkmış 703 ismin yalnız 12'si arşivde barlı (%1,71); EDG-016 panel-penceresindeki
+  çıkışların **%96,57'si SIFIR bar** (338/350) ve 12 barlının hepsi 2024+ (ikinci-seçilim).
+  Survivorship şerhi artık kapsama-yüzünde sayı; iki yaşayan sinyalin büyüklüğü delist-bar
+  kaynağı gelmeden ölçülemez — operatör kararının fiyat-etiketi bu. Kanıt:
+  research/olcumler/wp_u_midcap/. EDG-018 askıda:veri-kapısı. Yollar (2026-08-03 QC-araştırmasıyla YENİDEN ÇERÇEVELENDİ —
+  docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md): iki yol RAKİP DEĞİL TAMAMLAYICI. (a) QC platform-içi
+  ölçüm hattı — BEDAVA, BUGÜN (EDG-021 deseni kalıcılaşır; ToS verinin dışarı çıkışını kilitler,
+  içeride ölçüm serbest); (b) Massive yükseltme — YEREL ARŞİVİN tek meşru yolu (operatör kararı;
+  QC bunu ikame edemez — 'internal LEAN use only').
+- **⚠ OPERASYONEL BULGU (canlı sondaj):** mevcut Massive planı artık yalnız ~SON 2 AYI veriyor —
+  2004'e giden yerel bar arşivi yeniden üretilemez KALINTI; arşiv kaybı = kalıcı kayıp → yedek
+  zinciri kritikliği ↑ (VM-içi tar + Mac-pull mevcut; üçüncü kopya değerlendirilebilir).
+- Sonrası: PIT-evrenli G1 mid-cap ölçümü (üyelik verisi hazır; bar kısıtı yalnız delist-isimleri
+  etkiler — sağ-kalan mid-cap'lerle ÜST-SINIR ölçümü yine mümkün, yanlılık beyanlı) → B-9 (tetik:
+  trend kolu ship) · 13F önceliklendirme katmanı.
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-U-2026-08-09.md`, salt-ölçüm + plan):** canlı evren **251 =
+  REPLAY_UNIVERSE** (aynı küme, fark YOK — "251" zaten `REPLAY_UNIVERSE`'ün kendisi). FINVIZ evren-
+  genişletme kolu **%100 ÖLÜ** — `finviz_unavailable` **3.746** / `finviz_universe` (başarılı keşif)
+  **0** (2026-07-14→08-09), `FINVIZ_API_KEY` YOK → evren kalıcı 251. **RAKİP KÖK:** de-risk rampası
+  günlerin **%92**'sinde pozisyonu 1'e kısıyor (ROADMAP:425) → **"evren +X → işlem +Y" ÖLÇÜLEMEDİ**
+  (bilerek uydurulmuyor: aday-havuzu mu, tavan mı bağlıyor belirsiz). ÖNERİ **EDG-2026-022** ("Evren
+  bağlayıcı kısıt mı?" — OTONOM/bloksuz; altyapı hazır: `backtest.py` candidate_log + eff_max_open +
+  plan_log; yeni bar GEREKMEZ): FINVIZ harcamasını **DE-RISK eder** (evren bağlamıyorsa para boşa).
+  PIT fundamentals **EDGAR'la ÇÖZÜLÜ** (evrene bağlı otonom kol, blok değil). Delist-bar: 703 çıkıştan
+  yalnız 12'si arşivde barlı (%1,71); EDG-016 penceresi %96,57 sıfır-bar (kaynak kararı §6-9'da).
+
 
 ### WP-S — Sermaye/Defter Bütünlüğü + Koruma 🔴 AKTİF (2026-08-07 gecesi; kaynak: canlı risk turu)
 
@@ -247,6 +258,7 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   ALIP SATTIĞINI değiştirir → ön-kayıt kartı + kill-list gerekir. Seçenekler: (a) icraya bağla,
   (b) tavsiye kalsın ama kapı GO vermesin, (c) geri al. Gözlemlenebilirlik tarafı (terminal
   olay · `dormant_unconsumed` ayrı kovası · panoda payda-beyanlı `0/31`) otonom yapılabilir.
+
 
 ### WP-S2 — Ölçüm/Görünürlük Borçları 📋 (2026-08-07; hepsi BEYANLI, hiçbiri sessiz değil)
 - **kill#4 uygulama borcu (kart `EXE-2026-002-R1` ön şartı):** kod eşleşmeyenleri ZATEN
@@ -337,163 +349,6 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
   · **SB-2 `drift_sinifi` (AÇIK — WP-S):** MIRROR_DRIFT alarmına sebep-adlandırma alanı; 08-05'te
     dört alarm bastı, hiçbiri sebebi söylemedi.
 
-### WP-N — Kanıt-Hızı Programı 🔴 AKTİF (2026-08-09; operatör onaylı sıra: N1→N2→N3→N4, N5 serpiştirilir)
-
-**TEŞHİS (ölçülü):** darboğaz kod değil KANIT ÜRETİM HIZI. Faz-6'nın kapalı üç kilidi kârlı
-işlem geçmişi istiyor (kodla açılabilecek kilit kalmadı — WP-L); Eksen-2 67 skill'in 2'sini
-ölçebilmiş; Faz-5 4/20 çiftte; E3 ampirik bandı örneklem bekliyor; gölge modeli n_live=0
-yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt musluğu bu.
-
-- **N1 — Bildirim jetonu ayrımı ✅ KOD TARAFI (v216 — NAKED_POSITION jetonu obs.py NOTIFY_TOKENS'a ayrıldı; jeton pini `7f91178`'de beyanla büyüdü) / 🔒 KANAL OPERATÖRDE:** `NAKED_POSITION`
-  jetonu (obs.py NOTIFY_TOKENS) + koruma alarmının `MIRROR_DRIFT`ten ayrılması — bugün ikisi
-  aynı 6 saatlik susturma penceresini paylaşıyor; korumasız-pozisyon gecesi sev-1 alarmlar
-  bastı ve operatöre HİÇBİRİ ulaşmadı (33 teslim edilmemiş alarm birikmiş). Jeton ayrımı kanal
-  gelmeden de değerli (susturma ayrışır). KANAL (Telegram bot token / webhook URL) operatörün
-  tek parçası — teslim zinciri hazır, kanal boş (WP-O §6.1).
-- **N2 — Gölge kapsam genişletme ✅ KOD İNDİ (v217, kart EXE-2026-003 + R1 — gölge planlı-kol):** silahlı kol bayt-özdeş kaldı, planlı (silahlanmamış) kol AYRI defterde `kol: planli|silahli` etiketiyle (karışım kill#4'ü ateşlerdi, ölçülüp kanıtlandı). Tasarım metni: 4b bugün yalnız SİLAHLANMIŞ planların
-  gölge dolumunu yazıyor (6 seansta 4). Genişletme: tetiği kesilen PLANLI (silahlanmamış)
-  GO/REVIEW planları da gölge dolumu yazar, `kol: planli|silahli` etiketiyle AYRIK.
-  **ROL-1 DÜZELTMESİ (ilk öneri metnindeki hesap yanlıştı):** bu genişletme Faz-5 kilidinin
-  n_min'ini DOĞRUDAN doldurmaz — kilidin çifti gerçek-iç-dolum ister ve silahlanmamış planın
-  iç dolumu YOKTUR (R1'in kapsam_disi kovasına düşerler). Ölçeği veren İKİNCİL eşleştirmedir:
-  gölge(dakika-sim) × cf(EOD-sim) — İKİ SİMÜLASYON, aynı maliyet modeli, fark yalnız zamanlama
-  (EXE-2026-002'nin kendi onayladığı metodoloji). cf tüm adayları kapsadığı için örneklem
-  ~7 bin satırlık havuzdan beslenir. Bu ikincil hat KİLİDİ AÇMAZ (kilit gerçek-çift ister);
-  birikip gerçek-çift hattıyla UYUŞURSA kilidin kanıt kaynağını genişletme önerisi ayrı bir
-  kart revizyonu olarak OPERATÖRE gider. cf'nin çıkış-sadakati kusuru bu ölçümü KİRLETMEZ —
-  bu bir GİRİŞ ölçümü, çıkış modeli işe karışmıyor.
-  Skill gölge rotasyonu (57 ölçülmemiş skill, haftada N) AYRI kart — N2'den sonra açılır.
-- **N2b — Skill görüş defteri + yaşam-döngüsü ⚠️ KOD İNDİ / CANLI KANIT BEKLİYOR (v218, kart EDG-2026-019):**
-  skill yaşam-döngüsü dürüstlüğü + görüş defteri v1 katmanı indi (İLK koşusunda iki yönlü kesti).
-  AMA terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te
-  YENİDEN-ÜRETİLEMEDİ: `eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi, kadans bu adımı KOŞMADI —
-  KURU-KOŞU. Doğrulama birkaç EOD penceresi + EDG-2026-019 ölçüm kodu bekliyor (uydurulmaz:
-  ölçülemedi — bkz. `docs/SABAH-TRIYAJI-2026-08-09.md` §iii.7/§iv). 57 ölçülmemiş skill rotasyonu
-  bu hatta bağlı.
-- **N3 — Sermaye bekçileri ✅ İNDİ (WP-S SB-4 + SB-3, v216):** damgasız-yazım bekçisi (kitap
-  `store` dışından değişebiliyor ve kimse görmüyor — denetim tabanı) + `taban_kaymasi` satırı;
-  ikisi de v216'da indi (bkz. WP-S SB-4/SB-3 ✅).
-- **N4 — cf çıkış-yasası sadakati 🔒 BAKIM PENCERESİ ŞARTLI (en pahalı, en değerli):** 6 çıkış
-  tipi modellenecek + TÜM cf tarihi yeniden koşulacak (saatler, state'e yazar → canlı worker
-  koşarken YAPILMAZ). %96'lık skor havuzundaki +0,039R iyimserlik kapanır; Eksen-2/terfi/edge
-  hükümlerinin ortak zemini temizlenir. Kendi ön-kayıt kartıyla gider; pencereyi operatör açar.
-- **N5 — Görünürlük turu ✅ İNDİ (v219 + v225 + v226):** 409-yutması (boş catch 6→0, v219) +
-  `EV_TR` koruma_*/süpürücü çevirileri (v219 dokuz olay + v225 `siniflar` dökümü) +
-  `k.olcum`un çizilmesi (beş kilit, v219) + hermes telemetri kartı (v219, İLK pano okuyucusu) +
-  liveness kartı (v226). WP-S2 görünürlük borçlarının icra turu; hepsi app.js/api.py gösterim ailesinde.
-- **N6 — DEVİR TATBİKATI ✅ KOŞTU (6. kova, 2026-08-09 01:20-02:10 UTC — `docs/DEVIR-TATBIKATI-2026-08-09.md`):**
-  bağlamsız devralan ajan sistem haritası + ilk 10 risk çıkardı. **KRİTİK BULGU:** önceki koruma
-  "✅ KAPANDI" beyanı artefakttan doğrulanmamıştı — koruma×süpürücü çarpışmasını yeniden açtı
-  (`68ea173`), kök düzeltme v220+v221'le indi (bkz. WP-S ✅). Bağlam-sahibi SABAH TRİYAJI
-  (`docs/SABAH-TRIYAJI-2026-08-09.md`) 13 kalemi dağıtımlardan SONRA yeniden ölçtü: **13/13 gerçek,
-  0 çürük**; kapsamdaki P1=0 (tek gerçek sermaye-P1 çıplak pozisyon v220 ile kapandı). Fark hükmü:
-  tatbikatın bulduğu bilinen-dışı kalemler (systemd exit-143, sprint orphan, dual-source) dalgaya/
-  WP-S2'ye girdi. _(Aşağıdaki tasarım metni tarihçe olarak korunmuştur:)_
-- **~~N6 — DEVİR TATBİKATI (tasarım; 6. kova; DAĞITIMLAR BİTİNCE koşar — operatör onayı 2026-08-09)~~:**
-  BAĞLAMSIZ bir ajan (oturum hafızası YOK, yalnız depo + salt-okunur canlı) "sistem haritası +
-  ilk 10 risk" çıkarır; girişi deponun kendi devir sözleşmesi (CLAUDE.md → MERIDIAN_ENGINEERING_LOG).
-  Rol-1 çıktıyı BİLİNEN bulgu defteriyle (2026-08-07/09 turları = bilinen-pozitif seti) kıyaslar:
-  (a) bilinenleri BULAMADIĞI yerler = depo onboarding'inin/tek-kaynak haritasının boşluğu —
-  belge borcu olarak açılır; (b) bizim listemizde OLMAYIP bulduğu şeyler = bizim körlüğümüz —
-  şiddetine göre dalgaya girer. Çıktı: docs/DEVIR-TATBIKATI belgesi + Rol-1 fark hükmü.
-  SIRA GEREKÇESİ: dağıtım #2'den SONRA — tatbikat iyileştirilmiş durumu denetlesin ki bulduğu
-  her boşluk GERÇEK kalan boşluk olsun, bu gece zaten kapatılmış bir şeyin gölgesi değil.
-
-### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
-- **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
-  DÜŞTÜ: karşı-olgu kolları kapının OOS doğrudan etkisinin SIFIR olduğunu (55 bloke gün, 0
-  engellenen giriş), OOS "iyileşmesinin" tamamen IS-yankısı (portföy-durumu taşıması) olduğunu
-  kanıtladı; tek atfedilebilir pencerede kill#1: Sharpe −0,25→−0,90, PARA −0,03→−0,09. Tez kısmen
-  doğru (vol anlamlı ↓, oran 0,79) ama bedeli getiri — "pano göstergesi yeter". · **ToM tilt ✅
-  ARŞİV (EDG-006):** ön-adımda yön ters (−11,8bps), ikizler hiç açılmadı.
-- **KABLO BİLETİ ✅ KAPANDI (2026-08-01 temizlik turu):** spy_sma_gate GÖSTERGE'ye emekli edildi
-  (blocks sabit False + knob_emekli beyanı + sessiz-diriliş çivisi; hükümsüz kapıya çekilmiş kablo
-  söküldü). KALAN KÜÇÜK İŞ 📋: bounds.yaml'dan knob satırı düşülecek (makine etkisiz knob'u hâlâ
-  örnekliyor — 6 değerlendirme boşa K harcadı; akşam penceresi).
-- VIX koşullaması 🔒 veri-kilidi (operatörde) — SMA hükmünden sonra AİLE ÖNCELİĞİ DÜŞTÜ: rejim
-  kapısı ailesi bu evrende "vol'ü düşürür ama parayı da düşürür" profili verdi; JM rejim modeli +
-  koşullu vol kısma adayları açılmadan önce bu hüküm karşı-kanıt olarak okunmalı.
-- EMİLDİ: eski Y3 dörtlüsünün SMA/VIX bacakları · turn-of-month index-tilt (EDG-006 ile öldü) ·
-  breadth/distribution-day = PANO GÖSTERGESİ, kapı DEĞİL (kill-list).
-
-### WP-R — Rampa/Çıkış Serbestleştirme ✅ ÖLÇÜLDÜ→DARALDI (2026-07-31 03:19; kart EDG-003 measured)
-- **HÜKÜM:** P3 paketi ÖLDÜ (rampa serbest bile olsa P≤0,48 — suçlu rampa değil paketmiş);
-  early_kill-tek sağ (P=0,606) → gölge-v2 V3 birikimi sürer; **rampanın koruması GERÇEK ölçüldü**
-  (serbestlikte DD %4,6→%9,7) — gevşetme lehine kanıt yok. Kalan iş küçüldü: eşikleri bounds'a
-  taşımak yalnız hipotez-görünürlüğü için (düşük öncelik); çıkış-mimarisi umudu artık gölge-v2
-  canlı birikimi + E1/E4 zamanlama içgörülerinde (gece bacağı kaybı, 8-15g gündüz kazancı).
-- Kanıt: de-risk rampası (%3-kıs/%8-sıfırla, KODDA SABİT) günlerin %92'sinde aktif, izin çoğu gün
-  1 pozisyon — işlem üretiminin gizli boğucusu; P3 çıkış paketi imzası 4/4 (ödeme 2,84, beklenti
-  0,287R) ama örneklem çöküşüyle "reddedildi-çürütülmedi".
-- İş: rampa eşikleri bounds'a + `exit.profit_target_r`/`exit.time_stop_days` "kapalı" değerleri +
-  sabit-rampa koşulunda P3 ve early_kill tek-başına yeniden-ölçüm + chandelier sıkıştırma
-  tuhaflığının (max(close,hh) formu) düzeltilme kararı. Tek ön-kayıt kartı, K-muhasebeli.
-- EMİLDİ: eski G3b çıkış reformu ölçümü (bu turun ta kendisi, genişlemiş haliyle).
-
-### WP-U — Evren/PIT Cephesi 🔶 (araştırma indi 2026-07-31; stratejik ana cephe)
-- **ÜYELİK ÇÖZÜLDÜ (ücretsiz):** S&P500 tarihî üyelik 1996→bugün repo'da
-  (`research/pit_universe/sp500_uyelik_tarihi.csv`, 2.719 satır, MIT — fja05680). S&P400/600 için
-  hazır ücretsiz set BULUNAMADI (yfiua desteklemiyor — araştırma iddiası düzeltildi); alternatif:
-  SEC 13(f) resmî listesi (2004Q1→, likidite-evreni; CUSIP→ticker emeği).
-- **SERT KISIT (2026-08-02 SAYILANDI — EDG-018 kapı ölçümü):** delist-bar boşluğu ölçüldü:
-  endeksten çıkmış 703 ismin yalnız 12'si arşivde barlı (%1,71); EDG-016 panel-penceresindeki
-  çıkışların **%96,57'si SIFIR bar** (338/350) ve 12 barlının hepsi 2024+ (ikinci-seçilim).
-  Survivorship şerhi artık kapsama-yüzünde sayı; iki yaşayan sinyalin büyüklüğü delist-bar
-  kaynağı gelmeden ölçülemez — operatör kararının fiyat-etiketi bu. Kanıt:
-  research/olcumler/wp_u_midcap/. EDG-018 askıda:veri-kapısı. Yollar (2026-08-03 QC-araştırmasıyla YENİDEN ÇERÇEVELENDİ —
-  docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md): iki yol RAKİP DEĞİL TAMAMLAYICI. (a) QC platform-içi
-  ölçüm hattı — BEDAVA, BUGÜN (EDG-021 deseni kalıcılaşır; ToS verinin dışarı çıkışını kilitler,
-  içeride ölçüm serbest); (b) Massive yükseltme — YEREL ARŞİVİN tek meşru yolu (operatör kararı;
-  QC bunu ikame edemez — 'internal LEAN use only').
-- **⚠ OPERASYONEL BULGU (canlı sondaj):** mevcut Massive planı artık yalnız ~SON 2 AYI veriyor —
-  2004'e giden yerel bar arşivi yeniden üretilemez KALINTI; arşiv kaybı = kalıcı kayıp → yedek
-  zinciri kritikliği ↑ (VM-içi tar + Mac-pull mevcut; üçüncü kopya değerlendirilebilir).
-- Sonrası: PIT-evrenli G1 mid-cap ölçümü (üyelik verisi hazır; bar kısıtı yalnız delist-isimleri
-  etkiler — sağ-kalan mid-cap'lerle ÜST-SINIR ölçümü yine mümkün, yanlılık beyanlı) → B-9 (tetik:
-  trend kolu ship) · 13F önceliklendirme katmanı.
-- **KEŞİF 2026-08-09 (`docs/KESIF-WP-U-2026-08-09.md`, salt-ölçüm + plan):** canlı evren **251 =
-  REPLAY_UNIVERSE** (aynı küme, fark YOK — "251" zaten `REPLAY_UNIVERSE`'ün kendisi). FINVIZ evren-
-  genişletme kolu **%100 ÖLÜ** — `finviz_unavailable` **3.746** / `finviz_universe` (başarılı keşif)
-  **0** (2026-07-14→08-09), `FINVIZ_API_KEY` YOK → evren kalıcı 251. **RAKİP KÖK:** de-risk rampası
-  günlerin **%92**'sinde pozisyonu 1'e kısıyor (ROADMAP:425) → **"evren +X → işlem +Y" ÖLÇÜLEMEDİ**
-  (bilerek uydurulmuyor: aday-havuzu mu, tavan mı bağlıyor belirsiz). ÖNERİ **EDG-2026-022** ("Evren
-  bağlayıcı kısıt mı?" — OTONOM/bloksuz; altyapı hazır: `backtest.py` candidate_log + eff_max_open +
-  plan_log; yeni bar GEREKMEZ): FINVIZ harcamasını **DE-RISK eder** (evren bağlamıyorsa para boşa).
-  PIT fundamentals **EDGAR'la ÇÖZÜLÜ** (evrene bağlı otonom kol, blok değil). Delist-bar: 703 çıkıştan
-  yalnız 12'si arşivde barlı (%1,71); EDG-016 penceresi %96,57 sıfır-bar (kaynak kararı §6-9'da).
-
-### WP-K — Kurulum/Aile Genişletme
-- **Trend-kolu RAFİNE ✅ ÖLÇÜLDÜ (2026-07-31, kart EDG-009, K=4; pozitif kontrol 0.000000 farkla):**
-  rafine üstünlük KANITLANAMADI (B aylık-rebalans CI-0-içi, vol/DD kötü; muhafazakâr okuma) →
-  HAM KOL incumbent. ASIL BULGU — KALICI PIT ŞERHİ: +13,1p/yıl fazlanın büyük kısmı evren-seçim
-  yanlılığı; PIT-sağkalan evrende ~6-7p/yıl (D t=2.08 — hayatta, kill#2 tetiklenmedi). 2021+
-  tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). **GÖLGE-KİTAP ✅ KOD-HAZIR
-  (2026-07-31 gece turu; canlıya sonraki pencerede):** trend_shadow.py sıfır-yetkili paralel defter
-  — şasi-birebir sabitler, PIT şerhi kitap içinde, YASA-6 okuyucuları çivili, 645-seans smoke temiz
-  (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · **G4 pullback ✅ ARŞİV (2026-08-01, kart EDG-010, K=2): bağımsızlık GERÇEK (Jaccard ~0.02)
-  ama kenar YOK — ham pozitiflik evren-tabanında kayboluyor (dip10 trend-evreninde anlamlı negatif);
-  kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 in-play: EDG-011 ASKI SÜRER (tanım tarafı — 2026-08-02 keşfi: veri İKİ bağımsız eksenle
-  olgunlaştı [Nasdaq-geçmişi %99,7 tamlık + EDGAR 8-K %98,4 çapraz-doğrulama, dakika-damgalı]
-  ama kartın "t'de BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz; PIT defteri 0 satır —
-  A1'de snapshot dosyası hiç doğmamış, AYRICA canlı earnings.csv 2-sütunlu/Jul-31 bayat =
-  tazeleme turu dağıtımdan beri koşmamış, İZLENECEK). Tek-yönlü post-event tez ölçüldü ve
-  **EDG-2026-020 ✅ ARŞİV (2026-08-03: kill#1+#3 — havuz-fazlası CI-0-içi/negatif-nokta; ham
-  +%1,1 taban-sürüklenmesiydi [ders#3 vakası]; PEAD-kopyası değil ama bilgi de yok; 011'e
-  aleyhte-önsel not düşüldü)** · **G6 koşullu-kısa → RAF (2026-08-02 fizibilite keşfi: 5 yüzeyin 4'ü YOK
-  [broker/strategy/gölge/ayna], 12-kalem motor inşası; EDG-005 karşı-gözlemi: SPY<200MA
-  günlerinde long hâlâ pozitif-beklentili görünüyor — kısa tezine doğrudan karşı; 55 OOS
-  bloke-gününde 0 silahlanma. Yeniden açılış: operatör kararı + delist-bar sonrası kısa-tez
-  kanıtı. Kanıt: research/olcumler/kesif_2026-08-02/)** · **VCP-DECOMPOSE ✅ ARŞİV (2026-08-01, EDG-015,
-  K=2): çatı da bilgisiz — üst-%20 kompozit @10 aday-havuzunun ANLAMLI ALTINDA; form=bileşen-toplamı
-  (ρ=0,95). WP-K'da ölçülmemiş hipotez KALMADI.** ⚠ İZLEME→ÖĞRENME: canlı skorun kesit-içi
-  sıralaması kısa ufukta kanıtsız/ters (rs-negatif bulgusuyla tutarlı) — knob kararı öğrenme
-  döngüsünün/operatörün; kanıt vcp_olcum'da.
-- **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-K):** kendi kuyruğunda **ölçülmemiş hipotez
-  YOK** (VCP-DECOMPOSE ile tükendi). 3 artık kalem açık: **G5 in-play** (EDG-011 ASKI SÜRER — "t'de
-  BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz + PIT defteri 0 satır + canlı `earnings.csv` bayat,
-  FMP-402'ye bağlı) · **G6 koşullu-kısa** (RAF; EDG-005 karşı-gözlemi) · **EDG-021 2. koşum** (tanım-
-  eşitleme, operatör — §6). Genişleme hattı (transkript-LLM/13F + WP-QC (b)-kovası [354 idio-skew /
-  16 overnight / 269+125 mevsimsellik] + bileşen-ders Ek-B ①-⑤) kart-önce, WP-QC/HEDEF-5'te park.
 
 ### WP-M — Metodoloji/Yasa Borçları 📋 (ölçüm altyapısının kendisi)
 - **YENİ (EDG-010'dan, ders #3): ölçütler HAM getiri okuyamaz** — success/kill her zaman
@@ -532,6 +387,7 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
   etkiliyor; yeni WP-K aile ölçümlerinin tabanını temizler). Öneri sıra: bakım penceresinde OB-2 systemd
   → OB-1 kanal → OB-4 restart→PBO damgalama (M2) çapraz-kaldıraç; sonra M7/M8/M9 ucuz, sonra M1 çekirdek.
 
+
 ### WP-D — Veri Bütünlüğü 🔄
 - **BULGU-1 ✅ TEYİT-TAM (2026-08-03 bağımsız yeniden-üretim — kanıt research/olcumler/
   wpd_bulgu1_teyit/):** 4/4 vaka bugünkü kapıda KARANTİNA; evren geneli birebir (259 defter /
@@ -549,28 +405,6 @@ yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt 
   hassasiyeti; DÜŞÜK öncelik) · earnings kapsaması 194/251 + fail-open daraltma · 5.3 seans-içi
   kesinti/boşluk tespiti · ~~earnings 2-gün marj~~ (2026-08-02 KEŞİFLE KAPALI: aaa7a40+653c121 türetimli çözmüş, marj=9g, çivi v147'de).
 
-### WP-L — Öğrenme/Ölçek Merdiveni 📋 (tetik-şartlı; sırası kendiliğinden gelir)
-- Y5 meta-labeling (tetik: işlem birikimi — WP-R rampayı serbestleştirirse hızlanır) · Y7 ML
-  sıralama (tetik: evren genişlemesi WP-U) · intraday 4a saha kanıtı (tetik: ilk silahlı plan) →
-  4b gölge → Faz 5 kanıt → Faz 6 BEŞ KİLİT (değişmedi) · 6.1 guard-ret oranı izleme.
-- **MERDİVEN DURUMU ÖLÇÜLDÜ (2026-08-07, canlı):** 4a defteri 7.541 satır — ama bu DAKİKA BARI
-  değerlendirmesidir, "emre dönebilecek karar" DEĞİL (Rol-1 bu paydayı bir kez yanlış okuyup
-  "tıkanıklık" sandı; kart `EXE-2026-002` yanlış paydayı adıyla yasaklıyor). 4b gölge defteri
-  4 dolum. Faz-6 zinciri **1/5** — açık olan tek kilit operatör onayı (`INTRADAY_ARM`).
-- **✅ Faz-5 kilidi artık ÖLÇÜYOR (v212, kart `EXE-2026-002` + R1):** `durum` `olculemedi` →
-  `olculdu`. Gerekçe "üreten kod yok"tan "ÖRNEKLEM YETERSİZ (4/20)"ya döndü — birincisi hiç
-  dolmaz, ikincisi işlem biriktikçe KENDİLİĞİNDEN dolar. Ölçüm: n_eşleşen 4/4 (kill#4 %0),
-  ortalama −9,69 bps / −0,015R; CI **hesaplanmadı** çünkü `n_kume=1` (dört dolum tek gün) —
-  tek kümeden aralık üretmek genişliği sıfır bir CI verip kilidi HAK ETMEDEN açardı.
-  Tarih-kümeli bootstrap ayrıştırıcı testle kanıtlandı (aynı gün ikizlenen gözlemde kümeli
-  aralık %0 değişiyor, düz bootstrap %30 daralıyor). **Bu kalem KOD İSTEMEZ, İŞLEM İSTER.**
-- Kalan üç kapalı kilit (edge 1/5 · sonuç 0/4 · DSR 1e-06) KANIT eksikliğinden kapalı; kodla
-  açılamaz, kârlı işlem geçmişi ister. Merdivende kodla açılabilecek kilit KALMADI.
-
-### WP-O — Operatör Kalemleri → §6 (envanter §6.1; bu plandaki 🔒 biletlerin sahipleri orada:
-bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı [öncelik düşük — aile hükmü zayıf] ·
-analist/NLP verisi · FISV/PSKY; ~~shares-outstanding~~ ve ~~PIT-fundamentals~~ 2026-08-01'de
-EDGAR'la operatörsüz çözüldü)
 
 ### WP-H — Mühendislik Dayanıklılığı 📋 (2026-07-31 el kitabı turu; kaynak: operatörün 2024-26
 araştırma anketi — bizim gerçekle çarpıştırılmış hali. İlke: "AI mevcut disiplini AMPLİFİYE eder;
@@ -668,6 +502,7 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   DuckLake → RED-ŞİMDİLİK (251-sembol EOD'de katalog katmanının çözdüğü sorun bizde yok;
   tetik: bar arşivinin Parquet'e taşınması gündeme gelirse).
 
+
 ### WP-QC — QuantConnect Entegrasyonu 🆕 (2026-08-03; docs/QC-ENTEGRASYON-DEGERLENDIRMESI.md)
 - **İlke:** veri platformda serbest/çıkışta kilitli → QC = platform-içi ölçüm + LEAN-yerel motor;
   asla arşiv-kaynağı değil. Tüm ölçümler kart-disiplinli.
@@ -737,6 +572,7 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   değil; boyut L, ayrı tur). **⑦ VIX/SPX** FREE ama ToS **platform-İÇİ** — canlı `regime.py` VIX kapısını
   AÇMAZ ("kısmen çözülebilir" = ölçüm-içi bağlam, canlı-kapı değil); ekleme K-grid'i ÇARPAR, ön-kayıtta beyan.
 
+
 ### WP-UX — YENİDEN-TASARIM PROGRAMI 🔴 AKTİF (2026-08-07; yön: docs/TASARIM-YONU-2026-08-07.md — operatör onaylı, BAĞLAYICI)
 - **Girdi ölçümleri (bitti):** BASELINE-2026-08-06 (25 bulgu, 4×cid-4; araç kör noktası: detect
   app.js'in 7.511 satırında 0 bulgu) · PATTERN-ETUDU-2026-08-06 (11 platform, 81 iş; 22 FIRSAT,
@@ -778,6 +614,7 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   satır kaymaları hükmü değiştirmedi, 7 aile yeşil).
 - Kapı: her dalgada kapsam testleri → tek otoriter suite → tek dagit → canlı doğrulama.
 
+
 ### WP-P — Pano/Operatör Arayüzü (2026-08-01 UI el kitabı — gerçekle çarpıştırılmış; kontrol-odası
 + finans-izleme kanıt tabanı: HP-HMI/ISA-101, Airbus dark-cockpit, EEMUA 191, Few/Tufte)
 - **ZATEN VAR:** tabular-nums (19 kullanım) · dürüstlük-UI (None≠0 = YASA, provenance rozetleri,
@@ -817,52 +654,66 @@ kapılar+geri-alınabilirlik önce" — bizde kart/yasa/çivi disiplini VAR, eks
   EEMUA-191/Few-Tufte kontrol-odası) = **WP-UX D6 kabul çıtası**; WP-UX = yüzey/icra. WP-P yüzey işi
   YENİDEN AÇILMAZ (WP-UX aynı yüzeyleri düzenler).
 
-### SIRALAMA (güncel): mevcut dalga (BT-1→WP-E · WP-D-r2 · 1.2/1.4) → sabah konsolidasyon+dağıtım →
-**WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
-Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
+### WP-L — Öğrenme/Ölçek Merdiveni 📋 (tetik-şartlı; sırası kendiliğinden gelir)
+- Y5 meta-labeling (tetik: işlem birikimi — WP-R rampayı serbestleştirirse hızlanır) · Y7 ML
+  sıralama (tetik: evren genişlemesi WP-U) · intraday 4a saha kanıtı (tetik: ilk silahlı plan) →
+  4b gölge → Faz 5 kanıt → Faz 6 BEŞ KİLİT (değişmedi) · 6.1 guard-ret oranı izleme.
+- **MERDİVEN DURUMU ÖLÇÜLDÜ (2026-08-07, canlı):** 4a defteri 7.541 satır — ama bu DAKİKA BARI
+  değerlendirmesidir, "emre dönebilecek karar" DEĞİL (Rol-1 bu paydayı bir kez yanlış okuyup
+  "tıkanıklık" sandı; kart `EXE-2026-002` yanlış paydayı adıyla yasaklıyor). 4b gölge defteri
+  4 dolum. Faz-6 zinciri **1/5** — açık olan tek kilit operatör onayı (`INTRADAY_ARM`).
+- **✅ Faz-5 kilidi artık ÖLÇÜYOR (v212, kart `EXE-2026-002` + R1):** `durum` `olculemedi` →
+  `olculdu`. Gerekçe "üreten kod yok"tan "ÖRNEKLEM YETERSİZ (4/20)"ya döndü — birincisi hiç
+  dolmaz, ikincisi işlem biriktikçe KENDİLİĞİNDEN dolar. Ölçüm: n_eşleşen 4/4 (kill#4 %0),
+  ortalama −9,69 bps / −0,015R; CI **hesaplanmadı** çünkü `n_kume=1` (dört dolum tek gün) —
+  tek kümeden aralık üretmek genişliği sıfır bir CI verip kilidi HAK ETMEDEN açardı.
+  Tarih-kümeli bootstrap ayrıştırıcı testle kanıtlandı (aynı gün ikizlenen gözlemde kümeli
+  aralık %0 değişiyor, düz bootstrap %30 daralıyor). **Bu kalem KOD İSTEMEZ, İŞLEM İSTER.**
+- Kalan üç kapalı kilit (edge 1/5 · sonuç 0/4 · DSR 1e-06) KANIT eksikliğinden kapalı; kodla
+  açılamaz, kârlı işlem geçmişi ister. Merdivende kodla açılabilecek kilit KALMADI.
 
-## 4. YASALAR VE KESİŞEN KURALLAR
 
-- **NOUS SİSTEM-DEĞERLENDİRME KATMANI (kalıcı anayasal kayıt — WP-konsolidasyonunda düşmüştü,
-  F4 sürüklenme testi yakaladı, geri kondu):** Katman A-D haftalık öz-değerlendirme; **Katman D
-  anayasal çekirdek KAPALIDIR** — hakim kendi yasasına dokunamaz (CORE_FILES/CORE_CONCEPTS,
-  CekirdekIhlali + AUTHORITY_CHANGE alarmı, AST çivisi; nous_eval docstring'i ile aynı söz).
+## §2 ÖNERİ HAVUZU (backlog) — Claude'un önerileri
 
-- **Ölçüm-önce:** hiçbir değişiklik ölçümsüz canlıya girmez; kapı (reflect._gate_eval) TEK hakem;
-  knob hipotezleri tek-değişken (guard), mimari reform beyanlı bileşik ölçümle (k_probes = denenen).
-- **YASA 4** sessiz yutma yasak (kaçış: `# sessiz-yutma: <neden>`) · **YASA 6** üretilen her alanın
-  dış tüketicisi olmalı (okuma api.py üzerinden pano) · **UYDURMA YASAĞI** ölçülemeyen None kalır;
-  alan adları canlı dosyadan doğrulanır; retro damga yok.
-- **Canlı güvenlik:** state/'i yalnız worker yazar; ölçümler sandbox kopyada (config.STATE
-  yönlendirme + mtime parmak izi kanıtı); restart'ı operatör koşar (`./ops/stop-worker.sh && ./serve.sh`).
-- **Süreç:** turda tek konsolide-brief'li tek Opus implementasyon ajanı; tam suite turda BİR kez,
-  ÖN PLANDA senkron (ajan-içi waiter/arka plan bekleyici YASAK — iki kez arıza çıkardı); uzun
-  deterministik işler ana oturumdan harness-izlemeli arka planda; hermes SYSTEM statik (AST çivili).
-- **Okuma düzeltmeleri:** replay iyimserliği ölçüldü ~+0.018 (motor sapması) — backtest skorları bu
-  düzeltmeyle okunur · R-birimi geniş stopa yapısal önyargılı (boyut R-nötr küçülür, kazanan R'leri
-  daralır) — çıkış reformu kararları Hafta 3'ün dolar merceğini bekler · McLean-Pontiff: yayınlanmış
-  etkinin en fazla YARISI beklenir · cf sadakat sınırı: cf.advance yalnız stop/target/time_stop
-  simüle eder (trail/BE/chandelier/giveback/regime_flip/scale_out ve komisyon/ADV/impact YOK —
-  makine-okunur sabitlerle beyanlı, v108 canlı-kaynak testi çivili).
+Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan öneri §1'e taşınır + Task açılır.
+Ölçüm önerileri karta (§4) dönüşür; operatör kararı gerektirenler §3'e geçer.
 
-## 5. YAPMA LİSTESİ (ölçülmüş/belgeli çürükler — tur harcanmaz)
+1. **dagit rsync exclude genişletme** — dagit rsync exclude'una `research/olcumler/*/seanslar.json` +
+   `*.stderr.log` + `state/` eklenir. `.gitignore` rsync'i ETKİLEMİYOR (dagit kendi exclude listesini
+   kullanır), ham ölçüm verisi canlıya gidiyor (~446KB, zararsız — canlı okumaz — ama ideal değil).
+   *gerekçe: temiz dağıtım yüzeyi · boyut: S · bağımlılık: yok · öncelik: düşük.*
 
-Araştırma-kaynaklı: PEAD (likit büyük-cap'te ölü) · overnight drift (2021 sonrası çöktü) ·
-ay-dönümü (ABD'de kayboldu) · sektör-ETF trend (net edge marjinal) · VCP geometrisi (bağımsız
-kanıt yok — ölçülebilir bileşenleri zaten skorda) · opsiyon verisi satın alma (öngörü kısa-bacak/
-borç-ücreti kanalında) · equity-eğrisi otomatik risk kısma (momentum sistemini dipte kapatır;
-yerine DD>1.5×beklenti insan-incelemeli alarm) · fractional Kelly (sabit-R zaten ~çeyrek Kelly;
-üç aylık overbetting kontrolü yeter) · derin NN/geniş özellik uzayı (bu veri rejiminde overfit
-tiyatrosu) · breadth birincil kapı (yalnız <%20 washout istisnası) · **yerel LLM kurulmaz**
-(operatör kararı 2026-07-30: karar yolu deterministik → gecikme argümanı yok; gece yansıması
-1-3 çağrı/gün → maliyet/fallback değeri ≈0; VM 2OCPU/12GB'da toplu iş zaten ölür; ileride yalnız
-"Y6 toplu API maliyeti ısırırsa + anlaşma-ölçümü geçerse" koşuluyla yeniden açılabilir).
-Kendi ölçümlerimizle çürüyenler: breakeven'ı erkene çekme (H1a) · min_score 80 (H2 — dilim
-istatistiği tam replay'de tutmadı) · stm21 kısa-vade momentum (devir-koşullusu anlamlı NEGATİF —
-Medhat-Schmeling bizde replike olmadı) · knob-bileşik çıkış paketleri mevcut R-yasası altında
-(G3a: 3/3 ret — kuyruk kazanır ortalama kaybeder; dolar merceğiyle yeniden değerlendirilecek).
+2. **Gözlemlenebilirlik/dağıtım iyileştirme adayları (2026-08-02 canlı vaka; tam metin §6 snapshot'ta korunur)** —
+   hermes-CLI kalemleri a-e (servis açılışında senkron-doğrulama · pano senkron-sonuç zaman-damgası ·
+   bekçi "kota"≠"yapılandırmasız" ayrımı · RPD bütçesi ağa çıkmayan çağrıyı saymasın ·
+   `candidate_review_empty_parse` uyarısı) + dagit versiyonlu-state adımı (diff-göster + onaylı-kopya;
+   goal/bounds git-izli ama diğer versiyonlu state için). *gerekçe: canlı vaka kökenli sessiz-ölüm/
+   görünürlük boşlukları · boyut: S-M · bağımlılık: bakım penceresi · öncelik: düşük-orta.*
 
-## 6. OPERATÖR KALEMLERİ (karar/aksiyon operatörde)
+
+## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
+
+Claude'un otonom kapatamayacağı kalemler: operatör kararı, ücretli kimlik/kota, gerçek-para kapısı,
+ya da canlı-worker durdurup state'e yazan bakım penceresi. "Çağıranı yok" ile "çağıranı İNSAN" ayrı
+şeydir (envanter tablosu §3-sonu bu ayrımı korur). **Bakım-penceresi onaylı sırası (2026-08-09):**
+OB-2 systemd exit-143 → OB-1 N1 kanal → OB-4 restart→PBO (M2) damgalama çapraz-kaldıraç; N4 cf
+çıkış-sadakati (EXE-2026-004 Aşama-2, saatler, state'e yazar) aynı pencerede.
+
+**YENİ OPERATÖR BLOKLARI (WP turlarından toplandı — eski §6 numaralı listesi + envanter tablosu altta):**
+- **OB-2 systemd `SuccessExitStatus=143` daemon-reload (P2; N1 kanal-açılışında P1 ön-şart):** birim
+  dosyasına YAZILI (`meridian.service:82`, v225) ama CANLI systemd hâlâ boş `SuccessExitStatus=` ile
+  koşuyor → her restart exit-143 ile "FAILED" (son 3 günde 6 kez; fail-notify NO-OP kurtarıyor).
+  daemon-reload + bakım penceresi + elle test-ateşleme. N1 kanalı açılmadan ÖNCE inmeli, yoksa her
+  restart "FAILED" bildirir. (`docs/KESIF-WP-HD` §H10; `docs/SABAH-TRIYAJI-2026-08-09.md` §0.)
+- **DASH-TOKEN LoadCredential faz-1 etkinleştirme (bakım penceresi):** drop-in'ler HAZIR
+  (`deploy/oracle-a1/meridian.service.d/`, faz-1 LoadCredential + faz-2 ortam-kanalı-sıfır) +
+  `dash_token_credential.sh` (rotasyon/kurulum/doğrulama/geri-alma). Ana birime BİLEREK yazılmadı
+  (kaynak-dosya-yokken ilk dağıtım panoyu düşürürdü); etkinleştirme operatör bakım-penceresinde.
+- **ajan-git MEKANİK kapısı (süreç/araç kararı):** gece 2 ajan `git stash` koşup hasar verdi (hayalet
+  dizin süpürüldü). Yasak yalnız CLAUDE.md sözleşmesi; `dagit.sh` yalnız DAĞITIMI kapıyor; `git stash`ın
+  pre-stash kancası YOK → kapı ancak PATH-shim/wrapper'la mekanikleşir. Karar operatörde.
+
+**EKSİK OPERATÖR ENVANTERİ (eski §6 — kanonik liste 1-11 + §6.1 tablosu; numaralar korunur):**
 
 1. **NOUS_MODEL / beyin çeşitliliği:** Claude API anahtarı EKLE veya NOUS_MODEL'i Google-dışı
    modele çevir (panodan GEMINI_API_KEY girmek çeşitliliği GERİ siler — dikkat).
@@ -916,7 +767,101 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
 | `reflect --auto` | Deterministik tek-hamle yansıması (LLM'siz) | Beyinsiz/kotasız gecede tek hamle üretmenin elle yolu. `skills.axis2_cycle` Eksen-2 kolunu devraldıktan sonra ÜRETİM çağıranı kalmadı — kalan tek yol bu komut | `uv run python -m meridian.reflect --auto` (README'de yazılı). Otomatik bir çağıran EKLENMEZ: iki yansıma aynı gecede yarışır |
 | FMP plan yükseltmesi | Y4 içeriden-işlem derinliği | Para kararı. Ücretsiz planda ölçüldü (2026-07-30): `page>=1` → 402, `limit>100` → 402, `search?symbol` → 402, `date=` sessizce yok sayılıyor | Yükseltilince `insider.PLAN_SAYFA_TAVANI` ve `--gecmis` yolu yeniden açılabilir; kadans bugün günde 1× `page=0` çekiyor |
 
-## 7. KARAR GÜNLÜĞÜ (yeni giriş EN ÜSTE — tek satır + tarih)
+**🔒 BİLET SAHİPLERİ (eski WP-O — §3'teki biletlerin envanteri):**
+bildirim kanalı · NOUS_MODEL · FMP planı · VIX kaynağı [öncelik düşük — aile hükmü zayıf] ·
+analist/NLP verisi · FISV/PSKY; ~~shares-outstanding~~ ve ~~PIT-fundamentals~~ 2026-08-01'de
+EDGAR'la operatörsüz çözüldü)
+
+## §4 KANIT/KARTLAR (`research/cards/` indeksi + hükümler)
+
+Kural (README + iş emri): **kartsız ölçüm kodu yok**; her parametre grid'i K'ya ÇARPILARAK sayılır;
+eşik ölçümden SONRA değişmez; kill-list dokunulmaz; ölçüm ajanı karta DOKUNMAZ (hükmü Rol-1 işler).
+Durumlar: registered → measuring → promoted | archived. Kuzey yıldızı canlı hüküm (§0): **EDGE 1/5 ·
+SONUÇ 0/4** — edge/para kanıtlanmadı. Aşağısı ÖZET-indeks; tam hüküm ilgili §6 WP / §5 kararında.
+
+**AKTİF / YENİ KARTLAR (hüküm işlenmiş ya da ölçümde):**
+- **EDG-2026-022** evren-bağlayıcı-kısıt — **measured (2026-08-09):** de-risk+tavan BİRLİKTE %65,84
+  (CI 58,73–72,14; tamamı >%50) BASKIN → FINVIZ token harcaması **GEREKÇESİZ**; evren bağlayıcı DEĞİL
+  (%34,17). Bağlayan: `tavan_sifir` %57,54 + `derisk_bagladi` %8,28 (asıl kaldıraç de-risk rampası/
+  `eff_max_open`). KILL#3 tetiklendi (rejim-koşullu): trend_up'ta de-risk baskın, chop'ta (nadir %6,7)
+  evren baskın → FINVIZ genel gerekçesiz, chop-özel evren ayrı+küçük. OTONOM/bloksuz. → §3-8 FINVIZ.
+- **EXE-2026-004** cf-çıkış-sadakati (N4) — **measured_partial (2026-08-09):** AŞAMA-1 ölçüldü, üç
+  tüketici ölçütünün ÜÇÜ de ölçülebilir zarar göstermedi → cf çıkış-tipleri **EKLENMEDİ**; +0,039R
+  iyimserlik bir sapma olarak KAYITLI (düzeltilmedi). AŞAMA-2 (dört/altı çıkış tipi + TÜM cf tarihi
+  yeniden koşum) eşiğe ULAŞILMADI → **DONDU**; bakım penceresi şartlı (saatler, state'e yazar). Eşikler
+  ölçümden ÖNCE donmuştu, DEĞİŞMEDİ. → bakım penceresi §3.
+- **EDG-2026-021** qc-delist-doğrulama — **measured (2026-08-03, QC FREE, defter v3):** DUR=None, PK
+  GEÇTİ (IC=0,0265 n=335k); @20 fazla CI-0-içi → kill#1 "ŞÜPHEDE-değerlendirme" (birincil şüpheli
+  evren-kompozisyon farkı). 2. koşum tanım-eşitleme hakkı OPERATÖRDE (§3-11; WP-K K3).
+- **EDG-2026-019** skill-görüş-defteri (N2b) — **registered (2026-08-09); kod indi (v218), CANLI KANIT
+  KURU-KOŞU:** terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te
+  yeniden-üretilemedi (`eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi, kadans koşmadı). Birkaç EOD
+  penceresi + ölçüm kodu bekliyor. _(README numara-notu: 019 önce "emekli" damgalıydı; skill görüş defteri için yeniden kullanıldı.)_
+- **EXE-2026-003** gölge-planlı-kol (N2) — **registered (2026-08-09); kod indi (v217):** silahlanmamış
+  planlı kol AYRI defterde `kol: planli|silahli` (karışım kill#4'ü ateşlerdi). Faz-5 kilidini AÇMAZ
+  (kilit gerçek-iç-dolum ister); ölçeği ikincil hat verir: gölge(dakika-sim) × cf(EOD-sim).
+- **EDG-2026-017** rvol-form-revizyonu — registered (K+=2); rvol≥2,5 bölgesi form-şartsız + sürekli-rvol artığı (1.4'ün torun-kartı; ölçüm-sonrası-seçim yasağına uyuldu).
+- **EDG-2026-018** pit-midcap-üst-sınır — registered (K+=1); **askıda:veri-kapısı** (delist-bar; feasibility-gate önce; §3-9).
+- **EDG-2026-020** postevent-inplay — **archived (2026-08-03):** kill#1+#3 (havuz-fazlası CI-0-içi/negatif; ham +%1,1 taban-sürüklenmesi = ders#3 vakası); 011'e aleyhte-önsel not.
+- **KYS-2026-001** kıyas-kirlenmesi — registered (K+=2); **ALTYAPI kartı, retro-hüküm yok**; WP-M şasi aracına bağımlı (M1 = en yüksek kaldıraç — TÜM evren-medyanı ölçümlerini etkiliyor).
+- **EXE-2026-001** entry-execution — **E1-R2 (2026-08-07):** işletim noktası REF·limitsiz rejimi
+  (`limit_atr_mult:100`/`limit_pct_cap:0,04`); limit-bacağı MONOTON ZARARLI; kaçanlar sistematik kazanan.
+  E2 defteri gerçek dolumla accrues → canlı-geçiş kapısında E2 kanıtıyla yeniden hüküm (WP-E §1).
+- **EXE-2026-002** faz5-çıkış-ölçümü (+R1) — **ölçüyor (v212):** `olculdu`; n_eşleşen 4/4 (kill#4 %0),
+  ort −9,69 bps; CI **hesaplanmadı** (`n_kume=1`, dört dolum tek gün). İş ister, kod DEĞİL. kill#4
+  uygulama borcu → WP-S2 §1.
+
+**ARŞİV / KAPALI KARTLAR (hüküm — tam gerekçe §6 ilgili WP + §5):**
+- **EDG-2026-016** turnover-ana-etkisi — **SUCCESS / YAŞAYAN SİNYAL** (@20 net +0,55% CI-0-dışı; q5 monoton; survivorship-şerhli). Kablolama açık → WP2 §1.
+- **EDG-2026-009** trend-kolu-rafine — **measured→ALIVE/refine** (ham kol incumbent; PIT şerhi ~6-7p/yıl; gölge-kitap kod-hazır). **EDG-2026-003** rampa-p3 — measured→daraldı (P3 öldü; rampa koruması gerçek). **EDG-2026-011** inplay-önceliklendirme — **askı** (PIT-takvim; FMP-402'ye bağlı).
+- **EDG-2026-013** mom-turnover — devir-arşiv (etkileşim-tezi düştü). **EDG-2026-012** net-issuance — ARŞİV (yön ters+anlamlı, U-eğrisi). **EDG-2026-014** gross-profitability — ARŞİV (bilgisiz; PIT filed-tabanlı as-of İLK KEZ meşru). **EDG-2026-010** pullback — ARŞİV (bağımsızlık gerçek, kenar yok; ders#3). **EDG-2026-015** vcp-decompose — ARŞİV (çatı bilgisiz; form=bileşen-toplamı ρ=0,95).
+- **EDG-2026-001** 52wh · **EDG-2026-002** volume-shock (torun→EDG-017) · **EDG-2026-004** max-filter (yön TERS, kill×2) · **EDG-2026-005** sma-gate (KAPI AÇILMAZ, GÖSTERGE'ye emekli) · **EDG-2026-006** turn-of-month (yön ters) · **EDG-2026-007** residual-momentum (6/6 CI-0-içi; ρ=0,625) · **EDG-2026-008** vol-scaling-overlay (kill#3, iki pencere yönsüz) → hepsi **ARŞİV**.
+- **BASE-2026-001** sistem-karnesi (+%2,5/4,5yıl, 2024-bağımlı; huni üç-darboğaz).
+- **Retro kuyruk (README):** EAP large-cap **archived** (+9,0bps<30 eşik; PK geçti) · Insider CMP **archived** (pozitif-kontrollü 0) · Short-interest FINRA **archived** (12 hücre 0) · çıkış paketi P1/P2/P3 (K=3) **measured→shadow-accrual** · PEAD/rekonstitüsyon/sektör-takvim **archived** (kaynaklı; kill-list altta).
+
+**⑤ RETIRED çapraz-doğrulama (`research/qc_dogrulama/`, 2026-08-09; üç kaynak):** 8 emekli sembol
+(ANSS/DFS/FI/HES/IPG/K/PARA/WBA) — **yerel SP500-üyeliği 8/8 tutarlı** (her sembol delist gününden
+önce üyelikten düşmüş, beklenen); **Massive delist-otoritesi 7/8'i gün-güne BİREBİR doğruladı** (vekil→
+gerçek taşındı); hiçbir emeklilik kararı ÇELİŞMEDİ. Tek kalan QC-adımı: 1-hücrelik Security Master
+delist-olayı fizibilite sondası (artık TEYİT, bilinmeyen değil) — §3-11.
+
+### YAPMA LİSTESİ (kill-list — ölçülmüş/belgeli çürükler; tur harcanmaz; DOKUNULMAZ)
+
+Araştırma-kaynaklı: PEAD (likit büyük-cap'te ölü) · overnight drift (2021 sonrası çöktü) ·
+ay-dönümü (ABD'de kayboldu) · sektör-ETF trend (net edge marjinal) · VCP geometrisi (bağımsız
+kanıt yok — ölçülebilir bileşenleri zaten skorda) · opsiyon verisi satın alma (öngörü kısa-bacak/
+borç-ücreti kanalında) · equity-eğrisi otomatik risk kısma (momentum sistemini dipte kapatır;
+yerine DD>1.5×beklenti insan-incelemeli alarm) · fractional Kelly (sabit-R zaten ~çeyrek Kelly;
+üç aylık overbetting kontrolü yeter) · derin NN/geniş özellik uzayı (bu veri rejiminde overfit
+tiyatrosu) · breadth birincil kapı (yalnız <%20 washout istisnası) · **yerel LLM kurulmaz**
+(operatör kararı 2026-07-30: karar yolu deterministik → gecikme argümanı yok; gece yansıması
+1-3 çağrı/gün → maliyet/fallback değeri ≈0; VM 2OCPU/12GB'da toplu iş zaten ölür; ileride yalnız
+"Y6 toplu API maliyeti ısırırsa + anlaşma-ölçümü geçerse" koşuluyla yeniden açılabilir).
+Kendi ölçümlerimizle çürüyenler: breakeven'ı erkene çekme (H1a) · min_score 80 (H2 — dilim
+istatistiği tam replay'de tutmadı) · stm21 kısa-vade momentum (devir-koşullusu anlamlı NEGATİF —
+Medhat-Schmeling bizde replike olmadı) · knob-bileşik çıkış paketleri mevcut R-yasası altında
+(G3a: 3/3 ret — kuyruk kazanır ortalama kaybeder; dolar merceğiyle yeniden değerlendirilecek).
+
+## §5 KARAR GÜNLÜĞÜ (kronolojik; yeni giriş EN ÜSTE — tek satır + tarih; ayrıntı oturum kayıtlarında)
+
+- **2026-08-09 ROADMAP §0-6 MİMARİ YENİDEN-ÖRGÜTLEME (operatör onaylı; İÇERİK KORUNDU — silme/özet
+  DEĞİL, yeniden-ORGANİZE).** Eski §1-7 düzeni §0-6'ya taşındı. **Eski başlık → yeni bölüm haritası:**
+  eski §1 "ŞİMDİ" GÜNCEL-DURUM bloğu → §1 tepesi; eski §1 gece-vardiyası/denetim-kuyruğu tarihçesi →
+  §6 oturum snapshot'ları · eski §2 DURUM PANOSU → §6 snapshot · eski §3 PLAN WP'leri → §1 (aktif: WP-E/
+  WP2/WP-U/WP-S/WP-S2/WP-M/WP-D/WP-H/WP-QC/WP-UX/WP-P/WP-L) ve §6 (tamamlanan: WP0/WP1/WP3/WP-G/WP-R/
+  WP-K/WP-N) · eski §3 SIRALAMA → §0 · eski §4 YASALAR → §0 · eski §5 YAPMA LİSTESİ → §4 (kill-list) ·
+  eski §6 OPERATÖR + §6.1 envanter → §3 · eski §7 KARAR GÜNLÜĞÜ → §5 (aynen). Bitmiş dalgalar (KOVA-B,
+  WP-N, dalga-3) §6'da; WP-U/QC keşfi §4 kanıt + §3 operatöre dağıtıldı; kartlar §4 indeksinde. Hiçbir
+  bilgi kaybı yok: taşınan bloklar byte-özdeş; her açık kalem §1/§3/§4'te temsil edildi.
+- **2026-08-09 EDG-2026-022 ÖLÇÜLDÜ — FINVIZ HARCAMASI GEREKÇESİZ:** de-risk+tavan birlikte %65,84
+  (CI >%50) BASKIN; evren bağlayıcı DEĞİL (%34,17). Asıl kaldıraç de-risk rampası/`eff_max_open`.
+  Rejim-koşullu KILL#3: chop'ta (nadir %6,7) evren baskın ama genel+trend_up de-risk baskın. Sonuç:
+  `FINVIZ_API_KEY` operatör-bloğu (§3-8) DE-RISK edildi — evren bağlamadığı için token parası şimdilik
+  gerekçesiz. Otonom kart, blok değil; `docs/KESIF-WP-U-2026-08-09.md`.
+- **2026-08-09 EXE-2026-004 (N4) AŞAMA-1 ÖLÇÜLDÜ, AŞAMA-2 DONDURULDU:** üç tüketici ölçütü ölçülebilir
+  zarar göstermedi → cf çıkış-tipleri EKLENMEDİ (+0,039R iyimserlik sapma olarak KAYITLI, düzeltilmedi).
+  Aşama-2 (çıkış tipleri modeli + TÜM cf tarihi yeniden koşum) eşiğe ulaşılmadı; bakım penceresi şartlı
+  (saatler, state'e yazar → canlı worker koşarken YAPILMAZ). Eşikler ölçümden ÖNCE donmuş, DEĞİŞMEDİ.
 
 - **2026-08-09 DÖRT-CEPHE KEŞİF TURU + BAKIM PENCERESİ ONAYI (commit `068a580`):** operatör onayıyla
   dört büyük cephede SALT-ÖLÇÜM keşfi koşuldu (git yasaklı, canlı salt-okunur, `meridian/` dokunulmadı) —
@@ -1950,3 +1895,245 @@ kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunlar
   numpy sanitizer (54/54 rota) · review-backlog 5 madde · beyin unparseable kök nedeni düzeltildi.
 - **Numaralandırma notu (2026-07-26):** intraday "Faz" sayımı kanoniktir (§3.5); Faz 5/6 tanımları
   yeniden kurulmuştur (kayıp tarihin kurtarılması değil).
+
+## §6 ARŞİV — tamamlanan WP'ler + oturum snapshot'ları (tarihçe-koru; silme yok)
+
+Buradaki WP'ler tam metin korunur (tarihçe). Bir WP'nin içinde geçen açık operatör/kart/ölçüm kalemi
+KANONİK olarak §3/§4'te yaşar; buradaki metin o kalemin tarihçesi + gerekçesidir (çürütülen av
+adayları, kill-eşikleri, PIT şerhleri kaybolmasın diye). Bitmiş dalgalar: KOVA-B (16/16, 2026-08-02),
+WP-N kanıt-hızı programı (N1-N6; N1 kanal §3 · N4→EXE-2026-004 §4 · N2b→EDG-2026-019 §4), dalga-3.
+
+### Tamamlanan WP'ler (tam metin)
+
+### WP0 — Keşif ve Uyum Matrisi ✅ (2026-07-31; 14 mekanizma kanıtlı; en riskli 3 boşluk: iki-motor
+icra ayrışması · hacim-onayı çelişkisi · BMO/AMC boşluğu)
+
+
+### WP1 — Yalnız-OHLCV Adayları
+- 1.2 52w-high ✅ ARŞİV (9/9 hücre anlamsız; VCP'den bağımsız ama bilgisiz ρ=-0.036; panel tanısı
+  aralık-kısıtını dışladı) · 1.4 hacim-şoku ✅ ARŞİV (bant hayalet-artefaktı değil AMA 0/18 hücre
+  ham rvol20'yi geçemedi — ham rvol20 @20 IC 0.065 ANLAMLI; canlı eşik kalır). TORUN-KART ADAYI:
+  rvol≥2.5 bölgesi +1.61% anlamlı-pozitif, üçgen form onu sıfırlıyor — form-revizyonu YENİ ön-kayıtla
+  (ölçüm-sonrası-seçim yasağına uyuldu). BT-2 hasar tespiti: 5/63 hücre anlamlılık DEĞİŞTİRDİ
+  (sınırda hasar); 2018 hayaleti bu pencereye değmiyor — uzun-geçmiş artefaktları aklanmadı.
+- 1.3 MAX-filtresi ✅ ARŞİV (2026-07-31: yön TERS — yüksek-MAX bizde @20 +1,46pp iyi; eleme
+  hedef-çıkışların %28'ini keserdi; kill×2). **1.1 residual momentum ✅ ARŞİV (2026-07-31, kart
+  EDG-007, K=2): 6/6 hücre CI-0-içi + artımlı katkı yok — yapısal örtüşme (residmom≈rawmom ρ=0,625,
+  üst-terzil örtüşmesi %83); aile kapalı, torun yok. Yan kazanım: FF3 günlük faktörler repo'da
+  (research/ff_factors/, damgalı+doğrulanmış) — 1.5 için altyapı hazır.** **1.5 vol-scaling overlay ✅ ARŞİV (2026-07-31, EDG-008, K=2, kill#3): iki pencere de yönsüz;
+  tasarım dersi — IS-çapalı sigma_hedef düşük-vol OOS'ta kaldıraç-artırıcıya döner, ısı-rampasıyla
+  çifte-kısma; torun (yalnız-kıs m<=1) tetik-şartlı: yüksek-vol penceresi birikince.**
+- EMİLDİ: eski G2 skor-inşası S1/S2 adayları (rvolband/min_rvol çekirdeği) → 1.4'ün kart hükmüne
+  bağlandı (iki ayrı ölçüm değil) · eski G7 vol-hedefleme → 1.5'in portföy-bacağı olarak, ısı
+  tavanıyla birlikte POZİTİF-EV ÖNKOŞULLU (denetim RS-1).
+
+
+### WP3 — Doğrulama ve Ek-Veri Aileleri
+- 3.2 insider yeniden-kaydı ✅ KAPALI: gerçek CMP ayrımıyla ölçüldü, pozitif-kontrollü sıfır →
+  kalıcı arşiv (iş emrinin kendi kill-eşiği).
+- 3.1 kaynak-doğrulama ✅ TAMAM (2026-07-31 gece — 4/4 birinci-el): CMP tanımı BİZİMKİYLE
+  BİREBİR (insider arşivi GÜÇLENDİ; 2025 replikasyonu etki yarıya inmiş diyor — sıfırımız decay'le
+  tutarlı) · Moskowitz-Grinblatt: en-büyük-quintile'da da var AMA Grundy-Martin itirazı (VW +
+  1-ay gecikme sağlamlık protokolü ŞART — ileride kart açılırsa protokole gömülü) · Meursault
+  PEAD.txt: etki büyük-cap'te sönmüyor ama transkript+NLP ister → veri bileti (FMP transkriptleri
+  VAR, NLP altyapısı YOK) · McConnell-Xu ToM: DOĞRULANDI+replike → KART AÇILDI (EDG-2026-006,
+  ölçümde).
+- 3.3 text/analist PEAD 🔒 veri bileti (analist-tahmin/NLP; proxy yasak). EMİLDİ: eski Y6
+  transkript-LLM skoru (aynı text-veri ailesi; look-ahead disiplini şartıyla aynı bilete bağlı).
+
+
+### WP-G — Rejim Kapıları ✅ İKİ KART DA KAPANDI (2026-07-31; tanı turlu)
+- **SMA-200 kapısı ✅ ARŞİV (kart EDG-005): KAPI AÇILMAZ.** İlk "açılabilir" hükmü tanı turunda
+  DÜŞTÜ: karşı-olgu kolları kapının OOS doğrudan etkisinin SIFIR olduğunu (55 bloke gün, 0
+  engellenen giriş), OOS "iyileşmesinin" tamamen IS-yankısı (portföy-durumu taşıması) olduğunu
+  kanıtladı; tek atfedilebilir pencerede kill#1: Sharpe −0,25→−0,90, PARA −0,03→−0,09. Tez kısmen
+  doğru (vol anlamlı ↓, oran 0,79) ama bedeli getiri — "pano göstergesi yeter". · **ToM tilt ✅
+  ARŞİV (EDG-006):** ön-adımda yön ters (−11,8bps), ikizler hiç açılmadı.
+- **KABLO BİLETİ ✅ KAPANDI (2026-08-01 temizlik turu):** spy_sma_gate GÖSTERGE'ye emekli edildi
+  (blocks sabit False + knob_emekli beyanı + sessiz-diriliş çivisi; hükümsüz kapıya çekilmiş kablo
+  söküldü). KALAN KÜÇÜK İŞ 📋: bounds.yaml'dan knob satırı düşülecek (makine etkisiz knob'u hâlâ
+  örnekliyor — 6 değerlendirme boşa K harcadı; akşam penceresi).
+- VIX koşullaması 🔒 veri-kilidi (operatörde) — SMA hükmünden sonra AİLE ÖNCELİĞİ DÜŞTÜ: rejim
+  kapısı ailesi bu evrende "vol'ü düşürür ama parayı da düşürür" profili verdi; JM rejim modeli +
+  koşullu vol kısma adayları açılmadan önce bu hüküm karşı-kanıt olarak okunmalı.
+- EMİLDİ: eski Y3 dörtlüsünün SMA/VIX bacakları · turn-of-month index-tilt (EDG-006 ile öldü) ·
+  breadth/distribution-day = PANO GÖSTERGESİ, kapı DEĞİL (kill-list).
+
+
+### WP-R — Rampa/Çıkış Serbestleştirme ✅ ÖLÇÜLDÜ→DARALDI (2026-07-31 03:19; kart EDG-003 measured)
+- **HÜKÜM:** P3 paketi ÖLDÜ (rampa serbest bile olsa P≤0,48 — suçlu rampa değil paketmiş);
+  early_kill-tek sağ (P=0,606) → gölge-v2 V3 birikimi sürer; **rampanın koruması GERÇEK ölçüldü**
+  (serbestlikte DD %4,6→%9,7) — gevşetme lehine kanıt yok. Kalan iş küçüldü: eşikleri bounds'a
+  taşımak yalnız hipotez-görünürlüğü için (düşük öncelik); çıkış-mimarisi umudu artık gölge-v2
+  canlı birikimi + E1/E4 zamanlama içgörülerinde (gece bacağı kaybı, 8-15g gündüz kazancı).
+- Kanıt: de-risk rampası (%3-kıs/%8-sıfırla, KODDA SABİT) günlerin %92'sinde aktif, izin çoğu gün
+  1 pozisyon — işlem üretiminin gizli boğucusu; P3 çıkış paketi imzası 4/4 (ödeme 2,84, beklenti
+  0,287R) ama örneklem çöküşüyle "reddedildi-çürütülmedi".
+- İş: rampa eşikleri bounds'a + `exit.profit_target_r`/`exit.time_stop_days` "kapalı" değerleri +
+  sabit-rampa koşulunda P3 ve early_kill tek-başına yeniden-ölçüm + chandelier sıkıştırma
+  tuhaflığının (max(close,hh) formu) düzeltilme kararı. Tek ön-kayıt kartı, K-muhasebeli.
+- EMİLDİ: eski G3b çıkış reformu ölçümü (bu turun ta kendisi, genişlemiş haliyle).
+
+
+### WP-K — Kurulum/Aile Genişletme
+- **Trend-kolu RAFİNE ✅ ÖLÇÜLDÜ (2026-07-31, kart EDG-009, K=4; pozitif kontrol 0.000000 farkla):**
+  rafine üstünlük KANITLANAMADI (B aylık-rebalans CI-0-içi, vol/DD kötü; muhafazakâr okuma) →
+  HAM KOL incumbent. ASIL BULGU — KALICI PIT ŞERHİ: +13,1p/yıl fazlanın büyük kısmı evren-seçim
+  yanlılığı; PIT-sağkalan evrende ~6-7p/yıl (D t=2.08 — hayatta, kill#2 tetiklenmedi). 2021+
+  tanısı: decay değil oynaklık (eşlemeli çıtada erime yok, t=1.82). **GÖLGE-KİTAP ✅ KOD-HAZIR
+  (2026-07-31 gece turu; canlıya sonraki pencerede):** trend_shadow.py sıfır-yetkili paralel defter
+  — şasi-birebir sabitler, PIT şerhi kitap içinde, YASA-6 okuyucuları çivili, 645-seans smoke temiz
+  (medyan tur 23ms), kapatma anahtarı var; ilk giriş 2026-09-01 ay-sonu kararıyla (tasarım). · **G4 pullback ✅ ARŞİV (2026-08-01, kart EDG-010, K=2): bağımsızlık GERÇEK (Jaccard ~0.02)
+  ama kenar YOK — ham pozitiflik evren-tabanında kayboluyor (dip10 trend-evreninde anlamlı negatif);
+  kart-ölçütü kusuru itiraflı, ders WP-M #3'e (ham-getiri ölçütü yasak)** · G5 in-play: EDG-011 ASKI SÜRER (tanım tarafı — 2026-08-02 keşfi: veri İKİ bağımsız eksenle
+  olgunlaştı [Nasdaq-geçmişi %99,7 tamlık + EDGAR 8-K %98,4 çapraz-doğrulama, dakika-damgalı]
+  ama kartın "t'de BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz; PIT defteri 0 satır —
+  A1'de snapshot dosyası hiç doğmamış, AYRICA canlı earnings.csv 2-sütunlu/Jul-31 bayat =
+  tazeleme turu dağıtımdan beri koşmamış, İZLENECEK). Tek-yönlü post-event tez ölçüldü ve
+  **EDG-2026-020 ✅ ARŞİV (2026-08-03: kill#1+#3 — havuz-fazlası CI-0-içi/negatif-nokta; ham
+  +%1,1 taban-sürüklenmesiydi [ders#3 vakası]; PEAD-kopyası değil ama bilgi de yok; 011'e
+  aleyhte-önsel not düşüldü)** · **G6 koşullu-kısa → RAF (2026-08-02 fizibilite keşfi: 5 yüzeyin 4'ü YOK
+  [broker/strategy/gölge/ayna], 12-kalem motor inşası; EDG-005 karşı-gözlemi: SPY<200MA
+  günlerinde long hâlâ pozitif-beklentili görünüyor — kısa tezine doğrudan karşı; 55 OOS
+  bloke-gününde 0 silahlanma. Yeniden açılış: operatör kararı + delist-bar sonrası kısa-tez
+  kanıtı. Kanıt: research/olcumler/kesif_2026-08-02/)** · **VCP-DECOMPOSE ✅ ARŞİV (2026-08-01, EDG-015,
+  K=2): çatı da bilgisiz — üst-%20 kompozit @10 aday-havuzunun ANLAMLI ALTINDA; form=bileşen-toplamı
+  (ρ=0,95). WP-K'da ölçülmemiş hipotez KALMADI.** ⚠ İZLEME→ÖĞRENME: canlı skorun kesit-içi
+  sıralaması kısa ufukta kanıtsız/ters (rs-negatif bulgusuyla tutarlı) — knob kararı öğrenme
+  döngüsünün/operatörün; kanıt vcp_olcum'da.
+- **KEŞİF 2026-08-09 (`docs/KESIF-WP-MKP-2026-08-09.md` §WP-K):** kendi kuyruğunda **ölçülmemiş hipotez
+  YOK** (VCP-DECOMPOSE ile tükendi). 3 artık kalem açık: **G5 in-play** (EDG-011 ASKI SÜRER — "t'de
+  BİLİNEN takvim" lafzı ex-post kaynakla karşılanamaz + PIT defteri 0 satır + canlı `earnings.csv` bayat,
+  FMP-402'ye bağlı) · **G6 koşullu-kısa** (RAF; EDG-005 karşı-gözlemi) · **EDG-021 2. koşum** (tanım-
+  eşitleme, operatör — §6). Genişleme hattı (transkript-LLM/13F + WP-QC (b)-kovası [354 idio-skew /
+  16 overnight / 269+125 mevsimsellik] + bileşen-ders Ek-B ①-⑤) kart-önce, WP-QC/HEDEF-5'te park.
+
+
+### WP-N — Kanıt-Hızı Programı 🔴 AKTİF (2026-08-09; operatör onaylı sıra: N1→N2→N3→N4, N5 serpiştirilir)
+
+**TEŞHİS (ölçülü):** darboğaz kod değil KANIT ÜRETİM HIZI. Faz-6'nın kapalı üç kilidi kârlı
+işlem geçmişi istiyor (kodla açılabilecek kilit kalmadı — WP-L); Eksen-2 67 skill'in 2'sini
+ölçebilmiş; Faz-5 4/20 çiftte; E3 ampirik bandı örneklem bekliyor; gölge modeli n_live=0
+yüzünden hiç terfi edememiş. Sistem haftada ~4 pozisyon açıyor — kanıt musluğu bu.
+
+- **N1 — Bildirim jetonu ayrımı ✅ KOD TARAFI (v216 — NAKED_POSITION jetonu obs.py NOTIFY_TOKENS'a ayrıldı; jeton pini `7f91178`'de beyanla büyüdü) / 🔒 KANAL OPERATÖRDE:** `NAKED_POSITION`
+  jetonu (obs.py NOTIFY_TOKENS) + koruma alarmının `MIRROR_DRIFT`ten ayrılması — bugün ikisi
+  aynı 6 saatlik susturma penceresini paylaşıyor; korumasız-pozisyon gecesi sev-1 alarmlar
+  bastı ve operatöre HİÇBİRİ ulaşmadı (33 teslim edilmemiş alarm birikmiş). Jeton ayrımı kanal
+  gelmeden de değerli (susturma ayrışır). KANAL (Telegram bot token / webhook URL) operatörün
+  tek parçası — teslim zinciri hazır, kanal boş (WP-O §6.1).
+- **N2 — Gölge kapsam genişletme ✅ KOD İNDİ (v217, kart EXE-2026-003 + R1 — gölge planlı-kol):** silahlı kol bayt-özdeş kaldı, planlı (silahlanmamış) kol AYRI defterde `kol: planli|silahli` etiketiyle (karışım kill#4'ü ateşlerdi, ölçülüp kanıtlandı). Tasarım metni: 4b bugün yalnız SİLAHLANMIŞ planların
+  gölge dolumunu yazıyor (6 seansta 4). Genişletme: tetiği kesilen PLANLI (silahlanmamış)
+  GO/REVIEW planları da gölge dolumu yazar, `kol: planli|silahli` etiketiyle AYRIK.
+  **ROL-1 DÜZELTMESİ (ilk öneri metnindeki hesap yanlıştı):** bu genişletme Faz-5 kilidinin
+  n_min'ini DOĞRUDAN doldurmaz — kilidin çifti gerçek-iç-dolum ister ve silahlanmamış planın
+  iç dolumu YOKTUR (R1'in kapsam_disi kovasına düşerler). Ölçeği veren İKİNCİL eşleştirmedir:
+  gölge(dakika-sim) × cf(EOD-sim) — İKİ SİMÜLASYON, aynı maliyet modeli, fark yalnız zamanlama
+  (EXE-2026-002'nin kendi onayladığı metodoloji). cf tüm adayları kapsadığı için örneklem
+  ~7 bin satırlık havuzdan beslenir. Bu ikincil hat KİLİDİ AÇMAZ (kilit gerçek-çift ister);
+  birikip gerçek-çift hattıyla UYUŞURSA kilidin kanıt kaynağını genişletme önerisi ayrı bir
+  kart revizyonu olarak OPERATÖRE gider. cf'nin çıkış-sadakati kusuru bu ölçümü KİRLETMEZ —
+  bu bir GİRİŞ ölçümü, çıkış modeli işe karışmıyor.
+  Skill gölge rotasyonu (57 ölçülmemiş skill, haftada N) AYRI kart — N2'den sonra açılır.
+- **N2b — Skill görüş defteri + yaşam-döngüsü ⚠️ KOD İNDİ / CANLI KANIT BEKLİYOR (v218, kart EDG-2026-019):**
+  skill yaşam-döngüsü dürüstlüğü + görüş defteri v1 katmanı indi (İLK koşusunda iki yönlü kesti).
+  AMA terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te
+  YENİDEN-ÜRETİLEMEDİ: `eksen2.uretilen=0`, `gorusleri.jsonl` beslenmedi, kadans bu adımı KOŞMADI —
+  KURU-KOŞU. Doğrulama birkaç EOD penceresi + EDG-2026-019 ölçüm kodu bekliyor (uydurulmaz:
+  ölçülemedi — bkz. `docs/SABAH-TRIYAJI-2026-08-09.md` §iii.7/§iv). 57 ölçülmemiş skill rotasyonu
+  bu hatta bağlı.
+- **N3 — Sermaye bekçileri ✅ İNDİ (WP-S SB-4 + SB-3, v216):** damgasız-yazım bekçisi (kitap
+  `store` dışından değişebiliyor ve kimse görmüyor — denetim tabanı) + `taban_kaymasi` satırı;
+  ikisi de v216'da indi (bkz. WP-S SB-4/SB-3 ✅).
+- **N4 — cf çıkış-yasası sadakati 🔒 BAKIM PENCERESİ ŞARTLI (en pahalı, en değerli):** 6 çıkış
+  tipi modellenecek + TÜM cf tarihi yeniden koşulacak (saatler, state'e yazar → canlı worker
+  koşarken YAPILMAZ). %96'lık skor havuzundaki +0,039R iyimserlik kapanır; Eksen-2/terfi/edge
+  hükümlerinin ortak zemini temizlenir. Kendi ön-kayıt kartıyla gider; pencereyi operatör açar.
+- **N5 — Görünürlük turu ✅ İNDİ (v219 + v225 + v226):** 409-yutması (boş catch 6→0, v219) +
+  `EV_TR` koruma_*/süpürücü çevirileri (v219 dokuz olay + v225 `siniflar` dökümü) +
+  `k.olcum`un çizilmesi (beş kilit, v219) + hermes telemetri kartı (v219, İLK pano okuyucusu) +
+  liveness kartı (v226). WP-S2 görünürlük borçlarının icra turu; hepsi app.js/api.py gösterim ailesinde.
+- **N6 — DEVİR TATBİKATI ✅ KOŞTU (6. kova, 2026-08-09 01:20-02:10 UTC — `docs/DEVIR-TATBIKATI-2026-08-09.md`):**
+  bağlamsız devralan ajan sistem haritası + ilk 10 risk çıkardı. **KRİTİK BULGU:** önceki koruma
+  "✅ KAPANDI" beyanı artefakttan doğrulanmamıştı — koruma×süpürücü çarpışmasını yeniden açtı
+  (`68ea173`), kök düzeltme v220+v221'le indi (bkz. WP-S ✅). Bağlam-sahibi SABAH TRİYAJI
+  (`docs/SABAH-TRIYAJI-2026-08-09.md`) 13 kalemi dağıtımlardan SONRA yeniden ölçtü: **13/13 gerçek,
+  0 çürük**; kapsamdaki P1=0 (tek gerçek sermaye-P1 çıplak pozisyon v220 ile kapandı). Fark hükmü:
+  tatbikatın bulduğu bilinen-dışı kalemler (systemd exit-143, sprint orphan, dual-source) dalgaya/
+  WP-S2'ye girdi. _(Aşağıdaki tasarım metni tarihçe olarak korunmuştur:)_
+- **~~N6 — DEVİR TATBİKATI (tasarım; 6. kova; DAĞITIMLAR BİTİNCE koşar — operatör onayı 2026-08-09)~~:**
+  BAĞLAMSIZ bir ajan (oturum hafızası YOK, yalnız depo + salt-okunur canlı) "sistem haritası +
+  ilk 10 risk" çıkarır; girişi deponun kendi devir sözleşmesi (CLAUDE.md → MERIDIAN_ENGINEERING_LOG).
+  Rol-1 çıktıyı BİLİNEN bulgu defteriyle (2026-08-07/09 turları = bilinen-pozitif seti) kıyaslar:
+  (a) bilinenleri BULAMADIĞI yerler = depo onboarding'inin/tek-kaynak haritasının boşluğu —
+  belge borcu olarak açılır; (b) bizim listemizde OLMAYIP bulduğu şeyler = bizim körlüğümüz —
+  şiddetine göre dalgaya girer. Çıktı: docs/DEVIR-TATBIKATI belgesi + Rol-1 fark hükmü.
+  SIRA GEREKÇESİ: dağıtım #2'den SONRA — tatbikat iyileştirilmiş durumu denetlesin ki bulduğu
+  her boşluk GERÇEK kalan boşluk olsun, bu gece zaten kapatılmış bir şeyin gölgesi değil.
+
+
+### Oturum snapshot'ları (tarihçe — açık kalemler ilgili §1/§3/§4'e taşındı; burada tam metin korunur)
+
+**2026-07-31 gece-vardiyası + 2026-08-02 denetim-kuyruğu kaydı (eski §1 "ŞİMDİ" gövdesi):**
+
+- **GECE DALGASI CANLIDA (03:00 dağıtımı):** WP-E icra turu (iki-motor tek yasası `broker.entry_law`,
+  marketable stop-limit + gap-yolları, E2 slipaj defteri, E3 kötümser bant, E4 gece/gündüz) ·
+  SIP-geçmiş-yasası (ilk canlı kanıt: `alpaca_sip_skipped_current_session`) · pano 8-kalemi ·
+  BT-1 damga-migrasyonu UYGULANDI (95/95 `replay_seed`, gerçek-canlı sayaç 0'dan başladı) ·
+  round-2 karantina (8 defter onarıldı) + `bars_integrity.json` (61 sembol) · regime `entry_gates`
+  üretici düzeltmesi (SMA/VIX kapıları İLK KEZ ateşleyebilir durumda; knob'lar kapalı, tarih
+  birikiyor) · tick-progress bekçisi (asılı-tick sınıfına) · Suite: **~2.900 test, 0 kırmızı.**
+- **GECENİN ÖLÇÜM HÜKÜMLERİ:** 52wh ARŞİV · volshock ARŞİV (canlı eşik aklandı; ham rvol20 anlamlı)
+  · MAX ARŞİV (yön ters — yüksek-MAX bizde İYİ) · EAP ARŞİV (güç-yeterli) · WP3.1 4/4 birinci-el
+  (CMP birebir → insider arşivi kesinleşti; ToM YENİ KART ölçümde) · trend kolu YAŞIYOR (rafine
+  bekliyor) · KOŞUYOR: WP-R rampa-P3 (K=4) + SMA/ToM ikizleri.
+- **E4 İLK OKUMA (tohum-etiketli):** kaybın %84'ü GECE bacağında; tek pozitif dilim (8-15g)
+  kazancını GÜNDÜZDEN yapıyor; giriş-gap p90 +100bps → %1 limit tavanı bağlayıcı olacak.
+- **A1:** ilk tam-anayasa tick'i ilerliyor (IEX bacağı 252/253 teslim; onarım soğuma-içi-bekleme
+  kokusu sabah listesinde); monitör-v2 + 3sa-gevşetilmiş bekçi nöbette.
+- **Operatöre sabah kalemleri:** MNST 2005 ×0,48 bütünlük yorumu · delist-bar kararı (QuantConnect
+  vs Massive planı) · bildirim kanalı · FMP planı · VIX kaynağı · shares-outstanding kaynağı.
+- **DENETİM KUYRUĞU (2026-08-02 gecesi; kaynak `docs/SISTEM-DENETIMI-2026-08-02.md`):** KOVA A
+  **9/9 İNDİ** (d50b03b defter+kadans · 395920e veri-hattı · 8a38248 gözetim; 44 yeni test, hepsi
+  kırmızı-önce/canlı-kopya doğrulamalı). **KOVA B 16/16 İNDİ (2026-08-02 gündüz, operatör onayıyla — üç dalga):**
+  90a6663 icra-güvenlik (C9/C23/C8) · 6020fa0 yapı (C3/C5) · 84fcf69 öğrenme-politika (C14/C16/C17) ·
+  9b8327e küçükler (C1/C25) · 0a4453f iki-motor (C11/C18/C13/C19) · 6aba956 dalga-3 (C24/C12) ·
+  0170cc0 borçlar + takip hükümleri (v76 fikstürü, Y3 ölçülemedi-notu). Dağıtıldı 14:00/14:30 UTC;
+  birim migrasyonu yapıldı. 25 bulgunun 25'i kapalı ya da bilinçli-beyanlı.
+- **Hermes-CLI yapılandırma dersi (2026-08-02, canlı vaka):** A1 taşınmasında ~/.hermes yapılandırması
+  taşınmadı (hiçbir kanalın parçası değildi), senkron tek-atımlık olduğundan kendini onarmadı, hiçbir
+  bekçi "yerel ajan yapılandırılmış mı" ölçmüyordu — LLM ikinci-görüşü 6 gün sessiz öldü. Kalemler:
+  (a) servis açılışında senkron-doğrulama (GEMINI_API_KEY dolu + CLI modelsiz → yeniden senkron + olay);
+  (b) pano senkron-sonucu zaman-damgalı (bayat OSError vakası); (c) bekçi: agent_call boş-serisi
+  "kota" ile "yapılandırmasız"ı ayırt etsin; (d) RPD bütçesi ağa HİÇ çıkmamış çağrıyı saymasın —
+  canlı vaka: ölü zincir 150/150'yi 06:19'da yaktı, gerçek Gemini kotası el değmemişken inceleme
+  tüm gün bütçe-reddi yedi (sayaç korumaya çalıştığını ölçmüyor); (e) `review_candidates` dolu cevabın
+  filtreden sıfır görüşle çıktığı hâlde OLAYSIZ None dönüyor (hermes.py ~2109) — ham cevabın ilk
+  ~300 karakteriyle bir `candidate_review_empty_parse` uyarısı gerekir (2026-08-02 canlı vaka:
+  Gemini dolu cevap verdi, kayıt yok, sebep görünmez).
+- **VERSİYONLU-STATE DAĞITIM BOŞLUĞU (2026-08-02 akşam, canlı doğrulandı — KRİTİK SINIF):**
+  bounds.yaml/goal.yaml versiyonda AMA rsync state/'i dışlar → hiçbir dağıtım bunları canlıya
+  taşımıyor. Canlıda w_turnover YOK (sıfır turnover-örneklemesinin C15'ten bağımsız İKİNCİ kök
+  nedeni — knob hiç doğmamış), heat_hard_r YOK (guard fail-safe aynı değerlerde; sahiplik canlıda
+  gerçekleşmemiş). ÇÖZÜM toplu pencerede: canlı↔repo diff (canlıda repo-dışı satır varsa DUR) →
+  worker durmuşken scp → doğrulama. KALICI KALEM: dagit'e versiyonlu-state adımı (diff-göster +
+  onaylı-kopya) eklenmeli.
+- **Denetim turunun bıraktığı küçük kuyruk (ajan-beyanlı):** `same_evening_bars` fırlatmayan arıza
+  yolu hâlâ `empty` yazıyor (bacaktaki ikinci HATA≠BOŞ deliği; kapanış yolu: calls/fails deltasını
+  `_fetch_alpaca_session` üzerinden taşı) · `conftest._clear_module_caches` `scheduler._state`i
+  sıfırlamıyor (test_regime_patch sıraya-bağlı düşüş — kısmi `-k` seçimlerinde; tam suite düzeninde
+  görünmez) · pano `_patOK/_patNote` `dedektor_dustu/olculemedi` bilmiyor (düşen dedektör yeşil
+  görünür — S2R-3/app.js kalemi) · mutation.py `dedektor_dustu`yu okumuyor.
+
+**DURUM PANOSU (2026-07-31 sabah — eski §2; bayat, GÜNCEL DURUM §1 tarafından güncellenir):**
+
+| Eksen | Durum | % |
+|---|---|---|
+| Çalışma ortamı (A1 7/24 + bekçiler + yedek zinciri) | canlı; tick-bekçisi + fail-notify + VM-dışı yedek | 95 |
+| Veri hattı (aynı-akşam IEX + sip-sabah + onarım + takvim/karantina/bütünlük kapıları) | canlıda; delist-bar kısıtı açık | 90 |
+| İcra sadakati (iki-motor tek yasası + E2 defteri) | KOD canlıda; ilk gerçek emir sınavı bugünkü seans | 70 |
+| Ölçüm yönetişimi (kartlar + K + DSR/PBO + donmuş holdout + kod-damgası) | işliyor; skor kartı 39/100 → yeniden puanlama bekliyor | 85 |
+| Öğrenme otomasyonu (sprint/dolgu/Eksen-2/karne) | kadanslar canlı; ilk tam gece verisi birikiyor | 80 |
+| Edge envanteri | 9 aile ölçülmüş-arşiv · 1 YAŞIYOR (trend) · 3 ölçümde (rampa-P3, SMA, ToM) | — |
+| Pano dürüstlüğü | 8 kalem canlıda; operatör doğrulaması bekliyor | 85 |
+| Gerçek-canlı kanıt | n=0 (damga sonrası dürüst sayaç) — birikim bugün başlıyor | 0 |
