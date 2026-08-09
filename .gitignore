@@ -32,6 +32,12 @@ build/
 .hypothesis/
 mutants/
 
+# ölçüm ham çıktıları (WP-U/N4 vd, 2026-08-09) — özet `sonuc.json` + `olcum*.py` KAYNAK olarak commit'lenir;
+# ham seans dökümü / betik state / stderr YENİDEN ÜRETİLEBİLİR (olcum*.py deterministik), versiyonlanmaz.
+research/olcumler/*/seanslar.json
+research/olcumler/*/*.stderr.log
+research/olcumler/*/state/
+
 # os
 .DS_Store
 
