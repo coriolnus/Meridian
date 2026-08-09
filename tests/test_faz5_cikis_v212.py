@@ -196,26 +196,37 @@ def test_B_n_kucukse_OLCULDU_ama_ORNEKLEM_YETERSIZ(sandbox_state):
     assert h["olcum"]["ci"]["n_kume"] == 2 and h["olcum"]["ci"]["B"] == 10_000
 
 
-def test_B_kill4_eslesmeme_yuzde_20_ustunde_HUKUM_YOK(sandbox_state):
+def test_B_kill4_BOZULMA_yuzde_20_ustunde_HUKUM_YOK(sandbox_state):
     """KILL#4 — kart: "defter bütünlüğü sorunu; ölçüm hükmü VERİLMEZ, önce eşleştirme kırılması
     kök-neden turuna gider". `durum` bu yüzden `olculemedi` KALIR: kırık bir eşleştirmenin üstüne
-    kurulan "örneklem yetersiz" cümlesi de yanlış olurdu."""
+    kurulan "örneklem yetersiz" cümlesi de yanlış olurdu.
+
+    R1 DARALTMASI (EXE-2026-002-R1): kill#4 artık YALNIZ BOZULMA'da (golge_bozuk/bps_yok) tetikler;
+    `eod_yok` MEŞRU dolmamadır ve n_min'e havale edilir — o hâl artık kill#4'ü TETİKLEMEZ ve ayrı
+    çivilenir (`tests/test_kill4_daraltma_v228.py`). Bu yüzden fikstür `eod_yok`tan BOZULMA'ya
+    çevrildi: testin AMACI (%20 ÜSTÜNDE hüküm YOK) DEĞİŞMEDİ, yalnız DOĞRU sınıf kullanılıyor.
+    Sınıf `golge_bozuk`: `sim_fill` biçimsiz (None DEĞİL → evrene girer ama float() reddeder)."""
     golge, eod = _kazanc_seti(n_gun=2, gun_basi=2, bps=30.0)
-    golge.append(_golge("P-KAYIP-X", "2026-08-02", 99.0))    # 5 satırın 1'i = %20 DEĞİL, %20'yi AŞAN
+    golge.append(_golge("P-BOZUK-X", "2026-08-02", "BOZUK-BICIM"))  # 5 satırın 1'i BOZULMA = %20
     _defter(golge)
     _eod_yaz(eod)
     h = f5.cikis_olcumu()
     assert h["olcum"]["eslesmeyen"]["n"] == 1
     assert h["olcum"]["eslesmeyen"]["oran"] == pytest.approx(0.2), "1/5 = %20 — eşiği AŞMIYOR"
+    assert h["olcum"]["eslesmeyen"]["bozulma"]["oran"] == pytest.approx(0.2), \
+        "kill#4 oranı BOZULMA'dan gelir: 1/(4+1) = %20 — eşiği AŞMIYOR (kart: > %20)"
+    assert h["olcum"]["eslesmeyen"]["sinif_dagilimi"] == {"golge_bozuk": 1}
     assert h["durum"] == "olculdu", "%20 eşiği AŞILMADIKÇA hüküm verilir (kart: > %20)"
 
-    golge.append(_golge("P-KAYIP-Y", "2026-08-02", 99.0))    # 6 satırın 2'si = %33
+    golge.append(_golge("P-BOZUK-Y", "2026-08-02", "BOZUK-BICIM"))  # 6 satırın 2'si BOZULMA = %33
     _defter([golge[-1]])
     h2 = f5.cikis_olcumu()
     assert h2["durum"] == "olculemedi" and h2["gecer"] is False
     assert "KILL#4" in h2["neden"] and "kök-neden" in h2["neden"].lower()
-    assert set(h2["olcum"]["eslesmeyen"]["adlar"]) == {"P-KAYIP-X·2026-08-02",
-                                                       "P-KAYIP-Y·2026-08-02"}, \
+    assert h2["olcum"]["eslesmeyen"]["bozulma"]["oran"] == pytest.approx(round(2 / 6, 4)), \
+        "2/(4+2) = %33 > %20 — BOZULMA eşiği AŞIYOR"
+    assert set(h2["olcum"]["eslesmeyen"]["adlar"]) == {"P-BOZUK-X·2026-08-02",
+                                                       "P-BOZUK-Y·2026-08-02"}, \
         "kart: eşleşmeyen satır SESSİZCE DÜŞÜRÜLMEZ — sayısı ve ADI birlikte raporlanır"
     assert all(e["neden"] for e in h2["olcum"]["eslesmeyen"]["nedenler"])
 

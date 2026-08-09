@@ -181,12 +181,13 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
         info["owned"] = bool(res.get("owned"))
         kalan[t] = info
         out["failed"].append({"ticker": t, **{k: info[k] for k in ("tries", "naked", "son_detay")}})
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (çıkış icra edilemedi, sizing değil)
                   f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada "
                   f"AÇIK; {info['tries']}. deneme"
                   + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else ""),
                   ticker=t, plan_id=info.get("plan_id"), tries=info["tries"],
-                  naked=info["naked"], owned=info["owned"], detail=info["son_detay"])
+                  naked=info["naked"], owned=info["owned"], detail=info["son_detay"],
+                  drift_sinifi="cikis_yetimi")
     meta[MIRROR_EXIT_KEY] = kalan
     return out
 
@@ -1701,7 +1702,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                         # E2: RESMÎ AÇILIŞ bu seansın barlarından gelir — mutabakat
                                         # katmanı ikinci bir bar kaynağı açmaz (tek gerçek).
                                         opens={t: float(df.loc[d, "open"]) for t, df in per.items()
-                                               if d in df.index})
+                                               if d in df.index},
+                                        # SB-2: DOLUM anının boyut tabanı — iç motor bu `eq_now`la
+                                        # doldurdu (yukarıda :1114). Adet sapması sınıflandırması bunu
+                                        # SB-1 gönderim makbuzuyla kıyaslar (drift_sinifi).
+                                        fill_eq_now=eq_now)
     except Exception as e:
         obs.warn("reconcile_failed", error=f"{type(e).__name__}: {e}")
     _entry_exec_trim()
@@ -1954,9 +1959,89 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
     return out
 
 
+# =============================================================================================
+# SB-2 (2026-08-09) — MIRROR_DRIFT SAPMA SINIFI (`drift_sinifi`)
+# =============================================================================================
+# VAKA (docs/BAYAT-SERMAYE-KOK-2026-08-07.md §8/B2): 08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı,
+# dördü de ADET sapması dedi (54 vs 25 …) ve HİÇBİRİ sebebi ADLANDIRMADI — belirti (%49 sapma)
+# görüldü, SINIF söylenmedi. Gerçek kök: gönderim anında kitabın boyut tabanı 94.457,91$, dolum
+# anında 100.000$ (bayat sermaye). Bu yardımcı, adet sapmasını SB-1 boyut makbuzuyla
+# (`meta["size_law"]`, v222 — GÖNDERİM anının girdileri) DOLUM anının girdilerine kıyaslayıp
+# sapmayı ADLANDIRIR. ALARMIN KENDİSİ/EŞİĞİ (>%25) DEĞİŞMEZ — yalnız SEBEP alanı eklenir.
+# Türetilemeyen sınıf UYDURULMAZ: `olculemedi` + neden (0/boş DEĞİL — YASA: UYDURMA YASAĞI).
+_DRIFT_EPS_EQ   = 1.0        # eq_now farkı: makbuz 2 ondalığa yuvarlı — $1 altı yuvarlama gürültüsü
+_DRIFT_EPS_MULT = 1e-3       # size_mult farkı: makbuz 4 ondalığa yuvarlı
+_DRIFT_SEANS_S  = 24 * 3600  # "nabız yaşı > 1 seans" eşiği (sermaye_kaynagi korroborasyonu)
+
+
+def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak) -> tuple[str, str]:
+    """ADET sapmasının (`reconcile_broker_state` 1.2b) SEBEP SINIFINI türet — SB-2/B2 tablosu.
+
+    Girdi: `receipt` = SB-1 boyut makbuzu (`meta["size_law"][plan_id]`, GÖNDERİM anının girdileri:
+    eq_kaynak/eq_now/peak/size_mult/kitap_rev) · `fill_eq_now`/`fill_peak` = DOLUM anının girdileri
+    (iç motor `daily_cycle`de bu tabanla doldurdu). Sınıf, iki bacağın SEBEBİNİ ayırt ETTİĞİ kadar
+    kesindir; ayırt edilemiyorsa `olculemedi` — 0/boş DEĞİL, ADI OLAN üçüncü hâl (UYDURMA YASAĞI).
+
+    Sıra NEDENLİdir (ilk eşleşen kazanır):
+      olculemedi(makbuz yok)  — restart-öncesi / makbuzsuz gönderim: kıyas girdisi YOK.
+      olculemedi(dolum yok)   — reconcile eq_now'suz çağrıldı (eski çağıran): kıyas yapılamaz.
+      sermaye_kaynagi         — makbuz eq_kaynak=nabiz VE nabız yaşı>1 seans: boyut PAYINI bayat
+                                nabızdan aldı (kitap değil) — KANAL-özgü kök, generic tabandan ÖNCE.
+      boyutlama_tabani        — çarpan iki bacakta farklı VE makbuz eq_now ≠ dolum eq_now: boyut
+                                tabanı gönderim↔dolum arasında kaydı (canlı vaka: 94457,91 vs 100000).
+      derisk_carpani          — çarpan farklı ama eq_now ~aynı: de-risk eşiği/kartı arada değişti.
+      kitap_kaydi             — çarpan aynı ama makbuz kitap_rev ≠ dolum rev: kitap arada DEĞİŞTİ.
+      olculemedi(beyan/icra)  — tüm ölçülebilir girdiler eşit: kalan fark icra (limit/slipaj/kısmi)
+                                VEYA beyan_kaydi — makbuz beyan_n/ofset TAŞIMADIĞINDAN ayrılamaz
+                                (SB-1 makbuz genişletme AYRI kalem)."""
+    if not receipt:
+        return "olculemedi", ("plan için SB-1 boyut makbuzu (size_law) yok — restart-öncesi ya da "
+                              "makbuzsuz gönderim; sapma sınıfı türetilemedi")
+    if fill_eq_now is None:
+        return "olculemedi", ("dolum-anı eq_now geçilmedi (reconcile eq_now'suz çağrıldı) — "
+                              "makbuzla kıyas yapılamadı")
+    r_eqk, r_eqn = receipt.get("eq_kaynak"), receipt.get("eq_now")
+    r_mult, r_rev = receipt.get("size_mult"), receipt.get("kitap_rev")
+    try:
+        f_eqn  = float(fill_eq_now)
+        f_peak = float(fill_peak) if fill_peak is not None else START_EQUITY
+        f_mult = derisk_mult(f_eqn, f_peak)
+    except (TypeError, ValueError):
+        return "olculemedi", "dolum-anı eq_now/peak sayıya çevrilemedi — çarpan yeniden üretilemedi"
+    # sermaye_kaynagi: nabız KANALI + bayatlık. KANAL-özgü kök, generic taban kıyasından ÖNCE gelir
+    # (canlı AMGN bacağı: pano dalı `eq_now` almaz, boyutu bayat nabızdan okur — §6).
+    if r_eqk == "nabiz":
+        age = health.heartbeat_age_seconds()
+        if age is not None and age > _DRIFT_SEANS_S:
+            return "sermaye_kaynagi", (f"makbuz eq_kaynak=nabiz ve nabız yaşı {age/3600:.1f} sa "
+                                       f"(>1 seans) — boyut PAYINI bayat nabızdan aldı, kitaptan değil")
+    # boyutlama_tabani / derisk_carpani: çarpan iki bacakta farklı mı? (asıl sizing kolu)
+    if r_mult is not None and abs(float(r_mult) - f_mult) > _DRIFT_EPS_MULT:
+        if r_eqn is not None and abs(float(r_eqn) - f_eqn) > _DRIFT_EPS_EQ:
+            return "boyutlama_tabani", (f"gönderim eq_now {float(r_eqn):g}$ ≠ dolum eq_now {f_eqn:g}$ "
+                                        f"→ çarpan {float(r_mult):g}→{f_mult:g}; boyut tabanı "
+                                        f"gönderim↔dolum arasında kaydı")
+        return "derisk_carpani", (f"çarpan iki bacakta farklı ({float(r_mult):g} vs {f_mult:g}) ama "
+                                  f"eq_now ~aynı — de-risk eşiği/kartı gönderim↔dolum arasında değişti")
+    # kitap_kaydi: çarpan aynı ama kitap arada değişti mi? (boyut tabanı kaymadan içerik oynadı)
+    if r_rev is not None:
+        try:
+            f_rev = (store.stamp(PORTFOLIO) or (None, None))[1]
+        except Exception:  # sessiz-yutma: rev damgası okunamadı — kitap_kaydi ayrımı düşer, hüküm son dala geçer (uydurma yok)
+            f_rev = None
+        if f_rev is not None and r_rev != f_rev:
+            return "kitap_kaydi", (f"makbuz kitap_rev {r_rev} ≠ dolum-anı rev {f_rev} — kitap "
+                                   f"gönderim↔dolum arasında DEĞİŞTİ (boyut tabanı kaymadı)")
+    # tüm ölçülebilir girdiler eşit → icra VEYA beyan_kaydi; makbuz beyanı ölçmez → olculemedi
+    return "olculemedi", ("eq_now/size_mult/kitap_rev eşit; kalan fark icra (limit/slipaj/kısmi "
+                          "dolum) VEYA beyan_kaydi olabilir — size_law makbuzu beyan_n/ofset "
+                          "taşımadığından ayrım YAPILAMADI (SB-1 makbuz genişletme AYRI kalem)")
+
+
 def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                            open_positions: dict | None = None,
-                           opens: dict | None = None) -> dict:
+                           opens: dict | None = None,
+                           fill_eq_now: float | None = None) -> dict:
     """Phase 1 reconciliation — bring the internal book into agreement with the Alpaca PAPER mirror.
 
       * strip locally-armed plans whose Alpaca order is DEAD (rejected/canceled/expired) so the internal
@@ -1970,7 +2055,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         is written to the trade row (alpaca_fill_price) so real-world slippage vs the model is measurable.
 
     Matched by client_order_id == plan_id. Guarded to BROKER==alpaca_paper; any Alpaca API failure is logged,
-    never fatal to the cycle. Writes state/broker_reconcile.json for the dashboard."""
+    never fatal to the cycle. Writes state/broker_reconcile.json for the dashboard.
+
+    `fill_eq_now` (SB-2): DOLUM anının boyut tabanı (iç motorun `daily_cycle`de kullandığı `eq_now`).
+    ADET sapması (1.2b) tespit edilince SB-1 boyut makbuzuyla kıyaslanıp `drift_sinifi` türetilir.
+    OPSİYONELdir (varsayılan None) — eski çağıranlar bozulmaz; None ise sınıf `olculemedi` olur."""
     out = {"checked": False, "stripped": [], "drift": [],
            "positions": {"missing_on_alpaca": [], "qty_drift": [], "external": []}}
     # ATLAMA DA BİR SONUÇTUR. Bu iki dal HİÇBİR ŞEY YAZMADAN dönüyordu: broker_reconcile.json dünkü
@@ -2053,9 +2142,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         if ap is None:
             if sym not in alive_order_syms:
                 out["positions"]["missing_on_alpaca"].append(sym)
+                # SB-2: SABİT sınıf — sizing/sermaye sapması DEĞİL, durum ayrışması (iç açık, aynada
+                # ne pozisyon ne emir). Sizing taksonomisi uymaz; brief-sanction ile ADI konur.
                 obs.alarm(obs.ALARM_MIRROR_DRIFT,
                           f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var",
-                          ticker=sym, local_qty=qty)
+                          ticker=sym, local_qty=qty, drift_sinifi="split_brain")
             continue
         try:
             aq = float(ap.get("qty") or 0.0)
@@ -2067,10 +2158,19 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         # sizing runs off two slightly different equities (internal book vs Alpaca account), so small qty
         # gaps are expected; >25% relative gap is real drift, not rounding.
         if qty > 0 and abs(aq - qty) / qty > 0.25:
-            out["positions"]["qty_drift"].append({"ticker": sym, "local_qty": qty, "alpaca_qty": aq})
+            # SB-2: sapmayı ADLANDIR — SB-1 boyut makbuzunu (`size_law`) dolum-anı girdilerine
+            # kıyasla. Alarm/eşik (>%25) DEĞİŞMEZ; yalnız `drift_sinifi` + neden eklenir. Makbuz
+            # yoksa / türetilemezse `olculemedi` (0/boş DEĞİL). Türetme ASLA fırlamaz (helper içi).
+            _rcpt = (meta.get("size_law") or {}).get(info.get("plan_id"))
+            _sinif, _neden = _drift_sinifi_adet(_rcpt, fill_eq_now,
+                                                meta.get("peak_equity", START_EQUITY))
+            out["positions"]["qty_drift"].append({"ticker": sym, "local_qty": qty, "alpaca_qty": aq,
+                                                  "drift_sinifi": _sinif})
             obs.alarm(obs.ALARM_MIRROR_DRIFT,
-                      f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}",
-                      ticker=sym, local_qty=qty, alpaca_qty=aq)
+                      f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}"
+                      f" · sapma sınıfı: {_sinif} — {_neden}",
+                      ticker=sym, local_qty=qty, alpaca_qty=aq,
+                      drift_sinifi=_sinif, drift_neden=_neden)
     # engine-orphans vs true externals: a bracket the ENGINE submitted (client_order_id 'P-…') can fill
     # on Alpaca after the internal side dropped its plan (breaker day, slot race, gap guard) — that is
     # split-brain and must ALARM, not hide under 'external' with the operator's own holdings (audit #14).
@@ -2090,15 +2190,16 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     orphans = [s for s in _tum_yetim if s not in _exit_pending]
     exit_orphans = [s for s in _tum_yetim if s in _exit_pending]
     for sym in orphans:
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (durum ayrışması, sizing değil)
                   f"motor yetimi: {sym} Alpaca'da açık (motorun emri dolmuş) ama iç defterde yok",
-                  ticker=sym)
+                  ticker=sym, drift_sinifi="motor_yetimi")
     for sym in exit_orphans:
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (çıkış icra edilemedi, sizing değil)
                   f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, "
                   f"bir sonraki döngüde yeniden denenecek",
                   ticker=sym, reason=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("reason"),
-                  tries=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("tries"))
+                  tries=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("tries"),
+                  drift_sinifi="cikis_yetimi")
     out["positions"]["engine_orphans"] = orphans
     out["positions"]["exit_orphans"] = exit_orphans
     out["positions"]["external"] = sorted(sym for sym in a_by_sym
@@ -2157,11 +2258,14 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             _yamalar[tr.get("plan_id")] = {"alpaca_fill_price": round(af, 4),
                                            "mirror_divergence": round(div, 5)}
         if div > MIRROR_DRIFT_TOL:
+            # SB-2: SABİT sınıf `icra` — bu dal sim ÇIKIŞ FİYATI vs Alpaca dolum FİYATI sapmasıdır,
+            # yani tanım gereği icra (limit/slipaj). Sizing türetmesi yalnız ADET sapmasında (1.2b).
             out["drift"].append({"ticker": tr.get("ticker"), "sim": round(sim, 4), "alpaca": round(af, 4),
-                                 "div_pct": round(div * 100, 3)})
+                                 "div_pct": round(div * 100, 3), "drift_sinifi": "icra"})
             obs.alarm(obs.ALARM_MIRROR_DRIFT,
                       f"ayna sapması: {tr.get('ticker')} — sim {sim} vs Alpaca {af} (%{div*100:.2f})",
-                      ticker=tr.get("ticker"), sim=sim, alpaca_fill=af, divergence=round(div, 4))
+                      ticker=tr.get("ticker"), sim=sim, alpaca_fill=af, divergence=round(div, 4),
+                      drift_sinifi="icra")
     if _yamalar:
         def _fill_patch(rows, _y=_yamalar):
             son: dict = {}

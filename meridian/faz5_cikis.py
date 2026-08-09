@@ -50,7 +50,14 @@ CI_SEVIYE = 0.95
 BOOTSTRAP_N = 10_000        # kartın yazdığı replikasyon sayısı (repo varsayılanı 2.000 DEĞİL)
 BOOTSTRAP_TOHUM = 11        # repo kanonu (olcum_araclari.BOOTSTRAP_TOHUM ile aynı sayı): aynı
                             # defter aynı aralığı verir — tekrarlanabilirlik şartı
-KILL_ESLESMEME_ORANI = 0.20  # kill#4: eşleşmeyen gölge satırı oranı bunun ÜSTÜNDEyse hüküm YOK
+KILL_ESLESMEME_ORANI = 0.20  # kill#4: BOZULMA (defter güvenilmezliği) oranı bunun ÜSTÜNDEyse hüküm
+                            # YOK. R1 (EXE-2026-002-R1): oran YALNIZ bozulma sınıflarından hesaplanır
+KAPSAM_DISI_SINIFLARI = ("eod_yok",)  # MEŞRU DOLMAMA — kill#4 DIŞI (R1). Gölge sağlam ama iç EOD
+                            # motoru doldurmamayı SEÇTİ (limit kaçtı, kapı düşürdü, gap vetosu):
+                            # eşleşme YAPISAL olarak oluşmaz. `kapsam_disi` olarak ADIYLA sayılır,
+                            # hükmü GEÇERSİZ KILMAZ; yalnız eşleşen çift sayısını düşürür → n_min'e
+                            # havale. BURADA OLMAYAN her eşleşmeme (golge_bozuk, bps_yok ve gelecekte
+                            # doğacak her yeni kırılma) BOZULMA sayılır — fail-closed.
 MIN_KUME = 2                # tek tarih kümesinde kümeler-arası dağılım KURULAMAZ (aşağıda gerekçe)
 AD_TAVANI = 50              # ad/çift listelerinin BEYANLI tavanı — sayaçlar hep TAM, kırpma sayısı
                             # `*_kirpildi` ile yazılır (defter süresiz büyür ve bu sözlük
@@ -297,7 +304,8 @@ def cikis_olcumu(rows: list | None = None) -> dict:
 
     HÜKÜM SIRASI (kartın kill listesiyle AYNI sıra — sıra da bir karardır):
       0. defter/evren BOŞ            → durum `olculemedi`, gecer False (ölçülemedi ≠ 0)
-      1. KILL#4 eşleşmeme > %20      → durum `olculemedi`, HÜKÜM YOK, kök-neden turu gerekiyor
+      1. KILL#4 BOZULMA > %20        → durum `olculemedi`, HÜKÜM YOK, kök-neden turu gerekiyor
+                                       (R1: yalnız golge_bozuk+bps_yok; eod_yok kapsam DIŞI → n_min)
       2. n < n_min                   → durum `olculdu`,   gecer False, "ÖRNEKLEM YETERSİZ (n/20)"
       3. CI kurulamadı (küme < 2)    → durum `olculemedi`, gecer False (fail-closed)
       4. CI sıfırı İÇERİYOR          → durum `olculdu`,   gecer False (kill#1)
@@ -353,7 +361,25 @@ def cikis_olcumu(rows: list | None = None) -> dict:
     ciftler = [c for c in sonuclar if c["sinif"] == "eslesti"]
     eslesmeyen = [c for c in sonuclar if c["sinif"] != "eslesti"]
     n = len(ciftler)
-    oran = len(eslesmeyen) / len(evren)
+
+    # KILL#4 DARALTMASI (EXE-2026-002-R1). Eşleşmeyen İKİ AYRI OLGUdur ve kill#4 YALNIZ BOZULMAya
+    # bakar (eski geniş ölçüt ikisini karıştırıyordu — kartın TANIM KUSURU):
+    #   (a) BOZULMA — defter güvenilmez, hüküm verilemez: `golge_bozuk` (gölge satırı biçimsiz) +
+    #       `bps_yok` (eşleşti ama fark hesaplanamadı). Oran BUNLARDAN hesaplanır; > %20 → hüküm YOK.
+    #   (b) MEŞRU DOLMAMA — `eod_yok`: gölge sağlam ama iç EOD motoru doldurmamayı SEÇTİ (limit
+    #       kaçtı, kapı düşürdü, gap vetosu). Bozulma DEĞİL, motorun kararıdır; eşleşme YAPISAL
+    #       olarak oluşmaz ve OLUŞMAMALIDIR. `kapsam_disi` olarak ADIYLA raporlanır, hükmü GEÇERSİZ
+    #       KILMAZ — yalnız eşleşen çift sayısını düşürür ve n_min kapısına havale edilir.
+    # PAYDA eod_yok'u DIŞLAR (kartın "yalnız n'i düşürür" beyanının koddaki karşılığı): payda =
+    # eşleşen + bozulma. eod_yok'u paydada tutmak ona kill#4'ü SEYRELTME etkisi verirdi — kart bunu
+    # yasaklar (eod_yok'un TEK etkisi n'dir). Payda 0 ise bozulma da 0'dır (her şey eod_yok) → oran
+    # 0, kill#4 tetiklenmez ve hüküm n_min'e gider. FAIL-CLOSED: kapsam dışı SINIF açıkça
+    # `KAPSAM_DISI_SINIFLARI`dır; BURADA OLMAYAN her eşleşmeme BOZULMA sayılır.
+    bozulma = [c for c in eslesmeyen if c["sinif"] not in KAPSAM_DISI_SINIFLARI]
+    kapsam_disi = [c for c in eslesmeyen if c["sinif"] in KAPSAM_DISI_SINIFLARI]
+    payda = n + len(bozulma)
+    bozulma_orani = (len(bozulma) / payda) if payda else 0.0
+    oran = len(eslesmeyen) / len(evren)   # RAPOR (kill DEĞİL): evrenin ne kadarı hiç eşleşMEdi
 
     # KART: "sessizce düşürülmez" — eşleşmeyen satır SAYISI ve ADI birlikte raporlanır.
     # KIRPMA BEYANLIDIR, SESSİZ DEĞİL: defter süresiz büyür ve bu sözlük /api/diagnostics yükünün
@@ -366,18 +392,39 @@ def cikis_olcumu(rows: list | None = None) -> dict:
         "nedenler": [{"ad": c["ad"], "neden": c["neden"]} for c in eslesmeyen[:AD_TAVANI]],
         "sinif_dagilimi": {s: sum(1 for c in eslesmeyen if c["sinif"] == s)
                            for s in sorted({c["sinif"] for c in eslesmeyen})},
+        # R1: kill#4'ü ateşleyen ALT-KÜME. Oran eod_yok'u DIŞLAYAN paydadan (eşleşen + bozulma)
+        # gelir — bu, `oran` (evren paydalı, salt rapor) ile KARIŞTIRILMAMALIDIR.
+        "bozulma": {
+            "n": len(bozulma), "oran": round(bozulma_orani, 4), "payda": payda,
+            "kill_esigi": KILL_ESLESMEME_ORANI,
+            "adlar": [c["ad"] for c in bozulma[:AD_TAVANI]],
+            "adlar_kirpildi": max(0, len(bozulma) - AD_TAVANI),
+            "nedenler": [{"ad": c["ad"], "neden": c["neden"]} for c in bozulma[:AD_TAVANI]],
+            "beyan": ("kill#4 PAYDASI = eşleşen + bozulma (eod_yok DIŞLANIR); oran > "
+                      f"%{int(KILL_ESLESMEME_ORANI * 100)} → defter bütünlüğü sorunu, hüküm YOK"),
+        },
+        # R1: MEŞRU DOLMAMA — kill#4'ü GEÇERSİZ KILMAZ, yalnız n'i düşürür. ADIYLA raporlanır
+        # (kart: "sessizce düşürülmez") ama BOZULMA sayılmaz.
+        "kapsam_disi": {
+            "n": len(kapsam_disi), "siniflar": list(KAPSAM_DISI_SINIFLARI),
+            "adlar": [c["ad"] for c in kapsam_disi[:AD_TAVANI]],
+            "adlar_kirpildi": max(0, len(kapsam_disi) - AD_TAVANI),
+            "beyan": ("MEŞRU DOLMAMA (iç EOD motoru doldurmamayı SEÇTİ) — kill#4'ü GEÇERSİZ KILMAZ; "
+                      "yalnız eşleşen çift sayısını düşürür ve n_min kapısına havale edilir"),
+        },
     }
     olcum["n_eslesen"] = n
     olcum["ciftler"] = ciftler[-AD_TAVANI:]
     olcum["ciftler_kirpildi"] = max(0, n - AD_TAVANI)
 
-    if oran > KILL_ESLESMEME_ORANI:
+    if bozulma_orani > KILL_ESLESMEME_ORANI:
         return {"gecer": False, "durum": "olculemedi", "esik": esik,
                 "olcum": {**olcum, "ortalama_bps": None, "ci": None, "ortalama_R": None},
-                "neden": (f"KILL#4 — eşleşmeyen gölge satırı oranı %{oran * 100:.1f} > "
-                          f"%{KILL_ESLESMEME_ORANI * 100:.0f} ({len(eslesmeyen)}/{len(evren)}: "
-                          f"{', '.join(c['ad'] for c in eslesmeyen[:5])}"
-                          f"{' …' if len(eslesmeyen) > 5 else ''}). Defter bütünlüğü sorunu: "
+                "neden": (f"KILL#4 — BOZULMUŞ gölge satırı oranı %{bozulma_orani * 100:.1f} > "
+                          f"%{KILL_ESLESMEME_ORANI * 100:.0f} ({len(bozulma)}/{payda} eşleşen+bozulma; "
+                          f"{len(kapsam_disi)} eod_yok kapsam DIŞI): "
+                          f"{', '.join(c['ad'] for c in bozulma[:5])}"
+                          f"{' …' if len(bozulma) > 5 else ''}). Defter bütünlüğü sorunu: "
                           "ölçüm hükmü VERİLMEZ, önce eşleştirme kırılması KÖK-NEDEN turuna gider")}
 
     tarihler = [c["date"] for c in ciftler]
