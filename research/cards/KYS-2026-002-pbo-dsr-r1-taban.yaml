@@ -1,0 +1,52 @@
+card_id: KYS-2026-002
+family: pbo_dsr_taban
+thesis: >
+  DSR/PBO sert kapısı (validation.py, 2026-07-30 operatör-onaylı MOD-FARKINDALIKLI tasarım) 2026-08-09'a
+  kadar canlıda fiilen İŞSİZDİ: pencere_id damgası yoktu (0/204), PBO "ölçülemedi"ye düşüyordu. R1
+  rotasyonu + bu haftanın restart'larıyla damgalama başladı — kanonik canlı validation_ledger 383 satır
+  = 204 damgasız (R1-öncesi, retro-damga yasağı) + 179 R1-damgalı (yeni akış %100), oos_erosion 4 pencere
+  R1 (2026-08-10 salt-okunur ölçüm). TEZ: R1-damgalı popülasyonda kapının KENDİ motoruyla (validation.py
+  fonksiyonları — yeniden-implementasyon YASAK) PBO ve DSR TABAN değerleri artık hesaplanabilir. Bu taban,
+  (a) sert kapının canlıda ne hükmedeceğini İLK KEZ kanıtla gösterir, (b) M2 borcunu kapatır, (c) ileriki
+  metodoloji ölçümlerine (M1 kıyas-kirlenmesi dahil) referans çizgisi verir.
+
+evidence_refs:
+  - "M2 keşfi: docs/KESIF-WP-MKP-2026-08-09.md §WP-M (restart-şartlıydı; blok kalktı)"
+  - "canlı sayım 2026-08-10 Rol-1: ledger 383=204 None+179 R1; oos_erosion 4 pencere R1"
+  - "kapı tasarımı: meridian/validation.py (PBO_MIN_ADAY=8; DSR fail-closed; mod-farkındalıklı tablo
+     ROADMAP §5 2026-07-30 kaydında); PBO pencere-başına, havuzlama YASAK (R1 düzeltmesi, validation.py:47-48)"
+
+universe: >
+  Canlı validation_ledger + oos_erosion'un DONMUŞ salt-okunur kopyası (Rol-1 ssh ile çekti, ölçüm ajanı
+  canlıya DOKUNMAZ): research/olcumler/kys002_pbo_dsr_taban_2026-08-10/canli_kopya/. YALNIZ pencere_id==R1
+  satırlar/pencereler (damgasızlar tanımca dışarıda — retro-damga yasağı; sayıları raporlanır, hükümde yok).
+
+features_asof: >
+  Ölçüm motoru = validation.py'nin KENDİ fonksiyonları (PBO/CSCV + DSR/PSR). Yeniden-implementasyon,
+  "basitleştirilmiş formül", parametre değişikliği YASAK — taban ancak kapının GERÇEKTEN göreceği
+  değerse anlamlı. Girdi: R1 popülasyonu pencere-başına (havuzlama YASAK). Çıktı: pencere-başına PBO +
+  aday-kümesi DSR; kapının mod-farkındalıklı tablosuna göre hangi hücreye düştüğü (BLOKLAR/BLOKLAMAZ).
+
+parameter_grid:
+  yok: "tek popülasyon, kapının donuk eşikleri, grid YOK. K += 1 (taban okuması)"
+
+cost_model: yok   # taban okuması; getiri ölçümü değil
+
+success_metric: >
+  TABAN KAYDI (hüküm-eşiği YOK — bu bir referans-çizgisi ölçümü): pencere-başına PBO değer(ler)i +
+  DSR değeri + kapı-tablosu hücresi (hangi mod hangi hüküm). Başarı = sayıların validation.py motorundan
+  türetilmiş, pencere-başına, yeniden-üretilebilir kaydı. Yorum (iyi/kötü) Rol-1 hükmünde — eşik icat edilmez,
+  kapının mevcut donuk eşikleri (PBO %20, DSR 0.95, fail-closed) referans alınır.
+
+kill_criteria:
+  - "R1 pencere-başına aday < PBO_MIN_ADAY(8) ise o pencere için PBO HESAPLANMAZ → 'olculemedi' + birikme
+     bekler (fail-closed zaten böyle davranır; taban da aynı dürüstlükle yazılır)"
+  - "validation.py fonksiyonları değişiklik GEREKTİRMEDEN yeniden kullanılamıyorsa (imza/veri-şekli uyuşmazlığı)
+     → ölçüm DURUR, 'araç turu gerekir' raporlanır; basitleştirilmiş yeniden-implementasyon YASAK"
+  - "donmuş kopya ile canlı arasında satır-sayısı uyuşmazlığı çıkarsa (kopya bozuk) → ölçüm geçersiz, kopya tazelenir"
+
+k_registry: {registered_at: "2026-08-10T00:2x", trial_ids: [pending-KYS-002-r1-taban]}
+
+status: registered   # 2026-08-10 Rol-1 — ölçüm kodu YAZILMADI; kart ön şart. M2'nin restart-bloğu kalktı,
+#   taban artık ölçülebilir. Eşik İCAT EDİLMEZ: kapının kendi donuk eşikleri referans; bu kart yalnız
+#   İLK GERÇEK taban değerlerini kayda geçirir. Kimlik tekilliği doğrulandı (KYS-002 boştu).
