@@ -1,0 +1,84 @@
+card_id: EXE-2026-004
+family: cf_cikis_sadakati
+thesis: >
+  Karşı-olgusal defter (cf) çıkışı BİLEREK statiktir — sert stop / hedef / zaman stopu; trail,
+  scale-out, rejim-dönüşü, giveback, erken-itlaf çıkışları YOK (counterfactual.py:9-16). Bu bir
+  KUSUR DEĞİL, bir TASARIM KARARIDIR: cf seçilim kalitesini ölçer ("girer miydi, stop mu hedef
+  mi, kaç R"), birebir P&L kopyası değildir, ve SIFIR YETKİLİDİR — hiçbir kapı kararına kanıt
+  OLAMAZ. Sapma dosyanın kendi docstring'inde dürüstçe belgeli.
+  GERİLİM (bu kartın konusu): cf sıfır-yetkili olsa da gölge katmanları BESLER — gölge modelin
+  eğitim seti (shadow_model), skor kalibrasyonu (analytics), uyuyan kurulum silahlanma ölçümü
+  (skills). Ölçülmüş +0,039R iyimserlik (%96 skor havuzu; WP-E cf-sadakat şerhi) bu katmanlara
+  SIZIYOR OLABİLİR. Statik çıkış, trailing-stop'la korunan bir kazancı ya da rejim-flip'le erken
+  çıkışı GÖRMEZ → cf-R gerçek-R'den sistematik sapar.
+  TEZ: bu iyimserlik gölge katman TÜKETİCİLERİNDE ölçülebilir bir zarar veriyorsa, eksik dört
+  çıkış tipini modellemek cf-R'yi gerçeğe yaklaştırır ve o katmanları düzeltir. VERMİYORSA,
+  cf bilinçli-basit kalır ve bu kalem "gereksiz" olarak arşivlenir — felsefeye saygı.
+
+evidence_refs:
+  - "counterfactual.py:9-16 (statik çıkış BİLİNÇLİ + SIFIR YETKİ beyanı)"
+  - "WP-E cf-sadakat şerhi: +0,039R iyimserlik (%96 skor havuzu); docs/SABAH-TRIYAJI-2026-08-09.md:107"
+  - "cf tüketicileri (iyimserliğin sızma yolu): shadow_model (eğitim), analytics (kalibrasyon),
+     skills (uyuyan silahlanma) — resolved_rows/counterfactuals.jsonl okuyanlar"
+  - "motor gerçek çıkışları (loop.py:117): time_stop · regime_flip · giveback · erken_itlaf +
+     trail_stop (guard.py:489). cf'te VAR olan: sert stop · hedef · time_stop → EKSİK: 4 tip"
+
+universe: >
+  counterfactuals.jsonl'daki ÇÖZÜLMÜŞ (entered) satırların TAMAMI (canlı ~7.161 satır, ~2.100
+  dolan). Alt-örnek YOK. Sadakat ölçümü yalnız iç EOD defterinde (trades.jsonl) GERÇEK karşılığı
+  olan cf satırlarında yapılır (eşleşme: plan_id ya da (date,ticker)); eşleşmeyen cf satırı
+  "sadakat ölçülemez" kovasına düşer, ADIYLA raporlanır.
+
+features_asof: >
+  EKSİK ÇIKIŞ TİPLERİ (motorda var, cf'te yok — ölçüldü, 4 tip): trail_stop · regime_flip ·
+  giveback · erken_itlaf. Her biri motorun KENDİ yasasıyla cf simülasyonuna eklenir (loop.py
+  çıkış mantığının aynası; ileri-bakış YOK — her karar yalnız o bar ve öncesi).
+  SADAKAT METRİĞİ: eşleşmiş cf satırı başına `cf_R − gercek_R` (işaret + büyüklük). Havuz
+  ortalaması ve dağılımı; tarih-kümeli bootstrap %95 CI (aynı gün çıkanlar bağımlı).
+
+horizon: "çıkış anı — bu bir SADAKAT ölçümüdür; cf'in mevcut giriş yasası ve ufku DEĞİŞMEZ"
+
+parameter_grid:
+  yok: "grid YOK — dört çıkış tipi motorun mevcut yasasından türer, serbest parametre yok. K += 1"
+
+cost_model: pessimistic_band_v2   # cf zaten E3 slipajını taşıyor; çıkış tipleri maliyeti değiştirmez
+
+success_metric: >
+  İKİ AŞAMALI — sıra bağlayıcı:
+  AŞAMA 1 (ÖLÇÜM, düzeltmeden ÖNCE): mevcut cf-R iyimserliği gölge katman TÜKETİCİLERİNDE
+  ÖLÇÜLEBİLİR zarar veriyor mu? Üç ölçüt: (a) shadow_model canlı Brier — cf-eğitimli tahmin
+  gerçek sonuçtan kalibrasyonda sapıyor mu (reliability curve kayması); (b) analytics skor
+  kalibrasyonu — cf-R'ye dayanan skor gerçek-R'yi sistematik fazla mı tahmin ediyor;
+  (c) uyuyan silahlanma eşiği cf-iyimserliğiyle yanlış mı tetikleniyor. Herhangi biri
+  ölçülebilir sapma gösterirse AŞAMA 2 tetiklenir; hiçbiri göstermezse KILL#1.
+  AŞAMA 2 (koşullu DÜZELTME): dört çıkış tipi modellenir, TÜM cf tarihi yeniden koşulur.
+  BAŞARI: (i) sadakat farkı |cf_R − gercek_R| ortalaması DÜŞER (CI ile); (ii) AŞAMA-1'de
+  sapan tüketici ölçütü İYİLEŞİR; (iii) cf'in SEÇİLİM sinyali (girer-miydi / stop-mu-hedef-mi
+  ayrımı) BOZULMAZ — çünkü cf'in birincil işi hâlâ o.
+
+kill_criteria:
+  - "AŞAMA 1: üç tüketici ölçütünün ÜÇÜ de ölçülebilir zarar göstermezse → çıkış tipleri
+     EKLENMEZ. cf bilinçli-basit kalır (counterfactual.py felsefesi korunur), kalem
+     'ölçüldü — iyimserlik zararsız' diye ARŞİVLENİR. +0,039R bir sapma olarak KAYITLI kalır
+     ama düzeltilmez (göreli sıralama mutlak seviyeden bağımsızsa gölge katman zaten dayanıklı)."
+  - "AŞAMA 2 sonrası cf'in SEÇİLİM sinyali bozulursa (girer-miydi ölçümü artık ayrışmıyorsa,
+     ya da entered oranı yapısal değişirse) → GERİ AL. cf'in birincil işi seçilim kalitesidir;
+     onu P&L-sadakati uğruna feda etmek kartın amacına aykırıdır."
+  - "yeniden-koşum cf defterini bozarsa (yedek ile satır-sayısı/şema/eşleşme karşılaştırması
+     ayrışırsa) → GERİ AL, kök-neden turu. cf öğrenmenin ortak zemini; sessiz bozulma yasak."
+  - "sadakat farkı düzeltme SONRASI artMIŞSA (dört tip modeli gerçeği daha KÖTÜ tahmin ediyorsa)
+     → model yanlış, GERİ AL — 'ekledik çünkü eksikti' bir başarı ölçütü değildir."
+
+k_registry: {registered_at: "2026-08-09T13:0x", trial_ids: [pending-EXE-004-asama1-olcum]}
+
+status: registered   # 2026-08-09 Rol-1. ÖLÇÜM KODU YAZILMADI — bu kart ön şart.
+#   BENİM (Rol-1) GECE BRIEF HATAM DÜZELTİLDİ VE KAYDA GEÇTİ: N4'ü "körce 6 çıkış tipi ekle,
+#   +0,039R'yi kapat" diye tanımlamıştım. İKİ HATA: (1) sayı yanlıştı — eksik 4 tip (ölçüldü),
+#   (2) cf'in çıkış-basitliğinin BİLİNÇLİ tasarım olduğunu (seçilim kalitesi, sıfır yetki)
+#   görmemiştim. Körce çıkış eklemek cf'in felsefesini bozardı. Kart bu yüzden İKİ AŞAMALI:
+#   önce iyimserliğin gölge katmana ZARARINI ölç (AŞAMA 1); yalnız zarar varsa çıkış tiplerini
+#   ekle (AŞAMA 2). Zarar yoksa cf olduğu gibi kalır — bu bir başarısızlık değil, felsefeye
+#   saygıdır. HAFTA SONU KOŞUM İZNİ: bakım penceresi operatörce açıldı (2026-08-09, piyasa
+#   kapalı); AŞAMA 2 yeniden-koşumu canlı worker DURDURULARAK + counterfactuals.jsonl YEDEKLİ
+#   yapılır (geri-alınabilir). Eşikler (iki-aşama sırası, üç tüketici ölçütü, sadakat-CI,
+#   kill'ler) ÖLÇÜMDEN ÖNCE donduruldu; dokunulmaz.
