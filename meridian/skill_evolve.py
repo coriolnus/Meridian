@@ -167,8 +167,13 @@ def draft_revision(skill_name: str) -> dict | None:
             rationale = line.split(":", 1)[1].strip()[:300]
             break
     draft_path = path + ".v2-draft"
-    with open(draft_path, "w") as fh:
-        fh.write(body)
+    # KAPI-DIŞI TAŞIMA (H9 Kademe C): düz open(w) → store.write_text (atomik tmp+fsync+flock). NEDEN
+    # ATOMİK ŞART: yarım/sıfır-baytlık taslak, operatör ONAY YOLUNDA os.replace ile CANLI SKILL.md'ye
+    # taşınır → ajan bozuk skill okur. draft_path skills/ altında (STATE DIŞI) → store mutlak adı
+    # olduğu gibi kullanır; tek yazar (bu fonksiyon) için kilit yeterli. YASA-6 OKUYUCU: onay yolu
+    # (os.replace ile SKILL.md yapar) + pano ipucu (app.js:8367); taşınan SKILL.md sonra hermes-agent
+    # skill kütüphanesince okunur.
+    store.write_text(draft_path, body)
     recs = revisions()
     recs = [r for r in recs if not (r.get("skill") == skill_name and r.get("status") == "draft")]
     rec = {"skill": skill_name, "status": "draft", "rationale": rationale,

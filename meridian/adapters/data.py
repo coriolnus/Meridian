@@ -125,24 +125,30 @@ def _bump_wf_rev() -> None:
 
 
 def _write_bars(df: pd.DataFrame, cp: Path) -> None:
-    """ATOMİK yazım. Eskiden düz `to_csv` idi: süreç havuzundaki işçiler (dataset.load_cached) aynı
-    dosyayı EŞ ZAMANLI okuyor — yarım yazılmış bir CSV okunduğunda ticker sessizce kırpılmış barlarla
-    değerlendirilir ve bu 'küçülmüş dosya' olarak bütünlük dedektörüne düşer. mkstemp+os.replace ile
-    okuyucu ya eski ya yeni dosyayı görür, asla yarısını (store.write_json ile aynı disiplin)."""
-    import os
-    import tempfile
-    cp.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=str(cp.parent), suffix=".tmp")
+    """ATOMİK yazım — TEK KAPIDAN (store.write_text). Süreç havuzundaki işçiler (dataset.load_cached)
+    aynı dosyayı EŞ ZAMANLI okuyor — yarım yazılmış bir CSV okunduğunda ticker sessizce kırpılmış
+    barlarla değerlendirilir ve bu 'küçülmüş dosya' olarak bütünlük dedektörüne düşer.
+
+    H9 KADEME C — HOT-PATH KİLİT KARARI (elle mkstemp yerine kapıya taşındı):
+      * ATOMİKLİK (os.replace) zaten vardı; kapı fsync EKLER. B1'in JSON için kapattığı
+        sıfır-baytlık-dosya sınıfı bu CSV kopyasında hâlâ AÇIKTI (güç kesintisi → boş bar defteri →
+        okuyucu 'küçülmüş dosya' görür). Docstring'in zaten dediği "store.write_json ile aynı
+        disiplin" böylece LİTERAL olarak sağlanır.
+      * KİLİT KÖR/GLOBAL DEĞİL — DOSYA BAŞINA: store.file_lock adı `bars/<ticker>.csv` olduğundan her
+        ticker AYRI kilit dosyasına düşer (state/.locks/bars_<ticker>.csv.lock). Farklı ticker yazan
+        havuz işçileri BİRBİRİNİ BEKLEMEZ → hot-path SERİLEŞMEZ; yalnız AYNI ticker'ı yazan iki yol
+        serileşir — doğru granülerlik (aynı dosyada eşzamanlı yazımın kayıp-güncellemesini önler).
+      * PERFORMANS SESSİZ GERİLEMEZ: store `_record_io`/`io_stats` p95>50 ms'i BİR KEZ uyarır — fsync
+        maliyeti yavaş diskte GÖRÜNÜR olur (kör kilidin yapacağı SESSİZ regresyonun tersi).
+    STATE'e göreli ad kilidi paylaştırır; STATE dışı cp (olağandışı) mutlak yola düşer (relative_to
+    fallback). YASA-6 OKUYUCU: load_bars / dataset.load_cached bar CSV'lerini okur (üstteki eşzamanlı
+    okuyucu). to_csv string döndürülür → kapının fdopen'ı diske yazar; baytlar stream hâliyle birebir."""
+    from .. import store as _st
     try:
-        with os.fdopen(fd, "w", newline="") as fh:
-            df.to_csv(fh, index=False)
-        os.replace(tmp, cp)
-    except Exception:
-        try:
-            os.unlink(tmp)
-        except OSError:  # sessiz-yutma: en iyi çaba temizlik/kilit bırakma; hedef zaten yoksa yapacak bir şey yok ve asıl iş yolu bundan ötürü durduramaz
-            pass
-        raise
+        name = str(cp.relative_to(_config.STATE))
+    except ValueError:  # sessiz-yutma: STATE dışı bar yolu (olağandışı) — relative_to bilinçli ValueError atar, mutlak adla geçer ve veri kaybı yok
+        name = str(cp)
+    _st.write_text(name, df.to_csv(index=False))
 
 
 def _bar_source(ticker: str) -> str | None:

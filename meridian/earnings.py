@@ -387,16 +387,16 @@ def refresh(tickers: list[str]) -> int:
     for t, d, tm in rows:
         if tm or (t, d) not in merged:
             merged[(t, d)] = tm or merged.get((t, d))
-    import tempfile, os
-    path = config.STATE / "earnings.csv"
-    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-    with os.fdopen(fd, "w") as fh:
-        fh.write("ticker,date,time\n")
-        for (t, d), tm in sorted(merged.items()):
-            fh.write(f"{t},{d},{tm or ''}\n")
-    os.replace(tmp, path)
+    # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+    # STATE'e GÖRELİ ad ("earnings.csv") → kilit refresh_from_fmp ile PAYLAŞILIR (iki yol AYNI dosyayı
+    # yazar; mutlak ad ayrı kilide düşer = kilit yok). Biçim (CSV başlık + satırlar) BİREBİR korunur.
+    # YASA-6 OKUYUCU: _load() (satır ~111) → PEAD çapası + kazanç-karartma guard (in_blackout).
+    from . import store
+    _csv = "ticker,date,time\n" + "".join(
+        f"{t},{d},{tm or ''}\n" for (t, d), tm in sorted(merged.items()))
+    store.write_text("earnings.csv", _csv)
     clear_cache()
-    _snapshot(src)                 # PIT birikim defteri (bkz. SNAPSHOT_FILE) — os.replace'ten SONRA
+    _snapshot(src)                 # PIT birikim defteri (bkz. SNAPSHOT_FILE) — YAZIMDAN SONRA
     from . import obs
     obs.log("earnings_refreshed", source=src, new_rows=len(rows), total=len(merged),
             # SAAT ALANI KAÇ SATIRDA BİLİNİYOR — birikimin sayacı (ölçüm 2026-08-01: ~%34 bekleniyor)
@@ -470,14 +470,12 @@ def refresh_from_fmp(tickers: list[str]) -> int:
     # kasıtlı — "kaç satır getirdim" ile "takvimde kaç satır var" aynı sayı değildir.
     _yazilacak = ({(t, d) for t, ds in prev.items() for d in ds}
                   | {(str(t).upper(), str(d)[:10]) for t, d in rows})
-    import tempfile, os
-    path = config.STATE / "earnings.csv"
-    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-    with __import__("os").fdopen(fd, "w") as fh:
-        fh.write("ticker,date,time\n")
-        for t, d in sorted(_yazilacak):
-            fh.write(f"{t},{d},{_bilinen_saat(_bilinen, t, d)}\n")
-    os.replace(tmp, path)
+    # KAPI-DIŞI TAŞIMA (H9 Kademe C): bkz. refresh() — STATE'e göreli "earnings.csv" adı kilidi
+    # refresh() ile PAYLAŞTIRIR (iki yol aynı dosyayı yazar). Biçim BİREBİR korunur.
+    from . import store
+    _csv = "ticker,date,time\n" + "".join(
+        f"{t},{d},{_bilinen_saat(_bilinen, t, d)}\n" for t, d in sorted(_yazilacak))
+    store.write_text("earnings.csv", _csv)
     clear_cache()
     _snapshot("fmp")               # PIT birikim defteri — bu yol da takvimi BAŞTAN yazar
     return len(set(rows))

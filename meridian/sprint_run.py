@@ -69,13 +69,23 @@ def _write_live_status(payload: dict) -> None:
     path = os.environ.get("MERIDIAN_SPRINT_STATUS")
     if not path:
         return
+    from pathlib import Path
+    from . import config, store
+    payload = _damgayi_koru(path, payload)
+    # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK, sanitize YOK)
+    # → store.write_json. ATOMİKLİK korunur; fsync EKLENİR (güç kesintisinde sıfır-baytlık status →
+    # /api/sprint {} okurdu); sanitize EKLENİR (search sonucu np.float sızarsa çıplak json.dump
+    # patlardı). Kilit ADI: çocuk sandbox STATE'inde koşar, canlı status yolu STATE DIŞI → relative_to
+    # ValueError → mutlak ad → kendi kilidi. Ebeveynle (sprint.start, CANLI süreç) süreçler-arası
+    # serileştirme flock'la SAĞLANAMAZ (ayrı STATE → ayrı kilit); damga güvenliği yapısaldır:
+    # _damgayi_koru birleşimi + ebeveynin ömürde TEK yazımı (C15, yukarıdaki docstring).
+    # YASA-6 OKUYUCU: /api/sprint + /api/hermes (gömülü) birkaç saniyede bir poll eder.
     try:
-        import tempfile
-        payload = _damgayi_koru(path, payload)
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path) or ".", suffix=".tmp")
-        with os.fdopen(fd, "w") as f:
-            json.dump(payload, f)
-        os.replace(tmp, path)
+        name = str(Path(path).relative_to(config.STATE))
+    except ValueError:  # sessiz-yutma: canlı status yolu çocuğun sandbox STATE'i dışında — mutlak ad bilinçli fallback, veri kaybı yok
+        name = str(path)
+    try:
+        store.write_json(name, payload)
     except OSError:  # sessiz-yutma: sprint ilerleme dosyası salt gösterim içindir; yazılamaması sprint'in KENDİSİNİ durduramaz ve sonuç yine sprint_runs.jsonl'a yazılır
         pass
 

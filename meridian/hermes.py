@@ -2335,11 +2335,12 @@ def sync_local_agent_gemini(enable: bool) -> dict:
                          if not l.startswith(("GEMINI_API_KEY=", "GOOGLE_API_KEY="))]
         if key_value:
             lines.append(f"GEMINI_API_KEY={key_value}")
-        import tempfile
-        fd, tmp = tempfile.mkstemp(dir=home)
-        with os.fdopen(fd, "w") as fh:
-            fh.write("\n".join(lines) + "\n")
-        os.replace(tmp, env_path)
+        # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+        # env_path (~/.hermes/.env) STATE DIŞI → store mutlak adı olduğu gibi kullanır (kendi kilidi;
+        # tek yazar). 0600 auth._write ile AYNI sınıf (sır: GEMINI_API_KEY diskte): store'un mkstemp-0600'ü
+        # TESADÜFİdir, DEVREDİLMEZ — açık os.chmod KALIR. YASA-6 OKUYUCU: hermes-agent ikili dosyası .env'den
+        # GEMINI_API_KEY okur (+ bu fonksiyon mevcut satırları süzmek için okur).
+        store.write_text(env_path, "\n".join(lines) + "\n")
         os.chmod(env_path, 0o600)
 
     try:
@@ -2350,8 +2351,10 @@ def sync_local_agent_gemini(enable: bool) -> dict:
             if not os.path.exists(backup_path):   # ilk geçişte mevcut (Nous) ayarı yedekle
                 prev = {"provider": _cfg_get("model.provider"), "base_url": _cfg_get("model.base_url"),
                         "default": _cfg_get("model.default")}
-                with open(backup_path, "w") as fh:
-                    json.dump(prev, fh)
+                # KAPI-DIŞI TAŞIMA (H9 Kademe C): düz open(w)+json.dump (atomik DEĞİL, fsync/flock YOK)
+                # → store.write_json. backup_path (~/.hermes/...) STATE DIŞI → mutlak ad, kendi kilidi.
+                # YASA-6 OKUYUCU: aşağıdaki geri-yükleme dalı (json.load) disable'da Nous ayarını geri alır.
+                store.write_json(backup_path, prev)
             _write_env(key)
             model = secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
             _cfg("model.provider", "gemini")            # yerli sağlayıcı — base_url override'ı KALDIRILIR
@@ -2465,12 +2468,15 @@ def config_ensure_integrations() -> dict:
         return {"ok": True, "changed": []}
     try:
         import shutil
-        import tempfile
         shutil.copy2(AGENT_CONFIG, AGENT_CONFIG + ".meridian.bak")
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(AGENT_CONFIG))
-        with os.fdopen(fd, "w") as fh:
-            yaml.safe_dump(cfg, fh, allow_unicode=True, default_flow_style=False, sort_keys=False)
-        os.replace(tmp, AGENT_CONFIG)
+        # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+        # AGENT_CONFIG (~/.hermes/config.yaml) STATE DIŞI → mutlak ad, kendi kilidi. Biçim (safe_dump:
+        # allow_unicode, default_flow_style=False, sort_keys=False) BİREBİR korunur — stream yerine string
+        # döndürülüp aynı baytlar yazılır. .bak kopyası (shutil.copy2) manuel kurtarma anlık görüntüsüdür,
+        # düz-yazım kapsamı DIŞINDA bilinçli bırakıldı (tam dosya kopyası, tek okuyucu operatör).
+        # YASA-6 OKUYUCU: config_ensure_integrations (yeniden okur) + integrations_status + hermes-agent ikili.
+        store.write_text(AGENT_CONFIG,
+                         yaml.safe_dump(cfg, allow_unicode=True, default_flow_style=False, sort_keys=False))
         obs.log("agent_integrations_synced", changed=changed)
         return {"ok": True, "changed": changed}
     except Exception as e:
