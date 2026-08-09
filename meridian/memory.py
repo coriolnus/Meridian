@@ -209,5 +209,9 @@ def distill_lessons(trade_stats: Optional[dict] = None) -> str:
         lines.append("_No lessons yet — the ledger is empty. The first reflection will populate this._")
 
     text = "\n".join(lines) + "\n"
-    (config.STATE / LESSONS).write_text(text)
+    # H9 (kapı-dışı taşıma): düz `Path.write_text` dosyayı önce KIRPARdı — okuyucu (Hermes reflection
+    # prompt'u `config.STATE/"lessons.md"`yi okur, hermes.py:153; skill_evolve.py:143) tam o an gelirse
+    # yarım/BOŞ defter görür ve sessizce "ders yok" okurdu. TEK KAPI atomik+fsync+flock verir; içerik
+    # BİREBİR aynı kalır (write_text baytı aynen yazar).
+    store.write_text(LESSONS, text)
     return text

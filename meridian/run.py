@@ -167,10 +167,14 @@ def replay_seed(start: str, end: str) -> dict:
                       f"MERIDIAN_FORCE_RESEED=1 ile çalıştır.[/red]")
         return {"error": "scoreboard_history_present", "versions": _scored}
     if _vers:                                   # zorlansa bile YOK ETME: önce arşivle
-        config.HISTORY.mkdir(parents=True, exist_ok=True)
         _stamp = memory.now_iso().replace(":", "").replace("-", "")
-        (config.HISTORY / f"scoreboard-{_stamp}.json").write_text(
-            __import__("json").dumps(_sb, ensure_ascii=False, indent=2))
+        # H9 (kapı-dışı taşıma): düz `Path.write_text` KIRPMA sınıfıydı (yarı-yazımı okuyucu boş
+        # arşiv sanardı). TEK KAPIdan geç — atomik+fsync+flock; kapı `history/` dizinini kendi kurar
+        # (eski açık `config.HISTORY.mkdir` artık gereksiz). `ensure_ascii=False` biçimi KORUNUR: bu
+        # bir KURTARMA arşividir (okuyucu = operatör; alttaki console satırı yolunu verir), baytları
+        # aynen kalmalı — `write_json` ensure_ascii=True yazıp arşivi sessizce değiştirirdi.
+        store.write_text(f"history/scoreboard-{_stamp}.json",
+                         __import__("json").dumps(_sb, ensure_ascii=False, indent=2))
         console.print(f"[yellow]eski karne arşivlendi: history/scoreboard-{_stamp}.json[/yellow]")
 
     goal = config.goal()

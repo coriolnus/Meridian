@@ -304,20 +304,23 @@ def default_strategy() -> dict:
 
 
 def dump_yaml(obj: dict, path: Path) -> None:
-    """ATOMIC yaml write (mkstemp + os.replace) — strategy.yaml is HOT-RELOADED and read concurrently by
-    the scheduler cycle, the Hermes reflection thread, and API handlers. A plain truncate-then-write let
-    a reader land mid-write and get {} → params={}, version=1 fallback for that cycle (audit #32)."""
-    import os as _os
-    import tempfile as _tempfile
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = _tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    """YAML defterini TEK YAZIM KAPISINDAN (`store.write_text`) geçir — atomik tmp→fsync→os.replace
+    + süreçler-arası `flock`.
+
+    strategy.yaml SICAK-yeniden-yüklenir ve scheduler cycle + Hermes reflection thread + API
+    handler'ları tarafından EŞZAMANLI OKUNUR. Düz kes-ve-yaz bir okuyucuyu yazımın ORTASINDA
+    yakalayıp {} → params={}, version=1 yedeğine düşürüyordu (audit #32); bunu mkstemp+os.replace
+    zaten kapatmıştı. H9 kapı-dışı taşıması İKİ EKSİĞİ kapatır: (1) `fsync` YOKTU — güç kesintisinde
+    sıfır-baytlık strategy.yaml; (2) `flock` YOKTU — `versioning.commit` + Hermes + scheduler AYNI
+    dosyaya yazabilir ve kilitsiz iki yazar birbirinin tmp'siyle yarışırdı.
+
+    KİLİT ADI store'un öteki yazarlarıyla PAYLAŞILSIN diye STATE'e GÖRELİ ada çevrilir: mutlak yol
+    ayrı bir kilide düşerdi (aynı dosya iki kilit → kilit YOK). STATE dışı yollar (sprint sandbox
+    history'si — sprint.py:208) mutlak yolla geçer. Kapı `path.parent`i kendi kurar; biçim
+    (`sort_keys=False`) DEĞİŞMEZ — `safe_dump` string'i eskisiyle birebir, `write_text` baytı aynen yazar."""
+    from . import store
     try:
-        with _os.fdopen(fd, "w") as f:
-            yaml.safe_dump(obj, f, sort_keys=False)
-        _os.replace(tmp, path)
-    except BaseException:
-        try:
-            _os.unlink(tmp)
-        except OSError:  # sessiz-yutma: en iyi çaba temizlik/kilit bırakma; hedef zaten yoksa yapacak bir şey yok ve asıl iş yolu bundan ötürü durduramaz
-            pass
-        raise
+        name = str(Path(path).relative_to(STATE))
+    except ValueError:                # STATE dışı yol (ör. sprint sandbox history'si) — mutlak yolla gir
+        name = str(path)
+    store.write_text(name, yaml.safe_dump(obj, sort_keys=False))

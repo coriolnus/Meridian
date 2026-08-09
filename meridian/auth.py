@@ -85,16 +85,27 @@ def _read() -> dict:
 
 
 def _write(d: dict) -> None:
-    """0600 ile ve ATOMİK yaz. Geçici dosya da 0600 açılır: aksi halde parola hash'i ile imza
-    anahtarı, yeniden adlandırma anına kadar 0644 olarak diskte durur."""
-    path = _auth_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as f:
-        json.dump(d, f, indent=2)
-    os.replace(tmp, path)
-    os.chmod(path, 0o600)
+    """Kimlik defterini TEK YAZIM KAPISINDAN (`store.write_text`) geçir: atomik tmp→fsync→os.replace
+    + süreçler-arası `flock` + BENZERSİZ tmp adı. Yazımın MANTIĞI (biçim, okuyucu sözleşmesi)
+    değişmez — yalnız atomiklik/kilit/tmp-benzersizliği düzelir.
+
+    ÖNCESİ (H9 kapı-dışı envanterinde EN TEHLİKELİ tekil): tmp adı SABİTTİ
+    (`path.with_suffix(".json.tmp")`). İki süreç aynı anda yazarsa AYNI geçici dosyaya yazar, biri
+    diğerinin baytlarını ezer ve `os.replace` yarı-yazılmış bir dosyayı yerine koyar — atomiklik
+    iddiası tam orada biter. Ayrıca `fsync` YOKTU (güç kesintisinde sıfır-baytlık `auth.json` → `_read`
+    `{}` okur → 'kimlik yapılandırılmamış' → parola ve tüm oturumlar KAPALI tarafa düşer, kimse içeri
+    giremez) ve `flock` YOKTU (`set_password`/`rotate_key`/`_key` üçü de oku-değiştir-yaz'dır; kilitsiz
+    araya giren ikinci bir yazar birinin `key`ini ya da hash'ini bayat bir kopyayla geri alabilirdi).
+    `store.write_text` üçünü de kapıda verir; benzersiz tmp adını `mkstemp` sağlar.
+
+    0600 İZNİ HÂLÂ BURADA ve BİLEREK: store'un `mkstemp`'i tmp'yi zaten 0600 açar (parola hash'i +
+    imza anahtarı 0644 olarak diskte hiç durmaz) ve `os.replace` bunu son dosyaya taşır — ama bu
+    store'un İÇSEL bir seçimidir, YAZILI bir sözleşmesi değil. auth kendi güvenlik iznini store'un
+    tmp-modu tercihine devretmez: son dosyada 0600'ü AÇIKÇA doğrular (eski `_write`ın son satırındaki
+    `os.chmod` güvencesinin KORUNMASI)."""
+    from . import store
+    store.write_text("auth.json", json.dumps(d, indent=2))
+    os.chmod(_auth_file(), 0o600)
 
 
 # ---- parola --------------------------------------------------------------------------------
