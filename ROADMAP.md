@@ -172,7 +172,16 @@ bunu fark etmedi. Kök turları üç ayrı kusur ailesi çıkardı; üçü de ay
 **sistem doğru çalışıyor ama kendini yanlış anlatıyor.** Ayrıntı: `docs/KORUNUM-KOK-2026-08-07.md`,
 `docs/BAYAT-SERMAYE-KOK-2026-08-07.md`, kartlar `EXE-2026-001-R1/R2`, `EXE-2026-002` (+R1).
 
-- **✅ KAPANDI — koruma ölmüyor (E1-v2, v209-v211, canlıda doğrulandı):** bracket TIF'i emrin
+- **⟳ YENİDEN AÇILDI (2026-08-09, N6 tatbikatı buldu — kapanış ARTEFAKTTAN doğrulanmamıştı):**
+  operatörün v211'le kurduğu 4 bağımsız koruma OCO'su (coid `P-KORUMA-…`) 2026-08-07T20:32:39Z'de
+  `cancel_open_entries()` tarafından SÜPÜRÜLDÜ — koruma emri süpürücünün gözünde "dolmamış motor
+  girişi" (P- öneki + açık + filled_qty=0); "koruma bacağına dokunmaz" güvencesi yalnız BRACKET'A
+  BAĞLI bacağı tanıyordu, v211'in bağımsız OCO'su o fonksiyon yazılırken yoktu. Broker'da 0 açık
+  emir / 5 korumasız pozisyon; 16 sev-1 alarmı kanalsızlıktan teslim edilemedi. KÖK DÜZELTME
+  UÇUŞTA (v220: yön kemeri + P-KORUMA aile dışlaması + olay coid-sınıfı + idempotans çivisi).
+  DERS ROADMAP DİSİPLİNİNE: bir kalem ancak ürettiği artefakt canlıda doğrulanınca ✅ olur.
+  (Önceki metin aşağıda, tarihçe olarak duruyor:)
+- **~~✅ KAPANDI~~ — koruma ölmüyor (E1-v2, v209-v211, canlıda doğrulandı):** bracket TIF'i emrin
   TAMAMINA uygulanıyordu; `day` seçimi dolmuş pozisyonun stop'unu her kapanışta öldürüyordu
   (ölçüm: 08-06 20:00-20:02Z, dört pozisyon çıplak). TIF `gtc`, `day` beyaz-listeden ÇIKARILDI
   (`ENTRY_TIF_ALLOWED`), bayat tetik günlük `cancel_open_entries()` kadansına taşındı. v209
