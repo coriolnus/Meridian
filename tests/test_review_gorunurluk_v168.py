@@ -68,7 +68,10 @@ def test_h1_hermes_review_duz_metin_cevabi_json_parse_olayi_basar(hazir, monkeyp
     cevap = "Adaylara baktım: AAA taban sıkı görünüyor, ama JSON basmayacağım — düz metin yazıyorum."
     _sap(monkeypatch, cevap)
     assert hermes.review_candidates(GUN) is None
-    assert store.read_json("candidate_review.json", None) is None    # kayıt yok (davranış korunur)
+    # GÖRÜŞ kaydı yok (davranış korunur). v233 inceltmesi: dosyada artık sıkışıklık defteri
+    # (`backlog` sayaçları) durabilir — yasak olan görüş İÇERİĞİ uydurmaktır, deneme saymak değil.
+    kayit = store.read_json("candidate_review.json", {}) or {}
+    assert kayit.get("date") is None and not kayit.get("reviews")
     e = _tek_olay()
     assert e["asama"] == "json_parse"
     assert e["parse_ok"] is False
@@ -86,7 +89,8 @@ def test_h2_hermes_review_enum_disi_gorus_filtre_olayi_basar(hazir, monkeypatch)
         {"ticker": "BBB", "opinion": "oppose", "note": "aynı sınıf"},
     ], "reasoning": "model şemayı İngilizce doldurdu"}, ensure_ascii=False))
     assert hermes.review_candidates(GUN) is None
-    assert store.read_json("candidate_review.json", None) is None
+    kayit = store.read_json("candidate_review.json", {}) or {}
+    assert kayit.get("date") is None and not kayit.get("reviews")    # görüş kaydı yok (v233: bkz. h1)
     e = _tek_olay()
     assert e["asama"] == "filtre"
     assert e["parse_ok"] is True

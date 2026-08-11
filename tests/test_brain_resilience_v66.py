@@ -178,7 +178,9 @@ def test_empty_response_is_never_recorded_as_a_usable_opinion(seeded, monkeypatc
     monkeypatch.setattr(hermes, "_agent_call", lambda *a, **k: None)      # kota/arka uç: cevap yok
 
     assert hermes.review_candidates("2026-07-20") is None
-    assert store.read_json("candidate_review.json", None) is None, "boş inceleme dosyaya yazılmamalı"
+    kayit = store.read_json("candidate_review.json", {}) or {}
+    assert kayit.get("date") is None and not kayit.get("reviews"), \
+        "boş inceleme GÖRÜŞ olarak dosyaya yazılmamalı (v233: sıkışıklık sayaçları `backlog` altında serbest)"
     plan = store.read_jsonl("trade_plans.jsonl")[0]
     assert "llm_opinion" not in plan, "cevapsız çağrıdan LLM görüşü damgalanamaz"
 

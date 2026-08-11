@@ -2844,21 +2844,151 @@ def _warn_review_empty(asama: str, text: str, raw: str, *, parse_ok: bool,
              ham_ilk=repr((text or "")[:220]), detail=detail)
 
 
+# ================================================================================================
+# ADAY İNCELEME SIKIŞIKLIK DEFTERİ (v233, 2026-08-12) — canlı vaka: 2026-07-31'den beri backlog
+# aynı tarihi 5 dakikada bir deniyor, model zinciri cevapsız, günlük 150'lik ajan RPD bütçesinin
+# TAMAMI review'e yanıyordu (08-06/07/08 ölçümü: 75 deneme × 2 model = 150 çağrı, 19:21'de
+# `agent_budget_exhausted`, gün sonuna dek sessizlik) ve `candidate_review*` ailesi 08-02'den beri
+# TEK OLAY basmamıştı — başarısızlık `text is None` erken-dönüşünde olaysız yutuluyordu.
+# Defter üç şeyi kalıcılaştırır ve HEPSİ candidate_review.json'ın `backlog` anahtarında yaşar
+# (YASA-6 okuyucu zinciri hazır: api.py /api/candidates dosyayı OLDUĞU GİBİ panoya servis eder;
+# ayrıca review_backlog her turda okur — ayrı dosya codelaw DECLARED_SINKS beyanı gerektirirdi):
+#   tamam     — hangi seanslar GERÇEK görüş aldı (tek `date` işaretçisi çok-tarih izleyemiyordu;
+#               08-06 başarısı 08-07'yi yeniden hedef yapardı — sonsuz sarkaç).
+#   gecersiz  — N gerçek denemede görüş üretilemeyen seansların KALICI işareti (tarih+neden+deneme);
+#               kalibrasyon defteri boşluğu dürüstçe işaretli kalır, sahte review üretilmez ve
+#               backlog SONRAKİ görüşsüz tarihe ilerler (en-yeni-tarih donması biter).
+#   denemeler — tarih başına ardışık başarısızlık sayacı + üstel geri-çekilme penceresi
+#               (taban 300 sn, her başarısızlıkta ×2, tavan 3600 sn): 5 dakikalık scheduler
+#               kadansı korunur ama başarısız tarih için süreç doğurma hızı saatte 1'e iner —
+#               olay gürültüsü makullük bekçisini beslemez, RPD bütçesi öneri yoluna kalır.
+# N=12 GEREKÇESİ ve SAYIM KURALI: eşik `n_llm` üzerinden işler — yalnız ajan katmanının GERÇEKTEN
+# koşup görüş üretemediği denemeler sayılır (agent_bos/json_parse/filtre/plan_yok). Soğuma/bütçe
+# reddi/ikili-yokluğu (`agent_cagri_yok`/`ikili_yok`) sayılMAZ: modele hiç sorulmamış bir tarihi
+# "incelenemez" ilan etmek ölçülmemiş hüküm olurdu (UYDURMA YASAĞI). 12 gerçek deneme, üstel
+# geri-çekilmeyle ≤ ~1 gün duvar saati ve ≤ 24 alt-süreç eder (eski spin: günde 150) — parse
+# tesadüflerine cömert, bütçeye merhametli.
+# ================================================================================================
+REVIEW_GECERSIZ_N = int(os.environ.get("MERIDIAN_REVIEW_GECERSIZ_N", "12"))
+REVIEW_BEKLEME_TABAN_S = int(os.environ.get("MERIDIAN_REVIEW_BEKLEME_TABAN_S", "300"))
+REVIEW_BEKLEME_TAVAN_S = int(os.environ.get("MERIDIAN_REVIEW_BEKLEME_TAVAN_S", "3600"))
+REVIEW_BACKLOG_PENCERE = 5          # onarım geçidiyle aynı ufuk: son 5 seans telafi kapsamında
+_REVIEW_LLM_ASAMALARI = frozenset({"agent_bos", "json_parse", "filtre", "plan_yok"})
+_REVIEW_DEFTER_TAVAN = 24           # tamam/gecersiz/denemeler haritaları en yeni 24 tarihle sınırlı
+
+
+def _review_backlog_defteri(doc: dict | None = None) -> dict:
+    """candidate_review.json içindeki `backlog` anahtarını üç haritasıyla normalize eder.
+    `doc` verilirse (update_json mutator'ı içinden) diskten İKİNCİ kez okumaz."""
+    src = doc if doc is not None else (store.read_json("candidate_review.json", {}) or {})
+    bl = (src.get("backlog") or {}) if isinstance(src, dict) else {}
+    return {"tamam": dict(bl.get("tamam") or {}),
+            "gecersiz": dict(bl.get("gecersiz") or {}),
+            "denemeler": dict(bl.get("denemeler") or {})}
+
+
+def _review_bekleme_s(n: int) -> int:
+    """Ardışık n. başarısızlıktan sonraki bekleme: taban·2^(n-1), tavanlı. n=1 → 300 sn (mevcut
+    5 dk kadansıyla aynı — ilk tekrar cezasız), n≥5 → 3600 sn."""
+    return int(min(REVIEW_BEKLEME_TABAN_S * (2 ** max(0, int(n) - 1)), REVIEW_BEKLEME_TAVAN_S))
+
+
+def _review_defteri_buda(defter: dict) -> None:
+    """Haritaları en yeni _REVIEW_DEFTER_TAVAN tarihle sınırla — dosya panoya olduğu gibi servis
+    edilir (api /api/candidates), sınırsız büyüme HTTP gövdesini şişirirdi. ISO tarih anahtarları
+    sözlükçe sıralanabilir; en eskiler düşer."""
+    for ad in ("tamam", "gecersiz", "denemeler"):
+        m = defter.get(ad) or {}
+        if len(m) > _REVIEW_DEFTER_TAVAN:
+            for k in sorted(m)[:-_REVIEW_DEFTER_TAVAN]:
+                m.pop(k, None)
+
+
+def _agent_gun_sayaci() -> int:
+    """RPD gün sayacının anlık değeri — `_agent_call` öncesi/sonrası kıyası, alt sürecin GERÇEKTEN
+    koşup koşmadığının ölçülmüş imzasıdır (koşum = düşüm; ağa çıkmayan koşumlar iade edilir, yani
+    fark 0 kalır ve `agent_cagri_yok` sınıfına düşer — tahmin değil, bütçe defterinin kendisi)."""
+    return int((store.read_json(AGENT_BUDGET_FILE, {}) or {}).get("day") or 0)
+
+
+def _review_deneme_isle(day: str, asama: str) -> dict:
+    """Başarısız inceleme denemesini deftere işler: ardışık sayaç + geri-çekilme penceresi +
+    (eşikte) kalıcı `gecersiz` işareti. Kilitli oku-değiştir-yaz; dönüş güncel kayıt + gecersiz
+    bayrağı. Olay basmaz — basan `_review_atla` (defter ve olay ayrı sorumluluk)."""
+    import time as _t
+    sonuc: dict = {}
+
+    def _isle(doc):
+        defter = _review_backlog_defteri(doc)
+        rec = dict(defter["denemeler"].get(day) or {"n": 0, "n_llm": 0, "ilk_ts": memory.now_iso()})
+        rec["n"] = int(rec.get("n") or 0) + 1
+        if asama in _REVIEW_LLM_ASAMALARI:
+            rec["n_llm"] = int(rec.get("n_llm") or 0) + 1
+        rec["son_asama"] = asama
+        rec["son_ts"] = memory.now_iso()
+        rec["bekleme_s"] = _review_bekleme_s(rec["n"])
+        rec["sonraki_epoch"] = round(_t.time() + rec["bekleme_s"], 1)
+        gecersiz = int(rec.get("n_llm") or 0) >= REVIEW_GECERSIZ_N
+        if gecersiz:
+            defter["gecersiz"][day] = {"neden": asama, "deneme": rec["n"],
+                                       "deneme_llm": rec["n_llm"], "ilk_ts": rec.get("ilk_ts"),
+                                       "ts": rec["son_ts"]}
+            defter["denemeler"].pop(day, None)     # işaret kalıcı — sayaç görevini tamamladı
+        else:
+            defter["denemeler"][day] = rec
+        _review_defteri_buda(defter)
+        doc["backlog"] = defter
+        sonuc.update(rec, gecersiz=gecersiz)
+        return True
+
+    store.update_json("candidate_review.json", _isle, {})
+    if sonuc.get("gecersiz"):
+        obs.warn("candidate_review_gecersiz", date=day, neden=asama,
+                 deneme=sonuc.get("n"), deneme_llm=sonuc.get("n_llm"),
+                 detail=f"{REVIEW_GECERSIZ_N} gerçek denemede görüş üretilemedi — seans kalıcı "
+                        f"'review_gecersiz' işaretlendi (son aşama: {asama}). Kalibrasyon defteri "
+                        f"boşluğu dürüstçe açık kalır; sahte review yazılmaz, backlog sonraki "
+                        f"görüşsüz seansa ilerler.")
+    return sonuc
+
+
+def _review_atla(day: str | None, asama: str, *, uyari: bool, detail: str, **alanlar) -> None:
+    """KAYITSIZ DÖNÜŞ YASAĞI (v233): `review_candidates` görüş KAYDEDEMEDEN döndüğü her yol buradan
+    geçer — önce defter (deneme sayacı/geri-çekilme/gecersiz eşiği), sonra olay. Tarih bilinmiyorsa
+    (hiç plan yok) defter atlanır ama olay yine basılır: sessiz yol kalmaz."""
+    rec = _review_deneme_isle(day, asama) if day else {}
+    (obs.warn if uyari else obs.log)(
+        "candidate_review_skipped", date=day, asama=asama,
+        deneme=rec.get("n"), deneme_llm=rec.get("n_llm"), bekleme_s=rec.get("bekleme_s"),
+        detail=detail, **alanlar)
+
+
 def review_candidates(dstr: str | None = None) -> dict | None:
     """ADAY DANIŞMA KATMANI — yerel ajan (skill kütüphanesiyle) bugünün adaylarına İKİNCİ GÖRÜŞ verir.
     YETKİ SINIRI: bu inceleme yalnız bilgilendirir; kapı kararlarını (GO/REVIEW/NO_GO), silahlanmayı
     veya emirleri ASLA değiştirmez — 'aday seçimi LLM'e' isteği bilinçli olarak danışman olarak bağlandı,
     çünkü seçim otoritesini LLM'e vermek deterministik kapı yasasını delerdi. İlgili Meridian skill'leri
     oturuma önceden yüklenir (-s); sonuç state/candidate_review.json'a atomik yazılır, Adaylar sayfası
-    gösterir. Yerel ajan yoksa/hata verirse sessizce None (döngüye asla dokunmaz)."""
+    gösterir. Yerel ajan yoksa/hata verirse None döner ama ASLA SESSİZCE DEĞİL (v233): her kayıtsız
+    dönüş `candidate_review_skipped`/`candidate_review_empty_parse` basar ve sıkışıklık defterine
+    (backlog anahtarı) işlenir — 2026-07-31→08-08 canlı vakasında `text is None` yolu 10 gün boyunca
+    olaysız yutmuş, aile 08-02'den beri tek satır konuşmamıştı."""
     import subprocess
-    bin_ = _hermes_bin()
-    if not bin_:
-        return None
     plans = store.read_jsonl("trade_plans.jsonl")
     day = dstr or max([p.get("date") for p in plans if p.get("date")], default=None)
     todays = [p for p in plans if p.get("date") == day]
+    bin_ = _hermes_bin()
+    if not bin_:
+        _review_atla(day, "ikili_yok", uyari=True,
+                     detail="yerel hermes CLI bulunamadı (HERMES_LOCAL_BIN → PATH → ~/.hermes) — "
+                            "danışma katmanı bu seansı inceleyemedi; kurulum/symlink onarımı gerekir")
+        return None
     if not todays:
+        _review_atla(day, "plan_yok", uyari=bool(dstr),
+                     detail=("istenen seans için plan satırı yok — inceleme konusuz; tarih "
+                             "backlog'dan geldiyse plan defteri ile inceleme defteri ayrışmış demektir"
+                             if dstr else
+                             "hiç plan yok — inceleyecek aday üretilmemiş (taze kurulum/boş defter)"))
         return None
     ctx = {"date": day, "regime": store.read_json("regime.json", {}).get("regime"),
            "plans": [{k: p.get(k) for k in ("ticker", "setup", "entry_trigger", "stop", "profit_target",
@@ -2874,9 +3004,22 @@ def review_candidates(dstr: str | None = None) -> dict | None:
               "\"opinion\":\"destekle|çekimser|karşı\",\"note\":str<=200}]}\n\n" +
               json.dumps(ctx, ensure_ascii=False) + _opinion_history())
     _setups = tuple({p2.get("setup") for p2 in todays if p2.get("setup")})
+    butce_once = _agent_gun_sayaci()
     text = _agent_call(prompt, preload=tuple(_skill_preload("review", _setups)),
                        kind="review", timeout=300, max_wait=90.0)   # asenkron iş parçacığı bekleyebilir
     if text is None:
+        # KAYITSIZ DÖNÜŞ #0 (v233) — 2026-07-31→08-08 canlı vakasının TAM DÜŞTÜĞÜ YOL: `_agent_call`
+        # None döndürüyor (zincir cevapsız / havuz soğuması / RPD reddi) ve buradaki dönüş 10 gün
+        # boyunca aileden tek olay basmadan yuttu. Sınıf ayrımı ÖLÇÜMDÜR: RPD gün sayacı değiştiyse
+        # alt süreç gerçekten koştu (agent_bos — gecersiz eşiğine sayılır), değişmediyse çağrı hiç
+        # yapılamadı (agent_cagri_yok — tarihe fatura edilmez; ayrıntı agent_call_* olaylarında).
+        kosum_var = _agent_gun_sayaci() != butce_once
+        _review_atla(day, "agent_bos" if kosum_var else "agent_cagri_yok", uyari=False,
+                     soguma_s=round(brain_cooldown("agent"), 1), butce_gun=_agent_gun_sayaci(),
+                     detail=("model zinciri koştu ama cevapsız — görüş üretilemedi (ham kanıt "
+                             "agent_call_empty/review_fallback_empty olaylarında)" if kosum_var else
+                             "yerel ajan çağrısı hiç yapılamadı (soğuma penceresi ya da RPD/RPM "
+                             "bütçe reddi — ayrıntı agent_call_cooldown/agent_budget_* olaylarında)"))
         return None
     raw = _extract_json(text)
     parse_ok, parse_err, data = True, None, None
@@ -2893,6 +3036,7 @@ def review_candidates(dstr: str | None = None) -> dict | None:
         _warn_review_empty("json_parse", text, raw, parse_ok=False, ham=[], reviews=[],
                            detail=f"model cevabı JSON'a çevrilemedi ({parse_err}); iki deneme de "
                                   f"düştü — görüş kaydedilmedi, danışma katmanı bu seans sessiz")
+        _review_deneme_isle(day, "json_parse")     # v233: gerçek deneme — gecersiz eşiğine sayılır
         return None
     ham = list(data.get("reviews") or [])
     reviews = [r for r in ham
@@ -2903,11 +3047,26 @@ def review_candidates(dstr: str | None = None) -> dict | None:
         _warn_review_empty("filtre", text, raw, parse_ok=True, ham=ham, reviews=reviews,
                            detail=f"JSON ayrıştı ({len(ham)} ham görüş) ama şekil/enum süzgecinden "
                                   f"sıfır görüş çıktı — kayıt yok")
+        _review_deneme_isle(day, "filtre")         # v233: gerçek deneme — gecersiz eşiğine sayılır
         return None
     res = {"date": day, "model": active_model(), "brain": active_brain(),
            "reviews": reviews[:20], "ts": memory.now_iso(),
            "note": "danışma katmanı — kapı kararını değiştirmez"}
-    store.write_json("candidate_review.json", res)
+
+    def _yaz(doc):
+        # BAŞARI YOLU AYNI KAYDI YAZAR (v233 farkı yalnız taşıma): sıkışıklık defteri (`backlog`)
+        # kaybolmaz, seans `tamam`a işlenir, varsa deneme sayacı ve (elle koşumda kapanmış olabilecek)
+        # gecersiz işareti düşer — GERÇEK görüş her işaretten güçlüdür. Kilitli tek atomik yazım.
+        defter = _review_backlog_defteri(doc)
+        defter["tamam"][day] = res["ts"]
+        defter["denemeler"].pop(day, None)
+        defter["gecersiz"].pop(day, None)
+        _review_defteri_buda(defter)
+        doc.clear()
+        doc.update(res, backlog=defter)
+        return True
+
+    store.update_json("candidate_review.json", _yaz, {})
     obs.log("candidate_review", date=day, n=len(reviews), brain=active_brain())
     try:
         _stamp_llm_opinions(day, reviews)      # Kademe-1: görüşler plan satırlarına GERİ-damgalanır
@@ -3170,24 +3329,68 @@ def review_candidates_async(dstr: str | None = None):
 
 
 def review_backlog(max_sessions: int = 1) -> dict:
-    """TELAFİ: planı olan ama görüşü OLMAYAN en son seans(lar)ı incele.
+    """TELAFİ: planı olan ama görüşü OLMAYAN en yeni seans(lar)ı incele — SIKIŞIKLIK KORUMALI (v233).
 
     Tek bir kaçırılmış pencere, o seansı kalıcı olarak görüşsüz bırakıyordu (döngü aynı seansı ikinci
     kez işlemez). Danışma katmanının kanıt üretmesi buna bağlı: LLM görüş↔sonuç kalibrasyonu ancak
-    kapanan planların görüşü varsa birikir."""
+    kapanan planların görüşü varsa birikir.
+
+    v233 SERTLEŞTİRMESİ (canlı vaka 2026-07-31→08-08, ölçüldü): eski `dates[:max_sessions]` şekli
+    yalnız EN YENİ tarihi deniyordu ve o tarih incelenemez hâldeyken her şey donuyordu — scheduler
+    5 dakikada bir aynı tarihi dövdü, model zinciri cevapsızdı, günlük 150'lik RPD bütçesinin tamamı
+    review'e yandı (75 deneme × 2 model; 19:21'de `agent_budget_exhausted`) ve öneri yolu dahil tüm
+    ajan katmanı aç kaldı. Üç kural bunu bitirir:
+      1. GERİ-ÇEKİLME — başarısız tarih `denemeler` kaydındaki `sonraki_epoch`tan önce YENİDEN
+         DENENMEZ (üstel pencere, bkz. `_review_bekleme_s`); bekleyen turlar OLAYSIZ döner, çünkü
+         değişen hiçbir şey yokken 5 dakikada bir basılan `candidate_review_backlog` satırı bilgi
+         değil gürültüdür (günde ~276 satırdı).
+      2. KALICI İŞARET + İLERLEME — `REVIEW_GECERSIZ_N` gerçek denemede görüş üretilemeyen tarih
+         `gecersiz` işaretlenir (bkz. `_review_deneme_isle`) ve sıradaki görüşsüz tarih hedef olur;
+         pencere `REVIEW_BACKLOG_PENCERE` seansla sınırlı — daha eski boşluklar bu telafinin değil
+         kanıt dolgusunun (backfill_opinions) işidir.
+      3. TARAMA, EN YENİ GÖRÜŞLÜ SEANSTA DURUR — `tamam`/`date` işaretine varınca kırılır; gecersiz
+         işaretli tarihler atlanarak GEÇİLİR. Başarı yolu aynen korunur: review yazılır, işaretçi
+         ilerler, olay `reviewed` dolu basılır."""
+    import time as _t
     plans = store.read_jsonl("trade_plans.jsonl")
     if not plans:
         return {"reviewed": [], "detail": "plan yok"}
-    have = str((store.read_json("candidate_review.json", {}) or {}).get("date") or "")
+    kayit = store.read_json("candidate_review.json", {}) or {}
+    have = str(kayit.get("date") or "")
+    defter = _review_backlog_defteri(kayit)
     dates = sorted({str(p.get("date")) for p in plans if p.get("date")}, reverse=True)
-    todo = [d for d in dates[:max_sessions] if d != have]
+    now = _t.time()
+    todo, bekleyen, atlanan_gecersiz = [], [], []
+    for d in dates[:REVIEW_BACKLOG_PENCERE]:
+        if d in defter["gecersiz"]:
+            atlanan_gecersiz.append(d)
+            continue                                   # kalıcı işaret: atla ve İLERLE (donma biter)
+        if d == have or d in defter["tamam"]:
+            break                                      # en yeni görüşlü seans — gerisi dolgunun işi
+        sonraki = float((defter["denemeler"].get(d) or {}).get("sonraki_epoch") or 0.0)
+        if sonraki > now:
+            bekleyen.append(d)
+            break                                      # canlı hedef beklemede — eskiye sıçranmaz
+        todo.append(d)
+        if len(todo) >= max_sessions:
+            break
+    if not todo:
+        # Deneme yok, işaret yok, değişen durum yok — olay da yok. (Sessiz-yutma değil: yutulan bir
+        # başarısızlık yok; her gerçek deneme/işaret kendi olayını zaten basıyor.)
+        return {"reviewed": [], "requested": [], "already": have,
+                "bekleyen": bekleyen, "gecersiz": atlanan_gecersiz,
+                "detail": "sıradaki iş yok (bekleme penceresi / işaretli / güncel)"}
     done = []
     for d in todo:
         r = review_candidates(d)
         if r:
             done.append(d)
-    obs.log("candidate_review_backlog", requested=todo, reviewed=done, already=have)
-    return {"reviewed": done, "requested": todo, "already": have}
+    defter_son = _review_backlog_defteri()
+    gecersiz_yeni = [d for d in todo if d in defter_son["gecersiz"]]
+    obs.log("candidate_review_backlog", requested=todo, reviewed=done, already=have,
+            gecersiz_yeni=gecersiz_yeni, gecersiz_n=len(defter_son["gecersiz"]))
+    return {"reviewed": done, "requested": todo, "already": have,
+            "bekleyen": bekleyen, "gecersiz_yeni": gecersiz_yeni}
 
 
 def propose_with_llm() -> dict | None:
