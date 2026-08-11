@@ -181,8 +181,10 @@ def test_no_module_writes_another_modules_file():
         # kimlikler `alpaca_submitted`a EKLENİR, düşen (veto/ret) planlar `armed`dan kimlikle
         # ÇIKARILIR, `broker_rejected` defteri güncellenir. Canlı worker'ın o an ürettiği yeni
         # armed satırları bu yüzden EZİLMEZ (tam belge yazımı bilerek reddedildi).
-        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py",
-                           "api.py"},
+        # DARALMA (2026-08-12, icra-sözleşmesi v233): api.py listeden ÇIKTI — pano gönderim ucu artık
+        # kitaba KENDİSİ yazmıyor, tek kapı `loop.mirror_submit_ve_kalicilastir`ı çağırıyor (C8 tek-kapı
+        # çivisinin devamı; yazar sayısı 6→5, sahiplik sıkılaştı).
+        "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py"},
         # sermaye.py eğriye NOKTA eklemez; `points` DIŞINDA bir zarf anahtarına (reset_isaretleri)
         # kırılma beyanı yazar. Nokta eklemek `ledgerstamp.seed_boundary`nin tohum sınırını
         # kaydırırdı (bkz. sermaye.py modül başlığı + test_B3).

@@ -108,7 +108,11 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         # N1 (2026-08-09): korumasız pozisyon artık MIRROR_DRIFT'in susturma penceresini
         # PAYLAŞMIYOR — gerekçe yukarıda, davranışsal çivi
         # tests/test_dalga_w1_v216.py::test_N1_iki_alarm_ARTIK_AYNI_susturma_penceresini_paylasmaz
-        "NAKED_POSITION"}
+        "NAKED_POSITION",
+        # İCRA-SÖZLEŞMESİ (2026-08-12, v233 — VLO vakası): onaylı plan broker'a gitmediyse bu
+        # sermaye-sınıfı alarm split_brain gürültüsüne gömülmesin diye AYRI jeton; NOTIFY türetmesi
+        # bildirime otomatik bağlar. Bu literal güncellemesi o kararın kaydıdır (obs.py:71 gerekçesi).
+        "ONAYLI_PLAN_GONDERILMEDI"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():

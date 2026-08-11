@@ -3091,7 +3091,10 @@ const OLAY_YUZEYLERI = {
     // ve jeton ayrılınca yüzeysiz kaldı (v154 parite testi bunu yakaladı). Kendi bölümünü açmak
     // olguyu taşıdığı masadan koparırdı: teşhis kartı (`mutabakat:koruma`) mutabakat masasında,
     // `karar#mutabakat` altında duruyor ve aşağıdaki "Mutabakat masası" eylemi zaten oraya gidiyor.
-    jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC", "NAKED_POSITION"],
+    // İCRA-SÖZLEŞMESİ (2026-08-12, v233 — VLO vakası): ONAYLI_PLAN_GONDERILMEDI de bu masada —
+    // olgu ayna-gönderim olgusudur (onaylı plan broker'a ulaşmadı); MIRROR_DRIFT'ten AYRI jeton
+    // olması split_brain gürültüsüne gömülmemesi için (obs.py:71 gerekçesi), yüzeyi aynı mutabakat masası.
+    jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC", "NAKED_POSITION", "ONAYLI_PLAN_GONDERILMEDI"],
     neOldu: "İç sim dolumu ile gerçek Alpaca dolumu toleransın ötesinde ayrıştı (MIRROR_DRIFT), " +
             "broker iç defterin yürüteceği bir emri reddetti (BROKER_REJECT) ya da takip-stop " +
             "PATCH'i reddedildi ve iç HWM ile broker stopu ayrıştı (TRAIL_DESYNC). " +
