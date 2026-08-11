@@ -734,7 +734,25 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    güvenli budama = non-blocking flock alınabilen + eski dosyalar (ops betiği ya da conftest teardown).
    *gerekçe: sınırsız birikinti · boyut: S (flock-dikkatli) · bağımlılık: yok · öncelik: düşük.*
 
-6. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+6. **Bayat-defter-kalıntısı tuzağı (2026-08-11 VLO adli incelemesi bulgusu)** — trades defteri 07-31'de
+   DB'ye göç etti ama `state/trades.jsonl` DOSYASI 95 satırda donuk kalıntı olarak duruyor (portfolio/
+   shadow_books `.migrated`a çevrilmiş, trades ÇEVRİLMEMİŞ) → insan+araç yanlış okuyor (Rol-1'i "pozisyon
+   izsiz kayboldu" yanılgısına düşürdü; gerçek: T00097 VLO target +728$ DB'de düzgün). Düzeltme: migrate
+   edilen TÜM defter dosyalarına .migrated disiplini + store'a "bu ad DB'de, dosyayı okuma" koruması.
+   *gerekçe: adli/ölçüm güvenilirliği · boyut: S · bağımlılık: yok · öncelik: yüksek.*
+
+7. **4 pozisyon adet-sapması muhasebeli true-up (NUE 54/25 · EMR 64/37 · BKNG 43/22 · AMGN 33/22)** —
+   günlerdir MIRROR_DRIFT "olculemedi" (SB-1 makbuzsuz, restart-öncesi gönderimler; muhtemel kök teşhis #5
+   kısmi-dolum). Onarım SESSİZ OLMAZ: yön kararı operatörde (kitap→broker mu broker→kitap mı), uygulama
+   muhasebe-satırlı (adjustment kaydı + olay). *gerekçe: kitap↔broker bütünlüğü · boyut: M · bağımlılık:
+   operatör yön kararı (§3) · öncelik: yüksek.*
+
+8. **MNST 2:1 bar-kaynak uyuşmazlığı / split-ayarı sınıfı** — DATA_QUALITY: nasdaq 91.43 vs massive 45.72
+   (%50) + ledger_matches_bars 2 sapma (T00020/T00095 MNST defter-entry bar'ın 2 katı). Bar zinciri split'e
+   ayarlanmış, trades satırları ham kalmış görünüyor. Teşhis + tutarlılık kuralı (defter mi bar mı düzeltilir,
+   retro-değişmezlik gözetilerek). *gerekçe: ölçüm tabanı tutarlılığı · boyut: S-M · bağımlılık: yok · öncelik: orta.*
+
+9. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·
