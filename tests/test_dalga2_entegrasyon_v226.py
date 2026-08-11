@@ -63,10 +63,14 @@ def _fn(ad: str, kaynak: str = APPJS) -> str:
 # 1 · SB-1 — size_law PANO BACAĞI KALICILIĞI (kaynak + uçtan-uca davranış)
 # =================================================================================================
 def _submit_yamasi() -> str:
-    """`api_alpaca_submit_armed` içindeki kilit-altı `_yama` closure'ı."""
-    i = APIPY.index("def api_alpaca_submit_armed(")
-    j = APIPY.index("def _yama(doc):", i)
-    return APIPY[j:APIPY.index("store.update_json(\"portfolio.json\", _yama", j)]
+    """Kilit-altı `_yama` closure'ı — İŞ-2-EOD (2026-08-11, BEYANLI güncelleme): gövde
+    `api_alpaca_submit_armed`dan `loop.mirror_submit_ve_kalicilastir`a TAŞINDI (onay anı +
+    intraday 4b + pano ucu aynı kalıcılaştırma yasasını paylaşsın diye — C8 taşıma deseni).
+    SÖZLEŞME AYNI: bu test artık yamanın YENİ tek evine bakar; pano ucunun o eve çağrı yaptığı
+    `test_kovab_icra_v161::test_c8_both_callers_use_the_same_submit_function`ta çivili."""
+    i = LOOPPY.index("def mirror_submit_ve_kalicilastir(")
+    j = LOOPPY.index("def _yama(doc):", i)
+    return LOOPPY[j:LOOPPY.index("store.update_json(PORTFOLIO, _yama", j)]
 
 
 def test_sb1_yama_size_law_yamasi_KAYNAKTA():

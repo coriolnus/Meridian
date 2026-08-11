@@ -56,6 +56,19 @@ ALARM_GOAL_FAILURE = "GOAL_FAILURE"        # realized_30d < goal.failure_below �
 # ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu
 # kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır.
 ALARM_NAKED_POSITION = "NAKED_POSITION"    # açık pozisyonun broker'da canlı koruyucu stop'u YOK
+# ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (İŞ-3b, 2026-08-11; P-2026-08-07-VLO vakası). Aday
+# alternatif MIRROR_DRIFT'in yeni bir `drift_sinifi` değeriydi ve ÜÇ ölçülmüş gerekçeyle REDDEDİLDİ:
+# (1) N1 emsali birebir — `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa): gürültülü bir
+#     mutabakat gecesinde adet-sapması MIRROR_DRIFT'leri pencereyi doldurur ve "operatörün onayladığı
+#     emir broker'a HİÇ gitmedi" alarmının TESLİMATINI bastırırdı — bu sınıf tam da operatörün
+#     "büyük fiyasko" dediği sınıftır, muhasebe gürültüsünün arkasında bekleyemez.
+# (2) C9 yasası ("iki teşhis aynı isimle sayılırsa ikisi de okunamaz"): split_brain BELİRTİ adıdır
+#     (sebep bilinmiyor), bu jeton SEBEBİ BİLİNEN ve EYLEMİ BELLİ bir alt sınıftır (onay verildi,
+#     iç motor doldu, gönderim hiç olmadı → gönderim yolunu onar / elle emirle).
+# (3) Teslim zinciri değişmez: NOTIFY_TOKENS her ALARM_ sabitinden TÜRETİLİR (aşağıda) — jeton
+#     eklendiği an bildirim kapsamındadır, el listesi eskimez. Üretici: watchdog (İŞ-3b bekçisi);
+#     reconcile'ın MIRROR_DRIFT/split_brain alarmı AYNEN kalır (o genel belirtiyi anlatmaya devam eder).
+ALARM_ONAYLI_PLAN_GONDERILMEDI = "ONAYLI_PLAN_GONDERILMEDI"
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"

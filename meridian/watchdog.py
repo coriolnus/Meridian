@@ -305,6 +305,14 @@ def check_and_alarm() -> None:
         obs.warn("mutabakat_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="mutabakat tazelik bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
                         "'ayna görünümü taze' sayılmaz")
+    # #11 ONAYLI PLAN GÖNDERİLMEDİ (İŞ-3b, 2026-08-11): risk kalemi, bu poll'un kadansında ve KENDİ
+    # try'ında — akranlarıyla aynı yalıtım disiplini (birinin arızası diğerlerini götüremez).
+    try:
+        check_onayli_gonderim_and_alarm()
+    except Exception as e:
+        obs.warn("onayli_gonderim_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="onaylı-gönderim bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
+                        "'hepsi gönderilmiş' sayılmaz")
     # KALEM 3 + KALEM 7 (v223): canlılık (sprint orphan / öğrenme durması) ve evren-denetimi
     # sessiz-bozulma dedektörleri. İkisi de bu poll'un kadansında, HER BİRİ KENDİ try'ında —
     # birinin arızası diğerini ve mekanizma bekçisini GÖTÜREMEZ (aynı yalıtım disiplini yukarıda).
@@ -2577,6 +2585,114 @@ def check_mutabakat_and_alarm() -> dict:
                       skip_reason=rep.get("skip_reason"))
     _MUTABAKAT_ALARMED.clear()
     _MUTABAKAT_ALARMED.update(simdi)
+    return rep
+
+
+# =============================================================================================
+# #11 ONAYLI PLAN GÖNDERİLMEDİ (İŞ-3b, 2026-08-11 — P-2026-08-07-VLO sınıf kapanışı)
+#
+# VAKA: operatör REVIEW planını onayladı (plan_operator_approved), iç motor bir sonraki turda
+# doldurdu (E2 motor="ic" satırı), Alpaca'ya emir HİÇ gitmedi → reconcile yalnız GENEL split_brain
+# alarmı bastı ve "onayladığım emir gönderilmemiş" gerçeği o gürültünün içinde ADSIZ kaldı.
+# Onay-anı gönderimi + döngü kemeri bu yolu KAPATIR; bu bekçi yine de kalır — gelecekteki BAŞKA
+# bir atlama sınıfına karşı son hat (bekçi haber verir, düzeltmez; modül felsefesi).
+#
+# JETON `ONAYLI_PLAN_GONDERILMEDI` (obs.py'de gerekçeli — MIRROR_DRIFT alt-sınıfı BİLEREK değil:
+# jeton-başına susturma penceresi + C9 "iki teşhis tek isimde okunamaz" yasası).
+# =============================================================================================
+_ONAYLI_GONDERIM_ALARMED: set = set()   # mandal süreç-içi (koruma bekçisiyle aynı gerekçe, :2093)
+
+
+def onayli_gonderim_report() -> dict:
+    """#11 — operatör-onaylı VE iç-motor-dolmuş plan, dolum sonrası reconcile'da broker'da var mı?
+
+    TETİK TANIMI (İŞ-3b birebir): plan satırı `operator_onayi` damgası taşıyor + iç kitapta o
+    plan_id'li AÇIK pozisyon var + dolumdan SONRAKİ reconcile fotoğrafı (broker_reconcile.json,
+    kitabın işlediği seansla AYNI seans) sembolü `missing_on_alpaca` sayıyor — yani Alpaca'da NE
+    EMİR NE POZİSYON. `alpaca_submitted` izi `gonderim_izi` alanında AYRICA taşınır: "emir hiç
+    çıkmadı" ile "çıktı izi var ama broker'da bulunamadı" iki farklı onarım eylemidir.
+
+    ÜÇ HÂL (koruma/mutabakat dedektörleriyle aynı disiplin):
+      * `kapsam_disi` — BROKER != alpaca_paper: ayna yok, sorunun referansı yok. Alarm YOK.
+      * `ok=None`     — reconcile fotoğrafı yok / işlenmedi / kitabın seansının GERİSİNDE:
+                        ÖLÇÜLEMEDİ. Alarm BURADAN çıkmaz — fotoğraf bayatlığının sahibi #10'dur
+                        (mutabakat tazelik bekçisi); aynı olguyu iki kanaldan anlatmak
+                        check_integrity'nin çift-duyuru yasağını ihlal ederdi.
+      * `ok=False`    — ihlal listesi dolu: onaylı plan(lar) broker'a ulaşmamış."""
+    out = {"ok": None, "olculemedi": True, "kapsam_disi": False, "neden": "",
+           "ihlaller": [], "kontrol_edilen": 0,
+           "payda_beyani": "kontrol_edilen = plan satırı operatör-onaylı olan AÇIK iç pozisyon sayısı"}
+    from . import config as _cfg
+    if getattr(_cfg, "BROKER", "internal") != "alpaca_paper":
+        return {**out, "kapsam_disi": True,
+                "neden": f"broker={getattr(_cfg, 'BROKER', '?')} — ayna yok, 'broker'a gitti mi' "
+                         f"sorusunun referansı yok"}
+    pf = store.read_json("portfolio.json", {}) or {}
+    rc = store.read_json("broker_reconcile.json", None)
+    if not isinstance(rc, dict) or not rc:
+        return {**out, "neden": "broker_reconcile.json yok/okunamadı — dolum-sonrası fotoğraf yok, "
+                                "ÖLÇÜLEMEDİ ('hepsi gönderilmiş' DEĞİL)"}
+    if rc.get("checked") is False or rc.get("api_ok") is False:
+        return {**out, "neden": f"reconcile bu turda hüküm vermedi (checked={rc.get('checked')}, "
+                                f"api_ok={rc.get('api_ok')}, skip={rc.get('skip_reason')}) — ÖLÇÜLEMEDİ"}
+    kayit_seansi, kitap_seansi = str(rc.get("date") or ""), str(pf.get("last_date") or "")
+    if not kayit_seansi or not kitap_seansi or kayit_seansi < kitap_seansi:
+        return {**out, "neden": f"reconcile fotoğrafı ({kayit_seansi or '—'}) kitabın seansının "
+                                f"({kitap_seansi or '—'}) gerisinde — dolum sonrası İLK reconcile "
+                                f"henüz koşmadı; bayatlığın alarmı #10'da"}
+    missing = {str(s).upper() for s in ((rc.get("positions") or {}).get("missing_on_alpaca") or [])}
+    plans_by_id = {}
+    for r in store.read_jsonl("trade_plans.jsonl"):
+        if r.get("id"):
+            plans_by_id[r["id"]] = r          # aynı id'de EN YENİ satır kazanır (onay damgası taşıyan)
+    from . import loop as _loop               # geç import — döngüsel yük yok (loop bekçiyi geç yükler)
+    submitted = set(pf.get("alpaca_submitted") or [])
+    ihlaller = []
+    for tkr, pos in (pf.get("positions") or {}).items():
+        pid = (pos or {}).get("plan_id")
+        satir = plans_by_id.get(pid) if pid else None
+        if satir is None or not _loop.operator_onayli(satir):
+            continue
+        out["kontrol_edilen"] += 1
+        if str(tkr).upper() in missing:
+            ihlaller.append({"ticker": str(tkr), "plan_id": pid,
+                             "gonderim_izi": pid in submitted,
+                             "onay_ts": (satir.get(_loop.ONAY_ALANI) or {}).get("ts")})
+    return {**out, "ok": not ihlaller, "olculemedi": False, "neden": "",
+            "ihlaller": ihlaller, "kayit_seansi": kayit_seansi, "kitap_seansi": kitap_seansi}
+
+
+def check_onayli_gonderim_and_alarm() -> dict:
+    """#11'in alarm geçişi — ihlal (plan_id) başına BİR kez, mandallı; raporu döndürür.
+
+    `ölçülemedi` dalı ALARMSIZ ve bu bilinçli: fotoğraf bayatlığının sahibi #10 (çift-duyuru
+    yasağı — check_integrity'deki determinism istisnasıyla aynı desen). obs.alarm ateşlemesi
+    RUNBOOK üreticisine kendiliğinden akar (İŞ-3b sözleşmesi)."""
+    from . import obs
+    rep = onayli_gonderim_report()
+    if rep.get("kapsam_disi"):
+        _ONAYLI_GONDERIM_ALARMED.clear()
+        return rep
+    if rep.get("ok") is None:
+        return rep
+    simdi = set()
+    for v in rep.get("ihlaller") or []:
+        tok = f"onayli_gonderilmedi:{v.get('plan_id')}"
+        simdi.add(tok)
+        if tok in _ONAYLI_GONDERIM_ALARMED:
+            continue
+        iz = ("gönderim izi de yok — emir HİÇ çıkmamış"
+              if not v.get("gonderim_izi") else
+              "gönderim izi VAR ama broker'da ne emir ne pozisyon bulundu")
+        obs.alarm(obs.ALARM_ONAYLI_PLAN_GONDERILMEDI,
+                  f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör "
+                  f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE "
+                  f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle",
+                  kind="onayli_plan_gonderilmedi", ticker=v.get("ticker"), plan_id=v.get("plan_id"),
+                  gonderim_izi=bool(v.get("gonderim_izi")), onay_ts=v.get("onay_ts"))
+    # MANDAL: düzelen jeton düşer, yeniden bozulursa YENİDEN alarmlanır (koruma bekçisi deseni).
+    _ONAYLI_GONDERIM_ALARMED.clear()
+    _ONAYLI_GONDERIM_ALARMED.update(simdi)
     return rep
 
 

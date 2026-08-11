@@ -399,9 +399,13 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
     üretmez (`meta["last_date"] == dstr` → noop). Silahlı kümeye girmeyen bir onay, hiçbir şey
     yapmayan bir düğme olurdu.
 
-    EMİR GÖNDERMEZ: bu çağrı aynaya (Alpaca) emir YOLLAMAZ. Plan giriş kuyruğuna girer; dolum bir
-    sonraki açılışta iç motorun kapılarından geçerek olur, aynaya gönderim ise mevcut TEK kapıdan
-    (`mirror_submit_armed`, pano düğmesi ya da döngünün kendisi). İkinci bir emir yolu açmıyoruz.
+    ONAY = İCRA YETKİSİ (2026-08-11, İŞ-2-EOD — tarihçe-koru): v190'daki sözleşme "EMİR GÖNDERMEZ"
+    idi ve gerekçesi "ikinci bir emir yolu açmamak"tı. P-2026-08-07-VLO vakası bu sözleşmenin
+    boşluğunu kanıtladı: döngüden SONRA gelen onay, bir sonraki turun açılış fazında iç motorca
+    dolup silahlı kümeden çıkıyor ve `mirror_submit_armed`ın P3-sonu çağrısı onu HİÇ görmüyordu —
+    onaylı emir Alpaca'ya hiç gitmedi. Artık onay anında AYNI TEK KAPIDAN gönderilir
+    (`mirror_submit_ve_kalicilastir` → `mirror_submit_armed` — ikinci emir gövdesi YOK, C8 korunur);
+    dolum bir sonraki açılışta iç motorun kapılarından geçerek olur.
 
     YARIŞ PENCERESİ, BEYANLI: `_save_broker` kitabı yazarken `armed`ı DÖNGÜNÜN belleğinden basar.
     Onay tam bir döngü turunun ortasında gelirse bu ekleme o turun yazımıyla kaybolabilir (pencere
@@ -481,23 +485,71 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
     # operatöre BEYAN edilir — döngü v190'dan beri bu seansın REVIEW planlarının yasasını da tutar,
     # yani yasa yokluğu ancak eski (v190 öncesi üretilmiş) planlarda görülür.
     yasa_var = bool((kitap.get("entry_law") or {}).get(plan_id))
+    # ================================================================================================
+    # ONAY = İCRA YETKİSİ (İŞ-2-EOD, operatör 2026-08-11 — P-2026-08-07-VLO fiyaskosu):
+    # "EMİR GÖNDERMEZ" sözleşmesi kaldırıldı. Eski akışta onay yalnız silahlı kümeye yazıyor, aynaya
+    # gönderim döngünün P3 sonuna (ya da pano düğmesine) kalıyordu; döngüden SONRA gelen onay bir
+    # SONRAKİ turun AÇILIŞ fazında iç motorca dolup silahlı kümeden çıkınca aynaya emir HİÇ gitmedi
+    # (VLO: iç dolum 304.04×61, aynada sıfır emir, split_brain). Artık onay anında AYNI TEK KAPIDAN
+    # (mirror_submit_ve_kalicilastir → mirror_submit_armed) gönderilir — iç motor hangi yasayla
+    # (E1-v2, entry_law yan tablosu) dolduracaksa ayna da aynı yasayla, planın SİLAHLANMA ANINDA
+    # emirlenir (normal akışın birebir karşılığı: silahlanma akşamı gönderim). Setup'ın ARMED_SETUPS'ta
+    # olup olmaması BURADA süzgeç DEĞİLDİR: onaylı plan gönderilir (onay = icra yetkisi).
+    # SESSİZLİK YASAK (İŞ-3a): gönderimin sonucu — ya da yolun yokluğu — yanıt ve olayda AÇIKÇA yazar;
+    # onay REDDEDİLMEZ (operatör bilerek iç-defter denemesi yapabilir).
+    # ================================================================================================
+    if config.BROKER != "alpaca_paper":
+        gonderim = None
+        icra_yolu = (f"AYNA KAPALI — onay yalnız İÇ-DEFTERE işler, broker'a emir GİTMEZ "
+                     f"(broker={config.BROKER}); iç dolum bir sonraki açılışta")
+    else:
+        try:
+            gonderim = mirror_submit_ve_kalicilastir(source="onay", sadece_plan_id=plan_id)
+        except Exception as e:
+            gonderim = {"ok": False, "submitted": 0, "detail": f"{type(e).__name__}: {e}"}
+            obs.warn("onay_gonderim_dustu", plan_id=plan_id, error=f"{type(e).__name__}: {e}",
+                     detail="onay-anı ayna gönderimi istisnayla düştü — plan SİLAHLI, döngünün "
+                            "geç-gönderim kemeri (daily_cycle) yeniden dener")
+        _sonuc0 = (gonderim.get("results") or [{}])[0]
+        if gonderim.get("ok") and gonderim.get("submitted"):
+            icra_yolu = (f"ayna: bracket GÖNDERİLDİ (coid={plan_id}, qty={_sonuc0.get('qty')}) — "
+                         f"iç dolum bir sonraki açılışta, ayna dolumu tetik kesişiminde")
+        elif _sonuc0.get("dedup"):
+            icra_yolu = "ayna: emir ZATEN gönderilmişti (dedup) — ikinci emir doğmadı"
+        elif plan_id in (gonderim.get("dropped_ids") or []):
+            icra_yolu = (f"ayna: gönderim DÜŞTÜ ve plan silahlı kümeden çıkarıldı "
+                         f"({str(_sonuc0.get('detail') or gonderim.get('detail') or '')[:160]}) — "
+                         f"iç motor da doldurmayacak (tek yasa)")
+        else:
+            icra_yolu = (f"ayna: GÖNDERİLEMEDİ ({str(gonderim.get('detail') or _sonuc0.get('detail') or '?')[:160]}) "
+                         f"— plan SİLAHLI kaldı; onay iç-deftere işler, broker'a HENÜZ gitmedi. "
+                         f"Döngünün geç-gönderim kemeri yeniden dener; bekçi (ONAYLI_PLAN_GONDERILMEDI) "
+                         f"dolum sonrası boşluğu alarmlar")
     ev = obs.log("plan_operator_approved", plan_id=plan_id, ticker=ticker, date=pdate,
                  gate_verdict=verdict, kanal=onay.get("kanal"), icra_yasasi=yasa_var,
                  zaten_onayliydi=zaten_onayli, zaten_silahliydi=zaten_silahli,
                  armed_n=len(kitap.get("armed") or []),
+                 icra_yolu=icra_yolu,
+                 gonderim_ok=(None if gonderim is None else bool(gonderim.get("ok") and gonderim.get("submitted"))),
                  detail="operatör REVIEW planını onayladı — kapı hükmü DEĞİŞMEDİ (onay bir "
-                        "olaydır); plan giriş kuyruğuna alındı, dolum kapıları (HALT/breaker/"
+                        "olaydır); plan giriş kuyruğuna alındı VE aynaya gönderim onay anında "
+                        "denendi (onay = icra yetkisi, 2026-08-11); dolum kapıları (HALT/breaker/"
                         "veri/slot/de-risk/E1 limit) aynen koşar")
     return {"ok": True, "kod": 200, "plan_id": plan_id, "ticker": ticker, "date": pdate,
-            "gate_verdict": verdict, ONAY_ALANI: onay, "silahli": True,
+            "gate_verdict": verdict, ONAY_ALANI: onay, "silahli": plan_id not in set((gonderim or {}).get("dropped_ids") or []),
             "zaten_onayliydi": zaten_onayli, "zaten_silahliydi": zaten_silahli,
             "icra_yasasi": yasa_var, "armed_n": len(kitap.get("armed") or []),
             "ts": ev.get("ts"),
+            "icra_yolu": icra_yolu,
+            "gonderim": (None if gonderim is None else
+                         {"ok": bool(gonderim.get("ok")), "submitted": gonderim.get("submitted", 0),
+                          "detail": str(gonderim.get("detail") or "")[:200],
+                          "dropped_ids": gonderim.get("dropped_ids") or []}),
             "not": (None if yasa_var else
                     "E1 icra yasası (atr/ref_price) bu plan için defterde YOK — limit yalnız yüzde "
                     "tavanıyla kurulur, ATR ölçülemedi (uydurulmadı)"),
-            "neden": "onaylandı — plan silahlı kuyruğa alındı; dolum bir sonraki açılışta, "
-                     "aynaya gönderim mevcut tek kapıdan (silahlı planları gönder)"}
+            "neden": "onaylandı — plan silahlı kuyruğa alındı; iç dolum bir sonraki açılışta; "
+                     "aynaya gönderim ONAY ANINDA tek kapıdan denendi (sonuç: icra_yolu)"}
 
 
 # ==================================================================================================
@@ -673,6 +725,63 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
     except Exception as e:
         obs.warn("alpaca_submit_failed", error=f"{type(e).__name__}: {e}", kaynak=source)
         return {**out, "detail": f"{type(e).__name__}: {e}"}
+
+
+# ==================================================================================================
+# TEK KAPI + KALICILAŞTIRMA — DÖNGÜ-DIŞI ÇAĞIRANLARIN ORTAK YOLU (İŞ-2-EOD/4b, 2026-08-11)
+# ==================================================================================================
+# VAKA (P-2026-08-07-VLO, operatör: "onayladığım bir emrin gönderilmemesi büyük bir fiyasko"):
+# operatör onayı planı silahlı kümeye koyuyordu ama aynaya GÖNDERİM yalnız iki yerden tetikleniyordu
+# — döngünün P3 sonu (:1640) ve pano düğmesi. Onay döngüden SONRA gelince plan bir SONRAKİ turun
+# AÇILIŞ fazında iç motorca dolup silahlı kümeden çıkıyor, :1640 onu hiç görmüyordu → Alpaca'ya emir
+# hiç gitmedi, reconcile split_brain alarmladı. Bu yardımcı, pano ucundaki gönderim+kalıcılaştırma
+# desenini (api_alpaca_submit_armed) fonksiyonlaştırır ki onay anı ve intraday 4b AYNI tek kapıdan
+# (mirror_submit_armed — C8) geçsin; İKİNCİ bir emir gövdesi yazılmaz.
+def mirror_submit_ve_kalicilastir(dstr: str | None = None, *, source: str,
+                                  sadece_plan_id: str | None = None) -> dict:
+    """Diskteki kitabı okuyarak silahlı planları aynaya gönderir ve yan etkileri portfolio.json'a
+    KİLİT ALTINDA yamalar (tam-belge yazımı YASAK — canlı worker'ın armed setini ezerdi; pano ucuyla
+    birebir aynı yama: dedup kümesine ekle, düşenleri kimlikle çıkar, SB-1 makbuzunu bas).
+
+    `sadece_plan_id`: verilirse YALNIZ o plan gönderilir (görünüm-meta: armed daraltılır; dedup /
+    entry_law / peak / size_law kitaptan). intraday 4b bunu kullanır — silahlı kümedeki DİĞER
+    planların gönderim anı kendi tetikleyicilerinindir (onay anı ya da döngü), 4b'nin değil.
+
+    YARIŞ PENCERESİ, BEYANLI (operator_onay_ver docstring'indeki pencerenin ikizi): döngü tam bu
+    anda `_save_broker` yazarsa buradaki yama kaybolabilir. Kayıp sessiz ve tehlikesiz değil ama
+    KEMERLİ: (a) Alpaca coid teklik yasası aynı planın ikinci bracket'ını reddeder; (b) 4b'nin
+    Alpaca-tarafı idempotens kontrolü (açık emir + pozisyon) gönderim öncesi ayrıca bakar."""
+    kitap = store.read_json(PORTFOLIO, {}) or {}
+    meta = kitap
+    if sadece_plan_id is not None:
+        secilen = [p for p in (kitap.get("armed") or []) if p.get("id") == sadece_plan_id]
+        if not secilen:
+            return {"ok": False, "submitted": 0, "results": [], "equity": None,
+                    "submitted_ids": [], "dropped_ids": [],
+                    "detail": f"plan silahlı kümede değil: {sadece_plan_id}"}
+        meta = {**kitap, "armed": secilen}
+    # BOŞ TARİH YASAK (pano ucundaki gerekçenin aynısı): E2 penceresi `date >= cutoff` ile süzüyor —
+    # boş dize her pencereden sessizce düşerdi. Satırın tarihi eylemin tarihidir.
+    if not dstr:
+        dstr = str(meta.get("last_date") or dt.date.today().isoformat())
+    res = mirror_submit_armed(meta, dstr, source=source)
+    gonderilen, dusen = set(res.get("submitted_ids") or []), set(res.get("dropped_ids") or [])
+    if gonderilen or dusen:
+        def _yama(doc):
+            if not isinstance(doc, dict):
+                return False
+            doc["alpaca_submitted"] = list(dict.fromkeys(
+                list(doc.get("alpaca_submitted") or []) + sorted(gonderilen)))[-200:]
+            # STRICT yasa (Phase 1.1) burada da: veto/ret yiyen plan silahlı kümeden KİMLİKLE çıkar —
+            # iç motor bir sonraki açılışta hayalet dolum yapamaz.
+            doc["armed"] = [p for p in (doc.get("armed") or []) if p.get("id") not in dusen]
+            doc["broker_rejected"] = meta.get("broker_rejected", doc.get("broker_rejected", []))
+            # SB-1 makbuzu (pano bacağıyla aynı kilit-altı desen): meta'nın makbuzu diskteki belgeye
+            # basılır; meta'nınki kitabın kendi sözlüğünden tohumlandığı için içerik-koruyucudur.
+            doc["size_law"] = meta.get("size_law", doc.get("size_law", {}))
+            return True
+        store.update_json(PORTFOLIO, _yama, {})
+    return {**res, "submitted_ids": sorted(gonderilen), "dropped_ids": sorted(dusen)}
 
 
 def _universe_drift_check() -> None:
@@ -1130,6 +1239,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         _kapi = ("halt" if halted else "breaker" if breaker else "data_bad" if data_bad
                  else "throttle" if size_mult <= 0 else None)
         _dusen: list = []
+        # İŞ-2-EOD KEMERİ, TOPLAMA YARISI (2026-08-11, P-2026-08-07-VLO): iç motorun BU turda
+        # doldurduğu ama aynaya HİÇ gönderilmemiş planlar (onay-anı gönderimi düşmüş/ulaşamamış,
+        # unreachable-kalmış ya da düzeltme-öncesi silahlanmış her plan). Küme dolum ANINDA ölçülür
+        # — dolumdan sonra plan silahlı kümeden çıkar ve P3-sonu `mirror_submit_armed` onu göremez.
+        _gonderilmis0 = set(meta.get("alpaca_submitted") or [])
+        _ic_dolan_gonderilmemis: list = []
         if _kapi is None:
             fillable, carried = _carry_armed_without_bar(
                 meta.get("armed", []), lambda t: t in per and d in per[t].index)
@@ -1163,6 +1278,10 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                            "fill_vs_resmi_acilis_bps": None,
                                            "fill_vs_resmi_acilis_beyan": IC_ACILIS_TOTOLOJI_BEYAN,
                                            "fill_vs_limit_bps": _bps(_pos.entry, _lw.get("limit"))})
+                        # İŞ-2-EOD kemeri: iç dolum VAR, ayna gönderim izi YOK → geç-gönderim
+                        # adayı (aşağıda, bayat-tetik süpürmesinden SONRA gönderilir).
+                        if plan.get("id") and plan["id"] not in _gonderilmis0:
+                            _ic_dolan_gonderilmemis.append(plan)
                     else:
                         _reason = _rej.get("reason") or "bilinmiyor"
                         _entry_exec_write({**_base, "karar": _reason, "fill": None,
@@ -1206,6 +1325,47 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         # için o düşürme ZATEN oluyordu. Yani bu satır taşıma mekanizmasını bozmuyor, onun
         # bugünkü fiilî sonucunu aynen sürdürüyor.
         _cancel_stale_entry_orders(dstr)
+        # ==========================================================================================
+        # İŞ-2-EOD KEMERİ, GÖNDERİM YARISI (2026-08-11 — P-2026-08-07-VLO sınıf kapanışı):
+        # "İÇ MOTORUN DOLDURDUĞU HİÇBİR PLAN AYNAYA GÖNDERİLMEMİŞ KALAMAZ." Onay-anı gönderimi
+        # (operator_onay_ver) normal yoldur ve bu kemer o yol çalıştığında dedup'la NO-OP olur;
+        # burası onay-anı gönderiminin düştüğü / ulaşamadığı / hiç yaşanmadığı (düzeltme-öncesi
+        # silahlanma, unreachable-kalan akşam gönderimi) vakaların yakalayıcısıdır.
+        # YER BİLİNÇLİ: bayat-tetik süpürmesinden SONRA — süpürmeden önce gönderilseydi taze emir
+        # aynı turda "bayat" diye kesilirdi (P3-sonu gönderimiyle aynı sıra yasası). Emir bu akşam
+        # çıkar, bir SONRAKİ seans dolabilir; dolmadan kalırsa ertesi süpürme onu meşru keser
+        # (tek-seans taşıma yasasının aynısı). Geç kalmış bir gönderim, hiç yapılmamış bir
+        # gönderimden dürüsttür — ve olay defterine ADIYLA düşer.
+        # GÖRÜNÜM-META: armed'a DOKUNULMAZ (plan iç kitapta ZATEN dolu — silahlı kümeye geri koymak
+        # ertesi açılışta İKİNCİ iç dolum demekti); dedup/entry_law/makbuz döngünün kendi meta'sından.
+        # ==========================================================================================
+        if _ic_dolan_gonderilmemis and config.BROKER == "alpaca_paper":
+            _gec_view = {"armed": list(_ic_dolan_gonderilmemis),
+                         "alpaca_submitted": list(meta.get("alpaca_submitted") or []),
+                         "entry_law": meta.get("entry_law") or {},
+                         "peak_equity": meta.get("peak_equity", START_EQUITY),
+                         "size_law": meta.setdefault("size_law", {})}
+            try:
+                _gec = mirror_submit_armed(_gec_view, dstr, eq_now=eq_now, halted=halted,
+                                           source="loop_gec_gonderim")
+                meta["alpaca_submitted"] = list(_gec_view.get("alpaca_submitted")
+                                                or meta.get("alpaca_submitted") or [])
+                if _gec_view.get("broker_rejected"):
+                    meta["broker_rejected"] = (meta.get("broker_rejected", [])
+                                               + list(_gec_view["broker_rejected"]))[-50:]
+                obs.warn("mirror_gec_gonderim", date=dstr, n=len(_ic_dolan_gonderilmemis),
+                         submitted=_gec.get("submitted", 0),
+                         plan_ids=[p.get("id") for p in _ic_dolan_gonderilmemis][:10],
+                         detail="iç motor dolum yazdı ama aynaya gönderim izi yoktu — tek kapıdan "
+                                "GEÇ gönderildi (onay-anı yolunun yakalayıcı kemeri); emir bir "
+                                "sonraki seansta dolabilir, dolmazsa ertesi süpürmede kesilir")
+            except Exception as e:
+                # YASA 4: kemerin arızası günlük turu düşüremez ama sessiz de kalamaz — gönderilmemiş
+                # onaylı dolumun son bekçisi İŞ-3b alarmıdır (ONAYLI_PLAN_GONDERILMEDI).
+                obs.warn("mirror_gec_gonderim_dustu", error=f"{type(e).__name__}: {e}", date=dstr,
+                         n=len(_ic_dolan_gonderilmemis),
+                         detail="geç-gönderim kemeri istisnayla düştü — aynasız iç dolumları "
+                                "reconcile split_brain + ONAYLI_PLAN_GONDERILMEDI bekçisi yakalar")
 
     # C19 (denetim 2026-08-02) — GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
     # ve KAPANIŞ markıyla yapılıyordu (`b.equity(_marks(per, d))`); okuma tarafı ise D+1'in AÇILIŞ

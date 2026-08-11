@@ -1,8 +1,14 @@
-"""test_exhaustion_hammer_v92 — Stockbee satış-tükenmesi ÇEKİCİ kurulumu (KEYLESS, DORMANT).
+"""test_exhaustion_hammer_v92 — Stockbee satış-tükenmesi ÇEKİCİ kurulumu (KEYLESS, SİLAHLI).
 
 'declared-only' bir screener'ı motor-uygulanmış bir setup'a dönüştürmenin kanıtı: evaluate_exhaustion_hammer
 GERÇEKTEN ateşler (kör no-op değil), scan_all'da HER ticker'da koşar, per-skill attribution'a doğru
-screener'a bağlanır — ama ARMED_SETUPS'a EKLENMEDİĞİ için canlı deftere SIFIR risk. Anahtarsız (OHLCV).
+screener'a bağlanır. Anahtarsız (OHLCV).
+
+SİLAHLANMA TARİHÇESİ (BEYANLI test güncellemesi, sinsi değil): dosya 2026-07-24'te DORMANT sözleşmesini
+çiviliyordu ("ARMED_SETUPS'a EKLENMEDİĞİ için canlı deftere SIFIR risk"). 2026-08-11 operatör onayıyla
+("A seçeneği — exhaustion_hammer'ı silahla"; P-2026-08-07-VLO vakası) kurulum SİLAHLANDI; DORMANT
+testi aynı tarihle SİLAHLI sözleşmesine çevrildi. momentum_burst/episodic_pivot DORMANT kalır ve
+onların çivileri (test_audit_fixes / test_efficiency_v8 / test_decision_v3) DEĞİŞMEDİ.
 """
 from __future__ import annotations
 import numpy as np
@@ -80,14 +86,26 @@ def test_no_look_ahead():
     assert base.as_row() == after.as_row(), "karar GELECEK barlarla değişti — ileri-dönük sızıntı"
 
 
-def test_dormant_not_armed():
-    """DORMANT: scan_all çıktısında setup VAR (ölçülür) ama ARMED_SETUPS'ta YOK → scan_entry onu silahlamaz."""
-    assert "exhaustion_hammer" not in strat.ARMED_SETUPS
+def test_armed_by_operator_2026_08_11():
+    """SİLAHLI (operatör onayı 2026-08-11): ARMED_SETUPS'ta VAR ve scan_entry çekiç sinyalini aday yapar.
+    SIRA sözleşmesi de çivili: kanıtlı iki kurulum (breakout_vcp, pullback) öncelikli kalır —
+    exhaustion_hammer tuple'ın SONUNDADIR (aynı ticker'da ancak onlar ateşlemediyse aday üretir)."""
+    assert "exhaustion_hammer" in strat.ARMED_SETUPS, \
+        "operatör onayı (2026-08-11) geri alınmış görünüyor — silahlanma bilinçli karardı"
+    assert strat.ARMED_SETUPS.index("exhaustion_hammer") == len(strat.ARMED_SETUPS) - 1, \
+        "öncelik sırası değişti: kanıtlı kurulumlar (breakout_vcp, pullback) önce gelmeli"
     df = _hammer_bars()
     by_setup = strat.scan_all(df, {}, 95, "T")
     assert "exhaustion_hammer" in by_setup, "scan_all setup'ı ölçmüyor — attribution kör kalır"
     armed = strat.scan_entry(df, {}, 95, "T")
-    assert armed is None or armed.setup in strat.ARMED_SETUPS, "uyuyan setup canlı aday üretti (risk!)"
+    assert armed is not None and armed.setup == "exhaustion_hammer", \
+        "silahlı çekiç sinyali canlı aday üretmedi — onaylı silahlanma fiilen ölü"
+
+
+def test_diger_uyuyanlar_dormant_kalir():
+    """Onay YALNIZ exhaustion_hammer içindi (2026-08-11): momentum_burst + episodic_pivot DORMANT."""
+    assert "momentum_burst" not in strat.ARMED_SETUPS
+    assert "episodic_pivot" not in strat.ARMED_SETUPS
 
 
 def test_screener_attribution_wired():

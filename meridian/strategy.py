@@ -685,8 +685,14 @@ def evaluate_exhaustion_hammer(bars: pd.DataFrame, params: dict, rs_rating_value
                                ticker: str = "?") -> Optional[EntrySignal]:
     """Beşinci kurulum — Stockbee SATIŞ-TÜKENMESİ ÇEKİCİ: uptrend içindeki kontrollü geri çekilmede,
     gün içi dibi kısa vadeli düşüğü delip kapanışa alıcıların dönmesiyle uzun alt fitilli çekiç bar →
-    LONG reversal. Yalnız OHLCV (anahtarsız). DORMANT — ARMED_SETUPS'a EKLENMEZ; per-skill avg_r karşı-
-    olgusal defterde ölçülür. Kapalı barlar, ileri-dönük yok."""
+    LONG reversal. Yalnız OHLCV (anahtarsız).
+
+    SİLAHLANMA TARİHÇESİ (tarihçe-koru): 2026-07-24'te motor-uygulandı ve BİLİNÇLİ DORMANT bırakıldı
+    ("ARMED_SETUPS'a EKLENMEZ; per-skill avg_r karşı-olgusal defterde ölçülür" — o günkü karar).
+    2026-08-11 OPERATÖR ONAYIYLA SİLAHLANDI ("A seçeneği — exhaustion_hammer'ı silahla"): P-2026-08-07-
+    VLO vakası (REVIEW→operatör-onaylı plan iç motorda doldu, aynaya emir hiç gitmedi; fiyat 304→322)
+    onayın gerekçesidir. Silahlanma yalnız BU kuruluma verildi — momentum_burst ve episodic_pivot
+    DORMANT kalır. Kapalı barlar, ileri-dönük yok."""
     if bars is None or len(bars) < 65:
         return None
     df = bars
@@ -992,7 +998,15 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
 # entering at the high after a 4% burst has no tradeable edge here); breakout-only = 0.164 (pullback HELPS
 # +0.12). So the two proven setups are armed; momentum_burst is evaluated-but-DORMANT (its per-skill avg_r
 # is still measured, and the learning loop can revisit). Add "momentum_burst" to arm it (lowers the edge).
-ARMED_SETUPS = ("breakout_vcp", "pullback")
+#
+# exhaustion_hammer — SİLAHLI, OPERATÖR ONAYI 2026-08-11 ("A seçeneği — exhaustion_hammer'ı silahla").
+# Tarihçe: 2026-07-24'te motor-uygulandı ve bilinçli DORMANT bırakılmıştı (yukarıdaki ölçüm disiplini);
+# P-2026-08-07-VLO vakası (onaylı REVIEW planı iç motorda doldu, aynaya emir hiç gitmedi, fiyat 304→322)
+# sonrasında operatör silahlanmayı açıkça onayladı. SIRA ÖNEMLİ ve bilinçli: tuple sırası scan_entry /
+# cf_backfilldeki "ilk eşleşen silahlı kurulum" önceliğidir — kanıtlı iki kurulum (breakout_vcp,
+# pullback) öncelikli kalır, exhaustion_hammer aynı ticker'da ancak onlar ateşlemediyse aday üretir.
+# momentum_burst ve episodic_pivot DORMANT KALIR (onay yalnız exhaustion_hammer içindir).
+ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer")
 
 
 def relax_for_near_miss(eff: dict) -> dict:

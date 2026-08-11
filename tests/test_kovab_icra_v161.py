@@ -339,8 +339,15 @@ def test_c8_both_callers_use_the_same_submit_function():
             f = node.func
             if isinstance(f, ast.Attribute) and f.attr == "submit_plan":
                 dogrudan.append(node.lineno)
-            if (isinstance(f, ast.Attribute) and f.attr == "mirror_submit_armed") or \
-                    (isinstance(f, ast.Name) and f.id == "mirror_submit_armed"):
+            # İŞ-2-EOD (2026-08-11, BEYANLI güncelleme): tek kapının DIŞ katmanı artık
+            # `mirror_submit_ve_kalicilastir` (gönderim + kilit-altı kalıcılaştırma tek gövdede;
+            # onay anı + intraday 4b + pano ucu aynı yolu paylaşır). Sözleşme GEVŞEMEDİ,
+            # GENİŞLEDİ: pano ucu ya iç kapıyı ya sarmalayıcısını çağırmalı; sarmalayıcının
+            # kendisinin iç kapıyı çağırdığı aşağıda AYRICA çivili.
+            if (isinstance(f, ast.Attribute) and f.attr in ("mirror_submit_armed",
+                                                            "mirror_submit_ve_kalicilastir")) or \
+                    (isinstance(f, ast.Name) and f.id in ("mirror_submit_armed",
+                                                          "mirror_submit_ve_kalicilastir")):
                 kapi.append(node.lineno)
         cagiranlar[rel] = (dogrudan, kapi)
     # loop.py'de tek `submit_plan` çağrısı ORTAK FONKSİYONUN İÇİNDEDİR; api.py'de hiç olmamalı.
@@ -350,6 +357,9 @@ def test_c8_both_callers_use_the_same_submit_function():
     assert cagiranlar["meridian/loop.py"][1], "döngü ortak gönderim kapısını çağırmıyor"
     sp = inspect.getsource(loop.mirror_submit_armed)
     assert "alpaca.submit_plan(" in sp, "gönderim mantığı ortak fonksiyonda değil"
+    sarmal = inspect.getsource(loop.mirror_submit_ve_kalicilastir)
+    assert "mirror_submit_armed(" in sarmal, \
+        "sarmalayıcı iç kapıyı çağırmıyor — ikinci bir gönderim gövdesi doğmuş demektir"
 
 
 def test_c8_endpoint_applies_derisk_dedup_and_writes_e2(paper, monkeypatch):

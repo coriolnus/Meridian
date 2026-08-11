@@ -35,7 +35,17 @@ NEDEN GÖZLEM-ÖNCE (Faz 4 tasarım sentezi): (1) mrd:bars öğrenmeye/backtest'
 OOS kanıtı YOK; (2) strateji GÜNLÜK-kalibre (252-bar ısınma, haftalık resample, time_stop_days) → ham
 dakikalık barda 'karar' KATEGORİ HATASIDIR; (3) otonom intraday silahlanma yeni ve SONUÇLU (arming.py:
 'silahlanma otomatik değildir'). Gerçek silahlanma (Faz 4b) YALNIZ operatörün elle açtığı
-state/INTRADAY_ARM bayrağı + EOD ile BİREBİR aynı güvenlik kapılarıyla açılır — bu dosyada henüz YOK.
+state/INTRADAY_ARM bayrağı + EOD ile BİREBİR aynı güvenlik kapılarıyla açılır.
+
+FAZ 4B GÖNDERİM BACAĞI ARTIK VAR (İCRA turu, operatör onayı 2026-08-11 — P-2026-08-07-VLO vakası):
+`_faz4b` yalnız INTRADAY_ARM açıkken, SİLAHLI kolun gölge satırı `would_submit` dediyse ve plan
+icra-uygunsa ((setup ARMED_SETUPS'ta VE kapı GO) YA DA operatör-onaylı) GERÇEK bracket emrini TEK
+KAPIDAN (loop.mirror_submit_ve_kalicilastir → mirror_submit_armed) gönderir. "EOD ile BİREBİR aynı
+güvenlik kapıları" sözü İKİ katmanda tutulur, kopya yazılmadan: (1) gölge satırı o ANIN kapılarını
+üretimin kendi fonksiyonlarıyla yeniden ölçer (halt/breaker/veri/size_mult/pozisyon/slot —
+intraday_shadow._gates) ve `would_submit` değilse 4b HİÇ denemez; (2) tek kapı gönderim anında
+HALT + E1-v2 yasası + de-risk çarpanı + dedup + E2 satırını EOD yoluyla AYNI gövdeden uygular.
+INTRADAY_ARM kapalıyken davranış gözlem-moduyla BİREBİR aynıdır (4b hiç çağrılmaz).
 
 TETİK-GEÇİŞ ÖLÇÜMÜ kategori hatası DEĞİLDİR: dakikalık barın high'ı bir EŞİĞİ (entry_trigger) geçti mi —
 strateji GİRDİSİ değil, eşik kontrolü. 'Dakika-hassas icra EOD next-open'a kıyasla ne kazandırırdı'yı
@@ -91,6 +101,10 @@ class IntradayConsumer:
         # panoda o adla okunuyor (app.js "gölge kararı"). Yeni kolu ona eklemek, silahli kolun
         # sayımını değiştirmek olurdu — kartın derhal geri alma sebebi.
         self.shadow_planli_written = 0
+        # FAZ 4B SAYACI (2026-08-11): gönderilen GERÇEK bracket sayısı — gölge sayaçlarından AYRI
+        # (gölge ölçümdür, bu icradır; ikisini tek sayaçta toplamak kartın kill#3 sınıfı bir
+        # anlam kaymasıdır). Süreç-içi; kalıcı iz E2 defteri + olay defterindedir.
+        self.submitted_4b = 0
         self.skipped = {"session": 0, "halt": 0, "stale": 0, "no_bars": 0}
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
@@ -227,13 +241,27 @@ class IntradayConsumer:
         # SİLAHLI KOL — 2026-07-27'den beri aynı, v217'de BAYT DÜZEYİNDE değişmedi. `vs_eod` ve
         # EXE-2026-002'nin gerçek-çift hattı YALNIZ bu kolun defterini okur.
         if fired and is_armed_plan:
+            satir = None
             try:
                 from . import intraday_shadow
-                if intraday_shadow.record(plan, last, as_of) is not None:
+                satir = intraday_shadow.record(plan, last, as_of)
+                if satir is not None:
                     self.shadow_written += 1
             except Exception as e:
                 self.last_error = f"shadow: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_failed", ticker=tk, error=self.last_error)
+            # FAZ 4B (2026-08-11, operatör onaylı): bayrak açıksa ve gölge o anın kapılarıyla
+            # `would_submit` dediyse GERÇEK gönderim denenir. `satir` gölgenin DÖNÜŞÜDÜR — aynı
+            # girdi, aynı kapı ölçümü; gölge satırı yazılmadıysa (dedup: bu seans zaten kayıtlı /
+            # biçimsiz girdi / gölge kapalı) 4b de denemez → plan başına seansta EN FAZLA bir
+            # gönderim denemesi, gölge-kaydıyla eşlikte. GÖLGE KAYDI KALIR (yukarıda zaten yazıldı).
+            if armed:
+                try:
+                    self._faz4b(plan, satir, tk, pf, as_of)
+                except Exception as e:
+                    self.last_error = f"faz4b: {type(e).__name__}: {e}"[:160]
+                    obs.warn("intraday_4b_failed", ticker=tk, plan_id=(plan or {}).get("id"),
+                             error=self.last_error)
         # PLANLI KOL (kart EXE-2026-003, v217): tetiği kesilen ama SİLAHLANMAMIŞ GO/REVIEW planları.
         # NÜFUS 2026-07-30'da BİLEREK daraltılmıştı ve gerekçesi doğruydu: silahlanmamış plan iç
         # EOD defterinde hiç dolmaz, o yüzden gölge satırı `vs_eod`ta `n_unpaired`e düşer ve
@@ -259,11 +287,104 @@ class IntradayConsumer:
             except Exception as e:
                 self.last_error = f"shadow_planli: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_planli_failed", ticker=tk, error=self.last_error)
-        # Faz 4a: gözlem tamam, KARAR YOK. Bayrak açık olsa bile Faz 4b (gerçek silahlanma) HENÜZ YOK —
-        # sessizce silahlamak yerine GÖRÜNÜR bir uyarı (operatör bayrağı erken açtıysa yanlış beklenti kurmasın).
-        if armed:
-            obs.warn("intraday_arm_flag_on_but_4b_not_built", ticker=tk,
-                     detail="INTRADAY_ARM açık ama Faz 4b silahlama bacağı henüz uygulanmadı — yalnız gözlem")
+        # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol, 2026-08-11). Eski
+        # `intraday_arm_flag_on_but_4b_not_built` uyarısı kaldırıldı: cümlesi ("4b uygulanmadı")
+        # artık YANLIŞ olurdu ve yanlış bir uyarı, susan bir uyarıdan tehlikelidir. Bayrak açıkken
+        # gönder(eme)me artık sessiz değil — her dal kendi olayını yazar (intraday_4b_*).
+
+
+    # ---- FAZ 4B — GERÇEK İNTRADAY GÖNDERİM (İCRA turu, operatör onayı 2026-08-11) --------------
+    def _faz4b(self, plan: dict, satir: dict | None, tk: str, pf: dict, as_of) -> None:
+        """Tetik kesişimi + INTRADAY_ARM → TEK KAPIDAN gerçek bracket gönderimi.
+
+        KAPI SIRASI (her ret ADIYLA olay defterine düşer — sessizlik yok):
+          1. gölge eşliği   : `satir` bu olayda yazılan gölge satırıdır; `would_submit` değilse
+                              (kapı blokladı ya da satır hiç yazılmadı) GÖNDERİM DENENMEZ. Gölgenin
+                              kapı ölçümü (`intraday_shadow._gates`) üretimin kendi fonksiyonlarıyla
+                              o ANDA yeniden değerlendirilir — EOD kapı ailesinin intraday karşılığı.
+          2. icra-uygunluk  : (setup ARMED_SETUPS'ta VE kapı GO) YA DA operatör-onaylı plan
+                              (loop.operator_onayli). Keşif sondası gibi silahlı-ama-ikisi-de-değil
+                              planlar 4b'den GEÇMEZ (onların gönderim anı kendi tetikleyicisinindir).
+          3. seans (4G)     : süresi dolmuş plan GÖNDERİLMEZ — planlar tek seans geçerli
+                              (operator_onay_ver'in seans yasasıyla aynı kıyas: plan.date, kitabın
+                              işlediği son seanstan ESKİYSE seviyeler bayattır).
+          4. idempotens (c) : Alpaca tarafında aynı coid'li AÇIK emir ya da sembolde pozisyon varsa
+                              atla. Taşıma arızasında FAIL-CLOSED: çift-gönderim DIŞLANAMIYORSA
+                              gönderilmez (ölçülemeyen dedup, dedup değildir).
+          5. TEK KAPI       : loop.mirror_submit_ve_kalicilastir(sadece_plan_id=…) — HALT + E1-v2
+                              yasası + de-risk + `alpaca_submitted` dedup'ı + E2 satırı + kalıcılık
+                              EOD yoluyla AYNI gövdeden. EOD döngüsü de aynı dedup kümesini okuduğu
+                              için intraday-gönderilmiş planı İKİNCİ kez göndermez.
+        Dolmadan kalan 4b girişi EOD bayat-tetik süpürmesinde temizlenir (v210 politikası — DOĞRU
+        davranış); koruma bacakları v220/v221 kemerleriyle zaten muaf."""
+        if satir is None or satir.get("status") != "would_submit":
+            return                                   # gölge satırı sebebi zaten taşıyor (blocked:* / dedup)
+        plan_id = plan.get("id")
+        from . import loop as _loop, strategy as _strat
+        uygun = ((str(plan.get("setup") or "") in _strat.ARMED_SETUPS
+                  and str(plan.get("gate_verdict") or "") == "GO")
+                 or _loop.operator_onayli(plan))
+        if not uygun:
+            obs.log("intraday_4b_uygun_degil", ticker=tk, plan_id=plan_id,
+                    setup=plan.get("setup"), gate_verdict=plan.get("gate_verdict"),
+                    detail="INTRADAY_ARM açık ama plan icra-uygun değil — (setup silahlı VE kapı GO) "
+                           "ya da operatör onayı gerekir; yalnız gözlem yazıldı")
+            return
+        pdate, book_at = str(plan.get("date") or ""), str(pf.get("last_date") or "")
+        if not pdate or (book_at and pdate < book_at):
+            obs.warn("intraday_4b_suresi_dolmus", ticker=tk, plan_id=plan_id,
+                     plan_date=pdate or None, kitap_seansi=book_at or None,
+                     detail="süresi dolmuş plan GÖNDERİLMEZ (4G) — planlar tek seans geçerli, "
+                            "seviyeleri bayat")
+            return
+        if config.BROKER != "alpaca_paper":
+            obs.log("intraday_4b_ayna_kapali", ticker=tk, plan_id=plan_id, broker=config.BROKER,
+                    detail="INTRADAY_ARM açık ama ayna arka ucu kapalı — gönderim yolu yok")
+            return
+        from .adapters import alpaca
+        if not alpaca.paper_available():
+            obs.warn("intraday_4b_anahtar_yok", ticker=tk, plan_id=plan_id,
+                     detail="ALPACA_PAPER_KEY yok — 4b gönderimi atlandı (yalnız gözlem)")
+            return
+        # (c) ÇİFT-GÖNDERİM YASAK — Alpaca-tarafı kontrol (kitaptaki `alpaca_submitted` dedup'ı tek
+        # kapının içinde AYRICA koşar; burası restart/yarış pencerelerine karşı ikinci kemerdir).
+        acik = alpaca.orders(status="open", limit=100, nested=True)
+        if not alpaca.transport()["ok"]:
+            obs.warn("intraday_4b_dedup_olculemedi", ticker=tk, plan_id=plan_id,
+                     detail="açık emir listesi okunamadı — çift-gönderim DIŞLANAMADI, gönderim "
+                            "atlandı (fail-closed; bir sonraki tetik olayı yeniden dener)")
+            return
+        if any(str(o.get("client_order_id") or "") == str(plan_id) for o in (acik or [])):
+            obs.log("intraday_4b_dedup_emir", ticker=tk, plan_id=plan_id,
+                    detail="aynı coid'li emir Alpaca'da zaten canlı — ikinci gönderim yok (idempotent)")
+            return
+        apos = alpaca.positions()
+        if not alpaca.transport()["ok"]:
+            obs.warn("intraday_4b_dedup_olculemedi", ticker=tk, plan_id=plan_id,
+                     detail="pozisyon listesi okunamadı — çift-gönderim DIŞLANAMADI, gönderim "
+                            "atlandı (fail-closed)")
+            return
+        if any(str(p.get("symbol") or "").upper() == tk for p in (apos or [])):
+            obs.log("intraday_4b_dedup_pozisyon", ticker=tk, plan_id=plan_id,
+                    detail="sembolde Alpaca pozisyonu zaten var — ikinci giriş yok (idempotent)")
+            return
+        res = _loop.mirror_submit_ve_kalicilastir(barclock.session_date(as_of),
+                                                  source="intraday_4b", sadece_plan_id=plan_id)
+        r0 = (res.get("results") or [{}])[0]
+        if res.get("ok") and res.get("submitted"):
+            self.submitted_4b += 1
+            law = r0.get("law") or {}
+            # (e) "would_submit yerine submitted OLAYI": gölge DEFTERİ olduğu gibi kaldı (silahlı
+            # kolun şeması/kayıt sayımı kill#3 gereği dokunulmaz); İCRANIN kaydı bu olay + tek
+            # kapının E2 satırıdır (motor="ayna", kaynak="intraday_4b").
+            obs.log("intraday_4b_submitted", ticker=tk, plan_id=plan_id, coid=plan_id,
+                    qty=r0.get("qty"), limit=law.get("limit"), mode=law.get("mode"),
+                    tif=law.get("tif"), stop=plan.get("stop"), target=plan.get("profit_target"),
+                    detail="Faz 4b: tetik kesişimi + INTRADAY_ARM + icra-uygun plan → GERÇEK "
+                           "bracket gönderildi (gölge kaydı ayrıca duruyor)")
+        else:
+            obs.warn("intraday_4b_gonderilemedi", ticker=tk, plan_id=plan_id,
+                     detail=str(res.get("detail") or r0.get("detail") or "?")[:200])
 
 
 _CONSUMER: IntradayConsumer | None = None
@@ -284,7 +405,7 @@ def health() -> dict:
         return {"ok": None, "enabled": ENABLED, "armed": _health.intraday_armed(),
                 "events_handled": 0, "decisions_written": 0, "watched": 0, "watched_planned": 0,
                 "decisions_armed": 0, "decisions_planned": 0, "shadow_written": 0,
-                "shadow_planli_written": 0,
+                "shadow_planli_written": 0, "submitted_4b": 0,
                 "skipped": {}, "last_decision_at": None, "last_error": None, "mode": "observe"}
     c = _CONSUMER
     return {"ok": True, "enabled": ENABLED, "armed": _health.intraday_armed(),
@@ -292,6 +413,7 @@ def health() -> dict:
             "watched": c.watched, "watched_planned": c.watched_planned,
             "decisions_armed": c.decisions_armed, "decisions_planned": c.decisions_planned,
             "shadow_written": c.shadow_written,
-            "shadow_planli_written": c.shadow_planli_written, "skipped": dict(c.skipped),
+            "shadow_planli_written": c.shadow_planli_written,
+            "submitted_4b": c.submitted_4b, "skipped": dict(c.skipped),
             "last_decision_at": c.last_decision_at, "last_error": c.last_error or None,
             "mode": "arm" if _health.intraday_armed() else "observe"}

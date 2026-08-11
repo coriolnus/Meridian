@@ -57,9 +57,11 @@ ENGINE_IMPLEMENTED = {
     "vcp-screener", "pullback-screener", "stockbee-momentum-burst-screener", "data-quality-checker",  # P2
     "stockbee-episodic-pivot-analyzer",
     # 2026-07-24: iki declared-only screener artık motor-uygulandı → scan_all'da HER ticker'da koşar,
-    # karşı-olgusal defterde per-skill avg_r ölçülür (öğrenme artık kör değil), ama ARMED_SETUPS'a
-    # eklenmediği için canlı deftere sıfır risk. exhaustion-hammer KEYLESS (anında ölçer); pead FMP-kapılı
-    # ama earnings.csv anahtarsız Nasdaq'tan dolduğu için ölçer (veri yoksa dürüstçe None).
+    # karşı-olgusal defterde per-skill avg_r ölçülür (öğrenme artık kör değil). O gün ikisi de
+    # ARMED_SETUPS dışıydı (canlı deftere sıfır risk); 2026-08-11 operatör onayıyla exhaustion_hammer
+    # SİLAHLANDI (strategy.ARMED_SETUPS — gerekçe orada), pead DORMANT kalır. exhaustion-hammer KEYLESS
+    # (anında ölçer); pead FMP-kapılı ama earnings.csv anahtarsız Nasdaq'tan dolduğu için ölçer
+    # (veri yoksa dürüstçe None).
     "stockbee-exhaustion-hammer-screener", "pead-screener",
     # NOT eklendi: "canslim-screener" — evaluate_canslim scan_all'da güvenli no-op olarak KOŞAR ama
     # `earnings.canslim_fundamentals` + FMP nokta-zamanlı temel önbelleği (Faz C) inşa edilene kadar DAİMA

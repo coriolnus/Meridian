@@ -4073,39 +4073,18 @@ def api_alpaca_submit_armed(request: Request):
     döngünün kullandığı `loop.mirror_submit_armed` fonksiyonunu çağırır — ikinci bir emir yolu
     kalmadı.
 
-    KALICILIK: fonksiyon `meta`yı yerinde değiştirir; burada portfolio.json'a TAM BELGE yazımı
-    YASAK (canlı worker'ın o an güncellediği armed setini ezerdi). Yalnız iki alan KİLİT ALTINDA
-    yamalanır: gönderilen kimlikler dedup kümesine EKLENİR, düşen (veto/ret) planlar armed'dan
-    kimlikle ÇIKARILIR."""
+    KALICILIK ARTIK TEK YERDE (İŞ-2-EOD, 2026-08-11): gönderim + kilit-altı yama gövdesi
+    `loop.mirror_submit_ve_kalicilastir`a taşındı — onay anı (operator_onay_ver), intraday 4b ve bu
+    uç AYNI kalıcılaştırma yasasını paylaşır (tam-belge yazımı YASAK; gönderilenler dedup kümesine
+    EKLENİR, düşen veto/ret planları armed'dan kimlikle ÇIKARILIR, SB-1 makbuzu basılır — 08-06
+    AMGN pano/nabız vakasının kuralları aynen o gövdede). Davranış birebir; buradaki tek fark
+    çağrı olması (C8'in taşıma deseninin aynısı)."""
     _auth(request)
     from . import loop as _loop
     if health.halted():
         return {"ok": False, "detail": "HALT aktif — emir gönderilmez"}
-    meta = store.read_json("portfolio.json", {}) or {}
-    # BOŞ TARİH YASAK: E2 penceresi `date >= cutoff` ile süzüyor — boş dize her pencereden SESSİZCE
-    # düşerdi, yani düğmeden geçen gönderim slipaj özetinde hiç görünmezdi. Nabızda işlenmiş bar
-    # yoksa gönderimin GERÇEK günü yazılır (uydurma değil: satırın tarihi eylemin tarihidir).
-    import datetime as _dt
-    dstr = str(meta.get("last_date") or _dt.date.today().isoformat())
-    res = _loop.mirror_submit_armed(meta, dstr, source="pano")
+    res = _loop.mirror_submit_ve_kalicilastir(source="pano")
     gonderilen, dusen = set(res.get("submitted_ids") or []), set(res.get("dropped_ids") or [])
-    if gonderilen or dusen:
-        def _yama(doc):
-            if not isinstance(doc, dict):
-                return False
-            doc["alpaca_submitted"] = list(dict.fromkeys(
-                list(doc.get("alpaca_submitted") or []) + sorted(gonderilen)))[-200:]
-            doc["armed"] = [p for p in (doc.get("armed") or []) if p.get("id") not in dusen]
-            doc["broker_rejected"] = meta.get("broker_rejected", doc.get("broker_rejected", []))
-            # SB-1 PANO BACAĞI (2026-08-09): `mirror_submit_armed` `meta["size_law"]` makbuzunu plan
-            # başına ÜRETİR (loop.py:592) ama bu uç onu yalnız `alpaca_submitted`/`armed`/`broker_rejected`
-            # ile yamalıyordu — makbuz restart'ı ATLAYAMIYORDU (döngü bacağı `_save_broker`ın 14.
-            # anahtarıyla zaten kalıcı; pano bacağının eşdeğeri eksikti — 08-06 AMGN pano/nabız vakası).
-            # `broker_rejected` ile AYNI kilit-altı desen: meta'nın makbuzu diskteki belgeye basılır,
-            # meta boşsa diskteki mevcut makbuz KORUNUR (tam-belge yazımı YASAK, yabancı anahtarlar yaşar).
-            doc["size_law"] = meta.get("size_law", doc.get("size_law", {}))
-            return True
-        store.update_json("portfolio.json", _yama, {})
     obs.log("alpaca_submit_armed_endpoint", ok=res.get("ok"), submitted=res.get("submitted"),
             dropped=len(dusen), detail=str(res.get("detail", ""))[:160])
     # HALT dalı YUKARIDA döndü (zarf düşmez). Burada da yalnız defter GERÇEKTEN kıpırdadıysa
@@ -4905,8 +4884,15 @@ def api_plan_onayla(plan_id: str, request: Request):
 
     SÖZLEŞME: onay bir OLAYdır — `gate_verdict` GERİYE DÖNÜK DEĞİŞMEZ. NO_GO ASLA onaylanmaz;
     seansı geçmiş plan onaylanmaz; HALT'ta onaylanmaz. Reddin sebebi 409 gövdesinde metin olarak
-    döner (sessiz "olmadı" yok). Bu uç EMİR GÖNDERMEZ: plan silahlı kuyruğa girer, aynaya gönderim
-    mevcut TEK kapıdan (`/api/alpaca/submit_armed` → `loop.mirror_submit_armed`) geçer."""
+    döner (sessiz "olmadı" yok).
+
+    ONAY = İCRA YETKİSİ (İŞ-2-EOD/İŞ-3a, 2026-08-11 — tarihçe-koru: v190 sözleşmesi "bu uç emir
+    göndermez" idi ve P-2026-08-07-VLO fiyaskosu o boşluğu kanıtladı): onay artık AYNI TEK KAPIDAN
+    (`loop.mirror_submit_ve_kalicilastir` → `mirror_submit_armed`) onay ANINDA aynaya gönderimi de
+    dener — ikinci bir emir gövdesi YOK, yasa yine loop'ta. DÜRÜSTLÜK SÖZLEŞMESİ: yanıtın
+    `icra_yolu` alanı gönderimin sonucunu — ya da icra yolunun yokluğunu ("onay iç-deftere işler,
+    broker'a GİTMEZ: <eksik>") — AÇIKÇA söyler; onay REDDEDİLMEZ (operatör bilerek iç-defter
+    denemesi yapabilir), ama sessizlik YASAK."""
     _auth(request)
     from . import loop as _loop
     res = _loop.operator_onay_ver(plan_id, kanal="pano")
