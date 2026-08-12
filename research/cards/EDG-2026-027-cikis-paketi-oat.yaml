@@ -41,7 +41,22 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-027-B-scaleout, pending-027-B-chandelier, pending-027-C-scaleout, pending-027-C-chandelier]}
 
-status: measured_partial   # 2026-08-12 Rol-1 — FAZ-1 (B-taban) ölçüldü + hüküm; C hücreleri (F2) koşuyor.
+status: measured   # 2026-08-12 Rol-1 — DÖRT hücre tamam (F1+F2) + nihai hüküm.
+
+verdict_final:   # Rol-1 nihai hükmü (F2 sonrası) — ölçüm ajanları karta dokunmadı.
+  scale_out: >
+    HER İKİ TABANDA ZARARLI: B'de eşli −0.141R CI[−0.264,−0.045]; C'de −0.123R CI[−0.204,−0.054]
+    (tam-defter C'de +9.869→−14.263$ — 24k$ yıkım). Kök MEKANİK (bankalama-barı trail=entry_fill,
+    §2-13) her iki dünyada aynı imzayla (C stop_gap 60→91). ALET KAPALI; kavram sorusu EDG-029'un
+    (trail-düzeltmeli ölçüm) — 029 CI-pozitif çıkarsa motor-düzeltme kartı pencere-sonrası açılır.
+  chandelier: >
+    B'de ETKİSİZ (CI 0-içi), C'de SINIRDA-NEGATİF (eşli −0.0071R, CI [−0.0160, −0.0003] — üst uç
+    sıfırın altında; tam-defter −1.063$). Hiçbir tabanda kazanç kanıtı yok → ALET KAPALI KALIR
+    (lookback-trail bu motor/param kombinasyonunda değer üretmiyor; mevcut ATR-trail yeterli).
+  pencere_ozeti: "İki çıkış kolu da benimsenMEZ; çıkış-kanaması dosyasında kalan tek umut 029 (düzeltilmiş scale-out) + gelecek turda time_stop/breakeven kolları (bu kartın dışında)."
+  artefakt_f2: "sonuc_C_hucreler.json + hücre çıktıları; şasi sha-birebir, C↔C öz-eşleme [0,0], smoke 026-özdeş."
+
+status_eski_f1: measured_partial   # F1 hükmü verdict_faz1'de korunuyor.
 
 verdict_faz1:   # Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
   B_scaleout: >
