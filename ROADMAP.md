@@ -872,6 +872,26 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       (ölü knobu diriltmez ama iki tercihi ayırır) · not: 035 slot15 nokta-farkı (+354$, dd 0.1179)
       tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.*
 
+21. **SPRINT YETİM-RESTART'I KALICI OLARAK BLOKLU (canlı ölçüm 2026-08-13, gece penceresi)** — v235'in
+    yetim-restart mekanizması ÖLÜ: son `sprint_cadence_skip` satırı `sebep="mesgul:canli_arama"`,
+    `yetim=true`, `gecen_gun=5`, `arama_bayrak_yasi_sa=0.17`, `arama_bayat=false`. Yani canlı arama
+    bayrağı sürekli tazeleniyor (hermes ~5 dk'da bir çağrı yapıyor) → "meşgul" kontrolü ASLA
+    bayatlamıyor → yetim sprint gece penceresinde de yeniden başlamıyor. Kusur mantıksal: **yetim
+    restart'ı "meşgul" kapısına tabi olmamalı** (yetim = zaten ÖLÜ süreç; onu diriltmek canlı aramayla
+    çakışmaz — ayrı süreçler). Kadans-atlama doğru, yetim-restart yanlış yerde ona bağlanmış.
+    DÜZELTME: yetim dalını meşgul-kontrolünden ayır + test (yetim ∧ meşgul → RESTART; sağlıklı ∧ meşgul
+    → skip). *boyut: S · öncelik: yüksek (öğrenme sprintі 5 gündür durmuş).*
+
+22. **GEMİNİ MODEL ADI: kod doğru, ÇAĞRI eski adı kullanıyor (canlı ölçüm 2026-08-13)** —
+    `hermes.GEMINI_DEFAULT_MODEL = "gemini-pro-latest"` (v235 alias düzeltmesi yerinde) AMA bugünkü
+    20 `agent_call` olayında `model="gemini-3.5-flash"`. Yani varsayılan devreye girmiyor: model adı
+    başka bir yerden (config/integrations kaydı ya da çağrı-yeri parametresi) geliyor ve ölü-model
+    migrasyonu o yolu kapsamıyor. İYİ HABER: `nous` artık ayrı modele gidiyor (`tencent/hy3:free`,
+    20 çağrı) → `brain_chain_distinct` ihlalinin YARISI kendiliğinden kapanmış olabilir (doğrula).
+    DÜZELTME: model adının GERÇEK kaynağını izle (agent_call'ı yayan çağrı yeri), migrasyonu oraya
+    da bağla + çağrı-anı ölü-model kontrolü. *boyut: S-M · öncelik: yüksek (ölü model = 404 riski,
+    v235'in kapattığı sanılan sınıf).*
+
 19. **TOHUM YENİLEME — defter ESKİ dünyadan (operatör bulgusu 2026-08-13; kart EDG-2026-036)** —
     canlı DB kırılımı: `replay_seed` n=95 (sv=4, ESKİ paket: slot5·1,0R·mb dormant) · `live_paper`
     n=2 (+277,99$). Yani öğrenme/kalibrasyon/DSR-PBO/karne'yi besleyen soğuk-başlangıç tohumu
