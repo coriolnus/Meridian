@@ -1,0 +1,54 @@
+card_id: EDG-2026-028
+family: isi_kosul_ayari
+thesis: >
+  Portföy ısısı tek sabit (10R tavan — operatör ön-kararı 2026-08-12 'ISI 10R kalsın') yerine piyasa
+  koşuluna duyarlı olmalı: kancalar hazır (exposure_score günlük; params_by_regime tabloları BOŞ;
+  de-risk rampası öz-performans ekseni — ÇARPIMSAL birleşir). TEZ: tavanın ALTINDA koşul-duyarlı kısma,
+  dd'yi düşürürken P&L'i bozmaz. İki yöntem (operatör penceresi 2026-08-12; skor-lineer ELENDİ):
+  (Y1) rejim-haritalı ısı 10/6/4/2 R (trend_up/chop/high_vol/trend_down); (Y2) vol-hedefleme
+  ısı = 10R × hedef-vol/gerçekleşen-vol, bant [2R,10R], hedef-vol = TABAN koşumunun gerçekleşen-vol
+  MEDYANI (veri-türetimli — elle sayı uydurulmaz). UYGULAMA (operatör): CI-KAZANAN OTOMATİK —
+  donuk eşiği geçen yöntem params_by_regime/goal kancasına otomatik işlenir (risk-AZALTAN sınıf,
+  politika önerisi §2-10 ile tutarlı), rapor operatöre düşer.
+
+evidence_refs:
+  - "operatör girdileri 2026-08-12 penceresi: {rejim-haritalı 10/6/4/2, vol-hedef medyan} · CI-kazanan-otomatik"
+  - "operatör ön-kararı: 10R TAVAN sabit — ayar yalnız tavan altında kısar"
+  - "kancalar: regime.exposure_score (günlük, bugün trend_up/60) · params_by_regime {} boş · EDG-022 rejim-koşullu bulgular"
+  - "taban dünya: C (15/36 rampa + slot20 + 0.5R) — EDG-026 koşumu"
+
+universe: "EDG-023/026 evreni (251 sembol, 2022-01→2026-07); motor YAMASIZ; rampa 15/36 monkeypatch (023 beyanlı deseni); ısı-modülasyonu ölçüm-içi enjeksiyon/monkeypatch BEYANLI (eff_max_open türetimine koşul-çarpanı)"
+
+features_asof: >
+  ÜÇ koşum: (T) TABAN = C dünyası sabit-10R (EDG-026 çıktısı HAZIR — yeniden koşulmaz, sha-doğrulanır);
+  (Y1) rejim-haritalı: seans rejimi r → ısı_tavanı = {trend_up:10, chop:6, high_vol:4, trend_down:2}[r],
+  slot-eşdeğeri = ısı/0.5R (20/12/8/4 pozisyon); (Y2) vol-hedefleme: gerçekleşen-vol = C-taban günlük
+  getiri serisinin 20g kayan std (yıllıklaştırılmış); hedef = o serinin MEDYANI; ısı_t = clip(10R ×
+  hedef/vol_t, 2R, 10R). Rejim etiketi ve vol serisi İLERİ-BAKIŞSIZ (o güne kadar veri). Metrikler:
+  net P&L, max-dd kanonik, sharpe, işlem sayısı, işlem-başına R, rejim-kırılımlı doluluk/ısı gerçekleşen.
+
+parameter_grid:
+  yontem: [rejim_haritali, vol_hedefleme]   # K += 2 (skor-lineer operatörce elendi — ölçülmedi)
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  Yöntem-vs-taban, eşlenik ay-kümeli bootstrap %95 CI. OTOMATİK-BENİMSEME EŞİĞİ (donuk): (i) max-dd
+  tabana göre DÜŞÜYOR (nokta) VE (ii) net P&L farkının CI'sı 0'ı İÇERİYOR-ya-da-ÜSTÜNDE (kâr CI ile
+  BOZULMUYOR) VE (iii) işlem sayısı tabanın %60'ının altına İNMİYOR (öğrenme debisi korunur). İKİSİ de
+  geçerse dd-düşüşü BÜYÜK olan kazanır; kazanan params_by_regime/goal kancasına OTOMATİK işlenir
+  (kod turu + operatör raporu). Hiçbiri geçmezse sabit-10R kalır (bu da hüküm).
+
+kill_criteria:
+  - "taban (C) EDG-026'dan sha-doğrulanamazsa ya da 026 şasi-geçersizse → ölçüm bekler (C önkoşul)"
+  - "Y2'de vol-serisi ileri-bakış sızıntısı tespit edilirse (medyan tüm-dönemden ALINAMAZ — yalnız
+     hedef sabitken; kontrol: hedef T-taban serisinin medyanı OLARAK DONUK, seans-içi yeniden hesaplanmaz;
+     yine de kayan-vol her seansta yalnız geçmişten) → o hücre geçersiz, onarım turu"
+  - "her iki yöntemde de (iii) işlem-debisi %60 tabanının altına düşerse otomatik-benimseme YAPILMAZ —
+     sayılar pencereye gider (debi öğrenme yakıtı; operatör görmeli)"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-028-rejim-haritali, pending-028-vol-hedef]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili; ölçüm 026'nın C-çıktısına bağımlı (önkoşul);
+#   otomatik-benimseme eşiği ölçümden ÖNCE donduruldu (kontrol eşikte). Hedef-vol VERİ-TÜRETİMLİ
+#   (T-taban medyanı) — elle sayı yok. 10R tavan operatör ön-kararı: hiçbir yöntem tavanı AŞAMAZ.
