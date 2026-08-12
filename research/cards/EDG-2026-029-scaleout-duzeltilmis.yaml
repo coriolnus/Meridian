@@ -1,0 +1,36 @@
+card_id: EDG-2026-029
+family: scaleout_duzeltilmis
+thesis: >
+  EDG-027/H1 scale-out'u CI-negatif ölçtü AMA kökü MEKANİKTİ (§2-13): bankalama barında trail=entry_fill
+  kurulunca (entry_fill>open) koşucu AYNI BARDA ~0.7R stop_gap'e kesiliyor — gap-kazananlar budanıyor
+  (ENPH +12.3R→0.72R). TEZ: düzeltilmiş davranışla (bankalama barında trail entry_fill'e ÇEKİLMEZ; trail
+  güncellemesi bir SONRAKİ bardan) scale-out ½@1.5R kavramının gerçek etkisi ölçülür. Düzeltme ölçüm-içi
+  monkeypatch (BEYANLI — motor dosyası değişmez); kavram CI-pozitif çıkarsa motor-düzeltme kartı + kod turu
+  pencere-sonrası açılır.
+
+evidence_refs:
+  - "EDG-2026-027 verdict_faz1.B_scaleout: mekanik kök + scaled 73'ün 18'i bars_held=0 kanıtı"
+  - "ROADMAP §2-13: düzeltme adayı tanımı (sonraki-bar trail)"
+
+universe: "023/026 evreni; şasi 027-F1'in olcum.py'si (eşli-kıyas makinesi + öz-sınamalar) — yalnız trail-düzeltme monkeypatch'i eklenir"
+
+features_asof: >
+  İKİ hücre: (F1x) B + scale-out(0.5@1.5R) + TRAIL-DÜZELTMESİ · (F2x) C + scale-out(0.5@1.5R) +
+  TRAIL-DÜZELTMESİ. Kıyas kendi tabanlarına (B: 023-varyant; C: 026) — (date,ticker) EŞLİ R-farkı birincil,
+  %95 CI (seed 20260812). Ayrıca H1(düzeltmesiz)-vs-F1x farkı raporlanır (düzeltmenin kendi etkisi).
+
+parameter_grid:
+  hucre: [B_scaleout_fix, C_scaleout_fix]   # K += 2
+
+cost_model: pessimistic_band_v2
+
+success_metric: "Hücre-başına eşli ort-R farkı CI; CI>0 → 'kavram kazanan — motor-düzeltme kartı önerilir' (pencereye); CI 0-içi/altı → scale-out kavramen de etkisiz/zararlı, dosya kapanır."
+
+kill_criteria:
+  - "eşli-ortak <60 → olculemedi"
+  - "şasi bütünlüğü bozuksa hücre geçersiz"
+  - "monkeypatch'in DAVRANIŞ tanımı öz-sınamayla kanıtlanamazsa (bankalama-barında trail değişmiyor + sonraki bar güncelleniyor) → koşulmaz, araç turu"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-029-B-fix, pending-029-C-fix]}
+
+status: registered   # 2026-08-12 Rol-1 — §2-13'ün ölçüm yolu; eşikler donuk.

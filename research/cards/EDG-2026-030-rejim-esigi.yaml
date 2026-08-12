@@ -1,0 +1,30 @@
+card_id: EDG-2026-030
+family: rejim_esigi
+thesis: >
+  Seansların %40.8'i rejim kapısıyla TÜMDEN kapalı (EDG-022: rejim_kapali — exposure_budget=0); eşik
+  regime.min_exposure_score=40 HİÇ ölçülmedi. Debi kaldıraçları (rampa/slot) açıldıktan sonra kalan en
+  büyük karartma bu. TEZ: eşiği düşürmenin (40→30, 40→20) işlem debisi + P&L + dd etkisi C-dünyasında
+  ölçülür. Kötü-rejim işlemi eklemek P&L'i CI ile bozuyorsa eşik yerinde doğrulanır (o da hüküm).
+
+evidence_refs:
+  - "EDG-022: rejim_kapali %40.8 (468/1147 seans)"
+  - "goal: regime.min_exposure_score 40 (ölçülmemiş seçim)"
+
+universe: "023/026 evreni; C-şasi (026 olcum.py düzeni); eşik param-enjeksiyonu (goal params — motor yamasız)"
+
+features_asof: "İKİ hücre: esik_30, esik_20 — C-tabana (026 hazır) kıyas; eşlenik ay-kümeli bootstrap CI; metrikler: işlem n, net P&L, max-dd, sharpe, rejim-kırılımlı eklenen-işlem R'si (eklenenlerin çoğu düşük-skor rejimlerden gelecek — ayrı raporlanır)"
+
+parameter_grid:
+  esik: [30, 20]   # K += 2
+
+cost_model: pessimistic_band_v2
+
+success_metric: "Hücre-vs-C: işlem artışı CI + EKLENEN işlemlerin ort-R CI'sı. Eklenen-R CI-0-üstü VE dd C×1.5 altında → 'gevşetme adayı' pencereye; eklenen-R CI-negatif → eşik 40 kanıtla doğrulandı (kapanış)."
+
+kill_criteria:
+  - "eklenen işlem <30/hücre → olculemedi"
+  - "şasi bütünlüğü bozuksa geçersiz"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-030-esik30, pending-030-esik20]}
+
+status: registered   # 2026-08-12 Rol-1; eşikler donuk.

@@ -1,0 +1,31 @@
+card_id: EDG-2026-031
+family: turnover_agirlik
+thesis: >
+  Turnover skor-bileşeni EDG-016'yla ölçülüp (aylık +0.55% net, artık-IC 0.028) kablolandı (5dfca07) ama
+  ağırlığı 0'da bekliyor — hermes arama uzayında olsa da hiç denenmedi. TEZ: küçük pozitif ağırlıkların
+  (w_turnover 0.05, 0.10) C-dünyasında bileşik-skor üzerinden işlem seçilimini ve P&L'i iyileştirip
+  iyileştirmediği replay'de ölçülür. PIT disiplini: turnover EDG-016'nın EDGAR filed-tarihli verisinden
+  (indicators.turnover21 mevcut kablo — yeni tanım yok).
+
+evidence_refs:
+  - "EDG-2026-016 SUCCESS: @20 net +0.55%, q5 monoton; kablo indicators.py:156 + strategy.py:452"
+  - "bounds: entry.w_turnover {0–0.40, step 0.05} — arama uzayında, hiç denenmedi"
+
+universe: "023/026 evreni; C-şasi; w_turnover param-enjeksiyonu (goal params — motor yamasız; FAIL-OPEN None-davranışı mevcut kabloda)"
+
+features_asof: "İKİ hücre: w=0.05, w=0.10 — C-tabana kıyas; metrikler: işlem n (seçilim değişir — eşli değil TAM-defter kıyas + seçilim-farkı betimi), net P&L, max-dd, sharpe, turnover-kaynak sayacı (ölçülemeyen payda)"
+
+parameter_grid:
+  w_turnover: [0.05, 0.10]   # K += 2
+
+cost_model: pessimistic_band_v2
+
+success_metric: "Hücre-vs-C: net P&L + sharpe farkı (ay-kümeli CI). CI-pozitif → 'ağırlık adayı' pencereye (OOS-kapılı benimseme; elle kalıcı ağırlık YOK — hermes arama uzayına kanıt olarak da işlenir); CI-negatif/0-içi → w=0 doğrulandı."
+
+kill_criteria:
+  - "turnover-kaynak payda %50'nin altındaysa (çok sembalde ölçülemiyor) → olculemedi"
+  - "şasi bütünlüğü bozuksa geçersiz"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-031-w005, pending-031-w010]}
+
+status: registered   # 2026-08-12 Rol-1; eşikler donuk.
