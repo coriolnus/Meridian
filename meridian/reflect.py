@@ -1221,8 +1221,10 @@ def _havuz_tavani(tavan: int = 4) -> int:
     "-2" tam bu yüzden var: bir çekirdek uvicorn'a, bir çekirdek işlem döngüsü/hermes ipliğine
     kalmalı. ESKİ HÂLİ `max(2, ...)` İDİ ve tabanı 2'ye ÇİVİLİYORDU: 2 çekirdekli bir makinede
     "cpu-2 = 0" hesabını EZİP yine iki işçi açıyordu, yani tavan orada hiç yoktu. Taban 1'e indi.
-    Arama SONUÇLARI değişmez — işçi sayısı yalnız duvar-saatini belirler (`ex.map` sırayı korur,
-    her sonda bağımsız ve `_PROBE_CACHE` anahtarlı)."""
+    Arama SONUÇLARI değişmez — işçi sayısı yalnız duvar-saatini belirler (sonuçlar `_havuz_sonuclari`
+    üzerinden tamamlanma sırasıyla gelir ama her sonda bağımsız ve `_PROBE_CACHE` ANAHTARLIDIR;
+    determinizm sıraya değil anahtara dayanır — v236 atalet bekçisi de bu yüzden sırayı korumak
+    zorunda değildir)."""
     return max(1, min(tavan, (os.cpu_count() or 4) - 2))
 
 
@@ -1256,11 +1258,71 @@ def _pool_probe_job(args: dict) -> tuple:
     return args["key"], wf
 
 
+# ---- HAVUZ TOPLAM-ATALET TAVANI (v236, 2026-08-12 asılı-arama vakası) ---------------------------
+# ÖLÇÜLEN ARIZA (sprint.py:404 bloğunun kök tarafı): canlı arama ProcessPoolExecutor açar ve
+# `ex.map` sonuç-beklemesi SINIRSIZDIR — ölen/kilitlenen bir işçi süreci ebeveyn iş parçacığını
+# sonsuza dek bekletir; SEARCH_PROGRESS.running=True donar ve öğrenme zinciri kilitlenir (canlıda
+# 4+ gün ölçüldü; sprint'in bayatlık yasası v235 semptomu 6 saatte söker, bu tavan KAYNAĞI onarır:
+# asılı bekleyiş kendini kurtarır, iş parçacığı geri gelir).
+#
+# YASA: tavan FUTURE-BAŞINA DEĞİL, TOPLAM-ATALETTİR — "son biten işten beri HAVUZ_ATALET_SN boyunca
+# HİÇBİR iş bitmediyse havuz ölü sayılır". İlerleyen uzun bir arama (ör. 40 sondalı gece koşusu,
+# saatler sürer) ASLA kesilmez: her biten iş sayacı sıfırlar.
+#
+# EŞİK TÜRETİMDİR, UYDURMA DEĞİL: bir havuz işi TEK walk-forward'dır ve incumbent-walk ~90 sn
+# ÖLÇÜLÜDÜR (sprint.py:422 bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
+# işçi 20 kata kadar yavaşlasa bile (soğuk önbellek + nice(15) + dolu makine) tavana çarpmaz;
+# çarpan havuz, 30 dakikadır TEK iş bitirememiş havuzdur. 30 dk << bayatlık eşiği (6 sa): kurtarma
+# bayrak bayatlamadan, aynı gece penceresi içinde olur.
+HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN", "1800"))
+
+
+class _HavuzAtaleti(RuntimeError):
+    """Havuz toplam-atalet tavanına çarptı: son bitenden beri HAVUZ_ATALET_SN geçti, hiçbir iş bitmedi."""
+    def __init__(self, bekleyen: int, biten: int):
+        super().__init__(f"havuz {HAVUZ_ATALET_SN:.0f} sn'dir tek iş bitirmedi "
+                         f"(biten {biten}, bekleyen {bekleyen})")
+        self.bekleyen, self.biten = bekleyen, biten
+
+
+def _havuz_sonuclari(ex, jobs: list[dict]):
+    """`ex.map` YERİNE toplam-atalet bekçili sonuç akışı. Tamamlanma SIRASI korunmaz ve bu
+    ÖNEMSİZDİR: iki tüketici de sonucu ANAHTARLI önbelleğe yazar (_PROBE_CACHE/_INC_CACHE —
+    `_havuz_tavani` docstring'indeki determinizm beyanı anahtara dayanır, sıraya değil). Bir işçi
+    istisnası `f.result()` ile aynen yükselir (ex.map ile aynı sözleşme)."""
+    import concurrent.futures as _cf
+    kalan = {ex.submit(_pool_probe_job, j) for j in jobs}
+    biten = 0
+    while kalan:
+        done, kalan = _cf.wait(kalan, timeout=HAVUZ_ATALET_SN, return_when=_cf.FIRST_COMPLETED)
+        if not done:                       # tavan penceresi boyunca SIFIR ilerleme → havuz ölü
+            raise _HavuzAtaleti(bekleyen=len(kalan), biten=biten)
+        for f in done:
+            biten += 1
+            yield f.result()
+
+
+def _havuzu_oldur(ex) -> None:
+    """Atalete çarpan (ya da terk edilen) havuzu BLOKE ETMEDEN kapat: bekleyenler iptal, işçi
+    süreçleri öldürülür. Normal `shutdown(wait=True)` / `with`-çıkışı burada KULLANILAMAZ —
+    kilitlenmiş işçinin join'i sonsuza dek bekler, yani kaçılan arızanın kendisi. `_processes`
+    özel API'dir; erişilemezse (sürüm değişimi) kalan tek bedel nice(15)'li yetim bir süreçtir
+    ve zaman-aşımı olayı zaten beyan edilmiştir. İşçiler yalnız HESAPLAR (donmuş bar önbelleği,
+    yazım ebeveynde) — öldürmek hiçbir state yazımını yarıda kesmez."""
+    ex.shutdown(wait=False, cancel_futures=True)
+    try:
+        for p in list(getattr(ex, "_processes", {}).values()):
+            p.terminate()
+    except Exception:  # sessiz-yutma: işçi süreçleri öldürülemedi — havuz yine kapalı (wait=False) ve arama sıralı yolda devam ediyor; bedel nice'lenmiş yetim süreç, zaman-aşımı olayı bunu zaten beyan etti
+        pass
+
+
 def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
     """Sonda walk-forward'larını havuzda ÖNCEDEN hesaplayıp _PROBE_CACHE'e doldurur; ana döngü
     değişmeden (deterministik sıra + K-ceza + erken-en-iyi seçimi) önbellekten tüketir."""
     if os.environ.get("MERIDIAN_PARALLEL_PROBES") != "1" or len(probes) < 2:
         return
+    ex = None
     try:
         from concurrent.futures import ProcessPoolExecutor
         import multiprocessing as mp
@@ -1278,14 +1340,29 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
             return
         workers = _havuz_tavani(4)          # kibarlık + tavan gerekçesi: `_havuz_tavani` docstring'i
         ctx = mp.get_context("spawn")
-        with ProcessPoolExecutor(max_workers=workers, mp_context=ctx,
-                                 initializer=_pool_worker_init) as ex:
-            for key, wf in ex.map(_pool_probe_job, jobs):
-                _PROBE_CACHE[key] = wf
+        # `with` BİLEREK YOK (v236): with-çıkışı `shutdown(wait=True)`dır ve kilitlenmiş bir işçide
+        # sonsuza dek bekler — asılı-arama vakasının mekanizmasının ta kendisi. Kapatma üç yolda da
+        # AÇIK: normal (bekle — işler bitti, join anlık), atalet (öldür), istisna (öldür + yeniden fırlat).
+        ex = ProcessPoolExecutor(max_workers=workers, mp_context=ctx, initializer=_pool_worker_init)
+        for key, wf in _havuz_sonuclari(ex, jobs):
+            _PROBE_CACHE[key] = wf
+        ex.shutdown()
         _probe_disk_save()
         from . import obs as _obs
         _obs.log("parallel_probes_prefilled", n=len(jobs), workers=workers)
+    except _HavuzAtaleti as z:
+        _havuzu_oldur(ex)
+        _probe_disk_save()                  # BİTEN sondalar kaybolmaz — kısmi ilerleme diske iner
+        from . import obs as _obs
+        _obs.warn("arama_havuzu_zaman_asimi", yer="probe_prefill", atalet_sn=HAVUZ_ATALET_SN,
+                  biten=z.biten, bekleyen=z.bekleyen,
+                  detail="havuz toplam-atalet tavanına çarptı (son bitenden beri hiçbir iş "
+                         "bitmedi) — işçiler öldürüldü, kalan sondalar ana döngüde SIRALI "
+                         "hesaplanır; arama ölmez, bayrağı da arama sonu / reflect_once finally "
+                         "ağı temizler (asılı bekleyiş artık kendini kurtarıyor)")
     except Exception as e:
+        if ex is not None:
+            _havuzu_oldur(ex)               # sağlıklı işçiler cancel+terminate ile bloke etmeden iner
         from . import obs as _obs
         _obs.warn("parallel_probes_failed", error=f"{type(e).__name__}: {e}",
                   detail="sıralı yola düşüldü — davranış birebir")
@@ -1312,6 +1389,7 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
         (missing.append((key, er)) if key not in _INC_CACHE else None)
         cached += 1 if key in _INC_CACHE else 0
     if missing and os.environ.get("MERIDIAN_PARALLEL_PROBES") == "1" and len(missing) > 1:
+        ex = None
         try:
             from concurrent.futures import ProcessPoolExecutor
             import multiprocessing as mp
@@ -1322,13 +1400,28 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             # AYNI TAVAN BURADA DA (2026-08-03): incumbent ön-hesabı da aynı süreçte, aynı
             # çekirdekleri paylaşarak koşuyor. Kendi 3'lük sınırı KORUNUR (tavan onu yükseltmez,
             # yalnız düşürebilir) — kibarlaştırma hiçbir yolda yükü ARTIRMAmalı.
-            with ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
-                                     initializer=_pool_worker_init) as ex:
-                for key, wf in ex.map(_pool_probe_job, jobs):
-                    _INC_CACHE[key] = wf
-                    computed += 1
+            # `with` bilerek yok + atalet bekçisi (v236) — gerekçe `_parallel_prefill_probes`teki
+            # blokla AYNI: bu havuz da hermes iş parçacığını sonsuza dek bekletebiliyordu.
+            ex = ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
+                                     initializer=_pool_worker_init)
+            for key, wf in _havuz_sonuclari(ex, jobs):
+                _INC_CACHE[key] = wf
+                computed += 1
+            ex.shutdown()
             _inc_disk_save()
+        except _HavuzAtaleti as z:
+            _havuzu_oldur(ex)
+            _inc_disk_save()                # biten incumbent'lar kaybolmaz — kısmi ilerleme diske iner
+            from . import obs as _obs
+            _obs.warn("arama_havuzu_zaman_asimi", yer="incumbent_prefill", atalet_sn=HAVUZ_ATALET_SN,
+                      biten=z.biten, bekleyen=z.bekleyen,
+                      detail="incumbent ön-hesap havuzu toplam-atalet tavanına çarptı — işçiler "
+                             "öldürüldü, eksikler aşağıdaki SIRALI yolda hesaplanır (boşta ön-hesap "
+                             "asılı kalıp hermes iş parçacığını kilitleyemez)")
+            missing = [(k, er) for k, er in missing if k not in _INC_CACHE]
         except Exception as e:
+            if ex is not None:
+                _havuzu_oldur(ex)
             from . import obs as _obs
             _obs.warn("incumbent_prefill_pool_failed", error=f"{type(e).__name__}: {e}")
             missing = [(k, er) for k, er in missing if k not in _INC_CACHE]

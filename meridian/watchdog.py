@@ -1994,8 +1994,18 @@ def monotonicity_report(persist: bool = False, olaylar: list[dict] | None = None
         # MEŞRU KÜÇÜLME YOLU KAPALI DEĞİL: `grant_amnesty("sermaye_taban", …)` — re-seed defteri
         # kısaltırsa af YAZILI olarak verilir (akranlarıyla aynı disiplin).
         _tr = store.read_jsonl("trades.jsonl")
-        cur["sermaye_taban"] = round(float(pf.get("realized_pnl") or 0.0)
-                                     - sum(float(t.get("pnl_dollars") or 0.0) for t in _tr), 2)
+        # KANONİK TÜRETİM (v236, 2026-08-12 canlı alarmı "5542.09 → 5542.08"): Σ artık ham-float
+        # toplama sırasına/temsil tozuna bağlı DEĞİL — `sermaye.sermaye_taban` sent tamsayısıyla
+        # toplar (tek yer, testli; türetim gerekçesi sermaye.py:98'de). Bozuk-satır semantiği
+        # BİREBİR eski ifade: None/boş → 0, çevrilemeyen değer istisna atar ve bu try'ın kendi
+        # "kaynak okunamadı" beyanına düşer. Import FONKSİYON-İÇİ — yukarıdaki `beyan_olcusu`
+        # deseniyle aynı; sermaye→watchdog kenarı zaten var (`_peak_affi`), modül-seviyesi çekim
+        # gereksiz bir yükleme-sırası bağı eklerdi (lint-imports 5 sözleşmesi iki hâlde de yeşil).
+        # GEÇİŞ NOTU (tek-seferlik, 2026-08-12): ilk kanonik ölçüm, eski ham-float tabandan ≤1 sent
+        # sapabilir — dedektör o tek geçişte GERİLEME derse yol hazır: grant_amnesty('sermaye_taban',
+        # was, now, reason=…). Af BURADAN ÇAĞRILMAZ — canlı karar, operatörün/canlı turun elinde.
+        from . import sermaye as _srm
+        cur["sermaye_taban"] = _srm.sermaye_taban(pf, _tr)
     except Exception as e:
         from . import obs
         obs.warn("monotonicity_source_unreadable", source="portfolio.json",

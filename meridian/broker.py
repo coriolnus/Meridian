@@ -565,7 +565,15 @@ class PaperBroker:
             return False
         fill = level * (1.0 - self.slip)                      # bank at the scale level (slippage IN the price)
         partial_commission = sell_qty * self.commission
-        pnl_partial = sell_qty * (fill - pos.entry) - partial_commission   # H1: slippage already in `fill`; charge commission once
+        # WP-E SENT-TAM BİRİKİM (2026-08-12 canlı alarmı: "GERİLEME sermaye_taban 5542.09 → 5542.08").
+        # Defter satırı 2 haneye YUVARLANARAK yazılır (`close_position` satır-yazımı `round(pnl, 2)`)
+        # ama birikim HAM pnl ile yapılıyordu — `entry_commission` alanının kendi sözleşmesi
+        # ("realized_pnl == Σ row.pnl_dollars") sent-altı kalıntılarla sürükleniyor ve zımni taban
+        # (watchdog SB-3 / sermaye.sermaye_taban) yarım-sent sınırına oturuyordu. Yuvarlama artışın
+        # KAYNAĞINDA ve TEK yerde: üç akümülatör (realized_pnl / cash / banked_pnl) AYNI sent-tam
+        # artışı alır — banked ham kalsaydı kapanış satırı (`pnl = rem + banked`) birikimden bir
+        # sente kadar ayrışırdı. Fiyat/komisyon/eşik aritmetiği DEĞİŞMEZ: yalnız birikim noktası.
+        pnl_partial = round(sell_qty * (fill - pos.entry) - partial_commission, 2)   # H1: slippage already in `fill`; charge commission once
         self.realized_pnl += pnl_partial
         self.cash += pnl_partial
         pos.banked_pnl += pnl_partial
@@ -592,8 +600,13 @@ class PaperBroker:
         gross = pos.qty * (exit_fill - pos.entry)                # true round-trip P&L — both slippages in the fills
         pnl_remaining = gross - pos.entry_commission - exit_commission   # H1: charge commission ONCE (each side); slippage already priced in
         costs = pos.entry_slippage_cost + exit_slip_dollars + exit_commission   # informational total friction
-        self.realized_pnl += pnl_remaining
-        self.cash += pnl_remaining
+        # WP-E SENT-TAM BİRİKİM (gerekçe: scale_out'taki blok). Satır-yazımı `round(rem + banked, 2)`
+        # ve `banked` yukarıda sent-tamdır → sent ızgarası tam-sent kaymayla değişmediğinden
+        # round(rem + banked, 2) == round(rem, 2) + banked: birikim de round(rem, 2) alınca
+        # realized_pnl defterle SENT-TAM kapanır. `pnl_remaining` DEĞİŞKENİNİN kendisi yuvarlanmaz:
+        # r_multiple/pnl_pct satır aritmetiği bu yamanın kapsamı dışıdır (yalnız birikim noktaları).
+        self.realized_pnl += round(pnl_remaining, 2)
+        self.cash += round(pnl_remaining, 2)
         self._id += 1
         pnl = pnl_remaining + pos.banked_pnl                  # combine scaled + final into ONE trade
         r_multiple = pnl / pos.risk_dollars if pos.risk_dollars else 0.0

@@ -25,6 +25,21 @@ MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 # without this the operator sees only "reflecting: true" and cannot tell progress from a hang.
 SEARCH_PROGRESS: dict = {}
 
+
+def _progress(**alanlar) -> None:
+    """SEARCH_PROGRESS'in TEK yazım kapısı (v236, 2026-08-12 asılı-arama vakası): her yazım
+    `updated_at` (UTC ISO, kanonik `memory.now_iso`) damgası taşır.
+
+    NEDEN: canlı vakada bayrak günlerce `running=True` kaldı ve "bu bayrak EN SON ne zaman
+    yazıldı?" sorusunun defter-üstü cevabı YOKTU — teşhis, olay defterinden geriye saat saymakla
+    yapıldı. Damga o cevabı bayrağın kendisine koyar (hermes_runtime:522 aynı sözlüğü /api/hermes'e
+    aynen render eder; asılı aramada saat DONMUŞ görünür — sinyalin kendisi budur).
+
+    Sprint'in bayatlık yasasına (sprint.py:458) BİLEREK GİRMEZ: parmak izi faz/i/total/değişken/
+    değer beşlisidir; damga ize girseydi içeriksiz her yazım "ilerleme" gibi okunur, bayatlık
+    yasası körleşirdi. Damga parmak-izine EK sinyaldir, parçası değil."""
+    SEARCH_PROGRESS.update(dict(alanlar, updated_at=memory.now_iso()))
+
 HYP_SCHEMA = {
     "type": "object",
     "properties": {
@@ -3675,6 +3690,22 @@ def propose_virgin_knob() -> dict | None:
 
 
 def reflect_once(target_regime: str | None = "auto", *, background: bool = False) -> dict:
+    """Tek canlı yansıma — gövde `_reflect_once_govde`de (tasarım gerekçeleri orada).
+
+    v236 GÜVENLİK AĞI (2026-08-12 asılı-arama vakası): gövde HANGİ yoldan çıkarsa çıksın —
+    normal dönüş, içerideki phase="error" yolu (audit #28) ya da bugün var olmayan bir istisna
+    yolu — bayrak `running=True` BIRAKILAMAZ. Mevcut hata-yolu yazımları DURUYOR; bu ağ yalnız
+    onların kaçırdığı bir çıkışta devreye girer (normalde no-op: bayrak zaten temizlenmiştir).
+    Kadans tarafındaki bayatlık yasası (sprint.py:404) aynı sınıfın SÜREÇ-DIŞI emniyetidir;
+    bu ağ ise bayrağı asılı bırakmamanın SÜREÇ-İÇİ birinci hattıdır."""
+    try:
+        return _reflect_once_govde(target_regime, background=background)
+    finally:
+        if SEARCH_PROGRESS.get("running"):
+            _progress(running=False, phase="error", kaynak="reflect_once_finally_agi")
+
+
+def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool = False) -> dict:
     """One live reflection. A single smart move (Claude, if a key is set) is tried first; if it doesn't
     clear the gate — or there's no key — we fall through to the systematic COORDINATE-DESCENT SEARCH across
     all knobs on the PRODUCTION windows. That is the escape from the ±1 trap that lets the live strategy
@@ -3758,7 +3789,7 @@ def reflect_once(target_regime: str | None = "auto", *, background: bool = False
                      detail="arka plan yansıması KAPSANAMADI (geçerli rejim adı yok) — global ship "
                             "yetkisiyle koşmak yerine tur atlandı; canlı-dışı kanıt global params'a "
                             "giremez")
-            SEARCH_PROGRESS.update(running=False, phase="skipped")
+            _progress(running=False, phase="skipped")
             return {"status": "bg_regime_unscoped", "regime": target_regime,
                     "beyan": ("arka plan turu rejimle sınırlanamadı — global ship yetkisiyle "
                               "koşulmadı (C16)")}
@@ -3773,12 +3804,12 @@ def reflect_once(target_regime: str | None = "auto", *, background: bool = False
     # The incumbent walk-forward runs BEFORE any probe and takes ~90s. Without naming that phase the UI sits
     # on a bare "başlıyor…" for a minute and a half — indistinguishable from a hang (exactly how this whole
     # observability bug was found). Name it, so a slow baseline never looks like a crash.
-    SEARCH_PROGRESS.update(running=True, phase="incumbent", i=0, total=None)
+    _progress(running=True, phase="incumbent", i=0, total=None)
 
     def _on_probe(i, total, var, new, cand_oos, inc_oos, passes, best):
-        SEARCH_PROGRESS.update(running=True, phase="probing" if i else "planned", i=i, total=total,
-                               variable=var, new=new,
-                               candidate_oos=cand_oos, incumbent_oos=inc_oos, passes=passes, best=best)
+        _progress(running=True, phase="probing" if i else "planned", i=i, total=total,
+                  variable=var, new=new,
+                  candidate_oos=cand_oos, incumbent_oos=inc_oos, passes=passes, best=best)
         obs.log("hermes_search_probe", i=i, total=total, variable=var, new=new,
                 candidate_oos=cand_oos, incumbent_oos=inc_oos, passes=passes)
 
@@ -3788,13 +3819,13 @@ def reflect_once(target_regime: str | None = "auto", *, background: bool = False
                                            regime=search_regime)
     except Exception:
         # never leave the dashboard showing a phantom in-flight search after a crash (audit #28)
-        SEARCH_PROGRESS.update(running=False, phase="error")
+        _progress(running=False, phase="error")
         raise
     s = result.get("search", {})
     obs.log("hermes_search_done", evaluated=s.get("evaluated"), cleared=s.get("cleared"),
             status=result.get("status"), best=s.get("best"))
-    SEARCH_PROGRESS.update(running=False, phase="done", status=result.get("status"),
-                           evaluated=s.get("evaluated"), cleared=s.get("cleared"), best=s.get("best"))
+    _progress(running=False, phase="done", status=result.get("status"),
+              evaluated=s.get("evaluated"), cleared=s.get("cleared"), best=s.get("best"))
     return result
 
 
