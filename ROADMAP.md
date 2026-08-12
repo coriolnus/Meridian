@@ -728,13 +728,16 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    yeni donmuş-çekim betiği. Araç inince KYS-002 DSR-yarısı yeniden ölçülür. *gerekçe: M2'nin DSR yarısı
    ölçülemiyor · boyut: S-M · bağımlılık: reflect şema kararı (Rol-1) · öncelik: orta.*
 
-5. **`.locks/` pytest-yollu kilit birikintisi budaması (WP-S2 turu bulgusu, 2026-08-10)** — test koşuları
+5. ~~**`.locks/` budaması**~~ → **✅ KAPANDI (v234, 2026-08-12):** store.kilit_budamasi + conftest
+   sessionfinish (24sa+flock+inode-güvenli; ilk koşu 29 kilit temizledi). *(orijinal madde: 2026-08-10)* — test koşuları
    oturum-düzeyi tmp yolları hash'lenmiş kilit dosyaları bırakıyor (tur ölçtü: tek AST koşusu bile +2;
    25→27 birikiyor, budama yok). DİKKAT: flock semantiği — canlı tutulan kilidi silmek dışlamayı kırar;
    güvenli budama = non-blocking flock alınabilen + eski dosyalar (ops betiği ya da conftest teardown).
    *gerekçe: sınırsız birikinti · boyut: S (flock-dikkatli) · bağımlılık: yok · öncelik: düşük.*
 
-6. **Bayat-defter-kalıntısı tuzağı (2026-08-11 VLO adli incelemesi bulgusu)** — trades defteri 07-31'de
+6. ~~**Bayat-defter-kalıntısı tuzağı**~~ → **✅ KAPANDI (v234, 2026-08-12):** db_backed göç-süzgeci
+   (idempotent, adli-olaylı, damgasız-dosya-taşınmaz); canlı trades.jsonl kalıntısı bir sonraki restart'ta
+   kendiliğinden .migrated olur. *(orijinal madde: 2026-08-11)* — trades defteri 07-31'de
    DB'ye göç etti ama `state/trades.jsonl` DOSYASI 95 satırda donuk kalıntı olarak duruyor (portfolio/
    shadow_books `.migrated`a çevrilmiş, trades ÇEVRİLMEMİŞ) → insan+araç yanlış okuyor (Rol-1'i "pozisyon
    izsiz kayboldu" yanılgısına düşürdü; gerçek: T00097 VLO target +728$ DB'de düzgün). Düzeltme: migrate
