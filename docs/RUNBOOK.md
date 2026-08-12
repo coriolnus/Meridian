@@ -42,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
 - **15 ops betiği** başlığıyla okundu
-- **61 günlük maddesi** üç bölümden toplandı
+- **77 günlük maddesi** üç bölümden toplandı
 
 ---
 
@@ -92,7 +92,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:1220` → mesaj şablonu: `f"günlük kayıp devre kesici: {day_pnl_pct:.2%}"`
+  - `meridian/loop.py:1311` → mesaj şablonu: `f"günlük kayıp devre kesici: {day_pnl_pct:.2%}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -112,17 +112,17 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/adapters/data.py:2120` → mesaj şablonu: `f"{ticker}: {streak} ardışık turda hiçbir kaynak satır vermedi (istek hatası YOK) " f"— evren bakımı gerekiyor olabilir"`
   - `meridian/api.py:40` → mesaj şablonu: `"MERIDIAN_DASH_TOKEN ASCII-DIŞI: HTTP başlığında gönderilemez, yani pano " "kimlik doğrulaması FİİLEN İMKÂNSIZ. ASCII bir token ile değiştir."`
   - `meridian/hotstate.py:167` → mesaj şablonu: `f"hotstate ÇIRPINMA: {DOWN_REASSERT_S}s içinde {bastirilan} kopma"`
-  - `meridian/loop.py:796` → mesaj şablonu: `f"evren sapması: {rep['n_stale']} sembol S&P 500'de yok — {', '.join(rep['stale'][:8])}"`
-  - `meridian/loop.py:908` → mesaj şablonu: `"portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı"`
-  - `meridian/loop.py:918` → mesaj şablonu: `"sermaye beyanı silinecekti — kitap yazımı REDDEDİLDİ"`
-  - `meridian/loop.py:1173` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
-  - `meridian/loop.py:1180` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
+  - `meridian/loop.py:859` → mesaj şablonu: `f"evren sapması: {rep['n_stale']} sembol S&P 500'de yok — {', '.join(rep['stale'][:8])}"`
+  - `meridian/loop.py:971` → mesaj şablonu: `"portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı"`
+  - `meridian/loop.py:981` → mesaj şablonu: `"sermaye beyanı silinecekti — kitap yazımı REDDEDİLDİ"`
+  - `meridian/loop.py:1263` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
+  - `meridian/loop.py:1270` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
   - `meridian/scheduler.py:340` → mesaj şablonu: `f"SEANS ATLANDI: {session} — bir sonraki seans kapandı, bu seansın barı hâlâ " f"gelmedi (kapsama %{100 * float(cov or 0):.0f} < %{100 * need:.0f})"`
-  - `meridian/watchdog.py:1747` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
-  - `meridian/watchdog.py:1807` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
-  - `meridian/watchdog.py:1814` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
-  - `meridian/watchdog.py:2464` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
-  - `meridian/watchdog.py:2901` → mesaj şablonu: `rep.get("beyan")`
+  - `meridian/watchdog.py:1768` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
+  - `meridian/watchdog.py:1828` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
+  - `meridian/watchdog.py:1835` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
+  - `meridian/watchdog.py:2485` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
+  - `meridian/watchdog.py:2922` → mesaj şablonu: `rep.get("beyan")`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -153,14 +153,15 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Teşhis adımları
 
-- Bu jetonu **7 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:184` → mesaj şablonu: `f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada " f"AÇIK; {info['tries']}. deneme" + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else "")`
-  - `meridian/loop.py:2276` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
-  - `meridian/loop.py:2408` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
-  - `meridian/loop.py:2430` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
-  - `meridian/loop.py:2454` → mesaj şablonu: `f"motor yetimi: {sym} Alpaca'da açık (motorun emri dolmuş) ama iç defterde yok"`
-  - `meridian/loop.py:2458` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
-  - `meridian/loop.py:2526` → mesaj şablonu: `f"ayna sapması: {tr.get('ticker')} — sim {sim} vs Alpaca {af} (%{div*100:.2f})"`
+- Bu jetonu **8 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+  - `meridian/loop.py:247` → mesaj şablonu: `f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada " f"AÇIK; {info['tries']}. deneme" + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else "")`
+  - `meridian/loop.py:2562` → mesaj şablonu: `f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca " f"{round(af, 4)} (%{div*100:.2f})"`
+  - `meridian/loop.py:2672` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
+  - `meridian/loop.py:2823` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
+  - `meridian/loop.py:2855` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
+  - `meridian/loop.py:2879` → mesaj şablonu: `f"motor yetimi: {sym} Alpaca'da açık (motorun emri dolmuş) ama iç defterde yok"`
+  - `meridian/loop.py:2883` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
+  - `meridian/loop.py:2951` → mesaj şablonu: `f"ayna sapması: {tr.get('ticker')} — sim {sim} vs Alpaca {af} (%{div*100:.2f})"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -176,8 +177,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **3 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:619` → mesaj şablonu: `f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı"`
-  - `meridian/loop.py:700` → mesaj şablonu: `f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}"`
+  - `meridian/loop.py:682` → mesaj şablonu: `f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı"`
+  - `meridian/loop.py:763` → mesaj şablonu: `f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}"`
   - `meridian/mirror_stream.py:158` → mesaj şablonu: `f"akıştan anlık RET: {order.get('symbol')}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
@@ -194,7 +195,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:2052` → mesaj şablonu: `f"trail PATCH reddedildi: {sym} {frm}→{to}"`
+  - `meridian/loop.py:2156` → mesaj şablonu: `f"trail PATCH reddedildi: {sym} {frm}→{to}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -212,18 +213,18 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 - Bu jetonu **14 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
   - `meridian/selfreview.py:103` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
   - `meridian/watchdog.py:274` → mesaj şablonu: `f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)"`
-  - `meridian/watchdog.py:1721` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
-  - `meridian/watchdog.py:1730` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
-  - `meridian/watchdog.py:1736` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
-  - `meridian/watchdog.py:1787` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
-  - `meridian/watchdog.py:1794` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
-  - `meridian/watchdog.py:1800` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
-  - `meridian/watchdog.py:2573` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
-  - `meridian/watchdog.py:2580` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
-  - `meridian/watchdog.py:2832` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:2838` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:2844` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
-  - `meridian/watchdog.py:2850` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
+  - `meridian/watchdog.py:1742` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
+  - `meridian/watchdog.py:1751` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
+  - `meridian/watchdog.py:1757` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
+  - `meridian/watchdog.py:1808` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
+  - `meridian/watchdog.py:1815` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
+  - `meridian/watchdog.py:1821` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
+  - `meridian/watchdog.py:2594` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
+  - `meridian/watchdog.py:2601` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
+  - `meridian/watchdog.py:2853` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:2859` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:2865` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
+  - `meridian/watchdog.py:2871` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -277,7 +278,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:1704` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
+  - `meridian/watchdog.py:1725` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -294,8 +295,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:2281` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
-  - `meridian/watchdog.py:2294` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
+  - `meridian/watchdog.py:2302` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
+  - `meridian/watchdog.py:2315` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -311,13 +312,12 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:2687` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
+  - `meridian/watchdog.py:2708` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `ONAYLI_PLAN_GONDERILMEDI` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **ONAYLI_PLAN_GONDERILMEDI kurtarma (WP-P, 2026-08-12):** tetik watchdog.py:2687 (rapor watchdog.py:2606; poll kadansında, kendi try'ında watchdog.py:311): operatör-onaylı + iç-motor-dolmuş planın dolum-sonrası reconcile fotoğrafında Alpaca'da NE EMİR NE POZİSYON var; ihlal plan_id başına bir kez mandallı, ÖLÇÜLEMEDİ dalları alarmsız (fotoğraf bayatlığının sahibi #10 mutabakat-tazelik bekçisi — çift-duyuru yasağı). İlk ayrım olaydaki `gonderim_izi`: False = emir HİÇ çıkmadı → onay yanıtının/`plan_operator_approved` olayının `icra_yolu` alanını oku (loop.py:503-527 gönderimin sonucunu ya da yolun yokluğunu hâl hâl AÇIKÇA yazar); True = iz var ama broker'da yok → Mutabakat masası (pano karar#mutabakat) + Alpaca tarafını doğrula. Kendi kendine onarım: döngünün geç-gönderim kemeri (loop.py:1342) her günlük turda aynasız iç dolumları TEK kapıdan yeniden gönderir — olay `mirror_gec_gonderim`, kemer düşerse `mirror_gec_gonderim_dustu`. Pano `submit_armed` düğmesi BU vakayı KAPATMAZ (yalnız SİLAHLI kümeyi gönderir; dolan plan kümede değil — loop.py:1339 armed'a dokunulmaz beyanı). Kemer de kapatamıyorsa acil kapama ELLE EMİRDİR ve operatör domain kararıdır (alarm metninin kendi hükmü: "gönderim yolunu onar ya da elle emirle"); kalıcı onarım mühendislik turu.
 
 ---
 
@@ -346,8 +346,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `scheduler_poll` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **scheduler_poll kurtarma (WP-P, 2026-08-12):** damgayı advance_once'ın kendisi atar (scheduler.py:815, her 300 sn poll'da — seans DIŞINDA da; tick_watchdog başlığındaki ölçüm: hafta sonu maksimum aralık 302 sn). 30 dk sessizlik "kadans gecikti" değil SÜREÇ ÖLÜ/KİLİTLİ demektir; kurtarma yöneticileri süreç düzeyindedir: A1'de `meridian-tick-watchdog.timer` (deploy/oracle-a1/tick_watchdog.sh — scheduler_status.updated 45 dk bayatlarsa restart; YAS koruması taze süreci bayat sanmaz), yerelde `ops/keepalive.sh` (healthz üst üste 2 ölü → diriltir). Süreç dirilince poll kendiliğinden döner; elle yetişme `POST /api/scheduler/advance` (pano düğmesi; olay `scheduler_advance_manual`).
 
 ## hermes_poll {#hermes_poll}
 
@@ -366,8 +365,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `hermes_poll` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **hermes_poll kurtarma (WP-P, 2026-08-12):** önce ASKIDA mı bak — bekçi rozeti (pano Operasyon) `askida` kovasını ayrı gösterir (watchdog.py:118 sondası): kota soğuması (`brain_cooldown.json`) ya da kimlik havuzu tükenmesi BEKLEMEDİR, arıza değil — alarm üretmez, eylem gerektirmez, OK da sayılmaz (panoda dürüst). Gerçek bayatlıkta iplik ölmüştür: hermes ipliği api sürecinin İÇİNDE yaşar (start() api açılışında; hermes_runtime.py:372 beyanı) → kurtarma süreç restart'ıdır (yerelde `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer` — iplik tek başına yeniden başlatılamaz). Isınma koşarken damga sonda başına atılır (hermes_runtime.py:133) — "meşgul" sahte alarm üretmez (v192 + H11).
 
 ## warmup_sprint {#warmup_sprint}
 
@@ -385,8 +383,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `warmup_sprint` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **warmup_sprint kurtarma (WP-P, 2026-08-12):** 8 sa sessizlik "ısınma uzun sürdü" OLAMAZ — aramanın kendi tavanı (HERMES_WARMUP_MAX_MIN, varsayılan 5 sa) koşumu kibarca keser; aşım = tavan ÇALIŞMADI (iplik asılı / sonda içinde kilitli / süreç ölü). Kanıt: son ısınma özeti (hermes_runtime.py:160 `last_warmup`: kesildi/sebep/tavan_dk — pano hermes kartı) + `_warm_skip` nedeni (hermes_runtime.py:410 — "koşmadı" ile "koşamaz" ayrımı; learn_halted değeri Kademe-4 kolunun MEŞRU duraklatmasıdır, arıza değil). Kurtarma süreç restart'ıdır (yerelde `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer`).
 
 ## cf_advance {#cf_advance}
 
@@ -397,15 +394,14 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:1410`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:1511`
 - Son damga: `state/mechanism_beats.json` → `cf_advance`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `cf_advance` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **cf_advance kurtarma (WP-P, 2026-08-12):** karşı-olgusal defterin (cf_open.json + counterfactuals.jsonl) günlük ilerleyişi; SIFIR YETKİ — hiçbir karar bu deftere bakmaz (loop.py:1408 beyanı), bayatlığı sermaye riski değil ÖLÇÜM boşluğudur (gölge katmanların ham maddesi birikmez). Düşerse `cf_advance_failed` uyarısı hatayı taşır (olay akışı / `state/events.jsonl`); damga yalnız başarıda atılır → bir sonraki günlük tur kendiliğinden dener; elle yetişme `POST /api/scheduler/advance`. Günlük tur hiç koşmuyorsa sorun bu mekanizma değil süreçtir (süreç-düzeyi yöneticilere bak).
 
 ## p5_calibrations {#p5_calibrations}
 
@@ -416,15 +412,14 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:1948`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:2052`
 - Son damga: `state/mechanism_beats.json` → `p5_calibrations`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `p5_calibrations` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **p5_calibrations kurtarma (WP-P, 2026-08-12):** damga P5_LEARN bloğunun SON adımıdır (loop.py:1948) — bayatlık "tek kalibrasyon düştü" değil "öğrenme-analitik bloğu sonuna ulaşamadı" demektir; hangi adımda kırıldığı `v3_learn_layer_failed` uyarısındadır (blok tek korumada, loop.py:1950). Kendiliğinden onarım: her günlük turda yeniden koşar; elle yetişme `POST /api/scheduler/advance`. Rehinelik dersi: bu blok günlük döngüye bağlıdır — veri kapsaması yüzünden noop kalan bir gün öğrenmeyi de sessizce durdurur (öğrenme-rehineliği vakasının sınıfı).
 
 ## mirror_reconcile {#mirror_reconcile}
 
@@ -435,15 +430,14 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:2570`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:2995`
 - Son damga: `state/mechanism_beats.json` → `mirror_reconcile`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `mirror_reconcile` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **mirror_reconcile kurtarma (WP-P, 2026-08-12):** damga reconcile'ın `broker_reconcile.json` yazımından hemen önce atılır (loop.py:2570) — bayatlık "aynanın fotoğrafı eski" demektir ve fotoğraf yaşının asıl bekçisi #10 mutabakat-tazelik dedektörüdür (kind=mutabakat_tazeligi ile ayrıca alarmlar). Kontrol: Mutabakat masası (pano karar#mutabakat) + `state/broker_reconcile.json` date/api_ok/skip_reason alanları. Alpaca erişimi yoksa reconcile hüküm veremez → anahtar/ağ doğrulaması (mutabakat "Broker API" satırı; sırlar A1 `.env`). Kendiliğinden onarım: alpaca modunda her günlük tur; elle yetişme `POST /api/scheduler/advance`.
 
 ## crosscheck {#crosscheck}
 
@@ -461,8 +455,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `crosscheck` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **crosscheck kurtarma (WP-P, 2026-08-12):** SPY kapanışının bağımsız kaynakla seans başına bir karşılaştırması — `state/index_crosscheck.json`u yazar; veri-kalitesi kapısı `status=diverged`i AYNI seansta halt sebebine çevirir (loop.py:1169). Bayatlığın bedeli: bağımsız doğrulama SUSAR, bar kalitesi tek kaynağa kalır. Ateşleme yolu BİLİNÇLİ sessiz-yutmalı (scheduler.py:1170 — düşüş olay YAZMAZ) → teşhis dosyanın kendisinden: date/status alanı taze mi (pano Sağlık → Veri hattı, api.py:3850 aynı dosyayı servis eder). Kendiliğinden onarım: her yeni seans işlendiğinde; süreklilik arızası mühendislik turudur.
 
 ## earnings_refresh {#earnings_refresh}
 
@@ -498,8 +491,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `arming_eval` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **arming_eval kurtarma (WP-P, 2026-08-12):** haftalık uyuyan-kurulum ölçümü (scheduler.py:1039 `arming.evaluate`) — damga ve hafta bayrağı YALNIZ başarıda ilerler; düşerse `arming_eval_failed` uyarısı + bir SONRAKİ poll yeniden dener (hafta yakılmaz). Bayatlıkta kontrol: `state/arming_report.json` üretim damgası + pano Onay kuyruğu (karar#onaylar). Ölçüm koşup kapı geçse bile kod değişmez (ARMED_SETUPS bir mühendislik turudur; o karar çağrısının prosedürü kendi alarm bölümündedir) — burada iş yalnız kadansı yaşatmaktır.
 
 ## shadow_fit {#shadow_fit}
 
@@ -518,8 +510,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `shadow_fit` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **shadow_fit kurtarma (WP-P, 2026-08-12):** öğrenme kadansının 1. adımı (scheduler.py:517 `shadow_model.maybe_refit` — seans başına bir, bar varışından bağımsız). Düşerse `shadow_fit_cadence_failed` uyarısı ve asıl risk şudur: model BAYAT katsayılarla tahmin üretmeye DEVAM eder (yanlış sayı doğru görünür). Kontrol: `state/shadow_model.json` fit_attempt_ts/fit_ts/fit_skip_reason/n_fit damgaları. Adım düşerse seans damgası yine ilerler → yeniden deneme bir SONRAKİ seans; kadansın KENDİSİ düşerse (`learning_cadence_failed`) damga ilerlemez → sonraki poll dener; elle yetişme `POST /api/scheduler/advance` (seans henüz işlenmemişse).
 
 ## axis2_cycle {#axis2_cycle}
 
@@ -548,15 +539,14 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3278`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3320`
 - Son damga: `state/mechanism_beats.json` → `opinion_backfill`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `opinion_backfill` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **opinion_backfill kurtarma (WP-P, 2026-08-12):** 9 günlük pencere kısılmayı alarm SANMAZ — önce meşru sessizliği ele: `backfill_progress` olayı kuyruğun hâlini (kalan_gun/kalan_satir), `hermes.backfill_budget()` türetimi tavanı söyler (tavan 0 = bütçe kısıldı, damga BİLEREK atılmaz; kuyruk boş = iş yok). İkisi de değilse dolgu gerçekten durmuştur: kota soğuması (`brain_cooldown.json`) + kadans uyarılarına bak (`learning_cadence_failed` / `backfill_beat_failed`). Kendiliğinden onarım: her seans kadans yeniden tetikler; dolgu asenkron koşar (hermes.py:3285) ve kalanı sonraki tura devreder.
 
 ## sprint_cadence {#sprint_cadence}
 
@@ -594,8 +584,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `y4_collect` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **y4_collect kurtarma (WP-P, 2026-08-12):** damga toplama turunun SONUNDA koşulsuz atılır (scheduler.py:646) — iki ayak (Form 4 + FINRA kısa pozisyon) kendi korumasında, ayak arızası bayatlık ÜRETMEZ (`y4_insider_failed`/`y4_shortinterest_failed` uyarıları + `y4_collect` olayının insider_cagri/si_satir alanları ayak sağlığını taşır; anahtar/kota kısılması `atlandi` alanlarıyla kayıtlı — fmp_anahtari_yok/fmp_kota_blogu arıza değildir). Bayatlık = kadans HİÇ koşmadı (seans işlenmedi ya da süreç ölü) → günlük tur/süreç teşhisi. TÜKETİCİSİ BİLEREK YOK (scheduler.py'deki Y4 teşhis bloğu): bayatlığın bedeli karar değil PENCERE kaybıdır — 3 yıllık sınıflama penceresi dolmaz.
 
 ## validation_report {#validation_report}
 
@@ -613,8 +602,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `validation_report` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **validation_report kurtarma (WP-P, 2026-08-12):** haftalık kanıt raporu — SALT-OKUMA, hiçbir kapı etkilenmez (scheduler.py:685 olay beyanı); damga `state/validation_report.json` yazımından sonra (scheduler.py:682). Kontrol: dosyanın uretildi/hafta alanları + `validation_report_written` olayı. Ayak kendi korumasında düşerse (`validation_report_failed`) hafta İLERLER → yeniden deneme gelecek hafta; üçlü kadansın KENDİSİ düşerse (`weekly_validation_failed`) hafta yakılmaz → sonraki poll dener. Bayatlığın bedeli görünürlük: "hangi edge kanıtlanıyor?" tablosu eskir, karar bozulmaz.
 
 ## massive_verify {#massive_verify}
 
@@ -632,8 +620,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `massive_verify` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **massive_verify kurtarma (WP-P, 2026-08-12):** haftalık grouped-vs-zincir tutarlılık ölçümü — yazım kapısının (`massive.write_enabled`) DAYANAĞI; bayatlarsa kapı bayat kanıtla karar verir (`massive_verify_failed` uyarısının kendi beyanı). Kontrol: `state/massive_verify.json` (verdict/samples/max_dev) + `massive_verify_week` olayı. Anahtar yoksa ölçüm `atlandi: massive_anahtari_yok` ile atlanır ve damga HİÇ atılmaz — bu bayatlık arıza değil YAPILANDIRMA hâlidir (anahtar operatör kalemi). Ayak düşerse hafta ilerler → gelecek hafta; üçlü kadans düşerse (`weekly_validation_failed`) sonraki poll dener.
 
 ## shadowlaw_drift {#shadowlaw_drift}
 
@@ -651,8 +638,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `shadowlaw_drift` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **shadowlaw_drift kurtarma (WP-P, 2026-08-12):** haftalık MEASURED_V3 kayma ölçümü — kayma bulursa SABİT DEĞİŞTİRMEZ, yalnız `shadowlaw_variance_drift` uyarısı basar (scheduler.py:716 beyanı); türetilmiş marjların yenilenmesi KOD-TÜRETİLEMEZ, operatör + Rol-1 domain kararıdır. Sağlıklı hafta `shadowlaw_drift_ok` yazar; ölçüm düşerse `shadowlaw_drift_failed` ("marjlar sınanmadan yürürlükte" — bedeli bu). Kontrol: api teşhis bloğunun servis ettiği kayma özeti (scheduler.py:713 `_state` alanı) + olay defteri. Ayak düşerse hafta ilerler → gelecek hafta; üçlü kadans düşerse (`weekly_validation_failed`) sonraki poll dener.
 
 ---
 
@@ -688,8 +674,7 @@ normal konumları kapalıdır ve açık olmaları bir sapmadır.
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `halt_learning` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- **KALICI RİSKLER / DERSLER** → **halt_learning kurtarma (WP-P, 2026-08-12):** arıza değil OPERATÖR KOLUNUN kaydıdır — `state/LEARN_HALT` dosyası (health.py:26); kolu kimin/ne zaman çektiği `control_learn_halt` olayında. Etkisi: işlemler SÜRER, ship durur (reflect.submit erken döner — `submit_blocked_learn_halt` olayı, reflect.py:898) ve hermes ısınması duraklar (`_warm_skip="learn_halted"`, hermes_runtime.py:411); rollback güvenlik olarak açık kalır. Geri alma panodan: Müdahale kademeleri (kilitler#mudahale) Kademe-4 kolu → `POST /api/control/learn_halt` (api.py:2025; aynı uç aç/kapa).
 
 ## devre_kesici {#devre_kesici}
 
@@ -1164,6 +1149,22 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 - **ARMING_READY kurtarma (WP-P, 2026-08-10):** tetik arming.py:203/299 — uyuyan kurulum kapıyı geçti; arıza değil KARAR ÇAĞRISI. Kanıt: pano Onay kuyruğu (karar#onaylar) + `state/arming_report.json`. Panelde uygulanacak eylem BİLEREK yok (`actions: []` — api.py:1438 beyanı): silahlanma bir KOD değişikliğidir, icra yolu `strategy.py:995 ARMED_SETUPS` listesine kurulumu eklemektir (mühendislik turu, operatör onayıyla). Kapı geçişi icra zorunluluğu doğurmaz (arming.py docstring: "kapı GEÇSE bile ARMED_SETUPS değişmez") — reddetmek de meşru bir hüküm.
 - **AUTHORITY_CHANGE kurtarma (WP-P, 2026-08-10):** iki hâl. (a) analytics.py:1172 — LLM danışman yetkisi eşikle KENDİLİĞİNDEN açıldı/geri alındı (yetki yalnız REVIEW + karşı dolum vetosu); onay gerekmez, doğrulama yeter: olay alanları promoted/r_gap/n + `state/llm_calibration.json`; sınırlar pano Otonomi ve sınırlar (kilitler#ayarlar). (b) nous_eval.py:312 — çekirdek-şekilli öneri kuyruğa sokulmaya çalışıldı: alarmın kendi beyanıyla KOD HATASIDIR (köprü yanlış yönlendirdi) → operatör eylemi yok, mühendislik turu açılır.
 - **NAKED_POSITION kurtarma (WP-P, 2026-08-10):** tetik watchdog.py:2286 (motor pozisyonunda canlı koruyucu stop YOK — sev-1; pozisyon başına bir kez mandallı) ve watchdog.py:2273 (ÖLÇÜLEMEDİ: broker okunamadı — "korumasız 0" DEĞİL, önce erişimi düzelt). Kurtarma panodan: Mutabakat masası → Koruma · çıplak pozisyonlar kartı (taze ölçüm `GET /api/alpaca/koruma`) → koruma-onayı `POST /api/alpaca/koruma_kur` (onay jetonu + oneri_id; jetonsuz çağrı KURU KOŞU, bayat oneri_id emri düşürür) her çıplak motor pozisyonuna TEK OCO kurar; HALT bu yolu kapatmaz (koruma_kur bloğu beyanı).
+- **ONAYLI_PLAN_GONDERILMEDI kurtarma (WP-P, 2026-08-12):** tetik watchdog.py:2687 (rapor watchdog.py:2606; poll kadansında, kendi try'ında watchdog.py:311): operatör-onaylı + iç-motor-dolmuş planın dolum-sonrası reconcile fotoğrafında Alpaca'da NE EMİR NE POZİSYON var; ihlal plan_id başına bir kez mandallı, ÖLÇÜLEMEDİ dalları alarmsız (fotoğraf bayatlığının sahibi #10 mutabakat-tazelik bekçisi — çift-duyuru yasağı). İlk ayrım olaydaki `gonderim_izi`: False = emir HİÇ çıkmadı → onay yanıtının/`plan_operator_approved` olayının `icra_yolu` alanını oku (loop.py:503-527 gönderimin sonucunu ya da yolun yokluğunu hâl hâl AÇIKÇA yazar); True = iz var ama broker'da yok → Mutabakat masası (pano karar#mutabakat) + Alpaca tarafını doğrula. Kendi kendine onarım: döngünün geç-gönderim kemeri (loop.py:1342) her günlük turda aynasız iç dolumları TEK kapıdan yeniden gönderir — olay `mirror_gec_gonderim`, kemer düşerse `mirror_gec_gonderim_dustu`. Pano `submit_armed` düğmesi BU vakayı KAPATMAZ (yalnız SİLAHLI kümeyi gönderir; dolan plan kümede değil — loop.py:1339 armed'a dokunulmaz beyanı). Kemer de kapatamıyorsa acil kapama ELLE EMİRDİR ve operatör domain kararıdır (alarm metninin kendi hükmü: "gönderim yolunu onar ya da elle emirle"); kalıcı onarım mühendislik turu.
+- **scheduler_poll kurtarma (WP-P, 2026-08-12):** damgayı advance_once'ın kendisi atar (scheduler.py:815, her 300 sn poll'da — seans DIŞINDA da; tick_watchdog başlığındaki ölçüm: hafta sonu maksimum aralık 302 sn). 30 dk sessizlik "kadans gecikti" değil SÜREÇ ÖLÜ/KİLİTLİ demektir; kurtarma yöneticileri süreç düzeyindedir: A1'de `meridian-tick-watchdog.timer` (deploy/oracle-a1/tick_watchdog.sh — scheduler_status.updated 45 dk bayatlarsa restart; YAS koruması taze süreci bayat sanmaz), yerelde `ops/keepalive.sh` (healthz üst üste 2 ölü → diriltir). Süreç dirilince poll kendiliğinden döner; elle yetişme `POST /api/scheduler/advance` (pano düğmesi; olay `scheduler_advance_manual`).
+- **hermes_poll kurtarma (WP-P, 2026-08-12):** önce ASKIDA mı bak — bekçi rozeti (pano Operasyon) `askida` kovasını ayrı gösterir (watchdog.py:118 sondası): kota soğuması (`brain_cooldown.json`) ya da kimlik havuzu tükenmesi BEKLEMEDİR, arıza değil — alarm üretmez, eylem gerektirmez, OK da sayılmaz (panoda dürüst). Gerçek bayatlıkta iplik ölmüştür: hermes ipliği api sürecinin İÇİNDE yaşar (start() api açılışında; hermes_runtime.py:372 beyanı) → kurtarma süreç restart'ıdır (yerelde `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer` — iplik tek başına yeniden başlatılamaz). Isınma koşarken damga sonda başına atılır (hermes_runtime.py:133) — "meşgul" sahte alarm üretmez (v192 + H11).
+- **warmup_sprint kurtarma (WP-P, 2026-08-12):** 8 sa sessizlik "ısınma uzun sürdü" OLAMAZ — aramanın kendi tavanı (HERMES_WARMUP_MAX_MIN, varsayılan 5 sa) koşumu kibarca keser; aşım = tavan ÇALIŞMADI (iplik asılı / sonda içinde kilitli / süreç ölü). Kanıt: son ısınma özeti (hermes_runtime.py:160 `last_warmup`: kesildi/sebep/tavan_dk — pano hermes kartı) + `_warm_skip` nedeni (hermes_runtime.py:410 — "koşmadı" ile "koşamaz" ayrımı; learn_halted değeri Kademe-4 kolunun MEŞRU duraklatmasıdır, arıza değil). Kurtarma süreç restart'ıdır (yerelde `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer`).
+- **cf_advance kurtarma (WP-P, 2026-08-12):** karşı-olgusal defterin (cf_open.json + counterfactuals.jsonl) günlük ilerleyişi; SIFIR YETKİ — hiçbir karar bu deftere bakmaz (loop.py:1408 beyanı), bayatlığı sermaye riski değil ÖLÇÜM boşluğudur (gölge katmanların ham maddesi birikmez). Düşerse `cf_advance_failed` uyarısı hatayı taşır (olay akışı / `state/events.jsonl`); damga yalnız başarıda atılır → bir sonraki günlük tur kendiliğinden dener; elle yetişme `POST /api/scheduler/advance`. Günlük tur hiç koşmuyorsa sorun bu mekanizma değil süreçtir (süreç-düzeyi yöneticilere bak).
+- **p5_calibrations kurtarma (WP-P, 2026-08-12):** damga P5_LEARN bloğunun SON adımıdır (loop.py:1948) — bayatlık "tek kalibrasyon düştü" değil "öğrenme-analitik bloğu sonuna ulaşamadı" demektir; hangi adımda kırıldığı `v3_learn_layer_failed` uyarısındadır (blok tek korumada, loop.py:1950). Kendiliğinden onarım: her günlük turda yeniden koşar; elle yetişme `POST /api/scheduler/advance`. Rehinelik dersi: bu blok günlük döngüye bağlıdır — veri kapsaması yüzünden noop kalan bir gün öğrenmeyi de sessizce durdurur (öğrenme-rehineliği vakasının sınıfı).
+- **mirror_reconcile kurtarma (WP-P, 2026-08-12):** damga reconcile'ın `broker_reconcile.json` yazımından hemen önce atılır (loop.py:2570) — bayatlık "aynanın fotoğrafı eski" demektir ve fotoğraf yaşının asıl bekçisi #10 mutabakat-tazelik dedektörüdür (kind=mutabakat_tazeligi ile ayrıca alarmlar). Kontrol: Mutabakat masası (pano karar#mutabakat) + `state/broker_reconcile.json` date/api_ok/skip_reason alanları. Alpaca erişimi yoksa reconcile hüküm veremez → anahtar/ağ doğrulaması (mutabakat "Broker API" satırı; sırlar A1 `.env`). Kendiliğinden onarım: alpaca modunda her günlük tur; elle yetişme `POST /api/scheduler/advance`.
+- **crosscheck kurtarma (WP-P, 2026-08-12):** SPY kapanışının bağımsız kaynakla seans başına bir karşılaştırması — `state/index_crosscheck.json`u yazar; veri-kalitesi kapısı `status=diverged`i AYNI seansta halt sebebine çevirir (loop.py:1169). Bayatlığın bedeli: bağımsız doğrulama SUSAR, bar kalitesi tek kaynağa kalır. Ateşleme yolu BİLİNÇLİ sessiz-yutmalı (scheduler.py:1170 — düşüş olay YAZMAZ) → teşhis dosyanın kendisinden: date/status alanı taze mi (pano Sağlık → Veri hattı, api.py:3850 aynı dosyayı servis eder). Kendiliğinden onarım: her yeni seans işlendiğinde; süreklilik arızası mühendislik turudur.
+- **arming_eval kurtarma (WP-P, 2026-08-12):** haftalık uyuyan-kurulum ölçümü (scheduler.py:1039 `arming.evaluate`) — damga ve hafta bayrağı YALNIZ başarıda ilerler; düşerse `arming_eval_failed` uyarısı + bir SONRAKİ poll yeniden dener (hafta yakılmaz). Bayatlıkta kontrol: `state/arming_report.json` üretim damgası + pano Onay kuyruğu (karar#onaylar). Ölçüm koşup kapı geçse bile kod değişmez (ARMED_SETUPS bir mühendislik turudur; o karar çağrısının prosedürü kendi alarm bölümündedir) — burada iş yalnız kadansı yaşatmaktır.
+- **shadow_fit kurtarma (WP-P, 2026-08-12):** öğrenme kadansının 1. adımı (scheduler.py:517 `shadow_model.maybe_refit` — seans başına bir, bar varışından bağımsız). Düşerse `shadow_fit_cadence_failed` uyarısı ve asıl risk şudur: model BAYAT katsayılarla tahmin üretmeye DEVAM eder (yanlış sayı doğru görünür). Kontrol: `state/shadow_model.json` fit_attempt_ts/fit_ts/fit_skip_reason/n_fit damgaları. Adım düşerse seans damgası yine ilerler → yeniden deneme bir SONRAKİ seans; kadansın KENDİSİ düşerse (`learning_cadence_failed`) damga ilerlemez → sonraki poll dener; elle yetişme `POST /api/scheduler/advance` (seans henüz işlenmemişse).
+- **opinion_backfill kurtarma (WP-P, 2026-08-12):** 9 günlük pencere kısılmayı alarm SANMAZ — önce meşru sessizliği ele: `backfill_progress` olayı kuyruğun hâlini (kalan_gun/kalan_satir), `hermes.backfill_budget()` türetimi tavanı söyler (tavan 0 = bütçe kısıldı, damga BİLEREK atılmaz; kuyruk boş = iş yok). İkisi de değilse dolgu gerçekten durmuştur: kota soğuması (`brain_cooldown.json`) + kadans uyarılarına bak (`learning_cadence_failed` / `backfill_beat_failed`). Kendiliğinden onarım: her seans kadans yeniden tetikler; dolgu asenkron koşar (hermes.py:3285) ve kalanı sonraki tura devreder.
+- **y4_collect kurtarma (WP-P, 2026-08-12):** damga toplama turunun SONUNDA koşulsuz atılır (scheduler.py:646) — iki ayak (Form 4 + FINRA kısa pozisyon) kendi korumasında, ayak arızası bayatlık ÜRETMEZ (`y4_insider_failed`/`y4_shortinterest_failed` uyarıları + `y4_collect` olayının insider_cagri/si_satir alanları ayak sağlığını taşır; anahtar/kota kısılması `atlandi` alanlarıyla kayıtlı — fmp_anahtari_yok/fmp_kota_blogu arıza değildir). Bayatlık = kadans HİÇ koşmadı (seans işlenmedi ya da süreç ölü) → günlük tur/süreç teşhisi. TÜKETİCİSİ BİLEREK YOK (scheduler.py'deki Y4 teşhis bloğu): bayatlığın bedeli karar değil PENCERE kaybıdır — 3 yıllık sınıflama penceresi dolmaz.
+- **validation_report kurtarma (WP-P, 2026-08-12):** haftalık kanıt raporu — SALT-OKUMA, hiçbir kapı etkilenmez (scheduler.py:685 olay beyanı); damga `state/validation_report.json` yazımından sonra (scheduler.py:682). Kontrol: dosyanın uretildi/hafta alanları + `validation_report_written` olayı. Ayak kendi korumasında düşerse (`validation_report_failed`) hafta İLERLER → yeniden deneme gelecek hafta; üçlü kadansın KENDİSİ düşerse (`weekly_validation_failed`) hafta yakılmaz → sonraki poll dener. Bayatlığın bedeli görünürlük: "hangi edge kanıtlanıyor?" tablosu eskir, karar bozulmaz.
+- **massive_verify kurtarma (WP-P, 2026-08-12):** haftalık grouped-vs-zincir tutarlılık ölçümü — yazım kapısının (`massive.write_enabled`) DAYANAĞI; bayatlarsa kapı bayat kanıtla karar verir (`massive_verify_failed` uyarısının kendi beyanı). Kontrol: `state/massive_verify.json` (verdict/samples/max_dev) + `massive_verify_week` olayı. Anahtar yoksa ölçüm `atlandi: massive_anahtari_yok` ile atlanır ve damga HİÇ atılmaz — bu bayatlık arıza değil YAPILANDIRMA hâlidir (anahtar operatör kalemi). Ayak düşerse hafta ilerler → gelecek hafta; üçlü kadans düşerse (`weekly_validation_failed`) sonraki poll dener.
+- **shadowlaw_drift kurtarma (WP-P, 2026-08-12):** haftalık MEASURED_V3 kayma ölçümü — kayma bulursa SABİT DEĞİŞTİRMEZ, yalnız `shadowlaw_variance_drift` uyarısı basar (scheduler.py:716 beyanı); türetilmiş marjların yenilenmesi KOD-TÜRETİLEMEZ, operatör + Rol-1 domain kararıdır. Sağlıklı hafta `shadowlaw_drift_ok` yazar; ölçüm düşerse `shadowlaw_drift_failed` ("marjlar sınanmadan yürürlükte" — bedeli bu). Kontrol: api teşhis bloğunun servis ettiği kayma özeti (scheduler.py:713 `_state` alanı) + olay defteri. Ayak düşerse hafta ilerler → gelecek hafta; üçlü kadans düşerse (`weekly_validation_failed`) sonraki poll dener.
+- **halt_learning kurtarma (WP-P, 2026-08-12):** arıza değil OPERATÖR KOLUNUN kaydıdır — `state/LEARN_HALT` dosyası (health.py:26); kolu kimin/ne zaman çektiği `control_learn_halt` olayında. Etkisi: işlemler SÜRER, ship durur (reflect.submit erken döner — `submit_blocked_learn_halt` olayı, reflect.py:898) ve hermes ısınması duraklar (`_warm_skip="learn_halted"`, hermes_runtime.py:411); rollback güvenlik olarak açık kalır. Geri alma panodan: Müdahale kademeleri (kilitler#mudahale) Kademe-4 kolu → `POST /api/control/learn_halt` (api.py:2025; aynı uç aç/kapa).
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle) {#bu-oturumda-bulunan}
 

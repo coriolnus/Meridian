@@ -297,7 +297,7 @@ def istemci(monkeypatch):
 
 
 def test_t3_rota_cizer_ve_capalari_html_id_yapar(istemci):
-    c, _ = istemci
+    c, api = istemci
     r = c.get("/runbook")
     assert r.status_code == 200, r.text[:300]
     g = r.text
@@ -306,7 +306,15 @@ def test_t3_rota_cizer_ve_capalari_html_id_yapar(istemci):
     # sayfaya varır ama BÖLÜME varmaz — operatör 900 satırın tepesine düşer.
     for capa in sorted(_capalar()):
         assert f'id="{capa}"' in g, f"çapa HTML id'ye dönüşmemiş: {capa}"
-    assert 'class="yok"' in g, "'yazılmadı' işareti sayfada sönük kalmış"
+    # "yazılmadı" İŞARETİ (WP-P 2026-08-12 güncellemesi): eski assert canlı belgede HER ZAMAN en az
+    # bir boş girdi varsayıyordu — içerik borcu kapanınca (Çözüm boşları 16→0) o varsayım yanlış
+    # oldu ve test, runbook'u TAMAMLAMAYI cezalandırır hale geldi. Ölçülen şey RENDER YETENEĞİDİR,
+    # belgenin sonsuza dek eksik kalması değil: yetenek üreticinin sentineliyle doğrudan sınanır,
+    # canlı belgede sentinel MADDESİ varsa sayfada da renkli görünmek zorundadır (iki yön de korunur).
+    yetenek, _ = api._md_render(f"- x **{U.YAZILMADI}** y")
+    assert 'class="yok"' in yetenek, "'yazılmadı' işareti render yolunda sönük — api._md_render kuralı kaybolmuş"
+    if any(l.startswith(("- ", "  - ")) and U.YAZILMADI in l for l in RUNBOOK_MD.splitlines()):
+        assert 'class="yok"' in g, "belgede 'yazılmadı' maddesi var ama sayfada sönük kalmış"
     assert "<nav class=\"toc\"" in g and g.count("<li") > 20, "içindekiler üretilmemiş"
 
 

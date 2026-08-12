@@ -720,3 +720,122 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
   masası → Koruma · çıplak pozisyonlar kartı (taze ölçüm `GET /api/alpaca/koruma`) → koruma-onayı
   `POST /api/alpaca/koruma_kur` (onay jetonu + oneri_id; jetonsuz çağrı KURU KOŞU, bayat oneri_id
   emri düşürür) her çıplak motor pozisyonuna TEK OCO kurar; HALT bu yolu kapatmaz (koruma_kur bloğu beyanı).
+- **ONAYLI_PLAN_GONDERILMEDI kurtarma (WP-P, 2026-08-12):** tetik watchdog.py:2687 (rapor
+  watchdog.py:2606; poll kadansında, kendi try'ında watchdog.py:311): operatör-onaylı + iç-motor-dolmuş
+  planın dolum-sonrası reconcile fotoğrafında Alpaca'da NE EMİR NE POZİSYON var; ihlal plan_id başına
+  bir kez mandallı, ÖLÇÜLEMEDİ dalları alarmsız (fotoğraf bayatlığının sahibi #10 mutabakat-tazelik
+  bekçisi — çift-duyuru yasağı). İlk ayrım olaydaki `gonderim_izi`: False = emir HİÇ çıkmadı → onay
+  yanıtının/`plan_operator_approved` olayının `icra_yolu` alanını oku (loop.py:503-527 gönderimin
+  sonucunu ya da yolun yokluğunu hâl hâl AÇIKÇA yazar); True = iz var ama broker'da yok → Mutabakat
+  masası (pano karar#mutabakat) + Alpaca tarafını doğrula. Kendi kendine onarım: döngünün geç-gönderim
+  kemeri (loop.py:1342) her günlük turda aynasız iç dolumları TEK kapıdan yeniden gönderir — olay
+  `mirror_gec_gonderim`, kemer düşerse `mirror_gec_gonderim_dustu`. Pano `submit_armed` düğmesi BU
+  vakayı KAPATMAZ (yalnız SİLAHLI kümeyi gönderir; dolan plan kümede değil — loop.py:1339 armed'a
+  dokunulmaz beyanı). Kemer de kapatamıyorsa acil kapama ELLE EMİRDİR ve operatör domain kararıdır
+  (alarm metninin kendi hükmü: "gönderim yolunu onar ya da elle emirle"); kalıcı onarım mühendislik turu.
+- **scheduler_poll kurtarma (WP-P, 2026-08-12):** damgayı advance_once'ın kendisi atar
+  (scheduler.py:815, her 300 sn poll'da — seans DIŞINDA da; tick_watchdog başlığındaki ölçüm: hafta
+  sonu maksimum aralık 302 sn). 30 dk sessizlik "kadans gecikti" değil SÜREÇ ÖLÜ/KİLİTLİ demektir;
+  kurtarma yöneticileri süreç düzeyindedir: A1'de `meridian-tick-watchdog.timer`
+  (deploy/oracle-a1/tick_watchdog.sh — scheduler_status.updated 45 dk bayatlarsa restart; YAS
+  koruması taze süreci bayat sanmaz), yerelde `ops/keepalive.sh` (healthz üst üste 2 ölü → diriltir).
+  Süreç dirilince poll kendiliğinden döner; elle yetişme `POST /api/scheduler/advance` (pano düğmesi;
+  olay `scheduler_advance_manual`).
+- **hermes_poll kurtarma (WP-P, 2026-08-12):** önce ASKIDA mı bak — bekçi rozeti (pano Operasyon)
+  `askida` kovasını ayrı gösterir (watchdog.py:118 sondası): kota soğuması (`brain_cooldown.json`)
+  ya da kimlik havuzu tükenmesi BEKLEMEDİR, arıza değil — alarm üretmez, eylem gerektirmez, OK da
+  sayılmaz (panoda dürüst). Gerçek bayatlıkta iplik ölmüştür: hermes ipliği api sürecinin İÇİNDE
+  yaşar (start() api açılışında; hermes_runtime.py:372 beyanı) → kurtarma süreç restart'ıdır
+  (yerelde `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer` — iplik tek başına yeniden
+  başlatılamaz). Isınma koşarken damga sonda başına atılır (hermes_runtime.py:133) — "meşgul"
+  sahte alarm üretmez (v192 + H11).
+- **warmup_sprint kurtarma (WP-P, 2026-08-12):** 8 sa sessizlik "ısınma uzun sürdü" OLAMAZ —
+  aramanın kendi tavanı (HERMES_WARMUP_MAX_MIN, varsayılan 5 sa) koşumu kibarca keser; aşım = tavan
+  ÇALIŞMADI (iplik asılı / sonda içinde kilitli / süreç ölü). Kanıt: son ısınma özeti
+  (hermes_runtime.py:160 `last_warmup`: kesildi/sebep/tavan_dk — pano hermes kartı) + `_warm_skip`
+  nedeni (hermes_runtime.py:410 — "koşmadı" ile "koşamaz" ayrımı; learn_halted değeri Kademe-4
+  kolunun MEŞRU duraklatmasıdır, arıza değil). Kurtarma süreç restart'ıdır (yerelde
+  `ops/keepalive.sh`, A1'de `meridian-tick-watchdog.timer`).
+- **cf_advance kurtarma (WP-P, 2026-08-12):** karşı-olgusal defterin (cf_open.json +
+  counterfactuals.jsonl) günlük ilerleyişi; SIFIR YETKİ — hiçbir karar bu deftere bakmaz
+  (loop.py:1408 beyanı), bayatlığı sermaye riski değil ÖLÇÜM boşluğudur (gölge katmanların ham
+  maddesi birikmez). Düşerse `cf_advance_failed` uyarısı hatayı taşır (olay akışı /
+  `state/events.jsonl`); damga yalnız başarıda atılır → bir sonraki günlük tur kendiliğinden dener;
+  elle yetişme `POST /api/scheduler/advance`. Günlük tur hiç koşmuyorsa sorun bu mekanizma değil
+  süreçtir (süreç-düzeyi yöneticilere bak).
+- **p5_calibrations kurtarma (WP-P, 2026-08-12):** damga P5_LEARN bloğunun SON adımıdır
+  (loop.py:1948) — bayatlık "tek kalibrasyon düştü" değil "öğrenme-analitik bloğu sonuna
+  ulaşamadı" demektir; hangi adımda kırıldığı `v3_learn_layer_failed` uyarısındadır (blok tek
+  korumada, loop.py:1950). Kendiliğinden onarım: her günlük turda yeniden koşar; elle yetişme
+  `POST /api/scheduler/advance`. Rehinelik dersi: bu blok günlük döngüye bağlıdır — veri kapsaması
+  yüzünden noop kalan bir gün öğrenmeyi de sessizce durdurur (öğrenme-rehineliği vakasının sınıfı).
+- **mirror_reconcile kurtarma (WP-P, 2026-08-12):** damga reconcile'ın `broker_reconcile.json`
+  yazımından hemen önce atılır (loop.py:2570) — bayatlık "aynanın fotoğrafı eski" demektir ve
+  fotoğraf yaşının asıl bekçisi #10 mutabakat-tazelik dedektörüdür (kind=mutabakat_tazeligi ile
+  ayrıca alarmlar). Kontrol: Mutabakat masası (pano karar#mutabakat) + `state/broker_reconcile.json`
+  date/api_ok/skip_reason alanları. Alpaca erişimi yoksa reconcile hüküm veremez → anahtar/ağ
+  doğrulaması (mutabakat "Broker API" satırı; sırlar A1 `.env`). Kendiliğinden onarım: alpaca
+  modunda her günlük tur; elle yetişme `POST /api/scheduler/advance`.
+- **crosscheck kurtarma (WP-P, 2026-08-12):** SPY kapanışının bağımsız kaynakla seans başına bir
+  karşılaştırması — `state/index_crosscheck.json`u yazar; veri-kalitesi kapısı `status=diverged`i
+  AYNI seansta halt sebebine çevirir (loop.py:1169). Bayatlığın bedeli: bağımsız doğrulama SUSAR,
+  bar kalitesi tek kaynağa kalır. Ateşleme yolu BİLİNÇLİ sessiz-yutmalı (scheduler.py:1170 —
+  düşüş olay YAZMAZ) → teşhis dosyanın kendisinden: date/status alanı taze mi (pano Sağlık → Veri
+  hattı, api.py:3850 aynı dosyayı servis eder). Kendiliğinden onarım: her yeni seans işlendiğinde;
+  süreklilik arızası mühendislik turudur.
+- **arming_eval kurtarma (WP-P, 2026-08-12):** haftalık uyuyan-kurulum ölçümü (scheduler.py:1039
+  `arming.evaluate`) — damga ve hafta bayrağı YALNIZ başarıda ilerler; düşerse `arming_eval_failed`
+  uyarısı + bir SONRAKİ poll yeniden dener (hafta yakılmaz). Bayatlıkta kontrol:
+  `state/arming_report.json` üretim damgası + pano Onay kuyruğu (karar#onaylar). Ölçüm koşup kapı
+  geçse bile kod değişmez (ARMED_SETUPS bir mühendislik turudur; o karar çağrısının prosedürü kendi
+  alarm bölümündedir) — burada iş yalnız kadansı yaşatmaktır.
+- **shadow_fit kurtarma (WP-P, 2026-08-12):** öğrenme kadansının 1. adımı (scheduler.py:517
+  `shadow_model.maybe_refit` — seans başına bir, bar varışından bağımsız). Düşerse
+  `shadow_fit_cadence_failed` uyarısı ve asıl risk şudur: model BAYAT katsayılarla tahmin üretmeye
+  DEVAM eder (yanlış sayı doğru görünür). Kontrol: `state/shadow_model.json`
+  fit_attempt_ts/fit_ts/fit_skip_reason/n_fit damgaları. Adım düşerse seans damgası yine ilerler →
+  yeniden deneme bir SONRAKİ seans; kadansın KENDİSİ düşerse (`learning_cadence_failed`) damga
+  ilerlemez → sonraki poll dener; elle yetişme `POST /api/scheduler/advance` (seans henüz
+  işlenmemişse).
+- **opinion_backfill kurtarma (WP-P, 2026-08-12):** 9 günlük pencere kısılmayı alarm SANMAZ — önce
+  meşru sessizliği ele: `backfill_progress` olayı kuyruğun hâlini (kalan_gun/kalan_satir),
+  `hermes.backfill_budget()` türetimi tavanı söyler (tavan 0 = bütçe kısıldı, damga BİLEREK atılmaz;
+  kuyruk boş = iş yok). İkisi de değilse dolgu gerçekten durmuştur: kota soğuması
+  (`brain_cooldown.json`) + kadans uyarılarına bak (`learning_cadence_failed` /
+  `backfill_beat_failed`). Kendiliğinden onarım: her seans kadans yeniden tetikler; dolgu asenkron
+  koşar (hermes.py:3285) ve kalanı sonraki tura devreder.
+- **y4_collect kurtarma (WP-P, 2026-08-12):** damga toplama turunun SONUNDA koşulsuz atılır
+  (scheduler.py:646) — iki ayak (Form 4 + FINRA kısa pozisyon) kendi korumasında, ayak arızası
+  bayatlık ÜRETMEZ (`y4_insider_failed`/`y4_shortinterest_failed` uyarıları + `y4_collect` olayının
+  insider_cagri/si_satir alanları ayak sağlığını taşır; anahtar/kota kısılması `atlandi` alanlarıyla
+  kayıtlı — fmp_anahtari_yok/fmp_kota_blogu arıza değildir). Bayatlık = kadans HİÇ koşmadı (seans
+  işlenmedi ya da süreç ölü) → günlük tur/süreç teşhisi. TÜKETİCİSİ BİLEREK YOK (scheduler.py'deki
+  Y4 teşhis bloğu): bayatlığın bedeli karar değil PENCERE kaybıdır — 3 yıllık sınıflama penceresi dolmaz.
+- **validation_report kurtarma (WP-P, 2026-08-12):** haftalık kanıt raporu — SALT-OKUMA, hiçbir
+  kapı etkilenmez (scheduler.py:685 olay beyanı); damga `state/validation_report.json` yazımından
+  sonra (scheduler.py:682). Kontrol: dosyanın uretildi/hafta alanları + `validation_report_written`
+  olayı. Ayak kendi korumasında düşerse (`validation_report_failed`) hafta İLERLER → yeniden deneme
+  gelecek hafta; üçlü kadansın KENDİSİ düşerse (`weekly_validation_failed`) hafta yakılmaz →
+  sonraki poll dener. Bayatlığın bedeli görünürlük: "hangi edge kanıtlanıyor?" tablosu eskir,
+  karar bozulmaz.
+- **massive_verify kurtarma (WP-P, 2026-08-12):** haftalık grouped-vs-zincir tutarlılık ölçümü —
+  yazım kapısının (`massive.write_enabled`) DAYANAĞI; bayatlarsa kapı bayat kanıtla karar verir
+  (`massive_verify_failed` uyarısının kendi beyanı). Kontrol: `state/massive_verify.json`
+  (verdict/samples/max_dev) + `massive_verify_week` olayı. Anahtar yoksa ölçüm `atlandi:
+  massive_anahtari_yok` ile atlanır ve damga HİÇ atılmaz — bu bayatlık arıza değil YAPILANDIRMA
+  hâlidir (anahtar operatör kalemi). Ayak düşerse hafta ilerler → gelecek hafta; üçlü kadans
+  düşerse (`weekly_validation_failed`) sonraki poll dener.
+- **shadowlaw_drift kurtarma (WP-P, 2026-08-12):** haftalık MEASURED_V3 kayma ölçümü — kayma
+  bulursa SABİT DEĞİŞTİRMEZ, yalnız `shadowlaw_variance_drift` uyarısı basar (scheduler.py:716
+  beyanı); türetilmiş marjların yenilenmesi KOD-TÜRETİLEMEZ, operatör + Rol-1 domain kararıdır.
+  Sağlıklı hafta `shadowlaw_drift_ok` yazar; ölçüm düşerse `shadowlaw_drift_failed` ("marjlar
+  sınanmadan yürürlükte" — bedeli bu). Kontrol: api teşhis bloğunun servis ettiği kayma özeti
+  (scheduler.py:713 `_state` alanı) + olay defteri. Ayak düşerse hafta ilerler → gelecek hafta;
+  üçlü kadans düşerse (`weekly_validation_failed`) sonraki poll dener.
+- **halt_learning kurtarma (WP-P, 2026-08-12):** arıza değil OPERATÖR KOLUNUN kaydıdır —
+  `state/LEARN_HALT` dosyası (health.py:26); kolu kimin/ne zaman çektiği `control_learn_halt`
+  olayında. Etkisi: işlemler SÜRER, ship durur (reflect.submit erken döner —
+  `submit_blocked_learn_halt` olayı, reflect.py:898) ve hermes ısınması duraklar
+  (`_warm_skip="learn_halted"`, hermes_runtime.py:411); rollback güvenlik olarak açık kalır.
+  Geri alma panodan: Müdahale kademeleri (kilitler#mudahale) Kademe-4 kolu →
+  `POST /api/control/learn_halt` (api.py:2025; aynı uç aç/kapa).
