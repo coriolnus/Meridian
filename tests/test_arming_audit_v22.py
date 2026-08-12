@@ -38,18 +38,21 @@ def test_r1_arming_never_mutates_live_armed_set():
 
 
 def test_r1b_evaluate_leaves_armed_setups_untouched(sandbox_state, monkeypatch):
+    """UYUYAN ÖRNEK ADI DEĞİŞTİ (2026-08-12, BEYANLI): momentum_burst → episodic_pivot. mb o gün
+    operatör onayıyla silahlandı (§E.2), yani `_dormant_setups()` onu artık döndürmüyor ve
+    `evaluate` onu ölçmüyor. Ölçülen YASA aynı: kapı GEÇSE bile canlı silahlı küme değişmez."""
     from meridian import strategy
     before = list(strategy.ARMED_SETUPS)
-    monkeypatch.setattr(arming, "setup_report", lambda: {"momentum_burst": {"n": 999, "avg_r": 1.0,
+    monkeypatch.setattr(arming, "setup_report", lambda: {"episodic_pivot": {"n": 999, "avg_r": 1.0,
                                                                             "win_rate": 0.6, "regimes": {}}})
     monkeypatch.setattr(arming, "_measure", lambda s, b, i: {"status": "gate_passed", "search_p": 0.99})
     out = arming.evaluate(bars={}, index=None)
-    assert out["measurements"]["momentum_burst"]["status"] == "gate_passed"
+    assert out["measurements"]["episodic_pivot"]["status"] == "gate_passed"
     assert list(strategy.ARMED_SETUPS) == before, "kapı geçse BİLE canlı set değişemez"
 
 
 def test_r1c_gate_pass_only_alarms(sandbox_state, monkeypatch):
-    monkeypatch.setattr(arming, "setup_report", lambda: {"momentum_burst": {"n": 999, "avg_r": 1.0,
+    monkeypatch.setattr(arming, "setup_report", lambda: {"episodic_pivot": {"n": 999, "avg_r": 1.0,
                                                                             "win_rate": 0.6, "regimes": {}}})
     monkeypatch.setattr(arming, "_measure", lambda s, b, i: {"status": "gate_passed", "search_p": 0.99})
     arming.evaluate(bars={}, index=None)

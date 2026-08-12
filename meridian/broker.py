@@ -20,7 +20,21 @@ IMPACT_COEF = 0.10         # linear price-impact: participation of ADV adds IMPA
 MAX_NOTIONAL_PCT = 0.25    # a single position's notional (qty·entry) may not exceed this share of equity —
 #                            bounds the gap-through-stop tail: a tight-ATR name otherwise buys huge share
 #                            counts and a gap-down at bar-open loses NOTIONAL, not the intended 1R.
-DERISK_FLOOR_DD = 0.08     # at/beyond this drawdown from peak, take no new size
+# --- DE-RISK RAMPASI: KOD-İÇİ FAIL-SAFE VARSAYILANLARI (OPT Faz-1 kablolaması, 2026-08-12) -------
+# Bu iki sayı 2026-08-12'ye kadar `derisk_mult` GÖVDESİNDE gömülüydü (0.03 / 0.08) — yani ne
+# operatörün değişmez zarfında ne arama uzayında görünüyorlardı; EDG-023/026 ölçümleri onları
+# ancak MONKEYPATCH ile oynatabildi (research/olcumler/edg026_slot20_2026-08-12/olcum.py:178).
+# Artık goal.yaml `limits` bloğundan okunur (`derisk_ramp()`), buradaki değerler yalnız FAIL-SAFE:
+# dosya/anahtar yoksa ya da değer bozuksa yasa YOK olmaz, BENİMSENEN banda düşer.
+# DEĞERLER = operatör kararı 2026-08-12 (KARAR-PAKETİ §E.1/§E.3): 15/36, TEK RAMPA HER MODDA
+# (kâğıt = gerçek-para birebir; eski 3/8'e kod-yolu YOKTUR).
+DERISK_FULL_DD = 0.15      # bu çekilmeye KADAR tam boy (rampanın üst ucu)
+DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
+# ŞERH — KOPAN BAĞ (test_dalga_w1_v216 Ç5): `DERISK_FLOOR_DD` 2026-08-12'ye dek `goal.max_drawdown`
+# (0,08) ile SAYICA aynıydı ve test o eşitliği çiviliyordu. Karar bandı 36'ya taşıyınca bağ koptu:
+# ikisi AYNI SINIF DEĞİLDİR — biri EMİR BOYUTU rampasının tabanı, diğeri deneyin BAŞARISIZLIK
+# hükmü eşiğidir. Eşitlik bir yasa değil, tarihsel bir çakışmaydı; ayrışma bilinçlidir ve testte
+# mezar taşıyla beyan edilmiştir.
 
 # =================================================================================================
 # E1 — GİRİŞ İCRA YASASI: TEK YASA, İKİ MOTOR (WP-E / kart EXE-2026-001, 2026-07-31)
@@ -210,25 +224,83 @@ def bps_delta(a: float | None, b: float | None) -> float | None:
     return round((x / y - 1.0) * 10000.0, 3)
 
 
-def derisk_mult(equity: float, peak: float) -> float:
+def derisk_ramp(override: dict | None = None) -> dict:
+    """Yürürlükteki de-risk rampası. Kaynak: `goal.yaml` → `limits.derisk_full_dd` /
+    `limits.derisk_floor_dd` (DEĞİŞMEZ dosya, OPERATÖR KALEMİ — `guard.LIMIT_KEYS`; Hermes
+    öneremez ve bounds.yaml'da satırı YOKTUR: risk-artıran vanalar karar penceresinden geçer,
+    makine evriltmez — ROADMAP §2-10(3) uygulama politikası).
+
+    Dönüş: {"full_dd", "floor_dd", "kaynak"} — `kaynak` her alan için "goal.yaml" | "kod
+    varsayilani" der (config.live_expectancy_rule emsali: sessiz bir varsayılan, okuyucuya
+    "operatör böyle yazmış" izlenimi verirdi).
+
+    KELEPÇE (`entry_law` deseni birebir): bozuk/negatif/ters değer SESSİZCE geçmez — İKİ alan
+    BİRDEN fail-safe varsayılana döner. Yarısı dosyadan yarısı koddan bir rampa, hiç olmayan
+    rampadan tehlikelidir: `full_dd >= floor_dd` olduğu anda çarpan bir sıçrama fonksiyonuna
+    dönüşür (tam boydan sıfıra, ara bant yok) ve bu hiç kimsenin verdiği bir karar değildir."""
+    cfg = {"full_dd": DERISK_FULL_DD, "floor_dd": DERISK_FLOOR_DD,
+           "kaynak": {"full_dd": "kod varsayilani", "floor_dd": "kod varsayilani"}}
+    raw = override
+    if raw is None:
+        try:
+            from . import config
+            raw = (config.goal() or {}).get("limits") or {}
+        except Exception:  # sessiz-yutma: yapılandırma okunamadıysa RAMPA YOK olmaz, benimsenen banda düşer — ve `kaynak` alanı bunu dışarı söyler
+            raw = {}
+    if not isinstance(raw, dict):
+        return cfg
+    okunan: dict = {}
+    for ad in ("derisk_full_dd", "derisk_floor_dd"):
+        ham = raw.get(ad)
+        if ham is None:
+            continue
+        try:
+            okunan[ad] = float(ham)
+        except (TypeError, ValueError):  # sessiz-yutma: biçimsiz düğme varsayılana düşer; hangi bandın yürürlükte olduğu `kaynak` alanından okunur
+            return cfg
+    if not okunan:
+        return cfg
+    full = okunan.get("derisk_full_dd", DERISK_FULL_DD)
+    floor = okunan.get("derisk_floor_dd", DERISK_FLOOR_DD)
+    if not (0.0 <= full < floor <= 1.0):
+        return cfg                       # ters/aralık-dışı bant → İKİSİ BİRDEN varsayılana (bkz. docstring)
+    return {"full_dd": full, "floor_dd": floor,
+            "kaynak": {"full_dd": ("goal.yaml" if "derisk_full_dd" in okunan else "kod varsayilani"),
+                       "floor_dd": ("goal.yaml" if "derisk_floor_dd" in okunan else "kod varsayilani")}}
+
+
+def derisk_mult(equity: float, peak: float, cfg: dict | None = None) -> float:
     """Graded de-risk: shrink new-position size CONTINUOUSLY as the book draws down from its peak — a
-    smooth linear ramp (was a 4-step cliff: full at 2.99% dd, −34% at 3.01%). Full size until 3% dd,
-    then linearly to 0 at DERISK_FLOOR_DD. Applied identically in live and backtest at fill time."""
+    smooth linear ramp (was a 4-step cliff). Full size until `full_dd`, then linearly to 0 at
+    `floor_dd`. Applied identically in live and backtest at fill time — TEK RAMPA, mod dallanması
+    YOK (operatör kararı 2026-08-12 §E.3: kâğıt = gerçek-para birebir).
+
+    Bant `derisk_ramp()`ten gelir (goal.yaml → limits). Gövde EDG-026'nın ölçtüğü fonksiyonun
+    BİREBİR aynısıdır (olcum.py:178 `_rampa_fn`) — yalnız 0.03/0.08 yerine parametre; yuvarlama
+    hanesi (4) ve sınır yönleri (`<=` / `>=`) dahil hiçbir şey değişmedi."""
     if peak <= 0:
         return 1.0
+    cfg = cfg or derisk_ramp()
+    full_dd, floor_dd = cfg["full_dd"], cfg["floor_dd"]
     dd = (peak - equity) / peak
-    if dd <= 0.03:
+    if dd <= full_dd:
         return 1.0
-    if dd >= DERISK_FLOOR_DD:
+    if dd >= floor_dd:
         return 0.0
-    return round(1.0 - (dd - 0.03) / (DERISK_FLOOR_DD - 0.03), 4)   # linear 1.0 → 0.0 across [3%, 8%]
+    return round(1.0 - (dd - full_dd) / (floor_dd - full_dd), 4)   # linear 1.0 → 0.0 across the band
 
 
-def max_positions_at(equity: float, peak: float, base_max: int) -> int:
+def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None = None) -> int:
     """Concurrent-position throttle: as the book draws down, cut not just size but the NUMBER of open
     positions allowed — de-gross concentration, not only per-trade size. Never below 1 while any size
-    is permitted; 0 once the de-risk floor is hit."""
-    m = derisk_mult(equity, peak)
+    is permitted; 0 once the de-risk floor is hit.
+
+    ÜÇÜNCÜ ARGÜMAN YALNIZ VERİLDİĞİNDE GEÇİLİR — kolaylık değil UYUMLULUK: dondurulmuş ölçüm
+    şasileri `broker.derisk_mult`i İKİ argümanlı bir fonksiyonla monkeypatch'liyor (EDG-023/026,
+    olcum.py:299) ve `max_positions_at` yamayı GLOBAL çözümle görüyor (yayılım çivisi
+    olcum.py:306-307). Koşulsuz `derisk_mult(e, p, cfg)` çağrısı o şasileri TypeError'la
+    düşürürdü — yani bugünkü kablonun doğrulandığı ölçümler bir daha koşturulamazdı."""
+    m = derisk_mult(equity, peak) if cfg is None else derisk_mult(equity, peak, cfg)
     if m <= 0.0:
         return 0
     if m >= 1.0:

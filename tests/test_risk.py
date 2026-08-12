@@ -8,21 +8,24 @@ from meridian import broker, score, guard, earnings, config
 
 # ---------------- graded de-risk ladder ----------------
 def test_derisk_mult_continuous_ramp():
+    """BANT 3/8 → 15/36 (operatör kararı 2026-08-12, karar penceresi §E.1/§E.3; ölçüm EDG-2026-023).
+    Sayılar BEYANLI güncellendi — rampanın ŞEKLİ (tam boy → doğrusal → sıfır, 4 hane kuantize)
+    değişmedi, yalnız iki ucu goal.yaml `limits.derisk_full_dd`/`derisk_floor_dd`ye taşındı."""
     assert broker.derisk_mult(100_000, 100_000) == 1.0     # at peak — full size
-    assert broker.derisk_mult(98_000, 100_000) == 1.0      # <=3% dd — full size
-    assert broker.derisk_mult(96_000, 100_000) == pytest.approx(0.8, abs=1e-3)   # 4% dd — linear
-    assert broker.derisk_mult(93_000, 100_000) == pytest.approx(0.2, abs=1e-3)   # 7% dd — linear
-    assert broker.derisk_mult(90_000, 100_000) == 0.0      # >=8% dd — no new size
+    assert broker.derisk_mult(98_000, 100_000) == 1.0      # <=15% dd — full size
+    assert broker.derisk_mult(80_000, 100_000) == pytest.approx(0.7619, abs=1e-4)  # 20% dd — linear
+    assert broker.derisk_mult(70_000, 100_000) == pytest.approx(0.2857, abs=1e-4)  # 30% dd — linear
+    assert broker.derisk_mult(64_000, 100_000) == 0.0      # >=36% dd — no new size
     assert broker.derisk_mult(100_000, 0) == 1.0           # undefined peak — safe default
     # monotonic non-increasing as drawdown deepens
-    seq = [broker.derisk_mult(e, 100_000) for e in (100_000, 97_000, 95_000, 93_000, 91_000)]
+    seq = [broker.derisk_mult(e, 100_000) for e in (100_000, 90_000, 80_000, 70_000, 60_000)]
     assert all(a >= b for a, b in zip(seq, seq[1:]))
 
 
 def test_position_throttle_cuts_count_on_drawdown():
     assert broker.max_positions_at(100_000, 100_000, 5) == 5    # at peak — full slate
-    assert broker.max_positions_at(95_000, 100_000, 5) == 3     # 5% dd (mult 0.6) -> 3
-    assert broker.max_positions_at(90_000, 100_000, 5) == 0     # past the floor -> none
+    assert broker.max_positions_at(80_000, 100_000, 5) == 4     # 20% dd (mult 0.7619) -> 4
+    assert broker.max_positions_at(64_000, 100_000, 5) == 0     # past the floor -> none
 
 
 def test_notional_cap_bounds_single_name(monkeypatch):

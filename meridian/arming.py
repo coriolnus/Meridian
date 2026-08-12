@@ -1,6 +1,8 @@
 """arming.py — Silahlanma Değerlendiricisi (#3): uyuyan→ölç→silahla döngüsünün eksik son halkası.
 
-Uyuyan kurulumlar (momentum_burst, episodic_pivot) karşı-olgusal defterde ileriye dönük ölçülür; bu
+Uyuyan kurulumlar karşı-olgusal defterde ileriye dönük ölçülür (küme SABİT DEĞİL: `_dormant_setups()`
+motor listesinden ARMED_SETUPS'ı düşerek TÜRETİR — 2026-08-11 exhaustion_hammer, 2026-08-12
+momentum_burst operatör onayıyla silahlandı ve kümeden çıktı, bugün geriye episodic_pivot kalır); bu
 modül o kanıt YAZILI eşiği geçtiğinde KAPI ölçÜMÜNÜ otomatik koşar: incumbent (mevcut silahlı set)
 vs aday (aynı parametreler + kurulum silahlı) üretim pencerelerinde walk edilir ve karar TAMAMEN
 mevcut yasaya bırakılır (_gate_eval: blok-bootstrap + K-ceza + fold çoğunluğu + kuyruk vetosu).

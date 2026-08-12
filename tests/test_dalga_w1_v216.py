@@ -458,24 +458,55 @@ def test_C1_equity_curve_bayatlik_bekcisine_KAYITLI(sandbox_state):
 # Ç5 — DERISK_FLOOR_DD ve DD_VETO_MARGIN TEST-KAYNAKLI BAĞ
 # =================================================================================================
 def test_C5_derisk_floor_dd_goal_max_drawdown_ile_AYNI_SAYIDIR():
-    """AİLE #8'İN EN TEHLİKELİ UCU (CIFT-KAYNAK §4.9): `goal.max_drawdown`ın kodda üç kopyası var;
-    ikisi (`EDGE_MAXDD_MAX`, `RESULT_MAXDD_MAX`) goal'a test-kaynaklı BAĞLI, üçüncüsü değildi. Ve
-    üçüncüsü diğer ikisinden farklı bir şey yapıyor: onlar bir HÜKÜM eşiği, bu bir EMİR BOYUTU —
-    `derisk_mult` canlı pozisyon adedini bu sayıdan üretir (broker.py:213-224). Operatör
-    `goal.max_drawdown`ı değiştirirse iki hüküm eşiği testle takip ederdi, boyutlama rampası
-    YERİNDE KALIRDI. Emsal: tests/test_hafta3a_v119.py:78 (aynı desen, aynı gerekçe).
-    `broker.py` DEĞİŞTİRİLMEDİ — bağ TESTTEN kurulur, çünkü sabitin kod tarafındaki gerekçesi
-    (rampanın üst ucu) yerinde ve doğru; eksik olan yalnız kapıydı."""
-    assert broker.DERISK_FLOOR_DD == float(config.goal()["max_drawdown"]), \
-        "boyutlama rampasının tabanı goal.max_drawdown'dan AYRIŞTI — emir boyutu sessizce kaydı"
-    assert broker.DERISK_FLOOR_DD == analytics.EDGE_MAXDD_MAX == analytics.RESULT_MAXDD_MAX
+    """MEZAR TAŞI — BAĞIN RAMPA BACAĞI KOPTU (operatör kararı 2026-08-12, karar penceresi
+    §E.1/§E.3; iddia BEYANLI daraltıldı, sessizce silinmedi).
+
+    ESKİ İDDİA (2026-08-07'de doğruydu): `DERISK_FLOOR_DD == goal.max_drawdown == EDGE_MAXDD_MAX
+    == RESULT_MAXDD_MAX` — dördü de 0,08'di ve testin gerekçesi "operatör max_drawdown'ı
+    değiştirirse boyutlama rampası YERİNDE KALIRDI" idi.
+
+    NE DEĞİŞTİ: rampa artık bir SABİT değil, goal.yaml `limits.derisk_full_dd`/`derisk_floor_dd`
+    kablosudur (OPT Faz-1) ve operatör bandı 0,03/0,08 → 0,15/0,36'ya taşıdı (ölçüm EDG-2026-023,
+    hüküm karar penceresi). Yani eşitlik bir YASA değil TARİHSEL ÇAKIŞMAYMIŞ: eski testin kendi
+    cümlesi ikisinin AYRI SINIF olduğunu zaten söylüyordu — "onlar bir HÜKÜM eşiği, bu bir EMİR
+    BOYUTU". Ayrı sınıftaki iki sayıyı eşitlikle bağlamak, birini değiştiren kararın diğerini de
+    değiştirmesini ZORUNLU kılardı; oysa 0,36'lık bir rampa tabanı %36 düşüşe İZİN anlamına
+    gelmez (deneyin başarısızlık eşiği hâlâ 0,08).
+
+    KORUNAN BACAK: iki HÜKÜM eşiği (`EDGE_MAXDD_MAX`, `RESULT_MAXDD_MAX`) goal'a BAĞLI KALIR —
+    CIFT-KAYNAK §4.9'un asıl kapısı buydu ve o kapı açık kalırsa üç yerde üç farklı başarısızlık
+    tanımı doğardı.
+    RAMPA BACAĞININ YERİNE GEÇEN ÇİVİ: `test_C5_derisk_rampasi_KABLODAN_okunur` (aşağıda) —
+    taban artık goal'daki İKİZİNE bağlanır, sabite değil."""
+    assert analytics.EDGE_MAXDD_MAX == analytics.RESULT_MAXDD_MAX == float(config.goal()["max_drawdown"]), \
+        "hüküm eşikleri goal.max_drawdown'dan AYRIŞTI — üç yerde üç başarısızlık tanımı doğar"
+    # Kopan bacağın yerine: fail-safe varsayılanları ADIYLA çivile. Bunlar "yürürlükteki bant"
+    # değildir (o goal.yaml'dadır) — config okunamadığında düşülecek bandın ta kendisidir ve
+    # sessizce eski 3/8'e geri kaymamalıdır (operatör kararı: eski banda kod-yolu YOK).
+    assert (broker.DERISK_FULL_DD, broker.DERISK_FLOOR_DD) == (0.15, 0.36), \
+        "de-risk fail-safe bandı benimsenen 15/36'dan kaydı"
+
+
+def test_C5_derisk_rampasi_KABLODAN_okunur():
+    """Kopan bağın YERİNE GEÇEN çivi: rampanın tabanı artık `broker.py` sabitinden DEĞİL,
+    goal.yaml'daki ikizinden hüküm alır. Sabitin tek işi FAIL-SAFE olmaktır (dosya/anahtar yoksa),
+    yani "yürürlükteki taban" sorusunun tek dürüst cevabı goal'dur."""
+    lim = config.goal()["limits"]
+    bant = broker.derisk_ramp()
+    assert bant["full_dd"] == float(lim["derisk_full_dd"])
+    assert bant["floor_dd"] == float(lim["derisk_floor_dd"])
+    assert bant["kaynak"] == {"full_dd": "goal.yaml", "floor_dd": "goal.yaml"}, \
+        "yürürlükteki bant sessizce kod varsayılanına düşmüş — goal.yaml okunmuyor"
+    assert 0.0 <= bant["full_dd"] < bant["floor_dd"] <= 1.0
 
 
 def test_C5_derisk_rampasi_tabanda_SIFIR_boyut_verir():
     """Bağın DAVRANIŞSAL yarısı: sayı eşitliği tek başına bir iddiadır; rampanın o sayıda
-    gerçekten kapandığı ölçülür (yoksa sabit doğru, tüketici yanlış olabilirdi)."""
+    gerçekten kapandığı ölçülür (yoksa sabit doğru, tüketici yanlış olabilirdi). Taban artık
+    KABLODAN okunur (yukarıdaki mezar taşı) — iddia sabite değil yürürlükteki banda bağlıdır."""
     tepe = 100_000.0
-    tabanda = tepe * (1.0 - broker.DERISK_FLOOR_DD)
+    taban_dd = broker.derisk_ramp()["floor_dd"]
+    tabanda = tepe * (1.0 - taban_dd)
     assert broker.derisk_mult(tabanda, tepe) == 0.0
     assert broker.derisk_mult(tabanda * 0.99, tepe) == 0.0
     assert broker.derisk_mult(tepe, tepe) == 1.0

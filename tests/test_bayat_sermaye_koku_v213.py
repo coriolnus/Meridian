@@ -51,6 +51,15 @@ TOHUM_PNL = -5542.09          # Σ trades.pnl_dollars (95 satır, hepsi replay_s
 DEFTER_TABANI = 94457.91      # START_EQUITY + TOHUM_PNL — 1 Ağustos ÖNCESİ kitap
 BEYANLI_TABAN = 100000.0      # 1 Ağustos'ta taşınan taban (SR-20260801T151429+0000)
 CANLI_CARPAN = 0.4916         # derisk_mult(94457.91, 100000) — aynanın 5 Ağustos'ta kullandığı
+# VAKANIN GÜNÜNDE YÜRÜRLÜKTE OLAN RAMPA (2026-08-12'de eklendi — DONDURULMUŞ VAKA YASASI):
+# 5 Ağustos'ta `derisk_mult`in bandı 0,03 / 0,08'di ve 0,4916 O BANDIN sayısıdır. 2026-08-12'de
+# operatör bandı 0,15 / 0,36'ya taşıdı (goal.yaml `limits.derisk_*_dd`; karar penceresi §E.1/§E.3)
+# ve BUGÜNKÜ bantla aynı çekilme %5,5 → çarpan 1,0 verir. Vaka testinin işi tarihi YENİDEN
+# ÜRETMEKtir, bugünü değil: bant artık PARAMETRE olduğu için o günkü değer ADIYLA geçirilir
+# (uydurma yok, sessiz kayma yok). Bugünkü bandı ölçen çiviler ayrı dosyada
+# (tests/test_derisk_rampa_kablosu_v237.py) — ikisi karıştırılırsa vaka her bant değişiminde
+# "çürür" ve tarihî kanıt kaybolurdu.
+RAMPA_2026_08 = {"full_dd": 0.03, "floor_dd": 0.08}
 
 # NUE planı — canlı defterden birebir (`P-2026-08-05-NUE`).
 NUE_TETIK = 274.57            # plan `entry_trigger` — aynanın bacağı bunu kullandı
@@ -105,10 +114,16 @@ def test_kitap_beyanli_tabanda_iken_carpan_1_0():
 # K2 — 5 AĞUSTOS ARİTMETİĞİ BİREBİR
 # =================================================================================================
 def test_derisk_carpani_canli_vakanin_sayisini_verir():
-    """`derisk_mult(94457.91, 100000)` = 0,4916. Rampanın sabitleri değişirse ÖNCE burası düşer."""
+    """`derisk_mult(94457.91, 100000)` = 0,4916 — O GÜNKÜ bantla (RAMPA_2026_08). Rampanın
+    FORMÜLÜ değişirse (yuvarlama, sınır yönü, doğrusallık) burası hâlâ ÖNCE düşer; bandın
+    operatör kararıyla taşınması ise artık testi çürütmez (bkz. RAMPA_2026_08 gerekçesi)."""
     dd = (BEYANLI_TABAN - DEFTER_TABANI) / BEYANLI_TABAN
-    assert 0.03 < dd < DERISK_FLOOR_DD          # rampanın İÇİNDE — ne muaf ne tabanda
-    assert derisk_mult(DEFTER_TABANI, BEYANLI_TABAN) == CANLI_CARPAN
+    assert RAMPA_2026_08["full_dd"] < dd < RAMPA_2026_08["floor_dd"]   # o günkü rampanın İÇİNDE
+    assert derisk_mult(DEFTER_TABANI, BEYANLI_TABAN, RAMPA_2026_08) == CANLI_CARPAN
+    # BUGÜNKÜ bant aynı çekilmeyi kısmıyor — vakanın "aynı sayı bugün çıkmaz" hâli de ÖLÇÜLÜ
+    # kalsın (yarın biri bandı okumadan bu dosyaya bakarsa yanlış sonuç çıkarmasın).
+    assert derisk_mult(DEFTER_TABANI, BEYANLI_TABAN) == 1.0
+    assert dd < DERISK_FLOOR_DD
 
 
 def test_nue_iki_bacagin_adedi_birebir_yeniden_uretilir():
@@ -172,7 +187,7 @@ def test_ters_onarilmis_kitap_uc_kimligi_de_YESIL_birakir(sandbox_state):
     b = PaperBroker(START_EQUITY, slippage_bps=5, commission_per_share=0.0)
     b.cash, b.realized_pnl = pf["cash"], pf["realized_pnl"]
     assert b.equity() == pytest.approx(DEFTER_TABANI, abs=1e-6)
-    assert derisk_mult(b.equity(), pf["peak_equity"]) == CANLI_CARPAN
+    assert derisk_mult(b.equity(), pf["peak_equity"], RAMPA_2026_08) == CANLI_CARPAN
     assert sermaye.ofset(pf) == 0.0        # beyan yok → ofset 0 → kimlikler "tutuyor" der
 
 

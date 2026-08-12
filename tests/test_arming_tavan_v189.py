@@ -136,7 +136,12 @@ def test_hesap_sirasinda_bar_revizyonu_degisirse_onbellege_yazilmaz(monkeypatch)
 
 
 # ---------------- 2. ÇİVİ: tavan aşımı → olculemedi + döngü tamamlanır -------------------------
-def _tek_uyuyan(monkeypatch, setup="momentum_burst"):
+def _tek_uyuyan(monkeypatch, setup="episodic_pivot"):
+    """VARSAYILAN AD DEĞİŞTİ (2026-08-12, BEYANLI): eskiden "momentum_burst"tu. mb o gün operatör
+    onayıyla SİLAHLANDI (strategy.ARMED_SETUPS; karar penceresi §E.2) ve `_dormant_setups()`
+    artık onu döndürmüyor — `evaluate` yalnız DORMANT kümeyi ölçtüğü için eski ad bu dosyanın
+    yedi çivisini KeyError'la düşürüyordu. Ölçülen mekanizma (süre tavanı, uçuş kaydı, alarm
+    tek-atımı) kurulum-adından bağımsızdır; ad, hâlâ uyuyan tek kuruluma taşındı."""
     monkeypatch.setattr(arming, "setup_report",
                         lambda: {setup: {"n": 999, "avg_r": 1.0, "win_rate": 0.6, "regimes": {}}})
 
@@ -154,12 +159,12 @@ def test_tavan_asilinca_olculemedi_ve_tur_devam_eder(monkeypatch):
     t0 = time.monotonic()
     out = arming.evaluate(bars={}, index=None)
     gecen = time.monotonic() - t0
-    m = out["measurements"]["momentum_burst"]
+    m = out["measurements"]["episodic_pivot"]
     assert m["status"] == "olculemedi", "tavan aşıldı ama tur ölçümü beklemeye devam etti"
     assert m["neden"] == "sure_tavani_asildi"
     assert m["search_p"] is None and m["incumbent_oos"] is None, "ölçülemeyen sayı UYDURULMAZ"
     assert gecen < 10, f"evaluate tavanı aşan ölçümü bekledi ({gecen:.1f}s) — döngü bloke olur"
-    assert out["measurements"]["momentum_burst"]["tavan_s"] == pytest.approx(0.3)
+    assert out["measurements"]["episodic_pivot"]["tavan_s"] == pytest.approx(0.3)
     birak.set()
     assert arming.ucus_bekle(20)
 
@@ -175,11 +180,11 @@ def test_devredilen_olcum_arka_planda_raporu_kendi_isler(monkeypatch):
 
     monkeypatch.setattr(arming, "_measure", _yavas)
     arming.evaluate(bars={}, index=None)
-    assert store.read_json(arming.REPORT_FILE, {})["measurements"]["momentum_burst"]["status"] \
+    assert store.read_json(arming.REPORT_FILE, {})["measurements"]["episodic_pivot"]["status"] \
         == "olculemedi"
     birak.set()
     assert arming.ucus_bekle(20)
-    rap = store.read_json(arming.REPORT_FILE, {})["measurements"]["momentum_burst"]
+    rap = store.read_json(arming.REPORT_FILE, {})["measurements"]["episodic_pivot"]
     assert rap["status"] == "gate_passed" and rap["arka_plan"] is True
     assert rap["search_p"] == 0.97 and rap["bar_parmak"] and rap["olculdu_at"]
     olay = [e for e in store.read_jsonl("events.jsonl") if "ARMING_READY" in str(e)]
@@ -200,7 +205,7 @@ def test_arka_planda_olcum_surerken_ikinci_olcum_baslatilmaz(monkeypatch):
     arming.evaluate(bars={}, index=None)
     out2 = arming.evaluate(bars={}, index=None)          # bir sonraki taze poll
     assert sayac["n"] == 1, "aynı anda İKİ walk — düzeltme kendi kusuruna dönüşürdü"
-    assert out2["measurements"]["momentum_burst"]["neden"] == "onceki_tur_arka_planda"
+    assert out2["measurements"]["episodic_pivot"]["neden"] == "onceki_tur_arka_planda"
     birak.set()
     assert arming.ucus_bekle(20)
 
@@ -234,8 +239,8 @@ def test_aday_walki_incumbentin_onbellegine_DUSMEZ(monkeypatch):
                                                                "incumbent_oos": inc["oos_score"],
                                                                "candidate_oos": cand["oos_score"],
                                                                "fold_wins": "1/3"}, "P düşük"))
-    res = arming._measure("momentum_burst", bars={}, index=None)
-    assert gorulen == [(), ("momentum_burst",)], f"iki AYRI walk beklenirdi, görülen: {gorulen}"
+    res = arming._measure("episodic_pivot", bars={}, index=None)
+    assert gorulen == [(), ("episodic_pivot",)], f"iki AYRI walk beklenirdi, görülen: {gorulen}"
     assert res["incumbent_oos"] == 0.1 and res["candidate_oos"] == 0.3
 
 
@@ -246,7 +251,7 @@ def test_tavan_icinde_biten_olcum_eski_davranisla_bit_bit(monkeypatch):
              "incumbent_oos": 0.085, "candidate_oos": 0.127, "fold_wins": "2/3", "why": "P düşük"}
     monkeypatch.setattr(arming, "_measure", lambda s, b, i: dict(sonuc))
     out = arming.evaluate(bars={}, index=None)
-    assert out["measurements"]["momentum_burst"] == sonuc, \
+    assert out["measurements"]["episodic_pivot"] == sonuc, \
         "hızlı yolda rapor sözlüğü DEĞİŞTİ (tavan yolu davranışa sızdı)"
     assert arming._UCUS.get("slot") is None, "biten ölçümün uçuş kaydı temizlenmedi"
 
@@ -270,7 +275,7 @@ def test_olcum_hatasi_yine_eski_sekilde_raporlanir(monkeypatch):
 
     monkeypatch.setattr(arming, "_measure", _patla)
     out = arming.evaluate(bars={}, index=None)
-    assert out["measurements"]["momentum_burst"] == {"error": "RuntimeError: walk düştü"}
+    assert out["measurements"]["episodic_pivot"] == {"error": "RuntimeError: walk düştü"}
 
 
 def test_bozuk_tavan_env_varsayilana_duser(monkeypatch):

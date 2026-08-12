@@ -89,10 +89,16 @@ def test_no_look_ahead():
 def test_armed_by_operator_2026_08_11():
     """SİLAHLI (operatör onayı 2026-08-11): ARMED_SETUPS'ta VAR ve scan_entry çekiç sinyalini aday yapar.
     SIRA sözleşmesi de çivili: kanıtlı iki kurulum (breakout_vcp, pullback) öncelikli kalır —
-    exhaustion_hammer tuple'ın SONUNDADIR (aynı ticker'da ancak onlar ateşlemediyse aday üretir)."""
+    exhaustion_hammer onlardan SONRA gelir (aynı ticker'da ancak onlar ateşlemediyse aday üretir).
+
+    İDDİA DARALTILDI (2026-08-12, BEYANLI): eski hâli "tuple'ın SONUNDADIR" diyordu. O gün doğruydu
+    (silahlı küme üçlüydü) ama yazdığı şey sıra sözleşmesi değil, KÜME BÜYÜKLÜĞÜYDÜ: momentum_burst
+    operatör onayıyla sona eklenince (karar penceresi §E.2) çivi, korumadığı bir şey yüzünden
+    kırılırdı. Korunan asıl yasa — "kanıtlı iki kurulum ÖNCE gelir" — aşağıda doğrudan ölçülüyor."""
     assert "exhaustion_hammer" in strat.ARMED_SETUPS, \
         "operatör onayı (2026-08-11) geri alınmış görünüyor — silahlanma bilinçli karardı"
-    assert strat.ARMED_SETUPS.index("exhaustion_hammer") == len(strat.ARMED_SETUPS) - 1, \
+    assert strat.ARMED_SETUPS.index("exhaustion_hammer") > strat.ARMED_SETUPS.index("pullback") \
+        > strat.ARMED_SETUPS.index("breakout_vcp"), \
         "öncelik sırası değişti: kanıtlı kurulumlar (breakout_vcp, pullback) önce gelmeli"
     df = _hammer_bars()
     by_setup = strat.scan_all(df, {}, 95, "T")
@@ -103,9 +109,18 @@ def test_armed_by_operator_2026_08_11():
 
 
 def test_diger_uyuyanlar_dormant_kalir():
-    """Onay YALNIZ exhaustion_hammer içindi (2026-08-11): momentum_burst + episodic_pivot DORMANT."""
-    assert "momentum_burst" not in strat.ARMED_SETUPS
-    assert "episodic_pivot" not in strat.ARMED_SETUPS
+    """SİLAHLANMA TARİHÇESİ (BEYANLI, sinsi değil): 2026-08-11 onayı YALNIZ exhaustion_hammer
+    içindi ve bu test o gün momentum_burst + episodic_pivot'u DORMANT çiviliyordu. 2026-08-12'de
+    momentum_burst AYRI bir operatör onayıyla silahlandı (karar penceresi §E.2; kanıt EDG-2026-025
+    karnesi + EDG-2026-032 final-paket 3/3) — iddia o adı BIRAKTI, kalan uyuyanlar için DURUYOR.
+    Yani bu test hâlâ aynı şeyi koruyor: silahlanma otomatik değildir, her ad ayrı bir insan
+    kararıdır (`arming.py` kapı GEÇSE bile ARMED_SETUPS'a dokunmaz)."""
+    assert "momentum_burst" in strat.ARMED_SETUPS, \
+        "operatör onayı (2026-08-12) geri alınmış görünüyor — silahlanma bilinçli karardı"
+    assert strat.ARMED_SETUPS.index("momentum_burst") == len(strat.ARMED_SETUPS) - 1, \
+        "mb ÖNCELİK kazanmış: tarihçe-korumalı karar 'sona ekle' idi (032'nin ölçtüğü sıra)"
+    for uyuyan in ("episodic_pivot", "pead", "canslim"):
+        assert uyuyan not in strat.ARMED_SETUPS, f"{uyuyan} onaysız silahlanmış"
 
 
 def test_screener_attribution_wired():

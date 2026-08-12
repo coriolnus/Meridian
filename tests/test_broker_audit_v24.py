@@ -108,14 +108,17 @@ def test_k2c_scale_out_refused_when_bar_breached_the_stop():
 
 # ---------- risk kısıcıları: sürekli ve monoton ----------
 def test_derisk_is_monotone_and_continuous():
+    """Süpürme aralığı %10 → %40'a genişletildi (bant 3/8 → 15/36, operatör kararı 2026-08-12):
+    eski aralık yeni rampanın TAMAMEN tam-boy bölgesinde kalıyordu, yani monotonluk iddiası
+    hiçbir şeyi ölçmezdi (sabit 1.0 da monotondur). Süpürme artık üç bölgeyi de geçer."""
     prev = 1.0
     for i in range(0, 101):
-        dd = i / 1000.0                                        # %0 → %10 drawdown
+        dd = i / 250.0                                         # %0 → %40 drawdown
         m = derisk_mult(100_000 * (1 - dd), 100_000)
         assert 0.0 <= m <= 1.0 and m <= prev + 1e-9, "de-risk çarpanı drawdown arttıkça ARTAMAZ"
         prev = m
-    assert derisk_mult(92_000, 100_000) == 0.0                 # %8 tabanında sıfır
-    assert max_positions_at(92_000, 100_000, 5) == 0
+    assert derisk_mult(64_000, 100_000) == 0.0                 # %36 tabanında sıfır
+    assert max_positions_at(64_000, 100_000, 5) == 0
     assert max_positions_at(100_000, 100_000, 5) == 5
 
 

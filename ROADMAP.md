@@ -937,7 +937,13 @@ OB-2 systemd exit-143 → OB-1 N1 kanal → OB-4 restart→PBO (M2) damgalama ç
     (@20 fazla CI-0-içi; WP-K K3). Katman yükseltmesi (Researcher Seat $10/ay) yalnız ölçüm-OTOMASYONU
     için — elle koşumda GEREKMEZ. `docs/KESIF-WP-QC` §4-5.
 
-### 6.1 OPERATÖR KALEMİ ENVANTERİ (temizlik turu 2026-07-30 — ölü-mekanizma avının üçüncü kovası)
+12. **goal.max_drawdown 0.08 ↔ benimsenen-dünya dd %12.4-12.7 GERİLİMİ (kod-turu bulgusu 2026-08-12):**
+    C+mb paketinin ÖLÇÜLEN max-dd'si hedef-sözleşmesi eşiğinin üstünde — `goal_failure_report` + iki
+    analytics kapısı 0.08'e bakmaya devam ediyor; paket normal davranırken "deney başarısız" işareti
+    üretecekler (alarm/rapor düzeyi; icrayı durdurmaz). Rampa artık bu değere bağlı DEĞİL (v237 kablo).
+    Rol-1 önerisi: eşik %16-18 bandına (ölçülen dd × ~1.3 tampon) — ama bu HEDEF SÖZLEŞMESİ maddesi,
+    karar operatörün. Karar gelene dek 0.08 bilinçli-eski kalır (dürüst işaret: eşik aşımı = "paket
+    beklenen bölgesinde, sözleşme güncellenmedi" diye okunmalı). (temizlik turu 2026-07-30 — ölü-mekanizma avının üçüncü kovası)
 
 Bu tablonun VARLIK SEBEBİ: hedef sözleşmesi md.1 üç hâl tanır — kablolu, emekli, ya da **operatör
 kalemi**. Üçüncüsü yazılı olmazsa bir sonraki ölü-mekanizma avı bunları "çağıranı yok" diye yeniden

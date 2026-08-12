@@ -74,9 +74,20 @@ def test_setup_report_and_evaluate_flow(seeded_sandbox, monkeypatch):
     monkeypatch.setattr(arming, "_measure", lambda s2, b=None, i=None: {"status": "gate_passed", "search_p": 0.91})
     out = arming.evaluate(bars={}, index={})
     assert out["measurements"]["episodic_pivot"]["status"] == "gate_passed"
-    assert out["measurements"]["momentum_burst"]["status"] == "insufficient_cf"
+    # momentum_burst 2026-08-12'de operatör onayıyla SİLAHLANDI (§E.2) → artık uyuyan DEĞİL.
+    # cf defterinde satırı olsa bile `evaluate` onu ÖLÇMEZ: ölçüm kanalı yalnız DORMANT kümeyi
+    # tarar (`_dormant_setups`). Bu, eski "insufficient_cf" iddiasının yerine geçen çividir —
+    # silahlı bir kurulumun silahlanma kapısında görünmesi kavram karışıklığı olurdu.
+    assert "momentum_burst" not in out["measurements"], \
+        "silahlı kurulum silahlanma kapısında ölçülüyor — dormant/armed ayrımı bulandı"
+    assert rep["momentum_burst"]["n"] == 12, "cf attribution silahlanınca körleşmemeli"
     assert store.read_json("arming_report.json", {})["measurements"]["episodic_pivot"]["search_p"] == 0.91
     assert "episodic_pivot" not in strat.ARMED_SETUPS                     # ölçüm SİLAHLAMAZ — operatör onayı
+    # insufficient_cf bacağı KORUNDU: aynı uyuyan kurulum, zayıf kanıtla → ölçüm HİÇ koşmaz.
+    monkeypatch.setattr(cf, "resolved_rows",
+                        lambda entered_only=True: [_cf_row("episodic_pivot", -0.2) for _ in range(12)])
+    out2 = arming.evaluate(bars={}, index={})
+    assert out2["measurements"]["episodic_pivot"]["status"] == "insufficient_cf"
 
 
 def test_armed_extra_param_channel_only(seeded_sandbox):

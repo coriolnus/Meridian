@@ -199,8 +199,11 @@ def test_veri_kapisi_bloklar(sandbox_state, saat):
 
 
 def test_derisk_sifirlanınca_bloklar(sandbox_state, saat):
-    """%8 ve üzeri drawdown'da yeni boyut alınmaz (derisk_mult=0) — EOD'nin `size_mult > 0` kapısı."""
-    _saglikli_state(sandbox_state, realized_pnl=-15_000.0, peak=100_000.0)
+    """Rampa TABANINDA ve ötesinde yeni boyut alınmaz (derisk_mult=0) — EOD'nin `size_mult > 0`
+    kapısı. SENARYO DERİNLEŞTİRİLDİ (2026-08-12): taban %8 → %36 (goal.yaml
+    `limits.derisk_floor_dd`, operatör kararı §E.1/§E.3), yani eski −15.000$ artık TAM BOY
+    bölgesindedir ve testi sessizce etkisiz bırakırdı. Zarar tabanın ötesine taşındı."""
+    _saglikli_state(sandbox_state, realized_pnl=-40_000.0, peak=100_000.0)
     _gunluk_barlar(sandbox_state)
 
     satir = intraday_shadow.record(_plan(), _bar(), _SIMDI)

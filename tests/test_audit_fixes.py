@@ -212,8 +212,14 @@ def test_tail_uses_same_embargoed_bound_as_magnitude():
 # ---------------- candidate scan evaluates ALL screeners (not short-circuited) ----------------
 def test_scan_entry_evaluates_all_screeners_but_arms_only_proven():
     """Every screener runs on every ticker (the user's 'evaluate all skills' goal), but only ARMED_SETUPS
-    produce a tradeable candidate — momentum_burst/pullback are evaluated-but-dormant (measured to halve the
-    OOS edge). Guards both the old 'only vcp ever ran' AND the 'let everything trade and crater the edge'."""
+    produce a tradeable candidate. Guards both the old 'only vcp ever ran' AND the 'let everything trade
+    and crater the edge'.
+
+    BEYANLI GÜNCELLEME (2026-08-12): momentum_burst operatör onayıyla SİLAHLANDI (karar penceresi
+    §E.2). Bu testin (b) bacağı mb'nin dormant olmasına dayanıyordu; DORMANT örneği hâlâ motorda
+    olan bir kuruluma (episodic_pivot) taşındı — korunan yasa (silahsız kurulum aday ÜRETMEZ)
+    aynen duruyor. (a) bacağı ise DAHA GÜÇLENDİ: mb artık silahlı olduğu hâlde bile breakout_vcp
+    öncelikli kalmalı (sıra sözleşmesi: kanıtlı kurulumlar önce)."""
     import unittest.mock as m
     from meridian.strategy import EntrySignal
 
@@ -229,12 +235,15 @@ def test_scan_entry_evaluates_all_screeners_but_arms_only_proven():
     assert called == {"vcp", "mb", "pb"}                 # every screener evaluated (no short-circuit)
     assert out.setup == "breakout_vcp"                   # proven setup armed even though momentum_burst scored higher
 
-    # (b) breakout ABSENT but momentum_burst fires → evaluated, but NOT armed (dormant) → None
+    # (b) only a DORMANT setup fires (episodic_pivot) → evaluated, but NOT armed → None
     with m.patch.object(strategy, "evaluate_entry", lambda *a, **k: None), \
-         m.patch.object(strategy, "evaluate_momentum_burst", lambda *a, **k: sig("momentum_burst", 90)), \
-         m.patch.object(strategy, "evaluate_pullback", lambda *a, **k: None):
+         m.patch.object(strategy, "evaluate_momentum_burst", lambda *a, **k: None), \
+         m.patch.object(strategy, "evaluate_pullback", lambda *a, **k: None), \
+         m.patch.object(strategy, "evaluate_exhaustion_hammer", lambda *a, **k: None), \
+         m.patch.object(strategy, "evaluate_episodic_pivot", lambda *a, **k: sig("episodic_pivot", 90)):
         assert strategy.scan_entry(None, {}, 90, "X") is None
-    assert "momentum_burst" not in strategy.ARMED_SETUPS   # documents the dormancy decision
+    assert "episodic_pivot" not in strategy.ARMED_SETUPS   # documents the dormancy decision
+    assert "momentum_burst" in strategy.ARMED_SETUPS       # armed by operator 2026-08-12 (§E.2)
 
 
 def test_momentum_burst_fires_on_a_real_burst():

@@ -29,7 +29,15 @@ LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_dai
               # (adı konmuş sınıfın ikinci örneği: `broker.max_positions_at` rampası). Üçü de
               # goal.yaml `limits`e OPERATÖR KALEMİ olarak indi: Hermes öneremez (bu liste), arama
               # göremez (bounds'ta yok), operatör tek satırla değiştirir. DEĞERLER KORUNDU.
-              "heat_hard_r", "heat_review_r", "corr_review"}
+              "heat_hard_r", "heat_review_r", "corr_review",
+              # OPT Faz-1 kablolaması (2026-08-12, karar penceresi §E.1/§E.3): de-risk rampasının
+              # iki ucu. C24 yorumunun "adı konmuş sınıfın ikinci örneği: `broker.max_positions_at`
+              # rampası" dediği kalem TAM BUYDU — fonksiyon gövdesinde gömülü iki sabit, hiçbir
+              # yönetişim yüzeyinde görünmüyordu ve ölçüm ancak monkeypatch'le yapılabiliyordu.
+              # Aynı yere, AYNI yetkiyle indi: operatör kalemi (Hermes öneremez — bu liste; arama
+              # göremez — bounds.yaml'da satırı yok; risk-artıran vana pencereden geçer,
+              # ROADMAP §2-10(3)). Okuyan tek yer `broker.derisk_ramp()`.
+              "derisk_full_dd", "derisk_floor_dd"}
 
 # --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI (C13b, 2026-08-02) ------------------------------------
 # Bir knob replay/gölgede ÖLÇÜLÜR ama canlı motorda yapısal olarak hiçbir şey yapmazsa, terfi yolu

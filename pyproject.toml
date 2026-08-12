@@ -267,6 +267,10 @@ pytest_add_cli_args_test_selection = [
     "tests/test_broker_audit_v24.py",
     "tests/test_canslim_v94.py",
     "tests/test_decision_v3.py",
+    # 2026-08-12: de-risk rampası artık goal-kablosu (broker.derisk_ramp) — türetme kuralı gereği
+    # (karar-çekirdeğini DOĞRUDAN import eden test dosyaları) listeye girer; yoksa rampanın yeni
+    # dalları (kelepçe, fail-safe, kaynak beyanı) mutasyon skorunda ÖLÇÜLMEDEN kalırdı.
+    "tests/test_derisk_rampa_kablosu_v237.py",
     "tests/test_evidence_v4.py",
     "tests/test_execution_fidelity_v75.py",
     "tests/test_exhaustion_hammer_v92.py",

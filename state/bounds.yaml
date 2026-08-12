@@ -9,6 +9,9 @@ exit.time_stop_days:      {min: 3,   max: 40,  step: 1,   type: int}
 exit.trail_atr_mult:      {min: 1.0, max: 5.0, step: 0.1, type: float}
 exit.breakeven_r:         {min: 0.0, max: 3.0, step: 0.5, type: float}
 stop_loss_atr_mult:       {min: 0.8, max: 4.0, step: 0.1, type: float}
+# position_size_r: CANLI DEĞER 1.0 → 0.5 (operatör kararı 2026-08-12, karar penceresi §E.1;
+# EDG-2026-026 C kolu + 032 final-paket). Satır DEĞİŞMEDİ ve değişmemeliydi: 0,5 zaten aralık-içi
+# ve adım-üstü. Arama uzayı bir DEĞER değil bir KUMHAVUZUDUR — canlı değer state/strategy.yaml'da.
 position_size_r:          {min: 0.1, max: 1.0, step: 0.1, type: float}
 regime.min_exposure_score: {min: 0,   max: 80,  step: 5,   type: int}
 # Batch L — new edge/exit knobs, default OFF (0) so baseline is unchanged; Hermes can explore them.
@@ -99,3 +102,29 @@ regime.vix_backwardation_gate: {min: 0, max: 1, step: 1, type: int}      # VIX>V
 # (`shadow_variants._judge`) ve `mutation.py` — o iki yoldaki bir Y3 kolu tavanı UYGULAMAZ.
 portfolio.sector_cap:     {min: 0.0, max: 30.0, step: 5.0, type: float}  # sektör NOTIONAL payı tavanı %; 0 = kapalı (bant 25-30)
 portfolio.heat_cap:       {min: 0.0, max: 8.0,  step: 1.0, type: float}  # açık risk / NAV tavanı %; 0 = kapalı (bant 6-8)
+# =================================================================================================
+# DE-RISK RAMPASI — BU DOSYADA SATIRI YOK, VE BU BİLİNÇLİ (OPT Faz-1 kablolaması, 2026-08-12)
+# =================================================================================================
+# NE OLDU: `broker.derisk_mult`in iki eşiği (fonksiyon gövdesinde gömülü 0,03 / 0,08) parametreye
+# çevrildi ve operatör kararıyla 0,15 / 0,36'ya taşındı (EDG-2026-023 ölçümü + karar penceresi
+# §E.1/§E.3). Yürürlükteki değerler `state/goal.yaml` → `limits.derisk_full_dd` /
+# `limits.derisk_floor_dd`; okuyan tek yer `broker.derisk_ramp()`.
+# ARAMA ARALIĞI YAZILMADI, ÇÜNKÜ ÖYLE BİR KARAR YOK (uydurma yasağı): 2026-08-12 penceresinde
+# operatör bir ARALIK değil TEK NOKTA seçti (0,15 / 0,36 — EDG-023'ün iki kollu ölçümünden).
+# Buraya bir min/max/step yazmak, verilmemiş bir kararı kayda geçirmek olurdu. Kodun uyguladığı
+# TEK kelepçe akıl-sağlığıdır: `0 <= full_dd < floor_dd <= 1` (broker.derisk_ramp) — bir arama
+# aralığı DEĞİL, ters/anlamsız bandı reddeden fail-safe.
+# NEDEN SATIR YOK — İKİ AYRI YASA, İKİSİ DE BU DEPODA YAZILI:
+#   1. İKİ SAHİP YASAĞI: bir ad hem `guard.LIMIT_KEYS`te hem burada olamaz. `validate_change`
+#      LIMIT_KEYS'teki her adı reddeder (guard.py:166), yani buradaki satır Hermes'e ASLA
+#      geçmez — ama `config.bounds().keys()` UCB arama eksenlerini üretir (analytics.py:2781,
+#      api.py:3446), dolayısıyla eksen ÖRNEKLENİR ve her örnek "immutable" retine harcanır.
+#      Çivi emsali: tests/test_kovab_dalga3_v166.py::test_c24_uc_esik_de_HERMESE_KAPALI —
+#      "bounds.yaml'a da girmiş → iki sahip, sessiz ayrışma".
+#   2. HÜKÜMSÜZ EKSEN YASAĞI: `regime.spy_sma_gate` mezar taşı (8b6bbbc, yukarıda) tam bu zararı
+#      anlatıyor — "bir arama uzayında etkisiz bir eksen tutmak, kapsamayı değil yalnız bütçeyi
+#      büyütür". Altı değerlendirme, sonucu yapısal olarak sabit bir düğmeye harcanmıştı.
+# UYGULAMA POLİTİKASI (ROADMAP §2-10(3)): rampa/slot/boyut/ısı = HEP-PENCEREYE sınıfı (risk-artıran
+# vanalar). Bunlar makine tarafından evriltilmez; kapı-içi evrim kenar-iyileştirmeleri içindir.
+# BU SATIRLARIN GERİ GELMESİ İSTENİRSE: önce ad `guard.LIMIT_KEYS`ten ÇIKARILIR (yani operatör
+# kalemi olmaktan çıkarılır) — yoksa yukarıdaki iki yasa aynı anda çiğnenir.

@@ -1,7 +1,8 @@
 """counterfactual.py — Karşı-olgusal defter (öneri #1). Motorun ANA darboğazı kanıt bant genişliği:
 tarayıcı her gün ~50 ticker için tam plan kuruyor ama yalnız alınan 1-2 işlem etiket üretiyor. Bu modül
 alınmayan her tam-şekilli adayı — NO_GO/REVIEW kalanları, slot yetmeyenleri VE uyuyan kurulumların
-(momentum_burst, episodic_pivot) ateşlemelerini — simüle bracket ile sonuna kadar izleyip ayrı bir
+ateşlemelerini (küme ARMED_SETUPS'tan TÜRER; momentum_burst 2026-08-12'de silahlandı, bugün uyuyan
+olarak episodic_pivot/pead/canslim kalır) — simüle bracket ile sonuna kadar izleyip ayrı bir
 deftere yazar: girer miydi, stop mu hedef mi, kaç R, MFE/MAE.
 
 YASA AYNASI: giriş, motorun birebir yasasıyla simüle edilir (bir SONRAKİ seans açılışı; boşluk

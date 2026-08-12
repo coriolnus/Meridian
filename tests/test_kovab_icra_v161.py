@@ -384,13 +384,18 @@ def test_c8_endpoint_applies_derisk_dedup_and_writes_e2(paper, monkeypatch):
                    "entry_trigger": 10.0}],
         "alpaca_submitted": [], "peak_equity": 100_000.0, "last_date": "2026-08-01",
         "entry_law": {"P-2026-08-01-T0": {"atr": 1.25, "ref_price": 9.5}}})
-    health.write_heartbeat(equity=95_000.0, last_bar="2026-08-01")
+    # ÇEKİLME DERİNLEŞTİRİLDİ (2026-08-12): rampa bandı 3/8 → 15/36 oldu (goal.yaml
+    # `limits.derisk_*_dd`, operatör kararı §E.1/§E.3) ve %5 düşüş artık TAM BOY bölgesindedir —
+    # eski 95.000$ ile bu çivi "çarpan uygulandı mı?" sorusunu ölçmeyi bırakırdı (1.0 == 1.0).
+    # 76.600$ = %23,4 çekilme → YENİ bantta çarpan yine TAM 0,6: iddia edilen sayı korundu,
+    # senaryo bandın içine taşındı.
+    health.write_heartbeat(equity=76_600.0, last_bar="2026-08-01")
 
     r = TestClient(api.app).post("/api/alpaca/submit_armed")
     assert r.status_code == 200 and r.json()["submitted"] == 1, r.text
     assert len(gorulen) == 1
     assert gorulen[0]["size_mult"] == pytest.approx(0.6), \
-        "de-risk çarpanı uygulanmadı — %5 düşüşte TAM boyut gitti (C8'in ta kendisi)"
+        "de-risk çarpanı uygulanmadı — %23,4 düşüşte TAM boyut gitti (C8'in ta kendisi)"
     assert gorulen[0]["atr"] == 1.25 and gorulen[0]["ref_price"] == 9.5, \
         "entry_law girdileri geçmedi — aynı planda iki farklı limit tavanı"
     rows = [r for r in _e2_rows() if r.get("motor") == "ayna"]

@@ -692,7 +692,9 @@ def evaluate_exhaustion_hammer(bars: pd.DataFrame, params: dict, rs_rating_value
     2026-08-11 OPERATÖR ONAYIYLA SİLAHLANDI ("A seçeneği — exhaustion_hammer'ı silahla"): P-2026-08-07-
     VLO vakası (REVIEW→operatör-onaylı plan iç motorda doldu, aynaya emir hiç gitmedi; fiyat 304→322)
     onayın gerekçesidir. Silahlanma yalnız BU kuruluma verildi — momentum_burst ve episodic_pivot
-    DORMANT kalır. Kapalı barlar, ileri-dönük yok."""
+    DORMANT kalır. GÜNCELLEME 2026-08-12: momentum_burst da AYRI bir operatör onayıyla silahlandı
+    (gerekçe + şerh ARMED_SETUPS blokunda); yukarıdaki cümle o günün kapsamını anlatır, bugünkü
+    silahlı kümeyi DEĞİL. episodic_pivot dormant kalmayı sürdürür. Kapalı barlar, ileri-dönük yok."""
     if bars is None or len(bars) < 65:
         return None
     df = bars
@@ -1006,7 +1008,25 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
 # cf_backfilldeki "ilk eşleşen silahlı kurulum" önceliğidir — kanıtlı iki kurulum (breakout_vcp,
 # pullback) öncelikli kalır, exhaustion_hammer aynı ticker'da ancak onlar ateşlemediyse aday üretir.
 # momentum_burst ve episodic_pivot DORMANT KALIR (onay yalnız exhaustion_hammer içindir).
-ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer")
+#
+# momentum_burst — SİLAHLI, OPERATÖR ONAYI 2026-08-12 (karar penceresi §E.2: "momentum_burst:
+# MANUEL SİLAHLANMA ONAYI"). Emsal exhaustion_hammer/v233; yol aynı: OTOMATİK silahlanma OLMADI,
+# insan verdi. Yukarıdaki 2026-07 paragrafı ÇÜRÜTÜLMEDİ, AŞILDI — silinmiyor çünkü o gün ölçülen
+# şey (full-replay skor katkısı 0,281 → 0,100) gerçekti; değişen, kararın dayandığı ölçüm tabanı:
+#   * EDG-2026-025 (karne): donuk üçlü eşiğin (i) replay-CI>0 ayağı KIL PAYI DÜŞTÜ
+#     (CI [−0,0046, +0,5606], n=106) → OTOMATİK silahlanma tetiklenMEDİ; (ii) portföy-etkisi
+#     GEÇTİ (+11,9k$); (iii) "−0,114R çelişkisi" hiç ölçüm değilmiş (prompt figürü) — çözüldü.
+#   * EDG-2026-032 (final-paket doğrulaması, 3/3 GEÇTİ): C dünyası + mb = 885 işlem, +20.685$,
+#     dd %12,7, sharpe 0,521. O koşum mb'yi `entry.armed_extra` ÖLÇÜM kanalıyla silahladı
+#     (ARMED_SETUPS'a dokunmadan) — bu satır, ölçülen davranışın kablosudur.
+# ŞERH (hükme iliştirik, silinmez): mb'nin yıl-deseni 2022 ve 2026'da ZAYIF (cf H2 −1,03 n=7;
+# replay 2026 +0,014 n=16) → canlı izleme kalemi, sessiz bir zafer değil.
+# SIRA ÖNEMLİ ve TARİHÇE-KORUMALI: tuple sırası `scan_entry`/`cf_backfill`teki "ilk eşleşen silahlı
+# kurulum" önceliğidir. Mevcut üçlü YENİDEN SIRALANMADI; mb SONA eklendi — yani aynı ticker'da
+# ancak breakout_vcp, pullback ve exhaustion_hammer ateşlemediyse aday üretir. Bu, 032'nin ölçtüğü
+# önceliğin birebir aynısıdır (`ARMED_SETUPS + extra` → extra her zaman sonda).
+# episodic_pivot (ve pead/canslim) DORMANT KALIR — onay yalnız momentum_burst içindi.
+ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer", "momentum_burst")
 
 
 def relax_for_near_miss(eff: dict) -> dict:

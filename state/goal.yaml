@@ -111,7 +111,20 @@ pessimistic_band_v2:
 limits:
   autonomy_level: 0                    # 0=paper autonomous, 1=live+approval, 2=live autonomous
   max_position_r: 1.0
-  max_open_positions: 5
+  # OPERATÖR KARARI 2026-08-12 (karar penceresi §E.1 — "C paketi @ 5R BENİMSENDİ"): 5 → 20.
+  # ÖLÇÜM (EDG-2026-026, kart research/cards/EDG-2026-026-slot20-boyut05.yaml): slot20 + 0,5R
+  # kolu B'ye (slot5 + 1,0R) karşı 772 vs 410 işlem (CI [+271,+455]), net P&L +9.869$ vs +775$,
+  # max-dd %12,4 vs %17,8 (DÜŞTÜ), sharpe 0,285 vs 0,018 — üç kill de temiz. FİNAL-PAKET
+  # doğrulaması EDG-2026-032'de 3/3 geçti (C+mb: 885 işlem, +20.685$, dd %12,7, sharpe 0,521).
+  # BERABERİNDE GİDEN AYAR: `position_size_r` 1,0 → 0,5 (state/strategy.yaml params — motor onu
+  # GOAL'DAN DEĞİL strateji yüzeyinden okur, strategy.py:487/553/610/…). İkisi AYRILMAZ: slot 20
+  # tek başına ısı zarfını 5R'de bağlar ve boyut yarıya inmeden ölçülen davranışı vermez.
+  # ZARF DEĞİŞMEDİ: heat_hard_r 5,0R KALDI (EDG-2026-028 zarf-10'u ölçtü ve ELEDİ — sharpe
+  # 0,285 → 0,037). Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) artık
+  # eşitlik değil BOL: 5,0 <= 20,0 — sert tavan bağlayan taraf, slot sayısı değil.
+  # YAN ETKİ (bilinçli, 026 kartında beyanlı): `max_sector_exposure_pct` kuralının paydası
+  # `max_open_positions`tır (guard.py:352) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
+  max_open_positions: 20
   max_daily_loss_pct: 3.0
   max_sector_exposure_pct: 40.0
   no_trade_before_bars: 3              # skip the first N bars after the open
@@ -126,8 +139,32 @@ limits:
   # 4,5R kod-mirası güvenlik payıydı; 390 planlık defterde tek-bağlayıcı vaka 1'di (4,58R —
   # o vaka yeni tavanda geçerdi). RİSK-ARTIRAN bilinçli karar; kod vermiyor, operatör verdi.
   # Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) eşitlikte sağlanır.
-  heat_review_r: 3.5                   # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)
+  # ↑ 2026-08-12 DÜZELTMESİ (yukarıdaki cümle o günün aritmetiğidir): slot 5 → 20 olunca eşitlik
+  #   BİTTİ, çivi bol sağlanıyor (5,0 <= 20,0). Zarf gerilimi TERSİNE döndü: artık bağlayan taraf
+  #   slot sayısı değil ISI TAVANI — 0,5R'lik pozisyonlarla 5R zarfı ~10 isimde dolar, 20 slot
+  #   nadiren bağlar (026'nın "gerçek ısı-tavanı heat_hard_r" bulgusu bu).
+  heat_review_r: 3.5                  # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)
   corr_review: 0.85                    # adayın açık pozisyonlarla getiri korelasyonu → REVIEW
+  # --- DE-RISK RAMPASI (OPT Faz-1 kablolaması, 2026-08-12: koddan buraya TAŞINDI) ----------------
+  # C24 deseni BİREBİR (yukarıdaki üç ısı eşiği): iki sayı `broker.derisk_mult` GÖVDESİNDE gömülü
+  # sabitlerdi (0,03 / 0,08) — canlı defterde her emrin boyunu ve eşzamanlı pozisyon tavanını
+  # belirliyorlardı ama ne burada ne bounds.yaml'da görünüyorlardı. guard.py C24 yorumu bu kalemi
+  # adıyla bekliyordu: "adı konmuş sınıfın ikinci örneği: `broker.max_positions_at` rampası".
+  # DEĞERLER DEĞİŞTİ (taşıma DEĞİL, KARAR): 0,03/0,08 → 0,15/0,36. OPERATÖR KARARI 2026-08-12
+  # (§E.1 + §E.3): ölçüm EDG-2026-023 — 3/8 kolu 135 işlem / −7.761$ / işlem-R −0,078; 15/36 kolu
+  # 410 işlem / +775$ / işlem-R +0,032 (işlem farkı CI [+210,+342]). kill#3 (dd ×2,29) otomatik
+  # hükmü ENGELLEDİ; hükmü operatör verdi. Rampa 026/032 paketinin de tabanıdır (o koşumlar bu
+  # bandı monkeypatch'le kurdu — artık kablo gerçek).
+  # TEK RAMPA HER MODDA — MOD DALLANMASI YOK: Rol-1'in "gerçek-para 3/8 sabit kalsın" önerisi
+  # operatör kararıyla AŞILDI ("gerçek para'yı da birebir aynı yap"). Kodda eski 3/8'e giden bir
+  # yol bırakılmadı; `broker.py` fail-safe varsayılanları da 0,15/0,36'dır.
+  # OPERATÖR KALEMİ: `guard.LIMIT_KEYS` — Hermes öneremez, bounds.yaml'da satırı YOKTUR
+  # (risk-artıran vana = karar penceresi; ROADMAP §2-10(3) uygulama politikası).
+  # ŞERH: `derisk_floor_dd` 2026-08-12'ye dek `max_drawdown` (0,08) ile SAYICA aynıydı ve
+  # tests/test_dalga_w1_v216.py::Ç5 o eşitliği çiviliyordu. Bağ BİLEREK koptu: biri emir-boyutu
+  # rampasının tabanı, diğeri deneyin başarısızlık hükmü eşiğidir (ayrı sınıf, ayrı okuyucu).
+  derisk_full_dd: 0.15                 # bu çekilmeye KADAR tam boy (rampanın üst ucu)
+  derisk_floor_dd: 0.36                # bu çekilmede ve ötesinde YENİ boy YOK (rampanın tabanı)
   # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
   # SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmaz. Yani buradaki yolu değiştirmek
   # kill-switch'i TAŞIMAZ — dosya yine state/HALT olur. Yanlış kontrol hissi vermemesi için yazılı.

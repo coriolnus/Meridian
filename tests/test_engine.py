@@ -123,8 +123,11 @@ def test_classify_gate_three_states():
     # sector already has a position -> soft flag -> REVIEW
     v, r = guard.classify_gate(base, {"open_positions": 1, "sector_counts": {"tech": 1}, "day_pnl_pct": 0}, regime, goal, params)
     assert v == "REVIEW" and r
-    # slots full -> hard -> NO_GO
-    v, _ = guard.classify_gate(base, {"open_positions": 5, "sector_counts": {}, "day_pnl_pct": 0}, regime, goal, params)
+    # slots full -> hard -> NO_GO. TAVAN GOAL'DAN OKUNUR, sabit 5 DEĞİL (2026-08-12: operatör
+    # `max_open_positions`ı 5 → 20 yaptı ve sabit sayı "dolu" senaryosunu sessizce BOŞ slot'a
+    # çevirdi — test yeşil kalırken hiçbir şeyi ölçmez hâle gelecekti).
+    dolu = int(goal["limits"]["max_open_positions"])
+    v, _ = guard.classify_gate(base, {"open_positions": dolu, "sector_counts": {}, "day_pnl_pct": 0}, regime, goal, params)
     assert v == "NO_GO"
     # sub-2.0 R:R -> NO_GO (hard veto; meaningful now that R:R VARIES per plan via measured-move, and
     # profit_target_r's lower bound of 2.0 keeps this from ever zeroing out all trading)
