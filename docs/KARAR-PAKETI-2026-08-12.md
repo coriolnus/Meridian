@@ -78,9 +78,13 @@ w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Taka
    eşik/çıkış/w=0/rejim-eşik-40. ("ISI 10R" ön-kararı bu bilgilendirilmiş seçimle GÜNCELLENDİ — 5R.)
 2. **momentum_burst: MANUEL SİLAHLANMA ONAYI** (hammer emsali; kıl-payı-CI + 2026-zayıflık işareti
    bilinerek — operatör takdiri).
+3. **Rampa: GERÇEK-PARA DA 15/36 — mod ayrımı YOK** ("gerçek para'yı da birebir aynı yap", 2026-08-12
+   pencere-sonrası talimat). Rol-1'in "gerçek-para 3/8 sabit" önerisi (§A.1) operatör kararıyla aşıldı;
+   tek rampa her modda. Not: ölçüm tabanı kâğıt-replay (dd %12.4 C-dünyasında); gerçek-para modu bugün
+   kapalı — bu karar ileride açılırsa geçerli davranışı şimdiden sabitler.
 
 ### Uygulama zinciri (donuk sıra)
 - [1] FİNAL-PAKET doğrulama replay'i: **C + mb-silahlı** (yeni kombinasyon — 025'in mb'si A-dünyasındaydı) → EDG-032.
-- [2] Kod turu: rampa KABLOLAMASI (mod-farkındalıklı: kâğıt 15/36, gerçek-para 3/8 sabit — OPT Faz-1'in ilk kalemi)
+- [2] Kod turu: rampa KABLOLAMASI (TEK rampa 15/36 — mod ayrımı YOK, karar §E.3; OPT Faz-1'in ilk kalemi)
   + goal: max_open 20, position_size_r 0.5 + ARMED_SETUPS += momentum_burst (tarihçe-korumalı).
 - [3] Frozen-tree tam suite → [4] TEK dağıtım → [5] canlı doğrulama + özet.

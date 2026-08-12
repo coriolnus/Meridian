@@ -787,7 +787,9 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     tek pencere kurulur)** — Rol-1'in pencereye getireceği öneriler ŞİMDİDEN kayıtlı (sayılar hükümden önce
     gelir; CI'lar öneriyi çürütürse öneri düşer):
     · RAMPA 15/36 (kâğıt): BENİMSE — kill#3 (dd ×2.29) otomatik-hükmü engelledi, karar operatörün; %17.8 dd
-      kâğıtta öğrenme bedeli ↔ 3× işlem + eksiden artıya P&L + düzelen işlem-R (−0.078→+0.032). Gerçek-para 3/8 SABİT.
+      kâğıtta öğrenme bedeli ↔ 3× işlem + eksiden artıya P&L + düzelen işlem-R (−0.078→+0.032). ~~Gerçek-para 3/8 SABİT~~
+      → **GÜNCELLEME (2026-08-12 pencere-sonrası operatör talimatı): gerçek-para DA 15/36, mod ayrımı YOK**
+      ("birebir aynı" — KARAR-PAKETİ §E.3; Rol-1'in 3/8-sabit önerisi operatör kararıyla aşıldı).
     · SLOT 20 + 0.5R: OPERATÖR ÖN-KARARI (2026-08-12: 'ISI 10R kalsın') — 0.25R geri-düşüş önerisi KALDIRILDI;
       ısı 10R sabit, 026 sayıları pencereye BİLGİ olarak gelir (karar değiştirmez, şasi-geçersizlik hariç).
     · EŞİKLER (024): sayı gelmeden söz YOK — CI>0 hücre varsa OOS-kapılı öneri; yoksa 'eşikler kanıtla doğrulandı' kapanışı.
