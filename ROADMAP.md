@@ -775,13 +775,28 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     onarıldı), ÜÇ EKSİK: (1) KABLOLAMA — aranamaz sabitler parametrize (derisk bandı fonksiyon-gövdesinde
     sabitti, monkeypatch gerekti; max_open/size_r/scale_out/chandelier bounds'a — sınırlar operatör onaylı);
     (2) REPLAY-SWEEP otomasyonu — kart→koşum→CI→hüküm şablonu (bu hafta 5× elle) gece A1-nice penceresinde
-    (operatör tercihi) makineleşir, K-deflate'e çarpılı sayılır; (3) UYGULAMA POLİTİKASI sınıf-başına:
-    risk-artıran→karar-penceresi, ölçüm/çıkış-iyileştirme→donuk-eşik otomatik (iki mod da bu hafta emsalli:
-    023 vs 025). FREN: PBO 0.6286 — otomasyon kapıların İÇİNDEN akar. *gerekçe: elle-optimizasyon
+    (operatör tercihi) makineleşir, K-deflate'e çarpılı sayılır; (3) UYGULAMA POLİTİKASI sınıf-başına — Rol-1 ÖNERİSİ (2026-08-12,
+    operatör onayı bekler): HEP-PENCEREYE = risk-artıranlar (rampa/slot/boyut/ısı) + eşik-gevşetme
+    (strateji kimliği); DONUK-EŞİK-OTOMATİĞE = çıkış-parametre iyileştirmeleri, skor-ağırlıkları
+    (gölge-doğrulamalı), kurulum-silahlanma (025 emsali, operatör seçti), ölçüm/görünürlük. Tek cümle:
+    'vanaları pencere açar, kenar-iyileştirmeleri kapılar içinde makine evriltir.' FREN: PBO 0.6286 — otomasyon kapıların İÇİNDEN akar. *gerekçe: elle-optimizasyon
     ölçeklenmez · boyut: M-L (3 aşama) · bağımlılık: 023-027 karar penceresi + örneklem birikimi ·
     öncelik: yüksek (karar penceresinden sonra ilk büyük iş).*
 
-11. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+11. **KARAR PENCERESİ PAKETİ — 023/024/025/026/027 + Rol-1 önerileri (2026-08-12; ölçümler inince
+    tek pencere kurulur)** — Rol-1'in pencereye getireceği öneriler ŞİMDİDEN kayıtlı (sayılar hükümden önce
+    gelir; CI'lar öneriyi çürütürse öneri düşer):
+    · RAMPA 15/36 (kâğıt): BENİMSE — kill#3 (dd ×2.29) otomatik-hükmü engelledi, karar operatörün; %17.8 dd
+      kâğıtta öğrenme bedeli ↔ 3× işlem + eksiden artıya P&L + düzelen işlem-R (−0.078→+0.032). Gerçek-para 3/8 SABİT.
+    · SLOT 20 + 0.5R: 026 ısı/dd tablosu ŞARTLI benimse — dd B×1.5 aşarsa öneri 0.25R'ye iner (ısı-nötr), slot 20 kalır.
+    · EŞİKLER (024): sayı gelmeden söz YOK — CI>0 hücre varsa OOS-kapılı öneri; yoksa 'eşikler kanıtla doğrulandı' kapanışı.
+    · momentum_burst (025): DONUK ÜÇLÜ EŞİK karar verir (operatör otomatik-akış seçimi): replay-CI>0 ∧
+      portföy-etkisi≥0 ∧ çelişki-açıklandı → silahlanır; düşen ölçüt adıyla raporlanır.
+    · ÇIKIŞ KOLLARI (027): CI>0 kazanan kol(lar) benimse; Rol-1 beklentisi scale-out (%38 erken-kesim panzehiri) — beklenti≠hüküm.
+    · SIRA: pencere → TEK goal/bounds dağıtımı → hemen OPT Faz-1 kablolama (sonraki sweep monkeypatch'siz koşmalı).
+    *gerekçe: pencere kararları kanonik belgede ön-kayıtlı olsun (sohbette kaybolmaz) · bağımlılık: 024/025/026/027 ölçümleri · öncelik: en yüksek (bekleyen tek büyük karar).*
+
+12. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·
