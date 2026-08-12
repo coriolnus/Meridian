@@ -1,0 +1,26 @@
+
+==================== EDG-031 KIYAS ÖZETİ ====================
+
+--- w005 (w=0.05) ---
+şasi: serh=None
+işlem: C 772 → 776  fark=4  CI={'lo': -5.0, 'hi': 13.0, 'orta': 4.0}
+net_pnl: C 9869.2 → 6349.4  fark=-3519.8  CI={'lo': -11192.273, 'hi': 3257.434, 'orta': -3260.62}
+sharpe kanonik: C 0.285 → 0.189  fark=-0.096; sharpe_ay fark CI={'lo': -0.216, 'hi': 0.083, 'orta': -0.06} (atlanan=0)
+maxdd kanonik: C 0.1235 → 0.1174 (oran=0.951)
+seçilim: ortak=746  yalnız_C=26 (ort_r=0.0798)  yalnız_hücre=30 (ort_r=-0.1724)
+payda: sinyal-bv=0.9434  işlem-bv=0.9499  kill#1=False
+kill#2 (şasi) tetiklendi=False
+
+--- w010 (w=0.1) ---
+şasi: serh=None
+işlem: C 772 → 777  fark=5  CI={'lo': -5.0, 'hi': 15.0, 'orta': 5.0}
+net_pnl: C 9869.2 → 5590.6  fark=-4278.6  CI={'lo': -12060.064, 'hi': 2436.826, 'orta': -4022.945}
+sharpe kanonik: C 0.285 → 0.168  fark=-0.117; sharpe_ay fark CI={'lo': -0.226, 'hi': 0.064, 'orta': -0.076} (atlanan=0)
+maxdd kanonik: C 0.1235 → 0.1187 (oran=0.961)
+seçilim: ortak=749  yalnız_C=23 (ort_r=0.2465)  yalnız_hücre=28 (ort_r=-0.1326)
+payda: sinyal-bv=0.943  işlem-bv=0.9471  kill#1=False
+kill#2 (şasi) tetiklendi=False
+
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/sonuc.json
+==========================================================
+

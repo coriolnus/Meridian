@@ -1,0 +1,29 @@
+{"ts": "2026-08-12T14:14:28+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "AAPL", "dates": "2025-05-26", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T14:14:28+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "AVGO", "dates": "2008-06-12", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:28+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "CRM", "dates": "2018-11-22", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T14:14:30+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "CMCSA", "dates": "2013-12-18", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:30+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "PINS", "dates": "2013-07-15,2013-08-02", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:31+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "DLTR", "dates": "2012-06-26", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:33+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "UNP", "dates": "2014-06-06", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:34+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "TDG", "dates": "2011-12-01,2011-12-09", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:35+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "ALB", "dates": "2006-10-30", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T14:14:36+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "EL", "dates": "2012-01-20", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+[kosum] taban      KONTROL NOKTASINDAN yüklendi (ara_taban.json)
+[kosum] hacim_125  KONTROL NOKTASINDAN yüklendi (ara_hacim_125.json)
+[kosum] rs_65      KONTROL NOKTASINDAN yüklendi (ara_rs_65.json)
+[kosum] ikisi      bitti  sure= 1604.6s  n_trades= 193  pnl=  -3218.02  n_plan=1663  ckpt=ara_ikisi.json
+
+==================== EDG-024 ÖLÇÜM ÖZETİ ====================
+replay 2022-01-01→2026-07-30  sv=3  sembol=251  toplam süre=1614.9s
+KILL#3 şasi: sembol_esit=True takvim_esit=True params_022_esit=True limits_esit=True
+KILL#3 canlı: params_canli_esit=True armed=['breakout_vcp', 'pullback', 'exhaustion_hammer']
+022 plan-kıyas: eşit_gün=889/1147  ilk_sapma={'tarih': '2022-01-06', 'taban_plan': 1, 'edg022_plan': 0}
+TABAN: n=135  pnl=-7760.67  ort_r=-0.0784  setup={'breakout_vcp': 93, 'exhaustion_hammer': 40, 'pullback': 2}
+hacim_125  eklenen_n=106 olculemedi=False ort_r=-0.0166 CI95=[-0.2184, 0.1571] ay=33 kötümserCI=[-0.2434, 0.1314] netPnL_farkı=+8826.41 (eklenen +177.13 / çıkan 67 -4870.14 / kayma +3779.14) setup={'breakout_vcp': 85, 'exhaustion_hammer': 20, 'pullback': 1}
+rs_65      eklenen_n= 28 olculemedi=False ort_r=0.0937 CI95=[-0.4439, 0.5679] ay=12 kötümserCI=[-0.4732, 0.5418] netPnL_farkı=-71.65 (eklenen -1371.61 / çıkan 20 -938.42 / kayma +361.54) setup={'breakout_vcp': 21, 'exhaustion_hammer': 6, 'pullback': 1}
+ikisi      eklenen_n=126 olculemedi=False ort_r=-0.0689 CI95=[-0.2439, 0.0786] ay=40 kötümserCI=[-0.2708, 0.0522] netPnL_farkı=+4542.65 (eklenen -2576.84 / çıkan 68 -4391.60 / kayma +2727.89) setup={'breakout_vcp': 106, 'exhaustion_hammer': 19, 'pullback': 1}
+CI-0-ÜSTÜ hücreler: YOK
+yasak modül çivisi: loop/counterfactual/cf_backfill ithal EDİLMEDİ (doğrulandı)
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg024_esik_retro_2026-08-12/sonuc.json
+=============================================================
+

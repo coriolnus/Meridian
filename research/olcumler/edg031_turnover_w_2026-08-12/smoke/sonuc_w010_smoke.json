@@ -1,0 +1,319 @@
+{
+ "kart": "EDG-2026-031",
+ "kosum": "w010",
+ "w_turnover": 0.1,
+ "smoke": true,
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T13:32:29+00:00",
+ "sure_sn": 39.0,
+ "sasi": "EDG-026 C-dünyası (rampa 15/36 + slot20 + 0.5R) — beyan modül başlığında",
+ "rampa": {
+  "tam_dd": 0.15,
+  "sifir_dd": 0.36,
+  "enjeksiyon": "MONKEYPATCH — ölçüm modülü içinde broker.derisk_mult modül-özniteliği değiştirildi; motor DOSYASI değişmedi (EDG-026 şasi deseni AYNEN — beyan modül başlığında)"
+ },
+ "param_enjeksiyon": {
+  "max_open_positions": {
+   "once": 5,
+   "sonra": 20,
+   "yuzey": "goal['limits'] (şasi ENJ-1)"
+  },
+  "position_size_r": {
+   "once": 1.0,
+   "sonra": 0.5,
+   "yuzey": "strateji params sözlüğü (şasi ENJ-2)"
+  },
+  "entry.w_turnover": {
+   "once": null,
+   "sonra": 0.1,
+   "yuzey": "strateji params sözlüğü DÜZ anahtar — strategy.py:477 _f(params,'entry.w_turnover',0.0); resolve_params 4 rejimde kanıtlı; bounds satırı doğrulandı (EDG-031 ENJ-3)"
+  },
+  "zarf_sabit": "heat_hard_r=5.0R, heat_review_r=3.5R, max_position_r=1.0, max_sector_exposure_pct=40 DEĞİŞMEDİ; bu kart yalnız w_turnover değiştirir, şasi enjeksiyonları C ile AYNI"
+ },
+ "motor_sha256_16": {
+  "broker.py": "daa858a522d97c98",
+  "backtest.py": "d345b6eed3d28be4",
+  "strategy.py": "ac7c53a3d89b6203"
+ },
+ "config_sha256_16": {
+  "goal.yaml": {
+   "sandbox": "099590dedee1ccf2",
+   "edg022": "099590dedee1ccf2",
+   "repo_state": "099590dedee1ccf2"
+  },
+  "strategy.yaml": {
+   "sandbox": "9f3e4732315abe52",
+   "edg022": "9f3e4732315abe52",
+   "repo_state": "9f3e4732315abe52"
+  },
+  "bounds.yaml": {
+   "sandbox": "3e810b547ca95f9a",
+   "edg022": "3e810b547ca95f9a",
+   "repo_state": "3e810b547ca95f9a"
+  }
+ },
+ "replay": {
+  "start": "2022-01-01",
+  "end": "2022-06-30",
+  "strategy_version": 3,
+  "params_by_regime": true,
+  "n_sembol": 251,
+  "n_endeks_satir": 1403,
+  "max_open": 20,
+  "no_trade_before": 3,
+  "cost_model": {
+   "slippage_bps": 5.0,
+   "commission_per_share": 0.0,
+   "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+  }
+ },
+ "butunluk": {
+  "frame_okunamadi": 0,
+  "tekrar_tarih": [],
+  "scan_vs_plan_uyusmazlik_n": 0,
+  "scan_vs_plan_ornek": [],
+  "yasakli_modul_yuklendi": [],
+  "base_max_open_bozuk": [],
+  "cf_hata_n": 0,
+  "failopen_ihlal_n": 0,
+  "enj_scan_bozuk_n": 0,
+  "gecerli": true
+ },
+ "onucus_payda_kaniti": {
+  "sembol": "AAPL",
+  "tarih": "2024-06-28",
+  "turnover21": 0.00490139,
+  "turnover_score": 32.892,
+  "neden": null,
+  "gecerli": true
+ },
+ "oz_sinama": {
+  "n_sinyal": 4,
+  "n_ayni_setup": 4,
+  "n_bv_turnover_olculdu": 0,
+  "n_skor_degisti": 0,
+  "skor_degisti_pct": null,
+  "skor_fark_dagilim": null,
+  "n_failopen_kume": 4,
+  "n_failopen_ihlal": 0,
+  "failopen_ihlal_ornek": [],
+  "n_setup_degisen": 0,
+  "n_w0_sinyal_yok": 0,
+  "cf_hata_n": 0,
+  "cf_hata_ornek": [],
+  "enj_scan_gordu_n": 4,
+  "enj_scan_bozuk_n": 0,
+  "skor_degisim_kaniti": false,
+  "beyan": "karşı-olgusal yalnız sinyal doğduğunda taranır; terimin SİLDİĞİ sinyaller bu telemetride değil C-taban işlem kıyasında görünür (asimetri beyanı başlıkta)"
+ },
+ "payda_sayaci": {
+  "sinyal_bv": {
+   "n": 1,
+   "olculdu_n": 0,
+   "pay": 0.0
+  },
+  "islem_bv": {
+   "n": 1,
+   "olculdu_n": 0,
+   "pay": 0.0,
+   "eslesme_yok_n_tum_islem": 0
+  },
+  "sembol": {
+   "evren_n": 251,
+   "kapsam_disi_gorulen": [],
+   "kapsam_disi_n": 0,
+   "beyan": "kapsam_disi yalnız TARANAN sembollerde birikir (tembel seri kurulumu) — evren-genelinde mutlak kapsam sayısı değil, koşumda GÖRÜLEN kapsam-dışılıktır"
+  },
+  "cagri_okuma_raporu": {
+   "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+   "dosya_var": true,
+   "yukleme": {
+    "ham_satir": 161856,
+    "birim_veya_val_dusen": 76,
+    "split_kanit_satir": 1803,
+    "anlik_iki_etiket_satir": 32954,
+    "birincil_dei": 244,
+    "birincil_usgaap": 8,
+    "sembol": 252,
+    "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+    "durum": "yuklendi",
+    "yukleme_sn": 0.747
+   },
+   "cagri": 3,
+   "olculdu": 1,
+   "olculemedi": 2,
+   "neden": {
+    "bayat_seri": 2
+   },
+   "kapsam_disi_sembol": [],
+   "oran_olculdu": 0.3333,
+   "beyan": "SALT-OKUNUR köprü; ölçülemeyen hücre None + neden (fail-open). Fiziksel devir bekçisi BURADA DEĞİL `indicators.turnover21`dedir (orana bakar, sayıma değil).",
+   "beyan_ek": "ön-uçuş + karşı-olgusal çift-çağrılar dahil — kill bunun üstünden hesaplanmaz (tanım başlıkta)"
+  }
+ },
+ "islem": {
+  "n": 3,
+  "islem_yil": 6.09,
+  "aylik_ts_open": {
+   "2022-01": 3
+  },
+  "silahlanan_plan": 4,
+  "toplam_plan": 4,
+  "verdict_dagilim": {
+   "GO": 1,
+   "REVIEW": 3,
+   "NO_GO": 0
+  },
+  "nogo_neden_dagilim": {},
+  "review_neden_dagilim": {
+   "leading_sector": 3,
+   "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 3,
+   "rr_marginal": 1
+  },
+  "silahli_plan_size_r": {
+   "min": 0.36,
+   "max": 0.41,
+   "ort": 0.379
+  },
+  "entry_rejects": {
+   "open_below_stop": 1
+  },
+  "exit_reason_dagilim": {
+   "regime_flip": 3
+  },
+  "setup_dagilim": {
+   "breakout_vcp": 1,
+   "exhaustion_hammer": 2
+  }
+ },
+ "performans": {
+  "net_pnl_equity": -511.72,
+  "net_pnl_trades": -511.72,
+  "maxdd_kanonik": null,
+  "maxdd_m2m": 0.0051,
+  "avg_r": null,
+  "win_rate": null,
+  "sharpe": null,
+  "sharpe_measurable": null,
+  "score": null,
+  "score_n": 3,
+  "total_return": null
+ },
+ "doluluk": {
+  "pozisyon_gun_open_fazi": 2,
+  "ort_acik_pozisyon": 0.016,
+  "doluluk_orani_slot": 0.0008,
+  "toplam_bars_held": 5
+ },
+ "tepe_isi": {
+  "formul": "nominal = n_eszamanli × 0.5R (şasi formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+  "nominal_open_fazi_R": {
+   "max": 1.0,
+   "p50": 0.0,
+   "p90": 0.0,
+   "p99": 0.0,
+   "ort": 0.008,
+   "sifir_ustu_seans_n": 1,
+   "n_seans": 124,
+   "histogram_0p5R": {
+    "0.0": 123,
+    "1.0": 1
+   }
+  },
+  "nominal_islem_araligi_R": {
+   "max": 1.0,
+   "p50": 0.0,
+   "p90": 0.0,
+   "p99": 1.0,
+   "ort": 0.032,
+   "sifir_ustu_seans_n": 5,
+   "n_seans": 124,
+   "histogram_0p5R": {
+    "0.0": 119,
+    "0.5": 2,
+    "1.0": 3
+   }
+  },
+  "gerceklesen_open_fazi": {
+   "size_r_toplam": {
+    "max": 0.745,
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 0.0,
+    "ort": 0.006,
+    "sifir_ustu_seans_n": 1,
+    "n_seans": 124,
+    "histogram_0p5R": {
+     "0.0": 123,
+     "0.5": 1
+    }
+   },
+   "risk_dollars_giris_max": 743.99,
+   "kalan_risk_dollars_max": 738.54,
+   "kalan_risk_nav_pct_max": 0.741
+  },
+  "eszamanli_poz_max": {
+   "open_fazi": 2,
+   "islem_araligi": 2
+  }
+ },
+ "betim": {
+  "n_seans": 124,
+  "dd_gt_tam_esik_n": 0,
+  "eff_max_open_eq0_n": 0,
+  "eff_max_open_eq1_n": 0,
+  "eff_max_open_lt_base_n": 0,
+  "acik_slot_le0_n": 0,
+  "size_mult_0_n": 0
+ },
+ "tasnif_tum_seans": {
+  "n": 124,
+  "dagilim": {
+   "evren_bagladi": {
+    "n": 3,
+    "pct": 2.42
+   },
+   "isinma": {
+    "n": 3,
+    "pct": 2.42
+   },
+   "rejim_kapali": {
+    "n": 118,
+    "pct": 95.16
+   }
+  }
+ },
+ "birincil": {
+  "n": 3,
+  "dagilim": {
+   "evren_bagladi": {
+    "n": 3,
+    "pct": 100.0
+   }
+  },
+  "tavan_sifir_pct": 0.0
+ },
+ "ci95_ay_kumeli": {
+  "tavan_sifir": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "evren_bagladi": {
+   "lo": 1.0,
+   "hi": 1.0,
+   "orta": 1.0
+  },
+  "derisk_bagladi": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "derisk+tavan": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "_n_ay_kume": 1
+ }
+}

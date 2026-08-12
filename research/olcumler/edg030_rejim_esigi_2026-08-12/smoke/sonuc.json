@@ -1,0 +1,632 @@
+{
+ "kart": "EDG-2026-030",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T13:23:53+00:00",
+ "smoke": true,
+ "kiyas_taban": {
+  "kaynak": "EDG-026 C (slot20+0.5R+rampa15/36) HAZIR çıktıları — yeniden koşulmadı, salt-okundu",
+  "dosyalar": {
+   "sonuc": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/smoke/sonuc_c_smoke.json",
+   "seanslar": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/smoke/seanslar_c_smoke.json",
+   "islemler": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/smoke/islemler_c_smoke.json"
+  },
+  "sha256": {
+   "sonuc_c_smoke.json": "b45bf8f57e255b3eb982b35e1e7c98a0dd995f69cd30c6fdbd2c4e59ccebf79c",
+   "seanslar_c_smoke.json": "fdb8a6fec540afdf133ad1ca1ef3285491a654c4b6c269d1ecba2444d805236e",
+   "islemler_c_smoke.json": "936322b744700991f1c2c023c1be6f7d2dc87153698cdb97ba900a243a3b0625"
+  }
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap (iter=5000, seed=20260812, n_ay=6): aynı ay çekilişi iki koşuma birden; fark = hücre − C; metrikler iterasyon içinde kanonik formüllerle yeniden hesaplanır",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı)",
+  "sharpe_boot": "kanonik score_detail formülü; span = tam pencere gün sayısı (sabit); n≤2 veya std=0 iterasyonları atlanır (sayı raporlu)",
+  "maxdd_boot": "kanonik equity_curve (ts_close sıralı) + max_drawdown, çekilen ayların işlemleri takvim sırasında; ay yeniden-örneklemesi dd zaman-sırasını yapay kurar — CI bu beyanla okunur; NOKTA dd motor kanonik",
+  "eklenen_r_ci": "tek-örneklem ay-kümeli bootstrap (yalnız eklenen işlemlerin ayları)"
+ },
+ "hucreler": {
+  "e30": {
+   "hucre": "e30",
+   "esik": 30,
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "skor_kimligi_uyusmaz_n": 0,
+    "serh": null
+   },
+   "tablo": {
+    "islem_n": {
+     "C_esik40": 3,
+     "hucre_esik30": 3,
+     "fark": 0,
+     "fark_pct": 0.0
+    },
+    "islem_yil": {
+     "C_esik40": 6.09,
+     "hucre_esik30": 6.09
+    },
+    "islem_fark_ci95": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    },
+    "islem_oran_ci95": {
+     "lo": 1.0,
+     "hi": 1.0,
+     "orta": 1.0
+    },
+    "net_pnl_equity": {
+     "C_esik40": -511.72,
+     "hucre_esik30": -511.72
+    },
+    "net_pnl_trades": {
+     "C_esik40": -511.72,
+     "hucre_esik30": -511.72
+    },
+    "net_pnl_fark_ci95": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    },
+    "maxdd_kanonik": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "maxdd_m2m": {
+     "C_esik40": 0.0051,
+     "hucre_esik30": 0.0051
+    },
+    "maxdd_fark_ci95_kapali_islem_egrisi": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    },
+    "maxdd_ci_atlanan_iter": 1685,
+    "sharpe": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "sharpe_fark_ci95": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    },
+    "sharpe_ci_atlanan_iter": 1685,
+    "avg_r": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "win_rate": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "score": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "total_return": {
+     "C_esik40": null,
+     "hucre_esik30": null
+    },
+    "silahlanan_plan": {
+     "C_esik40": 4,
+     "hucre_esik30": 4
+    },
+    "toplam_plan": {
+     "C_esik40": 4,
+     "hucre_esik30": 4
+    },
+    "verdict_dagilim": {
+     "C_esik40": {
+      "GO": 1,
+      "REVIEW": 3,
+      "NO_GO": 0
+     },
+     "hucre_esik30": {
+      "GO": 1,
+      "REVIEW": 3,
+      "NO_GO": 0
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C_esik40": {},
+     "hucre_esik30": {}
+    },
+    "review_neden_dagilim": {
+     "C_esik40": {
+      "leading_sector": 3,
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 3,
+      "rr_marginal": 1
+     },
+     "hucre_esik30": {
+      "leading_sector": 3,
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 3,
+      "rr_marginal": 1
+     }
+    },
+    "entry_rejects": {
+     "C_esik40": {
+      "open_below_stop": 1
+     },
+     "hucre_esik30": {
+      "open_below_stop": 1
+     }
+    },
+    "exit_reason_dagilim": {
+     "C_esik40": {
+      "regime_flip": 3
+     },
+     "hucre_esik30": {
+      "regime_flip": 3
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C_esik40": 2,
+     "hucre_esik30": 2
+    },
+    "ort_acik_pozisyon": {
+     "C_esik40": 0.016,
+     "hucre_esik30": 0.016
+    },
+    "tasnif_tum_seans": {
+     "C_esik40": {
+      "evren_bagladi": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "rejim_kapali": {
+       "n": 118,
+       "pct": 95.16
+      }
+     },
+     "hucre_esik30": {
+      "evren_bagladi": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "rejim_kapali": {
+       "n": 118,
+       "pct": 95.16
+      }
+     }
+    },
+    "rejim_butce_hucre": {
+     "butce_acik_seans_n": 6,
+     "butce_kapali_seans_n": 118,
+     "skor_bant_dagilim_tum": {
+      "0-19": 105,
+      "20-29": 13,
+      "40+": 6
+     },
+     "skor_bant_dagilim_butce_acik": {
+      "40+": 6
+     },
+     "rejim_dagilim_seans": {
+      "high_vol": 102,
+      "chop": 13,
+      "trend_up": 6,
+      "trend_down": 3
+     }
+    },
+    "tepe_isi_ozet": {
+     "C_esik40": {
+      "nominal_open_max": 1.0,
+      "gerceklesen_sizeR_max": 0.745,
+      "eszamanli_poz_max": {
+       "open_fazi": 2,
+       "islem_araligi": 2
+      }
+     },
+     "hucre_esik30": {
+      "nominal_open_max": 1.0,
+      "gerceklesen_sizeR_max": 0.745,
+      "eszamanli_poz_max": {
+       "open_fazi": 2,
+       "islem_araligi": 2
+      }
+     }
+    }
+   },
+   "islem_kumesi": {
+    "kimlik": "(ts_open, ticker)",
+    "ortak_n": 3,
+    "eklenen_n": 0,
+    "cikan_n": 0,
+    "ortak_cikis_kayan_n": 0,
+    "ortak_pnl_farki": 0.0,
+    "pnl_ayristirma": {
+     "delta_net_pnl_trades": 0.0,
+     "eklenen_pnl": 0,
+     "cikan_pnl": 0,
+     "ortak_delta_pnl": 0.0,
+     "kalinti": 0.0
+    }
+   },
+   "eklenen_analiz": {
+    "ozet": null,
+    "ort_r_ci95_ay_kumeli": null,
+    "ort_r_ci_olculemedi_neden": "eklenen işlemler 0 ay kümesinde — ay-kümeli CI için <2 küme; olculemedi (None)",
+    "arm_gunu": {
+     "C_de_kapali_gunden": 0,
+     "C_de_acik_gunden_knockon": 0,
+     "arm_gunu_bulunamadi": 0,
+     "arm_gunu_skor_bandi": {},
+     "tanim": "arm = ts_open'dan önceki seans; C'de o seans exposure_budget_pct∈{0,None} ise 'kapalı günden'"
+    }
+   },
+   "cikan_analiz": {
+    "ozet": null,
+    "beyan": "çıkanlar yan-etkidir (knock-on): erken eklenen işlemler slot/ısı/equity yolunu değiştirir; C'deki bu işlemler hücrede oluşmadı"
+   },
+   "kill1_eklenen_min30": {
+    "esik": "eklenen işlem <30/hücre → OLCULEMEDI (kart kill#1)",
+    "eklenen_n": 0,
+    "tetiklendi": true,
+    "beyan": "eklenen 0 < 30 — bu hücre OLCULEMEDI"
+   },
+   "kill2_sasi_butunlugu": {
+    "esik": "şasi bütünlüğü (koşum-içi kontroller + eşik-yankı + bütçe-kural + motor/config sha == C + takvim + skor-kimliği) bozuksa GEÇERSİZ (kart kill#2)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "motor_sha_ayni": true,
+    "config_sha_ayni": true,
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "skor_kimligi_uyusmaz_n": 0,
+    "skor_kimligi_ornek": [],
+    "tetiklendi": false
+   },
+   "dd_kosul_kaydi_x1p5": {
+    "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil: dd_hücre vs C×1.5 kaydı; hüküm Rol-1'in",
+    "maxdd_C": null,
+    "maxdd_hucre": null,
+    "oran": null,
+    "C_x1p5_ustunde": null
+   }
+  },
+  "e20": {
+   "hucre": "e20",
+   "esik": 20,
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "skor_kimligi_uyusmaz_n": 0,
+    "serh": null
+   },
+   "tablo": {
+    "islem_n": {
+     "C_esik40": 3,
+     "hucre_esik20": 25,
+     "fark": 22,
+     "fark_pct": 733.3
+    },
+    "islem_yil": {
+     "C_esik40": 6.09,
+     "hucre_esik20": 50.73
+    },
+    "islem_fark_ci95": {
+     "lo": 0.0,
+     "hi": 48.0,
+     "orta": 22.0
+    },
+    "islem_oran_ci95": {
+     "lo": 5.3333,
+     "hi": 14.3333,
+     "orta": 6.8333
+    },
+    "net_pnl_equity": {
+     "C_esik40": -511.72,
+     "hucre_esik20": -684.4
+    },
+    "net_pnl_trades": {
+     "C_esik40": -511.72,
+     "hucre_esik20": -684.4
+    },
+    "net_pnl_fark_ci95": {
+     "lo": -2068.74,
+     "hi": 1550.7,
+     "orta": -172.68
+    },
+    "maxdd_kanonik": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "maxdd_m2m": {
+     "C_esik40": 0.0051,
+     "hucre_esik20": 0.0203
+    },
+    "maxdd_fark_ci95_kapali_islem_egrisi": {
+     "lo": 0.0106,
+     "hi": 0.0306,
+     "orta": 0.0106
+    },
+    "maxdd_ci_atlanan_iter": 1685,
+    "sharpe": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "sharpe_fark_ci95": {
+     "lo": 2.7721,
+     "hi": 7.1861,
+     "orta": 4.69
+    },
+    "sharpe_ci_atlanan_iter": 1685,
+    "avg_r": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "win_rate": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "score": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "total_return": {
+     "C_esik40": null,
+     "hucre_esik20": null
+    },
+    "silahlanan_plan": {
+     "C_esik40": 4,
+     "hucre_esik20": 26
+    },
+    "toplam_plan": {
+     "C_esik40": 4,
+     "hucre_esik20": 26
+    },
+    "verdict_dagilim": {
+     "C_esik40": {
+      "GO": 1,
+      "REVIEW": 3,
+      "NO_GO": 0
+     },
+     "hucre_esik20": {
+      "GO": 2,
+      "REVIEW": 24,
+      "NO_GO": 0
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C_esik40": {},
+     "hucre_esik20": {}
+    },
+    "review_neden_dagilim": {
+     "C_esik40": {
+      "leading_sector": 3,
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 3,
+      "rr_marginal": 1
+     },
+     "hucre_esik20": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 24,
+      "leading_sector": 17,
+      "sector_stacking": 9,
+      "score_band": 4,
+      "rr_marginal": 3,
+      "correlation": 2,
+      "heat_review": 2
+     }
+    },
+    "entry_rejects": {
+     "C_esik40": {
+      "open_below_stop": 1
+     },
+     "hucre_esik20": {
+      "open_below_stop": 1
+     }
+    },
+    "exit_reason_dagilim": {
+     "C_esik40": {
+      "regime_flip": 3
+     },
+     "hucre_esik20": {
+      "regime_flip": 17,
+      "stop": 8
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C_esik40": 2,
+     "hucre_esik20": 36
+    },
+    "ort_acik_pozisyon": {
+     "C_esik40": 0.016,
+     "hucre_esik20": 0.29
+    },
+    "tasnif_tum_seans": {
+     "C_esik40": {
+      "evren_bagladi": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "rejim_kapali": {
+       "n": 118,
+       "pct": 95.16
+      }
+     },
+     "hucre_esik20": {
+      "evren_bagladi": {
+       "n": 16,
+       "pct": 12.9
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 2.42
+      },
+      "rejim_kapali": {
+       "n": 105,
+       "pct": 84.68
+      }
+     }
+    },
+    "rejim_butce_hucre": {
+     "butce_acik_seans_n": 19,
+     "butce_kapali_seans_n": 105,
+     "skor_bant_dagilim_tum": {
+      "0-19": 105,
+      "20-29": 13,
+      "40+": 6
+     },
+     "skor_bant_dagilim_butce_acik": {
+      "20-29": 13,
+      "40+": 6
+     },
+     "rejim_dagilim_seans": {
+      "high_vol": 102,
+      "chop": 13,
+      "trend_up": 6,
+      "trend_down": 3
+     }
+    },
+    "tepe_isi_ozet": {
+     "C_esik40": {
+      "nominal_open_max": 1.0,
+      "gerceklesen_sizeR_max": 0.745,
+      "eszamanli_poz_max": {
+       "open_fazi": 2,
+       "islem_araligi": 2
+      }
+     },
+     "hucre_esik20": {
+      "nominal_open_max": 4.0,
+      "gerceklesen_sizeR_max": 3.135,
+      "eszamanli_poz_max": {
+       "open_fazi": 8,
+       "islem_araligi": 11
+      }
+     }
+    }
+   },
+   "islem_kumesi": {
+    "kimlik": "(ts_open, ticker)",
+    "ortak_n": 3,
+    "eklenen_n": 22,
+    "cikan_n": 0,
+    "ortak_cikis_kayan_n": 3,
+    "ortak_pnl_farki": -384.44,
+    "pnl_ayristirma": {
+     "delta_net_pnl_trades": -172.68,
+     "eklenen_pnl": 211.76,
+     "cikan_pnl": 0,
+     "ortak_delta_pnl": -384.44,
+     "kalinti": 0.0
+    }
+   },
+   "eklenen_analiz": {
+    "ozet": {
+     "n": 22,
+     "ort_r": 0.01,
+     "medyan_r": -0.019,
+     "pnl_toplam": 211.76,
+     "kazanma_orani": 0.364,
+     "rejim_kirilimi": {
+      "chop": {
+       "n": 22,
+       "pnl": 211.76,
+       "ort_r": 0.01
+      }
+     },
+     "exit_reason_dagilim": {
+      "regime_flip": 16,
+      "stop": 6
+     },
+     "setup_dagilim": {
+      "breakout_vcp": 12,
+      "exhaustion_hammer": 10
+     },
+     "aylik_n": {
+      "2022-01": 13,
+      "2022-04": 9
+     }
+    },
+    "ort_r_ci95_ay_kumeli": {
+     "lo": -0.0672,
+     "hi": 0.1227,
+     "orta": 0.0105
+    },
+    "ort_r_ci_olculemedi_neden": null,
+    "arm_gunu": {
+     "C_de_kapali_gunden": 22,
+     "C_de_acik_gunden_knockon": 0,
+     "arm_gunu_bulunamadi": 0,
+     "arm_gunu_skor_bandi": {
+      "20-29": 22
+     },
+     "tanim": "arm = ts_open'dan önceki seans; C'de o seans exposure_budget_pct∈{0,None} ise 'kapalı günden'"
+    }
+   },
+   "cikan_analiz": {
+    "ozet": null,
+    "beyan": "çıkanlar yan-etkidir (knock-on): erken eklenen işlemler slot/ısı/equity yolunu değiştirir; C'deki bu işlemler hücrede oluşmadı"
+   },
+   "kill1_eklenen_min30": {
+    "esik": "eklenen işlem <30/hücre → OLCULEMEDI (kart kill#1)",
+    "eklenen_n": 22,
+    "tetiklendi": true,
+    "beyan": "eklenen 22 < 30 — bu hücre OLCULEMEDI"
+   },
+   "kill2_sasi_butunlugu": {
+    "esik": "şasi bütünlüğü (koşum-içi kontroller + eşik-yankı + bütçe-kural + motor/config sha == C + takvim + skor-kimliği) bozuksa GEÇERSİZ (kart kill#2)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "motor_sha_ayni": true,
+    "config_sha_ayni": true,
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "skor_kimligi_uyusmaz_n": 0,
+    "skor_kimligi_ornek": [],
+    "tetiklendi": false
+   },
+   "dd_kosul_kaydi_x1p5": {
+    "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil: dd_hücre vs C×1.5 kaydı; hüküm Rol-1'in",
+    "maxdd_C": null,
+    "maxdd_hucre": null,
+    "oran": null,
+    "C_x1p5_ustunde": null
+   }
+  }
+ },
+ "dosyalar": {
+  "e30": {
+   "sonuc": "sonuc_e30_smoke.json",
+   "seanslar": "seanslar_e30_smoke.json",
+   "islemler": "islemler_e30_smoke.json"
+  },
+  "e20": {
+   "sonuc": "sonuc_e20_smoke.json",
+   "seanslar": "seanslar_e20_smoke.json",
+   "islemler": "islemler_e20_smoke.json"
+  }
+ },
+ "hukum": null
+}

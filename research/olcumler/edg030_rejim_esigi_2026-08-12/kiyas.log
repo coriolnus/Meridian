@@ -1,0 +1,24 @@
+
+==================== EDG-030 KIYAS ÖZETİ ====================
+
+--- hücre e30 (esik 30) ---
+şasi: serh=None  takvim=True  skor_uyusmaz=0
+işlem: C 772 → 772 (fark 0)  ΔCI95={'lo': 0.0, 'hi': 0.0, 'orta': 0.0}
+net_pnl: {'C_esik40': 9869.2, 'hucre_esik30': 9869.2}  ΔCI95={'lo': 0.0, 'hi': 0.0, 'orta': 0.0}
+maxdd: {'C_esik40': 0.1235, 'hucre_esik30': 0.1235}  ΔCI95(kapalı-işlem)={'lo': 0.0, 'hi': 0.0, 'orta': 0.0}
+sharpe: {'C_esik40': 0.285, 'hucre_esik30': 0.285}  ΔCI95={'lo': 0.0, 'hi': 0.0, 'orta': 0.0}
+küme: ortak=772 eklenen=0 çıkan=0 kayan=0
+KILL#1 tetiklendi=True  KILL#2 tetiklendi=False  dd×1.5 koşulu=False
+
+--- hücre e20 (esik 20) ---
+şasi: serh=None  takvim=True  skor_uyusmaz=0
+işlem: C 772 → 1005 (fark 233)  ΔCI95={'lo': 145.0, 'hi': 330.0, 'orta': 232.0}
+net_pnl: {'C_esik40': 9869.2, 'hucre_esik20': -6248.74}  ΔCI95={'lo': -42147.2952, 'hi': 9362.1667, 'orta': -15965.145}
+maxdd: {'C_esik40': 0.1235, 'hucre_esik20': 0.1618}  ΔCI95(kapalı-işlem)={'lo': -0.0486, 'hi': 0.2368, 'orta': 0.0599}
+sharpe: {'C_esik40': 0.285, 'hucre_esik20': -0.18}  ΔCI95={'lo': -1.1856, 'hi': 0.2919, 'orta': -0.4605}
+küme: ortak=706 eklenen=299 çıkan=66 kayan=560
+eklenen: n=299 ort_r=-0.004 CI={'lo': -0.1907, 'hi': 0.2036, 'orta': -0.0016} rejim={'chop': 285, 'high_vol': 8, 'trend_up': 6}
+KILL#1 tetiklendi=False  KILL#2 tetiklendi=False  dd×1.5 koşulu=False
+
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/sonuc.json
+KIYAS_BITTI
