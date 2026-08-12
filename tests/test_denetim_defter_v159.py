@@ -149,8 +149,14 @@ def _c15_kadans_karari(sprint_sandbox, monkeypatch, gecen_gun: int) -> dict:
     taban = _taban(gecen_gun)
     store.write_json(sprint.STATUS_FILE, {**PARENT_STAMP, "started_at": taban})
 
-    # ÇOCUK YAZIMI — kusurun tetiklendiği an
-    sprint_run._write_live_status(_child_payload(phase="baseline", progress=8, total=520,
+    # ÇOCUK YAZIMI — kusurun tetiklendiği an. FAZ 'done' (v235 uyarlaması, 2026-08-12): bu iki
+    # kadans testi DAMGA disiplinini (taze=0, haftalık eşik) ölçer ve karar hâli "son sprint BİTTİ,
+    # kadans yeni tur düşünüyor"dur. Eski fikstür 'baseline' + ölü pid (999999) taşıyordu — v235
+    # yetim yasasından beri o hâl YARIDA KALMIŞ sprint demektir ve kadans onu MEŞRU olarak
+    # `yetim_sprint_yeniden` ile yeniden başlatır (canlı vakanın ta kendisi; kapsamı
+    # test_ogrenme_katmani_durmasi_v235). Damga-koruma mekaniği fazdan bağımsızdır — buradaki
+    # iddiaların hiçbiri değişmez.
+    sprint_run._write_live_status(_child_payload(phase="done", progress=8, total=520,
                                                  n_v1=0, started_at=taban))
 
     # `now` YALNIZ SAATİ taşır (sprint.py:405/415) — 23:00 pencere İÇİNDE (22→06). Gün bacağını

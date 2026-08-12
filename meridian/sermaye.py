@@ -94,6 +94,42 @@ VARSAYILAN_GEREKCE = (
 EVENT = "paper_equity_reset"
 
 
+# ---- KANONİK SERMAYE TABANI (v235, 2026-08-12 canlı vakası) ------------------------------------
+def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> float:
+    """ZIMNİ SERMAYE TABANININ KANONİK (SENT-TAM) TÜRETİMİ — tek yerde, 2 hane.
+
+    Büyüklük `watchdog.monotonicity_report`un SB-3 satırıdır: taban = realized_pnl − Σ trades.
+    pnl_dollars ("normal işletimde SABİT; yalnız beyan taşır; beyanlar yalnız eklenir → ileri-only").
+    CANLI ALARM (2026-08-12): "GERİLEME: sermaye_taban 5542.09 → 5542.08" — 0,01'lik kırık, beyan
+    silinmesi DEĞİL, YUVARLAMA KIRIĞI. İki ölçülmüş bacağı var:
+
+      (a) TOPLAMA TOZU: watchdog:1976 `round(realized − Σ float, 2)` hesabında Σ, her çağrıda ham
+          float'ların o günkü sırasıyla toplanır; yarım-sent (x.xx5) sınırındaki bir taban, toz
+          kadar farkla iki yöne yuvarlanır. Burada Σ SENT TAMSAYISIYLA alınır: defter satırları
+          zaten 2 haneli yazılır (broker.py:605 `round(pnl, 2)`), yani `round(x*100)` terim başına
+          KESİNDİR ve toplam, toplama sırasından/temsil tozundan bağımsız aynı tamsayıdır.
+      (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
+          (broker.py:569/595) ama defter satırını yuvarlayıp yazar (:605) — broker.py:258'in kendi
+          sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
+          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır (WP-E
+          yaması: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
+          bugünkü dünyada ise en azından (a) bacağını ve ölçüm-anı tozunu keser.
+
+    KARŞILAŞTIRMA EPSILON'U BİLEREK YOK: eşik gevşetmek gerçek 1-sentlik silinmeyi de yutardı.
+    Yazım/türetim stabilize edilir, dedektörün `v < p` kıyası DOKUNULMADAN kalır — aynı defter iki
+    yoldan yazılınca sonuç bit-bit aynıdır, GERÇEK gerileme yine alarmlar.
+
+    Bozuk satır SEMANTİĞİ watchdog ifadesiyle BİREBİR: `pnl_dollars` None/boş → 0; sayıya
+    çevrilemeyen değer istisna fırlatır (watchdog kendi try'ında 'kaynak okunamadı' der — sahte bir
+    0 uydurulmaz). Tüketiciler: `durum()` (CLI/pano yüzeyi) + watchdog:1976 (tek satırlık yama
+    planı: `cur["sermaye_taban"] = _srm.sermaye_taban(pf, _tr)`)."""
+    pf = store.read_json(PORTFOLIO, {}) if pf is None else (pf or {})
+    rows = store.read_jsonl(ledgerstamp.LEDGER) if rows is None else rows
+    r_sent = round(float(pf.get("realized_pnl") or 0.0) * 100)
+    defter_sent = sum(round(float(t.get("pnl_dollars") or 0.0) * 100) for t in rows)
+    return (r_sent - defter_sent) / 100.0
+
+
 # ---- ÖLÇÜM (hiçbir bayt yazmaz) ----------------------------------------------------------------
 def _hedef() -> float:
     """Ayrıştırma sonrası sermaye TABANI — TEK kaynaktan (`score.START_EQUITY`). Burada 100_000
@@ -240,6 +276,9 @@ def durum() -> dict:
                  "n_isaret": len(isaretler), "isaretler": isaretler},
         "hedef_cash": _hedef(),
         "resetler": resetler(pf),
+        # ZIMNİ TABAN — KANONİK (v235): monotonluk dedektörünün izlediği büyüklüğün sent-tam hâli.
+        # Burada yüzeye çıkar ki operatör "taban kaç?" sorusunu alarm beklemeden ölçebilsin.
+        "sermaye_taban_kanonik": sermaye_taban(pf),
     }
     out["engeller"] = _engeller(pf, out)
     out["uyarilar"] = _uyarilar(pf, k, isaretler)
@@ -481,6 +520,9 @@ def _durum_yaz(d: dict, baslik: bool = True) -> None:
           f"tepe {_p(b['peak_equity'])} · gün-başı {_p(b['day_start_equity'])}")
     print(f"                          pozisyon {b['n_pozisyon']} · silahlı {b['n_silahli']} · "
           f"last_id {b['last_id']} · seans {b['last_date']}")
+    if d.get("sermaye_taban_kanonik") is not None:
+        print(f"  zımni taban (kanonik) : {_p(d['sermaye_taban_kanonik'])}   "
+              f"[realized − Σ defter, sent-tam — monotonluk dedektörünün izlediği büyüklük]")
     e = d["egri"]
     print(f"  eğri                  : {e['n_nokta']} nokta · son {e['son_nokta']} · "
           f"{e['n_isaret']} reset işareti")

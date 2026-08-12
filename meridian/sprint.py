@@ -112,7 +112,8 @@ def status() -> dict:
     # KATMANINDA dürüstleştirir (Ajan B panoda bunu okuyup yansıtır — çakışma yok). Ölü pid +
     # TERMİNAL faz NORMALDİR (done/stopped/…: iş bitti) → orphan DEĞİL. Faz YOKSA "koşuyor" gibi de
     # okunmaz → orphan DEĞİL (zombie-reap testi v45 o hâli yalnız `active False` diye çiviler).
-    # SPRINT DİRİLTİLMEZ: bu SALT bir gösterge; kadans/LLM kotası ayrı bir operatör kalemidir.
+    # BURADA DİRİLTİLMEZ: status() salt okur. YENİDEN BAŞLATMA v235'ten beri KADANSIN işidir —
+    # `should_run` yetimi tetik sayar (sebep=yetim_sprint_yeniden, ≥YETIM_YENIDEN_SAAT fren).
     faz = st.get("phase")
     orphan = bool(pid) and not alive and faz is not None and faz not in _TERMINAL_PHASES
     # YASA 6 (2026-07-21): sprint_run.py her aramadan sonra `sprint_runs.jsonl`'a satır yazıyordu ve
@@ -144,8 +145,9 @@ def status() -> dict:
     return {**st, "active": alive, "orphan": orphan,
             "orphan_note": (None if not orphan else
                             f"pid {pid} ÖLÜ ama faz '{faz}' terminal değil — sprint YARIDA KALDI "
-                            f"(orphan): süreç yok, ilerleme donmuş, 'koşuyor' DEĞİL. Kadans/kota "
-                            f"ayrı operatör kalemidir; bu gösterge DİRİLTMEZ."),
+                            f"(orphan): süreç yok, ilerleme donmuş, 'koşuyor' DEĞİL. Kadans yetim "
+                            f"tetiğiyle (yetim_sprint_yeniden, ≥{YETIM_YENIDEN_SAAT:.0f} sa fren) "
+                            f"uygun ilk gece penceresinde YENİDEN başlatır; bu gösterge yalnız okur."),
             "runs": _runs,
             "runs_ledger": ("var" if _runs else "YOK"), "runs_kaynak": _kaynak,
             "runs_note": (None if _runs else
@@ -398,18 +400,91 @@ def auto_config() -> dict:
     return out
 
 
-def _search_busy() -> bool:
-    """Canlı koordinat-inişi araması şu an koşuyor mu? Aynı süreçteki `hermes.SEARCH_PROGRESS`ten
-    okunur (zamanlayıcı ve api AYNI süreçtedir — daemon thread). Okunamıyorsa MEŞGUL SAYILIR:
-    muhafazakâr taraf, "emin değilsen 8 çekirdeği ikiye bölme"dir."""
+# ------------------------------------------------------------------------------------------------
+# CANLI-ARAMA BAYRAĞI: BAYATLIK YASASI (v235, 2026-08-12 canlı vakası).
+# ÖLÇÜLEN ARIZA: `sprint_cadence_skip sebep=mesgul:canli_arama` 4+ gün boyunca HER döngüde tekrar
+# etti; aynı pencerede sprint yetim (pid ölü, faz 'baseline') ve 9,6 gündür yeni hipotez yok.
+# `hermes.SEARCH_PROGRESS` süreç-içi bir sözlüktür ve `reflect_once` onu normal/istisna çıkışta
+# temizler (hermes.py:3749/3754) — yani bayrağın GÜNLERCE `running=True` kalabilmesinin tek yolu,
+# aramanın kendisinin ASILI kalmasıdır (canlı arama `ProcessPoolExecutor` açar, reflect.py:1049;
+# ölen bir işçi süreci ebeveyni sonsuza dek bekletebilir). Bayrak o hâlde DÜRÜSTÇE "koşuyor" der
+# ama iş ölüdür — ve kadansın tek meşguliyet kanıtı bu bayrak olduğundan ÖĞRENMENİN TAMAMI
+# (sprint → hipotez → kalibrasyon) sessizce kilitlenir. Bu, YASA-4'ün kovaladığı sınıfın ta
+# kendisidir: temizlenmeyen bir bayrak = beyansız sonsuz kilit.
+#
+# YASA: bayrak `running=True` VE parmak izi (faz/i/total/değişken/değer) ARAMA_BAYAT_SAAT boyunca
+# HİÇ değişmemişse arama BAYAT sayılır — kadans onu meşguliyet kanıtı olarak KULLANMAZ, tespit
+# OLAYLIDIR (`sprint_arama_bayragi_bayat`, episode başına bir kez) ve bayrak panoya da dürüst
+# görünsün diye `running=False, phase="bayat_temizlendi"` ile işaretlenir (hermes_runtime:522 aynı
+# sözlüğü render eder). Asılı iş parçacığı bir gün UYANIRSA kendi `update`i bayrağı yeniden yazar
+# ve parmak izi DEĞİŞTİĞİ için gözlem sıfırlanır — canlı bir arama asla bayat okunmaz.
+#
+# EŞİK TÜRETİMDİR, ÖLÇÜM DEĞİL: incumbent walk ~90 sn ÖLÇÜLÜDÜR (hermes.py:3731) ve her sonda
+# `_on_probe` ile parmak izini değiştirir; 6 saat = o adımın >200 katı. İkincil özellik: gece
+# penceresi 8 saat (22→06) olduğundan, pencere başında bayatlaşan bir bayrak AYNI gece içinde
+# aşılır ve sprint o gece kendine gelir.
+ARAMA_BAYAT_SAAT = 6.0
+# Süreç-içi gözlem defteri — izlediği bayrakla AYNI ömürde (restart ikisini birden sıfırlar).
+_ARAMA_GOZLEM: dict = {"iz": None, "beri": None, "olayli": False}
+# YETİM YENİDEN-BAŞLATMA FRENİ (v235): yetim tetiği ancak yetim başlangıç bu kadar eskiyse yanar.
+# 12 saat = gece penceresinin (8 sa) üstü — aynı gece içinde ölen bir çocuk AYNI pencerede ikinci
+# kez doğamaz, en erken ertesi gece denenir (çökme döngüsü ≤1 deneme/gece'ye sınırlanır).
+YETIM_YENIDEN_SAAT = 12.0
+# Yetim tespiti episode başına BİR olay üretir (sid ile anahtarlanır) — 300 sn'lik poll'de her
+# turda warn basmak, alarmın kendisini gürültüye çevirirdi.
+_YETIM_OLAYLI: set = set()
+
+
+def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
+    """Canlı koordinat-inişi araması ŞU AN meşguliyet kanıtı mı? `hermes.SEARCH_PROGRESS`ten okunur
+    (zamanlayıcı ve api AYNI süreçtedir — daemon thread). Okunamıyorsa MEŞGUL SAYILIR: muhafazakâr
+    taraf, "emin değilsen 8 çekirdeği ikiye bölme"dir. Dönüş her zaman yaş taşır: `yas_sa` bayrağın
+    SON İLERLEMEDEN beri kaç saattir değişmediğidir (skip olayına aynen çıkar — bkz. maybe_start).
+    `simdi` yalnız tz-AWARE ise saat kabul edilir (should_run'ın `gun_ref` seam'iyle aynı kural)."""
     try:
         from . import hermes
-        return bool((hermes.SEARCH_PROGRESS or {}).get("running"))
+        sp = dict(hermes.SEARCH_PROGRESS or {})
     except Exception as e:
         from . import obs
         obs.warn("sprint_search_busy_unreadable", error=f"{type(e).__name__}: {e}",
                  detail="arama durumu okunamadı — sprint MEŞGUL sayıp başlamadı (muhafazakâr taraf)")
-        return True
+        return {"mesgul": True, "bayat": False, "yas_sa": None, "faz": None, "kaynak": "okunamadi"}
+    if not sp.get("running"):
+        _ARAMA_GOZLEM.update(iz=None, beri=None, olayli=False)
+        return {"mesgul": False, "bayat": False, "yas_sa": None, "faz": sp.get("phase"),
+                "kaynak": "bayrak"}
+    if simdi is None or simdi.tzinfo is None:
+        simdi = dt.datetime.now(dt.timezone.utc)
+    iz = (sp.get("phase"), sp.get("i"), sp.get("total"), sp.get("variable"), sp.get("new"))
+    if _ARAMA_GOZLEM.get("iz") != iz or _ARAMA_GOZLEM.get("beri") is None:
+        _ARAMA_GOZLEM.update(iz=iz, beri=simdi, olayli=False)      # ilerleme var → saat sıfırlanır
+    yas_sa = max(0.0, (simdi - _ARAMA_GOZLEM["beri"]).total_seconds() / 3600.0)
+    bayat = yas_sa >= ARAMA_BAYAT_SAAT
+    if bayat and not _ARAMA_GOZLEM.get("olayli"):
+        from . import obs
+        obs.warn("sprint_arama_bayragi_bayat", yas_sa=round(yas_sa, 1),
+                 esik_saat=ARAMA_BAYAT_SAAT, faz=sp.get("phase"), i=sp.get("i"),
+                 total=sp.get("total"),
+                 detail=("canlı arama bayrağı `running=True` ama parmak izi bu süredir HİÇ "
+                         "değişmedi — arama asılı/ölü sayıldı; kadans bu bayrağı artık meşguliyet "
+                         "kanıtı olarak KULLANMAYACAK (öğrenme kilidi açılıyor). Bayrak panoda da "
+                         "dürüst görünsün diye 'bayat_temizlendi' ile işaretlendi; asılı iş "
+                         "parçacığı uyanırsa kendi yazımı gözlemi sıfırlar"))
+        try:
+            hermes.SEARCH_PROGRESS.update(
+                running=False, phase="bayat_temizlendi", bayat_yas_sa=round(yas_sa, 1),
+                bayat_temizleyen="sprint_kadansi",
+                bayat_ts=simdi.isoformat(timespec="seconds"))
+        except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
+            pass
+        _ARAMA_GOZLEM["olayli"] = True
+    return {"mesgul": not bayat, "bayat": bayat, "yas_sa": round(yas_sa, 2),
+            "faz": sp.get("phase"), "kaynak": "bayrak"}
+
+
+def _search_busy() -> bool:
+    """GERİYE UYUM SARICI (v235): karar `_arama_durumu`dadır — bayatlık yasası oradadır."""
+    return bool(_arama_durumu()["mesgul"])
 
 
 def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> dict:
@@ -433,24 +508,42 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     # yüzden bilinçle YAPILMIYOR (ayrım "aware mı" sorusudur, bir dönüştürme değil).
     gun_ref = now if now.tzinfo is not None else dt.datetime.now(dt.timezone.utc)
     try:
-        gun = (gun_ref - dt.datetime.fromisoformat(str(son))).days
+        gecen = gun_ref - dt.datetime.fromisoformat(str(son))
+        gun, gecen_saat = gecen.days, round(gecen.total_seconds() / 3600.0, 1)
     except (TypeError, ValueError):  # sessiz-yutma: sonuç KAYDA GEÇİYOR (gun=None → "hiç koşmadı" tetiği) — bilgi kaybolmaz
-        gun = None
+        gun, gecen_saat = None, None
     taze = len(hyps) - int(st.get("n_hyp_at_start") or 0)
+    # ARAMA BAYRAĞI GÖZLEMİ AYNI KARAR ÂNIYLA (gun_ref) OKUNUR — yaş, skip olayına aynen çıkar.
+    arama = _arama_durumu(gun_ref)
+    # YETİM SPRINT (v235): pid ÖLÜ + faz terminal DEĞİL (status():orphan). Yetim bir koşu "koştu"
+    # SAYILMAZ — sayılırsa haftalık taban, YARIDA KALMIŞ bir başlangıçtan ölçülür ve kadans 7 gün
+    # boşa susar (2026-08-12 canlı vakası: 4,4 gündür ölü çocuk, faz='baseline', kadans
+    # `tetik_yok/mesgul` arasında salınıyordu). YENİDEN BAŞLATMA KADANSIN İŞİDİR (2026-07-30
+    # operatör mandası "elle tetik beklemeden tam fonksiyonlu") — o yüzden yetim bir TETİKTİR,
+    # yalnız gösterge değil. ÇÖKME DÖNGÜSÜ FRENİ: tetik ancak yetim başlangıç YETIM_YENIDEN_SAAT'ten
+    # eskiyse yanar; hemen ölen bir çocuk aynı gece 5 dakikada bir yeniden doğamaz (≤1 deneme/12sa).
+    yetim = bool(st.get("orphan"))
+    yetim_tetik = yetim and gecen_saat is not None and gecen_saat >= YETIM_YENIDEN_SAAT
     ctx = {"gecen_gun": gun, "taze_hipotez": taze, "n_hipotez": len(hyps),
-           "saat": now.hour, "pencere": list(SPRINT_HOURS), "cfg": auto_config()}
+           "saat": now.hour, "pencere": list(SPRINT_HOURS), "cfg": auto_config(),
+           "arama_bayragi": arama, "yetim": yetim, "yetim_saat": gecen_saat if yetim else None,
+           "sid": st.get("sid")}
     if st.get("active"):
         return {**ctx, "kos": False, "sebep": "zaten_kosuyor"}
     if mesgul:
         return {**ctx, "kos": False, "sebep": f"mesgul:{mesgul}"}
-    if _search_busy():
+    if arama["mesgul"]:
         return {**ctx, "kos": False, "sebep": "mesgul:canli_arama"}
     lo, hi = SPRINT_HOURS
     # Pencere gece yarısını AŞAR (22→06): tek bir `lo <= h < hi` karşılaştırması burada HER ZAMAN
     # False verirdi ve kadans hiç koşmazdı — sessizce.
     if not (now.hour >= lo or now.hour < hi):
         return {**ctx, "kos": False, "sebep": "saat_dilimi_disinda"}
-    # TETİK: haftalık taban VEYA taze aday birikimi. "Hiç koşmadı" (gun=None) da tetiktir.
+    # TETİK: yetim yeniden-başlatma VEYA haftalık taban VEYA taze aday birikimi.
+    # "Hiç koşmadı" (gun=None) da tetiktir. Yetim, saat penceresinden SONRA gelir: yarıda kalmış
+    # antrenmanı gündüz yeniden başlatmak, 4 işçiyi canlı kararların makinesine sokmaktır.
+    if yetim_tetik:
+        return {**ctx, "kos": True, "sebep": "yetim_sprint_yeniden"}
     if gun is not None and gun < SPRINT_STALE_DAYS and taze < SPRINT_MIN_NEW_HYP:
         return {**ctx, "kos": False,
                 "sebep": f"tetik_yok(gun={gun}<{SPRINT_STALE_DAYS}, taze={taze}<{SPRINT_MIN_NEW_HYP})"}
@@ -466,9 +559,22 @@ def maybe_start(*, mesgul: str | None = None) -> dict:
     düşer, çünkü "gece değil" ile "sprint çöktü" aynı seviyede raporlanırsa ikincisi kaybolur."""
     from . import obs
     karar = should_run(mesgul=mesgul)
+    # YETİM TESPİTİ OLAYLIDIR (v235) — skip'ten ÖNCE, çünkü yetim bir sprint kapılara takılıp
+    # (arama/pencere) günlerce başlatılamayabilir ve o hâl SESSİZ kalamaz (YASA 4). Episode başına
+    # bir satır: sid anahtarı, aynı yetim için 300 sn'de bir tekrarını keser.
+    if karar.get("yetim") and karar.get("sid") and karar["sid"] not in _YETIM_OLAYLI:
+        obs.warn("sprint_yetim_tespit", sid=karar["sid"], yetim_saat=karar.get("yetim_saat"),
+                 yeniden_esik_saat=YETIM_YENIDEN_SAAT,
+                 detail=("sprint çocuğu ÖLÜ + faz terminal değil (yetim) — kadans, yetim başlangıç "
+                         f"{YETIM_YENIDEN_SAAT:.0f} saati aştığında uygun ilk gece penceresinde "
+                         "YENİDEN başlatır (sebep=yetim_sprint_yeniden); operatör onarımı gerekmez"))
+        _YETIM_OLAYLI.add(karar["sid"])
     if not karar["kos"]:
+        _ab = karar.get("arama_bayragi") or {}
         obs.log("sprint_cadence_skip", sebep=karar["sebep"], gecen_gun=karar["gecen_gun"],
-                taze_hipotez=karar["taze_hipotez"])
+                taze_hipotez=karar["taze_hipotez"],
+                arama_bayrak_yasi_sa=_ab.get("yas_sa"), arama_bayat=_ab.get("bayat"),
+                yetim=karar.get("yetim") or False)
         return {"started": False, **karar}
     cfg = karar["cfg"]
     res = start({"budget": cfg["budget"], "k_max": cfg["k_max"]})
