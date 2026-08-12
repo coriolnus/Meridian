@@ -34,7 +34,7 @@ Donuk üçlü eşik: (i) replay CI>0 **DÜŞTÜ kıl payı** (CI [−0.0046, +0.
 - chandelier: B etkisiz / C sınırda-negatif (CI üst −0.0003) — mevcut ATR-trail yeterli.
 **Öneri: ikisini de benimseme** (zaten kapalılar — değişiklik yok).
 
-## B. BEKLENEN HÜKÜMLER (koşumlar sürüyor — indikçe dolacak)
+## B. HÜKÜMLER (TÜM ÖLÇÜMLER TAMAM — 9/9)
 
 ### 5) EDG-024 — Eşik retro-kanıt (hacim 1.25× / RS 65, 3-hücre atıf) · 🔄
 _Ölçülecek: eklenen işlemlerin gerçek-R'si hücre başına CI. CI>0 → OOS-kapılı gevşetme önerisi; değilse eşikler kanıtla doğrulanır._

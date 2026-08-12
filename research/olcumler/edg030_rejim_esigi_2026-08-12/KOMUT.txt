@@ -1,0 +1,30 @@
+# EDG-2026-030 — koşum komutları (mutlak yollar; operatör-offline devralma için)
+# Kart: /Users/erdemozturk/AI-Trading/research/cards/EDG-2026-030-rejim-esigi.yaml (OKU-DOKUNMA)
+# İlk doğum: 2026-08-12, bu oturum — iki hücre paralel, nohup ile bağımsız süreç.
+
+## 1) ÖNCE ÇALIŞAN KOŞUM VAR MI KONTROL ET (çift-başlatma YASAK):
+pgrep -fl "edg030_rejim_esigi_2026-08-12/olcum.py kosum" || echo "kosum süreci yok"
+
+## 2) Bitmişlik işaretleri (log kuyruğunda):
+#   kosum_e30.log → "KOSUM_E30_BITTI"   (çıktı: sonuc_e30.json + seanslar_e30.json + islemler_e30.json)
+#   kosum_e20.log → "KOSUM_E20_BITTI"   (çıktı: sonuc_e20.json + seanslar_e20.json + islemler_e20.json)
+tail -3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/kosum_e30.log
+tail -3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/kosum_e20.log
+
+## 3) YENİDEN BAŞLATMA (yalnız ilgili hücre ÖLMÜŞSE ve BITTI işareti YOKSA; çıktılar üzerine yazılır):
+nohup /Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kosum e30 > /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/kosum_e30.log 2>&1 &
+nohup /Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kosum e20 > /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/kosum_e20.log 2>&1 &
+
+## 4) İKİ HÜCRE DE BİTTİKTEN SONRA BİRLEŞTİRME (C tabanı 026'dan salt-okunur; sonuc.json üretir):
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kiyas > /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/kiyas.log 2>&1
+# bitmişlik: kiyas.log → "KIYAS_BITTI"; çıktı: sonuc.json
+
+## (İsteğe bağlı) ŞASİ PROVASI — kısa pencere 2022-01-01→2022-06-30, çıktılar smoke/ altına:
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kosum e30 --smoke
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kosum e20 --smoke
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg030_rejim_esigi_2026-08-12/olcum.py kiyas --smoke
+
+## Notlar:
+# - Sandbox state dizinleri (state_e30/, state_e20/, *_smoke) otomatik kurulur; canlı state'e yazılmaz.
+# - Süre tahmini: hücre başına ~30-60 dk (026 C koşumu 1786 s; eşik düşünce taranan seans artar).
+# - git/canlı/ssh/serve.sh YOK. Kart dosyasına DOKUNULMAZ. Hüküm yazılmaz (Rol-1'in).

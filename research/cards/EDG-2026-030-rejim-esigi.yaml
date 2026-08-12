@@ -27,4 +27,16 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-030-esik30, pending-030-esik20]}
 
-status: registered   # 2026-08-12 Rol-1; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — hüküm: GEVŞETME ÖNERİLMEZ, eşik-40 kanıtla yerinde.
+
+verdict:   # Rol-1 hükmü.
+  e30: "kill#1 TETİKLENDİ / İNERT — [30,40) bandı pencerede hiç oluşmadı (skor örgüsü); C ile bit-özdeş."
+  e20: >
+    Eklenen 299 işlem ort-R −0.004 CI [−0.191,+0.204] (değer kanıtı YOK); tam-defter nokta −16.1k$, dd ×1.31,
+    sharpe 0.285→−0.18. Ayrıştırma (sente kapanan): asıl zarar yan-kanallar — regime_flip bastırılması
+    (141→63; çıkışlar time_stop/stop'a kaydı, −6.1k$) + trend_up kazananlarının ısı/slot-çalınmasıyla hiç
+    doğmaması (66 işlem, 50'si trend_up ort-R 0.736; −13.4k$). Chop-işlemleri eklemek portföyün İYİ işlemlerini
+    yerinden ediyor.
+  hukum: "%41 karartma KANITLA HAKLI: 30 anlamsız (boş bant), 20 zararlı-eğilimli. Eşik 40 kalır; kart arşiv. Pencereden kalem düştü (karar gerekmez)."
+  artefakt: "research/olcumler/edg030_rejim_esigi_2026-08-12/ (eşik-yüzeyi kanıtlı — monkeypatch'siz; öz-sınamalar 0 ihlal)"
+
