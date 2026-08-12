@@ -15,4 +15,7 @@
    ikisini içerik-aynı yeniden yazar, bekçi/mtime teşhisinde önce birth + .git/logs bak,
    2026-08-02 vakası). AJAN UÇUŞTAYKEN hüküm/doküman
    commit'leri AÇIK YOL LİSTESİYLE atılır (`git add -A` yasak — a94d425 vakası: tur ayrıklığını
-   süpürüp bulandırdı).
+   süpürüp bulandırdı). Tur-kapanışı commit'inden sonra `git push origin main` (2026-08-12'den
+   beri; remote: github.com/coriolnus/Meridian, özel) — cloud oturumları GitHub'daki hali
+   klonlar, push'lanmamış iş cloud'da görünmez. Push canlıya dağıtım DEĞİLDİR; dağıtım hâlâ
+   dagit.sh üzerinden.
