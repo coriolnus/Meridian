@@ -886,6 +886,25 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     *gerekçe: sharpe 0.285 pozitif-ama-ince; sıradaki çarpan işlem sayısı değil işlem SEÇİMİ · bağımlılık:
     dağıtım-sonrası ilk ölçüm dalgası · öncelik: yüksek (OPT Faz-1 kablolamasıyla eş-zamanlı gidebilir).*
 
+17. **KARNE SÜRÜM SPLIT'İ — motor v5, scoreboard v3 (canlı ölçüm 2026-08-13, ACİL)** — teşhis:
+    `docs/TESHIS-CANLI-VS-REPLAY-2026-08-13.md` §2. Motor `strategy.yaml` v5'i (0.5R) okuyor ama DB
+    `scoreboard.current_version: 3` — 08-12 mini-penceresinde scp'lenen scoreboard.json'u v234
+    bayat-defter migrasyonu `.migrated-*`e taşıdı, DB'ye YAZILMADI. Etki: sürüm-bazlı değerlendirme
+    yanlış sürüme atfediyor, yeni hipotezlerin ebeveyni yanlış, rollback yanlış hedefe döner
+    (`analytics.py:683,2168` · `hermes.py:133` · `recompute.py:292` · `rollback.py:355`). DÜZELTME:
+    v5 kaydı uygulamanın KENDİ yazım kapısından DB'ye (elle SQL DEĞİL) + `.migrated-*` artığı temizliği
+    + prosedür RUNBOOK'a ("sürüm terfisi dagit kapsamı dışıdır; strategy.yaml scp + scoreboard DB
+    yazımı AYRI adımdır" — bu tur öğrenildi). *boyut: S · öncelik: ACİL (öğrenme katmanı yanlış
+    zeminde çalışıyor).*
+
+18. **P&L GÖRÜNÜRLÜĞÜ — equity_curve 24 gün donuk (2026-08-13 ölçümü)** — son nokta 2026-07-20
+    (882 kayıt); pano P&L eğrisi bu yüzden hareketsiz ve operatör "P&L yansıtmıyor" diye okuyor.
+    §2-9'un (kadanslı yazar) artık GÖRÜNÜR etkisi var → §2-9 önceliği yükseltildi. Ek: canlı defter
+    toplamı −5.264$ (97 kapanan) iken portfolio `realized_pnl` +278$ — fark 2026-08-01 kâğıt-hesap
+    RESET işaretinden geliyor (equity_curve meta `paper_equity_reset` SR-20260801T151429); pano hangi
+    pencereyi gösterdiğini AÇIKÇA yazmalı (reset-öncesi/sonrası ayrımı görünür değil). *boyut: S-M ·
+    öncelik: yüksek.*
+
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
 
