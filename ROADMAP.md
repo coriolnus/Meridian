@@ -788,8 +788,12 @@ OB-2 systemd exit-143 → OB-1 N1 kanal → OB-4 restart→PBO (M2) damgalama ç
 
 **EKSİK OPERATÖR ENVANTERİ (eski §6 — kanonik liste 1-11 + §6.1 tablosu; numaralar korunur):**
 
-1. **NOUS_MODEL / beyin çeşitliliği:** Claude API anahtarı EKLE veya NOUS_MODEL'i Google-dışı
-   modele çevir (panodan GEMINI_API_KEY girmek çeşitliliği GERİ siler — dikkat).
+1. **NOUS_MODEL / beyin çeşitliliği — CANLI KANIT EKLENDİ (2026-08-12): Gemini HTTP 404.** Review
+   doğrulamasında yakalandı: birinci model "Gemini returned HTTP 404" (endpoint/model-adı ölü), yedek
+   tencent/hy3:free boş dönüyor → beyin zinciri fiilen CEVAPSIZ. v233 artık bunu dürüst olaylıyor ve
+   bütçe yangınını kesti (150 boş çağrı/gün bitti) ama GERÇEK review üretimi beyin gelene kadar olmaz
+   (12 denemede tarih 'gecersiz' işaretlenir — kalibrasyon boşluğu dürüst). Claude API anahtarı EKLE
+   veya NOUS_MODEL'i Google-dışı modele çevir (panodan GEMINI_API_KEY girmek çeşitliliği GERİ siler).
 2. **Bildirim kanalı:** Telegram/webhook — teslim zinciri hazır, kanal boş.
 3. **FMP kota kararı** (plan/limit).
 4. **Oracle sunucu taşıma** (5.1) — Faz 6 ön şartı.
