@@ -770,7 +770,18 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    sonunda (date, eq_now) noktasını file_lock altında eklesin. *gerekçe: pano eğrisi + Ç1 ölçümleri canlı
    akmıyor · boyut: S-M (sıralı 2 adım) · bağımlılık: ledgerstamp→loop sırası · öncelik: orta-yüksek.*
 
-10. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+10. **OPT — parametre-evrim boru hattı (elle-değerlerin otomasyonu; operatör sorusu 2026-08-12)** —
+    iskelet VAR (bounds arama-uzayı + hermes önerici + DSR/PBO/OOS/K kapıları + gölge varyantları; dün
+    onarıldı), ÜÇ EKSİK: (1) KABLOLAMA — aranamaz sabitler parametrize (derisk bandı fonksiyon-gövdesinde
+    sabitti, monkeypatch gerekti; max_open/size_r/scale_out/chandelier bounds'a — sınırlar operatör onaylı);
+    (2) REPLAY-SWEEP otomasyonu — kart→koşum→CI→hüküm şablonu (bu hafta 5× elle) gece A1-nice penceresinde
+    (operatör tercihi) makineleşir, K-deflate'e çarpılı sayılır; (3) UYGULAMA POLİTİKASI sınıf-başına:
+    risk-artıran→karar-penceresi, ölçüm/çıkış-iyileştirme→donuk-eşik otomatik (iki mod da bu hafta emsalli:
+    023 vs 025). FREN: PBO 0.6286 — otomasyon kapıların İÇİNDEN akar. *gerekçe: elle-optimizasyon
+    ölçeklenmez · boyut: M-L (3 aşama) · bağımlılık: 023-027 karar penceresi + örneklem birikimi ·
+    öncelik: yüksek (karar penceresinden sonra ilk büyük iş).*
+
+11. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·
