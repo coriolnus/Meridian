@@ -55,6 +55,22 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-028-rejim-haritali, pending-028-vol-hedef]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili; ölçüm 026'nın C-çıktısına bağımlı (önkoşul);
+status: measured   # 2026-08-12 Rol-1 — üç hücre ölçüldü + hüküm.
+
+verdict:   # Rol-1 hükmü — ölçüm ajanı karta dokunmadı; zarf kararı pencereye.
+  zarf_5to10: >
+    ÖNERİLMEZ (pencereye böyle gider): T10 C@5'e karşı +110 işlem (CI [+59,+166]) AMA net P&L 9.869→1.266$
+    (nokta −8.603$; CI 0-içi), sharpe 0.285→0.037, işlem-R 0.057→0.026 — yüksek ısıda eklenenler KÖTÜ
+    işlemler; 5R zarfı kalite koruyucusuymuş. OPERATÖR ÖN-KARARI ('ISI 10R kalsın') ölçümle ÇELİŞİYOR —
+    sayılar pencerede önüne gelir, karar onun; Rol-1 önerisi 5R'DE KAL.
+  modulasyon: >
+    Y1(rejim-harita): T10'a karşı +3.074$ (CI 0-içi), avg-R CI [−0.001,+0.029] — ölçüt-i KIL PAYI DÜŞTÜ →
+    otomatik YOK. Y2(vol-hedef): −3.924$, dd yukarı → otomatik YOK. YAPISAL BULGU: motor high_vol/trend_down'da
+    zaten GİRMİYOR (gerçekleşen ΣR=0), chop kullanımı 0.075 — rejim kapısı 5R dünyasında DOĞAL modülasyon;
+    cap10-modülasyonları zarf-10 reddedilirse konusuz. DOSYA HÜKMÜ: sabit-5R + mevcut rejim kapısı kalır;
+    kart kapanır (ölçülmüş-red — bu da kazançtır: iki yöntem ve zarf-genişletme kanıtla elendi).
+  artefakt: "research/olcumler/edg028_isi_ayari_2026-08-12/ (4-kol sha-şerhsiz; zincir-v2 venv-özdeşliği lsof-kanıtlı; kill'ler temiz)"
+
+status_eski: registered   # 2026-08-12 Rol-1 — operatör-girdili; ölçüm 026'nın C-çıktısına bağımlı (önkoşul);
 #   otomatik-benimseme eşiği ölçümden ÖNCE donduruldu (kontrol eşikte). Hedef-vol VERİ-TÜRETİMLİ
 #   (T-taban medyanı) — elle sayı yok. 10R tavan operatör ön-kararı: hiçbir yöntem tavanı AŞAMAZ.

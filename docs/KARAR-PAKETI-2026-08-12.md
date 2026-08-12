@@ -39,8 +39,14 @@ Donuk üçlü eşik: (i) replay CI>0 **DÜŞTÜ kıl payı** (CI [−0.0046, +0.
 ### 5) EDG-024 — Eşik retro-kanıt (hacim 1.25× / RS 65, 3-hücre atıf) · 🔄
 _Ölçülecek: eklenen işlemlerin gerçek-R'si hücre başına CI. CI>0 → OOS-kapılı gevşetme önerisi; değilse eşikler kanıtla doğrulanır._
 
-### 6) EDG-028 — Isı: zarf-10 + modülasyon (T10 · rejim-harita 10/6/4/2 · vol-hedef) · 🔄
-_T10-vs-C@5 = zarf-etkisi (5→10 kararının kanıtı — risk-artıran sınıf, PENCERE kararı). Y1/Y2-vs-T10 = modülasyon (donuk eşiği geçen OTOMATİK uygulanır — risk-azaltan sınıf, operatör akış-seçimi)._
+### 6) EDG-028 — Isı: zarf-10 + modülasyon · ✅ ölçüldü → **ZARF-10 ÖNERİLMEZ, modülasyon otomatiği YOK**
+| | C@5 (mevcut zarf) | T10 (zarf-10) |
+|---|---|---|
+| işlem | 772 | 882 (CI [+59,+166]) |
+| net P&L | **+9.869$** | +1.266$ (nokta −8.6k) |
+| sharpe / işlem-R | **0.285 / 0.057** | 0.037 / 0.026 |
+
+**Öneri: 5R ZARFINDA KAL** — 10R'nin eklediği işlemler kalitesiz ("ISI 10R" ön-kararınla çelişen ölçüm; karar senin). Y1 rejim-harita kıl-payı düştü (avg-R CI üst +0.029), Y2 vol-hedef net kötü → ikisi de otomatik uygulanMADI. Yapısal bulgu: rejim kapısı 5R dünyasında zaten doğal modülasyon (motor high_vol/trend_down'da girmiyor) — dosya ölçülmüş-red ile kapanır.
 
 ### 7) EDG-029 — Scale-out DÜZELTİLMİŞ (trail-kusursuz) B+C · 🔄
 _CI>0 → "kavram kazanan, motor-düzeltme kartı" önerisi; değilse scale-out dosyası tümden kapanır._
