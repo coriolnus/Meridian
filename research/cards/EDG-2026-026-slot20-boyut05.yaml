@@ -38,4 +38,21 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-EDG-026-slot20-r05]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili; ölçüm kodu yazılmadı; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm işlendi.
+
+verdict:   # Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
+  sonuc: >
+    C, B'ye HER EKSENDE baskın: işlem 410→772 (CI [+271,+455]), net P&L +775→+9.869$ (12.7×),
+    max-dd DÜŞTÜ 0.1775→0.1235, sharpe 0.018→0.285, avg-R 0.032→0.057, win 33.7→36.0%. Üç kill temiz
+    (şasi sha-şerhsiz, dd B×1.5 altında, bütünlük 0 hata). tavan_sifir %0 — slot artık hiç bağlamıyor;
+    bağlayıcı kısıt EVREN (%99.55). Pencere önerisi: BENİMSE (koşulsuz — sayılar 023-önerisindeki
+    şartlılığı kaldırdı).
+  zarf_kesfi: >
+    ÖNEMLİ: gerçek eşzamanlılık kısıtı slot değil ISI-ZARFI — motorda heat_hard_r=5.0R sabiti var
+    (kart-dışı, dokunulmadı; NO_GO 171'in 168'i heat_hard). Ölçülen C fiilen ≤5R ısıyla koştu (tepe
+    gerçekleşen 4.985R = NAV %4.63). OPERATÖR ÖN-KARARI 'ISI 10R' mevcut zarfda GERÇEKLEŞEMEZ —
+    10R dünyası ancak zarf enjeksiyonuyla ölçülür → EDG-028 değişikliği (T10 hücresi) bu keşfin sonucu.
+    Yan etki (beyan #3): sector_cap paydası max_open olduğundan sektör-tavanı 2→8 gevşedi (doğal sonuç,
+    pencereye bilgi). 15/36 rampası C'de hiç kısmadı (dd %15'i hiç aşmadı).
+  artefakt: "research/olcumler/edg026_slot20_2026-08-12/ (olcum.py · sonuc.json · sonuc_c.json · islemler_c.json; 1786.6s)"
+

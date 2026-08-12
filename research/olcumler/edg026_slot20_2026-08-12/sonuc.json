@@ -1,0 +1,484 @@
+{
+ "kart": "EDG-2026-026",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T12:34:12+00:00",
+ "kiyas_taban": {
+  "kaynak": "EDG-023 varyant (B) HAZIR çıktıları — yeniden koşulmadı",
+  "dosyalar": [
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/sonuc_varyant.json",
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/seanslar_varyant.json",
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/islemler_varyant.json"
+  ]
+ },
+ "sasi_kimligi": {
+  "motor_sha_ayni": {
+   "broker.py": true,
+   "backtest.py": true,
+   "strategy.py": true
+  },
+  "config_sha_ayni": {
+   "goal.yaml": true,
+   "strategy.yaml": true,
+   "bounds.yaml": true
+  },
+  "rampa_ayni_15_36": true,
+  "takvim_ayni": true,
+  "serh": null
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap: aynı ay çekilişi iki koşuma birden; fark = C − B; iter=5000, seed=20260812, n_ay=55",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı)",
+  "oran_atlanan_iter": 0
+ },
+ "param_enjeksiyon": {
+  "max_open_positions": {
+   "once": 5,
+   "sonra": 20,
+   "yuzey": "goal['limits'] (config.goal() derin kopyası — dosya değişmedi)"
+  },
+  "position_size_r": {
+   "once": 1.0,
+   "sonra": 0.5,
+   "yuzey": "strateji params sözlüğü — KART 'goal/limits' der; motorda bu anahtar params yüzeyinde yaşar (strategy.py _f). Beyan modül başlığında; params_by_regime 4 rejimde boş, resolve_params kanıtı koşum öncesi assert edildi"
+  },
+  "zarf_sabit": "heat_hard_r=5.0R, heat_review_r=3.5R, max_position_r=1.0, max_sector_exposure_pct=40 DEĞİŞMEDİ (kart yalnız 2 parametre). sector_cap paydası max_open_positions olduğundan sektör-başına fiili tavan 2→8'e gevşedi (motor-içi doğal sonuç, beyanlı)"
+ },
+ "butunluk": {
+  "C": {
+   "frame_okunamadi": 0,
+   "tekrar_tarih": [],
+   "scan_vs_plan_uyusmazlik_n": 0,
+   "scan_vs_plan_ornek": [],
+   "yasakli_modul_yuklendi": [],
+   "base_max_open_bozuk": [],
+   "gecerli": true
+  },
+  "B": {
+   "frame_okunamadi": 0,
+   "tekrar_tarih": [],
+   "scan_vs_plan_uyusmazlik_n": 0,
+   "scan_vs_plan_ornek": [],
+   "yasakli_modul_yuklendi": [],
+   "gecerli": true
+  }
+ },
+ "kill1_islem_artisi": {
+  "esik": "işlem sayısı B'ye göre CI ile ARTMIYORSA slot artışı fiilen İNERT (kart kill#1)",
+  "fark_ci95": {
+   "lo": 271.0,
+   "hi": 455.0,
+   "orta": 361.0
+  },
+  "artis_ci_0_disi": true,
+  "tetiklendi": false,
+  "beyan": null
+ },
+ "kill2_maxdd_1p5x": {
+  "esik": "maxdd_C > 1.5 × maxdd_B (kanonik) → 'öneri' dili kullanılmaz (kart kill#2)",
+  "maxdd_B": 0.1775,
+  "maxdd_C": 0.1235,
+  "oran": 0.696,
+  "tetiklendi": false,
+  "m2m_yalniz": {
+   "B": 0.1775,
+   "C": 0.1235,
+   "tetiklendi": false
+  }
+ },
+ "kill3_butunluk": {
+  "esik": "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan, yasak modül yok, base_max==20)",
+  "C": true,
+  "B": true,
+  "tetiklendi": false
+ },
+ "tepe_isi": {
+  "C_slot20_r05": {
+   "formul": "nominal = n_eszamanli × 0.5R (kart formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+   "nominal_open_fazi_R": {
+    "max": 6.5,
+    "p50": 1.0,
+    "p90": 5.0,
+    "p99": 6.0,
+    "ort": 1.874,
+    "sifir_ustu_seans_n": 617,
+    "n_seans": 1147,
+    "histogram_0p5R": {
+     "0.0": 530,
+     "0.5": 21,
+     "1.0": 35,
+     "1.5": 43,
+     "2.0": 50,
+     "2.5": 51,
+     "3.0": 66,
+     "3.5": 77,
+     "4.0": 59,
+     "4.5": 72,
+     "5.0": 50,
+     "5.5": 54,
+     "6.0": 32,
+     "6.5": 7
+    }
+   },
+   "nominal_islem_araligi_R": {
+    "max": 6.5,
+    "p50": 2.0,
+    "p90": 6.0,
+    "p99": 6.5,
+    "ort": 2.331,
+    "sifir_ustu_seans_n": 680,
+    "n_seans": 1147,
+    "histogram_0p5R": {
+     "0.0": 467,
+     "0.5": 24,
+     "1.0": 28,
+     "1.5": 45,
+     "2.0": 40,
+     "2.5": 41,
+     "3.0": 54,
+     "3.5": 59,
+     "4.0": 61,
+     "4.5": 81,
+     "5.0": 57,
+     "5.5": 70,
+     "6.0": 87,
+     "6.5": 33
+    }
+   },
+   "gerceklesen_open_fazi": {
+    "size_r_toplam": {
+     "max": 4.985,
+     "p50": 0.79,
+     "p90": 3.99,
+     "p99": 4.86,
+     "ort": 1.48,
+     "sifir_ustu_seans_n": 617,
+     "n_seans": 1147,
+     "histogram_0p5R": {
+      "0.0": 530,
+      "0.5": 27,
+      "1.0": 69,
+      "1.5": 53,
+      "2.0": 57,
+      "2.5": 96,
+      "3.0": 85,
+      "3.5": 81,
+      "4.0": 71,
+      "4.5": 49,
+      "5.0": 29
+     }
+    },
+    "risk_dollars_giris_max": 5660.99,
+    "kalan_risk_dollars_max": 4984.85,
+    "kalan_risk_nav_pct_max": 4.634
+   },
+   "eszamanli_poz_max": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   }
+  },
+  "B_slot5_r10": {
+   "formul": "nominal = n_eszamanli × 1.0R (B'nin pozisyon-başına nominal R'si)",
+   "nominal_open_fazi_R": {
+    "max": 5.0,
+    "p50": 1.0,
+    "p90": 5.0,
+    "p99": 5.0,
+    "ort": 1.985,
+    "sifir_ustu_seans_n": 611,
+    "n_seans": 1147,
+    "histogram_0p5R": {
+     "0.0": 536,
+     "1.0": 39,
+     "2.0": 61,
+     "3.0": 118,
+     "4.0": 203,
+     "5.0": 190
+    }
+   },
+   "nominal_islem_araligi_R": {
+    "max": 5.0,
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 5.0,
+    "ort": 2.48,
+    "sifir_ustu_seans_n": 677,
+    "n_seans": 1147,
+    "histogram_0p5R": {
+     "0.0": 470,
+     "1.0": 34,
+     "2.0": 39,
+     "3.0": 78,
+     "4.0": 132,
+     "5.0": 394
+    }
+   },
+   "gerceklesen_open_fazi": null,
+   "gerceklesen_neden_yok": "B seans şemasında size_r/risk_dollars alanı yok; yeniden koşum kart gereği YASAK (hazır çıktı okunur) — ölçülemedi",
+   "eszamanli_poz_max": {
+    "open_fazi": 5,
+    "islem_araligi": 5
+   }
+  }
+ },
+ "tablo": {
+  "islem_n": {
+   "B_slot5_r10": 410,
+   "C_slot20_r05": 772,
+   "fark": 362,
+   "fark_pct": 88.3
+  },
+  "islem_yil": {
+   "B_slot5_r10": 89.62,
+   "C_slot20_r05": 168.75
+  },
+  "islem_fark_ci95_ay_kumeli_eslenik": {
+   "lo": 271.0,
+   "hi": 455.0,
+   "orta": 361.0
+  },
+  "islem_oran_ci95": {
+   "lo": 1.721,
+   "hi": 2.041,
+   "orta": 1.883
+  },
+  "silahlanan_plan": {
+   "B_slot5_r10": 433,
+   "C_slot20_r05": 813
+  },
+  "toplam_plan": {
+   "B_slot5_r10": 722,
+   "C_slot20_r05": 984
+  },
+  "verdict_dagilim_C": {
+   "GO": 81,
+   "REVIEW": 732,
+   "NO_GO": 171
+  },
+  "nogo_neden_dagilim_C": {
+   "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 171,
+   "heat_hard": 168,
+   "sector_cap": 3
+  },
+  "nogo_neden_dagilim_B": null,
+  "entry_rejects": {
+   "B_slot5_r10": {
+    "open_below_stop": 12,
+    "max_chase": 11
+   },
+   "C_slot20_r05": {
+    "open_below_stop": 22,
+    "max_chase": 19
+   }
+  },
+  "exit_reason_dagilim": {
+   "B_slot5_r10": {
+    "stop": 173,
+    "regime_flip": 81,
+    "time_stop": 76,
+    "target": 37,
+    "stop_gap": 33,
+    "target_gap": 10
+   },
+   "C_slot20_r05": {
+    "stop": 334,
+    "regime_flip": 141,
+    "time_stop": 135,
+    "target": 83,
+    "stop_gap": 60,
+    "target_gap": 19
+   }
+  },
+  "net_pnl_equity": {
+   "B_slot5_r10": 774.6,
+   "C_slot20_r05": 9869.2
+  },
+  "net_pnl_trades": {
+   "B_slot5_r10": 774.6,
+   "C_slot20_r05": 9869.2
+  },
+  "maxdd_kanonik": {
+   "B_slot5_r10": 0.1775,
+   "C_slot20_r05": 0.1235
+  },
+  "maxdd_m2m": {
+   "B_slot5_r10": 0.1775,
+   "C_slot20_r05": 0.1235
+  },
+  "avg_r": {
+   "B_slot5_r10": 0.032,
+   "C_slot20_r05": 0.057
+  },
+  "win_rate": {
+   "B_slot5_r10": 0.337,
+   "C_slot20_r05": 0.36
+  },
+  "sharpe": {
+   "B_slot5_r10": 0.018,
+   "C_slot20_r05": 0.285
+  },
+  "score": {
+   "B_slot5_r10": -0.2975,
+   "C_slot20_r05": -0.1274
+  },
+  "total_return": {
+   "B_slot5_r10": 0.0077,
+   "C_slot20_r05": 0.0987
+  },
+  "doluluk_pozisyon_gun": {
+   "B_slot5_r10": 2277,
+   "C_slot20_r05": 4299
+  },
+  "ort_acik_pozisyon": {
+   "B_slot5_r10": 1.985,
+   "C_slot20_r05": 3.748
+  },
+  "doluluk_orani_slot": {
+   "B_slot5_r10": 0.397,
+   "C_slot20_r05": 0.1874
+  },
+  "toplam_bars_held": {
+   "B_slot5_r10": 2434,
+   "C_slot20_r05": 4575
+  },
+  "tasnif_birincil": {
+   "B_slot5_r10": {
+    "derisk_bagladi": {
+     "n": 77,
+     "pct": 11.6
+    },
+    "evren_bagladi": {
+     "n": 397,
+     "pct": 59.79
+    },
+    "tavan_sifir": {
+     "n": 190,
+     "pct": 28.61
+    }
+   },
+   "C_slot20_r05": {
+    "derisk_bagladi": {
+     "n": 3,
+     "pct": 0.45
+    },
+    "evren_bagladi": {
+     "n": 658,
+     "pct": 99.55
+    }
+   }
+  },
+  "tavan_sifir_birincil_pct": {
+   "B_slot5_r10": 28.61,
+   "C_slot20_r05": 0.0
+  },
+  "tasnif_tum_seans": {
+   "B_slot5_r10": {
+    "derisk_bagladi": {
+     "n": 77,
+     "pct": 6.71
+    },
+    "evren_bagladi": {
+     "n": 397,
+     "pct": 34.61
+    },
+    "isinma": {
+     "n": 3,
+     "pct": 0.26
+    },
+    "rejim_kapali": {
+     "n": 480,
+     "pct": 41.85
+    },
+    "tavan_sifir": {
+     "n": 190,
+     "pct": 16.56
+    }
+   },
+   "C_slot20_r05": {
+    "derisk_bagladi": {
+     "n": 3,
+     "pct": 0.26
+    },
+    "evren_bagladi": {
+     "n": 658,
+     "pct": 57.37
+    },
+    "isinma": {
+     "n": 3,
+     "pct": 0.26
+    },
+    "rejim_kapali": {
+     "n": 483,
+     "pct": 42.11
+    }
+   }
+  },
+  "ci95_ay_kumeli_kosum_ici": {
+   "B_slot5_r10": {
+    "tavan_sifir": {
+     "lo": 0.2383,
+     "hi": 0.3333,
+     "orta": 0.2855
+    },
+    "evren_bagladi": {
+     "lo": 0.5428,
+     "hi": 0.6551,
+     "orta": 0.5986
+    },
+    "derisk_bagladi": {
+     "lo": 0.0873,
+     "hi": 0.1469,
+     "orta": 0.1156
+    },
+    "derisk+tavan": {
+     "lo": 0.3449,
+     "hi": 0.4572,
+     "orta": 0.4014
+    },
+    "_n_ay_kume": 42
+   },
+   "C_slot20_r05": {
+    "tavan_sifir": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    },
+    "evren_bagladi": {
+     "lo": 0.9898,
+     "hi": 1.0,
+     "orta": 0.9955
+    },
+    "derisk_bagladi": {
+     "lo": 0.0,
+     "hi": 0.0102,
+     "orta": 0.0045
+    },
+    "derisk+tavan": {
+     "lo": 0.0,
+     "hi": 0.0102,
+     "orta": 0.0045
+    },
+    "_n_ay_kume": 42
+   }
+  },
+  "eff_max_open_lt_base_n": {
+   "B_slot5_r10": 2,
+   "C_slot20_r05": 0
+  },
+  "acik_slot_le0_n": {
+   "B_slot5_r10": 190,
+   "C_slot20_r05": 0
+  },
+  "dd_gt_tam_esik_n": {
+   "B_slot5_r10": 65,
+   "C_slot20_r05": 0
+  }
+ },
+ "dosyalar": {
+  "C": {
+   "sonuc": "sonuc_c.json",
+   "seanslar": "seanslar_c.json",
+   "islemler": "islemler_c.json"
+  },
+  "B": "EDG-023 dizini (kiyas_taban.dosyalar)"
+ }
+}

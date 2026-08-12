@@ -28,7 +28,13 @@ features_asof: >
   net P&L, max-dd kanonik, sharpe, işlem sayısı, işlem-başına R, rejim-kırılımlı doluluk/ısı gerçekleşen.
 
 parameter_grid:
-  yontem: [rejim_haritali, vol_hedefleme]   # K += 2 (skor-lineer operatörce elendi — ölçülmedi)
+  # DEĞİŞİKLİK 2026-08-12 (ölçümden ÖNCE, EDG-026 zarf-keşfi sonucu — gerekçeli): motorda heat_hard_r=5.0R
+  # sabiti keşfedildi; operatör ön-kararı '10R tavan' mevcut zarfda gerçekleşemez. 10/6/4/2 haritası ve
+  # 10R-tabanlı vol-hedef ancak zarf enjeksiyonuyla (heat_hard_r=10, ölçüm-içi, beyanlı) anlamlı.
+  # T10 sabit-10R referans hücresi EKLENDİ ki modülasyon-etkisi (Yx vs T10) zarf-etkisinden (T10 vs C@5)
+  # ayrışsın. Benimseme artık ZARF DEĞİŞİKLİĞİ de içerir (heat_hard_r 5→10 goal/zarf kararı) → otomatik
+  # uygulama YALNIZ modülasyon-katmanı için; zarf 5→10 kararı PENCEREDE (risk-artıran sınıf, politika §2-10).
+  yontem: [T10_sabit, rejim_haritali_cap10, vol_hedefleme_cap10]   # K += 3 (2→3; T10 referansı eklendi)
 
 cost_model: pessimistic_band_v2
 
