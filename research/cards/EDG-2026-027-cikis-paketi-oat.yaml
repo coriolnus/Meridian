@@ -1,0 +1,44 @@
+card_id: EDG-2026-027
+family: cikis_paketi_oat
+thesis: >
+  B-varyantının (EDG-023) çıkış dağılımı kanıyor: %50 stop, %38 time/regime erken-kesim, yalnız %11 hedef;
+  çıkış aletlerinin yarısı KAPALI (scale_out_frac 0, chandelier_lookback 0). TEZ: iki kapalı aleti TEK-TEK
+  (OAT — operatör tasarım seçimi 2026-08-12) açmak işlem-başına R'yi yükseltir; etki atfı ayrışır, kazanan
+  kollar sonraki küçük turda kombine edilir. Kollar (operatör): (K1) scale-out ½@1.5R — erken-kesimi
+  kısmi-kazanca çevirir; (K2) chandelier trail 20g — koşan kazananın kuyruğunu korur. İKİ TABANDA
+  (operatör: "iki tabanda da"): B(15/36+slot5+1R, ölçülü) ve C(15/36+slot20+0.5R, EDG-026 koşumu).
+  Uygulama: sayılar 024/025/026 ile TEK karar penceresine (operatör seçimi — otomatik değil).
+
+evidence_refs:
+  - "EDG-023/B çıkış dağılımı: stop 173+33gap / regime_flip 81 / time_stop 76 / target 37+10gap (410)"
+  - "goal params: exit.scale_out_frac 0.0 · exit.scale_out_r 2.0 · exit.chandelier_lookback 0 (kapalı aletler)"
+  - "operatör girdileri 2026-08-12 penceresi: OAT · {scale-out, chandelier} · iki-taban · karar-penceresi"
+
+universe: "EDG-023 evreni (251 sembol, 2022-01→2026-07); motor dosyaları YAMASIZ; rampa 15/36 ölçüm-içi monkeypatch (023 beyanlı deseni); kol paramları enjeksiyon (exit.scale_out_frac/scale_out_r, exit.chandelier_lookback)"
+
+features_asof: >
+  DÖRT hücre (OAT × taban): B+K1, B+K2, C+K1, C+K2 — her hücre KENDİ tabanına kıyaslanır (B-taban sonuçları
+  023'ten hazır; C-taban 026'dan). Girişler değişmez (giriş yasasına dokunulmuyor) → (date,ticker) EŞLİ
+  işlem kıyası birincil (aynı pozisyonun iki dünyadaki R'si; güçlü istatistik); scale-out slot erken
+  boşalttığı için işlem SAYISI kayabilir — eşli-ortak + tam-defter iki katman da raporlanır. Metrikler:
+  işlem-başına R farkı (eşli bootstrap %95 CI), net P&L, max-dd, çıkış-dağılımı kayması, hedefe-ulaşma oranı.
+
+parameter_grid:
+  hucre: [B_scaleout, B_chandelier, C_scaleout, C_chandelier]   # K += 4 (çarpılarak)
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  Hücre-başına eşli ort-R farkı %95 CI. YORUM ÇERÇEVESİ (hüküm operatörün): CI>0 kol 'kazanan aday' —
+  karar penceresinde benimseme/kombine-turu seçeneği; CI 0-içi 'etkisiz'; CI<0 'zararlı — alet kapalı
+  kalır (bu da değerli hüküm)'. dd ve P&L yan-tablo. Otomatik uygulama YOK.
+
+kill_criteria:
+  - "eşli-ortak işlem kümesi hücrede <60 ise eşli-CI 'olculemedi' — tam-defter katmanı raporlanır ama
+     hüküm dili kullanılmaz"
+  - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa hücre geçersiz"
+  - "C-taban 026 koşumu şasi-geçersiz çıkarsa C hücreleri 'bekliyor' — yalnız B hücreleriyle pencereye gidilir"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-027-B-scaleout, pending-027-B-chandelier, pending-027-C-scaleout, pending-027-C-chandelier]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili OAT tasarımı; iki fazlı yürütme (B şimdi, C 026-sonrası); eşikler donuk.
