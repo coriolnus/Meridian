@@ -316,7 +316,25 @@ def propose_with_claude() -> dict | None:
 # sağlayıcı; hata/boş cevapta zincir bir sonrakine düşer; hiçbiri yoksa ücretsiz deterministik önerici.
 NOUS_DEFAULT_ENDPOINT = "https://inference.nousresearch.com/v1"
 NOUS_DEFAULT_MODEL = "Hermes-4-405B"
-GEMINI_DEFAULT_MODEL = "gemini-3.1-pro"   # operatör tercihi (2026-07-19): "gemini 3.1 pro olmalı"
+# SABİT ALIAS (2026-08-12, canlı 404 vakası): anahtar SAĞLAMKEN (models-list HTTP 200) üretim
+# çağrısı 404 veriyordu — canlı ajan config'indeki `gemini-3.5-flash` Google listesinden KALKMIŞTI
+# ve buradaki eski çıplak ad (`gemini-3.1-pro`) o listede HİÇ yoktu (yalnız `-preview` türevi).
+# Google sürüm adlarını döndürüyor (resmî örnekler 3.6-flash'a geçti); çıplak sürüm adına
+# çivilenmek aynı 404 sınıfını yeniden üretir. Operatör tercihi (2026-07-19: "gemini 3.1 pro
+# olmalı") ALIAS ÜZERİNDEN KORUNUR: `gemini-pro-latest` bu yazım anında `gemini-3.1-pro-preview`ı
+# gösteriyor ve Google modeli yeniledikçe alias'la birlikte taşınır. Pano metni K1 gereği bu
+# sabitten türetilir (api.api_secrets → model_defaults), elle senkron gerekmez.
+GEMINI_DEFAULT_MODEL = "gemini-pro-latest"
+# BİLİNEN-ÖLÜ AD GÖÇÜ HARİTASI (2026-08-12): yerel hermes-agent config'inde (model.default) DURAN
+# ölü bir ad kendi kendine iyileşmez — `config_ensure_integrations` bu haritayla sabit alias'a
+# çevirir ve OLAYLAR (`gemini_dead_model_migrated`; sessiz değiştirme YASAK). Harita YALNIZ
+# bilinen-ölü adları taşır; TANINMAYAN adlar SERBEST GEÇER (elimizdeki model listesi kesitti ve
+# gelecekteki geçerli adlar — ör. gemini-3.6-flash — kırılmamalı). Rol eşleşmesi korunur:
+# hızlı-görev (flash) → flash alias'ı, pro → pro alias'ı.
+GEMINI_DEAD_MODEL_MAP = {
+    "gemini-3.5-flash": "gemini-flash-latest",   # canlı config'teki ölü ad (üretim 404, 2026-08-12)
+    "gemini-3.1-pro": "gemini-pro-latest",       # eski repo varsayılanı — listede yalnız -preview var
+}
 DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 
 # DÜŞÜNCE BÜTÇESİ (2026-07-26): gemini-3.x DÜŞÜNEN bir ailedir ve düşünce tokenları ÜRETİM tavanından
@@ -2399,6 +2417,7 @@ def config_ensure_integrations() -> dict:
       • hooks.pre_tool_call — koruma hook'u (state/secrets/mode/emir yüzeylerini sert bloklar)
       • prompt_caching.cache_ttl → 1h (oturum-arası önek önbelleği; saf maliyet)
       • credential_pool_strategies — 429 rotasyon stratejisi (havuz varsa devreye girer)
+      • model.default ÖLÜ-AD GÖÇÜ — bilinen-ölü Gemini adı sabit alias'a çevrilir (aşağıda)
     Yalnız DEĞİŞİKLİK varsa yazar (churn yok), yazmadan önce .bak alır. hermes-agent config'i kendi
     yeniden yazabildiği için (skill curator gibi) standby döngüsünde tazelenir. Dönüş: {changed:[...]}."""
     import yaml
@@ -2410,12 +2429,28 @@ def config_ensure_integrations() -> dict:
             cfg = yaml.safe_load(fh) or {}
     except Exception as e:
         return {"ok": False, "detail": f"config okunamadı ({type(e).__name__})"}
+    changed = []
+    # ÖLÜ-MODEL GÖÇÜ (2026-08-12, HTTP 404 kökü): bu senkron `model.default`ı bugüne dek KORUYORDU —
+    # Google bir modeli listeden kaldırınca config'te duran ad her üretim çağrısında 404 yiyor ve
+    # kendi kendine ASLA iyileşmiyordu (canlı vaka: gemini-3.5-flash; anahtar sağlam, models-list 200).
+    # Yalnız BİLİNEN-ölü adlar çevrilir (GEMINI_DEAD_MODEL_MAP); tanınmayan adlar serbest geçer —
+    # elimizdeki liste kesit, gelecekteki geçerli bir modeli "ölü" damgalamak yanlış onarım olurdu.
+    # Olay (`gemini_dead_model_migrated`) BAŞARILI yazımdan SONRA basılır: yazılamayan bir göçü
+    # "göçtü" diye olaylamak, panoya gerçekleşmemiş bir onarım okuturdu. Sessiz değiştirme YASAK.
+    gocen = None                                   # (eski, yeni) — olay yazım başarısına bağlı
+    model_blk = cfg.get("model")
+    if isinstance(model_blk, dict):
+        eski_ad = str(model_blk.get("default") or "")
+        yeni_ad = GEMINI_DEAD_MODEL_MAP.get(eski_ad)
+        if yeni_ad:
+            model_blk["default"] = yeni_ad
+            gocen = (eski_ad, yeni_ad)
+            changed.append(f"model.default({eski_ad}→{yeni_ad})")
     repo = _repo_root()
     guard = os.path.join(repo, "ops", "meridian-guard.sh")
     desired_mcp = {"command": sys.executable, "args": ["-m", "meridian.mcp_server"],
                    "env": {"PYTHONPATH": repo, "MERIDIAN_ROOT": repo},
                    "tools": {"resources": False, "prompts": False}}
-    changed = []
     # MCP sunucusu
     servers = cfg.setdefault("mcp_servers", {}) if isinstance(cfg.get("mcp_servers", {}), dict) else {}
     cfg["mcp_servers"] = servers
@@ -2477,6 +2512,13 @@ def config_ensure_integrations() -> dict:
         # YASA-6 OKUYUCU: config_ensure_integrations (yeniden okur) + integrations_status + hermes-agent ikili.
         store.write_text(AGENT_CONFIG,
                          yaml.safe_dump(cfg, allow_unicode=True, default_flow_style=False, sort_keys=False))
+        if gocen:
+            # YASA-6 OKUYUCU: pano olay akışı (events.jsonl) + operatör teşhisi — göç görünür olmalı,
+            # sessiz ad değiştirme yasak (aynı ilke: landing uydurma-rakam vakası, sabit≠gerçek).
+            obs.log("gemini_dead_model_migrated", eski=gocen[0], yeni=gocen[1],
+                    detail="yerel ajan config'indeki model adı Google listesinden kalkmış (üretim "
+                           "404 sınıfı) — sabit alias'a taşındı; rol korundu (flash→flash-latest, "
+                           "pro→pro-latest)")
         obs.log("agent_integrations_synced", changed=changed)
         return {"ok": True, "changed": changed}
     except Exception as e:

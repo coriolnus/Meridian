@@ -370,13 +370,15 @@ def test_gemini_key_syncs_local_agent_and_restores_on_delete(seeded_sandbox, mon
         stdout = "nous\n"     # config get cevabı (yedek için)
     monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: calls.append(cmd) or R())
     res = hermes.sync_local_agent_gemini(enable=True)
-    assert res["ok"] and "gemini-3.1-pro" in res["detail"]
+    # SABİTTEN TÜRETİLİR (2026-08-12): çıplak "gemini-3.1-pro" Google listesinden hiç geçmedi → 404
+    # sınıfı; varsayılan artık sabit alias (GEMINI_DEFAULT_MODEL) ve test adı çivilemez.
+    assert res["ok"] and hermes.GEMINI_DEFAULT_MODEL in res["detail"]
     env = (home / ".env").read_text()
     assert "GEMINI_API_KEY=gk-123" in env and "MEVCUT_SATIR=korunur" in env   # diğer satırlar korunur
     assert (home / "meridian-model-backup.json").exists()                      # Nous ayarı yedeklendi
     sets = [c for c in calls if c[1:3] == ["config", "set"]]
     assert any("model.provider" in c and "gemini" in c for c in sets)
-    assert any("model.default" in c and "gemini-3.1-pro" in c for c in sets)
+    assert any("model.default" in c and hermes.GEMINI_DEFAULT_MODEL in c for c in sets)
     res2 = hermes.sync_local_agent_gemini(enable=False)
     assert res2["ok"]
     env2 = (home / ".env").read_text()
