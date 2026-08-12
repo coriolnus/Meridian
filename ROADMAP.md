@@ -742,10 +742,14 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    *gerekçe: adli/ölçüm güvenilirliği · boyut: S · bağımlılık: yok · öncelik: yüksek.*
 
 7. **4 pozisyon adet-sapması muhasebeli true-up (NUE 54/25 · EMR 64/37 · BKNG 43/22 · AMGN 33/22)** —
-   günlerdir MIRROR_DRIFT "olculemedi" (SB-1 makbuzsuz, restart-öncesi gönderimler; muhtemel kök teşhis #5
-   kısmi-dolum). Onarım SESSİZ OLMAZ: yön kararı operatörde (kitap→broker mu broker→kitap mı), uygulama
-   muhasebe-satırlı (adjustment kaydı + olay). *gerekçe: kitap↔broker bütünlüğü · boyut: M · bağımlılık:
-   operatör yön kararı (§3) · öncelik: yüksek.*
+   **KÖK ÖLÇÜLDÜ (2026-08-12, Alpaca emir-geçmişi salt-okunur): kısmi-dolum DEĞİL — dört giriş emri de
+   TAM dolmuş (25/25 · 37/37 · 22/22 · 22/22, 08-06). Sapma GÖNDERİM-ANI BOYUTLAMA AYRIŞMASI** (SB-1
+   makbuz-öncesi dönem; oranlar 0.46–0.67 değişken = tek çarpan değil; AMGN coid'i momentum_burst —
+   dormant bir kez aynalanmış, tarihsel). İleri akış SB-1 makbuzuyla korunuyor; geriye dönük yön kararı
+   operatörde: (a) kitabı broker-gerçeğine indir (25/37/22/22; iç R-muhasebesi düzeltme-satırlı) ya da
+   (b) iki-motor kabulü + drift_sinifi 'makbuzsuz_boyut' (olculemedi yerine açıklanmış sınıf, alarm
+   anlamlı kalır). Uygulama her iki yönde de muhasebe-satırlı, SESSİZ DEĞİL. *gerekçe: kitap↔broker
+   bütünlüğü · boyut: S-M (kök artık belli) · bağımlılık: operatör yön kararı (§3) · öncelik: yüksek.*
 
 8. **MNST 2:1 bar-kaynak uyuşmazlığı / split-ayarı sınıfı** — DATA_QUALITY: nasdaq 91.43 vs massive 45.72
    (%50) + ledger_matches_bars 2 sapma (T00020/T00095 MNST defter-entry bar'ın 2 katı). Bar zinciri split'e
