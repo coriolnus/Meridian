@@ -63,8 +63,17 @@ uv run python ops/import_tarama.py --sessiz || {
 }
 
 echo "=== [1/5] rsync DRY-RUN ==="
-rsync -azin --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/ | head -40
-echo "--- (yukarısı ilk 40 satır; boşsa fark yok) ---"
+# SIGPIPE SINIFI (2026-08-12 vakası): eski hali `rsync … | head -40` idi — liste 40 satırı AŞINCA
+# head boruyu erken kapatır, rsync SIGPIPE/rc-20 ile ölür ve `set -o pipefail` dağıtımı [1]'de
+# sessizce düşürür. Kusur ancak tarihin en uzun transfer listesinde göründü (v237 turu: 81 ölçüm
+# artefaktı + kartlar). Tampon dosya rsync'in GERÇEK çıkış kodunu korur; head canlı boruya değil
+# dosyaya bakar — gerçek rsync hataları (23/24/12…) eskisi gibi dağıtımı durdurur.
+DRY_TMP="$(mktemp)"
+rsync -azin --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/ > "$DRY_TMP"
+head -40 "$DRY_TMP"
+_dry_n="$(wc -l < "$DRY_TMP" | tr -d ' ')"
+rm -f "$DRY_TMP"
+echo "--- (yukarısı ilk 40 satır; toplam $_dry_n satır; boşsa fark yok) ---"
 
 # =================================================================================================
 # [1b] VERSİYONLU STATE DOSYALARI — canlı ↔ repo farkı (2026-08-02)
