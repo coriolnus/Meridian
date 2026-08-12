@@ -754,7 +754,10 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    anlamlı kalır). Uygulama her iki yönde de muhasebe-satırlı, SESSİZ DEĞİL. *gerekçe: kitap↔broker
    bütünlüğü · boyut: S-M (kök artık belli) · bağımlılık: operatör yön kararı (§3) · öncelik: yüksek.*
 
-8. **MNST 2:1 bar-kaynak uyuşmazlığı / split-ayarı sınıfı** — DATA_QUALITY: nasdaq 91.43 vs massive 45.72
+8. **MNST split sınıfı — TEŞHİS ✅ (docs/TESHIS-MNST-SPLIT-2026-08-12.md); düzeltme KART-önce açık** —
+   MNST 1→2 (08-11, Massive splits dış-doğrulama). Kök: kaynak-kıyas kör-yüzde (oran-imza tanımaz); defter
+   DOĞRU retro-değişmez. Yön: A1 oran-imza + A2 kümülatif-katsayı defteri (kart ön-kayıtlı ölçüm-değişikliği).
+   YAN: corp-action FLAP (GE 34 reset/26g) aynı körlük ailesi; MNST turnover ~2× şişme izlemede. *(eski madde:)* — DATA_QUALITY: nasdaq 91.43 vs massive 45.72
    (%50) + ledger_matches_bars 2 sapma (T00020/T00095 MNST defter-entry bar'ın 2 katı). Bar zinciri split'e
    ayarlanmış, trades satırları ham kalmış görünüyor. Teşhis + tutarlılık kuralı (defter mi bar mı düzeltilir,
    retro-değişmezlik gözetilerek). *gerekçe: ölçüm tabanı tutarlılığı · boyut: S-M · bağımlılık: yok · öncelik: orta.*
