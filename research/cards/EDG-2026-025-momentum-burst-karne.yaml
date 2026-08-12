@@ -1,0 +1,52 @@
+card_id: EDG-2026-025
+family: dormant_karne_momentum_burst
+thesis: >
+  momentum_burst DORMANT ve kanıtı ÇELİŞKİLİ: cf defteri +0.092R (n=1080, N4 Aşama-1 ölçümü) POZİTİF
+  derken skill-görüş defterinin İLK KURU-KOŞUMU −0.114R 'emeklilik işareti' dedi (EDG-2026-019 dry-run,
+  canlı gorusleri.jsonl o gün 0 satırdı). Huni aynası (2026-08-12): 08-10'da MPC+VRTX'te sıkı-eşik
+  ateşlemesi — kurulum canlı fırsat üretiyor ama silahsız. TEZ: iki kanıt kaynağının çelişkisi ÖLÇÜMLE
+  çözülebilir (farklı evren/farklı metrik ölçüyorlar); kanonik karne çıkarılınca hüküm netleşir.
+  OPERATÖR AKIŞI (2026-08-12 pencere): kanıt önceden-donmuş eşiği geçerse OTOMATİK SİLAHLANIR
+  (ARMED_SETUPS kod turu + rapor); geçmezse dormant kalır ya da emeklilik önerisi gider.
+
+evidence_refs:
+  - "cf tarafı: N4/EXE-2026-004 Aşama-1 — momentum_burst cf_n=1080, cf_avg_r +0.092 (eşik-geçer marj)"
+  - "görüş tarafı: EDG-2026-019 ilk kuru-koşum −0.114R (kalibrasyonsuz dry-run; canlı görüş 0 satırdı)"
+  - "huni 2026-08-12: 08-10 MPC+VRTX sıkı ateşleme (dormant → aday sayılmadı)"
+  - "silahlanma akışı operatör kararı (2026-08-12): KANIT-POZİTİFSE OTOMATİK — kontrol bu kartın donuk eşiğinde"
+
+universe: >
+  cf defterinin momentum_burst satırlarının TAMAMI (tüketici-görünür entered evreni, near_miss-dışlama
+  N4 kuralıyla birebir) + replay çapraz-doğrulama: motorda momentum_burst SİLAHLIYMIŞ GİBİ tam replay
+  (2022-01→2026-07) — cf'in statik-çıkış iyimserliğinden bağımsız GERÇEK-yasalı R dağılımı.
+
+features_asof: >
+  ÜÇ bacak: (a) cf karne — momentum_burst cf satırlarının R dağılımı, tarih-kümeli %95 CI (N4 yöntemi);
+  (b) replay karne — silahlı-varsayımlı tam replay'de momentum_burst işlemlerinin GERÇEK-yasalı R'si +
+  portföy etkisi (diğer kurulumlardan slot çalma dahil — bileşik P&L farkı); (c) çelişki teşhisi —
+  EDG-019 dry-run'ının −0.114R'sinin kaynağı (hangi evren/pencere/metrik; kalibrasyonsuz görüşün
+  ağırlığı) ADIYLA açıklanır.
+
+parameter_grid:
+  yok: "tek kurulum, donuk tanımlar — grid YOK. K += 1"
+
+cost_model: pessimistic_band_v2   # replay bacağı motorun kendi maliyetiyle
+
+success_metric: >
+  SİLAHLANMA EŞİĞİ (donuk): (i) replay bacağı ort-R tarih-kümeli %95 CI 0-ÜSTÜNDE VE (ii) bileşik
+  portföy P&L farkı negatif DEĞİL (slot-çalma diğer kurulumların kârını CI ile düşürmüyor) VE
+  (iii) çelişki teşhisi dry-run'ın −0.114R'sini AÇIKLIYOR (açıklanamayan çelişki = silahlanmaz).
+  ÜÇÜ birden sağlanırsa → OTOMATİK SİLAHLANIR (ARMED_SETUPS += momentum_burst kod turu, exhaustion_hammer
+  emsali; operatöre rapor düşer). Sağlanmazsa → dormant kalır + hangi ölçütün düştüğü raporlanır.
+
+kill_criteria:
+  - "(iii) çözülemezse — iki kanıt kaynağı bağdaştırılamıyorsa — silahlanma YAPILMAZ (belirsiz kanıtla
+     icra değişikliği yasak); kart 'çelişki-açık' statüsünde bekler, eksik veri adıyla yazılır"
+  - "replay bacağında momentum_burst işlem sayısı <30 ise 'olculemedi' — otomatik silahlanma TETİKLENMEZ"
+  - "replay şasisi taban davranışı yeniden üretemezse ölçüm geçersiz"
+
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-025-mb-karne]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (otomatik-silahlanma eşiği ölçümden
+#   ÖNCE donduruldu; kontrol eşikte, keyfiyet yok). Ölçüm kodu yazılmadı. Diğer dormantlar (episodic_pivot,
+#   pead, canslim) bu kartın DIŞINDA — operatör 'önce momentum_burst' dedi; sonuca göre sıradaki açılır.

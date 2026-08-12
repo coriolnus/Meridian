@@ -1,0 +1,42 @@
+card_id: EDG-2026-024
+family: esik_retro_kanit
+thesis: >
+  Giriş eşiklerinin ikisi (hacim>=1.5x, RS>=70) aday ölümlerinin ezici kısmını üretiyor (2026-07-20
+  darboğaz turu; 2026-08-12 huni aynası: KKR/CLX/REGN/TGT eşik-hemen-altı). Near-miss gölgesi ileri-dönük
+  kanıt biriktirecek (bacak 07-29'dan beri ölüydü, düzeltme turda) ama RETRO kanıt beklemesiz alınabilir:
+  geçmiş barlarla 'eşik ILIMLI gevşeseydi (hacim 1.25x / RS 65 — operatör seçimi 2026-08-12) kaçan
+  işlemlerin GERÇEK-R'si ne olurdu'. ATIF ŞART: hangi eşik masada para bırakıyor — hacim mi RS mi ikisi mi.
+
+evidence_refs:
+  - "darboğaz turu 2026-07-20 (loop.py:1595 yorumu): ölümler kırılım-SONRASI eşiklerde (hacim×1.5, RS 70)"
+  - "operatör girdileri (2026-08-12 pencere): kapsam=yalnız hacim+RS, değer=ılımlı 1.25×/65 (tek kademe)"
+  - "huni aynası 2026-08-12: 08-10/11'de 4 near-miss (breakout_vcp) — eşiğin hemen altı kaynıyor"
+  - "eşik değişikliği YETKİSİ bu kartta DEĞİL: kanıt pozitifse değişiklik OOS kapısından + operatör onayı"
+
+universe: "EDG-022 replay evreni (251 sembol, 2022-01→2026-07); motor yamasız; yalnız giriş-eşik parametreleri hücrede değişir"
+
+features_asof: >
+  DÖRT koşum: (0) TABAN mevcut eşikler · (1) hacim-yalnız 1.25x (RS 70 sabit) · (2) RS-yalnız 65
+  (hacim 1.5x sabit) · (3) ikisi birden (1.25x + 65). Her hücrede: eklenen işlem sayısı (tabana göre),
+  eklenen işlemlerin GERÇEK-R dağılımı (motorun kendi çıkış yasalarıyla — cf değil, tam replay),
+  net P&L farkı, işlem-başına ort R.
+
+parameter_grid:
+  esik_hucresi: [hacim_125, rs_65, ikisi]   # K += 3 (çarpılarak; taban 022-tutarlılık çivisi sayılmaz)
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  Hücre-başına: eklenen işlemlerin ortalama R'si tarih-kümeli bootstrap %95 CI ile. HÜKÜM: bir hücrenin
+  eklenen-işlem ort-R CI'sı 0-ÜSTÜNDEyse o eşik 'masada para bırakıyor' — OOS-kapılı değişiklik önerisi
+  operatöre gider (bu kart YALNIZ kanıt üretir, eşik DEĞİŞTİRMEZ). CI 0-içi/altındaysa eşik yerinde doğru.
+
+kill_criteria:
+  - "üç hücrede de eklenen-işlem ort-R CI-0-üstü DEĞİLSE → mevcut eşikler kanıtla doğrulanmış olur;
+     kart arşiv, 'eşik gevşetme' talebi kapanır (bu da değerli bir hüküm)"
+  - "eklenen işlem sayısı hücre başına <15 ise o hücre 'olculemedi' (örneklem yetersiz — CI anlamsız)"
+  - "taban koşum mevcut canlı/022 davranışını yeniden üretemezse ölçüm geçersiz (şasi onarımı önce)"
+
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-024-hacim125, pending-EDG-024-rs65, pending-EDG-024-ikisi]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım; ölçüm kodu yazılmadı; eşikler donuk.

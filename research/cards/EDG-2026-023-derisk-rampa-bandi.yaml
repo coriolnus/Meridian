@@ -1,0 +1,48 @@
+card_id: EDG-2026-023
+family: derisk_rampa_bandi
+thesis: >
+  EDG-2026-022 ölçtü: işlem kıtlığının baskın kökü de-risk rampası (tavan_sifir %57.5 + derisk_bagladi
+  %8.3 = %65.8 CI>%50). Mevcut bant (tam<=%3dd, lineer→0 @%8dd) normal dalgalanmada bile sistemi çoğu
+  gün 0-1 pozisyona kilitliyor; işlem birikimi (öğrenmenin yakıtı: N4 n=92 underpowered, E-serisi aç,
+  Faz-6 kilitleri işlem-sayısına bağlı) boğuluyor. TEZ: bandı OPERATÖRÜN SEÇTİĞİ (%15 tam-kapasite /
+  %36 sıfır; 2026-08-12 pencere-onayı) değerlere genişletmek replay'de işlem sayısını anlamlı artırır;
+  bedeli (max-dd/P&L/PBO) ölçülür ve MOD-FARKINDALIKLI uygulanır: benimsenirse YALNIZ kâğıt hesapta
+  (öğrenme dönemi ilkesi — operatör kabulü 2026-08-12); gerçek-para 3/8'de KALIR (DSR-kapısı deseni).
+
+evidence_refs:
+  - "EDG-2026-022 verdict: derisk+tavan %65.8 CI[58.7,72.1] baskın; rejim-koşullu (trend_up tavan %59)"
+  - "operatör girdileri (2026-08-12, AskUserQuestion penceresi): varyant=yalnız-bant, sayılar=%15/%36,
+     mod-ilkesi=KABUL; kayan-tepe ölçüme GİRMEDİ (60g tercihi ileride o kart açılırsa kayıtlı)"
+  - "altyapı: EDG-022 replay şasisi (backtest motor yamasız, eff_max_open yakalama deseni hazır)"
+
+universe: "EDG-022 ile AYNI replay evreni: 251 sembol, 2022-01→2026-07, 1147 seans; motor YAMASIZ v3 (yalnız rampa parametreleri varyantta değişir)"
+
+features_asof: >
+  İki koşum, aynı motor: (A) TABAN rampa mevcut (tam<=%3, 0@%8) — EDG-022 koşumuyla tutarlılık kontrolü;
+  (B) VARYANT rampa (tam<=%15, lineer→0 @%36). Seans-başına: işlem sayısı, doluluk (pozisyon-gün),
+  tavan_sifir oranı. Koşum-sonu: net P&L, max drawdown, işlem/yıl, kısıt-sınıf dağılımı (022 tasnifiyle).
+
+parameter_grid:
+  rampa: [taban_3_8, varyant_15_36]   # K += 1 (taban yeniden-koşum sayılmaz — 022 tutarlılık çivisi; tek YENİ hücre)
+
+cost_model: pessimistic_band_v2   # motorun kendi maliyet modeli — değişmez
+
+success_metric: >
+  Varyantın tabanla kıyası: (i) işlem sayısı artışı (tarih-kümeli bootstrap %95 CI ile); (ii) tavan_sifir
+  oranındaki düşüş; (iii) BEDEL ŞEFFAF: max-dd farkı + net P&L farkı + işlem-başına ortalama R değişimi.
+  HÜKÜM İKİ AŞAMALI: işlem artışı CI-0-dışı VE max-dd artışı operatöre AÇIKÇA raporlanabilir sınırdaysa
+  → 'kâğıt-rampası adayı' (uygulama goal/bounds değişikliği = OPERATÖR ONAYI, otomatik değil).
+  Kötüleşme baskınsa → mevcut bant kalır, kart arşiv.
+
+kill_criteria:
+  - "varyant işlem sayısını CI ile artırmıyorsa → bant genişletme İŞE YARAMIYOR demektir; kart arşiv,
+     kalan kaldıraç eşikler/silahlı-küme (022'nin rejim-koşullu şerhi tekrar okunur)"
+  - "taban koşum EDG-022'nin yayınlı dağılımını (%57.5 tavan_sifir ±2pp) YENİDEN ÜRETEMEZSE ölçüm
+     GEÇERSİZ (şasi bozulmuş) — önce tutarlılık onarımı"
+  - "max-dd varyantta taban×2'yi aşarsa 'aday' hükmü verilmez; sayılar yine raporlanır (karar operatörün)"
+
+k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-023-rampa-bandi]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (pencere onayı); ölçüm kodu yazılmadı.
+#   UYGULAMA NOTU (ölçümden bağımsız, şimdiden donuk): benimseme = YALNIZ kâğıt (mod-farkındalıklı);
+#   gerçek-para rampası 3/8 SABİT. Eşikler ölçümden önce donduruldu.
