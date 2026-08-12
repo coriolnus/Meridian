@@ -794,7 +794,10 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     · momentum_burst (025): DONUK ÜÇLÜ EŞİK karar verir (operatör otomatik-akış seçimi): replay-CI>0 ∧
       portföy-etkisi≥0 ∧ çelişki-açıklandı → silahlanır; düşen ölçüt adıyla raporlanır.
     · ÇIKIŞ KOLLARI (027): CI>0 kazanan kol(lar) benimse; Rol-1 beklentisi scale-out (%38 erken-kesim panzehiri) — beklenti≠hüküm.
-    · SIRA: pencere → TEK goal/bounds dağıtımı → hemen OPT Faz-1 kablolama (sonraki sweep monkeypatch'siz koşmalı).
+    · FİNAL-PAKET DOĞRULAMASI (2026-08-12 eklendi — operatör sorusu 'birleşince ne verecek'): pencerede
+      SEÇİLEN tam kombinasyon dağıtımdan ÖNCE tek doğrulama replay'iyle ölçülür (kartlı, K+=1) — OAT
+      etkileri toplamsal varsayılMAZ, etkileşim ölçülür; beklenen sayı pakete damgalanır.
+    · SIRA: pencere → FİNAL-PAKET doğrulama koşumu → TEK goal/bounds dağıtımı → hemen OPT Faz-1 kablolama.
     *gerekçe: pencere kararları kanonik belgede ön-kayıtlı olsun (sohbette kaybolmaz) · bağımlılık: 024/025/026/027 ölçümleri · öncelik: en yüksek (bekleyen tek büyük karar).*
 
 12. **ISI'nın piyasa-koşullu otomatik ayarı (operatör sorusu 2026-08-12; aday kart EDG-028)** —
