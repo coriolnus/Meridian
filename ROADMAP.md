@@ -853,6 +853,13 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       öncelik: orta.*
     · **15e SETUP ARSENALİ:** hammer canlı-izlemede, mb EDG-032'de; yeni aile ancak kanıt-önce
       (aday: gap-sonrası-taban). *öncelik: düşük (önce eldekilerin canlı karnesi).*
+    · **15f YEREL DUYARLILIK TARAMASI (EDG-035; operatör yönergesi 2026-08-12: "iterasyonlarla en kârlı
+      versiyonu bulalım"):** C+mb komşuluğu OFAT 6 hücre — slot {15,25} · boyut {0.40,0.65} · zarf
+      {6.5,8.0} (K+=6). SERAP-KORUMASI: benimseme yalnız CI-üstünlükle (nokta-P&L sıralaması hüküm girdisi
+      değil); hiçbiri üstün değilse C+mb yerel-optimum kanıtla kapanır. Zamanlama: dağıtım-SONRASI temiz
+      ağaçta (033 dersi). SÜREKLİ motor: elle tarama tek atımlık — kalıcı iterasyon OPT Faz-2'dir (§2-10:
+      hermes bounds-uzayında kâğıt-OOS kapılı arama; Faz-1 kablolaması bu kod-turuyla açıldı).
+      *öncelik: yüksek (dağıtım-sonrası ilk ölçüm).*
     NOT: çıkış-mühendisliği hattı BİLİNÇLİ dışarıda — 027/029 iki kartla ölçüp eledi (ATR-trail yeterli).
     *gerekçe: sharpe 0.285 pozitif-ama-ince; sıradaki çarpan işlem sayısı değil işlem SEÇİMİ · bağımlılık:
     dağıtım-sonrası ilk ölçüm dalgası · öncelik: yüksek (OPT Faz-1 kablolamasıyla eş-zamanlı gidebilir).*
