@@ -762,7 +762,15 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    ayarlanmış, trades satırları ham kalmış görünüyor. Teşhis + tutarlılık kuralı (defter mi bar mı düzeltilir,
    retro-değişmezlik gözetilerek). *gerekçe: ölçüm tabanı tutarlılığı · boyut: S-M · bağımlılık: yok · öncelik: orta.*
 
-9. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+9. **equity_curve KADANSLI YAZAR planı (öğrenme-durması turu ölçtü, 2026-08-12)** — canlıda eğriye nokta
+   ekleyen HİÇBİR kadanslı yazar yok (yalnız replay_seed tohumu + reset işareti); 149sa bayatlık alarmı
+   BİLİNÇLİ görünürlük yaması (Ç1). TUZAK: ledgerstamp.seed_boundary sınırı eğrinin SON NOKTASINDAN okur —
+   bugün nokta ekleyen yazar sınırı kaydırıp köken defterini bozar. SIRA ZORUNLU: (1) seed_boundary önce
+   SON reset-işaretinin egri_son_nokta'sından okusun (sınır donar); (2) ANCAK SONRA loop.daily_cycle seans
+   sonunda (date, eq_now) noktasını file_lock altında eklesin. *gerekçe: pano eğrisi + Ç1 ölçümleri canlı
+   akmıyor · boyut: S-M (sıralı 2 adım) · bağımlılık: ledgerstamp→loop sırası · öncelik: orta-yüksek.*
+
+10. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·
