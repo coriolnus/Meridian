@@ -68,3 +68,19 @@ w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Taka
 - Beyin-anahtarı canlı doğrulaması (Gemini flash-latest ilk gerçek review — bu geceki döngüde izlenecek)
 - Bu geceki EOD: exhaustion_hammer'ın ilk silahlı döngüsü + near-miss dirilişi (canlı triyaj yarın)
 - N1 bildirim token'ı · VLO ayna kararı · lean login (§3)
+
+
+---
+
+## E. OPERATÖR KARARLARI (2026-08-12 pencere — NİHAİ; önceki yarım-pencere iptal, sıralama-tablosuyla yeniden soruldu)
+
+1. **DÜNYA: C paketi @ 5R BENİMSENDİ** — rampa 15/36 (kâğıt) + slot 20 + 0.5R + zarf 5R + mevcut
+   eşik/çıkış/w=0/rejim-eşik-40. ("ISI 10R" ön-kararı bu bilgilendirilmiş seçimle GÜNCELLENDİ — 5R.)
+2. **momentum_burst: MANUEL SİLAHLANMA ONAYI** (hammer emsali; kıl-payı-CI + 2026-zayıflık işareti
+   bilinerek — operatör takdiri).
+
+### Uygulama zinciri (donuk sıra)
+- [1] FİNAL-PAKET doğrulama replay'i: **C + mb-silahlı** (yeni kombinasyon — 025'in mb'si A-dünyasındaydı) → EDG-032.
+- [2] Kod turu: rampa KABLOLAMASI (mod-farkındalıklı: kâğıt 15/36, gerçek-para 3/8 sabit — OPT Faz-1'in ilk kalemi)
+  + goal: max_open 20, position_size_r 0.5 + ARMED_SETUPS += momentum_burst (tarihçe-korumalı).
+- [3] Frozen-tree tam suite → [4] TEK dağıtım → [5] canlı doğrulama + özet.
