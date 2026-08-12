@@ -26,6 +26,7 @@ dependencies = [
     # (streamhealth.py'ye dokunulmadı: opsiyonel import doğru davranıştır — bu satır onu
     #  "opsiyonel ama garanti kurulu" hâline getirir.)
     "certifi>=2024.7.4",
+    "lxml>=6.1.1",
 ]
 
 [project.optional-dependencies]
