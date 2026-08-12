@@ -36,6 +36,12 @@ def _slip() -> float:
 
 _LEDGER_IDS: dict = {"mtime": None, "ids": set()}
 
+# SON TOPLAMANIN MUHASEBESİ (2026-08-12, near-miss gölge bacağı ölümü). `collect` dönüşü int kalır
+# (22 test + cf_backfill o sözleşmeye bağlı); sınıf-bazlı sayım BURADAN okunur. OKUYUCULAR (YASA 6):
+# loop.daily_cycle özet olayı (`near_miss_yazilan`) + testler. Süreç-içi ve çağrı-başına ezilir;
+# loop ana collect'ten HEMEN sonra kopyalar (geç-borç collect'leri ezmeden önce).
+SON_TOPLAMA: dict = {}
+
 
 def _ledger_ids() -> set:
     """Çözülmüş satır kimlikleri — dosya mtime'ına göre önbellekli (backfill 1139 seans çağırır,
@@ -71,20 +77,31 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
     # (kazanma oranı, ort. R, skill katkısı) çift sayılmış kanıtla hesaplanır. Kimse fark etmezdi.
     seen = {r["id"] for r in open_rows} | _ledger_ids()
     added, dropped = 0, 0
+    # SINIF MUHASEBESİ (2026-08-12): near-miss bacağı 2026-07-30→08-12 arası İKİ HAFTA sessizce ölü
+    # kaldı ve bu fonksiyonun içinden hiçbir sayı dışarı sızmadığı için kimse görmedi. Düşme
+    # nedenleri ayrı sayılır: tavan (MAX_OPEN — yazım sırası plan→uyuyan→near-miss olduğundan tavan
+    # ÖNCE near-miss'i aç bırakır), çift (dedup — zararsız: satır zaten defterde; yeniden-koşularda
+    # normaldir), rps (entry≤stop — sinyal geometrisi bozuk, satır hiç doğmaz).
+    _sayim = {"plan": 0, "dormant": 0, "near_miss": 0}
+    _tavan = {"plan": 0, "dormant": 0, "near_miss": 0}
+    _cift = {"plan": 0, "dormant": 0, "near_miss": 0}
+    _nm_rps = 0
     try:                                   # #3: skill-katkı ölçümü cf hızında — satır screener'ını taşır
         from . import skills as _sk
         _scr = _sk.screener_for
     except Exception:  # sessiz-yutma: isteğe bağlı bağımlılık yok — yokluğu kusur değil yapılandırma; içe aktarma denemesinin kendisi zaten cevaptır
         _scr = lambda s2: None
 
-    def _push(row):
+    def _push(row, sinif="plan"):
         nonlocal added, dropped
         if row["id"] in seen:
+            _cift[sinif] += 1
             return
         if len(open_rows) >= MAX_OPEN:
             dropped += 1
+            _tavan[sinif] += 1
             return
-        open_rows.append(row); seen.add(row["id"]); added += 1
+        open_rows.append(row); seen.add(row["id"]); added += 1; _sayim[sinif] += 1
 
     for p in plans:
         rps = float(p["entry_trigger"]) - float(p["stop"])
@@ -117,7 +134,7 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                # yani "uyuyan kurulum kanıtı" diye filtreleyen her tüketici SIFIR satır görüyor.
                "dormant": bool(p.get("dormant_setup")),
                "status": "pending", "time_stop_days": int(time_stop_days),
-               "bars_held": 0})
+               "bars_held": 0}, "plan")
     for sig in dormant_sigs:                     # uyuyan kurulumlar: silahlanma kararının ileriye-dönük kanıtı
         rps = float(sig.entry_trigger) - float(sig.stop)
         if rps <= 0:
@@ -130,10 +147,11 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                "r_multiple_expected": round((sig.profit_target - sig.entry_trigger) / rps, 2),
                "regime": regime or "?", "verdict": "DORMANT", "taken": False, "dormant": True,
                "screener": _scr(sig.setup),
-               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0})
+               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0}, "dormant")
     for sig, blockers in near_miss:              # eşik-altı gölge adaylar: eşiklerin masada bıraktığı ölçülsün
         rps = float(sig.entry_trigger) - float(sig.stop)
         if rps <= 0:
+            _nm_rps += 1                         # sessizce eleniyordu — sayısı artık olaya taşınır
             continue
         _push({"id": f"CF-{dstr}-{sig.ticker}-{sig.setup}-nm", "date": dstr,
                "ticker": sig.ticker, "setup": sig.setup, "score": sig.score,
@@ -144,9 +162,28 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                "regime": regime or "?", "verdict": "NEAR_MISS", "taken": False, "dormant": False,
                "near_miss": True, "blocked_by": list(blockers),
                "screener": _scr(sig.setup),
-               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0})
+               "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0}, "near_miss")
     if dropped:
-        obs.warn("cf_ledger_full", dropped=dropped, cap=MAX_OPEN)
+        # SINIF KIRILIMI EKLENDİ (2026-08-12): toplam sayı hangi kanıt sınıfının aç kaldığını
+        # söylemiyordu — yazım sırası gereği tavana İLK kurban hep near-miss'tir.
+        obs.warn("cf_ledger_full", dropped=dropped, cap=MAX_OPEN,
+                 plan=_tavan["plan"], dormant=_tavan["dormant"], near_miss=_tavan["near_miss"],
+                 detail="açık defter tavanda — yazım sırası plan→uyuyan→near-miss olduğundan tavan "
+                        "önce near-miss bacağını aç bırakır (gölge kanıtı sessizce eksilirdi)")
+    # NEAR-MISS KAYIP OLAYI (2026-08-12, YASA 4): rps/tavan kaybı deftere hiç girmemiş kanıttır ve
+    # bugüne dek İZSİZDİ — 07-30 sonrası iki haftalık sessiz ölüm bu fonksiyonda görünmez kalmıştı.
+    # Çift (dedup) kayıp SAYILIR ama tek başına olay üretmez: yeniden-koşuların normal davranışıdır.
+    _nm_kayip = _nm_rps + _tavan["near_miss"]
+    if _nm_kayip:
+        (obs.warn if _sayim["near_miss"] == 0 else obs.log)(
+            "cf_near_miss_yutuldu", date=dstr, gelen=len(near_miss), yazilan=_sayim["near_miss"],
+            rps_gecersiz=_nm_rps, tavan=_tavan["near_miss"], cift=_cift["near_miss"],
+            detail="near-miss gölge satırlarının bir kısmı deftere HİÇ GİRMEDEN düştü "
+                   "(rps_gecersiz: entry≤stop geometrisi; tavan: MAX_OPEN doluluğu)")
+    SON_TOPLAMA.clear()
+    SON_TOPLAMA.update(date=dstr, yazilan=added, nm_gelen=len(near_miss),
+                       nm_yazilan=_sayim["near_miss"], nm_rps=_nm_rps,
+                       nm_tavan=_tavan["near_miss"], nm_cift=_cift["near_miss"])
     store.write_json(OPEN_FILE, open_rows)
     return added
 

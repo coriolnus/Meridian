@@ -1548,6 +1548,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
 
     candidates, plans, dormant_sigs, explore_pool = [], [], [], []
     near_miss_sigs = []
+    # NEAR-MISS GÖLGE BACAĞI GÖRÜNÜRLÜĞÜ (2026-08-12 — 2026-07-30→08-12 iki haftalık sessiz ölüm
+    # dersi, YASA 4+6): bacak koşmadıysa özet olaya 0 değil None yazılır ("ölçüldü, sıfır" ile
+    # "hiç ölçülmedi" ayrı olgulardır — UYDURMA YASAĞI) ve nedeni ayrı olayla deftere düşer.
+    _p2_kostu = False        # P2 taraması (near-miss gölge bacağı dahil) bu turda gerçekten koştu mu?
+    _nm_toplama = None       # cf.collect'in near-miss muhasebesi (ana çağrıdan kopya; None = collect konuşmadı)
+    late_by_date = {}        # geç-bar borç kesişimleri — blok koşmadığı turda da özet olay okur (NameError koruması)
     # P3 BLOĞUNUN DIŞINDA TANIMLANIR, İÇİNDE DEĞİL: blok `halted`/`data_bad`/slot koşuluna bağlıdır
     # ve koşmadığı turda sayaç TANIMSIZ kalırdı — `daily_cycle` olayı o turda NameError'la düşerdi.
     _kapsam_disi = 0         # bu turda karartma kapısının KONUŞAMADIĞI plan sayısı (beyanlı fail-open)
@@ -1579,6 +1585,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     explore_mode = (not halted and not data_bad and rj["exposure_budget_pct"] <= 0)
     if not halted and not data_bad and (rj["exposure_budget_pct"] > 0 or explore_mode) \
             and len(b.positions) < limits["max_open_positions"]:
+        _p2_kostu = True
         with skills.pipeline_run("P2_SCREEN", artifact="state/candidates.jsonl"):
             # Faz 0 KARANTİNA: validate_bars'ın 'hard' düşürdüğü ticker'lar bugüne dek yalnız
             # LİSTELENİYORDU (%25 eşiği aşılmadıkça) — bozuk barlı tek hisse aday üretebiliyordu.
@@ -1883,6 +1890,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 counterfactual.collect(dstr, plans, {a["id"] for a in meta["armed"]}, dormant_sigs,
                                        int(float(eff.get("exit.time_stop_days", 15))),
                                        near_miss=near_miss_sigs, regime=rj["regime"])
+                # ANA collect'in muhasebesi geç-borç çağrıları EZMEDEN kopyalanır (2026-08-12):
+                # özet olaydaki `near_miss_yazilan` bu seansın satırlarını sayar, geç-borcunkini değil.
+                _nm_toplama = dict(counterfactual.SON_TOPLAMA)
                 for _ds, _rows in (late_by_date or {}).items():    # kaçan seanslar kendi tarihleriyle
                     counterfactual.collect(_ds, [], set(), [],
                                            int(float(eff.get("exit.time_stop_days", 15))),
@@ -1934,6 +1944,16 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 bars=per, index_bars=idx, regime_ok=regime_ok)
         except Exception as e:
             obs.warn("shadow_variants_failed", error=f"{type(e).__name__}: {e}")
+
+    if not _p2_kostu:
+        # YASA 4 (2026-08-12): P2 koşmayınca near-miss gölge bacağı da koşmaz — bugüne dek bu
+        # sessizdi ve "defterde near-miss neden yok?" sorusu iki hafta cevapsız kaldı. Sebep
+        # türetimi blok koşulunun birebir tersidir; explore_mode budget≤0 hâlini zaten kapsadığı
+        # için (halted/data_bad değilse) kalan tek sebep kitap doluluğudur.
+        obs.log("near_miss_scan_atlandi", date=dstr,
+                sebep=("halted" if halted else "data_bad" if data_bad else "kitap_dolu"),
+                detail="P2 taraması (near-miss gölge bacağı DAHİL) bu turda hiç koşmadı — özet "
+                       "olayda near_miss=None 'ölçülmedi' demektir, 0 değil")
 
     if plans:
         # yerel LLM ajanından aday İKİNCİ GÖRÜŞÜ — arka planda (danışma katmanı; kapıyı değiştirmez,
@@ -2099,6 +2119,20 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                "takvim_guvenilmez": (_takvim_kusuru or {}).get("kod"),
                "takvim_guvenilmez_sebep": (_takvim_kusuru or {}).get("sebep"),
                "takvim_dusen_plan": _takvim_dusen}
+    # NEAR-MISS KURAKLIK BEKÇİSİ (2026-08-12): ana tarama aday bulmuşken GEVŞEK gölgenin 0 bulması
+    # yapısal olarak şüphelidir (Temmuz tabanı: her aday gününde ≥1 near-miss; 07-16: 1 aday/12 nm,
+    # 07-28: 6/19). 2026-07-30→08-12 sessiz ölümü tam bu geometriyle yaşandı ve hiçbir olay yoktu.
+    # Olay eşik tablosunu [sıkı, gevşek] çiftleriyle taşır: iki sütun eşitse gevşetme fiilen ÖLÜdür
+    # (bantsız tarama) — kök teşhisi canlı defterden tek satırla okunur. relax_for_near_miss
+    # TEK-KAYNAKTIR ve burada yalnız OKUNUR.
+    if _p2_kostu and candidates and not near_miss_sigs:
+        _rx_k = strat.relax_for_near_miss(eff)
+        obs.warn("near_miss_kurak", date=dstr, candidates=len(candidates),
+                 esikler={k: [eff.get(k), _rx_k.get(k)]
+                          for k in ("entry.min_volume_ratio", "entry.rs_rating_min",
+                                    "entry.min_score", "entry.pivot_proximity_pct")},
+                 detail="ana tarama aday buldu ama gevşek gölge 0 near-miss üretti — bant boş ya da "
+                        "bacak ölü; esikler[k]=[sıkı, gevşek], çiftler eşitse gevşetme etkisiz")
     # BU SATIR PANONUN "DÜN GECE" KARTININ KAYNAĞIDIR (v190, YASA 6 zinciri):
     # `api._son_dongu` olay defterinin KUYRUĞUNDAN bu satırı okur → `/api/today.son_dongu` → kart.
     # Kart eskiden `/api/events`in SON 80 KAYDINDA bunu arıyordu; günde BİR yazılan bir olay, gün
@@ -2107,12 +2141,19 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # dosyası AÇILMADI: döngünün yazdığı dosya kümesi bilinçli ve sınırlı bir listedir
     # (test_loop_gaps_v48::test_loop_writes_only_declared_state_files) ve olgu ZATEN bu satırda
     # yazılı — ikinci bir kopya, aynı olgunun iki sahibi demek olurdu.
+    # `near_miss*` sayaçları (2026-08-12): üretim `near_miss` (bacak koşmadıysa None — uydurma 0
+    # yok), deftere düşen `near_miss_yazilan` (cf.collect muhasebesi; collect konuşmadıysa None),
+    # geç-bar borcundan gelen `near_miss_gec`. Okuyucu: pano "dün gece" kartı + teşhis.
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
+            near_miss=(len(near_miss_sigs) if _p2_kostu else None),
+            near_miss_yazilan=((_nm_toplama or {}).get("nm_yazilan") if _p2_kostu else None),
+            near_miss_gec=(sum(len(v) for v in (late_by_date or {}).values()) if _p2_kostu else None),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
             halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet,
             earnings_kapsami=_kapsam)
     return {"status": "ok", "date": dstr, "regime": rj["regime"], "candidates": len(candidates),
             "plans": len(plans), "armed": len(meta["armed"]), "open_positions": len(b.positions),
+            "near_miss": (len(near_miss_sigs) if _p2_kostu else None),
             "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad,
             "trend_book": _trend_ozet}
 

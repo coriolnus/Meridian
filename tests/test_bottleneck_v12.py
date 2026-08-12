@@ -256,6 +256,12 @@ def _near_miss_kullanimlari() -> list[tuple[str, int]]:
             rol = "cf_defteri"                  # tek çıkış: karşı-olgusal defter (sıfır yetki)
         elif isinstance(p, ast.comprehension) and "_sv.record_cycle" in zincir:
             rol = "golge_nufusu"                # gölge-varyant ÖLÇÜM nüfusu (kendi defteri, sıfır yetki)
+        elif isinstance(p, ast.Call) and getattr(p.func, "id", None) == "len":
+            rol = "ozet_sayaci"                 # daily_cycle özet olayı + dönüşü (2026-08-12 sessiz-ölüm
+                                                # dersi): len() sayar, satırların İÇERİĞİ okunmaz — görünürlük
+        elif isinstance(p, ast.UnaryOp) and isinstance(p.op, ast.Not):
+            rol = "kuraklik_bekcisi"            # aday-varken-0-gölge uyarısının koşulu (obs.warn) — YASA 4
+                                                # olayı üretir, hiçbir karar ifadesine girmez
         else:
             rol = "BEYAZ_LISTE_DISI"
         out.append((rol, n.lineno))
@@ -273,18 +279,24 @@ def test_shadow_scan_wiring_is_zero_authority(sandbox_state):
 
     kullanimlar = _near_miss_kullanimlari()
     roller = sorted(r for r, _ in kullanimlar)
-    # DÖRT ROL, HEPSİ BU: topla → (cf defteri | gölge ölçüm nüfusu). Aday/plan/keşif SEÇİMİNDE
-    # kullanım YOK — beşinci bir kullanım belirirse `BEYAZ_LISTE_DISI` olarak burada patlar.
-    assert roller == ["cf_defteri", "golge_nufusu", "init", "topla"], \
+    # ALTI ROL, HEPSİ BU: topla → (cf defteri | gölge ölçüm nüfusu) + iki GÖRÜNÜRLÜK kullanımı
+    # (2026-08-12 sessiz-ölüm dersi: özet sayaç ×2 — olay + dönüş — ve kuraklık bekçisi; ikisi de
+    # len()/not ile SAYAR, satır içeriği okumaz). Aday/plan/keşif SEÇİMİNDE kullanım YOK — yeni
+    # bir kullanım belirirse `BEYAZ_LISTE_DISI` olarak burada patlar.
+    assert roller == ["cf_defteri", "golge_nufusu", "init", "kuraklik_bekcisi",
+                      "ozet_sayaci", "ozet_sayaci", "topla"], \
         f"near_miss_sigs kullanımı değişti: {kullanimlar}"
 
     # SIRA DA YASANIN PARÇASI: karar akışı (P2 tarama → P3 plan → silahlanma) cf devrinden ÖNCE
     # biter. `topla` dışındaki hiçbir kullanım o aralıkta olamaz — yani eşik-altı kanıt, kararı
-    # üreten hiçbir ifadeye giremez.
+    # üreten hiçbir ifadeye giremez. Görünürlük rolleri de gölge-devrinden SONRA gelmek zorunda:
+    # sayacın kendisi bile karar penceresine sızamaz.
     satir = {r: ln for r, ln in kullanimlar}
     assert satir["init"] < satir["topla"] < satir["cf_defteri"] < satir["golge_nufusu"]
     assert not [ln for r, ln in kullanimlar
                 if r not in ("init", "topla") and ln < satir["cf_defteri"]]
+    assert all(ln > satir["golge_nufusu"] for r, ln in kullanimlar
+               if r in ("kuraklik_bekcisi", "ozet_sayaci"))
 
     assert 'r.get("near_miss")' in inspect.getsource(hermes._stamp_llm_opinions)
 
