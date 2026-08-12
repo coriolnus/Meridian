@@ -39,4 +39,18 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-024-hacim125, pending-EDG-024-rs65, pending-EDG-024-ikisi]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım; ölçüm kodu yazılmadı; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — üç hücre ölçüldü + hüküm: EŞİKLER DOĞRULANDI (kill#1).
+
+verdict:   # Rol-1 hükmü.
+  sonuc: >
+    KILL#1 UYGULANDI: üç hücrede de eklenen-işlem ort-R CI'sı 0'ı kapsıyor (hacim_125 −0.017 [−0.218,+0.157]
+    n=106 · rs_65 +0.094 [−0.444,+0.568] n=28 · ikisi −0.069 [−0.244,+0.079] n=126; kötümser bantta da aynı)
+    → MEVCUT EŞİKLER (hacim 1.5×, RS 70) KANITLA DOĞRULANDI; gevşetme önerisi YOK, kart arşiv. Bu değerli
+    bir kapanış: 'eşikler masada para bırakıyor' hipotezi ölçülüp ELENDİ.
+  serap_uyarisi: >
+    Tam-defter +8.826$ (hacim_125) SERAP — dekompozisyon (sente kapanan): eklenenler yalnız +177$; kalan
+    kaskad/doluluk etkisi (gevşek eşik slotları farklı doldurup bazı taban-zararlılarını dışarıda bırakıyor).
+    Kırılgan portföy-yolu artefaktı — marjinal bandın kârlılığı DEĞİL. Karar bu sayıya dayandırılamaz.
+  capa_notu: "022-çapa sapması yine v233-hammer izi (taban armed'da hammer 308/914) — 023 hükmüyle tutarlı; taban=bugünkü canlı motor. Determinizm bonusu: 2 hücre iki bağımsız süreçte bit-özdeş."
+  artefakt: "research/olcumler/edg024_esik_retro_2026-08-12/ (motor SIFIR yama — çıplak replay×4; checkpoint'li)"
+

@@ -58,7 +58,9 @@ _Eklenen-işlem R'si CI>0 ∧ dd sınırlı → gevşetme adayı; CI-negatif →
 w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Takas aleyhte: kaybedilenler +R'li, eklenenler −R'li — kesitsel sinyal gerçek ama bileşik-ağırlık olarak seçilimi bozuyor. Kablo w=0'da; hermes arama-uzayında kalır (elle ağırlık yok).
 
 ## C. PENCERE SONRASI ZORUNLU ADIMLAR (sıra donuk — §2-11)
-1. **FİNAL-PAKET doğrulama replay'i:** seçilen tam kombinasyon tek koşumda ölçülür (etkileşimler toplamsal varsayılmaz), sayı pakete damgalanır.
+1. **FİNAL-PAKET doğrulama replay'i:** seçilen tam kombinasyon tek koşumda ölçülür. **SADELEŞME (2026-08-12):
+   seçim "C dünyası aynen" olursa (rampa 15/36 + slot20 + 0.5R + zarf-5R + mevcut eşik/çıkış/w=0) bu doğrulama
+   ZATEN YAPILMIŞTIR — 026 koşumu o kombinasyonun kendisidir (772 işlem, +9.869$, dd %12.4 damgalı).**
 2. **TEK goal/bounds dağıtımı** (suite yeşil şartıyla).
 3. **OPT Faz-1 kablolama** (bir sonraki tur monkeypatch'siz).
 
