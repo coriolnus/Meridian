@@ -886,7 +886,13 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     *gerekçe: sharpe 0.285 pozitif-ama-ince; sıradaki çarpan işlem sayısı değil işlem SEÇİMİ · bağımlılık:
     dağıtım-sonrası ilk ölçüm dalgası · öncelik: yüksek (OPT Faz-1 kablolamasıyla eş-zamanlı gidebilir).*
 
-17. **KARNE SÜRÜM SPLIT'İ — motor v5, scoreboard v3 (canlı ölçüm 2026-08-13, ACİL)** — teşhis:
+17. ~~**KARNE SÜRÜM SPLIT'İ**~~ → **✅ KAPANDI (2026-08-13 ~22:15Z, canlı doğrulandı):** v5 kaydı
+    uygulamanın KENDİ yazım kapısından (`store.write_json`→DB) eklendi, `current_version: 5`; v3/v4
+    tarihçesi korundu (elle SQL YOK), `.migrated-*` artığı backups'a alındı, worker yedekli bakım
+    penceresinde durdurulup başlatıldı (healthz 200). KALAN: prosedür RUNBOOK'a — "strategy sürüm
+    terfisi dagit kapsamı DIŞIDIR: strategy.yaml scp + scoreboard DB yazımı AYRI adımdır; scp'lenen
+    scoreboard.json'u bayat-defter migrasyonu `.migrated`'a taşır ve DB'ye YAZMAZ" (bu turun dersi).
+    Özgün teşhis:
     `docs/TESHIS-CANLI-VS-REPLAY-2026-08-13.md` §2. Motor `strategy.yaml` v5'i (0.5R) okuyor ama DB
     `scoreboard.current_version: 3` — 08-12 mini-penceresinde scp'lenen scoreboard.json'u v234
     bayat-defter migrasyonu `.migrated-*`e taşıdı, DB'ye YAZILMADI. Etki: sürüm-bazlı değerlendirme
