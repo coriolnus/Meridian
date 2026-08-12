@@ -860,6 +860,17 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       ağaçta (033 dersi). SÜREKLİ motor: elle tarama tek atımlık — kalıcı iterasyon OPT Faz-2'dir (§2-10:
       hermes bounds-uzayında kâğıt-OOS kapılı arama; Faz-1 kablolaması bu kod-turuyla açıldı).
       *öncelik: yüksek (dağıtım-sonrası ilk ölçüm).*
+
+16. **KORUNUM-14 SINIFI — uyuyan-kurulum planlarına terminal sınıf (pano ihlal-triyajı 2026-08-12)** —
+    korunum dedektörü 14 AÇIKLANAMAYAN sayıyor; canlı API dökümü: HEPSİ dönemin uyuyan kurulumlarının
+    REVIEW planları (mb×5+ / hammer×2 ilk-8'de; P-2026-07-23-{CSX,UNP,NSC,RTX}-momentum_burst kümesi).
+    Kök [[uyuyan-kurulum-yolu]] arka-bağsızlığı: silahlanamayan plan hiçbir terminal olaya ulaşamıyor.
+    DÜZELTME (dedektör-tarafı, dürüst kova): watchdog.conservation_report'a `uyuyan_kurulum` terminal
+    sınıfı — planın kurulumu plan-tarihinde ARMED_SETUPS dışıysa (silahlanma-tarihçesi kayıtla, koda
+    gömme) replay_era gibi ayrı sayılır; + test. NOT: bu geceki dağıtım mb'yi silahlıyor → sınıf İLERİYE
+    kapanıyor (hammer 08-12'de kapandı), kalan uyuyanlar üretmeye devam ederse sayı büyür — icra-bağı
+    kararı operatörde (§3/uyuyan). *boyut: S · öncelik: yüksek (sıradaki kod turu; bu gecekine EKLENMEZ —
+    dağıtım kapsamı donuk).*
     NOT: çıkış-mühendisliği hattı BİLİNÇLİ dışarıda — 027/029 iki kartla ölçüp eledi (ATR-trail yeterli).
     *gerekçe: sharpe 0.285 pozitif-ama-ince; sıradaki çarpan işlem sayısı değil işlem SEÇİMİ · bağımlılık:
     dağıtım-sonrası ilk ölçüm dalgası · öncelik: yüksek (OPT Faz-1 kablolamasıyla eş-zamanlı gidebilir).*
