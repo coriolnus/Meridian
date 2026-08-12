@@ -788,7 +788,8 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     gelir; CI'lar öneriyi çürütürse öneri düşer):
     · RAMPA 15/36 (kâğıt): BENİMSE — kill#3 (dd ×2.29) otomatik-hükmü engelledi, karar operatörün; %17.8 dd
       kâğıtta öğrenme bedeli ↔ 3× işlem + eksiden artıya P&L + düzelen işlem-R (−0.078→+0.032). Gerçek-para 3/8 SABİT.
-    · SLOT 20 + 0.5R: 026 ısı/dd tablosu ŞARTLI benimse — dd B×1.5 aşarsa öneri 0.25R'ye iner (ısı-nötr), slot 20 kalır.
+    · SLOT 20 + 0.5R: OPERATÖR ÖN-KARARI (2026-08-12: 'ISI 10R kalsın') — 0.25R geri-düşüş önerisi KALDIRILDI;
+      ısı 10R sabit, 026 sayıları pencereye BİLGİ olarak gelir (karar değiştirmez, şasi-geçersizlik hariç).
     · EŞİKLER (024): sayı gelmeden söz YOK — CI>0 hücre varsa OOS-kapılı öneri; yoksa 'eşikler kanıtla doğrulandı' kapanışı.
     · momentum_burst (025): DONUK ÜÇLÜ EŞİK karar verir (operatör otomatik-akış seçimi): replay-CI>0 ∧
       portföy-etkisi≥0 ∧ çelişki-açıklandı → silahlanır; düşen ölçüt adıyla raporlanır.
