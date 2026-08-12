@@ -1,0 +1,340 @@
+{
+ "kart": "EDG-2026-023",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T11:40:12+00:00",
+ "yontem": {
+  "eslenik_bootstrap": "tarih-kümeli (ay) EŞLENİK bootstrap: aynı ay çekilişi iki koşuma birden uygulanır; fark=varyant−taban; iter=5000, seed=20260812, n_ay=55",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı)",
+  "oran_atlanan_iter": 0,
+  "tavan_bos_iter": 0,
+  "takvim_ayni": true
+ },
+ "rampalar": {
+  "taban": {
+   "tam_dd": 0.03,
+   "sifir_dd": 0.08,
+   "enjeksiyon": "YOK — motor orijinali (yama sıfır)"
+  },
+  "varyant": {
+   "tam_dd": 0.15,
+   "sifir_dd": 0.36,
+   "enjeksiyon": "MONKEYPATCH — ölçüm modülü içinde broker.derisk_mult modül-özniteliği değiştirildi; motor DOSYASI değişmedi. Gerekçe: tam-eşik 0.03 fonksiyon gövdesinde sabit, motorda config/param enjeksiyon yüzeyi yok (beyan, kart+brief uyarınca)"
+  }
+ },
+ "butunluk": {
+  "taban": {
+   "frame_okunamadi": 0,
+   "tekrar_tarih": [],
+   "scan_vs_plan_uyusmazlik_n": 0,
+   "scan_vs_plan_ornek": [],
+   "yasakli_modul_yuklendi": [],
+   "gecerli": true
+  },
+  "varyant": {
+   "frame_okunamadi": 0,
+   "tekrar_tarih": [],
+   "scan_vs_plan_uyusmazlik_n": 0,
+   "scan_vs_plan_ornek": [],
+   "yasakli_modul_yuklendi": [],
+   "gecerli": true
+  }
+ },
+ "kill2_tutarlilik": {
+  "civi": "EDG-022 yayınlı birincil tavan_sifir %57.5 ± 2.0pp",
+  "edg022_yayin": {
+   "tavan_sifir_pct": 57.54,
+   "n_birincil": 676,
+   "n_tavan": 389
+  },
+  "taban_tavan_sifir_pct": 71.34,
+  "fark_pp": 13.84,
+  "evren_251": true,
+  "config_ayni_edg022": true,
+  "gecti": false
+ },
+ "kill1": {
+  "esik": "varyant işlem sayısını CI ile artırmıyorsa (fark CI'ı 0'ı dışlamalı, artı yönde)",
+  "fark_ci95": {
+   "lo": 210.0,
+   "hi": 342.0,
+   "orta": 275.0
+  },
+  "artis_ci_0_disi": true,
+  "tetiklendi": false
+ },
+ "kill3": {
+  "esik": "maxdd_varyant > 2 × maxdd_taban (kanonik: score_detail — kapalı∨M2M kötüsü)",
+  "maxdd_taban": 0.0776,
+  "maxdd_varyant": 0.1775,
+  "oran": 2.287,
+  "tetiklendi": true,
+  "m2m_yalniz": {
+   "taban": 0.0776,
+   "varyant": 0.1775,
+   "tetiklendi": true
+  }
+ },
+ "tablo": {
+  "islem_n": {
+   "taban": 135,
+   "varyant": 410,
+   "fark": 275,
+   "fark_pct": 203.7
+  },
+  "islem_yil": {
+   "taban": 29.51,
+   "varyant": 89.62
+  },
+  "islem_fark_ci95_ay_kumeli_eslenik": {
+   "lo": 210.0,
+   "hi": 342.0,
+   "orta": 275.0
+  },
+  "islem_oran_ci95": {
+   "lo": 2.522,
+   "hi": 3.681,
+   "orta": 3.049
+  },
+  "tavan_sifir_birincil_pct": {
+   "taban": 71.34,
+   "varyant": 28.61
+  },
+  "tavan_sifir_fark_pp_ci95": {
+   "lo": -47.681,
+   "hi": -37.549,
+   "orta": -42.802
+  },
+  "birincil_n": {
+   "taban": 677,
+   "varyant": 664
+  },
+  "tasnif_birincil": {
+   "taban": {
+    "derisk_bagladi": {
+     "n": 75,
+     "pct": 11.08
+    },
+    "evren_bagladi": {
+     "n": 119,
+     "pct": 17.58
+    },
+    "tavan_sifir": {
+     "n": 483,
+     "pct": 71.34
+    }
+   },
+   "varyant": {
+    "derisk_bagladi": {
+     "n": 77,
+     "pct": 11.6
+    },
+    "evren_bagladi": {
+     "n": 397,
+     "pct": 59.79
+    },
+    "tavan_sifir": {
+     "n": 190,
+     "pct": 28.61
+    }
+   }
+  },
+  "tasnif_tum_seans": {
+   "taban": {
+    "derisk_bagladi": {
+     "n": 75,
+     "pct": 6.54
+    },
+    "evren_bagladi": {
+     "n": 119,
+     "pct": 10.37
+    },
+    "isinma": {
+     "n": 3,
+     "pct": 0.26
+    },
+    "rejim_kapali": {
+     "n": 467,
+     "pct": 40.71
+    },
+    "tavan_sifir": {
+     "n": 483,
+     "pct": 42.11
+    }
+   },
+   "varyant": {
+    "derisk_bagladi": {
+     "n": 77,
+     "pct": 6.71
+    },
+    "evren_bagladi": {
+     "n": 397,
+     "pct": 34.61
+    },
+    "isinma": {
+     "n": 3,
+     "pct": 0.26
+    },
+    "rejim_kapali": {
+     "n": 480,
+     "pct": 41.85
+    },
+    "tavan_sifir": {
+     "n": 190,
+     "pct": 16.56
+    }
+   }
+  },
+  "ci95_ay_kumeli_kosum_ici": {
+   "taban": {
+    "tavan_sifir": {
+     "lo": 0.6667,
+     "hi": 0.7536,
+     "orta": 0.7135
+    },
+    "evren_bagladi": {
+     "lo": 0.1362,
+     "hi": 0.2234,
+     "orta": 0.1754
+    },
+    "derisk_bagladi": {
+     "lo": 0.0853,
+     "hi": 0.1389,
+     "orta": 0.11
+    },
+    "derisk+tavan": {
+     "lo": 0.7766,
+     "hi": 0.8638,
+     "orta": 0.8246
+    },
+    "_n_ay_kume": 42
+   },
+   "varyant": {
+    "tavan_sifir": {
+     "lo": 0.2383,
+     "hi": 0.3333,
+     "orta": 0.2855
+    },
+    "evren_bagladi": {
+     "lo": 0.5428,
+     "hi": 0.6551,
+     "orta": 0.5986
+    },
+    "derisk_bagladi": {
+     "lo": 0.0873,
+     "hi": 0.1469,
+     "orta": 0.1156
+    },
+    "derisk+tavan": {
+     "lo": 0.3449,
+     "hi": 0.4572,
+     "orta": 0.4014
+    },
+    "_n_ay_kume": 42
+   }
+  },
+  "net_pnl_equity": {
+   "taban": -7760.67,
+   "varyant": 774.6
+  },
+  "net_pnl_trades": {
+   "taban": -7760.67,
+   "varyant": 774.6
+  },
+  "maxdd_kanonik": {
+   "taban": 0.0776,
+   "varyant": 0.1775
+  },
+  "maxdd_m2m": {
+   "taban": 0.0776,
+   "varyant": 0.1775
+  },
+  "avg_r": {
+   "taban": -0.078,
+   "varyant": 0.032
+  },
+  "win_rate": {
+   "taban": 0.326,
+   "varyant": 0.337
+  },
+  "sharpe": {
+   "taban": -0.97,
+   "varyant": 0.018
+  },
+  "score": {
+   "taban": -0.0823,
+   "varyant": -0.2975
+  },
+  "doluluk_pozisyon_gun": {
+   "taban": 792,
+   "varyant": 2277
+  },
+  "ort_acik_pozisyon": {
+   "taban": 0.69,
+   "varyant": 1.985
+  },
+  "toplam_bars_held": {
+   "taban": 851,
+   "varyant": 2434
+  },
+  "silahlanan_plan": {
+   "taban": 914,
+   "varyant": 433
+  },
+  "toplam_plan": {
+   "taban": 1086,
+   "varyant": 722
+  },
+  "entry_rejects": {
+   "taban": {
+    "open_below_stop": 7,
+    "max_chase": 5
+   },
+   "varyant": {
+    "open_below_stop": 12,
+    "max_chase": 11
+   }
+  },
+  "exit_reason_dagilim": {
+   "taban": {
+    "stop": 59,
+    "regime_flip": 34,
+    "time_stop": 25,
+    "target": 9,
+    "stop_gap": 5,
+    "target_gap": 3
+   },
+   "varyant": {
+    "stop": 173,
+    "regime_flip": 81,
+    "time_stop": 76,
+    "target": 37,
+    "stop_gap": 33,
+    "target_gap": 10
+   }
+  },
+  "eff_max_open_eq0_n": {
+   "taban": 0,
+   "varyant": 0
+  },
+  "eff_max_open_eq1_n": {
+   "taban": 647,
+   "varyant": 0
+  },
+  "acik_slot_le0_n": {
+   "taban": 483,
+   "varyant": 190
+  }
+ },
+ "dosyalar": {
+  "taban": {
+   "sonuc": "sonuc_taban.json",
+   "seanslar": "seanslar_taban.json",
+   "islemler": "islemler_taban.json"
+  },
+  "varyant": {
+   "sonuc": "sonuc_varyant.json",
+   "seanslar": "seanslar_varyant.json",
+   "islemler": "islemler_varyant.json"
+  }
+ }
+}

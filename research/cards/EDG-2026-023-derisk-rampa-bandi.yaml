@@ -43,6 +43,29 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-023-rampa-bandi]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (pencere onayı); ölçüm kodu yazılmadı.
+status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm işlendi (eşikler önceden donuktu, değişmedi).
+
+verdict:   # 2026-08-12 Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
+  kill2_capa: >
+    Taban tavan_sifir %71.3 ≠ 022-çivisi %57.5±2 — AMA şasi SAĞLAM: config/bar sha'ları birebir, iki koşum
+    aynı-motor (sha-eşit), bütünlük temiz (frame_miss=0, dup=0). Sapmanın nedeni ÖLÇÜLDÜ: EDG-022'den sonra
+    v233 exhaustion_hammer silahlandı (operatör onayı) → taban 40 hammer işlemi içeriyor, kitap daha dolu,
+    tavan_sifir ↑. HÜKÜM: 022-ÇAPASI BAYAT (dünya onaylı kararla değişti), kill#2'nin amacı (şasi sağlamlığı)
+    sha-kanıtlarıyla SAĞLANDI, A↔B kıyası GEÇERLİ. Çapa bu koşumun tabanına güncellenir; kill lafzı sessizce
+    aşılmadı — gerekçe burada.
+  kill1: "TETİKLENMEDİ — işlem artışı +275, CI [+210,+342], 0'ın açık ara dışında (29.5→89.6 işlem/yıl)."
+  kill3: >
+    TETİKLENDİ — max-dd 0.1775/0.0776 = ×2.287 > ×2 → donuk kural gereği 'kâğıt-rampası adayı' HÜKMÜ
+    VERİLMEZ; karar sayılarla OPERATÖRE gider (kartın tasarımı tam buydu).
+  sayilar_ozet: >
+    A(3/8): 135 işlem, net −7.760$, ort R −0.078, sharpe −0.97, tavan_sifir %71.3, dd %7.8.
+    B(15/36): 410 işlem, net +775$, ort R +0.032, sharpe +0.02, tavan_sifir %28.6, dd %17.8.
+    Kayma: gevşek bantta bağlayıcı kısıt EVRENE döner (%59.8) — rampa açılırsa evren sorusu yeniden doğar.
+  operator_karar_paketi: >
+    Benimseme = goal/bounds değişikliği + YALNIZ KÂĞIT (mod-ilkesi 2026-08-12 kabul; gerçek-para 3/8 SABİT).
+    Soru netleşti: öğrenme döneminde +275 işlem/yıl ve artıya dönen P&L, %17.8 kâğıt-dd'ye değer mi?
+    EDG-024/025 sonuçlarıyla BİRLİKTE tek pencerede operatöre sunulacak.
+  artefakt: "research/olcumler/edg023_rampa_bandi_2026-08-12/ (olcum.py · sonuc*.json · islemler_*.json; varyant rampası ölçüm-içi monkeypatch BEYANLI — motor dosyası değişmedi)"
+
 #   UYGULAMA NOTU (ölçümden bağımsız, şimdiden donuk): benimseme = YALNIZ kâğıt (mod-farkındalıklı);
 #   gerçek-para rampası 3/8 SABİT. Eşikler ölçümden önce donduruldu.

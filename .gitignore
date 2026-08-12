@@ -54,3 +54,6 @@ skills-lock.json
 .github/agents/
 .github/hooks/
 .github/skills/
+research/olcumler/*/seanslar_*.json
+research/olcumler/*/kosum_*.log
+research/olcumler/*/state_*/

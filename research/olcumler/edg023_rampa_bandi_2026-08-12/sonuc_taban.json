@@ -1,0 +1,226 @@
+{
+ "kart": "EDG-2026-023",
+ "kosum": "taban",
+ "smoke": false,
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T11:39:26+00:00",
+ "sure_sn": 1665.1,
+ "rampa": {
+  "tam_dd": 0.03,
+  "sifir_dd": 0.08,
+  "enjeksiyon": "YOK — motor orijinali (yama sıfır)"
+ },
+ "motor_sha256_16": {
+  "broker.py": "daa858a522d97c98",
+  "backtest.py": "d345b6eed3d28be4",
+  "strategy.py": "ac7c53a3d89b6203"
+ },
+ "config_sha256_16": {
+  "goal.yaml": {
+   "sandbox": "099590dedee1ccf2",
+   "edg022": "099590dedee1ccf2",
+   "repo_state": "099590dedee1ccf2"
+  },
+  "strategy.yaml": {
+   "sandbox": "9f3e4732315abe52",
+   "edg022": "9f3e4732315abe52",
+   "repo_state": "9f3e4732315abe52"
+  },
+  "bounds.yaml": {
+   "sandbox": "3e810b547ca95f9a",
+   "edg022": "3e810b547ca95f9a",
+   "repo_state": "3e810b547ca95f9a"
+  }
+ },
+ "replay": {
+  "start": "2022-01-01",
+  "end": "2026-07-30",
+  "strategy_version": 3,
+  "params_by_regime": true,
+  "n_sembol": 251,
+  "n_endeks_satir": 1403,
+  "max_open": 5,
+  "no_trade_before": 3,
+  "cost_model": {
+   "slippage_bps": 5.0,
+   "commission_per_share": 0.0,
+   "not": "motorun kendi maliyet modeli — dokunulmadı (kart: değişmez)"
+  }
+ },
+ "butunluk": {
+  "frame_okunamadi": 0,
+  "tekrar_tarih": [],
+  "scan_vs_plan_uyusmazlik_n": 0,
+  "scan_vs_plan_ornek": [],
+  "yasakli_modul_yuklendi": [],
+  "gecerli": true
+ },
+ "islem": {
+  "n": 135,
+  "islem_yil": 29.51,
+  "aylik_ts_open": {
+   "2022-01": 3,
+   "2022-08": 4,
+   "2022-11": 7,
+   "2022-12": 4,
+   "2023-01": 3,
+   "2023-02": 11,
+   "2023-04": 5,
+   "2023-05": 3,
+   "2023-06": 2,
+   "2023-07": 4,
+   "2023-08": 1,
+   "2023-09": 3,
+   "2023-11": 3,
+   "2023-12": 3,
+   "2024-01": 4,
+   "2024-02": 4,
+   "2024-03": 5,
+   "2024-04": 1,
+   "2024-05": 3,
+   "2024-06": 2,
+   "2024-07": 2,
+   "2024-08": 2,
+   "2024-09": 2,
+   "2024-10": 3,
+   "2024-11": 2,
+   "2024-12": 5,
+   "2025-01": 3,
+   "2025-02": 2,
+   "2025-05": 1,
+   "2025-06": 3,
+   "2025-07": 2,
+   "2025-08": 2,
+   "2025-09": 4,
+   "2025-10": 3,
+   "2025-11": 1,
+   "2025-12": 1,
+   "2026-01": 2,
+   "2026-02": 5,
+   "2026-04": 3,
+   "2026-05": 3,
+   "2026-06": 4,
+   "2026-07": 5
+  },
+  "silahlanan_plan": 914,
+  "toplam_plan": 1086,
+  "entry_rejects": {
+   "open_below_stop": 7,
+   "max_chase": 5
+  },
+  "exit_reason_dagilim": {
+   "stop": 59,
+   "regime_flip": 34,
+   "time_stop": 25,
+   "target": 9,
+   "stop_gap": 5,
+   "target_gap": 3
+  }
+ },
+ "performans": {
+  "net_pnl_equity": -7760.67,
+  "net_pnl_trades": -7760.67,
+  "maxdd_kanonik": 0.0776,
+  "maxdd_m2m": 0.0776,
+  "avg_r": -0.078,
+  "win_rate": 0.326,
+  "sharpe": -0.97,
+  "sharpe_measurable": true,
+  "score": -0.0823,
+  "score_n": 135,
+  "total_return": -0.0776
+ },
+ "doluluk": {
+  "pozisyon_gun_open_fazi": 792,
+  "ort_acik_pozisyon": 0.69,
+  "toplam_bars_held": 851
+ },
+ "betim": {
+  "n_seans": 1147,
+  "dd_gt_tam_esik_n": 905,
+  "eff_max_open_eq0_n": 0,
+  "eff_max_open_eq1_n": 647,
+  "eff_max_open_lt_base_n": 900,
+  "acik_slot_le0_n": 483,
+  "size_mult_0_n": 0
+ },
+ "tasnif_tum_seans": {
+  "n": 1147,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 75,
+    "pct": 6.54
+   },
+   "evren_bagladi": {
+    "n": 119,
+    "pct": 10.37
+   },
+   "isinma": {
+    "n": 3,
+    "pct": 0.26
+   },
+   "rejim_kapali": {
+    "n": 467,
+    "pct": 40.71
+   },
+   "tavan_sifir": {
+    "n": 483,
+    "pct": 42.11
+   }
+  }
+ },
+ "birincil": {
+  "n": 677,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 75,
+    "pct": 11.08
+   },
+   "evren_bagladi": {
+    "n": 119,
+    "pct": 17.58
+   },
+   "tavan_sifir": {
+    "n": 483,
+    "pct": 71.34
+   }
+  },
+  "tavan_sifir_pct": 71.34
+ },
+ "ci95_ay_kumeli": {
+  "tavan_sifir": {
+   "lo": 0.6667,
+   "hi": 0.7536,
+   "orta": 0.7135
+  },
+  "evren_bagladi": {
+   "lo": 0.1362,
+   "hi": 0.2234,
+   "orta": 0.1754
+  },
+  "derisk_bagladi": {
+   "lo": 0.0853,
+   "hi": 0.1389,
+   "orta": 0.11
+  },
+  "derisk+tavan": {
+   "lo": 0.7766,
+   "hi": 0.8638,
+   "orta": 0.8246
+  },
+  "_n_ay_kume": 42
+ },
+ "kill2": {
+  "civi": "EDG-022 yayınlı birincil tavan_sifir %57.5 ± 2.0pp",
+  "edg022_yayin": {
+   "tavan_sifir_pct": 57.54,
+   "n_birincil": 676,
+   "n_tavan": 389
+  },
+  "taban_tavan_sifir_pct": 71.34,
+  "fark_pp": 13.84,
+  "evren_251": true,
+  "config_ayni_edg022": true,
+  "gecti": false
+ }
+}
