@@ -47,6 +47,23 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T1x", trial_ids: [pending-EDG-025-mb-karne]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (otomatik-silahlanma eşiği ölçümden
+status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm: OTOMATİK SİLAHLANMA YAPILMAZ (ölçüt-i kıl payı düştü).
+
+verdict:   # Rol-1 hükmü — ölçüm ajanı karta/ARMED_SETUPS'a dokunmadı.
+  olcut_i: "DÜŞTÜ (kıl payı): replay avg-R +0.2695, n=106, çıkış-günü-kümeli CI [−0.0046, +0.5606] — alt sınır 0'ın 0.005R altında. Donuk eşik donuktur; kıl payı eşiği değiştirmez."
+  olcut_ii: "GEÇTİ: bileşik ΔP&L +11.917$; slot-çalma zararsız (diğer kurulumlar +2.242$ DAHA İYİ, CI-kurulu değil)."
+  olcut_iii: >
+    ÇÖZÜLDÜ: −0.114R hiçbir zaman ölçüm DEĞİLMİŞ — v218 kalibrasyonsuz kuru-koşum PROMPT figürü; defterden
+    hiçbir dilim türetmiyor (en yakın 2022-H2 −0.1327), üç çağdaş doküman 'yeniden-üretilemedi' diyor, artefaktı
+    yok. Gerçek kanıt çelişkisiz: cf +0.0921 (n=1080, CI [−0.025,+0.213], N4 ile birebir) ve replay +0.2695 —
+    ikisi aynı yönde pozitif-nokta, ikisi de CI-0-içi.
+  hukum: >
+    ÜÇÜ BİRDEN şarttı → OTOMATİK SİLAHLANMA YAPILMAZ; momentum_burst DORMANT kalır. Sayılar karar penceresine
+    'kıl-payı işareti' olarak gider — manuel silahlanma operatör takdirinde (hammer emsali). DİKKAT İŞARETİ
+    (pencereye): 2026 yakın-dönem mb her iki bacakta zayıf (cf 2026-H2 −1.03 n=7; replay 2026 +0.014 n=16) —
+    kıl-payı pozitiflik eski yıllardan geliyor olabilir.
+  artefakt: "research/olcumler/edg025_mb_karne_2026-08-12/ (sonuc.json · üç kol · determinizm-ikizi birebir · sandbox-izole)"
+
+status_eski: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (otomatik-silahlanma eşiği ölçümden
 #   ÖNCE donduruldu; kontrol eşikte, keyfiyet yok). Ölçüm kodu yazılmadı. Diğer dormantlar (episodic_pivot,
 #   pead, canslim) bu kartın DIŞINDA — operatör 'önce momentum_burst' dedi; sonuca göre sıradaki açılır.

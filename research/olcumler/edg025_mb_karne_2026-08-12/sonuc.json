@@ -1,0 +1,505 @@
+{
+ "kart": "EDG-2026-025 momentum_burst kanonik karne — ÜÇ BACAK ÖLÇÜMÜ",
+ "olcum_zamani": "2026-08-12T12:44:34+00:00",
+ "olcum_ajani_beyani": "SALT-ÖLÇÜM: karta/ARMED_SETUPS'a/gerçek state'e DOKUNULMADI; git/ssh/serve.sh YOK. Replay kolları sandbox'ta koştu (MERIDIAN_ROOT yönlendirmesi; kod_damgasi.json motor bayt-eşitliği; barlar salt-okunur sembolik bağ). loop/counterfactual/cf_backfill/hermes İTHAL EDİLMEDİ (koşum-içi sys.modules tripwire her kolda 'temiz'); cf verisi DOSYADAN okundu, tüketici mantığı satır-atıfla aynalandı (N4 emsali). HÜKÜM/SİLAHLANMA YAZILMADI — Rol-1 işler.",
+ "bacak_a_cf_karne": {
+  "cf_defteri_kunye": {
+   "yol": "/Users/erdemozturk/AI-Trading/state/counterfactuals.jsonl",
+   "sha256_16": "df479477d73c9f79",
+   "mtime": "2026-07-30T00:09:57",
+   "n_satir": 7161
+  },
+  "tuketici_evren_aynasi": "counterfactual.py:247-254 (near_miss dışarıda + entered) + r_multiple is not None (olcum_cf_sadakat.py:109-110)",
+  "n_cf_toplam": 7161,
+  "n_tuketici_gorunur": 2106,
+  "mb": {
+   "n": 1080,
+   "avg_r": 0.0921,
+   "median_r": -0.415,
+   "p10": -1.028,
+   "p90": 2.244,
+   "win_rate": 0.4259,
+   "toplam_r": 99.44,
+   "near_miss_entered_mb_satiri": 0,
+   "not_near_miss": "mb'de near_miss-entered satır sayısı 0 — N4 dışlama kuralı mb örneklemini DEĞİŞTİRMİYOR (evren farkı −0.114'ü near_miss ile açıklayamaz)",
+   "ci95_tarih_kumeli_cikis_gunu": {
+    "mean": 0.0921,
+    "ci_low": -0.0249,
+    "ci_high": 0.2133,
+    "n": 1080,
+    "n_cluster": 600,
+    "ci_excludes_0": false
+   },
+   "ci95_tarih_kumeli_giris_gunu": {
+    "mean": 0.0921,
+    "ci_low": -0.0251,
+    "ci_high": 0.2119,
+    "n": 1080,
+    "n_cluster": 534,
+    "ci_excludes_0": false
+   },
+   "exit_reason_dagilimi": {
+    "stop": 453,
+    "time_stop": 382,
+    "target": 140,
+    "stop_gap": 62,
+    "target_gap": 43
+   },
+   "yil_bazinda": {
+    "2022": {
+     "n": 172,
+     "avg_r": -0.2579
+    },
+    "2023": {
+     "n": 233,
+     "avg_r": 0.0457
+    },
+    "2024": {
+     "n": 273,
+     "avg_r": 0.168
+    },
+    "2025": {
+     "n": 212,
+     "avg_r": 0.2927
+    },
+    "2026": {
+     "n": 190,
+     "avg_r": 0.1327
+    }
+   }
+  },
+  "n4_tutarlilik": {
+   "n4_cf_n": 1080,
+   "n4_cf_avg_r": 0.0921,
+   "bu_olcum_n": 1080,
+   "bu_olcum_avg_r": 0.0921,
+   "birebir": true
+  }
+ },
+ "bacak_b_replay_karne": {
+  "sasi_dogrulamasi_kill3": {
+   "determinizm_pk": {
+    "trade_digest_esit": true,
+    "equity_digest_esit": true,
+    "taban_trade_digest": "a61a9de9a3872663",
+    "pk_trade_digest": "a61a9de9a3872663"
+   },
+   "taban_setup_kumesi": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "pullback"
+   ],
+   "taban_yalniz_armed_setups": true,
+   "armed_setups_repo": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer"
+   ],
+   "gecerli": true,
+   "not": "determinizm ikizi + silahlı-küme disiplini. 2026-08-03 karne rakamlarıyla bire bir kıyas MÜMKÜN DEĞİL ve beklenmez: o karne walk_forward geometrisiyle ve exhaustion_hammer SİLAHSIZKEN koştu (silahlanma 2026-08-11, strategy.py:1002-1009); bu beyan bir bulgu, bir başarısızlık değil."
+  },
+  "pencere": {
+   "start": "2022-01-01",
+   "end": "2026-07-31"
+  },
+  "takvim": {
+   "ilk": "2022-01-03",
+   "son": "2026-07-31"
+  },
+  "n_sembol": 251,
+  "koslar": {
+   "taban": {
+    "n_trades": 135,
+    "n_plans": 1086,
+    "sure_sn": 1671.0,
+    "son_equity": 92239.33,
+    "toplam_pnl": -7760.67,
+    "entry_rejects": {
+     "open_below_stop": 7,
+     "max_chase": 5
+    }
+   },
+   "taban_pk": {
+    "n_trades": 135,
+    "n_plans": 1086,
+    "sure_sn": 1363.7,
+    "son_equity": 92239.33,
+    "toplam_pnl": -7760.67,
+    "entry_rejects": {
+     "open_below_stop": 7,
+     "max_chase": 5
+    }
+   },
+   "mb_silahli": {
+    "n_trades": 246,
+    "n_plans": 1528,
+    "sure_sn": 1798.3,
+    "son_equity": 104156.81,
+    "toplam_pnl": 4156.81,
+    "entry_rejects": {
+     "open_below_stop": 9,
+     "max_chase": 9
+    }
+   }
+  },
+  "mb_islemleri": {
+   "n": 106,
+   "kill2_esik30": "esik_ustu",
+   "avg_r": 0.2695,
+   "win_rate": 0.4245,
+   "toplam_pnl": 9675.88,
+   "ci95_tarih_kumeli_cikis_gunu": {
+    "mean": 0.2695,
+    "ci_low": -0.0046,
+    "ci_high": 0.5606,
+    "n": 106,
+    "n_cluster": 88,
+    "ci_excludes_0": false
+   },
+   "exit_reason_dagilimi": {
+    "stop": 41,
+    "regime_flip": 21,
+    "time_stop": 18,
+    "target": 15,
+    "stop_gap": 6,
+    "target_gap": 5
+   },
+   "yil_bazinda": {
+    "2022": {
+     "n": 9,
+     "avg_r": -0.1519
+    },
+    "2023": {
+     "n": 28,
+     "avg_r": 0.2954
+    },
+    "2024": {
+     "n": 43,
+     "avg_r": 0.3175
+    },
+    "2025": {
+     "n": 10,
+     "avg_r": 0.7787
+    },
+    "2026": {
+     "n": 16,
+     "avg_r": 0.0139
+    }
+   }
+  },
+  "bilesik_portfoy": {
+   "son_equity_taban": 92239.33,
+   "son_equity_mb": 104156.81,
+   "delta_son_equity": 11917.48,
+   "delta_toplam_pnl_islemlerden": 11917.48,
+   "ci95_gun_kumeli_toplam_fark": {
+    "toplam": 11917.48,
+    "ci_low": -12652.15,
+    "ci_high": 36151.43,
+    "n": 1148,
+    "n_cluster": 1148,
+    "ci_excludes_0": false
+   },
+   "n_trades_taban": 135,
+   "n_trades_mb_kolu": 246
+  },
+  "slot_calma": {
+   "diger_kurulumlar_pnl_taban": -7760.67,
+   "diger_kurulumlar_pnl_mb_kolunda": -5519.07,
+   "delta_diger_pnl": 2241.6,
+   "n_diger_taban": 135,
+   "n_diger_mb_kolunda": 140,
+   "ci95_gun_kumeli_toplam_fark": {
+    "toplam": 2241.6,
+    "ci_low": -13512.35,
+    "ci_high": 17250.99,
+    "n": 170,
+    "n_cluster": 170,
+    "ci_excludes_0": false
+   },
+   "setup_bazinda_taban": {
+    "breakout_vcp": {
+     "n": 93,
+     "pnl": -3282.59,
+     "avg_r": -0.0333
+    },
+    "exhaustion_hammer": {
+     "n": 40,
+     "pnl": -3913.78,
+     "avg_r": -0.1588
+    },
+    "pullback": {
+     "n": 2,
+     "pnl": -564.3,
+     "avg_r": -0.5705
+    }
+   },
+   "setup_bazinda_mb_kolu": {
+    "breakout_vcp": {
+     "n": 91,
+     "pnl": -1637.69,
+     "avg_r": 0.0153
+    },
+    "exhaustion_hammer": {
+     "n": 47,
+     "pnl": -3357.81,
+     "avg_r": -0.2754
+    },
+    "momentum_burst": {
+     "n": 106,
+     "pnl": 9675.88,
+     "avg_r": 0.2695
+    },
+    "pullback": {
+     "n": 2,
+     "pnl": -523.57,
+     "avg_r": -0.7335
+    }
+   }
+  }
+ },
+ "bacak_c_celiski_teshisi": {
+  "belgesel": {
+   "soru": "EDG-2026-019 kuru-koşumunun −0.114R'si NEREDEN geldi; (a)/(b) ile neden ayrışıyor?",
+   "kaynak_zinciri": [
+    {
+     "kaynak": "research/cards/EDG-2026-025-momentum-burst-karne.yaml:4-5,14",
+     "icerik": "−0.114R = 'skill-görüş defterinin İLK KURU-KOŞUMU' (EDG-2026-019 dry-run, kalibrasyonsuz); 'canlı gorusleri.jsonl o gün 0 satırdı'"
+    },
+    {
+     "kaynak": "ROADMAP.md:891-894 (aynısı 2133-2139, N2b bloğu)",
+     "icerik": "v218 kodu indi; 'CANLI KANIT KURU-KOŞU: terfi/emeklilik R-figürleri (vcp +0,116R / momentum-burst −0,114R) canlı state'te yeniden-üretilemedi (eksen2.uretilen=0, gorusleri.jsonl beslenmedi, kadans koşmadı)'"
+    },
+    {
+     "kaynak": "docs/SABAH-TRIYAJI-2026-08-09.md:114-118, 130-132",
+     "icerik": "'promptta anılan figürler ... canlı state'te YENİDEN-ÜRETİLEMEDİ'; canlıda eşik-aşan tek skill pullback-screener (n_cf=21, cf_avg_r=−0,968) — mb DEĞİL; 'EDG-2026-019 ölçüm kodu yazılmadan bu R-figürleri doğrulanamaz ... uydurmuyorum: ölçülemedi'"
+    },
+    {
+     "kaynak": "docs/KESIF-WP-MKP-2026-08-09.md:159-161",
+     "icerik": "kart registered, ölçüm kodu HENÜZ YAZILMADI; R-figürleri canlıda YENİDEN-ÜRETİLEMEDİ (eksen2.uretilen=0)"
+    },
+    {
+     "kaynak": "meridian/skill_gorus.py:517-533 (v218)",
+     "icerik": "'emeklilik_isareti' mekanizması gerçekten v218'de var (iki yönlü kesim) — −0.114'ün SÖZCÜK DAĞARI buradan; ama işaret üretmek için görüş DEFTERİ satırı gerekir ve canlı defter o gün 0 satırdı"
+    },
+    {
+     "kaynak": "artefakt taraması (bu tur)",
+     "icerik": "research/ altında EDG-019 ölçüm/kuru-koşum çıktısı YOK (find '*gorus*' → yalnız kart + modül + test); yerel state'te skill_gorusleri.jsonl YOK; −0.114'ü üreten hesap hiçbir artefakta yazılmamış"
+    },
+    {
+     "kaynak": "meridian/strategy.py:995-1000 (tarihsel bağlam)",
+     "icerik": "mb'nin dormant kalışının ORİJİNAL ölçümü BAŞKA bir metrik: tam-replay BİLEŞİK SKOR katkısı (breakout+pullback 0.281 → +mb 0.100; 'it HURTS −0.18') — o da −0.114 değil; 'mb negatif' anlatısının üçüncü, ayrı-metrikli soyu"
+    }
+   ],
+   "evren_pencere_metrik_cevabi": "Hangi evren/pencere/metrik: BİLİNMİYOR-ÇÜNKÜ-KAYITSIZ. −0.114R bir defter ölçümü değil, v218 turunda PROMPT'ta anılan kalibrasyonsuz kuru-koşum figürüdür; girdisi olacak görüş defteri canlıda 0 satırdı, ölçüm kodu yazılmamıştı ve üç çağdaş doküman figürü 'yeniden-üretilemedi' diye kayda geçirdi. Üreten hesabın artefaktı yok.",
+   "ayrisma_aciklamasi_adiyla": [
+    "(a) ile ayrışma: (a) cf defterinin tüketici-görünür 1080 mb satırının 4,5+ yıllık ortalama R'sidir (+0.0921); −0.114 ise defter-dışı, artefaktsız bir kuru-koşum değeri. AYNI ölçüm uzayında değiller — çelişki iki ölçümün çelişkisi değil, bir ölçümle bir doğrulanamayan alıntının yan yana düşmesi.",
+    "İşaret-çevrimi mekanizması ADIYLA: mb cf performansı pencereye GÜÇLÜ bağımlı — 2022 −0.258 (n=172), 2025 +0.293 (n=212), son-37-giriş −0.718, 2026-H2 −1.030 (n=7). Küçük ya da yakın-pencere bir kuru-koşumun NEGATİF görmesi mekanik olarak mümkün; AMA −0.114'ün kendisi hiçbir taranan dilimden (kuyruk k=5..1080, yıl/yarıyıl/çeyrek, ±0.0005) çıkmadı — sayısal köken BAĞDAŞTIRILAMADI (uydurma yasak; en yakın: 2022-H2 −0.1327, n=63).",
+    "(b) ile ayrışma: (b) motorun GERÇEK yasasıyla (slot/kapı/maliyet/çıkış şelalesi) replay'dir — kartın karar metriği budur ve kendi CI'ıyla ayakta durur; kuru-koşum figürünün bu uzayda bir karşılığı hiç üretilmedi.",
+    "near_miss AÇIKLAMA DEĞİL: mb'de near_miss-entered satır 0 → N4 dışlama kuralı mb örneklemini değiştirmiyor; '−0.114 near_miss dahil evrenden geldi' hipotezi KAPALI."
+   ],
+   "sinif": "belgesel köken NET (prompt-alıntısı, defter-dışı, artefaktsız) + sayısal türetim BAĞDAŞTIRILAMADI. 'Açıklıyor mu' hükmü Rol-1'in — kill#1 cümlesi 'iki kanıt kaynağı bağdaştırılamıyorsa silahlanma YAPILMAZ' der; buradaki bulgu 'iki kanıt kaynağı yok: biri kanıt, öteki kayıtsız alıntı' şeklindedir."
+  },
+  "sayisal_tarama": {
+   "hedef": -0.114,
+   "tolerans": 0.0005,
+   "taranan": "kuyruk pencereleri (son k, k=5..n) + yıl/yarıyıl/çeyrek dilimleri (n>=5)",
+   "aday_dilimler": null,
+   "bulundu": false,
+   "yakin_pencere_ornegi": {
+    "son_37_giris_avg_r": -0.7175,
+    "not": "yakın pencerede mb GERÇEKTEN negatif (işaret çevrilir) ama −0.114'ün kendisi bu taramalardan çıkmadıysa sayısal köken kurulamamıştır"
+   },
+   "takvim_dilim_ozeti": {
+    "2022": {
+     "n": 172,
+     "avg_r": -0.2579
+    },
+    "2022-H1": {
+     "n": 109,
+     "avg_r": -0.3302
+    },
+    "2022-H2": {
+     "n": 63,
+     "avg_r": -0.1327
+    },
+    "2022-Q1": {
+     "n": 78,
+     "avg_r": -0.2894
+    },
+    "2022-Q2": {
+     "n": 31,
+     "avg_r": -0.4329
+    },
+    "2022-Q3": {
+     "n": 26,
+     "avg_r": -0.403
+    },
+    "2022-Q4": {
+     "n": 37,
+     "avg_r": 0.0572
+    },
+    "2023": {
+     "n": 233,
+     "avg_r": 0.0457
+    },
+    "2023-H1": {
+     "n": 119,
+     "avg_r": 0.0259
+    },
+    "2023-H2": {
+     "n": 114,
+     "avg_r": 0.0665
+    },
+    "2023-Q1": {
+     "n": 49,
+     "avg_r": -0.3949
+    },
+    "2023-Q2": {
+     "n": 70,
+     "avg_r": 0.3204
+    },
+    "2023-Q3": {
+     "n": 48,
+     "avg_r": -0.3834
+    },
+    "2023-Q4": {
+     "n": 66,
+     "avg_r": 0.3937
+    },
+    "2024": {
+     "n": 273,
+     "avg_r": 0.168
+    },
+    "2024-H1": {
+     "n": 128,
+     "avg_r": 0.0389
+    },
+    "2024-H2": {
+     "n": 145,
+     "avg_r": 0.2819
+    },
+    "2024-Q1": {
+     "n": 77,
+     "avg_r": 0.0483
+    },
+    "2024-Q2": {
+     "n": 51,
+     "avg_r": 0.0248
+    },
+    "2024-Q3": {
+     "n": 38,
+     "avg_r": 0.0462
+    },
+    "2024-Q4": {
+     "n": 107,
+     "avg_r": 0.3657
+    },
+    "2025": {
+     "n": 212,
+     "avg_r": 0.2927
+    },
+    "2025-H1": {
+     "n": 83,
+     "avg_r": 0.4522
+    },
+    "2025-H2": {
+     "n": 129,
+     "avg_r": 0.1901
+    },
+    "2025-Q1": {
+     "n": 44,
+     "avg_r": 0.0507
+    },
+    "2025-Q2": {
+     "n": 39,
+     "avg_r": 0.9053
+    },
+    "2025-Q3": {
+     "n": 62,
+     "avg_r": 0.2383
+    },
+    "2025-Q4": {
+     "n": 67,
+     "avg_r": 0.1456
+    },
+    "2026": {
+     "n": 190,
+     "avg_r": 0.1327
+    },
+    "2026-H1": {
+     "n": 183,
+     "avg_r": 0.1771
+    },
+    "2026-H2": {
+     "n": 7,
+     "avg_r": -1.0296
+    },
+    "2026-Q1": {
+     "n": 93,
+     "avg_r": 0.2319
+    },
+    "2026-Q2": {
+     "n": 90,
+     "avg_r": 0.1206
+    },
+    "2026-Q3": {
+     "n": 7,
+     "avg_r": -1.0296
+    }
+   }
+  }
+ },
+ "silahlanma_olcutleri_mekanik": {
+  "i_replay_ci_0_ustunde": {
+   "durum": "dustu",
+   "deger": {
+    "avg_r": 0.2695,
+    "ci": [
+     -0.0046,
+     0.5606
+    ],
+    "n": 106
+   }
+  },
+  "ii_bilesik_pnl_negatif_degil": {
+   "durum": "gecti",
+   "deger": {
+    "delta_pnl_bilesik": 11917.48,
+    "bilesik_ci": [
+     -12652.15,
+     36151.43
+    ],
+    "diger_kurulum_delta_pnl": 2241.6,
+    "diger_ci": [
+     -13512.35,
+     17250.99
+    ],
+    "diger_ci_ile_dusuyor": false
+   },
+   "okuma_beyani": "MEKANİK okuma: ΔP&L_nokta>=0 VE diğer-kurulum ΔP&L CI-üstü<0 DEĞİL. 'negatif değil'in CI'lı okuması Rol-1'e bırakıldı — bileşik CI da raporda."
+  },
+  "iii_celiski_teshisi": {
+   "durum": "bulgu_uretildi_hukum_rol1",
+   "iki_katman": {
+    "belgesel_koken": "aciklandi — defter-dışı prompt-alıntısı; kaynak zinciri satır-atıflı (bacak_c.belgesel.kaynak_zinciri)",
+    "sayisal_turetim": "bagdastirilamadi — taranan hiçbir dilim −0.114 vermiyor (en yakın 2022-H2 −0.1327, n=63; tolerans ±0.0005)"
+   },
+   "ozet": "belgesel köken NET (defter-dışı prompt-alıntısı; 3 çağdaş doküman 'yeniden-üretilemedi'), sayısal türetim BAĞDAŞTIRILAMADI (hiçbir dilim −0.114 vermiyor; en yakın 2022-H2 −0.1327)",
+   "not": "kill#1 cümlesinin uygulanıp uygulanmayacağı Rol-1 kararı"
+  },
+  "kill2_mb_islem_30": {
+   "tetiklendi": false,
+   "n_mb": 106
+  },
+  "kill3_sasi": {
+   "gecerli": true,
+   "detay": {
+    "trade_digest_esit": true,
+    "equity_digest_esit": true,
+    "taban_trade_digest": "a61a9de9a3872663",
+    "pk_trade_digest": "a61a9de9a3872663"
+   }
+  }
+ }
+}
