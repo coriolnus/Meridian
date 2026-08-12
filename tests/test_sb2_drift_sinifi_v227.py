@@ -11,6 +11,15 @@ sınıf + `olculemedi`'nin ADI OLAN hâlleri); sonra `reconcile_broker_state` ü
 alarmın alanı taşıdığı ve EŞİĞİN (>%25) DEĞİŞMEDİĞİ gösterilir. Türetilemeyen sınıf UYDURULMAZ:
 `olculemedi` + neden (0/boş DEĞİL). Beyan_kaydi bilerek `olculemedi`'dir — makbuz beyan_n/ofset
 taşımaz (SB-1 makbuz genişletme AYRI kalem).
+
+GÜNCELLEME (WP-E dolum boşlukları turu, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md):
+  * B6 — `fill_eq_now` yalnız pozisyon BU SEANSTA dolduysa dolum tabanıdır; saf çağrılar artık
+    `dolum_taze=True` geçirir, e2e pozisyon anlık görüntüsü `ts_open` taşır. Yaşlı pozisyonda
+    kıyas YAPILMAZ (yeni testler test_wpe_dolum_boslugu_v234.py'de).
+  * B5/ROADMAP §2-7 — makbuzsuz sapmanın adı `olculemedi` değil `makbuzsuz_boyut`.
+  * B8 — `motor_yetimi` üçe ayrıldı; buradaki yetim testi `giris_yetimi` alt-adını doğrular.
+  * B2 — 1.3 kuyruk-güdümlü oldu: `icra` sapma testi artık yamalanacak trades SATIRINI da yazar
+    (satırsız kapanış yamalanamaz ve `exit_fill_patch_satirsiz` uyarısıyla düşer).
 """
 from __future__ import annotations
 
@@ -45,7 +54,8 @@ def _events(token: str) -> list:
 def test_boyutlama_tabani_canli_08_05_vakasini_yakalar(sandbox_state):
     """08-05 KANITI: gönderim eq_now 94457,91$ (bayat taban) ≠ dolum eq_now 100000$ → çarpan
     0,4916→1,0. Sınıf `boyutlama_tabani` ve neden İKİ tabanı da adıyla taşır."""
-    sinif, neden = loop._drift_sinifi_adet(_makbuz(), fill_eq_now=100000.0, fill_peak=100000.0)
+    sinif, neden = loop._drift_sinifi_adet(_makbuz(), fill_eq_now=100000.0, fill_peak=100000.0,
+                                           dolum_taze=True)   # B6: ayni-seans dolumu
     assert sinif == "boyutlama_tabani", f"08-05 vakası yanlış sınıfa düştü: {sinif} — {neden}"
     assert "94457" in neden and "100000" in neden, "neden iki boyut tabanını da adlandırmıyor"
 
@@ -55,7 +65,8 @@ def test_sermaye_kaynagi_bayat_nabiz_kanaldan_gelir(sandbox_state, monkeypatch):
     kök, generic taban kıyasından ÖNCE (eq_now da farklı olsa bile nabız kanalı kazanır)."""
     monkeypatch.setattr(health, "heartbeat_age_seconds", lambda: 90000.0)   # ~25 sa > 1 seans
     sinif, neden = loop._drift_sinifi_adet(_makbuz(eq_kaynak="nabiz", kitap_rev=None),
-                                           fill_eq_now=100000.0, fill_peak=100000.0)
+                                           fill_eq_now=100000.0, fill_peak=100000.0,
+                                           dolum_taze=True)
     assert sinif == "sermaye_kaynagi", f"{sinif} — {neden}"
     assert "nabız" in neden or "nabiz" in neden
 
@@ -65,7 +76,7 @@ def test_taze_nabiz_sermaye_kaynagi_DEGIL_tabana_duser(sandbox_state, monkeypatc
     hâlâ varsa `boyutlama_tabani`'na düşer. Sınıf, nabzın YAŞINI gerçekten okuyor."""
     monkeypatch.setattr(health, "heartbeat_age_seconds", lambda: 120.0)
     sinif, _ = loop._drift_sinifi_adet(_makbuz(eq_kaynak="nabiz", kitap_rev=None),
-                                       fill_eq_now=100000.0, fill_peak=100000.0)
+                                       fill_eq_now=100000.0, fill_peak=100000.0, dolum_taze=True)
     assert sinif == "boyutlama_tabani"
 
 
@@ -74,7 +85,7 @@ def test_derisk_carpani_esik_degisiminde(sandbox_state):
     farklı → de-risk eşiği/kartı arada değişti = `derisk_carpani`."""
     sinif, neden = loop._drift_sinifi_adet(
         _makbuz(eq_now=100000.0, size_mult=0.5, kitap_rev=None),
-        fill_eq_now=100000.0, fill_peak=100000.0)
+        fill_eq_now=100000.0, fill_peak=100000.0, dolum_taze=True)
     assert sinif == "derisk_carpani", f"{sinif} — {neden}"
 
 
@@ -83,15 +94,17 @@ def test_kitap_kaydi_rev_gonderim_dolum_arasinda_degisti(sandbox_state, monkeypa
     monkeypatch.setattr(store, "stamp", lambda name: ("sha", 7))
     sinif, neden = loop._drift_sinifi_adet(
         _makbuz(eq_now=100000.0, size_mult=1.0, kitap_rev=5),
-        fill_eq_now=100000.0, fill_peak=100000.0)
+        fill_eq_now=100000.0, fill_peak=100000.0, dolum_taze=True)
     assert sinif == "kitap_kaydi", f"{sinif} — {neden}"
     assert "5" in neden and "7" in neden
 
 
-def test_olculemedi_makbuz_yok_restart_oncesi(sandbox_state):
-    """Makbuz YOK (restart-öncesi / makbuzsuz gönderim) → `olculemedi` + neden. 0/boş DEĞİL."""
+def test_makbuzsuz_boyut_makbuz_yok_restart_oncesi(sandbox_state):
+    """Makbuz YOK (restart-öncesi / makbuzsuz gönderim) → `makbuzsuz_boyut` + neden (ROADMAP §2-7,
+    2026-08-12 forensiği: jenerik `olculemedi` bu alt-hâli gizliyordu; ad artık teşhisin kendisi).
+    dolum_taze geçirilmese bile ad değişmez — makbuzsuzluk yaş sorusundan ÖNCE gelir."""
     sinif, neden = loop._drift_sinifi_adet(None, fill_eq_now=100000.0, fill_peak=100000.0)
-    assert sinif == "olculemedi"
+    assert sinif == "makbuzsuz_boyut"
     assert "makbuz" in neden and len(neden) >= 20
 
 
@@ -109,7 +122,7 @@ def test_beyan_kaydi_olculemedi_makbuz_beyani_tasimadigindan(sandbox_state, monk
     monkeypatch.setattr(store, "stamp", lambda name: ("sha", 5))   # rev AYNI → kitap_kaydi elenir
     sinif, neden = loop._drift_sinifi_adet(
         _makbuz(eq_now=100000.0, size_mult=1.0, kitap_rev=5),
-        fill_eq_now=100000.0, fill_peak=100000.0)
+        fill_eq_now=100000.0, fill_peak=100000.0, dolum_taze=True)
     assert sinif == "olculemedi", f"{sinif} — {neden}"
     assert "beyan" in neden and "icra" in neden
 
@@ -124,7 +137,8 @@ def test_adet_sapmasi_alarmi_boyutlama_tabani_tasir(sandbox_state, monkeypatch):
     meta = {"armed": [], "size_law": {"P-NUE": _makbuz()}, "peak_equity": 100000.0}
     out = loop.reconcile_broker_state(
         meta, "2026-08-06", [],
-        open_positions={"NUE": {"qty": 54.0, "scaled_out": False, "plan_id": "P-NUE"}},
+        open_positions={"NUE": {"qty": 54.0, "scaled_out": False, "plan_id": "P-NUE",
+                                "ts_open": "2026-08-06"}},   # B6: bu seansta doldu — kıyas meşru
         fill_eq_now=100000.0)
     qd = out["positions"]["qty_drift"]
     assert len(qd) == 1 and qd[0]["drift_sinifi"] == "boyutlama_tabani"
@@ -159,15 +173,16 @@ def test_eski_cagiran_fill_eq_now_suz_olculemedi_ama_alarm_yine_oter(sandbox_sta
     assert _events("MIRROR_DRIFT"), "eşik/alarm davranışı değişti — alarm ötmedi"
 
 
-def test_makbuzsuz_plan_reconcile_uzerinden_olculemedi(sandbox_state, monkeypatch):
-    """restart-öncesi plan: `size_law` YOK → sapma yine yakalanır ama sınıf `olculemedi`."""
+def test_makbuzsuz_plan_reconcile_uzerinden_makbuzsuz_boyut(sandbox_state, monkeypatch):
+    """restart-öncesi plan: `size_law` YOK → sapma yine yakalanır, sınıf ADIYLA `makbuzsuz_boyut`
+    (eski jenerik `olculemedi` — ROADMAP §2-7 forensiğinin kapattığı okunmazlık)."""
     _wire(monkeypatch, orders=[], positions=[{"symbol": "NUE", "qty": "25"}])
     meta = {"armed": [], "peak_equity": 100000.0}          # size_law YOK
     out = loop.reconcile_broker_state(
         meta, "2026-08-06", [],
         open_positions={"NUE": {"qty": 54.0, "scaled_out": False, "plan_id": "P-NUE"}},
         fill_eq_now=100000.0)
-    assert out["positions"]["qty_drift"][0]["drift_sinifi"] == "olculemedi"
+    assert out["positions"]["qty_drift"][0]["drift_sinifi"] == "makbuzsuz_boyut"
 
 
 # =================================================================================================
@@ -186,7 +201,7 @@ def test_kayip_pozisyon_split_brain_etiketi(sandbox_state, monkeypatch):
 
 
 def test_motor_ve_cikis_yetimi_sabit_etiketleri(sandbox_state, monkeypatch):
-    """AMD motor yetimi → `motor_yetimi`; NVDA çıkış yetimi (kuyrukta) → `cikis_yetimi`."""
+    """AMD gerçek giriş yetimi → `giris_yetimi` (B8 alt-adı); NVDA çıkış yetimi (kuyrukta) → `cikis_yetimi`."""
     _wire(monkeypatch,
           orders=[{"id": "p1", "symbol": "NVDA", "client_order_id": "P-1-NVDA",
                    "status": "filled", "filled_qty": "10", "legs": []},
@@ -196,10 +211,13 @@ def test_motor_ve_cikis_yetimi_sabit_etiketleri(sandbox_state, monkeypatch):
     meta = {"armed": [], "mirror_exit_pending": {"NVDA": {"plan_id": "P-1-NVDA",
                                                           "reason": "time_stop", "tries": 3}}}
     out = loop.reconcile_broker_state(meta, "2026-08-06", [], open_positions={}, fill_eq_now=100000.0)
-    assert out["positions"]["engine_orphans"] == ["AMD"]
+    assert out["positions"]["engine_orphans"] == ["AMD"], "liste üyeliği değişmemeli (_mirror_busy okuyucusu)"
     assert out["positions"]["exit_orphans"] == ["NVDA"]
     ev = _events("MIRROR_DRIFT")
-    assert any(e.get("drift_sinifi") == "motor_yetimi" for e in ev)
+    # B8: tek ad ("motor_yetimi") üç olguyu gizliyordu — silahlı/yakın-kapanış izi olmayan AMD
+    # GERÇEK giriş yetimidir ve alt-adıyla alarmlanır (ayrıntılı sınıf testleri v234 dosyasında).
+    assert any(e.get("drift_sinifi") == "giris_yetimi" for e in ev)
+    assert not any(e.get("drift_sinifi") == "motor_yetimi" for e in ev), "eski jenerik ad hâlâ basılıyor"
     assert any(e.get("drift_sinifi") == "cikis_yetimi" for e in ev)
 
 
@@ -209,12 +227,18 @@ def test_exec_sapmasi_icra_etiketi(sandbox_state, monkeypatch):
           orders=[{"id": "o1", "symbol": "NUE", "client_order_id": "P-NUE", "status": "filled", "legs": []}],
           positions=[])
     monkeypatch.setattr(alpaca, "exit_fill_price", lambda o: 110.0)
+    # B2 sonrası 1.3 kuyruk-güdümlü: yama trades.jsonl'daki SATIRA yazılır — satır önce var olmalı
+    # (canlı yolda `_persist_trade` kapanış anında yazar; eski test satırsız kapanış geçiriyordu).
+    store.append_jsonl("trades.jsonl", {"plan_id": "P-NUE", "ticker": "NUE", "exit": 100.0,
+                                        "exit_reason": "stop", "ts_close": "2026-08-06"})
     out = loop.reconcile_broker_state(
         {"armed": []}, "2026-08-06",
-        [{"plan_id": "P-NUE", "ticker": "NUE", "exit": 100.0}],
+        [{"plan_id": "P-NUE", "ticker": "NUE", "exit": 100.0, "exit_reason": "stop"}],
         open_positions={}, fill_eq_now=100000.0)
     assert out["drift"] and out["drift"][0]["drift_sinifi"] == "icra"
     assert any(e.get("drift_sinifi") == "icra" for e in _events("MIRROR_DRIFT"))
+    satir = [r for r in store.read_jsonl("trades.jsonl") if r.get("plan_id") == "P-NUE"][-1]
+    assert satir.get("alpaca_fill_price") == 110.0, "kuyruk yaması satıra yazmadı"
 
 
 def test_184_ayna_cikisi_kapatilamadi_cikis_yetimi_etiketi(sandbox_state, monkeypatch):

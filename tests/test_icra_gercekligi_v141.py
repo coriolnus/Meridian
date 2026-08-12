@@ -260,7 +260,8 @@ def test_e2_fill_patch_writes_both_bps(sandbox_state):
     orders = {"P-2026-07-31-AAA": {"status": "filled", "filled_avg_price": "100.40",
                                    "filled_qty": "50"}}
     rap = loop._patch_entry_slippage(orders, {"AAA": 100.0}, "2026-07-31")
-    assert rap == {"eslesen": 1, "yazilan": 1, "acilis_yok": 0}
+    assert rap == {"eslesen": 1, "yazilan": 1, "acilis_yok": 0,
+                   "kismi_tazelenen": 0}   # B5a (v234): kısmi-tazeleme sayacı sözleşmeye girdi
     row = store.read_jsonl(loop.ENTRY_LEDGER)[0]
     assert row["fill"] == 100.4
     assert row["fill_vs_resmi_acilis_bps"] == pytest.approx(40.0, abs=0.01)   # açılışa göre +40 bps

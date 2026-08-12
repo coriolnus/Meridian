@@ -264,17 +264,27 @@ def positions() -> list:
         return []
 
 
-def orders(status: str = "open", limit: int = 50, nested: bool = False) -> list:
+def orders(status: str = "open", limit: int = 50, nested: bool = False,
+           after: str | None = None, until: str | None = None) -> list:
     """List orders. nested=True asks Alpaca to return each bracket as ONE parent order carrying its
     take-profit/stop-loss children in a `legs[]` array. WITHOUT it, the list endpoint flattens a bracket
     into 3 separate top-level orders (parent + 2 children), each with legs=[] — so exit_fill_price(), which
     reads the parent's legs, would find nothing and the reconciler's divergence audit would silently no-op.
     The reconciler MUST pass nested=True (verified against the live paper account: flat→3 rows/legs=0,
-    nested→1 parent/legs=2)."""
+    nested→1 parent/legs=2).
+
+    B7a (teşhis 2026-08-10): `after`/`until` Alpaca'nın `submitted_at` süzgeçleridir ve SAYFALAMANIN
+    yapı taşıdır — `until=<önceki sayfanın en eski submitted_at'i>` ile geriye doğru sayfalanır.
+    Bu fonksiyon TEK sayfa döndürür; sayfalayan (ve pencere kapsamını BEYAN eden) katman
+    `loop._alpaca_emir_penceresi`dir — hüküm orada, burada yalnız geçirgen parametre."""
     try:
         params = {"status": status, "limit": limit, "direction": "desc"}
         if nested:
             params["nested"] = "true"
+        if after:
+            params["after"] = str(after)
+        if until:
+            params["until"] = str(until)
         r = httpx.get(f"{_paper_base()}/v2/orders", headers=_headers(), params=params, timeout=15)
         r.raise_for_status()
         _note(True)
@@ -284,6 +294,29 @@ def orders(status: str = "open", limit: int = 50, nested: bool = False) -> list:
         # 'Alpaca'da kayıp' diye alarma boğuyordu (denetim 2026-07-21).
         _note(False, f"orders: {type(e).__name__}: {e}")
         return []
+
+
+def order_by_id(order_id: str) -> dict | None:
+    """Tek emri KİMLİĞİYLE oku (GET /v2/orders/{id}) — B1'in (karar-çıkışı dolum körlüğü) okuma ucu.
+
+    NEDEN VAR: `DELETE /v2/positions` kapatması coid'i Alpaca-üretimi olan YENİ bir market emri
+    doğurur; o emir `by_coid[plan_id]` ile ASLA eşleşmez ve liste penceresinden (limit/kesinti)
+    taşmış olabilir. Kimlikle doğrudan okuma pencere boşluğundan bağımsızdır. SALT-OKUMA: emir
+    üretmez/değiştirmez. None => okunamadı (arıza ayrımı A1 deseniyle transport()'ta)."""
+    oid = str(order_id or "").strip()
+    if not oid:
+        return None
+    try:
+        r = httpx.get(f"{_paper_base()}/v2/orders/{oid}", headers=_headers(), timeout=15)
+        if r.status_code >= 400:
+            _note(True)                  # cevap geldi: 404 dahi olsa broker ULAŞILABİLİR
+            return None
+        _note(True)
+        body = r.json()
+        return body if isinstance(body, dict) else None
+    except Exception as e:
+        _note(False, f"order_by_id: {type(e).__name__}: {e}")
+        return None
 
 
 def submit_bracket(symbol: str, qty: int, entry_stop: float, take_profit: float, stop_loss: float,
@@ -616,9 +649,18 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     hisseyle redd turu ya da yarı-sökülmüş koruma) üretmek yerine alarm + bir sonraki tur yeniden
     dener (kuyruk zaten yeniden dener, loop._mirror_exit_sync).
 
-    Dönüş: {ok, owned, cancelled[], closed_qty, naked, cancel_failed, reachable, detail}."""
+    KAPATMA EMRİNİN KİMLİĞİ (B1, teşhis 2026-08-10): DELETE cevabının gövdesi, kapatmayı yapan
+    YENİ market emrinin kendisidir (coid Alpaca-üretimi — plan_id ile ASLA eşleşmez). Emrin `id`si
+    dönüşte `close_order_id` olarak taşınır ki reconcile o emrin `filled_avg_price`ını sonraki
+    turda okuyup trades satırına yamayabilsin (E2 giriş-yamasının çıkış simetriği). Gövde/id
+    OKUNAMAZSA UYDURULMAZ: `close_order_id=None` + `close_order_neden` (çağıran yamayı beyanla
+    kapatır — dolum fiyatı 0/varsayım olamaz).
+
+    Dönüş: {ok, owned, cancelled[], closed_qty, naked, cancel_failed, reachable, detail,
+            close_order_id, close_order_neden}."""
     out = {"ok": False, "owned": False, "cancelled": [], "closed_qty": 0.0,
-           "naked": False, "cancel_failed": False, "reachable": True, "detail": ""}
+           "naked": False, "cancel_failed": False, "reachable": True, "detail": "",
+           "close_order_id": None, "close_order_neden": None}
     sym = str(symbol or "").strip()
     if not sym:
         return {**out, "detail": "sembol verilmedi"}
@@ -725,7 +767,18 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
             except Exception:  # sessiz-yutma: gövde JSON değil (sağlayıcı HTML/boş dönebilir); durum kodu tek başına yeterli kanıttır
                 det = f"HTTP {r.status_code}"
             return {**out, "ok": False, "naked": _naked(out), "detail": str(det)[:200]}
-        return {**out, "ok": True, "closed_qty": float(close_qty), "detail": ""}
+        # B1: kapatma emrinin kimliği cevaptan okunur — okunamazsa None + NEDEN (uydurma yasağı).
+        oid, oneden = None, None
+        try:
+            govde = r.json()
+            if isinstance(govde, dict) and govde.get("id"):
+                oid = str(govde["id"])
+            else:
+                oneden = "DELETE cevabında emir gövdesi/id yok"
+        except Exception as e:  # sessiz-yutma DEĞİL: neden dönüşte taşınır, çağıran beyanla kapatır
+            oneden = f"DELETE cevap gövdesi okunamadı: {type(e).__name__}"
+        return {**out, "ok": True, "closed_qty": float(close_qty), "detail": "",
+                "close_order_id": oid, "close_order_neden": oneden}
     except Exception as e:
         _note(False, f"close_engine_position: {type(e).__name__}: {e}")
         return {**out, "ok": False, "reachable": False, "naked": _naked(out),

@@ -217,7 +217,8 @@ def test_k8_patch_entry_slippage_hala_iki_bps_yazar(sandbox_state):
         "fill_vs_resmi_acilis_bps": None, "fill_vs_limit_bps": None})
     orders = {"P-1": {"status": "filled", "filled_avg_price": "100.40", "filled_qty": "50"}}
     rap = loop._patch_entry_slippage(orders, {"AAA": 100.0}, "2026-08-09")
-    assert rap == {"eslesen": 1, "yazilan": 1, "acilis_yok": 0}
+    assert rap == {"eslesen": 1, "yazilan": 1, "acilis_yok": 0,
+                   "kismi_tazelenen": 0}   # B5a (v234): kısmi-tazeleme sayacı sözleşmeye girdi
     row = store.read_jsonl(loop.ENTRY_LEDGER)[0]
     assert row["fill"] == 100.4 and row["fill_vs_resmi_acilis_bps"] == pytest.approx(40.0, abs=0.01)
     assert loop._patch_entry_slippage(orders, {"AAA": 100.0}, "2026-08-10")["yazilan"] == 0

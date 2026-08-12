@@ -128,6 +128,56 @@ class _MirrorUnreachable(Exception):
 # ise bilinçli ve belgeli (reconcile `scaled` dalı), bu tur onu da değiştirmez.
 MIRROR_EXIT_KEY = "mirror_exit_pending"
 
+# ==================================================================================================
+# ÇIKIŞ DOLUM-YAMASI KUYRUĞU (B1+B2, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
+# ==================================================================================================
+# İKİ BOŞLUK, TEK MEKANİZMA:
+#   B1 — karar-çıkışı dolum körlüğü: `DELETE /v2/positions` kapatması coid'i Alpaca-üretimi YENİ bir
+#        market emri doğurur; trades-yaması yalnız `by_coid[plan_id]`in bacaklarını okuduğu için o
+#        dolum HİÇBİR deftere akmıyordu (fotoğrafta kapanışların ~%38'i — slipaj örneklemi sistematik
+#        olarak TP/SL-bacağına yanlıydı). Artık kapatma cevabındaki emir kimliği (`close_order_id`)
+#        kuyruğa yazılır ve reconcile o emrin `filled_avg_price`ını okuyup satırı yamalar.
+#   B2 — tek-atış yaması: eski (1.3) yalnız AYNI TURDA kapananlara bakıyordu; kapanış turundaki API
+#        arızası ya da bacağın FARKLI GÜNDE dolması yamayı SONSUZA DEK kaybediyordu (E2'nin giriş
+#        yarısı her tur yeniden denerken çıkış yarısı denemiyordu — asimetri). Kuyruk kalıcıdır
+#        (_save_broker anahtarı), her reconcile turunda yeniden denenir, tavana varınca VAZGEÇİŞ
+#        OLAYLIDIR ve satıra dürüst beyan düşer (fiyat UYDURULMAZ: None + neden).
+# EMİR ÜRETMEZ: kuyruk yalnız OKUR ve yamalar — bu tur ölçüm/görünürlük turudur (icra yok).
+EXIT_FILL_KEY = "exit_fill_pending"
+EXIT_FILL_MAX_TRIES = 5     # tur; sınırlı pencere — sonsuz retry yeni bir sessizlik sınıfı olurdu
+EXIT_FILL_CAP = 80          # kuyruk tavanı (kapanış debisi küçük; taşma patolojiktir ve OLAYLIdır)
+
+
+def _exit_fill_kaydet(meta: dict, plan_id, ticker, *, kaynak: str, dstr: str,
+                      order_id=None, order_id_neden=None, reason=None) -> None:
+    """Kapanan işlemi çıkış dolum-yaması kuyruğuna yaz. `kaynak`:
+      * "karar" — DELETE kapatması; dolum `close_order_id`li emirden okunacak (B1).
+      * "bacak" — dokunuş çıkışı; dolum parent bracket'ın TP/SL bacağından okunacak (eski 1.3 yolu,
+                  artık yeniden-denemeli — B2).
+    İdempotent: plan_id kuyruktaysa üzerine YAZILMAZ (karar kaydının order_id'si korunur; yalnız
+    eksik order_id sonradan gelirse tamamlanır). plan_id yoksa satır eşlenemez → dürüst uyarı."""
+    if not plan_id:
+        obs.warn("exit_fill_patch_planidsiz", ticker=ticker, kaynak=kaynak,
+                 detail="kapanan işlemde plan_id yok — trades satırı ayna dolumuyla eşlenemez, "
+                        "yama kuyruğuna ALINMADI (ölçülemedi; uydurma eşleme yok)")
+        return
+    q = meta.setdefault(EXIT_FILL_KEY, {})
+    cur = q.get(plan_id)
+    if cur is not None:
+        if order_id and not cur.get("order_id"):
+            cur["order_id"] = str(order_id)
+            cur["kaynak"] = kaynak
+        return
+    if len(q) >= EXIT_FILL_CAP:
+        en_eski = min(q, key=lambda k: str(q[k].get("since") or ""))
+        dusen = q.pop(en_eski)
+        obs.warn("exit_fill_kuyruk_tasti", dusen_plan_id=en_eski, ticker=dusen.get("ticker"),
+                 cap=EXIT_FILL_CAP,
+                 detail="çıkış dolum-yaması kuyruğu tavana vurdu — en eski kayıt beyansız düştü; "
+                        "bu debi patolojiktir (kapanış sayısı ≤ pozisyon tavanı olmalı)")
+    q[plan_id] = {"ticker": ticker, "kaynak": kaynak, "order_id": (str(order_id) if order_id else None),
+                  "order_id_neden": order_id_neden, "reason": reason, "since": dstr, "tries": 0}
+
 
 def _mirror_exit_enqueue(meta: dict, ticker: str, plan_id, reason: str, dstr: str) -> None:
     """İç motorun uyguladığı çıkışı ayna kuyruğuna yazar. Yalnız `alpaca_paper` modunda: iç-broker
@@ -172,9 +222,22 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
             res = {"ok": False, "detail": f"{type(e).__name__}: {e}", "naked": False}
         if res.get("ok"):
             out["closed"].append({"ticker": t, "qty": res.get("closed_qty"), "tries": info["tries"]})
+            # B1: kapatma emrinin kimliği dolum-yaması kuyruğuna — reconcile o emrin
+            # `filled_avg_price`ını okuyup trades satırına yamalar (E2 giriş-yamasının simetriği).
+            # `closed_qty=0` dalı (pozisyon zaten yoktu) kuyruğa YAZILMAZ: ölçülecek dolum yok.
+            if float(res.get("closed_qty") or 0.0) > 0:
+                _exit_fill_kaydet(meta, info.get("plan_id"), t, kaynak="karar", dstr=dstr,
+                                  order_id=res.get("close_order_id"),
+                                  order_id_neden=res.get("close_order_neden"),
+                                  reason=info.get("reason"))
             obs.log("mirror_exit_closed", ticker=t, plan_id=info.get("plan_id"),
                     reason=info.get("reason"), qty=res.get("closed_qty"), tries=info["tries"],
-                    cancelled=len(res.get("cancelled") or []), detail=str(res.get("detail", ""))[:120])
+                    cancelled=len(res.get("cancelled") or []),
+                    # B1 (olay-katmanı yüzü): kapatma EMRİNİN kimliği olayda taşınır — dolum fiyatı
+                    # bu anda HENÜZ yok (market emri az önce doğdu), fiyatı reconcile yaması yazar.
+                    close_order_id=res.get("close_order_id"),
+                    close_order_neden=res.get("close_order_neden"),
+                    detail=str(res.get("detail", ""))[:120])
             continue
         info["naked"] = bool(info.get("naked")) or bool(res.get("naked"))
         info["son_detay"] = str(res.get("detail", ""))[:200]
@@ -878,8 +941,15 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
           # RESTART'I ATLATMALI (entry_law ile aynı gerekçe, 14. sahiplenilen anahtar). Bayat-sermaye
           # turunun bekçisi: 08-05 aynanın yarım boyutlu emrini çözmek ÜÇ ayrı deftere (portfolio /
           # events / trade_plans) bakmayı gerektirmişti; makbuz boyut kararının girdilerini TEK
-          # satırda söyler (eq_kaynak · eq_now · peak · size_mult · kitap_rev). Yazan: mirror_submit_armed.
-          "size_law": meta.get("size_law", {})}
+          # satırda söyler (eq_kaynak · eq_now · peak · size_mult · kitap_rev; B6'dan beri iç dolum
+          # anında `dolum_eq`/`dolum_peak` ikinci yarısı damgalanır). Yazan: mirror_submit_armed.
+          "size_law": meta.get("size_law", {}),
+          # B1/B2 (teşhis 2026-08-10): çıkış dolum-yaması kuyruğu RESTART'I ATLATMALI (15. anahtar).
+          # Kaybolursa kapanan işlemin gerçek ayna dolumu bir daha ARANMAZ — tek-atış kusuru
+          # (B2) restart kılığında geri gelirdi. Yazanlar: `_mirror_exit_sync` (karar kapatmaları,
+          # close_order_id ile) + `reconcile_broker_state` başı (bacak kapatmaları); tüketen:
+          # `_exit_fill_yamasi` (her reconcile turu).
+          EXIT_FILL_KEY: meta.get(EXIT_FILL_KEY, {})}
     # AYNI KİLİT: Hermes'in görüş damgası da portfolio.json'a yazıyor (ayrı iş parçacığı) —
     # ikisi de store.file_lock(PORTFOLIO) altında olmalı, yoksa biri diğerinin defterini ezer.
     # `update_json` kilidi ZATEN alır (yeniden girişli); dıştaki `with` okuma+kıyas+yazımın TEK
@@ -1087,6 +1157,31 @@ def _carry_armed_without_bar(armed: list, has_bar) -> tuple[list, list]:
     return fillable, carried
 
 
+_RECONCILE_ATLANDI_LOGGED: set = set()
+
+
+def _reconcile_gunu_atlandi(sinif: str, dstr: str) -> None:
+    """B7b (teşhis 2026-08-10): `noop` / `waiting_for_universe` / `refused_regressive` dalları
+    reconcile'a HİÇ varmadan döner — o gün dolumlar yalnız Kanal-1'de (mirror_orders, kitap-dışı)
+    yaşar ve `broker_reconcile.json` ÖNCEKİ seanstan konuşur. Bu kadans BİLİNÇLİdir (EOD kitap
+    turu); değişen şey sessizliğidir: gün sınıfı artık OLAYLANIR ki "mutabakat neden bayat?"
+    sorusu defterden cevaplansın (skip-yazıcı `_skip` yalnız broker/paper dallarını kapsıyordu).
+
+    Tekilleştirme `_hotstate_off_once` desenidir: gün+sınıf başına süreçte BİR olay — noop dalı her
+    gün-içi poll'da vurur, her vuruşta yazmak defteri bilgi taşımayan satırlarla şişirirdi.
+    Yalnız `alpaca_paper`da: ayna yokken 'reconcile atlandı' demek olmayan bir borcu olaylamaktır."""
+    if config.BROKER != "alpaca_paper":
+        return
+    k = (dstr, sinif)
+    if k in _RECONCILE_ATLANDI_LOGGED:
+        return
+    _RECONCILE_ATLANDI_LOGGED.add(k)
+    obs.log("reconcile_atlandi", sinif=sinif, date=dstr,
+            detail="günlük tur reconcile'a varmadan döndü — broker_reconcile.json önceki seanstan "
+                   "konuşur; gün içi ayna dolumları o gün yalnız Kanal-1'de (mirror_orders) görünür "
+                   "(B7b beyanı; kadans bilinçli, sessizliği değil)")
+
+
 def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> dict:
     """Process the latest closed trading day. Returns a summary dict."""
     # goal/bounds lru_cache'i uzun ömürlü süreçte dosyayı DONDURUYORDU: operatörün goal.yaml'da
@@ -1143,6 +1238,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         obs.log("waiting_for_universe", chosen=dstr, book_at=str(_book_at0),
                 index_session=str(all_dates[-1].date()),
                 detail="tam kapsamalı seans kitabın gerisinde — barlar yetişince o seans işlenecek")
+        _reconcile_gunu_atlandi("waiting_for_universe", dstr)     # B7b: atlanan mutabakat OLAYLI
         return {"status": "waiting_for_universe", "date": dstr, "book_at": str(_book_at0),
                 "index_session": str(all_dates[-1].date())}
 
@@ -1154,6 +1250,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     if _book_at and dstr < str(_book_at):
         obs.warn("regressive_session_refused", date=dstr, book_at=str(_book_at),
                  detail="endeks kitabın gerisinde — bayat/yedek kaynak şüphesi; kitap geri sarılmaz")
+        _reconcile_gunu_atlandi("refused_regressive", dstr)      # B7b: atlanan mutabakat OLAYLI
         return {"status": "refused_regressive", "date": dstr, "book_at": str(_book_at)}
 
     # ---- data-quality gate: bad bars must never drive trades (Hard Rule 7) ----
@@ -1193,6 +1290,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                regime=_rg.get("regime"),
                                exposure_budget_pct=_rg.get("exposure_budget_pct"),
                                note="bar already processed")
+        _reconcile_gunu_atlandi("noop", dstr)                    # B7b: atlanan mutabakat OLAYLI
         return {"status": "noop", "date": dstr}
 
     marks = _marks(per, d)
@@ -1278,6 +1376,16 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                            "fill_vs_resmi_acilis_bps": None,
                                            "fill_vs_resmi_acilis_beyan": IC_ACILIS_TOTOLOJI_BEYAN,
                                            "fill_vs_limit_bps": _bps(_pos.entry, _lw.get("limit"))})
+                        # B6 (teşhis 2026-08-10): SB-1 makbuzunun İKİNCİ YARISI — DOLUM anının
+                        # boyut tabanı makbuza damgalanır. SB-2 sınıflandırıcısı yaşlı pozisyonda
+                        # "dolum tabanı" diye BUGÜNÜN eq'sini kıyaslayıp sebep UYDURUYORDU; damga
+                        # varsa kıyas dolum gününün GERÇEK tabanıyla yapılır, yoksa `olculemedi`.
+                        # Yalnız MEVCUT makbuza yazılır: makbuzsuz plana yarım makbuz üretmek,
+                        # gönderim-bacağı ölçülmemişken kıyas varmış gibi görünmek olurdu.
+                        _rcpt6 = (meta.get("size_law") or {}).get(plan.get("id"))
+                        if _rcpt6 is not None and _rcpt6.get("dolum_eq") is None:
+                            _rcpt6["dolum_eq"] = round(float(eq_now), 2)
+                            _rcpt6["dolum_peak"] = round(float(meta.get("peak_equity", START_EQUITY)), 2)
                         # İŞ-2-EOD kemeri: iç dolum VAR, ayna gönderim izi YOK → geç-gönderim
                         # adayı (aşağıda, bayat-tetik süpürmesinden SONRA gönderilir).
                         if plan.get("id") and plan["id"] not in _gonderilmis0:
@@ -1859,8 +1967,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     mirror = {}
     try:
         mirror = reconcile_broker_state(meta, dstr, b.closed,   # Phase 1: reconcile internal book ↔ Alpaca mirror
+                                        # B6: `ts_open` sapma sınıflandırıcısının YAŞ sinyalidir —
+                                        # bugün dolmayan pozisyonda bugünün eq'siyle kıyas YAPILMAZ.
                                         open_positions={t: {"qty": p.qty, "scaled_out": p.scaled_out,
-                                                            "trail_stop": p.trail_stop, "plan_id": p.plan_id}
+                                                            "trail_stop": p.trail_stop, "plan_id": p.plan_id,
+                                                            "ts_open": p.ts_open}
                                                         for t, p in b.positions.items()},
                                         # E2: RESMÎ AÇILIŞ bu seansın barlarından gelir — mutabakat
                                         # katmanı ikinci bir bar kaynağı açmaz (tek gerçek).
@@ -2055,8 +2166,10 @@ def _trail_patch_alarm(sym: str, res: dict, frm: float, to: float) -> None:
 
 
 def _entry_fill_price(order: dict) -> float | None:
-    """Bir bracket PARENT emrinin GİRİŞ dolum fiyatı. `exit_fill_price`in ikizi: o BACAKLARA bakar
-    (çıkış), bu parent'ın kendisine (giriş). `partially_filled` de gerçek bir `filled_avg_price`
+    """Bir emrin KENDİ dolum fiyatı (`filled_avg_price`). İki tüketici, tek hüküm: (a) bracket
+    PARENT'ının GİRİŞ dolumu — `exit_fill_price`in ikizi: o BACAKLARA bakar (çıkış), bu emrin
+    kendisine; (b) B1 kapatma emri (`DELETE /positions`ın doğurduğu market SELL) — o da düz bir
+    emirdir, dolumu kendi gövdesindedir. `partially_filled` de gerçek bir `filled_avg_price`
     taşır ve atlanırsa slipaj ölçümü tam icra karıştığında sessizce boşalır (denetim #54'ün dersi)."""
     if not isinstance(order, dict):
         return None
@@ -2081,8 +2194,16 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
         altında doldu (yasa para bıraktı), 0'a yakın = tavanda dolduk (limit BAĞLADI).
 
     Resmî açılış yoksa (bar gelmemiş) o bps None kalır — açılışı dolum fiyatıyla ikame etmek,
-    ölçmek istediğimiz farkı tanımı gereği sıfır yapardı."""
-    out = {"eslesen": 0, "yazilan": 0, "acilis_yok": 0}
+    ölçmek istediğimiz farkı tanımı gereği sıfır yapardı.
+
+    KISMİ DOLUM DONMAZ (B5a, teşhis 2026-08-10): eski idempotens `fill is not None` idi — ilk
+    fotoğraf `partially_filled` ise satır o anda DONUYORDU; GTC kalanı sonraki seans(lar)da dolmaya
+    devam ettiğinde (fill_qty/ortalama değişir) satır asla güncellenmiyordu. Artık yalnız TERMİNAL
+    satır donar: `fill_status=partially_filled` satırlar emir terminal olana dek her tur tazelenir
+    (idempotens korunur: değişmemiş kısmi satır yeniden yazılmaz). Kısmi-dolmuş emir sonradan
+    süpürülür/iptal olursa (`canceled` + filled_qty>0) o da bir SONdur: ortalama fiyat son kez
+    yazılır ve satır gerçek statüsüyle donar."""
+    out = {"eslesen": 0, "yazilan": 0, "acilis_yok": 0, "kismi_tazelenen": 0}
     # KİLİT (KALEM 8, 2026-08-09): read_jsonl → (değiştir) → write_jsonl TEK kritik bölge, hepsi
     # `file_lock(ENTRY_LEDGER)` altında. Eskiden read KİLİTSİZdi ve write kendi kilidini AYRI
     # alıyordu; ikisinin arasına aynı deftere düşen bir append/patch, write tüm defteri yeniden
@@ -2097,13 +2218,34 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
             return out
         changed = False
         for r in rows:
-            if r.get("motor") != "ayna" or r.get("fill") is not None:
+            if r.get("motor") != "ayna":
                 continue
+            kismi = (r.get("fill") is not None
+                     and str(r.get("fill_status") or "") == "partially_filled")
+            if r.get("fill") is not None and not kismi:
+                continue                       # TERMİNAL satır donuk (idempotens korunur)
             o = by_coid.get(r.get("plan_id"))
             af = _entry_fill_price(o) if o else None
+            if af is None and kismi and isinstance(o, dict):
+                # B5a son-durum dalı: kısmi-dolmuş emir sonradan iptal/süpürülmüş (`canceled` +
+                # filled_qty>0). `_entry_fill_price` ölü statüde fiyat vermez (giriş yamasında
+                # doğru davranış) ama burada dolum GERÇEKLEŞMİŞ ve fiyatı gövdede duruyor —
+                # okunur, satır gerçek statüsüyle DONDURULUR. Okunamazsa satır kısmi kalır (uydurma yok).
+                try:
+                    ham = o.get("filled_avg_price")
+                    af = float(ham) if ham not in (None, "") else None
+                except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; satır kısmi kalır ve sonraki tur yeniden denenir
+                    af = None
             if af is None:
                 continue
-            out["eslesen"] += 1
+            if kismi:
+                eski = (r.get("fill"), r.get("fill_qty"), r.get("fill_status"))
+                yeni = (round(af, 4), o.get("filled_qty"), str(o.get("status", "")).lower())
+                if eski == yeni:
+                    continue                   # kısmi ama DEĞİŞMEMİŞ — defter boşuna yazılmaz
+                out["kismi_tazelenen"] += 1
+            else:
+                out["eslesen"] += 1
             op = (opens or {}).get(r.get("ticker"))
             if op is None:
                 op = r.get("resmi_acilis")
@@ -2141,40 +2283,71 @@ _DRIFT_EPS_MULT = 1e-3       # size_mult farkı: makbuz 4 ondalığa yuvarlı
 _DRIFT_SEANS_S  = 24 * 3600  # "nabız yaşı > 1 seans" eşiği (sermaye_kaynagi korroborasyonu)
 
 
-def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak) -> tuple[str, str]:
+def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
+                       dolum_taze: bool | None = None) -> tuple[str, str]:
     """ADET sapmasının (`reconcile_broker_state` 1.2b) SEBEP SINIFINI türet — SB-2/B2 tablosu.
 
     Girdi: `receipt` = SB-1 boyut makbuzu (`meta["size_law"][plan_id]`, GÖNDERİM anının girdileri:
-    eq_kaynak/eq_now/peak/size_mult/kitap_rev) · `fill_eq_now`/`fill_peak` = DOLUM anının girdileri
-    (iç motor `daily_cycle`de bu tabanla doldurdu). Sınıf, iki bacağın SEBEBİNİ ayırt ETTİĞİ kadar
-    kesindir; ayırt edilemiyorsa `olculemedi` — 0/boş DEĞİL, ADI OLAN üçüncü hâl (UYDURMA YASAĞI).
+    eq_kaynak/eq_now/peak/size_mult/kitap_rev; B6'dan beri iç dolum anında `dolum_eq`/`dolum_peak`
+    İKİNCİ YARISI damgalanır) · `fill_eq_now`/`fill_peak` = BU TURUN açılış girdileri ·
+    `dolum_taze` = pozisyon BU seansta mı doldu (`ts_open == dstr`; None = yaş okunamadı).
+    Sınıf, iki bacağın SEBEBİNİ ayırt ETTİĞİ kadar kesindir; ayırt edilemiyorsa `olculemedi` —
+    0/boş DEĞİL, ADI OLAN üçüncü hâl (UYDURMA YASAĞI).
+
+    B6 (fill_eq_now anakronizmi, teşhis 2026-08-10): `fill_eq_now` DOLUM anının değil BU TURUN
+    tabanıdır — yalnız pozisyon bu seansta dolduysa ikisi aynı şeydir. Yaşlı pozisyonda kıyasın sağ
+    bacağı makbuzun `dolum_eq` damgasıdır; damga da yoksa kıyas YAPILMAZ (`olculemedi` + neden) —
+    "gönderim eq X ≠ dolum eq Y" cümlesindeki Y'nin bugünün sayısı olması sebep UYDURMAKTI.
 
     Sıra NEDENLİdir (ilk eşleşen kazanır):
-      olculemedi(makbuz yok)  — restart-öncesi / makbuzsuz gönderim: kıyas girdisi YOK.
+      makbuzsuz_boyut         — SB-1 makbuzu YOK (restart-öncesi / makbuzsuz gönderim): boyut
+                                kararının girdileri kayıtsız. `olculemedi`nin ADLI alt-hâli —
+                                2026-08-12 forensiği (ROADMAP §2-7): eski pozisyon sapmalarının
+                                tamamı bu addır, jenerik `olculemedi` teşhisi gizliyordu.
       olculemedi(dolum yok)   — reconcile eq_now'suz çağrıldı (eski çağıran): kıyas yapılamaz.
+      olculemedi(anakronizm)  — pozisyon BU seansta dolmadı ve makbuzda `dolum_eq` damgası yok:
+                                dolum-anı tabanı bilinmiyor, bugünün tabanıyla kıyas YAPILMAZ (B6).
       sermaye_kaynagi         — makbuz eq_kaynak=nabiz VE nabız yaşı>1 seans: boyut PAYINI bayat
                                 nabızdan aldı (kitap değil) — KANAL-özgü kök, generic tabandan ÖNCE.
-      boyutlama_tabani        — çarpan iki bacakta farklı VE makbuz eq_now ≠ dolum eq_now: boyut
+      boyutlama_tabani        — çarpan iki bacakta farklı VE makbuz eq_now ≠ dolum eq: boyut
                                 tabanı gönderim↔dolum arasında kaydı (canlı vaka: 94457,91 vs 100000).
-      derisk_carpani          — çarpan farklı ama eq_now ~aynı: de-risk eşiği/kartı arada değişti.
+      derisk_carpani          — çarpan farklı ama eq ~aynı: de-risk eşiği/kartı arada değişti.
       kitap_kaydi             — çarpan aynı ama makbuz kitap_rev ≠ dolum rev: kitap arada DEĞİŞTİ.
       olculemedi(beyan/icra)  — tüm ölçülebilir girdiler eşit: kalan fark icra (limit/slipaj/kısmi)
                                 VEYA beyan_kaydi — makbuz beyan_n/ofset TAŞIMADIĞINDAN ayrılamaz
-                                (SB-1 makbuz genişletme AYRI kalem)."""
+                                (SB-1 makbuz genişletme AYRI kalem).
+    KISMİ DOLUM bu tabloda DEĞİL: onun kanıtı makbuz değil EMRİN KENDİSİdir (filled_qty<qty) ve
+    çağıran (1.2b) `_kismi_dolum_tespiti` ile bu fonksiyona hiç gelmeden sınıflar (B5)."""
     if not receipt:
-        return "olculemedi", ("plan için SB-1 boyut makbuzu (size_law) yok — restart-öncesi ya da "
-                              "makbuzsuz gönderim; sapma sınıfı türetilemedi")
-    if fill_eq_now is None:
+        return "makbuzsuz_boyut", ("plan için SB-1 boyut makbuzu (size_law) yok — restart-öncesi "
+                                   "ya da makbuzsuz gönderim; boyut kararının girdileri kayıtsız, "
+                                   "gönderim↔dolum kıyası kurulamaz (ROADMAP §2-7, 2026-08-12 "
+                                   "forensiği: 'olculemedi'nin adlı alt-hâli)")
+    # B6 — kıyasın SAĞ bacağı (dolum-anı tabanı) üç kaynaktan, güven sırasıyla:
+    #   1. makbuz `dolum_eq` damgası (iç dolum anında basıldı — yaşdan bağımsız doğru taban),
+    #   2. `fill_eq_now`, YALNIZ pozisyon bu seansta dolduysa (bu turun açılış tabanı = dolum tabanı),
+    #   3. yoksa kıyas YOK — bugünün sayısını dolum tabanı diye kullanmak sebep uydurmaktı.
+    _d_eq = receipt.get("dolum_eq")
+    if _d_eq is not None:
+        taban, taban_peak = _d_eq, receipt.get("dolum_peak", fill_peak)
+    elif fill_eq_now is None:
         return "olculemedi", ("dolum-anı eq_now geçilmedi (reconcile eq_now'suz çağrıldı) — "
                               "makbuzla kıyas yapılamadı")
+    elif dolum_taze is True:
+        taban, taban_peak = fill_eq_now, fill_peak
+    else:
+        return "olculemedi", ("dolum-anı sermaye tabanı bilinmiyor: makbuzda `dolum_eq` damgası yok"
+                              + (" ve pozisyonun ts_open'ı okunamadı" if dolum_taze is None
+                                 else " ve pozisyon bu seansta dolmadı")
+                              + " — BUGÜNÜN eq_now'u ile kıyas anakronizm olurdu (B6); kıyas YAPILMADI")
     r_eqk, r_eqn = receipt.get("eq_kaynak"), receipt.get("eq_now")
     r_mult, r_rev = receipt.get("size_mult"), receipt.get("kitap_rev")
     try:
-        f_eqn  = float(fill_eq_now)
-        f_peak = float(fill_peak) if fill_peak is not None else START_EQUITY
+        f_eqn  = float(taban)
+        f_peak = float(taban_peak) if taban_peak is not None else START_EQUITY
         f_mult = derisk_mult(f_eqn, f_peak)
-    except (TypeError, ValueError):  # sessiz-yutma: dolum-anı eq_now/peak sayı DEĞİL (biçimsiz/None) — çarpan yeniden üretilemez; hüküm UYDURULMAZ, `olculemedi`ye düşer (dönüşteki neden bunu söyler)
-        return "olculemedi", "dolum-anı eq_now/peak sayıya çevrilemedi — çarpan yeniden üretilemedi"
+    except (TypeError, ValueError):  # sessiz-yutma: dolum-anı eq/peak sayı DEĞİL (biçimsiz/None) — çarpan yeniden üretilemez; hüküm UYDURULMAZ, `olculemedi`ye düşer (dönüşteki neden bunu söyler)
+        return "olculemedi", "dolum-anı eq/peak sayıya çevrilemedi — çarpan yeniden üretilemedi"
     # sermaye_kaynagi: nabız KANALI + bayatlık. KANAL-özgü kök, generic taban kıyasından ÖNCE gelir
     # (canlı AMGN bacağı: pano dalı `eq_now` almaz, boyutu bayat nabızdan okur — §6).
     if r_eqk == "nabiz":
@@ -2203,6 +2376,257 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak) -> tuple[st
     return "olculemedi", ("eq_now/size_mult/kitap_rev eşit; kalan fark icra (limit/slipaj/kısmi "
                           "dolum) VEYA beyan_kaydi olabilir — size_law makbuzu beyan_n/ofset "
                           "taşımadığından ayrım YAPILAMADI (SB-1 makbuz genişletme AYRI kalem)")
+
+
+def _kismi_dolum_tespiti(order) -> tuple[str, str] | None:
+    """B5 (teşhis 2026-08-10): adet sapmasının DOĞRUDAN kanıtı — giriş emri KISMÎ mi doldu?
+
+    SB-2 tablosunda `kismi_dolum` diye bir sınıf YOKTU; kısmi dolum ancak `olculemedi` gerekçe
+    METNİNDE geçiyor, eq/çarpan kıyası tesadüfen tutarsa sapma yanlışlıkla boyutlama sınıflarına
+    yazılıyordu. Kanıt makbuz kıyası değil EMRİN KENDİSİdir: `filled_qty < qty` (ya da statü
+    `partially_filled`) ise ayna adedi tanım gereği eksiktir — makbuz heuristiğinden ÖNCE gelir.
+    NOT: 08-06 dört-pozisyon vakası kısmi dolum ÇIKMADI (emirler tam dolmuştu, fark boyutlamaydı) —
+    sınıf GELECEK vakalar için var; tespit ölçülemiyorsa None döner ve hüküm SB-2 tablosuna kalır."""
+    if not isinstance(order, dict):
+        return None
+    try:
+        istenen = float(order.get("qty") or 0.0)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm SB-2 tablosuna düşer (uydurma sınıf yok)
+        istenen = 0.0
+    try:
+        dolan = float(order.get("filled_qty") or 0.0)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm SB-2 tablosuna düşer (uydurma sınıf yok)
+        return None
+    st = str(order.get("status", "")).lower()
+    if st == "partially_filled" or (istenen > 0 and 0 < dolan < istenen - 1e-9):
+        return "kismi_dolum", (f"giriş emri KISMÎ doldu: {dolan:g}/{istenen:g} adet "
+                               f"(status={st or '?'}) — ayna adedi bu yüzden eksik; boyutlama "
+                               f"kıyası değil icra olgusu (B5)")
+    return None
+
+
+# ==================================================================================================
+# EMİR PENCERESİ — SAYFALI ÇEKİM (B7a, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
+# ==================================================================================================
+# BULGU: `orders(status="all", limit=200)` sayfasızdı — 200 üst-düzey emri aşan bir boşlukta (uzun
+# kesinti + yoğun trafik) daha eski dolumlar `by_coid`e hiç girmiyor, E2 satırı sonsuza dek
+# `fill=None` kalıyor ve "dolmadı" diye OKUNUYORDU (pencere-dışılık ile dolmamışlık ayırt edilemez).
+# ÇÖZÜM: geriye doğru `until=<önceki sayfanın en eski submitted_at'i>` ile sayfalanır; HEDEF, hâlâ
+# dolum bekleyen en eski kaydın tarihidir (E2 `fill=None`/kısmi satırlar + çıkış-yaması kuyruğu).
+# Kapsanamazsa (sayfa tavanı) bu SESSİZ DEĞİL: `kapsandi=False` panoya yazılır + olay düşer —
+# "pencere-dışı, hüküm yok" beyanı (dolmadı SANILMAZ).
+_EMIR_PENCERESI_SAYFA_TAVANI = 5      # 5 × 200 = 1000 emir; tavan aşımı beyanlıdır, sessiz değil
+
+
+_EMIR_PENCERESI_UFUK_GUN = 14   # E2 hedef ufku (takvim günü) — gerekçe fonksiyon docstring'inde
+
+
+def _emir_penceresi_hedefi(meta: dict, dstr: str) -> str | None:
+    """Pencerenin GERİYE dek uzanması gereken tarih: dolum bekleyen en eski kayıt. Kaynaklar:
+    E2 defterinin `fill=None` ya da kısmi (`partially_filled`) ayna satırları + çıkış dolum-yaması
+    kuyruğunun `since` tarihleri. Hiç bekleyen yoksa None → tek sayfa yeter (bugünkü davranış).
+
+    UFUK (bilinçli): E2'de `fill=None` iki ayrı olguyu kapsar — "henüz dolmadı" VE "hiç dolmadı"
+    (dolmama_orani'nın MEŞRU paydası; kaçan giriş sonsuza dek fill=None kalır). İkincisi hedefe
+    alınsaydı pencere her tur en eski kaçan girişe dek sayfalanır, tavana çarpar ve her gün sahte
+    'kapsanamadı' olayı basardı (alarm hijyeni). Giriş emri E1'de TIF=DAY, GTC kalıntısı da akşam
+    süpürülür — ufuktan (14 gün) yaşlı bir ayna girişinin hâlâ dolabilir olması yapısal olarak
+    mümkün değil; ufuk dışı satır 'dolmadı' sınıfının kendisidir, pencere borcu değil."""
+    tarihler: list = []
+    try:
+        esik = (dt.date.fromisoformat(str(dstr))
+                - dt.timedelta(days=_EMIR_PENCERESI_UFUK_GUN)).isoformat()
+    except ValueError:
+        esik = ""                                  # tarih okunamadı — ufuk süzgeci devre dışı (dar değil geniş)
+    try:
+        for r in store.read_jsonl(ENTRY_LEDGER):
+            if r.get("motor") != "ayna" or r.get("karar") != "submitted":
+                continue
+            if r.get("fill") is None or str(r.get("fill_status") or "") == "partially_filled":
+                d0 = str(r.get("date") or "")
+                if d0 and d0 >= esik:
+                    tarihler.append(d0)
+    except Exception as e:
+        obs.warn("emir_penceresi_hedef_okunamadi", error=f"{type(e).__name__}: {e}",
+                 detail="E2 defteri okunamadı — pencere hedefi yalnız çıkış kuyruğundan kuruldu")
+    for v in (meta.get(EXIT_FILL_KEY) or {}).values():
+        if v.get("since"):
+            tarihler.append(str(v["since"]))
+    return min(tarihler) if tarihler else None
+
+
+def _alpaca_emir_penceresi(alpaca_mod, hedef: str | None) -> tuple[list, dict]:
+    """Emir listesini SAYFALI çek (en yeniden geriye). Dönüş: (emirler, pencere_özeti).
+
+    İlk sayfanın taşıma arızası ESKİ davranışla bire bir yukarı fırlar (çağıranın A1 arıza dalı);
+    SONRAKİ sayfaların arızası eldekini düşürmez — toplanan pencere `kapsandi=False` + nedenle
+    döner (yarım pencere, tam pencere GİBİ konuşamaz)."""
+    pencere = {"sayfa": 0, "n_emir": 0, "kapsandi": True, "en_eski": None, "hedef": hedef,
+               "neden": None}
+    toplam: list = []
+    gorulen: set = set()
+    until = None
+    while True:
+        pencere["sayfa"] += 1
+        # `until` YALNIZ 2. sayfadan itibaren geçilir: ilk sayfa çağrısı eski tek-sayfa çağrının
+        # imzasıyla BİREBİR aynı kalır (geriye uyum — eski saplamalar/sarmalayıcılar kırılmaz).
+        kw = {"status": "all", "limit": 200, "nested": True}
+        if until:
+            kw["until"] = until
+        sayfa = alpaca_mod.orders(**kw)
+        if not alpaca_mod.transport()["ok"]:
+            if pencere["sayfa"] == 1:
+                raise RuntimeError(alpaca_mod.transport().get("error") or "alpaca transport down")
+            pencere.update({"kapsandi": False,
+                            "neden": f"sayfa {pencere['sayfa']} okunamadı (taşıma arızası) — "
+                                     f"pencere yarım, hedefe varılamadı"})
+            break
+        yeni = [o for o in (sayfa or []) if str(o.get("id") or id(o)) not in gorulen]
+        gorulen |= {str(o.get("id") or id(o)) for o in yeni}
+        toplam.extend(yeni)
+        damgalar = [str(o.get("submitted_at") or "") for o in (sayfa or []) if o.get("submitted_at")]
+        en_eski = min(damgalar) if damgalar else None
+        if en_eski:
+            pencere["en_eski"] = en_eski[:10]
+        if len(sayfa or []) < 200:
+            break                                  # tarihçenin sonu — pencere tam
+        if hedef is None:
+            break                                  # bekleyen yok: tek sayfa yeter (eski davranış)
+        if en_eski is None:
+            pencere.update({"kapsandi": False,
+                            "neden": "sayfada submitted_at okunamadı — geriye sayfalanamaz"})
+            break
+        if en_eski[:10] < str(hedef):
+            break                                  # hedef tarihten eskisine ulaşıldı — kapsandı
+        if pencere["sayfa"] >= _EMIR_PENCERESI_SAYFA_TAVANI:
+            pencere.update({"kapsandi": False,
+                            "neden": f"sayfa tavanı ({_EMIR_PENCERESI_SAYFA_TAVANI}×200) aşıldı — "
+                                     f"hedef {hedef} pencereye alınamadı"})
+            break
+        until = en_eski
+    pencere["n_emir"] = len(toplam)
+    if not pencere["kapsandi"]:
+        # YASA-4: pencere-dışılık ile dolmamışlık AYNI ŞEY DEĞİL — beyan olayla düşer; E2/yama
+        # okumaları bu turda pencere-dışı satırlar için HÜKÜM VERMEZ (dolmadı sanılmaz).
+        obs.warn("reconcile_emir_penceresi_asilamadi", hedef=hedef, en_eski=pencere["en_eski"],
+                 sayfa=pencere["sayfa"], n_emir=pencere["n_emir"], neden=pencere["neden"],
+                 detail="dolum bekleyen en eski kayıt emir penceresine sığmadı — pencere-dışı "
+                        "satırlar için hüküm YOK (fill=None 'dolmadı' diye okunmasın, B7a)")
+    return toplam, pencere
+
+
+# ==================================================================================================
+# ÇIKIŞ DOLUM-YAMASI İŞLEME (B1+B2) — kuyruk her reconcile turunda denenir, vazgeçiş OLAYLI
+# ==================================================================================================
+def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: dict,
+                      alpaca_mod) -> None:
+    """Kuyruktaki her kapanışın AYNA dolum fiyatını ara ve trades satırına yamala.
+
+    İki okuma yolu (kayıttaki `kaynak`):
+      * "karar" — B1: `close_order_id`li market emri; önce bu turun penceresinden (`by_id`),
+        yoksa kimlikle tekil GET (`alpaca.order_by_id` — pencere boşluğundan bağımsız).
+      * "bacak" — B2: parent bracket'ın dolan TP/SL bacağı (`alpaca.exit_fill_price`).
+    Bulunursa: kilitli yama `alpaca_fill_price + mirror_divergence` (+eşik aşımında `icra` sınıflı
+    MIRROR_DRIFT — eski 1.3 ile aynı eşik/alarm) ve kuyruktan düşer. Bulunamazsa `tries` artar;
+    `EXIT_FILL_MAX_TRIES` turda VAZGEÇİŞ: olay + satıra dürüst `alpaca_fill_beyan` (fiyat
+    UYDURULMAZ — None + neden; `alpaca_fill_price` anahtarı AÇILMAZ ki geç gelen gerçek dolum
+    hâlâ yamanabilsin). Kilit penceresi ağ çağrılarını KAPSAMAZ (eski 1.3 yasası)."""
+    pend = dict(meta.get(EXIT_FILL_KEY) or {})
+    out["exit_fill"] = {"bekleyen": 0, "yamalanan": 0, "vazgecilen": 0}
+    if not pend:
+        return
+    trades = store.read_jsonl("trades.jsonl")
+    son: dict = {}
+    for i, t in enumerate(trades):
+        if t.get("plan_id") in pend:
+            son[t["plan_id"]] = i                  # plan başına EN YENİ satır
+    yamalar: dict = {}
+    beyanlar: dict = {}
+    kalan: dict = {}
+    for pid, info in pend.items():
+        info = dict(info or {})
+        info["tries"] = int(info.get("tries") or 0) + 1
+        i = son.get(pid)
+        if i is None:
+            obs.warn("exit_fill_patch_satirsiz", plan_id=pid, ticker=info.get("ticker"),
+                     detail="trades.jsonl'da bu plan_id'li satır yok (trim/eski defter?) — "
+                            "yamalanacak yer yok, kayıt kuyruğundan düşürüldü")
+            continue
+        row = trades[i]
+        if row.get("alpaca_fill_price") is not None:
+            continue                               # zaten yamalı (ör. koruma_dolumu satırı) — düş
+        af, af_neden = None, None
+        if info.get("kaynak") == "karar":
+            oid = info.get("order_id")
+            if oid:
+                o = by_id.get(str(oid)) or alpaca_mod.order_by_id(str(oid))
+                af = _entry_fill_price(o) if o else None
+                if af is None:
+                    af_neden = (f"kapatma emri {str(oid)[:20]}… bu tur okunamadı/dolum fiyatı yok "
+                                f"(status={str((o or {}).get('status') or 'okunamadı')})")
+            else:
+                af_neden = ("kapatma emrinin kimliği yok — "
+                            + str(info.get("order_id_neden") or "DELETE cevabı kimlik taşımadı"))
+        else:
+            o = by_coid.get(pid)
+            af = alpaca_mod.exit_fill_price(o) if o else None
+            if af is None:
+                af_neden = ("parent emir pencerede yok" if o is None
+                            else "bracket bacağında dolum fiyatı yok (bacak henüz dolmadı / iptal)")
+        if af is not None:
+            sim = float(row.get("exit") or 0.0)
+            div = abs(af - sim) / sim if sim else 0.0
+            yamalar[pid] = {"alpaca_fill_price": round(af, 4), "mirror_divergence": round(div, 5)}
+            out["exit_fill"]["yamalanan"] += 1
+            obs.log("mirror_exit_fill_patched", plan_id=pid, ticker=info.get("ticker"),
+                    kaynak=info.get("kaynak"), reason=info.get("reason"), tries=info["tries"],
+                    alpaca_fill=round(af, 4), sim=round(sim, 4), divergence=round(div, 5),
+                    detail="kapanan işlemin GERÇEK ayna dolumu satıra yamalandı (B1/B2)")
+            if div > MIRROR_DRIFT_TOL:
+                # SB-2: SABİT sınıf `icra` — eski 1.3 ile AYNI eşik, AYNI alarm (davranış korunur).
+                out["drift"].append({"ticker": info.get("ticker"), "sim": round(sim, 4),
+                                     "alpaca": round(af, 4), "div_pct": round(div * 100, 3),
+                                     "drift_sinifi": "icra"})
+                obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                          f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca "
+                          f"{round(af, 4)} (%{div*100:.2f})",
+                          ticker=info.get("ticker"), sim=round(sim, 4), alpaca_fill=round(af, 4),
+                          divergence=round(div, 4), drift_sinifi="icra")
+            continue
+        if info["tries"] >= EXIT_FILL_MAX_TRIES:
+            beyan = (f"ÖLÇÜLEMEDİ: ayna çıkış dolum fiyatı {info['tries']} reconcile turunda "
+                     f"okunamadı — {af_neden}; fiyat UYDURULMADI (None + bu neden)")
+            beyanlar[pid] = beyan
+            out["exit_fill"]["vazgecilen"] += 1
+            obs.warn("mirror_exit_fill_vazgecildi", plan_id=pid, ticker=info.get("ticker"),
+                     kaynak=info.get("kaynak"), tries=info["tries"], neden=af_neden,
+                     detail="çıkış dolum-yaması vazgeçişle kapandı — satıra dürüst beyan yazıldı; "
+                            "`alpaca_fill_price` anahtarı açılmadı (geç gelen gerçek dolum hâlâ "
+                            "yamanabilir)")
+            continue
+        info["son_neden"] = str(af_neden or "")[:160]
+        kalan[pid] = info
+    meta[EXIT_FILL_KEY] = kalan
+    out["exit_fill"]["bekleyen"] = len(kalan)
+    if yamalar or beyanlar:
+        def _yama(rows, _y=yamalar, _b=beyanlar):
+            hedefte: dict = {}
+            for _i, _t in enumerate(rows):         # plan başına EN YENİ satır (yeniden okunur)
+                if _t.get("plan_id") in _y or _t.get("plan_id") in _b:
+                    hedefte[_t["plan_id"]] = _i
+            hit = False
+            for _pid, _i in hedefte.items():
+                if _pid in _y and rows[_i].get("alpaca_fill_price") is None:
+                    rows[_i].update(_y[_pid])
+                    rows[_i].pop("alpaca_fill_beyan", None)   # ölçüm geldi — eski beyan kalkar
+                    hit = True
+                elif _pid in _b and rows[_i].get("alpaca_fill_price") is None \
+                        and not rows[_i].get("alpaca_fill_beyan"):
+                    rows[_i]["alpaca_fill_beyan"] = _b[_pid]
+                    hit = True
+            return hit
+
+        store.update_jsonl("trades.jsonl", _yama)  # kilitli oku-değiştir-yaz (telemetri)
 
 
 # ==================================================================================================
@@ -2327,17 +2751,35 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     if config.BROKER != "alpaca_paper":
         return _skip(f"broker={config.BROKER} — ayna mutabakatı yalnız alpaca_paper'da anlamlı")
     from .adapters import alpaca
+    # B2 (teşhis 2026-08-10): bu turda kapananlar KALICI dolum-yaması kuyruğuna — TEK-ATIŞ DEĞİL.
+    # Kayıt, aşağıdaki paper_available/API arıza dallarından ÖNCE düşer: kapanış turundaki geçici
+    # arıza artık yamayı sonsuza dek kaybettiremez (kuyruk meta'da yaşar, `_save_broker` kalıcılaştırır,
+    # sonraki reconcile yeniden dener). İki süzgeç: (a) satır zaten gerçek dolum taşıyor (B3
+    # koruma_dolumu yolu satırı kapanış anında yazar), (b) ayna kapatması HÂLÂ kuyruktaysa
+    # (`MIRROR_EXIT_KEY`) ölçülecek dolum henüz YOK — kapatma başarınca `karar` kaydı kimlikle düşer.
+    _bekleyen_kapatma = set((meta.get(MIRROR_EXIT_KEY) or {}).keys())
+    for _tr in (closed_this_cycle or []):
+        if _tr.get("alpaca_fill_price") is not None:
+            continue
+        if str(_tr.get("ticker")) in _bekleyen_kapatma:
+            continue
+        _exit_fill_kaydet(meta, _tr.get("plan_id"), _tr.get("ticker"), kaynak="bacak",
+                          dstr=dstr, reason=_tr.get("exit_reason"))
     if not alpaca.paper_available():
         return _skip("paper_available()=False — kimlik/erişim yok, ayna okunamadı")
     try:
         # nested=True is REQUIRED: the flat list endpoint splits a bracket into 3 top-level orders with
         # legs=[], so exit_fill_price() (which reads the parent's legs) would always see nothing and the
         # divergence audit below would silently no-op. nested returns the parent carrying its TP/SL legs.
-        all_orders = alpaca.orders(status="all", limit=200, nested=True)
+        # B7a: pencere artık SAYFALIdır — hedef, dolum bekleyen en eski kayıt (E2 + çıkış kuyruğu);
+        # kapsanamayan pencere beyanlıdır (`emir_penceresi.kapsandi=False` + olay), sessiz değil.
+        all_orders, out["emir_penceresi"] = _alpaca_emir_penceresi(
+            alpaca, _emir_penceresi_hedefi(meta, dstr))
         # A1 (denetim 2026-07-21): alpaca.orders() İSTİSNA FIRLATMAZ — hata durumunda [] döner. Yani
         # aşağıdaki `except` ÖLÜ KOD'du ve API arızası "hiç emir yok" gibi okunuyordu: a_by_sym da boş
         # kalıp AÇIK HER POZİSYON 'Alpaca'da kayıp' diye split-brain alarmı üretiyor, pano ise
-        # api_ok=True gösteriyordu. Arızayı artık taşıma kaydı söylüyor.
+        # api_ok=True gösteriyordu. Arızayı artık taşıma kaydı söylüyor (ilk sayfa arızası helper'dan
+        # AYNI RuntimeError ile fırlar — davranış birebir eski).
         if not alpaca.transport()["ok"]:
             raise RuntimeError(alpaca.transport().get("error") or "alpaca transport down")
     except Exception as e:
@@ -2349,6 +2791,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         return out
     out["checked"] = True
     by_coid = {o.get("client_order_id"): o for o in (all_orders or []) if o.get("client_order_id")}
+    by_id = {str(o.get("id")): o for o in (all_orders or []) if o.get("id")}   # B1: kapatma emri kimlikle
     DEAD = {"rejected", "canceled", "cancelled", "expired", "done_for_day"}
 
     # (1.1) E2 — GİRİŞ SLİPAJ DEFTERİNİN DOLUM YARISI. Emirler ZATEN okundu; ikinci bir çağrı yok.
@@ -2421,10 +2864,20 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         if qty > 0 and abs(aq - qty) / qty > 0.25:
             # SB-2: sapmayı ADLANDIR — SB-1 boyut makbuzunu (`size_law`) dolum-anı girdilerine
             # kıyasla. Alarm/eşik (>%25) DEĞİŞMEZ; yalnız `drift_sinifi` + neden eklenir. Makbuz
-            # yoksa / türetilemezse `olculemedi` (0/boş DEĞİL). Türetme ASLA fırlamaz (helper içi).
-            _rcpt = (meta.get("size_law") or {}).get(info.get("plan_id"))
-            _sinif, _neden = _drift_sinifi_adet(_rcpt, fill_eq_now,
-                                                meta.get("peak_equity", START_EQUITY))
+            # yoksa `makbuzsuz_boyut` (B5/ROADMAP §2-7), türetilemezse `olculemedi` (0/boş DEĞİL).
+            # Türetme ASLA fırlamaz (helper içi).
+            # B5: KISMİ DOLUM makbuz kıyasından ÖNCE — kanıtı emrin kendisi (filled_qty<qty).
+            _kismi = _kismi_dolum_tespiti(by_coid.get(info.get("plan_id")))
+            if _kismi is not None:
+                _sinif, _neden = _kismi
+            else:
+                # B6: yaş sinyali — pozisyon BU seansta mı doldu? (ts_open yoksa None = okunamadı;
+                # sınıflandırıcı yaşlı/yaşsız pozisyonda bugünün eq'siyle kıyas YAPMAZ.)
+                _ts0 = str(info.get("ts_open") or "")[:10]
+                _rcpt = (meta.get("size_law") or {}).get(info.get("plan_id"))
+                _sinif, _neden = _drift_sinifi_adet(_rcpt, fill_eq_now,
+                                                    meta.get("peak_equity", START_EQUITY),
+                                                    dolum_taze=(None if not _ts0 else _ts0 == dstr))
             out["positions"]["qty_drift"].append({"ticker": sym, "local_qty": qty, "alpaca_qty": aq,
                                                   "drift_sinifi": _sinif})
             obs.alarm(obs.ALARM_MIRROR_DRIFT,
@@ -2450,10 +2903,55 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     _tum_yetim = sorted(sym for sym in a_by_sym if sym not in local and sym in engine_syms)
     orphans = [s for s in _tum_yetim if s not in _exit_pending]
     exit_orphans = [s for s in _tum_yetim if s in _exit_pending]
+    # ==============================================================================================
+    # B8 (teşhis 2026-08-10): "motor_yetimi" ÜÇ AYRI OLGUNUN ortak adıydı ve üçü tek isimle
+    # okunamıyordu (C9'un kendi gerekçesinin giriş tarafındaki ihlali). SINIF AYRIMI (yalnız
+    # görünürlük — kabul/kapatma OPERATÖR kararıdır, bu tur EMİR ÜRETMEZ; `engine_orphans`
+    # listesi ve `_mirror_busy` karar kilidi BİREBİR aynı kalır):
+    #   tasima_gecikmesi — plan hâlâ SİLAHLI kümede (taşınan/bar bekleyen/onaylı): ayna gün içi
+    #                      doldu, iç dolum bir sonraki açılışta — bekleme, arıza değil.
+    #   cikis_gecikmesi  — iç kitap sembolü YAKIN ZAMANDA kapattı (dolum-yaması kuyruğunda ya da
+    #                      son satırlarda) ama ayna pozisyonu duruyor: bacak/kapatma dolumu gecikti (B2).
+    #   giris_yetimi     — ikisi de değil: aynanın DOLDURDUĞU girişin iç kitapta karşılığı yok
+    #                      (gerçek yetim; kabul-mü-kapat-mı politikası operatörde).
+    # ==============================================================================================
+    _armed_syms = {str(a.get("ticker")) for a in (meta.get("armed") or []) if a.get("ticker")}
+    _efp_syms = {str(v.get("ticker")) for v in (meta.get(EXIT_FILL_KEY) or {}).values()
+                 if v.get("ticker")}
+    _son_kapanis: dict = {}
+    for _r in store.read_jsonl("trades.jsonl")[-60:]:
+        if _r.get("ticker"):
+            _son_kapanis[str(_r["ticker"])] = str(_r.get("ts_close") or "")
+
+    def _yakin_kapanis(sym: str) -> bool:
+        ts = _son_kapanis.get(sym)
+        if not ts:
+            return False
+        try:
+            return 0 <= (dt.date.fromisoformat(dstr) - dt.date.fromisoformat(ts[:10])).days <= 7
+        except ValueError:  # sessiz-yutma: biçimsiz tarih tek satırı düşürür; sınıf `giris_yetimi`ye kalır (yakınlık KANITLANAMADI, uydurulmaz)
+            return False
+
+    def _yetim_sinifla(sym: str) -> tuple[str, str]:
+        if sym in _armed_syms:
+            return "tasima_gecikmesi", ("plan hâlâ silahlı kümede (taşınan/bar bekleyen) — ayna "
+                                        "gün içi doldu, iç dolum bir sonraki açılışta; bekleme, "
+                                        "arıza değil")
+        if sym in _efp_syms or _yakin_kapanis(sym):
+            return "cikis_gecikmesi", ("iç kitap bu sembolü yakın zamanda KAPATTI ama ayna "
+                                       "pozisyonu duruyor — çıkış bacağı/kapatma dolumu bekleniyor "
+                                       "(B2); dolum-yaması kuyruğu izliyor")
+        return "giris_yetimi", ("aynanın DOLDURDUĞU girişin iç kitapta karşılığı yok — gerçek "
+                                "yetim; kabul-mü-kapat-mı OPERATÖR kararı (bu tur emir üretmez)")
+
+    orphans_sinifli = []
     for sym in orphans:
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (durum ayrışması, sizing değil)
-                  f"motor yetimi: {sym} Alpaca'da açık (motorun emri dolmuş) ama iç defterde yok",
-                  ticker=sym, drift_sinifi="motor_yetimi")
+        _ys, _yn = _yetim_sinifla(sym)
+        orphans_sinifli.append({"ticker": sym, "sinif": _ys, "neden": _yn})
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: durum ayrışması, sizing değil (B8 alt-adlı)
+                  f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç "
+                  f"defterde yok — {_yn}",
+                  ticker=sym, drift_sinifi=_ys)
     for sym in exit_orphans:
         obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (çıkış icra edilemedi, sizing değil)
                   f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, "
@@ -2461,7 +2959,8 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                   ticker=sym, reason=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("reason"),
                   tries=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("tries"),
                   drift_sinifi="cikis_yetimi")
-    out["positions"]["engine_orphans"] = orphans
+    out["positions"]["engine_orphans"] = orphans          # eski okuyucular (pano sayacı, _mirror_busy) BOZULMAZ
+    out["positions"]["engine_orphans_sinifli"] = orphans_sinifli   # B8: sınıflı görünürlük (pano passthrough)
     out["positions"]["exit_orphans"] = exit_orphans
     out["positions"]["external"] = sorted(sym for sym in a_by_sym
                                           if sym not in local and sym not in engine_syms)  # info only, no alarm
@@ -2493,54 +2992,15 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                         ok=bool(res.get("ok")), detail=str(res.get("detail", ""))[:120])
                 _trail_patch_alarm(sym, res, cur_stop, float(ts))
 
-    # (1.3) execution-divergence audit on trades closed THIS cycle
-    #
-    # KİLİTLİ YAMA (B3, 2026-07-31): eskiden defter burada okunuyor, ARADA Alpaca çağrıları
-    # yapılıyor ve sonunda TAMAMI geri yazılıyordu — kilitsiz, üstelik uzun bir pencerede. O
-    # pencerede `_persist_trade` bir satır eklerse (canlı döngü) yeni satır SESSİZCE siliniyordu.
-    # Yamalar artık toplanıp tek kilitli `update_jsonl` ile uygulanır: kilit penceresi ağ
-    # çağrılarını KAPSAMAZ (süreçler-arası kilidi ağ gecikmesi kadar tutmak yeni bir kilitlenme
-    # sınıfı açardı) ve defter yeniden okunduğu için araya giren satırlar korunur.
-    trades = store.read_jsonl("trades.jsonl")
-    last_row = {}
-    for i, t in enumerate(trades):
-        if t.get("plan_id"):
-            last_row[t["plan_id"]] = i           # newest row per plan_id (the one just persisted this cycle)
-    _yamalar: dict = {}
-    for tr in closed_this_cycle:
-        o = by_coid.get(tr.get("plan_id"))
-        af = alpaca.exit_fill_price(o) if o else None
-        if af is None:
-            continue
-        sim = float(tr.get("exit") or 0.0)
-        div = abs(af - sim) / sim if sim else 0.0
-        i = last_row.get(tr.get("plan_id"))
-        if i is not None and "alpaca_fill_price" not in trades[i]:
-            _yamalar[tr.get("plan_id")] = {"alpaca_fill_price": round(af, 4),
-                                           "mirror_divergence": round(div, 5)}
-        if div > MIRROR_DRIFT_TOL:
-            # SB-2: SABİT sınıf `icra` — bu dal sim ÇIKIŞ FİYATI vs Alpaca dolum FİYATI sapmasıdır,
-            # yani tanım gereği icra (limit/slipaj). Sizing türetmesi yalnız ADET sapmasında (1.2b).
-            out["drift"].append({"ticker": tr.get("ticker"), "sim": round(sim, 4), "alpaca": round(af, 4),
-                                 "div_pct": round(div * 100, 3), "drift_sinifi": "icra"})
-            obs.alarm(obs.ALARM_MIRROR_DRIFT,
-                      f"ayna sapması: {tr.get('ticker')} — sim {sim} vs Alpaca {af} (%{div*100:.2f})",
-                      ticker=tr.get("ticker"), sim=sim, alpaca_fill=af, divergence=round(div, 4),
-                      drift_sinifi="icra")
-    if _yamalar:
-        def _fill_patch(rows, _y=_yamalar):
-            son: dict = {}
-            for _i, _t in enumerate(rows):        # plan başına EN YENİ satır (bu turda yazılan)
-                if _t.get("plan_id") in _y:
-                    son[_t["plan_id"]] = _i
-            hit = False
-            for _pid, _i in son.items():
-                if "alpaca_fill_price" not in rows[_i]:
-                    rows[_i].update(_y[_pid])
-                    hit = True
-            return hit
-
-        store.update_jsonl("trades.jsonl", _fill_patch)   # kilitli oku-değiştir-yaz (telemetri)
+    # (1.3) execution-divergence audit — ARTIK KUYRUK-GÜDÜMLÜ (B1+B2, teşhis 2026-08-10).
+    # Eski dal yalnız `closed_this_cycle` üzerinde TEK ATIŞtı: kapanış turundaki API arızası ya da
+    # farklı günde dolan bacak yamayı sonsuza dek kaybediyordu; DELETE-kapatmalarının (karar
+    # çıkışları, ~%38) dolumu ise YAPISAL olarak hiç okunamıyordu. Kuyruk turun başında dolduruldu
+    # (bu turda kapananlar + önceki turların bekleyenleri); burada her kayıt için iki okuma yolundan
+    # (`karar`=close_order_id'li market emri, `bacak`=parent'ın TP/SL bacağı) dolum aranır, bulunan
+    # kilitli yamayla satıra yazılır, bulunamayan `EXIT_FILL_MAX_TRIES` tura kadar taşınır ve
+    # vazgeçiş OLAYLI + satıra dürüst beyanla kapanır. Eşik/alarm ("icra", MIRROR_DRIFT_TOL) aynen.
+    _exit_fill_yamasi(meta, by_coid, by_id, dstr, out, alpaca)
 
     # Faz 1 (1a): HAYALET emirler — Alpaca'da canlı görünen ama yerel izde (armed/alpaca_submitted/
     # mirror durum makinesi) karşılığı olmayan coid'ler. Motor bunları AÇMADI: ya operatör elle emir
@@ -2577,5 +3037,14 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         # broker API sağlığı (kesinti panoda görünür olmalı) + trail senkron kaydı
         "alive_order_syms": sorted(s for s in alive_order_syms if s),
         "api_ok": True, "trail_synced": out.get("trail_synced", []),
+        # WP-E görünürlük üçlüsü (teşhis 2026-08-10; okuyucu: /api/alpaca `reconcile` passthrough +
+        # /api/diagnostics — pano mutabakat masası):
+        #   entry_slippage  — E2 yama sayaçları. Teşhis §3'ün TEK okuyucusuz-yazım bulgusu buydu
+        #                     (üretiliyor, hiçbir artefakta girmiyordu — YASA-6 ihlali kapandı).
+        #   exit_fill       — çıkış dolum-yaması kuyruğunun tur özeti (bekleyen/yamalanan/vazgeçilen).
+        #   emir_penceresi  — B7a sayfalı pencerenin kapsam beyanı (kapsandi=False sessiz değil).
+        "entry_slippage": out.get("entry_slippage"),
+        "exit_fill": out.get("exit_fill"),
+        "emir_penceresi": out.get("emir_penceresi"),
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
     return out
