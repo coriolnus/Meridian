@@ -797,7 +797,17 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     · SIRA: pencere → TEK goal/bounds dağıtımı → hemen OPT Faz-1 kablolama (sonraki sweep monkeypatch'siz koşmalı).
     *gerekçe: pencere kararları kanonik belgede ön-kayıtlı olsun (sohbette kaybolmaz) · bağımlılık: 024/025/026/027 ölçümleri · öncelik: en yüksek (bekleyen tek büyük karar).*
 
-12. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+12. **ISI'nın piyasa-koşullu otomatik ayarı (operatör sorusu 2026-08-12; aday kart EDG-028)** —
+    kancalar HAZIR: exposure_score günlük hesaplanıyor (bugün yalnız açık/kapalı kapı), params_by_regime
+    tabloları motorda BOŞ bekliyor; de-risk rampası (öz-performans) ile ÇARPIMSAL birleşir. Üç aday yöntem:
+    rejim-haritalı ısı (trend_up 10R / chop 6 / high_vol 4 / trend_down 2 — değerler pencereden) ·
+    vol-hedefleme (taban × hedef-vol/gerçekleşen-vol, bant [2R,10R]) · skor-lineer (10R × skor/100).
+    OPERATÖR ÖN-KARARIYLA UYUM: 10R TAVAN sabit — otomatik ayar yalnız tavan ALTINDA kısar. Ölçüm:
+    C-dünyasında sabit-10R tabanına karşı üç varyant (OPT boru hattının ilk müşterisi; kazanan
+    params_by_regime kancasına). *gerekçe: ısı tek sabit yerine koşul-duyarlı · boyut: M · bağımlılık:
+    026 şasisi + pencere girdileri · öncelik: yüksek (karar-paketi sonrası).*
+
+13. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·
