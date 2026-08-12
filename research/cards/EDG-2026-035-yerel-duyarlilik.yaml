@@ -44,4 +44,28 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T5x", trial_ids: [pending-035-slot15, pending-035-slot25, pending-035-size040, pending-035-size065, pending-035-zarf65, pending-035-zarf80]}
 
-status: registered   # 2026-08-12 Rol-1 — dağıtım-SONRASI koşulacak (zamanlama kuralı); eşikler donuk.
+status: measured   # 2026-08-13 Rol-1 — 6 hücre ölçüldü + hüküm: C+mb YEREL-OPTİMUM KANITLA.
+
+verdict:   # Rol-1 hükmü.
+  sonuc: >
+    ALTI HÜCREDE DE CI-ÜSTÜNLÜK DÜŞTÜ (kartın tek benimseme ayağı) → C+mb @5R YEREL OPTİMUM KANITLA;
+    değişiklik önerisi YOK, pencere kurulmaz. Nokta farkları (hüküm girdisi DEĞİL, serap-koruması):
+    slot15 +354$ · slot25 0,00$ · size040 −3.553$ · size065 +64$ · zarf65 −9.553$ · zarf80 −5.209$.
+    dd (b) ve sharpe (c) ayakları 6/6 geçti — yani komşuluk 'tehlikeli' değil, sadece 'daha iyi değil'.
+    K=6 harcandı; aday çıkmadığı için DSR değerlendirmesi konusuz.
+  yapisal_bulgu: >
+    ÖLÇÜMÜN ASIL KAZANIMI — SLOT TAVANI FİİLEN ÖLÜ BİR KNOB: eşzamanlı pozisyon tepesi 13 (<20), yani
+    slot20 hiç bağlamıyor; slot25 defteri tabanla BAYT-ÖZDEŞ (ΔCI=[0,0]). Bağlayıcı kaynak ısı zarfı
+    (gerçekleşen tepe tam 5,000R) — 028/032/033'ün üçüncü kez ölçtüğü aynı yasa, artık dördüncü kanıtla.
+    slot15'in farkı da slottan DEĞİL yan kanaldan: sektör tavanı paydası max_open'a bağlı (guard.py:359,
+    (sektör+1)/max_open > %40 → isim tavanı 20'de 8, 15'te 6) — sector_cap NO_GO 8→33. Yani "slot" knobu
+    fiilen "sektör çeşitlendirme" knobu; ikisi yapışık (→ ROADMAP §2-15g). ZARF EKSENİ: hacim üretiyor,
+    kalite düşürüyor (n 885→1052→1144, sharpe 0,521→0,278→0,369) ve monoton DEĞİL; zarf80 slot tavanının
+    bağladığı ilk hücre (max_open NO_GO 32) — zarf×slot etkileşimi OFAT'ın kör noktasında başlıyor.
+    Operatörün "C+mb @10R ne olurdu" sorusu buradan cevaplanır: eğim aleyhte, 10R ölçmeye gerek yok.
+  kill1_kanit: >
+    ŞASİ-KONTROLÜ GEÇTİ + DAĞITIM-REGRESYON KANITI: v237 yeni-motor default'u, 032-cmb ile BAYT-ÖZDEŞ
+    (islemler d4033de6…, seanslar f0c8df92…; 12/12 ölçüm bloğu derin-eşit; n=885, +20.684,69$, dd 0,1268,
+    sharpe 0,521). Yani rampa kablolaması + mb silahlaması davranışı ZERRE değiştirmedi — kod turu
+    ölçülen dünyayı birebir taşıdı. Beklenen tek fark motor sha'sı (dağıtımın kendisi).
+  artefakt: "research/olcumler/edg035_duyarlilik_2026-08-12/ (7 koşum; kill#3 temiz — sha+mtime parmak izi 7 koşumda sabit; zarf hücreleri sentetik-plan öz-sınamalı)"

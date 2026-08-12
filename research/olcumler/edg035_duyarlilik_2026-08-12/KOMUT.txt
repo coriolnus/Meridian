@@ -1,0 +1,52 @@
+# EDG-2026-035 — KESİNTİ DEVAMLILIK KOMUTLARI (2026-08-12, ölçüm ajanı)
+# Kart: research/cards/EDG-2026-035-yerel-duyarlilik.yaml (OKU-DOKUNMA)
+# Operatör offline penceresi için: her adım mutlak yollu, tek satır, kopyala-yapıştır.
+# ZİNCİR SIRASI (kill#1 kapısı sıralamayı ZORLAR):
+#   smoke → kontrol (TAM) → kontrol_kiyas (kill#1; düşerse DUR) → 6 hücre (≤3 paralel) → kiyas
+
+## 0) ÇİFT-BAŞLATMA KORUMASI — yeniden başlatmadan ÖNCE MUTLAKA bak:
+ps aux | grep "edg035_duyarlilik" | grep -v grep
+ls -la /Users/erdemozturk/AI-Trading/research/olcumler/edg035_duyarlilik_2026-08-12/
+#   - Süreç LİSTEDEYSE → dokunma, bekle.
+#   - sonuc_<hücre>.json VARSA → o hücre bitmiş, yeniden koşma.
+#   - Süreç yok + sonuc yok + log yarım → hücre kesilmiş → aşağıdaki komutla YENİDEN başlat
+#     (idempotent: state_<hücre> sandbox'ları ve çıktılar üzerine yazılır; artık temizliği gerekmez).
+#   - EŞZAMANLILIK TAVANI: aynı anda EN FAZLA 3 hücre süreci (brief kuralı).
+
+## 1) Smoke kanaryası (şasi provası; ~10 sn; fulls'a dokunmaz):
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py kontrol --smoke > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_kontrol_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py kontrol_kiyas --smoke >> research/olcumler/edg035_duyarlilik_2026-08-12/kosum_kontrol_smoke.log 2>&1
+# smoke kill#1 düşerse: DUR — dağıtım-regresyon şüphesi; Rol-1'e raporla, hücre koşma.
+
+## 2) Kontrol (TAM, ~13-25 dk) + kill#1 şasi-kontrolü:
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py kontrol > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_kontrol.log 2>&1 & disown
+# bitiş işareti: log sonunda "yazıldı: .../sonuc_kontrol.json"; sonra:
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py kontrol_kiyas > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_kontrol_kiyas.log 2>&1
+# ÇIKIŞ KODU 2 = kill#1 DÜŞTÜ → ÖLÇÜM DURUR (kart); hücre KOŞMA, teşhis Rol-1'e.
+
+## 3) DALGA-1 (yalnız kill#1 GEÇTİYSE; 3 paralel):
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py slot15 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_slot15.log 2>&1 & disown
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py slot25 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_slot25.log 2>&1 & disown
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py size040 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_size040.log 2>&1 & disown
+
+## 4) DALGA-2 (dalga-1'in ÜÇÜ de sonuc yazınca; 3 paralel):
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py size065 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_size065.log 2>&1 & disown
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py zarf65 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_zarf65.log 2>&1 & disown
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py zarf80 > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_zarf80.log 2>&1 & disown
+
+## 5) İzleme:
+tail -3 /Users/erdemozturk/AI-Trading/research/olcumler/edg035_duyarlilik_2026-08-12/kosum_*.log
+
+## 6) ALTI hücre de bitince BİRLEŞTİR (eşlenik CI'lar + kapılar + eğim haritası → sonuc.json):
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py kiyas > research/olcumler/edg035_duyarlilik_2026-08-12/kosum_kiyas.log 2>&1
+# → sonuc.json; assert ile ölürse log'a bakın (çivi/bütünlük/kill ihlali demektir).
+
+## NOTLAR
+# - kill#1: kontrol ↔ EDG-032 cmb bit-özdeşlik (islemler/seanslar sha256 + sonuc ölçüm blokları).
+#   Düşerse dağıtım-regresyon kanıtıdır — hücreler KOŞULMAZ, teşhis Rol-1'e gider.
+# - kill#3: her koşum motor sha+mtime parmak izini başta/sonda kendisi alır; değişim hücreyi
+#   geçersiz kılar (033 dersi). Koşumlar sırasında repo koduna DOKUNMAYIN.
+# - Öz-sınamalar (rampa-kablolu çivileri, mb-ARMED, zarf yüzeyi) her koşumun BAŞINDA otomatik:
+#   kanıtlanamazsa süreç replay'e girmeden ölür.
+# - git/canlı/serve.sh/state-yazımı YOK; her şey bu dizinin sandbox'larına yazar.
+# - HÜKÜM YOK: sonuc.json ölçümdür; yorum Rol-1'in.

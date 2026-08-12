@@ -859,7 +859,18 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       değil); hiçbiri üstün değilse C+mb yerel-optimum kanıtla kapanır. Zamanlama: dağıtım-SONRASI temiz
       ağaçta (033 dersi). SÜREKLİ motor: elle tarama tek atımlık — kalıcı iterasyon OPT Faz-2'dir (§2-10:
       hermes bounds-uzayında kâğıt-OOS kapılı arama; Faz-1 kablolaması bu kod-turuyla açıldı).
-      *öncelik: yüksek (dağıtım-sonrası ilk ölçüm).*
+      *öncelik: yüksek (dağıtım-sonrası ilk ölçüm).* → **ÖLÇÜLDÜ-KAPANDI (EDG-035, 2026-08-13):
+      6/6 hücre CI-üstünlük ayağında düştü → C+mb @5R YEREL OPTİMUM KANITLA.** Yan kazanç: v237
+      dağıtımının davranışı ZERRE değiştirmediği bayt-özdeşlikle kanıtlandı (regresyon yok).
+    · **15g SLOT↔SEKTÖR TAVANI YAPIŞIKLIĞI (EDG-035'in yapısal bulgusu, 2026-08-13):** slot tavanı
+      fiilen ÖLÜ knob (eşzamanlı tepe 13 < 20; slot25 defteri bayt-özdeş) — ama slot sayısını
+      değiştirmek sektör tavanını DOLAYLI değiştiriyor (`guard.py:359`: (sektör+1)/max_open > %40 →
+      isim tavanı 20'de 8, 15'te 6). İki ayrı risk-tercihi tek knoba yapışık: "kaç pozisyon" ile
+      "ne kadar çeşitlendirme" birbirinden bağımsız sorulardır. ÖNERİ: sektör tavanı paydası
+      max_open'dan ayrılıp kendi parametresine bağlansın (kart-önce ölçüm: mevcut davranış korunacak
+      şekilde payda sabitlenip slot serbest bırakılırsa ne değişir). *boyut: S-M · öncelik: orta
+      (ölü knobu diriltmez ama iki tercihi ayırır) · not: 035 slot15 nokta-farkı (+354$, dd 0.1179)
+      tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.*
 
 16. **KORUNUM-14 SINIFI — uyuyan-kurulum planlarına terminal sınıf (pano ihlal-triyajı 2026-08-12)** —
     korunum dedektörü 14 AÇIKLANAMAYAN sayıyor; canlı API dökümü: HEPSİ dönemin uyuyan kurulumlarının

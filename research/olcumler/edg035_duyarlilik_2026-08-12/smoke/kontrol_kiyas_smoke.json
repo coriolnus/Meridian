@@ -1,0 +1,52 @@
+{
+ "kart": "EDG-2026-035",
+ "adim": "kill#1 şasi-kontrolü_smoke",
+ "olcum_zamani": "2026-08-12T20:30:36+00:00",
+ "tanim": "yeni-motor (v237) default + goal-enjeksiyon(max_open 20, size 0.5) TAM replay ↔ EDG-032 cmb HAZIR çıktıları. Bit-özdeşlik iddiası DETERMİNİSTİK replay içeriği üzerinden: islemler+seanslar dosya baytları (sha256) + sonuc ölçüm blokları derin-eşit. sonuc_cmb.json'ın kendisi bayt-özdeş OLAMAZ (olcum_zamani/sure_sn/motor-sha koşum kimliğidir; motor-sha FARKI dağıtımın kendisidir ve beklenen farktır).",
+ "dosya_sha256": {
+  "yerel": {
+   "islemler": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "seanslar": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "sonuc": "cc345de2412bc25c14c4ab4c744e362cf80264194652413578909a2173ab31eb"
+  },
+  "ref_032": {
+   "islemler": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "seanslar": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "sonuc": "228f7051f0eaec835bafaa61439bc783afbf2c3ad47a5fccc34ff417fc9daeaf"
+  }
+ },
+ "bayt_ozdeslik": {
+  "islemler": true,
+  "seanslar": true
+ },
+ "sonuc_blok_esitligi": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "mb_sayaclari": true,
+  "replay": true,
+  "butunluk_ortak": true,
+  "config_sha_sandbox": true
+ },
+ "blok_fark_ozet": null,
+ "motor_sha_farki_beklenen": {
+  "broker.py": {
+   "yerel_v237": "af7282d09d027687",
+   "ref_032": "daa858a522d97c98"
+  },
+  "backtest.py": {
+   "yerel_v237": "d345b6eed3d28be4",
+   "ref_032": "d345b6eed3d28be4"
+  },
+  "strategy.py": {
+   "yerel_v237": "34339f5c2dc4ce53",
+   "ref_032": "ac7c53a3d89b6203"
+  }
+ },
+ "kill1_gecti": true
+}

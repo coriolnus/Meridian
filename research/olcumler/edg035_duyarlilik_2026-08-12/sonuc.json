@@ -1,0 +1,874 @@
+{
+ "kart": "EDG-2026-035",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg035_duyarlilik_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T21:25:15+00:00",
+ "olcum_ajani_beyani": "SALT-ÖLÇÜM: karta/motor koduna/gerçek state'e DOKUNULMADI; git/canlı/ssh/serve.sh YOK. Rampa monkeypatch'siz (motor kablolu — kanıt rampa_kablolu bloklarında); mb motorun ARMED_SETUPS'unda (kanal enjeksiyonu yok). Zarf hücreleri goal['limits'] kanonik yüzeyinde beyanlı enjeksiyon + sentetik öz-sınama (028 T10 emsali). TABAN = kontrol koşumu (kill#1 bit-özdeşlik kanıtı kontrol_kiyas.json'da; 032-cmb ile islemler/seanslar sha256 bayt-özdeş). NOKTA-P&L SIRALAMASI ÜRETİLMEDİ (kart serap-koruması). HÜKÜM YAZILMADI — Rol-1 işler.",
+ "kill1_sasi_kontrolu": {
+  "kaynak": "kontrol_kiyas.json",
+  "gecti": true,
+  "islemler_sha256": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+  "ref_032_islemler_sha256": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d"
+ },
+ "taban": {
+  "koşum": "kontrol (= 032-cmb bit-özdeş)",
+  "islem_n": 885,
+  "net_pnl_equity": 20684.69,
+  "maxdd_kanonik": 0.1268,
+  "sharpe": 0.521,
+  "avg_r": 0.076,
+  "win_rate": 0.363,
+  "mb_islem_n": 339,
+  "dd_kapi_esigi_1p3x": 0.16484
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap: takvim aylarından AYNI çekiliş hücre+taban çiftine; fark = HÜCRE − TABAN; iter=5000, seed=20260812, n_ay=55; tohum hücreler arasında da aynı (çekilişler özdeş → hücreler arası kıyaslanabilir)",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı — şasi tanımı AYNEN)",
+  "maxdd": "motor-kanonik score.score_detail.max_drawdown",
+  "cok_test_notu": "K=6 hücre tek kartta sınandı (kart k_registry; K grid'de çarpılarak sayılır) — DSR/çoklu-test değerlendirmesi Rol-1'in"
+ },
+ "kimlik_butunluk": {
+  "per_run": {
+   "kontrol": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true
+   },
+   "slot15": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   },
+   "slot25": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   },
+   "size040": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   },
+   "size065": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   },
+   "zarf65": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   },
+   "zarf80": {
+    "butunluk_gecerli": true,
+    "kill3_temiz": true,
+    "motor_ayni_tabanla": true,
+    "config_sha_ayni": true,
+    "pencere_ayni": true,
+    "takvim_ayni": true
+   }
+  },
+  "hepsi_temiz": true,
+  "motor_sha256_16_v237": {
+   "broker.py": "af7282d09d027687",
+   "backtest.py": "d345b6eed3d28be4",
+   "strategy.py": "34339f5c2dc4ce53",
+   "guard.py": "b28ceea53ab80f1c"
+  }
+ },
+ "hucre_tablosu": {
+  "slot15": {
+   "hucre": {
+    "eksen": "slot",
+    "slot": 15,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 876,
+   "delta_n": -9,
+   "delta_n_ci95": {
+    "lo": -18.0,
+    "hi": -2.0,
+    "orta": -9.0
+   },
+   "net_pnl_equity": 21038.91,
+   "delta_pnl_nokta": 354.22,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": -4399.8,
+    "hi": 5985.8,
+    "orta": 248.4
+   },
+   "maxdd_kanonik": 0.1179,
+   "maxdd_m2m": 0.1179,
+   "sharpe": 0.538,
+   "avg_r": 0.079,
+   "delta_avg_r_ci95": {
+    "lo": -0.0111,
+    "hi": 0.0175,
+    "orta": 0.0026
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.362,
+   "total_return": 0.2104,
+   "mb_islem_n": 337,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 315,
+     "pnl": 8474.56,
+     "avg_r": 0.057
+    },
+    "exhaustion_hammer": {
+     "n": 218,
+     "pnl": 2938.51,
+     "avg_r": 0.1334
+    },
+    "momentum_burst": {
+     "n": 337,
+     "pnl": 12014.95,
+     "avg_r": 0.0801
+    },
+    "pullback": {
+     "n": 6,
+     "pnl": -2389.11,
+     "avg_r": -0.7845
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 64,
+    "REVIEW": 862,
+    "NO_GO": 617
+   },
+   "nogo_heat_hard_n": 595,
+   "nogo_max_open_n": 0,
+   "doluluk_orani_slot": 0.2901,
+   "ort_acik_pozisyon": 4.351,
+   "isi_gerceklesen_max": 5.0,
+   "eszamanli_poz_max": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   },
+   "tavan_sifir_pct_birincil": 0.0,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": -4399.8,
+      "hi": 5985.8,
+      "orta": 248.4
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.1179,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.538,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  },
+  "slot25": {
+   "hucre": {
+    "eksen": "slot",
+    "slot": 25,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 885,
+   "delta_n": 0,
+   "delta_n_ci95": {
+    "lo": 0.0,
+    "hi": 0.0,
+    "orta": 0.0
+   },
+   "net_pnl_equity": 20684.69,
+   "delta_pnl_nokta": 0.0,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": 0.0,
+    "hi": 0.0,
+    "orta": 0.0
+   },
+   "maxdd_kanonik": 0.1268,
+   "maxdd_m2m": 0.1268,
+   "sharpe": 0.521,
+   "avg_r": 0.076,
+   "delta_avg_r_ci95": {
+    "lo": 0.0,
+    "hi": 0.0,
+    "orta": 0.0
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.363,
+   "total_return": 0.2068,
+   "mb_islem_n": 339,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 315,
+     "pnl": 7460.7,
+     "avg_r": 0.0468
+    },
+    "exhaustion_hammer": {
+     "n": 225,
+     "pnl": 3153.7,
+     "avg_r": 0.1308
+    },
+    "momentum_burst": {
+     "n": 339,
+     "pnl": 12488.14,
+     "avg_r": 0.0829
+    },
+    "pullback": {
+     "n": 6,
+     "pnl": -2417.85,
+     "avg_r": -0.7875
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 63,
+    "REVIEW": 873,
+    "NO_GO": 607
+   },
+   "nogo_heat_hard_n": 607,
+   "nogo_max_open_n": 0,
+   "doluluk_orani_slot": 0.1738,
+   "ort_acik_pozisyon": 4.344,
+   "isi_gerceklesen_max": 5.0,
+   "eszamanli_poz_max": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   },
+   "tavan_sifir_pct_birincil": 0.0,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": 0.0,
+      "hi": 0.0,
+      "orta": 0.0
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.1268,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.521,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  },
+  "size040": {
+   "hucre": {
+    "eksen": "size",
+    "slot": 20,
+    "position_size_r": 0.4,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 1023,
+   "delta_n": 138,
+   "delta_n_ci95": {
+    "lo": 97.0,
+    "hi": 183.0,
+    "orta": 137.0
+   },
+   "net_pnl_equity": 17131.49,
+   "delta_pnl_nokta": -3553.2,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": -16099.1,
+    "hi": 8760.4,
+    "orta": -3569.7
+   },
+   "maxdd_kanonik": 0.1126,
+   "maxdd_m2m": 0.1126,
+   "sharpe": 0.519,
+   "avg_r": 0.065,
+   "delta_avg_r_ci95": {
+    "lo": -0.0449,
+    "hi": 0.0208,
+    "orta": -0.0109
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.366,
+   "total_return": 0.1713,
+   "mb_islem_n": 391,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 368,
+     "pnl": 4547.05,
+     "avg_r": 0.0343
+    },
+    "exhaustion_hammer": {
+     "n": 256,
+     "pnl": 3839.1,
+     "avg_r": 0.1142
+    },
+    "momentum_burst": {
+     "n": 391,
+     "pnl": 11055.3,
+     "avg_r": 0.079
+    },
+    "pullback": {
+     "n": 8,
+     "pnl": -2309.96,
+     "avg_r": -0.737
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 72,
+    "REVIEW": 1009,
+    "NO_GO": 429
+   },
+   "nogo_heat_hard_n": 415,
+   "nogo_max_open_n": 0,
+   "doluluk_orani_slot": 0.2565,
+   "ort_acik_pozisyon": 5.13,
+   "isi_gerceklesen_max": 4.996,
+   "eszamanli_poz_max": {
+    "open_fazi": 16,
+    "islem_araligi": 16
+   },
+   "tavan_sifir_pct_birincil": 0.0,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": -16099.1,
+      "hi": 8760.4,
+      "orta": -3569.7
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.1126,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.519,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  },
+  "size065": {
+   "hucre": {
+    "eksen": "size",
+    "slot": 20,
+    "position_size_r": 0.65,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 740,
+   "delta_n": -145,
+   "delta_n_ci95": {
+    "lo": -188.0,
+    "hi": -103.0,
+    "orta": -144.0
+   },
+   "net_pnl_equity": 20748.28,
+   "delta_pnl_nokta": 63.59,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": -17015.6,
+    "hi": 17180.2,
+    "orta": 222.7
+   },
+   "maxdd_kanonik": 0.1491,
+   "maxdd_m2m": 0.1491,
+   "sharpe": 0.452,
+   "avg_r": 0.084,
+   "delta_avg_r_ci95": {
+    "lo": -0.0405,
+    "hi": 0.0555,
+    "orta": 0.0082
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.353,
+   "total_return": 0.2075,
+   "mb_islem_n": 279,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 257,
+     "pnl": 5358.97,
+     "avg_r": 0.0357
+    },
+    "exhaustion_hammer": {
+     "n": 199,
+     "pnl": 5021.4,
+     "avg_r": 0.1742
+    },
+    "momentum_burst": {
+     "n": 279,
+     "pnl": 12499.21,
+     "avg_r": 0.0791
+    },
+    "pullback": {
+     "n": 5,
+     "pnl": -2131.3,
+     "avg_r": -0.7236
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 56,
+    "REVIEW": 725,
+    "NO_GO": 803
+   },
+   "nogo_heat_hard_n": 803,
+   "nogo_max_open_n": 0,
+   "doluluk_orani_slot": 0.1758,
+   "ort_acik_pozisyon": 3.516,
+   "isi_gerceklesen_max": 4.998,
+   "eszamanli_poz_max": {
+    "open_fazi": 10,
+    "islem_araligi": 10
+   },
+   "tavan_sifir_pct_birincil": 0.0,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": -17015.6,
+      "hi": 17180.2,
+      "orta": 222.7
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.1491,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.452,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  },
+  "zarf65": {
+   "hucre": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 6.5,
+    "zarf_enjekte": true
+   },
+   "islem_n": 1052,
+   "delta_n": 167,
+   "delta_n_ci95": {
+    "lo": 120.975,
+    "hi": 217.0,
+    "orta": 166.0
+   },
+   "net_pnl_equity": 11132.04,
+   "delta_pnl_nokta": -9552.65,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": -22169.3,
+    "hi": 2985.8,
+    "orta": -9443.8
+   },
+   "maxdd_kanonik": 0.1588,
+   "maxdd_m2m": 0.1566,
+   "sharpe": 0.278,
+   "avg_r": 0.046,
+   "delta_avg_r_ci95": {
+    "lo": -0.0647,
+    "hi": 0.0028,
+    "orta": -0.0297
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.356,
+   "total_return": 0.1113,
+   "mb_islem_n": 402,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 375,
+     "pnl": 520.1,
+     "avg_r": 0.0012
+    },
+    "exhaustion_hammer": {
+     "n": 267,
+     "pnl": -967.39,
+     "avg_r": 0.0751
+    },
+    "momentum_burst": {
+     "n": 402,
+     "pnl": 14403.87,
+     "avg_r": 0.0848
+    },
+    "pullback": {
+     "n": 8,
+     "pnl": -2824.54,
+     "avg_r": -0.7399
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 55,
+    "REVIEW": 1054,
+    "NO_GO": 395
+   },
+   "nogo_heat_hard_n": 381,
+   "nogo_max_open_n": 0,
+   "doluluk_orani_slot": 0.2628,
+   "ort_acik_pozisyon": 5.256,
+   "isi_gerceklesen_max": 6.49,
+   "eszamanli_poz_max": {
+    "open_fazi": 16,
+    "islem_araligi": 17
+   },
+   "tavan_sifir_pct_birincil": 0.0,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": -22169.3,
+      "hi": 2985.8,
+      "orta": -9443.8
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.1588,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.278,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  },
+  "zarf80": {
+   "hucre": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 8.0,
+    "zarf_enjekte": true
+   },
+   "islem_n": 1144,
+   "delta_n": 259,
+   "delta_n_ci95": {
+    "lo": 186.0,
+    "hi": 337.0,
+    "orta": 258.0
+   },
+   "net_pnl_equity": 15475.88,
+   "delta_pnl_nokta": -5208.81,
+   "delta_pnl_ci95_eslenik_ay_kumeli": {
+    "lo": -20207.3,
+    "hi": 8911.2,
+    "orta": -4946.8
+   },
+   "maxdd_kanonik": 0.147,
+   "maxdd_m2m": 0.147,
+   "sharpe": 0.369,
+   "avg_r": 0.051,
+   "delta_avg_r_ci95": {
+    "lo": -0.0667,
+    "hi": 0.0137,
+    "orta": -0.0245
+   },
+   "avg_r_atlanan_iter": 0,
+   "win_rate": 0.366,
+   "total_return": 0.1548,
+   "mb_islem_n": 435,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 422,
+     "pnl": 5455.63,
+     "avg_r": 0.0307
+    },
+    "exhaustion_hammer": {
+     "n": 280,
+     "pnl": 791.23,
+     "avg_r": 0.0837
+    },
+    "momentum_burst": {
+     "n": 435,
+     "pnl": 11826.69,
+     "avg_r": 0.0634
+    },
+    "pullback": {
+     "n": 7,
+     "pnl": -2597.67,
+     "avg_r": -0.7747
+    }
+   },
+   "verdict_dagilim": {
+    "GO": 52,
+    "REVIEW": 1153,
+    "NO_GO": 262
+   },
+   "nogo_heat_hard_n": 236,
+   "nogo_max_open_n": 32,
+   "doluluk_orani_slot": 0.2946,
+   "ort_acik_pozisyon": 5.892,
+   "isi_gerceklesen_max": 7.985,
+   "eszamanli_poz_max": {
+    "open_fazi": 20,
+    "islem_araligi": 20
+   },
+   "tavan_sifir_pct_birincil": 0.45,
+   "takvim_disi_islem": 0,
+   "kapilar_kart_donuk": {
+    "a_dpnl_ci_alt_gt0": {
+     "olcut": "ΔP&L(hücre−taban) CI ALT > 0 (CI-üstünlük)",
+     "ci": {
+      "lo": -20207.3,
+      "hi": 8911.2,
+      "orta": -4946.8
+     },
+     "isaret": "dustu"
+    },
+    "b_dd_le_taban_1p3x": {
+     "olcut": "maxdd ≤ taban×1.3",
+     "taban_dd": 0.1268,
+     "esik": 0.16484,
+     "esik_kart_yuvarlak": 0.1648,
+     "deger": 0.147,
+     "isaret": "gecti"
+    },
+    "c_sharpe_ge_0p20": {
+     "olcut": "sharpe ≥ 0.2",
+     "deger": 0.369,
+     "isaret": "gecti"
+    },
+    "benimseme_adayi_mekanik": "hayir"
+   }
+  }
+ },
+ "egim_haritasi": {
+  "not": "KARAR DEĞİL BİLGİ (kart features_asof): nokta-tahmin sonlu farkları — CI'sız; benimseme yalnız kapı-işaretlerinden, eğimden DEĞİL. Zarf ekseninde merkez 5.0 SOL uçtur (kart grid'i 6.5/8.0 — iki komşu da sağda)",
+  "slot": {
+   "noktalar": {
+    "15": {
+     "pnl": 21038.91,
+     "sharpe": 0.538,
+     "dd": 0.1179,
+     "n": 876,
+     "avg_r": 0.079
+    },
+    "20": {
+     "pnl": 20684.69,
+     "sharpe": 0.521,
+     "dd": 0.1268,
+     "n": 885,
+     "avg_r": 0.076
+    },
+    "25": {
+     "pnl": 20684.69,
+     "sharpe": 0.521,
+     "dd": 0.1268,
+     "n": 885,
+     "avg_r": 0.076
+    }
+   },
+   "segmentler": [
+    {
+     "aralik": "15→20",
+     "birim": "1 slot",
+     "dpnl_per_birim": -70.84,
+     "dsharpe_per_birim": -0.0034,
+     "ddd_per_birim": 0.00178,
+     "dn_per_birim": 1.8,
+     "davg_r_per_birim": -0.0006
+    },
+    {
+     "aralik": "20→25",
+     "birim": "1 slot",
+     "dpnl_per_birim": 0.0,
+     "dsharpe_per_birim": 0.0,
+     "ddd_per_birim": 0.0,
+     "dn_per_birim": 0.0,
+     "davg_r_per_birim": 0.0
+    }
+   ]
+  },
+  "size_r": {
+   "noktalar": {
+    "0.40": {
+     "pnl": 17131.49,
+     "sharpe": 0.519,
+     "dd": 0.1126,
+     "n": 1023,
+     "avg_r": 0.065
+    },
+    "0.50": {
+     "pnl": 20684.69,
+     "sharpe": 0.521,
+     "dd": 0.1268,
+     "n": 885,
+     "avg_r": 0.076
+    },
+    "0.65": {
+     "pnl": 20748.28,
+     "sharpe": 0.452,
+     "dd": 0.1491,
+     "n": 740,
+     "avg_r": 0.084
+    }
+   },
+   "segmentler": [
+    {
+     "aralik": "0.4→0.5",
+     "birim": "1.0R (ΔP&L/ΔR)",
+     "dpnl_per_birim": 35532.0,
+     "dsharpe_per_birim": 0.02,
+     "ddd_per_birim": 0.142,
+     "dn_per_birim": -1380.0,
+     "davg_r_per_birim": 0.11
+    },
+    {
+     "aralik": "0.5→0.65",
+     "birim": "1.0R (ΔP&L/ΔR)",
+     "dpnl_per_birim": 423.93,
+     "dsharpe_per_birim": -0.46,
+     "ddd_per_birim": 0.148667,
+     "dn_per_birim": -966.666667,
+     "davg_r_per_birim": 0.053333
+    }
+   ]
+  },
+  "zarf_r": {
+   "noktalar": {
+    "5.0": {
+     "pnl": 20684.69,
+     "sharpe": 0.521,
+     "dd": 0.1268,
+     "n": 885,
+     "avg_r": 0.076
+    },
+    "6.5": {
+     "pnl": 11132.04,
+     "sharpe": 0.278,
+     "dd": 0.1588,
+     "n": 1052,
+     "avg_r": 0.046
+    },
+    "8.0": {
+     "pnl": 15475.88,
+     "sharpe": 0.369,
+     "dd": 0.147,
+     "n": 1144,
+     "avg_r": 0.051
+    }
+   },
+   "segmentler": [
+    {
+     "aralik": "5.0→6.5",
+     "birim": "1.0R zarf",
+     "dpnl_per_birim": -6368.43,
+     "dsharpe_per_birim": -0.162,
+     "ddd_per_birim": 0.021333,
+     "dn_per_birim": 111.333333,
+     "davg_r_per_birim": -0.02
+    },
+    {
+     "aralik": "6.5→8.0",
+     "birim": "1.0R zarf",
+     "dpnl_per_birim": 2895.89,
+     "dsharpe_per_birim": 0.060667,
+     "ddd_per_birim": -0.007867,
+     "dn_per_birim": 61.333333,
+     "davg_r_per_birim": 0.003333
+    }
+   ]
+  }
+ },
+ "kapi_ozeti_mekanik": {
+  "slot15": "hayir",
+  "slot25": "hayir",
+  "size040": "hayir",
+  "size065": "hayir",
+  "zarf65": "hayir",
+  "zarf80": "hayir"
+ },
+ "dosyalar": {
+  "kontrol": {
+   "sonuc": "sonuc_kontrol.json",
+   "seanslar": "seanslar_kontrol.json",
+   "islemler": "islemler_kontrol.json"
+  },
+  "slot15": {
+   "sonuc": "sonuc_slot15.json",
+   "seanslar": "seanslar_slot15.json",
+   "islemler": "islemler_slot15.json"
+  },
+  "slot25": {
+   "sonuc": "sonuc_slot25.json",
+   "seanslar": "seanslar_slot25.json",
+   "islemler": "islemler_slot25.json"
+  },
+  "size040": {
+   "sonuc": "sonuc_size040.json",
+   "seanslar": "seanslar_size040.json",
+   "islemler": "islemler_size040.json"
+  },
+  "size065": {
+   "sonuc": "sonuc_size065.json",
+   "seanslar": "seanslar_size065.json",
+   "islemler": "islemler_size065.json"
+  },
+  "zarf65": {
+   "sonuc": "sonuc_zarf65.json",
+   "seanslar": "seanslar_zarf65.json",
+   "islemler": "islemler_zarf65.json"
+  },
+  "zarf80": {
+   "sonuc": "sonuc_zarf80.json",
+   "seanslar": "seanslar_zarf80.json",
+   "islemler": "islemler_zarf80.json"
+  }
+ }
+}
