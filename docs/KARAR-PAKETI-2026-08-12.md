@@ -87,6 +87,11 @@ w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Taka
 - [1] ✅ FİNAL-PAKET doğrulama replay'i (EDG-032, 2026-08-12): **KAPI 3/3 GEÇTİ** — damga: C+mb 885 işlem ·
   +20.685$ · dd %12.7 · sharpe 0.521. Şerh: ΔP&L nokta +10.8k ama CI 0-içi (bozulmama-kapısı, iyileşme-kanıtı
   değil); mb yıl-deseni 2022/2026 zayıf → canlı izleme kalemi.
-- [2] Kod turu: rampa KABLOLAMASI (TEK rampa 15/36 — mod ayrımı YOK, karar §E.3; OPT Faz-1'in ilk kalemi)
-  + goal: max_open 20, position_size_r 0.5 + ARMED_SETUPS += momentum_burst (tarihçe-korumalı).
-- [3] Frozen-tree tam suite → [4] TEK dağıtım → [5] canlı doğrulama + özet.
+- [2] ✅ Kod turu (v237, 6d92b64): rampa kablolu (TEK 15/36; AST mod-dallanma-yok çivili; 026-aynası
+  5×501 kanıtlı) + goal max_open 20 + strategy-v5 (0.5R, sürüm yasasıyla) + ARMED_SETUPS += mb.
+- [3] ✅ Frozen-tree tam suite: rc=0, tam grep 0 FAILED/0 ERROR.
+- [4] ✅ TEK dağıtım (2026-08-12 20:13Z, dagit rc=0; 645-satırlık transfer — dagit'in SIGPIPE kusuru
+  bulunup düzeltildi 0710a20) + strategy-v5 mini-penceresi (yedekli, bayt-doğrulı).
+- [5] ✅ Canlı doğrulama aşama-1: ARMED 4'lü + slot 20 + derisk 0.15/0.36 + v5/0.5R canlıda; healthz 200.
+  Davranışsal kanıt bu geceki EOD'de (mb ilk silahlı döngü; sprint gece-restart 22-06Z; evren denetimi
+  lxml-sonrası ilk koşum; Gemini flash-latest ilk gerçek review) — sabah triyajı kapatır.
