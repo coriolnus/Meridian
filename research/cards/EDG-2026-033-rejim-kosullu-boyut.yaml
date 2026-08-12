@@ -36,4 +36,25 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-033-h1, pending-033-h2]}
 
-status: registered   # 2026-08-12 Rol-1 — §2-15 hattının ilk kartı; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: DÜZ-0.5R KANITLA DOĞRULANDI.
+
+verdict:   # Rol-1 hükmü.
+  sonuc: >
+    İKİ HÜCRE DE DÜŞTÜ (başarı-koşulu ΔP&L CI-alt>0 sağlanmadı): h1 yukarı-asimetri ΔP&L −7.624$
+    (CI [−22.410,+7.380]), sharpe 0.285→0.053 · h2 tam-modülasyon Δ−8.897$ (CI [−22.639,+4.368]),
+    sharpe→0.023. Kartın kuralı gereği DÜZ-0.5R KANITLA DOĞRULANDI; kart arşiv.
+  mekanizma: >
+    ÖĞRETİCİ (sente kapanan ayrışım): saf-boyut etkisi eşleşen trend_up işlemlerde h1'de POZİTİF (+1.429$,
+    137 çift) — hipotezin çekirdeği yanlış değil. Kaybın ana kalemi KOMPOZİSYON: 0.75R planlar sabit 5R
+    zarfını 2× hızla dolduruyor (heat_hard NO_GO 168→343), C'nin ~170 pozitif-beklentili işlemi (ort-R
+    .104) hiç doğmuyor; yerine gelen az sayıda işlem negatif seçilimli (−.178). 028/032 ile aynı yasa:
+    ZARF 5R sistemin bağlayıcı kaynağı — zarfa dokunmadan işlem-başı boyut büyütmek işlem SAYISINI kısar
+    ve seçilimi bozar. (Zarf×boyut birlikte-büyütme AYRI hipotez olurdu ama 028 zarf-10'un kalite çöküşünü
+    zaten ölçtü — önerilmez, yeni kart açılmaz.)
+  kill3_serhi: >
+    Sha kayıt-drifti TETİKLENDİ ama ölçüm GEÇERLİ-şerhli: paralel implementasyon ajanının commit'lenmemiş
+    motor düzenlemeleri hücre İTHALİNDEN 3-6 dk sonra diske indi; çalışma-zamanı C-özdeşliği dört bağımsız
+    kanıtla gösterildi (kontrol-koşumu C-sha'ları + bit-özdeşlik 10/10, import-zamanlaması, yeni-şasi
+    3-arg-çökerdi argümanı, defterde 0 mb işlemi; rejim-kimliği 0 uyuşmazlık). SÜREÇ DERSİ kayıtlı
+    (hafıza: paralel-oturum-dagitimi): motor düzenlenirken ölçüm ajanı worktree'de koşmalı.
+  artefakt: "research/olcumler/edg033_rejim_boyut_2026-08-12/ (kontrol bit-özdeş; ayrışım kalıntısı 0.00$; teshis_motor_drift.json)"

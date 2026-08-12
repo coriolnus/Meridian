@@ -1,0 +1,30 @@
+# EDG-2026-033 — koşum komutları (mutlak yollar; operatör-offline devralma için)
+# Kart: /Users/erdemozturk/AI-Trading/research/cards/EDG-2026-033-rejim-kosullu-boyut.yaml (OKU-DOKUNMA)
+# İlk doğum: 2026-08-12, bu oturum — kontrol smoke GEÇTİ (KONTROL_PASS), iki hücre paralel nohup.
+
+## 0) SIRA: kontrol ÖNCE (kill#1 kapısı) — GEÇMEDEN hücre koşulmaz:
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/olcum.py kontrol
+# bitmişlik: "KONTROL_PASS" (kontrol.log + smoke/kontrol_bit_ozdeslik.json). FAIL → DUR, Rol-1'e rapor.
+
+## 1) ÇALIŞAN KOŞUM VAR MI KONTROL ET (çift-başlatma YASAK):
+pgrep -fl "edg033_rejim_boyut_2026-08-12/olcum.py kosum" || echo "kosum süreci yok"
+
+## 2) Bitmişlik işaretleri (log kuyruğunda):
+#   kosum_h1.log → "KOSUM_H1_BITTI"   (çıktı: sonuc_h1.json + seanslar_h1.json + islemler_h1.json)
+#   kosum_h2.log → "KOSUM_H2_BITTI"   (çıktı: sonuc_h2.json + seanslar_h2.json + islemler_h2.json)
+tail -3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/kosum_h1.log
+tail -3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/kosum_h2.log
+
+## 3) HÜCRELER (yalnız ilgili hücre ÖLMÜŞSE ve BITTI işareti YOKSA yeniden başlat; çıktılar üzerine yazılır):
+nohup /Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/olcum.py kosum h1 > /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/kosum_h1.log 2>&1 &
+nohup /Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/olcum.py kosum h2 > /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/kosum_h2.log 2>&1 &
+
+## 4) İKİ HÜCRE DE BİTTİKTEN SONRA BİRLEŞTİRME (C tabanı 026'dan salt-okunur; sonuc.json üretir):
+/Users/erdemozturk/AI-Trading/.venv/bin/python3 /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/olcum.py kiyas > /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/kiyas.log 2>&1
+# bitmişlik: kiyas.log → "KIYAS_BITTI"; çıktı: sonuc.json
+
+## Notlar:
+# - Hücre haritaları (mutlak size_r): h1 {trend_up .75, diğer .5} · h2 {trend_up .75, diğer .35}; taban 0.5.
+# - Sandbox state dizinleri (state_h1/, state_h2/, *_smoke) otomatik kurulur; canlı state'e yazılmaz.
+# - Süre tahmini: hücre başına ~30 dk (026 C 1786 s); iki paralel süreç sınırı aşılmaz (≤2).
+# - git/canlı/ssh/serve.sh YOK. Kart dosyasına DOKUNULMAZ. Hüküm yazılmaz (Rol-1'in).

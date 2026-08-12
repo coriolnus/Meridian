@@ -1,0 +1,1665 @@
+{
+ "kart": "EDG-2026-033",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T18:22:30+00:00",
+ "smoke": false,
+ "kiyas_taban": {
+  "kaynak": "EDG-026 C (slot20+0.5R+rampa15/36) HAZIR çıktıları — yeniden koşulmadı, salt-okundu",
+  "dosyalar": {
+   "sonuc": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/sonuc_c.json",
+   "seanslar": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/seanslar_c.json",
+   "islemler": "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/islemler_c.json"
+  },
+  "sha256": {
+   "sonuc_c.json": "c18e3b4497dc1e618d8d3d543ad444060cc28a1fe2561b531d5a86adea5672ff",
+   "seanslar_c.json": "6a8aceaea7b453182c1179086fdc3be63e56d4cb81f5218a7551672f562c178b",
+   "islemler_c.json": "fdb428551ceab4de69ca053a6ef4f16d8caad136306cd2946fb1a6edc6d5acda"
+  }
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap (iter=5000, seed=20260812, n_ay=55): aynı ay çekilişi iki koşuma birden; fark = hücre − C; metrikler iterasyon içinde kanonik formüllerle yeniden hesaplanır; rejim-başına Δpnl aynı çekilişten (eşlenik)",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı)",
+  "sharpe_boot": "kanonik score_detail formülü; span = tam pencere gün sayısı (sabit); n≤2 veya std=0 iterasyonları atlanır (sayı raporlu)",
+  "maxdd_boot": "kanonik equity_curve (ts_close sıralı) + max_drawdown; ay yeniden-örneklemesi dd zaman-sırasını yapay kurar — CI bu beyanla okunur; NOKTA dd motor kanonik",
+  "saf_boyut_ayrisimi": "Δ(Σpnl) ≡ Σeklenen + Σortak_Δ − Σçıkan; ortak_Δ üç kovaya tam bölünür (yol-aynı∧trend_up / yol-aynı∧diğer / yol-kayan); kalıntı sente kapanmalı (|kalinti|≤0.01$)"
+ },
+ "kill1_kontrol_bit_ozdesligi": {
+  "esik": "kontrol bit-özdeşliği düşerse ölçüm GEÇERSİZ (kart kill#1)",
+  "bit_ozdes": true,
+  "tetiklendi": false,
+  "kaynak": "/Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/smoke/kontrol_bit_ozdeslik.json"
+ },
+ "kill2_trend_up_taban_n": {
+  "esik": "taban-defterde (C islemler) trend_up n < 30 → olculemedi (kart kill#2)",
+  "trend_up_n_taban": 688,
+  "tetiklendi": false
+ },
+ "hucreler": {
+  "h1": {
+   "hucre": "h1",
+   "ad": "yukari_asimetri",
+   "harita_mutlak_size_r": {
+    "trend_up": 0.75,
+    "trend_down": 0.5,
+    "chop": 0.5,
+    "high_vol": 0.5
+   },
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": false,
+     "backtest.py": true,
+     "strategy.py": false
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "rejim_kimligi_uyusmaz_n": 0,
+    "serh": "MOTOR/CONFIG SHA'LARI C İLE BİREBİR DEĞİL — kıyas ŞERHLİ: motor={'broker.py': False, 'backtest.py': True, 'strategy.py': False} config={'goal.yaml': True, 'strategy.yaml': True, 'bounds.yaml': True}"
+   },
+   "tablo": {
+    "islem_n": {
+     "C_duz_0p5R": 772,
+     "hucre_yukari_asimetri": 627,
+     "fark": -145,
+     "fark_pct": -18.8
+    },
+    "islem_yil": {
+     "C_duz_0p5R": 168.75,
+     "hucre_yukari_asimetri": 137.05
+    },
+    "islem_fark_ci95": {
+     "lo": -192.0,
+     "hi": -102.0,
+     "orta": -145.0
+    },
+    "islem_oran_ci95": {
+     "lo": 0.7771,
+     "hi": 0.8496,
+     "orta": 0.8123
+    },
+    "net_pnl_equity": {
+     "C_duz_0p5R": 9869.2,
+     "hucre_yukari_asimetri": 2245.29
+    },
+    "net_pnl_trades": {
+     "C_duz_0p5R": 9869.2,
+     "hucre_yukari_asimetri": 2245.29
+    },
+    "net_pnl_fark_ci95": {
+     "lo": -22409.7975,
+     "hi": 7380.1245,
+     "orta": -7760.375
+    },
+    "maxdd_kanonik": {
+     "C_duz_0p5R": 0.1235,
+     "hucre_yukari_asimetri": 0.1364
+    },
+    "maxdd_m2m": {
+     "C_duz_0p5R": 0.1235,
+     "hucre_yukari_asimetri": 0.1364
+    },
+    "maxdd_fark_ci95_kapali_islem_egrisi": {
+     "lo": -0.0256,
+     "hi": 0.1563,
+     "orta": 0.042
+    },
+    "maxdd_ci_atlanan_iter": 0,
+    "sharpe": {
+     "C_duz_0p5R": 0.285,
+     "hucre_yukari_asimetri": 0.053
+    },
+    "sharpe_fark_ci95": {
+     "lo": -0.6299,
+     "hi": 0.1485,
+     "orta": -0.2352
+    },
+    "sharpe_ci_atlanan_iter": 0,
+    "avg_r": {
+     "C_duz_0p5R": 0.057,
+     "hucre_yukari_asimetri": 0.035
+    },
+    "win_rate": {
+     "C_duz_0p5R": 0.36,
+     "hucre_yukari_asimetri": 0.341
+    },
+    "score": {
+     "C_duz_0p5R": -0.1274,
+     "hucre_yukari_asimetri": -0.2042
+    },
+    "total_return": {
+     "C_duz_0p5R": 0.0987,
+     "hucre_yukari_asimetri": 0.0225
+    },
+    "silahlanan_plan": {
+     "C_duz_0p5R": 813,
+     "hucre_yukari_asimetri": 663
+    },
+    "toplam_plan": {
+     "C_duz_0p5R": 984,
+     "hucre_yukari_asimetri": 1006
+    },
+    "verdict_dagilim": {
+     "C_duz_0p5R": {
+      "GO": 81,
+      "REVIEW": 732,
+      "NO_GO": 171
+     },
+     "hucre_yukari_asimetri": {
+      "GO": 61,
+      "REVIEW": 602,
+      "NO_GO": 343
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C_duz_0p5R": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 171,
+      "heat_hard": 168,
+      "sector_cap": 3
+     },
+     "hucre_yukari_asimetri": {
+      "heat_hard": 343,
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 343
+     }
+    },
+    "review_neden_dagilim": {
+     "C_duz_0p5R": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 732,
+      "leading_sector": 472,
+      "sector_stacking": 441,
+      "heat_review": 342,
+      "score_band": 98,
+      "rr_marginal": 62,
+      "correlation": 10
+     },
+     "hucre_yukari_asimetri": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 602,
+      "leading_sector": 385,
+      "heat_review": 369,
+      "sector_stacking": 317,
+      "score_band": 71,
+      "rr_marginal": 51,
+      "correlation": 6
+     }
+    },
+    "entry_rejects": {
+     "C_duz_0p5R": {
+      "open_below_stop": 22,
+      "max_chase": 19
+     },
+     "hucre_yukari_asimetri": {
+      "open_below_stop": 18,
+      "max_chase": 18
+     }
+    },
+    "exit_reason_dagilim": {
+     "C_duz_0p5R": {
+      "stop": 334,
+      "regime_flip": 141,
+      "time_stop": 135,
+      "target": 83,
+      "stop_gap": 60,
+      "target_gap": 19
+     },
+     "hucre_yukari_asimetri": {
+      "stop": 272,
+      "regime_flip": 124,
+      "time_stop": 103,
+      "target": 62,
+      "stop_gap": 49,
+      "target_gap": 17
+     }
+    },
+    "silahli_plan_size_r": {
+     "C_duz_0p5R": {
+      "min": 0.3,
+      "max": 0.485,
+      "ort": 0.393
+     },
+     "hucre_yukari_asimetri": {
+      "min": 0.305,
+      "max": 0.728,
+      "ort": 0.567
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C_duz_0p5R": 4299,
+     "hucre_yukari_asimetri": 3388
+    },
+    "ort_acik_pozisyon": {
+     "C_duz_0p5R": 3.748,
+     "hucre_yukari_asimetri": 2.954
+    },
+    "toplam_bars_held": {
+     "C_duz_0p5R": 4575,
+     "hucre_yukari_asimetri": 3615
+    },
+    "tasnif_tum_seans": {
+     "C_duz_0p5R": {
+      "derisk_bagladi": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "evren_bagladi": {
+       "n": 658,
+       "pct": 57.37
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "rejim_kapali": {
+       "n": 483,
+       "pct": 42.11
+      }
+     },
+     "hucre_yukari_asimetri": {
+      "derisk_bagladi": {
+       "n": 2,
+       "pct": 0.17
+      },
+      "evren_bagladi": {
+       "n": 659,
+       "pct": 57.45
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "rejim_kapali": {
+       "n": 483,
+       "pct": 42.11
+      }
+     }
+    }
+   },
+   "rejim_karne": {
+    "C_duz_0p5R": {
+     "trend_up": {
+      "n": 688,
+      "ort_r": 0.08,
+      "medyan_r": -0.176,
+      "pnl": 13987.95,
+      "kazanma_orani": 0.369
+     },
+     "chop": {
+      "n": 84,
+      "ort_r": -0.127,
+      "medyan_r": -0.571,
+      "pnl": -4118.75,
+      "kazanma_orani": 0.286
+     }
+    },
+    "hucre_yukari_asimetri": {
+     "trend_up": {
+      "n": 543,
+      "ort_r": 0.06,
+      "medyan_r": -0.248,
+      "pnl": 6300.67,
+      "kazanma_orani": 0.35
+     },
+     "chop": {
+      "n": 84,
+      "ort_r": -0.127,
+      "medyan_r": -0.572,
+      "pnl": -4055.38,
+      "kazanma_orani": 0.286
+     }
+    },
+    "delta": {
+     "chop": {
+      "d_n": 0,
+      "d_pnl": 63.37,
+      "d_pnl_ci95_eslenik": {
+       "lo": -56.472,
+       "hi": 230.33,
+       "orta": 55.645
+      },
+      "d_ort_r": 0.0
+     },
+     "trend_up": {
+      "d_n": -145,
+      "d_pnl": -7687.28,
+      "d_pnl_ci95_eslenik": {
+       "lo": -22396.9542,
+       "hi": 7303.642,
+       "orta": -7812.18
+      },
+      "d_ort_r": -0.02
+     }
+    },
+    "d_pnl_rejim_ci_olculemedi_neden": {
+     "high_vol": "iki tarafta da bu rejimde işlem yok — CI olculemedi",
+     "trend_down": "iki tarafta da bu rejimde işlem yok — CI olculemedi"
+    },
+    "tanim": "işlem kaydındaki `regime` (plan günü, motor kaydı — 030 deseni)"
+   },
+   "isi_kullanim_profili": {
+    "C": {
+     "tepe_isi": {
+      "formul": "nominal = n_eszamanli × 0.5R (kart formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+      "nominal_open_fazi_R": {
+       "max": 6.5,
+       "p50": 1.0,
+       "p90": 5.0,
+       "p99": 6.0,
+       "ort": 1.874,
+       "sifir_ustu_seans_n": 617,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 530,
+        "0.5": 21,
+        "1.0": 35,
+        "1.5": 43,
+        "2.0": 50,
+        "2.5": 51,
+        "3.0": 66,
+        "3.5": 77,
+        "4.0": 59,
+        "4.5": 72,
+        "5.0": 50,
+        "5.5": 54,
+        "6.0": 32,
+        "6.5": 7
+       }
+      },
+      "nominal_islem_araligi_R": {
+       "max": 6.5,
+       "p50": 2.0,
+       "p90": 6.0,
+       "p99": 6.5,
+       "ort": 2.331,
+       "sifir_ustu_seans_n": 680,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 467,
+        "0.5": 24,
+        "1.0": 28,
+        "1.5": 45,
+        "2.0": 40,
+        "2.5": 41,
+        "3.0": 54,
+        "3.5": 59,
+        "4.0": 61,
+        "4.5": 81,
+        "5.0": 57,
+        "5.5": 70,
+        "6.0": 87,
+        "6.5": 33
+       }
+      },
+      "gerceklesen_open_fazi": {
+       "size_r_toplam": {
+        "max": 4.985,
+        "p50": 0.79,
+        "p90": 3.99,
+        "p99": 4.86,
+        "ort": 1.48,
+        "sifir_ustu_seans_n": 617,
+        "n_seans": 1147,
+        "histogram_0p5R": {
+         "0.0": 530,
+         "0.5": 27,
+         "1.0": 69,
+         "1.5": 53,
+         "2.0": 57,
+         "2.5": 96,
+         "3.0": 85,
+         "3.5": 81,
+         "4.0": 71,
+         "4.5": 49,
+         "5.0": 29
+        }
+       },
+       "risk_dollars_giris_max": 5660.99,
+       "kalan_risk_dollars_max": 4984.85,
+       "kalan_risk_nav_pct_max": 4.634
+      },
+      "eszamanli_poz_max": {
+       "open_fazi": 13,
+       "islem_araligi": 13
+      }
+     },
+     "rejim_kirilimi": {
+      "trend_up": {
+       "seans_n": 602,
+       "gerceklesen_size_r": {
+        "max": 4.985,
+        "p50": 2.695,
+        "p90": 4.37,
+        "p99": 4.96,
+        "ort": 2.552,
+        "sifir_ustu_seans_n": 545,
+        "n_seans": 602,
+        "histogram_0p5R": {
+         "0.0": 57,
+         "0.5": 13,
+         "1.0": 58,
+         "1.5": 46,
+         "2.0": 52,
+         "2.5": 88,
+         "3.0": 79,
+         "3.5": 73,
+         "4.0": 67,
+         "4.5": 43,
+         "5.0": 26
+        }
+       },
+       "ort_acik_pozisyon": 6.453
+      },
+      "chop": {
+       "seans_n": 324,
+       "gerceklesen_size_r": {
+        "max": 4.985,
+        "p50": 0.0,
+        "p90": 2.46,
+        "p99": 4.602,
+        "ort": 0.499,
+        "sifir_ustu_seans_n": 72,
+        "n_seans": 324,
+        "histogram_0p5R": {
+         "0.0": 252,
+         "0.5": 14,
+         "1.0": 11,
+         "1.5": 7,
+         "2.0": 5,
+         "2.5": 8,
+         "3.0": 6,
+         "3.5": 8,
+         "4.0": 4,
+         "4.5": 6,
+         "5.0": 3
+        }
+       },
+       "ort_acik_pozisyon": 1.278
+      },
+      "high_vol": {
+       "seans_n": 187,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 187,
+        "histogram_0p5R": {
+         "0.0": 187
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      },
+      "trend_down": {
+       "seans_n": 34,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 34,
+        "histogram_0p5R": {
+         "0.0": 34
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      }
+     },
+     "heat_hard_nogo_n": 168,
+     "silahli_plan_size_r": {
+      "min": 0.3,
+      "max": 0.485,
+      "ort": 0.393
+     }
+    },
+    "hucre_yukari_asimetri": {
+     "tepe_isi": {
+      "formul": "nominal = n_eszamanli × 0.5R (kart formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+      "nominal_open_fazi_R": {
+       "max": 6.0,
+       "p50": 1.0,
+       "p90": 3.5,
+       "p99": 4.5,
+       "ort": 1.477,
+       "sifir_ustu_seans_n": 617,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 530,
+        "0.5": 23,
+        "1.0": 35,
+        "1.5": 60,
+        "2.0": 66,
+        "2.5": 94,
+        "3.0": 137,
+        "3.5": 107,
+        "4.0": 69,
+        "4.5": 15,
+        "5.0": 3,
+        "5.5": 3,
+        "6.0": 5
+       }
+      },
+      "nominal_islem_araligi_R": {
+       "max": 6.5,
+       "p50": 2.0,
+       "p90": 4.0,
+       "p99": 5.77,
+       "ort": 1.849,
+       "sifir_ustu_seans_n": 680,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 467,
+        "0.5": 24,
+        "1.0": 29,
+        "1.5": 53,
+        "2.0": 41,
+        "2.5": 67,
+        "3.0": 95,
+        "3.5": 124,
+        "4.0": 206,
+        "4.5": 25,
+        "5.0": 2,
+        "5.5": 2,
+        "6.0": 7,
+        "6.5": 5
+       }
+      },
+      "gerceklesen_open_fazi": {
+       "size_r_toplam": {
+        "max": 4.995,
+        "p50": 1.14,
+        "p90": 4.29,
+        "p99": 4.98,
+        "ort": 1.703,
+        "sifir_ustu_seans_n": 617,
+        "n_seans": 1147,
+        "histogram_0p5R": {
+         "0.0": 530,
+         "0.5": 26,
+         "1.0": 35,
+         "1.5": 34,
+         "2.0": 37,
+         "2.5": 69,
+         "3.0": 89,
+         "3.5": 109,
+         "4.0": 97,
+         "4.5": 76,
+         "5.0": 45
+        }
+       },
+       "risk_dollars_giris_max": 5383.46,
+       "kalan_risk_dollars_max": 5059.53,
+       "kalan_risk_nav_pct_max": 4.883
+      },
+      "eszamanli_poz_max": {
+       "open_fazi": 12,
+       "islem_araligi": 13
+      }
+     },
+     "rejim_kirilimi": {
+      "trend_up": {
+       "seans_n": 602,
+       "gerceklesen_size_r": {
+        "max": 4.995,
+        "p50": 3.326,
+        "p90": 4.61,
+        "p99": 4.988,
+        "ort": 2.964,
+        "sifir_ustu_seans_n": 545,
+        "n_seans": 602,
+        "histogram_0p5R": {
+         "0.0": 57,
+         "0.5": 13,
+         "1.0": 24,
+         "1.5": 30,
+         "2.0": 31,
+         "2.5": 60,
+         "3.0": 82,
+         "3.5": 101,
+         "4.0": 92,
+         "4.5": 69,
+         "5.0": 43
+        }
+       },
+       "ort_acik_pozisyon": 4.977
+      },
+      "chop": {
+       "seans_n": 324,
+       "gerceklesen_size_r": {
+        "max": 4.835,
+        "p50": 0.0,
+        "p90": 2.591,
+        "p99": 4.622,
+        "ort": 0.522,
+        "sifir_ustu_seans_n": 72,
+        "n_seans": 324,
+        "histogram_0p5R": {
+         "0.0": 252,
+         "0.5": 13,
+         "1.0": 11,
+         "1.5": 4,
+         "2.0": 6,
+         "2.5": 9,
+         "3.0": 7,
+         "3.5": 8,
+         "4.0": 5,
+         "4.5": 7,
+         "5.0": 2
+        }
+       },
+       "ort_acik_pozisyon": 1.21
+      },
+      "high_vol": {
+       "seans_n": 187,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 187,
+        "histogram_0p5R": {
+         "0.0": 187
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      },
+      "trend_down": {
+       "seans_n": 34,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 34,
+        "histogram_0p5R": {
+         "0.0": 34
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      }
+     },
+     "heat_hard_nogo_n": 343,
+     "silahli_plan_size_r": {
+      "min": 0.305,
+      "max": 0.728,
+      "ort": 0.567
+     },
+     "silahli_size_r_rejim": {
+      "chop": {
+       "n": 91,
+       "min": 0.305,
+       "max": 0.45,
+       "ort": 0.383
+      },
+      "trend_up": {
+       "n": 572,
+       "min": 0.458,
+       "max": 0.728,
+       "ort": 0.596
+      }
+     }
+    }
+   },
+   "saf_boyut_ayrisimi": {
+    "kimlik": "(ts_open[:10], ticker); yol-aynı = ts_close+exit_reason aynı ∧ |Δr|≤1e-9",
+    "ortak_n": 602,
+    "eklenen_n": 25,
+    "cikan_n": 170,
+    "ortak_rejim_cift_uyusmaz_n": 0,
+    "kovalar": {
+     "ortak_yol_ayni_trend_up": {
+      "n": 137,
+      "d_pnl": 1429.36,
+      "qty_oran": {
+       "n": 137,
+       "medyan": 1.4259,
+       "ort": 1.3771,
+       "min": 0.9251,
+       "max": 1.5
+      },
+      "yorum_beyani": "amaçlanan SAF-BOYUT etkisi + equity-yolu sürüklenmesi (qty equity'ye bağlı; oran ≈ çarpan × equity-sapması)"
+     },
+     "ortak_yol_ayni_diger_rejim": {
+      "n": 35,
+      "d_pnl": 14.86,
+      "qty_oran": {
+       "n": 35,
+       "medyan": 0.9979,
+       "ort": 0.9911,
+       "min": 0.9489,
+       "max": 1.0
+      },
+      "yorum_beyani": "H1'de çarpan=1.0 → fark saf equity-sürüklenmesi; H2'de 0.7× boyut + sürüklenme"
+     },
+     "ortak_yol_kayan_knockon": {
+      "n": 430,
+      "d_pnl": 437.6
+     },
+     "eklenen": {
+      "pnl": -2764.85,
+      "ozet": {
+       "n": 25,
+       "ort_r": -0.178,
+       "medyan_r": -0.086,
+       "pnl_toplam": -2764.85,
+       "kazanma_orani": 0.28,
+       "rejim_kirilimi": {
+        "trend_up": {
+         "n": 25,
+         "ort_r": -0.178,
+         "medyan_r": -0.086,
+         "pnl": -2764.85,
+         "kazanma_orani": 0.28
+        }
+       },
+       "exit_reason_dagilim": {
+        "stop": 11,
+        "regime_flip": 6,
+        "time_stop": 4,
+        "target": 2,
+        "stop_gap": 2
+       }
+      }
+     },
+     "cikan": {
+      "pnl": 6740.88,
+      "ozet": {
+       "n": 170,
+       "ort_r": 0.104,
+       "medyan_r": -0.02,
+       "pnl_toplam": 6740.88,
+       "kazanma_orani": 0.418,
+       "rejim_kirilimi": {
+        "trend_up": {
+         "n": 170,
+         "ort_r": 0.104,
+         "medyan_r": -0.02,
+         "pnl": 6740.88,
+         "kazanma_orani": 0.418
+        }
+       },
+       "exit_reason_dagilim": {
+        "stop": 73,
+        "time_stop": 36,
+        "target": 23,
+        "regime_flip": 23,
+        "stop_gap": 13,
+        "target_gap": 2
+       }
+      }
+     }
+    },
+    "pnl_kimligi": {
+     "delta_net_pnl_trades": -7623.91,
+     "eklenen_pnl": -2764.85,
+     "cikan_pnl": 6740.88,
+     "ortak_delta_pnl": 1881.82,
+     "kalinti": 0.0,
+     "sente_kapandi": true
+    }
+   },
+   "kill3_sasi_butunlugu": {
+    "esik": "şasi bütünlüğü: koşum-içi kontroller (frame/dup/scan==plan/yasak/base_max) + çarpan öz-sınamaları (scan-çağrı + plan/işlem bandı) + motor/config sha == C + takvim + rejim-kimliği (kart kill#3)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "carpan_scan_ihlal_n": 0,
+    "carpan_plan_band_ihlal_n": 0,
+    "motor_sha_ayni": false,
+    "config_sha_ayni": true,
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "rejim_kimligi_uyusmaz_n": 0,
+    "rejim_kimligi_ornek": [],
+    "tetiklendi": true
+   },
+   "basari_kosulu_kaydi": {
+    "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil: ΔP&L CI-alt>0 VE dd ≤ C×1.3 kaydı; hüküm Rol-1'in",
+    "d_pnl_ci_alt": -22409.7975,
+    "d_pnl_ci_alt_pozitif": false,
+    "maxdd_C": 0.1235,
+    "maxdd_hucre": 0.1364,
+    "dd_oran": 1.104,
+    "dd_C_x1p3_icinde": true
+   }
+  },
+  "h2": {
+   "hucre": "h2",
+   "ad": "tam_modulasyon",
+   "harita_mutlak_size_r": {
+    "trend_up": 0.75,
+    "trend_down": 0.35,
+    "chop": 0.35,
+    "high_vol": 0.35
+   },
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": false,
+     "backtest.py": true,
+     "strategy.py": false
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "rejim_kimligi_uyusmaz_n": 0,
+    "serh": "MOTOR/CONFIG SHA'LARI C İLE BİREBİR DEĞİL — kıyas ŞERHLİ: motor={'broker.py': False, 'backtest.py': True, 'strategy.py': False} config={'goal.yaml': True, 'strategy.yaml': True, 'bounds.yaml': True}"
+   },
+   "tablo": {
+    "islem_n": {
+     "C_duz_0p5R": 772,
+     "hucre_tam_modulasyon": 639,
+     "fark": -133,
+     "fark_pct": -17.2
+    },
+    "islem_yil": {
+     "C_duz_0p5R": 168.75,
+     "hucre_tam_modulasyon": 139.67
+    },
+    "islem_fark_ci95": {
+     "lo": -183.0,
+     "hi": -87.0,
+     "orta": -133.0
+    },
+    "islem_oran_ci95": {
+     "lo": 0.7855,
+     "hi": 0.8745,
+     "orta": 0.8271
+    },
+    "net_pnl_equity": {
+     "C_duz_0p5R": 9869.2,
+     "hucre_tam_modulasyon": 972.48
+    },
+    "net_pnl_trades": {
+     "C_duz_0p5R": 9869.2,
+     "hucre_tam_modulasyon": 972.48
+    },
+    "net_pnl_fark_ci95": {
+     "lo": -22638.8257,
+     "hi": 4368.435,
+     "orta": -8933.775
+    },
+    "maxdd_kanonik": {
+     "C_duz_0p5R": 0.1235,
+     "hucre_tam_modulasyon": 0.1322
+    },
+    "maxdd_m2m": {
+     "C_duz_0p5R": 0.1235,
+     "hucre_tam_modulasyon": 0.1322
+    },
+    "maxdd_fark_ci95_kapali_islem_egrisi": {
+     "lo": -0.026,
+     "hi": 0.1546,
+     "orta": 0.043
+    },
+    "maxdd_ci_atlanan_iter": 0,
+    "sharpe": {
+     "C_duz_0p5R": 0.285,
+     "hucre_tam_modulasyon": 0.023
+    },
+    "sharpe_fark_ci95": {
+     "lo": -0.6282,
+     "hi": 0.1026,
+     "orta": -0.2693
+    },
+    "sharpe_ci_atlanan_iter": 0,
+    "avg_r": {
+     "C_duz_0p5R": 0.057,
+     "hucre_tam_modulasyon": 0.02
+    },
+    "win_rate": {
+     "C_duz_0p5R": 0.36,
+     "hucre_tam_modulasyon": 0.335
+    },
+    "score": {
+     "C_duz_0p5R": -0.1274,
+     "hucre_tam_modulasyon": -0.1927
+    },
+    "total_return": {
+     "C_duz_0p5R": 0.0987,
+     "hucre_tam_modulasyon": 0.0097
+    },
+    "silahlanan_plan": {
+     "C_duz_0p5R": 813,
+     "hucre_tam_modulasyon": 675
+    },
+    "toplam_plan": {
+     "C_duz_0p5R": 984,
+     "hucre_tam_modulasyon": 1004
+    },
+    "verdict_dagilim": {
+     "C_duz_0p5R": {
+      "GO": 81,
+      "REVIEW": 732,
+      "NO_GO": 171
+     },
+     "hucre_tam_modulasyon": {
+      "GO": 63,
+      "REVIEW": 612,
+      "NO_GO": 329
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C_duz_0p5R": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 171,
+      "heat_hard": 168,
+      "sector_cap": 3
+     },
+     "hucre_tam_modulasyon": {
+      "heat_hard": 329,
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 329
+     }
+    },
+    "review_neden_dagilim": {
+     "C_duz_0p5R": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 732,
+      "leading_sector": 472,
+      "sector_stacking": 441,
+      "heat_review": 342,
+      "score_band": 98,
+      "rr_marginal": 62,
+      "correlation": 10
+     },
+     "hucre_tam_modulasyon": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 612,
+      "leading_sector": 395,
+      "heat_review": 358,
+      "sector_stacking": 327,
+      "score_band": 75,
+      "rr_marginal": 51,
+      "correlation": 7
+     }
+    },
+    "entry_rejects": {
+     "C_duz_0p5R": {
+      "open_below_stop": 22,
+      "max_chase": 19
+     },
+     "hucre_tam_modulasyon": {
+      "open_below_stop": 18,
+      "max_chase": 18
+     }
+    },
+    "exit_reason_dagilim": {
+     "C_duz_0p5R": {
+      "stop": 334,
+      "regime_flip": 141,
+      "time_stop": 135,
+      "target": 83,
+      "stop_gap": 60,
+      "target_gap": 19
+     },
+     "hucre_tam_modulasyon": {
+      "stop": 281,
+      "regime_flip": 127,
+      "time_stop": 102,
+      "target": 62,
+      "stop_gap": 49,
+      "target_gap": 18
+     }
+    },
+    "silahli_plan_size_r": {
+     "C_duz_0p5R": {
+      "min": 0.3,
+      "max": 0.485,
+      "ort": 0.393
+     },
+     "hucre_tam_modulasyon": {
+      "min": 0.213,
+      "max": 0.728,
+      "ort": 0.547
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C_duz_0p5R": 4299,
+     "hucre_tam_modulasyon": 3444
+    },
+    "ort_acik_pozisyon": {
+     "C_duz_0p5R": 3.748,
+     "hucre_tam_modulasyon": 3.003
+    },
+    "toplam_bars_held": {
+     "C_duz_0p5R": 4575,
+     "hucre_tam_modulasyon": 3673
+    },
+    "tasnif_tum_seans": {
+     "C_duz_0p5R": {
+      "derisk_bagladi": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "evren_bagladi": {
+       "n": 658,
+       "pct": 57.37
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "rejim_kapali": {
+       "n": 483,
+       "pct": 42.11
+      }
+     },
+     "hucre_tam_modulasyon": {
+      "derisk_bagladi": {
+       "n": 2,
+       "pct": 0.17
+      },
+      "evren_bagladi": {
+       "n": 659,
+       "pct": 57.45
+      },
+      "isinma": {
+       "n": 3,
+       "pct": 0.26
+      },
+      "rejim_kapali": {
+       "n": 483,
+       "pct": 42.11
+      }
+     }
+    }
+   },
+   "rejim_karne": {
+    "C_duz_0p5R": {
+     "trend_up": {
+      "n": 688,
+      "ort_r": 0.08,
+      "medyan_r": -0.176,
+      "pnl": 13987.95,
+      "kazanma_orani": 0.369
+     },
+     "chop": {
+      "n": 84,
+      "ort_r": -0.127,
+      "medyan_r": -0.571,
+      "pnl": -4118.75,
+      "kazanma_orani": 0.286
+     }
+    },
+    "hucre_tam_modulasyon": {
+     "trend_up": {
+      "n": 546,
+      "ort_r": 0.056,
+      "medyan_r": -0.251,
+      "pnl": 5191.34,
+      "kazanma_orani": 0.348
+     },
+     "chop": {
+      "n": 93,
+      "ort_r": -0.19,
+      "medyan_r": -0.662,
+      "pnl": -4218.86,
+      "kazanma_orani": 0.258
+     }
+    },
+    "delta": {
+     "chop": {
+      "d_n": 9,
+      "d_pnl": -100.11,
+      "d_pnl_ci95_eslenik": {
+       "lo": -2809.9228,
+       "hi": 2048.124,
+       "orta": 46.725
+      },
+      "d_ort_r": -0.063
+     },
+     "trend_up": {
+      "d_n": -142,
+      "d_pnl": -8796.61,
+      "d_pnl_ci95_eslenik": {
+       "lo": -22370.0785,
+       "hi": 4276.4105,
+       "orta": -8888.7
+      },
+      "d_ort_r": -0.024
+     }
+    },
+    "d_pnl_rejim_ci_olculemedi_neden": {
+     "high_vol": "iki tarafta da bu rejimde işlem yok — CI olculemedi",
+     "trend_down": "iki tarafta da bu rejimde işlem yok — CI olculemedi"
+    },
+    "tanim": "işlem kaydındaki `regime` (plan günü, motor kaydı — 030 deseni)"
+   },
+   "isi_kullanim_profili": {
+    "C": {
+     "tepe_isi": {
+      "formul": "nominal = n_eszamanli × 0.5R (kart formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+      "nominal_open_fazi_R": {
+       "max": 6.5,
+       "p50": 1.0,
+       "p90": 5.0,
+       "p99": 6.0,
+       "ort": 1.874,
+       "sifir_ustu_seans_n": 617,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 530,
+        "0.5": 21,
+        "1.0": 35,
+        "1.5": 43,
+        "2.0": 50,
+        "2.5": 51,
+        "3.0": 66,
+        "3.5": 77,
+        "4.0": 59,
+        "4.5": 72,
+        "5.0": 50,
+        "5.5": 54,
+        "6.0": 32,
+        "6.5": 7
+       }
+      },
+      "nominal_islem_araligi_R": {
+       "max": 6.5,
+       "p50": 2.0,
+       "p90": 6.0,
+       "p99": 6.5,
+       "ort": 2.331,
+       "sifir_ustu_seans_n": 680,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 467,
+        "0.5": 24,
+        "1.0": 28,
+        "1.5": 45,
+        "2.0": 40,
+        "2.5": 41,
+        "3.0": 54,
+        "3.5": 59,
+        "4.0": 61,
+        "4.5": 81,
+        "5.0": 57,
+        "5.5": 70,
+        "6.0": 87,
+        "6.5": 33
+       }
+      },
+      "gerceklesen_open_fazi": {
+       "size_r_toplam": {
+        "max": 4.985,
+        "p50": 0.79,
+        "p90": 3.99,
+        "p99": 4.86,
+        "ort": 1.48,
+        "sifir_ustu_seans_n": 617,
+        "n_seans": 1147,
+        "histogram_0p5R": {
+         "0.0": 530,
+         "0.5": 27,
+         "1.0": 69,
+         "1.5": 53,
+         "2.0": 57,
+         "2.5": 96,
+         "3.0": 85,
+         "3.5": 81,
+         "4.0": 71,
+         "4.5": 49,
+         "5.0": 29
+        }
+       },
+       "risk_dollars_giris_max": 5660.99,
+       "kalan_risk_dollars_max": 4984.85,
+       "kalan_risk_nav_pct_max": 4.634
+      },
+      "eszamanli_poz_max": {
+       "open_fazi": 13,
+       "islem_araligi": 13
+      }
+     },
+     "rejim_kirilimi": {
+      "trend_up": {
+       "seans_n": 602,
+       "gerceklesen_size_r": {
+        "max": 4.985,
+        "p50": 2.695,
+        "p90": 4.37,
+        "p99": 4.96,
+        "ort": 2.552,
+        "sifir_ustu_seans_n": 545,
+        "n_seans": 602,
+        "histogram_0p5R": {
+         "0.0": 57,
+         "0.5": 13,
+         "1.0": 58,
+         "1.5": 46,
+         "2.0": 52,
+         "2.5": 88,
+         "3.0": 79,
+         "3.5": 73,
+         "4.0": 67,
+         "4.5": 43,
+         "5.0": 26
+        }
+       },
+       "ort_acik_pozisyon": 6.453
+      },
+      "chop": {
+       "seans_n": 324,
+       "gerceklesen_size_r": {
+        "max": 4.985,
+        "p50": 0.0,
+        "p90": 2.46,
+        "p99": 4.602,
+        "ort": 0.499,
+        "sifir_ustu_seans_n": 72,
+        "n_seans": 324,
+        "histogram_0p5R": {
+         "0.0": 252,
+         "0.5": 14,
+         "1.0": 11,
+         "1.5": 7,
+         "2.0": 5,
+         "2.5": 8,
+         "3.0": 6,
+         "3.5": 8,
+         "4.0": 4,
+         "4.5": 6,
+         "5.0": 3
+        }
+       },
+       "ort_acik_pozisyon": 1.278
+      },
+      "high_vol": {
+       "seans_n": 187,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 187,
+        "histogram_0p5R": {
+         "0.0": 187
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      },
+      "trend_down": {
+       "seans_n": 34,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 34,
+        "histogram_0p5R": {
+         "0.0": 34
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      }
+     },
+     "heat_hard_nogo_n": 168,
+     "silahli_plan_size_r": {
+      "min": 0.3,
+      "max": 0.485,
+      "ort": 0.393
+     }
+    },
+    "hucre_tam_modulasyon": {
+     "tepe_isi": {
+      "formul": "nominal = n_eszamanli × 0.5R (kart formülü; conviction 0.6-1.0× nedeniyle ÜST SINIR)",
+      "nominal_open_fazi_R": {
+       "max": 9.0,
+       "p50": 1.0,
+       "p90": 3.5,
+       "p99": 5.5,
+       "ort": 1.501,
+       "sifir_ustu_seans_n": 617,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 530,
+        "0.5": 23,
+        "1.0": 35,
+        "1.5": 61,
+        "2.0": 67,
+        "2.5": 94,
+        "3.0": 127,
+        "3.5": 110,
+        "4.0": 69,
+        "4.5": 15,
+        "5.0": 1,
+        "5.5": 4,
+        "6.0": 4,
+        "6.5": 1,
+        "7.0": 2,
+        "7.5": 1,
+        "8.5": 1,
+        "9.0": 2
+       }
+      },
+      "nominal_islem_araligi_R": {
+       "max": 9.0,
+       "p50": 2.0,
+       "p90": 4.0,
+       "p99": 6.5,
+       "ort": 1.88,
+       "sifir_ustu_seans_n": 680,
+       "n_seans": 1147,
+       "histogram_0p5R": {
+        "0.0": 467,
+        "0.5": 24,
+        "1.0": 29,
+        "1.5": 53,
+        "2.0": 42,
+        "2.5": 68,
+        "3.0": 95,
+        "3.5": 113,
+        "4.0": 208,
+        "4.5": 26,
+        "5.0": 3,
+        "6.0": 2,
+        "6.5": 7,
+        "7.0": 4,
+        "8.0": 2,
+        "8.5": 1,
+        "9.0": 3
+       }
+      },
+      "gerceklesen_open_fazi": {
+       "size_r_toplam": {
+        "max": 4.992,
+        "p50": 1.073,
+        "p90": 4.27,
+        "p99": 4.966,
+        "ort": 1.679,
+        "sifir_ustu_seans_n": 617,
+        "n_seans": 1147,
+        "histogram_0p5R": {
+         "0.0": 531,
+         "0.5": 30,
+         "1.0": 34,
+         "1.5": 38,
+         "2.0": 35,
+         "2.5": 69,
+         "3.0": 94,
+         "3.5": 107,
+         "4.0": 89,
+         "4.5": 74,
+         "5.0": 46
+        }
+       },
+       "risk_dollars_giris_max": 5317.39,
+       "kalan_risk_dollars_max": 5027.09,
+       "kalan_risk_nav_pct_max": 4.85
+      },
+      "eszamanli_poz_max": {
+       "open_fazi": 18,
+       "islem_araligi": 18
+      }
+     },
+     "rejim_kirilimi": {
+      "trend_up": {
+       "seans_n": 602,
+       "gerceklesen_size_r": {
+        "max": 4.992,
+        "p50": 3.287,
+        "p90": 4.612,
+        "p99": 4.988,
+        "ort": 2.957,
+        "sifir_ustu_seans_n": 545,
+        "n_seans": 602,
+        "histogram_0p5R": {
+         "0.0": 57,
+         "0.5": 13,
+         "1.0": 24,
+         "1.5": 33,
+         "2.0": 29,
+         "2.5": 61,
+         "3.0": 82,
+         "3.5": 102,
+         "4.0": 86,
+         "4.5": 71,
+         "5.0": 44
+        }
+       },
+       "ort_acik_pozisyon": 4.98
+      },
+      "chop": {
+       "seans_n": 324,
+       "gerceklesen_size_r": {
+        "max": 4.875,
+        "p50": 0.0,
+        "p90": 2.319,
+        "p99": 4.621,
+        "ort": 0.451,
+        "sifir_ustu_seans_n": 72,
+        "n_seans": 324,
+        "histogram_0p5R": {
+         "0.0": 253,
+         "0.5": 17,
+         "1.0": 10,
+         "1.5": 5,
+         "2.0": 6,
+         "2.5": 8,
+         "3.0": 12,
+         "3.5": 5,
+         "4.0": 3,
+         "4.5": 3,
+         "5.0": 2
+        }
+       },
+       "ort_acik_pozisyon": 1.377
+      },
+      "high_vol": {
+       "seans_n": 187,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 187,
+        "histogram_0p5R": {
+         "0.0": 187
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      },
+      "trend_down": {
+       "seans_n": 34,
+       "gerceklesen_size_r": {
+        "max": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p99": 0.0,
+        "ort": 0.0,
+        "sifir_ustu_seans_n": 0,
+        "n_seans": 34,
+        "histogram_0p5R": {
+         "0.0": 34
+        }
+       },
+       "ort_acik_pozisyon": 0.0
+      }
+     },
+     "heat_hard_nogo_n": 329,
+     "silahli_plan_size_r": {
+      "min": 0.213,
+      "max": 0.728,
+      "ort": 0.547
+     },
+     "silahli_size_r_rejim": {
+      "chop": {
+       "n": 100,
+       "min": 0.213,
+       "max": 0.315,
+       "ort": 0.267
+      },
+      "trend_up": {
+       "n": 575,
+       "min": 0.458,
+       "max": 0.728,
+       "ort": 0.596
+      }
+     }
+    }
+   },
+   "saf_boyut_ayrisimi": {
+    "kimlik": "(ts_open[:10], ticker); yol-aynı = ts_close+exit_reason aynı ∧ |Δr|≤1e-9",
+    "ortak_n": 605,
+    "eklenen_n": 34,
+    "cikan_n": 167,
+    "ortak_rejim_cift_uyusmaz_n": 0,
+    "kovalar": {
+     "ortak_yol_ayni_trend_up": {
+      "n": 132,
+      "d_pnl": -2346.48,
+      "qty_oran": {
+       "n": 132,
+       "medyan": 1.4205,
+       "ort": 1.3647,
+       "min": 0.9104,
+       "max": 1.5
+      },
+      "yorum_beyani": "amaçlanan SAF-BOYUT etkisi + equity-yolu sürüklenmesi (qty equity'ye bağlı; oran ≈ çarpan × equity-sapması)"
+     },
+     "ortak_yol_ayni_diger_rejim": {
+      "n": 18,
+      "d_pnl": 141.4,
+      "qty_oran": {
+       "n": 18,
+       "medyan": 0.6879,
+       "ort": 0.7328,
+       "min": 0.6607,
+       "max": 1.0
+      },
+      "yorum_beyani": "H1'de çarpan=1.0 → fark saf equity-sürüklenmesi; H2'de 0.7× boyut + sürüklenme"
+     },
+     "ortak_yol_kayan_knockon": {
+      "n": 455,
+      "d_pnl": 4914.84
+     },
+     "eklenen": {
+      "pnl": -3984.33,
+      "ozet": {
+       "n": 34,
+       "ort_r": -0.324,
+       "medyan_r": -0.494,
+       "pnl_toplam": -3984.33,
+       "kazanma_orani": 0.206,
+       "rejim_kirilimi": {
+        "trend_up": {
+         "n": 24,
+         "ort_r": -0.157,
+         "medyan_r": -0.176,
+         "pnl": -2401.2,
+         "kazanma_orani": 0.292
+        },
+        "chop": {
+         "n": 10,
+         "ort_r": -0.724,
+         "medyan_r": -0.984,
+         "pnl": -1583.13,
+         "kazanma_orani": 0.0
+        }
+       },
+       "exit_reason_dagilim": {
+        "stop": 18,
+        "regime_flip": 9,
+        "target": 2,
+        "stop_gap": 2,
+        "time_stop": 2,
+        "target_gap": 1
+       }
+      }
+     },
+     "cikan": {
+      "pnl": 7622.15,
+      "ozet": {
+       "n": 167,
+       "ort_r": 0.119,
+       "medyan_r": -0.018,
+       "pnl_toplam": 7622.15,
+       "kazanma_orani": 0.425,
+       "rejim_kirilimi": {
+        "trend_up": {
+         "n": 166,
+         "ort_r": 0.12,
+         "medyan_r": -0.018,
+         "pnl": 7633.82,
+         "kazanma_orani": 0.428
+        },
+        "chop": {
+         "n": 1,
+         "ort_r": -0.036,
+         "medyan_r": -0.036,
+         "pnl": -11.67,
+         "kazanma_orani": 0.0
+        }
+       },
+       "exit_reason_dagilim": {
+        "stop": 71,
+        "time_stop": 35,
+        "target": 23,
+        "regime_flip": 23,
+        "stop_gap": 13,
+        "target_gap": 2
+       }
+      }
+     }
+    },
+    "pnl_kimligi": {
+     "delta_net_pnl_trades": -8896.72,
+     "eklenen_pnl": -3984.33,
+     "cikan_pnl": 7622.15,
+     "ortak_delta_pnl": 2709.76,
+     "kalinti": 0.0,
+     "sente_kapandi": true
+    }
+   },
+   "kill3_sasi_butunlugu": {
+    "esik": "şasi bütünlüğü: koşum-içi kontroller (frame/dup/scan==plan/yasak/base_max) + çarpan öz-sınamaları (scan-çağrı + plan/işlem bandı) + motor/config sha == C + takvim + rejim-kimliği (kart kill#3)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "carpan_scan_ihlal_n": 0,
+    "carpan_plan_band_ihlal_n": 0,
+    "motor_sha_ayni": false,
+    "config_sha_ayni": true,
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "rejim_kimligi_uyusmaz_n": 0,
+    "rejim_kimligi_ornek": [],
+    "tetiklendi": true
+   },
+   "basari_kosulu_kaydi": {
+    "not": "HÜKÜM GİRDİSİ (kart success_metric) — kill değil: ΔP&L CI-alt>0 VE dd ≤ C×1.3 kaydı; hüküm Rol-1'in",
+    "d_pnl_ci_alt": -22638.8257,
+    "d_pnl_ci_alt_pozitif": false,
+    "maxdd_C": 0.1235,
+    "maxdd_hucre": 0.1322,
+    "dd_oran": 1.07,
+    "dd_C_x1p3_icinde": true
+   }
+  }
+ },
+ "dosyalar": {
+  "h1": {
+   "sonuc": "sonuc_h1.json",
+   "seanslar": "seanslar_h1.json",
+   "islemler": "islemler_h1.json"
+  },
+  "h2": {
+   "sonuc": "sonuc_h2.json",
+   "seanslar": "seanslar_h2.json",
+   "islemler": "islemler_h2.json"
+  }
+ },
+ "hukum": null
+}

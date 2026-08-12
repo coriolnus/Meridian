@@ -1,0 +1,66 @@
+{
+ "kart": "EDG-2026-033",
+ "teshis": "motor_sha_drift_kayit_zamani",
+ "olcum_zamani": "2026-08-12T18:25:54+00:00",
+ "vaka_ozeti": "kill#3 sha-uyuşmazlığı KAYIT-ZAMANI artefaktıdır: paralel oturumun commit'lenmemiş çalışma-ağacı düzenlemeleri (OPT Faz-1: derisk rampası goal.yaml'a kablolandı; momentum_burst ARMED_SETUPS'a eklendi) hücre İTHALİNDEN SONRA, sonuc YAZIMINDAN ÖNCE diske indi. Koşan kod C-özdeş ESKİ motordu — dört bağımsız kanıt aşağıda. Hüküm Rol-1'in.",
+ "kanit_1_ithal_zamanlamasi": {
+  "hucre_log_ilk_satir_utc": {
+   "h1": "2026-08-12T18:08:25+00:00",
+   "h2": "2026-08-12T18:08:25+00:00"
+  },
+  "motor_mtime_utc": {
+   "broker.py": "2026-08-12T18:11:47+00:00",
+   "strategy.py": "2026-08-12T18:14:31+00:00",
+   "guard.py": "2026-08-12T18:12:00+00:00"
+  },
+  "beyan": "log ilk satırı (bar-yükleme uyarısı) ithalin BİTTİĞİ andan sonradır; mtime'lar ondan 3-6 dk SONRA — ithal edilen baytlar eskiydi"
+ },
+ "kanit_2_kontrol_sha_kaydi": {
+  "kontrol_sonuc_motor_sha": {
+   "broker.py": "daa858a522d97c98",
+   "backtest.py": "d345b6eed3d28be4",
+   "strategy.py": "ac7c53a3d89b6203",
+   "regime.py": "6417301907cbf30a",
+   "guard.py": "ff62ae6e4eabd851",
+   "score.py": "d4dba15b9e60f17d"
+  },
+  "C_motor_sha": {
+   "broker.py": "daa858a522d97c98",
+   "backtest.py": "d345b6eed3d28be4",
+   "strategy.py": "ac7c53a3d89b6203"
+  },
+  "beyan": "18:07:30'da yazılan kontrol sonucu C'nin sha'larını BİREBİR kaydetti — düzenlemelerden önce ağaç C-özdeşti; kontrol bit-özdeşliği ŞERHSİZ geçti"
+ },
+ "kanit_3_yapisal_typeerror": {
+  "beyan": "YENİ broker.max_positions_at, derisk_mult'u 3 argümanla çağırır (equity, peak, cfg); şasinin monkeypatch'i 2-parametreli kapanıştır — YENİ modül yüklenseydi koşum-öncesi assert'te (max_positions_at(80,100,5)==4) TypeError ile ÇÖKERDİ. İki hücre de 820+ sn koşup tam defter üretti → ESKİ max_positions_at yürüdü"
+ },
+ "kanit_4_defter_ici_setup_evreni": {
+  "beyan": "YENİ strategy.py momentum_burst'ü silahlar (ARMED_SETUPS 4'lü); hücre defterlerinde SIFIR momentum_burst işlemi var — koşan ARMED_SETUPS eski 3'lüydü (C evreniyle aynı)",
+  "setup_dagilimlari": {
+   "h1": {
+    "breakout_vcp": 381,
+    "exhaustion_hammer": 239,
+    "pullback": 7
+   },
+   "h2": {
+    "breakout_vcp": 385,
+    "exhaustion_hammer": 247,
+    "pullback": 7
+   }
+  }
+ },
+ "calisma_agaci_durumu": [
+  "M meridian/broker.py",
+  " M meridian/guard.py",
+  " M meridian/strategy.py"
+ ],
+ "simdiki_motor_sha256_16": {
+  "broker.py": "634d15249d38fe24",
+  "backtest.py": "d345b6eed3d28be4",
+  "strategy.py": "34339f5c2dc4ce53",
+  "regime.py": "6417301907cbf30a",
+  "guard.py": "b28ceea53ab80f1c",
+  "score.py": "d4dba15b9e60f17d"
+ },
+ "sonuc_beyani": "hücrelerin ÇALIŞMA-ZAMANI motoru C ile özdeşti (kanıt 1-4); kill#3 bayrağı kayıt-zamanı sha görüntüsünü dürüstçe yansıtır ve sonuc.json'da OLDUĞU GİBİ bırakılmıştır — yorum/hüküm Rol-1'in"
+}

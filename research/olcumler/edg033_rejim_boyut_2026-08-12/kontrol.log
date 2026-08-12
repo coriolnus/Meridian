@@ -1,0 +1,27 @@
+{"ts": "2026-08-12T18:07:22+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "AAPL", "dates": "2025-05-26", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T18:07:22+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "AVGO", "dates": "2008-06-12", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:22+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "CRM", "dates": "2018-11-22", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T18:07:22+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "CMCSA", "dates": "2013-12-18", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:22+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "PINS", "dates": "2013-07-15,2013-08-02", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:23+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "DLTR", "dates": "2012-06-26", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:23+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "UNP", "dates": "2014-06-06", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:23+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "TDG", "dates": "2011-12-01,2011-12-09", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:23+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "ALB", "dates": "2006-10-30", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T18:07:24+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "EL", "dates": "2012-01-20", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+
+=========== EDG-033 KOŞUM [kontrol_kontrol_carpan1_smoke] ===========
+replay 2022-01-01→2022-06-30  sv=3  sembol=251  süre=8.4s
+enjeksiyon: max_open 5→20  size_r taban 1.0→0.5  harita={'trend_up': 0.5, 'trend_down': 0.5, 'chop': 0.5, 'high_vol': 0.5}
+bütünlük geçerli=True  frame_miss=0 dup=0 scan!=plan=0 yasak=[] base_max_bozuk=0 carpan_ihlal=0 plan_band_ihlal=0
+işlem n=3 (6.09/yıl)  net_pnl=-511.72  maxdd_kanonik=None  avg_r=None  sharpe=None
+silahlı size_r rejim: {'trend_up': {'n': 4, 'min': 0.36, 'max': 0.41, 'ort': 0.379}}
+NO_GO nedenleri: {}
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/smoke/sonuc_kontrol_smoke.json
+KOSUM_KONTROL_SMOKE_BITTI
+
+=========== EDG-033 KONTROL BİT-ÖZDEŞLİK ===========
+dosya bayt-aynı: {'seanslar': True, 'islemler': True}
+sonuc bölüm eşitliği: {'replay': True, 'butunluk': True, 'islem': True, 'performans': True, 'doluluk': True, 'tepe_isi': True, 'betim': True, 'tasnif_tum_seans': True, 'birincil': True, 'ci95_ay_kumeli': True}
+bit_ozdes=True  kill#1 tetiklendi=False
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg033_rejim_boyut_2026-08-12/smoke/kontrol_bit_ozdeslik.json
+KONTROL_PASS

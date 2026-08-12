@@ -834,11 +834,11 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     iyileştirmek için hangi yöne gitmeliyiz")** — 9-kart dalgasının meta-bulgusu: DEBİ KOLU BİTTİ (C'ye
     eklenen her debi/eşik-gevşetme kalemi kaliteyi düşürdü); kalan kaldıraçlar seçilim kalitesi + sermaye
     tahsisi. Sıralı adaylar (her biri kart-önce, C-şasi üzerinde):
-    · **15a REJİM-KOŞULLU BOYUTLAMA (EDG-033 adayı — EN GÜÇLÜ KANIT):** 030 ayrışımı trend_up işlemlerde
-      ort-R 0.736 gösterdi (portföy geneli 0.057; e20'nin −13.4k$'lık zararı trend_up kazananlarının
-      yerinden edilmesiydi). Hipotez: taban 0.5R sabit kalır, rejim-skoru yüksek pencerede kademeli artış
-      (ör. trend_up'ta 0.75R) / nötr bantta 0.35R. Zarf 5R DOKUNULMAZ — aynı ısı, daha iyi dağılım.
-      *boyut: S (param-enjeksiyon, motor yamasız) · öncelik: EN YÜKSEK.*
+    · ~~**15a REJİM-KOŞULLU BOYUTLAMA**~~ → **ÖLÇÜLDÜ-KAPANDI (EDG-033, 2026-08-12): İKİ HÜCRE DE DÜŞTÜ,
+      düz-0.5R kanıtla doğrulandı** (h1 Δ−7.6k / h2 Δ−8.9k; sharpe 0.285→0.05/0.02). Öğretici mekanizma:
+      saf-boyut etkisi eşleşenlerde POZİTİFTİ (+1.4k) ama 0.75R planlar 5R zarfını 2× hızla doldurup C'nin
+      ~170 iyi işlemini yerinden etti — ZARF bağlayıcı kaynak; zarfa dokunmadan boyut büyütme kompozisyonu
+      bozuyor (028/032 ile aynı yasa). Zarf×boyut birlikte-büyütme açılMAZ (028 zarf-10 çöküşü ölçülü).
     · ~~**15b SLOT-YARIŞMASI KABUL POLİTİKASI**~~ → **ÖLÇÜLDÜ-KAPANDI (EDG-034 FAZ-0, 2026-08-12):
       İNERT — motor kabulü ZATEN bileşik-skor azalan sıralıyor** (backtest.py:332; canlı loop.py:1641
       aynı yasa; 'aday>boş-slot' yarışması 1147 seansta 3). Öğretici: 030'un çalınması sıra değil SKOR

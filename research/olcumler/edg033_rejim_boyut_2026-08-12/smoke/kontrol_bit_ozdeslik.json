@@ -1,0 +1,32 @@
+{
+ "kart": "EDG-2026-033",
+ "kontrol": "carpan_1.0_smoke_bit_ozdeslik",
+ "olcum_zamani": "2026-08-12T18:07:30+00:00",
+ "tanim": "kill#1 kontrolü: çarpan≡1.0 (dört rejimde 0.5) smoke koşumu 026 C smoke çıktılarıyla — seanslar+islemler BAYT-AYNI (sha256) ve sonuc ekonomik bölümleri ['replay', 'butunluk', 'islem', 'performans', 'doluluk', 'tepe_isi', 'betim', 'tasnif_tum_seans', 'birincil', 'ci95_ay_kumeli'] sözlük-eşit",
+ "dosya_bayt_kiyasi": {
+  "seanslar": {
+   "kontrol_sha256": "fdb8a6fec540afdf133ad1ca1ef3285491a654c4b6c269d1ecba2444d805236e",
+   "c_sha256": "fdb8a6fec540afdf133ad1ca1ef3285491a654c4b6c269d1ecba2444d805236e",
+   "bayt_ayni": true
+  },
+  "islemler": {
+   "kontrol_sha256": "936322b744700991f1c2c023c1be6f7d2dc87153698cdb97ba900a243a3b0625",
+   "c_sha256": "936322b744700991f1c2c023c1be6f7d2dc87153698cdb97ba900a243a3b0625",
+   "bayt_ayni": true
+  }
+ },
+ "sonuc_bolum_esitligi": {
+  "replay": true,
+  "butunluk": true,
+  "islem": true,
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true
+ },
+ "bit_ozdes": true,
+ "kill1_tetiklendi": false
+}
