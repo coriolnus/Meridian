@@ -64,8 +64,13 @@ def test_obs_owns_only_the_event_ledger_and_notify_state(sandbox_state):
     # notify_undelivered.json (2026-07-22): kanal yapılandırılmamışken alarm hiçbir yere gitmiyordu
     # ve bu SESSİZDİ (canlıda 23 MECHANISM_STALE yazıldı, 0'ı teslim edildi). Teslim edilemeyen
     # alarm artık sayılıyor; sahiplik obs'ta, çünkü kararı veren `_maybe_notify`.
+    # alarm_mandal.json (2026-08-12, gelen-kutusu hijyeni): tekrar-mandalı imza defteri — kararı
+    # veren obs'un kendi mandal hunisi, okuyucusu watchdog.parity_report. Kardeş çivilerin deseni
+    # gibi modül SABİTİNDEN okunur (elle literal değil — test_scheduler_owns_only_its_own_state
+    # docstring'indeki gerekçe: sabit değişirse test kendiliğinden izler, ikiz-literal bayatlamaz).
+    from meridian.obs import MANDAL_FILE
     assert _writes("meridian/obs.py") <= {"events.jsonl", "notify_sent.json",
-                                          "notify_undelivered.json"}
+                                          "notify_undelivered.json", MANDAL_FILE}
 
 
 def test_probgate_owns_only_its_calibration_file(sandbox_state):
