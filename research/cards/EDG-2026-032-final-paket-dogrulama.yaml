@@ -32,4 +32,19 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T3x", trial_ids: [pending-032-c-mb]}
 
-status: registered   # 2026-08-12 Rol-1 — pencere-sonrası zorunlu doğrulama; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — ölçüldü + hüküm: KAPI 3/3 GEÇTİ, dağıtım ilerler.
+
+verdict:   # Rol-1 hükmü.
+  kapi: >
+    3/3 GEÇTİ (donuk ölçütler, mekanik): (i) ΔP&L CI-üst +40.731 ≥ 0 ✓ · (ii) dd 0.1268 ≤ 0.16055 ✓ ·
+    (iii) sharpe 0.521 ≥ 0.20 ✓. PAKET DAMGASI (C+mb): 885 işlem · net +20.684,7$ · max-dd %12.7 ·
+    sharpe 0.521 · işlem-R 0.076 (C: 772 · +9.869$ · %12.4 · 0.285 · 0.057).
+  serh: >
+    DÜRÜSTLÜK ŞERHİ: ΔP&L +10.815$ NOKTA-pozitif ama CI [−16.070,+40.731] 0-içi — kapı bozulmama-kapısıdır,
+    iyileşme-kanıtı değildir; mb zaten operatör-takdiri silahlanmıştı (kıl-payı-CI bilinerek). mb-karnesi:
+    n=339, ort-R +0.083 (CI 0-içi), +12.488$; yıl-deseni 2022(−0.296)/2026(−0.042) zayıf — 025 uyarısı
+    C-dünyasında da görünür → CANLI İZLEME kalemi. Slot-kalabalıklaşma gerçek (diğer kurulumlar −226 işlem,
+    CI 0-dışı) ama zararsız (kurulum-başına R bozulmadı; ΔP&L kayması CI 0-içi). mb ısı-tavanına yaslanıyor
+    (heat_hard NO_GO 168→607) — zarf 5R bağlayıcı kalır (028 hükmüyle tutarlı).
+  kanal: "entry.armed_extra öz-sınama 3/3; ARMED_SETUPS koşumda değişmedi; sha'lar C-pinleriyle birebir; frame_miss=0 dup=0 scan==plan; yasaklı modül yüklenmedi."
+  artefakt: "research/olcumler/edg032_final_paket_2026-08-12/ (sonuc.json + cmb koşum çıktıları + smoke)"

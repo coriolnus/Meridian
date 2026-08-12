@@ -84,7 +84,9 @@ w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Taka
    kapalı — bu karar ileride açılırsa geçerli davranışı şimdiden sabitler.
 
 ### Uygulama zinciri (donuk sıra)
-- [1] FİNAL-PAKET doğrulama replay'i: **C + mb-silahlı** (yeni kombinasyon — 025'in mb'si A-dünyasındaydı) → EDG-032.
+- [1] ✅ FİNAL-PAKET doğrulama replay'i (EDG-032, 2026-08-12): **KAPI 3/3 GEÇTİ** — damga: C+mb 885 işlem ·
+  +20.685$ · dd %12.7 · sharpe 0.521. Şerh: ΔP&L nokta +10.8k ama CI 0-içi (bozulmama-kapısı, iyileşme-kanıtı
+  değil); mb yıl-deseni 2022/2026 zayıf → canlı izleme kalemi.
 - [2] Kod turu: rampa KABLOLAMASI (TEK rampa 15/36 — mod ayrımı YOK, karar §E.3; OPT Faz-1'in ilk kalemi)
   + goal: max_open 20, position_size_r 0.5 + ARMED_SETUPS += momentum_burst (tarihçe-korumalı).
 - [3] Frozen-tree tam suite → [4] TEK dağıtım → [5] canlı doğrulama + özet.

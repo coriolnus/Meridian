@@ -1,0 +1,21 @@
+{"ts": "2026-08-12T17:46:52+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "AAPL", "dates": "2025-05-26", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T17:46:52+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "AVGO", "dates": "2008-06-12", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:52+00:00", "level": "warn", "event": "bar_ghost_session_dropped", "ticker": "CRM", "dates": "2018-11-22", "n": 1, "calendar": "XNYS", "detail": "takvimde SEANS OLMAYAN tarihte bar satırı — kaynak çoğu sembolde önceki seansı kopyalamış, bir kısmında BÖLÜNME-DÜZELTİLMEMİŞ ham fiyat yazmış; satır düştü"}
+{"ts": "2026-08-12T17:46:53+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "CMCSA", "dates": "2013-12-18", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:53+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "PINS", "dates": "2013-07-15,2013-08-02", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:53+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "DLTR", "dates": "2012-06-26", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:54+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "UNP", "dates": "2014-06-06", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:54+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "TDG", "dates": "2011-12-01,2011-12-09", "n": 2, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:54+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "ALB", "dates": "2006-10-30", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+{"ts": "2026-08-12T17:46:54+00:00", "level": "warn", "event": "bar_unadjusted_row_quarantined", "ticker": "EL", "dates": "2012-01-20", "n": 1, "calendar": "XNYS", "detail": "geçerli seansta izole düzeltilmemiş fiyat satırı (|hareket|>%35, ertesi bar geri dönüyor, hacim tutarsız) — split_suspect artık SOFT değil, satır karantinada"}
+
+=========== EDG-032 KOŞUM [cmb_slot20_r05_mb] ===========
+replay 2022-01-01→2026-07-30  sv=3  sembol=251  süre=758.8s
+enjeksiyon: max_open 5→20  position_size_r 1.0→0.5  armed_extra None→['momentum_burst']
+mb-kanal öz-sınama: True/True/True (silahlanıyor/dormant/öncelik)  ARMED_SETUPS sonrası aynı=True
+bütünlük geçerli=True  frame_miss=0 dup=0 scan!=plan=0 yasak=[] base_max_bozuk=0
+işlem n=885 (mb=339)  net_pnl=20684.69  maxdd_kanonik=0.1268  sharpe=0.521  avg_r=0.076
+plan setup dağılımı: {'momentum_burst': 603, 'breakout_vcp': 580, 'exhaustion_hammer': 347, 'pullback': 13}
+mb plan verdict: {'GO': 21, 'REVIEW': 337, 'NO_GO': 245}
+NO_GO nedenleri: {'heat_hard': 607, 'HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs': 607, 'sector_cap': 8}
+yazıldı: /Users/erdemozturk/AI-Trading/research/olcumler/edg032_final_paket_2026-08-12/sonuc_cmb.json
