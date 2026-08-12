@@ -35,4 +35,19 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-034-skor-sirali]}
 
-status: registered   # 2026-08-12 Rol-1 — §2-15 hattının ikinci kartı; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — FAZ-0 betimsel ölçüm + hüküm: İNERT-KAPANIŞ.
+
+verdict:   # Rol-1 hükmü.
+  faz0: >
+    Kabul sırası ZATEN bileşik-skor azalan: backtest.py:332 `candidates.sort(key=score, reverse=True)` —
+    kapı/silahlanma döngüsünden ÖNCE; ısı/sektör kapasitesi ve OPEN-doldurma bu sırayı aynen taşıyor
+    (arm :339→:432, open :227). Canlı taraf aynı yasada (loop.py:1641, salt-okuma). Motor sha'ları 026
+    C-pinleriyle birebir. Ek: 'aday>boş-slot' yarışması 1147 seansta yalnız 3 (kill#2 eşiği <20 de tetik);
+    arm-anı max_open NO_GO 0; ısı/sektör yarışması 76 seans/171 NO_GO ama orada da sıra skor-azalan.
+  hukum: >
+    İNERT-KAPANIŞ — hipotez motorda zaten gerçeklenmiş; politika değiştirecek yüzey yok, FAZ-1 dejenere
+    (bit-özdeşlik yapısal, Δ≡0) olduğundan KOŞULMADI (kartın ön-koşul maddesi). Mevcut kabul yasası artık
+    KANITLA BELGELİ. K muhasebesi: 1 trial kayıtlı-ama-koşulmadı; muhafazakâr sayım — K geri alınmaz.
+    ÖĞRETİCİ BULGU: 030'un slot-çalınması bir SIRA sorunu değil SKOR sorunu — kötü-rejim adayı skor
+    yarışını kazanabiliyor → §2-15a (rejim bilgisinin boyuta/skora işlenmesi, EDG-033) hattını güçlendirir.
+  artefakt: "research/olcumler/edg034_skor_kabul_2026-08-12/sonuc_faz0.json (replay yok — FAZ-0 erken-çıkış a+b; şasiye/motora tek bayt yazılmadı)"

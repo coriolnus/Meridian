@@ -1,0 +1,65 @@
+{
+ "kart": "EDG-2026-034",
+ "faz": "FAZ-0 (betimsel — replay KOŞULMADI, kart ön-koşulu gereği)",
+ "modul": "ölçüm ajanı 2026-08-12 — bu dosya HÜKÜM İÇERMEZ; hüküm Rol-1'in",
+ "olcum_zamani": "2026-08-12",
+ "soru_1_kabul_sirasinin_dogasi": {
+  "bulgu": "kabul ZATEN bileşik-skor AZALAN sıralı — tarama-sırası DEĞİL",
+  "kanit_kod_yuzeyi": {
+   "tek_kanonik_nokta": "meridian/backtest.py replay() — motorda aday-iterasyonu/giriş-doldurması olan TEK fonksiyon (walk_forward replay'e delege eder; scan_entry yalnız :329, fill_entry yalnız :232'de çağrılır)",
+   "aday_toplama": "backtest.py:322-331 — `for t, df_t in per.items()` (evren/tarama sırası; sözlük sırası)",
+   "siralama": "backtest.py:332 — `candidates.sort(key=lambda s: s.score, reverse=True)` (bileşik-skor AZALAN; kapı/silahlanma döngüsünden ÖNCE)",
+   "kapi_silahlanma": "backtest.py:339 `for sig in candidates:` → guard.classify_gate → NO_GO değilse backtest.py:432 `armed.append(plan)` — skor sırasında; sector_ct ve open_risk_r (armed dahil) bu sırayla birikir → ısı/sektör kapasitesini de YÜKSEK skor önce alır",
+   "open_fazi_doldurma": "backtest.py:227 `for plan in armed:` — armed listesi CLOSE'daki skor-sırasını AYNEN taşır (yeniden sıralama yok, araya ekleme yok; her gün fill sonrası armed=[] sıfırlanır) → eff_max_open kısıtına çarpıldığında da doldurma önceliği skor-sıralı",
+   "skor_alani": "strategy.py EntrySignal.score — kurulum-başına [0,100] bileşik skor (scan_entry sembol-başına TEK sinyal döner; kurulum önceliği sembol-İÇİ seçimdir, slot yarışması değildir)"
+  },
+  "skor_korelasyonu": {
+   "yapisal": "kabul sırası = skor sırası, korelasyon 1.0 YAPIYA GÖRE (sıralama satırı kanıtı); tarama-sırası yalnız EŞİT-int-skor bağlarında hayatta kalır (Python kararlı sıralama)",
+   "orneklem": null,
+   "orneklem_neden_olculemedi": "026 C-çıktıları aday-düzeyi skorları persist etmedi (candidate_log/plan_log kaydedilmedi) — sonradan örneklem korelasyonu türetilemez; yapısal kanıt varken gerek de yok (UYDURMA YASAĞI: null + neden)"
+  },
+  "canli_taraf_baglam": "loop.py:1641 aynı satır: `candidates.sort(key=lambda c: c['score'], reverse=True)` — canlı ve replay bu yüzeyde AYNI yasada (yalnız bağlam; kart kapsamı backtest motoru; loop İTHAL edilmedi, salt okundu)"
+ },
+ "soru_2_yarisma_sikligi_026C_ciktilarindan": {
+  "kaynak": "research/olcumler/edg026_slot20_2026-08-12/{seanslar_c,sonuc_c}.json — YENİDEN KOŞUM YOK; motor sha çivileri mevcut ağaçla birebir doğrulandı",
+  "sha_dogrulama": {"broker.py": "daa858a522d97c98", "backtest.py": "d345b6eed3d28be4", "strategy.py": "ac7c53a3d89b6203", "ayni": true, "butunluk_026C": true},
+  "pencere": "2022-01-01 → 2026-07-30, 1147 seans, C-dünyası (slot 20, 0.5R)",
+  "slot_yarismasi_kart_tanimi_aday_gt_bos_slot": {
+   "seans_n": 3,
+   "seanslar": [
+    {"date": "2022-11-30", "aday_n": 14, "acik_slot": 13, "silahli_n": 6},
+    {"date": "2023-11-30", "aday_n": 17, "acik_slot": 15, "silahli_n": 4},
+    {"date": "2023-12-15", "aday_n": 9, "acik_slot": 8, "silahli_n": 0}
+   ],
+   "not": "classify derisk_bagladi=3 ile birebir aynı küme"
+  },
+  "arm_ani_slot_nogo": {"max_open_positions_pozisyon_dolu_nogo_n": 0, "not": "arm-anı slot tavanı C'de HİÇ tetiklenmedi"},
+  "open_fazi_slot_dusmesi": {"n": 0, "kanit": "silahlı 813 = işlem 772 + limit-red 41 (open_below_stop 22 + max_chase 19) BİREBİR — eff_max_open/breaker/size_mult atlaması 0 kez"},
+  "isi_sektor_yarismasi_genis_tanim": {
+   "nogo_lu_seans_n": 76,
+   "nogo_plan_n": 171,
+   "neden_dagilimi": {"heat_hard": 168, "sector_cap": 3, "max_open_positions": 0},
+   "not": "ısı/sektör kapasite yarışması VAR (76 seans) — ama kabul sırası bu yarışmalarda da zaten skor-azalan (bkz. soru_1); politika değiştirecek bir şey bulamaz"
+  },
+  "cok_adayli_seans": {"aday_ge2_n": 258, "aday_ge2_ve_nogo_lu_n": 64, "aday_gt0_n": 440, "aday_max": 17}
+ },
+ "erken_cikis_kosullari": {
+  "a_sira_zaten_skor_sirali": {
+   "saglandi": true,
+   "sonuc": "kart ön-koşulu gereği İNERT-çıkış — FAZ-1 replay KOŞULMADI",
+   "gerekce": "FAZ-1 politikası (yarışma anında bileşik-skor AZALAN kabul) motorun MEVCUT davranışının kendisi; aynı anahtar üzerinde kararlı yeniden-sıralama zaten-sıralı listede no-op → hücre C'ye YAPISAL olarak bit-özdeş olurdu (Δ=0, kıyas dejenere). Bağ-kırma tek serbestlik derecesi: eşit int-skorlar mevcut motorda kararlı sırayla (tarama-sırası) çözülür; kartın beyanlı politikası da skor-anahtarlı olduğundan aynı davranış"
+  },
+  "b_yarisma_seansi_lt20": {
+   "kart_slot_tanimiyla_saglandi": true,
+   "deger": "3 < 20 (aday>boş-slot)",
+   "not": "geniş ısı/sektör tanımıyla 76 ≥ 20 — ama (a) yürürlükte; hangi tanımın kill#2'yi bağladığı Rol-1'in okuması"
+  }
+ },
+ "faz1": null,
+ "faz1_neden_kosulmadi": "kart features_asof: 'Zaten skor-sıralıysa → İNERT, dur' — FAZ-0 erken-çıkış (a) sağlandı; replay/monkeypatch/kontrol-hücresi koşulmadı, K harcanmadı-sayılmaz-geri-alınmaz sorusu Rol-1'in",
+ "kill_bayraklari": {
+  "kill_kontrol_bit_ozdesligi": "uygulanmadı (FAZ-1 açılmadı)",
+  "kill_yarisma_lt20": "kart slot-tanımıyla TETİKLENDİ (3<20) — İNERT-çıkışla aynı yönde",
+  "kill_sasi_butunlugu": "şasi bozulmadı: motor sha'ları 026 C pinleriyle birebir; hiçbir motor/config dosyasına yazılmadı; replay koşulmadı"
+ }
+}

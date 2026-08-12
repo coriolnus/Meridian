@@ -839,9 +839,10 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       yerinden edilmesiydi). Hipotez: taban 0.5R sabit kalır, rejim-skoru yüksek pencerede kademeli artış
       (ör. trend_up'ta 0.75R) / nötr bantta 0.35R. Zarf 5R DOKUNULMAZ — aynı ısı, daha iyi dağılım.
       *boyut: S (param-enjeksiyon, motor yamasız) · öncelik: EN YÜKSEK.*
-    · **15b SLOT-YARIŞMASI KABUL POLİTİKASI (EDG-034 adayı):** 030 mekanizması slot/ısı-çalınması —
-      kötü aday iyi adayın yerini alabiliyor (kabul tarama-sıralı). Hipotez: slot doluyken/yarışırken
-      bileşik-skor sıralı kabul (yüksek skor önce). *boyut: S-M · öncelik: yüksek.*
+    · ~~**15b SLOT-YARIŞMASI KABUL POLİTİKASI**~~ → **ÖLÇÜLDÜ-KAPANDI (EDG-034 FAZ-0, 2026-08-12):
+      İNERT — motor kabulü ZATEN bileşik-skor azalan sıralıyor** (backtest.py:332; canlı loop.py:1641
+      aynı yasa; 'aday>boş-slot' yarışması 1147 seansta 3). Öğretici: 030'un çalınması sıra değil SKOR
+      sorunu (kötü-rejim adayı yarışı kazanabiliyor) → 15a hattını güçlendirir.
     · **15c EVREN GENİŞLETME (kalan TEK kalite-nötr debi kolu):** 251→~400-500 likit isim; eşik
       GEVŞEMEZ, sadece havuz büyür (024 dersi: marjinal bant değersiz — daha çok isim ≠ daha gevşek
       kapı). Bağımlılık: §3-8 FINVIZ Elite / §3-9 delist-bar kaynağı (survivorship). *boyut: M ·
