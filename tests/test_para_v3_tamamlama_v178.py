@@ -38,6 +38,32 @@ from meridian import analytics, backtest, config, reflect, score as score_mod, s
 from tests import wf_fixtures as wf
 from tests.conftest import make_bars
 
+# =================================================================================================
+# PARA-v3 ÖLÇÜM TABANI DONMUŞ (2026-08-13)
+# =================================================================================================
+# Bu dosyanın fikstürleri 2026-07-30'un PARA-v3 ölçümüne kalibre: `max_drawdown=0,08` →
+# `DD_VETO_MARGIN=0,04`, ve sentetik eğrilerin ihlal-günü sayıları/örnekleri o eşikten türetildi
+# (ör. 102k seviyesi %7,3 düşüşle 0,04'ün ÜSTÜ, 0,08'in ALTI — marj değişince aynı eğri farklı
+# sayıda ihlal üretir). Operatör 2026-08-13'te bütçeyi 0,16'ya çıkardı; canlı sabitler okunsaydı
+# bu dosya OPERATÖRÜN RİSK İŞTAHINA bağlı olurdu — oysa ölçtüğü şey PARA-v3 YASASI (blok eşiği
+# ödünç alır mı, m2m ihlali hükme girer mi, geriye-uyum korunuyor mu).
+# YASANIN KENDİSİ AYRICA ÇİVİLİ: marj↔bütçe bağı `test_para_yasasi_v127` ve
+# `test_dalga_w1_v216::test_C5_dd_veto_margin_goalun_TAM_YARISIDIR` tarafından CANLI değere karşı
+# sınanır — yani bu dondurma bir körlük yaratmaz, yalnız tarihsel tabanı tarihsel tutar.
+@pytest.fixture(autouse=True)
+def _para_v3_olcum_tabani(monkeypatch):
+    monkeypatch.setattr(shadowlaw, "DD_VETO_MARGIN", 0.04)
+    monkeypatch.setattr(reflect, "DD_VETO_MARGIN", 0.04)
+    _ger = config.goal()
+
+    def _donmus_goal():
+        return {**_ger, "max_drawdown": 0.08}
+    # `cache_clear` ŞART: gerçek `config.goal` lru_cache'lidir ve `sandbox_state` fixture'ı her
+    # kurulumda onu çağırır — yerine konan sade fonksiyonda o alan yoksa TÜM dosya setup'ta patlar.
+    _donmus_goal.cache_clear = lambda: None
+    monkeypatch.setattr(config, "goal", _donmus_goal)
+
+
 
 # =================================================================================================
 # ⓐ DİLİMLEME YASASI — TEK UYGULAMA, YARI-AÇIK SINIR
@@ -188,7 +214,9 @@ def test_BAYRAK_KAPALIYKEN_M2M_ihlali_HUKME_GIRMEZ_ama_KAYDA_girer(kapi_ortami):
     """ⓓ ASIL ÇİVİ. Aday M2M düşüşünü marjın çok ötesinde kötüleştiriyor: `passes` DEĞİŞMEZ
     (bit-bit eski davranış), ama kapı kaydı ihlali ADIYLA taşır — ölçüm kartının ham maddesi."""
     temiz_passes, g0, w0 = reflect._gate_eval(*_ciftler(), k_probes=1)
-    inc, cand = _ciftler(inc_dd_mtm=0.05, cand_dd_mtm=0.15)      # 0,15 > 0,05 + 0,04 → ihlal
+    # FİKSTÜR EŞİK-BAĞIL (2026-08-13): fark marjdan TÜRETİLİR — marj değişince test kendini onarır.
+    inc, cand = _ciftler(inc_dd_mtm=0.05,
+                         cand_dd_mtm=0.05 + shadowlaw.DD_VETO_MARGIN * 2.5)   # marjın belirgin ÜSTÜ → ihlal
     passes, gate, why = reflect._gate_eval(inc, cand, k_probes=1)
 
     assert passes is temiz_passes is True, "M2M bacağı bayrak kapalıyken hükmü değiştirdi"
@@ -224,7 +252,8 @@ def test_BAYRAK_ACIKKEN_bacak_GERCEKTEN_baglanir(monkeypatch, kapi_ortami):
 def test_BAYRAK_ACIK_ama_IHLAL_YOKSA_hukum_DEGISMEZ(monkeypatch, kapi_ortami):
     """Bacak TEK YÖNLÜ: yalnız kötüleşmeyi cezalandırır. Marj içinde kalan aday etkilenmez."""
     monkeypatch.setenv(reflect.DD_MTM_VETO_ENV, "1")
-    inc, cand = _ciftler(inc_dd_mtm=0.05, cand_dd_mtm=0.08)      # 0,08 < 0,05 + 0,04 → geçti
+    inc, cand = _ciftler(inc_dd_mtm=0.05,
+                         cand_dd_mtm=0.05 + shadowlaw.DD_VETO_MARGIN * 0.75)  # marjın ALTI → geçti
     passes, gate, _why = reflect._gate_eval(inc, cand, k_probes=1)
     assert gate["dd_mtm_durum"] == "gecti" and passes is True
     # İYİLEŞME ÖDÜLLENDİRİLMEZ (çift-sayım arka kapıdan dönmesin)
@@ -287,7 +316,7 @@ def test_IKI_BILESEN_de_HUKUMSUZLUGUNU_ADIYLA_beyan_eder():
 # =================================================================================================
 def test_PARA_v3_sabitleri_ve_yasa_damgasi_DEGISMEDI():
     """Bu tur ŞASİ turudur: hiçbir yasa sayısı değişmez. Değişirse tüm geçmiş hükümler kıyaslanamaz."""
-    assert shadowlaw.DD_VETO_MARGIN == 0.04
+    assert shadowlaw.DD_VETO_MARGIN == 0.5 * float(config.goal()["max_drawdown"])  # sayı değil TÜRETİM (2026-08-13)
     assert reflect.DD_VETO_MARGIN == shadowlaw.DD_VETO_MARGIN
     assert reflect.GATE_MARGIN == 0.02
     assert reflect.MONEY_GATE_MARGIN == shadowlaw.MONEY_GATE_MARGIN

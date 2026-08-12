@@ -47,4 +47,41 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-13T0x", trial_ids: [pending-036-kuru-kosum]}
 
-status: registered   # 2026-08-13 Rol-1 — operatör bulgusundan doğdu; aşama-2 (uygulama) OPERATÖR ONAYI ister.
+status: measured   # 2026-08-13 Rol-1 — aşama-0+1 ölçüldü + hüküm: YENİLEME ŞU ARTEFAKTLA YAPILMAZ.
+verdict:
+  asama0: >
+    KILL#1 TETİKLENMEDİ — tohumun EN AZ 15 gerçek tüketicisi var ve 13'ü `kaynak` ayrımı YAPMIYOR.
+    Faz-6'nın iki kilidi (edge_verdict analytics.py:1840 · result_verdict :2287) doğrudan tohumdan
+    besleniyor; shadowlaw'ın MONEY_GATE_MARGIN/DD_VETO_MARGIN'i tohum defterinden TÜRETİLMİŞ
+    (shadowlaw.py:341); component_ic'in "gerçek katman n=95" hükmü tohumun kendisi. Yalnız 3 tüketici
+    ayrımı tam yapıyor (learning_scorecard orneklem_n=2, sermaye.py, /api/public/summary).
+    TARİHSEL KANIT: rollback defterinde v4 satırı `live_score=−0.0089, n_trades=95, rolled_back=true`
+    — tohum ZATEN BİR KEZ canlı sürüm geri aldırmış. Yani soru akademik değil.
+  asama1: >
+    (b) TÜKETİCİ TUTARLILIĞI DÜŞTÜ — kartın beklentisinin TERSİ ölçüldü. 885-satırlık artefaktla
+    7 tüketici KÖRLEŞİYOR (score_calibration IC → None; skills gerçek katman "?" n=885; mae_profile
+    → None; llm_calibration çifti 4→1), `sieve` bütünlük dedektörü 8 ihlal (4 kritik) yazıyor,
+    shadowlaw kayma bekçisi ateşliyor (margin_scale 0,1865→0,9272, 5×), rollback kapısı AÇILIYOR
+    (ham_delta −0,1779 < −0,1 → geri-alma eşiği aşılır). İYİ YÖNLER de ölçüldü: DSR 3e-06→0,0393,
+    result_verdict 0/4→1/4 (net_pnl −5.264$ → +20.963$), CI 145,19$→91,64$.
+  kok: >
+    BU BİR TOHUM DEĞİL ARTEFAKT PROBLEMİ. EDG-032'nin `islemler_cmb.json`'u SLIM PROJEKSİYON
+    (olcum.py:671-673 tam satırı 12 alana kırpıyor). Canlı şema 26 alan: 10 taşınabilir, 3 prosedürel
+    damga, **13 UYDURULAMAZ EKSİK** (plan_id, side, entry, exit, r_multiple_expected, pnl_pct, costs,
+    score, exploration, scaled_out, mfe_r, mae_r, skill_chain). Tam satırlar 032 koşumunda BELLEKTE
+    VARDI (broker.py:685-702), diske yazılmadı.
+  hukum: >
+    YENİLEME ŞU ARTEFAKTLA YAPILMAZ (kart kuralı: (b) düştü → DUR). DOĞRU YOL: 032 koşumunu TAM-SATIR
+    serileştirmeyle yeniden koş (deterministik, ~30dk; sha-pinli aynı dünya), sonra yenilemeyi o
+    defterle tekrar ölç. Aşama-2 (uygulama) HER HALÜKÂRDA operatör onayı ister ve İKİ EK RİSK kayda
+    geçti: (i) `strategy_version=5` damgası tohumu yürürlükteki sürümün paydasına sokar ve geri-alma
+    eşiğini aşırır — damga şeması yeniden düşünülmeli (ör. tohum ayrı sürüm-uzayı) · (ii) hermes
+    yansıma sayacı defter UZUNLUĞUNU okuyor (790 yeni → sayı kapısı açılır), yani yenileme öğrenme
+    kadansını da tetikler.
+  yan_kazanim: >
+    Denetim, ROADMAP §2-20/split hattına iki somut kalem ekledi: 13 tüketicinin `kaynak` körlüğü
+    (sim/gerçek ayrımı KARAR yollarında yok — rollback + hermes sayacı) ve ölçüm artefaktlarının
+    şema-eksikliği (replay defterleri canlı şemaya çevrilemiyor → her yenileme/backfill fikri bu
+    duvara çarpar).
+  artefakt: "research/olcumler/edg036_tohum_2026-08-13/ (sonuc.json + 4 ham ölçüm + 5 arşiv betiği; canlıya HİÇBİR yazım yok)"
+

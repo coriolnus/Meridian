@@ -1,0 +1,315 @@
+{
+ "dunya_A": {
+  "shadowlaw_variance_drift": {
+   "olculdu": true,
+   "kayma": [],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.1893,
+    "sd_dusus": 0.0339,
+    "ort_dusus": 0.0711,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 97,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "sieve_report": {
+   "ok": true,
+   "violations": [],
+   "stages": {
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 97,
+     "out": 4,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 93
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "rollback_girdileri": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 0,
+   "n_parent": 2,
+   "erken_return_None": true,
+   "cur_score": null,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "scoreboard_parent_kaydi": {
+    "backtest_oos": 0.1245,
+    "baseline_verdict": "olculebilir",
+    "baseline_source": "parent_backfill",
+    "baseline_measured_at": "2026-07-26T20:06:41+00:00",
+    "baseline_n_trades": 103,
+    "baseline_span_days": 914,
+    "baseline_freq_ratio": 1.511,
+    "reinstated": true
+   },
+   "scoreboard_parent_anahtarlari": [
+    "backtest_oos",
+    "baseline_freq_ratio",
+    "baseline_measured_at",
+    "baseline_n_trades",
+    "baseline_source",
+    "baseline_span_days",
+    "baseline_verdict",
+    "reinstated"
+   ],
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": null,
+   "ham_delta_esigi_asiyor": null,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  }
+ },
+ "dunya_B": {
+  "shadowlaw_variance_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.9898,
+     "turetilen_marj": 0.02,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.9898,
+    "sd_dusus": 0.0633,
+    "ort_dusus": 0.1864,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 887,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "sieve_report": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.gercek",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.gercek': 885 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:plan_id_biçimi:eski_şema×885). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "component_ic.gercek",
+     "rule": "sema_orani_yuksek",
+     "severity": "kritik",
+     "detail": "'component_ic.gercek': giren 887 satırın %100'i şema yüzünden elendi (eşik %10). Tek bozuk satır değil, sistematik bir uyumsuzluk — bu aşamanın ürettiği HER sayı eksik kanıtla hesaplanmıştır."
+    },
+    {
+     "stage": "llm_opinion_calibration.gercek",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'llm_opinion_calibration.gercek': 885 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:eksik_alan:plan_id×885). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "llm_opinion_calibration.gercek",
+     "rule": "sema_orani_yuksek",
+     "severity": "kritik",
+     "detail": "'llm_opinion_calibration.gercek': giren 887 satırın %100'i şema yüzünden elendi (eşik %10). Tek bozuk satır değil, sistematik bir uyumsuzluk — bu aşamanın ürettiği HER sayı eksik kanıtla hesaplanmıştır."
+    },
+    {
+     "stage": "score_calibration.gercek",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'score_calibration.gercek': 885 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:eksik_alan:score×885). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "score_calibration.gercek",
+     "rule": "sema_orani_yuksek",
+     "severity": "kritik",
+     "detail": "'score_calibration.gercek': giren 887 satırın %100'i şema yüzünden elendi (eşik %10). Tek bozuk satır değil, sistematik bir uyumsuzluk — bu aşamanın ürettiği HER sayı eksik kanıtla hesaplanmıştır."
+    },
+    {
+     "stage": "threshold_curve.gercek",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.gercek': 885 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:plan_id_biçimi:eski_şema×885). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.gercek",
+     "rule": "sema_orani_yuksek",
+     "severity": "kritik",
+     "detail": "'threshold_curve.gercek': giren 887 satırın %100'i şema yüzünden elendi (eşik %10). Tek bozuk satır değil, sistematik bir uyumsuzluk — bu aşamanın ürettiği HER sayı eksik kanıtla hesaplanmıştır."
+    }
+   ],
+   "stages": {
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.gercek": {
+     "in": 887,
+     "out": 2,
+     "drops": {
+      "sema:plan_id_biçimi:eski_şema": 885
+     }
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 887,
+     "out": 1,
+     "drops": {
+      "sema:eksik_alan:plan_id": 885,
+      "piyasa:llm_görüşü_yok": 1
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 887,
+     "out": 2,
+     "drops": {
+      "sema:eksik_alan:score": 885
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.gercek": {
+     "in": 887,
+     "out": 2,
+     "drops": {
+      "sema:plan_id_biçimi:eski_şema": 885
+     }
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "rollback_girdileri": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 885,
+   "n_parent": 2,
+   "erken_return_None": false,
+   "cur_score": -0.0534,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "scoreboard_parent_kaydi": {
+    "backtest_oos": 0.1245,
+    "baseline_verdict": "olculebilir",
+    "baseline_source": "parent_backfill",
+    "baseline_measured_at": "2026-07-26T20:06:41+00:00",
+    "baseline_n_trades": 103,
+    "baseline_span_days": 914,
+    "baseline_freq_ratio": 1.511,
+    "reinstated": true
+   },
+   "scoreboard_parent_anahtarlari": [
+    "backtest_oos",
+    "baseline_freq_ratio",
+    "baseline_measured_at",
+    "baseline_n_trades",
+    "baseline_source",
+    "baseline_span_days",
+    "baseline_verdict",
+    "reinstated"
+   ],
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": -0.1779,
+   "ham_delta_esigi_asiyor": true,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  }
+ }
+}

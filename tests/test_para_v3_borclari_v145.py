@@ -32,9 +32,35 @@ import json
 
 import pytest
 
-from meridian import analytics, backtest, config, score as score_mod, shadowlaw
+from meridian import analytics, backtest, config, reflect, score as score_mod, shadowlaw
 from tests import wf_fixtures as wf
 from tests.conftest import make_bars
+
+# =================================================================================================
+# PARA-v3 ÖLÇÜM TABANI DONMUŞ (2026-08-13)
+# =================================================================================================
+# Bu dosyanın fikstürleri 2026-07-30'un PARA-v3 ölçümüne kalibre: `max_drawdown=0,08` →
+# `DD_VETO_MARGIN=0,04`, ve sentetik eğrilerin ihlal-günü sayıları/örnekleri o eşikten türetildi
+# (ör. 102k seviyesi %7,3 düşüşle 0,04'ün ÜSTÜ, 0,08'in ALTI — marj değişince aynı eğri farklı
+# sayıda ihlal üretir). Operatör 2026-08-13'te bütçeyi 0,16'ya çıkardı; canlı sabitler okunsaydı
+# bu dosya OPERATÖRÜN RİSK İŞTAHINA bağlı olurdu — oysa ölçtüğü şey PARA-v3 YASASI (blok eşiği
+# ödünç alır mı, m2m ihlali hükme girer mi, geriye-uyum korunuyor mu).
+# YASANIN KENDİSİ AYRICA ÇİVİLİ: marj↔bütçe bağı `test_para_yasasi_v127` ve
+# `test_dalga_w1_v216::test_C5_dd_veto_margin_goalun_TAM_YARISIDIR` tarafından CANLI değere karşı
+# sınanır — yani bu dondurma bir körlük yaratmaz, yalnız tarihsel tabanı tarihsel tutar.
+@pytest.fixture(autouse=True)
+def _para_v3_olcum_tabani(monkeypatch):
+    monkeypatch.setattr(shadowlaw, "DD_VETO_MARGIN", 0.04)
+    monkeypatch.setattr(reflect, "DD_VETO_MARGIN", 0.04)
+    _ger = config.goal()
+
+    def _donmus_goal():
+        return {**_ger, "max_drawdown": 0.08}
+    # `cache_clear` ŞART: gerçek `config.goal` lru_cache'lidir ve `sandbox_state` fixture'ı her
+    # kurulumda onu çağırır — yerine konan sade fonksiyonda o alan yoksa TÜM dosya setup'ta patlar.
+    _donmus_goal.cache_clear = lambda: None
+    monkeypatch.setattr(config, "goal", _donmus_goal)
+
 
 
 # Ölçümün penceresi ELLE sabitlenir: `_span_days` fikstürün kendi kümelenmesinden türetseydi
@@ -223,7 +249,9 @@ def test_mtm_dd_bloku_IHLALI_bulur_ve_ILK_5_gunu_ornekler():
     r = backtest.mtm_dd_veto(_egri(seviyeler))
 
     assert r["olculdu"] is True and r["neden"] is None
-    assert r["esik"] == shadowlaw.DD_VETO_MARGIN == 0.04
+    # 2026-08-13: sabit 0,04 KALDIRILDI — bu satırın yasası "blok eşiği ÖDÜNÇ ALIR, kendi
+    # eşiğini tanımlamaz"dır; sayının kendisi goal'e yapışık (operatör 0,08→0,16 → marj 0,08).
+    assert r["esik"] == shadowlaw.DD_VETO_MARGIN
     assert r["esik_kaynagi"] == "shadowlaw.DD_VETO_MARGIN"
     # maksimum düşüş ELLE: (110000 − 92000)/110000
     assert r["max_mtm_dd"] == pytest.approx((110_000 - 92_000) / 110_000, abs=1e-4) == \
@@ -234,7 +262,7 @@ def test_mtm_dd_bloku_IHLALI_bulur_ve_ILK_5_gunu_ornekler():
     # ÖRNEKLEME ÇİVİSİ: sayaç 6 der ama liste İLK 5'i taşır (defter şişmesin).
     assert r["n_ihlal_gunu"] == 6
     assert [g["tarih"] for g in r["ihlal_gunleri"]] == [f"2024-01-0{i}" for i in range(5, 10)]
-    assert all(g["dd"] > 0.04 for g in r["ihlal_gunleri"])
+    assert all(g["dd"] > shadowlaw.DD_VETO_MARGIN for g in r["ihlal_gunleri"])
     assert r["n_gun"] == len(seviyeler) and r["pencere"] == {"ilk": "2024-01-01",
                                                             "son": "2024-01-12"}
     assert r["hukum_verir"] is False, "rapor bloğu hüküm veriyor gibi etiketlenmiş"
@@ -388,7 +416,9 @@ def test_YASA6_mtm_bloğunun_okuyucusu_walk_forward_ciktisidir():
 # =================================================================================================
 def test_DD_VETO_MARGIN_tek_kaynak_kalir_ve_kendi_gurultusunun_disinda():
     """Blok eşiği ÖDÜNÇ ALIR, kendi eşiğini TANIMLAMAZ; ve kayıtlı türetim koşulu bozulmamış."""
-    assert shadowlaw.DD_VETO_MARGIN == 0.04
+    # 2026-08-13: sayı değil TÜRETİM çivilenir — marj `goal.max_drawdown`ın tam yarısı (canlı bağ,
+    # `test_para_yasasi_v127`de ayrıca çivili) ve kendi ölçüm gürültüsünün DIŞINDA.
+    assert shadowlaw.DD_VETO_MARGIN == 0.5 * float(config.goal()["max_drawdown"])
     assert shadowlaw.DD_VETO_MARGIN > shadowlaw.MEASURED_V3["sd_dusus"], \
         "veto sınırı kendi ölçüm gürültüsünün içine düştü (yazılı türetim koşulu)"
     assert score_mod.START_EQUITY == BASLANGIC

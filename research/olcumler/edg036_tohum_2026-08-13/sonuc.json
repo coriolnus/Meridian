@@ -1,0 +1,1337 @@
+{
+ "kart": "EDG-2026-036",
+ "asama": "0 (ön-ölçüm) + 1 (kuru koşum)",
+ "olcum_zamani": "2026-08-12T22:23:41+00:00",
+ "olcum_ajani_beyani": "SALT-ÖLÇÜM. Karta DOKUNULMADI, hüküm YAZILMADI, git komutu KOŞULMADI, repo koduna DOKUNULMADI. Canlıya YALNIZ salt-okuma: SQLite `mode=ro` URI + düz dosya okuması; `meridian.store` canlıda BİLEREK kullanılmadı (store.read_* → db_backed() → bayat-defter süzgeci `.migrated` yeniden adlandırması yapabilir = YAZIM). Canlıya dosya yazılmadı, state'e yazılmadı, servis durdurulmadı. AŞAMA-1 tamamen YEREL izole sandbox'ta koştu (canlı state'in salt-okuma KOPYASI; sandbox'ta DB yok → dosya çağı). UYDURMA YASAĞI: 032 artefaktında olmayan alanlar None bırakıldı; yalnız kartın aşama-2'de ADIYLA yazdığı iki damga (kaynak=replay_seed, strategy_version=5) + `id` sayacı basıldı ve bunlar `sema_uyumu` altında AYRICA beyan edildi.",
+ "canli_taban": {
+  "trades_n": 97,
+  "kaynak_dagilimi": {
+   "replay_seed": 95,
+   "live_paper": 2
+  },
+  "sv_x_kaynak": {
+   "sv=4|replay_seed": 95,
+   "sv=3|live_paper": 2
+  },
+  "pnl": {
+   "replay_seed": {
+    "n": 95,
+    "n_pnl": 95,
+    "toplam_pnl": -5542.09,
+    "ort_pnl": -58.34,
+    "n_r": 95,
+    "ort_r": -0.0421,
+    "ts_min": "2023-02-01",
+    "ts_max": "2026-07-20"
+   },
+   "live_paper": {
+    "n": 2,
+    "n_pnl": 2,
+    "toplam_pnl": 277.99,
+    "ort_pnl": 139.0,
+    "n_r": 2,
+    "ort_r": -0.055,
+    "ts_min": "2026-08-07",
+    "ts_max": "2026-08-11"
+   }
+  },
+  "strategy": {
+   "version": 5,
+   "parent": 3,
+   "regime": null
+  },
+  "goal": {
+   "min_sample": 30,
+   "reflection_every": 5,
+   "max_drawdown": 0.08,
+   "target_annual_return": null,
+   "max_open_positions": null
+  },
+  "scoreboard": {
+   "current_version": 5,
+   "versions": {
+    "4": {
+     "live_score": -0.0089,
+     "backtest_oos": null,
+     "rolled_back": true,
+     "parent": null,
+     "shipped_at": null,
+     "n_trades": 95
+    },
+    "3": {
+     "live_score": null,
+     "backtest_oos": 0.1245,
+     "rolled_back": null,
+     "parent": null,
+     "shipped_at": null,
+     "n_trades": null
+    },
+    "5": {
+     "live_score": null,
+     "backtest_oos": null,
+     "rolled_back": null,
+     "parent": 3,
+     "shipped_at": null,
+     "n_trades": null
+    }
+   }
+  },
+  "portfolio_realized_pnl": 277.98314200393065,
+  "plan_join": {
+   "seed_eslesen": 95,
+   "seed_n": 95,
+   "live_eslesen": 2,
+   "live_n": 2,
+   "ornek_seed_plan_id": [
+    "P-2023-01-30-SNAP",
+    "P-2023-01-31-PKG",
+    "P-2023-01-26-APO"
+   ],
+   "ornek_live_plan_id": [
+    "P-2026-08-06-ALL-momentum_burst",
+    "P-2026-08-07-VLO-exhaustion_hammer"
+   ]
+  },
+  "n_trials_DSR": {
+   "toplam": 235,
+   "erosion_sorgu_guncel_pencere": 192,
+   "k_probes": 43,
+   "pencere_id": "R1",
+   "erosion_n_pencere_guncel": 4,
+   "erosion_n_pencere_hepsi": 6
+  }
+ },
+ "asama0_tuketici_tablosu": [
+  {
+   "tuketici": "DSR — canlı defterin deflate Sharpe'ı",
+   "giris_noktasi": "meridian/analytics.py:2530 validation_trio → analytics.py:10 _trades()",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR — `_trades()` damgayı hiç görmez; payda TÜM defter",
+   "canli_cikti": {
+    "dsr_tum_defter": 3e-06,
+    "n": 97,
+    "yalniz_live_paper": "ÖLÇÜLEMEZ (n=2 < DSR_MIN_N=20)",
+    "yalniz_replay_seed_dsr": 1e-06
+   },
+   "not": "DSR ayrıca health.FAZ6_KILITLERI'nin 5. kilidi (health.py:101,187-195)"
+  },
+  {
+   "tuketici": "PBO / CSCV",
+   "giris_noktasi": "analytics.py:2565 validation.pbo_cscv(validation_ledger.jsonl satırları)",
+   "tohumu_okuyor": "HAYIR",
+   "kaynak_ayrimi": "KONU DIŞI — trades defterini hiç okumaz",
+   "canli_cikti": {
+    "validation_ledger_n": 387,
+    "guncel_pencere_n": 183,
+    "PBO_MIN_ADAY": 8,
+    "seri_tasiyan_n": 387,
+    "not": "PBO trades defterini HİÇ okumaz — adayların kendi getiri serilerinden hesaplanır"
+   },
+   "not": "aday getiri serilerinden hesaplanır; tohum yenilemesi PBO'yu DEĞİŞTİRMEZ (kuru koşumda birebir aynı: 0.5714)"
+  },
+  {
+   "tuketici": "Skor→sonuç kalibrasyonu (score_calibration.json)",
+   "giris_noktasi": "analytics.py:829 score_calibration → analytics.py:848 `for t in _trades()`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "KISMİ — `gercek_kaynak` YAN KANALI ayırır (analytics.py:939-945), ama HÜKME giren `katmanlar.gercek` ayırmaz (n=97'nin 95'i tohum)",
+   "canli_cikti": {
+    "n_real": 97,
+    "katmanlar": {
+     "gercek": {
+      "rank_ic": 0.0526,
+      "n": 97,
+      "anlamli": false,
+      "se_yontem": "i.i.d._varsayimi"
+     },
+     "cf": {
+      "rank_ic": -0.0052,
+      "n": 2129,
+      "anlamli": null,
+      "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+     },
+     "havuz": {
+      "rank_ic": -0.0041,
+      "n": 2226,
+      "anlamli": null,
+      "karisim": "97 gerçek / 2129 sim"
+     }
+    },
+    "gercek_kaynak": {
+     "live_paper": {
+      "n": 2,
+      "ic": null
+     },
+     "replay_seed": {
+      "n": 95,
+      "ic": {
+       "rank_ic": 0.0492,
+       "n": 95
+      }
+     },
+     "belirsiz": {
+      "n": 0,
+      "ic": null
+     }
+    },
+    "verdict": "gerçek dilim IC 0.0526 (n=97), gürültüden ayırt EDİLEMİYOR"
+   },
+   "not": "edge_verdict 1. ölçütü (analytics.py:1866-1872) bu `katmanlar.gercek`i okur"
+  },
+  {
+   "tuketici": "EDGE HÜKMÜ (edge_verdict)",
+   "giris_noktasi": "analytics.py:1840; 1. ölçüt score_calibration.json, 5. ölçüt _realized_drawdown → _trades()",
+   "tohumu_okuyor": "EVET (dolaylı + doğrudan)",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "passed": 0,
+     "failed": 1,
+     "unmeasured": 4,
+     "zayif": 0,
+     "verdict": "EDGE KANITI: 0/5 sağlandı (0 zayıf, 1 sağlanmadı, 4 ölçülemedi) — edge kanıtlanmadı"
+    }
+   },
+   "not": "health.FAZ6_KILITLERI 1. kilit `edge_kaniti`"
+  },
+  {
+   "tuketici": "SONUÇ HÜKMÜ (result_verdict)",
+   "giris_noktasi": "analytics.py:2268 → 2287 `trades = _trades()`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR — dört dolar ölçütünün paydası TÜM defter (n=97)",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "passed": 0,
+     "failed": 3,
+     "unmeasured": 1,
+     "zayif": 0,
+     "verdict": "SONUÇ: 0/4 sağlandı (0 zayıf, 3 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı"
+    }
+   },
+   "not": "health.FAZ6_KILITLERI 2. kilit `sonuc_hukmu`; sermaye artırımı + silahlanma bu hükme bakar (ROADMAP §3.1)"
+  },
+  {
+   "tuketici": "VARYANS ATRİBÜSYONU (shadowlaw.variance_attribution)",
+   "giris_noktasi": "meridian/shadowlaw.py:341; çağrı yolu shadowlaw.py:445 variance_drift, :603 --olc CLI",
+   "tohumu_okuyor": "EVET (defter argüman olarak geçer; canlı çağrı `analytics._trades()`)",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "n_trades": 97,
+     "span_days": 1296,
+     "block_days": 14,
+     "n_blocks": 93,
+     "n_valid": 400,
+     "eski_paylar": {
+      "para": 0.0028,
+      "dusus": 0.8366,
+      "sharpe": 0.1606
+     },
+     "v3_paylar": {
+      "para": 1.0,
+      "dusus": 0.0,
+      "sharpe": 0.0
+     },
+     "sd_dusus": 0.0371,
+     "ort_dusus": 0.0733,
+     "dusus_p05": 0.0265,
+     "dusus_p95": 0.1443,
+     "dd_veto_gurultunun_disinda": true,
+     "para_payi_tek_terim": true,
+     "margin_scale": 0.1865,
+     "ret_scale_k": 2.349
+    },
+    "kayma_bekcisi_A": []
+   },
+   "not": "MONEY_GATE_MARGIN (0,02×margin_scale) ve DD_VETO_MARGIN bu ölçümden TÜRETİLMİŞ canlı sabitler"
+  },
+  {
+   "tuketici": "LLM görüş kalibrasyonu (llm_calibration.json)",
+   "giris_noktasi": "analytics.py:1074 llm_opinion_calibration → 1086 `for t in _trades()` (plan_id join)",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "llm_calibration.json": {
+     "n_pairs": 4,
+     "buckets": {
+      "karşı": {
+       "n": 1,
+       "win_rate": 0.0,
+       "avg_r": -1.004
+      },
+      "çekimser": {
+       "n": 3,
+       "win_rate": 0.667,
+       "avg_r": 0.403
+      }
+     },
+     "promoted": false
+    },
+    "sieve_A": {
+     "in": 97,
+     "out": 4,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 93
+     }
+    },
+    "plan_llm_opinion_tasiyan": 8
+   },
+   "not": "tohumun 95/95 satırı plana JOIN OLUYOR (a0b.plan_join) — yani tohum bu tüketicinin paydasında"
+  },
+  {
+   "tuketici": "Bileşen IC (component_ic.json)",
+   "giris_noktasi": "meridian/component_ic.py:451 `for t in store.read_jsonl('trades.jsonl')`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 5 bar · IC 0.2341 (n=95) — ANLAMLI; 24/24 hücre ölçülebildi, 2 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil"
+   },
+   "not": "canlı hüküm metni 'gerçek katman ... n=95' diyor — o 95 TOHUMUN KENDİSİ"
+  },
+  {
+   "tuketici": "Eşik eğrisi (threshold_curve.json)",
+   "giris_noktasi": "meridian/threshold_curve.py:87 `for t in store.read_jsonl('trades.jsonl')`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 80 (ort R 0.062, n=65) · canlı eşik 60 (ort R -0.0423, n=97) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi"
+   },
+   "not": "'canlı eşik 60 (ort R -0,0423, n=97)' — payda tohum"
+  },
+  {
+   "tuketici": "Skills karnesi (skill_attribution → skills.catalog)",
+   "giris_noktasi": "analytics.py:79 skill_attribution → _trades(); skills.py:332 catalog()",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "kuru_kosum_A": [
+     {
+      "skill": "stockbee-momentum-burst-screener",
+      "n": 1,
+      "win_rate": 0.0,
+      "avg_r": -1.028,
+      "total_r": -1.03,
+      "n_cf": 1085,
+      "cf_avg_r": 0.089
+     },
+     {
+      "skill": "pullback-screener",
+      "n": 4,
+      "win_rate": 0.0,
+      "avg_r": -1.0,
+      "total_r": -4.0,
+      "n_cf": 21,
+      "cf_avg_r": -0.968
+     },
+     {
+      "skill": "pre-trade-discipline-gate",
+      "n": 97,
+      "win_rate": 0.371,
+      "avg_r": -0.042,
+      "total_r": -4.1,
+      "n_cf": 0,
+      "cf_avg_r": null
+     },
+     {
+      "skill": "position-sizer",
+      "n": 97,
+      "win_rate": 0.371,
+      "avg_r": -0.042,
+      "total_r": -4.1,
+      "n_cf": 0,
+      "cf_avg_r": null
+     },
+     {
+      "skill": "vcp-screener",
+      "n": 91,
+      "win_rate": 0.385,
+      "avg_r": 0.0,
+      "total_r": 0.0,
+      "n_cf": 1009,
+      "cf_avg_r": -0.001
+     },
+     {
+      "skill": "stockbee-exhaustion-hammer-screener",
+      "n": 1,
+      "win_rate": 1.0,
+      "avg_r": 0.918,
+      "total_r": 0.92,
+      "n_cf": 12,
+      "cf_avg_r": 0.328
+     }
+    ]
+   },
+   "not": "vcp-screener n=91 / pullback-screener n=4 — hepsi tohum satırı (canlı yalnız 2)"
+  },
+  {
+   "tuketici": "Eksen-2 öneri eşikleri (skills.recommend_from_attribution / axis2_diagnosis)",
+   "giris_noktasi": "meridian/skills.py:383, :725 — `catalog()`ın n/avg_r alanları üzerinden",
+   "tohumu_okuyor": "EVET (dolaylı — skill_attribution üzerinden)",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "axis2_status.json_otomatik": [
+     {
+      "skill": "pullback-screener",
+      "n_cf": 21,
+      "cf_avg_r": -0.968,
+      "n": 4,
+      "avg_r": -1.0,
+      "zaten_golgede": true,
+      "why": "kanıt eşiği AŞILDI ama skill MOTOR-İÇİ: registry'ye `shadow` yazmak davranışı DEĞİŞTİRMEZ (motor bayraktan bağımsız koşar). Gerçek aksiyon knob/kapı düzeyindedir — otomatik bayrak yazımı YAPILMADI."
+     }
+    ],
+    "kuru_kosum_A_sayim": {
+     "arsiv": 36,
+     "esik_araliginda": 1,
+     "gercek_katman_olculmemis": 21,
+     "gercek_katman_olculmemis_cf_dolu": 1,
+     "korumali": 5,
+     "ornek_yetersiz_cf_de_yetersiz": 2,
+     "ornek_yetersiz_gercek_katman_yarim": 1
+    }
+   },
+   "not": "canlı axis2 kaydındaki 'pullback-screener n=4 avg_r=-1,0' gerçek katmanı TOHUMDUR"
+  },
+  {
+   "tuketici": "cf defteri & near_miss",
+   "giris_noktasi": "analytics.py:1465 near_miss_report → counterfactual.resolved_rows (trades'e HİÇ dokunmaz)",
+   "tohumu_okuyor": "HAYIR",
+   "kaynak_ayrimi": "KONU DIŞI",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "resolved_total": 5021,
+     "n_kova": 6,
+     "prov": {
+      "n_total": 5021,
+      "generated": "2026-08-12T22:17:45+00:00",
+      "source": "yalnız-simüle",
+      "n_real": 0,
+      "n_cf": 5021,
+      "stages": [
+       "near_miss_report.satirlar",
+       "near_miss_report.rejim_dilimi"
+      ]
+     }
+    },
+    "kuru_kosum_B": {
+     "resolved_total": 5021,
+     "n_kova": 6,
+     "prov": {
+      "n_total": 5021,
+      "generated": "2026-08-12T22:17:47+00:00",
+      "source": "yalnız-simüle",
+      "n_real": 0,
+      "n_cf": 5021,
+      "stages": [
+       "near_miss_report.satirlar",
+       "near_miss_report.rejim_dilimi"
+      ]
+     }
+    },
+    "cf_resolved_entered": {
+     "resolved_entered": 2129
+    }
+   },
+   "not": "künyesi zaten 'yalnız-simüle, n_real=0'; A ve B'de BİREBİR AYNI"
+  },
+  {
+   "tuketici": "cf_fidelity",
+   "giris_noktasi": "analytics.py:1400 cf_fidelity → _trades() (gerçek↔cf kesişimi)",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "anahtarlar": [
+     "_kaynak",
+     "corr",
+     "eksik_friksiyon",
+     "eksik_mekanizmalar",
+     "fidelity_ok",
+     "mean_diff_r",
+     "n",
+     "note",
+     "sadakat_beyani",
+     "sim_cikislar"
+    ]
+   },
+   "not": "kesişim tarafı gerçek defterden gelir; tohum orada"
+  },
+  {
+   "tuketici": "Hermes hipotez üretimi — yansıma SAYI kapısı",
+   "giris_noktasi": "hermes_runtime.py:310 `_restored_baseline`, :397 `_run`, :526 `status`; hermes.py:3839 _closed_count",
+   "tohumu_okuyor": "EVET — defter UZUNLUĞU sayaç",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "hermes_status.last_reflect_at": 97,
+    "kuru_kosum_A": {
+     "last_reflect_at_kalici": 97,
+     "defter_n": 97,
+     "trades_since_last_reflection": 0,
+     "reflection_every": 5,
+     "trades_until_next": 5,
+     "sayi_kapisi_acik": false,
+     "not": "gün-aralığı (horizon) kapısı AYRICA vardır; burada yalnız SAYI kolu"
+    }
+   },
+   "not": "tohum satır sayısı reflection_every sayacının doğrudan girdisi"
+  },
+  {
+   "tuketici": "Ebeveyn zinciri / rollback (rollback.check_and_rollback + evaluate_outcomes)",
+   "giris_noktasi": "meridian/rollback.py:180/373 — `strategy_version` ile filtreler, `kaynak` ile DEĞİL",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR — ayrım `strategy_version` üzerinden; tohum sv=4 olduğu için bugün v5'in paydasına GİRMİYOR (tesadüf, tasarım değil)",
+   "canli_cikti": {
+    "scoreboard_v4": {
+     "live_score": -0.0089,
+     "backtest_oos": null,
+     "rolled_back": true,
+     "parent": null,
+     "shipped_at": null,
+     "n_trades": 95
+    },
+    "kuru_kosum_A": {
+     "version": 5,
+     "parent": 3,
+     "ship_eval_regime": null,
+     "min_sample": 30,
+     "n_cur": 0,
+     "n_parent": 2,
+     "erken_return_None": true,
+     "cur_score": null,
+     "par_score_ham": 0.1245,
+     "par_score": 0.1245,
+     "par_score_yolu": "scoreboard.live_score|backtest_oos",
+     "scoreboard_parent_kaydi": {
+      "backtest_oos": 0.1245,
+      "baseline_verdict": "olculebilir",
+      "baseline_source": "parent_backfill",
+      "baseline_measured_at": "2026-07-26T20:06:41+00:00",
+      "baseline_n_trades": 103,
+      "baseline_span_days": 914,
+      "baseline_freq_ratio": 1.511,
+      "reinstated": true
+     },
+     "scoreboard_parent_anahtarlari": [
+      "backtest_oos",
+      "baseline_freq_ratio",
+      "baseline_measured_at",
+      "baseline_n_trades",
+      "baseline_source",
+      "baseline_span_days",
+      "baseline_verdict",
+      "reinstated"
+     ],
+     "rollback_if_worse_by": 0.1,
+     "ham_delta": null,
+     "ham_delta_esigi_asiyor": null,
+     "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+    }
+   },
+   "not": "scoreboard'daki v4 kaydı live_score=-0,0089 · n_trades=95 · rolled_back=true — yani TOHUM bir kez ZATEN canlı sürüm geri almış"
+  },
+  {
+   "tuketici": "shadowlaw kayma bekçisi (variance_drift)",
+   "giris_noktasi": "meridian/shadowlaw.py:437",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "olculdu": true,
+     "kayma": [],
+     "kayitli_n_trades": 95,
+     "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+     "yururlukteki_DD_VETO_MARGIN": 0.08,
+     "olcum_ozet": {
+      "margin_scale": 0.1893,
+      "sd_dusus": 0.0339,
+      "ort_dusus": 0.0711,
+      "dd_veto_gurultunun_disinda": true,
+      "para_payi_tek_terim": true,
+      "n_trades": 97,
+      "n_blocks": null,
+      "block_days": null
+     }
+    }
+   },
+   "not": "A dünyasında kayma YOK (margin_scale 0,1893 ≈ kayıtlı 0,1908) — kayıt TOHUMDAN ölçülmüş"
+  },
+  {
+   "tuketici": "reflect.propose_deterministic (deterministik öneri)",
+   "giris_noktasi": "meridian/reflect.py:794 `store.read_jsonl('trades.jsonl', limit=40)`",
+   "tohumu_okuyor": "EVET (son 40 satır — bugün 38'i tohum)",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": "yalnız `reflect --auto` CLI'ından çağrılır (reflect.py:771 yorumu) — canlı otomatik yol DEĞİL",
+   "not": "exit_reason kovaları + win_rate o 40 satırdan okunur"
+  },
+  {
+   "tuketici": "N4 / örneklem sayaçları (learning_scorecard.defter)",
+   "giris_noktasi": "analytics.py:639 → 668-681 `ledgerstamp.counts` + `orneklem_n`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "EVET — TAM AYIRIM. `orneklem_n = live_paper + belirsiz`; replay_seed paydaya GİRMEZ",
+   "canli_cikti": {
+    "kuru_kosum_A_defter": {
+     "live_paper_n": 2,
+     "replay_seed_n": 95,
+     "gercek_canli_n": 2,
+     "orneklem_n": 2
+    }
+   },
+   "not": "TOHUM YENİLEMESİNDEN ETKİLENMEYEN TEK TÜKETİCİ (A ve B'de orneklem_n=2)"
+  },
+  {
+   "tuketici": "Rejim bütçe tetikleyicisi (regime_trigger)",
+   "giris_noktasi": "meridian/regime_trigger.py:22 evaluate(trades)",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "kuru_kosum_A": {
+     "trend_up": {
+      "n": 59,
+      "threshold": 30,
+      "ready": true
+     },
+     "trend_down": {
+      "n": 0,
+      "threshold": 30,
+      "ready": false
+     },
+     "chop": {
+      "n": 35,
+      "threshold": 30,
+      "ready": true
+     },
+     "high_vol": {
+      "n": 3,
+      "threshold": 30,
+      "ready": false
+     }
+    },
+    "canli_fired": {
+     "fired": [
+      "chop",
+      "trend_up"
+     ]
+    }
+   },
+   "not": "trend_up/chop eşiği ZATEN tohumla aşılmış ve olay yazılmış"
+  },
+  {
+   "tuketici": "MAE profili (mae_profile.json)",
+   "giris_noktasi": "analytics.py:3142 → _trades() (mfe_r/mae_r)",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "HAYIR",
+   "canli_cikti": {
+    "n": 97
+   },
+   "not": "canlı n=97"
+  },
+  {
+   "tuketici": "Alfa/Beta atribüsyonu (trade_alpha_beta)",
+   "giris_noktasi": "analytics.py:532 → 604 `ledgerstamp.kaynak_of(t)`",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "EVET — `kaynak_kirilim` alanı",
+   "canli_cikti": "ölçülmedi (sandbox'ta SPY penceresi ayrı; result_verdict.beta_duzeltilmis kolonunda taşınır)",
+   "not": "ayrım VAR ama hükme girmez (`hukme_girmez: True`)"
+  },
+  {
+   "tuketici": "Sermaye ayrıştırması (sermaye.py)",
+   "giris_noktasi": "meridian/sermaye.py:176-210 `ledgerstamp.kaynak_of` + LIVE_PAPER/REPLAY_SEED",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "EVET — P&L kaynak başına ayrı",
+   "canli_cikti": {
+    "portfolio.realized_pnl": 277.98314200393065
+   },
+   "not": "canlı realized_pnl 277,98$ — YALNIZ live_paper; tohum P&L'i portföye HİÇ girmemiş"
+  },
+  {
+   "tuketici": "/api/public/summary + /api/diagnostics",
+   "giris_noktasi": "meridian/api.py:706-708 `_ls.split(trades)[_ls.LIVE_PAPER]`, api.py:1286, :3706",
+   "tohumu_okuyor": "EVET",
+   "kaynak_ayrimi": "EVET — public summary yalnız live_paper dilimini gösterir",
+   "canli_cikti": "kod yolu doğrulandı (api.py:702-708 yorumu: 'ledgerstamp — learning_scorecard'ın da paydası')",
+   "not": "dürüstlük ölçütünün (c) yüzey bacağı"
+  }
+ ],
+ "asama0_kill1": {
+  "kriter": "kartın kill#1'i: '(0)'da tohumun gerçek tüketicisi çıkmazsa → yenileme GEREKSİZ'",
+  "tetiklendi_mi": false,
+  "gerekce": "tohumun EN AZ 15 gerçek tüketicisi ölçüldü ve bunların 13'ü `kaynak` ayrımı YAPMIYOR (payda = tüm defter). Üstelik ikisi CANLI KARAR yolu: rollback/ebeveyn zinciri (strategy_version filtresi) ve hermes yansıma sayacı (defter uzunluğu). Yalnız `learning_scorecard.orneklem_n`, `sermaye.py`, `trade_alpha_beta.kaynak_kirilim`, `score_calibration.gercek_kaynak` ve `/api/public/summary` ayırıyor — bunlardan yalnız ilki bir KAPI paydası.",
+  "hukum_yeri": "Rol-1 (ölçüm ajanı hüküm yazmaz)"
+ },
+ "asama1_dunyalar": {
+  "A": {
+   "tanim": "canlı defterin bugünkü hâli",
+   "n": 97,
+   "kirilim": {
+    "replay_seed": 95,
+    "live_paper": 2
+   }
+  },
+  "B": {
+   "tanim": "EDG-032 C+mb (885) + aynı 2 live_paper",
+   "n": 887,
+   "kirilim": {
+    "replay_seed": 885,
+    "live_paper": 2
+   }
+  }
+ },
+ "asama1_kiyas_tablosu": [
+  {
+   "olcum": "defter n",
+   "A_mevcut_tohum": 97,
+   "B_edg032_cmb": 887,
+   "yon": "büyür (97→887)"
+  },
+  {
+   "olcum": "replay_seed n",
+   "A_mevcut_tohum": 95,
+   "B_edg032_cmb": 885,
+   "yon": "büyür"
+  },
+  {
+   "olcum": "live_paper n",
+   "A_mevcut_tohum": 2,
+   "B_edg032_cmb": 2,
+   "yon": "DEĞİŞMEZ"
+  },
+  {
+   "olcum": "portfolio.realized_pnl",
+   "A_mevcut_tohum": 277.98314200393065,
+   "B_edg032_cmb": 277.98314200393065,
+   "yon": "DEĞİŞMEZ"
+  },
+  {
+   "olcum": "DSR (canlı defter)",
+   "A_mevcut_tohum": 3e-06,
+   "B_edg032_cmb": 0.039316,
+   "yon": "İYİLEŞİR (3e-06 → 0,0393) ama DSR_HARD_MIN=0,95'in ÇOK altında"
+  },
+  {
+   "olcum": "Sharpe (gözlem başına)",
+   "A_mevcut_tohum": -0.176667,
+   "B_edg032_cmb": 0.03787,
+   "yon": "işaret DÖNER (−0,177 → +0,038)"
+  },
+  {
+   "olcum": "PBO",
+   "A_mevcut_tohum": 0.5714,
+   "B_edg032_cmb": 0.5714,
+   "yon": "BİREBİR AYNI (trades okumaz)"
+  },
+  {
+   "olcum": "score_calibration katmanlar.gercek",
+   "A_mevcut_tohum": {
+    "rank_ic": 0.0526,
+    "n": 97,
+    "anlamli": false,
+    "se_yontem": "i.i.d._varsayimi"
+   },
+   "B_edg032_cmb": null,
+   "yon": "KÖRLEŞİR — n=97 IC 0,0526 → None (885 satır `score` alanı yok)"
+  },
+  {
+   "olcum": "score_calibration verdict",
+   "A_mevcut_tohum": "gerçek dilim IC 0.0526 (n=97), gürültüden ayırt EDİLEMİYOR",
+   "B_edg032_cmb": "gerçek dilim ÖLÇÜLMEDİ (n=2; <30 ya da rütbe değişimi yok) — skorun tahmin gücü hakkında bir şey söylenemez",
+   "yon": "KÖRLEŞİR"
+  },
+  {
+   "olcum": "llm_calibration n_pairs",
+   "A_mevcut_tohum": 4,
+   "B_edg032_cmb": 1,
+   "yon": "KÜÇÜLÜR (4→1; 885 satır `plan_id` yok)"
+  },
+  {
+   "olcum": "edge_verdict",
+   "A_mevcut_tohum": {
+    "passed": 0,
+    "failed": 1,
+    "unmeasured": 4,
+    "zayif": 0
+   },
+   "B_edg032_cmb": {
+    "passed": 0,
+    "failed": 0,
+    "unmeasured": 4,
+    "zayif": 1
+   },
+   "yon": "0/5 KALIR; spy_ustu 'kaldi'(−0,1113) → 'zayif'(+0,2094)"
+  },
+  {
+   "olcum": "result_verdict",
+   "A_mevcut_tohum": {
+    "passed": 0,
+    "failed": 3,
+    "unmeasured": 1,
+    "zayif": 0
+   },
+   "B_edg032_cmb": {
+    "passed": 1,
+    "failed": 1,
+    "unmeasured": 1,
+    "zayif": 1
+   },
+   "yon": "0/4 → 1/4: net_pnl 'kaldi'(−5.264$) → 'gecti'(+20.963$); dolar_beklenti 'kaldi'(−54,27$) → 'zayif'(+23,63$)"
+  },
+  {
+   "olcum": "result_verdict CI (dolar beklenti)",
+   "A_mevcut_tohum": {
+    "lo": -130.32,
+    "hi": 14.87,
+    "seviye": 0.95,
+    "n": 97,
+    "blok": 5,
+    "B": 10000,
+    "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+    "sifiri_disliyor": false
+   },
+   "B_edg032_cmb": {
+    "lo": -21.69,
+    "hi": 69.95,
+    "seviye": 0.95,
+    "n": 887,
+    "blok": 5,
+    "B": 10000,
+    "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+    "sifiri_disliyor": false
+   },
+   "yon": "CI DARALIR (genişlik 145,19$ → 91,64$) ama HÂLÂ sıfırı içeriyor"
+  },
+  {
+   "olcum": "variance_attribution margin_scale",
+   "A_mevcut_tohum": 0.1865,
+   "B_edg032_cmb": 0.9272,
+   "yon": "5× KAYAR (0,1865 → 0,9272)"
+  },
+  {
+   "olcum": "shadowlaw kayma bekçisi",
+   "A_mevcut_tohum": [],
+   "B_edg032_cmb": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.9898,
+     "turetilen_marj": 0.02,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "yon": "A: kayma YOK → B: margin_scale KAYMASI (0,02×0,9898=0,02 ≠ MONEY_GATE_MARGIN 0,004)"
+  },
+  {
+   "olcum": "sieve bütünlük dedektörü",
+   "A_mevcut_tohum": {
+    "ok": true,
+    "n_ihlal": 0
+   },
+   "B_edg032_cmb": {
+    "ok": false,
+    "n_ihlal": 8
+   },
+   "yon": "TEMİZ → 8 İHLAL (4 aşamada %100 şema elemesi; 4'ü 'kritik')"
+  },
+  {
+   "olcum": "skills gerçek katman",
+   "A_mevcut_tohum": [
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 1,
+     "win_rate": 0.0,
+     "avg_r": -1.028,
+     "total_r": -1.03,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "pullback-screener",
+     "n": 4,
+     "win_rate": 0.0,
+     "avg_r": -1.0,
+     "total_r": -4.0,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 97,
+     "win_rate": 0.371,
+     "avg_r": -0.042,
+     "total_r": -4.1,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "position-sizer",
+     "n": 97,
+     "win_rate": 0.371,
+     "avg_r": -0.042,
+     "total_r": -4.1,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 91,
+     "win_rate": 0.385,
+     "avg_r": 0.0,
+     "total_r": 0.0,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918,
+     "total_r": 0.92,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "B_edg032_cmb": [
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 1,
+     "win_rate": 0.0,
+     "avg_r": -1.028,
+     "total_r": -1.03,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 2,
+     "win_rate": 0.5,
+     "avg_r": -0.055,
+     "total_r": -0.11,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "position-sizer",
+     "n": 2,
+     "win_rate": 0.5,
+     "avg_r": -0.055,
+     "total_r": -0.11,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "?",
+     "n": 885,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.54,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918,
+     "total_r": 0.92,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "yon": "ÇÖKER — vcp-screener n=91 ve pullback-screener n=4 kaybolur, 885 satır '?' kovasına düşer (skill_chain yok)"
+  },
+  {
+   "olcum": "axis2 teşhis sayımı",
+   "A_mevcut_tohum": {
+    "arsiv": 36,
+    "esik_araliginda": 1,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 2,
+    "ornek_yetersiz_gercek_katman_yarim": 1
+   },
+   "B_edg032_cmb": {
+    "arsiv": 36,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 3,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1,
+    "ornek_yetersiz_gercek_katman_yarim": 1
+   },
+   "yon": "kovalar kayar: `esik_araliginda` 1→0, `gercek_katman_olculmemis_cf_dolu` 1→3"
+  },
+  {
+   "olcum": "rollback/ebeveyn kapısı",
+   "A_mevcut_tohum": "KAPALI — cur_trades < min_sample (return None)",
+   "B_edg032_cmb": "AÇILIR — evaluate_outcomes/check_and_rollback ÖLÇER",
+   "yon": "KAPALI → AÇILIR: n_cur 0→885, cur_score −0,0534, par_score 0,1245 (v3 backtest_oos), ham_delta −0,1779 < −rollback_if_worse_by(0,1) → GERİ ALMA EŞİĞİ AŞILIR"
+  },
+  {
+   "olcum": "hermes yansıma sayacı",
+   "A_mevcut_tohum": {
+    "last_reflect_at_kalici": 97,
+    "defter_n": 97,
+    "trades_since_last_reflection": 0,
+    "reflection_every": 5,
+    "trades_until_next": 5,
+    "sayi_kapisi_acik": false,
+    "not": "gün-aralığı (horizon) kapısı AYRICA vardır; burada yalnız SAYI kolu"
+   },
+   "B_edg032_cmb": {
+    "last_reflect_at_kalici": 97,
+    "defter_n": 887,
+    "trades_since_last_reflection": 790,
+    "reflection_every": 5,
+    "trades_until_next": 0,
+    "sayi_kapisi_acik": true,
+    "not": "gün-aralığı (horizon) kapısı AYRICA vardır; burada yalnız SAYI kolu"
+   },
+   "yon": "0 → 790 yeni işlem; SAYI kapısı kapalı→AÇIK (gün-aralığı kapısı ayrıca var)"
+  },
+  {
+   "olcum": "learning_scorecard orneklem_n",
+   "A_mevcut_tohum": 2,
+   "B_edg032_cmb": 2,
+   "yon": "DEĞİŞMEZ (2) — tek yalıtılmış tüketici"
+  },
+  {
+   "olcum": "regime_trigger n",
+   "A_mevcut_tohum": {
+    "trend_up": {
+     "n": 59,
+     "threshold": 30,
+     "ready": true
+    },
+    "trend_down": {
+     "n": 0,
+     "threshold": 30,
+     "ready": false
+    },
+    "chop": {
+     "n": 35,
+     "threshold": 30,
+     "ready": true
+    },
+    "high_vol": {
+     "n": 3,
+     "threshold": 30,
+     "ready": false
+    }
+   },
+   "B_edg032_cmb": {
+    "trend_up": {
+     "n": 792,
+     "threshold": 30,
+     "ready": true
+    },
+    "trend_down": {
+     "n": 0,
+     "threshold": 30,
+     "ready": false
+    },
+    "chop": {
+     "n": 95,
+     "threshold": 30,
+     "ready": true
+    },
+    "high_vol": {
+     "n": 0,
+     "threshold": 30,
+     "ready": false
+    }
+   },
+   "yon": "trend_up 59→792, chop 35→95, high_vol 3→0; ready bayrakları DEĞİŞMEZ"
+  },
+  {
+   "olcum": "mae_profile n",
+   "A_mevcut_tohum": 97,
+   "B_edg032_cmb": null,
+   "yon": "KÖRLEŞİR (97 → None; mfe_r/mae_r yok)"
+  },
+  {
+   "olcum": "net_kotumser ölçülen n",
+   "A_mevcut_tohum": {
+    "n_olculen": 97,
+    "n_notional_yok": 0
+   },
+   "B_edg032_cmb": {
+    "n_olculen": 2,
+    "n_notional_yok": 885
+   },
+   "yon": "KÖRLEŞİR (97→2 ölçülen; 885 satırda `entry` yok → notional hesaplanamıyor)"
+  },
+  {
+   "olcum": "near_miss / cf",
+   "A_mevcut_tohum": 5021,
+   "B_edg032_cmb": 5021,
+   "yon": "BİREBİR AYNI"
+  },
+  {
+   "olcum": "component_ic / threshold_curve",
+   "A_mevcut_tohum": "sandbox'ta ÖLÇÜLEMEDİ (bars yok)",
+   "B_edg032_cmb": "sandbox'ta ÖLÇÜLEMEDİ (bars yok) — ama sieve 885/885 `sema:plan_id_biçimi:eski_şema` elemesi kaydetti",
+   "yon": "KÖRLEŞİR (eleme muhasebesinden kanıtlı)"
+  }
+ ],
+ "sema_uyumu": {
+  "kaynak_dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032_final_paket_2026-08-12/islemler_cmb.json",
+  "sha256": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+  "n_satir": 885,
+  "cmb_alanlari": {
+   "bars_held": {
+    "var": 885,
+    "dolu": 885
+   },
+   "exit_reason": {
+    "var": 885,
+    "dolu": 885
+   },
+   "pnl_dollars": {
+    "var": 885,
+    "dolu": 885
+   },
+   "qty": {
+    "var": 885,
+    "dolu": 885
+   },
+   "r_multiple": {
+    "var": 885,
+    "dolu": 885
+   },
+   "regime": {
+    "var": 885,
+    "dolu": 885
+   },
+   "risk_dollars": {
+    "var": 885,
+    "dolu": 0
+   },
+   "setup": {
+    "var": 885,
+    "dolu": 885
+   },
+   "size_r": {
+    "var": 885,
+    "dolu": 0
+   },
+   "ticker": {
+    "var": 885,
+    "dolu": 885
+   },
+   "ts_close": {
+    "var": 885,
+    "dolu": 885
+   },
+   "ts_open": {
+    "var": 885,
+    "dolu": 885
+   }
+  },
+  "canli_trades_alanlari": [
+   "bars_held",
+   "costs",
+   "entry",
+   "exit",
+   "exit_reason",
+   "exploration",
+   "id",
+   "kaynak",
+   "mae_r",
+   "mfe_r",
+   "plan_id",
+   "pnl_dollars",
+   "pnl_pct",
+   "qty",
+   "r_multiple",
+   "r_multiple_expected",
+   "regime",
+   "scaled_out",
+   "score",
+   "setup",
+   "side",
+   "skill_chain",
+   "strategy_version",
+   "ticker",
+   "ts_close",
+   "ts_open"
+  ],
+  "TASINABILIR (veriden)": [
+   "ticker",
+   "ts_open",
+   "ts_close",
+   "qty",
+   "r_multiple",
+   "pnl_dollars",
+   "exit_reason",
+   "regime",
+   "setup",
+   "bars_held"
+  ],
+  "DAMGALANIR (veriden DEĞİL, prosedürden)": {
+   "id": "defter yazarının sayaç ürünü (broker._id → T00001…)",
+   "strategy_version": "prosedür (kart aşama-2: 5)",
+   "kaynak": "prosedür (kart aşama-2: replay_seed)"
+  },
+  "EKSIK (uydurulamaz — None kalır)": [
+   "plan_id",
+   "side",
+   "entry",
+   "exit",
+   "r_multiple_expected",
+   "pnl_pct",
+   "costs",
+   "score",
+   "exploration",
+   "scaled_out",
+   "mfe_r",
+   "mae_r",
+   "skill_chain"
+  ],
+  "cmb_fazlasi (canlı şemada yok)": [
+   "risk_dollars",
+   "size_r"
+  ],
+  "ozet": "canlı şema 26 alan · 032 artefaktından taşınabilen 10 · prosedürel damga 3 · UYDURULAMAZ EKSİK 13"
+ },
+ "sema_uyumu_hukmu_icin_olculen": {
+  "032_artefakti_slim_projeksiyondur": "olcum.py:671-673 `slim = [{k: t.get(k) for k in (12 alan)} for t in trades]` — TAM satırlar (broker.close_position, broker.py:685-702: id/plan_id/side/entry/exit/pnl_pct/costs/score/skill_chain/mfe_r/mae_r/r_multiple_expected/exploration/scaled_out) koşum sırasında BELLEKTE vardı ama diske YAZILMADI",
+  "state_cmb_de_defter_yok": "research/olcumler/edg032_final_paket_2026-08-12/state_cmb/ = {goal.yaml, bounds.yaml, events.jsonl, strategy.yaml} — trades.jsonl YOK",
+  "sonuc": "mevcut 032 artefaktı canlı `trades` şemasına ÇEVRİLEMEZ: 26 alanın 13'ü uydurulamaz eksik. Tohum yenilemesi için 032 koşumunun TAM satır serileştirmesiyle YENİDEN KOŞULMASI gerekir (kartın kill#3'ü: 'yeni tohum yürürlükteki paketle üretilmemişse (sha uyuşmazlığı) → geçersiz' bu maliyeti kapsıyor)"
+ },
+ "kart_basari_olcutleri_MEKANIK_ISARET": {
+  "(a) BÜTÜNLÜK": {
+   "olculen": {
+    "live_paper_n_A": 2,
+    "live_paper_n_B": 2,
+    "portfolio_realized_pnl_A": 277.98314200393065,
+    "portfolio_realized_pnl_B": 277.98314200393065,
+    "bit_ayni": true
+   },
+   "isaret": "SAĞLANDI (kuru koşumda)",
+   "serh": "kuru koşum defteri YENİDEN YAZMADI; gerçek yazım yolu (aşama-2) SINANMADI"
+  },
+  "(b) TÜKETİCİ TUTARLILIĞI": {
+   "olculen": {
+    "korlesen_tuketici": [
+     "score_calibration.katmanlar.gercek (97→None)",
+     "llm_opinion_calibration (4→1 çift)",
+     "component_ic.gercek (885/885 şema elemesi)",
+     "threshold_curve.gercek (885/885 şema elemesi)",
+     "mae_profile (n 97→None)",
+     "skills gerçek katman (vcp n=91 → '?' n=885)",
+     "net_kotumser (n_olculen 97→2)"
+    ],
+    "iyilesen_tuketici": [
+     "DSR (3e-06→0,0393)",
+     "result_verdict net_pnl (kaldi→gecti)",
+     "result_verdict dolar_beklenti CI genişliği 145,19$→91,64$",
+     "variance_attribution n_blocks 93→280"
+    ],
+    "degismeyen": [
+     "PBO",
+     "near_miss/cf",
+     "learning_scorecard.orneklem_n",
+     "portfolio.realized_pnl"
+    ],
+    "yeni_ihlal": {
+     "sieve_ok_A": true,
+     "sieve_ok_B": false,
+     "n_ihlal_B": 8,
+     "shadowlaw_kayma_B": [
+      "margin_scale"
+     ]
+    }
+   },
+   "isaret": "DÜŞTÜ",
+   "serh": "kartın beklentisi ('örneklem 95→885 → CI'lar daralır, olculemedi kovaları dolar') ÖLÇÜLDÜ ve TERSİ çıktı: `score`/`plan_id`/`skill_chain`/`mfe_r` gerektiren tüketici ailesi tamamen körleşiyor ve `sieve` bütünlük dedektörü 8 ihlal (4'ü kritik) yazıyor. Bu bir TOHUM problemi değil ARTEFAKT problemidir: 032 dosyası slim projeksiyon. Tam-satırlı bir yeniden koşumda bu ölçütün yeniden ölçülmesi gerekir."
+  },
+  "(c) DÜRÜSTLÜK": {
+   "olculen": {
+    "damga_ayrimi_korunuyor": {
+     "A": {
+      "n": 97,
+      "live_paper_n": 2,
+      "replay_seed_n": 95,
+      "belirsiz_n": 0,
+      "damgasiz_n": 0,
+      "toplam": 97,
+      "training_n": 95,
+      "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+     },
+     "B": {
+      "n": 887,
+      "live_paper_n": 2,
+      "replay_seed_n": 885,
+      "belirsiz_n": 0,
+      "damgasiz_n": 0,
+      "toplam": 887,
+      "training_n": 885,
+      "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+     }
+    },
+    "orneklem_paydasi_tohumu_dislyor": {
+     "A": 2,
+     "B": 2
+    },
+    "public_summary_yalniz_live_paper": "api.py:706-708 `_ls.split(trades)[_ls.LIVE_PAPER]` — kod yolu doğrulandı",
+    "AMA_ayirt_ETMEYEN_CANLI_KARAR_YOLLARI": {
+     "rollback_ebeveyn_zinciri": {
+      "version": 5,
+      "parent": 3,
+      "ship_eval_regime": null,
+      "min_sample": 30,
+      "n_cur": 885,
+      "n_parent": 2,
+      "erken_return_None": false,
+      "cur_score": -0.0534,
+      "par_score_ham": 0.1245,
+      "par_score": 0.1245,
+      "par_score_yolu": "scoreboard.live_score|backtest_oos",
+      "scoreboard_parent_kaydi": {
+       "backtest_oos": 0.1245,
+       "baseline_verdict": "olculebilir",
+       "baseline_source": "parent_backfill",
+       "baseline_measured_at": "2026-07-26T20:06:41+00:00",
+       "baseline_n_trades": 103,
+       "baseline_span_days": 914,
+       "baseline_freq_ratio": 1.511,
+       "reinstated": true
+      },
+      "scoreboard_parent_anahtarlari": [
+       "backtest_oos",
+       "baseline_freq_ratio",
+       "baseline_measured_at",
+       "baseline_n_trades",
+       "baseline_source",
+       "baseline_span_days",
+       "baseline_verdict",
+       "reinstated"
+      ],
+      "rollback_if_worse_by": 0.1,
+      "ham_delta": -0.1779,
+      "ham_delta_esigi_asiyor": true,
+      "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+     },
+     "hermes_yansima_sayaci": {
+      "last_reflect_at_kalici": 97,
+      "defter_n": 887,
+      "trades_since_last_reflection": 790,
+      "reflection_every": 5,
+      "trades_until_next": 0,
+      "sayi_kapisi_acik": true,
+      "not": "gün-aralığı (horizon) kapısı AYRICA vardır; burada yalnız SAYI kolu"
+     }
+    }
+   },
+   "isaret": "KISMİ — yüzey/karne tarafı ayrımı KORUYOR, iki CANLI KARAR yolu KORUMUYOR",
+   "serh": "`rollback.check_and_rollback` ve `evaluate_outcomes` `strategy_version` ile filtreler, `kaynak` ile DEĞİL. Kartın aşama-2'de yazdığı `strategy_version=5` damgası ile tohum yürürlükteki sürümün paydasına GİRER: kuru koşumda n_cur=885, cur_score=−0,0534, par_score=0,1245, ham_delta=−0,1779 < −0,1 → geri-alma eşiği AŞILIR (nihai karar `_would_have` replay'ine bağlı, o KOŞULMADI). Emsal defterde var: scoreboard v4 kaydı `live_score=−0,0089 · n_trades=95 · rolled_back=true` — yani BUGÜNKÜ tohum zaten bir kez canlı sürüm geri aldırmış."
+  }
+ },
+ "dosyalar": {
+  "canli_asama0.json": "aşama-0 canlı salt-okuma (defter, kaynak, DSR üç payda, artefaktlar)",
+  "canli_asama0b.json": "aşama-0 canlı salt-okuma 2 (doc varlıklar, yasa dosyaları, plan join)",
+  "asama1_kiyas.json": "aşama-1 A-vs-B tüketici çıktıları + şema uyumu",
+  "asama1_kapilar.json": "aşama-1 kapı probları (shadowlaw kayma, sieve ihlal, rollback girdileri)",
+  "olcum_canli_asama0.py / olcum_canli_asama0b.py / olcum_asama1.py / olcum_asama1_kapilar.py": "ölçüm betikleri (arşiv)"
+ },
+ "sha256_16": {
+  "islemler_cmb.json": "d4033de68f6281a4"
+ }
+}
