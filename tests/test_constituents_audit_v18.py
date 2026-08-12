@@ -5,6 +5,16 @@
   C2 "önbellekteki liste gerçek" → diskteki ÜRETİM önbelleği test fixture'ıydı (3 sembol, as_of 2099)
   C3 "boş liste zararsızdır"     → 'bilmiyoruz' ile 'sapma yok' aynı şeye benziyordu
   C4 "kaynak erişilebilir"       → lxml/bs4 yok + Wikipedia 403; ikisi de sessizce yutuluyordu
+
+BEYANLI GÜNCELLEME (v238, 2026-08-13) — C4'ün İKİ YARISI AYRI ÖLÇÜLDÜ, YARISI ÇÜRÜMÜŞTÜ:
+  * "lxml/bs4 yok" ARTIK YANLIŞ: lxml 6.1.1 kurulu ve `pyproject.toml`da ana bağımlılık. Aşağıdaki
+    `test_c4b_missing_parser_is_visible` HÂLÂ GEÇERLİ ve DEĞİŞMEDİ — ama artık bugünkü canlı
+    kurulumu değil, ayrıştırıcının bir gün DÜŞMESİ hâlini ölçer (ImportError'ı `pd.read_html`
+    yamasıyla kendisi enjekte ediyor). Yani test bir SENARYO çivisi; kurulum iddiası değil.
+  * "Wikipedia 403" HÂLÂ DOĞRU (2026-08-13 ölçümü: HTTP 403, gövde 141 bayt) — `test_c4_...` aynen.
+  * BU DENETİMİN GÖRMEDİĞİ ASIL KÖK v238'de bulundu: pandas 3'te `read_html` ham HTML DİZGESİNİ
+    dosya-yolu sanıyor (canlı `universe_drift.json` → FileNotFoundError). Kapanışı ve fikstür-HTML
+    ile pandas-3 regresyon çivisi `tests/test_ariza_turu_v238.py` [A] bölümündedir.
 """
 from __future__ import annotations
 

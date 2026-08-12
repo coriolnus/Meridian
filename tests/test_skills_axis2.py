@@ -1,5 +1,13 @@
 """Axis-2 skill self-improvement — the catalog Hermes reasons with, attribution-driven recommendations,
-the operator-gated apply, and the hard protection of the enforcement skills."""
+the operator-gated apply, and the hard protection of the enforcement skills.
+
+BEYANLI EK (v238, 2026-08-13). Bu dosya `recommend_from_attribution`ın `lean_in` ÜRETTİĞİNİ
+(test_recommendations_flag_loser_and_winner) ve `apply_skill_action`ın bilinmeyen eylemi
+REDDETTİĞİNİ (test_apply_action_reversible_and_refuses_protected) ayrı ayrı çiviliyordu — AMA
+İKİSİNİN ARASINDAKİ BOŞLUĞU hiç sınamıyordu: üretilen `lean_in`, uygulayıcının reddettiği eylemin
+ta kendisiydi ve operatörün "Uygula" düğmesi bu boşluktan sessizce ölüyordu. Buradaki iddialar
+DEĞİŞMEDİ (ret sözleşmesi ek `kod` alanı kazandı, `ok` semantiği aynı); boşluğun kapanışı
+`tests/test_ariza_turu_v238.py` [B] bölümündedir."""
 import pytest
 
 from meridian import skills, store, analytics

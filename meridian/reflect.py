@@ -22,7 +22,9 @@ TAIL_MARGIN_R = 0.5  # capital preservation: candidate may not raise OOS tail lo
 # `GATE_MARGIN` BİLEŞİK ölçekte tanımlıydı ve yasanın karar değişkeni artık PARA. İki sabit, tek
 # kaynaktan (`shadowlaw`) gelir çünkü türetimleri ölçüme dayanır ve ölçüm kaydı orada durur:
 #   MONEY_GATE_MARGIN = 0.004  ← 0.02 × σ(ΔS_v3)/σ(S_eski) = 0.02 × 0.1908 (σ-eşdeğerliği)
-#   DD_VETO_MARGIN    = 0.04   ← σ(düşüş)=0.0343'ün DIŞINDA ve %8 düşüş bütçesinin YARISI
+#   DD_VETO_MARGIN    = 0.08   ← düşüş bütçesinin YARISI (goal.max_drawdown=0,16, operatör
+#                                kararı 2026-08-13) ve σ(düşüş)=0,0343'ün DIŞINDA — türetim
+#                                shadowlaw.py:90-97'de, sayı ORADAN gelir (burada kopya YOK)
 # `GATE_MARGIN` SİLİNMEDİ ve 0.02 kaldı: LEGACY yolun (dilimsiz fikstür/sandbox) yasası odur ve o
 # yol bileşik skor karşılaştırır — orada para ölçeği hesaplanamaz (dilim yok, span yok). Yani
 # 0.02 artık "eski yasanın marjı", 0.004 ise "yürürlükteki yasanın marjı"dır ve hangisinin koştuğu

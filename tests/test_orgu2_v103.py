@@ -112,7 +112,7 @@ def test_esikler_modul_sabiti_olarak_TEK_yerde_durur():
     assert analytics.REGIME_AVG_R_MIN == 0.0      # karşılaştırma KESİN büyüktür (`> 0`)
     # 5. ölçüt KUYRUK (Hafta 3a, 2026-07-30) — üç eşiği de aynı yerde, adıyla durur
     assert analytics.EDGE_TAIL_N_MIN == 40
-    assert analytics.EDGE_MAXDD_MAX == 0.08
+    assert analytics.EDGE_MAXDD_MAX == 0.16   # 0.08→0.16: operatör kararı 2026-08-13 (EDG-032 dd %12.7 × 1.3)
     assert analytics.EDGE_CVAR5_MIN_R == -1.5
     # DÜŞÜŞ TAVANI ÜÇ YERDE AYNI SAYI OLMALI: operatörün yazılı başarısızlık sınırı (goal.yaml),
     # EDGE'in kuyruk ölçütü ve SONUÇ hükmünün maks-düşüş ölçütü. Sürüklenirse burası kırmızı yanar.

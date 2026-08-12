@@ -1619,7 +1619,12 @@ async def api_skills_apply(request: Request):
     backtest cannot validate LLM-skill impact, so a human approves what the brain recommends.
 
     v215 (B-6): L1+'ta "insan onaylar" artık bir NİYET değil bir KAYIT — kapı, uygulamadan önce
-    onay defterinde `rec:{skill}` için `approve` satırı arar. L0'da davranış birebir aynıdır."""
+    onay defterinde `rec:{skill}` için `approve` satırı arar. L0'da davranış birebir aynıdır.
+
+    v238 (2026-08-13): RET SÖZLEŞMESİ. Başarı 200 + `{"ok": true, ...}` (DEĞİŞMEDİ); her ret artık
+    durum koduyla FIRLAR — 400 istek bozuk, 409 dünyanın durumu çakışıyor — ve `detail` operatörün
+    okuyacağı `[kimlik] gerekçe` metnini taşır. Eskiden ret HTTP 200 gövdesinde geliyordu ve pano
+    onu görmüyordu (aşağıdaki blokta ölçüm ve üç seçeneğin gerekçesi)."""
     _auth(request)
     from . import skills
     try:
@@ -1638,7 +1643,40 @@ async def api_skills_apply(request: Request):
     if res.get("ok"):
         obs.log("skill_action_applied", skill=skill, action=action)
         _diag_onbellek_bosalt("skill_action")     # YALNIZ ok: reddedilen eylem hiçbir şeyi değiştirmedi
-    return res
+        return res
+    # ---- `ok:False` ARTIK HTTP 200 İLE GEÇMEZ (v238, 2026-08-13) -------------------------------
+    # ÖLÇÜLEN ARIZA (operatör vakası): `apply_skill_action` `lean_in` için
+    # `{"ok": False, "reason": "unknown action 'lean_in'"}` döndürüyordu, bu uç onu HTTP **200**
+    # ile gövdede yolluyordu ve `app.js:applySkillRec` yalnız FIRLATILAN hatayı yazdığı için
+    # (v219 sözleşmesi: 2xx dışı = `ApiHata`) ekranda HİÇBİR ŞEY olmuyordu. Bu, v219'da kapatılan
+    # "sessiz ret" sınıfının ikinci örneği — bu kez boş `catch`ten değil, 200-gövde-ret yolundan.
+    #
+    # DÜZELTMENİN YERİ NEDEN BU KATMAN (üç seçenek tartıldı, bu ölçüye dayanıyor):
+    #   * `apply_skill_action`ın KENDİSİ istisna fırlatsaydı: süreç-içi otomatik yol
+    #     (`skills.auto_shadow_from_evidence`) reddi bir KANIT SATIRI olarak yazıyor
+    #     ("UYGULANAMADI: <reason>" → `atlanan`); orayı istisnaya çevirmek, ölçüm döngüsünü
+    #     bir bayrak reddi yüzünden düşürürdü. Sözlük sözleşmesi o çağıran için DOĞRU.
+    #   * YALNIZ ön yüzde gövde okumak: aynı yanlışın üçüncü kopyası olurdu — `/api/skills/apply`
+    #     dışındaki her istemci (curl, betik, gelecekteki yüzey) reddi yine sessizce yutardı.
+    #   * BU KATMAN: HTTP sözleşmesinde ret = durum kodu. Kardeş uç `/api/skills/revision` ve
+    #     onay kapısı zaten aynı deseni kullanıyor (409 + `detail` metni), yani pano tarafında
+    #     YENİ bir yol açılmıyor — var olan `eylemHatasiYaz` dalı reddi olduğu gibi basıyor.
+    #
+    # DURUM KODU `kod` ALANINDAN TÜRETİLİR, SERBEST METİNDEN DEĞİL: `reason` operatöre yazılmış bir
+    # cümledir ve değişebilir; ona göre dallanmak kapıyı bir gün sessizce yanlış koda kaydırırdı.
+    #   400 — istemci hatalı bir eylem gönderdi (yazım hatası/eski istemci). Aynı ucun gövde
+    #         ayrıştırma hatası da 400 (yukarıda) — istek BOZUK, dünya değil.
+    #   409 — kimlik ve yetki yerinde; ÇAKIŞAN ŞEY DÜNYANIN DURUMU: skill korumalı, kayıtta yok,
+    #         ya da eylemin (lean_in) uygulayıcısı yok. `/api/skills/revision`ın 409 gerekçesiyle
+    #         birebir aynı sınıf ("kimlik doğrulandı … çakışan şey DÜNYANIN DURUMU").
+    _KOD_DURUM = {"bilinmeyen_eylem": 400, "korumali": 409, "kayitsiz": 409,
+                  "uygulayicisi_yok": 409}
+    kod = str(res.get("kod") or "")
+    obs.warn("skill_action_refused", skill=skill, action=action, kod=kod or None,
+             detail=str(res.get("reason") or "")[:300])
+    raise HTTPException(status_code=_KOD_DURUM.get(kod, 409),
+                        detail=f"[{onay_kimligi('skill_rec', str(skill or ''))}] "
+                               f"{res.get('reason') or 'eylem UYGULANMADI (sunucu sebep bildirmedi)'}")
 
 
 @app.get("/api/plots")
@@ -4721,10 +4759,22 @@ def api_approvals(request: Request):
                       "actions": ["apply", "reject"], "skill": r["skill"]})
     from . import skills as _sk2
     for rec in _sk2.pending_recommendations():
-        inbox.append({"type": "skill_rec", "id": onay_kimligi("skill_rec", str(rec.get("skill"))),
-                      "title": f"Eksen-2: {rec.get('skill')} → {rec.get('action')}",
-                      "evidence": rec.get("rationale") or "", "actions": ["apply"],
-                      "skill": rec.get("skill"), "action": rec.get("action")})
+        # EYLEM LİSTESİ ARTIK ÖLÇÜLÜR (v238, 2026-08-13). Eskiden HER Eksen-2 önerisi koşulsuz
+        # `actions: ["apply"]` taşıyordu; `lean_in` önerisi için de bir "Uygula" düğmesi çiziliyor,
+        # düğme sunucuda reddediliyor ve ret ekranda görünmüyordu. Uygulayıcısı olmayan bir eylemi
+        # uygulanabilir gibi sunmak, kusurun İLK adımı — `arming:{setup}` öğesi bu deseni zaten
+        # doğru kuruyor: `actions: []` + neden diye DÜRÜST bir `note`. Aynısı burada uygulanır ve
+        # ölçüt `skills.eylem_uygulanabilir` (uygulayıcının kendi kümesi), elle liste DEĞİL.
+        _uyg = bool(rec.get("uygulanabilir", _sk2.eylem_uygulanabilir(rec.get("action"))))
+        _oge = {"type": "skill_rec", "id": onay_kimligi("skill_rec", str(rec.get("skill"))),
+                "title": f"Eksen-2: {rec.get('skill')} → {rec.get('action')}",
+                "evidence": rec.get("rationale") or "",
+                "actions": ["apply"] if _uyg else [],
+                "skill": rec.get("skill"), "action": rec.get("action"),
+                "uygulanabilir": _uyg}
+        if not _uyg:
+            _oge["note"] = rec.get("uygulanamama_notu") or _sk2.UYGULANAMAZ_NOT
+        inbox.append(_oge)
     lvl = config.limits()["autonomy_level"]
     return {"level": lvl, "inbox": inbox,
             "pending": store.read_jsonl(APPROVALS_LEDGER) if lvl >= 1 else [],

@@ -33,6 +33,52 @@ SKILL_RECS = "skill_recommendations.jsonl"
 PROTECTED = frozenset({"pre-trade-discipline-gate", "drawdown-circuit-breaker", "data-quality-checker",
                        "position-sizer", "portfolio-manager"})
 
+# ---- EYLEM SÖZLÜĞÜ: "ÖNERİLEBİLİR" İLE "UYGULANABİLİR" AYRI KÜMELERDİR (v238, 2026-08-13) -------
+# ÖLÇÜLEN ARIZA (operatör vakası): öneri üreteci ve kayıt kapısı ÜÇ eylem tanıyordu
+# (shadow/activate/lean_in) ama `apply_skill_action` yalnız İKİsini uyguluyordu. Üç liste üç ayrı
+# yerde elle yazılıydı (burada, `record_recommendation`da, `hermes.HYP_SCHEMA`da, ayrıca
+# `app.js`te bir dördüncü kopya) — yani ayrışma bir ihtimal değil, ZATEN OLMUŞ bir olguydu:
+# operatör "Uygula"ya basıyor, sunucu `{"ok": False, "reason": "unknown action 'lean_in'"}` dönüyor,
+# ekranda hiçbir şey olmuyordu. Sözlük artık TEK yerde ve İKİ kümedir; ayrımın kendisi bir ölçüm:
+#
+#   ONERILEBILIR — kanıt eşiğini aşan bir GÖZLEM olarak kaydedilebilecek eylemler.
+#   UYGULANABILIR — `apply_skill_action`ın gerçekten YAZABİLECEĞİ eylemler (kayıt defteri alanına
+#                   karşılık gelenler). ONERILEBILIR'in ALT KÜMESİDİR.
+#
+# `lean_in` NEDEN UYGULANABİLİR DEĞİL — ÖLÇÜLDÜ, VARSAYILMADI (2026-08-13):
+#   (1) KAYIT ŞEMASINDA KARŞILIĞI YOK. Canlı `skills_registry.json` 67 kaydının alan kümesi
+#       sayıldı: category · fmp · alpaca · api_free · enabled · reason · pipeline · style_active ·
+#       mode · shadow · agent_authored · last_run · last_artifact · failure_count · retired(+_at/
+#       _folder/_requires/_from_pipeline) · merged_into · denetim_notu · aktivasyon_kosulu ·
+#       stale_last_run_cleared · engine · note. Bir skill'i AĞIRLIKLANDIRAN, önceliklendiren ya da
+#       "öne çıkaran" TEK alan yok. Yazılacak bir yer olmadan "uygulandı" demek uydurma olurdu.
+#   (2) KARAR ÇEKİRDEĞİ KAYIT DEFTERİNİ ZATEN OKUMUYOR. `strategy.py` içinde `skills` geçen SIFIR
+#       satır var; kayıt defterini okuyanlar `enabled_in()` (koşu defteri etiketi),
+#       `reconcile_enablement()` (anahtar kapısı) ve `catalog()` (raporlama). Yani bir bayrak
+#       yazılabilseydi bile motorun ne aldığını/sattığını değiştirmezdi.
+#   (3) ADAYLARIN SINIFI MOTOR-İÇİ. `lean_in` yalnız atıf ölçülen skiller için doğar; atıf ölçülen
+#       skiller pratikte tarayıcılardır ve hepsi `ENGINE_IMPLEMENTED` kümesindedir (canlı örnek:
+#       `stockbee-exhaustion-hammer-screener` — hem ENGINE_IMPLEMENTED hem `strategy.ARMED_SETUPS`
+#       içinde). Bu sınıfın hükmü bu dosyada ZATEN yazılı ve ölçülü: `auto_shadow_from_evidence`
+#       içindeki `motor_ici_esik_asan` kovası (2026-08-07) — "registry'ye bayrak yazmak davranışı
+#       DEĞİŞTİRMEZ; gerçek aksiyon knob/kapı düzeyindedir".
+# HÜKÜM: `lean_in` ÖNERİ olarak kalır (ölçüm gerçektir ve operatörün görmesi gerekir) ama
+# "uygulanabilir" gibi SUNULMAZ — `arming:{setup}` emsali (api.py: `actions: []` + dürüst not).
+# Sıra DEĞİŞMEZ: `hermes.HYP_SCHEMA` enum'u bu tuple'dan türer ve enum sırası çivili (v106).
+ONERILEBILIR_EYLEMLER: tuple[str, ...] = ("shadow", "activate", "lean_in")
+UYGULANABILIR_EYLEMLER: tuple[str, ...] = ("shadow", "activate")
+
+#: Bir öneri eylemi için, uygulayıcısı YOKSA operatöre gösterilecek dürüst not. Tek yerde durur
+#: çünkü üç yüzey (gelen kutusu · öğrenme kartı · beceri sayfası) aynı cümleyi okumak zorunda.
+UYGULANAMAZ_NOT = ("kayıt-önerisi; davranışsal karşılığı yok — kayıt defterinde bu eylemi "
+                   "karşılayan alan bulunmuyor ve deterministik motor kayıt defterini okumuyor. "
+                   "Gerçek aksiyon knob/kapı düzeyindedir (bkz. motor_ici_esik_asan).")
+
+
+def eylem_uygulanabilir(action: str | None) -> bool:
+    """Bu eylemin GERÇEK bir uygulayıcısı var mı? Yüzeyler düğme çizmeden ÖNCE buna sorar."""
+    return str(action or "") in UYGULANABILIR_EYLEMLER
+
 # Which screener a plan's setup came from. Used to build skill_chain from the ACTUAL setup so per-skill
 # attribution can differentiate screeners (the old hardcoded "vcp-screener*" — with a star — never
 # key-matched the "vcp-screener" registry entry, so Axis-2 attribution stayed frozen for every trade).
@@ -374,7 +420,10 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
     """Log an Axis-2 skill recommendation as PENDING (operator applies it). Dedups: skips if an identical
     un-applied recommendation for the same skill already exists. Refuses protected/unknown skills."""
     skill, action = rec.get("skill"), rec.get("action")
-    if not skill or skill in PROTECTED or action not in ("shadow", "activate", "lean_in"):
+    # 2026-08-13 (v238): elle yazılı üçlü yerine TEK sözlük. Bu satır ile `apply_skill_action`ın
+    # kabul ettiği küme arasındaki sessiz ayrışma, "Uygula" düğmesinin sessizce ölmesinin ta
+    # kendisiydi; artık ikisi de aynı tuple ailesinden okur ve fark BEYANLIDIR (alt küme).
+    if not skill or skill in PROTECTED or action not in ONERILEBILIR_EYLEMLER:
         return False
     if skill not in registry().get("skills", {}):
         return False
@@ -400,7 +449,13 @@ def pending_recommendations() -> list[dict]:
     """Un-applied recommendations, newest-first, deduped by skill. An APPLIED marker shadows any OLDER
     pending row for the same skill (M3): apply_skill_action APPENDS a {applied:True} row rather than
     flipping the original {pending:True} one, so without this the apply button and the (N) badge never
-    cleared and every re-click appended another row (unbounded growth)."""
+    cleared and every re-click appended another row (unbounded growth).
+
+    UYGULANABİLİRLİK BURADA DAMGALANIR (v238, 2026-08-13). Üç yüzey de (gelen kutusu · öğrenme
+    öneri kartı · beceri sayfası) bu TEK üreticiden besleniyor; damgayı burada basmak, "hangi öneri
+    gerçekten uygulanabilir" sorusunun üç yerde üç kez cevaplanmasını (ve birinin sessizce
+    ayrışmasını — ölçülen arızanın ta kendisi) yapısal olarak imkânsız kılar. Alan EK'tir: defter
+    satırı değişmez, yalnız okuyucuya taşınan sözlük zenginleşir."""
     seen, out = set(), []
     for r in reversed(store.read_jsonl(SKILL_RECS)):   # newest-first
         sk = r.get("skill")
@@ -410,25 +465,43 @@ def pending_recommendations() -> list[dict]:
             seen.add(sk)
             continue
         if r.get("pending"):
-            seen.add(sk); out.append(r)
+            seen.add(sk)
+            r = dict(r)             # defterden okunan satırı KİRLETME: damga yalnız taşınan kopyada
+            r["uygulanabilir"] = eylem_uygulanabilir(r.get("action"))
+            if not r["uygulanabilir"]:
+                r["uygulanamama_notu"] = UYGULANAMAZ_NOT
+            out.append(r)
     return out
 
 
 def apply_skill_action(skill: str, action: str) -> dict:
     """Apply a REVERSIBLE Axis-2 skill action. Refuses protected skills and unknown names. 'shadow' keeps
     the skill running but marks it under-review (does not touch the deterministic live engine, which never
-    executes LLM skills); 'activate' clears shadow. Logged; fully reversible."""
-    if action not in ("shadow", "activate"):
-        return {"ok": False, "reason": f"unknown action '{action}'"}
+    executes LLM skills); 'activate' clears shadow. Logged; fully reversible.
+
+    RET SÖZLEŞMESİ (v238, 2026-08-13): her ret artık `reason`ın YANINDA makine-okunur bir `kod`
+    taşır. Neden: bu fonksiyonun İKİ çağıranı var ve ikisinin ihtiyacı farklı — süreç-içi otomatik
+    yol (`auto_shadow_from_evidence`) `reason` metnini kanıta yazar, HTTP yüzeyi ise reddi doğru
+    duruma çevirmek zorunda ve bunu SERBEST METİN eşleştirerek yapmak (yarın metin değişince
+    sessizce 500'e/200'e kayacak bir kapı) bu turda kapattığımız sınıfın kendisi olurdu."""
+    if action not in UYGULANABILIR_EYLEMLER:
+        # `lean_in` TAM OLARAK BURAYA DÜŞÜYORDU ve HTTP 200 ile sessizce dönüyordu. Kod ayrımı
+        # önemli: ÖNERİLEBİLİR ama uygulanamaz bir eylem (lean_in) ile hiç tanınmayan bir eylem
+        # (yazım hatası, eski istemci) operatöre AYNI cümleyi kurmamalı.
+        kod = "uygulayicisi_yok" if action in ONERILEBILIR_EYLEMLER else "bilinmeyen_eylem"
+        neden = (f"'{action}' bir ÖNERİ eylemidir ama uygulayıcısı yok — {UYGULANAMAZ_NOT}"
+                 if kod == "uygulayicisi_yok" else f"unknown action '{action}'")
+        return {"ok": False, "kod": kod, "reason": neden}
     if skill in PROTECTED:
-        return {"ok": False, "reason": f"'{skill}' korumalı — gölgelenemez/kapatılamaz"}
+        return {"ok": False, "kod": "korumali",
+                "reason": f"'{skill}' korumalı — gölgelenemez/kapatılamaz"}
     # kilit: OKUMA+YAZMA aynı kilit altında olmalı — aynı anda koşan pipeline damgası bu kararı
     # ezmesin (memory.py'deki audit #19 kayıp-güncelleme deseninin aynısı; turu 30)
     with _REG_LOCK:
         reg = registry()
         info = reg.get("skills", {}).get(skill)
         if info is None:
-            return {"ok": False, "reason": f"'{skill}' kayıtlı değil"}
+            return {"ok": False, "kod": "kayitsiz", "reason": f"'{skill}' kayıtlı değil"}
         info["shadow"] = (action == "shadow")
         if action == "shadow":
             info["mode"] = "shadow"; info["reason"] = "gölge (Axis-2 incelemesi)"

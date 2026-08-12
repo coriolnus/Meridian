@@ -16,6 +16,9 @@ import threading
 import time
 
 from . import config, store, memory, reflect, health, obs, secrets
+# 2026-08-13 (v238): şema enum'unun TEK kaynağı için modül düzeyinde gerekli (aşağıda
+# HYP_SCHEMA sabit bir sözlük). Döngü YOK: `skills` yalnız `config`+`store` çeker.
+from . import skills as _skills
 from . import agent_telemetry as _at        # D3 modül 1+2: çağrı telemetrisi + ham iz + MASKELEME
 
 MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
@@ -67,7 +70,10 @@ HYP_SCHEMA = {
                            "on a strong one, from skill_library performance. Advisory (operator applies).",
             "properties": {
                 "skill": {"type": "string", "description": "a name from skill_library (never a protected one)"},
-                "action": {"type": "string", "enum": ["shadow", "activate", "lean_in"]},
+                # 2026-08-13 (v238): enum ARTIK TÜRETİLİR. Elle yazılı üçlü, `skills` tarafındaki
+                # uygulayıcı kümesiyle sessizce ayrışmıştı ve "Uygula" düğmesi bu ayrışmadan
+                # ölüyordu. Sıra korunur (v106 çivisi): tuple sıralı, `list()` onu bozmaz.
+                "action": {"type": "string", "enum": list(_skills.ONERILEBILIR_EYLEMLER)},
                 "rationale": {"type": "string"},
             },
             "required": ["skill", "action", "rationale"],

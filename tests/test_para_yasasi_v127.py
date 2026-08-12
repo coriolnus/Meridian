@@ -32,7 +32,14 @@ from tests import wf_fixtures as wf
 
 
 def _goal():
-    return config.goal()
+    """ÖLÇÜM TABANI DONMUŞ (2026-08-13): bu dosyanın fikstürleri 2026-07-30'da `max_drawdown=0,08`
+    dünyasında kalibre edildi — E raporunun varyans payları (dusus>0,70) ve düşüş-vetosu fikstürünün
+    0,0660'lık düşüş farkı o dünyanın sayıları. Operatör 2026-08-13'te bütçeyi 0,16'ya çıkardı
+    (C+mb paketinin ölçülen dd'si %12,7) ve `DD_VETO_MARGIN` türetimi gereği 0,08'e taşındı; canlı
+    goal okunmaya devam etseydi bu testler OPERATÖRÜN RİSK İŞTAHINA bağlı olurdu — oysa ölçtükleri
+    şey YASA (para tek terim mi, veto marjdan fazla kötüleşmede ısırıyor mu). Yasanın kendisi
+    marj-bağıldır ve `test_C5_dd_veto_margin_goalun_TAM_YARISIDIR` ile ayrıca çivilidir."""
+    return {**config.goal(), "max_drawdown": 0.08}
 
 
 SPAN_S = (dt.date.fromisoformat(wf.S_END) - dt.date.fromisoformat(wf.S_LO)).days
@@ -150,7 +157,7 @@ def test_ret_c_v3_30_GUNE_INDIRGEME_yapmaz_para_terimi_CANLANDI():
 # =================================================================================================
 # ② DÜŞÜŞ VETOSU — kötüleşme RET, iyileşme SIFIR PUAN
 # =================================================================================================
-def test_dusus_vetosu_ISIRIR_para_DAHA_IYI_olsa_bile(sandbox_state):
+def test_dusus_vetosu_ISIRIR_para_DAHA_IYI_olsa_bile(sandbox_state, monkeypatch):
     """ÇİVİ (vetonun dişleri): adayın parası incumbent'tan BELİRGİN biçimde iyi olsa DA, maks düşüşü
     marjdan fazla kötüleşiyorsa RET. Eski yasada bu bir PAZARLIKtı (kâr artışı, dd_c kaybını 0,3
     ağırlıkla telafi edebiliyordu); yeni yasada PAZARLIK YOK."""
@@ -162,6 +169,14 @@ def test_dusus_vetosu_ISIRIR_para_DAHA_IYI_olsa_bile(sandbox_state):
     cand = wf.wf_from_trades(_yerlestir(its, "derin", bump=80.0)
                              + _yerlestir(itc, "derin", bump=80.0))
     cand["oos_score"] = 0.20
+
+    # MARJ FİKSTÜR TABANINA PİNLİ (2026-08-13): bu fikstürün düşüş farkı (~0,0495) 2026-07-30'un
+    # 0,04'lük marjına kalibre edildi (yukarıdaki bump=80 gerekçesi bunu açıkça yazıyor). Operatör
+    # bütçeyi 0,16'ya çıkarınca marj türetim gereği 0,08'e taşındı ve fikstür vetoyu tetikleyemez
+    # oldu. Bu testin ölçtüğü YASA "düşüş marjdan fazla kötüleşirse RET" — marjın SAYISI onun konusu
+    # değil; o bağ `test_dusus_vetosu_MARJI_kendi_gurultusunun_DISINDA`da CANLI goal'e karşı çivili.
+    monkeypatch.setattr(shadowlaw, "DD_VETO_MARGIN", 0.04)
+    monkeypatch.setattr(reflect, "DD_VETO_MARGIN", 0.04)
 
     passes, gate, why = reflect._gate_eval(inc, cand)
 
@@ -217,7 +232,9 @@ def test_dusus_vetosu_MARJI_kendi_gurultusunun_DISINDA():
     m = shadowlaw.MEASURED_V3
     assert shadowlaw.DD_VETO_MARGIN > m["sd_dusus"], "veto sınırı kendi gürültüsünün içinde"
     # ikinci türetim: düşüş bütçesinin YARISI
-    assert abs(shadowlaw.DD_VETO_MARGIN - 0.5 * float(_goal()["max_drawdown"])) < 1e-9
+    # CANLI goal — `_goal()` DEĞİL: bu satır marj↔bütçe BAĞINI sınıyor, dosyanın donmuş fikstür
+    # tabanını değil (2026-08-13 ayrımı; bkz. _goal() beyanı).
+    assert abs(shadowlaw.DD_VETO_MARGIN - 0.5 * float(config.goal()["max_drawdown"])) < 1e-9
     # gerekçe kodda YAZILI (sabit gerekçesiz duramaz)
     src = inspect.getsource(shadowlaw)
     assert "BÜTÇENİN YARISI" in src and "KENDİ GÜRÜLTÜSÜNÜN DIŞINDA" in src

@@ -872,6 +872,40 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       (ölü knobu diriltmez ama iki tercihi ayırır) · not: 035 slot15 nokta-farkı (+354$, dd 0.1179)
       tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.*
 
+19. **TOHUM YENİLEME — defter ESKİ dünyadan (operatör bulgusu 2026-08-13; kart EDG-2026-036)** —
+    canlı DB kırılımı: `replay_seed` n=95 (sv=4, ESKİ paket: slot5·1,0R·mb dormant) · `live_paper`
+    n=2 (+277,99$). Yani öğrenme/kalibrasyon/DSR-PBO/karne'yi besleyen soğuk-başlangıç tohumu
+    yürürlükteki C+mb @5R paketinin DEĞİL. Operatörün sorusu ("bunu C+mb için de yapmamız gerekmiyor
+    mu") yapısal olarak haklı. Kart üç aşamalı: (0) tohumun gerçek tüketicileri kanıtla çıkarılır —
+    tüketicisi yoksa yenileme YASA-6 ihlali olur, kart ucuz kapanır · (1) kuru koşum (eski tohum vs
+    EDG-032'nin 885-işlemlik defteri ile tüketici çıktıları yan yana) · (2) uygulama YALNIZ operatör
+    onayıyla, yedekli pencerede; eski tohum ARŞİVLENİR, kâğıt-icra satırlarına DOKUNULMAZ.
+    *boyut: M · öncelik: yüksek (öğrenme yanlış zeminde) · bağımlılık: EDG-036 aşama-0.*
+
+20. **PAKET-BAĞIMLI EŞİK ENVANTERİ SONUÇLARI (denetim 2026-08-13, `docs/DENETIM-PAKET-BAGIMLI-ESIKLER-2026-08-13.md`)**
+    · **20a ACİL/KIRMIZI:** `shadowlaw.DD_VETO_MARGIN` (`shadowlaw.py:97`) goal bütçesinin YARISI olmalı;
+      max_drawdown 0,16'ya çıkınca 0,04'te kaldı → iki test kırmızı (`test_para_yasasi_v127`,
+      `test_dalga_w1_v216::test_C5_dd_veto_margin_goalun_TAM_YARISIDIR`). Rol-1'in değişikliğinin
+      aşağı akışı; AYNI TURDA kapatılır.
+    · **20b YAPISAL:** `analytics.RESULT_PF_MIN=1.3` (`analytics.py:2089`) ↔ benimsenen paketin PF'i
+      **1,1119** → SONUÇ hükmü 4/4 istediği için (`health.py:148`) **Faz-6 `sonuc_hukmu` kilidi bu
+      paketle yapısal olarak AÇILAMAZ**. Eşiğin gerekçesi 95-işlemlik deftere dayanıyordu; 885 işlemde
+      aynı biçimde geçerli değil. KARAR GEREKİR (eşiği ölç-ve-güncelle mi, paketi mi elemek — ikincisi
+      ölçüme aykırı olur). *öncelik: yüksek.*
+    · **20c YÖNETİŞİM ASİMETRİSİ:** goal "slot 20 ve 0,5R AYRILMAZ" diyor ama slot `LIMIT_KEYS`te
+      (hermes öneremez), `position_size_r` `bounds.yaml:15`'te 1,0'a kadar AÇIK → öğrenme ikilinin
+      yarısını tek başına geri çekebilir; o yönün ölçülmüş hâli EDG-026'nın B kolu (+775$, sharpe 0,018).
+      ÖNERİ: ya ikisi de kilitli ya da bounds üst sınırı 0,5'e çekilir (kart-önce). *öncelik: yüksek.*
+    · **20d İNCE MARJLAR / İZLEME:** `EDGE_CVAR5_MIN_R=−1.5` ↔ ölçülen −1,4736 (marj %1,8; hammer tek
+      başına −1,5916 eşik-altı) · hedef üçlüsü ölçülen dünyada çok gevşek (realized_30d +0,341% vs %7;
+      sharpe 0,521 vs 1,2 → bileşik skor ≈0,130 iken `rollback_if_worse_by=0.10` skorun neredeyse
+      tamamı) · `loop.EXPLORE_MAX_POS=5` hâlâ eski max_open · trend_down/high_vol rejimlerinde 4,54
+      yılda SIFIR işlem (rejim kapısı orada tümden kapalı — bilgi, kusur değil).
+    · **20e İYİ HABER (kapandı):** R-birimli 11 eşik (skills −0,15/+0,30, AUTO_AVG_R, TAIL_MARGIN_R,
+      CVAR) boyut değişiminden ETKİLENMİYOR — R, `position_size_r`'den yapısal olarak bağımsız
+      (`broker.py:439-445,526,535,684` + `counterfactual.py:220` kanıtlı). Bu eşiklere DOKUNULMAZ.
+      Denetimin §7'sinde 11 maddelik "dokunulmayacaklar" listesi var (başında heat_hard_r=5.0).
+
 16. **KORUNUM-14 SINIFI — uyuyan-kurulum planlarına terminal sınıf (pano ihlal-triyajı 2026-08-12)** —
     korunum dedektörü 14 AÇIKLANAMAYAN sayıyor; canlı API dökümü: HEPSİ dönemin uyuyan kurulumlarının
     REVIEW planları (mb×5+ / hammer×2 ilk-8'de; P-2026-07-23-{CSX,UNP,NSC,RTX}-momentum_burst kümesi).

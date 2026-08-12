@@ -15,6 +15,7 @@ Modül KARAR VERMEZ, düzeltmez, hiçbir şey yazmaz — yalnız "iki cevap tutm
 from __future__ import annotations
 
 import ast
+import re                       # v238: damgalı göç arşivi desenini TÜRETMEK için (_orphan_state_files)
 
 from . import store
 
@@ -427,11 +428,41 @@ def _orphan_state_files() -> dict:
         #       geçmez ve geçmemelidir; `meridian.db` geçer. Yan dosya, ana dosyanın parçasıdır.
         from . import storage as _sg
         _db_yan = {f"{_sg.DB_NAME}{s}" for s in ("", "-wal", "-shm", "-journal")}
-        known = known | _db_yan | {f"{n}.migrated" for n in known}
-        orphans = []
+        known = known | _db_yan | {f"{n}{_sg.MIGRATED_SUFFIX}" for n in known}
+
+        # ---- DAMGALI GÖÇ ARŞİVİ: TANINMIŞ TERMİNAL SINIF, SESSİZ MUAFİYET DEĞİL (v238) ---------
+        # CANLI BULGU (2026-08-12 dağıtım penceresi): `state/scoreboard.json.migrated-20260812-
+        # 201359-p192112` yetim sayıldı. Dedektör HAKSIZ DEĞİLDİ — dosyanın gerçekten okuyucusu
+        # yok. Ama sınıfı yanlıştı: bu bir "üretilip tüketilmeyen kanıt" değil, BİLEREK bırakılmış
+        # bir ARŞİVdir ve yukarıdaki `.migrated` türetmesi onu ZATEN tanıyor olmalıydı.
+        #   KÖKEN (store.py `_bayat_defter_suzgeci`): göç-edilmiş bir defterin kanonik dosyası
+        #   duruyorsa `.migrated`a çekilir; HEDEF DOLUYSA ad `.migrated-<ts>-p<pid>` olur, çünkü
+        #   POSIX `rename` dolu hedefi SESSİZCE EZERDİ. Yani damgalı ad, tanınan `.migrated`
+        #   yeniden-adlandırmasının ÇARPIŞMA DALIDIR — ayrı bir mekanizma değil.
+        # NEDEN "GEVŞETME" DEĞİL (v204 kuralı: deseni gevşetmek = bekçiyi kör etmek): tanıma
+        # TÜRETİLİR, elle liste değil — kök ad `known` içinde OLMAK ZORUNDA ve son ek yazıcının
+        # kendi damga biçimine (`%Y%m%d-%H%M%S` + `-p<pid>`) uymak zorunda. Uydurma bir
+        # `foo.json.migrated-elle` ya da bilinmeyen bir kökün arşivi bu kapıdan GEÇMEZ, yetim kalır.
+        # NEDEN YAZICI TEMİZLEMİYOR: store.py'nin yasası açık — "hiçbir şey silinmez ve üzerine
+        # yazılmaz". Damgalı arşiv, `.migrated` hedefi zaten doluyken doğar; yani elde İKİ kuşak
+        # arşiv vardır ve `dbmigrate --geri-al` yalnız DÜZ `.migrated`i asıl adına döndürür
+        # (dbmigrate.py: `ars = p.with_name(name + MIGRATED_SUFFIX)`). Damgalıyı silmek, geri
+        # dönüşü olmayan tek kopyayı yok etmek olurdu; taşımak ise operatör prosedürüdür
+        # (`ops/state_yetim_temizle.sh` deseni: TAŞIR, SİLMEZ). Kod tarafı bu yüzden yalnız
+        # DOĞRU SINIFLAR ve ADIYLA SAYAR — sessizce yok saymaz.
+        _damga = re.compile(re.escape(_sg.MIGRATED_SUFFIX) + r"-\d{8}-\d{6}-p\d+$")
+
+        def _migrasyon_artigi(nm: str) -> bool:
+            m = _damga.search(nm)
+            return bool(m) and nm[:m.start()] in known
+
+        orphans, migrasyon_artigi = [], []
         for f in config.STATE.glob("*.json*"):
             nm = f.name
             if nm in known:
+                continue
+            if _migrasyon_artigi(nm):
+                migrasyon_artigi.append(nm)
                 continue
             # boş dosya orphan sayılmaz (henüz üretilmemiş); dolu ve okuyucusuz ise bulgudur
             try:
@@ -491,12 +522,24 @@ def _orphan_state_files() -> dict:
                 continue
 
         ok = not orphans
-        return _row("orphan_state_files", ok, len(orphans), f"{len(arts)} bilinen artefakt",
-                    ("her disk dosyasının bir okuyucusu/beyanı var" if ok
-                     else f"{len(orphans)} dosya diskte var ama hiçbir modül okumuyor: "
-                          f"{', '.join(sorted(orphans)[:5])} — üretilip tüketilmeyen kanıt"),
-                    "state/*.json* + kök *.json* + state/ dizin-ve-diğer-uzantı listesi",
-                    "codelaw.artifact_graph okuyucuları")
+        # ADIYLA SAYILIR (v238): `migrasyon_artigi` satırı DÜŞÜRMEZ (`ok`a girmez) ama `detail`e
+        # YAZILIR. `detail` bilerek seçildi: watchdog rows'a yalnız `check`/`ok`/`detail` taşıyor
+        # (watchdog.py:1068), yani operatörün gördüğü TEK metin bu. Sayıyı ek bir alana koyup
+        # burada susmak, "sessizce yok say" ile aynı sonucu verirdi.
+        _artik_not = ("" if not migrasyon_artigi else
+                      f" | migrasyon_artigi: {len(migrasyon_artigi)} damgalı göç arşivi "
+                      f"({', '.join(sorted(migrasyon_artigi)[:3])}) — TANINMIŞ TERMİNAL SINIF, "
+                      f"yetim DEĞİL: kaynağı store._bayat_defter_suzgeci çarpışma dalı, silinmez; "
+                      f"temizlik operatör prosedürü (ops/state_yetim_temizle.sh deseni: TAŞIR)")
+        satir = _row("orphan_state_files", ok, len(orphans), f"{len(arts)} bilinen artefakt",
+                     ("her disk dosyasının bir okuyucusu/beyanı var" if ok
+                      else f"{len(orphans)} dosya diskte var ama hiçbir modül okumuyor: "
+                           f"{', '.join(sorted(orphans)[:5])} — üretilip tüketilmeyen kanıt")
+                     + _artik_not,
+                     "state/*.json* + kök *.json* + state/ dizin-ve-diğer-uzantı listesi",
+                     "codelaw.artifact_graph okuyucuları")
+        satir["migrasyon_artigi"] = sorted(migrasyon_artigi)   # programatik okuyucu/test için tam liste
+        return satir
     except Exception as e:
         from . import obs
         obs.warn("orphan_scan_failed", error=f"{type(e).__name__}: {e}")

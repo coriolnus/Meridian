@@ -67,7 +67,13 @@ def canli_defter_kopyasi(sandbox_state):
 
 
 def _goal():
-    return config.goal()
+    """ÖLÇÜM TABANI DONMUŞ (2026-08-13): bu dosya 3a **E raporunu** replike ediyor — o rapor
+    2026-07-30'da `max_drawdown=0,08` dünyasında ölçüldü ve varyans payları (dusus≈0,82) o bütçenin
+    sayıları. Operatör 2026-08-13'te bütçeyi 0,16'ya çıkardı; canlı goal okunsaydı payların TAMAMI
+    kayardı (ölçüldü: dusus 0,8195→0,5486) ve donmuş bir tarihsel raporun replikasyonu operatörün
+    risk iştahına bağlı hâle gelirdi. Tarihsel taban tarihsel kalır — yürürlükteki eşiğin doğru
+    yayıldığı `test_dalga_w1_v216` (C1/C5) ve `test_para_yasasi_v127` tarafından ayrıca çivilidir."""
+    return {**config.goal(), "max_drawdown": 0.08}
 
 
 def _tohumla(st):

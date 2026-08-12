@@ -1611,7 +1611,7 @@ EDGE_TAIL_N_MIN = 40        # kuyruk hükmü için asgari kapanmış işlem. %5'
                             # kötü işlem CVaR'ı tek başına belirler ve o bir dağılım değil bir
                             # anekdottur. (EDGE_IC_N_MIN 60'tan KÜÇÜK bilinçli: IC bir EĞİM
                             # tahminidir ve daha çok satır ister; kuyruk bir UÇ değeridir.)
-EDGE_MAXDD_MAX = 0.08       # gerçekleşen maksimum düşüş tavanı. `goal.yaml`ın `max_drawdown`
+EDGE_MAXDD_MAX = 0.16       # gerçekleşen maksimum düşüş tavanı. `goal.yaml`ın `max_drawdown`
                             # değeriyle BİREBİR AYNI — çünkü o sayı operatörün yazılı BAŞARISIZLIK
                             # SINIRIdır ve kuzey yıldızının ikinci bir risk iştahı icat etmesi,
                             # aynı depoda iki farklı "kabul edilebilir düşüş" tanımı doğururdu.
@@ -2091,7 +2091,7 @@ RESULT_PF_MIN = 1.3            # profit factor tabanı (Σkazanç / |Σkayıp|).
                                # içindedir VE dolum kalitesindeki mütevazı bir kötüleşmeyle silinir
                                # (Alpaca paper dolumları iyimser — Y2/TCA hâlâ ölçülmedi). 1,3
                                # friksiyonun üstünde ~%30 tampon bırakır.
-RESULT_MAXDD_MAX = 0.08        # gerçekleşen maks düşüş tavanı — `goal.yaml`ın `max_drawdown`'ı ve
+RESULT_MAXDD_MAX = 0.16        # gerçekleşen maks düşüş tavanı — `goal.yaml`ın `max_drawdown`'ı ve
                                # `EDGE_MAXDD_MAX` ile BİREBİR AYNI. Üç yerde aynı sayı bilinçli:
                                # operatörün yazılı başarısızlık sınırı TEK olmalı. Eşitlik testle
                                # çivilenir; ayrışırsa orası kırmızı yanar.

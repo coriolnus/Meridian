@@ -7,6 +7,20 @@ DENETİM 2026-07-21 (dönüşümlü tur 3) — bu modül hakkında DÜRÜST DURU
   * Wikipedia yolu bu kurulumda ÇALIŞAMAZ: (a) `pandas.read_html` lxml/bs4/html5lib ister — üçü de
     kurulu değil; (b) Wikipedia bu User-Agent'a **403** dönüyor (bot politikası). İkisi de
     `except: return None` ile yutuluyordu, dolayısıyla modül sessizce hep bayat önbelleği döndürürdü.
+
+BU BEYAN 2026-08-13'TE YENİDEN ÖLÇÜLDÜ — YARISI ÇÜRÜMÜŞTÜ (v238 arıza turu):
+  * (a) ARTIK YANLIŞ. lxml 6.1.1 KURULU ve `pyproject.toml`da ANA bağımlılık (satır 29). Ayrıştırıcı
+    yokluğu 2026-07 kökü olarak GEÇMİŞTE kaldı; beyan güncellenmediği için canlıdaki gerçek arıza
+    aylarca "eski, bilinen bir sınır" sanıldı. ÖLÇÜLEN GERÇEK KÖK BAŞKAYDI: pandas 3.0.3'te
+    `read_html` ham HTML DİZGESİ kabul etmiyor — dizgeyi dosya-yolu sanıyor ve canlı
+    `state/universe_drift.json` `reason: "FileNotFoundError: [Errno 2] ... <!DOCTYPE html>..."`
+    yazıyordu. Yerelde birebir üretildi (pandas 3.0.3): ham dizge → FileNotFoundError,
+    `io.StringIO(...)` → parse OK. Düzeltme `_fetch_tables` içinde, gerekçesiyle.
+  * (b) HÂLÂ DOĞRU. 2026-08-13 ölçümü: `GET` + `User-Agent: Meridian/1.0` → **HTTP 403**, gövde 141
+    bayt. Yani StringIO düzeltmesinden SONRA da bu kurulumda Wikipedia'dan üyelik listesi GELMEZ;
+    değişen şey, gelen HTML'in artık ayrıştırılabilir olması (kaynak açılırsa/UA değişirse yol
+    çalışır) ve `health()`in artık DOĞRU nedeni yazması (`HTTP 403`, uydurma bir dosya-yolu hatası
+    değil). Zincirdeki birincil kaynak FMP'dir; Wikipedia en iyi-çaba ikincil olarak KALIR.
   * Diskteki ÜRETİM önbelleği TEST VERİSİYDİ: {"as_of": "2099-01-01", "current":
     ["AAPL","MSFT","NVDA"], changes:[{removed:"nan"}]} — bir test koşusu gerçek state klasörüne
     sızmıştı (2026-07-18). Bir tüketici olsaydı S&P 500 diye ÜÇ sembol alacaktı ve `as_of()` uydurma
@@ -74,8 +88,10 @@ def _cached() -> dict:
 
 def _fetch_tables():
     """(current_symbols, changes) — Wikipedia'dan. Başarısızlıkta (None, None) AMA sebebi kaydederek.
-    NOT: pandas.read_html lxml/bs4 ister ve Wikipedia botlara 403 dönebilir; ikisi de burada görünür."""
+    NOT: Wikipedia botlara 403 dönebilir (2026-08-13'te bu UA ile hâlâ dönüyor) ve ayrıştırıcı
+    eksikliği de olabilir; ikisi de `health()`te AYRI nedenlerle görünür."""
     try:
+        import io
         import pandas as pd
         import httpx
         r = httpx.get(WIKI_URL, timeout=20, headers={"User-Agent": "Meridian/1.0"},
@@ -83,7 +99,19 @@ def _fetch_tables():
         if r.status_code >= 400:
             _note(False, "wikipedia", 0, f"HTTP {r.status_code}")
             return None, None
-        tables = pd.read_html(r.text)                     # needs lxml/html5lib+bs4; may raise if absent
+        # 2026-08-13 (v238): `pd.read_html(r.text)` — HAM DİZGE — pandas 3'te DOSYA YOLU sanılıyor.
+        # Canlı kanıt: universe_drift.json `reason: "FileNotFoundError: ... <!DOCTYPE html>..."`;
+        # yani evren denetimi survivorship kanıtı üretmiyordu ve neden diye YANLIŞ bir sınıf
+        # (dosya yok) yazıyordu. `io.StringIO` pandas'ın KENDİ geçiş yolu (2.1'de uyarı, 3.0'da
+        # hata) — davranışı değiştirmez, yalnız girdiyi "bu bir yol değil, içerik" diye işaretler.
+        #
+        # 2026-08-13 · `flavor="lxml"` DE BİLEREK: varsayılan zincir lxml TABLO BULAMAZSA bs4+
+        # html5lib'e düşer ve html5lib kurulu olmadığı için hata `ImportError: Import html5lib
+        # failed` olur. Ölçüldü: 403 gövdesi (141 bayt, tablosuz) tam bunu üretiyor — yani gerçek
+        # sebep "tablo yok" iken `health()` "paket eksik" diye YANLIŞ sınıf yazardı ve bu, bu
+        # dosyanın başlığındaki (a) beyanını çürüten aynı yanlış-teşhis döngüsünü yeniden kurardı.
+        # lxml sabitlenince tablosuz gövde dürüstçe `ValueError: No tables found` verir.
+        tables = pd.read_html(io.StringIO(r.text), flavor="lxml")
     except Exception as e:
         _note(False, "wikipedia", 0, f"{type(e).__name__}: {e}")
         return None, None

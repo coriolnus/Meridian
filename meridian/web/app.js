@@ -1158,6 +1158,12 @@ const EV_TR = {
     || `[${e.kimlik || "?"}] için defterde 'approve' satırı yok (karar: ${e.karar || "yok"})`}`,
   approval_decision: e => `Onay defterine karar yazıldı: ${e.approval_id || "?"} → ${e.decision || "?"}`
     + ` · ${e.has_reason ? "gerekçeli" : "gerekçesiz"}`,
+  // v238 (2026-08-13): reddedilen beceri eylemi. Ekran mesajı ANLIKTIR (kutu bir sonraki çizimde
+  // silinir) ve operatör o an başka bir sekmede olabilir — "bastım, hiçbir şey olmadı" vakası
+  // SONRADAN da kurulabilmeli. Alanlar `api.api_skills_apply`ın obs.warn'undan BİREBİR: skill ·
+  // action · kod · detail. Ölçülmeyen alan UYDURULMAZ.
+  skill_action_refused: e => `Beceri eylemi REDDEDİLDİ — ${e.skill || "?"} → ${e.action || "?"}`
+    + ` (${e.kod || "kod yazılmamış"})${e.detail ? " · " + e.detail : ""}`,
   koruma_kur_istegi: e => `Koruma kurma isteği — ${e.onay_verildi ? "ONAYLI" : "onaysız (kuru koşu)"}`
     + ` · sonuç ${e.sonuc || "?"} · ${e.gonderilen ?? "?"}/${e.toplam ?? "?"} gönderildi`,
   koruma_oco_gonderildi: e => `Koruma OCO gönderildi: ${e.ticker || "?"} ${e.adet ?? "?"} adet`
@@ -9465,12 +9471,23 @@ RENDER.hermes = async () => {
   }).join("");
   const ACT_TR = { shadow: "Gölgeye al", activate: "Aktifleştir", lean_in: "Öne çıkar" };
   const recCards = (d.skill_recommendations || []).map(rc => {
-    const applyable = rc.action === "shadow" || rc.action === "activate";
+    // UYGULANABİLİRLİK SUNUCUDAN OKUNUR (v238, 2026-08-13). Burada eylem adlarını ELLE saymak
+    // (eski satır: `rc.action === "shadow" || rc.action === "activate"`) uygulayıcı kümesinin
+    // DÖRDÜNCÜ kopyasıydı; Onaylar gelen kutusundaki kopya bu listeyi hiç taşımadığı için orada
+    // `lean_in` için "Uygula" düğmesi çiziliyor ve sunucu reddi ekrana ulaşmıyordu. Ölçüt artık
+    // `skills.eylem_uygulanabilir` — yükte `uygulanabilir` alanı olarak gelir. Yedek dal
+    // (alan gelmezse) YİNE eski davranışı verir ama BEYANLIDIR: eski bir arka uçla konuşan pano
+    // düğmeyi kaybetmesin diye, uydurma bir "uygulanabilir" değeri üretmesin diye.
+    const applyable = (rc.uygulanabilir != null)
+      ? !!rc.uygulanabilir
+      : (rc.action === "shadow" || rc.action === "activate");
+    const notu = rc.uygulanamama_notu
+      || "Bilgi amaçlı — bu araca daha çok yaslan; uygulanacak bir düğme YOK (davranışsal karşılığı yok).";
     return `<div class="hyp"><div class="top"><span class="v">${esc(rc.skill)}</span><span class="st ${rc.action === 'shadow' ? 's-rb' : 's-ok'}">${esc(ACT_TR[rc.action] || rc.action)}</span></div>
       <p>${esc(rc.rationale || '')}</p>
       ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>
         <p class="hint" data-eylem-msg="${esc(rc.skill)}" style="margin:6px 0 0"></p>`
-                  : '<p class="hint" style="margin-top:4px">Bilgi amaçlı — bu araca daha çok yaslan.</p>'}</div>`;
+                  : `<p class="hint" style="margin-top:4px">${esc(notu)}</p>`}</div>`;
   }).join("");
   $("ogrenme-eylem").innerHTML = eylemSeridi(d);
   // MLOPS + ÖĞRENME ÇARKI BURAYA GELDİ (S2R-2): eski Operasyon'un "Bölüm 3 · MLOps & Hermes" ve

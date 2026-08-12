@@ -14,16 +14,37 @@ O 885 işlem **hiç yapılmadı**. Geriye dönük bir hesaba yansıyamaz — yan
 mimarisi (sim ≠ gerçekleşen) çökerdi. Kâğıt hesap 2026-07-10'da açıldı; paket 2026-08-12 20:13Z'de
 canlıya indi. Yani paketin canlı ömrü **bir gündür** ve henüz tek işlem üretmemiştir.
 
-| | replay (EDG-032) | CANLI (gerçekleşen) |
-|---|---|---|
-| pencere | 2022-01 → 2026-07 (4,5 yıl) | 2026-07-10 → bugün (~1 ay) |
-| işlem | 885 | 97 kapanan + 4 açık |
-| P&L | +20.685$ (simüle) | **−5.264$** (defter toplamı) · reset sonrası **+278$** |
-| paket | C+mb @5R | 08-12 20:13Z'ye kadar ESKİ paket (slot5 · 1,0R · rampa 3/8 · mb dormant) |
+### DÜZELTME (2026-08-13, operatör itirazı üzerine ölçüldü — İLK YAZIM YANLIŞTI)
 
-Yani canlı −5.264$'lık zararın TAMAMI eski paketle üretildi. Yeni paketin canlı karnesi henüz BOŞ.
-Replay'in doğru kullanımı: "bu paket 4,5 yılda pozitif ve daha yüksek sharpe verdi" — bir gelecek
-beklentisi, geçmiş bir kazanç değil.
+Bu belgenin ilk hâli "canlı gerçek −5.264$ (97 işlem)" diyordu. **YANLIŞ.** Operatör itiraz etti
+("uygulama kurulalı 1 ay olmadı, 4 senelik paper geçmişi nasıl olur — kendinle çelişiyorsun") ve
+ölçüm onu doğruladı. `trades.kaynak` kolonu kırılımı (canlı DB, salt-okuma):
+
+| kaynak | n | P&L | pencere | strategy_version |
+|---|---|---|---|---|
+| **replay_seed** | **95** | −5.542,09$ | 2023-01-23 → 2026-07-17 | sv=4 (ESKİ paket) |
+| **live_paper** | **2** | **+277,99$** | 2026-08-07 → 2026-08-10 | sv=3 |
+
+Yani 97 işlemin **95'i replay tohumudur** — kâğıt hesapta İCRA EDİLMEDİ, motor tarafından geçmiş
+barlar üzerinde üretilip deftere soğuk-başlangıç örneklemi olarak kondu. Gerçekten emir gönderilip
+dolan işlem sayısı **2**: ALL/momentum_burst (−450,38$) ve VLO/exhaustion_hammer (+728,37$).
+
+Bu, "portfolio ↔ trades tutarsızlığı" diye §2-18'e yazdığım kalemi de çözüyor: **tutarsızlık YOK.**
+`portfolio.realized_pnl = +277,98$` yalnız gerçekleşen kâğıt-icrayı sayıyor ve doğru; trades toplamı
+tohumu da içeriyor. İki kaynak farklı SORUYA cevap veriyor. Kalan gerçek kusur: pano bu ayrımı
+göstermiyor — operatör "P&L" başlığı altında hangi pencereyi gördüğünü bilemiyor.
+
+| | replay ölçümü (EDG-032) | replay TOHUMU (defterdeki) | KÂĞIT-İCRA (gerçekleşen) |
+|---|---|---|---|
+| pencere | 2022-01 → 2026-07 | 2023-01 → 2026-07 | 2026-08-07 → 08-10 |
+| işlem | 885 | 95 | **2** |
+| P&L | +20.685$ | −5.542$ | **+277,99$** |
+| paket | **C+mb @5R (YENİ)** | **sv=4 ESKİ** (slot5·1,0R·mb dormant) | sv=3 |
+
+**ASIL BULGU (operatörün sorusu): defterin kendisi ESKİ DÜNYADAN.** Öğrenme katmanı, kalibrasyon,
+DSR/PBO, karne — hepsi bu 95 tohumdan besleniyor ve tohum eski paketin ürünü. Yeni paket canlıda ama
+geçmiş kanıt eskinin. Operatörün "bunu C+mb @5R için de yapmamız gerekmiyor mu?" sorusunun cevabı
+EVET — tohum yenileme kalemi: ROADMAP §2-19 + kart EDG-2026-036.
 
 ## 2) "Eski rakamlara göre çalışıyor" — KISMEN DOĞRU (bir gerçek split var)
 

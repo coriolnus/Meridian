@@ -17,7 +17,11 @@ target_return_30d: 0.07
 min_sharpe: 1.2
 
 # failure
-max_drawdown: 0.08
+max_drawdown: 0.16   # 0.08→0.16 (OPERATÖR KARARI 2026-08-13 penceresi): benimsenen C+mb paketinin
+                     # ÖLÇÜLEN max-dd'si %12.7 (EDG-032 damgası) — eski çizgi paketin normal
+                     # bölgesinde yanlış-alarm üretirdi. Yeni çizgi = ölçülen × ~1.3 tampon (ölçüm
+                     # kapılarıyla aynı disiplin): %16 aşımı artık GERÇEK "ölçüm-dışı" sinyalidir.
+                     # Eski 3/8 rampasının 0.08'le sayıca bağı v237'de zaten koptu (derisk_floor_dd).
 # failure_below: 30 GÜNLÜK gerçekleşen getiri bu eşiğin altına düşerse deney BAŞARISIZDIR.
 # ÖLÇÜLÜYOR (K1, 2026-07-30): watchdog.goal_failure_report() → GOAL_FAILURE alarmı. Tanımlandığı
 # 2026-07-14'ten 07-30'a kadar hiçbir kod bu hükmü okumuyordu (score.py yalnız hedef üçlüsünü

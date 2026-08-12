@@ -409,10 +409,15 @@ def test_C1_alt_sinir_esigi_gecse_bile_GECTI_DENMEZ(sandbox_state):
 def test_C1_alt_sinir_esigi_ASIYORSA_hukum_KESINDIR(sandbox_state):
     """Eksik bacak hükmü İYİLEŞTİREMEZ: alt sınır zaten tavanı aşıyorsa "kaldı" kesindir ve
     ölçülemedi'ye kaçmak, bilinen bir başarısızlığı belirsizliğe gömmek olurdu."""
-    store.write_jsonl("trades.jsonl", [_islem(i, -300.0) for i in range(45)])
+    # FİKSTÜR EŞİK-BAĞIL (2026-08-13): sabit −300×45 (dd=0,135) 0,08'lik tavana kalibreydi; operatör
+    # tavanı 0,16'ya çıkarınca fikstür tavanın ALTINDA kaldı ve test kendi senaryosunu KURAMAZ oldu
+    # ("alt sınır tavanı aşıyorsa" önermesi sağlanamıyordu). Kayıp artık tavandan TÜRETİLİR: tavan
+    # yarın yine değişirse bu test kendini onarır, sessizce anlamsızlaşmaz.
+    _kayip = round(100_000.0 * (analytics.EDGE_MAXDD_MAX * 1.35) / 45, 2)   # tavanın belirgin ÜSTÜ
+    store.write_jsonl("trades.jsonl", [_islem(i, -_kayip) for i in range(45)])
     store.write_json("equity_curve.json", {"version": 4, "points": [
         ["2026-06-01", 100000.0], ["2026-06-30", 99000.0]]})
-    store.write_json("portfolio.json", {"cash": 90000.0, "last_date": "2026-07-20"})
+    store.write_json("portfolio.json", {"cash": 100_000.0 - 45 * _kayip, "last_date": "2026-07-20"})
     dd = analytics._realized_drawdown()
     assert dd["max_dd_alt_sinir"] is True and dd["max_dd"] > analytics.EDGE_MAXDD_MAX
     assert analytics.edge_verdict()["criteria"]["kuyruk"]["status"] == "kaldi"
@@ -432,8 +437,10 @@ def test_C1_kitabin_seansi_OKUNAMAZSA_seri_bayat_SAYILMAZ(sandbox_state):
 
 def test_C1_ESIKLER_OYNAMADI(sandbox_state):
     """Bu iş bir EŞİK OYNATMA DEĞİLDİR. Üç kaynak hâlâ birebir aynı sayıda (v119'un çivisi)."""
+    # 2026-08-13: sayı 0,08→0,16 (operatör kararı — C+mb paketinin ölçülen dd'si %12,7; sabit değer
+    # ARTIK ÇİVİLENMEZ, çünkü çivilenen şey ÜÇ KAYNAĞIN EŞİTLİĞİdir, belirli bir sayı değil).
     assert analytics.EDGE_MAXDD_MAX == analytics.RESULT_MAXDD_MAX == \
-        float(config.goal()["max_drawdown"]) == 0.08
+        float(config.goal()["max_drawdown"])
 
 
 def test_C1_equity_curve_bayatlik_bekcisine_KAYITLI(sandbox_state):

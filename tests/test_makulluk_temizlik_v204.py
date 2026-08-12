@@ -11,6 +11,14 @@ BULGU 1 — `yeniden_hesap:orphan_state_files` canlıda 7 dosya sayıyordu.
   7. dosya `auth.json`: dedektörün KÖR NOKTASI — okuyucusu ölçüldü, `DECLARED_SINKS`e beyanlı.
 
 BULGU 2 — `eleme:component_ic.eslesme:sema_elemesi` + `eleme:threshold_curve.eslesme:sema_elemesi`.
+  BEYANLI EK (v238, 2026-08-13): dedektörün ÜÇÜNCÜ sınıfı ölçüldü — DAMGALI GÖÇ ARŞİVİ
+  (`state/scoreboard.json.migrated-20260812-201359-p192112`, 2026-08-12 dağıtım penceresi).
+  Bu dosya bir yedek ARTIĞI değil, `store._bayat_defter_suzgeci`in çarpışma dalıdır ve düz
+  `.migrated` ZATEN tanınıyordu; dedektör artık damgalı biçimi de TÜRETEREK tanır ve
+  `migrasyon_artigi` adıyla SAYAR. Aşağıdaki `test_yedek_artigi_HALA_yetim_sayilir` bekçisi
+  DEĞİŞMEDİ ve v238'de yeniden çivilendi — `.bak-` hâlâ yetimdir, desen GEVŞETİLMEDİ.
+  Kapanış: `tests/test_ariza_turu_v238.py` [C] bölümü.
+
   Kök TEK: yedi satırın hepsi `DD`, hepsi cf katmanı, hepsi 2022-11-10…2024-07-31 arası. `DD`nin
   bütünlük kaydı `guvenli_baslangic: 2025-11-04` (2025-11-03 ölçek dikişi, K1) → `measurement_bars`
   o tarihten öncesini ölçüm çerçevesinden BİLEREK çıkarıyor. Yani `sema:` (= veri sözleşmesi hatası)

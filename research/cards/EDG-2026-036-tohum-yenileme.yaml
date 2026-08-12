@@ -1,0 +1,50 @@
+card_id: EDG-2026-036
+family: tohum_yenileme
+thesis: >
+  Operatör bulgusu (2026-08-13): defterdeki 95 işlem `kaynak=replay_seed` · `strategy_version=4` —
+  yani soğuk-başlangıç tohumu ESKİ paketin (slot5 · 1,0R · rampa 3/8 · mb dormant) ürünü. Canlıda
+  artık C+mb @5R koşuyor (v237/v5). Öğrenme katmanı, kalibrasyon, DSR/PBO ve karne bu tohumdan
+  besleniyor → YENİ dünya ESKİ dünyanın kanıtıyla değerlendiriliyor (split sınıfının en büyüğü).
+  TEZ: tohum, yürürlükteki paketle yeniden üretilirse (EDG-032 replay'i zaten bu defteri üretti —
+  885 işlem) öğrenme doğru zemine oturur. ÖLÇÜLECEK: yenilemenin tüketicilere etkisi + tohumun
+  gerçekleşen kâğıt-icrayı KİRLETMEDİĞİ (kaynak damgası ayrımı bozulmamalı).
+
+evidence_refs:
+  - "canlı DB kırılımı 2026-08-13: replay_seed n=95 (sv=4, −5.542$) · live_paper n=2 (+277,99$)"
+  - "EDG-032 damgası: C+mb 885 işlem +20.685$ dd %12,7 sharpe 0,521 (yürürlükteki paketin replay'i)"
+  - "docs/TESHIS-CANLI-VS-REPLAY-2026-08-13.md §DÜZELTME"
+
+universe: >
+  Tohum kaynağı = EDG-032 cmb koşumunun işlem defteri (research/olcumler/edg032_final_paket_2026-08-12/
+  islemler_cmb.json — sha-künyeli). Hedef: canlı `trades` tablosunun replay_seed dilimi. KÂĞIT-İCRA
+  SATIRLARINA (live_paper) DOKUNULMAZ — ayrı kaynak damgası, ayrı otorite.
+
+features_asof: >
+  ÜÇ AŞAMA. (0) ÖN-ÖLÇÜM (replay YOK, salt-okuma): tohumun HANGİ tüketicileri besleyip beslemediğini
+  KANITLA çıkar — kalibrasyon, DSR/PBO tabanı, skills karnesi, near_miss/cf defteri, analytics kapıları,
+  hermes öneri eşikleri. Tüketicisi olmayan bir tohumu yenilemek YASA-6 ihlali olurdu. (1) KURU KOŞUM:
+  yeni tohum yüklenirse tüketici çıktıları NE OLUR (yan yana: eski tohum vs yeni tohum ile hesaplanan
+  DSR/PBO/kalibrasyon/karne). (2) UYGULAMA yalnız (0)+(1) yeşilse ve operatör onayıyla: yedekli bakım
+  penceresi, eski tohum ARŞİVLENİR (silinmez — tarihçe-koru), yeni satırlar `kaynak=replay_seed` +
+  `strategy_version=5` + tohum-parti damgasıyla girer.
+
+parameter_grid:
+  yok: "tek yenileme hattı — K += 1 (ölçüm: kuru-koşum kıyası)"
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  (a) BÜTÜNLÜK: yenileme sonrası live_paper satırları BİT-AYNI (kaynak ayrımı korunmuş; portfolio
+  realized_pnl +277,99$ DEĞİŞMEZ) · (b) TÜKETİCİ TUTARLILIĞI: (0)'da adı geçen her tüketici yeni
+  tohumla ÇALIŞIYOR ve çıktısı açıklanabilir (örneklem 95→~885 büyüdüğü için CI'lar daralmalı) ·
+  (c) DÜRÜSTLÜK: hiçbir yüzey tohumu gerçekleşen icra gibi göstermiyor (pano/karne/API'de kaynak
+  ayrımı görünür). Üçü sağlanırsa yenileme ÖNERİLİR; biri düşerse DURUR ve neden raporlanır.
+
+kill_criteria:
+  - "(0)'da tohumun gerçek tüketicisi çıkmazsa → yenileme GEREKSİZ (kart kapanır, ucuz hüküm)"
+  - "kâğıt-icra satırlarına dokunma riski gösterilirse → DUR (icra defteri kutsaldır)"
+  - "yeni tohum yürürlükteki paketle üretilmemişse (sha uyuşmazlığı) → geçersiz"
+
+k_registry: {registered_at: "2026-08-13T0x", trial_ids: [pending-036-kuru-kosum]}
+
+status: registered   # 2026-08-13 Rol-1 — operatör bulgusundan doğdu; aşama-2 (uygulama) OPERATÖR ONAYI ister.

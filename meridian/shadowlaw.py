@@ -92,9 +92,14 @@ MONEY_GATE_MARGIN: float = 0.004       # 0,02 × 0,1908 = 0,00382 → 0,004 (par
 #       0,0343 (2000 replikasyon; ortalama düşüş %6,9, %5-%95 bandı %2,4-%13,4). Vetonun karar
 #       sınırı kendi ölçüm gürültüsünün İÇİNDE olamaz — `TAIL_SIMS`in dersi (marjın yarısı kadar
 #       gürültü kabul edilemezdi). 0,04 > 0,0343.
-#   (2) BÜTÇENİN YARISI: `goal.max_drawdown` = %8 tüm düşüş bütçesidir; 0,04 onun tam yarısıdır —
+#   (2) BÜTÇENİN YARISI: `goal.max_drawdown` tüm düşüş bütçesidir; marj onun tam yarısıdır —
 #       "aday, incumbent'ın üstüne bütçenin yarısını daha yakamaz" okunabilir bir kuraldır.
-DD_VETO_MARGIN: float = 0.04
+# GÜNCELLEME 2026-08-13 (operatör kararı: max_drawdown 0,08→0,16, C+mb paketinin ölçülen dd'si %12,7):
+#   türetim (2) gereği marj 0,04 → **0,08**. Türetim (1) hâlâ sağlanıyor ve ARTIK BAĞLAYICI DEĞİL,
+#   yalnız alt sınır: 0,08 > σ(düşüş)=0,0343. İki türetimin aynı sayıya çıkması 0,08'lik bütçeye özgü
+#   bir tesadüftü; kural (2) yasadır, (1) o kuralın ihlal edilmediğini doğrulayan kapıdır. Bu sabit
+#   goal'e YAPIŞIK — max_drawdown değişirse burası da değişir (test_dalga_w1_v216 C5 çivisi).
+DD_VETO_MARGIN: float = 0.08
 
 # ---- CANLI DEFTERDE ÖLÇÜLEN (2026-07-30, seed=42, n_boot=2000, block_days=15, span=1274g) ------
 # Sabit DEĞİL, ÖLÇÜM KAYDIDIR: `variance_attribution()` her çağrıda yeniden ölçer ve `--olc` CLI'ı
