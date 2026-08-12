@@ -2436,8 +2436,8 @@ def _emir_penceresi_hedefi(meta: dict, dstr: str) -> str | None:
     try:
         esik = (dt.date.fromisoformat(str(dstr))
                 - dt.timedelta(days=_EMIR_PENCERESI_UFUK_GUN)).isoformat()
-    except ValueError:
-        esik = ""                                  # tarih okunamadı — ufuk süzgeci devre dışı (dar değil geniş)
+    except ValueError:  # sessiz-yutma: dstr tarih olarak okunamadı -> ufuk süzgeci devre dışı kalır (dar değil GENİŞ davranış: hiçbir hedef elenmez); hata yutulmuyor, boş eşik aşağıda tüm satırları hedefe alır
+        esik = ""
     try:
         for r in store.read_jsonl(ENTRY_LEDGER):
             if r.get("motor") != "ayna" or r.get("karar") != "submitted":
