@@ -810,7 +810,15 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     params_by_regime kancasına). *gerekçe: ısı tek sabit yerine koşul-duyarlı · boyut: M · bağımlılık:
     026 şasisi + pencere girdileri · öncelik: yüksek (karar-paketi sonrası).*
 
-13. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
+13. **Scale-out bankalama-barı trail kusuru (EDG-027/H1 mekanik bulgusu, 2026-08-12)** — bankalama
+    barında trail=entry_fill kurulumu (entry_fill>open) koşucuyu AYNI BARDA ~0.7R stop_gap'e kesiyor;
+    ölçüm bu yüzden CI-negatif (−0.14R) çıktı — kavram değil implementasyon kusuru. DÜZELTME ADAYI:
+    bankalama-barında trail'i entry_fill'e ÇEKMEME (ör. bir sonraki bardan itibaren) ya da aynı-bar
+    stop-kontrol sırası; motor-değişikliği = kart + yeniden-ölçüm (027/H1 hükmü o zamana dek geçerli:
+    alet kapalı). *gerekçe: büyük gap-kazananlar budanıyor (ENPH +12.3R→0.72R) · boyut: S-M ·
+    bağımlılık: kart · öncelik: yüksek (çıkış-kanaması ailesi).*
+
+14. **M8 kararları Rol-1 turu (docs/M8-K-SENKRON-RAPOR-2026-08-10.md'nin işlenmesi)** — rapor 7 başlık verdi,
    kararlar ölçüm-anlamı değiştirir, aceleye gelmez: U1 EXE-001 K-düzeltme notu (aritmetik dürüstlük;
    tarihçe-koru) · U2 8 kartın pending-* trial_ids temizliği · U3 README endeks tazeleme · U5 beyan-K/
    harcanan-K şeması · U6 kart-K↔DSR n_trials bağlanmalı mı (MİMARİ: yeni tüketici + DSR çıktısı değişir) ·

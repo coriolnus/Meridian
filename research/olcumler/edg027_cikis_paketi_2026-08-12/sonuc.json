@@ -1,0 +1,482 @@
+{
+ "kart": "EDG-2026-027",
+ "faz": "FAZ-1 — yalnız B-taban hücreleri (C hücreleri ayrı fazda; kill#3/C bu fazın dışında)",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg027_cikis_paketi_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T12:47:25+00:00",
+ "yontem": {
+  "esli_anahtar": "(ts_open[:10], ticker) — girişler değişmediği için aynı pozisyonun iki dünyadaki R'si",
+  "esli_R": "satırın r_multiple'ı — scale-out'ta birleşik (banked+kalan; broker.close_position tek satır)",
+  "esli_ci": "işlem-TARİH-kümeli eşlenik bootstrap: kümeler eşli kümenin ayrık ts_open tarihleri; yerine-koymalı; iter=5000, seed=20260812; fark=hücre−B; ay-kümeli CI yan-tablo (ikinci eşik değil)",
+  "taban_B": "EDG-023 varyant (rampa 15/36) HAZIR çıktıları — yeniden koşulmadı; sha çivileri + n/pnl/dd çivileriyle doğrulandı",
+  "esli_makine_kontrolu": "B↔B öz-eşleme: n=410, tüm farklar 0, CI [0,0] — assert geçti"
+ },
+ "sha_dogrulama": {
+  "motor_guncel": {
+   "broker.py": "daa858a522d97c98",
+   "backtest.py": "d345b6eed3d28be4",
+   "strategy.py": "ac7c53a3d89b6203"
+  },
+  "edg023_civi": {
+   "broker.py": "daa858a522d97c98",
+   "backtest.py": "d345b6eed3d28be4",
+   "strategy.py": "ac7c53a3d89b6203"
+  },
+  "hucre_kayitlari_esit": true,
+  "config_civi": {
+   "goal.yaml": "099590dedee1ccf2",
+   "strategy.yaml": "9f3e4732315abe52",
+   "bounds.yaml": "3e810b547ca95f9a"
+  }
+ },
+ "taban_B_ozet": {
+  "kaynak": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12",
+  "islem_n": 410,
+  "performans": {
+   "net_pnl_equity": 774.6,
+   "net_pnl_trades": 774.6,
+   "maxdd_kanonik": 0.1775,
+   "maxdd_m2m": 0.1775,
+   "avg_r": 0.032,
+   "win_rate": 0.337,
+   "sharpe": 0.018,
+   "sharpe_measurable": true,
+   "score": -0.2975,
+   "score_n": 410,
+   "total_return": 0.0077
+  },
+  "exit_reason_dagilim": {
+   "stop": 173,
+   "regime_flip": 81,
+   "time_stop": 76,
+   "target": 37,
+   "stop_gap": 33,
+   "target_gap": 10
+  },
+  "butunluk": {
+   "frame_okunamadi": 0,
+   "tekrar_tarih": [],
+   "scan_vs_plan_uyusmazlik_n": 0,
+   "scan_vs_plan_ornek": [],
+   "yasakli_modul_yuklendi": [],
+   "gecerli": true
+  }
+ },
+ "hucreler": {
+  "h1_scaleout": {
+   "trial_id": "pending-027-B-scaleout",
+   "enjeksiyon": {
+    "exit.scale_out_frac": 0.5,
+    "exit.scale_out_r": 1.5
+   },
+   "sure_sn": 1579.7,
+   "butunluk_hucre": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "gecerli": true
+   },
+   "takvim_ayni_B": true,
+   "kill2_sasi_gecerli": true,
+   "esli": {
+    "esli_n": 371,
+    "anahtar_tekrar": {
+     "B": 0,
+     "H": 0
+    },
+    "kill1_esli_lt_min": false,
+    "kill1_esik": 60,
+    "ort_fark": -0.1409,
+    "medyan_fark": 0.0,
+    "fark_pos_n": 120,
+    "fark_neg_n": 98,
+    "fark_sifir_n": 153,
+    "ci95_tarih_kumeli_eslenik": {
+     "lo": -0.2639,
+     "hi": -0.0451,
+     "orta": -0.1384,
+     "_n_kume": 269
+    },
+    "ci95_ay_kumeli_yan_tablo": {
+     "lo": -0.3128,
+     "hi": -0.0192,
+     "orta": -0.1302,
+     "_n_kume": 42
+    },
+    "cikis_gecis_matrisi": {
+     "stop→stop": 154,
+     "time_stop→time_stop": 74,
+     "regime_flip→regime_flip": 70,
+     "target→target": 25,
+     "stop_gap→stop_gap": 23,
+     "target→stop_gap": 8,
+     "target_gap→target_gap": 7,
+     "stop→stop_gap": 4,
+     "regime_flip→stop_gap": 3,
+     "time_stop→stop_gap": 1,
+     "target→stop": 1,
+     "target_gap→stop_gap": 1
+    },
+    "esli_scaled_out_n": 70,
+    "scaled_betim": {
+     "esli_scaled": {
+      "n": 70,
+      "ort_fark": -0.7498
+     },
+     "esli_scaled_disi": {
+      "n": 301,
+      "ort_fark": 0.0008,
+      "fark_sifir_disi_n": 148
+     },
+     "tam_defter_scaled": {
+      "n": 73,
+      "exit_reason_dagilim": {
+       "time_stop": 25,
+       "stop_gap": 21,
+       "target": 17,
+       "stop": 5,
+       "regime_flip": 3,
+       "target_gap": 2
+      },
+      "bars_held_0_n": 18,
+      "r_060_080_n": 23
+     }
+    },
+    "yalniz_B": {
+     "n": 39,
+     "toplam_r": -6.755,
+     "toplam_pnl": -5812.78
+    },
+    "yalniz_H": {
+     "n": 21,
+     "toplam_r": -7.426,
+     "toplam_pnl": -4382.53
+    }
+   },
+   "tam_defter": {
+    "islem_n": {
+     "B": 410,
+     "hucre": 392,
+     "fark": -18,
+     "fark_pct": -4.4
+    },
+    "islem_yil": {
+     "B": 89.62,
+     "hucre": 85.68
+    },
+    "net_pnl_equity": {
+     "B": 774.6,
+     "hucre": -16683.95,
+     "fark": -17458.55
+    },
+    "net_pnl_trades": {
+     "B": 774.6,
+     "hucre": -16683.95
+    },
+    "maxdd_kanonik": {
+     "B": 0.1775,
+     "hucre": 0.2594
+    },
+    "maxdd_m2m": {
+     "B": 0.1775,
+     "hucre": 0.2594
+    },
+    "avg_r": {
+     "B": 0.032,
+     "hucre": -0.101
+    },
+    "win_rate": {
+     "B": 0.337,
+     "hucre": 0.365
+    },
+    "sharpe": {
+     "B": 0.018,
+     "hucre": -0.586
+    },
+    "score": {
+     "B": -0.2975,
+     "hucre": -0.3722
+    },
+    "exit_reason_dagilim": {
+     "B": {
+      "stop": 173,
+      "regime_flip": 81,
+      "time_stop": 76,
+      "target": 37,
+      "stop_gap": 33,
+      "target_gap": 10
+     },
+     "hucre": {
+      "stop": 165,
+      "time_stop": 76,
+      "regime_flip": 74,
+      "stop_gap": 44,
+      "target": 26,
+      "target_gap": 7
+     }
+    },
+    "hedef_orani_pct": {
+     "B": 11.46,
+     "hucre": 8.42
+    },
+    "scaled_out": {
+     "B": {
+      "n": 0,
+      "not": "frac=0 — alet kapalı (tanım gereği)"
+     },
+     "hucre": {
+      "n": 73,
+      "pct": 18.62
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "B": 2277,
+     "hucre": 2142
+    },
+    "ort_acik_pozisyon": {
+     "B": 1.985,
+     "hucre": 1.867
+    },
+    "toplam_bars_held": {
+     "B": 2434,
+     "hucre": 2292
+    },
+    "silahlanan_plan": {
+     "B": 433,
+     "hucre": 497
+    },
+    "toplam_plan": {
+     "B": 722,
+     "hucre": 794
+    },
+    "entry_rejects": {
+     "B": {
+      "open_below_stop": 12,
+      "max_chase": 11
+     },
+     "hucre": {
+      "open_below_stop": 12,
+      "max_chase": 13
+     }
+    }
+   }
+  },
+  "h2_chandelier": {
+   "trial_id": "pending-027-B-chandelier",
+   "enjeksiyon": {
+    "exit.chandelier_lookback": 20
+   },
+   "sure_sn": 1458.8,
+   "butunluk_hucre": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "gecerli": true
+   },
+   "takvim_ayni_B": true,
+   "kill2_sasi_gecerli": true,
+   "esli": {
+    "esli_n": 404,
+    "anahtar_tekrar": {
+     "B": 0,
+     "H": 0
+    },
+    "kill1_esli_lt_min": false,
+    "kill1_esik": 60,
+    "ort_fark": -0.0019,
+    "medyan_fark": 0.0,
+    "fark_pos_n": 80,
+    "fark_neg_n": 78,
+    "fark_sifir_n": 246,
+    "ci95_tarih_kumeli_eslenik": {
+     "lo": -0.0102,
+     "hi": 0.0036,
+     "orta": -0.0015,
+     "_n_kume": 281
+    },
+    "ci95_ay_kumeli_yan_tablo": {
+     "lo": -0.0106,
+     "hi": 0.0037,
+     "orta": -0.0015,
+     "_n_kume": 42
+    },
+    "cikis_gecis_matrisi": {
+     "stop→stop": 171,
+     "regime_flip→regime_flip": 79,
+     "time_stop→time_stop": 71,
+     "target→target": 37,
+     "stop_gap→stop_gap": 32,
+     "target_gap→target_gap": 10,
+     "time_stop→stop": 2,
+     "stop_gap→stop": 1,
+     "regime_flip→stop": 1
+    },
+    "esli_scaled_out_n": 0,
+    "scaled_betim": {
+     "esli_scaled": {
+      "n": 0,
+      "ort_fark": null
+     },
+     "esli_scaled_disi": {
+      "n": 404,
+      "ort_fark": -0.0019,
+      "fark_sifir_disi_n": 158
+     },
+     "tam_defter_scaled": {
+      "n": 0,
+      "exit_reason_dagilim": {},
+      "bars_held_0_n": 0,
+      "r_060_080_n": 0
+     }
+    },
+    "yalniz_B": {
+     "n": 6,
+     "toplam_r": 0.392,
+     "toplam_pnl": 375.54
+    },
+    "yalniz_H": {
+     "n": 7,
+     "toplam_r": 2.43,
+     "toplam_pnl": 1720.2
+    }
+   },
+   "tam_defter": {
+    "islem_n": {
+     "B": 410,
+     "hucre": 411,
+     "fark": 1,
+     "fark_pct": 0.2
+    },
+    "islem_yil": {
+     "B": 89.62,
+     "hucre": 89.84
+    },
+    "net_pnl_equity": {
+     "B": 774.6,
+     "hucre": 1576.44,
+     "fark": 801.84
+    },
+    "net_pnl_trades": {
+     "B": 774.6,
+     "hucre": 1576.44
+    },
+    "maxdd_kanonik": {
+     "B": 0.1775,
+     "hucre": 0.1889
+    },
+    "maxdd_m2m": {
+     "B": 0.1775,
+     "hucre": 0.1889
+    },
+    "avg_r": {
+     "B": 0.032,
+     "hucre": 0.035
+    },
+    "win_rate": {
+     "B": 0.337,
+     "hucre": 0.348
+    },
+    "sharpe": {
+     "B": 0.018,
+     "hucre": 0.036
+    },
+    "score": {
+     "B": -0.2975,
+     "hucre": -0.295
+    },
+    "exit_reason_dagilim": {
+     "B": {
+      "stop": 173,
+      "regime_flip": 81,
+      "time_stop": 76,
+      "target": 37,
+      "stop_gap": 33,
+      "target_gap": 10
+     },
+     "hucre": {
+      "stop": 179,
+      "regime_flip": 80,
+      "time_stop": 72,
+      "target": 38,
+      "stop_gap": 32,
+      "target_gap": 10
+     }
+    },
+    "hedef_orani_pct": {
+     "B": 11.46,
+     "hucre": 11.68
+    },
+    "scaled_out": {
+     "B": {
+      "n": 0,
+      "not": "frac=0 — alet kapalı (tanım gereği)"
+     },
+     "hucre": {
+      "n": 0,
+      "pct": 0.0
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "B": 2277,
+     "hucre": 2269
+    },
+    "ort_acik_pozisyon": {
+     "B": 1.985,
+     "hucre": 1.978
+    },
+    "toplam_bars_held": {
+     "B": 2434,
+     "hucre": 2421
+    },
+    "silahlanan_plan": {
+     "B": 433,
+     "hucre": 439
+    },
+    "toplam_plan": {
+     "B": 722,
+     "hucre": 736
+    },
+    "entry_rejects": {
+     "B": {
+      "open_below_stop": 12,
+      "max_chase": 11
+     },
+     "hucre": {
+      "open_below_stop": 12,
+      "max_chase": 11
+     }
+    }
+   }
+  }
+ },
+ "kill_bayraklari": {
+  "h1_scaleout": {
+   "kill1_esli_lt60": false,
+   "kill2_sasi_bozuk": false
+  },
+  "h2_chandelier": {
+   "kill1_esli_lt60": false,
+   "kill2_sasi_bozuk": false
+  }
+ },
+ "dosyalar": {
+  "B": {
+   "sonuc": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/sonuc_varyant.json",
+   "islemler": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/islemler_varyant.json",
+   "seanslar": "/Users/erdemozturk/AI-Trading/research/olcumler/edg023_rampa_bandi_2026-08-12/seanslar_varyant.json"
+  },
+  "h1_scaleout": {
+   "sonuc": "sonuc_h1_scaleout.json",
+   "seanslar": "seanslar_h1_scaleout.json",
+   "islemler": "islemler_h1_scaleout.json"
+  },
+  "h2_chandelier": {
+   "sonuc": "sonuc_h2_chandelier.json",
+   "seanslar": "seanslar_h2_chandelier.json",
+   "islemler": "islemler_h2_chandelier.json"
+  }
+ }
+}

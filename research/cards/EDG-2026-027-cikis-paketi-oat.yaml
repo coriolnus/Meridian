@@ -41,4 +41,21 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-027-B-scaleout, pending-027-B-chandelier, pending-027-C-scaleout, pending-027-C-chandelier]}
 
-status: registered   # 2026-08-12 Rol-1 — operatör-girdili OAT tasarımı; iki fazlı yürütme (B şimdi, C 026-sonrası); eşikler donuk.
+status: measured_partial   # 2026-08-12 Rol-1 — FAZ-1 (B-taban) ölçüldü + hüküm; C hücreleri (F2) koşuyor.
+
+verdict_faz1:   # Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
+  B_scaleout: >
+    ZARARLI (CI-negatif): eşli fark −0.1409R, CI [−0.264, −0.045], n=371; tam-defter net −16.684$, dd 0.259.
+    ALET KAPALI KALIR. AMA kök MEKANİK: bankalama barında trail=entry_fill kuruluyor; entry_fill=open×(1+slip)
+    > open olduğundan giriş-günü bankalamada aynı barın o<=eff_stop dalı DAİMA tetikleniyor → koşucu aynı bar
+    ~0.7R stop_gap (scaled 73'ün 18'i bars_held=0; en negatif çiftler B'nin büyük gap-kazananları, ENPH
+    +12.31R→0.72R). Yani ölçülen şey 'kavram' değil 'mevcut implementasyonun kusuru' — motor-düzeltme adayı
+    §2'ye; düzeltilirse YENİDEN ölçüm (bu hüküm o zamana dek geçerli).
+  B_chandelier: >
+    ETKİSİZ@B (eşli 0-içi): fark −0.0019R, CI [−0.0102, +0.0036], n=404. Tam-defter +802$ farkı eşli-DIŞI
+    işlem/equity-yolu sürüklenmesinden — mekanizmanın kendisinden değil (dürüst ölçü eşli-CI; Rol-1'in
+    'umut verici' ilk-bakışı bu ayrımı atlamıştı, düzeltildi). C-tabanda (F2) dinamik farklı olabilir — bekleniyor.
+  kill_durum: "kill#1/#2 tetiklenmedi (eşli n 371/404; şasi sha-eşit, bütünlük temiz, B↔B öz-kontrol [0,0])."
+  artefakt: "research/olcumler/edg027_cikis_paketi_2026-08-12/ (sonuc.json + hücre çıktıları; H1 1579.7s, H2 1458.8s)"
+
+status_eski: registered   # 2026-08-12 Rol-1 — operatör-girdili OAT tasarımı; iki fazlı yürütme (B şimdi, C 026-sonrası); eşikler donuk.

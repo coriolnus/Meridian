@@ -1,0 +1,238 @@
+{
+ "kart": "EDG-2026-027",
+ "faz": "FAZ-1 (B-taban)",
+ "hucre": "h1_scaleout",
+ "trial_id": "pending-027-B-scaleout",
+ "smoke": false,
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg027_cikis_paketi_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T12:42:37+00:00",
+ "sure_sn": 1579.7,
+ "rampa_B": {
+  "tam_dd": 0.15,
+  "sifir_dd": 0.36,
+  "enjeksiyon": "MONKEYPATCH — şasi EDG-023 varyant beyanı AYNEN (B paramlarının parçası)"
+ },
+ "enjeksiyon": {
+  "degerler": {
+   "exit.scale_out_frac": 0.5,
+   "exit.scale_out_r": 1.5
+  },
+  "dosya_once": {
+   "exit.chandelier_lookback": 0,
+   "exit.scale_out_frac": 0.0,
+   "exit.scale_out_r": 2.0
+  },
+  "sabit_kanit": {
+   "exit.chandelier_lookback": 0
+  },
+  "beyan": "PARAMS-SÖZLÜĞÜ ENJEKSİYONU — strategy.yaml DOSYASI ve motor DOSYALARI değişmedi; mekanizma motorda mevcut ve paramla kapalıydı (broker.py:529 scale_out, strategy.py:1101 chandelier). Yayılım motorun kendi param yolu (prev_eff/resolve_params); dört rejim için resolve_params kanıtı + gerçek motor fonksiyonlarıyla öz-sınama koşum öncesi geçti."
+ },
+ "motor_sha256_16": {
+  "broker.py": "daa858a522d97c98",
+  "backtest.py": "d345b6eed3d28be4",
+  "strategy.py": "ac7c53a3d89b6203"
+ },
+ "motor_sha_esit_edg023": true,
+ "config_sha256_16": {
+  "goal.yaml": {
+   "sandbox": "099590dedee1ccf2",
+   "edg022": "099590dedee1ccf2",
+   "edg023_civi": "099590dedee1ccf2",
+   "repo_state": "099590dedee1ccf2"
+  },
+  "strategy.yaml": {
+   "sandbox": "9f3e4732315abe52",
+   "edg022": "9f3e4732315abe52",
+   "edg023_civi": "9f3e4732315abe52",
+   "repo_state": "9f3e4732315abe52"
+  },
+  "bounds.yaml": {
+   "sandbox": "3e810b547ca95f9a",
+   "edg022": "3e810b547ca95f9a",
+   "edg023_civi": "3e810b547ca95f9a",
+   "repo_state": "3e810b547ca95f9a"
+  }
+ },
+ "replay": {
+  "start": "2022-01-01",
+  "end": "2026-07-30",
+  "strategy_version": 3,
+  "params_by_regime": true,
+  "n_sembol": 251,
+  "n_endeks_satir": 1403,
+  "max_open": 5,
+  "no_trade_before": 3,
+  "cost_model": {
+   "slippage_bps": 5.0,
+   "commission_per_share": 0.0,
+   "not": "motorun kendi maliyet modeli — dokunulmadı (kart: değişmez)"
+  }
+ },
+ "butunluk": {
+  "frame_okunamadi": 0,
+  "tekrar_tarih": [],
+  "scan_vs_plan_uyusmazlik_n": 0,
+  "scan_vs_plan_ornek": [],
+  "yasakli_modul_yuklendi": [],
+  "gecerli": true
+ },
+ "islem": {
+  "n": 392,
+  "islem_yil": 85.68,
+  "aylik_ts_open": {
+   "2022-01": 3,
+   "2022-08": 4,
+   "2022-11": 8,
+   "2022-12": 5,
+   "2023-01": 3,
+   "2023-02": 14,
+   "2023-04": 7,
+   "2023-05": 12,
+   "2023-06": 7,
+   "2023-07": 11,
+   "2023-08": 8,
+   "2023-09": 10,
+   "2023-11": 9,
+   "2023-12": 5,
+   "2024-01": 13,
+   "2024-02": 13,
+   "2024-03": 8,
+   "2024-04": 3,
+   "2024-05": 7,
+   "2024-06": 12,
+   "2024-07": 12,
+   "2024-08": 13,
+   "2024-09": 14,
+   "2024-10": 8,
+   "2024-11": 5,
+   "2024-12": 10,
+   "2025-01": 10,
+   "2025-02": 6,
+   "2025-05": 4,
+   "2025-06": 8,
+   "2025-07": 15,
+   "2025-08": 11,
+   "2025-09": 10,
+   "2025-10": 16,
+   "2025-11": 7,
+   "2025-12": 6,
+   "2026-01": 12,
+   "2026-02": 18,
+   "2026-04": 11,
+   "2026-05": 10,
+   "2026-06": 12,
+   "2026-07": 12
+  },
+  "silahlanan_plan": 497,
+  "toplam_plan": 794,
+  "entry_rejects": {
+   "open_below_stop": 12,
+   "max_chase": 13
+  },
+  "exit_reason_dagilim": {
+   "stop": 165,
+   "time_stop": 76,
+   "regime_flip": 74,
+   "stop_gap": 44,
+   "target": 26,
+   "target_gap": 7
+  },
+  "hedef_n": 33,
+  "hedef_orani_pct": 8.42,
+  "scaled_out_n": 73,
+  "scaled_out_pct": 18.62
+ },
+ "performans": {
+  "net_pnl_equity": -16683.95,
+  "net_pnl_trades": -16683.95,
+  "maxdd_kanonik": 0.2594,
+  "maxdd_m2m": 0.2594,
+  "avg_r": -0.101,
+  "win_rate": 0.365,
+  "sharpe": -0.586,
+  "sharpe_measurable": true,
+  "score": -0.3722,
+  "score_n": 392,
+  "total_return": -0.1668
+ },
+ "doluluk": {
+  "pozisyon_gun_open_fazi": 2142,
+  "ort_acik_pozisyon": 1.867,
+  "toplam_bars_held": 2292
+ },
+ "betim": {
+  "n_seans": 1147,
+  "dd_gt_tam_esik_n": 264,
+  "eff_max_open_eq0_n": 0,
+  "eff_max_open_eq1_n": 0,
+  "eff_max_open_lt_base_n": 205,
+  "acik_slot_le0_n": 207,
+  "size_mult_0_n": 0
+ },
+ "tasnif_tum_seans": {
+  "n": 1147,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 97,
+    "pct": 8.46
+   },
+   "evren_bagladi": {
+    "n": 363,
+    "pct": 31.65
+   },
+   "isinma": {
+    "n": 3,
+    "pct": 0.26
+   },
+   "rejim_kapali": {
+    "n": 477,
+    "pct": 41.59
+   },
+   "tavan_sifir": {
+    "n": 207,
+    "pct": 18.05
+   }
+  }
+ },
+ "birincil": {
+  "n": 667,
+  "dagilim": {
+   "derisk_bagladi": {
+    "n": 97,
+    "pct": 14.54
+   },
+   "evren_bagladi": {
+    "n": 363,
+    "pct": 54.42
+   },
+   "tavan_sifir": {
+    "n": 207,
+    "pct": 31.03
+   }
+  },
+  "tavan_sifir_pct": 31.03
+ },
+ "ci95_ay_kumeli": {
+  "tavan_sifir": {
+   "lo": 0.2604,
+   "hi": 0.3606,
+   "orta": 0.3095
+  },
+  "evren_bagladi": {
+   "lo": 0.4883,
+   "hi": 0.6044,
+   "orta": 0.5448
+  },
+  "derisk_bagladi": {
+   "lo": 0.1166,
+   "hi": 0.1748,
+   "orta": 0.1452
+  },
+  "derisk+tavan": {
+   "lo": 0.3956,
+   "hi": 0.5117,
+   "orta": 0.4552
+  },
+  "_n_ay_kume": 42
+ }
+}
