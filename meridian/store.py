@@ -45,7 +45,104 @@ def _path(name: str) -> Path:
 
 def db_backed(name: str) -> bool:
     """Bu ad ŞU AN SQLite'tan mı okunuyor? (Okuyucusu: dbmigrate, ledgerstamp, testler.)"""
-    return storage.active(name) if not os.path.isabs(str(name)) else False
+    aktif = storage.active(name) if not os.path.isabs(str(name)) else False
+    if aktif:
+        # DB devredeyse İLK temasta bayat-defter süzgeci koşar (aşağıda; süreç+yol başına BİR KEZ).
+        # `MERIDIAN_DB=off` iken `aktif` False'tur, yani dosyaların OTORİTER olduğu modda süzgeç
+        # yapısal olarak devre dışıdır — orada kanonik dosyayı taşımak defteri yok etmek olurdu.
+        _bayat_defter_suzgeci()
+    return aktif
+
+
+# ---- BAYAT-DEFTER-KALINTISI SÜZGECİ (ROADMAP §2-6, 2026-08-12) ---------------------------------
+# BULGU (VLO adli incelemesi, 2026-08-11): defterler 07-31'de DB'ye göçtü ama canlıda
+# `state/trades.jsonl` 95 satırda DONUK bir kalıntı olarak kanonik adında kaldı (DB 97; portfolio/
+# shadow_books `.migrated` olmuş, trades OLMAMIŞTI) ve Rol-1'i "pozisyon izsiz kayboldu" yanılgısına
+# düşürdü — gerçek: T00097 DB'de düzgündü. `dbmigrate.apply` arşivlemeyi yalnız O KOŞUDA taşıdığı
+# varlıklar için (`tasinan` listesi) ve yalnız `p.exists() and not hedef.exists()` ise yapar; yani
+# disiplin TEK ATIŞLIKTIR ve üç sınıf açıkta kalır:
+#   (a) hedef arşiv ZATEN varsa kaynak sessizce yerinde kalır (dbmigrate.apply arşiv döngüsü —
+#       else dalı yok, rapora da düşmez);
+#   (b) `zaten_tasindi` varlığın SONRADAN yeniden doğan kanonik dosyasına hiçbir koşu dokunmaz
+#       (ikinci `--uygula` onu `tasinan`a almaz);
+#   (c) `MERIDIAN_DB=off` penceresinde dosya yoluna yazılmış kanonik dosya, DB'ye dönülünce
+#       görünmez olur ama diskte kanonik adıyla durur.
+# Üçünde de UYGULAMA doğru okur (aşağıdaki read_* dallarında dosyaya düşüş YOKTUR — DB otoriter;
+# test çivisi v234) ama İNSAN ve harici araç bayat dosyayı okur. Süzgeç bu sınıfı kapatır:
+# DB'nin devrede olduğu ilk `db_backed` temasında, `migrated_at` DAMGALI bir varlığın kanonik düz
+# dosyası hâlâ duruyorsa `.migrated`a çevrilir (hedef doluysa `.migrated-<ts>-p<pid>` — POSIX
+# rename dolu hedefi SESSİZCE EZERDİ; hiçbir şey silinmez ve üzerine yazılmaz). İdempotent: bir
+# sonraki restart/dağıtımda canlıda kendiliğinden düzelir. `migrated_at` DAMGASIZ varlığın kanonik
+# dosyası TAŞINMAZ — içeriğinin DB'ye geçtiği hiç kanıtlanmadı, ona `.migrated` demek UYDURMA
+# olurdu; yalnız beyan edilir (YASA 4: görünmez dosya sessiz bırakılmaz). dbmigrate'in kuru koşu /
+# `--durum` / `--geri-al` yolları store'a hiç girmediği için bu süzgeç onların "tek bayt yazmam"
+# sözünü delmez; `--geri-al` sonrası DB yok → `active()` False → süzgeç yapısal olarak kapalı.
+_BAYAT_SUPURULDU: set = set()
+
+
+def _bayat_defter_suzgeci() -> None:
+    """Göç-edilmiş varlığın kanonik düz dosyası duruyorsa `.migrated` disiplinine çek (bir kez)."""
+    key = str(storage.db_path())
+    if key in _BAYAT_SUPURULDU:
+        return
+    if len(_BAYAT_SUPURULDU) > 64:      # sandbox yolları süreç ömrü boyunca birikmesin (_SCHEMA_OK deseni)
+        _BAYAT_SUPURULDU.clear()
+    # DAMGA İŞTEN ÖNCE (storage._OFF_OLCULDU deseni): aşağıdaki obs.warn → append_jsonl →
+    # db_backed zinciri bu fonksiyona geri gelir; damga özyinelemeyi yapısal olarak keser.
+    _BAYAT_SUPURULDU.add(key)
+    arsivlenen: list = []
+    gocsuz: list = []
+    hatalar: list = []
+    for name in storage.ENTITIES:
+        try:
+            p = _state() / name
+            if not p.exists():
+                continue
+            m = storage.meta(name)
+            if not (m and m.get("migrated_at")):
+                gocsuz.append(name)
+                continue
+            # Adli sinyaller RENAME'DEN ÖNCE ölçülür (VLO vakasında dosyanın donukluğunu anlatan
+            # da tam bunlardı: boyut 95 satırda, mtime migrasyon gününde). İçerik-digest kıyası
+            # BİLEREK yok: karşılaştırılabilir digest borusu `dbmigrate`tedir ve store'un onu
+            # import etmesi katman sözleşmesini (çekirdek-altyapı → üst katman, geçişli
+            # barrepair→…→watchdog zinciri) deler; kopyalamak ise iki digest'in sessiz ayrışması
+            # olurdu. Arşiv baytları AYNEN korunduğu için digest sonradan her an alınabilir —
+            # ölçülmeyen şey burada None/eksik değil, ertelenmiş ve dosyada saklı.
+            st = p.stat()
+            hedef = p.with_name(name + storage.MIGRATED_SUFFIX)
+            if hedef.exists():
+                hedef = p.with_name(name + storage.MIGRATED_SUFFIX + "-"
+                                    + _time.strftime("%Y%m%d-%H%M%S") + f"-p{os.getpid()}")
+            p.rename(hedef)
+            arsivlenen.append({"dosya": name, "hedef": hedef.name,
+                               "boyut": st.st_size, "dosya_mtime": st.st_mtime,
+                               "kaynak_digest": m.get("source_digest")})
+        except OSError as e:
+            if (_state() / name).exists():
+                hatalar.append(f"{name}: {type(e).__name__}: {e}")
+            # dosya artık yoksa yarışı eşzamanlı bir süreç kazandı — arşivleme ZATEN oldu,
+            # bu bir hata değil sonucun kendisidir; kayda geçecek ayrıca bir şey kalmadı
+    if not (arsivlenen or gocsuz or hatalar):
+        return
+    try:
+        from . import obs
+        if arsivlenen or hatalar:
+            obs.warn("bayat_defter_arsivlendi",
+                     arsivlenen=arsivlenen, hatalar=hatalar or None,
+                     detail="DB devredeyken kanonik adda duran göç-edilmiş defter dosyaları "
+                            ".migrated disiplinine çekildi — okuma yolu zaten DB-otoriterdi, bu "
+                            "dosyaları yalnız insan ve harici araç okuyordu (bayat-defter "
+                            "tuzağı, ROADMAP §2-6; hiçbir dosya silinmedi/ezilmedi)")
+        if gocsuz:
+            obs.warn("db_aktif_kanonik_dosya_gocsuz", dosyalar=gocsuz,
+                     detail="DB devrede AMA bu adların kanonik dosyası migrated_at damgası "
+                            "OLMADAN duruyor: içeriğinin DB'ye taşındığı kanıtlanmadı — "
+                            ".migrated denMEDİ (uydurma olurdu) ve dosya store okuyucularına "
+                            "görünmez; operatör içeriği ya dbmigrate ile taşımalı ya bilinçli "
+                            "kaldırmalı")
+    except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — arşivleme diskte zaten uygulandı; kayıt denemesi bir okuma yolunu düşüremez
+        pass
 
 
 def sanitize(obj: Any) -> Any:
@@ -213,6 +310,92 @@ def file_lock(name: str):
             lk = _FileLock(name, Path(_state()) / ".locks")
             _FILE_LOCKS[key] = lk
         return lk
+
+
+# ---- .LOCKS BUDAMASI (ROADMAP §2-5, 2026-08-12) ------------------------------------------------
+def kilit_budamasi(lock_dir: Path | str | None = None, max_yas_saat: float = 24.0) -> dict:
+    """`state/.locks` altındaki ESKİ ve SERBEST kilit dosyalarını budar; sonucu raporlar.
+
+    NEDEN VAR (WP-S2 turu ölçümü, 2026-08-10): pytest sandbox'ları MUTLAK tmp yollarını
+    kilitleyince `.locks/` altında oturum-başına-benzersiz hash'li adlar birikir (tek koşu +2,
+    budama yoktu → sınırsız birikinti). Kilit dosyası içerik taşımaz; tek tehlike YANLIŞ SİLMEdir:
+
+      * TUTULAN kilidi silmek DIŞLAMAYI KIRAR: yol silinince bir sonraki `open(O_CREAT)` YENİ bir
+        inode yaratır; eski fd'nin flock'u ile yenisininki artık FARKLI dosyaları kilitler ve iki
+        "sahip" aynı anda içeride olur. Bu yüzden yalnız NON-BLOCKING flock ALINABİLEN dosya aday
+        olur ve silme KİLİT ELDEYKEN yapılır — aday seçildikten sonra kilitlenen yarışçı, biz
+        flock'u tutarken `acquire` içinde BEKLER, dosyayı yeniden yaratamaz.
+      * `_FileLock.release()` fd'yi KAPATIR (depth→0), yani serbest kilidin askıda açık fd'si
+        kalmaz — non-blocking flock testi bu depoda "canlı mı" sorusunun DOĞRU ölçümüdür (flock(2):
+        aynı süreçte bile ayrı open'lar birbirini dışlar, test v234 bunu ölçer).
+      * mtime BURADA DOĞUM zamanıdır: kilit dosyasına hiç bayt yazılmaz, open/flock mtime'ı
+        İLERLETMEZ. Yani yaş eşiği "son kullanımdan beri" DEĞİL "yaratılıştan beri" ölçer — ad-sabit
+        canlı kilitler (portfolio.json.lock) aktif kullanılırken bile ESKİ görünür. pytest-tmp
+        adları ise oturumla doğar ve bir daha ASLA yeniden kullanılmaz; yaş yalnız orada gerçek
+        ölülük ölçüsüdür. Bu asimetri, budamanın NEREDEN tetiklendiğini belirler (aşağıda).
+
+    KONUM KARARI: MEKANİZMA burada (`.locks` yerleşiminin sahibi store'dur; birim-testlenebilir),
+    TETİK YALNIZ `tests/conftest.py` oturum-sonu kancasında (yalnız xdist-kontrolcüsü). Canlı
+    worker başlangıcına BİLEREK bağlanmadı: canlının `.locks`'u sınırlı bir ad kümesidir (pytest
+    çöpü orada doğmaz → budanacak birikinti yok) ve worker+pano API'nin eşzamanlı systemd açılışında
+    sil/yeniden-yarat yarış penceresi açmak, SIFIR kazanca karşılık dışlama riski satın almak
+    olurdu. Ops betiği de gerekmez: birikinti tam olarak pytest'in koştuğu makinede doğar.
+
+    DOKUNMADIKLARI: `.lock` uzantısız her şey, alt dizinler, `state/.reflect.lock` gibi `.locks`
+    DIŞI kilitler, genç dosyalar, flock'u alınamayanlar, açılamayanlar (güvenli taraf: kalır).
+
+    DÖNÜŞ (okuyucusu: conftest özet satırı + v234 testleri):
+    {dizin, tarandi, budandi[], tutulan, genc, degisen, hata}."""
+    d = Path(lock_dir) if lock_dir is not None else Path(_state()) / ".locks"
+    rapor: dict = {"dizin": str(d), "tarandi": 0, "budandi": [],
+                   "tutulan": 0, "genc": 0, "degisen": 0, "hata": 0}
+    if not d.is_dir():
+        return rapor
+    esik = _time.time() - max_yas_saat * 3600.0
+    for p in sorted(d.iterdir()):
+        if not p.name.endswith(".lock") or not p.is_file():
+            continue
+        rapor["tarandi"] += 1
+        try:
+            st = p.stat()
+        except OSError:  # sessiz-yutma: sayaçlı — dosya tarama ile stat arasında kaybolduysa budanacak bir şey de kalmadı; `hata` sayacı raporda okunur, budayıcı düşmez
+            rapor["hata"] += 1
+            continue
+        if st.st_mtime > esik:
+            rapor["genc"] += 1
+            continue
+        try:
+            fd = os.open(str(p), os.O_RDWR)     # O_CREAT BİLEREK YOK: budayıcı kilit dosyası YARATMAZ
+        except OSError:  # sessiz-yutma: sayaçlı — açılamayan dosyaya (erişim yok / yarışta kayboldu) DOKUNULMAZ; güvenli taraf silmemektir ve `hata` sayacı raporda okunur
+            rapor["hata"] += 1
+            continue
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:  # sessiz-yutma: sayaçlı — flock alınamadı, kilit CANLI (bir süreç tutuyor); budamak dışlamayı kırardı, dosyaya DOKUNULMAZ ve `tutulan` sayacı raporda okunur
+            rapor["tutulan"] += 1
+            try:
+                os.close(fd)
+            except OSError:  # sessiz-yutma: kapatılamayan tanıtıcıyı süreç sonu toplar; sayım yukarıda zaten yapıldı ve budayıcı bir sonraki dosyaya geçebilir
+                pass
+            continue
+        try:
+            # Kilit ELDEYKEN doğrula ve sil: yol hâlâ AYNI inode mu? (stat→open arasında dosya
+            # değiştirildiyse elimizdeki flock BAŞKA bir dosyanın kilididir — silmek yanlış
+            # dosyayı silmek olurdu.)
+            if os.fstat(fd).st_ino == os.stat(str(p)).st_ino:
+                os.unlink(str(p))
+                rapor["budandi"].append(p.name)
+            else:
+                rapor["degisen"] += 1
+        except OSError:  # sessiz-yutma: sayaçlı — sil/stat düşerse dosya YERİNDE KALIR (güvenli taraf silmemektir) ve `hata` sayacı raporda okuyucuya bunu söyler
+            rapor["hata"] += 1
+        finally:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                os.close(fd)
+            except OSError:  # sessiz-yutma: bırakma/kapatma düşse de silme kararı verildi ve uygulandı; açık kalan tanıtıcıyı süreç sonu toplar
+                pass
+    return rapor
 
 
 from . import provenance as _prov

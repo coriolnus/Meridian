@@ -832,6 +832,25 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     import os
+    # ---- .locks BUDAMASI (ROADMAP §2-5, 2026-08-12) ----
+    # pytest sandbox'ları MUTLAK tmp yollarını kilitleyince repo `state/.locks` altında
+    # oturum-başına-benzersiz kilit adları birikiyordu (WP-S2 ölçümü: tek koşu +2, budama yok).
+    # Mekanizma ve güvenlik sözleşmesi `store.kilit_budamasi`dadır (yalnız SERBEST — non-blocking
+    # flock alınabilen — VE eski dosyalar silinir; tutulan kilit DOKUNULMAZDIR, testi v234).
+    # TETİK BİLEREK YALNIZ BURADA: canlı worker'ın `.locks`'u sınırlı ad kümesidir (pytest çöpü
+    # orada doğmaz), başlangıca bağlamak sıfır kazanca karşı yarış penceresi açardı. xdist
+    # worker'ında koşmaz (`workerinput`): eşzamanlı test süreçleri bitmeden budayıcı çalışmasın.
+    if not hasattr(session.config, "workerinput"):
+        try:
+            from meridian import store as _store
+            r = _store.kilit_budamasi()
+            if r["budandi"]:
+                print(f"\n[kilit-budama] {len(r['budandi'])} eski serbest kilit silindi "
+                      f"(tutulan {r['tutulan']}, genç {r['genc']}, hata {r['hata']}) — {r['dizin']}")
+        except Exception as e:
+            # sessiz-yutma değil, beyanlı: budayıcının düşmesi test sonucunu değiştiremez ama
+            # görünmez de kalamaz — tek satır beyan basılır, oturum çıkış kodu ellenmez.
+            print(f"\n[kilit-budama] atlandı: {type(e).__name__}: {e}")
     if os.environ.get("MERIDIAN_PROVENANCE") != "1":
         return
     import json
