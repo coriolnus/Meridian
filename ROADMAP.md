@@ -830,6 +830,32 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
    U7 rotasyon-yerel vs ömür-boyu sayaç hükmü. *gerekçe: K-defteri deneysel bütçenin kalbi · boyut: M ·
    bağımlılık: rapor(✅) · öncelik: yüksek-ama-odaklı-tur.*
 
+15. **SEÇİLİM-KALİTESİ HATTI — C-sonrası iyileştirme yönü (operatör sorusu 2026-08-12: "bu rakamları
+    iyileştirmek için hangi yöne gitmeliyiz")** — 9-kart dalgasının meta-bulgusu: DEBİ KOLU BİTTİ (C'ye
+    eklenen her debi/eşik-gevşetme kalemi kaliteyi düşürdü); kalan kaldıraçlar seçilim kalitesi + sermaye
+    tahsisi. Sıralı adaylar (her biri kart-önce, C-şasi üzerinde):
+    · **15a REJİM-KOŞULLU BOYUTLAMA (EDG-033 adayı — EN GÜÇLÜ KANIT):** 030 ayrışımı trend_up işlemlerde
+      ort-R 0.736 gösterdi (portföy geneli 0.057; e20'nin −13.4k$'lık zararı trend_up kazananlarının
+      yerinden edilmesiydi). Hipotez: taban 0.5R sabit kalır, rejim-skoru yüksek pencerede kademeli artış
+      (ör. trend_up'ta 0.75R) / nötr bantta 0.35R. Zarf 5R DOKUNULMAZ — aynı ısı, daha iyi dağılım.
+      *boyut: S (param-enjeksiyon, motor yamasız) · öncelik: EN YÜKSEK.*
+    · **15b SLOT-YARIŞMASI KABUL POLİTİKASI (EDG-034 adayı):** 030 mekanizması slot/ısı-çalınması —
+      kötü aday iyi adayın yerini alabiliyor (kabul tarama-sıralı). Hipotez: slot doluyken/yarışırken
+      bileşik-skor sıralı kabul (yüksek skor önce). *boyut: S-M · öncelik: yüksek.*
+    · **15c EVREN GENİŞLETME (kalan TEK kalite-nötr debi kolu):** 251→~400-500 likit isim; eşik
+      GEVŞEMEZ, sadece havuz büyür (024 dersi: marjinal bant değersiz — daha çok isim ≠ daha gevşek
+      kapı). Bağımlılık: §3-8 FINVIZ Elite / §3-9 delist-bar kaynağı (survivorship). *boyut: M ·
+      öncelik: orta (operatör-blok bağımlı).*
+    · **15d PIT-TEMİZ FAKTÖR SETİ + hermes arama yakıtı (OPT Faz-2'nin girdisi):** 031 dersi — elle
+      bileşik-ağırlık YOK; yeni faktörler (EDGAR filed-tarihli earnings-drift, sektör-görece momentum)
+      indicators'a kablolanır w=0 ile, hermes arama uzayına bırakılır; benimseme OOS-kapılı. *boyut: M ·
+      öncelik: orta.*
+    · **15e SETUP ARSENALİ:** hammer canlı-izlemede, mb EDG-032'de; yeni aile ancak kanıt-önce
+      (aday: gap-sonrası-taban). *öncelik: düşük (önce eldekilerin canlı karnesi).*
+    NOT: çıkış-mühendisliği hattı BİLİNÇLİ dışarıda — 027/029 iki kartla ölçüp eledi (ATR-trail yeterli).
+    *gerekçe: sharpe 0.285 pozitif-ama-ince; sıradaki çarpan işlem sayısı değil işlem SEÇİMİ · bağımlılık:
+    dağıtım-sonrası ilk ölçüm dalgası · öncelik: yüksek (OPT Faz-1 kablolamasıyla eş-zamanlı gidebilir).*
+
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
 
