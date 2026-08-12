@@ -1,0 +1,39 @@
+card_id: EDG-2026-033
+family: rejim_kosullu_boyut
+thesis: >
+  §2-15a: Debi kolu bitti (9-kart dalgası); kalan kaldıraç sermaye TAHSİSİ. EDG-030 ayrışımı trend_up
+  işlemlerde ort-R 0.736 ölçtü (portföy geneli 0.057) ve e20 zararının ana kalemi trend_up kazananlarının
+  yerinden edilmesiydi. TEZ: zarf 5R SABİTKEN işlem-başı riski rejim sınıfına göre modüle etmek (iyi
+  rejimde büyük, nötrde küçük) aynı ısıyla daha iyi dağılım verir. CI çürütürse düz-0.5R kanıtla doğrulanır.
+
+evidence_refs:
+  - "EDG-030 verdict e20: trend_up ort-R 0.736 (50/66 kayıp-işlem trend_up, −13.4k$); yan-kanal mekanizması"
+  - "EDG-026: C-taban 772 işlem +9.869$ dd %12.4 sharpe 0.285 (sha-pinli)"
+  - "ROADMAP §2-15a (2026-08-12 öneri-kaydı)"
+
+universe: "C-şasi AYNEN (026 olcum.py; rampa 15/36 + slot20 + 0.5R taban + zarf 5R dokunulmaz); rejim sınıfı motorun KENDİ sınıflayıcısından (030 kırılım deseni); boyut-çarpanı TEK kanonik yüzeyde BEYANLI monkeypatch (position_size_r tüketim noktası — ajan yüzeyi keşfeder, tek nokta, öz-sınamalı)"
+
+features_asof: >
+  İKİ hücre + kontrol: H1 'yukarı-asimetri' (trend_up 0.75R, diğer açık rejimler 0.5R) · H2 'tam-modülasyon'
+  (trend_up 0.75R, açık-ama-trend_up-olmayan 0.35R). KONTROL (şasi-sınaması, hücre değil): çarpan≡1.0
+  smoke-penceresinde C ile bit-özdeşlik ŞART. Kıyas C'ye: işlem n, net P&L farkı+CI, max-dd, sharpe,
+  rejim-kırılımlı karne, ısı-kullanım profili, eşleşen-(date,ticker) işlemlerde saf-boyut-etkisi ayrışımı.
+
+parameter_grid:
+  hucre: [yukari_asimetri, tam_modulasyon]   # K += 2 (kontrol koşumu hücre sayılmaz — şasi doğrulaması)
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  Hücre-vs-C eşlenik ay-kümeli bootstrap (5000, seed 20260812): ΔP&L CI-alt > 0 VE dd ≤ C×1.3 → 'benimseme
+  adayı' pencereye (uygulama her durumda final-paket doğrulaması + operatör onayı gerektirir — §2-11).
+  CI-0-içi/negatif → düz-0.5R kanıtla doğrulanır (kapanış hükmü).
+
+kill_criteria:
+  - "kontrol bit-özdeşliği düşerse ölçüm GEÇERSİZ (yama yüzeyi yan-etkili)"
+  - "trend_up işlem sayısı taban-defterde <30 → olculemedi"
+  - "şasi bütünlüğü bozuksa geçersiz"
+
+k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-033-h1, pending-033-h2]}
+
+status: registered   # 2026-08-12 Rol-1 — §2-15 hattının ilk kartı; eşikler donuk.

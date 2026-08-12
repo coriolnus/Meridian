@@ -1,0 +1,38 @@
+card_id: EDG-2026-034
+family: skor_sirali_kabul
+thesis: >
+  §2-15b: EDG-030 mekanizması slot/ısı-çalınmasını gösterdi — kabul tarama-sıralıysa kötü aday iyi adayın
+  slotunu tüketebilir. TEZ: slot/ısı yarışması anında bileşik-skor sıralı kabul (yüksek önce) portföyü
+  iyileştirir. ÖN-KOŞUL (betimsel faz): motorun MEVCUT kabul sırası ölçülür; zaten skor-sıralıysa hücre
+  İNERT ilan edilir ve replay koşulmaz (ucuz dürüst kapanış). CI çürütürse mevcut sıra kanıtla doğrulanır.
+
+evidence_refs:
+  - "EDG-030 verdict e20: ısı/slot-çalınmasıyla trend_up kazananları hiç doğmadı (yan-kanal −13.4k$)"
+  - "EDG-026 C-taban sha-pinli; ROADMAP §2-15b (2026-08-12 öneri-kaydı)"
+
+universe: "C-şasi AYNEN (026 olcum.py); kabul-sırası yüzeyi ajan keşfeder (backtest motoru aday-iterasyon noktası — TEK kanonik nokta, BEYANLI monkeypatch); KONTROL: kimlik-sıralama (stable, orijinal sıra) smoke-penceresinde C ile bit-özdeşlik ŞART"
+
+features_asof: >
+  FAZ-0 betimsel: mevcut kabul sırasının doğası (tarama-sırası mı, skor-korelasyonu ne) + slot-yarışması
+  sıklığı (kaç seansta aday>boş-slot). Zaten skor-sıralıysa → İNERT, dur. Değilse FAZ-1 TEK hücre:
+  yarışma anında bileşik-skor azalan kabul. Kıyas C'ye: ΔP&L+CI, dd, sharpe, takas-ayrışımı (giren/çıkan
+  işlemlerin R profili), yarışma-seansı sayısı.
+
+parameter_grid:
+  hucre: [skor_sirali]   # K += 1 (faz-0 betimsel + kontrol hücre sayılmaz)
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  Hücre-vs-C eşlenik ay-kümeli bootstrap (5000, seed 20260812): ΔP&L CI-alt > 0 VE dd ≤ C×1.3 → 'benimseme
+  adayı' pencereye (final-paket doğrulaması + operatör onayı şartıyla — §2-11). CI-0-içi/negatif → mevcut
+  kabul sırası kanıtla doğrulanır. FAZ-0 inert-çıkışı da geçerli hüküm (kart kapanır, K harcanmaz-geri-alınmaz).
+
+kill_criteria:
+  - "kontrol bit-özdeşliği düşerse ölçüm GEÇERSİZ"
+  - "slot-yarışması seans sayısı <20 → olculemedi (politika hiç devreye girmiyor)"
+  - "şasi bütünlüğü bozuksa geçersiz"
+
+k_registry: {registered_at: "2026-08-12T4x", trial_ids: [pending-034-skor-sirali]}
+
+status: registered   # 2026-08-12 Rol-1 — §2-15 hattının ikinci kartı; eşikler donuk.
