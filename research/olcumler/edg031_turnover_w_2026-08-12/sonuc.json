@@ -1,0 +1,784 @@
+{
+ "kart": "EDG-2026-031",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/olcum.py",
+ "olcum_zamani": "2026-08-12T14:29:07+00:00",
+ "smoke": false,
+ "kiyas_taban": {
+  "kaynak": "EDG-026 C koşumu HAZIR çıktıları — yeniden koşulmadı",
+  "dosyalar": [
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/sonuc_c.json",
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/seanslar_c.json",
+   "/Users/erdemozturk/AI-Trading/research/olcumler/edg026_slot20_2026-08-12/islemler_c.json"
+  ],
+  "dosya_sha256_16": {
+   "sonuc": "c18e3b4497dc1e61",
+   "seanslar": "6a8aceaea7b45318",
+   "islemler": "fdb428551ceab4de"
+  },
+  "c_w_turnover": "0.0 (varsayılan — test_turnover_kablolama_v149 bit-bit sıfır-etki çivisi; C = w=0 hücresi)"
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap: aynı ay çekilişi iki koşuma birden; fark = HÜCRE − C; iter=5000, seed=20260812, n_ay=55; üç metrik (işlem n, net P&L, sharpe_ay) AYNI çekiliş üzerinde",
+  "islem_ay_anahtari": "ts_open[:7] (giriş ayı)",
+  "sharpe_ay_tanimi": "seans eq_open serisinden aylık bileşik getiri; sharpe = mean/std(ddof=1)×√12; tanım başlıkta DONUK",
+  "birincil_metrikler": "net P&L farkı + sharpe farkı (kart success_metric)"
+ },
+ "hucreler": {
+  "w005": {
+   "w_turnover": 0.05,
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "serh": null
+   },
+   "birincil_farklar_ci95": {
+    "net_pnl_fark": {
+     "lo": -11192.273,
+     "hi": 3257.434,
+     "orta": -3260.62
+    },
+    "sharpe_ay_fark": {
+     "lo": -0.216,
+     "hi": 0.083,
+     "orta": -0.06
+    },
+    "sharpe_atlanan_iter": 0,
+    "islem_fark": {
+     "lo": -5.0,
+     "hi": 13.0,
+     "orta": 4.0
+    },
+    "islem_oran": {
+     "lo": 0.993,
+     "hi": 1.017,
+     "orta": 1.005
+    },
+    "oran_atlanan_iter": 0
+   },
+   "tablo": {
+    "islem_n": {
+     "C": 772,
+     "hucre": 776,
+     "fark": 4,
+     "fark_pct": 0.5
+    },
+    "net_pnl_equity": {
+     "C": 9869.2,
+     "hucre": 6349.4,
+     "fark": -3519.8
+    },
+    "net_pnl_trades": {
+     "C": 9869.2,
+     "hucre": 6349.4
+    },
+    "sharpe_kanonik": {
+     "C": 0.285,
+     "hucre": 0.189,
+     "fark": -0.096
+    },
+    "sharpe_ay_nokta": {
+     "C": 0.2474,
+     "hucre": 0.1831,
+     "fark": -0.0643
+    },
+    "maxdd_kanonik": {
+     "C": 0.1235,
+     "hucre": 0.1174,
+     "oran": 0.951
+    },
+    "maxdd_m2m": {
+     "C": 0.1235,
+     "hucre": 0.1153
+    },
+    "avg_r": {
+     "C": 0.057,
+     "hucre": 0.047
+    },
+    "win_rate": {
+     "C": 0.36,
+     "hucre": 0.354
+    },
+    "score": {
+     "C": -0.1274,
+     "hucre": -0.1166
+    },
+    "total_return": {
+     "C": 0.0987,
+     "hucre": 0.0635
+    },
+    "islem_yil": {
+     "C": 168.75,
+     "hucre": 169.62
+    },
+    "silahlanan_plan": {
+     "C": 813,
+     "hucre": 820
+    },
+    "toplam_plan": {
+     "C": 984,
+     "hucre": 978
+    },
+    "verdict_dagilim": {
+     "C": {
+      "GO": 81,
+      "REVIEW": 732,
+      "NO_GO": 171
+     },
+     "hucre": {
+      "GO": 77,
+      "REVIEW": 743,
+      "NO_GO": 158
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 171,
+      "heat_hard": 168,
+      "sector_cap": 3
+     },
+     "hucre": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 158,
+      "heat_hard": 154,
+      "sector_cap": 4
+     }
+    },
+    "setup_dagilim_hucre": {
+     "breakout_vcp": 479,
+     "exhaustion_hammer": 290,
+     "pullback": 7
+    },
+    "exit_reason_dagilim": {
+     "C": {
+      "stop": 334,
+      "regime_flip": 141,
+      "time_stop": 135,
+      "target": 83,
+      "stop_gap": 60,
+      "target_gap": 19
+     },
+     "hucre": {
+      "stop": 338,
+      "regime_flip": 142,
+      "time_stop": 136,
+      "target": 83,
+      "stop_gap": 59,
+      "target_gap": 18
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C": 4299,
+     "hucre": 4364
+    },
+    "ort_acik_pozisyon": {
+     "C": 3.748,
+     "hucre": 3.805
+    }
+   },
+   "secilim_farki": {
+    "anahtar": "(ticker, ts_open[:10])",
+    "ortak": {
+     "n": 746,
+     "cikis_farkli_n": 0,
+     "delta_r": {
+      "ort": -0.00038,
+      "ort_mutlak": 0.00596,
+      "max_mutlak": 0.114
+     },
+     "delta_pnl_toplam": -541.74,
+     "beyan": "ortak işlemde ΔR≈0 beklenir (çıkışlar portföyden bağımsız); Δpnl conviction/equity boyutlamasından kayar — beyan başlıkta"
+    },
+    "yalniz_C": {
+     "profil": {
+      "n": 26,
+      "ort_r": 0.0798,
+      "medyan_r": -0.0145,
+      "win_rate": 0.4615,
+      "toplam_r": 2.075,
+      "toplam_pnl": 806.84,
+      "setup_dagilim": {
+       "breakout_vcp": 17,
+       "exhaustion_hammer": 8,
+       "pullback": 1
+      },
+      "exit_dagilim": {
+       "stop": 10,
+       "time_stop": 6,
+       "stop_gap": 4,
+       "regime_flip": 3,
+       "target": 2,
+       "target_gap": 1
+      }
+     },
+     "mekanizma_sondasi": {
+      "plan_gunu_bulunamadi": 0,
+      "hucrede_pozisyon_acikti": 4,
+      "hucre_sinyal_uretmedi": 0,
+      "hucre_plan_NO_GO": 22,
+      "hucre_silahli_dolmadi": 0,
+      "ornekler_sinyal_uretmedi": [],
+      "beyan": "C'nin kendi sinyal/plan defteri 026 çıktısında saklanmadı → simetrik C-tarafı sondası ölçülemedi (None); bu sonda hücre defterinden okur. 'hucre_sinyal_uretmedi' = aynı (gün,sembol) girdisiyle hücre taraması sinyal döndürmedi (girdiler portföyden bağımsız → w teriminin skor/kapı etkisi) ya da hücrede sembol o gün armed idi (ayrıştırılamaz, armed-günü defteri yok — işaretli belirsizlik)"
+     }
+    },
+    "yalniz_hucre": {
+     "profil": {
+      "n": 30,
+      "ort_r": -0.1724,
+      "medyan_r": -0.417,
+      "win_rate": 0.3,
+      "toplam_r": -5.171,
+      "toplam_pnl": -2171.22,
+      "setup_dagilim": {
+       "breakout_vcp": 24,
+       "exhaustion_hammer": 5,
+       "pullback": 1
+      },
+      "exit_dagilim": {
+       "stop": 14,
+       "time_stop": 7,
+       "regime_flip": 4,
+       "stop_gap": 3,
+       "target": 2
+      }
+     },
+     "w0_karsi_olgusal": {
+      "w0_sinyal_yok_n": 1,
+      "w0_ayni_setup_n": 29,
+      "w0_setup_farkli_n": 0,
+      "kayit_yok_n": 0,
+      "w0_skor_dusuk_n": 0
+     }
+    }
+   },
+   "payda_sayaci": {
+    "sinyal_bv": {
+     "n": 618,
+     "olculdu_n": 583,
+     "pay": 0.9434
+    },
+    "islem_bv": {
+     "n": 479,
+     "olculdu_n": 455,
+     "pay": 0.9499,
+     "eslesme_yok_n_tum_islem": 0
+    },
+    "sembol": {
+     "evren_n": 251,
+     "kapsam_disi_gorulen": [
+      "EL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+     ],
+     "kapsam_disi_n": 5,
+     "beyan": "kapsam_disi yalnız TARANAN sembollerde birikir (tembel seri kurulumu) — evren-genelinde mutlak kapsam sayısı değil, koşumda GÖRÜLEN kapsam-dışılıktır"
+    },
+    "cagri_okuma_raporu": {
+     "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+     "dosya_var": true,
+     "yukleme": {
+      "ham_satir": 161856,
+      "birim_veya_val_dusen": 76,
+      "split_kanit_satir": 1803,
+      "anlik_iki_etiket_satir": 32954,
+      "birincil_dei": 244,
+      "birincil_usgaap": 8,
+      "sembol": 252,
+      "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+      "durum": "yuklendi",
+      "yukleme_sn": 0.872,
+      "yedek_etiket_eklenen_kayit": 22
+     },
+     "cagri": 1299,
+     "olculdu": 1227,
+     "olculemedi": 72,
+     "neden": {
+      "bayat_seri": 47,
+      "anlik_hisse_serisi_yok": 21,
+      "olcek_hatasi_gidis_donus": 2,
+      "dosyalama_yok": 2
+     },
+     "kapsam_disi_sembol": [
+      "EL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+     ],
+     "oran_olculdu": 0.9446,
+     "beyan": "SALT-OKUNUR köprü; ölçülemeyen hücre None + neden (fail-open). Fiziksel devir bekçisi BURADA DEĞİL `indicators.turnover21`dedir (orana bakar, sayıma değil).",
+     "beyan_ek": "ön-uçuş + karşı-olgusal çift-çağrılar dahil — kill bunun üstünden hesaplanmaz (tanım başlıkta)"
+    }
+   },
+   "oz_sinama": {
+    "n_sinyal": 978,
+    "n_ayni_setup": 977,
+    "n_bv_turnover_olculdu": 582,
+    "n_skor_degisti": 468,
+    "skor_degisti_pct": 80.41,
+    "skor_fark_dagilim": {
+     "min": -4,
+     "max": 2,
+     "ort": -1.519,
+     "pozitif_n": 38,
+     "negatif_n": 430,
+     "sifir_n": 114
+    },
+    "n_failopen_kume": 395,
+    "n_failopen_ihlal": 0,
+    "failopen_ihlal_ornek": [],
+    "n_setup_degisen": 0,
+    "n_w0_sinyal_yok": 1,
+    "cf_hata_n": 0,
+    "cf_hata_ornek": [],
+    "enj_scan_gordu_n": 978,
+    "enj_scan_bozuk_n": 0,
+    "skor_degisim_kaniti": true,
+    "beyan": "karşı-olgusal yalnız sinyal doğduğunda taranır; terimin SİLDİĞİ sinyaller bu telemetride değil C-taban işlem kıyasında görünür (asimetri beyanı başlıkta)"
+   },
+   "onucus_payda_kaniti": {
+    "sembol": "AAPL",
+    "tarih": "2024-06-28",
+    "turnover21": 0.00490139,
+    "turnover_score": 32.892,
+    "neden": null,
+    "gecerli": true
+   },
+   "kill1_payda": {
+    "esik": "turnover-kaynak payda < 0.5 → olculemedi (kart kill#1)",
+    "sinyal_bv_pay": 0.9434,
+    "islem_bv_pay": 0.9499,
+    "tetiklendi": false
+   },
+   "kill2_sasi": {
+    "esik": "şasi bütünlüğü bozuksa geçersiz (kart kill#2)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "oz_sinama_skor_kaniti": true,
+    "tetiklendi": false,
+    "serh": null
+   }
+  },
+  "w010": {
+   "w_turnover": 0.1,
+   "sasi_kimligi": {
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "serh": null
+   },
+   "birincil_farklar_ci95": {
+    "net_pnl_fark": {
+     "lo": -12060.064,
+     "hi": 2436.826,
+     "orta": -4022.945
+    },
+    "sharpe_ay_fark": {
+     "lo": -0.226,
+     "hi": 0.064,
+     "orta": -0.076
+    },
+    "sharpe_atlanan_iter": 0,
+    "islem_fark": {
+     "lo": -5.0,
+     "hi": 15.0,
+     "orta": 5.0
+    },
+    "islem_oran": {
+     "lo": 0.993,
+     "hi": 1.019,
+     "orta": 1.006
+    },
+    "oran_atlanan_iter": 0
+   },
+   "tablo": {
+    "islem_n": {
+     "C": 772,
+     "hucre": 777,
+     "fark": 5,
+     "fark_pct": 0.6
+    },
+    "net_pnl_equity": {
+     "C": 9869.2,
+     "hucre": 5590.6,
+     "fark": -4278.6
+    },
+    "net_pnl_trades": {
+     "C": 9869.2,
+     "hucre": 5590.6
+    },
+    "sharpe_kanonik": {
+     "C": 0.285,
+     "hucre": 0.168,
+     "fark": -0.117
+    },
+    "sharpe_ay_nokta": {
+     "C": 0.2474,
+     "hucre": 0.1677,
+     "fark": -0.0797
+    },
+    "maxdd_kanonik": {
+     "C": 0.1235,
+     "hucre": 0.1187,
+     "oran": 0.961
+    },
+    "maxdd_m2m": {
+     "C": 0.1235,
+     "hucre": 0.118
+    },
+    "avg_r": {
+     "C": 0.057,
+     "hucre": 0.045
+    },
+    "win_rate": {
+     "C": 0.36,
+     "hucre": 0.353
+    },
+    "score": {
+     "C": -0.1274,
+     "hucre": -0.1241
+    },
+    "total_return": {
+     "C": 0.0987,
+     "hucre": 0.0559
+    },
+    "islem_yil": {
+     "C": 168.75,
+     "hucre": 169.84
+    },
+    "silahlanan_plan": {
+     "C": 813,
+     "hucre": 820
+    },
+    "toplam_plan": {
+     "C": 984,
+     "hucre": 973
+    },
+    "verdict_dagilim": {
+     "C": {
+      "GO": 81,
+      "REVIEW": 732,
+      "NO_GO": 171
+     },
+     "hucre": {
+      "GO": 76,
+      "REVIEW": 744,
+      "NO_GO": 153
+     }
+    },
+    "nogo_neden_dagilim": {
+     "C": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 171,
+      "heat_hard": 168,
+      "sector_cap": 3
+     },
+     "hucre": {
+      "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 153,
+      "heat_hard": 149,
+      "sector_cap": 4
+     }
+    },
+    "setup_dagilim_hucre": {
+     "breakout_vcp": 473,
+     "exhaustion_hammer": 297,
+     "pullback": 7
+    },
+    "exit_reason_dagilim": {
+     "C": {
+      "stop": 334,
+      "regime_flip": 141,
+      "time_stop": 135,
+      "target": 83,
+      "stop_gap": 60,
+      "target_gap": 19
+     },
+     "hucre": {
+      "stop": 343,
+      "regime_flip": 139,
+      "time_stop": 135,
+      "target": 83,
+      "stop_gap": 59,
+      "target_gap": 18
+     }
+    },
+    "doluluk_pozisyon_gun": {
+     "C": 4299,
+     "hucre": 4332
+    },
+    "ort_acik_pozisyon": {
+     "C": 3.748,
+     "hucre": 3.777
+    }
+   },
+   "secilim_farki": {
+    "anahtar": "(ticker, ts_open[:10])",
+    "ortak": {
+     "n": 749,
+     "cikis_farkli_n": 0,
+     "delta_r": {
+      "ort": 0.00049,
+      "ort_mutlak": 0.00573,
+      "max_mutlak": 0.111
+     },
+     "delta_pnl_toplam": -472.96,
+     "beyan": "ortak işlemde ΔR≈0 beklenir (çıkışlar portföyden bağımsız); Δpnl conviction/equity boyutlamasından kayar — beyan başlıkta"
+    },
+    "yalniz_C": {
+     "profil": {
+      "n": 23,
+      "ort_r": 0.2465,
+      "medyan_r": 0.109,
+      "win_rate": 0.5652,
+      "toplam_r": 5.67,
+      "toplam_pnl": 2216.58,
+      "setup_dagilim": {
+       "breakout_vcp": 18,
+       "exhaustion_hammer": 3,
+       "pullback": 2
+      },
+      "exit_dagilim": {
+       "time_stop": 8,
+       "stop": 4,
+       "stop_gap": 4,
+       "regime_flip": 4,
+       "target": 2,
+       "target_gap": 1
+      }
+     },
+     "mekanizma_sondasi": {
+      "plan_gunu_bulunamadi": 0,
+      "hucrede_pozisyon_acikti": 3,
+      "hucre_sinyal_uretmedi": 6,
+      "hucre_plan_NO_GO": 14,
+      "hucre_silahli_dolmadi": 0,
+      "ornekler_sinyal_uretmedi": [
+       {
+        "plan_gunu": "2023-02-14",
+        "ticker": "MAR"
+       },
+       {
+        "plan_gunu": "2023-04-21",
+        "ticker": "MDT"
+       },
+       {
+        "plan_gunu": "2023-09-14",
+        "ticker": "TMUS"
+       },
+       {
+        "plan_gunu": "2024-01-30",
+        "ticker": "DHR"
+       },
+       {
+        "plan_gunu": "2025-02-12",
+        "ticker": "KO"
+       },
+       {
+        "plan_gunu": "2026-01-06",
+        "ticker": "VRTX"
+       }
+      ],
+      "beyan": "C'nin kendi sinyal/plan defteri 026 çıktısında saklanmadı → simetrik C-tarafı sondası ölçülemedi (None); bu sonda hücre defterinden okur. 'hucre_sinyal_uretmedi' = aynı (gün,sembol) girdisiyle hücre taraması sinyal döndürmedi (girdiler portföyden bağımsız → w teriminin skor/kapı etkisi) ya da hücrede sembol o gün armed idi (ayrıştırılamaz, armed-günü defteri yok — işaretli belirsizlik)"
+     }
+    },
+    "yalniz_hucre": {
+     "profil": {
+      "n": 28,
+      "ort_r": -0.1326,
+      "medyan_r": -0.34,
+      "win_rate": 0.3214,
+      "toplam_r": -3.714,
+      "toplam_pnl": -1589.06,
+      "setup_dagilim": {
+       "breakout_vcp": 19,
+       "exhaustion_hammer": 7,
+       "pullback": 2
+      },
+      "exit_dagilim": {
+       "stop": 13,
+       "time_stop": 8,
+       "stop_gap": 3,
+       "target": 2,
+       "regime_flip": 2
+      }
+     },
+     "w0_karsi_olgusal": {
+      "w0_sinyal_yok_n": 1,
+      "w0_ayni_setup_n": 27,
+      "w0_setup_farkli_n": 0,
+      "kayit_yok_n": 0,
+      "w0_skor_dusuk_n": 2
+     }
+    }
+   },
+   "payda_sayaci": {
+    "sinyal_bv": {
+     "n": 614,
+     "olculdu_n": 579,
+     "pay": 0.943
+    },
+    "islem_bv": {
+     "n": 473,
+     "olculdu_n": 448,
+     "pay": 0.9471,
+     "eslesme_yok_n_tum_islem": 0
+    },
+    "sembol": {
+     "evren_n": 251,
+     "kapsam_disi_gorulen": [
+      "EL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+     ],
+     "kapsam_disi_n": 5,
+     "beyan": "kapsam_disi yalnız TARANAN sembollerde birikir (tembel seri kurulumu) — evren-genelinde mutlak kapsam sayısı değil, koşumda GÖRÜLEN kapsam-dışılıktır"
+    },
+    "cagri_okuma_raporu": {
+     "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+     "dosya_var": true,
+     "yukleme": {
+      "ham_satir": 161856,
+      "birim_veya_val_dusen": 76,
+      "split_kanit_satir": 1803,
+      "anlik_iki_etiket_satir": 32954,
+      "birincil_dei": 244,
+      "birincil_usgaap": 8,
+      "sembol": 252,
+      "dosya": "/Users/erdemozturk/AI-Trading/research/edgar_facts/shares_outstanding.csv.gz",
+      "durum": "yuklendi",
+      "yukleme_sn": 0.903,
+      "yedek_etiket_eklenen_kayit": 22
+     },
+     "cagri": 1298,
+     "olculdu": 1226,
+     "olculemedi": 72,
+     "neden": {
+      "bayat_seri": 47,
+      "anlik_hisse_serisi_yok": 21,
+      "olcek_hatasi_gidis_donus": 2,
+      "dosyalama_yok": 2
+     },
+     "kapsam_disi_sembol": [
+      "EL",
+      "META",
+      "MKC",
+      "STZ",
+      "TSN"
+     ],
+     "oran_olculdu": 0.9445,
+     "beyan": "SALT-OKUNUR köprü; ölçülemeyen hücre None + neden (fail-open). Fiziksel devir bekçisi BURADA DEĞİL `indicators.turnover21`dedir (orana bakar, sayıma değil).",
+     "beyan_ek": "ön-uçuş + karşı-olgusal çift-çağrılar dahil — kill bunun üstünden hesaplanmaz (tanım başlıkta)"
+    }
+   },
+   "oz_sinama": {
+    "n_sinyal": 973,
+    "n_ayni_setup": 972,
+    "n_bv_turnover_olculdu": 578,
+    "n_skor_degisti": 512,
+    "skor_degisti_pct": 88.58,
+    "skor_fark_dagilim": {
+     "min": -8,
+     "max": 3,
+     "ort": -2.912,
+     "pozitif_n": 58,
+     "negatif_n": 454,
+     "sifir_n": 66
+    },
+    "n_failopen_kume": 394,
+    "n_failopen_ihlal": 0,
+    "failopen_ihlal_ornek": [],
+    "n_setup_degisen": 0,
+    "n_w0_sinyal_yok": 1,
+    "cf_hata_n": 0,
+    "cf_hata_ornek": [],
+    "enj_scan_gordu_n": 973,
+    "enj_scan_bozuk_n": 0,
+    "skor_degisim_kaniti": true,
+    "beyan": "karşı-olgusal yalnız sinyal doğduğunda taranır; terimin SİLDİĞİ sinyaller bu telemetride değil C-taban işlem kıyasında görünür (asimetri beyanı başlıkta)"
+   },
+   "onucus_payda_kaniti": {
+    "sembol": "AAPL",
+    "tarih": "2024-06-28",
+    "turnover21": 0.00490139,
+    "turnover_score": 32.892,
+    "neden": null,
+    "gecerli": true
+   },
+   "kill1_payda": {
+    "esik": "turnover-kaynak payda < 0.5 → olculemedi (kart kill#1)",
+    "sinyal_bv_pay": 0.943,
+    "islem_bv_pay": 0.9471,
+    "tetiklendi": false
+   },
+   "kill2_sasi": {
+    "esik": "şasi bütünlüğü bozuksa geçersiz (kart kill#2)",
+    "hucre_butunluk": true,
+    "C_butunluk": true,
+    "motor_sha_ayni": {
+     "broker.py": true,
+     "backtest.py": true,
+     "strategy.py": true
+    },
+    "config_sha_ayni": {
+     "goal.yaml": true,
+     "strategy.yaml": true,
+     "bounds.yaml": true
+    },
+    "rampa_ayni_15_36": true,
+    "takvim_ayni": true,
+    "oz_sinama_skor_kaniti": true,
+    "tetiklendi": false,
+    "serh": null
+   }
+  }
+ },
+ "dosyalar": {
+  "w005": {
+   "sonuc": "sonuc_w005.json",
+   "seanslar": "seanslar_w005.json",
+   "islemler": "islemler_w005.json",
+   "sinyaller": "sinyaller_w005.json",
+   "planlar": "planlar_w005.json"
+  },
+  "w010": {
+   "sonuc": "sonuc_w010.json",
+   "seanslar": "seanslar_w010.json",
+   "islemler": "islemler_w010.json",
+   "sinyaller": "sinyaller_w010.json",
+   "planlar": "planlar_w010.json"
+  }
+ },
+ "hukum": null
+}

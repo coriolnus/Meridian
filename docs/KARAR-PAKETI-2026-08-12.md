@@ -54,8 +54,8 @@ Düzeltilmiş haliyle bile CI-negatif (B −0.053R / C −0.045R, ikisi tam-nega
 ### 8) EDG-030 — Rejim-eşiği 40→{30,20} · 🔄
 _Eklenen-işlem R'si CI>0 ∧ dd sınırlı → gevşetme adayı; CI-negatif → %41'lik karartma kanıtla haklı._
 
-### 9) EDG-031 — Turnover ağırlığı 0→{0.05,0.10} · 🔄
-_P&L/sharpe CI-pozitif → ağırlık adayı (OOS-kapılı); değilse w=0 doğrulanır._
+### 9) EDG-031 — Turnover ağırlığı · ✅ ölçüldü → **w=0 DOĞRULANDI, karar gerekmez**
+w005 −3.5k$/w010 −4.3k$ (CI 0-içi, medyan negatif; sharpe düşüyor). Takas aleyhte: kaybedilenler +R'li, eklenenler −R'li — kesitsel sinyal gerçek ama bileşik-ağırlık olarak seçilimi bozuyor. Kablo w=0'da; hermes arama-uzayında kalır (elle ağırlık yok).
 
 ## C. PENCERE SONRASI ZORUNLU ADIMLAR (sıra donuk — §2-11)
 1. **FİNAL-PAKET doğrulama replay'i:** seçilen tam kombinasyon tek koşumda ölçülür (etkileşimler toplamsal varsayılmaz), sayı pakete damgalanır.

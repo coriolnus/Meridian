@@ -28,4 +28,16 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-031-w005, pending-031-w010]}
 
-status: registered   # 2026-08-12 Rol-1; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: w=0 DOĞRULANDI.
+
+verdict:   # Rol-1 hükmü.
+  sonuc: >
+    İki ağırlık da benimsenMEZ: w005 ΔP&L −3.520$ (CI [−11192,+3257]), w010 −4.279$ (CI [−12060,+2437]) —
+    CI'lar 0-içi, medyanlar negatif; sharpe her ikisinde düşüyor (0.285→0.19/0.17). Kartın kuralı: CI-pozitif
+    değilse w=0 doğrulanır → DOĞRULANDI. MEKANİZMA (öğretici): takas aleyhte — kaybedilen işlemler +R'li
+    (+0.08/+0.25), eklenenler −R'li (−0.17/−0.13); turnover terimi çoğu sinyalin skorunu AŞAĞI itiyor
+    (tipik puan 30-50 < bileşik 60-90). EDG-016'nın kesitsel sinyali GERÇEK ama bileşik-skor ağırlığı olarak
+    bu motorda seçilimi bozuyor. Kablo w=0'da kalır; hermes arama uzayından ÇIKARILMAZ (öğrenme farklı
+    rejim/pencerede deneyebilir — bu ölçüm o aramaya kanıt olarak işlenmiş olur). Elle ağırlık YOK.
+  artefakt: "research/olcumler/edg031_turnover_w_2026-08-12/ (payda %94-95, kill'ler temiz, ayrışım sente kapanıyor)"
+

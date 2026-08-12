@@ -1,0 +1,22 @@
+EDG-2026-031 — yeniden-başlatma komutları (mutlak yollar; her hücre bağımsız süreç)
+
+# ÖNCE mevcut süreç var mı bak (çift-başlatma YASAK):
+pgrep -fl "edg031_turnover_w_2026-08-12/olcum.py" || echo "süreç yok"
+
+# Hücre w=0.05 (çıktılar: sonuc_w005.json + seanslar/islemler/sinyaller/planlar_w005.json):
+cd /Users/erdemozturk/AI-Trading && nohup /Users/erdemozturk/AI-Trading/.venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/olcum.py w005 > /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/kosum_w005.log 2>&1 &
+
+# Hücre w=0.10 (çıktılar: sonuc_w010.json + ...):
+cd /Users/erdemozturk/AI-Trading && nohup /Users/erdemozturk/AI-Trading/.venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/olcum.py w010 > /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/kosum_w010.log 2>&1 &
+
+# İKİSİ DE BİTİNCE (sonuc_w005.json VE sonuc_w010.json varken) birleştirme:
+cd /Users/erdemozturk/AI-Trading && /Users/erdemozturk/AI-Trading/.venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/olcum.py kiyas > /Users/erdemozturk/AI-Trading/research/olcumler/edg031_turnover_w_2026-08-12/kiyas.log 2>&1
+
+# Notlar:
+# - Beklenen hücre süresi ~30 dk (EDG-026 C koşumu 1787 sn idi); log kuyruğundan izlenir.
+# - Hücre yarım kaldıysa: sonuc_wXXX.json YOKSA o hücre bitmemiştir; süreci pgrep ile kontrol
+#   et, yoksa üstteki komutla YENİDEN başlat (sandbox state_wXXX/ yeniden kullanılır, sorun değil).
+# - Smoke provası (isteğe bağlı, ~1 dk/hücre): aynı komutlara "--smoke" ekle; kiyas --smoke
+#   yalnız smoke çıktılarını okur. Smoke, tam koşumla AYNI dosyalara YAZMAZ (smoke/ altı).
+# - C-taban HAZIR: research/olcumler/edg026_slot20_2026-08-12/{sonuc_c,seanslar_c,islemler_c}.json
+#   — yeniden koşulmaz, kiyas sha doğrular.
