@@ -1,0 +1,41 @@
+# EDG-2026-029 — KESİNTİ DEVAMLILIK KOMUTLARI (2026-08-12, ölçüm ajanı)
+# Kart: research/cards/EDG-2026-029-scaleout-duzeltilmis.yaml (OKU-DOKUNMA)
+# Operatör offline penceresi için: her adım mutlak yollu, tek satır, kopyala-yapıştır.
+
+## DURUM (doğum anı 2026-08-12 ~16:20 +03)
+# F1x (B_scaleout_fix, PID 93947) ve F2x (C_scaleout_fix, PID 93948) nohup ile PARALEL doğdu.
+# Beklenen süre: hücre başına ~25-60 dk (makinede 4 başka ölçüm süreci koşuyor; contention'a bağlı).
+# Öz-sınama kapısı (selftest) doğumdan ÖNCE GEÇTİ — kill#3 kanıtlı (log başlarında da tekrar koşulur).
+
+## 0) ÇİFT-BAŞLATMA KORUMASI — yeniden başlatmadan ÖNCE MUTLAKA bak:
+ps aux | grep "edg029_scaleout_fix" | grep -v grep
+ls -la /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/
+#   - Süreç LİSTEDEYSE → dokunma, bekle.
+#   - sonuc_F1x.json VARSA → F1x bitmiş, yeniden koşma. sonuc_F2x.json VARSA → F2x bitmiş.
+#   - Süreç yok + sonuc_*.json yok + log yarım → o hücre kesilmiş → aşağıdaki komutla YENİDEN başlat
+#     (koşum idempotent: state_F1x/state_F2x sandbox'ları ve çıktılar üzerine yazılır, artık temizliği gerekmez).
+
+## 1) F1x yeniden başlatma (yalnız kesildiyse):
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/olcum.py F1x > /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F1x.log 2>&1 & disown
+
+## 2) F2x yeniden başlatma (yalnız kesildiyse):
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/olcum.py F2x > /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F2x.log 2>&1 & disown
+
+## 3) İzleme (bitiş işareti: log sonunda "yazıldı: .../sonuc_F1x.json" / "sonuc_F2x.json"):
+tail -5 /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F1x.log
+tail -5 /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F2x.log
+
+## 4) İKİSİ DE bitince BİRLEŞTİR (eşli CI'lar + F1x↔H1 + kill bayrakları → sonuc.json):
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/olcum.py birlestir > /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_birlestir.log 2>&1
+# → /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/sonuc.json
+# birlestir dakikalar sürer (replay yok); assert ile ölürse log'a bakın (çivi/bütünlük ihlali demektir).
+
+## 5) (İsteğe bağlı, kanarya) smoke provası — fulls'a dokunmaz, ayrı dosyalara yazar:
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/olcum.py F1x --smoke > /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F1x_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/olcum.py F2x --smoke > /Users/erdemozturk/AI-Trading/research/olcumler/edg029_scaleout_fix_2026-08-12/kosum_F2x_smoke.log 2>&1
+
+## NOTLAR
+# - Öz-sınama (kill#3) her koşumun BAŞINDA otomatik: kanıtlanamazsa süreç replay'e girmeden ölür (kart gereği KOŞULMAZ).
+# - Tabanlar yeniden KOŞULMAZ: B=edg023 varyant, C=edg026 c_slot20_r05, H1=edg027 h1_scaleout hazır dosyaları.
+# - git/canlı/serve.sh/state-yazımı YOK; her şey bu dizinin sandbox'larına yazar.
+# - HÜKÜM YOK: sonuc.json ölçümdür; yorum Rol-1'in.

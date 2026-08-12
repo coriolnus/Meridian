@@ -48,8 +48,8 @@ _Ölçülecek: eklenen işlemlerin gerçek-R'si hücre başına CI. CI>0 → OOS
 
 **Öneri: 5R ZARFINDA KAL** — 10R'nin eklediği işlemler kalitesiz ("ISI 10R" ön-kararınla çelişen ölçüm; karar senin). Y1 rejim-harita kıl-payı düştü (avg-R CI üst +0.029), Y2 vol-hedef net kötü → ikisi de otomatik uygulanMADI. Yapısal bulgu: rejim kapısı 5R dünyasında zaten doğal modülasyon (motor high_vol/trend_down'da girmiyor) — dosya ölçülmüş-red ile kapanır.
 
-### 7) EDG-029 — Scale-out DÜZELTİLMİŞ (trail-kusursuz) B+C · 🔄
-_CI>0 → "kavram kazanan, motor-düzeltme kartı" önerisi; değilse scale-out dosyası tümden kapanır._
+### 7) EDG-029 — Scale-out DÜZELTİLMİŞ · ✅ ölçüldü → **KAVRAM ELENDİ, DOSYA KAPANDI**
+Düzeltilmiş haliyle bile CI-negatif (B −0.053R / C −0.045R, ikisi tam-negatif). Düzeltme kusur-payını geri aldı (+0.087R) ama kalan zarar kavramın kendisi: 1.5R'de yarı-bankalama kuyruk-kazananları feda ediyor. **Karar gerekmez** — alet kapalı kalır; §2-13 latent-kusur notuna indi.
 
 ### 8) EDG-030 — Rejim-eşiği 40→{30,20} · 🔄
 _Eklenen-işlem R'si CI>0 ∧ dd sınırlı → gevşetme adayı; CI-negatif → %41'lik karartma kanıtla haklı._

@@ -810,7 +810,10 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     params_by_regime kancasına). *gerekçe: ısı tek sabit yerine koşul-duyarlı · boyut: M · bağımlılık:
     026 şasisi + pencere girdileri · öncelik: yüksek (karar-paketi sonrası).*
 
-13. **Scale-out bankalama-barı trail kusuru (EDG-027/H1 mekanik bulgusu, 2026-08-12)** — bankalama
+13. ~~**Scale-out trail kusuru**~~ → **LATENT-KUSUR notuna indi (EDG-029 ölçtü, 2026-08-12):** düzeltilmiş
+    haliyle bile kavram CI-negatif (B −0.053/C −0.045) → alet kapalı kalıyor, düzeltme ACİL DEĞİL.
+    ZORUNLULUK ŞARTI: scale_out_frac bir gün açılacaksa ÖNCE bu kusur düzeltilir (bankalama-barı
+    trail=entry_fill → aynı-bar stop_gap). *öncelik: düşük (latent) · orijinal bulgu:* — bankalama
     barında trail=entry_fill kurulumu (entry_fill>open) koşucuyu AYNI BARDA ~0.7R stop_gap'e kesiyor;
     ölçüm bu yüzden CI-negatif (−0.14R) çıktı — kavram değil implementasyon kusuru. DÜZELTME ADAYI:
     bankalama-barında trail'i entry_fill'e ÇEKMEME (ör. bir sonraki bardan itibaren) ya da aynı-bar

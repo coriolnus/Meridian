@@ -33,4 +33,15 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-029-B-fix, pending-029-C-fix]}
 
-status: registered   # 2026-08-12 Rol-1 — §2-13'ün ölçüm yolu; eşikler donuk.
+status: measured   # 2026-08-12 Rol-1 — iki hücre ölçüldü + hüküm: KAVRAM ELENDİ.
+
+verdict:   # Rol-1 hükmü.
+  sonuc: >
+    Scale-out DÜZELTİLMİŞ haliyle bile CI-NEGATİF: F1x(B) −0.0530R CI[−0.1033,−0.0091] · F2x(C) −0.0451R
+    CI[−0.0839,−0.0116]. Düzeltme İŞE YARADI (F1x−H1 = +0.0874R CI[+0.034,+0.153]; bars_held=0 18→2, 0.73R
+    imzası yok) — yani 027'nin zararının bir kısmı kusurdu AMA kalan zarar KAVRAMIN kendisi: 1.5R'de yarıyı
+    bankalamak, P&L'i taşıyan az sayıdaki büyük kazananın kuyruğunu feda ediyor. SCALE-OUT DOSYASI TÜMDEN
+    KAPANIR (bu motor/param dünyasında). §2-13 motor-düzeltmesi LATENT-KUSUR notuna iner: scale_out_frac=0
+    olduğu sürece zararsız; alet bir gün açılacaksa ÖNCE düzeltilmesi ZORUNLU.
+  artefakt: "research/olcumler/edg029_scaleout_fix_2026-08-12/ (kill#3 kusur-varlığı+yama-davranışı kanıtlı; öz-eşlemeler [0,0]; F1x 2519s, F2x 3490s)"
+
