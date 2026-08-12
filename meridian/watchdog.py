@@ -1230,6 +1230,27 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
                                + (f" · son okundu: {_ack.get('ack_ts')}" if _ack.get("ack_ts") else
                                   " · yerel gelen kutusu hiç okunmadı")})
 
+    # 7ğ) İMZA-MANDALI GÖRÜNÜRLÜĞÜ (2026-08-12) — `obs.alarm` tekrar-eden bilinen-durumları
+    #     (MIRROR_DRIFT adet/durum imzası, DATA_QUALITY bar-kaynak imzası) satır basmadan sayıyor.
+    #     v192 yasası: bastırılan SAYILIR ve GÖRÜNÜR — bu satır o defterin DIŞ okuyucusudur
+    #     (YASA-6; obs kendi yazdığını kendi okusaydı tüketici sayılmazdı). `ok` HEP True:
+    #     mandallı her durum İLK görüşte zaten alarmlandı; bu satır alarm değil ENVANTERDİR ve
+    #     kırmızıya dönseydi `check_integrity_and_alarm` gürültü-kısma mekanizmasının kendisinden
+    #     alarm üretirdi (notify_channel/alarm_delivery istisnalarıyla aynı döngüsellik sınıfı).
+    from . import obs as _obs
+    _mnd = {k: v for k, v in (store.read_json(_obs.MANDAL_FILE, {}) or {}).items()
+            if isinstance(v, dict)}
+    if _mnd:
+        _mb = sum(int(v.get("bastirilan") or 0) for v in _mnd.values())
+        _ornek = sorted(_mnd.items(), key=lambda kv: -int(kv[1].get("bastirilan") or 0))[:3]
+        _otxt = " · ".join(f"{k.split('|', 1)[1]}×{int(v.get('bastirilan') or 0)}"
+                           for k, v in _ornek)
+        rows.append({"check": "alarm_mandal", "ok": True,
+                     "detail": (f"{len(_mnd)} bilinen-aktif durum mandallı, {_mb} tekrar satırsız "
+                                f"sayıldı (ilk görüş alarmlandı; adet/sınıf/sapma değişimi ve "
+                                f"{int(_obs.MANDAL_SERBEST_S / 3600)} sa sessizlik sonrası yeniden "
+                                f"alarmlanır) — en gürültülü: {_otxt} · defter: state/{_obs.MANDAL_FILE}")})
+
     # 7h) ÖĞRENME DÖNGÜSÜ AÇIK MI — `learning_loop_open.json` bugüne dek YAZILIYOR ama hiçbir
     #     dedektör/pano tarafından OKUNMUYORDU (kendi beyanı "makullük dedektörü toplamı okur" diyordu
     #     ve bu DOĞRU DEĞİLDİ — yasa 6 ihlali, üstelik beyanın kendisiyle örtülmüş hâli).

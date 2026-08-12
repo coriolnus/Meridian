@@ -257,12 +257,38 @@ def discover_universe(preset: str = DEFAULT_PRESET, limit: int = MAX_TICKERS,
     rec = {"date": today, "source": res["source"], "preset": res["preset"],
            "reason": res.get("reason", ""), "n": len(res["tickers"]),
            "tickers": res["tickers"], "at": _now_iso()}
-    store.write_json(CACHE_FILE, rec)
     if res["source"] == "none":
         # DÜRÜST BOZUNMA: Finviz katkısı bu tur sıfır; NEDENİ söyle, sessiz kalma.
-        obs.warn("finviz_unavailable", reason=res.get("reason", ""), preset=preset,
-                 detail="evren yalnız REPLAY_UNIVERSE ile kuruldu — Finviz keşfi bu tur devre dışı")
+        #
+        # UYARI KADANSI ≠ KEŞİF KADANSI (2026-08-12, gelen-kutusu hijyeni). "none" kaydı yukarıdaki
+        # önbellek kapısını ASLA geçemez (source ∈ {elite, public} şartı), yani token yokken HER
+        # keşif turu buraya düşüyordu → canlıda ~5 dakikada bir `finviz_unavailable` (~200+/gün).
+        # EDG-2026-022 hükmü FINVIZ alınmayacak diyor; değişmeyen bir yokluğu günde 200 kez anlatmak
+        # gerçek alarmları okunmaz yapar. KEŞİF DENEMESİ AYNEN SÜRÜYOR (token gelirse davranış bu
+        # satırlara dokunmadan kendiliğinden canlanır); yalnız UYARI kadansı düşer:
+        #   * durum (source=none + AYNI reason) değişmedikçe günde EN FAZLA 1 uyarı,
+        #   * reason DEĞİŞİRSE (başka bir arıza sınıfı) aynı gün bile ANINDA yeni uyarı,
+        #   * bastırılan her tekrar SAYILIR (v192 yasası) — sayaç bu kayıtta (`bastirilan`) durur,
+        #     `status()["last"]` onu panoya taşır; günlük uyarı satırı da toplamı üstünde taşır.
+        onceki = store.read_json(CACHE_FILE, {}) or {}
+        ayni_durum = (onceki.get("source") == "none"
+                      and onceki.get("reason") == rec["reason"])
+        rec["ilk_gorulme"] = ((onceki.get("ilk_gorulme") if ayni_durum else None)
+                             or rec["at"])
+        rec["bastirilan"] = int(onceki.get("bastirilan") or 0) if ayni_durum else 0
+        rec["uyarildi_gun"] = today
+        if ayni_durum and onceki.get("uyarildi_gun") == today:
+            rec["bastirilan"] += 1        # bugün zaten uyarıldı → satır yok, sayaç var
+            store.write_json(CACHE_FILE, rec)
+        else:
+            store.write_json(CACHE_FILE, rec)
+            obs.warn("finviz_unavailable", reason=res.get("reason", ""), preset=preset,
+                     detail="evren yalnız REPLAY_UNIVERSE ile kuruldu — Finviz keşfi bu tur devre "
+                            "dışı. Tekrarlar günde 1'e mandallı (EDG-2026-022; durum değişirse "
+                            "anında yeniden uyarılır) — sayaç: state/" + CACHE_FILE,
+                     ilk_gorulme=rec["ilk_gorulme"], bastirilan_toplam=rec["bastirilan"])
     else:
+        store.write_json(CACHE_FILE, rec)
         obs.log("finviz_universe", source=res["source"], n=len(res["tickers"]), preset=preset)
     return list(res["tickers"])
 
@@ -298,7 +324,10 @@ def status() -> dict:
     """Pano/API görünürlüğü: kaynak, sayı, token durumu (son-4 maskeli), son çekim."""
     from .. import store
     c = store.read_json(CACHE_FILE, {}) or {}
+    # `uyarildi_gun`/`bastirilan`/`ilk_gorulme`: uyarı-kadansı mandalının DIŞ okuyucusu (YASA-6) —
+    # "bugün kaç deneme bastırıldı" pano/API'de görünür kalır, susturmak yok saymak değildir.
     return {"elite_token": secrets.mask(secrets.get("FINVIZ_API_KEY")),
             "health": health(),
-            "last": {k: c.get(k) for k in ("date", "source", "n", "reason", "at")},
+            "last": {k: c.get(k) for k in ("date", "source", "n", "reason", "at",
+                                           "uyarildi_gun", "bastirilan", "ilk_gorulme")},
             "presets": sorted(PRESETS)}

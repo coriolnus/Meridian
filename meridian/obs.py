@@ -210,10 +210,105 @@ def _maybe_notify(token: str, message: str) -> None:
         pass
 
 
+# ---- İMZA-MANDALI: tekrar-eden BİLİNEN durum → DURUM, yalnız DEĞİŞİM → alarm (2026-08-12) ----
+# ÖLÇÜLEN GÜRÜLTÜ: aynı (ticker, local_qty, alpaca_qty, drift_sinifi) içerikli MIRROR_DRIFT
+# adet-sapması HER GÜN ×4 (NUE/EMR/BKNG/AMGN `olculemedi` — kök bilinen: makbuzsuz boyut,
+# ROADMAP §2-7) ve aynı (ticker, date, source, dev_pct) içerikli DATA_QUALITY bar-kaynak
+# uyuşmazlığı (MNST %50) her gün yeniden alarmlanıyordu. Çözülmemiş ama DEĞİŞMEMİŞ bir durumu
+# her gün yeniden anlatmak alarm-yorgunluğudur (EEMUA, ROADMAP WP-P); susup yok saymak ise yasak.
+# KURAL (dikiş defteri `bar_source_seams.json` + v192 bastırma-sayacı emsali): imza İLK görüşte
+# alarmlanır; AYNI imza tekrarları SAYILIR ama satır üretmez; imzanın HERHANGİ bir alanı değişirse
+# (adet/sınıf/sapma) bu YENİ bir imzadır ve ANINDA alarmlanır; imza `MANDAL_SERBEST_S` boyunca hiç
+# görünmezse durum ÇÖZÜLMÜŞ sayılır ve yeniden belirmesi YENİDEN alarmlanır (`mandal_yeniden`).
+# GÖRÜNÜRLÜK (YASA-4 + YASA-6): ilk alarm satırı `tekrar_mandali` alanıyla "tekrarlar sayaçta"
+# der; sayaç `state/alarm_mandal.json`ta durur ve DIŞ okuyucusu `watchdog.parity_report`un
+# `alarm_mandal` satırıdır (→ /api/diagnostics → pano) — bastırılan hiçbir tekrar görünmez olmaz.
+# SINIR: teslim katmanına (aşağıdaki `_maybe_notify` 6 sa penceresi) DOKUNULMAZ; sermaye-sınıfı
+# jetonlar (NAKED_POSITION, ONAYLI_PLAN_GONDERILMEDI, …) bu sözlükte YOKTUR ve eklenmesi karar
+# ister (test_gelen_kutusu_mandal çivisi). Alarm SEVİYESİ ve eşikleri değişmez — yalnız kadans.
+MANDAL_FILE = "alarm_mandal.json"
+MANDAL_SERBEST_S = 4 * 24 * 3600   # 96 sa: hafta sonu (Cu→Pzt = 72 sa) + pay; altı "aktif durum"
+# jeton → {ayrac: hangi alan mandalı AÇAR, alanlar: imzayı kuran alanlar, yalniz/haric: ayraç süzgeci}
+# `ayrac` alanı OLMAYAN satır mandallanmaz (eski/başka yayıcılar bugünkü gibi akar — fail-open).
+MANDAL_IMZALAR: dict[str, dict] = {
+    # adet/durum sapmaları imzayla tam anlatılır → mandallanabilir. `icra` ve `koruma_dolumu`
+    # HARİÇ: ikisi de dolum-BAŞINA olaydır (her vaka yeni bir gerçek; imza tuple'ı fiyat/bacak
+    # taşımaz, aynı görünen iki vaka AYRI olabilir) — onları mandallamak yeni olayı yutardı.
+    "MIRROR_DRIFT": {"ayrac": "drift_sinifi", "haric": ("icra", "koruma_dolumu"),
+                     "alanlar": ("ticker", "local_qty", "alpaca_qty", "drift_sinifi")},
+    # yalnız bar-kaynak uyuşmazlığı (adapters.data._massive_crosscheck). Diğer tüm DATA_QUALITY
+    # yayıcıları (determinism/monotonicity/ownership/parity/…) `kind` süzgecine takılmaz→akar.
+    "DATA_QUALITY": {"ayrac": "kind", "yalniz": ("bar_kaynak_uyusmazligi",),
+                     "alanlar": ("ticker", "date", "source", "dev_pct")},
+}
+
+
+def _mandal_yakala(token: str, fields: dict) -> dict | None:
+    """İmza mandalda mı? None → normal yayın (ve uygunsa `tekrar_mandali` işareti fields'a
+    eklenmiş olur); dict → BASTIRILDI (satır yazılmaz, sayaç arttı — dönen kayıt teşhis içindir)."""
+    cfg = MANDAL_IMZALAR.get(token)
+    if not cfg:
+        return None
+    ayrac = fields.get(cfg["ayrac"])
+    if ayrac is None:
+        return None
+    if cfg.get("yalniz") and ayrac not in cfg["yalniz"]:
+        return None
+    if cfg.get("haric") and ayrac in cfg["haric"]:
+        return None
+    if not fields.get("ticker"):
+        return None                       # kimliksiz satır mandallanamaz — olduğu gibi akar
+    import time
+    from . import store
+    imza = token + "|" + "|".join(f"{k}={fields.get(k)}" for k in cfg["alanlar"])
+    now = time.time()
+    now_iso = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    karar: dict = {}
+
+    def _mut(doc: dict) -> bool:
+        row = doc.get(imza)
+        if isinstance(row, dict) and (now - float(row.get("son_ts") or 0)) < MANDAL_SERBEST_S:
+            # BİLİNEN-AKTİF DURUM: satır yok, sayaç var (v192 — bastırılan SAYILIR ve görünür).
+            row["n"] = int(row.get("n") or 0) + 1
+            row["bastirilan"] = int(row.get("bastirilan") or 0) + 1
+            row["son_ts"] = now
+            row["son"] = now_iso
+            karar.update(bastir=True, kayit=dict(row))
+        else:
+            yeniden = isinstance(row, dict)   # serbest penceresini aşmış ESKİ imza yeniden belirdi
+            doc[imza] = {"token": token, "ilk": (row or {}).get("ilk") or now_iso, "son": now_iso,
+                         "son_ts": now, "n": int((row or {}).get("n") or 0) + 1,
+                         "bastirilan": int((row or {}).get("bastirilan") or 0),
+                         "yeniden": yeniden}
+            karar.update(bastir=False, yeniden=yeniden)
+            # SÜPRÜNTÜ: 2× serbest penceresinden eski imzalar düşer — defter okunur kalır; düşen
+            # imzanın yeniden belirmesi zaten YENİ imza muamelesi görür (ilk görüşte alarm).
+            for k in [k for k, v in doc.items()
+                      if isinstance(v, dict) and (now - float(v.get("son_ts") or 0)) > 2 * MANDAL_SERBEST_S]:
+                doc.pop(k, None)
+        return True
+
+    store.update_json(MANDAL_FILE, _mut, {})
+    if karar.get("bastir"):
+        return {"ts": now_iso, "level": "alarm",
+                "event": f"{token} {str(fields.get('message') or '')[:160]}",
+                "mandal_bastirildi": True, "imza": imza, **karar["kayit"]}
+    fields["tekrar_mandali"] = "state/" + MANDAL_FILE
+    if karar.get("yeniden"):
+        fields["mandal_yeniden"] = True    # sessiz kalmış durum GERİ geldi — bu bilgi satırda taşınır
+    return None
+
+
 def alarm(token: str, message: str, **fields) -> dict:
     """Emit an alarm line whose text CONTAINS the token monitoring.sh searches for."""
     fields["alarm"] = token
     fields["message"] = message
+    try:
+        _m = _mandal_yakala(token, fields)
+    except Exception:  # sessiz-yutma: mandal makinesinin arızası alarmı ASLA yutamaz — fail-open, satır normal yoldan basılır
+        _m = None
+    if _m is not None:
+        return _m                          # bilinen-aktif durum: satır yok, sayaç state/alarm_mandal.json'ta
     _maybe_notify(token, message)
     # the raw token appears in the printed line so a plain substring filter matches
     return _emit("alarm", f"{token} {message}", fields)
