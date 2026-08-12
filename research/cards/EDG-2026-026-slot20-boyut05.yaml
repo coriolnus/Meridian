@@ -1,0 +1,41 @@
+card_id: EDG-2026-026
+family: slot_kapasitesi_boyut
+thesis: >
+  Operatör kararı (2026-08-12 pencere): pozisyon tavanı 5→20, pozisyon-başına risk 1.0R→0.5R (nakit
+  matematiği: 1R'de 20 slot fiilen ~6'da tıkanır; 0.5R tam-dolulukta 10R ısı = mevcudun ~2 katı, bilinçli).
+  KAPSAM (operatör): HER İKİ MODDA (kâğıt + gerçek-para; gerçek-para uygulaması Faz-6 kapılarına tabidir;
+  15/36 rampasının yalnız-kâğıt kararı AYRI ve geçerli). TEZ: 15/36 rampası üstüne slot20+0.5R, işlem
+  akışını ve çeşitlenmeyi B-varyantının (EDG-023: 410 işlem) ötesine taşır; bedeli (ısı, dd, P&L) ölçülür.
+  İlerleme operatör tercihiyle ÖNCE-ÖLÇ: benimseme 023/024/025 ile TEK karar penceresinde.
+
+evidence_refs:
+  - "EDG-2026-023 measured: B(15/36, slot5, 1R) = 410 işlem, +775$, dd %17.8 — bu kartın kıyas tabanı"
+  - "operatör girdileri 2026-08-12: slot=20 · boyut=0.5R · önce-ölç · her-iki-mod"
+  - "nakit kısıtı: 1R nominal ~15-20k$ → 100k$'da ~5-6 eşzamanlı; 0.5R ~12-14; ısı tablosu karar penceresinde"
+
+universe: "EDG-023 ile AYNI (251 sembol, 2022-01→2026-07, 1147 seans); motor dosyaları YAMASIZ (rampa 15/36 ölçüm-içi monkeypatch — 023 beyanlı deseni; slot/boyut param-enjeksiyonu)"
+
+features_asof: >
+  TEK koşum (C): rampa 15/36 + max_open_positions=20 + position_size_r=0.5. KIYAS: EDG-023'ün B koşumuna
+  (aynı motor sha'ları — doğrulanır) ve A referansına. Seans-başına doluluk/ısı (gerçekleşen eşzamanlı
+  pozisyon × R), işlem sayısı, kısıt-sınıf dağılımı; koşum-sonu net P&L, max-dd, işlem-başına R, sharpe.
+
+parameter_grid:
+  yok: "tek hücre (slot20_r05) — K += 1"
+
+cost_model: pessimistic_band_v2
+
+success_metric: >
+  C-vs-B: işlem artışı (eşlenik ay-kümeli bootstrap %95 CI) + gerçekleşen tepe-ısı (max eşzamanlı R) +
+  dd/P&L/R tablosu. HÜKÜM VERİLMEZ — sayılar 023/024/025 paketiyle operatör karar penceresine gider
+  (023 emsali: benimseme goal/bounds değişikliği = operatör onayı).
+
+kill_criteria:
+  - "işlem sayısı B'ye göre CI ile ARTMIYORSA slot artışı fiilen İNERT (nakit/aday tavanı başka yerde) —
+     rapor edilir, benimseme önerilmez"
+  - "max-dd B'nin ×1.5'ini aşarsa 'öneri' dili kullanılmaz; sayılar yine tam raporlanır (karar operatörün)"
+  - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa ölçüm geçersiz"
+
+k_registry: {registered_at: "2026-08-12T2x", trial_ids: [pending-EDG-026-slot20-r05]}
+
+status: registered   # 2026-08-12 Rol-1 — operatör-girdili; ölçüm kodu yazılmadı; eşikler donuk.
