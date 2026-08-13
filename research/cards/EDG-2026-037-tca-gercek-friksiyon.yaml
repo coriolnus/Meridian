@@ -1,0 +1,55 @@
+card_id: EDG-2026-037
+family: tca_gercek_friksiyon
+thesis: >
+  Operatör kararı (2026-08-13): "TCA'yı ölç, sonra eşiği tartışalım". Bağlam: benimsenen C+mb paketinin
+  replay profit-factor'ü 1,1119 iken `analytics.RESULT_PF_MIN=1.3` — SONUÇ hükmü 4/4 istediği için
+  Faz-6 `sonuc_hukmu` kilidi bu paketle AÇILAMIYOR. Eşiğin KENDİ yazılı gerekçesi iki ayak taşıyor
+  (analytics.py:2089-2093): (a) "1,0-1,2 bandı 95 işlemlik defterde örneklem gürültüsünün içindedir"
+  — bu ayak 885 işlemlik ölçümle ZAYIFLADI; (b) "kâğıt dolumları iyimser, Y2/TCA hâlâ ölçülmedi" —
+  bu ayak HÂLÂ AYAKTA ve eşiğin asıl var oluş sebebi. TEZ: gerçek friksiyon ölçülmeden eşik
+  tartışılamaz; ölçülürse iki sonuçtan biri çıkar — friksiyon replay varsayımından KÖTÜ ise 1,11 zaten
+  şişkindir (eşik haklı), İYİ/EŞİT ise eşiğin (b) ayağı da düşer ve tartışma meşrulaşır.
+
+evidence_refs:
+  - "analytics.py:2089-2093 RESULT_PF_MIN gerekçesi (iki ayak, biri ölçülmemiş)"
+  - "EDG-032 damgası: C+mb brüt +205.552$ / −184.868$ → PF 1,1119"
+  - "kartların cost_model: pessimistic_band_v2 — replay'in VARSAYDIĞI friksiyon"
+  - "WP-E dolum boşluğu turu (v234): karar-çıkışı dolumları ölçülür oldu, slipaj örneklemi ~%38 genişledi"
+  - "canlı defter: live_paper n=2 — TCA'nın gerçek-icra kolu ÖRNEKLEM YETERSİZ olabilir (ölç, varsayma)"
+
+universe: >
+  ÜÇ KAYNAK, üçü de canlı (salt-okuma): (1) ayna emir/dolum defteri (mirror_orders + dolum olayları,
+  WP-E damgaları: kismi_dolum/makbuzsuz_boyut/dolum_eq) — plan fiyatı ↔ gerçek dolum farkı;
+  (2) trades tablosu `costs` alanı (broker'ın "informational total friction" ifadesi) ve `pnl_dollars`
+  (ZATEN NET — analytics.py:2079-2084, friksiyon İKİ KEZ kesilmez); (3) replay'in kendi friksiyon
+  modeli (`pessimistic_band_v2` — kodda nerede tanımlı, hangi bileşenleri var, hangi sayıları kullanıyor).
+
+features_asof: >
+  ÖLÇÜLECEK: (a) gerçekleşen slipaj dağılımı (bps, giriş ve çıkış bacağı AYRI; tetik↔dolum farkı) —
+  n, medyan, p90, ortalama + CI · (b) komisyon/ücret gerçekleşen toplamı · (c) replay'in VARSAYDIĞI
+  friksiyon aynı işlemler için ne derdi (yan yana) · (d) FARK: gerçek − varsayılan, dolar VE PF etkisi
+  ("friksiyon replay'deki gibi olsaydı PF ne olurdu / gerçekleşen gibi olsaydı ne olurdu").
+  ÖRNEKLEM DÜRÜSTLÜĞÜ ŞART: kâğıt-icra işlem sayısı 2; eğer TCA yalnız kapanmış işlemden hesaplanabiliyorsa
+  n=2 ile hüküm VERİLMEZ — o zaman payda EMİR düzeyine taşınır (gönderilen/dolan emirler, açık pozisyonların
+  giriş bacakları dahil) ve bu genişletme AÇIKÇA beyan edilir.
+
+parameter_grid:
+  yok: "betimsel ölçüm — K += 0 (hipotez sınamıyor; eşik tartışmasının GİRDİSİ)"
+
+cost_model: gercek_olculen   # bu kartın ürünü ZATEN friksiyonun kendisi
+
+success_metric: >
+  ÜRÜN: (i) gerçek friksiyonun sayısı + örneklem künyesi (n, hangi payda, hangi bacak) · (ii) replay
+  varsayımıyla FARKI · (iii) PF'in friksiyon-düzeltilmiş hâli. HÜKÜM DEĞİL GİRDİ: bu kart eşiği
+  DEĞİŞTİRMEZ; `RESULT_PF_MIN` tartışması ayrı bir operatör penceresinde, BU sayılarla açılır.
+  ÖRNEKLEM YETERSİZSE bu da bir üründür: "TCA ÖLÇÜLEMEDİ (n=X) — eşiğin (b) ayağı çürütülemedi,
+  1,3 yerinde kalır" dürüst kapanışı.
+
+kill_criteria:
+  - "ayna dolum defterinde eşleşen plan↔dolum çifti <10 ise slipaj 'olculemedi' (+ payda beyanı)"
+  - "replay friksiyon modeli koddan OKUNAMAZSA kıyas yapılmaz — uydurulmaz"
+  - "kâğıt-icra ile replay'i AYNI potaya koymak yasak: kâğıt dolumları iyimser olabilir, bu kartın konusu tam da o"
+
+k_registry: {registered_at: "2026-08-13T1x", trial_ids: [pending-037-tca]}
+
+status: registered   # 2026-08-13 Rol-1 — operatör talimatı; PF eşiği tartışmasının ÖN ŞARTI.
