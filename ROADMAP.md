@@ -1301,6 +1301,22 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🆕 35. 15g TURUNUN DEVRETTİĞİ İKİ KALEM** _(2026-08-14, v245-E; sahipleri WP5 ve WP11)_
+  **(a) MUTASYON SEÇİMİ EKSİK — `pyproject.toml`** _(WP5)_: `[tool.mutmut] only_mutate`
+  `meridian/guard.py`yi içeriyor ama `pytest_add_cli_args_test_selection` listesinde yeni
+  `tests/test_sektor_tavani_ayristirma_v245.py` YOK. pyproject'in KENDİ türetme kuralı ("bu üç
+  modülü DOĞRUDAN import eden test dosyaları") gereği girmesi gerekir — v237 de-risk turunda tam
+  bu gerekçeyle eklenmişti. Girmezse haftalık ritüelde `sector_cap_basis` mutantları (ör. "açık
+  paydayı yok say") **ölmeden hayatta kalır**; yanlış-yeşil değil yanlış-kırmızı üretir ama gerçek
+  boşlukları gizler. *tek satır.*
+  **(b) `backtest.py:149` ÖLÜ YEREL — İKİNCİ SEKTÖR KURALININ TOHUMU** _(WP11)_:
+  `max_sector_pct = float(limits["max_sector_exposure_pct"])` atanıyor, **hiç okunmuyor** (replay
+  sektör tavanını `guard.classify_gate`e devrediyor, `backtest.py:377` — yani ayrıştırma replay'i
+  otomatik kapsıyor, ikinci uygulama YOK ve bu İYİ). Ama az önce ayrıştırılan politikanın adını
+  taşıyan ölü bir yerel, kullanılan `max_open`/`max_pos_r` satırlarının üç satır altında duruyor:
+  birileri "bağlarsa" **ikinci ve ayrışmış bir sektör kuralı** doğar — `guard.check_trade`
+  docstring'indeki tur-12 ayrışma sınıfı. *KALDIR ya da DAMGALA (25a/25b deseni).*
+
 - **🆕 34. KAYAN OTURUMUN İKİ SESSİZ SÜRÜKLENMESİ** _(2026-08-14, v245-B turunun ADIYLA devrettiği kalemler; sahibi WP6)_
   Kayan oturum (v2 jeton) uygulandıktan sonra **iki beyan eskidi** ve ikisi de test kırmızısı
   ÜRETMİYOR — yani sessiz:
