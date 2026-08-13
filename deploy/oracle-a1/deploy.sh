@@ -100,6 +100,15 @@ sudo cp deploy/oracle-a1/meridian-fail-notify.service /etc/systemd/system/meridi
 # ölçülen sessizlik 73,1 dk) hiçbir bekçiye çarpmadan tekrarlanabilirdi.
 sudo cp deploy/oracle-a1/meridian-tick-watchdog.service /etc/systemd/system/meridian-tick-watchdog.service
 sudo cp deploy/oracle-a1/meridian-tick-watchdog.timer   /etc/systemd/system/meridian-tick-watchdog.timer
+# SPRINT ŞABLON BİRİMİ (v241, 2026-08-13 — tick-watchdog'un AYNI DERSİ, bu kez baştan uygulandı).
+# Öğrenme sprinti 2026-08-13'e dek worker'ın çocuğu olarak doğuyordu (`sprint.py` Popen) ve systemd
+# varsayılan `KillMode=control-group` yüzünden HER `systemctl restart meridian` onu biçiyordu —
+# o gün üç sprint tam bu şekilde öldü (41, 113 ve 1 adımda; üçünün de tetiği bir restart'tı).
+# Kendi birimi olduğu için artık worker'ın cgroup'unda DEĞİL; birim dosyasında `PartOf`/`BindsTo`/
+# `After=meridian.service` BİLEREK YOK. `enable` EDİLMEZ (şablon + `[Install]` yok): örnekleri
+# `sprint.start()` sid ile tetikler. Kurulmazsa sistem bozulmaz — kod `sprint_systemd_yok` olayıyla
+# eski Popen yoluna GÖRÜNÜR şekilde düşer (`kosum_yolu` damgası), ama o yolda sorun geri gelir.
+sudo cp deploy/oracle-a1/meridian-sprint@.service       /etc/systemd/system/meridian-sprint@.service
 # ÇALIŞTIRMA BİTİ: rsync tabanlı dağıtım (dagit.sh / push_code_a1.sh) izinleri her zaman
 # taşımayabilir; `Type=oneshot` bir ExecStart çalıştırılamazsa birim 203/EXEC ile düşer ve bekçi
 # SESSİZCE ölür. Her koşuda garanti altına alınır (`.dash.env` izin sabitlemesiyle aynı sınıf).

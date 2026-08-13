@@ -27,9 +27,11 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -285,6 +287,224 @@ def _kur_kum_havuzu(sid: str) -> Path:
     return sbroot
 
 
+# ==================================================================================================
+# KOŞUM YOLU — SPRINT KENDİ SYSTEMD BİRİMİNDE DOĞAR (v241, 2026-08-13)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLMÜŞ KÖK NEDEN (kanıt: ölüm-anı yakalayıcısı; üç ölümde de aynı desen):
+#     14:50:02 sprint ilerliyor (113/531) → 14:54:14 worker YENİ pid ile ayağa kalkıyor (dağıtım
+#     `systemctl restart meridian`) → 14:54:16 SPRINT ORPHAN → 14:54:22 pid yok. OOM YOK, traceback YOK.
+# Aşağıdaki `Popen(..., start_new_session=True)` yeni bir OTURUM açar ama systemd'nin CGROUP'undan
+# ÇIKARMAZ; systemd varsayılanı `KillMode=control-group` cgroup'taki HER süreci öldürür. Yani sprint
+# her dağıtımda sessizce öldürülüyordu — kum havuzu, ilerleme ve gecelik kalibrasyon noktası birlikte.
+# Bunu hiçbir `Popen` bayrağı çözemez (setsid oturumu değiştirir, cgroup'u değiştirmez); tek yapısal
+# yol AYRI BİR SYSTEMD BİRİMİDİR: `deploy/oracle-a1/meridian-sprint@.service` (şablon; örnek adı = sid).
+#
+# FAIL-OPEN DEĞİL, FAIL-VISIBLE. Yol kullanılamıyorsa (birim kurulu değil, sudo geçmiyor, systemd yok
+# — ör. yerel macOS geliştirmesi) eski `Popen` yoluna DÜŞÜLÜR, ama ASLA sessizce: `sprint_systemd_yok`
+# olayı ADLI bir sebeple düşer ve `sprint_status.json`a `kosum_yolu:"systemd"|"popen"` damgalanır.
+# Yani "sprint neden yine öldü?" sorusu bir sonraki turda ÖLÇÜMLE cevaplanır, tahminle değil.
+# (Damganın çocuk yazımlarında hayatta kalması `sprint_run.STAMP_KEYS`e bağlıdır — C15 mekanizması.)
+#
+# ÇİFT-SPRINT YASAĞI, DÜŞÜŞ YOLUNUN TEK GERÇEK RİSKİ: aynı kum havuzuna iki yazar, ölçümün kendisini
+# çöpe atardı. Bu yüzden `Popen`a düşmeden ÖNCE birimin GERÇEKTEN koşmadığı `MainPID` ile SORULUR;
+# koşuyorsa systemd yolu kabul edilir (tetik komutu hata dönmüş olsa bile).
+# ==================================================================================================
+BIRIM_DOSYA_ADI = "meridian-sprint@.service"
+# Şablonun kurulu olabileceği yollar — systemd'nin birim arama sırasıyla aynı (yerel yönetici
+# dizini önce). SALT DOSYA yoklaması yapılır, `systemctl cat` DEĞİL: bkz. `_birim_kurulu`.
+BIRIM_ARANAN_DIZINLER = ("/etc/systemd/system", "/run/systemd/system",
+                         "/usr/local/lib/systemd/system", "/usr/lib/systemd/system",
+                         "/lib/systemd/system")
+ORTAM_DOSYASI = "sprint.env"          # kum havuzunun KÖKÜNDE; birimin `EnvironmentFile=`i bunu okur
+# Birim dosyasındaki mutlak yolun (WorkingDirectory + EnvironmentFile) KOD TARAFINDAKİ KARŞILIĞI.
+# Bu bir İKİNCİ TANIM DEĞİL, bir KAPIDIR: kum havuzu bu kökün altında değilse (taşınmış kurulum,
+# farklı MERIDIAN_ROOT, symlink'li yol) birim BAŞKA bir dosyadan ortam okurdu ve sprint yanlış kökle
+# koşardı. Uyuşmazlık `yol_uyusmazligi` sebebiyle systemd yolunu REDDEDER — sessizce ayrışmaz.
+BIRIM_KOK = "/opt/meridian"
+# ZAMAN AŞIMLARI TAVANDIR, BEKLENEN SÜRE DEĞİL. `Type=simple` birimde `systemctl start` exec'ten
+# hemen sonra döner (ölçülen mertebe: yüz milisaniye). Tavanın DAR tutulmasının sebebi ölçülmüş bir
+# kısıttır: `/api/sprint/start` bir `async def` uçtur, yani bu çağrı olay döngüsünü BLOKLAR — uzun
+# bir tavan panoyu ve /healthz'i asılı-tick bekçisinin eşiğine kadar dondururdu. 15 sn beklenenin
+# ~50 katıdır ve zaman aşımı yolu GÜVENLİDİR (kuyruktaki iş iptal edilir, sonra düşülür).
+BASLAT_ZAMAN_ASIMI = 15.0
+# 20 sn > birimdeki `TimeoutStopSec=15`: systemd'nin SIGKILL'i HER ZAMAN bu tavandan ÖNCE gelir,
+# yani buradaki zaman aşımı "systemd durduramadı" demektir — "beklemeyi bıraktık" değil.
+# (`/api/sprint/stop` `def`tir, yani thread havuzunda koşar ve olay döngüsünü bloklamaz.)
+DURDUR_ZAMAN_ASIMI = 20.0
+MAINPID_DENEME, MAINPID_BEKLE_SN = 4, 0.25   # ≤1 sn: `Type=simple`de MainPID fork anında yazılır
+# WORKER ORTAMINDAN ÇOCUĞA DEVREDİLENLER — ALLOWLIST, PREFİX KURALI DEĞİL.
+# Bugünkü `Popen` yolu worker'ın TÜM ortamını (`{**os.environ, …}`) çocuğa akıtıyor; systemd birimi
+# ise TEMİZ ortamla koşar. Fark bilinçli bir DARALTMADIR ve iki yönü de ölçüldü:
+#   TAŞINIR (davranışı değiştirdiği ÖLÇÜLDÜ):
+#     · MERIDIAN_PARALLEL_PROBES — reflect.py:1325/1393 okur; taşınmazsa arama SERİLEŞİR (canlı
+#       birimde `=1`), yani sprint gece penceresine sığmayabilir.
+#     · MERIDIAN_SEARCH_MAX_MIN  — reflect.py:1611 okur; varsayılanı 35, canlı birimde 60. Taşınmazsa
+#       aramanın duvar-saati tavanı SESSİZCE değişirdi (ölçüm koşulları ayrışır).
+#     · PATH/HOME/LANG/LC_ALL/TZ/PYTHONPATH — süreç zeminidir; TZ ve LANG tarih/dize davranışına girer.
+#   TAŞINMAZ (bilinçli): `MERIDIAN_DASH_TOKEN` (SIR — bugün her sprint çocuğunun /proc/<pid>/environ'ında
+#     duruyor; bu birim o yüzeyi kapatır), `MERIDIAN_BIND_HOST`/`MERIDIAN_AUTOSTART_*`/`CYCLE_POLL_*`
+#     (yalnız sunucu-giriş noktaları okur), `HERMES_*` (sprint LLM ÇAĞIRMAZ). Prefiks kuralı
+#     (`MERIDIAN_*` hepsi) YAZILMADI: ilk isabeti `MERIDIAN_DASH_TOKEN` olurdu.
+DEVREDILEN_ORTAM = ("PATH", "HOME", "LANG", "LC_ALL", "TZ", "PYTHONPATH",
+                    "MERIDIAN_PARALLEL_PROBES", "MERIDIAN_SEARCH_MAX_MIN")
+
+
+def _birim_adi(sid: str) -> str:
+    """Örnek adı = sid = kum havuzu dizin adı. Tek eşleme, üç yerde aynı ad (birim, dizin, durum)."""
+    return f"meridian-sprint@{sid}.service"
+
+
+def _birim_kurulu() -> str | None:
+    """Şablon birim kurulu mu? → kurulu dosyanın yolu ya da None.
+
+    SALT DOSYA YOKLAMASI, BİLİNÇLİ OLARAK ALT SÜREÇ YOK. `systemctl cat` daha "doğru" bir yoklama
+    olurdu ama (a) henüz systemd yolunu seçmiş değiliz — yoklamanın kendisi bedelli olmamalı, (b) bu
+    depoda `subprocess.Popen`ı saplayan MEVCUT sprint testleri var ve `subprocess.run` onların
+    saplamasına girerdi: yoklama, ölçtüğü şeyi bozardı."""
+    for d in BIRIM_ARANAN_DIZINLER:
+        try:
+            p = Path(d) / BIRIM_DOSYA_ADI
+            if p.exists():
+                return str(p)
+        except OSError:  # sessiz-yutma: yol yoklanamıyorsa "kurulu değil" hükmü DOĞRUDUR ve çağıran zaten adlı sebeple popen'a düşer
+            continue
+    return None
+
+
+def _systemctl_komutu() -> tuple[list[str] | None, str | None]:
+    """Birimi TETİKLEYEN komutun öneki → (komut, None) | (None, sebep).
+
+    SEAM `MERIDIAN_SPRINT_SYSTEMCTL`: tetik komutunu baştan sona değiştirir. Var olma sebebi ölçülmüş
+    bir belirsizliktir — `meridian.service`te `NoNewPrivileges=true` yürürlüktedir ve bu bayrak SETUID
+    ikililerini (sudo TAM OLARAK öyle bir ikilidir) yetki kazanmaktan alıkoyar; operatör kabuğunda
+    ölçülen `sudo -n` başarısı worker İÇİNDEN geçerli olduğunu KANITLAMAZ. Sudo geçmezse operatörün
+    ikinci yolu (polkit + `busctl call … StartUnit`, setuid'siz) KOD DEĞİŞİKLİĞİ İSTEMEZ: bu değişken
+    onu yerine koyar. Ölçüm komutu ve iki seçeneğin gerekçesi birim dosyasının kurulum adımı [3]'te."""
+    ham = (os.environ.get("MERIDIAN_SPRINT_SYSTEMCTL") or "").strip()
+    if ham:
+        parcalar = shlex.split(ham)
+        return (parcalar, None) if parcalar else (None, "tetik_komutu_bos")
+    sc = shutil.which("systemctl")
+    if not sc:
+        return None, "systemctl_yok"
+    if getattr(os, "geteuid", lambda: 1)() == 0:
+        return [sc], None          # root'sak sudo'ya hiç gerek yok (konteyner/kurtarma yolu)
+    sudo = shutil.which("sudo")
+    if not sudo:
+        return None, "sudo_yok"
+    # `-n`: parola İSTEMEZ, ister istemez BAŞARISIZ olur. Bekleyen bir tetik zamanlayıcı thread'ini
+    # kilitlerdi; "hızlı ve adlı başarısızlık" burada doğru taraftır.
+    return [sudo, "-n", sc], None
+
+
+def _ortam_metni(ortam: dict) -> str:
+    """systemd `EnvironmentFile` içeriği — HER değer TEK TIRNAK içinde.
+
+    SESSİZ BOZULMA SINIFI: systemd'nin env ayrıştırıcısı KABUK BENZERİDİR. `KEY={"a": 1}` yazılsaydı
+    içteki `"` işaretleri TIRNAK sayılıp sökülür, çocuğa `{a: 1}` ulaşır ve `json.loads` patlardı —
+    üstelik bunu ancak canlıda, gece yarısı öğrenirdik. Tek tırnak içinde systemd hiçbir şeyi
+    yorumlamaz. Değerde tek tırnak/satır sonu varsa ValueError: taşınamayan bir ortamla systemd yolu
+    seçilmez (çağıran `Popen`a düşer ve sebebi yazar) — kırpmak ya da kaçırmak, ölçülmemiş bir
+    dönüşüm uydurmak olurdu."""
+    satirlar = []
+    for k in sorted(ortam):
+        v = str(ortam[k])
+        if "'" in v or "\n" in v or "\r" in v:
+            raise ValueError(f"{k}: systemd ortam dosyasında taşınamayan karakter (tek tırnak/satır sonu)")
+        satirlar.append(f"{k}='{v}'")
+    return "\n".join(satirlar) + "\n"
+
+
+def _mainpid(birim: str) -> int | None:
+    """Birimin ana süreç pid'i (`systemctl show -p MainPID`) — 0/okunamaz ise None.
+
+    SALT OKUMA, YETKİ GEREKTİRMEZ: `show` bir D-Bus property okumasıdır, `sudo` KULLANILMAZ. Bu yüzden
+    tetik komutu değiştirilmiş olsa (polkit/busctl) bile bu yoklama çalışır — okuma ile tetik AYRI
+    kanallardır ve ayrı kalmaları teşhis için önemlidir."""
+    sc = shutil.which("systemctl")
+    if not sc:
+        return None
+    try:
+        r = subprocess.run([sc, "show", "-p", "MainPID", "--value", birim],
+                           capture_output=True, text=True, timeout=10, stdin=subprocess.DEVNULL)
+        if r.returncode != 0:
+            return None
+        return int((r.stdout or "").strip() or 0) or None      # systemd koşmayan birime 0 der
+    except (OSError, ValueError, subprocess.SubprocessError):  # sessiz-yutma: sonuç KAYDA GEÇİYOR — çağıran None'ı "birim koşmuyor" diye ADLI sebebe (mainpid_yok) çevirir ve popen'a düşer
+        return None
+
+
+def _systemd_durdur(birim: str, komut: list[str] | None = None, *,
+                    bloklamadan: bool = False) -> tuple[bool, str | None]:
+    """`systemctl stop <birim>` → (durduruldu?, sebep). `bloklamadan`: yalnız işi kuyruğa koyar."""
+    if komut is None:
+        komut, sebep = _systemctl_komutu()
+        if komut is None:
+            return False, sebep
+    args = [*komut, "stop", *(["--no-block"] if bloklamadan else []), birim]
+    try:
+        r = subprocess.run(args, capture_output=True, text=True,
+                           timeout=DURDUR_ZAMAN_ASIMI, stdin=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:  # sessiz-yutma: sonuç KAYDA GEÇİYOR — sebep çağırana döner ve `stop()` onu `sprint_systemd_durdurulamadi` olayına yazar; istisna nesnesinin kendisi bilgi taşımaz (tavan zaten bizim)
+        return False, "zaman_asimi"
+    except (OSError, subprocess.SubprocessError) as e:
+        return False, f"{type(e).__name__}: {e}"
+    if r.returncode == 0:
+        return True, None
+    return False, (((r.stderr or r.stdout or "").strip().splitlines() or [""])[0][:200]
+                   or f"rc={r.returncode}")
+
+
+def _systemd_baslat(sid: str, sbroot: Path, ortam: dict) -> tuple[int | None, str | None, str | None]:
+    """Sprint'i KENDİ systemd biriminde başlat → (pid, None, ayrinti) | (None, sebep, ayrinti).
+
+    `sebep` HER ZAMAN adlı bir dizedir (UYDURMA YASAĞI'nın karşılığı: "olmadı" değil, "şu adımda,
+    şu yüzden olmadı"). Sıra ucuzdan pahalıya: komut → birim → yol kapısı → ortam dosyası → tetik."""
+    komut, sebep = _systemctl_komutu()
+    if komut is None:
+        return None, sebep, None
+    if not _birim_kurulu():
+        return None, "birim_kurulu_degil", f"aranan: {BIRIM_DOSYA_ADI} @ {', '.join(BIRIM_ARANAN_DIZINLER)}"
+    ortam_dosyasi = Path(sbroot) / ORTAM_DOSYASI
+    beklenen = f"{BIRIM_KOK}/state/sprint/{sid}/{ORTAM_DOSYASI}"
+    if str(ortam_dosyasi) != beklenen:
+        return None, "yol_uyusmazligi", f"birim '{beklenen}' okur, kum havuzu '{ortam_dosyasi}'"
+    try:
+        ortam_dosyasi.write_text(_ortam_metni(ortam))
+        os.chmod(ortam_dosyasi, 0o600)
+    except (OSError, ValueError) as e:
+        return None, "ortam_yazilamadi", f"{type(e).__name__}: {e}"
+    birim = _birim_adi(sid)
+    try:
+        r = subprocess.run([*komut, "start", birim], capture_output=True, text=True,
+                           timeout=BASLAT_ZAMAN_ASIMI, stdin=subprocess.DEVNULL)
+        rc = r.returncode
+        ayrinti = (((r.stderr or r.stdout or "").strip().splitlines() or [""])[0][:200]) or None
+    except subprocess.TimeoutExpired:  # sessiz-yutma: sonuç KAYDA GEÇİYOR — `rc=None` aşağıda `zaman_asimi` sebebine çevrilir, iş iptal edilir ve `sprint_systemd_yok` olayı ayrıntısıyla düşer
+        rc, ayrinti = None, f"tetik {BASLAT_ZAMAN_ASIMI:.0f} sn'de dönmedi"
+    except (OSError, subprocess.SubprocessError) as e:
+        return None, "tetik_calistirilamadi", f"{type(e).__name__}: {e}"
+    # ÇİFT-SPRINT KAPISI: `Popen`a düşmeden önce birimin koşup koşmadığı SORULUR. Tetik hata dönse
+    # bile birim ayakta olabilir (ör. sudo stderr'e uyarı yazıp rc≠0 verirken job başarılı olabilir);
+    # o hâlde ikinci bir süreç doğurmak aynı kum havuzuna iki yazar demektir ve ölçüm çöpe gider.
+    pid = None
+    for _ in range(MAINPID_DENEME):
+        pid = _mainpid(birim)
+        if pid:
+            break
+        time.sleep(MAINPID_BEKLE_SN)
+    if pid:
+        return pid, None, (ayrinti if rc not in (0, None) else None)
+    if rc is None:
+        # ZAMAN AŞIMI + MainPID yok: iş HÂLÂ KUYRUKTA olabilir ve biz `Popen` ettikten sonra
+        # ateşleyebilir. En iyi çaba iptal, sonra düşüş — çift sprint riski kapatılır.
+        _systemd_durdur(birim, komut, bloklamadan=True)
+        return None, "zaman_asimi", ayrinti
+    # rc==0 ama MainPID yok: `Type=simple`de MainPID fork anında yazılır, yani süreç DOĞDU ve HEMEN
+    # öldü (ya da systemd okunamıyor). Koşan bir şey OLMADIĞI ölçüldüğü için düşüş güvenlidir.
+    return None, ("mainpid_yok" if rc == 0 else "baslatma_hatasi"), (ayrinti or f"rc={rc}")
+
+
 def start(cfg: dict | None = None) -> dict:
     cfg = cfg or {}
     if status().get("active"):
@@ -294,12 +514,35 @@ def start(cfg: dict | None = None) -> dict:
     sbroot = _kur_kum_havuzu(sid)
     live = config.STATE
     conf = {"k_max": int(cfg.get("k_max", 3)), "budget": int(cfg.get("budget", 12))}
-    env = {**os.environ, "MERIDIAN_ROOT": str(sbroot), "MERIDIAN_BROKER": "internal",
-           "MERIDIAN_SPRINT_STATUS": str((live / STATUS_FILE).resolve())}
-    proc = subprocess.Popen(
-        [sys.executable, "-m", "meridian.sprint_run", str(sbroot), json.dumps(conf)],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-        start_new_session=True)
+    # TEK KODLAMA, İKİ YOL: aynı dize hem `Popen` argümanına hem systemd ortam dosyasına gider —
+    # iki ayrı `json.dumps` çağrısı, iki yolun sessizce ayrışabileceği bir yüzey olurdu. BOŞLUKSUZ
+    # (`separators`): `${VAR}` zaten tek argüman verir, ama biri bir gün birimde süslü parantezi
+    # düşürürse (`$VAR`) systemd değeri boşluklardan böler — boşluksuz dize o hatayı da yutar.
+    conf_json = json.dumps(conf, separators=(",", ":"))
+    sprint_ortami = {"MERIDIAN_ROOT": str(sbroot), "MERIDIAN_BROKER": "internal",
+                     "MERIDIAN_SPRINT_STATUS": str((live / STATUS_FILE).resolve())}
+    pid, sebep, ayrinti = _systemd_baslat(sid, sbroot, {
+        **{k: os.environ[k] for k in DEVREDILEN_ORTAM if os.environ.get(k)},
+        **sprint_ortami, "MERIDIAN_SPRINT_SBROOT": str(sbroot), "MERIDIAN_SPRINT_CONF": conf_json})
+    from . import obs
+    if pid is not None:
+        kosum_yolu, birim = "systemd", _birim_adi(sid)
+        obs.log("sprint_systemd_baslatildi", sid=sid, birim=birim, pid=pid, uyari=ayrinti,
+                detail=("sprint KENDİ systemd biriminde koşuyor — worker restart'ı artık onu "
+                        f"öldürmez (v241 kök nedeni). Günlüğü: journalctl -u {birim}"))
+    else:
+        kosum_yolu, birim = "popen", None
+        obs.warn("sprint_systemd_yok", sebep=sebep, ayrinti=ayrinti, sid=sid,
+                 birim=_birim_adi(sid), kosum_yolu="popen",
+                 detail=("systemd koşum yolu KULLANILAMADI — sprint eski `Popen` yoluyla, yani "
+                         "WORKER'IN CGROUP'UNDA doğuyor: `systemctl restart meridian` onu yine "
+                         "öldürür (v241 kök nedeni GERİ, ama görünür). Kurulum adımları: "
+                         "deploy/oracle-a1/meridian-sprint@.service başlığı."))
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "meridian.sprint_run", str(sbroot), conf_json],
+            env={**os.environ, **sprint_ortami}, stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
+        pid = proc.pid
     # HİPOTEZ SAYACI BAŞLANGIÇTA DAMGALANIR: otomatik kadansın ikinci tetiği ("son sprintten beri
     # taze aday birikti mi") ancak bir TABAN varsa ölçülebilir. Damga olmadan `taze = len(hyps) − 0`
     # olurdu ve tetik her gece yanardı — haftalık disiplin sessizce kaybolurdu.
@@ -312,13 +555,20 @@ def start(cfg: dict | None = None) -> dict:
         from . import memory
         n_hyp = len(memory.all_hypotheses())
     except Exception as e:
-        from . import obs
         obs.warn("sprint_hyp_baseline_failed", error=f"{type(e).__name__}: {e}",
                  detail="taze-aday tetiği tabanı yazılamadı — kadans haftalık tabana düşer")
         n_hyp = None
-    st = {"pid": proc.pid, "sid": sid, "phase": "starting", "started_at": _now(),
+    # ŞEMA KORUNUR, İKİ ALAN EKLENİR. Mevcut okuyucuların (pano, kadans `should_run`, watchdog
+    # `_sprint_liveness`, yetim göstergesi) beklediği alan kümesi AYNEN durur — `pid` hâlâ pid'dir,
+    # yalnız KAYNAĞI değişti (systemd yolunda `MainPID`). Eklenen ikisi TEŞHİS içindir:
+    #   · `kosum_yolu` — "bu sprint hangi yoldan koştu?" sorusu SONRADAN sorulabilir olsun diye.
+    #   · `birim` — systemd yolunda `journalctl -u <birim>` adresini taşır; popen yolunda None
+    #     (uydurma yok: birim yoksa alan da bir birim ADI taşımaz).
+    # İkisi de `sprint_run.STAMP_KEYS`e eklendi, yoksa çocuğun İLK ilerleme yazımında silinirlerdi
+    # (C15'in birebir aynı sınıfı — damga ebeveynde doğar, çocuk dosyayı yeniden yazar).
+    st = {"pid": pid, "sid": sid, "phase": "starting", "started_at": _now(),
           "cfg": conf, "sbroot": str(sbroot), "eval_start": EVAL_START, "cutoff": CUTOFF,
-          "n_hyp_at_start": n_hyp}
+          "n_hyp_at_start": n_hyp, "kosum_yolu": kosum_yolu, "birim": birim}
     store.write_json(STATUS_FILE, st)
     return {"started": True, **st}
 
@@ -639,6 +889,17 @@ def maybe_start(*, mesgul: str | None = None) -> dict:
 
 
 def stop() -> dict:
+    """Antrenmanı durdur. ÜÇ KATMAN, sırayla: (1) işbirlikçi STOP dosyası, (2) koşum yoluna UYGUN
+    sert durdurma, (3) durum damgası.
+
+    (2) NEDEN YOLA BAĞLI: systemd yolunda süreç ARTIK BİZİM ÇOCUĞUMUZ DEĞİLDİR. `os.kill(pid, 15)`
+    yalnız ana süreci vurur — `ProcessPoolExecutor` işçileri birimin cgroup'unda YAŞAMAYA DEVAM eder
+    (Restart=no olduğu için systemd de onları toplamaz). `systemctl stop` cgroup'un tamamını indirir
+    (KillMode=control-group) ve 20 sn sonra SIGKILL'i garanti eder. AYRICA pid-YENİDEN-KULLANIM
+    riskini kapatır: yabancı bir süreç haline gelmiş bir pid'e sinyal göndermek, bu depoda zaten
+    ölçülmüş bir sınıftır (watchdog `_sprint_liveness` pid yeniden-kullanımını ayrıca çapraz sorar).
+    Birim durdurulamazsa pid yolu YEDEK olarak yine denenir — hiç durdurmamaktan iyidir, ve
+    başarısızlık `sprint_systemd_durdurulamadi` ile KAYDA GEÇER."""
     st = store.read_json(STATUS_FILE, {})
     sbroot = st.get("sbroot")
     if sbroot:
@@ -646,11 +907,24 @@ def stop() -> dict:
             (Path(sbroot) / "state" / "STOP").write_text("1")   # cooperative flag; child checks each session
         except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
             pass
-    pid = st.get("pid")
-    if pid:
+    pid, yol = st.get("pid"), st.get("kosum_yolu")
+    # `birim` damgası yoksa sid'den türetilir: v241 ÖNCESİ başlamış (damgasız) ama systemd altında
+    # koşan bir sprint kalmasın diye DEĞİL — öyle bir sprint yok; damga bir gün bir yazımda düşerse
+    # `stop()` yine de doğru birimi adresleyebilsin diye.
+    birim = st.get("birim") or (_birim_adi(st["sid"]) if yol == "systemd" and st.get("sid") else None)
+    durduruldu = False
+    if yol == "systemd" and birim:
+        durduruldu, sebep = _systemd_durdur(birim)
+        if not durduruldu:
+            from . import obs
+            obs.warn("sprint_systemd_durdurulamadi", birim=birim, sebep=sebep, pid=pid,
+                     detail=("systemd birimi durdurulamadı — pid'e SIGTERM ile yedek durdurmaya "
+                             "düşülüyor; havuz işçileri birimin cgroup'unda kalabilir, "
+                             f"operatör doğrulaması: systemctl status {birim}"))
+    if pid and not durduruldu:
         try:
             os.kill(int(pid), 15)
         except (OSError, ValueError):  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             pass
     store.write_json(STATUS_FILE, {**st, "phase": "stopping", "stopped_at": _now()})
-    return {"stopping": True}
+    return {"stopping": True, "kosum_yolu": yol, "birim": birim}

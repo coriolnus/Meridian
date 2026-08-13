@@ -21,7 +21,10 @@ import sys
 
 # KADANS DAMGASI — ebeveynin (`sprint.start`) yazdığı, çocuğun ÜRETMEDİĞİ alanlar. Çocuğun her
 # yazımında KORUNUR; bkz. `_damgayi_koru`.
-STAMP_KEYS = ("cfg", "n_hyp_at_start")
+# `kosum_yolu`/`birim` v241'de EKLENDİ (systemd koşum yolu): ebeveyn hangi yoldan başlattığını
+# damgalar, çocuk bunu BİLEMEZ ve ilk ilerleme yazımında silerdi — C15'in birebir aynı sınıfı.
+# Damganın okuyucusu operatörün doğrulama adımıdır ("kosum_yolu 'systemd' mi?") ve panodur.
+STAMP_KEYS = ("cfg", "n_hyp_at_start", "kosum_yolu", "birim")
 
 
 def _damgayi_koru(path: str, payload: dict) -> dict:

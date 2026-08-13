@@ -1,0 +1,247 @@
+# meridian-sprint@.service — ÖĞRENME ANTRENMANININ (sprint) KENDİ SYSTEMD BİRİMİ. ÖRNEKLENEBİLİR
+# (template): örnek adı sprint kimliğidir (sid) → `meridian-sprint@20260813-151752.service`.
+#
+# ==================================================================================================
+# NEDEN VAR — ÖLÇÜLMÜŞ KÖK NEDEN (v241, 2026-08-13). VARSAYIM DEĞİL, ÖLÜM-ANI YAKALAYICISININ KANITI:
+#     14:50:02  sprint ilerliyor (113/531)
+#     14:54:14  scheduler_state_rehydrated — YENİ pid (uv[206794]; eski 197068) = worker restart
+#     14:54:16  SPRINT ORPHAN
+#     14:54:22  pid yok
+#   `dmesg`de OOM YOK, traceback YOK: süreç ÇÖKMEDİ, ÖLDÜRÜLDÜ. Aynı desen üç dağıtımda birebir
+#   tekrarlandı (08-07→08-12 · 08-13 00:54→01:26 · 08-13 13:34→14:54).
+#
+#   MEKANİZMA: `sprint.start()` çocuğu `subprocess.Popen(..., start_new_session=True)` ile doğuruyordu.
+#   `start_new_session` yeni bir OTURUM (setsid) açar — bu, TERMİNAL sinyallerinden (SIGHUP/SIGINT)
+#   korur ama systemd'nin CGROUP'undan ÇIKARMAZ. systemd varsayılanı `KillMode=control-group`dur:
+#   `systemctl restart meridian` worker'ın cgroup'undaki HER SÜRECİ öldürür — oturumu ne olursa olsun.
+#   Yani sprint, her dağıtımda/restart'ta sessizce öldürülüyordu ve yetim mekanizması bunu ancak
+#   12 saat sonra fark ediyordu: canlı ölçümde 5 gün boyunca hiç tamamlanmış sprint yok.
+#
+#   ÇÖZÜM SINIFI: sprint'i worker'ın cgroup'undan ÇIKARMAK. Bunu HİÇBİR `Popen` bayrağı yapamaz
+#   (setsid oturum değiştirir, cgroup değiştirmez; cgroup'a yazmak ayrıcalık ister). Tek yapısal yol
+#   AYRI BİR SYSTEMD BİRİMİDİR: kendi cgroup'u, kendi yaşam döngüsü, worker'dan tam izolasyon.
+#
+# BU DOSYANIN EN ÖNEMLİ SATIRI, OLMAYAN SATIRDIR:
+#   `PartOf=`, `BindsTo=`, `Requires=`, `Requisite=`, `After=meridian.service` — HİÇBİRİ YAZILMAZ ve
+#   yazılmamalıdır. Bunlardan herhangi biri sprint'i worker'ın yaşam döngüsüne geri bağlar ve v241'in
+#   kök nedenini BAŞKA BİR ADLA geri getirir (`PartOf` restart'ta birlikte durdurur — cgroup ölümünün
+#   yapılandırma kılığındaki ikizi). Sprint SAF OFFLINE bir antrenmandır: ağ yok (MERIDIAN_BROKER=
+#   internal), canlı defter yok (kum havuzu), worker'a bağımlılık yok. Bağ kurulacak hiçbir gerekçe
+#   yoktur — ve bir gün biri "düzen olsun diye" `After=meridian.service` eklerse bu paragraf onu
+#   durdurmalıdır.
+#
+# NEDEN TEMPLATE (`@`) — TEK BİR `meridian-sprint.service` DEĞİL:
+#   Her sprint kendi ÖRNEĞİdir (adı = sid = kum havuzunun dizin adı). Kazanç üç kat:
+#     (1) EŞZAMANLILIK systemd'nin işi olur: aynı sid için ikinci `start` NO-OP'tur (job zaten var);
+#         tek-birim tasarımda ikinci `start` çalışan sprint'i yeniden başlatırdı (kum havuzu bozulur).
+#     (2) TEŞHİS ADRESLENEBİLİR: `journalctl -u meridian-sprint@20260813-151752` tam o antrenmanın
+#         çıktısını verir; sid, `sprint_status.json` ve `state/sprint/<sid>/` ile BİREBİR aynı ad.
+#     (3) GEÇMİŞ KAYBOLMAZ: biten örnekler journal'da ayrı ayrı durur (tek birimde hepsi tek akışta).
+#
+# [Install] BÖLÜMÜ BİLEREK YOK: bu birim ENABLE EDİLMEZ. Sprint TEK ATIMLIK bir antrenmandır ve
+#   `sprint.start()` tarafından örneklenir. `[Install]` olsaydı birim "enable edilebilir" görünürdü
+#   ve enable edilmiş bir örnek AÇILIŞTA yeniden doğardı — makine her açıldığında kendiliğinden
+#   başlayan bir antrenman, kadans yasasının (gece penceresi + fren) tamamen dışında koşardı.
+# ==================================================================================================
+#
+# ------------------------------------------------------------------------------------------------
+# KURULUM — OPERATÖRÜN İŞİ (sudo gerekir; ajanlar canlıya yazmaz). Kopyala-yapıştır:
+#
+#   [1] BİRİMİ KUR (deploy.sh bu birimi KOPYALAMIYOR — bilinçli: kurulum operatör kararı)
+#         sudo cp /opt/meridian/deploy/oracle-a1/meridian-sprint@.service \
+#                 /etc/systemd/system/meridian-sprint@.service
+#         sudo systemctl daemon-reload
+#         systemctl cat meridian-sprint@.service | head -3     # kuruldu mu (enable EDİLMEZ)
+#
+#   [2] YORUMLAYICI DOĞRULAMASI — ExecStart'taki python, worker'ın `sys.executable`ı ile AYNI olmalı
+#       (bugün `uv run uvicorn` altında bu `/opt/meridian/.venv/bin/python`dır). Ölç:
+#         sudo -u ubuntu /opt/meridian/.venv/bin/python -c "import meridian.sprint_run; print('ok')"
+#       (Çalışma dizini /opt/meridian olduğu için `python -m` modülü CWD'den çözer — WorkingDirectory
+#        LOAD-BEARING'dir, süs değil.)
+#
+#   [3] SUDO WORKER İÇİNDEN ÇALIŞIYOR MU — BU ADIM ATLANMAMALI.
+#       `meridian.service`te `NoNewPrivileges=true` YÜRÜRLÜKTEDİR (H3 sertleştirme, 2026-08-02) ve bu
+#       bayrak SETUID ikililerinin yetki kazanmasını engeller — `sudo` tam olarak öyle bir ikilidir.
+#       Yani operatör kabuğunda ölçülen `sudo -n true` başarısı, WORKER SÜRECİNİN İÇİNDEN de
+#       çalışacağını KANITLAMAZ: iki ayrı bağlam. Worker'ın kısıtlarını taklit eden ölçüm:
+#         sudo systemd-run --uid=ubuntu -p NoNewPrivileges=yes -p CapabilityBoundingSet= \
+#              --wait --pipe --collect /usr/bin/sudo -n /bin/true ; echo "rc=$?"
+#       rc=0  → yol açık, yapılacak bir şey yok.
+#       rc≠0  (tipik: "sudo: effective uid is not 0 ... nosuid") → İKİ SEÇENEK, İKİSİ DE OPERATÖRÜN:
+#         (a) DAR AMA GENİŞLETİCİ — worker'a özel drop-in:
+#               /etc/systemd/system/meridian.service.d/53-sprint-tetik.conf
+#               [Service]
+#               NoNewPrivileges=no
+#             BEDELİ AÇIKÇA YAZILIR: worker'daki TÜM setuid ikilileri (yalnız sudo değil) yeniden
+#             yetki kazanabilir hâle gelir. H3'ün 9.2→6.3 sertleştirmesinden bir kalem geri verilir.
+#         (b) DAHA DAR, SUDO'SUZ — polkit + D-Bus (setuid yok, NoNewPrivileges'ı DELMEZ):
+#               /etc/polkit-1/rules.d/50-meridian-sprint.rules ile `ubuntu` kullanıcısına YALNIZ
+#               `meridian-sprint@*.service` birimleri için `manage-units` izni verilir; tetik komutu
+#               `busctl call ... StartUnit` olur. Kod tarafı buna HAZIRDIR: tetik komutu
+#               `MERIDIAN_SPRINT_SYSTEMCTL` ortam değişkeniyle baştan sona değiştirilebilir
+#               (bkz. sprint.py `_systemctl_komutu`) — kod değişikliği GEREKMEZ.
+#       HİÇBİRİ YAPILMAZSA: sistem BOZULMAZ. `sprint.start()` eski `Popen` yoluna DÜŞER, ama bunu
+#       SESSİZCE yapmaz: `sprint_systemd_yok` olayı (sebebiyle) düşer ve `sprint_status.json`a
+#       `kosum_yolu:"popen"` damgalanır. Yani v241 kök nedeni geri gelir ama GÖRÜNÜR hâlde.
+#
+#   [4] SUDO YÜZEYİNİ DARALT (ÖNERİ — bugünkü hâl `ubuntu ALL=(ALL) NOPASSWD: ALL`, yani her şey):
+#         sudo visudo -f /etc/sudoers.d/meridian-sprint
+#       İçerik (tek satır, sonunda satır sonu):
+#         ubuntu ALL=(root) NOPASSWD: /usr/bin/systemctl start meridian-sprint@*, \
+#                                     /usr/bin/systemctl stop meridian-sprint@*
+#       Bu kural yetki KAZANDIRMAZ, yalnız CGROUP YERLEŞİMİ satın alır: birim `User=ubuntu` ile koşar,
+#       yani ubuntu'nun zaten çalıştırabileceği bir komutu systemd'nin ayrı bir cgroup'unda başlatır.
+#       Kalan yüzey bu yüzden küçüktür: joker `meridian-sprint@*` yalnız BU şablonun örneklerini
+#       adresler ve şablonun `ExecStart`ı sabittir (örnek adı yalnız `%i`ye, yani env dosyası yoluna
+#       girer — ve ubuntu o dizine zaten yazabiliyor).
+#       DİKKAT: bu satır `NOPASSWD: ALL` kuralını KALDIRMAZ; onun daraltılması ayrı bir karardır.
+#
+#   [5] KURULUMDAN SONRA DOĞRULA — "kurulu ≠ çalışır" (fail-notify dersi, 2026-07-30: birim iki gün
+#       kuruluydu, ilk test-ateşlemede IndentationError verdi). Bir sonraki sprint başladığında:
+#         python - <<'PY'
+#         import json; print(json.load(open('/opt/meridian/state/sprint_status.json')).get('kosum_yolu'))
+#         PY
+#       "systemd" bekleniyor. "popen" görürsen olay defterine bak: `sprint_systemd_yok` satırındaki
+#       `sebep` alanı hangi adımın düştüğünü ADIYLA söyler.
+#         systemctl status "meridian-sprint@$(python -c "import json;print(json.load(open('/opt/meridian/state/sprint_status.json'))['sid'])")"
+#       ASIL SINAMA (v241 kök nedeni): sprint koşarken `sudo systemctl restart meridian` yap ve
+#       sprint'in HÂLÂ koştuğunu gör. Eski davranışta sprint 2-8 saniye içinde ölüyordu.
+# ------------------------------------------------------------------------------------------------
+#
+# ÖRNEK BAŞINA ORTAM DOSYASI — `state/sprint/<sid>/sprint.env`, YAZARI `sprint.start()`tir.
+#   NEDEN DOSYA, NEDEN ÖRNEK ADI DEĞİL: çocuğun iki argümanı var — kum havuzu KÖKÜ ve conf JSON'u
+#   (`{"k_max":3,"budget":12}`). JSON'u örnek adına gömmek systemd kaçışıyla (`\x7b`, `\x22`)
+#   okunamaz bir birim adı üretirdi ve `systemctl status` çıktısını teşhis edilemez hâle getirirdi;
+#   üstelik örnek adı KİMLİKTİR (sid), yük taşıyacak yer değildir. Ortam dosyası her ikisini de
+#   taşır ve dosyanın kendisi kum havuzunun İÇİNDEDİR: sprint'in bütün girdisi tek dizinde durur.
+#   QUOTING SÖZLEŞMESİ (sessiz bozulma sınıfı — systemd'nin env ayrıştırıcısı kabuk benzeridir):
+#     `KEY={"a": 1}` yazılsaydı systemd içteki `"` işaretlerini TIRNAK sayıp SÖKERDİ ve çocuğa
+#     `{a: 1}` ulaşırdı → `json.loads` patlar. Bu yüzden `sprint.start()` HER değeri TEK TIRNAKLA
+#     yazar (`KEY='{"a":1}'`); tek tırnak içinde systemd hiçbir şeyi yorumlamaz. Değerde tek tırnak
+#     veya satır sonu varsa `sprint.start()` systemd yolunu REDDEDER ve `Popen`a düşer (fail-visible).
+#     JSON ayrıca BOŞLUKSUZ üretilir (`separators=(",",":")`) — `${VAR}` zaten tek argüman verir ama
+#     boşluksuz değer, biri bir gün süslü parantezsiz `$VAR` yazarsa da bölünmez.
+#   `-` ÖNEKİ BİLEREK YOK: dosya yoksa birim BAŞLAMAMALIDIR. `-` ile olsaydı `${MERIDIAN_SPRINT_SBROOT}`
+#   boş dizeye genişler ve çocuk argümansız/yanlış kökle koşardı — kum havuzu olmadan koşan bir
+#   sprint CANLI state'e yazma riski demektir. Dosyasız başlatma girişimi `systemctl start`ı
+#   BAŞARISIZ kılar, `sprint.start()` bunu görür ve nedeniyle raporlar.
+[Unit]
+Description=Meridian öğrenme antrenmanı (sprint %i) — kum havuzunda, canlı defterden izole
+Documentation=file:/opt/meridian/meridian/sprint.py
+# After/Wants YOK: sprint ağa çıkmaz (MERIDIAN_BROKER=internal, barlar diskten symlink'li) ve
+# hiçbir birime bağımlı değildir. `network-online.target` beklemek yalnız gecikme eklerdi.
+
+[Service]
+Type=simple
+User=ubuntu
+# LOAD-BEARING: `python -m meridian.sprint_run` modülü CWD'den çözer (bugünkü Popen yolu da worker'ın
+# /opt/meridian CWD'siyle koşuyor). Burayı değiştiren, importu kırar.
+WorkingDirectory=/opt/meridian
+# `%i` (KAÇIŞLI örnek adı), `%I` DEĞİL — ve bu bir tuzaktır: systemd'nin kaçış şemasında `-` karakteri
+# `/`nin kaçışıdır, yani `%I` sid'i `20260813/151752` diye AÇAR ve yol tutmaz. sid'de yalnız rakam ve
+# `-` olduğu için `%i` adın kendisidir. Bunu `%I` yapan bir "düzeltme" birimi sessizce kırar.
+EnvironmentFile=/opt/meridian/state/sprint/%i/sprint.env
+# ExecStart, `sprint.start()`in DÜŞÜŞ yolunda kurduğu komutun AYNISIDIR (sprint.py, `start()` içindeki
+# `subprocess.Popen(...)` çağrısı — satır numarası YAZILMIYOR, bayatlar):
+#   <venv python> -m meridian.sprint_run <sbroot> <conf-json>
+# `${VAR}` (SÜSLÜ PARANTEZLİ) ZORUNLUDUR: systemd `$VAR`ı boşluklardan bölüp ÇOK argümana çevirir,
+# `${VAR}` ise değeri TEK argüman olarak geçirir. Conf JSON'u ve yol tek argüman olmak zorundadır.
+# İlk argüman (yorumlayıcı) değişken OLAMAZ — systemd bunu reddeder; o yüzden mutlak yol.
+ExecStart=/opt/meridian/.venv/bin/python -m meridian.sprint_run ${MERIDIAN_SPRINT_SBROOT} ${MERIDIAN_SPRINT_CONF}
+# ORTAM: MERIDIAN_ROOT / MERIDIAN_BROKER=internal / MERIDIAN_SPRINT_STATUS aynı env dosyasından gelir —
+# `sprint.py`deki `sprint_ortami` sözlüğüyle BİREBİR (tek kaynak). O üçlü BURAYA YAZILMAZ: değerleri
+# sprint'e özgüdür (sbroot her örnekte farklı) ve tek kaynak koddur; birime kopyalamak "aynı yasanın
+# iki uygulaması" hatasıdır. Env dosyası ayrıca worker'ın ortamından SEÇİLMİŞ birkaç değişkeni taşır
+# (PATH, MERIDIAN_PARALLEL_PROBES, MERIDIAN_SEARCH_MAX_MIN …) — listesi ve gerekçesi sprint.py
+# `DEVREDILEN_ORTAM`da. Sırlar (MERIDIAN_DASH_TOKEN) BİLEREK TAŞINMAZ: bugünkü Popen yolu worker'ın
+# TÜM ortamını çocuğa akıtıyor; bu birim o yüzeyi DARALTIR.
+#
+# Restart=no — SPRINT TEK ATIMLIKTIR. Başarısız bir antrenmanı systemd'nin yeniden başlatması,
+# `sprint_status.json`daki yetim göstergesini ve kadansın 12 saatlik frenini (YETIM_YENIDEN_SAAT)
+# devre dışı bırakır: kanıt bozulur, çökme döngüsü serbest kalır. Yeniden başlatma kararı KADANSIN
+# işidir (sprint.py `should_run` → sebep=yetim_sprint_yeniden), systemd'nin değil.
+Restart=no
+# KillMode=control-group (systemd VARSAYILANI — burada AÇIKÇA yazılıdır çünkü bu turun kök nedeni
+# tam olarak kill semantiğidir ve bir sonraki mühendis yürürlükteki değeri TAHMİN ETMEMELİDİR).
+# SEÇİM GEREKÇESİ: sprint Faz-B'de `ProcessPoolExecutor` açar (reflect.py:1049, 4 çekirdekte 2 işçi).
+# `KillMode=process` bu işçileri YETİM bırakırdı: ana süreç ölür, havuz işçileri init'e devrolup
+# çekirdekleri yakmaya devam ederdi — kadansın eşzamanlılık kapılarının tam olarak önlemeye çalıştığı
+# hâl. `control-group` sprint'in TÜM ağacını birlikte indirir. Bu, v241'in kök nedeniyle ÇELİŞMEZ:
+# oradaki sorun semantiğin kendisi değil, sprint'in YANLIŞ cgroup'ta (worker'ınkinde) olmasıydı.
+# Artık cgroup yalnız sprint'i içerir, yani "grubu öldür" tam olarak "sprint'i öldür" demektir.
+KillMode=control-group
+# KillSignal VARSAYILAN (SIGTERM). barsarchive.service'teki SIGINT SEÇİMİ BURADA GEÇERSİZDİR:
+# `sprint_run` KeyboardInterrupt yakalamaz. Sprint'in ZARİF yolu sinyal değil, `sprint.stop()`in
+# kum havuzuna yazdığı işbirlikçi STOP dosyasıdır (çocuk her seansta yoklar); sinyal yalnız arkadaki
+# sert kapanıştır. Veri riski YOK: canlıya tek yazım `sprint_status.json` ve o atomiktir
+# (store.write_json → mkstemp + os.replace), kum havuzunun kaybı zaten önemsizdir.
+# TimeoutStopSec=15 — SIGTERM'den sonra SIGKILL'e kadar beklenen süre. Uzun tutmanın koruyacağı bir
+# şey yok (yukarıdaki gerekçe), kısa tutmanın kazancı var: durdurulamayan bir sprint 4 çekirdeği
+# tutmaya devam eder. CPython varsayılan SIGTERM davranışı süreci ANINDA sonlandırır, yani 15 sn
+# normal yolun kat kat üstüdür. `sprint.stop()` bu birimi 20 sn'lik bir tavanla bekler (sprint.py
+# DURDUR_ZAMAN_ASIMI) — yani systemd'nin SIGKILL'i HER ZAMAN çağıranın zaman aşımından ÖNCE gelir
+# ve çağıranın zaman aşımı "systemd durduramadı" demek olur, "beklemeyi bıraktık" değil.
+TimeoutStopSec=15
+# ÇIKTI JOURNAL'A GİDER (systemd varsayılanı; açıkça yazıldı çünkü bu bir DÜZELTMEDİR): bugünkü
+# Popen yolu stdout/stderr'i DEVNULL'a atıyor — v241 teşhisinde sprint'in ölüm anında elimizde
+# HİÇBİR traceback yoktu ve ölüm-anı yakalayıcısı yazmak zorunda kaldık. Artık her örneğin çıktısı
+# `journalctl -u meridian-sprint@<sid>` altında durur.
+StandardOutput=journal
+StandardError=journal
+# CollectMode= BİLEREK YOK (yani varsayılan `inactive`). Başarıyla biten örnekler systemd tarafından
+# kendiliğinden boşaltılır; BAŞARISIZ olanlar `systemctl --failed` listesinde DURUR. Bu bir kusur
+# değil bir SEÇİMDİR: `CollectMode=inactive-or-failed` yazsaydık çöken bir antrenman systemd'nin
+# arıza listesinden de sessizce silinirdi. "Gürültü, sessizlikten iyidir" (meridian.service:176).
+# Bedeli operatörün ara sıra temizlemesidir:  sudo systemctl reset-failed 'meridian-sprint@*'
+# OnFailure= BİLEREK YOK. `meridian.service` OnFailure=meridian-fail-notify.service kullanır çünkü
+# worker'ın ölümü bir ARIZADIR. Başarısız bir gecelik antrenman arıza DEĞİLDİR: kadansın yetim
+# tetiği (sprint.py) onu zaten uygun ilk gece penceresinde yeniden başlatır. Antrenman gürültüsünü
+# arıza kanalına bağlamak, meridian.service:78'de adı konmuş hatanın tekrarı olurdu (GERÇEK arıza
+# gürültüde boğulur).
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — meridian.service ile AYNI çekirdek küme; gerekçelerin TAMAMI orada yazılı ve
+# BURADA TEKRAR EDİLMEZ. Bu birim aynı kod tabanını, aynı kullanıcıyla, aynı makinede koşturur;
+# ayrışan iki kalem aşağıda ADIYLA işaretlidir. (Küme meridian.service'te 2026-07-31'den beri
+# canlıdır ve sprint'in koştuğu yollar — walk-forward + ProcessPoolExecutor — orada zaten bu
+# kısıtlar altında koşuyor: bu, ölçülmüş bir zemin, iyimser bir varsayım değil.)
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA 1/2 — ReadWritePaths BURADA DAHA DAR: ne `~/.hermes` ne `~/.cache`. ÖLÇÜM (yazan
+#     yollar tarandı): çocuk (a) kum havuzuna (state/sprint/<sid>/…), (b) canlı
+#     `state/sprint_status.json`a, (c) import anında `__pycache__`e yazar — üçü de /opt/meridian
+#     altındadır. `~/.hermes` YOK çünkü sprint LLM ÇAĞIRMAZ (sprint.py: "Sprint LLM ÇAĞIRMAZ:
+#     sprint_run yalnız reflect.search_and_submit koşturur"). `~/.cache` YOK çünkü ExecStart `uv`
+#     DEĞİL, doğrudan `.venv/bin/python`dır — uv önbelleği bu yolda hiç açılmaz.
+#     İLK KOŞUMDA JOURNAL İZLENİR: beklenmedik bir HOME yazımı çıkarsa arıza şekli EACCES/EROFS'tur
+#     ve `phase=error` ile `sprint_status.json`a düşer; onarımı `-/home/ubuntu/.cache` eklemektir.
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# --- AYRIŞMA 2/2 — sprint AĞA ÇIKMAZ (broker=internal, barlar diskten). Liste yine de
+#     meridian.service ile BİREBİR AYNI tutuldu (barsarchive.service'teki gerekçenin aynısı: iki
+#     birimin ortak direktifleri ayrışırsa "hangisi neden farklı" sorusu cevapsız kalır). AF_UNIX
+#     BURADA GEREKLİDİR: `ProcessPoolExecutor` işçi boruları AF_UNIX çiftleri kullanır.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+# Dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices · PrivateUsers · ProtectProc/
+# ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve gerekçeleri: meridian.service.
+# PrivateDevices'ın burada AYRICA sakıncası var: /dev/shm'i ÖZELLEŞTİRİR ve `ProcessPoolExecutor`
+# semaforları oradan gelir (meridian.service'te de tam bu sebeple dışarıda).
+SystemCallFilter=@system-service
+# CPUWeight= / Nice= BİLİNÇLİ OLARAK YOK. Sprint artık ayrı bir cgroup'tadır, yani canlı worker'a
+# karşı ağırlığını AYARLAMAK ilk kez MÜMKÜN — ama hangi ağırlığın doğru olduğu ÖLÇÜLMEDİ. Bugünkü
+# davranış (eşit ağırlık) bu turdan önce de geçerliydi; ölçülmemiş bir sayı koymak, davranışı
+# değiştirip "iyileştirdik" demek olurdu. Kalem: sprint koşarken /healthz gecikmesini ölç, sonra karar ver.
