@@ -872,7 +872,14 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
       (ölü knobu diriltmez ama iki tercihi ayırır) · not: 035 slot15 nokta-farkı (+354$, dd 0.1179)
       tam bu kanaldan geldi — CI 0-içi olduğu için hüküm değil, işaret.*
 
-21. **SPRINT YETİM-RESTART'I KALICI OLARAK BLOKLU (canlı ölçüm 2026-08-13, gece penceresi)** — v235'in
+21. ~~**SPRINT YETİM-RESTART'I KALICI BLOKLU**~~ → **✅ KAPANDI (v239, dağıtım 2026-08-13 01:26Z,
+    CANLI DOĞRULANDI):** `mesgul` YÜK/YETKİ diye ayrıldı (yük kapıları yetimi bloklamaz; `elle_tik`
+    yetki kapısı korunur — 2026-07-30'da ölçülmüş kazanın kapısı, Rol-1 onayı). KANIT: yeni sprint
+    `sid=20260813-005434` doğdu ve skip sebebi `mesgul:canli_arama` → **`tetik_yok(gun=0<7, taze=0<5)`**
+    oldu (doğru davranış). YENİ KALEM ÇIKTI: yeni sprint çocuğu da 0,5 saatte öldü (`sprint_yetim_tespit`
+    yetim_saat=0.5) — **kilit açıldı ama çocuk süreç neden ölüyor ayrı bir soru**; 12sa freni doğru
+    çalışıyor. *sıradaki tur: sprint çocuk-süreç ölüm kökü (log/exit-kodu izle).*
+    Özgün teşhis: v235'in
     yetim-restart mekanizması ÖLÜ: son `sprint_cadence_skip` satırı `sebep="mesgul:canli_arama"`,
     `yetim=true`, `gecen_gun=5`, `arama_bayrak_yasi_sa=0.17`, `arama_bayat=false`. Yani canlı arama
     bayrağı sürekli tazeleniyor (hermes ~5 dk'da bir çağrı yapıyor) → "meşgul" kontrolü ASLA
@@ -882,7 +889,13 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     DÜZELTME: yetim dalını meşgul-kontrolünden ayır + test (yetim ∧ meşgul → RESTART; sağlıklı ∧ meşgul
     → skip). *boyut: S · öncelik: yüksek (öğrenme sprintі 5 gündür durmuş).*
 
-22. **GEMİNİ MODEL ADI: kod doğru, ÇAĞRI eski adı kullanıyor (canlı ölçüm 2026-08-13)** —
+22. ~~**GEMİNİ ÇAĞRI-ANI ESKİ MODEL ADI**~~ → **✅ KAPANDI (v239, canlı doğrulandı: `canonical_model
+    ('gemini-3.5-flash')` → `gemini-flash-latest`).** Kök brief'imin ötesindeydi: göç SIR yolunu hiç
+    kapsamıyordu (`NOUS_MODEL`) ve `GEMINI_MODEL` sırrı da ölüydü → doğrudan Gemini HTTP çağrısı da 404
+    alıyordu. Tek kapı (`canonical_model`) rapor-edilen↔çağrılan split'ini de kapattı. **YAN BULGU
+    ÇÜRÜTÜLDÜ:** nous'un birincili de aynı ölü ad (tencent/hy3 yalnız YEDEK) → `brain_chain_distinct`
+    TAM AÇIK ve paylaşılan kimlik ölüydü. Kalıcı onarım OPERATÖR kaleminde (§3: Claude anahtarı ya da
+    NOUS_MODEL'i Google dışına al) — koda yazılamaz, sır. Özgün teşhis:
     `hermes.GEMINI_DEFAULT_MODEL = "gemini-pro-latest"` (v235 alias düzeltmesi yerinde) AMA bugünkü
     20 `agent_call` olayında `model="gemini-3.5-flash"`. Yani varsayılan devreye girmiyor: model adı
     başka bir yerden (config/integrations kaydı ya da çağrı-yeri parametresi) geliyor ve ölü-model
