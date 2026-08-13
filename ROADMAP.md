@@ -1301,7 +1301,24 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
-- _(boş — sınıflandırılmamış yeni öneri yok)_
+- **🆕 30. AYRILMAZ ÇİFTİN İKİ YARISI FARKLI YEDEK DAVRANIŞINDA** _(2026-08-14, WP6-26 turunun devrettiği kalem; sahibi WP2 ya da WP6 — sınıflandırma Rol-1'de)_
+  `state/goal.yaml:123-125` kendi metninde şunu **beyan ediyor**: *"BERABERİNDE GİDEN AYAR:
+  `position_size_r` 1,0 → 0,5 … **İkisi AYRILMAZ**: slot 20 tek başına ısı zarfını 5R'de bağlar ve
+  boyut yarıya inmeden ölçülen davranışı vermez."*
+  Ama çiftin iki yarısı **iki ayrı dosyada** ve **iki ayrı yedek davranışında** yaşıyor:
+  `max_open_positions: 20` → `goal.yaml` (yedeği yok, sağlam) · `position_size_r: 0.5` →
+  `state/strategy.yaml` params, ve o dosya okunamaz/bozuk/şemasızsa `config.strategy()`
+  (`config.py:186-203`) sessizce `default_strategy()`e düşer — orada **`position_size_r: 1.0`**
+  (`config.py:286`). Yani beyan edilen invaryant, tek bir dosya arızasıyla kırılır.
+  **SEVİYE DÜZELTİLDİ (ilk okumam yanlıştı):** bu bir toplam-risk patlaması DEĞİLDİR — `heat_hard_r`
+  5,0R yine bağlar. Değişen şey **portföy ŞEKLİDİR**: aynı ısıda yarı sayıda, iki kat büyük pozisyon.
+  Ölçülmemiş bir bileşim, ama 20R'lik bir ısı değil.
+  Düşüş TAMAMEN sessiz de değil (`strategy_file_unusable` uyarısı basılıyor) — sessiz olan
+  **yedeğin DEĞERİ**.
+  *öncelik: orta (latent — tetiği `strategy.yaml` bozulması) · boyut: S (tek değer + çivi) ·
+  dikkat: `default_strategy()` üç yerde kullanılıyor (`run.py:54` ilk koşum, `mutation.py:149`
+  kum havuzu tohumu, ve bu yedek) — değer 0,5'e çekilirse üçü de canlıyla hizalanır, hangisinin
+  ISTENEN olduğu kararı Rol-1'e ait. Hiçbir test `1.0` değerini çivilemiyor (ölçüldü).*
 
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
 
