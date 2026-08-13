@@ -1023,9 +1023,14 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     davranışı yok; `kill_switch_file` — yolu değiştirmek kill-switch'i TAŞIMAZ, `health.py` sabit
     kodluyor) + `execution_v2.tif` + 2 guard sabiti + 12 registry alanı. Emsal: `spy_sma_gate` mezar
     taşı · **25b DAMGALA (6 sınıf):** en acili SKILL ROZETİ — pano "gölge" diyor ama bayrak trading
-    davranışını DEĞİŞTİRMİYOR · **25c DİRİLT (4), en yüksek öncelik `no_trade_before_bars`** — yalnız
-    `backtest.py:151` okuyor, canlı `loop.py` HİÇ okumuyor → replay'de uygulanan/canlıda uygulanmayan
-    kural = **MOTOR-EŞİTLİĞİ İHLALİ** · **25d ON EZİLME ZİNCİRİ** adıyla kayıtlı (slot←ısı zarfı ·
+    davranışını DEĞİŞTİRMİYOR · **25c DİRİLT (4)** — DİKKAT, envanterin "en yüksek öncelik `no_trade_before_bars`
+    = MOTOR-EŞİTLİĞİ İHLALİ" hükmü **Rol-1 ÖLÇÜMÜYLE DÜZELTİLDİ (2026-08-13)**: `bar_i`,
+    `enumerate(calendar)` üzerinden gelen SEANS SIRASIDIR (`backtest.py:215`) → kural "koşumun ilk 3
+    seansında tarama yapma" = REPLAY ISINMA kuralı. Canlının "koşum başlangıcı" kavramı YOK, yani
+    `loop.py`nin okumaması eksiklik değil doğal sonuç; etki 1147 seansın 3'ü. Doğru muamele DİRİLT
+    DEĞİL **DAMGALA**: `goal.yaml`daki yorum ("skip the first N bars after the open") intraday
+    çağrışımı yapıyor ve YANILTICI; ayrıca `guard.LIMIT_KEYS`te durması onu "canlı zarf parametresi"
+    gibi gösteriyor — ikisi de düzeltilmeli. Kalan 3 diriltme adayı geçerli · **25d ON EZİLME ZİNCİRİ** adıyla kayıtlı (slot←ısı zarfı ·
     limit_atr←limit_pct · tüm arama uzayı←`probgate.P_BASE=0,80` (16 ret) · keşif bütçesi←üretici
     kuraklığı (llm_pick 102 ↔ armed **1**) · R:R tabanı←bounds alt sınırı (0/409 düşen) · …).
     · **25e ÖĞRENME DÖNGÜSÜ 0 SHIP** — canlı defter: **52 hipotez, 52 ret, 0 ship**; `strategy.yaml`ın
