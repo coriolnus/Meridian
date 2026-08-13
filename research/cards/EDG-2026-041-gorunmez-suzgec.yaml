@@ -1,0 +1,111 @@
+card_id: EDG-2026-041
+family: ogrenme_on_elemesi
+thesis: >
+  ROADMAP WP3-A/28a (denetim D2: EN ÜST öncelik): `hermes_bg_proposal_rejected` — arka plan
+  turunda üretilen **47 öneri deftere HİÇ girmedi**; aynı pencerede giren 1. Yani "52 hipotez
+  ürettik" cümlesi ÜRETİMİN değil ÖN-ELEMENİN hayatta kalanlarını sayıyor.
+  AMA ROADMAP'in kendi uyarısı bağlayıcı: "28a'nın kodu KENDİ KARŞI-GEREKÇESİNİ taşıyor —
+  'tek satır aç' diye sunulamaz, KART-ÖNCE." Karşı-gerekçe okundu ve GEÇERLİ bulundu
+  (`hermes.py`, `hermes_bg_proposal_rejected` bloğunun üstü, C16-(b) bacağı / denetim #27):
+  arka plan turunda `@`siz bir öneri, CANLI OLMAYAN bir rejimin kanıtıyla CANLI davranışı
+  değiştirme ruhsatına dönüşür; sertifika korkuluğu tam da bunu engellemek için var.
+  TEZ: sorun kapının VARLIĞI değil, kapının **ayrımsız ve kayıtsız** olması. Bu kart iki şeyi
+  ayırır — (i) korkuluğun korunması ZORUNLU, (ii) reddedilen önerinin GÖRÜNMEZ olması bir
+  ölçüm-bütünlüğü kusurudur ve korkuluktan BAĞIMSIZ olarak düzeltilebilir.
+
+evidence_refs:
+  - "docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md — 47 öneri deftere girmedi, ilk 2026-08-02T14:00, son 2026-08-13T17:26"
+  - "ROADMAP §1 WP3-A/28a — 'EN ACİL, HÂLÂ AKIYOR'; D2 sıralaması 28a > 28d > 28c"
+  - "kodun karşı-gerekçesi: C16-(b) bacağı + denetim #27 (sertifika korkuluğunun yan kapısı)"
+  - "28b ölçümü: '52 ret' aslında 23 — sayı ön-elemeyle şişmiş görünüyordu"
+
+universe: >
+  CANLI öğrenme döngüsü (replay DEĞİL). Ölçüm birimi: arka plan turunda üretilip
+  `hermes_bg_proposal_rejected` ile düşen öneriler + aynı pencerede deftere giren öneriler.
+  Pencere: 2026-08-02T14:00 → kartın koşum anı. Kaynak: canlı `state/events.jsonl` +
+  öneri defteri (salt-okuma; motor DEĞİŞTİRİLMEDEN önce ölçülür).
+
+features_asof: >
+  ÖLÇÜLECEK — üçü de reddedilen önerilerin KENDİ kayıtlarından:
+  (a) 47 reddin kaçında `certified` (bg_regime) BİLİNİYORDU, kaçında `None`du. Kod
+      `certified = None if target_regime == "auto" else target_regime` diyor; `auto` hâlinde
+      koşul `background and preg is None`e iner, yani **hangi rejimin sertifikalı olduğu
+      bilinmeden** her global öneri düşer. Bu iki hâl AYRI sayılır — biri "korkuluk çalıştı",
+      diğeri "korkuluk ölçemediği için kesti".
+  (b) Reddedilen önerilerin değişken dağılımı: kaçı ZATEN rejim-hedefliydi (`x@rejim`) ve
+      farklı rejime gitmeye çalışıyordu (korkuluğun ASIL hedefi), kaçı düz global (`x`).
+  (c) Reddedilenlerin kaçı, `x@<certified>` biçimine YENİDEN YAZILABİLİR olurdu — yani
+      kanıtı kendi rejiminin içinde tutarak hayatta kalabilir miydi.
+
+parameter_grid:
+  yok: "betimsel ölçüm + mekanizma kararı — K += 0 (edge hipotezi sınamıyor; öğrenme borusunun kendi ölçümü, EDG-036 emsali)"
+
+cost_model: yok   # canlı defter ölçümü; friksiyon varsayımı KONU DIŞI
+
+success_metric: >
+  Bu kart bir HİPOTEZ SINAMAZ, bir MEKANİZMA KARARI verir. Üç dal, ölçümden ÖNCE donuk:
+  D1 — KAYIT (koşulsuz, korkuluktan BAĞIMSIZ): reddedilen öneri deftere REDDEDİLDİ olarak
+       girmelidir. Bugün hiç girmiyor ve bu, "üretim" ile "hayatta kalan"ı aynı sayıya
+       katlıyor (28b'nin '52 aslında 23' bulgusunun kökü). Bu dal ölçüm sonucundan BAĞIMSIZ
+       olarak uygulanır — çünkü kusur kapının hükmünde değil, GÖRÜNÜRLÜĞÜNDE.
+  D2 — YENİDEN YÖNLENDİRME (koşullu): eğer (c) ölçümü, reddedilenlerin ≥%50'sinin
+       `x@<certified>` biçimine yeniden yazılabilir olduğunu VE `certified`in bilindiğini
+       gösterirse → öneri ATILMAK yerine kendi rejimine ÇİVİLENİR. Korkuluk AYNEN korunur
+       (kanıt rejimini terk etmez), yalnız iş çöpe gitmez.
+  D3 — DOKUNMA (koşullu): eğer reddedilenlerin çoğunda `certified is None` ise, korkuluk
+       ölçemediği için kesiyordur ve doğru düzeltme BU KARTTA DEĞİLDİR (arka plan turunun
+       sertifikasını taşıması ayrı bir iştir → ROADMAP kalemi açılır). Kapı DEĞİŞMEZ.
+  HER ÜÇ DALDA DA: sertifika korkuluğunun davranışı — "canlı-dışı rejimin kanıtı canlı
+  davranışı değiştiremez" — BOZULAMAZ. Bu bir kill kriteridir, başarı ölçütü değil.
+
+kill_criteria:
+  - "önerilen değişiklik, canlı-DIŞI bir rejimin kanıtının canlı `params`ı etkilemesine yol açıyorsa GEÇERSİZ — denetim #27 deliği yeniden açılamaz (mutlak)"
+  - "reddedilen önerilerin kayıtları okunamazsa (olay defteri eksik/bozuk) sayılar 'olculemedi' damgalanır; 47 rakamı TEŞHİS BELGESİNDEN alınır ve yeniden ÖLÇÜLMEDEN hüküm verilmez"
+  - "D1 kaydı öneri defterine GERÇEK öneri gibi girerse geçersiz — reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa 28b'nin ters yönü doğar (sayı bu kez ŞİŞER)"
+  - "ölçüm motoru değiştirdikten SONRA koşulursa geçersiz — önce ölç, sonra değiştir"
+
+k_registry: {registered_at: "2026-08-14T1x", trial_ids: [pending-041-on-eleme-envanteri]}
+
+status: measured   # 2026-08-14 Rol-1 — canlı defterden ölçüldü (motor DEĞİŞMEDEN ÖNCE) + hüküm: D1 + D2.
+
+verdict:   # Rol-1 hükmü.
+  olcum: >
+    47 red, ilk 2026-08-02T14:00:41Z, son 2026-08-13T17:26:34Z (teşhis belgesinin sayısı canlı
+    defterde BİREBİR doğrulandı).
+    (a) `bg_regime` 47/47'de **BİLİNİYOR** ve hepsinde aynı: `chop`. `None(auto)` **SIFIR**.
+    (b) 46/47 düz global (`@`siz) · 1/47 rejim-hedefli (`exit.time_stop_days@trend_up`).
+    (c) Değişken dağılımı: `entry.w_turnover` 21 · `exit.trail_atr_mult` 16 ·
+        `regime.vix_backwardation_gate` 8 · `exit.breakeven_r` 1 · `exit.time_stop_days@trend_up` 1.
+  hukum: >
+    **D3 ELENDİ, D1 + D2 TETİKLENDİ.** D3'ün şartı ("çoğunda `certified is None`") ölçümle
+    ÇÜRÜDÜ: sertifika 47/47'de biliniyordu — yani korkuluk körlükten değil, AYRIMSIZLIKTAN
+    kesiyordu. D2'nin eşiği (≥%50 yeniden yazılabilir) **%97,9 ile aşıldı** (46/47).
+    D1 KOŞULSUZ: reddedilen öneri deftere REDDEDİLDİ damgasıyla girer. Bugünkü görünmezlik,
+    "üretim" ile "hayatta kalan"ı aynı sayıya katlıyor — 28b'nin "52 aslında 23" bulgusunun kökü.
+    D2 UYGULANIR: `@`siz öneri ATILMAK yerine `x@<certified>` biçimine ÇİVİLENİR.
+    KORKULUK BOZULMUYOR — GÜÇLENİYOR: korkuluğun invaryantı "kanıt kendi rejimini terk etmesin"
+    idi. Ret bu invaryantı sağlar ama işi çöpe atar; yeniden yazım AYNI invaryantı sağlar ve işi
+    korur. `chop` sertifikalı kanıt yalnız `chop` parametrelerini değiştirir; canlı-DIŞI rejimin
+    kanıtı canlı davranışa SIZMAZ (denetim #27 deliği kapalı kalır).
+    TEK İSTİSNA AYNEN REDDEDİLİR: rejim-hedefli ama FARKLI rejime giden öneri
+    (`exit.time_stop_days@trend_up`, sertifika `chop`) — korkuluğun ASIL hedefi budur, 1/47.
+  yan_bulgu: >
+    28a ile 28c BİRBİRİNİ BESLİYOR: reddedilen 47'nin 37'si iki değişkende toplanıyor
+    (`entry.w_turnover` 21 + `exit.trail_atr_mult` 16). Aynı tekrar deseni 28c'nin kökü
+    (`already_failed` hafızası yalnız explore dalında). Yani döngü aynı düğmeyi tekrar tekrar
+    öneriyor VE o öneriler sessizce düşüyor — ikisi birlikte çözülmezse biri diğerinin etkisini
+    maskeler. İkisi de bu turda (v245) ele alınıyor.
+  sinir: >
+    Kurtarılan önerilerin İYİ olduğu İDDİA EDİLMİYOR (kartın beyanlı sınırı 1): yeniden yazılan
+    öneri `probgate`ten yine geçmek zorundadır ve bu kart o geçişi ÖLÇMEZ. Ölçülen tek şey,
+    kapıya HİÇ ULAŞAMAMA kusurunun kapandığıdır. Etki ancak bir sonraki öğrenme penceresinde
+    ölçülebilir (ship sayısı DEĞİL, kapıya ULAŞAN öneri sayısı — ikisi ayrı ölçüt).
+
+beyanlı_sinirlar: >
+  (1) Bu kart öğrenme döngüsünün ÜRETİM tarafını ölçer, KALİTE tarafını değil: reddedilen 47
+  önerinin İYİ öneriler olduğu İDDİA EDİLMİYOR. Kurtarılmaları hâlinde kapıdan (probgate) yine
+  geçmeleri gerekir; bu kart yalnız "kapıya hiç ulaşamıyorlar" kusurunu ele alır.
+  (2) 28d (chop dilimi 27 < eşik 30) AYRI bir tıkanıklıktır ve bu kartla ÇÖZÜLMEZ; ikisi
+  birbirinin yerine geçmez — 28a boruyu açar, 28d ölçüm yeteneğini geri verir.
+  (3) Kartın (c) ölçütü ("yeniden yazılabilir mi") bir ÇIKARIMDIR: yeniden yazılan önerinin
+  guard'dan geçeceği ÖLÇÜLMEZ, yalnız biçimsel uygunluk sayılır. Bu ayrım hükümde yazılı kalır.
