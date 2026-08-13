@@ -1055,6 +1055,46 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     sınıfı onaya bağlamamayı savunuyor) — OPERATÖR.*
 
 
+
+28. **ÖĞRENME TIKANIKLIĞI — KÖK BULUNDU (`docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md`)** — Rol-1
+    hükmü: **KARIŞIM, ama zaman dilimlerine göre** — Temmuz'da kapı HAKLIYDI (H1), 2026-08-02'den
+    bugüne döngü TIKALI (H2). Ve tıkanıklık kapının SIKILIĞINDA değil **kapının ÖNÜNDE**.
+    · **28a GÖRÜNMEZ SÜZGEÇ (EN ACİL, HÂLÂ AKIYOR):** `hermes_bg_proposal_rejected` — **47 öneri
+      deftere HİÇ girmedi**; `hermes.py:3889` arka plan turu `chop` sertifikalıysa GLOBAL (`@`siz)
+      her öneriyi atıyor. Aynı pencerede deftere giren: **1**. İlk 2026-08-02T14:00, **son bugün
+      17:26**. Yani "52 hipotez" üretimin değil, ÖN-ELEMENİN hayatta kalanları. *öncelik: ACİL.*
+    · **28b "52 RET" ASLINDA 23:** 22'si TEKRAR (guard hafızası kesti, hepsi tek gün 07-14), 4'ü
+      NO-OP (aday bit-bit aynı), 1 ölçülemeyen, 2 ship. Sayı olduğundan büyük görünüyordu.
+    · **28c TEKRAR DESENİNİN KÖKÜ TEK SATIR:** `reflect.propose_deterministic`de `already_failed`
+      kontrolü YALNIZ `explore` dalının içinde; varsayılan **exploit** yolunda hafıza YOK.
+      `stop_loss_atr_mult=2,1` **21 kez** önerildi; arama uzayında 33 adım-üstü değer varken 32'sine
+      hiç bakılmadı, ters yön bile denenmedi. *boyut: S · öncelik: YÜKSEK (tek satır, 21 tekrar).*
+    · **28d AĞUSTOS'TA ÖLÇÜM DURDU:** 500 sondanın **500'ü** `candidate_oos=NULL` (Temmuz'da 477'nin
+      382'si ölçülüyordu). Sebep `inc_cache.json`da yazılı: `chop` dilimi **27 işlem, eşik 30**;
+      üçüncü fold'da 0, teyitte 0. Kapı yargı VERMİYOR — **ÖLÇEMİYOR**. Tohum yenilemesi bunu
+      ÇÖZMEDİ ve ÇÖZEMEZ (kapı `meridian.db::trades` okumaz, `dataset.load()`+`walk_forward` ile
+      kendi örneklemini simüle eder). *öncelik: yüksek — ölçemeyen kapı öğrenmeyi durdurur.*
+    · **28e `P=0,000` İKİ GERÇEĞİ AYNI SAYIYLA SÖYLÜYOR:** `p = np.mean(arr > 0)` kesin eşitsizlik →
+      bit-bit AYNI aday da 0,000 alıyor. Defterdeki beş 0,000'ın **dördü no-op**, biri gerçek felaket.
+      No-op kaynakları: yapısal-atıl düğmeler (`scale_out_r` frac=0 iken, `early_kill_bars` pivot=0
+      iken) ve `entry.w_tight None→0.3` = **kodun varsayılanının aynısı**. `bounds.yaml`ın kendi
+      `spy_sma_gate` mezar taşının uyardığı zarar üç satırda tekrarlıyor; `regime.vix_backwardation_gate`
+      ("veri_yok → atıl") bugün hâlâ 8 kez örneklendi. *boyut: S-M.*
+    · **28f SHIP KAPISINDA DELİK:** H00029 (v0003) `confirm_p=null`, `confirm_n_valid=0`, OOS'lar
+      `None` — **ölçülemeyen bir no-op ship edildi**. Kapı "ölçülemedi"yi "geçti" sayıyor.
+    · **28g EŞİK DUYARLILIĞI (ölçüm, öneri DEĞİL):** P_BASE 0,80→**0 ship** · 0,70→**1**
+      (`entry.rs_rating_min@trend_up`) · 0,60→**2**. Yalnız P'ye bakmak yanıltıcı: H00033 P'yi geçer
+      ama fold-çoğunluğunda (1/3) düşer. **EŞİK DEĞİŞTİRİLMEZ** — 28a/28c/28d çözülmeden eşiğe
+      dokunmak, ölçemeyen bir kapıyı gevşetmek olur.
+    · **28h BAŞARI ÖRNEĞİ VAR:** **H00039** — ort.Δ +0,0837, OOS +%58, fold **3/3**, tail ✔; tek
+      eksiği P=0,709. KARŞI-KANIT: **H00032** kapının haklılığını kanıtlıyor (arama +0,128 → teyit
+      −0,080; kazananın-laneti tam yakalandı). İkisi birlikte "kapı çöp değil ama fazla tek-ayaklı".
+    · **28i YAN BULGU (ciddi):** mevcut incumbent `oos_score +0,2354` ↔ `holdout_score −0,5366`
+      (sapma 0,772, eşik 0,10) — **savunulan tabanın kendisi holdout'ta sert negatif**. Ayrı kalem.
+    · **28j `explore_rate` ÖLÜ:** `goal.yaml`da yazılı ama HİÇBİR KOD OKUMUYOR (tek eşleşme
+      `guard.GOAL_KEYS` üyeliği) → §2-25a kaldırma listesine eklenir.
+
+
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
 
 Claude'un otonom kapatamayacağı kalemler: operatör kararı, ücretli kimlik/kota, gerçek-para kapısı,
