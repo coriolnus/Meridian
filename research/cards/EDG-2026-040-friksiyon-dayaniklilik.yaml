@@ -1,0 +1,80 @@
+card_id: EDG-2026-040
+family: friksiyon_dayaniklilik
+thesis: >
+  EDG-037/038 replay motorunun `slippage_bps=5` varsayımını İLK KEZ ölçtü ve iyimser buldu (kanonik
+  ölçütle giriş bacağında medyan +29,0 bps; n=4, CI geniş, çıkış bacağı n=0). Denetim
+  (docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E) bu bulguyu dokuz replay hükmüne şerh olarak
+  taşıdı ve TEK açık takip kalemini adlandırdı: hiçbir hüküm friksiyon ARTIRILARAK YENİDEN KOŞULMADI.
+  EDG-037'nin PF eğrisi (+10bps→0,994) bir YENİDEN-ÖLÇEKLEMEDİR — mevcut defterin brüt kâr/zararını
+  oransal kaydırır, motorun TEPKİ vermesine izin vermez. Oysa slipaj dolum fiyatını değiştirir →
+  stop mesafesi değişir → pozisyon boyutu değişir → ısı tüketimi değişir → HANGİ İŞLEMLERİN DOĞDUĞU
+  değişir. Yani gerçek duyarlılık ancak KOŞARAK bilinir.
+  TEZ: benimsenen C+mb paketi, ölçülen friksiyon farkı mertebesinde ek maliyet altında da pozitif
+  kalıyor mu — ve kalmıyorsa hangi bantta işaret değiştiriyor.
+  BU KART BELİRSİZLİĞİ ÇÖZMEZ, SİSTEMİN O BELİRSİZLİĞE DUYARLILIĞINI ÖLÇER. İkisi ayrı şeydir:
+  gerçek friksiyonun ne olduğu hâlâ n=4'lük bir tahmindir (EDG-037 kill#1 damgası ayakta).
+
+evidence_refs:
+  - "EDG-2026-038 kanonik ölçüt: giriş bacağı medyan +29,0 · ortalama 43,0 · ağırlıklı 34,8 bps; 3/4 aleyhte; model 5 bps"
+  - "EDG-2026-037 pf_hukmu: PF 1,1119, ek friksiyonda MONOTON AZALAN; simetrik başabaş 9,49 bps/bacak (YENİDEN-ÖLÇEKLEME, koşum değil)"
+  - "EDG-2026-032 damgası (şerhli): C+mb 885 işlem · +20.684,69$ · dd 0,1268 · sharpe 0,521"
+  - "EDG-2026-023 B kolu: rampa 15/36 + slot5 + 1,0R = 410 işlem · +775$ · dd 0,1775 · sharpe 0,018"
+  - "EDG-2026-026 seçim gerekçesi (şerhli): C 772 işlem · +9.869$ · sharpe 0,285 — C ~1,9× işlem üretiyor, ~1,9× friksiyon emiyor"
+  - "denetim §E: 'B vs C, +10/+20/+30 bps friksiyon-duyarlılık taraması — HENÜZ ÖLÇÜLMEDİ'"
+
+universe: >
+  C+mb @5R dünyası AYNEN (edg032b şasisi: rampa 15/36 kablolu · slot 20 · position_size_r 0,5 ·
+  heat_hard_r 5,0 · mb silahlı · 251 sembol · 2022-01→2026-07 · 1147 seans). TEK DEĞİŞKEN
+  `goal.slippage_bps` — motor YAMASIZ, param enjeksiyonu (broker.py:414 `self.slip = slippage_bps/10000`).
+  FRİKSİYONUN NEREYE DEĞDİĞİ (koddan okundu, varsayılmadı): giriş `next_open*(1+slip)` (broker.py:515) ·
+  çıkış `raw_exit*(1-slip)` (:669) · kısmi satış `level*(1-slip)` (:638). Yani knob İKİ BACAĞA DA
+  simetrik iner, stop çıkışları DAHİL (`close_position` çıkış nedenine bakmaz). Komisyon ayrı ve 0.
+
+features_asof: >
+  AŞAMA-1 (koşulsuz, 3 hücre): C+mb @ slippage_bps {15, 25, 35} = ölçülen fark mertebesinin
+  +10/+20/+30 bps'lik üç noktası. Her hücre-vs-taban(slip=5, edg032b): işlem n · net P&L · PF ·
+  max-dd · sharpe · işlem-R · ΔP&L+CI (eşlenik ay-kümeli bootstrap 5000, seed 20260812).
+  ZORUNLU EK ÇIKTI: kompozisyon ayrıştırması — işlem sayısı neden değişti (ısı/slot/evren NO_GO
+  sayaçları), yani hasarın ne kadarı FİYAT ne kadarı SEÇİLİM.
+  AŞAMA-2 (KOŞULLU — kural aşağıda donuk, 2 hücre): B @ slip 15 ve C(mb'siz) @ slip 15, eşli kıyas.
+  ŞASİ KONTROLÜ (hücre DEĞİL): slip=5 koşumu edg032b ile BAYT-ÖZDEŞ olmalı.
+
+parameter_grid:
+  asama1_slippage_bps: [15, 25, 35]      # K += 3
+  asama2_kosullu: [B_slip15, C_slip15]   # K += 2 — YALNIZ Aşama-1 kapısı açarsa
+
+cost_model: gercek_olculen_bant   # bu kartın konusu friksiyonun KENDİSİ; pessimistic_band_v2 taban olarak kalır
+
+success_metric: >
+  Ö1 — PAKET DAYANIKLILIĞI (birincil, donuk): slip=15 hücresinde net P&L > 0 VE PF > 1,0 →
+  "C+mb +10 bps ek friksiyona DAYANIYOR". Aksi hâlde hüküm: "BENİMSENEN PAKET ÖLÇÜLEN FRİKSİYON
+  MERTEBESİNDE NEGATİF" — bu bir bulgudur, gizlenmez; ROADMAP'e ACİL kalem olarak girer.
+  Ö2 — BAŞABAŞ BANDI: net P&L'in işaret değiştirdiği aralık ÖLÇÜLEN NOKTALARDAN BANT olarak verilir
+  ("5-15 bps arası" gibi). İNTERPOLASYON YASAK — ara nokta iddiası ölçülmemiştir.
+  Ö3 — SEÇİM DAYANIKLILIĞI (koşullu, Aşama-2): ΔP&L(C − B) @ slip 15, CI ile. CI-alt > 0 → EDG-026'nın
+  seçim gerekçesi friksiyona DAYANIKLI, §E şerhi 'yön korunuyor' notuyla kapanır. CI 0-içi → gerekçe
+  ZAYIFLAR, şerh KALICILAŞIR. CI-üst < 0 → EDG-026 hükmü TERSİNE DÖNER → ACİL operatör penceresi.
+  KAPI (Aşama-2 KOŞULU, ölçümden ÖNCE donuk): Aşama-2 YALNIZCA slip=15 hücresinde C+mb net P&L > 0
+  ise koşulur. Negatifse iki kol da zarardadır ve "zararlılar arasında seçim" kararı ilgisizdir —
+  Aşama-2 KOŞULMAZ, K'dan 2 düşülür, kart Aşama-1 hükmüyle kapanır.
+
+kill_criteria:
+  - "şasi kontrolü düşerse (slip=5 koşumu ≠ edg032b bayt-özdeş) ölçüm DURUR — önce şasi teşhisi, hücre koşulmaz"
+  - "slip enjeksiyonu öz-sınamayla GÖSTERİLEMEZSE geçersiz: her hücrede ilk ≥20 girişte (fill/next_open − 1) ölçülür ve beklenen bps'e eşit olmalı (tolerans 1e-9); çıkış bacağı için aynı sınama (1 − exit_fill/raw_exit)"
+  - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa geçersiz"
+  - "motor dosyalarında koşum sırasında mtime/sha değişimi → o hücre geçersiz, yeniden koşulur (EDG-033 dersi)"
+  - "yasaklı modül (loop/counterfactual/cf_backfill/hermes) yüklenirse geçersiz — sys.modules kanıtı zorunlu"
+
+beyanlı_sinirlar: >
+  BU KARTIN ÖLÇTÜĞÜ ŞEY BİR ALT SINIRDIR — üç sebeple, üçü de ölçümden ÖNCE beyan edildi:
+  (1) SABİT-BPS VARSAYIMI: gerçek friksiyon fiyata/likiditeye/oynaklığa göre DEĞİŞİYOR (EDG-038:
+  aynı seansta BKNG 134 ↔ AMGN 15 bps). Sabit bps, pahalı isimlerdeki hasarı EKSİK sayar.
+  (2) STOP DOLUM İYİMSERLİĞİ: bar-içi stop `eff_stop` seviyesinde dolmuş sayılıyor (broker.py:596);
+  gerçek stop hızlı piyasada sabit bps'in ötesinde kayabilir. Bu kart o kalıntıyı MODELLEMEZ.
+  (3) FRİKSİYON TAHMİNİNİN KENDİSİ n=4: EDG-037'nin kill#1 damgası ("SLİPAJ ÖLÇÜLEMEDİ, n=4") AYAKTA.
+  Seçilen {15,25,35} noktaları o tahminin BANDIDIR, ölçülmüş gerçeği değil — bu kart "friksiyon şu
+  kadardır" DEMEZ, "şu kadar olsaydı sistem ne yapardı" der. İki cümle karıştırılırsa UYDURMA olur.
+
+k_registry: {registered_at: "2026-08-13T3x", trial_ids: [pending-040-slip15, pending-040-slip25, pending-040-slip35, conditional-040-B-slip15, conditional-040-C-slip15]}
+
+status: registered   # 2026-08-13 Rol-1 — ön-kayıt. Ölçüm v243 dağıtımı sonrası TEMİZ ağaçta koşulur (EDG-033 dersi).
