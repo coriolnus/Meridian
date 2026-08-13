@@ -1,0 +1,53 @@
+====================================================================================================
+EDG-2026-038 · TCA tur-2 — ÖLÇÜM ÖZETİ
+====================================================================================================
+
+[A] ÜÇ PAYDA + IEX (giriş bacağı, n=4 emir)
+ölçüt                                 medyan  ortalama  ağırlık.       p90  aleyh               t-CI95
+D0_IEX_acilis_EDG037                  35.374    55.064    45.041   110.528    4/4    [-65.549;175.677]
+D1_konsolide_acilis                   29.007    42.946    34.778   103.514    3/4    [-97.766;183.658]
+D2_konsolide_ilk_dk_vwap              25.053    36.805     29.18    89.382    3/4    [-84.394;158.004]
+D3_konsolide_ilk_dk_orta_nokta        21.037    24.956    18.925    57.809    2/4     [-48.875;98.786]
+
+  ölçüt hatası (IEX−konsolide) max |bps| = 36.791 · eşik 5.0 · kill3 çürüdü mü: False
+  çapraz (Alpaca SIP vs Massive) max |bps| = 2.757 · açılışta: 0.0
+  MODELE YAKINLIK (medyan |bps| modelin kendi paydasına):
+    D0_IEX_acilis_EDG037               {'n': 4, 'medyan_mutlak_bps': 22.003, 'ortalama_mutlak_bps': 26.477, 'max_mutlak_bps': 54.182}
+    D1_konsolide_acilis                {'n': 4, 'medyan_mutlak_bps': 3.92, 'ortalama_mutlak_bps': 6.324, 'max_mutlak_bps': 17.455}
+    D2_konsolide_ilk_dk_vwap           {'n': 4, 'medyan_mutlak_bps': 14.858, 'ortalama_mutlak_bps': 14.534, 'max_mutlak_bps': 26.583}
+    D3_konsolide_ilk_dk_orta_nokta     {'n': 4, 'medyan_mutlak_bps': 32.436, 'ortalama_mutlak_bps': 39.88, 'max_mutlak_bps': 77.91}
+  KANONİK: D1_konsolide_acilis · geçerli: True · çürütme: HAYIR — hiçbiri gerçekleşmedi
+
+[B] ÇIKIŞ BACAĞI — ÖLÇÜLEMEDİ (n=0) — kart eşiği n≥5
+  motor satış emri: 24 · dolan: 0 · {'canceled': 12, 'expired': 4, 'held': 4, 'new': 4}
+  stop bacağı limit_price boş: 12 / 12 · TIF: {'day': 8, 'gtc': 16}
+  AMGN  korumasız: 2.895 seans-saati (duvar 56.40 s) · pencere n=2
+  BKNG  korumasız: 2.895 seans-saati (duvar 56.42 s) · pencere n=2
+  EMR   korumasız: 2.895 seans-saati (duvar 56.44 s) · pencere n=2
+  NUE   korumasız: 2.895 seans-saati (duvar 56.41 s) · pencere n=2
+  en uzun korumasız: 2.895 seans-saati = 0.445 seans · eşik aşıldı mı: False
+  koruma OTOMATİK kuruluyor mu: False
+  n=0 MEKANİK NEDENİ — hiçbir seviye değmedi mi: True
+    AMGN  stop 389.42 (en yakın +299 bps) · hedef 453.50 (en yakın -699 bps)
+    BKNG  stop 191.54 (en yakın +746 bps) · hedef 245.76 (en yakın -1224 bps)
+    EMR   stop 152.48 (en yakın +231 bps) · hedef 186.35 (en yakın -1073 bps)
+    NUE   stop 257.40 (en yakın +368 bps) · hedef 317.49 (en yakın -1256 bps)
+
+[C] PF (kanonik ölçütle, 885 işlem)
+  fark B (yalnız icra)      : ort 37.946 · medyan 24.007 · ağırlıklı 29.778 · t-CI95 [-102.766, 178.658]
+  fark A (payda-özdeş)      : ort 35.532 · ağırlıklı 26.668
+  model BAR hatası          : ort 2.413 · medyan -0.06
+  S0_taban_replay_varsayimi              pf=1.1119   net=20684.69     (giriş+- / çıkış+- bps)
+  K1_kanonik_ORTALAMA_yalniz_giris       pf=0.9032   net=-20601.23    (giriş+37.946 / çıkış+0.0 bps)
+  K2_kanonik_MEDYAN_yalniz_giris         pf=0.9732   net=-5435.35     (giriş+24.007 / çıkış+0.0 bps)
+  K3_kanonik_AGIRLIKLI_yalniz_giris      pf=0.9433   net=-11714.3     (giriş+29.778 / çıkış+0.0 bps)
+  K4_kanonik_ORTALAMA_SIMETRIK_VARSAYIM  pf=0.7422   net=-61965.65    (giriş+37.946 / çıkış+37.946 bps)
+  K5_kanonik_AGIRLIKLI_SIMETRIK_VARSAYIM pf=0.8065   net=-44174.89    (giriş+29.778 / çıkış+29.778 bps)
+  K6_EN_IYI_gozlem_yalniz_giris          pf=1.2885   net=48668.51     (giriş+-25.72 / çıkış+0.0 bps)
+  K7_E3_kotumser_bant_referans           pf=1.051    net=9794.17      (giriş+5.0 / çıkış+5.0 bps)
+  A1_farkA_payda_ozdes_ORTALAMA_yalniz_giris pf=0.9148   net=-17974.76    (giriş+35.532 / çıkış+0.0 bps)
+  A2_farkA_payda_ozdes_AGIRLIKLI_yalniz_giris pf=0.9592   net=-8330.57     (giriş+26.668 / çıkış+0.0 bps)
+  başabaş simetrik: 9.49 · yalnız giriş: 19.0
+  başabaş eğrisi (giriş→gereken çıkış): {'0': 18.97, '2.5': 16.47, '5': 13.98, '7.5': 11.48, '10': 8.99, '12.5': 6.49, '15': 3.99, '17.5': 1.5, '19': 0.0, '20': 0.0, '25': 0.0, '30': 0.0, '40': 0.0, '50': 0.0}
+
+sonuc.json yazıldı.

@@ -1,0 +1,165 @@
+card_id: EDG-2026-038
+family: tca_gercek_friksiyon
+onceki: EDG-2026-037   # bu kart onun ÖLÇÜTÜNÜ düzeltir + ölçülmemiş yarısını (çıkış) arar
+thesis: >
+  Operatör kararı (2026-08-13): "ölçütü konsolideye taşı ve çıkış slipajını ölç". EDG-037'nin
+  paydası (`resmi_acilis`) Alpaca **IEX** günlük bar açılışıydı; `docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md`
+  §B.6 bunun konsolide 13:30 açılışına göre −36,8 / −27,7 / 0,0 / +16,2 bps saptığını ölçtü — yani
+  ÖLÇÜTÜN HATASI, ÖLÇÜLEN BÜYÜKLÜKLE AYNI MERTEBEDE. TEZ (iki ayak):
+  (A) Slipajın kanonik paydası, replay motorunun KENDİ dolum yasasının paydasıyla AYNI büyüklük
+  olmak zorundadır. `broker.fill_entry` `base_fill = next_open × (1+slip)` yazar ve `next_open`
+  replay'in bar arşivinden (`state/bars/*.csv` — Cboe/Nasdaq/Massive zinciri, KONSOLİDE) gelir.
+  TCA'nın paydası IEX ise, ölçülen "fark" iki ayrı büyüklüğün farkıdır ve model hatası DEĞİLDİR.
+  (B) Round-trip friksiyonun yarısı (çıkış) EDG-037'de n=0 idi. Giriş bacağı LIMIT, çıkış bacağının
+  stop kolu `limit_price=null` (= tetiklenince MARKET, `alpaca.py:1024`) — yani replay'in çıkışta da
+  5 bps varsaydığı yer (`broker.py:669`), YAPISAL olarak girişten daha iyimser olabilir. Çıkışın
+  ÖLÇÜLMEMİŞ olmasının kendisi bir bulgudur ve nedeni (TIF kelepçesi / koruma yeniden kurulumu)
+  slipajdan bağımsız bir KORUMA sorusu açabilir.
+
+evidence_refs:
+  - "EDG-037 sonuc.json — giriş bacağı n=4, IEX paydası, medyan 35,4 bps, 4/4 aleyhte"
+  - "EDG-037 kart `verdict.OLCUT_SERHI` — ölçüt-bağımlılık şerhi (Rol-1, aynı gün)"
+  - "docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md §B.6 (ölçüt krizi tablosu) + §C.0-K3 + [D] madde 1"
+  - "alpaca.py:1091-1095 — DATA_FEED='iex' (yürürlükteki veri katmanı) vs DATA_FEED_SIP='sip' (konsolide)"
+  - "alpaca.py:1021-1025 submit_protective_oco gövdesi — stop bacağı YALNIZ `stop_price` taşır (limit_price YOK)"
+  - "broker.py:60-102 E1-v2 şerhi — `ENTRY_TIF='day'` 2026-08-06 akşamı dört korumayı öldürdü; bugün `gtc` kelepçesi"
+  - "broker.py:515 (giriş dolum yasası) / :669 (çıkış dolum yasası) — İKİ BACAK AYNI 5 bps'i varsayıyor"
+
+universe: >
+  DÖRT KAYNAK, hepsi SALT-OKUMA:
+  (1) KONSOLİDE FİYAT — Alpaca `/v2/stocks/bars` `feed=sip` (günlük + 1Min), 2026-08-06 seansı,
+      dört sembol (NUE/EMR/BKNG/AMGN). İKİNCİ BAĞIMSIZ KAYNAK: Massive `/v2/aggs` (aynı seans,
+      aynı semboller) — çapraz doğrulama; iki kaynak ayrışırsa kanonik ölçüt İLAN EDİLMEZ.
+  (2) DOLUM GERÇEĞİ — canlı Alpaca `/v2/orders` (status=all, nested) + `/v2/account/activities`
+      (FILL). EDG-037'nin dört giriş dolumu + O TARİHTEN BUGÜNE (2026-08-13) eklenmiş HER TÜRLÜ
+      SATIŞ dolumu.
+  (3) KORUMA YAŞAM DÖNGÜSÜ — koruma OCO emirlerinin (`P-KORUMA-*`) tip/TIF/status/zaman damgaları
+      + `state/mirror_orders.json` + `state/entry_execution.jsonl`.
+  (4) DEFTER — `research/olcumler/edg032_final_paket_2026-08-12/islemler_cmb.json` (885 işlem) +
+      o koşumun kendi bar arşivi (`state_cmb/bars`) — PF yeniden hesabı için.
+
+features_asof: >
+  ÖLÇÜLECEK:
+  [A] ÜÇ PAYDA ADAYI yan yana, aynı dört dolum için: (1) konsolide resmî açılış basımı (SIP günlük
+      bar `open` = 13:30 açılış müzayedesi), (2) konsolide ilk-dakika VWAP (13:30-13:31 dakika barı
+      `vw`), (3) konsolide ilk-dakika orta-noktası ((h+l)/2 aynı barda). Her biri için: bps, işaret,
+      medyan/ortalama/notional-ağırlıklı + t-CI95 + bootstrap-CI95 + işaret testi. EDG-037'nin IEX
+      sütunu SİLİNMEZ — yan yana kalır (okuyucu ölçüt değişiminin etkisini görebilsin).
+      Payda künyesi ADIYLA yazılır: hangi uç, hangi feed parametresi, hangi kod satırı.
+  [B] ÇIKIŞ BACAĞI: (i) koruma OCO'sunun iki bacağının tip/TIF/limit_price'ı (kod + CANLI kayıt),
+      (ii) `day` TIF'in öldürdüğü korumaların YENİDEN kurulup kurulmadığı — kurulmadıysa/geç
+      kurulduysa AÇIK POZİSYONUN KORUMASIZ KALDIĞI PENCERE saat cinsinden ölçülür (bu, slipajdan
+      ÖNEMLİ bir bulgudur), (iii) gerçek çıkış dolumu varsa bps (payda: aynı kanonik ölçüt).
+  [C] PF yeniden hesabı: [A]'nın kanonik farkıyla + giriş/çıkış bacakları AYRI parametreli
+      (asimetrik senaryo: giriş +X bps, çıkış +Y bps) duyarlılık YÜZEYİ + başabaş EĞRİSİ.
+
+parameter_grid:
+  yok: >
+    betimsel ölçüm + ölçüt düzeltmesi — K += 0. Hipotez sınamıyor; [C]'deki (X,Y) yüzeyi bir
+    ARAMA DEĞİL bir DUYARLILIK haritasıdır (parametre seçilmiyor, sonucun parametreye bağımlılığı
+    gösteriliyor). Kart hiçbir yapılandırma değeri ÖNERMEZ.
+
+cost_model: gercek_olculen
+
+# --------------------------------------------------------------------------------------------
+# ÖN-KAYIT: KANONİK ÖLÇÜT SEÇİMİ — ÖLÇÜMDEN ÖNCE DONDURULDU
+# --------------------------------------------------------------------------------------------
+# Bu blok, "üç sayıya bakıp en hoşuna gideni kanonik ilan etme" serbestisini KAPATIR. Seçim ve
+# gerekçesi burada YAZILIDIR; ölçüm bu gerekçeyi yalnız ÇÜRÜTEBİLİR (aşağıdaki çürütme koşulları),
+# "başka sayı daha küçük çıktı" diye DEĞİŞTİREMEZ.
+kanonik_olcut_on_kayit:
+  secim: "konsolide resmî AÇILIŞ basımı (SIP günlük bar `open`)"
+  gerekce_1_model_ozdesligi: >
+    ÖLÇTÜĞÜMÜZ ŞEY "gerçek dolum − MODELİN dediği dolum"dur. Modelin dediği dolum
+    `broker.py:515` = `next_open × (1+slip)` ve `next_open` replay'in bar arşivinden gelir
+    (`adapters/data.py` zinciri: Cboe historical / Nasdaq / Massive grouped — üçü de KONSOLİDE).
+    Payda modelin paydasıyla AYNI büyüklük değilse ölçülen fark, model hatası değil KAYNAK farkıdır.
+    VWAP ve orta-nokta bu özdeşliği SAĞLAMAZ: motor hiçbir yerde VWAP'a ya da bant orta-noktasına
+    göre dolum yazmaz.
+  gerekce_2_olcut_hatasi: >
+    Açılış müzayedesi basımı TEK ve RESMÎdir (konsolide bantta tek fiyat) — tahmin hatası ~0.
+    VWAP ve (h+l)/2 birer TAHMİN EDİCİdir: birinci-dakika örnekleminin kendi gürültüsünü taşırlar.
+    Ayrıca (h+l)/2 bir KOTASYON orta-noktası DEĞİLDİR (işlem fiyatlarının menzil ortası) — icra
+    ölçütü literatüründe karşılığı yoktur ve bandı inşaen ortalayarak sonucu YAPAY OLARAK yumuşatır.
+  gerekce_3_karar_karsiligi: >
+    Sistemin verdiği karar "açılışta marketable limit emri gönder"dir (alpaca.py:342-354,
+    extended_hours=false). Bu kararın doğal kıyas fiyatı açılış basımıdır. VWAP, ZAMANA YAYILMIŞ
+    bir emrin ölçütüdür; bizim emrimiz zamana yayılmıyor.
+  curutme_kosullari:   # ölçüm bunlardan BİRİNİ gösterirse seçim GEÇERSİZ, gerekçe yeniden kurulur
+    - "replay bar arşivinin açılışı KONSOLİDE DEĞİLSE (kaynak damgası IEX/eksik çıkarsa) gerekçe_1 çöker"
+    - "iki bağımsız konsolide kaynak (Alpaca SIP vs Massive) aynı 13:30 açılışında >5 bps ayrışırsa gerekçe_2 çöker"
+    - "SIP günlük `open`, SIP 13:30 dakika barının [low,high] bandının DIŞINDAysa (açılış basımı değil, başka bir şey ölçülüyor demektir)"
+  esik_donduruldu: >
+    Ölçüt-hatası eşiği: |IEX − konsolide| > 5 bps ise "ölçüt taşınması GEREKLİ" sayılır.
+    Çıkış bacağı hüküm kapısı: n ≥ 5 gerçek çıkış dolumu. Koruma boşluğu bulgusu eşiği:
+    açık pozisyonun canlı koruma emri OLMADIĞI kesintisiz pencere > 1 tam seans.
+
+success_metric: >
+  ÜRÜN: (i) üç paydanın YAN YANA tablosu + EDG-037'nin IEX sütunu (silinmeden) + kanonik seçimin
+  gerekçesi ve (varsa) çürütülmesi · (ii) konsolide veri künyesi (uç, feed parametresi, kod satırı,
+  iki kaynağın çapraz farkı) · (iii) çıkış bacağı: ya bps ölçümü (n≥5) ya da "ÖLÇÜLEMEDİ (n=X) +
+  NEDEN" damgası, ve nedenin KENDİSİ (TIF/koruma yaşam döngüsü) bir bulgu olarak · (iv) asimetrik
+  (giriş X, çıkış Y) PF duyarlılık yüzeyi + başabaş eğrisi.
+  HÜKÜM DEĞİL GİRDİ: bu kart eşiği DEĞİŞTİRMEZ, yapılandırma ÖNERMEZ, kod YAZMAZ. Hükmü Rol-1 işler.
+  ÖLÇÜLEMEZSE BU DA BİR ÜRÜNDÜR: "konsolide çekilemedi → ölçüt taşınmadı" ya da "çıkış n=0 →
+  round-trip hâlâ yarım" dürüst kapanışı.
+
+kill_criteria:
+  - "KONSOLİDE VERİ ÇEKİLEMEZSE ÖLÇÜT TAŞINMAZ: SIP reddi/boş dönerse IEX sayısı 'konsolide' diye ETİKETLENMEZ; [A] 'ÖLÇÜLEMEDİ + ham hata metni' ile kapanır. Uydurma payda YOK."
+  - "İKİ KONSOLİDE KAYNAK AYRIŞIRSA (Alpaca SIP vs Massive, aynı 13:30 açılışı, >5 bps) kanonik ölçüt İLAN EDİLMEZ — fark beyan edilir, seçim ertelenir."
+  - "ÖLÇÜT KRİZİ ÇÜRÜRSE: konsolide açılış 4/4 satırda IEX'ten ≤5 bps farklıysa [A] DÜŞER ve EDG-037'nin sayıları AYNEN geçerli kalır (kart kendi tezini çürütmüş olur, bu da bir üründür)."
+  - "ÇIKIŞ BACAĞI n<5 ise 'ÖLÇÜLEMEDİ (n=X)' damgası ZORUNLU: giriş sayısı çıkışa KOPYALANMAZ; simetrik senaryolar 'VARSAYIM' etiketiyle ve ölçülmediği yazılarak sunulur."
+  - "KANONİK SEÇİM POST-HOC DEĞİŞTİRİLEMEZ: `kanonik_olcut_on_kayit` bloğu ölçümden önce donduruldu; yalnız `curutme_kosullari`ndan biri gerçekleşirse seçim düşer."
+  - "PAYDA KARIŞTIRMA YASAĞI (EDG-037 kill#3'ün devamı): replay/simüle dolumlar (`replay_seed`, `live_paper`, iç motor) TCA paydasına GİRMEZ; yalnız broker'ın gerçek dolum kayıtları."
+  - "MOTOR-DIŞI EMİR YASAĞI: operatörün kendi emirleri (`P-` öneksiz coid) ve tatbikat/smoke emirleri paydadan ÇIKARILIR."
+
+k_registry: {registered_at: "2026-08-13T18:0x", trial_ids: [pending-038-tca2]}
+
+status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm aşağıda.   # ölçüm bu satır yazıldıktan SONRA koşuldu
+
+verdict:   # Rol-1 doldurur — ölçüm ajanı BURAYA DOKUNMAZ.
+
+verdict:   # Rol-1 hükmü (2026-08-13).
+  olcut: >
+    KANONİK PAYDA = D1 KONSOLİDE AÇILIŞ (feed=sip). Gerekçe ÖN-KAYITLI ve ölçüm onu doğruladı:
+    ölçtüğümüz şey "gerçek − MODELİN dediği" olduğu için payda modelin kendi paydasıyla aynı büyüklük
+    olmalı; model `broker.py:515 next_open` → `state/bars/*.csv` → `bars_source.json` = cboe/konsolide
+    (dört ismin dördü de), IEX DEĞİL. Modele yakınlık sayıya döküldü: D1 3,9 bps · D0(IEX) 22,0 ·
+    D2 14,9 · D3 32,4. DİKKAT — D3 EN KÜÇÜK slipaj sayısını üretiyor ama modelden EN UZAK olan o;
+    ön-kayıt tam bu "yaltaklanan ölçüt" seçimini kapatmak için vardı ve İŞE YARADI.
+    ÖLÇÜT TAŞINMASI GEREKLİYDİ (kanıt): IEX ilk-dakika işlem sayısı EMR'de 1 (tek 100 hisselik basım),
+    SIP'te 221 — payda temsili değildi. Çapraz kontrol: Alpaca SIP ↔ Massive açılış basımı 0,00 bps.
+  yeni_sayilar: >
+    Kanonik ölçütle giriş bacağı: medyan 29,0 · ortalama 43,0 · ağırlıklı 34,8 bps · **3/4 aleyhte**
+    (NUE −20,7 = LEHTE; EMR +26,8 · AMGN +31,2 · BKNG +134,5). EDG-037'nin "4/4 aleyhte, ~9 kat"
+    ifadesi ÖLÇÜT ARTEFAKTIYDI — kanonikte oran ~7× ve işaret tutarlılığı 3/4. Model 5 bps sabit.
+  edg037_teshis_duzeltmesi: >
+    EDG-037 çıkış bacağının n=0 olmasını `ENTRY_TIF=day` kelepçesine bağlamıştı — BU TEŞHİS EKSİKTİ.
+    Ölçüldü: 08-06..08-12 beş seansta hiçbir pozisyonun stop'u ya da hedefi DEĞMEDİ (en yakın EMR,
+    stop'un +231 bps üstünde; NUE +368 · AMGN +299 · BKNG +746). Korumalar kesintisiz canlı kalsaydı
+    da n=0 olurdu. Bağlayıcı kısıt EMİR ÖMRÜ değil TUTUŞ SÜRESİ. TIF kelepçesi gerçek bir KORUMA
+    boşluğu üretti (aşağıda) ama ÖLÇÜM boşluğunun sebebi o değil.
+  koruma_bulgusu: >
+    Koruma OTOMATİK yeniden kurulMUYOR: `submit_protective_oco`nun tek çağıranı `api.koruma_kur` ve o
+    üç kapı ardında (ölçüm + operatör onay jetonu + öneri kimliği); bekçi çıplaklığı GÖRÜP alarm
+    üretiyor ama KURMUYOR. Ölçülen zincir: 08-06 20:00Z bracket'lar öldü (day TIF) → 08-07 16:23Z elle
+    kuruldu → 20:32Z yine öldü (v220 coid çarpışması) → 08-09 08:35Z elle kuruldu. Korumasız duvar
+    56,4 saat, SEANS-İÇİ 2,895 saat (0,445 seans) → kartın donuk ">1 seans" eşiğini AŞMADI; bulgu
+    olarak DAMGALANMAZ, sayı olarak beyan edilir. Yine de OPERATÖR KALEMİ: koruma kurulumunun elle
+    olması, TIF ölümüyle birleşince pozisyonları seans-içi çıplak bırakabiliyor.
+  asimetri: >
+    MEKANİZMA BEYANI (sayı değil): giriş `type=limit` (TAVANLI) · çıkış stop bacağı `type=stop`,
+    `limit_price=null` → tetiklenince MARKET (TAVANSIZ). Replay ikisine de aynı 5 bps'i uyguluyor
+    (broker.py:515/:669) VE bar-içi stop dokunuşunu `eff_stop`ta dolmuş sayıyor (:596) — yani
+    stop-tetik slipajı modelde SIFIR. Çıkış friksiyonu ölçülene dek bu, adı konmuş bir iyimserliktir.
+  pf: >
+    Kanonik ölçütle yalnız-giriş başabaşı 19,0 bps; ölçülen giriş farkının medyan(24,0)/ağırlıklı(29,8)/
+    ortalama(37,9) ÜÇÜ DE bunun üstünde → çıkış friksiyonu SIFIR olsa bile PF<1 (K2 0,973 · K3 0,943 ·
+    K1 0,903). NOKTA TAHMİNİ, HÜKÜM DEĞİL: n=4, t-CI95 [−102,8; 178,7] sıfırı içeriyor. Simetrik
+    başabaş 9,49 bps. RESULT_PF_MIN=1.3 GEVŞETİLMEZ — EDG-037 hükmü güçlenerek durur.
+  sonraki: >
+    (a) ÇIKIŞ ÖRNEKLEMİ tutuş süresine bağlı — beklemek gerekiyor; hızlandırmanın tek meşru yolu
+    örneklem biriktirmek, eşik oynatmak DEĞİL. (b) Replay'in bar-içi stop varsayımı (slipaj=0) ayrı
+    bir ölçüm kalemi — çıkış n≥5 olunca ilk sınanacak şey bu. (c) `slippage_bps=5` GÜNCELLENMEZ:
+    n=4 ile motor sabitini değiştirmek, ölçülmemişi ölçülmüş sanmaktır (EDG-037 kill#1 hâlâ geçerli).
+  artefakt: "research/olcumler/edg038_tca2_2026-08-13/ (canli_ham sha16 53d509c7a356f1ab; 12×12 asimetrik PF yüzeyi sonuc.json'da)"

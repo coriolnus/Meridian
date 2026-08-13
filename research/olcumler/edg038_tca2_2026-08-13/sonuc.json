@@ -1,0 +1,2509 @@
+{
+ "kart": "EDG-2026-038",
+ "kart_yolu": "research/cards/EDG-2026-038-tca-konsolide-cikis.yaml",
+ "olcum_zamani": "2026-08-13T18:35:20+00:00",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg038_tca2_2026-08-13/olcum.py",
+ "ham_kanit": {
+  "canli": {
+   "dosya": "canli_ham.json",
+   "sha256_16": "53d509c7a356f1ab",
+   "cekim_zamani": "2026-08-13T18:21:58+00:00",
+   "cekim_betigi": "canli_cek.py (canlıda SALT-OKUMA, stdin deseni)"
+  },
+  "massive": {
+   "dosya": "massive_capraz.json",
+   "sha256_16": "5763d86c54d8ba83",
+   "kaynak": "Massive MCP — Alpaca'dan BAĞIMSIZ ikinci konsolide kaynak"
+  },
+  "edg037": {
+   "dosya": "../edg037_tca_2026-08-13/sonuc.json",
+   "sha256_16": "ecb6c89bb4f3d8a0"
+  }
+ },
+ "K_sayimi": "K += 0 — betimsel ölçüm + ölçüt düzeltmesi (kart parameter_grid: yok)",
+ "OZET_TABLO": {
+  "kanonik_olcut": "D1_konsolide_acilis",
+  "kanonik_gecerli": true,
+  "kanonik_curutme": "HAYIR — hiçbiri gerçekleşmedi",
+  "olcut_kiyasi_medyan_bps": {
+   "D0_IEX_acilis_EDG037": 35.374,
+   "D1_konsolide_acilis": 29.007,
+   "D2_konsolide_ilk_dk_vwap": 25.053,
+   "D3_konsolide_ilk_dk_orta_nokta": 21.037
+  },
+  "olcut_kiyasi_aleyhte_n": {
+   "D0_IEX_acilis_EDG037": 4,
+   "D1_konsolide_acilis": 3,
+   "D2_konsolide_ilk_dk_vwap": 3,
+   "D3_konsolide_ilk_dk_orta_nokta": 2
+  },
+  "olcut_hatasi_IEX_vs_konsolide_max_bps": 36.791,
+  "capraz_iki_kaynak_max_bps": 2.757,
+  "KANONIK_slipaj": {
+   "n": 4,
+   "medyan": 29.007,
+   "ortalama": 42.946,
+   "p90": 103.514,
+   "min": -20.72,
+   "max": 134.49,
+   "agirlikli_ortalama": 34.778,
+   "agirlik_tabani": "notional (fill × qty)",
+   "t_ci95": {
+    "ortalama": 42.946,
+    "sd": 65.402,
+    "se": 32.701,
+    "t": 4.303,
+    "lo": -97.766,
+    "hi": 183.658,
+    "sifiri_iceriyor": true
+   },
+   "bootstrap_ci95": {
+    "lo": -7.731,
+    "hi": 107.562,
+    "orta": 42.946,
+    "n_iter": 20000,
+    "seed": 20260813,
+    "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+   },
+   "isaret_testi": {
+    "n": 4,
+    "aleyhte": 3,
+    "lehte": 1,
+    "p_tek_kuyruk": 0.3125,
+    "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+   }
+  },
+  "KANONIK_farkB_yalniz_icra": {
+   "n": 4,
+   "medyan": 24.007,
+   "ortalama": 37.946,
+   "p90": 98.514,
+   "min": -25.72,
+   "max": 129.49,
+   "agirlikli_ortalama": 29.778,
+   "agirlik_tabani": "notional (fill × qty)",
+   "t_ci95": {
+    "ortalama": 37.946,
+    "sd": 65.402,
+    "se": 32.701,
+    "t": 4.303,
+    "lo": -102.766,
+    "hi": 178.658,
+    "sifiri_iceriyor": true
+   },
+   "bootstrap_ci95": {
+    "lo": -12.731,
+    "hi": 102.562,
+    "orta": 37.946,
+    "n_iter": 20000,
+    "seed": 20260813,
+    "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+   },
+   "isaret_testi": {
+    "n": 4,
+    "aleyhte": 3,
+    "lehte": 1,
+    "p_tek_kuyruk": 0.3125,
+    "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+   },
+   "tanim": "gerçek_bps − 5.0 (modelin NOMİNAL slipaj varsayımı). Modelin bar hatası DIŞARIDA.",
+   "serh": "Kimlik: farkA = farkB − model_BAR_hatasi (birebir tutar)."
+  },
+  "KANONIK_farkA_payda_ozdes": {
+   "n": 4,
+   "medyan": 24.067,
+   "ortalama": 35.532,
+   "p90": 103.952,
+   "min": -43.214,
+   "max": 137.207,
+   "agirlikli_ortalama": 26.668,
+   "agirlik_tabani": "notional (fill × qty)",
+   "t_ci95": {
+    "ortalama": 35.532,
+    "sd": 74.86,
+    "se": 37.43,
+    "t": 4.303,
+    "lo": -125.53,
+    "hi": 196.593,
+    "sifiri_iceriyor": true
+   },
+   "bootstrap_ci95": {
+    "lo": -25.821,
+    "hi": 108.349,
+    "orta": 35.532,
+    "n_iter": 20000,
+    "seed": 20260813,
+    "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+   },
+   "isaret_testi": {
+    "n": 4,
+    "aleyhte": 3,
+    "lehte": 1,
+    "p_tek_kuyruk": 0.3125,
+    "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+   },
+   "tanim": "gerçek_bps − model_bps (İKİSİ DE aynı paydaya göre). Model fiyatı = MODELİN KENDİ barı × (1+5bps).",
+   "serh": "Bu fark İKİ bileşen taşır: (a) icra sapması, (b) modelin BARININ ölçüte sapması. Ayrıştırması `MODEL_BAR_HATASI`."
+  },
+  "KANONIK_model_bar_hatasi": {
+   "n": 4,
+   "medyan": -0.06,
+   "ortalama": 2.413,
+   "p90": 12.24,
+   "min": -7.713,
+   "max": 17.485,
+   "agirlikli_ortalama": 3.108,
+   "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+   "t_ci95": {
+    "ortalama": 2.413,
+    "sd": 10.676,
+    "se": 5.338,
+    "t": 4.303,
+    "lo": -20.557,
+    "hi": 25.383,
+    "sifiri_iceriyor": true
+   },
+   "isaret_testi": {
+    "n": 3,
+    "aleyhte": 1,
+    "lehte": 2,
+    "p_tek_kuyruk": 0.875,
+    "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+   },
+   "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+  },
+  "cikis_bacagi": {
+   "n": 0,
+   "DAMGA": "ÖLÇÜLEMEDİ (n=0) — kart eşiği n≥5",
+   "gonderilen_motor_satis_emri": 24,
+   "en_uzun_korumasiz_SEANS_saati": 2.895,
+   "koruma_otomatik_kuruluyor_mu": false,
+   "hicbir_seviye_degmedi": true
+  },
+  "pf": {
+   "S0_taban_replay_varsayimi": 1.1119,
+   "K1_kanonik_ORTALAMA_yalniz_giris": 0.9032,
+   "K2_kanonik_MEDYAN_yalniz_giris": 0.9732,
+   "K3_kanonik_AGIRLIKLI_yalniz_giris": 0.9433,
+   "K4_kanonik_ORTALAMA_SIMETRIK_VARSAYIM": 0.7422,
+   "K5_kanonik_AGIRLIKLI_SIMETRIK_VARSAYIM": 0.8065,
+   "K6_EN_IYI_gozlem_yalniz_giris": 1.2885,
+   "K7_E3_kotumser_bant_referans": 1.051,
+   "A1_farkA_payda_ozdes_ORTALAMA_yalniz_giris": 0.9148,
+   "A2_farkA_payda_ozdes_AGIRLIKLI_yalniz_giris": 0.9592
+  },
+  "basabas_simetrik": 9.49,
+  "basabas_yalniz_giris": 19.0,
+  "kill": {
+   "kill1_konsolide_cekilemedi": false,
+   "kill2_iki_kaynak_ayristi": false,
+   "kill3_olcut_krizi_curudu": false,
+   "kill4_cikis_n_5_alti": true,
+   "kill5_kanonik_post_hoc_degisti": false
+  }
+ },
+ "a_olcut": {
+  "payda_kunyesi": {
+   "KONSOLİDE_KAYNAK_ADIYLA": {
+    "uc": "https://data.alpaca.markets/v2/stocks/bars",
+    "feed_parametresi": "feed=sip",
+    "kod_sabiti": "meridian/adapters/alpaca.py:1093 — `DATA_FEED_SIP = \"sip\"`",
+    "gunluk": "timeframe=1Day, adjustment=split, start=end=2026-08-06",
+    "dakika": "timeframe=1Min, 2026-08-06T13:25Z..14:05Z",
+    "IKINCI_BAGIMSIZ_KAYNAK": "Massive /v2/aggs (grouped daily + 1/minute) — massive_capraz.json"
+   },
+   "EDG037_PAYDASI_ADIYLA": {
+    "feed_parametresi": "feed=iex",
+    "kod_sabiti": "meridian/adapters/alpaca.py:1092 — `DATA_FEED = \"iex\"`",
+    "nasil_defterlere_girdi": "loop.py:1998 `per[ticker].loc[d,'open']` → loop.py:2290-2299 `_patch_entry_slippage` → state/entry_execution.jsonl `resmi_acilis`; kaynak zinciri alpaca.py:1092,1431",
+    "IEX_NEDIR": "IEX tek bir borsanın kendi bandıdır; konsolide (SIP) hacmin medyan %2,2-2,5'i (alpaca.py:1101 canlı ölçümü). 'IEX'in ilk basımı' ≠ 'resmî açılış müzayedesi basımı'."
+   },
+   "MODELIN_PAYDASI_ADIYLA": {
+    "kod": "meridian/broker.py:515 — `base_fill = next_open * (1.0 + self.slip)`",
+    "next_open_nereden": "replay bar arşivi state/bars/<sym>.csv",
+    "arsiv_kaynak_damgasi": {
+     "cboe": 193,
+     "nasdaq": 59
+    },
+    "dort_sembol_damgasi": {
+     "NUE": {
+      "source": "cboe",
+      "at": "2026-07-21T14:48:24+00:00"
+     },
+     "EMR": {
+      "source": "cboe",
+      "at": "2026-07-21T14:48:12+00:00"
+     },
+     "BKNG": {
+      "source": "cboe",
+      "at": "2026-07-21T14:40:59+00:00"
+     },
+     "AMGN": {
+      "source": "cboe",
+      "at": "2026-07-21T14:47:00+00:00"
+     }
+    },
+    "kaynak_kodu": "meridian/adapters/data.py — Cboe delayed_quotes historical (birincil) / Nasdaq (yedek) / Massive grouped — ÜÇÜ DE KONSOLİDE, hiçbiri IEX değil"
+   }
+  },
+  "dolumlar": [
+   {
+    "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+    "ticker": "AMGN",
+    "qty": 22.0,
+    "fill": 415.007273,
+    "limit": 424.04,
+    "type": "limit",
+    "tif": "day",
+    "submitted_at": "2026-08-06T10:32:46.83608Z",
+    "filled_at": "2026-08-06T13:32:28.153863Z"
+   },
+   {
+    "plan_id": "P-2026-08-05-BKNG",
+    "ticker": "BKNG",
+    "qty": 22.0,
+    "fill": 210.24,
+    "limit": 215.31,
+    "type": "limit",
+    "tif": "day",
+    "submitted_at": "2026-08-06T08:00:27.048181Z",
+    "filled_at": "2026-08-06T13:32:06.872629Z"
+   },
+   {
+    "plan_id": "P-2026-08-05-EMR",
+    "ticker": "EMR",
+    "qty": 37.0,
+    "fill": 164.76,
+    "limit": 168.65,
+    "type": "limit",
+    "tif": "day",
+    "submitted_at": "2026-08-06T08:00:26.965352Z",
+    "filled_at": "2026-08-06T13:32:20.943857Z"
+   },
+   {
+    "plan_id": "P-2026-08-05-NUE",
+    "ticker": "NUE",
+    "qty": 25.0,
+    "fill": 273.9512,
+    "limit": 285.55,
+    "type": "limit",
+    "tif": "day",
+    "submitted_at": "2026-08-06T08:00:27.052851Z",
+    "filled_at": "2026-08-06T13:33:07.913388Z"
+   }
+  ],
+  "paydalar": {
+   "AMGN": {
+    "D1_konsolide_acilis": 413.715,
+    "D2_konsolide_ilk_dk_vwap": 414.1175,
+    "D3_konsolide_ilk_dk_orta_nokta": 415.07,
+    "D0_IEX_acilis_EDG037": 414.385,
+    "DM_replay_bar_arsivi_acilis": 413.71,
+    "_massive_gunluk_acilis": 413.715,
+    "_massive_dk_vwap": 414.2317,
+    "_massive_dk_orta_nokta": 415.07,
+    "_sip_dk_bar": {
+     "c": 416.74,
+     "h": 417.14,
+     "l": 413,
+     "n": 977,
+     "o": 413.715,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 59996,
+     "vw": 414.1175
+    },
+    "_iex_dk_bar": {
+     "c": 416.74,
+     "h": 416.74,
+     "l": 413.605,
+     "n": 29,
+     "o": 414.385,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 1041,
+     "vw": 415.567157
+    },
+    "_iex_gunluk_islem_sayisi": 2852,
+    "_sip_gunluk_islem_sayisi": 57712
+   },
+   "BKNG": {
+    "D1_konsolide_acilis": 207.45,
+    "D2_konsolide_ilk_dk_vwap": 207.841034,
+    "D3_konsolide_ilk_dk_orta_nokta": 208.905,
+    "D0_IEX_acilis_EDG037": 207.45,
+    "DM_replay_bar_arsivi_acilis": 207.29,
+    "_massive_gunluk_acilis": 207.45,
+    "_massive_dk_vwap": 207.8493,
+    "_massive_dk_orta_nokta": 208.905,
+    "_sip_dk_bar": {
+     "c": 210.24,
+     "h": 210.81,
+     "l": 207,
+     "n": 1619,
+     "o": 207.16,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 193581,
+     "vw": 207.841034
+    },
+    "_iex_dk_bar": {
+     "c": 210.425,
+     "h": 210.75,
+     "l": 207.29,
+     "n": 63,
+     "o": 207.45,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 1202,
+     "vw": 209.934349
+    },
+    "_iex_gunluk_islem_sayisi": 19179,
+    "_sip_gunluk_islem_sayisi": 265749
+   },
+   "EMR": {
+    "D1_konsolide_acilis": 164.32,
+    "D2_konsolide_ilk_dk_vwap": 164.289815,
+    "D3_konsolide_ilk_dk_orta_nokta": 164.045,
+    "D0_IEX_acilis_EDG037": 163.865,
+    "DM_replay_bar_arsivi_acilis": 164.32,
+    "_massive_gunluk_acilis": 164.32,
+    "_massive_dk_vwap": 164.2798,
+    "_massive_dk_orta_nokta": 164.045,
+    "_sip_dk_bar": {
+     "c": 163.615,
+     "h": 164.85,
+     "l": 163.24,
+     "n": 221,
+     "o": 164.32,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 59100,
+     "vw": 164.289815
+    },
+    "_iex_dk_bar": {
+     "c": 163.865,
+     "h": 163.865,
+     "l": 163.865,
+     "n": 1,
+     "o": 163.865,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 100,
+     "vw": 163.865
+    },
+    "_iex_gunluk_islem_sayisi": 3971,
+    "_sip_gunluk_islem_sayisi": 68312
+   },
+   "NUE": {
+    "D1_konsolide_acilis": 274.52,
+    "D2_konsolide_ilk_dk_vwap": 274.453659,
+    "D3_konsolide_ilk_dk_orta_nokta": 274.12,
+    "D0_IEX_acilis_EDG037": 273.51,
+    "DM_replay_bar_arsivi_acilis": 275.0,
+    "_massive_gunluk_acilis": 274.52,
+    "_massive_dk_vwap": 274.443,
+    "_massive_dk_orta_nokta": 274.12,
+    "_sip_dk_bar": {
+     "c": 273.5,
+     "h": 274.74,
+     "l": 273.5,
+     "n": 403,
+     "o": 274.52,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 20879,
+     "vw": 274.453659
+    },
+    "_iex_dk_bar": {
+     "c": 274.09,
+     "h": 274.09,
+     "l": 273.51,
+     "n": 6,
+     "o": 273.51,
+     "t": "2026-08-06T13:30:00Z",
+     "v": 407,
+     "vw": 273.73
+    },
+    "_iex_gunluk_islem_sayisi": 2280,
+    "_sip_gunluk_islem_sayisi": 33028
+   }
+  },
+  "capraz_kontrol_iki_konsolide_kaynak": {
+   "esik_bps": 5.0,
+   "satirlar": [
+    {
+     "ticker": "AMGN",
+     "alpaca_sip_acilis": 413.715,
+     "massive_acilis": 413.715,
+     "acilis_fark_bps": 0.0,
+     "alpaca_sip_dk_vwap": 414.1175,
+     "massive_dk_vwap": 414.2317,
+     "vwap_fark_bps": -2.757,
+     "orta_nokta_fark_bps": 0.0
+    },
+    {
+     "ticker": "BKNG",
+     "alpaca_sip_acilis": 207.45,
+     "massive_acilis": 207.45,
+     "acilis_fark_bps": 0.0,
+     "alpaca_sip_dk_vwap": 207.841034,
+     "massive_dk_vwap": 207.8493,
+     "vwap_fark_bps": -0.398,
+     "orta_nokta_fark_bps": 0.0
+    },
+    {
+     "ticker": "EMR",
+     "alpaca_sip_acilis": 164.32,
+     "massive_acilis": 164.32,
+     "acilis_fark_bps": 0.0,
+     "alpaca_sip_dk_vwap": 164.289815,
+     "massive_dk_vwap": 164.2798,
+     "vwap_fark_bps": 0.61,
+     "orta_nokta_fark_bps": 0.0
+    },
+    {
+     "ticker": "NUE",
+     "alpaca_sip_acilis": 274.52,
+     "massive_acilis": 274.52,
+     "acilis_fark_bps": 0.0,
+     "alpaca_sip_dk_vwap": 274.453659,
+     "massive_dk_vwap": 274.443,
+     "vwap_fark_bps": 0.388,
+     "orta_nokta_fark_bps": 0.0
+    }
+   ],
+   "max_sapma_bps": 2.757,
+   "tetiklendi": false,
+   "acilis_max_sapma_bps": 0.0
+  },
+  "olcut_hatasi_IEX_vs_konsolide": {
+   "esik_bps": 5.0,
+   "satirlar": [
+    {
+     "ticker": "AMGN",
+     "IEX_acilis": 414.385,
+     "konsolide_acilis": 413.715,
+     "IEX_eksi_konsolide_bps": 16.195,
+     "IEX_gunluk_islem_sayisi": 2852,
+     "SIP_gunluk_islem_sayisi": 57712,
+     "IEX_ilk_dk_islem_sayisi": 29,
+     "SIP_ilk_dk_islem_sayisi": 977
+    },
+    {
+     "ticker": "BKNG",
+     "IEX_acilis": 207.45,
+     "konsolide_acilis": 207.45,
+     "IEX_eksi_konsolide_bps": 0.0,
+     "IEX_gunluk_islem_sayisi": 19179,
+     "SIP_gunluk_islem_sayisi": 265749,
+     "IEX_ilk_dk_islem_sayisi": 63,
+     "SIP_ilk_dk_islem_sayisi": 1619
+    },
+    {
+     "ticker": "EMR",
+     "IEX_acilis": 163.865,
+     "konsolide_acilis": 164.32,
+     "IEX_eksi_konsolide_bps": -27.69,
+     "IEX_gunluk_islem_sayisi": 3971,
+     "SIP_gunluk_islem_sayisi": 68312,
+     "IEX_ilk_dk_islem_sayisi": 1,
+     "SIP_ilk_dk_islem_sayisi": 221
+    },
+    {
+     "ticker": "NUE",
+     "IEX_acilis": 273.51,
+     "konsolide_acilis": 274.52,
+     "IEX_eksi_konsolide_bps": -36.791,
+     "IEX_gunluk_islem_sayisi": 2280,
+     "SIP_gunluk_islem_sayisi": 33028,
+     "IEX_ilk_dk_islem_sayisi": 6,
+     "SIP_ilk_dk_islem_sayisi": 403
+    }
+   ],
+   "max_mutlak_bps": 36.791,
+   "medyan_mutlak_bps": 21.943,
+   "esigi_asan_satir": 3,
+   "kill3_curudu_mu": false
+  },
+  "kanonik_secim_sinamasi_MODELE_YAKINLIK": {
+   "aciklama": "her payda adayının MODELİN KENDİ paydasından (state/bars açılışı, kaynak: Cboe — bars_source.json) sapması, mutlak bps",
+   "satirlar": [
+    {
+     "ticker": "AMGN",
+     "model_paydasi": 413.71,
+     "D0_IEX_acilis_EDG037": 414.385,
+     "D0_IEX_acilis_EDG037_sapma_bps": 16.316,
+     "D1_konsolide_acilis": 413.715,
+     "D1_konsolide_acilis_sapma_bps": 0.121,
+     "D2_konsolide_ilk_dk_vwap": 414.1175,
+     "D2_konsolide_ilk_dk_vwap_sapma_bps": 9.85,
+     "D3_konsolide_ilk_dk_orta_nokta": 415.07,
+     "D3_konsolide_ilk_dk_orta_nokta_sapma_bps": 32.873
+    },
+    {
+     "ticker": "BKNG",
+     "model_paydasi": 207.29,
+     "D0_IEX_acilis_EDG037": 207.45,
+     "D0_IEX_acilis_EDG037_sapma_bps": 7.719,
+     "D1_konsolide_acilis": 207.45,
+     "D1_konsolide_acilis_sapma_bps": 7.719,
+     "D2_konsolide_ilk_dk_vwap": 207.841034,
+     "D2_konsolide_ilk_dk_vwap_sapma_bps": 26.583,
+     "D3_konsolide_ilk_dk_orta_nokta": 208.905,
+     "D3_konsolide_ilk_dk_orta_nokta_sapma_bps": 77.91
+    },
+    {
+     "ticker": "EMR",
+     "model_paydasi": 164.32,
+     "D0_IEX_acilis_EDG037": 163.865,
+     "D0_IEX_acilis_EDG037_sapma_bps": -27.69,
+     "D1_konsolide_acilis": 164.32,
+     "D1_konsolide_acilis_sapma_bps": 0.0,
+     "D2_konsolide_ilk_dk_vwap": 164.289815,
+     "D2_konsolide_ilk_dk_vwap_sapma_bps": -1.837,
+     "D3_konsolide_ilk_dk_orta_nokta": 164.045,
+     "D3_konsolide_ilk_dk_orta_nokta_sapma_bps": -16.736
+    },
+    {
+     "ticker": "NUE",
+     "model_paydasi": 275.0,
+     "D0_IEX_acilis_EDG037": 273.51,
+     "D0_IEX_acilis_EDG037_sapma_bps": -54.182,
+     "D1_konsolide_acilis": 274.52,
+     "D1_konsolide_acilis_sapma_bps": -17.455,
+     "D2_konsolide_ilk_dk_vwap": 274.453659,
+     "D2_konsolide_ilk_dk_vwap_sapma_bps": -19.867,
+     "D3_konsolide_ilk_dk_orta_nokta": 274.12,
+     "D3_konsolide_ilk_dk_orta_nokta_sapma_bps": -32.0
+    }
+   ],
+   "ozet": {
+    "D0_IEX_acilis_EDG037": {
+     "n": 4,
+     "medyan_mutlak_bps": 22.003,
+     "ortalama_mutlak_bps": 26.477,
+     "max_mutlak_bps": 54.182
+    },
+    "D1_konsolide_acilis": {
+     "n": 4,
+     "medyan_mutlak_bps": 3.92,
+     "ortalama_mutlak_bps": 6.324,
+     "max_mutlak_bps": 17.455
+    },
+    "D2_konsolide_ilk_dk_vwap": {
+     "n": 4,
+     "medyan_mutlak_bps": 14.858,
+     "ortalama_mutlak_bps": 14.534,
+     "max_mutlak_bps": 26.583
+    },
+    "D3_konsolide_ilk_dk_orta_nokta": {
+     "n": 4,
+     "medyan_mutlak_bps": 32.436,
+     "ortalama_mutlak_bps": 39.88,
+     "max_mutlak_bps": 77.91
+    }
+   }
+  },
+  "olcutler": {
+   "D0_IEX_acilis_EDG037": {
+    "aciklama": "IEX günlük açılış (EDG-037'nin PAYDASI — yan yana kalsın diye)",
+    "satirlar": [
+     {
+      "ticker": "AMGN",
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "qty": 22.0,
+      "fill": 415.007273,
+      "payda": 414.385,
+      "bps_vs_payda": 15.017,
+      "model_fiyati": 413.9169,
+      "model_bps_vs_payda": -11.297,
+      "model_BAR_hatasi_bps": -16.289,
+      "farkA_payda_ozdes_bps": 26.314,
+      "farkB_yalniz_icra_bps": 10.017,
+      "notional_fill": 9130.16,
+      "slipaj_dolar_GERCEK": 13.69
+     },
+     {
+      "ticker": "BKNG",
+      "plan_id": "P-2026-08-05-BKNG",
+      "qty": 22.0,
+      "fill": 210.24,
+      "payda": 207.45,
+      "bps_vs_payda": 134.49,
+      "model_fiyati": 207.3936,
+      "model_bps_vs_payda": -2.717,
+      "model_BAR_hatasi_bps": -7.713,
+      "farkA_payda_ozdes_bps": 137.207,
+      "farkB_yalniz_icra_bps": 129.49,
+      "notional_fill": 4625.28,
+      "slipaj_dolar_GERCEK": 61.38
+     },
+     {
+      "ticker": "EMR",
+      "plan_id": "P-2026-08-05-EMR",
+      "qty": 37.0,
+      "fill": 164.76,
+      "payda": 163.865,
+      "bps_vs_payda": 54.618,
+      "model_fiyati": 164.4022,
+      "model_bps_vs_payda": 32.781,
+      "model_BAR_hatasi_bps": 27.767,
+      "farkA_payda_ozdes_bps": 21.837,
+      "farkB_yalniz_icra_bps": 49.618,
+      "notional_fill": 6096.12,
+      "slipaj_dolar_GERCEK": 33.115
+     },
+     {
+      "ticker": "NUE",
+      "plan_id": "P-2026-08-05-NUE",
+      "qty": 25.0,
+      "fill": 273.9512,
+      "payda": 273.51,
+      "bps_vs_payda": 16.131,
+      "model_fiyati": 275.1375,
+      "model_bps_vs_payda": 59.504,
+      "model_BAR_hatasi_bps": 54.477,
+      "farkA_payda_ozdes_bps": -43.373,
+      "farkB_yalniz_icra_bps": 11.131,
+      "notional_fill": 6848.78,
+      "slipaj_dolar_GERCEK": 11.03
+     }
+    ],
+    "GERCEK_vs_payda_bps": {
+     "n": 4,
+     "medyan": 35.374,
+     "ortalama": 55.064,
+     "p90": 110.528,
+     "min": 15.017,
+     "max": 134.49,
+     "agirlikli_ortalama": 45.041,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 55.064,
+      "sd": 56.06,
+      "se": 28.03,
+      "t": 4.303,
+      "lo": -65.549,
+      "hi": 175.677,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": 15.574,
+      "hi": 104.9,
+      "orta": 55.064,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 4,
+      "lehte": 0,
+      "p_tek_kuyruk": 0.0625,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "FARK_A_payda_ozdes": {
+     "n": 4,
+     "medyan": 24.075,
+     "ortalama": 35.496,
+     "p90": 103.939,
+     "min": -43.373,
+     "max": 137.207,
+     "agirlikli_ortalama": 26.627,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 35.496,
+      "sd": 74.914,
+      "se": 37.457,
+      "t": 4.303,
+      "lo": -125.681,
+      "hi": 196.674,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -25.951,
+      "hi": 108.364,
+      "orta": 35.496,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − model_bps (İKİSİ DE aynı paydaya göre). Model fiyatı = MODELİN KENDİ barı × (1+5bps).",
+     "serh": "Bu fark İKİ bileşen taşır: (a) icra sapması, (b) modelin BARININ ölçüte sapması. Ayrıştırması `MODEL_BAR_HATASI`."
+    },
+    "FARK_B_yalniz_icra": {
+     "n": 4,
+     "medyan": 30.375,
+     "ortalama": 50.064,
+     "p90": 105.528,
+     "min": 10.017,
+     "max": 129.49,
+     "agirlikli_ortalama": 40.041,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 50.064,
+      "sd": 56.06,
+      "se": 28.03,
+      "t": 4.303,
+      "lo": -70.549,
+      "hi": 170.677,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": 10.574,
+      "hi": 99.9,
+      "orta": 50.064,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 4,
+      "lehte": 0,
+      "p_tek_kuyruk": 0.0625,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − 5.0 (modelin NOMİNAL slipaj varsayımı). Modelin bar hatası DIŞARIDA.",
+     "serh": "Kimlik: farkA = farkB − model_BAR_hatasi (birebir tutar)."
+    },
+    "MODEL_BAR_HATASI": {
+     "n": 4,
+     "medyan": 10.027,
+     "ortalama": 14.56,
+     "p90": 46.464,
+     "min": -16.289,
+     "max": 54.477,
+     "agirlikli_ortalama": 13.407,
+     "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+     "t_ci95": {
+      "ortalama": 14.56,
+      "sd": 32.739,
+      "se": 16.37,
+      "t": 4.303,
+      "lo": -55.878,
+      "hi": 84.999,
+      "sifiri_iceriyor": true
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 2,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.6875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+    }
+   },
+   "D1_konsolide_acilis": {
+    "aciklama": "KONSOLİDE resmî açılış basımı (SIP günlük bar `open` = 13:30 müzayede)",
+    "satirlar": [
+     {
+      "ticker": "AMGN",
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "qty": 22.0,
+      "fill": 415.007273,
+      "payda": 413.715,
+      "bps_vs_payda": 31.236,
+      "model_fiyati": 413.9169,
+      "model_bps_vs_payda": 4.879,
+      "model_BAR_hatasi_bps": -0.121,
+      "farkA_payda_ozdes_bps": 26.357,
+      "farkB_yalniz_icra_bps": 26.236,
+      "notional_fill": 9130.16,
+      "slipaj_dolar_GERCEK": 28.43
+     },
+     {
+      "ticker": "BKNG",
+      "plan_id": "P-2026-08-05-BKNG",
+      "qty": 22.0,
+      "fill": 210.24,
+      "payda": 207.45,
+      "bps_vs_payda": 134.49,
+      "model_fiyati": 207.3936,
+      "model_bps_vs_payda": -2.717,
+      "model_BAR_hatasi_bps": -7.713,
+      "farkA_payda_ozdes_bps": 137.207,
+      "farkB_yalniz_icra_bps": 129.49,
+      "notional_fill": 4625.28,
+      "slipaj_dolar_GERCEK": 61.38
+     },
+     {
+      "ticker": "EMR",
+      "plan_id": "P-2026-08-05-EMR",
+      "qty": 37.0,
+      "fill": 164.76,
+      "payda": 164.32,
+      "bps_vs_payda": 26.777,
+      "model_fiyati": 164.4022,
+      "model_bps_vs_payda": 5.0,
+      "model_BAR_hatasi_bps": 0.0,
+      "farkA_payda_ozdes_bps": 21.777,
+      "farkB_yalniz_icra_bps": 21.777,
+      "notional_fill": 6096.12,
+      "slipaj_dolar_GERCEK": 16.28
+     },
+     {
+      "ticker": "NUE",
+      "plan_id": "P-2026-08-05-NUE",
+      "qty": 25.0,
+      "fill": 273.9512,
+      "payda": 274.52,
+      "bps_vs_payda": -20.72,
+      "model_fiyati": 275.1375,
+      "model_bps_vs_payda": 22.494,
+      "model_BAR_hatasi_bps": 17.485,
+      "farkA_payda_ozdes_bps": -43.214,
+      "farkB_yalniz_icra_bps": -25.72,
+      "notional_fill": 6848.78,
+      "slipaj_dolar_GERCEK": -14.22
+     }
+    ],
+    "GERCEK_vs_payda_bps": {
+     "n": 4,
+     "medyan": 29.007,
+     "ortalama": 42.946,
+     "p90": 103.514,
+     "min": -20.72,
+     "max": 134.49,
+     "agirlikli_ortalama": 34.778,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 42.946,
+      "sd": 65.402,
+      "se": 32.701,
+      "t": 4.303,
+      "lo": -97.766,
+      "hi": 183.658,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -7.731,
+      "hi": 107.562,
+      "orta": 42.946,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "FARK_A_payda_ozdes": {
+     "n": 4,
+     "medyan": 24.067,
+     "ortalama": 35.532,
+     "p90": 103.952,
+     "min": -43.214,
+     "max": 137.207,
+     "agirlikli_ortalama": 26.668,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 35.532,
+      "sd": 74.86,
+      "se": 37.43,
+      "t": 4.303,
+      "lo": -125.53,
+      "hi": 196.593,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -25.821,
+      "hi": 108.349,
+      "orta": 35.532,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − model_bps (İKİSİ DE aynı paydaya göre). Model fiyatı = MODELİN KENDİ barı × (1+5bps).",
+     "serh": "Bu fark İKİ bileşen taşır: (a) icra sapması, (b) modelin BARININ ölçüte sapması. Ayrıştırması `MODEL_BAR_HATASI`."
+    },
+    "FARK_B_yalniz_icra": {
+     "n": 4,
+     "medyan": 24.007,
+     "ortalama": 37.946,
+     "p90": 98.514,
+     "min": -25.72,
+     "max": 129.49,
+     "agirlikli_ortalama": 29.778,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 37.946,
+      "sd": 65.402,
+      "se": 32.701,
+      "t": 4.303,
+      "lo": -102.766,
+      "hi": 178.658,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -12.731,
+      "hi": 102.562,
+      "orta": 37.946,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − 5.0 (modelin NOMİNAL slipaj varsayımı). Modelin bar hatası DIŞARIDA.",
+     "serh": "Kimlik: farkA = farkB − model_BAR_hatasi (birebir tutar)."
+    },
+    "MODEL_BAR_HATASI": {
+     "n": 4,
+     "medyan": -0.06,
+     "ortalama": 2.413,
+     "p90": 12.24,
+     "min": -7.713,
+     "max": 17.485,
+     "agirlikli_ortalama": 3.108,
+     "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+     "t_ci95": {
+      "ortalama": 2.413,
+      "sd": 10.676,
+      "se": 5.338,
+      "t": 4.303,
+      "lo": -20.557,
+      "hi": 25.383,
+      "sifiri_iceriyor": true
+     },
+     "isaret_testi": {
+      "n": 3,
+      "aleyhte": 1,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+    }
+   },
+   "D2_konsolide_ilk_dk_vwap": {
+    "aciklama": "KONSOLİDE ilk-dakika VWAP (13:30-13:31 barı `vw`)",
+    "satirlar": [
+     {
+      "ticker": "AMGN",
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "qty": 22.0,
+      "fill": 415.007273,
+      "payda": 414.1175,
+      "bps_vs_payda": 21.486,
+      "model_fiyati": 413.9169,
+      "model_bps_vs_payda": -4.845,
+      "model_BAR_hatasi_bps": -9.84,
+      "farkA_payda_ozdes_bps": 26.331,
+      "farkB_yalniz_icra_bps": 16.486,
+      "notional_fill": 9130.16,
+      "slipaj_dolar_GERCEK": 19.575
+     },
+     {
+      "ticker": "BKNG",
+      "plan_id": "P-2026-08-05-BKNG",
+      "qty": 22.0,
+      "fill": 210.24,
+      "payda": 207.841034,
+      "bps_vs_payda": 115.423,
+      "model_fiyati": 207.3936,
+      "model_bps_vs_payda": -21.526,
+      "model_BAR_hatasi_bps": -26.512,
+      "farkA_payda_ozdes_bps": 136.949,
+      "farkB_yalniz_icra_bps": 110.423,
+      "notional_fill": 4625.28,
+      "slipaj_dolar_GERCEK": 52.7773
+     },
+     {
+      "ticker": "EMR",
+      "plan_id": "P-2026-08-05-EMR",
+      "qty": 37.0,
+      "fill": 164.76,
+      "payda": 164.289815,
+      "bps_vs_payda": 28.619,
+      "model_fiyati": 164.4022,
+      "model_bps_vs_payda": 6.838,
+      "model_BAR_hatasi_bps": 1.837,
+      "farkA_payda_ozdes_bps": 21.781,
+      "farkB_yalniz_icra_bps": 23.619,
+      "notional_fill": 6096.12,
+      "slipaj_dolar_GERCEK": 17.3968
+     },
+     {
+      "ticker": "NUE",
+      "plan_id": "P-2026-08-05-NUE",
+      "qty": 25.0,
+      "fill": 273.9512,
+      "payda": 274.453659,
+      "bps_vs_payda": -18.308,
+      "model_fiyati": 275.1375,
+      "model_bps_vs_payda": 24.916,
+      "model_BAR_hatasi_bps": 19.906,
+      "farkA_payda_ozdes_bps": -43.224,
+      "farkB_yalniz_icra_bps": -23.308,
+      "notional_fill": 6848.78,
+      "slipaj_dolar_GERCEK": -12.5615
+     }
+    ],
+    "GERCEK_vs_payda_bps": {
+     "n": 4,
+     "medyan": 25.053,
+     "ortalama": 36.805,
+     "p90": 89.382,
+     "min": -18.308,
+     "max": 115.423,
+     "agirlikli_ortalama": 29.18,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 36.805,
+      "sd": 56.332,
+      "se": 28.166,
+      "t": 4.303,
+      "lo": -84.394,
+      "hi": 158.004,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -6.576,
+      "hi": 91.939,
+      "orta": 36.805,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "FARK_A_payda_ozdes": {
+     "n": 4,
+     "medyan": 24.056,
+     "ortalama": 35.459,
+     "p90": 103.764,
+     "min": -43.224,
+     "max": 136.949,
+     "agirlikli_ortalama": 26.613,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 35.459,
+      "sd": 74.748,
+      "se": 37.374,
+      "t": 4.303,
+      "lo": -125.36,
+      "hi": 196.279,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -25.835,
+      "hi": 108.157,
+      "orta": 35.459,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − model_bps (İKİSİ DE aynı paydaya göre). Model fiyatı = MODELİN KENDİ barı × (1+5bps).",
+     "serh": "Bu fark İKİ bileşen taşır: (a) icra sapması, (b) modelin BARININ ölçüte sapması. Ayrıştırması `MODEL_BAR_HATASI`."
+    },
+    "FARK_B_yalniz_icra": {
+     "n": 4,
+     "medyan": 20.053,
+     "ortalama": 31.805,
+     "p90": 84.382,
+     "min": -23.308,
+     "max": 110.423,
+     "agirlikli_ortalama": 24.18,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 31.805,
+      "sd": 56.332,
+      "se": 28.166,
+      "t": 4.303,
+      "lo": -89.394,
+      "hi": 153.004,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -11.576,
+      "hi": 86.939,
+      "orta": 31.805,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − 5.0 (modelin NOMİNAL slipaj varsayımı). Modelin bar hatası DIŞARIDA.",
+     "serh": "Kimlik: farkA = farkB − model_BAR_hatasi (birebir tutar)."
+    },
+    "MODEL_BAR_HATASI": {
+     "n": 4,
+     "medyan": -4.002,
+     "ortalama": -3.652,
+     "p90": 14.485,
+     "min": -26.512,
+     "max": 19.906,
+     "agirlikli_ortalama": -2.432,
+     "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+     "t_ci95": {
+      "ortalama": -3.652,
+      "sd": 19.545,
+      "se": 9.772,
+      "t": 4.303,
+      "lo": -45.703,
+      "hi": 38.398,
+      "sifiri_iceriyor": true
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 2,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.6875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+    }
+   },
+   "D3_konsolide_ilk_dk_orta_nokta": {
+    "aciklama": "KONSOLİDE ilk-dakika MENZİL orta-noktası ((h+l)/2)",
+    "satirlar": [
+     {
+      "ticker": "AMGN",
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "qty": 22.0,
+      "fill": 415.007273,
+      "payda": 415.07,
+      "bps_vs_payda": -1.511,
+      "model_fiyati": 413.9169,
+      "model_bps_vs_payda": -27.782,
+      "model_BAR_hatasi_bps": -32.766,
+      "farkA_payda_ozdes_bps": 26.271,
+      "farkB_yalniz_icra_bps": -6.511,
+      "notional_fill": 9130.16,
+      "slipaj_dolar_GERCEK": -1.38
+     },
+     {
+      "ticker": "BKNG",
+      "plan_id": "P-2026-08-05-BKNG",
+      "qty": 22.0,
+      "fill": 210.24,
+      "payda": 208.905,
+      "bps_vs_payda": 63.905,
+      "model_fiyati": 207.3936,
+      "model_bps_vs_payda": -72.347,
+      "model_BAR_hatasi_bps": -77.308,
+      "farkA_payda_ozdes_bps": 136.252,
+      "farkB_yalniz_icra_bps": 58.905,
+      "notional_fill": 4625.28,
+      "slipaj_dolar_GERCEK": 29.37
+     },
+     {
+      "ticker": "EMR",
+      "plan_id": "P-2026-08-05-EMR",
+      "qty": 37.0,
+      "fill": 164.76,
+      "payda": 164.045,
+      "bps_vs_payda": 43.586,
+      "model_fiyati": 164.4022,
+      "model_bps_vs_payda": 21.772,
+      "model_BAR_hatasi_bps": 16.764,
+      "farkA_payda_ozdes_bps": 21.814,
+      "farkB_yalniz_icra_bps": 38.586,
+      "notional_fill": 6096.12,
+      "slipaj_dolar_GERCEK": 26.455
+     },
+     {
+      "ticker": "NUE",
+      "plan_id": "P-2026-08-05-NUE",
+      "qty": 25.0,
+      "fill": 273.9512,
+      "payda": 274.12,
+      "bps_vs_payda": -6.158,
+      "model_fiyati": 275.1375,
+      "model_bps_vs_payda": 37.119,
+      "model_BAR_hatasi_bps": 32.103,
+      "farkA_payda_ozdes_bps": -43.277,
+      "farkB_yalniz_icra_bps": -11.158,
+      "notional_fill": 6848.78,
+      "slipaj_dolar_GERCEK": -4.22
+     }
+    ],
+    "GERCEK_vs_payda_bps": {
+     "n": 4,
+     "medyan": 21.037,
+     "ortalama": 24.956,
+     "p90": 57.809,
+     "min": -6.158,
+     "max": 63.905,
+     "agirlikli_ortalama": 18.925,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 24.956,
+      "sd": 34.316,
+      "se": 17.158,
+      "t": 4.303,
+      "lo": -48.875,
+      "hi": 98.786,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -3.835,
+      "hi": 53.745,
+      "orta": 24.956,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 2,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.6875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "FARK_A_payda_ozdes": {
+     "n": 4,
+     "medyan": 24.043,
+     "ortalama": 35.265,
+     "p90": 103.258,
+     "min": -43.277,
+     "max": 136.252,
+     "agirlikli_ortalama": 26.466,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 35.265,
+      "sd": 74.451,
+      "se": 37.226,
+      "t": 4.303,
+      "lo": -124.917,
+      "hi": 195.447,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -25.89,
+      "hi": 107.643,
+      "orta": 35.265,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 3,
+      "lehte": 1,
+      "p_tek_kuyruk": 0.3125,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − model_bps (İKİSİ DE aynı paydaya göre). Model fiyatı = MODELİN KENDİ barı × (1+5bps).",
+     "serh": "Bu fark İKİ bileşen taşır: (a) icra sapması, (b) modelin BARININ ölçüte sapması. Ayrıştırması `MODEL_BAR_HATASI`."
+    },
+    "FARK_B_yalniz_icra": {
+     "n": 4,
+     "medyan": 16.037,
+     "ortalama": 19.956,
+     "p90": 52.809,
+     "min": -11.158,
+     "max": 58.905,
+     "agirlikli_ortalama": 13.925,
+     "agirlik_tabani": "notional (fill × qty)",
+     "t_ci95": {
+      "ortalama": 19.956,
+      "sd": 34.316,
+      "se": 17.158,
+      "t": 4.303,
+      "lo": -53.875,
+      "hi": 93.786,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": -8.835,
+      "hi": 48.745,
+      "orta": 19.956,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 2,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.6875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "tanim": "gerçek_bps − 5.0 (modelin NOMİNAL slipaj varsayımı). Modelin bar hatası DIŞARIDA.",
+     "serh": "Kimlik: farkA = farkB − model_BAR_hatasi (birebir tutar)."
+    },
+    "MODEL_BAR_HATASI": {
+     "n": 4,
+     "medyan": -8.001,
+     "ortalama": -15.302,
+     "p90": 27.501,
+     "min": -77.308,
+     "max": 32.103,
+     "agirlikli_ortalama": -12.534,
+     "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+     "t_ci95": {
+      "ortalama": -15.302,
+      "sd": 49.75,
+      "se": 24.875,
+      "t": 4.303,
+      "lo": -122.339,
+      "hi": 91.735,
+      "sifiri_iceriyor": true
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 2,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.6875,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+    }
+   }
+  },
+  "EDG037_YAYINLANMIS": {
+   "kaynak": "../edg037_tca_2026-08-13/sonuc.json",
+   "sha256_16": "ecb6c89bb4f3d8a0",
+   "slipaj_giris_bps_vs_resmi_acilis": {
+    "n": 4,
+    "medyan": 35.374,
+    "ortalama": 55.064,
+    "p90": 110.528,
+    "min": 15.017,
+    "max": 134.49,
+    "agirlikli_ortalama": 44.849
+   },
+   "satir_sayisi": 4
+  },
+  "KANONIK": {
+   "secim": "D1_konsolide_acilis",
+   "on_kayit": "research/cards/EDG-2026-038-tca-konsolide-cikis.yaml → kanonik_olcut_on_kayit",
+   "curutme_kosullari_gerceklesti_mi": "HAYIR — hiçbiri gerçekleşmedi",
+   "gecerli": true
+  }
+ },
+ "b_cikis_bacagi": {
+  "olculdu": false,
+  "n": 0,
+  "DAMGA": "ÖLÇÜLEMEDİ (n=0) — kart eşiği n≥5",
+  "neden": "Motorun gönderdiği HİÇBİR satış emri bugüne dek dolmadı. Hesabın TÜM dolum geçmişinde (10 FILL olayı) satış tarafı SIFIRdır — dört pozisyon (NUE/EMR/BKNG/AMGN) 2026-08-06'dan beri AÇIK, koruma bacakları ne stop'a ne hedefe değdi. Çıkış slipajı için tek bir gözlem bile yok; sayı UYDURULMAZ ve giriş sayısı çıkışa KOPYALANMAZ.",
+  "gonderilen_motor_satis_emri": 24,
+  "dolan_motor_satis_emri": 0,
+  "satis_emir_status_dagilim": {
+   "canceled": 12,
+   "expired": 4,
+   "held": 4,
+   "new": 4
+  },
+  "dislanan_tatbikat_satis_emri": 8,
+  "tum_FILL_olayi": 10,
+  "FILL_side_dagilim": {
+   "buy": 10
+  },
+  "i_koruma_bacagi_anatomisi": {
+   "kod": {
+    "gonderim": "meridian/adapters/alpaca.py:979-1035 `submit_protective_oco`",
+    "govde": "alpaca.py:1021-1025 — {type:'limit', time_in_force:KORUMA_TIF, order_class:'oco', take_profit:{limit_price}, stop_loss:{stop_price}}",
+    "KORUMA_TIF": "gtc",
+    "KORUMA_TIF_kod": "alpaca.py:955 — `KORUMA_TIF = \"gtc\"` (ENTRY_TIF'ten TÜRETİLMEZ)",
+    "stop_bacagi_limitsiz": "alpaca.py:1024 — `\"stop_loss\": {\"stop_price\": round(sl, 2)}` — gövdede `limit_price` YOK ⇒ tetiklenince MARKET",
+    "giris_bracket_TIF": "broker.py:96 `ENTRY_TIF='gtc'` · :102 `ENTRY_TIF_ALLOWED=('gtc',)` (E1-v2, 2026-08-07 kelepçesi)"
+   },
+   "canli": {
+    "stop_bacagi_n": 12,
+    "limit_bacagi_n": 12,
+    "stop_bacaginda_limit_price_bos": 12,
+    "tif_dagilim": {
+     "day": 8,
+     "gtc": 16
+    },
+    "order_class_dagilim": {
+     "bracket": 8,
+     "oco": 16
+    },
+    "acik_stop_bacagi_status": {
+     "held": 4
+    },
+    "acik_limit_bacagi_status": {
+     "new": 4
+    },
+    "satirlar": [
+     {
+      "client_order_id": "2af95ccb-8851-4d01-ab0f-e661c072925c",
+      "symbol": "NUE",
+      "type": "stop",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": null,
+      "stop_price": "257.4",
+      "status": "canceled",
+      "created_at": "2026-08-05T22:10:00.305267Z",
+      "submitted_at": "2026-08-05T22:10:00.305267Z",
+      "canceled_at": "2026-08-06T20:02:06.635242Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "8796e3f6-a515-41ef-b470-8d3bceba5c3d",
+      "symbol": "NUE",
+      "type": "limit",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": "317.49",
+      "stop_price": null,
+      "status": "expired",
+      "created_at": "2026-08-05T22:10:00.305267Z",
+      "submitted_at": "2026-08-06T13:33:07.945149Z",
+      "canceled_at": null,
+      "expired_at": "2026-08-06T20:02:06.633094Z",
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "a1be9baf-3ef3-4e78-8ff0-20cb30728045",
+      "symbol": "EMR",
+      "type": "stop",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": null,
+      "stop_price": "152.48",
+      "status": "canceled",
+      "created_at": "2026-08-05T22:10:00.911051Z",
+      "submitted_at": "2026-08-05T22:10:00.911051Z",
+      "canceled_at": "2026-08-06T20:00:16.648963Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "fbab98c1-f012-47ce-8724-17457611985a",
+      "symbol": "EMR",
+      "type": "limit",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": "186.35",
+      "stop_price": null,
+      "status": "expired",
+      "created_at": "2026-08-05T22:10:00.911051Z",
+      "submitted_at": "2026-08-06T13:32:20.954709Z",
+      "canceled_at": null,
+      "expired_at": "2026-08-06T20:00:16.646395Z",
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "95d4dc02-0c87-4fcd-9614-32c3383c6d14",
+      "symbol": "BKNG",
+      "type": "stop",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": null,
+      "stop_price": "191.54",
+      "status": "canceled",
+      "created_at": "2026-08-05T22:10:01.521476Z",
+      "submitted_at": "2026-08-05T22:10:01.521476Z",
+      "canceled_at": "2026-08-06T20:01:34.295962Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "e3b2e2d3-50d0-462e-98ea-8f9ec9370810",
+      "symbol": "BKNG",
+      "type": "limit",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": "245.76",
+      "stop_price": null,
+      "status": "expired",
+      "created_at": "2026-08-05T22:10:01.521476Z",
+      "submitted_at": "2026-08-06T13:32:06.878237Z",
+      "canceled_at": null,
+      "expired_at": "2026-08-06T20:01:34.293582Z",
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "6396a952-bed7-460b-9ae0-8de6e2fbe9e3",
+      "symbol": "AMGN",
+      "type": "stop",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": null,
+      "stop_price": "389.42",
+      "status": "canceled",
+      "created_at": "2026-08-06T10:32:46.83022Z",
+      "submitted_at": "2026-08-06T10:32:46.83022Z",
+      "canceled_at": "2026-08-06T20:02:31.926869Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "42080cc1-86f5-48e2-bac1-74333cbecafd",
+      "symbol": "AMGN",
+      "type": "limit",
+      "order_class": "bracket",
+      "time_in_force": "day",
+      "limit_price": "453.5",
+      "stop_price": null,
+      "status": "expired",
+      "created_at": "2026-08-06T10:32:46.83022Z",
+      "submitted_at": "2026-08-06T13:32:28.166705Z",
+      "canceled_at": null,
+      "expired_at": "2026-08-06T20:02:31.923914Z",
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "5c59ce27-829c-41dc-bbe0-2a18211fdb6f",
+      "symbol": "AMGN",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "389.42",
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.045434Z",
+      "submitted_at": "2026-08-07T16:23:41.045434Z",
+      "canceled_at": "2026-08-07T20:32:40.009048Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260807-1623-AMGN",
+      "symbol": "AMGN",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "453.5",
+      "stop_price": null,
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.045434Z",
+      "submitted_at": "2026-08-07T16:23:41.072277Z",
+      "canceled_at": "2026-08-07T20:32:40.007217Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "69ae03af-42c8-42ba-a970-de771aa08eeb",
+      "symbol": "BKNG",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "191.54",
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.462893Z",
+      "submitted_at": "2026-08-07T16:23:41.462893Z",
+      "canceled_at": "2026-08-07T20:32:39.700129Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260807-1623-BKNG",
+      "symbol": "BKNG",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "245.76",
+      "stop_price": null,
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.462893Z",
+      "submitted_at": "2026-08-07T16:23:41.466723Z",
+      "canceled_at": "2026-08-07T20:32:39.69825Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "1b8aef16-8a3d-46b1-a186-d844668ce683",
+      "symbol": "EMR",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "152.48",
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.812121Z",
+      "submitted_at": "2026-08-07T16:23:41.812121Z",
+      "canceled_at": "2026-08-07T20:32:39.396883Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260807-1623-EMR",
+      "symbol": "EMR",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "186.35",
+      "stop_price": null,
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:41.812121Z",
+      "submitted_at": "2026-08-07T16:23:41.836569Z",
+      "canceled_at": "2026-08-07T20:32:39.394967Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "36e1455e-1a45-43a7-a43e-614c34d8d349",
+      "symbol": "NUE",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "257.4",
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:42.386212Z",
+      "submitted_at": "2026-08-07T16:23:42.386212Z",
+      "canceled_at": "2026-08-07T20:32:39.08771Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260807-1623-NUE",
+      "symbol": "NUE",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "317.49",
+      "stop_price": null,
+      "status": "canceled",
+      "created_at": "2026-08-07T16:23:42.386212Z",
+      "submitted_at": "2026-08-07T16:23:42.411747Z",
+      "canceled_at": "2026-08-07T20:32:39.085715Z",
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "50990cb8-6dc8-4537-aa83-369afab66509",
+      "symbol": "AMGN",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "389.42",
+      "status": "held",
+      "created_at": "2026-08-09T08:35:43.395143Z",
+      "submitted_at": "2026-08-09T08:35:43.395143Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260809-0835-AMGN",
+      "symbol": "AMGN",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "453.5",
+      "stop_price": null,
+      "status": "new",
+      "created_at": "2026-08-09T08:35:43.395143Z",
+      "submitted_at": "2026-08-10T08:00:38.336413Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "41e85f79-5778-42e5-a6ec-811ee5834ba0",
+      "symbol": "BKNG",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "191.54",
+      "status": "held",
+      "created_at": "2026-08-09T08:35:43.705466Z",
+      "submitted_at": "2026-08-09T08:35:43.705466Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260809-0835-BKNG",
+      "symbol": "BKNG",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "245.76",
+      "stop_price": null,
+      "status": "new",
+      "created_at": "2026-08-09T08:35:43.705466Z",
+      "submitted_at": "2026-08-10T08:00:35.050306Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "33f9d1b2-615c-4a44-81b9-5d56ae0e5229",
+      "symbol": "EMR",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "152.48",
+      "status": "held",
+      "created_at": "2026-08-09T08:35:44.012538Z",
+      "submitted_at": "2026-08-09T08:35:44.012538Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260809-0835-EMR",
+      "symbol": "EMR",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "186.35",
+      "stop_price": null,
+      "status": "new",
+      "created_at": "2026-08-09T08:35:44.012538Z",
+      "submitted_at": "2026-08-10T08:00:38.340006Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "f57885f7-b0fb-40be-b1e2-ca7865375121",
+      "symbol": "NUE",
+      "type": "stop",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": null,
+      "stop_price": "257.4",
+      "status": "held",
+      "created_at": "2026-08-09T08:35:44.318218Z",
+      "submitted_at": "2026-08-09T08:35:44.318218Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     },
+     {
+      "client_order_id": "P-KORUMA-20260809-0835-NUE",
+      "symbol": "NUE",
+      "type": "limit",
+      "order_class": "oco",
+      "time_in_force": "gtc",
+      "limit_price": "317.49",
+      "stop_price": null,
+      "status": "new",
+      "created_at": "2026-08-09T08:35:44.318218Z",
+      "submitted_at": "2026-08-10T08:00:38.343814Z",
+      "canceled_at": null,
+      "expired_at": null,
+      "filled_at": null,
+      "filled_qty": "0"
+     }
+    ]
+   },
+   "OLCULEMEDI_held_semantigi": {
+    "gozlem": "Yürürlükteki dört OCO'nun STOP bacağı `status=held`, LİMİT bacağı `status=new`. Depo bu yapıyı 2026-08-09'da ölçmüş ve belgelemiş (alpaca.py:435-448: primary=limit/accepted, legs[0]=stop/held).",
+    "olculemeyen": "`held` bacağının tetiklendiğinde GERÇEKTEN piyasaya çıkıp çıkmadığı BU VERİDEN doğrulanamaz — hiçbir stop bugüne dek tetiklenmedi (n=0). 'Koruma ayakta' cümlesi broker'ın belgelenmiş davranışına dayanıyor, BİZİM ÖLÇÜMÜMÜZE değil. Uydurma yasağı: bu satır bir varsayımdır ve öyle etiketlenmiştir."
+   }
+  },
+  "ii_koruma_yasam_dongusu": {
+   "ciplak_pencere_esigi_seans": 1.0,
+   "seans_tanimi": "13:30-20:00Z hafta içi (6,5 saat/seans); resmî tatil düşülmedi (2026-08-06..13 aralığında ABD borsa tatili yok)",
+   "pozisyon_basina": {
+    "AMGN": {
+     "pozisyon_acildi": "2026-08-06T13:32:28.153863+00:00",
+     "koruma_canli_araliklari": [
+      [
+       "2026-08-06T13:32:28.153863+00:00",
+       "2026-08-06T20:02:31.926869+00:00"
+      ],
+      [
+       "2026-08-07T16:23:41.045434+00:00",
+       "2026-08-07T20:32:40.009048+00:00"
+      ],
+      [
+       "2026-08-09T08:35:43.395143+00:00",
+       "2026-08-13T18:21:58+00:00"
+      ]
+     ],
+     "korumasiz_pencereler": [
+      {
+       "bas": "2026-08-06T20:02:31.926869+00:00",
+       "son": "2026-08-07T16:23:41.045434+00:00",
+       "duvar_saati": 20.353,
+       "SEANS_saati": 2.895
+      },
+      {
+       "bas": "2026-08-07T20:32:40.009048+00:00",
+       "son": "2026-08-09T08:35:43.395143+00:00",
+       "duvar_saati": 36.051,
+       "SEANS_saati": 0.0
+      }
+     ],
+     "korumasiz_toplam_duvar_saati": 56.403,
+     "korumasiz_toplam_SEANS_saati": 2.895
+    },
+    "BKNG": {
+     "pozisyon_acildi": "2026-08-06T13:32:06.872629+00:00",
+     "koruma_canli_araliklari": [
+      [
+       "2026-08-06T13:32:06.872629+00:00",
+       "2026-08-06T20:01:34.295962+00:00"
+      ],
+      [
+       "2026-08-07T16:23:41.462893+00:00",
+       "2026-08-07T20:32:39.700129+00:00"
+      ],
+      [
+       "2026-08-09T08:35:43.705466+00:00",
+       "2026-08-13T18:21:58+00:00"
+      ]
+     ],
+     "korumasiz_pencereler": [
+      {
+       "bas": "2026-08-06T20:01:34.295962+00:00",
+       "son": "2026-08-07T16:23:41.462893+00:00",
+       "duvar_saati": 20.369,
+       "SEANS_saati": 2.895
+      },
+      {
+       "bas": "2026-08-07T20:32:39.700129+00:00",
+       "son": "2026-08-09T08:35:43.705466+00:00",
+       "duvar_saati": 36.051,
+       "SEANS_saati": 0.0
+      }
+     ],
+     "korumasiz_toplam_duvar_saati": 56.42,
+     "korumasiz_toplam_SEANS_saati": 2.895
+    },
+    "EMR": {
+     "pozisyon_acildi": "2026-08-06T13:32:20.943857+00:00",
+     "koruma_canli_araliklari": [
+      [
+       "2026-08-06T13:32:20.943857+00:00",
+       "2026-08-06T20:00:16.648963+00:00"
+      ],
+      [
+       "2026-08-07T16:23:41.812121+00:00",
+       "2026-08-07T20:32:39.396883+00:00"
+      ],
+      [
+       "2026-08-09T08:35:44.012538+00:00",
+       "2026-08-13T18:21:58+00:00"
+      ]
+     ],
+     "korumasiz_pencereler": [
+      {
+       "bas": "2026-08-06T20:00:16.648963+00:00",
+       "son": "2026-08-07T16:23:41.812121+00:00",
+       "duvar_saati": 20.39,
+       "SEANS_saati": 2.895
+      },
+      {
+       "bas": "2026-08-07T20:32:39.396883+00:00",
+       "son": "2026-08-09T08:35:44.012538+00:00",
+       "duvar_saati": 36.051,
+       "SEANS_saati": 0.0
+      }
+     ],
+     "korumasiz_toplam_duvar_saati": 56.442,
+     "korumasiz_toplam_SEANS_saati": 2.895
+    },
+    "NUE": {
+     "pozisyon_acildi": "2026-08-06T13:33:07.913388+00:00",
+     "koruma_canli_araliklari": [
+      [
+       "2026-08-06T13:33:07.913388+00:00",
+       "2026-08-06T20:02:06.635242+00:00"
+      ],
+      [
+       "2026-08-07T16:23:42.386212+00:00",
+       "2026-08-07T20:32:39.087710+00:00"
+      ],
+      [
+       "2026-08-09T08:35:44.318218+00:00",
+       "2026-08-13T18:21:58+00:00"
+      ]
+     ],
+     "korumasiz_pencereler": [
+      {
+       "bas": "2026-08-06T20:02:06.635242+00:00",
+       "son": "2026-08-07T16:23:42.386212+00:00",
+       "duvar_saati": 20.36,
+       "SEANS_saati": 2.895
+      },
+      {
+       "bas": "2026-08-07T20:32:39.087710+00:00",
+       "son": "2026-08-09T08:35:44.318218+00:00",
+       "duvar_saati": 36.051,
+       "SEANS_saati": 0.0
+      }
+     ],
+     "korumasiz_toplam_duvar_saati": 56.411,
+     "korumasiz_toplam_SEANS_saati": 2.895
+    }
+   },
+   "en_uzun_korumasiz_SEANS_saati": 2.895,
+   "en_uzun_korumasiz_SEANS_orani": 0.445,
+   "esik_asildi_mi": false,
+   "yeniden_kurma_yolu": {
+    "cagri_yeri": "meridian/api.py:4564 — `alpaca.submit_protective_oco(...)`",
+    "tek_cagiran": "meridian/api.py:4513 `koruma_kur(onay, oneri_id, onaylayan)`",
+    "http_ucu": "POST /api/alpaca/koruma_kur (api.py:4636)",
+    "kapi_sayisi": 3,
+    "kapilar": [
+     "1) ölçüm — broker okunamazsa emir YOK",
+     "2) ONAY JETONU — jetonsuz çağrı KURU KOŞU (hiçbir emir gitmez)",
+     "3) ÖNERİ KİMLİĞİ — o ölçüme ait `oneri_id` eşleşmezse emir GİTMEZ"
+    ],
+    "OTOMATIK_MI": false,
+    "beyan": "Depoda `submit_protective_oco`yu çağıran BAŞKA yol YOK (tarama: yalnız api.py:4564 + testler). Yani `tif=day` korumayı öldürdüğünde koruma KENDİLİĞİNDEN kurulmaz — operatörün panodan onay jetonuyla basması gerekir. Bekçi (`watchdog.py:2418-2583` `korumasiz_pozisyon` alarmı) durumu GÖRÜR ve alarm üretir ama KURMAZ.",
+    "bekci": "meridian/watchdog.py:2435-2522 — `korumasiz/toplam` + payda beyanı; alarm `kind=korumasiz_pozisyon`"
+   }
+  },
+  "iii_cikis_slipaji": {
+   "n": 0,
+   "satirlar": [],
+   "payda": null,
+   "cikis_gunu_barlari": 0
+  },
+  "n0_MEKANIK_NEDENI": {
+   "soru": "Emir ölü olduğu için mi dolmadı, yoksa fiyat seviyeye hiç ulaşmadığı için mi? İKİ AYRI NEDEN — ikisi de doğru olabilir, ikisi de ölçülür.",
+   "kaynak": "Massive günlük barlar 2026-08-06..08-12 (massive_capraz.json; 2026-08-13 seansı HENÜZ KAPANMADI, kapsam DIŞI)",
+   "pozisyon_basina": {
+    "AMGN": {
+     "stop": 389.42,
+     "hedef": 453.5,
+     "seans_n": 5,
+     "kapsam": [
+      "2026-08-06",
+      "2026-08-12"
+     ],
+     "en_dusuk": 401.07,
+     "en_yuksek": 421.79,
+     "stopa_en_yakin_bps": 299.2,
+     "hedefe_en_yakin_bps": -699.2,
+     "stop_degdi_mi": false,
+     "hedef_degdi_mi": false
+    },
+    "BKNG": {
+     "stop": 191.54,
+     "hedef": 245.76,
+     "seans_n": 5,
+     "kapsam": [
+      "2026-08-06",
+      "2026-08-12"
+     ],
+     "en_dusuk": 205.82,
+     "en_yuksek": 215.69,
+     "stopa_en_yakin_bps": 745.5,
+     "hedefe_en_yakin_bps": -1223.6,
+     "stop_degdi_mi": false,
+     "hedef_degdi_mi": false
+    },
+    "EMR": {
+     "stop": 152.48,
+     "hedef": 186.35,
+     "seans_n": 5,
+     "kapsam": [
+      "2026-08-06",
+      "2026-08-12"
+     ],
+     "en_dusuk": 156.0,
+     "en_yuksek": 166.35,
+     "stopa_en_yakin_bps": 230.8,
+     "hedefe_en_yakin_bps": -1073.2,
+     "stop_degdi_mi": false,
+     "hedef_degdi_mi": false
+    },
+    "NUE": {
+     "stop": 257.4,
+     "hedef": 317.49,
+     "seans_n": 5,
+     "kapsam": [
+      "2026-08-06",
+      "2026-08-12"
+     ],
+     "en_dusuk": 266.8854,
+     "en_yuksek": 277.6,
+     "stopa_en_yakin_bps": 368.5,
+     "hedefe_en_yakin_bps": -1256.4,
+     "stop_degdi_mi": false,
+     "hedef_degdi_mi": false
+    }
+   },
+   "HICBIR_SEVIYE_DEGMEDI": true,
+   "hüküm": "BAĞLAYICI KISIT TUTUŞ SÜRESİ, EMİR ÖMRÜ DEĞİL: beş seansın hiçbirinde hiçbir pozisyonun stop'u ya da hedefi DEĞMEDİ. Yani korumalar kesintisiz canlı kalsaydı DA çıkış dolumu n=0 olurdu. EDG-037'nin n=0'ı `ENTRY_TIF=day` kelepçesine bağlaması EKSİK bir teşhistir — kelepçe KORUMA boşluğu üretti (§ii), ama ÖLÇÜM boşluğunu üreten şey o değil, fiyatın hiçbir seviyeye ulaşmamasıdır."
+  },
+  "ASIMETRI": {
+   "giris_bacagi_canli": "type=limit (bracket) — ödenen fiyat LİMİTLE TAVANLI (alpaca.py:347-348; canlı 4/4 emir `type=limit`)",
+   "cikis_stop_bacagi_canli": "type=stop, limit_price=null → tetiklenince MARKET, TAVANSIZ (alpaca.py:1024 gövdede yalnız `stop_price`; canlı kayıtta 12/12 stop bacağında limit_price boş)",
+   "replay_giris": "broker.py:515 — `base_fill = next_open * (1.0 + self.slip)`  (slip=5 bps)",
+   "replay_cikis": "broker.py:669 — `exit_fill = raw_exit * (1.0 - self.slip)`   (AYNI 5 bps)",
+   "replay_stop_dokunusu": "broker.py:596 — bar-içi stop dokunuşunda çıkış `eff_stop` kabul edilir; stop-tetik SLİPAJI SIFIR varsayılır, üstüne yalnız 5 bps düşülür",
+   "HUKUM_YOK_SERHI": "Giriş LİMİT (tavanlı) ama çıkış MARKET (tavansız) olduğu için replay'in SİMETRİK 5 bps varsayımı çıkış bacağında YAPISAL OLARAK daha iyimser OLABİLİR. 'Olabilir' — çünkü ÖLÇÜLMEDİ (aşağıdaki n). Bu satır bir mekanizma beyanıdır, bir sayı değildir."
+  }
+ },
+ "c_pf_etkisi": {
+  "taban_defter": {
+   "kaynak": "../edg032_final_paket_2026-08-12/islemler_cmb.json",
+   "n": 885,
+   "sha256_16": "d4033de68f6281a4",
+   "tarih_araligi": [
+    "2022-01-07",
+    "2026-07-24"
+   ]
+  },
+  "kanonik_olcut": "D1_konsolide_acilis",
+  "kullanilan_fark": {
+   "BIRINCIL": "FARK_B_yalniz_icra (gerçek_bps − 5 bps nominal)",
+   "gerekce": "FARK_A modelin BAR hatasını da taşır; o hata bir veri-sağlayıcı sapmasıdır ve n=4'te işareti belirlenemez (ortalama ~+2 bps, medyan ~0). Dört gözlemlik bir bar-hatası tahminini 885 işleme yaymak, ölçmediğimiz bir sistematiği varsaymak olurdu. İKİ TANIM DA senaryolarda var (K* = B, A* = A).",
+   "B_ortalama": 37.946,
+   "B_medyan": 24.007,
+   "B_notional_agirlikli": 29.778,
+   "B_min": -25.72,
+   "B_max": 129.49,
+   "B_n": 4,
+   "B_t_ci95": {
+    "ortalama": 37.946,
+    "sd": 65.402,
+    "se": 32.701,
+    "t": 4.303,
+    "lo": -102.766,
+    "hi": 178.658,
+    "sifiri_iceriyor": true
+   },
+   "B_bootstrap_ci95": {
+    "lo": -12.731,
+    "hi": 102.562,
+    "orta": 37.946,
+    "n_iter": 20000,
+    "seed": 20260813,
+    "serh": "n<10'da bootstrap yalnız GÖZLENEN değerleri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+   },
+   "A_ortalama": 35.532,
+   "A_notional_agirlikli": 26.668,
+   "A_t_ci95": {
+    "ortalama": 35.532,
+    "sd": 74.86,
+    "se": 37.43,
+    "t": 4.303,
+    "lo": -125.53,
+    "hi": 196.593,
+    "sifiri_iceriyor": true
+   },
+   "model_bar_hatasi": {
+    "n": 4,
+    "medyan": -0.06,
+    "ortalama": 2.413,
+    "p90": 12.24,
+    "min": -7.713,
+    "max": 17.485,
+    "agirlikli_ortalama": 3.108,
+    "tanim": "replay bar arşivi açılışı (Cboe) − bu ölçüt, bps",
+    "t_ci95": {
+     "ortalama": 2.413,
+     "sd": 10.676,
+     "se": 5.338,
+     "t": 4.303,
+     "lo": -20.557,
+     "hi": 25.383,
+     "sifiri_iceriyor": true
+    },
+    "isaret_testi": {
+     "n": 3,
+     "aleyhte": 1,
+     "lehte": 2,
+     "p_tek_kuyruk": 0.875,
+     "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+    },
+    "serh": "Bu bir İCRA kalemi DEĞİL, bir VERİ-SAĞLAYICI sapmasıdır. İşareti sistematik mi rastgele mi — n=4'te SÖYLENEMEZ."
+   },
+   "serh": "n=4 — NOKTA TAHMİNİ, dağılım değil"
+  },
+  "notional_turetme": {
+   "yontem": "giriş notional = qty × açılış(ts_open) × (1+slippage_bps/1e4) — motorun KENDİ dolum yasası (broker.py:515). çıkış notional = giriş notional + pnl_dollars — KİMLİK (komisyon 0 + scale_out_frac 0,0).",
+   "bar_kaynagi": "../edg032_final_paket_2026-08-12/state_cmb/bars",
+   "bar_bulunan": 885,
+   "bar_yok": 0,
+   "sadakat_sinamasi": {
+    "test_edilen": 885,
+    "gecen": 885,
+    "oran": 1.0,
+    "olcut": "türetilen çıkış fiyatı, ts_close barının [low×0,98, high×1,02] aralığında mı"
+   }
+  },
+  "senaryolar": {
+   "S0_taban_replay_varsayimi": {
+    "aciklama": "EDG-032'nin yayınlanmış hâli — friksiyon = 5 bps/bacak (fiyata gömülü)",
+    "n": 885,
+    "brut_kazanc": 205552.44,
+    "brut_kayip": -184867.75,
+    "net": 20684.69,
+    "pf": 1.1119
+   },
+   "K1_kanonik_ORTALAMA_yalniz_giris": {
+    "giris_ek_bps": 37.946,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 192134.67,
+    "brut_kayip": -212735.9,
+    "net": -20601.23,
+    "pf": 0.9032,
+    "kazanan_n": 308,
+    "kaybeden_n": 577,
+    "aciklama": "KANONİK (konsolide açılış) ortalama fark YALNIZ giriş bacağına — çıkış ÖLÇÜLMEDİ (n=0), bu yüzden bu senaryo ALT SINIR"
+   },
+   "K2_kanonik_MEDYAN_yalniz_giris": {
+    "giris_ek_bps": 24.007,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 197001.93,
+    "brut_kayip": -202437.28,
+    "net": -5435.35,
+    "pf": 0.9732,
+    "kazanan_n": 311,
+    "kaybeden_n": 574,
+    "aciklama": "kanonik medyan fark yalnız girişe (uç gözlemin etkisi kırpılmış)"
+   },
+   "K3_kanonik_AGIRLIKLI_yalniz_giris": {
+    "giris_ek_bps": 29.778,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 194978.65,
+    "brut_kayip": -206692.96,
+    "net": -11714.3,
+    "pf": 0.9433,
+    "kazanan_n": 311,
+    "kaybeden_n": 574,
+    "aciklama": "kanonik notional-ağırlıklı fark yalnız girişe — dolar etkisine en yakın okuma"
+   },
+   "K4_kanonik_ORTALAMA_SIMETRIK_VARSAYIM": {
+    "giris_ek_bps": 37.946,
+    "cikis_ek_bps": 37.946,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 178410.84,
+    "brut_kayip": -240376.49,
+    "net": -61965.65,
+    "pf": 0.7422,
+    "kazanan_n": 294,
+    "kaybeden_n": 591,
+    "aciklama": "VARSAYIM (ölçüm DEĞİL): aynı fark her iki bacağa. Çıkış bacağı n=0 — bu satır 'çıkış girişe benzeseydi' der, 'çıkış böyle' DEMEZ"
+   },
+   "K5_kanonik_AGIRLIKLI_SIMETRIK_VARSAYIM": {
+    "giris_ek_bps": 29.778,
+    "cikis_ek_bps": 29.778,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 184091.9,
+    "brut_kayip": -228266.79,
+    "net": -44174.89,
+    "pf": 0.8065,
+    "kazanan_n": 301,
+    "kaybeden_n": 584,
+    "aciklama": "VARSAYIM: notional-ağırlıklı fark her iki bacağa"
+   },
+   "K6_EN_IYI_gozlem_yalniz_giris": {
+    "giris_ek_bps": -25.72,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 217337.59,
+    "brut_kayip": -168669.08,
+    "net": 48668.51,
+    "pf": 1.2885,
+    "kazanan_n": 419,
+    "kaybeden_n": 466,
+    "aciklama": "dört gözlemin EN LEHTE olanı yalnız girişe — 'en iyimser okuma bile ne yapar'. Kanonik ölçütte bu gözlem NEGATİF (NUE): dolum konsolide açılışın ALTINDA gerçekleşti, yani o işlemde icra modelden İYİydi."
+   },
+   "K7_E3_kotumser_bant_referans": {
+    "giris_ek_bps": 5.0,
+    "cikis_ek_bps": 5.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 201855.78,
+    "brut_kayip": -192061.61,
+    "net": 9794.17,
+    "pf": 1.051,
+    "kazanan_n": 320,
+    "kaybeden_n": 565,
+    "aciklama": "goal.pessimistic_band_v2'nin varsaydığı EK 5 bps/bacak — bu kart ÖNCESİ elimizdeki en kötümser sayı; kıyas çıpası"
+   },
+   "A1_farkA_payda_ozdes_ORTALAMA_yalniz_giris": {
+    "giris_ek_bps": 35.532,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 192973.15,
+    "brut_kayip": -210947.91,
+    "net": -17974.76,
+    "pf": 0.9148,
+    "kazanan_n": 308,
+    "kaybeden_n": 577,
+    "aciklama": "ALTERNATİF FARK TANIMI (A): modelin BAR hatası DAHİL. Aynı yüzeyin başka bir noktası — okuyucu iki tanımın PF sonucunu yan yana görsün diye."
+   },
+   "A2_farkA_payda_ozdes_AGIRLIKLI_yalniz_giris": {
+    "giris_ek_bps": 26.668,
+    "cikis_ek_bps": 0.0,
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 196069.0,
+    "brut_kayip": -204399.57,
+    "net": -8330.57,
+    "pf": 0.9592,
+    "kazanan_n": 311,
+    "kaybeden_n": 574,
+    "aciklama": "ALTERNATİF FARK TANIMI (A), notional-ağırlıklı"
+   }
+  },
+  "asimetrik_duyarlilik_yuzeyi_pf": {
+   "eksen_birim": "satır = GİRİŞ bacağına ek bps · sütun = ÇIKIŞ bacağına ek bps (ikisi de yürürlükteki 5 bps'in ÜSTÜNE)",
+   "yuzey": {
+    "0": {
+     "0": 1.1119,
+     "2.5": 1.0962,
+     "5": 1.0809,
+     "7.5": 1.0658,
+     "10": 1.051,
+     "15": 1.0222,
+     "20": 0.9944,
+     "30": 0.9417,
+     "40": 0.8927,
+     "50": 0.8468,
+     "75": 0.7445,
+     "100": 0.6572
+    },
+    "2.5": {
+     "0": 1.0962,
+     "2.5": 1.0809,
+     "5": 1.0658,
+     "7.5": 1.051,
+     "10": 1.0364,
+     "15": 1.0082,
+     "20": 0.9809,
+     "30": 0.9292,
+     "40": 0.881,
+     "50": 0.8359,
+     "75": 0.7352,
+     "100": 0.6492
+    },
+    "5": {
+     "0": 1.0809,
+     "2.5": 1.0658,
+     "5": 1.051,
+     "7.5": 1.0365,
+     "10": 1.0222,
+     "15": 0.9944,
+     "20": 0.9677,
+     "30": 0.9169,
+     "40": 0.8695,
+     "50": 0.8251,
+     "75": 0.7261,
+     "100": 0.6414
+    },
+    "7.5": {
+     "0": 1.0658,
+     "2.5": 1.051,
+     "5": 1.0365,
+     "7.5": 1.0222,
+     "10": 1.0082,
+     "15": 0.981,
+     "20": 0.9547,
+     "30": 0.9048,
+     "40": 0.8581,
+     "50": 0.8145,
+     "75": 0.7171,
+     "100": 0.6336
+    },
+    "10": {
+     "0": 1.051,
+     "2.5": 1.0365,
+     "5": 1.0222,
+     "7.5": 1.0082,
+     "10": 0.9945,
+     "15": 0.9677,
+     "20": 0.9419,
+     "30": 0.8929,
+     "40": 0.847,
+     "50": 0.8041,
+     "75": 0.7082,
+     "100": 0.6261
+    },
+    "15": {
+     "0": 1.0223,
+     "2.5": 1.0083,
+     "5": 0.9946,
+     "7.5": 0.9811,
+     "10": 0.9678,
+     "15": 0.942,
+     "20": 0.917,
+     "30": 0.8697,
+     "40": 0.8254,
+     "50": 0.7838,
+     "75": 0.691,
+     "100": 0.6112
+    },
+    "20": {
+     "0": 0.9946,
+     "2.5": 0.9811,
+     "5": 0.9679,
+     "7.5": 0.9548,
+     "10": 0.9421,
+     "15": 0.9171,
+     "20": 0.893,
+     "30": 0.8472,
+     "40": 0.8044,
+     "50": 0.7642,
+     "75": 0.6742,
+     "100": 0.5968
+    },
+    "30": {
+     "0": 0.9422,
+     "2.5": 0.9296,
+     "5": 0.9173,
+     "7.5": 0.9052,
+     "10": 0.8932,
+     "15": 0.87,
+     "20": 0.8475,
+     "30": 0.8046,
+     "40": 0.7645,
+     "50": 0.7268,
+     "75": 0.6422,
+     "100": 0.5693
+    },
+    "40": {
+     "0": 0.8934,
+     "2.5": 0.8817,
+     "5": 0.8702,
+     "7.5": 0.8588,
+     "10": 0.8477,
+     "15": 0.8259,
+     "20": 0.8049,
+     "30": 0.7648,
+     "40": 0.7271,
+     "50": 0.6917,
+     "75": 0.6121,
+     "100": 0.5433
+    },
+    "50": {
+     "0": 0.8479,
+     "2.5": 0.837,
+     "5": 0.8262,
+     "7.5": 0.8156,
+     "10": 0.8051,
+     "15": 0.7848,
+     "20": 0.765,
+     "30": 0.7274,
+     "40": 0.692,
+     "50": 0.6588,
+     "75": 0.5837,
+     "100": 0.5187
+    },
+    "75": {
+     "0": 0.7466,
+     "2.5": 0.7373,
+     "5": 0.7281,
+     "7.5": 0.7191,
+     "10": 0.7102,
+     "15": 0.6928,
+     "20": 0.6759,
+     "30": 0.6437,
+     "40": 0.6132,
+     "50": 0.5846,
+     "75": 0.5196,
+     "100": 0.4629
+    },
+    "100": {
+     "0": 0.6604,
+     "2.5": 0.6524,
+     "5": 0.6445,
+     "7.5": 0.6367,
+     "10": 0.6291,
+     "15": 0.6141,
+     "20": 0.5995,
+     "30": 0.5717,
+     "40": 0.5454,
+     "50": 0.5205,
+     "75": 0.4638,
+     "100": 0.414
+    }
+   },
+   "not": "PF her iki eksende MONOTON AZALANDIR — hiçbir friksiyon varsayımı S0'ın üstüne çıkamaz; tartışma yalnız 'ne kadar aşağıda' sorusudur"
+  },
+  "basabas_egrisi": {
+   "aciklama": "verilen GİRİŞ ek-friksiyonunda PF'i tam 1,0'a indiren ÇIKIŞ ek-friksiyonu (bps/bacak). 0.0 = giriş TEK BAŞINA başabaşı zaten geçmiş; null = 2000 bps'e kadar çıkış eklense bile PF>1 (gerçekleşmez).",
+   "egri": {
+    "0": 18.97,
+    "2.5": 16.47,
+    "5": 13.98,
+    "7.5": 11.48,
+    "10": 8.99,
+    "12.5": 6.49,
+    "15": 3.99,
+    "17.5": 1.5,
+    "19": 0.0,
+    "20": 0.0,
+    "25": 0.0,
+    "30": 0.0,
+    "40": 0.0,
+    "50": 0.0
+   },
+   "basabas_simetrik": 9.49,
+   "basabas_yalniz_giris": 19.0
+  },
+  "esik_baglami": {
+   "RESULT_PF_MIN": 1.3,
+   "kod": "meridian/analytics.py:2089-2093",
+   "not": "Bu kart HÜKÜM VERMEZ. Senaryolar eşik tartışmasının GİRDİSİdir."
+  }
+ },
+ "HUKUM": "YOK — bu kart eşiği DEĞİŞTİRMEZ, yapılandırma ÖNERMEZ (kart success_metric). Ürün: sayı + künye + fark. Hükmü Rol-1 işler."
+}
