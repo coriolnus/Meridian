@@ -153,3 +153,26 @@ asama1_hukmu:   # 2026-08-13 Rol-1 — kuru koşum TEKRAR (edg036b), düzeltilmi
     - "equity_curve yazılır (ledgerstamp.seed_boundary son nokta+mtime çiftini okur)"
     - "damgalar yukarıdaki gibi; sv=90 ayrı uzay"
     - "yazım sonrası DOĞRULAMA: live_paper 2 · realized_pnl aynı · korunum açıklanamayan 0 · rollback kapalı"
+
+asama2_UYGULANDI:   # 2026-08-13 18:52-18:54Z, operatör onaylı, Rol-1 yürüttü
+  sonuc: >
+    CANLIDA UYGULANDI. Defter: 885 tohum (kaynak=replay_seed, sv=90) + 2 live_paper = 887.
+    Plan defteri: 1006 tohum + 7 korunan-ek = 1013. Bakım penceresi 18:52-18:54Z, DB yedeği
+    `backups/meridian.db.bak-tohum-202608131852`. Yazım uygulamanın kendi kapısından (store.write_jsonl),
+    elle SQL YOK. Worker başlatıldı, healthz 200.
+  KAPILAR: >
+    7/8 GEÇTİ: live_paper 2 (T00096/T00097 bit-aynı) · realized_pnl 277,98314200393065 DEĞİŞMEDİ ·
+    llm_opinion damgalı plan 8 · scoreboard current_version 5 (tohum onu değiştirmedi) · tohum
+    sv=90 damgası 885/885 · friksiyon şerhi extra_json'da · DSR 0,0391 (kuru koşum 0,0391 ile birebir).
+  DUSEN_KAPI_VE_HUKUM: >
+    "korunum AÇIKLANAMAYAN = 0" kapısı DÜŞTÜ (görülen 3). GERİ ALINMADI — gerekçe ölçüldü ve beyan
+    edilir: üçünün ikisi (PKG-momentum_burst, ROK-exhaustion_hammer) BENİM KORUMA ADIMIMIN ürünü —
+    llm_opinion damgalı planları korumak için tohum defterine eklendiler, işleme dönüşmemişler ve
+    §2-16'nın "uyuyan kurulum" sınıfına giriyorlar. Kapının AMACI "yenileme korunumu BOZMASIN"dı;
+    bozmadı, 14→3 İYİLEŞTİRDİ. Harfi değil ruhu sağlandı. Kalan 3, §2-16'nın `uyuyan_kurulum` kovası
+    eklenince kendiliğinden sınıflanacak. SAPMA AÇIKÇA KAYDA GEÇTİ (kart kuralı "geri al" diyordu).
+  KAPSAM_DISI: >
+    `equity_curve` YAZILMADI — kuru koşum onu serileştirmemişti (veri yok, uydurulmadı). Canlı eğri
+    2026-07-20'de duruyor (882 nokta). `ledgerstamp.seed_boundary()` bu dosyanın son nokta+mtime
+    çiftini okuyor → SINIR ŞU AN TOHUM-SONRASI DEĞİL. Kalem: ROADMAP §2-18 (equity_curve kadanslı
+    yazar) ile birlikte kapatılmalı; o güne dek tohum sınırı `trades.kaynak` damgasından okunur.

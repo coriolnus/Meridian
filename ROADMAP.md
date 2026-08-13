@@ -984,6 +984,72 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     öncelik: yüksek.*
 
 
+
+23. **İCRA/FRİKSİYON HATTI (EDG-037/038 + `docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md`)** — PF'i
+    yükseltmenin en büyük kaldıracı artık strateji değil İCRA (EDG-035 komşuluğu kapattı; icra farkı
+    ölçüldü). Sıralı kalemler: · **23a ÖLÇÜT ✅ KAPANDI** (EDG-038: kanonik payda konsolide açılış) ·
+    **23b ÇIKIŞ SLİPAJI** — n=0, sebebi TIF değil TUTUŞ SÜRESİ (5 seansta hiçbir stop/hedef değmedi);
+    örneklem beklenecek, eşik oynatarak hızlandırmak YASAK · **23c REPLAY'DE DİNLENEN LİMİT DALI** —
+    replay limit emrinin dinlenmesini modellemiyor, kaçan-işlem maliyetini ABARTIYOR; iki ölçüm zıt
+    işaretli (E1 grid vs 885-kesim) ve bu düzeltilmeden hiçbir limit-tavanı kararı verilemez ·
+    **23d BAR-İÇİ STOP VARSAYIMI** — `broker.py:596` stop dokunuşunu `eff_stop`ta dolmuş sayıyor,
+    stop-tetik slipajı SIFIR; giriş LİMİT (tavanlı) ↔ çıkış stop→MARKET (tavansız) asimetrisiyle
+    birleşince adı konmuş bir iyimserlik · **23e GÜN-İÇİ PENCERE** — 13:30-13:45 menzili 146,7 bps,
+    13:45-14:00'te 84,9 (−%42), bedeli +3,4 bps sürüklenme; AMA bugünkü replayde MODELLENEMEZ
+    (dakika barı yolu yok, `timeframe=1Day` tek yol) → altyapı kalemi · **23f `gap_behavior: cancel`
+    ELENMELİ** — koşulu TOTOLOJİ (`entry_trigger`=sinyal barı kapanışı, referans aynı → hep true);
+    filtre değil KAPATMA DÜĞMESİ (%51 ya da %100 işlem keser) · **23g ADV/likidite sıkılaştırma ATIL**
+    (etki ≤0,8 bps — kapatılan kalem). *öncelik: 23c>23d>23e; 23f/23g karar-gerektirmez.*
+
+24. **SKILL KATMANI — üç ayrı kusur (denetimler: `DENETIM-SKILL-CAGRI-IZI`, `ARASTIRMA-SKILL-ETKIN-KULLANIM`)**
+    · **24a ÇAĞRI İZİ GERİLEMESİ** — `nous_call_skills` olayı skill adlarını yazıyordu, 2026-07-20'de
+    `preloaded:<sayı>`ya çöktü; Meridian defterlerinde skill ADI yok, gerçek iz üçüncü-taraf
+    `~/.hermes/skills/.usage.json`'da (v242 turu kapatıyor) · **24b SOUL.md KİLİDİ ✅ AÇILDI**
+    (2026-08-13; yasak çıktı biçimine daraltıldı) ama **HİÇ SINANMADI** — çağrı oranı %1,1'den ne
+    olacak, ölçülecek · **24c ANA DANIŞMA YOLU ÖLÜ** — son 7 günde 788 `agent_call`, 385 boş, **1**
+    başarılı görüş; skill'i oraya bağlamak bugün anlamsız · **24d PİLOT-S1** — 2 skill
+    (`edge-strategy-reviewer`, `weekly-performance-digest`) × DOLGU yolu (çalışan tek nokta), 91 günlük
+    kuyrukta A/B; `n_pairs` 4→~51→~95, kol başına ~46 (terfi tabanı 30 aşılır); başarı eşiği ve 5
+    başarısızlık ölçütü önceden yazılı · **24e ÇEKİMSER TEŞVİKİ (yapısal)** — `destekle` kovası BOŞ,
+    `r_gap=null`; `_opinion_history` çekimseri "nötr" sayıyor → hep çekimser diyen model hiç yanılmaz
+    ve hiç terfi etmez. Terfinin ASIL duvarı bu · **24f SKILL.md ↔ KOD BAĞI YOK** (31 dosyada 3 atıf;
+    `strategy.py`de `skills` geçen 0 satır) · **24g SPRINT SIZINTISI** — sandbox canlının PAYLAŞIMLI
+    skill dizinini buduyor (bugün 17:15'te 4 symlink), "izole" vaadi ajan katmanında tutmuyor (v242).
+
+25. **ÖLÜ/EZİLEN BİLEŞEN BUDAMASI (`docs/DENETIM-OLU-BILESEN-ENVANTERI-2026-08-13.md`)** — operatör
+    sezgisi ÖLÇÜLDÜ ve doğrulandı: **473 bileşenin %41,4'ü ölü (140) ya da eziliyor (56)**. Ölülerin
+    105'i İKİ yapısal olgudan (93 skill bayrağı + 12 registry alanı); tek tek adlandırılmış ölü 35.
+    · **25a KALDIR (14):** 8 goal.yaml alanı (en tehlikelileri `backtest_gate` — kapı SÖZÜ verir,
+    davranışı yok; `kill_switch_file` — yolu değiştirmek kill-switch'i TAŞIMAZ, `health.py` sabit
+    kodluyor) + `execution_v2.tif` + 2 guard sabiti + 12 registry alanı. Emsal: `spy_sma_gate` mezar
+    taşı · **25b DAMGALA (6 sınıf):** en acili SKILL ROZETİ — pano "gölge" diyor ama bayrak trading
+    davranışını DEĞİŞTİRMİYOR · **25c DİRİLT (4), en yüksek öncelik `no_trade_before_bars`** — yalnız
+    `backtest.py:151` okuyor, canlı `loop.py` HİÇ okumuyor → replay'de uygulanan/canlıda uygulanmayan
+    kural = **MOTOR-EŞİTLİĞİ İHLALİ** · **25d ON EZİLME ZİNCİRİ** adıyla kayıtlı (slot←ısı zarfı ·
+    limit_atr←limit_pct · tüm arama uzayı←`probgate.P_BASE=0,80` (16 ret) · keşif bütçesi←üretici
+    kuraklığı (llm_pick 102 ↔ armed **1**) · R:R tabanı←bounds alt sınırı (0/409 düşen) · …).
+    · **25e ÖĞRENME DÖNGÜSÜ 0 SHIP** — canlı defter: **52 hipotez, 52 ret, 0 ship**; `strategy.yaml`ın
+    18 parametresinden 16'sı kodun tohum varsayılanıyla BİREBİR; döngünün tek hayatta kalan ürünü
+    `pivot_proximity_pct=2,3`. Bir sürüm (v0003) kodun varsayılanının aynısını ship etmiş ("OOS
+    None→None" = ölçülemeyen no-op). *öncelik: 25c ACİL (motor eşitliği), 25e YÜKSEK (öğrenme fiilen
+    üretmiyor), 25a/25b orta.*
+
+26. **DEĞER-EŞİTLİĞİ KAPISININ GENİŞLETİLMESİ (§2-20/split hattının devamı)** — 8. desen canlıda
+    (3 eşit / 0 ayrık / 1 beyanlı) ama `EQUIVALENT_TRUTHS` yalnız 4 çift taşıyor; split denetiminin
+    **26 KAPISIZ çifti** onun genişleme listesi (sektör tavanı dörtlüsü, `DISCIPLINE_MIN_RR`,
+    `min_sample` yedeği, alarm jetonları, registry-bayrağı↔ARMED_SETUPS…). Her ekleme tek satır.
+    *öncelik: yüksek — bugün bulunan split'lerin çoğu bu kapıyla kendiliğinden yakalanırdı.*
+
+27. **KORUMA KURULUMU ELLE (EDG-038 yan bulgusu + envanter triyajı) — OPERATÖR KALEMİ** — canlıda
+    4 pozisyonun (NUE/EMR/BKNG/AMGN) broker'da canlı koruyucu stop'u YOK (`korumasiz_motor_disi_pozisyon`
+    26 kez, `MIRROR_DRIFT KORUMASIZ POZİSYON` her biri 6 kez). Kök: `submit_protective_oco`nun tek
+    çağıranı `api.koruma_kur` ve o ÜÇ KAPI ardında (ölçüm + operatör onay jetonu + öneri kimliği);
+    bekçi çıplaklığı GÖRÜP alarm üretiyor ama KURMUYOR. Ölçülen: `day` TIF bracket'ları gece öldürüyor,
+    yeniden kurulum elle. Seans-içi çıplaklık 2,895 saat ölçüldü (0,445 seans — eşiği aşmadı).
+    *karar: koruma yeniden-kurulumu otomatikleşmeli mi (risk AZALTAN yön, api.py'nin kendi şerhi bu
+    sınıfı onaya bağlamamayı savunuyor) — OPERATÖR.*
+
+
 ## §3 OPERATÖR BLOKLARI (karar/aksiyon/kimlik/para/bakım-penceresi operatörde)
 
 Claude'un otonom kapatamayacağı kalemler: operatör kararı, ücretli kimlik/kota, gerçek-para kapısı,
