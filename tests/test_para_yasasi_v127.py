@@ -132,6 +132,29 @@ def test_probgate_ADIM_ADIM_yalnız_para_terimini_kullanir():
     assert "s_eski" in src and "return shadowlaw.ret_c_v3" in src
 
 
+def test_donmus_TABAN_yalnizca_dusus_butcesini_pinler(monkeypatch):
+    """ÇİVİ (2026-08-13): bu dosyanın `_goal()`u da tarihsel tabanı dondururken YALNIZ
+    `max_drawdown`ı pinlemek zorunda — kardeşi `test_hafta3b_v125`teki aynı adlı çivinin ikizi,
+    tam gerekçe orada yazılı.
+
+    BURADA AYRICA GEREKLİ olmasının sebebi: bu dosyada donmuş taban, ① bloğunun TEK TERİM
+    çivilerini (`money_score` düşüşten/Sharpe'tan etkilenmiyor mu) besleyen `g = {**_goal(), ...}`
+    yoluna da giriyor. Tüm goal donarsa o çiviler `target_return_30d`/`min_sharpe` değişse bile
+    yeşil kalır — oysa ölçtükleri şey yürürlükteki YASAdır. Düşüş vetosunun marj↔bütçe bağı da
+    bilerek CANLI goal'e karşı çivili (`test_dusus_vetosu_MARJI_kendi_gurultusunun_DISINDA`).
+
+    KÖKEN sınanır, DEĞER değil: tüm goal'u bugünkü değerlerine donduran bir fikstür değer
+    kıyasından sessizce geçerdi (v125'teki ikizin gerekçesine bak — negatif kontrolde düştü)."""
+    sahte = {**config.goal(), "target_return_30d": 0.999, "min_sharpe": 9.9, "max_drawdown": 0.99}
+    monkeypatch.setattr(config, "goal", lambda: sahte)
+    donmus = _goal()
+    assert donmus["max_drawdown"] == 0.08, "düşüş bütçesi pini kalkmış ya da başka değere kaymış"
+    assert set(donmus) == set(sahte), "donmuş taban goal'un ANAHTAR KÜMESİNİ değiştiriyor"
+    kayan = {k for k in sahte if donmus[k] != sahte[k]}
+    assert kayan == {"max_drawdown"}, \
+        f"düşüş bütçesi DIŞINDA da anahtar donmuş (canlı yasayı okumuyor): {sorted(kayan)}"
+
+
 def test_varyans_atamasi_PARA_payi_YUZDE_YUZ():
     """Yasanın kendi çivisi — ÖLÇÜLÜR, varsayılmaz. Skora bir gün ikinci bir bacak sızarsa pay
     1,0'ın altına düşer ve bu test kırılır."""

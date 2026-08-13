@@ -180,6 +180,38 @@ def test_varyans_atamasi_hedefi_olcer_ve_tutmadigini_BEYAN_eder():
     assert "v3" in shadowlaw.MEASURED_V2["hukum"] and "YETMEDİ" in shadowlaw.MEASURED_V2["hukum"]
 
 
+def test_donmus_TABAN_yalnizca_dusus_butcesini_pinler(monkeypatch):
+    """ÇİVİ (2026-08-13, bütçe 0,08→0,16 turunun KALINTI kusuru): `_goal()` tarihsel tabanı
+    dondururken goal'un YALNIZ `max_drawdown` anahtarını pinlemek ZORUNDA; geri kalanı CANLI kalır.
+
+    NEDEN AYRI BİR ÇİVİ GEREKİYOR: "tarihsel ölçüm tarihsel goal'le okunsun" cümlesi, fikstürü bir
+    gün 2026-07-30'un TÜM goal'una (hedef getiri, min_sharpe, min_sample) dondurmaya davet eder ve
+    bu, tek satırlık masum bir "sadeleştirme" gibi görünür. O an bu dosyanın öbür çivileri — başta
+    v3'ün TEK-TERİMLİLİĞİ — yürürlükteki yasayı okumayı bırakır ve yasa değişse bile yeşil kalır:
+    ① bloğunun başında yazılı olan aynı zarar, yani bir çivinin verebileceği en kötü yanlış güvence.
+
+    DONDURMANIN GEREKTİĞİ TEK ANAHTARIN BU OLDUĞU ÖLÇÜLDÜ (2026-08-13, aynı defter n=95/span=1274g,
+    iki bütçe yan yana): `v3_paylar` = {1,0/0,0/0,0}, `para_payi_tek_terim` = True, `sd_dusus` =
+    0,0348 ve `dd_veto_gurultunun_disinda` = True — HER İKİ bütçede de BİREBİR aynı. Yani öbür
+    anahtarları dondurmanın ölçüsel bir gerekçesi YOK; bütçeye bağlı olan yalnız eski yasanın
+    payları (dusus 0,8195→0,5486, çünkü `dd_c = kıs(1 − dd/max_dd)` varyansı 1/max_dd² ölçekler).
+
+    NEDEN DEĞER KIYASI DEĞİL, SAHTE GOAL: ilk yazımı "canlı goal ile donmuş tabanı karşılaştır, tek
+    fark max_drawdown olsun" biçimindeydi ve NEGATİF KONTROLDE DÜŞTÜ (2026-08-13): tüm goal'u
+    bugünkü değerlerine donduran bir fikstür o çividen SESSİZCE geçiyor, çünkü donmuş literal ile
+    canlı değer o gün eşit. Yani çivi ancak operatör o anahtarı değiştirdikten SONRA — yani iş
+    işten geçtikten sonra — ısırırdı. Bu yüzden değer değil KÖKEN sınanır: `config.goal()` sahte bir
+    sözlük döndürür ve pinlenmemiş HER anahtarın o sahte değeri taşıması beklenir."""
+    sahte = {**config.goal(), "target_return_30d": 0.999, "min_sharpe": 9.9, "max_drawdown": 0.99}
+    monkeypatch.setattr(config, "goal", lambda: sahte)
+    donmus = _goal()
+    assert donmus["max_drawdown"] == 0.08, "düşüş bütçesi pini kalkmış ya da başka değere kaymış"
+    assert set(donmus) == set(sahte), "donmuş taban goal'un ANAHTAR KÜMESİNİ değiştiriyor"
+    kayan = {k for k in sahte if donmus[k] != sahte[k]}
+    assert kayan == {"max_drawdown"}, \
+        f"düşüş bütçesi DIŞINDA da anahtar donmuş (canlı yasayı okumuyor): {sorted(kayan)}"
+
+
 def test_varyans_atamasi_E_raporunu_replike_eder_ve_v3_TEK_TERIM():
     """E raporu ESKİ yasa için PARA %0,3 / düşüş %82 / Sharpe %17,7 ölçmüştü. Harness onu ÜRETMELİ
     — yoksa v3 ölçümünün TABANI doğrulanmamış olur.
