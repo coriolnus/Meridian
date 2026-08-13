@@ -1301,6 +1301,35 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🆕 31. `active_model()` KÜNYE KUSURUNUN İKİNCİ EVİ + UYDURMA KORUMASI EKSİĞİ** _(2026-08-14, v245-A turunun ADIYLA devrettiği iki kalem; sahibi WP7)_
+  **(a) İKİNCİ EV:** `hermes.py:3987` `chain_text` → `out.update({... "model": active_model()})` —
+  `candidate_review`de bu tur kapatılan kusurun **birebir aynısı** (Katman-B nous değerlendirme
+  kayıtları "istenen"i taşıyıp "cevap veren" sanılıyor). v245 sözleşmesi dar tutulduğu için
+  DOKUNULMADI; kapatılması `cevap_veren_model()` hazır olduğu için tek satırlık iştir.
+  **(b) UYDURMA KORUMASI TAŞINMAMIŞ:** `active_model()` (`hermes.py:727`), `_model_id("nous")`in
+  (`:655`) sahip olduğu "yerel ajan + `NOUS_MODEL` yok → **None** (uydurma yasağı)" korumasını
+  TAŞIMIYOR. ÖLÇÜLDÜ: aynı durumda `_model_id('nous')=None` iken `active_model()='Hermes-4-405B'`
+  döndü — yani **defterde hiç çağrılmamış bir model adı** durabilir. Yeni `model_istenen` alanı
+  eski anlamı birebir korumak için bilerek `active_model()` taşıyor, dolayısıyla o alan bu
+  yapılandırmada uydurma ad taşıyabilir; `model` alanı taşımaz (o ölçülmüş).
+  *öncelik: (a) düşük-orta, tek satır · (b) orta — uydurma yasağının kendi yüzeyinde ihlali.*
+
+- **🆕 32. SUITE'İN İÇİNDEN GERÇEK AĞ ÇAĞRISI — ÖLÇÜLDÜ** _(2026-08-14, v245-A yan bulgusu; sahibi WP5)_
+  `test_ogrenme_otomasyonu_v136`in iki testi `scheduler.advance_once → earnings.refresh →
+  adapters/data.py:2673 → :855 _get_json` üzerinden **gerçek `api.nasdaq.com`** çağrısı yapıyor.
+  ÖLÇÜM: ağ bacağı saplandığında iki test **0,47 sn**, saplanmadığında **263,71 sn** (SIGABRT yığın
+  dökümüyle çerçeve çerçeve doğrulandı). MERIDIAN_ENGINEERING_LOG bunu zaten açık kalem olarak
+  taşıyor; bu ölçüm **büyüklüğünü** veriyor. Otoriter suite süresinin görünür bir kısmı budur ve
+  ağ nondeterminizmi kırmızı üretebilir.
+  *öncelik: orta · boyut: S (ağ bacağını testte sapla) · yan fayda: tam suite belirgin hızlanır.*
+
+- **🆕 33. KARDEŞ AJAN PYTEST ÇAKIŞMASI — ORKESTRASYON DERSİ** _(2026-08-14, yaşanmış)_
+  Aynı checkout'ta iki ajan eşzamanlı `pytest` koşarken `_no_live_state_writes` bekçisi
+  `['events.jsonl']` ile ERROR verdi; izole yeniden koşum **10 passed / 0 error**. Yani kırmızı
+  koddan değil, **paralel koşumdan** doğdu (`hermes.py:410-419` bu sınıfı zaten belgeliyor).
+  **KURAL:** otoriter tam suite koşarken hiçbir ajan test koşmamalı; ajanlar arası dosya-ayrıklığı
+  YETMEZ — `state/` paylaşımlı bir yüzeydir. *(Rol-1 çalışma kuralı; ROADMAP'e kayıt amaçlı.)*
+
 - **🆕 30. AYRILMAZ ÇİFTİN İKİ YARISI FARKLI YEDEK DAVRANIŞINDA** _(2026-08-14, WP6-26 turunun devrettiği kalem; sahibi WP2 ya da WP6 — sınıflandırma Rol-1'de)_
   `state/goal.yaml:123-125` kendi metninde şunu **beyan ediyor**: *"BERABERİNDE GİDEN AYAR:
   `position_size_r` 1,0 → 0,5 … **İkisi AYRILMAZ**: slot 20 tek başına ısı zarfını 5R'de bağlar ve
