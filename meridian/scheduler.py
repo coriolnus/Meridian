@@ -742,6 +742,52 @@ GAP_SEEN_MAX = 200          # tekrar-bastırma defterinin tavanı (imza başına
 # ölçülemez, günlük döngü koşmaya devam eder. Tek adla saymak iki arızanın kapsamını karıştırırdı.
 _GAP_CALENDAR_WARNED = False
 
+# ==================================================================================================
+# BOŞLUK OLAYININ SEVİYESİ VE KÜNYESİ (v244, 2026-08-14) — K1+K2
+# --------------------------------------------------------------------------------------------------
+# DEDEKTÖR DOĞRU, BEKLENTİNİN ZEMİNİ YANLIŞTI. Ölçüldü (docs/TESHIS-ALARM-GURULTUSU-IEX-SEYREKLIGI-
+# 2026-08-14.md): seans-içi akış IEX'tir (`marketstream.FEED`), IEX ABD hacminin küçük bir payını
+# basar ve orta ölçekli bir isimde bazı dakikalarda HİÇ IEX baskısı olmaz. "Seansın her dakikasında
+# bu sembolden bir baskı olmalı" cümlesi KONSOLİDE (SIP) besleme kalitesinde bir beklentidir.
+# AYIRT EDİCİ ÖLÇÜM: geçmiş `tur="sembol"` alarm havuzundan (n=1717) sabit tohumla 15 rastgele alarm
+# çekildi ve her biri kendi penceresinde iki beslemeye soruldu → SEYREKLİK 15 · GERÇEK-KESİNTİ 0.
+# Her vakada IEX penceresinde 1 bar, konsolidede 4-10.
+# MALİYET: günde 408 olay = warn/error kutusunun ~%68'i. Para riski taşıyan
+# `korumasiz_motor_disi_pozisyon` günde 13 — yani en önemli alarm, en gürültülüsünün 1/31'i kadar
+# görünür. Susturulan şey sinyal değil, sinyalin ÜSTÜNÜ örten gürültüdür.
+#
+# NE DEĞİŞTİ / NE DEĞİŞMEDİ (dar yüzey, bilinçli):
+#   · `barsarchive.gap_scan` MANTIĞINA DOKUNULMADI — eşik, pencere, bağlam şartı, takvim hükümleri
+#     (takvim_yok / seans_disi / arsiv_yok) ve iki-kez-saymama kuralı AYNEN.
+#   · Tekrar-bastırma (`intraday_gap_seen`) ve `_state["intraday_gap"]` gövdesi AYNEN — olay
+#     defterine yazım SÜRER, VERİ KAYBI YOK. Değişen yalnız SEVİYE ve KÜNYE.
+#   · `tur="akis"` (BÜTÜN sembollerde eş-anlı susma) `warn` KALIR: o gerçekten soket/besleme
+#     kesintisidir ve nadir gerçek kesinti K2'den sonra da bu kanalda görünür.
+#   · `tur="sembol"` bilgi seviyesine (`obs.log`) iner — hüküm verilmiyor, ÖLÇÜM kaydediliyor.
+# K3 (eşiği besleme kimliğinden türetme) BİLEREK YAPILMADI: SIP aboneliği kararı gündeme gelmeden
+# eşiği oynatmak, bugün doğru olan hassasiyeti ölçüsüz değiştirirdi.
+GAP_SEMBOL_SEYREKLIK_NOTU = ("IEX TEK BORSADIR: sembol-boşluğu çoğu vakada arıza değil, o dakikada "
+                             "o borsada işlem geçmemesidir (yapısal seyreklik) — 15 rastgele alarmın "
+                             "15'i konsolide beslemede DOLU çıktı, 0 gerçek kesinti")
+
+
+def _akis_beslemesi() -> tuple:
+    """Seans-içi akışın ETKİN besleme kimliği (künye için). Dönüş: (ad, ölçülememe_nedeni).
+
+    SABİT KODLANMAZ: tek kaynak `marketstream.FEED`tir (o da `MERIDIAN_DATA_FEED`ten okunur). SIP'e
+    geçildiği gün künye kendiliğinden doğruyu söyler — burada "iex" yazsaydık, künyenin kendisi
+    ilk gün bayatlardı ve tam da düzeltmeye çalıştığımız yanlış-zemin sınıfını üretirdi.
+    GEÇ İMPORT: `scheduler` bugün `marketstream`e bağlı DEĞİL ve modül-başı bir import, akış
+    katmanının (asyncio/redis/adapter) bir arızasını günlük döngünün açılışına bağlardı."""
+    try:
+        from . import marketstream
+        return str(marketstream.FEED), None
+    except Exception as e:
+        # sessiz-yutma: künye ölçülemedi — bir ETİKET uğruna boşluk taraması DÜŞÜREMEZ (kontrolün
+        # kendisi kaybolurdu, YASA 4'ün tam kapattığı sınıf). Uydurma yasağı gereği ad None kalır
+        # ve NEDEN olayın içinde `feed_neden` alanıyla taşınır; "iex" varsayımı yazmak yasaktır.
+        return None, f"{type(e).__name__}: {e}"
+
 
 def _intraday_gap_check() -> dict | None:
     """5.3 — SEANS-İÇİ KESİNTİ TESPİTİ. Her poll'de HAFİF bir kontrol: seans-içi bar akışında eksik
@@ -780,19 +826,30 @@ def _intraday_gap_check() -> dict | None:
         return rapor
     gorulen = list(_state.get("intraday_gap_seen") or [])
     yeni = 0
+    feed, feed_neden = _akis_beslemesi()          # K1 künyesi — döngü BAŞINA bir kez ölçülür
     for b in rapor.get("bosluklar") or []:
         imza = f"{rapor['gun']}|{b['tur']}|{b['sembol'] or '*'}|{b['baslangic']}"
         if imza in gorulen:
             continue
         gorulen.append(imza)
         yeni += 1
-        obs.warn("intraday_gap_detected", tur=b["tur"], sembol=b["sembol"], gun=rapor["gun"],
-                 aralik=f"{b['baslangic'][11:16]}-{b['bitis'][11:16]}Z", eksik_dk=b["eksik_dk"],
-                 beklenen=b["beklenen"], gelen=b["gelen"], pencere_dk=rapor["esik"]["pencere_dk"],
-                 detail=("seans içinde HİÇ bar gelmeyen dakika penceresi — akış kesintisi; "
-                         "mrd:bars bir RING'tir, o dakikalar geri gelmez"
-                         if b["tur"] == "akis" else
-                         "sembol deliğin iki yanında dakika dakika akıyordu ama arada sustu"))
+        sembol_boslugu = b["tur"] != "akis"
+        # K2 — SEVİYE TÜRE GÖRE (gerekçe: GAP_SEMBOL_SEYREKLIK_NOTU üstündeki blok). `akis` warn
+        # KALIR; `sembol` bilgi seviyesine iner. Olay ADI, alanları ve tekilleştirmesi AYNI —
+        # defterdeki satır sürüyor, yalnız alarm kutusuna düşmüyor.
+        yaz = obs.log if sembol_boslugu else obs.warn
+        yaz("intraday_gap_detected", tur=b["tur"], sembol=b["sembol"], gun=rapor["gun"],
+            aralik=f"{b['baslangic'][11:16]}-{b['bitis'][11:16]}Z", eksik_dk=b["eksik_dk"],
+            beklenen=b["beklenen"], gelen=b["gelen"], pencere_dk=rapor["esik"]["pencere_dk"],
+            # K1 — BESLEME KÜNYESİ: "hangi beslemeye baktığımız, ölçtüğümüz şeyin ne olduğunu
+            # değiştiriyor" (aynı ders aynı gün TCA ölçütünde de çıktı). Ölçülemediyse ad None
+            # kalır ve neden yazılır — uydurma yasağı.
+            feed=feed, **({} if feed else {"feed_neden": feed_neden}),
+            detail=("seans içinde HİÇ bar gelmeyen dakika penceresi — akış kesintisi; "
+                    "mrd:bars bir RING'tir, o dakikalar geri gelmez"
+                    if not sembol_boslugu else
+                    "sembol deliğin iki yanında dakika dakika akıyordu ama arada sustu. "
+                    + GAP_SEMBOL_SEYREKLIK_NOTU))
     _state["intraday_gap"] = {**{k: rapor[k] for k in
                                  ("durum", "gun", "olculdu", "pencere", "sembol", "gelen_bar",
                                   "bozuk_satir", "bosluk_sayisi", "esik")},

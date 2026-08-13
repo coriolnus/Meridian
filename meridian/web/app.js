@@ -9857,7 +9857,18 @@ const KEY_GROUPS = [
     // düzelttiğinin YAZILI olmasıydı. 4. eleman ("nous") mevcut sır-alanı desenidir: alan ayarlıysa
     // keyField Test düğmesini çıkarır → /api/secrets/test/nous → hermes.ping_brain("nous").
     // YENİ UÇ YOK; var olan uca bağlandı.
-    ["NOUS_MODEL", "Nous modeli (opsiyonel)", "Boşsa {default}. Google-dışı ücretsiz model (ör. tencent/hy3:free) — girildiğinde beyin çeşitliliği ölçümü kendiliğinden düzelir; Test düğmesi nous ayağını canlı yoklar.", "nous"],
+    //
+    // GEREKÇE DÜZELTMESİ (v244, 2026-08-14) — BU METİN HATAYI ÜRETTİ, sonra da anlattı.
+    // Eski metin ölü bir adı ÖRNEK OLARAK öneriyordu ve "girildiğinde beyin çeşitliliği ölçümü
+    // kendiliğinden düzelir" diyordu. İkisi birlikte bir tuzaktı: operatör tam bu satıra bakarak o
+    // adı girdi, ad OpenRouter'ın 411 modelinden HİÇBİRİ DEĞİLDİ (hiç var olmadı) ve 24 saatte 33
+    // çağrının 33'ü boş döndü (~354 sn israf). Çeşitlilik ölçütü (`same_model_ids`) yine de
+    // "düzelmiş" göründü — çünkü o ölçüt İKİ ADIN FARKLI OLMASINI sayar, ikinci adın CEVAP
+    // VERDİĞİNİ değil. Yani metnin vaat ettiği "düzelme" gerçekleşti ve ölçü YANILTTI.
+    // Kanıt: docs/TESHIS-BEYIN-ZINCIRI-ERISILEMEZ-MODEL-2026-08-13.md.
+    // Yeni örnek TAHMİN DEĞİL ÖLÇÜM: `nvidia/nemotron-3-ultra-550b-a55b:free` canlıda dolu cevap
+    // verdi (838 ms, tam JSON uyumu, 1M bağlam, araç desteği, ücretsiz katman).
+    ["NOUS_MODEL", "Nous modeli (opsiyonel)", "Boşsa {default}. Google-dışı ücretsiz model (ölçülmüş örnek: nvidia/nemotron-3-ultra-550b-a55b:free — canlıda dolu cevap verdiği doğrulandı). UYARI: adı değiştirmeden ÖNCE o modelin gerçekten ERİŞİLEBİLİR olduğunu doğrula — kimlik (OpenRouter anahtarı) + sağlayıcı yönlendirmesi + o modelden alınmış DOLU bir cevap. Çeşitlilik ölçütünün (same_model_ids) boşalması YETMEZ: o ölçüt iki adın farklı olmasını sayar, ikincisinin cevap verdiğini değil — hiç var olmayan bir ad da ölçüyü 'düzelmiş' gösterir. Test düğmesi nous ayağını canlı yoklar.", "nous"],
     ["NOUS_FALLBACK_MODEL", "Yedek model (opsiyonel)", "Birincil model cevapsız kalırsa (kota/RPM) ajan bir kez bu modelle dener — düşüş zinciri."],
     ["GEMINI_API_KEY", "Gemini anahtarı", "Google AI Studio anahtarı (aistudio.google.com/apikey). Kaydedince YEREL hermes-agent da otomatik Gemini 3.1 Pro'ya geçer — terminal adımı yok; anahtarı silersen ajan eski Nous ayarına döner.", "gemini"],
     ["GEMINI_OAUTH_TOKEN", "Gemini OAuth token (alternatif)", "Kendi OAuth akışından gelen Bearer token — süresi dolunca kendi aracınla yenilersin; motor yalnız kullanır."],

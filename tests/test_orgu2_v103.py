@@ -668,15 +668,30 @@ def test_app_js_sozdizimi_gecerli():
 
 
 def test_nous_model_alani_ipucunu_ve_TEST_dugmesini_tasir():
-    """Alan zaten vardı; eksik olan tek bir metin girişinin beyin çeşitliliği ölçümünü nasıl
-    düzelttiğinin YAZILI olmasıydı. 4. eleman mevcut sır-alanı desenidir: `keyField` onu görünce
-    Test düğmesini çıkarır."""
+    """Alan zaten vardı; eksik olan tek bir metin girişinin ne yaptığının YAZILI olmasıydı.
+    4. eleman mevcut sır-alanı desenidir: `keyField` onu görünce Test düğmesini çıkarır.
+
+    ÇİVİ DÜZELTİLDİ (v244, 2026-08-14) — v122 dersinin TERSİ VAKASI, açıkça beyan edilir:
+    orada iddia doğruydu, yeri değişmişti; BURADA İDDİANIN KENDİSİ YANLIŞTI ve bu çivi onu
+    KİLİTLİYORDU. İki eski satır kalktı:
+      1. `"tencent/hy3:free" in satir[0]` — ölü bir adı ÖRNEK olarak sabitliyordu. O ad
+         OpenRouter'ın 411 modelinden hiçbiri değil, hiç var olmadı; operatör tam bu metne bakarak
+         girdi ve 24 saatte 33 çağrının 33'ü boş döndü (~354 sn israf, çağrıların %46'sı).
+         Kanıt: docs/TESHIS-BEYIN-ZINCIRI-ERISILEMEZ-MODEL-2026-08-13.md.
+      2. `"beyin çeşitliliği ölçümü kendiliğinden düzelir"` — metnin yanlış vaadi. Ölçüt
+         (`same_model_ids`) İKİ ADIN FARKLI OLMASINI sayar, ikincisinin CEVAP VERDİĞİNİ değil:
+         ölü ad girildiğinde ölçü GERÇEKTEN "düzeldi" ve tam da bu yüzden yanılttı.
+    Yerlerine gelen iddialar ÖLÇÜME dayanır: örnek model canlıda dolu cevap verdi ve metin artık
+    ölçütün yetmediğini açıkça söylüyor. Ölü adın app.js'te HİÇ geçmediği ayrıca
+    tests/test_agent_provider_yonlendirme_v244.py'de çivili."""
     src = open("meridian/web/app.js").read()
     satir = [s for s in src.splitlines() if s.strip().startswith('["NOUS_MODEL"')]
 
     assert len(satir) == 1, "NOUS_MODEL alanı listede yok ya da çoğaldı"
-    assert "tencent/hy3:free" in satir[0]
-    assert "beyin çeşitliliği ölçümü kendiliğinden düzelir" in satir[0]
+    assert "tencent/hy3:free" not in satir[0], "ölü model adı örnek olarak geri gelmiş"
+    assert "nvidia/nemotron-3-ultra-550b-a55b:free" in satir[0]   # ÖLÇÜLDÜ: canlıda dolu cevap
+    assert "ERİŞİLEBİLİR" in satir[0] and "same_model_ids" in satir[0], \
+        "erişilebilirlik uyarısı yok — metin yine ölçütü kanıt sanmaya davet eder"
     assert satir[0].rstrip().endswith('"nous"],'), "Test düğmesi sağlayıcıya bağlanmamış"
 
 

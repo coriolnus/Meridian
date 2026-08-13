@@ -1832,10 +1832,82 @@ QUIET_FLAG = "-Q"
 CLI_UNKNOWN_FLAG_SIGNS = ("unrecognized arguments", "no such option", "Unknown option")
 _quiet_flag_ok = True          # süreç-içi öğrenme: bir kez 'desteklenmiyor' denince tekrar denenmez
 
+# ==================================================================================================
+# SAĞLAYICI YÖNLENDİRMESİ (v244) — `--model` DOĞRUYDU, İSTEK YANLIŞ UCA GİDİYORDU
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA (canlı, 24 saat): `_agent_chat_cmd` CLI'ya YALNIZ `--model` geçiyordu; yerel hermes
+# CLI'nın kendi yapılandırması `model.provider: gemini` olduğu için bir OpenRouter slug'ı
+# (`nvidia/...:free`) GEMINI ucuna gidip `HTTP 404` alıyordu. 33 çağrının 33'ü boş, ~354 sn israf,
+# tüm ajan çağrılarının %46'sı. Kanıt: docs/TESHIS-BEYIN-ZINCIRI-ERISILEMEZ-MODEL-2026-08-13.md.
+#
+# NEDEN `config set model.provider auto` DEĞİL: ucuz yol DENENDİ ve ÇÜRÜDÜ (2026-08-13 21:12Z,
+# canlı) — `auto` slug'a göre yönlendirmiyor, hiçbir kimliğe bağlanamıyor ve auth başlığı hiç
+# göndermiyor: hem tencent hem `gemini-flash-latest` 401 verdi, yani ÇALIŞAN ayak da düştü. Geri
+# alındı. Kural bu turda kodda yaşar, CLI yapılandırmasında DEĞİL: `model.provider: gemini`
+# yapılandırmada AYNEN kalır ve slug taşımayan adlar (`gemini-flash-latest`) bugünkü davranışını
+# BİT BİT korur — bayrak eklenmez, CLI kendi varsayılanına gider.
+#
+# NEDEN KİMLİK ŞARTI VAR: kimlik yokken slug'a `--provider openrouter` eklemek 404'ü "Provider
+# resolver returned an empty API key" hatasına ÇEVİRİR — daha iyi değil, yalnız BAŞKA bir arıza.
+# (ÖLÇÜLDÜ: bayrak CLI'da VAR ve tanınıyor; anahtarsız çağrıda tam bu cümleyi basıyor.)
+#
+# KİMLİK YÜZEYİ — HANGİSİ SSoT (bu turun asıl kararı):
+#   Soru "Meridian'ın bir anahtarı var mı" DEĞİL, "ALT SÜREÇ olarak koşan CLI bir anahtar
+#   GÖREBİLİYOR mu"dur. CLI'nın gördüğü iki yüzey vardır ve yalnız ikisi:
+#     (1) süreç ortamı — `_agent_call._kos` alt süreci `env={**os.environ, ...}` ile doğurur,
+#     (2) `~/.hermes/.env` — CLI'nın KENDİ kimlik dosyası (Gemini ayağı da bu dosyadan besleniyor;
+#         `_agent_env_has_key` aynı dosyayı zaten bu amaçla okuyor).
+#   `secrets.get("OPENROUTER_API_KEY")` BİLEREK KULLANILMADI: `secrets` zinciri env'den SONRA
+#   `state/secrets.json` ve GCP Secret Manager'a bakar ve o iki kaynak alt sürece HİÇ GEÇMEZ —
+#   yani kasada anahtar varken `secrets.get` True derdi, CLI ise anahtarsız kalırdı. Bu tam olarak
+#   bu turun kapattığı sınıftır ("ayar yapıldı sanılıyor, ulaşılamıyor"): yanlış yüzeye bakan bir
+#   kapı, arızayı düzeltmek yerine ADINI değiştirirdi. Env kolu zaten kapsanıyor — `secrets.get`in
+#   BİRİNCİ kaynağı da os.environ'dır, biz doğrudan oraya bakınca aynı vakayı doğru gerekçeyle
+#   yakalarız.
+#   `secrets.ALLOWED` KONTROL EDİLDİ: `OPENROUTER_API_KEY` listede YOK ve bu turda EKLENMEDİ —
+#   eklemek panodan `state/secrets.json`a yazmayı açardı, ama o dosya CLI'ya görünmez: operatör
+#   anahtarı girer, ✓ görür ve çağrı yine düşerdi. Anahtarın gideceği yer `~/.hermes/.env`tir
+#   (kurulum belgesi Adım 1b) ve oraya YAZMAK bu brief'in kapsamı dışındadır (sır yazma yolu).
+#
+# SAĞLAYICI ADI SABİTTE: ikinci beyin başka bir toplayıcıya taşınırsa tek satır değişir.
+AGENT_SLUG_PROVIDER = "openrouter"
+# CLI'nin o sağlayıcı için okuduğu env/`.env` anahtar adı (ÖLÇÜLDÜ: CLI'nin yapılandırmasız
+# rehberi bu adı söylüyor — `AGENT_UNCONFIGURED_SIGNS` içinde de aynı ad geçiyor).
+AGENT_SLUG_PROVIDER_ENV = "OPENROUTER_API_KEY"
+
+
+def _agent_slug_provider_ready() -> bool:
+    """Alt süreç olarak koşacak CLI, OpenRouter kimliğini GÖREBİLİYOR mu? (değer ASLA okunmaz/dönmez)
+
+    İki yüzey, ikisi de CLI'nin gerçekten okuduğu yerler: süreç ortamı (alt sürece miras kalır) ve
+    `~/.hermes/.env`. Gerekçesi yukarıdaki blokta; kısaca: Meridian'ın kasası CLI'ya görünmez, o
+    yüzden `secrets.get` burada YANLIŞ CEVAP verirdi."""
+    if (os.environ.get(AGENT_SLUG_PROVIDER_ENV) or "").strip():
+        return True
+    # None = dosya VAR ama okunamadı → "kimlik yok" SAYILIR (yönlendirme eklenmez). Ölçülemeyen bir
+    # kimliğe dayanıp bayrak eklemek, çalışan 404 yolunu okunamayan bir hataya çevirebilirdi;
+    # güvenli taraf bugünkü davranışı korumaktır.
+    return _agent_env_has((AGENT_SLUG_PROVIDER_ENV,)) is True
+
+
+def _agent_provider_for(model: str | None) -> str | None:
+    """Bu model kimliği için CLI'ya geçilecek `--provider` (yoksa None = bayrak EKLENMEZ).
+
+    Kural: kimlik SLASH içeriyorsa OpenRouter slug biçimidir (`saglayici/model[:etiket]`);
+    çıplak adlar (`gemini-flash-latest`) CLI'nin kendi varsayılanına bırakılır."""
+    if not model or "/" not in model:
+        return None
+    if not _agent_slug_provider_ready():
+        return None
+    return AGENT_SLUG_PROVIDER
+
 
 def _agent_chat_cmd(bin_: str, prompt: str, preload: tuple, model: str | None) -> list:
     """CLI `chat` komutunun TEK KURULUM YERİ. İki bayrak iki AYRI iş yapar ve karıştırılırsa arıza
-    sessizdir: `-q` istemi taşır, `-Q` çıktıyı yalnız son cevaba indirger."""
+    sessizdir: `-q` istemi taşır, `-Q` çıktıyı yalnız son cevaba indirger.
+
+    SAF KALIR — olay BASMAZ, dosya YAZMAZ: bu kurucu üç ayrı yerden (ilk deneme + iki onarım
+    yeniden-koşumu) çağrılıyor ve buradan olay basmak tek bir çağrıyı deftere üç kez yazardı."""
     cmd = [bin_, "chat", "--accept-hooks"]
     if _quiet_flag_ok:
         cmd.append(QUIET_FLAG)
@@ -1844,6 +1916,9 @@ def _agent_chat_cmd(bin_: str, prompt: str, preload: tuple, model: str | None) -
         cmd += ["-s", sk]
     if model:
         cmd += ["--model", model]
+        prov = _agent_provider_for(model)
+        if prov:
+            cmd += ["--provider", prov]
     return cmd
 
 
@@ -2435,12 +2510,17 @@ def _agent_env_path() -> str:
     return os.path.join(os.path.expanduser("~/.hermes"), ".env")
 
 
-def _agent_env_has_key() -> bool | None:
-    """`~/.hermes/.env` DOLU bir Gemini anahtar satırı taşıyor mu? None = dosya okunamadı.
+def _agent_env_has(names: tuple) -> bool | None:
+    """`~/.hermes/.env` DOLU bir `names` satırı taşıyor mu? None = dosya okunamadı.
 
     DEĞER HİÇBİR ZAMAN OKUNMAZ/DÖNMEZ/LOGLANMAZ — yalnız satırın varlığı ve boş olmadığı. Dosyanın
     YOKLUĞU bir ölçüm arızası değil, ölçülmüş bir yokluktur (canlı vaka: A1 taşınmasında ~/.hermes
-    hiç taşınmadı) — o yüzden None değil False döner."""
+    hiç taşınmadı) — o yüzden None değil False döner.
+
+    v244'te AD KÜMESİ PARAMETRELENDİ (gövde bit bit aynı): aynı dosya artık iki soruya cevap
+    veriyor — Gemini anahtar satırı (`local_agent_config_state`) ve OpenRouter kimliği
+    (`_agent_slug_provider_ready`). İkinci bir ayrıştırıcı yazmak, aynı biçimi iki yerde
+    yorumlayan iki davranış demekti (`export ` öneki, tırnak soyma, boş-değer ayrımı)."""
     path = _agent_env_path()
     if not os.path.exists(path):
         return False
@@ -2451,7 +2531,7 @@ def _agent_env_has_key() -> bool | None:
                 if s.startswith("export "):
                     s = s[7:]
                 k, sep, v = s.partition("=")
-                if sep and k.strip() in GEMINI_ENV_NAMES and v.strip().strip("'\""):
+                if sep and k.strip() in names and v.strip().strip("'\""):
                     return True
         return False
     except OSError:
@@ -2460,6 +2540,11 @@ def _agent_env_has_key() -> bool | None:
         # yapılandırırdı. None döndürmek arızayı KORUR — `local_agent_config_state` onu
         # "yapilandirilmis=None"a çevirir, açılış senkronu koşmaz ve neden defterde uyarı olur.
         return None
+
+
+def _agent_env_has_key() -> bool | None:
+    """`~/.hermes/.env` DOLU bir GEMINI anahtar satırı taşıyor mu? (v244 öncesi sözleşme AYNEN)."""
+    return _agent_env_has(GEMINI_ENV_NAMES)
 
 
 def local_agent_config_state() -> dict:

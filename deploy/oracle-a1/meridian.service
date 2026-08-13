@@ -48,6 +48,24 @@ Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl
 Environment=MERIDIAN_PARALLEL_PROBES=1
 Environment=MERIDIAN_SEARCH_MAX_MIN=60
 Environment=HERMES_SEARCH_BUDGET=8
+# --- AJAN GÜNLÜK BÜTÇESİ (2026-08-14, ÖLÇÜMLE) ------------------------------------------------
+#     `hermes.AGENT_RPD` kod varsayılanı 150'dir ve gerekçesi kodda yazılı: "ücretsiz katman
+#     güvenli tavanları — bugün canlıda kota sessizce bitti". O gerekçe 2026-08-14'te GEÇERSİZ
+#     OLDU: beyin zinciri OpenRouter'a taşındı ve hesaba $10 kredi yüklendi.
+#     ÖLÇÜLEN (openrouter.ai/api/v1/key + /credits, aynı gün): `is_free_tier: false`,
+#     `total_credits: 10`. OpenRouter'ın belgelenmiş kuralı: ömür boyu kredi ≥$10 → 20 istek/dk,
+#     **1000 istek/gün** (altında 20/dk, 50/gün).
+#     BAĞLAYICI KISIT BİZDİK, SAĞLAYICI DEĞİL: aynı gün 21:50'de `state/agent_budget.json`
+#     `day: 144` gösteriyordu — kendi tavanımızın %96'sı, sağlayıcı tavanının %14'ü. Yani 856
+#     isteklik pay dururken öğrenme dolgusu kendi frenimize çarpmak üzereydi.
+#     600 SEÇİLDİ, 1000 DEĞİL: hesap kotası PAYLAŞIMLIDIR — `_agent_call` (bu bütçe) ile
+#     `_propose_nous`/`_nous_text` (bütçesiz, ayrı yol) aynı OpenRouter hesabını yer, üstüne elle
+#     yapılan teşhis çağrıları biner. 600 = tavanın %60'ı; kalan 400 öneri yoluna + payına ayrıldı.
+#     AÇIK: öneri yolunun günlük çağrı sayısı HENÜZ ÖLÇÜLMEDİ — bu sayı bir günlük canlı ölçümden
+#     sonra yeniden değerlendirilmeli (fazla pay kaldıysa yükselt, 429 görülürse düşür).
+#     RPM'e DOKUNULMADI (6): çağrılar seridir ve her biri ~10 sn sürer, yani 6/dk zaten fiilî seri
+#     sınıra yakındır; sağlayıcı 20 veriyor olması burada kazanç üretmez.
+Environment=MERIDIAN_AGENT_RPD=600
 # --- PANO TOKEN'I ARTIK BU DOSYADA DEĞİL (H3 tur-1, 2026-07-31 bakım penceresi) --------------
 #     `MERIDIAN_DASH_TOKEN` eskiden BURADA düz metin `Environment=` satırıydı; birim dosyası
 #     /etc/systemd/system altında 0644'tür — yani makinedeki HER kullanıcı token'ı okuyabiliyordu.
