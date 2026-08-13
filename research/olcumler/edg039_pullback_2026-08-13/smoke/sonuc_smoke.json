@@ -1,0 +1,638 @@
+{
+ "kart": "EDG-2026-039",
+ "adim": "kıyas + yan-kanal ayrıştırması_smoke",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg039_pullback_2026-08-13/olcum.py",
+ "olcum_zamani": "2026-08-13T18:38:54+00:00",
+ "smoke": true,
+ "hucre": "C+mb − pullback (ARMED_SETUPS'tan `pullback` çıkarılmış dünya) — TEK HÜCRE",
+ "kiyas_taban": {
+  "kaynak": "EDG-032b `kontrol` HAZIR çıktıları — YENİDEN KOŞULMADI, salt-okundu (C+mb @5R: rampa 15/36, slot 20, 0,5R, zarf 5R, mb ARMED'da)",
+  "dizin": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/smoke",
+  "dosya_sha256": {
+   "sonuc_kontrol_smoke.json": "2254b0e59e9546800abd5632d0947a1035eb8830d83dd547445635f20cc455dc",
+   "seanslar_kontrol_smoke.json": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "islemler_kontrol_smoke.json": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "islemler_tam_kontrol_smoke.json": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5"
+  }
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap (iter=5000, seed=20260812): AYNI ay çekilişi İKİ kola birden uygulanır; Δ her iterasyonda eşli hesaplanır (ortak ay gürültüsü sadeleşir). Ay kümesi = ts_open[:7]; küme sayısı M=6.",
+  "maxdd": "kapı metriği `maxdd_kanonik` = score.score_detail.max_drawdown (koşum çıktısı). Bootstrap içindeki Δmaxdd ise KAPALI-İŞLEM eğrisi üzerinden (score.equity_curve) — ay çekilişi m2m eğrisini yeniden kuramaz; iki ölçü AYRI adlarla raporlanır, karıştırılmaz.",
+  "islem_kimligi": "(ts_open[:10], ticker) — EDG-030 deseni AYNEN",
+  "islem_kimligi_tekil": {
+   "taban": true,
+   "hucre": true,
+   "serh": null
+  },
+  "cost_model": "motorun kendi maliyet modeli (iki kol AYNI) — kart notu: pessimistic_band_v2 GÖRECELİ kıyasta etkisiz"
+ },
+ "tablo": {
+  "islem_n": {
+   "taban_Cmb": 8,
+   "hucre_Cmb_eksi_pullback": 8,
+   "delta": 0,
+   "delta_pct": 0.0
+  },
+  "islem_n_delta_ci95_eslenik": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "islem_yil": {
+   "taban_Cmb": 16.23,
+   "hucre_Cmb_eksi_pullback": 16.23,
+   "delta": 0.0
+  },
+  "net_pnl_equity": {
+   "taban_Cmb": -2163.48,
+   "hucre_Cmb_eksi_pullback": -2163.48,
+   "delta": 0.0
+  },
+  "net_pnl_trades": {
+   "taban_Cmb": -2163.48,
+   "hucre_Cmb_eksi_pullback": -2163.48,
+   "delta": 0.0
+  },
+  "net_pnl_delta_ci95_eslenik": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "maxdd_kanonik": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "maxdd_m2m": {
+   "taban_Cmb": 0.0216,
+   "hucre_Cmb_eksi_pullback": 0.0216,
+   "delta": 0.0
+  },
+  "maxdd_delta_ci95_eslenik_kapali_islem_egrisi": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "maxdd_ci_atlanan_iter": 1685,
+  "sharpe": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "sharpe_delta_ci95_eslenik": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "sharpe_ci_atlanan_iter": 1685,
+  "avg_r_islem_R": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "win_rate": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "score": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "total_return": {
+   "taban_Cmb": null,
+   "hucre_Cmb_eksi_pullback": null,
+   "delta": null
+  },
+  "silahlanan_plan": {
+   "taban_Cmb": 9,
+   "hucre_Cmb_eksi_pullback": 9,
+   "delta": 0
+  },
+  "toplam_plan": {
+   "taban_Cmb": 9,
+   "hucre_Cmb_eksi_pullback": 9,
+   "delta": 0
+  },
+  "doluluk_pozisyon_gun": {
+   "taban_Cmb": 4,
+   "hucre_Cmb_eksi_pullback": 4,
+   "delta": 0
+  },
+  "ort_acik_pozisyon": {
+   "taban_Cmb": 0.032,
+   "hucre_Cmb_eksi_pullback": 0.032,
+   "delta": 0.0
+  },
+  "toplam_bars_held": {
+   "taban_Cmb": 11,
+   "hucre_Cmb_eksi_pullback": 11,
+   "delta": 0
+  },
+  "exit_reason_dagilim": {
+   "taban_Cmb": {
+    "regime_flip": 7,
+    "stop": 1
+   },
+   "hucre_Cmb_eksi_pullback": {
+    "regime_flip": 7,
+    "stop": 1
+   }
+  },
+  "tepe_isi_gerceklesen_sizeR_max": {
+   "taban_Cmb": 1.525,
+   "hucre_Cmb_eksi_pullback": 1.525
+  },
+  "eszamanli_poz_max": {
+   "taban_Cmb": {
+    "open_fazi": 4,
+    "islem_araligi": 6
+   },
+   "hucre_Cmb_eksi_pullback": {
+    "open_fazi": 4,
+    "islem_araligi": 6
+   }
+  }
+ },
+ "kurulum_kirilimi_yanyana": {
+  "breakout_vcp": {
+   "taban": {
+    "n": 1,
+    "ort_r": -0.286,
+    "net_pnl": -108.28,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "hucre": {
+    "n": 1,
+    "ort_r": -0.286,
+    "net_pnl": -108.28,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "delta": {
+    "n": 0,
+    "ort_r": 0.0,
+    "net_pnl": 0.0,
+    "kazanma_orani": 0.0
+   }
+  },
+  "exhaustion_hammer": {
+   "taban": {
+    "n": 2,
+    "ort_r": -0.534,
+    "net_pnl": -403.44,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "hucre": {
+    "n": 2,
+    "ort_r": -0.534,
+    "net_pnl": -403.44,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "delta": {
+    "n": 0,
+    "ort_r": 0.0,
+    "net_pnl": 0.0,
+    "kazanma_orani": 0.0
+   }
+  },
+  "momentum_burst": {
+   "taban": {
+    "n": 5,
+    "ort_r": -0.845,
+    "net_pnl": -1651.76,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "hucre": {
+    "n": 5,
+    "ort_r": -0.845,
+    "net_pnl": -1651.76,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "delta": {
+    "n": 0,
+    "ort_r": 0.0,
+    "net_pnl": 0.0,
+    "kazanma_orani": 0.0
+   }
+  }
+ },
+ "pnl_ayristirma": {
+  "kimlik": "Δ(Σpnl) = Σeklenen + Σortak_Δ − Σçıkan   (kalıntı 0.00 olmalı — sente kapanma)",
+  "taban_net_pnl_trades": -2163.48,
+  "hucre_net_pnl_trades": -2163.48,
+  "delta_net_pnl_trades": 0.0,
+  "eklenen_pnl": 0,
+  "cikan_pnl": 0,
+  "ortak_delta_pnl": 0.0,
+  "kalinti": 0.0,
+  "sente_kapaniyor": true,
+  "naif_beklenti": {
+   "tanim": "kartın adıyla andığı naif beklenti: pullback'in 6 işlemi kaybolur, kaybı kurtarılır → ΔP&L ≈ −(pullback net P&L)",
+   "deger": 0,
+   "gerceklesen": 0.0,
+   "fark": 0.0,
+   "farkin_bilesenleri_ADIYLA": {
+    "1_yan_kanal_EKLENEN_islemler": {
+     "pnl": 0,
+     "n": 0,
+     "ad": "SERBEST KALAN KAPASİTE DOLDU — pullback'in tuttuğu slot/ısı boşalınca tabanda kapıdan dönen adaylar işleme girdi"
+    },
+    "2_yan_kanal_CIKAN_pullback_disi": {
+     "pnl": 0,
+     "n": 0,
+     "katki": 0,
+     "ad": "KNOCK-ON KAYIP — erken/farklı dolan işlemler slot-ısı-equity yolunu kaydırdı; tabanda var olan bu işlemler hücrede HİÇ oluşmadı"
+    },
+    "3_ORTAK_islemlerde_kayma": {
+     "pnl": 0.0,
+     "n_kayan": 0,
+     "n_ortak": 8,
+     "ad": "EQUITY-YOLU KAYMASI — aynı gün/aynı sembolde açılan işlemler farklı equity ve farklı ısı altında boyutlandı (qty/çıkış/R kaydı)"
+    }
+   },
+   "toplam_kontrol": 0.0,
+   "toplam_kontrol_esit_mi": true
+  },
+  "pullback_kalemleri": {
+   "taban_n": 0,
+   "hucre_n": 0,
+   "tabandan_kaybolan_n": 0,
+   "pnl": 0,
+   "hepsi_kayboldu": true
+  }
+ },
+ "yan_kanal_ayristirmasi": {
+  "tanim": "pullback'in 6 işlemi kaybolunca ne oldu: MEŞGUL PENCERE = [ts_open, ts_close] (seans kaydı bar açılışında alınır, pozisyon o an hâlâ açık). Tabanda bu seanslarda 1 slot + pozisyonun size_r'ı bağlıydı.",
+  "mesgul_seans_n": 0,
+  "mesgul_seans_toplam_pencere": {
+   "ilk": null,
+   "son": null
+  },
+  "serbest_kalan_kapasite_ozeti": {
+   "taban_ort_n_acik": null,
+   "hucre_ort_n_acik": null,
+   "taban_ort_acik_size_r": null,
+   "hucre_ort_acik_size_r": null,
+   "taban_slot_dolu_seans_n": 0,
+   "hucre_slot_dolu_seans_n": 0,
+   "okuma": "hücre ort_n_acik ≈ taban ise serbest kalan slot ANINDA yeniden doldu; belirgin düşükse kapasite BOŞ kaldı"
+  },
+  "pencere_pencere": [],
+  "EKLENEN_islemler": {
+   "toplam": null,
+   "ort_r_ci95_ay_kumeli": null,
+   "ort_r_ci_olculemedi_neden": "eklenen işlemler 0 ay kümesinde — ay-kümeli CI için <2 küme; olculemedi (None)",
+   "mesgul_pencere_ICINDE_acilan": {
+    "n": 0,
+    "ozet": null
+   },
+   "mesgul_pencere_DISINDA_acilan": {
+    "n": 0,
+    "ozet": null,
+    "ad": "DOWNSTREAM KNOCK-ON — pullback penceresiyle doğrudan ilgisi yok; equity/ısı yolunun kayması sonraki seanslarda yeni dolumlar doğurdu"
+   }
+  },
+  "CIKAN_islemler": {
+   "pullback": {
+    "n": 0,
+    "ozet": null
+   },
+   "pullback_disi_knock_on": {
+    "n": 0,
+    "ozet": null
+   }
+  },
+  "ORTAK_islemlerde_kayma": {
+   "ortak_n": 8,
+   "kayan_n": 0,
+   "kayan_toplam_delta_pnl": 0.0,
+   "ornekler": []
+  },
+  "kapi_basinci": {
+   "tanim": "silahlı plan kapıdan neden dönüyor — ısı/slot baskısının doğrudan ölçüsü",
+   "nogo_neden_dagilim": {
+    "taban": {},
+    "hucre": {}
+   },
+   "review_neden_dagilim": {
+    "taban": {
+     "leading_sector": 6,
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 6,
+     "rr_marginal": 1,
+     "sector_stacking": 1
+    },
+    "hucre": {
+     "leading_sector": 6,
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 6,
+     "rr_marginal": 1,
+     "sector_stacking": 1
+    }
+   },
+   "verdict_dagilim": {
+    "taban": {
+     "GO": 3,
+     "REVIEW": 6,
+     "NO_GO": 0
+    },
+    "hucre": {
+     "GO": 3,
+     "REVIEW": 6,
+     "NO_GO": 0
+    }
+   },
+   "plan_setup_dagilim": {
+    "taban": {
+     "momentum_burst": 5,
+     "exhaustion_hammer": 3,
+     "breakout_vcp": 1
+    },
+    "hucre": {
+     "momentum_burst": 5,
+     "exhaustion_hammer": 3,
+     "breakout_vcp": 1
+    }
+   }
+  }
+ },
+ "kapi_isareti": {
+  "kart_olcutu": "ΔP&L CI-alt > 0 → önerilir · ΔP&L CI 0-içi iken dd/sharpe belirgin iyileşiyorsa önerilir · ΔP&L CI-üst < 0 → pullback silahlı kalır",
+  "delta_pnl_nokta": 0.0,
+  "delta_pnl_ci95_eslenik": {
+   "lo": 0.0,
+   "hi": 0.0,
+   "orta": 0.0
+  },
+  "dal": "CI_0_ICI → kartın İKİNCİ AYAĞI geçerli: 'dd/sharpe belirgin iyileşiyorsa önerilir'. 'belirgin' kartta SAYISAL TANIMLANMAMIŞ — eşik sonradan konulamaz (ölçüm disiplini); yön ve CI aşağıda, hüküm Rol-1'in.",
+  "ikinci_ayak_dd_sharpe": {
+   "maxdd_kanonik": {
+    "taban": null,
+    "hucre": null,
+    "delta": null,
+    "yon": null,
+    "delta_ci95_eslenik": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    }
+   },
+   "sharpe": {
+    "taban": null,
+    "hucre": null,
+    "delta": null,
+    "yon": null,
+    "delta_ci95_eslenik": {
+     "lo": 0.0,
+     "hi": 0.0,
+     "orta": 0.0
+    }
+   },
+   "belirgin_mi": null,
+   "belirgin_olculemedi_neden": "kart 'belirgin iyileşme'yi sayısal tanımlamadı; ölçüm ajanı eşik UYDURAMAZ (eşikler donuk) — yön, nokta farkı ve eşlenik CI raporlandı"
+  },
+  "beyan": "MEKANİK işaret — HÜKÜM DEĞİL. Hükmü Rol-1 işler (kart status: registered)."
+ },
+ "kill_bayraklari": {
+  "kill1_sasi_butunlugu": {
+   "esik": "şasi bütünlüğü (frame/dup/scan==plan + yasak-modül + base_max + kill3-mtime + sha)",
+   "hucre_butunluk": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "base_max_open_bozuk": [],
+    "kill3_bozuk_dosyalar": [],
+    "gecerli": true
+   },
+   "taban_butunluk": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "base_max_open_bozuk": [],
+    "kill3_bozuk_dosyalar": [],
+    "gecerli": true
+   },
+   "motor_sha_ayni": {
+    "broker.py": true,
+    "backtest.py": true,
+    "strategy.py": true,
+    "guard.py": true
+   },
+   "config_sha_ayni": {
+    "goal.yaml": true,
+    "strategy.yaml": true,
+    "bounds.yaml": true
+   },
+   "takvim_ayni": true,
+   "n_seans": {
+    "taban": 124,
+    "hucre": 124
+   },
+   "rampa_ayni_15_36": true,
+   "tetiklendi": false
+  },
+  "kill2_kanal": {
+   "esik": "ARMED kümesi enjeksiyonu strategy.py'yi DEĞİŞTİRİYORSA geçersiz — ölçüm kanalı repo koduna dokunmaz",
+   "strategy_py_sha256_once": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_sha256_sonra": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_dokunulmadi": true,
+   "armed_setups_sabiti_degismedi": true,
+   "armed_setups_tuple_kimligi_ayni": true,
+   "kill3_mtime_temiz": {
+    "hucre": true,
+    "taban": true
+   },
+   "repo_calisma_agacinda_strategy_py_sha256": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "kanal_notrlugu_gecti": true,
+   "kanal_notrlugu_kaynak": "/Users/erdemozturk/AI-Trading/research/olcumler/edg039_pullback_2026-08-13/smoke/notrluk_smoke.json",
+   "on_ucus_ozsinama_gecti": true,
+   "ozsinama_b_ihlal_n": 0,
+   "ozsinama_a_kosum_ici": {
+    "taban_pullback_secti_n": 0,
+    "kesildi_bosa_dustu_n": 0,
+    "kesildi_yerine_gecen": {},
+    "gecti": null,
+    "olculemedi_neden": "smoke penceresinde (2022-H1) taban dünyasında hiç pullback planı yok — sayaç 0 çıkması pencere olgusudur, kanal hatası DEĞİL; (a)'nın koşum-içi ayağı TAM pencerede ölçülür",
+    "beyan": "GERÇEK barlarda: taban kümesiyle `pullback` seçilecek her çağrıda hücre ya hiç silahlanmadı ya da bir SONRAKİ öncelikli kuruluma düştü"
+   },
+   "tetiklendi": false
+  },
+  "kill3_taban_defteri": {
+   "esik": "taban defterde `pullback` 6 işlem bulunamazsa (sha uyuşmazlığı) GEÇERSİZ",
+   "taban_tam_defter_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "brief_sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "sha_uyuyor": null,
+   "sha_serh": "smoke penceresinde brief künyesi TAM koşuma aittir — kıyaslanmadı (None)",
+   "pullback_islem_n": 0,
+   "beklenen_n": 6,
+   "pullback_kirilimi": null,
+   "tetiklendi": true
+  },
+  "herhangi_tetiklendi": true
+ },
+ "kanal_kaniti_hucre": {
+  "secim": "BEYANLI MONKEYPATCH — ARMED kümesinin TAMAMI param olarak geçirildi (`entry.armed_kume`); tek kanonik nokta: strategy.scan_entry",
+  "gerekce": "repo yüzeyi yalnız EKLEME yönünde (`entry.armed_extra`, strategy.py:1068); ÇIKARMA anahtarı repo kodunda YOK. Bir `armed_eksi` kanalı açmak strategy.py'yi DEĞİŞTİRMEK olurdu → kart kill#2. Modül sabitini koşum boyunca yeniden bağlamak da reddedildi (sabit replay dışında da okunuyor; öz-sınama (c) tam bunu yasaklar). Kalan tek yol kartın adıyla önerdiği ikinci yoldur.",
+  "kanonik_nokta_kaniti": "replay yolunda ARMED_SETUPS'ın TEK okuyucusu scan_entry (backtest.py:329). cf_backfill/loop/shadow_variants da okur ama replay'de İTHAL EDİLMEZ — yasak-modül assert'i bunu kanıtlar: yuklenen=[]",
+  "armed_taban": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "armed_hucre": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "cikarilan": [
+   "pullback"
+  ],
+  "param_yuzeyi": "params['entry.armed_kume'] → config.resolve_params → eff → backtest.py:329 scan_entry(eff) (4 rejimde assert'lendi)",
+  "kanun_kopyalanmadi": "tarama `strat.scan_all` ÇAĞRISIYLA yapılır; kopyalanan tek şey strategy.py:1069-1072 öncelik döngüsüdür ve taban kümesiyle özdeş davranışı BAYT-ÖZDEŞLİK kapısıyla (`notrluk`) çakılıdır",
+  "on_ucus_ozsinama_a_b": {
+   "cikarilan": [
+    "pullback"
+   ],
+   "hucre_kumesi": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "senaryolar": {
+    "yalniz_pullback": {
+     "taban": "pullback",
+     "hucre": null
+    },
+    "pullback_ve_mb": {
+     "taban": "pullback",
+     "hucre": "momentum_burst"
+    },
+    "pullback_ve_eh": {
+     "taban": "pullback",
+     "hucre": "exhaustion_hammer"
+    },
+    "breakout_ve_pullback": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "yalniz_eh": {
+     "taban": "exhaustion_hammer",
+     "hucre": "exhaustion_hammer"
+    },
+    "yalniz_mb": {
+     "taban": "momentum_burst",
+     "hucre": "momentum_burst"
+    },
+    "yalniz_breakout": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "uyuyan_kurulum": {
+     "taban": null,
+     "hucre": null
+    },
+    "hicbiri": {
+     "taban": null,
+     "hucre": null
+    }
+   },
+   "beklenen": {
+    "yalniz_pullback": {
+     "taban": "pullback",
+     "hucre": null
+    },
+    "pullback_ve_mb": {
+     "taban": "pullback",
+     "hucre": "momentum_burst"
+    },
+    "pullback_ve_eh": {
+     "taban": "pullback",
+     "hucre": "exhaustion_hammer"
+    },
+    "breakout_ve_pullback": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "yalniz_eh": {
+     "taban": "exhaustion_hammer",
+     "hucre": "exhaustion_hammer"
+    },
+    "yalniz_mb": {
+     "taban": "momentum_burst",
+     "hucre": "momentum_burst"
+    },
+    "yalniz_breakout": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "uyuyan_kurulum": {
+     "taban": null,
+     "hucre": null
+    },
+    "hicbiri": {
+     "taban": null,
+     "hucre": null
+    }
+   },
+   "gecti": true,
+   "beyan": "sentetik `scan_all` ile ön-uçuş: (a) pullback sinyali TEK adayken hücre hiç silahlanmıyor; pullback+mb'de mb'ye düşüyor. (b) pullback dışındaki üç kurulumun seçimi HER senaryoda taban ile aynı. Sahte tarama yalnız bu fonksiyon içinde takılı, finally ile geri alındı (assert'li).",
+   "sentetik_cagri_n": 18
+  },
+  "kosum_ici_sayaclar": {
+   "cagri_n": 743,
+   "taban_sinyal_n": 9,
+   "hucre_sinyal_n": 9,
+   "taban_pullback_secti_n": 0,
+   "kesildi_bosa_dustu_n": 0,
+   "kesildi_yerine_gecen": {},
+   "ozsinama_b_ihlal_n": 0,
+   "ozsinama_b_ihlal_ornek": [],
+   "kesilen_ornekler": []
+  },
+  "ozsinama_a_kosum_ici": {
+   "taban_pullback_secti_n": 0,
+   "kesildi_bosa_dustu_n": 0,
+   "kesildi_yerine_gecen": {},
+   "gecti": null,
+   "olculemedi_neden": "smoke penceresinde (2022-H1) taban dünyasında hiç pullback planı yok — sayaç 0 çıkması pencere olgusudur, kanal hatası DEĞİL; (a)'nın koşum-içi ayağı TAM pencerede ölçülür",
+   "beyan": "GERÇEK barlarda: taban kümesiyle `pullback` seçilecek her çağrıda hücre ya hiç silahlanmadı ya da bir SONRAKİ öncelikli kuruluma düştü"
+  },
+  "ozsinama_b_kosum_ici": {
+   "ihlal_n": 0,
+   "ihlal_ornek": [],
+   "gecti": true,
+   "beyan": "ÇAĞRI BAŞINA değişmez: taban seçimi pullback DEĞİLSE hücre seçimi AYNI NESNE olmak zorunda — ihlalde koşum AssertionError ile durur"
+  },
+  "ozsinama_c": {
+   "armed_setups_once": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "armed_setups_sonra": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "deger_ayni": true,
+   "tuple_kimligi_ayni": true,
+   "strategy_py_sha256_once": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_sha256_sonra": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_dokunulmadi": true,
+   "scan_entry_geri_takildi": true
+  }
+ },
+ "beyan": "Bu dosya HÜKÜM İÇERMEZ. Kart eşikleri DONUK; kapı işareti MEKANİKTİR. Ölçüm ajanı karta dokunmadı, repo koduna dokunmadı, git/canlı/state'e yazmadı."
+}

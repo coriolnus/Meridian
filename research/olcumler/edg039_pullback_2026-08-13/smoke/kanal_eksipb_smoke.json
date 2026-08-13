@@ -1,0 +1,155 @@
+{
+ "secim": "BEYANLI MONKEYPATCH — ARMED kümesinin TAMAMI param olarak geçirildi (`entry.armed_kume`); tek kanonik nokta: strategy.scan_entry",
+ "gerekce": "repo yüzeyi yalnız EKLEME yönünde (`entry.armed_extra`, strategy.py:1068); ÇIKARMA anahtarı repo kodunda YOK. Bir `armed_eksi` kanalı açmak strategy.py'yi DEĞİŞTİRMEK olurdu → kart kill#2. Modül sabitini koşum boyunca yeniden bağlamak da reddedildi (sabit replay dışında da okunuyor; öz-sınama (c) tam bunu yasaklar). Kalan tek yol kartın adıyla önerdiği ikinci yoldur.",
+ "kanonik_nokta_kaniti": "replay yolunda ARMED_SETUPS'ın TEK okuyucusu scan_entry (backtest.py:329). cf_backfill/loop/shadow_variants da okur ama replay'de İTHAL EDİLMEZ — yasak-modül assert'i bunu kanıtlar: yuklenen=[]",
+ "armed_taban": [
+  "breakout_vcp",
+  "pullback",
+  "exhaustion_hammer",
+  "momentum_burst"
+ ],
+ "armed_hucre": [
+  "breakout_vcp",
+  "exhaustion_hammer",
+  "momentum_burst"
+ ],
+ "cikarilan": [
+  "pullback"
+ ],
+ "param_yuzeyi": "params['entry.armed_kume'] → config.resolve_params → eff → backtest.py:329 scan_entry(eff) (4 rejimde assert'lendi)",
+ "kanun_kopyalanmadi": "tarama `strat.scan_all` ÇAĞRISIYLA yapılır; kopyalanan tek şey strategy.py:1069-1072 öncelik döngüsüdür ve taban kümesiyle özdeş davranışı BAYT-ÖZDEŞLİK kapısıyla (`notrluk`) çakılıdır",
+ "on_ucus_ozsinama_a_b": {
+  "cikarilan": [
+   "pullback"
+  ],
+  "hucre_kumesi": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "senaryolar": {
+   "yalniz_pullback": {
+    "taban": "pullback",
+    "hucre": null
+   },
+   "pullback_ve_mb": {
+    "taban": "pullback",
+    "hucre": "momentum_burst"
+   },
+   "pullback_ve_eh": {
+    "taban": "pullback",
+    "hucre": "exhaustion_hammer"
+   },
+   "breakout_ve_pullback": {
+    "taban": "breakout_vcp",
+    "hucre": "breakout_vcp"
+   },
+   "yalniz_eh": {
+    "taban": "exhaustion_hammer",
+    "hucre": "exhaustion_hammer"
+   },
+   "yalniz_mb": {
+    "taban": "momentum_burst",
+    "hucre": "momentum_burst"
+   },
+   "yalniz_breakout": {
+    "taban": "breakout_vcp",
+    "hucre": "breakout_vcp"
+   },
+   "uyuyan_kurulum": {
+    "taban": null,
+    "hucre": null
+   },
+   "hicbiri": {
+    "taban": null,
+    "hucre": null
+   }
+  },
+  "beklenen": {
+   "yalniz_pullback": {
+    "taban": "pullback",
+    "hucre": null
+   },
+   "pullback_ve_mb": {
+    "taban": "pullback",
+    "hucre": "momentum_burst"
+   },
+   "pullback_ve_eh": {
+    "taban": "pullback",
+    "hucre": "exhaustion_hammer"
+   },
+   "breakout_ve_pullback": {
+    "taban": "breakout_vcp",
+    "hucre": "breakout_vcp"
+   },
+   "yalniz_eh": {
+    "taban": "exhaustion_hammer",
+    "hucre": "exhaustion_hammer"
+   },
+   "yalniz_mb": {
+    "taban": "momentum_burst",
+    "hucre": "momentum_burst"
+   },
+   "yalniz_breakout": {
+    "taban": "breakout_vcp",
+    "hucre": "breakout_vcp"
+   },
+   "uyuyan_kurulum": {
+    "taban": null,
+    "hucre": null
+   },
+   "hicbiri": {
+    "taban": null,
+    "hucre": null
+   }
+  },
+  "gecti": true,
+  "beyan": "sentetik `scan_all` ile ön-uçuş: (a) pullback sinyali TEK adayken hücre hiç silahlanmıyor; pullback+mb'de mb'ye düşüyor. (b) pullback dışındaki üç kurulumun seçimi HER senaryoda taban ile aynı. Sahte tarama yalnız bu fonksiyon içinde takılı, finally ile geri alındı (assert'li).",
+  "sentetik_cagri_n": 18
+ },
+ "kosum_ici_sayaclar": {
+  "cagri_n": 743,
+  "taban_sinyal_n": 9,
+  "hucre_sinyal_n": 9,
+  "taban_pullback_secti_n": 0,
+  "kesildi_bosa_dustu_n": 0,
+  "kesildi_yerine_gecen": {},
+  "ozsinama_b_ihlal_n": 0,
+  "ozsinama_b_ihlal_ornek": [],
+  "kesilen_ornekler": []
+ },
+ "ozsinama_a_kosum_ici": {
+  "taban_pullback_secti_n": 0,
+  "kesildi_bosa_dustu_n": 0,
+  "kesildi_yerine_gecen": {},
+  "gecti": null,
+  "olculemedi_neden": "smoke penceresinde (2022-H1) taban dünyasında hiç pullback planı yok — sayaç 0 çıkması pencere olgusudur, kanal hatası DEĞİL; (a)'nın koşum-içi ayağı TAM pencerede ölçülür",
+  "beyan": "GERÇEK barlarda: taban kümesiyle `pullback` seçilecek her çağrıda hücre ya hiç silahlanmadı ya da bir SONRAKİ öncelikli kuruluma düştü"
+ },
+ "ozsinama_b_kosum_ici": {
+  "ihlal_n": 0,
+  "ihlal_ornek": [],
+  "gecti": true,
+  "beyan": "ÇAĞRI BAŞINA değişmez: taban seçimi pullback DEĞİLSE hücre seçimi AYNI NESNE olmak zorunda — ihlalde koşum AssertionError ile durur"
+ },
+ "ozsinama_c": {
+  "armed_setups_once": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "armed_setups_sonra": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "deger_ayni": true,
+  "tuple_kimligi_ayni": true,
+  "strategy_py_sha256_once": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+  "strategy_py_sha256_sonra": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+  "strategy_py_dokunulmadi": true,
+  "scan_entry_geri_takildi": true
+ }
+}

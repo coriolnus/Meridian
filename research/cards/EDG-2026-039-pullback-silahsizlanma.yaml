@@ -48,4 +48,39 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-13T2x", trial_ids: [pending-039-pullback-cikar]}
 
-status: registered   # 2026-08-13 Rol-1 — operatör "önce kart, sonra karar" dedi; eşikler donuk.
+status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm: SİLAHSIZLANMA ÖNERİLİR (kanıt asimetrisiyle); karar operatörün.
+
+verdict:   # Rol-1 hükmü.
+  olcum: >
+    ΔP&L +3.121,44$ (CI95 [−2.098,97, +10.780,65] → **0-İÇİ**) · dd 0,1268→0,1263 (−0,0005) ·
+    sharpe 0,521→0,594 (+0,073) · işlem n DEĞİŞMEDİ (885→885; boşalan kapasite doldu) · işlem-R
+    0,076→0,083. Kartın birinci dalı (CI-alt>0) ve üçüncü dalı (CI-üst<0) TETİKLENMEDİ; ikinci ayak
+    ("CI 0-içi iken dd/sharpe belirgin iyileşiyorsa") biçimsel olarak açık ama "belirgin" kartta
+    SAYISAL TANIMLANMAMIŞTI ve eşik sonradan konulamaz — ajan `belirgin_mi: None` yazdı, DOĞRU davrandı.
+  yan_kanal: >
+    Sente kapanıyor: Δ 3.121,44 = eklenen 367,10 + ortak-yol kayması 93,79 + knock-on 242,70 +
+    pullback'in kendi kaybının geri alınması 2.417,85. Naif beklenti (+2.418) ile gerçekleşen
+    arasındaki +703,59'un ADI var. Bağlayan kısıt SLOT DEĞİL ISI: 39 meşgul seansın hiçbirinde slot
+    dolmadı (0/39), `heat_hard` NO_GO 607→593.
+  ZAYIFLIK_ADIYLA: >
+    Sonuç TEK İŞLEME bağlı: OXY penceresinde doğan IRM/exhaustion_hammer (+4.053R, +2.247,04$)
+    farkı domine ediyor. Eklenen 10 işlemin ort-R'si +0,018, CI [−0,708, +1,479] — 0-içi, n=10.
+    Yani "çıkarmanın faydası" KANITLANMIŞ DEĞİL.
+  hukum: >
+    **SİLAHSIZLANMA ÖNERİLİR — ama gerekçe "çıkarmak kazandırıyor" DEĞİL, KANIT ASİMETRİSİ:**
+    (i) pullback'in ZARARI üç bağımsız kaynakta tutarlı — replay n=6 ort-R −0,787 **kazanma %0,0** ·
+    canlı gerçek n=4 −1,00R · cf n=21 −0,97R. (ii) Çıkarmanın FAYDASI belirsiz (CI 0-içi, tek işlem
+    dominasyonu) ama ZARARI da yok: dd ve sharpe iki yönde de iyileşme işaretinde, işlem sayısı sabit.
+    (iii) Maliyet asimetrisi: silahlı tutmak her seans slot+ısı+sermaye riski harcıyor; silahsız
+    tutmanın maliyeti yalnız "belki iyi olurdu" ve o ihtimal DORMANT haldeyken cf defterinde ÖLÇÜLMEYE
+    DEVAM eder — yani kanıt birikmeye devam eder, para riski biter. (iv) Geri alma tek satır.
+    KARAR OPERATÖRÜN (kart kuralı). Uygulanırsa: `ARMED_SETUPS`ten çıkar + kart-önce yeniden
+    değerlendirme eşiği yaz (ör. cf'de n≥30 ve ort-R CI-alt>0 olursa yeniden silahlanma penceresi).
+  kanal_kaniti: >
+    Kanal seçimi BEYANLI ve kanıtlı: repo yüzeyi yalnız EKLEME yönünde (`entry.armed_extra`);
+    `armed_eksi` repoda SIFIR geçiş → o kanalı açmak strategy.py'yi değiştirmek olurdu (kill#2),
+    REDDEDİLDİ. Seçilen: ARMED kümesini param geçiren beyanlı monkeypatch, tek kanonik noktada
+    (`scan_entry`). NÖTRLÜK KAPISI: aynı sarmalayıcıyla TAM küme koşumu edg032b kontrolüyle
+    BAYT-ÖZDEŞ (sha 46ebeb48…674874). Öz-sınama 3/3, 160.719 çağrıda 0 ihlal, `ARMED_SETUPS`
+    değeri+kimliği değişmedi, strategy.py sha üçlü-aynı.
+  artefakt: "research/olcumler/edg039_pullback_2026-08-13/"

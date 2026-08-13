@@ -1,0 +1,1710 @@
+{
+ "kart": "EDG-2026-039",
+ "adim": "kıyas + yan-kanal ayrıştırması",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg039_pullback_2026-08-13/olcum.py",
+ "olcum_zamani": "2026-08-13T19:33:01+00:00",
+ "smoke": false,
+ "hucre": "C+mb − pullback (ARMED_SETUPS'tan `pullback` çıkarılmış dünya) — TEK HÜCRE",
+ "kiyas_taban": {
+  "kaynak": "EDG-032b `kontrol` HAZIR çıktıları — YENİDEN KOŞULMADI, salt-okundu (C+mb @5R: rampa 15/36, slot 20, 0,5R, zarf 5R, mb ARMED'da)",
+  "dizin": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13",
+  "dosya_sha256": {
+   "sonuc_kontrol.json": "64f7993bd3317acfbef45eb5ca5959aa17510c8ddabeac8a28e4b48d4e49ae78",
+   "seanslar_kontrol.json": "f0c8df928e20979d8b959d009cfbc4e363ed43cce1d27d1b5ed615bf50e432a4",
+   "islemler_kontrol.json": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+   "islemler_tam_kontrol.json": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874"
+  }
+ },
+ "yontem": {
+  "eslenik_bootstrap": "ay-kümeli EŞLENİK bootstrap (iter=5000, seed=20260812): AYNI ay çekilişi İKİ kola birden uygulanır; Δ her iterasyonda eşli hesaplanır (ortak ay gürültüsü sadeleşir). Ay kümesi = ts_open[:7]; küme sayısı M=55.",
+  "maxdd": "kapı metriği `maxdd_kanonik` = score.score_detail.max_drawdown (koşum çıktısı). Bootstrap içindeki Δmaxdd ise KAPALI-İŞLEM eğrisi üzerinden (score.equity_curve) — ay çekilişi m2m eğrisini yeniden kuramaz; iki ölçü AYRI adlarla raporlanır, karıştırılmaz.",
+  "islem_kimligi": "(ts_open[:10], ticker) — EDG-030 deseni AYNEN",
+  "islem_kimligi_tekil": {
+   "taban": true,
+   "hucre": true,
+   "serh": null
+  },
+  "cost_model": "motorun kendi maliyet modeli (iki kol AYNI) — kart notu: pessimistic_band_v2 GÖRECELİ kıyasta etkisiz"
+ },
+ "tablo": {
+  "islem_n": {
+   "taban_Cmb": 885,
+   "hucre_Cmb_eksi_pullback": 885,
+   "delta": 0,
+   "delta_pct": 0.0
+  },
+  "islem_n_delta_ci95_eslenik": {
+   "lo": -3.0,
+   "hi": 3.0,
+   "orta": 0.0
+  },
+  "islem_yil": {
+   "taban_Cmb": 193.44,
+   "hucre_Cmb_eksi_pullback": 193.44,
+   "delta": 0.0
+  },
+  "net_pnl_equity": {
+   "taban_Cmb": 20684.69,
+   "hucre_Cmb_eksi_pullback": 23806.13,
+   "delta": 3121.44
+  },
+  "net_pnl_trades": {
+   "taban_Cmb": 20684.69,
+   "hucre_Cmb_eksi_pullback": 23806.13,
+   "delta": 3121.44
+  },
+  "net_pnl_delta_ci95_eslenik": {
+   "lo": -2098.9718,
+   "hi": 10780.6462,
+   "orta": 2808.695
+  },
+  "maxdd_kanonik": {
+   "taban_Cmb": 0.1268,
+   "hucre_Cmb_eksi_pullback": 0.1263,
+   "delta": -0.0005
+  },
+  "maxdd_m2m": {
+   "taban_Cmb": 0.1268,
+   "hucre_Cmb_eksi_pullback": 0.1263,
+   "delta": -0.0005
+  },
+  "maxdd_delta_ci95_eslenik_kapali_islem_egrisi": {
+   "lo": -0.021,
+   "hi": 0.0162,
+   "orta": 0.0002
+  },
+  "maxdd_ci_atlanan_iter": 0,
+  "sharpe": {
+   "taban_Cmb": 0.521,
+   "hucre_Cmb_eksi_pullback": 0.594,
+   "delta": 0.073
+  },
+  "sharpe_delta_ci95_eslenik": {
+   "lo": -0.0561,
+   "hi": 0.2421,
+   "orta": 0.0677
+  },
+  "sharpe_ci_atlanan_iter": 0,
+  "avg_r_islem_R": {
+   "taban_Cmb": 0.076,
+   "hucre_Cmb_eksi_pullback": 0.083,
+   "delta": 0.007
+  },
+  "win_rate": {
+   "taban_Cmb": 0.363,
+   "hucre_Cmb_eksi_pullback": 0.365,
+   "delta": 0.002
+  },
+  "score": {
+   "taban_Cmb": -0.1081,
+   "hucre_Cmb_eksi_pullback": -0.0967,
+   "delta": 0.0114
+  },
+  "total_return": {
+   "taban_Cmb": 0.2068,
+   "hucre_Cmb_eksi_pullback": 0.2381,
+   "delta": 0.0313
+  },
+  "silahlanan_plan": {
+   "taban_Cmb": 936,
+   "hucre_Cmb_eksi_pullback": 936,
+   "delta": 0
+  },
+  "toplam_plan": {
+   "taban_Cmb": 1543,
+   "hucre_Cmb_eksi_pullback": 1529,
+   "delta": -14
+  },
+  "doluluk_pozisyon_gun": {
+   "taban_Cmb": 4983,
+   "hucre_Cmb_eksi_pullback": 4976,
+   "delta": -7
+  },
+  "ort_acik_pozisyon": {
+   "taban_Cmb": 4.344,
+   "hucre_Cmb_eksi_pullback": 4.338,
+   "delta": -0.006
+  },
+  "toplam_bars_held": {
+   "taban_Cmb": 5306,
+   "hucre_Cmb_eksi_pullback": 5296,
+   "delta": -10
+  },
+  "exit_reason_dagilim": {
+   "taban_Cmb": {
+    "stop": 379,
+    "regime_flip": 171,
+    "time_stop": 152,
+    "target": 99,
+    "stop_gap": 57,
+    "target_gap": 27
+   },
+   "hucre_Cmb_eksi_pullback": {
+    "stop": 380,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 57,
+    "target_gap": 27
+   }
+  },
+  "tepe_isi_gerceklesen_sizeR_max": {
+   "taban_Cmb": 5.0,
+   "hucre_Cmb_eksi_pullback": 5.0
+  },
+  "eszamanli_poz_max": {
+   "taban_Cmb": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   },
+   "hucre_Cmb_eksi_pullback": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   }
+  }
+ },
+ "kurulum_kirilimi_yanyana": {
+  "breakout_vcp": {
+   "taban": {
+    "n": 315,
+    "ort_r": 0.0468,
+    "net_pnl": 7460.7,
+    "kazanma_orani": 0.4,
+    "kazanan_n": 126
+   },
+   "hucre": {
+    "n": 318,
+    "ort_r": 0.0397,
+    "net_pnl": 6171.45,
+    "kazanma_orani": 0.3994,
+    "kazanan_n": 127
+   },
+   "delta": {
+    "n": 3,
+    "ort_r": -0.0071,
+    "net_pnl": -1289.25,
+    "kazanma_orani": -0.0006
+   }
+  },
+  "exhaustion_hammer": {
+   "taban": {
+    "n": 225,
+    "ort_r": 0.1308,
+    "net_pnl": 3153.7,
+    "kazanma_orani": 0.28,
+    "kazanan_n": 63
+   },
+   "hucre": {
+    "n": 228,
+    "ort_r": 0.1403,
+    "net_pnl": 4711.24,
+    "kazanma_orani": 0.2807,
+    "kazanan_n": 64
+   },
+   "delta": {
+    "n": 3,
+    "ort_r": 0.0095,
+    "net_pnl": 1557.54,
+    "kazanma_orani": 0.0007
+   }
+  },
+  "momentum_burst": {
+   "taban": {
+    "n": 339,
+    "ort_r": 0.0829,
+    "net_pnl": 12488.14,
+    "kazanma_orani": 0.3894,
+    "kazanan_n": 132
+   },
+   "hucre": {
+    "n": 339,
+    "ort_r": 0.0847,
+    "net_pnl": 12923.44,
+    "kazanma_orani": 0.3894,
+    "kazanan_n": 132
+   },
+   "delta": {
+    "n": 0,
+    "ort_r": 0.0018,
+    "net_pnl": 435.3,
+    "kazanma_orani": 0.0
+   }
+  },
+  "pullback": {
+   "taban": {
+    "n": 6,
+    "ort_r": -0.7875,
+    "net_pnl": -2417.85,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "hucre": null,
+   "delta": null
+  }
+ },
+ "pnl_ayristirma": {
+  "kimlik": "Δ(Σpnl) = Σeklenen + Σortak_Δ − Σçıkan   (kalıntı 0.00 olmalı — sente kapanma)",
+  "taban_net_pnl_trades": 20684.69,
+  "hucre_net_pnl_trades": 23806.13,
+  "delta_net_pnl_trades": 3121.44,
+  "eklenen_pnl": 367.1,
+  "cikan_pnl": -2660.55,
+  "ortak_delta_pnl": 93.79,
+  "kalinti": 0.0,
+  "sente_kapaniyor": true,
+  "naif_beklenti": {
+   "tanim": "kartın adıyla andığı naif beklenti: pullback'in 6 işlemi kaybolur, kaybı kurtarılır → ΔP&L ≈ −(pullback net P&L)",
+   "deger": 2417.85,
+   "gerceklesen": 3121.44,
+   "fark": 703.59,
+   "farkin_bilesenleri_ADIYLA": {
+    "1_yan_kanal_EKLENEN_islemler": {
+     "pnl": 367.1,
+     "n": 10,
+     "ad": "SERBEST KALAN KAPASİTE DOLDU — pullback'in tuttuğu slot/ısı boşalınca tabanda kapıdan dönen adaylar işleme girdi"
+    },
+    "2_yan_kanal_CIKAN_pullback_disi": {
+     "pnl": -242.7,
+     "n": 4,
+     "katki": 242.7,
+     "ad": "KNOCK-ON KAYIP — erken/farklı dolan işlemler slot-ısı-equity yolunu kaydırdı; tabanda var olan bu işlemler hücrede HİÇ oluşmadı"
+    },
+    "3_ORTAK_islemlerde_kayma": {
+     "pnl": 93.79,
+     "n_kayan": 641,
+     "n_ortak": 875,
+     "ad": "EQUITY-YOLU KAYMASI — aynı gün/aynı sembolde açılan işlemler farklı equity ve farklı ısı altında boyutlandı (qty/çıkış/R kaydı)"
+    }
+   },
+   "toplam_kontrol": 703.59,
+   "toplam_kontrol_esit_mi": true
+  },
+  "pullback_kalemleri": {
+   "taban_n": 6,
+   "hucre_n": 0,
+   "tabandan_kaybolan_n": 6,
+   "pnl": -2417.85,
+   "hepsi_kayboldu": true
+  }
+ },
+ "yan_kanal_ayristirmasi": {
+  "tanim": "pullback'in 6 işlemi kaybolunca ne oldu: MEŞGUL PENCERE = [ts_open, ts_close] (seans kaydı bar açılışında alınır, pozisyon o an hâlâ açık). Tabanda bu seanslarda 1 slot + pozisyonun size_r'ı bağlıydı.",
+  "mesgul_seans_n": 39,
+  "mesgul_seans_toplam_pencere": {
+   "ilk": "2023-02-14",
+   "son": "2026-06-29"
+  },
+  "serbest_kalan_kapasite_ozeti": {
+   "taban_ort_n_acik": 8.897,
+   "hucre_ort_n_acik": 8.769,
+   "taban_ort_acik_size_r": 3.645,
+   "hucre_ort_acik_size_r": 3.576,
+   "taban_slot_dolu_seans_n": 0,
+   "hucre_slot_dolu_seans_n": 0,
+   "okuma": "hücre ort_n_acik ≈ taban ise serbest kalan slot ANINDA yeniden doldu; belirgin düşükse kapasite BOŞ kaldı"
+  },
+  "pencere_pencere": [
+   {
+    "pullback_islem": {
+     "ticker": "V",
+     "ts_open": "2023-02-14",
+     "ts_close": "2023-02-21",
+     "r_multiple": -0.78,
+     "pnl_dollars": -294.85,
+     "exit_reason": "regime_flip",
+     "regime": "chop",
+     "bars_held": 4
+    },
+    "pencere": {
+     "ilk": "2023-02-14",
+     "son": "2023-02-21",
+     "seans_n": 5
+    },
+    "taban_seans": {
+     "ort_n_acik": 10.0,
+     "ort_acik_slot": 10.0,
+     "ort_acik_size_r": 3.833,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 1
+    },
+    "hucre_seans": {
+     "ort_n_acik": 9.8,
+     "ort_acik_slot": 10.2,
+     "ort_acik_size_r": 3.748,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 2
+    },
+    "pencere_ici_EKLENEN_islemler": [
+     {
+      "ts_open": "2023-02-14",
+      "ticker": "META",
+      "setup": "exhaustion_hammer",
+      "r_multiple": -0.591,
+      "pnl_dollars": -137.92,
+      "exit_reason": "stop_gap"
+     },
+     {
+      "ts_open": "2023-02-16",
+      "ticker": "CDNS",
+      "setup": "breakout_vcp",
+      "r_multiple": -1.012,
+      "pnl_dollars": -381.87,
+      "exit_reason": "stop"
+     }
+    ],
+    "pencere_ici_eklenen_n": 2,
+    "pencere_ici_eklenen_pnl": -519.79,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "evren_bagladi": 3,
+      "rejim_kapali": 2
+     },
+     "butce_kapali_seans_n": 2,
+     "rejimler": [
+      "chop"
+     ]
+    }
+   },
+   {
+    "pullback_islem": {
+     "ticker": "ZBH",
+     "ts_open": "2023-05-11",
+     "ts_close": "2023-05-23",
+     "r_multiple": -1.013,
+     "pnl_dollars": -433.84,
+     "exit_reason": "stop",
+     "regime": "trend_up",
+     "bars_held": 8
+    },
+    "pencere": {
+     "ilk": "2023-05-11",
+     "son": "2023-05-23",
+     "seans_n": 9
+    },
+    "taban_seans": {
+     "ort_n_acik": 10.444,
+     "ort_acik_slot": 9.556,
+     "ort_acik_size_r": 4.288,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 6
+    },
+    "hucre_seans": {
+     "ort_n_acik": 10.222,
+     "ort_acik_slot": 9.778,
+     "ort_acik_size_r": 4.115,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 6
+    },
+    "pencere_ici_EKLENEN_islemler": [
+     {
+      "ts_open": "2023-05-11",
+      "ticker": "GOOGL",
+      "setup": "breakout_vcp",
+      "r_multiple": 1.1,
+      "pnl_dollars": 355.12,
+      "exit_reason": "target"
+     }
+    ],
+    "pencere_ici_eklenen_n": 1,
+    "pencere_ici_eklenen_pnl": 355.12,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "evren_bagladi": 9
+     },
+     "butce_kapali_seans_n": 0,
+     "rejimler": [
+      "trend_up"
+     ]
+    }
+   },
+   {
+    "pullback_islem": {
+     "ticker": "WBD",
+     "ts_open": "2025-01-07",
+     "ts_close": "2025-01-08",
+     "r_multiple": -0.349,
+     "pnl_dollars": -185.95,
+     "exit_reason": "regime_flip",
+     "regime": "trend_up",
+     "bars_held": 1
+    },
+    "pencere": {
+     "ilk": "2025-01-07",
+     "son": "2025-01-08",
+     "seans_n": 2
+    },
+    "taban_seans": {
+     "ort_n_acik": 0.0,
+     "ort_acik_slot": 20.0,
+     "ort_acik_size_r": 0.0,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 0
+    },
+    "hucre_seans": {
+     "ort_n_acik": 0.0,
+     "ort_acik_slot": 20.0,
+     "ort_acik_size_r": 0.0,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 0
+    },
+    "pencere_ici_EKLENEN_islemler": [],
+    "pencere_ici_eklenen_n": 0,
+    "pencere_ici_eklenen_pnl": 0,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "rejim_kapali": 2
+     },
+     "butce_kapali_seans_n": 2,
+     "rejimler": [
+      "chop"
+     ]
+    }
+   },
+   {
+    "pullback_islem": {
+     "ticker": "LNG",
+     "ts_open": "2025-01-31",
+     "ts_close": "2025-02-06",
+     "r_multiple": -1.0,
+     "pnl_dollars": -532.52,
+     "exit_reason": "stop",
+     "regime": "trend_up",
+     "bars_held": 4
+    },
+    "pencere": {
+     "ilk": "2025-01-31",
+     "son": "2025-02-06",
+     "seans_n": 5
+    },
+    "taban_seans": {
+     "ort_n_acik": 11.2,
+     "ort_acik_slot": 8.8,
+     "ort_acik_size_r": 4.501,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 2
+    },
+    "hucre_seans": {
+     "ort_n_acik": 11.2,
+     "ort_acik_slot": 8.8,
+     "ort_acik_size_r": 4.441,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 1
+    },
+    "pencere_ici_EKLENEN_islemler": [
+     {
+      "ts_open": "2025-01-31",
+      "ticker": "PH",
+      "setup": "momentum_burst",
+      "r_multiple": -0.995,
+      "pnl_dollars": -447.47,
+      "exit_reason": "stop"
+     }
+    ],
+    "pencere_ici_eklenen_n": 1,
+    "pencere_ici_eklenen_pnl": -447.47,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "evren_bagladi": 5
+     },
+     "butce_kapali_seans_n": 0,
+     "rejimler": [
+      "trend_up"
+     ]
+    }
+   },
+   {
+    "pullback_islem": {
+     "ticker": "OXY",
+     "ts_open": "2026-04-29",
+     "ts_close": "2026-05-07",
+     "r_multiple": -1.112,
+     "pnl_dollars": -719.41,
+     "exit_reason": "stop_gap",
+     "regime": "trend_up",
+     "bars_held": 6
+    },
+    "pencere": {
+     "ilk": "2026-04-29",
+     "son": "2026-05-07",
+     "seans_n": 7
+    },
+    "taban_seans": {
+     "ort_n_acik": 10.0,
+     "ort_acik_slot": 10.0,
+     "ort_acik_size_r": 4.299,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 7
+    },
+    "hucre_seans": {
+     "ort_n_acik": 9.857,
+     "ort_acik_slot": 10.143,
+     "ort_acik_size_r": 4.223,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 8
+    },
+    "pencere_ici_EKLENEN_islemler": [
+     {
+      "ts_open": "2026-04-29",
+      "ticker": "IRM",
+      "setup": "exhaustion_hammer",
+      "r_multiple": 4.053,
+      "pnl_dollars": 2247.04,
+      "exit_reason": "target"
+     },
+     {
+      "ts_open": "2026-05-01",
+      "ticker": "IRM",
+      "setup": "momentum_burst",
+      "r_multiple": 0.09,
+      "pnl_dollars": 60.3,
+      "exit_reason": "time_stop"
+     }
+    ],
+    "pencere_ici_eklenen_n": 2,
+    "pencere_ici_eklenen_pnl": 2307.34,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "derisk_bagladi": 1,
+      "evren_bagladi": 6
+     },
+     "butce_kapali_seans_n": 0,
+     "rejimler": [
+      "trend_up"
+     ]
+    }
+   },
+   {
+    "pullback_islem": {
+     "ticker": "F",
+     "ts_open": "2026-06-12",
+     "ts_close": "2026-06-29",
+     "r_multiple": -0.471,
+     "pnl_dollars": -251.28,
+     "exit_reason": "regime_flip",
+     "regime": "trend_up",
+     "bars_held": 10
+    },
+    "pencere": {
+     "ilk": "2026-06-12",
+     "son": "2026-06-29",
+     "seans_n": 11
+    },
+    "taban_seans": {
+     "ort_n_acik": 7.0,
+     "ort_acik_slot": 13.0,
+     "ort_acik_size_r": 2.889,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 18
+    },
+    "hucre_seans": {
+     "ort_n_acik": 6.909,
+     "ort_acik_slot": 13.091,
+     "ort_acik_size_r": 2.902,
+     "slot_dolu_seans_n": 0,
+     "toplam_silahli_plan": 19
+    },
+    "pencere_ici_EKLENEN_islemler": [
+     {
+      "ts_open": "2026-06-15",
+      "ticker": "ROKU",
+      "setup": "momentum_burst",
+      "r_multiple": -0.273,
+      "pnl_dollars": -178.34,
+      "exit_reason": "regime_flip"
+     }
+    ],
+    "pencere_ici_eklenen_n": 1,
+    "pencere_ici_eklenen_pnl": -178.34,
+    "pencere_rejim_durumu": {
+     "sinif_dagilim": {
+      "evren_bagladi": 10,
+      "rejim_kapali": 1
+     },
+     "butce_kapali_seans_n": 1,
+     "rejimler": [
+      "chop",
+      "trend_up"
+     ]
+    }
+   }
+  ],
+  "EKLENEN_islemler": {
+   "toplam": {
+    "n": 10,
+    "ort_r": 0.018,
+    "medyan_r": -0.432,
+    "pnl_toplam": 367.1,
+    "kazanma_orani": 0.4,
+    "rejim_kirilimi": {
+     "trend_up": {
+      "n": 8,
+      "pnl": 886.89,
+      "ort_r": 0.223
+     },
+     "chop": {
+      "n": 2,
+      "pnl": -519.79,
+      "ort_r": -0.801
+     }
+    },
+    "exit_reason_dagilim": {
+     "stop": 3,
+     "stop_gap": 2,
+     "target": 2,
+     "regime_flip": 2,
+     "time_stop": 1
+    },
+    "setup_dagilim": {
+     "breakout_vcp": 4,
+     "exhaustion_hammer": 3,
+     "momentum_burst": 3
+    },
+    "aylik_n": {
+     "2023-02": 2,
+     "2023-05": 1,
+     "2025-01": 1,
+     "2025-02": 1,
+     "2026-04": 1,
+     "2026-05": 1,
+     "2026-06": 3
+    }
+   },
+   "ort_r_ci95_ay_kumeli": {
+    "lo": -0.7077,
+    "hi": 1.4785,
+    "orta": -0.0224
+   },
+   "ort_r_ci_olculemedi_neden": null,
+   "mesgul_pencere_ICINDE_acilan": {
+    "n": 7,
+    "ozet": {
+     "n": 7,
+     "ort_r": 0.339,
+     "medyan_r": -0.273,
+     "pnl_toplam": 1516.86,
+     "kazanma_orani": 0.429,
+     "rejim_kirilimi": {
+      "trend_up": {
+       "n": 5,
+       "pnl": 2036.65,
+       "ort_r": 0.795
+      },
+      "chop": {
+       "n": 2,
+       "pnl": -519.79,
+       "ort_r": -0.801
+      }
+     },
+     "exit_reason_dagilim": {
+      "stop": 2,
+      "target": 2,
+      "stop_gap": 1,
+      "time_stop": 1,
+      "regime_flip": 1
+     },
+     "setup_dagilim": {
+      "momentum_burst": 3,
+      "exhaustion_hammer": 2,
+      "breakout_vcp": 2
+     },
+     "aylik_n": {
+      "2023-02": 2,
+      "2023-05": 1,
+      "2025-01": 1,
+      "2026-04": 1,
+      "2026-05": 1,
+      "2026-06": 1
+     }
+    }
+   },
+   "mesgul_pencere_DISINDA_acilan": {
+    "n": 3,
+    "ozet": {
+     "n": 3,
+     "ort_r": -0.731,
+     "medyan_r": -1.036,
+     "pnl_toplam": -1149.76,
+     "kazanma_orani": 0.333,
+     "rejim_kirilimi": {
+      "trend_up": {
+       "n": 3,
+       "pnl": -1149.76,
+       "ort_r": -0.731
+      }
+     },
+     "exit_reason_dagilim": {
+      "regime_flip": 1,
+      "stop_gap": 1,
+      "stop": 1
+     },
+     "setup_dagilim": {
+      "breakout_vcp": 2,
+      "exhaustion_hammer": 1
+     },
+     "aylik_n": {
+      "2025-02": 1,
+      "2026-06": 2
+     }
+    },
+    "ad": "DOWNSTREAM KNOCK-ON — pullback penceresiyle doğrudan ilgisi yok; equity/ısı yolunun kayması sonraki seanslarda yeni dolumlar doğurdu"
+   }
+  },
+  "CIKAN_islemler": {
+   "pullback": {
+    "n": 6,
+    "ozet": {
+     "n": 6,
+     "ort_r": -0.787,
+     "medyan_r": -0.89,
+     "pnl_toplam": -2417.85,
+     "kazanma_orani": 0.0,
+     "rejim_kirilimi": {
+      "trend_up": {
+       "n": 5,
+       "pnl": -2123.0,
+       "ort_r": -0.789
+      },
+      "chop": {
+       "n": 1,
+       "pnl": -294.85,
+       "ort_r": -0.78
+      }
+     },
+     "exit_reason_dagilim": {
+      "regime_flip": 3,
+      "stop": 2,
+      "stop_gap": 1
+     },
+     "setup_dagilim": {
+      "pullback": 6
+     },
+     "aylik_n": {
+      "2023-02": 1,
+      "2023-05": 1,
+      "2025-01": 2,
+      "2026-04": 1,
+      "2026-06": 1
+     }
+    }
+   },
+   "pullback_disi_knock_on": {
+    "n": 4,
+    "ozet": {
+     "n": 4,
+     "ort_r": -0.085,
+     "medyan_r": 0.375,
+     "pnl_toplam": -242.7,
+     "kazanma_orani": 0.5,
+     "rejim_kirilimi": {
+      "trend_up": {
+       "n": 4,
+       "pnl": -242.7,
+       "ort_r": -0.085
+      }
+     },
+     "exit_reason_dagilim": {
+      "regime_flip": 2,
+      "time_stop": 1,
+      "stop_gap": 1
+     },
+     "setup_dagilim": {
+      "momentum_burst": 3,
+      "breakout_vcp": 1
+     },
+     "aylik_n": {
+      "2025-02": 1,
+      "2026-05": 1,
+      "2026-06": 2
+     }
+    }
+   }
+  },
+  "ORTAK_islemlerde_kayma": {
+   "ortak_n": 875,
+   "kayan_n": 641,
+   "kayan_toplam_delta_pnl": 93.79,
+   "ornekler": [
+    {
+     "kimlik": [
+      "2023-02-24",
+      "AMAT"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 211,
+      "r": 1.887,
+      "pnl": 503.72,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 210,
+      "r": 1.887,
+      "pnl": 501.33,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "COF"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 218,
+      "r": 5.749,
+      "pnl": 540.26,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 217,
+      "r": 5.749,
+      "pnl": 537.78,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "LRCX"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 491,
+      "r": 2.65,
+      "pnl": 588.4,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 490,
+      "r": 2.65,
+      "pnl": 587.2,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "MPWR"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 40,
+      "r": 0.344,
+      "pnl": 124.37,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 40,
+      "r": 0.345,
+      "pnl": 124.37,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "MRVL"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 386,
+      "r": 0.358,
+      "pnl": 129.37,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 385,
+      "r": 0.358,
+      "pnl": 129.03,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "NVDA"
+     ],
+     "setup": "momentum_burst",
+     "taban": {
+      "ts_close": "2023-02-27",
+      "qty": 853,
+      "r": 0.841,
+      "pnl": 355.31,
+      "exit": "regime_flip"
+     },
+     "hucre": {
+      "ts_close": "2023-02-27",
+      "qty": 851,
+      "r": 0.841,
+      "pnl": 354.48,
+      "exit": "regime_flip"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-02-24",
+      "TER"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-02-24",
+      "qty": 232,
+      "r": -1.091,
+      "pnl": -149.59,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-02-24",
+      "qty": 231,
+      "r": -1.091,
+      "pnl": -148.94,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-14",
+      "MPC"
+     ],
+     "setup": "exhaustion_hammer",
+     "taban": {
+      "ts_close": "2023-04-18",
+      "qty": 117,
+      "r": -1.016,
+      "pnl": -354.17,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-04-18",
+      "qty": 117,
+      "r": -1.018,
+      "pnl": -354.17,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-17",
+      "V"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-02",
+      "qty": 49,
+      "r": -1.003,
+      "pnl": -378.48,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-02",
+      "qty": 49,
+      "r": -1.005,
+      "pnl": -378.48,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-19",
+      "LMT"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-04-21",
+      "qty": 21,
+      "r": -0.985,
+      "pnl": -375.34,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-04-21",
+      "qty": 21,
+      "r": -0.988,
+      "pnl": -375.34,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-20",
+      "ISRG"
+     ],
+     "setup": "momentum_burst",
+     "taban": {
+      "ts_close": "2023-05-02",
+      "qty": 52,
+      "r": -0.017,
+      "pnl": -7.78,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-02",
+      "qty": 51,
+      "r": -0.016,
+      "pnl": -7.63,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-20",
+      "SYK"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-02",
+      "qty": 40,
+      "r": -1.356,
+      "pnl": -508.94,
+      "exit": "stop_gap"
+     },
+     "hucre": {
+      "ts_close": "2023-05-02",
+      "qty": 40,
+      "r": -1.359,
+      "pnl": -508.94,
+      "exit": "stop_gap"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-21",
+      "COST"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-04",
+      "qty": 15,
+      "r": -0.986,
+      "pnl": -332.97,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-04",
+      "qty": 15,
+      "r": -0.989,
+      "pnl": -332.97,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-21",
+      "LRCX"
+     ],
+     "setup": "momentum_burst",
+     "taban": {
+      "ts_close": "2023-04-25",
+      "qty": 197,
+      "r": -1.011,
+      "pnl": -419.16,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-04-25",
+      "qty": 196,
+      "r": -1.008,
+      "pnl": -417.03,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-24",
+      "CLX"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-03",
+      "qty": 81,
+      "r": 2.599,
+      "pnl": 986.32,
+      "exit": "target"
+     },
+     "hucre": {
+      "ts_close": "2023-05-03",
+      "qty": 81,
+      "r": 2.605,
+      "pnl": 986.32,
+      "exit": "target"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-24",
+      "MDT"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-15",
+      "qty": 47,
+      "r": 0.111,
+      "pnl": 32.96,
+      "exit": "time_stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-15",
+      "qty": 46,
+      "r": 0.109,
+      "pnl": 32.26,
+      "exit": "time_stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-24",
+      "PG"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-15",
+      "qty": 89,
+      "r": 0.363,
+      "pnl": 115.15,
+      "exit": "time_stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-15",
+      "qty": 89,
+      "r": 0.364,
+      "pnl": 115.15,
+      "exit": "time_stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-26",
+      "KMB"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-10",
+      "qty": 134,
+      "r": -0.026,
+      "pnl": -9.61,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-10",
+      "qty": 133,
+      "r": -0.026,
+      "pnl": -9.54,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-26",
+      "SPOT"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-04-28",
+      "qty": 45,
+      "r": -0.999,
+      "pnl": -417.84,
+      "exit": "stop"
+     },
+     "hucre": {
+      "ts_close": "2023-04-28",
+      "qty": 45,
+      "r": -1.002,
+      "pnl": -417.84,
+      "exit": "stop"
+     }
+    },
+    {
+     "kimlik": [
+      "2023-04-27",
+      "MSFT"
+     ],
+     "setup": "breakout_vcp",
+     "taban": {
+      "ts_close": "2023-05-18",
+      "qty": 26,
+      "r": 1.234,
+      "pnl": 479.83,
+      "exit": "time_stop"
+     },
+     "hucre": {
+      "ts_close": "2023-05-18",
+      "qty": 25,
+      "r": 1.189,
+      "pnl": 461.37,
+      "exit": "time_stop"
+     }
+    }
+   ]
+  },
+  "tarama_evreni": {
+   "tanim": "backtest.py:326 — ZATEN TUTULAN (ya da o gün silahlanmış) ticker taramadan ATLANIR. Yani tarama evreni portföye BAĞLIDIR: pullback'in tuttuğu 6 sembol hücrede tutulmadığı için sonraki seanslarda taranmaya DEVAM etti.",
+   "toplam_scan_cagrisi": {
+    "taban": 160712,
+    "hucre": 160719,
+    "delta": 7
+   },
+   "toplam_sinyal_aday": {
+    "taban": 1543,
+    "hucre": 1529,
+    "delta": -14
+   },
+   "pullback_ust_secim_sayaci": {
+    "taban_kolu": 13,
+    "hucre_kolu": 19,
+    "serh": "İKİ SAYI DOĞRUDAN KIYASLANAMAZ: hücrede pullback sembolleri portföyde tutulmadığı için tarama evreninde KALDI ve aynı kurulum tekrar tekrar ateşledi (hepsi silahsız düştü). Fark ölçüm hatası değil, atlama kuralının portföyle etkileşimidir."
+   }
+  },
+  "kapi_basinci": {
+   "tanim": "silahlı plan kapıdan neden dönüyor — ısı/slot baskısının doğrudan ölçüsü",
+   "nogo_neden_dagilim": {
+    "taban": {
+     "heat_hard": 607,
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 607,
+     "sector_cap": 8
+    },
+    "hucre": {
+     "heat_hard": 593,
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 593,
+     "sector_cap": 7
+    }
+   },
+   "review_neden_dagilim": {
+    "taban": {
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 873,
+     "sector_stacking": 562,
+     "heat_review": 560,
+     "leading_sector": 527,
+     "score_band": 73,
+     "rr_marginal": 43,
+     "correlation": 12
+    },
+    "hucre": {
+     "HAM:NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapıs": 872,
+     "sector_stacking": 560,
+     "heat_review": 560,
+     "leading_sector": 527,
+     "score_band": 74,
+     "rr_marginal": 37,
+     "correlation": 12
+    }
+   },
+   "verdict_dagilim": {
+    "taban": {
+     "GO": 63,
+     "REVIEW": 873,
+     "NO_GO": 607
+    },
+    "hucre": {
+     "GO": 64,
+     "REVIEW": 872,
+     "NO_GO": 593
+    }
+   },
+   "plan_setup_dagilim": {
+    "taban": {
+     "momentum_burst": 603,
+     "breakout_vcp": 580,
+     "exhaustion_hammer": 347,
+     "pullback": 13
+    },
+    "hucre": {
+     "momentum_burst": 601,
+     "breakout_vcp": 579,
+     "exhaustion_hammer": 349
+    }
+   }
+  }
+ },
+ "kapi_isareti": {
+  "kart_olcutu": "ΔP&L CI-alt > 0 → önerilir · ΔP&L CI 0-içi iken dd/sharpe belirgin iyileşiyorsa önerilir · ΔP&L CI-üst < 0 → pullback silahlı kalır",
+  "delta_pnl_nokta": 3121.44,
+  "delta_pnl_ci95_eslenik": {
+   "lo": -2098.9718,
+   "hi": 10780.6462,
+   "orta": 2808.695
+  },
+  "dal": "CI_0_ICI → kartın İKİNCİ AYAĞI geçerli: 'dd/sharpe belirgin iyileşiyorsa önerilir'. 'belirgin' kartta SAYISAL TANIMLANMAMIŞ — eşik sonradan konulamaz (ölçüm disiplini); yön ve CI aşağıda, hüküm Rol-1'in.",
+  "ikinci_ayak_dd_sharpe": {
+   "maxdd_kanonik": {
+    "taban": 0.1268,
+    "hucre": 0.1263,
+    "delta": -0.0005,
+    "yon": "iyilesme (dd düştü)",
+    "delta_ci95_eslenik": {
+     "lo": -0.021,
+     "hi": 0.0162,
+     "orta": 0.0002
+    }
+   },
+   "sharpe": {
+    "taban": 0.521,
+    "hucre": 0.594,
+    "delta": 0.073,
+    "yon": "iyilesme (sharpe yükseldi)",
+    "delta_ci95_eslenik": {
+     "lo": -0.0561,
+     "hi": 0.2421,
+     "orta": 0.0677
+    }
+   },
+   "belirgin_mi": null,
+   "belirgin_olculemedi_neden": "kart 'belirgin iyileşme'yi sayısal tanımlamadı; ölçüm ajanı eşik UYDURAMAZ (eşikler donuk) — yön, nokta farkı ve eşlenik CI raporlandı"
+  },
+  "beyan": "MEKANİK işaret — HÜKÜM DEĞİL. Hükmü Rol-1 işler (kart status: registered)."
+ },
+ "kill_bayraklari": {
+  "kill1_sasi_butunlugu": {
+   "esik": "şasi bütünlüğü (frame/dup/scan==plan + yasak-modül + base_max + kill3-mtime + sha)",
+   "hucre_butunluk": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "base_max_open_bozuk": [],
+    "kill3_bozuk_dosyalar": [],
+    "gecerli": true
+   },
+   "taban_butunluk": {
+    "frame_okunamadi": 0,
+    "tekrar_tarih": [],
+    "scan_vs_plan_uyusmazlik_n": 0,
+    "scan_vs_plan_ornek": [],
+    "yasakli_modul_yuklendi": [],
+    "base_max_open_bozuk": [],
+    "kill3_bozuk_dosyalar": [],
+    "gecerli": true
+   },
+   "motor_sha_ayni": {
+    "broker.py": true,
+    "backtest.py": true,
+    "strategy.py": true,
+    "guard.py": true
+   },
+   "config_sha_ayni": {
+    "goal.yaml": true,
+    "strategy.yaml": true,
+    "bounds.yaml": true
+   },
+   "takvim_ayni": true,
+   "n_seans": {
+    "taban": 1147,
+    "hucre": 1147
+   },
+   "rampa_ayni_15_36": true,
+   "tetiklendi": false
+  },
+  "kill2_kanal": {
+   "esik": "ARMED kümesi enjeksiyonu strategy.py'yi DEĞİŞTİRİYORSA geçersiz — ölçüm kanalı repo koduna dokunmaz",
+   "strategy_py_sha256_once": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_sha256_sonra": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_dokunulmadi": true,
+   "armed_setups_sabiti_degismedi": true,
+   "armed_setups_tuple_kimligi_ayni": true,
+   "kill3_mtime_temiz": {
+    "hucre": true,
+    "taban": true
+   },
+   "repo_calisma_agacinda_strategy_py_sha256": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "kanal_notrlugu_gecti": true,
+   "kanal_notrlugu_kaynak": "/Users/erdemozturk/AI-Trading/research/olcumler/edg039_pullback_2026-08-13/notrluk.json",
+   "on_ucus_ozsinama_gecti": true,
+   "ozsinama_b_ihlal_n": 0,
+   "ozsinama_a_kosum_ici": {
+    "taban_pullback_secti_n": 19,
+    "kesildi_bosa_dustu_n": 18,
+    "kesildi_yerine_gecen": {
+     "exhaustion_hammer": 1
+    },
+    "gecti": true,
+    "olculemedi_neden": null,
+    "beyan": "GERÇEK barlarda: taban kümesiyle `pullback` seçilecek her çağrıda hücre ya hiç silahlanmadı ya da bir SONRAKİ öncelikli kuruluma düştü"
+   },
+   "tetiklendi": false
+  },
+  "kill3_taban_defteri": {
+   "esik": "taban defterde `pullback` 6 işlem bulunamazsa (sha uyuşmazlığı) GEÇERSİZ",
+   "taban_tam_defter_sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "brief_sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "sha_uyuyor": true,
+   "sha_serh": null,
+   "pullback_islem_n": 6,
+   "beklenen_n": 6,
+   "pullback_kirilimi": {
+    "n": 6,
+    "ort_r": -0.7875,
+    "net_pnl": -2417.85,
+    "kazanma_orani": 0.0,
+    "kazanan_n": 0
+   },
+   "tetiklendi": false
+  },
+  "herhangi_tetiklendi": false
+ },
+ "kanal_kaniti_hucre": {
+  "secim": "BEYANLI MONKEYPATCH — ARMED kümesinin TAMAMI param olarak geçirildi (`entry.armed_kume`); tek kanonik nokta: strategy.scan_entry",
+  "gerekce": "repo yüzeyi yalnız EKLEME yönünde (`entry.armed_extra`, strategy.py:1068); ÇIKARMA anahtarı repo kodunda YOK. Bir `armed_eksi` kanalı açmak strategy.py'yi DEĞİŞTİRMEK olurdu → kart kill#2. Modül sabitini koşum boyunca yeniden bağlamak da reddedildi (sabit replay dışında da okunuyor; öz-sınama (c) tam bunu yasaklar). Kalan tek yol kartın adıyla önerdiği ikinci yoldur.",
+  "kanonik_nokta_kaniti": "replay yolunda ARMED_SETUPS'ın TEK okuyucusu scan_entry (backtest.py:329). cf_backfill/loop/shadow_variants da okur ama replay'de İTHAL EDİLMEZ — yasak-modül assert'i bunu kanıtlar: yuklenen=[]",
+  "armed_taban": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "armed_hucre": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "cikarilan": [
+   "pullback"
+  ],
+  "param_yuzeyi": "params['entry.armed_kume'] → config.resolve_params → eff → backtest.py:329 scan_entry(eff) (4 rejimde assert'lendi)",
+  "kanun_kopyalanmadi": "tarama `strat.scan_all` ÇAĞRISIYLA yapılır; kopyalanan tek şey strategy.py:1069-1072 öncelik döngüsüdür ve taban kümesiyle özdeş davranışı BAYT-ÖZDEŞLİK kapısıyla (`notrluk`) çakılıdır",
+  "on_ucus_ozsinama_a_b": {
+   "cikarilan": [
+    "pullback"
+   ],
+   "hucre_kumesi": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "senaryolar": {
+    "yalniz_pullback": {
+     "taban": "pullback",
+     "hucre": null
+    },
+    "pullback_ve_mb": {
+     "taban": "pullback",
+     "hucre": "momentum_burst"
+    },
+    "pullback_ve_eh": {
+     "taban": "pullback",
+     "hucre": "exhaustion_hammer"
+    },
+    "breakout_ve_pullback": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "yalniz_eh": {
+     "taban": "exhaustion_hammer",
+     "hucre": "exhaustion_hammer"
+    },
+    "yalniz_mb": {
+     "taban": "momentum_burst",
+     "hucre": "momentum_burst"
+    },
+    "yalniz_breakout": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "uyuyan_kurulum": {
+     "taban": null,
+     "hucre": null
+    },
+    "hicbiri": {
+     "taban": null,
+     "hucre": null
+    }
+   },
+   "beklenen": {
+    "yalniz_pullback": {
+     "taban": "pullback",
+     "hucre": null
+    },
+    "pullback_ve_mb": {
+     "taban": "pullback",
+     "hucre": "momentum_burst"
+    },
+    "pullback_ve_eh": {
+     "taban": "pullback",
+     "hucre": "exhaustion_hammer"
+    },
+    "breakout_ve_pullback": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "yalniz_eh": {
+     "taban": "exhaustion_hammer",
+     "hucre": "exhaustion_hammer"
+    },
+    "yalniz_mb": {
+     "taban": "momentum_burst",
+     "hucre": "momentum_burst"
+    },
+    "yalniz_breakout": {
+     "taban": "breakout_vcp",
+     "hucre": "breakout_vcp"
+    },
+    "uyuyan_kurulum": {
+     "taban": null,
+     "hucre": null
+    },
+    "hicbiri": {
+     "taban": null,
+     "hucre": null
+    }
+   },
+   "gecti": true,
+   "beyan": "sentetik `scan_all` ile ön-uçuş: (a) pullback sinyali TEK adayken hücre hiç silahlanmıyor; pullback+mb'de mb'ye düşüyor. (b) pullback dışındaki üç kurulumun seçimi HER senaryoda taban ile aynı. Sahte tarama yalnız bu fonksiyon içinde takılı, finally ile geri alındı (assert'li).",
+   "sentetik_cagri_n": 18
+  },
+  "kosum_ici_sayaclar": {
+   "cagri_n": 160719,
+   "taban_sinyal_n": 1547,
+   "hucre_sinyal_n": 1529,
+   "taban_pullback_secti_n": 19,
+   "kesildi_bosa_dustu_n": 18,
+   "kesildi_yerine_gecen": {
+    "exhaustion_hammer": 1
+   },
+   "ozsinama_b_ihlal_n": 0,
+   "ozsinama_b_ihlal_ornek": [],
+   "kesilen_ornekler": [
+    {
+     "ticker": "V",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "V",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "ZBH",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "ZBH",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "ZBH",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "ZBH",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "ZBH",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "MRVL",
+     "taban": "pullback",
+     "hucre": "exhaustion_hammer"
+    },
+    {
+     "ticker": "TRV",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "WBD",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "LNG",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "LNG",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "LNG",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "QCOM",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "QCOM",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "QCOM",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "OXY",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "F",
+     "taban": "pullback",
+     "hucre": null
+    },
+    {
+     "ticker": "F",
+     "taban": "pullback",
+     "hucre": null
+    }
+   ]
+  },
+  "ozsinama_a_kosum_ici": {
+   "taban_pullback_secti_n": 19,
+   "kesildi_bosa_dustu_n": 18,
+   "kesildi_yerine_gecen": {
+    "exhaustion_hammer": 1
+   },
+   "gecti": true,
+   "olculemedi_neden": null,
+   "beyan": "GERÇEK barlarda: taban kümesiyle `pullback` seçilecek her çağrıda hücre ya hiç silahlanmadı ya da bir SONRAKİ öncelikli kuruluma düştü"
+  },
+  "ozsinama_b_kosum_ici": {
+   "ihlal_n": 0,
+   "ihlal_ornek": [],
+   "gecti": true,
+   "beyan": "ÇAĞRI BAŞINA değişmez: taban seçimi pullback DEĞİLSE hücre seçimi AYNI NESNE olmak zorunda — ihlalde koşum AssertionError ile durur"
+  },
+  "ozsinama_c": {
+   "armed_setups_once": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "armed_setups_sonra": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "deger_ayni": true,
+   "tuple_kimligi_ayni": true,
+   "strategy_py_sha256_once": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_sha256_sonra": "34339f5c2dc4ce53a6778629322679396940a15dbf28845fbf3f640c3b02010d",
+   "strategy_py_dokunulmadi": true,
+   "scan_entry_geri_takildi": true
+  }
+ },
+ "beyan": "Bu dosya HÜKÜM İÇERMEZ. Kart eşikleri DONUK; kapı işareti MEKANİKTİR. Ölçüm ajanı karta dokunmadı, repo koduna dokunmadı, git/canlı/state'e yazmadı."
+}

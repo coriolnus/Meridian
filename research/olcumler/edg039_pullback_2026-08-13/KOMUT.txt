@@ -1,0 +1,45 @@
+# EDG-2026-039 — PULLBACK SİLAHSIZLANMA · komut zinciri (2026-08-13, ölçüm ajanı)
+# Kart: research/cards/EDG-2026-039-pullback-silahsizlanma.yaml (OKU-DOKUNMA; hüküm Rol-1'in)
+# Şasi: research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py AYNEN devralındı.
+# Taban: edg032b `kontrol` HAZIR çıktıları — YENİDEN KOŞULMADI, sha-doğrulandı
+#        (islemler_tam_kontrol.json, 885 satır, sha256 46ebeb48…674874).
+#
+# YAZMA SINIRLARI: git YOK · canlıya SSH/yazım YOK · repo koduna DOKUNULMADI (strategy.py dahil,
+#   kart kill#2) · config.STATE = state_<kol>/ izole sandbox · barlar symlink ile SALT-OKUNUR.
+#
+# KANAL (BEYANLI): ARMED kümesinin TAMAMI param olarak geçirilir (`entry.armed_kume`), tek
+#   kanonik noktada — `strategy.scan_entry` monkeypatch'i. Gerekçe ve alternatiflerin niçin
+#   reddedildiği: olcum.py başlık bloğu + her koşumun `kanal_<kol>.json` dosyası.
+#   Repo yüzeyi yalnız EKLEME yönünde (`entry.armed_extra`); `armed_eksi` anahtarı repo kodunda
+#   SIFIR geçiş (grep 2026-08-13) — açmak strategy.py'yi değiştirmek olurdu → kart kill#2.
+
+# ZİNCİR SIRASI (nötrlük kapısı sıralamayı ZORLAR):
+#   smoke(taban) → notrluk --smoke → smoke(eksipb) → kiyas --smoke
+#   → eksipb (TAM ~13dk) → taban (TAM ~13dk) → notrluk (kill#2 ayağı) → kiyas
+
+# [1] duman — pencere 2022-01-01→2022-06-30 (kanal öz-sınamaları burada da koşar)
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py taban  --smoke > research/olcumler/edg039_pullback_2026-08-13/kosum_taban_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py notrluk --smoke
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py eksipb --smoke > research/olcumler/edg039_pullback_2026-08-13/kosum_eksipb_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py kiyas  --smoke
+
+# [2] TAM pencere zinciri (arka plan, ~26dk toplam) — 2022-01-01→2026-07-30, evren 251, seed 20260812
+#     SIRALI koşuluyor: makine 8GB; iki eşzamanlı replay swap'a düşürüp koşumu yavaşlatır.
+cd /Users/erdemozturk/AI-Trading && ./research/olcumler/edg039_pullback_2026-08-13/zincir.sh
+#   zincir.sh içeriği: eksipb → taban → notrluk (her adımın exit kodu zincir.log'a)
+
+# [3] KANAL-NÖTRLÜĞÜ KAPISI (kart kill#2 ayağı) — `taban` kolu ↔ edg032b `kontrol` BAYT-ÖZDEŞ mi?
+#     Sarmalayıcı TAM ARMED kümesiyle koştuğunda dünyayı değiştirmemeli. Düşerse (exit 2) DUR.
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py notrluk; echo "exit=$?"
+
+# [4] KIYAS + YAN-KANAL AYRIŞTIRMASI → sonuc.json
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg039_pullback_2026-08-13/olcum.py kiyas > research/olcumler/edg039_pullback_2026-08-13/kosum_kiyas.log 2>&1
+
+# ÇIKTILAR
+#   sonuc.json                — kıyas tablosu + yan-kanal ayrıştırması + kurulum kırılımı + kapı işareti
+#   sonuc_eksipb.json         — hücre koşumu (C+mb − pullback)
+#   sonuc_taban.json          — nötrlük kolu (TAM ARMED kümesi, aynı sarmalayıcı)
+#   kanal_eksipb.json         — kanal seçimi + gerekçe + öz-sınama (a)(b)(c) kanıtı
+#   notrluk.json              — bayt-özdeşlik kapısı
+#   islemler[_tam]_*.json     — slim projeksiyon + TAM broker satırı defterleri
+#   seanslar_*.json           — seans kayıtları (slot/ısı yan-kanal ayrıştırmasının kaynağı)

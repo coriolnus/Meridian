@@ -1,0 +1,116 @@
+{
+ "kart": "EDG-2026-039",
+ "adim": "KANAL-NÖTRLÜĞÜ KAPISI (taban ↔ edg032b kontrol)",
+ "olcum_zamani": "2026-08-13T19:29:36+00:00",
+ "tanim": "BEYANLI ARMED sarmalayıcısı TAM kümeyle (çıkarma YOK) koşturuldu. İddia: sarmalayıcı orijinal `strategy.scan_entry` ile DAVRANIŞ-ÖZDEŞ. Kanıt: slim islemler + seanslar + TAM defter dosya baytları edg032b `kontrol` ile sha256-özdeş ve sonuc ölçüm blokları derin-eşit.",
+ "dosya_sha256": {
+  "taban_039": {
+   "islemler": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+   "seanslar": "f0c8df928e20979d8b959d009cfbc4e363ed43cce1d27d1b5ed615bf50e432a4",
+   "islemler_tam": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "sonuc": "6c3a01015cc5addffdc750deacc8369048945a2073625b52f2179f1c3208ea29"
+  },
+  "kontrol_032b": {
+   "islemler": "d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d",
+   "seanslar": "f0c8df928e20979d8b959d009cfbc4e363ed43cce1d27d1b5ed615bf50e432a4",
+   "islemler_tam": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+   "sonuc": "64f7993bd3317acfbef45eb5ca5959aa17510c8ddabeac8a28e4b48d4e49ae78"
+  }
+ },
+ "bayt_ozdeslik": {
+  "islemler": true,
+  "seanslar": true,
+  "islemler_tam": true
+ },
+ "sonuc_blok_esitligi": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true
+ },
+ "blok_fark_ozet": null,
+ "kanal_sayaclari_taban": {
+  "cagri_n": 160712,
+  "taban_sinyal_n": 1543,
+  "hucre_sinyal_n": 1543,
+  "taban_pullback_secti_n": 13,
+  "kesildi_bosa_dustu_n": 0,
+  "kesildi_yerine_gecen": {
+   "pullback": 13
+  },
+  "ozsinama_b_ihlal_n": 0,
+  "ozsinama_b_ihlal_ornek": [],
+  "kesilen_ornekler": [
+   {
+    "ticker": "V",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "ZBH",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "MRVL",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "TRV",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "WBD",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "LNG",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "LNG",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "LNG",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "QCOM",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "QCOM",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "QCOM",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "OXY",
+    "taban": "pullback",
+    "hucre": "pullback"
+   },
+   {
+    "ticker": "F",
+    "taban": "pullback",
+    "hucre": "pullback"
+   }
+  ]
+ },
+ "notrluk_gecti": true
+}

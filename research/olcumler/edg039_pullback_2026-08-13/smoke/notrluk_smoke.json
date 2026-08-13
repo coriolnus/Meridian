@@ -1,0 +1,48 @@
+{
+ "kart": "EDG-2026-039",
+ "adim": "KANAL-NÖTRLÜĞÜ KAPISI_smoke (taban ↔ edg032b kontrol)",
+ "olcum_zamani": "2026-08-13T18:37:46+00:00",
+ "tanim": "BEYANLI ARMED sarmalayıcısı TAM kümeyle (çıkarma YOK) koşturuldu. İddia: sarmalayıcı orijinal `strategy.scan_entry` ile DAVRANIŞ-ÖZDEŞ. Kanıt: slim islemler + seanslar + TAM defter dosya baytları edg032b `kontrol` ile sha256-özdeş ve sonuc ölçüm blokları derin-eşit.",
+ "dosya_sha256": {
+  "taban_039": {
+   "islemler": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "seanslar": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "islemler_tam": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "sonuc": "0cfcc39217d2aa29b878e987590e8e64b42c4b37c6441d6428a9fd5c37539eb4"
+  },
+  "kontrol_032b": {
+   "islemler": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "seanslar": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "islemler_tam": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "sonuc": "2254b0e59e9546800abd5632d0947a1035eb8830d83dd547445635f20cc455dc"
+  }
+ },
+ "bayt_ozdeslik": {
+  "islemler": true,
+  "seanslar": true,
+  "islemler_tam": true
+ },
+ "sonuc_blok_esitligi": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true
+ },
+ "blok_fark_ozet": null,
+ "kanal_sayaclari_taban": {
+  "cagri_n": 743,
+  "taban_sinyal_n": 9,
+  "hucre_sinyal_n": 9,
+  "taban_pullback_secti_n": 0,
+  "kesildi_bosa_dustu_n": 0,
+  "kesildi_yerine_gecen": {},
+  "ozsinama_b_ihlal_n": 0,
+  "ozsinama_b_ihlal_ornek": [],
+  "kesilen_ornekler": []
+ },
+ "notrluk_gecti": true
+}
