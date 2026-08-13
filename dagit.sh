@@ -190,6 +190,51 @@ if [[ -n "${STATE_ENGEL// /}" ]]; then
   echo "  ⚠ operatöre bırakılan:$STATE_ENGEL"
 fi
 
+# [1c] SİSTEM BİRİMİ AYRIKLIĞI (2026-08-14, YAŞANMIŞ VAKA). rsync `/opt/meridian/`e yazar; systemd'nin
+# OKUDUĞU dosya `/etc/systemd/system/`dedir ve dagit onu KURMAZ. O gece `deploy/oracle-a1/meridian.service`e
+# `Environment=MERIDIAN_AGENT_RPD=600` eklendi, suite geçti, dağıtım "TAMAM" dedi — ve ayar ETKİSİZ kaldı;
+# arıza yalnızca worker'ın `/proc/<pid>/environ`ına elle bakılınca görüldü. Sessiz etkisizlik, yanlış
+# ayardan beterdir: operatör değişikliğin yürürlükte olduğunu SANIR.
+#
+# NEDEN KURMUYOR, YALNIZ SÖYLÜYOR: birim kurmak `sudo` + `daemon-reload` + RESTART demektir; restart
+# bakım penceresinin konusudur ve [4]'ün hükmüne aittir. Kapı burada bir KARAR vermez, GÖRÜNÜRLÜK üretir.
+#
+# AYRIM YÖNERGE DÜZEYİNDE ([1b]'nin dersi): bu dosyalar yorum ağırlıklıdır (mezar taşları, kanıt
+# blokları). Ham `diff` her yorum düzenlemesinde bağırırdı, yani kimse bakmaz olurdu. Karşılaştırma
+# YALNIZ yönerge satırlarında (`Anahtar=değer`); yorum farkı sessiz nottur.
+echo "=== [1c/5] sistem birimi ayrıklığı (repo ↔ /etc) ==="
+BIRIM_AYRIK=""
+_yonergeler() { grep -E '^[A-Za-z][A-Za-z0-9]*=' "$1" 2>/dev/null | sed 's/[[:space:]]*$//' | sort; }
+for _bs in "$REPO"/deploy/oracle-a1/*.service; do
+  [[ -e "$_bs" ]] || continue
+  _ad="$(basename "$_bs")"
+  _canli_tmp="$(mktemp)"
+  if ! "${SSH[@]}" "cat /etc/systemd/system/$_ad" > "$_canli_tmp" 2>/dev/null; then
+    echo "  ⚠ $_ad: /etc/systemd/system'de YOK (hiç kurulmamış)"
+    BIRIM_AYRIK="$BIRIM_AYRIK $_ad"; rm -f "$_canli_tmp"; continue
+  fi
+  if diff <(_yonergeler "$_bs") <(_yonergeler "$_canli_tmp") > /dev/null 2>&1; then
+    # yorum farkı önemsizdir ama SESSİZ de kalmaz — "aynı" derken neyi kastettiğimiz yazılı olsun
+    if diff -q "$_bs" "$_canli_tmp" > /dev/null 2>&1; then echo "  ✓ $_ad: birebir"
+    else echo "  ✓ $_ad: YÖNERGELER aynı (yalnız yorum farkı)"; fi
+  else
+    echo "  ⚠ $_ad: YÖNERGE FARKI — repodaki değişiklik ETKİSİZ:"
+    diff <(_yonergeler "$_canli_tmp") <(_yonergeler "$_bs") | grep -E '^[<>]' | sed 's/^/      /'
+    BIRIM_AYRIK="$BIRIM_AYRIK $_ad"
+  fi
+  rm -f "$_canli_tmp"
+done
+if [[ -n "$BIRIM_AYRIK" ]]; then
+  echo "  ——————————————————————————————————————————————————————————————"
+  echo "  BU DEĞİŞİKLİKLER YÜRÜRLÜKTE DEĞİL. Kurmak OPERATÖR/BAKIM işidir:"
+  for _ad in $BIRIM_AYRIK; do
+    echo "    ssh ubuntu@$IP 'sudo cp -p /etc/systemd/system/$_ad /etc/systemd/system/$_ad.bak-\$(date -u +%Y%m%dT%H%M%SZ) && sudo install -m 0644 /opt/meridian/deploy/oracle-a1/$_ad /etc/systemd/system/$_ad && sudo systemctl daemon-reload'"
+  done
+  echo "  Ardından ilgili servis RESTART ister (bakım penceresi) ve etki"
+  echo "  /proc/<MainPID>/environ üzerinden DOĞRULANMALIDIR — 'kurdum' ≠ 'yürürlükte'."
+  echo "  ——————————————————————————————————————————————————————————————"
+fi
+
 if [[ "${1:-}" != "--uygula" ]]; then
   # KURU KOŞUMDA YALNIZ DIFF: yukarıdaki blok hiçbir şey yazmadı (tek yazımı $STATE_TMP'ye okuma).
   # Kopyalama --uygula'ya ve BAKIM PENCERESİNE bağlıdır — koşan bir worker'ın altından yapılandırma
