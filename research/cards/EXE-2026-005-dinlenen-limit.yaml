@@ -1,0 +1,77 @@
+card_id: EXE-2026-005
+family: dinlenen_limit_sadakati
+thesis: >
+  ROADMAP WP1-B/23c (denetim D5: "kapanmadan HİÇBİR limit-tavanı kararı verilemez"). Replay motoru
+  limit girişini YALNIZ bir ana karşı sınıyor — bir sonraki barın AÇILIŞINA (`broker.py` giriş
+  dolumu `next_open` üzerinden kuruludur). Gerçek bir limit emri ise gün boyu DİNLENİR: fiyat
+  seans içinde limite geri gelirse emir dolar.
+  SONUÇ: replay, "limit tavanı yüzünden kaçtı" dediği işlemlerin bir kısmını YANLIŞ sayıyor ve
+  bu hata TEK YÖNLÜ — kaçan-işlem maliyetini SİSTEMATİK OLARAK ABARTIYOR.
+  BEDELİ SOMUT: 2026-08-03 E1 grid hükmü ("limit bacağı MONOTON ZARARLI · kaçanlar sistematik
+  KAZANAN") tam olarak bu abartılmış maliyetle verildi; `EXE-2026-001-R2`ye bu yüzden K1 şerhi
+  düşüldü (2026-08-13). Ve iki ölçüm ZIT İŞARETLİ: E1 grid ile 885-kesim aynı soruya ters cevap
+  veriyor. Bu kart o çelişkinin ölçüm-artefaktı olup olmadığını sınar.
+
+evidence_refs:
+  - "docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md:349-350 — 'K1 kapanmadan yapılan her limit-tavanı ölçümü kaçan işlem maliyetini SİSTEMATİK OLARAK ABARTIR'"
+  - "aynı belge :335-345 — 100 bps tavanla EMR/BKNG/AMGN limit fiyatı AYNI SEANSTA işlem gördü (fırsat kanıtı)"
+  - "EXE-2026-001-R2 `k1_serhi` (2026-08-13): canlı davranış değişmez, GEREKÇE askıya alındı"
+  - "ROADMAP WP1-B/23c — öncelik 23c > 23d > 23e"
+
+universe: >
+  Replay motoru, C+mb @5R dünyası (edg032b şasisi). DEĞİŞEN TEK ŞEY giriş dolum kuralı:
+  bugünkü "yalnız açılışta sına" yerine "gün içinde limite dokunulduysa DOLDU say".
+  VERİ YETERLİ: günlük bar `low` alanını taşıyor, yani alış limitinin gün içinde dokunulup
+  dokunulmadığı EK VERİ ÇEKMEDEN ölçülebilir (dakika barı GEREKMEZ — o ayrı bir kalem, 23e).
+  KANONİK YÜZEY: dolum kuralı TEK yerde değişir; ikinci bir dolum yolu açmak yasak.
+
+features_asof: >
+  İKİ KOL, aynı şasi, tek fark dolum kuralı:
+  A) BUGÜNKÜ (yalnız-açılış) — taban, edg032b ile bit-özdeş olmalı (şasi kontrolü).
+  B) DİNLENEN LİMİT — `low <= limit` ise limit fiyatından dolmuş sayılır.
+  ÖLÇÜLECEK: (a) kaçan sayılıp da GERÇEKTE dolacak olan işlem sayısı ve oranı ·
+  (b) o işlemlerin gerçekleşen R dağılımı — "kaçanlar sistematik KAZANAN mıydı" iddiası
+  DOĞRUDAN sınanır · (c) portföy etkisi: net P&L farkı + CI (eşlenik ay-kümeli bootstrap 5000,
+  seed 20260812) · (d) yan kanal: dolan bu işlemler slot/ısı tükettiği için hangi işlemler
+  yerinden oldu (EDG-030/039 deseni — etki TOPLAMSAL DEĞİLDİR).
+
+parameter_grid:
+  dolum_kurali: [yalniz_acilis, dinlenen_limit]   # K += 1 (A kolu ŞASİ KONTROLÜ, hücre sayılmaz)
+
+cost_model: pessimistic_band_v2   # NOT: EDG-037/038 bu bandın iyimser olduğunu ölçtü; bu kart GÖRECELİ
+                                  # kıyas yapıyor (iki kol aynı bant) → şerh EDG-040'ın konusu, bunun değil.
+
+success_metric: >
+  BU KART BİR TERCİH YAPMAZ, BİR SADAKAT KUSURU ÖLÇER. Ürün üç sayıdır:
+  Ö1 — ABARTININ BÜYÜKLÜĞÜ: bugünkü kuralın "kaçtı" dediği işlemlerin yüzde kaçı dinlenen
+       limitle DOLUYOR. Bu sayı doğrudan K1 şerhinin gücüdür.
+  Ö2 — İŞARET SINAMASI: o işlemlerin ort-R'si POZİTİF mi? E1 grid hükmü "kaçanlar sistematik
+       KAZANAN" diyordu; dinlenen limitle onlar artık KAÇMIYOR. Ort-R CI'sıyla raporlanır.
+  Ö3 — PORTFÖY ETKİSİ: ΔP&L + CI, yan-kanal ayrıştırmasıyla sente kapanmalı.
+  MOTOR KURALI DEĞİŞİKLİĞİ ÖNERİLİR ANCAK: B kolu bir SADAKAT düzeltmesidir (gerçek limit emri
+  gün boyu dinler), yani "daha iyi sonuç verdiği için" DEĞİL "gerçeğe daha yakın olduğu için"
+  benimsenir. ΔP&L NEGATİF çıksa bile sadakat düzeltmesi GEÇERLİDİR — bu kartın en önemli
+  cümlesi budur ve ölçümden ÖNCE yazılmıştır.
+  E1 GRID HÜKMÜ: Ö1 belirginse (>%20) `EXE-2026-001-R2`nin K1 şerhi KALKMAZ, tam tersine
+  hüküm YENİDEN ÖLÇÜLMEK üzere açılır (ayrı kart).
+
+kill_criteria:
+  - "A kolu edg032b ile bit-özdeş DEĞİLSE ölçüm DURUR — şasi bozuk, hüküm verilmez"
+  - "dolum kuralı İKİ yerde uygulanırsa (canlı ↔ replay ayrışması) geçersiz: bu kart replay SADAKATİNİ ölçer, canlı davranışı DEĞİŞTİRMEZ"
+  - "limit fiyatı bar aralığının DIŞINDAysa (low > limit) dolduruldu sayılırsa geçersiz — bu bir uydurma dolumdur"
+  - "gün içi sıralama iddiası yapılırsa geçersiz: günlük barla 'önce stop mu, önce limit mi' BİLİNEMEZ. Belirsizlik KÖTÜMSER tarafa yazılır ve bu BEYAN edilir (broker.py'nin kendi 'bar içi — sıra bilinemez, stop önce' emsali)"
+  - "şasi bütünlüğü (frame_miss=0, dup=0, scan==plan) bozuksa geçersiz"
+
+k_registry: {registered_at: "2026-08-14T2x", trial_ids: [pending-EXE-005-dinlenen-limit]}
+
+status: registered   # 2026-08-14 Rol-1 — ön-kayıt. Ölçüm v245 dağıtımı sonrası TEMİZ ağaçta (EDG-033 dersi).
+
+beyanlı_sinirlar: >
+  (1) GÜNLÜK BAR SINIRI: `low <= limit` "gün içinde dokunuldu" der ama SIRAYI söylemez. Aynı gün
+  hem stop hem limit dokunmuşsa hangisinin önce olduğu ÖLÇÜLEMEZ. Kart bunu kötümser tarafa
+  yazar (kill kriteri) — yani bu ölçüm bile hâlâ bir ALT SINIRDIR.
+  (2) Bu kart 23d'yi (bar-içi stop `eff_stop`ta dolmuş sayılıyor, stop slipajı SIFIR) ÇÖZMEZ.
+  İkisi birlikte "giriş LİMİT tavanlı ↔ çıkış stop→MARKET tavansız" asimetrisini kuruyor;
+  23c kapanınca asimetrinin YARISI kapanır ve bu, kalan yarıyı DAHA görünür kılar.
+  (3) 23e (gün-içi pencere seçimi) bugünkü replayde MODELLENEMEZ (`timeframe=1Day` tek yol) —
+  bu kartın kapsamı DIŞINDADIR ve karıştırılmamalıdır.
