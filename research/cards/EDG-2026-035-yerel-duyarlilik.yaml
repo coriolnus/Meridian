@@ -68,4 +68,19 @@ verdict:   # Rol-1 hükmü.
     (islemler d4033de6…, seanslar f0c8df92…; 12/12 ölçüm bloğu derin-eşit; n=885, +20.684,69$, dd 0,1268,
     sharpe 0,521). Yani rampa kablolaması + mb silahlaması davranışı ZERRE değiştirmedi — kod turu
     ölçülen dünyayı birebir taşıdı. Beklenen tek fark motor sha'sı (dağıtımın kendisi).
+  tca_serhi: >
+    KISMİ FRİKSİYON ŞERHİ — YALNIZ `kill1_kanit`taki MUTLAK DAMGA SATIRINA (2026-08-13; kaynak:
+    EDG-2026-037 / EDG-2026-038 + denetim docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E).
+    HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+    ŞERHİN İNDİĞİ SATIR: "n=885, +20.684,69$, dd 0,1268, sharpe 0,521". Bu, EDG-2026-032'nin paket
+    damgasının tekrarıdır ve onunla AYNI MARUZİYETTEDİR: replay motorunun `slippage_bps=5` varsayımıyla
+    üretildi; kanonik ölçütle (D1 konsolide açılış) giriş bacağında medyan +29,0 bps fark ölçüldü,
+    3/4 aleyhte, model 5 bps sabit. SINIRLAR BEYANLI: n=4, CI geniş, ÇIKIŞ bacağı n=0.
+    NE DEĞİŞMEZ — VE HÜKÜM GÜÇLENİR: "C+mb @5R YEREL OPTİMUM" sonucu 6/6 hücrede CI-üstünlüğün
+    DÜŞMESİNE dayanır; zarf hücreleri tabandan DAHA ÇOK işlem üretiyor (n 885→1052→1144) → gerçek
+    friksiyonda o hücreler DAHA DA kötüleşir. slot25'in BAYT-ÖZDEŞLİĞİ (ΔCI=[0,0]) ve `kill1_kanit`in
+    dağıtım-regresyon kanıtı (v237 default'u ↔ 032-cmb bayt-özdeş) ÖZDEŞLİK iddialarıdır, seviye
+    iddiası değil — friksiyondan tamamen bağımsızdır. `yapisal_bulgu` da (slot tavanı ölü knob;
+    bağlayıcı kaynak ısı zarfı; slot↔sektör-tavanı yapışıklığı) sayım/yapı bulgusudur.
+    YANİ: şerh DAMGAYA iner, HÜKME DEĞİL. Bu bir ÇIKARIMDIR (§E.0); hücreler yeniden koşulmadı.
   artefakt: "research/olcumler/edg035_duyarlilik_2026-08-12/ (7 koşum; kill#3 temiz — sha+mtime parmak izi 7 koşumda sabit; zarf hücreleri sentetik-plan öz-sınamalı)"

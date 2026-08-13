@@ -39,6 +39,24 @@ verdict:   # Rol-1 hükmü.
     3/3 GEÇTİ (donuk ölçütler, mekanik): (i) ΔP&L CI-üst +40.731 ≥ 0 ✓ · (ii) dd 0.1268 ≤ 0.16055 ✓ ·
     (iii) sharpe 0.521 ≥ 0.20 ✓. PAKET DAMGASI (C+mb): 885 işlem · net +20.684,7$ · max-dd %12.7 ·
     sharpe 0.521 · işlem-R 0.076 (C: 772 · +9.869$ · %12.4 · 0.285 · 0.057).
+  tca_serhi: >
+    FRİKSİYON ŞERHİ — YUKARIDAKİ PAKET DAMGASININ ÜSTÜNE (2026-08-13; kaynak: EDG-2026-037 /
+    EDG-2026-038 + denetim docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E). DAMGA SİLİNMEDİ.
+    `EDG-2026-037` bu kartın sayısını ADIYLA anıyor: "MUTLAK kârlılık iddiası (+20.685$) friksiyon
+    varsayımına asılı ve o varsayım ilk kez ölçüldüğünde iyimser çıktı".
+    ÖLÇÜLEN: kanonik ölçütle (D1 konsolide açılış, feed=sip) giriş bacağında medyan +29,0 · ortalama
+    43,0 · ağırlıklı 34,8 bps · 3/4 aleyhte; model varsayımı 5 bps sabit → oran ~7×. SINIRLAR BEYANLI:
+    n=4, CI geniş, ÇIKIŞ bacağı n=0 (round-trip friksiyonun yarısı hiç ölçülmedi).
+    NE DEĞİŞMEZ: kapının MANTIĞI ve C+mb ↔ C karşılaştırmasının kendisi (iki kol aynı varsayımla
+    koştu); `serh` bloğunun dürüstlük uyarısı (ΔP&L CI [−16.070,+40.731] 0-içi → bu bir
+    bozulmama-kapısıdır, iyileşme kanıtı değil) friksiyondan bağımsız olarak AYAKTA.
+    NE DEĞİŞİR: damganın MUTLAK satırları — "885 işlem · net +20.684,7$ · max-dd %12,7 · sharpe 0,521".
+    Kapının (iii) ayağı (sharpe 0,521 ≥ 0,20) bir SEVİYE ölçütüdür ve friksiyon varsayımına doğrudan
+    asılıdır (denetim §E.0-iii). Ayrıca EDG-037'nin `pf_hukmu`: paketin PF'i 1,1119'dur ve PF ek
+    friksiyonda MONOTON AZALANDIR — yani `RESULT_PF_MIN=1.3` hiçbir friksiyon varsayımıyla
+    yukarıdan yakalanamaz; eşik GEVŞETİLMEZ.
+    OKUMA: Faz-6 kilidinin kapalı kalması ARIZA DEĞİL KORUMA (EDG-037). Bu damga PAKETİ temsil eder,
+    GERÇEKLEŞEN İCRAYI DEĞİL. Şerh bir ÇIKARIMDIR; kart yeniden KOŞULMADI.
   serh: >
     DÜRÜSTLÜK ŞERHİ: ΔP&L +10.815$ NOKTA-pozitif ama CI [−16.070,+40.731] 0-içi — kapı bozulmama-kapısıdır,
     iyileşme-kanıtı değildir; mb zaten operatör-takdiri silahlanmıştı (kıl-payı-CI bilinerek). mb-karnesi:

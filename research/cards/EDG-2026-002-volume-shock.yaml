@@ -5,8 +5,8 @@ thesis: >
   (Gervais-Kaniel-Mingelgrin). Meridian'ın "hacim onayı" zaten bu ailenin sezgisel hali — AMA canlı
   eşik (min_volume_ratio=1.5 doğrusal) kendi ölçülmüş bant tablosuyla çelişiyor (0.8-1.5 bandı
   NEGATİF, 1.5-2.0 tatlı nokta). Bu kart sezgiseli nicelle değiştirme kararının ölçümüdür.
-evidence_refs: [Gervais-Kaniel-Mingelgrin 2001 JoF, strategy.py:26-33 ölçülmüş bant tablosu (n=2093),
-  WP0 riski #2, katalog PDF aile 9]
+evidence_refs: ["Gervais-Kaniel-Mingelgrin 2001 JoF", "strategy.py:26-33 ölçülmüş bant tablosu (n=2093)",
+  "WP0 riski #2", "katalog PDF aile 9"]
 universe: full_251
 features_asof: "feat_volshock = hacim persentili (son 50 gün dağılımı, yalnız t ve öncesi); mevcut rvol_band_score (uykuda, ağırlık 0) ile kıyas — hayalet-temiz barlardan YENİDEN üretilmiş tabloyla (BT-2 şartı)"
 horizon: "retrospektif katkı: cf/component_ic ufukları; sonra gölge-v1 giriş kolu adayı (V-defterine tek satır)"

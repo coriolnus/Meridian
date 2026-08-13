@@ -62,6 +62,33 @@ verdict:   # Rol-1 hükmü — ölçüm ajanı karta/ARMED_SETUPS'a dokunmadı.
     'kıl-payı işareti' olarak gider — manuel silahlanma operatör takdirinde (hammer emsali). DİKKAT İŞARETİ
     (pencereye): 2026 yakın-dönem mb her iki bacakta zayıf (cf 2026-H2 −1.03 n=7; replay 2026 +0.014 n=16) —
     kıl-payı pozitiflik eski yıllardan geliyor olabilir.
+  tca_serhi: >
+    KISMİ FRİKSİYON ŞERHİ — YALNIZ ÖLÇÜT-ii'ye (2026-08-13; kaynak: EDG-2026-037 / EDG-2026-038 +
+    denetim docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E). HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+    ÖLÇÜT-i (replay avg-R +0.2695, CI [−0.0046,+0.5606]) ŞERH GEREKTİRMEZ, FRİKSİYONLA GÜÇLENİR:
+    gerçek friksiyon ort-R'yi aşağı çeker → kıl payı düşen ölçüt daha da net düşer → "OTOMATİK
+    SİLAHLANMA YAPILMAZ" hükmü SAĞLAMLAŞIR.
+    ÖLÇÜT-ii (bileşik ΔP&L +11.917$) DUYARLI: mb'li kol taban koldan FARKLI SAYIDA işlem üretir
+    (n-asimetrik) ve her ek işlem iki bacak friksiyon taşır (denetim §E.0-ii). Bu MUTLAK dolar rakamı
+    replay motorunun `slippage_bps=5` varsayımına asılıdır; o varsayım ilk kez ölçüldüğünde iyimser
+    çıktı — kanonik ölçütle (D1 konsolide açılış) giriş bacağında medyan +29,0 bps fark, 3/4 aleyhte,
+    model 5 bps sabit. SINIRLAR BEYANLI: n=4, CI geniş, ÇIKIŞ bacağı n=0. Aynı satırdaki slot-çalma
+    sonucu (+2.242$, CI-kurulu DEĞİL) zaten hüküm taşımıyordu.
+    ÖLÇÜT-iii (çelişki teşhisi: −0.114R'nin kalibrasyonsuz PROMPT figürü olduğu) friksiyondan
+    TAMAMEN BAĞIMSIZ — dokunulmaz.
+    Bu şerh bir ÇIKARIMDIR (§E.0 ayrım kuralı); kol YENİDEN KOŞULMADI.
+  canli_durum_serhi: >
+    CANLI DURUM DÜZELTMESİ (2026-08-13; kaynak: denetim docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md
+    §E.1, EDG-025 satırı). Yukarıdaki `hukum` "momentum_burst DORMANT kalır" diyor — bu ÖLÇÜMÜN hükmüdür
+    ve AYNEN GEÇERLİDİR (otomatik silahlanma YAPILMADI). AMA CANLI SİSTEMDE MOMENTUM_BURST SİLAHLIDIR:
+    `meridian/strategy.py:1029` → `ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer",
+    "momentum_burst")`. Silahlanma 2026-08-12 karar penceresinde OPERATÖR TAKDİRİYLE yapıldı — yani
+    kartın kendi öngördüğü yolla ("manuel silahlanma operatör takdirinde — hammer emsali"), kartın
+    hükmüne rağmen değil. ÇELİŞKİ YOK; ama kart tek başına okunursa "mb canlıda kapalı" sanılır, bu
+    yüzden AÇIKÇA yazılıyor: hüküm = OTOMATİK silahlanma yok · canlı = SİLAHLI (operatör kararı).
+    Kartın "DİKKAT İŞARETİ"nin canlı izleme kalemi olarak devam ettiği yer: C-dünyasındaki mb karnesi
+    EDG-2026-032'de ölçüldü (n=339, ort-R +0.083, CI 0-içi; 2022/2026 yıl-deseni zayıf) ve aynı uyarı
+    `strategy.py:1022-1023` şerhinde de duruyor.
   artefakt: "research/olcumler/edg025_mb_karne_2026-08-12/ (sonuc.json · üç kol · determinizm-ikizi birebir · sandbox-izole)"
 
 status_eski: registered   # 2026-08-12 Rol-1 — operatör-girdili tasarım (otomatik-silahlanma eşiği ölçümden

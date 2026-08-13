@@ -9,7 +9,7 @@ thesis: >
   artık yoksa ikisi de rvol/mom akrabalığına düşer.
 evidence_refs: [research/olcumler/wp2_olcum/sonuc_013.json (tanı tablosu), EDG-013 hüküm notu,
   research/edgar_facts/ (as-of altyapısı + fiziksel devir bekçisi)]
-universe: full_251 (kapsam beyanlı; fiziksel bekçi: implied devir>1 → None+neden — kabuk-sayısı vakaları)
+universe: "full_251 (kapsam beyanlı; fiziksel bekçi: implied devir>1 → None+neden — kabuk-sayısı vakaları)"
 features_asof: "turnover21(t) = medyan21(hacim)/as_of_shares(t) — EDG-012/013 as-of kuralları BİREBİR (wp2_olcum altyapısı yeniden kullanılır)"
 horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması; 21g blok CI"
 parameter_grid:

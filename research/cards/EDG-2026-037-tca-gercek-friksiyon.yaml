@@ -99,7 +99,8 @@ verdict:   # Rol-1 hükmü.
     aktarılamaz; sağlam kalan üç şey — (i) slipaj model varsayımının (5 bps) BELİRGİN üstünde,
     (ii) PF ek friksiyonda monoton azalan olduğu için 1,1119 yükselemez, (iii) çıkış bacağı n=0.
     Rol-1 bu şerhi kendi raporlamasına da uygulamalı (operatöre "9 kat" diye aktarılmıştı — düzeltildi).
-  MEKANİZMA (ayrıştırma tamamlandı, aynı araştırma): likidite ELENDİ (katılım 1e-5…8e-4 → etki
+  MEKANIZMA: >
+    (ayrıştırma tamamlandı, aynı araştırma) likidite ELENDİ (katılım 1e-5…8e-4 → etki
     ≤0,8 bps) · stop-mekaniği ELENDİ (giriş emirleri `type=limit` bracket/day — kovalama YOK) · gap
     ELENDİ (885 işlemde medyan +1,4 bps, %51,1 yukarı = simetrik). KALAN TEK AÇIKLAMA: açılışın ilk
     dakikasının FİYAT BANDI (konsolide 13:30 barı: NUE 45 · EMR 98 · AMGN 100 · BKNG 184 bps) ×

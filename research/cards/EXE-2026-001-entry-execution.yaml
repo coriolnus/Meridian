@@ -154,3 +154,26 @@ revizyonlar:
       hangi kolon" sorusunu kayda geçirir. Rol-1'in ilk okuması ("kanıtsız sapma") YANLIŞTI:
       kanıt kartın kendi içindeydi ve sapma kanıtın işaret ettiği YÖNDEYDİ.
     operator_hukmu: "operatör 2026-08-07: böyle kalsın (işletim noktası REF·limitsiz rejimi)"
+    k1_serhi: >
+      K1 ŞERHİ (2026-08-13; kaynak: docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md:349-350 + denetim
+      docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md A6). HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+      Yukarıdaki `ne_olculdu` tablosu ve ondan türeyen `kok_neden` (limit bacağı MONOTON ZARARLI ·
+      kaçan dolumlar sistematik KAZANAN) 2026-08-03 E1 grid'inden gelir; o grid REPLAY motorunda
+      koşuldu ve replay DİNLENEN LİMİTİ MODELLEMİYOR (K1). Araştırmanın harfi harfine hükmü:
+      "K1 kapanmadan yapılan her limit-tavanı ölçümü kaçan işlem maliyetini SİSTEMATİK OLARAK ABARTIR,
+      ve 2026-08-03 E1 grid hükmü tam olarak o abartılmış maliyetle verilmiştir."
+      NE DEĞİŞMEZ — CANLI DAVRANIŞ. İşletim noktası REF·limitsiz rejiminde KALIR (operatör hükmü
+      2026-08-07, yukarıda). Bu şerh bir değişiklik önerisi DEĞİLDİR, hiçbir yapılandırmaya dokunmaz
+      ve `k_etkisi`/K defterine etkisi YOKTUR. Dolmama oranları (A %34,68 · B %16,48 · C %9,55 ·
+      REF %2,38) doğrudan SAYIMLARDIR ve kill#1 eşiğinden (>%40) uzaklaşma tespiti ayakta kalır.
+      NE DEĞİŞİR — GEREKÇENİN GÜCÜ ASKIYA ALINIR. "Atlanan işlemlerin toplam değeri, kovalayarak
+      girmenin ödül/risk aşınmasından BÜYÜKTÜR" çıkarımı sistematik olarak ABARTILMIŞ bir kaçan-işlem
+      maliyetiyle kuruldu; net $ kolonları (A −7.202,46 · B −1.182,15 · C −2.878,30 · REF +2.957,02)
+      bu yanlılığı taşır. Kartın kendi `OKUMA SINIRI` satırı bunun yarısını zaten söylüyordu
+      (replay dolum-iyimserliği REF kolonunda en yüksek) — K1 şerhi diğer yarısını ekler.
+      FIRSAT KANITI (aynı araştırma :335-345, hüküm değil kanıt): 100 bps tavanla EMR/BKNG/AMGN limit
+      fiyatı AYNI SEANSTA işlem gördü; notional-ağırlıklı üst-sınır tasarruf 49,65 bps. Araştırmanın
+      kendi şerhi geçerlidir: "limit fiyatı işlem gördü" ≠ "emrimiz doldu" (kuyruk önceliği ve paper
+      motorunun davranışı SİMÜLE EDİLMEDİ).
+      ŞERH NE ZAMAN KALKAR: ROADMAP §2-23c (K1 — replayde dinlenen limitin modellenmesi) kapandığında.
+      O güne dek hiçbir limit-tavanı KARARI bu grid'e dayandırılamaz.

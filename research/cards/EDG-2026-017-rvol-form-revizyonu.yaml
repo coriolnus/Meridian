@@ -9,7 +9,8 @@ thesis: >
   devamıysa mevcut canlı eşik yeterlidir (yeni mekanizma AÇILMAZ).
 evidence_refs: [research/cards/EDG-2026-002-volume-shock.yaml (hüküm + yan gözlem),
   "ham rvol20 @20 IC 0.065 canlı-eşik aklaması (EDG-002 tanısı)"]
-universe: full_251 (kapsam beyanlı; delist-bar şerhi: hayatta-kalma yanlılığı pozitif bulguda
+universe: >
+  full_251 (kapsam beyanlı; delist-bar şerhi: hayatta-kalma yanlılığı pozitif bulguda
   yukarı-çarpıtır — EDG-016 emsali kalıcı şerh)
 features_asof: "rvol20(t) = hacim(t)/medyan20(hacim) — canlı tanımla BİREBİR (indicators.py kaynak; ölçüm kopyası sandbox'ta doğrulanır)"
 horizon: "kesit dilim: günlük gözlem; ileri getiri 10/20g; taban = aynı-gün evren ortalaması (ders#3: ham-getiri YASAK); 21g blok CI"

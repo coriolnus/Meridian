@@ -54,5 +54,25 @@ verdict:   # Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
     10R dünyası ancak zarf enjeksiyonuyla ölçülür → EDG-028 değişikliği (T10 hücresi) bu keşfin sonucu.
     Yan etki (beyan #3): sector_cap paydası max_open olduğundan sektör-tavanı 2→8 gevşedi (doğal sonuç,
     pencereye bilgi). 15/36 rampası C'de hiç kısmadı (dd %15'i hiç aşmadı).
+  tca_serhi: >
+    FRİKSİYON ŞERHİ (2026-08-13; kaynak: EDG-2026-037 / EDG-2026-038 TCA ölçümleri + denetim
+    docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E). HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+    Bu kartın bütün sayıları replay motorunun `slippage_bps=5` varsayımıyla üretildi ve o varsayım
+    ilk kez ölçüldüğünde İYİMSER çıktı: kanonik ölçütle (D1 konsolide açılış) giriş bacağında medyan
+    +29,0 bps fark · 3/4 aleyhte · model 5 bps sabit → oran ~7×. ÖLÇÜMÜN SINIRI DA BEYAN EDİLİR:
+    n=4, CI geniş, ÇIKIŞ bacağı n=0 (round-trip friksiyonun yarısı hiç ölçülmedi).
+    NE DEĞİŞMEZ: C'nin B'ye göreli üstünlüğünün YÖNÜ ve sayım/oran ölçütleri. İki kol da AYNI
+    friksiyon varsayımıyla koştu; işlem artışı 410→772 (CI [+271,+455]), tavan_sifir %0, bağlayıcı
+    kısıtın EVREN (%99.55) olduğu bulgusu ve `zarf_kesfi` bloğunun tamamı (ısı-zarfı 5R'nin gerçek
+    bağlayıcı kaynak olması) friksiyon varsayımından BAĞIMSIZDIR.
+    NE DEĞİŞİR: üstünlüğün BÜYÜKLÜĞÜ ve bütün MUTLAK seviye iddiaları. C, B'nin ~1,9 katı işlem
+    üretiyor → ~1,9 kat friksiyon emiyor → gerçek friksiyonda "net P&L +775$ → +9.869$ (12,7×)"
+    farkı DARALIR (yön dönmez, büyüklük küçülür). sharpe 0.018→0.285 ve max-dd 0.1775→0.1235
+    SEVİYE iddialarıdır ve doğrudan varsayıma asılıdır.
+    NEDEN BU KART EN KRİTİK: benimsenen paketin SEÇİM GEREKÇESİ tam da bu C-vs-B karşılaştırmasıdır
+    (denetim §E.1). Şerhsiz okunursa seçim gerekçesi olduğundan güçlü görünür.
+    TAKİP KALEMİ (denetim önerisi — HENÜZ ÖLÇÜLMEDİ): kart-önce tek koşumluk friksiyon-duyarlılık
+    taraması, B vs C, +10/+20/+30 bps senaryolu. Bu şerh bir ÇIKARIMDIR (denetim §E.0 ayrım kuralı);
+    kart YENİDEN KOŞULMADI, hiçbir sayı yeniden hesaplanmadı.
   artefakt: "research/olcumler/edg026_slot20_2026-08-12/ (olcum.py · sonuc.json · sonuc_c.json · islemler_c.json; 1786.6s)"
 

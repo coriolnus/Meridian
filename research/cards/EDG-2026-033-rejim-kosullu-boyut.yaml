@@ -43,6 +43,24 @@ verdict:   # Rol-1 hükmü.
     İKİ HÜCRE DE DÜŞTÜ (başarı-koşulu ΔP&L CI-alt>0 sağlanmadı): h1 yukarı-asimetri ΔP&L −7.624$
     (CI [−22.410,+7.380]), sharpe 0.285→0.053 · h2 tam-modülasyon Δ−8.897$ (CI [−22.639,+4.368]),
     sharpe→0.023. Kartın kuralı gereği DÜZ-0.5R KANITLA DOĞRULANDI; kart arşiv.
+  tca_serhi: >
+    FRİKSİYON ŞERHİ + DİL DÜZELTMESİ (2026-08-13; kaynak: EDG-2026-037 / EDG-2026-038 + denetim
+    docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E). HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+    BU KART, dokuz replay kartı içinde friksiyon YÖNÜ ALEYHTE olan TEK karttır (denetim §E.1):
+    hüküm ZAYIFLAR, tersine DÖNMEZ — BELİRSİZLEŞİR.
+    MEKANİZMA: h1/h2 kolları tabandan DAHA AZ işlem üretiyor — 0.75R planlar sabit 5R zarfını 2× hızla
+    dolduruyor ve C'nin ~170 pozitif-beklentili işlemi hiç doğmuyor (yukarıdaki `mekanizma` bloğunun
+    kendi ölçümü). Gerçek friksiyonda TABAN daha çok friksiyon yer → ΔP&L farkları (−7.624$ / −8.897$)
+    DARALIR → zaten 0-içi olan CI'lar daha da belirsizleşir.
+    DİL DÜZELTMESİ (denetim eylemi): yukarıdaki `sonuc` satırı SİLİNMEDİ, ŞÖYLE OKUNMALIDIR —
+    "düz-0.5R KANITLA DOĞRULANDI" → "düz-0.5R BU FRİKSİYON VARSAYIMI ALTINDA (`slippage_bps=5`)
+    DOĞRULANDI". Kartın kapanış hükmü ve arşiv kararı DEĞİŞMEZ; değişen tek şey kanıtın GÜCÜDÜR.
+    NE DEĞİŞMEZ: eşli ölçütler — saf-boyut etkisinin eşleşen trend_up işlemlerde POZİTİF olması
+    (+1.429$, 137 çift) ve "ZARF 5R sistemin bağlayıcı kaynağıdır" yasası (kompozisyon/sayım bulgusu;
+    heat_hard NO_GO 168→343). `kill3_serhi`nin sha-drift kanıtları da friksiyondan bağımsızdır.
+    NE DEĞİŞİR: "kanıtla doğrulandı" ifadesinin gücü + mutlak ΔP&L ve sharpe SEVİYELERİ.
+    ÖLÇÜM: kanonik ölçütle giriş bacağı medyan +29,0 bps (model 5 bps; n=4, CI geniş, çıkış bacağı
+    n=0). Bu şerh bir ÇIKARIMDIR (§E.0 ayrım kuralı); hücreler YENİDEN KOŞULMADI.
   mekanizma: >
     ÖĞRETİCİ (sente kapanan ayrışım): saf-boyut etkisi eşleşen trend_up işlemlerde h1'de POZİTİF (+1.429$,
     137 çift) — hipotezin çekirdeği yanlış değil. Kaybın ana kalemi KOMPOZİSYON: 0.75R planlar sabit 5R

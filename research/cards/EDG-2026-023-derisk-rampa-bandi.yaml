@@ -61,6 +61,22 @@ verdict:   # 2026-08-12 Rol-1 hükmü — ölçüm ajanı karta dokunmadı.
     A(3/8): 135 işlem, net −7.760$, ort R −0.078, sharpe −0.97, tavan_sifir %71.3, dd %7.8.
     B(15/36): 410 işlem, net +775$, ort R +0.032, sharpe +0.02, tavan_sifir %28.6, dd %17.8.
     Kayma: gevşek bantta bağlayıcı kısıt EVRENE döner (%59.8) — rampa açılırsa evren sorusu yeniden doğar.
+  tca_serhi: >
+    FRİKSİYON ŞERHİ (2026-08-13; kaynak: EDG-2026-037 / EDG-2026-038 TCA ölçümleri + denetim
+    docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md §E). HÜKÜM SİLİNMEDİ — ÜSTÜNE YAZILDI.
+    Bu kartın iki koşumu da replay motorunun `slippage_bps=5` varsayımıyla üretildi; o varsayım ilk kez
+    ölçüldüğünde iyimser çıktı — kanonik ölçütle (D1 konsolide açılış) giriş bacağında medyan +29,0 bps
+    fark, 3/4 aleyhte, model 5 bps sabit. SINIRLAR BEYANLI: n=4, CI geniş, ÇIKIŞ bacağı n=0.
+    NE DEĞİŞMEZ: kill#1 ve kill#3'ün DAYANDIĞI ölçütler. İşlem artışı +275 (CI [+210,+342]) bir
+    SAYIM; max-dd oranı 0.1775/0.0776 = ×2,287 bir ORAN'dır — friksiyon iki kola da aynı vurur
+    (denetim §E.0-i). Kill#3'ün TETİKLENMESİ, "kâğıt-rampası adayı hükmü VERİLMEZ" kararı ve
+    kararın operatöre gitmesi AYAKTA. `kill2_capa` bloğunun şasi-sağlamlık kanıtları da etkilenmez.
+    NE DEĞİŞİR: `sayilar_ozet`in MUTLAK P&L satırları (A net −7.760$ · B net +775$) ve `operator_karar_paketi`
+    içindeki "artıya dönen P&L" İŞARET İDDİASI. Kollar n=135 vs n=410 — ÜÇ KAT fark; her ek işlem iki
+    bacak friksiyon taşır, dolayısıyla ΔP&L friksiyona DUYARLIDIR (§E.0-ii) ve mutlak seviyeler
+    doğrudan asılıdır (§E.0-iii). B'nin +775$'lık marjı benimsenen paketin marjından İNCE — ölçülen
+    +29,0 bps'lik fark, "eksiden artıya" işaretinin ayakta kalıp kalmadığını BELİRSİZLEŞTİRİR.
+    Bu şerh bir ÇIKARIMDIR; koşumlar YENİDEN YAPILMADI, hiçbir sayı yeniden hesaplanmadı.
   operator_karar_paketi: >
     Benimseme = goal/bounds değişikliği + YALNIZ KÂĞIT (mod-ilkesi 2026-08-12 kabul; gerçek-para 3/8 SABİT).
     Soru netleşti: öğrenme döneminde +275 işlem/yıl ve artıya dönen P&L, %17.8 kâğıt-dd'ye değer mi?
