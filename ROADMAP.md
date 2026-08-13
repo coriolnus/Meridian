@@ -1056,6 +1056,14 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
 
 
 
+29. **PULLBACK SİLAHSIZLANMASI — ÖLÇÜLDÜ, KARAR SIRAYA ALINDI (EDG-2026-039, operatör 2026-08-13:
+    "önce diğer işler, bu beklesin")** — hüküm: silahsızlanma ÖNERİLİR ama gerekçe "çıkarmak
+    kazandırıyor" DEĞİL, KANIT ASİMETRİSİ. Ölçüm: ΔP&L +3.121$ (CI 0-içi), dd −0,0005, sharpe +0,073,
+    işlem n sabit (kapasite doldu). ZAYIFLIK: sonuç tek işleme bağlı (IRM/hammer +2.247$). Pullback'in
+    ZARARI ise üç kaynakta tutarlı (replay n=6 **kazanma %0,0** · canlı n=4 −1,00R · cf n=21 −0,97R).
+    Uygulanırsa: `ARMED_SETUPS`ten çıkar + yeniden-silahlanma eşiği yaz (cf'de n≥30 ∧ ort-R CI-alt>0).
+    Beklerken bedel: her seans slot+ısı+sermaye. *durum: KARAR BEKLİYOR (operatör sıraya aldı).*
+
 28. **ÖĞRENME TIKANIKLIĞI — KÖK BULUNDU (`docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md`)** — Rol-1
     hükmü: **KARIŞIM, ama zaman dilimlerine göre** — Temmuz'da kapı HAKLIYDI (H1), 2026-08-02'den
     bugüne döngü TIKALI (H2). Ve tıkanıklık kapının SIKILIĞINDA değil **kapının ÖNÜNDE**.
