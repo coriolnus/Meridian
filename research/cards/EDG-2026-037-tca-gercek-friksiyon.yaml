@@ -52,4 +52,41 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-13T1x", trial_ids: [pending-037-tca]}
 
-status: registered   # 2026-08-13 Rol-1 — operatör talimatı; PF eşiği tartışmasının ÖN ŞARTI.
+status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm: EŞİK TARTIŞMASI KAPANDI (eşik lehine, ama asıl bulgu daha ağır).
+
+verdict:   # Rol-1 hükmü.
+  olcum: >
+    kill#1 ATEŞLENDİ — eşleşen plan↔dolum çifti n=4 (<10) → resmî damga "SLİPAJ ÖLÇÜLEMEDİ (n=4)".
+    Sayılar BETİMLEYİCİ, istatistiksel hüküm taşımaz (tek seans 2026-08-06 13:30-13:33Z, tek gün,
+    ÇIKIŞ bacağı n=0 — round-trip friksiyonun YARISI hiç ölçülmedi; ortalama farkın t-CI'si sıfırı içeriyor).
+    GİRİŞ bacağı, resmî açılış tabanına göre: medyan 35,4 · ortalama 55,1 · notional-ağırlıklı 44,8 bps;
+    4/4 ALEYHTE. Model varsayımı 5,0 bps → FARK ağırlıklı +39,8 bps/bacak; dolar 13,34$ → 119,22$ (~8,9×).
+  pf_hukmu: >
+    EŞİK TARTIŞMASI KAPANDI — `RESULT_PF_MIN=1.3` GEVŞETİLMEZ, çünkü tartışmanın yönü TERSİNE döndü.
+    PF ek friksiyonda monoton azalandır: 1,1119 hiçbir friksiyon varsayımıyla YÜKSELEMEZ. Başabaş
+    (PF=1,0) için tolere edilebilir ek friksiyon simetrikte 9,49 bps/bacak — ölçülen farkın EN KÜÇÜK
+    TEK GÖZLEMİ (+10,0 bps) bile bunun üstünde. Senaryolar: +10bps→PF 0,994 (−1,1k$) · ağırlıklı
+    +39,8→0,728 (−66k$) · ortalama +50→0,659 (−88k$). Eşiğin (b) ayağı ("kâğıt dolumları iyimser")
+    ÇÜRÜTÜLEMEDİ; aksine E3 kötümser bandı (+5 bps/bacak) DA iyimser çıktı (~4,5×).
+  asil_bulgu: >
+    İKİ ÖLÇÜM ARIZASI ORTAYA ÇIKTI — ikisi de "varsayımı ölçüm sanmak" sınıfı:
+    (1) `trades.costs` GERÇEKLEŞEN FRİKSİYON DEĞİL: 97/97 satırda dolu (toplam 625,19$) ama 0/97'sinde
+    gerçek dolum var — alan iç modelin KENDİ slipaj dolarını taşıyor (broker.py:674). Bu alanı "ödediğimiz
+    friksiyon" diye okuyan her tüketici varsayımı ölçüm sanmıştır.
+    (2) İKİ `live_paper` işlemi (ALL, VLO) AYNADA HİÇ YOK — ne `mirror_orders`'da ne Alpaca emir
+    geçmişinde; fiyatları iç simülasyondan. Yani "gerçekleşen kâğıt-icra" saydığımız 2 işlem de
+    fiilen SİMÜLE. Gerçek broker dolumu YALNIZ 4 açık pozisyonun giriş bacağında var.
+    (3) `pessimistic_band_v2`ın `ampirik_bps: null, ampirik_n: 0` — bugüne dek hiç ölçülmemiş,
+    literatürden alınmış bir sayıymış. Bu kart o alanın İLK ampirik girdisini üretti (n=4).
+  sonuc: >
+    C+mb'nin GÖRECELİ üstünlüğü (EDG-035: yerel optimum) etkilenmez — tüm kollar aynı friksiyon
+    varsayımıyla ölçüldü. Ama MUTLAK kârlılık iddiası ("+20.685$") friksiyon varsayımına asılı ve o
+    varsayım ilk kez ölçüldüğünde ~9 kat iyimser çıktı. Faz-6 kilidinin kapalı olması ARIZA DEĞİL,
+    KORUMA — sistem tam da bu bilinmezlik için o kapıyı koymuş.
+  sonraki: >
+    ZORUNLU SIRA: (a) ÖRNEKLEM — çıkış bacağı dolumu HİÇ yok çünkü koruma emirleri `expired/canceled`
+    (ENTRY_TIF=day kelepçesi, broker.py:60-75); önce o kelepçe incelenmeli, yoksa round-trip friksiyon
+    ölçülemez · (b) n≥10 dolum çifti biriktikten sonra EDG-037 TEKRAR koşulur · (c) ancak o zaman
+    `goal.slippage_bps=5` ve `pessimistic_band_v2.ampirik_bps` ölçüye göre güncellenir · (d) replay
+    hükümleri (EDG-023..035) o güncellemeden SONRA yeniden okunmalı — hepsi 5 bps varsayımıyla üretildi.
+  artefakt: "research/olcumler/edg037_tca_2026-08-13/ (canli_ham.json sha16 f04339460837e21c, çekim 17:40Z; duyarlılık eğrisi sonuc.json'da)"

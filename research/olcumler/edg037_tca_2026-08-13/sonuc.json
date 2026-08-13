@@ -1,0 +1,732 @@
+{
+ "kart": "EDG-2026-037",
+ "kart_yolu": "research/cards/EDG-2026-037-tca-gercek-friksiyon.yaml",
+ "olcum_zamani": "2026-08-13T17:42:44+00:00",
+ "modul": "/Users/erdemozturk/AI-Trading/research/olcumler/edg037_tca_2026-08-13/olcum.py",
+ "ham_kanit": {
+  "dosya": "canli_ham.json",
+  "sha256_16": "cf1cf4262907ac64",
+  "cekim_zamani": "2026-08-13T17:41:05+00:00",
+  "cekim_betigi": "canli_cek.py (canlıda SALT-OKUMA, stdin deseni)"
+ },
+ "K_sayimi": "K += 0 — betimsel ölçüm, hipotez sınamıyor (kart parameter_grid: yok)",
+ "OZET_TABLO": {
+  "payda_kunyesi": {
+   "kullanilan_payda": "EMİR düzeyi (giriş bacağı) — kart features_asof izniyle kapanmış-işlemden genişletildi",
+   "eslesen_plan_dolum_cifti": 4,
+   "dolum_olayi": 9,
+   "cikis_bacagi_cifti": 0,
+   "dislanan_replay_seed": 95,
+   "dislanan_live_paper": 2,
+   "seans": "TEK seans — 2026-08-06 13:30-13:33Z (açılışın ilk 3 dakikası)"
+  },
+  "slipaj_giris_bps_vs_resmi_acilis": {
+   "n": 4,
+   "medyan": 35.374,
+   "ortalama": 55.064,
+   "p90": 110.528,
+   "min": 15.017,
+   "max": 134.49,
+   "agirlikli_ortalama": 44.849
+  },
+  "slipaj_cikis": "ÖLÇÜLEMEDİ (n=0) — 24 motor satış emri gönderildi, 0'ı doldu",
+  "replay_varsayimi_bps_bacak": 5,
+  "kotumser_bant_bps_bacak": 10.0,
+  "FARK_bps_bacak": {
+   "n": 4,
+   "medyan": 30.344,
+   "ortalama": 50.044,
+   "agirlikli_ortalama": 39.829,
+   "min": 10.005,
+   "max": 129.482
+  },
+  "FARK_dolar_dort_emirde": {
+   "gercek": 119.2156,
+   "model_ayni_adet": 13.3445,
+   "notional": 26581.12
+  },
+  "ucret_gercek_dolar": 0.01,
+  "pf": {
+   "S0_taban_replay_varsayimi": 1.1119,
+   "S1_gerceklesen_ORTALAMA_yalniz_giris": 0.8477,
+   "S2_gerceklesen_ORTALAMA_simetrik": 0.6585,
+   "S3_gerceklesen_MEDYAN_simetrik": 0.8018,
+   "S4_gerceklesen_NOTIONAL_AGIRLIKLI_simetrik": 0.7283,
+   "S5_E3_kotumser_bant_referans": 1.051,
+   "S6_gozlenen_EN_IYI_nokta_simetrik": 0.9944
+  },
+  "pf_basabas_ek_bps": {
+   "yalniz_giris": 19.0,
+   "simetrik": 9.49,
+   "anlami": "PF'i tam 1,0'a (başabaş) indiren EK friksiyon. Ölçülen fark bu sayının üstündeyse benimsenen paket friksiyon-düzeltilmiş hâlde PARA KAYBEDER."
+  },
+  "kill": {
+   "kill1_eslesen_cift_10_alti": true,
+   "kill2_replay_modeli_okunamadi": false,
+   "kill3_kagit_icra_replay_ayni_potada": false
+  }
+ },
+ "a_gerceklesen_slipaj": {
+  "payda_merdiveni": {
+   "1_kapanmis_islem": {
+    "n_toplam": 97,
+    "kaynak_dagilim": {
+     "replay_seed": 95,
+     "live_paper": 2
+    },
+    "live_paper_n": 2,
+    "gercek_dolumlu_n": 0,
+    "hüküm": "KULLANILAMAZ — `alpaca_fill_price` 0/97. İki `live_paper` satırının (ALL, VLO) aynada KARŞILIĞI YOK: mirror_orders'da ve Alpaca emir geçmişinde bu iki sembol hiç geçmiyor → fiyatları İÇ SİMÜLASYONDAN. Kapanmış-işlem paydası TCA'ya girmez (kart kill#3)."
+   },
+   "2_emir_duzeyi_GECERLI_PAYDA": {
+    "motor_emri_toplam": 28,
+    "motor_emri_dolan": 4,
+    "giris_bacagi_dolan": 4,
+    "cikis_bacagi_dolan": 0,
+    "acik_pozisyon_girisleri_dahil": true,
+    "beyan": "PAYDA GENİŞLETİLDİ (kart features_asof izniyle): kapanmış işlem yerine GÖNDERİLEN/DOLAN EMİR. Açık 4 pozisyonun (NUE/EMR/BKNG/AMGN) GİRİŞ bacakları paydaya DAHİL; bu dört isim hâlâ açık olduğu için çıkış bacakları henüz hiç dolmadı."
+   },
+   "3_dolum_olayi_duzeyi": {
+    "motor_dolum_olayi": 9,
+    "kismi": 5,
+    "tam": 4,
+    "beyan": "Alpaca `activities?activity_types=FILL` — bir emrin PARÇA dolumları ayrı satırdır; kısmi-dolum fiyat dağılımı yalnız burada görünür."
+   },
+   "dislanan": {
+    "replay_seed_islem": 95,
+    "replay_seed_neden": "simüle dolum — bu kartın ölçtüğü şeyin tam tersi (kart kill#3)",
+    "motor_disi_emir": 13,
+    "motor_disi_dolum": 1,
+    "motor_disi_neden": "operatörün kendi NVDA alımı + F üzerinde tatbikat/smoke emirleri (client_order_id plan kimliği DEĞİL) — motorun icrası sayılmaz"
+   }
+  },
+  "giris_bacagi": {
+   "emir_duzeyi": {
+    "satirlar": [
+     {
+      "ticker": "NUE",
+      "plan_id": "P-2026-08-05-NUE",
+      "date": "2026-08-05",
+      "qty_ayna": 25,
+      "fill_gercek": 273.9512,
+      "resmi_acilis": 273.51,
+      "entry_trigger": 274.57,
+      "limit": 285.5528,
+      "gap_at_submit": true,
+      "bps_vs_acilis_GERCEK": 16.131,
+      "bps_vs_tetik_GERCEK": -22.537,
+      "fill_ic_motor": 273.6478,
+      "qty_ic": 54,
+      "bps_vs_acilis_MODEL": 5.038,
+      "notional_gercek": 6848.78,
+      "fark_bps": 11.093,
+      "slipaj_dolar_GERCEK": 11.03,
+      "slipaj_dolar_MODEL_ayni_adet": 3.4449
+     },
+     {
+      "ticker": "EMR",
+      "plan_id": "P-2026-08-05-EMR",
+      "date": "2026-08-05",
+      "qty_ayna": 37,
+      "fill_gercek": 164.76,
+      "resmi_acilis": 163.865,
+      "entry_trigger": 162.16,
+      "limit": 168.6464,
+      "gap_at_submit": true,
+      "bps_vs_acilis_GERCEK": 54.618,
+      "bps_vs_tetik_GERCEK": 160.335,
+      "fill_ic_motor": 163.9473,
+      "qty_ic": 64,
+      "bps_vs_acilis_MODEL": 5.022,
+      "notional_gercek": 6096.12,
+      "fark_bps": 49.596,
+      "slipaj_dolar_GERCEK": 33.115,
+      "slipaj_dolar_MODEL_ayni_adet": 3.0448
+     },
+     {
+      "ticker": "BKNG",
+      "plan_id": "P-2026-08-05-BKNG",
+      "date": "2026-08-05",
+      "qty_ayna": 22,
+      "fill_gercek": 210.24,
+      "resmi_acilis": 207.45,
+      "entry_trigger": 207.03,
+      "limit": 215.3112,
+      "gap_at_submit": true,
+      "bps_vs_acilis_GERCEK": 134.49,
+      "bps_vs_tetik_GERCEK": 155.05,
+      "fill_ic_motor": 207.5539,
+      "qty_ic": 43,
+      "bps_vs_acilis_MODEL": 5.008,
+      "notional_gercek": 4625.28,
+      "fark_bps": 129.482,
+      "slipaj_dolar_GERCEK": 61.38,
+      "slipaj_dolar_MODEL_ayni_adet": 2.2856
+     },
+     {
+      "ticker": "AMGN",
+      "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+      "date": "2026-08-05",
+      "qty_ayna": 22,
+      "fill_gercek": 415.0073,
+      "resmi_acilis": 414.385,
+      "entry_trigger": 407.73,
+      "limit": 424.0392,
+      "gap_at_submit": true,
+      "bps_vs_acilis_GERCEK": 15.017,
+      "bps_vs_tetik_GERCEK": 178.483,
+      "fill_ic_motor": 414.5927,
+      "qty_ic": 33,
+      "bps_vs_acilis_MODEL": 5.012,
+      "notional_gercek": 9130.16,
+      "fark_bps": 10.005,
+      "slipaj_dolar_GERCEK": 13.6906,
+      "slipaj_dolar_MODEL_ayni_adet": 4.5692
+     }
+    ],
+    "GERCEK_vs_resmi_acilis_bps": {
+     "n": 4,
+     "medyan": 35.374,
+     "ortalama": 55.064,
+     "p90": 110.528,
+     "min": 15.017,
+     "max": 134.49,
+     "agirlikli_ortalama": 44.849,
+     "p90_serhi": "n=4 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+     "agirlik_tabani": "notional (adet × referans fiyat)",
+     "t_ci95": {
+      "ortalama": 55.064,
+      "sd": 56.06,
+      "se": 28.03,
+      "t": 4.303,
+      "lo": -65.549,
+      "hi": 175.677,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": 15.574,
+      "hi": 104.9,
+      "orta": 55.064,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN dört değeri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 4,
+      "lehte": 0,
+      "p_tek_kuyruk": 0.0625,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "GERCEK_vs_plan_tetigi_bps": {
+     "n": 4,
+     "medyan": 157.692,
+     "ortalama": 117.833,
+     "p90": 173.039,
+     "min": -22.537,
+     "max": 178.483,
+     "agirlikli_ortalama": null,
+     "p90_serhi": "n=4 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+     "serh": "GAP DAHİL — dördünde de `gap_at_submit=true`; gece boşluğu icra maliyeti değildir ve iç motor da aynı boşluğu öder. Friksiyon kıyası için AÇILIŞ tabanı kullanılır."
+    },
+    "FARK_gercek_eksi_model_bps": {
+     "n": 4,
+     "medyan": 30.344,
+     "ortalama": 50.044,
+     "p90": 105.516,
+     "min": 10.005,
+     "max": 129.482,
+     "agirlikli_ortalama": 39.829,
+     "p90_serhi": "n=4 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+     "agirlik_tabani": "notional (adet × referans fiyat)",
+     "t_ci95": {
+      "ortalama": 50.044,
+      "sd": 56.068,
+      "se": 28.034,
+      "t": 4.303,
+      "lo": -70.587,
+      "hi": 170.675,
+      "sifiri_iceriyor": true
+     },
+     "bootstrap_ci95": {
+      "lo": 10.549,
+      "hi": 99.885,
+      "orta": 50.044,
+      "n_iter": 20000,
+      "seed": 20260813,
+      "serh": "n<10'da bootstrap yalnız GÖZLENEN dört değeri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+     },
+     "isaret_testi": {
+      "n": 4,
+      "aleyhte": 4,
+      "lehte": 0,
+      "p_tek_kuyruk": 0.0625,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     }
+    },
+    "dolar": {
+     "slipaj_GERCEK_toplam": 119.2156,
+     "slipaj_MODEL_ayni_adet_toplam": 13.3445,
+     "notional_acilista": 26581.12
+    }
+   },
+   "dolum_olayi_duzeyi": {
+    "satirlar": [
+     {
+      "ts": "2026-08-06T13:30:13.483118Z",
+      "ticker": "BKNG",
+      "tip": "partial_fill",
+      "side": "buy",
+      "qty": "11",
+      "price": "210.41",
+      "coid": "P-2026-08-05-BKNG",
+      "resmi_acilis": 207.45,
+      "bps_vs_acilis": 142.685
+     },
+     {
+      "ts": "2026-08-06T13:30:43.479824Z",
+      "ticker": "EMR",
+      "tip": "partial_fill",
+      "side": "buy",
+      "qty": "36",
+      "price": "164.76",
+      "coid": "P-2026-08-05-EMR",
+      "resmi_acilis": 163.865,
+      "bps_vs_acilis": 54.618
+     },
+     {
+      "ts": "2026-08-06T13:30:51.300957Z",
+      "ticker": "NUE",
+      "tip": "partial_fill",
+      "side": "buy",
+      "qty": "15",
+      "price": "274.72",
+      "coid": "P-2026-08-05-NUE",
+      "resmi_acilis": 273.51,
+      "bps_vs_acilis": 44.24
+     },
+     {
+      "ts": "2026-08-06T13:30:59.932204Z",
+      "ticker": "AMGN",
+      "tip": "partial_fill",
+      "side": "buy",
+      "qty": "2",
+      "price": "417.48",
+      "coid": "P-2026-08-05-AMGN-momentum_burst",
+      "resmi_acilis": 414.385,
+      "bps_vs_acilis": 74.689
+     },
+     {
+      "ts": "2026-08-06T13:32:06.872629Z",
+      "ticker": "BKNG",
+      "tip": "fill",
+      "side": "buy",
+      "qty": "11",
+      "price": "210.07",
+      "coid": "P-2026-08-05-BKNG",
+      "resmi_acilis": 207.45,
+      "bps_vs_acilis": 126.295
+     },
+     {
+      "ts": "2026-08-06T13:32:20.943857Z",
+      "ticker": "EMR",
+      "tip": "fill",
+      "side": "buy",
+      "qty": "1",
+      "price": "164.76",
+      "coid": "P-2026-08-05-EMR",
+      "resmi_acilis": 163.865,
+      "bps_vs_acilis": 54.618
+     },
+     {
+      "ts": "2026-08-06T13:32:24.385894Z",
+      "ticker": "NUE",
+      "tip": "partial_fill",
+      "side": "buy",
+      "qty": "8",
+      "price": "272.82",
+      "coid": "P-2026-08-05-NUE",
+      "resmi_acilis": 273.51,
+      "bps_vs_acilis": -25.228
+     },
+     {
+      "ts": "2026-08-06T13:32:28.153863Z",
+      "ticker": "AMGN",
+      "tip": "fill",
+      "side": "buy",
+      "qty": "20",
+      "price": "414.76",
+      "coid": "P-2026-08-05-AMGN-momentum_burst",
+      "resmi_acilis": 414.385,
+      "bps_vs_acilis": 9.05
+     },
+     {
+      "ts": "2026-08-06T13:33:07.913388Z",
+      "ticker": "NUE",
+      "tip": "fill",
+      "side": "buy",
+      "qty": "2",
+      "price": "272.71",
+      "coid": "P-2026-08-05-NUE",
+      "resmi_acilis": 273.51,
+      "bps_vs_acilis": -29.249
+     }
+    ],
+    "GERCEK_vs_resmi_acilis_bps": {
+     "n": 9,
+     "medyan": 54.618,
+     "ortalama": 50.191,
+     "p90": 129.573,
+     "min": -29.249,
+     "max": 142.685,
+     "agirlikli_ortalama": 53.899,
+     "p90_serhi": "n=9 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+     "agirlik_tabani": "notional (adet × referans fiyat)",
+     "t_ci95": {
+      "ortalama": 50.191,
+      "sd": 59.909,
+      "se": 19.97,
+      "t": 2.365,
+      "lo": 2.962,
+      "hi": 97.419,
+      "sifiri_iceriyor": false
+     },
+     "isaret_testi": {
+      "n": 9,
+      "aleyhte": 7,
+      "lehte": 2,
+      "p_tek_kuyruk": 0.08984,
+      "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+     },
+     "KUMELENME_UYARISI": "Bu 9 gözlem BAĞIMSIZ DEĞİLDİR: 4 ebeveyn emir, 4 sembol, TEK seans (2026-08-06 13:30-13:33Z = açılışın ilk 3 dakikası). t-CI'nin sıfırı içermemesi bağımsızlık varsayımının ürünüdür; efektif örneklem 9 değil ~1 GÜNdür. Bu satır kuyruğu GÖSTERİR, hüküm TAŞIMAZ."
+    },
+    "acilis_tabani_yok_n": 0
+   }
+  },
+  "cikis_bacagi": {
+   "olculdu": false,
+   "n": 0,
+   "gonderilen_satis_emri": 24,
+   "dolan_satis_emri": 0,
+   "satis_dolum_olayi": 0,
+   "satis_emir_status_dagilim": {
+    "canceled": 12,
+    "expired": 4,
+    "held": 4,
+    "new": 4
+   },
+   "neden": "ÖLÇÜLEMEDİ (n=0): motorun gönderdiği HİÇBİR satış emri dolmadı. Koruma bacakları ya `expired` (2026-08-06 akşamı, ENTRY_TIF=day kelepçesi — broker.py:60-75 E1-v2 şerhi) ya `canceled` ya da hâlâ `new/held`. Dört pozisyon AÇIK. Çıkış slipajı için tek bir gözlem bile yok; sayı UYDURULMAZ.",
+   "sonuc_icin_anlami": "Round-trip friksiyonun YARISI ölçülmemiştir. Aşağıdaki PF düzeltmesi bu yüzden İKİ senaryo verir (yalnız-giriş / simetrik)."
+  },
+  "kill_bayraklari": {
+   "kill1_eslesen_cift_10_alti": {
+    "tetiklendi": true,
+    "n_cift": 4,
+    "esik": 10,
+    "hüküm_metni": "SLİPAJ ÖLÇÜLEMEDİ (n=4 < 10) — kart kill#1. Aşağıdaki sayılar BETİMLEYİCİdir; istatistiksel hüküm taşımaz."
+   },
+   "kill2_replay_modeli_okunamadi": {
+    "tetiklendi": false,
+    "not": "model koddan OKUNDU (alıntılar `replay_varsayimi`da)"
+   },
+   "kill3_kagit_icra_replay_ayni_potada": {
+    "tetiklendi": false,
+    "not": "95 `replay_seed` satırı ve 2 `live_paper` satırı TCA paydasından ÇIKARILDI; ölçüm YALNIZ broker'ın gerçek dolum kayıtları üstünde yapıldı."
+   }
+  }
+ },
+ "b_komisyon_ucret": {
+  "GERCEKLESEN": {
+   "kayit_tipleri_okundu": [
+    "FEE",
+    "CFEE",
+    "PTC"
+   ],
+   "FEE_n": 2,
+   "CFEE_n": 0,
+   "PTC_n": 0,
+   "kayitlar": [
+    {
+     "id": "20260806000000000::957c565e-980f-4d11-bb81-311e5fad545b",
+     "activity_type": "FEE",
+     "activity_sub_type": "CAT",
+     "date": "2026-08-06",
+     "created_at": "2026-08-07T00:05:13.300296Z",
+     "net_amount": "-0.01",
+     "description": "CAT fee for proceed of 9 trades on 2026-08-06 by PA30UAS6YY6Y",
+     "status": "executed",
+     "currency": "USD"
+    },
+    {
+     "id": "20260714000000000::492e462f-1ced-48b8-8a4b-08ac614abe94",
+     "activity_type": "FEE",
+     "activity_sub_type": "CAT",
+     "date": "2026-07-14",
+     "created_at": "2026-07-15T00:05:11.224575Z",
+     "net_amount": "-0.01",
+     "description": "CAT fee for proceed of 1 trades on 2026-07-14 by PA30UAS6YY6Y",
+     "status": "executed",
+     "currency": "USD"
+    }
+   ],
+   "toplam_dolar_hesap_omru": 0.02,
+   "motor_dolumlarina_atfedilen": 0.01,
+   "atif_gerekcesi": "2026-08-06 tarihli CAT ücreti — açıklaması 'proceed of 9 trades' ve o gün hesapta gerçekleşen 9 dolum olayının TAMAMI motorun giriş emirlerine ait (NVDA dolumu 2026-07-14'te, ayrı ücret kaydı var).",
+   "komisyon": {
+    "dolar": 0.0,
+    "kanit": "Alpaca kâğıt hesabında komisyon aktivitesi YOK; hisse senedi komisyonu 0$. Ücret yalnız düzenleyici CAT kalemi olarak göründü."
+   },
+   "bps_karsiligi": 0.0038,
+   "bps_karsiligi_taban": "motor giriş notional'ı 26581.12$"
+  },
+  "MODELIN_VARSAYIMI": {
+   "commission_per_share": 0.0,
+   "dolar": 0.0,
+   "kod": "meridian/broker.py:415 — `self.commission = commission_per_share`"
+  },
+  "costs_ALANI_UYARISI": {
+   "trades_costs_toplam": 625.19,
+   "costs_dolu_satir": 97,
+   "gercek_dolumlu_satir": 0,
+   "hüküm": "`costs` GERÇEKLEŞEN FRİKSİYON DEĞİLDİR. Defterin 97 satırının 97'sinde `costs` dolu ama 0'ında gerçek dolum fiyatı var → `costs` tamamen İÇ MODELİN kendi slipaj dolarıdır (broker.py:674). 625,19$'ı 'ödediğimiz friksiyon' diye okumak, varsayımı ölçüm sanmaktır.",
+   "iki_kez_kesme_uyarisi": "meridian/analytics.py:2079-2084 — `pnl_dollars` ZATEN NET; `costs` bilgi amaçlı, friksiyon İKİ KEZ kesilmez"
+  },
+  "OZET": "Gerçek ÜCRET tarafı ihmal edilebilir (hesap ömrü boyunca 0,02$; motora atfedilen 0,01$). Friksiyonun tamamı SLİPAJdır — komisyon/ücret PF tartışmasında gürültüdür."
+ },
+ "c_replay_varsayimi": {
+  "yururlukteki_model": {
+   "slippage_bps": 5,
+   "birim": "tek yön (bacak başına), fiyatın İÇİNE gömülü",
+   "round_trip_bps": 10.0,
+   "commission_per_share": 0.0,
+   "spread_bileseni": "AYRI BİR BİLEŞEN YOK — spread, `slippage_bps` içinde varsayılmış tek sayıya gömülüdür (goal.yaml:56-58 'frictions' bloğu)",
+   "likidite_bileseni": "meridian/broker.py:528 — `fill = base_fill * (1.0 + IMPACT_COEF * participation)`; IMPACT_COEF=0.10 (:19), ADV_CAP_PCT=0.02 (:18) → katılım tavanda bile ek etki ≤ 20 bps",
+   "kod_alintilari": {
+    "giris": "meridian/broker.py:515 — `base_fill = next_open * (1.0 + self.slip)`  # long: pay up (fixed component)",
+    "cikis": "meridian/broker.py:669 — `exit_fill = raw_exit * (1.0 - self.slip)`  # long exit: receive less",
+    "kismi_cikis": "meridian/broker.py:638 — `fill = level * (1.0 - self.slip)`  # scale-out (C+mb'de frac=0.0 → ölü yol)",
+    "slip_tanimi": "meridian/broker.py:414 — `self.slip = slippage_bps / 10000.0`",
+    "komisyon_tanimi": "meridian/broker.py:415 — `self.commission = commission_per_share`",
+    "likidite_etkisi": "meridian/broker.py:528 — `fill = base_fill * (1.0 + IMPACT_COEF * participation)`; IMPACT_COEF=0.10 (:19), ADV_CAP_PCT=0.02 (:18) → katılım tavanda bile ek etki ≤ 20 bps",
+    "costs_tanimi": "meridian/broker.py:674 — `costs = pos.entry_slippage_cost + exit_slip_dollars + exit_commission   # informational total friction`",
+    "net_uyarisi": "meridian/analytics.py:2079-2084 — `pnl_dollars` ZATEN NET; `costs` bilgi amaçlı, friksiyon İKİ KEZ kesilmez"
+   },
+   "goal_sha256_16": "0f0a7b4bd912d6bd"
+  },
+  "pessimistic_band_v2": {
+   "acilis_spread_bps": 20.0,
+   "mevcut_model_bps": 10.0,
+   "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+   "ampirik_bps": null,
+   "ampirik_n": 0,
+   "ampirik_guncelleme": null,
+   "yorum": "E3 KÖTÜMSER BANT (goal.yaml:96-112): açılış efektif spread 20 bps → tek yönde yarısı = 10 bps/bacak ödenir varsayımı. Yürürlükteki model 5 bps/bacak → kötümser bant EK 5 bps/bacak demektir. `ampirik_bps: null`, `ampirik_n: 0` — yani bu bant BUGÜNE DEK ÖLÇÜLMEMİŞ, literatürden alınmış bir varsayımdır. BU KART O ALANIN İLK AMPİRİK GİRDİSİNİ ÜRETİR (n çok küçük — aşağıda)."
+  },
+  "ayni_islemler_icin_ne_derdi": {
+   "kaynak": "state/entry_execution.jsonl — İÇ MOTOR (`motor: ic`) satırları, AYNI dört isim, AYNI seans, AYNI resmî açılış tabanı",
+   "olculen_bps": [
+    {
+     "ticker": "NUE",
+     "fill": 273.6478,
+     "resmi_acilis": 273.51,
+     "bps_vs_resmi_acilis": 5.038
+    },
+    {
+     "ticker": "EMR",
+     "fill": 163.9473,
+     "resmi_acilis": 163.865,
+     "bps_vs_resmi_acilis": 5.022
+    },
+    {
+     "ticker": "BKNG",
+     "fill": 207.5539,
+     "resmi_acilis": 207.45,
+     "bps_vs_resmi_acilis": 5.007
+    },
+    {
+     "ticker": "AMGN",
+     "fill": 414.5927,
+     "resmi_acilis": 414.385,
+     "bps_vs_resmi_acilis": 5.012
+    },
+    {
+     "ticker": "ALL",
+     "fill": 271.6386,
+     "resmi_acilis": 271.5,
+     "bps_vs_resmi_acilis": 5.104
+    },
+    {
+     "ticker": "VLO",
+     "fill": 304.0426,
+     "resmi_acilis": 303.89,
+     "bps_vs_resmi_acilis": null
+    }
+   ],
+   "totoloji_serhi": "İç motorun bps'i TANIM GEREĞİ `slippage_bps`i yeniden üretir (defterin kendi beyanı, VLO satırı: 'resmî açılışa göre bps tanımı gereği slippage_bps sabitini yeniden üretir — totoloji, ölçüm değil'). Burada bir ÖLÇÜM değil, VARSAYIMIN SAYISI okunmaktadır — kıyasın 'varsayılan' ayağı tam olarak budur."
+  }
+ },
+ "d_fark_ve_pf_etkisi": {
+  "taban_defter": {
+   "kaynak": "../edg032_final_paket_2026-08-12/islemler_cmb.json",
+   "n": 885,
+   "sha256_16": "d4033de68f6281a4",
+   "tarih_araligi": [
+    "2022-01-07",
+    "2026-07-24"
+   ]
+  },
+  "notional_turetme": {
+   "yontem": "giriş notional = qty × açılış(ts_open) × (1+slippage_bps/1e4) — motorun KENDİ dolum yasası (broker.py:515). çıkış notional = giriş notional + pnl_dollars — KİMLİK (komisyon 0 + scale_out_frac 0,0 → pnl = qty×(exit−entry)).",
+   "bar_kaynagi": "../edg032_final_paket_2026-08-12/state_cmb/bars",
+   "bar_bulunan": 885,
+   "bar_yok": 0,
+   "sadakat_sinamasi": {
+    "test_edilen": 885,
+    "gecen": 885,
+    "oran": 1.0,
+    "olcut": "türetilen çıkış fiyatı, ts_close barının [low×0,98 , high×1,02] aralığında mı"
+   },
+   "serh": "Likidite etkisi (IMPACT_COEF·katılım) notional'da İHMAL EDİLDİ — ADV tavanında bile ≤20 bps'lik bir fiyat farkı notional'ı %0,2 oynatır; PF hassasiyetini etkilemez. Bar bulunamayan satır düzeltmeden DÜŞER (uydurma yasağı) ve sayısı yukarıda beyanlıdır."
+  },
+  "olculen_fark_bps_bacak": {
+   "ortalama": 50.044,
+   "medyan": 30.344,
+   "notional_agirlikli": 39.829,
+   "n": 4,
+   "serh": "n=4 — bu sayı bir NOKTA TAHMİNİdir, dağılım değil"
+  },
+  "senaryolar": {
+   "S0_taban_replay_varsayimi": {
+    "aciklama": "EDG-032'nin yayınlanmış hâli — friksiyon = 5 bps/bacak (fiyata gömülü)",
+    "n": 885,
+    "brut_kazanc": 205552.44,
+    "brut_kayip": -184867.75,
+    "net": 20684.69,
+    "pf": 1.1119
+   },
+   "S1_gerceklesen_ORTALAMA_yalniz_giris": {
+    "ek_bps_bacak": 50.044,
+    "bacak": "giris",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 187956.23,
+    "brut_kayip": -221720.3,
+    "net": -33764.07,
+    "pf": 0.8477,
+    "kazanan_n": 304,
+    "kaybeden_n": 581,
+    "aciklama": "ölçülen ortalama FARK yalnız giriş bacağına — çıkış bacağı ölçülmediği için muhafazakâr (alt sınır) senaryo"
+   },
+   "S2_gerceklesen_ORTALAMA_simetrik": {
+    "ek_bps_bacak": 50.044,
+    "bacak": "her_iki",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 170283.71,
+    "brut_kayip": -258600.06,
+    "net": -88316.35,
+    "pf": 0.6585,
+    "kazanan_n": 286,
+    "kaybeden_n": 599,
+    "aciklama": "aynı fark her iki bacağa — VARSAYIM: çıkış bacağı girişe benzer davranır (ÖLÇÜLMEDİ; n=0)"
+   },
+   "S3_gerceklesen_MEDYAN_simetrik": {
+    "ek_bps_bacak": 30.344,
+    "bacak": "her_iki",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 183694.39,
+    "brut_kayip": -229102.09,
+    "net": -45407.7,
+    "pf": 0.8018,
+    "kazanan_n": 301,
+    "kaybeden_n": 584,
+    "aciklama": "medyan fark (uç gözlem BKNG'nin etkisi kırpılmış), simetrik"
+   },
+   "S4_gerceklesen_NOTIONAL_AGIRLIKLI_simetrik": {
+    "ek_bps_bacak": 39.829,
+    "bacak": "her_iki",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 177127.52,
+    "brut_kayip": -243194.54,
+    "net": -66067.02,
+    "pf": 0.7283,
+    "kazanan_n": 292,
+    "kaybeden_n": 593,
+    "aciklama": "notional-ağırlıklı fark, simetrik — dolar etkisine en yakın okuma"
+   },
+   "S5_E3_kotumser_bant_referans": {
+    "ek_bps_bacak": 5.0,
+    "bacak": "her_iki",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 201855.78,
+    "brut_kayip": -192061.61,
+    "net": 9794.17,
+    "pf": 1.051,
+    "kazanan_n": 320,
+    "kaybeden_n": 565,
+    "aciklama": "goal.pessimistic_band_v2'nin varsaydığı EK 5 bps/bacak — bu kart ÖNCESİ elimizdeki en kötümser sayı; kıyas çıpası"
+   },
+   "S6_gozlenen_EN_IYI_nokta_simetrik": {
+    "ek_bps_bacak": 10.005,
+    "bacak": "her_iki",
+    "n": 885,
+    "atlanan_bar_yok": 0,
+    "brut_kazanc": 198200.51,
+    "brut_kayip": -199307.75,
+    "net": -1107.24,
+    "pf": 0.9944,
+    "kazanan_n": 312,
+    "kaybeden_n": 573,
+    "aciklama": "dört gözlemin EN LEHTE olanı (AMGN) her iki bacağa — 'en iyimser okuma bile ne yapar' sınaması; sonucun tek bir uç gözleme (BKNG) dayanmadığını gösterir"
+   }
+  },
+  "duyarlilik_egrisi_pf": {
+   "yalniz_giris": {
+    "0": 1.1119,
+    "2.5": 1.0962,
+    "5": 1.0809,
+    "7.5": 1.0658,
+    "10": 1.051,
+    "15": 1.0223,
+    "20": 0.9946,
+    "30": 0.9422,
+    "40": 0.8934,
+    "50": 0.8479,
+    "75": 0.7466,
+    "100": 0.6604
+   },
+   "simetrik": {
+    "0": 1.1119,
+    "2.5": 1.0809,
+    "5": 1.051,
+    "7.5": 1.0222,
+    "10": 0.9945,
+    "15": 0.942,
+    "20": 0.893,
+    "30": 0.8046,
+    "40": 0.7271,
+    "50": 0.6588,
+    "75": 0.5196,
+    "100": 0.414
+   },
+   "birim": "anahtar = EK bps/bacak (yürürlükteki 5 bps'in ÜSTÜNE)",
+   "not": "PF ek friksiyonda MONOTON AZALANDIR — hiçbir friksiyon varsayımı 1,1119'un üstüne çıkaramaz; eşik tartışması yalnız 'ne kadar aşağıda' sorusudur"
+  },
+  "basabas_ek_bps_bacak": {
+   "yalniz_giris": 19.0,
+   "simetrik": 9.49,
+   "anlami": "PF'i tam 1,0'a (başabaş) indiren EK friksiyon. Ölçülen fark bu sayının üstündeyse benimsenen paket friksiyon-düzeltilmiş hâlde PARA KAYBEDER."
+  },
+  "esik_baglami": {
+   "RESULT_PF_MIN": 1.3,
+   "kod": "meridian/analytics.py:2089-2093",
+   "esigin_b_ayagi": "\"Alpaca paper dolumları iyimser — Y2/TCA hâlâ ölçülmedi\"",
+   "not": "Bu kart HÜKÜM VERMEZ. Yukarıdaki senaryolar eşik tartışmasının GİRDİSİdir."
+  }
+ },
+ "HUKUM": "YOK — bu kart eşiği DEĞİŞTİRMEZ (kart success_metric). Ürün: sayı + künye + fark."
+}

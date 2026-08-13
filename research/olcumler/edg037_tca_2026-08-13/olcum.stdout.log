@@ -1,0 +1,180 @@
+YAZILDI: /Users/erdemozturk/AI-Trading/research/olcumler/edg037_tca_2026-08-13/sonuc.json
+
+== GİRİŞ BACAĞI · GERÇEK slipaj (resmî açılışa göre, bps) ==
+{
+ "n": 4,
+ "medyan": 35.374,
+ "ortalama": 55.064,
+ "p90": 110.528,
+ "min": 15.017,
+ "max": 134.49,
+ "agirlikli_ortalama": 44.849,
+ "p90_serhi": "n=4 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+ "agirlik_tabani": "notional (adet × referans fiyat)",
+ "t_ci95": {
+  "ortalama": 55.064,
+  "sd": 56.06,
+  "se": 28.03,
+  "t": 4.303,
+  "lo": -65.549,
+  "hi": 175.677,
+  "sifiri_iceriyor": true
+ },
+ "bootstrap_ci95": {
+  "lo": 15.574,
+  "hi": 104.9,
+  "orta": 55.064,
+  "n_iter": 20000,
+  "seed": 20260813,
+  "serh": "n<10'da bootstrap yalnız GÖZLENEN dört değeri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+ },
+ "isaret_testi": {
+  "n": 4,
+  "aleyhte": 4,
+  "lehte": 0,
+  "p_tek_kuyruk": 0.0625,
+  "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+ }
+}
+
+== FARK (gerçek − replay varsayımı), bps/bacak ==
+{
+ "n": 4,
+ "medyan": 30.344,
+ "ortalama": 50.044,
+ "p90": 105.516,
+ "min": 10.005,
+ "max": 129.482,
+ "agirlikli_ortalama": 39.829,
+ "p90_serhi": "n=4 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+ "agirlik_tabani": "notional (adet × referans fiyat)",
+ "t_ci95": {
+  "ortalama": 50.044,
+  "sd": 56.068,
+  "se": 28.034,
+  "t": 4.303,
+  "lo": -70.587,
+  "hi": 170.675,
+  "sifiri_iceriyor": true
+ },
+ "bootstrap_ci95": {
+  "lo": 10.549,
+  "hi": 99.885,
+  "orta": 50.044,
+  "n_iter": 20000,
+  "seed": 20260813,
+  "serh": "n<10'da bootstrap yalnız GÖZLENEN dört değeri yeniden örnekler — dağılım varsayımı yok ama bilgi de yok; genişlik betimleyicidir"
+ },
+ "isaret_testi": {
+  "n": 4,
+  "aleyhte": 4,
+  "lehte": 0,
+  "p_tek_kuyruk": 0.0625,
+  "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+ }
+}
+
+== ÇIKIŞ BACAĞI ==
+{
+ "olculdu": false,
+ "n": 0,
+ "gonderilen_satis_emri": 24,
+ "dolan_satis_emri": 0,
+ "satis_dolum_olayi": 0,
+ "satis_emir_status_dagilim": {
+  "canceled": 12,
+  "expired": 4,
+  "held": 4,
+  "new": 4
+ },
+ "neden": "ÖLÇÜLEMEDİ (n=0): motorun gönderdiği HİÇBİR satış emri dolmadı. Koruma bacakları ya `expired` (2026-08-06 akşamı, ENTRY_TIF=day kelepçesi — broker.py:60-75 E1-v2 şerhi) ya `canceled` ya da hâlâ `new/held`. Dört pozisyon AÇIK. Çıkış slipajı için tek bir gözlem bile yok; sayı UYDURULMAZ.",
+ "sonuc_icin_anlami": "Round-trip friksiyonun YARISI ölçülmemiştir. Aşağıdaki PF düzeltmesi bu yüzden İKİ senaryo verir (yalnız-giriş / simetrik)."
+}
+
+== KILL ==
+{
+ "kill1_eslesen_cift_10_alti": {
+  "tetiklendi": true,
+  "n_cift": 4,
+  "esik": 10,
+  "hüküm_metni": "SLİPAJ ÖLÇÜLEMEDİ (n=4 < 10) — kart kill#1. Aşağıdaki sayılar BETİMLEYİCİdir; istatistiksel hüküm taşımaz."
+ },
+ "kill2_replay_modeli_okunamadi": {
+  "tetiklendi": false,
+  "not": "model koddan OKUNDU (alıntılar `replay_varsayimi`da)"
+ },
+ "kill3_kagit_icra_replay_ayni_potada": {
+  "tetiklendi": false,
+  "not": "95 `replay_seed` satırı ve 2 `live_paper` satırı TCA paydasından ÇIKARILDI; ölçüm YALNIZ broker'ın gerçek dolum kayıtları üstünde yapıldı."
+ }
+}
+
+== DOLUM-OLAYI DÜZEYİ (n=9) ==
+{
+ "n": 9,
+ "medyan": 54.618,
+ "ortalama": 50.191,
+ "p90": 129.573,
+ "min": -29.249,
+ "max": 142.685,
+ "agirlikli_ortalama": 53.899,
+ "p90_serhi": "n=9 — p90 pratikte maksimuma eşittir, dağılım kuyruğu ÖLÇÜLMEDİ",
+ "agirlik_tabani": "notional (adet × referans fiyat)",
+ "t_ci95": {
+  "ortalama": 50.191,
+  "sd": 59.909,
+  "se": 19.97,
+  "t": 2.365,
+  "lo": 2.962,
+  "hi": 97.419,
+  "sifiri_iceriyor": false
+ },
+ "isaret_testi": {
+  "n": 9,
+  "aleyhte": 7,
+  "lehte": 2,
+  "p_tek_kuyruk": 0.08984,
+  "yorum": "H0: dolumun tabanın üstünde/altında olması eşit olasılıklı (p=0,5)"
+ },
+ "KUMELENME_UYARISI": "Bu 9 gözlem BAĞIMSIZ DEĞİLDİR: 4 ebeveyn emir, 4 sembol, TEK seans (2026-08-06 13:30-13:33Z = açılışın ilk 3 dakikası). t-CI'nin sıfırı içermemesi bağımsızlık varsayımının ürünüdür; efektif örneklem 9 değil ~1 GÜNdür. Bu satır kuyruğu GÖSTERİR, hüküm TAŞIMAZ."
+}
+
+== PAYDA MERDİVENİ ==
+  1_kapanmis_islem: {"n_toplam": 97, "kaynak_dagilim": {"replay_seed": 95, "live_paper": 2}, "live_paper_n": 2, "gercek_dolumlu_n": 0}
+  2_emir_duzeyi_GECERLI_PAYDA: {"motor_emri_toplam": 28, "motor_emri_dolan": 4, "giris_bacagi_dolan": 4, "cikis_bacagi_dolan": 0, "acik_pozisyon_girisleri_dahil": true}
+  3_dolum_olayi_duzeyi: {"motor_dolum_olayi": 9, "kismi": 5, "tam": 4}
+  dislanan: {"replay_seed_islem": 95, "motor_disi_emir": 13, "motor_disi_dolum": 1}
+
+== ÜCRET ==
+{
+ "kayit_tipleri_okundu": [
+  "FEE",
+  "CFEE",
+  "PTC"
+ ],
+ "FEE_n": 2,
+ "CFEE_n": 0,
+ "PTC_n": 0,
+ "toplam_dolar_hesap_omru": 0.02,
+ "motor_dolumlarina_atfedilen": 0.01,
+ "atif_gerekcesi": "2026-08-06 tarihli CAT ücreti — açıklaması 'proceed of 9 trades' ve o gün hesapta gerçekleşen 9 dolum olayının TAMAMI motorun giriş emirlerine ait (NVDA dolumu 2026-07-14'te, ayrı ücret kaydı var).",
+ "komisyon": {
+  "dolar": 0.0,
+  "kanit": "Alpaca kâğıt hesabında komisyon aktivitesi YOK; hisse senedi komisyonu 0$. Ücret yalnız düzenleyici CAT kalemi olarak göründü."
+ },
+ "bps_karsiligi": 0.0038,
+ "bps_karsiligi_taban": "motor giriş notional'ı 26581.12$"
+}
+
+== PF SENARYOLARI ==
+  S0_taban_replay_varsayimi                  pf=1.1119  net=20684.69  (+205552.44 / -184867.75)
+  S1_gerceklesen_ORTALAMA_yalniz_giris       pf=0.8477  net=-33764.07  (+187956.23 / -221720.3)
+  S2_gerceklesen_ORTALAMA_simetrik           pf=0.6585  net=-88316.35  (+170283.71 / -258600.06)
+  S3_gerceklesen_MEDYAN_simetrik             pf=0.8018  net=-45407.7  (+183694.39 / -229102.09)
+  S4_gerceklesen_NOTIONAL_AGIRLIKLI_simetrik pf=0.7283  net=-66067.02  (+177127.52 / -243194.54)
+  S5_E3_kotumser_bant_referans               pf=1.051  net=9794.17  (+201855.78 / -192061.61)
+  S6_gozlenen_EN_IYI_nokta_simetrik          pf=0.9944  net=-1107.24  (+198200.51 / -199307.75)
+  başabaş ek bps/bacak: {'yalniz_giris': 19.0, 'simetrik': 9.49, 'anlami': "PF'i tam 1,0'a (başabaş) indiren EK friksiyon. Ölçülen fark bu sayının üstündeyse benimsenen paket friksiyon-düzeltilmiş hâlde PARA KAYBEDER."}
+  duyarlılık (simetrik): {0: 1.1119, 2.5: 1.0809, 5: 1.051, 7.5: 1.0222, 10: 0.9945, 15: 0.942, 20: 0.893, 30: 0.8046, 40: 0.7271, 50: 0.6588, 75: 0.5196, 100: 0.414}
+  duyarlılık (yalnız giriş): {0: 1.1119, 2.5: 1.0962, 5: 1.0809, 7.5: 1.0658, 10: 1.051, 15: 1.0223, 20: 0.9946, 30: 0.9422, 40: 0.8934, 50: 0.8479, 75: 0.7466, 100: 0.6604}
+  notional sadakat: {'test_edilen': 885, 'gecen': 885, 'oran': 1.0, 'olcut': 'türetilen çıkış fiyatı, ts_close barının [low×0,98 , high×1,02] aralığında mı'}
