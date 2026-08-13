@@ -1649,6 +1649,14 @@ karar penceresinin UYGULANMASI, `max_drawdown` operatör kararı, tohum yenileme
 v237-v243 dağıtımları vardı; hepsi yalnız §2 maddelerinin İÇİNDE yaşıyordu ve §2 temizlenince
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§1'de.)_
 
+- **2026-08-14 C6 UZLAŞTIRILDI → 15c ASKISI KALKTI:** "evren mi ısı mı bağlıyor" çelişki DEĞİLmiş — huninin iki katı (seans düzeyi %99,55 evren · plan düzeyi 607/607 heat_hard). 15c'nin başarı ölçütü "daha çok işlem" DEĞİL, işlem-başı R + sharpe. `docs/UZLASTIRMA-C6-EVREN-MI-ISI-MI-2026-08-14.md`.
+- **2026-08-14 WP7-24b ÖLÇÜLDÜ, TEŞHİS DEĞİŞTİ:** kilitli olan araç değil SKILL YOLU — model 202 kez araç çağırmış ama %85'i ham dosya araması, `skill_view` yalnız 5 (%2,5). SOUL düzeltmesi bir KESİNTİNİN içine indi (o gün 550× 404), o yüzden hâlâ sınanmadı. Ayrıca `tool_calls` yapısal −1 (`-Q` özeti bastırıyor) → Meridian kendi defterinden bunu ölçemiyor. `docs/OLCUM-WP7-24B-SKILL-CAGRI-IZI-2026-08-14.md`.
+- **2026-08-14 EDG-2026-041 (28a görünmez süzgeç) ÖLÇÜLDÜ + hüküm D1+D2:** korkuluk körlükten değil AYRIMSIZLIKTAN kesiyormuş — `bg_regime` 47/47'de biliniyordu (hepsi `chop`), 46/47 yeniden yazılabilir. Ret yerine `x@<certified>`e çivileme; korkuluk bozulmuyor, güçleniyor.
+- **2026-08-14 BEYİN ZİNCİRİ OPENROUTER'A TAŞINDI:** `tencent/hy3:free` OpenRouter kataloğunda HİÇ YOKMUŞ (411 model) — 24 saatte 33/33 boş, çağrıların %46'sı. Zincir artık `nemotron-3-ultra:free` → `gpt-oss-20b:free` (ikisi de ücretsiz), `same_model_ids` İLK KEZ boş. `--provider` yönlendirmesi v244'te; `model.provider auto` alternatifi CANLIDA ÇÜRÜTÜLDÜ (çalışan gemini ayağını da düşürdü).
+- **2026-08-14 ALARM GÜRÜLTÜSÜ KÖKÜ (v244):** `intraday_gap_detected` günde 408 = uyarıların %68'i ve 15/15 örneklemle **IEX seyrekliği**, arıza değil (LMT 13:34-37: iex boş, sip dolu). `tur="sembol"` bilgi seviyesine indi, `tur="akis"` warn kaldı. Aynı kök TCA ölçütünü de bozmuştu — besleme kimliği bir ÖLÇÜT KÜNYESİDİR.
+- **2026-08-14 PANO TIKANIKLIĞI KÖKÜ (v243):** tohum yenilemesi `recompute.report()` içindeki bar okumasını 95→400 çağrıya çıkarmış; `parity_report` canlıda 17,4→7,8 sn (soğuk) / 11,9→2,1 sn (sıcak), sayfa artık teşhis ucunu BEKLEMİYOR.
+- **2026-08-14 dagit [1c] EKLENDİ:** birim dosyası repoda değişip `/etc/systemd/system`e kurulmayınca ayar SESSİZCE ETKİSİZ kalıyordu (aynı gece yaşandı: `MERIDIAN_AGENT_RPD=600`). Kapı yönerge-düzeyinde fark söyler, kurmaz — kurulum bakım penceresinin işi.
+
 - **2026-08-13 ROADMAP YENİDEN YAPILANDIRMA (operatör talebi; denetim `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md`):**
   12 harfli WP → **WP1-WP11 numaralı ad** (eski adlar "(eski: …)" ile korunur) · **§2 öneri havuzu
   BOŞALTILDI** (29 kalem: 20'si WP'ye taşındı gövde-AYNEN, 9'u + 5 alt-kalem §6 arşive) · dokuz bayat
