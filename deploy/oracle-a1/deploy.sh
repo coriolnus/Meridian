@@ -116,6 +116,18 @@ sudo cp deploy/oracle-a1/meridian-sprint@.service       /etc/systemd/system/meri
 # meridian.service `Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl` (tetiği sudo'suz yapar).
 sudo cp deploy/oracle-a1/50-meridian-sprint.rules       /etc/polkit-1/rules.d/50-meridian-sprint.rules
 sudo systemctl restart polkit
+# HERMES BRİFİNGİ (SOUL.md) — v242, 2026-08-13. tick-watchdog ve polkit ile AYNI SINIF: dosya
+# CANLIDA elle kurulmuştu ve depoda YOKTU, yani taze bir kurulum beyni brifingsiz açardı (ya da
+# eski bir kopya elde kalırdı). Brifing ölçülebilir davranış üretir: 2026-08-13'te içindeki
+# "araç çağrısı … yok" satırı ÇIKTI BİÇİMİNE daraltıldı çünkü bir üstteki maddenin ("skill'in
+# SKILL.md'sini oku") tek uygulama yolunu yasaklıyordu — ölçüm: 1.113 oturumda %1,1 skill aracı
+# çağrısı (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md). ÜZERİNE YAZMAZ: varsa yedeklenir.
+if [ -f deploy/hermes/SOUL.md ]; then
+  mkdir -p "$HOME/.hermes"
+  [ -f "$HOME/.hermes/SOUL.md" ] && cp "$HOME/.hermes/SOUL.md" "$HOME/.hermes/SOUL.md.bak-$(date -u +%Y%m%d%H%M)"
+  cp deploy/hermes/SOUL.md "$HOME/.hermes/SOUL.md"
+  echo "-- hermes brifingi kuruldu: ~/.hermes/SOUL.md"
+fi
 # ÇALIŞTIRMA BİTİ: rsync tabanlı dağıtım (dagit.sh / push_code_a1.sh) izinleri her zaman
 # taşımayabilir; `Type=oneshot` bir ExecStart çalıştırılamazsa birim 203/EXEC ile düşer ve bekçi
 # SESSİZCE ölür. Her koşuda garanti altına alınır (`.dash.env` izin sabitlemesiyle aynı sınıf).
