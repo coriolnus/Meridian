@@ -159,11 +159,17 @@ def test_agent_skill_sync_links_enabled_prunes_stale_spares_alien(tmp_path, monk
     (agent / "yabanci-builtin").mkdir()                                   # ajanın kendi dizini (link değil)
     os.symlink(repo / disabled, agent / disabled)                         # bayat: devre-dışı ama linkli
     out = hermes.sync_agent_skills()
-    assert out["enabled"] == len(enabled) and len(out["linked"]) == len(enabled)
+    # ALAN ADI GÜNCELLENDİ (v242, 2026-08-13): dönüşteki `linked` → `yeni_baglanan`. İDDİA
+    # DEĞİŞMEDİ, ADI DEĞİŞTİ — eski ad `agent_skill_coverage()`teki `linked` ile ÇAKIŞIYORDU
+    # (biri "o senkronda YENİ kurulan", öteki "bağlı TOPLAM") ve canlı bir denetim tam bu yüzden
+    # `linked: 4`ü "30'un yalnız 4'ü bağlı" diye okudu. Alt satırdaki `cov["linked"]` BİLEREK
+    # dokunulmadan bırakıldı: pano onu okuyor ve orada anlamı zaten toplamdır.
+    assert out["enabled"] == len(enabled) and len(out["yeni_baglanan"]) == len(enabled)
     assert disabled in out["pruned"]                                      # kapalı skill ajandan söküldü
     assert (agent / "yabanci-builtin").exists()                           # yabancı dizin kutsal
     cov = hermes.agent_skill_coverage()
     assert cov["linked"] == cov["enabled"] and cov["stale_linked"] == 0 and cov["missing"] == []
+    assert out["bagli_toplam"] == cov["linked"]                           # iki yüzey aynı sayıyı der
 
 
 def test_skill_preload_sets_are_curated_and_capped():

@@ -17,7 +17,11 @@ import time
 
 from . import config, store, memory, reflect, health, obs, secrets
 # 2026-08-13 (v238): şema enum'unun TEK kaynağı için modül düzeyinde gerekli (aşağıda
-# HYP_SCHEMA sabit bir sözlük). Döngü YOK: `skills` yalnız `config`+`store` çeker.
+# HYP_SCHEMA sabit bir sözlük). Döngü YOK: `skills` MODÜL DÜZEYİNDE yalnız `config`+`store` çeker.
+# v242 NOTU (2026-08-13): `skills.catalog()` artık ÇAĞRI ANINDA buraya geri bakıyor
+# (`skills._ajan_skill_dizini` → `AGENT_SKILLS_DIR`) — ajan kullanım sayacının yolu TEK yerde
+# tanımlı kalsın diye. Bu bir modül-düzeyi döngüsü DEĞİLDİR (geç ithal + `getattr` savunması);
+# yukarıdaki cümlenin koruduğu özellik — skills'in modül düzeyinde hermes'i çekmemesi — DURUYOR.
 from . import skills as _skills
 from . import agent_telemetry as _at        # D3 modül 1+2: çağrı telemetrisi + ham iz + MASKELEME
 
@@ -1931,7 +1935,8 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
             except subprocess.TimeoutExpired as e:
                 _at.kaydet(kind=kind, model=model, deneme=deneme, alt=alt, sure_ms=kr.dur(),
                            sonuc_sinifi=_at.SINIF_ZAMAN_ASIMI, returncode=None,
-                           arac_cagri_n=None, on_yukleme_n=len(preload), istem=prompt,
+                           arac_cagri_n=None, on_yukleme_n=len(preload),
+                           on_yukleme=list(preload), istem=prompt,
                            stdout=(e.stdout if isinstance(e.stdout, str) else None),
                            stderr=(e.stderr if isinstance(e.stderr, str) else None),
                            zaman_asimi_s=timeout)
@@ -1945,7 +1950,12 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                    sonuc_sinifi=sinif, returncode=out_.returncode,
                    # -1 = ÖLÇÜLEMEDİ (`-Q` özeti bastırır) → deftere None yazılır, 0 DEĞİL.
                    arac_cagri_n=(tc if tc >= 0 else None),
-                   on_yukleme_n=len(preload), istem=prompt,
+                   # ADLAR DA YAZILIR (v242, 2026-08-13 — GERİLEME ONARIMI): `on_yukleme_n` tek
+                   # başına "kaç skill" der, "hangileri" demez. Onarımın tam gerekçesi ve hacim
+                   # ölçümü `agent_telemetry.skill_adlari` üstündeki blokta. `preload` bu kapanışta
+                   # GEÇ okunur ve bu bilinçlidir: ön-uçuş onarımı (`Unknown skill(s)`) listeyi
+                   # KÜÇÜLTEBİLİR ve deftere gerçekten GÖNDERİLEN liste yazılmalıdır, istenen değil.
+                   on_yukleme_n=len(preload), on_yukleme=list(preload), istem=prompt,
                    stdout=out_.stdout, stderr=out_.stderr)
 
     for attempt, model in enumerate(models):
@@ -2012,7 +2022,17 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
                    sinif=(_at.SINIF_YAPILANDIRMASIZ if unconf
                           else (_at.SINIF_BOS if empty else _at.SINIF_DOLU)))
-        obs.log("agent_call", kind=kind, preloaded=len(preload), model=model or "varsayılan",
+        # SKILL ADLARI GERİ GELDİ (v242, 2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL.
+        # 2026-07-20'ye kadar `nous_call_skills` olayı çağrı başına `names: [...]` tam listesini
+        # yazıyordu; `_agent_call` yeniden yazılırken liste `preloaded: <sayı>`ya çöktü ve bir daha
+        # geri gelmedi (kanıt + hacim ölçümü: `agent_telemetry.skill_adlari` üstündeki blok,
+        # docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §2.4). `preloaded` SİLİNMEDİ: bugünkü
+        # okuyucular sayıyı okumaya devam etsin, yeni alan onun YANINA gelsin.
+        _sk_adlar, _sk_kirpildi = _at.skill_adlari(preload)
+        obs.log("agent_call", kind=kind, preloaded=len(preload), skills=_sk_adlar,
+                # Kırpılan sayı HER SATIRDA yazılır (0 olsa bile): alanın yokluğu bu depoda
+                # "sıfır sanılır" sınıfına giriyor (bkz. `agent_tooluse.json` `olculemeyen` dersi).
+                skills_kirpildi_n=_sk_kirpildi, model=model or "varsayılan",
                 attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf),
                 # SÜRE OLAYA DA KONUR (D3 modül 1): `agent_calls.jsonl` tam ölçümü taşır ama olay
                 # defterini tek başına okuyan biri (canlı journal takibi) süreyi orada da görmeli —
@@ -2896,25 +2916,21 @@ def register_pool_key(provider: str, api_key: str, label: str = "meridian") -> d
         return {"ok": False, "detail": f"hata ({type(e).__name__})"}
 
 
-def sync_agent_skills() -> dict:
-    """Yerel ajanın skill seti = Meridian'ın ENABLED seti — birebir. İki yönde eşitler:
-    (1) etkin olup linklenmemiş skill'ler symlink'lenir; (2) Meridian'ın DEVRE DIŞI bıraktığı ya da
-    silinen skill'lerin linkleri sökülür (canlıda yakalanan kusur: 8 kapalı skill ajanda hâlâ
-    aktifti — motorun 'kenar yok' dediği bilgiyle ajan düşünmeye devam ediyordu). YALNIZ bizim
-    repoya çözümlenen symlink'lere dokunulur — ajanın kendi builtin klasörleri kutsaldır."""
-    from . import skills as _sk
-    repo = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills")
-    enabled = {s2["name"] for s2 in _sk.catalog() if s2.get("enabled")}
-    os.makedirs(AGENT_SKILLS_DIR, exist_ok=True)
-    linked, pruned = [], []
+def _agent_skill_plani(repo: str, enabled: set) -> tuple[list, list]:
+    """Ajan skill dizininde YAPILACAK değişikliğin PLANI: (bağlanacak, sökülecek). UYGULAMAZ.
+
+    NEDEN AYRI FONKSİYON (v242, 2026-08-13): kum havuzu yolu "ne OLURDU"yu deftere yazmak zorunda
+    (aşağıda, fail-visible) ama uygulamamalı. Planı `sync_agent_skills` içinde bir kez, burada bir
+    kez yazmak `_kur_kum_havuzu`nun kendi gerekçesindeki hatanın aynısı olurdu — aynı yasanın iki
+    uygulaması sessizce ayrışır ve ayrışan taraf ölçümü yalanlar. Tek tarama, iki tüketici."""
+    baglanacak, sokulecek = [], []
     for name in sorted(enabled):
-        src, dst = os.path.join(repo, name), os.path.join(AGENT_SKILLS_DIR, name)
-        if os.path.isdir(src) and not os.path.exists(dst):
-            try:
-                os.symlink(src, dst); linked.append(name)
-            except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
-                pass
-    for entry in os.listdir(AGENT_SKILLS_DIR):
+        if os.path.isdir(os.path.join(repo, name)) and not os.path.exists(os.path.join(AGENT_SKILLS_DIR, name)):
+            baglanacak.append(name)
+    if not os.path.isdir(AGENT_SKILLS_DIR):
+        return baglanacak, sokulecek                   # dizin YOK: sökülecek bir şey de yok
+    kok = os.path.realpath(repo)
+    for entry in sorted(os.listdir(AGENT_SKILLS_DIR)):
         dst = os.path.join(AGENT_SKILLS_DIR, entry)
         if not os.path.islink(dst):
             continue                                   # ajanın kendi dizinleri — dokunma
@@ -2922,19 +2938,116 @@ def sync_agent_skills() -> dict:
             target = os.path.realpath(dst)
         except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
             continue
-        if target.startswith(os.path.realpath(repo)) and entry not in enabled:
-            try:
-                os.unlink(dst); pruned.append(entry)
-            except OSError:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
-                pass
-    out = {"enabled": len(enabled), "linked": linked, "pruned": pruned}
+        if target.startswith(kok) and entry not in enabled:
+            sokulecek.append(entry)
+    return baglanacak, sokulecek
+
+
+def _agent_bagli_toplam(enabled: set) -> int:
+    """ENABLED setinin kaçı ajan dizinine FİİLEN bağlı? (olayın `kapsam` alanının paydası).
+
+    `agent_skill_coverage()`ten AYRI durur ve bu bilinçli: o fonksiyon `skills.catalog()`u kendi
+    çağırır (kayıt defteri + atıf analitiği), yani senkron yolunda ikinci kez ödenecek bir maliyet.
+    Burada `enabled` zaten elimizde; tek `listdir` yeter."""
+    if not os.path.isdir(AGENT_SKILLS_DIR):
+        return 0
+    bagli = {e for e in os.listdir(AGENT_SKILLS_DIR)
+             if os.path.islink(os.path.join(AGENT_SKILLS_DIR, e))}
+    return len(enabled & bagli)
+
+
+def sync_agent_skills() -> dict:
+    """Yerel ajanın skill seti = Meridian'ın ENABLED seti — birebir. İki yönde eşitler:
+    (1) etkin olup linklenmemiş skill'ler symlink'lenir; (2) Meridian'ın DEVRE DIŞI bıraktığı ya da
+    silinen skill'lerin linkleri sökülür (canlıda yakalanan kusur: 8 kapalı skill ajanda hâlâ
+    aktifti — motorun 'kenar yok' dediği bilgiyle ajan düşünmeye devam ediyordu). YALNIZ bizim
+    repoya çözümlenen symlink'lere dokunulur — ajanın kendi builtin klasörleri kutsaldır.
+
+    KUM HAVUZU BU DİZİNE YAZMAZ (v242, 2026-08-13 — ölçülmüş sızıntının kapatılması). `AGENT_SKILLS_DIR`
+    HOST GENELİNDE TEK ve PAYLAŞIMLIDIR; sprint kum havuzu ise kendi (anahtarsız) enabled setini
+    hesaplar ve o setle canlının symlink'lerini söküyordu — kanıt, mekanizma ve zincir
+    `sprint.kum_havuzunda` üstünde yazılı. İKİ ONARIM YOLU VARDI ve seçim ÖLÇÜLEBİLİRLİĞE göre
+    yapıldı:
+      (A) SPRINT'E KENDİ DİZİNİNİ VER — bu tur reddedildi, ama İMKÂNSIZ OLDUĞU İÇİN DEĞİL.
+          ÖLÇÜLDÜ, VARSAYILMADI (yerel hermes-agent kaynağı v0.18.2, 2026-08-13):
+            `tools/skill_usage.py:81` `_skills_dir() = get_hermes_home() / "skills"`
+            `hermes_constants.py:56-67` `HERMES_HOME` env değişkeni VARSA o, yoksa `~/.hermes`.
+          Yani skill dizinini taşımanın bir kolu GERÇEKTEN var. Bedeli şu: `HERMES_HOME` skill
+          dizinini değil TÜM ajan evini taşır — `auth.json` (kimlik havuzu), `config.yaml`
+          (MCP/hook/model), `logs/`, `sessions/`. Boş bir eve işaret eden sprint'in ajan çağrıları
+          KİMLİKSİZ ve YAPILANDIRMASIZ kalır ve tamamı düşer; yani "izolasyon" adına sprint'in
+          ölçüm yolunu kapatmış olurduk. Çalışması için yeni evin auth/config'inin de bağlanması
+          (ve üçüncü-taraf ev düzeninin bizim sözleşmemiz hâline gelmesi) gerekir — bu ayrı bir
+          karardır ve canlı bir sprint koşumuyla doğrulanmadan alınmamalıdır (Rol-1'e kalan kalem).
+      (B) KUM HAVUZU PAYLAŞIMLI DİZİNİ DEĞİŞTİRMEZ — seçildi. Yerel, BURADAN sınanabilir ve canlı
+          davranışı AYNEN korur. Kum havuzunun ajan çağrıları da bozulmaz: `-s` listesi zaten KUM
+          HAVUZUNUN KENDİ enabled setinden süzülür (`_skill_preload`), yani sandbox kapalı saydığı
+          bir skill'i hiçbir zaman yüklemez — sökmesi de zaten gereksizdi. (B) (A)'nın ÖNÜNÜ
+          KAPATMAZ: ayrı ev bir gün kurulursa bu kapı zararsız bir no-op'a döner.
+    BAĞLAMA da yapılmaz, yalnız sökme değil: bağlama da PAYLAŞIMLI dizinin mutasyonudur ve kum havuzu
+    canlının kapattığı bir skill'i açık sayarsa (mutasyon sprint'i) onu canlı ajanın kataloğuna
+    SOKARDI — `sync_agent_skills`in var oluş sebebinin tam tersi. Atlama SESSİZ DEĞİLDİR: gerçekten
+    bir değişiklik engellendiyse olay ADIYLA ve NE OLURDU listesiyle yazılır."""
+    from . import skills as _sk
+    from . import sprint as _sp
+    repo = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills")
+    enabled = {s2["name"] for s2 in _sk.catalog() if s2.get("enabled")}
+    kum = _sp.kum_havuzunda()
+    if not kum:
+        os.makedirs(AGENT_SKILLS_DIR, exist_ok=True)   # kum havuzunda DİZİN BİLE yaratılmaz
+    baglanacak, sokulecek = _agent_skill_plani(repo, enabled)
+    if kum:
+        if baglanacak or sokulecek:
+            obs.warn("agent_skills_sync_atlandi_kum_havuzu", enabled=len(enabled),
+                     olurdu_baglanacak=baglanacak[:10], olurdu_sokulecek=sokulecek[:10],
+                     n_baglanacak=len(baglanacak), n_sokulecek=len(sokulecek),
+                     dizin=AGENT_SKILLS_DIR,
+                     detail="sprint kum havuzu PAYLAŞIMLI ajan skill dizinine yazmaz (v242) — bu "
+                            "senkron ATLANDI. Kum havuzunun enabled seti canlınınkinden KÜÇÜKTÜR "
+                            "(sandbox'ta sağlayıcı anahtarı yok), yani uygulansaydı canlı ajanın "
+                            "kataloğundan skill SÖKÜLÜRDÜ (2026-08-13 vakası: dört `fmp=req` skill). "
+                            "Kum havuzunun kendi çağrıları etkilenmez: `-s` listesi zaten kum "
+                            "havuzunun kendi enabled setinden süzülüyor.")
+        return {"enabled": len(enabled), "yeni_baglanan": [], "pruned": [],
+                "atlandi": "kum_havuzu", "olurdu_baglanacak": baglanacak,
+                "olurdu_sokulecek": sokulecek}
+    linked, pruned = [], []
+    for name in baglanacak:
+        try:
+            os.symlink(os.path.join(repo, name), os.path.join(AGENT_SKILLS_DIR, name))
+            linked.append(name)
+        except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
+            pass
+    for entry in sokulecek:
+        try:
+            os.unlink(os.path.join(AGENT_SKILLS_DIR, entry)); pruned.append(entry)
+        except OSError:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
+            pass
+    # ALAN ADI DEĞİŞTİ: `linked` → `yeni_baglanan` (v242, 2026-08-13). ESKİ AD YANILTIYORDU ve bunun
+    # ÖLÇÜLMÜŞ bir bedeli var: `linked` bu olayda "O SENKRONDA YENİ KURULAN symlink sayısı" demekti,
+    # ama `agent_skill_coverage()` AYNI SÖZCÜĞÜ "enabled ∩ bağlı TOPLAMI" anlamında kullanıyor (pano
+    # onu öyle okuyor ve orada doğru). Aynı ad, iki anlam → canlı `linked: 4` satırını okuyan denetim
+    # "30 enabled'ın yalnız 4'ü bağlı" sandı (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §1.4/§B6).
+    # Çare yalnız yeniden adlandırma değil: TOPLAM KAPSAM da aynı satıra yazılır, böylece olayı tek
+    # başına okuyan birinin ikinci bir yere bakması gerekmez. `yeni_baglanan_adlar` `pruned` ile
+    # simetriktir — söküleni adıyla yazıp bağlananı sayıyla yazmak, iki yönü asimetrik okuturdu.
+    bagli_toplam = _agent_bagli_toplam(enabled)
+    out = {"enabled": len(enabled), "yeni_baglanan": linked, "pruned": pruned,
+           "bagli_toplam": bagli_toplam}
     if linked or pruned:
-        obs.log("agent_skills_synced", enabled=len(enabled), linked=len(linked), pruned=pruned[:10])
+        obs.log("agent_skills_synced", enabled=len(enabled),
+                yeni_baglanan=len(linked), yeni_baglanan_adlar=linked[:10], pruned=pruned[:10],
+                bagli_toplam=bagli_toplam, kapsam=f"{bagli_toplam}/{len(enabled)}")
     return out
 
 
 def agent_skill_coverage() -> dict:
-    """Panel için: enabled set ↔ ajan linkleri kapsamı (eksik/bayat görünür olsun)."""
+    """Panel için: enabled set ↔ ajan linkleri kapsamı (eksik/bayat görünür olsun).
+
+    BURADAKİ `linked` = enabled ∩ bağlı TOPLAMI (pano bunu böyle okur ve doğrudur). `agent_skills_synced`
+    OLAYINDAKİ aynı sözcük 2026-08-13'e kadar "o senkronda YENİ kurulan" demekti ve çakışma bir denetimi
+    yanlış okuttu; olay tarafı `yeni_baglanan`a çevrildi (gerekçe `sync_agent_skills` içinde). Bu ad
+    DEĞİŞMEDİ çünkü tüketicisi `meridian/web/app.js` ve orada anlamı zaten toplamdır."""
     from . import skills as _sk
     enabled = {s2["name"] for s2 in _sk.catalog() if s2.get("enabled")}
     linked = set()

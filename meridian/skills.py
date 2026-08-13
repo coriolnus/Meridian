@@ -322,18 +322,135 @@ def envanter() -> dict:
     }
 
 
+# ==================================================================================================
+# AJANIN KENDİ KULLANIM SAYACI (v242, 2026-08-13) — "ENJEKTE EDİLDİ" ≠ "MODEL KENDİ AÇTI"
+# ==================================================================================================
+# NEDEN VAR (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §B3 / Ö2). Bir skill'in LLM tarafında ne
+# olduğunun gerçek izi ÜÇÜNCÜ TARAF bir deftere düşüyor — `~/.hermes/skills/.usage.json` — ve bu
+# depoda o dosyayı okuyan TEK SATIR kod yoktu. Meridian'ın kendi defterleri yalnız SAYI taşıyor
+# (`preloaded`, `on_yukleme_n`; ad izi v242'de geri kondu ama BUGÜNDEN İLERİYE); dosyadaki iki sayaç
+# ise geçmişi kümülatif olarak taşıyor ve İKİ AYRI OLGUYU ölçüyor:
+#
+#   `use_count`  → BİZ bastık.  `-s` ile isteme ön-yüklendi (`build_preloaded_skills_prompt` yolu).
+#                  Bu Meridian'ın KENDİ kürasyon kararıdır — modelin tercihi hakkında hiçbir şey demez.
+#   `view_count` → MODEL KENDİ AÇTI. `skill_view(name)` aracıyla, kendi iradesiyle (`bump_view`).
+#
+# İKİSİNİ KARIŞTIRMAK TEŞHİSİ ÇÖKERTİR ve bu yüzden AYRI ALANLARDA taşınırlar: canlı ölçümde
+# `use_count` toplamı 6.839 iken `view_count` toplamı 11'dir. "6.839 kullanım" diye tek sayıya
+# katlansaydı, modelin skill araçlarını fiilen HİÇ kullanmadığı (1.113 oturumda %1,1) olgusu
+# görünmez olurdu — ki asıl bulgu odur.
+#
+# KIRILGANLIK DAMGALIDIR: bu dosyanın sahibi Hermes CLI'dir, şeması bizim sözleşmemiz DEĞİL ve
+# haber vermeden değişebilir. Bu yüzden (a) her alan tek tek ve tipiyle doğrulanır, (b) beklenmedik
+# şekil UYDURULMAZ — `None` + NEDEN döner, (c) neden süreç başına BİR KEZ olay olarak da yazılır
+# (`catalog()` sık çağrılır; her çağrıda uyarmak defteri gürültüyle doldururdu).
+AJAN_KULLANIM_DOSYASI = ".usage.json"     # dizini `hermes.AGENT_SKILLS_DIR`ten türer (tek tanım)
+_AJAN_KULLANIM_UYARILDI: set[str] = set()
+
+
+def _ajan_kullanim_uyar(neden: str, yol: str) -> None:
+    """Okunamayan/şekli değişen üçüncü-taraf sayacı SÜREÇ BAŞINA BİR KEZ olaylar (YASA 4).
+
+    Sessiz kalmak yasak: alanların `None` olması "bu skill hiç kullanılmadı" diye okunurdu."""
+    if neden in _AJAN_KULLANIM_UYARILDI:
+        return
+    _AJAN_KULLANIM_UYARILDI.add(neden)
+    from . import obs
+    obs.warn("ajan_skill_kullanim_okunamadi", neden=neden, yol=yol,
+             detail="ajanın kendi skill kullanım sayacı okunamadı — katalogdaki `ajan_yukleme_n` / "
+                    "`ajan_acilma_n` alanları None kalır. BU 'SIFIR KULLANIM' DEĞİLDİR: dosyanın "
+                    "sahibi Hermes CLI'dir ve şeması bizim sözleşmemiz değildir (üçüncü taraf).")
+
+
+def _ajan_skill_dizini() -> str | None:
+    """Ajanın skill dizini — TEK TANIM `hermes.AGENT_SKILLS_DIR`tir, burada YENİDEN YAZILMAZ.
+
+    GEÇ İTHAL, BİLİNÇLİ: `hermes` MODÜL DÜZEYİNDE `skills`i çekiyor (hermes.py:25) ve o yöndeki
+    yokluk ("skills yalnız config+store çeker") bir import döngüsünü engelleyen özelliktir. Buradaki
+    ithal ÇAĞRI ANINDA olur, yani modül düzeyinde bir döngü DOĞURMAZ. Yine de `getattr` ile
+    savunulur: `hermes` YARIM yüklenmişken (ithal zincirinin ortasında bir çağrı) sabit henüz
+    tanımlı olmayabilir ve bu yol bir ölçüm yoludur — çağıranı düşürmesi yasak."""
+    try:
+        from . import hermes as _hm
+    except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
+        return None
+    return getattr(_hm, "AGENT_SKILLS_DIR", None)
+
+
+def ajan_kullanim(dizin: str | None = None) -> dict:
+    """Ajanın `<skill dizini>/.usage.json` sayacını OKU (salt-okuma, hiçbir şeye yazmaz).
+
+    Dönüş: `{"ok": bool, "yol": str|None, "neden": str|None, "kayitlar": {ad: {...}}}` — `ok=False`
+    olduğunda `kayitlar` BOŞTUR ve `neden` doludur (UYDURMA YASAĞI: ölçülemeyen değer None + neden).
+
+    `dizin` verilmezse `hermes.AGENT_SKILLS_DIR`ten türer (bkz. `_ajan_skill_dizini`)."""
+    import json
+    import os
+    kok = dizin if dizin is not None else _ajan_skill_dizini()
+    if not kok:
+        return {"ok": False, "yol": None, "kayitlar": {},
+                "neden": "ajan skill dizini çözülemedi (yerel hermes-agent yolu bilinmiyor)"}
+    yol = os.path.join(kok, AJAN_KULLANIM_DOSYASI)
+    bos = {"ok": False, "yol": yol, "kayitlar": {}}
+    try:
+        with open(yol, encoding="utf-8") as fh:
+            ham = json.load(fh)
+    except FileNotFoundError:  # sessiz-yutma: hata YUTULMUYOR — istisna nesnesi TÜRÜNDEN başka bilgi taşımıyor (yol zaten elimizde) ve o tür `neden`e + `ajan_skill_kullanim_okunamadi` olayına ADIYLA yazılıyor; dosyanın yokluğu beklenen bir hâldir (yerel hermes-agent kurulu olmayabilir) ve çağıranı düşürmesi yasaktır
+        neden = "ajan kullanım sayacı dosyası yok (yerel hermes-agent kurulu değil ya da hiç çağrı yapılmadı)"
+        _ajan_kullanim_uyar("dosya_yok", yol)
+        return {**bos, "neden": neden}
+    except (OSError, ValueError) as e:
+        neden = f"ajan kullanım sayacı okunamadı ({type(e).__name__})"
+        _ajan_kullanim_uyar("okunamadi", yol)
+        return {**bos, "neden": neden}
+    if not isinstance(ham, dict):
+        neden = f"ajan kullanım sayacının şeması beklenmedik (kök {type(ham).__name__}, sözlük bekleniyordu)"
+        _ajan_kullanim_uyar("sema", yol)
+        return {**bos, "neden": neden}
+    def _sayi(v2):
+        """Sayaç değeri — SAYI DEĞİLSE None, 0'A DÜŞÜRÜLMEZ. "Alan yoktu" ile "ölçüldü ve sıfırdı"
+        bu depoda tekrar tekrar karışan iki hâldir (`arac_cagri_n` ve `olculemeyen` dersi).
+        `bool` DIŞLANIR: Python'da `isinstance(True, int)` doğrudur ve üçüncü-taraf şema bir gün
+        sayacı bayrağa çevirirse `True` sessizce "1 kullanım" diye okunurdu."""
+        return v2 if isinstance(v2, int) and not isinstance(v2, bool) else None
+    kayitlar = {}
+    for ad, v in ham.items():
+        if not isinstance(v, dict):
+            continue                                   # üçüncü-taraf şema: tanımadığımız girdi ATLANIR
+        kayitlar[str(ad)] = {
+            "ajan_yukleme_n": _sayi(v.get("use_count")),     # `-s` — BİZ isteme bastık
+            "ajan_acilma_n": _sayi(v.get("view_count")),     # `skill_view` — MODEL kendi açtı
+            "son_yukleme": v.get("last_used_at") if isinstance(v.get("last_used_at"), str) else None,
+            "son_acilma": v.get("last_viewed_at") if isinstance(v.get("last_viewed_at"), str) else None,
+        }
+    return {"ok": True, "yol": yol, "neden": None, "kayitlar": kayitlar}
+
+
 def catalog() -> list[dict]:
     """The full skill library as Hermes should see it: name, one-line purpose (SKILL.md), category /
     mode / key-requirements (registry), and LIVE performance (attribution — n, win_rate, avg_r). This
-    is the toolkit briefing the brain reasons with when it improves the system."""
+    is the toolkit briefing the brain reasons with when it improves the system.
+
+    v242 (2026-08-13): AJAN KATMANI da taşınır (`ajan_yukleme_n` / `ajan_acilma_n` + son damgalar).
+    `last_run` deterministik boru hattının damgasıdır, LLM'in değil — ikisi AYRI katmanlardır ve
+    katalog bugüne dek yalnız birincisini gösteriyordu. Kaynak `ajan_kullanim()`; ölçülemediğinde
+    dört alan da None ve `ajan_kullanim_neden` doludur."""
     from . import analytics
     reg = registry().get("skills", {})
     descs = _skill_descriptions()
     attr = {s["skill"]: s for s in analytics.skill_attribution().get("skills", [])}
+    kul = ajan_kullanim()
+    kul_kayit, kul_neden = kul.get("kayitlar") or {}, kul.get("neden")
     names = sorted(set(list(reg.keys()) + list(descs.keys())))
     out = []
     for name in names:
         info, a = reg.get(name, {}), attr.get(name, {})
+        # AJAN KATMANI (v242, 2026-08-13). `last_run` LLM'i DEĞİL deterministik boru hattını damgalar
+        # (`_touch_registry_run`ın tek çağıranı `pipeline_run`) — yani "bu skill'i LLM kullandı mı"
+        # sorusunun bugüne dek hiçbir alanı yoktu. Bu iki sayaç o boşluğu kapatır ve BİRBİRİNE
+        # KARIŞTIRILMAZ: `ajan_yukleme_n` = biz isteme bastık, `ajan_acilma_n` = model kendi açtı.
+        u = kul_kayit.get(name) or {}
+        olculdu = bool(kul.get("ok")) and name in kul_kayit
         out.append({
             "name": name, "description": descs.get(name, ""),
             "category": info.get("category"), "enabled": bool(info.get("enabled")),
@@ -351,6 +468,22 @@ def catalog() -> list[dict]:
             # H5'in kanıt eşiği, geniş örneklemli cf katmanını HİÇ göremiyordu. Gerçek katmanın n'i
             # çoğu skill için 0-4 arasında; karar yalnız oradan verilemez.
             "n_cf": a.get("n_cf", 0), "cf_avg_r": a.get("cf_avg_r"),
+            # --- AJAN KATMANI (v242) — iki AYRI olgu, iki AYRI alan; toplanmaları YASAK -----------
+            "ajan_yukleme_n": u.get("ajan_yukleme_n") if olculdu else None,   # `-s` ile isteme BİZ bastık
+            "ajan_acilma_n": u.get("ajan_acilma_n") if olculdu else None,     # MODEL kendi açtı (skill_view)
+            "son_yukleme": u.get("son_yukleme") if olculdu else None,
+            "son_acilma": u.get("son_acilma") if olculdu else None,
+            # KAYIT YOKLUĞU 'SIFIR' DEĞİLDİR ve bu ayrım burada yazılı kalır: sayaç dosyasında bir
+            # ad hiç geçmiyorsa bu "hiç kullanılmadı" DA olabilir, "CLI o adı sayacına hiç
+            # kaydetmedi" DE (canlı dosyada kayıtların `created_at`i KURULUM anıdır, kullanım anı
+            # değil — yani kayıt kullanımla değil kurulumla doğuyor). İkisi bu dosyadan ayırt
+            # EDİLEMEZ → None + neden. 0 yazmak, ölçülmemiş bir şeyi ölçülmüş göstermek olurdu.
+            "ajan_kullanim_neden": (
+                None if olculdu else
+                (kul_neden if not kul.get("ok") else
+                 "ajan kullanım sayacı OKUNDU ama bu skill orada kayıtlı değil — 'hiç kullanılmadı' "
+                 "ile 'sayaç bu adı hiç kaydetmedi' bu dosyadan ayırt edilemez")),
+            "ajan_kullanim_kaynak": kul.get("yol"),
         })
     return out
 

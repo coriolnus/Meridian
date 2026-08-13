@@ -288,6 +288,51 @@ def _kur_kum_havuzu(sid: str) -> Path:
 
 
 # ==================================================================================================
+# "BU SÜREÇ KUM HAVUZUNDA MI?" — İZOLASYON SÖZLEŞMESİNİN SORULABİLİR HÂLİ (v242, 2026-08-13)
+# --------------------------------------------------------------------------------------------------
+# NEDEN VAR — ÖLÇÜLMÜŞ SIZINTI (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §1.4 ve §B4).
+# Bu dosyanın başlığı "canlı defterler, karne ve koşan Hermes ASLA dokunulmaz" diyor ve bu DEFTERLER
+# için doğru. Ama kum havuzu, süreç DIŞINDAKİ paylaşımlı kaynakları da değiştirebiliyordu. Kanıt iki
+# ayrı defterde, 59 saniye arayla:
+#     sprint  2026-08-13T15:20:13  agent_skills_synced  enabled=26  linked=0
+#             pruned=[parabolic-short-trade-planner, ibd-distribution-day-monitor,
+#                     canslim-screener, economic-calendar-fetcher]
+#     canlı   2026-08-13T15:21:12  agent_skills_synced  enabled=30  linked=4  pruned=[]   ← onarım
+# ZİNCİR: kum havuzunda FMP anahtarı YOK → `skills.reconcile_enablement` o dört `fmp=req` skill'ini
+# kapatıyor → `hermes.sync_agent_skills` kum havuzunun (26'lık) enabled setine bakıp onları
+# CANLININ paylaşımlı `~/.hermes/skills` dizininden SÖKÜYOR. Söküm ile bir sonraki canlı senkron
+# arasındaki pencerede o dört skill canlı ajanın kataloğunda da YOK — sunulmuyor, `skill_view` ile
+# açılamıyor. Yani "kum havuzu canlıdan izoledir" vaadi AJAN KATMANINDA tutmuyordu.
+#
+# ÖLÇÜT YAPISALDIR, BAYRAK DEĞİL — ve bu bilinçli: `MERIDIAN_SPRINT_SBROOT` YALNIZ systemd yolunda
+# yazılıyor (`start()`), `Popen` düşüş yolunda hiç yok. Bayrağa-tek dayanan bir ölçüt, sızıntıyı tam
+# da düşüş yolunda (yerel geliştirme + systemd birimi kurulu olmayan sunucu) AÇIK bırakırdı. Yapı
+# her iki yolu kapsar: kum havuzu TANIMI GEREĞİ `<canlı state>/sprint/<sid>/state` altında doğar
+# (`_kur_kum_havuzu` yukarıda) ve çocuk `MERIDIAN_ROOT=<sbroot>` ile koştuğu için `config.STATE` bu
+# yola çözülür. Bayrak varsa yine OKUNUR (varlığı kesin bilgidir), yapı ise yedek değil TABANDIR.
+# ==================================================================================================
+def kum_havuzunda() -> bool:
+    """Bu SÜREÇ bir sprint kum havuzunda mı koşuyor? PAYLAŞIMLI bir kaynağa yazmadan önce sorulur.
+
+    Kum havuzunun KENDİ dosyalarına yazmak serbesttir (zaten tüm amacı budur); bu kapı yalnız
+    süreç dışındaki, canlıyla ORTAK kaynaklar içindir — bugünkü tek örneği ajanın
+    `~/.hermes/skills` dizini (`hermes.sync_agent_skills`)."""
+    try:
+        st = Path(config.STATE).resolve()
+    except OSError:  # sessiz-yutma: yol çözümü düştü (kopmuş symlink/izin) — kapı KAPALI tarafa değil AÇIK tarafa düşer; bu bir teşhis yolu değil, canlı senkronun kendisidir ve yanlış "kum havuzundayım" cevabı canlı onarımı durdururdu
+        return False
+    sb = os.environ.get("MERIDIAN_SPRINT_SBROOT")
+    if sb:
+        try:
+            if Path(sb).resolve() in (st, *st.parents):
+                return True
+        except OSError:  # sessiz-yutma: bayrak yolu çözülemedi — aşağıdaki YAPISAL ölçüt zaten aynı soruyu bayraksız cevaplıyor, yani dedektör kapanmıyor sadece ikinci kanıtını kaybediyor
+            pass
+    # `<canlı state>/sprint/<sid>/state` → parent = <sid>, parent.parent = "sprint"
+    return st.name == "state" and st.parent.parent.name == "sprint"
+
+
+# ==================================================================================================
 # KOŞUM YOLU — SPRINT KENDİ SYSTEMD BİRİMİNDE DOĞAR (v241, 2026-08-13)
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLMÜŞ KÖK NEDEN (kanıt: ölüm-anı yakalayıcısı; üç ölümde de aynı desen):

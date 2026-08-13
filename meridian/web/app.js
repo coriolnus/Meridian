@@ -3289,7 +3289,13 @@ const OLAY_YUZEYLERI = {
         ["Çağrı kotası", ac.rpm_limit == null ? null : `${ac.rpm_limit}/dk · ${ac.rpd_limit ?? "—"}/gün`],
         ["Bugünkü çağrı", ac.day == null ? null : ac.day],
         ["Bütçe günü", ac.date || null],
-        ["Beceri kapsaması", (ml.agent_skills || {}).ok == null ? null : `${ml.agent_skills.ok}/${ml.agent_skills.total ?? "—"}`],
+        // ALAN ADLARI DÜZELTİLDİ (v242, 2026-08-13). Bu satır `ok`/`total` okuyordu; `agent_skill_coverage()`
+        // (hermes.py) ise `{enabled, linked, missing, stale_linked}` döndürüyor — yani ikisi de `undefined`di
+        // ve satır DOĞUŞUNDAN BERİ hep "—" gösteriyordu. Sessizce boş bir ölçüm satırı, ölçümün YOKLUĞUNDAN
+        // beter: operatöre "baktım, veri yok" dedirtir. Aynı gövdeyi doğru okuyan ikinci bir yüzey zaten
+        // vardı (aşağıda "Ajan skill kapsamı" satırı, `ag.linked`/`ag.enabled`) — iki yüzey ayrışmıştı.
+        ["Beceri kapsaması", (ml.agent_skills || {}).enabled == null ? null
+          : `${ml.agent_skills.linked ?? "—"}/${ml.agent_skills.enabled}`],
       ];
     },
     adimlar: [

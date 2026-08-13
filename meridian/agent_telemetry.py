@@ -73,7 +73,13 @@ IZ_DEFTERI = "agent_traces.jsonl"
 # ---- TAVANLAR VE BUDAMA (doğuşta yazıldı; disk patlaması bir arıza değil bir TASARIM hatasıdır) -
 IZ_AKIS_TAVANI_KR = 8_000      # stdout/stderr BAŞINA karakter (maskeleme sonrası, kırpma beyanlı)
 IZ_SATIR_TAVANI = 300          # ham iz defteri halkası — bu sayıdan eskisi düşer
-CAGRI_SATIR_TAVANI = 4_000     # telemetri defteri halkası (satır ~300 bayt → ~1,2 MB)
+# Satır boyu 2026-08-13'te YENİDEN ÖLÇÜLDÜ (eski yorum "~300 bayt → ~1,2 MB" diyordu ve o sayı
+# `on_yukleme` eklenmeden ÖNCE de bayattı — ölçüm: ön-yüklemesiz satır zaten 505 bayt). Bugünkü
+# ölçüm (yerel, gerçek alan kümesi · `on_yukleme` dâhil):
+#     n=0 ad → 505 bayt · n=6 (canlı `review` listesi) → 654 bayt · n=12 (tavan) → 986 bayt
+# → halka dolu iken defter ~2,6 MB (gerçekçi) / ~3,9 MB (en kötü hâl). Ham iz defterinin ~4,9 MB'ı
+# yanında ikinci mertebede kalır; tavan DEĞİŞMEDİ, yalnız hesabı dürüstleşti.
+CAGRI_SATIR_TAVANI = 4_000     # telemetri defteri halkası (satır 505-986 bayt → ~2,6-3,9 MB)
 OZET_ORNEK = 500               # `ozet()` için okunan son satır sayısı (pano ucu her istekte çağırır)
 # Türetilmiş tavan — ölçü değil HESAP, ve hesabın kendisi testte çivilidir:
 IZ_USTBILGI_KR = 600           # iz satırının ham-metin DIŞI alanları (ölçülmedi, ÜST SINIR kabulü)
@@ -98,6 +104,46 @@ TASIYICILAR = (TASIYICI_AJAN, TASIYICI_HTTP)
 # `-Q` altında CLI oturum özeti bastırılır → araç sayısı ÖLÇÜLEMEZ. Alan None kalır ve NEDENİ
 # satırda yazılı olur; 0 yazmak "araç kullanılmadı" diye okunurdu (eksik alan = sıfır sanılır sınıfı).
 ARAC_OLCULEMEDI = "-Q sessiz mod CLI oturum özetini bastırır — araç sayısı bu çağrıda ÖLÇÜLEMEDİ"
+
+# ================================================================================================
+# ÇAĞRI BAŞINA SKILL ADLARI (v242, 2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL
+# ================================================================================================
+# NE KAYBEDİLDİ (ölçüldü: docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §2.4/§B1). `nous_call_skills`
+# olayı çağrı başına ön-yüklenen skill'lerin TAM AD LİSTESİNİ yazıyordu:
+#     {"ts":"2026-07-20T09:59:21+00:00","event":"nous_call_skills","kind":"review","preloaded":5,
+#      "names":["vcp-screener","pullback-screener","pre-trade-discipline-gate",…]}
+# Son basıldığı an 2026-07-20T10:06:49. `_agent_call` yeniden yazılırken olay `agent_call`a
+# birleştirildi ve liste `preloaded: <sayı>`ya ÇÖKTÜ. Bugün Meridian'ın ÜÇ defteri de
+# (`events.jsonl`, `agent_calls.jsonl`, `agent_traces.jsonl`) yalnız SAYIYI taşıyor: "kaç tane"
+# yazılı, "hangileri" yazılı değil. Gerçek ad izi üçüncü-taraf bir sayaca (`~/.hermes/skills/
+# .usage.json`) düşüyor ve o sayaç KÜMÜLATİF — gün gün dağılım geriye dönük KURTARILAMAZ (§B8).
+# Bu yüzden buradaki ekleme bir özellik değil, bir GERİLEMENİN onarımıdır.
+#
+# HACİM ÖLÇÜLDÜ, TAHMİN EDİLMEDİ (2026-08-13, canlı ön-yükleme listeleriyle):
+#   proposal (8 ad) → JSON alanı 208 bayt · review (6 ad) → 163 bayt
+#   canlı `agent_call` hacmi 1.819 olay/ay → ~369 KB/ay; `events.jsonl` bugün ~9 MB (yerel ölçüm)
+#   yani ~%4 büyüme. Tavanın en kötü hâli (12 × en uzun ad) 480 bayttır.
+# TAVAN NEDEN VAR: `_skill_preload` bugün 8'de kapanıyor ama `_agent_call`ın imzası herhangi bir
+# `preload` demetini kabul eder — tavansız bir alan, bir gün gelen 200 elemanlı bir liste ile
+# defteri sessizce şişirirdi. Tavan 8'in ÜSTÜNDEDİR (12), yani bugünün yolunda HİÇ tetiklenmez;
+# tetiklendiği gün SESSİZ KALMAZ: kırpılan sayı `*_kirpildi_n` alanıyla ADIYLA yazılır.
+# SIRA KORUNUR, ALFABETİK DEĞİL: liste CLI'ya `-s` ile hangi sırayla verildiyse o sırayla yazılır.
+# Sıra kanıt-güdümlü skorlamanın çıktısıdır (`hermes._skill_preload` `_score` sıralaması) — ada
+# göre sıralamak, "en yüksek ölçülmüş katkı hangisiydi" bilgisini defterden silerdi.
+SKILL_AD_TAVANI = 12
+
+
+def skill_adlari(preload) -> tuple[list[str], int]:
+    """Ön-yükleme listesini DEFTERE YAZILABİLİR hâle getir. Dönüş: (adlar, kırpılan_sayı).
+
+    TEK UYGULAMA: hem olay defteri (`hermes._agent_call` → `obs.log("agent_call", …)`) hem
+    telemetri defteri (`kaydet`) bu fonksiyondan geçer. İki ayrı kırpma kuralı yazmak, bu depoda
+    tekrar tekrar yaşanan "aynı yasanın iki uygulaması" hatasıydı — iki defter aynı çağrı için
+    farklı liste taşırsa hangisinin doğru olduğu SONRADAN bilinemez."""
+    adlar = [str(s) for s in (preload or []) if s]
+    if len(adlar) <= SKILL_AD_TAVANI:
+        return adlar, 0
+    return adlar[:SKILL_AD_TAVANI], len(adlar) - SKILL_AD_TAVANI
 
 
 # ================================================================================================
@@ -218,7 +264,8 @@ def _budan(defter: str, tavan: int) -> int:
 
 def kaydet(*, kind: str, model: str | None, deneme: int, alt: int, sure_ms: float,
            sonuc_sinifi: str, tasiyici: str = TASIYICI_AJAN, returncode: int | None = None,
-           arac_cagri_n: int | None = None, on_yukleme_n: int = 0, istem: str | None = None,
+           arac_cagri_n: int | None = None, on_yukleme_n: int = 0,
+           on_yukleme: list | tuple | None = None, istem: str | None = None,
            stdout: str | None = None, stderr: str | None = None,
            ts: str | None = None, **ek) -> dict | None:
     """BİR alt-süreç/HTTP koşumunun telemetri satırını (+ ham iz satırını) yaz. Dönüş: telemetri
@@ -230,14 +277,27 @@ def kaydet(*, kind: str, model: str | None, deneme: int, alt: int, sure_ms: floa
 
     `arac_cagri_n=None` = ÖLÇÜLEMEDİ (satırda `arac_neden` ile birlikte taşınır), 0 = ölçüldü ve
     araç kullanılmadı. İkisini tek alana katlamak, MCP yatırımının atıl olup olmadığını sonsuza
-    dek cevapsız bırakırdı (`agent_tooluse.json`'daki `olculemeyen` sayacının aynı dersi)."""
+    dek cevapsız bırakırdı (`agent_tooluse.json`'daki `olculemeyen` sayacının aynı dersi).
+
+    `on_yukleme` (v242, 2026-08-13) = ön-yüklenen skill ADLARI — `on_yukleme_n`in YANINA, onu
+    SİLMEDEN (mevcut okuyucular sayıyı okumaya devam eder). Verilmezse alan hiç yazılmaz: bu
+    yolun (HTTP taşıyıcısı) ön-yükleme kavramı YOKTUR ve boş liste yazmak "ölçüldü, hiç skill
+    yoktu" diye okunurdu. Gerekçe ve hacim ölçümü: `skill_adlari` üstündeki blok."""
     ts = ts or _simdi()
     iz_id = iz_kimligi(ts, kind, deneme, alt)
+    # ADLAR SAYININ HEMEN YANINA KONUR (satır sözlüğünün İÇİNDE, `**ek` birleşmesinden ÖNCE):
+    # sonradan eklenen bir alan satırın kuyruğuna düşer ve `on_yukleme_n` ile `on_yukleme` gözle
+    # karşılaştırılamaz olur — bu defterin okuyucusu insandır (`ops/vaka_sabitle.py` + teşhis).
+    _adlar, _kirpilan = (skill_adlari(on_yukleme) if on_yukleme is not None else (None, 0))
     satir = {"ts": ts, "iz_id": iz_id, "tasiyici": str(tasiyici), "kind": str(kind),
              "model": model or "varsayılan", "deneme": int(deneme), "alt": int(alt),
              "sure_ms": round(float(sure_ms), 1), "sonuc_sinifi": str(sonuc_sinifi),
              "returncode": returncode, "arac_cagri_n": arac_cagri_n,
              "on_yukleme_n": int(on_yukleme_n),
+             **({"on_yukleme": _adlar} if _adlar is not None else {}),
+             # SESSİZ KIRPMA YASAK — tavana takılan sayı ADIYLA yazılır (yalnız takıldığında:
+             # bu alanın YOKLUĞU "kırpılmadı" demektir ve `on_yukleme` listesi zaten yanında durur).
+             **({"on_yukleme_kirpildi_n": _kirpilan} if _kirpilan else {}),
              "cikti_kr": len(stdout or ""), "hata_kr": len(stderr or "")}
     if arac_cagri_n is None:
         satir["arac_neden"] = ARAC_OLCULEMEDI
