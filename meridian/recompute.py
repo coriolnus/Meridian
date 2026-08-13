@@ -69,6 +69,12 @@ def _row(check: str, ok: bool, a, b, detail: str, a_yol: str, b_yol: str) -> dic
             "a_yol": a_yol, "b_yol": b_yol}
 
 
+def _seed_notu(haric: int) -> str:
+    """Dışlanan tohum diliminin GÖRÜNÜR beyanı (v243, 2026-08-13). Sessiz bir filtre, paydayı
+    okuyucudan gizler: "95 işlem birebir" cümlesi 885 satır atlanmışken de aynı görünürdü."""
+    return "" if not haric else f"  · replay_seed_haric: {haric} satır (pano yolu; `--deep` görür)"
+
+
 _CORPUS_CACHE: dict = {}
 # Orphan taramasının KÖK+dizin kesiti için kaynak metni (K1, 2026-07-30). `codelaw.artifact_graph`
 # yalnız `store.*` çağrılarını ve .json/.jsonl adlarını çözer; yaml/csv/log/dizin artefaktları o
@@ -150,6 +156,8 @@ def report(deep: bool = False) -> dict:
     """Her satır: aynı büyüklüğün iki bağımsız hesabı + tutuyor mu.
 
     deep=True, önbellek barlarını okuyup evren kapsamasını YENİDEN hesaplar (pahalı; gece işi).
+    deep=True AYRICA `ledger_matches_bars`ı defterin TAMAMINA açar (tohum dilimi dahil) — pano
+    yolu yalnız canlı dilime bakar, gerekçesi aşağıda (v243, 2026-08-13).
     """
     rows: list[dict] = []
     pf = store.read_json("portfolio.json", {}) or {}
@@ -163,9 +171,40 @@ def report(deep: bool = False) -> dict:
     #    "barlar → trades.jsonl" kenarı o haritada hiç yoktu. Barlar altından değişince her
     #    R-katı, her skor sessizce başka bir dünyaya ait olur.
     #    A yolu: defterin kaydettiği giriş fiyatı.  B yolu: o günün barından OKUNAN açılış.
+    #
+    #    PANO YOLU YALNIZ CANLI DİLİME BAKAR (v243, 2026-08-13) — ÖLÇÜMLE gerekçeli:
+    #    2026-08-13 18:54Z tohum yenilemesi `trades.jsonl`ı 97→887 satıra çıkardı. Bu blok
+    #    baktığı HER satır için `load_bars` çağırıyor ve o çağrı ucuz DEĞİL: sembolün TÜM
+    #    önbellek CSV'sini okur, tam `sanitize_bars` koşturur (takvim taraması + düzeltilmemiş
+    #    fiyat maskesi + kayan medyan) ve sonra tek güne dilimler. Yerel kum havuzunda canlı
+    #    defter boyutuna tohumlanmış A/B (aynı state, aynı sıcak bar önbelleği, YALNIZ defter
+    #    boyu değişken):
+    #        95 satır  →  95 load_bars / 1.064 ms  ·  recompute.report 2.554 ms · parity 3.481 ms
+    #       887 satır  → 400 load_bars / 4.032 ms  ·  recompute.report 5.650 ms · parity 6.680 ms
+    #    Canlıda aynı blok `parity_report`u 16.705 ms'ye çıkardı ve o süre `/api/diagnostics`in
+    #    kritik yolundaydı: pano AÇILMADI (operatör arızası, 2026-08-13 20:2xZ).
+    #
+    #    NEDEN TOHUM DİLİMİ PANO YOLUNDAN ÇIKIYOR — ve neden bu bir körlük DEĞİL: `replay_seed`
+    #    satırları tohum koşusunun O ANKİ bar önbelleğinden TÜRETİLİR ve tohum yazımı defterin
+    #    TAMAMINI yeniden yazar (ledgerstamp.py:202). Yani yenilemeden hemen sonra bu dilim
+    #    KURULUŞ GEREĞİ tutar; tutmadığı hâlin çaresi de canlı bir müdahale değil, YENİ BİR
+    #    TOHUMDUR — bu dosyanın kendi GE/T00005 notu tam olarak bunu söylüyor ("bir sonraki tam
+    #    re-seed'de düşecek, operatör kararı"). 15 saniyede bir anketlenen pano ucunun soracağı
+    #    soru bu değildir; canlı dilim (live_paper + DAMGASIZ tarihsel satırlar) o ucun
+    #    müdahale edebileceği tek dilimdir.
+    #    DAMGASIZLAR İÇERİDE KALIR (geriye uyum): migrasyon öncesi satırların `kaynak` alanı yok
+    #    ve onları tohum saymak, ölçülmemiş bir kökeni varsaymak olurdu (ledgerstamp: `belirsiz`).
+    #    DIŞLAMA SESSİZ DEĞİL: `replay_seed_haric=N` satırın DETAYINDA yazılı, ve `deep=True`
+    #    (gece işi) defterin TAMAMINA bakar — docstring'in verdiği söz artık DOĞRU: eskiden
+    #    `trades[-400:]` koşulsuzdu, yani "gece işi tamamını görür" yazan yorum YANLIŞTI.
     if trades:
+        from . import ledgerstamp as _ls
+        # Damga TEK KAYNAKTAN okunur (`ledgerstamp.kaynak_of`): burada `row.get("kaynak")` yazmak,
+        # bu deponun "aynı yasanın iki uygulaması" diye adlandırdığı hatanın kendisi olurdu.
+        _bakilacak = trades if deep else [t for t in trades if _ls.kaynak_of(t) != _ls.REPLAY_SEED]
+        _haric = 0 if deep else len(trades) - len(_bakilacak)
         sapan, karsilastirilan = [], 0
-        for t in trades[-400:]:                      # tavan: pano yolu; gece işi tamamını görür
+        for t in _bakilacak[-400:]:                  # tavan: pano yolu; gece işi tamamını görür
             tk, d0, e = t.get("ticker"), str(t.get("ts_open") or ""), t.get("entry")
             if not (tk and len(d0) == 10 and e):
                 continue
@@ -205,8 +244,21 @@ def report(deep: bool = False) -> dict:
                 detay += ("  · BİLİNEN HAYALET: GE HealthCare spin-off düzeltmesi; işlem yeniden "
                           "oynatmada üretilmiyor, bir sonraki re-seed'de düşecek (operatör kararı)")
             rows.append(_row("ledger_matches_bars", not sapan,
-                             karsilastirilan - len(sapan), karsilastirilan, detay,
+                             karsilastirilan - len(sapan), karsilastirilan,
+                             detay + _seed_notu(_haric),
                              "trades.jsonl `entry` alanı", "adapters.data.load_bars açılışı"))
+        elif _haric:
+            # DIŞLAMA ASLA SESSİZ KALMAZ. Canlı dilimde karşılaştırılabilir satır YOKSA (tohum
+            # yenilemesinden hemen sonraki normal hâl: 887 satırın 885'i tohum) satırın DÜŞMESİ,
+            # dedektörün kaybolmasıyla aynı şeydir — okuyucu neyin ölçülmediğini bilemez.
+            # `ok=True`: ölçülen hiçbir şey TUTMADI değil, bu yolun kapsamında ölçülecek şey yok;
+            # kalıcı kırmızı bir satır operatöre bakmayı bıraktırırdı (alarm_delivery dersi).
+            rows.append(_row("ledger_matches_bars", True, 0, 0,
+                             f"canlı dilimde karşılaştırılabilir işlem YOK (0 satır)"
+                             + _seed_notu(_haric)
+                             + " — tohum dilimi bu yolun kapsamı dışında; hükmü gece işi verir",
+                             "trades.jsonl `entry` alanı (live_paper + damgasız)",
+                             "adapters.data.load_bars açılışı"))
 
     # OFSET TEK YERDE OKUNUR: üç kimlik de aynı beyanı kullanmalı. Üç ayrı okuma olsaydı biri
     # güncellenip diğerleri unutulduğunda "aynı yasanın iki uygulaması" sınıfı buraya, tam da onu

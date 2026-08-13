@@ -291,12 +291,18 @@ def test_genel_bakis_OZETTIR_detay_tablosu_tasimaz():
 def test_alarm_butcesi_TEK_SATIR_kart_degil():
     """ADR alarm bütçesini kart değil TEK SATIR sayıyor. Kart olsaydı yedinci kart olur ve
     bütçeyi kart sayısıyla değil YÜKSEKLİĞİYLE sessizce yerdi."""
-    fn = _govde("function gbAlarmSatiri(ab) {", "\n}\n")
+    # ÇAPA GÜNCELLENDİ (v243, 2026-08-13, BEYANLI): imza `gbAlarmSatiri(ab, bekliyor)` oldu.
+    # `bekliyor` üçüncü durumdur — `/api/diagnostics` artık sayfanın ilk boyamasını beklemiyor
+    # (pano açılmama arızası), yani satır bir süre CEVAPSIZ duruyor ve o aralıkta "ölçülmedi"
+    # yazmak henüz sorulmamış bir soruya olumsuz cevap uydurmak olurdu. İDDİA DEĞİŞMEDİ.
+    fn = _govde("function gbAlarmSatiri(ab, bekliyor) {", "\n}\n")
     assert 'class="gb-alarm' in fn and "gb-kart" not in fn
     assert fn.count("data-act=") == 1, "tek satırın da tek bağı olmalı"
     assert 'data-act="go" data-a1="${hedef}"' in fn
     # Ölçülemeyen bütçe "0" ya da "sağlıklı" YAZMAZ.
     assert "ölçülmedi" in fn, "alarm bütçesi ölçülemediğinde uydurma sayı riski"
+    # ÜÇÜNCÜ DURUM DA UYDURMAZ: bekleyen satır "0" ya da "aşım yok" DEMEZ.
+    assert "ölçülüyor…" in fn, "bekleyen durum bir sayı ya da hüküm uyduruyor olabilir"
 
 
 def test_genel_bakis_kaydirmasizligi_TEK_SUTUNA_dusmez():

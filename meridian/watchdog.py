@@ -937,8 +937,12 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     # 3) KANIT KAYNAĞI — kalibrasyon yalnız SİMÜLASYONDAN besleniyorsa öğrenme gerçeğe değmiyor
     sc = store.read_json("score_calibration.json", {}) or {}
     n_real, n_cf = sc.get("n_real"), sc.get("n_cf")
+    # TEK OKUMA (v243, 2026-08-13): defter aşağıda (5) `trades_all` olarak zaten okunuyordu ve
+    # burada İKİNCİ kez okunuyordu — tohum yenilemesinden sonra 887 satır × 2. Sayı aynı sayıdır;
+    # ikinci okumanın tek ürettiği şey iki farklı ana ait iki fotoğraf olma İHTİMALİYDİ.
+    trades_all = store.read_jsonl("trades.jsonl")
     if n_real is not None:
-        trades = _n_jsonl("trades.jsonl")
+        trades = len(trades_all)
         rows.append({"check": "evidence_source", "ok": not (trades >= 20 and not n_real),
                      "detail": f"kalibrasyon: gerçek {n_real} / simüle {n_cf} (kapalı işlem {trades})"
                                + (" — gerçek işlemler kalibrasyona GİRMİYOR" if trades >= 20 and not n_real else "")})
@@ -955,7 +959,6 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     #    Canlıda bulundu: cf_fidelity plan_id'yi `P-YYYY-MM-DD-TICKER` diye ayrıştırıyordu ama
     #    replay'den tohumlanmış işlemler `P00140` şemasındaydı → 90 işlemin 90'ı da elendi ve
     #    mekanizma SONSUZA KADAR None döndü. Üretkenlik dedektörü "aç" diyordu; NEDEN'i söylemiyordu.
-    trades_all = store.read_jsonl("trades.jsonl")
     joinable = sum(1 for t in trades_all if str(t.get("plan_id") or "").startswith("P-")
                    and len(str(t.get("plan_id")).split("-")) >= 5)
     fid = store.read_json("cf_fidelity.json", None)
@@ -975,10 +978,15 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     # 6) LLM GÖRÜŞ↔SONUÇ — damga düşüyor ama çift birikmiyor mu? (join/kapanış kopukluğu)
     lc = store.read_json("llm_calibration.json", None)
     if lc is not None:
-        stamped = sum(1 for pl in store.read_jsonl("trade_plans.jsonl") if pl.get("llm_opinion"))
+        # TEK OKUMA (v243, 2026-08-13): plan defteri iki satır arayla İKİ kez okunuyordu (1013
+        # satır × 2). İki okuma arasında `hermes` bir görüş damgası yazabilir — o hâlde `stamped`
+        # ile `stamped_closed` FARKLI defterlerden sayılır ve "damgalı 12, kapanmış 13" gibi
+        # kendi içinde imkânsız bir satır doğar. Tek fotoğraf, tek hüküm.
+        _planlar = store.read_jsonl("trade_plans.jsonl")
+        stamped = sum(1 for pl in _planlar if pl.get("llm_opinion"))
         pairs = int(lc.get("n_pairs") or 0)
         closed_ids = {str(t.get("plan_id")) for t in trades_all}
-        stamped_closed = sum(1 for pl in store.read_jsonl("trade_plans.jsonl")
+        stamped_closed = sum(1 for pl in _planlar
                              if pl.get("llm_opinion") and str(pl.get("id")) in closed_ids)
         ok = not (stamped_closed >= 5 and pairs == 0)
         rows.append({"check": "llm_pair_join", "ok": ok,

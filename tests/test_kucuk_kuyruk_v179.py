@@ -522,7 +522,10 @@ def test_pano_muafiyeti_GOSTERIR_iki_render_yerinde_de():
     aynı bütçeyi basıyor; birinde gösterip diğerinde göstermemek, panonun kendi içinde çelişmesi
     olurdu (bu depoda 'iki kaynak, ayrışan iki yasa' diye adlandırılan baskın hata deseni)."""
     js = APP_JS.read_text()
-    for fn in ("function gbAlarmSatiri(ab) {", "function alarmButce(ab) {"):
+    # ÇAPA GÜNCELLENDİ (v243, 2026-08-13, BEYANLI): `gbAlarmSatiri` imzası `(ab, bekliyor)` oldu —
+    # teşhis ucu artık `RENDER.bugun`un ilk boyamasını beklemiyor (pano açılmama arızası) ve satır
+    # "ölçülüyor…" üçüncü durumunu taşıyor. Bu testin İDDİASI değişmedi: iki render yeri de durmalı.
+    for fn in ("function gbAlarmSatiri(ab, bekliyor) {", "function alarmButce(ab) {"):
         assert fn in js, f"render yeri kaybolmuş: {fn}"
     # Rozet METNİ ve HAM sayı iki yerde de basılmalı; tam beyan `title`da taşınır.
     assert js.count("restart-muafiyetli") == 2, \
@@ -553,7 +556,9 @@ def _fn_cikar(js: str, imza: str) -> str:
 
 
 @pytest.mark.parametrize("imza,cagri", [
-    ("function gbAlarmSatiri(ab)", "gbAlarmSatiri"),
+    # v243 (2026-08-13, BEYANLI): imza `(ab, bekliyor)` oldu; node koşumu tek argümanla çağırıyor
+    # ve `bekliyor` undefined kalıyor — yani ÖLÇÜLEN dal hâlâ gerçek bütçe render'ıdır.
+    ("function gbAlarmSatiri(ab, bekliyor)", "gbAlarmSatiri"),
     ("function alarmButce(ab)", "alarmButce"),
 ])
 def test_pano_rozeti_GERCEKTEN_render_edilir(imza, cagri):

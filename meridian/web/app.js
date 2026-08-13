@@ -1657,15 +1657,25 @@ const _gbSay = (v, birim) => v == null ? `<span class="gb-say mut">—</span>`
 
 RENDER.bugun = async () => {
   recReset();
-  // ÜÇ UÇ BEKLENİR, ÜÇÜ ARKADAN GELİR. Beklenenler sayfanın CÜMLESİNİ kuranlar (durum, döngü,
-  // alarm); arkadan gelenler eğilim kartları. `/api/market` 260 CSV okur ve onu ilk boyamaya
-  // zincirlemek, panonun açılış sayfasını en pahalı ucuna bağlamak olurdu.
+  // TEK UÇ BEKLENİR, GERİSİ ARKADAN GELİR (v243'te üçten bire indi — aşağıdaki blok).
+  // Beklenen, sayfanın CÜMLESİNİ kuran uçtur (durum + döngü + plan); arkadan gelenler teşhis ve
+  // eğilim kartları. `/api/market` 260 CSV okur ve onu ilk boyamaya zincirlemek, panonun açılış
+  // sayfasını en pahalı ucuna bağlamak olurdu — aynı yasa artık `/api/diagnostics` için de geçerli.
   // `/api/events` ARTIK ÇEKİLMİYOR (v190): tek okuyucusu aşağıdaki "Dün gece" kartıydı ve o kart
   // uçtan gelen SON DÖNGÜ ÖZETİNİ okuyor. Olay penceresi bir defterdir, bir ölçüm kaynağı değil.
-  const [t, d] = await Promise.all([
-    j("/api/today"), j("/api/diagnostics").catch(() => ({})),
-  ]);
-  if (d && d.sessiz_hat) { _DIAG = d; sessizHatGlobal(d.sessiz_hat); }
+  // TEK UÇ BEKLENİR (v243, 2026-08-13) — ÖLÇÜLMÜŞ ÜRETİM ARIZASININ DÜZELTMESİ.
+  // Bu satır `Promise.all([/api/today, /api/diagnostics])` idi ve `bugun` VARSAYILAN rotadır:
+  // yani panonun ilk boyaması, uçların EN PAHALISINA zincirliydi. 2026-08-13 tohum yenilemesi
+  // `trades.jsonl`ı 97→887 satıra çıkarınca `/api/diagnostics` 20-90 sn'ye tırmandı ve operatör
+  // "pano yüklenmiyor" dedi — oysa `/api/today` 0,18 sn, `/api/approvals` 0,05 sn, `/api/summary`
+  // 0,49 sn ile AYAKTAYDI. Ekranı tutan tek şey bu `await`di.
+  // Neden PREFETCH'ten çıkarmak YETMEZDİ: ön-yükleme zaten boşta ve ATEŞLE-UNUT (warmViews);
+  // sayfayı bekleten o değil, BURASIYDI. Uç PREFETCH'te KALIR — soğuk süreçte maliyeti boşta
+  // ödemek, operatör Operasyon'a tıkladığında ödemekten iyidir.
+  // Kart KAYBOLMAZ: teşhisin beslediği üç yüzey (sessiz hat şeridi, alarm bütçesi satırı, ret
+  // sayısı) aşağıda YERİNDE doldurulur — sayfanın kendi "iskelet konur, ölçüm arkadan gelir"
+  // deseni (eğri/karne/kapsama kartları) ve `refreshStatus`un ATEŞLE-UNUT beyanı ile aynı yasa.
+  const t = await j("/api/today");
 
   // ---- 1) DÜN GECE — son günlük döngünün KENDİ kaydından (`/api/today.son_dongu`).
   //         ESKİ KUSUR (operatör bulgusu): kart, olay akışının son 80 kaydında `daily_cycle`
@@ -1707,7 +1717,8 @@ RENDER.bugun = async () => {
   //         uçtan gelmedi" aynı cümle değildir.
   const planlar = Array.isArray(t.todays_plans) ? t.todays_plans : null;
   const reviewN = planlar ? planlar.filter(p => p && p.onay_bekliyor).length : null;
-  const retN = (((d || {}).reconcile || {}).failed_submissions || {}).open;
+  // RET SAYISI ARKADAN GELİR: kaynağı `/api/diagnostics.reconcile` ve o uç artık beklenmiyor.
+  // Yuva BOŞ doğar — "0 ret" YAZMAZ: ölçülmemiş bir sayıyı sıfır göstermek uydurma olurdu.
   const bugunGovde = `${_gbSay(silahliN, "silahlı emir")}
     <p class="gb-alt">${onayN == null
       ? "bekleyen onay <b>ölçülmedi</b> — gelen kutusu alanı uçtan gelmedi"
@@ -1715,8 +1726,7 @@ RENDER.bugun = async () => {
           reviewN == null
             ? ' · <span class="mut">REVIEW ölçülemedi — plan defteri uçtan gelmedi</span>'
             : (reviewN ? ` · <b>${reviewN}</b> plan onayını bekliyor` : "")}`}</p>
-    <p class="gb-alt">${silahliN ? "açılışta ateşlenecek" : "açılışta yeni tarama yapılır"}${
-      (retN || []).length ? ` · <span class="neg">${retN.length} emir reddedildi</span>` : ""}</p>`;
+    <p class="gb-alt">${silahliN ? "açılışta ateşlenecek" : "açılışta yeni tarama yapılır"}<span id="gb-ret"></span></p>`;
 
   // ---- 4-6) ÜÇ MİNİ-TREND — iskelet konur, ölçüm arkadan gelir. "ölçülüyor…" bir sayı DEĞİL:
   //           dolmayan bir kart tire ile kalır ve nedenini söyler.
@@ -1728,7 +1738,7 @@ RENDER.bugun = async () => {
   // kartının işidir ve iki yerden aynı şeyi söylemek, ikisini de zayıflatırdı.
   $("page-bugun").innerHTML = `
     <div class="alan-bas">${alanBasHTML("bugun")}</div>
-    ${gbAlarmSatiri((d || {}).alarm_butcesi)}
+    ${gbAlarmSatiri(null, true)}
     <div class="gb-ust">
       ${gbKart("gece", geceGovde)}
       ${gbKart("sermaye", sermayeGovde)}
@@ -1742,6 +1752,21 @@ RENDER.bugun = async () => {
   buildSidebar(t);
 
   // --- arkadan gelen ölçümler ---------------------------------------------------------------
+  // TEŞHİS UCU — sayfa ÇİZİLDİKTEN sonra. Üç yüzeyi yerinde doldurur; hiçbiri ilk boyamayı
+  // bekletmez. Uç düşerse üçü de "ölçülemedi" der (uydurma yok, sessizlik de yok).
+  j("/api/diagnostics").then(d => {
+    if (d) _DIAG = d;
+    sessizHatGlobal(d && d.sessiz_hat);
+    const al = $("gb-alarm");
+    if (al) al.outerHTML = gbAlarmSatiri((d || {}).alarm_butcesi);
+    const ret = $("gb-ret"), acik = (((d || {}).reconcile || {}).failed_submissions || {}).open;
+    if (ret && (acik || []).length) ret.innerHTML = ` · <span class="neg">${acik.length} emir reddedildi</span>`;
+  }).catch(() => {
+    const al = $("gb-alarm");
+    if (al) al.outerHTML = gbAlarmSatiri(null);   // "ölçülmedi — teşhis ucu bu alanı vermedi"
+    const ret = $("gb-ret");
+    if (ret) ret.innerHTML = ` · <span class="mut">ret sayısı ölçülemedi — teşhis ucu okunamadı</span>`;
+  });
   // Eğri + karne AYNI uçtan gelir (`/api/performance`): iki ayrı istek atmak, aynı dosyayı iki kez
   // okutmak olurdu.
   j("/api/performance").then(p => {
@@ -1786,12 +1811,17 @@ RENDER.bugun = async () => {
 // ALARM BÜTÇESİ TEK SATIR (ADR). Mevcut `alarmButce()` özeti burada KISALTILMADAN değil,
 // ÖZETLENEREK yazılır: tam kırılım Gözetim & Alarmlar'ın işi, buradaki iş "bugün bu bütçe
 // aşıldı mı?" sorusunu tek satırda kapatmak.
-function gbAlarmSatiri(ab) {
+// ÜÇ DURUM, İKİ DEĞİL (v243, 2026-08-13): "ölçülüyor…" ile "ölçülmedi" AYNI cümle değildir.
+// Teşhis ucu artık sayfayı bekletmediği için satır bir süre CEVAPSIZ duruyor; o aralıkta
+// "ölçülmedi — uç bu alanı vermedi" yazmak, henüz sorulmamış bir soruya olumsuz cevap uydurmaktır.
+// `id="gb-alarm"` sabittir: yanıt gelince satır YERİNDE (outerHTML) değişir.
+function gbAlarmSatiri(ab, bekliyor) {
   const hedef = "saglik#operasyon", bag = `<button class="gb-bag" type="button" data-act="go" data-a1="${hedef}">→ ${
     esc(ALAN_ADI.saglik)} <span class="tx3">· alarmlar</span></button>`;
-  if (!ab) return `<div class="gb-alarm">alarm bütçesi · <b>ölçülmedi</b> — teşhis ucu bu alanı vermedi${bag}</div>`;
+  if (bekliyor) return `<div class="gb-alarm" id="gb-alarm">alarm bütçesi · <span class="mut">ölçülüyor…</span>${bag}</div>`;
+  if (!ab) return `<div class="gb-alarm" id="gb-alarm">alarm bütçesi · <b>ölçülmedi</b> — teşhis ucu bu alanı vermedi${bag}</div>`;
   const d = ab.dagilim || {};
-  return `<div class="gb-alarm${ab.asim_var ? " asim" : ""}">
+  return `<div class="gb-alarm${ab.asim_var ? " asim" : ""}" id="gb-alarm">
     <span>alarm bütçesi · son 24 sa <b>${d.low ?? "—"}</b> low / <b>${d.high ?? "—"}</b> high</span>
     <span${ab.tepe_muafiyet_uygulandi ? ` title="${esc(ab.tepe_beyan || "")}"` : ""}>tepe <b>${
       ab.tepe_10dk ?? "—"}</b>/10dk (tavan ${ab.tavan_10dk ?? "—"})${
