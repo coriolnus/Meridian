@@ -1301,6 +1301,19 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🆕 34. KAYAN OTURUMUN İKİ SESSİZ SÜRÜKLENMESİ** _(2026-08-14, v245-B turunun ADIYLA devrettiği kalemler; sahibi WP6)_
+  Kayan oturum (v2 jeton) uygulandıktan sonra **iki beyan eskidi** ve ikisi de test kırmızısı
+  ÜRETMİYOR — yani sessiz:
+  **(a)** `meridian/codelaw.py` `DECLARED_SINKS["auth.json"]` çapası `api.py:420` diyor, satır
+  artık **426**; ayrıca yazan listesi `set_password`/`rotate_key`/`issue_session` sayıyor ama
+  **`refresh_session`** (→`_sign`→`_key()`) aynı sınıftan ve **adı geçmiyor**. Test yalnız terim
+  VARLIĞINA baktığı için kırmızı yok. Bu, denetim A17'nin (kaynak-içi çapa bayatlığı) yeni bir
+  örneği — ve tam da `codelaw`ın kendi kovaladığı sınıf.
+  **(b)** `meridian/auth_cli.py status` "oturum ömrü : 12 saat" basıyor; artık EKSİK — doğrusu
+  "12 saatlik **KAYAN** pencere + **7 gün mutlak tavan**". Operatörün elindeki tek CLI beyanı bu.
+  *öncelik: düşük-orta · boyut: XS (iki metin) · not: (a) çapa-bayatlığı sınıfı olduğu için
+  A17 ile birlikte ele alınmalı — tek tek düzeltmek deseni kapatmaz.*
+
 - **🆕 31. `active_model()` KÜNYE KUSURUNUN İKİNCİ EVİ + UYDURMA KORUMASI EKSİĞİ** _(2026-08-14, v245-A turunun ADIYLA devrettiği iki kalem; sahibi WP7)_
   **(a) İKİNCİ EV:** `hermes.py:3987` `chain_text` → `out.update({... "model": active_model()})` —
   `candidate_review`de bu tur kapatılan kusurun **birebir aynısı** (Katman-B nous değerlendirme
