@@ -1,0 +1,34 @@
+# EDG-2026-032b — TAM-SATIR TOHUM KOŞUMU · komut zinciri (2026-08-13, ölçüm ajanı)
+# Kart: research/cards/EDG-2026-036-tohum-yenileme.yaml (OKU-DOKUNMA)
+# Niçin: EDG-036 hükmü — "032 koşumunu TAM-SATIR serileştirmeyle yeniden koş (deterministik,
+#        sha-pinli AYNI dünya), sonra yenilemeyi o defterle tekrar ölç."
+#
+# ZİNCİR SIRASI (özdeşlik kapısı sıralamayı ZORLAR):
+#   smoke → ozdeslik --smoke → kontrol (TAM, ~30dk) → ozdeslik (kill#1; düşerse DUR) → kapsama
+#
+# YAZMA SINIRLARI: git YOK · canlıya SSH/yazım YOK · repo koduna dokunulmadı ·
+# config.STATE = state_kontrol/ (izole sandbox), barlar symlink ile SALT-OKUNUR.
+
+# [1] duman (≈9sn) — pencere 2022-01-01→2022-06-30
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py kontrol --smoke > research/olcumler/edg032b_tamsatir_2026-08-13/kosum_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py ozdeslik --smoke >> research/olcumler/edg032b_tamsatir_2026-08-13/kosum_smoke.log 2>&1
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py kapsama --smoke >> research/olcumler/edg032b_tamsatir_2026-08-13/kosum_smoke.log 2>&1
+
+# [2] TAM koşum (arka plan, ~30dk) — pencere 2022-01-01→2026-07-30, evren 251, seed 20260812
+cd /Users/erdemozturk/AI-Trading && nohup .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py kontrol > research/olcumler/edg032b_tamsatir_2026-08-13/kosum_kontrol.log 2>&1 & disown
+
+# [3] KILL#1 ÖZDEŞLİK KAPISI — slim projeksiyon ↔ EDG-032 islemler_cmb.json BAYT-ÖZDEŞ mi?
+#     Düşerse (exit 2) DUR: "tam-satır yazımı dünyayı değiştirdi" demektir, defter tohum OLAMAZ.
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py ozdeslik > research/olcumler/edg032b_tamsatir_2026-08-13/kosum_ozdeslik.log 2>&1; echo "exit=$?"
+
+# [4] KAPSAMA — canlı `trades` şemasının 26 alanı için alan alan muhasebe
+cd /Users/erdemozturk/AI-Trading && .venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py kapsama > research/olcumler/edg032b_tamsatir_2026-08-13/kosum_kapsama.log 2>&1
+
+# ÇIKTILAR
+#   islemler_tam_kontrol.json   TAM SATIR defteri (broker.py:685-702 sözlüğü, KIRPMA YOK) ← tohum adayı
+#   islemler_kontrol.json       12 alanlık slim projeksiyon (yalnız özdeşlik kapısının kıyas nesnesi)
+#   seanslar_kontrol.json       seans defteri (özdeşlik kapısının ikinci bayt kıyası)
+#   sonuc_kontrol.json          koşum künyesi + bütünlük + performans blokları
+#   alan_envanteri_kontrol.json tam defterin ham alan/tip envanteri
+#   ozdeslik.json               kill#1 kanıtı (sha kıyası + sonuc blok eşitliği)
+#   kapsama.json                26 alanın kova tablosu + skill_chain/plan_id özel ölçümleri

@@ -47,7 +47,35 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-13T0x", trial_ids: [pending-036-kuru-kosum]}
 
-status: measured   # 2026-08-13 Rol-1 — aşama-0+1 ölçüldü + hüküm: YENİLEME ŞU ARTEFAKTLA YAPILMAZ.
+status: measured   # 2026-08-13 Rol-1 — hüküm İKİ KEZ verildi: önce "yapılamaz", sonra ÖLÇÜMLE DÜZELTİLDİ.
+
+hukum_duzeltmesi:   # 2026-08-13, EDG-032b tam-satır koşumu (research/olcumler/edg032b_tamsatir_2026-08-13/)
+  ne_yanlisti: >
+    ALTTAKİ "13 UYDURULAMAZ EKSİK alan" hükmü YANLIŞTI ve şimdi ölçümle çürütüldü. O hüküm SLIM
+    PROJEKSİYON üzerinden verilmişti (olcum.py:671-673 tam satırı 12 alana kırpıyordu); alanların
+    motorda VAR OLUP OLMADIĞI ölçülmemiş, projeksiyonda görünmemesi "yok" sanılmıştı. Kendi kuralımı
+    çiğnemişim: yokluğu KANITLAMADAN yokluk hükmü verdim.
+  olculen: >
+    Tam-satır koşum (aynı dünya — 12-alan projeksiyonu 032-cmb ile BAYT-ÖZDEŞ, sha
+    d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d): canlı şemanın 26 alanından
+    **25'i 885/885 DOLU**, 1'i yapısal boş (`kaynak` — YAZAR basar, üretici değil; broker.py:666-667),
+    **eksik 0**. "13 uydurulamaz"ın 13/13'ü dolu çıktı. `skill_chain` 885/885 dolu (4 çeşit zincir),
+    `plan_id` 885/885 canlı biçimde (P-YYYY-MM-DD-TICKER) — yani 036'nın "skills karnesi tohumdan
+    beslenemez" KALICI SINIR endişesi de bu artefaktta geçersiz.
+  yeni_hukum: >
+    YENİLEME YAPILABİLİR. Körleşen 7 tüketicinin 6'sı bu defterle AÇILIR (score_calibration,
+    component_ic, threshold_curve, cf_fidelity, mae_profile, skills-gerçek-katman, net_kotumser).
+    7.'si (`llm_opinion_calibration`) KALICI OLARAK açılmaz ve bu DOĞRUDUR: LLM görüşü canlı yolda
+    basılır (hermes.py:3313), backtest'te `llm_opinion` hiç geçmez — hiçbir replay tohumu üretemez.
+    Bu, tohumun dürüst sınırıdır ve damgada yazılmalıdır.
+  eksik_adim: >
+    Bu koşum yalnız İŞLEM defterini yazdı; gerçek yenileme yolu (`run.py:276-283`) `trade_plans.jsonl`i
+    de baştan yazar. Plan defteri OLMADAN yenileme korunum dedektörünü bozar (409 plan ↔ 97 işlem
+    dengesi 885 işleme karşı eski planla kalır). → ikinci serileştirme koşumu ŞART (~13 dk, aynı dünya).
+  friksiyon_serhi: >
+    EDG-037 (TCA) uyarısı tohuma İŞLENMELİ: bu defter `slippage_bps=5` varsayımıyla üretildi ve o
+    varsayım ilk ölçümde ~9 kat iyimser çıktı. Tohum GÜNCEL PAKETİ temsil eder ama İYİMSER FRİKSİYONU
+    taşır; damgasına yazılmazsa sonraki okuyucu bunu gerçekleşen sanır.
 verdict:
   asama0: >
     KILL#1 TETİKLENMEDİ — tohumun EN AZ 15 gerçek tüketicisi var ve 13'ü `kaynak` ayrımı YAPMIYOR.
