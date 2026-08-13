@@ -76,6 +76,24 @@ Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonrak
 _Aşağıdaki GÜNCEL DURUM anlık yönelim; ardından uniform ÖZET TABLOSU (her WP tek biçim); sonra WP
 detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kalır; tamamlanan WP'ler §6'da._
 
+> **GÜNCEL DURUM — 2026-08-13 ~20:30Z (YEDİ DAĞITIM + TOHUM YENİLEME; ROADMAP tutarlılık denetimi
+> `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md`):**
+> Sistem canlı — birimler active, healthz 200, otoriter suite yeşil. **CANLIDA: C+mb @5R paketi**
+> (mb silahlı, slot 20, 0,5R, rampa 15/36 kablolu, `max_drawdown` 0,16) · sprint AYRI systemd
+> biriminde (v241 — worker restart'ı artık onu öldürmüyor, kanıtlı) · beyin zinciri AYRIK
+> (nous=tencent, gemini=flash-latest) · 8. bütünlük deseni `divergence` · eksen-2 karar kaydı ·
+> tohum defteri YENİLENDİ (97→887 işlem, sv=90 ayrı sürüm-uzayı + friksiyon şerhi).
+> **⚠ DÜZELTME (denetim A3): "4 motor pozisyonu KORUMALI" İDDİASI ARTIK YANLIŞ** — bugünkü ölçüm
+> (`DENETIM-OLU-BILESEN-ENVANTERI:397-398`): NUE/EMR/BKNG/AMGN **dördü de açık ve broker'da canlı
+> koruyucu stop YOK** (`korumasiz_motor_disi_pozisyon` 26 kez). Koruma yeniden-kurulumu ELLE ve üç
+> kapı ardında (EDG-038 yan bulgusu) → **EN ACİL OPERATÖR KALEMİ** (bkz. §3).
+> **AÇIK ÜRETİM ARIZASI (2026-08-13 20:2xZ):** pano açılışı `/api/diagnostics` üzerinden tıkanıyor —
+> `parity_report` soğuk çağrıda 16,7s (tohum sonrası defter 9× büyüdü); v243 turu bunu kapatıyor.
+> **İKİNCİ ACİL OPERATÖR KALEMİ: BİLDİRİM KANALI (N1)** — kanal yok, 29 alarm teslim edilemedi;
+> artık ön-şartsız (systemd exit-143 kapandı).
+>
+> _(2026-08-09 kaydı tarihçe olarak aşağıda korunmuştur.)_
+>
 > **GÜNCEL DURUM — 2026-08-09 ~09:00 UTC (GECE+SABAH DÖRT DAĞITIM İNDİ, son commit `964696b`):**
 > Sistem canlı ve sağlıklı — broker `alpaca_paper`, birimler active, otoriter suite YEŞİL (v196
 > son iki kırmızıyı kapadı). **4 motor pozisyonu KORUMALI:** broker'da 4 açık `P-KORUMA-…-0835`
