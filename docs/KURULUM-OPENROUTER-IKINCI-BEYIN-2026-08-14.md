@@ -60,28 +60,44 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && .venv/bin/pyt
 Beklenen: birinci satır `False` (uzak uca geçildi), ikinci satır **dolu bir cevap**.
 `False` gelmiyorsa `NOUS_ENDPOINT` yazılmamıştır.
 
-### Adım 3 — Yol B: önce UCUZ olanı dene (config), olmazsa kod turu
+### Adım 3 — Yol B: ⛔ UCUZ YOL DENENDİ ve ÇÜRÜDÜ → kod turu ZORUNLU
 
-CLI'nın `--provider` varsayılanı `auto`. Yapılandırmadaki sabit `gemini` bunu eziyor olabilir.
-Önce şunu dene — model slug'ına göre yönlendirme açılırsa **kod değişikliği hiç gerekmez**:
+**Hipotez (benim tahminim):** CLI'nın `--provider` varsayılanı `auto` olduğuna göre,
+yapılandırmadaki sabit `gemini`yi `auto`ya çekmek slug'a göre yönlendirmeyi açar ve kod
+değişikliği gerekmez.
 
-```bash
-ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 '~/.local/bin/hermes config set model.provider auto && ~/.local/bin/hermes chat -Q -q "iki kelimeyle merhaba de" --model tencent/hy3:free 2>&1 | tail -3'
+**ÖLÇÜM (2026-08-13 21:12Z, canlı) — HİPOTEZ ÇÜRÜDÜ:**
+
+```
+hermes config set model.provider auto          → ✓ Set model.provider = auto
+hermes chat --model tencent/hy3:free           → HTTP 401: Missing Authentication header
+hermes chat --model gemini-flash-latest        → HTTP 401: Missing Authentication header   ← ÇALIŞAN YOL DA KIRILDI
 ```
 
-**Ve hemen ardından mevcut yolun bozulmadığını doğrula (bu şart):**
+`auto`, slug'a göre yönlendirmiyor; **hiçbir kimliğe bağlanamıyor** ve auth başlığı hiç
+göndermiyor. Yani ucuz yol yalnız işe yaramamakla kalmıyor, **mevcut çalışan Gemini ayağını
+da düşürüyor**.
 
-```bash
-ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 '~/.local/bin/hermes chat -Q -q "iki kelimeyle merhaba de" --model gemini-flash-latest 2>&1 | tail -3'
-```
+**GERİ ALINDI ve DOĞRULANDI** (aynı dakika): `hermes config set model.provider gemini` →
+`gemini-flash-latest` yine dolu cevap veriyor. Kırık pencere ~50 saniye sürdü ve o aralıkta
+**hiçbir üretim çağrısı yapılmadı** (son `agent_call` 13 dakika öncesineydi) — canlı etkilenmedi.
 
-- **İkisi de dolu cevap verirse:** bitti, Yol B de açıldı, kod turu gereksiz.
-- **tencent çalışıp gemini bozulursa:** geri al (`hermes config set model.provider gemini`) ve
-  kod turuna geç — `_agent_chat_cmd` slash içeren model kimliklerinde `--provider openrouter`
-  geçmeli. Bu dar bir değişiklik; Rol-1 brief'ler, Opus uygular.
-- **tencent hâlâ 404 verirse:** anahtar `.hermes/.env`e yazılmamış ya da CLI'nın okuduğu ad
-  farklı — `hermes config show` çıktısındaki `OpenRouter` satırı `(not set)` yerine
-  set görünmeli.
+**DERS (bu belgenin en pahalı satırı):** karşı-sınama (`gemini bozulmadı mı`) **aynı komutta**
+koşulduğu için arıza 50 saniyede yakalandı. Tek başına "tencent çalıştı mı" sorulsaydı,
+cevap "hayır" olurdu ve **çalışan ayağın da düştüğü fark edilmezdi** — beyin zinciri gece
+boyunca kapalı kalırdı. Sağlayıcı/model yönlendirmesi değiştiren her denemede karşı-sınama
+ŞARTTIR.
+
+**Kalan tek yol — dar kod turu (Rol-1 brief'ler, Opus uygular):** `_agent_chat_cmd`
+(`meridian/hermes.py:1836`) CLI komutunu kuran TEK yerdir; model kimliği slash içeriyorsa
+(OpenRouter slug biçimi) komuta `--provider openrouter` eklenmeli. `model.provider: gemini`
+yapılandırmada **DEĞİŞMEDEN kalır** — böylece gemini ayağı bugünkü davranışını korur.
+Doğrulama, yine iki yönlü: tencent dolu cevap **ve** gemini bozulmamış.
+
+**Not — `.hermes/.env` kontrolü:** `hermes config show` çıktısında `OpenRouter` satırı
+`(not set)` yerine maskeli bir değer göstermeli. Yer tutucu metin (`BURAYA_ANAHTAR` gibi)
+yazıldıysa satır dolu **görünür ama 401 verir** — maskeli değerin gerçek anahtarın son
+karakterleri olduğu doğrulanmalı.
 
 ## 3. Bilinmesi gereken sınır — ücretsiz katman kotası
 
