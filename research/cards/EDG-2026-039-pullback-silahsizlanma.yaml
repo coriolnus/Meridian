@@ -1,0 +1,51 @@
+card_id: EDG-2026-039
+family: pullback_silahsizlanma
+thesis: >
+  Operatör kararı (2026-08-13): "önce kart, sonra karar". Bağlam — ÜÇ BAĞIMSIZ KAYNAK aynı yönde:
+  C+mb replay 885 defterinde pullback n=6, ort-R −0,787, net −2.418$, **kazanma %0,0** · canlı gerçek
+  katman n=4, avg_r −1,00 · karşı-olgusal n=21, cf_avg_r −0,97. Sistem bunu görüp `pullback-screener`ı
+  registry'de `shadow`a almış AMA bayrak ETKİSİZ (strategy.py `skills` kelimesini hiç okumuyor) ve
+  kurulum `ARMED_SETUPS`ta silahlı kalmış — "koruma kararı alındı sanılıyor, uygulanmamış" sınıfı.
+  TEZ: silahsızlandırmanın PORTFÖY etkisi ölçülür. Naif beklenti "+2.418$ kurtarılır" YANLIŞ olabilir:
+  serbest kalan slot/ısı başka kurulumlara akar (030'un yan-kanal dersi; EDG-033'te ters yönde ölçüldü)
+  ve etki toplamsal değildir.
+
+evidence_refs:
+  - "EDG-032b tam-satır defteri: pullback n=6, ort-R −0,787, net −2.418$, kazanma %0,0 (885 işlemde)"
+  - "canlı eksen-2 teşhisi 2026-08-12: pullback-screener gerçek n=4 avg_r −1,00 · cf n=21 −0,968"
+  - "registry: mode=shadow, shadow=True — ama strategy.py 'skills' geçiş sayısı 0 (bayrak etkisiz)"
+  - "EDG-030 yan-kanal dersi: kurulum çıkarınca/eklenince slot-ısı başka kurulumlara kayar, toplamsal değil"
+
+universe: >
+  C+mb @5R dünyası AYNEN (edg032b şasisi — rampa kablolu, slot 20, 0,5R, zarf 5R, mb silahlı).
+  TEK DEĞİŞKEN: ARMED_SETUPS'tan `pullback` çıkarılır (param-enjeksiyonu; strategy.py'ye DOKUNULMAZ —
+  ölçüm kanalı EDG-025/032'nin `entry.armed_extra` emsalinin TERSİ yönü, "armed_eksi" kanalı kurulur
+  ya da ARMED kümesi param olarak geçirilir; hangisi mevcut yüzeyle uyumluysa o, BEYANLI).
+
+features_asof: >
+  TEK KOŞUM: C+mb − pullback. Kıyas C+mb tabanına (edg032b, sha-pinli): işlem n · net P&L farkı + CI
+  (eşlenik ay-kümeli bootstrap 5000, seed 20260812) · max-dd · sharpe · işlem-R. AYRICA ZORUNLU:
+  **yan-kanal ayrıştırması** — pullback'in 6 işlemi kaybolunca serbest kalan slot/ısı hangi kurulumlara
+  aktı, o işlemlerin R'si ne (030 deseni). "Kurtarılan 2.418$" ile "gerçekleşen fark" arasındaki
+  açıklama sente kapanmalı.
+
+parameter_grid:
+  yok: "tek hücre — K += 1"
+
+cost_model: pessimistic_band_v2   # NOT: EDG-037 bu bandın da iyimser olabileceğini ölçtü (ölçüt şerhli);
+                                  # bu kart GÖRECELİ kıyas yaptığı için etkilenmez (iki kol aynı bant).
+
+success_metric: >
+  SİLAHSIZLANMA ÖNERİLİR ANCAK: ΔP&L CI-alt > 0 (yani çıkarmak CI ile İYİLEŞTİRİYOR) VEYA
+  ΔP&L CI 0-içi iken dd/sharpe belirgin iyileşiyorsa (risk azalıyor, getiri değişmiyor).
+  ΔP&L CI-üst < 0 ise (çıkarmak zarar veriyor) pullback SİLAHLI KALIR ve kayıp serisi örneklem
+  kuraklığına yorulur. HER İKİ DURUMDA yan-kanal ayrıştırması raporlanır.
+
+kill_criteria:
+  - "şasi bütünlüğü bozuksa geçersiz (frame/dup/scan==plan + sha künyesi)"
+  - "ARMED kümesi enjeksiyonu strategy.py'yi DEĞİŞTİRİYORSA geçersiz — ölçüm kanalı repo koduna dokunmaz"
+  - "pullback'in 6 işlemi taban defterde bulunamazsa (sha uyuşmazlığı) geçersiz"
+
+k_registry: {registered_at: "2026-08-13T2x", trial_ids: [pending-039-pullback-cikar]}
+
+status: registered   # 2026-08-13 Rol-1 — operatör "önce kart, sonra karar" dedi; eşikler donuk.
