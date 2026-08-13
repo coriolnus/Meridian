@@ -877,8 +877,13 @@ Biçim: `gerekçe · tahmini boyut · bağımlılık · öncelik`. Olgunlaşan �
     yetki kapısı korunur — 2026-07-30'da ölçülmüş kazanın kapısı, Rol-1 onayı). KANIT: yeni sprint
     `sid=20260813-005434` doğdu ve skip sebebi `mesgul:canli_arama` → **`tetik_yok(gun=0<7, taze=0<5)`**
     oldu (doğru davranış). YENİ KALEM ÇIKTI: yeni sprint çocuğu da 0,5 saatte öldü (`sprint_yetim_tespit`
-    yetim_saat=0.5) — **kilit açıldı ama çocuk süreç neden ölüyor ayrı bir soru**; 12sa freni doğru
-    çalışıyor. *sıradaki tur: sprint çocuk-süreç ölüm kökü (log/exit-kodu izle).*
+    yetim_saat=0.5). **ÖLÜM KÖKÜ DE BULUNDU VE KAPANDI (v241, 2026-08-13 17:16Z):** sprint ÇÖKMÜYORDU,
+    ÖLDÜRÜLÜYORDU — çocuk worker'ın systemd cgroup'unda doğuyordu ve `KillMode=control-group` her
+    `restart meridian`da onu biçiyordu (o gün üç ölüm: 41/113/1 adım, üçünün de tetiği bir restart —
+    ikisi Rol-1 dağıtımı, biri paralel oturumunki; OOM yok, traceback yok, NRestarts=0). Çözüm: kendi
+    şablon birimi `meridian-sprint@<sid>` (worker'a bağ YOK) + polkit kuralı (setuid'siz tetik —
+    `NoNewPrivileges` koruması taviz VERMEDEN korundu). **KANIT TESTİ GEÇTİ:** sprint koşarken kasten
+    `systemctl restart meridian` → aynı pid restart'ın öbür tarafında CANLI, `kosum_yolu:"systemd"`.
     Özgün teşhis: v235'in
     yetim-restart mekanizması ÖLÜ: son `sprint_cadence_skip` satırı `sebep="mesgul:canli_arama"`,
     `yetim=true`, `gecen_gun=5`, `arama_bayrak_yasi_sa=0.17`, `arama_bayat=false`. Yani canlı arama
