@@ -794,12 +794,50 @@ function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
       parca.join(" · ")}</p>`;
 }
 
+// ---- AYNA ROZETİ: İKİ BOYUT, TEK CÜMLE -------------------------------------------------------
+// (2026-08-13 · docs/DENETIM-SPLIT-SINIFI-2026-08-13.md §3.1)
+// KUSUR NEYDİ: bu rozet YALNIZ `hb.mirror_drift`e bakıyordu ve o alan FİYAT sapmasını ölçer
+// (loop.py:25 `MIRROR_DRIFT_TOL` — iç sim dolumu ↔ gerçek Alpaca dolumu). ADET sapması
+// (`position_drift`, `loop.reconcile_broker_state`) BAŞKA bir gerçektir ve nabızda anahtarı hiç
+// yoktu. Canlı
+// ölçüm (2026-08-12T22:01Z): fiyat sapması False, adet sapması True, 4/4 pozisyon ~2 kat ayrık —
+// rozet "ayna uyumlu" (yeşil) yazarken aynı ekranın eylem şeridi "Alpaca aynasında sapma var"
+// diyordu. Kök neden bir DÜZELTMENİN yan ürünüydü: P6 tekilleştirmesi (app.js:9739-9744) sapma
+// metnini mutabakat masasına taşıdı, bu özet rozeti BAŞKA bir alandan besleniyordu ve taşınmadı.
+//
+// SÖZLEŞME: iki boyut da doğruysa "ayna uyumlu" YAZILABİLİR; biri bile sapıksa yazılamaz ve HANGİ
+// boyutun saptığı adıyla söylenir. Ölçülmemiş boyut ÜÇÜNCÜ hâldir (ne yeşil ne kırmızı) — nabız
+// artık `mirror_checked` taşır ve ölçülmeyen tur iki alanı da `null` yazar
+// (`loop.ayna_sapma_alanlari` — satır numarası değil AD verilir: bu turun kendi dersi).
+// GERİYE UYUM: dağıtım öncesi yazılmış bir nabızda `position_drift` anahtarı YOKTUR (undefined) →
+// adet boyutu "ölçülmedi" okunur. Eski nabzı "temiz" saymak, kapatılan kusuru geri açmak olurdu.
+function aynaRozeti(hb) {
+  const _boyut = v => (v === true ? "sapma" : v === false ? "uyumlu" : "olculemedi");
+  const fiyat = _boyut(hb.mirror_drift), adet = _boyut(hb.position_drift);
+  const sapan = [fiyat === "sapma" ? "fiyat" : null, adet === "sapma" ? "adet" : null].filter(Boolean);
+  const olcumsuz = [fiyat === "olculemedi" ? "fiyat" : null,
+                    adet === "olculemedi" ? "adet" : null].filter(Boolean);
+  const kunye = `fiyat sapması: ${fiyat === "olculemedi" ? "ÖLÇÜLMEDİ" : fiyat}`
+              + ` · adet sapması: ${adet === "olculemedi" ? "ÖLÇÜLMEDİ" : adet}`
+              + (hb.mirror_checked === false ? " · bu turda mutabakat KOŞMADI" : "");
+  if (sapan.length) return { metin: `sapma: ${sapan.join("+")}`, sinif: "neg", baslik: kunye };
+  // "AYNA YOK" ≠ "AYNA ÖLÇÜLEMEDİ" (loop._skip sınıfı). Dahili brokerde kıyaslanacak bir ayna
+  // hiç yoktur; o hâli amber basmak, hiç var olmayan bir arızayı sonsuza dek raporlamak olurdu —
+  // ve "kalıcı bir uyarı, hiç uyarı olmamakla aynı bilgiyi taşır" (bu panonun kendi kuralı).
+  if (hb.mirror_skip_sinifi === "ayna_yok")
+    return { metin: "ayna yok", sinif: "", baslik: `${kunye} · dahili broker — kıyaslanacak ayna yok` };
+  if (olcumsuz.length === 2) return { metin: "ayna ölçülmedi", sinif: "warn", baslik: kunye };
+  if (olcumsuz.length) return { metin: `${olcumsuz[0]} ölçülmedi`, sinif: "warn", baslik: kunye };
+  return { metin: "ayna uyumlu", sinif: "pos", baslik: kunye };
+}
+
 async function buildSidebar(today, x) {
   // Nav bir İNDEKS'tir, etiket listesi değil: her görünümün altında o sayfanın tek satırlık CANLI
   // özeti okunur — kullanıcı tıklamadan "orada ne var?" sorusunun cevabını görür. Tüm değerler
   // API'den; veri yoksa satır dürüstçe kısalır, asla uydurulmaz. x = brifing'in hermes paketi
   // (öğrenme/araç özetleri için; periyodik tazelemede olmayabilir → o satırlar sabit kalır).
   const hb = today.heartbeat || {};
+  const _ayna = aynaRozeti(hb);     // İKİ boyut (fiyat + adet) — bkz. aynaRozeti şerhi
   const vc = today.verdict_counts || {};
   const adayN = (today.todays_plans || []).length;
   // Rozet artık BEKLEYEN KARAR sayısını taşır (aday sayısını değil): aday bilgi, bekleyen karar
@@ -895,7 +933,7 @@ async function buildSidebar(today, x) {
   $("side").innerHTML = `
     <p class="slab">HESAP</p>
     <div class="acct">
-      <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${hb.mirror_drift ? "neg" : "pos"}">${hb.mirror_drift ? "sapma" : "ayna uyumlu"}</b></div>
+      <div class="r"><span>${esc(today.broker || "Dahili broker")}</span><b class="${_ayna.sinif}" title="${esc(_ayna.baslik)}">${esc(_ayna.metin)}</b></div>
       <div class="r"><span>Sermaye</span><b class="${SERMAYE_RENK[(today.sermaye_koken || {}).renk] || ""}">${money(today.equity)}</b></div>
       ${sermayeKokenSatiri(today.sermaye_koken, { kisa: true, ibareyle: true })}
       <!-- MOD HER DURUMDA GÖRÜNÜR (Dalga-0 hükmü) — bu satır o yüzden kalır. Otonomi seviyesi
@@ -1046,7 +1084,12 @@ function spineHTML(t, h, rc, ws) {
   // panonun kendi içinde tek adres dili kalsın.
   if (t.halted) acts.push(["sistem DURDURULDU — sağ üstten DEVAM", "kilitler#mudahale"]);
   if (hb.breaker_tripped) acts.push(["günlük kayıp devre kesici tetikli", "kilitler#mudahale"]);
-  if (hb.mirror_drift || (rc && (rc.mirror_drift || rc.position_drift))) acts.push(["Alpaca aynasında sapma var", "karar#mutabakat"]);
+  // NABIZ ARTIK ADET BOYUTUNU DA TAŞIYOR (2026-08-13): `hb.position_drift` eklendi
+  // (`loop.ayna_sapma_alanlari` → `health.write_heartbeat`).
+  // Bu satır zaten mutabakat tarafından okuyordu, yani şerit DOĞRUYDU — eksik olan HESAP rozetiydi
+  // (bkz. aynaRozeti). Nabız bacağı yine de tamamlanır: `/api/alpaca` yavaş/kopuk olduğunda `rc`
+  // boş gelir ve şerit o turda YALNIZ nabza bakar; adet sapmasını orada da görebilmeli.
+  if (hb.mirror_drift || hb.position_drift || (rc && (rc.mirror_drift || rc.position_drift))) acts.push(["Alpaca aynasında sapma var", "karar#mutabakat"]);
   // REDDEDİLEN EMİR ARTIK KAYDA GİDER (2026-07-27). Eskiden hedef "ayarlar" idi ve oradaki
   // karşılık tek bir cansız cümleydi: hangi hisse, broker ne dedi, şimdi ne yapılmalı —
   // hiçbiri yanıtlanmıyordu. Ürünün var olma nedeni olan an, en zayıf desteğe sahipti.
@@ -5987,9 +6030,13 @@ async function opParcalar() {
   // (2026-07-21) Yedi dedektör rapor üretiyordu ama HİÇBİR panel okumuyordu — denetimin bulduğu
   // "kanıt üretiliyor, tüketilmiyor" sınıfının ta kendisi. Panel o boşluğu kapatır.
   const ig = d.integrity || {}, lc = d.ledger_contract || {}, cov = d.coverage || {}, sv = d.sieve || {};
+  // 8. DEDEKTÖR (2026-08-13): `divergence` — DEĞER eşitliği. `coherence`ın kardeşi ve ondan
+  // sonra gelmesi anlamlıdır: o ZAMAN ölçer ("türev kaynağından eski mi?"), bu DEĞER ölçer
+  // ("iki kaynak aynı şeyi mi söylüyor?"). Aynı saniyede yazılmış ZIT değerli iki dosya yedi
+  // dedektörün hepsinden yeşil geçiyordu (denetim 2026-08-13 §5).
   const PAT_TR = { production: "üretkenlik", conservation: "korunum", determinism: "determinizm",
                    coherence: "tutarlılık", monotonicity: "monotonluk", ownership: "sahiplik",
-                   parity: "makullük" };
+                   parity: "makullük", divergence: "değer-eşitliği" };
   // ÜRETİCİ/TÜKETİCİ PARİTESİ (2026-07-22 denetimi): bu iki satır üreticinin GÖNDERDİĞİ TİPTEN
   // farklı bir tip varsayıyordu. watchdog.conservation_report `unexplained` alanını TAM SAYI
   // gönderir; burada dizi sanılıp `.length` okunuyordu → `(5 || []).length` = undefined →
@@ -6000,6 +6047,10 @@ async function opParcalar() {
                  : k === "conservation" ? !_say(v.unexplained)
                  : k === "coherence" ? !(v.stale || []).length
                  : k === "ownership" ? v.ok !== false && !(v.lost || []).length
+                 // `divergence`: yalnız AYRIK olgular ihlaldir. `olculemeyen` (kaynak okunamadı)
+                 // ve `beyanli` (bilinçli ikizleme, kıyasa girmez) ihlal DEĞİLDİR — ölçülemeyeni
+                 // kırmızı basmak, "ölçemedim" hükmünü "ihlal" diye anlatmak olurdu (C22 dersi).
+                 : k === "divergence" ? !(v.ayrik || []).length
                  : v.ok !== false && !(v.regressions || []).length && !(v.shrunk || 0);
   // ---- ÜÇÜNCÜ DURUM: ÖLÇÜLEMEDİ (S2R-3 · denetim C21/C22'nin pano ayağı, 2026-08-02) ---------
   // `_patOK` İKİ DEĞERLİYDİ ve bu, watchdog'un iki yeni alanını (dedektor_dustu / olculemedi)
@@ -6032,6 +6083,19 @@ async function opParcalar() {
                  : k === "coherence" ? `${v.ok ?? 0}/${v.total ?? 0} kalibrasyon taze${(v.stale || []).length ? ` · BAYAT: ${v.stale.map(x => `${x.artifact || x}${x.behind_h != null ? ` (${x.behind_h}sa geride)` : ""}`).join(", ")}` : ""}`
                  : k === "monotonicity" ? `${v.tracked ?? 0} sayaç izleniyor${(v.regressions || []).length ? ` · GERİLEME: ${v.regressions.map(x => `${x.field} ${x.was}→${x.now}`).join(", ")}` : ""}${(v.amnestied || []).length ? ` · AFFEDİLDİ: ${v.amnestied.map(a => `${a.field} ${a.was}→${a.now} (${a.reason || ""})`.slice(0, 120)).join(" | ")}` : ""}`
                  : k === "ownership" ? ((v.lost || []).length ? `${v.lost.length} sahipsiz alan: ${v.lost.map(x => `${x.file || "?"}.${x.field || "?"}`).join(", ")}` : "her kaydın sahibi var")
+                 // ÜÇ SAYI, ÜÇ AYRI HÜKÜM: eşit / AYRIK / okunamayan kaynak. Beyanlı ikizlemeler
+                 // ayrıca yazılır (kayıtta var, kıyasta yok) — sessiz muafiyet olmadıkları ancak
+                 // ekranda görünürlerse doğrudur.
+                 // `trn()` KULLANILIR, `?? 0` DEĞİL (2026-08-13, v196 çırçırı): bu satır ilk
+                 // yazımında kardeşlerini (`production`/`coherence`) kopyalayıp `${v.esit ?? 0}/
+                 // ${v.total ?? 0}` diyordu — ama tam o iki kardeş, nullsıfır triyajında **(a)
+                 // YALAN SÖYLEYEN** olarak sınıflanmış ve kaldırma kuyruğunda duruyor
+                 // (RAPOR.md §4, `app.js:4977`/`4980`: "yokluk 'ölçülmedi', basılan 0 'ölçtük,
+                 // sıfır çıktı' der"). Yani kopyalanan şey desen değil KUSURDU ve çırçır 192→194
+                 // GERİYE dönmüştü. `total` hiçbir zaman 0 olamaz (`len(EQUIVALENT_TRUTHS)`),
+                 // dolayısıyla basılan "0/0 olgu eşit" ölçülmemiş bir turu "her şey kıyaslandı,
+                 // hiçbiri eşit değil" diye okutur — iki yönlü uydurma. `trn()` yoklukta "—" basar.
+                 : k === "divergence" ? `${trn(v.esit)}/${trn(v.total)} olgu eşit${(v.ayrik || []).length ? ` · AYRIK: ${v.ayrik.map(a => `${a.olgu} (${Object.entries(a.kaynaklar || {}).map(([n, d]) => `${n}=${JSON.stringify(d.deger)}`).join(" ≠ ")})`).join(", ")}` : ""}${(v.olculemeyen || []).length ? ` · ${v.olculemeyen.length} kaynak okunamadı: ${v.olculemeyen.map(o => `${o.olgu}/${o.kaynak}`).join(", ")}` : ""}${(v.beyanli || []).length ? ` · ${v.beyanli.length} beyanlı ikizleme (kıyas dışı)` : ""}`
                  : `${(v.rows || []).filter(r => r.ok).length}/${(v.rows || []).length} makullük denetimi geçti`;
   const PAT_CIP = { temiz: ["temiz", "t-go"], ihlal: ["İHLAL", "t-no"],
                     olculemedi: ["ÖLÇÜLEMEDİ", "t-vi"] };
@@ -6091,7 +6155,21 @@ async function opParcalar() {
   const _patTemiz = _patKeys.filter(k => _patDurum(k, ig[k]) === "temiz").length;
   const _patIhlal = _patKeys.filter(k => _patDurum(k, ig[k]) === "ihlal").length;
   const _patUyg = _patTemiz + _patIhlal;
-  const s5 = `<div class="card rise"${katKart("veriboru:butunluk")}><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (7 desen)${
+  // ---- BAŞLIK SAYISI ARTIK SABİT DEĞİL, RAPORDAN TÜRER (2026-08-13, denetim §3.6) ------------
+  // ÖLÇÜLEN KUSUR: bu başlık "(7 desen)" yazıyordu ve AYNI KARTIN altındaki kapsam satırı
+  // `${cov.patterns}` = 6 render ediyordu — tek görünümde 7 ve 6 yan yana, aralarında hiçbir
+  // köprü yok. İkisi AYNI ŞEY DEĞİL: buradaki sayı ÇALIŞMA-ANI DEDEKTÖR ailesidir
+  // (watchdog._DEDEKTOR_BOS), oradaki ise BİLEŞEN × DESEN KAPSAM MATRİSİnin desen ekseni
+  // (integrity_registry.PATTERNS). Aynı sözcükle ("desen") adlandırıldıkları için çelişki gibi
+  // okunuyordu. İki düzeltme birden: (1) sayı raporun kendisinden türer — 8. dedektör eklenince
+  // başlık kendiliğinden 8 der, elle senkron YOKTUR; (2) alt satır artık "kapsam matrisi deseni"
+  // diye ADLANDIRILIR, yani iki sayı iki ayrı soruyu cevapladığını söyler.
+  // ÜÇÜNCÜ HÂL: pano tanımadığı bir dedektör görürse (backend ilerledi, pano geride kaldı) bunu
+  // SÖYLER — sessizce düşürmek, tam da bu kartın kapattığı "görünmez kapsam daralması"dır.
+  const _patBilinmeyen = Object.keys(ig).filter(k => !(k in PAT_TR) && ig[k] && typeof ig[k] === "object");
+  const s5 = `<div class="card rise"${katKart("veriboru:butunluk")}><h2 class="t">Bölüm 5 · Bütünlük dedektörleri (${
+      _patKeys.length ? `${_patKeys.length} dedektör` : "dedektör raporu yok"})${
+      _patBilinmeyen.length ? " " + _chip(`${_patBilinmeyen.length} DEDEKTÖR PANODA TANIMSIZ`, "t-vi") : ""}${
       patOlcumsuz.length ? " " + _chip(`${patOlcumsuz.length} DEDEKTÖR ÖLÇEMEDİ`, "t-vi") : ""}${ageBadge}</h2>
     ${kartOzeti(!_patKeys.length ? {
       deger: null, rozet: "ÖLÇÜLEMEDİ",
@@ -6107,9 +6185,15 @@ async function opParcalar() {
       esc(patOlcumsuz.map(k => PAT_TR[k]).join(", "))}</b> (watchdog <code>olculemedi</code>/<code>detector_failed</code>).
       Yalıtım çalıştı — diğerleri koştu; ama ölçülemeyen desen <b>temiz sayılmaz</b> ve bu satırlar
       ne yeşil ne kırmızıdır. Kanıt duruyor, tespit bir tur ertelendi.</p>` : ""}
-    <p class="hint">Testler "kod çalışıyor mu" der; bu yedi desen "sistem üretiyor mu, kaybetmiyor mu,
-    ürettiği kanıt tüketilebilir mi" diye sorar. 2026-07-21'de motorun evrenin %18'inde karar verdiği
-    hatayı yalnız 7. desen (makullük) görebiliyordu.</p>
+    ${_patBilinmeyen.length ? `<p class="hint neg">Bekçi bu panonun TANIMADIĞI dedektör(ler) döndürdü:
+      <b>${esc(_patBilinmeyen.join(", "))}</b>. Arka uç ilerledi, pano geride kaldı — satırları
+      yukarıda GÖRÜNMÜYOR. Sessizce düşürmek, bu kartın kapattığı kusurun kendisi olurdu.</p>` : ""}
+    <p class="hint">Testler "kod çalışıyor mu" der; bu dedektörler "sistem üretiyor mu, kaybetmiyor
+    mu, ürettiği kanıt tüketilebilir mi, iki kaynak aynı şeyi mi söylüyor" diye sorar.
+    2026-07-21'de motorun evrenin %18'inde karar verdiği hatayı yalnız <b>makullük</b> görebiliyordu;
+    2026-08-13'te eklenen <b>değer-eşitliği</b> ise ilk yedisinin yapısal kör noktasını kapatır —
+    onlar ZAMAN ölçer, o DEĞER ölçer (aynı saniyede yazılmış zıt değerli iki dosya hepsinden
+    yeşil geçiyordu).</p>
     ${parityBad ? `<h3 class="t" style="margin-top:16px">Makullük ihlalleri</h3>${parityBad}` : ""}
     <h3 class="t" style="margin-top:16px">Defter sözleşmesi · ${lc.compliant ?? "—"}/${lc.ledgers ?? "—"} uyumlu</h3>
     ${lcRows || '<p class="hint">Sözleşme raporu yok.</p>'}
@@ -6130,7 +6214,7 @@ async function opParcalar() {
         `<p class="hint ${v.severity === "kritik" ? "neg" : "warn"}" style="margin-top:6px">${esc(v.detail)}</p>`).join("");
       return (rows || '<p class="hint">Henüz eleme kaydı yok — kalibrasyonlar bir kez koşunca dolar.</p>') + viol;
     })()}
-    ${cov.cells_applicable ? `<div class="srow" style="margin-top:12px"><span>Denetim kapsamı (${cov.components} bileşen × ${cov.patterns} desen)</span><b>${cov.cells_covered ?? "—"}/${cov.cells_applicable} uygulanabilir hücre (%${trn(cov.coverage_pct, 1)}) · ham %${trn(cov.raw_pct, 1)} · ${cov.cells_na ?? 0} N/A${cov.open_gaps ? ` · <span class="neg">${cov.open_gaps} açık boşluk</span>` : ""}</b></div>` : ""}</div>`;
+    ${cov.cells_applicable ? `<div class="srow" style="margin-top:12px"><span>Denetim kapsamı (${cov.components} bileşen × ${cov.patterns} <b>kapsam matrisi deseni</b> — yukarıdaki dedektör sayısıyla AYNI ŞEY DEĞİL: bu statik bir bileşen×desen tablosudur, o çalışma-anı dedektör ailesi)</span><b>${cov.cells_covered ?? "—"}/${cov.cells_applicable} uygulanabilir hücre (%${trn(cov.coverage_pct, 1)}) · ham %${trn(cov.raw_pct, 1)} · ${cov.cells_na ?? 0} N/A${cov.open_gaps ? ` · <span class="neg">${cov.open_gaps} açık boşluk</span>` : ""}</b></div>` : ""}</div>`;
 
   // ---------- BÖLÜM 6 · REDIS SICAK KATMAN (intraday) ----------
   // (2026-07-23) Redis sıcak katmanı `/api/hermes`te üretiliyordu ama HİÇBİR panel okumuyordu —

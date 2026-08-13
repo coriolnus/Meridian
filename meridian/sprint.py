@@ -434,6 +434,42 @@ YETIM_YENIDEN_SAAT = 12.0
 # turda warn basmak, alarmın kendisini gürültüye çevirirdi.
 _YETIM_OLAYLI: set = set()
 
+# ==================================================================================================
+# MEŞGULİYET KAPILARI YETİM-RESTART'I KALICI BLOKLUYORDU (2026-08-13, canlı ölçüm)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA — canlı olay defteri, aynı satır her poll'de:
+#     sprint_cadence_skip{sebep:"mesgul:canli_arama", yetim:true, gecen_gun:5,
+#                         arama_bayrak_yasi_sa:0.17, arama_bayat:false}
+# v235 yetimi bir TETİK yapmıştı (`yetim_sprint_yeniden`) ama tetik, gövdede meşguliyet
+# kapılarının ARDINA konmuştu. Beyin zinciri ~5 dakikada bir yansıma turu açtığı için
+# `SEARCH_PROGRESS` parmak izi sürekli DEĞİŞİYOR → bayatlık saati her turda sıfırlanıyor →
+# `arama["mesgul"]` ASLA False olmuyor. Yani v235'in bayatlık yasası (ARAMA_BAYAT_SAAT) doğru
+# çalışıyor ve tam da bu yüzden tetik hiç yanmıyor: bayrak asılı değil, gerçekten meşgul. Sonuç
+# yetim-restart'ın ÖLÜ bir mekanizma olması — 5 gündür ölü bir çocuk, 5 gündür yeniden doğmuyor.
+#
+# AYRIM: "MEŞGUL" İKİ AYRI SORUYU CEVAPLIYOR ve ikisi tek argümanla taşınıyordu.
+#   (a) YÜK KAPISI  — `canli_arama`, `bar_kovalamasi`: "makine şu an dolu mu?" Bu soru YETİM için
+#       sorulmaz: yetim ZATEN ÖLÜ bir süreçtir, canlı aramayla ÇAKIŞMAZ (ayrı süreçler) ve onu
+#       yeniden doğurmak gece penceresinde, 12 saatlik frenin ardında, poll başına en çok bir kez
+#       olur. Yük kapısının kalıcı olması, öğrenmenin tamamını (sprint → hipotez → kalibrasyon)
+#       süresiz kilitliyordu — yani kapının önlediği zarardan büyük bir zarar üretiyordu.
+#   (b) YETKİ KAPISI — `elle_tik`: "bu çağıranın sprint başlatmaya HAKKI var mı?" Bu bir yük
+#       sorusu DEĞİLDİR ve yetim onu deleMEZ. `scheduler.advance_once`ın iki çağıranı var (daemon
+#       döngüsü + panonun ELLE TİK düğmesi) ve 2026-07-30'da ÖLÇÜLMÜŞ bir kaza var: elle tik,
+#       saat 22:00'yi geçince gerçekten 4 işçilik bir alt süreç başlatıyordu. Operatör "bir tur
+#       ilerlet" derken dakikalarca sürecek bir antrenman İSTEMEMİŞTİR — sprintin elle tetiği ayrı
+#       bir düğmedir (`/api/sprint/start`) ve o hiçbir kapıya uğramaz.
+# Bu yüzden bypass YÜK kapılarına özgüdür; yetki kapıları burada adıyla listelenir.
+#
+# KORUNAN KURALLAR: (1) `st.active` (GERÇEKTEN koşan sprint) bypass edilmez — iki sprint 8 çekirdeği
+# ikiye böler. (2) Gece penceresi (SPRINT_HOURS) yerinde kalır ve yetim tetiğinden ÖNCE gelir:
+# yarıda kalmış bir antrenmanı gündüz yeniden başlatmak, 4 işçiyi canlı kararların makinesine
+# sokmaktır. (3) 12 saatlik yetim freni (YETIM_YENIDEN_SAAT) yerinde kalır — bypass yalnız
+# `yetim_tetik` (yetim ∧ fren aşıldı) için açılır, çıplak `yetim` için değil; aksi hâlde hemen ölen
+# bir çocuk 5 dakikada bir yeniden doğardı (çökme döngüsü).
+# ==================================================================================================
+MESGUL_YETKI_KAPILARI = frozenset({"elle_tik"})
+
 
 def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
     """Canlı koordinat-inişi araması ŞU AN meşguliyet kanıtı mı? `hermes.SEARCH_PROGRESS`ten okunur
@@ -527,12 +563,18 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     ctx = {"gecen_gun": gun, "taze_hipotez": taze, "n_hipotez": len(hyps),
            "saat": now.hour, "pencere": list(SPRINT_HOURS), "cfg": auto_config(),
            "arama_bayragi": arama, "yetim": yetim, "yetim_saat": gecen_saat if yetim else None,
+           # TETİK AYRI ALAN OLARAK TAŞINIR (2026-08-13): `yetim` "yarıda kalmış bir sprint var"
+           # der, `yetim_tetik` "ve 12 saatlik fren aşıldı, yeniden başlatılabilir" der. İkisi tek
+           # bayrakla anlatılırsa skip olayından "neden hâlâ başlamadı?" sorusu cevaplanamaz.
+           "yetim_tetik": yetim_tetik,
            "sid": st.get("sid")}
     if st.get("active"):
         return {**ctx, "kos": False, "sebep": "zaten_kosuyor"}
-    if mesgul:
+    # YÜK KAPILARI YETİM-RESTART'I BLOKLAYAMAZ, YETKİ KAPILARI BLOKLAR (bkz. MESGUL_YETKI_KAPILARI
+    # üstündeki ölçüm/gerekçe). Sağlıklı sprintte davranış BİREBİR eskisi gibidir: meşgulse skip.
+    if mesgul and (not yetim_tetik or mesgul in MESGUL_YETKI_KAPILARI):
         return {**ctx, "kos": False, "sebep": f"mesgul:{mesgul}"}
-    if arama["mesgul"]:
+    if arama["mesgul"] and not yetim_tetik:
         return {**ctx, "kos": False, "sebep": "mesgul:canli_arama"}
     lo, hi = SPRINT_HOURS
     # Pencere gece yarısını AŞAR (22→06): tek bir `lo <= h < hi` karşılaştırması burada HER ZAMAN
@@ -567,14 +609,21 @@ def maybe_start(*, mesgul: str | None = None) -> dict:
                  yeniden_esik_saat=YETIM_YENIDEN_SAAT,
                  detail=("sprint çocuğu ÖLÜ + faz terminal değil (yetim) — kadans, yetim başlangıç "
                          f"{YETIM_YENIDEN_SAAT:.0f} saati aştığında uygun ilk gece penceresinde "
-                         "YENİDEN başlatır (sebep=yetim_sprint_yeniden); operatör onarımı gerekmez"))
+                         "YENİDEN başlatır (sebep=yetim_sprint_yeniden); canlı arama/bar kovalaması "
+                         "gibi YÜK kapıları bu tetiği artık bloklamaz (2026-08-13), yalnız yetki "
+                         f"kapıları ({', '.join(sorted(MESGUL_YETKI_KAPILARI))}) bloklar; "
+                         "operatör onarımı gerekmez"))
         _YETIM_OLAYLI.add(karar["sid"])
     if not karar["kos"]:
         _ab = karar.get("arama_bayragi") or {}
         obs.log("sprint_cadence_skip", sebep=karar["sebep"], gecen_gun=karar["gecen_gun"],
                 taze_hipotez=karar["taze_hipotez"],
                 arama_bayrak_yasi_sa=_ab.get("yas_sa"), arama_bayat=_ab.get("bayat"),
-                yetim=karar.get("yetim") or False)
+                # `yetim` ile `yetim_tetik` AYRI alanlar: birincisi "yarıda kalmış sprint var",
+                # ikincisi "ve 12 sa fren aşıldı". Skip satırında ikisi de olmazsa "yetim=true ama
+                # neden hâlâ başlamadı?" sorusu defterden cevaplanamaz (canlı teşhis 2026-08-13).
+                yetim=karar.get("yetim") or False,
+                yetim_tetik=karar.get("yetim_tetik") or False)
         return {"started": False, **karar}
     cfg = karar["cfg"]
     res = start({"budget": cfg["budget"], "k_max": cfg["k_max"]})

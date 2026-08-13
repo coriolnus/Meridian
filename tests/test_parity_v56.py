@@ -237,6 +237,21 @@ DECLARED_ALIASES = {
     # ve payda sıfırken `rate` None döner. Deseni yakalayan satır yalnızca "hangisi doluysa göster"
     # kapısıdır (`if tu and (tu.get("calls") or tu.get("olculemeyen"))`), bir yedek-ad yaması değil.
     ("hermes.py", "calls", "olculemeyen"),
+    # ALIAS DEĞİL, İKİ AYRI SAPMA BOYUTUNUN BİRLEŞİMİ (2026-08-13, v239 ayna-rozeti turu).
+    # `loop.ayna_sapma_alanlari` nabza `position_drift` yazarken şu kapıyı kuruyor:
+    #     bool(pos.get("missing_on_alpaca") or pos.get("qty_drift"))
+    # İkisi AYNI kavramın iki adı DEĞİLDİR ve biri diğerinin yedeği hiç değildir:
+    #   · `missing_on_alpaca` = pozisyon bizim kitabımızda VAR, Alpaca aynasında YOK (EKSİK KAYIT).
+    #   · `qty_drift`         = pozisyon İKİ TARAFTA DA var ama ADET tutmuyor (canlı ölçüm
+    #                           2026-08-12T22:01Z: NUE 54/25 · EMR 64/37 · BKNG 43/22 · AMGN 33/22).
+    # Yani bu bir "hangi ad varsa onu al" yaması değil, İKİSİNDEN BİRİ VARSA sapma vardır MANTIKSAL
+    # BİRLEŞİMİdir — envanterdeki `("watchdog.py", "armed", "alpaca_submitted")` ve
+    # `("mirror_stream.py", "kept", "foreign")` satırlarıyla aynı sınıf. Tarayıcının deseni
+    # (`X.get(a) or X.get(b)`) birleşimi takastan ayırt edemez; ayrım ancak burada YAZILI olur.
+    # İKİSİNİ TEK ALANA İNDİRMEK YASAK: rozet "sapma var mı" sorusunu tek bit olarak cevaplar, ama
+    # kaynak iki alan AYRI kalmalı — mutabakat masası hangi sınıfın gerçekleştiğini söyler
+    # (eksik kayıt → gönderim yolu onarımı; adet sapması → miktar mutabakatı; farklı eylemler).
+    ("loop.py", "missing_on_alpaca", "qty_drift"),
 }
 
 

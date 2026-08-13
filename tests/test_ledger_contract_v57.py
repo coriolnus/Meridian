@@ -159,9 +159,11 @@ def test_contract_report_is_served_and_consumed(seeded):
     assert "ledger_contract" in api_src, "sözleşme /api/diagnostics'te sunulmuyor"
     js = _p.Path("meridian/web/app.js").read_text()
     assert "d.ledger_contract" in js, "pano sözleşmeyi OKUMUYOR — üretilip tüketilmeyen kanıt"
-    assert "d.integrity" in js, "yedi desen raporu panoda okunmuyor"
+    assert "d.integrity" in js, "bütünlük dedektörleri raporu panoda okunmuyor"
+    # 8. DESEN BEYANLI EKLENDİ (2026-08-13): `divergence` panoda da bir satır almalı — arka uç
+    # ilerleyip pano geride kalırsa dedektör üretilir ama TÜKETİLMEZ (YASA 6).
     for key in ("production", "conservation", "determinism", "coherence",
-                "monotonicity", "ownership", "parity"):
+                "monotonicity", "ownership", "parity", "divergence"):
         assert key in js, f"{key} deseni panoda gösterilmiyor"
 
 

@@ -106,8 +106,10 @@ def _dusen(ad: str) -> dict:
             "olculemedi": True, "error": "OSError: [Errno 2] No such file"}
 
 
+# 8. DESEN BEYANLI EKLENDİ (2026-08-13): `divergence`. Üçüncü durum (ÖLÇÜLEMEDİ) yeni desende
+# de geçerli olmalı — iskeleti boş listeler taşıdığı için tam olarak A sınıfının riskindedir.
 DESENLER = ["production", "conservation", "determinism", "coherence", "monotonicity",
-            "ownership", "parity"]
+            "ownership", "parity", "divergence"]
 
 
 def test_dusen_dedektor_YEDI_desende_de_UCUNCU_duruma_duser():

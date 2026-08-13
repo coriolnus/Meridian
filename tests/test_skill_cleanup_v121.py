@@ -354,16 +354,85 @@ def test_c9b_activation_conditions_are_measurement_gated():
 
 
 # ---------- C10: sunum katmanı dürüstlüğü (2026-07-30 kopya düzeltmesi) ----------
-PRESENTATION_PAGES = ("meridian/web/landing.html", "meridian/web/workflow.html",
+# ==================================================================================================
+# KAPI ÜÇ AYRI YOLDAN KAÇIRIYORDU — ÖLÇÜLDÜ VE KAPATILDI
+# (2026-08-13 · `docs/DENETIM-SPLIT-SINIFI-2026-08-13.md` §3.7/§3.8)
+# --------------------------------------------------------------------------------------------------
+# Bu kapı 2026-07-30'da tam bu hastalık için kuruldu ve YEŞİL yanıyordu; denetim üç kaçış ölçtü:
+#   (a) KAPSAM DIŞI DOSYA — `README.md` tuple'da yoktu. Deponun en çok okunan sayfası dört ayrı
+#       bayat iddia taşıyordu (skill sayısı · `skills/shadow/` diye var olmayan bir dizin ·
+#       "last 20 sessions" · "max drawdown 8% · 5 positions · 1.0R" — üçü de operatör kararıyla
+#       taşınmıştı). Yeni oturum brief'i ve dış okuyucu buradan besleniyor.
+#   (b) HİÇ TARANMAYAN DOSYA — `meridian/web/workflow.js` canlı `/workflow` rotasından servis
+#       ediliyor ama hiçbir test içeriğini koda bağlamıyordu ("Strateji v4 · eşik 40→20" derken
+#       defterde v5 · eşik 40 vardı; "250 sembollük evren … bugün" derken "bugün" 2026-07-21'di).
+#   (c) KAPSANAN DOSYADA BİÇİMLE ATLATMA — `r"\d+\s+skill"` deseni BİTİŞİKLİK istiyordu; araya
+#       giren tek bir sözcük ("68 **Meridian** skill") eşleşmeyi bozuyordu. Fiilen koşuldu: `[]`.
+# ÜÇÜNCÜ KAÇIŞIN DERSİ GENELDİR: bir kapının YEŞİL yanması, ölçtüğü şeyin doğru olduğu anlamına
+# gelmez — kapsamı elle tutulan bir liste, eşleşmesi bir biçim olduğu sürece.
+#
+# EK KAPI (aynı sınıf, farklı nicelik): sunum katmanı BİLİNEN-ÖLÜ bir model adını "sistemin beyni"
+# ilan ediyordu. O ad kaydı KODDA duruyor (`hermes.GEMINI_DEAD_MODEL_MAP`) — kapı listeyi elle
+# tekrarlamaz, oradan TÜRETİR (aynı ruh: `recompute._orphan_state_files` beyaz liste değil türetme).
+# ==================================================================================================
+PRESENTATION_PAGES = ("README.md", "meridian/web/landing.html", "meridian/web/landing.js",
+                      "meridian/web/workflow.html", "meridian/web/workflow.js",
                       "workflow-diagram.html")
+
+# ARAYA GİREN SÖZCÜĞE DAYANIKLI: sayı ile "skill" arasına EN ÇOK İKİ sözcük girebilir ("68 Meridian
+# skill", "66 Claude trading skills"). Sözcük sınıfı bilerek NOKTALAMASIZDIR — virgül/nokta geçen
+# bir cümle ("5 pipelines, each skill…") sayının o skill'i SAYDIĞI anlamına gelmez ve yanlış pozitif
+# üretirdi. `\w` Python3'te Unicode'dur, yani Türkçe sözcükler de kapsanır.
+SKILL_COUNT_RE = re.compile(r"\d+(?:\s+[\w'’-]+){0,2}\s+skill", re.IGNORECASE)
 
 
 @pytest.mark.parametrize("page", PRESENTATION_PAGES)
 def test_c10_presentation_carries_no_hardcoded_skill_count(page):
     """Sabit "66/68/59 skill" yazıları arşivle bir gecede yalan oldu. Sabit sayı sunum katmanına
     geri yazılamaz: sayı ya /api/public/summary'den canlı gelir ya da hiç görünmez."""
-    stale = re.findall(r"\d+\s+skill", (REPO / page).read_text(), flags=re.IGNORECASE)
+    stale = SKILL_COUNT_RE.findall((REPO / page).read_text())
     assert not stale, f"{page} sabit skill sayısı taşıyor: {stale}"
+
+
+def test_c10_regex_hala_eski_bicimi_yakaliyor():
+    """KARŞI-TEST (v204 kuralı): deseni gevşetmek, GENİŞLETMEK olmalı — daraltmak değil. Üç tarihî
+    vaka ve ölçülen kaçış birlikte çivilenir; son iki satır yanlış-pozitif sınırını korur."""
+    for yakalanmali in ("66 skill", "68 skill", "59 skills", "68 Meridian skill",
+                        "66 Claude trading skills", "31 canlı skill", "68 MERIDIAN SKILL"):
+        assert SKILL_COUNT_RE.search(yakalanmali), f"desen daraltılmış: {yakalanmali!r} kaçıyor"
+    for yakalanmamali in ("5 deterministic, auditable pipelines", "skills_live", "skill sayısı",
+                          "5 pipelines, each skill runs", "state/skills_registry.json"):
+        assert not SKILL_COUNT_RE.search(yakalanmamali), (
+            f"desen yanlış pozitif üretiyor: {yakalanmamali!r}")
+
+
+def test_c10_kapsam_sunum_AILESINI_kapsar():
+    """(a)+(b) KAÇIŞLARININ KÖKÜ: kapsam ELLE TUTULAN bir listeydi. Liste tamamen türetilemez
+    (hangi dosyanın 'sunum' olduğu bir hükümdür) ama AİLELER türetilebilir: `meridian/web/` altındaki
+    her `landing*`/`workflow*` yüzeyi ve deponun kök sunum dosyaları kapsamda olmak ZORUNDA.
+    Yarın `workflow2.js` eklenirse bu satır kırılır — kapsam sessizce daralamaz."""
+    aile = sorted(p.relative_to(REPO).as_posix()
+                  for p in (REPO / "meridian" / "web").iterdir()
+                  if p.is_file() and (p.name.startswith("landing") or p.name.startswith("workflow")))
+    eksik = [p for p in aile if p not in PRESENTATION_PAGES]
+    assert not eksik, f"sunum ailesinden kapsam dışı dosya: {eksik}"
+    for kok in ("README.md", "workflow-diagram.html"):
+        assert kok in PRESENTATION_PAGES, f"kök sunum dosyası kapsam dışı: {kok}"
+
+
+@pytest.mark.parametrize("page", PRESENTATION_PAGES)
+def test_c10d_presentation_carries_no_dead_model_name(page):
+    """Sunum katmanı, kodun BİLİNEN-ÖLÜ ilan ettiği bir model adını taşıyamaz.
+
+    ÖLÇÜLEN VAKA: `workflow-diagram.html` `gemini-3.5-flash`ı "sistemin beyni" diye gösteriyordu;
+    aynı ad `hermes.GEMINI_DEAD_MODEL_MAP`te "üretim 404" şerhiyle kayıtlıydı. Kapı listeyi elle
+    tekrarlamaz — haritadan TÜRETİR, yani harita büyüdüğünde kapsam kendiliğinden büyür."""
+    from meridian import hermes
+    metin = (REPO / page).read_text()
+    bulunan = [ad for ad in hermes.GEMINI_DEAD_MODEL_MAP if ad in metin]
+    assert not bulunan, (
+        f"{page} bilinen-ölü model adı taşıyor: {bulunan} — ad ya canlı uçtan gelir "
+        f"(/api/secrets → model_defaults) ya da hiç yazılmaz")
 
 
 def test_c10b_landing_binds_the_live_skill_count():

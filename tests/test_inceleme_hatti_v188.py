@@ -40,8 +40,29 @@ T0 = float(calendar.timegm((2026, 8, 4, 7, 23, 32, 0, 0, 0)))
 # Dünkü tükenme işareti: son sıfırlama sınırından (2026-08-04T07:00Z) ÖNCE.
 DUN_2000 = float(calendar.timegm((2026, 8, 3, 20, 0, 0, 0, 0, 0)))
 
-BIRINCI = "gemini-3.1-pro"
+# FİKSTÜR MODEL ADI TAZELENDİ (2026-08-13): burası eskiden `gemini-3.1-pro` idi. v239 çağrı-anı
+# göçü (`hermes.canonical_model` / `_nous_model_zinciri`) o adı BİLİNEN-ÖLÜ sayıp `gemini-pro-latest`
+# alias'ına çeviriyor (üretim 404 sınıfı, `GEMINI_DEAD_MODEL_MAP`) — yani zincire giren ad ile bu
+# dosyanın beklediği ad ayrıştı ve üç test "yoklanan birinci model" karşılaştırmasında düştü.
+# BU DOSYANIN İDDİASI GÖÇ DEĞİL SIRA: "bayat tükenme işareti temizlenir ve BİRİNCİ model gerçekten
+# yoklanır; yedeğe erken düşülmez". O iddia model adından bağımsızdır, dolayısıyla doğru düzeltme
+# beklentiyi göçe göre eğmek değil fikstürü CANLI ada taşımaktır (göç katmanının kendi çivileri
+# `test_agent_olu_model_cagri_ani_v239.py` + `test_gemini_olu_model_gocu_v235.py`de).
+BIRINCI = "gemini-pro-latest"
 YEDEK = "tencent/hy3:free"
+
+
+def test_fikstur_modeli_CANLI_kalmali():
+    """Bu dosyanın sessizce bayatlamasını önleyen bekçi (2026-08-13 vakasının sınıfı).
+
+    Üç test tek sebeple kırmızıya döndü: fikstür ölü bir model adı taşıyordu ve göç katmanı onu
+    çevirince beklenti tutmaz oldu. Alias'lar da ölümlüdür; bir sonrakinde arıza "üç anlaşılmaz
+    kırmızı" olarak değil, ADIYLA gelsin."""
+    assert BIRINCI not in hermes.GEMINI_DEAD_MODEL_MAP, (
+        f"fikstürün birinci modeli ({BIRINCI}) ölü-ad haritasına girmiş — çağrı-anı göçü onu "
+        f"'{hermes.GEMINI_DEAD_MODEL_MAP.get(BIRINCI)}' yapar ve aşağıdaki sıra iddiaları "
+        f"model adı yüzünden düşer. Fikstürü canlı alias'a taşı (iddiayı DEĞİL).")
+    assert YEDEK not in hermes.GEMINI_DEAD_MODEL_MAP, f"yedek fikstür modeli ({YEDEK}) ölü"
 
 # Boş-oturum imzası (canlıda görülen CLI özeti): model hiç cevap vermedi.
 BOS_CIKTI = "…  |  Messages:       1 (1 user, 0 tool calls)"

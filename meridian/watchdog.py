@@ -1291,14 +1291,26 @@ _DEDEKTOR_BOS: dict[str, dict] = {
     "monotonicity": {"regressions": [], "amnestied": [], "tracked": 0},
     "ownership":    {"lost": []},
     "parity":       {"rows": [], "n_cycles": 0},
+    # 8. desen (2026-08-13): DEĞER eşitliği. `olculemeyen` adı BİLEREK `olculemedi` DEĞİL —
+    # `_tut` düşen dedektöre `olculemedi: True` (bool) koyar ve pano `=== true` ile onu üçüncü
+    # duruma çevirir; aynı adı bir LİSTE alanı için kullanmak iki ayrı hükmü tek ada bindirirdi.
+    "divergence":   {"ayrik": [], "esit": 0, "total": 0, "olculemeyen": [], "beyanli": []},
 }
 
 
 def integrity_report(persist: bool = False) -> dict:
-    """YEDİ dedektörü tek çağrıda topla (teşhis paneli + öz-değerlendirme buradan okur).
+    """SEKİZ dedektörü tek çağrıda topla (teşhis paneli + öz-değerlendirme buradan okur).
     7. desen (parity/makullük) 2026-07-21'de eklendi: ilk altısı bileşen bazlıdır ve 'doğru
     parçalar, yanlış sistem sonucu' sınıfını göremez — motorun evrenin %18'inde karar verdiği
     hata tam olarak o sınıftandı.
+    8. desen (divergence/değer-eşitliği) 2026-08-13'te eklendi: ilk yedisinin hiçbiri "iki kaynak
+    AYNI ŞEYİ mi söylüyor?" sorusunu sormuyordu — `coherence` ZAMAN ölçer, dolayısıyla aynı saniyede
+    yazılmış ZIT DEĞERLİ iki dosya bütün kapılardan yeşil geçiyordu (denetim §5, 2026-08-13).
+
+    DEDEKTÖR SAYISI ≠ KAPSAM MATRİSİ DESEN SAYISI. Buradaki aile 8'dir; `integrity_registry.PATTERNS`
+    ise 6'dır ve o bir BİLEŞEN × DESEN kapsam matrisidir. İki sayı aynı görünümde yan yana basılıp
+    ikisi de "desen" diye adlandırıldığı için panoda 2026-08-13'e dek "7 desen / 6 desen" çelişkisi
+    duruyordu; ikisi artık AYRI adlandırılır (app.js Bölüm 5).
 
     DEĞERLEME SIRASI SÖZLEŞMESİ (C21, 2026-08-02): `parity_report()` persist'li ÜÇLÜDEN
     (determinism/monotonicity/ownership) ÖNCE değerlenir. Eski hâlde parity sözlük literalinde EN
@@ -1353,7 +1365,10 @@ def integrity_report(persist: bool = False) -> dict:
                 "coherence": _tut("coherence", coherence_report),
                 "monotonicity": _tut("monotonicity", lambda: monotonicity_report(persist=persist)),
                 "ownership": _tut("ownership", lambda: ownership_report(persist=persist)),
-                "parity": _par}
+                "parity": _par,
+                # 8. desen (2026-08-13): DEĞER eşitliği. `coherence`ın kardeşi — o ZAMAN ölçer,
+                # bu DEĞER. Persist YOK (taban ilerletmez), yan etkisi YOK: saf okuma.
+                "divergence": _tut("divergence", divergence_report)}
     finally:
         # TUR BİTTİ, KUTU BOŞALIR: paylaşılan liste bu turun fotoğrafıdır. Bırakılsaydı bir sonraki
         # BAĞIMSIZ `parity_report()` çağrısı, yaşı beyansız eski bir defteri okurdu.
@@ -1814,6 +1829,18 @@ def check_integrity_and_alarm() -> None:
         if tok not in prev:
             obs.alarm("MECHANISM_STALE",
                       f"MAKULLÜK: {pr['check']} — {pr['detail']}", kind="parity", check=pr["check"])
+    for dv in rep.get("divergence", {}).get("ayrik") or []:    # #8 aynı olgu, iki kaynak, ZIT değer
+        # OLGU-BAŞINA JETON (artifact_unread deseniyle aynı disiplin): tek `divergence` jetonu
+        # mandala yapışsaydı, ESKİ bir ayrışma sürerken YENİ bir olgu ayrıştığında alarm
+        # üretilemezdi. `beyanli-ayri` kaynaklar zaten kıyasa girmez, yani muafiyet alarm doğurmaz.
+        tok = f"divergence:{dv['olgu']}"
+        now.add(tok)
+        if tok not in prev:
+            _k = " · ".join(f"{a}={d['deger']}" for a, d in (dv.get("kaynaklar") or {}).items())
+            obs.alarm("MECHANISM_STALE",
+                      f"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT "
+                      f"değer taşıyor ({_k}) · {dv['neden']}",
+                      kind="divergence", olgu=dv["olgu"])
     for st in rep["coherence"].get("stale") or []:             # #4 bayat türev (eski veriyle konuşan kalibrasyon)
         tok = f"stale:{st['artifact']}"
         now.add(tok)
@@ -1907,6 +1934,224 @@ def coherence_report() -> dict:
             ok += 1
     stale.sort(key=lambda x: -x["behind_h"])
     return {"stale": stale, "ok": ok, "absent": absent, "total": len(DERIVED_SOURCES)}
+
+
+# ==================================================================================================
+# #8 DEĞER-EŞİTLİĞİ (AYRIŞMA) — ŞABLONUN ÖLÇTÜĞÜ NİCELİK YANLIŞTI
+# (2026-08-13 · `docs/DENETIM-SPLIT-SINIFI-2026-08-13.md` §5 ve §8/P1)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN BOŞLUK: yukarıdaki `coherence_report` yalnız **mtime** kıyaslar ("türev kaynağından eski
+# mi?"). Sormadığı soru şudur: **"iki kaynak AYNI ŞEYİ mi söylüyor?"** — ve yedi dedektörün hiçbiri
+# onu sormuyordu (`parity` makullük/oran, `ownership` alan-ezilmesi, `monotonicity` geri-sarma
+# ölçer). Sonuç yapısaldır: aynı saniyede yazılmış ZIT DEĞERLİ iki dosya tüm kapılardan YEŞİL geçer.
+# Denetimin üç en ağır bulgusu tam bu boşluktan doğdu (rozet ↔ mutabakat; ortamlar arası
+# `max_drawdown`; hiçbir şeyden türemeyen anlatı).
+#
+# BURAYA KONDU, `integrity_registry.py`YE DEĞİL — ve gerekçesi ölçüldü: `integrity_registry` statik
+# bir KAPSAM MATRİSİDİR (bileşen × desen, elle doldurulur, `PATTERNS` = 6); `watchdog._DEDEKTOR_BOS`
+# çalışma-anı DEDEKTÖR ailesidir (7. desen `parity` de oraya eklendi). Bir *dedektör* dedektör
+# tarafına gider. İki sayı (8 dedektör ↔ 6 kapsam deseni) AYNI ŞEY DEĞİLDİR ve pano artık ikisini
+# ayrı adlandırır (bkz. app.js Bölüm 5 başlığı) — yoksa bu tur, kapatmaya çalıştığı "aynı görünümde
+# 7 ve 6 yan yana" kusurunu bir kez daha üretirdi.
+#
+# KAYIT *GERÇEK* ÜZERİNDEN TUTULUR, *DOSYA* ÜZERİNDEN DEĞİL: her satır bir OLGUdur ve o olguyu
+# iddia eden tüm yüzeyleri listeler. Yeni bir tüketici (JS, doküman, kart) aynı olguyu yazdığında
+# satıra eklenir; kapının kapsamı bir dosya listesine ve bir regex biçimine bağımlı kalmaz — C10'un
+# üç ayrı yoldan kaçırmasının kökü tam buydu.
+#
+# BİLİNÇLİ İKİZLEME SESSİZ MUAFİYET DEĞİLDİR: `beyanli-ayri` ilişkisi kayda GİRER, kıyasa girmez ve
+# gerekçesi satırın yanında durur (`recompute._orphan_state_files`in "beyaz liste değil türetme"
+# ilkesiyle aynı ruh). Muafiyeti kaydın DIŞINDA tutmak, denetimin §7'sini görünmez kılardı.
+#
+# ÖLÇÜLEMEYEN KAYNAK İHLAL DEĞİLDİR: bir kaynak okunamazsa (modül yok, dosya yok, kum havuzu)
+# `olculemeyen` listesine adıyla girer ve o olgu KIYASLANMAZ. "Okunamadı" ile "ayrık" aynı sayıya
+# katlanırsa dedektörün kendi körlüğü ihlal gibi okunur.
+# ==================================================================================================
+def _sabit(modul: str, ad: str):
+    """Bir Meridian modülünün sabitini oku. Bulunamazsa `_OLCULEMEDI` — 0/None DEĞİL."""
+    import importlib
+    m = importlib.import_module(f".{modul}", __package__)
+    if not hasattr(m, ad):
+        raise AttributeError(f"{modul}.{ad} yok")
+    return getattr(m, ad)
+
+
+def _yaml_alan(dosya: str, *yol: str):
+    """`state/*.yaml` içinden düz bir alan — DOSYADAN, `config.goal()`ten DEĞİL.
+
+    NEDEN: `config.goal()` `lru_cache`lidir. Bu dedektörün sorduğu soru "dosyada NE YAZIYOR?"tur;
+    önbellekten okumak, dosya değişip süreç yeniden başlamadığında ayrışmayı tam da görülmesi
+    gereken anda gizlerdi (canlı ile repo arasındaki `max_drawdown` ayrışması bu sınıftandı)."""
+    from . import config
+    import yaml
+    p = config.STATE / dosya
+    doc = yaml.safe_load(p.read_text()) or {}
+    for k in yol:
+        doc = doc[k]
+    return doc
+
+
+def _sunum_uyuyan_iddialari() -> frozenset:
+    """Sunum yüzeylerinin UYUYAN ilan ettiği kurulum adları — cümle kapsamında, muhafazakâr.
+
+    HEURİSTİĞİN SINIRI YAZILI: bir cümlede hem uyuyanlık hem silahlanma sözcüğü geçiyorsa o cümle
+    SAYILMAZ (canlı örnek: "momentum_burst … TAM SİLAHLANDI … Kalan uyuyan ateşlemeler …" — aynı
+    tooltip iki cümleyle iki ayrı şey söylüyor). Yani dedektör yalnız TARTIŞMASIZ hâli bildirir;
+    şüpheli hâlde susar. Yanlış alarm, bu depoda ölçülmüş en pahalı kusur sınıfıdır (kurt masalı).
+
+    TÜRKÇE KÜÇÜLTME TUZAĞI (ölçüldü, 2026-08-13): `"TAM SİLAHLANDI".lower()` Python'da
+    `'tam si̇lahlandi'` verir — noktalı `İ`, `i` + BİRLEŞTİREN NOKTA'ya (U+0307) açılır ve düz bir
+    `"silahlandi" in metin` kontrolü SESSİZCE kaçar. İlk koşumda tam bu yüzden yanlış pozitif
+    üretti. Normalleştirici birleştiren noktayı düşürür.
+
+    SÖZCÜK LİSTESİ BİLEREK KÖK DEĞİL TAM BİÇİMDİR: "silahlan" kökü seçilseydi tarihî vaka
+    ("… <b>UYUYAN</b> (kapı **silahlanma** kararını verene dek ölçülür)") kendi kendini susturur
+    ve dedektör yakalaması gereken cümleyi kaçırırdı — gevşetme, körleştirmedir."""
+    from pathlib import Path as _P
+    kok = _P(__file__).resolve().parent
+    sayfalar = [kok / "web" / "workflow.js", kok.parent / "workflow-diagram.html"]
+    mevcut = [p for p in sayfalar if p.exists()]
+    if not mevcut:
+        raise FileNotFoundError("sunum yüzeyleri okunamadı (kum havuzu/kısmi ağaç)")
+    armed = set(_sabit("strategy", "ARMED_SETUPS"))
+    bulunan: set = set()
+    for p in mevcut:
+        bulunan |= uyuyan_iddia_tara(p.read_text(), armed)
+    return frozenset(bulunan)
+
+
+UYUYAN_SOZCUKLERI = ("uyuyan", "dormant", "uyku")
+SILAHLI_SOZCUKLERI = ("silahli", "silahlı", "silahlandi", "silahlandı", "armed", "tam silah")
+
+
+def _kucult(s: str) -> str:
+    """Türkçe-güvenli küçültme: birleştiren nokta (U+0307) düşürülür (bkz. tuzak şerhi)."""
+    import unicodedata as _ud
+    return "".join(c for c in _ud.normalize("NFD", s.lower()) if not _ud.combining(c))
+
+
+def uyuyan_iddia_tara(metin: str, armed) -> set:
+    """Bir sunum METNİNDE 'uyuyan' ilan edilen SİLAHLI kurulum adları (saf fonksiyon → sınanabilir).
+
+    Dosyadan ayrı durur çünkü asıl iddia — "tarihî bayat cümleyi HÂLÂ yakalıyor mu?" — ancak
+    metni doğrudan besleyerek kanıtlanabilir; repo dosyaları düzeldiğinde o kanıt kaybolmamalı."""
+    import re as _re
+    armed = set(armed)
+    bulunan: set = set()
+    for cumle in _re.split(r"[.;]\s|<br\s*/?>", metin):
+        dusuk = _kucult(cumle)
+        if not any(_kucult(s) in dusuk for s in UYUYAN_SOZCUKLERI):
+            continue
+        if any(_kucult(s) in dusuk for s in SILAHLI_SOZCUKLERI):
+            continue
+        bulunan |= {ad for ad in armed if ad in cumle}
+    return bulunan
+
+
+# Her satır BİR OLGU; `kaynaklar` o olguyu iddia eden yüzeylerdir. Üçüncü eleman İLİŞKİdir ve
+# değeri KIYAS UZAYINA taşır: "esit" (olduğu gibi) · "yarisi" (×2) · "beyanli-ayri" (kıyasa girmez,
+# kayda girer). Başlangıç seti denetimin "KAPISIZ" kovasından türetildi.
+EQUIVALENT_TRUTHS: dict[str, dict] = {
+    # §3.3 — canlıda ORTAMLAR ARASI ayrıktı (repo 0,16 · canlı 0,08) ve üçlü kapı iki tarafta da
+    # yeşildi, çünkü testler TEK checkout içinde koşar. Bu dedektör kapıyı ÇALIŞMA ANINA taşır:
+    # canlı süreç kendi ağacındaki dört sayıyı kendi belleğinde kıyaslar.
+    "max_drawdown": {
+        "neden": "düşüş tavanı; edge_verdict/result_verdict ve DD vetosu aynı sayıdan beslenir",
+        "kaynaklar": [
+            ("goal.yaml:max_drawdown", lambda: _yaml_alan("goal.yaml", "max_drawdown")),
+            ("analytics.EDGE_MAXDD_MAX", lambda: _sabit("analytics", "EDGE_MAXDD_MAX")),
+            ("analytics.RESULT_MAXDD_MAX", lambda: _sabit("analytics", "RESULT_MAXDD_MAX")),
+            # §7-#3'ün AKSİNE bu bağ KOPARILMADI: `shadowlaw` kendi yorumunda (`:102` bloğu)
+            # marjı goal'ün yarısı olarak tanımlar. Ölçüm sırasında bir kez AYRIK yakalandı
+            # (0,04 iken goal 0,16) ve sonraki okumada onarılmıştı — yani sürüklenme GERÇEK.
+            ("shadowlaw.DD_VETO_MARGIN", lambda: _sabit("shadowlaw", "DD_VETO_MARGIN"), "yarisi"),
+        ],
+    },
+    # §4.2-#36 — bugün eşit (5=5) ama kapısı YOKTU: karne sürümü ile yürürlükteki strateji sürümü
+    # ayrışırsa "hangi sürüm canlı?" sorusunun iki cevabı olur.
+    "strateji_surumu": {
+        "neden": "yürürlükteki strateji sürümü; karne ve strateji dosyası aynı sayıyı söylemeli",
+        "kaynaklar": [
+            ("strategy.yaml:version", lambda: int(_yaml_alan("strategy.yaml", "version"))),
+            ("scoreboard.current_version",
+             lambda: int((store.read_json("scoreboard.json", {}) or {})["current_version"])),
+        ],
+    },
+    # §7-#2 — BİLİNÇLİ İKİZLEME. `trades.jsonl` KAPANMIŞ işlem defteridir (`ledgers.py` sözleşmesi
+    # `ts_close` ZORUNLU der), yani açık pozisyonun orada satırı OLMAZ. Kayda giriyor ki muafiyet
+    # SESSİZ olmasın; kıyasa girmiyor ki yanlış alarm üretmesin.
+    "acik_pozisyon_defteri": {
+        "neden": "açık pozisyonlar portfolio'da yaşar; trades KAPANMIŞ işlem defteridir "
+                 "(ledgers.CONTRACTS: ts_close zorunlu) — iki farklı soru, tek kaynak",
+        "kaynaklar": [
+            ("portfolio.positions",
+             lambda: len((store.read_json("portfolio.json", {}) or {}).get("positions") or {})),
+            ("trades.jsonl:acik_satir",
+             lambda: sum(1 for r in store.read_jsonl("trades.jsonl") if not r.get("ts_close")),
+             "beyanli-ayri"),
+        ],
+    },
+    # §4.1-#21 — sunum katmanı `momentum_burst`ü "UYUYAN" ilan ediyordu; kurulum 2026-08-12'de
+    # silahlanmıştı. Metin tarafı MUHAFAZAKÂR okunur (bkz. `_sunum_uyuyan_iddialari`).
+    "silahli_kurulumlar": {
+        "neden": "hangi kurulum silahlı: kod (`strategy.ARMED_SETUPS`) ↔ sunum anlatısı",
+        "kaynaklar": [
+            ("strategy.ARMED_SETUPS", lambda: frozenset(_sabit("strategy", "ARMED_SETUPS"))),
+            ("sunum: uyuyan ilan edilmeyenler",
+             lambda: frozenset(_sabit("strategy", "ARMED_SETUPS")) - _sunum_uyuyan_iddialari()),
+        ],
+    },
+}
+
+_ILISKI_NORM = {
+    "esit": lambda v: v,
+    "yarisi": lambda v: v * 2,
+}
+
+
+def divergence_report() -> dict:
+    """#8 — DEĞER AYRIŞMASI. Aynı olguyu iddia eden kaynaklar aynı şeyi mi söylüyor?
+
+    `coherence`den farkı ZAMAN değil DEĞER ölçmesidir; ikisi kardeştir, biri diğerinin yerine
+    geçmez (bayat bir türev burada YEŞİL görünebilir ve doğrusu odur — onu `coherence` söyler).
+    Yalnız gözlem: bekçi hiçbir değeri düzeltmez."""
+    ayrik, olculemeyen, beyanli, esit = [], [], [], 0
+    for olgu, kayit in EQUIVALENT_TRUTHS.items():
+        degerler: dict = {}
+        for kaynak in kayit["kaynaklar"]:
+            ad, oku = kaynak[0], kaynak[1]
+            iliski = kaynak[2] if len(kaynak) > 2 else "esit"
+            try:
+                ham = oku()
+            except Exception as e:
+                olculemeyen.append({"olgu": olgu, "kaynak": ad,
+                                    "error": f"{type(e).__name__}: {e}"})
+                continue
+            if iliski not in _ILISKI_NORM:            # beyanli-ayri (ve gelecekteki muafiyetler)
+                beyanli.append({"olgu": olgu, "kaynak": ad, "deger": _gorunur(ham),
+                                "iliski": iliski, "neden": kayit["neden"]})
+                continue
+            degerler[ad] = (_ILISKI_NORM[iliski](ham), _gorunur(ham), iliski)
+        if len(degerler) < 2:
+            continue                                  # kıyas için en az iki ÖLÇÜLMÜŞ kaynak gerek
+        norm = {d[0] for d in degerler.values()}
+        if len(norm) == 1:
+            esit += 1
+        else:
+            ayrik.append({"olgu": olgu, "neden": kayit["neden"],
+                          "kaynaklar": {ad: {"deger": d[1], "iliski": d[2]}
+                                        for ad, d in degerler.items()}})
+    return {"ayrik": ayrik, "esit": esit, "total": len(EQUIVALENT_TRUTHS),
+            "olculemeyen": olculemeyen, "beyanli": beyanli}
+
+
+def _gorunur(v):
+    """Rapor JSON'una girebilecek biçim (frozenset/tuple → sıralı liste)."""
+    if isinstance(v, (frozenset, set)):
+        return sorted(str(x) for x in v)
+    if isinstance(v, tuple):
+        return [str(x) for x in v]
+    return v
 
 
 # --------- #5 MONOTONLUK: ileri-only nicelikler geri gitmemeli ---------

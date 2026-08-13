@@ -357,8 +357,12 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # yakalandı" diye okunur. Düşen bir dedektör jetonu, çöken bir dedektörü YAKALAMA sayardı ve
     # kapsama sayısını yukarı çekerdi — bu modülün ilk tasarım kararının (sayıyı şişirmek ölçümü
     # yalana çevirir) tam tersi. Ölçülemeyen ölçülemedi kalır, AYRI raporlanır.
-    _DEDEKTORLER = ("production", "conservation", "determinism", "coherence",
-                    "monotonicity", "ownership", "parity")
+    # AİLE TÜRETİLİR, ELLE YAZILMAZ (2026-08-13). Burada yedi adlık SABİT bir tuple duruyordu ve
+    # `watchdog._DEDEKTOR_BOS`un ikinci, elle bakımlı bir kopyasıydı: 8. dedektör (`divergence`)
+    # eklendiğinde bu liste SESSİZCE geride kalır, düşen bir dedektör "düşmedi" sayılır ve körlük
+    # haritası yalan söylerdi — üstelik bu bloğun kendi gerekçesi tam olarak o yalana karşı yazılmış.
+    # Aynı çift-kaynak sınıfının bu turda kapatılan kardeşi: pano başlığının sabit "(7 desen)"i.
+    _DEDEKTORLER = tuple(wd._DEDEKTOR_BOS)
     dustu: set[str] = set()
     for _ad in _DEDEKTORLER:
         _d = rep.get(_ad)
@@ -396,6 +400,9 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
         for pr in rep["parity"].get("rows", []):
             if not pr.get("ok"):
                 red.add(f"parity:{pr['check']}")
+    if "divergence" not in dustu:      # 8. desen (2026-08-13): olgu-başına jeton, akranlarıyla aynı
+        for dv in rep.get("divergence", {}).get("ayrik", []):
+            red.add(f"divergence:{dv['olgu']}")
 
     lrep = lg.report()
     for name in lrep.get("violating", []):
@@ -775,7 +782,12 @@ def format_report(res: dict) -> str:
         for m, d in sorted(_ol.items()):
             L.append(f"  ! {m:38s} → {', '.join(f'{k} ({v})' for k, v in sorted(d.items()))}")
     else:
-        L.append("ÖLÇÜLEMEDİ: yok — yedi dedektörün hepsi her koşumda hüküm verdi")
+        # SAYI TÜRETİLİR (2026-08-13): burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
+        # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, bu turda kapatılan pano
+        # başlığının kardeşi. Aile üreticiden okunur.
+        from . import watchdog as _wd_ad
+        L.append(f"ÖLÇÜLEMEDİ: yok — {len(_wd_ad._DEDEKTOR_BOS)} dedektörün hepsi her koşumda "
+                 f"hüküm verdi")
     L.append(f"sieve dedektörü: {'var' if res.get('sieve_present') else 'YOK (ölçülmedi)'}")
     L.append(f"kapsam dışı (ağ): {', '.join(res.get('out_of_scope', []))}")
     L.append("")

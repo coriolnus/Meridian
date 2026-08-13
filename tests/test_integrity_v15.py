@@ -139,12 +139,16 @@ def test_integrity_alarms_once_per_violation(sandbox_state, monkeypatch):
 
 
 def test_integrity_report_shape(sandbox_state):
-    """Şekil sözleşmesi — 7 desenin TAMAMI raporda. 7. desen (makullük/parity) 2026-07-21'de
+    """Şekil sözleşmesi — SEKİZ desenin TAMAMI raporda. 7. desen (makullük/parity) 2026-07-21'de
     eklendi: ilk altısı bileşen bazlıdır ve 'doğru parçalar, yanlış sistem sonucu' sınıfını göremez
-    — motorun evrenin %18'inde karar verdiği hata tam o sınıftandı."""
+    — motorun evrenin %18'inde karar verdiği hata tam o sınıftandı.
+
+    8. desen (değer-eşitliği/divergence) 2026-08-13'te BEYANLI eklendi: ilk yedisinin hiçbiri
+    "iki kaynak AYNI ŞEYİ mi söylüyor?" diye sormuyordu — `coherence` ZAMAN ölçer, dolayısıyla
+    aynı saniyede yazılmış ZIT DEĞERLİ iki dosya bütün kapılardan yeşil geçiyordu."""
     rep = w.integrity_report(persist=True)
     assert {"production", "conservation", "determinism", "coherence",
-            "monotonicity", "ownership", "parity"} == set(rep)
+            "monotonicity", "ownership", "parity", "divergence"} == set(rep)
 
 
 # ---------------- #4 TUTARLILIK (türev bayatlığı) ----------------

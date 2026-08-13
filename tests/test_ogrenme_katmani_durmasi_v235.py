@@ -171,20 +171,31 @@ def test_terminal_faz_yetim_tetigi_uretmez(sandbox_state, monkeypatch):
 
 def test_yetim_tespiti_olayli_ve_episode_basina_tek(sandbox_state, monkeypatch):
     """Yetim tespiti SESSİZ DEĞİL (YASA 4): `sprint_yetim_tespit` düşer — ama episode (sid) başına
-    BİR kez; 300 sn'lik poll'de her turda warn basmak alarmı gürültüye çevirirdi. Meşgul bayrak
-    yetimi başlatmayı engellese bile tespit görünür kalır."""
+    BİR kez; 300 sn'lik poll'de her turda warn basmak alarmı gürültüye çevirirdi. Bir kapı yetimi
+    başlatmayı engellese bile tespit görünür kalır.
+
+    BEYANLI GÜNCELLEME (v239, 2026-08-13). Bu testin "başlatma yolu kapalı" kurulumu ESKİDEN canlı
+    arama bayrağıydı (`SEARCH_PROGRESS.running=True`). v239 tam O KAPIYI kaldırdı ve gerekçesi
+    ölçüldü: canlı arama bir YÜK sinyalidir ve yetim ZATEN ÖLÜ bir süreçtir; beyin zinciri ~5
+    dakikada bir tur açtığı için bayrak asla bayatlamıyordu ve v235'in yetim-restart'ı ÖLÜ bir
+    mekanizmaya dönüşmüştü (canlı: `sebep=mesgul:canli_arama, yetim=true, gecen_gun=5`). Testin
+    ASIL iddiası (tespit olaylı + episode başına bir kez) DEĞİŞMEDİ; kapalı tutulan kapı, v239'un
+    bilerek KORUDUĞU kapıyla değiştirildi: `elle_tik` bir YETKİ kapısıdır (2026-07-30'un ölçülmüş
+    kazası) ve yetim onu delmez. Yani test zayıflatılmadı — hâlâ ayakta olan bir kapıya baktırıldı.
+    Yeni kolun iki yönü `tests/test_sprint_yetim_yuk_kapisi_v239.py`de ayrıca çivilidir."""
     _yetim_kur(monkeypatch, started_hours_ago=48)
     from meridian import hermes
-    hermes.SEARCH_PROGRESS.update(running=True, phase="probing", i=1)   # başlatma yolu kapalı
+    hermes.SEARCH_PROGRESS.update(running=True, phase="probing", i=1)   # YÜK kapısı: artık delinir
     baslatilan = []
     monkeypatch.setattr(sprint, "start", lambda cfg=None: baslatilan.append(cfg) or {"started": True})
-    sprint.maybe_start()
-    sprint.maybe_start()
-    assert baslatilan == []                                    # meşgul: süreç doğmadı
+    sprint.maybe_start(mesgul="elle_tik")                      # YETKİ kapısı: yetimde de bloklar
+    sprint.maybe_start(mesgul="elle_tik")
+    assert baslatilan == [], "yetki kapısı (elle_tik) delindi — 2026-07-30 kazası geri gelmiş"
     olay = _olaylar("sprint_yetim_tespit")
     assert len(olay) == 1 and olay[0]["sid"] == "yt1", olay
     skip = _olaylar("sprint_cadence_skip")
     assert skip and skip[-1].get("yetim") is True, "skip olayı yetim bilgisini taşımıyor"
+    assert skip[-1].get("sebep") == "mesgul:elle_tik", skip[-1]
 
 
 def test_yetim_yeniden_baslatma_ucu_uca_status_temizlenir(sandbox_state, monkeypatch):

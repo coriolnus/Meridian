@@ -2106,7 +2106,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                            armed=len(meta["armed"]), day_pnl_pct=round(day_pnl_pct, 4),
                            breaker_tripped=breaker, halted=halted, data_ok=not data_bad,
                            explore_mode=bool(explore_mode),
-                           mirror_drift=bool(mirror.get("drift")))
+                           **ayna_sapma_alanlari(mirror))
     # KAPSAM SAYACI (2026-08-01): "kaç plan üretildi" ile "kaç planda karartma kapısı KONUŞABİLDİ"
     # ayrı sayılardır. İkincisi bugüne dek hiçbir olayda yoktu; fail-open sessizken bir eğilim
     # (kapsamın aşınması) yalnız plan plan bakılarak görülebilirdi. `takvim_bos` üçüncü hâli taşır:
@@ -2747,6 +2747,50 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
               coid=kd.get("coid"), islendi=islendi, neden=neden or None)
 
 
+# ==================================================================================================
+# AYNA SAPMASI İKİ BOYUTLUDUR — NABIZ BUGÜNE DEK YALNIZ BİRİNİ TAŞIYORDU
+# (2026-08-13 · `docs/DENETIM-SPLIT-SINIFI-2026-08-13.md` §3.1; canlı ölçüm 2026-08-12T22:01Z)
+# --------------------------------------------------------------------------------------------------
+# `mirror_drift` FİYAT sapmasıdır (`MIRROR_DRIFT_TOL`, bu dosyanın :25'i — iç sim dolumu ile gerçek
+# Alpaca dolumu arasındaki fark). ADET sapması BAŞKA bir gerçektir (`position_drift`, :3075 —
+# `missing_on_alpaca` ∪ `qty_drift`) ve yalnız `broker_reconcile.json`a yazılıyordu; NABIZDA O
+# ANAHTAR HİÇ YOKTU. Ölçülen sonuç: pano HESAP rozeti nabzı okuduğu için (app.js) `mirror_drift`
+# False görüp **"ayna uyumlu" (yeşil)** yazarken 4/4 pozisyon ~2 kat ayrıktı (NUE 54/25 · EMR 64/37
+# · BKNG 43/22 · AMGN 33/22) ve AYNI ekranın eylem şeridi "Alpaca aynasında sapma var" diyordu.
+# Kök neden bir DÜZELTMENİN yan ürünü: P6 tekilleştirmesi sapma METNİNİ mutabakat masasına taşıdı,
+# özet rozeti ise başka bir alandan besleniyordu ve taşınmadı — rozet eski evin anahtarında kaldı.
+#
+# ALAN YAYAN TARAFA EKLENİR, TÜKETİCİYE YAMA ATILMAZ: nabzı okuyan HER tüketici (pano rozeti,
+# /api/today, digest ve bundan sonra yazılacak olanlar) böylece otomatik kapsanır. Tüketiciyi
+# yamalamak, "kapının kapsamı elle tutulan bir liste" kusurunu (denetim §3.8) bir kez daha üretirdi.
+#
+# ÖLÇÜLMEDİ ≠ TEMİZ (UYDURMA YASAĞI). Mutabakat atlandıysa/düştüyse `checked` False'tur (:2778 iskelet
+# + :2833 damga; `daily_cycle`daki `except` dalında `mirror` boş sözlüktür) ve o hâlde sapma hakkında
+# HİÇBİR ŞEY bilmiyoruz → iki alan da `None`. Eski `bool(mirror.get("drift"))` biçimi tam bu uydurmayı
+# yapıyordu: mutabakat hiç koşmasa bile nabza "sapma yok" düşüyordu.
+#
+# `None` DA HER TUR AÇIKÇA YAZILIR: nabız BİNDİRMELİ yazılır (`health.write_heartbeat` — alan sahipliği
+# yasası), yani anahtarı hiç yazmamak DÜNKÜ değeri sonsuza dek taşırdı.
+# ==================================================================================================
+def ayna_sapma_alanlari(mirror: dict | None) -> dict:
+    """Mutabakat çıktısından NABIZ alanları: `mirror_checked` + iki sapma boyutu (fiyat · adet).
+
+    Saf fonksiyon — `daily_cycle` bunu `write_heartbeat(**...)` ile açar. AYRI durmasının nedeni
+    ölçülebilirlik: sapmanın nabza doğru düşüp düşmediği tam bir günlük tur koşturmadan sınanabilmeli
+    (kapının kendisi de bir kapı gerektirmemeli)."""
+    m = mirror or {}
+    olculdu = bool(m.get("checked"))
+    pos = m.get("positions") or {}
+    return {"mirror_checked": olculdu,
+            # ATLAMA SINIFI ROZETE KADAR TAŞINIR (bkz. `_skip`): "ayna yok" (dahili broker) ile
+            # "ayna okunamadı" (kimlik/erişim/arıza) ayrı hükümlerdir. Ölçülmüş bir turda alan
+            # None kalır — sınıf ancak atlanan turun özelliğidir.
+            "mirror_skip_sinifi": (None if olculdu else m.get("skip_sinifi")),
+            "mirror_drift": (bool(m.get("drift")) if olculdu else None),
+            "position_drift": (bool(pos.get("missing_on_alpaca") or pos.get("qty_drift"))
+                               if olculdu else None)}
+
+
 def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                            open_positions: dict | None = None,
                            opens: dict | None = None,
@@ -2782,15 +2826,21 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     # içeriğiyle diskte kalıyor, pano onu GÜNCEL mutabakat sanıp okuyordu — "kontrol edilmedi" ile
     # "kontrol edildi, temiz" ayırt edilemiyordu. Arıza dalı (aşağıda) zaten api_ok=False yazıyor;
     # atlama dalları da nedenini yazmalı, yoksa bayat artefakt taze konuşur (2026-07-22).
-    def _skip(reason: str) -> dict:
+    # ATLAMA SINIFI (2026-08-13): "AYNA YOK" ile "AYNA OKUNAMADI" aynı şey değildir ve nabza
+    # taşınırken ayrılmaları gerekir. Dahili brokerde kıyaslanacak bir ayna HİÇ YOKTUR — o hâli
+    # "ölçülemedi" diye amber basmak, hiç var olmayan bir arızayı sonsuza dek raporlamak olurdu
+    # (kurt masalı). Kimlik/erişim yokluğu ise GERÇEKTEN ölçülemeyen bir olgudur.
+    def _skip(reason: str, sinif: str = "olculemedi") -> dict:
         prev = store.read_json("broker_reconcile.json", {})
         store.write_json("broker_reconcile.json", {**prev, "checked": False, "skip_reason": reason,
-                         "date": dstr,
+                         "skip_sinifi": sinif, "date": dstr,
                          "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
+        out["skip_sinifi"] = sinif
         return out
 
     if config.BROKER != "alpaca_paper":
-        return _skip(f"broker={config.BROKER} — ayna mutabakatı yalnız alpaca_paper'da anlamlı")
+        return _skip(f"broker={config.BROKER} — ayna mutabakatı yalnız alpaca_paper'da anlamlı",
+                     "ayna_yok")
     from .adapters import alpaca
     # B2 (teşhis 2026-08-10): bu turda kapananlar KALICI dolum-yaması kuyruğuna — TEK-ATIŞ DEĞİL.
     # Kayıt, aşağıdaki paper_available/API arıza dallarından ÖNCE düşer: kapanış turundaki geçici

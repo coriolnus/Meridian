@@ -14,8 +14,10 @@ fixed sandbox — and it **cannot touch a dollar until it has earned it**.
 
 Three layers on one VM sharing one state directory:
 
-- **Skill layer** — 66 Claude trading skills (regime, screeners, planners, post-mortem, edge
-  research, meta/skill-authoring), bound into 5 deterministic, auditable pipelines.
+- **Skill layer** — Claude trading skills (regime, screeners, planners, post-mortem, edge
+  research, meta/skill-authoring), bound into 5 deterministic, auditable pipelines. The live count
+  is served, never written down: `GET /api/public/summary` → `skills_live`; the registry of record
+  is `state/skills_registry.json` (retired entries carry `retired: true`).
 - **Engine layer** — deterministic Python: `strategy.py` (pure signal, closed bars only), `broker.py`
   (realistic frictions), `backtest.py` (walk-forward OOS — the learning gate), `guard.py` (the real
   constraint layer), `score.py`, `memory.py`, `rollback.py`, `regime.py`, `health.py`.
@@ -42,9 +44,10 @@ Enforcement lives in **code, not prompts**. Everything Hermes is told, `guard.py
 
 - **Axis 1 — parameters.** `strategy.yaml` moves inside `bounds.yaml`, gated by the backtest.
 - **Axis 2 — capability.** Hermes may author new skills for itself. Every new/modified skill runs in
-  `skills/shadow/` for **10 sessions** on live data — scored against outcomes, unable to influence a
-  trade — and is promoted only with **explicit human approval** in the dashboard. The agent may never
-  promote its own skill.
+  shadow mode on live data — scored against outcomes, unable to influence a trade — and is promoted
+  only with **explicit human approval** in the dashboard. The agent may never promote its own skill.
+  Shadow mode is a `shadow` flag on the registry entry (`meridian/skills.py`), not a directory; the
+  promotion window is whatever that entry records, so this page states no number.
 
 ## Autonomy ladder — how live trading is *earned*
 
@@ -56,8 +59,10 @@ L2  LIVE, AUTONOMOUS             ← real money inside the limits block.
 
 Promotion L0 → L1 requires, and `guard.py` enforces: ≥ 60 closed paper trades · a positive score in
 ≥ 2 regimes · max drawdown within `goal.max_drawdown` for the whole paper period · ≥ 3 accepted
-hypotheses whose realised outcome matched their prediction · zero unexplained circuit-breaker trips in
-the last 20 sessions · a broker key with withdrawals disabled and this VM's IP allow-listed · **two
+hypotheses whose realised outcome matched their prediction · zero unexplained circuit-breaker trips
+inside the ladder's calendar window (`analytics.LADDER_BREAKER_WINDOW_DAYS`; a *session-count*
+window silently narrowed itself as event volume grew, so the window is days, not rows) · a broker
+key with withdrawals disabled and this VM's IP allow-listed · **two
 env flags flipped by hand** (`MERIDIAN_MODE=live`, `MERIDIAN_I_ACCEPT_RISK=true`) · a phone kill
 switch. Meridian ships at **L0** and never flips a flag itself. The dashboard's **Today** page renders
 exactly how far it is from being trusted with money.
@@ -143,9 +148,17 @@ gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE --command "rm -
 
 ## Locked strategy (this deployment)
 
-S&P 500 · swing momentum · target +7% / 30d · max drawdown 8% · min Sharpe 1.2 · 5 positions · 1.0R
-each · 3% max daily loss · reflect every 5 trades · min sample 30 · 5 bps slippage · skill evolution
-on (shadow-mode). FMP and Alpaca keys not yet present — FMP screeners auto-enable when a key lands;
-until then the engine trades on its internal broker using its self-contained momentum-breakout signal.
+S&P 500 · swing momentum · skill evolution on (shadow-mode). Every number of this contract lives in
+config and is **deliberately not copied here**: risk envelope and limits in `state/goal.yaml`
+(`target_return_30d`, `max_drawdown`, `min_sharpe`, `limits.max_open_positions`,
+`limits.max_daily_loss_pct`, `min_sample`, `slippage_bps`), position sizing in
+`state/strategy.yaml` (`position_size_r`). The dashboard renders them live.
+
+> Why no numbers here: this line carried `max drawdown 8% · 5 positions · 1.0R` long after the
+> operator had moved all three (2026-08-12/13). A README cannot go stale relative to a source it
+> never reads — so it states the address, not the value. Same rule as the live skill count above.
+
+FMP and Alpaca keys not yet present — FMP screeners auto-enable when a key lands; until then the
+engine trades on its internal broker using its self-contained momentum-breakout signal.
 
 _Meridian is a research system. Paper mode. Not financial advice._

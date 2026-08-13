@@ -116,8 +116,9 @@ def _dusuk_rapor(dusen_ad: str) -> dict:
     """`integrity_report`in C21 yalıtım biçimi: iskelet + `dedektor_dustu` (watchdog.py:863)."""
     from meridian import watchdog as wd
     rep = {}
+    # 8. DESEN BEYANLI EKLENDİ (2026-08-13) — aile artık üreticiden türetiliyor (mutation.py).
     for ad in ("production", "conservation", "determinism", "coherence", "monotonicity",
-               "ownership", "parity"):
+               "ownership", "parity", "divergence"):
         if ad == dusen_ad:
             rep[ad] = {**wd._DEDEKTOR_BOS.get(ad, {}), "ok": False, "dedektor_dustu": True,
                        "olculemedi": True, "error": "RuntimeError: defter okunamadı"}
@@ -127,7 +128,7 @@ def _dusuk_rapor(dusen_ad: str) -> dict:
 
 
 @pytest.mark.parametrize("dusen_ad", ["production", "conservation", "determinism", "coherence",
-                                      "monotonicity", "ownership", "parity"])
+                                      "monotonicity", "ownership", "parity", "divergence"])
 def test_mutasyon_dusen_dedektor_ADIYLA_RAPORLANIR(sandbox_state, monkeypatch, dusen_ad):
     """ASIL DÜZELTME: düşen dedektör SESSİZ kalmıyor — adıyla hem `dusen` sözlüğüne hem koşum
     defterine düşüyor. Eskiden iskeletin boş listesi 'bulgu yok' diye okunuyordu ve çöküşün

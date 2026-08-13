@@ -664,10 +664,47 @@ def test_next_version_outruns_scoreboard_and_history_even_after_a_rollback(seede
     assert versioning._next_version({"version": 1}) == 10
 
 
+# OKUMA ERİŞİMCİLERİ — aşağıdaki tarayıcının alt-ağaç budaması bunlarda durur.
+_KARNE_OKUMA_ERISIMCILERI = ("read_json", "read_jsonl", "mtime")
+
+
+def _karneyi_ham_yaziyor_mu(node: ast.Call) -> bool:
+    """`node` alt-ağacında 'scoreboard.json' OKUMA YOLU DIŞINDA geçiyor mu?
+
+    DÜZELTİLDİ (2026-08-13, otoriter suite bulgusu). Eski tarayıcı iki adımlıydı: (1) çağrının
+    ADI `read_json` ise atla, (2) değilse `ast.walk(node)` ile alt-ağacın TAMAMINDA sabiti ara.
+    Bu iki adım birbiriyle çelişiyordu — muafiyet yalnız okumanın EN DIŞTAKİ çağrı olduğu hâlde
+    tutuyor, okuma başka bir çağrıyla SARMALANDIĞI anda kayboluyordu. v239'un `divergence`
+    dedektörü (`watchdog.EQUIVALENT_TRUTHS["strateji_surumu"]`) tam bu şekli yazdı:
+        lambda: int((store.read_json("scoreboard.json", {}) or {})["current_version"])
+    Dıştaki `int(...)` çağrısının adı `read_json` DEĞİL, ama alt-ağacında sabit VAR → tarayıcı
+    bir OKUMAYI ham yazım sanıp `watchdog.py`yi kümeye ekledi.
+    ÖLÇÜLDÜ, VARSAYILMADI: `meridian/` taraması watchdog'da tek geçiş verdi (satır 2077) ve o
+    geçiş `store.read_json`dur; `store.write_json("scoreboard.json", …)` biçiminde bir yazım
+    watchdog'da YOKTUR. Dedektör okur, yazmaz — dolayısıyla doğru düzeltme PİNİ GENİŞLETMEK
+    DEĞİLDİR: `watchdog.py`yi kümeye yazmak hem yanlış bir olgu ilan eder hem de yarın gerçek bir
+    ham yazım oraya girerse bekçiyi kör bırakırdı. Muafiyet SARMALAMAYA DAYANIKLI hâle getirildi:
+    alt-ağaç gezilirken okuma çağrılarının kökleri BUDANIR.
+    KÜME DEĞİŞMEDİ — bu turda ham yazan modül seti aynıdır (dört modül)."""
+    yigin = [node]
+    while yigin:
+        n = yigin.pop()
+        if isinstance(n, ast.Constant) and n.value == "scoreboard.json":
+            return True
+        for c in ast.iter_child_nodes(n):
+            if isinstance(c, ast.Call):
+                ad = c.func.attr if isinstance(c.func, ast.Attribute) \
+                    else getattr(c.func, "id", "")
+                if ad in _KARNE_OKUMA_ERISIMCILERI:
+                    continue                 # OKUMA alt-ağacı budandı — sarmalayıcı yanılmasın
+            yigin.append(c)
+    return False
+
+
 def test_only_known_call_sites_write_the_scoreboard_wholesale(seeded):
     """SAHİPLİK: karneyi `versioning.update_scoreboard` (BİRLEŞTİRİR) dışında tam sözlükle yazan
     her yol soy zincirini tek hamlede silebilir. Bugün üç böyle yol var; dördüncüsü sessizce
-    eklenemesin."""
+    eklenemesin. Tarayıcının okuma muafiyeti için bkz. `_karneyi_ham_yaziyor_mu` (2026-08-13)."""
     raw = set()
     for f in sorted(MERIDIAN.rglob("*.py")):
         tree = ast.parse(f.read_text())
@@ -676,13 +713,34 @@ def test_only_known_call_sites_write_the_scoreboard_wholesale(seeded):
                 continue
             name = node.func.attr if isinstance(node.func, ast.Attribute) \
                 else getattr(node.func, "id", "")
-            if name in ("read_json",):
+            if name in _KARNE_OKUMA_ERISIMCILERI:
                 continue
-            if any(isinstance(a, ast.Constant) and a.value == "scoreboard.json"
-                   for a in ast.walk(node)):
+            if _karneyi_ham_yaziyor_mu(node):
                 raw.add(f.name)
     assert raw == {"versioning.py", "run.py", "sprint.py", "mutation.py"}, \
         f"karneyi ham yazan modül kümesi değişti: {sorted(raw)}"
+
+
+def test_karne_tarayicisi_sarmalanmis_okumayi_yazim_SANMAZ():
+    """2026-08-13 karşı-testi: düzeltmenin kendisi çivilenir, yoksa bir sonraki sarmalayıcıda
+    aynı yanlış-pozitif geri gelir (ve çaresi yine "pini genişlet" sanılır).
+
+    ÜST SINIR DA ÇİVİLİ: budama YALNIZ okuma çağrılarında durur — `write_json` sarmalanmış olsa
+    bile yakalanmalı, aksi halde düzeltme bekçiyi kör ederdi."""
+    okuma = ast.parse('int((store.read_json("scoreboard.json", {}) or {})["current_version"])')
+    yazim = ast.parse('bool(store.write_json("scoreboard.json", {}))')
+    sarmalanmis_yazim = ast.parse(
+        'log(store.write_json("scoreboard.json", store.read_json("scoreboard.json", {})))')
+
+    def _dis_cagri(mod):
+        return next(n for n in ast.walk(mod) if isinstance(n, ast.Call))
+
+    assert _karneyi_ham_yaziyor_mu(_dis_cagri(okuma)) is False, \
+        "sarmalanmış OKUMA yine yazım sanıldı — watchdog yanlış-pozitifi geri geldi"
+    assert _karneyi_ham_yaziyor_mu(_dis_cagri(yazim)) is True, \
+        "sarmalanmış YAZIM kaçtı — budama fazla geniş, bekçi körleşti"
+    assert _karneyi_ham_yaziyor_mu(_dis_cagri(sarmalanmis_yazim)) is True, \
+        "yazım+okuma karışık ifadede yazım kaçtı"
 
 
 def test_a_reseed_preserves_the_parent_link_in_the_scoreboard(seeded, monkeypatch):

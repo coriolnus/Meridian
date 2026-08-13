@@ -71,7 +71,7 @@ def test_A_esikler_adlandirilmis_sabit_olarak_TEK_yerde_durur():
     testler de eşiği değiştirmeden senaryo kuramazdı (EDGE hükmünün aynı yasası)."""
     assert analytics.RESULT_N_MIN == 30
     assert analytics.RESULT_PF_MIN == 1.3
-    assert analytics.RESULT_MAXDD_MAX == 0.08
+    assert analytics.RESULT_MAXDD_MAX == 0.16   # 0.08→0.16: operatör kararı 2026-08-13
     assert analytics.RESULT_NET_OVER_FRICTION == 1.0
     # DÜŞÜŞ TAVANI TEK KAYNAK: goal.yaml (operatörün yazılı başarısızlık sınırı), EDGE'in kuyruk
     # ölçütü ve SONUÇ hükmü AYNI sayıyı kullanmak zorunda. Sürüklenirse burası kırmızı yanar.
@@ -287,7 +287,7 @@ def test_B_CVaR_ISARET_SOZLESMESI_cikitinin_ICINDE_yazar(sandbox_state):
 
 def test_B_esikler_gerekcesiyle_birlikte_adlandirilmis():
     assert analytics.EDGE_TAIL_N_MIN == 40
-    assert analytics.EDGE_MAXDD_MAX == 0.08
+    assert analytics.EDGE_MAXDD_MAX == 0.16   # 0.08→0.16: operatör kararı 2026-08-13
     assert analytics.EDGE_CVAR5_MIN_R == -1.5
     src = inspect.getsource(analytics)
     # Gerekçe YASADAN türer, ölçümden değil: boyutlayıcı adedi risk_$/(giriş−stop) kurar → stopa

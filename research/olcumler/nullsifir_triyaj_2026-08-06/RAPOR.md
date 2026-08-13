@@ -387,3 +387,38 @@ kapısıdır (DOM'a sayı basmaz) → (b); dalga-2'de eski `ölçülen` satırı
 fonksiyonuna TAŞINDI, yeni bir guard değil (§1'deki eski `landing.js:66` kaydının yeni yeri).
 v196 tavanı yalnız `app.js` ölçer; landing bu teste girmez, sayım değişmez.
 
+
+---
+
+## 8. v239 EKİ — 2 yeni **(a)**, EKLENDİĞİ TURDA ÖDENDİ (2026-08-13)
+
+v239 `app.js`e sekizinci bütünlük deseninin (`divergence` / değer-eşitliği) özet satırını ekledi
+ve çırçır **192 → 194**'e ÇIKTI (otoriter suite `test_nullsifir_sayisi_CIRCIRI_asmiyor` ile düştü).
+Sınıf sütunu **`a-v239`** — §4/§5'in DONMUŞ tablolarına karışmasın diye ayrı imle yazıldı
+(§7'nin `b-d2` emsali); bu iki satır 2026-08-06 sayımının parçası DEĞİLDİR.
+
+| dosya:satır | ifade | sınıf | gerekçe | hüküm |
+|---|---|---|---|---|
+| `app.js:6089` #0 | `?? 0` (`v.esit`) | a-v239 | sunucu alanı doğrudan DOM'a — yokluk 'ölçülmedi', basılan 0 'ölçtük, sıfır çıktı' der | **ÖDENDİ (v239 düzeltme turu)** → `trn(v.esit)` |
+| `app.js:6089` #1 | `?? 0` (`v.total`) | a-v239 | a.g.; ayrıca `total` = `len(EQUIVALENT_TRUTHS)` olduğu için **hiçbir zaman 0 olamaz** — basılan 0 imkânsız bir olguyu iddia eder | **ÖDENDİ (v239 düzeltme turu)** → `trn(v.total)` |
+
+**KÖK: DESEN DEĞİL KUSUR KOPYALANDI.** Yeni satır iki kardeşinden (`production` → `app.js:4977`,
+`coherence` → `app.js:4980`) biçim aldı; ama tam o iki kardeş §4 kuyruğunda **(a)** olarak
+işaretlidir ve aynı gerekçeyle kaldırılmayı bekler. Yani "mevcut koda benzet" kuralı, kaldırma
+kuyruğundaki bir kusuru ÇOĞALTTI. Çırçırın yakaladığı şey buydu ve doğru cevap tavanı yükseltmek
+değil, satırı ekleyen turun borcu ödemesidir.
+
+**NEDEN İKİ YÖNLÜ UYDURMA:** `"0/0 olgu eşit"` ölçülmemiş bir turu hem "kıyas yapıldı" hem
+"hiçbir olgu eşit değil" diye okutur. Üstelik bu satıra gelinebilmesi için `_patOlculemedi(v)`
+dalının ZATEN elenmiş olması gerekir — yani dosyanın kendi dürüst mekanizması (`ÖLÇÜLEMEDİ`
+rozeti + `_patOlcumYok`) devredeyken, `?? 0` onun arkasından ikinci ve sessiz bir hüküm veriyordu.
+
+**DÜZELTME BİÇİMİ — SİLME, EKLEME DEĞİL** (§0'ın "çoğu bir EKLEME değil bir SİLMEdir" kaydı):
+guard kaldırıldı ve değer jenerik dürüst biçimleyiciye (`trn()`, `app.js:275` — null/NaN'da `—`)
+bağlandı. Üretici tarafı ayrıca doğrulandı (YASA-6): `watchdog.divergence_report()` `esit`+`total`
+alanlarını HER dönüşte basar ve `INTEGRITY_SKELETON` (`watchdog.py:1297`) yedeği de ikisini taşır —
+yani guard zaten ölü savunmaydı; tek işlevi, gerçekleşmesi hâlinde YALAN söylemekti.
+
+**SAYIM SONRASI:** `app.js` = **192** eşleşme (v239 öncesiyle aynı) — §1 tablosundaki
+"kalan eşleşme" satırı DEĞİŞMEZ ve `NULLSIFIR_TAVAN` 192'de KALIR. Kuyrukta kalan (a): **133**
+(v239 iki tane ekleyip aynı turda ikisini de ödediği için kuyruk büyümedi).

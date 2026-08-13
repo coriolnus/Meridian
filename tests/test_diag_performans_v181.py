@@ -182,8 +182,10 @@ def test_paylasilan_okuma_DUSERSE_dedektor_yalitimi_YASAR(sentetik_defter, monke
     monkeypatch.setattr(store, "read_jsonl", _patlayan)
     rep = wd.integrity_report()
 
+    # 8. DESEN BEYANLI EKLENDİ (2026-08-13): `divergence` — DEĞER eşitliği dedektörü.
     assert {"production", "conservation", "determinism", "coherence",
-            "monotonicity", "ownership", "parity"} == set(rep), "şekil sözleşmesi bozuldu"
+            "monotonicity", "ownership", "parity", "divergence"} == set(rep), \
+        "şekil sözleşmesi bozuldu"
     assert any(e == "integrity_shared_events_read_failed" for e, _ in yakala_uyari), \
         "paylaşılan okumanın düşüşü SESSİZ kaldı — yavaş yola düşüldüğü ölçülemez"
     assert rep["conservation"].get("dedektor_dustu") is True

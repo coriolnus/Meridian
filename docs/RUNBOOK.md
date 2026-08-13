@@ -118,11 +118,11 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/loop.py:1270` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
   - `meridian/loop.py:1277` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
   - `meridian/scheduler.py:340` → mesaj şablonu: `f"SEANS ATLANDI: {session} — bir sonraki seans kapandı, bu seansın barı hâlâ " f"gelmedi (kapsama %{100 * float(cov or 0):.0f} < %{100 * need:.0f})"`
-  - `meridian/watchdog.py:1768` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
-  - `meridian/watchdog.py:1828` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
-  - `meridian/watchdog.py:1835` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
-  - `meridian/watchdog.py:2495` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
-  - `meridian/watchdog.py:2932` → mesaj şablonu: `rep.get("beyan")`
+  - `meridian/watchdog.py:1783` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
+  - `meridian/watchdog.py:1855` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
+  - `meridian/watchdog.py:1862` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
+  - `meridian/watchdog.py:2740` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
+  - `meridian/watchdog.py:3177` → mesaj şablonu: `rep.get("beyan")`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -157,10 +157,10 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/loop.py:247` → mesaj şablonu: `f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada " f"AÇIK; {info['tries']}. deneme" + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else "")`
   - `meridian/loop.py:2631` → mesaj şablonu: `f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca " f"{round(af, 4)} (%{div*100:.2f})"`
   - `meridian/loop.py:2741` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
-  - `meridian/loop.py:2892` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
-  - `meridian/loop.py:2924` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
-  - `meridian/loop.py:2992` → mesaj şablonu: `f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç " f"defterde yok — {_yn}"`
-  - `meridian/loop.py:2997` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
+  - `meridian/loop.py:2942` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
+  - `meridian/loop.py:2974` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
+  - `meridian/loop.py:3042` → mesaj şablonu: `f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç " f"defterde yok — {_yn}"`
+  - `meridian/loop.py:3047` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -209,21 +209,22 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Teşhis adımları
 
-- Bu jetonu **14 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+- Bu jetonu **15 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
   - `meridian/selfreview.py:103` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
   - `meridian/watchdog.py:274` → mesaj şablonu: `f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)"`
-  - `meridian/watchdog.py:1742` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
-  - `meridian/watchdog.py:1751` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
-  - `meridian/watchdog.py:1757` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
-  - `meridian/watchdog.py:1808` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
-  - `meridian/watchdog.py:1815` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
-  - `meridian/watchdog.py:1821` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
-  - `meridian/watchdog.py:2604` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
-  - `meridian/watchdog.py:2611` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
-  - `meridian/watchdog.py:2863` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:2869` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:2875` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
-  - `meridian/watchdog.py:2881` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
+  - `meridian/watchdog.py:1757` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
+  - `meridian/watchdog.py:1766` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
+  - `meridian/watchdog.py:1772` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
+  - `meridian/watchdog.py:1823` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
+  - `meridian/watchdog.py:1830` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
+  - `meridian/watchdog.py:1840` → mesaj şablonu: `f"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT " f"değer taşıyor ({_k}) · {dv['neden']}"`
+  - `meridian/watchdog.py:1848` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
+  - `meridian/watchdog.py:2849` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
+  - `meridian/watchdog.py:2856` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
+  - `meridian/watchdog.py:3108` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:3114` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:3120` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
+  - `meridian/watchdog.py:3126` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -277,7 +278,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:1725` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
+  - `meridian/watchdog.py:1740` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -294,8 +295,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:2312` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
-  - `meridian/watchdog.py:2325` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
+  - `meridian/watchdog.py:2557` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
+  - `meridian/watchdog.py:2570` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -311,7 +312,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:2718` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
+  - `meridian/watchdog.py:2963` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -429,7 +430,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:3071`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:3121`
 - Son damga: `state/mechanism_beats.json` → `mirror_reconcile`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -538,7 +539,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3341`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3454`
 - Son damga: `state/mechanism_beats.json` → `opinion_backfill`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -556,7 +557,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/sprint.py:586`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/sprint.py:635`
 - Son damga: `state/mechanism_beats.json` → `sprint_cadence`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*

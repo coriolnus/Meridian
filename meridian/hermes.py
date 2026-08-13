@@ -356,6 +356,100 @@ GEMINI_DEAD_MODEL_MAP = {
     "gemini-3.5-flash": "gemini-flash-latest",   # canlı config'teki ölü ad (üretim 404, 2026-08-12)
     "gemini-3.1-pro": "gemini-pro-latest",       # eski repo varsayılanı — listede yalnız -preview var
 }
+
+# ==================================================================================================
+# GÖÇ TEK YOLU KAPATIYORDU — ÇAĞRI ANI AÇIKTA KALDI (2026-08-13, canlı ölçüm)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA: `GEMINI_DEFAULT_MODEL` DOĞRU (`gemini-pro-latest`), v235 göçü de doğru çalışıyor —
+# ama canlıda BUGÜNKÜ 20 `agent_call` olayının hepsi `model="gemini-3.5-flash"` taşıyor. Sebep
+# izlendi: `_agent_call` model zincirini `GEMINI_DEFAULT_MODEL`den DEĞİL, SIRLARDAN kuruyor
+# (`NOUS_MODEL` → `NOUS_FALLBACK_MODEL`, aşağıda `_nous_model_zinciri`) ve seçilen ad CLI'ya
+# `--model` ile geçiliyor (`_agent_chat_cmd`). v235'in göçü YALNIZ `~/.hermes/config.yaml`ın
+# `model.default` alanını onarıyordu (`config_ensure_integrations`) — sır tarafına HİÇ bakmıyordu.
+# Yani "ölü ad kendi kendine iyileşmez" dersi bir yolda öğrenilmiş, ikizi açık bırakılmıştı.
+#
+# İKİ KATMANLI ONARIM:
+#   (1) YAPILANDIRMA ANI  — `config_ensure_integrations` (v235, DURUYOR): config'teki ölü adı göçürür.
+#   (2) ÇAĞRI ANI (BU TUR) — `_nous_model_zinciri`: sırdan gelen ad ölüyse alias'a ÇEVRİLİR ve olay
+#       basılır. Bu katman zorunludur çünkü sır dosyası bizim yeniden yazacağımız bir yüzey DEĞİL
+#       (operatörün `.env`i; sırra yazmak sır-yazma yasağına girer) ve config göçü onu kapsamaz.
+# Sessiz değiştirme YASAK: her göç `agent_model_olu_ad_gocuruldu` satırı yazar (süreç başına ad
+# başına BİR kez — çağrı ~5 dakikada bir koşuyor, her turda warn basmak alarmı gürültüye çevirirdi).
+#
+# TANINMAYAN AD SERBEST GEÇER: elimizdeki liste bir KESİTTİR; gelecekteki geçerli bir adı (ör.
+# `gemini-3.6-flash`) "ölü" damgalamak, onarım kılığında bir arıza olurdu.
+#
+# --------------------------------------------------------------------------------------------------
+# OLAY YAYINI ÇEVİRİYE DEĞİL ÇAĞRIYA BAĞLIDIR (2026-08-13 düzeltmesi, otoriter suite bulgusu)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN KUSUR: ilk hâlde `canonical_model` HER çağrı yerinde olay basıyordu — RAPORLAMA yüzeyleri
+# dahil. `hermes_runtime.status()` (yani `/api/hermes`) `active_model()` + `_model_id()` üzerinden
+# iki `obs.warn` doğuruyordu; `tests/test_api_contract.py::test_hermes_status_..._mid_search`
+# teardown'unda CANLI `state/events.jsonl`e iki satır DÜŞTÜ ("CANLI state'e YAZILDI"). Aynı sınıf
+# v239 ajanının kendi raporunda da beyan edilmişti ("sandbox'sız smoke sondasının yan etkisi").
+# KUSUR TEST DEĞİL YAYIN YERİYDİ: bir pano isteği, bir import ya da bir bağlantı sondası
+# operatörün defterine "göç oldu" satırı YAZAMAZ — o defter üretim kanıtıdır ve panonun okuma
+# yapması bir üretim olayı değildir.
+# AYRIM: ÇEVİRİ her yerde olur (rapor edilen kimlik ile çağrılan kimlik ayrışmamalı — test_3b),
+# ama OLAY yalnız modelin GERÇEKTEN çağrıldığı iki yerde basılır: `_nous_model_zinciri`
+# (→ `_agent_call`) ve `_gemini_call`. Bayrak `olay=False` ile VARSAYILAN SESSİZDİR: ileride
+# eklenecek yeni bir okuma yüzeyi, unutulduğunda defter yazmak yerine susar (güvenli taraf).
+# Sessiz-değiştirme yasağı KORUNUR — üretim yolu ~5 dakikada bir koşuyor, göç ilk gerçek çağrıda
+# zaten deftere düşüyor; tekilleştirme kümesi de yalnız olay basıldığında işaretlenir (sessiz
+# geçiş kümeyi kirletirse gerçek çağrının olayı yutulurdu).
+# ==================================================================================================
+_OLU_MODEL_OLAYLI: set = set()
+
+
+def canonical_model(ad: str | None, *, kaynak: str = "?", olay: bool = False) -> str | None:
+    """Bilinen-ölü model adını sabit alias'a çevirir; tanınmayan/boş ad AYNEN geçer.
+
+    `kaynak` yalnız olay satırı içindir (hangi yüzeydeki ad göçtü) — davranışa girmez.
+    `olay=True` YALNIZ gerçek çağrı yolundan verilir (bkz. üstteki "olay yayını" notu): çeviri her
+    yerde aynı, defter yazımı yalnız modele gerçekten gidildiğinde."""
+    if not ad:
+        return ad
+    yeni = GEMINI_DEAD_MODEL_MAP.get(str(ad).strip())
+    if not yeni:
+        return ad
+    anahtar = (kaynak, str(ad).strip())
+    if olay and anahtar not in _OLU_MODEL_OLAYLI:
+        _OLU_MODEL_OLAYLI.add(anahtar)
+        obs.warn("agent_model_olu_ad_gocuruldu", kaynak=kaynak, eski=str(ad).strip(), yeni=yeni,
+                 detail="çağrı anında BİLİNEN-ÖLÜ model adı görüldü (üretim 404 sınıfı) ve sabit "
+                        "alias'a çevrildi; rol korundu (flash→flash-latest, pro→pro-latest). "
+                        "KALICI ONARIM OPERATÖRDE: sır dosyasındaki adı güncelle — bu katman "
+                        "her çağrıda yeniden çevirir ama sırra YAZMAZ (sır-yazma yasağı).")
+    return yeni
+
+
+def gemini_model(*, olay: bool = False) -> str:
+    """Gemini çağrılarının TEK model kaynağı: sır override'ı → repo varsayılanı → ölü-ad göçü.
+
+    Bu ifade (`secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL`) dört yerde elle kopyalanmıştı
+    (üretim çağrısı, bağlantı sondası, yerel ajan geçişi, `_model_id`) — yani ölü-ad kontrolünü
+    dört ayrı yere yazmak ya da bir yerini unutmak gerekiyordu. Tek kapı, bu turun kapattığı
+    kusurun (aynı gerçeğin ikinci evi) burada tekrarlanmasını önler.
+
+    `olay=True` yalnız `_gemini_call`den gelir — sonda/rapor/config yüzeyleri sessiz okur."""
+    return canonical_model(secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL,
+                           kaynak="GEMINI_MODEL", olay=olay)
+
+
+def _nous_model_zinciri() -> list:
+    """`_agent_call`in model düşüş zinciri — ÇAĞRI ANINDA ölü-ad kontrolünden geçirilmiş hâli.
+
+    Tekilleştirme GÖÇTEN SONRA yapılır: iki sır aynı alias'a göçerse zincir tek elemana iner ve bu
+    DOĞRUDUR (aynı modeli iki kez denemek "yedeklilik" değildir; canlıda tam bu yanılsama ölçüldü —
+    `brain_chain_facts` docstring'i). Hiç ad yoksa `[None]` = "CLI kendi varsayılanını kullansın".
+
+    Bu fonksiyon GERÇEK ÇAĞRI yoludur (`_agent_call`) — göç olayını basan iki yerden biri."""
+    ham = [canonical_model(secrets.get("NOUS_MODEL"), kaynak="NOUS_MODEL", olay=True),
+           canonical_model(secrets.get("NOUS_FALLBACK_MODEL"), kaynak="NOUS_FALLBACK_MODEL",
+                           olay=True)]
+    return [m for m in dict.fromkeys(ham) if m] or [None]
+
+
 DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 
 # DÜŞÜNCE BÜTÇESİ (2026-07-26): gemini-3.x DÜŞÜNEN bir ailedir ve düşünce tokenları ÜRETİM tavanından
@@ -534,9 +628,16 @@ def _model_id(p: str) -> str | None:
     if p == "nous":
         if _nous_local() and not (secrets.get("NOUS_MODEL") or "").strip():
             return None
-        return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
+        # ÇAĞRI ANIYLA AYNI AD (2026-08-13): `_agent_call` sırdaki ölü adı alias'a
+        # çevirerek çağırıyor (`_nous_model_zinciri`). Raporlanan kimlik çevirmeden
+        # geçseydi "ne çağırdığımız" ile "ne rapor ettiğimiz" ayrışır ve bu turun
+        # kapattığı çift-kaynak sınıfının YENİSİ doğardı. OLAY BASILMAZ (`olay=False`,
+        # 2026-08-13 düzeltmesi): burası RAPOR yüzeyi — bir pano isteği operatörün
+        # defterine "göç oldu" satırı yazamaz; olayı gerçek çağrı yolu basar.
+        return canonical_model(secrets.get("NOUS_MODEL"), kaynak="NOUS_MODEL") \
+            or NOUS_DEFAULT_MODEL
     if p == "gemini":
-        return secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+        return gemini_model()
     return None
 
 
@@ -601,9 +702,16 @@ def active_model() -> str | None:
     if p == "claude":
         return MODEL
     if p == "nous":
-        return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
+        # ÇAĞRI ANIYLA AYNI AD (2026-08-13): `_agent_call` sırdaki ölü adı alias'a
+        # çevirerek çağırıyor (`_nous_model_zinciri`). Raporlanan kimlik çevirmeden
+        # geçseydi "ne çağırdığımız" ile "ne rapor ettiğimiz" ayrışır ve bu turun
+        # kapattığı çift-kaynak sınıfının YENİSİ doğardı. OLAY BASILMAZ (`olay=False`,
+        # 2026-08-13 düzeltmesi): burası RAPOR yüzeyi — bir pano isteği operatörün
+        # defterine "göç oldu" satırı yazamaz; olayı gerçek çağrı yolu basar.
+        return canonical_model(secrets.get("NOUS_MODEL"), kaynak="NOUS_MODEL") \
+            or NOUS_DEFAULT_MODEL
     if p == "gemini":
-        return secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+        return gemini_model()
     return None
 
 
@@ -1778,8 +1886,10 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         sync_agent_skills()
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         pass
-    models = [m for m in dict.fromkeys([secrets.get("NOUS_MODEL"),
-                                        secrets.get("NOUS_FALLBACK_MODEL")]) if m] or [None]
+    # ÇAĞRI ANI ÖLÜ-AD KONTROLÜ (2026-08-13): zincir SIRLARDAN kurulur ve v235 göçü yalnız ajan
+    # config'ini kapsıyordu — sırdaki ölü ad her çağrıda 404 üretiyordu (canlı: 20/20 `agent_call`
+    # `model=gemini-3.5-flash`). Bkz. `_nous_model_zinciri` üstündeki ölçüm/gerekçe.
+    models = _nous_model_zinciri()
     son_stdout = son_stderr = ""      # zincirin SON denemesinin ham çıktısı — boş-sınıfı tailde ayrılır
     son_rc: int | None = None         # ve ÇIKIŞ KODU: `-Q` altında boşluk ölçütünün yarısı budur
 
@@ -2098,7 +2208,10 @@ def _propose_nous() -> dict | None:
 def _gemini_call(user: str, *, note: str) -> str | None:
     """Gemini'nin tek gövdesi — metin döner. Bkz. `_claude_text` notu."""
     import httpx
-    model = secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+    # GERÇEK ÇAĞRI YOLU (2026-08-13): göç olayını basan iki yerden biri — `_nous_model_zinciri`in
+    # gemini ikizi. Sonda (`ping_brain`), rapor (`active_model`/`_model_id`) ve yerel-ajan config
+    # yüzeyleri AYNI çeviriyi sessiz alır; defter yazımı yalnız modele gerçekten gidildiğinde olur.
+    model = gemini_model(olay=True)
     headers = {"Content-Type": "application/json"}
     key = secrets.get("GEMINI_API_KEY")
     if key:
@@ -2222,7 +2335,7 @@ def ping_brain(provider: str) -> dict:
                 return {"ok": False, "detail": "kimlik reddedildi" + ("" if key else " — OAuth token süresi dolmuş olabilir")}
             r.raise_for_status()
             models = [str(m.get("name", "")).split("/")[-1] for m in (r.json() or {}).get("models", [])]
-            want = secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+            want = gemini_model()
             hit = want in models
             close = [m for m in models if "3.1" in m or "gemini-3" in m][:3]
             extra = f" · '{want}' listede ✓" if hit else (f" · '{want}' listede YOK — yakın: {', '.join(close) or 'bulunamadı'}")
@@ -2395,7 +2508,7 @@ def sync_local_agent_gemini(enable: bool) -> dict:
                 # YASA-6 OKUYUCU: aşağıdaki geri-yükleme dalı (json.load) disable'da Nous ayarını geri alır.
                 store.write_json(backup_path, prev)
             _write_env(key)
-            model = secrets.get("GEMINI_MODEL") or GEMINI_DEFAULT_MODEL
+            model = gemini_model()
             _cfg("model.provider", "gemini")            # yerli sağlayıcı — base_url override'ı KALDIRILIR
             subprocess.run([bin_, "config", "unset", "model.base_url"], capture_output=True, text=True, timeout=30)
             _cfg("model.default", model)

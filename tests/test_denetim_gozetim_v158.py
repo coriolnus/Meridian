@@ -220,8 +220,10 @@ def test_C21_dusen_dedektor_digerlerini_GOTURMEZ(sandbox_state, monkeypatch):
     monkeypatch.setattr(wd, "conservation_report", _patla)
     rep = wd.integrity_report(persist=True)
 
+    # 8. DESEN BEYANLI EKLENDİ (2026-08-13): `divergence` — DEĞER eşitliği dedektörü.
     assert {"production", "conservation", "determinism", "coherence",
-            "monotonicity", "ownership", "parity"} == set(rep), "şekil sözleşmesi bozuldu"
+            "monotonicity", "ownership", "parity", "divergence"} == set(rep), \
+        "şekil sözleşmesi bozuldu"
     kons = rep["conservation"]
     assert kons["ok"] is False and kons["dedektor_dustu"] is True
     assert "ValueError" in kons["error"] and "defter okunamadı" in kons["error"]
