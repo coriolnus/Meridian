@@ -1,0 +1,56 @@
+# EDG-2026-036b — TOHUM YENİLEME AŞAMA-1 (TEKRAR, düzeltilmiş artefaktla) · komut zinciri
+# 2026-08-13, ölçüm ajanı. Kart: research/cards/EDG-2026-036-tohum-yenileme.yaml (OKU-DOKUNMA)
+#
+# NİÇİN: kartın `hukum_duzeltmesi.eksik_adim`ı — 032b koşumu yalnız İŞLEM defterini yazdı.
+#        Gerçek yenileme yolu (run.py:276-283) `trade_plans.jsonl`i de baştan yazar.
+#
+# YAZMA SINIRLARI: git YOK · canlıya SSH-YAZIM YOK (yalnız stdin betiğiyle SALT-OKUMA, DB mode=ro)
+#                  · repo koduna DOKUNULMADI · config.STATE her koşumda izole sandbox
+
+# [0] duman (≈9sn ×2) — pencere 2022-01-01→2022-06-30
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py kontrol   --smoke > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_smoke.log 2>&1
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py ozdeslik  --smoke >> research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_smoke.log 2>&1
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py kontrolgd --smoke > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_smoke_gd.log 2>&1
+
+# [1] TAM koşumlar (arka plan, paralel) — pencere 2022-01-01→2026-07-30, evren 251, seed 20260812
+#     kontrol   : with_gate_detail=False (032/032b şasisi — ÖZDEŞLİK TABANI)
+#     kontrolgd : with_gate_detail=True  (run.py:190-191 GERÇEK yenileme yolu — TOHUM ADAYI)
+cd ~/AI-Trading && nohup .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py kontrol   > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_kontrol.log   2>&1 & disown
+cd ~/AI-Trading && nohup .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py kontrolgd > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_kontrolgd.log 2>&1 & disown
+
+# [2] KILL#1 ÖZDEŞLİK KAPISI — slim projeksiyon ↔ EDG-032 islemler_cmb.json BAYT-ÖZDEŞ mi?
+#     (sha d4033de68f6281a4dc694023cee459ff9c243f434e999aff65b64730bbc11a7d) düşerse (exit 2) DUR.
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py ozdeslik > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_ozdeslik.log 2>&1; echo "exit=$?"
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_defter.py kapsama  > research/olcumler/edg036b_yenileme_kuru_2026-08-13/kosum_kapsama.log  2>&1
+
+# [3] CANLI SALT-OKUMA (stdin deseni — uzak diske TEK BAYT yazılmaz; DB mode=ro; SIR dosyaları dışlandı)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'python3 -' < research/olcumler/edg036b_yenileme_kuru_2026-08-13/uzak_saltokuma.py > <scratch>/canli_dump.b64
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_taban_kur.py <scratch>/canli_dump.b64 <scratch>/edg036b_sb
+
+# [4] PLAN DEFTERİ KAPSAMA — canlı `trade_plans` şemasının 25 alanı için alan alan muhasebe
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_plan_kapsama.py <scratch>/edg036b_sb/taban_kunye.json research/olcumler/edg036b_yenileme_kuru_2026-08-13/planlar_yenileme_kontrolgd.json research/olcumler/edg036b_yenileme_kuru_2026-08-13/plan_kapsama.json kontrolgd
+
+# [5] AŞAMA-1 KURU KOŞUM — 5 dünya × 15 tüketici + 3 kritik bayrak (YEREL izole sandbox)
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_asama1.py <scratch>/edg036b_sb research/olcumler/edg036b_yenileme_kuru_2026-08-13/asama1_kiyas.json
+
+# [6] SONUÇ DERLEME
+cd ~/AI-Trading && .venv/bin/python research/olcumler/edg036b_yenileme_kuru_2026-08-13/olcum_sonuc_yaz.py \
+    research/olcumler/edg036b_yenileme_kuru_2026-08-13/asama1_kiyas.json \
+    research/olcumler/edg036b_yenileme_kuru_2026-08-13/plan_kapsama.json \
+    research/olcumler/edg036b_yenileme_kuru_2026-08-13/kapsama.json \
+    research/olcumler/edg036b_yenileme_kuru_2026-08-13/ozdeslik.json \
+    <scratch>/edg036b_sb/taban_kunye.json \
+    research/olcumler/edg036b_yenileme_kuru_2026-08-13/sonuc.json
+
+# ÇIKTILAR
+#   islemler_tam_kontrol(gd).json     TAM SATIR işlem defteri (broker.py:685-702 sözlüğü)
+#   planlar_tam_kontrol(gd).json      res.plan_log OLDUĞU GİBİ (kırpma YOK)
+#   planlar_yenileme_kontrol(gd).json run.py:276-283 `_keep` seçimi = YENİLEMENİN YAZACAĞI defter
+#   adaylar_yenileme_kontrol(gd).json run.py:281 candidates.jsonl girdisi
+#   plan_envanteri_*.json             plan alan envanteri + korunum (plan↔işlem) sayaçları
+#   ozdeslik.json                     kill#1 kanıtı
+#   kapsama.json / plan_kapsama.json  işlem/plan defteri kapsama tabloları
+#   asama1_kiyas.json                 5 dünya × 15 tüketici ham ölçümü
+#   sonuc.json                        derlenmiş rapor (HÜKÜM YOK — üç ölçüt MEKANİK işaretli)
+# NOT: sandbox (canlı state'in SALT-OKUMA kopyası + 5 dünya) oturum scratchpad'inde; depoya
+#      konmadı (≈45MB). Künyesi <scratch>/edg036b_sb/taban_kunye.json — sha256'ları sonuc.json'da.

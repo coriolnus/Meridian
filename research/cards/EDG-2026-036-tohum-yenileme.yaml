@@ -113,3 +113,43 @@ verdict:
     duvara çarpar).
   artefakt: "research/olcumler/edg036_tohum_2026-08-13/ (sonuc.json + 4 ham ölçüm + 5 arşiv betiği; canlıya HİÇBİR yazım yok)"
 
+
+asama1_hukmu:   # 2026-08-13 Rol-1 — kuru koşum TEKRAR (edg036b), düzeltilmiş artefaktla.
+  ucolcut: >
+    (a) BÜTÜNLÜK ✓ · (b) TÜKETİCİ TUTARLILIĞI ✓ · (c) DÜRÜSTLÜK ✓ — ama (a) YALNIZ KORUYUCU
+    PROSEDÜRLE. `run.py replay_seed` HARFİ HARFİNE koşarsa live_paper 2 satırı SİLİNİR ve
+    `realized_pnl` 277,99$ → 20.684,69$ olur; yani TOHUM GERÇEKLEŞEN SANILIR. Bu, kartın en sert
+    kill'idir ve uygulama prosedürünün merkezine yazılmalı.
+  korleşme_yok: >
+    İlk kuru koşumda 7 tüketici körleşiyordu — HEPSİ AÇIK. Körleşen 0. DSR 3e-06→0,0391 ·
+    score_calibration IC anlamsız→ANLAMLI (n=887) · result_verdict 0/4→1/4 · cf_fidelity n=89→301 ·
+    skills gerçek katman vcp n=315 giriyor · hermes yansıma 0→790.
+  UC_BAYRAK: >
+    (1) `sieve` A=2/0-kritik ↔ B=2/0-kritik — AYNI; yenileme SIFIR yeni ihlal ekliyor (ilk koşumdaki
+    8/4 alan-eksikliğindenmiş). (2) `shadowlaw` ateşliyor AMA **A'da da ateşliyor** (A margin_scale
+    0,2795 ↔ yürürlükteki marj) — yenileme bayrağı YARATMIYOR, büyütüyor; ayrı bir kalem.
+    (3) **rollback kapısı AÇILMIYOR** (ham_delta +0,0328, eşik −0,1) → DAĞITIM ENGELİ YOK.
+  ILK_KOSUMUN_ROLLBACK_ACILMASI_ARTEFAKT_DEGILDI: >
+    2×2 ayrıştırma: `score()` tam-satır ve slim defter için AYNI değeri veriyor; tek çevrilen değişken
+    `goal.max_drawdown` 0,08→0,16. Canlı goal.yaml mtime 01:26:41Z, ilk kuru koşum 01:12-01:23 —
+    yani ÖLÇÜM SIRASINDA GOAL DEĞİŞMİŞ. Ders: kuru koşum penceresinde yapılandırma dondurulmalı.
+  IKI_GERILEME_ADIYLA: >
+    (i) `component_ic` 2 anlamlı hücre → 0 (n=882'de en iyi 0,0641). 24 hücrede 2 anlamlı zaten
+    çoklu-test şüphesiydi; yeni tablo DAHA DÜRÜST olabilir ama KAYIP olarak kayda geçer.
+    (ii) `llm_calibration` 4 çift → 1: `run.py:283` plan defterinin TAMAMINI eziyor ve canlıdaki 8
+    `llm_opinion` damgası yok oluyor. ÖNLENEBİLİR — koruyucu prosedürün ikinci maddesi.
+  DAMGA_KARARI: >
+    **AYRI TOHUM SÜRÜM-UZAYI** (sv=90) benimsendi. Ölçüm: sv=5 bugün zararsız (delta +0,0328) ama bu
+    `goal.max_drawdown=0,16`a bağlı bir TESADÜF — eşik tekrar sıkışırsa aynı tohum geri-alma kapısını
+    açar. sv=3 ise ebeveyn tabanını kirletir (n_parent=887). Ayrı uzay her iki bağımlılığı da keser.
+    Zorunlu damgalar: `kaynak=replay_seed` · `tohum_parti=EDG-036b-2026-08-13` ·
+    `tohum_kaynak_sha256=46ebeb48…4874` + plan sha · motor künyesi · pencere/evren ·
+    **EDG-037/038 FRİKSİYON ŞERHİ**: "slippage_bps=5 varsayımıyla üretildi; kanonik ölçütle ilk TCA
+    ~7× iyimser çıktı (n=4, CI geniş). Tohum güncel PAKETİ temsil eder, gerçekleşen İCRAYI DEĞİL."
+  UYGULAMA_PROSEDURU:   # aşama-2, operatör onaylı (2026-08-13)
+    - "worker DURDUR + DB yedek (mini-pencere deseni)"
+    - "live_paper 2 satır KORUNUR (bit-aynı) · portfolio.realized_pnl 277,98314200393065 DEĞİŞMEZ"
+    - "llm_opinion damgalı 8 plan KORUNUR (plan defteri tam-ez YASAK)"
+    - "equity_curve yazılır (ledgerstamp.seed_boundary son nokta+mtime çiftini okur)"
+    - "damgalar yukarıdaki gibi; sv=90 ayrı uzay"
+    - "yazım sonrası DOĞRULAMA: live_paper 2 · realized_pnl aynı · korunum açıklanamayan 0 · rollback kapalı"

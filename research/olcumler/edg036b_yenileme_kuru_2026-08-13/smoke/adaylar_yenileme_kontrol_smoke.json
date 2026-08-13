@@ -1,0 +1,110 @@
+[
+ {
+  "date": "2022-01-06",
+  "ticker": "CF",
+  "source_skill": "stockbee-exhaustion-hammer-screener",
+  "score": 82,
+  "setup": "exhaustion_hammer",
+  "sector": "materials",
+  "pivot": 66.66,
+  "stop": 66.5933,
+  "atr": 2.4012,
+  "rs_rating": 76
+ },
+ {
+  "date": "2022-01-06",
+  "ticker": "FANG",
+  "source_skill": "stockbee-momentum-burst-screener",
+  "score": 77,
+  "setup": "momentum_burst",
+  "sector": "energy",
+  "pivot": 118.11,
+  "stop": 119.8553,
+  "atr": 5.0987,
+  "rs_rating": 83
+ },
+ {
+  "date": "2022-01-11",
+  "ticker": "MRVL",
+  "source_skill": "stockbee-momentum-burst-screener",
+  "score": 82,
+  "setup": "momentum_burst",
+  "sector": "tech",
+  "pivot": 82.21,
+  "stop": 79.8471,
+  "atr": 3.8091,
+  "rs_rating": 97
+ },
+ {
+  "date": "2022-01-11",
+  "ticker": "SCHW",
+  "source_skill": "vcp-screener",
+  "score": 76,
+  "setup": "breakout_vcp",
+  "sector": "financials",
+  "pivot": 92.32,
+  "stop": 89.3896,
+  "atr": 2.2602,
+  "rs_rating": 90
+ },
+ {
+  "date": "2022-01-11",
+  "ticker": "XOM",
+  "source_skill": "stockbee-momentum-burst-screener",
+  "score": 74,
+  "setup": "momentum_burst",
+  "sector": "energy",
+  "pivot": 68.47,
+  "stop": 68.1827,
+  "atr": 1.5892,
+  "rs_rating": 81
+ },
+ {
+  "date": "2022-01-11",
+  "ticker": "LYV",
+  "source_skill": "stockbee-exhaustion-hammer-screener",
+  "score": 73,
+  "setup": "exhaustion_hammer",
+  "sector": "comms",
+  "pivot": 113.07,
+  "stop": 112.9569,
+  "atr": 4.6917,
+  "rs_rating": 79
+ },
+ {
+  "date": "2022-01-11",
+  "ticker": "LLY",
+  "source_skill": "stockbee-exhaustion-hammer-screener",
+  "score": 72,
+  "setup": "exhaustion_hammer",
+  "sector": "health",
+  "pivot": 257.06,
+  "stop": 256.8029,
+  "atr": 6.5131,
+  "rs_rating": 69
+ },
+ {
+  "date": "2022-01-12",
+  "ticker": "AMAT",
+  "source_skill": "stockbee-momentum-burst-screener",
+  "score": 80,
+  "setup": "momentum_burst",
+  "sector": "tech",
+  "pivot": 152.45,
+  "stop": 153.1854,
+  "atr": 5.7385,
+  "rs_rating": 91
+ },
+ {
+  "date": "2022-01-12",
+  "ticker": "FCX",
+  "source_skill": "stockbee-momentum-burst-screener",
+  "score": 77,
+  "setup": "momentum_burst",
+  "sector": "materials",
+  "pivot": 42.99,
+  "stop": 43.777,
+  "atr": 1.4918,
+  "rs_rating": 93
+ }
+]

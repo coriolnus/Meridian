@@ -1,0 +1,1297 @@
+[
+ {
+  "id": "P-2022-01-06-CF",
+  "date": "2022-01-06",
+  "ticker": "CF",
+  "side": "long",
+  "entry_trigger": 69.24,
+  "stop": 66.59334,
+  "profit_target": 74.77,
+  "targets": [
+   74.77
+  ],
+  "size_r": 0.41,
+  "r_multiple_expected": 2.09,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-exhaustion-hammer-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "materials",
+  "score": 82,
+  "setup": "exhaustion_hammer",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'materials' bugünün lider sektörlerinde değil (staples, energy, industrials)",
+   "R:R 2.1 marjinal",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 0,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.41,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.09,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.41,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.41,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "materials",
+    "threshold": "staples,energy,industrials",
+    "note": "'materials' bugünün lider sektörlerinde değil (staples, energy, industrials)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": false,
+    "severity": "soft",
+    "value": 2.09,
+    "threshold": ">=2.3",
+    "note": "R:R 2.1 marjinal"
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 82,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "CF",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-06-FANG",
+  "date": "2022-01-06",
+  "ticker": "FANG",
+  "side": "long",
+  "entry_trigger": 123.65,
+  "stop": 119.85531931702117,
+  "profit_target": 133.1367017074471,
+  "targets": [
+   133.1367017074471
+  ],
+  "size_r": 0.385,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-momentum-burst-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "energy",
+  "score": 77,
+  "setup": "momentum_burst",
+  "gate_verdict": "GO",
+  "gate_reasons": [
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.385,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.79,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.79,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": true,
+    "severity": "soft",
+    "value": "energy",
+    "threshold": "staples,energy,industrials",
+    "note": null
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 77,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "FANG",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-11-MRVL",
+  "date": "2022-01-11",
+  "ticker": "MRVL",
+  "side": "long",
+  "entry_trigger": 86.23,
+  "stop": 79.84713382091022,
+  "profit_target": 102.18716544772448,
+  "targets": [
+   102.18716544772448
+  ],
+  "size_r": 0.41,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-momentum-burst-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "tech",
+  "score": 82,
+  "setup": "momentum_burst",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'tech' bugünün lider sektörlerinde değil (energy, financials, staples)",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 0,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.41,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.41,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.41,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "tech",
+    "threshold": "energy,financials,staples",
+    "note": "'tech' bugünün lider sektörlerinde değil (energy, financials, staples)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 82,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "MRVL",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-11-SCHW",
+  "date": "2022-01-11",
+  "ticker": "SCHW",
+  "side": "long",
+  "entry_trigger": 93.91,
+  "stop": 89.389640339402,
+  "profit_target": 105.21089915149497,
+  "targets": [
+   105.21089915149497
+  ],
+  "size_r": 0.38,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "vcp-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "financials",
+  "score": 76,
+  "setup": "breakout_vcp",
+  "gate_verdict": "GO",
+  "gate_reasons": [
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.38,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.79,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.79,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": true,
+    "severity": "soft",
+    "value": "financials",
+    "threshold": "energy,financials,staples",
+    "note": null
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 76,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "SCHW",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-11-XOM",
+  "date": "2022-01-11",
+  "ticker": "XOM",
+  "side": "long",
+  "entry_trigger": 71.35,
+  "stop": 68.18269952321965,
+  "profit_target": 79.26825119195084,
+  "targets": [
+   79.26825119195084
+  ],
+  "size_r": 0.37,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-momentum-burst-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "energy",
+  "score": 74,
+  "setup": "momentum_burst",
+  "gate_verdict": "GO",
+  "gate_reasons": [
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 2,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.37,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 1.16,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 1.16,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": true,
+    "severity": "soft",
+    "value": "energy",
+    "threshold": "energy,financials,staples",
+    "note": null
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 74,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "XOM",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-11-LYV",
+  "date": "2022-01-11",
+  "ticker": "LYV",
+  "side": "long",
+  "entry_trigger": 116.0,
+  "stop": 112.95693,
+  "profit_target": 123.607675,
+  "targets": [
+   123.607675
+  ],
+  "size_r": 0.365,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-exhaustion-hammer-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "comms",
+  "score": 73,
+  "setup": "exhaustion_hammer",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'comms' bugünün lider sektörlerinde değil (energy, financials, staples)",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 3,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.365,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 1.52,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 1.52,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "comms",
+    "threshold": "energy,financials,staples",
+    "note": "'comms' bugünün lider sektörlerinde değil (energy, financials, staples)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 73,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "LYV",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-11-LLY",
+  "date": "2022-01-11",
+  "ticker": "LLY",
+  "side": "long",
+  "entry_trigger": 262.32,
+  "stop": 256.80294,
+  "profit_target": 276.11265000000003,
+  "targets": [
+   276.11265000000003
+  ],
+  "size_r": 0.36,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-exhaustion-hammer-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "health",
+  "score": 72,
+  "setup": "exhaustion_hammer",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'health' bugünün lider sektörlerinde değil (energy, financials, staples)",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 4,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.36,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 1.88,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 1.88,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.0,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "health",
+    "threshold": "energy,financials,staples",
+    "note": "'health' bugünün lider sektörlerinde değil (energy, financials, staples)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 72,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "LLY",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-12-AMAT",
+  "date": "2022-01-12",
+  "ticker": "AMAT",
+  "side": "long",
+  "entry_trigger": 159.55,
+  "stop": 153.18538447417785,
+  "profit_target": 175.4615388145554,
+  "targets": [
+   175.4615388145554
+  ],
+  "size_r": 0.4,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-momentum-burst-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "tech",
+  "score": 80,
+  "setup": "momentum_burst",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'tech' sektöründe korelasyon yığılması",
+   "'tech' bugünün lider sektörlerinde değil (energy, financials, industrials)",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 4,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 2,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.4,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 1.92,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": false,
+    "severity": "soft",
+    "value": 1,
+    "threshold": "0",
+    "note": "'tech' sektöründe korelasyon yığılması"
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 1.92,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.51,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "tech",
+    "threshold": "energy,financials,industrials",
+    "note": "'tech' bugünün lider sektörlerinde değil (energy, financials, industrials)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 80,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "AMAT",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ },
+ {
+  "id": "P-2022-01-12-FCX",
+  "date": "2022-01-12",
+  "ticker": "FCX",
+  "side": "long",
+  "entry_trigger": 45.15,
+  "stop": 43.77704952104565,
+  "profit_target": 48.58237619738588,
+  "targets": [
+   48.58237619738588
+  ],
+  "size_r": 0.385,
+  "r_multiple_expected": 2.5,
+  "regime_at_plan": "trend_up",
+  "strategy_version": 3,
+  "skill_chain": [
+   "stockbee-momentum-burst-screener",
+   "position-sizer",
+   "pre-trade-discipline-gate"
+  ],
+  "sector": "materials",
+  "score": 77,
+  "setup": "momentum_burst",
+  "gate_verdict": "REVIEW",
+  "gate_reasons": [
+   "'materials' bugünün lider sektörlerinde değil (energy, financials, industrials)",
+   "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+  ],
+  "gate_checks": [
+   {
+    "check": "exposure_budget",
+    "passed": true,
+    "severity": "hard",
+    "value": 60,
+    "threshold": ">0",
+    "note": null
+   },
+   {
+    "check": "max_open_positions",
+    "passed": true,
+    "severity": "hard",
+    "value": 5,
+    "threshold": "<20",
+    "note": null
+   },
+   {
+    "check": "sector_cap",
+    "passed": true,
+    "severity": "hard",
+    "value": 1,
+    "threshold": "%40",
+    "note": null
+   },
+   {
+    "check": "daily_loss_breaker",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.0,
+    "threshold": ">-%3",
+    "note": null
+   },
+   {
+    "check": "position_size",
+    "passed": true,
+    "severity": "hard",
+    "value": 0.385,
+    "threshold": "<=1.0R",
+    "note": null
+   },
+   {
+    "check": "rr_floor",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.5,
+    "threshold": ">=2.0",
+    "note": null
+   },
+   {
+    "check": "heat_hard",
+    "passed": true,
+    "severity": "hard",
+    "value": 2.31,
+    "threshold": "<=5.0R",
+    "note": null
+   },
+   {
+    "check": "sector_stacking",
+    "passed": true,
+    "severity": "soft",
+    "value": 0,
+    "threshold": "0",
+    "note": null
+   },
+   {
+    "check": "heat_review",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.31,
+    "threshold": "<=3.5R",
+    "note": null
+   },
+   {
+    "check": "correlation",
+    "passed": true,
+    "severity": "soft",
+    "value": 0.51,
+    "threshold": "<=0.85",
+    "note": null
+   },
+   {
+    "check": "leading_sector",
+    "passed": false,
+    "severity": "soft",
+    "value": "materials",
+    "threshold": "energy,financials,industrials",
+    "note": "'materials' bugünün lider sektörlerinde değil (energy, financials, industrials)"
+   },
+   {
+    "check": "rr_marginal",
+    "passed": true,
+    "severity": "soft",
+    "value": 2.5,
+    "threshold": ">=2.3",
+    "note": null
+   },
+   {
+    "check": "score_band",
+    "passed": true,
+    "severity": "soft",
+    "value": 77,
+    "threshold": ">=70",
+    "note": null
+   },
+   {
+    "check": "earnings_blackout",
+    "passed": true,
+    "severity": "hard",
+    "value": "FCX",
+    "threshold": null,
+    "coverage": "olculemedi_replay",
+    "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"
+   }
+  ]
+ }
+]

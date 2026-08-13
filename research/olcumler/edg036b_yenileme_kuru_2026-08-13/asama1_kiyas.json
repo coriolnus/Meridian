@@ -1,0 +1,4572 @@
+{
+ "kart": "EDG-2026-036",
+ "asama": "1 (kuru koşum — TEKRAR, düzeltilmiş artefaktla)",
+ "olcum_ajani_beyani": "SALT-ÖLÇÜM. Karta DOKUNULMADI, hüküm YAZILMADI, git komutu KOŞULMADI, repo koduna DOKUNULMADI. Canlıya YALNIZ salt-okuma (stdin betiği; DB mode=ro). Aşama-1 tamamen YEREL izole sandbox'ta koştu. UYDURMA YASAĞI: tohum satırları TAM-SATIR defterinden KIRPILMADAN alındı; yalnız `kaynak` damgası (ledgerstamp.stamp_rows) ve `strategy_version` (dünya parametresi) prosedürden basıldı.",
+ "tohum_kaynagi": {
+  "tam_satir_defteri": "/Users/erdemozturk/AI-Trading/research/olcumler/edg036b_yenileme_kuru_2026-08-13/islemler_tam_kontrolgd.json",
+  "sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+  "n": 885,
+  "plan_defteri": "/Users/erdemozturk/AI-Trading/research/olcumler/edg036b_yenileme_kuru_2026-08-13/planlar_yenileme_kontrolgd.json",
+  "plan_sha256": "81bfe4bd8a0677c548787dac7b2a82cbad99d34454e77a6c5a38041d785a9949",
+  "plan_n": 1006,
+  "gate_detay": true,
+  "gerekce": "run.py:190-191 gerçek yenileme yolu with_gate_detail=True koşar",
+  "cost_model": {
+   "slippage_bps": 5.0,
+   "commission_per_share": 0.0,
+   "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+  },
+  "gd_vs_std_ozdeslik": {
+   "gd_vs_std_islem_ayni": true,
+   "gd_sha_satirlar": "4cfe664f89801b91876457aa7b47e06c47ff4589bc68f82a7dfa9dc781baaec1",
+   "std_sha_satirlar": "4cfe664f89801b91876457aa7b47e06c47ff4589bc68f82a7dfa9dc781baaec1",
+   "n_gd": 885,
+   "n_std": 885
+  }
+ },
+ "canli_taban": {
+  "trades_n": 97,
+  "plans_n": 409,
+  "kaynak_kirilimi": {
+   "replay_seed": 95,
+   "live_paper": 2
+  },
+  "live_paper_plan_n": 2,
+  "portfolio_realized_pnl": 277.98314200393065
+ },
+ "dunyalar": {
+  "A": {
+   "tanim": "canlı defterin bugünkü hâli",
+   "n_islem": 97,
+   "n_plan": 409,
+   "kaynak_kirilimi": {
+    "replay_seed": 95,
+    "live_paper": 2
+   },
+   "sv_kirilimi": {
+    "replay_seed|sv=4": 95,
+    "live_paper|sv=3": 2
+   }
+  },
+  "B": {
+   "tanim": "yenileme (koruyucu) — 885 tohum sv=5 + 2 live_paper BİT-AYNI",
+   "n_islem": 887,
+   "n_plan": 1008,
+   "kaynak_kirilimi": {
+    "replay_seed": 885,
+    "live_paper": 2
+   },
+   "sv_kirilimi": {
+    "replay_seed|sv=5": 885,
+    "live_paper|sv=3": 2
+   }
+  },
+  "B_sv3": {
+   "tanim": "yenileme (koruyucu) — 885 tohum sv=3 + 2 live_paper BİT-AYNI",
+   "n_islem": 887,
+   "n_plan": 1008,
+   "kaynak_kirilimi": {
+    "replay_seed": 885,
+    "live_paper": 2
+   },
+   "sv_kirilimi": {
+    "replay_seed|sv=3": 885,
+    "live_paper|sv=3": 2
+   }
+  },
+  "B_svTOHUM": {
+   "tanim": "yenileme (koruyucu) — 885 tohum sv=90 + 2 live_paper BİT-AYNI",
+   "n_islem": 887,
+   "n_plan": 1008,
+   "kaynak_kirilimi": {
+    "replay_seed": 885,
+    "live_paper": 2
+   },
+   "sv_kirilimi": {
+    "replay_seed|sv=90": 885,
+    "live_paper|sv=3": 2
+   }
+  },
+  "B_literal": {
+   "tanim": "run.py replay_seed HARFİ HARFİNE — defterlerin TAMAMI ezilir, kitap yeniden kurulur",
+   "n_islem": 885,
+   "n_plan": 1006,
+   "kaynak_kirilimi": {
+    "replay_seed": 885
+   },
+   "sv_kirilimi": {
+    "replay_seed|sv=5": 885
+   }
+  }
+ },
+ "olcum_A": {
+  "_defter": {
+   "n": 97,
+   "n_plan": 409,
+   "live_paper_n": 2,
+   "replay_seed_n": 95,
+   "belirsiz_n": 0,
+   "damgasiz_n": 0,
+   "toplam": 97,
+   "training_n": 95,
+   "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+  },
+  "korunum_plan_islem": {
+   "n_islem": 97,
+   "n_plan": 409,
+   "plan_bulan_islem": 97,
+   "aciklanamayan_islem": 0,
+   "aciklanamayan_kaynak_kirilimi": {},
+   "ornek_oksuz_plan_id": [],
+   "islemsiz_plan_n": 312
+  },
+  "score_calibration": {
+   "n": 2226,
+   "n_real": 97,
+   "n_cf": 2129,
+   "katmanlar": {
+    "gercek": {
+     "rank_ic": 0.0526,
+     "n": 97,
+     "anlamli": false,
+     "se_yontem": "i.i.d._varsayimi"
+    },
+    "cf": {
+     "rank_ic": -0.0052,
+     "n": 2129,
+     "anlamli": null,
+     "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+    },
+    "havuz": {
+     "rank_ic": -0.0041,
+     "n": 2226,
+     "anlamli": null,
+     "karisim": "97 gerçek / 2129 sim"
+    }
+   },
+   "gercek_kaynak": {
+    "live_paper": {
+     "n": 2,
+     "ic": null
+    },
+    "replay_seed": {
+     "n": 95,
+     "ic": {
+      "rank_ic": 0.0492,
+      "n": 95
+     }
+    },
+    "belirsiz": {
+     "n": 0,
+     "ic": null
+    }
+   },
+   "verdict": "gerçek dilim IC 0.0526 (n=97), gürültüden ayırt EDİLEMİYOR"
+  },
+  "llm_calibration": {
+   "n_pairs": 4,
+   "buckets": {
+    "karşı": {
+     "n": 1,
+     "win_rate": 0.0,
+     "avg_r": -1.004
+    },
+    "çekimser": {
+     "n": 3,
+     "win_rate": 0.667,
+     "avg_r": 0.403
+    }
+   },
+   "cf_pairs": 2,
+   "promoted": false,
+   "r_gap": null,
+   "n_plans_with_opinion": 8
+  },
+  "dsr_pbo_validation_trio": {
+   "dsr_canli": {
+    "dsr": 3e-06,
+    "psr_sifir": 0.04183,
+    "sharpe_gozlem": -0.176667,
+    "n": 97,
+    "skew": -0.1139,
+    "kurtosis": 3.7485,
+    "n_trials": 237,
+    "beklenen_maks_sharpe": 0.28861,
+    "deneme_varyansi": 0.0104701614,
+    "varyans_kaynagi": "sifir_beceri_null",
+    "deneme_sharpe_n": 0,
+    "yontem": "Bailey & López de Prado (2014) — PSR(E[max SR]); çarpıklık/basıklık düzeltmeli",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `dsr_kapi` verir (paper=damga · gerçek-para=SERT fail-closed)"
+   },
+   "n_trials": 237,
+   "pbo": {
+    "durum": "olculdu",
+    "pbo": 0.6714,
+    "n_aday": 185,
+    "n_gozlem": 211,
+    "blocks": 8,
+    "min_aday": 8,
+    "yontem": "CSCV (Bailey/Borwein/López de Prado/Zhu 2015) — blok kombinasyonları",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `pbo_kapi` verir (İKİ MODDA DA SERT, ölçülebilir olduğunda)",
+    "n_kombinasyon": 70,
+    "ort_oos_sira": 0.4075,
+    "adaylar": [
+     "entry.min_rvol=1.2",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=15",
+     "exit.early_kill_bars=4",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.5",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.8",
+     "exit.trail_atr_mult=2.2",
+     "portfolio.heat_cap=3.0",
+     "entry.w_mom=0.1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.spy_sma_gate=1",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.2",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_rvolband=0.2",
+     "entry.w_tight=0.3",
+     "degisiklik_yok",
+     "entry.w_vol=0.25",
+     "degisiklik_yok",
+     "exit.chandelier_lookback=15",
+     "degisiklik_yok",
+     "exit.early_kill_bars=5",
+     "exit.early_kill_pivot=0",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.giveback_pct=0.2",
+     "exit.time_stop_days=17",
+     "exit.time_stop_days=13",
+     "entry.max_ext_atr=2.0",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "exit.scale_out_r=1.5",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok"
+    ],
+    "neden": null
+   },
+   "defter": {
+    "n_kayit": 200,
+    "dosya": "validation_ledger.jsonl",
+    "son": "2026-08-13T04:08:19+00:00",
+    "n_kayit_guncel_pencere": 185,
+    "n_kayit_onceki_pencereler": 15,
+    "beyan": "defter BUGÜNDEN sayar — geçmiş kapı kayıtları seri taşımıyordu ve geriye dönük üretilmedi. PBO YALNIZ `pencere_id=R1` satırlarından hesaplanır: iki pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz (ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, PBO paydasına GİRMEZ."
+   }
+  },
+  "edge_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 2,
+   "zayif": 1,
+   "verdict": "EDGE KANITI: 1/5 sağlandı (1 zayıf, 1 sağlanmadı, 2 ölçülemedi) — edge kanıtlanmadı",
+   "criteria": {
+    "skor_sonuc": {
+     "status": "zayif",
+     "value": 0.0526,
+     "esik": "gerçek katman rank_ic >= 0.03 (n >= 60) VE istatistiksel anlamlılık",
+     "n": 97,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem (cf HARİÇ)"
+    },
+    "spy_ustu": {
+     "status": "kaldi",
+     "value": -0.1113,
+     "esik": "maruziyet-düzeltilmiş fark > 0 VE bootstrap aralığı sıfırı dışarıda bırakıyor",
+     "n": null,
+     "anlamli": true,
+     "kaynak": "gerçek kapanmış işlem vs SPY (2023-01-23 → 2026-08-11), maruziyet-düzeltilmiş"
+    },
+    "tahmin_isabeti": {
+     "status": "olculemedi",
+     "value": 0.0,
+     "esik": "sign_hits/n >= 0.6 (n >= 10)",
+     "n": 1,
+     "anlamli": null,
+     "kaynak": "terminal hipotez (tahmin+gerçekleşen)"
+    },
+    "rejim_edge": {
+     "status": "gecti",
+     "value": {
+      "regime": "trend_up",
+      "n": 1343,
+      "avg_r": 0.112
+     },
+     "esik": "herhangi bir rejimde n >= 30 VE avg_r > 0.0",
+     "n": null,
+     "anlamli": null,
+     "kaynak": "yalnız-simüle"
+    },
+    "kuyruk": {
+     "status": "olculemedi",
+     "value": {
+      "max_dd": 0.0599,
+      "cvar5_r": -1.1594
+     },
+     "esik": "gerçekleşen maks düşüş <= 0.16 VE işlem-R CVaR(%5) >= -1.5R (n >= 40)",
+     "n": 97,
+     "anlamli": null,
+     "kaynak": "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
+    }
+   }
+  },
+  "result_verdict": {
+   "passed": 0,
+   "failed": 3,
+   "unmeasured": 1,
+   "zayif": 0,
+   "verdict": "SONUÇ: 0/4 sağlandı (0 zayıf, 3 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı",
+   "criteria": {
+    "dolar_beklenti": {
+     "status": "kaldi",
+     "value": -54.27,
+     "esik": "işlem başına ortalama net $ > 0 VE blok-bootstrap %95 aralığı sıfırı dışlıyor (n >= 30)",
+     "n": 97,
+     "ci": {
+      "lo": -130.32,
+      "hi": 14.87,
+      "seviye": 0.95,
+      "n": 97,
+      "blok": 5,
+      "B": 10000,
+      "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+      "sifiri_disliyor": false
+     },
+     "anlamli": false
+    },
+    "profit_factor": {
+     "status": "kaldi",
+     "value": 0.6023,
+     "esik": "profit factor >= 1.3 (n >= 30)",
+     "n": 97,
+     "ci": null,
+     "anlamli": null
+    },
+    "maks_dusus": {
+     "status": "olculemedi",
+     "value": 0.0599,
+     "esik": "gerçekleşen maks düşüş <= 0.16 (n >= 30)",
+     "n": 97,
+     "ci": null,
+     "anlamli": null
+    },
+    "net_pnl": {
+     "status": "kaldi",
+     "value": -5264.1,
+     "esik": "toplam net PnL > 0 VE net >= 1.0 × ödenen friksiyon (n >= 30)",
+     "n": 97,
+     "ci": null,
+     "anlamli": null
+    }
+   }
+  },
+  "variance_attribution": {
+   "n_trades": 97,
+   "span_days": 1296,
+   "block_days": 14,
+   "n_blocks": 93,
+   "n_valid": 400,
+   "eski_paylar": {
+    "para": 0.0073,
+    "dusus": 0.5761,
+    "sharpe": 0.4166
+   },
+   "v3_paylar": {
+    "para": 1.0,
+    "dusus": 0.0,
+    "sharpe": 0.0
+   },
+   "sd_dusus": 0.0371,
+   "ort_dusus": 0.0733,
+   "dusus_p05": 0.0265,
+   "dusus_p95": 0.1443,
+   "dd_veto_gurultunun_disinda": true,
+   "para_payi_tek_terim": true,
+   "margin_scale": 0.2772,
+   "ret_scale_k": 2.349
+  },
+  "skills_attribution": {
+   "skills": [
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 1,
+     "win_rate": 0.0,
+     "avg_r": -1.028,
+     "total_r": -1.03,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "pullback-screener",
+     "n": 4,
+     "win_rate": 0.0,
+     "avg_r": -1.0,
+     "total_r": -4.0,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "position-sizer",
+     "n": 97,
+     "win_rate": 0.371,
+     "avg_r": -0.042,
+     "total_r": -4.1,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 97,
+     "win_rate": 0.371,
+     "avg_r": -0.042,
+     "total_r": -4.1,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 91,
+     "win_rate": 0.385,
+     "avg_r": 0.0,
+     "total_r": 0.0,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918,
+     "total_r": 0.92,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "n_skill_gercek_katmanli": 6
+  },
+  "skills_axis2": {
+   "kova_sayilari": {
+    "arsiv": 36,
+    "esik_araliginda": 1,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 2,
+    "ornek_yetersiz_gercek_katman_yarim": 1
+   },
+   "gercek_islem_tasiyan_skill_n": 6,
+   "sayim": {
+    "arsiv": 36,
+    "esik_araliginda": 1,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 2,
+    "ornek_yetersiz_gercek_katman_yarim": 1
+   },
+   "arsiv_kova": "arsiv",
+   "aktif_payda": 31,
+   "esik": {
+    "min_n": 8,
+    "shadow_avg_r": -0.15,
+    "lean_in_avg_r": 0.3,
+    "cf_kol": {
+     "gercek_asgari": 4.0,
+     "cf_asgari": 40
+    },
+    "katman": "hüküm YALNIZ gerçek (n, avg_r); cf katmanı (n_cf, cf_avg_r) YALNIZ örneklem kolunda okunur — cf tek başına öneri TETİKLEMEZ"
+   }
+  },
+  "near_miss": {
+   "resolved_total": 5021,
+   "n_kova": 6
+  },
+  "cf_defteri_n": {
+   "resolved_entered": 2129
+  },
+  "cf_fidelity": {
+   "n": 89,
+   "corr": 0.935,
+   "mean_diff_r": 0.039,
+   "fidelity_ok": true,
+   "eksik_mekanizmalar": [
+    "trail_atr",
+    "breakeven_lock",
+    "chandelier",
+    "giveback",
+    "regime_flip",
+    "scale_out"
+   ],
+   "eksik_friksiyon": [
+    "commission_per_share",
+    "adv_cap",
+    "price_impact",
+    "notional_cap",
+    "derisk_mult"
+   ]
+  },
+  "hermes_reflect_sayaci": {
+   "last_reflect_at_kalici": 97,
+   "defter_n": 97,
+   "trades_since_last_reflection": 0,
+   "reflection_every": 5,
+   "trades_until_next": 5,
+   "sayi_kapisi_acik": false
+  },
+  "learning_scorecard": {
+   "trades_total": 97,
+   "defter": {
+    "live_paper_n": 2,
+    "replay_seed_n": 95,
+    "belirsiz_n": 0,
+    "damgasiz_n": 0,
+    "toplam": 97,
+    "training_n": 95,
+    "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+    "gercek_canli_n": 2,
+    "orneklem_n": 2,
+    "orneklem_kapsam": "min_sample paydası = live_paper + belirsiz (damgasızlar dahil); replay_seed satırları TRAINING sayılır ve paydaya girmez",
+    "sinir": {
+     "replay_end": "2026-07-20",
+     "toplu_yazim": false,
+     "mtime_delta_s": 1399.221,
+     "n_equity_points": 882,
+     "guven": "orta",
+     "neden": "toplu yazım imzası YOK (mtime farkı 1399.221sn) — defter tohum yazımından SONRA da yazılmış; sınır yine 2026-07-20, sonrası canlı eklemeye açık",
+     "kanit": "equity_curve.json son noktası (tek yazar: run.replay_seed) + trades.jsonl/equity_curve.json mtime çifti",
+     "equity_ilk_nokta": "2023-01-12"
+    }
+   },
+   "min_sample": 30,
+   "loop_state": "no_ship_v1_stands",
+   "verdict": "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), değerlendirilecek bir evrim yok. 27 backtest, 22 guard reddi. Öğrenme antrenmanı başlatabilirsin."
+  },
+  "component_ic": {
+   "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 5 bar · IC 0.2341 (n=95) — ANLAMLI; 24/24 hücre ölçülebildi, 2 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil",
+   "n_gozlem": {
+    "gercek": 97,
+    "cf": 2129,
+    "havuz_tekil": 1958
+   },
+   "layers": [
+    "gercek",
+    "cf",
+    "havuz"
+   ],
+   "anlamli_sayim": {
+    "gercek": 2,
+    "cf": 8,
+    "havuz": 7
+   }
+  },
+  "threshold_curve": {
+   "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 80 (ort R 0.0657, n=63) · canlı eşik 60 (ort R -0.0421, n=95) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi",
+   "n_gozlem": {
+    "gercek": 97,
+    "cf": 2129,
+    "eslesen": 2209
+   },
+   "canli_min_score": 60.0,
+   "min_n": 10,
+   "katmanlar": [
+    "gercek",
+    "cf"
+   ],
+   "cf_sadakat": "cf `ileri_getiri`si barlardan gelir ve sadakat kusurundan BAĞIMSIZDIR; cf `gerceklesen_r`si ise simüle çıkıştan gelir ve KUSURU TAŞIR"
+  },
+  "mae_profile": {
+   "n": 97,
+   "n_eksik_alan": 0,
+   "kazananlar": {
+    "n": 36,
+    "medyan": 0.323,
+    "ort": 0.353,
+    "p90": 0.708,
+    "maks": 0.878
+   },
+   "kaybedenler": {
+    "n": 61,
+    "medyan": 1.057,
+    "ort": 0.97,
+    "p90": 1.453,
+    "maks": 2.437
+   },
+   "birim": "R (POZİTİF büyüklük — defterde mae_r acının BÜYÜKLÜĞÜ olarak yazılı)",
+   "esikler": {
+    "kazanan_p90_dar": 0.7,
+    "kaybeden_medyan_kayma": 1.15
+   },
+   "hukum": [
+    "stop mesafesi ölçülen dağılımla TUTARLI — sıkılaştırma/gevşetme için kanıt YOK"
+   ],
+   "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL. MFE çıkış kuralını, MAE STOP kuralını yargılar; ikisi `exit_efficiency` ile yan yana okunur."
+  },
+  "net_kotumser": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "net": -5264.1,
+   "ek_maliyet": 312.77,
+   "net_kotumser": -5576.87,
+   "n": 97,
+   "n_olculen": 97,
+   "n_notional_yok": 0,
+   "isaret_donuyor": false,
+   "hukme_girmez": true,
+   "kapsam": "ek maliyet yalnız GİRİŞ bacağına (girişler açılışta) uygulanır; `pnl_dollars` zaten NET'tir ve friksiyon İKİ KEZ kesilmez — bu sütun mevcut modelin ÜSTÜNE yalnız FARKI (açılış_spread/2 − yürürlükteki_slipaj) ekler"
+  },
+  "regime_trigger": {
+   "trend_up": {
+    "n": 59,
+    "threshold": 30,
+    "ready": true
+   },
+   "trend_down": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   },
+   "chop": {
+    "n": 35,
+    "threshold": 30,
+    "ready": true
+   },
+   "high_vol": {
+    "n": 3,
+    "threshold": 30,
+    "ready": false
+   }
+  },
+  "portfolio_realized_pnl": 277.98314200393065,
+  "BAYRAK_sieve": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    }
+   ],
+   "n_violation": 2,
+   "kritik_n": 0,
+   "stages": {
+    "cf_fidelity.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "cf_fidelity.kesisim": {
+     "in": 2129,
+     "out": 89,
+     "drops": {
+      "piyasa:alınmamış_plan": 1302,
+      "piyasa:gerçekte_eşleşmedi": 738
+     }
+    },
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.eslesme": {
+     "in": 2226,
+     "out": 2209,
+     "drops": {
+      "sema:bar_yok:tarih": 10,
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 7
+     }
+    },
+    "component_ic.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "exit_efficiency.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "exit_efficiency.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 97,
+     "out": 4,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 93
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "regime_edge": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "shadow_model.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.terfi": {
+     "in": 97,
+     "out": 2,
+     "drops": {
+      "piyasa:gölge_tahmini_damgalanmamış": 95
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.eslesme": {
+     "in": 2226,
+     "out": 2209,
+     "drops": {
+      "sema:bar_yok:tarih": 10,
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 7
+     }
+    },
+    "threshold_curve.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "BAYRAK_shadowlaw_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.2795,
+     "turetilen_marj": 0.006,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.2795,
+    "sd_dusus": 0.0339,
+    "ort_dusus": 0.0711,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 97,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "BAYRAK_rollback_kapisi": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 0,
+   "n_parent": 2,
+   "erken_return_None": true,
+   "cur_score": null,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": null,
+   "KAPI_ACILIYOR": null,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  },
+  "live_paper_satirlari": {
+   "n": 2,
+   "sha_satirlar": "973c569323879ec6b1d339f9775bd14f54de2cf2e61bf98fba7661f354bc7521",
+   "pnl_toplam": 277.99,
+   "id_ler": [
+    "T00096",
+    "T00097"
+   ],
+   "plan_id_ler": [
+    "P-2026-08-06-ALL-momentum_burst",
+    "P-2026-08-07-VLO-exhaustion_hammer"
+   ]
+  }
+ },
+ "olcum_B": {
+  "_defter": {
+   "n": 887,
+   "n_plan": 1008,
+   "live_paper_n": 2,
+   "replay_seed_n": 885,
+   "belirsiz_n": 0,
+   "damgasiz_n": 0,
+   "toplam": 887,
+   "training_n": 885,
+   "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+  },
+  "korunum_plan_islem": {
+   "n_islem": 887,
+   "n_plan": 1008,
+   "plan_bulan_islem": 887,
+   "aciklanamayan_islem": 0,
+   "aciklanamayan_kaynak_kirilimi": {},
+   "ornek_oksuz_plan_id": [],
+   "islemsiz_plan_n": 121
+  },
+  "score_calibration": {
+   "n": 3016,
+   "n_real": 887,
+   "n_cf": 2129,
+   "katmanlar": {
+    "gercek": {
+     "rank_ic": 0.092,
+     "n": 887,
+     "anlamli": true,
+     "se_yontem": "i.i.d._varsayimi"
+    },
+    "cf": {
+     "rank_ic": -0.0052,
+     "n": 2129,
+     "anlamli": null,
+     "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+    },
+    "havuz": {
+     "rank_ic": 0.0214,
+     "n": 3016,
+     "anlamli": null,
+     "karisim": "887 gerçek / 2129 sim"
+    }
+   },
+   "gercek_kaynak": {
+    "live_paper": {
+     "n": 2,
+     "ic": null
+    },
+    "replay_seed": {
+     "n": 885,
+     "ic": {
+      "rank_ic": 0.0922,
+      "n": 885
+     }
+    },
+    "belirsiz": {
+     "n": 0,
+     "ic": null
+    }
+   },
+   "verdict": "gerçek dilim IC 0.092 (n=887), anlamlı"
+  },
+  "llm_calibration": {
+   "n_pairs": 1,
+   "buckets": {
+    "çekimser": {
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918
+    }
+   },
+   "cf_pairs": 2,
+   "promoted": false,
+   "r_gap": null,
+   "n_plans_with_opinion": 1
+  },
+  "dsr_pbo_validation_trio": {
+   "dsr_canli": {
+    "dsr": 0.039075,
+    "psr_sifir": 0.879607,
+    "sharpe_gozlem": 0.03787,
+    "n": 887,
+    "skew": 2.1519,
+    "kurtosis": 14.7596,
+    "n_trials": 237,
+    "beklenen_maks_sharpe": 0.094739,
+    "deneme_varyansi": 0.0011282041,
+    "varyans_kaynagi": "sifir_beceri_null",
+    "deneme_sharpe_n": 0,
+    "yontem": "Bailey & López de Prado (2014) — PSR(E[max SR]); çarpıklık/basıklık düzeltmeli",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `dsr_kapi` verir (paper=damga · gerçek-para=SERT fail-closed)"
+   },
+   "n_trials": 237,
+   "pbo": {
+    "durum": "olculdu",
+    "pbo": 0.6714,
+    "n_aday": 185,
+    "n_gozlem": 211,
+    "blocks": 8,
+    "min_aday": 8,
+    "yontem": "CSCV (Bailey/Borwein/López de Prado/Zhu 2015) — blok kombinasyonları",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `pbo_kapi` verir (İKİ MODDA DA SERT, ölçülebilir olduğunda)",
+    "n_kombinasyon": 70,
+    "ort_oos_sira": 0.4075,
+    "adaylar": [
+     "entry.min_rvol=1.2",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=15",
+     "exit.early_kill_bars=4",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.5",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.8",
+     "exit.trail_atr_mult=2.2",
+     "portfolio.heat_cap=3.0",
+     "entry.w_mom=0.1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.spy_sma_gate=1",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.2",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_rvolband=0.2",
+     "entry.w_tight=0.3",
+     "degisiklik_yok",
+     "entry.w_vol=0.25",
+     "degisiklik_yok",
+     "exit.chandelier_lookback=15",
+     "degisiklik_yok",
+     "exit.early_kill_bars=5",
+     "exit.early_kill_pivot=0",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.giveback_pct=0.2",
+     "exit.time_stop_days=17",
+     "exit.time_stop_days=13",
+     "entry.max_ext_atr=2.0",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "exit.scale_out_r=1.5",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok"
+    ],
+    "neden": null
+   },
+   "defter": {
+    "n_kayit": 200,
+    "dosya": "validation_ledger.jsonl",
+    "son": "2026-08-13T04:08:19+00:00",
+    "n_kayit_guncel_pencere": 185,
+    "n_kayit_onceki_pencereler": 15,
+    "beyan": "defter BUGÜNDEN sayar — geçmiş kapı kayıtları seri taşımıyordu ve geriye dönük üretilmedi. PBO YALNIZ `pencere_id=R1` satırlarından hesaplanır: iki pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz (ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, PBO paydasına GİRMEZ."
+   }
+  },
+  "edge_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 2,
+   "zayif": 1,
+   "verdict": "EDGE KANITI: 1/5 sağlandı (1 zayıf, 1 sağlanmadı, 2 ölçülemedi) — edge kanıtlanmadı",
+   "criteria": {
+    "skor_sonuc": {
+     "status": "zayif",
+     "value": 0.0526,
+     "esik": "gerçek katman rank_ic >= 0.03 (n >= 60) VE istatistiksel anlamlılık",
+     "n": 97,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem (cf HARİÇ)"
+    },
+    "spy_ustu": {
+     "status": "kaldi",
+     "value": -0.1335,
+     "esik": "maruziyet-düzeltilmiş fark > 0 VE bootstrap aralığı sıfırı dışarıda bırakıyor",
+     "n": null,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem vs SPY (2022-01-07 → 2026-08-11), maruziyet-düzeltilmiş"
+    },
+    "tahmin_isabeti": {
+     "status": "olculemedi",
+     "value": 0.0,
+     "esik": "sign_hits/n >= 0.6 (n >= 10)",
+     "n": 1,
+     "anlamli": null,
+     "kaynak": "terminal hipotez (tahmin+gerçekleşen)"
+    },
+    "rejim_edge": {
+     "status": "gecti",
+     "value": {
+      "regime": "trend_up",
+      "n": 1343,
+      "avg_r": 0.112
+     },
+     "esik": "herhangi bir rejimde n >= 30 VE avg_r > 0.0",
+     "n": null,
+     "anlamli": null,
+     "kaynak": "yalnız-simüle"
+    },
+    "kuyruk": {
+     "status": "olculemedi",
+     "value": {
+      "max_dd": 0.1156,
+      "cvar5_r": -1.4736
+     },
+     "esik": "gerçekleşen maks düşüş <= 0.16 VE işlem-R CVaR(%5) >= -1.5R (n >= 40)",
+     "n": 887,
+     "anlamli": null,
+     "kaynak": "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
+    }
+   }
+  },
+  "result_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 1,
+   "zayif": 1,
+   "verdict": "SONUÇ: 1/4 sağlandı (1 zayıf, 1 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı",
+   "criteria": {
+    "dolar_beklenti": {
+     "status": "zayif",
+     "value": 23.63,
+     "esik": "işlem başına ortalama net $ > 0 VE blok-bootstrap %95 aralığı sıfırı dışlıyor (n >= 30)",
+     "n": 887,
+     "ci": {
+      "lo": -21.69,
+      "hi": 69.95,
+      "seviye": 0.95,
+      "n": 887,
+      "blok": 5,
+      "B": 10000,
+      "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+      "sifiri_disliyor": false
+     },
+     "anlamli": false
+    },
+    "profit_factor": {
+     "status": "kaldi",
+     "value": 1.1131,
+     "esik": "profit factor >= 1.3 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "maks_dusus": {
+     "status": "olculemedi",
+     "value": 0.1156,
+     "esik": "gerçekleşen maks düşüş <= 0.16 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "net_pnl": {
+     "status": "gecti",
+     "value": 20962.68,
+     "esik": "toplam net PnL > 0 VE net >= 1.0 × ödenen friksiyon (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    }
+   }
+  },
+  "variance_attribution": {
+   "n_trades": 887,
+   "span_days": 1677,
+   "block_days": 6,
+   "n_blocks": 280,
+   "n_valid": 400,
+   "eski_paylar": {
+    "para": 0.0388,
+    "dusus": 0.8231,
+    "sharpe": 0.1381
+   },
+   "v3_paylar": {
+    "para": 1.0,
+    "dusus": 0.0,
+    "sharpe": 0.0
+   },
+   "sd_dusus": 0.0648,
+   "ort_dusus": 0.1832,
+   "dusus_p05": 0.1004,
+   "dusus_p95": 0.3069,
+   "dd_veto_gurultunun_disinda": true,
+   "para_payi_tek_terim": true,
+   "margin_scale": 0.7162,
+   "ret_scale_k": 2.546
+  },
+  "skills_attribution": {
+   "skills": [
+    {
+     "skill": "pullback-screener",
+     "n": 6,
+     "win_rate": 0.0,
+     "avg_r": -0.787,
+     "total_r": -4.72,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 315,
+     "win_rate": 0.4,
+     "avg_r": 0.047,
+     "total_r": 14.73,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "position-sizer",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 340,
+     "win_rate": 0.388,
+     "avg_r": 0.08,
+     "total_r": 27.07,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 226,
+     "win_rate": 0.283,
+     "avg_r": 0.134,
+     "total_r": 30.35,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "n_skill_gercek_katmanli": 6
+  },
+  "skills_axis2": {
+   "kova_sayilari": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "gercek_islem_tasiyan_skill_n": 6,
+   "sayim": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "arsiv_kova": "arsiv",
+   "aktif_payda": 31,
+   "esik": {
+    "min_n": 8,
+    "shadow_avg_r": -0.15,
+    "lean_in_avg_r": 0.3,
+    "cf_kol": {
+     "gercek_asgari": 4.0,
+     "cf_asgari": 40
+    },
+    "katman": "hüküm YALNIZ gerçek (n, avg_r); cf katmanı (n_cf, cf_avg_r) YALNIZ örneklem kolunda okunur — cf tek başına öneri TETİKLEMEZ"
+   }
+  },
+  "near_miss": {
+   "resolved_total": 5021,
+   "n_kova": 6
+  },
+  "cf_defteri_n": {
+   "resolved_entered": 2129
+  },
+  "cf_fidelity": {
+   "n": 301,
+   "corr": 0.842,
+   "mean_diff_r": 0.063,
+   "fidelity_ok": true,
+   "eksik_mekanizmalar": [
+    "trail_atr",
+    "breakeven_lock",
+    "chandelier",
+    "giveback",
+    "regime_flip",
+    "scale_out"
+   ],
+   "eksik_friksiyon": [
+    "commission_per_share",
+    "adv_cap",
+    "price_impact",
+    "notional_cap",
+    "derisk_mult"
+   ]
+  },
+  "hermes_reflect_sayaci": {
+   "last_reflect_at_kalici": 97,
+   "defter_n": 887,
+   "trades_since_last_reflection": 790,
+   "reflection_every": 5,
+   "trades_until_next": 0,
+   "sayi_kapisi_acik": true
+  },
+  "learning_scorecard": {
+   "trades_total": 887,
+   "defter": {
+    "live_paper_n": 2,
+    "replay_seed_n": 885,
+    "belirsiz_n": 0,
+    "damgasiz_n": 0,
+    "toplam": 887,
+    "training_n": 885,
+    "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+    "gercek_canli_n": 2,
+    "orneklem_n": 2,
+    "orneklem_kapsam": "min_sample paydası = live_paper + belirsiz (damgasızlar dahil); replay_seed satırları TRAINING sayılır ve paydaya girmez",
+    "sinir": {
+     "replay_end": "2026-07-20",
+     "toplu_yazim": false,
+     "mtime_delta_s": 1413.162,
+     "n_equity_points": 882,
+     "guven": "orta",
+     "neden": "toplu yazım imzası YOK (mtime farkı 1413.162sn) — defter tohum yazımından SONRA da yazılmış; sınır yine 2026-07-20, sonrası canlı eklemeye açık",
+     "kanit": "equity_curve.json son noktası (tek yazar: run.replay_seed) + trades.jsonl/equity_curve.json mtime çifti",
+     "equity_ilk_nokta": "2023-01-12"
+    }
+   },
+   "min_sample": 30,
+   "loop_state": "no_ship_v1_stands",
+   "verdict": "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), değerlendirilecek bir evrim yok. 27 backtest, 22 guard reddi. Öğrenme antrenmanı başlatabilirsin."
+  },
+  "component_ic": {
+   "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 10 bar · IC 0.0641 (n=882) — anlamlı DEĞİL (aralık sıfırı kapsıyor); 24/24 hücre ölçülebildi, 0 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "havuz_tekil": 2195
+   },
+   "layers": [
+    "gercek",
+    "cf",
+    "havuz"
+   ],
+   "anlamli_sayim": {
+    "gercek": 0,
+    "cf": 8,
+    "havuz": 5
+   }
+  },
+  "threshold_curve": {
+   "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 90 (ort R 0.176, n=149) · canlı eşik 60 (ort R 0.0776, n=884) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "eslesen": 2998
+   },
+   "canli_min_score": 60.0,
+   "min_n": 10,
+   "katmanlar": [
+    "gercek",
+    "cf"
+   ],
+   "cf_sadakat": "cf `ileri_getiri`si barlardan gelir ve sadakat kusurundan BAĞIMSIZDIR; cf `gerceklesen_r`si ise simüle çıkıştan gelir ve KUSURU TAŞIR"
+  },
+  "mae_profile": {
+   "n": 887,
+   "n_eksik_alan": 0,
+   "kazananlar": {
+    "n": 322,
+    "medyan": 0.289,
+    "ort": 0.352,
+    "p90": 0.732,
+    "maks": 0.997
+   },
+   "kaybedenler": {
+    "n": 565,
+    "medyan": 1.069,
+    "ort": 1.299,
+    "p90": 2.027,
+    "maks": 26.15
+   },
+   "birim": "R (POZİTİF büyüklük — defterde mae_r acının BÜYÜKLÜĞÜ olarak yazılı)",
+   "esikler": {
+    "kazanan_p90_dar": 0.7,
+    "kaybeden_medyan_kayma": 1.15
+   },
+   "hukum": [
+    "stop mesafesi ölçülen dağılımla TUTARLI — sıkılaştırma/gevşetme için kanıt YOK"
+   ],
+   "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL. MFE çıkış kuralını, MAE STOP kuralını yargılar; ikisi `exit_efficiency` ile yan yana okunur."
+  },
+  "net_kotumser": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "net": 20962.68,
+   "ek_maliyet": 5461.74,
+   "net_kotumser": 15500.94,
+   "n": 887,
+   "n_olculen": 887,
+   "n_notional_yok": 0,
+   "isaret_donuyor": false,
+   "hukme_girmez": true,
+   "kapsam": "ek maliyet yalnız GİRİŞ bacağına (girişler açılışta) uygulanır; `pnl_dollars` zaten NET'tir ve friksiyon İKİ KEZ kesilmez — bu sütun mevcut modelin ÜSTÜNE yalnız FARKI (açılış_spread/2 − yürürlükteki_slipaj) ekler"
+  },
+  "regime_trigger": {
+   "trend_up": {
+    "n": 792,
+    "threshold": 30,
+    "ready": true
+   },
+   "trend_down": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   },
+   "chop": {
+    "n": 95,
+    "threshold": 30,
+    "ready": true
+   },
+   "high_vol": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   }
+  },
+  "portfolio_realized_pnl": 277.98314200393065,
+  "BAYRAK_sieve": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    }
+   ],
+   "n_violation": 2,
+   "kritik_n": 0,
+   "stages": {
+    "cf_fidelity.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "cf_fidelity.kesisim": {
+     "in": 2129,
+     "out": 301,
+     "drops": {
+      "piyasa:alınmamış_plan": 1302,
+      "piyasa:gerçekte_eşleşmedi": 526
+     }
+    },
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "sema:bar_yok:tarih": 10,
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8
+     }
+    },
+    "component_ic.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "exit_efficiency.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "exit_efficiency.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 887,
+     "out": 1,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 886
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "regime_edge": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "shadow_model.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "shadow_model.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.terfi": {
+     "in": 97,
+     "out": 2,
+     "drops": {
+      "piyasa:gölge_tahmini_damgalanmamış": 95
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8,
+      "sema:bar_yok:tarih": 10
+     }
+    },
+    "threshold_curve.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "BAYRAK_shadowlaw_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.7404,
+     "turetilen_marj": 0.015,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.7404,
+    "sd_dusus": 0.0633,
+    "ort_dusus": 0.1864,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 887,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "BAYRAK_rollback_kapisi": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 885,
+   "n_parent": 2,
+   "erken_return_None": false,
+   "cur_score": 0.1573,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": 0.0328,
+   "KAPI_ACILIYOR": false,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  },
+  "live_paper_satirlari": {
+   "n": 2,
+   "sha_satirlar": "973c569323879ec6b1d339f9775bd14f54de2cf2e61bf98fba7661f354bc7521",
+   "pnl_toplam": 277.99,
+   "id_ler": [
+    "T00096",
+    "T00097"
+   ],
+   "plan_id_ler": [
+    "P-2026-08-06-ALL-momentum_burst",
+    "P-2026-08-07-VLO-exhaustion_hammer"
+   ]
+  }
+ },
+ "olcum_B_sv3": {
+  "_defter": {
+   "n": 887,
+   "n_plan": 1008,
+   "live_paper_n": 2,
+   "replay_seed_n": 885,
+   "belirsiz_n": 0,
+   "damgasiz_n": 0,
+   "toplam": 887,
+   "training_n": 885,
+   "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+  },
+  "korunum_plan_islem": {
+   "n_islem": 887,
+   "n_plan": 1008,
+   "plan_bulan_islem": 887,
+   "aciklanamayan_islem": 0,
+   "aciklanamayan_kaynak_kirilimi": {},
+   "ornek_oksuz_plan_id": [],
+   "islemsiz_plan_n": 121
+  },
+  "score_calibration": {
+   "n": 3016,
+   "n_real": 887,
+   "n_cf": 2129,
+   "katmanlar": {
+    "gercek": {
+     "rank_ic": 0.092,
+     "n": 887,
+     "anlamli": true,
+     "se_yontem": "i.i.d._varsayimi"
+    },
+    "cf": {
+     "rank_ic": -0.0052,
+     "n": 2129,
+     "anlamli": null,
+     "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+    },
+    "havuz": {
+     "rank_ic": 0.0214,
+     "n": 3016,
+     "anlamli": null,
+     "karisim": "887 gerçek / 2129 sim"
+    }
+   },
+   "gercek_kaynak": {
+    "live_paper": {
+     "n": 2,
+     "ic": null
+    },
+    "replay_seed": {
+     "n": 885,
+     "ic": {
+      "rank_ic": 0.0922,
+      "n": 885
+     }
+    },
+    "belirsiz": {
+     "n": 0,
+     "ic": null
+    }
+   },
+   "verdict": "gerçek dilim IC 0.092 (n=887), anlamlı"
+  },
+  "llm_calibration": {
+   "n_pairs": 1,
+   "buckets": {
+    "çekimser": {
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918
+    }
+   },
+   "cf_pairs": 2,
+   "promoted": false,
+   "r_gap": null,
+   "n_plans_with_opinion": 1
+  },
+  "dsr_pbo_validation_trio": {
+   "dsr_canli": {
+    "dsr": 0.039075,
+    "psr_sifir": 0.879607,
+    "sharpe_gozlem": 0.03787,
+    "n": 887,
+    "skew": 2.1519,
+    "kurtosis": 14.7596,
+    "n_trials": 237,
+    "beklenen_maks_sharpe": 0.094739,
+    "deneme_varyansi": 0.0011282041,
+    "varyans_kaynagi": "sifir_beceri_null",
+    "deneme_sharpe_n": 0,
+    "yontem": "Bailey & López de Prado (2014) — PSR(E[max SR]); çarpıklık/basıklık düzeltmeli",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `dsr_kapi` verir (paper=damga · gerçek-para=SERT fail-closed)"
+   },
+   "n_trials": 237,
+   "pbo": {
+    "durum": "olculdu",
+    "pbo": 0.6714,
+    "n_aday": 185,
+    "n_gozlem": 211,
+    "blocks": 8,
+    "min_aday": 8,
+    "yontem": "CSCV (Bailey/Borwein/López de Prado/Zhu 2015) — blok kombinasyonları",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `pbo_kapi` verir (İKİ MODDA DA SERT, ölçülebilir olduğunda)",
+    "n_kombinasyon": 70,
+    "ort_oos_sira": 0.4075,
+    "adaylar": [
+     "entry.min_rvol=1.2",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=15",
+     "exit.early_kill_bars=4",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.5",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.8",
+     "exit.trail_atr_mult=2.2",
+     "portfolio.heat_cap=3.0",
+     "entry.w_mom=0.1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.spy_sma_gate=1",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.2",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_rvolband=0.2",
+     "entry.w_tight=0.3",
+     "degisiklik_yok",
+     "entry.w_vol=0.25",
+     "degisiklik_yok",
+     "exit.chandelier_lookback=15",
+     "degisiklik_yok",
+     "exit.early_kill_bars=5",
+     "exit.early_kill_pivot=0",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.giveback_pct=0.2",
+     "exit.time_stop_days=17",
+     "exit.time_stop_days=13",
+     "entry.max_ext_atr=2.0",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "exit.scale_out_r=1.5",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok"
+    ],
+    "neden": null
+   },
+   "defter": {
+    "n_kayit": 200,
+    "dosya": "validation_ledger.jsonl",
+    "son": "2026-08-13T04:08:19+00:00",
+    "n_kayit_guncel_pencere": 185,
+    "n_kayit_onceki_pencereler": 15,
+    "beyan": "defter BUGÜNDEN sayar — geçmiş kapı kayıtları seri taşımıyordu ve geriye dönük üretilmedi. PBO YALNIZ `pencere_id=R1` satırlarından hesaplanır: iki pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz (ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, PBO paydasına GİRMEZ."
+   }
+  },
+  "edge_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 2,
+   "zayif": 1,
+   "verdict": "EDGE KANITI: 1/5 sağlandı (1 zayıf, 1 sağlanmadı, 2 ölçülemedi) — edge kanıtlanmadı",
+   "criteria": {
+    "skor_sonuc": {
+     "status": "zayif",
+     "value": 0.0526,
+     "esik": "gerçek katman rank_ic >= 0.03 (n >= 60) VE istatistiksel anlamlılık",
+     "n": 97,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem (cf HARİÇ)"
+    },
+    "spy_ustu": {
+     "status": "kaldi",
+     "value": -0.1335,
+     "esik": "maruziyet-düzeltilmiş fark > 0 VE bootstrap aralığı sıfırı dışarıda bırakıyor",
+     "n": null,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem vs SPY (2022-01-07 → 2026-08-11), maruziyet-düzeltilmiş"
+    },
+    "tahmin_isabeti": {
+     "status": "olculemedi",
+     "value": 0.0,
+     "esik": "sign_hits/n >= 0.6 (n >= 10)",
+     "n": 1,
+     "anlamli": null,
+     "kaynak": "terminal hipotez (tahmin+gerçekleşen)"
+    },
+    "rejim_edge": {
+     "status": "gecti",
+     "value": {
+      "regime": "trend_up",
+      "n": 1343,
+      "avg_r": 0.112
+     },
+     "esik": "herhangi bir rejimde n >= 30 VE avg_r > 0.0",
+     "n": null,
+     "anlamli": null,
+     "kaynak": "yalnız-simüle"
+    },
+    "kuyruk": {
+     "status": "olculemedi",
+     "value": {
+      "max_dd": 0.1156,
+      "cvar5_r": -1.4736
+     },
+     "esik": "gerçekleşen maks düşüş <= 0.16 VE işlem-R CVaR(%5) >= -1.5R (n >= 40)",
+     "n": 887,
+     "anlamli": null,
+     "kaynak": "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
+    }
+   }
+  },
+  "result_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 1,
+   "zayif": 1,
+   "verdict": "SONUÇ: 1/4 sağlandı (1 zayıf, 1 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı",
+   "criteria": {
+    "dolar_beklenti": {
+     "status": "zayif",
+     "value": 23.63,
+     "esik": "işlem başına ortalama net $ > 0 VE blok-bootstrap %95 aralığı sıfırı dışlıyor (n >= 30)",
+     "n": 887,
+     "ci": {
+      "lo": -21.69,
+      "hi": 69.95,
+      "seviye": 0.95,
+      "n": 887,
+      "blok": 5,
+      "B": 10000,
+      "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+      "sifiri_disliyor": false
+     },
+     "anlamli": false
+    },
+    "profit_factor": {
+     "status": "kaldi",
+     "value": 1.1131,
+     "esik": "profit factor >= 1.3 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "maks_dusus": {
+     "status": "olculemedi",
+     "value": 0.1156,
+     "esik": "gerçekleşen maks düşüş <= 0.16 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "net_pnl": {
+     "status": "gecti",
+     "value": 20962.68,
+     "esik": "toplam net PnL > 0 VE net >= 1.0 × ödenen friksiyon (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    }
+   }
+  },
+  "variance_attribution": {
+   "n_trades": 887,
+   "span_days": 1677,
+   "block_days": 6,
+   "n_blocks": 280,
+   "n_valid": 400,
+   "eski_paylar": {
+    "para": 0.0388,
+    "dusus": 0.8231,
+    "sharpe": 0.1381
+   },
+   "v3_paylar": {
+    "para": 1.0,
+    "dusus": 0.0,
+    "sharpe": 0.0
+   },
+   "sd_dusus": 0.0648,
+   "ort_dusus": 0.1832,
+   "dusus_p05": 0.1004,
+   "dusus_p95": 0.3069,
+   "dd_veto_gurultunun_disinda": true,
+   "para_payi_tek_terim": true,
+   "margin_scale": 0.7162,
+   "ret_scale_k": 2.546
+  },
+  "skills_attribution": {
+   "skills": [
+    {
+     "skill": "pullback-screener",
+     "n": 6,
+     "win_rate": 0.0,
+     "avg_r": -0.787,
+     "total_r": -4.72,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 315,
+     "win_rate": 0.4,
+     "avg_r": 0.047,
+     "total_r": 14.73,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "position-sizer",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 340,
+     "win_rate": 0.388,
+     "avg_r": 0.08,
+     "total_r": 27.07,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 226,
+     "win_rate": 0.283,
+     "avg_r": 0.134,
+     "total_r": 30.35,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "n_skill_gercek_katmanli": 6
+  },
+  "skills_axis2": {
+   "kova_sayilari": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "gercek_islem_tasiyan_skill_n": 6,
+   "sayim": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "arsiv_kova": "arsiv",
+   "aktif_payda": 31,
+   "esik": {
+    "min_n": 8,
+    "shadow_avg_r": -0.15,
+    "lean_in_avg_r": 0.3,
+    "cf_kol": {
+     "gercek_asgari": 4.0,
+     "cf_asgari": 40
+    },
+    "katman": "hüküm YALNIZ gerçek (n, avg_r); cf katmanı (n_cf, cf_avg_r) YALNIZ örneklem kolunda okunur — cf tek başına öneri TETİKLEMEZ"
+   }
+  },
+  "near_miss": {
+   "resolved_total": 5021,
+   "n_kova": 6
+  },
+  "cf_defteri_n": {
+   "resolved_entered": 2129
+  },
+  "cf_fidelity": {
+   "n": 301,
+   "corr": 0.842,
+   "mean_diff_r": 0.063,
+   "fidelity_ok": true,
+   "eksik_mekanizmalar": [
+    "trail_atr",
+    "breakeven_lock",
+    "chandelier",
+    "giveback",
+    "regime_flip",
+    "scale_out"
+   ],
+   "eksik_friksiyon": [
+    "commission_per_share",
+    "adv_cap",
+    "price_impact",
+    "notional_cap",
+    "derisk_mult"
+   ]
+  },
+  "hermes_reflect_sayaci": {
+   "last_reflect_at_kalici": 97,
+   "defter_n": 887,
+   "trades_since_last_reflection": 790,
+   "reflection_every": 5,
+   "trades_until_next": 0,
+   "sayi_kapisi_acik": true
+  },
+  "learning_scorecard": {
+   "trades_total": 887,
+   "defter": {
+    "live_paper_n": 2,
+    "replay_seed_n": 885,
+    "belirsiz_n": 0,
+    "damgasiz_n": 0,
+    "toplam": 887,
+    "training_n": 885,
+    "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+    "gercek_canli_n": 2,
+    "orneklem_n": 2,
+    "orneklem_kapsam": "min_sample paydası = live_paper + belirsiz (damgasızlar dahil); replay_seed satırları TRAINING sayılır ve paydaya girmez",
+    "sinir": {
+     "replay_end": "2026-07-20",
+     "toplu_yazim": false,
+     "mtime_delta_s": 1426.531,
+     "n_equity_points": 882,
+     "guven": "orta",
+     "neden": "toplu yazım imzası YOK (mtime farkı 1426.531sn) — defter tohum yazımından SONRA da yazılmış; sınır yine 2026-07-20, sonrası canlı eklemeye açık",
+     "kanit": "equity_curve.json son noktası (tek yazar: run.replay_seed) + trades.jsonl/equity_curve.json mtime çifti",
+     "equity_ilk_nokta": "2023-01-12"
+    }
+   },
+   "min_sample": 30,
+   "loop_state": "no_ship_v1_stands",
+   "verdict": "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), değerlendirilecek bir evrim yok. 27 backtest, 22 guard reddi. Öğrenme antrenmanı başlatabilirsin."
+  },
+  "component_ic": {
+   "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 10 bar · IC 0.0641 (n=882) — anlamlı DEĞİL (aralık sıfırı kapsıyor); 24/24 hücre ölçülebildi, 0 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "havuz_tekil": 2195
+   },
+   "layers": [
+    "gercek",
+    "cf",
+    "havuz"
+   ],
+   "anlamli_sayim": {
+    "gercek": 0,
+    "cf": 8,
+    "havuz": 5
+   }
+  },
+  "threshold_curve": {
+   "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 90 (ort R 0.176, n=149) · canlı eşik 60 (ort R 0.0776, n=884) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "eslesen": 2998
+   },
+   "canli_min_score": 60.0,
+   "min_n": 10,
+   "katmanlar": [
+    "gercek",
+    "cf"
+   ],
+   "cf_sadakat": "cf `ileri_getiri`si barlardan gelir ve sadakat kusurundan BAĞIMSIZDIR; cf `gerceklesen_r`si ise simüle çıkıştan gelir ve KUSURU TAŞIR"
+  },
+  "mae_profile": {
+   "n": 887,
+   "n_eksik_alan": 0,
+   "kazananlar": {
+    "n": 322,
+    "medyan": 0.289,
+    "ort": 0.352,
+    "p90": 0.732,
+    "maks": 0.997
+   },
+   "kaybedenler": {
+    "n": 565,
+    "medyan": 1.069,
+    "ort": 1.299,
+    "p90": 2.027,
+    "maks": 26.15
+   },
+   "birim": "R (POZİTİF büyüklük — defterde mae_r acının BÜYÜKLÜĞÜ olarak yazılı)",
+   "esikler": {
+    "kazanan_p90_dar": 0.7,
+    "kaybeden_medyan_kayma": 1.15
+   },
+   "hukum": [
+    "stop mesafesi ölçülen dağılımla TUTARLI — sıkılaştırma/gevşetme için kanıt YOK"
+   ],
+   "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL. MFE çıkış kuralını, MAE STOP kuralını yargılar; ikisi `exit_efficiency` ile yan yana okunur."
+  },
+  "net_kotumser": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "net": 20962.68,
+   "ek_maliyet": 5461.74,
+   "net_kotumser": 15500.94,
+   "n": 887,
+   "n_olculen": 887,
+   "n_notional_yok": 0,
+   "isaret_donuyor": false,
+   "hukme_girmez": true,
+   "kapsam": "ek maliyet yalnız GİRİŞ bacağına (girişler açılışta) uygulanır; `pnl_dollars` zaten NET'tir ve friksiyon İKİ KEZ kesilmez — bu sütun mevcut modelin ÜSTÜNE yalnız FARKI (açılış_spread/2 − yürürlükteki_slipaj) ekler"
+  },
+  "regime_trigger": {
+   "trend_up": {
+    "n": 792,
+    "threshold": 30,
+    "ready": true
+   },
+   "trend_down": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   },
+   "chop": {
+    "n": 95,
+    "threshold": 30,
+    "ready": true
+   },
+   "high_vol": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   }
+  },
+  "portfolio_realized_pnl": 277.98314200393065,
+  "BAYRAK_sieve": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    }
+   ],
+   "n_violation": 2,
+   "kritik_n": 0,
+   "stages": {
+    "cf_fidelity.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "cf_fidelity.kesisim": {
+     "in": 2129,
+     "out": 301,
+     "drops": {
+      "piyasa:alınmamış_plan": 1302,
+      "piyasa:gerçekte_eşleşmedi": 526
+     }
+    },
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "sema:bar_yok:tarih": 10,
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8
+     }
+    },
+    "component_ic.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "exit_efficiency.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "exit_efficiency.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 887,
+     "out": 1,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 886
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "regime_edge": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "shadow_model.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "shadow_model.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.terfi": {
+     "in": 97,
+     "out": 2,
+     "drops": {
+      "piyasa:gölge_tahmini_damgalanmamış": 95
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8,
+      "sema:bar_yok:tarih": 10
+     }
+    },
+    "threshold_curve.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "BAYRAK_shadowlaw_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.7404,
+     "turetilen_marj": 0.015,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.7404,
+    "sd_dusus": 0.0633,
+    "ort_dusus": 0.1864,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 887,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "BAYRAK_rollback_kapisi": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 0,
+   "n_parent": 887,
+   "erken_return_None": true,
+   "cur_score": null,
+   "par_score_ham": 0.1514,
+   "par_score": 0.1514,
+   "par_score_yolu": "islemlerden",
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": null,
+   "KAPI_ACILIYOR": null,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  },
+  "live_paper_satirlari": {
+   "n": 2,
+   "sha_satirlar": "973c569323879ec6b1d339f9775bd14f54de2cf2e61bf98fba7661f354bc7521",
+   "pnl_toplam": 277.99,
+   "id_ler": [
+    "T00096",
+    "T00097"
+   ],
+   "plan_id_ler": [
+    "P-2026-08-06-ALL-momentum_burst",
+    "P-2026-08-07-VLO-exhaustion_hammer"
+   ]
+  }
+ },
+ "olcum_B_svTOHUM": {
+  "_defter": {
+   "n": 887,
+   "n_plan": 1008,
+   "live_paper_n": 2,
+   "replay_seed_n": 885,
+   "belirsiz_n": 0,
+   "damgasiz_n": 0,
+   "toplam": 887,
+   "training_n": 885,
+   "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+  },
+  "korunum_plan_islem": {
+   "n_islem": 887,
+   "n_plan": 1008,
+   "plan_bulan_islem": 887,
+   "aciklanamayan_islem": 0,
+   "aciklanamayan_kaynak_kirilimi": {},
+   "ornek_oksuz_plan_id": [],
+   "islemsiz_plan_n": 121
+  },
+  "score_calibration": {
+   "n": 3016,
+   "n_real": 887,
+   "n_cf": 2129,
+   "katmanlar": {
+    "gercek": {
+     "rank_ic": 0.092,
+     "n": 887,
+     "anlamli": true,
+     "se_yontem": "i.i.d._varsayimi"
+    },
+    "cf": {
+     "rank_ic": -0.0052,
+     "n": 2129,
+     "anlamli": null,
+     "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+    },
+    "havuz": {
+     "rank_ic": 0.0214,
+     "n": 3016,
+     "anlamli": null,
+     "karisim": "887 gerçek / 2129 sim"
+    }
+   },
+   "gercek_kaynak": {
+    "live_paper": {
+     "n": 2,
+     "ic": null
+    },
+    "replay_seed": {
+     "n": 885,
+     "ic": {
+      "rank_ic": 0.0922,
+      "n": 885
+     }
+    },
+    "belirsiz": {
+     "n": 0,
+     "ic": null
+    }
+   },
+   "verdict": "gerçek dilim IC 0.092 (n=887), anlamlı"
+  },
+  "llm_calibration": {
+   "n_pairs": 1,
+   "buckets": {
+    "çekimser": {
+     "n": 1,
+     "win_rate": 1.0,
+     "avg_r": 0.918
+    }
+   },
+   "cf_pairs": 2,
+   "promoted": false,
+   "r_gap": null,
+   "n_plans_with_opinion": 1
+  },
+  "dsr_pbo_validation_trio": {
+   "dsr_canli": {
+    "dsr": 0.039075,
+    "psr_sifir": 0.879607,
+    "sharpe_gozlem": 0.03787,
+    "n": 887,
+    "skew": 2.1519,
+    "kurtosis": 14.7596,
+    "n_trials": 237,
+    "beklenen_maks_sharpe": 0.094739,
+    "deneme_varyansi": 0.0011282041,
+    "varyans_kaynagi": "sifir_beceri_null",
+    "deneme_sharpe_n": 0,
+    "yontem": "Bailey & López de Prado (2014) — PSR(E[max SR]); çarpıklık/basıklık düzeltmeli",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `dsr_kapi` verir (paper=damga · gerçek-para=SERT fail-closed)"
+   },
+   "n_trials": 237,
+   "pbo": {
+    "durum": "olculdu",
+    "pbo": 0.6714,
+    "n_aday": 185,
+    "n_gozlem": 211,
+    "blocks": 8,
+    "min_aday": 8,
+    "yontem": "CSCV (Bailey/Borwein/López de Prado/Zhu 2015) — blok kombinasyonları",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `pbo_kapi` verir (İKİ MODDA DA SERT, ölçülebilir olduğunda)",
+    "n_kombinasyon": 70,
+    "ort_oos_sira": 0.4075,
+    "adaylar": [
+     "entry.min_rvol=1.2",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=15",
+     "exit.early_kill_bars=4",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.5",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.8",
+     "exit.trail_atr_mult=2.2",
+     "portfolio.heat_cap=3.0",
+     "entry.w_mom=0.1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.spy_sma_gate=1",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.2",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_rvolband=0.2",
+     "entry.w_tight=0.3",
+     "degisiklik_yok",
+     "entry.w_vol=0.25",
+     "degisiklik_yok",
+     "exit.chandelier_lookback=15",
+     "degisiklik_yok",
+     "exit.early_kill_bars=5",
+     "exit.early_kill_pivot=0",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.giveback_pct=0.2",
+     "exit.time_stop_days=17",
+     "exit.time_stop_days=13",
+     "entry.max_ext_atr=2.0",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "exit.scale_out_r=1.5",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok"
+    ],
+    "neden": null
+   },
+   "defter": {
+    "n_kayit": 200,
+    "dosya": "validation_ledger.jsonl",
+    "son": "2026-08-13T04:08:19+00:00",
+    "n_kayit_guncel_pencere": 185,
+    "n_kayit_onceki_pencereler": 15,
+    "beyan": "defter BUGÜNDEN sayar — geçmiş kapı kayıtları seri taşımıyordu ve geriye dönük üretilmedi. PBO YALNIZ `pencere_id=R1` satırlarından hesaplanır: iki pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz (ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, PBO paydasına GİRMEZ."
+   }
+  },
+  "edge_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 2,
+   "zayif": 1,
+   "verdict": "EDGE KANITI: 1/5 sağlandı (1 zayıf, 1 sağlanmadı, 2 ölçülemedi) — edge kanıtlanmadı",
+   "criteria": {
+    "skor_sonuc": {
+     "status": "zayif",
+     "value": 0.0526,
+     "esik": "gerçek katman rank_ic >= 0.03 (n >= 60) VE istatistiksel anlamlılık",
+     "n": 97,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem (cf HARİÇ)"
+    },
+    "spy_ustu": {
+     "status": "kaldi",
+     "value": -0.1335,
+     "esik": "maruziyet-düzeltilmiş fark > 0 VE bootstrap aralığı sıfırı dışarıda bırakıyor",
+     "n": null,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem vs SPY (2022-01-07 → 2026-08-11), maruziyet-düzeltilmiş"
+    },
+    "tahmin_isabeti": {
+     "status": "olculemedi",
+     "value": 0.0,
+     "esik": "sign_hits/n >= 0.6 (n >= 10)",
+     "n": 1,
+     "anlamli": null,
+     "kaynak": "terminal hipotez (tahmin+gerçekleşen)"
+    },
+    "rejim_edge": {
+     "status": "gecti",
+     "value": {
+      "regime": "trend_up",
+      "n": 1343,
+      "avg_r": 0.112
+     },
+     "esik": "herhangi bir rejimde n >= 30 VE avg_r > 0.0",
+     "n": null,
+     "anlamli": null,
+     "kaynak": "yalnız-simüle"
+    },
+    "kuyruk": {
+     "status": "olculemedi",
+     "value": {
+      "max_dd": 0.1156,
+      "cvar5_r": -1.4736
+     },
+     "esik": "gerçekleşen maks düşüş <= 0.16 VE işlem-R CVaR(%5) >= -1.5R (n >= 40)",
+     "n": 887,
+     "anlamli": null,
+     "kaynak": "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
+    }
+   }
+  },
+  "result_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 1,
+   "zayif": 1,
+   "verdict": "SONUÇ: 1/4 sağlandı (1 zayıf, 1 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı",
+   "criteria": {
+    "dolar_beklenti": {
+     "status": "zayif",
+     "value": 23.63,
+     "esik": "işlem başına ortalama net $ > 0 VE blok-bootstrap %95 aralığı sıfırı dışlıyor (n >= 30)",
+     "n": 887,
+     "ci": {
+      "lo": -21.69,
+      "hi": 69.95,
+      "seviye": 0.95,
+      "n": 887,
+      "blok": 5,
+      "B": 10000,
+      "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+      "sifiri_disliyor": false
+     },
+     "anlamli": false
+    },
+    "profit_factor": {
+     "status": "kaldi",
+     "value": 1.1131,
+     "esik": "profit factor >= 1.3 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "maks_dusus": {
+     "status": "olculemedi",
+     "value": 0.1156,
+     "esik": "gerçekleşen maks düşüş <= 0.16 (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    },
+    "net_pnl": {
+     "status": "gecti",
+     "value": 20962.68,
+     "esik": "toplam net PnL > 0 VE net >= 1.0 × ödenen friksiyon (n >= 30)",
+     "n": 887,
+     "ci": null,
+     "anlamli": null
+    }
+   }
+  },
+  "variance_attribution": {
+   "n_trades": 887,
+   "span_days": 1677,
+   "block_days": 6,
+   "n_blocks": 280,
+   "n_valid": 400,
+   "eski_paylar": {
+    "para": 0.0388,
+    "dusus": 0.8231,
+    "sharpe": 0.1381
+   },
+   "v3_paylar": {
+    "para": 1.0,
+    "dusus": 0.0,
+    "sharpe": 0.0
+   },
+   "sd_dusus": 0.0648,
+   "ort_dusus": 0.1832,
+   "dusus_p05": 0.1004,
+   "dusus_p95": 0.3069,
+   "dd_veto_gurultunun_disinda": true,
+   "para_payi_tek_terim": true,
+   "margin_scale": 0.7162,
+   "ret_scale_k": 2.546
+  },
+  "skills_attribution": {
+   "skills": [
+    {
+     "skill": "pullback-screener",
+     "n": 6,
+     "win_rate": 0.0,
+     "avg_r": -0.787,
+     "total_r": -4.72,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 315,
+     "win_rate": 0.4,
+     "avg_r": 0.047,
+     "total_r": 14.73,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "position-sizer",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 887,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.43,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 340,
+     "win_rate": 0.388,
+     "avg_r": 0.08,
+     "total_r": 27.07,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 226,
+     "win_rate": 0.283,
+     "avg_r": 0.134,
+     "total_r": 30.35,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "n_skill_gercek_katmanli": 6
+  },
+  "skills_axis2": {
+   "kova_sayilari": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "gercek_islem_tasiyan_skill_n": 6,
+   "sayim": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "arsiv_kova": "arsiv",
+   "aktif_payda": 31,
+   "esik": {
+    "min_n": 8,
+    "shadow_avg_r": -0.15,
+    "lean_in_avg_r": 0.3,
+    "cf_kol": {
+     "gercek_asgari": 4.0,
+     "cf_asgari": 40
+    },
+    "katman": "hüküm YALNIZ gerçek (n, avg_r); cf katmanı (n_cf, cf_avg_r) YALNIZ örneklem kolunda okunur — cf tek başına öneri TETİKLEMEZ"
+   }
+  },
+  "near_miss": {
+   "resolved_total": 5021,
+   "n_kova": 6
+  },
+  "cf_defteri_n": {
+   "resolved_entered": 2129
+  },
+  "cf_fidelity": {
+   "n": 301,
+   "corr": 0.842,
+   "mean_diff_r": 0.063,
+   "fidelity_ok": true,
+   "eksik_mekanizmalar": [
+    "trail_atr",
+    "breakeven_lock",
+    "chandelier",
+    "giveback",
+    "regime_flip",
+    "scale_out"
+   ],
+   "eksik_friksiyon": [
+    "commission_per_share",
+    "adv_cap",
+    "price_impact",
+    "notional_cap",
+    "derisk_mult"
+   ]
+  },
+  "hermes_reflect_sayaci": {
+   "last_reflect_at_kalici": 97,
+   "defter_n": 887,
+   "trades_since_last_reflection": 790,
+   "reflection_every": 5,
+   "trades_until_next": 0,
+   "sayi_kapisi_acik": true
+  },
+  "learning_scorecard": {
+   "trades_total": 887,
+   "defter": {
+    "live_paper_n": 2,
+    "replay_seed_n": 885,
+    "belirsiz_n": 0,
+    "damgasiz_n": 0,
+    "toplam": 887,
+    "training_n": 885,
+    "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+    "gercek_canli_n": 2,
+    "orneklem_n": 2,
+    "orneklem_kapsam": "min_sample paydası = live_paper + belirsiz (damgasızlar dahil); replay_seed satırları TRAINING sayılır ve paydaya girmez",
+    "sinir": {
+     "replay_end": "2026-07-20",
+     "toplu_yazim": false,
+     "mtime_delta_s": 1439.141,
+     "n_equity_points": 882,
+     "guven": "orta",
+     "neden": "toplu yazım imzası YOK (mtime farkı 1439.141sn) — defter tohum yazımından SONRA da yazılmış; sınır yine 2026-07-20, sonrası canlı eklemeye açık",
+     "kanit": "equity_curve.json son noktası (tek yazar: run.replay_seed) + trades.jsonl/equity_curve.json mtime çifti",
+     "equity_ilk_nokta": "2023-01-12"
+    }
+   },
+   "min_sample": 30,
+   "loop_state": "no_ship_v1_stands",
+   "verdict": "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), değerlendirilecek bir evrim yok. 27 backtest, 22 guard reddi. Öğrenme antrenmanı başlatabilirsin."
+  },
+  "component_ic": {
+   "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 10 bar · IC 0.0641 (n=882) — anlamlı DEĞİL (aralık sıfırı kapsıyor); 24/24 hücre ölçülebildi, 0 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "havuz_tekil": 2195
+   },
+   "layers": [
+    "gercek",
+    "cf",
+    "havuz"
+   ],
+   "anlamli_sayim": {
+    "gercek": 0,
+    "cf": 8,
+    "havuz": 5
+   }
+  },
+  "threshold_curve": {
+   "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 90 (ort R 0.176, n=149) · canlı eşik 60 (ort R 0.0776, n=884) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi",
+   "n_gozlem": {
+    "gercek": 887,
+    "cf": 2129,
+    "eslesen": 2998
+   },
+   "canli_min_score": 60.0,
+   "min_n": 10,
+   "katmanlar": [
+    "gercek",
+    "cf"
+   ],
+   "cf_sadakat": "cf `ileri_getiri`si barlardan gelir ve sadakat kusurundan BAĞIMSIZDIR; cf `gerceklesen_r`si ise simüle çıkıştan gelir ve KUSURU TAŞIR"
+  },
+  "mae_profile": {
+   "n": 887,
+   "n_eksik_alan": 0,
+   "kazananlar": {
+    "n": 322,
+    "medyan": 0.289,
+    "ort": 0.352,
+    "p90": 0.732,
+    "maks": 0.997
+   },
+   "kaybedenler": {
+    "n": 565,
+    "medyan": 1.069,
+    "ort": 1.299,
+    "p90": 2.027,
+    "maks": 26.15
+   },
+   "birim": "R (POZİTİF büyüklük — defterde mae_r acının BÜYÜKLÜĞÜ olarak yazılı)",
+   "esikler": {
+    "kazanan_p90_dar": 0.7,
+    "kaybeden_medyan_kayma": 1.15
+   },
+   "hukum": [
+    "stop mesafesi ölçülen dağılımla TUTARLI — sıkılaştırma/gevşetme için kanıt YOK"
+   ],
+   "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL. MFE çıkış kuralını, MAE STOP kuralını yargılar; ikisi `exit_efficiency` ile yan yana okunur."
+  },
+  "net_kotumser": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "net": 20962.68,
+   "ek_maliyet": 5461.74,
+   "net_kotumser": 15500.94,
+   "n": 887,
+   "n_olculen": 887,
+   "n_notional_yok": 0,
+   "isaret_donuyor": false,
+   "hukme_girmez": true,
+   "kapsam": "ek maliyet yalnız GİRİŞ bacağına (girişler açılışta) uygulanır; `pnl_dollars` zaten NET'tir ve friksiyon İKİ KEZ kesilmez — bu sütun mevcut modelin ÜSTÜNE yalnız FARKI (açılış_spread/2 − yürürlükteki_slipaj) ekler"
+  },
+  "regime_trigger": {
+   "trend_up": {
+    "n": 792,
+    "threshold": 30,
+    "ready": true
+   },
+   "trend_down": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   },
+   "chop": {
+    "n": 95,
+    "threshold": 30,
+    "ready": true
+   },
+   "high_vol": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   }
+  },
+  "portfolio_realized_pnl": 277.98314200393065,
+  "BAYRAK_sieve": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.eslesme': 10 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×10). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    }
+   ],
+   "n_violation": 2,
+   "kritik_n": 0,
+   "stages": {
+    "cf_fidelity.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "cf_fidelity.kesisim": {
+     "in": 2129,
+     "out": 301,
+     "drops": {
+      "piyasa:alınmamış_plan": 1302,
+      "piyasa:gerçekte_eşleşmedi": 526
+     }
+    },
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "sema:bar_yok:tarih": 10,
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8
+     }
+    },
+    "component_ic.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "exit_efficiency.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "exit_efficiency.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 887,
+     "out": 1,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 886
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "regime_edge": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    },
+    "shadow_model.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "shadow_model.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.terfi": {
+     "in": 97,
+     "out": 2,
+     "drops": {
+      "piyasa:gölge_tahmini_damgalanmamış": 95
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.eslesme": {
+     "in": 3016,
+     "out": 2998,
+     "drops": {
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8,
+      "sema:bar_yok:tarih": 10
+     }
+    },
+    "threshold_curve.gercek": {
+     "in": 887,
+     "out": 887,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "BAYRAK_shadowlaw_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.7404,
+     "turetilen_marj": 0.015,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.7404,
+    "sd_dusus": 0.0633,
+    "ort_dusus": 0.1864,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 887,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "BAYRAK_rollback_kapisi": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 0,
+   "n_parent": 2,
+   "erken_return_None": true,
+   "cur_score": null,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": null,
+   "KAPI_ACILIYOR": null,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  },
+  "live_paper_satirlari": {
+   "n": 2,
+   "sha_satirlar": "973c569323879ec6b1d339f9775bd14f54de2cf2e61bf98fba7661f354bc7521",
+   "pnl_toplam": 277.99,
+   "id_ler": [
+    "T00096",
+    "T00097"
+   ],
+   "plan_id_ler": [
+    "P-2026-08-06-ALL-momentum_burst",
+    "P-2026-08-07-VLO-exhaustion_hammer"
+   ]
+  }
+ },
+ "olcum_B_literal": {
+  "_defter": {
+   "n": 885,
+   "n_plan": 1006,
+   "live_paper_n": 0,
+   "replay_seed_n": 885,
+   "belirsiz_n": 0,
+   "damgasiz_n": 0,
+   "toplam": 885,
+   "training_n": 885,
+   "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)"
+  },
+  "korunum_plan_islem": {
+   "n_islem": 885,
+   "n_plan": 1006,
+   "plan_bulan_islem": 885,
+   "aciklanamayan_islem": 0,
+   "aciklanamayan_kaynak_kirilimi": {},
+   "ornek_oksuz_plan_id": [],
+   "islemsiz_plan_n": 121
+  },
+  "score_calibration": {
+   "n": 3014,
+   "n_real": 885,
+   "n_cf": 2129,
+   "katmanlar": {
+    "gercek": {
+     "rank_ic": 0.0922,
+     "n": 885,
+     "anlamli": true,
+     "se_yontem": "i.i.d._varsayimi"
+    },
+    "cf": {
+     "rank_ic": -0.0052,
+     "n": 2129,
+     "anlamli": null,
+     "sadakat": "statik parantez: yalnız stop_gap/target_gap/stop/target/time_stop simüle edilir; canlı motorun 6 çıkış mekanizması (trail_atr, breakeven_lock, chandelier, giveback, regime_flip, scale_out) ve 5 friksiyon kalemi (commission_per_share, adv_cap, price_impact, notional_cap, derisk_mult) UYGULANMAZ"
+    },
+    "havuz": {
+     "rank_ic": 0.0214,
+     "n": 3014,
+     "anlamli": null,
+     "karisim": "885 gerçek / 2129 sim"
+    }
+   },
+   "gercek_kaynak": {
+    "live_paper": {
+     "n": 0,
+     "ic": null
+    },
+    "replay_seed": {
+     "n": 885,
+     "ic": {
+      "rank_ic": 0.0922,
+      "n": 885
+     }
+    },
+    "belirsiz": {
+     "n": 0,
+     "ic": null
+    }
+   },
+   "verdict": "gerçek dilim IC 0.0922 (n=885), anlamlı"
+  },
+  "llm_calibration": {
+   "n_pairs": 0,
+   "buckets": {},
+   "cf_pairs": 2,
+   "promoted": false,
+   "r_gap": null,
+   "n_plans_with_opinion": 0
+  },
+  "dsr_pbo_validation_trio": {
+   "dsr_canli": {
+    "dsr": 0.03793,
+    "psr_sifir": 0.876624,
+    "sharpe_gozlem": 0.037449,
+    "n": 885,
+    "skew": 2.1564,
+    "kurtosis": 14.7894,
+    "n_trials": 237,
+    "beklenen_maks_sharpe": 0.094845,
+    "deneme_varyansi": 0.0011307358,
+    "varyans_kaynagi": "sifir_beceri_null",
+    "deneme_sharpe_n": 0,
+    "yontem": "Bailey & López de Prado (2014) — PSR(E[max SR]); çarpıklık/basıklık düzeltmeli",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `dsr_kapi` verir (paper=damga · gerçek-para=SERT fail-closed)"
+   },
+   "n_trials": 237,
+   "pbo": {
+    "durum": "olculdu",
+    "pbo": 0.6714,
+    "n_aday": 185,
+    "n_gozlem": 211,
+    "blocks": 8,
+    "min_aday": 8,
+    "yontem": "CSCV (Bailey/Borwein/López de Prado/Zhu 2015) — blok kombinasyonları",
+    "rol": "ÖLÇÜM — kapı `passes` hükmüne girmez; SHIP hükmünü `pbo_kapi` verir (İKİ MODDA DA SERT, ölçülebilir olduğunda)",
+    "n_kombinasyon": 70,
+    "ort_oos_sira": 0.4075,
+    "adaylar": [
+     "entry.min_rvol=1.2",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "entry.rs_dual_horizon=1",
+     "entry.w_mom=0.15",
+     "entry.w_prox=0.3",
+     "entry.w_prox=0.0",
+     "entry.w_rvolband=0.15",
+     "entry.w_tight=0.2",
+     "entry.w_vol=0.2",
+     "exit.breakeven_r=2.5",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=15",
+     "exit.early_kill_bars=4",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.5",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.8",
+     "exit.trail_atr_mult=2.2",
+     "portfolio.heat_cap=3.0",
+     "entry.w_mom=0.1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "entry.w_rvolband=0.1",
+     "entry.w_tight=0.15",
+     "entry.w_vol=0.15",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.spy_sma_gate=1",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.2",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_rvolband=0.2",
+     "entry.w_tight=0.3",
+     "degisiklik_yok",
+     "entry.w_vol=0.25",
+     "degisiklik_yok",
+     "exit.chandelier_lookback=15",
+     "degisiklik_yok",
+     "exit.early_kill_bars=5",
+     "exit.early_kill_pivot=0",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "entry.w_prox=0.25",
+     "entry.w_prox=0.05",
+     "exit.breakeven_r=2.0",
+     "exit.breakeven_r=0.0",
+     "exit.scale_out_r=3.0",
+     "exit.scale_out_r=1.0",
+     "exit.trail_atr_mult=2.7",
+     "exit.trail_atr_mult=2.3",
+     "portfolio.heat_cap=2.0",
+     "portfolio.sector_cap=10.0",
+     "position_size_r=0.8",
+     "regime.vix_backwardation_gate=1",
+     "stop_buffer_atr=0.3",
+     "stop_mode=1",
+     "exit.chandelier_lookback=10",
+     "exit.early_kill_bars=3",
+     "exit.early_kill_pivot=1",
+     "exit.giveback_pct=0.2",
+     "exit.time_stop_days=17",
+     "exit.time_stop_days=13",
+     "entry.max_ext_atr=2.0",
+     "entry.min_volume_ratio=1.7",
+     "entry.min_volume_ratio=1.3",
+     "entry.pivot_proximity_pct=2.5",
+     "entry.w_mom=0.1",
+     "exit.scale_out_r=1.5",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok",
+     "degisiklik_yok"
+    ],
+    "neden": null
+   },
+   "defter": {
+    "n_kayit": 200,
+    "dosya": "validation_ledger.jsonl",
+    "son": "2026-08-13T04:08:19+00:00",
+    "n_kayit_guncel_pencere": 185,
+    "n_kayit_onceki_pencereler": 15,
+    "beyan": "defter BUGÜNDEN sayar — geçmiş kapı kayıtları seri taşımıyordu ve geriye dönük üretilmedi. PBO YALNIZ `pencere_id=R1` satırlarından hesaplanır: iki pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz (ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, PBO paydasına GİRMEZ."
+   }
+  },
+  "edge_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 2,
+   "zayif": 1,
+   "verdict": "EDGE KANITI: 1/5 sağlandı (1 zayıf, 1 sağlanmadı, 2 ölçülemedi) — edge kanıtlanmadı",
+   "criteria": {
+    "skor_sonuc": {
+     "status": "zayif",
+     "value": 0.0526,
+     "esik": "gerçek katman rank_ic >= 0.03 (n >= 60) VE istatistiksel anlamlılık",
+     "n": 97,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem (cf HARİÇ)"
+    },
+    "spy_ustu": {
+     "status": "kaldi",
+     "value": -0.1038,
+     "esik": "maruziyet-düzeltilmiş fark > 0 VE bootstrap aralığı sıfırı dışarıda bırakıyor",
+     "n": null,
+     "anlamli": false,
+     "kaynak": "gerçek kapanmış işlem vs SPY (2022-01-07 → 2026-07-24), maruziyet-düzeltilmiş"
+    },
+    "tahmin_isabeti": {
+     "status": "olculemedi",
+     "value": 0.0,
+     "esik": "sign_hits/n >= 0.6 (n >= 10)",
+     "n": 1,
+     "anlamli": null,
+     "kaynak": "terminal hipotez (tahmin+gerçekleşen)"
+    },
+    "rejim_edge": {
+     "status": "gecti",
+     "value": {
+      "regime": "trend_up",
+      "n": 1343,
+      "avg_r": 0.112
+     },
+     "esik": "herhangi bir rejimde n >= 30 VE avg_r > 0.0",
+     "n": null,
+     "anlamli": null,
+     "kaynak": "yalnız-simüle"
+    },
+    "kuyruk": {
+     "status": "olculemedi",
+     "value": {
+      "max_dd": 0.1123,
+      "cvar5_r": -1.4736
+     },
+     "esik": "gerçekleşen maks düşüş <= 0.16 VE işlem-R CVaR(%5) >= -1.5R (n >= 40)",
+     "n": 885,
+     "anlamli": null,
+     "kaynak": "gerçek kapanmış işlem + günlük piyasaya-göre sermaye eğrisi"
+    }
+   }
+  },
+  "result_verdict": {
+   "passed": 1,
+   "failed": 1,
+   "unmeasured": 1,
+   "zayif": 1,
+   "verdict": "SONUÇ: 1/4 sağlandı (1 zayıf, 1 sağlanmadı, 1 ölçülemedi) — para kanıtlanmadı",
+   "criteria": {
+    "dolar_beklenti": {
+     "status": "zayif",
+     "value": 23.37,
+     "esik": "işlem başına ortalama net $ > 0 VE blok-bootstrap %95 aralığı sıfırı dışlıyor (n >= 30)",
+     "n": 885,
+     "ci": {
+      "lo": -22.3,
+      "hi": 69.75,
+      "seviye": 0.95,
+      "n": 885,
+      "blok": 5,
+      "B": 10000,
+      "yontem": "circular blok bootstrap (blok=5 işlem, B=10000, tohum sabit)",
+      "sifiri_disliyor": false
+     },
+     "anlamli": false
+    },
+    "profit_factor": {
+     "status": "kaldi",
+     "value": 1.1119,
+     "esik": "profit factor >= 1.3 (n >= 30)",
+     "n": 885,
+     "ci": null,
+     "anlamli": null
+    },
+    "maks_dusus": {
+     "status": "olculemedi",
+     "value": 0.1123,
+     "esik": "gerçekleşen maks düşüş <= 0.16 (n >= 30)",
+     "n": 885,
+     "ci": null,
+     "anlamli": null
+    },
+    "net_pnl": {
+     "status": "gecti",
+     "value": 20684.69,
+     "esik": "toplam net PnL > 0 VE net >= 1.0 × ödenen friksiyon (n >= 30)",
+     "n": 885,
+     "ci": null,
+     "anlamli": null
+    }
+   }
+  },
+  "variance_attribution": {
+   "n_trades": 885,
+   "span_days": 1659,
+   "block_days": 6,
+   "n_blocks": 277,
+   "n_valid": 400,
+   "eski_paylar": {
+    "para": 0.0388,
+    "dusus": 0.8215,
+    "sharpe": 0.1398
+   },
+   "v3_paylar": {
+    "para": 1.0,
+    "dusus": 0.0,
+    "sharpe": 0.0
+   },
+   "sd_dusus": 0.0636,
+   "ort_dusus": 0.1862,
+   "dusus_p05": 0.1063,
+   "dusus_p95": 0.3096,
+   "dd_veto_gurultunun_disinda": true,
+   "para_payi_tek_terim": true,
+   "margin_scale": 0.731,
+   "ret_scale_k": 2.579
+  },
+  "skills_attribution": {
+   "skills": [
+    {
+     "skill": "pullback-screener",
+     "n": 6,
+     "win_rate": 0.0,
+     "avg_r": -0.787,
+     "total_r": -4.72,
+     "n_cf": 21,
+     "cf_avg_r": -0.968
+    },
+    {
+     "skill": "vcp-screener",
+     "n": 315,
+     "win_rate": 0.4,
+     "avg_r": 0.047,
+     "total_r": 14.73,
+     "n_cf": 1009,
+     "cf_avg_r": -0.001
+    },
+    {
+     "skill": "position-sizer",
+     "n": 885,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.54,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "pre-trade-discipline-gate",
+     "n": 885,
+     "win_rate": 0.363,
+     "avg_r": 0.076,
+     "total_r": 67.54,
+     "n_cf": 0,
+     "cf_avg_r": null
+    },
+    {
+     "skill": "stockbee-momentum-burst-screener",
+     "n": 339,
+     "win_rate": 0.389,
+     "avg_r": 0.083,
+     "total_r": 28.1,
+     "n_cf": 1085,
+     "cf_avg_r": 0.089
+    },
+    {
+     "skill": "stockbee-exhaustion-hammer-screener",
+     "n": 225,
+     "win_rate": 0.28,
+     "avg_r": 0.131,
+     "total_r": 29.43,
+     "n_cf": 12,
+     "cf_avg_r": 0.328
+    }
+   ],
+   "n_skill_gercek_katmanli": 6
+  },
+  "skills_axis2": {
+   "kova_sayilari": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "gercek_islem_tasiyan_skill_n": 6,
+   "sayim": {
+    "arsiv": 36,
+    "esik_araliginda": 3,
+    "gercek_katman_olculmemis": 21,
+    "gercek_katman_olculmemis_cf_dolu": 1,
+    "korumali": 5,
+    "ornek_yetersiz_cf_de_yetersiz": 1
+   },
+   "arsiv_kova": "arsiv",
+   "aktif_payda": 31,
+   "esik": {
+    "min_n": 8,
+    "shadow_avg_r": -0.15,
+    "lean_in_avg_r": 0.3,
+    "cf_kol": {
+     "gercek_asgari": 4.0,
+     "cf_asgari": 40
+    },
+    "katman": "hüküm YALNIZ gerçek (n, avg_r); cf katmanı (n_cf, cf_avg_r) YALNIZ örneklem kolunda okunur — cf tek başına öneri TETİKLEMEZ"
+   }
+  },
+  "near_miss": {
+   "resolved_total": 5021,
+   "n_kova": 6
+  },
+  "cf_defteri_n": {
+   "resolved_entered": 2129
+  },
+  "cf_fidelity": {
+   "n": 301,
+   "corr": 0.842,
+   "mean_diff_r": 0.063,
+   "fidelity_ok": true,
+   "eksik_mekanizmalar": [
+    "trail_atr",
+    "breakeven_lock",
+    "chandelier",
+    "giveback",
+    "regime_flip",
+    "scale_out"
+   ],
+   "eksik_friksiyon": [
+    "commission_per_share",
+    "adv_cap",
+    "price_impact",
+    "notional_cap",
+    "derisk_mult"
+   ]
+  },
+  "hermes_reflect_sayaci": {
+   "last_reflect_at_kalici": 97,
+   "defter_n": 885,
+   "trades_since_last_reflection": 788,
+   "reflection_every": 5,
+   "trades_until_next": 0,
+   "sayi_kapisi_acik": true
+  },
+  "learning_scorecard": {
+   "trades_total": 885,
+   "defter": {
+    "live_paper_n": 0,
+    "replay_seed_n": 885,
+    "belirsiz_n": 0,
+    "damgasiz_n": 0,
+    "toplam": 885,
+    "training_n": 885,
+    "kapsam": "live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni ölçülemeyen satır (damgasızlar dahil)",
+    "gercek_canli_n": 0,
+    "orneklem_n": 0,
+    "orneklem_kapsam": "min_sample paydası = live_paper + belirsiz (damgasızlar dahil); replay_seed satırları TRAINING sayılır ve paydaya girmez",
+    "sinir": {
+     "replay_end": "2026-07-20",
+     "toplu_yazim": false,
+     "mtime_delta_s": 1452.007,
+     "n_equity_points": 882,
+     "guven": "orta",
+     "neden": "toplu yazım imzası YOK (mtime farkı 1452.007sn) — defter tohum yazımından SONRA da yazılmış; sınır yine 2026-07-20, sonrası canlı eklemeye açık",
+     "kanit": "equity_curve.json son noktası (tek yazar: run.replay_seed) + trades.jsonl/equity_curve.json mtime çifti",
+     "equity_ilk_nokta": "2023-01-12"
+    }
+   },
+   "min_sample": 30,
+   "loop_state": "no_ship_v1_stands",
+   "verdict": "hiçbir öneri OOS kapısını geçemedi — canlı strateji hâlâ v1 (parent yok), değerlendirilecek bir evrim yok. 27 backtest, 22 guard reddi. Öğrenme antrenmanı başlatabilirsin."
+  },
+  "component_ic": {
+   "verdict": "gerçek katmanın en güçlü bileşeni: rvol20 · 10 bar · IC 0.0641 (n=882) — anlamlı DEĞİL (aralık sıfırı kapsıyor); 24/24 hücre ölçülebildi, 0 anlamlı. cf (sim) katmanında 8 anlamlı hücre var — bağlam, kanıt değil",
+   "n_gozlem": {
+    "gercek": 885,
+    "cf": 2129,
+    "havuz_tekil": 2195
+   },
+   "layers": [
+    "gercek",
+    "cf",
+    "havuz"
+   ],
+   "anlamli_sayim": {
+    "gercek": 0,
+    "cf": 8,
+    "havuz": 5
+   }
+  },
+  "threshold_curve": {
+   "verdict": "gerçek katmanda en yüksek ortalama R eşiği: 90 (ort R 0.176, n=149) · canlı eşik 60 (ort R 0.0776, n=884) — aralıklar ÖRTÜŞÜYOR: fark gösterilemedi",
+   "n_gozlem": {
+    "gercek": 885,
+    "cf": 2129,
+    "eslesen": 2998
+   },
+   "canli_min_score": 60.0,
+   "min_n": 10,
+   "katmanlar": [
+    "gercek",
+    "cf"
+   ],
+   "cf_sadakat": "cf `ileri_getiri`si barlardan gelir ve sadakat kusurundan BAĞIMSIZDIR; cf `gerceklesen_r`si ise simüle çıkıştan gelir ve KUSURU TAŞIR"
+  },
+  "mae_profile": {
+   "n": 885,
+   "n_eksik_alan": 0,
+   "kazananlar": {
+    "n": 321,
+    "medyan": 0.291,
+    "ort": 0.352,
+    "p90": 0.733,
+    "maks": 0.997
+   },
+   "kaybedenler": {
+    "n": 564,
+    "medyan": 1.07,
+    "ort": 1.299,
+    "p90": 2.029,
+    "maks": 26.15
+   },
+   "birim": "R (POZİTİF büyüklük — defterde mae_r acının BÜYÜKLÜĞÜ olarak yazılı)",
+   "esikler": {
+    "kazanan_p90_dar": 0.7,
+    "kaybeden_medyan_kayma": 1.15
+   },
+   "hukum": [
+    "stop mesafesi ölçülen dağılımla TUTARLI — sıkılaştırma/gevşetme için kanıt YOK"
+   ],
+   "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL. MFE çıkış kuralını, MAE STOP kuralını yargılar; ikisi `exit_efficiency` ile yan yana okunur."
+  },
+  "net_kotumser": {
+   "band": {
+    "ek_bps_giris": 5.0,
+    "taban": "literatur",
+    "acilis_spread_bps": 20.0,
+    "ampirik_bps": null,
+    "ampirik_n": 0,
+    "yururlukteki_slippage_bps": 5.0,
+    "mevcut_model_bps": 10.0,
+    "kaynak": "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE",
+    "kapsam": "ek maliyet YALNIZ giriş bacağına uygulanır (girişler açılışta, çıkışlar bar-içi); notional = entry × qty"
+   },
+   "net": 20684.69,
+   "ek_maliyet": 5440.11,
+   "net_kotumser": 15244.58,
+   "n": 885,
+   "n_olculen": 885,
+   "n_notional_yok": 0,
+   "isaret_donuyor": false,
+   "hukme_girmez": true,
+   "kapsam": "ek maliyet yalnız GİRİŞ bacağına (girişler açılışta) uygulanır; `pnl_dollars` zaten NET'tir ve friksiyon İKİ KEZ kesilmez — bu sütun mevcut modelin ÜSTÜNE yalnız FARKI (açılış_spread/2 − yürürlükteki_slipaj) ekler"
+  },
+  "regime_trigger": {
+   "trend_up": {
+    "n": 790,
+    "threshold": 30,
+    "ready": true
+   },
+   "trend_down": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   },
+   "chop": {
+    "n": 95,
+    "threshold": 30,
+    "ready": true
+   },
+   "high_vol": {
+    "n": 0,
+    "threshold": 30,
+    "ready": false
+   }
+  },
+  "portfolio_realized_pnl": 20684.69,
+  "BAYRAK_sieve": {
+   "ok": false,
+   "violations": [
+    {
+     "stage": "component_ic.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'component_ic.eslesme': 8 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×8). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    },
+    {
+     "stage": "threshold_curve.eslesme",
+     "rule": "sema_elemesi",
+     "severity": "hata",
+     "detail": "'threshold_curve.eslesme': 8 satır VERİ SÖZLEŞMESİ yüzünden elendi (sema:bar_yok:tarih×8). Bu bir piyasa filtresi DEĞİL, yazılım hatasıdır: satır beklenen alanı taşımıyor ve hesaptan sessizce düşüyor."
+    }
+   ],
+   "n_violation": 2,
+   "kritik_n": 0,
+   "stages": {
+    "cf_fidelity.gercek": {
+     "in": 885,
+     "out": 885,
+     "drops": {}
+    },
+    "cf_fidelity.kesisim": {
+     "in": 2129,
+     "out": 301,
+     "drops": {
+      "piyasa:alınmamış_plan": 1302,
+      "piyasa:gerçekte_eşleşmedi": 526
+     }
+    },
+    "component_ic.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "component_ic.eslesme": {
+     "in": 3014,
+     "out": 2998,
+     "drops": {
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8,
+      "sema:bar_yok:tarih": 8
+     }
+    },
+    "component_ic.gercek": {
+     "in": 885,
+     "out": 885,
+     "drops": {}
+    },
+    "exit_efficiency.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "exit_efficiency.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "llm_opinion_calibration.cf": {
+     "in": 2129,
+     "out": 2,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 2127
+     }
+    },
+    "llm_opinion_calibration.gercek": {
+     "in": 885,
+     "out": 0,
+     "drops": {
+      "piyasa:llm_görüşü_yok": 885
+     }
+    },
+    "near_miss_report.rejim_dilimi": {
+     "in": 5021,
+     "out": 4979,
+     "drops": {
+      "piyasa:girilmedi": 42
+     }
+    },
+    "near_miss_report.satirlar": {
+     "in": 7218,
+     "out": 5021,
+     "drops": {
+      "piyasa:eşik_altı_değil": 2197
+     }
+    },
+    "regime_edge": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "score_calibration.gercek": {
+     "in": 885,
+     "out": 885,
+     "drops": {}
+    },
+    "shadow_model.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "shadow_model.gercek": {
+     "in": 97,
+     "out": 97,
+     "drops": {}
+    },
+    "shadow_model.terfi": {
+     "in": 97,
+     "out": 2,
+     "drops": {
+      "piyasa:gölge_tahmini_damgalanmamış": 95
+     }
+    },
+    "threshold_curve.cf": {
+     "in": 2129,
+     "out": 2129,
+     "drops": {}
+    },
+    "threshold_curve.eslesme": {
+     "in": 3014,
+     "out": 2998,
+     "drops": {
+      "piyasa:butunluk_dislamasi:guvenli_baslangic_oncesi": 8,
+      "sema:bar_yok:tarih": 8
+     }
+    },
+    "threshold_curve.gercek": {
+     "in": 885,
+     "out": 885,
+     "drops": {}
+    }
+   },
+   "esik": {
+    "SEMA_ESCALATE_FRAC": 0.1,
+    "SEMA_ESCALATE_MIN_N": 5
+   }
+  },
+  "BAYRAK_shadowlaw_drift": {
+   "olculdu": true,
+   "kayma": [
+    {
+     "ad": "margin_scale",
+     "kayitli": 0.1908,
+     "olculen": 0.7503,
+     "turetilen_marj": 0.015,
+     "yururlukteki_marj": 0.004,
+     "gerekce": "0,02 × margin_scale artık MONEY_GATE_MARGIN'e yuvarlanmıyor — para ölçeğindeki taban marj yazılı çevrimden koptu"
+    }
+   ],
+   "kayitli_n_trades": 95,
+   "yururlukteki_MONEY_GATE_MARGIN": 0.004,
+   "yururlukteki_DD_VETO_MARGIN": 0.08,
+   "olcum_ozet": {
+    "margin_scale": 0.7503,
+    "sd_dusus": 0.0627,
+    "ort_dusus": 0.1854,
+    "dd_veto_gurultunun_disinda": true,
+    "para_payi_tek_terim": true,
+    "n_trades": 885,
+    "n_blocks": null,
+    "block_days": null
+   }
+  },
+  "BAYRAK_rollback_kapisi": {
+   "version": 5,
+   "parent": 3,
+   "ship_eval_regime": null,
+   "min_sample": 30,
+   "n_cur": 885,
+   "n_parent": 0,
+   "erken_return_None": false,
+   "cur_score": 0.1573,
+   "par_score_ham": 0.1245,
+   "par_score": 0.1245,
+   "par_score_yolu": "scoreboard.live_score|backtest_oos",
+   "rollback_if_worse_by": 0.1,
+   "ham_delta": 0.0328,
+   "KAPI_ACILIYOR": false,
+   "not": "nihai karar `_karar_girdisi` (would_have replay'i) ile verilir — o replay bar tabanı ister ve BURADA KOŞULMADI; rapor karar noktasına KADARki girdilerdir"
+  },
+  "live_paper_satirlari": {
+   "n": 0,
+   "sha_satirlar": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "pnl_toplam": 0,
+   "id_ler": [],
+   "plan_id_ler": []
+  }
+ }
+}

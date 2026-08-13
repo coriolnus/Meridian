@@ -1,0 +1,577 @@
+{
+ "kart": "EDG-2026-036",
+ "adim": "tam-satır kapsama raporu",
+ "olcum_zamani": "2026-08-13T18:24:07+00:00",
+ "defter": {
+  "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/edg036b_yenileme_kuru_2026-08-13/islemler_tam_kontrol.json",
+  "n_satir": 885,
+  "boyut_bayt": 576901,
+  "sha256": "46ebeb48a8d35bc421b49f51f1996ea0c2d69563dc39a7b825c7d4dea7674874",
+  "satir_anahtar_sirasi": [
+   "id",
+   "ts_open",
+   "ts_close",
+   "ticker",
+   "side",
+   "entry",
+   "exit",
+   "qty",
+   "r_multiple",
+   "pnl_pct",
+   "pnl_dollars",
+   "costs",
+   "exit_reason",
+   "strategy_version",
+   "regime",
+   "setup",
+   "score",
+   "r_multiple_expected",
+   "exploration",
+   "plan_id",
+   "skill_chain",
+   "bars_held",
+   "scaled_out",
+   "mfe_r",
+   "mae_r"
+  ],
+  "tum_satirlar_ayni_anahtar_kumesi": true
+ },
+ "canli_sema": {
+  "n_alan": 26,
+  "alanlar": [
+   "bars_held",
+   "costs",
+   "entry",
+   "exit",
+   "exit_reason",
+   "exploration",
+   "id",
+   "kaynak",
+   "mae_r",
+   "mfe_r",
+   "plan_id",
+   "pnl_dollars",
+   "pnl_pct",
+   "qty",
+   "r_multiple",
+   "r_multiple_expected",
+   "regime",
+   "scaled_out",
+   "score",
+   "setup",
+   "side",
+   "skill_chain",
+   "strategy_version",
+   "ticker",
+   "ts_close",
+   "ts_open"
+  ],
+  "kaynak": "meridian/storage.py:82-95 tipli kolonlar (25) + skill_chain (extra_json — storage.py:79 beyanı) = 26",
+  "edg036_listesiyle_ayni": true
+ },
+ "kapsama_tablosu": {
+  "bars_held": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 885
+   },
+   "ornek": 1,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "costs": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 10.52,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "entry": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 69.285,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "exit": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 68.3958,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "exit_reason": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "regime_flip",
+   "farkli_deger_n": 6,
+   "deger_kumesi": [
+    "regime_flip",
+    "stop",
+    "stop_gap",
+    "target",
+    "target_gap",
+    "time_stop"
+   ]
+  },
+  "exploration": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "bool": 885
+   },
+   "ornek": false,
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "False"
+   ]
+  },
+  "id": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "T00001",
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null,
+   "prosedurel_serh": "broker._id sayacı (T00001…) — koşum-içi sıra numarası. Replay ÜRETİR ama defter kimliği değildir: canlı deftere yazılırken yazarın sayacıyla yeniden basılır."
+  },
+  "kaynak": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "ledgerstamp.stamp() ürünü — `loop._persist_trade`→live_paper, `run.replay_seed`→replay_seed (broker.py:666-667). Üretici satıra damga BASMAZ: satırın nereye yazıldığını bilen katman basar. Replay çıktısında YAPISAL OLARAK YOK."
+  },
+  "mae_r": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 0.117,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "mfe_r": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 0.333,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "plan_id": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "P-2022-01-06-CF",
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "pnl_dollars": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": -135.16,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "pnl_pct": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": -0.01283,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "qty": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 885
+   },
+   "ornek": 152,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "r_multiple": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": -0.33,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "r_multiple_expected": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 885
+   },
+   "ornek": 2.09,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "regime": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "trend_up",
+   "farkli_deger_n": 2,
+   "deger_kumesi": [
+    "chop",
+    "trend_up"
+   ]
+  },
+  "scaled_out": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "bool": 885
+   },
+   "ornek": false,
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "False"
+   ]
+  },
+  "score": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 885
+   },
+   "ornek": 82,
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "setup": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "exhaustion_hammer",
+   "farkli_deger_n": 4,
+   "deger_kumesi": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst",
+    "pullback"
+   ]
+  },
+  "side": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "long",
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "long"
+   ]
+  },
+  "skill_chain": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "list": 885
+   },
+   "ornek": [
+    "stockbee-exhaustion-hammer-screener",
+    "position-sizer",
+    "pre-trade-discipline-gate"
+   ],
+   "farkli_deger_n": 4,
+   "deger_kumesi": [
+    "('pullback-screener', 'position-sizer', 'pre-trade-discipline-gate')",
+    "('stockbee-exhaustion-hammer-screener', 'position-sizer', 'pre-trade-discipline-gate')",
+    "('stockbee-momentum-burst-screener', 'position-sizer', 'pre-trade-discipline-gate')",
+    "('vcp-screener', 'position-sizer', 'pre-trade-discipline-gate')"
+   ]
+  },
+  "strategy_version": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 885
+   },
+   "ornek": 3,
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "3"
+   ],
+   "prosedurel_serh": "plan['strategy_version'] üzerinden taşınır; replay DONMUŞ sandbox strategy.yaml sürümünü (v3) yazar. Tohum partisinin sürüm damgası prosedürdür (kart aşama-2) — replay'in ürettiği değer o damga DEĞİLDİR."
+  },
+  "ticker": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "CF",
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "ts_close": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "2022-01-10",
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  },
+  "ts_open": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 885,
+   "n_satir": 885,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 885
+   },
+   "ornek": "2022-01-07",
+   "farkli_deger_n": ">12 (sayılmadı — kardinalite yüksek)",
+   "deger_kumesi": null
+  }
+ },
+ "kova_ozeti": {
+  "dolu": {
+   "n": 25,
+   "alanlar": [
+    "bars_held",
+    "costs",
+    "entry",
+    "exit",
+    "exit_reason",
+    "exploration",
+    "id",
+    "mae_r",
+    "mfe_r",
+    "plan_id",
+    "pnl_dollars",
+    "pnl_pct",
+    "qty",
+    "r_multiple",
+    "r_multiple_expected",
+    "regime",
+    "scaled_out",
+    "score",
+    "setup",
+    "side",
+    "skill_chain",
+    "strategy_version",
+    "ticker",
+    "ts_close",
+    "ts_open"
+   ]
+  },
+  "yapisal_bos": {
+   "n": 1,
+   "alanlar": [
+    "kaynak"
+   ]
+  },
+  "eksik": {
+   "n": 0,
+   "alanlar": []
+  }
+ },
+ "defterde_fazla_canli_semada_yok": [],
+ "slim_projeksiyon_kiyasi": {
+  "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/edg036b_yenileme_kuru_2026-08-13/islemler_kontrol.json",
+  "n_alan": 12,
+  "alanlar": [
+   "bars_held",
+   "exit_reason",
+   "pnl_dollars",
+   "qty",
+   "r_multiple",
+   "regime",
+   "risk_dollars",
+   "setup",
+   "size_r",
+   "ticker",
+   "ts_close",
+   "ts_open"
+  ],
+  "dolu_alanlar": [
+   "bars_held",
+   "exit_reason",
+   "pnl_dollars",
+   "qty",
+   "r_multiple",
+   "regime",
+   "setup",
+   "ticker",
+   "ts_close",
+   "ts_open"
+  ],
+  "slim_hep_bos_alanlar": [
+   "risk_dollars",
+   "size_r"
+  ],
+  "tam_defterin_slim_uzeri_kazanimi": [
+   "costs",
+   "entry",
+   "exit",
+   "exploration",
+   "id",
+   "mae_r",
+   "mfe_r",
+   "plan_id",
+   "pnl_pct",
+   "r_multiple_expected",
+   "scaled_out",
+   "score",
+   "side",
+   "skill_chain",
+   "strategy_version"
+  ]
+ },
+ "skill_chain_olcumu": {
+  "replay_uretiyor_mu": true,
+  "n_dolu": 885,
+  "n_bos": 0,
+  "n_satir": 885,
+  "uretim_noktasi": "backtest.replay plan sözlüğü (backtest.py:355): [skills.screener_for(setup), 'position-sizer', 'pre-trade-discipline-gate'] → broker.fill_entry (broker.py:549) → Position.skill_chain → kapanış satırı (broker.py:694)",
+  "zincir_dagilimi": {
+   "stockbee-momentum-burst-screener > position-sizer > pre-trade-discipline-gate": 339,
+   "vcp-screener > position-sizer > pre-trade-discipline-gate": 315,
+   "stockbee-exhaustion-hammer-screener > position-sizer > pre-trade-discipline-gate": 225,
+   "pullback-screener > position-sizer > pre-trade-discipline-gate": 6
+  },
+  "ilk_halka_dagilimi": {
+   "stockbee-momentum-burst-screener": 339,
+   "vcp-screener": 315,
+   "stockbee-exhaustion-hammer-screener": 225,
+   "pullback-screener": 6
+  },
+  "canli_yazar_deseni": "loop.py:1713 canlı döngü AYNI üçlüyü kuruyor (skills.screener_for(setup) + position-sizer + pre-trade-discipline-gate) — iki üreticinin zincir şeması kod düzeyinde aynı desende",
+  "not": "EDG-036 bu alanı 'uydurulamaz eksik' saymıştı; o hüküm SLIM PROJEKSİYON üzerinden verildi (slim 12 alanda skill_chain yoktu). Bu ölçüm alanın kendisini tam-satır defterinden okur."
+ },
+ "plan_id_olcumu": {
+  "n_dolu": 885,
+  "canli_bicim_uyan_n": 885,
+  "bicim_beyani": "canlı şema `P-YYYY-MM-DD-TICKER` (backtest.py:342-349 blok beyanı: replay plan kimliği 2026-07-21'de canlı şemaya çevrildi)",
+  "ornek": "P-2022-01-06-CF",
+  "tekil_n": 885
+ },
+ "edg036_eksik_listesinin_yeniden_olcumu": {
+  "plan_id": "dolu",
+  "side": "dolu",
+  "entry": "dolu",
+  "exit": "dolu",
+  "r_multiple_expected": "dolu",
+  "pnl_pct": "dolu",
+  "costs": "dolu",
+  "score": "dolu",
+  "exploration": "dolu",
+  "scaled_out": "dolu",
+  "mfe_r": "dolu",
+  "mae_r": "dolu",
+  "skill_chain": "dolu"
+ },
+ "beyan": "Bu dosya HÜKÜM İÇERMEZ. Kovalar mekaniktir: `dolu` = defterde ≥1 satırda None-olmayan değer; `yapisal_bos` = replay üretmez, yazar/prosedür basar; `eksik` = şemada var, defterde yok ∨ hepsi None. Hiçbir alan doldurulmadı."
+}

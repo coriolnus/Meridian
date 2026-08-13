@@ -1,0 +1,169 @@
+{
+ "plan_log_ham_n": 9,
+ "yenileme_keep_n": 9,
+ "candidate_log_ham_n": 9,
+ "adaylar_keep_n": 9,
+ "islem_n": 8,
+ "islem_plan_id_tekil_n": 8,
+ "keep_icinde_eslesen_islem_n": 8,
+ "keep_disinda_kalan_islem_n": 0,
+ "korunum_orani": 1.0,
+ "alanlar": {
+  "date": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "entry_trigger": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "float": 9
+   }
+  },
+  "gate_checks": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "list": 9
+   }
+  },
+  "gate_reasons": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "list": 9
+   }
+  },
+  "gate_verdict": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "id": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "profit_target": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "float": 9
+   }
+  },
+  "r_multiple_expected": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "float": 9
+   }
+  },
+  "regime_at_plan": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "score": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "int": 9
+   }
+  },
+  "sector": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "setup": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "side": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  },
+  "size_r": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "float": 9
+   }
+  },
+  "skill_chain": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "list": 9
+   }
+  },
+  "stop": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "float": 9
+   }
+  },
+  "strategy_version": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "int": 9
+   }
+  },
+  "targets": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "list": 9
+   }
+  },
+  "ticker": {
+   "var": 9,
+   "dolu": 9,
+   "tipler": {
+    "str": 9
+   }
+  }
+ },
+ "satir_anahtar_sirasi": [
+  "id",
+  "date",
+  "ticker",
+  "side",
+  "entry_trigger",
+  "stop",
+  "profit_target",
+  "targets",
+  "size_r",
+  "r_multiple_expected",
+  "regime_at_plan",
+  "strategy_version",
+  "skill_chain",
+  "sector",
+  "score",
+  "setup",
+  "gate_verdict",
+  "gate_reasons",
+  "gate_checks"
+ ],
+ "tum_satirlar_ayni_anahtar_kumesi": true,
+ "anahtar_kumesi_cesidi": 1
+}

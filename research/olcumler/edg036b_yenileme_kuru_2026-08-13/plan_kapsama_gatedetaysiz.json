@@ -1,0 +1,518 @@
+{
+ "kart": "EDG-2026-036",
+ "adim": "plan defteri kapsama raporu (kontrol_gate_detaysiz)",
+ "olcum_zamani": "2026-08-13T18:28:57+00:00",
+ "defter": {
+  "yol": "research/olcumler/edg036b_yenileme_kuru_2026-08-13/planlar_yenileme_kontrol.json",
+  "n_satir": 1006,
+  "boyut_bayt": 807454,
+  "sha256": "fcf5855dfc384962380bdc50271082cc6dc5601f5ddb861b02960b38d98df8bf",
+  "satir_anahtar_sirasi": [
+   "id",
+   "date",
+   "ticker",
+   "side",
+   "entry_trigger",
+   "stop",
+   "profit_target",
+   "targets",
+   "size_r",
+   "r_multiple_expected",
+   "regime_at_plan",
+   "strategy_version",
+   "skill_chain",
+   "sector",
+   "score",
+   "setup",
+   "gate_verdict",
+   "gate_reasons"
+  ],
+  "anahtar_kumesi_cesidi": 1
+ },
+ "canli_sema": {
+  "n_alan": 25,
+  "sql_tipli_kolon": [
+   "id",
+   "date",
+   "ticker",
+   "side",
+   "entry_trigger",
+   "stop",
+   "profit_target",
+   "size_r",
+   "r_multiple_expected",
+   "regime_at_plan",
+   "strategy_version",
+   "sector",
+   "score",
+   "setup",
+   "gate_verdict",
+   "broker_status",
+   "dormant_setup",
+   "exploration",
+   "p_win_shadow"
+  ],
+  "extra_json_gozlenen": [
+   "gate_checks",
+   "gate_reasons",
+   "llm_opinion",
+   "operator_onayi",
+   "skill_chain",
+   "targets"
+  ],
+  "kaynak": "A1 SALT-OKUMA: PRAGMA table_info(trade_plans) (seq/extra_json hariç 19 kolon) + canlı 409 satırda gözlenen extra_json alanları",
+  "kaynak_damgasi_var_mi": "HAYIR — `kaynak` plan şemasında HİÇ YOK (storage.py:99-105 PLANS kolonları; canlı 409/409 satırda alan yok). Plan defteri tohum/canlı ayrımı YAPAMAZ; ayrım YALNIZ `trades.kaynak`ta var."
+ },
+ "kapsama_tablosu": {
+  "id": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "P-2022-01-06-CF",
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "date": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "2022-01-06",
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "ticker": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "CF",
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "side": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "long",
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "long"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "entry_trigger": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 1006
+   },
+   "ornek": 69.24,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "stop": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 1006
+   },
+   "ornek": 66.59334,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "profit_target": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 1006
+   },
+   "ornek": 74.77,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "size_r": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 1006
+   },
+   "ornek": 0.41,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "r_multiple_expected": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "float": 1006
+   },
+   "ornek": 2.09,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "regime_at_plan": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "trend_up",
+   "farkli_deger_n": 2,
+   "deger_kumesi": [
+    "chop",
+    "trend_up"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "strategy_version": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 1006
+   },
+   "ornek": 3,
+   "farkli_deger_n": 1,
+   "deger_kumesi": [
+    "3"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "sector": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "materials",
+   "farkli_deger_n": 11,
+   "deger_kumesi": [
+    "comms",
+    "consumer",
+    "energy",
+    "financials",
+    "health",
+    "industrials",
+    "materials",
+    "reits",
+    "staples",
+    "tech",
+    "utilities"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "score": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "int": 1006
+   },
+   "ornek": 82,
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "setup": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "exhaustion_hammer",
+   "farkli_deger_n": 4,
+   "deger_kumesi": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst",
+    "pullback"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "gate_verdict": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "str": 1006
+   },
+   "ornek": "REVIEW",
+   "farkli_deger_n": 3,
+   "deger_kumesi": [
+    "GO",
+    "NO_GO",
+    "REVIEW"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "broker_status": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "loop.py:270-290 `_broker_status_yaz` — CANLI aynanın (Alpaca) dolum/ret durumu. Replay'de 'broker durumu' kavramı YOK: dolum backtest içinde anında ve kesindir. Canlı defterde 4/409 dolu.",
+   "canli_dolu_n": 4,
+   "canli_n": 409,
+   "canli_kapsama_pct": 0.98
+  },
+  "dormant_setup": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "cf_backfill.py:82/101/109 — uyuyan-kurulum (dormant) tarama yolunun damgası; canlı tarama üretir, replay yolu değil. Canlı 42/409 dolu.",
+   "canli_dolu_n": 42,
+   "canli_n": 409,
+   "canli_kapsama_pct": 10.27
+  },
+  "exploration": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "keşif (exploration) damgası — canlı boyutlandırma yolunda basılır (api.py:3514/3627 okuyucu). Canlı defterde 1/409 dolu.",
+   "canli_dolu_n": 1,
+   "canli_n": 409,
+   "canli_kapsama_pct": 0.24
+  },
+  "p_win_shadow": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "loop.py:1777 `plan['p_win_shadow'] = pw` — gölge modelin canlı döngüde bastığı kazanma olasılığı. Canlı defterde 42/409 dolu.",
+   "canli_dolu_n": 42,
+   "canli_n": 409,
+   "canli_kapsama_pct": 10.27
+  },
+  "gate_checks": {
+   "kova": "eksik",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "backtest.replay plan sözlüğünde (backtest.py:340-360 + 429-430) bu anahtar HİÇ üretilmiyor",
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "gate_reasons": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "list": 1006
+   },
+   "ornek": [
+    "'materials' bugünün lider sektörlerinde değil (staples, energy, industrials)",
+    "R:R 2.1 marjinal",
+    "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsamıyor; karartma kapısı KONTROL EDEMEDİ (karar DEĞİŞMEDİ)"
+   ],
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "llm_opinion": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "hermes.py:3313-3319 `store.update_jsonl('trade_plans.jsonl', _patch_plans)` — LLM görüş damgası YALNIZ canlı yolda basılır. Backtest'te `llm_opinion` hiç geçmez → HİÇBİR replay tohumu üretemez (kartın `hukum_duzeltmesi` maddesindeki KALICI SINIR). Canlı defterde 8/409 dolu.",
+   "canli_dolu_n": 8,
+   "canli_n": 409,
+   "canli_kapsama_pct": 1.96
+  },
+  "operator_onayi": {
+   "kova": "yapisal_bos",
+   "defterde_var": false,
+   "n_dolu": 0,
+   "neden": "loop.py:427 ONAY_ALANI + loop.py:533 `store.update_jsonl` — OPERATÖR onay damgası. Replay'de operatör yoktur. Canlı defterde 4/409 dolu.",
+   "canli_dolu_n": 4,
+   "canli_n": 409,
+   "canli_kapsama_pct": 0.98
+  },
+  "skill_chain": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "list": 1006
+   },
+   "ornek": [
+    "stockbee-exhaustion-hammer-screener",
+    "position-sizer",
+    "pre-trade-discipline-gate"
+   ],
+   "farkli_deger_n": 4,
+   "deger_kumesi": [
+    "['pullback-screener', 'position-sizer', 'pre-trade-disciplin",
+    "['stockbee-exhaustion-hammer-screener', 'position-sizer', 'p",
+    "['stockbee-momentum-burst-screener', 'position-sizer', 'pre-",
+    "['vcp-screener', 'position-sizer', 'pre-trade-discipline-gat"
+   ],
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  },
+  "targets": {
+   "kova": "dolu",
+   "defterde_var": true,
+   "n_dolu": 1006,
+   "n_satir": 1006,
+   "kapsama_pct": 100.0,
+   "tipler": {
+    "list": 1006
+   },
+   "ornek": [
+    74.77
+   ],
+   "farkli_deger_n": ">12 (kardinalite yüksek)",
+   "deger_kumesi": null,
+   "canli_dolu_n": 409,
+   "canli_n": 409,
+   "canli_kapsama_pct": 100.0
+  }
+ },
+ "kova_ozeti": {
+  "dolu": {
+   "n": 18,
+   "alanlar": [
+    "id",
+    "date",
+    "ticker",
+    "side",
+    "entry_trigger",
+    "stop",
+    "profit_target",
+    "size_r",
+    "r_multiple_expected",
+    "regime_at_plan",
+    "strategy_version",
+    "sector",
+    "score",
+    "setup",
+    "gate_verdict",
+    "gate_reasons",
+    "skill_chain",
+    "targets"
+   ]
+  },
+  "yapisal_bos": {
+   "n": 6,
+   "alanlar": [
+    "broker_status",
+    "dormant_setup",
+    "exploration",
+    "p_win_shadow",
+    "llm_opinion",
+    "operator_onayi"
+   ]
+  },
+  "eksik": {
+   "n": 1,
+   "alanlar": [
+    "gate_checks"
+   ]
+  }
+ },
+ "defterde_fazla_canli_semada_yok": [],
+ "kimlik_bicimi": {
+  "n_dolu": 1006,
+  "canli_bicim_uyan_n": 1006,
+  "tekil_n": 1006,
+  "ornek": "P-2022-01-06-CF",
+  "canli_defterde_gozlenen_ek_bicim": "canlı planların bir kısmı `P-TARIH-TICKER-SETUP` (dormant yolu, cf_backfill.py:101) — replay yalnız `P-TARIH-TICKER` üretir"
+ },
+ "gate_verdict_dagilimi": {
+  "REVIEW": 843,
+  "GO": 59,
+  "NO_GO": 104
+ },
+ "beyan": "Bu dosya HÜKÜM İÇERMEZ. Kovalar mekaniktir. Hiçbir alan doldurulmadı; canlı-yazar alanları adıyla ve kod satırıyla yapısal-boş sayıldı."
+}

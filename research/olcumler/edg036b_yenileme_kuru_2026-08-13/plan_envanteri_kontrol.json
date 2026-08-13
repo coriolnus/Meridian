@@ -1,0 +1,161 @@
+{
+ "plan_log_ham_n": 1543,
+ "yenileme_keep_n": 1006,
+ "candidate_log_ham_n": 1316,
+ "adaylar_keep_n": 300,
+ "islem_n": 885,
+ "islem_plan_id_tekil_n": 885,
+ "keep_icinde_eslesen_islem_n": 885,
+ "keep_disinda_kalan_islem_n": 0,
+ "korunum_orani": 1.0,
+ "alanlar": {
+  "date": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "entry_trigger": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "float": 1006
+   }
+  },
+  "gate_reasons": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "list": 1006
+   }
+  },
+  "gate_verdict": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "id": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "profit_target": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "float": 1006
+   }
+  },
+  "r_multiple_expected": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "float": 1006
+   }
+  },
+  "regime_at_plan": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "score": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "int": 1006
+   }
+  },
+  "sector": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "setup": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "side": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  },
+  "size_r": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "float": 1006
+   }
+  },
+  "skill_chain": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "list": 1006
+   }
+  },
+  "stop": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "float": 1006
+   }
+  },
+  "strategy_version": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "int": 1006
+   }
+  },
+  "targets": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "list": 1006
+   }
+  },
+  "ticker": {
+   "var": 1006,
+   "dolu": 1006,
+   "tipler": {
+    "str": 1006
+   }
+  }
+ },
+ "satir_anahtar_sirasi": [
+  "id",
+  "date",
+  "ticker",
+  "side",
+  "entry_trigger",
+  "stop",
+  "profit_target",
+  "targets",
+  "size_r",
+  "r_multiple_expected",
+  "regime_at_plan",
+  "strategy_version",
+  "skill_chain",
+  "sector",
+  "score",
+  "setup",
+  "gate_verdict",
+  "gate_reasons"
+ ],
+ "tum_satirlar_ayni_anahtar_kumesi": true,
+ "anahtar_kumesi_cesidi": 1
+}
