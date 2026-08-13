@@ -32,6 +32,19 @@ Environment=HERMES_POLL_SECONDS=300
 #     sınırlıyor — reflect.py:1049 `workers = max(2, min(4, cpu_count-2))` → 4 çekirdekte 2 işçi,
 #     geriye sunucu+ajan için 2 çekirdek kalır (yerel prod serve.sh ile aynı bayrak).
 #     Duvar-saati tavanı yine geniş: Ampere çekirdeği Apple Silicon'dan yavaş, aramalar uzun sürer. ---
+# --- SPRINT TETİK KOMUTU (v241, 2026-08-13 — CANLIDA ÖLÇÜLDÜ, varsayılmadı) -------------------
+#     `sprint.start()` antrenmanı kendi systemd birimine (`meridian-sprint@<sid>`) tetikler; varsayılan
+#     tetik `sudo -n systemctl`dir. AMA bu birimde `NoNewPrivileges=true` yürürlükte ve o bayrak SETUID
+#     ikililerini (sudo tam olarak öyle) yetki kazanmaktan alıkoyuyor. Canlı ölçüm (2026-08-13 16:47Z):
+#         sudo: The "no new privileges" flag is set, which prevents sudo from running as root.
+#     → sprint systemd yoluna geçemeyip `kosum_yolu:"popen"` ile eski yola düşüyordu; o yolda çocuk
+#     worker'ın CGROUP'unda doğar ve HER restart onu biçer (bugün üç sprint böyle öldü).
+#     ÇÖZÜM `NoNewPrivileges=no` DEĞİL (H3 güvenlik turunun koruma kalemini geri alırdı): polkit kuralı
+#     `/etc/polkit-1/rules.d/50-meridian-sprint.rules` yalnız `ubuntu` + yalnız `meridian-sprint@*` için
+#     manage-units izni verir; setuid devreye girmez, yetki DBus'ta çözülür. Bu satır tetiği sudo'suz
+#     yola çevirir (seam: sprint.py `_tetik_komutu`). Polkit kuralı yoksa tetik yetki hatası alır ve kod
+#     GÖRÜNÜR şekilde popen'a düşer (`sprint_systemd_yok` olayı + `kosum_yolu` damgası) — sessiz bozulma yok.
+Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl
 Environment=MERIDIAN_PARALLEL_PROBES=1
 Environment=MERIDIAN_SEARCH_MAX_MIN=60
 Environment=HERMES_SEARCH_BUDGET=8

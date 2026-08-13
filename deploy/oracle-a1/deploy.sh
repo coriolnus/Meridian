@@ -109,6 +109,13 @@ sudo cp deploy/oracle-a1/meridian-tick-watchdog.timer   /etc/systemd/system/meri
 # `sprint.start()` sid ile tetikler. Kurulmazsa sistem bozulmaz — kod `sprint_systemd_yok` olayıyla
 # eski Popen yoluna GÖRÜNÜR şekilde düşer (`kosum_yolu` damgası), ama o yolda sorun geri gelir.
 sudo cp deploy/oracle-a1/meridian-sprint@.service       /etc/systemd/system/meridian-sprint@.service
+# POLKIT KURALI (v241, 2026-08-13 — CANLI ÖLÇÜMÜN sonucu): worker `NoNewPrivileges=true` altında
+# koştuğu için `sudo` (setuid) root'a yükselemiyor ve sprint birimini tetikleyemiyordu. Bu kural
+# yalnız `ubuntu` kullanıcısına, yalnız `meridian-sprint@*` birimleri için manage-units izni verir —
+# `NoNewPrivileges=no` tavizini VERMEDEN (H3 koruma kalemi yerinde kalır). Eşlik eden satır:
+# meridian.service `Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl` (tetiği sudo'suz yapar).
+sudo cp deploy/oracle-a1/50-meridian-sprint.rules       /etc/polkit-1/rules.d/50-meridian-sprint.rules
+sudo systemctl restart polkit
 # ÇALIŞTIRMA BİTİ: rsync tabanlı dağıtım (dagit.sh / push_code_a1.sh) izinleri her zaman
 # taşımayabilir; `Type=oneshot` bir ExecStart çalıştırılamazsa birim 203/EXEC ile düşer ve bekçi
 # SESSİZCE ölür. Her koşuda garanti altına alınır (`.dash.env` izin sabitlemesiyle aynı sınıf).

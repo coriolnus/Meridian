@@ -1,0 +1,16 @@
+// Meridian sprint şablon birimi — worker (ubuntu) kendi antrenmanını setuid/sudo OLMADAN
+// tetikleyebilsin diye. GEREKÇE (2026-08-13, v241): meridian.service `NoNewPrivileges=true` ile
+// koşuyor (H3 güvenlik turu) ve bu bayrak sudo'nun root'a yükselmesini engelliyor — canlıda ölçüldü:
+//   sudo: The "no new privileges" flag is set, which prevents sudo from running as root.
+// Alternatif `NoNewPrivileges=no` olurdu ve H3'ün koruma kalemini geri alırdı; polkit yolu o tavizi
+// VERMEDEN yalnız bu birim ailesini açar (setuid ikilisi devreye girmez, yetki DBus'ta verilir).
+// KAPSAM DAR: yalnız `meridian-sprint@*` örnekleri, yalnız `ubuntu` kullanıcısı, yalnız manage-units.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        subject.user == "ubuntu") {
+        var unit = action.lookup("unit");
+        if (unit && unit.indexOf("meridian-sprint@") == 0) {
+            return polkit.Result.YES;
+        }
+    }
+});
