@@ -355,6 +355,13 @@ def catalog() -> list[dict]:
     return out
 
 
+# ÖRNEKLEM EŞİĞİ TEK SABİTTEN OKUNUR (v240, 2026-08-13). Eskiden `8` İKİ imza varsayılanında
+# (`recommend_from_attribution`, `axis2_diagnosis`) elle yazılıydı ve ÜÇÜNCÜ bir tüketici
+# (`record_recommendation`in örneklem künyesi) eklenirken üçüncü bir kopya doğacaktı — bu dosyanın
+# tarihi tam olarak "aynı eşik üç yerde, biri sessizce ayrışır" vakalarından ibaret (v238 eylem
+# sözlüğü, `_SCREENER_BY_SETUP` yıldızı). Değer DEĞİŞMEDİ: 8.
+MIN_N = 8
+
 # CF KOLUNUN ORANLARI (Rol 1 tasarım kararı, 2026-07-30 temizlik turu). Sabit DEĞİL, TÜREV:
 # ikisi de `min_n`den türer, yani eşik tek yerde ayarlanınca kol da onunla birlikte kayar.
 CF_REAL_FRACTION = 0.5    # cf-destekli kolun istediği ASGARİ gerçek örneklem = min_n'in yarısı
@@ -380,7 +387,83 @@ def _cf_arm(s: dict, min_n: int) -> bool:
     return n >= (min_n * CF_REAL_FRACTION) and n_cf >= (min_n * CF_SAMPLE_MULT)
 
 
-def recommend_from_attribution(min_n: int = 8) -> list[dict]:
+# =================================================================================================
+# ÖRNEKLEM KÜNYESİ (v240, 2026-08-13) — "güçlü canlı performans" cümlesi ÖLÇÜLEN n'e bağlanır
+# =================================================================================================
+# ÖLÇÜLEN ARIZA (operatör vakası, canlı): gelen kutusundaki bir Eksen-2 önerisi
+# `stockbee-exhaustion-hammer-screener` için "Strong live performance of 0.918 avg_r" diyordu; aynı
+# skill eksen-2 teşhis defterinde `ornek_yetersiz_cf_de_yetersiz` kovasında ve **n=1** (cf n=12,
+# cf ort 0,328). Yani TEK işlem "güçlü canlı performans" diye sunuluyordu.
+#
+# KÖK — ÖLÇÜLDÜ, VARSAYILMADI: öneri İKİ AYRI YOLDAN doğuyor ve örneklem eşiği YALNIZ BİRİNDE var.
+#   (a) DETERMİNİSTİK YOL: `recommend_from_attribution(min_n=MIN_N)` → iki kollu örneklem kapısı
+#       (gerçek `n >= min_n` VEYA `_cf_arm`). Bu yolun ürettiği rationale Türkçe ve sayı taşıyor.
+#   (b) LLM YOLU: hermes `HYP_SCHEMA.skill_recommendation` (skill+action+**serbest metin**
+#       rationale) → `reflect._submit_locked` → `record_recommendation`. Bu zincirde HİÇBİR
+#       örneklem kapısı YOK: `record_recommendation` yalnız (skill boş mu · PROTECTED mi · eylem
+#       sözlükte mi · kayıtta mı) sorar. `min_n` bu yolun hiçbir yerinde geçmiyor.
+#   Kanıtın kendisi defterde duruyor: `skill_recommendations.jsonl` satırı
+#   `pullback-screener/shadow` — kaynak `hermes:gemini`, metin "avg_r of -1.0 over **n=4** trades".
+#   n=4 < MIN_N=8; deterministik yol o satırı ÜRETEMEZDİ, LLM yolu sorgusuz yazdı.
+#   Üstelik hermes'in gördüğü kütüphane (`hermes._skill_library`) skill'i `n >= 1` ile "ölçülü"
+#   rafına koyuyor — yani n=1 modelin gözünde meşru bir kanıt satırıydı.
+#
+# HÜKÜM (bu tur): öneri SUSTURULMAZ — ölçüm gerçektir ve operatörün görmesi gerekir (v238'in
+# `lean_in` hükmüyle aynı çizgi). DEĞİŞEN: her öneri satırı, KAYIT ANINDA ÖLÇÜLEN künyeyi taşır
+# (n · avg_r · n_cf · cf_avg_r) ve künye eşiği geçmiyorsa bunu ADIYLA yazar. Künye ÖNERİ METNİNDEN
+# DEĞİL KATALOGDAN okunur: metni yazan taraf (LLM) aynı zamanda kendi kanıtını beyan edemez.
+ORNEK_YETERSIZ_ETIKET = "ÖRNEKLEM EŞİĞİN ALTINDA"
+
+#: Künyesi hiç yazılmamış (v240 öncesi) defter satırları için dürüst not. UYDURMA YASAĞI: eski
+#: satıra bugünkü ölçümü basmak, o öneri anında var olmayan bir kanıtı geçmişe yazmak olurdu.
+ORNEK_OLCULEMEDI_NOT = ("örneklem künyesi ÖLÇÜLEMEDİ — bu satır künye damgası eklenmeden "
+                        "(v240 öncesi) yazılmış; öneri anındaki n/cf değerleri kayıtta yok")
+
+
+def ornek_kunyesi(skill: str, min_n: int = MIN_N) -> dict:
+    """Bir skill'in ÖLÇÜLEN örneklem künyesi + eşik hükmü. Öneri metnine BAKMAZ.
+
+    `yeterli` alanı `recommend_from_attribution`ın kullandığı İKİ KOLLU kapının ta kendisidir
+    (gerçek `n >= min_n` VEYA `_cf_arm`) — üçüncü bir eşik yorumu açmamak için aynı `_cf_arm`
+    çağrılır. Ölçüm yapılamazsa (kayıt/atıf okunamadı) None DÖNMEZ, `olculemedi` yazar: "eşiği
+    geçemedi" ile "ölçemedik" aynı şey değildir ve ikisini tek `False`ta birleştirmek, bu depoda
+    yasak olan uydurmanın sessiz biçimidir.
+
+    KATALOG PARAMETRESİ YOK ve bu bilinçli: tek çağıran `record_recommendation` ve o da öneri
+    başına BİR kez çağırıyor. "İleride lazım olur" diye bir enjeksiyon kancası bırakmak, hedef
+    sözleşmesi 1'in (ölü mekanizma sıfır) tam olarak yasakladığı şey."""
+    try:
+        s = next((c for c in catalog() if c.get("name") == skill), None)
+    except Exception as e:                       # atıf defteri/kayıt okunamadı — künye ölçülemedi
+        return {"olculemedi": f"{type(e).__name__}: {e}"[:120]}
+    if s is None:
+        return {"olculemedi": f"katalogda kayıt yok: {skill!r}"}
+    kunye = {"n": s.get("n") or 0, "avg_r": s.get("avg_r"),
+             "n_cf": s.get("n_cf") or 0, "cf_avg_r": s.get("cf_avg_r")}
+    kunye["yeterli"] = bool((kunye["n"] >= min_n) or _cf_arm(s, min_n))
+    kunye["esik"] = {"min_n": min_n, "cf_gercek_asgari": min_n * CF_REAL_FRACTION,
+                     "cf_asgari": min_n * CF_SAMPLE_MULT}
+    return kunye
+
+
+def ornek_notu(kunye: dict | None) -> str:
+    """Künyeden operatörün okuyacağı TEK cümle. Üç yüzey (gelen kutusu · öğrenme kartı · beceri
+    sayfası) aynı cümleyi okumak zorunda olduğu için cümle burada kurulur, yüzeylerde değil."""
+    if not kunye:
+        return ORNEK_OLCULEMEDI_NOT
+    if kunye.get("olculemedi"):
+        return f"{ORNEK_OLCULEMEDI_NOT} ({kunye['olculemedi']})"
+    e = kunye.get("esik") or {}
+    ozet = (f"n={kunye.get('n')} · cf n={kunye.get('n_cf')} "
+            f"(eşik: gerçek {e.get('min_n')} ya da yarı-gerçek {e.get('cf_gercek_asgari')} "
+            f"+ cf {e.get('cf_asgari')})")
+    if kunye.get("yeterli"):
+        return f"örneklem eşiği GEÇİLDİ — {ozet}"
+    return (f"{ORNEK_YETERSIZ_ETIKET} — {ozet}. Metindeki değerlendirme bu örnekleme dayanmıyor; "
+            f"öneri KAYIT olarak durur, kanıt olarak sayılmaz.")
+
+
+def recommend_from_attribution(min_n: int = MIN_N) -> list[dict]:
     """Deterministic Axis-2 signal (no LLM): from per-skill attribution, flag skills to SHADOW (chronic
     negative avg_r over >= min_n trades, not protected, currently enabled) and skills to LEAN ON (strong
     positive avg_r). Advisory — surfaced for the operator; not auto-applied.
@@ -438,9 +521,23 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
         return False   # a genuinely OPEN pending rec exists — no duplicate. An old pending row that a
                        # LATER applied row superseded must NOT block forever (audit #37: after one
                        # apply cycle the same skill+action could never be recommended again).
+    # ÖRNEKLEM KÜNYESİ BURADA BASILIR — ÖNERİ ANINDA, ÖLÇÜMDEN (v240, 2026-08-13). Üç gerekçe:
+    #   (1) BU, İKİ YOLUN BİRLEŞTİĞİ TEK NOKTA. Deterministik üreteç de LLM yolu da buradan geçer
+    #       (`axis2_cycle` · `reflect._submit_locked` · `auto_shadow_from_evidence`); kapı burada
+    #       olmazsa örneklem sorusu yine iki ayrı yerde iki ayrı cevap alırdı — arızanın kökü bu.
+    #   (2) KÜNYE `rec`TEN OKUNMAZ. LLM yolunun `rec`i yalnız skill/action/serbest-metin taşır ve
+    #       `auto_shadow_from_evidence` cf değerlerini `n`/`avg_r` adlarıyla geçirir. Metni yazan
+    #       tarafın kendi kanıtını da beyan etmesi, ölçüyü iddiaya tabi kılardı.
+    #   (3) SNAPSHOT'TIR, CANLI SORGU DEĞİL: karar defterinin künyesi "öneri anındaki n" olmalı;
+    #       satır yarın okunduğunda n değişmiş olabilir ve o zaman öneri BAŞKA bir kanıta
+    #       dayanıyormuş gibi görünürdü.
+    # ÖNERİ YİNE KAYDEDİLİR (eşik altı olsa da): v238'in `lean_in` hükmüyle aynı çizgi — ölçüm
+    # gerçektir, operatörün görmesi gerekir; değişen, "güçlü" gibi SUNULMAMASIDIR.
+    kunye = ornek_kunyesi(skill)
     store.append_jsonl(SKILL_RECS, {
         "ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "skill": skill,
         "action": action, "rationale": rec.get("rationale", ""), "source": source,
+        "ornek": kunye, "ornek_yeterli": kunye.get("yeterli"), "ornek_notu": ornek_notu(kunye),
         "pending": True, "applied": False})
     return True
 
@@ -470,6 +567,13 @@ def pending_recommendations() -> list[dict]:
             r["uygulanabilir"] = eylem_uygulanabilir(r.get("action"))
             if not r["uygulanabilir"]:
                 r["uygulanamama_notu"] = UYGULANAMAZ_NOT
+            # KÜNYE DEFTERDEN GELİR, BURADA YENİDEN ÖLÇÜLMEZ (v240): bu fonksiyon her istekte üç
+            # yüzeyi besliyor ve burada `catalog()` çağırmak her gelen kutusu çizimine bir atıf
+            # hesabı bindirirdi. Künyesi olmayan ESKİ satır için değer UYDURULMAZ: `ornek_yeterli`
+            # None kalır ("ölçülemedi"), `False` ("eşiği geçemedi") DEĞİL.
+            if "ornek" not in r:
+                r["ornek"], r["ornek_yeterli"] = None, None
+                r["ornek_notu"] = ORNEK_OLCULEMEDI_NOT
             out.append(r)
     return out
 
@@ -722,7 +826,7 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
 AXIS2_FILE = "axis2_status.json"      # kadansın son koşusu (okuyan: analytics + api)
 
 
-def axis2_diagnosis(min_n: int = 8) -> dict:
+def axis2_diagnosis(min_n: int = MIN_N) -> dict:
     """ÜRETECİN SESSİZLİĞİNİN SATIR SATIR MUHASEBESİ — her skill hangi eşik kolunda elendi?
 
     "0 öneri" tek başına iki BAMBAŞKA hâli aynı gösterir: (1) kanıt var ama eşiği geçmiyor,

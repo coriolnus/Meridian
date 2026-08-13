@@ -104,6 +104,10 @@ You improve the system along TWO axes:
   add a `skill_recommendation` (shadow the loser, or lean on the winner). This is ADVISORY — the operator
   applies it — because the deterministic backtest does not execute the LLM skills, so it cannot gate them.
   Never recommend a protected skill (skill_library marks them). Omit the recommendation if nothing is clear.
+  SAMPLE FLOOR IS NOT OPTIONAL: `skill_library.sample_gate` carries the exact thresholds. A skill below
+  the floor has NOISE, not performance — do not call it "strong", "chronic" or "clear". If you write a
+  recommendation anyway, put the raw n and n_cf in the rationale and say the sample is below the floor.
+  Your rationale is stored next to the MEASURED n; a claim the numbers do not support is visible.
 
 Grounding rules:
 - Cite in `rationale` WHICH evidence item motivates the change (by its key name in the context or the
@@ -227,15 +231,34 @@ def _skill_library() -> dict:
             does = str(s.get("description") or "")
             if len(does) > SKILL_DOES_CAP:
                 does = does[:SKILL_DOES_CAP - 1] + "…"
+            # cf KATMANI DA GÖRÜNÜR (v240, 2026-08-13). Ölçülen arıza: model `n=1`lik bir skill için
+            # "Strong live performance of 0.918 avg_r" yazdı — çünkü gördüğü SATIRDA örneklemin
+            # yeterli olup olmadığını söyleyen HİÇBİR ŞEY yoktu ve karşı-olgusal katman (bu skill'de
+            # n_cf=12, cf ort 0,328) prompt'a hiç girmiyordu. `skills.catalog()` iki alanı ZATEN
+            # üretiyor; burada düşürmek, modeli tek işlemlik bir kanıtla baş başa bırakmaktı.
             olculu.append({"name": s["name"], "does": does, "on": s["enabled"],
-                           "avg_r": s["avg_r"], "n": s["n"], "needs": s["requires"],
+                           "avg_r": s["avg_r"], "n": s["n"],
+                           "n_cf": s.get("n_cf") or 0, "cf_avg_r": s.get("cf_avg_r"),
+                           "needs": s["requires"],
                            "protected": s["protected"], "shadow": s["shadow"]})
         else:
             olcusuz.append(s["name"])
+    # EŞİK PROMPT'TA YAZILI VE KAYNAKTAN OKUNUR. Sayıyı burada elle yazmak, `skills.MIN_N`
+    # değiştiği gün modele eski eşiği anlatmak olurdu (bu dosyanın `_gate_anchor` dersi birebir aynı).
+    esik = {"min_n": skills.MIN_N,
+            "cf_arm": {"real_min": skills.MIN_N * skills.CF_REAL_FRACTION,
+                       "cf_min": skills.MIN_N * skills.CF_SAMPLE_MULT}}
     return {"measured_or_protected": olculu,
             "unmeasured": olcusuz,
+            "sample_gate": esik,
             "note": "unmeasured skills have n=0 live trades: no evidence exists to shadow or lean on "
-                    "them, so only their names are listed. Axis-2 recommendations must cite avg_r/n."}
+                    "them, so only their names are listed. Axis-2 recommendations must cite avg_r/n. "
+                    f"SAMPLE FLOOR (`sample_gate`): a skill clears it only with n >= {esik['min_n']} "
+                    f"real trades, OR n >= {esik['cf_arm']['real_min']:g} real AND n_cf >= "
+                    f"{esik['cf_arm']['cf_min']:g} counterfactual rows. Below the floor the avg_r is "
+                    "NOISE, not performance: never call it 'strong' or 'chronic'. You may still note "
+                    "it, but you must write the raw n and n_cf in the rationale and say the sample is "
+                    "below the floor — the operator's ledger stamps the measured n either way."}
 
 
 def _claude_text(user: str, *, note: str, schema: dict | None = None,

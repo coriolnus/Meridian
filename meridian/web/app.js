@@ -995,8 +995,8 @@ const EYLEMLER = new Set([
   "ackAlerts", "ackReject", "ackRejectAll", "addPoolKey", "alpacaSubmit",
   "olayAc",
   "applySkillRec", "cikisYap", "clearSecret", "closeDrawer", "denetimAra", "filterLessons", "go",
-  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kbdOverlay", "kmMod",
-  "korumaKur", "mktChip",
+  "hermesBackfill", "hermesCtl", "hermesReflect", "intradayArm", "kararKaydet", "kbdOverlay",
+  "kmMod", "korumaKur", "mktChip",
   "mktPaint", "mktSort", "notifyTest", "opCancelOpen", "opFlatten", "opLearnHaltToggle",
   "opSoftHalt", "planOnayla", "saveSecret", "skillRev", "sprintStart", "sprintStop", "temaDegistir",
   "testKey", "toggleHalt", "toggleKs",
@@ -1199,7 +1199,12 @@ const EV_TR = {
     + ` (L${e.seviye ?? "?"} · ${e.yol || "yol yazılmamış"})`,
   approval_missing_refused: e => `ONAY KAPISI REDDETTİ — ${e.neden
     || `[${e.kimlik || "?"}] için defterde 'approve' satırı yok (karar: ${e.karar || "yok"})`}`,
+  // `davranissal` v240'ta eklendi: aynı defterde artık İKİ sınıf satır var — bir uygulama kapısını
+  // bağlayan karar (`rev:`/`rec:`) ve hiçbir şeyi bağlamayan KARAR KAYDI (`kayit:`). Olay akışında
+  // ikisi aynı cümleyle akarsa, kayıt-önerisine verilen bir "Kabul" sonradan "uygulandı" diye
+  // okunur — bu turun kapattığı yanlış-güven sınıfının ta kendisi.
   approval_decision: e => `Onay defterine karar yazıldı: ${e.approval_id || "?"} → ${e.decision || "?"}`
+    + (e.davranissal === false ? " (kayıt-önerisi — davranış değişmez)" : "")
     + ` · ${e.has_reason ? "gerekçeli" : "gerekçesiz"}`,
   // v238 (2026-08-13): reddedilen beceri eylemi. Ekran mesajı ANLIKTIR (kutu bir sonraki çizimde
   // silinir) ve operatör o an başka bir sekmede olabilir — "bastım, hiçbir şey olmadı" vakası
@@ -9152,6 +9157,64 @@ function line(pts) {
 // ================= ONAYLAR (Kararlar sayfasının alt yüzeyi) =================
 // Ayrı sayfayken L0'da yapısal olarak boştu ve kullanıcıya "bu nav maddesini yok say" öğretiyordu.
 // Artık adayların hemen altında: üstte sistemin ÖNERDİĞİ, altta senin ONAYINI bekleyen.
+// ---- ÖRNEKLEM KÜNYESİ + KARAR DAMGASI (v240, 2026-08-13) -------------------------------------
+// ÖLÇÜLEN KUSUR (canlı): gelen kutusundaki Eksen-2 önerisi "Strong live performance of 0.918
+// avg_r" diyordu; aynı skill eksen-2 teşhisinde `ornek_yetersiz_cf_de_yetersiz` kovasında ve n=1.
+// Metni LLM yazıyor (hermes `skill_recommendation`), örneklem eşiği ise yalnız DETERMİNİSTİK
+// üreteçte vardı — iki ayrı yol, tek ekran. Pano metni DÜZELTMEZ (uydurma olurdu): sunucunun
+// ÖLÇTÜĞÜ künyeyi metnin YANINA koyar, iddia ile ölçü ayrı ayrı okunur.
+// ÜÇ HÂL AYRI: yeterli (nötr) · yetersiz (uyarı) · ölçülemedi (uyarı DEĞİL, bilgi) — "eşiği
+// geçemedi" ile "ölçemedik" aynı tonda gösterilirse ikisi de inandırıcılığını kaybeder.
+function ornekSatiri(it) {
+  const o = it.ornek, notu = it.ornek_notu;
+  if (!notu && !o) return "";
+  const sayi = o ? `n=${o.n ?? "—"}${o.avg_r != null ? ` · ort ${trn(o.avg_r, 3)}R` : ""}`
+                   + ` · cf n=${o.n_cf ?? "—"}${o.cf_avg_r != null ? ` · cf ort ${trn(o.cf_avg_r, 3)}R` : ""}` : "";
+  const kls = it.ornek_yeterli === false ? "neg" : (it.ornek_yeterli == null ? "mut" : "pos");
+  return `<br><span class="hint" style="font-size:11px">Ölçülen örneklem: <b class="${kls}">${
+    esc(sayi || "ölçülemedi")}</b>${notu ? ` — ${esc(notu)}` : ""}</span>`;
+}
+
+const KARAR_TR = { approve: "KABUL", reject: "RET", bozuk: "OKUNAMIYOR" };
+function kararDamgasi(kk) {
+  if (!kk) return "";
+  if (kk.okunamadi)
+    return `<br><span class="hint" style="font-size:11px"><b class="neg">Karar defteri OKUNAMADI</b>
+      (${esc(kk.okunamadi)}) — bu "karar yok" DEĞİL, ölçüm yok demektir.</span>`;
+  if (!kk.karar)
+    return `<br><span class="hint" style="font-size:11px">${esc(kk.not || "")} · kimlik
+      <code>${esc(kk.id)}</code></span>`;
+  const k = kk.kunye || {}, o = k.ornek || null;
+  return `<br><span class="hint" style="font-size:11px">Karar: <b class="${
+    kk.karar === "approve" ? "pos" : "neg"}">${esc(KARAR_TR[kk.karar] || kk.karar)}</b>${
+    kk.ts ? ` · ${esc(String(kk.ts).replace("T", " ").slice(0, 16))}` : ""}${
+    o ? ` · karar anındaki künye: n=${esc(String(o.n ?? "—"))} · cf n=${esc(String(o.n_cf ?? "—"))}` : ""}${
+    kk.gerekce ? ` · “${esc(kk.gerekce)}”` : ""} — ${esc(kk.not || "")}</span>`;
+}
+
+// Kararı deftere yazar. DAVRANIŞ DEĞİŞTİRMEZ ve bu, düğmenin yanındaki cümlede de yazılı olmalı:
+// operatör "onayladım, artık uygulanıyor" sanmamalı. Yanıtın `davranissal` alanı SUNUCUDAN gelir —
+// panonun kimlik önekini kendi ayrıştırıp hüküm vermesi, aynı sorunun ikinci kez cevaplanması olurdu.
+window.kararKaydet = async (id, decision) => {
+  const kutu = eylemKutusu(id);
+  if (kutu) kutu.innerHTML = `<span class="mut">kayda geçiriliyor…</span>`;
+  try {
+    const r = await apiFetch("/api/approvals/" + encodeURIComponent(id), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision, reason: "pano · karar kaydı" }) }).then(x => x.json());
+    if (kutu) kutu.innerHTML = `<span class="${decision === "approve" ? "pos" : "neg"}">${
+      esc(KARAR_TR[decision] || decision)} deftere yazıldı</span>${
+      r && r.davranissal === false ? ` <span class="mut">— ${esc(r.not || "")}</span>` : ""}`;
+  } catch (e) {
+    eylemHatasiYaz(kutu, e, "karar deftere YAZILMADI — kayıt yapılmadı, öneri hâlâ kararsız.");
+    return;   // TAZELEME YOK: yeniden çizim mesajı siler ve ret yine görünmez olurdu (v219 dersi)
+  }
+  // `_JC.clear()` BURADA YOK ve bu bilinçli: `apiFetch` GET olmayan her istekte önbelleği zaten
+  // boşaltıyor (app.js:171). İkinci bir temizlik, "önbelleği kim boşaltır" sorusuna ikinci bir
+  // cevap yazmak olurdu — bu turda kapattığımız sınıfın küçük hali.
+  await _aktifSayfayiCiz();
+};
+
 RENDER.onaylar = async () => {
   // Teşhis ucu merdivenin "neden L0?" satırı için okunur (faz6 kilit zinciri). Ön-yüklü + 15 sn
   // önbellekli; düşerse null gelir ve o satır dürüstçe hiç çizilmez.
@@ -9172,12 +9235,23 @@ RENDER.onaylar = async () => {
         return `<button class="dlbtn" data-act="applySkillRec" data-a1="${esc(it.skill)}" data-a2="${esc(it.action)}">Uygula</button>`;
       return "";
     }).join(" ");
+    // KARAR KAYDI DÜĞMESİ (v240): uygulanabilir karşılığı OLMAYAN öneri artık "görülüp geçilen"
+    // bir satır değil. Düğmeler `it.actions`tan DEĞİL `it.karar_kaydi`ndan doğar — `actions`
+    // UYGULAMA eylemlerinin listesidir ve oraya kayıt düğmesi koymak, v238'de kapattığımız
+    // "uygulanamaz eylemi uygulanabilir gibi sunma" kusurunu geri getirirdi.
+    const kk = it.karar_kaydi;
+    const kararBtn = kk && !kk.karar
+      ? `<button class="dlbtn" data-act="kararKaydet" data-a1="${esc(kk.id)}" data-a2="approve">Kabul · kayda geç</button>
+         <button class="dlbtn" style="border-color:var(--red);color:var(--red)" data-act="kararKaydet" data-a1="${esc(kk.id)}" data-a2="reject">Ret · kayda geç</button>`
+      : "";
     return `<div class="trow" style="grid-template-columns:96px 1fr auto;align-items:start">
       <span class="tag ${kls}">${lbl}</span>
       <span><b style="font-size:13px">${esc(it.title)}</b><br><span class="chain">${esc(it.evidence || "")}</span>
+        ${ornekSatiri(it)}
         ${it.note ? `<br><span class="hint" style="font-size:11px">${esc(it.note)}</span>` : ""}
-        ${it.skill ? `<p class="hint" data-eylem-msg="${esc(it.skill)}" style="margin:6px 0 0"></p>` : ""}</span>
-      <span style="display:flex;gap:6px">${btns}</span></div>`;
+        ${kk ? kararDamgasi(kk) : ""}
+        ${it.skill ? `<p class="hint" data-eylem-msg="${esc(kk ? kk.id : it.skill)}" style="margin:6px 0 0"></p>` : ""}</span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${btns}${kararBtn}</span></div>`;
   }).join("");
   // ---- ONAYINI BEKLEYEN REVIEW PLANLARI (v195-a · UX denetimi B4) ----------------------------
   // ÖLÇÜLEN KUSUR: bölümün soru cümlesi "şu an benim onayımı bekleyen ne var?" idi ama yüzey
@@ -9567,11 +9641,17 @@ RENDER.hermes = async () => {
       : (rc.action === "shadow" || rc.action === "activate");
     const notu = rc.uygulanamama_notu
       || "Bilgi amaçlı — bu araca daha çok yaslan; uygulanacak bir düğme YOK (davranışsal karşılığı yok).";
+    // ÖRNEKLEM + KARAR DAMGASI BURADA DA OKUNUR (v240) ama DÜĞME YOK: karar yazma yolu TEK
+    // yerdedir (Onaylar → gelen kutusu), tıpkı plan onayının tek yolu gibi. İki yüzey aynı
+    // gerçeği göstermeli — damga yalnız gelen kutusunda olsaydı, operatör kararını verdikten
+    // sonra bu kart aynı öneriyi hâlâ kararsız gösterirdi.
     return `<div class="hyp"><div class="top"><span class="v">${esc(rc.skill)}</span><span class="st ${rc.action === 'shadow' ? 's-rb' : 's-ok'}">${esc(ACT_TR[rc.action] || rc.action)}</span></div>
       <p>${esc(rc.rationale || '')}</p>
+      <p class="hint" style="margin:4px 0 0;font-size:11px">${ornekSatiri(rc).replace(/^<br>/, "")}</p>
       ${applyable ? `<button class="dlbtn" style="margin-top:8px" data-act="applySkillRec" data-a1="${esc(rc.skill)}" data-a2="${esc(rc.action)}">${esc(ACT_TR[rc.action])} · uygula</button>
         <p class="hint" data-eylem-msg="${esc(rc.skill)}" style="margin:6px 0 0"></p>`
-                  : `<p class="hint" style="margin-top:4px">${esc(notu)}</p>`}</div>`;
+                  : `<p class="hint" style="margin-top:4px">${esc(notu)}${
+                      rc.karar_kaydi ? `${kararDamgasi(rc.karar_kaydi)}<br><span style="font-size:11px">Karar düğmesi <b>Onaylar → Gelen kutusu</b>ndadır (tek karar yolu).</span>` : ""}</p>`}</div>`;
   }).join("");
   $("ogrenme-eylem").innerHTML = eylemSeridi(d);
   // MLOPS + ÖĞRENME ÇARKI BURAYA GELDİ (S2R-2): eski Operasyon'un "Bölüm 3 · MLOps & Hermes" ve

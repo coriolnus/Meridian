@@ -1469,10 +1469,44 @@ def api_skills(request: Request):
 # "riski azaltan eylem" istisnası bu aileye HİÇ uygulanmaz; iki yön de operatör kararıdır ve iki
 # yön de kayıtlı olmalıdır. `shadow`u muaf tutmak, gelen kutusunun önerilerinin neredeyse tamamı
 # `shadow` olduğu için kapıyı ATIL bırakırdı.
+#
+# ---- KARAR KAYDI (v240, 2026-08-13) — uygulanabilir karşılığı OLMAYAN öneriye KARAR YOLU --------
+# OPERATÖR VAKASI: v239'da `lean_in` düğmesi kaldırıldı (ölçüldü: registry'de karşılık yok, motor
+# kayıt defterini okumuyor). Doğruydu ama YARIMDI — öneri gelen kutusunda GÖRÜNÜYOR, operatörün
+# yapabileceği HİÇBİR ŞEY yok. "Butonu işler hale getireceğine komple kaldırmışsın, bunu nasıl
+# onaylayacağım?" Yani eksik olan davranış değil KARAR YOLUYDU.
+#
+# İKİNCİ ONAY YOLU AÇILMADI — ve bu bilinçli. Karar aynı deftere (`approvals.jsonl`), aynı uçtan
+# (`POST /api/approvals/{id}`), aynı kimlik üreticisinden (`onay_kimligi`) yazılır. DEĞİŞEN TEK ŞEY
+# KİMLİK UZAYI: `kayit:{skill}:{action}`. Neden AYRI uzay, neden `rec:` DEĞİL:
+#   (1) `rec:{skill}` DİZGESİNİ L1 UYGULAMA KAPISI OKUYOR (`_onay_kapisi` ← `POST /api/skills/apply`).
+#       Bugün L0'da `lean_in` için yazılacak bir `approve` satırı, yarın L1'de aynı skill'e gelen
+#       bir `shadow` önerisinin uygulamasını AÇARDI — çünkü kapının kendi beyanı şu: "onay KİMLİĞE
+#       bağlıdır, öneri ÖRNEĞİNE değil". Davranışsal olmayan bir kaydın davranışsal bir kapıyı
+#       açması, bu bloğun kapatmak için var olduğu kusurun ta kendisi olurdu.
+#   (2) EYLEM DE KİMLİĞE GİRER (`{skill}:{action}`). Kayıt uzayını hiçbir kapı okumadığı için
+#       burada daha SIKI olabiliriz: `lean_in`e verilen karar, aynı skill'in `shadow` önerisini
+#       "karar verilmiş" göstermez. Gelen kutusunda yanlış bir "hallolmuş" damgası, kararı
+#       kaybetmekle aynı şeydir.
+# BU KAYIT HİÇBİR ŞEYİ UYGULAMAZ ve bunu hem API yanıtı hem pano AÇIKÇA yazar (`KAYIT_KARARI_NOT`).
 APPROVALS_LEDGER = "approvals.jsonl"
 
 # Gelen kutusu tür kodu → kimlik öneki. `api_approvals` bu sözlükten geçer; kapı da öyle.
-ONAY_ONEK = {"arming": "arming", "skill_revision": "rev", "skill_rec": "rec"}
+ONAY_ONEK = {"arming": "arming", "skill_revision": "rev", "skill_rec": "rec",
+             "skill_rec_kayit": "kayit"}
+
+#: Bir UYGULAMA KAPISININ okuduğu önekler — yani kararı yazmak yarın bir icrayı AÇAN kimlikler.
+#: Ölçüm (çağrı yeri taraması): `_onay_kapisi` yalnız iki yerden çağrılıyor — `POST /api/skills/
+#: revision` (`rev:`) ve `POST /api/skills/apply` (`rec:`). `arming:` ve `kayit:` uzaylarını
+#: HİÇBİR kapı okumaz. Bu küme elle yazılı olmak zorunda (statik graf "hangi önek okunuyor"u
+#: göremez) ve bu yüzden bir TESTLE çivilenir: kaynak `_onay_kapisi(onay_kimligi(...))` çağrıları
+#: bu kümeden başka bir tür kullanırsa kırmızı verir.
+KAPI_OKUYAN_ONEKLER = frozenset({"rev", "rec"})
+
+#: Karar kaydının operatöre kurduğu TEK cümle — API yanıtında da panoda da BİREBİR aynı okunur.
+#: İki yerde iki cümle, yarın birinin "uygulandı" imâsı taşımasıyla biterdi.
+KAYIT_KARARI_NOT = ("kayıt-önerisi; karar defterde, davranış DEĞİŞMEZ — gerçek aksiyon knob/kapı "
+                    "düzeyindedir (bkz. motor_ici_esik_asan)")
 
 
 def onay_kimligi(tur: str, ad: str) -> str:
@@ -1510,12 +1544,34 @@ def _onay_defteri_karari(kimlik: str) -> dict:
     `jsonl_rows_skipped` uyarısı bırakır — o sınıfın izi orada, bu kapının gördüğü küme ise
     ayrıştırılabilmiş ama şeması bozuk satırlardır.
     """
+    t = _defter_tarama()
+    if t["okunamadi"]:
+        return {"karar": None, "bozuk": 0, "atfedilemeyen": 0, "okunamadi": t["okunamadi"]}
+    k = t["kararlar"].get(kimlik) or {"karar": None, "bozuk": 0}
+    return {"karar": k["karar"], "bozuk": k["bozuk"],
+            "atfedilemeyen": t["atfedilemeyen"], "okunamadi": None}
+
+
+def _defter_tarama() -> dict:
+    """Defterin TEK GEÇİŞLİ taraması: `{"kararlar": {id: {karar, bozuk, ts, reason, satir}},
+    "atfedilemeyen": int, "okunamadi": str|None}`.
+
+    NEDEN AYRI BİR FONKSİYON (v240, 2026-08-13): karar kaydı ile birlikte defterin İKİNCİ bir
+    okuyucusu doğdu — gelen kutusu artık her öğe için "bu öneriye karar verilmiş mi" sorusunu
+    soruyor. O soruyu ikinci bir döngüyle cevaplasaydık, deponun en pahalı hatası olan
+    "aynı defteri iki yerde iki farklı yorumlayan iki okuyucu" sınıfını KAPI ile GÖRÜNÜM arasında
+    açmış olurduk (kapı "reject" derken pano "bekliyor" gösterebilirdi). Döngü TEK; `_onay_
+    defteri_karari` bu taramadan TÜRER ve semantiği birebir korunur (dosya sırası = zaman sırası,
+    son satır kazanır, bozuk `decision` = "bozuk", atfedilemeyen satır kimseye onay vermez).
+
+    GÖRÜNÜM TARAFI KARAR VERMEZ: bu fonksiyon yalnız OKUR. Kapı hâlâ `_onay_kapisi`dir ve
+    fail-closed davranışı orada; buradan dönen `ts`/`reason`/`satir` alanları SADECE ekrana çıkar.
+    """
     try:
         satirlar = store.read_jsonl(APPROVALS_LEDGER)
     except Exception as e:
-        return {"karar": None, "bozuk": 0, "atfedilemeyen": 0,
-                "okunamadi": f"{type(e).__name__}: {e}"[:120]}
-    karar, bozuk, atfedilemeyen = None, 0, 0
+        return {"kararlar": {}, "atfedilemeyen": 0, "okunamadi": f"{type(e).__name__}: {e}"[:120]}
+    kararlar, atfedilemeyen = {}, 0
     for r in satirlar:
         if not isinstance(r, dict):
             atfedilemeyen += 1
@@ -1524,15 +1580,93 @@ def _onay_defteri_karari(kimlik: str) -> dict:
         if not isinstance(rid, str) or not rid:
             atfedilemeyen += 1
             continue
-        if rid != kimlik:
-            continue
+        k = kararlar.setdefault(rid, {"karar": None, "bozuk": 0, "ts": None, "reason": "",
+                                      "satir": None})
         d = r.get("decision")
         if not isinstance(d, str) or d.strip().lower() not in ("approve", "reject"):
-            bozuk += 1
-            karar = "bozuk"
+            k["bozuk"] += 1
+            k["karar"] = "bozuk"
             continue
-        karar = d.strip().lower()
-    return {"karar": karar, "bozuk": bozuk, "atfedilemeyen": atfedilemeyen, "okunamadi": None}
+        k["karar"] = d.strip().lower()
+        k["ts"], k["reason"], k["satir"] = r.get("ts"), str(r.get("reason") or "")[:200], r
+    return {"kararlar": kararlar, "atfedilemeyen": atfedilemeyen, "okunamadi": None}
+
+
+def kayit_karar_kimligi(skill: str, action: str) -> str:
+    """Karar-kaydı kimliği: `kayit:{skill}:{action}`. Üretim TEK yerde (`onay_kimligi`) kalır —
+    gelen kutusu, yazma ucu ve pano AYNI dizgeyi görmek zorunda (v215'in kimlik dersi)."""
+    return onay_kimligi("skill_rec_kayit", f"{skill}:{action}")
+
+
+def _oneriler_karar_damgali() -> list[dict]:
+    """Bekleyen Eksen-2 önerileri + (uygulanabilir karşılığı olmayanlar için) KARAR DAMGASI.
+
+    NEDEN BURADA DA: öğrenme kartı ile onay gelen kutusu AYNI öneri listesini gösteriyor. Karar
+    damgası yalnız gelen kutusunda olsaydı, operatör kararını verdikten sonra öğrenme kartında
+    aynı satır hâlâ kararsız görünürdü — "iki yüzey aynı gerçeği farklı anlatır" sınıfı.
+    DÜĞME YİNE TEK YERDE (gelen kutusu): burası damgayı OKUR, karar YAZDIRMAZ — `planOnayla`nın
+    tek-onay-yolu deseniyle aynı (app.js `planKart` beyanı)."""
+    from . import skills as _sk
+    recs = _sk.pending_recommendations()
+    if not any(not r.get("uygulanabilir") for r in recs):
+        return recs                                   # defteri boşuna okuma
+    t = _defter_tarama()
+    out = []
+    for r in recs:
+        if not r.get("uygulanabilir"):
+            r = {**r, "karar_kaydi": _karar_kaydi(str(r.get("skill")), str(r.get("action")),
+                                                  tarama=t)}
+        out.append(r)
+    return out
+
+
+def _kayit_karar_kunyesi(approval_id: str) -> dict:
+    """`kayit:{skill}:{action}` kimliği için KARAR ANINDAKİ kanıt künyesi (skill · action · öneri
+    satırının örneklem damgası). Kararın neye karşı verildiği defterden okunabilmeli: aynı öneri
+    yarın başka bir n ile yeniden doğduğunda operatör "ben neyi reddetmiştim?" diyebilmeli.
+
+    KÜNYE ÖNERİ SATIRINDAN GELİR, YENİDEN ÖLÇÜLMEZ: `skills.record_recommendation` künyeyi öneri
+    ANINDA basıyor; burada `catalog()`u yeniden çağırmak, karar anındaki (daha yeni) bir ölçümü
+    "öneri kanıtı" diye kaydetmek olurdu. Öneri bulunamazsa UYDURULMAZ: `bulunamadi` yazılır."""
+    ad = str(approval_id).split(":", 1)[1] if ":" in str(approval_id) else ""
+    skill, _, action = ad.partition(":")
+    try:
+        from . import skills as _sk
+        rec = next((r for r in _sk.pending_recommendations()
+                    if str(r.get("skill")) == skill and str(r.get("action")) == action), None)
+    except Exception as e:
+        return {"skill": skill, "action": action,
+                "olculemedi": f"{type(e).__name__}: {e}"[:120]}
+    if rec is None:
+        return {"skill": skill, "action": action,
+                "bulunamadi": "karar anında bu öneri BEKLEYEN listesinde değildi — künye yok"}
+    return {"skill": skill, "action": action, "rationale": str(rec.get("rationale") or "")[:200],
+            "ornek": rec.get("ornek"), "ornek_yeterli": rec.get("ornek_yeterli"),
+            "oneri_ts": rec.get("ts"), "kaynak": rec.get("source")}
+
+
+def _karar_kaydi(skill: str, action: str, *, tarama: dict | None = None) -> dict:
+    """Bir öneri için KARAR KAYDI bloğu: kimlik + (varsa) verilmiş karar + künyesi.
+
+    "BEKLİYOR" DEĞİL "KARAR VERİLMİŞ" (brief madde 3): karar verilmiş bir öneri gelen kutusunda
+    duruyor olabilir (üreteç aynı öneriyi yarın yeniden yazabilir) ama BEKLİYOR gibi SAYILMAZ ve
+    damgasıyla görünür. Aynı öneri tekrar üretilirse operatör önceki kararını ve o günkü künyeyi
+    tekrar okur — aynı satırı iki kez incelemek zorunda kalmaz.
+
+    DEFTER OKUNAMAZSA KARAR "YOK" SAYILIR ve bu YÖN BİLİNÇLİ: görünüm tarafında fail-closed
+    demek "kararı unut, yine sor" demektir (kaybolan karar > gereksiz soru). Kapı tarafındaki
+    fail-closed ile karışmasın diye `okunamadi` alanı çıktıda AÇIKÇA taşınır."""
+    t = tarama if tarama is not None else _defter_tarama()
+    kimlik = kayit_karar_kimligi(skill, action)
+    k = (t.get("kararlar") or {}).get(kimlik) or {}
+    satir = k.get("satir") or {}
+    return {"id": kimlik, "karar": k.get("karar"), "ts": k.get("ts"),
+            "gerekce": k.get("reason") or "",
+            # KARAR ANINDAKİ KÜNYE — kararın hangi kanıta karşı verildiği. Yazan taraf
+            # (`api_approve`) ölçer; burada yalnız okunur, YENİDEN ÖLÇÜLMEZ.
+            "kunye": satir.get("kunye"),
+            "okunamadi": t.get("okunamadi"),
+            "davranissal": False, "not": KAYIT_KARARI_NOT}
 
 
 # Kapının reddederken yazdığı gerekçeler. YASA 4: her sessiz-olmayan ret ≥20 karakter gerekçe
@@ -3937,7 +4071,7 @@ def api_hermes(request: Request):
             "spend_detay": _spend_detay(),
             "autostart": os.environ.get("MERIDIAN_AUTOSTART_HERMES") == "1",
             "recent": list(reversed(hyps))[:8],
-            "skill_recommendations": skills.pending_recommendations(),   # Axis-2 (operator applies)
+            "skill_recommendations": _oneriler_karar_damgali(),          # Axis-2 (operator applies)
             "skill_count": len(skills.catalog()),
             "learning": analytics.learning_scorecard(),                  # honest "is it learning?" scorecard
             "scheduler": __import__("meridian.scheduler", fromlist=["status"]).status(),
@@ -4758,6 +4892,9 @@ def api_approvals(request: Request):
                       "evidence": f"{esc_ev(r.get('rationale'))} · kanıt n={ev.get('n')} ort {ev.get('avg_r')}R",
                       "actions": ["apply", "reject"], "skill": r["skill"]})
     from . import skills as _sk2
+    _tarama = None                      # TEK okuma, TEMBEL: her öneri için defteri yeniden taramak
+                                        # aynı yanıtın içinde N farklı okuma anı demek olurdu; hiç
+                                        # kayıt-önerisi yoksa da defter boşuna okunmamalı
     for rec in _sk2.pending_recommendations():
         # EYLEM LİSTESİ ARTIK ÖLÇÜLÜR (v238, 2026-08-13). Eskiden HER Eksen-2 önerisi koşulsuz
         # `actions: ["apply"]` taşıyordu; `lean_in` önerisi için de bir "Uygula" düğmesi çiziliyor,
@@ -4768,12 +4905,26 @@ def api_approvals(request: Request):
         _uyg = bool(rec.get("uygulanabilir", _sk2.eylem_uygulanabilir(rec.get("action"))))
         _oge = {"type": "skill_rec", "id": onay_kimligi("skill_rec", str(rec.get("skill"))),
                 "title": f"Eksen-2: {rec.get('skill')} → {rec.get('action')}",
+                # ÖRNEKLEM KANITIN YANINDA (v240): kanıt satırı öneri METNİDİR ve o metni LLM
+                # yazıyor olabilir ("Strong live performance of 0.918 avg_r" — canlı vaka, n=1).
+                # Ölçülen künye metnin YANINA konur, metnin İÇİNE değil: iddia ile ölçü ayrı
+                # okunabilmeli, yoksa "düzeltilmiş metin" ile "doğru metin" karışır.
                 "evidence": rec.get("rationale") or "",
+                "ornek": rec.get("ornek"), "ornek_yeterli": rec.get("ornek_yeterli"),
+                "ornek_notu": rec.get("ornek_notu"),
                 "actions": ["apply"] if _uyg else [],
                 "skill": rec.get("skill"), "action": rec.get("action"),
                 "uygulanabilir": _uyg}
         if not _uyg:
             _oge["note"] = rec.get("uygulanamama_notu") or _sk2.UYGULANAMAZ_NOT
+            # KARAR YOLU (v240): uygulanabilir karşılığı olmayan öneri artık "görülüp geçilen" bir
+            # satır değil — operatör KABUL/RET diyebilir ve karar deftere düşer. `actions` BOŞ
+            # KALIR (orası UYGULAMA eylemlerinin listesi; oraya kayıt düğmesi koymak, v238'de
+            # kapattığımız "uygulanabilir gibi sunma" kusurunu geri getirirdi).
+            if _tarama is None:
+                _tarama = _defter_tarama()
+            _oge["karar_kaydi"] = _karar_kaydi(str(rec.get("skill")), str(rec.get("action")),
+                                               tarama=_tarama)
         inbox.append(_oge)
     lvl = config.limits()["autonomy_level"]
     return {"level": lvl, "inbox": inbox,
@@ -4873,7 +5024,20 @@ def _inbox_count(planlar: list | None = None) -> int:
         ar = store.read_json("arming_report.json", {}) or {}
         n = sum(1 for m2 in (ar.get("measurements") or {}).values() if m2.get("status") == "gate_passed")
         n += len(_se.pending_drafts())
-        n += len(_sk3.pending_recommendations())
+        # KARAR VERİLMİŞ ÖNERİ ROZETİ ŞİŞİRMEZ (v240): rozet "senden İŞ isteyen karar" sayar.
+        # Operatör bir kayıt-önerisine Kabul/Ret dedikten sonra o satır gelen kutusunda damgasıyla
+        # DURUR (üreteç aynı öneriyi yeniden yazabilir, karar geçmişi görünür kalmalı) ama artık iş
+        # istemez. Sayım gelen kutusuyla AYNI yardımcıdan (`_karar_kaydi`) geçer; ölçütü burada
+        # yeniden yazsaydık kart ile rozet aynı gün ayrışırdı (`_onay_bekleyen_damgala` dersi).
+        _tarama = None                             # tembel: kayıt-önerisi yoksa defter okunmaz
+        for _rec in _sk3.pending_recommendations():
+            if _rec.get("uygulanabilir"):
+                n += 1
+                continue
+            if _tarama is None:
+                _tarama = _defter_tarama()
+            _kk = _karar_kaydi(str(_rec.get("skill")), str(_rec.get("action")), tarama=_tarama)
+            n += 0 if _kk["karar"] in ("approve", "reject") else 1
         return n_plan + n
     except Exception as e:
         # YASA 4 (2026-07-21): burada sessizce 0 dönmek, operatörün gelen kutusunda BEKLEYEN kararlar
@@ -4966,21 +5130,52 @@ async def api_approve(approval_id: str, request: Request):
 
     `decision` yalnız `approve` ya da `reject` olarak OKUNUR. Uç bunu burada DAYATMAZ (defter bir
     olay kaydıdır ve operatörün yazdığı ham karar aynen saklanır); okunamayan bir karar kapıda
-    "onay YOK" sayılır ve nedeni olay akışına düşer (`approval_missing_refused`)."""
+    "onay YOK" sayılır ve nedeni olay akışına düşer (`approval_missing_refused`).
+
+    L0 İSTİSNASI — KAPI-BAĞLAMAYAN KİMLİKLER (v240, 2026-08-13). L1+ kısıtı BURADA DEĞİL, kısıtın
+    KORUDUĞU ŞEYDE anlamlıdır: bir `approve` satırı L1'de bir UYGULAMA KAPISINI açar
+    (`_onay_kapisi` ← `rev:` / `rec:`), yani L0'da yazılan karar yarın icraya dönüşebilirdi.
+    `KAPI_OKUYAN_ONEKLER` DIŞINDAKİ kimlikleri (bugün `kayit:` ve `arming:`) HİÇBİR kapı okumaz —
+    orada 403'ün koruduğu bir şey YOKTUR ve 403, sistem L0 olduğu sürece karar kaydını tümüyle
+    imkânsız kılıyordu (operatörün itirazının tam adresi: öneri görünür, karar yolu yok).
+    TANINMAYAN ÖNEK L0'DA HÂLÂ 403: bağlamadığını KANITLAYAMADIĞIMIZ bir uzaya karar yazdırmak,
+    fail-closed'ın tersi olurdu."""
     _auth(request)
-    if config.limits()["autonomy_level"] < 1:
+    _onek = str(approval_id).split(":", 1)[0]
+    _baglayici = _onek in KAPI_OKUYAN_ONEKLER
+    _kapi_disi = _onek in (set(ONAY_ONEK.values()) - set(KAPI_OKUYAN_ONEKLER))
+    if config.limits()["autonomy_level"] < 1 and not _kapi_disi:
         raise HTTPException(status_code=403, detail="approvals are L1+ only; system is L0 paper")
     body = await request.json()
     decision = body.get("decision")
     reason = body.get("reason", "")
-    store.append_jsonl(APPROVALS_LEDGER, {"id": approval_id, "decision": decision,
-                                          "reason": reason, "ts": memory.now_iso()})
+    satir = {"id": approval_id, "decision": decision, "reason": reason, "ts": memory.now_iso()}
+    if not _baglayici:
+        # KAYIT SATIRI KENDİNİ BEYAN EDER: defteri sonradan okuyan (insan ya da kapı) bu satırın
+        # hiçbir icrayı açmadığını satırın KENDİSİNDEN görmeli — "hangi önekti?" diye hatırlamak
+        # zorunda kalmamalı. `davranissal: False` bir yorum değil, defterin kendi künyesi.
+        satir["davranissal"] = False
+        satir["not"] = KAYIT_KARARI_NOT
+    if _onek == ONAY_ONEK["skill_rec_kayit"]:
+        # KARAR ANINDAKİ KANIT KÜNYESİ — SUNUCU ÖLÇER, İSTEMCİ BEYAN ETMEZ. Künyeyi gövdeden almak,
+        # "kararın dayandığı kanıt"ı karar verenin kendi iddiasına bırakmak olurdu; ayrıca panonun
+        # o an ekranda tuttuğu bayat bir künye deftere gerçekmiş gibi girerdi.
+        satir["kunye"] = _kayit_karar_kunyesi(approval_id)
+    store.append_jsonl(APPROVALS_LEDGER, satir)
     # Operatör kararı OLAY defterine de düşer: onay/ret, alarmların ve döngü olaylarının yanında
     # tek bir zaman çizgisinde okunabilmeli (N/A sorgusu, 2026-07-21).
     obs.log("approval_decision", approval_id=approval_id, decision=str(decision)[:40],
-            has_reason=bool(reason))
+            has_reason=bool(reason), davranissal=_baglayici)
     if reason:
         memory.distill_lessons()
     # L0'da 403 YUKARIDA fırladı (zarf düşmez); buraya gelen istek onay defterine satır yazmıştır.
     _diag_onbellek_bosalt("approval_decision")
-    return {"ok": True, "id": approval_id, "decision": decision}
+    # YANIT KENDİ SINIRINI SÖYLER (v240): "ok: true" tek başına "yapıldı" gibi okunur ve bir
+    # kayıt-önerisinde bu YANLIŞ GÜVEN üretirdi — operatör davranışın değiştiğini sanırdı. Alan
+    # her kararda taşınır (bağlayıcıda da), çünkü "davranışsal mı" sorusunun cevabı istemcinin
+    # kimlik önekini kendi ayrıştırmasına bırakılamaz.
+    yanit = {"ok": True, "id": approval_id, "decision": decision, "davranissal": _baglayici}
+    if not _baglayici:
+        yanit["not"] = KAYIT_KARARI_NOT
+        yanit["kunye"] = satir.get("kunye")
+    return yanit
