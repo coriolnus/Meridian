@@ -1301,6 +1301,40 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_
+  `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın **m2m bacağı
+  körlükten çıkıyor**: seri kitabın seansını kapsar hâle gelince `m2m_durum` `"donem_disi"` →
+  **`"olculdu"`**, `max_dd_alt_sinir` False olur (`analytics.py:1696-1707`). Yani `edge_verdict` /
+  `result_verdict`in maks-düşüş girdisi **"bilinmiyor"dan "ölçüldü"ye** dönüyor.
+  **SONUÇ:** ajanın ölçtüğü %8,04, `EDGE_MAXDD_MAX = 0,08`i **kıl payı** aşıyor → dağıtımdan sonra
+  bir Faz-6 kilidi düşebilir.
+  **BU BİR ARIZA DEĞİL, KAPININ ÇALIŞMASIDIR.** Hiçbir eşiğe dokunulmadı; sistem ilk kez
+  ölçebildiği bir şeyi ölçüyor ve ölçüm eşiği aşıyor. Eşiği gevşetmek YASAK (EDG-037'nin
+  `RESULT_PF_MIN` emsali: "kilidin kapalı kalması ARIZA DEĞİL KORUMA").
+  *aksiyon: dağıtımdan sonra `edge_verdict` çıktısı okunur; düşen ayak ADIYLA raporlanır.*
+
+- **🆕 37. `seed_boundary` İKİ YOLU FARKLI ŞEY ÖLÇÜYOR — HANGİSİ OTORİTE?** _(2026-08-14, v245-D'nin ÖLÇTÜĞÜ ayrışma; Rol-1 kararı bekliyor)_
+  Onarım sonrası sınır iki kaynaktan okunabiliyor ve **ayrışıyorlar**:
+  · YOL-1 reset işareti → `egri_son_nokta = 2026-07-20` (işaret 2026-08-01'de dondu)
+  · YOL-2 `trades.kaynak` damgası → en geç `ts_close` = **2026-07-24** (ölçüm:
+    `edg032_final_paket_2026-08-12/islemler_cmb.json`, 885 satır)
+  Brief'in dayattığı sıra (donmuşluk > tazelik) YOL-1'i seçiyor, yani sınır gerçek tohum
+  penceresinden **4 gün geride**. **BUGÜN ETKİSİZ** (887 satırın hepsi damgalı → `classify`
+  kural-0'da durur, migrasyon no-op) ve artık `yollar_ayrisik: true` + `neden`de **GÖRÜNÜR**.
+  **AÇIK SORU:** ikisi aynı şeyi ölçmüyor — YOL-1 "reset anındaki EĞRİ noktası", YOL-2 "son TOHUM
+  işlemi". Sınırın tanımı "tohum nerede biter" ise YOL-2 doğrudan ölçümdür; donmuşluk şartını da
+  sağlar (eğriye nokta eklemek işlem damgalarını kaydırmaz). Yani sıra TERS olabilir.
+  **BU TURDA DEĞİŞTİRİLMEDİ** — bilerek: hangisinin otorite olduğu ÖLÇÜLMEDİ ve gece 03:00'te
+  ölçmeden karar vermek bu turun kendi disiplinini bozardı. *öncelik: orta (latent) · gerekli iş:
+  iki tanımın hangisinin `classify` sözleşmesine uyduğunu ölçmek.*
+
+- **🆕 38. İKİ MODÜL YORUMU ARTIK YANLIŞ** _(2026-08-14, v245-D devri; sahibi WP6/A17)_
+  `run.py:194-204` ("sınır tam olarak o çiftten ölçülür") ve `sermaye.py:30-35` ("eğriye nokta
+  eklenmiyor **çünkü** sınır son noktadan okunuyor") — ikisi de v245-D ile **YANLIŞLANDI**: sınır
+  artık son noktadan okunmuyor ve eğriye nokta ekleniyor. `test_sermaye_ayristirma_v150::test_B3`
+  gerekçesi güncellendi (tests/ ajanın sınırındaydı); iki modül yorumu açık kaldı.
+  A17/§2-34(a) ile aynı sınıf: **kaynak-içi beyanın koddan geri kalması.** *boyut: XS.*
+
 - **🆕 35. 15g TURUNUN DEVRETTİĞİ İKİ KALEM** _(2026-08-14, v245-E; sahipleri WP5 ve WP11)_
   **(a) MUTASYON SEÇİMİ EKSİK — `pyproject.toml`** _(WP5)_: `[tool.mutmut] only_mutate`
   `meridian/guard.py`yi içeriyor ama `pytest_add_cli_args_test_selection` listesinde yeni
