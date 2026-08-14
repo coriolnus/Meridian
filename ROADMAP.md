@@ -1301,6 +1301,32 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 48. ÜRETİCİ HAYALET DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, canlıda ölçüldü; sahibi WP3)_
+  28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü: **17'si kapıya varıyor, 30'u eleniyor.**
+  30'un dağılımı:
+  · **21 × `entry.w_turnover`** → canlı stratejide **YOK**
+  · **8 × `regime.vix_backwardation_gate`** → canlı stratejide **YOK**
+  · **1 × `exit.time_stop_days@trend_up`** → sertifika `chop`, öneri `trend_up` = **korkuluğun ASIL
+    hedefi, meşru ret**
+  Yani **30'un 29'u, motorda var olmayan düğmelere yapılmış önerilerdi.**
+  **KÖK (canlıda ölçüldü):** `bounds.yaml` **32** düğme taşıyor, canlı `strategy.yaml` params **18**;
+  **14 düğme bounds'ta VAR canlıda YOK** (`entry.min_rvol` · `entry.w_mom` · `entry.w_rs` ·
+  `entry.w_rvolband` · `entry.w_tight` · `entry.w_turnover` · `entry.w_vol` · `exit.early_kill_bars` ·
+  `exit.early_kill_pivot` · `portfolio.heat_cap` · `portfolio.sector_cap` ·
+  `regime.vix_backwardation_gate` · …). Keşif üreticisi (`propose_virgin_knob`) adaylarını
+  **`bounds.yaml`dan** seçiyor ve kendi gerekçesi *"bounds.yaml'da var ama defterde hiç hipotez
+  taşımamış"* diyor — yani **"hiç denenmiş mi"ye bakıyor, "motorda var mı"ya BAKMIYOR.**
+  **BU KUSUR 28a SAYESİNDE GÖRÜNÜR OLDU:** dün bu 29 öneri guard'a hiç ulaşmıyordu, arka plan
+  süzgeci onları guard'dan ÖNCE imha ediyordu. Üretici aylardır hayalet düğmelere öneri üretiyordu
+  ve kimse bilmiyordu. **Boruyu açmanın ilk ürünü bir kazanç değil, bir teşhis oldu.**
+  **ÖLÇÜLMEDİ — TAMİRAT YÖNÜ AÇIK:** o 14 öksüzün bir kısmı ölü görünmüyor (`portfolio.sector_cap`,
+  `portfolio.heat_cap`, `entry.w_mom`, `entry.w_rs`); motor bunları **goal limitlerinden** okuyor
+  olabilir. O hâlde sorun "ölü düğme" DEĞİL, **`bounds.yaml`ın arama uzayını motorun gerçek
+  parametre yüzeyiyle eşleştirmemesi** olur. İki tanı iki farklı tamirat ister:
+  (a) üretici canlı params'a süzgeç uygular · (b) bounds ile motorun okuma yüzeyleri eşleştirilir ·
+  (c) gerçekten ölü olanlar §2-25a'ya gider. **Hangisi olduğu ÖLÇÜLMEDİ — kart-önce.**
+  *öncelik: YÜKSEK — keşif bütçesinin %62'si (29/47) hayalet düğmeye gidiyordu.*
+
 - **🔴 45. 28d TEŞHİSİ — EŞİK DÜŞÜRMEK BU TIKANIKLIĞI AÇMAZ** _(2026-08-14, v247-B ölçtü; **planı DEĞİŞTİRİR**)_
   ROADMAP 28d'yi "kapı ölçemiyor, `chop` dilimi 27 < eşik 30" diye taşıyordu ve örtük çözüm eşikti.
   **ÖLÇÜM ÜÇ ŞIKKI AYRIŞTIRDI:** pencere dar mı → **HAYIR** (OOS 850 gün) · fold geometrisi mi →
