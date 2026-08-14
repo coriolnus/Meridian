@@ -146,7 +146,23 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     limits = goal["limits"]
     max_open = int(limits["max_open_positions"])
     max_pos_r = float(limits["max_position_r"])
-    max_sector_pct = float(limits["max_sector_exposure_pct"])
+    # SEKTÖR TAVANI BURADA OKUNMAZ — VE BU BİLİNÇLİDİR (2026-08-14, ROADMAP §2-35b).
+    # BURADA ŞU SATIR VARDI: `max_sector_pct = float(limits["max_sector_exposure_pct"])`. Atanıyor,
+    # HİÇBİR YERDE okunmuyordu (ölü yerel; repo genelinde `max_sector_pct` adının meridian/ içindeki
+    # TEK geçtiği yerdi). Replay sektör tavanını `guard.classify_gate`e DEVREDER: kapıya
+    # `portfolio["sector_counts"]` (bu fonksiyonda `sector_ct`ten kurulur) ve `goal` gider, kural
+    # guard'ın `sector_cap` satırında işler, paydasını `guard.sector_cap_basis` belirler. Yani ikinci
+    # bir uygulama YOKTUR ve olmaması İYİDİR — WP-15g'nin payda ayrıştırması replay'i bu yüzden
+    # otomatik kapsadı. Ölü yerel KALDIRILDI çünkü politikanın ADINI taşıyordu ve kullanılan
+    # `max_open`/`max_pos_r` satırlarının dibinde duruyordu: "birileri bağlarsa" ikinci ve AYRIŞMIŞ
+    # bir sektör kuralı doğardı (`guard.check_trade` docstring'indeki tur-12 ayrışma sınıfı).
+    # BURAYA YENİ BİR SEKTÖR KURALI YAZILMAZ — tavan guard'ta TEKtir, replay onu ÇAĞIRIR.
+    # ÖLÇÜLEN TEK YAN ETKİ (gizlenmiyor): satırın gözlenebilir tek işlevi, `max_sector_exposure_pct`
+    # anahtarı EKSİK bir goal sözlüğünde KeyError'ı replay GİRİŞİNDE yükseltmesiydi. Artık aynı
+    # KeyError kapıya giren İLK planda `guard.classify_gate`ten yükselir (fail-closed korunur, yeri
+    # değişir); hiç plan kapıya girmeyen bir koşumda ise hiç yükselmez — eksik anahtarlı goal zaten
+    # `config.goal()` yolundan gelmez (state/goal.yaml `limits.max_sector_exposure_pct` taşır ve ad
+    # `guard.LIMIT_KEYS`te kayıtlıdır).
     max_daily_loss = float(limits["max_daily_loss_pct"]) / 100.0
     no_trade_before = int(limits.get("no_trade_before_bars", 0))
 

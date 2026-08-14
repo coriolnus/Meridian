@@ -19,7 +19,9 @@ sayıya "Sermaye" diyordu ve iki ayrı yalan söylüyordu:
      de-risk rampası düşüşü ORADAN ölçer: canlı çağ, hiç yaşamadığı bir düşüşün cezasıyla başlardı.
 
 ÖLÇÜLEN İNCE NOKTA — NAKDİ RESETLEMEK TEK BAŞINA HİÇBİR ŞEY YAPMAZDI. `broker.equity()` `cash`i
-OKUMAZ (broker.py:263 `eq = self.start_equity + self.realized_pnl`). Yalnız `cash`i 100.000'e
+OKUMAZ (`PaperBroker.equity`: `eq = self.start_equity + self.realized_pnl` — ÇAPA SEMBOLDÜR;
+burada "broker.py:263" yazıyordu, o satır bugün de-risk rampasına ait: A17 çürüme sınıfı, 2026-08-14
+ölçümüyle düzeltildi). Yalnız `cash`i 100.000'e
 çekmek panoyu düzeltir, boyutlandırmayı DÜZELTMEZ — kozmetik bir yama olurdu. Bu yüzden reset
 kitabın DÖRT alanına birden dokunur ve dördünün de gerekçesi ayrı yazılıdır (aşağıda `_yeni_kitap`).
 
@@ -33,6 +35,20 @@ NOKTASININ TARİHİNDEN okur (ledgerstamp.py:149, tek yazar run.py:171). Reset g
 eklenseydi tohum sınırı bugüne kayar ve bundan sonraki HER canlı satır `replay_seed` diye
 damgalanırdı — yani bu turun kapattığı kusuru, tam da onu kapatan araç geri açardı. İşaret ayrı bir
 zarf anahtarında durur; `points` dokunulmaz kalır.
+
+  ↑ ÜSTTEKİ GEREKÇE YANLIŞLANDI (2026-08-14, v245-D; paragraf tarihçe için duruyor). İKİ
+  DAYANAĞI DA ÖLDÜ: (1) `ledgerstamp.seed_boundary()` sınırı artık eğrinin son noktasından
+  OKUMUYOR — sıra (a) son reset işaretinin DONMUŞ `egri_son_nokta` alanı, (b) yedek yol
+  `trades.jsonl` `replay_seed` damgalarının en geç `ts_close`u; güncel son nokta rapora yalnız
+  bilgi olarak girer ve "sınırı BELİRLEMEZ" diye beyanlıdır. (2) "tek yazar run.py" varsayımı
+  da yok: `loop._persist_equity_point` her seans sonunda eğriye TEK nokta ekliyor (kadanslı
+  yazar, bacak-2) — üstelik bu modülün kendisi de aynı zarfa reset İŞARETİ yazıyor (aşağıda,
+  `uygula`). KARAR DEĞİŞMEDİ, GEREKÇESİ DEĞİŞTİ: reset günü `points`e nokta EKLENMEZ, çünkü
+  (i) bu modülün işi nakit tabanını ayrıştırmaktır, eğrinin tarihini yeniden yazmak değil, ve
+  (ii) o günün noktasını zaten kadanslı yazar seans sonunda kendi koyar — buradan ikinci bir
+  nokta koymak aynı günü iki yazarlı hâle getirirdi (`_persist_equity_point` günde tek nokta
+  değişmezini korur). Sınır artık işaretin DONMUŞ alanından okunduğu için eğriye nokta eklenmesi
+  onu kaydırmaz; yani eski paragrafın korktuğu felaket yolu yapısal olarak kapalıdır.
 
 MUTABAKAT KİMLİĞİ KIRILMAZ, BEYANLI HÂLE GETİRİLİR. Reset üç `recompute` kimliğini birden bozar
 (`realized_pnl`, `cash_identity`, `equity_curve_tail`) — çünkü kitap yeni bir tabana taşındı,
@@ -413,10 +429,17 @@ def uygula(gerekce: str = VARSAYILAN_GEREKCE) -> dict:
         isaret = {"id": reset_id, "tarih": ts, "tip": "paper_equity_reset",
                   "onceki_deger": onceki["cash"], "yeni_deger": round(hedef, 2),
                   "egri_son_nokta": egri_son, "gerekce": str(gerekce).strip(),
+                  # İŞARETİN METNİ DE BİR BEYANDIR ve koddan geri kalamaz (2026-08-14, v245-D):
+                  # eski cümle "nokta eklenmez ÇÜNKÜ eğrinin son noktası tohum sınırıdır" diyordu;
+                  # sınır artık son noktadan okunmuyor (bu işaretin DONMUŞ `egri_son_nokta`
+                  # alanından okunuyor) ve eğriye her seans kadanslı yazar nokta ekliyor. Gerekçe
+                  # düzeltildi, karar aynı — bkz. modül başlığındaki mezar taşı.
                   "not": ("eğri noktaları SİLİNMEDİ: bu tarih tohum (antrenman) dönemine aittir ve "
                           "ölçüm girdisidir. İşaret, eğrinin bu noktadan sonra yeni bir sermaye "
-                          "tabanına oturduğunu BEYAN eder — nokta olarak eklenmez, çünkü eğrinin "
-                          "son noktası ledgerstamp'in tohum sınırıdır")}
+                          "tabanına oturduğunu BEYAN eder — nokta olarak eklenmez, çünkü o günün "
+                          "noktasını kadanslı yazar (loop._persist_equity_point) seans sonunda "
+                          "kendi koyar; bu işaretin `egri_son_nokta` alanı ise DONDURULMUŞ tohum "
+                          "sınırıdır (ledgerstamp.seed_boundary onu buradan okur)")}
         eq[CURVE_MARK_KEY] = _egri_isaretleri(eq) + [isaret]
         store.write_json(EQUITY, eq)
     rapor["egri_isareti"] = isaret

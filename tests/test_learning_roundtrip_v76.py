@@ -50,6 +50,14 @@ REPLAY_START, REPLAY_END = "2022-01-03", "2022-12-30"
 # Turu kapatan tek değişkenli hamle ve onun tersi. İkisi de bounds.yaml içinde, adım üstünde.
 KNOB = "position_size_r"
 SMALL, FULL = 0.1, 1.0          # ölçülen: küçük pozisyon popülasyonu ebeveyninden ~0.21 skor geride
+# TOHUM DEĞERİ KAYNAKTAN OKUNUR, LİTERAL DEĞİL (v246-C · ROADMAP §2-30). `seeded` fikstürü v1'i
+# `run.bootstrap_v01()` ile kurar, yani v1'in boyutu `config.default_strategy()`ten gelir. Burada
+# 1,0 literali yazılıydı ve yedek canlıyla hizalanınca (1,0 → 0,5) rollback testi ÖLÇTÜĞÜ ŞEY
+# yüzünden değil, TOHUMUN ADINI yanlış bildiği için kırmızıya döndü. Testin cümlesi bir SAYI değil
+# bir DAVRANIŞ: "geri alma ebeveynin değerini geri getirir ve o değer sevk edilenden FARKLIDIR" —
+# farklılık `!= SMALL` ile yerinde ölçülmeye devam ediyor. `FULL` DOKUNULMADI: o, sevk edilen
+# hipotezin değeridir (bounds tavanı, tam pozisyon) ve tohumla aynı şey değildir.
+TOHUM = config.default_strategy()["params"][KNOB]
 
 
 # ----------------------------------------------------------------------------------------------
@@ -359,7 +367,7 @@ def test_rollback_restores_parent_records_why_and_cannot_pingpong(seeded, monkey
     # (a) EBEVEYN PARAMETRELERİ GERÇEKTEN GERİ GELDİ
     now = config.load_strategy()
     assert int(now["version"]) == 1 and now["params"] == v1_params
-    assert now["params"][KNOB] == FULL != SMALL
+    assert now["params"][KNOB] == TOHUM != SMALL
 
     # (b) NEDENİ KAYITLI: defter + karne + alarm
     hyp = [h for h in memory.all_hypotheses() if h.get("version_to") == v2][0]

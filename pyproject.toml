@@ -261,6 +261,20 @@ pytest_add_cli_args_test_selection = [
     # TÜRETİLMİŞ: bu üç modülü doğrudan import eden test dosyaları (grep ile; liste büyüyünce
     # ops/haftalik_mutasyon.sh öz-testi biçimi doğrular, içeriği ezberlemez). Tam suite'in kapsamı
     # DEĞİŞMEZ — bu seçim yalnız mutasyon koşumuna özgüdür.
+    #
+    # SÜRÜKLENME ÖLÇÜLDÜ, GİZLENMEDİ (2026-08-14, v246-A): kural mekanik olarak uygulandığında
+    # (AST: `from meridian import broker|guard|score`, `from meridian.<mod> import ...`, modül
+    # düzeyi VE fonksiyon içi) bugün **79 test modülü** kuralı sağlıyor; bu liste **39**. Yani
+    # kural ile liste arasında **41 dosyalık** bir fark var ve fark BU TURDA KAPATILMADI: kapsam
+    # genişletme mutasyon ritüelinin süresini değiştirir ve karar Rol-1'indir (ops/haftalik_
+    # mutasyon.sh başlığı). Fark iki alt sınıf taşıyor ve ikisi de körü körüne eklenemez:
+    # (a) `tests/wf_fixtures.py` kuralı sağlar ama TEST MODÜLÜ DEĞİLDİR (pytest toplamaz) —
+    #     eklenirse seçim sessizce hiçbir şey seçmeyen bir öğe kazanır;
+    # (b) kaynak METNİ tarayan testler (`Path(guard.__file__).read_text()` sınıfı) mutantı
+    #     davranışla değil metinle "öldürebilir" — skoru şişirir. Liste büyütülürken bu iki sınıf
+    #     ayrıştırılmalı. Ters yön de ölçüldü: `tests/test_trend_shadow_v144.py` listede DURUYOR
+    #     ama üç modülün hiçbirini import etmiyor (zararsız fazlalık; daraltma da bir karardır,
+    #     bu turda dokunulmadı — 8 koşumluk dışlama-kovalamacasının dersi).
     "tests/test_audit_fixes.py",
     "tests/test_batch_k.py",
     "tests/test_batch_l.py",
@@ -289,6 +303,12 @@ pytest_add_cli_args_test_selection = [
     "tests/test_regime_patch.py",
     "tests/test_risk.py",
     "tests/test_score_audit_v40.py",
+    # 2026-08-14 (WP-15g devri, ROADMAP §2-35a): sektör tavanının paydası artık KENDİ anahtarını
+    # taşıyor (`guard.sector_cap_basis`) — türetme kuralı gereği (karar-çekirdeğini DOĞRUDAN import
+    # eden test dosyaları) listeye girer. Girmezse `sector_cap_basis` mutantları (ör. "açık paydayı
+    # yok say", "türetme dalını sabitle") ölmeden hayatta kalır ve haftalık ritüel gerçek boşluğu
+    # gizler — v237 de-risk rampası satırı tam bu gerekçeyle eklenmişti.
+    "tests/test_sektor_tavani_ayristirma_v245.py",
     "tests/test_temizlik_kablolama_v137.py",
     "tests/test_trend_shadow_v144.py",
     # MUTANT-BORCU dosyaları (2026-08-01 Workflow turu — skor bunlarsız kör kalırdı; doğrulayıcı bulgusu):

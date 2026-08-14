@@ -324,12 +324,27 @@ DECLARED_SINKS: dict[str, str] = {
     # yalnız `store.read_*`/`write_*` çağrılarını görür, auth kendi dosya erişimini kullanır
     # (`_auth_file().read_text()`), tıpkı `secrets.json` gibi. Beyan edilmeseydi dedektör her turda
     # gerçek olmayan bir bulgu bağırır, gerçek bir yetim o gürültüde kaybolurdu.
+    # ÇAPA SATIR DEĞİL SEMBOL (2026-08-14, v246-A — A17 sınıfının kendi yüzeyinde onarımı): bu
+    # satırda önce `api.py:420` yazıyordu, kayan-oturum turundan (v245-B) sonra gerçek satır 426
+    # oldu ve HİÇBİR test kırmızı vermedi — çünkü kapı yalnız terimin VARLIĞINA bakıyordu. Satır
+    # numarası gömen her çapa, çapaladığı dosyanın her düzenlemesinde bayatlar; `codelaw`ın kendi
+    # kovaladığı sınıf tam budur. Bu yüzden çapa artık FONKSİYON ADI + ÇAĞRI DİZGİSİDİR
+    # (`api._auth` içinde `auth.verify_session(`) ve UYUŞMASI çivilenir — bkz.
+    # tests/test_beyan_bayatligi_v246.py: çapa kaynakla eşleşmezse test düşer, sessizlik yapısal
+    # olarak imkânsızdır. Aynı çivi YAZAN LİSTESİNİ de UYUŞMA olarak ölçer: auth.py'de `_write`e
+    # ulaşan her AÇIK giriş bu metinde ADIYLA geçmek zorundadır (varlık değil, tamlık).
     "auth.json": "PANONUN KİMLİK DOSYASI — scrypt parola tuzu+özeti (`algo`) ve oturum imza anahtarı "
-                 "(`key`). YAZAN: auth.set_password/rotate_key/issue_session (→ `auth._write`, 0600 "
-                 "atomik) ve `python -m meridian.auth_cli set`. OKUYAN: `auth._read()` — "
-                 "password_set/verify_password/verify_session/issue_session hepsi oradan geçer; DIŞ "
-                 "tüketici api.py'dir ve dolaylıdır (erişimci fonksiyon sınıfı): `_auth` bağımlılığı "
-                 "her korumalı uçta `auth.verify_session(cookie)` çağırır (api.py:420), /api/login "
+                 "(`key`). YAZIM TEK KAPIDAN: `auth._write` (0600 atomik). O kapıyı çağıranlar "
+                 "`auth.set_password`, `auth.rotate_key` ve `auth._key()`; `_key()` anahtar YOKSA "
+                 "üretip yazar, dolayısıyla imza yoluna giren HER giriş dosyayı ilk çağrıda "
+                 "DOĞURABİLİR: `auth.issue_session`, `auth.refresh_session` (kayan oturum, v245-B — "
+                 "→`_sign`→`_key()`; eskiden bu ad listede YOKTU) ve `auth.verify_session` "
+                 "(→`_parse_session`→`_key()`). Kabuk yolu: `python -m meridian.auth_cli set` "
+                 "(→set_password) ve `... logout-all` (→rotate_key). OKUYAN: `auth._read()` — "
+                 "password_set/verify_password/verify_session/issue_session/refresh_session hepsi "
+                 "oradan geçer; DIŞ tüketici api.py'dir ve dolaylıdır (erişimci fonksiyon sınıfı): "
+                 "`api._auth` bağımlılığı her korumalı uçta `auth.verify_session(` çağırır (ÇAPA "
+                 "SEMBOLDÜR, satır numarası DEĞİL — üstteki nota bak), /api/login "
                  "`verify_password`+`issue_session`, /api/auth/status `password_set`. Yani dosya "
                  "okunmasa 51 uç 401 dönerdi — ölü değil, panonun kapısı. `secrets.json` ile AYNI "
                  "sınıf (recompute.accessor_read): store.* dışından okunuyor, statik graf göremiyor",

@@ -495,3 +495,60 @@ def test_dinamik_jeton_adlari_rol_adidir():
     """`var(--${renk})` kalıbı hue adı TAŞIYAMAZ — orada da rol adı geçerlidir."""
     ihlal = [m.group(1) for m in re.finditer(r'var\(--\$\{[^}]*?"(green|red|amber)"', APPJS)]
     assert not ihlal, f"dinamik jeton hâlâ hue adıyla: {ihlal}"
+
+
+# --- sermaye reset'i: TEK OLGU, TEK KANAL (v246-D) --------------------------------------------
+# YORUM SATIRLARI SAYILMAZ (repo deseni: test_pano_durum_kartlari_v191, test_wp2d_pano_beyani_v246):
+# gerekçe kaynakta durur ama BİLDİRİM değildir — bir yorumdaki "sermaye reset'i" bir emisyon değil.
+APPJS_KOD = "\n".join(l for l in APPJS.splitlines() if not l.lstrip().startswith("//"))
+ROL_SINIFI = re.compile(r'\b(pos|neg|warn)\b')
+
+
+def _saran_etiket(metin: str, i: int) -> str:
+    """`i` konumundaki metni saran EN YAKIN AÇILIŞ etiketini döndür (`<b>`, `<span class="…">`).
+
+    PENCERE DEĞİL ETİKET ölçülür: "şu kadar karakter geride `warn` geçmiyor" kırılgan bir
+    iddiadır (araya giren bir kardeş emisyon onu hem yanlış düşürür hem yanlış geçirir);
+    metni fiilen boyayan şey saran etikettir. Kapanış etiketleri atlanır; etiket metinden
+    önce kapanmıyorsa saran etiket YOKTUR (çıplak metin) ve boş dize döner.
+    """
+    j = metin.rfind("<", 0, i)
+    while j >= 0:
+        k = metin.find(">", j)
+        if k < 0 or k >= i:
+            return ""
+        if metin[j + 1:j + 2] != "/":
+            return metin[j:k + 1]
+        j = metin.rfind("<", 0, j)
+    return ""
+
+
+def test_sermaye_reseti_hicbir_yuzeyde_siddet_tasimaz():
+    """Sermaye reset'i bir ANOMALİ DEĞİLDİR: operatörün kayıtlı, kasıtlı eylemidir.
+
+    `sermaye.uygula` onu yazar, işaretin bir KİMLİĞİ vardır (`SR-…`) ve olay defterinde
+    izlenir. Ona `warn` vermek "bir şey yanlış" der — YANLIŞ BİLGİ. Ölçülen kusur bu turda
+    İKİ YERDEYDİ ve ikisi AYRIŞMIŞTI: Birikim şeridi (`egriBeyani` ④) kehribar basıyordu,
+    Genel Bakış mini eğrisi de (`gb-alt`) ayrı bir kehribar. Aynı olgu iki yüzeyde iki
+    şiddet taşıyorsa okuyucu hangisine inanacağını bilemez — bu deponun "aynı gerçek iki
+    yerde" sınıfı. Çivi ÜÇÜNCÜ bir yüzeyde yeniden doğmasını engeller.
+
+    Renk gitti diye BİLGİ gitmedi: kırılma sayısı, tarihi, iki değeri, kimliği ve konum
+    beyanı yerinde — nötr `<b>` ile. İkinci blok tam da "rengi silerek geçme" hilesini
+    kapatır (§6'nın `kl` assert'iyle aynı gerekçe).
+    """
+    ihlal = []
+    for m in re.finditer(r"sermaye reset", APPJS_KOD):
+        etiket = _saran_etiket(APPJS_KOD, m.start())
+        if ROL_SINIFI.search(etiket):
+            ihlal.append((APPJS_KOD[:m.start()].count("\n") + 1, etiket, APPJS_KOD[m.start():m.start() + 40]))
+    assert not ihlal, f"sermaye reset şiddet kanalında: {ihlal}"
+
+    # GÖRÜNÜRLÜK KAYBI DEĞİL — dört yüzeyin dördü de kırılmayı hâlâ söylüyor:
+    assert "<b>sermaye reset ${esc(String(m.tarih" in APPJS, "Birikim şeridi (④) reset satırını basmıyor"
+    assert "sermaye reset'i</b>" in APPJS, "Genel Bakış mini eğrisi reset SAYISINI basmıyor"
+    assert ">sermaye reset · ${esc(String(m.tarih" in APPJS, "grafikteki kırılma işareti etiketsiz"
+    assert "sermaye reset işareti" in APPJS, "aria beyanı kırılmayı söylemiyor (sesli gizleme)"
+    # ŞERİT KİMLİĞİ VE KONUMU TAŞIMAYA DEVAM EDER: kimliksiz bir kırılma izlenemez.
+    assert "<code>${esc(m.id)}</code>" in APPJS, "reset kimliği şeritten düşmüş"
+    assert "m.konum_neden" in APPJS, "konum beyanı şeritten düşmüş"

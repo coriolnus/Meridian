@@ -1386,7 +1386,14 @@ def _son_dongu() -> dict:
             "yas_saat": yas, "candidates": doc.get("candidates"), "plans": doc.get("plans"),
             "armed": doc.get("armed"), "regime": doc.get("regime"),
             "open_positions": doc.get("open_positions"), "data_ok": doc.get("data_ok"),
-            "halted": doc.get("halted")}
+            "halted": doc.get("halted"),
+            # WP2-D BACAK-3 (2026-08-14): kadanslı eğri yazarının MAKBUZU. `loop._persist_equity_point`
+            # onu `daily_cycle` satırına damgalıyor (loop.py:2161) ve bu fonksiyon o satırın TEK
+            # okuyucusudur — ikinci bir defter taraması açmak, aynı dosyayı iki kez okumak olurdu.
+            # Tüketici: `_egri_beyani` (aşağıda) → `/api/performance.equity_curve_beyani.son_yazim`
+            # → panonun eğri altı beyan şeridi. Alan YOKSA None kalır: makbuzsuz bir tur "yazıldı"
+            # diye okunamaz (eski kayıtlar bu alanı taşımıyor ve bu bir olgu, sıfır değil).
+            "egri_nokta": (doc.get("egri_nokta") if isinstance(doc.get("egri_nokta"), dict) else None)}
 
 
 @app.get("/api/today")
@@ -2104,13 +2111,158 @@ def _benchmark_veto_tally() -> dict:
                      "eklenip eklenmeyeceğine veriyle karar verilir (reflect.py:721)")}
 
 
+# ---- WP2-D BACAK-3: EĞRİNİN PENCERE BEYANI (2026-08-14) ---------------------------------------
+# ÖLÇÜLEN KUSUR (canlı, 2026-08-14): `equity_curve.json` 882 nokta taşıyor ve sonuncusu 2026-07-20 —
+# eğri 24 gündür donuktu, pano bunu HİÇBİR YERDE söylemiyordu ve operatör grafiğe bakıp "P&L
+# yansıtmıyor" diye okuyordu. Aynı zarfta 1 sermaye reset işareti var (`SR-20260801T151429+0000`,
+# `egri_son_nokta ["2026-07-20", 94457.91]`): yani çizilen tek çizgi bir sermaye tabanı
+# değişiminin ÖNCESİNİ ve SONRASINI birlikte kapsıyor. Ve 24 günlük boşluk KAPANMAYACAK — geriye
+# doldurmak uydurma olurdu (loop.py:2208 bloğu bunu adıyla yazıyor) — yani eğri yeni noktalarla
+# sürerken ortada kalıcı bir delik kalacak.
+#
+# ÜÇ OLGU DA ZATEN ÖLÇÜLÜYDÜ, HİÇBİRİNİN PANODA OKUYUCUSU YOKTU:
+#   * reset işaretleri zarfın `sermaye.CURVE_MARK_KEY` anahtarında yaşıyor ve `/api/performance`
+#     zarfı OLDUĞU GİBİ servis ediyor — yani tel üzerinde vardı, çizilmiyordu;
+#   * kadanslı yazarın makbuzu (`durum`: yazildi · tazelendi · idempotent_atlandi · yazilmadi)
+#     `daily_cycle` satırında ve `_son_dongu()` o satırı ZATEN okuyor (ikinci defter taraması YOK);
+#   * donukluk ve boşluk noktaların KENDİSİNDEN ölçülür.
+# Bu blok üçünü tek yüzeyde toplar. HESAP BURADA, PANODA DEĞİL: pano ikinci bir "kaç gün geride"
+# yasası kursaydı, ilk düzenlemede uçtan sessizce ayrışırdı (`sermaye.koken` docstring'indeki
+# "iki hesap" kusuru).
+#
+# HİÇBİR SAYI UYDURULMAZ: çözülemeyen nokta sayılır (`okunamayan_nokta`) ama seriye 0 olarak
+# GİRMEZ; ölçülemeyen her alan None döner ve panonun karşılığı "ölçülemedi"dir.
+
+# BOŞLUK EŞİĞİ — TAKVİM GÜNÜ, SEANS DEĞİL. Burada bir seans takvimi ÇALIŞTIRILMAZ: repo'nun takvimi
+# (earnings/exchange) bu uca bağlı değil ve onu buraya çekmek, panonun eğri beyanını takvim
+# sağlığına rehin ederdi. Ölçülen büyüklük bu yüzden dürüstçe TAKVİM GÜNÜdür ve eşik doğal
+# aralıkların ÜSTÜNE konur: hafta sonu Cuma→Pazartesi 3 gün, hafta sonu + tek tatil Cuma→Salı 4
+# gün. 5 gün ve üstü, ARDIŞIK en az iki seansın seride olmadığı anlamına gelir. Eşik bir HÜKÜM
+# değil bir MERCEKtir — dışarı `bosluk_esigi_gun` olarak beyan edilir ki okuyucu neyin sayıldığını
+# bilsin (yıl sonu gibi çok-tatilli aralıklar bu mercekte "boşluk" görünebilir ve görünmelidir:
+# eğri onları gerçekten atlamıştır).
+_EGRI_BOSLUK_ESIK_GUN = 5
+# Yük tavanı: pano her boşluğa bir işaret çiziyor. Tavan aşılırsa `bosluk_kirpildi` ile BEYAN edilir
+# — sessizce kısaltılmış bir liste, "başka boşluk yok" diye okunurdu.
+_EGRI_BOSLUK_TAVAN = 24
+
+
+def _egri_beyani(ec: dict | None, pf: dict | None) -> dict:
+    """Pano eğrisinin PENCERE BEYANI: hangi seri, hangi tabanda, ne kadar geride, nerede kırık.
+
+    Girdiler ÇAĞIRANIN ELİNDEKİ okumalardır (`equity_curve.json` zarfı + `portfolio.json`) — bu
+    fonksiyon hiçbir dosyayı ikinci kez okumaz. Tek istisnası `_son_dongu()`dur ve o da olay
+    defterinin damgasına göre ÖNBELLEKLİdir."""
+    import datetime as _dt
+    from . import sermaye as _sr
+
+    def _coz(p):
+        """Tek noktayı (date, float) çiftine çöz. Çözülemeyen bacak None döner — 0 DEĞİL."""
+        if not isinstance(p, (list, tuple)) or len(p) < 2:
+            return None, None
+        try:
+            t = _dt.date.fromisoformat(str(p[0])[:10])
+        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — çözülemeyen nokta `okunamayan_nokta` sayacına girer ve beyanla birlikte panoya çıkar; burada uyarı basmak her istekte aynı bozuk satır için gürültü üretirdi
+            t = None
+        try:
+            v = float(p[1])
+        except (TypeError, ValueError):  # sessiz-yutma: aynı sayaç — değeri okunamayan nokta seriye 0 olarak GİRMEZ, sayılır ve beyan edilir
+            v = None
+        return t, v
+
+    ec = ec if isinstance(ec, dict) else {}
+    pts = ec.get("points") if isinstance(ec.get("points"), list) else []
+    tarihli, okunamayan = [], 0
+    for i, p in enumerate(pts):
+        t, v = _coz(p)
+        if t is None or v is None:
+            okunamayan += 1
+            continue
+        tarihli.append((i, t, round(v, 2)))
+
+    ilk = [tarihli[0][1].isoformat(), tarihli[0][2]] if tarihli else None
+    son = [tarihli[-1][1].isoformat(), tarihli[-1][2]] if tarihli else None
+
+    # DONUKLUK EĞRİNİN DIŞINDAN ÖLÇÜLÜR. Serinin kendi son tarihi "geride mi?" sorusunu cevaplayamaz;
+    # ölçüt kitabın işlediği son seanstır (`portfolio.last_date`). İkisinden biri yoksa cevap 0 değil
+    # None'dur — "geride değil" ile "kıyas yapılamadı" aynı cümle değildir.
+    son_seans = (pf or {}).get("last_date") if isinstance(pf, dict) else None
+    gecikme = None
+    try:
+        if son and son_seans:
+            gecikme = (_dt.date.fromisoformat(str(son_seans)[:10])
+                       - _dt.date.fromisoformat(son[0])).days
+    except (TypeError, ValueError):  # sessiz-yutma: kitabın son seansı biçimsiz — gecikme ÖLÇÜLEMEDİ olarak None kalır ve pano bunu adıyla yazar (0 gün YAZMAZ)
+        gecikme = None
+
+    bosluklar = []
+    for (i0, t0, _v0), (_i1, t1, _v1) in zip(tarihli, tarihli[1:]):
+        gun = (t1 - t0).days
+        if gun >= _EGRI_BOSLUK_ESIK_GUN:
+            # `i` = boşluğun SOLUNDAKİ noktanın dizini — pano işareti tam oraya koyar (seri dizin
+            # ekseninde çizilir, yani boşluk grafikte normal bir adım gibi görünür; işaret olmadan
+            # delik GÖRÜNMEZ, tam da bu turun kapattığı hâl).
+            bosluklar.append({"onceki": t0.isoformat(), "sonraki": t1.isoformat(),
+                              "gun": gun, "i": i0})
+    n_bosluk = len(bosluklar)
+    en_buyuk = max(bosluklar, key=lambda b: b["gun"]) if bosluklar else None
+    bosluk_kirpildi = n_bosluk > _EGRI_BOSLUK_TAVAN
+    if bosluk_kirpildi:
+        bosluklar = bosluklar[-_EGRI_BOSLUK_TAVAN:]      # EN YENİLER kalır (operatörün baktığı uç)
+
+    # RESET İŞARETLERİ — anahtar `sermaye.CURVE_MARK_KEY`den okunur, burada İKİNCİ bir literal
+    # yazılmaz (`test_defter_kaynak_damgasi_v140` o adı tek kaynakta çiviliyor).
+    isaretler = []
+    for m in (ec.get(_sr.CURVE_MARK_KEY) or []):
+        if not isinstance(m, dict):
+            continue
+        et, ev = _coz(m.get("egri_son_nokta"))
+        idx = next((i for i, t, _v in tarihli if t == et), None) if et is not None else None
+        isaretler.append({
+            "id": m.get("id"), "tarih": m.get("tarih"),
+            "onceki_deger": m.get("onceki_deger"), "yeni_deger": m.get("yeni_deger"),
+            "egri_son_nokta": ([et.isoformat(), ev] if et is not None else None),
+            "i": idx,
+            # KONUM ÖLÇÜLEMEZSE İŞARET YİNE LİSTELENİR, sadece grafiğe konmaz: bir reset'i "yeri
+            # bulunamadı" diye gizlemek, beyanın kendisini yutmak olurdu.
+            "konum_neden": (None if idx is not None else
+                            "işaretin `egri_son_nokta` tarihi seride bulunamadı — kırılma "
+                            "LİSTELENİR ama grafiğe konumlandırılamaz"),
+        })
+
+    # SON YAZIM MAKBUZU — kadanslı yazarın kendi hükmü (`loop._persist_equity_point`), olay
+    # defterinden `_son_dongu()` ile. Makbuz yoksa None: "yazılmadı" DİYEMEYİZ, ölçemedik.
+    sd = _son_dongu()
+    son_yazim = sd.get("egri_nokta") if isinstance(sd, dict) else None
+
+    return {
+        "n_nokta": len(pts), "okunamayan_nokta": okunamayan,
+        "ilk": ilk, "son": son,
+        "son_seans": son_seans, "gecikme_gun": gecikme,
+        "bosluk_esigi_gun": _EGRI_BOSLUK_ESIK_GUN, "n_bosluk": n_bosluk,
+        "bosluklar": bosluklar, "en_buyuk_bosluk": en_buyuk,
+        "bosluk_kirpildi": bosluk_kirpildi, "bosluk_tavani": _EGRI_BOSLUK_TAVAN,
+        "reset_isaretleri": isaretler, "n_isaret": len(isaretler),
+        "son_yazim": son_yazim if isinstance(son_yazim, dict) else None,
+        "son_dongu_tarih": (sd or {}).get("date") if isinstance(sd, dict) else None,
+        "beyan": ("seri, kitabın BEYANLI sermaye ofseti düşülmüş TEK tabanda çizilir "
+                  "(loop._persist_equity_point); seans sonunda günde tek nokta eklenir. Reset "
+                  "işaretleri kırılmayı BEYAN eder, nokta olarak eklenmez; geçmiş boşluklar "
+                  "geriye doldurulmaz — doldurmak uydurma olurdu."),
+    }
+
+
 @app.get("/api/performance")
 def api_performance(request: Request):
     _auth(request)
     goal = config.goal()
     trades = store.read_jsonl("trades.jsonl")
+    _ec = store.read_json("equity_curve.json", {"points": []})
     return {
-        "equity_curve": store.read_json("equity_curve.json", {"points": []}),
+        "equity_curve": _ec,
+        # WP2-D BACAK-3: eğrinin PENCERE BEYANI — hangi seri, ne kadar geride, nerede kırık.
+        # Aynı zarftan türetilir (ikinci okuma YOK) ve panonun eğri altı şeridini besler.
+        "equity_curve_beyani": _egri_beyani(_ec, store.read_json("portfolio.json", {})),
         "score_detail": analytics.score_mod.score_detail(trades, goal),
         "kelly": analytics.score_mod.kelly_fraction(trades),          # realized-edge sizing ceiling (advisory)
         "tail_risk": analytics.score_mod.tail_risk(trades),           # block-bootstrap VaR/CVaR

@@ -1772,11 +1772,30 @@ RENDER.bugun = async () => {
   j("/api/performance").then(p => {
     const pts = ((p.equity_curve || {}).points || []).slice(-40);
     const eq = $("gb-eq");
+    // WP2-D BACAK-3 — MİNİ EĞRİ DE PENCERESİNİ SÖYLER. Bu kart serinin SON 40 noktasını çizer ve
+    // "son 40 kapanış" cümlesi hangi tarihte bittiğini SÖYLEMİYORDU: 24 gün donuk bir eğri burada
+    // canlı bir trend gibi görünüyordu. Tam beyan (delik/kırılma/makbuz) Birikim sayfasının işi —
+    // burada tek soru "bu çizgi ne kadar taze?".
+    // İKİ YÜZEY TEK RENK SÖZLEŞMESİ: donukluk bir ANOMALİdir (aşağıdaki `tazelik` şiddet
+    // kanalında kalır), sermaye reset'i DEĞİLDİR — operatörün kayıtlı, kasıtlı eylemidir.
+    // Reset sayısı bu yüzden nötr <b> ile basılır, `egriBeyani`nin ④ şeridiyle BİREBİR aynı
+    // dille. İkisi ayrışırsa aynı olgu iki yerde iki şiddet taşır ve okuyucu hangisine
+    // inanacağını bilemez (çivi: test_renk_rolleri_v197 §8 `test_sermaye_reseti_notr`).
+    const eb = p.equity_curve_beyani || null;
+    const tazelik = !eb
+      ? `<span class="mut">tazelik ölçülemedi — uç beyan alanını vermedi</span>`
+      : (eb.gecikme_gun == null
+          ? `<span class="mut">son nokta ${esc((eb.son || [])[0] || "—")} · gecikme ölçülemedi</span>`
+          : (eb.gecikme_gun > 0
+              ? `<span class="warn">${esc((eb.son || [])[0] || "—")} · ${eb.gecikme_gun} gün geride</span>`
+              : `${esc((eb.son || [])[0] || "—")} · güncel`));
     if (eq) eq.innerHTML = pts.length > 2
       ? `${sparkline(pts.map(q => +q[1]))}
-         <p class="gb-alt">son <b>${pts.length}</b> kapanış · en düşük ${money(Math.min(...pts.map(q => +q[1])))}</p>`
+         <p class="gb-alt">son <b>${pts.length}</b> kapanış · en düşük ${money(Math.min(...pts.map(q => +q[1])))}</p>
+         <p class="gb-alt">${tazelik}${eb && eb.n_isaret ? ` · <b>${eb.n_isaret} sermaye reset'i</b>` : ""}</p>`
       : `<span class="gb-say mut">—</span><p class="gb-alt">eğri için yeterli kapanmış işlem yok
-           (${pts.length} nokta) — çizmek uydurma olurdu</p>`;
+           (${pts.length} nokta) — çizmek uydurma olurdu</p>
+         <p class="gb-alt">${tazelik}</p>`;
     const sd = p.score_detail || {}, kn = $("gb-karne");
     if (kn) kn.innerHTML = sd.score == null
       ? `<span class="gb-say mut">—</span><p class="gb-alt">${esc(sd.reason
@@ -9003,11 +9022,14 @@ RENDER.performans = async () => {
   // null gelir ve kart ÖLÇÜLEMEDİ dalına girer — sayfanın geri kalanı çizilmeye devam eder.
   const [d, dg] = await Promise.all([j("/api/performance"), j("/api/diagnostics").catch(() => null)]);
   const eq = (d.equity_curve && d.equity_curve.points) || [];
+  // WP2-D BACAK-3: eğrinin PENCERE BEYANI aynı uçtan gelir (`_egri_beyani`) — pano onu HESAPLAMAZ,
+  // çizer. Uç alanı vermezse `egriBeyani(null)` "beyan ölçülemedi" der; grafik yine çizilir.
+  const eqB = d.equity_curve_beyani || null;
   $("page-performans").innerHTML = bolumBasHTML("performans", "Birikim · para eğrisi ve defter",
     "Bugüne kadar ne biriktiği: eğri, boyut tavanı, kuyruk riski, ölçülen friksiyon, <b>çıkış "
     + "nedeni kırılımı</b> ve kapanmış işlemlerin tek tek hesabı. Karne (öğreniyor mu?) Öğrenme "
     + "sayfasında.")
-    + `<div class="card rise"><h2 class="t">Para eğrisi (paper)</h2>${line(eq)}</div>
+    + `<div class="card rise"><h2 class="t">Para eğrisi (paper)</h2>${line(eq, eqB)}${egriBeyani(eqB)}</div>
     ${riskCard(d.kelly, d.tail_risk, d.slippage_measured, d.benchmark_veto_tally)}
     ${firsatCikisNedeni((dg || {}).mlops)}
     <div class="card rise"><h2 class="t">Son işlemler · tek tek hesap (${d.n_trades ?? 0} toplam)</h2>
@@ -9176,18 +9198,132 @@ function tradeRows(trades) {
       <span style="text-align:right">${div}</span></button>`;
   }).join("");
 }
-function line(pts) {
-  if (!pts.length) return `<div class="empty">Para eğrisi verisi yok.</div>`;
+function line(pts, b) {
+  // İKİ BOŞ HÂL, TEK CÜMLE DEĞİL (WP2-D bacak-3): "hiç nokta yok" ile "tek nokta var" ayrı
+  // olgulardır ve ikisi de ÇİZİLMEZ. Tek noktayla `sx()` paydası 0 olur (i/(n-1)) → NaN yol: eski
+  // kod sessizce boş bir SVG basardı, yani "veri yok" demek yerine bozuk bir grafik gösterirdi.
+  if (!pts.length) return `<div class="empty">Para eğrisi verisi yok — <b>nokta yazılmamış</b>. Bu "sermaye 0" DEĞİL, ölçüm yok demektir.</div>`;
+  if (pts.length < 2) return `<div class="empty">Eğride tek nokta var (${esc(String((pts[0] || [])[0] || "—"))} · ${
+    money((pts[0] || [])[1])}) — çizgi çizmek için en az iki nokta gerekir. Uydurma bir ikinci nokta çizilmez.</div>`;
   const W = 1080, H = 240, pad = 30, ys = pts.map(p => p[1]), mn = Math.min(...ys), mx = Math.max(...ys);
   const sx = i => pad + i / (pts.length - 1) * (W - 2 * pad), sy = v => H - pad - ((v - mn) / ((mx - mn) || 1)) * (H - 2 * pad);
   const path = pts.map((p, i) => `${i ? 'L' : 'M'}${sx(i).toFixed(1)},${sy(p[1]).toFixed(1)}`).join("");
   const base = sy(pts[0][1]);
   const area = `M${pad},${base} ` + pts.map((p, i) => `L${sx(i).toFixed(1)},${sy(p[1]).toFixed(1)}`).join("") + `L${W - pad},${base}Z`;
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="Para eğrisi: ${money(pts[0][1])} (${esc(pts[0][0])}) → ${money(pts[pts.length-1][1])} (${esc(pts[pts.length-1][0])})">
+  // ---- KIRILMA VE DELİK İŞARETLERİ (WP2-D bacak-3) -------------------------------------------
+  // NİYE GRAFİĞİN ÜSTÜNDE, YALNIZ ALTTAKİ ŞERİTTE DEĞİL: seri DİZİN ekseninde çizilir, yani 24
+  // günlük bir delik grafikte sıradan bir adım gibi görünür ve sermaye reset'i sıradan bir zıplama
+  // gibi. İkisi de tam olarak grafiğe bakarken YANLIŞ okunuyordu; beyanın oraya değmesi gerekiyor.
+  // İNDİS SUNUCUDAN GELİR (`beyan.*.i`): panonun tarihleri yeniden eşleştirmesi, aynı hesabın
+  // ikinci bir uygulaması olurdu. `i` null ise işaret ÇİZİLMEZ (yer uydurulmaz) — şerit onu yine
+  // listeler ve nedenini yazar.
+  const bo = b || {};
+  const enB = bo.en_buyuk_bosluk || null;
+  const bosIsaret = (bo.bosluklar || []).filter(g => g && g.i != null && g.i < pts.length - 1).map(g => {
+    const x = sx(g.i + 0.5).toFixed(1), buyuk = enB && g.onceki === enB.onceki;
+    // `<title>` = imleçle üstüne gelince deliğin İKİ UCU okunur. Etiketi her deliğe basmak grafiği
+    // okunmaz ederdi; tarihleri hiç taşımamak ise "burada bir şey eksik" deyip nesini demeyi
+    // atlamak olurdu — en büyüğü yazıyla, hepsi başlıkla.
+    return `<line x1="${x}" y1="${pad - 8}" x2="${x}" y2="${H - pad}" stroke="var(--amber)" stroke-width="1" stroke-dasharray="2 3" opacity=".75"><title>${
+      esc(g.onceki)} → ${esc(g.sonraki)} · ${g.gun} gün nokta yok (geriye doldurulmaz)</title></line>`
+      + (buyuk ? `<text x="${x}" y="${H - pad + 12}" text-anchor="middle" fill="var(--amber)" font-size="10">${g.gun} gün delik</text>` : "");
+  }).join("");
+  const resIsaret = (bo.reset_isaretleri || []).filter(m => m && m.i != null && m.i < pts.length).map(m => {
+    const x = sx(m.i + 0.5).toFixed(1), sag = m.i > pts.length * 0.75;
+    return `<line x1="${x}" y1="${pad - 8}" x2="${x}" y2="${H - pad}" stroke="var(--tx2)" stroke-width="1" stroke-dasharray="5 3"/>
+      <text x="${sag ? x - 4 : +x + 4}" y="${pad + 2}" text-anchor="${sag ? "end" : "start"}" fill="var(--tx2)" font-size="10">sermaye reset · ${esc(String(m.tarih || "").slice(0, 10))}</text>`;
+  }).join("");
+  // ARIA ETİKETİ DE BEYANI TAŞIR: ekran okuyucuya "şu iki uç arasında bir çizgi" demek, tam da
+  // gizlenen olguyu (donukluk + kırılma) gizlemenin sesli hâli olurdu.
+  const aria = `Para eğrisi: ${money(pts[0][1])} (${esc(pts[0][0])}) → ${money(pts[pts.length-1][1])} (${esc(pts[pts.length-1][0])})`
+    + (bo.n_isaret ? `. ${bo.n_isaret} sermaye reset işareti` : "")
+    + (bo.n_bosluk ? `. ${bo.n_bosluk} boşluk` : "")
+    + (bo.gecikme_gun ? `. Son nokta kitabın son seansından ${bo.gecikme_gun} gün geride` : "");
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="${esc(aria)}">
     <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
     <path d="${area}" fill="url(#eg)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    ${bosIsaret}${resIsaret}
     <text x="${pad}" y="16" fill="var(--tx2)" font-size="11">${money(pts[0][1])} · ${esc(pts[0][0])}</text>
     <text x="${W - pad}" y="16" text-anchor="end" fill="var(--green)" font-size="11">${money(pts[pts.length - 1][1])} · ${esc(pts[pts.length - 1][0])}</text></svg>`;
+}
+
+// ---- EĞRİNİN PENCERE BEYANI (WP2-D bacak-3, 2026-08-14) ---------------------------------------
+// ÖLÇÜLEN KUSUR (canlı): `equity_curve.json` 882 nokta taşıyordu, sonuncusu 2026-07-20 — eğri 24
+// gündür donuktu ve pano bunu HİÇBİR YERDE söylemiyordu; operatör grafiğe bakıp "P&L yansıtmıyor"
+// diye okudu. Aynı seri bir sermaye reset'inin ÖNCESİNİ ve SONRASINI kapsıyor. Grafik doğruydu,
+// ANLATTIĞI şey eksikti — `sermaye_koken` satırının kapattığı kusurun eğri hâli.
+//
+// ÜSLUP `sermayeKokenSatiri` İLE AYNI ve bu bilinçli: değerin ALTINDA sönük, ` · ` ile ayrılmış
+// tek şerit + gerekirse ikinci satırda tanım cümlesi. Yeni bir görsel dil icat edilmez.
+// SAYI UYDURULMAZ: uç alanı vermezse şerit "beyan ölçülemedi" der; nokta yoksa `line()` zaten
+// "veri yok" yazar ve buradaki şerit onun NEDENİNİ taşır.
+const EGRI_YAZIM_TR = {
+  yazildi: ["nokta yazıldı", ""],
+  tazelendi: ["nokta yerinde tazelendi", ""],
+  // ÜÇÜNCÜ HÂL AYRI CÜMLE (loop.py:2262'nin `durum` sözleşmesinin var olma sebebi): "yazmadım
+  // çünkü zaten yazılı" bir ARIZA DEĞİL, "yazamadım" arızadır. İkisi aynı tonda gösterilseydi
+  // operatör her gün bir uyarı görür ve uyarılara bakmayı bırakırdı.
+  idempotent_atlandi: ["aynı gün aynı değer — yeniden yazılmadı", "mut"],
+  yazilmadi: ["nokta YAZILMADI", "warn"],
+};
+function egriBeyani(b) {
+  if (!b) return `<p class="sub mut" style="margin-top:6px;font-size:11px;line-height:1.5">Eğri
+    penceresi <b>ölçülemedi</b> — performans ucu <code>equity_curve_beyani</code> alanını vermedi.
+    Bu "eğri sağlam" DEĞİL, beyan yok demektir.</p>`;
+  const p = [];
+  // ① PENCERE: kaç nokta, hangi iki tarih arası. Payda olmadan "son 40 kapanış" bir şey söylemez.
+  p.push(b.n_nokta ? `<b>${b.n_nokta}</b> nokta · ${esc((b.ilk || [])[0] || "—")} → ${esc((b.son || [])[0] || "—")}`
+                   : `<b class="warn">0 nokta</b> — seri boş`);
+  if (b.okunamayan_nokta) p.push(`<span class="warn">${b.okunamayan_nokta} nokta okunamadı</span> (seriye 0 olarak girmedi)`);
+  // ② DONUKLUK: eğrinin son noktası ile kitabın işlediği son seans arasındaki fark.
+  // KAPI SÜSLÜ AYRAÇTA DURUR ve bu bilinçli: renk YALNIZ anomalide basılır kuralı kaynakta
+  // ÖLÇÜLÜR (test_renk_rolleri_v197 §6 → tara_emisyon.py), ve tarayıcı kapıyı emisyonu SARAN
+  // ifadede arar. Ayraçsız bir dalda koşul BİR ÜST SATIRDA kalır: renk hak edilmiş olsa bile
+  // "veri ne olursa olsun basılıyor" diye sayılır. Ayraçları kaldırmak o ölçümü kırar.
+  if (b.gecikme_gun == null) {
+    p.push(`<span class="mut">gecikme ölçülemedi — kitabın son seansı okunamadı</span>`);
+  } else if (b.gecikme_gun > 0) {
+    p.push(`<span class="warn">son nokta <b>${b.gecikme_gun} gün geride</b></span> — kitabın son seansı ${esc(String(b.son_seans || "—"))}`);
+  } else {
+    p.push(`kitabın son seansıyla (${esc(String(b.son_seans || "—"))}) güncel`);
+  }
+  // ③ DELİKLER: kapanmayacaklar ve bunu SÖYLEMEK zorundayız (geriye doldurmak uydurma olurdu).
+  //    Ayraçlar ②'deki gerekçeyle duruyor: kapı emisyonun saran ifadesinde görünür olmalı.
+  if (b.n_bosluk) {
+    p.push(`<span class="warn"><b>${b.n_bosluk}</b> delik</span>${b.en_buyuk_bosluk
+      ? ` (en büyüğü ${b.en_buyuk_bosluk.gun} gün: ${esc(b.en_buyuk_bosluk.onceki)} → ${esc(b.en_buyuk_bosluk.sonraki)})` : ""} · geriye DOLDURULMAZ${
+      b.bosluk_kirpildi ? ` · <span class="mut">grafikte son ${b.bosluk_tavani} tanesi işaretli</span>` : ""}`);
+  } else if (b.n_nokta) {
+    p.push(`≥${b.bosluk_esigi_gun} takvim günü delik yok`);
+  }
+  // ④ KIRILMA: sermaye reset'i seriyi iki tabana böler; işaret zarfta BEYANLI, nokta olarak eklenmez.
+  //    KİMLİK DE YAZILIR (`m.id`): operatör aynı kırılmayı `python -m meridian.sermaye --durum`
+  //    çıktısında ve olay defterinde bu kimlikle bulur — kimliksiz bir kırılma izlenemez.
+  //    ŞİDDET RENGİ YOK ve bu bir görünürlük kaybı DEĞİL: reset bir ARIZA değil, operatörün
+  //    kayıtlı ve kasıtlı eylemidir (`sermaye.uygula` yazar, işaretin kimliği vardır). `warn`
+  //    ona "bir şey yanlış" derdi — yanlış bilgi. Satır, tarihi/değerleri/kimliği/konum
+  //    beyanıyla aynen duruyor; vurgu nötr <b> ile, şiddet kanalına girmeden veriliyor.
+  (b.reset_isaretleri || []).forEach(m => {
+    p.push(`<b>sermaye reset ${esc(String(m.tarih || "").slice(0, 10))}</b>: ${
+      money(m.onceki_deger)} → ${money(m.yeni_deger)}${m.egri_son_nokta
+        ? ` · kırılma serinin <b>${esc(m.egri_son_nokta[0])}</b> noktasından SONRA` : ""}${
+      m.id ? ` · <code>${esc(m.id)}</code>` : ""}${
+      m.konum_neden ? ` · <span class="mut">${esc(m.konum_neden)}</span>` : ""}`);
+  });
+  // ⑤ SON YAZIM MAKBUZU: gece nokta kondu mu, konmadıysa NEDEN (uydurma sessizlik yok).
+  const y = b.son_yazim;
+  if (!y) p.push(`<span class="mut">son yazım makbuzu yok — döngü kaydı bu alanı taşımıyor (yazılmadı DEĞİL: ölçülemedi)</span>`);
+  else {
+    const [txt, kls] = EGRI_YAZIM_TR[y.durum] || [`son yazım: ${y.durum || "?"}`, "mut"];
+    // OFSET SIFIRDAN FARKLIYSA SÖYLENİR: seri kitabın HAM nakdi değil, beyanlı ofset düşülmüş
+    // tabandır (loop.py:2221) — bu, grafiğin sayısı ile "Sermaye" kartının sayısı arasındaki
+    // farkın TEK açıklaması ve söylenmezse iki kart çelişiyor gibi okunur.
+    p.push(`son yazım ${esc(String(y.tarih || b.son_dongu_tarih || "—"))}: <span class="${kls}">${esc(txt)}</span>${
+      y.ofset ? ` · beyanlı ofset ${money(y.ofset)} düşülmüş tabanda` : ""}${
+      y.neden ? ` — ${esc(y.neden)}` : ""}`);
+  }
+  return `<p class="sub mut" style="margin-top:6px;font-size:11px;line-height:1.5">${p.join(" · ")}</p>
+    <p class="sub mut" style="margin-top:2px;font-size:11px;line-height:1.5;opacity:.75">${esc(b.beyan || "")}</p>`;
 }
 
 // ================= ONAYLAR (Kararlar sayfasının alt yüzeyi) =================

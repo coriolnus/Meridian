@@ -57,7 +57,16 @@ def _status() -> int:
     host = os.environ.get("MERIDIAN_BIND_HOST", "127.0.0.1")
     genel = host not in ("127.0.0.1", "localhost", "::1")
     print(f"bağlanma    : {host}{'  ← GENEL' if genel else '  (loopback)'}")
-    print(f"oturum ömrü : {auth.SESSION_TTL_S // 3600} saat")
+    # OTURUM ÖMRÜ İKİ SAYIDIR (v245-B kayan oturum; düzeltme 2026-08-14, ROADMAP §2-34b).
+    # ÖNCEDEN yalnız "12 saat" basıyordu ve bu artık EKSİKTİ: pencere SABİT değil KAYAN
+    # (`auth.refresh_session` yarı-ömürden sonra uzatır) ve kaymanın MUTLAK BİR TAVANI var
+    # (`iat + SESSION_ABSOLUTE_MAX_S`). Tek sayı gören operatör, kullandığı panonun 12 saatte
+    # kapanacağını sanardı (yanlış) ya da sonsuza dek açık kalacağını (daha tehlikeli yanlış).
+    # İKİ SAYI DA KODDAN OKUNUR, METNE GÖMÜLMEZ: sabitler değişirse bu satır kendiliğinden
+    # doğru kalır — çivisi tests/test_beyan_bayatligi_v246.py (sabitler saplanır, çıktı izler).
+    print(f"oturum ömrü : {auth.SESSION_TTL_S // 3600} saat KAYAN pencere "
+          f"(yarı-ömürden sonra her istek uzatır) · mutlak tavan "
+          f"{auth.SESSION_ABSOLUTE_MAX_S // 86400} gün (uzatma bunu AŞAMAZ)")
     if genel and not kurulu:
         print("\nUYARI: genel arayüze parolasız bağlanma — sunucu açılmayı REDDEDER.", file=sys.stderr)
         return 1

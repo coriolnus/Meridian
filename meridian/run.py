@@ -197,6 +197,25 @@ def replay_seed(start: str, end: str) -> dict:
     # simülasyonun çıktısı. Sıradaki `equity_curve.json` yazımı bu toplu yazımın ZAMAN İMZASIDIR;
     # `ledgerstamp.seed_boundary()` geriye dönük sınırı tam olarak o çiftten ölçer — bu iki satırın
     # ARDIŞIKLIĞI bozulursa o ölçüm de bozulur.
+    #   ↑ ARTIK BÖYLE DEĞİL (2026-08-14, v245-D; cümle tarihçe için duruyor, YANLIŞLANDI).
+    #   `ledgerstamp.seed_boundary()` sınırı BU ÇİFTTEN ÖLÇMÜYOR ve eğrinin son noktasından hiç
+    #   okumuyor: sıra (1) eğri zarfındaki son reset işaretinin DONMUŞ `egri_son_nokta` alanı,
+    #   (2) yedek yol olarak `trades.jsonl` satırlarındaki `replay_seed` damgalarının en geç
+    #   `ts_close`u; eğrinin güncel son noktası rapora yalnız BİLGİ olarak girer ("imza sınırı
+    #   BELİRLEMEZ"). Değişimin sebebi: eğrinin tek yazarı artık bu blok değil —
+    #   `loop._persist_equity_point` her seans sonunda eğriye nokta ekliyor (bacak-2), yani son
+    #   noktadan okunan bir sınır her gün bugüne kayardı (ledgerstamp modül başlığı bu vakayı
+    #   ölçümüyle anlatıyor: tohum 2026-08-13'te yenilendi, eğri 2026-07-20'de duruyordu).
+    #   ARDIŞIKLIK YİNE DE ANLAMLI, AMA BAŞKA BİR ŞEY İÇİN: iki dosyanın mtime farkı
+    #   `ledgerstamp._toplu_yazim_olculebilir` + `BULK_WRITE_TOLERANCE_S` ile bir TOPLU YAZIM
+    #   İMZASI üretir ve rapora teşhis olarak girer. Yani bu iki satır ayrılırsa SINIR ölçümü
+    #   değil, TEŞHİS zayıflar — ve aşağıdaki kilit gerekçesi (tek sıraya alma) aynen geçerlidir.
+    #   YAN ETKİ BEYANI (A17, sessiz bırakılmıyor): bu düzeltme aşağıdaki iki yazımı ~13 satır
+    #   aşağı kaydırdı, dolayısıyla `ledgerstamp.py`nin `run.py:203`/`run.py:204` SATIR çapaları
+    #   bayatladı (metin çapaları — alıntıladıkları kod satırları — geçerli). O dosya bu turun
+    #   dosya sınırının DIŞINDA, düzeltme sahibine devredildi; `ledgerstamp.py:82`nin
+    #   "run.py:157 ve 158" çapası zaten bu turdan ÖNCE de bayattı. DERS: satır-numarası çapası,
+    #   BAŞKA bir dosyadaki yorum düzenlemesini sessizce yük taşıyan bir işlem hâline getirir.
     # KİLİT (B3): iki yazım ARDIŞIK kalmalı (yukarıdaki gerekçe) ve ikisi de defterin tamamını
     # ezer — kilit ikisini tek sıraya alır, aradaki adım hâlâ tek bir sözlük kurmaktır.
     with store.file_lock("trades.jsonl"), store.file_lock("equity_curve.json"):

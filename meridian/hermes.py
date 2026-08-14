@@ -725,21 +725,22 @@ def active_brain() -> str:
 
 
 def active_model() -> str | None:
-    p = active_brain()
-    if p == "claude":
-        return MODEL
-    if p == "nous":
-        # ÇAĞRI ANIYLA AYNI AD (2026-08-13): `_agent_call` sırdaki ölü adı alias'a
-        # çevirerek çağırıyor (`_nous_model_zinciri`). Raporlanan kimlik çevirmeden
-        # geçseydi "ne çağırdığımız" ile "ne rapor ettiğimiz" ayrışır ve bu turun
-        # kapattığı çift-kaynak sınıfının YENİSİ doğardı. OLAY BASILMAZ (`olay=False`,
-        # 2026-08-13 düzeltmesi): burası RAPOR yüzeyi — bir pano isteği operatörün
-        # defterine "göç oldu" satırı yazamaz; olayı gerçek çağrı yolu basar.
-        return canonical_model(secrets.get("NOUS_MODEL"), kaynak="NOUS_MODEL") \
-            or NOUS_DEFAULT_MODEL
-    if p == "gemini":
-        return gemini_model()
-    return None
+    """ŞU AN konuşacak beynin model kimliği = `_model_id`in AKTİF sağlayıcıya uygulanmış hâli.
+
+    İKİ KOPYA BİRLEŞTİRİLDİ (2026-08-14, v246-B). Bu gövde `_model_id`in satır satır ikiziydi ve
+    ikizler AYRIŞMIŞTI: `_model_id("nous")`e 2026-07-26'da eklenen UYDURMA KORUMASI ("yerel ajan +
+    `NOUS_MODEL` yok → hangi modele gidildiğini CLI'nın kendi config'i belirler, biz bilmeyiz →
+    None") buraya hiç taşınmamıştı. ÖLÇÜLDÜ (v245-A): aynı yapılandırmada `_model_id('nous')`
+    dürüstçe None derken `active_model()` `'Hermes-4-405B'` döndürüyordu — yani HİÇ ÇAĞRILMAMIŞ
+    bir model adı `hermes_status.json`da, panoda ve künye alanlarında durabiliyordu. Korumayı elle
+    kopyalamak aynı sınıfı ÜÇÜNCÜ kez doğururdu; tek kaynağa bağlamak kapatır. (Ölü-ad çevirisi ve
+    "rapor yüzeyi olay basmaz" kuralı `_model_id`in içinde AYNEN duruyor.)
+
+    ÇAĞIRANLAR None'U TAŞIYOR — ölçüldü, varsayılmadı: `hermes_runtime._persist`/`status` zaten
+    `model = None` yolunu taşıyor (test_brain_resilience_v66: deterministik yolda
+    `disk["model"] is None`), pano `s.model || '—'` basıyor (web/app.js), `candidate_review` ve
+    `chain_text` künyelerindeki `model_istenen` okuması None'a karşı korumalı."""
+    return _model_id(active_brain())
 
 
 def _parse_hyp(text: str) -> dict | None:
@@ -2350,11 +2351,25 @@ def _extract_json(text: str) -> str:
     return best or t
 
 
+def _nous_portal_model() -> str:
+    """PORTAL (uzak, OpenAI-uyumlu) Nous ucuna GERÇEKTEN giden model adı — `_nous_text`in istek
+    gövdesine yazdığı değerin TEK kaynağı.
+
+    NEDEN TEK KAYNAK (v246-B): `chain_text` künyesi bu ayağın modelini de bildirmek zorunda ve aynı
+    ifadeyi ikinci kez yazmak, bu turun kapattığı sınıfın ("iki kopya sessizce ayrışır") tam
+    kendisiydi. Varsayılan burada UYDURMA DEĞİLDİR ve ayrım `_model_id` docstring'inde yazılı:
+    portal modunda gövdeyi BİZ kuruyoruz, yani `NOUS_DEFAULT_MODEL` gerçekten GİDEN addır (yerel
+    ajan modunda değildi — orada adı CLI'nın kendi config'i seçer, bu yüzden orası None döner).
+    ÖLÜ-AD GÖÇÜ UYGULANMAZ, bilerek: `GEMINI_DEAD_MODEL_MAP` Google adlarını taşır, portal ucu
+    Nous/OpenRouter kimliği ister — çeviri burada adı ONARMAZ, BOZARDI."""
+    return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
+
+
 def _nous_text(user: str, *, note: str) -> str | None:
     """Nous'un UZAK ucunun (OpenAI-uyumlu) tek gövdesi — metin döner. Bkz. `_claude_text` notu."""
     import httpx
     base = (secrets.get("NOUS_ENDPOINT") or NOUS_DEFAULT_ENDPOINT).rstrip("/")
-    model = secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
+    model = _nous_portal_model()
     r = httpx.post(f"{base}/chat/completions",
                    headers={"Authorization": f"Bearer {secrets.get('NOUS_API_KEY')}",
                             "Content-Type": "application/json"},
@@ -3932,6 +3947,45 @@ def propose_with_llm() -> dict | None:
     return None
 
 
+# ==================================================================================================
+# ZİNCİR KÜNYESİ — "CEVABI KİM VERDİ" (v246-B, 2026-08-14; `candidate_review`in v245 kardeşi)
+# --------------------------------------------------------------------------------------------------
+# ESKİ HÂL: `out.update({..., "model": active_model()})` — yani künye zincir KOŞTUKTAN SONRA
+# YAPILANDIRMAYI yeniden okuyordu. Zincirin bütün varlık sebebi ayakların DÜŞMESİ olduğu için bu
+# alan tam da düşüş olduğunda yanlış oluyordu: metni ikinci ayak yazarken künye birinciyi söylüyordu.
+# `candidate_review`de ölçülen bedel buydu — `tencent/hy3:free` 56 çağrıda 0 cevap verdi, pano
+# haftalarca onun adını yazdı ve HATALI KÜNYE ARIZAYI GİZLEDİ. Bu, aynı kusurun ikinci eviydi
+# (ROADMAP §2-31a) ve tüketicisi Katman-B'nin kalıcı defterleridir (bkz. aşağıdaki tüketici listesi).
+#
+# OKUMA NOKTASI NEDEN AYAK BAŞINA (bu blok tam olarak bir tuzağı kapatıyor):
+# `cevap_veren_model()` TÜKETEN bir okumadır (okuyunca kutuyu boşaltır) ve kutuyu YALNIZ
+# `_agent_call` doldurur — zincirin dört ayağından YALNIZ BİRİ (nous + yerel ajan) oradan geçer.
+# Kutuyu ayak ayrımı yapmadan tek yerde okumak, düzelttiğimiz kusuru TERS YÖNDE üretirdi:
+#   · nous-yerel BOŞ → gemini DOLU  ⇒ kutu boş; gemini'nin künyesi sessizce None olurdu.
+#   · claude ilk denemede DOLU      ⇒ kutu bu turda hiç yazılmadı; aynı iş parçacığındaki ÖNCEKİ
+#     bir `_agent_call`in tüketilmemiş künyesi claude'un cevabına YAPIŞIRDI (bayat künye).
+# Bu yüzden her ayak künyesini KENDİ çağrısının yanında bildirir ve kutu yalnız kendi çağrısını
+# yapan ayakta okunur. Doğruluğun kanıtı üç yapısal olguya dayanır: (i) kutuyu yazan tek yer
+# `_agent_model_kaydet` (dolu cevabı veren denemenin içinde), (ii) `_agent_call` kutuyu GİRİŞTE
+# sıfırlar (erken dönüşler dahil) — yani okuduğumuz şey her zaman BİZİM çağrımıza aittir,
+# (iii) kutu `threading.local` ve okuyucu çağrıyı yapan iş parçacığının kendisidir.
+# Diğer üç ayak için künye ölçüm değil OLGUDUR: gövdenin isteğe YAZDIĞI adın aynı kaynağı
+# (`MODEL` sabiti · `_nous_portal_model()` · `gemini_model()`) — bu yüzden onlarda "ölçülemedi"
+# hâli yoktur. Kalan pay dürüstçe beyan edilir: gemini/portal adları sır okumasıdır ve sır önbelleği
+# (TTL 300 sn) çağrı ile künye arasında yenilenirse ad ayrışabilir; ölçülen bir vaka YOKTUR ve bu
+# pencere `active_model()`in kapattığımız SAĞLAYICI-SEÇİMİ hatasıyla aynı sınıfta değildir.
+#
+# TÜKETİCİLER (ADIYLA, v246-B ölçümü): tek üretim tüketicisi `nous_eval.haftalik_degerlendirme`
+# (`nous_eval.py:695-699`) — `cevap.get("text"/"beyin"/"model"/"neden")` okur ve `model`i iki
+# kalıcı deftere yazar: `nous_eval_runs.json` (`_kosu_kaydet`) ve `improvement_proposals.jsonl`
+# (`_oneri_kaydet` → satır alanı `model`; ledgers sözleşmesinde ZORUNLU DEĞİL, yani None meşru).
+# Pano ikisini de None-korumalı basar (`web/app.js`: `p.model || "—"`). Sözleşme EK ALANLA
+# genişledi, mevcut anahtarların adı/şekli DEĞİŞMEDİ — `.get()` okuyan tüketici kırılmaz.
+# ==================================================================================================
+ZINCIR_MODEL_YOK = ("cevap veren model YOK: beyin zincirinden dolu metin çıkmadı — ayak başına "
+                    "sebep `neden` alanında")
+
+
 def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 300,
                max_wait: float = 0.0, note: str | None = None) -> dict:
     """BEYİN ZİNCİRİNİN GENEL METİN YOLU — `propose_with_llm` ile AYNI disiplin, farklı GÖREV.
@@ -3946,11 +4000,22 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
     yani user-prompt yolundan. SYSTEM statik bir sabittir (AST testiyle çivili) ve içine görev metni
     sızdığı gün `cache_control` her turda ıskalar; maliyet sessizce katlanır.
 
-    DÖNÜŞ: {"text", "beyin", "model", "neden": {sağlayıcı: sebep}} — `text=None` ise `neden`
-    zincirin HER ayağının niçin cevap vermediğini taşır. "Çağrı yapılamadı" ile "cevap boş geldi"
-    ayrı sınıflardır (`_NOT_A_RESPONSE`) ve tek satıra katlanmazlar."""
+    DÖNÜŞ: {"text", "beyin", "model", "model_kaynagi", "model_olculemedi", "model_istenen",
+    "neden": {sağlayıcı: sebep}} — `text=None` ise `neden` zincirin HER ayağının niçin cevap
+    vermediğini taşır. "Çağrı yapılamadı" ile "cevap boş geldi" ayrı sınıflardır
+    (`_NOT_A_RESPONSE`) ve tek satıra katlanmazlar. Künye sözleşmesi için bkz. üstteki blok."""
     from . import spend
-    out: dict = {"text": None, "beyin": None, "model": None, "neden": {}}
+    # "İSTENEN" ZİNCİR GİRİŞİNDE ÖLÇÜLÜR, sonunda değil: `active_model()` yapılandırmayı okur ve
+    # zincir KOŞARKEN yapılandırma değişir (bir ayak 429 yiyip soğumaya girince `active_brain`
+    # kayar). Koşu bittikten sonra okumak, "ne istedik" sorusunu koşunun KENDİ yan etkisiyle
+    # cevaplamak olurdu — düşen ayak listeden silinmiş görünür ve ayrışma kendini gizlerdi.
+    _istenen = active_model()
+    out: dict = {"text": None, "beyin": None, "model": None,
+                 # KÜNYE SÖZLEŞMESİ (v246-B) — `candidate_review` deseninin aynısı: alan VARSA
+                 # `model` = CEVABI VEREN; alan YOKSA kayıt eski sözleşmedendir ("istenen"i taşır)
+                 # ve RETRO-DÜZELTİLMEZ. İki anlam iki ad: "istenen" `model_istenen`de durur.
+                 "model_kaynagi": "cevap_veren", "model_olculemedi": ZINCIR_MODEL_YOK,
+                 "model_istenen": _istenen, "neden": {}}
     if spend.over_budget():
         out["neden"]["*"] = "monthly_budget"
         obs.log("nous_chain_budget_gate", kind=kind,
@@ -3966,16 +4031,24 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
             obs.log("nous_chain_cooldown", provider=p, kind=kind, remaining_s=round(rem, 1))
             continue
         _trace_take()                      # önceki turdan artık neden kalmasın
+        kunye, kunye_neden = None, None    # BU AYAĞIN künyesi — okuma noktası ayağın kendi yanında
         try:
             if p == "claude":
                 txt = _claude_text(prompt, note=note or kind, max_tokens=8000)
+                kunye = MODEL              # `_claude_text` gövdesi bu SABİTİ gönderir (import'ta bağlı)
             elif p == "nous":
                 # YEREL ajan varsa O kullanılır (skill kütüphanesi + MCP araçları onun yolunda).
-                txt = (_agent_call(prompt, preload=preload, kind=kind, timeout=timeout,
-                                   max_wait=max_wait) if _nous_local()
-                       else _nous_text(prompt, note=note or kind))
+                if _nous_local():
+                    txt = _agent_call(prompt, preload=preload, kind=kind, timeout=timeout,
+                                      max_wait=max_wait)
+                    # TÜKETEN OKUMA — ÇAĞRININ HEMEN YANINDA ve YALNIZ BU AYAKTA (bkz. üstteki blok).
+                    kunye, kunye_neden = cevap_veren_model()
+                else:
+                    txt = _nous_text(prompt, note=note or kind)
+                    kunye = _nous_portal_model()      # istek gövdesindeki adın TEK kaynağı
             else:
                 txt = _gemini_call(prompt, note=note or kind)
+                kunye = gemini_model()     # `_gemini_call`in URL'ye yazdığı adın AYNI kaynağı
         except Exception as e:
             limited, retry_after = _rate_limited(e)
             cooled = brain_stand_down(p, "rate_limit" if limited else "error", retry_after) if limited else 0.0
@@ -3985,7 +4058,18 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
             continue
         if txt and str(txt).strip():
             brain_recovered(p)
-            out.update({"text": txt, "beyin": p, "model": active_model()})
+            out.update({"text": txt, "beyin": p, "model": kunye,
+                        # UYDURMA YASAĞI: ölçülemeyen künye `active_model()`e (yapılandırma)
+                        # SESSİZCE DÜŞMEZ — None kalır ve NEDENİ yanında durur.
+                        "model_olculemedi": None if kunye else (kunye_neden or ZINCIR_MODEL_YOK)})
+            if kunye and _istenen and kunye != _istenen:
+                # AYRIŞMA GÖRÜNÜR OLUR (candidate_review'deki kardeşinin aynısı): zincirin yedeğe
+                # düşmesi bir ARIZA değildir; arıza, düştüğünün SÖYLENMEMESİYDİ. Uyarı değil kayıt.
+                obs.log("nous_chain_model_ayrismasi", kind=kind, beyin=p, cevap_veren=kunye,
+                        istenen=_istenen,
+                        detail="metni zincirin İSTENENDEN BAŞKA bir ayağı/modeli yazdı — künye "
+                               "artık cevap vereni taşıyor; istenen ayağın neden boş döndüğü "
+                               "nous_chain_empty/nous_chain_skipped olaylarında")
             return out
         reason, detail = _trace_take()
         reason = reason or EMPTY_UNKNOWN
