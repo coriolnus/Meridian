@@ -67,6 +67,33 @@ karakter). `AGENT_RPD=600` ultra ile **76 saat** ederdi — yani bütçe ulaşı
    düzelir"* — harfiyen uygulandı ve **sistemi bozdu**. Ölçüt yeşillenirken (`same_model_ids`
    boşaldı) sistem bozuluyordu. Hafıza düzeltildi.
 
+## 3b. v245 — beş cephe, paralel, dosya-ayrık
+
+| cephe | ne yapıldı | doğrulama |
+|---|---|---|
+| **WP6-26** değer-eşitliği kapısı | 26 çift envanteri: **13'ü kaynağında zaten kapanmış · 4+1 bağlandı · 9'u bağlanmadı (her biri NEDENİYLE)** | 436 test yeşil · **maliyet DÜŞTÜ**: 9,10 → 7,13 ms (okuma kutusu + libyaml) · canlı `total 9 · esit 7 · ayrik 0` |
+| **WP3-28c** öğrenme hafızası | `already_failed` exploit yoluna; iki tanım **bire indi**; adım merdiveni; kısırlık görünür | ~810 test yeşil · gizli `KeyError` (`x@rejim` son-eki) testle yakalandı |
+| **WP3** model künyesi | `candidate_review.json` artık **cevap veren** modeli taşıyor; `model_kaynagi`/`model_istenen` ile iki anlam iki ada ayrıldı; ayrışma olayı | 20 çivi; bu gecenin vakası (birinci boş → ikinci dolu) doğrudan çivili |
+| **WP8** kayan oturum | v2 jeton `<exp>.<iat>.<nonce>.<imza>`; yarı-ömürde tazelenir, **7 gün mutlak tavan**; v1 doğrulanır ama yenilenmez | 758 test · **yakalanan tuzak:** tazeleyici `/api/logout`un silme başlığını ezecekti → çıkış sessizce çalışmaz olurdu |
+| **WP8** kimlik olayları | `login_ok` · `session_refresh` · `session_drop` · `login_locked_out` (kilit devreye girince defter tamamen susuyordu) | parola/jeton hiçbir olayda geçmiyor (dizgi çivisi) |
+| **WP2-D** equity_curve | bacak-1 `seed_boundary` **son noktadan okumayı bıraktı** (reset işareti → damga → `None`+neden); bacak-2 kadanslı yazar (`file_lock`, idempotent, ölçülemezse yazmaz) | 1822 test yeşil · `lint-imports` 5 KEPT / 0 broken · `silent_handlers 0` |
+| **WP11-15g** slot↔sektör | sektör tavanının paydası `max_open_positions`tan **ayrıldı** (`sector_cap_basis`, operatör-only) | **620 hücrelik** kalıcı eşdeğerlik matrisi + tek seferlik **17.856 hücrelik** diferansiyel kıyas → sıfır ayrışma; canlıda **no-op** (anahtar yok → türetilmiş payda) |
+
+**Yöntem notu — beş ajanın beşi de kendi enstrümanını sınadı:** kapının gerçekten kıyas ürettiği
+ayrı çiviyle · tazeleyicinin logout'u ezmediği olguya bakarak · boş `grep`e güvenmeden önce
+**bilerek kırmızı dosyayla** `FAILED`in göründüğü · sökülen kodun gizli çökmesi iddia yerine testle.
+Bu, gecenin başındaki `tool_calls: −1` dersinin karşılığı: **hep aynı şeyi söyleyen gösterge kanıt
+değildir.** (Aynı tuzağa ben de düştüm: "pytest koşuyor mu" bekçim `grep -c '[p]ytest'` ile
+**kendini** sayıyordu.)
+
+## 3c. Dağıtımdan sonra beklenen — ÖNCEDEN SÖYLENİYOR
+
+**Faz-6 kilidi meşru biçimde düşebilir.** Kadanslı yazar `analytics._realized_drawdown`ın m2m
+bacağını körlükten çıkarıyor: `m2m_durum` `"donem_disi"` → `"olculdu"`. Ölçülen **%8,04**,
+`EDGE_MAXDD_MAX = 0,08`i kıl payı aşıyor. **Bu bir arıza değil, kapının çalışmasıdır** — hiçbir
+eşiğe dokunulmadı, sistem ilk kez ölçebildiği bir şeyi ölçüyor. Eşiği gevşetmek gündemde değil
+(EDG-037'nin `RESULT_PF_MIN` emsali: *"kilidin kapalı kalması ARIZA DEĞİL KORUMA"*).
+
 ## 4. Seni bekleyenler
 
 | # | ne | neden bende değil |
