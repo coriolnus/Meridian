@@ -1301,6 +1301,35 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 39. KALİBRASYON "HANGİ BEYİN NE KADAR İSABETLİ"Yİ CEVAPLAYAMIYOR — YAPISAL** _(2026-08-14, v246-B ölçtü; **Rol-1 kararı gerektiriyor**)_
+  `analytics.llm_opinion_calibration` çiftleri `trade_plans.llm_opinion` + işlem defteri join'inden
+  kuruyor ve **model künyesini hiç okumuyor** (`grep -c candidate_review analytics.py` = **0** —
+  v245'te benim ters yöndeki iddiam da böyle çürümüştü). Sorun künyeyi okumaması değil,
+  **kaydedilmiş bir künye OLMAMASI**:
+  · `llm_opinion`ı yazan tek yer `hermes._stamp_llm_opinions`; satıra **TEK anahtar** yazabiliyor ve
+    bu **YAZILI YASA** (`test_authority_boundaries_v77::test_c3`: `degisen == {"llm_opinion"}`)
+  · plan satırlarında model/beyin adı **yok** (ölçüm: damgalı 4 satırın 0'ında)
+  · olaylar da taşımıyor (`llm_opinions_stamped` alanları ts/event/level/date/n)
+  · `candidate_review.json` v245'ten beri cevap vereni taşıyor ama **tek-belge** deposu (`doc.clear()`)
+    — yalnız son gün
+  · tek kalıcı model defteri `agent_calls.jsonl`, ama satırında **ticker ve plan günü yok** ve
+    `backfill_opinions` bugünkü çağrıyla **aylar öncesine** damga vuruyor → zaman-yakınlığı join'i
+    **yapısal olarak yanlış**
+  **DOĞRUDAN SONUCU:** bu gecenin **ultra→super** değişiminin etkisi bu kanalda **ÖLÇÜLEMEZ**;
+  öncesi/sonrası çiftler aynı taze pencerede ayrıştırılamadan karışır. Yani "model değişikliği
+  işe yaradı mı" sorusunun bugün bir cevap yolu YOK.
+  **NEDEN ROL-1'DE:** ucuz ve sözleşme-kırmayan yol yok. Plan satırına ikinci alan yazmak
+  **yetki-sınırı yasasını değiştirmeyi** gerektirir; ayrı bir atıf defteri yasayı kırmaz ama
+  `ledgers.CONTRACTS` kaydı + kalibrasyon tarafında tüketici ister.
+  Ölçüm `tests/test_zincir_kunye_v246.py::test_n1` ile **donduruldu** (kapı kapatmıyor, ölçümün
+  bayatlamasını engelliyor). *öncelik: yüksek — model seçimi bir kaldıraç ve bugün geri-besleme yok.*
+
+- **🆕 40. `nous_eval` yeni künye alanlarını defterine taşımıyor** _(2026-08-14, v246-B devri; sahibi WP7)_
+  `chain_text` artık `model_kaynagi`/`model_olculemedi`/`model_istenen` üretiyor ama
+  `nous_eval.haftalik_degerlendirme` (`nous_eval.py:695-699`) yalnız `.get("model")` okuyor; iki
+  kalıcı defter (`nous_eval_runs.json`, `improvement_proposals.jsonl`) beyanları taşımıyor.
+  Tek satırlık iş; v246-B'nin dosya sınırı dışındaydı. *boyut: XS.*
+
 - **🔴 36. FAZ-6 KİLİDİ MEŞRU BİÇİMDE DÜŞEBİLİR — KADANSLI YAZARIN YAN ETKİSİ** _(2026-08-14, v245-D; sahibi WP5/WP2; **operatör bilgilendirmesi**)_
   `equity_curve` kadanslı yazarı devreye girince `analytics._realized_drawdown`ın **m2m bacağı
   körlükten çıkıyor**: seri kitabın seansını kapsar hâle gelince `m2m_durum` `"donem_disi"` →
