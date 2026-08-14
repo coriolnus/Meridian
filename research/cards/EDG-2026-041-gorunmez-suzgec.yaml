@@ -95,6 +95,31 @@ verdict:   # Rol-1 hükmü.
     (`already_failed` hafızası yalnız explore dalında). Yani döngü aynı düğmeyi tekrar tekrar
     öneriyor VE o öneriler sessizce düşüyor — ikisi birlikte çözülmezse biri diğerinin etkisini
     maskeler. İkisi de bu turda (v245) ele alınıyor.
+  uygulama_hukmu: >
+    UYGULANDI 2026-08-14 (v247-A). **D1'İN YERİ KARTIN LAFZINDAN AYRILDI — ROL-1 ONAYI, gerekçeli.**
+    Kart "reddedilen öneri DEFTERE girer" diyor ve `hypotheses.jsonl` akla geliyor. Ölçüm bunun
+    kartın KENDİ kill kriterini ("aday sayan tüketicide aday gibi sayılmamalı") **dört ayrı yerde
+    ihlal edeceğini** gösterdi:
+    (i) `analytics.dead_families` durum süzgeci TAŞIMIYOR ve `DEAD_FAMILY_MIN_N=3` — ölçülen
+    dağılımda `entry.w_turnover` 21 satır demek, aile anında "ölü" sayılır ve düğme
+    `virgin_knobs()` bakir listesinden DÜŞER. Yani reddedilen öneriler **öneri uzayını daraltırdı**.
+    (ii) `watchdog._learning_liveness` yaşı `ts`ten ölçüyor → taze ret satırı "öğrenme durdu"
+    alarmını **sıfırlar**; kusuru gösterecek tek alarm kendi kaydıyla maskelenir.
+    (iii) `selfreview`in 25/15'lik pencereleri düğmeyi "denendi" sayar ve gerçek hipotezi dışarı iter.
+    (iv) `api.hypotheses_total` → `landing.js` **kamuya açık ship-oranının paydası**.
+    SEÇİLEN YER `events.jsonl`: `ledgers.CONTRACTS`ta sözleşmeli, **aday sayan tüketicisi yok**.
+    Kayıt `damga="REDDEDILDI"` + `red_nedeni` + `old/new/source/rationale` taşıyor (eskiden yalnız
+    `variable`+`bg_regime` vardı — NE önerildiği okunamıyordu).
+    **KARTIN RUHU LAFZINA ÜSTÜN TUTULDU:** amaç "üretim ile hayatta kalanı ayırmak"tı; `hypotheses`
+    seçeneği o amacı sağlamak yerine ölçülebilir biçimde ZARAR verirdi.
+    ASIL GÖVDEYİ D2 TAŞIYOR: 47'nin 46'sı artık çivilenip `reflect.submit`e gidiyor ve GERÇEK defter
+    satırı üretiyor; D1'in kalan nüfusu **1/47**.
+    ÖLÇÜLEN SONUÇ (kuru koşum): `entry.w_turnover@chop` guard'da düşer (21/47) ·
+    `regime.vix_backwardation_gate@chop` `regime.*` kuralında düşer (8/47) · `exit.trail_atr_mult@chop`
+    + `exit.breakeven_r@chop` guard'ı geçip **KAPIYA ULAŞIR (17/47)**. Yani daha önce sessizce imha
+    edilen 47 önerinin **17'si artık kapıya varıyor** — kartın ölçütü tam olarak buydu.
+    AÇIK: `hypotheses.jsonl` yolunu açmak altı dosya (analytics/watchdog/selfreview/api/app.js/
+    landing.js) düzeltmeyi gerektirir → ROADMAP kalemi, bu turda YAPILMADI.
   sinir: >
     Kurtarılan önerilerin İYİ olduğu İDDİA EDİLMİYOR (kartın beyanlı sınırı 1): yeniden yazılan
     öneri `probgate`ten yine geçmek zorundadır ve bu kart o geçişi ÖLÇMEZ. Ölçülen tek şey,
