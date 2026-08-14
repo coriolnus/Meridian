@@ -1301,6 +1301,50 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 45. 28d TEŞHİSİ — EŞİK DÜŞÜRMEK BU TIKANIKLIĞI AÇMAZ** _(2026-08-14, v247-B ölçtü; **planı DEĞİŞTİRİR**)_
+  ROADMAP 28d'yi "kapı ölçemiyor, `chop` dilimi 27 < eşik 30" diye taşıyordu ve örtük çözüm eşikti.
+  **ÖLÇÜM ÜÇ ŞIKKI AYRIŞTIRDI:** pencere dar mı → **HAYIR** (OOS 850 gün) · fold geometrisi mi →
+  **HAYIR** (eşik `score_detail`te dilimin TAMAMINA biner) · **sınıflayıcı seyrek mi → EVET,
+  BELİRLEYİCİ**: `chop` OOS'un **%4,7'si** (27/572) ve **zamanda kümelenmiş**.
+  Fold kırılımı: fold1 8/189 · fold2 19/128 · **fold3 0/255**. **27 chop'un 26'sı arama diliminde,
+  TEYİTTE SIFIR.** 2025-07-01'den sonraki **394 günde hiç chop yok**.
+  **KİLİT SONUÇ:** teyit tabanı `max(10, …)` yüzünden **10'un altına inmez** ve chop'un teyit dilimi
+  **0 işlem**. Yani `min_sample` 30→10 olsa **bile** @chop teyitte ölçülemez → **eşik düşürmek bu
+  tıkanıklığı AÇMAZ.** Eşik tartışması bu kalem için **konusuz**.
+  **SIRA ÖLÇÜMLE DOĞRULANDI:** 28f'ten ÖNCE eşik düşürülseydi @chop adayları **teyitsiz** ship
+  edilebilirdi (H00029 sınıfı). 28f sonrası dürüstçe engelleniyor — ROADMAP'in `28a > 28d` sırası
+  doğruymuş, ama gerekçesi sanılandan farklı.
+  **GERÇEK KALEM ARTIK BU:** `chop` rejimi bir yıldır oluşmuyor. Bu bir kapı arızası değil, **rejim
+  sınıflayıcısının ya da piyasanın** gerçeği. Doğru soru: sınıflayıcı fazla mı dar (kalibrasyon) ·
+  yoksa gerçekten chop yok mu (o zaman @chop öğrenmesi **yapısal olarak beklemede**). *öncelik:
+  yüksek · gerekli iş: sınıflayıcının chop tanımını ölçmek — kart-önce.*
+
+- **🆕 46. 28f — DELİK İKİ NÜSHALIYDI, İKİNCİSİ ROADMAP'TE YOKTU** _(2026-08-14, v247-B)_
+  **(a) TEYİT ayağı** (bilinen): `if conf.law == "probabilistic":` — teyit olasılıksal hüküm
+  veremeyince blok **tamamen atlanıyor**, aday **teyitsiz ship** ediliyordu. Dört yol `law="legacy"`
+  döndürüyor, hepsi `p=None, n_valid=0`. **[B] dalında kod LİTERAL OLARAK *"ship yetkisi bu kanıtla
+  verilemez"* yazıyor ve ship yolu onu yok sayıyordu.**
+  **(b) ARAMA ayağı** (ÖLÇÜMLE BULUNDU, ROADMAP'te yok): `evaluate_search` "dilim yok" ile "dilim var
+  ama ölçemedim"i aynı dala sokuyordu; ikincisinde sessizce **daha gevşek bileşik nokta-marj
+  yasasına** düşüp geçiriyordu — ölçülen: `passes=True, gate_law=legacy_margin, search_p=None,
+  why=''`. **Sıfır olasılıksal kanıtla "geçti".**
+  Düzeltme üç değerli (geçti/geçmedi/**ölçülemedi**), fail-closed, eşiklere dokunulmadı. **AYRIM
+  SINIRI BİLİNÇLİ:** dilim YOKSA (fikstür/sandbox) teyit mekanizması yürürlükte değildir —
+  *olmayan sınavdan kalınmaz*; fail-closed yalnız "yasa yürürlükte, ölçüm yok" hâline biner.
+  Geçmiş vaka **H00029 → v0003** (`entry.w_prox` None→0,15, 2026-07-20) adıyla kayıtlı ve
+  **retro-düzeltilmedi** (tarihçe-koru).
+
+- **🆕 47. 28i — SAPMA TEK FOLD'DAN GELMİYOR, GELEMEZ** _(2026-08-14, v247-B ölçtü)_
+  Arama fold'ları: fold1 **274 gün** · fold2 **263** · fold3 **38**. fold3 bir tasarım penceresi
+  DEĞİL, takvim sınırı (2025-07-01) ile %70 kesimi (2025-08-18) arasında kalan **ARTIK** — tam
+  fold3'ün %13'ü.
+  Canlı: kapı `n=36, avg_r=−0,2223` oyluyor; **aynı dönem** tam uzunlukta `n=249, avg_r=+0,2140`.
+  **Aynı dönem, iki zıt işaret, tek fark pencere uzunluğu.**
+  **"Sapma tek fold'dan mı?" → HAYIR, GELEMEZ:** holdout bir fold DEĞİL, OOS'un tamamen dışında
+  ayrı **91 günlük** pencere. Fold'lar OOS'un içindedir ve holdout skoruna hiç girmezler. 0,772'lik
+  sapma, o 91 günlük kısa pencerenin **kendi getirisidir**. *gerekli iş: artık-fold ve 91 günlük
+  holdout penceresinin meşruiyeti — kart-önce.*
+
 - **🆕 44. RENK ROL-SIZINTISININ ÖLÇÜLMEMİŞ İKİNCİ EVİ** _(2026-08-14, v246-D kapsam dışı bulgusu; sahibi WP8)_
   `meridian/web/app.js`in **çalışma-zamanı SVG/inline** stillerinde **33 adet ham değer-katmanı
   jetonu** var (`var(--amber|--green|--red)`; ör. `:9227`/`:9229` delik işareti kehribar, ayrıca
