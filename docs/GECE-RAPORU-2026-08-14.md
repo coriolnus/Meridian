@@ -113,6 +113,47 @@ seansın kapanışında düşer — o ana kadar `kuyruk` hâlâ `olculemedi` gö
 | servis | `active` · healthz **18 ms** |
 | dagit [1c] | 7 birimin 7'si birebir — gece kurulan birim tuttu |
 
+## 3d. v246 — ikinci tur (dört cephe) · DAĞITILDI ve DOĞRULANDI
+
+Otoriter tam suite **`rc=0`, tam taramada sıfır eşleşme**; dagit [1b] SSoT birebir, [1c] yedi
+birimin yedisi birebir; dağıtım temiz.
+
+| cephe | ne |
+|---|---|
+| **ölçüm hijyeni** | mutasyon listesi (kural 79 modül ↔ liste 39 → **41 dosyalık boşluk ÖLÇÜLDÜ, bilerek eklenmedi**) · `backtest.py` ölü yereli kaldırıldı · `codelaw` çapası **satır→sembol** + yazan listesi tamam · `auth_cli` beyanı düzeldi · üç yanlışlanan iddia (biri **`state/`e yazılıyordu**) |
+| **künye ikinci evi** | `chain_text` cevap vereni taşıyor · `active_model()` → `_model_id(active_brain())`, uydurma koruması taşındı |
+| **pano + config** | WP2-D **bacak-3**: pano hangi pencereyi gösterdiğini söylüyor · `config` yedeği canlıyla hizalandı (0,5) · **dördüncü tüketici** bulundu (`sprint.py` 1,0R ile arıyordu) |
+| **renk rolleri** | gecikme/delik: renk hak edilmiş, kapı görünür yapıldı (render eşdeğerliği **19 fikstürle kanıtlandı**) · sermaye reset: renk hak **etmiyor** — anomali değil, kayıtlı operatör eylemi. Dört yüzey artık aynı dilde + **deseni kapatan çivi** |
+
+### Canlı doğrulama (06:40, dağıtım sonrası)
+
+```
+882 nokta · 2023-01-12 → 2026-07-20
+gecikme_gun 24 · son_seans 2026-08-13 · n_bosluk 0 · n_isaret 1 · okunamayan_nokta 0
+healthz 200 · 59 ms · servis active
+```
+
+Yani panonun kendisi artık **"son nokta 24 gün geride — kitabın son seansı 2026-08-13"** diyecek.
+*"P&L yansıtmıyor"* şikâyetinin cevabı artık ekranda. (`n_bosluk 0` doğru: 24 günlük eksiklik
+serinin **sonunda**, iki nokta *arasında* değil — donukluk ile delik ayrı şeyler, ayrı raporlanıyor.)
+
+## 3e. Gecenin deseni — iki cümle
+
+Yapılan işin çoğu yeni özellik değildi. Tek bir şeyin dokuz ayrı örneğiydi:
+
+**(1) Sistem kendisi hakkında bir şey söylüyor, o şey gerçekle ayrışıyor, ve ayrışma SESSİZ.**
+`trades.costs` (varsayımı gerçekleşen sanmak) · `tool_calls` (hep −1) · model künyesi (istenen ↔
+cevap veren) · IEX ölçütü (tek borsayı piyasa sanmak) · satır çapaları · `codelaw` yazan listesi ·
+`sermaye.py`nin **`state/`e yazdığı** yanlış iddia · renk rolleri · `nogo_neden_dagilim`.
+
+**(2) Daha incesi: kural konuyor ama bekçisi kuralın yaşadığı HER YERİ taramıyor.**
+Renk çivisi yalnız CSS'e bakıyordu, `app.js` çalışma zamanına değil (§2-44) · `codelaw` çapa
+VARLIĞINA bakıyordu, UYUŞMASINA değil (§2-34a) · emisyon tarayıcısı `if`i aynı satırda arıyordu.
+**İkincisi daha tehlikeli:** birincide "ölçmüyoruz" belli olur; ikincide **yeşil bir çivi** vardır
+ve yanlış yere bakmaktadır.
+
+Bu gece yapılan işin büyük kısmı bu iki sessizliği **sesli** hâle getirmekti.
+
 ## 4. Seni bekleyenler
 
 | # | ne | neden bende değil |
