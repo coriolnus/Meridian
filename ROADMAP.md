@@ -1301,6 +1301,18 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🆕 44. RENK ROL-SIZINTISININ ÖLÇÜLMEMİŞ İKİNCİ EVİ** _(2026-08-14, v246-D kapsam dışı bulgusu; sahibi WP8)_
+  `meridian/web/app.js`in **çalışma-zamanı SVG/inline** stillerinde **33 adet ham değer-katmanı
+  jetonu** var (`var(--amber|--green|--red)`; ör. `:9227`/`:9229` delik işareti kehribar, ayrıca
+  `:533`, `:3662`, `:3956`…). §2'nin `test_bilesen_kurallari_ham_hue_okumaz` çivisi **yalnız
+  `index.html` CSS kurallarını** tarıyor — bu yüzey onun **menzilinde değil**.
+  **Tutarsızlık AYNI FONKSİYONUN İÇİNDE:** delik işareti ham kehribar kullanırken üç satır
+  ötedeki reset işareti `var(--tx2)` (rol jetonu) kullanıyor.
+  Bu, gecenin tekrar eden deseninin bir başka yüzü: **kural konuyor ama bekçisi kuralın yaşadığı
+  her yeri taramıyor** — `codelaw` çapası (§2-34a), `tool_calls` (WP7), `nogo_neden_dagilim` (C6
+  yan bulgusu) ve bu, aynı sınıf. *öncelik: düşük-orta · gerekli iş: çivinin menzilini
+  `app.js` çalışma-zamanı stillerine genişletmek, sonra 33 jetonu sınıflamak (rol mü değer mi).*
+
 - **🔴 41. MUTASYON KAPSAMI 39/79 — GENİŞLETME KARARI ROL-1'DE** _(2026-08-14, v246-A ölçtü ve BİLEREK eklemedi)_
   `pyproject.toml`ın KENDİ türetme kuralı (`meridian import broker|guard|score`, AST ile modül
   düzeyi + fonksiyon içi) bugün **79 test modülünü** kapsıyor; `pytest_add_cli_args_test_selection`
