@@ -1301,6 +1301,43 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 41. MUTASYON KAPSAMI 39/79 — GENİŞLETME KARARI ROL-1'DE** _(2026-08-14, v246-A ölçtü ve BİLEREK eklemedi)_
+  `pyproject.toml`ın KENDİ türetme kuralı (`meridian import broker|guard|score`, AST ile modül
+  düzeyi + fonksiyon içi) bugün **79 test modülünü** kapsıyor; `pytest_add_cli_args_test_selection`
+  listesinde **39** var → **41 dosyalık boşluk** (tamamı ajan raporunda ADIYLA).
+  **KÖRLEMESİNE EKLENEMEZ — iki alt sınıf tehlikeli:** (a) `tests/wf_fixtures.py` kuralı sağlıyor
+  ama test modülü değil; (b) **kaynak-metni tarayan testler** (`Path(guard.__file__).read_text()`)
+  mutantı davranışla değil **METİNLE** öldürüp mutasyon skorunu **şişirir** — yani kapsamı
+  genişletmek ölçümü bozabilir. Ters yön de var: `test_trend_shadow_v144` listede ama üç modülü
+  hiç import etmiyor (zararsız fazlalık).
+  Bu turda YALNIZ `test_sektor_tavani_ayristirma_v245.py` eklendi (v237 emsali); gerisi ölçülüp
+  `pyproject.toml`a tarihli notla bırakıldı. **Karar:** ritüel süresini değiştirir
+  (`ops/haftalik_mutasyon.sh`) ve davranış-çivisi ↔ metin-çivisi ayrımı yapılmadan eklenirse skor
+  yanıltıcı olur. *öncelik: orta · gerekli iş: 41 dosyayı "davranış mı metin mi" diye sınıflamak.*
+
+- **🆕 42. ÇAPA DESENİ — ÖLÇÜLDÜ, YOL AÇIK (A17 genel kalemi)** _(2026-08-14, v246-A)_
+  meridian/ içinde **138** `dosya.py:SATIR` çapası var. **93'ü (%67)** bir `def/class` gövdesine
+  düşüyor → doğrudan `modül.sembol` çapasına çevrilebilir ve uyuşması **AST ile 5 satırda**
+  sınanır. **28'i** modül düzeyinde → çapa "ayırt edici kod dizgisi" olur (emsal: `ledgerstamp`
+  yazımları kod satırını da alıntılıyor). **15'i** meridian/tests/ops dışını gösteriyor.
+  **ASIL BULGU:** satır çapasının bayat olup olmadığı **otomatik denetlenemiyor** — sezgisel
+  tarayıcı 31 çapayı hükme bağlayabildi ve **yanlış-pozitif üretti** (`insider.py:281` bayat
+  göründü, DOĞRUYDU). Sembol çapasında aynı soru mekanik. **Sembol çapası da çürür (yeniden
+  adlandırma) ama çürümesi SESLİ olur — bütün mesele bu.**
+  ÖNERİ (üç adım): (1) yeni çapalar `modül.sembol` · (2) `codelaw`a genel `capa_uyusmasi()`
+  tarayıcısı (DECLARED_* metinlerinden `mod.sembol` çıkar, AST ile doğrula, uyuşmazsa kırmızı) ·
+  (3) eski satır çapaları **büyük-patlama göçü yerine** çevresi düzenlendikçe dönüştürülür.
+  Bu turda iki çapa tek tek sembolleştirildi (`codelaw` auth çapası, `sermaye`→`broker` çapası).
+
+- **🆕 43. YANLIŞLANAN İDDİANIN ÜÇÜNCÜ ÖRNEĞİ VERİYE YAZILMIŞ** _(2026-08-14, v246-A bulup düzeltti; ders kaydı)_
+  §2-38 iki modül YORUMUNU sayıyordu. Üçüncüsü daha ağırdı: `sermaye.py:413-425` reset işaretinin
+  `not` alanına *"eğrinin son noktası tohum sınırıdır"* cümlesini **`state/`e YAZIYORDU**. Yorum
+  bayatlaması bir sınıf; **artık yanlış olan bir iddiayı kalıcı veriye yazmak** başka bir sınıf —
+  yorum okunmayabilir, veri okunur ve ona göre karar verilir. Düzeltildi.
+  *ders: beyanın koddan geri kalması taraması YALNIZ yorumlara değil, koda gömülü metin üreten
+  yazımlara da uygulanmalı.* Ayrıca `state/goal.yaml:130` çapası (`guard.py:352`, gerçek yer
+  440-443) bayat — `state/` yazımı yasak olduğu için rapor edildi, düzeltilmedi.
+
 - **🔴 39. KALİBRASYON "HANGİ BEYİN NE KADAR İSABETLİ"Yİ CEVAPLAYAMIYOR — YAPISAL** _(2026-08-14, v246-B ölçtü; **Rol-1 kararı gerektiriyor**)_
   `analytics.llm_opinion_calibration` çiftleri `trade_plans.llm_opinion` + işlem defteri join'inden
   kuruyor ve **model künyesini hiç okumuyor** (`grep -c candidate_review analytics.py` = **0** —
