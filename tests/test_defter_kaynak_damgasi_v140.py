@@ -26,7 +26,7 @@ import re
 import pandas as pd
 import pytest
 
-from meridian import analytics, config, ledgerstamp, loop, run, store
+from meridian import analytics, config, ledgerstamp, loop, run, sermaye, store
 
 
 # =================================================================================================
@@ -42,12 +42,37 @@ def _islem(i: int, ts_open: str, ts_close: str, pnl_pct: float, *, setup="breako
             "plan_id": f"P-{ts_open}-AAA", "skill_chain": ["vcp-screener"], **ek}
 
 
-def _tohum_yazimi(trades: list, egri_son: str) -> None:
-    """`run.replay_seed`in DİSKTEKİ İZİNİ birebir taklit et: defterin tamamı yazılır, HEMEN ardından
-    equity_curve.json. `seed_boundary` sınırı tam olarak bu çiftten ölçer."""
+def _reset_isareti(egri_son: str, id_: str = "SR-20260801T151429") -> dict:
+    """`sermaye.uygula`nın eğri ZARFINA yazdığı işaretin ŞEKLİ (sermaye.py:413-419).
+
+    Alan adları uydurulmaz: anahtar `sermaye.CURVE_MARK_KEY`den, `egri_son_nokta` ise yazımın
+    kendi biçiminden (`list(pts[-1])`) gelir. Fikstür yazımın şeklini taklit eder; ŞEKLİN OTORİTESİ
+    sermaye.py'dedir ve `test_B_CIVI_isaretin_sekli_SERMAYE_ile_ayni` bunu ayrıca çiviler."""
+    return {"id": id_, "tarih": "2026-08-01T15:14:29+00:00", "tip": "paper_equity_reset",
+            "onceki_deger": 94457.91, "yeni_deger": 100000.0,
+            "egri_son_nokta": [egri_son, 94457.91],
+            "gerekce": "antrenman tohumunun zararı canlı-kâğıt sermayeden ayrıştırıldı (fikstür)"}
+
+
+def _tohum_yazimi(trades: list, egri_son: str, *, isaret: bool = True) -> None:
+    """CANLI DİSK İZİNİN BİREBİR TAKLİDİ — İKİ YAZIM, İKİ SAHİP:
+
+      1. `run.replay_seed` defterin TAMAMINI ve HEMEN ardından `equity_curve.json`ı yazar
+         (run.py:203-204);
+      2. `sermaye.uygula` eğrinin ZARFINA reset işaretini basar (sermaye.py:413-421) ve o işaret
+         `egri_son_nokta`yı DONDURUR.
+
+    WP2-D bacak-1 ONARIMI: `seed_boundary` sınırı artık (1)'in SON NOKTASINDAN değil (2)'nin donmuş
+    alanından okur — eğriye kadanslı yazar (loop.daily_cycle) nokta eklediğinde sınırın kaymaması
+    için. Fikstür bu yüzden ikisini birden kurar.
+
+    `isaret=False`: işaretin HİÇ yazılmadığı dünya (tohumlanmış ama sermaye ayrıştırması yapılmamış
+    kurulum) — kartın yazılı yedek yolunun (`trades.kaynak`) fikstürü."""
     store.write_jsonl("trades.jsonl", trades)
-    store.write_json("equity_curve.json",
-                     {"version": 4, "points": [["2023-01-12", 100000.0], [egri_son, 94457.91]]})
+    eq = {"version": 4, "points": [["2023-01-12", 100000.0], [egri_son, 94457.91]]}
+    if isaret:
+        eq[sermaye.CURVE_MARK_KEY] = [_reset_isareti(egri_son)]
+    store.write_json("equity_curve.json", eq)
 
 
 def _spy_yaz(dates, closes) -> None:
@@ -140,12 +165,99 @@ def test_A_stamp_rows_tumune_basar():
 # =================================================================================================
 # B) GERİYE MİGRASYON — SINIR ÖLÇÜLÜR, UYDURULMAZ
 # =================================================================================================
-def test_B_sinir_egrinin_son_noktasindan_VE_mtime_ciftinden_olculur(sandbox_state):
+def test_B_sinir_SON_RESET_ISARETINDEN_okunur(sandbox_state):
+    """WP2-D bacak-1 ONARIMI: sınırın kaynağı eğrinin SON NOKTASI DEĞİL, son reset işaretinin
+    DONMUŞ `egri_son_nokta` alanıdır. Hangi yolun konuştuğu `kaynak` alanında BEYANLIDIR."""
     _tohum_yazimi([_islem(i, "2023-01-31", "2023-02-01", -0.01) for i in range(3)], "2026-07-20")
     b = ledgerstamp.seed_boundary()
     assert b["replay_end"] == "2026-07-20"
-    assert b["toplu_yazim"] is True and b["guven"] == "yuksek"
-    assert b["mtime_delta_s"] <= ledgerstamp.BULK_WRITE_TOLERANCE_S
+    assert b["kaynak"] == ledgerstamp.KAYNAK_RESET and b["guven"] == "yuksek"
+    assert b["yollar"][ledgerstamp.KAYNAK_RESET] == "2026-07-20"
+    assert b["reset_isareti"]["isaret_id"] == "SR-20260801T151429"
+    # mtime çifti HÂLÂ ÖLÇÜLÜR (sınıflandırıcının çelişki kuralı okur) ama SINIRI BELİRLEMEZ.
+    assert b["toplu_yazim"] is True and b["mtime_delta_s"] <= ledgerstamp.BULK_WRITE_TOLERANCE_S
+
+
+def test_B_CIVI_EGRIYE_NOKTA_EKLENINCE_SINIR_DEGISMEZ(sandbox_state):
+    """BU TEST ONARIMIN TA KENDİSİDİR (WP2-D bacak-1 ↔ bacak-2 kilidi).
+
+    Eski hâlde sınır eğrinin son noktasından okunuyordu; kadanslı yazar (bacak-2) her seans bir
+    nokta eklediği anda sınır BUGÜNE kayar ve o günden sonraki HER canlı satır `replay_seed` diye
+    damgalanırdı — köken defterinin aktif olarak bozulması. Nokta eklenir, sınır KIPIRDAMAZ.
+
+    POZİTİF KONTROL BİLEREK YANINDA: ölçümün "hep aynı sayıyı döndüren ölü bir sabit" olmadığını
+    kanıtlar — yeni bir reset İŞARETİ yazıldığında sınır DEĞİŞİR."""
+    _tohum_yazimi([_islem(i, "2023-01-31", "2023-02-01", -0.01) for i in range(3)], "2026-07-20")
+    once = ledgerstamp.seed_boundary()["replay_end"]
+    assert once == "2026-07-20"
+    eq = store.read_json("equity_curve.json", {})
+    eq["points"].append(["2026-08-14", 100277.98])          # kadanslı yazarın eklediği nokta
+    store.write_json("equity_curve.json", eq)
+    b = ledgerstamp.seed_boundary()
+    assert b["replay_end"] == once, "eğriye nokta eklemek tohum sınırını KAYDIRDI"
+    assert b["egri_son_nokta"] == "2026-08-14", "eski yolun değeri görünür kalmalı (bilgi)"
+    # POZİTİF KONTROL — işaret değişince sınır değişir
+    eq = store.read_json("equity_curve.json", {})
+    eq[sermaye.CURVE_MARK_KEY].append(_reset_isareti("2026-08-14", id_="SR-20260814T000000"))
+    store.write_json("equity_curve.json", eq)
+    b2 = ledgerstamp.seed_boundary()
+    assert b2["replay_end"] == "2026-08-14" and b2["kaynak"] == ledgerstamp.KAYNAK_RESET
+    assert b2["reset_isareti"]["n_isaret"] == 2
+
+
+def test_B_ISARET_YOKSA_YEDEK_YOL_trades_damgasindan_okur(sandbox_state):
+    """Kartın YAZILI geçici çaresi (EDG-2026-036:178): işaret yoksa sınır `trades.kaynak`
+    damgasından okunur. Beyan zorunlu — `kaynak` alanı hangi yolun konuştuğunu söyler, yoksa iki
+    farklı kanıttan gelen aynı sayı okur için ayırt edilemez olurdu."""
+    rows = [dict(_islem(i, "2023-01-31", f"2023-02-0{i+1}", -0.01),
+                 kaynak=ledgerstamp.REPLAY_SEED) for i in range(3)]
+    _tohum_yazimi(rows, "2026-07-20", isaret=False)
+    b = ledgerstamp.seed_boundary()
+    assert b["replay_end"] == "2023-02-03", "damgalı satırların EN GEÇ ts_close'u"
+    assert b["kaynak"] == ledgerstamp.KAYNAK_DAMGA and b["guven"] == "orta"
+    assert b["yollar"] == {ledgerstamp.KAYNAK_RESET: None, ledgerstamp.KAYNAK_DAMGA: "2023-02-03"}
+    assert b["damga_olcumu"]["damgali_n"] == 3
+    assert "YEDEK YOL" in b["neden"]
+    # ve eğrinin son noktası (2026-07-20) SINIR OLARAK KULLANILMADI
+    assert b["egri_son_nokta"] == "2026-07-20" and b["replay_end"] != b["egri_son_nokta"]
+
+
+def test_B_YEDEK_YOL_bicimsiz_ts_close_SAYILIR_gizlenmez(sandbox_state):
+    """Ölçülemeyen satır sessizce atlanmaz: sınır o satırlar kadar eksik ölçülmüş olabilir ve
+    rapor bunu sayıyla söyler."""
+    rows = [dict(_islem(0, "2023-01-31", "2023-02-01", -0.01), kaynak=ledgerstamp.REPLAY_SEED),
+            dict(_islem(1, "2023-01-31", "yok", -0.01), kaynak=ledgerstamp.REPLAY_SEED)]
+    _tohum_yazimi(rows, "2026-07-20", isaret=False)
+    b = ledgerstamp.seed_boundary()
+    assert b["replay_end"] == "2023-02-01"
+    assert b["damga_olcumu"] == {"damgali_n": 2, "ts_olculebilen": 1, "ts_olculemeyen": 1}
+
+
+def test_B_ISARETIN_ALANI_OKUNAMAZSA_yedek_yola_duser(sandbox_state):
+    """İşaret VAR ama `egri_son_nokta` boş (reset anında eğri boşsa sermaye.py oraya None yazar).
+    "İşaret var" ile "işaret KONUŞABİLİYOR" aynı şey değildir — ikincisi ölçülür."""
+    rows = [dict(_islem(0, "2023-01-31", "2023-02-01", -0.01), kaynak=ledgerstamp.REPLAY_SEED)]
+    store.write_jsonl("trades.jsonl", rows)
+    isaret = _reset_isareti("2026-07-20")
+    isaret["egri_son_nokta"] = None
+    store.write_json("equity_curve.json", {"version": 4, "points": [["2023-01-12", 100000.0]],
+                                           sermaye.CURVE_MARK_KEY: [isaret]})
+    b = ledgerstamp.seed_boundary()
+    assert b["kaynak"] == ledgerstamp.KAYNAK_DAMGA and b["replay_end"] == "2023-02-01"
+    assert b["reset_isareti"]["n_isaret"] == 1 and b["yollar"][ledgerstamp.KAYNAK_RESET] is None
+
+
+def test_B_CIVI_isaretin_sekli_SERMAYE_ile_ayni():
+    """FİKSTÜR OTORİTE DEĞİLDİR. `_reset_isareti` sermaye.py'nin yazdığı şekli taklit eder; o şekil
+    değişirse (alan adı ya da zarf anahtarı) bu dosyanın bütün B bloğu sessizce YANLIŞ şeyi ölçmeye
+    başlardı — testler yeşil kalarak. Şekil kaynaktan okunur."""
+    src = pathlib.Path(inspect.getfile(sermaye)).read_text()
+    assert 'CURVE_MARK_KEY = "reset_isaretleri"' in src
+    blok = src[src.index("isaret = {"):src.index("eq[CURVE_MARK_KEY]")]
+    assert '"egri_son_nokta": egri_son' in blok, "işaretin `egri_son_nokta` alanı değişti"
+    assert set(_reset_isareti("2026-07-20")) <= set(re.findall(r'"(\w+)":', blok))
+    # ve o alan GERÇEKTEN eğrinin o ANDAKİ son noktasıdır (sonradan tazelenen bir alan değil)
+    assert "egri_son = list(pts[-1]) if pts else None" in src
 
 
 def test_B_toplu_yazim_defterin_TAMAMINI_tohum_sayar(sandbox_state):
@@ -207,7 +319,10 @@ def test_B_tohum_SONRASI_eklenen_satir_live_paper(sandbox_state):
     os.utime(eq, (eski, eski))
     store.append_jsonl("trades.jsonl", _islem(9, "2026-07-21", "2026-07-24", 0.02))
     b = ledgerstamp.seed_boundary()
-    assert b["toplu_yazim"] is False and b["guven"] == "orta"
+    assert b["toplu_yazim"] is False
+    # `guven` ARTIK SINIRIN KAYNAĞINI anlatır (WP2-D bacak-1), mtime imzasını değil: imza yokken de
+    # sınır DONMUŞ işaretten okunuyorsa güven yüksektir. İmzanın kendisi ayrı alanda durur.
+    assert b["guven"] == "yuksek" and b["kaynak"] == ledgerstamp.KAYNAK_RESET
     rapor = ledgerstamp.migrate(apply=False)
     assert rapor["dagilim"] == {ledgerstamp.REPLAY_SEED: 2, ledgerstamp.LIVE_PAPER: 1}
 
@@ -223,14 +338,29 @@ def test_B_CELISKI_uydurulmaz_belirsiz_kalir(sandbox_state):
 
 
 def test_B_sinir_olculemezse_TUMU_belirsiz(sandbox_state):
-    """UYDURMA YASAĞI: `equity_curve.json` yoksa tohum penceresinin sınırı bilinmez. Varsayılan bir
-    tarih seçmek (ör. "bugün") defterin tamamını tek bir tahmine göre etiketlerdi."""
+    """UYDURMA YASAĞI — ÜÇÜNCÜ HÂL. Ne işaret ne damga varsa sınır BİLİNMEZ. Varsayılan bir tarih
+    seçmek (ör. "bugün") defterin tamamını tek bir tahmine göre etiketlerdi; "sınır 0" demek de
+    aynı yalanın sayısal hâli olurdu."""
     store.write_jsonl("trades.jsonl", [_islem(0, "2023-01-31", "2023-02-01", -0.01)])
     b = ledgerstamp.seed_boundary()
     assert b["replay_end"] is None and b["guven"] == "yok"
+    assert b["kaynak"] == ledgerstamp.KAYNAK_YOK
     rapor = ledgerstamp.migrate(apply=False)
     assert rapor["dagilim"] == {ledgerstamp.BELIRSIZ: 1}
     assert rapor["sinif_ozeti"] == {"sinir_olculemedi": 1}
+
+
+def test_B_EGRI_DOLU_ama_KANIT_yoksa_yine_OLCULEMEDI(sandbox_state):
+    """ONARIMIN EN SERT ÇİVİSİ: eğri 882 noktalı da olsa, işaret ve damga yoksa sınır YOKTUR.
+    Eski kod tam burada eğrinin son noktasına düşüyordu — ve kadanslı yazar eklendikten sonra o
+    nokta BUGÜN olacağı için defterin TAMAMI `replay_seed` damgalanırdı."""
+    store.write_jsonl("trades.jsonl", [_islem(0, "2023-01-31", "2023-02-01", -0.01)])
+    store.write_json("equity_curve.json", {"version": 4, "points": [["2023-01-12", 100000.0],
+                                                                    ["2026-08-14", 100277.98]]})
+    b = ledgerstamp.seed_boundary()
+    assert b["replay_end"] is None and b["kaynak"] == ledgerstamp.KAYNAK_YOK
+    assert b["egri_son_nokta"] == "2026-08-14", "eski yolun değeri GÖRÜNÜR ama sınır DEĞİL"
+    assert b["n_equity_points"] == 2
 
 
 def test_B_bicimsiz_ts_close_belirsiz(sandbox_state):

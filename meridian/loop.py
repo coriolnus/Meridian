@@ -2101,6 +2101,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     "status": _trend.get("status")} if isinstance(_trend, dict) else None)
 
     equity = round(b.equity(_marks(per, d)), 2)
+    # WP2-D BACAK-2 — SEANS SONU NOKTASI. Nabızdan HEMEN ÖNCE: ikisi de aynı `equity` sayısını
+    # taşır ve araya bir yazım girerse pano ile eğri aynı turda iki farklı sayı gösterirdi.
+    # Yazım kararı fonksiyonun kendisindedir (idempotens, taban, ölçülemeyen değer) — burada
+    # yalnız MAKBUZ alınır ve aşağıdaki olay/dönüşte okunur.
+    _egri_nokta = _persist_equity_point(dstr, equity, meta)
     health.write_heartbeat(version=version, open_positions=len(b.positions), equity=equity,
                            last_bar=dstr, regime=rj["regime"], exposure_budget_pct=rj["exposure_budget_pct"],
                            armed=len(meta["armed"]), day_pnl_pct=round(day_pnl_pct, 4),
@@ -2150,12 +2155,15 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             near_miss_gec=(sum(len(v) for v in (late_by_date or {}).values()) if _p2_kostu else None),
             armed=len(meta["armed"]), open_positions=len(b.positions), equity=equity,
             halted=halted, breaker=breaker, data_ok=not data_bad, trend_book=_trend_ozet,
-            earnings_kapsami=_kapsam)
+            earnings_kapsami=_kapsam,
+            # WP2-D bacak-2 makbuzu: eğriye nokta yazıldı mı, yazılmadıysa NEDEN (YASA 6 — bu
+            # satırın okuyucusu pano "dün gece" kartı + teşhis; yazılmayan nokta SESSİZ kalamaz).
+            egri_nokta=_egri_nokta)
     return {"status": "ok", "date": dstr, "regime": rj["regime"], "candidates": len(candidates),
             "plans": len(plans), "armed": len(meta["armed"]), "open_positions": len(b.positions),
             "near_miss": (len(near_miss_sigs) if _p2_kostu else None),
             "equity": equity, "halted": halted, "breaker": breaker, "data_ok": not data_bad,
-            "trend_book": _trend_ozet}
+            "trend_book": _trend_ozet, "egri_nokta": _egri_nokta}
 
 
 SCAN_TAIL_BARS = 340       # P2 tarama penceresi: 252-bar ısınma + haftalık resample payı
@@ -2195,6 +2203,147 @@ def _persist_trade(trade: dict) -> None:
             obs.warn("duplicate_trade_suppressed", ticker=trade.get("ticker"), ts_close=trade.get("ts_close"))
             return
     store.append_jsonl("trades.jsonl", trade)
+
+
+# ---- WP2-D BACAK-2: SERMAYE EĞRİSİNİN KADANSLI YAZARI (2026-08-14) ----------------------------
+# NEDEN VAR. `equity_curve.json`a nokta ekleyen HİÇBİR kadanslı yazar YOKTU: yalnız
+# `run.replay_seed` (tohum — defterin tamamını tek seferde yazar) ve `sermaye.uygula` (`points`e
+# DOKUNMAZ, zarfa reset işareti basar). Canlıda ölçülen sonuç: eğri 2026-07-20'de dondu, 24 gün tek
+# nokta eklenmedi, pano P&L eğrisi hareketsiz kaldı ve operatör bunu "P&L yansıtmıyor" diye okudu
+# (ROADMAP WP2-D · EDG-2026-036:175-178).
+#
+# SIRA ZORUNLUYDU VE UYULDU. Bu yazar ancak `ledgerstamp.seed_boundary` sınırı EĞRİNİN SON
+# NOKTASINDAN okumayı bıraktıktan SONRA yazılabilirdi (bacak-1). Aksi hâlde eklenen her nokta tohum
+# sınırını bugüne taşırdı ve o günden sonraki HER canlı satır `replay_seed` damgalanırdı — köken
+# defterinin aktif olarak bozulması. Çivi: tests/test_defter_kaynak_damgasi_v140.py::
+# test_B_CIVI_EGRIYE_NOKTA_EKLENINCE_SINIR_DEGISMEZ.
+#
+# HANGİ TABANDA YAZILIR — EĞRİNİN KENDİ TABANINDA, KİTABINKİNDE DEĞİL. `sermaye.uygula` kitabı yeni
+# bir tabana taşır (canlı çağ 100.000$'dan başlar) ama eğri noktalarını SİLMEZ; kırılma `ofset`
+# olarak BEYAN edilir ve `recompute`in `equity_curve_tail` kimliği eğrinin sonuna tam olarak o
+# ofseti EKLEYEREK ölçer (recompute.py:295-305). Ham `eq_now` yazmak iki şeyi birden bozardı:
+#   (a) kimlik ofseti İKİ KEZ sayar → kalıcı kırmızı bir mutabakat satırı (kurt masalı),
+#   (b) eğri, reset gününde ofset kadar SIÇRAR → hiç kazanılmamış bir günlük kâr çizilir; sermaye.py
+#       :339 bu hatayı adıyla ("%5,87'lik UYDURMA bir günlük kâr") zaten uyarıyordu.
+# Nokta bu yüzden `eq_now − ofset` olarak yazılır: seri TEK tabanda kalır, kimlik ölçmeye devam
+# eder ve kırılma yine yalnız `reset_isaretleri` beyanında durur.
+#
+# AD NEDEN LİTERAL SABİT (`ledgerstamp.EQUITY` değil): sahiplik/YASA-6 tarayıcıları statiktir ve
+# yalnız dizge sabitlerini çözer (test_na_revision_v53::_writes modül-içi `AD = "x.json"`
+# atamalarını da izler, ama MODÜL DIŞI bir niteliği — `ledgerstamp.EQUITY` — çözemez). Niteliği
+# kullanmak yazımı ortak-sahiplik taramasından ve `codelaw.artifact_graph`tan GİZLERDİ; yani
+# "sessizce bir dosyanın sahibi olmama" kuralını tam da onu ölçen araçtan kaçarak çiğnerdi.
+# İkiz literal `sermaye.EQUITY`/`ledgerstamp.EQUITY` ile aynı sınıftır ve çivisi vardır:
+# test_wp2d_egri_kadansli_yazar_v245::test_CIVI_egri_dosya_adi_TEK.
+EQUITY_CURVE = "equity_curve.json"
+
+
+def _persist_equity_point(dstr: str, eq_now, meta: dict) -> dict:
+    """Seans sonunda eğriye TEK nokta: `(dstr, eq_now − beyanlı ofset)`.
+
+    İDEMPOTENT — GÜNDE TEK NOKTA. Kıyas EĞRİNİN SON NOKTASIYLA yapılır, tüm seride arama ile değil:
+    koşum tekrarı/restart/elle tetik aynı güne ikinci bir satır yazamaz, aynı gün İÇİNDE değişen
+    değer yerinde tazelenir (nokta SAYISI sabit kalır), ve GEÇMİŞ noktalara asla dokunulmaz. Son
+    nokta bugünden İLERİDEYSE yazım REDDEDİLİR: geriye yazmak eğrinin tarihini değiştirirdi ve
+    "bayat bar ile koşan bir tur" sessizce geçmişi düzeltemez.
+
+    ÖLÇÜLEMEYEN NOKTA YAZILMAZ. `eq_now` sayıya çevrilemiyor/sonlu değilse, tarih ayrıştırılamıyorsa
+    ya da beyanlı ofset okunamıyorsa SATIR YAZILMAZ ve neden hem dönüşte hem olay defterinde durur.
+    Sıfır ya da bayat bir değer yazmak, eğriyi tam da onu okumak isteyen soruya (P&L nereye gitti?)
+    karşı yalancı yapardı.
+
+    YAZIM TEK KAPIDAN: `store.update_json` = `file_lock` + oku-değiştir-yaz + atomik yazım. İkinci
+    bir yazım yolu icat edilmez; zarfın `points` DIŞINDAKİ anahtarları (reset işaretleri, version)
+    olduğu gibi korunur — bacak-1'in sınırı tam olarak orada yaşıyor.
+
+    DÖNÜŞ: makbuz sözlüğü (yazıldı mı, hangi değer, hangi taban, yazılmadıysa NEDEN). Döngünün
+    `daily_cycle` olayına ve dönüşüne girer — YASA 6: üretilen satırın okuyucusu vardır."""
+    import math
+    # `durum` DÖRT HÂLİ AYIRIR ve makine-okunurdur: yazildi · tazelendi (aynı gün, değişen değer) ·
+    # idempotent_atlandi (aynı gün, aynı değer — nokta ZATEN yerinde) · yazilmadi (ölçülemedi/
+    # reddedildi, `neden` söyler). `yazildi` bool'u geriye uyum için durur ama ÜÇÜNCÜ HÂLİ
+    # taşıyamaz: "yazmadım çünkü zaten yazılı" ile "yazamadım" aynı bayrağa düşerse pano bacağı
+    # (WP2-D bacak-3) doğru cümleyi kuramaz ve `neden` metnine göre dizge eşleştirmek zorunda kalır.
+    mak = {"yazildi": False, "durum": "yazilmadi", "tarih": dstr, "deger": None, "eq_now": None,
+           "ofset": None, "neden": None}
+    try:
+        try:
+            dt.date.fromisoformat(str(dstr or "")[:10])
+        except ValueError:
+            mak["neden"] = f"seans tarihi ayrıştırılamadı ({dstr!r}) — nokta yazılmadı"
+            obs.warn("equity_point_skipped", neden=mak["neden"], date=str(dstr))
+            return mak
+        try:
+            v = float(eq_now)
+        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — çevrilemeyen değer NaN'a düşürülür ve bir SONRAKİ satırdaki `isfinite` kapısı onu "ölçülemedi" olarak dışarı söyler (makbuz + `equity_point_skipped` olayı); iki dalın (biçimsiz / sonsuz) tek yerde toplanması, aynı hükmü iki kez yazmayı önler
+            v = float("nan")
+        if not math.isfinite(v):
+            mak["neden"] = f"öz sermaye ölçülemedi ({eq_now!r}) — nokta yazılmadı (sıfır YAZILMAZ)"
+            obs.warn("equity_point_skipped", neden=mak["neden"], date=dstr)
+            return mak
+        mak["eq_now"] = round(v, 2)
+        # BEYANLI TABAN. `meta` bu turun başında diskten okunan kitabın kendisidir (`_load_broker`),
+        # yani ofset kitabın `sermaye_resetleri` kaydından — ikinci bir okuma ve ikinci bir "an" yok.
+        try:
+            from . import sermaye as _srm
+            ofs = float(_srm.ofset(meta if isinstance(meta, dict) else None))
+        except Exception as e:
+            mak["neden"] = (f"beyanlı sermaye ofseti okunamadı ({type(e).__name__}: {e}) — nokta "
+                            f"YAZILMADI: hangi tabanda yazılacağı ölçülemeyen bir nokta, eğriyi "
+                            f"kimliğiyle birlikte bozar")
+            obs.warn("equity_point_skipped", neden=mak["neden"], date=dstr)
+            return mak
+        mak["ofset"] = round(ofs, 2)
+        deger = round(v - ofs, 2)
+        mak["deger"] = deger
+        red: dict = {}
+
+        def _ekle(doc):
+            pts = (doc or {}).setdefault("points", [])
+            son = pts[-1] if pts else None
+            son_t = None
+            if isinstance(son, (list, tuple)) and son:
+                son_t = str(son[0])[:10]
+            if son is not None and son_t is None:
+                red["neden"] = ("eğrinin son noktası ayrıştırılamadı — nokta yazılmadı (bozuk bir "
+                                "kuyruğun üstüne yazmak seriyi sessizce iki parçaya bölerdi)")
+                return False
+            if son_t is not None and son_t > str(dstr)[:10]:
+                red["neden"] = (f"eğrinin son noktası {son_t}, seans {dstr} — GERİYE yazım "
+                                f"reddedildi (eğrinin tarihi değiştirilmez)")
+                return False
+            if son_t == str(dstr)[:10]:
+                try:
+                    ayni = abs(float(son[1]) - deger) < 0.005
+                except (TypeError, ValueError, IndexError):  # sessiz-yutma: aynı günün mevcut noktası okunamadı — "değişmedi" DİYEMEYİZ, o yüzden `ayni=False` ile nokta TAZELENİR (bozuk değer ölçülmüş bir değerle değişir); sessiz olan hâl, okunamayan bir değeri "aynı" sayıp yazımı atlamak olurdu
+                    ayni = False
+                if ayni:
+                    red["ayni"] = True
+                    return False                     # aynı gün, aynı değer → tek bayt yazılmaz
+                pts[-1] = [str(dstr)[:10], deger]    # aynı gün → YERİNDE tazelenir (nokta SAYISI sabit)
+                red["tazelendi"] = True
+                return True
+            pts.append([str(dstr)[:10], deger])
+            return True
+
+        store.update_json(EQUITY_CURVE, _ekle, {"points": []})
+        if red.get("neden"):
+            mak["neden"] = red["neden"]
+            obs.warn("equity_point_skipped", neden=mak["neden"], date=dstr, deger=deger)
+            return mak
+        if red.get("ayni"):
+            mak["neden"] = "aynı gün aynı değer zaten yazılı — idempotent atlama"
+            mak["yazildi"], mak["durum"] = False, "idempotent_atlandi"
+            return mak
+        mak["yazildi"] = True
+        mak["tazelendi"] = bool(red.get("tazelendi"))
+        mak["durum"] = "tazelendi" if mak["tazelendi"] else "yazildi"
+        return mak
+    except Exception as e:  # sessiz-yutma: eğri yazımı ÖLÇÜM katmanıdır ve canlı kararı/kapanışı rehin alamaz; düşüş adıyla olay defterine geçer ve makbuz `yazildi: False` + neden ile döner (uydurma nokta YOK)
+        mak["neden"] = f"{type(e).__name__}: {e}"
+        obs.warn("equity_point_failed", error=mak["neden"], date=str(dstr),
+                 detail="sermaye eğrisine kadanslı nokta yazılamadı — döngü ETKİLENMEDİ")
+        return mak
 
 
 def _trail_patch_alarm(sym: str, res: dict, frm: float, to: float) -> None:

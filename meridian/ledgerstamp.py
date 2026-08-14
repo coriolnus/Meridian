@@ -15,16 +15,32 @@ yerde YOKTU. Bu modül üç şey yapar: (1) ileri yolun damgasını sağlar, (2)
 KANITA dayanarak geriye dönük damgalar, (3) okuyucuların damgayı ayrıştırabileceği tek sayaç
 yüzeyini verir.
 
-TOHUM SINIRI UYDURULMAZ, ÖLÇÜLÜR. Sınırın kanıtı `run.replay_seed`in KENDİ yazım sırasıdır:
+TOHUM SINIRI UYDURULMAZ, ÖLÇÜLÜR — VE ARTIK EĞRİNİN SON NOKTASINDAN OKUNMAZ (WP2-D bacak-1,
+2026-08-14). Eski okuma şu iki satıra dayanıyordu:
 
-    run.py:157   store.write_jsonl("trades.jsonl", res.trades)      # defterin TAMAMI
-    run.py:158   store.write_json("equity_curve.json", {...})       # HEMEN ardından
+    run.py:203   store.write_jsonl("trades.jsonl", res.trades)      # defterin TAMAMI
+    run.py:204   store.write_json("equity_curve.json", {...})       # HEMEN ardından
 
-`equity_curve.json`ı üretimde başka hiçbir yol yazmaz (tek yazar run.py:158). O hâlde:
-  * eğrinin SON NOKTASININ tarihi = replay'in `end` parametresi = tohum penceresinin sınırı;
-  * iki dosyanın mtime'ı saniyeler içinde ise defter o toplu yazımdan BU YANA hiç eklenmemiştir
-    (append mtime'ı ileri taşırdı) — yani diskteki her satır o toplu yazımın ürünüdür.
-İkisi bağımsız kanıttır ve birbirini doğrular; ikisi de yoksa satır `belirsiz` kalır. AYIRT
+ve "eğriyi üretimde başka hiçbir yol yazmaz" varsayımı üzerinde duruyordu. O VARSAYIM İKİ KEZ
+ÖLDÜ: (1) `sermaye.uygula` eğri zarfına reset işareti yazıyor (2026-08-01), (2) `loop.daily_cycle`
+artık her seans sonunda eğriye NOKTA ekliyor (bacak-2, aşağıdaki yazar). Son noktadan okunan bir
+sınır, kadanslı yazarın eklediği her noktayla BUGÜNE kayardı ve bundan sonraki HER canlı satır
+`replay_seed` diye damgalanırdı — köken defterinin aktif olarak bozulması. Üstelik tehlike zaten
+gerçekleşmişti: tohum 2026-08-13'te yenilendi, eğri 2026-07-20'de duruyordu, yani sınır YANLIŞTI.
+
+SINIR ARTIK DONMUŞ KANITTAN OKUNUR, sırayla:
+  * YOL-1 `reset_isareti` — eğri zarfındaki SON reset işaretinin `egri_son_nokta` alanı. İşaret
+    bir kez yazılır ve bir daha yeniden yazılmaz; eğriye nokta eklemek onu KIPIRDATMAZ.
+  * YOL-2 `trades.kaynak` — kartın yazılı yedek çaresi (EDG-2026-036:178): `replay_seed` damgalı
+    satırların EN GEÇ `ts_close`u. İşaret yoksa ya da alanı okunamıyorsa bu yol konuşur.
+  * YOL-3 `yok` — hiçbiri ölçülemezse `replay_end` None'dır ve TÜM satırlar `belirsiz` kalır.
+    "Sınır 0" ya da "bugün" gibi bir varsayılan UYDURULMAZ.
+Hangi yolun konuştuğu `kaynak` alanında BEYAN EDİLİR; iki yol aynı sayıyı verse bile okuyucu
+hangisine baktığını görür (`yollar` alanı ikisini yan yana taşır).
+
+TOPLU YAZIM İMZASI (mtime çifti) İKİNCİL VE ARTIK ZAYIFTIR: eğrinin kadanslı bir yazarı olduğu
+için iki dosyanın mtime'ı "defter o yazımdan beri hiç eklenmedi" KANITI değildir. Alan yine
+ölçülür ve taşınır (sınıflandırıcının çelişki kuralı onu okur) ama SINIRI belirlemez. AYIRT
 EDİLEMEYENE İSİM TAKMAK, ölçümü tam da BT-1'in şikâyet ettiği yere geri götürürdü.
 
 CANLI WORKER KOŞARKEN YAZMA: migrasyon CLI'si canlı süreç görürse `--uygula`yı REDDEDER
@@ -57,6 +73,11 @@ GECERLI = frozenset({LIVE_PAPER, REPLAY_SEED, BELIRSIZ})
 
 LEDGER = "trades.jsonl"
 EQUITY = "equity_curve.json"
+
+# ---- SINIRIN KAYNAKLARI (WP2-D bacak-1). Hangi yolun konuştuğu her raporda ADIYLA yazar. -------
+KAYNAK_RESET = "reset_isareti"   # eğri zarfındaki SON reset işaretinin `egri_son_nokta` alanı
+KAYNAK_DAMGA = "trades.kaynak"   # yedek yol: `replay_seed` damgalı satırların en geç `ts_close`u
+KAYNAK_YOK = "yok"               # üçüncü hâl: ölçülemedi — `replay_end` None (SIFIR ya da bugün DEĞİL)
 
 # İKİ YAZIMIN "AYNI ANDA" SAYILDIĞI PENCERE. run.py:157 ve 158 ardışıktır; aradaki tek iş bir
 # sözlük kurmaktır (canlı defterde ölçülen fark 4 ms). 5 sn hem yavaş diskte hem yüklü bir VM'de
@@ -135,61 +156,176 @@ def _mtime(name: str) -> float | None:
 def _toplu_yazim_olculebilir() -> bool:
     """TOPLU YAZIM İMZASI YALNIZ DOSYA ÇAĞINDA ANLAMLIDIR.
 
-    İmza şuna dayanır: `run.py:163` defteri, `run.py:164` eğriyi yazar; iki AYRI dosyanın mtime'ı
+    İmza şuna dayanır: `run.py:203` defteri, `run.py:204` eğriyi yazar; iki AYRI dosyanın mtime'ı
     saniyeler içindeyse defter o toplu yazımdan beri hiç `append` almamıştır. SQLite'a taşındıktan
     sonra iki varlığın damgası TEK migrasyon transaction'ında AYNI ana düşer — yani fark her zaman
     ~0 çıkar ve imza "defter hiç eklenmedi" diye OKUNURDU. Bu bir ölçüm değil, migrasyonun kendi
-    gölgesidir. Ölçülemeyen bir imzayı VAR saymak, tam olarak BT-1'in şikâyet ettiği hatadır."""
+    gölgesidir. Ölçülemeyen bir imzayı VAR saymak, tam olarak BT-1'in şikâyet ettiği hatadır.
+
+    İMZANIN İKİNCİ AŞINMASI (WP2-D bacak-2, 2026-08-14): dosya çağında bile imza artık ZAYIFTIR —
+    `loop.daily_cycle` eğriye her seans nokta ekliyor, yani `equity_curve.json` mtime'ı defterden
+    bağımsız ilerliyor. Bu fonksiyon "ölçülebilir mi" sorusunu (arka uç) cevaplar; "ne kadar
+    kanıt" sorusunun cevabı artık `kaynak` alanındadır. İmza SINIRI BELİRLEMEZ; yalnız
+    `classify`ın çelişki kuralını besler ve o kural her zaman MUHAFAZAKÂR tarafa (`belirsiz`)
+    düşer — zayıflayan bir imza yanlış bir `live_paper` damgası üretemez."""
     return not (store.db_backed(LEDGER) or store.db_backed(EQUITY))
 
 
-def seed_boundary() -> dict:
-    """TOHUM PENCERESİNİN SINIRI — iki bağımsız kanıttan, tahminsiz.
+def _tarih(v) -> str | None:
+    """Ham bir değerden (eğri noktası, liste, dize) ISO tarih çıkar; çıkaramazsan None.
 
-    Kanıt-1 (sınırın KENDİSİ): `equity_curve.json`ın son noktasının tarihi. Bu dosyayı üretimde
-    yalnız `run.replay_seed` yazar (run.py:158) ve içeriği replay'in `end` parametresine kadar
-    uzanır. Yani "tohum koşusu nereye kadar gitti?" sorusunun defterdeki tek doğrudan cevabı.
+    Nokta şekli `["2026-07-20", 94457.91]`dır (`sermaye.uygula` işarete `list(pts[-1])` yazar), ama
+    zarf anahtarları serbest biçimlidir ve SQLite çağı ham nesneyi `extra_json`dan geri verir: boş
+    liste, düz dize ya da bozuk bir değer de gelebilir. AYRIŞTIRILAMAYAN değer None döner —
+    "okunamadı" ile "yok" aynı kovaya girer ve ikisi de UYDURULMAZ."""
+    if isinstance(v, (list, tuple)):
+        v = v[0] if v else None
+    if v is None:
+        return None
+    s = str(v)[:10]
+    try:
+        _dt.date.fromisoformat(s)
+    except ValueError:  # sessiz-yutma: SESSİZ DEĞİL — biçimsiz değer çağırana None olarak döner ve `neden` metnine girer; saf ölçüm fonksiyonunu kayıt kanalına bağlamak `classify`ın sözleşmesini kırardı
+        return None
+    return s
 
-    Kanıt-2 (TOPLU YAZIM İMZASI): `trades.jsonl` ile `equity_curve.json`ın mtime farkı. run.py'de
-    iki yazım ardışıktır; fark saniyeler içindeyse defter o toplu yazımdan BU YANA hiç `append`
-    almamıştır (append mtime'ı ileri taşırdı). İmza varsa "diskteki her satır tohumdur" iddiası
-    ölçülmüş olur; yoksa sınır yine Kanıt-1'den okunur ama sonrası canlı eklemeye açıktır.
 
-    Hiçbir kanıt yoksa `replay_end` None döner ve TÜM satırlar `belirsiz` sınıflanır."""
+def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
+    """YOL-1 — SON reset işaretinin `egri_son_nokta` alanı. ONARIMIN TA KENDİSİ.
+
+    İşaret DONMUŞ bir kanıttır: `sermaye.uygula` onu bir kez yazar (sermaye.py:413-421), bir daha
+    yeniden yazmaz ve `points`e dokunmaz. Eğriye kaç nokta eklenirse eklensin bu alan kıpırdamaz —
+    sınır da kıpırdamaz. Eğrinin son noktasından okumak tam tersiydi: her yeni nokta sınırı ileri
+    taşır, köken defteri her seans yeniden yazılırdı.
+
+    İŞARETİN ADI/ŞEKLİ KOPYALANMAZ, ÇAĞRILIR (`sermaye._egri_isaretleri`): iki modül aynı zarf
+    anahtarını iki ayrı yerde tanımlasaydı biri değiştiğinde öteki sessizce boş dönerdi — bu
+    deponun "aynı yasanın iki uygulaması" sınıfı.
+
+    SONDAN GERİYE taranır: reset ANINDA eğri boşsa sermaye.py alana None yazar (sermaye.py:412),
+    yani son işaret konuşamayabilir. Konuşabilen EN SON işaret alınır; hiçbiri konuşamazsa None
+    döner ve YOL-2 devreye girer."""
+    from .sermaye import _egri_isaretleri          # TEK KAYNAK: işareti YAZAN modülün okuyucusu
+    isaretler = _egri_isaretleri(eq or {})
+    for m in reversed(isaretler):
+        d = _tarih(m.get("egri_son_nokta"))
+        if d:
+            return d, {"n_isaret": len(isaretler), "isaret_id": m.get("id"),
+                       "isaret_tarihi": m.get("tarih")}
+    return None, {"n_isaret": len(isaretler), "isaret_id": None, "isaret_tarihi": None}
+
+
+def _sinir_damgadan(rows: list[dict]) -> tuple[str | None, dict]:
+    """YOL-2 (YEDEK) — `replay_seed` damgalı satırların EN GEÇ `ts_close`u.
+
+    Kartın KENDİ yazılı çaresi (EDG-2026-036:178: "o güne dek tohum sınırı `trades.kaynak`
+    damgasından okunur"). Reset işareti hiç yazılmamış bir depoda (ör. tohumlanmış ama sermaye
+    ayrıştırması yapılmamış kurulum) tohum penceresini ölçen tek DONMUŞ kanıt budur: damga satır
+    diske düşmeden basılır (`run.replay_seed` → `stamp_rows`) ve `stamp` var olan damgayı EZMEZ.
+
+    SINIRI DAR TUTAN KABUL: bu yol yalnız ZATEN DAMGALI satırlardan türer, yani damgasız satırları
+    sınıflandırmak için kullanıldığında bir tür dairesellik taşır — sınır, damgalı dilimin sonudur;
+    damgasız satır o sınırın ötesindeyse "sonradan eklendi" der. Dairesellik ZARARSIZ ama ZAYIF
+    olduğu için güven `orta`dır ve `kaynak` alanı hangi yolun konuştuğunu söyler.
+
+    `ts_close`u ayrıştırılamayan tohum satırı SESSİZCE ATLANMAZ: sayılır (`ts_olculemeyen`) ve
+    raporda durur — sınır o satırlar kadar eksik ölçülmüş olabilir ve bunu söylemek zorundadır."""
+    n = olculebilen = 0
+    en_gec = None
+    for r in rows or []:
+        if not isinstance(r, dict) or r.get(FIELD) != REPLAY_SEED:
+            continue
+        n += 1
+        d = _tarih(r.get("ts_close"))
+        if d is None:
+            continue
+        olculebilen += 1
+        if en_gec is None or d > en_gec:
+            en_gec = d
+    return en_gec, {"damgali_n": n, "ts_olculebilen": olculebilen,
+                    "ts_olculemeyen": n - olculebilen}
+
+
+def seed_boundary(rows: list[dict] | None = None) -> dict:
+    """TOHUM PENCERESİNİN SINIRI — DONMUŞ kanıttan, tahminsiz.
+
+    ÜÇ YOL, SIRAYLA (modül başlığındaki onarım gerekçesi):
+      1. `reset_isareti` — eğri zarfındaki son reset işaretinin `egri_son_nokta`sı (güven: yuksek).
+      2. `trades.kaynak` — `replay_seed` damgalı satırların en geç `ts_close`u (güven: orta).
+      3. `yok`           — hiçbiri ölçülemedi: `replay_end` None, her satır `belirsiz` (güven: yok).
+
+    HANGİ YOLUN KONUŞTUĞU `kaynak` ALANINDA YAZAR ve `yollar` ikisinin değerini yan yana taşır:
+    iki yol aynı sayıyı verse bile okuyucu hangisine baktığını görmek zorundadır (aynı sayıya iki
+    ayrı kanıttan varmak ile tek kanıta mahkûm olmak farklı şeylerdir).
+
+    `egri_son_nokta` alanı BİLGİ OLARAK taşınır ama SINIRI BELİRLEMEZ — eski yolun bugün ne
+    diyeceği görünsün diye (canlıda 2026-08-13'te ikisi ayrışmıştı; eski yol sınırı 2026-07-20'de
+    donduruyordu). Kadanslı yazar (bacak-2) bu alanı her seans ileri taşır; `replay_end`i TAŞIMAZ.
+
+    `rows` verilirse defter yeniden okunmaz (çağıran zaten elinde tutuyorsa — `_migrate_locked`
+    kilidin içinde tam olarak bunu yapar); verilmezse diskten okunur."""
     eq = store.read_json(EQUITY, None)
     pts = (eq or {}).get("points") or []
-    replay_end = None
-    if pts:
-        try:
-            replay_end = str(pts[-1][0])[:10]
-        except (IndexError, TypeError, ValueError):  # sessiz-yutma: eğri şeması beklenmedik — sınır ÖLÇÜLEMEDİ olarak kalır ve `neden` alanı bunu dışarı söyler (aşağıda), varsayılan bir tarih UYDURULMAZ
-            replay_end = None
+    egri_son = _tarih(pts[-1]) if pts else None
+    d_reset, m_reset = _sinir_reset_isaretinden(eq)
+    rows = store.read_jsonl(LEDGER) if rows is None else rows
+    d_damga, m_damga = _sinir_damgadan(rows)
+
     _olculebilir = _toplu_yazim_olculebilir()
     t_led, t_eq = (_mtime(LEDGER), _mtime(EQUITY)) if _olculebilir else (None, None)
     delta = None if (t_led is None or t_eq is None) else round(abs(t_led - t_eq), 3)
     toplu = None if delta is None else bool(delta <= BULK_WRITE_TOLERANCE_S)
-    if replay_end is None:
-        guven, neden = "yok", (f"{EQUITY} okunamadı ya da nokta taşımıyor — tohum penceresinin "
-                               f"sınırı ölçülemedi; hiçbir satır sınıflanamaz")
-    elif toplu:
-        guven, neden = "yuksek", (f"toplu yazım imzası VAR (mtime farkı {delta}sn ≤ "
-                                  f"{BULK_WRITE_TOLERANCE_S}sn) — defter, {replay_end} sonuna kadar "
-                                  f"koşan tohum yazımından bu yana hiç eklenmemiş")
-    elif not _olculebilir:
-        guven, neden = "orta", (f"toplu yazım imzası ÖLÇÜLEMEZ (defter SQLite arka ucunda: iki "
-                                f"varlığın damgası tek transaction'da aynı ana düşer) — sınır yine "
-                                f"{replay_end}, sonrası canlı eklemeye açık sayılır")
+    _imza = (f"toplu yazım imzası: {'VAR' if toplu else 'YOK'} (mtime farkı {delta}sn)"
+             if toplu is not None else
+             ("toplu yazım imzası ÖLÇÜLEMEZ (varlıklar SQLite arka ucunda: iki damga tek "
+              "transaction'da aynı ana düşer)" if not _olculebilir
+              else "toplu yazım imzası ÖLÇÜLEMEDİ (mtime okunamadı)"))
+
+    # İKİ YOL AYRIŞIRSA BU SESSİZ KALAMAZ. Canlıda ÖLÇÜLEN hâl (2026-08-14): işaret 2026-08-01'de
+    # donmuş ve eğrinin O ANDAKİ son noktasını (2026-07-20) taşıyor; oysa 2026-08-13 tohum
+    # yenilemesi defterine en geç 2026-07-24 kapanışlı satırlar girdi. Yani DONMUŞ sınır, tohumun
+    # GERÇEK penceresinden 4 gün geride. Sıra bilinçlidir (donma > tazelik: sınırın kaymaması
+    # köken defterinin ta kendisidir) ama fark ADIYLA görünmeli — yoksa okuyucu tek bir tarihe
+    # bakıp iki kanıtın anlaştığını sanar.
+    _ayrisma = ("" if not (d_reset and d_damga) or d_reset == d_damga else
+                (f" · AYRIŞMA: yedek yol (`{KAYNAK_DAMGA}`) {d_damga} diyor — tohum defteri "
+                 f"işaretin donduğu tarihten SONRAsına uzanıyor; sınır bilerek DONMUŞ olanı "
+                 f"alır, fark burada beyanlıdır"))
+    if d_reset:
+        replay_end, kaynak, guven = d_reset, KAYNAK_RESET, "yuksek"
+        neden = (f"sınır SON reset işaretinin `egri_son_nokta` alanından okundu "
+                 f"({m_reset['isaret_id']}, işaret tarihi {m_reset['isaret_tarihi']}): "
+                 f"{replay_end}. Bu alan DONMUŞTUR — eğriye yeni nokta eklenmesi sınırı "
+                 f"kaydırmaz.{_ayrisma} [{_imza}; imza sınırı BELİRLEMEZ]")
+    elif d_damga:
+        replay_end, kaynak, guven = d_damga, KAYNAK_DAMGA, "orta"
+        neden = (f"eğride reset işareti yok ya da `egri_son_nokta` okunamadı "
+                 f"({m_reset['n_isaret']} işaret görüldü) — YEDEK YOL: sınır `trades.kaynak` "
+                 f"damgasından okundu; {m_damga['damgali_n']} replay_seed satırının en geç "
+                 f"ts_close'u {replay_end} "
+                 f"({m_damga['ts_olculemeyen']} satırın ts_close'u ayrıştırılamadı). [{_imza}]")
     else:
-        guven, neden = "orta", (f"toplu yazım imzası YOK (mtime farkı {delta}sn) — defter tohum "
-                                f"yazımından SONRA da yazılmış; sınır yine {replay_end}, sonrası "
-                                f"canlı eklemeye açık")
-    return {"replay_end": replay_end, "toplu_yazim": toplu, "mtime_delta_s": delta,
+        replay_end, kaynak, guven = None, KAYNAK_YOK, "yok"
+        neden = (f"tohum penceresinin sınırı ÖLÇÜLEMEDİ: eğride konuşabilen reset işareti yok "
+                 f"({m_reset['n_isaret']} işaret) ve defterde `replay_seed` damgalı ölçülebilir "
+                 f"satır yok ({m_damga['damgali_n']} damgalı, {m_damga['ts_olculemeyen']} biçimsiz "
+                 f"ts_close) — hiçbir satır sınıflanamaz. Eğrinin son noktası "
+                 f"({egri_son}) SINIR SAYILMAZ: kadanslı yazar onu her seans ileri taşır.")
+    return {"replay_end": replay_end, "kaynak": kaynak,
+            "yollar": {KAYNAK_RESET: d_reset, KAYNAK_DAMGA: d_damga},
+            # İKİ KANIT ANLAŞMIYOR MU? Makine-okunur bayrak (metin `neden`de ayrıca durur).
+            "yollar_ayrisik": bool(d_reset and d_damga and d_reset != d_damga),
+            "reset_isareti": m_reset, "damga_olcumu": m_damga,
+            "toplu_yazim": toplu, "mtime_delta_s": delta,
             "n_equity_points": len(pts), "guven": guven, "neden": neden,
-            "kanit": ((f"{EQUITY} son noktası (tek yazar: run.replay_seed) + "
-                       f"{LEDGER}/{EQUITY} mtime çifti") if _olculebilir else
-                      (f"{EQUITY} son noktası (tek yazar: run.replay_seed); mtime çifti SQLite "
-                       f"arka ucunda ölçülemez")),
-            "equity_ilk_nokta": (str(pts[0][0])[:10] if pts else None)}
+            "kanit": ((f"eğri zarfındaki son reset işaretinin `egri_son_nokta` alanı "
+                       f"(yazar: sermaye.uygula) — DONMUŞ") if kaynak == KAYNAK_RESET else
+                      (f"`{LEDGER}` içindeki replay_seed damgalarının en geç ts_close'u "
+                       f"(yazar: run.replay_seed → stamp_rows) — YEDEK YOL"
+                       if kaynak == KAYNAK_DAMGA else "kanıt YOK — sınır ölçülemedi")),
+            # ESKİ YOLUN BUGÜNKÜ DEĞERİ — bilgi; sınırı BELİRLEMEZ (bkz. modül başlığı).
+            "egri_son_nokta": egri_son,
+            "equity_ilk_nokta": (_tarih(pts[0]) if pts else None)}
 
 
 def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
@@ -204,7 +340,13 @@ def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
       4. `ts_close > replay_end` → `live_paper` — YALNIZ defter tohum yazımından sonra da
          yazılmışsa. Toplu yazım imzası VARSA böyle bir satırın var olması ÇELİŞKİDİR (defter o
          yazımdan beri dokunulmamış olmalıydı) ve çelişki `live_paper` diye çözülmez: `belirsiz`
-         kalır. Sınıflandırıcı kendi kanıtını yalanlayamaz."""
+         kalır. Sınıflandırıcı kendi kanıtını yalanlayamaz.
+
+    KURAL-4'ÜN İMZASI ZAYIFLADI, KURALIN YÖNÜ DEĞİŞMEDİ (WP2-D bacak-2, 2026-08-14): eğrinin artık
+    kadanslı bir yazarı var, yani mtime çifti "defter hiç eklenmedi" kanıtı değil. Kural yine de
+    KALDI çünkü hatası tek yönlü: imza yanlışlıkla VAR görünürse satır `live_paper` yerine
+    `belirsiz` olur — pozitif bir iddia ölçülmemiş kanıtla BASILMAZ. Ters yönde (kuralı kaldırmak)
+    zayıflayan bir imza doğrudan yanlış `live_paper` damgası üretirdi."""
     b = boundary if boundary is not None else seed_boundary()
     end = b.get("replay_end")
     toplu = b.get("toplu_yazim")
@@ -255,7 +397,10 @@ def migrate(apply: bool = False) -> dict:
 
 def _migrate_locked(apply: bool) -> dict:
     rows = store.read_jsonl(LEDGER)
-    b = seed_boundary()
+    # SINIR, RAPORUN ÖLÇTÜĞÜ DEFTERİN TA KENDİSİNDEN türetilir (yedek yol `trades.kaynak`ı okur):
+    # `rows` geçilmeseydi defter kilidin içinde İKİNCİ KEZ okunurdu ve rapor iki farklı anın
+    # karışımı olurdu — aynı kritik bölgede iki ayrı gerçek.
+    b = seed_boundary(rows)
     kararlar = classify(rows, b)
     dagilim: dict[str, int] = {}
     siniflar: dict[str, int] = {}
@@ -278,6 +423,7 @@ def _migrate_locked(apply: bool) -> dict:
         from . import obs
         obs.warn("ledger_source_stamp_migrated", n=len(yeni), degisen=degisecek,
                  replay_end=b.get("replay_end"), guven=b.get("guven"),
+                 sinir_kaynagi=b.get("kaynak"),
                  **{k: int(v) for k, v in dagilim.items()},
                  detail="BT-1 kapanışı: işlem defteri satırları kaynak damgası kazandı; "
                         "learning_scorecard/skor kalibrasyonu/alfa-beta artık gerçek-canlı n'i "
@@ -299,8 +445,13 @@ def _print(rapor: dict) -> None:
                                                     else "KURU KOŞU (hiçbir bayt yazılmadı)")
     b = rapor["sinir"]
     print(f"[ledgerstamp] {mod}")
-    print(f"  tohum sınırı: {b['replay_end']}  (güven: {b['guven']}) — {b['neden']}")
+    print(f"  tohum sınırı: {b['replay_end']}  (kaynak: {b.get('kaynak')} · güven: {b['guven']}) "
+          f"— {b['neden']}")
     print(f"  kanıt: {b['kanit']}")
+    # İKİ YOL YAN YANA: aynı sayıya iki kanıttan varmak ile tek kanıta mahkûm olmak farklıdır.
+    _y = b.get("yollar") or {}
+    print(f"  yollar: {KAYNAK_RESET}={_y.get(KAYNAK_RESET)} · {KAYNAK_DAMGA}={_y.get(KAYNAK_DAMGA)}"
+          f"  (eğri son noktası: {b.get('egri_son_nokta')} — SINIR DEĞİL)")
     print(f"  defter satırı: {rapor['n']}, damgası değişecek: {rapor['degisecek']}")
     for k, v in sorted(rapor["dagilim"].items()):
         print(f"   {k:14s} {v}")

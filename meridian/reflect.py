@@ -786,7 +786,13 @@ def propose_deterministic(explore: bool = False) -> dict:
         one variable most implicated (stop-outs → wider stop, time-stops → shorter clock, …).
       * explore (--explore): a UCB1 bandit ranks ALL tunable variables by their historical ship-rate
         in the ledger, preferring under-tried ones, so the loop widens its search instead of hammering
-        the same few knobs. Either way the result is a single validated-shape proposal for the gate."""
+        the same few knobs. Either way the result is a single validated-shape proposal for the gate.
+
+    HAFIZA HER İKİ KİPTE DE OKUNUR (2026-08-14, ROADMAP §1 WP3-A/28c): defterde `rejected_by_backtest` ya da
+    `rolled_back` ile duran bir (değişken, değer) çifti yeniden ÖNERİLMEZ. Exploit kipinde bu,
+    sezgiselin yönünde bir sonraki denenmemiş ADIMA geçmek demektir (yön ve değişken değişmez).
+    Tüm adımlar elenirse öneri yine döner ama `memory_exhausted=True` taşır ve
+    `propose_deterministic_memory_exhausted` uyarısı basılır — kısırlık sessiz kalamaz."""
     strat = config.load_strategy()
     params = strat.get("params", {})
     bounds = config.bounds()
@@ -796,11 +802,13 @@ def propose_deterministic(explore: bool = False) -> dict:
     n = max(1, len(trades))
     win_rate = sum(1 for t in trades if t.get("r_multiple", 0) > 0) / n if trades else 0.0
 
-    def move(var, direction):
+    def move(var, direction, k: int = 1):
+        """Sezgiselin YÖNÜNDE k adım. `k` ADIM SAYISIDIR — ikinci bir değişken ya da ikinci bir yön
+        DEĞİL: tek-değişken sözleşmesi ve `hdir` sezgiseli aynen korunur (k=1 eski davranış)."""
         b = bounds[var]
         lo, hi, step, typ = b["min"], b["max"], b["step"], b["type"]
         cur = params.get(var, lo)
-        new = max(lo, min(hi, cur + direction * step))
+        new = max(lo, min(hi, cur + direction * k * step))
         return int(new) if typ == "int" else round(new, 4)
 
     def explore_dir(var):
@@ -808,12 +816,12 @@ def propose_deterministic(explore: bool = False) -> dict:
         mid = (b["min"] + b["max"]) / 2.0
         return +1 if params.get(var, mid) <= mid else -1   # step toward the untested half of the range
 
-    def already_failed(var, val):
-        for h in hyps:
-            if h.get("variable") == var and guard._equalish(h.get("new"), val, bounds[var]["type"]) \
-                    and h.get("status") in ("rejected_by_backtest", "rolled_back"):
-                return True
-        return False
+    # HAFIZA TEK TANIMDAN OKUNUR (ROADMAP §1 WP3-A/28c, 2026-08-14). Burada eskiden aynı işi yapan İKİNCİ bir
+    # `already_failed` kapanışı vardı; modül düzeyindeki `_already_failed` (koordinat-inişi aramasının
+    # da kullandığı tanım) ile tek farkı @regime son-ekini çözememesiydi — `bounds[var]["type"]`
+    # son-ekli adla aranıyor ve defterde o adla bir satır VARSA KeyError fırlatıyordu (yani hafızanın
+    # tam da iş göreceği anda). "Başarısız" tanımı DEĞİŞMEDİ: guard'ın kalıcı kara listesiyle birebir
+    # aynı küme — `status in ("rejected_by_backtest", "rolled_back")` (guard.py:236).
 
     # exploit heuristic — the one variable most implicated by recent behavior
     if reasons.get("stop", 0) + reasons.get("stop_gap", 0) > 0.4 * n:
@@ -834,7 +842,8 @@ def propose_deterministic(explore: bool = False) -> dict:
         for var in _ucb_rank(list(bounds.keys()), hyps):
             direction = hdir if var == hvar else explore_dir(var)
             new = move(var, direction)
-            if guard._equalish(params.get(var), new, bounds[var]["type"]) or already_failed(var + suffix, new):
+            if guard._equalish(params.get(var), new, bounds[var]["type"]) \
+                    or _already_failed(var + suffix, new, hyps, bounds):
                 continue
             label = f"bandit(UCB) explore: {var}{suffix}" + (f" ({live_regime} rejimine özel)" if suffix else "")
             return _proposal(var + suffix, new, params, label, explore=True)
@@ -842,11 +851,71 @@ def propose_deterministic(explore: bool = False) -> dict:
     else:
         var = hvar
 
-    new = move(var, hdir)
-    return _proposal(var, new, params, hwhy, explore=False)
+    # =============================================================================================
+    # EXPLOIT YOLUNA HAFIZA (ROADMAP §1 WP3-A, kalem 28c; 2026-08-14) — 21 TEKRARIN KÖKÜ
+    # ---------------------------------------------------------------------------------------------
+    # ÖLÇÜLEN BEDEL (docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md §2): `already_failed` kontrolü
+    # YALNIZ explore dalının içindeydi; varsayılan exploit yolunda hafıza YOKTU. Sezgisel "stop'lar
+    # baskın → stop'a yer aç" dediği sürece `move()` HER TURDA aynı tek adımı üretiyordu:
+    # `stop_loss_atr_mult=2.1` defterde 21 kez (1 backtest reti + 20 guard reti), oysa bounds o
+    # düğmede 33 adım-üstü değer taşıyor ve 32'sine HİÇ bakılmamıştı. Döngüyü kıran şey üretici
+    # değil guard'ın kara listesiydi — yani sistem öğrenerek değil, bir kapıyla kurtuluyordu.
+    #
+    # KONTROLÜN NEDEN YALNIZ EXPLORE'DA OLDUĞUNA DAİR GEREKÇE: KODDA/YORUMDA BULUNAMADI. Docstring
+    # iki modu "aynı tek-değişken hamlesi üzerinde iki SEÇİM kipi" diye tanımlıyor ve hafızadan hiç
+    # söz etmiyor; `_ucb_rank`in kendi yorumu da hafızayı değil sıralamayı anlatıyor. En yakın örtük
+    # okuma "explore taranan bir LİSTE üzerinde yürür, atlamak doğal; exploit tek hamle üretir" —
+    # ama bu bir gerekçe değil bir yapı farkıdır ve ölçüm onu çürütüyor.
+    #
+    # ÇÖZÜM ADIM SAYISINDADIR, YÖN DEĞİL: sezgiselin TEŞHİSİ (hangi değişken, hangi yön) korunur;
+    # hafıza yalnız "kaçıncı adım" sorusunu açar. Ters yön BİLEREK denenmiyor — "stop'a yer aç"
+    # diyen bir teşhisin ardından stop'u daraltmak teşhisin kendisini çürütmek olurdu; yön sorusu
+    # ayrı bir ölçümün (ve explore/UCB kolunun) işidir.
+    # KAPSAM NOTU: explore dalı aday BULAMAYIP buraya düştüğünde de bu merdiven koşar — çünkü bu
+    # kuyruk yapısı gereği EXPLOIT hamlesidir (`var = hvar`, `hwhy`, `explore=False`). Explore'un
+    # KENDİ dönüş yolu (yukarıdaki `_proposal(..., explore=True)`) bit-bit dokunulmadan durur.
+    # =============================================================================================
+    b = bounds[var]
+    n_adim = int(round((b["max"] - b["min"]) / b["step"])) + 1 if b["step"] else 1
+    adaylar, onceki = [], None
+    for k in range(1, max(1, n_adim) + 1):
+        val = move(var, hdir, k)
+        if onceki is not None and guard._equalish(val, onceki, b["type"]):
+            break                      # sınıra kenetlendi — sonraki adımlar aynı değeri üretir
+        onceki = val
+        adaylar.append((k, val))
+
+    elenen = []
+    for k, val in adaylar:
+        if guard._equalish(params.get(var), val, b["type"]):
+            elenen.append({"deger": val, "neden": "no-op"})
+            continue
+        if _already_failed(var, val, hyps, bounds):
+            elenen.append({"deger": val, "neden": "zaten_denendi"})
+            continue
+        why = hwhy if k == 1 else (f"{hwhy} — hafıza: {k} adım (daha yakın {k - 1} değer zaten "
+                                   f"denenip başarısız olmuştu)")
+        return _proposal(var, val, params, why, explore=False)
+
+    # TÜM ADAYLAR ELENDİ — SESSİZ KISIRLAŞMA YASAK. Dönüş DEĞERİ eski davranışın aynısıdır (tek
+    # adım; guard onu zaten tekrar diye reddedecek) ama artık hem olay hem alan bunu SÖYLER: bu
+    # değişkende sezgiselin yönünde denenmemiş değer KALMADI. Sessizce boş dönmek ya da None
+    # döndürmek çağıranı (`reflect --auto` CLI'ı, `proposal['variable']` okur) kırardı.
+    from . import obs as _obs_m
+    _obs_m.warn("propose_deterministic_memory_exhausted", variable=var, direction=hdir,
+                n_aday=len(adaylar), n_elenen=len(elenen), elenen=elenen[:12],
+                rationale=hwhy,
+                detail="exploit sezgiselinin YÖNÜNDEKİ tüm adım değerleri elendi (no-op ya da "
+                       "defterde başarısız) — bu değişkende deterministik üretici yeni bir hamle "
+                       "ÜRETEMİYOR. Öneri yine de tek-adım değeriyle dönüyor (eski davranış) ve "
+                       "guard onu tekrar diye reddedecek; kısırlık artık görünür. Yol: --explore "
+                       "(UCB kolu başka değişkene geçer) ya da sezgiselin yön/değişken revizyonu.")
+    return _proposal(var, move(var, hdir), params,
+                     f"{hwhy} — HAFIZA TÜKENDİ: bu yönde denenmemiş değer kalmadı",
+                     explore=False, memory_exhausted=True)
 
 
-def _proposal(var, new, params, why, explore=False) -> dict:
+def _proposal(var, new, params, why, explore=False, memory_exhausted: bool = False) -> dict:
     from . import skills, analytics
     recs = skills.recommend_from_attribution()      # Axis-2 from measured skill contribution (no LLM)
     # confidence anchored to the agent's OWN realized calibration (how often its past predictions held),
@@ -865,6 +934,10 @@ def _proposal(var, new, params, why, explore=False) -> dict:
         "confidence": conf,
         "regime": store.read_json("regime.json", {}).get("regime", "any"),
         "skill_recommendation": recs[0] if recs else None,
+        # HER ÖNERİDE YAZILIR (False olsa bile): bu depoda "eksik alan = sıfır/false sanılır" kendi
+        # sınıfıdır (agent_tooluse `olculemeyen` dersi). True = üretici bu değişkende denenmemiş
+        # değer bulamadı ve dönen hamle bilinen bir tekrardır.
+        "memory_exhausted": bool(memory_exhausted),
     }
 
 

@@ -710,6 +710,11 @@ def _clear_module_caches():
     # şeye dokunmamış olurdu — `_fmp._HEALTH` ile aynı ders.
     import meridian.auth as _auth_mod
     _auth_mod._FAILS.clear()
+    # `auth._DROP_REPORTED` AYNI SINIF (2026-08-14, kayan oturum turu): oturum-düşüşü olayının
+    # sel kapısı da IP anahtarlı süreç-içi bir defterdir ve TestClient'ın IP'si her testte aynı
+    # ("testclient"). Bir test düşüş olayını tetikleyip pencereyi kapatınca, SONRAKİ testin
+    # beklediği olay 5 dakika boyunca hiç basılmazdı — `_FAILS` vakasının birebir tekrarı.
+    _auth_mod._DROP_REPORTED.clear()
     _ea._CACHE.clear()
     _sk._DESC_CACHE = None            # dict|None: yeniden okumaya zorla
     for c in (_rf._CACHE_WARNED,):

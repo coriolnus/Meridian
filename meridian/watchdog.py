@@ -1984,19 +1984,72 @@ def _sabit(modul: str, ad: str):
     return getattr(m, ad)
 
 
+# RAPOR-BAŞINA OKUMA KUTUSU (2026-08-14). Aynı dosyadan BEŞ alan okuyan beş kaynak, o dosyayı beş
+# kez ayrıştırırdı: `goal.yaml` tek başına 3,6 ms — çift sayısı arttıkça sıcak yolun (pano teşhis)
+# maliyeti kaynak sayısıyla DEĞİL okuma sayısıyla büyürdü. Kutu bir tur boyunca yaşar.
+#
+# ÖNBELLEK DEĞİL, TUR FOTOĞRAFI: kutu `divergence_report()` girişinde açılır, çıkışında (finally)
+# KAPANIR. `_yaml_alan`ın kendi gerekçesi (`config.goal()` `lru_cache`i turlar ARASI bayatlar)
+# ihlal edilmez — turlar arası hiçbir şey taşınmaz. Yan fayda: tek turun bütün kaynakları dosyanın
+# AYNI anlık görüntüsünü görür; yazım ortasında yakalanmış bir dosya, iki kaynağa iki farklı değer
+# gösterip UYDURMA bir ayrışma üretemez.
+#
+# İPLİK-YEREL (`_PAYLASIM` ile aynı gerekçe): canlıda scheduler/hermes/API iplikleri aynı süreçte.
+# Kutu yokken (`divergence_report` dışından çağrı) yardımcılar bugüne kadarki gibi TAZE okur.
+_OKUMA = threading.local()
+
+
+def _bir_kez(anahtar, uret):
+    """Tur kutusu açıksa `anahtar` başına bir kez üret; kutu yoksa her çağrıda taze üret.
+
+    DÖNEN NESNE PAYLAŞILIR: çağıranlar onu DEĞİŞTİRMEZ (hepsi skaler/küme okur). Değiştiren bir
+    çağıran eklenirse kutu zehirlenir — bu yüzden burada yazılı."""
+    kutu = getattr(_OKUMA, "kutu", None)
+    if kutu is None:
+        return uret()
+    if anahtar not in kutu:
+        kutu[anahtar] = uret()
+    return kutu[anahtar]
+
+
+def _dosya_metni(p) -> str:
+    """Bir sunum/kaynak dosyasının metni (tur başına tek okuma)."""
+    from pathlib import Path as _P
+    p = _P(p)
+    return _bir_kez(("metin", str(p)), p.read_text)
+
+
 def _yaml_alan(dosya: str, *yol: str):
     """`state/*.yaml` içinden düz bir alan — DOSYADAN, `config.goal()`ten DEĞİL.
 
     NEDEN: `config.goal()` `lru_cache`lidir. Bu dedektörün sorduğu soru "dosyada NE YAZIYOR?"tur;
     önbellekten okumak, dosya değişip süreç yeniden başlamadığında ayrışmayı tam da görülmesi
-    gereken anda gizlerdi (canlı ile repo arasındaki `max_drawdown` ayrışması bu sınıftandı)."""
+    gereken anda gizlerdi (canlı ile repo arasındaki `max_drawdown` ayrışması bu sınıftandı).
+
+    AYRIŞTIRMA tur başına bir kezdir (`_bir_kez`), OKUMA değil — yani "dosyada ne yazıyor?"
+    sorusunun cevabı her turda diskten yeniden gelir; yalnız aynı turun ikinci alanı bedavadır."""
     from . import config
-    import yaml
     p = config.STATE / dosya
-    doc = yaml.safe_load(p.read_text()) or {}
+    doc = _bir_kez(("yaml", str(p)), lambda: _yaml_yukle(p.read_text()) or {})
     for k in yol:
         doc = doc[k]
     return doc
+
+
+def _yaml_yukle(metin: str):
+    """`yaml.safe_load` ile AYNI şema, varsa libyaml hızıyla.
+
+    NEDEN: bu dedektörün maliyeti okuduğu DOSYA sayısıyla büyür ve saf-Python ayrıştırıcı
+    `state/goal.yaml`ı 3,8 ms, `bounds.yaml`ı 5,7 ms'de çözüyor — iki dosya, deseni %77 şişiriyordu
+    (ölçüldü, 2026-08-14). `CSafeLoader` AYNI güvenli şemadır (`safe_load` = `load(…, SafeLoader)`);
+    değiştirilen tek şey ayrıştırıcının dili, kabul edilen belge sınıfı DEĞİL — eşitlik testle
+    çivili (`test_deger_esitligi_deseni_v239`).
+
+    YOKSA SESSİZ DÜŞMEZ, ESKİ YOLA DÜŞER: libyaml'sız bir kurulumda `CSafeLoader` yoktur ve o
+    kurulumda dedektör bugüne kadarki hızıyla, AYNI hükümle koşar."""
+    import yaml
+    loader = getattr(yaml, "CSafeLoader", None)
+    return yaml.load(metin, Loader=loader) if loader else yaml.safe_load(metin)
 
 
 def _sunum_uyuyan_iddialari() -> frozenset:
@@ -2026,6 +2079,61 @@ def _sunum_uyuyan_iddialari() -> frozenset:
     for p in mevcut:
         bulunan |= uyuyan_iddia_tara(p.read_text(), armed)
     return frozenset(bulunan)
+
+
+def _pano_alarm_jetonlari() -> frozenset:
+    """Panonun olay kartlarına ELLE kopyalanmış alarm jetonları (`app.js` `jetonlar:` dizileri).
+
+    NEDEN KAPI GEREKİYOR: `obs.NOTIFY_TOKENS` her `ALARM_` sabitinden TÜRETİLİR (obs.py:122) — yani
+    Python tarafında elle bakımlı liste sorunu 2026-07 turunda çözüldü. Ama panonun kart tanımları
+    aynı jetonları JS dizilerine ELLE kopyalar ve o kopya hiçbir şeyden türemez: dil sınırını aşan
+    tek yüzey burasıdır. Yeni bir alarm eklenip karta yazılmazsa jeton ÜRETİLİR ama panoda hiçbir
+    kartın altına düşmez — YASA 6'nın (okuyucusuz yazım yok) tam tersi: okuyucusuz ALARM.
+
+    JETON KAYNAĞI HİÇ BULUNAMAZSA İHLAL DEĞİL, ÖLÇÜLEMEZ: pano jetonları bir gün API'den türetirse
+    `jetonlar:` anahtarı kalkar ve boş küme "14 jeton kayıp" diye okunurdu — yani kapı, kapatmaya
+    çalıştığı sınıfın kendisini (uydurma sayı) üretirdi. Bir tane bile dizi yoksa fırlatılır ve
+    olgu `olculemeyen`e adıyla düşer."""
+    import re as _re
+    from pathlib import Path as _P
+    p = _P(__file__).resolve().parent / "web" / "app.js"
+    bloklar = _re.findall(r"jetonlar:\s*\[([^\]]*)\]", _dosya_metni(p))
+    if not bloklar:
+        raise LookupError("app.js'te hiç `jetonlar:` dizisi yok — pano jeton kaynağı değişmiş "
+                          "olabilir; boş küme 'jeton kayıp' diye okunamaz")
+    out: set = set()
+    for b in bloklar:
+        out |= set(_re.findall(r'"([A-Z][A-Z0-9_]*)"', b))
+    return frozenset(out)
+
+
+def _defter_sema_alanlari() -> tuple:
+    """(sözleşmenin ZORUNLU alanları, SQL şemasında KARŞILIĞI OLAN zorunlu alanlar).
+
+    `ledgers.CONTRACTS[x].required` bir defterin satırında BULUNMASI ŞART olan alanları söyler;
+    `storage._COLS[x]` o defterin SQLite şemasını söyler. Bir alan sözleşmede zorunluyken şemada
+    kolonu yoksa satır yazılır ama `extra_json`a gömülür: kayıp değildir, SORGULANAMAZDIR — ve
+    o alana göre süzen her okuyucu sessizce boş küme alır.
+
+    YALNIZ TABLOSU OLAN DEFTERLER: `_COLS`ta karşılığı olmayan defterler (yalnız JSONL yaşayanlar)
+    BİLEREK atlanır — onlar için "şema yok" bir kusur değil, tasarımdır. Atlama sessiz kalmasın
+    diye burada yazılı."""
+    C = _sabit("ledgers", "CONTRACTS")
+    COLS = _sabit("storage", "_COLS")
+    zorunlu: set = set()
+    semali: set = set()
+    for ad, sozlesme in C.items():
+        kolonlar = COLS.get(ad)
+        if not kolonlar:
+            continue
+        adlar = {n for n, _tip in kolonlar}
+        for alan in sozlesme.required:
+            zorunlu.add(f"{ad}:{alan}")
+            if alan in adlar:
+                semali.add(f"{ad}:{alan}")
+    if not zorunlu:
+        raise LookupError("hiçbir defter sözleşmesinin SQL şeması bulunamadı — kıyas tabanı yok")
+    return frozenset(zorunlu), frozenset(semali)
 
 
 UYUYAN_SOZCUKLERI = ("uyuyan", "dormant", "uyku")
@@ -2109,6 +2217,85 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
              lambda: frozenset(_sabit("strategy", "ARMED_SETUPS")) - _sunum_uyuyan_iddialari()),
         ],
     },
+    # ---- WP6/26 İKİNCİ DALGA (2026-08-14) ------------------------------------------------------
+    # Denetimin "KAPISIZ" kovasından, ÖLÇÜLEREK seçildi. Seçim ölçütü üç maddeydi ve üçü de
+    # yazılıdır: (a) iki kaynak GERÇEKTEN aynı olguyu iddia ediyor mu — yakın ama farklı tanımlı
+    # iki sayıyı eşitlemek yanlış alarm üretir ve kapıyı işe yaramaz kılar (bu depoda ölçülmüş en
+    # pahalı kusur sınıfı: kurt masalı); (b) kıyas deterministik mi; (c) tolerans gerekiyor mu.
+    # TOLERANS: hiçbirinde YOK — hepsi TAM eşitliktir. Tek kayan-noktalı çift (`rr_tabani`) iki
+    # tarafta da ondalık LİTERAL taşır (2.0 ↔ 2.0), türetilmiş/yuvarlanmış bir sayı değil; bu
+    # yüzden `==` güvenlidir ve bir epsilon uydurmak ölçülmemiş bir bant beyan etmek olurdu.
+    #
+    # §4.1-#15 + §8/P3 — "bir istatistik için en az kaç satır?" sorusunun TEK cevabı olmalı ve
+    # üç sabitin kendi yorumları bunu ZATEN yazıyor (`RESULT_N_MIN`: "goal.yaml'ın min_sample
+    # değeriyle BİREBİR"; `REGIME_N_MIN`: "IC_MIN_SAMPLE ile aynı taban … iki farklı cevabı
+    # olmasın diye"). Yazılı olan iddia kapıya bağlanmamıştı: `RESULT_N_MIN` çapraz-dosya çiviliydi
+    # (test_hafta3a_v119.py:82) ama `REGIME_N_MIN` çivisi LİTERALdi (test_orgu2_v103.py:111) —
+    # yani goal 30'dan kaydığında sabit kendi literaliyle YEŞİL kalırdı.
+    "asgari_ornek": {
+        "neden": "asgari örneklem: rejim edge'i, dolar hükmü ve bileşen IC'si aynı tabandan "
+                 "beslenir — 'kaç satır yeterli' sorusunun ikinci bir cevabı olmamalı",
+        "kaynaklar": [
+            ("goal.yaml:min_sample", lambda: int(_yaml_alan("goal.yaml", "min_sample"))),
+            ("analytics.REGIME_N_MIN", lambda: int(_sabit("analytics", "REGIME_N_MIN"))),
+            ("analytics.RESULT_N_MIN", lambda: int(_sabit("analytics", "RESULT_N_MIN"))),
+            ("analytics.IC_MIN_SAMPLE", lambda: int(_sabit("analytics", "IC_MIN_SAMPLE"))),
+        ],
+    },
+    # §4.1-#14 — R:R TABANI. `guard.DISCIPLINE_MIN_RR` planı SERT veto eder; `bounds`un
+    # `exit.profit_target_r.min`i ise arama uzayının alt ucudur ve `strategy.py:619/674`
+    # (`rr = max(DISCIPLINE_MIN_RR, pt_cap)`) ikisinin AYNI niceliğin tabanı olduğunu yazar.
+    # AYRIŞMA HER İKİ YÖNDE DE ANLAMLIDIR — eşitlik bu yüzden doğru ilişkidir, ">=" değil:
+    #   bounds.min < guard  → optimizatör KALICI hard-veto yiyecek planlar üretebilir (denetimin
+    #                         kaydettiği yön), yani arama bütçesi ölü bölgeye harcanır;
+    #   bounds.min > guard  → `DISCIPLINE_MIN_RR` vetosu ULAŞILAMAZ olur, yani guard'ın "R:R
+    #                         tabanı" iddiası sessizce ölü koda döner (aynı sınıf, ters işaret).
+    "rr_tabani": {
+        "neden": "asgari R:R tabanı; disiplin kapısının sert vetosu ile arama uzayının alt ucu "
+                 "AYNI niceliğin tabanıdır (strategy: rr = max(DISCIPLINE_MIN_RR, pt_cap))",
+        "kaynaklar": [
+            ("guard.DISCIPLINE_MIN_RR", lambda: float(_sabit("guard", "DISCIPLINE_MIN_RR"))),
+            ("bounds.yaml:exit.profit_target_r.min",
+             lambda: float(_yaml_alan("bounds.yaml", "exit.profit_target_r", "min"))),
+        ],
+    },
+    # §4.1-#13 — ALARM JETONLARI, dil sınırını aşan tek ELLE kopya. Python tarafı türetilmiş
+    # (`obs.NOTIFY_TOKENS` = her `ALARM_` sabiti); pano kart dizileri türetilmemiş. Denetim bugün
+    # 14/14 EŞİT ölçtü — yani bu çift bir onarım değil, REGRESYON kapısıdır: bir sonraki alarm
+    # sabiti karta yazılmazsa jeton üretilir ama panoda evi olmaz.
+    "alarm_jetonlari": {
+        "neden": "alarm jeton kümesi: obs sabitleri (türetilmiş) ↔ pano kartlarının elle "
+                 "kopyalanmış dizileri — kartsız jeton, okuyucusuz alarm demektir (YASA 6)",
+        "kaynaklar": [
+            ("obs.NOTIFY_TOKENS", lambda: frozenset(_sabit("obs", "NOTIFY_TOKENS"))),
+            ("app.js: kart jetonları", _pano_alarm_jetonlari),
+        ],
+    },
+    # §4.1-#17 — DEFTER SÖZLEŞMESİ ↔ SQL ŞEMASI. Kıyas `silahli_kurulumlar`ın deseniyle aynıdır
+    # (taban küme ↔ taban kümenin karşılanan dilimi): eşitlik "her ZORUNLU alanın tipli bir kolonu
+    # var" demektir. Ayrışırsa rapor eksik alanı ADIYLA gösterir (iki liste yan yana).
+    # RİSK SINIFI DÜŞÜK AMA SESSİZ: kolonsuz zorunlu alan `extra_json`a gömülür — satır KAYBOLMAZ,
+    # yalnız o alana göre süzen okuyucu sessizce boş küme alır (doğruluk değil, sorgulanabilirlik).
+    "defter_sema_kapsami": {
+        "neden": "defter sözleşmesinin ZORUNLU alanları ile SQLite şemasının tipli kolonları; "
+                 "kolonsuz zorunlu alan extra_json'a gömülür ve o alana göre süzme sessizce boşalır",
+        "kaynaklar": [
+            ("ledgers.CONTRACTS:zorunlu", lambda: _defter_sema_alanlari()[0]),
+            ("storage._COLS:şemada karşılığı olan", lambda: _defter_sema_alanlari()[1]),
+        ],
+    },
+    # §7-#3 — BİLİNÇLİ İKİZLEME (kıyasa girmez, kayda girer). `broker.DERISK_FLOOR_DD` bir zamanlar
+    # `goal.max_drawdown`dan türetiliyordu; bağ 2026-08-12'de BİLEREK koparıldı (`broker.py:33`
+    # "ŞERH — KOPAN BAĞ") ve mezar-taşı testiyle sessiz yeniden-bağlanmaya karşı çivilendi. Kayda
+    # giriyor ki muafiyet SESSİZ olmasın: bugünkü değeri raporda görünür, ama ayrışma SAYILMAZ.
+    "derisk_tabani": {
+        "neden": "de-risk rampasının taban düşüşü; goal.max_drawdown ile bağı 2026-08-12'de "
+                 "BİLEREK koparıldı (broker.py:33 'KOPAN BAĞ') — aynı sayı DEĞİLDİR",
+        "kaynaklar": [
+            ("goal.yaml:max_drawdown", lambda: _yaml_alan("goal.yaml", "max_drawdown")),
+            ("broker.DERISK_FLOOR_DD", lambda: _sabit("broker", "DERISK_FLOOR_DD"), "beyanli-ayri"),
+        ],
+    },
 }
 
 _ILISKI_NORM = {
@@ -2122,7 +2309,23 @@ def divergence_report() -> dict:
 
     `coherence`den farkı ZAMAN değil DEĞER ölçmesidir; ikisi kardeştir, biri diğerinin yerine
     geçmez (bayat bir türev burada YEŞİL görünebilir ve doğrusu odur — onu `coherence` söyler).
-    Yalnız gözlem: bekçi hiçbir değeri düzeltmez."""
+    Yalnız gözlem: bekçi hiçbir değeri düzeltmez.
+
+    TUR FOTOĞRAFI (2026-08-14): aynı dosyadan besleniyorsa iki kaynak o dosyayı BİR kez ayrıştırır
+    (`_OKUMA` kutusu). İki fayda tek mekanizmada: sıcak yol kaynak sayısıyla değil DOSYA sayısıyla
+    büyür, ve tek turun bütün kaynakları aynı anlık görüntüyü görür — yazım ortasında yakalanmış
+    bir dosya UYDURMA bir ayrışma üretemez. Kutu turun sonunda KAPANIR; turlar arası hiçbir şey
+    taşınmaz (`_yaml_alan`ın "önbellekten okuma" yasağı ihlal edilmez)."""
+    _OKUMA.kutu = {}
+    try:
+        return _divergence_hesapla()
+    finally:
+        # TUR BİTTİ, KUTU BOŞALIR (`_PAYLASIM` ile aynı disiplin): bırakılsaydı bir sonraki
+        # bağımsız çağrı yaşı beyansız bir fotoğraftan konuşurdu.
+        _OKUMA.kutu = None
+
+
+def _divergence_hesapla() -> dict:
     ayrik, olculemeyen, beyanli, esit = [], [], [], 0
     for olgu, kayit in EQUIVALENT_TRUTHS.items():
         degerler: dict = {}
@@ -2142,7 +2345,7 @@ def divergence_report() -> dict:
             degerler[ad] = (_ILISKI_NORM[iliski](ham), _gorunur(ham), iliski)
         if len(degerler) < 2:
             continue                                  # kıyas için en az iki ÖLÇÜLMÜŞ kaynak gerek
-        norm = {d[0] for d in degerler.values()}
+        norm = {_kiyas_anahtari(d[0]) for d in degerler.values()}
         if len(norm) == 1:
             esit += 1
         else:
@@ -2151,6 +2354,21 @@ def divergence_report() -> dict:
                                         for ad, d in degerler.items()}})
     return {"ayrik": ayrik, "esit": esit, "total": len(EQUIVALENT_TRUTHS),
             "olculemeyen": olculemeyen, "beyanli": beyanli}
+
+
+def _kiyas_anahtari(v):
+    """Normalize edilmiş değerin KÜMEYE girebilen hâli.
+
+    `divergence_report` eşitliği `{...}` kümesinde ölçer; `frozenset` hash'lenir ama düz `set`
+    hash'lenmez. Küme döndüren bir kaynak (ör. defter alanları) eklendiğinde ham `set` TypeError
+    fırlatır ve dedektör TAMAMEN düşerdi — yani tek bir çift, sekizinci deseni topyekûn susturur.
+    Sekiz dedektörün yalıtımı (`_tut`) bunu "dedektor_dustu" diye duyururdu, ama hüküm yine
+    kaybolurdu; hash'lenebilirlik kaynağın biçimine bırakılamayacak kadar ucuz bir garantidir."""
+    if isinstance(v, set):
+        return frozenset(v)
+    if isinstance(v, list):
+        return tuple(v)
+    return v
 
 
 def _gorunur(v):

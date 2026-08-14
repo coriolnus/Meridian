@@ -1944,6 +1944,66 @@ def _quiet_flag_unsupported_warn(out) -> None:
                         f"Kalıcı çözüm: hermes-agent'ı -Q destekleyen sürüme yükselt.")
 
 
+# ==================================================================================================
+# KÜNYE "İSTENEN"İ DEĞİL "CEVAP VEREN"İ TAŞIR (2026-08-14; canlı ölçüm 2026-08-13)
+# --------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA (canlı A1, 2026-08-13 — olay defterinden birebir):
+#     20:37:26  agent_call kind=review model=tencent/hy3:free      attempt=1 empty=True  rc=1
+#     20:37:31  agent_call kind=review model=gemini-flash-latest   attempt=2 empty=False rc=0
+#     20:37:32  candidate_review.json yazıldı → "model": "tencent/hy3:free"
+# Görüşü İKİNCİ model yazdı, künye BİRİNCİYİ söylüyordu. Sebep `review_candidates`in `active_model()`
+# çağırmasıydı: o fonksiyon YAPILANDIRMAYI okur (`NOUS_MODEL` sırrı), zincirin hangi ayağının
+# GERÇEKTEN konuştuğunu değil. BEDELİ ÖLÇÜLDÜ: tencent 56 çağrının 56'sında boş döndü ama pano
+# haftalarca `TENCENT/HY3:FREE` yazdı — hatalı künye arızayı GİZLEDİ. Künye doğru olsaydı başlıkta
+# `gemini-flash-latest` görünür, ayrışma ilk gün fark edilirdi.
+#
+# NEDEN YAN KANAL, DÖNÜŞ TÜRÜ DEĞİL: `_agent_call`in bugünkü dönüşü `str | None` ve altı üretim
+# çağıranı var (`_propose_nous_local`, `review_candidates`, `rank_explore`, `_review_plans_batch`,
+# `chain_text`, `skill_evolve.propose_skill_revision`) + ~30 test iddiası; hepsi metni doğrudan
+# kullanıyor. Dönüşü tuple'a çevirmek altısını birden kırardı; bu turun kapsamı KÜNYE, taşıma
+# sözleşmesi değil.
+#
+# NEDEN threading.local: emsali bu modülde ZATEN VAR (`_BRAIN_TRACE`/`_trace_note`) ve gerekçesi
+# aynen geçerli — arka plan dolgu kolu ile inceleme kolu AYNI ANDA `_agent_call` koşabilir
+# (hermes_runtime sondası + asenkron backfill iş parçacığı); modül düzeyinde tek kutu birinin
+# künyesini ötekine yazardı. EŞZAMANLILIK VARSAYIMI AÇIK BEYAN: okuyucu, çağrıyı YAPAN iş
+# parçacığının kendisidir (bugün öyle — `review_candidates` çağrıyı ve okumayı aynı gövdede yapar).
+# Başka bir iş parçacığından okumak ÖLÇÜLEMEDİ döndürür; uydurma değil, dürüst boşluk.
+#
+# TÜKETEN OKUMA (`_trace_take` emsali): okuyunca kutu boşalır — ikinci bir okuyucu bayat bir künyeyi
+# taze sanamaz. Bir sonraki `_agent_call` girişte kutuyu zaten temizler (erken dönüşler dahil).
+# ==================================================================================================
+AGENT_MODEL_YOK_KAYIT = ("cevap veren model ÖLÇÜLEMEDİ: bu iş parçacığında tamamlanmış bir ajan "
+                         "çağrısı kaydı yok (çağrı hiç yapılmadı, cevapsız döndü ya da künye başka "
+                         "bir iş parçacığında kaldı)")
+AGENT_MODEL_YOK_ZINCIR = ("cevap veren model ÖLÇÜLEMEDİ: model zinciri adsızdı (NOUS_MODEL / "
+                          "NOUS_FALLBACK_MODEL sırrı yok) — CLI kendi varsayılanına gitti ve o adı "
+                          "bize bildirmiyor")
+_AGENT_SON_MODEL = threading.local()
+
+
+def _agent_model_sifirla() -> None:
+    """Kutuyu boşalt — HER `_agent_call` girişinde, erken dönüşlerden ÖNCE."""
+    _AGENT_SON_MODEL.model, _AGENT_SON_MODEL.neden = None, AGENT_MODEL_YOK_KAYIT
+
+
+def _agent_model_kaydet(model: str | None) -> None:
+    """Dolu cevabı GERÇEKTEN veren denemenin model adı (`None` = zincir adsızdı → CLI varsayılanı)."""
+    _AGENT_SON_MODEL.model = model or None
+    _AGENT_SON_MODEL.neden = None if model else AGENT_MODEL_YOK_ZINCIR
+
+
+def cevap_veren_model() -> tuple[str | None, str | None]:
+    """SON `_agent_call`in cevabını veren model → `(model, ölçülemedi_nedeni)`; biri hep None'dır.
+
+    UYDURMA YASAĞI: ölçülemezse `(None, neden)` döner — `active_model()`e (yapılandırma) SESSİZCE
+    düşmez. Okuma TÜKETİR (bkz. üstteki blok)."""
+    m = getattr(_AGENT_SON_MODEL, "model", None)
+    n = getattr(_AGENT_SON_MODEL, "neden", AGENT_MODEL_YOK_KAYIT)
+    _AGENT_SON_MODEL.model, _AGENT_SON_MODEL.neden = None, AGENT_MODEL_YOK_KAYIT
+    return (m, None) if m else (None, n or AGENT_MODEL_YOK_KAYIT)
+
+
 def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 timeout: int = 300, max_wait: float = 0.0) -> str | None:
     """TÜM yerel-ajan çağrılarının tek kapısı (#1): skill senkronu + -s ön-yükleme + oran bütçesi +
@@ -1959,8 +2019,13 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
 
     ÇAĞRI YAPILMADAN dönülen üç yol (ikili yok · soğuma · bütçe reddi) deftere YAZILMAZ ve bu
     bilinçlidir: süresi olmayan bir şeyin "çağrı süresi" satırı, ortalamayı sessizce aşağı çeker.
-    O üç hâl zaten kendi olaylarını basıyor (`agent_call_cooldown`, `agent_budget_denied`)."""
+    O üç hâl zaten kendi olaylarını basıyor (`agent_call_cooldown`, `agent_budget_denied`).
+
+    KÜNYE YAN KANALI: dolu cevabı veren denemenin model adı `cevap_veren_model()` ile okunur (dönüş
+    türü DEĞİŞMEDİ). Kutu burada, HER erken dönüşten önce sıfırlanır — önceki bir çağrının künyesi
+    bu çağrının cevabı sanılamaz."""
     import subprocess
+    _agent_model_sifirla()
     bin_ = _hermes_bin()
     if not bin_:
         return None
@@ -2145,6 +2210,8 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 store.write_json("agent_tooluse.json", st)
             except Exception:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
                 pass
+            # CEVABI VEREN DENEME BUDUR (zincirin kaçıncı ayağı olursa olsun) — künye buradan çıkar.
+            _agent_model_kaydet(model)
             return out.stdout
     # ZİNCİR UZUNLUĞU DÜRÜST BİLDİRİLİR: canlı defterde bu satır "tüm model zinciri cevapsız" diyordu
     # ama tried=1'di — NOUS_FALLBACK_MODEL hiç ayarlanmamıştı, yani "düşüş zinciri" tek elemanlıydı.
@@ -3402,6 +3469,11 @@ def review_candidates(dstr: str | None = None) -> dict | None:
               json.dumps(ctx, ensure_ascii=False) + _opinion_history())
     _setups = tuple({p2.get("setup") for p2 in todays if p2.get("setup")})
     butce_once = _agent_gun_sayaci()
+    # Künye kutusu ÇAĞRIDAN ÖNCE de boşaltılır: `_agent_call` bunu kendi girişinde zaten yapıyor,
+    # ama garantiyi OKUYAN tarafta tutmak sözleşmeyi çağrılana bağımlı olmaktan çıkarır (saplanmış
+    # bir `_agent_call` — testler, ileride bir sarmalayıcı — kutuya hiç dokunmaz ve o hâlde bayat
+    # bir künye bu seansın görüşüne yapıştırılırdı).
+    _agent_model_sifirla()
     text = _agent_call(prompt, preload=tuple(_skill_preload("review", _setups)),
                        kind="review", timeout=300, max_wait=90.0)   # asenkron iş parçacığı bekleyebilir
     if text is None:
@@ -3446,9 +3518,27 @@ def review_candidates(dstr: str | None = None) -> dict | None:
                                   f"sıfır görüş çıktı — kayıt yok")
         _review_deneme_isle(day, "filtre")         # v233: gerçek deneme — gecersiz eşiğine sayılır
         return None
-    res = {"date": day, "model": active_model(), "brain": active_brain(),
+    # KÜNYE: CEVABI VEREN MODEL (2026-08-14). Eskiden burada `active_model()` vardı ve o
+    # YAPILANDIRMAYI okuyordu — canlıda görüşü `gemini-flash-latest` yazarken künye
+    # `tencent/hy3:free` diyordu (ölçüm `cevap_veren_model` üstündeki blokta). Ölçülemezse alan
+    # None + neden; `active_model()`e SESSİZCE dönülmez (uydurma yasağı).
+    # GERİYE UYUM: eski kayıtlarda `model` alanı "İSTENEN"i taşır ve RETRO-DÜZELTİLMEZ. Yeni
+    # kayıtlar anlamlarını kendileri beyan eder: `model_kaynagi` alanı VARSA `model` = cevap veren;
+    # alan YOKSA kayıt eski sözleşmedendir. İki anlamın aynı ada binmemesi için "istenen" değer de
+    # kendi ADIYLA yazılır (`model_istenen`) — ayrışma artık dosyanın kendisinden ölçülebilir.
+    _cevap_model, _model_neden = cevap_veren_model()
+    res = {"date": day, "model": _cevap_model, "brain": active_brain(),
+           "model_kaynagi": "cevap_veren", "model_olculemedi": _model_neden,
+           "model_istenen": active_model(),
            "reviews": reviews[:20], "ts": memory.now_iso(),
            "note": "danışma katmanı — kapı kararını değiştirmez"}
+    if _cevap_model and res["model_istenen"] and _cevap_model != res["model_istenen"]:
+        # AYRIŞMA GÖRÜNÜR OLUR: tam da haftalarca gizlenen olgu. Uyarı değil kayıt — zincirin
+        # yedeğe düşmesi bir ARIZA değildir; arıza, düştüğünün SÖYLENMEMESİYDİ.
+        obs.log("candidate_review_model_ayrismasi", date=day, cevap_veren=_cevap_model,
+                istenen=res["model_istenen"],
+                detail="görüşü zincirin yedek ayağı yazdı — künye artık cevap vereni taşıyor; "
+                       "birincil ayağın neden boş döndüğü agent_call/agent_call_empty olaylarında")
 
     def _yaz(doc):
         # BAŞARI YOLU AYNI KAYDI YAZAR (v233 farkı yalnız taşıma): sıkışıklık defteri (`backlog`)

@@ -184,13 +184,22 @@ def test_B2_dokunulmayanlar_YERINDE_kalir(sandbox_state):
     assert pf["last_id"] == pf0["last_id"] and pf["last_date"] == pf0["last_date"]
 
 
-def test_B3_egriye_NOKTA_eklenmez_cunku_tohum_sinirini_kaydirirdi(sandbox_state):
-    """BU TESTİN KENDİSİ BİR TASARIM KARARININ BEKÇİSİDİR.
+def test_B3_egriye_NOKTA_eklenmez_reset_YALNIZ_isaret_yazar(sandbox_state):
+    """BU TESTİN KENDİSİ BİR TASARIM KARARININ BEKÇİSİDİR — ama gerekçesi 2026-08-14'te DEĞİŞTİ.
 
-    `ledgerstamp.seed_boundary()` tohum penceresinin sınırını EĞRİNİN SON NOKTASININ TARİHİNDEN
-    okur (tek yazar `run.replay_seed`). Reset günü eğriye bir nokta eklenseydi sınır bugüne kayar
-    ve bundan SONRAKİ her canlı satır `replay_seed` diye damgalanırdı — yani bu turun kapattığı
-    kusuru, onu kapatan araç geri açardı. İşaret ayrı zarf anahtarında durur."""
+    ESKİ GEREKÇE (artık geçersiz, tarihçe için duruyor): `seed_boundary` sınırı EĞRİNİN SON
+    NOKTASINDAN okuyordu; reset günü bir nokta eklenseydi sınır bugüne kayar ve sonraki her canlı
+    satır `replay_seed` damgalanırdı.
+
+    BUGÜNKÜ GEREKÇE (WP2-D bacak-1): sınır artık işaretin DONMUŞ `egri_son_nokta` alanından
+    okunuyor, yani nokta eklemek sınırı kaydırmıyor (kadanslı yazar bacak-2 tam bu yüzden
+    yazılabildi). Kural yine de duruyor ve SAHİPLİK gerekçesiyle: `sermaye.uygula` bir MİGRASYON
+    aracıdır, seans yazarı değil — eğriye nokta eklemek ona ait olmayan bir olguyu (o günün
+    sermayesi) ikinci bir yazardan yazmak olurdu. Nokta yazarı `loop._persist_equity_point`tir ve
+    çivileri `test_wp2d_egri_kadansli_yazar_v245.py`dedir.
+
+    Sınırın DEĞİŞMEMESİ hâlâ ölçülüyor — bu kez iki yolun (işaret öncesi damga, işaret sonrası
+    `egri_son_nokta`) AYNI sayıyı vermesi olarak."""
     _tohumlanmis_dunya()
     sinir_once = ledgerstamp.seed_boundary()["replay_end"]
     n_once = len(store.read_json(sermaye.EQUITY, {})["points"])

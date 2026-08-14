@@ -37,7 +37,15 @@ LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_dai
               # Aynı yere, AYNI yetkiyle indi: operatör kalemi (Hermes öneremez — bu liste; arama
               # göremez — bounds.yaml'da satırı yok; risk-artıran vana pencereden geçer,
               # ROADMAP §2-10(3)). Okuyan tek yer `broker.derisk_ramp()`.
-              "derisk_full_dd", "derisk_floor_dd"}
+              "derisk_full_dd", "derisk_floor_dd",
+              # WP-15g AYRIŞTIRMASI (2026-08-14): sektör tavanının KENDİ paydası. C24/de-risk
+              # deseniyle AYNI yetki sınıfı — operatör kalemi: Hermes öneremez (bu liste), arama
+              # göremez (bounds.yaml'da satırı YOK; risk/çeşitlendirme vanası arama uzayına
+              # girmez). Bugün goal.yaml'da SATIRI DA YOK ve olmaması DOĞRUDUR: anahtar yokken
+              # payda `max_open_positions`tan TÜRETİLİR (bkz. `sector_cap_basis`), yani bu tur
+              # davranış değiştirmez. Ad burada ŞİMDİDEN durur ki, operatör bir gün satırı
+              # yazdığında Hermes'e açık bir düğme olarak DOĞMASIN (GU1 kayma sınıfı).
+              "sector_cap_basis"}
 
 # --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI (C13b, 2026-08-02) ------------------------------------
 # Bir knob replay/gölgede ÖLÇÜLÜR ama canlı motorda yapısal olarak hiçbir şey yapmazsa, terfi yolu
@@ -300,6 +308,64 @@ HEAT_REVIEW_R = 3.5            # total open risk (R) above this -> REVIEW (book 
 HEAT_HARD_R = 5.0             # OPERATÖR KARARI 2026-08-03 (d01ccb5): zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)
 CORR_REVIEW = 0.85           # candidate return-correlation with a held name above this -> REVIEW
 
+# --- SEKTÖR TAVANI PAYDASI — WP-15g YAPIŞIKLIK AYRIŞTIRMASI (2026-08-14) ------------------------
+# ÖLÇÜLEN GERÇEK (EDG-2026-035 `yapisal_bulgu`, kart research/cards/EDG-2026-035-yerel-duyarlilik.yaml):
+# sektör tavanı oranının PAYDASI `max_open_positions`tı — yani KAPASİTE knob'u sessizce
+# ÇEŞİTLENDİRME politikasını da belirliyordu (max_open 20 → sektör başına 8 isim; 15 → 6 isim).
+# Aynı kart slot tavanının kapasite olarak ÖLÜ olduğunu da ölçtü (eşzamanlı pozisyon tepesi 13 < 20;
+# slot25 defteri tabanla BAYT-ÖZDEŞ, ΔCI=[0,0]) ve slot15 hücresinin farkının slottan DEĞİL bu yan
+# kanaldan geldiğini gösterdi (`sector_cap` NO_GO 8→33). Yani `max_open_positions`ın o gün TEK CANLI
+# ETKİSİ bu paydaydı: adı "kapasite", işi "çeşitlendirme". İki politika tek sayıya binmişti.
+#
+# BU TUR YALNIZ AYRIŞTIRMADIR — SAYI DEĞİŞMEZ. Payda için ne goal.yaml'a ELLE bir sayı yazılır ne
+# buraya bir MODÜL SABİTİ konur: anahtar yoksa payda `max_open_positions`tan TÜRETİLİR, yani
+# bugünkü formülün ta kendisi koşar (eşdeğerlik çivisi: tests/test_sektor_tavani_ayristirma_v245.py).
+# Eşiği "iyileştirmek" (ör. sektör başına 8 yerine 10 isim) AYRI ve ÖLÇÜLECEK bir iştir — kart-önce.
+SECTOR_CAP_BASIS_KEY = "sector_cap_basis"
+_BASIS_YOK = object()   # "anahtar hiç yok" ≠ "anahtar var ama None": ikisi de düşer, NEDENLERİ ayrı
+
+
+def sector_cap_basis(limits: dict):
+    """(payda, düşüş_nedeni) — sektör tavanı oranının PAYDASI. SAF fonksiyon (defter yok, ağ yok).
+
+    `düşüş_nedeni is None` ⇔ payda operatörün AÇIKÇA yazdığı `limits.sector_cap_basis`tır; o zaman
+    `max_open_positions` sektör tavanını ARTIK OYNATMAZ (ayrıştırmanın ta kendisi).
+    `düşüş_nedeni` bir DİZGEYSE payda TÜRETİLMİŞTİR (`limits["max_open_positions"]` — bugünkü
+    davranış) ve neden okunabilir hâlde çağıranın elindedir. SESSİZ VARSAYILAN YOK: bu fonksiyon
+    hiçbir dalda sebepsiz bir sayı döndürmez.
+
+    NEDEN FAIL-SAFE TÜRETME (burası CANLI RİSK KAPISI): yanlış bir payda bu kapıyı ya HİÇ ateşlemez
+    (payda çok büyük → çeşitlendirme sessizce kaybolur) ya da HER planı keser (payda 1 → (0+1)/1 >
+    %40). İkisi de canlı defterde sessiz davranış kaymasıdır ve ikisi de ancak haftalar sonra
+    fark edilirdi. Bu yüzden okunamayan/anlamsız her değer BUGÜNKÜ türetilmiş davranışa düşer —
+    payda asla tahmin edilmez, uydurulmaz.
+
+    TÜRETME YOLUNDA BİT-ÖZDEŞLİK: `limits["max_open_positions"]` HAM döndürülür (float()/int()
+    dönüşümü YOK) ve çağrı yerindeki `max(1, payda)` katmanı da eskisi gibi durur — eski ifade ile
+    yeni yol arasında bir yuvarlama/tip farkı DOĞMASIN diye. Anahtar eksikse `KeyError` de eskisi
+    gibi yükselir (aynı satır, aynı istisna)."""
+    ham = limits.get(SECTOR_CAP_BASIS_KEY, _BASIS_YOK)
+    if ham is _BASIS_YOK:
+        # NORMAL YOL — bugün goal.yaml'da bu anahtar YOKTUR: bugünkü formülün birebir kendisi.
+        return limits["max_open_positions"], "anahtar yok — payda max_open_positions'tan TÜRETİLDİ"
+    if ham is None:
+        # UYDURMA YASAĞI deseni: None = "ölçülemedi/yazılmadı", 0 değil. Tahmin etmeyiz, düşeriz.
+        return limits["max_open_positions"], "değer None (yazılmamış/ölçülememiş) — türetilmiş paydaya düşüldü"
+    if isinstance(ham, bool):
+        # YAML `true`/`false` bool doğurur ve `float()` onu sessizce 1.0/0.0'a çevirirdi; payda 1.0
+        # HER planı keserdi (yukarıdaki felaket dalının tam örneği). bool bir payda değildir.
+        return limits["max_open_positions"], f"değer mantıksal ({ham!r}), sayı değil — türetilmiş paydaya düşüldü"
+    try:
+        deger = float(ham)
+    except (TypeError, ValueError):  # sessiz-yutma: istisna YUTULMUYOR — nedeni dizgeye çevrilip çağırana DÖNÜYOR ve kapı bugünkü türetilmiş paydaya düşüyor (canlı risk kapısında fail-safe)
+        return limits["max_open_positions"], f"değer sayıya çevrilemedi ({ham!r}) — türetilmiş paydaya düşüldü"
+    if not deger > 0.0:
+        # 0 / negatif / NaN aynı dalda (NaN her karşılaştırmada False verir). Isı eşiklerinin
+        # aksine burada 0 MEŞRU DEĞİLDİR: 0 bir eşik değil bir PAYDADIR (bkz. C24 `.get` şerhi —
+        # orada 0.0 "her planı kes" demekti ve operatörün sayısıydı; payda olarak 0 tanımsızdır).
+        return limits["max_open_positions"], f"payda pozitif değil ({ham!r}) — türetilmiş paydaya düşüldü"
+    return deger, None
+
 
 def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params: dict | None = None,
                   detail_out: list | None = None):
@@ -356,8 +422,23 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     _chk("max_open_positions", portfolio.get("open_positions", 0) >= limits["max_open_positions"],
          f"max {limits['max_open_positions']} pozisyon dolu", "hard",
          value=portfolio.get("open_positions", 0), threshold=f"<{limits['max_open_positions']}")
+    # WP-15g: sektör tavanının paydası ARTIK KENDİ anahtarını taşır (yukarıdaki `sector_cap_basis`).
+    # Anahtar yokken payda `max_open_positions`tan TÜRETİLİR → bugünkü hüküm ZERRE değişmez.
+    # BURADA HESAPLANIR, fonksiyon başında DEĞİL — DEĞERLENDİRME SIRASI da davranışın parçası:
+    # `max_open_positions` eksik bir goal sözlüğünde eski kod KeyError'ı BİR ÜSTTEKİ `_chk` satırında
+    # yükseltiyordu, yani `detail_out` o ana kadar `exposure_budget` satırını çoktan almış oluyordu.
+    # Payda fonksiyon başında okunsaydı istisna daha erken düşer ve YARIM karar ağacı ayrışırdı.
+    # İkinci dönüş değeri (düşüş nedeni) BİLEREK `detail_out`a YAZILMAZ: karar-ağacı satırlarının
+    # sözleşmesi (ad listesi + uzunluk + "geçen kontrol not YAZMAZ") bu turda DONDURULMUŞTUR ve bir
+    # yönetişim notu için hüküm yüzeyi kirletilmez. Neden sessiz DEĞİL, ÇAĞRILABİLİR: aynı saf
+    # fonksiyon `guard.sector_cap_basis(limits)[1]` ile dışarıdan okunur ve testlerde çivilenir.
+    sector_basis = sector_cap_basis(limits)[0]
+    # AYRIŞTIRILDI (WP-15g, 2026-08-14): payda artık `max_open_positions` DEĞİL `sector_basis`.
+    # Anahtar yokken `sector_basis` TAM OLARAK `limits["max_open_positions"]`tır (aynı nesne, ham) —
+    # ifade, `max(1, ...)` katmanı, karşılaştırma yönü, hüküm metni ve value/threshold alanları
+    # DEĞİŞMEDİ. Sektör başına fiili isim tavanı = floor(payda × max_sector_exposure_pct/100).
     _chk("sector_cap",
-         (sc.get(sec, 0) + 1) / max(1, limits["max_open_positions"]) > limits["max_sector_exposure_pct"] / 100.0,
+         (sc.get(sec, 0) + 1) / max(1, sector_basis) > limits["max_sector_exposure_pct"] / 100.0,
          f"'{sec}' sektör tavanı %{limits['max_sector_exposure_pct']:.0f} aşılıyor", "hard",
          value=sc.get(sec, 0) + 1, threshold=f"%{limits['max_sector_exposure_pct']:.0f}")
     _chk("daily_loss_breaker", portfolio.get("day_pnl_pct", 0.0) <= -limits["max_daily_loss_pct"] / 100.0,

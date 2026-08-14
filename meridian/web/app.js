@@ -10427,8 +10427,17 @@ $("gate-form").addEventListener("submit", async e => {
   } finally { btn.disabled = false; }
 });
 
-// 401 HER YERDEN gelebilir: oturum 12 saatte dolar ve operatör o an hangi sayfadaysa oradadır.
-// apiFetch tek boğaz olduğu için kapıyı oradan açmak, her çağrı yerine tek tek bakmaktan güvenli.
+// 401 HER YERDEN gelebilir ve operatör o an hangi sayfadaysa oradadır. apiFetch tek boğaz olduğu
+// için kapıyı oradan açmak, her çağrı yerine tek tek bakmaktan güvenli.
+//
+// "OTURUM 12 SAATTE DOLAR" ARTIK DOĞRU DEĞİL (2026-08-14) — ve o cümle bu satırda yazılıydı.
+// Sunucu oturumu KAYAN pencereye geçti: yetkili her istek çerezi yarı-ömrü geçmişse tazeler, yani
+// AKTİF kullanılan pano artık dolmuyor. Dolan iki hâl kaldı: (1) pano ~12 saat hiç kullanılmadı,
+// (2) oturum veriliş anından itibaren 7 günlük mutlak tavana vardı (çalınan çerezin ömür sınırı).
+// BU DOSYADA DAVRANIŞ DEĞİŞMEDİ ve değişmemeli: kapak yine 401'de açılır, `_JC` yine temizlenir.
+// Sunucu tarafındaki tazeleme istemcinin göreceği bir şey DEĞİLDİR (çerez HttpOnly'dir, JS onu
+// okuyamaz) — pano yalnız 401 görmemeye başlar. Kapak mantığına dokunmak, sunucu bir gün geri
+// alınırsa operatörü kapısız bırakırdı.
 function _yetkisizYakala(r) {
   if (r && r.status === 401 && _oturumAcik) {
     _oturumAcik = false;

@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from meridian import config, loop, store
+from meridian import config, ledgerstamp, loop, store
 from tests.conftest import make_bars
 
 
@@ -148,7 +148,14 @@ def test_loop_writes_only_declared_state_files():
             written.add(n.args[0].value)
     allowed = {"universe_drift.json", "portfolio.json", "trade_plans.jsonl", "scan_debt.json",
                "data_quality.json", "regime.json", "candidates.jsonl", "score_calibration.json",
-               "trades.jsonl", "broker_reconcile.json", "counterfactuals.jsonl", "near_miss.json"}
+               "trades.jsonl", "broker_reconcile.json", "counterfactuals.jsonl", "near_miss.json",
+               # WP2-D bacak-2 (2026-08-14): eğrinin KADANSLI yazarı. Sahiplik ORTAK ve beyanlı
+               # (test_na_revision_v53::test_no_module_writes_another_modules_file): run.py tohumu,
+               # sermaye.py zarftaki reset işaretini, loop.py seans noktasını yazar. Yazım
+               # `store.update_json` (file_lock + oku-değiştir-yaz) ile ve YALNIZ `points`e EKLER —
+               # zarfın öteki anahtarları (bacak-1'in sınırı orada) korunur.
+               ledgerstamp.EQUITY}
+    assert loop.EQUITY_CURVE == ledgerstamp.EQUITY, "ikiz literal ayrıştı"
     extra = written - allowed
     assert not extra, f"döngü beyan edilmemiş dosyalara yazıyor: {extra}"
     assert "goal.yaml" not in written and "bounds.yaml" not in written

@@ -345,6 +345,11 @@ class GuvenlikBasliklariMiddleware:
 # listeyi ters kurar). Sonuç: CORS'un kendi kısa-devre yaptığı preflight yanıtları da başlığı alır.
 app.add_middleware(GuvenlikBasliklariMiddleware)
 
+# ÜÇÜNCÜ BİR MIDDLEWARE DAHA VAR ve bilerek BURADA DEĞİL: `KayanOturumMiddleware` (oturum çerezini
+# kullanımla tazeler) kimlik uçlarının — `/api/login`, `/api/logout`, `/api/setup-password` —
+# HEMEN YANINDA durur. Gerekçe orada yazılı: çerezi YAZAN dört yol (giriş · ilk kurulum · çıkış ·
+# tazeleme) tek bir ekranda okunabilmeli, yoksa biri ötekinin başlığını sessizce ezer.
+
 
 def _autostart():
     """When the operator opens the app locally (serve.sh sets the flags), bring the Hermes standby brain
@@ -417,7 +422,8 @@ def _auth(request: Request):
     `?token=` QUERY PARAMETRESİ KALDIRILDI (2026-07-28): URL'ler sunucu loglarına, tarayıcı
     geçmişine ve `Referer` başlığına düşer. İndirme bağlantıları artık çerezle çalışıyor —
     tarayıcı onu kendiliğinden gönderir, URL'e sır koymaya gerek yok."""
-    if auth.verify_session(request.cookies.get(auth.COOKIE_NAME)):
+    cerez = request.cookies.get(auth.COOKIE_NAME)
+    if auth.verify_session(cerez):
         return
     if auth.password_set():
         # Parola kurulduysa oturum ZORUNLUDUR; başlık token'ı yalnız ek bir betik yoludur.
@@ -425,6 +431,16 @@ def _auth(request: Request):
                 (request.headers.get("x-meridian-token") or "").encode("utf-8"),
                 DASH_TOKEN.encode("utf-8")):
             return
+        # OTURUM DÜŞÜŞÜ — YALNIZ ÇEREZ GELMİŞKEN (2026-08-14 kayıt boşluğu). Ayrım kasıtlı:
+        # çerezsiz bir 401 sıradan bir yetkisiz çağrıdır (bot taraması, açılıştaki `/api/session`),
+        # ÇEREZLİ bir 401 ise bir oturumun DÜŞTÜĞÜ andır — operatörün "arayüz kayboldu" dediği
+        # olay tam olarak budur ve bugüne dek hiçbir yere yazılmıyordu. İkisini aynı satırla
+        # bassaydık defter gürültüden ibaret olur, gerçek düşüş orada kaybolurdu.
+        # SEL KAPISI `auth.note_session_drop`ta: pano 15 sn'de bir yokluyor ve `rotate_key()`
+        # sonrası tarayıcı ölü çerezi max-age dolana kadar göndermeye devam eder.
+        # JETON GEÇMEZ — düşmüş bir çerez bile bir sırdır ve deftere yazılan sır, sızan sırdır.
+        if cerez and auth.note_session_drop(_client_ip(request)):
+            obs.warn("session_drop", ip=_client_ip(request), yol=request.url.path)
         raise HTTPException(status_code=401, detail="unauthorized")
     if not DASH_TOKEN:
         return
@@ -996,6 +1012,118 @@ def _secure_cookie(request: Request) -> bool:
     return proto == "https"
 
 
+def _oturum_cerez_basligi(tok: str, max_age: int, secure: bool) -> str:
+    """Oturum çerezinin `Set-Cookie` başlığı — ÇEREZİ YAZAN HERKESİN TEK KAYNAĞI.
+
+    NEDEN FONKSİYON, ÜÇ KEZ `set_cookie(...)` DEĞİL: öznitelikler (HttpOnly · SameSite=Strict ·
+    Secure · path) bir GÜVENLİK DURUŞUDUR ve test_kimlik_v114 onları YALNIZ `/api/login`in
+    yanıtında ölçüyor. Üç ayrı çağrı yeri, üç ayrı sürüklenme yolu demektir: tazeleyicinin
+    `HttpOnly`ı düşmesi hiçbir yerde kırmızıya dönmez ama tek bir XSS'i kalıcı erişime çevirirdi.
+    Kaynak tek olduğunda o ölçüm üçünü birden çiviler.
+
+    NEDEN ÖZNİTELİKLERİ ELLE KURMUYOR: biçimlendirmeyi Starlette'in kendi `set_cookie`i yapsın —
+    kaçış kuralları ve `SameSite` yazımı çerçevenin sözleşmesidir, bizim taklidimiz değil.
+    Tek kullanımlık bir `Response` yalnız başlığı ÜRETMEK için kurulur; hiçbir yere gönderilmez."""
+    tasiyici = Response()
+    tasiyici.set_cookie(auth.COOKIE_NAME, tok, max_age=max_age,
+                        httponly=True, samesite="strict", secure=secure, path="/")
+    return tasiyici.headers["set-cookie"]
+
+
+def _oturum_cerezi_yazilmis(basliklar) -> bool:
+    """Yanıt oturum çerezini ZATEN yazıyor mu? (ham ASGI başlık listesi üzerinde)"""
+    onek = (auth.COOKIE_NAME + "=").encode("latin-1")
+    return any(ad.lower() == b"set-cookie" and deger.lstrip().startswith(onek)
+               for ad, deger in basliklar)
+
+
+class KayanOturumMiddleware:
+    """KAYAN OTURUM — yetkili istek geldikçe çerezi tazeler (2026-08-14).
+
+    ARIZA (operatör bildirdi): "arayüz bir süre sonra kayboluyor, bütün sekmeler için geçerli".
+    Kök neden bir çizim hatası değildi: `SESSION_TTL_S` SABİT bir pencereydi ve çerezi yenileyen
+    hiçbir yol yoktu. 12 saat dolduğunda `_auth` 401 verir, `app.js`in `_yetkisizYakala`sı kapağı
+    açar; çerez sekmeler arasında ORTAK olduğu için hepsi AYNI ANDA düşer ve pano 15 saniyede bir
+    yokladığı için düşüş saniyeler içinde görünür. Tarif birebir buydu.
+
+    NEDEN MIDDLEWARE, `_auth` İÇİNDE DEĞİL: `_auth` yaklaşık 80 uçta çağrılır ve `Request`ten
+    başka bir şey görmez — `Response`a erişimi YOKTUR. Çerezi oradan yazmak için seksen imzayı
+    değiştirmek gerekirdi ve her yeni uç, imzayı unutabilecek yeni bir yer olurdu. Tazeleme bir
+    UÇ meselesi değil BAĞLANTI meselesidir; yeri taşıma katmanıdır.
+
+    NEDEN SAF ASGI, `@app.middleware("http")` DEĞİL: `GuvenlikBasliklariMiddleware`in gerekçesinin
+    AYNISI — BaseHTTPMiddleware yanıtı `StreamingResponse`a sarar ve bu dosyanın statik yolu
+    `FileResponse` + gövdesiz 304 üzerine kuruludur. Burada da yalnız `http.response.start`
+    mesajının BAŞLIK LİSTESİNE bir satır EKLENİR, gövdeye hiç dokunulmaz.
+
+    ZATEN ÇEREZ YAZAN YANITA DOKUNULMAZ — ve bu kural bir zarafet değil, bir HATA KAPISIDIR:
+    `/api/logout` çerezi SİLER (`delete_cookie`). Bu middleware yığının EN DIŞINDA olduğu için
+    onun başlığından SONRA yazardı; tarayıcı aynı ada iki `Set-Cookie` görünce SONUNCUYU uygular,
+    yani çıkış SESSİZCE çalışmaz olurdu. Aynı tuzak `/api/login` ve `/api/setup-password` için de
+    geçerli (taze çerezin üstüne eski oturumun tazelenmişini yazmak). Yol ADI listelemek yerine
+    OLGUYA bakılır — "yanıt bu çerezi zaten yazıyor mu" — çünkü yol listesi zamanla sürüklenir,
+    olgu sürüklenmez.
+
+    ÖLÇÜLEN MALİYET — İDDİA DEĞİL, SAYI (2026-08-14, bu makinede sayaçla): maliyet birimi
+    `auth._read()`tir (imza anahtarı `state/auth.json`dan gelir) ve tek okuma **19,4 µs**.
+      * çerezsiz istek           → **0** ek okuma (middleware çerez yokken hiç dallanmaz)
+      * çerezli, yarı-ömür içi   → **+1** (1 → 2). `refresh_session` imzayı ÖNCE doğrular; imzadan
+                                   önce `exp`/`iat` okumak doğrulanmamış veriye dayanarak
+                                   dallanmak olurdu ve auth.py'nin yazılı sıra kuralını bozardı.
+      * çerezli, tazeleme anı    → **+2** (1 → 3; ikincisi yeni jetonu imzalamak için) — oturum
+                                   başına ~6 saatte BİR kez.
+    Sayılar `test_kayan_oturum_v245.py::test_tazeleyicinin_disk_maliyeti_OLCULDU`de çivilidir;
+    biri artarsa test söyler, yorum sessizce eskimez."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":       # lifespan/websocket: çerez kavramı yok
+            await self.app(scope, receive, send)
+            return
+        istek = Request(scope)
+        tok = istek.cookies.get(auth.COOKIE_NAME)
+        if not tok:                        # çerezsiz istek: tek bir disk okuması bile yapılmaz
+            await self.app(scope, receive, send)
+            return
+        tazelenmis = auth.refresh_session(tok)
+        if tazelenmis is None:             # düşmüş · yarı-ömrü geçmemiş · tavana varmış · ESKİ biçim
+            await self.app(scope, receive, send)
+            return
+        yeni_tok, kalan = tazelenmis
+        baslik = _oturum_cerez_basligi(yeni_tok, kalan, _secure_cookie(istek)).encode("latin-1")
+        ip = _client_ip(istek)
+        yazildi = False
+
+        async def _send(mesaj):
+            nonlocal yazildi
+            if mesaj["type"] != "http.response.start" or yazildi:
+                await send(mesaj)
+                return
+            yazildi = True
+            yazilacak = not _oturum_cerezi_yazilmis(mesaj["headers"])
+            if yazilacak:
+                mesaj["headers"] = list(mesaj["headers"]) + [(b"set-cookie", baslik)]
+            await send(mesaj)
+            # KAYIT GÖNDERİMDEN SONRA — sıra bilinçli: taşıyan şey çerezdir, kayıt onun yanındaki
+            # ikinci iştir. `obs` yazımı (stdout + jsonl) patlarsa bu sırada operatörün oturumu
+            # ZATEN tazelenmiş olur; önce yazsaydık bir kayıt arızası, düzeltmeye çalıştığımız
+            # arızanın ta kendisini (oturum düşmesi) geri getirebilirdi.
+            # PAROLA DA JETON DA GEÇMEZ — yalnız kim/nereye/ne kadar kaldı.
+            if yazilacak:
+                obs.log("session_refresh", ip=ip, kalan_s=kalan, yol=scope.get("path", ""))
+
+        await self.app(scope, receive, _send)
+
+
+# EN SON EKLENİR → yığının EN DIŞINDA kalır. Bilinçli: `GuvenlikBasliklariMiddleware` yanıt
+# başlıklarını kendi adlarıyla SET eder (`set-cookie` o listede yok, yani çerez ondan zarar
+# görmez), ama en dışta durmak tazeleyicinin gördüğü başlık listesinin NİHAİ liste olmasını
+# garanti eder — "yanıt çerezi zaten yazıyor mu" sorusunun doğru cevaplanması buna bağlıdır.
+app.add_middleware(KayanOturumMiddleware)
+
+
 @app.post("/api/login")
 def api_login(request: Request, body: dict):
     """Parolayı doğrula, imzalı oturum çerezi ver.
@@ -1005,6 +1133,10 @@ def api_login(request: Request, body: dict):
     çalışmak sahte bir mahremiyet olurdu."""
     ip = _client_ip(request)
     if auth.locked_out(ip):
+        # KİLİT DE BİR OLAYDIR (2026-08-14): `login_failed` sekiz kez yazılır, sonra kilit devreye
+        # girer ve o andan sonra HİÇBİR SATIR düşmezdi — yani defteri okuyan kişi saldırının tam
+        # DEVAM ETTİĞİ pencerede sessizlik görürdü. En çok kayda değer dal, en sessiz olanıydı.
+        obs.warn("login_locked_out", ip=ip, retry_after_s=auth.retry_after_s(ip))
         raise HTTPException(status_code=429, detail=f"cok fazla deneme — {auth.retry_after_s(ip)} sn sonra")
     pw = (body or {}).get("password") or ""
     if not auth.password_set() or not auth.verify_password(pw):
@@ -1012,10 +1144,17 @@ def api_login(request: Request, body: dict):
         obs.warn("login_failed", detail=f"ip={ip}")
         raise HTTPException(status_code=401, detail="parola hatalı")
     auth.note_success(ip)
+    # BAŞARILI GİRİŞ KAYDEDİLİR (2026-08-14 boşluğu): bu yüzey bir broker hesabına bakıyor ve HALT/
+    # Flatten taşıyor, ama "kim ne zaman girdi" sorusunun cevabı HİÇBİR YERDE yoktu — yalnız
+    # başarısız giriş ve ilk parola kurulumu olay basıyordu. Başarısızı kaydedip başarılıyı
+    # kaydetmemek, defteri tam da işe yarayacağı soruda kör bırakır: bir sızıntıdan sonra sorulan
+    # şey "kaç kez yanlış denendi" değil, "başka biri İÇERİ GİRDİ Mİ"dir.
+    # PAROLA VE JETON ASLA GEÇMEZ — kayıt yalnız kimliği DOĞRULANMIŞ olgunun kendisidir.
+    obs.log("login_ok", ip=ip, ttl_s=auth.SESSION_TTL_S)
     tok = auth.issue_session()
     r = JSONResponse({"ok": True, "expires_in": auth.SESSION_TTL_S})
-    r.set_cookie(auth.COOKIE_NAME, tok, max_age=auth.SESSION_TTL_S,
-                 httponly=True, samesite="strict", secure=_secure_cookie(request), path="/")
+    r.headers.append("set-cookie",
+                     _oturum_cerez_basligi(tok, auth.SESSION_TTL_S, _secure_cookie(request)))
     return r
 
 
@@ -1051,8 +1190,8 @@ def api_setup_password(request: Request, body: dict):
     obs.warn("password_set", detail=f"ip={_client_ip(request)}")
     tok = auth.issue_session()
     r = JSONResponse({"ok": True})
-    r.set_cookie(auth.COOKIE_NAME, tok, max_age=auth.SESSION_TTL_S,
-                 httponly=True, samesite="strict", secure=_secure_cookie(request), path="/")
+    r.headers.append("set-cookie",
+                     _oturum_cerez_basligi(tok, auth.SESSION_TTL_S, _secure_cookie(request)))
     return r
 
 

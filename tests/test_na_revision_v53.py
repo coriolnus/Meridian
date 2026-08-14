@@ -190,10 +190,19 @@ def test_no_module_writes_another_modules_file():
         # kitaba KENDİSİ yazmıyor, tek kapı `loop.mirror_submit_ve_kalicilastir`ı çağırıyor (C8 tek-kapı
         # çivisinin devamı; yazar sayısı 6→5, sahiplik sıkılaştı).
         "portfolio.json": {"loop.py", "sprint_run.py", "hermes.py", "run.py", "sermaye.py"},
-        # sermaye.py eğriye NOKTA eklemez; `points` DIŞINDA bir zarf anahtarına (reset_isaretleri)
-        # kırılma beyanı yazar. Nokta eklemek `ledgerstamp.seed_boundary`nin tohum sınırını
-        # kaydırırdı (bkz. sermaye.py modül başlığı + test_B3).
-        "equity_curve.json": {"run.py", "sermaye.py"},
+        # ÜÇ YAZAR, ÜÇ AYRI KAPSAM (WP2-D, 2026-08-14):
+        #   run.py     — tohum koşusu: `points`i TOPTAN yazar (defterle ardışık, tek toplu yazım).
+        #   sermaye.py — `points`e DOKUNMAZ; zarftaki `reset_isaretleri` anahtarına kırılma beyanı
+        #                yazar (o beyan artık tohum sınırının TEK kaynağıdır).
+        #   loop.py    — seans sonu KADANSLI NOKTASI: `store.update_json` (file_lock + oku-değiştir-
+        #                yaz) ile `points`e TEK nokta EKLER, zarfın öteki anahtarlarına dokunmaz ve
+        #                günde bir noktadan fazlasını yazamaz (idempotens fonksiyonun içinde).
+        # Kayıp-güncelleme riski YOK: üçü de aynı `file_lock(equity_curve.json)` sırasını paylaşır
+        # ve run.py/sermaye.py yolları canlı worker koşarken zaten reddediliyor.
+        # ESKİ GEREKÇE ARTIK GEÇERSİZ ve bu BİLEREK kayda geçiyor: "nokta eklemek seed_boundary'nin
+        # tohum sınırını kaydırırdı" — kaydırmıyor, çünkü sınır bacak-1'den beri eğrinin son
+        # noktasından DEĞİL reset işaretinin donmuş `egri_son_nokta`sından okunuyor.
+        "equity_curve.json": {"run.py", "sermaye.py", "loop.py"},
         "candidates.jsonl": {"loop.py", "run.py"},
         "counterfactuals.jsonl": {"counterfactual.py", "cf_backfill.py"},
         "cf_open.json": {"counterfactual.py", "hermes.py"},   # cf sahibi + LLM görüş damgası (kilitli)
