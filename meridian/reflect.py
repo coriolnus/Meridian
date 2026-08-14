@@ -476,6 +476,19 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     from .oos_pipeline import OutOfSamplePipeline
     pipe = OutOfSamplePipeline(config.goal())
     prob = pipe.evaluate_search(inc, cand, k_probes=k_probes)
+    # ---- 28f: "ÖLÇÜLEMEDİ" ÜÇÜNCÜ HÂLDİR — "GEÇTİ" DEĞİL ---------------------------------------
+    # `evaluate_search` İKİ SEBEPLE `law="legacy"` döner ve ikisi AYNI ŞEY DEĞİLDİR:
+    #   (a) DİLİM YOK      → olasılıksal yasa bu ortamda hiç YÜRÜRLÜKTE DEĞİL (fikstür/sandbox);
+    #                        eski marj yasası o dünyanın MEŞRU yasasıdır ve aynen koşar.
+    #   (b) DİLİM VAR ama ölçüm YAPILAMADI (dilim sınırı çözülemedi · dilim boş · geçerli
+    #                        replikasyon < max(200, n_boot/10)) → yasa YÜRÜRLÜKTE ama ÖLÇEMEDİ.
+    # (b) bugüne kadar (a) ile aynı dala düşüyordu ve sonuç şuydu: yürürlükteki yasa ölçemeyince
+    # kapı sessizce BAŞKA ve DAHA GEVŞEK bir yasaya (bileşik nokta-marj) geçip adayı GEÇİRİYORDU.
+    # ÖLÇÜLDÜ: dilimleri olan, arama sınırı çözülemeyen bir çiftte `passes=True, gate_law=legacy_
+    # margin, search_p=None, why=''` — yani hiçbir olasılıksal kanıt olmadan "geçti".
+    # Bu bir EŞİK DEĞİŞİKLİĞİ DEĞİL, TANIM DÜZELTMESİdir: ölçülemeyen bir aday ölçülmüş sayılamaz.
+    # Fail-closed, ve nedeni kayda ADIYLA girer.
+    _dilimli = bool(OutOfSamplePipeline.has_slices(inc) and OutOfSamplePipeline.has_slices(cand))
     if prob.law == "probabilistic":
         # dilim tabanı: bootstrap içi min_sample bypass'ı dilimin KENDİSİNİ inceltmesin — iki tarafta
         # da en az min_sample·0.7 işlem yoksa olasılıksal karar dürüst değildir → magnitude geçmez.
@@ -520,6 +533,17 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                          f"{erosion_margin_para} karşılanmadı (aday {cand_para} vs incumbent "
                          f"{inc_para})" if not erosion_ok else prob.why))
         law = "probabilistic"
+    elif _dilimli:
+        # ÖLÇÜLEMEDİ (28f): yasa yürürlükte, ölçüm yok → GEÇEMEZ. Eski marj yasasına DÜŞMEZ, çünkü
+        # düşmek "ölçemedim" ile "başka bir yasaya göre geçti"yi aynı şey saymak olurdu.
+        inc_para = cand_para = None
+        erosion_margin_para = None
+        magnitude_ok = False
+        mag_why = (f"ÖLÇÜLEMEDİ: dilimler VAR (olasılıksal yasa yürürlükte) ama arama dilimi "
+                   f"ölçülemedi — {prob.why or 'sebep beyan edilmedi'}. Ölçülemeyen aday geçmiş "
+                   f"sayılamaz (fail-closed); eski bileşik marj yasasına DÜŞÜLMEZ, o başka bir "
+                   f"yasadır ve burada yürürlükte değildir")
+        law = "olculemedi"
     else:
         # LEGACY fallback (dilim yok): davranış-özdeş ESKİ marj yasası — bool() coercion yük taşır
         # (numpy.bool_ /api 500 dersi). Marj artık aşınma cezasını İÇERİR.
@@ -536,6 +560,13 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     # `dd_mtm_ok` bayrak kapalıyken TANIM GEREĞİ True — bu terim varsayılan yolda NO-OP'tur ve
     # yalnız ölçüm kartının koşumunda (MERIDIAN_DD_MTM_VETO=1) hüküm üretebilir.
     passes = bool(magnitude_ok and majority and tail_ok and dd_ok and dd_mtm_ok)
+
+    # DAMGA TEK YERDE TÜRETİLİR (kapı kaydı + doğrulama defteri AYNI dizgeyi yazsın). ÜÇ DEĞER:
+    # ölçülemeyen bir satıra "eski_bilesik_marj" basmak BİRİM YALANI olurdu — o satırda hiçbir
+    # ölçek yok, çünkü hiçbir ölçüm yok (`probgate.BILESIK_DAMGALAR` bilinmeyen damgayı zaten
+    # SAYMAZ ve sayaçta adıyla gösterir; ship etmediği için çift de üretmez).
+    _yasa_damga = (shadowlaw.YASA_SURUMU if law == "probabilistic"
+                   else ("olculemedi" if law == "olculemedi" else "eski_bilesik_marj"))
 
     # ---- Y1 DOĞRULAMA: DSR (ADVISORY) + ADAY GETİRİ DEFTERİ (Hafta 3a, 2026-07-30) -------------
     # DSR, kapının SORMADIĞI soruyu sorar: "kaç aday denedik de bu geçti?" Aşınma defteri o yükü
@@ -596,7 +627,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             # olduğunu tahmin etmek zorunda kalmamalı. Damga + geçiş tarihi kayda GİRER; geçiş
             # ÖNCESİ kayıtlarda alan YOKTUR ve yokluğu "eski bileşik yasa" demektir (retro damga
             # yasağı — eski kayıtlar geriye dönük damgalanmaz).
-            "yasa_surumu": (shadowlaw.YASA_SURUMU if law == "probabilistic" else "eski_bilesik_marj"),
+            "yasa_surumu": _yasa_damga,
             "yasa_gecis_tarihi": shadowlaw.YASA_GECIS_TARIHI, "yasa_metni": shadowlaw.YASA_METNI,
             # KARAR skorları PARA ölçeğinde (yasanın gerçekten okuduğu sayılar). `incumbent_oos`/
             # `candidate_oos` bileşik RAPOR metriği olarak yerinde kalır — ikisi AYRI satırdır.
@@ -618,6 +649,11 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                              "(DD_VETO_MARGIN) kapanmış-işlem düşüş dağılımından türetildi, M2M "
                              "dağılımının σ'sı ölçülmedi; bağlanması ölçüm kartı ister"),
             "gate_law": law, "k_probes": k_probes, **prob.as_gate_fields("search"),
+            # ÜÇ DEĞERLİ BÜYÜKLÜK HÜKMÜ (28f): "gecti" · "gecmedi" · "olculemedi". `magnitude_ok`
+            # tek başına iki-değerlidir ve ÖLÇÜLEMEYENİ GEÇMEYENDEN ayıramaz; bir okuyucu (ya da
+            # bekçi) "kapı neyi eliyor?" sorusunu ancak bu alanla dürüstçe cevaplayabilir.
+            "magnitude_durum": ("gecti" if magnitude_ok else
+                                "olculemedi" if law == "olculemedi" else "gecmedi"),
             "incumbent_folds": inc_folds, "candidate_folds": cand_folds,
             "fold_law": fold_law, "fold_bounds": fold_bounds,
             # Hedef (FOLD_TARGET_N) sınavı KOLAYLAŞTIRMAK için kullanılmaz; tutup tutmadığı burada
@@ -688,7 +724,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             # PARA-v3: defter satırı da HANGİ YASA altında hüküm aldığını taşır. Yoksa geçiş
             # öncesi/sonrası satırlar aynı kolonda karışır ve PBO/DSR analizleri iki farklı
             # karar değişkenini tek popülasyon sanır.
-            "yasa_surumu": (shadowlaw.YASA_SURUMU if law == "probabilistic" else "eski_bilesik_marj"),
+            "yasa_surumu": _yasa_damga,
             "oos_para": cand_para, "incumbent_para": inc_para,
             "dd_ok": bool(dd_ok), "candidate_dd": None if cand_dd is None else round(float(cand_dd), 4),
             "incumbent_dd": None if inc_dd is None else round(float(inc_dd), 4),
@@ -1064,6 +1100,48 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     from .oos_pipeline import OutOfSamplePipeline
     conf = OutOfSamplePipeline(goal).confirm(inc, cand)
     gate.update(conf.as_gate_fields("confirm"))
+    # ---- 28f: SHIP KAPISINDAKİ DELİK — "ÖLÇÜLEMEDİ" ARTIK "GEÇTİ" DEĞİL ------------------------
+    # ESKİSİ: `if conf.law == "probabilistic":` — yani teyit yürüyüşü olasılıksal bir hüküm
+    # VEREMEDİĞİNDE bütün blok ATLANIYOR ve aday teyit edilmeden SHIP ediliyordu. `confirm()` DÖRT
+    # ayrı sebeple `law="legacy"` döner ve ÖLÇÜLDÜ (hepsi p=None, n_valid=0):
+    #     [A] dilim yok           → "teyit dilimi yok — legacy yasa"
+    #     [B] teyit dilimi ince   → "teyit dilimi ince (6 < 21 işlem) — SHIP YETKİSİ BU KANITLA
+    #                                VERİLEMEZ"          ← kod bunu YAZIYOR, ship yolu YOK SAYIYORDU
+    #     [C] teyit dilimi boş    → aynı taban dalı (0 < 21)
+    #     [D] dilim sınırı bozuk / geçerli replikasyon yetersiz → probgate.evaluate legacy döner
+    # GEÇMİŞ VAKA (ADIYLA, retro DÜZELTİLMEDİ): **H00029 → v0003** (`entry.w_prox` None→0,15,
+    # 2026-07-20) `confirm_p=null`, `confirm_n_valid=0` ile SHIP edildi; değeri `strategy.py:419`
+    # varsayılanının aynısıydı, yani ölçülemeyen bir NO-OP canlıya çıktı. Defter GERİYE DÖNÜK
+    # DÜZELTİLMEZ (tarihçe bozulur); bu düzeltme yalnız bundan sonrasını bağlar.
+    #
+    # ÜÇ DEĞERLİ HÜKÜM: geçti · geçmedi · ÖLÇÜLEMEDİ. Üçüncüsü ship'i ENGELLER (fail-closed).
+    # [A] AYRI TUTULUR ve tek meşru atlama sebebidir: dilim YOKSA teyit mekanizması o ortamda hiç
+    # YÜRÜRLÜKTE DEĞİLDİR (fikstür/sandbox, arama ayağı da orada legacy marj yasasında koşuyor) —
+    # olmayan bir sınavdan kalmak diye bir şey yok. [B]/[C]/[D] ise dilimler VARKEN ölçümün
+    # YAPILAMAMASIDIR ve orada susmak, tam olarak bu deponun en pahalı hatasıdır.
+    _teyit_yururlukte = bool(OutOfSamplePipeline.has_slices(inc)
+                             and OutOfSamplePipeline.has_slices(cand))
+    if conf.law == "probabilistic":
+        gate["confirm_durum"] = "gecti" if conf.passes else "gecmedi"
+    else:
+        gate["confirm_durum"] = "olculemedi" if _teyit_yururlukte else "yasa_yururlukte_degil"
+    gate["confirm_beyan"] = {
+        "gecti": "teyit dilimi ÖLÇÜLDÜ ve adayı DOĞRULADI",
+        "gecmedi": "teyit dilimi ÖLÇÜLDÜ ve adayı REDDETTİ — kazananın-laneti yakalandı",
+        "olculemedi": ("teyit dilimi ÖLÇÜLEMEDİ (dilimler var, hüküm yok) — ship fail-closed "
+                       "ENGELLENDİ; bu bir kalite reddi DEĞİL, kanıtın YOKLUĞUdur"),
+        "yasa_yururlukte_degil": ("bu ortamda OOS dilimi YOK (fikstür/sandbox) — teyit mekanizması "
+                                  "hiç yürürlükte değil; arama ayağı da legacy marj yasasında"),
+    }[gate["confirm_durum"]]
+    if gate["confirm_durum"] == "olculemedi":
+        gate["confirm_failed"] = True          # bekçiler/pano için: bu satır ship ETMEDİ
+        _neden = (f"teyit ÖLÇÜLEMEDİ: {conf.why or 'sebep beyan edilmedi'} — ölçülemeyen bir aday "
+                  f"ship edilemez (fail-closed). ÖLÇÜLEMEDİ ≠ GEÇTİ ve ≠ REDDEDİLDİ.")
+        hyp = memory.record({**base, "version_to": None, "status": "rejected_by_confirmation",
+                             "backtest": gate, "reject_reasons": [_neden]})
+        memory.distill_lessons()
+        return {"status": "rejected_by_confirmation", "gate": gate, "hypothesis": hyp,
+                "beyan": gate["confirm_beyan"]}
     if conf.law == "probabilistic":
         if not conf.passes:
             gate["confirm_failed"] = True

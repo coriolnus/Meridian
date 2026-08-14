@@ -1160,16 +1160,25 @@ def exploration_share(n: int = EXPLORE_WINDOW, *, fam: dict | None = None,
         BUGÜNKÜ hükme göredir (öneri anındaki hâline göre değil) ve bu bir SAPMA olarak beyan edilir:
         H2 anlık bir görüntü üretir, geçmişe dönük yeniden sayım İKİNCİ bir ölü-aile tanımı olurdu.
 
-    Ölçülemeyen None (uydurma yasağı): boş defterde üç alan da None döner, sebebiyle birlikte."""
+    Ölçülemeyen None (uydurma yasağı): boş defterde üç alan da None döner, sebebiyle birlikte.
+
+    DÖRDÜNCÜ SAYI — `on_eleme` (EDG-2026-041 D1'in YASA-6 okuyucusu): yukarıdaki üç sayı YALNIZ
+    DEFTERE GİREBİLMİŞ önerileri görür, yani "hayatta kalan"ı. `on_eleme`, defterden ÖNCEKİ arka
+    plan korkuluğunda düşen ve orada çivilenen önerileri taşır — "üretim" ile "hayatta kalan"
+    böylece AYRI iki sayı olur (kartın D1 gerekçesinin ta kendisi). Defter BOŞ olsa bile ölçülür:
+    ön-eleme sayımı hipotez defterinden BAĞIMSIZDIR ve boş defterde onu da None yapmak, ölçülmüş
+    bir sayıyı ölçülemedi diye yazmak olurdu."""
     hyps = memory.all_hypotheses()
     toplam = len(hyps)
+    on_eleme = bg_on_eleme_karnesi()
     beyan = ("bakir isabet = öneri kendi ailesine defterdeki İLK dokunuş mu; ölü aile sınıflandırması "
              "H2'nin BUGÜNKÜ hükmüdür (öneri anındaki değil) — H2 anlık görüntü üretir ve geçmişe "
-             "dönük ikinci bir tanım yazılmadı")
+             "dönük ikinci bir tanım yazılmadı; `on_eleme` DEFTER ÖNCESİ korkuluğu sayar (üretim ≠ "
+             "hayatta kalan) ve kümülatif değil PENCERELİdir")
     if not toplam:
         return {"pencere": n, "n_olculen": 0, "n_defter": 0, "aile_dagilimi": None,
                 "en_yogun_aile": None, "en_yogun_pay": None, "bakir_isabet": None,
-                "olu_aile_tekrari": None, "bakir_dugme_kalan": None,
+                "olu_aile_tekrari": None, "bakir_dugme_kalan": None, "on_eleme": on_eleme,
                 "beyan": "hipotez defteri BOŞ — keşif payı ÖLÇÜLEMEDİ (uydurulmadı)"}
     try:
         _a = __import__("meridian.analytics", fromlist=["_knob_family"])
@@ -1213,6 +1222,7 @@ def exploration_share(n: int = EXPLORE_WINDOW, *, fam: dict | None = None,
         "bakir_isabet": {"n": n_bakir, "oran": round(n_bakir / m, 3), "aileler": bakir_ad},
         "olu_aile_tekrari": {"n": n_olu, "oran": round(n_olu / m, 3), "aileler": olu_ad},
         "bakir_dugme_kalan": len(virgin_knobs() if bakir is None else bakir),
+        "on_eleme": on_eleme,
         "beyan": beyan,
     }
 
@@ -1284,6 +1294,20 @@ def _exploration_sections() -> str:
                  f"first-ever-touch of a knob {bi.get('n')}/{ks['n_olculen']} "
                  f"({bi.get('oran')}); landed in an already-dead family {ot.get('n')}/{ks['n_olculen']} "
                  f"({ot.get('oran')}).")
+    # ---- ÖN-ELEME (EDG-2026-041): beyin, önerilerinin defter ÖNCESİ ne olduğunu da GÖRMELİ -------
+    # Ölçülen körlük tam buydu: 47 öneri arka plan korkuluğunda düştü ve beyin bunu HİÇ görmedi —
+    # aynı düğmeyi tekrar tekrar önermesinin (kart `yan_bulgu`: 37/47 iki değişkende) bir ayağı bu.
+    # SAYI SIFIRSA SATIR YAZILMAZ: boş bir "0 rejected" satırı her turda token yakar ve hiçbir şey
+    # anlatmaz.
+    _oe = ks.get("on_eleme") or {}
+    _red, _cvl = (_oe.get("reddedilen") or {}), (_oe.get("rejimlendirilen") or {})
+    if _red.get("n") or _cvl.get("n"):
+        L.append(f"\n  Background pre-filter (last {_oe.get('pencere')} events, NOT cumulative): "
+                 f"{_cvl.get('n')} global proposal(s) were PINNED to the certified regime "
+                 f"(x -> x@regime, they still had to clear guard + gate), "
+                 f"{_red.get('n')} were REJECTED outright {_red.get('nedenler')}. A background round "
+                 f"can only tune the regime it is certified for — propose 'knob@<that regime>' "
+                 f"directly when you know it.")
     return "\n".join(L)
 
 
@@ -4203,6 +4227,131 @@ def propose_virgin_knob() -> dict | None:
     return None
 
 
+# =================================================================================================
+# EDG-2026-041 — ARKA PLAN ÖN-ELEMESİ: D1 (KAYIT) + D2 (ÇİVİLEME)
+# =================================================================================================
+# ÖLÇÜLEN (kart `verdict.olcum`, Rol-1 2026-08-14, canlı defterden MOTOR DEĞİŞMEDEN ÖNCE):
+# `hermes_bg_proposal_rejected` 47 kez ateşledi (2026-08-02T14:00 → 2026-08-13T17:26) ve bu 47
+# önerinin HİÇBİRİ hipotez defterine girmedi. Sertifika 47/47'de BİLİNİYORDU (hepsi `chop`,
+# `None(auto)` SIFIR) — korkuluk KÖRLÜKTEN değil AYRIMSIZLIKTAN kesiyordu. 46/47 düz global.
+# Kusur kapının HÜKMÜNDE değil GÖRÜNÜRLÜĞÜNDEydi: "üretim" ile "hayatta kalan" aynı sayıya
+# katlanıyordu (28b'nin "52 aslında 23" bulgusunun kökü).
+BG_RED_DAMGA = "REDDEDILDI"      # D1 damgası — reddedilen öneri ADAY DEĞİLDİR, ayrı damga taşır
+BG_ON_ELEME_PENCERE = 4000       # karne penceresi: olay defterinin son N satırı
+
+
+def _bg_on_eleme_kaydi(proposal: dict | None, *, pvar: str, certified, red_nedeni: str) -> None:
+    """D1 — REDDEDİLEN ÖNERİNİN TAM KAYDI, REDDEDİLDİ damgasıyla.
+
+    ESKİ HÂL yalnız `variable` + `bg_regime` yazıyordu: kayıttan NE ÖNERİLDİĞİ (eski/yeni değer,
+    hangi üretici, hangi gerekçe) okunamıyordu, yani reddin kendisi de sayılabilir bir kayıt
+    değildi. Bu fonksiyon o kaydı tamamlar ve REDDİN NEDENİNİ makine-okunur bir alana koyar
+    (`red_nedeni` ∈ {`global_sertifikasiz`, `farkli_rejim`}); okuyucusu `bg_on_eleme_karnesi`.
+
+    DAMGA NEREYE KONDU ve NEDEN `hypotheses.jsonl` DEĞİL — ÖLÇÜLDÜ, SEÇİLDİ, GEREKÇELENDİ.
+    Kartın kill kriteri MUTLAK: "D1 kaydı öneri defterine GERÇEK öneri gibi girerse geçersiz —
+    reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa 28b'nin TERS YÖNÜ doğar (sayı bu kez
+    ŞİŞER)". Hipotez defterinin TÜM tüketicileri tarandı; sekizi satırı DURUMA BAKMADAN sayar ve
+    ÜÇÜ yalnız sayı şişirmez, ÖĞRENME DÖNGÜSÜNÜ BOZAR:
+      (a) `analytics.dead_families` (analytics.py:2759) durum süzgeci TAŞIMAZ ve
+          `DEAD_FAMILY_MIN_N = 3`'tür. Ölçülen dağılımda `entry.w_turnover` 21 satır demektir →
+          aile ANINDA "ölü" ilan edilir, düğme `hermes.virgin_knobs()`un bakir listesinden DÜŞER.
+          Yani reddedilen öneriler öneri UZAYINI daraltırdı — düzeltmenin tam tersi.
+      (b) `watchdog._learning_liveness` (watchdog.py:3282) yaşı `ts`ten ölçer ve 168 saatte
+          "öğrenme durdu" der. TAZE bir satır bu alarmı SIFIRLAR — bu kusuru gösterebilecek TEK
+          alarm, kusurun kendi kaydıyla maskelenirdi.
+      (c) `selfreview`ın 25/15 satırlık pencereleri (selfreview.py:286/332/351/360) düğmeyi
+          "denendi" sayar ve kanıt→hipotez dikkat satırlarını BASTIRIR; ayrıca satır başına gerçek
+          bir hipotezi pencereden DIŞARI iter.
+    Ek olarak `api.py:712` `/api/public/summary` → `hypotheses_total` KAMUYA AÇIK ship-oranının
+    PAYDASIdır (landing.js:68) ve `selfreview.py:130` + `web/app.js:5945` `startswith("rejected")`
+    süzgeciyle reddi GERÇEK KAPI REDDİYLE aynı kovaya koyar. Bu tüketicilerin HİÇBİRİ bu turun
+    dosya sınırında değildir, dolayısıyla kill kriteri hipotez defterinde SAĞLANAMAZDI.
+
+    SEÇİLEN YER: `events.jsonl` — `ledgers.CONTRACTS`ta SÖZLEŞMELİ bir defterdir (yazar `obs.py`,
+    tüketiciler `api`/`watchdog`/`selfreview`/`notify`/`analytics`), aday sayan HİÇBİR tüketicisi
+    yoktur, ve kayıt oraya AYRI DAMGAYLA girer — "ayrı damga" şartının en sert biçimi. Ayrıca
+    D2'den sonra bu dalın nüfusu ölçülen 47'den 1'e iner: `@`siz öneriler artık ÇİVİLENİP
+    `reflect.submit`e gider ve GERÇEK bir defter satırı (guard/kapı reddi ya da ship) üretir —
+    yani "üretim deftere girsin" isteğinin ASIL gövdesini D2 karşılar, D1 artığı kapatır.
+
+    KAYIT DÜŞERSE TUR DÜŞMEZ: muhasebe kanalının arızası öğrenme turunu öldürmemeli — ama sessiz
+    de kalmaz (aşağıdaki ikinci uyarı)."""
+    p = proposal if isinstance(proposal, dict) else {}
+    try:
+        obs.warn("hermes_bg_proposal_rejected",
+                 # ESKİ ALANLAR BİREBİR DURUYOR: kartın retro ölçümü (47 sayımı + değişken
+                 # dağılımı) bu iki alandan okundu; adlarını değiştirmek kanıt zincirini koparırdı.
+                 variable=pvar or "(global)", bg_regime=certified,
+                 # --- D1: REDDEDİLDİ DAMGASI + TAM ÖNERİ KAYDI ---
+                 damga=BG_RED_DAMGA, red_nedeni=red_nedeni,
+                 old=p.get("old"), new=p.get("new"), source=p.get("source"),
+                 # Gerekçe KIRPILIR: olay defteri satır-başına küçük kalmalı (27k+ satır, tam
+                 # dosya taranarak okunuyor); tam metin zaten öneriyi üreten olayda durur.
+                 rationale=str(p.get("rationale") or "")[:240],
+                 detail="arka plan turunda GLOBAL ya da farklı-rejim öneri reddedildi — canlı "
+                        "olmayan rejimin kanıtı yalnız o rejimin params_by_regime'ine girebilir")
+    except Exception as e:  # sessiz-yutma: kayıt kanalının arızası ÖĞRENME TURUNU düşürmemeli — red zaten uygulandı, yalnız muhasebesi eksik kaldı ve o eksiklik ikinci bir uyarıyla ADIYLA duyuruluyor
+        try:
+            obs.warn("hermes_bg_on_eleme_kaydi_dustu", error=f"{type(e).__name__}: {e}",
+                     variable=pvar or "(global)",
+                     detail="D1 kaydı YAZILAMADI — ret uygulandı ama defterde izi yok; ön-eleme "
+                            "karnesi bu turu SAYAMAZ (uydurma yerine eksik sayılır)")
+        except Exception:  # sessiz-yutma: ikinci kayıt kanalı da düştü — üçüncü bir kanal YOK ve muhasebe denemesi çağıranı düşüremez
+            pass
+
+
+def bg_on_eleme_karnesi(olaylar: list | None = None, n: int = BG_ON_ELEME_PENCERE) -> dict:
+    """ÖN-ELEME KARNESİ (YASA 6 okuyucusu) — "üretim" ile "hayatta kalan" AYRI iki sayı.
+
+    D1 kaydının TÜKETİCİSİ budur: `exploration_share()` bunu kendi karnesine gömer,
+    `analytics.hermes_scorecard()` o karneyi olduğu gibi dışa verir (analytics.py:2837) → pano.
+    Okuyucusuz bir damga, bugün düzelttiğimiz kusurun ikinci kuşağı olurdu.
+
+    İKİ SAYI, İKİSİ DE OLAY DEFTERİNDEN:
+      * `reddedilen` — korkuluğun DÜŞÜRDÜĞÜ öneriler, nedenine göre kırılımlı. `red_nedeni`
+        taşımayan satırlar `damgasiz` kovasına düşer ve UYDURULMAZ: damga bu turda eklendi, ondan
+        önceki 47 satır retro damga yasağı gereği damgasız kalır ve öyle SAYILIR.
+      * `rejimlendirilen` — D2'nin KURTARDIĞI öneriler (`x` → `x@<sertifika>`). Bu sayı bir
+        BAŞARI İDDİASI DEĞİLDİR: çivilenen öneri guard/bounds ve probgate'ten yine geçmek
+        zorundadır. Ölçtüğü tek şey "kapıya HİÇ ULAŞAMAMA" kusurunun kapandığıdır (kartın `sinir`
+        bloğu: ship sayısı DEĞİL, kapıya ULAŞAN öneri sayısı).
+
+    PENCERE BEYANLIDIR: olay defterinin son `n` satırı taranır, yani sayılar KÜMÜLATİF DEĞİLDİR.
+    `olaylar` enjekte edilebilir (`exploration_share`in `fam`/`bakir` deseni) — aynı defteri iki
+    kez taramak yalnız maliyet değil, iki okuma arasına düşen bir yazımla TUTARSIZLIK riskidir."""
+    beyan = (f"olay defterinin son {n} satırı tarandı — sayılar KÜMÜLATİF DEĞİL, pencerelidir; "
+             f"`damgasiz` kovası damga eklenmeden önce yazılmış satırlardır (retro damga yasağı)")
+    if olaylar is None:
+        try:
+            olaylar = store.read_jsonl("events.jsonl", limit=n)
+        except Exception as e:
+            obs.warn("hermes_on_eleme_karnesi_okunamadi", error=f"{type(e).__name__}: {e}",
+                     detail="olay defteri okunamadı — ön-eleme ÖLÇÜLEMEDİ (sıfır YAZILMADI)")
+            return {"pencere": n, "reddedilen": None, "rejimlendirilen": None,
+                    "beyan": "olay defteri okunamadı — ön-eleme ÖLÇÜLEMEDİ (uydurulmadı)"}
+    nedenler: dict[str, int] = {}
+    n_red = n_cvl = 0
+    son_red = son_cvl = None
+    for e in olaylar:
+        ad = e.get("event")
+        if ad == "hermes_bg_proposal_rejected":
+            n_red += 1
+            k = str(e.get("red_nedeni") or "damgasiz")
+            nedenler[k] = nedenler.get(k, 0) + 1
+            son_red = {"ts": e.get("ts"), "variable": e.get("variable"),
+                       "bg_regime": e.get("bg_regime"), "red_nedeni": e.get("red_nedeni")}
+        elif ad == "hermes_bg_proposal_rejimlendi":
+            n_cvl += 1
+            son_cvl = {"ts": e.get("ts"), "eski": e.get("eski"), "yeni": e.get("yeni"),
+                       "sertifika": e.get("sertifika")}
+    return {"pencere": n,
+            "reddedilen": {"n": n_red, "damga": BG_RED_DAMGA,
+                           "nedenler": dict(sorted(nedenler.items())), "son": son_red},
+            "rejimlendirilen": {"n": n_cvl, "son": son_cvl},
+            "beyan": beyan}
+
+
 def reflect_once(target_regime: str | None = "auto", *, background: bool = False) -> dict:
     """Tek canlı yansıma — gövde `_reflect_once_govde`de (tasarım gerekçeleri orada).
 
@@ -4258,15 +4407,52 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
         pvar = str(proposal.get("variable") or "")
         preg = pvar.split("@", 1)[1] if "@" in pvar else None
         certified = None if target_regime == "auto" else target_regime
+        # --- EDG-2026-041 D2 — ÇİVİLEME: `@`SİZ ÖNERİ ATILMAZ, SERTİFİKALI REJİME YENİDEN YAZILIR --
+        # KORKULUK BOZULMUYOR, GÜÇLENİYOR (kart hükmü, Rol-1 2026-08-14). Korkuluğun invaryantı
+        # "kanıt kendi rejimini terk etmesin"di; RET bu invaryantı sağlar ama işi çöpe atar, YENİDEN
+        # YAZIM aynı invaryantı sağlar ve işi korur: `chop` sertifikalı kanıt yalnız
+        # `params_by_regime["chop"]`i değiştirir, canlı-DIŞI rejimin kanıtı düz `params`a SIZMAZ
+        # (denetim #27 deliği kapalı kalır).
+        # ÜÇ ŞART DA ZORUNLU, ÜÇÜ DE ÖLÇÜLMÜŞ BİR VAKAYA KARŞILIK GELİR:
+        #   `background`            — CANLI tur DEĞİŞMEZ; global muafiyet canlıda meşrudur.
+        #   `preg is None`          — zaten rejim-hedefli öneri yeniden yazılmaz (aşağıdaki dallar).
+        #   `certified in VALID_REGIMES` — sertifika BİLİNMİYORSA (`auto`/None) hiçbir şey değişmez:
+        #       hangi rejimin sertifikalı olduğu UYDURULAMAZ. Geçersiz bir rejim ADI da çivilenmez —
+        #       o turda arama zaten `bg_reflection_skipped_unscoped` ile hiç koşmaz (aşağısı), yani
+        #       kapsanamayan bir tura öneri çakmak, kimsenin notlandıramayacağı bir değişken üretirdi.
+        # `pvar` BOŞSA çivilenmez: `@chop` biçiminde adsız bir değişken üretmek uydurma olurdu.
+        # YENİDEN YAZILAN ÖNERİ MUAF DEĞİLDİR: aşağıdaki `reflect.submit` yolu guard/bounds
+        # doğrulamasını AYNEN uygular (`guard.validate_change` → base params/bounds/regime kontrolü)
+        # ve düşerse öneri düşer — kartın beyanlı sınırı: "kurtarılan önerilerin İYİ olduğu İDDİA
+        # EDİLMİYOR; probgate'ten yine geçmek zorundadır".
+        if background and pvar and preg is None and certified in config.VALID_REGIMES:
+            _eski = pvar
+            pvar, preg = f"{_eski}@{certified}", certified
+            proposal = {**proposal, "variable": pvar,
+                        # GEREKÇE DE YENİDEN YAZILIR: defterde "bu öneri global doğdu, rejime
+                        # çivilendi" okunabilmeli — sessiz dönüşüm bu turun düzelttiği kusurun
+                        # ta kendisidir.
+                        "rationale": (f"[rejime çivilendi: {_eski} → {pvar}; arka plan turu "
+                                      f"{certified} sertifikalı — kanıt kendi rejimini terk etmiyor] "
+                                      + str(proposal.get("rationale") or ""))}
+            obs.log("hermes_bg_proposal_rejimlendi", eski=_eski, yeni=pvar, sertifika=certified,
+                    source=proposal.get("source"),
+                    detail="arka plan turunda GLOBAL doğan öneri ATILMADI, sertifikalı rejime "
+                           "ÇİVİLENDİ — guard/bounds doğrulaması reflect.submit'te AYNEN koşar")
         if background and (preg is None or (certified is not None and preg != certified)):
             # C16 (b) BACAĞI: sertifika kontrolü `preg is None` hâline DE uygulanır — ama YALNIZ arka
             # plan turunda. Global muafiyet ("or be global", aşağıdaki dal) CANLI turda meşrudur:
             # canlı rejimin kanıtı düz `params`ı da meşru biçimde ayarlar. Arka plan turunda AYNI
             # muafiyet, canlı-DIŞI bir rejimin kanıtıyla canlı davranışı değiştirme ruhsatına dönüşür
             # — LLM/bakir-düğme yolu, aramayı rejime zorlamanın etrafından dolaşan bir yan kapıdır.
-            obs.warn("hermes_bg_proposal_rejected", variable=pvar or "(global)", bg_regime=certified,
-                     detail="arka plan turunda GLOBAL ya da farklı-rejim öneri reddedildi — canlı "
-                            "olmayan rejimin kanıtı yalnız o rejimin params_by_regime'ine girebilir")
+            # D2'DEN SONRA BU DAL İKİ VAKAYA İNER (ölçüm: 1/47 + 0/47) ve İKİSİ DE KASITLIDIR:
+            #   (1) `preg is not None and preg != certified` — FARKLI rejime giden öneri. Korkuluğun
+            #       ASIL hedefi budur; çivileme onu KURTARMAZ, çünkü kurtarmak kanıtı sahibi olmayan
+            #       bir rejime taşımak olurdu.
+            #   (2) `certified` bilinmiyor (`auto`/None) ya da geçerli bir rejim adı değil — sertifika
+            #       uydurulamaz, bugünkü ret AYNEN sürer.
+            _neden = "farkli_rejim" if preg is not None else "global_sertifikasiz"
+            _bg_on_eleme_kaydi(proposal, pvar=pvar, certified=certified, red_nedeni=_neden)
             proposal = None                     # fall through to the (bg-regime-scoped) search
         elif preg is not None and certified is not None and preg != certified:
             obs.warn("hermes_proposal_uncertified_regime", variable=pvar, certified=certified)

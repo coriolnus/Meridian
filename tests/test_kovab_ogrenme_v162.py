@@ -281,18 +281,24 @@ def test_C16_canli_chop_turu_BIREBIR_ESKI_DAVRANIS(bg_ortami):
     assert bg_ortami["search"][-1]["regime"] == "chop"
 
 
-def test_C16_bg_turunda_GLOBAL_oneri_reddedilir(sandbox_state, bg_ortami, monkeypatch):
+def test_C16_bg_turunda_GLOBAL_oneri_SERTIFIKASIZ_gecemez(sandbox_state, bg_ortami, monkeypatch):
     """(b) bacağı: `preg is None` (@'sız = global) öneride sertifika kontrolü HİÇ devreye girmiyordu
-    — LLM/bakir-düğme yolu, aramayı rejime zorlamanın etrafından dolaşan bir yan kapıydı."""
+    — LLM/bakir-düğme yolu, aramayı rejime zorlamanın etrafından dolaşan bir yan kapıydı.
+
+    HÜKÜM GÜNCELLENDİ (EDG-2026-041 D2, Rol-1 2026-08-14): korunan invaryant "kapıya SERTİFİKASIZ
+    GLOBAL bir öneri GİTMEZ"dir — "öneri ÇÖPE ATILIR" değil. Öneri artık atılmak yerine sertifikalı
+    rejime ÇİVİLENİR; kapıya giden ad `@trend_up` taşır, yani canlı-DIŞI rejimin kanıtı düz
+    `params`a hâlâ SIZAMAZ (denetim #27 deliği kapalı). Bu testin ölçtüğü şey o invaryanttır;
+    çivilemenin kendi çivileri `test_gorunmez_suzgec_v247.py`dedir."""
     monkeypatch.setattr(hermes, "propose_with_llm",
                         lambda: {"variable": "stop_loss_atr_mult", "new": 2.2, "old": 2.0,
                                  "source": "llm", "rationale": "test"})
     hermes.reflect_once(target_regime="trend_up", background=True)
-    assert not bg_ortami["submit"], "bg turunda GLOBAL öneri kapıya gitti — sertifikasız global ship"
-    assert bg_ortami["search"][-1]["regime"] == "trend_up", "reddedilen öneri aramaya düşmedi"
-    olaylar = [e for e in store.read_jsonl("events.jsonl")
-               if e.get("event") == "hermes_bg_proposal_rejected"]
-    assert olaylar and len(str(olaylar[-1].get("detail", ""))) >= 20
+    gidenler = [str((p or {}).get("variable")) for p in bg_ortami["submit"]]
+    assert all("@" in v for v in gidenler), \
+        f"bg turunda GLOBAL (@'sız) öneri kapıya gitti — sertifikasız global ship: {gidenler}"
+    assert gidenler == ["stop_loss_atr_mult@trend_up"], \
+        "çivileme sertifikalı rejime yapılmadı (ya da öneri sessizce atıldı)"
 
 
 def test_C16_bg_turunda_DOGRU_REJIM_onerisi_gecer(sandbox_state, bg_ortami, monkeypatch):

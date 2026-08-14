@@ -180,6 +180,31 @@ def refresh_meta_calibration() -> dict:
     return out
 
 
+# ---- 28e: `p = 0,000` İKİ AYRI GERÇEĞİ AYNI SAYIYLA SÖYLÜYORDU -------------------------------
+# `p = float(np.mean(arr > 0))` KESİN eşitsizliktir: aday ebeveynle bit-bit AYNIYSA ΔS her
+# replikasyonda tam 0 olur, `arr > 0` hep False, p = 0,000 — yani "aday ebeveynden AYIRT EDİLEMİYOR"
+# ile "aday ebeveynden KÖTÜ" tek sayıya çöküyordu. ÖLÇÜLDÜ (defter tam sayımı, teşhis belgesi §0
+# Kanıt-3): `P=0,000` yazan BEŞ satırın DÖRDÜ no-op (H00046/49/50/51, mean_delta = 0,0), yalnız
+# biri gerçek felaket (H00031, mean_delta = −0,0921). Dördü de YAPISAL OLARAK ATIL bir düğmeden
+# geliyordu (`scale_out_r` frac=0 iken · `early_kill_bars` pivot=0 iken · `entry.w_tight`
+# None→0,3 = kodun varsayılanının AYNISI). "Düğme atıl" bir RET değil, kendi başına bir HÜKÜMdür.
+#
+# EŞİK UYDURULMADI — AYRIM KODUN KENDİ KAYAN-NOKTA GERÇEĞİNDEN TÜRETİLDİ. İki taraf aynı işlem
+# listesinden aynı deterministik `score_detail` ile skorlanır; girdiler özdeşse çıktılar BİT-BİT
+# özdeştir ve fark tam 0,0 çıkar. Ayrım ölçütü bu yüzden bir tolerans değil, IEEE-754'ün o
+# büyüklükte temsil edebildiği EN KÜÇÜK farktır: `np.spacing(max(|si|,|sc|))` (tek ULP). Ölçüldü:
+# no-op kurgusunda 600/600 replikasyon `ΔS == 0,0` (ULP ≈ 5,6e−17), felaket kurgusunda 0/600 ve
+# medyan |ΔS| = 0,383 — iki sınıf 16 büyüklük mertebesi ayrık, ara bölge YOK. Yani seçilecek bir
+# eşik yok; sınır kayan-noktanın kendisi.
+#
+# `p`nin ANLAMI DEĞİŞMEDİ (tüketiciler var: pano, arming, defter, meta-kalibrasyon): ayrım EK
+# alandır ve `passes` hükmüne GİRMEZ. Bir no-op zaten geçemez (p=0 < p_req); değişen tek şey,
+# defterin ARTIK ikisini ayrı cümleyle yazması.
+AYRIM_AYNI = "ayirt_edilemez"          # replikasyonların TAMAMINDA |ΔS| ≤ 1 ULP → fiilen no-op
+AYRIM_KISMEN = "kismen_ayirt_edilemez"  # bir kısmında → düğme yalnız bazı bloklarda iş yapıyor
+AYRIM_FARKLI = "ayrisiyor"             # hiçbirinde → gerçek bir davranış farkı ölçüldü
+
+
 @dataclass
 class GateResult:
     """Olasılıksal kapının tek ölçüm sonucu — JSON-güvenli, defter-hazır."""
@@ -193,6 +218,10 @@ class GateResult:
     k_probes: int = 1
     law: str = "probabilistic"      # "probabilistic" | "legacy" (fallback sinyali)
     why: str = ""
+    # 28e: "aday ebeveynden AYIRT EDİLEMİYOR" ile "aday ebeveynden KÖTÜ" AYRI hükümlerdir.
+    # None = ölçülemedi (legacy yol / replikasyon yok) — "ayrışıyor" DEĞİL.
+    ayrim: str | None = None
+    ayrim_n: int | None = None      # |ΔS| ≤ 1 ULP olan replikasyon sayısı
     extra: dict = field(default_factory=dict)
 
     def as_gate_fields(self, prefix: str) -> dict:
@@ -204,7 +233,10 @@ class GateResult:
         out = {f"{prefix}_p": self.p, f"{prefix}_p_required": self.p_required,
                f"{prefix}_mean_delta": self.mean_delta, f"{prefix}_n_valid": self.n_valid,
                f"{prefix}_n_boot": self.n_boot,
-               f"{prefix}_block_days": self.block_days}
+               f"{prefix}_block_days": self.block_days,
+               # 28e AYRIM: `p` alanının anlamı DEĞİŞMEDİ; bu EK alan `p=0,000`ın hangi gerçeği
+               # anlattığını söyler. None = ölçülemedi (legacy yol), "ayrisiyor" DEĞİL.
+               f"{prefix}_ayrim": self.ayrim, f"{prefix}_ayrim_n": self.ayrim_n}
         if self.extra.get("hist"):
             out[f"{prefix}_hist"] = self.extra["hist"]   # Faz 4: çan eğrisi hipotez kaydında taşınır
         # GÖLGE YASA (PARA-v3, ters gölgeleme): "ESKİ YASA ne derdi" hükmü kapı kaydına GİRER ama
@@ -340,6 +372,7 @@ class PairedProbabilisticGate:
         rng = np.random.default_rng(self.seed)
         deltas = []
         deltas_eski = []         # ESKİ YASA (gölge) — aynı replikasyonlarda, karara GİRMEZ
+        olcekler = []            # 28e: replikasyon başına skor BÜYÜKLÜĞÜ — ULP ayrımının paydası
         for _ in range(self.n_boot):
             picks = rng.integers(0, n_blocks, size=n_blocks)
             ri = [t for i in picks for t in b_inc[i]]
@@ -349,6 +382,7 @@ class PairedProbabilisticGate:
             if si is None or sc is None:
                 continue
             deltas.append(sc - si)
+            olcekler.append(max(abs(si), abs(sc)))
             if si_e is not None and sc_e is not None:
                 deltas_eski.append(sc_e - si_e)
         n_valid = len(deltas)
@@ -360,6 +394,16 @@ class PairedProbabilisticGate:
         p = float(np.mean(arr > 0))
         mean_d = float(np.mean(arr))
         passes = bool(p >= p_req)
+        # ---- 28e AYRIM: no-op mu, kayıp mı? (modül başındaki gerekçeye bak) --------------------
+        # `np.spacing(x)` = x'ten bir SONRAKİ temsil edilebilir kayan noktaya olan uzaklık, yani o
+        # büyüklükte kodun ifade edebildiği EN KÜÇÜK fark. `|ΔS| ≤ 1 ULP` demek "iki skor ya aynı
+        # ya da komşu float" demektir; bundan daha ince bir "aynı" tanımı YOKTUR. Eşik değil, sınır.
+        # `np.spacing(0.0)` en küçük normal-altı sayıdır, yani iki taraf da tam 0 ise ayrım DOĞRU
+        # biçimde "aynı" der (0 ≤ 5e−324) — sıfır skorlu bir dilim yanlışlıkla "ayrışıyor" olmaz.
+        ulp = np.spacing(np.asarray(olcekler, dtype=float))
+        n_ayni = int(np.sum(np.abs(arr) <= ulp))
+        ayrim = (AYRIM_AYNI if n_ayni == n_valid else
+                 AYRIM_KISMEN if n_ayni else AYRIM_FARKLI)
         # GÖLGE HÜKÜM (TERS GÖLGELEME): aynı p_required, ESKİ yasanın bileşik ΔS'iyle. `passes` ile
         # HİÇBİR ilişkisi yoktur — kayda geçer, panoda "eski hüküm" alanı olur ve geçişin
         # SÜREKLİLİĞİNİ sağlar: yeni yasa altında reddedilen/geçen her aday için eski yasanın ne
@@ -375,6 +419,18 @@ class PairedProbabilisticGate:
                       "law": "eski_yasa", "yasa_metni": shadowlaw.OLD_LAW_METNI,
                       "decides": False}
         why = "" if passes else f"P(ΔS>0)={p:.3f} < gerekli {p_req:.2f} (K={k_probes} aday cezası dahil)"
+        # NO-OP BİR RET DEĞİL, AYRI BİR HÜKÜMDÜR (28e). Gerekçe dizgesi deftere `reject_reasons`
+        # olarak düşüyor; bugüne kadar atıl bir düğme ile zararlı bir aday ORADA da aynı cümleyi
+        # alıyordu. "P(ΔS>0)=..." parçası KORUNUR (tüketiciler o dizgeyi arıyor), önüne hükmün
+        # kendisi yazılır — ve okuyucu §2-25a (atıl düğme ayıklama) adayını doğrudan görür.
+        if not passes and ayrim == AYRIM_AYNI:
+            why = (f"AYIRT EDİLEMEZ: aday ebeveynden ölçülebilir biçimde FARKLI DEĞİL — "
+                   f"{n_ayni}/{n_valid} replikasyonda |ΔS| ≤ 1 ULP (bit-bit aynı skor). Bu bir "
+                   f"kalite reddi DEĞİL, değişikliğin FİİLEN HİÇBİR ŞEY YAPMADIĞININ ölçümüdür "
+                   f"(atıl düğme adayı). {why}")
+        elif not passes and ayrim == AYRIM_KISMEN:
+            why = (f"KISMEN AYIRT EDİLEMEZ: {n_ayni}/{n_valid} replikasyonda aday ebeveynle "
+                   f"bit-bit aynı skoru üretti — düğme yalnız bazı bloklarda iş yapıyor. {why}")
         # Faz 4 (3b): 40-kutu histogram — panodaki çan eğrisi + K-ceza eşik çizgisi buradan çizilir.
         # Ham 2000 replikasyonu saklamak şişkinlik olur; histogram deterministik ve yeterli.
         counts, edges = np.histogram(arr, bins=40)
@@ -383,7 +439,15 @@ class PairedProbabilisticGate:
                 "mean": round(mean_d, 4), "p": round(p, 4), "p_required": p_req}
         return GateResult(passes, round(p, 4), p_req, round(mean_d, 4), n_boot=self.n_boot,
                           n_valid=n_valid, block_days=bdays, k_probes=k_probes, law="probabilistic",
-                          why=why, extra={"delta_p05": round(float(np.percentile(arr, 5)), 4),
-                                          "delta_p95": round(float(np.percentile(arr, 95)), 4),
-                                          "hist": hist, "eski_yasa": shadow,
-                                          "yasa_surumu": shadowlaw.YASA_SURUMU})
+                          why=why, ayrim=ayrim, ayrim_n=n_ayni,
+                          extra={"delta_p05": round(float(np.percentile(arr, 5)), 4),
+                                 "delta_p95": round(float(np.percentile(arr, 95)), 4),
+                                 "hist": hist, "eski_yasa": shadow,
+                                 "yasa_surumu": shadowlaw.YASA_SURUMU,
+                                 # AYRIM ÖLÇÜTÜNÜN KENDİSİ DE KAYDA GİRER: bir kaydı altı ay sonra
+                                 # okuyan, "ayirt_edilemez" hükmünün hangi tanımdan çıktığını
+                                 # tahmin etmek zorunda kalmasın (eşik yok, ULP var — beyanı da
+                                 # burada dursun).
+                                 "ayrim_olcut": ("|ΔS| ≤ np.spacing(max(|s_inc|,|s_cand|)) — IEEE-754'ün "
+                                                 "o büyüklükte temsil edebildiği TEK ULP; eşik değil sınır"),
+                                 "ayrim_p": round(n_ayni / n_valid, 4)})
