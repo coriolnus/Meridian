@@ -86,13 +86,32 @@ Bu, gecenin başındaki `tool_calls: −1` dersinin karşılığı: **hep aynı 
 değildir.** (Aynı tuzağa ben de düştüm: "pytest koşuyor mu" bekçim `grep -c '[p]ytest'` ile
 **kendini** sayıyordu.)
 
-## 3c. Dağıtımdan sonra beklenen — ÖNCEDEN SÖYLENİYOR
+## 3c. Dağıtım sonrası ölçüldü — ve çerçevem DÜZELDİ
 
-**Faz-6 kilidi meşru biçimde düşebilir.** Kadanslı yazar `analytics._realized_drawdown`ın m2m
-bacağını körlükten çıkarıyor: `m2m_durum` `"donem_disi"` → `"olculdu"`. Ölçülen **%8,04**,
-`EDGE_MAXDD_MAX = 0,08`i kıl payı aşıyor. **Bu bir arıza değil, kapının çalışmasıdır** — hiçbir
-eşiğe dokunulmadı, sistem ilk kez ölçebildiği bir şeyi ölçüyor. Eşiği gevşetmek gündemde değil
-(EDG-037'nin `RESULT_PF_MIN` emsali: *"kilidin kapalı kalması ARIZA DEĞİL KORUMA"*).
+Dağıtımdan hemen sonra canlıda ölçtüm; **ilk çerçevem fazla dramatikti, düzeltiyorum.**
+
+**ÖNCE ne demiştim:** *"Faz-6 kilidi meşru biçimde düşebilir."*
+**ÖLÇÜLEN:** `edge_verdict` canlıda **zaten 2/5** — yani kilit **hâlihazırda kapalı**
+(`skor_sonuc` geçti · `rejim_edge` geçti · `spy_ustu` sağlanmadı · `tahmin_isabeti` ve `kuyruk`
+**ölçülemedi**). `kuyruk` ölçütünün içindeki `max_dd` canlıda **0,1156**.
+
+**DOĞRU CÜMLE:** kadanslı yazar devreye girince bir kilit *düşmeyecek* — **bir ölçüt
+"ölçülemedi"den "ölçüldü ve geçmedi"ye dönecek.** Geçen ölçüt sayısı değişmez (2/5 kalır);
+değişen, kapalı olmanın artık **ölçülmüş** bir gerekçesi olmasıdır. Bu bir kayıp değil kazanç:
+"bilmiyoruz" ile "ölçtük ve geçmedi" aynı şey değildir ve bugüne kadar aynı kovaya düşüyordu.
+
+Eşiğe dokunulmadı ve dokunulmayacak (EDG-037'nin `RESULT_PF_MIN` emsali: *"kilidin kapalı kalması
+ARIZA DEĞİL KORUMA"*). **Ne zaman görünür:** yazar seans sonunda yazar, yani ilk nokta bugünkü
+seansın kapanışında düşer — o ana kadar `kuyruk` hâlâ `olculemedi` görünecektir.
+
+### Dağıtım sonrası doğrulama (04:20 UTC+3, canlı)
+
+| ne | sonuç |
+|---|---|
+| `seed_boundary` | `replay_end 2026-07-20` · `kaynak: reset_isareti` · **`yollar_ayrisik: true`** (reset 07-20 ↔ trades 07-24) · `guven: yuksek` — ayrışma artık **görünür**, sessiz seçim yok |
+| değer-eşitliği kapısı | **9 çift · 7 eşit · 0 ayrık · 0 ölçülemeyen · 2 beyanlı-ayrı** (gerekçeleri yazılı) |
+| servis | `active` · healthz **18 ms** |
+| dagit [1c] | 7 birimin 7'si birebir — gece kurulan birim tuttu |
 
 ## 4. Seni bekleyenler
 
