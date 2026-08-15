@@ -98,15 +98,20 @@ _HEALTH: dict = {"ok": None, "calls": 0, "fails": 0, "last_error": "", "at": Non
 
 
 def health() -> dict:
+    """FMP içeriden-işlem çağrılarının son durumunun kopyası (ok, çağrı/hata sayaçları, son hata,
+    son istenen uç yolu, toplam satır, damga). Yutulan hata "veri yok" gibi görünmesin diye vardır."""
     return dict(_HEALTH)
 
 
 # ------------------------------------------------------------------ yardımcılar
 def _simdi() -> str:
+    """Şu anın UTC ISO-8601 damgası (saniye çözünürlüğünde) — defter/watermark/sağlık damgaları için."""
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _store():
+    """`meridian.store` modülünü geç (tembel) içe aktarıp döndürür — döngüsel içe aktarmayı önlemek
+    için. Defter ve özet dosyalarının tüm okuma/yazması bu kapıdan geçer."""
     from .. import store
     return store
 
@@ -131,6 +136,8 @@ def _iso(v) -> str | None:
 
 
 def _sayi(v) -> float | None:
+    """Sağlayıcının sayısal alanını float'a çevirir; boş/biçimsiz/NaN/sonsuz ise None.
+    UYDURMA YASAĞI: 0.0 yazmak ödül satırını bedelsiz alım gibi gösterirdi — bilinmezlik None kalır."""
     if v is None or v == "":
         return None
     try:
@@ -212,6 +219,8 @@ def _anahtar(s: dict) -> str:
 
 
 def bos_defter() -> dict:
+    """Boş defter iskeleti: sürüm, watermark (en yeni filing/işlem, son çekim), çağrı muhasebesi,
+    sembol kapsamı, alan teşhisi ve boş `islemler` listesi. Defter yoksa/bozuksa bu şema kullanılır."""
     return {"surum": 1, "guncellendi": None,
             "watermark": {"en_yeni_filing": None, "en_yeni_islem": None, "son_cekim": None},
             "cagri": {"toplam": 0, "son_tur": 0},
@@ -221,6 +230,8 @@ def bos_defter() -> dict:
 
 
 def defter_oku() -> dict:
+    """state/insider_trades.json defterini okur; dosya yoksa ya da beklenen şemayı taşımıyorsa
+    (`islemler` anahtarı yok) `bos_defter()` döner. AĞ ÇAĞRISI YOK."""
     d = _store().read_json(LEDGER_FILE, None)
     if not isinstance(d, dict) or "islemler" not in d:
         return bos_defter()
@@ -398,6 +409,9 @@ def gecmis_cek(semboller: list[str], sayfa: int = 3, tavan: int = 20,
 
 
 def _bitir_gecmis(rapor, defter, yeni_satirlar, eslesmeyen, yaz):
+    """Geçmiş derinleştirme turunu kapatır: eşlenmeyen alan adlarını (şema sürüklenmesi teşhisi)
+    rapora en fazla 20 tane olacak şekilde yazar ve `yaz` ise yeni satırları deftere birleştirir.
+    Raporu döndürür — `gecmis_cek`in tek çıkış yolu budur."""
     rapor["eslesmeyen_alanlar"] = sorted(eslesmeyen)[:20]
     if yaz:
         _defteri_birlestir(defter, yeni_satirlar, rapor, eslesmeyen)
@@ -442,6 +456,8 @@ def _defteri_birlestir(defter: dict, yeni: list[dict], rapor: dict, eslesmeyen: 
 
 # ------------------------------------------------------------------ sınıflama
 def _ay(tarih: str) -> int:
+    """ISO `YYYY-MM-DD` tarihinden ay numarasını (1-12) çıkarır. CMP sınıflamasının "aynı ay"
+    karşılaştırması buna dayanır; girdi biçimsizse ValueError yükselir (sessizce 0 dönmez)."""
     return int(tarih[5:7])
 
 
@@ -582,6 +598,8 @@ def ozet(pencere_gun: int = VARSAYILAN_OZET_GUN, yaz: bool = True) -> dict:
 
 
 def durum() -> dict:
+    """Ağa gitmeden durum özeti: defterdeki işlem sayısı/güncelleme damgası/watermark/çağrı
+    muhasebesi, FMP anahtar ve kota-bloğu bayrakları, ve health()."""
     from . import fmp
     d = defter_oku()
     return {"defter": {"islem_n": len(d.get("islemler") or []),
@@ -594,6 +612,9 @@ def durum() -> dict:
 
 # ------------------------------------------------------------------ CLI (YASA 6 tüketicisi)
 def main(argv=None) -> int:
+    """CLI girişi (YASA 6 tüketicisi): --fetch (artımlı delta), --gecmis (sembol-başına derinleştirme,
+    TAVANLI), --ozet (defterden skor, ağ yok), --durum. AĞ ÇAĞRISI YALNIZ BURADAN yapılır.
+    Sonuç JSON basılır; bölümlerden biri "hata" taşıyorsa 1, argümansız çağrıda 2, aksi hâlde 0."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.adapters.insider",
         description="Form 4 içeriden işlem verisi (FMP) — artımlı çekim, CMP rutin/fırsatçı "

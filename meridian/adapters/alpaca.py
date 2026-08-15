@@ -74,6 +74,9 @@ _TRANSPORT = {"ok": True, "error": "", "at": None, "calls": 0, "fails": 0, "cons
 
 
 def _note(ok: bool, err: str = "") -> None:
+    """Bir REST çağrısının sonucunu `_TRANSPORT`a işler: çağrı sayacı + damga, başarıda hata/ardışık
+    sayaç sıfırlanır, başarısızlıkta kırpılmış hata ile fails/consecutive_fails artar.
+    YASA 4: okuma uçları istisnayı yutar; yutulan arıza yalnızca burada görünür kalır."""
     _TRANSPORT["calls"] += 1
     _TRANSPORT["at"] = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
     if ok:
@@ -149,6 +152,9 @@ def ping() -> dict:
 
 
 def _client(paper: bool):
+    """alpaca-py `TradingClient` üretir (paper/live seçimi çağırana ait). SDK kurulu değilse veya
+    ALPACA_PAPER_KEY/SECRET yoksa RuntimeError. Tek üretim çağıranı `live_client`tır — kağıt yol
+    SDK'yı kullanmaz, REST/httpx üzerinden gider."""
     try:
         from alpaca.trading.client import TradingClient  # optional 'live'/paper extra
     except ImportError as e:
@@ -184,6 +190,8 @@ def live_client():
 
 
 def status() -> dict:
+    """Panoya tek satırlık sağlayıcı durumu: kağıt anahtarların varlığı, live bayrağı, özerklik
+    seviyesi ve anahtar yoksa gösterilecek neden. Ağa GİTMEZ (canlı test için ping() vardır)."""
     return {"provider": "Alpaca", "paper_available": paper_available(),
             "live_enabled": config.live_enabled(), "autonomy_level": config.limits()["autonomy_level"],
             "reason": "" if paper_available() else "Alpaca paper keys absent — engine uses internal broker"}
@@ -238,6 +246,8 @@ def _paper_base() -> str:
 
 
 def _headers() -> dict:
+    """Kağıt TİCARET REST istekleri için kimlik başlıkları (APCA anahtar/sır + JSON içerik tipi).
+    Anahtarlar BAŞLIKTA gider, URL'de asla; anahtar yoksa boş dizge kalır ve istek 401 alır."""
     return {"APCA-API-KEY-ID": secrets.get("ALPACA_PAPER_KEY") or "",
             "APCA-API-SECRET-KEY": secrets.get("ALPACA_PAPER_SECRET") or "",
             "Content-Type": "application/json"}
@@ -1148,6 +1158,8 @@ class AlpacaDataError(RuntimeError):
     yapmak zorunda. Alpaca hata gövdesi anahtar taşımaz (anahtar BAŞLIKTA gider — bkz. _data_headers)."""
 
     def __init__(self, reason: str, status: int | None = None, body: str = ""):
+        """Hatayı makine-okunur `reason`, HTTP `status` ve sağlayıcının 300 karaktere kırpılmış ham
+        `body`siyle kurar. Gövde katman seçimi (abonelik reddi mi geçici arıza mı) için taşınır."""
         super().__init__(f"alpaca veri isteği başarısız: {reason}")
         self.reason = reason
         self.status = status
@@ -1165,17 +1177,23 @@ def data_transport() -> dict:
 
 
 def _data_headers() -> dict:
+    """Alpaca VERİ ucu için kimlik başlıkları (APCA anahtar/sır + Accept: json). Ticaret ucununkinden
+    ayrıdır. Anahtar başlıkta gider — bu yüzden hata gövdesi sır taşımaz ve kayda alınabilir."""
     return {"APCA-API-KEY-ID": secrets.get("ALPACA_PAPER_KEY") or "",
             "APCA-API-SECRET-KEY": secrets.get("ALPACA_PAPER_SECRET") or "",
             "Accept": "application/json"}
 
 
 def _mono() -> float:
+    """Monotonik saat okuması (saniye) — soğuma pencerelerinin ölçümü için. Duvar saati DEĞİL:
+    saat düzeltmesi/NTP sıçraması soğumayı bozmasın diye."""
     import time as _t
     return _t.monotonic()
 
 
 def _data_cooled(key: str) -> bool:
+    """Bu veri bacağı (key) hâlâ soğuma penceresinde mi? Son başarısızlığın üstünden anahtara özel
+    süre (abonelik reddinde SIP_REJECT_COOLDOWN_S, aksi hâlde DATA_FAIL_COOLDOWN_S) geçmediyse True."""
     at = _DATA_FAIL_AT.get(key)
     return at is not None and (_mono() - at) < _DATA_COOLDOWN.get(key, DATA_FAIL_COOLDOWN_S)
 
@@ -1204,6 +1222,8 @@ def _data_fail(key: str, e: "AlpacaDataError", **fields) -> None:
 
 
 def _chunks(seq: list, n: int):
+    """Diziyi en fazla n öğelik ardışık dilimler hâlinde üretir (çok-sembollü veri isteklerini
+    sağlayıcının sembol sınırına bölmek için). Kopya üretmez, dilim döndürür."""
     for i in range(0, len(seq), n):
         yield seq[i:i + n]
 

@@ -126,6 +126,8 @@ def available() -> bool:
 
 
 def health() -> dict:
+    """Massive HTTP yolunun son durumunun kopyası — "anahtar var mı" değil, çağrı GERÇEKTEN üretti mi
+    sorusunun cevabı (available() ile ayrımı budur)."""
     return dict(_HEALTH)
 
 
@@ -159,6 +161,9 @@ class MassiveError(RuntimeError):
     istekten AYIRT ETMEK zorundadır — aksi hâlde tek bir reddi çağrı sayısı kadar loglar."""
 
     def __init__(self, reason: str, status: int | None = None, kapi: bool = False):
+        """Hatayı makine-okunur `reason`, HTTP `status` ve `kapi` bayrağıyla kurar. `kapi=True`
+        AĞA HİÇ ÇIKILMADI demektir (gün-içi yetki kapısı isteği baştan reddetti) — çağıran bunu
+        gerçekten atılıp patlamış bir istekten ayırmak zorundadır."""
         super().__init__(f"massive isteği başarısız: {reason}")
         self.reason = reason
         self.status = status
@@ -197,6 +202,8 @@ _YETKI_RET_DUYURULDU: dict[str, str] = {}   # {uç ailesi: UTC gün} — gerekç
 
 
 def _bugun_utc() -> str:
+    """Bugünün UTC tarihi (ISO `YYYY-MM-DD`). Gün-içi yetki kapısının gün damgası budur: gün dönünce
+    reddedilen yol BİR KEZ yeniden denenir."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).date().isoformat()
 
@@ -395,6 +402,8 @@ def all_tickers(limit: int = 1000, active: bool = True) -> list[dict] | None:
 
 
 def _warn(event: str, **fields) -> None:
+    """Uyarı olayını `obs.warn`a geçiren ince sarmalayıcı (obs geç içe aktarılır). Kayıt kanalının
+    kendisi düşerse sessizce yutar — telemetri denemesi çağıranın kararını ASLA düşüremez."""
     try:
         from .. import obs
         obs.warn(event, **fields)
@@ -457,6 +466,8 @@ def to_frame(rows: list[dict], date=None):
 
 # ---------------------------------------------------------------- günlük anlık görüntü (tek çağrı)
 def _store():
+    """`meridian.store` modülünü geç (tembel) içe aktarıp döndürür — ağır/döngüsel içe aktarmayı
+    modül yükleme anından uzak tutmak için. Anlık görüntü ve ölçüm dosyaları bu kapıdan geçer."""
     from .. import store
     return store
 
@@ -528,6 +539,9 @@ def snapshot(date: str | None = None, max_back: int = 3, end=None) -> dict:
 
 
 def _read_snapshot_disk() -> dict:
+    """Süreçler arası paylaşılan grouped anlık görüntüsünü diskten okur
+    (state/massive_grouped_last.json). Okunamazsa boş sözlük — en kötü ihtimalle bir çağrı fazladan
+    atılır, karar etkilenmez."""
     try:
         return _store().read_json(SNAPSHOT_FILE, {}) or {}
     except Exception:
@@ -536,6 +550,9 @@ def _read_snapshot_disk() -> dict:
 
 
 def _write_snapshot_disk(date: str, bars: dict) -> None:
+    """Seansın grouped barlarını disk önbelleğine yazar (tarih, sembol sayısı, UTC çekim damgası,
+    barlar) ki diğer süreçler aynı günü tekrar sormasın. Yazım başarısızlığı YUTULMAZ: `_warn` ile
+    `massive_snapshot_write_failed` olayı basılır."""
     import datetime as _dt
     try:
         _store().write_json(SNAPSHOT_FILE, {
@@ -605,6 +622,8 @@ def reset_cache() -> None:
 
 # ---------------------------------------------------------------- yazım kapısı (ölçüm → karar)
 def verify_state() -> dict:
+    """`--dogrula` ölçümünün diskteki sonucunu okur (state/massive_verify.json); write_enabled()
+    kapısının yerel kanıtı budur. Okunamazsa boş sözlük — kapı KAPALI sayılır (muhafazakâr taraf)."""
     try:
         return _store().read_json(VERIFY_FILE, {}) or {}
     except Exception:
@@ -737,6 +756,9 @@ def _cache_closes(ticker: str, since: str) -> dict:
 
 
 def _massive_closes(ticker: str, start: str, end: str) -> dict | None:
+    """Massive'den [start, end] aralığının kapanışlarını {ISO tarih: close} olarak getirir
+    (ayarlama tutarlılık ölçümünün Massive tarafı). İstek başarısızsa None — HATA≠BOŞ:
+    boş sözlük "veri yok", None "ölçülemedi" demektir."""
     rows = custom_bars(ticker, start, end)
     if rows is None:
         return None
@@ -749,6 +771,8 @@ def _massive_closes(ticker: str, start: str, end: str) -> dict | None:
 
 
 def _fmp_closes(ticker: str, since: str) -> dict:
+    """FMP historical-EOD'den `since` gününden itibaren kapanışları {ISO tarih: close} olarak toplar
+    (doğrulamanın isteğe bağlı ikinci referansı; SEMBOL BAŞINA 1 FMP İSTEĞİ). Biçimsiz satır atlanır."""
     from . import fmp
     out = {}
     for r in fmp.historical_eod(ticker) or []:
@@ -878,6 +902,9 @@ def ping() -> dict:
 
 
 def status() -> dict:
+    """Panoya tek satırlık sağlayıcı durumu: anahtar/mod, yazım kapısının açık olup olmadığı ve
+    HANGİ kanıta dayandığı (yerel ölçüm mü Rol 1 tabanı mı), son doğrulama hükmü, hız limiti ve
+    geçmiş derinliği. Ağa GİTMEZ (canlı test için ping() vardır)."""
     v = verify_state()
     return {"provider": "Massive", "available": available(), "mode": mode(),
             "write_enabled": write_enabled(), "basis": verify_basis(),
@@ -889,6 +916,10 @@ def status() -> dict:
 
 # ---------------------------------------------------------------- CLI
 def main(argv=None) -> int:
+    """CLI girişi: --durum (ağ yok), --anlik (TEK grouped çağrısı + özet), --dogrula (ayarlama
+    tutarlılık ölçümü; --fmp ile FMP kıyası, --sembol/--gun ile kapsam) — yazım kapısının hükmünü
+    bu ölçüm yazar. Sonuç JSON basılır; hüküm "uyumsuz"/"olculemedi" ise 1, argümansız çağrıda 2,
+    aksi hâlde 0 döner."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.adapters.massive",
         description="Massive EOD adaptörü. AĞ ÇAĞRISI YALNIZ BURADAN (ve zincirin artımlı yolundan).")

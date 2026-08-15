@@ -68,16 +68,22 @@ def _active_keys() -> list[tuple[str, str]]:
 
 
 def _key_blocked(name: str) -> bool:
+    """Bu FMP anahtarı şu an 429-kota bloğunda mı? `_KEY_BLOCKED`teki blocked_until damgasını
+    şimdiyle karşılaştırır; kayıt yoksa False. Süreç-içi bellekte tutulur, diske yazılmaz."""
     import time as _t
     return _t.time() < float(_KEY_BLOCKED.get(name) or 0)
 
 
 def _block_key(name: str) -> None:
+    """Adı verilen anahtarı QUOTA_COOLDOWN_S boyunca bloklu işaretler (429 sonrası). Kota dolmuşken
+    istek atmak ne veri getirir ne kotayı geri verir; bu işaret diğer FMP tüketicilerini korur."""
     import time as _t
     _KEY_BLOCKED[name] = _t.time() + QUOTA_COOLDOWN_S
 
 
 def health() -> dict:
+    """FMP HTTP yolunun son durumunun kopyası (ok, çağrı/hata sayaçları, son HTTP kodu, son hata,
+    son kullanılan anahtar adı ve damga). Anahtarın VARLIĞINI değil, çağrının sonucunu bildirir."""
     return dict(_HEALTH)
 
 
@@ -142,6 +148,8 @@ def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body
 
 
 def usage() -> dict:
+    """Diskteki günlük kota muhasebesini (state/fmp_usage.json: {date, calls, fails, blocked_at})
+    okur. Dosya yoksa/okunamazsa boş sözlük — pano bunu "muhasebe yok" olarak gösterir."""
     try:
         from .. import store
         return store.read_json(USAGE_FILE, {}) or {}
@@ -273,6 +281,8 @@ def quote(symbols: list[str]) -> list[dict]:
 
 
 def profile(symbol: str) -> dict | None:
+    """Sembolün FMP şirket profili (stable: profile?symbol=X) — tek kayıtlık sözlük.
+    Anahtar yoksa, sembol boşsa veya çağrı başarısızsa None (hata yutulur, sağlık kaydına yazılır)."""
     if not available() or not symbol:
         return None
     try:
@@ -375,5 +385,7 @@ def ping(which: str = "FMP_API_KEY") -> dict:
 
 
 def status() -> dict:
+    """Panoya tek satırlık sağlayıcı durumu: FMP anahtarı yapılandırılmış mı ve değilse kullanıcıya
+    gösterilecek neden. Ağa GİTMEZ — canlı erişim testi için ping() kullanılır."""
     return {"provider": "FMP", "available": available(),
             "reason": "" if available() else "FMP_API_KEY yok — Ayarlar'dan ekleyin"}

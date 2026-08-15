@@ -105,6 +105,8 @@ def _nabiz(asama: str, i: int | None = None, n: int | None = None) -> None:
 
 
 def _cache_path(ticker: str) -> Path:
+    """Sembolün bar önbelleği CSV yolu (state/bars/<ticker>.csv). Ad küçültülür ve '.' → '-' yapılır
+    (BRK.B gibi semboller dosya adında noktalı olmasın)."""
     return _config.BARS / f"{ticker.lower().replace('.', '-')}.csv"
 
 
@@ -170,6 +172,9 @@ def _write_bars(df: pd.DataFrame, cp: Path) -> None:
 
 
 def _bar_source(ticker: str) -> str | None:
+    """Bu sembolün barlarını SABİTLENMİŞ kaynağı (state defterinden) döndürür; kayıt yoksa None.
+    Defter okunamazsa da None döner ama olay `_bar_warn` ile kaydedilir (YASA 4) — "kaynak bilinmiyor"
+    sessiz bir kaynak değişimine yol açabilir, bu yüzden iz bırakılır."""
     try:
         from .. import store as _st
         return (_st.read_json(SOURCE_FILE, {}) or {}).get(ticker.upper(), {}).get("source")
@@ -182,6 +187,9 @@ def _bar_source(ticker: str) -> str | None:
 
 
 def _pin_source(ticker: str, source: str) -> None:
+    """Sembolün bar kaynağını deftere SABİTLER (kaynak adı + UTC damgası, state/SOURCE_FILE).
+    Geçmişin sahibi budur; başka bir kaynak yalnız YENİ tarihleri ekleyebilir (ölçek karışmasın).
+    Yazım başarısızlığı yutulur ama `bar_source_pin_failed` olayıyla görünür kalır."""
     try:
         from .. import store as _st
         import datetime as _dt
@@ -436,6 +444,9 @@ PHANTOM_WINDOW = 63                  # …altındaysa o dönem gerçek bir liste
 
 
 def _integrity_feats(df: pd.DataFrame) -> dict:
+    """Bütünlük kurallarının ORTAK ham büyüklüklerini bir kez hesaplar: kapanış/hacim (c, v),
+    günlük oran r, ileri-geri çarpımın sapması drr (tek-gün sıçraması), high/low aralığı hl,
+    açılış boşluğu ogap ve dolar hacmi dvol. SAF — hüküm vermez, yalnız olguları üretir."""
     c = pd.to_numeric(df["close"], errors="coerce")
     v = pd.to_numeric(df["volume"], errors="coerce")
     o = pd.to_numeric(df["open"], errors="coerce")
@@ -853,12 +864,18 @@ class FetchError(RuntimeError):
     içerir — o metin bir gün loglanırsa anahtar diske düşer."""
 
     def __init__(self, reason: str, attempts: int):
+        """Hatayı KISA, makine-okunur `reason` ("HTTP 429", "ConnectTimeout") ve yapılan deneme
+        sayısıyla kurar. URL ASLA taşınmaz: FMP anahtarı sorgu parametresinde gider ve loglanan
+        bir hata metni onu diske düşürürdü."""
         super().__init__(f"fetch failed after {attempts} tries: {reason}")
         self.reason = reason
         self.attempts = attempts
 
 
 def _get_json(url: str, timeout: float, attempts: int = 3):
+    """Anahtarsız uçlara (Cboe/Nasdaq) tek GET kapısı: `attempts` kez üstel geri çekilmeyle
+    (0.4/0.8/1.6 sn) dener ve httpx yanıtını döndürür. Hepsi başarısızsa FetchError yükseltir —
+    HATA≠BOŞ: boş DataFrame ile arıza asla karıştırılmaz."""
     reason = "bilinmiyor"
     for i in range(attempts):
         try:
@@ -875,6 +892,8 @@ def _get_json(url: str, timeout: float, attempts: int = 3):
 
 
 def _fetch_cboe(ticker: str, timeout: float) -> pd.DataFrame:
+    """Cboe gecikmeli günlük OHLCV ucundan sembolün barlarını çeker (anahtarsız). Sağlayıcı satır
+    vermezse BOŞ DataFrame; istek başarısızsa FetchError (_get_json'dan) yükselir."""
     data = _get_json(CBOE.format(sym=ticker.upper()), timeout).json().get("data", [])
     if not data:
         return pd.DataFrame()
@@ -884,11 +903,15 @@ def _fetch_cboe(ticker: str, timeout: float) -> pd.DataFrame:
 
 
 def _fetch_nasdaq(ticker: str, start: str, end: str, timeout: float) -> pd.DataFrame:
+    """Nasdaq historical ucundan [start, end] aralığının barlarını çeker (anahtarsız); '$' ve binlik
+    ayraçlı metin alanları sayıya çevrilir. Satır yoksa BOŞ DataFrame; istek başarısızsa FetchError."""
     rows = (_get_json(NASDAQ.format(sym=ticker.upper(), d1=start, d2=end), timeout).json()
             .get("data") or {}).get("tradesTable", {}).get("rows") or []
     if not rows:
         return pd.DataFrame()
     def num(x):
+        """Nasdaq'ın metin sayısal hücresini float'a çevirir ('$' ve ',' atılır); boş ya da 'N/A' ise
+        None — ölçülmemiş alan 0 yazılmaz."""
         return float(str(x).replace("$", "").replace(",", "")) if x not in (None, "", "N/A") else None
     recs = [{"date": pd.to_datetime(r_["date"]), "open": num(r_.get("open")), "high": num(r_.get("high")),
              "low": num(r_.get("low")), "close": num(r_.get("close")), "volume": num(r_.get("volume"))}
@@ -1014,6 +1037,8 @@ def _record_xcheck(ticker: str, src: str, dev: float) -> None:
 
 
 def _xcheck() -> dict:
+    """Çapraz-kaynak ölçüm defterinin süreç-içi aynası; ilk çağrıda diskten (CROSSCHECK_FILE)
+    TEMBEL okunur. Sonraki çağrılar aynı sözlüğü döndürür — yazımlar `flush_xcheck` ile toplu gider."""
     global _XCHECK
     if not _XCHECK:
         from .. import store
@@ -1022,6 +1047,8 @@ def _xcheck() -> dict:
 
 
 def flush_xcheck() -> None:
+    """Çapraz-kaynak defterini diske yazar ve kirli sayacı sıfırlar. Yazım başarısızlığı yutulur ama
+    `massive_xcheck_write_failed` olayıyla görünür kalır (ölçüm defteri karar yolunu düşürmez)."""
     global _XCHECK_DIRTY
     try:
         from .. import store
@@ -1159,30 +1186,42 @@ class _LegCtx:
     "hangi seans" sorusunun cevabı tahminle değil, çağıranın bilgisiyle verilir."""
 
     def __init__(self, session: str | None):
+        """Bacağın açılacağı SEANS ADINI (ISO `YYYY-MM-DD`ye kırpılmış) saklar; None ise bacak
+        kapalıdır. Henüz hiçbir şey değiştirmez — devreye giriş `__enter__`dadır."""
         self.session = str(session)[:10] if session else None
         self._token = None
 
     def __enter__(self):
+        """Seans adını `_LEG_SESSION` bağlam değişkenine yazar (geri alma token'ı saklanır) —
+        aynı-akşam bacağı yalnız bu blok içinde açıktır. Bağlam değişkeni yoksa hiçbir şey yapmaz."""
         if _LEG_SESSION is not None:
             self._token = _LEG_SESSION.set(self.session)
         return self
 
     def __exit__(self, *exc):
+        """Bağlam değişkenini blok öncesindeki değerine geri alır, böylece bacak blok dışına
+        SIZMAZ (replay yoluna canlı bar kaçmasın). False döner — istisna yutulmaz."""
         if _LEG_SESSION is not None and self._token is not None:
             _LEG_SESSION.reset(self._token)
         return False
 
 
 def live_session_leg(session: str | None):
+    """`with data.live_session_leg(seans):` bağlam yöneticisini üretir — aynı-akşam Alpaca IEX
+    bacağını YALNIZ verilen kapanmış seans için ve yalnız blok süresince açar."""
     return _LegCtx(session)
 
 
 def _leg_session() -> str | None:
+    """Şu an açık olan bacak seansı (bağlam değişkeninden) ya da None — bacak kapalıysa/bağlam
+    değişkeni yoksa None. Yükleme yolu "bacağı çalıştırayım mı" sorusunu buna sorar."""
     return _LEG_SESSION.get() if _LEG_SESSION is not None else None
 
 
 # ---------------- aynı-akşam defteri (geçici barlar + kalibrasyon + ıraksama) --------------------
 def _se() -> dict:
+    """Aynı-akşam defterinin süreç-içi aynası; ilk çağrıda diskten (SAME_EVENING_FILE) TEMBEL okunur
+    ve `provisional`/`volume_ratio`/`sessions` bölümleri garanti edilir. Bozuk belge boş kabul edilir."""
     global _SE
     if not _SE:
         from .. import store
@@ -1211,6 +1250,8 @@ def flush_same_evening() -> None:
 
 
 def _se_touch() -> None:
+    """Aynı-akşam defterinde bir değişiklik olduğunu işaretler; kirli sayaç `_SE_FLUSH_EVERY`ye
+    ulaşınca `flush_same_evening()` ile toplu yazım yapılır (sembol başına disk yazımı olmasın)."""
     global _SE_DIRTY
     _SE_DIRTY += 1
     if _SE_DIRTY >= _SE_FLUSH_EVERY:
@@ -1230,6 +1271,8 @@ def _note_provisional(ticker: str, rows: dict) -> None:
 
 
 def _provisional_dates(ticker: str) -> set:
+    """Bu sembol için defterde GEÇİCİ (IEX kaynaklı) olarak işaretlenmiş bar tarihlerinin kümesi;
+    kayıt yoksa boş küme. T+1 konsolide bar geldiğinde hangi barların değiştirileceği buradan bilinir."""
     return set((_se()["provisional"].get(ticker.upper()) or {}).keys())
 
 
@@ -1245,6 +1288,8 @@ def _volume_ratio(ticker: str) -> float | None:
 
 
 def _median(xs: list) -> float | None:
+    """Pozitif sayıların medyanı; kullanılabilir örnek yoksa None (0.0 döndürmek "ölçüldü" demek
+    olurdu). None ve ≤0 değerler elenir, çift sayıda örnekte orta ikilinin ortalaması alınır."""
     vals = sorted(float(x) for x in xs if x is not None and float(x) > 0)
     if not vals:
         return None
@@ -1253,6 +1298,9 @@ def _median(xs: list) -> float | None:
 
 
 def _set_volume_ratio(ticker: str, samples: list, source: str) -> float | None:
+    """Konsolide/IEX hacim oranını ÖLÇÜMDEN kurar: son VOLUME_CAL_KEEP pozitif örneğin medyanını
+    alır, örnekler-kaynak-damga ile aynı-akşam defterine yazar ve oranı döndürür. Örnek yoksa oran
+    None kalır — varsayılan bir oran UYDURULMAZ."""
     from .. import memory
     t = ticker.upper()
     keep = [float(s) for s in samples if s and float(s) > 0][-VOLUME_CAL_KEEP:]
@@ -2113,6 +2161,8 @@ _NO_DATA: dict = {}
 
 
 def _no_data_reg() -> dict:
+    """Verisiz-sembol defterinin süreç-içi aynası; ilk çağrıda diskten (NO_DATA_FILE) TEMBEL okunur.
+    Ardışık `symbol_unknown` serileri burada tutulur — ölü sembol sorusunun ikinci bağımsız kanıtı."""
     global _NO_DATA
     if not _NO_DATA:
         from .. import store
@@ -2443,6 +2493,8 @@ _SEAM_FLUSH_EVERY = 25     # 250'lik tazelemede ~10 yazım (her sembolde bir de�
 
 
 def _seams() -> dict:
+    """Dikiş defterinin süreç-içi aynası; ilk çağrıda diskten (SEAM_FILE) TEMBEL okunur. Sabitlenmiş
+    kaynak ile yeni kaynağın çakıştığı semboller burada sayılır (uyarı bir kez, sayaç sürekli)."""
     global _SEAMS
     if not _SEAMS:
         from .. import store
@@ -2498,6 +2550,8 @@ def seam_report() -> dict:
 
 
 def _window(df: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
+    """Bar çerçevesini [start, end] tarih aralığına (iki uç DAHİL) kırpar ve indeksi sıfırlar.
+    None/boş girdi aynen (ya da boş çerçeve olarak) geri döner."""
     if df is None or df.empty:
         return df if df is not None else pd.DataFrame()
     m = (df["date"] >= pd.Timestamp(start)) & (df["date"] <= pd.Timestamp(end))

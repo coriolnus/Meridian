@@ -49,19 +49,26 @@ _HEALTH: dict = {"ok": None, "calls": 0, "fails": 0, "last_status": None, "last_
 
 
 def health() -> dict:
+    """FINRA HTTP yolunun son durumunun kopyası (ok, çağrı/hata sayaçları, son HTTP kodu ve hata,
+    dönen satır sayısı, damga). Anahtarsız uç olduğu için maskelenecek sır yoktur."""
     return dict(_HEALTH)
 
 
 def _simdi() -> str:
+    """Şu anın UTC ISO-8601 damgası (saniye çözünürlüğünde) — sağlık kaydı ve dosya damgaları için."""
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _store():
+    """`meridian.store` modülünü geç (tembel) içe aktarıp döndürür — modül yükleme sırasında döngüsel
+    içe aktarmayı önlemek için. Tüm disk okuma/yazma bu kapıdan geçer."""
     from .. import store
     return store
 
 
 def _universe() -> list[str]:
+    """Kesişimde kullanılacak sembol evreni: `adapters.data.REPLAY_UNIVERSE`ün kopyası (elle bakımlı
+    liste). FINRA tüm piyasayı döndürür; kapsam bu evrenle sınırlanır."""
     from . import data
     return list(data.REPLAY_UNIVERSE)
 
@@ -157,6 +164,8 @@ def _isgunu_farki(d0: _dt.date, d1: _dt.date) -> int:
 
 # ------------------------------------------------------------------ float (isteğe bağlı, TAVANLI)
 def float_onbellek() -> dict:
+    """state/short_interest_float.json önbelleğini okur (sembol → float/sharesOutstanding).
+    Dosya yoksa veya biçimi bozuksa boş iskelet döner — AĞ ÇAĞRISI YOK."""
     d = _store().read_json(FLOAT_FILE, None)
     return d if isinstance(d, dict) else {"surum": 1, "guncellendi": None, "semboller": {}}
 
@@ -207,6 +216,8 @@ def float_cek(semboller: list[str], tavan: int = 25) -> dict:
 
 # ------------------------------------------------------------------ özet
 def _sayi(v):
+    """FINRA'nın metin sayısal alanını float'a çevirir; boş/biçimsiz/NaN/sonsuz ise None.
+    UYDURMA YASAĞI: ölçülemeyen alan 0 değil None olur ve bilinmezlik türetilen alanlara taşınır."""
     if v is None or v == "":
         return None
     try:
@@ -300,6 +311,8 @@ def ozet(satirlar: list[dict], cagri: int = 0, hata: str | None = None,
 
 
 def durum() -> dict:
+    """Ağa gitmeden durum özeti: son yazılan short_interest.json'ın üretim/yayın/kapsam alanları,
+    float önbelleğindeki sembol sayısı ve health(). Dosya yoksa alanlar None kalır."""
     d = _store().read_json(SIGNAL_FILE, None) or {}
     return {"dosya": {"uretildi": d.get("uretildi"), "yayin": d.get("yayin"),
                       "kapsam": d.get("kapsam")},
@@ -309,6 +322,9 @@ def durum() -> dict:
 
 # ------------------------------------------------------------------ CLI (YASA 6 tüketicisi)
 def main(argv=None) -> int:
+    """CLI girişi (YASA 6 tüketicisi): --fetch (FINRA'dan çek + özeti yaz), --ozet, --durum,
+    --float-cek. AĞ ÇAĞRISI YALNIZ BURADAN yapılır; sonuç JSON basılır.
+    Çıkış kodu: herhangi bir bölümde "hata" alanı doluysa 1, argümansız çağrıda 2, aksi hâlde 0."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.adapters.shortinterest",
         description="FINRA Equity Short Interest (ücretsiz/anahtarsız) — son yayını çeker, evren "
