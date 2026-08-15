@@ -127,7 +127,7 @@ VARSAYILAN_GEREKCE = (
 EVENT = "paper_equity_reset"
 
 
-# ---- KANONİK SERMAYE TABANI (2026-08-12 canlı vakası) ------------------------------------------
+# ---- KANONİK SERMAYE TABANI (canlı vaka) ------------------------------------------
 def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> float:
     """ZIMNİ SERMAYE TABANININ KANONİK (SENT-TAM) TÜRETİMİ — tek yerde, 2 hane.
 

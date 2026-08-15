@@ -33,7 +33,7 @@ import httpx
 
 from .. import secrets
 
-# 2026-07-23 (operatör Finviz notu): kanonik export yolu artık `/export/screener`. Eski `.ashx`
+# OPERATÖR FINVIZ NOTU: kanonik export yolu artık `/export/screener`. Eski `.ashx`
 # uçları ÇALIŞIR ama 301 REDIRECT döner — httpx (curl gibi) varsayılan olarak yönlendirmeyi İZLEMEZ
 # ve BOŞ gövde alır. Eski değer `export.ashx` idi: geçerli bir token'la bile CSV boş gelir, 0 satır
 # parse edilir ve `_plausible([])` False olduğu için token SESSİZCE "çalışmıyor" sanılırdı. İki kat
@@ -121,7 +121,7 @@ def export_rows(filters: str, timeout: float = 20.0, view: str = "111") -> list[
         raise RuntimeError("FINVIZ_API_KEY absent")
     params = {"v": view, "f": filters, "auth": token}
     # follow_redirects=True ZORUNLU: Finviz eski/alternatif yolları 301'le kanonik export'a taşır;
-    # izlenmezse gövde BOŞ gelir ve geçerli token 'çalışmıyor' sanılır (operatör notu, 2026-07-23).
+    # izlenmezse gövde BOŞ gelir ve geçerli token 'çalışmıyor' sanılır (operatör notu).
     r = httpx.get(ELITE_EXPORT, params=params, timeout=timeout,
                   headers={"User-Agent": _UA}, follow_redirects=True)
     # 401/403 = token geçersiz/süresi dolmuş (1 haftalık trial bitti). Bu bir OLAY, sessizlik değil.

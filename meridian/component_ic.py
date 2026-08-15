@@ -53,7 +53,7 @@ HORIZONS = (5, 10, 20)
 # İsimler ağırlık adlarını takip eder (w_rs → rs) ki pano tablosunda hangi ağırlığın hangi ölçüme
 # karşılık geldiği tahmin edilmek zorunda kalmasın.
 #
-# ÜÇ YENİ BİLEŞEN (2026-07-29): rvol20 / mom12_1 / rmom. Eski dördü
+# ÜÇ YENİ BİLEŞEN: rvol20 / mom12_1 / rmom. Eski dördü
 # KALDIRILMADI — kıyas sürsün diye yan yana ölçülürler; yeni bir çekirdeğin eskisinden iyi olduğu
 # ancak ikisi AYNI tabloda, aynı popülasyonda, aynı CI disiplininde durursa söylenebilir.
 #
@@ -61,13 +61,13 @@ HORIZONS = (5, 10, 20)
 # bileşen skor uzayındadır (tight = tt·100, vol = kırpılmış oran, prox = kırpılmış puan). Yenilerde
 # ise ağırlığın çarptığı büyüklük bir DÖNÜŞÜMDÜR: entry.w_rvolband ham rvol'ü değil onun ÜÇGEN bant
 # puanını (strategy.rvol_band_score), entry.w_mom ise ham 12-1 getiriyi değil onun 63-barlık
-# yüzdelik rütbesini çarpar. Buradaki satırlar HAM seriyi ölçer; sebebi, kanıt tabanının (2026-07-29
-# g2_olcum) tam olarak ham seriyi ölçmüş olması ve gece tablosunun o kanıtla DOĞRUDAN kıyaslanabilir
+# yüzdelik rütbesini çarpar. Buradaki satırlar HAM seriyi ölçer; sebebi, kanıt tabanının
+# (g2_olcum) tam olarak ham seriyi ölçmüş olması ve gece tablosunun o kanıtla DOĞRUDAN kıyaslanabilir
 # kalması. Sonuç: bu satırlar "bant puanının IC'si" DEĞİLDİR — üçgen dönüşüm monoton olmadığı için
 # Spearman IC'si de aynı sayı olmak zorunda değildir. Bandın kanıtı ayrı bir tablodur (bant ortalama
 # getirileri, g2_olcum çıktısı) ve bileşiğin uçtan uca ölçümü kalem E'nin aday profillerine aittir.
 #
-# (7) SEKİZİNCİ SATIR: turnover21 (EDG-2026-016). Kartın hükmü SUCCESS ve entegrasyon
+# (7) SEKİZİNCİ SATIR: turnover21. Kartın hükmü SUCCESS ve entegrasyon
 #     kararı "elle ağırlık yok — kablola, düğmeyi bounds'a 0 ile indir, ölçüsünü öğrenme döngüsü
 #     versin". Bu tablo o döngünün GÖZÜDÜR: düğme 0'da dururken bile hücreler her gece dolar, yani
 #     "önce aç sonra ölç" kısır döngüsüne girilmez. Satırın ölçtüğü büyüklük HAM orandır
@@ -208,7 +208,7 @@ def _component_frame(df: pd.DataFrame, prox_max: float,
     out["prox"] = (100.0 * (1.0 - (prox_pct / prox_max).clip(upper=1.0))
                    if prox_max > 0 else pd.Series(0.0, index=df.index))
     out.loc[pivot <= 0, "prox"] = float("nan")                    # geçersiz pivot → ölçülemedi
-    # (2026-07-29): HAM seriler, canlı yolun kullandığı AYNI indicators fonksiyonlarıyla
+    # HAM seriler, canlı yolun kullandığı AYNI indicators fonksiyonlarıyla
     # (tek yasa, tek uygulama — modül başlığı, karar 1).
     out["rvol20"] = ind.rvol20(df["volume"])
     out["mom12_1"] = ind.mom_12_1(close)
@@ -263,7 +263,7 @@ def forward_returns(df: pd.DataFrame) -> dict:
     return {h: close.shift(-h) / close - 1.0 for h in HORIZONS}
 
 
-# ---- ÇERÇEVEDE OLMAYAN TARİHİN SINIFI: BUG MU, BEYAN EDİLMİŞ DIŞLAMA MI? (2026-08-07) -----------
+# ---- ÇERÇEVEDE OLMAYAN TARİHİN SINIFI: BUG MU, BEYAN EDİLMİŞ DIŞLAMA MI? -----------
 # ÖLÇÜLDÜ, VARSAYILMADI. MAKULLÜK paneli iki ihlal bağırıyordu — `eleme:component_ic.eslesme:
 # sema_elemesi` ve `eleme:threshold_curve.eslesme:sema_elemesi` — ikisi de aynı cümleyle: "7 satır
 # VERİ SÖZLEŞMESİ yüzünden elendi, bu bir piyasa filtresi DEĞİL yazılım hatasıdır". Yedi satırın
@@ -341,7 +341,7 @@ def _load_universe() -> dict:
             continue
         try:
             df, _ = data_adapter.sanitize_bars(pd.read_csv(cp, parse_dates=["date"]), t)
-            # BÜTÜNLÜK DEFTERİ (2026-07-31, hayalet-round-2): çözülmemiş ölçek/kimlik kırılmasından
+            # BÜTÜNLÜK DEFTERİ (hayalet-round-2): çözülmemiş ölçek/kimlik kırılmasından
             # ÖNCEKİ dönem ölçümden düşer. Kural burada YENİDEN YAZILMAZ — `bars_integrity` defteri
             # okunur (tek yasa, iki tüketici: cf_backfill aynı satırı çağırır). Defter yoksa hiçbir
             # şey düşmez; tablonun eski hâline döner ve bunu `integrity_report()` söyler.
@@ -434,7 +434,7 @@ def component_ic(write: bool = True) -> dict | None:
     Dönüş None: hiç gözlem yoksa ya da bar evreni okunamadıysa — boş bir tablo yazıp "ölçtük"
     izlenimi vermek, ölçmemekten daha kötüdür.
 
-    `write=False` (2026-08-01, yeniden-üretim aracı için): tabloyu hesaplar ama `component_ic.json`a
+    `write=False` (yeniden-üretim aracı için): tabloyu hesaplar ama `component_ic.json`a
     ve başarı olayına YAZMAZ. Varsayılan True olduğu için gecelik P5 çağrısı (loop.py) birebir
     eskisi gibi davranır. Kuru koşunun yazmaması bir incelik değil şart: bu tablo canlı state'te
     durur ve worker koşarken ikinci bir sürecin yazması bu depoda yasak.
@@ -652,7 +652,7 @@ def compact_lines(doc: dict | None = None, max_satir: int = 6) -> list[str]:
     satirlar = [f"{c} @{h}bar IC {ic} (n={n}, ağırlık {doc.get('agirliklar', {}).get(c)})"
                 f"{_ci_metni('gercek', c, h)}"
                 for c, h, ic, n in hucreler[:max_satir]]
-    # CF SATIRI AYRI VE ETİKETLİ (2026-07-29): 1.4 karar kapısının cevaplanabilir olması için gereken
+    # CF SATIRI AYRI VE ETİKETLİ: 1.4 karar kapısının cevaplanabilir olması için gereken
     # örneklem yalnız cf'te var (n≈2100 vs 95), ama o satırlar ALINMAMIŞ girişlerdir — beyne
     # etiketsiz giderse ikisini aynı kefeye koyar ve seçim yanlılığını görmez.
     cf = doc["tablo"].get("cf") or {}

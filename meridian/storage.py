@@ -58,7 +58,7 @@ PORTFOLIO = "portfolio.json"
 EQUITY = "equity_curve.json"
 SHADOW_BOOKS = "shadow_books.json"
 
-# Tipli kolonlar. Tipler CANLI defterden ÖLÇÜLDÜ (2026-07-31, state/trades.jsonl 95 satır ×
+# Tipli kolonlar. Tipler CANLI defterden ÖLÇÜLDÜ (state/trades.jsonl 95 satır ×
 # state/trade_plans.jsonl 390 satır — her alanın tipi tek değerliydi), uydurulmadı. Ölçüm dışı
 # kalan alanlar (skill_chain, targets, gate_checks, …) extra_json'da yaşar: sözleşme (ledgers.py)
 # onları serbest bırakır ve tipli bir kolona zorlamak şemayı defterin kendisinden daha katı yapardı.
@@ -74,7 +74,7 @@ _COLS: dict[str, tuple[tuple[str, str], ...]] = {
         ("exploration", "BOOL"), ("scaled_out", "BOOL"),
         ("bars_held", "INTEGER"), ("mfe_r", "REAL"), ("mae_r", "REAL"),
         # `kaynak` = ledgerstamp'in KAYNAK DAMGASI (live_paper | replay_seed | belirsiz). Canlı
-        # deftere HENÜZ basılmadı (BT-1 migrasyonu Rol-1'de) — kolon boş kalır, uydurulmaz.
+        # deftere HENÜZ basılmadı (migrasyon Rol-1'de) — kolon boş kalır, uydurulmaz.
         ("kaynak", "TEXT"),
     ),
     PLANS: (
@@ -176,7 +176,7 @@ def pragma_state(conn: sqlite3.Connection | None = None) -> dict:
 def close_connections() -> None:
     """Tüm bağlantıları kapat (testler ve sandbox söküm yolları için).
 
-    ADI BİLEREK `close_all` DEĞİL (2026-08-02): `alpaca.close_all` TÜM POZİSYONLARI DÜZLEŞTİREN
+    ADI BİLEREK `close_all` DEĞİL: `alpaca.close_all` TÜM POZİSYONLARI DÜZLEŞTİREN
     yetki-yasası çağrısıdır ve dedektörü (`test_authority_boundaries_v77`) AST'de ATTRIBUTE ADINA
     bakar — `storage.close_all()` masum bir bağlantı kapatması olduğu hâlde ihlal olarak yakalanırdı.
     Dedektör daraltılmaz (paranoyak kalır); isim uzayı ayrık tutulur."""
@@ -240,7 +240,7 @@ def _ddl() -> list[str]:
 def apply_schema(conn: sqlite3.Connection) -> None:
     """Şema ifadeleri — TRANSACTION YÖNETMEZ (çağıran açar/kapatır); `do_replace_rows` ile aynı desen.
 
-    NEDEN AYRILDI (C4, 2026-08-02). `ensure_schema` KENDİ `BEGIN…COMMIT`ini atıyordu ve `dbmigrate`
+    NEDEN AYRILDI. `ensure_schema` KENDİ `BEGIN…COMMIT`ini atıyordu ve `dbmigrate`
     onu migrasyon transaction'ından ÖNCE çağırıyordu. Sonuç ölçüldü: migrasyon KAYNAK_BOZUK ya da
     PARİTE_TUTMADI ile düşse bile şema COMMIT edilmiş kalıyor, `active()` "dosya var + şema sürümü
     var" görüp True dönüyor ve altı defter BOŞ okunuyordu — yani `connect` docstring'inin adıyla
@@ -361,7 +361,7 @@ def active(name: str | None = None) -> bool:
 def _isaretli_sifir(val: Any) -> bool:
     """`-0.0` mı? (`val == 0.0` her iki sıfır için de True'dur; ayrım YALNIZ işaret bitindedir.)
 
-    NEDEN AYRI BİR SORU (ÖLÇÜLDÜ 2026-07-31, WP-H/H1 property testi buldu — elle yazılmış hiçbir
+    NEDEN AYRI BİR SORU (property testi buldu — elle yazılmış hiçbir
     örnek testi bunu aramamıştı): SQLite'ın REAL kolonu negatif sıfırın İŞARETİNİ KAYBEDER.
         sqlite> CREATE TABLE t(x REAL); INSERT INTO t VALUES(-0.0); SELECT x FROM t;  →  0.0
     Tip afinitesi savunması (`_matches`) bu sızıntıya YAPISAL OLARAK kördü: `-0.0` GERÇEKTEN bir
@@ -440,7 +440,7 @@ def _touch(conn, name: str, *, n: int, present: bool = True, env: dict | None = 
     """Varlık damgasını ilerlet. `env=None` → zarfa DOKUNMA (COALESCE). `env=dict` → MEVCUT zarfın
     ÜSTÜNE BİRLEŞTİR.
 
-    NEDEN BİRLEŞTİRME (D3, 2026-08-04 — LATENT kusurun kapanışı). Buradaki `COALESCE(?, env_json)`
+    NEDEN BİRLEŞTİRME (LATENT kusurun kapanışı). Buradaki `COALESCE(?, env_json)`
     "None ise koru" demek istiyordu ama TEK env yazarı olan `do_write_series` env'i HER ZAMAN bir
     dict olarak verir (`{}` bile `'{}'` yazılır) — yani koruma hiçbir zaman devreye girmiyordu ve
     zarf her seri yazımında BÜTÜN OLARAK EZİLİYORDU. Eğrinin tek yazarı `run.py`dir ve o yalnız

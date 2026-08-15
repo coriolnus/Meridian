@@ -40,7 +40,7 @@ import yaml
 
 from . import config, store
 
-SANDBOX_KEEP = 3   # retain the newest N sprint sandboxes; older ones are pruned on the next start (L5)
+SANDBOX_KEEP = 3   # retain the newest N sprint sandboxes; older ones are pruned on the next start
 
 # FIXED windows — deliberately NOT operator-tunable (a movable cutoff would be p-hacking). Disjoint by
 # construction: select on data ≤ CUTOFF, measure on trades ≥ EVAL_START. Eval spans ~2y so v1 and v2 each
@@ -53,14 +53,14 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # bars symlinked; sprint subtree excluded; keys not needed; HALT must NEVER enter the sandbox — the
 # operator halting LIVE trading is the natural moment to run an offline sprint, but a copied kill-switch
 # makes every sandbox session suppress entries → n_v1=0 and a uselessly "inconclusive" sprint.
-# SEANS-İÇİ ARŞİVLER DE ATLANIR (2026-08-02 A1 ölçümü). state/bars_intraday 43M + state/intraday_bars 40M
+# SEANS-İÇİ ARŞİVLER DE ATLANIR (A1 ölçümü). state/bars_intraday 43M + state/intraday_bars 40M
 # = 83M, yani bir kum havuzunun ~110M'inin dörtte üçü (state/sprint 438M = 4 × ~110M). Bu iki dizin bu
 # küme yazıldıktan SONRA doğdu — SKIP_COPY yalnız "bars"ı atlıyordu, yeni gelenler sessizce kopyalanır
 # oldu. YAZAR TEKLİĞİ arşivci tarafında: bars_intraday'i barsarchive.py, intraday_bars'ı bararchive.py
 # yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
 # yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
 # değil BEYANLA karşılıyor (barsarchive.py:748 — "arşivi YOK ... henüz hiç tur koşmadı").
-# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (2026-08-02 ölçümü). Altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
+# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (ölçüldü). Altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
 # `storage.active`; yol her çağrıda `config.STATE`ten türer). DB kum havuzuna kopyalanınca
 # `_reset_sandbox_state`in HAM DOSYA yazımları çocuğun store okumalarına GÖRÜNMEZ olur: çocuk
 # canlının `portfolio.json`unu DB kopyasından okur, `last_date="2026-07-31"` görür ve
@@ -214,16 +214,16 @@ def _reset_sandbox_state(sbstate: Path) -> None:
 
 
 def _prune_old_sandboxes(keep: int = SANDBOX_KEEP) -> None:
-    """Retain only the newest `keep` sprint sandboxes (L5). Each start() copies the live state tree into a
+    """Retain only the newest `keep` sprint sandboxes. Each start() copies the live state tree into a
     new dated dir (bars are symlinked) and nothing ever deleted them — an operator-paced disk leak.
     Never deletes the currently-active sandbox.
 
-    BOYUT İDDİASI TAZELENDİ (2026-08-02). Bu docstring "~1.5 MB" diyordu: YAZILDIĞI GÜN DOĞRUYDU,
+    BOYUT İDDİASI TAZELENDİ. Bu docstring "~1.5 MB" diyordu: YAZILDIĞI GÜN DOĞRUYDU,
     sonra canlı state büyüdü ve iddia bayatladı. A1'de ölçüm: state/ 617M, state/sprint 438M =
     4 kum havuzu × ~110M. SKIP_COPY'ye bars_intraday+intraday_bars (43M+40M = 83M) eklendikten sonra
     kum havuzu başına ARİTMETİK BEKLENTİ ~27M'dir (110−83). BU BİR TÜRETİM, ÖLÇÜM DEĞİL — yeni bir
     sandbox doğduğunda `du -sh state/sprint/*` ile doğrulanmadan "ölçüldü" diye anılmaz.
-    Birikme sınırsız DEĞİL: SANDBOX_KEEP=3 + her start()'ta budama çalışıyor (2026-08-02 A1'de
+    Birikme sınırsız DEĞİL: SANDBOX_KEEP=3 + her start()'ta budama çalışıyor (A1'de
     doğrulandı), kararlı durum 4 dizin = 3 saklanan + 1 yeni."""
     root = config.STATE / "sprint"
     if not root.exists():
@@ -289,9 +289,9 @@ def _kur_kum_havuzu(sid: str) -> Path:
 
 
 # ==================================================================================================
-# "BU SÜREÇ KUM HAVUZUNDA MI?" — İZOLASYON SÖZLEŞMESİNİN SORULABİLİR HÂLİ (v242, 2026-08-13)
+# "BU SÜREÇ KUM HAVUZUNDA MI?" — İZOLASYON SÖZLEŞMESİNİN SORULABİLİR HÂLİ
 # --------------------------------------------------------------------------------------------------
-# NEDEN VAR — ÖLÇÜLMÜŞ SIZINTI (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §1.4 ve §B4).
+# NEDEN VAR — ÖLÇÜLMÜŞ SIZINTI (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md).
 # Bu dosyanın başlığı "canlı defterler, karne ve koşan Hermes ASLA dokunulmaz" diyor ve bu DEFTERLER
 # için doğru. Ama kum havuzu, süreç DIŞINDAKİ paylaşımlı kaynakları da değiştirebiliyordu. Kanıt iki
 # ayrı defterde, 59 saniye arayla:
@@ -334,7 +334,7 @@ def kum_havuzunda() -> bool:
 
 
 # ==================================================================================================
-# KOŞUM YOLU — SPRINT KENDİ SYSTEMD BİRİMİNDE DOĞAR (v241, 2026-08-13)
+# KOŞUM YOLU — SPRINT KENDİ SYSTEMD BİRİMİNDE DOĞAR
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLMÜŞ KÖK NEDEN (kanıt: ölüm-anı yakalayıcısı; üç ölümde de aynı desen):
 #     14:50:02 sprint ilerliyor (113/531) → 14:54:14 worker YENİ pid ile ayağa kalkıyor (dağıtım
@@ -697,7 +697,7 @@ def auto_config() -> dict:
 
 
 # ------------------------------------------------------------------------------------------------
-# CANLI-ARAMA BAYRAĞI: BAYATLIK YASASI (2026-08-12 canlı vakası).
+# CANLI-ARAMA BAYRAĞI: BAYATLIK YASASI (canlı vaka).
 # ÖLÇÜLEN ARIZA: `sprint_cadence_skip sebep=mesgul:canli_arama` 4+ gün boyunca HER döngüde tekrar
 # etti; aynı pencerede sprint yetim (pid ölü, faz 'baseline') ve 9,6 gündür yeni hipotez yok.
 # `hermes.SEARCH_PROGRESS` süreç-içi bir sözlüktür ve `reflect_once` onu normal/istisna çıkışta
@@ -731,7 +731,7 @@ YETIM_YENIDEN_SAAT = 12.0
 _YETIM_OLAYLI: set = set()
 
 # ==================================================================================================
-# MEŞGULİYET KAPILARI YETİM-RESTART'I KALICI BLOKLUYORDU (2026-08-13, canlı ölçüm)
+# MEŞGULİYET KAPILARI YETİM-RESTART'I KALICI BLOKLUYORDU (canlı ölçüm)
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLEN ARIZA — canlı olay defteri, aynı satır her poll'de:
 #     sprint_cadence_skip{sebep:"mesgul:canli_arama", yetim:true, gecen_gun:5,
@@ -751,7 +751,7 @@ _YETIM_OLAYLI: set = set()
 #       süresiz kilitliyordu — yani kapının önlediği zarardan büyük bir zarar üretiyordu.
 #   (b) YETKİ KAPISI — `elle_tik`: "bu çağıranın sprint başlatmaya HAKKI var mı?" Bu bir yük
 #       sorusu DEĞİLDİR ve yetim onu deleMEZ. `scheduler.advance_once`ın iki çağıranı var (daemon
-#       döngüsü + panonun ELLE TİK düğmesi) ve 2026-07-30'da ÖLÇÜLMÜŞ bir kaza var: elle tik,
+#       döngüsü + panonun ELLE TİK düğmesi) ve ÖLÇÜLMÜŞ bir kaza var: elle tik,
 #       saat 22:00'yi geçince gerçekten 4 işçilik bir alt süreç başlatıyordu. Operatör "bir tur
 #       ilerlet" derken dakikalarca sürecek bir antrenman İSTEMEMİŞTİR — sprintin elle tetiği ayrı
 #       bir düğmedir (`/api/sprint/start`) ve o hiçbir kapıya uğramaz.
@@ -849,7 +849,7 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     arama = _arama_durumu(gun_ref)
     # YETİM SPRINT: pid ÖLÜ + faz terminal DEĞİL (status():orphan). Yetim bir koşu "koştu"
     # SAYILMAZ — sayılırsa haftalık taban, YARIDA KALMIŞ bir başlangıçtan ölçülür ve kadans 7 gün
-    # boşa susar (2026-08-12 canlı vakası: 4,4 gündür ölü çocuk, faz='baseline', kadans
+    # boşa susar (canlı vaka: 4,4 gündür ölü çocuk, faz='baseline', kadans
     # `tetik_yok/mesgul` arasında salınıyordu). YENİDEN BAŞLATMA KADANSIN İŞİDİR (operatör
     # mandası "elle tetik beklemeden tam fonksiyonlu") — o yüzden yetim bir TETİKTİR,
     # yalnız gösterge değil. ÇÖKME DÖNGÜSÜ FRENİ: tetik ancak yetim başlangıç YETIM_YENIDEN_SAAT'ten
@@ -859,7 +859,7 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     ctx = {"gecen_gun": gun, "taze_hipotez": taze, "n_hipotez": len(hyps),
            "saat": now.hour, "pencere": list(SPRINT_HOURS), "cfg": auto_config(),
            "arama_bayragi": arama, "yetim": yetim, "yetim_saat": gecen_saat if yetim else None,
-           # TETİK AYRI ALAN OLARAK TAŞINIR (2026-08-13): `yetim` "yarıda kalmış bir sprint var"
+           # TETİK AYRI ALAN OLARAK TAŞINIR: `yetim` "yarıda kalmış bir sprint var"
            # der, `yetim_tetik` "ve 12 saatlik fren aşıldı, yeniden başlatılabilir" der. İkisi tek
            # bayrakla anlatılırsa skip olayından "neden hâlâ başlamadı?" sorusu cevaplanamaz.
            "yetim_tetik": yetim_tetik,
@@ -954,7 +954,7 @@ def stop() -> dict:
         except OSError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
             pass
     pid, yol = st.get("pid"), st.get("kosum_yolu")
-    # `birim` damgası yoksa sid'den türetilir: v241 ÖNCESİ başlamış (damgasız) ama systemd altında
+    # `birim` damgası yoksa sid'den türetilir: DAMGA ÖNCESİ başlamış (damgasız) ama systemd altında
     # koşan bir sprint kalmasın diye DEĞİL — öyle bir sprint yok; damga bir gün bir yazımda düşerse
     # `stop()` yine de doğru birimi adresleyebilsin diye.
     birim = st.get("birim") or (_birim_adi(st["sid"]) if yol == "systemd" and st.get("sid") else None)

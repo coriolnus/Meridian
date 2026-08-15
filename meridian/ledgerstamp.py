@@ -43,7 +43,7 @@ GECERLI = frozenset({LIVE_PAPER, REPLAY_SEED, BELIRSIZ})
 LEDGER = "trades.jsonl"
 EQUITY = "equity_curve.json"
 
-# ---- SINIRIN KAYNAKLARI (WP2-D bacak-1). Hangi yolun konuştuğu her raporda ADIYLA yazar. -------
+# ---- SINIRIN KAYNAKLARI. Hangi yolun konuştuğu her raporda ADIYLA yazar. -------
 KAYNAK_RESET = "reset_isareti"   # eğri zarfındaki SON reset işaretinin `egri_son_nokta` alanı
 KAYNAK_DAMGA = "trades.kaynak"   # yedek yol: `replay_seed` damgalı satırların en geç `ts_close`u
 KAYNAK_YOK = "yok"               # üçüncü hâl: ölçülemedi — `replay_end` None (SIFIR ya da bugün DEĞİL)
@@ -99,7 +99,7 @@ def counts(rows: list[dict] | None = None) -> dict:
                 damgasiz += 1
     return {"live_paper_n": live, "replay_seed_n": seed, "belirsiz_n": belirsiz,
             "damgasiz_n": damgasiz, "toplam": len(rows),
-            # OKURA TEK CÜMLE: "training" tohum satırlarının etiketidir (denetim BT-1 dili).
+            # OKURA TEK CÜMLE: "training" tohum satırlarının etiketidir (denetim dili).
             "training_n": seed,
             "kapsam": ("live_paper = canlı kâğıt döngünün kapattığı işlem; replay_seed = tohum "
                        "koşusunun ÜRETTİĞİ işlem (training, survivorship'li); belirsiz = kökeni "
@@ -129,9 +129,9 @@ def _toplu_yazim_olculebilir() -> bool:
     saniyeler içindeyse defter o toplu yazımdan beri hiç `append` almamıştır. SQLite'a taşındıktan
     sonra iki varlığın damgası TEK migrasyon transaction'ında AYNI ana düşer — yani fark her zaman
     ~0 çıkar ve imza "defter hiç eklenmedi" diye OKUNURDU. Bu bir ölçüm değil, migrasyonun kendi
-    gölgesidir. Ölçülemeyen bir imzayı VAR saymak, tam olarak BT-1'in şikâyet ettiği hatadır.
+    gölgesidir. Ölçülemeyen bir imzayı VAR saymak, tam olarak denetimin şikâyet ettiği hatadır.
 
-    İMZANIN İKİNCİ AŞINMASI (WP2-D bacak-2, 2026-08-14): dosya çağında bile imza artık ZAYIFTIR —
+    İMZANIN İKİNCİ AŞINMASI: dosya çağında bile imza artık ZAYIFTIR —
     `loop.daily_cycle` eğriye her seans nokta ekliyor, yani `equity_curve.json` mtime'ı defterden
     bağımsız ilerliyor. Bu fonksiyon "ölçülebilir mi" sorusunu (arka uç) cevaplar; "ne kadar
     kanıt" sorusunun cevabı artık `kaynak` alanındadır. İmza SINIRI BELİRLEMEZ; yalnız
@@ -187,7 +187,7 @@ def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
 def _sinir_damgadan(rows: list[dict]) -> tuple[str | None, dict]:
     """YOL-2 (YEDEK) — `replay_seed` damgalı satırların EN GEÇ `ts_close`u.
 
-    Kartın KENDİ yazılı çaresi (EDG-2026-036:178: "o güne dek tohum sınırı `trades.kaynak`
+    Kartın KENDİ yazılı çaresi ("o güne dek tohum sınırı `trades.kaynak`
     damgasından okunur"). Reset işareti hiç yazılmamış bir depoda (ör. tohumlanmış ama sermaye
     ayrıştırması yapılmamış kurulum) tohum penceresini ölçen tek DONMUŞ kanıt budur: damga satır
     diske düşmeden basılır (`run.replay_seed` → `stamp_rows`) ve `stamp` var olan damgayı EZMEZ.
@@ -250,7 +250,7 @@ def seed_boundary(rows: list[dict] | None = None) -> dict:
               "transaction'da aynı ana düşer)" if not _olculebilir
               else "toplu yazım imzası ÖLÇÜLEMEDİ (mtime okunamadı)"))
 
-    # İKİ YOL AYRIŞIRSA BU SESSİZ KALAMAZ. Canlıda ÖLÇÜLEN hâl (2026-08-14): işaret 2026-08-01'de
+    # İKİ YOL AYRIŞIRSA BU SESSİZ KALAMAZ. Canlıda ÖLÇÜLEN hâl: işaret 2026-08-01'de
     # donmuş ve eğrinin O ANDAKİ son noktasını (2026-07-20) taşıyor; oysa 2026-08-13 tohum
     # yenilemesi defterine en geç 2026-07-24 kapanışlı satırlar girdi. Yani DONMUŞ sınır, tohumun
     # GERÇEK penceresinden 4 gün geride. Sıra bilinçlidir (donma > tazelik: sınırın kaymaması
@@ -311,7 +311,7 @@ def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
          yazımdan beri dokunulmamış olmalıydı) ve çelişki `live_paper` diye çözülmez: `belirsiz`
          kalır. Sınıflandırıcı kendi kanıtını yalanlayamaz.
 
-    KURAL-4'ÜN İMZASI ZAYIFLADI, KURALIN YÖNÜ DEĞİŞMEDİ (WP2-D bacak-2, 2026-08-14): eğrinin artık
+    KURAL-4'ÜN İMZASI ZAYIFLADI, KURALIN YÖNÜ DEĞİŞMEDİ: eğrinin artık
     kadanslı bir yazarı var, yani mtime çifti "defter hiç eklenmedi" kanıtı değil. Kural yine de
     KALDI çünkü hatası tek yönlü: imza yanlışlıkla VAR görünürse satır `live_paper` yerine
     `belirsiz` olur — pozitif bir iddia ölçülmemiş kanıtla BASILMAZ. Ters yönde (kuralı kaldırmak)
@@ -356,7 +356,7 @@ def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
 def migrate(apply: bool = False) -> dict:
     """TEK SEFERLİK GERİYE MİGRASYON. Kuru koşu VARSAYILANDIR (`barrepair` kuralı: veri yazan bir
     aracın varsayılanı yazmak olamaz). Uygulama tek atomik `write_jsonl` ile biter."""
-    # KİLİT (B3, 2026-07-31): oku-değiştir-yaz. `store.file_lock` artık SÜREÇLER ARASIdır
+    # KİLİT: oku-değiştir-yaz. `store.file_lock` artık SÜREÇLER ARASIdır
     # (fcntl.flock), yani modülün başındaki "store kilidi süreç-içidir" uyarısının dayandığı
     # boşluk kapandı — CLI ile canlı worker aynı sırayı paylaşır. Süreç kontrolü (main) yine
     # durur: kilit yarışı önler, ama defteri iki farklı NİYETLE yeniden yazmayı önlemez.

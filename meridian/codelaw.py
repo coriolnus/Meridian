@@ -207,7 +207,7 @@ WRITE_CALLS = frozenset({"write_json", "write_jsonl", "append_jsonl", "update_js
 READ_CALLS = frozenset({"read_json", "read_jsonl"})
 
 # Kodda BAŞKA BİR MODÜLDEN doğrudan okuyucusu olmaması meşru olan artefaktlar. Beyan edilmemiş bir
-# "yazılıyor ama okunmuyor" artefaktı İHLALDİR — çünkü 2026-07-21'de tam olarak öyle bir dosya
+# "yazılıyor ama okunmuyor" artefaktı İHLALDİR — çünkü tam olarak öyle bir dosya
 # (yedi desenli bütünlük raporu) üretilip hiç okunmamıştı. Buradaki her satır bir KARARDIR, muafiyet
 # değil: ya tüketici bir ERİŞİMCİ FONKSİYON üzerinden dolaylıdır (statik tarama fonksiyon içindeki
 # okumayı yazan modüle sayar), ya dosya modülün KENDİ işletim durumudur (önbellek, alarm tekilleştirme,
@@ -344,8 +344,8 @@ DECLARED_SINKS: dict[str, str] = {
     # Bu dört artefaktın bugünkü tüketicisi adaptörlerin KENDİ CLI'ı ve v117 testleridir; loop/api/cf
     # bağlantısı SONRAKİ tura ertelendi. Erteleme bir üşenme değil, ÖLÇÜLMÜŞ bir gerekçe:
     #   * insider: rutin/fırsatçı sınıflaması 3 YILLIK bir geçmiş penceresi ister. FMP'nin
-    #     `insider-trading/search` ucu ücretsiz planda HTTP 402 döndüğü CANLI DOĞRULANDI
-    #     (2026-07-29), yani pencere ancak `/latest` akışının günlük birikmesiyle dolar. Bugün
+    #     `insider-trading/search` ucu ücretsiz planda HTTP 402 döndüğü CANLI DOĞRULANDI,
+    #     yani pencere ancak `/latest` akışının günlük birikmesiyle dolar. Bugün
     #     bağlanacak bir tüketici, `siniflanamadi` ile dolu bir dosyayı sinyal sanardı — dosyanın
     #     `kapsam.siniflama_hazir_mi` alanı tam da o bağlantının NE ZAMAN yapılabileceğini söyler.
     #   * shortinterest: "filtreli vs filtresiz" karşı-olgusal defterde ÖLÇÜLMEDEN bir kaçınma
@@ -385,7 +385,7 @@ DECLARED_SINKS: dict[str, str] = {
                                  "sinyal değil, kota tasarrufu için tutulan yardımcı defterdir",
 
     # NOT: `shadow_variants.jsonl` buradan ÇIKARILDI — beyan SÜRELİYDİ ve
-    # devri yazılıydı ("Hafta 3b `/api/diagnostics`e özeti bağladığı gün BU SATIR KALDIRILMALI").
+    # devri yazılıydı ("`/api/diagnostics`e özeti bağladığı gün BU SATIR KALDIRILMALI").
     # Devir yapıldı: `analytics.shadow_variant_summary()` defteri DIŞ bir modülden okuyor,
     # `/api/diagnostics` onu taşıyor, pano gölge-varyant kartını çiziyor (varyant başına son karar +
     # kümülatif ayrışma sayısı) ve defter `ledgers.CONTRACTS`e girdi. Muafiyet işi bittikten sonra
@@ -736,7 +736,7 @@ def artifact_graph(root: str = "meridian") -> dict:
     for name, rec in sorted(arts.items()):
         writers, readers = sorted(rec["writers"]), sorted(rec["readers"])
         # "başka bir modül okuyor mu?" — kendi yazdığını kendi geri okuyan modül tüketici sayılmaz;
-        # 2026-07-21'deki bütünlük raporu da kendi içinde tutarlıydı, eksik olan DIŞARIDAN okunmasıydı.
+        # O bütünlük raporu da kendi içinde tutarlıydı, eksik olan DIŞARIDAN okunmasıydı.
         external = sorted(set(readers) - set(writers))
         out[name] = {"writers": writers, "readers": readers, "external_readers": external,
                      "writer_sites": sorted(rec["writer_sites"]),

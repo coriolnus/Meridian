@@ -50,7 +50,7 @@ BACKOFF_BASE_S = 2.0             # 2, 4, 8 sn üstel geri çekilme
 SNAPSHOT_FILE = "massive_grouped_last.json"   # {date, fetched_at, bars:{T:{...}}} — süreçler arası tek çağrı
 VERIFY_FILE = "massive_verify.json"           # --dogrula ölçümünün SONUCU; write_enabled() bunu okur
 
-# --- TABAN ÖLÇÜMÜ: yazım kapısının dayandığı KANIT (Rol 1, 2026-07-29) -------------------------
+# --- TABAN ÖLÇÜMÜ: yazım kapısının dayandığı KANIT (Rol 1) -------------------------
 # Brief'in 2. maddesi "ayarlama (adjusted) tutarlılığı ÖLÇÜLECEK, varsayılmayacak" diyordu. Ölçümü
 # Rol 1 yaptı (operatör Massive'i Claude eklentisi olarak kurmuştu; MCP kanalı üzerinden canlı API).
 # Bu sabit, kapının HANGİ kanıta dayandığını koda yazar — kapı "öylesine açık" değil, ATIFLI ve
@@ -652,7 +652,7 @@ def write_enabled() -> bool:
         return taban        # ölçüm yok / yetersiz örneklem / ölçülemedi → ÇÜRÜTME DEĞİL, tabana dön
     if int(v.get("samples") or 0) < VERIFY_MIN_SAMPLES:
         return taban        # zayıf onay da çürütme değildir
-    # BAYATLIK ≠ ÇELİŞKİ (2026-07-29). İlk yazımda bayat ölçüm kapıyı KAPATIYORDU ve bu sessiz bir
+    # BAYATLIK ≠ ÇELİŞKİ. İlk yazımda bayat ölçüm kapıyı KAPATIYORDU ve bu sessiz bir
     # ZAMAN BOMBASIYDI: 30 gün sonra yazım modu kendiliğinden kapanır, zincir sembol-başına FMP'ye
     # döner ve kota yağmuru (250 istek/tazeleme) hiçbir şey değişmemiş gibi geri gelirdi — kimse de
     # sebebini bilmezdi. Ölçümün ESKİMESİ, ölçeklerin AYRIŞTIĞININ kanıtı değildir. Doğru davranış:

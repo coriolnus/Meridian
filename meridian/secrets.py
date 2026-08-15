@@ -61,7 +61,7 @@ ALLOWED: frozenset[str] = frozenset({
     # süresi dolunca adapter public HTML'e düşer, o da olmazsa evren REPLAY_UNIVERSE'e döner — hepsi
     # dürüst bozunma (adapters/finviz.py). Yalnız evreni genişletir; karar/kapı asla Finviz'e bakmaz.
     "FINVIZ_API_KEY",
-    # 2026-07-29: Massive EOD bar sağlayıcısı. TEK grouped çağrısı TÜM ABD piyasasının o günkü
+    # Massive EOD bar sağlayıcısı. TEK grouped çağrısı TÜM ABD piyasasının o günkü
     # barlarını verir — bugünkü "sembol başına 1 FMP isteği" yağmurunu (250 istek = FMP günlük
     # kotasının tamamı, canlı kanıt state/fmp_usage.json) 1 isteğe indirir. YOKKEN adaptör dürüstçe
     # devre dışı ve zincir FMP→Cboe→Nasdaq ile aynen sürer (adapters/massive.py). Anahtar girilse

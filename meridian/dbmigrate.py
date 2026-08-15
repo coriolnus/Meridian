@@ -138,7 +138,7 @@ def plan() -> dict:
 def db_state() -> list[dict]:
     """DB'deki varlıkların CANLI sayaçları (iddia değil, tablodan sayım).
 
-    ŞEMA KURMAZ (C4, 2026-08-02). Eskiden `connect(create=True)` + `ensure_schema(c)` çağırıyordu;
+    ŞEMA KURMAZ. Eskiden `connect(create=True)` + `ensure_schema(c)` çağırıyordu;
     yani SALT-OKUMA diye çağrılan bir rapor, DB dosyasını yaratıp şemayı KALICI COMMIT ediyordu.
     İki sonucu vardı: (1) `plan()` "hiçbir bayt yazılmaz, DB açılmaz" diye beyan ederken bu yoldan
     geçtiğinde tam tersini yapıyordu, (2) `apply()`in şemayı transaction'ın İÇİNE alan düzeltmesi
@@ -163,7 +163,7 @@ def db_state() -> list[dict]:
 
 # ---- BAŞARISIZ MİGRASYONDAN SONRA: DB'Yİ KENARA AL ---------------------------------------------
 def _karantina(rapor: dict, db_yeni: bool, sebep: str) -> None:
-    """Bu koşuda DOĞAN DB'yi `meridian.db.failed-<ts>` diye kenara al ve BEYAN ET (C4, 2026-08-02).
+    """Bu koşuda DOĞAN DB'yi `meridian.db.failed-<ts>` diye kenara al ve BEYAN ET.
 
     NEDEN GEREKLİ. Şema artık migrasyon transaction'ının içinde kurulduğu için geri alma onu da
     götürür ve `active()` zaten False döner — ama geride ŞEMASIZ bir `meridian.db` DOSYASI kalır.

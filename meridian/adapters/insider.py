@@ -42,7 +42,7 @@ SAYFA_LIMIT = 100            # FMP sayfa boyu — ÜCRETSİZ PLANIN TAVANI (limi
 VARSAYILAN_SAYFA_TAVANI = 40 # soğuk koşuda kotayı bölmek için (ÜCRETLİ plan varsayımı — bkz. aşağı)
 DEFTER_TAVANI = 60_000       # defter satır tavanı (en yenileri tutulur) — dosya sınırsız büyümesin
 
-# ---- ÜCRETSİZ PLANIN ÖLÇÜLMÜŞ SINIRLARI (Rol 1 canlı sondajı, 2026-07-30) ------------------------
+# ---- ÜCRETSİZ PLANIN ÖLÇÜLMÜŞ SINIRLARI (Rol 1 canlı sondajı) ------------------------
 # TAHMİN DEĞİL, SONDA: dört sınır da canlı istekle doğrulandı. Buraya yazılmalarının sebebi, otonom
 # kadansın tavanını BU DOSYADAN türetmesi — sayı çağıranda sabitlenirse iki yerde iki tavan olur ve
 # biri güncellenmez (bu deponun tekrar eden hatası).
@@ -57,7 +57,7 @@ DEFTER_TAVANI = 60_000       # defter satır tavanı (en yenileri tutulur) — d
 #     Bu, "parametre kabul edildi" ile "parametre uygulandı"nın ayrı şeyler olduğunun canlı örneği.
 PLAN_SAYFA_TAVANI = 1        # ücretsiz planda ÇALIŞAN tek sayfa: page=0
 #
-# "GÜNLÜK BİRİKTİRMEYLE 3 YIL DOLAR" — ÖLÇÜLMEMİŞ BİR UMUTTUR (2026-07-30, dürüstlük düzeltmesi).
+# "GÜNLÜK BİRİKTİRMEYLE 3 YIL DOLAR" — ÖLÇÜLMEMİŞ BİR UMUTTUR (dürüstlük düzeltmesi).
 # Bu dosyanın başlığı ve `codelaw.DECLARED_SINKS`teki erteleme gerekçesi, sınıflama penceresinin
 # `/latest` akışının günlük birikmesiyle dolacağını söylüyor. O cümle bir ÖLÇÜM değil bir UMUTTU ve
 # Rol 1'in sondası neden şüpheli olduğunu gösterdi: günde TEK sayfa = en yeni ~100 dosyalama ve
@@ -84,7 +84,7 @@ ALAN_ADAYLARI: dict[str, tuple[str, ...]] = {
     "yon_bayragi":   ("acquisitionOrDisposition", "acquistionOrDisposition", "acquiredDisposed"),
 }
 # Sağlayıcının verdiği ama kanonik satıra girmeyen, BİLİNEN ve zararsız alanlar (canlı yanıttan
-# doğrulandı 2026-07-29). Teşhis bunları "bilinmeyen alan" saymaz.
+# doğrulandı). Teşhis bunları "bilinmeyen alan" saymaz.
 _BEKLENEN_EKSTRA = {"link", "url", "securityName", "formType", "companyCik", "reportingCik",
                     "totalValue", "directOrIndirect"}
 # TEŞHİSİN ÖLÇTÜĞÜ ŞEY: ŞEMA SÜRÜKLENMESİ (tanımadığımız BİR ALAN ADI) — "bilinen alan ama bu

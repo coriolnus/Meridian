@@ -237,7 +237,7 @@ def temiz_taban(getiriler, olay_gunleri, pencere) -> dict:
 
 
 # ==================================================================================================
-# OLAY-DIŞI KIYAS — `temiz_taban`ın GÜN BAZLI ikizi (WP-M, 2026-08-02)
+# OLAY-DIŞI KIYAS — `temiz_taban`ın GÜN BAZLI ikizi
 # ==================================================================================================
 # NEDEN AYRI BİR FONKSİYON. `temiz_taban` tek bir HAVUZ döndürür: "olay penceresine değmemiş tüm
 # satırlar". Ders #3 ise tabanı AYNI GÜNÜN evreninde ister — çünkü havuz tabanı, olay günlerinin
@@ -436,7 +436,7 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
 
 
 # ==================================================================================================
-# 2B — BLOK-BOOTSTRAP CI STANDARDI (WP-M, 2026-08-02)
+# 2B — BLOK-BOOTSTRAP CI STANDARDI
 # ==================================================================================================
 # NEDEN BLOK, NEDEN IID DEĞİL. Zaman serisi gözlemleri bağımsız DEĞİLDİR: getiriler kümelenir
 # (volatilite kümelenmesi), kayıplar seri hâlinde gelir, aynı rejimdeki günler birlikte hareket
@@ -444,7 +444,7 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
 # DAR gösterir — yani aralık, ölçülmemiş bir kesinlik yazar. Bu tek yönlü bir hatadır: IID daima
 # "daha anlamlı" görünür, hiçbir zaman daha az. Bu yüzden IID bir tercih değil, bir HATA SINIFIDIR.
 #
-# DEPODAKİ CANLI KANIT (analytics, 2026-07-30, n=95): işlem başına ortalama $ için IID aralık
+# DEPODAKİ CANLI KANIT (analytics, n=95): işlem başına ortalama $ için IID aralık
 # [−116,86, −0,00] sıfırı KIL PAYI dışarıda bırakıyordu ("kaybettiğimiz kanıtlandı"), blok aralığı
 # [−137,75, +14,53] ise sıfırı İÇERİYOR ("n=95'te henüz kanıtlanmadı"). Aynı defter, iki hüküm.
 #
@@ -575,7 +575,7 @@ def blok_bootstrap_ci(seri, blok: int | None = None, n_ornek: int = BOOTSTRAP_N,
 
 
 # ==================================================================================================
-# 2C — EMPİRİK-BAYES KÜÇÜLTME (SE tabanlı; WP-M, 2026-08-02)
+# 2C — EMPİRİK-BAYES KÜÇÜLTME (SE tabanlı)
 # ==================================================================================================
 # NEDEN VAR — EN İYİ HÜCRE SEÇİM YANLILIĞI ("kazananın laneti"). Çok hücreli bir kart özeti (K
 # grid'i: bileşen × ufuk, rejim × kurulum, eşik × pencere) hücrelerin HAM tahminlerini yazar ve
@@ -737,7 +737,7 @@ def eb_kucult(etkiler, seler, min_hucre: int = EB_MIN_HUCRE) -> dict:
 
 
 # ==================================================================================================
-# KOD-SÜRÜMÜ DAMGASI (WP-M, 2026-08-02)
+# KOD-SÜRÜMÜ DAMGASI
 # ==================================================================================================
 # NEDEN VAR. Bir ölçüm raporu okunurken sorulan ilk soru "bu sayı hangi kodla üretildi?"dir ve bu
 # soru bugüne kadar hiçbir raporun İÇİNDE cevaplanmıyordu. Cevap dışarıda (dosya tarihi, oturum

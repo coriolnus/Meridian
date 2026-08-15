@@ -208,7 +208,7 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
 
     def _marks_open():
         # AÇILIŞ MARKI (replay `marks_open_on`): açılış fazının sermayesi D'nin KAPANIŞIYLA
-        # işaretlenirse devre kesici/kısma/boyutlandırma sabahtan öğleden sonrayı bilir (denetim #1).
+        # işaretlenirse devre kesici/kısma/boyutlandırma sabahtan öğleden sonrayı bilir.
         out = {}
         for t in b.positions:
             bar = _bar_on(bars_of(t), d)

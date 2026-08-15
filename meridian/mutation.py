@@ -353,7 +353,7 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # yakalandı" diye okunur. Düşen bir dedektör jetonu, çöken bir dedektörü YAKALAMA sayardı ve
     # kapsama sayısını yukarı çekerdi — bu modülün ilk tasarım kararının (sayıyı şişirmek ölçümü
     # yalana çevirir) tam tersi. Ölçülemeyen ölçülemedi kalır, AYRI raporlanır.
-    # AİLE TÜRETİLİR, ELLE YAZILMAZ (2026-08-13). Burada yedi adlık SABİT bir tuple duruyordu ve
+    # AİLE TÜRETİLİR, ELLE YAZILMAZ. Burada yedi adlık SABİT bir tuple duruyordu ve
     # `watchdog._DEDEKTOR_BOS`un ikinci, elle bakımlı bir kopyasıydı: 8. dedektör (`divergence`)
     # eklendiğinde bu liste SESSİZCE geride kalır, düşen bir dedektör "düşmedi" sayılır ve körlük
     # haritası yalan söylerdi — üstelik bu bloğun kendi gerekçesi tam olarak o yalana karşı yazılmış.
@@ -396,7 +396,7 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
         for pr in rep["parity"].get("rows", []):
             if not pr.get("ok"):
                 red.add(f"parity:{pr['check']}")
-    if "divergence" not in dustu:      # 8. desen (2026-08-13): olgu-başına jeton, akranlarıyla aynı
+    if "divergence" not in dustu:      # 8. desen: olgu-başına jeton, akranlarıyla aynı
         for dv in rep.get("divergence", {}).get("ayrik", []):
             red.add(f"divergence:{dv['olgu']}")
 
@@ -778,7 +778,7 @@ def format_report(res: dict) -> str:
         for m, d in sorted(_ol.items()):
             L.append(f"  ! {m:38s} → {', '.join(f'{k} ({v})' for k, v in sorted(d.items()))}")
     else:
-        # SAYI TÜRETİLİR (2026-08-13): burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
+        # SAYI TÜRETİLİR: burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
         # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, kapatılan pano
         # başlığının kardeşi. Aile üreticiden okunur.
         from . import watchdog as _wd_ad

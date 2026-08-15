@@ -85,7 +85,7 @@ _FAILS: dict[str, list[float]] = {}
 def _auth_file() -> Path:
     """Kimlik dosyasının yolu — HER ÇAĞRIDA yeniden çözülür, modül düzeyinde DONDURULMAZ.
 
-    NEDEN FONKSİYON (2026-07-29): burası `AUTH_FILE = config.STATE / "auth.json"` idi, yani yol
+    NEDEN FONKSİYON: burası `AUTH_FILE = config.STATE / "auth.json"` idi, yani yol
     `import meridian.auth` ANINDA bağlanıyordu. `config.STATE`i SONRADAN yönlendiren her çağıran —
     test sandbox'ı, `MERIDIAN_ROOT` ile ikinci bir kök, bir kurtarma kopyası — auth'un hâlâ ESKİ
     dizini okuduğunu HİÇBİR YERDE göremiyordu. Somut bedeli: sandbox'lı testler kendi state

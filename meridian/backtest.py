@@ -668,7 +668,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
     law. Annualization uses the SEGMENT's calendar length (not the trade cluster's span), and drawdown
     folds in the daily mark-to-market curve when provided.
 
-    --- FORMÜLÜN DÜZ-YAZI AÇIKLAMASI (Hafta 3a "ölçünün ölçümü" raporu, 2026-07-30) ---
+    --- FORMÜLÜN DÜZ-YAZI AÇIKLAMASI ---
 
     Bu fonksiyon `score.score_detail`e delege eder; kapının BÜYÜKLÜK yasasının okuduğu `oos_score`
     oradan gelir ve şudur:
@@ -697,7 +697,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
     Yani kapının BÜYÜKLÜK yasası fiilen bir DÜŞÜŞ+DÜZGÜNLÜK yasasıdır; kâr terimi, ölçek
     seçiminden (aylık %7 hedef × 30/span indirgemesi) dolayı kendi aralığının ~1/20'sine
     sıkıştırılmıştır. Bir aday, kârı artırıp düşüşü ya da Sharpe'ı hafifçe bozarak bu skorda
-    KAYBEDEBİLİR — ROADMAP §3.1'in "büyüklük yasası revizyonu gerekir mi?" sorusunun sayısal
+    KAYBEDEBİLİR — "büyüklük yasası revizyonu gerekir mi?" sorusunun sayısal
     zemini budur. (Bu bir HATA raporu değil ÖLÇÜM: yasa bilinçli olarak risk-ağırlıklıdır; ölçülen
     şey, o ağırlığın nominal 0,3+0,2 değil fiilen ~0,88 olduğudur.)
 

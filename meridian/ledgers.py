@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from . import store
 
 # Plan kimliği: canlı döngü, backtest ve cf_backfill'in ORTAK anahtarı. Bu formatın dışındaki bir
-# kimlik, cf↔gerçek birleştirmesini imkânsız kılar (2026-07-21'de tam olarak bu oldu).
+# kimlik, cf↔gerçek birleştirmesini imkânsız kılar (canlıda tam olarak bu oldu).
 PLAN_ID_RE = re.compile(r"^P-\d{4}-\d{2}-\d{2}-.+")
 CF_ID_RE = re.compile(r"^CF-\d{4}-\d{2}-\d{2}-.+")
 
@@ -87,12 +87,12 @@ CONTRACTS: dict[str, Contract] = {
     # G2 ALAN ADI KANONİKLEŞTİRME. 2026-07-29'da deftere üç G2 alanı eklendi
     # (`rvol20`, `mom_12_1`, `rmom`) ve ad dikişi AYNI GÜN ayrıştı: defter `mom_12_1` yazıyor
     # (strategy.py:137), component_ic raporu `mom12_1` kullanıyor (component_ic.py:102). ledgers.py
-    # 2026-07-21'de TAM BU "takma ad" hastalığı için kurulmuştu, ama candidates sözleşmesi ne
+    # TAM BU "takma ad" hastalığı için kurulmuştu, ama candidates sözleşmesi ne
     # alanları ne alias'ı beyan ediyordu — yani kurulma sebebi olan hata kendi kapsamı dışında
     # yeniden açıldı.
     #
     # KANONİK AD = DEFTERİN ADI (`mom_12_1`): sözleşmenin konusu DİSKTEKİ satırdır, ve diskte 10
-    # satırda `mom_12_1` var (canlı sayım 2026-07-30: rvol20 10/2 non-null, mom_12_1 10/2,
+    # satırda `mom_12_1` var (canlı sayım: rvol20 10/2 non-null, mom_12_1 10/2,
     # rmom 10/0). component_ic'in `mom12_1`'i RAPOR tarafının yazımıdır; alias olarak beyan edilir,
     # böylece bir yazar yarın rapor yazımıyla deftere yazarsa validate_row onu SESSİZ değil İHLAL
     # olarak görür. Yeniden adlandırma bilinçli olarak YAPILMADI: iki canlı yüzey de üretimde.
@@ -155,7 +155,7 @@ CONTRACTS: dict[str, Contract] = {
     # `sharpe_gozlem` de zorunlu: DSR'nin deneme-varyansı bu alandan ÖLÇÜLÜR; eksikse hesap
     # gürültülü null yaklaşımına düşer ve bunun neden olduğu görünmez kalırdı.
     # GÖLGE-VARYANT DEFTERİ SÖZLEŞMEYE GİRİYOR. Sadeleştirme turu bu defteri
-    # `codelaw.DECLARED_SINKS`e SÜRELİ bir beyanla koymuştu ("pano/api tüketicisi Hafta 3b'ye
+    # `codelaw.DECLARED_SINKS`e SÜRELİ bir beyanla koymuştu ("pano/api tüketicisi sonraki tura
     # devredildi"). Devir BU TURDA yapıldı: tüketici artık api `/api/diagnostics` → pano gölge-varyant
     # kartı, beyan satırı KALDIRILDI. Sözleşme o devrin ikinci yarısıdır — defterin ALANLARI da
     # yazılı olmalı, yoksa `trades.jsonl`ın `setup`/`score` dersi burada yeniden yaşanır.
@@ -265,7 +265,7 @@ CONTRACTS: dict[str, Contract] = {
              "(oos_erosion.arsivle — içerik değişmez, yalnız etiket eklenir)"),
     # İKİ İNTRADAY DEFTERİ SÖZLEŞMEYE GİRİYOR. Faz 4a/4b defterleri bugüne kadar
     # sözleşme yasasının TAMAMEN dışındaydı: `watchdog.parity_report` yalnız CONTRACTS'ı gezer, ve
-    # CONTRACTS 8 eski defterle sınırlıydı. Yani 2026-07-21'de yedi hatayı doğuran "sözleşmesiz
+    # CONTRACTS 8 eski defterle sınırlıydı. Yani yedi hatayı doğuran "sözleşmesiz
     # defter" deseni en YENİ iki defterde aynen yeniden açıktı.
     #
     # ÜÇ DAMGA — İDDİANIN CANLI DENETÇİSİ: intraday_shadow.py:241 "as_of >= close_ts sonradan
@@ -336,7 +336,7 @@ CONTRACTS: dict[str, Contract] = {
              "'ölçülemedi'ye GERİ ALINIRDI (kart EXE-2026-003 kill#4)"),
 
     # AJAN TELEMETRİSİ + HAM İZ. İki defter DOĞUŞTA sözleşmeye giriyor:
-    # 2026-07-21'in yedi hatasının altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
+    # O yedi hatanın altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
     # defterde (4a/4b) bir kez daha açılmıştı — üçüncü kez açılmasın diye alanlar burada, defterin
     # ilk satırı yazılmadan önce çivilendi.
     "agent_calls.jsonl": Contract(
@@ -465,7 +465,7 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
 
     İKİ VARSAYIM, İKİSİ DE ÖLÇÜLDÜ: (1) sabit tablosu modül DOSYA ADIYLA anahtarlanır ve ağaçta
     `__init__.py` dışında yinelenen dosya adı YOKTUR (yinelense, iki farklı alt paketin aynı adlı
-    sabiti karışırdı); (2) maliyet — soğuk tarama 0,625 sn (ölçüm 2026-08-09; ikinci ast.walk
+    sabiti karışırdı); (2) maliyet — soğuk tarama 0,625 sn (ölçüldü; ikinci ast.walk
     içeri-import'ları da görsün diye eklendi, `tree.body` taraması onları kaçırırdı), sıcak yol
     önbellekten ~1 ms. Önbellek damgası kaynak mtime'ı olduğu için ölçüm yalnız kod değişince
     yeniden ödenir."""

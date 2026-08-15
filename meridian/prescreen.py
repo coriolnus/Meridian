@@ -313,7 +313,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             "tail_delta": kuyruk, "tail_ok": gate.get("tail_ok"),
             "gate_law": gate.get("gate_law"), "k_probes": gate.get("k_probes"),
             "passes": bool(passes), "why": why, "margin": gate.get("margin"),
-            # ---- PARA-v3 (2026-07-30): ÖN-ELEME ARTIK YASANIN GERÇEK SAYILARINI KAYDEDER ----
+            # ---- PARA-v3: ÖN-ELEME ARTIK YASANIN GERÇEK SAYILARINI KAYDEDER ----
             # Bu satır bugüne dek yalnız BİLEŞİK `oos_score` farkını (`delta`) yazıyordu. O sayı
             # artık kapının KARAR değişkeni DEĞİL — bir RAPOR metriği. Kaydı olduğu gibi bırakmak,
             # ölçüm aracının yasadan geri kalması olurdu: rapor "Δ −0,03 → geçmez" der, oysa hüküm
@@ -321,7 +321,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             # (modül başlığındaki "ölçüm aracı turdan tura değişmesin" ilkesinin ta kendisi —
             # değişen ölçüm aracı değil YASA olduğunda araç ONU izlemek zorundadır).
             "yasa_surumu": gate.get("yasa_surumu"),
-            # PENCERE DAMGASI (HOLDOUT ROTASYONU R1, 2026-07-30): ön-eleme satırları tur raporlarına
+            # PENCERE DAMGASI (HOLDOUT ROTASYONU R1): ön-eleme satırları tur raporlarına
             # elle taşınıyor ve orada başka turların sayılarıyla yan yana duruyor. Damgasız bir satır,
             # R0'da ölçülmüş bir Δ'yı R1 Δ'sıyla kıyaslamayı DAVET eder — pencere kimliği satırın
             # kendisinde durmak zorunda (rapor envelope'undaki `pencereler` bloğu satır kopyalanınca
@@ -366,7 +366,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         "adaylar": sonuc, "guard_reddi": reddedilen,
         "pencereler": {"is_start": w[0], "oos_start": w[1], "oos_end": w[2], "holdout_end": w[3],
                        "folds": w[4], "embargo_days": w[5],
-                       # PENCERE KİMLİĞİ + HABERSİZ KIYAS YASAĞI raporun İÇİNDE (R1, 2026-07-30):
+                       # PENCERE KİMLİĞİ + HABERSİZ KIYAS YASAĞI raporun İÇİNDE (R1):
                        # tarihler zaten yazılıydı ama "bu tarihler hangi rotasyon" ve "eski
                        # sayılarla kıyaslanamaz" cümleleri yazılı DEĞİLDİ — raporu okuyanın o
                        # çıkarımı kendi yapmasını beklemek, tam olarak habersiz kıyasın yolu.

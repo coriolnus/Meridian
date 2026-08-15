@@ -48,7 +48,7 @@ ALARM_ARMING_READY = "ARMING_READY"        # silahlanma eşiği karşılandı �
 # yetkinin GERİ ALINMASI, sessizce alınırsa "danışman hâlâ konuşuyor" sanılır.
 ALARM_AUTHORITY = "AUTHORITY_CHANGE"       # bir mekanizmanın yetkisi açıldı/geri alındı
 # SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ. goal.yaml `failure_below` hükmünü ("30g getiri bu
-# eşiğin altına düşerse deney BAŞARISIZ") tanımlandığı 2026-07-14'ten beri hiçbir kod ölçmüyordu:
+# eşiğin altına düşerse deney BAŞARISIZ") tanımlandığından beri hiçbir kod ölçmüyordu:
 # score.py hedef tarafını (target_return_30d/max_drawdown/min_sharpe) composite'e katıyor, failure
 # tarafını asla okumuyordu. Deney başarısız olsa bunu söyleyecek tek satır kod yoktu. Bu kendi
 # sınıfıdır: DATA_QUALITY "veri bozuk" der, MECHANISM_STALE "mekanizma üretmiyor" der — ikisi de
@@ -65,7 +65,7 @@ ALARM_GOAL_FAILURE = "GOAL_FAILURE"        # realized_30d < goal.failure_below �
 # ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu
 # kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır.
 ALARM_NAKED_POSITION = "NAKED_POSITION"    # açık pozisyonun broker'da canlı koruyucu stop'u YOK
-# ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (İŞ-3b; P-2026-08-07-VLO vakası). Aday
+# ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (P-2026-08-07-VLO vakası). Aday
 # alternatif MIRROR_DRIFT'in yeni bir `drift_sinifi` değeriydi ve ÜÇ ölçülmüş gerekçeyle REDDEDİLDİ:
 # (1) N1 emsali birebir — `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa): gürültülü bir
 #     mutabakat gecesinde adet-sapması MIRROR_DRIFT'leri pencereyi doldurur ve "operatörün onayladığı

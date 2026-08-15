@@ -63,7 +63,7 @@ def _market_regime(trades: list) -> str:
     return "|".join(regs) if regs else "unknown"
 
 
-# ---- KARAR GİRDİSİ: LIKE-FOR-LIKE mi, ESKİ ASİMETRİK YOL mu? (2026-07-29) ---------------------
+# ---- KARAR GİRDİSİ: LIKE-FOR-LIKE mi, ESKİ ASİMETRİK YOL mu? ---------------------
 # Geri-alma kararının İKİ olası girdisi var ve hangisinin kullanıldığı KARAR KAYDINA damgalanır:
 #   * `like_for_like_replay_v1` — ebeveyn parametreleri çocuğun canlı döneminde replay edildi;
 #     iki taraf da `backtest.segment_score` ile AYNI pencerede puanlandı (bkz. baseline modülü).

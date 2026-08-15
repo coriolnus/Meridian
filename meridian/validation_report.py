@@ -98,11 +98,11 @@ def render_text() -> str:
     sc = r["score_calibration"]
     if sc:
         L.append(f"2) SKOR KALİBRASYONU: rank-IC {sc['rank_ic']} (n={sc['n']}) · monoton mu: {sc.get('monotone_hint')}")
-        # AYRIŞTIRMA (2026-07-26): tek satırlık havuzlanmış IC, 22:1 cf ağırlığıyla gerçek işlemlerin
+        # AYRIŞTIRMA: tek satırlık havuzlanmış IC, 22:1 cf ağırlığıyla gerçek işlemlerin
         # sinyalini görünmez kılıyordu. İki popülasyon AYRI raporlanır; hüküm gerçek dilimindir.
         _r, _c = sc.get("real"), sc.get("cf")
         if _r or _c:
-            # `se_yontem` KÜNYESİ BASILIR (2026-07-26): analytics onu YAZIYOR ama hiçbir okuyucusu
+            # `se_yontem` KÜNYESİ BASILIR: analytics onu YAZIYOR ama hiçbir okuyucusu
             # yoktu (yasa 6). Alan boş bir etiket değil, anlamlılık iddiasının DAYANAĞI: standart
             # hata i.i.d. VARSAYIMIYLA hesaplanıyor. Gerçek işlemler güne/ticker'a kümelenmişse o
             # varsayım iyimserdir ve "anlamlı" damgası olduğundan dar bir aralıktan gelir —

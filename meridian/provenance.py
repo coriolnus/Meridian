@@ -183,7 +183,7 @@ class oturum:
     """YENİDEN-GİRİŞLİ ÖLÇÜM. İç içe bir ölçüm (ör. dedektörün kendi testi) DIŞTAKİNİ ezmemeli.
     Canlıda yaşandı: test fikstürü `basla()` çağırınca oturum boyu biriken 145 bin satırlık ölçüm
     sıfırlandı ve paket sonundaki rapor "1 artefakt" dedi. Bir bekçi, ölçtüğü şeyi perturbe
-    etmemeli — kendi kendini de (2026-07-22)."""
+    etmemeli — kendi kendini de."""
 
     def __enter__(self):
         self._sn = _anlik()

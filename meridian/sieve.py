@@ -167,7 +167,7 @@ def report(doc: dict | None = None) -> dict:
         out_stages[name] = {"in": n_in, "out": n_out, "drops": drops, "sema_drops": sema_n,
                             "piyasa_drops": piyasa_n, "sema_frac": frac, "ts": st.get("ts")}
         top = max(drops.items(), key=lambda kv: kv[1])[0] if drops else "—"
-        # KURT MASALI YASAĞI (2026-07-22): tamamı ELENDİ ama elemelerin HEPSİ `piyasa:` ise bu
+        # KURT MASALI YASAĞI: tamamı ELENDİ ama elemelerin HEPSİ `piyasa:` ise bu
         # "veri elendi" (bug) DEĞİL, "bu kanıt türü henüz yok" (bilgi) demektir — replay'de LLM
         # görüşü ya da canlı gölge-tahmin çifti bulunmaması gibi. Sınıfa bakmadan kırmızı yakmak,
         # tam olarak sieve'in engellemek için var olduğu şeydir: operatör kırmızıyı yok saymayı
