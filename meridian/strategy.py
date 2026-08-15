@@ -296,6 +296,8 @@ def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars
 
 @dataclass(frozen=True)
 class EntrySignal:
+    """Sinyal barında üretilen GİRİŞ SİNYALİ — donmuş (frozen) kayıt: pivot/stop/ATR/skor ve skor
+    bileşenleri. Ölçülemeyen bileşen None kalır (0.0 DEĞİL — uydurma yasağı)."""
     ticker: str
     setup: str
     entry_trigger: float      # reference price at the signal bar's close
@@ -324,6 +326,8 @@ class EntrySignal:
     turnover21: Optional[float] = None
 
     def as_row(self) -> dict:
+        """Sinyali deftere yazılacak düz sözlüğe çevirir (fiyat alanları yuvarlı). Bileşen alanları HER
+        satırda bulunur; ölçülemeyen None olarak yazılır — "eksik alan" ile "ölçülemedi" karışmasın."""
         return {
             "ticker": self.ticker, "setup": self.setup, "pivot": round(self.pivot, 4),
             "stop": round(self.stop, 4), "atr": round(self.atr, 4), "rs_rating": self.rs_rating,
@@ -340,6 +344,7 @@ class EntrySignal:
 
 
 def _f(params: dict, key: str, default: float) -> float:
+    """Parametre sözlüğünden bir düğmeyi float olarak okur; anahtar yoksa verilen varsayılana düşer."""
     return float(params.get(key, default))
 
 
@@ -1090,6 +1095,7 @@ def scan_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int, ticker: s
 
 @dataclass
 class ManageDecision:
+    """Bir barlık pozisyon yönetimi kararı: şimdi çıkılacak mı, çıkış nedeni ve GEVŞEMEYEN takip stopu."""
     exit_now: bool
     exit_reason: Optional[str]
     trail_stop: float          # updated trailing stop level (never loosens)
