@@ -94,9 +94,9 @@ HYP_SCHEMA = {
                            "on a strong one, from skill_library performance. Advisory (operator applies).",
             "properties": {
                 "skill": {"type": "string", "description": "a name from skill_library (never a protected one)"},
-                # 2026-08-13 (v238): enum ARTIK TÜRETİLİR. Elle yazılı üçlü, `skills` tarafındaki
+                # 2026-08-13: enum ARTIK TÜRETİLİR. Elle yazılı üçlü, `skills` tarafındaki
                 # uygulayıcı kümesiyle sessizce ayrışmıştı ve "Uygula" düğmesi bu ayrışmadan
-                # ölüyordu. Sıra korunur (v106 çivisi): tuple sıralı, `list()` onu bozmaz.
+                # ölüyordu. Sıra korunur (çivi): tuple sıralı, `list()` onu bozmaz.
                 "action": {"type": "string", "enum": list(_skills.ONERILEBILIR_EYLEMLER)},
                 "rationale": {"type": "string"},
             },
@@ -377,46 +377,46 @@ def propose_with_claude() -> dict | None:
 
 
 # ================= ÇOK-SAĞLAYICILI BEYİN (Nous Hermes · Gemini · Claude · deterministik) =================
-# Operatör isteği (2026-07-19): beyin Nous hermes-agent'a ve OAuth'lu Gemini'a bağlanabilsin. MİMARİ YASA
+# Operatör isteği: beyin Nous hermes-agent'a ve OAuth'lu Gemini'a bağlanabilsin. MİMARİ YASA
 # DEĞİŞMEZ: hangi LLM konuşursa konuşsun yalnızca ÖNERİR — tek değişken, OOS walk-forward kapısı, ufuk
 # koruması ve rollback aynen kalır. "Sürekli kendini güncelleyen döngü" bu kapılı yansıma döngüsüdür;
 # beyin takılabilir, yasa takılabilir değil. Zincir: HERMES_BRAIN_ORDER sırasıyla anahtarı hazır olan ilk
 # sağlayıcı; hata/boş cevapta zincir bir sonrakine düşer; hiçbiri yoksa ücretsiz deterministik önerici.
 NOUS_DEFAULT_ENDPOINT = "https://inference.nousresearch.com/v1"
 NOUS_DEFAULT_MODEL = "Hermes-4-405B"
-# SABİT ALIAS (2026-08-12, canlı 404 vakası): anahtar SAĞLAMKEN (models-list HTTP 200) üretim
+# SABİT ALIAS (canlı 404 vakası): anahtar SAĞLAMKEN (models-list HTTP 200) üretim
 # çağrısı 404 veriyordu — canlı ajan config'indeki `gemini-3.5-flash` Google listesinden KALKMIŞTI
 # ve buradaki eski çıplak ad (`gemini-3.1-pro`) o listede HİÇ yoktu (yalnız `-preview` türevi).
 # Google sürüm adlarını döndürüyor (resmî örnekler 3.6-flash'a geçti); çıplak sürüm adına
-# çivilenmek aynı 404 sınıfını yeniden üretir. Operatör tercihi (2026-07-19: "gemini 3.1 pro
+# çivilenmek aynı 404 sınıfını yeniden üretir. Operatör tercihi ("gemini 3.1 pro
 # olmalı") ALIAS ÜZERİNDEN KORUNUR: `gemini-pro-latest` bu yazım anında `gemini-3.1-pro-preview`ı
 # gösteriyor ve Google modeli yeniledikçe alias'la birlikte taşınır. Pano metni K1 gereği bu
 # sabitten türetilir (api.api_secrets → model_defaults), elle senkron gerekmez.
 GEMINI_DEFAULT_MODEL = "gemini-pro-latest"
-# BİLİNEN-ÖLÜ AD GÖÇÜ HARİTASI (2026-08-12): yerel hermes-agent config'inde (model.default) DURAN
+# BİLİNEN-ÖLÜ AD GÖÇÜ HARİTASI: yerel hermes-agent config'inde (model.default) DURAN
 # ölü bir ad kendi kendine iyileşmez — `config_ensure_integrations` bu haritayla sabit alias'a
 # çevirir ve OLAYLAR (`gemini_dead_model_migrated`; sessiz değiştirme YASAK). Harita YALNIZ
 # bilinen-ölü adları taşır; TANINMAYAN adlar SERBEST GEÇER (elimizdeki model listesi kesitti ve
 # gelecekteki geçerli adlar — ör. gemini-3.6-flash — kırılmamalı). Rol eşleşmesi korunur:
 # hızlı-görev (flash) → flash alias'ı, pro → pro alias'ı.
 GEMINI_DEAD_MODEL_MAP = {
-    "gemini-3.5-flash": "gemini-flash-latest",   # canlı config'teki ölü ad (üretim 404, 2026-08-12)
+    "gemini-3.5-flash": "gemini-flash-latest",   # canlı config'teki ölü ad (üretim 404)
     "gemini-3.1-pro": "gemini-pro-latest",       # eski repo varsayılanı — listede yalnız -preview var
 }
 
 # ==================================================================================================
 # GÖÇ TEK YOLU KAPATIYORDU — ÇAĞRI ANI AÇIKTA KALDI (2026-08-13, canlı ölçüm)
 # --------------------------------------------------------------------------------------------------
-# ÖLÇÜLEN ARIZA: `GEMINI_DEFAULT_MODEL` DOĞRU (`gemini-pro-latest`), v235 göçü de doğru çalışıyor —
+# ÖLÇÜLEN ARIZA: `GEMINI_DEFAULT_MODEL` DOĞRU (`gemini-pro-latest`), göç de doğru çalışıyor —
 # ama canlıda BUGÜNKÜ 20 `agent_call` olayının hepsi `model="gemini-3.5-flash"` taşıyor. Sebep
 # izlendi: `_agent_call` model zincirini `GEMINI_DEFAULT_MODEL`den DEĞİL, SIRLARDAN kuruyor
 # (`NOUS_MODEL` → `NOUS_FALLBACK_MODEL`, aşağıda `_nous_model_zinciri`) ve seçilen ad CLI'ya
-# `--model` ile geçiliyor (`_agent_chat_cmd`). v235'in göçü YALNIZ `~/.hermes/config.yaml`ın
+# `--model` ile geçiliyor (`_agent_chat_cmd`). Göç YALNIZ `~/.hermes/config.yaml`ın
 # `model.default` alanını onarıyordu (`config_ensure_integrations`) — sır tarafına HİÇ bakmıyordu.
 # Yani "ölü ad kendi kendine iyileşmez" dersi bir yolda öğrenilmiş, ikizi açık bırakılmıştı.
 #
 # İKİ KATMANLI ONARIM:
-#   (1) YAPILANDIRMA ANI  — `config_ensure_integrations` (v235, DURUYOR): config'teki ölü adı göçürür.
+#   (1) YAPILANDIRMA ANI  — `config_ensure_integrations` (DURUYOR): config'teki ölü adı göçürür.
 #   (2) ÇAĞRI ANI (BU TUR) — `_nous_model_zinciri`: sırdan gelen ad ölüyse alias'a ÇEVRİLİR ve olay
 #       basılır. Bu katman zorunludur çünkü sır dosyası bizim yeniden yazacağımız bir yüzey DEĞİL
 #       (operatörün `.env`i; sırra yazmak sır-yazma yasağına girer) ve config göçü onu kapsamaz.
@@ -433,7 +433,7 @@ GEMINI_DEAD_MODEL_MAP = {
 # dahil. `hermes_runtime.status()` (yani `/api/hermes`) `active_model()` + `_model_id()` üzerinden
 # iki `obs.warn` doğuruyordu; `tests/test_api_contract.py::test_hermes_status_..._mid_search`
 # teardown'unda CANLI `state/events.jsonl`e iki satır DÜŞTÜ ("CANLI state'e YAZILDI"). Aynı sınıf
-# v239 ajanının kendi raporunda da beyan edilmişti ("sandbox'sız smoke sondasının yan etkisi").
+# Ajanın kendi raporunda da beyan edilmişti ("sandbox'sız smoke sondasının yan etkisi").
 # KUSUR TEST DEĞİL YAYIN YERİYDİ: bir pano isteği, bir import ya da bir bağlantı sondası
 # operatörün defterine "göç oldu" satırı YAZAMAZ — o defter üretim kanıtıdır ve panonun okuma
 # yapması bir üretim olayı değildir.
@@ -499,7 +499,7 @@ def _nous_model_zinciri() -> list:
 
 DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 
-# DÜŞÜNCE BÜTÇESİ (2026-07-26): gemini-3.x DÜŞÜNEN bir ailedir ve düşünce tokenları ÜRETİM tavanından
+# DÜŞÜNCE BÜTÇESİ: gemini-3.x DÜŞÜNEN bir ailedir ve düşünce tokenları ÜRETİM tavanından
 # yenir. Eski istek `maxOutputTokens: 4000` gönderiyordu, düşünce ayarı YOKTU; canlı ölçüm
 # (gemini-3.5-flash, aynı yansıma prompt'u) şunu verdi:
 #     thoughtsTokenCount=3838 + candidatesTokenCount=144 ≈ 4000 · finishReason=MAX_TOKENS
@@ -513,7 +513,7 @@ DEFAULT_BRAIN_ORDER = "claude,nous,gemini"
 GEMINI_THINKING_BUDGET = int(os.environ.get("HERMES_GEMINI_THINKING_BUDGET", "0"))
 GEMINI_MAX_OUTPUT_TOKENS = int(os.environ.get("HERMES_GEMINI_MAX_OUTPUT_TOKENS", "8000"))
 
-# ============ 429 SOĞUMA DEFTERİ + BOŞ-CEVAP SINIFLANDIRMASI (v66, 2026-07-22) ============
+# ============ 429 SOĞUMA DEFTERİ + BOŞ-CEVAP SINIFLANDIRMASI =============
 # Canlı defterde 45x hermes_brain_failed vardı ve HEPSİ aynı gemini free-tier 429'uydu — üç gün
 # boyunca, her yansıma turunda yeniden. Geri çekilme YOKTU: kotayı yiyen sağlayıcı bir sonraki turda
 # hiçbir şey hatırlamadan yeniden aranıyordu. Mevcut iki emniyet de absorbe edemedi:
@@ -654,7 +654,7 @@ def brain_availability() -> dict:
                   "ready": bool(_provider_ready(p) and rem <= 0),
                   "reason": row.get("reason") if rem > 0 else None,
                   # HANGİ MODELE gidiyor — iki ayağın aynı kimliğe gittiği ancak burada görülür
-                  # (2026-07-26: nous ve gemini ikisi de gemini-3.5-flash'a gidiyordu).
+                  # (nous ve gemini ikisi de gemini-3.5-flash'a gidiyordu).
                   "model_id": _model_id(p)}
     return out
 
@@ -662,7 +662,7 @@ def brain_availability() -> dict:
 def _model_id(p: str) -> str | None:
     """O sağlayıcıya GİDECEK model kimliği — `active_model()`in sağlayıcı-bağımsız hâli.
 
-    NOUS'TA İKİ AYRI DÜNYA VAR ve varsayılan yalnız birinde meşrudur (2026-07-26):
+    NOUS'TA İKİ AYRI DÜNYA VAR ve varsayılan yalnız birinde meşrudur:
       * PORTAL modu — istek bizim kurduğumuz gövdeyle gider ve model alanını BİZ yazarız; NOUS_MODEL
         boşsa `NOUS_DEFAULT_MODEL` gerçekten gidecek olan modeldir. Varsayılan bir ÖLÇÜMDÜR.
       * YEREL AJAN modu — istek `hermes` ikilisine devredilir; hangi modele gideceğini onun KENDİ
@@ -689,7 +689,7 @@ def _model_id(p: str) -> str | None:
 
 
 def brain_chain_facts() -> dict:
-    """ZİNCİR GERÇEKTEN YEDEKLİ Mİ — YALNIZ DOĞRUDAN SAYILABİLİR OLGULAR (2026-07-26).
+    """ZİNCİR GERÇEKTEN YEDEKLİ Mİ — YALNIZ DOĞRUDAN SAYILABİLİR OLGULAR.
 
     CANLI KANIT: `DEFAULT_BRAIN_ORDER` üç ad taşıyor ama claude kimliksiz (atlanıyor) ve nous ile
     gemini AYNI model kimliğiyle çağrılıyordu (gemini-3.5-flash). Pano iki yeşil çip gösterirken
@@ -747,10 +747,10 @@ def active_brain() -> str:
 def active_model() -> str | None:
     """ŞU AN konuşacak beynin model kimliği = `_model_id`in AKTİF sağlayıcıya uygulanmış hâli.
 
-    İKİ KOPYA BİRLEŞTİRİLDİ (2026-08-14, v246-B). Bu gövde `_model_id`in satır satır ikiziydi ve
-    ikizler AYRIŞMIŞTI: `_model_id("nous")`e 2026-07-26'da eklenen UYDURMA KORUMASI ("yerel ajan +
+    İKİ KOPYA BİRLEŞTİRİLDİ. Bu gövde `_model_id`in satır satır ikiziydi ve
+    ikizler AYRIŞMIŞTI: `_model_id("nous")`e eklenen UYDURMA KORUMASI ("yerel ajan +
     `NOUS_MODEL` yok → hangi modele gidildiğini CLI'nın kendi config'i belirler, biz bilmeyiz →
-    None") buraya hiç taşınmamıştı. ÖLÇÜLDÜ (v245-A): aynı yapılandırmada `_model_id('nous')`
+    None") buraya hiç taşınmamıştı. ÖLÇÜLDÜ: aynı yapılandırmada `_model_id('nous')`
     dürüstçe None derken `active_model()` `'Hermes-4-405B'` döndürüyordu — yani HİÇ ÇAĞRILMAMIŞ
     bir model adı `hermes_status.json`da, panoda ve künye alanlarında durabiliyordu. Korumayı elle
     kopyalamak aynı sınıfı ÜÇÜNCÜ kez doğururdu; tek kaynağa bağlamak kapatır. (Ölü-ad çevirisi ve
@@ -782,7 +782,7 @@ def _parse_hyp(text: str) -> dict | None:
         try:
             hyp = json.loads(_unwrap_strings(t))   # CLI paneli uzun stringleri sarmalar (string-içi ham \n)
         except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
-            # KUYRUK DA BASILIR (2026-07-27). `t[:120]` yalnız BAŞI gösteriyordu; oysa KESİLME
+            # KUYRUK DA BASILIR. `t[:120]` yalnız BAŞI gösteriyordu; oysa KESİLME
             # kuyrukta görünür. gemini bacağının günlerce yanlış sınıfta durmasının sebebi tam
             # buydu: baş sağlıklı bir JSON gibi okunuyor, kesik uç hiç görünmüyor — `truncated`
             # (bütçe sorunu) ile `unparseable` (biçim sorunu) aynı satıra katlanıyordu ve ikisi
@@ -809,7 +809,7 @@ def _looks_like_refusal(t: str) -> bool:
     return any(m in head for m in _REFUSAL_MARKS)
 
 
-# Kanıt paketi karakter tavanı. 1400 → 6200 (3b): H1 karnesi + H2 aile hafızası + eşik eğrisi
+# Kanıt paketi karakter tavanı. 1400 → 6200: H1 karnesi + H2 aile hafızası + eşik eğrisi
 # özeti + kuyruk durumu eklendi ve paket CANLI DEFTERDE 5.769 karakter ÖLÇÜLDÜ. Tavan o ölçümün
 # ~%7 üstünde: bugün hiçbir alan düşmüyor (3.600'de component_ic + weekly_attention +
 # dormant_setup_evidence düşüyordu — yani Aşama 1.2'nin bileşen-IC kanıtı, bir kör noktayı
@@ -834,7 +834,7 @@ def evidence_pack() -> str:
         sc = store.read_json("score_calibration.json", None)
         if sc:
             # GERÇEK dilim önce: havuzlanmış IC cf ağırlıklıdır ve beyne "skorun tahmin gücü"
-            # diye sunulursa ölçülmemiş bir sinyale dayanarak öneri üretir (2026-07-26).
+            # diye sunulursa ölçülmemiş bir sinyale dayanarak öneri üretir.
             _re = sc.get("real") if isinstance(sc.get("real"), dict) else None
             if _re:
                 pack["score_calibration"] = {"rank_ic": _re.get("rank_ic"), "n": _re.get("n"),
@@ -843,7 +843,7 @@ def evidence_pack() -> str:
             elif "real" in sc:
                 # YENİ ŞEMA + GERÇEK DİLİM ÖLÇÜLEMEDİ. Havuzlanmış sayıyı yedek diye koymak, beyne
                 # "işte skorun tahmin gücü" diye ALINMAMIŞ hipotetik girişlerin IC'sini sunmaktı ve
-                # LLM onu prompt'ta gerekçe olarak alıntılıyordu (2026-07-26). Sayı yerine ANALİZİN
+                # LLM onu prompt'ta gerekçe olarak alıntılıyordu. Sayı yerine ANALİZİN
                 # KENDİ HÜKMÜ gider: ölçülmemiş olduğu, bir sayının içinde saklanmadan söylenir.
                 pack["score_calibration"] = {"skor_kalibrasyonu": sc.get("verdict")
                                              or "gerçek dilim ÖLÇÜLMEDİ — skorun tahmin gücü bilinmiyor"}
@@ -853,7 +853,7 @@ def evidence_pack() -> str:
                 pack["score_calibration"] = {"rank_ic": sc.get("rank_ic"), "n": sc.get("n"),
                                              "kaynak": "havuzlanmış",
                                              "monotone": sc.get("monotone_hint")}
-        # BİLEŞEN IC — KOMPAKT (Aşama 1.2, 2026-07-28). Beyin bugüne kadar yalnız BİLEŞİK skorun
+        # BİLEŞEN IC — KOMPAKT. Beyin bugüne kadar yalnız BİLEŞİK skorun
         # IC'sini görüyordu ve o sayı sıfıra yakın olduğu için "skor işe yaramıyor" diye okunup
         # hipotezler kör bir yere, çoğunlukla çıkış knob'larına akıyordu. Bileşen kırılımı olmadan
         # "hangi ağırlığı hangi yöne?" sorusu kanıta bağlanamaz. Yalnız ÖLÇÜLEBİLEN hücreler ve
@@ -910,7 +910,7 @@ def evidence_pack() -> str:
                       if (v.get("n_r") or 0) >= 30 and (v.get("avg_r") or 0) > 0.03}
             if leaves:
                 pack["thresholds_leaving_edge"] = leaves    # ör. {"rs":0.109} → rs eşiği gevşetmeyi öner
-        # ---- HERMES ETKİNLEŞTİRME PAKETİ H1+H2+H3 (2026-07-30) --------------------------------
+        # ---- HERMES ETKİNLEŞTİRME PAKETİ H1+H2+H3 ----------------------------------
         # ÜÇÜ DE `analytics` ÜZERİNDEN GELİR, SYSTEM'e HİÇBİR ŞEY EKLENMEZ: SYSTEM statik kalır
         # (AST testiyle çivilenmiş), bütün yeni kanıt USER-PROMPT yolundan girer. Sebebi tek:
         # SYSTEM prompt önbelleğe alınıyor (cache_control) ve içine değişken metin girdiği gün
@@ -954,7 +954,7 @@ def evidence_pack() -> str:
             if _q:
                 pack["composite_queue"] = {
                     "pending": _q.get("n_bekleyen"), "measured": _q.get("n_olculen"),
-                    # C14 OKUYUCUSU (YASA 6): `measure_failed` damgasını okuyan taraf BURASIDIR —
+                    # OKUYUCUSU (YASA 6): `measure_failed` damgasını okuyan taraf BURASIDIR —
                     # beyin, kuyruğa attığı fikrin ölçülüp ölçülmediğini görmeden aynı fikri her
                     # hafta yeniden üretiyordu. "Ölçüm denendi ve DÜŞTÜ" ile "sırada bekliyor" aynı
                     # cümle değildir: ilki bir arıza sinyali, ikincisi normal bir kuyruk hâli.
@@ -974,7 +974,7 @@ def evidence_pack() -> str:
             obs.warn("evidence_hermes_package_failed", error=f"{type(e).__name__}: {e}",
                      detail="H1/H2/H3 kanıtı prompt'a GİRMEDİ — hermes kendi karnesini görmüyor")
     except Exception as e:
-        # YASA 4 (2026-07-21): kanıt paketi sessizce boşalırsa LLM ölçülmüş kalibrasyonları HİÇ
+        # YASA 4: kanıt paketi sessizce boşalırsa LLM ölçülmüş kalibrasyonları HİÇ
         # görmeden öneri üretir — çıktı yine geçerli görünür, yalnız dayanağı yoktur. "Üretilip
         # tüketilmeyen kanıt" ile aynı kök (yasa 6): kanıt vardı, kimseye ulaşmadı.
         obs.warn("evidence_pack_partial", error=f"{type(e).__name__}: {e}", keys=sorted(pack.keys()))
@@ -997,7 +997,7 @@ def evidence_pack() -> str:
 EVIDENCE_PRIORITY: tuple[str, ...] = (
     "your_prediction_accuracy",     # H1 — kendi tahmin isabetin
     "dead_knob_families",           # H2 — ölü aileler + hiç denenmemiş düğmeler
-    "do_not_propose",               # H2 — §5 YAPMA listesi (makine-okunur)
+    "do_not_propose",               # H2 — YAPMA listesi (makine-okunur)
     "composite_queue",              # H3 — bileşik yolun varlığı ve bütçesi
     "score_calibration",
     "component_ic",
@@ -1090,7 +1090,7 @@ def _example_hypothesis() -> str:
     })
 
 
-# ================= ÜRETEÇ KEŞİF DENGESİ (N00002, 2026-07-30) =====================================
+# ================= ÜRETEÇ KEŞİF DENGESİ ==========================================
 # ÖLÇÜLDÜ (canlı defter, 41 hipotez / 32 düğme): denemelerin %51,2'si TEK düğmede
 # (`stop_loss_atr_mult`; 21 deneme, 0 ship) ve bounds'taki 32 düğmenin 18'i HİÇ hipotez taşımadı.
 # Üreteç kendi tarihini GÖRMÜYORDU: ölü aile istatistiği ve kör nokta ölçülüyor (H2/`dead_families`)
@@ -1182,10 +1182,10 @@ def exploration_share(n: int = EXPLORE_WINDOW, *, fam: dict | None = None,
 
     Ölçülemeyen None (uydurma yasağı): boş defterde üç alan da None döner, sebebiyle birlikte.
 
-    DÖRDÜNCÜ SAYI — `on_eleme` (EDG-2026-041 D1'in YASA-6 okuyucusu): yukarıdaki üç sayı YALNIZ
+    DÖRDÜNCÜ SAYI — `on_eleme` (D1'in YASA-6 okuyucusu): yukarıdaki üç sayı YALNIZ
     DEFTERE GİREBİLMİŞ önerileri görür, yani "hayatta kalan"ı. `on_eleme`, defterden ÖNCEKİ arka
     plan korkuluğunda düşen ve orada çivilenen önerileri taşır — "üretim" ile "hayatta kalan"
-    böylece AYRI iki sayı olur (kartın D1 gerekçesinin ta kendisi). Defter BOŞ olsa bile ölçülür:
+    böylece AYRI iki sayı olur (D1 gerekçesinin ta kendisi). Defter BOŞ olsa bile ölçülür:
     ön-eleme sayımı hipotez defterinden BAĞIMSIZDIR ve boş defterde onu da None yapmak, ölçülmüş
     bir sayıyı ölçülemedi diye yazmak olurdu."""
     hyps = memory.all_hypotheses()
@@ -1314,7 +1314,7 @@ def _exploration_sections() -> str:
                  f"first-ever-touch of a knob {bi.get('n')}/{ks['n_olculen']} "
                  f"({bi.get('oran')}); landed in an already-dead family {ot.get('n')}/{ks['n_olculen']} "
                  f"({ot.get('oran')}).")
-    # ---- ÖN-ELEME (EDG-2026-041): beyin, önerilerinin defter ÖNCESİ ne olduğunu da GÖRMELİ -------
+    # ---- ÖN-ELEME: beyin, önerilerinin defter ÖNCESİ ne olduğunu da GÖRMELİ -------
     # Ölçülen körlük tam buydu: 47 öneri arka plan korkuluğunda düştü ve beyin bunu HİÇ görmedi —
     # aynı düğmeyi tekrar tekrar önermesinin (kart `yan_bulgu`: 37/47 iki değişkende) bir ayağı bu.
     # SAYI SIFIRSA SATIR YAZILMAZ: boş bir "0 rejected" satırı her turda token yakar ve hiçbir şey
@@ -1376,7 +1376,7 @@ def _hermes_bin() -> str | None:
 
 def _nous_local() -> bool:
     """Nous beyni YEREL mi çalışır? NOUS_ENDPOINT=='local' → zorla yerel; boşsa yerel ikili varsa yerel
-    (uygulamanın parçası — operatör isteği 2026-07-19), yoksa Portal API'ye düşer."""
+    (uygulamanın parçası — operatör isteği), yoksa Portal API'ye düşer."""
     ep = (secrets.get("NOUS_ENDPOINT") or "").strip().lower()
     if ep == "local":
         return True
@@ -1425,7 +1425,7 @@ def _agent_budget_take(max_wait: float = 0.0) -> bool:
 
 
 def _agent_budget_refund(reason: str) -> bool:
-    """AĞA HİÇ ÇIKMAMIŞ ÇAĞRIYI GÜN SAYACINDAN GERİ AL (HERMES-DAYANIKLILIK (d), 2026-08-02).
+    """AĞA HİÇ ÇIKMAMIŞ ÇAĞRIYI GÜN SAYACINDAN GERİ AL.
 
     CANLI VAKA: yapılandırmasız yerel CLI hiçbir sağlayıcıya bağlanmadan `exit(1)` ediyordu, ama
     `_agent_budget_take` çağrıdan ÖNCE düştüğü için ölü zincir 150/150'lik RPD kotasını 06:19'da
@@ -1467,7 +1467,7 @@ def _agent_budget_refund(reason: str) -> bool:
 
 
 # ==================================================================================================
-# BÜTÇE ÖZ-AYARI — STATİK TAVANLAR KOTA DURUMUNDAN TÜRETİLİR (öğrenme otomasyonu turu, 2026-07-30)
+# BÜTÇE ÖZ-AYARI — STATİK TAVANLAR KOTA DURUMUNDAN TÜRETİLİR
 # ==================================================================================================
 # NEDEN. `MERIDIAN_BACKFILL_MAX_DAYS=40` ve `HERMES_SEARCH_BUDGET=10` sabit sayılardı ve ikisi de
 # GERÇEKTEN KALAN kotadan habersizdi. İki yönde de yanlıştı: kota bolken tavan boşuna alçak
@@ -1580,7 +1580,7 @@ def search_budget() -> dict:
 
 
 # ==================================================================================================
-# ISINMA SPRİNTİ OTO-ÖLÇEKLEMESİ (v190, 2026-08-06 — operatör ops-kuralı, ÖLÇÜM DEĞİL: kart gerekmez)
+# ISINMA SPRİNTİ OTO-ÖLÇEKLEMESİ (operatör ops-kuralı, ÖLÇÜM DEĞİL: kart gerekmez)
 # ==================================================================================================
 # CANLI OLGU: `warmup_sprint` her ~4,4 saatte bir koşuyor ve serisi `evaluated 10→20→30,
 # cleared: 0, best: null`. Bütçe SABİTTİ (`hermes_runtime`de `HERMES_WARMUP_BUDGET` varsayılanı 10),
@@ -1741,14 +1741,14 @@ def _agent_reply_missing(stdout: str) -> bool:
 
 def _agent_tool_calls(stdout: str) -> int:
     """CLI özetinden araç-çağrı sayısını çıkar ('Messages: N (M user, K tool calls)'). MCP araçlarını
-    (#4) ajanın gerçekten KULLANIP kullanmadığını ölçmek için — sıfır ise MCP yatırımı atıl demektir.
+    ajanın gerçekten KULLANIP kullanmadığını ölçmek için — sıfır ise MCP yatırımı atıl demektir.
     Özet yoksa/eşleşmezse -1 (bilinmiyor)."""
     import re as _re
     m = _re.search(r"(\d+)\s+tool calls?", stdout or "")
     return int(m.group(1)) if m else -1
 
 
-# ---- YAPILANDIRMASIZ CLI İMZALARI (HERMES-DAYANIKLILIK (c), 2026-08-02) -------------------------
+# ---- YAPILANDIRMASIZ CLI İMZALARI ---------------------------
 # İMZALAR ÖLÇÜLDÜ, TAHMİN EDİLMEDİ — kurulu hermes-agent kaynağından okundu (2026-08-02):
 #   hermes_cli/main.py `cmd_chat`: ilk-koşum bekçisi `_has_any_provider_configured()` False iken
 #   STDOUT'a "It looks like Hermes isn't configured yet ..." basar, TTY yoksa
@@ -1780,7 +1780,7 @@ def _agent_unconfigured_sign(stdout: str, stderr: str) -> str | None:
     return None
 
 
-# ---- KOTA İMZALARI (v188, 2026-08-04) ----------------------------------------------------------
+# ---- KOTA İMZALARI ------------------------------------------------------------
 # `_rate_limited` bir İSTİSNA sınıflandırır (httpx yolu); yerel ajan yolunda istisna YOKTUR — elde
 # yalnız bir süreç çıktısı vardır. Boş bir cevabın "kota bitti" mi yoksa "model sustu" mu olduğunu
 # ayıran tek DOĞRUDAN kanıt bu çıktıdaki imzadır. İkisini ayırmamak, susan bir modelin cezasını
@@ -1805,7 +1805,7 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
     return m.group(1) if m else None
 
 
-# ---- HAM ÇIKTI ÖZETİ — KÖRLÜĞÜN SONU (v190, 2026-08-06) ----------------------------------------
+# ---- HAM ÇIKTI ÖZETİ — KÖRLÜĞÜN SONU ------------------------------------------
 # CANLI VAKA: `agent_call kind=review model=gemini-3.5-flash attempt=1 empty=true tool_calls=-1`
 # → yedek de boş → `review_fallback_empty`. Defterde bu üç satırdan BAŞKA hiçbir şey yoktu ve
 # üçü de aynı şeyi söylüyordu: "boş". `-Q` altında `tool_calls=-1` YAPISALDIR (sessiz mod oturum
@@ -1818,9 +1818,9 @@ def _agent_quota_sign(stdout: str, stderr: str) -> str | None:
 # Defter git-izsizdir ama panodan okunur; maskeleme DESENLE yapılır, gerçek sır değerleri OKUNMADAN
 # (sır okumak için `secrets.get` çağırmak, sızıntı yüzeyini teşhis uğruna genişletmek olurdu).
 #
-# GÖVDE TAŞINDI (D3 modül 2, 2026-08-07): desenler ve uygulama artık `agent_telemetry`de yaşıyor,
+# GÖVDE TAŞINDI: desenler ve uygulama artık `agent_telemetry`de yaşıyor,
 # çünkü HAM İZ DEFTERİ de aynı maskelemeyi ister ve İKİNCİ BİR UYGULAMA YASAKTIR — iki kopya
-# sessizce ayrışır, ayrışan taraf sızdırır. Bu ad ve imza KORUNDU: v193 sözleşmesi (`_ham_ozet`
+# sessizce ayrışır, ayrışan taraf sızdırır. Bu ad ve imza KORUNDU: eski sözleşme (`_ham_ozet`
 # 200 karakterde beyanlı kırpar, maskeleme kırpmadan ÖNCE koşar) buradan sınanıyor ve `_agent_call`
 # ile `agent_skill_preload_unknown` yolları bu adı çağırıyor.
 
@@ -1834,7 +1834,7 @@ def _ham_ozet(metin: str | None, limit: int = 200) -> str:
     return _at.maskele(metin, limit)
 
 
-# ---- YEREL ÖN-UÇUŞ HATASI: BİLİNMEYEN SKILL (v190, 2026-08-06) ---------------------------------
+# ---- YEREL ÖN-UÇUŞ HATASI: BİLİNMEYEN SKILL -----------------------------------
 # ÖLÇÜLDÜ, TAHMİN EDİLMEDİ (yerel kurulum v0.18.2, 2026-08-06):
 #   `hermes chat --accept-hooks -Q -q "say hi" -s yok-boyle-bir-skill --model gemini-3.5-flash`
 #   → rc=1 · stdout="Error: Unknown skill(s): yok-boyle-bir-skill" · süre 0,9 sn · AĞA ÇIKMAZ.
@@ -1863,7 +1863,7 @@ def _agent_unknown_skills(stdout: str, stderr: str) -> list:
     return [p.strip() for p in ham.replace(";", ",").split(",") if p.strip()]
 
 
-# ---- CLI SESSİZ MODU (`-Q`) — SÜRÜM DERSİ, 2026-08-02 ------------------------------------------
+# ---- CLI SESSİZ MODU (`-Q`) — SÜRÜM DERSİ --------------------------------------------
 # KÖK NEDEN (canlı vaka): `-q` SESSİZLİK DEĞİL, SORGU bayrağıdır (`-q QUERY, --query QUERY`) —
 # sessiz mod AYRI bir bayraktır: `-Q, --quiet` ("suppress banner, spinner, and tool previews. Only
 # output the final ..."). ÖLÇÜLDÜ: yerel kurulum v0.18.2, A1 v0.19.0 — ikisinde de ayrım aynı.
@@ -1878,7 +1878,7 @@ CLI_UNKNOWN_FLAG_SIGNS = ("unrecognized arguments", "no such option", "Unknown o
 _quiet_flag_ok = True          # süreç-içi öğrenme: bir kez 'desteklenmiyor' denince tekrar denenmez
 
 # ==================================================================================================
-# SAĞLAYICI YÖNLENDİRMESİ (v244) — `--model` DOĞRUYDU, İSTEK YANLIŞ UCA GİDİYORDU
+# SAĞLAYICI YÖNLENDİRMESİ — `--model` DOĞRUYDU, İSTEK YANLIŞ UCA GİDİYORDU
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLEN ARIZA (canlı, 24 saat): `_agent_chat_cmd` CLI'ya YALNIZ `--model` geçiyordu; yerel hermes
 # CLI'nın kendi yapılandırması `model.provider: gemini` olduğu için bir OpenRouter slug'ı
@@ -1990,7 +1990,7 @@ def _quiet_flag_unsupported_warn(out) -> None:
 
 
 # ==================================================================================================
-# KÜNYE "İSTENEN"İ DEĞİL "CEVAP VEREN"İ TAŞIR (2026-08-14; canlı ölçüm 2026-08-13)
+# KÜNYE "İSTENEN"İ DEĞİL "CEVAP VEREN"İ TAŞIR (canlı ölçüm 2026-08-13)
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLEN ARIZA (canlı A1, 2026-08-13 — olay defterinden birebir):
 #     20:37:26  agent_call kind=review model=tencent/hy3:free      attempt=1 empty=True  rc=1
@@ -2051,11 +2051,11 @@ def cevap_veren_model() -> tuple[str | None, str | None]:
 
 def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 timeout: int = 300, max_wait: float = 0.0) -> str | None:
-    """TÜM yerel-ajan çağrılarının tek kapısı (#1): skill senkronu + -s ön-yükleme + oran bütçesi +
+    """TÜM yerel-ajan çağrılarının tek kapısı: skill senkronu + -s ön-yükleme + oran bütçesi +
     model düşüş zinciri (NOUS_MODEL → NOUS_FALLBACK_MODEL; boş oturumda bir kez düşer). None = çağrı
     yapılamadı/cevapsız — çağıran fail-open davranır. Ham stdout döner; parse çağıranın işi.
 
-    TELEMETRİ (D3 modül 1, 2026-08-07): KOŞAN HER ALT SÜREÇ ölçülür ve `agent_calls.jsonl`e bir
+    TELEMETRİ: KOŞAN HER ALT SÜREÇ ölçülür ve `agent_calls.jsonl`e bir
     satır düşer — süre, deneme no, alt-koşum no (onarım yeniden-koşumları), model, araç sayısı,
     çıktı boyutu, sonuç sınıfı. Süre ÖLÇÜM ANINDA yazılır: iki olay damgasının farkı çağrının
     süresi DEĞİLDİR (arada bütçe bekleyişi, skill senkronu ve süreç doğuşu vardır). Aynı koşumun
@@ -2076,7 +2076,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         return None
     rem = brain_cooldown("agent")
     if rem > 0 and _pool_window_renewed():
-        # KOTA PENCERESİ YENİLENDİ (v188, 2026-08-04): elimizdeki soğuma DÜNKÜ havuz tükenmesinden
+        # KOTA PENCERESİ YENİLENDİ: elimizdeki soğuma DÜNKÜ havuz tükenmesinden
         # kuruldu ve o işaret sağlayıcının son günlük sıfırlamasından ÖNCEYE ait — yani BUGÜNÜN
         # kotası hakkında hiçbir şey söylemiyor. Canlıda görülen sonuç: taze kota penceresi hiç
         # denenmeden yedek modele düşülüyor, yedek susunca 6 saat daha kilitleniyordu. İşaret
@@ -2098,7 +2098,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         sync_agent_skills()
     except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
         pass
-    # ÇAĞRI ANI ÖLÜ-AD KONTROLÜ (2026-08-13): zincir SIRLARDAN kurulur ve v235 göçü yalnız ajan
+    # ÇAĞRI ANI ÖLÜ-AD KONTROLÜ (2026-08-13): zincir SIRLARDAN kurulur ve göç yalnız ajan
     # config'ini kapsıyordu — sırdaki ölü ad her çağrıda 404 üretiyordu (canlı: 20/20 `agent_call`
     # `model=gemini-3.5-flash`). Bkz. `_nous_model_zinciri` üstündeki ölçüm/gerekçe.
     models = _nous_model_zinciri()
@@ -2135,7 +2135,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                    sonuc_sinifi=sinif, returncode=out_.returncode,
                    # -1 = ÖLÇÜLEMEDİ (`-Q` özeti bastırır) → deftere None yazılır, 0 DEĞİL.
                    arac_cagri_n=(tc if tc >= 0 else None),
-                   # ADLAR DA YAZILIR (v242, 2026-08-13 — GERİLEME ONARIMI): `on_yukleme_n` tek
+                   # ADLAR DA YAZILIR (2026-08-13 — GERİLEME ONARIMI): `on_yukleme_n` tek
                    # başına "kaç skill" der, "hangileri" demez. Onarımın tam gerekçesi ve hacim
                    # ölçümü `agent_telemetry.skill_adlari` üstündeki blokta. `preload` bu kapanışta
                    # GEÇ okunur ve bu bilinçlidir: ön-uçuş onarımı (`Unknown skill(s)`) listeyi
@@ -2169,7 +2169,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         # defterde `agent_call_empty` HİÇ yazmazdı. Boş stdout artık ölçütün parçası.
         empty = (out.returncode != 0 or not (out.stdout or "").strip()
                  or _agent_reply_missing(out.stdout))
-        # ÖN-UÇUŞ ARGÜMAN HATASI ONARILIR, CEZALANDIRILMAZ (v190). Ölçülmüş imza: rc=1 + stdout
+        # ÖN-UÇUŞ ARGÜMAN HATASI ONARILIR, CEZALANDIRILMAZ. Ölçülmüş imza: rc=1 + stdout
         # "Error: Unknown skill(s): X" + 0,9 sn + AĞA ÇIKMAMA. Zincirin ikinci modeli aynı listeyle
         # aynen düşerdi (hata modelden ÖNCE), yani bu satır olmadan tek bayat symlink hattı komple
         # susturuyordu. Onarım: DÜŞEN adlar çıktıdan okunur, ön-yükleme listesinden çıkarılır ve
@@ -2207,11 +2207,11 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
         _telemetri(out, sure_ms, deneme=attempt + 1, alt=alt,
                    sinif=(_at.SINIF_YAPILANDIRMASIZ if unconf
                           else (_at.SINIF_BOS if empty else _at.SINIF_DOLU)))
-        # SKILL ADLARI GERİ GELDİ (v242, 2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL.
+        # SKILL ADLARI GERİ GELDİ (2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL.
         # 2026-07-20'ye kadar `nous_call_skills` olayı çağrı başına `names: [...]` tam listesini
         # yazıyordu; `_agent_call` yeniden yazılırken liste `preloaded: <sayı>`ya çöktü ve bir daha
         # geri gelmedi (kanıt + hacim ölçümü: `agent_telemetry.skill_adlari` üstündeki blok,
-        # docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §2.4). `preloaded` SİLİNMEDİ: bugünkü
+        # docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md). `preloaded` SİLİNMEDİ: bugünkü
         # okuyucular sayıyı okumaya devam etsin, yeni alan onun YANINA gelsin.
         _sk_adlar, _sk_kirpildi = _at.skill_adlari(preload)
         obs.log("agent_call", kind=kind, preloaded=len(preload), skills=_sk_adlar,
@@ -2219,12 +2219,12 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
                 # "sıfır sanılır" sınıfına giriyor (bkz. `agent_tooluse.json` `olculemeyen` dersi).
                 skills_kirpildi_n=_sk_kirpildi, model=model or "varsayılan",
                 attempt=attempt + 1, empty=empty, tool_calls=tcalls, unconfigured=bool(unconf),
-                # SÜRE OLAYA DA KONUR (D3 modül 1): `agent_calls.jsonl` tam ölçümü taşır ama olay
+                # SÜRE OLAYA DA KONUR: `agent_calls.jsonl` tam ölçümü taşır ama olay
                 # defterini tek başına okuyan biri (canlı journal takibi) süreyi orada da görmeli —
                 # aksi halde iki damganın farkını "çağrı süresi" sanma hatası geri döner.
                 sure_ms=round(sure_ms, 1), alt_kosum=alt,
                 # `-Q` altında `tool_calls=-1` YAPISALDIR ve `empty` fiilen "rc!=0 ya da boş stdout"a
-                # iner — o iki olgu deftere yazılmadan hiçbir boş çağrı teşhis edilemez (v190).
+                # iner — o iki olgu deftere yazılmadan hiçbir boş çağrı teşhis edilemez.
                 returncode=out.returncode, stdout_kr=len(out.stdout or ""),
                 stderr_kr=len(out.stderr or ""))
         if unconf:
@@ -2262,7 +2262,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
     # ama tried=1'di — NOUS_FALLBACK_MODEL hiç ayarlanmamıştı, yani "düşüş zinciri" tek elemanlıydı.
     # Yedeğin YOKLUĞU, yedeğin BAŞARISIZLIĞI gibi okunuyordu.
     exhausted = _pool_exhausted()
-    # BOŞ YEDEK ≠ BİTMİŞ KOTA (v188, 2026-08-04). Canlı satır: `agent_call kind=review
+    # BOŞ YEDEK ≠ BİTMİŞ KOTA. Canlı satır: `agent_call kind=review
     # model=tencent/hy3:free attempt=2 empty=true` → `agent_call_empty pool_exhausted="gemini"
     # cooldown_s=21600`. İki olgu tek cezaya katlanmıştı: (i) havuzun kendi kaydı tükenmişlik
     # diyordu, (ii) YEDEK model (başka bir üst-akış!) boş döndü. (ii) hakkında havuzun söyleyecek
@@ -2296,7 +2296,7 @@ def _agent_call(prompt: str, preload: tuple = (), kind: str = "generic",
              fallback_model_configured=bool(secrets.get("NOUS_FALLBACK_MODEL")),
              pool_exhausted=exhausted, cooldown_s=round(cooled, 1), cooldown_sinifi=sinif,
              kota_imzasi=kota_imza,
-             # HAM KANIT (v190) — bir daha KÖR kalmamak için. Bu üç alan olmadan defterdeki "boş"
+             # HAM KANIT — bir daha KÖR kalmamak için. Bu üç alan olmadan defterdeki "boş"
              # satırı hiçbir teşhis taşımıyordu: hangi çıkış kodu, süreç ne dedi, stderr ne taşıdı.
              # Maskeleme desenle yapılır (bkz. `_ham_ozet`); gerçek sır değerleri OKUNMAZ.
              returncode=son_rc, ham_stdout=_ham_ozet(son_stdout), ham_stderr=_ham_ozet(son_stderr),
@@ -2399,7 +2399,7 @@ def _nous_portal_model() -> str:
     """PORTAL (uzak, OpenAI-uyumlu) Nous ucuna GERÇEKTEN giden model adı — `_nous_text`in istek
     gövdesine yazdığı değerin TEK kaynağı.
 
-    NEDEN TEK KAYNAK (v246-B): `chain_text` künyesi bu ayağın modelini de bildirmek zorunda ve aynı
+    NEDEN TEK KAYNAK: `chain_text` künyesi bu ayağın modelini de bildirmek zorunda ve aynı
     ifadeyi ikinci kez yazmak, bu turun kapattığı sınıfın ("iki kopya sessizce ayrışır") tam
     kendisiydi. Varsayılan burada UYDURMA DEĞİLDİR ve ayrım `_model_id` docstring'inde yazılı:
     portal modunda gövdeyi BİZ kuruyoruz, yani `NOUS_DEFAULT_MODEL` gerçekten GİDEN addır (yerel
@@ -2462,7 +2462,7 @@ def _gemini_call(user: str, *, note: str) -> str | None:
         headers["x-goog-api-key"] = key
     else:
         headers["Authorization"] = f"Bearer {secrets.get('GEMINI_OAUTH_TOKEN')}"
-    # SÜRE ÖLÇÜMÜ (D3 modül 1, `tasiyici="http"`) — bkz. `_claude_text`teki aynı blok.
+    # SÜRE ÖLÇÜMÜ (`tasiyici="http"`) — bkz. `_claude_text`teki aynı blok.
     _kr = _at.Kronometre()
     try:
         r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
@@ -2594,7 +2594,7 @@ def ping_brain(provider: str) -> dict:
 # Yerli sağlayıcı: harness "gemini" id'sini ve GEMINI_API_KEY env adını yerel olarak tanır
 # (auth.py ProviderConfig) — OpenAI-uyumlu dolambaç GEREKMEZ (canlıda "Unknown provider: openai" ile bulundu).
 
-# ---- YEREL CLI YAPILANDIRMA ÖLÇÜMÜ (HERMES-DAYANIKLILIK (a), 2026-08-02) ------------------------
+# ---- YEREL CLI YAPILANDIRMA ÖLÇÜMÜ --------------------------
 # `hermes config get` SÖZLEŞMESİ ÖLÇÜLDÜ (kurulu sürüm, 2026-08-02) — tahmin edilmedi:
 #   • AYARLI anahtar  → stdout = ÇIPLAK değer, stderr boş, rc=0
 #   • AYARSIZ anahtar → stdout BOŞ, stderr = "Config key not set: <key>", rc=1
@@ -2643,7 +2643,7 @@ def _agent_env_has(names: tuple) -> bool | None:
     YOKLUĞU bir ölçüm arızası değil, ölçülmüş bir yokluktur (canlı vaka: A1 taşınmasında ~/.hermes
     hiç taşınmadı) — o yüzden None değil False döner.
 
-    v244'te AD KÜMESİ PARAMETRELENDİ (gövde bit bit aynı): aynı dosya artık iki soruya cevap
+    AD KÜMESİ PARAMETRELENDİ (gövde bit bit aynı): aynı dosya artık iki soruya cevap
     veriyor — Gemini anahtar satırı (`local_agent_config_state`) ve OpenRouter kimliği
     (`_agent_slug_provider_ready`). İkinci bir ayrıştırıcı yazmak, aynı biçimi iki yerde
     yorumlayan iki davranış demekti (`export ` öneki, tırnak soyma, boş-değer ayrımı)."""
@@ -2669,7 +2669,7 @@ def _agent_env_has(names: tuple) -> bool | None:
 
 
 def _agent_env_has_key() -> bool | None:
-    """`~/.hermes/.env` DOLU bir GEMINI anahtar satırı taşıyor mu? (v244 öncesi sözleşme AYNEN)."""
+    """`~/.hermes/.env` DOLU bir GEMINI anahtar satırı taşıyor mu? (sözleşme AYNEN)."""
     return _agent_env_has(GEMINI_ENV_NAMES)
 
 
@@ -2711,7 +2711,7 @@ def sync_local_agent_gemini(enable: bool) -> dict:
     Gemini'a çevrilir. enable=False (anahtar silindi): .env satırı kaldırılır, yedeklenen Nous ayarı
     geri yüklenir. Anahtar değeri hiçbir yerde loglanmaz/yansıtılmaz.
 
-    `senkron_ts` (HERMES-DAYANIKLILIK (b), 2026-08-02): HER dönüşte ISO damga bulunur — başarıda da,
+    `senkron_ts`: HER dönüşte ISO damga bulunur — başarıda da,
     reddte de, istisnada da. Panonun okuduğu satır "senkron OK" derken o cümlenin NE ZAMAN
     ölçüldüğünü söylemiyordu; canlı vakada altı gün önceki bir OSError'un sonucu taze bir hüküm gibi
     okundu. Damgasız bir durum satırı, bayatladığını kendisi söyleyemez."""
@@ -2741,7 +2741,7 @@ def sync_local_agent_gemini(enable: bool) -> dict:
                          if not l.startswith(("GEMINI_API_KEY=", "GOOGLE_API_KEY="))]
         if key_value:
             lines.append(f"GEMINI_API_KEY={key_value}")
-        # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+        # KAPI-DIŞI TAŞIMA: elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
         # env_path (~/.hermes/.env) STATE DIŞI → store mutlak adı olduğu gibi kullanır (kendi kilidi;
         # tek yazar). 0600 auth._write ile AYNI sınıf (sır: GEMINI_API_KEY diskte): store'un mkstemp-0600'ü
         # TESADÜFİdir, DEVREDİLMEZ — açık os.chmod KALIR. YASA-6 OKUYUCU: hermes-agent ikili dosyası .env'den
@@ -2757,7 +2757,7 @@ def sync_local_agent_gemini(enable: bool) -> dict:
             if not os.path.exists(backup_path):   # ilk geçişte mevcut (Nous) ayarı yedekle
                 prev = {"provider": _cfg_get("model.provider"), "base_url": _cfg_get("model.base_url"),
                         "default": _cfg_get("model.default")}
-                # KAPI-DIŞI TAŞIMA (H9 Kademe C): düz open(w)+json.dump (atomik DEĞİL, fsync/flock YOK)
+                # KAPI-DIŞI TAŞIMA: düz open(w)+json.dump (atomik DEĞİL, fsync/flock YOK)
                 # → store.write_json. backup_path (~/.hermes/...) STATE DIŞI → mutlak ad, kendi kilidi.
                 # YASA-6 OKUYUCU: aşağıdaki geri-yükleme dalı (json.load) disable'da Nous ayarını geri alır.
                 store.write_json(backup_path, prev)
@@ -2818,7 +2818,7 @@ def config_ensure_integrations() -> dict:
     except Exception as e:
         return {"ok": False, "detail": f"config okunamadı ({type(e).__name__})"}
     changed = []
-    # ÖLÜ-MODEL GÖÇÜ (2026-08-12, HTTP 404 kökü): bu senkron `model.default`ı bugüne dek KORUYORDU —
+    # ÖLÜ-MODEL GÖÇÜ (HTTP 404 kökü): bu senkron `model.default`ı bugüne dek KORUYORDU —
     # Google bir modeli listeden kaldırınca config'te duran ad her üretim çağrısında 404 yiyor ve
     # kendi kendine ASLA iyileşmiyordu (canlı vaka: gemini-3.5-flash; anahtar sağlam, models-list 200).
     # Yalnız BİLİNEN-ölü adlar çevrilir (GEMINI_DEAD_MODEL_MAP); tanınmayan adlar serbest geçer —
@@ -2892,7 +2892,7 @@ def config_ensure_integrations() -> dict:
     try:
         import shutil
         shutil.copy2(AGENT_CONFIG, AGENT_CONFIG + ".meridian.bak")
-        # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+        # KAPI-DIŞI TAŞIMA: elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
         # AGENT_CONFIG (~/.hermes/config.yaml) STATE DIŞI → mutlak ad, kendi kilidi. Biçim (safe_dump:
         # allow_unicode, default_flow_style=False, sort_keys=False) BİREBİR korunur — stream yerine string
         # döndürülüp aynı baytlar yazılır. .bak kopyası (shutil.copy2) manuel kurtarma anlık görüntüsüdür,
@@ -2931,12 +2931,12 @@ def integrations_status() -> dict:
     except Exception:  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
         pass
     try:
-        # ÇAĞRI TELEMETRİSİ (D3 modül 1) — YASA 6'nın DIŞ OKUYUCUSU BURASIDIR ve okuma bilerek
+        # ÇAĞRI TELEMETRİSİ — YASA 6'nın DIŞ OKUYUCUSU BURASIDIR ve okuma bilerek
         # BURADA yapılır: `codelaw.artifact_graph` yalnız `store.read_jsonl(<sabit>)` çağrısını
         # görür, `agent_telemetry.ozet()`in içindeki okumayı göremez. Yani defteri "dış tüketicisi
         # var" yapan şey tam olarak bu satırdır — muafiyet değil, gerçek bir tüketici.
-        # Bu alan `/api/hermes` gövdesinde AKAR; pano KARTI D3-UI dalgasının işidir (bkz.
-        # TASARIM-YONU §3 ④ Öğrenme yüzeyi) — veri hazır, çizim henüz yok.
+        # Bu alan `/api/hermes` gövdesinde AKAR; pano KARTI sonraki UI dalgasının işidir (bkz.
+        # TASARIM-YONU, Öğrenme yüzeyi) — veri hazır, çizim henüz yok.
         out["agent_calls"] = _at.ozet(store.read_jsonl(_at.CAGRI_DEFTERI, limit=_at.OZET_ORNEK))
     except Exception as e:
         # YASA 4: sessizce atlanırsa pano "hiç ajan çağrısı yok" diye okur — oysa ölçüm okunamadı.
@@ -2944,7 +2944,7 @@ def integrations_status() -> dict:
                  detail="çağrı telemetrisi özeti ÜRETİLEMEDİ — alan yazılmadı (0 DEĞİL)")
     tu = store.read_json("agent_tooluse.json", None)          # #4: MCP araç kullanım oranı
     if tu and (tu.get("calls") or tu.get("olculemeyen")):
-        # `olculemeyen` AYRI YAYINLANIR (2026-08-02, `-Q` sonrası): sessiz mod oturum özetini
+        # `olculemeyen` AYRI YAYINLANIR (`-Q` sonrası): sessiz mod oturum özetini
         # bastırdığı için araç sayısı okunamayan çağrılar var. Oranı onlarla seyreltmek uydurma,
         # onları hiç göstermemek ise donmuş bir sayacı "kullanılmadı" diye okutmak olurdu.
         out["tool_use"] = {"calls": tu.get("calls", 0), "with_tools": tu.get("with_tools", 0),
@@ -2952,7 +2952,7 @@ def integrations_status() -> dict:
                            "olculemeyen": tu.get("olculemeyen", 0),
                            "rate": (round(tu.get("with_tools", 0) / tu["calls"], 2)
                                     if tu.get("calls") else None)}
-    # havuz: sağlayıcı başına anahtar SAYISI + sağlığı (DEĞER YOK). Sağlık alanı v66'da eklendi:
+    # havuz: sağlayıcı başına anahtar SAYISI + sağlığı (DEĞER YOK). Sağlık alanı sonradan eklendi:
     # "2 anahtar var" ile "2 anahtarın 2'si de tükenmiş" panoda aynı görünüyordu ve rotasyonun neden
     # işe yaramadığı hiçbir yerden okunamıyordu.
     health_ = pool_health()
@@ -2975,7 +2975,7 @@ def integrations_status() -> dict:
 
 AGENT_AUTH_FILE = os.path.expanduser("~/.hermes/auth.json")
 POOL_EXHAUSTED_WINDOW_S = int(os.environ.get("HERMES_POOL_EXHAUSTED_WINDOW_S", "3600"))
-# GÜNLÜK KOTA SIFIRLAMA SINIRI (v188, 2026-08-04). Serbest katman kotası GÜNLÜKTÜR: her gün bu UTC
+# GÜNLÜK KOTA SIFIRLAMA SINIRI. Serbest katman kotası GÜNLÜKTÜR: her gün bu UTC
 # saatinde yenilenir ve o andan itibaren dünkü tükenme işareti BUGÜN hakkında hiçbir şey söylemez.
 # Saati koda gömmedik — sağlayıcıya göre değişir ve gömülü bir sayı yanlış sağlayıcıda SESSİZCE
 # yanlış kalırdı; dosyadaki diğer sağlayıcı ayarlarıyla aynı desen (env ile taşınır).
@@ -3083,7 +3083,7 @@ def _pool_exhausted() -> str | None:
     None. Tükenme işareti İKİ ölçütü birden geçmelidir: (1) yakın geçmişte konmuş olmalı (pencere),
     (2) İÇİNDE BULUNDUĞUMUZ kota penceresine ait olmalı — yani son günlük sıfırlamadan SONRA.
 
-    (2) v188'de eklendi (canlı, 2026-08-04): dünkü işaret sıfırlamadan sonra da 'tükenmiş' okunuyor,
+    (2) SONRADAN eklendi (canlı, 2026-08-04): dünkü işaret sıfırlamadan sonra da 'tükenmiş' okunuyor,
     taze kota penceresi HİÇ denenmeden yedek modele düşülüyordu. Zamansız işaret (havuz satırında
     `last_status_at` yok) daha da kötüsüydü: eski kod onu SONSUZA dek tükenmiş sayıyordu. Artık
     ölçülemeyen zaman uydurulmaz da yok sayılmaz da — ilk gözlem anı çivilenir ve o eskir."""
@@ -3130,7 +3130,7 @@ def register_pool_key(provider: str, api_key: str, label: str = "meridian") -> d
 def _agent_skill_plani(repo: str, enabled: set) -> tuple[list, list]:
     """Ajan skill dizininde YAPILACAK değişikliğin PLANI: (bağlanacak, sökülecek). UYGULAMAZ.
 
-    NEDEN AYRI FONKSİYON (v242, 2026-08-13): kum havuzu yolu "ne OLURDU"yu deftere yazmak zorunda
+    NEDEN AYRI FONKSİYON (2026-08-13): kum havuzu yolu "ne OLURDU"yu deftere yazmak zorunda
     (aşağıda, fail-visible) ama uygulamamalı. Planı `sync_agent_skills` içinde bir kez, burada bir
     kez yazmak `_kur_kum_havuzu`nun kendi gerekçesindeki hatanın aynısı olurdu — aynı yasanın iki
     uygulaması sessizce ayrışır ve ayrışan taraf ölçümü yalanlar. Tek tarama, iki tüketici."""
@@ -3174,7 +3174,7 @@ def sync_agent_skills() -> dict:
     aktifti — motorun 'kenar yok' dediği bilgiyle ajan düşünmeye devam ediyordu). YALNIZ bizim
     repoya çözümlenen symlink'lere dokunulur — ajanın kendi builtin klasörleri kutsaldır.
 
-    KUM HAVUZU BU DİZİNE YAZMAZ (v242, 2026-08-13 — ölçülmüş sızıntının kapatılması). `AGENT_SKILLS_DIR`
+    KUM HAVUZU BU DİZİNE YAZMAZ (2026-08-13 — ölçülmüş sızıntının kapatılması). `AGENT_SKILLS_DIR`
     HOST GENELİNDE TEK ve PAYLAŞIMLIDIR; sprint kum havuzu ise kendi (anahtarsız) enabled setini
     hesaplar ve o setle canlının symlink'lerini söküyordu — kanıt, mekanizma ve zincir
     `sprint.kum_havuzunda` üstünde yazılı. İKİ ONARIM YOLU VARDI ve seçim ÖLÇÜLEBİLİRLİĞE göre
@@ -3234,11 +3234,11 @@ def sync_agent_skills() -> dict:
             os.unlink(os.path.join(AGENT_SKILLS_DIR, entry)); pruned.append(entry)
         except OSError:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             pass
-    # ALAN ADI DEĞİŞTİ: `linked` → `yeni_baglanan` (v242, 2026-08-13). ESKİ AD YANILTIYORDU ve bunun
+    # ALAN ADI DEĞİŞTİ: `linked` → `yeni_baglanan` (2026-08-13). ESKİ AD YANILTIYORDU ve bunun
     # ÖLÇÜLMÜŞ bir bedeli var: `linked` bu olayda "O SENKRONDA YENİ KURULAN symlink sayısı" demekti,
     # ama `agent_skill_coverage()` AYNI SÖZCÜĞÜ "enabled ∩ bağlı TOPLAMI" anlamında kullanıyor (pano
     # onu öyle okuyor ve orada doğru). Aynı ad, iki anlam → canlı `linked: 4` satırını okuyan denetim
-    # "30 enabled'ın yalnız 4'ü bağlı" sandı (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §1.4/§B6).
+    # "30 enabled'ın yalnız 4'ü bağlı" sandı (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md).
     # Çare yalnız yeniden adlandırma değil: TOPLAM KAPSAM da aynı satıra yazılır, böylece olayı tek
     # başına okuyan birinin ikinci bir yere bakması gerekmez. `yeni_baglanan_adlar` `pruned` ile
     # simetriktir — söküleni adıyla yazıp bağlananı sayıyla yazmak, iki yönü asimetrik okuturdu.
@@ -3326,7 +3326,7 @@ def _skill_preload(kind: str, setups: tuple = ()) -> list:
         a = attr.get(n) or {}
         return n not in CORE and (a.get("n") or 0) >= 10 and (a.get("avg_r") or 0) <= -0.15
     out = [n for n in out if not _bad(n)]
-    # ÇEKİRDEK KIRPMAYA DA DAYANIR (2026-07-22): eskiden CORE yalnız _bad() elemesinden korunuyordu,
+    # ÇEKİRDEK KIRPMAYA DA DAYANIR: eskiden CORE yalnız _bad() elemesinden korunuyordu,
     # sıralama+kırpmadan DEĞİL. Gerçek kanıt birikip ölçülen ort.R hafif negatife düşünce
     # (pre-trade-discipline-gate ve position-sizer: -0.054) çekirdek ikili listenin dibine kaydı ve
     # out[:8] onları sessizce attı — ajan disiplin kapısı ve pozisyon boyutlandırıcı olmadan
@@ -3368,7 +3368,7 @@ def _warn_review_empty(asama: str, text: str, raw: str, *, parse_ok: bool,
 
 
 # ================================================================================================
-# ADAY İNCELEME SIKIŞIKLIK DEFTERİ (v233, 2026-08-12) — canlı vaka: 2026-07-31'den beri backlog
+# ADAY İNCELEME SIKIŞIKLIK DEFTERİ — canlı vaka: 2026-07-31'den beri backlog
 # aynı tarihi 5 dakikada bir deniyor, model zinciri cevapsız, günlük 150'lik ajan RPD bütçesinin
 # TAMAMI review'e yanıyordu (08-06/07/08 ölçümü: 75 deneme × 2 model = 150 çağrı, 19:21'de
 # `agent_budget_exhausted`, gün sonuna dek sessizlik) ve `candidate_review*` ailesi 08-02'den beri
@@ -3476,7 +3476,7 @@ def _review_deneme_isle(day: str, asama: str) -> dict:
 
 
 def _review_atla(day: str | None, asama: str, *, uyari: bool, detail: str, **alanlar) -> None:
-    """KAYITSIZ DÖNÜŞ YASAĞI (v233): `review_candidates` görüş KAYDEDEMEDEN döndüğü her yol buradan
+    """KAYITSIZ DÖNÜŞ YASAĞI: `review_candidates` görüş KAYDEDEMEDEN döndüğü her yol buradan
     geçer — önce defter (deneme sayacı/geri-çekilme/gecersiz eşiği), sonra olay. Tarih bilinmiyorsa
     (hiç plan yok) defter atlanır ama olay yine basılır: sessiz yol kalmaz."""
     rec = _review_deneme_isle(day, asama) if day else {}
@@ -3492,7 +3492,7 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     veya emirleri ASLA değiştirmez — 'aday seçimi LLM'e' isteği bilinçli olarak danışman olarak bağlandı,
     çünkü seçim otoritesini LLM'e vermek deterministik kapı yasasını delerdi. İlgili Meridian skill'leri
     oturuma önceden yüklenir (-s); sonuç state/candidate_review.json'a atomik yazılır, Adaylar sayfası
-    gösterir. Yerel ajan yoksa/hata verirse None döner ama ASLA SESSİZCE DEĞİL (v233): her kayıtsız
+    gösterir. Yerel ajan yoksa/hata verirse None döner ama ASLA SESSİZCE DEĞİL: her kayıtsız
     dönüş `candidate_review_skipped`/`candidate_review_empty_parse` basar ve sıkışıklık defterine
     (backlog anahtarı) işlenir — 2026-07-31→08-08 canlı vakasında `text is None` yolu 10 gün boyunca
     olaysız yutmuş, aile 08-02'den beri tek satır konuşmamıştı."""
@@ -3536,7 +3536,7 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     text = _agent_call(prompt, preload=tuple(_skill_preload("review", _setups)),
                        kind="review", timeout=300, max_wait=90.0)   # asenkron iş parçacığı bekleyebilir
     if text is None:
-        # KAYITSIZ DÖNÜŞ #0 (v233) — 2026-07-31→08-08 canlı vakasının TAM DÜŞTÜĞÜ YOL: `_agent_call`
+        # KAYITSIZ DÖNÜŞ #0 — 2026-07-31→08-08 canlı vakasının TAM DÜŞTÜĞÜ YOL: `_agent_call`
         # None döndürüyor (zincir cevapsız / havuz soğuması / RPD reddi) ve buradaki dönüş 10 gün
         # boyunca aileden tek olay basmadan yuttu. Sınıf ayrımı ÖLÇÜMDÜR: RPD gün sayacı değiştiyse
         # alt süreç gerçekten koştu (agent_bos — gecersiz eşiğine sayılır), değişmediyse çağrı hiç
@@ -3564,7 +3564,7 @@ def review_candidates(dstr: str | None = None) -> dict | None:
         _warn_review_empty("json_parse", text, raw, parse_ok=False, ham=[], reviews=[],
                            detail=f"model cevabı JSON'a çevrilemedi ({parse_err}); iki deneme de "
                                   f"düştü — görüş kaydedilmedi, danışma katmanı bu seans sessiz")
-        _review_deneme_isle(day, "json_parse")     # v233: gerçek deneme — gecersiz eşiğine sayılır
+        _review_deneme_isle(day, "json_parse")     # gerçek deneme — gecersiz eşiğine sayılır
         return None
     ham = list(data.get("reviews") or [])
     reviews = [r for r in ham
@@ -3575,9 +3575,9 @@ def review_candidates(dstr: str | None = None) -> dict | None:
         _warn_review_empty("filtre", text, raw, parse_ok=True, ham=ham, reviews=reviews,
                            detail=f"JSON ayrıştı ({len(ham)} ham görüş) ama şekil/enum süzgecinden "
                                   f"sıfır görüş çıktı — kayıt yok")
-        _review_deneme_isle(day, "filtre")         # v233: gerçek deneme — gecersiz eşiğine sayılır
+        _review_deneme_isle(day, "filtre")         # gerçek deneme — gecersiz eşiğine sayılır
         return None
-    # KÜNYE: CEVABI VEREN MODEL (2026-08-14). Eskiden burada `active_model()` vardı ve o
+    # KÜNYE: CEVABI VEREN MODEL. Eskiden burada `active_model()` vardı ve o
     # YAPILANDIRMAYI okuyordu — canlıda görüşü `gemini-flash-latest` yazarken künye
     # `tencent/hy3:free` diyordu (ölçüm `cevap_veren_model` üstündeki blokta). Ölçülemezse alan
     # None + neden; `active_model()`e SESSİZCE dönülmez (uydurma yasağı).
@@ -3600,7 +3600,7 @@ def review_candidates(dstr: str | None = None) -> dict | None:
                        "birincil ayağın neden boş döndüğü agent_call/agent_call_empty olaylarında")
 
     def _yaz(doc):
-        # BAŞARI YOLU AYNI KAYDI YAZAR (v233 farkı yalnız taşıma): sıkışıklık defteri (`backlog`)
+        # BAŞARI YOLU AYNI KAYDI YAZAR (fark yalnız taşıma): sıkışıklık defteri (`backlog`)
         # kaybolmaz, seans `tamam`a işlenir, varsa deneme sayacı ve (elle koşumda kapanmış olabilecek)
         # gecersiz işareti düşer — GERÇEK görüş her işaretten güçlüdür. Kilitli tek atomik yazım.
         defter = _review_backlog_defteri(doc)
@@ -3615,14 +3615,14 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     store.update_json("candidate_review.json", _yaz, {})
     obs.log("candidate_review", date=day, n=len(reviews), brain=active_brain())
     try:
-        _stamp_llm_opinions(day, reviews)      # Kademe-1: görüşler plan satırlarına GERİ-damgalanır
+        _stamp_llm_opinions(day, reviews)      # görüşler plan satırlarına GERİ-damgalanır
     except Exception as e:
         obs.warn("llm_stamp_failed", error=f"{type(e).__name__}: {e}")
     return res
 
 
 def _opinion_history(k: int = 5) -> str:
-    """v10 #4 — ajanın KENDİ karnesi: son k gerçek görüş-sonuç çifti, prompt'a somut ders olarak.
+    """Ajanın KENDİ karnesi: son k gerçek görüş-sonuç çifti, prompt'a somut ders olarak.
     Toplu kalibrasyon sayısı deseni göstermez; 'NVDA'da karşı demiştin → +2.1R' gösterir. Veri yoksa
     boş dize (uydurma ders yok)."""
     plans = {pl.get("id"): pl for pl in store.read_jsonl("trade_plans.jsonl")}
@@ -3650,7 +3650,7 @@ def _stamp_llm_opinions(day: str, reviews: list) -> None:
     op_by_ticker = {str(r.get("ticker")): r.get("opinion") for r in reviews if r.get("ticker")}
     if not op_by_ticker:
         return
-    # KİLİTLİ oku-değiştir-yaz (2026-07-21): bu damga, zamanlayıcı iş parçacığının AYNI dosyaya
+    # KİLİTLİ oku-değiştir-yaz: bu damga, zamanlayıcı iş parçacığının AYNI dosyaya
     # yazdığı anlarda araya giriyordu; kilitsiz hâlde döngünün planlarını bayat kopyayla ezebilirdi.
     counters = {"plans": 0}
 
@@ -3759,12 +3759,12 @@ def _review_plans_batch(day: str, subset: list) -> list:
 
 
 def backfill_opinions(max_days: int | None = None) -> dict:
-    """ÇEVRİMDIŞI GÖRÜŞ DOLGUSU (Hermes batch özelliğinden esinli, kanıt debisi turu 2026-07-20).
+    """ÇEVRİMDIŞI GÖRÜŞ DOLGUSU (Hermes batch özelliğinden esinli).
     Kalibrasyon aylar yerine GÜNLERDE anlamlılığa ulaşsın diye: SONUCU ZATEN BİLİNEN ama LLM görüşü
     OLMAYAN geçmiş planları yerel ajana KARAR-ANI bilgisiyle (sonuç gizli) toplu inceletir ve görüşü
     trade_plans + cf defterine geriye damgalar. Look-ahead YOK → öngörü geçerliliği korunur; terfiyi
     sahte tetiklemez. Rate bütçesine saygılı: gün başına 1 çağrı, max_days tavanı, bütçe kuruyunca durur.
-    OTOMATİK KADANS (2026-07-30): `max_days=None` → tavan `backfill_budget()`ten TÜRETİLİR (kalan
+    OTOMATİK KADANS: `max_days=None` → tavan `backfill_budget()`ten TÜRETİLİR (kalan
     ajan kotasının payı; havuz soğumadaysa 0). Eskiden tek tetik pano düğmesiydi ve sabit 40'tı;
     yani kuyruk YALNIZ operatör hatırlarsa eriyordu. Açık bir sayı verilirse (operatörün elle
     hızlandırması / testler) o sayı AYNEN geçerlidir — türetim ezilmez, atlanır.
@@ -3857,7 +3857,7 @@ def review_candidates_async(dstr: str | None = None):
     """Döngüyü bloklamadan incele: scheduler thread'i 300 sn'lik bir LLM sürecini bekleyemez.
 
     DÖNÜŞ: başlatılan Thread — çağıran KISA ÖMÜRLÜ bir süreçse (`python -m meridian.run --once`)
-    join etmek ZORUNDADIR. 2026-07-22'de bulundu: daemon thread, süreç çıkışında öldürülüyordu, yani
+    join etmek ZORUNDADIR. Bulundu: daemon thread, süreç çıkışında öldürülüyordu, yani
     tek-atışlık her koşuda ikinci görüş SESSİZCE kayboluyordu. Üstelik telafisi de yoktu — zamanlayıcı
     o seansı "zaten işlendi" görüp bir daha tetiklemediği için o gün SONSUZA KADAR görüşsüz kalıyordu.
     Hiçbir istisna fırlamadı; panoda yalnız bir hafta önceki görüş duruyordu.
@@ -3875,13 +3875,13 @@ def review_candidates_async(dstr: str | None = None):
 
 
 def review_backlog(max_sessions: int = 1) -> dict:
-    """TELAFİ: planı olan ama görüşü OLMAYAN en yeni seans(lar)ı incele — SIKIŞIKLIK KORUMALI (v233).
+    """TELAFİ: planı olan ama görüşü OLMAYAN en yeni seans(lar)ı incele — SIKIŞIKLIK KORUMALI.
 
     Tek bir kaçırılmış pencere, o seansı kalıcı olarak görüşsüz bırakıyordu (döngü aynı seansı ikinci
     kez işlemez). Danışma katmanının kanıt üretmesi buna bağlı: LLM görüş↔sonuç kalibrasyonu ancak
     kapanan planların görüşü varsa birikir.
 
-    v233 SERTLEŞTİRMESİ (canlı vaka 2026-07-31→08-08, ölçüldü): eski `dates[:max_sessions]` şekli
+    SERTLEŞTİRME (canlı vaka 2026-07-31→08-08, ölçüldü): eski `dates[:max_sessions]` şekli
     yalnız EN YENİ tarihi deniyordu ve o tarih incelenemez hâldeyken her şey donuyordu — scheduler
     5 dakikada bir aynı tarihi dövdü, model zinciri cevapsızdı, günlük 150'lik RPD bütçesinin tamamı
     review'e yandı (75 deneme × 2 model; 19:21'de `agent_budget_exhausted`) ve öneri yolu dahil tüm
@@ -3992,14 +3992,14 @@ def propose_with_llm() -> dict | None:
 
 
 # ==================================================================================================
-# ZİNCİR KÜNYESİ — "CEVABI KİM VERDİ" (v246-B, 2026-08-14; `candidate_review`in v245 kardeşi)
+# ZİNCİR KÜNYESİ — "CEVABI KİM VERDİ" (`candidate_review` deseninin kardeşi)
 # --------------------------------------------------------------------------------------------------
 # ESKİ HÂL: `out.update({..., "model": active_model()})` — yani künye zincir KOŞTUKTAN SONRA
 # YAPILANDIRMAYI yeniden okuyordu. Zincirin bütün varlık sebebi ayakların DÜŞMESİ olduğu için bu
 # alan tam da düşüş olduğunda yanlış oluyordu: metni ikinci ayak yazarken künye birinciyi söylüyordu.
 # `candidate_review`de ölçülen bedel buydu — `tencent/hy3:free` 56 çağrıda 0 cevap verdi, pano
 # haftalarca onun adını yazdı ve HATALI KÜNYE ARIZAYI GİZLEDİ. Bu, aynı kusurun ikinci eviydi
-# (ROADMAP §2-31a) ve tüketicisi Katman-B'nin kalıcı defterleridir (bkz. aşağıdaki tüketici listesi).
+# ve tüketicisi Katman-B'nin kalıcı defterleridir (bkz. aşağıdaki tüketici listesi).
 #
 # OKUMA NOKTASI NEDEN AYAK BAŞINA (bu blok tam olarak bir tuzağı kapatıyor):
 # `cevap_veren_model()` TÜKETEN bir okumadır (okuyunca kutuyu boşaltır) ve kutuyu YALNIZ
@@ -4019,7 +4019,7 @@ def propose_with_llm() -> dict | None:
 # (TTL 300 sn) çağrı ile künye arasında yenilenirse ad ayrışabilir; ölçülen bir vaka YOKTUR ve bu
 # pencere `active_model()`in kapattığımız SAĞLAYICI-SEÇİMİ hatasıyla aynı sınıfta değildir.
 #
-# TÜKETİCİLER (ADIYLA, v246-B ölçümü): tek üretim tüketicisi `nous_eval.haftalik_degerlendirme`
+# TÜKETİCİLER (ADIYLA, ölçüldü): tek üretim tüketicisi `nous_eval.haftalik_degerlendirme`
 # (`nous_eval.py:695-699`) — `cevap.get("text"/"beyin"/"model"/"neden")` okur ve `model`i iki
 # kalıcı deftere yazar: `nous_eval_runs.json` (`_kosu_kaydet`) ve `improvement_proposals.jsonl`
 # (`_oneri_kaydet` → satır alanı `model`; ledgers sözleşmesinde ZORUNLU DEĞİL, yani None meşru).
@@ -4034,7 +4034,7 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
                max_wait: float = 0.0, note: str | None = None) -> dict:
     """BEYİN ZİNCİRİNİN GENEL METİN YOLU — `propose_with_llm` ile AYNI disiplin, farklı GÖREV.
 
-    NEDEN VAR (nous sistem-değerlendirme katmanı, ROADMAP §3.2): Katman B beyni bir hipotez üretmek
+    NEDEN VAR (nous sistem-değerlendirme katmanı): Katman B beyni bir hipotez üretmek
     için değil, MEKANİZMALARI DEĞERLENDİRMEK için çağırır. `propose_with_llm` hipoteze özeldir
     (`_parse_hyp`, `hyp["source"]`, tek-değişken sözleşmesi) ve o yolu genel amaçlı hâle getirmek
     hipotez yolunu kırılgan yapardı. Bu fonksiyon zincirin YALNIZ taşıma katmanını paylaşır:
@@ -4055,7 +4055,7 @@ def chain_text(prompt: str, *, kind: str, preload: tuple = (), timeout: int = 30
     # cevaplamak olurdu — düşen ayak listeden silinmiş görünür ve ayrışma kendini gizlerdi.
     _istenen = active_model()
     out: dict = {"text": None, "beyin": None, "model": None,
-                 # KÜNYE SÖZLEŞMESİ (v246-B) — `candidate_review` deseninin aynısı: alan VARSA
+                 # KÜNYE SÖZLEŞMESİ — `candidate_review` deseninin aynısı: alan VARSA
                  # `model` = CEVABI VEREN; alan YOKSA kayıt eski sözleşmedendir ("istenen"i taşır)
                  # ve RETRO-DÜZELTİLMEZ. İki anlam iki ad: "istenen" `model_istenen`de durur.
                  "model_kaynagi": "cevap_veren", "model_olculemedi": ZINCIR_MODEL_YOK,
@@ -4167,7 +4167,7 @@ def _virgin_value(spec: dict, live):
 def propose_virgin_knob() -> dict | None:
     """BEYİN YOKKEN ÜRETİLEN TEK DETERMİNİSTİK HAREKET — bakir düğmelerden (N00002).
 
-    ESKİ HÂL (2026-07-30 öncesi): beyin zinciri boş dönünce `reflect_once` TEK bir akıllı hamle
+    ESKİ HÂL: beyin zinciri boş dönünce `reflect_once` TEK bir akıllı hamle
     üretmeden doğrudan koordinat-inişi aramasına düşüyordu; `reflect.propose_deterministic` hermes'in
     yolunda HİÇ çağrılmıyordu (yalnız `reflect --auto` CLI'sinde). Yani "beyinsiz gecede tek hamle"
     yuvası BOŞTU. Arama sırası zaten denenmemiş düğmeleri öne alıyor (`_ucb_rank` → +inf) ama arama
@@ -4248,14 +4248,14 @@ def propose_virgin_knob() -> dict | None:
 
 
 # =================================================================================================
-# EDG-2026-041 — ARKA PLAN ÖN-ELEMESİ: D1 (KAYIT) + D2 (ÇİVİLEME)
+# ARKA PLAN ÖN-ELEMESİ: D1 (KAYIT) + D2 (ÇİVİLEME)
 # =================================================================================================
-# ÖLÇÜLEN (kart `verdict.olcum`, Rol-1 2026-08-14, canlı defterden MOTOR DEĞİŞMEDEN ÖNCE):
+# ÖLÇÜLEN (kart `verdict.olcum`, canlı defterden MOTOR DEĞİŞMEDEN ÖNCE):
 # `hermes_bg_proposal_rejected` 47 kez ateşledi (2026-08-02T14:00 → 2026-08-13T17:26) ve bu 47
 # önerinin HİÇBİRİ hipotez defterine girmedi. Sertifika 47/47'de BİLİNİYORDU (hepsi `chop`,
 # `None(auto)` SIFIR) — korkuluk KÖRLÜKTEN değil AYRIMSIZLIKTAN kesiyordu. 46/47 düz global.
 # Kusur kapının HÜKMÜNDE değil GÖRÜNÜRLÜĞÜNDEydi: "üretim" ile "hayatta kalan" aynı sayıya
-# katlanıyordu (28b'nin "52 aslında 23" bulgusunun kökü).
+# katlanıyordu ("52 aslında 23" bulgusunun kökü).
 BG_RED_DAMGA = "REDDEDILDI"      # D1 damgası — reddedilen öneri ADAY DEĞİLDİR, ayrı damga taşır
 BG_ON_ELEME_PENCERE = 4000       # karne penceresi: olay defterinin son N satırı
 
@@ -4269,8 +4269,8 @@ def _bg_on_eleme_kaydi(proposal: dict | None, *, pvar: str, certified, red_neden
     (`red_nedeni` ∈ {`global_sertifikasiz`, `farkli_rejim`}); okuyucusu `bg_on_eleme_karnesi`.
 
     DAMGA NEREYE KONDU ve NEDEN `hypotheses.jsonl` DEĞİL — ÖLÇÜLDÜ, SEÇİLDİ, GEREKÇELENDİ.
-    Kartın kill kriteri MUTLAK: "D1 kaydı öneri defterine GERÇEK öneri gibi girerse geçersiz —
-    reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa 28b'nin TERS YÖNÜ doğar (sayı bu kez
+    Kill kriteri MUTLAK: "D1 kaydı öneri defterine GERÇEK öneri gibi girerse geçersiz —
+    reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa o bulgunun TERS YÖNÜ doğar (sayı bu kez
     ŞİŞER)". Hipotez defterinin TÜM tüketicileri tarandı; sekizi satırı DURUMA BAKMADAN sayar ve
     ÜÇÜ yalnız sayı şişirmez, ÖĞRENME DÖNGÜSÜNÜ BOZAR:
       (a) `analytics.dead_families` (analytics.py:2759) durum süzgeci TAŞIMAZ ve
@@ -4375,8 +4375,8 @@ def bg_on_eleme_karnesi(olaylar: list | None = None, n: int = BG_ON_ELEME_PENCER
 def reflect_once(target_regime: str | None = "auto", *, background: bool = False) -> dict:
     """Tek canlı yansıma — gövde `_reflect_once_govde`de (tasarım gerekçeleri orada).
 
-    v236 GÜVENLİK AĞI (2026-08-12 asılı-arama vakası): gövde HANGİ yoldan çıkarsa çıksın —
-    normal dönüş, içerideki phase="error" yolu (audit #28) ya da bugün var olmayan bir istisna
+    GÜVENLİK AĞI (2026-08-12 asılı-arama vakası): gövde HANGİ yoldan çıkarsa çıksın —
+    normal dönüş, içerideki phase="error" yolu ya da bugün var olmayan bir istisna
     yolu — bayrak `running=True` BIRAKILAMAZ. Mevcut hata-yolu yazımları DURUYOR; bu ağ yalnız
     onların kaçırdığı bir çıkışta devreye girer (normalde no-op: bayrak zaten temizlenmiştir).
     Kadans tarafındaki bayatlık yasası (sprint.py:404) aynı sınıfın SÜREÇ-DIŞI emniyetidir;
@@ -4397,7 +4397,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     The standby loop passes its certified regime so a regime flip between the horizon check and the search
     (the walk takes minutes) can't retarget the ship into an uncertified regime.
 
-    `background` (C16, 2026-08-02) — ARKA PLAN TURU: CANLI OLMAYAN bir rejimin birikmiş kanıtıyla
+    `background` (C16) — ARKA PLAN TURU: CANLI OLMAYAN bir rejimin birikmiş kanıtıyla
     koşulan yansıma (`hermes_runtime._bg_ready_regime` seçer). Bu bayrak olmadan çağrı, kanıtın hangi
     rejimden geldiğini BİLMİYORDU ve `_bg_ready_regime`in emniyet beyanı ("ship yalnız
     params_by_regime[o rejim]'i değiştirir — canlı davranış rejim dönene dek değişmez") kodda
@@ -4423,16 +4423,16 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     if proposal is not None:
         # A Claude var@regime proposal must target the CERTIFIED regime (or be global): the horizon
         # guardrail certified evidence for ONE regime — shipping an override into a different, never-
-        # certified regime through this side door would bypass the whole guardrail (audit #27).
+        # certified regime through this side door would bypass the whole guardrail.
         pvar = str(proposal.get("variable") or "")
         preg = pvar.split("@", 1)[1] if "@" in pvar else None
         certified = None if target_regime == "auto" else target_regime
-        # --- EDG-2026-041 D2 — ÇİVİLEME: `@`SİZ ÖNERİ ATILMAZ, SERTİFİKALI REJİME YENİDEN YAZILIR --
-        # KORKULUK BOZULMUYOR, GÜÇLENİYOR (kart hükmü, Rol-1 2026-08-14). Korkuluğun invaryantı
+        # --- D2 — ÇİVİLEME: `@`SİZ ÖNERİ ATILMAZ, SERTİFİKALI REJİME YENİDEN YAZILIR --
+        # KORKULUK BOZULMUYOR, GÜÇLENİYOR. Korkuluğun invaryantı
         # "kanıt kendi rejimini terk etmesin"di; RET bu invaryantı sağlar ama işi çöpe atar, YENİDEN
         # YAZIM aynı invaryantı sağlar ve işi korur: `chop` sertifikalı kanıt yalnız
         # `params_by_regime["chop"]`i değiştirir, canlı-DIŞI rejimin kanıtı düz `params`a SIZMAZ
-        # (denetim #27 deliği kapalı kalır).
+        # (o delik kapalı kalır).
         # ÜÇ ŞART DA ZORUNLU, ÜÇÜ DE ÖLÇÜLMÜŞ BİR VAKAYA KARŞILIK GELİR:
         #   `background`            — CANLI tur DEĞİŞMEZ; global muafiyet canlıda meşrudur.
         #   `preg is None`          — zaten rejim-hedefli öneri yeniden yazılmaz (aşağıdaki dallar).
@@ -4491,7 +4491,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     # becomes var@{regime}, graded only on that regime's slice, shipping into params_by_regime. Under
     # trend_up (the regime the global params were tuned in, ~90% of the book) the search stays global:
     # the slice would be nearly the whole book anyway, and global ships must remain possible.
-    # BU İSTİSNA CANLI TURA AİTTİR (C16, 2026-08-02): gerekçesi "trend_up canlıdır, dilimi zaten
+    # BU İSTİSNA CANLI TURA AİTTİR (C16): gerekçesi "trend_up canlıdır, dilimi zaten
     # defterin tamamıdır" cümlesine dayanır. Arka plan turunda o cümle YANLIŞtır ve istisna sessizce
     # sertifikasız bir global ship yetkisine dönüşür — `background` dalı onu kapatır.
     live_reg = store.read_json("regime.json", {}).get("regime") if target_regime == "auto" else target_regime
@@ -4515,7 +4515,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
                               "koşulmadı (C16)")}
     else:
         search_regime = live_reg if live_reg in config.VALID_REGIMES and live_reg != "trend_up" else None
-    # TAVAN ARTIK TÜRETİLİR (bütçe öz-ayarı, 2026-07-30): `SEARCH_BUDGET` sabiti TABAN olarak durur
+    # TAVAN ARTIK TÜRETİLİR (bütçe öz-ayarı): `SEARCH_BUDGET` sabiti TABAN olarak durur
     # (env override yolu birebir aynı); `search_budget()` kota durumuna göre onu açar. Türetimin
     # KENDİSİ olaya yazılır — "bugün neden 20 sonda koştu?" sorusu defterden cevaplanabilsin.
     _sb = search_budget()
@@ -4538,7 +4538,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
                                            budget=_sb["tavan"], k_max=SEARCH_KMAX, on_probe=_on_probe,
                                            regime=search_regime)
     except Exception:
-        # never leave the dashboard showing a phantom in-flight search after a crash (audit #28)
+        # never leave the dashboard showing a phantom in-flight search after a crash
         _progress(running=False, phase="error")
         raise
     s = result.get("search", {})
@@ -4559,7 +4559,7 @@ def loop(poll_seconds: int = 1800) -> None:
     goal = config.goal()
     every = int(goal["reflection_every"])
     from . import hermes_runtime as _hr
-    last_reflect_at = _hr._restored_baseline()   # survive restarts — same fix as the in-process path (#25)
+    last_reflect_at = _hr._restored_baseline()   # survive restarts — same fix as the in-process path
     print(f"[hermes] standby — will reflect every {every} closed trades. Model={MODEL}. baseline={last_reflect_at}")
     while True:
         try:
@@ -4579,7 +4579,7 @@ def loop(poll_seconds: int = 1800) -> None:
                                                                    regime=live_reg, min_trades=every):
                     reflect_once(target_regime=live_reg)
                     last_reflect_at = n
-                    # persist so a tmux restart doesn't reset the 30-day horizon clock (#25)
+                    # persist so a tmux restart doesn't reset the 30-day horizon clock
                     st = store.read_json(hr.STATUS_FILE, {})
                     st["last_reflect_at"] = n
                     store.write_json(hr.STATUS_FILE, st)

@@ -164,7 +164,7 @@ def _eval_regime_of(variable: str) -> str | None:
     return regime if regime in config.VALID_REGIMES else None
 
 
-# ---- v189 (2026-08-05): ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
+# ---- 2026-08-05: ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
 # ÖLÇÜLEN VAKA (canlı A1, 2026-08-04/05, py-spy): EOD döngüsü iki gece üst üste BİTMEDİ; yığın
 # `scheduler.advance_once → arming.evaluate → _measure → _wf_cached → backtest.walk_forward →
 # replay → scan_entry` içinde AKTİF dönüyordu.
@@ -667,7 +667,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                              "(DD_VETO_MARGIN) kapanmış-işlem düşüş dağılımından türetildi, M2M "
                              "dağılımının σ'sı ölçülmedi; bağlanması ölçüm kartı ister"),
             "gate_law": law, "k_probes": k_probes, **prob.as_gate_fields("search"),
-            # ÜÇ DEĞERLİ BÜYÜKLÜK HÜKMÜ (28f): "gecti" · "gecmedi" · "olculemedi". `magnitude_ok`
+            # ÜÇ DEĞERLİ BÜYÜKLÜK HÜKMÜ: "gecti" · "gecmedi" · "olculemedi". `magnitude_ok`
             # tek başına iki-değerlidir ve ÖLÇÜLEMEYENİ GEÇMEYENDEN ayıramaz; bir okuyucu (ya da
             # bekçi) "kapı neyi eliyor?" sorusunu ancak bu alanla dürüstçe cevaplayabilir.
             "magnitude_durum": ("gecti" if magnitude_ok else
@@ -908,7 +908,7 @@ def propose_deterministic(explore: bool = False) -> dict:
     # =============================================================================================
     # EXPLOIT YOLUNA HAFIZA — 21 TEKRARIN KÖKÜ
     # ---------------------------------------------------------------------------------------------
-    # ÖLÇÜLEN BEDEL (docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md §2): `already_failed` kontrolü
+    # ÖLÇÜLEN BEDEL (docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md): `already_failed` kontrolü
     # YALNIZ explore dalının içindeydi; varsayılan exploit yolunda hafıza YOKTU. Sezgisel "stop'lar
     # baskın → stop'a yer aç" dediği sürece `move()` HER TURDA aynı tek adımı üretiyordu:
     # `stop_loss_atr_mult=2.1` defterde 21 kez (1 backtest reti + 20 guard reti), oysa bounds o

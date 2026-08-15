@@ -76,9 +76,9 @@ TASIYICILAR = (TASIYICI_AJAN, TASIYICI_HTTP)
 ARAC_OLCULEMEDI = "-Q sessiz mod CLI oturum özetini bastırır — araç sayısı bu çağrıda ÖLÇÜLEMEDİ"
 
 # ================================================================================================
-# ÇAĞRI BAŞINA SKILL ADLARI (v242, 2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL
+# ÇAĞRI BAŞINA SKILL ADLARI (2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL
 # ================================================================================================
-# NE KAYBEDİLDİ (ölçüldü: docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §2.4/§B1). `nous_call_skills`
+# NE KAYBEDİLDİ (ölçüldü: docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md). `nous_call_skills`
 # olayı çağrı başına ön-yüklenen skill'lerin TAM AD LİSTESİNİ yazıyordu:
 #     {"ts":"2026-07-20T09:59:21+00:00","event":"nous_call_skills","kind":"review","preloaded":5,
 #      "names":["vcp-screener","pullback-screener","pre-trade-discipline-gate",…]}
@@ -249,7 +249,7 @@ def kaydet(*, kind: str, model: str | None, deneme: int, alt: int, sure_ms: floa
     araç kullanılmadı. İkisini tek alana katlamak, MCP yatırımının atıl olup olmadığını sonsuza
     dek cevapsız bırakırdı (`agent_tooluse.json`'daki `olculemeyen` sayacının aynı dersi).
 
-    `on_yukleme` (v242, 2026-08-13) = ön-yüklenen skill ADLARI — `on_yukleme_n`in YANINA, onu
+    `on_yukleme` (2026-08-13) = ön-yüklenen skill ADLARI — `on_yukleme_n`in YANINA, onu
     SİLMEDEN (mevcut okuyucular sayıyı okumaya devam eder). Verilmezse alan hiç yazılmaz: bu
     yolun (HTTP taşıyıcısı) ön-yükleme kavramı YOKTUR ve boş liste yazmak "ölçüldü, hiç skill
     yoktu" diye okunurdu. Gerekçe ve hacim ölçümü: `skill_adlari` üstündeki blok."""
