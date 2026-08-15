@@ -67,7 +67,7 @@ class OutOfSamplePipeline:
             return GateResult(False, None, self.p_confirm, None, law="legacy",
                               why="teyit dilimi yok — legacy yasa")
         sp = cand_wf["oos_split"]
-        # TABAN ÖRNEKLEM (2026-07-22, kapı denetimi): arama diliminin tabanı vardı
+        # TABAN ÖRNEKLEM: arama diliminin tabanı vardı
         # (`max(10, 0.7·min_sample)`), teyit yürüyüşünün HİÇ YOKTU. Bootstrap'ın iç `min_sample: 1`
         # baypası bunu erişilebilir kılıyordu: taraf başına 6 işlemle kapı `passes=True, p=0.886`
         # diyordu — ve o 6 işlemden türeyen `predicted_delta` deftere "yansız" diye yazılıyordu.

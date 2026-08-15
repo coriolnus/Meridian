@@ -39,7 +39,7 @@ LESSONS = "lessons.md"
 # writeback_outcome() do full-file read-modify-rewrite — and they run on DIFFERENT daemon threads
 # (scheduler cycle vs Hermes reflection). An unlocked interleave could atomically replace the file
 # with a snapshot that predates a just-shipped hypothesis: strategy.yaml already bumped, its ledger
-# row gone forever (audit #19).
+# row gone forever.
 _HYP_LOCK = threading.Lock()
 
 
@@ -57,7 +57,7 @@ def next_id() -> str:
     """Hipotez kimliği ASLA yeniden kullanılmamalı: defterdeki her satır (ve lessons.md, scoreboard,
     rollback kayıtları) bu kimlikle birbirine bağlanıyor.
 
-    ESKİ HÂL `len(...)+1` idi (denetim turu 17, 2026-07-21): defter kısalırsa (yeniden tohumlama,
+    ESKİ HÂL `len(...)+1` idi: defter kısalırsa (yeniden tohumlama,
     elle temizlik, kısmi bir yazım) kimlikler GERİ SARAR ve iki farklı hipotez aynı kimliği taşır —
     'H00042 neden hem reddedildi hem canlı?' sorusu böyle doğar. Artık EN BÜYÜK mevcut numara + 1:
     tek yönlü, kısalmaya dayanıklı."""
@@ -66,7 +66,7 @@ def next_id() -> str:
         s = str(h.get("id") or "")
         if s.startswith("H") and s[1:].isdigit():
             mx = max(mx, int(s[1:]))
-    # YÜKSEK-SU İŞARETİ (2026-07-22, kusur #7): `max+1` KISALMAYA dayanıklıydı ama SİLİNMEYE değil.
+    # YÜKSEK-SU İŞARETİ: `max+1` KISALMAYA dayanıklıydı ama SİLİNMEYE değil.
     # Defter tamamen boşalırsa (elle temizlik, yarım restore) numaralar H00001'den başlar ve
     # ARŞİVLENMİŞ satırlarla çakışır — "H00042 neden hem reddedildi hem canlı?" sorusu geri gelir.
     # İşaret ayrı bir dosyada ve MONOTON: defterden bağımsız, asla geri sarmaz.
@@ -91,14 +91,14 @@ def record(hyp: dict) -> dict:
     return hyp
 
 
-# Geçiş yasası (2026-07-22, kusur #5): `update_status` HERHANGİ bir dizgiyi kabul ediyordu —
+# Geçiş yasası: `update_status` HERHANGİ bir dizgiyi kabul ediyordu —
 # `promoted → proposed` geriye dönüşü de, `status:"muz"` de. Statü aylık kotayı, UCB ödülünü ve
 # `lessons.md`'yi besliyor; geçersiz bir geçiş sessizce öğrenme muhasebesini bozar.
 # rejected_by_backtest / rejected_by_confirmation: reflect.py:477,492 bunları `record()` ile YAZAR
 # (kapı ve teyit yürüyüşü redleri) ve reflect.py:254,328,592 terminal-red olarak OKUR — ama
 # LEGAL_STATUS'te yoklardı. record() doğrulamaz, dolayısıyla yazım geçiyordu; ne var ki böyle bir
 # satır bir gün update_status'e girerse "tanınmayan statü" diye sessizce reddedilir ve iki uygulama
-# (yazan vs geçiş-yasası) ayrışırdı. İkisi de meşru terminal reddir (2026-07-23, tarama bulgusu).
+# (yazan vs geçiş-yasası) ayrışırdı. İkisi de meşru terminal reddir.
 LEGAL_STATUS = {"proposed", "rejected_by_guard", "rejected_by_gate", "rejected_by_backtest",
                 "rejected_by_confirmation", "live", "promoted", "rolled_back", "superseded", "expired"}
 TERMINAL_STATUS = {"rejected_by_guard", "rejected_by_gate", "rejected_by_backtest",
@@ -126,7 +126,7 @@ def update_status(hyp_id: str, status: str, **extra) -> Optional[dict]:
                 if _cur != status:
                     r["status_ts"] = now_iso()   # stamp TRANSITIONS only — a neutral-hold refresh must
                 r["status"] = status             # not re-date the ship (it burned a monthly-quota slot
-                r.update(extra)                  # forever and destroyed the audit trail — audit #20)
+                r.update(extra)                  # forever and destroyed the audit trail)
                 updated = r
         if updated is not None:
             store.write_jsonl(HYP, rows)
@@ -145,7 +145,7 @@ def accepted_this_month(ts: Optional[str] = None) -> int:
 
 def writeback_outcome(version_to: int, realized_delta: float, realized_detail: dict) -> Optional[dict]:
     """Once min_sample trades have run under a version, write the realized score delta back onto
-    the hypothesis that shipped it. This closes the loop — the entire point (§5 step 6)."""
+    the hypothesis that shipped it. This closes the loop — the entire point."""
     with _HYP_LOCK:
         rows = all_hypotheses()
         target = None
@@ -157,12 +157,12 @@ def writeback_outcome(version_to: int, realized_delta: float, realized_detail: d
         if target.get("status") == "promoted" and target.get("realized_delta") is not None:
             # Promotion is a one-way ratchet — its recorded outcome must be too. Rewriting a promoted
             # hypothesis's realized_delta/calibration_hit with every later market drift flip-flopped the
-            # autonomy ladder's calibration gate and lessons.md while 'promoted' stayed frozen (audit #21).
+            # autonomy ladder's calibration gate and lessons.md while 'promoted' stayed frozen.
             return target
         predicted = target.get("predicted_delta")
         target["realized_delta"] = round(realized_delta, 4)
         target["realized_detail"] = realized_detail
-        # P3.d telemetry: market_regime must be a TOP-LEVEL, greppable field on the hypothesis row (the
+        # Telemetry: market_regime must be a TOP-LEVEL, greppable field on the hypothesis row (the
         # eval-window regime the realized delta was measured in), not only nested inside realized_detail.
         if isinstance(realized_detail, dict) and realized_detail.get("market_regime"):
             target["market_regime"] = realized_detail["market_regime"]
@@ -225,7 +225,7 @@ def distill_lessons(trade_stats: Optional[dict] = None) -> str:
         lines.append("_No lessons yet — the ledger is empty. The first reflection will populate this._")
 
     text = "\n".join(lines) + "\n"
-    # H9 (kapı-dışı taşıma): düz `Path.write_text` dosyayı önce KIRPARdı — okuyucu (Hermes reflection
+    # Kapı-dışı taşıma: düz `Path.write_text` dosyayı önce KIRPARdı — okuyucu (Hermes reflection
     # prompt'u `config.STATE/"lessons.md"`yi okur, hermes.py:153; skill_evolve.py:143) tam o an gelirse
     # yarım/BOŞ defter görür ve sessizce "ders yok" okurdu. TEK KAPI atomik+fsync+flock verir; içerik
     # BİREBİR aynı kalır (write_text baytı aynen yazar).

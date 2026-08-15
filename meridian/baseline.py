@@ -62,7 +62,7 @@ def _frekans(n: int, span_days) -> float | None:
     return round(n / (span_days / YIL_GUN), 4)
 
 
-# ---- LIKE-FOR-LIKE ROLLBACK KIYASI (Aşama 2.3, 2026-07-29) ------------------------------------
+# ---- LIKE-FOR-LIKE ROLLBACK KIYASI (2026-07-29) -----------------------------------------------
 # TEŞHİS. Bugünkü geri-alma kararı ELMA-ARMUTtu: çocuğun CANLI skoru (95 işlem, ~4 ay, canlı motor,
 # `score_mod.score` ile o kümenin KENDİ süresine göre yıllıklandırılmış) ile ebeveynin BACKTEST OOS
 # skoru (2,5 yıllık pencere, replay motoru, `span_days=903` ile yıllıklandırılmış) karşılaştırılıyordu.

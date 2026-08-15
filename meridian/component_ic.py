@@ -53,7 +53,7 @@ HORIZONS = (5, 10, 20)
 # İsimler ağırlık adlarını takip eder (w_rs → rs) ki pano tablosunda hangi ağırlığın hangi ölçüme
 # karşılık geldiği tahmin edilmek zorunda kalmasın.
 #
-# ÜÇ YENİ BİLEŞEN (G2, ROADMAP §E Aşama 7, 2026-07-29): rvol20 / mom12_1 / rmom. Eski dördü
+# ÜÇ YENİ BİLEŞEN (2026-07-29): rvol20 / mom12_1 / rmom. Eski dördü
 # KALDIRILMADI — kıyas sürsün diye yan yana ölçülürler; yeni bir çekirdeğin eskisinden iyi olduğu
 # ancak ikisi AYNI tabloda, aynı popülasyonda, aynı CI disiplininde durursa söylenebilir.
 #
@@ -61,13 +61,13 @@ HORIZONS = (5, 10, 20)
 # bileşen skor uzayındadır (tight = tt·100, vol = kırpılmış oran, prox = kırpılmış puan). Yenilerde
 # ise ağırlığın çarptığı büyüklük bir DÖNÜŞÜMDÜR: entry.w_rvolband ham rvol'ü değil onun ÜÇGEN bant
 # puanını (strategy.rvol_band_score), entry.w_mom ise ham 12-1 getiriyi değil onun 63-barlık
-# yüzdelik rütbesini çarpar. Buradaki satırlar HAM seriyi ölçer; sebebi, G2 kanıt tabanının (2026-07-29
+# yüzdelik rütbesini çarpar. Buradaki satırlar HAM seriyi ölçer; sebebi, kanıt tabanının (2026-07-29
 # g2_olcum) tam olarak ham seriyi ölçmüş olması ve gece tablosunun o kanıtla DOĞRUDAN kıyaslanabilir
 # kalması. Sonuç: bu satırlar "bant puanının IC'si" DEĞİLDİR — üçgen dönüşüm monoton olmadığı için
 # Spearman IC'si de aynı sayı olmak zorunda değildir. Bandın kanıtı ayrı bir tablodur (bant ortalama
 # getirileri, g2_olcum çıktısı) ve bileşiğin uçtan uca ölçümü kalem E'nin aday profillerine aittir.
 #
-# (7) SEKİZİNCİ SATIR: turnover21 (EDG-2026-016, 2026-08-01). Kartın hükmü SUCCESS ve entegrasyon
+# (7) SEKİZİNCİ SATIR: turnover21 (EDG-2026-016). Kartın hükmü SUCCESS ve entegrasyon
 #     kararı "elle ağırlık yok — kablola, düğmeyi bounds'a 0 ile indir, ölçüsünü öğrenme döngüsü
 #     versin". Bu tablo o döngünün GÖZÜDÜR: düğme 0'da dururken bile hücreler her gece dolar, yani
 #     "önce aç sonra ölç" kısır döngüsüne girilmez. Satırın ölçtüğü büyüklük HAM orandır
@@ -122,7 +122,7 @@ def _fisher_ci(ic: float, n: int) -> tuple[float | None, float | None]:
 
 
 # ==================================================================================================
-# 2C — EMPİRİK BAYES SÜTUNU (WP-M borç kalemi, 2026-08-01)
+# EMPİRİK BAYES SÜTUNU
 # ==================================================================================================
 # NE. Her hücrenin HAM `ic`'sinin YANINA, o katmanın ortak ortalamasına James-Stein tarzı
 # küçültülmüş bir ikizi (`eb_ic`) + küçültme katsayısı (`shrink_katsayisi`) yazılır.
@@ -208,12 +208,12 @@ def _component_frame(df: pd.DataFrame, prox_max: float,
     out["prox"] = (100.0 * (1.0 - (prox_pct / prox_max).clip(upper=1.0))
                    if prox_max > 0 else pd.Series(0.0, index=df.index))
     out.loc[pivot <= 0, "prox"] = float("nan")                    # geçersiz pivot → ölçülemedi
-    # G2 (2026-07-29): HAM seriler, canlı yolun kullandığı AYNI indicators fonksiyonlarıyla
+    # (2026-07-29): HAM seriler, canlı yolun kullandığı AYNI indicators fonksiyonlarıyla
     # (tek yasa, tek uygulama — modül başlığı, karar 1).
     out["rvol20"] = ind.rvol20(df["volume"])
     out["mom12_1"] = ind.mom_12_1(close)
     out["rmom"] = ind.residual_momentum(close, index_close)
-    # EDG-016 (2026-08-01): turnover21 = medyan21(hacim)/as_of_shares(t). Payda BAR BAŞINA as-of
+    # turnover21 = medyan21(hacim)/as_of_shares(t). Payda BAR BAŞINA as-of
     # okunur (tek çağrı, vektörel) — sembolün bugünkü hisse sayısını tüm geçmişe yaymak PIT
     # sızıntısı olurdu ve tam olarak EDGAR README'nin GOOGL örneğindeki hatadır. Ölçülemeyen
     # payda → o barda NaN + neden (sayaç `edgar_shares.okuma_raporu()`nda).
@@ -564,7 +564,7 @@ def component_ic(write: bool = True) -> dict | None:
         "getiri_tanimi": "close[t+h]/close[t]-1 (sinyal barı kapanışından, yüzde; R'ye bölünmez)",
         "prox_max": prox_max, "tablo": tablo, "en_guclu": en_guclu, "verdict": verdict,
         "anlamli_sayim": anlamli_sayim,
-        # 2C EMPİRİK-BAYES PARALEL SÜTUN (WP-M, 2026-08-01) — `tablo`ya DOKUNMAZ, yanında durur.
+        # EMPİRİK-BAYES PARALEL SÜTUN — `tablo`ya DOKUNMAZ, yanında durur.
         # Gerekçe ve sınırlar `_eb_blok`un üstündeki blokta; okuyucusu
         # `analytics.shrunk_component_ic().tablo_ici_eb` (YASA 6).
         "eb": _eb_blok(tablo),
@@ -608,7 +608,7 @@ def component_ic(write: bool = True) -> dict | None:
     }
     if write:
         store.write_json(COMPONENT_IC_FILE, out)
-        # GÜNLÜK DÖNGÜ OLAYINDA TURNOVER SAYACI (EDG-016 fail-open beyanının okuyucusu): payda kaç
+        # GÜNLÜK DÖNGÜ OLAYINDA TURNOVER SAYACI (fail-open beyanının okuyucusu): payda kaç
         # kez okunabildi, kaç kez okunamadı ve EN SIK sebep neydi. Olay satırı kısa tutulur; tam
         # döküm `component_ic.json` → `turnover_kaynak` alanındadır.
         tk = out.get("turnover_kaynak") or {}
@@ -669,13 +669,13 @@ def compact_lines(doc: dict | None = None, max_satir: int = 6) -> list[str]:
 
 
 # ==================================================================================================
-# YENİDEN ÜRETİM ARACI — "defterdeki tablo hangi bar tabanından çıktı?" (WP-D borcu, 2026-08-01)
+# YENİDEN ÜRETİM ARACI — "defterdeki tablo hangi bar tabanından çıktı?"
 # ==================================================================================================
-# NEDEN VAR. `_load_universe`/`_load_index_close` 2026-07-31'de `measurement_bars()` kapısına
+# NEDEN VAR. `_load_universe`/`_load_index_close` `measurement_bars()` kapısına
 # bağlandı: çözülmemiş ölçek/kimlik kırılmasından ÖNCEKİ dönem ölçümden düşer (hayalet-round-2).
 # Ama `state/component_ic.json` o günden ÖNCE üretilmişti ve dosya bunu KENDİ SÖYLÜYOR: `bars_integrity`
 # alanı yok (o alan da aynı turda eklendi). Yani defterdeki tablo ile bugünkü boru hattının ürettiği
-# tablo AYNI ADI taşıyan İKİ FARKLI ölçümdür — ve fark ölçüldü (EDG-007 raporu: cf rvol20 @20
+# tablo AYNI ADI taşıyan İKİ FARKLI ölçümdür — ve fark ölçüldü (cf rvol20 @20
 # defterde 0,0604, dışlamalı boru hattında 0,0637).
 #
 # NEDEN AYRI BİR ARAÇ (gecelik P5 zaten `component_ic()` çağırıyor). İki sebep:

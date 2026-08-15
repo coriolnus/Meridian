@@ -39,7 +39,7 @@ def _next_version(current: dict) -> int:
     makes strategy.yaml carry the parent's number, so the next ship would reuse the rolled-back child's
     number — and then be judged on the DEAD version's trades (trades.jsonl rows keep the old tag) while
     update_scoreboard merges its fields into the dead row (rolled_back:true and all). Allocate past the
-    max of: current, every scoreboard entry, every history snapshot (audit #17/#31)."""
+    max of: current, every scoreboard entry, every history snapshot."""
     hi = int(current.get("version", 1))
     for v in scoreboard().get("versions", {}):
         try:
@@ -93,7 +93,7 @@ def _sb_default() -> dict:
 # karneye TOPTAN yazan modülleri AST ile sayar ve sabit adı çözemez. Sabite çevirmek o dedektörü
 # SESSİZCE köreltirdi — "karneyi kim yazıyor?" sorusunun tek statik cevabı kaybolurdu.
 def update_scoreboard(version: int, **fields) -> dict:
-    """KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31).
+    """KİLİTLİ oku-değiştir-yaz.
 
     Eskiden kilitsizdi ve bu depoda BELGELİ bir kayıp-güncelleme yoluydu: karneye ship yolu
     (reflect), ölçüm yolu (baseline.set_row_fields) ve replay (run.py) yazıyor — üçü ayrı
@@ -122,7 +122,7 @@ def set_row_fields(version: int, **fields) -> dict:
 
     Yalnız `versions[str(version)]` satırına yazar; `current_version` olduğu gibi bırakılır.
 
-    KİLİTLİ (B3, 2026-07-31): `update_scoreboard` ile AYNI gerekçe — bu fonksiyon canlı worker
+    KİLİTLİ: `update_scoreboard` ile AYNI gerekçe — bu fonksiyon canlı worker
     koşarken elle tetiklenen bir ölçüm yolundan (baseline backfill) çağrılıyor, yani iki süreçli
     kayıp-güncellemenin en olası kapısı buydu."""
     v = str(version)

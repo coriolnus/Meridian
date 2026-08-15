@@ -86,7 +86,7 @@ MONEY_GATE_MARGIN: float = 0.004       # 0,02 × 0,1908 = 0,00382 → 0,004 (par
 #   türetim (2) gereği marj 0,04 → **0,08**. Türetim (1) hâlâ sağlanıyor ve ARTIK BAĞLAYICI DEĞİL,
 #   yalnız alt sınır: 0,08 > σ(düşüş)=0,0343. İki türetimin aynı sayıya çıkması 0,08'lik bütçeye özgü
 #   bir tesadüftü; kural (2) yasadır, (1) o kuralın ihlal edilmediğini doğrulayan kapıdır. Bu sabit
-#   goal'e YAPIŞIK — max_drawdown değişirse burası da değişir (test_dalga_w1_v216 C5 çivisi).
+#   goal'e YAPIŞIK — max_drawdown değişirse burası da değişir (test_dalga_w1_v216 çivisi).
 DD_VETO_MARGIN: float = 0.08
 
 # ---- CANLI DEFTERDE ÖLÇÜLEN (2026-07-30, seed=42, n_boot=2000, block_days=15, span=1274g) ------
@@ -172,7 +172,7 @@ def ret_c_v3(total_return: float, span_days: float,
     return _clip(float(total_return) / h)
 
 
-# ---- ① PARA ÖLÇEĞİ: R-KATI DEĞİL, GERÇEKLEŞEN DOLAR (WP-M borcu, 2026-08-01) --------------------
+# ---- PARA ÖLÇEĞİ: R-KATI DEĞİL, GERÇEKLEŞEN DOLAR ----------------------------------------------
 # NEDEN VAR. PARA-v3'ün karar sayısı `ret_c_v3` [-1,+1]'e KISTIRILMIŞ bir orandır ve iki yerde
 # parayı GÖRÜNMEZ kılar:
 #   (1) KIRPILMA BÖLGESİ: |pencere_getirisi| hedefi aştığı anda skor 1,0'da (ya da −1,0'da) DONAR.
@@ -254,9 +254,9 @@ def money_score_detail(trades: list[dict], goal: dict, span_days: float | None =
     (karne/tarih kırılmasın). Burada yalnız KAPININ okuduğu sayı yeniden türetilir.
 
     v1 None dönerse (min_sample altı) v3 de None döner: bilinmeyen skor, vasat skor gibi
-    okunamaz (§4).
+    okunamaz.
 
-    `realized_usd` (WP-M ①, 2026-08-01) EK bir anahtardır ve İKİ DALDA DA döner — bilerek: skor
+    `realized_usd` EK bir anahtardır ve İKİ DALDA DA döner — bilerek: skor
     min_sample altında ÖLÇÜLEMEZ ama para ölçülebilir. "Skor yok" ile "para yok" aynı cümle
     değildir ve rollback meta-kalibrasyonunun okumak istediği tam olarak bu ayrımdır. Mevcut
     alanların DEĞERLERİ bu turda değişmedi (geriye-uyum çivisi testte)."""

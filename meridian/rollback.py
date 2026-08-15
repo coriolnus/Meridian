@@ -43,7 +43,7 @@ def _ship_eval_regime(version: int) -> str | None:
 
 
 def _parent_score_fallback(version: int, par_score):
-    """P3.d reachability: when the parent has neither min_sample live trades NOR a scoreboard entry
+    """Reachability: when the parent has neither min_sample live trades NOR a scoreboard entry
     (e.g. the ledger was re-seeded under the child version), fall back to the incumbent OOS recorded in
     the SHIPPING hypothesis's gate — the exact score the child had to beat to go live. Without this,
     par_score stays None forever and the realized-outcome writeback (realized_delta, calibration_hit,
@@ -57,13 +57,13 @@ def _parent_score_fallback(version: int, par_score):
 
 
 def _market_regime(trades: list) -> str:
-    """Phase 3.3: the distinct regime(s) the realized delta was MEASURED in (the eval window), '|'-joined —
+    """The distinct regime(s) the realized delta was MEASURED in (the eval window), '|'-joined —
     so we can audit whether a shipped change only helped in one market (bull/bear bias)."""
     regs = sorted({t.get("regime") for t in trades if t.get("regime")})
     return "|".join(regs) if regs else "unknown"
 
 
-# ---- KARAR GİRDİSİ: LIKE-FOR-LIKE mi, ESKİ ASİMETRİK YOL mu? (Aşama 2.3, 2026-07-29) ----------
+# ---- KARAR GİRDİSİ: LIKE-FOR-LIKE mi, ESKİ ASİMETRİK YOL mu? (2026-07-29) ---------------------
 # Geri-alma kararının İKİ olası girdisi var ve hangisinin kullanıldığı KARAR KAYDINA damgalanır:
 #   * `like_for_like_replay_v1` — ebeveyn parametreleri çocuğun canlı döneminde replay edildi;
 #     iki taraf da `backtest.segment_score` ile AYNI pencerede puanlandı (bkz. baseline modülü).
@@ -87,13 +87,13 @@ def _karar_girdisi(cur_score: float, par_score: float, wh: Optional[dict]) -> di
             "yontem": LEGACY_YONTEM}
 
 
-# ---- PARA İKİZİ: GERÇEKLEŞMENİN İKİNCİ CETVELİ (WP-M ölçek borcu, 2026-08-03) ------------------
+# ---- PARA İKİZİ: GERÇEKLEŞMENİN İKİNCİ CETVELİ -------------------------------------------------
 # NEDEN. `realized_delta` BİLEŞİK skordan (`score.score`) türer ve TÜREMEYE DEVAM EDER: geri-alma
 # hükmü ve `goal.rollback_if_worse_by` eşiği o birimde kalibre edildi, birimi değiştirmek eşiği
 # ölçümsüz değiştirmek olurdu. Ama `predicted_delta` PARA-v3 geçişinden beri `ret_c_v3` ölçeğinde
 # yazılıyor (`reflect._gate_eval` → `conf.mean_delta`) ve `probgate.refresh_meta_calibration` bu iki
 # sayıyı BÖLÜYORDU: para ÷ bileşik = birim karışımı (σ oranı ≈0,19 olduğundan oran ~5× şişerdi).
-# Karışım 2026-07-30'da ATLAMAYLA kapatıldı — ama atlama mekanizmayı MUHAFAZAKÂR yapmadı, ÖLDÜRDÜ:
+# Karışım ATLAMAYLA kapatıldı — ama atlama mekanizmayı MUHAFAZAKÂR yapmadı, ÖLDÜRDÜ:
 # para_v3 altında hiçbir YENİ çift sayılamaz, `n_measured` META_MIN_N'e asla ulaşamaz, `extra_p`
 # sonsuza dek 0 kalır; yani sistematik iyimserliği cezalandıran emniyet sessizce kapalıdır.
 #
@@ -108,7 +108,7 @@ def _karar_girdisi(cur_score: float, par_score: float, wh: Optional[dict]) -> di
 #       başka bir soruyu cevaplardı.
 #   (2) Ebeveyn skoru YEDEKten geldiyse (`par_trades` < min_sample → karne `live_score`/
 #       `backtest_oos`, ya da kapı `incumbent_oos`): ebeveynin işlem listesi yok, para tarafı yok.
-#   (3) `money_score` None döndüyse: bilinmeyen skor, sıfır skor gibi okunamaz (§4).
+#   (3) `money_score` None döndüyse: bilinmeyen skor, sıfır skor gibi okunamaz.
 #
 # TEK PAYDA, İKİ TARAF: `hedef_pencere` span'e bağlıdır; her tarafı KENDİ span'iyle normalize etmek
 # iki FARKLI paydayla bölmek olurdu — `probgate._score_pair`in "payda dilimin uzunluğuyla
@@ -206,7 +206,7 @@ def check_and_rollback(goal: Optional[dict] = None,
         return None  # not enough evidence yet — never roll back on noise
 
     par_trades = [t for t in trades if t.get("strategy_version") == parent]
-    # PARA İKİZİNİN ÖN KOŞULU (2026-08-03): ebeveyn skoru işlemlerden mi, YEDEKten mi geldi?
+    # PARA İKİZİNİN ÖN KOŞULU: ebeveyn skoru işlemlerden mi, YEDEKten mi geldi?
     # Aşağıdaki yedek dallarından biri işlerse ebeveynin işlem listesi YOKTUR ve para tarafı
     # ölçülemez — bayrak burada, karar dallarından ÖNCE donar.
     _par_yedekten = len(par_trades) < int(goal["min_sample"])
@@ -234,7 +234,7 @@ def check_and_rollback(goal: Optional[dict] = None,
         try:
             versioning.revert_to(parent)
         except FileNotFoundError as e:
-            # EBEVEYN ANLIK GÖRÜNTÜSÜ YOK (denetim turu 25, 2026-07-21): eskiden bu istisna döngüde
+            # EBEVEYN ANLIK GÖRÜNTÜSÜ YOK: eskiden bu istisna döngüde
             # jenerik bir uyarıya dönüşüyordu ("evaluate_outcomes_failed") — yani kötü sürüm CANLI
             # kalıyor, geri alma sessizce başarısız oluyordu. Geri alma başarısızlığı, geri almanın
             # kendisi kadar yüksek sesli olmalı: operatör elle müdahale etmeli.
@@ -314,7 +314,7 @@ def _open_loop(reason: str, **fields) -> None:
 
 
 def _no_parent_diagnostics(version: int, parent) -> dict:
-    """DÖNGÜ NEDEN ÖLÇEMİYOR — ÖLÇÜLEN OLGULAR, ATIF DEĞİL (2026-07-26).
+    """DÖNGÜ NEDEN ÖLÇEMİYOR — ÖLÇÜLEN OLGULAR, ATIF DEĞİL.
 
     Kayıt eskiden yalnız n_cur/n_par taşıyordu; "kanıt bekliyorum" ile "ölçemiyorum" ayrıldı ama
     ÖLÇEMEYİŞİN SEBEBİ hâlâ görünmüyordu. Suçu tek bir sebebe sabitlemek de yanlış olurdu: canlı
@@ -350,7 +350,7 @@ def _close_loop() -> None:
 
 
 def sweep_orphan_hypotheses() -> list:
-    """YETİM HİPOTEZ SÜPÜRMESİ (2026-07-22, kusur #1). `evaluate_outcomes` yalnız GÜNCEL sürüme
+    """YETİM HİPOTEZ SÜPÜRMESİ. `evaluate_outcomes` yalnız GÜNCEL sürüme
     bakar. v2 min_sample'a ulaşmadan v3 ship edilirse, v2'nin hipotezi `live` durumunda SONSUZA
     KADAR kalır — sonradan 46 işlem biriktirse bile. Canlı kanıt: H00029 (v2→v3, live,
     realized_delta yok) ve H00026 (ölçülmüş -0.0364 ama terminale hiç ulaşmamış).
@@ -407,7 +407,7 @@ def evaluate_outcomes(goal: Optional[dict] = None) -> Optional[dict]:
         par_score = v.get("live_score", v.get("backtest_oos"))
     par_score = _parent_score_fallback(version, par_score)   # last resort: the shipping gate's incumbent OOS
     if cur_score is None or par_score is None:
-        # DÖNGÜ AÇIK KALDI (2026-07-22, öğrenme-döngüsü denetimi kusur #2). Eskiden burada sessizce
+        # DÖNGÜ AÇIK KALDI. Eskiden burada sessizce
         # `return None` vardı ve "kanıt bekliyorum" ile "ÖLÇEMİYORUM" aynı görünüyordu. CANLI KANIT:
         # v4'ün ebeveyni yok, ebeveyn satırı da karnede yok → `par_score=None` → döngü HER TURDA
         # sessizce kapanıyordu. Ajan meşgul görünüyor ve hiç öğrenmiyor; hiçbir hipotez terminale
