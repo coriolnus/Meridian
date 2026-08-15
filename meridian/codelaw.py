@@ -689,9 +689,15 @@ def _site_key(site: str) -> tuple[str, int]:
 
     ÖRNEK ÇAPA BİLEREK YAZILMADI: bu docstring'e gerçek bir `dosya.py` + numara çifti koymak,
     `stale_line_anchors`ın kovaladığı sınıftan YENİ bir çapa üretirdi — kendi yasasını ihlal eden
-    bir yardımcı."""
+    bir yardımcı.
+
+    `isascii()` GUARD'I ZORUNLU: `str.isdigit()` Unicode'da RAKAM SAYILAN her şeye True der —
+    üst-simge ve daire içi biçimler dâhil — ama `int()` onları KABUL ETMEZ. Yani yalnız
+    `isdigit()` bakan bir guard, sıralamayı korumak için yazıldığı hâlde `ValueError` ile
+    çökerdi: koruyucunun kendisi yeni bir çökme yolu. `isascii() and isdigit()` tam olarak
+    `int()`in aldığı kümedir."""
     dosya, ayrac, satir = site.rpartition(":")
-    if not ayrac or not satir.isdigit():
+    if not ayrac or not (satir.isascii() and satir.isdigit()):
         return (site, 0)
     return (dosya, int(satir))
 
@@ -1031,13 +1037,21 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
             for fn in _reach_in_module(tree, art, consts, gconsts):
                 # kendi modülünden gelen çağrı tüketici DEĞİLDİR (grafiğin `external_readers`
                 # kuralıyla aynı disiplin: kendi yazdığını kendi okuyan modül sayılmaz)
-                yerler = sorted(s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:"))
+                # SIRA (dosya, SAYISAL satır) — bkz. `_site_key`. Bu listeler `writer_sites`/
+                # `reader_sites` ile AYNI raporda yan yana okunur; biri sayısal biri sözlüksel
+                # sıralanırsa aynı çıktı iki farklı sıra gösterir ve okuyan, farkı bir BULGU
+                # sanar. Sıra tek yasadan gelir.
+                yerler = sorted((s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:")),
+                                key=_site_key)
                 if yerler:
                     accessors[f"{stem}.{fn}"] = yerler
         out.append({"kind": "sink", "artifact": art, "claim_patterns": claim,
                     "claims_no_prod_reader": bool(claim),
                     "host_modules": host_mods, "unverifiable": None,
-                    "external_accessors": {k: sorted(v) for k, v in sorted(accessors.items())},
+                    # değer listeleri ÇAĞRI YERİ (`_site_key`); anahtarlar `modul.fn` adıdır ve
+                    # ad sırası (düz `sorted`) onlar için doğrudur.
+                    "external_accessors": {k: sorted(v, key=_site_key)
+                                           for k, v in sorted(accessors.items())},
                     "stale_claim": bool(claim) and bool(accessors)})
 
     # --- kind="pattern": sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------------
@@ -1081,7 +1095,9 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
             elif "main" not in reach:
                 # okuyucu var ama CLI girişinden erişilemiyor → "çağıranı insan" iddiası yanlış
                 nedenler.append("okuyucu_main_kolundan_erisilemiyor")
-            erisimciler = {f"{stem}.{fn}": sorted(idx.get((stem, fn), [])) for fn in sorted(reach)}
+            # SIRA (dosya, SAYISAL satır) — bkz. `_site_key`; aynı raporda iki farklı sıra olmasın.
+            erisimciler = {f"{stem}.{fn}": sorted(idx.get((stem, fn), []), key=_site_key)
+                           for fn in sorted(reach)}
         info = graph["artifacts"].get(art) or {}
         if info and info.get("unread"):
             # dış okuyucusu YOK — bu kayda değil `DECLARED_SINKS`e ait (yanlış dosyalanmış beyan)
