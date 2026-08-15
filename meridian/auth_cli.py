@@ -31,6 +31,9 @@ from . import auth
 
 
 def _set() -> int:
+    """`set` komutu: parolayı kurar/değiştirir. Kuruluysa önce MEVCUT parola doğrulanır, sonra
+    yenisi iki kez sorulur. Parola `getpass` ile alınır — ekrana yazılmaz, kabuk geçmişine düşmez
+    ve hiçbir yere loglanmaz. Açık oturumlar DÜŞMEZ. Dönüş: 0 başarı, 1 hata."""
     if auth.password_set():
         print("Parola zaten kurulu. Değiştirmek için önce MEVCUT parolayı gir.")
         cur = getpass.getpass("Mevcut parola: ")
@@ -52,6 +55,9 @@ def _set() -> int:
 
 
 def _status() -> int:
+    """`status` komutu: parolanın kurulu olup olmadığını, `auth.json` yolunu ve iznini (0600
+    olmalı), bağlanma adresinin genel olup olmadığını ve oturum ömrünü (kayan pencere + mutlak
+    tavan, sabitlerden OKUNUR) basar. Genel arayüz + parolasız hâlde 1 döner; aksi hâlde 0."""
     kurulu = auth.password_set()
     print(f"parola      : {'kurulu' if kurulu else 'KURULU DEĞİL'}")
     # `auth._auth_file()` — ÇAĞRI ANINDA çözülür; `status` çıktısı süreç neyi okuyorsa ONU
@@ -84,12 +90,16 @@ def _status() -> int:
 
 
 def _logout_all() -> int:
+    """`logout-all` komutu: oturum imza anahtarını döndürür → açık TÜM oturumlar düşer.
+    Parola DEĞİŞMEZ. Her zaman 0 döner."""
     auth.rotate_key()
     print("✓ imza anahtarı döndürüldü — açık tüm oturumlar düştü. Parola DEĞİŞMEDİ.")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: `set` | `status` (varsayılan) | `logout-all` komutunu seçip çıkış kodunu döner.
+    Tanınmayan komutta modül kullanımını basar ve 2 döner."""
     args = argv if argv is not None else sys.argv[1:]
     cmd = args[0] if args else "status"
     if cmd == "set":

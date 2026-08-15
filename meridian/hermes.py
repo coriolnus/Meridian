@@ -3040,6 +3040,7 @@ def _pool_seen_at(prov: str, now: float) -> float:
     """Havuz tükenme işaretinin SON-TÜKENME-ZAMANI; havuz dosyası taşımıyorsa BİZİM ilk gözlem
     anımız çivilenir (bir kez yazılır, sonraki okumalar aynı anı döndürür)."""
     def _mut(cur):
+        """İlk gözlem anını sağlayıcı adına BİR KEZ çiviler; kayıt varsa dokunmaz (False)."""
         if cur.get(prov):
             return False
         cur[prov] = now
@@ -3356,6 +3357,8 @@ def _skill_preload(kind: str, setups: tuple = ()) -> list:
     except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
         attr = {}
     def _score(n):
+        """Skill'in kanıt skoru: ölçülmüş gerçek ort.R (n≥5), yoksa 0,5 × cf ort.R (n_cf≥10),
+        yoksa 0,0 — ölçüsüzler kürasyon sırasını korur."""
         a = attr.get(n) or {}
         if (a.get("n") or 0) >= 5 and a.get("avg_r") is not None:
             return float(a["avg_r"])
@@ -3363,6 +3366,8 @@ def _skill_preload(kind: str, setups: tuple = ()) -> list:
             return 0.5 * float(a["cf_avg_r"])
         return 0.0
     def _bad(n):
+        """ÖLÇÜLMÜŞ-KÖTÜ mü: gerçek n≥10 ve ort.R ≤ −0,15. Çekirdek üçlü asla kötü sayılmaz
+        (ön-yüklemeden düşmez); eleme yalnız bağlam slotunu boşaltır, ajan skill'e yine erişir."""
         a = attr.get(n) or {}
         return n not in CORE and (a.get("n") or 0) >= 10 and (a.get("avg_r") or 0) <= -0.15
     out = [n for n in out if not _bad(n)]
@@ -3482,6 +3487,9 @@ def _review_deneme_isle(day: str, asama: str) -> dict:
     sonuc: dict = {}
 
     def _isle(doc):
+        """Kilitli mutasyon: o günün deneme sayacını (toplam + LLM) artırır, geri-çekilme
+        penceresini yeniden hesaplar ve LLM denemesi `REVIEW_GECERSIZ_N`e ulaştıysa günü kalıcı
+        `gecersiz` işaretine taşıyıp deneme satırını düşürür."""
         defter = _review_backlog_defteri(doc)
         rec = dict(defter["denemeler"].get(day) or {"n": 0, "n_llm": 0, "ilk_ts": memory.now_iso()})
         rec["n"] = int(rec.get("n") or 0) + 1
@@ -3640,6 +3648,9 @@ def review_candidates(dstr: str | None = None) -> dict | None:
                        "birincil ayağın neden boş döndüğü agent_call/agent_call_empty olaylarında")
 
     def _yaz(doc):
+        """Başarı yolunun tek atomik yazımı: günü `tamam`a işler, o güne ait deneme sayacını ve
+        (varsa) kalıcı `gecersiz` işaretini DÜŞÜRÜR — gerçek görüş her işaretten güçlüdür — ve
+        belgeyi yeni kayıtla değiştirirken sıkışıklık defterini korur."""
         # BAŞARI YOLU AYNI KAYDI YAZAR (fark yalnız taşıma): sıkışıklık defteri (`backlog`)
         # kaybolmaz, seans `tamam`a işlenir, varsa deneme sayacı ve (elle koşumda kapanmış olabilecek)
         # gecersiz işareti düşer — GERÇEK görüş her işaretten güçlüdür. Kilitli tek atomik yazım.
@@ -3695,6 +3706,8 @@ def _stamp_llm_opinions(day: str, reviews: list) -> None:
     counters = {"plans": 0}
 
     def _patch_plans(plans):
+        """trade_plans.jsonl satırlarına o günün LLM görüşünü damgalar (yalnız aynı gün + aynı
+        ticker + `llm_opinion` HENÜZ YOKKEN — var olan damga ezilmez); damgalanan sayısını sayar."""
         n = 0
         for pl in plans:
             if pl.get("date") == day and pl.get("ticker") in op_by_ticker and "llm_opinion" not in pl:
@@ -3706,6 +3719,8 @@ def _stamp_llm_opinions(day: str, reviews: list) -> None:
     store.update_jsonl("trade_plans.jsonl", _patch_plans)
     patched = counters["plans"]
     def _patch_cf(rows):                                 # #4: cf defteri de damgalanır — görüş↔sonuç
+        """Karşı-olgusal (cf) defter satırlarını aynı kuralla damgalar; eşik-altı `near_miss`
+        gölge adaylar ATLANIR (onlar LLM görüşü almaz)."""
         hit = False                                      # çiftleri simüle satırlardan haftalar içinde birikir
         for r in (rows or []):
             if r.get("near_miss"):                       # eşik-altı gölge adaylar LLM görüşü almaz
@@ -3717,6 +3732,8 @@ def _stamp_llm_opinions(day: str, reviews: list) -> None:
 
     store.update_json("cf_open.json", _patch_cf, [])
     def _patch_pf(pf):                                   # CANLI DEFTER — kilitsiz dokunulmaz
+        """portfolio.json'daki SİLAHLI planlara aynı damgayı basar (P4 dolum-anı vetosu oradan
+        okur). Silahlı plan yoksa dokunmaz; var olan `llm_opinion` ezilmez."""
         if not pf or not pf.get("armed"):
             return False
         changed = False
@@ -3884,6 +3901,8 @@ def backfill_opinions_async(max_days: int | None = None):
     import threading
 
     def _bg():
+        """Arka plan gövdesi: dolguyu koşar; istisna iş parçacığını sessizce düşürmesin diye
+        `opinion_backfill_failed` uyarısına çevrilir."""
         try:
             backfill_opinions(max_days)
         except Exception as e:
@@ -3905,6 +3924,8 @@ def review_candidates_async(dstr: str | None = None):
     import threading
 
     def _bg():
+        """Arka plan gövdesi: aday incelemesini koşar; istisna `candidate_review_failed`
+        uyarısına çevrilir (sessiz kayıp yok)."""
         try:
             review_candidates(dstr)
         except Exception as e:
@@ -4191,6 +4212,8 @@ def _virgin_value(spec: dict, live):
     from . import guard as _g
 
     def _snap(x):
+        """Değeri düğmenin ADIM ızgarasına oturtur, [min, max] aralığına kıstırır ve tipe göre
+        yuvarlar (int → tam sayı, float → 4 hane) — sınır dışı ya da ızgara dışı değer üretilmez."""
         v = lo + round((float(x) - lo) / step) * step
         v = min(hi, max(lo, v))
         return int(round(v)) if typ == "int" else round(float(v), 4)

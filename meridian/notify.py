@@ -28,6 +28,9 @@ from . import secrets
 
 
 def _post(url: str, payload: dict, timeout: float = 8.0) -> bool:
+    """JSON gövdesini verilen adrese POST eder; teslim edildiyse True, herhangi bir ağ/sağlayıcı
+    hatasında False. Yalnız stdlib (`urllib`) kullanır ve istisna yukarı sızmaz — bildirim
+    denemesi çağıranı asla düşüremez."""
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                      headers={"Content-Type": "application/json"})
@@ -38,6 +41,8 @@ def _post(url: str, payload: dict, timeout: float = 8.0) -> bool:
 
 
 def configured() -> bool:
+    """En az bir bildirim kanalı yapılandırılmış mı: Telegram (bot jetonu + sohbet kimliği)
+    ya da genel webhook adresi? Sır DEĞERLERİ okunur ama hiçbir yere yazılmaz/loglanmaz."""
     return bool((secrets.get("TELEGRAM_BOT_TOKEN") and secrets.get("TELEGRAM_CHAT_ID"))
                 or secrets.get("MERIDIAN_WEBHOOK_URL"))
 
@@ -167,14 +172,20 @@ def send(text: str) -> bool:
 
 # convenience wrappers keyed to the alarm classes (safe no-op if unconfigured)
 def breaker(day_pnl_pct: float):
+    """Devre-kesici bildirimi: günlük kayıp yüzdesiyle "yeni giriş durdu" mesajını iter.
+    Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send(f"⚠️ Meridian devre kesici: günlük kayıp {day_pnl_pct:.2%} — yeni giriş durdu.")
 
 
 def rollback(frm: int, to: int, delta: float):
+    """Otomatik geri alma bildirimi: hangi strateji sürümünden hangisine dönüldüğünü ve skor
+    farkını iter. Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send(f"↩️ Meridian rollback: v{frm} → v{to} (skor {delta:+.3f}) otomatik geri alındı.")
 
 
 def halted(on: bool):
+    """HALT durum değişimi bildirimi: `on` ise "DURDURULDU", değilse "devam ediyor" mesajını iter.
+    Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send("🛑 Meridian DURDURULDU (HALT)." if on else "▶️ Meridian devam ediyor.")
 
 

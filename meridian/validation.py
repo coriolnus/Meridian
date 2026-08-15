@@ -345,6 +345,8 @@ def _matris(rows: list) -> tuple[list, list, list]:
 
 
 def _sharpe(xs: list) -> float:
+    """Dizinin örneklem Sharpe'ı (ortalama / standart sapma, yıllıklandırılmamış). n<2 ya da varyans
+    sıfırsa 0.0 döner."""
     n = len(xs)
     if n < 2:
         return 0.0

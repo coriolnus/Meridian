@@ -24,6 +24,8 @@ MIN_N = 30           # bir edge iddiasının anlamlı sayılması için asgari �
 
 
 def _edge(rows: list) -> dict:
+    """Bir satır kümesinin edge özeti: girilen ve `r_multiple`ı ölçülmüş satırlarda n, ortalama R ve
+    kazanma oranı. Ölçülecek satır yoksa n=0 ve diğerleri None — sıfır YAZILMAZ."""
     rms = [float(r["r_multiple"]) for r in rows if r.get("entered") and r.get("r_multiple") is not None]
     if not rms:
         return {"n": 0, "avg_r": None, "win_rate": None}
@@ -32,6 +34,9 @@ def _edge(rows: list) -> dict:
 
 
 def build() -> dict:
+    """Makine-okunur kanıt raporunu kurar: kanıt tabanı, kapı hükmü başına temel edge, skor
+    kalibrasyonu, kurulum/skill katkısı, rejim edge'i, eşik karnesi ve cf↔gerçek sadakati.
+    SALT OKUMA — kendi ölçümünü yapmaz, yalnız KAYITLI kanıtı toplar."""
     rows = cf.resolved_rows(entered_only=False)                # tüm çözülmüş cf (near-miss dahil değil)
     rows_nm = cf.resolved_rows(entered_only=False, include_near_miss=True)
     real_n = len(store.read_jsonl("trades.jsonl"))
@@ -76,6 +81,8 @@ def build() -> dict:
 
 
 def _verdict(n, avg_r, min_n=MIN_N):
+    """n ve ortalama R'den hüküm cümlesi üretir. n taban örneklemin altındaysa "KANIT YOK (n=…)" —
+    yetersiz örneklemde edge iddiası BASILMAZ."""
     if not n or n < min_n:
         return f"KANIT YOK (n={n or 0}<{min_n})"
     if avg_r is None:
@@ -84,6 +91,8 @@ def _verdict(n, avg_r, min_n=MIN_N):
 
 
 def render_text() -> str:
+    """`build()` raporunu operatör için numaralı metin dökümüne çevirir (her satır n ve hükmüyle).
+    SALT OKUMA — hiçbir şey yazmaz."""
     r = build()
     L = []
     eb = r["evidence_base"]

@@ -323,6 +323,8 @@ def classify(rows: list[dict], boundary: dict | None = None) -> list[dict]:
     out = []
 
     def _k(kaynak, sinif, gerekce, degisti=True):
+        """Tek satırın damga kararını çıktı listesine ekler: kaynak damgası, GRUPLANABİLİR kural adı (`sinif`),
+        o satıra özgü kanıt (`gerekce`) ve damganın gerçekten değişip değişmediği."""
         # `sinif` GRUPLANABİLİR kural adıdır, `gerekce` o SATIRIN kanıtıdır. İkisi ayrı olmasaydı
         # rapor 95 satırı 90 ayrı "gerekçe"ye bölerdi (her tarih kendi başına bir metin) ve
         # okuyan "hangi KURAL kaç satırı damgaladı?" sorusunu hiç göremezdi.
@@ -366,6 +368,9 @@ def migrate(apply: bool = False) -> dict:
 
 
 def _migrate_locked(apply: bool) -> dict:
+    """Damga göçünün kilit ALTINDAKİ gövdesi: defteri okur, tohum sınırını AYNI satırlardan türetir,
+    kararları sınıflandırır ve raporu kurar. `apply` yanlışsa ya da değişecek satır yoksa tek bayt
+    yazılmaz; yazıldığında sayaçlar öncesi/sonrası raporlanır ve olay defterine uyarı düşer."""
     rows = store.read_jsonl(LEDGER)
     # SINIR, RAPORUN ÖLÇTÜĞÜ DEFTERİN TA KENDİSİNDEN türetilir (yedek yol `trades.kaynak`ı okur):
     # `rows` geçilmeseydi defter kilidin içinde İKİNCİ KEZ okunurdu ve rapor iki farklı anın
@@ -410,6 +415,8 @@ def _worker_running() -> bool:
 
 
 def _print(rapor: dict) -> None:
+    """Göç raporunu insan okunur biçimde basar: mod (kuru koşu / uygulandı), tohum sınırı ve iki bağımsız
+    kanıt yolu, damga dağılımı, kural bazında sayımlar ve birkaç örnek satır."""
     mod = "UYGULANDI" if rapor.get("yazildi") else ("UYGULAMA İSTENDİ ama değişecek satır yok"
                                                     if rapor.get("applied")
                                                     else "KURU KOŞU (hiçbir bayt yazılmadı)")
@@ -435,6 +442,9 @@ def _print(rapor: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: `trades.jsonl` satırlarına kaynak damgası basar. Varsayılan KURU KOŞU; `--uygula`
+    canlı worker görünürken `--zorla` olmadan REDDEDİLİR (aynı defteri iki süreç iki farklı niyetle
+    yeniden yazamaz). Dönüş: çıkış kodu."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.ledgerstamp",
         description="trades.jsonl satırlarına kaynak damgası (live_paper/replay_seed/belirsiz) basar")

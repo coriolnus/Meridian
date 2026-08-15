@@ -110,6 +110,7 @@ def _nabiz(asama: str) -> None:
 
 
 def _simdi() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -151,6 +152,7 @@ def setup_report() -> dict:
 
 
 def _dormant_setups() -> list[str]:
+    """Motorun tanıdığı ama HENÜZ SİLAHLANMAMIŞ (canlı deftere risk yazmayan) setup adlarını verir."""
     from . import strategy as strat
     engine = ("breakout_vcp", "momentum_burst", "pullback", "episodic_pivot")
     return [s for s in engine if s not in strat.ARMED_SETUPS]
@@ -190,6 +192,8 @@ def _rapora_isle(setup: str, sonuc: dict, parmak: str) -> None:
     onceki: dict = {}
 
     def _degistir(doc: dict) -> bool:
+        """Rapor sözlüğünün yamacı: `measurements[setup]` satırını yeni kayıtla değiştirir ve önceki
+        durumu (`onceki`) yan not olarak saklar."""
         doc.setdefault("measurements", {})
         onceki["status"] = (doc["measurements"].get(setup) or {}).get("status")
         doc["measurements"][setup] = kayit

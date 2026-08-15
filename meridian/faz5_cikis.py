@@ -425,6 +425,8 @@ def cikis_olcumu(rows: list | None = None) -> dict:
                                   [c["date"] for c in r_ciftler])
 
     def _yuvarla(ci: dict) -> dict:
+        """Bootstrap güven aralığı sözlüğünü rapor biçimine çevirir: sayısal alanlar 4 ondalığa yuvarlanır,
+        ölçülemeyenler None KALIR (uydurma yasağı); yöntem/küme künyesi olduğu gibi taşınır."""
         return {"ort": (None if ci["ort"] is None else round(ci["ort"], 4)),
                 "alt": (None if ci["lo"] is None else round(ci["lo"], 4)),
                 "ust": (None if ci["hi"] is None else round(ci["hi"], 4)),

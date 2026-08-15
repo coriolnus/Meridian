@@ -441,6 +441,7 @@ class Kronometre:
     __slots__ = ("_t0", "ms")
 
     def __init__(self):
+        """Kronometreyi kurar: monotonik saatten başlangıcı alır, ölçülen süreyi sıfırlar."""
         self._t0 = time.perf_counter()
         self.ms = 0.0
 
@@ -450,10 +451,12 @@ class Kronometre:
         return self.ms
 
     def __enter__(self):
+        """`with` girişinde başlangıcı ve süreyi yeniden sıfırlar; kronometrenin kendisini döndürür."""
         self._t0 = time.perf_counter()
         self.ms = 0.0
         return self
 
     def __exit__(self, *exc):
+        """`with` çıkışında süreyi kapatır. İstisnayı YUTMAZ (False döner) — telemetri bir hatayı gizleyemez."""
         self.dur()
         return False
