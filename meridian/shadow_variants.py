@@ -1,65 +1,36 @@
-"""shadow_variants.py — 2.4 GÖLGE-VARYANT PORTFÖYLERİ (2026-07-30). SIFIR YETKİ, KENDİ DEFTERİ.
+"""shadow_variants.py — aynı günün canlı aday akışına farklı parametre kümeleriyle KÂĞIT karar uygulayan gölge-varyant karar defteri.
 
-SORUN. Kârlılık programının kanıt hızı bugün TEK bir parametre kümesine bağlı: canlı strateji her gün
-BİR karar akışı üretiyor, o akış da ayda ~10-20 satır kanıt biriktiriyor. Bir düğmenin (ör. `min_rvol`)
-işe yarayıp yaramadığını sormanın iki yolu vardı: (a) OOS replay'i (`prescreen`/`walk_forward`) — geçmiş
-barlar üzerinde, güçlü ama GEÇMİŞE bakar ve pencereleri tükenir; (b) canlıya ship edip beklemek — yavaş
-ve sonuçlu. Arada bir katman yoktu: **aynı günün aynı aday akışına farklı parametrelerle KÂĞIT karar
-uygulayıp defter tutmak.** Bu modül o katmandır — kanıt hızı çarpanı, risk çarpanı değil.
+NE YAPAR. Kanıt hızı tek parametre kümesine bağlıydı: canlı strateji günde BİR karar akışı üretir
+ve bir düğmenin etkisini sormanın iki yolu vardı — OOS replay (geçmişe bakar, pencereleri tükenir)
+ya da canlıya ship edip beklemek (yavaş, sonuçlu). Bu modül aradaki eksik katmandır: her EOD
+turunda `VARIANTS` sözlüğündeki her kol için "hangi adaylar sinyal üretirdi, kapı ne derdi, hangi
+set silahlanırdı, geometri ne olurdu" ölçülür ve canlı kararla ayrışması satır satır deftere
+yazılır. Kanıt hızı çarpanıdır, risk çarpanı değil. Ölçülen şey KARARDIR, portföy değil:
+varyantların pozisyon ömrünü (fill → yönetim → çıkış → mark) kalıcı kâğıt kitaplarla izleyen ayrı
+motor `shadow_lifecycle`tadır; bu modül o kitapların yalnız DIŞ OKUYUCUSUDUR (`--karne`).
 
-DESEN 4B'DEN GENELLENDİ. `intraday_shadow` seans içinde "tetik kesildiğinde ne olurdu?"yu KOPYA bir
-broker/kitap üzerinde ölçüp kendi defterine yazıyor. Buradaki genelleme aynı üç kurala uyar:
-  1. KANUN ÇAĞRILIR, KOPYALANMAZ. Tarama `strategy.scan_all`, kapı `guard.classify_gate`, karartma
-     `earnings.in_blackout`, kısma `broker.derisk_mult`/`max_positions_at` — hepsi ÜRETİMİN kendi
-     fonksiyonları. İkinci bir kopya yazmak, varyant defterinin zamanla stratejiyi değil KENDİNİ
-     ölçmeye başlaması demekti (4b'nin yazılı dersi).
-  2. KİTAP KOPYADIR, SALT OKUNUR. Canlı `PaperBroker` nesnesine erişilmez; `loop` bir PROJEKSİYON
-     geçirir (pozisyon sayısı/sektörü/size_r + sermaye + zirve). Hiçbir yazım yolu (`_save_broker`,
-     `fill_entry`) çağrılmaz.
-  3. TEK YAZDIĞI KENDİ DEFTERİDİR (`state/shadow_variants.jsonl`). canlı strategy.yaml'a, guard'a,
-     kapıya, `portfolio.json`a ve hipotez defterine HİÇBİR yol çıkmaz.
+KİLİT GİRİŞLER. `record_cycle` (loop.daily_cycle kancası: bir tur × tüm varyantlar; `bars`
+verilirse yaşam-döngüsü motorunu da aynı kancadan koşturur), `VARIANTS` / `LIFECYCLE_KNOBS_V2`,
+`validate_knobs` (uydurma düğme adı sessiz kalmaz), `_judge` (karar ve kitap katmanlarının
+paylaştığı TEK kapı yolu), `summarize`/`render_summary` (`--ozet`), `summarize_books`/
+`render_karne` (`--karne`), `main` (CLI).
 
-BEYAN — BUNLAR ÖLÇÜMDÜR, SHIP DEĞİL. `VARIANTS` sözlüğündeki her giriş bir YOKLAMADIR. `prescreen`in
-`k_probes` disiplininin kardeşi: her satır `k_variants` taşır (o gün kaç varyant koştu). Sonradan "en
-iyi varyant" seçmek ÇOKLU KARŞILAŞTIRMADIR; paydayı satıra yazmayan bir defter, kazananın-lanetini
-görünmez kılar. Bir varyantın canlıya geçişi YALNIZ OOS kapısından (prescreen/reflect) geçerek olur —
-bu defterden ship yolu YOKTUR ve olmamalıdır.
+YASALAR — GÖLGE KATMANI. (1) SIFIR YETKİ: bu defterden ship yolu YOKTUR; canlıya geçiş yalnız
+OOS kapısından (prescreen/reflect). (2) KANUN ÇAĞRILIR, KOPYALANMAZ: tarama `strategy.scan_all`,
+kapı `guard.classify_gate`, karartma `earnings.in_blackout`, kısma `broker.derisk_mult`/
+`max_positions_at` — hepsi üretimin kendi fonksiyonları; ikinci kopya, defterin zamanla stratejiyi
+değil KENDİNİ ölçmesi demekti. (3) KİTAP KOPYADIR, SALT OKUNUR: canlı `PaperBroker` nesnesine
+erişilmez, loop bir projeksiyon geçirir; strategy.yaml'a, portfolio.json'a, kapıya ve hipotez
+defterine hiçbir yazım yolu çıkmaz — canlı karara dokunamaz. (4) ÇOKLU-KARŞILAŞTIRMA PAYDASI
+satırda taşınır: `k_variants` (karar) ile `k_lifecycle` (para) AYRI paydalardır ve tek sayıya
+indirgenmez; çıkış-düğmeli kollar bu sette yoktur, çünkü giriş yolunda hiç okunmazlar — kontrol
+koluyla karar-özdeş olur, paydayı sıfır ölçüm kazancıyla şişirirlerdi (testle çakılı:
+tests/test_sadelestirme_v123.py). (5) PIT çapası: tohum (tarihsel) turda bugünün kazanç takvimi
+konuşturulmaz (`_CANLI_TUR`). Nüfus tamdır: kanca candidates ∪ near_miss geçirir — gevşetilmiş
+eşik kümesi her varyantın üretebileceği kümenin üst kümesidir.
 
-ÖLÇÜLEN ŞEY: KARAR, henüz PORTFÖY DEĞİL (v1 sınırı, bilerek ve yazılı). Her EOD turunda her varyant
-için "hangi adaylar sinyal üretti, kapı ne dedi, hangi set silahlanırdı, geometri (stop/hedef/R) ne
-olurdu" ölçülür. Varyantların KENDİ pozisyon ömürleri (fill → yönetim → çıkış → mark) İZLENMEZ: bunun
-için ikinci bir yaşam-döngüsü motoru gerekirdi ve o motorun canlıdan sürüklenmesi tam olarak 4b'nin
-reddettiği hatadır. Çok günlü P&L sorusunun aracı ZATEN var ve kapının yasasını çağırıyor:
-`backtest.walk_forward` (→ `prescreen`). Bu defterin işi onun ölçemediğini ölçmektir — CANLI günün
-gerçek akışında kararın nasıl AYRIŞTIĞINI, her gün, taze.
-
-ÇIKIŞ DÜĞMELİ KOL BU SETTE YOKTUR (2026-07-30 kararı) — v1 SINIRININ DOĞRUDAN SONUCU. Bir eksiklik
-değil bir ELEME: ÇIKIŞ düğmeleri v1'in ölçtüğü GİRİŞ yolunda HİÇ OKUNMAZ. Ölçüldü, varsayılmadı —
-`exit.early_kill_pivot` yalnız `strategy.early_kill_pivot_exit` içinde okunur, o da yalnız
-`manage_position`dan çağrılır; `exit.scale_out_frac`/`_r` yalnız `broker.scale_out`, yani FILL
-ömründe. Böyle bir kol kontrol kolu (V5) ile KARAR-ÖZDEŞ olur: defterine yazacağı ayrışma sıfırı bir
-ÖLÇÜM değil bir KURGU olur ve "erken itlafın/kısmi kâr almanın etkisi yok" diye okunmaya açık kalır.
-ÜSTELİK BEDELLİ — her karar-özdeş kol `k_variants` paydasını büyütür, yani GERÇEKTEN ayrışan kolların
-(V1/V2/V4) çoklu-karşılaştırma cezasını SIFIR ölçüm kazancı karşılığında artırır. Bu yüzden
-`LIFECYCLE_KNOBS_V2` düğmelerinden birini taşıyan kol v1 setine ALINMAZ; kural yazılı bir konvansiyon
-değil, testle ÇAKILMIŞ bir kısıttır (`tests/test_sadelestirme_v123.py`). Bu düğmelerin çok günlü P&L
-sorusu ZATEN yanıtlanabilir ve aracı bellidir: `backtest.walk_forward` (→ `prescreen`). Gölge-v2
-yaşam-döngüsü motoru geldiğinde kısıt kalkar ve eleme gerekçesiyle birlikte kollar geri eklenir.
-
-GÖLGE-v2 GELDİ (2026-07-30) — AMA BU DEFTERİN SINIRI DEĞİŞMEDİ. `meridian/shadow_lifecycle.py`
-artık fill → yönetim → çıkış → mark izleyen KALICI bir kâğıt kitabı tutar ve çıkarılan çıkış kolları
-(V3/V6) ORADA geri geldi. Bu modülün `VARIANTS` seti BİLEREK aynı kaldı: burada ölçülen soru hâlâ
-KARARIN ayrışmasıdır ve o soruda çıkış düğmeleri hâlâ karar-özdeştir (yukarıdaki yapısal gerekçe ve
-`tests/test_sadelestirme_v123.py` çivisi aynen geçerli). İki soru, iki payda: `k_variants` (karar,
-bu defter) ve `k_lifecycle` (para, kitap defteri). Tek bir sayıya indirgemek, karar-özdeş kolları
-karar sorusunun paydasına geri sokmak — yani 2026-07-30'da tam bu gerekçeyle yapılan temizliği geri
-almak — olurdu. Bu modül kitabın DIŞ OKUYUCUSUDUR (`--karne`), yazarı değil.
-
-NÜFUS NEDEN TAM: kanca `candidates` ∪ `near_miss` ticker'larını geçirir. `near_miss` taraması
-`strategy.relax_for_near_miss` ile koşar (hacim ≤1.0 = bounds tabanı, RS ≤55, skor ≤50, proximity
-×1.5) — yani GEVŞETİLMİŞ eşiklerin ürettiği küme, buradaki her varyantın üretebileceği kümenin
-ÜST KÜMESİDİR. V4 gibi bir düğmeyi GEVŞETEN varyant bile bu yüzden eksiksiz ölçülür; canlı akışı tek
-başına süzmek onu sessizce kör bırakırdı (canlı `candidates` bir ALT kümedir).
+OKUR: canlı P2/P3 girdileri çağrılabilirlerle loop'tan; bounds sözleşmesi; shadow_lifecycle'ın
+kitap/işlem defterleri (yalnız okuma).  YAZAR: yalnız kendi defteri `state/shadow_variants.jsonl`.
 """
 from __future__ import annotations
 

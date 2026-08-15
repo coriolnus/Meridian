@@ -1,24 +1,33 @@
-"""skill_gorus.py — GÖRÜŞ DEFTERİ v1 (ön-kayıt kartı EDG-2026-019, 2026-08-09).
+"""skill_gorus.py — skill'lerin yapılandırılmış GÖRÜŞ yazıp gerçekleşen sonuçla puanlandığı, icraya dokunmayan görüş defteri.
 
-NEDEN VAR — KISIR DÖNGÜNÜN GÖLGE TARAFTAN KIRILMASI. Aktif skill kümesinin aday seçimine ölçülebilir
-bir katkısı olup olmadığı BİLİNMİYOR, çünkü skill'ler üretimde hiç koşmuyor ve Eksen-2 (doğru
-olarak) kanıtsız öneri üretmeyi reddediyor. "Ölçmek için koşmalı, koşturmak için ölçmeli" döngüsü.
-Bu katman döngüyü İCRAYA DOKUNMADAN kırar: skill'ler yapılandırılmış GÖRÜŞ yazar, yüzey başına bir
-ÇÖZÜCÜ o görüşü GERÇEKLEŞEN sonuçla puanlar, hüküm yüzey-başına kanıtla operatöre gider.
+NE YAPAR — KISIR DÖNGÜNÜN GÖLGE TARAFTAN KIRILMASI. Aktif skill kümesinin aday seçimine ölçülebilir
+bir katkısı olup olmadığı bilinmiyordu, çünkü skill'ler üretimde koşmuyor ve Eksen-2 (doğru
+olarak) kanıtsız öneri üretmeyi reddediyor — "ölçmek için koşmalı, koşturmak için ölçmeli"
+döngüsü. Bu katman döngüyü İCRAYA DOKUNMADAN kırar: deterministik motorun fiilen koşturduğu
+skill'ler için yüzey başına görüş satırları türetilir, yüzey başına bir ÇÖZÜCÜ o görüşleri
+GERÇEKLEŞEN sonuçla puanlar (sıralayıcıda rank-IC, çıkışta kıyas), hüküm tarih-kümeli bootstrap +
+BH-FDR süzgeciyle yüzey-başına kanıt olarak operatöre gider. Şemada beş yüzey vardır (YUZEYLER),
+ikisi ölçülür (OLCULEN_YUZEYLER); çözücüsü olmayan yüzeye görüş YAZILMAZ (okuyucusuz yazım yok).
 
-NE YAPMAZ — VE BU BİR SÖZLEŞMEDİR.
-  * HİÇBİR TERFİ OTOMATİK DEĞİL. FDR-sağkalanlar yalnız Eksen-2 teşhisine ve rapora düşer;
-    bu modül kayıt defterine, bayrağa, eşiğe, plana, emre DOKUNMAZ. (2026-08-06 Eksen-2 kararının
-    devamı: motor-içi bayrak yazımı yasağı.)
-  * İLERİ-BAKIŞ YOK. Görüş satırı YALNIZ t ve öncesi veriyi taşır (skor plan anındadır); sonuç
-    defterde DEĞİL, çözücünün ayrıca okuduğu SONUÇ defterlerindedir. İkisini tek satırda
-    birleştirmek, görüşün içine cevabı yazmak olurdu.
-  * EŞİK İCAT ETMEZ. Bütün eşikler karttan gelir ve ölçümden ÖNCE donduruldu (aşağıda `KART_*`).
+KİLİT GİRİŞLER. `topla` (görüş üretimi; yazım tavanlı, en eskiden yeniye), `kadans` (öğrenme
+kadansı kancası; süre örneklemi + p95 tavanı), `rapor` (FDR-sağkalan hüküm yüzeyi), `evren`
+(aktif + korumasız + deterministik küme, dışlama muhasebesiyle), `gorus_satiri` (şema doğrulamalı
+satır — kusurlu satır atılmaz, ValueError atar), `cozucu_siralayici`/`cozucu_cikis`,
+`bootstrap_p`/`bh_fdr`, `defter`.
 
-DAVRANIŞSAL TÜKETİCİ İLK GÜNDEN (uyuyan-yol dersi: önden bağlı arkadan bağsız yüzey İNŞA EDİLMEZ).
-Defterin iki okuyucusu bu turda BAĞLANDI ve ikisi de bu modülün DIŞINDADIR:
-  1. `api._eksen2_gorus()` → `/api/skills` yükünde `gorus_defteri` alanı (pano/operatör yüzeyi),
-  2. `scheduler._learning_cadence` → kadansın kendi çıktısında `gorus` bloğu (öğrenme defteri).
+DEĞİŞMEZLER — GÖLGE/GÖRÜŞ KATMANI SÖZLEŞMESİ. HİÇBİR TERFİ OTOMATİK DEĞİL: bu modül kayıt
+defterine, bayrağa, eşiğe, plana, emre DOKUNMAZ — canlı karara hiçbir yol çıkmaz; FDR-sağkalanlar
+yalnız Eksen-2 teşhisine ve rapora düşer (motor-içi bayrak yazımı yasağının devamı). İLERİ-BAKIŞ
+YOK: görüş satırı yalnız t ve öncesi veriyi taşır; sonuç, çözücünün ayrıca okuduğu SONUÇ
+defterlerindedir — ikisini tek satırda birleştirmek görüşün içine cevabı yazmak olurdu. EŞİK İCAT
+ETMEZ: bütün eşikler ön-kayıt kartından gelir ve ölçümden ÖNCE donduruldu (`KART_*` sabitleri —
+kod onları değiştiremez). Görüş üretimi kadans süresini tavanın üstünde şişiremez (p95 kill'inin
+ön alıcısı yazım tavanıdır). Davranışsal tüketici ilk günden bağlıdır ve modülün DIŞINDADIR:
+`api._eksen2_gorus()` (pano) + `scheduler._learning_cadence` (öğrenme defteri).
+
+OKUR: skills.catalog/ENGINE_IMPLEMENTED (evren), counterfactuals + trades sonuç defterleri,
+exit_efficiency.json (girdi bekçisi).
+YAZAR: yalnız kendi iki defteri `state/skill_gorusleri.jsonl` + `state/skill_gorus_durum.json`.
 """
 from __future__ import annotations
 
