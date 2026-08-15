@@ -1,51 +1,28 @@
-"""adapters/massive.py — Massive (massive.com) EOD bar sağlayıcısı.
+"""adapters/massive.py — Massive (massive.com) EOD bar sağlayıcısı: tüm piyasayı TEK çağrıda veren
+grouped-daily ucu ile artımlı tazelemeyi FMP kotasından kurtarır.
 
-NEDEN VAR: bugün 250 sembollük BİR bar tazelemesi, SEMBOL BAŞINA bir FMP isteği atıyor ve ücretsiz
-katmanın günlük kotasının TAMAMINI yakıyor (canlı kanıt: state/fmp_usage.json, 2026-07-27'de
-`calls_today: 251` ile "Limit Reach"). Massive'in **grouped daily** ucu TÜM ABD piyasasının o güne ait
-EOD barlarını TEK çağrıda döndürür — yani artımlı günlük tazeleme N istekten 1 isteğe iner.
-
-ROL AYRIMI (Rol 1 kararı):
-  * Massive → GÜNLÜK ARTIMLI tazeleme (önbellekte zaten geçmişi olan sembollerin SON barı) +
-    çapraz doğrulama. Ücretsiz katman: 5 çağrı/dk, ~2 yıl geçmiş, EOD.
-  * FMP     → DERİN geçmiş backfill (2021+; walk-forward bunu ister) ve Massive düşerse yedek.
-  * Alpaca  → dakikalık; bu modül ona hiç dokunmaz.
-
-UÇLAR — DOKÜMANDAN DOĞRULANDI (2026-07-29, massive.com/docs endpoint sayfaları):
-  grouped daily   GET {BASE}/v2/aggs/grouped/locale/us/market/stocks/{YYYY-MM-DD}
-                      ?adjusted=true&include_otc=false
-  custom bars     GET {BASE}/v2/aggs/ticker/{ticker}/range/{mult}/{timespan}/{from}/{to}
-  all tickers     GET {BASE}/v3/reference/tickers
-NOT: massive.com/llms.txt bu uçları `/rest/stocks/aggregates/daily-market-summary` gibi adlarla
-listeler — bunlar DOKÜMAN SAYFASI yollarıdır, istek yolları değil. İstek yolları yukarıdaki gibidir
-(her uç sayfasındaki literal "GET https://api.massive.com/..." satırından alındı).
-
-ALAN EŞLEMESİ (results[] → bizim CSV şeması date,open,high,low,close,volume):
-    T  → (ticker; satırın kimliği, sütun değil)      o → open      h → high
-    l  → low            c → close        v → volume   t → date (unix ms, ET seansına çevrilir)
-    vw → **ATILIR** (CSV şemasında vwap sütunu YOK — state/bars/*.csv başlığı doğrulandı)
-    n  → **ATILIR** (işlem sayısı; şemada yok)     otc → ATILIR (include_otc=false zaten)
-
-ANAHTAR YOKSA: her uç None döner (BOŞ LİSTE DEĞİL — "istek atılamadı" ile "sağlayıcı sıfır satır
-döndürdü" ayrı şeylerdir; data.py'deki HATA≠BOŞ disiplininin aynısı) ve yokluk BİR KEZ obs'a kaydedilir
-(YASA 4: yokluk kaydedilir, sessiz değil). Zincir FMP ile aynen sürer.
-
-YAZIM ZİNCİRİNE GİRİŞ ÖLÇÜME BAĞLIDIR — ve ölçüm YAPILDI (ayrıntı: BASELINE):
-  * Rol 1, iki ayrı tarihte (25 ve 12 sembol; arada temettü ex-tarihi geçen KO/PEP/O/VZ/MO dahil):
-    maksimum sapma %0.000.
-  * Rol 2 (bu ajan) BAĞIMSIZ tekrar, TÜM önbellek evreni (251 sembol, 2026-07-28): maksimum sapma
-    **%0.081**, %0.1 toleransını aşan 0/251. Yani "sıfır sapma" DOĞRU DEĞİL — küçük örneklemin
-    yuvarlamasıydı; gerçek iyi huylu gürültü tabanı ~%0.08. Sapmalar DAĞINIK, çarpımsal değil:
-    bölünme 2x/4x, temettü %1–15 SABİT kayma üretirdi, bu ise venue/consolidated close farkı.
-  * Hacim ekseni de ölçüldü (brief istemiyordu, ama bar yazan kaynak hacmi de yazar): 239/251
-    birebir aynı, medyan oran 1.000 → sistematik hacim kırılması YOK.
-Hüküm: iki kaynak AYNI ayarlama politikasında (yalnız bölünme-düzeltmeli) → kapı AÇIK. Yerel
-`--dogrula` koşulursa hüküm ONUN olur ve "uyumsuz" derse kapı kapanır; taban yerel kanıtı ezemez.
-
-Anahtar YOKSA hiçbir şey değişmez: uçlar None döner, zincir FMP→Cboe→Nasdaq olarak aynen sürer.
-Bugün worker'da anahtar yoktur (Claude eklentisinin anahtarı worker'a AKMAZ) — yani bu modül
-panoya `MASSIVE_API_KEY` girilene kadar çalışma zamanında HİÇBİR davranışı değiştirmez.
-"""
+(a) Ne yapar: 250 sembollük bir bar tazelemesi sembol başına FMP isteğiyle ücretsiz kotanın tamamını
+yakıyordu (canlı defterde ölçülmüş sınıf); Massive'in grouped-daily ucu TÜM ABD piyasasının o günkü
+EOD barlarını tek çağrıda döndürür — artımlı tazeleme N istekten 1 isteğe iner. Rol ayrımı: Massive
+günlük artımlı tazeleme + çapraz doğrulama (ücretsiz katman: 5 çağrı/dk, ~2 yıl geçmiş, EOD);
+FMP derin backfill ve yedek; Alpaca dakikalık — bu modül ona dokunmaz. Uçlar (doküman sayfası adları
+değil, gerçek istek yolları): GET /v2/aggs/grouped/locale/us/market/stocks/{YYYY-MM-DD},
+GET /v2/aggs/ticker/{t}/range/{mult}/{timespan}/{from}/{to}, GET /v3/reference/tickers. Alan
+eşlemesi results[] → CSV şeması (o/h/l/c/v; t unix-ms → ET seans tarihi; vw/n/otc ATILIR).
+(b) Kilit girişler: grouped_daily(), custom_bars(), snapshot()/latest_bar()/bar_for(), covers(),
+write_enabled()/mode()/verify_basis(), verify() (CLI --dogrula), ping(), status(), reset_cache().
+(c) Değişmezler: ANAHTAR GEREKMEZ sanılmasın — MASSIVE_API_KEY yoksa her uç None döner ve zincir
+(FMP→Cboe→Nasdaq) aynen sürer; None="istek atılamadı", []="sağlayıcı sıfır satır döndürdü"
+(HATA≠BOŞ disiplini) ve anahtar yokluğu bir kez adıyla kaydedilir. YAZIM ZİNCİRİNE GİRİŞ ÖLÇÜME
+BAĞLIDIR: taban ölçümü iki kaynağı aynı ayarlama politikasında (yalnız bölünme-düzeltmeli; iyi huylu
+gürültü tabanı ~%0.08, çarpımsal değil dağınık) buldu ve kapı bu atıfla açıktır; yerel `--dogrula`
+tabanı EZER, "uyumsuz" derse kapı kapanır (bayatlık çelişki değildir, tabana dönülür). 401/403
+plan/yetki hükmüdür: gün-içi yetki kapısı aynı yolu o gün bir daha sormaz (geri çekilme çözmez);
+anahtar Authorization başlığında gider, hata metnine/loga asla sızmaz.
+(d) Okur/yazar, önbellek: günlük anlık görüntü süreç-içi memo + state/massive_grouped_last.json
+(gün içinde ikinci grouped çağrısı atılmaz; başarısız deneme FAIL_COOLDOWN_S boyunca tekrarlanmaz);
+doğrulama hükmü state/massive_verify.json'a yazılır ve write_enabled() onu okur; 5/dk token-bucket +
+429/5xx üstel geri çekilme sağlık sayacıyla (health) görünür."""
 from __future__ import annotations
 
 import argparse

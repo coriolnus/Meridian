@@ -1,86 +1,29 @@
-"""adapters/insider.py — Form 4 (içeriden işlem) verisi: FMP insider-trading uçları (ROADMAP §3.4 Y4).
+"""adapters/insider.py — Form 4 (içeriden işlem) verisi: FMP insider-trading akışından artımlı
+defter + Cohen–Malloy–Pomorski (2012) rutin/fırsatçı sınıflaması.
 
-ROL: EVRENE BİR ONAY/TILT KATMANI HAZIRLAMAK, karar vermek DEĞİL. Bu adaptör yalnız ölçer ve yazar;
-`insider_signals.json` bugün HİÇBİR üretim tüketicisine bağlı değildir (aşağıda "YASA 6" notu).
-
---------------------------------------------------------------------------------------------------
-UÇLAR ve MALİYET (FMP stable; anahtar `?apikey=` sorgu parametresinde — adapters/fmp.py zinciriyle
-AYNI: rotasyon, kota bloğu, maskeleme, günlük muhasebe hepsi ORADAN gelir, burada TEKRAR EDİLMEZ)
-
-  1. `insider-trading/latest?page=P&limit=L`   — PİYASA GENELİ en yeni Form 4 dosyalamaları.
-     Maliyet EVREN BOYUNDAN BAĞIMSIZ: 250 sembol için 250 istek DEĞİL, "yeni dosyalama akışı"nda
-     kaç sayfa varsa o kadar istek. Bu, `data.nasdaq_earnings_window`ın kazanç takviminde kullandığı
-     ile AYNI kaçış: sembol-başına sorgu FMP'nin ~250/gün ücretsiz kotasının TAMAMINI yakar.
-  2. `insider-trading/search?symbol=X&page=P&limit=L` — SEMBOL BAŞINA geçmiş. Yalnız `--gecmis`
-     yolundan, TAVANLI çağrılır (sınıflamanın 3 yıllık penceresini derinleştirmek için).
-     >>> CANLI ÖLÇÜM (2026-07-29): bu uç MEVCUT ÜCRETSİZ PLANDA **HTTP 402 Payment Required**
-     döner (üç sembolde de aynı yanıt; `/latest` aynı anahtarla 200 veriyordu, yani kota değil
-     PLAN sınırı). SONUCU AÇIKÇA SÖYLEMEK GEREKİR: 3 yıllık sınıflama penceresi bugün ancak
-     `/latest` akışının GÜNLÜK BİRİKTİRİLMESİYLE dolar — yani sınıflama, defter o derinliğe
-     ulaşana kadar `siniflanamadi` döndürmeye DEVAM EDER ve bu bir kusur değil, ölçülmüş bir
-     kapsam gerçeğidir. Alternatif: FMP planını yükseltmek. `--gecmis` yolu kaldırılmadı çünkü
-     402 dürüstçe raporlanıyor ve plan yükselince ÇALIŞIR hâlde.
-
-  ARTIMLI DELTA — "TEK TOPLU TARAMA" DEĞİL. `--fetch` her koşuda akışı BAŞTAN taramaz: defterdeki
-  su işareti (`watermark.en_yeni_filing` + görülen satır anahtarları) aşıldığı anda sayfalama DURUR.
-    * SOĞUK ilk koşu 30 günü doldurmak için ~150 sayfa isteyebilir → `--sayfa-tavani` (varsayılan 40)
-      onu böler; operatör birkaç güne yayar. Yarım kalması DÜRÜSTTÜR: rapor `tavana_carpti=True` der.
-    * SICAK günlük koşu yalnız yeni dosyalamaları görür → tipik olarak 3-8 istek/gün.
-  Her koşu GERÇEK çağrı sayısını döndürür ve deftere yazar (`cagri.son_tur`): kota etkisi tahmin
-  değil ÖLÇÜM olsun.
-
---------------------------------------------------------------------------------------------------
-RUTİN vs FIRSATÇI (Cohen–Malloy–Pomorski 2012 BASİTLEŞTİRMESİ)
-
-  Gerekçe: Form 4 akışının büyük kısmı TAKVİMSEL gürültüdür — aynı yönetici her yıl aynı ayda
-  (vesting/10b5-1 planı/yıllık ödül penceresi) işlem yapar ve bu işlemler GELECEK GETİRİ HAKKINDA
-  bilgi taşımaz. CMP'nin bulgusu: bu "rutin" işlemler ayıklandığında GERİYE KALAN "fırsatçı"
-  işlemler anlamlı öngörü taşır. Yani sinyal, işlemin VARLIĞINDA değil, TAKVİM DIŞILIĞINDA.
-
-  BURADAKİ BASİTLEŞTİRME (özgün makale 3 ardışık yıl + ayrı bir sınıflandırma penceresi kullanır):
-    RUTİN     : aynı KİŞİ + aynı SEMBOL, işlemin takvim ayında ÖNCEKİ 3 YILIN HER BİRİNDE de
-                işlem yapmış.
-    FIRSATÇI  : geçmiş penceresi KAPSANIYOR ama yukarıdaki koşul sağlanmıyor.
-    SINIFLANAMADI : defterin o sembol için gördüğü en eski işlem, gereken 3 yıllık pencerenin
-                başlangıcından SONRA ise. Yani "o yıllarda işlem yok" değil, "O YILLARA BAKAMIYORUZ".
-
-  BU AYRIM BU DOSYANIN EN ÖNEMLİ SATIRI (UYDURMA YASAĞI). Veri yokluğunu "rutin değil → fırsatçı"
-  diye okumak, taze bir defterdeki HER işlemi fırsatçı ilan ederdi: sinyal %100 dolu görünür, hiçbir
-  testi kırmaz ve tamamen uydurmadır. Kapsam yoksa cevap SINIFLANAMADI'dır; özet dosyası bu sayıyı
-  AYRI alanda gösterir ki defter sığken bunun görülmemesi imkânsız olsun.
-
-  YÖN de aynı disiplinle okunur: Form 4'te "iktisap" (acquisition) ile "AÇIK PİYASA ALIMI" AYNI ŞEY
-  DEĞİLDİR. Dosyalamaların çoğu ödül (A-Award), opsiyon icrası (M-Exempt), vergi stopajı (F-InKind)
-  ya da bağıştır (G-Gift) — bunların hiçbiri "yönetici cebinden para verip hisse aldı" demek değil.
-  Sinyal YALNIZ işlem kodu P (P-Purchase) ve S (P-Sale/S-Sale) satırlarından üretilir; gerisi
-  `diger`, tanınmayan kod `bilinmiyor` olarak AYRI sayılır ve nete GİRMEZ.
-
---------------------------------------------------------------------------------------------------
-YAZAR TEKLİĞİ (paralel-yazar güvenliği)
-
-  Bu modül state'e İKİ dosya yazar ve İKİSİNİN DE TEK YAZARI bu dosyanın CLI'ıdır:
-      state/insider_trades.json    ham defter (artımlı; su işareti burada)
-      state/insider_signals.json   sembol-başına özet skor
-  Canlı worker (meridian.run / loop.daily_cycle) bu dosyalara DOKUNMAZ — ne okur ne yazar. Yazım
-  `store.write_json` ile ATOMİKtir (mkstemp + os.replace), yani bir okur yarım dosya göremez.
-  `store.file_lock` 2026-07-31'den beri SÜREÇLER ARASIdır (fcntl.flock); burada zaten yeterliydi
-  (tek yazar tek süreçtir, CLI) — sertleşme bedavaya geldi. Bu iki
-  dosya YENİ olduğu için, canlı worker koşarken bu CLI'ı çalıştırmak güvenlidir — çakışacak bir
-  yazar yok. (fmp_usage.json muhasebesi ORTAKtır; oraya yazan zaten adapters/fmp.py'dir ve atomiktir.)
-
-YASA 6 (tüketici zorunluluğu) — BEYANLI ERTELEME: bu turda ölçülen tek tüketici CLI + testlerdir.
-  loop/api/counterfactual bağlantısı BİLİNÇLİ olarak SONRAKİ tura ertelendi; sebebi, sınıflamanın
-  anlamlı olabilmesi için defterin önce 3 yıllık kapsama ULAŞMASI gerekmesi. Bugün bağlanan bir
-  tüketici, `siniflanamadi` ile dolu bir dosyayı sinyal sanardı. Kapsam metriği (`kapsam` bloğu)
-  tam da o bağlantının ne zaman yapılabileceğini söylemek için yazılır.
-
-CANLI DOĞRULAMA DURUMU (2026-07-29): FMP'nin insider uçlarının ALAN ADLARI bu turda CANLI
-  doğrulanamadı — her iki FMP anahtarı da o gün kota-bloklu (HTTP 429 "Limit Reach") idi. Alan
-  eşlemesi FMP stable sözleşmesine göre yazıldı ve TAKMA-AD haritası ile toleranslı okunur; ama
-  tolerans sessiz olmaz: eşlenemeyen ham alan adları `alan_teshis.eslesmeyen_alanlar` altında
-  deftere YAZILIR ve ilk canlı koşuda gözle görülür. Sağlayıcı şeması kaydıysa sonuç sıfır dolu bir
-  sinyal değil, adıyla görünen bir teşhis olur.
-"""
+(a) Ne yapar: FMP stable'ın `insider-trading/latest` akışını (piyasa geneli — maliyet evren
+boyundan BAĞIMSIZ: sembol başına değil sayfa başına istek) artımlı tarar, REPLAY_UNIVERSE
+kesişimini ham deftere işler ve sembol-başına özet skor üretir. `insider-trading/search` (sembol
+başına geçmiş) ücretsiz FMP planında HTTP 402 döner (kota değil PLAN sınırı — canlı ölçüldü; aynı
+sondayla limit>100 ve page>=1 de 402, `date=` sessizce yok sayılıyor); `--gecmis` yolu 402'yi
+dürüstçe raporlar, plan yükselirse çalışır. Rotasyon/kota/maskeleme/muhasebe adapters/fmp.py'den
+gelir. Rol: evrene onay/tilt katmanı HAZIRLAMAK, karar vermek değil.
+(b) Kilit girişler: fetch_delta() (su işaretine yetişince duran artımlı tarama; `tavana_carpti`
+yarım kalışı görünür kılar), gecmis_cek(), ozet() (ağ yok), siniflandir(), yon_coz(), durum(),
+health(); CLI: --fetch/--gecmis/--ozet/--durum.
+(c) Değişmezler — UYDURMA YASAĞI bu dosyanın en önemli satırıdır: CMP basitleştirmesinde RUTİN =
+aynı kişi+sembol işlemin takvim ayında önceki 3 yılın HER BİRİNDE de işlem yapmış; FIRSATÇI =
+pencere kapsanıyor ama koşul sağlanmıyor; SINIFLANAMADI = defter o pencereye BAKAMIYOR. Veri
+yokluğunu fırsatçılık saymak taze defterdeki her işlemi sinyal ilan ederdi — kapsam yoksa cevap
+SINIFLANAMADI'dır ve özet bunu ayrı sayar. YÖN disiplini: "iktisap" ≠ "açık piyasa alımı"; nete
+yalnız işlem kodu P (alım) ve S (satım) girer, ödül/icra/stopaj/bağış `diger`, okunamayan kod
+`bilinmiyor`. Alan eşlemesi takma-ad haritasıyla toleranslıdır ama sessiz değildir: eşlenemeyen ham
+alanlar `alan_teshis.eslesmeyen_alanlar`a yazılır (şema sürüklenmesi adıyla görünür).
+(d) Okur/yazar: state/insider_trades.json (ham defter; su işareti + kapsam_sembol) ve
+state/insider_signals.json (özet) — İKİSİNİN DE TEK YAZARI bu CLI'dır; canlı worker bu dosyalara
+dokunmaz, yazım store.write_json ile atomiktir. Okuyucusuz-yazım yasağına BEYANLI ERTELEME: bugünkü
+tek tüketici CLI + testler; loop/api bağlantısı defter 3 yıllık kapsama ulaşana dek bilinçli olarak
+bekletilir (hazırlık ölçüsü: `kapsam.siniflama_hazir_mi`)."""
 from __future__ import annotations
 
 import argparse

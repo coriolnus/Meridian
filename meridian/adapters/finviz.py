@@ -1,21 +1,27 @@
-"""adapters/finviz.py — Finviz'i OTONOM ADAY KAYNAĞI yapar (2026-07-23).
+"""adapters/finviz.py — Finviz momentum/kırılım ekranını OTONOM ADAY KAYNAĞI yapan keşif adaptörü.
 
-Rol: EVRENİ GENİŞLETMEK, karar vermek DEĞİL. Finviz "bugün momentum/kırılım ekranında olanlar"ı
-döndürür; bu ticker'ların barları FMP zincirinden çekilir ve Meridian'ın KENDİ vcp/pullback/momentum
-yasası + kapısı yine karar verir. Finviz burada yalnız "hangi hisselere bakılsın" listesini büyütür.
-Bu izolasyon bilinçlidir: Finviz kırılgandır (public scraping, 1 haftalık Elite trial), ama kırılganlığı
-karar mantığına SIZAMAZ — yalnız evrenin genişliğini etkiler.
-
-DÜRÜST BOZUNMA (bu kod tabanının ana yasası): `discover()` HER ZAMAN bir kaynak etiketiyle döner.
-Elite token varsa CSV export (ToS-uygun, stdlib parse); yoksa/süresi dolmuşsa public HTML (httpx +
-regex, bs4 yok); o da olmazsa BOŞ + `reason`. Boş dönüş asla sessiz değildir — evren REPLAY_UNIVERSE'e
-düşer, olay kaydedilir, sağlık ve seam görünür olur. "Aday bulunamadı" ile "Finviz'e ulaşılamadı"
-ASLA aynı görünmez.
-
-GİZLİLİK: token yalnız `auth` sorgu parametresinde gider; httpx'in hata metni TAM URL'i taşıdığından
-(fmp.py'nin öğrettiği ders) hata mesajları KAYNAĞINDA maskelenir — token asla loglanmaz, panoya
-son-4 dışında hiç çıkmaz.
-"""
+(a) Ne yapar: Finviz screener'ından "bugün momentum/kırılım ekranında olanlar"ın ticker listesini
+döndürür — rolü EVRENİ GENİŞLETMEK, karar vermek DEĞİL. Bu ticker'ların barları bar zincirinden
+çekilir ve Meridian'ın kendi vcp/pullback/momentum yasası + kapısı yine karar verir; Finviz'in
+kırılganlığı (public scraping, kısa Elite trial) karar mantığına SIZAMAZ, yalnız evrenin genişliğini
+etkiler. İki kaynak yolu: Elite CSV export (elite.finviz.com/export/screener — kanonik yol; eski
+.ashx uçları 301 döner ve follow_redirects olmadan gövde BOŞ gelir, geçerli token 'çalışmıyor'
+sanılırdı) ve public HTML (finviz.com/screener.ashx, httpx + regex, bs4 yok).
+(b) Kilit girişler: discover() (kaynak etiketli sonuç), discover_universe() (dataset.load_live'ın
+çağırdığı günlük-önbellekli otonom yol), export_rows() (yalnız skill yüzeyi — tam CSV satırları;
+sağlık karnesini bilerek kirletmez), ping(), health(), status(); PRESETS/DEFAULT_PRESET,
+MAX_TICKERS, MERIDIAN_FINVIZ_PUBLIC ortam değişkeni.
+(c) Değişmezler — DÜRÜST BOZUNMA: discover() HER ZAMAN kaynak etiketiyle döner
+(elite | public | none + reason); boş dönüş sessiz değildir — evren REPLAY_UNIVERSE'e düşer, olay
+kaydedilir. "Aday bulunamadı" ile "Finviz'e ulaşılamadı" asla aynı görünmez. Public scraping
+ToS-riskli olduğundan otonom döngüde VARSAYILAN KAPALIDIR (yalnız MERIDIAN_FINVIZ_PUBLIC=1 ya da
+elle çağrı). elite() = token VAR demektir, çalışıyor demek değil. Makullük bandı (_plausible) hem
+kurt-masalını hem parse patlamasını (tüm sayfayı ticker sanmak) reddeder. GİZLİLİK: token yalnız
+`auth` sorgu parametresinde gider; httpx hata metni tam URL taşıdığından mesajlar KAYNAĞINDA
+maskelenir — token asla loglanmaz, panoya son-4 dışında çıkmaz.
+(d) Okur/yazar, önbellek: state/finviz_universe.json — günlük evren önbelleği (aynı gün ikinci çağrı
+ağa gitmez; anahtar sunucunun yerel takvim günü) + "none" hâlinde uyarı-kadansı mandalı (durum
+değişmedikçe günde en fazla 1 uyarı; bastırılan tekrarlar sayılır ve status()'ta görünür)."""
 from __future__ import annotations
 
 import csv as _csv

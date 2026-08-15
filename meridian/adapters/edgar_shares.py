@@ -1,63 +1,30 @@
-"""edgar_shares.py — EDGAR AS-OF DOLAŞIMDAKİ HİSSE SAYIMI: SALT-OKUNUR VERİ KÖPRÜSÜ.
+"""adapters/edgar_shares.py — EDGAR as-of dolaşımdaki hisse sayımı: salt-okunur PIT veri köprüsü.
 
-NE VAR BURADA. `research/edgar_facts/shares_outstanding.csv.gz` (SEC XBRL companyfacts,
-161.856 satır · 258 sembol) deponun içinde STATİK bir dosyadır ve aylık olarak
-`research/edgar_facts/betikler/` ile tazelenir. Bu modül o dosyayı OKUR ve tek bir soruyu
-cevaplar: "t gününde bu sembolün dolaşımdaki hisse sayısı — O GÜN BİLİNEBİLEN hâliyle — kaçtı?"
-Yazma yolu YOKTUR: ne bu dosyaya ne state'e tek bayt yazılır (canlı worker koşarken state'e
-yazım bu depoda yasak, ve bu modül canlı tarama yolunda çağrılır).
-
-NEDEN GEREKLİ. EDG-2026-016 hükmü (2026-08-01, SUCCESS): turnover21 = medyan21(hacim) /
-as_of_shares(t) kesitsel olarak MONOTON bilgi taşıyor — üst %20 dilim evren-fazlası @20 +0,65%
-CI[+0,34,+1,01], rvol20+mom21 kontrolünden sonra ARTIK üç yöntemle birden sağ, maliyet-sonrası
-net +0,55%. Ölçüm `wp2_olcum/ortak.py` altyapısıyla yapıldı; ölçülmüş yolu canlı motora
-bağlamanın önkoşulu, PAYDANIN (hisse sayımı) canlı yolda da AYNI kurallarla okunmasıdır.
-
---- AS-OF/ETİKET/TEMİZLİK KURALLARI: ÖLÇÜMLE BİREBİR (ortak.build_hisse'den port) -------------
-Aşağıdaki altı kural ölçüm turunun kodundan BİREBİR alınmıştır. Sayıların ölçümdekiyle aynı
-çıkması bunlara bağlıdır; birinin "sadeleştirilmesi" canlı payda ile ölçülmüş paydayı sessizce
-ayırırdı (ve EDG-016'nın kanıtı canlıda geçerli olmaktan çıkardı):
-
-  (1) PIT: t gününde bilinen küme `filed <= t`'dir. `end <= t` filtresi PIT DEĞİLDİR ve geleceği
-      sızdırır (README'nin GOOGL 20:1 örneği: aynı `end`, iki `filed`, iki değer).
-  (2) ETİKET: yalnız ANLIK iki etiket — dei:EntityCommonStockSharesOutstanding (kapak sayfası,
-      medyan 7g gecikme) ve us-gaap:CommonStockSharesOutstanding (bilanço, ~36g). `...Issued`
-      KULLANILMAZ (hazine farkı), ağırlıklı-ortalama serileri SEVİYE olarak KULLANILMAZ (yalnız
-      bölünme yeniden-beyanının KANITI olarak okunur, bkz. `_split_olaylari`).
-  (3) BİRİNCİL ETİKET: dei'de en az 8 farklı `filed` varsa dei; yoksa us-gaap; o da yoksa dei.
-      Birincilde 200 günden uzun boşluk varsa o boşluğa ÖTEKİ etiketten kayıt eklenir (yedek).
-  (4) BÖLÜNME/GÜNCEL BAZ: bir dosyalamada bildirilen sayı O GÜNKÜ hisse birimindedir; bar hacmi
-      ise güncel bazda split-düzeltilmiştir. İkisini bölmek için hisse sayımı güncel baza çevrilir:
-      shares(t) = val(f_t) × B_son / B(f_t). Bölünme takvimi EDGAR'ın KENDİ geriye-dönük yeniden
-      beyanından türetilir (bar serisinden okunamaz — bar zaten düzeltilmiş).
-  (5) BAYATLIK BEKÇİSİ: son dosyalama t'den 200 günden eskiyse as-of değer YOKTUR (None + neden).
-      Ölçümde 27 sembolde işledi (SCHW 1006, V 4007, NKE 2934 hücre...).
-  (6) ÖLÇEK-HATASI PENCERESİ: açıklanamayan >=5× sıçrama 6 dosyalama içinde ~1/oran ile geri
-      dönüyorsa aradaki kayıtlar GEÇERSİZDİR (None + neden).
-
-BURADA OLMAYAN TEK BEKÇİ — VE NEREDE OLDUĞU. Ölçümün FİZİKSEL DEVİR BEKÇİSİ (medyan-21g hacim
-dolaşımdaki hissenin tamamını aşamaz → devir>1 imkânsız) bu modülde DEĞİL, `indicators.turnover21`
-içindedir. Sebebi yapısal: bekçi hisse sayımına DEĞİL, hacimle kurulan ORANA bakar; burada
-uygulamak bu modüle bar verisi taşımak olurdu. Fark yazılı olsun: ölçümde bekçi bir KAYDIN
-geçerlilik penceresini toptan geçersiz kılar (pencere medyanı üzerinden), canlı yolda ise NOKTASAL
-çalışır (yalnız devir>1 çıkan barda None). Noktasal biçim aynı imkânsızlığı aynı yönde eler; farkı
-şudur ki penceredeki "temiz" günleri ayakta bırakır — yani daha az agresiftir ve hiçbir uydurma
-değeri ölçüme sokmaz.
-
-FAIL-OPEN BEYANI (bu modülün SÖZLEŞMESİ). Dosya yoksa, okunamıyorsa, sembolün serisi yoksa,
-seri bayatsa ya da kayıt geçersizse → dönen değer None'dur ve NEDENİ adıyla verilir. None'un
-ANLAMI "sıfır hisse" değil "ÖLÇÜLEMEDİ"dir; çağıran taraf bunu 0 gibi kullanamaz (skor tarafındaki
-karşılığı ve gerekçesi `strategy.evaluate_entry`in turnover bloğunda yazılıdır). Her çağrı
-`okuma_raporu()` sayaçlarına düşer; sayaçların tüketicisi `component_ic.json`in `turnover_kaynak`
-alanı ve gecelik `component_ic` olayıdır (YASA 6: okuyucusuz yazım yok).
-
-OLAY MI SAYAÇ MI — AYRIM BİLİNÇLİ VE ÖLÇÜLDÜ. Bu modül SKOR yolundan, sembol döngüsünün içinden
-çağrılır ve `obs.warn` bir DEFTER YAZIMIdır. Kapsam-dışı sembol başına uyarı atmak, saf skor
-hesabını canlı `events.jsonl`a yazan bir G/Ç yoluna çevirirdi — ölçüldü: eklendiği anda sentetik
-sembollü mevcut testler canlı deftere yazmaya başladı ve sızıntı bekçisi kırmızıya döndü. Bu yüzden
-SEMBOL düzeyi olgular SAYILIR ve ADIYLA raporlanır (`okuma_raporu().kapsam_disi_sembol`), KAYNAK
-düzeyi olgular (dosya yok / okunamadı) UYARIR — onlar süreç başına bir kezdir ve gerçekten alarmdır.
-"""
+(a) Ne yapar: depo içindeki statik `research/edgar_facts/shares_outstanding.csv.gz` dosyasını
+(SEC XBRL companyfacts dökümü; aylık olarak research/edgar_facts/betikler/ ile tazelenir) okur ve
+tek soruyu cevaplar: "t gününde bu sembolün dolaşımdaki hisse sayısı — O GÜN BİLİNEBİLEN hâliyle —
+kaçtı?" Varlık sebebi turnover ölçümüdür (turnover21 = medyan21(hacim) / as_of_shares(t) kesitsel
+monoton bilgi taşıyor); ölçülmüş yolu canlıya bağlamanın önkoşulu PAYDANIN aynı kurallarla
+okunmasıdır — altı kural ölçüm altyapısından (ortak.build_hisse) BİREBİR port edilmiştir, birinin
+"sadeleştirilmesi" canlı paydayı ölçülmüş paydadan sessizce ayırır.
+(b) Kilit girişler: as_of_shares(), as_of_shares_detay(), as_of_shares_series() (vektörel tek
+uygulama), okuma_raporu(), _sifirla() (yalnız testler); SHARES_FILE, BAYAT_GUN, NEDEN_* kodları.
+(c) Değişmezler — AS-OF/PIT DİSİPLİNİ: (1) t gününde bilinen küme `filed <= t`'dir; `end <= t` PIT
+DEĞİLDİR, geleceği sızdırır (aynı `end`, iki `filed`, iki değer). (2) Yalnız iki ANLIK etiket
+(dei:EntityCommonStockSharesOutstanding, us-gaap:CommonStockSharesOutstanding); `...Issued` ve
+ağırlıklı-ortalama serileri SEVİYE olarak kullanılmaz. (3) Birincil etiket seçimi + uzun boşlukta
+öteki etiketten yedek. (4) Bildirilen sayı o günkü hisse birimindedir; güncel baza çevrim, bölünme
+takvimi EDGAR'ın KENDİ geriye-dönük yeniden-beyanından (bar serisi zaten düzeltilmiş, oradan
+okunamaz). (5) Bayatlık bekçisi: son dosyalama BAYAT_GUN'den eskiyse değer YOK. (6) Ölçek-hatası
+gidiş-dönüş penceresindeki kayıtlar geçersiz. Fiziksel devir bekçisi (devir>1 imkânsız) BURADA
+DEĞİL `indicators.turnover21`dedir — orana bakar, sayıma değil. FAIL-OPEN sözleşme: ölçülemeyen
+her hücre None + NEDEN kodudur; None "sıfır hisse" değil "ölçülemedi"dir, çağıran 0 gibi
+kullanamaz. Sembol düzeyi olgular SAYILIR (skor yolunda obs.warn atılmaz — sembol başına olay, saf
+hesabı canlı deftere yazan G/Ç yoluna çevirirdi; ölçülmüş ders), kaynak düzeyi olgular süreç
+başına bir kez UYARIR.
+(d) Okur/yazar: YAZMA YOLU YOKTUR — ne bu dosyaya ne state'e tek bayt (modül canlı tarama yolunda
+çağrılır). Tablolar bir kez, sembol serileri TEMBEL kurulur ve süreç içinde önbelleklenir; sayaçlar
+okuma_raporu() ile component_ic.json'ın `turnover_kaynak` alanına akar (okuyucusuz yazım yok)."""
 from __future__ import annotations
 
 import time

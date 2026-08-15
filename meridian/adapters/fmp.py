@@ -1,12 +1,26 @@
-"""adapters/fmp.py — Financial Modeling Prep (STABLE API). Enriches live candidates (fundamentals,
-quotes, constituents, earnings) when FMP_API_KEY is present. Without a key it reports unavailable and
-the FMP-`req` skills stay disabled — no faked data (Hard Rule 7).
+"""adapters/fmp.py — Financial Modeling Prep (STABLE API) istemcisi: kotalı, çift-anahtarlı,
+sızdırmaz tek GET kapısı üzerinden fiyat/kazanç/üyelik verisi.
 
-Stable API contract (per FMP docs):
-  base    https://financialmodelingprep.com/stable
-  auth    every request takes ?apikey=<KEY>   (passed as a query param, never in the path/logs)
-  style   query params, e.g. /quote?symbol=AAPL , /profile?symbol=AAPL , /search-name?query=apple
-"""
+(a) Ne yapar: FMP_API_KEY varken canlı adayları zenginleştirir — kote fiyat, şirket profili, kazanç
+rapor tarihleri (PEAD çapası + kazanç-karartma guard'ının girdisi), tam EOD geçmişi (bar zincirinin
+derin-backfill kolu) ve güncel S&P 500 üyeliği. Anahtar yoksa uydurma veri ÜRETİLMEZ: available()
+False döner, çağıranlar boş/None ile dürüstçe bozunur. Stable sözleşme: taban
+https://financialmodelingprep.com/stable; her istek ?apikey=<KEY> sorgu parametresi taşır; biçim
+/quote?symbol=AAPL, /profile?symbol=AAPL gibi sorgu-parametreli uçlardır.
+(b) Kilit girişler: quote(), profile(), earnings_dates(strict=...), historical_eod(),
+sp500_constituents(), ping(which=...), available()/health()/usage()/quota_blocked(); iç kapılar
+_get() (rotasyonlu) ve _get_with_key() (tek anahtar, muhasebeli).
+(c) Değişmezler: available() = ANAHTAR VAR demektir, ÇALIŞIYOR demek değil (kotalı anahtar 429
+yerken de True; üretim sorusunun cevabı health()). Ücretsiz katman ~250 istek/gün: birincil anahtar
+429 kotasına girince YEDEK anahtara (FMP_API_KEY_2) otomatik rotasyon yapılır; kota bloğu
+ANAHTAR-BAŞINA izlenir, tüm anahtarlar bloklu iken hiç istek atılmaz (boş istek ne veri getirir ne
+kota geri verir). 401/403/5xx ve ağ hataları rotasyonla ÇÖZÜLMEZ, aynen fırlatılır. Anahtar sorgu
+parametresinde gittiği için httpx hata metni tam URL taşır — her hata metni KAYNAĞINDA maskelenir
+(_redact), anahtar asla loga/diske düşmez; istisna TÜRÜ korunur ki ping() 401'i ayırt edebilsin.
+earnings_dates'te boş liste "kazanç yok" ile "istek düştü"yü ayıramaz — strict=True hatayı yutmaz.
+(d) Okur/yazar: state/fmp_usage.json günlük kota muhasebesi (gün/anahtar/durum-kodu kırılımı, 429
+anlarının damgalı listesi; oku-değiştir-yaz file_lock ile kilitli); başka önbellek tutmaz — bar
+önbelleği adapters/data.py'nin, üyelik önbelleği adapters/constituents.py'nindir."""
 from __future__ import annotations
 import httpx
 from .. import secrets

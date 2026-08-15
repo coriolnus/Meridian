@@ -1,79 +1,29 @@
-"""adapters/shortinterest.py — FINRA Equity Short Interest (ROADMAP §3.4 Y4, "kaçınma filtresi" ayağı).
+"""adapters/shortinterest.py — FINRA Equity Short Interest: kaçınma filtresinin veri ayağı —
+anahtarsız çekim, evren kesişimi, gün-kapatma ve SI%float türetimi.
 
-ROL: ölçmek ve yazmak. Bu adaptör bugün HİÇBİR üretim kararına bağlı değildir (aşağıda "YASA 6").
-
---------------------------------------------------------------------------------------------------
-UÇ ve MALİYET — ANAHTARSIZ, ÜCRETSİZ, KOTASIZ (FMP'den TAMAMEN AYRI)
-
-  POST https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest
-       Accept: application/json
-       gövde: {"limit":N,
-               "compareFilters":[{"fieldName":"settlementDate","fieldValue":"YYYY-MM-DD",
-                                  "compareType":"GTE"}],
-               "domainFilters":[{"fieldName":"symbolCode","values":[...]}]}
-
-  CANLI DOĞRULANDI (2026-07-29): uç anahtarsız 200 döner; `domainFilters` sembol listesiyle
-  filtreler; `compareFilters` GTE ile tarih penceresi daraltılır. ALAN ADLARI canlı yanıttan
-  ALINDI (tahmin DEĞİL): symbolCode, issueName, marketClassCode, settlementDate,
-  currentShortPositionQuantity, previousShortPositionQuantity, averageDailyVolumeQuantity,
-  daysToCoverQuantity, changePercent, changePreviousNumber, stockSplitFlag, revisionFlag,
-  accountingYearMonthNumber, issuerServicesGroupExchangeCode.
-  NOT: `sortFields` bu uçta REDDEDİLİR ("Sorting is allowed only if all partition keys are specified
-  in EQUAL CompareFilter") — bu yüzden "son yayın" sunucuda sıralanarak değil, pencere çekilip
-  YEREL max(settlementDate) ile bulunur. Bir varsayım değil, sağlayıcının söylediği sınır.
-
-  MALİYET: evren `parca` (varsayılan 125) sembolluk dilimlere bölünür → 250 sembol için 2 istek.
-  Ücretsiz ve kotasız olduğundan FMP bütçesine SIFIR etkisi vardır. FMP'ye TEK dokunuş, isteğe bağlı
-  `--float-cek` yoludur (aşağıda) ve varsayılan olarak KAPALIDIR.
-
---------------------------------------------------------------------------------------------------
-BAYATLIK GÖRÜNÜR OLMALI
-
-  FINRA kısa pozisyonu ayda İKİ KEZ yayımlar (ayın 15'i ve son iş günü mutabakat tarihleri) ve
-  yayın mutabakat tarihinden ~9 İŞ GÜNÜ SONRA gelir. Yani bu veri EN İYİ İHTİMALLE ~9 iş günü,
-  en kötü ihtimalle ~3 hafta eskidir. Bir "kaçınma filtresi" 3 haftalık veriyle bugünü filtrelemeye
-  kalkarsa, filtrelediğini sandığı riski çoktan kaçırmış olabilir.
-
-  Bu yüzden bayatlık dosyanın İÇİNDEDİR ve türetilmesi okura bırakılmaz: `yayin` bloğu mutabakat
-  tarihini, takvim/iş günü gecikmesini ve `bayat_mi` bayrağını taşır. Okuyan taraf tarihi kendi
-  hesaplamak zorunda kalırsa er ya da geç hesaplamaz.
-
---------------------------------------------------------------------------------------------------
-TÜRETİLEN ALANLAR ve NEDEN İKİ AYRI "gün kapatma"
-
-  gun_kapatma_meridian = kısa pozisyon / ADV20(bar önbelleği)   ← BİZİM ölçümümüz
-  gun_kapatma_finra    = FINRA'nın `daysToCoverQuantity` alanı  ← SAĞLAYICININ ölçümü
-
-  İkisi AYNI ŞEY DEĞİLDİR: FINRA kendi `averageDailyVolumeQuantity` tanımını kullanır (mutabakat
-  dönemine ait), biz bar önbelleğindeki SON 20 SEANSIN ortalamasını kullanırız. Birini diğerinin
-  yerine yazmak, iki farklı ölçümü tek isim altında birleştirip farkı görünmez kılardı. İkisi de
-  yazılır; ayrıştıkları yerde soru sorulabilsin.
-
-  ADV20 bar önbelleğinden OKUNUR (adapters/data.py `_cache_path` deseni) — AĞ ÇAĞRISI YOK, yazım
-  YOK. Önbellek yoksa alan None'dır ve `adv20_kaynak` sebebi söyler; 0 ya da tahmin YAZILMAZ.
-
-  si_yuzde_float: float/sharesOutstanding gerektirir ve bu depoda BÖYLE BİR KAYNAK YOKTUR (arandı).
-  FMP `profile` ucundan gelebilir ama SEMBOL BAŞINA 1 istektir: 250 sembol = günlük FMP kotasının
-  TAMAMI. Bu yüzden varsayılan davranış "alan None"dır ve `--float-cek N` ile TAVANLI, KALICI
-  ÖNBELLEKLİ (`short_interest_float.json`) olarak azar azar doldurulur. Bilinmeyen float için
-  UYDURMA YOK: None kalır, `float_kaynak` null olur.
-
---------------------------------------------------------------------------------------------------
-YAZAR TEKLİĞİ (paralel-yazar güvenliği)
-
-  state/short_interest.json         özet — TEK YAZAR: bu dosyanın CLI'ı
-  state/short_interest_float.json   float önbelleği — TEK YAZAR: bu dosyanın CLI'ı
-  Canlı worker (meridian.run / loop) bu dosyalara DOKUNMAZ. `store.write_json` atomiktir
-  (mkstemp + os.replace + fsync), yani okur yarım dosya göremez; `store.file_lock` 2026-07-31'den
-  beri süreçler arasıdır (fcntl.flock) ve tek
-  yazar zaten tek süreç olduğu için yeterlidir. Dosyalar YENİ olduğundan canlı worker koşarken bu
-  CLI'ı çalıştırmak güvenlidir.
-
-YASA 6 (tüketici zorunluluğu) — BEYANLI ERTELEME: bu turda ölçülen tek tüketici CLI + testlerdir.
-  loop/api/counterfactual bağlantısı bilinçli olarak SONRAKİ tura ertelendi. Sebep: "filtreli vs
-  filtresiz" karşılaştırması karşı-olgusal defterde ölçülmeden bir kaçınma filtresi kapıya
-  bağlanırsa, hiç ölçülmemiş bir kısıt canlı stratejiyi daraltmış olur.
-"""
+(a) Ne yapar: FINRA'nın consolidatedShortInterest veri kümesini POST
+https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest ile çeker — ANAHTARSIZ,
+ücretsiz, kotasız (FMP bütçesine sıfır etki). Gövde `compareFilters` (settlementDate GTE penceresi)
++ `domainFilters` (symbolCode listesi) taşır; alan adları canlı yanıttan alınmıştır (tahmin değil:
+symbolCode, settlementDate, currentShortPositionQuantity, daysToCoverQuantity, ...). `sortFields`
+bu uçta reddedilir — "son yayın" sunucuda sıralanarak değil, pencere çekilip YEREL
+max(settlementDate) ile bulunur. Evren `parca` (varsayılan 125) sembollük dilimlere bölünür:
+250 sembol = 2 istek. Rol: ölçmek ve yazmak; bugün hiçbir üretim kararına bağlı değildir.
+(b) Kilit girişler: fetch(), ozet() (ağ yok), adv20() (bar önbelleğinden salt-okuma), float_cek()
+(FMP profile — sembol başına 1 istek, TAVANLI, varsayılan kapalı), durum(), health(); CLI:
+--fetch/--ozet/--durum/--float-cek N.
+(c) Değişmezler — BAYATLIK GÖRÜNÜR: FINRA ayda iki kez, mutabakat tarihinden ~9 iş günü SONRA
+yayımlar; veri en iyi ihtimalle ~9 iş günü eskidir. `yayin` bloğu gecikmeyi ve `bayat_mi` bayrağını
+dosyanın İÇİNDE taşır — türetilmesi okura bırakılmaz. İKİ AYRI gün-kapatma bilerek yazılır:
+gun_kapatma_meridian (kısa pozisyon / bar-önbelleği ADV20) bizim ölçümümüz, gun_kapatma_finra
+sağlayıcının kendi tanımı — ikisi aynı şey değildir, ayrıştıkları yerde soru sorulabilsin. UYDURMA
+YOK: ADV20/float ölçülemiyorsa alan None kalır ve kaynak/sebep alanı söyler (0 ya da tahmin
+yazılmaz). Okuyucusuz-yazım yasağına BEYANLI ERTELEME: bugünkü tek tüketici CLI + testler; kaçınma
+filtresi, karşı-olgusal defterde ölçülmeden kapıya bağlanmaz.
+(d) Okur/yazar: state/short_interest.json (özet) ve state/short_interest_float.json (kalıcı float
+önbelleği; mevcut sembol yeniden çekilmez) — TEK YAZAR bu CLI'dır, canlı worker dokunmaz; yazım
+store.write_json ile atomiktir. ADV20 bar önbelleğini yalnız OKUR (data.load_bars çağrılmaz — o ağ
+yapabilir)."""
 from __future__ import annotations
 
 import argparse
