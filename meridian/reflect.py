@@ -42,7 +42,7 @@ TAIL_MARGIN_R = 0.5  # capital preservation: candidate may not raise OOS tail lo
 #   MONEY_GATE_MARGIN = 0.004  ← 0.02 × σ(ΔS_v3)/σ(S_eski) = 0.02 × 0.1908 (σ-eşdeğerliği)
 #   DD_VETO_MARGIN    = 0.08   ← düşüş bütçesinin YARISI (goal.max_drawdown=0,16, operatör
 #                                kararı 2026-08-13) ve σ(düşüş)=0,0343'ün DIŞINDA — türetim
-#                                shadowlaw.py:90-97'de, sayı ORADAN gelir (burada kopya YOK)
+#                                `shadowlaw.DD_VETO_MARGIN` başlığında, sayı ORADAN gelir (burada kopya YOK)
 # `GATE_MARGIN` SİLİNMEDİ ve 0.02 kaldı: LEGACY yolun (dilimsiz fikstür/sandbox) yasası odur ve o
 # yol bileşik skor karşılaştırır — orada para ölçeği hesaplanamaz (dilim yok, span yok). Yani
 # 0.02 artık "eski yasanın marjı", 0.004 ise "yürürlükteki yasanın marjı"dır ve hangisinin koştuğu
@@ -875,7 +875,7 @@ def propose_deterministic(explore: bool = False) -> dict:
     # da kullandığı tanım) ile tek farkı @regime son-ekini çözememesiydi — `bounds[var]["type"]`
     # son-ekli adla aranıyor ve defterde o adla bir satır VARSA KeyError fırlatıyordu (yani hafızanın
     # tam da iş göreceği anda). "Başarısız" tanımı DEĞİŞMEDİ: guard'ın kalıcı kara listesiyle birebir
-    # aynı küme — `status in ("rejected_by_backtest", "rolled_back")` (guard.py:236).
+    # aynı küme — `status in ("rejected_by_backtest", "rolled_back")` (`guard.validate_change`).
 
     # exploit heuristic — the one variable most implicated by recent behavior
     if reasons.get("stop", 0) + reasons.get("stop_gap", 0) > 0.4 * n:
@@ -1128,7 +1128,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     #     [C] teyit dilimi boş    → aynı taban dalı (0 < 21)
     #     [D] dilim sınırı bozuk / geçerli replikasyon yetersiz → probgate.evaluate legacy döner
     # GEÇMİŞ VAKA (ADIYLA, retro DÜZELTİLMEDİ): **H00029 → v0003** (`entry.w_prox` None→0,15,
-    # 2026-07-20) `confirm_p=null`, `confirm_n_valid=0` ile SHIP edildi; değeri `strategy.py:419`
+    # 2026-07-20) `confirm_p=null`, `confirm_n_valid=0` ile SHIP edildi; değeri `strategy.evaluate_entry`
     # varsayılanının aynısıydı, yani ölçülemeyen bir NO-OP canlıya çıktı. Defter GERİYE DÖNÜK
     # DÜZELTİLMEZ (tarihçe bozulur); bu düzeltme yalnız bundan sonrasını bağlar.
     #
@@ -1429,7 +1429,7 @@ def _pool_probe_job(args: dict) -> tuple:
 
 
 # ---- HAVUZ TOPLAM-ATALET TAVANI (2026-08-12 asılı-arama vakası) ---------------------------------
-# ÖLÇÜLEN ARIZA (sprint.py:404 bloğunun kök tarafı): canlı arama ProcessPoolExecutor açar ve
+# ÖLÇÜLEN ARIZA (`sprint._arama_durumu` bayatlık yasasının kök tarafı): canlı arama ProcessPoolExecutor açar ve
 # `ex.map` sonuç-beklemesi SINIRSIZDIR — ölen/kilitlenen bir işçi süreci ebeveyn iş parçacığını
 # sonsuza dek bekletir; SEARCH_PROGRESS.running=True donar ve öğrenme zinciri kilitlenir (canlıda
 # 4+ gün ölçüldü; sprint'in bayatlık yasası semptomu 6 saatte söker, bu tavan KAYNAĞI onarır:
@@ -1440,7 +1440,7 @@ def _pool_probe_job(args: dict) -> tuple:
 # saatler sürer) ASLA kesilmez: her biten iş sayacı sıfırlar.
 #
 # EŞİK TÜRETİMDİR, UYDURMA DEĞİL: bir havuz işi TEK walk-forward'dır ve incumbent-walk ~90 sn
-# ÖLÇÜLÜDÜR (sprint.py:422 bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
+# ÖLÇÜLÜDÜR (`sprint.ARAMA_BAYAT_SAAT` bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
 # işçi 20 kata kadar yavaşlasa bile (soğuk önbellek + nice(15) + dolu makine) tavana çarpmaz;
 # çarpan havuz, 30 dakikadır TEK iş bitirememiş havuzdur. 30 dk << bayatlık eşiği (6 sa): kurtarma
 # bayrak bayatlamadan, aynı gece penceresi içinde olur.

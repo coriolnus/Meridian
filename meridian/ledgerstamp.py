@@ -48,7 +48,8 @@ KAYNAK_RESET = "reset_isareti"   # eğri zarfındaki SON reset işaretinin `egri
 KAYNAK_DAMGA = "trades.kaynak"   # yedek yol: `replay_seed` damgalı satırların en geç `ts_close`u
 KAYNAK_YOK = "yok"               # üçüncü hâl: ölçülemedi — `replay_end` None (SIFIR ya da bugün DEĞİL)
 
-# İKİ YAZIMIN "AYNI ANDA" SAYILDIĞI PENCERE. run.py:157 ve 158 ardışıktır; aradaki tek iş bir
+# İKİ YAZIMIN "AYNI ANDA" SAYILDIĞI PENCERE. `run.replay_seed`in `trades.jsonl` ve
+# `equity_curve.json` yazımları ardışıktır; aradaki tek iş bir
 # sözlük kurmaktır (canlı defterde ölçülen fark 4 ms). 5 sn hem yavaş diskte hem yüklü bir VM'de
 # rahat pay bırakır, ama bir sonraki SEANSIN append'iyle karışacak kadar geniş değildir.
 BULK_WRITE_TOLERANCE_S = 5.0
@@ -125,7 +126,7 @@ def _mtime(name: str) -> float | None:
 def _toplu_yazim_olculebilir() -> bool:
     """TOPLU YAZIM İMZASI YALNIZ DOSYA ÇAĞINDA ANLAMLIDIR.
 
-    İmza şuna dayanır: `run.py:203` defteri, `run.py:204` eğriyi yazar; iki AYRI dosyanın mtime'ı
+    İmza şuna dayanır: `run.replay_seed` önce defteri, hemen ardından eğriyi yazar; iki AYRI dosyanın mtime'ı
     saniyeler içindeyse defter o toplu yazımdan beri hiç `append` almamıştır. SQLite'a taşındıktan
     sonra iki varlığın damgası TEK migrasyon transaction'ında AYNI ana düşer — yani fark her zaman
     ~0 çıkar ve imza "defter hiç eklenmedi" diye OKUNURDU. Bu bir ölçüm değil, migrasyonun kendi
@@ -162,7 +163,7 @@ def _tarih(v) -> str | None:
 def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
     """YOL-1 — SON reset işaretinin `egri_son_nokta` alanı. ONARIMIN TA KENDİSİ.
 
-    İşaret DONMUŞ bir kanıttır: `sermaye.uygula` onu bir kez yazar (sermaye.py:413-421), bir daha
+    İşaret DONMUŞ bir kanıttır: `sermaye.uygula` onu bir kez yazar, bir daha
     yeniden yazmaz ve `points`e dokunmaz. Eğriye kaç nokta eklenirse eklensin bu alan kıpırdamaz —
     sınır da kıpırdamaz. Eğrinin son noktasından okumak tam tersiydi: her yeni nokta sınırı ileri
     taşır, köken defteri her seans yeniden yazılırdı.
@@ -171,7 +172,7 @@ def _sinir_reset_isaretinden(eq: dict | None) -> tuple[str | None, dict]:
     anahtarını iki ayrı yerde tanımlasaydı biri değiştiğinde öteki sessizce boş dönerdi — bu
     deponun "aynı yasanın iki uygulaması" sınıfı.
 
-    SONDAN GERİYE taranır: reset ANINDA eğri boşsa sermaye.py alana None yazar (sermaye.py:412),
+    SONDAN GERİYE taranır: reset ANINDA eğri boşsa `sermaye.uygula` alana None yazar,
     yani son işaret konuşamayabilir. Konuşabilen EN SON işaret alınır; hiçbiri konuşamazsa None
     döner ve YOL-2 devreye girer."""
     from .sermaye import _egri_isaretleri          # TEK KAYNAK: işareti YAZAN modülün okuyucusu

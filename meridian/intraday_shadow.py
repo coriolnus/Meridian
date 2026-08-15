@@ -159,7 +159,7 @@ def _daily_adv(ticker: str, session: str):
 
 
 def _gates(b: PaperBroker, meta: dict, ticker: str) -> tuple[dict, dict]:
-    """EOD dolgu kapısının (loop.py:368 + 373) gölgedeki karşılığı + her girdinin KAYNAĞI.
+    """EOD dolgu kapısının (`loop.daily_cycle` kapı bloğu) gölgedeki karşılığı + her girdinin KAYNAĞI.
 
     Kapı yasası burada yeniden ÖLÇÜLÜR, kopyalanmaz: `halted`/`circuit_breaker_tripped`/`derisk_mult`
     /`max_positions_at` üretimin kendi fonksiyonlarıdır. Ama girdilerin bir kısmı seans içinde
@@ -199,7 +199,7 @@ def _gates(b: PaperBroker, meta: dict, ticker: str) -> tuple[dict, dict]:
 
 
 def _blocking(gates: dict) -> str | None:
-    """İlk engelleyen kapının ADI — loop.py:368/373'teki sırayla.
+    """İlk engelleyen kapının ADI — `loop.daily_cycle`in kapı sırasıyla.
 
     `breaker`/`data_bad` None ise (kaynak dosya hiç yok) kapı ÖLÇÜLEMEDİ demektir; bu durumda
     'geçti' saymak fail-open olurdu, o yüzden ölçülemeyen kapı da engeller ve adıyla yazılır."""
@@ -319,7 +319,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
     #   * `pivot` — bugün `fill_entry`in HÜKMÜNÜ DEĞİŞTİRMEZ ve bu böyle YAZILIYOR (uydurma yasağı:
     #     bağlanan her bacak "kaçan dolum" bulur diye sunulamaz). Yalnız `Position.pivot` alanına
     #     düşer, gölge de kopya broker'ı atar. Yine de geçirilir, İKİ SEBEPLE: (1) çağrı canlı
-    #     `loop.py:820` ile ARGÜMAN ARGÜMAN aynı olur — C13'ün kapattığı kopukluk ("replay taşıyor,
+    #     `loop.daily_cycle`in `fill_entry` çağrısı ile ARGÜMAN ARGÜMAN aynı olur — C13'ün kapattığı kopukluk ("replay taşıyor,
     #     canlı taşımıyor → knob terfi edince bir motorda SESSİZ NO-OP") tam olarak bir motorun
     #     eksik argümanla çağrılmasından doğmuştu ve gölge o listede kalan son motordu;
     #     (2) yapı çizgisi satıra yazılır — hangi girdiyle karar verildiği, kararın kendisi kadar
@@ -343,7 +343,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
         pos = b.fill_entry(plan, sim_price, as_of.isoformat(), b.equity(),
                            size_mult=gates["size_mult"], adv=_daily_adv(ticker, session),
                            atr=atr_icra,
-                           # `pivot or 0.0` = canlı loop.py:823 ile BİREBİR aynı ifade; 0.0 orada da
+                           # `pivot or 0.0` = canlı `loop.daily_cycle` `fill_entry` çağrısıyla BİREBİR aynı ifade; 0.0 orada da
                            # "bilinmiyor" demektir (broker.fill_entry docstring'i).
                            pivot=float(pivot_icra or 0.0),
                            # None BİLEREK None kalır: `False`a çevirmek "gap YOKTU" iddiasını
@@ -705,7 +705,7 @@ def golge_cf_eslestirme(satirlar: list[dict] | None = None,
     İŞARET TERİMİ YOK — VE BU BİR EKSİKLİK DEĞİL, ÖLÇÜLMÜŞ BİR SINIR. `faz5_cikis` kısa tarafta
     işareti çevirir çünkü iç EOD defteri `side` taşır. cf defterinde `side` alanı HİÇ YOKTUR
     (counterfactual._push) ve kartın formülünde de işaret terimi yoktur; formül olduğu gibi
-    uygulanır ve sınır satırda BEYAN EDİLİR. Bugün canlı yol yalnız long üretiyor (loop.py:1374),
+    uygulanır ve sınır satırda BEYAN EDİLİR. Bugün canlı yol yalnız long üretiyor (`loop.daily_cycle`),
     ama bu varsayım koda gömülmez — cf defterine `side` geldiği gün burası da düzeltilmelidir.
 
     EŞLEŞME ANAHTARI (kart: `plan_id`) — cf tarafında `plan_id` ALANI YOKTUR (ölçüldü: 0 kayıt).

@@ -572,12 +572,12 @@ def _looks_like_artifact(s: str) -> bool:
 # o çağrıların AST şekli `Call(func=Attribute(value=Call(func=Name('_store')), attr='read_json'))`
 # ve eski filtre yalnız `isinstance(n.func, ast.Attribute)` diye sorup TABANA hiç bakmadığı için
 # dokuzunun da adı çözülüyordu — hepsi writer_sites/reader_sites'ta duruyordu
-# (insider.py:281,637 · shortinterest.py:210,353,392 · massive.py:555,564,632,856), `massive_verify.json`
+# (`insider` · `shortinterest` · `massive` modüllerindeki dokuz çağrı), `massive_verify.json`
 # dâhil. Bulgunun ASIL çekirdeği ise doğrudur ve tam olarak buradadır: **tarayıcı ÇÖZEMEDİĞİ
 # deseni saymıyordu.** Ölçülen gerçek kör sınıflar:
 #   (1) `func` bir `ast.Name` — `from .store import read_json` sonrası ÇIPLAK ad çağrısı. Filtre
-#       `isinstance(n.func, ast.Attribute)` dediği için 6 gerçek çağrı (store.py:225,228,235,238,
-#       416,417 — `update_json`/`update_jsonl`/`merge_dated_jsonl` içleri) ne artefakta, ne
+#       `isinstance(n.func, ast.Attribute)` dediği için 6 gerçek çağrı (`store.py` →
+#       `update_json`/`update_jsonl`/`merge_dated_jsonl` içleri) ne artefakta, ne
 #       `unresolved`a, ne `UNSCANNED`e düşüyordu: HİÇBİR SAYAÇTA yoktu.
 #   (2) konumsal argümanı olmayan çağrı (`store.write_json(name=...)`): `n.args` boş → `continue`.
 #       Bugün 0 örnek var, ama kapı YAPISALDI; sıfır örnek "kapalı" demek değildir.
@@ -778,8 +778,8 @@ def artifact_graph(root: str = "meridian") -> dict:
 #     stale_sinks = [k for k in DECLARED_SINKS if k in out and not out[k]["unread"]]
 # Yani bir muafiyetin bayatladığını ancak GRAFİK dış okuyucu görürse anlar. `sieve.json` tam bu
 # deliğe düşmüştü: beyanı "panoya bağlı değil, tek okuyucusu kendi testi" diyordu; gerçekte
-# `api.py:3202` `sieve.report()` çağırıyor ve sonuç TERFİ HÜKMÜNÜ belirliyordu. Grafik bunu
-# göremez çünkü tek `store` okuması `sieve.py:148`'dedir (aynı modül) → `external_readers` boş →
+# `api.py` → `api_diagnostics` `sieve.report()` çağırıyor ve sonuç TERFİ HÜKMÜNÜ belirliyordu. Grafik bunu
+# göremez çünkü tek `store` okuması `sieve.stages`'dedir (aynı modül) → `external_readers` boş →
 # `unread` True → muafiyet "geçerli" görünür. Tetikleyici yanlış sinyale bağlıydı.
 #
 # KAPAMA (asgari, bilerek dar): beyan METNİNİN İDDİASI, FONKSİYON-ÇAĞRI düzeyinde doğrulanır.

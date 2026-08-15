@@ -86,7 +86,8 @@ CONTRACTS: dict[str, Contract] = {
         note="regime '?' olabilir (rejim bilinmiyorsa) ama ALAN bulunmalı — dilimleme ona bakar"),
     # G2 ALAN ADI KANONİKLEŞTİRME. 2026-07-29'da deftere üç G2 alanı eklendi
     # (`rvol20`, `mom_12_1`, `rmom`) ve ad dikişi AYNI GÜN ayrıştı: defter `mom_12_1` yazıyor
-    # (strategy.py:137), component_ic raporu `mom12_1` kullanıyor (component_ic.py:102). ledgers.py
+    # (`strategy.EntrySignal.as_row`), component_ic raporu `mom12_1` kullanıyor
+    # (`component_ic.COMPONENTS`). ledgers.py
     # TAM BU "takma ad" hastalığı için kurulmuştu, ama candidates sözleşmesi ne
     # alanları ne alias'ı beyan ediyordu — yani kurulma sebebi olan hata kendi kapsamı dışında
     # yeniden açıldı.
@@ -114,7 +115,7 @@ CONTRACTS: dict[str, Contract] = {
         # canlı state/hypotheses.jsonl'a yazan tek modül memory'dir.
         writers=("memory.py",),
         key="id", key_format=re.compile(r"^H\d{5}$"),
-        # `api` EKSİKTİ: api.py:1270 bu defteri OKUYOR (pano ship geçmişi/diff şeridi) ve
+        # `api` EKSİKTİ: `api.py` → `_regresyon_kirilimi` bu defteri OKUYOR (pano ship geçmişi/diff şeridi) ve
         # o okuma DSR damgalarını da taşıyor — sayılmayan bir tüketici, şema kararlarında
         # hesaba katılmayan bir tüketicidir (events.jsonl'da aynı eksik aynı turda düzeltilmişti).
         consumers=("reflect", "rollback", "probgate", "analytics", "selfreview", "api"),
@@ -131,8 +132,9 @@ CONTRACTS: dict[str, Contract] = {
              "girmez). Damgalar ZORUNLU alan DEĞİLDİR ve olmayacaktır: v130 öncesi satırlarda "
              "yokturlar ve retro damga yasağı gereği doldurulmazlar — damgasız satır 'sert kapı "
              "öncesi' demektir"),
-    # TÜKETİCİ LİSTESİ EKSİKTİ: `notify.inbox` (notify.py:78) ve
-    # `analytics.autonomy` devre-kesici sayacı (analytics.py:106) da bu defteri okuyor. Sözleşmenin
+    # TÜKETİCİ LİSTESİ EKSİKTİ: `notify.inbox` ve
+    # `analytics.autonomy_ladder`ın devre-kesici sayacı (`analytics._breaker_trips_since`) da bu
+    # defteri okuyor. Sözleşmenin
     # TEK işi tam olmaktır: budama/şema kararları bu listeye bakılarak verilirse, sayılmayan iki
     # okuyucu hesaba katılmaz — ve ikisi de PENCERELİ okur (4000/400 satır), yani defterin hacmi
     # onların gördüğü tarihi doğrudan belirler.
@@ -268,7 +270,7 @@ CONTRACTS: dict[str, Contract] = {
     # CONTRACTS 8 eski defterle sınırlıydı. Yani yedi hatayı doğuran "sözleşmesiz
     # defter" deseni en YENİ iki defterde aynen yeniden açıktı.
     #
-    # ÜÇ DAMGA — İDDİANIN CANLI DENETÇİSİ: intraday_shadow.py:241 "as_of >= close_ts sonradan
+    # ÜÇ DAMGA — İDDİANIN CANLI DENETÇİSİ: `intraday_shadow._satir` "as_of >= close_ts sonradan
     # denetlenebilir" diyor, ama tek denetim fixture'lı birim testlerdi; diskteki GERÇEK satırlara
     # bakan hiçbir canlı dedektör yoktu. Üç damga (`decision_as_of`, `bar_t`, `close_ts`) burada
     # ZORUNLU alan olur — eksikse look-ahead denetimi hiç yapılamaz — ve karşılaştırmayı
@@ -276,7 +278,8 @@ CONTRACTS: dict[str, Contract] = {
     #
     # ALANLAR YAZARDAN DOĞRULANDI, DİSKTEN DEĞİL: iki defter de henüz 0 satır (bilinen açlık —
     # 4a saha 0 satır, gölge hiç satır görmedi). UYDURMA YASAĞI gereği kaynak uydurulmaz: adlar
-    # intraday_cycle.py:125-131 ve intraday_shadow.py:230-243 yazım satırlarından alındı.
+    # `intraday_cycle.IntradayConsumer._handle_symbol` ve `intraday_shadow._satir` yazım
+    # satırlarından alındı.
     "intraday_decisions.jsonl": Contract(
         required=("ts", "ticker", "source", "decision_as_of", "bar_t", "close_ts",
                   "admissible_bars", "fired"),
@@ -300,10 +303,10 @@ CONTRACTS: dict[str, Contract] = {
     # kapanmıyor, sayacı ilerliyor: yeni defter doğduğu commit'te buraya da satır ister.
     #
     # ALANLAR DİSKTEN DEĞİL YAZARDAN ÖLÇÜLDÜ (defter henüz 0 satır; UYDURMA YASAĞI): satırı
-    # `intraday_shadow._satir()` (intraday_shadow.py:384-408) kurar, `intraday_cycle` (intraday_
-    # cycle.py:256) diske yazar. Ölçülen tam anahtar kümesi silahli kolun ALTIN SATIRIYLA
+    # `intraday_shadow._satir()` kurar, `intraday_cycle.IntradayConsumer._handle_symbol`
+    # diske yazar. Ölçülen tam anahtar kümesi silahli kolun ALTIN SATIRIYLA
     # (26 anahtar, test_golge_planli_kol_v217.ALTIN_ANAHTARLAR) BİREBİR aynıdır, ARTI tek fark:
-    # `kol` (intraday_shadow.py:411). Tek gövde, tek şema.
+    # `kol` (`intraday_shadow._satir`). Tek gövde, tek şema.
     #
     # `kol` NEDEN ZORUNLU: bu defterin varlık sebebi nüfus ayrımıdır (silahlanmamış GO/REVIEW
     # planları). Etiket düşerse iki kol tek havuzda okunabilir hâle gelir — kartın kill#4'ünün
@@ -313,11 +316,11 @@ CONTRACTS: dict[str, Contract] = {
     #
     # ÜÇ DAMGA + `gate_inputs_as_of` kardeş sözleşmeyle AYNI GEREKÇEYLE zorunludur: look-ahead
     # denetimini `watchdog.intraday_stamp_report()` yapar ve bu defter onun taradığı
-    # `INTRADAY_STAMP_LEDGERS` kümesindedir (watchdog.py:1567-1568).
+    # `INTRADAY_STAMP_LEDGERS` kümesindedir (`watchdog.INTRADAY_STAMP_LEDGERS`).
     #
     # `consumers` ÖLÇÜLDÜ, öneriden İKİ NOKTADA AYRIŞTI: (a) `watchdog` EKLENDİ — damga
-    # denetimi defteri gerçekten okuyor (watchdog.py:1582); (b) `api` YAZILMADI — pano yolu
-    # (api.py:3475) YALNIZ silahli defteri okur, planli kol henüz uca çıkmıyor. Belgeleme alanı
+    # denetimi defteri gerçekten okuyor (`watchdog.intraday_stamp_report`); (b) `api` YAZILMADI — pano yolu
+    # (`api._eylemsizlik`) YALNIZ silahli defteri okur, planli kol henüz uca çıkmıyor. Belgeleme alanı
     # olması onu bir dilek listesine çevirmez: yazılmayan tüketici, YASA-6 borcunun kaydıdır.
     "intraday_shadow_planli_orders.jsonl": Contract(
         required=("plan_id", "ticker", "date", "status", "kol", "sim_fill", "decision_as_of",

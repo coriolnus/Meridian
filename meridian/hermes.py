@@ -62,7 +62,7 @@ def _progress(**alanlar) -> None:
     yapıldı. Damga o cevabı bayrağın kendisine koyar (hermes_runtime:522 aynı sözlüğü /api/hermes'e
     aynen render eder; asılı aramada saat DONMUŞ görünür — sinyalin kendisi budur).
 
-    Sprint'in bayatlık yasasına (sprint.py:458) BİLEREK GİRMEZ: parmak izi faz/i/total/değişken/
+    Sprint'in bayatlık yasasına (`sprint._arama_durumu`) BİLEREK GİRMEZ: parmak izi faz/i/total/değişken/
     değer beşlisidir; damga ize girseydi içeriksiz her yazım "ilerleme" gibi okunur, bayatlık
     yasası körleşirdi. Damga parmak-izine EK sinyaldir, parçası değil."""
     SEARCH_PROGRESS.update(dict(alanlar, updated_at=memory.now_iso()))
@@ -4020,7 +4020,7 @@ def propose_with_llm() -> dict | None:
 # pencere `active_model()`in kapattığımız SAĞLAYICI-SEÇİMİ hatasıyla aynı sınıfta değildir.
 #
 # TÜKETİCİLER (ADIYLA, ölçüldü): tek üretim tüketicisi `nous_eval.haftalik_degerlendirme`
-# (`nous_eval.py:695-699`) — `cevap.get("text"/"beyin"/"model"/"neden")` okur ve `model`i iki
+# (`nous_eval.haftalik_degerlendirme`) — `cevap.get("text"/"beyin"/"model"/"neden")` okur ve `model`i iki
 # kalıcı deftere yazar: `nous_eval_runs.json` (`_kosu_kaydet`) ve `improvement_proposals.jsonl`
 # (`_oneri_kaydet` → satır alanı `model`; ledgers sözleşmesinde ZORUNLU DEĞİL, yani None meşru).
 # Pano ikisini de None-korumalı basar (`web/app.js`: `p.model || "—"`). Sözleşme EK ALANLA
@@ -4273,18 +4273,18 @@ def _bg_on_eleme_kaydi(proposal: dict | None, *, pvar: str, certified, red_neden
     reddedilen öneri 'aday' değildir; ayrı damga şart, yoksa o bulgunun TERS YÖNÜ doğar (sayı bu kez
     ŞİŞER)". Hipotez defterinin TÜM tüketicileri tarandı; sekizi satırı DURUMA BAKMADAN sayar ve
     ÜÇÜ yalnız sayı şişirmez, ÖĞRENME DÖNGÜSÜNÜ BOZAR:
-      (a) `analytics.dead_families` (analytics.py:2759) durum süzgeci TAŞIMAZ ve
+      (a) `analytics.dead_families` (`analytics.py` → `dead_families`) durum süzgeci TAŞIMAZ ve
           `DEAD_FAMILY_MIN_N = 3`'tür. Ölçülen dağılımda `entry.w_turnover` 21 satır demektir →
           aile ANINDA "ölü" ilan edilir, düğme `hermes.virgin_knobs()`un bakir listesinden DÜŞER.
           Yani reddedilen öneriler öneri UZAYINI daraltırdı — düzeltmenin tam tersi.
-      (b) `watchdog._learning_liveness` (watchdog.py:3282) yaşı `ts`ten ölçer ve 168 saatte
+      (b) `watchdog._learning_liveness` (`watchdog.py` → `_learning_liveness`) yaşı `ts`ten ölçer ve 168 saatte
           "öğrenme durdu" der. TAZE bir satır bu alarmı SIFIRLAR — bu kusuru gösterebilecek TEK
           alarm, kusurun kendi kaydıyla maskelenirdi.
-      (c) `selfreview`ın 25/15 satırlık pencereleri (selfreview.py:286/332/351/360) düğmeyi
-          "denendi" sayar ve kanıt→hipotez dikkat satırlarını BASTIRIR; ayrıca satır başına gerçek
+      (c) `selfreview`ın 25/15 satırlık pencereleri (`selfreview._near_miss_attention` +
+          `selfreview.contradictions`) düğmeyi "denendi" sayar ve kanıt→hipotez dikkat satırlarını BASTIRIR; ayrıca satır başına gerçek
           bir hipotezi pencereden DIŞARI iter.
-    Ek olarak `api.py:712` `/api/public/summary` → `hypotheses_total` KAMUYA AÇIK ship-oranının
-    PAYDASIdır (landing.js:68) ve `selfreview.py:130` + `web/app.js:5945` `startswith("rejected")`
+    Ek olarak `api.py` → `api_public_summary` (`/api/public/summary`) → `hypotheses_total` KAMUYA AÇIK ship-oranının
+    PAYDASIdır (landing.js:68) ve `selfreview.build` + `web/app.js:5945` `startswith("rejected")`
     süzgeciyle reddi GERÇEK KAPI REDDİYLE aynı kovaya koyar. Bu tüketicilerin HİÇBİRİ bu turun
     dosya sınırında değildir, dolayısıyla kill kriteri hipotez defterinde SAĞLANAMAZDI.
 
@@ -4325,7 +4325,7 @@ def bg_on_eleme_karnesi(olaylar: list | None = None, n: int = BG_ON_ELEME_PENCER
     """ÖN-ELEME KARNESİ (YASA 6 okuyucusu) — "üretim" ile "hayatta kalan" AYRI iki sayı.
 
     D1 kaydının TÜKETİCİSİ budur: `exploration_share()` bunu kendi karnesine gömer,
-    `analytics.hermes_scorecard()` o karneyi olduğu gibi dışa verir (analytics.py:2837) → pano.
+    `analytics.hermes_scorecard()` o karneyi olduğu gibi dışa verir (`analytics.py` → `hermes_scorecard`) → pano.
     Okuyucusuz bir damga, bugün düzelttiğimiz kusurun ikinci kuşağı olurdu.
 
     İKİ SAYI, İKİSİ DE OLAY DEFTERİNDEN:
@@ -4379,7 +4379,7 @@ def reflect_once(target_regime: str | None = "auto", *, background: bool = False
     normal dönüş, içerideki phase="error" yolu ya da bugün var olmayan bir istisna
     yolu — bayrak `running=True` BIRAKILAMAZ. Mevcut hata-yolu yazımları DURUYOR; bu ağ yalnız
     onların kaçırdığı bir çıkışta devreye girer (normalde no-op: bayrak zaten temizlenmiştir).
-    Kadans tarafındaki bayatlık yasası (sprint.py:404) aynı sınıfın SÜREÇ-DIŞI emniyetidir;
+    Kadans tarafındaki bayatlık yasası (`sprint._arama_durumu`) aynı sınıfın SÜREÇ-DIŞI emniyetidir;
     bu ağ ise bayrağı asılı bırakmamanın SÜREÇ-İÇİ birinci hattıdır."""
     try:
         return _reflect_once_govde(target_regime, background=background)

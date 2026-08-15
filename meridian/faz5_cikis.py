@@ -166,7 +166,8 @@ def _eod_defteri() -> dict:
 
     YÖN DE BURADAN OKUNUR: gölge satırında `side` alanı YOKTUR ve kartın formülü kısa tarafta
     işareti ters çevirir. Yönü "long" diye VARSAYMAK, ölçülmemiş bir şeyi ölçülmüş göstermek
-    olurdu — bugün canlı yol yalnız long üretiyor olsa bile (loop.py:1374), varsayım koda gömülmez.
+    olurdu — bugün canlı yol yalnız long üretiyor olsa bile (`loop.daily_cycle`in `fill_entry` çağrısı),
+    varsayım koda gömülmez.
     """
     out: dict = {}
     for tr in store.read_jsonl(EOD_DEFTERI):
@@ -302,7 +303,8 @@ def cikis_olcumu(rows: list | None = None) -> dict:
       6. CI alt sınırı ≤ maliyet bandı → durum `olculdu`, gecer False (kill#3 — anlamlı ama işe yaramaz)
       7. CI alt sınırı > band        → durum `olculdu`,   gecer True
 
-    `gecer` ÜÇ DEĞERLİ DEĞİLDİR (health.py:108-113 sözleşmesi): ölçülemeyen kilit KAPALIdır.
+    `gecer` ÜÇ DEĞERLİ DEĞİLDİR (`health.py` modül başlığındaki `faz5_cikisi` maddesinin
+    sözleşmesi): ölçülemeyen kilit KAPALIdır.
     Kill#4 önce gelir çünkü eşleştirme kırıksa n de ortalama da CI de YANLIŞ bir evrenden gelir —
     kırık bir eşleştirmenin üstüne kurulan "örneklem yetersiz" cümlesi de yanlış olurdu.
 

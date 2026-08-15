@@ -1405,7 +1405,7 @@ def _son_dongu() -> dict:
             "open_positions": doc.get("open_positions"), "data_ok": doc.get("data_ok"),
             "halted": doc.get("halted"),
             # Kadanslı eğri yazarının MAKBUZU. `loop._persist_equity_point`
-            # onu `daily_cycle` satırına damgalıyor (loop.py:2161) ve bu fonksiyon o satırın TEK
+            # onu `daily_cycle` satırına damgalıyor (`loop.py` → `daily_cycle` olay damgası) ve bu fonksiyon o satırın TEK
             # okuyucusudur — ikinci bir defter taraması açmak, aynı dosyayı iki kez okumak olurdu.
             # Tüketici: `_egri_beyani` (aşağıda) → `/api/performance.equity_curve_beyani.son_yazim`
             # → panonun eğri altı beyan şeridi. Alan YOKSA None kalır: makbuzsuz bir tur "yazıldı"
@@ -1558,7 +1558,7 @@ def api_skills(request: Request):
     # KOŞU DEFTERİ PANOYA BAĞLANIYOR. `pipeline_runs.jsonl` her skill koşusunda
     # satır yazıyor ve tek okuyucusu /api/pipeline_runs'tı — o ucu ise HİÇBİR istemci çağırmıyordu.
     # Artefakt yasası tatmin görünüyordu (modüller-arası read_jsonl VAR), ama zincir bir kat
-    # yukarıda, HTTP→DOM katmanında kopuktu: statik Python grafı JS'i göremez. skills.py:3'ün
+    # yukarıda, HTTP→DOM katmanında kopuktu: statik Python grafı JS'i göremez. `skills.py` modül başlığının
     # "ajanın yaptığı hiçbir şey görünmez değildir" vaadi panoda karşılıksızdı.
     # `skills_declared_not_run` BİLEREK taşınıyor: "beyan edildi ama koşmadı" tam olarak Hermes'in
     # 14 düğmede dönmesiyle aynı sınıf bir körlük kanıtıdır ve yalnız bu defterde ölçülüyor.
@@ -1620,7 +1620,7 @@ def api_skills(request: Request):
 #     onay damgası → `loop.girise_uygun` → silahlı küme. İlgili denetim kaydının kendi "ayırt edici notu" bu
 #     karışıklığı açıkça yasaklıyor. Buraya `approvals.jsonl` kapısı koymak, çalışan bir onay
 #     mekanizmasının üstüne İKİNCİ bir onay yolu açmak olurdu (app.js:8470'in reddettiği desen).
-#   * `skills.auto_shadow_from_evidence` (skills.py:499, süreç-içi, HTTP değil): operatör kararı
+#   * `skills.auto_shadow_from_evidence` (`skills.py`, süreç-içi, HTTP değil): operatör kararı
 #     DEĞİLDİR — gelen kutusunda kimliği yoktur (`pending: False` yazar), dolayısıyla ona ait bir
 #     onay satırı HİÇBİR ZAMAN var olamaz; kapı oraya konsaydı L1'de skill öz-yönetim döngüsünü kalıcı ve
 #     açılamaz biçimde dondururdu. Ayrıca tek yönlüdür (yalnız `shadow`, PROTECTED hariç, koşu
@@ -2047,7 +2047,7 @@ def api_plots(request: Request):
 def _slippage_measured(trades: list[dict], goal: dict) -> dict:
     """ÖLÇÜLEN SLİPAJ vs VARSAYILAN SLİPAJ.
 
-    `loop.py:998-1000` kapanan işlemlere `alpaca_fill_price` + `mirror_divergence` geri-yazıyor ve
+    `loop.py` → `reconcile_broker_state` kapanan işlemlere `alpaca_fill_price` + `mirror_divergence` geri-yazıyor ve
     gerekçesi açık: "real-world slippage vs the model is measurable". Ama ölçülen sapmayı
     `goal.slippage_bps`e (ya da herhangi bir kalibrasyon raporuna) geri besleyen tüketici YOKTU —
     döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml:27 slippage_bps: 5.
@@ -2111,7 +2111,7 @@ def _y3_gate_row() -> dict:
 def _benchmark_veto_tally() -> dict:
     """`hypotheses.vs_benchmark_at_ship` SAYACI.
 
-    reflect.py:721 her ship'e `analytics.benchmark_relative()` anlık görüntüsü damgalıyor ve
+    `reflect.py` → `_submit_locked` her ship'e `analytics.benchmark_relative()` anlık görüntüsü damgalıyor ve
     yorumu şunu söylüyor: "20-30 gözlem birikince kapıya eklenip eklenmeyeceğine VERİYLE karar
     verilir". Ama alanın repo genelinde tek okuyucusu damgalandığını doğrulayan bir testti — ne
     pano ne API servis ediyordu, ve o kararı tetikleyecek SAYAÇ hiç yazılmamıştı. Yani alan
@@ -2121,7 +2121,7 @@ def _benchmark_veto_tally() -> dict:
     beat = sum(1 for r in rows if r.get("beat_benchmark") is True)
     lost = sum(1 for r in rows if r.get("beat_benchmark") is False)
     return {"n": len(rows), "beat": beat, "lost": lost,
-            # Eşik reflect.py:721 yorumundan gelir; sayaç onu YENİDEN tanımlamaz, gösterir.
+            # Eşik `reflect._submit_locked` yorumundan gelir; sayaç onu YENİDEN tanımlamaz, gösterir.
             "decision_n": 20,
             "ready": len(rows) >= 20,
             "note": ("her ship'e damgalanan 'SPY'ı geçti mi' anlık görüntüsü; 20 gözlemde kapıya "
@@ -2134,7 +2134,7 @@ def _benchmark_veto_tally() -> dict:
 # yansıtmıyor" diye okuyordu. Aynı zarfta 1 sermaye reset işareti var (`SR-20260801T151429+0000`,
 # `egri_son_nokta ["2026-07-20", 94457.91]`): yani çizilen tek çizgi bir sermaye tabanı
 # değişiminin ÖNCESİNİ ve SONRASINI birlikte kapsıyor. Ve 24 günlük boşluk KAPANMAYACAK — geriye
-# doldurmak uydurma olurdu (loop.py:2208 bloğu bunu adıyla yazıyor) — yani eğri yeni noktalarla
+# doldurmak uydurma olurdu (`loop._persist_equity_point` bloğu bunu adıyla yazıyor) — yani eğri yeni noktalarla
 # sürerken ortada kalıcı bir delik kalacak.
 #
 # ÜÇ OLGU DA ZATEN ÖLÇÜLÜYDÜ, HİÇBİRİNİN PANODA OKUYUCUSU YOKTU:

@@ -375,11 +375,11 @@ def dump_yaml(obj: dict, path: Path) -> None:
 
     KİLİT ADI store'un öteki yazarlarıyla PAYLAŞILSIN diye STATE'e GÖRELİ ada çevrilir: mutlak yol
     ayrı bir kilide düşerdi (aynı dosya iki kilit → kilit YOK). STATE dışı yollar (sprint sandbox
-    history'si — sprint.py:208) mutlak yolla geçer. Kapı `path.parent`i kendi kurar; biçim
+    history'si — `sprint._reset_sandbox_state`) mutlak yolla geçer. Kapı `path.parent`i kendi kurar; biçim
     (`sort_keys=False`) DEĞİŞMEZ — `safe_dump` string'i eskisiyle birebir, `write_text` baytı aynen yazar."""
     from . import store
     try:
         name = str(Path(path).relative_to(STATE))
-    except ValueError:  # sessiz-yutma: STATE dışı yol (sprint sandbox history'si, sprint.py:208) — relative_to bilerek ValueError atar, yol mutlak geçer; hata YUTULMUYOR, bilinçli fallback ve veri kaybı yok
+    except ValueError:  # sessiz-yutma: STATE dışı yol (sprint sandbox history'si, `sprint._reset_sandbox_state`) — relative_to bilerek ValueError atar, yol mutlak geçer; hata YUTULMUYOR, bilinçli fallback ve veri kaybı yok
         name = str(path)
     store.write_text(name, yaml.safe_dump(obj, sort_keys=False))
