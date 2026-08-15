@@ -1,37 +1,29 @@
-"""hermes_composite.py — BİLEŞİK ÖNERİ YOLU (Hermes paketi H3 + H4, 2026-07-30).
+"""hermes_composite.py — bileşik (çok-düğmeli) önerilerin ölçüm kuyruğu: tek-değişken yasasını
+gevşetmeden fikri çöpe atmamak.
 
-SORUN. Tek-değişken yasası (`goal.one_variable_only`) kapının temel disiplinidir ve KALKMAYACAK:
-iki düğmeyi birlikte oynatıp iyileşme görmek, hangisinin işe yaradığını ÖLÇMEZ. Ama yasanın bir yan
-etkisi vardı: hermes bir bileşik fikir ürettiğinde (ör. "stop_mode=1 İLE stop_buffer_atr=0.4 birlikte
-anlamlı") o fikir guard'da REDDEDİLİP ÇÖPE gidiyordu. Fikrin kendisi bilgiydi; kaybı ölçülmemiş bir
-kayıptı.
+Ne yapar: tek-değişken yasası (`goal.one_variable_only`) kapının temel disiplinidir ve kalkmaz —
+iki düğmeyi birlikte oynatıp iyileşme görmek hangisinin işe yaradığını ÖLÇMEZ. Ama hermes bir
+bileşik fikir ürettiğinde (ör. "stop_mode=1 İLE stop_buffer_atr=0.4 birlikte anlamlı") o fikir
+bilgidir; guard'da reddedilip çöpe gitmesi ölçülmemiş bir kayıptı. `enqueue` bu fikri guard'ı
+ATLAMADAN ve canlıya GİTMEDEN `state/composite_queue.jsonl` kuyruğuna yazar (ledgers sözleşmeli);
+kuyruk `prescreen --composite` resmî ölçüm yolunun girdisidir. Gece döngüsü `spawn_pending` ile
+haftalık yoklama bütçesi içinde prescreen'i ayrı bir arka plan sürecine başlatır (gece döngüsü
+bloklanmaz); alt süreç `--queue-id` taşır ve ölçüm bitişinde aynı satıra `mark(id, "measured")`
+yazılır. `reap_measuring` ölmüş ölçüm süreçlerini yoklayıp `measure_failed` damgalar — sessiz
+asılı satır yoktur, ne damgalanan ne damgalanamayan hâl sessizdir. `week_key` hafta damgasının
+tek kaynağıdır: bütçeyi sayan modül damgayı da tanımlar, ikinci bir biçim sessizce ayrışırdı.
 
-ÇÖZÜM (H3). Bileşik öneri guard'ı ATLAMAZ ve canlıya GİTMEZ — bir KUYRUĞA yazılır
-(`state/composite_queue.jsonl`, ledgers sözleşmeli). Kuyruk, `prescreen --composite` yolunun (2026-07-30
-sadeleştirme turunda inen resmî bileşik ölçüm yolu) girdisidir. Yani bileşik fikir tek-değişken
-yasasını gevşetmez; ÖLÇÜLMEK üzere sıraya girer ve ship yolu yine kapı + operatördür.
+Değişmezler: bu modül KARAR VERMEZ — `passes` semantiğine, tek-değişken yasasına ve kapı
+eşiklerine dokunmaz; ship yolu yine kapı + operatördür (kuyruğa girmek onay değil, ölçüm
+sırasıdır). Bütçe (WEEKLY_PROBE_BUDGET=3) bir beyandır: her ölçüm bir DENEMEDİR ve aşınma
+defterine/DSR paydasına `k_probes` beyanıyla N olarak girer; sınırsız otomatik yoklama
+deflasyonu kendi eliyle şişirip her adayı imkânsızlaştırır. Demet boyu en çok
+COMPOSITE_MAX_KNOBS=3: daha büyüğü hipotez değil strateji yeniden yazımıdır. Şekil hükmü tek
+yerdedir (`guard.composite_shape_reasons`) — iki denetim kopyası sessizce ayrışırdı.
 
-ÇÖZÜM (H4). Kuyruk kendi kendine boşalmazsa yine kopuk kablodur. Gece döngüsü kuyruğa bakar ve
-HAFTALIK YOKLAMA BÜTÇESİ içinde (WEEKLY_PROBE_BUDGET = 3) prescreen'i AYRI BİR ARKA PLAN SÜRECİNE
-spawn eder — gece döngüsünü BLOKLAMAZ (`ops/barsarchive-run.sh` nohup deseni). Bütçe neden var:
-her ölçüm bir DENEMEDİR ve aşınma defterine/DSR'ye N olarak girer; sınırsız otomatik yoklama,
-deflasyonu kendi eliyle şişirip her adayı imkânsızlaştırır. Bütçe sayacı bu yüzden aşınma defteriyle
-AYNI dili konuşur: her ölçüm `k_probes` beyanıyla kaydedilir.
-
-HALKANIN KAPANIŞI (C14, 2026-08-02). "Sonucu deftere yazar" cümlesinin KARŞILIĞI 2026-08-02'ye kadar
-KODDA YOKTU: `spawn_pending` satırı `measuring` damgalıyor, prescreen sonucu yalnız `--workdir`e
-yazıyor ve kimse geri okumuyordu — yani `measured` yazan tek bir üretim yolu yoktu, `n_olculen`
-yapısal olarak hep 0'dı ve ölmüş bir süreç sonsuza dek "ÖLÇÜLÜYOR" görünüyordu (nous_eval._akibet
-beyne her hafta aynı yalanı taşıyordu). İKİ KABLO ÇEKİLDİ:
-  (a) KİMLİK TAŞIMASI — `spawn_pending` alt sürece `--queue-id <id>` geçirir; prescreen ölçüm
-      bitişinde AYNI kimliğe `mark(id, "measured", result=özet)` yazar (bkz. prescreen.kuyruk_geri_yaz).
-  (b) ÖLÜ SÜREÇ TOPLAMA — `reap_measuring()` her gece kancasında (spawn_pending'in İLK adımı)
-      'measuring' satırların pid'ini yoklar; ölmüş süreç `measure_failed` damgasını alır. Sessiz
-      asılı satır YOKTUR: ne damgalanabilen ne damgalanamayan hâl sessizdir.
-
-YASALAR: bu modül KARAR VERMEZ. Kuyruğa yazar, bütçeyi sayar, süreci başlatır, sonucun defterdeki
-kimliğini taşır ve ölmüş ölçümü damgalar. `passes` semantiğine, tek-değişken yasasına ve kapı
-eşiklerine DOKUNMAZ."""
+Okur/yazar: composite_queue.jsonl (kuyruk; status: pending → measuring → measured /
+measure_failed / rejected_shape) ve composite_budget.json (haftalık sayaç) yazar; olayları
+events.jsonl'a (obs) düşer."""
 from __future__ import annotations
 
 import datetime as dt

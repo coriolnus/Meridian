@@ -1,25 +1,30 @@
-"""probgate.py — Eşleştirilmiş Olasılıksal Kapı (karar mekanizması v3, Component 1).
+"""probgate.py — eşleştirilmiş olasılıksal kapı: nokta-eşik yerine blok-bootstrap ile P(ΔS>0)
+ölçer.
 
-Nokta-eşik (+0.02) yerine BLOK-BOOTSTRAP ile P(ΔS>0): incumbent ve aday, AYNI yeniden-örneklenmiş
-takvim bloklarında skorlanır — ortak işlemlerin gürültüsü farkta birbirini söndürür, testin gücü
-noktasal karşılaştırmanın çok üstüne çıkar. v2 dersinin kurumsallaşması: arama +0.059 gösterip canlı
-−0.036 gerçekleşmişti; kazananın-laneti (winner's curse) artık K-probe cezası ve teyit yürüyüşüyle
-(oos_pipeline) yapısal olarak bastırılır.
+Ne yapar: incumbent ve adayı AYNI yeniden-örneklenmiş takvim bloklarında skorlar — ortak
+işlemlerin gürültüsü farkta birbirini söndürür, testin gücü noktasal karşılaştırmanın (+0.02
+marjı) çok üstüne çıkar. Ölçülmüş bir dersin kurumsallaşması: arama +0.059 gösterip canlıda
+−0.036 gerçekleşmişti; kazananın-laneti artık K-sonda cezası ve teyit yürüyüşüyle
+(oos_pipeline) yapısal olarak bastırılır. ΔS PARA ölçeğindedir: `shadowlaw.ret_c_v3` farkı,
+yalnız para terimi, çarpıtmasız. Eski bileşik skorun varyansının %82'si düşüşten, %17,7'si
+Sharpe'tan geliyordu ve ikisi AYNI ANDA ayrı sert vetolarda da sayılıyordu — çift sayım
+skordan çıkarıldı; düşüş ve kuyruk `reflect`teki vetolarda güçlenerek durur (tam ölçüm kaydı:
+`shadowlaw` modül beyanı). Eski yasanın hükmü gölge alan olarak kayda girer ama karara girmez.
 
-ΔS ARTIK PARADIR (**PARA-v3**, 2026-07-30 — yasanın yeniden tasarımı). Bu modülün MEKANİZMASI
-değişmedi (blok-bootstrap, P(ΔS>0), K-cezası, aşınma marjı, teyit yürüyüşü aynen); değişen tek şey
-ΔS'in TANIMIdır:
+Kilit girişler: `PairedProbabilisticGate` (sınıf — `evaluate` ana ölçüm; `p_required_for`
+K-sonda cezasının GERÇEK Bonferroni eşiği; `block_days_for` dinamik blok boyu, medyan tutuş
+süresi [5, 21] güne kıstırılır), `GateResult` (dataclass — JSON-güvenli sonuç, `as_gate_fields`
+ile kapı kaydına yazılır), `refresh_meta_calibration` (meta-kalibrasyon: öngörülen/gerçekleşen
+çiftlerinden `extra_p` türetir — yalnız SIKILAŞTIRIR, gevşeme operatör kararıdır). Eşikler:
+P_BASE=0.80 (tek adayda ship alt sınırı), P_CONFIRM=0.70 (teyit dilimi), P_CEIL=0.999.
 
-    ESKİ:  ΔS = bileşik skor farkı  (0,5·ret_c + 0,3·dd_c + 0,2·sharpe_c)
-    YENİ:  ΔS = `shadowlaw.ret_c_v3` farkı — YALNIZ para terimi, çarpıtmasız
+Değişmezler: bu modül YALNIZCA ölçer — ship kararının sahibi reflect.submit'tir; fold-çoğunluğu
+ve kuyruk vetosu orada aynen yürürlüktedir; K arttıkça eşik gerçek Bonferroni ile yükselir;
+ölçülemeyen kalibrasyon çifti SAYILMAZ ve `extra_p` yer-tutucuyla doldurulmaz (birim
+varsayılmaz, atlanan sayaçta adıyla görünür).
 
-Gerekçe ÖLÇÜLDÜ (3a E raporu + 3b gölge ölçümü): eski ΔS'in varyansının %82'si düşüş, %17,7'si
-Sharpe, %0,3'ü paraydı ve düşüş/Sharpe HEM burada HEM ayrı sert vetolarda sayılıyordu — ÇİFT SAYIM.
-Şimdi skorda yalnız para var; düşüş ve kuyruk `reflect`teki vetolarda (biri bu turda EKLENDİ:
-düşüş vetosu) GÜÇLENEREK duruyor. Tam gerekçe ve ölçüm kaydı: `shadowlaw` modül beyanı.
-
-Yasa değişmez: bu modül YALNIZCA ölçer; ship kararının sahibi reflect.submit'tir ve fold-çoğunluğu +
-kuyruk vetosu aynen yürürlüktedir."""
+Okur/yazar: gate_calibration.json (meta-kalibrasyon durumu, store üzerinden); uyarıları
+events.jsonl'a (obs) düşer."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 import datetime as dt
