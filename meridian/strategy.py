@@ -1,10 +1,26 @@
-"""strategy.py — PURE. No I/O, no clock reads, no network. Index -1 is ALWAYS a closed bar.
-The exact same functions run in live trading and in the backtest. If they ever diverge,
-every backtest number becomes a lie (§4). Signal logic only; fill mechanics live in broker.py.
+"""strategy.py — saf sinyal mantığı: yedi giriş kurulumunun değerlendirmesi ve kapalı-bar pozisyon yönetimi.
 
-The core edge is a swing-momentum breakout computed directly from OHLCV — self-contained so it
-runs with or without FMP screeners. When FMP is present, screeners feed *extra* live candidates;
-they never define the entry logic here."""
+Ne yapar: OHLCV bar kuyruğundan giriş sinyali (EntrySignal) üretir ve açık pozisyonun bar-başına
+yönetim kararını (ManageDecision) verir. Çekirdek kenar, doğrudan OHLCV'den hesaplanan
+swing-momentum kırılımıdır — dış tarayıcı (FMP) olmadan da çalışır; tarayıcılar yalnız EK canlı
+aday besler, giriş mantığını asla tanımlamaz. Yedi ekran her sembolde daima değerlendirilir;
+yalnız ARMED_SETUPS üyeleri işlem adayı üretir, kalanlar uyuyan olarak karşı-olgusal ölçüme akar.
+Dolum mekaniği burada değil broker.py'dedir.
+
+Kilit girişler: evaluate_entry (breakout_vcp), evaluate_pullback, evaluate_momentum_burst,
+evaluate_episodic_pivot, evaluate_exhaustion_hammer, evaluate_pead, evaluate_canslim; toplayıcılar
+scan_all / scan_entry; yönetim manage_position (+ structural_stop, early_kill_pivot_exit); bileşen
+puanları rvol_band_score / mom_rank_score / turnover_score; gölge eşikleri relax_for_near_miss.
+
+Değişmezler: modül SAF'tır — I/O yok, saat okuma yok, ağ yok; index -1 DAİMA kapalı bardır. Canlı
+ve backtest birebir AYNI fonksiyonları koşar; ayrışırlarsa her backtest sayısı yalan olur. Karar
+kapalı bara, icra ertesi barın açılışına bağlıdır (ileri-dönük yok). Ölçülemeyen değer None kalır
+(0 uydurulmaz); ölçülemeyen kapı girdisi elemedir; disiplin kapısının R:R tabanının
+(DISCIPLINE_MIN_RR) altındaki plan hiç yüzeye çıkmaz.
+
+Okur/yazar: çağıranın verdiği DataFrame dışında yalnız iki tarihe-çapalı determinist okuma yapar
+(EDGAR hisse sayımı ve kazanç takvimi — depo-içi statik dosyalar, duvar saati yok; canlı ile
+replay aynı dosyadan aynı sayıyı alır, saflık sözleşmesi bozulmaz). Hiçbir dosyaya yazmaz."""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional

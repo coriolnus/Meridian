@@ -1,5 +1,24 @@
-"""Pure technical indicators over closed OHLCV bars. No I/O, no clock. numpy/pandas only.
-Every function here is deterministic and used identically in live and backtest paths."""
+"""indicators.py — kapalı OHLCV barları üzerinde saf, determinist teknik gösterge kütüphanesi.
+
+Ne yapar: strateji katmanının tükettiği tüm gösterge serilerini üretir — oynaklık (true_range,
+atr), ortalamalar (sma), hacim (volume_ratio, rvol20, med_volume21, turnover21), momentum
+(trailing_return, mom_12_1, residual_momentum), yapı (pivot_high, trend_template,
+weekly_uptrend) ve kesitsel yardımcılar (rs_rating, returns_tail, corr_max). Canlı ve backtest
+yolları bu fonksiyonların birebir aynısını koşar; ayrışma yapısal olarak imkânsızdır.
+
+Değişmezler: I/O yok, saat yok, ağ yok — yalnız numpy/pandas ve verilen seriler. Her pencere
+NEDENSELdir (bar yalnız kendi geçmişine bakar, ileri-dönük yok) ve ısınma dolmadan NaN döner:
+yarım pencereyle hesaplanmış bir "ortalama/uç değer" ölçülmüş gibi raporlanmaz; trend_template
+ısınması gerçek en uzun pencereye (52 hafta = 252 bar) bağlıdır ve girdisi eksik bar için skor
+tanımsızdır (NaN, 0 değil — "veri yok" ile "trend zayıf" aynı şey değildir). volume_ratio'nun
+paydası bugünü DIŞLAR (sert bir eşiğin bölenidir; bugünü içermek eşiği geçen kırılımları sessizce
+elerdi), rvol20'ninki bilinçli olarak İÇERİR (bant kenarları o tanımla ölçüldü) — ikisi ayrı
+büyüklüktür, tanımı "düzeltmek" ölçülmemiş bir ölçek uydurmak olur. turnover21'in fiziksel bekçisi
+(devir > 1 → NaN) veri-kalitesi kuralıdır, sinyal eşiği değil; sıfır varyans/sapma "ölçülemedi"
+demektir, sonsuz değil. rs_rating beraberliklere aynı puanı verir (aynı kanıt zıt karar üretemez)
+ve tek isimli kesitte nötr 50 döner; hizasız endeks serisi sessiz NaN yerine ValueError yükseltir.
+
+Okur/yazar: hiçbir dosyaya dokunmaz; girdi serilerini değiştirmez, yeni seri döndürür."""
 from __future__ import annotations
 import numpy as np
 import pandas as pd
