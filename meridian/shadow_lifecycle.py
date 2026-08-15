@@ -21,7 +21,12 @@ yolu YOKTUR — canlıya geçiş yalnız OOS kapısından (prescreen/reflect); p
 hızlandırıcısıdır, onay değil. YASALAR ÇAĞRILIR, KOPYALANMAZ: fill/kısmi satış/dokunuş çıkışı
 `broker.PaperBroker`ın kendisi, yönetim `strategy.manage_position`, likidite `backtest._adv`,
 kısma `broker.derisk_mult`/`max_positions_at`, tarama+kapı `shadow_variants._signals`/`._judge` —
-ikinci bir icra kopyası ilk düzeltmede çatallanır ve defter kendini ölçmeye başlardı. KİMLİK
+ikinci bir icra kopyası ilk düzeltmede çatallanır ve defter kendini ölçmeye başlardı.
+KOPYALANAN TEK ŞEY SÜRÜCÜDÜR (`step()`in faz sırası) ve kaynağı ADIYLA yazılıdır: `backtest.replay`in
+olay düzeni — OPEN(D) bekleyen çıkışlar+fill, INTRADAY(D) scale_out+dokunuş, CLOSE(D) yönetim+arm.
+Sıra bir "yasa" değil bir OLAY DÜZENİDİR ve ileri-dönüklüğü olmayan tek düzendir; onu çağırmanın
+yolu yok (replay kendi takvimini ve kendi brokerını kurar), o yüzden burada tek yardımcıya çıkarıldı.
+KİMLİK
 AYRIKLIĞI: her işlem/plan kimliği `SV-` öneklidir ve canlı PLAN_ID_RE ile asla eşleşmez. İKİ SORU
 İKİ PAYDA: `k_variants` (karar) ≠ `k_lifecycle` (para, = len(arms())) — tek sayıya indirgenmez.
 
