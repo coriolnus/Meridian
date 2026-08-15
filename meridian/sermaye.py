@@ -37,7 +37,8 @@ noktaları da SİLİNMEZ — eğrinin tarihi korunur, kırılma noktası BEYAN e
 
 NEDEN EĞRİYE YENİ NOKTA EKLENMİYOR (ölçülmüş yan etki). `points`e bir nokta eklemek cazip: eğri
 kırılmayı kendi çizerdi. Ama `ledgerstamp.seed_boundary()` tohum penceresinin sınırını EĞRİNİN SON
-NOKTASININ TARİHİNDEN okur (ledgerstamp.py:149, tek yazar run.py:171). Reset günü bir nokta
+NOKTASININ TARİHİNDEN okur (`ledgerstamp.seed_boundary`; eğrinin tek yazarı `run.replay_seed`).
+Reset günü bir nokta
 eklenseydi tohum sınırı bugüne kayar ve bundan sonraki HER canlı satır `replay_seed` diye
 damgalanırdı — yani bu turun kapattığı kusuru, tam da onu kapatan araç geri açardı. İşaret ayrı bir
 zarf anahtarında durur; `points` dokunulmaz kalır.
@@ -112,7 +113,7 @@ HEARTBEAT = "heartbeat.json"
 # kimliği kaç reset olursa olsun aynı formülle ölçer.
 RESET_KEY = "sermaye_resetleri"
 # EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi);
-# storage.py:196 zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
+# `storage._ddl` zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
 CURVE_MARK_KEY = "reset_isaretleri"
 
 # GEREKÇE EŞİĞİ. YASA 4'ün burada karşılığı: sermaye tabanını taşımak geri alınabilir ama
@@ -139,10 +140,11 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
       (a) TOPLAMA TOZU: watchdog:1976 `round(realized − Σ float, 2)` hesabında Σ, her çağrıda ham
           float'ların o günkü sırasıyla toplanır; yarım-sent (x.xx5) sınırındaki bir taban, toz
           kadar farkla iki yöne yuvarlanır. Burada Σ SENT TAMSAYISIYLA alınır: defter satırları
-          zaten 2 haneli yazılır (broker.py:605 `round(pnl, 2)`), yani `round(x*100)` terim başına
+          zaten 2 haneli yazılır (`PaperBroker.close_position` → `round(pnl, 2)`), yani `round(x*100)` terim başına
           KESİNDİR ve toplam, toplama sırasından/temsil tozundan bağımsız aynı tamsayıdır.
       (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
-          (broker.py:569/595) ama defter satırını yuvarlayıp yazar (:605) — broker.py:258'in kendi
+          (`PaperBroker.scale_out` / `PaperBroker.close_position`) ama defter satırını yuvarlayıp
+          yazar (aynı satır-yazımı) — `broker` modül başlığının kendi
           sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
           taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır
           (yama: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,

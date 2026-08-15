@@ -382,7 +382,8 @@ def _ajan_kullanim_uyar(neden: str, yol: str) -> None:
 def _ajan_skill_dizini() -> str | None:
     """Ajanın skill dizini — TEK TANIM `hermes.AGENT_SKILLS_DIR`tir, burada YENİDEN YAZILMAZ.
 
-    GEÇ İTHAL, BİLİNÇLİ: `hermes` MODÜL DÜZEYİNDE `skills`i çekiyor (hermes.py:25) ve o yöndeki
+    GEÇ İTHAL, BİLİNÇLİ: `hermes` MODÜL DÜZEYİNDE `skills`i çekiyor (`hermes.py` modül başındaki
+    `from . import skills as _skills`) ve o yöndeki
     yokluk ("skills yalnız config+store çeker") bir import döngüsünü engelleyen özelliktir. Buradaki
     ithal ÇAĞRI ANINDA olur, yani modül düzeyinde bir döngü DOĞURMAZ. Yine de `getattr` ile
     savunulur: `hermes` YARIM yüklenmişken (ithal zincirinin ortasında bir çağrı) sabit henüz
@@ -950,13 +951,13 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
 # yerde yazmıyor". Üretici İKİ TANE ve ikisi de bulundu:
 #
 #   (a) `recommend_from_attribution()` — deterministik Eksen-2 sinyali. TEK çağıranı
-#       `reflect._proposal` (reflect.py:643) ve oradan çıktısı yalnızca öneri sözlüğünün
+#       `reflect._proposal` ve oradan çıktısı yalnızca öneri sözlüğünün
 #       `skill_recommendation` alanına gömülür; deftere ancak o öneri `reflect._submit_locked`e
-#       (reflect.py:706) ulaşırsa yazılır. Yani üreteç, BİR HİPOTEZ ÖNERİSİNİN YAN ÜRÜNÜYDÜ.
+#       ulaşırsa yazılır. Yani üreteç, BİR HİPOTEZ ÖNERİSİNİN YAN ÜRÜNÜYDÜ.
 #       Ve hermes'in canlı yollarının İKİSİ de o alanı boş bırakır: beyin zinciri (`propose_with_llm`)
 #       alanı hiç doldurmaz, bakir-düğme yolu ise BİLEREK `None` yazar (hermes.py, "AXIS-2 NOTU
 #       EKLENMEZ" notu). Sonuç: canlı gecede üreteç sonuçsuz koşar.
-#   (b) `auto_shadow_from_evidence()` — `loop.py:848`den çağrılır; yani
+#   (b) `auto_shadow_from_evidence()` — `loop.daily_cycle`in P5_LEARN bloğundan çağrılır; yani
 #       `daily_cycle` ⊂ "yeni seansın barı geldi" rehineliğinde (bkz. scheduler._learning_cadence).
 #
 # EŞİK ÖLÇÜMÜ (canlı katalog — DEĞİŞTİRİLMEDİ, ÖLÇÜLDÜ):

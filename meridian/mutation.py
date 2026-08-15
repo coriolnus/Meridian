@@ -219,7 +219,7 @@ def _build_ledgers(state: Path) -> None:
             if row:
                 trades.append(row)
         # cf ŞEMASI counterfactual.collect ile HİZALI olmalı: build_state
-        # yalnız `gate_verdict`/`plan_id` yazıyordu ama validation_report.py:30-31 `verdict` ve `taken`
+        # yalnız `gate_verdict`/`plan_id` yazıyordu ama `validation_report.build` `verdict` ve `taken`
         # okuyor — ikisi de None kalıyor ve o tüketiciyi bozan mutasyonlar TEMEL DURUMDA da None gördüğü
         # için asla yakalanamıyordu (kapsama sahte yüksek). Kanonik alanlar da yazılır.
         cfs.append({"id": f"CF-{sess}-{tkr}", "date": sess, "ticker": tkr, "setup": "breakout_vcp",

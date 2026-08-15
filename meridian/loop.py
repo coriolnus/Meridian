@@ -929,7 +929,7 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
     olurdu — bir sonraki beyan anahtarını yazan kişi aynı tuzağa düşerdi. Yapısal kapı, sahipliği
     yazarın KENDİ listesiyle sınırlamaktır: `update_json` diskteki belgeyi kilit altında okur,
     üstüne yalnız aşağıdaki 14 alanı basar; yabancı anahtarlar (bugünkü beyan VE gelecekteki her
-    beyan) yerinde yaşar. Aynı aile: `health.py:239` çok-yazarlı nabız alanları, `storage._touch`
+    beyan) yerinde yaşar. Aynı aile: `health.write_heartbeat` çok-yazarlı nabız alanları, `storage._touch`
     eğri zarfı.
 
     RATCHET: yazımdan ÖNCE, aynı kilit altında, beyan ölçüsü İKİ kaynakla kıyaslanır —
@@ -2240,7 +2240,7 @@ def _persist_trade(trade: dict) -> None:
 # HANGİ TABANDA YAZILIR — EĞRİNİN KENDİ TABANINDA, KİTABINKİNDE DEĞİL. `sermaye.uygula` kitabı yeni
 # bir tabana taşır (canlı çağ 100.000$'dan başlar) ama eğri noktalarını SİLMEZ; kırılma `ofset`
 # olarak BEYAN edilir ve `recompute`in `equity_curve_tail` kimliği eğrinin sonuna tam olarak o
-# ofseti EKLEYEREK ölçer (recompute.py:295-305). Ham `eq_now` yazmak iki şeyi birden bozardı:
+# ofseti EKLEYEREK ölçer (`recompute.report` kimlik kıyasları). Ham `eq_now` yazmak iki şeyi birden bozardı:
 #   (a) kimlik ofseti İKİ KEZ sayar → kalıcı kırmızı bir mutabakat satırı (kurt masalı),
 #   (b) eğri, reset gününde ofset kadar SIÇRAR → hiç kazanılmamış bir günlük kâr çizilir; sermaye.py
 #       :339 bu hatayı adıyla ("%5,87'lik UYDURMA bir günlük kâr") zaten uyarıyordu.
@@ -2871,7 +2871,8 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
     """Koruma dolumunu KİTABA işle + DOĞRU sınıfla alarmla (split_brain değil `koruma_dolumu`).
 
     Çıkış tipi dolan bacağa göre `koruma_stop` / `koruma_hedef` — çıkış-tipi sözlüğü AÇIKTIR
-    (tüketiciler group-by okur: analytics.py:1349 `by_reason.setdefault`, api.py:1693; sabit bir
+    (tüketiciler group-by okur: `analytics.py` → `profit_waterfall` → `by_reason.setdefault`,
+    `api.api_plots` → `exits`; sabit bir
     enum yok — `CF_SIM_EXITS` yalnız CF simülasyon çıkışlarının listesidir), yeni ad kendi kovasını
     açar ve görünür kalır.
 

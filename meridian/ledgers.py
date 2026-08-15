@@ -133,7 +133,7 @@ CONTRACTS: dict[str, Contract] = {
              "yokturlar ve retro damga yasağı gereği doldurulmazlar — damgasız satır 'sert kapı "
              "öncesi' demektir"),
     # TÜKETİCİ LİSTESİ EKSİKTİ: `notify.inbox` ve
-    # `analytics.autonomy_ladder`ın devre-kesici sayacı (`analytics._breaker_trips_since`) da bu
+    # `analytics.autonomy_ladder`ın devre-kesici sayacı (`analytics.py` → `_breaker_trips_since`) da bu
     # defteri okuyor. Sözleşmenin
     # TEK işi tam olmaktır: budama/şema kararları bu listeye bakılarak verilirse, sayılmayan iki
     # okuyucu hesaba katılmaz — ve ikisi de PENCERELİ okur (4000/400 satır), yani defterin hacmi

@@ -195,7 +195,8 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
     `armed_next`: bu seansın KAPANIŞINDA silahlanacak planlar —
     `[{"plan": {...}, "pivot": float, "atr": float|None}]`. Pivot ve ATR plan SÖZLÜĞÜNE konmaz, YAN
     haritada taşınır: `backtest.replay`in `armed_pivots`/`armed_atr` deseni ve aynı gerekçe (ikisi de
-    bir defter alanı değil bir İCRA girdisidir; G3b notu, broker.py:132). `atr` yoksa/None ise E1
+    bir defter alanı değil bir İCRA girdisidir; G3b notu, `broker.PaperBroker.fill_entry`). `atr`
+    yoksa/None ise E1
     limiti yalnız yüzde tavanıyla kurulur — uydurma ATR yok, ama o durumda bu motor canlıdan GEVŞEK
     kalır, o yüzden `_day` onu silahlanma anındaki sinyalden DOLDURUR (C11/C18).
 

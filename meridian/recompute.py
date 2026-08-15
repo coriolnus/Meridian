@@ -196,7 +196,8 @@ def report(deep: bool = False) -> dict:
     #
     #    NEDEN TOHUM DİLİMİ PANO YOLUNDAN ÇIKIYOR — ve neden bu bir körlük DEĞİL: `replay_seed`
     #    satırları tohum koşusunun O ANKİ bar önbelleğinden TÜRETİLİR ve tohum yazımı defterin
-    #    TAMAMINI yeniden yazar (ledgerstamp.py:202). Yani yenilemeden hemen sonra bu dilim
+    #    TAMAMINI yeniden yazar (`run.replay_seed` → `ledgerstamp.stamp_rows`). Yani yenilemeden
+    #    hemen sonra bu dilim
     #    KURULUŞ GEREĞİ tutar; tutmadığı hâlin çaresi de canlı bir müdahale değil, YENİ BİR
     #    TOHUMDUR — bu dosyanın kendi GE/T00005 notu tam olarak bunu söylüyor ("bir sonraki tam
     #    re-seed'de düşecek, operatör kararı"). 15 saniyede bir anketlenen pano ucunun soracağı
@@ -586,7 +587,7 @@ def _orphan_state_files() -> dict:
         ok = not orphans
         # ADIYLA SAYILIR: `migrasyon_artigi` satırı DÜŞÜRMEZ (`ok`a girmez) ama `detail`e
         # YAZILIR. `detail` bilerek seçildi: watchdog rows'a yalnız `check`/`ok`/`detail` taşıyor
-        # (watchdog.py:1068), yani operatörün gördüğü TEK metin bu. Sayıyı ek bir alana koyup
+        # (`watchdog.parity_report`), yani operatörün gördüğü TEK metin bu. Sayıyı ek bir alana koyup
         # burada susmak, "sessizce yok say" ile aynı sonucu verirdi.
         _artik_not = ("" if not migrasyon_artigi else
                       f" | migrasyon_artigi: {len(migrasyon_artigi)} damgalı göç arşivi "

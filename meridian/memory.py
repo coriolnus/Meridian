@@ -94,8 +94,9 @@ def record(hyp: dict) -> dict:
 # Geçiş yasası: `update_status` HERHANGİ bir dizgiyi kabul ediyordu —
 # `promoted → proposed` geriye dönüşü de, `status:"muz"` de. Statü aylık kotayı, UCB ödülünü ve
 # `lessons.md`'yi besliyor; geçersiz bir geçiş sessizce öğrenme muhasebesini bozar.
-# rejected_by_backtest / rejected_by_confirmation: reflect.py:477,492 bunları `record()` ile YAZAR
-# (kapı ve teyit yürüyüşü redleri) ve reflect.py:254,328,592 terminal-red olarak OKUR — ama
+# rejected_by_backtest / rejected_by_confirmation: `reflect.py` → `_submit_locked` bunları
+# `record()` ile YAZAR (kapı ve teyit yürüyüşü redleri) ve `reflect.py` → `_ledger_stats` /
+# `propose_deterministic` / `_already_failed` terminal-red olarak OKUR — ama
 # LEGAL_STATUS'te yoklardı. record() doğrulamaz, dolayısıyla yazım geçiyordu; ne var ki böyle bir
 # satır bir gün update_status'e girerse "tanınmayan statü" diye sessizce reddedilir ve iki uygulama
 # (yazan vs geçiş-yasası) ayrışırdı. İkisi de meşru terminal reddir.
@@ -226,7 +227,8 @@ def distill_lessons(trade_stats: Optional[dict] = None) -> str:
 
     text = "\n".join(lines) + "\n"
     # Kapı-dışı taşıma: düz `Path.write_text` dosyayı önce KIRPARdı — okuyucu (Hermes reflection
-    # prompt'u `config.STATE/"lessons.md"`yi okur, hermes.py:153; skill_evolve.py:143) tam o an gelirse
+    # prompt'u `config.STATE/"lessons.md"`yi okur, `hermes.py` → `build_context`;
+    # `skill_evolve.draft_revision`) tam o an gelirse
     # yarım/BOŞ defter görür ve sessizce "ders yok" okurdu. TEK KAPI atomik+fsync+flock verir; içerik
     # BİREBİR aynı kalır (write_text baytı aynen yazar).
     store.write_text(LESSONS, text)

@@ -44,7 +44,7 @@ KEYSET_TAVAN = 256      # bellek sınırı; imza çeşitliliği bu sayıya kadar
 # ÇOK-BİÇİMLİ DEFTER EŞİĞİ. events.jsonl gibi defterlerde her olay TÜRÜ farklı alan taşır: birlik
 # kümesi 40+, tipik satır 4-5 anahtar. Böyle bir defterde "hiçbir satırda yok" ARGÜMAN DEĞİLDİR —
 # o alanı taşıyan olay türü henüz yaşanmamış olabilir. İlk koşuda tam bu oldu: dedektör
-# events.jsonl'de `plan_id` sürüklenmesi bildirdi, oysa üretici (loop.py:114) alanı doğru yazıyor;
+# events.jsonl'de `plan_id` sürüklenmesi bildirdi, oysa üretici (`loop` olay yazarları) alanı doğru yazıyor;
 # yalnızca o beş olay türünden dördü bu defterde hiç ateşlememişti. Kanıtlayamadığımız yere
 # "ihlal" değil "belirsiz" yazarız — kurt masalı yasağı dedektörün KENDİSİ için de geçerlidir.
 HETEROJEN_KAT = 3.0

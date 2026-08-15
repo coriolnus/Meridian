@@ -418,8 +418,8 @@ def _repair_once_per_session(session: str) -> None:
 # ÖĞRENME KADANSI — SEANS BAŞINA BİR KEZ, BAR VARIŞINDAN BAĞIMSIZ
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KUSUR. Üç öğrenme mekanizması da KOD OLARAK vardı ve üçü de AYNI yere asılıydı:
-# `loop.daily_cycle`ın P5_LEARN bloğu (shadow_model.refit_and_save → loop.py:796,
-# skills.auto_shadow_from_evidence → loop.py:848). O blok yalnız YENİ BİR SEANSIN BARI GELDİĞİNDE
+# `loop.daily_cycle`ın P5_LEARN bloğu (`shadow_model.refit_and_save` +
+# `skills.auto_shadow_from_evidence` çağrıları). O blok yalnız YENİ BİR SEANSIN BARI GELDİĞİNDE
 # koşar. Canlı kanıt (2026-07-30): scheduler last_summary="noop", kapsama 0,172,
 # portfolio.last_date=2026-07-28 — yani veri hattı takılı ve öğrenme onunla birlikte durmuş.
 # Kusur eksik bir çağrı değil, bir REHİNELİKTİ: kanıt üreten katman, kanıt TÜKETEN katmanın
@@ -1303,7 +1303,7 @@ def advance_once() -> dict:
             # demektir; sprint'i o pencereye sokmak, kovalamayı yavaşlatmaktır.
             # DÖRDÜNCÜ KAPI — YALNIZ DAEMON DÖNGÜSÜ SPRINT BAŞLATIR (2026-07-30, ölçülmüş kaza).
             # `advance_once`ın İKİ çağıranı var: bu modülün `_run` daemon döngüsü ve panonun ELLE
-            # TİK düğmesi (`api.py:1823`). Kadans bu ayrımı gözetmeyince şu oldu: testler
+            # TİK düğmesi (`api.py` → `api_scheduler_advance`). Kadans bu ayrımı gözetmeyince şu oldu: testler
             # `advance_once()`ı doğrudan çağırıyor ve saat 22:00'yi geçtiği anda gece kapısı
             # AÇILDIĞI için `maybe_start` gerçekten bir alt süreç başlattı — canlı state'i kum
             # havuzuna kopyalayan, 4 işçilik `meridian.sprint_run`. Test paketi 18:00-21:00 arası

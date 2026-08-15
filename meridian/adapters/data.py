@@ -973,7 +973,7 @@ def _massive_crosscheck(ticker: str, df: pd.DataFrame, src: str) -> None:
         if dev > MASSIVE_TOL:
             from .. import obs
             # KENDİ METNİNİN VAADİNİ TUTAN SEVİYE: bu olay "v1'de ALARM" diye
-            # yazıyordu ama `obs.warn` seviyesindeydi — ve notify.py:84 alarm-olmayan her satırı
+            # yazıyordu ama `obs.warn` seviyesindeydi — ve `notify.inbox` alarm-olmayan her satırı
             # eler, yani uyuşmazlık NOTIFY/inbox/telefon zincirine hiç giremiyordu. Canlıda 1
             # gerçek uyuşmazlık olayı var ve hiçbir özel yüzeye ulaşmadı. İki kaynağın fiyat
             # ayrışması DATA_QUALITY sınıfıdır: kararların dayandığı barın kendisi tartışmalı.
@@ -1127,7 +1127,8 @@ PROVISIONAL_KEEP_SESSIONS = 10        # defterde tutulan geçici seans sayısı 
 
 # ÖLÇÜM NEREDE BİRİKİYOR — VE NEDEN `data_quality.json` DEĞİL (beyan edilmiş sapma):
 # brief "ıraksama data_quality.json'a yeni bir anahtar altında BİRİKSİN" diyordu. Ölçülmüş engel:
-# `loop.daily_cycle` o dosyayı her seansta SIFIRDAN yazıyor (loop.py:334 — tek bir sözlük literali,
+# `loop.daily_cycle` o dosyayı her seansta SIFIRDAN yazıyor (tek `store.write_json` çağrısı, tek
+# sözlük literali,
 # read-modify-write DEĞİL) ve loop.py bu turda başka bir ajanın yüzeyi. Oraya yazılan bir anahtar
 # aynı turun içinde silinirdi: "birikim" o dosyada YAPISAL olarak imkânsız. Üretilip tüketilmeyen —
 # üstelik silinen — kanıt bırakmaktansa defter kendi dosyasında tutulur ve DIŞ tüketiciye bağlanır

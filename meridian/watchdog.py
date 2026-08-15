@@ -534,7 +534,7 @@ def conservation_report(olaylar: list[dict] | None = None) -> dict:
         # (pl['broker_status']) olarak yazar, yayılan olay ise obs.alarm(BROKER_REJECT). Dal ölüydü:
         # canlıdaki 4 red (UNP/NSC/TMO/RTX) `dropped` kümesine hiç giremiyor, korunum raporu onları
         # AÇIKLANAMAYAN sayıyor ya da cf no_fill'e yanlış sınıflıyordu. obs.alarm `alarm` alanını
-        # fields'a koyar (obs.py:142), event adı ise "BROKER_REJECT <mesaj>" — imza budur.
+        # fields'a koyar (`obs.alarm`), event adı ise "BROKER_REJECT <mesaj>" — imza budur.
         elif e.get("alarm") == "BROKER_REJECT" and e.get("plan_id"):
             dropped.add(str(e["plan_id"]))
     last = str((store.read_json("portfolio.json", {}) or {}).get("last_date") or "")
@@ -616,7 +616,7 @@ def determinism_report(persist: bool = False) -> dict:
         # FAIL-CLOSED. Eski hâli `{"ok": True, "detail": "kontrol atlandı"}` idi ve
         # işaretinin gerekçesi ("sonuç KAYDA GEÇİYOR") FİİLEN YANLIŞTI: hiçbir obs.warn basılmıyordu
         # ve `detail` metnini okuyan TEK bir tüketici yoktu — üç tüketicinin (bu dosya :1086,
-        # mutation.py:315, pano `_patOK`) üçü de yalnız `ok`a bakar. Yani ÖLÇÜLEMEYEN bir hüküm
+        # `mutation.detector_red`, pano `_patOK`) üçü de yalnız `ok`a bakar. Yani ÖLÇÜLEMEYEN bir hüküm
         # "temiz" kılığında yeşile boyanıyordu; UYDURMA YASAĞI'nın tam karşılığı.
         # `olculemedi` MAKİNE-OKUNUR: alarm katmanı bunu "SESSİZ BAR MUTASYONU" diye değil
         # "ÖLÇÜLEMEDİ" diye adlandırır (bkz. check_integrity_and_alarm) — ölçülemeyen bir hükmü
@@ -671,7 +671,7 @@ PARITY_DRY_SESSIONS = 10       # tam kapsamalı bu kadar seansta HİÇ aday yoks
 # burada: `integrity_report` olay defterini YEDİ KEZ baştan sona okuyup ayrıştırıyordu (parity 4×,
 # korunum 1×, monotonluk 1×, defter-sözleşmesi 1× — sonuncusu ledgers.py'de, bu turun kapsamı
 # dışında). C6'dan sonra pencereler TARİH tabanlı olduğu için hiçbiri satır limiti kullanmıyor ve
-# `store.read_jsonl` zaten dosyanın TAMAMINI okuyup sonra dilimliyor (store.py:329-354) — yani
+# `store.read_jsonl` zaten dosyanın TAMAMINI okuyup sonra dilimliyor — yani
 # yedi tam ayrıştırma, aynı 31 bin satır için. Rapor başına BİR okuma yeter: her pencere aynı ham
 # listeden süzülür ve sonuç bit-bit aynıdır (pencere hesabının kendisi değişmiyor).
 #
@@ -708,7 +708,7 @@ def events_since(days: int, limit_hint: int | None = None,
     `universe_coverage` kontrolü "işlenen seanslar tam evreni gördü" diyordu, oysa aynı defterde
     164 atlanmış seans yazılıydı. Gürültü, dedektörleri kapatan bir saldırı yüzeyine dönüştü.
 
-    MALİYET ~SIFIR: `store.read_jsonl` dosyanın TAMAMINI okuyup sonra dilimliyor (store.py:182-200),
+    MALİYET ~SIFIR: `store.read_jsonl` dosyanın TAMAMINI okuyup sonra dilimliyor,
     yani satır limiti I/O tasarrufu ETMİYORDU — yalnız görüş alanını daraltıyordu. Burada aynı okuma
     yapılır, filtre ts üzerinedir. `limit_hint` yalnız çok uzun defterlerde üst sınır olarak durur.
 
@@ -726,7 +726,7 @@ def events_since(days: int, limit_hint: int | None = None,
 # ATLANDI (son: 2026-07-29 %17) — kaynak yayınlamıyor" diyordu. Aynı defterde ölçülen gerçek:
 #   * 165 sayısı OLAY sayısıdır, SEANS sayısı değil — yerel defter kopyasında 165 olay yalnız
 #     YEDİ ayrık seansa aitti ve 159'u TEK seansa (2026-07-15) düşmüştü. O 159, scheduler'ın
-#     `_rehydrate` düzeltmesinden (scheduler.py:185) önceki tavan-unutma fırtınasıdır:
+#     `scheduler._rehydrate` düzeltmesinden önceki tavan-unutma fırtınasıdır:
 #     bir sayaç kusurunun kalıntısı, ikinci bir sayaç kusuru tarafından "165 seans" diye okunmuş.
 #   * son atlanan seans 2026-07-29 — hükmün verildiği günden DOKUZ gün önce. Aradaki seanslarda
 #     ölçülen kapsama 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 0,996 idi (canlı
@@ -742,7 +742,7 @@ def events_since(days: int, limit_hint: int | None = None,
 # bir (1) seanstır. N ise bekçinin uydurduğu bir sayı DEĞİL, motorun kendi yasasıdır:
 # `loop.UNIVERSE_LAG_MAX_D` (=5) motorun bir seansın barını kovalamayı sürdürdüğü ufuktur — o
 # ufkun ötesinde motor zaten pes etmiştir, yani orası TARİHTİR. Eşik de aynı yerden okunur
-# (`loop.UNIVERSE_MIN_COVERAGE`) — scheduler.py:890'daki "tek yasa, tek ölçüm" ile aynı gerekçe.
+# (`loop.UNIVERSE_MIN_COVERAGE`) — `scheduler.advance_once`taki "tek yasa, tek ölçüm" ile aynı gerekçe.
 KAPSAMA_PENCERE_SEANS = 5        # yedek beyan; asıl kaynak loop.UNIVERSE_LAG_MAX_D
 KAPSAMA_ESIK = 0.90              # yedek beyan; asıl kaynak loop.UNIVERSE_MIN_COVERAGE
 
@@ -1077,7 +1077,7 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
                                 f"zinciri bu katmana bağlı")})
 
     # 7d-bis) ÜÇ DAMGA — LOOK-AHEAD İDDİASININ CANLI DENETÇİSİ.
-    #     intraday_shadow.py:241 "as_of >= close_ts sonradan denetlenebilir" diye söz veriyor;
+    #     `intraday_shadow._satir` "as_of >= close_ts sonradan denetlenebilir" diye söz veriyor;
     #     bugüne kadar o denetimi yapan tek şey fixture'lı birim testlerdi. Diskteki GERÇEK
     #     satırlara bakan hiçbir canlı dedektör yoktu — yani iddia test ortamında doğru, sahada
     #     DENETİMSİZDİ. Kontrol UCUZ (iki alan kıyası) ve tam olarak Faz 5 kanıtının dayandığı
@@ -1351,7 +1351,7 @@ def integrity_report(persist: bool = False) -> dict:
     DEDEKTÖR-BAŞINA YALITIM: düşen bir dedektör diğerlerini GÖTÜRMEZ; `{"ok": False,
     "dedektor_dustu": True, "error": ...}` döner ve alarm katmanı bunu adıyla duyurur. Yalıtımın
     iskeleti (`_DEDEKTOR_BOS`) şart: tüketiciler alt alanları köşeli parantezle indeksliyor
-    (bu dosyada :1086+, mutation.py:311-313, pano app.js:3677-3690) — iskeletsiz bir hata sözlüğü
+    (bu dosyada `integrity_report` tüketicileri, `mutation.detector_red`, pano app.js) — iskeletsiz bir hata sözlüğü
     yalıtımı çağıranda KeyError'a çevirirdi, yani hiç yalıtmamış olurdu.
 
     TEK OKUMA: olay defteri turun BAŞINDA bir kez okunur ve dedektörler onu
@@ -1481,7 +1481,7 @@ ALARM_DURAN_TAVAN = 10                # EEMUA 191: aynı anda DURAN alarm ≤10
 # hâlâ sayılır ve tavanı deler. Daha geniş bir pencere seçmek, korumak istediğimiz şeyi de körleştirirdi.
 ALARM_RESTART_MUAFIYET_S = 5 * 60
 # Restart'ın ÖLÇÜLEN sinyali. `scheduler._rehydrate()` her süreç doğumunda BİR kez `info` seviyesinde
-# yazar (scheduler.py:96) ve seviyesi `info` olduğu için bütçenin kendi sayacına ZATEN girmez.
+# yazar ve seviyesi `info` olduğu için bütçenin kendi sayacına ZATEN girmez.
 # EŞLEŞME KANITI (aynı canlı defter, aynı 24 saat): 11 `scheduler_state_rehydrated` damgası vs
 # systemd journal'ındaki 11 "Started meridian.service" damgası — 11/11, fark 0..3 sn.
 # NEDEN BU, `scheduler_status.json`ın `started_at`i DEĞİL: `started_at` YALNIZ o an koşan sürecin
@@ -1642,7 +1642,7 @@ def alarm_budget_cached() -> tuple[dict, float]:
 # `intraday_shadow.PLANLI_ORDERS_FILE`. Yeni kol AYRI bir deftere yazıyor (silahli kolun bayt
 # değişmezliği kill#3'ün şartı) ve iki kol AYNI GÖVDEDEN (`intraday_shadow._satir`) geçtiği için
 # satır şeması BİREBİR aynı üç damgayı taşıyor — ölçüldü: `decision_as_of` / `bar_t` / `close_ts`
-# (intraday_shadow.py:406-407). Kapsam listesine girmeseydi look-ahead denetimi yeni kolu HİÇ
+# (aynı `_satir` gövdesinde). Kapsam listesine girmeseydi look-ahead denetimi yeni kolu HİÇ
 # taramazdı: kolun var olma sebebi NÜFUS (dakika-hassas icra sorusuna daha geniş örneklem), yani
 # denetlenmeyen satır sayısı tam da büyümesi beklenen taraftaydı.
 # LİTERAL SÜRÜKLENMESİ BİR KAPIYLA BAĞLI: adları burada literal tutmak (mevcut desen) ile modülü
@@ -1681,7 +1681,8 @@ def intraday_stamp_report(sample: int = 500) -> dict:
             # ofset farkı sıralamayı bozar. Ayrıştırılamayan damga İHLAL değil, ÖLÇÜLEMEZ sayılır.
             try:
                 if dt.datetime.fromisoformat(str(a)) < dt.datetime.fromisoformat(str(c)):
-                    # `ticker` İKİ defterde de yazılıyor (intraday_cycle.py:126, intraday_shadow.py:231)
+                    # `ticker` İKİ defterde de yazılıyor (`intraday_cycle.IntradayConsumer._handle_symbol`,
+                    # `intraday_shadow._satir`)
                     # — `plan_id`'ye düşen bir yedek yazmak, olmayan bir şema ayrışmasını beyan
                     # etmek olurdu (test_no_undeclared_field_alias_appears bunu haklı olarak yakalar).
                     bad.append(r.get("ticker") or "?")
@@ -1746,10 +1747,10 @@ def check_integrity_and_alarm() -> None:
     """Bütünlük ihlallerini bir kez alarmlar (bekçi felsefesi: yalnız haber verir, düzeltmez)."""
     from . import obs
     # TABAN SAHİPLİĞİ: burası CANLI state'te tabanı ilerleten TEK
-    # yoldur, ama "tek sahip" cümlesi mutlak biçimde YANLIŞTI — `mutation.py:310` da
+    # yoldur, ama "tek sahip" cümlesi mutlak biçimde YANLIŞTI — `mutation.detector_red` de
     # `integrity_report(persist=True)` çağırır. Aradaki fark yönlendirmedir, çağrı değil:
     # mutation.py `_LIVE_STATE` koruması ve `_state_dir` ile GEÇİCİ bir kopyaya yazar
-    # (mutation.py:54-80, :609-635), yani canlı tabana dokunmaz.
+    # (`mutation._assert_not_live` + `mutation.build_state`), yani canlı tabana dokunmaz.
     # DOĞRU CÜMLE: canlı tabanın tek yazarı burasıdır — `persist=True` çağrısının tek sahibi DEĞİL.
     rep = integrity_report(persist=True)
     prev = set(store.read_json("integrity_alarmed.json", []))
@@ -2099,7 +2100,7 @@ def _sunum_uyuyan_iddialari() -> frozenset:
 def _pano_alarm_jetonlari() -> frozenset:
     """Panonun olay kartlarına ELLE kopyalanmış alarm jetonları (`app.js` `jetonlar:` dizileri).
 
-    NEDEN KAPI GEREKİYOR: `obs.NOTIFY_TOKENS` her `ALARM_` sabitinden TÜRETİLİR (obs.py:122) — yani
+    NEDEN KAPI GEREKİYOR: `obs.NOTIFY_TOKENS` her `ALARM_` sabitinden TÜRETİLİR — yani
     Python tarafında elle bakımlı liste sorunu daha önce çözüldü. Ama panonun kart tanımları
     aynı jetonları JS dizilerine ELLE kopyalar ve o kopya hiçbir şeyden türemez: dil sınırını aşan
     tek yüzey burasıdır. Yeni bir alarm eklenip karta yazılmazsa jeton ÜRETİLİR ama panoda hiçbir
@@ -2258,7 +2259,8 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
         ],
     },
     # R:R TABANI. `guard.DISCIPLINE_MIN_RR` planı SERT veto eder; `bounds`un
-    # `exit.profit_target_r.min`i ise arama uzayının alt ucudur ve `strategy.py:619/674`
+    # `exit.profit_target_r.min`i ise arama uzayının alt ucudur ve
+    # `strategy.evaluate_momentum_burst`/`evaluate_episodic_pivot`
     # (`rr = max(DISCIPLINE_MIN_RR, pt_cap)`) ikisinin AYNI niceliğin tabanı olduğunu yazar.
     # AYRIŞMA HER İKİ YÖNDE DE ANLAMLIDIR — eşitlik bu yüzden doğru ilişkidir, ">=" değil:
     #   bounds.min < guard  → optimizatör KALICI hard-veto yiyecek planlar üretebilir (denetimin
@@ -2300,7 +2302,7 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
         ],
     },
     # BİLİNÇLİ İKİZLEME (kıyasa girmez, kayda girer). `broker.DERISK_FLOOR_DD` bir zamanlar
-    # `goal.max_drawdown`dan türetiliyordu; bağ BİLEREK koparıldı (`broker.py:33`
+    # `goal.max_drawdown`dan türetiliyordu; bağ BİLEREK koparıldı (`broker.py` → `DERISK_FLOOR_DD`
     # "ŞERH — KOPAN BAĞ") ve mezar-taşı testiyle sessiz yeniden-bağlanmaya karşı çivilendi. Kayda
     # giriyor ki muafiyet SESSİZ olmasın: bugünkü değeri raporda görünür, ama ayrışma SAYILMAZ.
     "derisk_tabani": {
@@ -2482,7 +2484,8 @@ def monotonicity_report(persist: bool = False, olaylar: list[dict] | None = None
         _tr = store.read_jsonl("trades.jsonl")
         # KANONİK TÜRETİM (2026-08-12 canlı alarmı "5542.09 → 5542.08"): Σ artık ham-float
         # toplama sırasına/temsil tozuna bağlı DEĞİL — `sermaye.sermaye_taban` sent tamsayısıyla
-        # toplar (tek yer, testli; türetim gerekçesi sermaye.py:98'de). Bozuk-satır semantiği
+        # toplar (tek yer, testli; türetim gerekçesi `sermaye.sermaye_taban` başlığındadır).
+        # Bozuk-satır semantiği
         # BİREBİR eski ifade: None/boş → 0, çevrilemeyen değer istisna atar ve bu try'ın kendi
         # "kaynak okunamadı" beyanına düşer. Import FONKSİYON-İÇİ — yukarıdaki `beyan_olcusu`
         # deseniyle aynı; sermaye→watchdog kenarı zaten var (`_peak_affi`), modül-seviyesi çekim
@@ -2606,7 +2609,7 @@ def ownership_report(persist: bool = False) -> dict:
 #   * `alpaca._naked()` yalnız DAR vakayı bilir ("kapatma düştü, bacak iptal edilmişti").
 # Yani soru hiç sorulmamıştı. Bu dedektör onu sorar ve HÜKÜM VERİR.
 #
-# SAHİPLİK KANITI BACAKTA DEĞİL PARENT'TA (alpaca.py:411 dersi): koruma bacaklarının
+# SAHİPLİK KANITI BACAKTA DEĞİL PARENT'TA (`alpaca.coid_sinifi` dersi): koruma bacaklarının
 # `client_order_id`si Alpaca üretimidir, `is_engine_order` onlarda HER ZAMAN False döner. "Canlı
 # stop var mı" sorusu bu yüzden önek süzgeciyle SORULAMAZ — süzseydik her pozisyon çıplak görünür,
 # dedektör de kurt masalı anlatırdı. Önek yalnız POZİSYONUN kime ait olduğunu ayırmakta kullanılır.
@@ -2615,7 +2618,7 @@ KORUMA_PAYDA_BEYANI = "korumasız / toplam MOTOR pozisyonu (motor-dışı pozisy
 _KORUMA_TIPLERI = ("stop", "stop_limit", "trailing_stop")   # koruyucu emir tipleri
 _KORUMA_TOL = 1e-6                   # kesirli hisse yuvarlamasını eler, gerçek açığı elemez
 KORUMA_EMIR_TAVANI = 200             # `close_engine_position` ile AYNI tavan (tek okuma disiplini)
-# MANDAL SÜREÇ-İÇİDİR, DİSKE YAZILMAZ. Gerekçesi obs.py:101-104'ün `_SUPPRESS_LOGGED` kaydıyla
+# MANDAL SÜREÇ-İÇİDİR, DİSKE YAZILMAZ. Gerekçesi `obs._SUPPRESS_LOGGED` kaydıyla
 # BİREBİR aynı: diske yazsaydık ikinci bir defter yüzeyi doğardı — üstelik yazanı da okuyanı da bu
 # dosya olan, yani `parity:artifact_unread`in tanımına giren bir yüzey. Süreç yeniden başlarsa
 # korumasız pozisyon başına BİR fazla alarm satırı düşer; bu, satır SELİNDEN (288/gün) iyidir ve
@@ -2771,7 +2774,7 @@ def check_koruma_and_alarm() -> dict:
     BAŞINADIR, yani gürültülü bir mutabakat gecesinde ADET SAPMASI alarmları pencereyi doldurup
     KORUMASIZ POZİSYON alarmının TESLİMATINI bastırabiliyordu. Bir muhasebe sapması bir sermaye
     riskini susturamaz. Jeton artık kendisidir: `obs.ALARM_NAKED_POSITION`. Teslim zinciri
-    DEĞİŞMEDİ — `obs.NOTIFY_TOKENS` her `ALARM_*` sabitinden TÜRETİLİR (obs.py:98), yani jeton
+    DEĞİŞMEDİ — `obs.NOTIFY_TOKENS` her `ALARM_*` sabitinden TÜRETİLİR, yani jeton
     eklendiği an bildirim kapsamına girer; kanalın kendisi operatör yapılandırmasıdır.
 
     ÖLÇÜLEMEDİ DALI DA AYNI JETONA GEÇTİ ve bu bilinçlidir: "koruma ölçülemedi" ile "koruma yok"
@@ -2837,7 +2840,7 @@ def check_koruma_and_alarm() -> dict:
 # `portfolio.json` defterin ESKİ tabanına geri çekildi (cash 94.457,91 / realized −5.542,09). O
 # yazımı yapan komut ÖLÇÜLEMEDİ ama yazımın SINIFI ölçüldü ve kanıtı kesindir:
 #   * `entity_meta.rev` o gün yalnız İKİ kez ilerledi (3→4→5) ve ikisi de kanıtlı `_save_broker`;
-#   * `store.write_json`/`update_json` HER yazımda `storage._touch` ile rev'i artırır (storage.py:480);
+#   * `store.write_json`/`update_json` HER yazımda `storage._touch` ile rev'i artırır;
 #   ⇒ içerik değişti, DAMGA değişmedi ⇒ değişim `store` kapısından GEÇMEDİ.
 # Sonucu: 5 Ağustos 22:10:01'de ayna bu tabanla dört emri YARIM boyutta gönderdi (çarpan 0,4916).
 #
@@ -2848,7 +2851,7 @@ def check_koruma_and_alarm() -> dict:
 #       hâli DİSKE ÇİMENTOLADIĞI için "haber" onarımdan sonra gelirdi.
 #   (b) `check_and_alarm` (scheduler poll'u, 300 sn) — alarm ~08:00'da, yani aynanın yarım boyutlu
 #       emirlerinden **38 saat ÖNCE** düşerdi.
-# Emsal aynı dosyada YAZILI (watchdog.py:282-285, #8 koruma): bir RİSK kalemi için doğru kadans
+# Emsal aynı dosyada YAZILI (`check_and_alarm` içindeki #8 koruma): bir RİSK kalemi için doğru kadans
 # poll'dur, `check_integrity_and_alarm` (günde bir) değil. Bu yüzden `loop.py`ye TEK SATIR
 # eklenmedi — dedektör hiçbir çağıran işbirliği İSTEMİYOR (aşağıdaki ayırt etme kuralı kendi
 # kendine yeter), yani "minimal dokunuş" burada SIFIR dokunuştur.
@@ -2876,7 +2879,7 @@ def check_koruma_and_alarm() -> dict:
 DAMGA_FILE = "entity_damga.json"
 # İZLENEN VARLIKLAR. Kitapla başlar ve bilerek DAR: her ad poll başına bir okuma + bir sha256
 # maliyetidir ve bu bekçi 300 sn'de bir koşar. Kitap, damgasız bir yazımın EMİR BOYUTUNA döndüğü
-# tek belgedir (`loop.py:1067` `eq_now` → `derisk_mult`) — sınıfın para yolundaki tek ucu.
+# tek belgedir (`loop.daily_cycle` `eq_now` → `derisk_mult`) — sınıfın para yolundaki tek ucu.
 DAMGALI_VARLIKLAR = ("portfolio.json",)
 _DAMGA_ALARMED: set = set()
 
@@ -2950,7 +2953,7 @@ def kitap_damga_report(persist: bool = False) -> dict:
                          "detay": f"İÇERİK DEĞİŞTİ, DAMGA DEĞİŞMEDİ (rev/updated_at {list(dmg)}) — "
                                   f"yazım `store` kapısından GEÇMEDİ"})
     if persist and yeni != taban:
-        # DEĞİŞMEDİYSE YAZMA — `check_and_alarm`ın kendi disiplini (watchdog.py:245-248): bu
+        # DEĞİŞMEDİYSE YAZMA — `check_and_alarm`ın kendi disiplini: bu
         # fonksiyon 300 sn'lik poll'da koşuyor ve koşulsuz yazım günde 288 gereksiz atomik yazım
         # + IO p95 gürültüsü ederdi. Sakin bir sistemde damga da özet de kıpırdamaz.
         store.write_json(DAMGA_FILE, yeni)
@@ -3000,7 +3003,8 @@ def check_kitap_damga_and_alarm() -> dict:
 # bu soruya yanlış cevap veriyor ve üçü de ölçüldü:
 #   (1) `EXPECTED["mirror_reconcile"]` = 4 GÜN. Pencere seans-bağımlı işler için doğru genişlikte
 #       ama bir AYNA GÖRÜNÜMÜ için değil: 24,3 saatlik bir boşluk pencerenin çok altında kalır,
-#       yani görünmez. Üstelik nabız (`beat`) YALNIZ tam-yazım dalında atılır (loop.py:2146) —
+#       yani görünmez. Üstelik nabız (`beat`) YALNIZ tam-yazım dalında atılır
+#       (`loop.reconcile_broker_state`) —
 #       `_skip` ve `api_ok=False` dalları kaydı yazar ama nabzı ATMAZ.
 #   (2) `coherence_report` bunu `portfolio.json`a GÖRE ölçer. Kitabın BEŞ yazarı vardır (hermes
 #       görüş damgası, api gönderim ucu, `loop._arm_yama`, `_save_broker`, ops betikleri) ve

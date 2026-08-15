@@ -59,12 +59,12 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # oldu. YAZAR TEKLİĞİ arşivci tarafında: bars_intraday'i barsarchive.py, intraday_bars'ı bararchive.py
 # yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
 # yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
-# değil BEYANLA karşılıyor (barsarchive.py:748 — "arşivi YOK ... henüz hiç tur koşmadı").
+# değil BEYANLA karşılıyor (`barsarchive.render_summary` — "arşivi YOK ... henüz hiç tur koşmadı").
 # DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (ölçüldü). Altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
 # `storage.active`; yol her çağrıda `config.STATE`ten türer). DB kum havuzuna kopyalanınca
 # `_reset_sandbox_state`in HAM DOSYA yazımları çocuğun store okumalarına GÖRÜNMEZ olur: çocuk
 # canlının `portfolio.json`unu DB kopyasından okur, `last_date="2026-07-31"` görür ve
-# `loop.daily_cycle` monotonluk bekçisi (loop.py:719) eval penceresindeki HER tarihsel seansı
+# `loop.daily_cycle` monotonluk bekçisi eval penceresindeki HER tarihsel seansı
 # `regressive_session_refused` ile reddeder. ÖLÇÜM (A1, salt-okuma): son kum havuzunda 522/522 seans
 # reddedildi, DB'deki 95 işlemin hepsi strategy_version=4 olduğu için `_count(1)=0`, ve 07-31'den
 # beri 154 kadans koşusunun TAMAMI ~60 sn'de `phase=done, n_v1=0` ile bitti — yani mekanizma
@@ -382,9 +382,11 @@ MAINPID_DENEME, MAINPID_BEKLE_SN = 4, 0.25   # ≤1 sn: `Type=simple`de MainPID 
 # Bugünkü `Popen` yolu worker'ın TÜM ortamını (`{**os.environ, …}`) çocuğa akıtıyor; systemd birimi
 # ise TEMİZ ortamla koşar. Fark bilinçli bir DARALTMADIR ve iki yönü de ölçüldü:
 #   TAŞINIR (davranışı değiştirdiği ÖLÇÜLDÜ):
-#     · MERIDIAN_PARALLEL_PROBES — reflect.py:1325/1393 okur; taşınmazsa arama SERİLEŞİR (canlı
+#     · MERIDIAN_PARALLEL_PROBES — `reflect._parallel_prefill_probes` + `reflect.prefill_incumbents`
+#       okur; taşınmazsa arama SERİLEŞİR (canlı
 #       birimde `=1`), yani sprint gece penceresine sığmayabilir.
-#     · MERIDIAN_SEARCH_MAX_MIN  — reflect.py:1611 okur; varsayılanı 35, canlı birimde 60. Taşınmazsa
+#     · MERIDIAN_SEARCH_MAX_MIN  — `reflect.coordinate_descent_search` okur; varsayılanı 35, canlı
+#       birimde 60. Taşınmazsa
 #       aramanın duvar-saati tavanı SESSİZCE değişirdi (ölçüm koşulları ayrışır).
 #     · PATH/HOME/LANG/LC_ALL/TZ/PYTHONPATH — süreç zeminidir; TZ ve LANG tarih/dize davranışına girer.
 #   TAŞINMAZ (bilinçli): `MERIDIAN_DASH_TOKEN` (SIR — bugün her sprint çocuğunun /proc/<pid>/environ'ında
@@ -631,7 +633,8 @@ def start(cfg: dict | None = None) -> dict:
 # EŞZAMANLILIK — ÜÇ KAPI, ÜÇÜ DE AYRI BİR ARIZAYI ÖNLER:
 #   (1) `sprint.status().active`  — iki sprint aynı anda 8 çekirdeği ikiye böler ve ikisi de yavaşlar.
 #   (2) ARAMA KOŞUYOR MU (`hermes.SEARCH_PROGRESS`) — canlı arama da `ProcessPoolExecutor` açar
-#       (reflect.py:1049, workers = max(2, min(4, çekirdek−2))). İkisi birlikte makineyi doyurur ve
+#       (`reflect._parallel_prefill_probes` → `_havuz_tavani`, workers = max(2, min(4, çekirdek−2))).
+#       İkisi birlikte makineyi doyurur ve
 #       ASIL bedeli zamanlayıcının 300 sn'lik poll'üdür: nabız bayatlar, /healthz 503'ler.
 #   (3) ÇAĞIRANIN MEŞGULİYET SİNYALİ (`mesgul` argümanı) — zamanlayıcı EOD döngüsünü koşturmak
 #       üzereyse sprint başlamaz. Bu kapı ÇAĞIRANDAN gelir çünkü "daily_cycle birazdan koşacak"
@@ -701,8 +704,10 @@ def auto_config() -> dict:
 # ÖLÇÜLEN ARIZA: `sprint_cadence_skip sebep=mesgul:canli_arama` 4+ gün boyunca HER döngüde tekrar
 # etti; aynı pencerede sprint yetim (pid ölü, faz 'baseline') ve 9,6 gündür yeni hipotez yok.
 # `hermes.SEARCH_PROGRESS` süreç-içi bir sözlüktür ve `reflect_once` onu normal/istisna çıkışta
-# temizler (hermes.py:3749/3754) — yani bayrağın GÜNLERCE `running=True` kalabilmesinin tek yolu,
-# aramanın kendisinin ASILI kalmasıdır (canlı arama `ProcessPoolExecutor` açar, reflect.py:1049;
+# temizler (`hermes.py` → `reflect_once` + `_reflect_once_govde`) — yani bayrağın GÜNLERCE
+# `running=True` kalabilmesinin tek yolu,
+# aramanın kendisinin ASILI kalmasıdır (canlı arama `ProcessPoolExecutor` açar,
+# `reflect._parallel_prefill_probes`;
 # ölen bir işçi süreci ebeveyni sonsuza dek bekletebilir). Bayrak o hâlde DÜRÜSTÇE "koşuyor" der
 # ama iş ölüdür — ve kadansın tek meşguliyet kanıtı bu bayrak olduğundan ÖĞRENMENİN TAMAMI
 # (sprint → hipotez → kalibrasyon) sessizce kilitlenir. Bu, YASA-4'ün kovaladığı sınıfın ta
@@ -715,7 +720,8 @@ def auto_config() -> dict:
 # sözlüğü render eder). Asılı iş parçacığı bir gün UYANIRSA kendi `update`i bayrağı yeniden yazar
 # ve parmak izi DEĞİŞTİĞİ için gözlem sıfırlanır — canlı bir arama asla bayat okunmaz.
 #
-# EŞİK TÜRETİMDİR, ÖLÇÜM DEĞİL: incumbent walk ~90 sn ÖLÇÜLÜDÜR (hermes.py:3731) ve her sonda
+# EŞİK TÜRETİMDİR, ÖLÇÜM DEĞİL: incumbent walk ~90 sn ÖLÇÜLÜDÜR (`hermes._reflect_once_govde`
+# `phase="incumbent"` adımı) ve her sonda
 # `_on_probe` ile parmak izini değiştirir; 6 saat = o adımın >200 katı. İkincil özellik: gece
 # penceresi 8 saat (22→06) olduğundan, pencere başında bayatlaşan bir bayrak AYNI gece içinde
 # aşılır ve sprint o gece kendine gelir.
