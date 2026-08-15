@@ -62,7 +62,7 @@ class IntradayConsumer:
         self.last_error: str = ""
         self.watched = 0
         self.watched_planned = 0        # ilgi kümesinin PLAN nüfusundan geleni (silahlanma kuraklığı görünür olsun)
-        # NÜFUS AYRIMI SAYAÇTA (2026-07-30): defterin `fired` toplamı artık SİLAHSIZ planları da
+        # NÜFUS AYRIMI SAYAÇTA: defterin `fired` toplamı artık SİLAHSIZ planları da
         # içeriyor. Dış tüketici (api) toplamı bölmeden okuduğu için, ayrımı ÜRETİCİ tarafında
         # sayıyoruz — yoksa panodaki "fired" sayısı sessizce anlam değiştirir ve kimse görmez.
         # Bunlar SÜREÇ-İÇİ sayaçlardır (restart'ta sıfırlanır); defter toplamı api'de kalır.
@@ -73,7 +73,7 @@ class IntradayConsumer:
         # panoda o adla okunuyor (app.js "gölge kararı"). Yeni kolu ona eklemek, silahli kolun
         # sayımını değiştirmek olurdu — kartın derhal geri alma sebebi.
         self.shadow_planli_written = 0
-        # FAZ 4B SAYACI (2026-08-11): gönderilen GERÇEK bracket sayısı — gölge sayaçlarından AYRI
+        # FAZ 4B SAYACI: gönderilen GERÇEK bracket sayısı — gölge sayaçlarından AYRI
         # (gölge ölçümdür, bu icradır; ikisini tek sayaçta toplamak kartın kill#3 sınıfı bir
         # anlam kaymasıdır). Süreç-içi; kalıcı iz E2 defteri + olay defterindedir.
         self.submitted_4b = 0
@@ -259,13 +259,13 @@ class IntradayConsumer:
             except Exception as e:
                 self.last_error = f"shadow_planli: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_planli_failed", ticker=tk, error=self.last_error)
-        # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol, 2026-08-11). Eski
+        # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol). Eski
         # `intraday_arm_flag_on_but_4b_not_built` uyarısı kaldırıldı: cümlesi ("4b uygulanmadı")
         # artık YANLIŞ olurdu ve yanlış bir uyarı, susan bir uyarıdan tehlikelidir. Bayrak açıkken
         # gönder(eme)me artık sessiz değil — her dal kendi olayını yazar (intraday_4b_*).
 
 
-    # ---- FAZ 4B — GERÇEK İNTRADAY GÖNDERİM (İCRA turu, operatör onayı 2026-08-11) --------------
+    # ---- FAZ 4B — GERÇEK İNTRADAY GÖNDERİM (operatör onayı 2026-08-11) -------------------------
     def _faz4b(self, plan: dict, satir: dict | None, tk: str, pf: dict, as_of) -> None:
         """Tetik kesişimi + INTRADAY_ARM → TEK KAPIDAN gerçek bracket gönderimi.
 

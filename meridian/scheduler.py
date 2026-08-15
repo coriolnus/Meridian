@@ -1237,7 +1237,7 @@ def advance_once() -> dict:
             except Exception as e:
                 from . import obs as _obs5
                 _obs5.warn("skill_revision_week_failed", error=f"{type(e).__name__}: {e}")
-            try:                             # öneri #5b: SPY çapraz-doğrulama (bağımsız kaynak, seansta 1 kez)
+            try:                             # SPY çapraz-doğrulama (bağımsız kaynak, seansta 1 kez)
                 from .adapters import data as _da
                 from . import watchdog as _wd4
                 store.write_json("index_crosscheck.json", _da.crosscheck_index())
