@@ -77,6 +77,10 @@ _META_WARNED = False
 
 
 def _meta_extra_p() -> float:
+    """Meta-kalibrasyonun ölçtüğü ek sıkılaştırma ofsetini (`extra_p`) durum dosyasından okur.
+
+    Emniyet olarak [0, +0.10] bandına kıstırılır — yalnız SIKILAŞTIRIR. Dosya okunamazsa
+    fail-open değil, uyarı basıp 0.0 döner (süreç başına tek uyarı, YASA 4)."""
     from . import store
     global _META_WARNED
     try:
@@ -229,6 +233,11 @@ class GateResult:
     extra: dict = field(default_factory=dict)
 
     def as_gate_fields(self, prefix: str) -> dict:
+        """Sonucu `prefix` ön ekli düz kapı-kaydı alanlarına çevirir (defter/pano tüketir).
+
+        Payda da yazılır (`n_boot` + `n_valid`): P yalnız ayakta kalan replikasyonlardan
+        hesaplanır, okuyucu seçilmiş altkümeyi ayırt edebilmelidir. Gölge yasa alanları
+        (`_eski_yasa`, `_yasa_surumu`) yalnız varsa eklenir ve karara GİRMEZ."""
         # n_boot DA yazılır: n_valid tek başına PAYDASIZ bir sayıdır. Skorlanamayan
         # replikasyonlar sessizce düşüyor (evaluate: si/sc None → continue) ve P yalnız AYAKTA KALAN
         # replikasyonlar üzerinden hesaplanıyor. Defterde 1200 görüp bunun 1200/1200 mü yoksa
@@ -262,6 +271,9 @@ class PairedProbabilisticGate:
     örneklemler gücü düşürmesin); dilimin kendisine taban reflect katmanında uygulanır."""
 
     def __init__(self, goal: dict, n_boot: int = N_BOOT_DEFAULT, seed: int = SEED_DEFAULT):
+        """Kapıyı hedef sözleşmesi, replikasyon sayısı ve RNG tohumuyla kurar.
+
+        Tohum sabittir (varsayılan SEED_DEFAULT) — aynı girdi aynı kapı kararını verir."""
         self.goal = goal
         self.n_boot = int(n_boot)
         self.seed = int(seed)
@@ -269,6 +281,7 @@ class PairedProbabilisticGate:
     # ---- yardımcılar ----
     @staticmethod
     def _day(t: dict) -> str:
+        """İşlemin açılış gününü ISO tarih önekine (YYYY-MM-DD) indirger; alan yoksa boş dizge."""
         return str(t.get("ts_open", ""))[:10]
 
     @staticmethod
@@ -345,6 +358,13 @@ class PairedProbabilisticGate:
     # ---- çekirdek ----
     def evaluate(self, inc_trades: list, cand_trades: list, seg_start: str, seg_end: str,
                  k_probes: int = 1, p_base: float = P_BASE) -> GateResult:
+        """Ana ölçüm: incumbent ile adayı AYNI yeniden-örneklenmiş takvim bloklarında skorlayıp
+        P(ΔS>0)'ı ve K-sonda cezalı gerekli eşiği döndürür.
+
+        Fail-closed: dilim sınırları çözülemez, taraflardan biri boş ya da geçerli replikasyon
+        sayısı eşiğin (≥200 veya n_boot/10) altındaysa `passes=False` + `law="legacy"` ile döner
+        — çağıran legacy marj yasasına düşer. Ek olarak ULP tabanlı AYRIM hükmü ("aday ayırt
+        edilemiyor" ≠ "aday kötü") ve eski yasanın gölge hükmü kayda basılır; gölge karara GİRMEZ."""
         p_req = self.p_required_for(k_probes, p_base)
         try:
             d0 = dt.date.fromisoformat(seg_start[:10])
@@ -362,6 +382,8 @@ class PairedProbabilisticGate:
 
         # blok -> işlem indeksleri (her iki taraf için önceden kovala; replikasyonlar O(blok) olur)
         def _bucketize(trades):
+            """İşlemleri açılış gününe göre `n_blocks` takvim bloğuna kovalar (replikasyon O(blok)
+            olsun diye önceden). Tarihi çözülemeyen ya da dilim dışına düşen işlem alınmaz."""
             buckets = [[] for _ in range(n_blocks)]
             for t in trades:
                 try:

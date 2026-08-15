@@ -70,6 +70,8 @@ def elite() -> bool:
 
 
 def health() -> dict:
+    """Finviz screener yolunun son durumunun kopyası (ok/kaynak/n, çağrı-hata sayaçları, son HTTP
+    kodu ve maskelenmiş hata). Token'ın VARLIĞI değil, çağrının GERÇEKTEN üretip üretmediğini söyler."""
     return dict(_HEALTH)
 
 
@@ -79,6 +81,8 @@ def _mask_url(msg: str) -> str:
 
 
 def _note(ok: bool, source: str | None, n: int, status=None, error: str = "") -> None:
+    """Bir çekim denemesini `_HEALTH`e işler: çağrı/başarısızlık sayaçlarını artırır, kaynak-sonuç-
+    HTTP kodunu ve _mask_url'den geçirilmiş (auth token'ı gizlenmiş) hata metnini damgayla saklar."""
     _HEALTH["calls"] += 1
     if not ok:
         _HEALTH["fails"] += 1
@@ -87,6 +91,7 @@ def _note(ok: bool, source: str | None, n: int, status=None, error: str = "") ->
 
 
 def _now_iso() -> str:
+    """Şu anın UTC ISO-8601 damgası (saniye çözünürlüğünde, mikrosaniyesiz) — sağlık kayıtları için."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 

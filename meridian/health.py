@@ -28,6 +28,7 @@ HEARTBEAT = "heartbeat.json"
 
 
 def halt_path() -> Path:
+    """Kill-switch bayrak dosyasının yolu (`state/HALT`)."""
     return config.STATE / "HALT"
 
 
@@ -40,14 +41,19 @@ def halted() -> bool:
 # (Halt Learning) ayrı bayrak: işlemler sürer, Hermes YENİ versiyon ship EDEMEZ (rollback güvenlik
 # olarak açık kalır). İkisi de dosya-tabanlı: yeniden başlatmada hayatta kalır, elle de yönetilebilir.
 def learn_halt_path() -> Path:
+    """Kademe-4 (öğrenme durdurma) bayrak dosyasının yolu (`state/LEARN_HALT`)."""
     return config.STATE / "LEARN_HALT"
 
 
 def learn_halted() -> bool:
+    """LEARN_HALT dosyası varsa True: işlemler sürer ama yeni sürüm ship EDİLEMEZ."""
     return learn_halt_path().exists()
 
 
 def set_halt(on: bool) -> bool:
+    """Kill-switch'i açar (dosyayı touch'lar) ya da kapatır (siler); sonuçtaki gerçek durumu döner.
+
+    Dönüş değeri istenen değil ÖLÇÜLEN durumdur (`halted()` yeniden okunur)."""
     p = halt_path()
     if on:
         p.touch(exist_ok=True)
@@ -57,6 +63,7 @@ def set_halt(on: bool) -> bool:
 
 
 def set_learn_halt(on: bool) -> bool:
+    """LEARN_HALT bayrağını açar/kapatır ve dosyadan yeniden okunan gerçek durumu döner."""
     p = learn_halt_path()
     if on:
         p.touch(exist_ok=True)
@@ -71,14 +78,19 @@ def set_learn_halt(on: bool) -> bool:
 # touch'ı / panodaki tuş. Faz 4b (gerçek intraday silahlanma) bu bayrak + EOD ile aynı güvenlik kapıları
 # olmadan çalışmaz.
 def intraday_arm_path() -> Path:
+    """Intraday silahlanma bayrak dosyasının yolu (`state/INTRADAY_ARM`)."""
     return config.STATE / "INTRADAY_ARM"
 
 
 def intraday_armed() -> bool:
+    """TERS mantık: dosya VARSA silahlı. Dosya yoksa silahsız (yalnız gözlem) — default kapalıdır."""
     return intraday_arm_path().exists()
 
 
 def set_intraday_arm(on: bool) -> bool:
+    """INTRADAY_ARM bayrağını açar/kapatır ve dosyadan yeniden okunan gerçek durumu döner.
+
+    Yalnız operatör yolu içindir; hiçbir otomatik akış (döngü/ajan/bekçi) bunu çağırmamalıdır."""
     p = intraday_arm_path()
     if on:
         p.touch(exist_ok=True)
@@ -291,6 +303,9 @@ def write_heartbeat(**fields) -> dict:
 
 
 def heartbeat_age_seconds() -> float | None:
+    """Nabzın (`heartbeat.json`) `ts` damgası üstünden geçen saniye; ölçülemezse None.
+
+    Salt-okuma. Kayıt yoksa, `ts` alanı yoksa ya da damga ayrıştırılamıyorsa UYDURMA yerine None."""
     hb = store.read_json(HEARTBEAT)
     if not hb or "ts" not in hb:
         return None
@@ -303,10 +318,14 @@ def heartbeat_age_seconds() -> float | None:
 
 
 def stale(threshold_seconds: float = 900) -> bool:
+    """Nabız eşikten eski mi? Yaş ölçülemiyorsa BAYAT sayar (fail-closed)."""
     age = heartbeat_age_seconds()
     return age is None or age > threshold_seconds
 
 
 def circuit_breaker_tripped(day_pnl_pct: float, goal: dict | None = None) -> bool:
+    """Günlük kayıp, hedefteki `limits.max_daily_loss_pct` tavanına ulaştıysa (ya da aştıysa) True.
+
+    Salt-okuma karar fonksiyonu: eşiği hedef sözleşmesinden okur, hiçbir bayrak yazmaz."""
     goal = goal or config.goal()
     return day_pnl_pct <= -goal["limits"]["max_daily_loss_pct"] / 100.0

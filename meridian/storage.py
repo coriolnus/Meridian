@@ -100,10 +100,12 @@ DOC_ENTITIES = tuple(n for n in ENTITIES if _KIND[n] == "doc")
 
 
 def table_of(name: str) -> str | None:
+    """Kanonik varlık adının SQLite tablo adı; kayıtta yoksa `None`."""
     return _TABLE.get(name)
 
 
 def kind_of(name: str) -> str | None:
+    """Varlığın türü — "rows" | "doc" | "series"; kayıtta yoksa `None`."""
     return _KIND.get(name)
 
 
@@ -128,6 +130,7 @@ def db_path() -> Path:
 
 
 def _dict_row(cursor, row):
+    """sqlite3 `row_factory`: satırı demet yerine {kolon adı: değer} sözlüğü olarak verir."""
     return {d[0]: row[i] for i, d in enumerate(cursor.description)}
 
 
@@ -196,6 +199,8 @@ def close_connections() -> None:
 
 # ---- ŞEMA --------------------------------------------------------------------------------------
 def _ddl() -> list[str]:
+    """Şemanın tüm DDL ifadelerini üretir: `schema_version`, `entity_meta`, altı varlık tablosu
+    ve indeksler. Hepsi `IF NOT EXISTS` — idempotenttir, var olan veriye dokunmaz."""
     out = ["CREATE TABLE IF NOT EXISTS schema_version ("
            "  version INTEGER NOT NULL,"
            "  applied_at REAL NOT NULL)",
@@ -278,6 +283,8 @@ def ensure_schema(conn: sqlite3.Connection | None = None) -> sqlite3.Connection:
 
 
 def schema_version(conn: sqlite3.Connection | None = None) -> int | None:
+    """DB'de kayıtlı en yüksek şema sürümü; tablo yoksa ya da dosya SQLite değilse `None`
+    (sürüm UYDURULMAZ — `active()` bunu "DB devrede değil" diye okur)."""
     c = conn or connect()
     try:
         with _GUARD:
@@ -383,6 +390,8 @@ def _isaretli_sifir(val: Any) -> bool:
 
 
 def _matches(val: Any, typ: str) -> bool:
+    """Değer kolonun tipine SADAKATLE sığıyor mu? `bool`/`int` ayrımı korunur ve `-0.0` REAL'e
+    uymuyor sayılır (işaret biti kolonda kaybolur) — uymayan alan `extra_json`a düşürülür."""
     if typ == "BOOL":
         return isinstance(val, bool)
     if typ == "INTEGER":
@@ -393,6 +402,8 @@ def _matches(val: Any, typ: str) -> bool:
 
 
 def _scalar(val: Any) -> bool:
+    """Değer sqlite3'ün doğrudan bağlayabileceği bir skaler mi (None/str/int/float/bool)?
+    Liste/sözlük için False döner — o alanlar kolonda NULL kalır, doğruluğu `extra_json` taşır."""
     return val is None or isinstance(val, (str, int, float, bool))
 
 
@@ -419,6 +430,8 @@ def _row_to_cols(name: str, row: dict) -> tuple[list, str | None]:
 
 
 def _cols_to_row(name: str, rec: dict) -> dict:
+    """DB satırını defter sözlüğüne çevirir (`_row_to_cols`in tersi): NULL kolonlar atlanır,
+    BOOL kolonlar `bool`a döner ve `extra_json` en son birleştirilir — yani extra KAZANIR."""
     spec = _COLS[name]
     out: dict = {}
     for col, typ in spec:

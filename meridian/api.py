@@ -151,13 +151,19 @@ class _NativeRoute(APIRoute):
     """
 
     def __init__(self, path: str, endpoint, **kwargs):
+        """Uç fonksiyonunu `store.sanitize` sarıcısıyla değiştirip rotayı O SARICIYLA kaydeder.
+
+        Eş-yordam ve düz fonksiyon ayrı sarılır. `functools.wraps` `__wrapped__` kurduğu için
+        FastAPI bağımlılıkları sarıcının ardındaki ORİJİNAL imzadan çözmeye devam eder."""
         if inspect.iscoroutinefunction(endpoint):
             @functools.wraps(endpoint)
             async def _sarili(*a, **k):
+                """Eş-yordam ucu bekler, dönüşünü `store.sanitize`den geçirip verir."""
                 return store.sanitize(await endpoint(*a, **k))
         else:
             @functools.wraps(endpoint)
             def _sarili(*a, **k):
+                """Düz (senkron) ucu çağırır, dönüşünü `store.sanitize`den geçirip verir."""
                 return store.sanitize(endpoint(*a, **k))
         # `functools.wraps` `__wrapped__` kurar; FastAPI bağımlılıkları `inspect.signature` ile
         # çözer ve o da `__wrapped__`i izler — yani `request: Request` gibi parametreler sarıcının
@@ -341,14 +347,19 @@ class GuvenlikBasliklariMiddleware:
     """
 
     def __init__(self, app):
+        """Sarılacak ASGI uygulamasını saklar (başka durum tutmaz)."""
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        """HTTP isteklerinde `send`i sarar; HTTP dışı kapsamları (lifespan/websocket) aynen geçirir.
+
+        Gövdeye HİÇ dokunmaz — yalnız `http.response.start` mesajının başlık listesi değişir."""
         if scope["type"] != "http":       # lifespan/websocket: başlık kavramı yok
             await self.app(scope, receive, send)
             return
 
         async def _send(mesaj):
+            """Yanıt başlangıcında aynı adlı başlıkları atıp `GUVENLIK_BASLIKLARI`nı SET eder."""
             if mesaj["type"] == "http.response.start":
                 mesaj["headers"] = [
                     (ad, deger) for ad, deger in mesaj["headers"] if ad.lower() not in _GB_ADLAR
@@ -618,11 +629,13 @@ def _statik(request: Request, ad: str, media_type: str | None = None):
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    """`/` ucu: pano kabuğu `index.html`i ETag/304 pazarlığıyla döndürür (salt-okuma)."""
     return _statik(request, "index.html")
 
 
 @app.get("/app.js")
 def appjs(request: Request):
+    """`/app.js` ucu: pano uygulama betiğini ETag/304 pazarlığıyla döndürür (salt-okuma)."""
     return _statik(request, "app.js", "application/javascript")
 
 
@@ -635,16 +648,19 @@ def appjs(request: Request):
 # sayfa aksi hâlde canlıda ölü açılırdı (workflow'un tüm diyagramı script'te üretiliyor).
 @app.get("/theme.js")
 def themejs(request: Request):
+    """`/theme.js` ucu: tema betiğini ETag/304 pazarlığıyla döndürür (salt-okuma)."""
     return _statik(request, "theme.js", "application/javascript")
 
 
 @app.get("/landing.js")
 def landingjs(request: Request):
+    """`/landing.js` ucu: karşılama sayfasının betiğini ETag/304 ile döndürür (salt-okuma)."""
     return _statik(request, "landing.js", "application/javascript")
 
 
 @app.get("/workflow.js")
 def workflowjs(request: Request):
+    """`/workflow.js` ucu: iş akışı diyagramını üreten betiği ETag/304 ile döndürür (salt-okuma)."""
     return _statik(request, "workflow.js", "application/javascript")
 
 
@@ -653,6 +669,7 @@ def workflowjs(request: Request):
 # döner ve palet sessizce hiç var olmaz.
 @app.get("/palette.js")
 def palettejs(request: Request):
+    """`/palette.js` ucu: ⌘K komut paleti betiğini ETag/304 ile döndürür (salt-okuma)."""
     return _statik(request, "palette.js", "application/javascript")
 
 

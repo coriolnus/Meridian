@@ -50,6 +50,10 @@ COMPOSITE_MAX_KNOBS = 3
 
 
 def _week_key(ts: str | None = None) -> str:
+    """Haftalık bütçe damgasını ISO takvimden üretir: "YYYY-Www" (ts yoksa bugün).
+
+    Damganın TEK kaynağı burasıdır — bütçeyi sayan modül damgayı da tanımlar; ikinci bir
+    biçim yılbaşı haftasında sessizce ayrışırdı."""
     d = dt.date.fromisoformat((ts or dt.date.today().isoformat())[:10])
     iso = d.isocalendar()
     return f"{iso[0]}-W{iso[1]:02d}"
@@ -106,6 +110,7 @@ def enqueue(composite: dict, *, rationale: str = "", source: str = "hermes",
 
 
 def _next_seq() -> int:
+    """Sıradaki kuyruk sıra numarası: mevcut satır sayısı + 1 (C%05d kimliğinin sayısal kısmı)."""
     return len(store.read_jsonl(QUEUE_FILE)) + 1
 
 
@@ -147,6 +152,9 @@ def queue_status(rows: list | None = None) -> dict:
 
 
 def _budget_used(hafta: str | None = None) -> int:
+    """Verilen haftada (varsayılan: bu hafta) şimdiye dek harcanmış yoklama sayısını okur.
+
+    Sayaç `composite_budget.json` içindedir; kayıt yoksa 0 döner."""
     h = hafta or _week_key()
     st = store.read_json(BUDGET_STATE, {}) or {}
     return int((st.get("weeks") or {}).get(h, 0))
@@ -162,7 +170,11 @@ def _budget_take(hafta: str | None = None) -> bool:
     # SINIRSIZ oluyordu. İlk koşuda tam olarak bu yakalandı (10 yoklamanın 10'u da izin aldı) ve
     # bu, bileşik yolun tek emniyetinin sessizce yok olması demekti — DSR paydası sınırsız şişerdi.
     def _f(st):
-        if st is None:                       # default `{}` verildiği için normalde olmaz
+        """`store.update_json` mutasyonu: hafta sayacını yerinde artırır, tavanda `_denied` basar.
+
+        `st` YENİDEN BAĞLANMAZ — aynı nesne diske yazılır; yeni bir sözlük yaratmak sayacı
+        sessizce sıfırlar ve haftalık bütçeyi sınırsız yapardı."""
+        if st is None:                     # default `{}` verildiği için normalde olmaz
             return False
         weeks = st.setdefault("weeks", {})
         cur = int(weeks.get(h, 0))

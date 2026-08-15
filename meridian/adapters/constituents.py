@@ -41,6 +41,8 @@ def health() -> dict:
 
 
 def _note(ok: bool, source: str | None = None, n: int = 0, error: str = "") -> None:
+    """Son çekim denemesinin sonucunu (başarı, kaynak etiketi, sembol sayısı, kırpılmış hata metni)
+    UTC damgasıyla `_HEALTH`e yazar; health() bunu okur. HATA≠BOŞ: yutulan hata burada görünür kalır."""
     _HEALTH.update({"ok": ok, "source": source, "n": int(n), "error": error[:200],
                     "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
 
@@ -119,6 +121,8 @@ def _fetch_tables():
         # True, so `nan or ""` returned nan and str(nan)=='nan' — as_of() then added a fabricated 'NAN'
         # ticker to point-in-time membership. Coalesce NaN/None to "" explicitly.
         def _cell(v):
+            """Wikipedia değişiklik-günlüğü hücresini NaN-güvenli dizgeye çevirir: None/NaN → ""
+            (aksi hâlde str(nan)=='nan' PIT üyeliğine uydurma 'NAN' sembolü sokuyordu), yoksa kırpılmış str."""
             return "" if v is None or (isinstance(v, float) and pd.isna(v)) else str(v).strip()
         for _, row in ch.iterrows():
             changes.append({"date": _cell(row.get(dcol)), "added": _cell(row.get(acol)),

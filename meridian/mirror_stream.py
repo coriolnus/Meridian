@@ -61,6 +61,9 @@ class MirrorOrderStateMachine:
     edilir."""
 
     def __init__(self):
+        """state/mirror_orders.json'dan emirleri ve son olay damgasını diriltir, kilidi ve ORTAK
+        sağlık nesnesini (persist=self._persist ile disk kalıcılığı enjekte) kurar. `hydrate` bayat
+        `stream_ok` bayrağını taze nabız yoksa false'a çeker."""
         st = store.read_json(STATE_FILE, {})
         self.orders: dict = st.get("orders", {})          # coid -> {status, symbol, filled_qty, ...}
         self.last_event_ts: str | None = st.get("last_event_ts")
@@ -73,51 +76,69 @@ class MirrorOrderStateMachine:
     # --- Sağlık alanları ORTAK yasaya proxy (test yüzeyi korunur: sm.stream_ok/last_error/... ) ---
     @property
     def stream_ok(self) -> bool:
+        """Ham akış bayrağı (ORTAK sağlık nesnesinden). TEK BAŞINA okunmamalı — dürüst okuma
+        stream_health()'tir (bayrak nabızla çarpılır)."""
         return self.health.stream_ok
 
     @stream_ok.setter
     def stream_ok(self, v):
+        """Ham akış bayrağını ORTAK sağlık nesnesine yazar (kenar kaydı basmaz — o set_stream'in işi)."""
         self.health.stream_ok = v
 
     @property
     def last_error(self) -> str:
+        """ŞU ANKİ durumun nedeni (geçmiş değil) — ORTAK sağlık nesnesinden okunur."""
         return self.health.last_error
 
     @last_error.setter
     def last_error(self, v):
+        """Şu anki durum nedenini ORTAK sağlık nesnesine yazar."""
         self.health.last_error = v
 
     @property
     def down_since(self):
+        """Süregelen kopuşun başlangıç damgası (kopuk değilse None) — ORTAK sağlık nesnesinden."""
         return self.health.down_since
 
     @down_since.setter
     def down_since(self, v):
+        """Kopuş başlangıç damgasını ORTAK sağlık nesnesine yazar."""
         self.health.down_since = v
 
     @property
     def checked_at(self):
+        """Son nabız (tazelik) damgası — ORTAK sağlık nesnesinden. Bayatsa bayrak yeşil sayılmaz."""
         return self.health.checked_at
 
     @checked_at.setter
     def checked_at(self, v):
+        """Nabız damgasını ORTAK sağlık nesnesine yazar."""
         self.health.checked_at = v
 
     @property
     def _last_reassert(self) -> float:
+        """Süregelen kopuşun en son yeniden kayda geçirildiği monotonic an — ORTAK sağlık nesnesinden."""
         return self.health._last_reassert
 
     @_last_reassert.setter
     def _last_reassert(self, v):
+        """Son down-reassert anını ORTAK sağlık nesnesine yazar."""
         self.health._last_reassert = v
 
     def set_stream(self, ok: bool, error: str = "") -> None:
+        """Akış durum KENARINI ORTAK yasaya (StreamHealth.set_stream) devreder: yalnız değişimde
+        kayıt basılır, sonuç diske yazılır."""
         self.health.set_stream(ok, error)
 
     def touch(self, error: str = "") -> bool:
+        """NABIZ — tazelik damgasını ORTAK yasa üzerinden yeniler; süregelen kopuş DOWN_REASSERT_S'te
+        bir yeniden kayda geçtiyse True döner."""
         return self.health.touch(error)
 
     def _persist(self) -> None:
+        """Emirleri + son olay damgasını + sağlık alanlarını state/mirror_orders.json'a atomik yazar.
+        Terminal emirler en son 100 ile sınırlanır (dosya sonsuz büyümesin). StreamHealth'e persist
+        geri-çağrısı olarak enjekte edilir — yürütme gerçeği restart-güvenli kalır."""
         # canlı olmayan (terminal) emirleri en son 100 ile sınırla — dosya sonsuz büyümesin
         term = [(k, v) for k, v in self.orders.items() if str(v.get("status", "")).lower() in TERMINAL]
         if len(term) > 100:
@@ -197,6 +218,8 @@ MACHINE: MirrorOrderStateMachine | None = None
 
 
 def machine() -> MirrorOrderStateMachine:
+    """Süreç-içi TEKİL durum makinesini döndürür (ilk çağrıda diskten diriltip kurar). Testler kendi
+    örneğini kurduğu için bu tekil yalnız uvicorn sürecinin ortak kancasıdır."""
     global MACHINE
     if MACHINE is None:
         MACHINE = MirrorOrderStateMachine()
@@ -246,6 +269,9 @@ class MirrorStreamListener:
     connect_kwargs = {"ping_interval": 20, "ping_timeout": 20}
 
     def __init__(self, sm: MirrorOrderStateMachine | None = None):
+        """Dinleyiciyi verilen (ya da süreç-içi tekil) durum makinesine bağlar; ORTAK sağlık nesnesini
+        makineden ödünç alır (run_stream `spec.health` bekler) ve dur-olayı, KANITLI canlılık bayrağı,
+        kopuş saati ile kesinti-başına-bir devre-kesici bayrağını sıfırlar."""
         self.sm = sm or machine()
         self.health = self.sm.health          # ortak sağlık nesnesi (run_stream `spec.health` bekler)
         self._stop = asyncio.Event()
