@@ -82,6 +82,8 @@
   <h1>Meridian — Operasyon ve Teşhis Paneli</h1>
   <p>Kapanan XNYS seansından Alpaca paper emrine giden işlem döngüsü + Hermes öğrenme döngüsü — artık canlı beslenebilir:
      çift-durum senkron izleme, gecikme ısı haritası, time-travel log oynatıcı ve daraltılabilir kulvarlar.
+     Öğrenme kulvarı gerçek boru hattını izler: beyin zinciri → arka plan süzgeci (28a) → guard tek-kapısı →
+     olasılıksal kapı → teyit yürüyüşü → ship (güncelleme 2026-08-15).
      Tık: bağlantıları vurgula · Çift tık (⊕ işaretli düğüm): iç akış · Kulvar başlığı: daralt/aç.</p>
 </div>
 <div class="controls">
@@ -142,7 +144,7 @@ const NODES=[
   tip:"<b>EOD barlar</b> (önbellek disiplinli, seans başına 1 tazeleme) + haftada bir <b>FMP kazanç takvimi</b> → earnings.csv. Aynı dosya hem PEAD çapasını hem kazanç-karartma guard'ını besler."},
  {id:3, t:"proc",ic:"🧭", lb:"Rejim Tespiti",         sb:"trend / chop / panic",        c:2,r:0,
   tip:"Endeks + piyasa genişliği → <b>market_regime</b>. Rejim-yuvalı parametreler (params_by_regime) ve rejim-izole öğrenme bu etiketi anahtar olarak kullanır."},
- {id:4, t:"proc",ic:"🔍", lb:"Tarama: 4 Kurulum",     sb:"VCP · pullback · burst · EP", c:3,r:0,
+ {id:4, t:"proc",ic:"🔍", lb:"Tarama: Kurulumlar",    sb:"yürürlük: strategy.ARMED_SETUPS", c:3,r:0,
   tip:"Silahlı kadro SAYFAYA YAZILMAZ: burada sabit bir kadro duruyordu ve operatör penceresi kurulumları taşıdıkça (2026-08-11/12) sayfa sessizce yanlışa döndü — bir kurulum SİLAHLIYKEN burada uykuda görünüyor, bir başkası hiç anılmıyordu. Yürürlükteki küme <code>strategy.ARMED_SETUPS</code>, uykudakilerin silahlanma ölçümü ise arming_report.json'dur. EP'de kazanç raporu çapası ZORUNLU — veri yoksa hiç ateşlemez."},
  {id:5, t:"dec",ic:"🛡", lb:"Risk Kapıları",          sb:"halt · bütçe · karartma · guard", c:4,r:0,
   tip:"HALT, veri tazeliği, rejim maruz-kalım bütçesi, kazanç karartması, bekleyen-emir guard'ı (mirror_busy). <b>Branşlar:</b> bütçe &gt;0 → normal akış; bütçe %0 → keşif modu."},
@@ -161,15 +163,19 @@ const NODES=[
  {id:12,t:"trigger",ic:"🧠", lb:"Hermes Bekleme",     sb:"ufuk bekçisi + ısınma",       c:0,r:2,
   tip:"Rejim-kapsamlı aşırı-uyum ufku (≥30 gün + yeterli işlem, katı-VE) dolunca yansıma tetikler. <b>YENİ (#4):</b> ufuk dolmadan boş döngüde 12 poll'da bir <b>ısınma sprinti</b> — ship'siz arama, UCB öncelikleri ısınır."},
  {id:13,t:"tool",ic:"🤖", lb:"LLM Beyin Zinciri",     sb:"claude → nous → gemini",      c:1,r:2,
-  tip:"HERMES_BRAIN_ORDER: Claude → lokal hermes-agent (canlı Meridian skill seti + SOUL.md; güncel sayı: /api/public/summary → skills_live) → Gemini. <b>Tek-değişken</b> önerisi üretir; bütçe kapısı ödemeli beyinleri keser. Öneri = danışma, karar = kapı. <b>Çift tıkla:</b> iç akış."},
- {id:14,t:"dec",ic:"🎲", lb:"Olasılıksal Kapı",       sb:"P(ΔS&gt;0) ≥ 0.80+K",          c:2,r:2,
+  tip:"HERMES_BRAIN_ORDER: Claude → lokal hermes-agent (canlı Meridian skill seti + SOUL.md; güncel sayı: /api/public/summary → skills_live) → Gemini. <b>Tek-değişken</b> önerisi üretir; bütçe kapısı ödemeli beyinleri keser. Zincir boş dönerse determinist <b>virgin-knob</b> yedeği devreye girer (⊕ iç akışta). Öneri = danışma, karar = kapı. <b>Çift tıkla:</b> iç akış."},
+ {id:18,t:"dec",ic:"🚧", lb:"Arka Plan Süzgeci",      sb:"28a · sertifika uyumu",       c:2,r:2,
+  tip:"<b>28a — bir zamanların görünmez süzgeci (teşhis: ROADMAP §2-48).</b> Arka plan turunda sertifika `chop` iken GLOBAL (@'siz) öneriler deftere hiç girmeden eleniyordu — 2026-08-02'den beri 47 öneri böyle imha edildi, aynı pencerede deftere giren: 1. <b>Davranış sürümlü:</b> v246 = imha · v247+ = sertifikalı rejime YENİDEN YAZIM (EDG-2026-041 D2); yürürlükteki durum için ROADMAP WP3-A durum notuna bak. Retler bilinçli olarak hypotheses.jsonl'a DEĞİL events.jsonl'a yazılır — sekiz okuyucu satır sayarak 'denendi' sanırdı (hermes.py:4247)."},
+ {id:19,t:"dec",ic:"⚖️", lb:"Guard — Tek Kapı",       sb:"tek değişken · bounds · kota", c:3,r:2,
+  tip:"<b>reflect.submit → guard.validate_change: her önerinin geçtiği TEK kapı.</b> Tek-değişken şekli, bounds.yaml üyeliği, tip/aralık/adım, no-op, already-failed hafızası, aylık kota. Bileşik öneri ship EDİLMEZ → ölçüm kuyruğuna (hermes_composite); ret → hipotez defterine ölçülen gerekçeyle. Saf ve statik — defter/LLM/ağ okumaz (test_gate_statistics_v74 ile mühürlü)."},
+ {id:14,t:"dec",ic:"🎲", lb:"Olasılıksal Kapı",       sb:"P(ΔS&gt;0) ≥ 0.80+K",          c:2,r:3,
   tip:"Blok-bootstrap (N=2000, seed=42) eşleştirilmiş karşılaştırma, <b>Search-OOS (%70)</b> üzerinde. K-sonda cezası: eşik 0.80+0.01·K (tavan 0.95). Fixture yoksa eski marj yasasına dürüst geri dönüş."},
- {id:15,t:"dec",ic:"🚶", lb:"Doğrulama Yürüyüşü",     sb:"Confirm-OOS · P ≥ 0.70",      c:3,r:2,
-  tip:"Aramanın hiç görmediği <b>%30 dilimde</b> onay yürüyüşü. predicted_delta onay ortalamasıyla DEFLATE edilir — arama iyimserliği rapora sızamaz."},
- {id:16,t:"out",ic:"🚢", lb:"Ship + Alfa Damgası",    sb:"params vN+1",                 c:4,r:2,
+ {id:15,t:"dec",ic:"🚶", lb:"Doğrulama Yürüyüşü",     sb:"Confirm-OOS · P ≥ 0.70",      c:3,r:3,
+  tip:"Aramanın hiç görmediği <b>%30 dilimde</b> onay yürüyüşü. predicted_delta onay ortalamasıyla DEFLATE edilir — arama iyimserliği rapora sızamaz. <b>28f:</b> ölçülemeyen onay (confirm_p=null) 'geçti' SAYILMAZ — ship bloklanır (reflect.py)."},
+ {id:16,t:"out",ic:"🚢", lb:"Ship + Alfa Damgası",    sb:"params vN+1",                 c:4,r:3,
   tip:"Versiyon numarası asla geri kullanılmaz. <b>YENİ (#5):</b> her ship'e vs_benchmark_at_ship (SPY-üstü alfa) damgası — kapı bileşeni DEĞİL; 20-30 gözlem sonrası veto adaylığı veriyle kararlaşır."},
- {id:17,t:"data",ic:"🗄", lb:"Hipotez Hafızası",      sb:"hypotheses · search_history", c:5,r:2,
-  tip:"Kabuller VE retler ölçülen sayılarla kaydedilir; canlı skor rejim-etiketli (live_score@regime). Isınma sprintlerinin izleri de buraya yazılır — bir sonraki arama bilgili başlar."}];
+ {id:17,t:"data",ic:"🗄", lb:"Hipotez Hafızası",      sb:"hypotheses · search_history", c:5,r:3,
+  tip:"Kabuller VE retler ölçülen sayılarla kaydedilir; canlı skor rejim-etiketli (live_score@regime). Isınma sprintlerinin izleri de buraya yazılır — bir sonraki arama bilgili başlar. Arka plan süzgeç retleri BURAYA GİRMEZ (bilinçli — events.jsonl'a bak)."}];
 const EDGES=[
  {f:1,t:2, l:"kapanan seans"},        {f:2,t:3, l:"barlar"},
  {f:3,t:4, l:"rejim etiketi"},        {f:4,t:5, l:"aday planlar"},
@@ -178,13 +184,15 @@ const EDGES=[
  {f:8,t:9, l:"GO"},                   {f:8,t:11,l:"NO_GO / REVIEW · kayıt"},
  {f:9,t:10,l:"emir durumu (WS)"},     {f:10,t:11,l:"fill / iptal"},
  {f:11,t:12,l:"kapanan işlemler"},    {f:12,t:13,l:"ufuk dolu → yansıma"},
- {f:13,t:14,l:"tek-değişken önerisi"},{f:14,t:15,l:"P(ΔS>0) ≥ eşik"},
- {f:14,t:17,l:"RET · kayıt"},         {f:15,t:16,l:"onay P ≥ 0.70"},
- {f:16,t:17,l:"hipotez + alfa damgası"},{f:16,t:4, l:"params vN+1 (geri besleme)"}];
+ {f:13,t:18,l:"aday öneri"},          {f:18,t:19,l:"uyum → submit"},
+ {f:19,t:14,l:"guard geçti"},         {f:19,t:17,l:"guard reddi · kayıt"},
+ {f:14,t:15,l:"P(ΔS>0) ≥ eşik"},     {f:14,t:17,l:"RET · kayıt"},
+ {f:15,t:16,l:"onay P ≥ 0.70"},      {f:16,t:17,l:"hipotez + alfa damgası"},
+ {f:16,t:4, l:"params vN+1 (geri besleme)"}];
 
 // Alt-ağlar: veri tabanlı — başka düğümler de eklenebilir (5: kapı zinciri, 14: bootstrap iç akışı)
 const SUBGRAPHS={
- 13:{ title:"LLM Beyin Zinciri — iç akış (HERMES_BRAIN_ORDER)", W:1080, H:420,
+ 13:{ title:"LLM Beyin Zinciri — iç akış (HERMES_BRAIN_ORDER + determinist yedek)", W:1080, H:420,
   nodes:[
    {id:"g", t:"dec",  ic:"💰", lb:"Bütçe Kapısı",          sb:"ödemeli beyinleri keser",       x:30,  y:160,
     tip:"Günlük LLM bütçesi aşıldıysa zincirin tamamı atlanır — sistem LLM'siz de karar üretir (kapı kural tabanlıdır)."},
@@ -197,9 +205,13 @@ const SUBGRAPHS={
    {id:"p", t:"proc", ic:"🧩", lb:"JSON Ayıklama",         sb:"son panel + unwrap",            x:560, y:160,
     tip:"CLI çıktısının SON ╭─╰─ panelinden JSON çekilir (prompt eko tuzağına karşı); panelin ~80 kolonluk sert satır kırması string İÇİNDEYSE katlanır (_unwrap_strings)."},
    {id:"o", t:"out",  ic:"📨", lb:"Tek-Değişken Önerisi",  sb:"probes_tested ile kapıya",      x:820, y:160,
-    tip:"one_variable_only yasası: öneri tek parametre değiştirir. Denenen K sonda sayısı kapının eşiğini yükseltir (0.80+0.01·K) — çok deneyen, daha güçlü kanıt borçlanır."}],
+    tip:"one_variable_only yasası: öneri tek parametre değiştirir. Denenen K sonda sayısı kapının eşiğini yükseltir (0.80+0.01·K) — çok deneyen, daha güçlü kanıt borçlanır."},
+   {id:"v", t:"proc", ic:"🧪", lb:"Virgin-Knob Üretici",   sb:"determinist yedek · bounds'tan aday", x:820, y:290,
+    tip:"Zincir boş / bütçe kesik → LLM'siz determinist üretim: bounds.yaml'da olup defterde HİÇ hipotez taşımamış düğmeler (hermes.propose_virgin_knob). <b>Bilinen kusur (ROADMAP §2-48):</b> adaylar bounds'tan seçilir, canlı params süzgeci YOK — ölçülen 47 önerinin 29'u canlıda taşınmayan iki düğmeye gitti; tamirat yönü kart-önce, sahibi WP3."}],
   edges:[ {f:"g",t:"a",l:"bütçe OK"}, {f:"a",t:"b",l:"boş / hata → düş"}, {f:"b",t:"c",l:"boş / hata → düş"},
           {f:"a",t:"p",l:"yanıt"}, {f:"b",t:"p",l:"CLI panel çıktısı"}, {f:"c",t:"p",l:"yanıt"},
+          {f:"g",t:"v",l:"bütçe kesik → LLM'siz"}, {f:"c",t:"v",l:"zincir boş → yedek"},
+          {f:"v",t:"o",l:"bounds'tan aday"},
           {f:"p",t:"o",l:"hipotez JSON"} ]}};
 
 // Emir durumu → renk (Alpaca durum adlarıyla birebir)
@@ -211,7 +223,7 @@ const stColor=s=>ST_COLOR[String(s||"").toLowerCase()]||"#6b7280";
 
 // Gömülü demo günü — gerçek bir döngünün şekliyle (H00027 reddi dahil)
 const DEMO={
- latency:{1:14,2:2600,3:38,4:310,5:12,6:6,7:18,8:9,9:840,10:4100,11:26,12:7,13:23400,14:6800,15:2900,16:180,17:22},
+ latency:{1:14,2:2600,3:38,4:310,5:12,6:6,7:18,8:9,9:840,10:4100,11:26,12:7,13:23400,14:6800,15:2900,16:180,17:22,18:5,19:11},
  dual:{9:{inner:"filled",outer:"pending_new"},10:{inner:"canceled",outer:"canceled"}},
  timeline:[
   {ts:"22:05",label:"Seans kapandı — zamanlayıcı günlük döngüyü tetikledi",nodes:[1],edges:[[1,2]]},
@@ -225,7 +237,7 @@ const DEMO={
   {ts:"22:08",label:"WS: accepted → filled; defter-Alpaca senkron farkı ⚠ (Alpaca Emir düğümündeki bölünmeye bak)",nodes:[10],edges:[[10,11]]},
   {ts:"22:08",label:"Defter yazıldı — kapanan işlem öğrenme ufkuna eklendi",nodes:[11],edges:[[11,12]]},
   {ts:"22:10",label:"Hermes: ufuk dolmadı → yansıma yok; ısınma sprinti koştu (ship yok)",nodes:[12],veto:[[12,13]]},
-  {ts:"23:00",label:"H00027: öneri kapıda RED (0.146 &lt; 0.185) — ret ölçülen sayılarla hafızaya yazıldı",nodes:[13,14],edges:[[13,14],[14,17]],veto:[[14,15]]}]};
+  {ts:"23:00",label:"H00027: süzgeç + guard geçildi, kapıda RED (0.146 &lt; 0.185) — ret ölçülen sayılarla hafızaya yazıldı",nodes:[13,18,19,14],edges:[[13,18],[18,19],[19,14],[14,17]],veto:[[14,15]]}]};
 
 // ============================== DURUM ==============================
 const S={ mode:"topology", collapsed:{trade:false,learn:false}, dual:{}, latency:{},
@@ -239,7 +251,7 @@ const wrap=$("wrap"), svg=$("edges"), tip=$("tip"), outer=$("outer"),
 const NS="http://www.w3.org/2000/svg";
 const byId={}, elById={};
 const key=(f,t)=>f+"-"+t;
-const laneOf=n=>n.r===2?"learn":"trade";
+const laneOf=n=>n.r>=2?"learn":"trade";
 const visible=n=>!S.collapsed[laneOf(n)];
 const fmtMs=ms=>ms>=1000?(ms/1000).toFixed(1).replace(".",",")+" s":Math.round(ms)+" ms";
 
@@ -298,9 +310,9 @@ function layout(){
   const top=72, gap=35,
         tradeH=S.collapsed.trade?40:445,
         learnTop=top+tradeH+gap,
-        learnH=S.collapsed.learn?40:212,
+        learnH=S.collapsed.learn?40:445,
         H=learnTop+learnH+26;
-  return {tradeTop:top,tradeH,learnTop,learnH,H,Y:[top+40,top+263,learnTop+48]}; }
+  return {tradeTop:top,tradeH,learnTop,learnH,H,Y:[top+40,top+263,learnTop+48,learnTop+271]}; }
 
 function rect(id){ const e=elById[id]; return {x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight,
   cx:e.offsetLeft+e.offsetWidth/2, cy:e.offsetTop+e.offsetHeight/2}; }

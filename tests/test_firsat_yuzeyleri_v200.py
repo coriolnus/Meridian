@@ -339,7 +339,8 @@ def test_bos_dalda_da_KART_var(kart_ciktilari):
     yoksa operatör "bu tur veri yoktu" ile "bu kart hiç yazılmamış"ı ayırt edemez."""
     for ad in _ISLER:
         html = kart_ciktilari[ad + "|bos"]
-        assert html.count('class="card') == 1, f"{ad}: boş dalda kart sayısı {html.count('class=\"card')}"
+        n_kart = html.count('class="card')
+        assert n_kart == 1, f"{ad}: boş dalda kart sayısı {n_kart}"
 
 
 # ==============================================================================================
