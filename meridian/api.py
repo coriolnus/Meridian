@@ -123,7 +123,14 @@ async def _lifespan(_app):
     yield
 
 
-app = FastAPI(title="Meridian", docs_url=None, redoc_url=None, lifespan=_lifespan)
+# `openapi_url=None` DE KAPALI — docs_url/redoc_url'i kapatmak YETMEZ. FastAPI her rota
+# gövdesinin docstring'ini OpenAPI şemasının `description` alanına AYNEN kopyalar ve
+# /openapi.json varsayılan olarak KİMLİK DOĞRULAMASIZ servis edilir (ölçüldü: 200, ~45 KB;
+# aynı anda /api/diagnostics 401 veriyordu). Docstring turunda rota açıklamaları 49'dan 73'e
+# çıkınca bu yüzey iç mühendislik gerekçelerini — hangi korumanın neden zayıf olduğunu
+# anlatan notlar dahil — dışarı yayınlar hâle geldi. Yani burada docstring YORUM DEĞİL,
+# YAYINLANAN ÇIKTIDIR. Şema kapalı; pano kendi uçlarını zaten adıyla biliyor.
+app = FastAPI(title="Meridian", docs_url=None, redoc_url=None, openapi_url=None, lifespan=_lifespan)
 
 
 # ---- SERİLEŞTİRME SİGORTASI --------------------------------------------------------

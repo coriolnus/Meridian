@@ -363,7 +363,7 @@ DECLARED_SINKS: dict[str, str] = {
     # BEYAN TAZELENDİ (mekanizma ölçtü): "DIŞ tüketici ertelendi" cümlesi
     # ÇÜRÜTÜLDÜ — `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
     "insider_trades.json": "Form 4 ham defteri (artımlı; su işareti + kapsam burada). Okuma "
-                           "`insider.defter_oku()` içindedir (insider.py:281, aynı modül → statik "
+                           "`insider.defter_oku()` içindedir (aynı modül → statik "
                            "graf göremez); sarmalayıcıları `ozet()`/`durum()`. DIŞ ÇAĞIRAN ÖLÇÜLDÜ "
                            "(2026-08-08): `scheduler._y4_collect` seans başına bir kez "
                            "`insider.ozet()` ve `insider.durum()` çağırır, sonucu "
@@ -486,7 +486,7 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
     "intraday_bars/*.jsonl": {
         "sinif": "gelecek_tuketici",
         "gerekce": "DAKİKALIK BAR ARŞİVİ — Faz-5/6 KANIT KORPUSU. YAZAN: `bararchive.archive_frame` "
-                   "(bararchive.py:110, `store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)`), "
+                   "(`store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)` çağrısı), "
                    "çağıranı `hotstate` — CANLI SICAK YOL, dakikalık. BUGÜN TÜKETİCİSİ YOK ve bu "
                    "ÖLÇÜLMÜŞ bir karardır, ihmal değil: intraday hattı (hotstate → mrd:bars) "
                    "uçucudur (~2 seans TTL), 'dakika-hassas icra EOD'dan gerçekten iyi mi?' sorusu "
@@ -516,10 +516,10 @@ HUMAN_INVOKED_SINKS: dict[str, dict[str, str]] = {
         "sinif": "cagirani_insan",
         "cli": "meridian.shadow_variants --karne",
         "gerekce": "GÖLGE-v2 YAŞAM-DÖNGÜSÜ İŞLEM DEFTERİ. YAZAN: `shadow_lifecycle` "
-                   "(shadow_lifecycle.py:574, `TRADES_FILE` sabiti satır 73'te) — modülün başlığı "
+                   "(`store.append_jsonl(TRADES_FILE, ...)`; ad `TRADES_FILE` sabitinde) — modülün başlığı "
                    "SIFIR YETKİ bloğudur: canlı portfolio/trades/trade_plans'a ve aynaya HİÇBİR yol "
                    "çıkmaz, buradaki para sayıları bir KANIT HIZLANDIRICISIDIR, onay değil. OKUYAN: "
-                   "`shadow_variants._load_books` (shadow_variants.py:607) — DIŞ modüldür, bu yüzden "
+                   "`shadow_variants._load_books` — DIŞ modüldür, bu yüzden "
                    "`unread` False'tur ve artefakt bir ihlal DEĞİLDİR. BEYANIN SEBEBİ o okuyucunun "
                    "TEK ÇAĞIRANIDIR: `shadow_variants.main()`in `--karne` kolu, yani ÇAĞIRAN BİR "
                    "İNSANDIR; hiçbir üretim yolu (loop/scheduler/api/pano) bu defteri okumaz. "
@@ -1083,12 +1083,79 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
         return False
 
 
+#: Satır çapası deseni: `dosya.py:NNN`. Beyanlarda ve yorumlarda geçen bu biçim, çapaladığı
+#: dosyanın HER düzenlemesinde bayatlar — bir docstring eklemek onlarca çapayı sessizce yanlışa
+#: çevirir. Bu depoda tam olarak bu sınıf ölçüldü ve elle ~117 yerde düzeltildi; ELLE DÜZELTME
+#: SINIFI KAPATMADI (aynı turda yenisi doğdu ve bir test onu dondurdu). Yasa bu yüzden var.
+_CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
+
+
+def stale_line_anchors(root: str = "meridian") -> list[dict]:
+    """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
+
+    Çapa üç biçimde çürür ve üçü de burada yakalanır:
+      * `menzil_disi` — numara dosyanın satır sayısını aşıyor (çapa artık hiçbir şeyi göstermiyor),
+      * `bos_satir`   — gösterdiği satır boş,
+      * `yorum`       — gösterdiği satır bir yorum (çapa kod göstermeliydi).
+
+    Hedef dosya BASENAME ile çözülür; aynı adlı iki dosya varsa (`ikircikli`) hüküm verilmez —
+    ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Kendi kendini de tarar: bu modülün
+    beyanlarındaki çapalar da ölçülür.
+
+    Neden burada: `stale_claims` beyanın ULAŞILABİLİRLİĞİNİ doğrular, METNİNİ değil — çapa
+    metnin içinde yaşadığı için o kapının yapısal kör noktasıdır.
+    """
+    kok = pathlib.Path(root)
+    adres: dict[str, list[pathlib.Path]] = {}
+    for f in kok.rglob("*.py"):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+            continue
+        adres.setdefault(f.name, []).append(f)
+
+    # BEYANLI MUAFİYET (YASA 4'ün deseni): bir satır bayat çapayı KANIT olarak alıntılıyorsa —
+    # yani dersin kendisi "şu çapa bayatladı" ise — çürüklüğü bulgu değil, anlatının parçasıdır.
+    # İşaret zorunlu ve GÖRÜNÜR: `çapa-mezar-taşı`. İşaretsiz hiçbir çapa muaf değildir.
+    MUAFIYET = "çapa-mezar-taşı"
+    curuk: list[dict] = []
+    for f in _py_files(root):
+        try:
+            satirlar = f.read_text(encoding="utf-8").splitlines()
+        except (OSError, ValueError) as e:            # ValueError: UnicodeDecodeError'ı da kapsar
+            _note_unscanned(str(f), f"{type(e).__name__}: {e}")
+            continue
+        for i, satir in enumerate(satirlar, 1):
+            if MUAFIYET in satir:
+                continue
+            for m in _CAPA_DESENI.finditer(satir):
+                hedef_ad, n = m.group(1), int(m.group(2))
+                hedefler = adres.get(hedef_ad, [])
+                if len(hedefler) != 1:
+                    continue                          # yok ya da ikircikli → hüküm YOK
+                try:
+                    hedef_satirlar = hedefler[0].read_text(encoding="utf-8").splitlines()
+                except (OSError, ValueError):  # sessiz-yutma: HEDEF dosya okunamıyorsa çapa hakkında hüküm veremeyiz; ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI) — taranamayan dosyanın kendisi zaten _note_unscanned ile kayda geçer
+                    continue
+                if n < 1 or n > len(hedef_satirlar):
+                    neden = "menzil_disi"
+                else:
+                    govde = hedef_satirlar[n - 1].strip()
+                    if not govde:
+                        neden = "bos_satir"
+                    elif govde.startswith("#"):
+                        neden = "yorum"
+                    else:
+                        continue                      # kod satırı → çapa AYAKTA
+                curuk.append({"kaynak": f"{f.name}:{i}", "capa": m.group(0), "neden": neden})
+    return curuk
+
+
 def report(root: str = "meridian") -> dict:
     """İki yasanın birlikte durumu — tek bakışta 'kaç ihlal' cevabı."""
     sil = silent_handlers(root)
     ann = annotated_handlers(root)
     graph = artifact_graph(root)
     curuk = stale_claims(root)
+    capalar = stale_line_anchors(root)
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -1107,4 +1174,8 @@ def report(root: str = "meridian") -> dict:
             # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri.
             "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(root)],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
-            "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED}
+            # ÇÜRÜK SATIR ÇAPALARI: beyanın METNİ ölçülür (stale_claims yalnız ULAŞILABİLİRLİĞİ
+            # ölçer, bu onun yapısal kör noktasıydı). Elle süpürme sınıfı kapatmadı; yasa kapatır.
+            "stale_line_anchors": capalar,
+            "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
+                  and not capalar}
