@@ -1,10 +1,23 @@
-"""guard.py — the real constraint layer. An instruction to an LLM is a suggestion; a validator is
-a constraint (Hard Rule 6). Every rule stated to Hermes is enforced here.
+"""guard.py — parametre önerileri ve işlem planları için saf, statik kısıt katmanı.
 
-Two surfaces:
-  validate_change(proposal, ...) — static validation of a parameter hypothesis (no backtest)
-  check_trade(plan, portfolio, regime, goal) — runtime risk-envelope check for a would-be entry
-Every rejection carries a machine-readable reason and is written back by memory.py."""
+LLM'e verilen talimat bir ÖNERİDİR; doğrulayıcı bir YASADIR (Hard Rule 6): Hermes'e söylenen her
+kural burada koda dökülür ve uygulanır. İki yüzey: (1) `validate_change` — tek-değişkenli parametre
+hipotezinin backtest'siz denetimi (aralık + adım + tip, `base@regime` son eki, no-op, daha önce
+denenip düşmüş aynı değişiklik, aylık kabul kotası; bileşik öneri `composite_shape_reasons` ile
+yalnız ŞEKİL hükmü alır ve ölçüm kuyruğuna YÖNLENDİRİLİR, canlıya girmez); (2) `classify_gate` —
+aday girişin çalışma-zamanı risk-zarfı hükmü (GO/REVIEW/NO_GO). Sert zarfın TEK kaynağı
+`classify_gate`tir; `check_trade` ondan TÜRETİLİR — zarfın ikinci bir kopyasını taşıyan eski
+tasarım, iki yüzey sessizce ayrışıp canlıda NO_GO olan plana "geçti" deyince YANLIŞLANDI ve
+türetme o ayrışmayı yapısal olarak imkânsız kılar. Yardımcılar: `sector_cap_basis` (sektör tavanı
+paydası — sebepli fail-safe, sessiz varsayılan yok), `y3_plan_inputs`/`y3_portfolio_inputs`
+(dolar tabanlı portföy tavanlarının üretici sözleşmesi). Kilit ad kümeleri: `GOAL_KEYS`/
+`LIMIT_KEYS` (Hermes'in öneremeyeceği değişmez operatör kalemleri), `LIVE_DEAD_KNOBS` (canlı
+motorun okuyamadığı, yapısal no-op knob sınıfı — terfisi ölçülmemiş kazanç üretirdi).
+
+DEĞİŞMEZLER: guard SAFTIR — hüküm yalnız argümanlarının fonksiyonudur; defter/LLM/ağ okumaz,
+diske yazmaz, kuyruğa dahi yazdırmaz (yazım çağıranın işidir). Her ret makine-okunur gerekçe
+taşır ve memory.py tarafından deftere işlenir; sessiz-yutma ve okuyucusuz-yazım yasalarının
+denetimi codelaw'dadır."""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional

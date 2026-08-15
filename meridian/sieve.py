@@ -1,33 +1,27 @@
-"""sieve.py — ELEME MUHASEBESİ (2026-07-21'in doğrudan çıktısı).
+"""sieve.py — eleme muhasebesi: her sessiz `continue`yi sayılı ve gerekçeli bir kayda çevirir.
 
-NEDEN VAR: 2026-07-21'de bir günde on üç hata çıktı ve HİÇBİRİ istisna fırlatmadı. Hepsi birebir
-aynı şekilde davrandı: `.get()` None döndü → satır çıplak bir `continue` ile atlandı → bir sayı
-sessizce küçüldü → kimse fark etmedi. Somut örnekler:
-
-  * `trades.jsonl` satırlarında `setup`/`score` YOKTU (eski şemayla tohumlanmış defter) → 90 GERÇEK
-    işlemin 90'ı da skor kalibrasyonundan ve gölge model eğitiminden elendi. Panoda "gerçek 0 /
-    simüle 241" yazıyordu; harmanlanmış TEK sayı (241) bunu gizledi.
-  * cf satırları `r_multiple_expected`'i `rr_expected` diye yeniden adlandırıyordu → yaması olan
-    tüketici çalıştı, olmayan her satırı sessizce eledi.
-  * Çözülmüş cf satırlarının %70'i `regime: "?"` taşıyordu, buna rağmen bir öneri üreteci o kanıttan
-    `knob@rejim` tavsiyesi çıkarıyordu.
-
-NE YAPAR: her sessiz `continue`yi SAYILI ve GEREKÇELİ bir elemeye çevirir. Amaç tek bir cümlede:
+Sessiz-hata sınıfının ortak biçimi şudur: `.get()` None döndü → satır çıplak bir `continue` ile
+atlandı → bir sayı sessizce küçüldü → kimse fark etmedi (gerçek işlemlerin tamamının eksik alan
+yüzünden kalibrasyondan elenmesi, takma ada dönüşen alan adları, rejimsiz kanıttan üretilen
+rejim-tavsiyesi hep bu sınıftı; harmanlanmış tek sayı kaybı gizler). Amaç tek cümledir:
 **"0 satır çıktı" bir daha asla "zaten satır yoktu" ile karıştırılamasın.**
 
-ÇEKİRDEK FİKİR — NEDEN SINIFLANDIRMASI (modülün asıl değeri budur):
-  `sema:*`    VERİ SÖZLEŞMESİ nedeni — eksik alan, yanlış anahtar biçimi, takma ad uyuşmazlığı,
-              çözülemeyen değer. Bu bir HATADIR; birinin kodu/defteri düzeltmesi gerekir.
-  `piyasa:*`  MEŞRU iş filtresi — skor eşiğin altında, yanlış rejim, girilmemiş plan, kazanç
-              ambargosu. Bu BİLGİDİR; sistemin çalıştığının kanıtıdır.
-Sınıfsız bir neden REDDEDİLİR (ValueError). "Neden elendi?" sorusunun cevapsız kalması, bu modülün
-var olma sebebinin ta kendisidir — cevapsızlığa geri dönüş yolu kapalı olmalı.
+ÇEKİRDEK FİKİR — NEDEN SINIFLANDIRMASI (modülün asıl değeri): `sema:*` = VERİ SÖZLEŞMESİ nedeni
+(eksik alan, yanlış anahtar biçimi, takma ad uyuşmazlığı, çözülemeyen değer — bu bir HATADIR,
+birinin kodu/defteri düzeltmesi gerekir) · `piyasa:*` = MEŞRU iş filtresi (eşik altı skor, yanlış
+rejim, girilmemiş plan, kazanç ambargosu — bu BİLGİDİR, sistemin çalıştığının kanıtı). Sınıfsız
+neden REDDEDİLİR (`classify` ValueError atar): cevapsızlığa geri dönüş yolu kapalıdır.
 
-DEDEKTÖRÜN KURT MASALI ANLATMAMASI: yalnız `sema:` elemeleri ihlal üretir. `piyasa:` elemeleri ne
-kadar büyük olursa olsun ihlal DEĞİLDİR — aksi hâlde operatör uyarıyı görmezden gelmeyi öğrenir.
+GİRİŞLER: `Sieve` (tek tüketim aşamasının defteri; bağlam yöneticisi — `keep`/`drop` sayar,
+çıkışta `flush` aşamanın SON koşusunu state/sieve.json'a kilitli oku-değiştir-yaz ile işler),
+`stages`/`report`/`ok` (dedektör + pano görünümü: girdisi olup çıktısı sıfır VE şema elemesi olan
+aşama KRİTİK; her `sema:` eleme HATA; şema oranı eşiği aşarsa KRİTİK — `piyasa:` elemesi hiçbir
+kural tetiklemez, dedektör kurt masalı anlatmaz), KÜNYE katmanı `provenance`/`provenance_of`
+(hiçbir toplulaştırılmış sayı PAYDASIZ ve KAYNAKSIZ var olamaz; `_kaynak` alanı gerçek/simüle
+kırılımını ve besleyen aşamaları taşır).
 
-SIFIR YETKİ: burada hiçbir şey karar vermez, hiçbir işlem/portföy durumuna dokunmaz. Yalnız sayar
-ve rapor eder.
+SIFIR YETKİ: burada hiçbir şey karar vermez, hiçbir işlem/portföy durumuna dokunmaz; yalnız sayar
+ve rapor eder. Okur/yazar: yalnız state/sieve.json.
 """
 from __future__ import annotations
 
