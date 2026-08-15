@@ -47,7 +47,7 @@ LEDGER = "shadow_variants.jsonl"
 MAX_ROWS_PER_VARIANT = 12         # satıra gömülen aday detayının tavanı (defter şişmesin)
 
 # --- VARYANT TANIMLARI — TEK SÖZLÜK ----------------------------------------------------------------
-# İLK SET, ROADMAP KANITLARINDAN TÜRETİLDİ (uydurma yok; her satırın gerekçesi ROADMAP §3.2/§E'de):
+# İLK SET, ÖLÇÜM KANITLARINDAN TÜRETİLDİ (uydurma yok):
 #   V1  entry.min_rvol=1.5        G2/S2 ölçümü: Δ-0.046 AMA fold 3/3 kazanıyor + CVaR iyileşiyor →
 #                                 "kapıdan geçmedi ama ölmedi" sınıfı; canlı akışta günlük kanıt hak eder.
 #   V2  stop 3.0 + breakeven 0    G3b çıkış reformu: geniş stop + BE kapatma (BE'nin erken düz-çıkış
@@ -93,7 +93,7 @@ VARIANTS: dict[str, dict] = {
 # Bu turda UYGULANAN ve UYGULANMAYAN kapılar SATIRA YAZILIR. "Hangi kapıyla ölçüldü" sorusu, kapının
 # kendisi kadar önemlidir (4b'nin `gate_inputs_as_of` dersi): eksik kapı, gölge setini canlıdan daha
 # CÖMERT gösterir ve fark "varyant iyi" diye okunur.
-# `earnings.in_blackout` YALNIZ CANLI TURDA uygulanır (kardeş-PIT düzeltmesi, 2026-08-03 — aşağıdaki
+# `earnings.in_blackout` YALNIZ CANLI TURDA uygulanır (kardeş-PIT düzeltmesi — aşağıdaki
 # `_CANLI_TUR` bloğu): tohumlama bacağında kapı KONUŞMAZ ve satır bunu `olculemedi_seed` diye söyler.
 GATES_APPLIED = ("guard.classify_gate", "earnings.in_blackout")
 GATES_SKIPPED = {
@@ -102,13 +102,13 @@ GATES_SKIPPED = {
                    "terfi durumu güne bağlı olduğu için varyant setine sokmak ölçümü oynak yapardı",
 }
 
-# --- KARDEŞ-PIT ÇAPASI (2026-08-03) ---------------------------------------------------------------
+# --- KARDEŞ-PIT ÇAPASI ----------------------------------------------------------------------------
 # `state/earnings.csv` bir İLERİ-PENCERE snapshot'ıdır (bugünden ~21 gün ileri, sembol başına 1,0
 # tarih): yalnız BUGÜNÜN turunun kararı için PIT'tir. `_judge` iki yerden çağrılır —
 #   (a) bu modülün kendi EOD turu (`record_cycle` → `_decide_variant`): tarih CANLI turun tarihidir,
 #       takvim PIT'tir, kapı aynen çalışır (`loop.daily_cycle` ile birebir);
 #   (b) `shadow_lifecycle._seed` (aynı kancanın içinden, GEÇMİŞ seanslar): tarih tarihseldir ve
-#       bugünün takvimini o karara uygulamak `backtest.replay`in 89d4497'de bıraktığı ihlalin ta
+#       bugünün takvimini o karara uygulamak `backtest.replay`in bıraktığı ihlalin ta
 #       kendisidir (kardeşi `cf_backfill.py`de aynı gün kapatıldı).
 # ÇAPA: turu açan tarih `record_cycle`ta damgalanır; `_judge` yalnız O tarihte takvimi konuşturur.
 # NEDEN TARİH KARŞILAŞTIRMASI DEĞİL DE ÇAPA: canlı EOD turu "bugün"ü değil SON KAPANMIŞ SEANSI
@@ -233,7 +233,7 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
     plan SÖZLÜĞÜNE konmaz, YAN haritada taşınır (`backtest.replay`in `armed_pivots` deseni ve aynı
     gerekçe — pivot bir defter alanı değil `broker.fill_entry`e giden bir İCRA girdisidir).
 
-    `eg`: KAZANÇ-KAPISI SAYACI (2026-08-03, kardeş-PIT). Verilirse yerinde doldurulur; dönüş
+    `eg`: KAZANÇ-KAPISI SAYACI (kardeş-PIT). Verilirse yerinde doldurulur; dönüş
     ÜÇLÜSÜ DEĞİŞMEZ — `shadow_lifecycle` bu üçlüyü açıyor ve arity değişikliği ölçümle ilgisiz bir
     kırmızı üretirdi (dosya-ayrıklık sözleşmesi: o dosyaya bu turda dokunulmuyor)."""
     # Tur başına BİR kez: `_takvim_pit_mi` sembole değil TARİHE bakar (aday başına çağırmak aynı
@@ -255,7 +255,7 @@ def _judge(sigs: list, date: str, *, sector_of, max_corr_of, params: dict, regim
                      "open_risk_r": open_risk + sum(float(a["size_r"]) for a in armed),
                      "max_corr": max_corr_of(sig.ticker)}
         verdict, reasons = guard.classify_gate(plan, portfolio, regime, goal, params)
-        # ---- KARDEŞ-PIT DÜZELTMESİ (2026-08-03) — gerekçe `_CANLI_TUR` bloğunda. CANLI turda hiçbir
+        # ---- KARDEŞ-PIT DÜZELTMESİ — gerekçe `_CANLI_TUR` bloğunda. CANLI turda hiçbir
         # şey değişmedi (aynı çağrı, aynı koşul, aynı sıra, aynı etiket); TARİHSEL (tohum) turda
         # `in_blackout` HİÇ ÇAĞRILMIYOR: ne veto ne etiket. `earnings_blackout` orada False değil
         # None — "karartma yok" ile "ölçemedik" aynı şey değildir ve False demek, bu turda
@@ -301,7 +301,7 @@ def _decide_variant(vid: str, spec: dict, date: str, tickers: list, *, tail_of, 
     devredilirler. Defter şeması DEĞİŞMEZ — bu iki alan diske hiç ulaşmaz."""
     params = {**eff, **spec["knobs"]}
     sigs, scan_failed = _signals(tickers, params, tail_of, rs_of)
-    # KAZANÇ-KAPISI SAYACI (kardeş-PIT, 2026-08-03) — satıra girer, `summarize` okur (YASA 6).
+    # KAZANÇ-KAPISI SAYACI (kardeş-PIT) — satıra girer, `summarize` okur (YASA 6).
     # Bu defterin satırları CANLI turdan doğduğu için burada `olculemedi_seed` 0 olmalıdır ve
     # sayacın asıl işi budur: "0 plan etkilendi" beyanı, beyan değil ÖLÇÜM olarak taşınır.
     eg: dict[str, int] = {}
@@ -337,7 +337,7 @@ def record_cycle(date: str, tickers: list, *, tail_of, rs_of, sector_of, max_cor
     `write=False` testler için: satırlar üretilir, DEFTERE YAZILMAZ (canlı state'e yazan test yok)."""
     if not ENABLED:
         return None
-    # KARDEŞ-PIT ÇAPASI (2026-08-03) — turu AÇAN tarih burada damgalanır ve `_judge` yalnız bu
+    # KARDEŞ-PIT ÇAPASI — turu AÇAN tarih burada damgalanır ve `_judge` yalnız bu
     # tarihte takvimi konuşturur. Damga `_decide_variant` döngüsünden ve `_sl.run_cycle` (tohum
     # bacağı ONUN İÇİNDE koşar) çağrısından ÖNCE atılmalıdır; sırası bozulursa tohum seansları
     # kendilerini canlı sanar ve düzeltme sessizce geri alınır (yapısal test v185'te).
@@ -430,7 +430,7 @@ def summarize(rows: list[dict], days: int = 10) -> dict:
                                  "only_live_n": 0, "shared_n": 0, "scan_failed_n": 0,
                                  "earnings_olculemedi_n": 0})
         p["days"] += 1
-        # KARDEŞ-PIT SAYACININ OKUYUCUSU (YASA 6, 2026-08-03): kaç karar, kazanç-karartma kapısı
+        # KARDEŞ-PIT SAYACININ OKUYUCUSU (YASA 6): kaç karar, kazanç-karartma kapısı
         # KONUŞAMADAN alındı. Bu defter canlı turdan doğar, yani sayı 0 OLMALIDIR — 0'dan sapması
         # tohum satırlarının karar defterine sızdığını söyler ve `render_summary` onu bağırır.
         p["earnings_olculemedi_n"] += int((r.get("earnings_gate") or {}).get("olculemedi_seed") or 0)

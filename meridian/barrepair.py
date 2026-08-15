@@ -253,7 +253,7 @@ def integrity_apply(rapor: dict) -> dict:
     store.write_json(data.INTEGRITY_FILE, kayit)
     try:
         from . import obs
-        # BEYAN KODLA EŞİTLENDİ (denetim hafif bulgusu, 2026-08-02): bu satır `dataset.load_cached`i
+        # BEYAN KODLA EŞİTLENDİ: bu satır `dataset.load_cached`i
         # de "güvensiz dönemi dışlayanlar" arasında sayıyordu; `data.measurement_bars` docstring'i
         # (GERÇEK KAYNAK) bunu ölçülmüş gerekçeyle REDDEDİYOR — `dataset` yolu BİLEREK bağlanmadı,
         # `load_cached` yalnız `sanitize_bars` + `_window` çağırır. Yani onarımın kendi olayı, kirli

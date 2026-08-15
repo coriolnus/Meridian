@@ -28,14 +28,14 @@ import sys
 
 # KADANS DAMGASI — ebeveynin (`sprint.start`) yazdığı, çocuğun ÜRETMEDİĞİ alanlar. Çocuğun her
 # yazımında KORUNUR; bkz. `_damgayi_koru`.
-# `kosum_yolu`/`birim` v241'de EKLENDİ (systemd koşum yolu): ebeveyn hangi yoldan başlattığını
+# `kosum_yolu`/`birim` EKLENDİ (systemd koşum yolu): ebeveyn hangi yoldan başlattığını
 # damgalar, çocuk bunu BİLEMEZ ve ilk ilerleme yazımında silerdi — C15'in birebir aynı sınıfı.
 # Damganın okuyucusu operatörün doğrulama adımıdır ("kosum_yolu 'systemd' mi?") ve panodur.
 STAMP_KEYS = ("cfg", "n_hyp_at_start", "kosum_yolu", "birim")
 
 
 def _damgayi_koru(path: str, payload: dict) -> dict:
-    """Mevcut durum dosyasındaki KADANS DAMGASINI payload'a geri koy (C15, 2026-08-02).
+    """Mevcut durum dosyasındaki KADANS DAMGASINI payload'a geri koy.
 
     KUSUR. `sprint.start()` `n_hyp_at_start` (+ `cfg`) damgasını CANLI `sprint_status.json`a yazar
     ve kendi yorumunda nedenini beyan eder: "Damga olmadan `taze = len(hyps) − 0` olurdu ve tetik
@@ -72,9 +72,9 @@ def _damgayi_koru(path: str, payload: dict) -> dict:
 def _write_live_status(payload: dict) -> None:
     """ATOMIC — the API process polls this file every few seconds while the child rewrites it; a plain
     truncate-then-write let /api/sprint (and /api/hermes, which embeds it) read half-written JSON and
-    500 intermittently (audit #29).
+    500 intermittently.
 
-    KADANS DAMGASI KORUNUR (C15): payload yalnız ÇOCUĞUN ürettiği alanları taşır; dosyadaki
+    KADANS DAMGASI KORUNUR: payload yalnız ÇOCUĞUN ürettiği alanları taşır; dosyadaki
     `n_hyp_at_start`/`cfg` bu yazımda silinirse sprint kadansı haftalık tabanını kaybeder."""
     path = os.environ.get("MERIDIAN_SPRINT_STATUS")
     if not path:
@@ -82,13 +82,13 @@ def _write_live_status(payload: dict) -> None:
     from pathlib import Path
     from . import config, store
     payload = _damgayi_koru(path, payload)
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK, sanitize YOK)
+    # KAPI-DIŞI TAŞIMA: elle mkstemp+os.replace (fsync YOK, flock YOK, sanitize YOK)
     # → store.write_json. ATOMİKLİK korunur; fsync EKLENİR (güç kesintisinde sıfır-baytlık status →
     # /api/sprint {} okurdu); sanitize EKLENİR (search sonucu np.float sızarsa çıplak json.dump
     # patlardı). Kilit ADI: çocuk sandbox STATE'inde koşar, canlı status yolu STATE DIŞI → relative_to
     # ValueError → mutlak ad → kendi kilidi. Ebeveynle (sprint.start, CANLI süreç) süreçler-arası
     # serileştirme flock'la SAĞLANAMAZ (ayrı STATE → ayrı kilit); damga güvenliği yapısaldır:
-    # _damgayi_koru birleşimi + ebeveynin ömürde TEK yazımı (C15, yukarıdaki docstring).
+    # _damgayi_koru birleşimi + ebeveynin ömürde TEK yazımı (yukarıdaki docstring).
     # YASA-6 OKUYUCU: /api/sprint + /api/hermes (gömülü) birkaç saniyede bir poll eder.
     try:
         name = str(Path(path).relative_to(config.STATE))
@@ -151,7 +151,7 @@ def _run(sbroot: str, cfg: dict) -> None:
     total = len(fwd)
     if total == 0:
         return status(phase="done", loop_closed=False, note="eval penceresinde seans yok")
-    # STRICTLY before EVAL_START (M5). _sessions uses an INCLUSIVE upper bound, so when EVAL_START is itself
+    # STRICTLY before EVAL_START. _sessions uses an INCLUSIVE upper bound, so when EVAL_START is itself
     # a session, day_before == fwd[0] — Phase C's _reset_flat(day_before) sets last_date=fwd[0], the first
     # daily_cycle(on_date=fwd[0]) hits loop.py's same-day dedup and no-ops, so v2 skips the first eval
     # session that v1 (reset with last_date=None) processes. That breaks the "same window, same flat book"

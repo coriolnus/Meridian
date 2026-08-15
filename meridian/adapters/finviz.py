@@ -227,7 +227,7 @@ def discover_universe(preset: str = DEFAULT_PRESET, limit: int = MAX_TICKERS,
     allow_public None ise MERIDIAN_FINVIZ_PUBLIC ortam değişkeninden okunur (varsayılan KAPALI): token
     yoksa otonom döngü sürekli public scraping yapıp ban riski almaz — Finviz dürüstçe devre dışı kalır.
 
-    ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI (sınıf avı, 2026-07-30 temizlik turu) ----------------
+    ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI ----------------
     T+1 kusurunun sınıfı "kodda örtük yayın-zamanı/TTL varsayımı"ydı. Bu fonksiyonun da BİR TANE
     var ve bugüne dek hiçbir yerde yazmıyordu. ÖLÇÜLDÜ, DEĞİŞTİRİLMEDİ (bugün DOĞRU çalışıyor):
 
@@ -266,15 +266,15 @@ def discover_universe(preset: str = DEFAULT_PRESET, limit: int = MAX_TICKERS,
     if res["source"] == "none":
         # DÜRÜST BOZUNMA: Finviz katkısı bu tur sıfır; NEDENİ söyle, sessiz kalma.
         #
-        # UYARI KADANSI ≠ KEŞİF KADANSI (2026-08-12, gelen-kutusu hijyeni). "none" kaydı yukarıdaki
+        # UYARI KADANSI ≠ KEŞİF KADANSI (gelen-kutusu hijyeni). "none" kaydı yukarıdaki
         # önbellek kapısını ASLA geçemez (source ∈ {elite, public} şartı), yani token yokken HER
         # keşif turu buraya düşüyordu → canlıda ~5 dakikada bir `finviz_unavailable` (~200+/gün).
-        # EDG-2026-022 hükmü FINVIZ alınmayacak diyor; değişmeyen bir yokluğu günde 200 kez anlatmak
+        # Yürürlükteki hüküm FINVIZ alınmayacak diyor; değişmeyen bir yokluğu günde 200 kez anlatmak
         # gerçek alarmları okunmaz yapar. KEŞİF DENEMESİ AYNEN SÜRÜYOR (token gelirse davranış bu
         # satırlara dokunmadan kendiliğinden canlanır); yalnız UYARI kadansı düşer:
         #   * durum (source=none + AYNI reason) değişmedikçe günde EN FAZLA 1 uyarı,
         #   * reason DEĞİŞİRSE (başka bir arıza sınıfı) aynı gün bile ANINDA yeni uyarı,
-        #   * bastırılan her tekrar SAYILIR (v192 yasası) — sayaç bu kayıtta (`bastirilan`) durur,
+        #   * bastırılan her tekrar SAYILIR — sayaç bu kayıtta (`bastirilan`) durur,
         #     `status()["last"]` onu panoya taşır; günlük uyarı satırı da toplamı üstünde taşır.
         onceki = store.read_json(CACHE_FILE, {}) or {}
         ayni_durum = (onceki.get("source") == "none"

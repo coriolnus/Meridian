@@ -67,7 +67,7 @@ def _status() -> int:
     host = os.environ.get("MERIDIAN_BIND_HOST", "127.0.0.1")
     genel = host not in ("127.0.0.1", "localhost", "::1")
     print(f"bağlanma    : {host}{'  ← GENEL' if genel else '  (loopback)'}")
-    # OTURUM ÖMRÜ İKİ SAYIDIR (v245-B kayan oturum; düzeltme 2026-08-14, ROADMAP §2-34b).
+    # OTURUM ÖMRÜ İKİ SAYIDIR (kayan oturum).
     # ÖNCEDEN yalnız "12 saat" basıyordu ve bu artık EKSİKTİ: pencere SABİT değil KAYAN
     # (`auth.refresh_session` yarı-ömürden sonra uzatır) ve kaymanın MUTLAK BİR TAVANI var
     # (`iat + SESSION_ABSOLUTE_MAX_S`). Tek sayı gören operatör, kullandığı panonun 12 saatte

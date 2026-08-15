@@ -40,7 +40,7 @@ COLS = ["date", "open", "high", "low", "close", "volume"]
 SPLIT_SUSPECT_RET = 0.35   # |day-over-day close move| above this is flagged (possible unadjusted split)
 FRESH_DAYS = 3             # cache within this many days of `end` is considered fresh -> no refetch
 CORP_ACTION_PCT = 0.25     # overlapping-date adjusted-close divergence beyond this ⇒ split/dividend re-adjustment
-_WARMUP_WARNED: set = set()   # once-per-process telemetry for caches that can't reach FETCH_START (audit #44)
+_WARMUP_WARNED: set = set()   # once-per-process telemetry for caches that can't reach FETCH_START
 BAR_EPS = 1e-6                # relative close delta above this = the bar CHANGED (not float noise)
 SOURCE_FILE = "bars_source.json"   # {ticker: {"source": ..., "at": ...}} — hangi kaynak yazdı (D1)
 _LAST_SOURCE: dict[str, str] = {}  # fetch() bu turda hangi kaynağın verdiğini buraya yazar
@@ -84,7 +84,7 @@ _MASSIVE_MODE_LOGGED = False
 
 
 def _nabiz(asama: str, i: int | None = None, n: int | None = None) -> None:
-    """İLERLEME NABZI (v186, 2026-08-04) — asılı-tick bekçisine "bu süpürme İLERLİYOR" de.
+    """İLERLEME NABZI — asılı-tick bekçisine "bu süpürme İLERLİYOR" de.
 
     Gerekçenin tamamı `scheduler.py`nin İLERLEME NABZI bloğundadır (canlı vaka: 2026-08-03 akşamı
     bekçi meşru-uzun EOD döngüsünü üç kez öldürdü). Burada yalnız iki BİÇİM kararı yazılıdır:
@@ -126,7 +126,7 @@ def _bar_warn(event: str, exc: BaseException, **extra) -> None:
         pass
 
 
-# ---------------- yazma disiplini (denetim turu 2, 2026-07-21) ----------------
+# ---------------- yazma disiplini ----------------
 def _bump_wf_rev() -> None:
     """Bar geçmişi DEĞİŞTİ → önbelleklenmiş walk-forward'lar artık var olmayan barlara ait. Revizyon
     MONOTON artar (zaman damgası); sıfırlanamaz, yarışta kayıp-güncelleme olmaz."""
@@ -136,7 +136,7 @@ def _bump_wf_rev() -> None:
         _prev = int(_st.read_json("wf_cache_rev.json", {}).get("rev", 0))
         _st.write_json("wf_cache_rev.json", {"rev": max(int(_t.time()), _prev + 1)})
     except Exception as e:
-        # YASA 4 (2026-07-21): revizyon artmazsa ARTIK VAR OLMAYAN barlara ait walk-forward'lar
+        # YASA 4: revizyon artmazsa ARTIK VAR OLMAYAN barlara ait walk-forward'lar
         # geçerli sayılır — bölünme/temettü yeniden düzeltmesinden sonra motor ESKİ sonuçla karar
         # verir. Sessizce başarısız olması, en tehlikeli sınıf: yanlış ama tutarlı görünen sonuç.
         _bar_warn("wf_rev_bump_failed", e)
@@ -147,8 +147,8 @@ def _write_bars(df: pd.DataFrame, cp: Path) -> None:
     aynı dosyayı EŞ ZAMANLI okuyor — yarım yazılmış bir CSV okunduğunda ticker sessizce kırpılmış
     barlarla değerlendirilir ve bu 'küçülmüş dosya' olarak bütünlük dedektörüne düşer.
 
-    H9 KADEME C — HOT-PATH KİLİT KARARI (elle mkstemp yerine kapıya taşındı):
-      * ATOMİKLİK (os.replace) zaten vardı; kapı fsync EKLER. B1'in JSON için kapattığı
+    HOT-PATH KİLİT KARARI (elle mkstemp yerine kapıya taşındı):
+      * ATOMİKLİK (os.replace) zaten vardı; kapı fsync EKLER. JSON için kapatılan
         sıfır-baytlık-dosya sınıfı bu CSV kopyasında hâlâ AÇIKTI (güç kesintisi → boş bar defteri →
         okuyucu 'küçülmüş dosya' görür). Docstring'in zaten dediği "store.write_json ile aynı
         disiplin" böylece LİTERAL olarak sağlanır.
@@ -208,7 +208,7 @@ def _changed_rows(cached: pd.DataFrame, merged: pd.DataFrame) -> tuple[int, floa
 
 
 # ==================================================================================================
-# HAYALET SEANS KAPISI + DÜZELTİLMEMİŞ SATIR KARANTİNASI  (2026-07-30)
+# HAYALET SEANS KAPISI + DÜZELTİLMEMİŞ SATIR KARANTİNASI
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KÖK NEDEN (yerel state/bars taraması, 259 dosya / 1.344.334 satır — uydurma değil, sayım):
 # takvimde SEANS OLMAYAN iki tarih, bar defterlerinde gerçek bir seans satırı gibi duruyor.
@@ -285,7 +285,7 @@ def _sessions() -> frozenset:
 def _calendar_scan(df: pd.DataFrame) -> tuple:
     """(hayalet_maskesi, red_ölçümü|None) — TEK geçiş, SAF (hiçbir yan etkisi yok).
 
-    KİTLESEL UYUŞMAZLIK REDDEDİLİR, SESSİZCE UYGULANMAZ (2026-07-30 — `bar_row_loss_refused` ile
+    KİTLESEL UYUŞMAZLIK REDDEDİLİR, SESSİZCE UYGULANMAZ (`bar_row_loss_refused` ile
     AYNI yasa, yeni yüzey): kapı bir serinin KÜÇÜK bir kısmını düşürüyorsa bu bir arıza onarımıdır;
     BÜYÜK bir kısmını düşürüyorsa artık onarım değil, serinin TAKVİMİNİ reddetmektir — seri başka
     bir borsanın/venue'nün olabilir, sentetik olabilir, ya da takvimin kendisi yanlış olabilir.
@@ -353,7 +353,7 @@ def _note_cal_mismatch(ticker: str, red: dict) -> None:
 def _unadjusted_mask(df: pd.DataFrame) -> pd.Series:
     """GEÇERLİ bir seansta duran BÖLÜNME-DÜZELTİLMEMİŞ tek satırın imzası (True = karantina).
 
-    2026-07-31 YENİDEN TASARIM — HACİM ŞARTI ARTIK VETO DEĞİL, ZAYIFLATICI.
+    YENİDEN TASARIM — HACİM ŞARTI ARTIK VETO DEĞİL, ZAYIFLATICI.
     Ölçüldü (aynı 259 defter / 1.343.892 geçerli-seans satırı, hayalet-round-2):
       (a) |hareket| > %35                                     → 216 satır
       (a&b) sıçra-VE-GERİ-DÖN = gerçek tek-satır hayalet sınıfı →  13 satır
@@ -719,7 +719,7 @@ def sanitize_bars(df: pd.DataFrame, ticker: str = "?") -> tuple[pd.DataFrame, di
     last of duplicate dates, and clamp high=max(OHLC)/low=min(OHLC) (the true high must be >= all of
     open/close, the true low <= all). This is standard data cleaning, not fabrication.
 
-    2026-07-30 EKİ — TAKVİM KAPISI: geçerli bir XNYS seansı OLMAYAN tarihin satırı DÜŞER
+    TAKVİM KAPISI: geçerli bir XNYS seansı OLMAYAN tarihin satırı DÜŞER
     (`bar_ghost_session_dropped`), ve geçerli seansta duran izole bölünme-düzeltilmemiş satır
     KARANTİNAYA alınır (`bar_unadjusted_row_quarantined`). İkisi de sessiz değildir; gerekçe ve
     ölçüm yukarıdaki blokta."""
@@ -790,7 +790,7 @@ def validate_bars(df: pd.DataFrame, ticker: str = "?") -> tuple[bool, list[dict]
                        "detail": f"{int(df['date'].duplicated().sum())} duplicate dates"})
     if not df["date"].is_monotonic_increasing:
         issues.append({"severity": "soft", "code": "unsorted", "detail": "dates not strictly increasing"})
-    # ---- HAYALET SEANS: SERT (2026-07-30) ----
+    # ---- HAYALET SEANS: SERT ----
     # Neden sert: bu satır bir "şüphe" değil, bir OLGUDUR — piyasa o gün kapalıydı, o bar hiç var
     # olmadı. Soft bırakmak, `load_many`nin ticker'ı geçirmesi ve kararın uydurma bir bara dayanması
     # demek olurdu. Kapı (`sanitize_bars`) normalde bu satırları zaten düşürür; buraya düşen bir
@@ -822,7 +822,7 @@ def validate_bars(df: pd.DataFrame, ticker: str = "?") -> tuple[bool, list[dict]
         # (meşru kazanç şoku ile ölçek dikişi aynı imzayı verir) ve tek satır düşürerek çözülmez.
         issues.append({"severity": "soft", "code": "split_suspect",
                        "detail": f"{n_susp} day(s) with |move|>{SPLIT_SUSPECT_RET:.0%} (worst {worst}) — possible unadjusted split"})
-    # --- #34 completeness: zero-volume bars, big calendar gaps, and staleness ---
+    # --- completeness: zero-volume bars, big calendar gaps, and staleness ---
     n_zero = int((v <= 0).sum())
     if n_zero:
         issues.append({"severity": "soft", "code": "zero_volume",
@@ -972,7 +972,7 @@ def _massive_crosscheck(ticker: str, df: pd.DataFrame, src: str) -> None:
         _record_xcheck(ticker.upper(), src, dev)
         if dev > MASSIVE_TOL:
             from .. import obs
-            # KENDİ METNİNİN VAADİNİ TUTAN SEVİYE (K1, 2026-07-30): bu olay "v1'de ALARM" diye
+            # KENDİ METNİNİN VAADİNİ TUTAN SEVİYE: bu olay "v1'de ALARM" diye
             # yazıyordu ama `obs.warn` seviyesindeydi — ve notify.py:84 alarm-olmayan her satırı
             # eler, yani uyuşmazlık NOTIFY/inbox/telefon zincirine hiç giremiyordu. Canlıda 1
             # gerçek uyuşmazlık olayı var ve hiçbir özel yüzeye ulaşmadı. İki kaynağın fiyat
@@ -1066,7 +1066,7 @@ def _log_massive_mode() -> None:
 
 
 # ==================================================================================================
-# AYNI-AKŞAM BACAĞI (Alpaca IEX) + T+1 OTORİTER DÜZELTME + ONARIM GEÇİDİ  (2026-07-30)
+# AYNI-AKŞAM BACAĞI (Alpaca IEX) + T+1 OTORİTER DÜZELTME + ONARIM GEÇİDİ
 # ==================================================================================================
 # KÖK NEDEN (Rol 1'in kanıtlı teşhisi): zincirin en taze kolu (Massive grouped) ücretsiz katmanda
 # T+1 yayınlıyor — canlı kanıt state/massive_grouped_last.json (date 07-28, fetched_at 07-29 21:15Z).
@@ -1090,7 +1090,7 @@ def _log_massive_mode() -> None:
 #   1. BACAK   : GÜNCEL seansın barını aynı akşam getirir (fiilen iex). GEÇMİŞ TAŞIMAZ: yalnız
 #                önbelleğin son barından SONRAKİ tarih (ya da kendi yazdığı geçici barın
 #                tazelenmesi) yazılabilir. Sahiplik ASLA ona geçmez (massive ile aynı ilke).
-#   2. SIP DÜZELTİCİ (2026-07-30, tasarım düzeltmesi): ertesi günün onarım/düzeltme koşusunda,
+#   2. SIP DÜZELTİCİ (tasarım düzeltmesi): ertesi günün onarım/düzeltme koşusunda,
 #                dünün IEX-damgalı satırları KONSOLİDE sip barıyla değiştirilir. Massive'den ÖNCE
 #                koşar — çünkü sip o saatte hazırdır ve grouped kapsaması gecikebilir (canlı: 0,172).
 #                Bu basamak ne SAHİPLİK alır ne de NİHAİ otoritedir; yalnız geçici satırı temsilîden
@@ -1125,7 +1125,7 @@ REPAIR_LOOKBACK = 5                   # onarım geçidi: son K seans taranır
 REPAIR_MIN_COVERAGE = 0.90            # motorun kapısıyla AYNI eşik ailesi (loop.UNIVERSE_MIN_COVERAGE)
 PROVISIONAL_KEEP_SESSIONS = 10        # defterde tutulan geçici seans sayısı (sınırsız büyümesin)
 
-# ÖLÇÜM NEREDE BİRİKİYOR — VE NEDEN `data_quality.json` DEĞİL (beyan edilmiş sapma, 2026-07-30):
+# ÖLÇÜM NEREDE BİRİKİYOR — VE NEDEN `data_quality.json` DEĞİL (beyan edilmiş sapma):
 # brief "ıraksama data_quality.json'a yeni bir anahtar altında BİRİKSİN" diyordu. Ölçülmüş engel:
 # `loop.daily_cycle` o dosyayı her seansta SIFIRDAN yazıyor (loop.py:334 — tek bir sözlük literali,
 # read-modify-write DEĞİL) ve loop.py bu turda başka bir ajanın yüzeyi. Oraya yazılan bir anahtar
@@ -1276,10 +1276,10 @@ def _leg_temiz_cevap(source, calls, fails) -> bool:
     """BACAK İSTEĞİ "TEMİZ TAM CEVAP" MI? — TEK YASA, İKİ TÜKETİCİ.
 
     (a) `_alpaca_session_bars`: temizse barı DÖNMEYEN sembol de `asked` defterine girer (tekrar-dövme
-        yasağı — bkz. C20 bloğu); (b) `_leg_outcome_reason`: temizse barsızlık `"empty"`dir, temiz
+        yasağı); (b) `_leg_outcome_reason`: temizse barsızlık `"empty"`dir, temiz
         DEĞİLSE `outcomes`a `error:` yazılır (HATA ≠ BOŞ).
-    İKİ KOPYA YAZILSAYDI biri güncellenir diğeri unutulurdu — ve bu tam olarak yaşandı: C20
-    2026-08-02'de (a)'da düzeltildi, (b) açık kaldı ve ROADMAP küçük-kuyruğuna düştü."""
+    İKİ KOPYA YAZILSAYDI biri güncellenir diğeri unutulurdu — ve bu tam olarak yaşandı: önce
+    yalnız (a) düzeltildi, (b) açık kaldı."""
     return bool(source) and int(calls or 0) > 0 and int(fails or 0) == 0
 
 
@@ -1314,7 +1314,7 @@ def _alpaca_session_bars(ticker: str, session: str, tasima: dict | None = None) 
     servis ettiği tahmin edilmez — `alpaca.same_evening_bars` söyler ve defterde o adla yaşar.
     Basamak turlar arasında değişebilir (abonelik soğuması), o yüzden damga sembolle birlikte gider.
 
-    `asked` İSTEKTEN SONRA İŞARETLENİR (denetim C20, 2026-08-02). Eskiden işaret istekten ÖNCE
+    `asked` İSTEKTEN SONRA İŞARETLENİR. Eskiden işaret istekten ÖNCE
     atılıyordu ve `same_evening_bars` ARIZADA FIRLATMIYOR ({"source": None, "bars": {}} döner),
     altındaki `snapshots`/`daily_bars` ise chunk arızasında KISMİ sonuç döndürüyor. Yani 3 chunk'ın
     2.'si 429 aldığında ~150 sembol "soruldu" sayılıyor ama memo'ya HİÇ girmiyordu; defteri temizleyen
@@ -1336,7 +1336,7 @@ def _alpaca_session_bars(ticker: str, session: str, tasima: dict | None = None) 
     yine işaret yok). Soğuma dolunca poll yeniden dener — kaybedilen tek şey bir soğuma penceresidir,
     bütün seans değil.
 
-    `tasima` ÇIKTI PARAMETRESİ (ROADMAP küçük-kuyruk, 2026-08-02): verilirse bu çağrıdaki taşıma
+    `tasima` ÇIKTI PARAMETRESİ: verilirse bu çağrıdaki taşıma
     deltası (`calls`/`fails`/`source`), istek çıkıp çıkmadığı (`istendi`) ve sembolün NİHAİ `asked`
     hâli (`cevaplandi`) doldurulur. Tüketicisi `_fetch_alpaca_session`tir: barsızlığın "cevap" mı
     "arıza" mı olduğu ancak bu sayaçlarla ayrılır (bkz. `_leg_outcome_reason`). Sözlük verilmezse
@@ -1378,7 +1378,7 @@ def _fetch_alpaca_session(ticker: str, session: str) -> tuple[pd.DataFrame, str 
     Ham kayıt `_ALPACA_PENDING`e konur ve deftere ancak yazım BAŞARILI olursa geçer — yazılmamış
     bir barı 'geçici' diye kaydetmek, olmayan bir satır hakkında hüküm üretmek olurdu.
 
-    ÜÇÜNCÜ ALAN — HATA ≠ BOŞ'UN İKİNCİ DELİĞİ (ROADMAP küçük-kuyruk, 2026-08-02): C20 kardeşi
+    ÜÇÜNCÜ ALAN — HATA ≠ BOŞ'UN İKİNCİ DELİĞİ: önceki düzeltme
     yalnız FIRLATAN yolu kapatmıştı. `alpaca.same_evening_bars` ARIZADA FIRLATMAZ ({"source": None,
     "bars": {}} döner), yani taşıma çöktüğünde bu fonksiyon SESSİZCE `(boş çerçeve, None)`
     döndürüyor ve çağıran `outcomes`a `"empty"` yazıyordu — ağ arızası `symbol_unknown` hükmüne,
@@ -1548,7 +1548,7 @@ def upgrade_divergence(doc: dict | None = None, session: str | None = None) -> d
     d = str(session)[:10] if session else max(sess)
     row = sess.get(d) or {}
     n, nv = int(row.get("upgraded") or 0), int(row.get("n_volume") or 0)
-    # KAYNAK AYRIMI (2026-07-30): aynı seansta ARTIK İKİ düzeltici var — sip düzelticisi (iex →
+    # KAYNAK AYRIMI: aynı seansta ARTIK İKİ düzeltici var — sip düzelticisi (iex →
     # konsolide) ve massive (→ nihai otorite). İkisinin sapması aynı büyüklük DEĞİLDİR (biri
     # temsilî↔konsolide farkı, öteki iki konsolide kaynağın farkı); tek ortalamada eritilirse
     # ikisi de okunamaz hâle gelir ve "sip massive ile uyuşuyor mu?" sorusu cevapsız kalır.
@@ -1571,7 +1571,7 @@ def upgrade_divergence(doc: dict | None = None, session: str | None = None) -> d
 
 
 # ---------------- SIP DÜZELTİCİ: ikinci konsolide kaynak, massive'den ÖNCE -----------------------
-# NEDEN VAR (tasarım düzeltmesi, 2026-07-30 canlı bulgusu). Aynı akşam sip 403 veriyor ("recent SIP"
+# NEDEN VAR (tasarım düzeltmesi, canlı bulgu). Aynı akşam sip 403 veriyor ("recent SIP"
 # penceresi takvim günü bitene kadar sürüyor) — yani D seansının satırları o akşam KAÇINILMAZ olarak
 # temsilî IEX'tir. Eski tasarımda o satırların konsolideye dönmesi TEK BİR kaynağa, Massive grouped'a
 # bağlıydı; ve grouped'ın gecikmesi bu turun kök nedeninin ta kendisiydi (canlı kapsama 0,172).
@@ -1680,7 +1680,7 @@ def sip_correct_provisional(tickers: list[str] | None = None,
     for _i_d, d in enumerate(_hedef_seans, 1):
         syms = sorted(set(targets[d]))
         out["asked_sessions"] += 1
-        _nabiz("sip_duzeltme:seans", _i_d, len(_hedef_seans))   # v186: sonraki satır ağa çıkar
+        _nabiz("sip_duzeltme:seans", _i_d, len(_hedef_seans))   # sonraki satır ağa çıkar
         got = alpaca.sip_session_bars(syms, d)
         if got is None:
             # HÜKÜM YOK: istek atılamadı/patladı. Damga KALIR, massive nihai otorite olarak bekler.
@@ -1688,7 +1688,7 @@ def sip_correct_provisional(tickers: list[str] | None = None,
             continue
         n = 0
         for _i_t, t in enumerate(syms, 1):
-            _nabiz("sip_duzeltme:bar", _i_t, len(syms))   # v186: `_overwrite_bar` sembol başına CSV yazar
+            _nabiz("sip_duzeltme:bar", _i_t, len(syms))   # `_overwrite_bar` sembol başına CSV yazar
             if _apply_sip_correction(t, d, got.get(t)):
                 n += 1
         out["corrected"] += n
@@ -1789,7 +1789,7 @@ def calibrate_volume(tickers: list[str] | None = None, days: int = VOLUME_CAL_DA
         out["skipped"] = "veri ucu isteği başarısız (hüküm yok)"
         return out
     for _i_t, t in enumerate(syms, 1):
-        _nabiz("hacim_kalibrasyonu", _i_t, len(syms))   # v186: evren boyu CSV okuması
+        _nabiz("hacim_kalibrasyonu", _i_t, len(syms))   # evren boyu CSV okuması
         rows = got.get(t) or []
         if not rows:
             out["unmeasured"].append(t)
@@ -1840,7 +1840,7 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
     syms = [s.upper() for s in (tickers or ([INDEX_SYMBOL] + list(REPLAY_UNIVERSE)))]
     have: dict[str, set] = {}
     for _i_s, t in enumerate(syms, 1):
-        _nabiz("onarim:kapsama_taramasi", _i_s, len(syms))   # v186: evren boyu CSV okuması
+        _nabiz("onarim:kapsama_taramasi", _i_s, len(syms))   # evren boyu CSV okuması
         cp = _cache_path(t)
         if not cp.exists():
             continue
@@ -1854,7 +1854,7 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
         return out
     for i in range(max(1, int(sessions))):
         d = massive.last_session(back=i)
-        _nabiz("onarim:seans", i + 1, max(1, int(sessions)))   # v186: sonraki satır ağa çıkabilir
+        _nabiz("onarim:seans", i + 1, max(1, int(sessions)))   # sonraki satır ağa çıkabilir
         out["sessions_checked"].append(d)
         cov = sum(1 for s in have.values() if d in s) / len(have)
         out["coverage"][d] = round(cov, 3)
@@ -1867,7 +1867,7 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
             continue
         n = 0
         for _i_r, (t, dates) in enumerate(have.items(), 1):
-            # v186: `_merge_repair_bar` sembol başına CSV okur + sanitize eder + YENİDEN YAZAR —
+            # `_merge_repair_bar` sembol başına CSV okur + sanitize eder + YENİDEN YAZAR —
             # eksik bir seansta bu, evren boyu bir disk süpürmesidir.
             _nabiz("onarim:bar_birlestirme", _i_r, len(have))
             if d in dates:
@@ -1959,7 +1959,7 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
     chain += [("cboe", lambda: _fetch_cboe(ticker, timeout)),
               ("nasdaq", lambda: _fetch_nasdaq(ticker, start, end, timeout))]
     fresh_enough = pd.Timestamp(end) - pd.Timedelta(days=1)   # ≥ end-1d ⇒ latest plausible session present
-    # CANLI KAPI AÇIKSA ÇITA HEDEF SEANSTIR (2026-07-30 — bacağı ÖLÜ DOĞMAKTAN kurtaran satır).
+    # CANLI KAPI AÇIKSA ÇITA HEDEF SEANSTIR (bacağı ÖLÜ DOĞMAKTAN kurtaran satır).
     # `end-1d` toleransı "kaynaklar gecikmeli yayınlar" kabulüydü; ama kapanış AKŞAMINDA end=BUGÜN
     # ve tolerans DÜNü taze sayıyor — yani bir gün geride olan Cboe zinciri ERKEN döndürüyor ve
     # aynı-akşam bacağına sıra HİÇ gelmiyordu. Tam da kapatmaya çalıştığımız delik, kapatma yolunun
@@ -2027,16 +2027,16 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
         if adf is not None and not adf.empty and not best.empty:
             adf = adf[~adf["date"].isin(set(best["date"]))]   # ZİNCİRİN satırı KAZANIR, ezilmez
         if adf is None or adf.empty or not _leg_src:
-            # BACAK KOLU DA ZİNCİRİN SÖZLEŞMESİNE TABİDİR (denetim C20 hafif-kardeşi, 2026-08-02):
+            # BACAK KOLU DA ZİNCİRİN SÖZLEŞMESİNE TABİDİR:
             # İSTEK PATLADIYSA "empty" YAZILAMAZ. Aşağıdaki hüküm `o.startswith("error")` ile
             # okunuyor; bacak hiçbir zaman `error:` yazmadığı için diğer kolların temiz-boş döndüğü
             # bir turda İSTİSNA `symbol_unknown` hükmüne dönüşüyor, `_record_no_data` serisi artıyor
             # ve 5. turda DATA_QUALITY "evren bakımı gerekiyor olabilir" diyordu — yani ağ arızası
-            # "sembol öldü" kanıtına çevriliyordu. Bu, aşağıda uzun uzun anlatılan ve 2026-07-22'de
+            # "sembol öldü" kanıtına çevriliyordu. Bu, aşağıda uzun uzun anlatılan ve
             # düzeltildiği söylenen hatanın bacaktaki nüshasıydı. Anahtar da damgayı izler:
             # başarıda `outcomes[_leg_src]` yazılıyor, arızada damga HENÜZ YOK → "alpaca".
             #
-            # İKİNCİ DELİK DE KAPALI (ROADMAP küçük-kuyruk, 2026-08-02): yukarıdaki `except` YALNIZ
+            # İKİNCİ DELİK DE KAPALI: yukarıdaki `except` YALNIZ
             # FIRLATAN yolu yakalıyordu; `alpaca.same_evening_bars` ise arızada FIRLATMAZ
             # ({"source": None, "bars": {}}). Yani 429/soğuma/kotasızlık hâlinde `_leg_err` None
             # kalıyor ve buraya yine "empty" yazılıyordu — düzeltmenin BEYAN ETTİĞİ sınıf açıktı.
@@ -2056,9 +2056,9 @@ def fetch(ticker: str, start: str, end: str, timeout: float = 30.0,
         _massive_crosscheck(ticker, best, best_src)
     elif tried:
         # HİÇBİR kaynak veri vermedi. Eskiden bu tamamen sessizdi: load_bars bayat önbelleği döndürür,
-        # motor eski barlarla işlem yapmaya devam ederdi ve hiçbir yerde iz kalmazdı (denetim turu 2).
+        # motor eski barlarla işlem yapmaya devam ederdi ve hiçbir yerde iz kalmazdı.
         #
-        # HATA ≠ BOŞ (2026-07-22). Eskiden her kol `except Exception: df = pd.DataFrame()` ile
+        # HATA ≠ BOŞ. Eskiden her kol `except Exception: df = pd.DataFrame()` ile
         # boşluğa çevriliyordu, olay da yalnız "bar_sources_all_empty tried=cboe,nasdaq" diyordu.
         # Operatör bunu okuyup DOĞAL olarak "sembol borsadan düşmüş, evrenden çıkarayım" diye
         # yorumluyor. Canlı kanıt bunun yanlış olduğunu gösterdi: 2026-07-21 16:27–17:15 arası
@@ -2101,7 +2101,7 @@ def _empty_reason(source: str) -> str:
     return "empty"
 
 
-# ---- VERİSİZ SEMBOL DEFTERİ (2026-07-22) ------------------------------------------------------
+# ---- VERİSİZ SEMBOL DEFTERİ ------------------------------------------------------
 # "Hiçbir kaynak satır vermedi" bulgusu tek başına bir SEANSLIK gürültüdür; anlamlı olan ISRARDIR.
 # Defter yalnız `symbol_unknown` hükmünü (her kaynak düzgün cevap verip sıfır satır) sayar; ilk
 # başarılı çekimde SIFIRLANIR. Evren elle bakımlıdır (loop._universe_drift_check bugün HTTP 403
@@ -2159,7 +2159,7 @@ def no_data_report() -> dict:
     """Evren bakımı için okunabilir özet: hangi semboller ISRARLA veri vermiyor, hangileri yalnız
     kaynak arızası yaşadı. Üretilip tüketilmeyen kanıt bırakmamak için var.
 
-    EMEKLİLİK AYRIMI (2026-07-30): defterdeki her kayıt artık emekli mi diye SORULUR. Emekli bir
+    EMEKLİLİK AYRIMI: defterdeki her kayıt artık emekli mi diye SORULUR. Emekli bir
     sembolün (`RETIRED_SYMBOLS`) veri vermemesi bir BULGU değil, beklenen sonuçtur — hükmü zaten
     verilmiştir. Onu `confirmed_no_data` içinde bırakmak, kapanmış bir dosyayı her turda yeniden
     "evren bakımı adayı" diye açmak olurdu; operatör aynı sekiz ismi sonsuza dek incelerdi. Bu
@@ -2189,11 +2189,11 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
         # ALWAYS read the disk cache — even under use_cache=False. use_cache=False means "don't TRUST
         # freshness, force a network fetch"; it must still merge with disk, run the corporate-action
         # check, and fall back to the cache when all sources fail (blindly overwriting the cache and
-        # returning empty on a transient outage was audit #45/#42).
+        # returning empty on a transient outage was an earlier, fixed bug).
         _raw = pd.read_csv(cp, parse_dates=["date"])
         cached_raw_rows = len(_raw)
         cached, _rep = sanitize_bars(_raw, ticker)         # repair any legacy glitch on read
-        # KAPININ DÜŞÜRDÜĞÜ SATIR "KAYIP" DEĞİLDİR (2026-07-30). Aşağıdaki D3 monotonluk koruması
+        # KAPININ DÜŞÜRDÜĞÜ SATIR "KAYIP" DEĞİLDİR. Aşağıdaki D3 monotonluk koruması
         # DİSKTEKİ ham satır sayısıyla kıyaslar ve haklı olarak öyle yapar (kaybın gerçek yolu
         # sanitize'ın düşürdüğü satırların geri yazılmasıydı). Ama takvim kapısı SAYILI, OLAYLI ve
         # KASITLI bir düşüştür: baz ondan arındırılmazsa her tur `bar_row_loss_refused` basar,
@@ -2218,7 +2218,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
     if use_cache and cached is not None and not cached.empty:
         # Freshness = RECENCY only. The old min-date condition (cache must reach FETCH_START+7d) was
         # permanently unsatisfiable for sources whose history window doesn't reach that far back — those
-        # caches were bypassed and re-downloaded on EVERY load for nothing (audit #43). Short warmup
+        # caches were bypassed and re-downloaded on EVERY load for nothing. Short warmup
         # coverage is telemetry, not a refetch trigger (refetching cannot conjure older data).
         if cached["date"].min() > pd.Timestamp(start) + pd.Timedelta(days=7) \
                 and ticker.upper() not in _WARMUP_WARNED:
@@ -2226,7 +2226,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
             try:
                 from .. import obs
                 from ..indicators import TREND_TEMPLATE_WARMUP as _tt_warm
-                # BULGU EYLEME BAĞLANDI (2026-07-22): olay eskiden yalnız "ilk bar geç" diyordu ve
+                # BULGU EYLEME BAĞLANDI: olay eskiden yalnız "ilk bar geç" diyordu ve
                 # hiçbir tüketicisi yoktu. Asıl soru "motor bu sembolde gösterge hesaplıyor mu?"dur.
                 # Cevap artık indicators.trend_template içinde: ısınma dolmadan NaN döner ve dört
                 # kurulumun `pd.isna(tt)` koruması sembolü dışlar. Olay, o eşiği ölçüyle söyler.
@@ -2281,7 +2281,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
             obs.log("corporate_action_cache_reset", ticker=ticker)
         except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
             pass
-        # DOSYAYI SİLMİYORUZ (2026-07-22 — canlı `index_bars_invalid {"issues": ["empty"]}` kökü).
+        # DOSYAYI SİLMİYORUZ (canlı `index_bars_invalid {"issues": ["empty"]}` kökü).
         # Eskiden burada `cp.unlink()` vardı: dosya SİLİNİYOR, yeni hâli ancak ~40 satır sonra
         # `_write_bars` ile yazılıyordu. Aradaki pencerede önbellek DİSKTE YOKTU ve o anda okuyan
         # herkes (havuz işçilerinin dataset.load_cached'i, ikinci bir sürecin load_bars'ı)
@@ -2292,7 +2292,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
         # `cached = None` zaten "bayat ölçekli geçmişi kullanma" demek için yeterli — silmek fazladan
         # bir şey kazandırmıyor, süreç iki adım arasında ölürse geçmişi KALICI olarak kaybettiriyordu.
         corp_reset = True
-        # KRİTİK (2026-07-21'de canlıda bulundu): bu satır BARLARI değiştirir — önbelleklenmiş her
+        # KRİTİK (canlıda bulundu): bu satır BARLARI değiştirir — önbelleklenmiş her
         # walk-forward artık ARTIK VAR OLMAYAN barlar üzerinde hesaplanmıştır. Revizyon bumplanmazsa
         # kapı, BAYAT-bar incumbent'ını TAZE-bar candidate'ıyla kıyaslar (elma-armut) ve kararı geçersiz
         # olur. Canlı kanıt: aynı v4 incumbent'ı 0.2043 → 0.1130 → 0.0988 sürüklendi. Aynı koruma
@@ -2303,7 +2303,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
 
     pinned = _bar_source(ticker)
     _prov = _provisional_dates(ticker)
-    # ---- AYNI-AKŞAM BACAĞI GEÇMİŞE YAZAMAZ (2026-07-30) ----
+    # ---- AYNI-AKŞAM BACAĞI GEÇMİŞE YAZAMAZ ----
     # IEX barı TEMSİLÎDİR (tek borsanın işlemleri) ve hacmi ölçeklenmiştir. Zincirin sabitlenmiş
     # sahibi yoksa (pinned is None) aşağıdaki dikiş kuralı hiç çalışmaz ve keep="last" ile bir IEX
     # satırı, önbellekteki KONSOLİDE bir barı sessizce ezebilirdi — düzeltmenin TERSİ yönde bir
@@ -2314,7 +2314,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
         fetched = fetched[(fetched["date"] > cached["date"].max()) | _fd.isin(_prov)]
         if fetched.empty:
             return _window(cached, start, end)
-    # ---- D1: KAYNAK-ÖLÇEĞİ DİKİŞİ (denetim turu 2, 2026-07-21 — canlıda yakalandı) ----
+    # ---- D1: KAYNAK-ÖLÇEĞİ DİKİŞİ (canlıda yakalandı) ----
     # FMP tam TEMETTÜ+bölünme düzeltmeli seri döner; Cboe yalnız bölünme düzeltmelidir. FMP kotası
     # dolunca (bugün: 429 — 250 ticker'lık tazeleme günlük kotanın tamamını yakıyor) zincir Cboe'ye
     # düşer ve Cboe DE tam geçmiş döndürdüğü için keep="last" TÜM geçmişi başka bir düzeltme ölçeğine
@@ -2322,7 +2322,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
     # sıfırlama ne revizyon bumpı olur: kapı bayat-bar incumbent'ını taze-bar candidate'ıyla kıyaslar.
     # KURAL: geçmişi TEK kaynak sahiplenir; farklı bir kaynak yalnız YENİ tarihleri EKLEYEBİLİR.
     if (cached is not None and not cached.empty and src and pinned and src != pinned):
-        # T+1 DÜZELTME KAPISI (2026-07-30): "yalnız YENİ tarih" kuralı, aynı-akşam bacağının yazdığı
+        # T+1 DÜZELTME KAPISI: "yalnız YENİ tarih" kuralı, aynı-akşam bacağının yazdığı
         # GEÇİCİ barı da dokunulmaz yapardı — yani IEX satırı sonsuza dek kalır ve düzeltme
         # YAPISAL olarak imkânsız olurdu. Geçici tarihler kuralın BİLİNÇLİ istisnasıdır: o satırın
         # sahibi zaten hiçbir zaman bu bacak değildi (defter onu 'provisional' diye kaydetti).
@@ -2358,7 +2358,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
             pass
         return _window(cached, start, end)
     # ---- D1b: geçmiş DEĞİŞTİYSE revizyonu bumpla (salt ekleme masumdur) ----
-    # HAYALET SATIRIN SİLİNMESİ DE BİR GEÇMİŞ DEĞİŞİMİDİR (2026-07-30): `_changed_rows` yalnız
+    # HAYALET SATIRIN SİLİNMESİ DE BİR GEÇMİŞ DEĞİŞİMİDİR: `_changed_rows` yalnız
     # ÖRTÜŞEN tarihlerin kapanışını kıyaslar — silinen bir tarih orada hiç görünmez. Bump olmadan
     # dosya küçülür ve watchdog.determinism_report bunu haklı olarak "SESSİZ BAR MUTASYONU" sayar;
     # ayrıca o hayalet bardan geçen önbelleklenmiş walk-forward'lar gerçekten geçersizdir.
@@ -2390,7 +2390,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
     # cevabıdır ve ölçek dikişi kararı buna dayanır. Massive tek bar ekler — geçmişi o yazmadı.
     # Sahipliği ona vermek, gerçek sahibi (Cboe/Nasdaq) bir gün geri geldiğinde onu "yabancı kaynak"
     # sayıp geçmişi uzatmasını engellerdi. Massive her zaman EKLEYENDİR, sahip değil.
-    # AYNI-AKŞAM BACAĞI DA EKLEYENDİR (2026-07-30): tek bir temsilî bar geçmişin sahibi olamaz ve
+    # AYNI-AKŞAM BACAĞI DA EKLEYENDİR: tek bir temsilî bar geçmişin sahibi olamaz ve
     # zaten T+1'de kendisi EZİLİYOR — sahiplenmesi, ertesi gün gerçek sahibi dikiş sayardı.
     if src and src not in _NON_OWNING and (corp_reset or pinned is None):
         _pin_source(ticker, src)                         # geçmişin sahibi: onu yazan kaynak
@@ -2429,7 +2429,7 @@ def _corporate_action(cached: pd.DataFrame, fetched: pd.DataFrame) -> bool:
 
 
 
-# ---- KAYNAK DİKİŞİ DEFTERİ (2026-07-22) -------------------------------------------------------
+# ---- KAYNAK DİKİŞİ DEFTERİ -------------------------------------------------------
 # Dikiş koruması DOĞRU çalışıyor ama her sembolde HER tazelemede uyarı basıyordu: 250 satır × her tur.
 # Sonuç, susturmaktan beter bir şeydi — gerçek uyarılar bu gürültünün içinde görünmez oluyordu.
 # Ama sessizce yok saymak da olmaz: dikiş, geçmişin ARTIK YAYIN YAPMAYAN bir kaynağa ait olduğu
@@ -2509,7 +2509,7 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     failed, quarantined = [], []
     _n_uni = len(tickers)
     for _i_t, t in enumerate(tickers, 1):
-        # v186 NABIZ NOKTASI #1 (turun en uzunu): sembol başına tam zincir (massive → fmp → cboe →
+        # NABIZ NOKTASI #1 (turun en uzunu): sembol başına tam zincir (massive → fmp → cboe →
         # nasdaq → aynı-akşam bacağı) + hayalet süpürmesi + CSV yazımı. 2026-08-03 akşamı bekçiyi
         # üç kez ateşleyen blok BURASIYDI (408 sembol, 367 satırlık onarım kuyruğu).
         _nabiz("bar_yukleme", _i_t, _n_uni)
@@ -2531,7 +2531,7 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     if quarantined:
         print(f"[data] QUARANTINED {len(quarantined)} on integrity failure: "
               + ", ".join(f'{t}({",".join(c)})' for t, c in quarantined[:8]))
-    # D5 KORUNUM (denetim turu 2): evrenden düşen ticker'lar yalnız STDOUT'a yazılıyordu — olay
+    # D5 KORUNUM: evrenden düşen ticker'lar yalnız STDOUT'a yazılıyordu — olay
     # defterinde iz yoktu. Evren 250'den 180'e insin, hiçbir kayıtta görünmezdi. Artık kayıtlı.
     # TUR SONU: aynı-akşam defteri diske iner ve biriken ıraksama olayı SEANS BAŞINA tek satır
     # olarak duyurulur (eşik-tabanlı flush turun ortasında kalmasın diye — 250 sembolde defterin
@@ -2560,7 +2560,7 @@ REPLAY_UNIVERSE = [
     # laggards / dispersers 2022–2025 — real S&P names that fell or went sideways. Including them fixes
     # the survivorship bias: the learning gate now tunes against losers too, not only today's winners.
     "INTC", "PYPL", "DIS", "T", "EA", "PFE", "ENPH", "MRNA", "MMM", "HRL", "VFC", "F",
-    # #1 EVREN GENİŞLEMESİ (2026-07-20, operatör kararı: 250 likit hisse) — tüm kanıt motorları
+    # EVREN GENİŞLEMESİ (2026-07-20, operatör kararı: 250 likit hisse) — tüm kanıt motorları
     # (karşı-olgusal defter, gölge/skor/LLM kalibrasyonu, EP ölçümü) evrenle DOĞRUSAL ölçeklenir.
     # Sektör-dengeli S&P büyük/orta boy likit isimler; her birinin backtest.SECTORS'ta etiketi var
     # (test-zorlamalı). Geçiş günü RS yüzdelik dağılımı kayar — deftere obs ile işaretlenir.
@@ -2607,7 +2607,7 @@ REPLAY_UNIVERSE = [
 ]
 INDEX_SYMBOL = "SPY"
 
-# SEMBOL EMEKLİLİK DEFTERİ (2026-07-30) — "artık işlem görmüyor" hükmü TEK YERDE yazılıdır.
+# SEMBOL EMEKLİLİK DEFTERİ — "artık işlem görmüyor" hükmü TEK YERDE yazılıdır.
 #
 # NEDEN VAR: bu sekiz sembol evrenden ZATEN çıkarıldı, ama çıkarmak yetmedi. `state/bars/` altında
 # CSV'leri duruyor ve DİSKİ SAYAN her yüzey (pano "Piyasa" sekmesi, marketview) onları sonsuza dek
@@ -2658,7 +2658,7 @@ EARNINGS_WINDOW_FAILED_DAYS_KEPT = 8   # `stats["dusen_gunler"]` listesi sınır
 
 def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
                            with_time: bool = False, stats: dict | None = None) -> dict:
-    """#5 — Nasdaq'ın ANAHTARSIZ kazanç takvimi (api.nasdaq.com/api/calendar/earnings?date=...).
+    """Nasdaq'ın ANAHTARSIZ kazanç takvimi (api.nasdaq.com/api/calendar/earnings?date=...).
     Gün başına bir istek; iş günü penceresi için {TICKER: [date,...]} döner. FMP'nin 250/gün kota
     duvarına karşı birincil kaynak: 21 günlük pencere ≈ 15 istek (evren boyundan BAĞIMSIZ — FMP'de
     250 ticker = 250 istek = bütün günlük kota). Hata gün bazında yutulur; kısmi sonuç dürüsttür.
@@ -2667,7 +2667,7 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
     şekil DEĞİŞMEZ: mevcut çağıranlar ve kayıtlı sahteler aynı sözlüğü görür (alan eklemek, eski
     sözleşmeyi kırmadan yapılır).
 
-    `stats` — GÜN-BAŞINA DÜRÜSTLÜK SAYACI (denetim C25, 2026-08-02). Verilirse şu alanlarla
+    `stats` — GÜN-BAŞINA DÜRÜSTLÜK SAYACI. Verilirse şu alanlarla
     DOLDURULUR: `istenen` (iş günü sayısı), `cevaplayan`, `dusen`, `dusen_gunler` (ilk N tarih),
     `son_hata` (son düşen günün istisna adı), `kapsama` (cevaplayan/istenen; iş günü YOKSA None —
     sıfıra bölünen bir oranı 0,0 diye yazmak ölçülmemiş bir sayı uydurmak olurdu).
@@ -2684,7 +2684,7 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
     _gunler_tum = pd.bdate_range(start, end)
     for _i_g, d in enumerate(_gunler_tum, 1):
         ds = str(d.date())
-        # v186: gün başına bir HTTP (3 deneme + geri çekilme) + `polite_delay` — pencere ~30 iş günü
+        # gün başına bir HTTP (3 deneme + geri çekilme) + `polite_delay` — pencere ~30 iş günü
         # olduğunda bu blok tek başına dakikalarca sürer ve eski hâlde tek bir tick yazmazdı.
         _nabiz("kazanc_takvimi:gun", _i_g, len(_gunler_tum))
         try:
@@ -2712,7 +2712,7 @@ def nasdaq_earnings_window(start: str, end: str, polite_delay: float = 0.25,
 
 
 def crosscheck_index(divergence_pct: float = 0.015) -> dict:
-    """öneri #5b — endeks (SPY) kapanışını BAĞIMSIZ kaynaktan çapraz doğrula. Zincir tek kaynağın
+    """Endeks (SPY) kapanışını BAĞIMSIZ kaynaktan çapraz doğrula. Zincir tek kaynağın
     dediğine güveniyor; kaynaklardan biri sessizce bozuk kapanış basarsa tüm rejim/tarama o sayının
     üstüne kurulur. Önbellekteki SPY son barı ile Cboe'nin (anahtarsız, gecikmeli) aynı-gün kapanışı
     karşılaştırılır. Aynı gün barı yoksa 'source_lagging' (gecikmeli kaynak suç değil) — yalnız

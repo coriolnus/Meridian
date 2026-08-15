@@ -127,7 +127,7 @@ VARSAYILAN_GEREKCE = (
 EVENT = "paper_equity_reset"
 
 
-# ---- KANONİK SERMAYE TABANI (v235, 2026-08-12 canlı vakası) ------------------------------------
+# ---- KANONİK SERMAYE TABANI (2026-08-12 canlı vakası) ------------------------------------------
 def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> float:
     """ZIMNİ SERMAYE TABANININ KANONİK (SENT-TAM) TÜRETİMİ — tek yerde, 2 hane.
 
@@ -144,8 +144,8 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
       (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
           (broker.py:569/595) ama defter satırını yuvarlayıp yazar (:605) — broker.py:258'in kendi
           sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
-          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır (WP-E
-          yaması: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
+          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır
+          (yama: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
           bugünkü dünyada ise en azından (a) bacağını ve ölçüm-anı tozunu keser.
 
     KARŞILAŞTIRMA EPSILON'U BİLEREK YOK: eşik gevşetmek gerçek 1-sentlik silinmeyi de yutardı.
@@ -309,7 +309,7 @@ def durum() -> dict:
                  "n_isaret": len(isaretler), "isaretler": isaretler},
         "hedef_cash": _hedef(),
         "resetler": resetler(pf),
-        # ZIMNİ TABAN — KANONİK (v235): monotonluk dedektörünün izlediği büyüklüğün sent-tam hâli.
+        # ZIMNİ TABAN — KANONİK: monotonluk dedektörünün izlediği büyüklüğün sent-tam hâli.
         # Burada yüzeye çıkar ki operatör "taban kaç?" sorusunu alarm beklemeden ölçebilsin.
         "sermaye_taban_kanonik": sermaye_taban(pf),
     }
@@ -446,7 +446,7 @@ def uygula(gerekce: str = VARSAYILAN_GEREKCE) -> dict:
         isaret = {"id": reset_id, "tarih": ts, "tip": "paper_equity_reset",
                   "onceki_deger": onceki["cash"], "yeni_deger": round(hedef, 2),
                   "egri_son_nokta": egri_son, "gerekce": str(gerekce).strip(),
-                  # İŞARETİN METNİ DE BİR BEYANDIR ve koddan geri kalamaz (2026-08-14, v245-D):
+                  # İŞARETİN METNİ DE BİR BEYANDIR ve koddan geri kalamaz:
                   # eski cümle "nokta eklenmez ÇÜNKÜ eğrinin son noktası tohum sınırıdır" diyordu;
                   # sınır artık son noktadan okunmuyor (bu işaretin DONMUŞ `egri_son_nokta`
                   # alanından okunuyor) ve eğriye her seans kadanslı yazar nokta ekliyor. Gerekçe
@@ -462,7 +462,7 @@ def uygula(gerekce: str = VARSAYILAN_GEREKCE) -> dict:
     rapor["egri_isareti"] = isaret
 
     # (2) KİTAP — dört alan + reset defteri. Kilit altında oku-değiştir-yaz (loop `_save_broker` ve
-    #     hermes damgası aynı dosyaya yazıyor; `store.file_lock` 2026-07-31'den beri süreçler arası).
+    #     hermes damgası aynı dosyaya yazıyor; `store.file_lock` süreçler arası).
     with store.file_lock(PORTFOLIO):
         pf = store.read_json(PORTFOLIO, {}) or {}
         yeni = _yeni_kitap(pf, hedef)

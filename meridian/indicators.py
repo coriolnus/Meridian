@@ -53,7 +53,7 @@ def trailing_return(close: pd.Series, lookback: int) -> pd.Series:
 def volume_ratio(volume: pd.Series, period: int = 50) -> pd.Series:
     """Today's volume vs its trailing average — the classic breakout confirmation.
 
-    PAYDA BUGÜNÜ İÇERMEZ (2026-07-22, sinyal-matematiği turu). Eskiden `volume.rolling(period)` idi:
+    PAYDA BUGÜNÜ İÇERMEZ. Eskiden `volume.rolling(period)` idi:
     bugünün hacmi KENDİ ortalamasının içindeydi ve oran tam olarak 50/(49+r) çarpanıyla 1.0'a doğru
     SIKIŞIYORDU — gerçek 1.50 → ölçülen 1.485, gerçek 3.00 → ölçülen 2.885. `min_volume_ratio` SERT
     bir eşik olduğu için bu, eşiği gerçekten geçen kırılımları sessizce eliyordu: gerçek barlarda
@@ -67,11 +67,11 @@ def volume_ratio(volume: pd.Series, period: int = 50) -> pd.Series:
 
 
 # =================================================================================================
-# G2 — SKOR YENİDEN İNŞASI (ROADMAP §E Aşama 7 G2, 2026-07-29). Üç yeni bileşen göstergesi.
+# SKOR YENİDEN İNŞASI (2026-07-29). Üç yeni bileşen göstergesi.
 # Hepsi NEDENSEL yuvarlanan pencerelerdir ve ısınma dolmadan NaN döner (uydurma yasağı).
 # Bu turda SKORA ETKİLERİ SIFIRDIR (bkz. strategy.evaluate_entry, entry.w_* varsayılanları 0.0).
 # =================================================================================================
-RVOL_WINDOW = 20          # G2 ölçümünde (g2_olcum.py) kullanılan pencere — bant kenarları buna ait
+RVOL_WINDOW = 20          # ölçümde (g2_olcum.py) kullanılan pencere — bant kenarları buna ait
 MOM_LOOKBACK = 252        # 12 ay
 MOM_SKIP = 21             # atlanan son 1 ay (kısa-vade dönüş kirliliğini dışarıda bırakır)
 RESID_WINDOW = MOM_LOOKBACK - MOM_SKIP   # 231 bar = [t-252, t-21] aralığının uzunluğu
@@ -90,7 +90,7 @@ def rvol20(volume: pd.Series, period: int = RVOL_WINDOW) -> pd.Series:
     (strategy.rvol_band_score) ve ham seri burada kırpılmadan/dönüştürülmeden bırakılır.
 
     `volume_ratio`DAN FARKI VE PAYDA TERCİHİNİN GEREKÇESİ. İki şey ayrı: (1) pencere 50 değil 20;
-    (2) PAYDA BUGÜNÜ İÇERİR. İkincisi `volume_ratio`nun 2026-07-22'de bilerek verdiği kararın TERSİ
+    (2) PAYDA BUGÜNÜ İÇERİR. İkincisi `volume_ratio`nun bilerek verdiği kararın TERSİ
     ve bu bilinçlidir: orada payda SERT bir eşiğin (min_volume_ratio) böleniydi ve bugünü içermek
     eşiği gerçekten geçen kırılımları eliyordu. Buradaki büyüklük ise bir eşiğin böleni değil, bant
     kenarları ÖLÇÜLMÜŞ bir ölçektir — ve o ölçüm tam olarak bu tanımla (bugün dahil) yapıldı. Aynı
@@ -163,7 +163,7 @@ def residual_momentum(close: pd.Series, index_close: pd.Series | None) -> pd.Ser
 
 
 # =================================================================================================
-# EDG-2026-016 — TURNOVER (devir hızı). Kartın hükmü SUCCESS (2026-08-01): üst-%20 dilim
+# EDG-2026-016 — TURNOVER (devir hızı). Kartın hükmü SUCCESS: üst-%20 dilim
 # evren-fazlası @10 +0,31% CI[+0,15,+0,49] · @20 +0,65% CI[+0,34,+1,01]; rvol20+mom21 kontrolünden
 # sonra ARTIK üç yöntemle birden sağ (kova-tabanı +0,56%, kova-içi +0,77%, artık-IC @20 0,0284);
 # q5 TEKDÜZE MONOTON; maliyet-sonrası net +0,55% (20bps duyarlılıkta +0,45%).
@@ -177,13 +177,13 @@ def med_volume21(volume: pd.Series, period: int = TURNOVER_WINDOW) -> pd.Series:
 
     NEDEN MEDYAN VE NEDEN ORTALAMA DEĞİL: bu büyüklük devir hızının PAYIDIR ve tek bir kazanç-günü
     ya da endeks-yeniden-dengeleme hacmi ortalamayı katlarken medyanı kıpırdatmaz. Ölçüm bu tanımla
-    yapıldı (EDG-012/013/016 üçünde de aynı satır); ortalamaya çevirmek, kartın ölçtüğü büyüklükten
+    yapıldı (üç devir kartında da aynı satır); ortalamaya çevirmek, kartın ölçtüğü büyüklükten
     BAŞKA bir seriyi aynı adla skora sokmak olurdu."""
     return volume.rolling(period, min_periods=period).median()
 
 
 def turnover21(volume: pd.Series, shares) -> pd.Series:
-    """DEVİR HIZI: medyan21(hacim) / as_of_shares(t) — EDG-016'nın ölçtüğü seri, BİREBİR.
+    """DEVİR HIZI: medyan21(hacim) / as_of_shares(t) — ölçüm kartının ölçtüğü seri, BİREBİR.
 
     `shares` bir SAYI (o barın as-of hisse sayımı) ya da `volume` ile HİZALI bir seri olabilir;
     None/NaN olduğu yerde sonuç NaN'dır — "ölçülemedi", sıfır değil (UYDURMA YASAĞI).
@@ -225,9 +225,9 @@ def pivot_high(high: pd.Series, lookback: int = 40, exclude_recent: int = 1) -> 
     return shifted.rolling(lookback, min_periods=lookback // 2).max()
 
 
-# ISINMA (2026-07-22, canlı `warmup_coverage_short` bulgusu): trend şablonu EN UZUN penceresi kadar
+# ISINMA (canlı `warmup_coverage_short` bulgusu): trend şablonu EN UZUN penceresi kadar
 # bar ister; bu kadar bar yoksa şablon HESAPLANAMAZ.
-# DÜZELTME (2026-07-22, sinyal-matematiği turu): sabit 220 idi ve "en uzun pencere 200g ortalama +
+# DÜZELTME: sabit 220 idi ve "en uzun pencere 200g ortalama +
 # 20 barlık eğim" diye gerekçelendirilmişti. YANLIŞ: şablonun 5. ve 6. koşulu 52 HAFTALIK yüksek/düşük
 # üzerinden kurulur — o pencere 252 bardır, 220'den UZUNDUR. 52w serilerinin min_periods'ı 100 olduğu
 # için 220-251 bar arası şablon SAYI ÜRETİYOR ve o sayı "52 haftalık" diye raporlanıyordu, oysa 220-251
@@ -240,7 +240,7 @@ def trend_template(df: pd.DataFrame) -> pd.Series:
     """Minervini-style trend template score in [0,1]: fraction of conditions met.
     Close>50sma>150sma>200sma, 200sma rising, close within 25% of 52w high, >30% above 52w low.
 
-    ISINMASI DOLMAYAN BAR = NaN, 0 DEĞİL (2026-07-22 — sessiz doğruluk hatası).
+    ISINMASI DOLMAYAN BAR = NaN, 0 DEĞİL (sessiz doğruluk hatası).
     Eski hâl `pd.concat(conds).astype(float).mean()` idi. Pandas'ta NaN ile karşılaştırma False üretir:
     200 günlük ortalaması HENÜZ YOKKEN `sma150 > sma200` "koşul sağlanmadı" sayılıyordu. Yani genç bir
     sembol (canlı kanıt: KVUE ilk barı 2023-05-04, istenen 2021-01-01) "veri yok" değil "trend zayıf"
@@ -255,7 +255,7 @@ def trend_template(df: pd.DataFrame) -> pd.Series:
     sma150 = sma(close, 150)
     sma200 = sma(close, 200)
     sma200_prev = sma200.shift(20)
-    # 52 HAFTA = 252 BAR, EKSİĞİ DEĞİL (2026-07-22). min_periods=100 iken 100-251 bar arasında
+    # 52 HAFTA = 252 BAR, EKSİĞİ DEĞİL. min_periods=100 iken 100-251 bar arasında
     # "52 haftalık yüksek/düşük" adı altında DAHA KISA bir pencerenin uç değeri dönüyordu. Kısa
     # pencere maksimumu ≤ gerçek maksimum → "52w zirvenin %25 yakınında" koşulu KOLAYLAŞIYOR;
     # kısa pencere minimumu ≥ gerçek minimum → "52w dipten %30 yukarıda" koşulu ZORLAŞIYOR. İki
@@ -307,10 +307,10 @@ def rs_rating(returns_by_ticker: dict[str, float]) -> dict[str, int]:
     tickers = [t for t, _ in items]
     if len(items) == 1:
         # a cross-section of ONE measurable ticker has no peers to rank against — the old formula gave
-        # it RS=1 (worst), hard-vetoing the only candidate below no-data names' default 50 (audit #40)
+        # it RS=1 (worst), hard-vetoing the only candidate below no-data names' default 50
         return {tickers[0]: 50}
     vals = np.array([r for _, r in items], dtype=float)
-    # BERABERLİK = AYNI PUAN (denetim turu 15, 2026-07-21). Eski hâl argsort ile beraberlere KEYFÎ
+    # BERABERLİK = AYNI PUAN. Eski hâl argsort ile beraberlere KEYFÎ
     # ayrı sıralar veriyordu: getirisi birebir aynı iki isimden biri RS 50, diğeri RS 99 alabiliyordu
     # — ve rs_rating_min sert bir eşik olduğu için AYNI kanıt zıt kararlar üretiyordu (biri silahlanır,
     # diğeri elenir). Üstelik argsort kararlılığı garanti değil: evrenin sırası değişince sonuç kayar.

@@ -36,7 +36,7 @@ def halted() -> bool:
     return halt_path().exists()
 
 
-# Faz 3 (5a) — kademeli kriz kontrolleri. Kademe 1 (Soft Halt) mevcut HALT dosyasıdır; kademe 4
+# Kademeli kriz kontrolleri. Kademe 1 (Soft Halt) mevcut HALT dosyasıdır; kademe 4
 # (Halt Learning) ayrı bayrak: işlemler sürer, Hermes YENİ versiyon ship EDEMEZ (rollback güvenlik
 # olarak açık kalır). İkisi de dosya-tabanlı: yeniden başlatmada hayatta kalır, elle de yönetilebilir.
 def learn_halt_path() -> Path:
@@ -87,24 +87,24 @@ def set_intraday_arm(on: bool) -> bool:
     return intraday_armed()
 
 
-# ---- FAZ-6 KİLİT ZİNCİRİ (DSR hard-gate turu, 2026-07-30 — operatör onaylı) ---------------------
+# ---- FAZ-6 KİLİT ZİNCİRİ (operatör onaylı) ------------------------------------------------------
 # NEDEN BU DOSYADA: Faz-6'nın (otonom intraday emir) fiziksel anahtarı `state/INTRADAY_ARM`dır ve o
 # bayrak BU modülde yaşıyor. Kilitleri bayrağın yanında tutmak, "bayrağı açan kişi neyin açıldığını
 # aynı dosyada okur" demektir; başka bir modüle koymak, anahtarla kilit listesini iki ayrı yere
 # dağıtıp birinin diğerinden habersiz gevşemesine izin verirdi.
 #
-# KİLİT LİSTESİ TEK YERDE ADLANDIRILDI (`FAZ6_KILITLERI`). ROADMAP §3.5 "dört kilit" diyordu ama o
+# KİLİT LİSTESİ TEK YERDE ADLANDIRILDI (`FAZ6_KILITLERI`). Yol haritası "dört kilit" diyordu ama o
 # dört kilit hiçbir yerde MAKİNE OKUNUR biçimde yazılı değildi — yani "dolunca silahlan" cümlesinin
 # denetçisi yoktu ve bir kilidin sessizce düşmesi kimseye görünmezdi. Bu tur beşinciyi (DSR) ekliyor
 # ve aynı hamlede listeyi kodun içine alıyor.
 #
 #   1. edge_kaniti    — `analytics.edge_verdict`: BEŞ ölçütün BEŞİ de eşiği VE anlamlılığı geçti mi?
 #   2. sonuc_hukmu    — `analytics.result_verdict`: DÖRT dolar ölçütünün DÖRDÜ de sağlandı mı?
-#                       (ROADMAP §3.1 birebir: rafineri kararları EDGE'e, sermaye/SİLAHLANMA
+#                       (rafineri kararları EDGE'e, sermaye/SİLAHLANMA
 #                       İKİSİNE bakar — R birimi geniş stopa yapısal önyargılı olduğu için tek
 #                       merceğe bırakılamaz)
 #   3. faz5_cikisi    — dakikalık kanıt katmanı: 4a saha verisi + "dakika-hassas icra ne
-#                       kazandırırdı" CI'lı ölçümü. İKİNCİSİ 2026-08-07'de YAZILDI
+#                       kazandırırdı" CI'lı ölçümü. İKİNCİSİ SONRADAN YAZILDI
 #                       (`faz5_cikis.cikis_olcumu`, ön-kayıt kartı EXE-2026-002): eşleştirilmiş
 #                       (plan_id) gölge-vs-EOD farkı, TARİH-KÜMELİ bootstrap %95 CI, E3 maliyet
 #                       bandı eşiği, n_min=20. Kilit hâlâ kapalı olabilir ama artık ÖLÇÜLMÜŞ bir
@@ -112,7 +112,7 @@ def set_intraday_arm(on: bool) -> bool:
 #                       silmek, tam olarak bu zincirin engellediği şeydir — `durum` alanı ikisini
 #                       ayırmaya devam eder (`olculemedi` = defter boş / kill#4 eşleştirme kırığı).
 #   4. operator_onayi — `state/INTRADAY_ARM` (elle touch / panodaki tuş). Hiçbir otomatik yol
-#                       (döngü/ajan/bekçi) açamaz; ROADMAP §3.5'in "5.1 runtime (Oracle taşıma)"
+#                       (döngü/ajan/bekçi) açamaz; yol haritasının "5.1 runtime (Oracle taşıma)"
 #                       ön şartı da OPERATÖR TARAFINDA olduğu için bu kilidin içinde taşınır —
 #                       makine tarafında ölçülebilir bir karşılığı yoktur ve uydurulmaz.
 #   5. dsr_gecer      — YÜRÜRLÜKTEKİ PENCEREDE (R1+) canlı defterin DSR'si ölçülü VE eşiği geçiyor
@@ -166,7 +166,7 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
                      None if s_p >= s_n else (sonuc.get("verdict") or "dolar hükmü sağlanmadı"))
 
     # FAZ-5: 4a saha satırı SAYILIR (ölçülebilir) + dakika-hassas icranın CI'lı kazanç ÖLÇÜMÜ.
-    # 2026-08-07'ye kadar bu kilit SABİT `False`/`olculemedi` yazıyordu ve gerekçesi "ölçümü ÜRETEN
+    # Önceleri bu kilit SABİT `False`/`olculemedi` yazıyordu ve gerekçesi "ölçümü ÜRETEN
     # kod yok"tu. Ölçüm artık var (`faz5_cikis.cikis_olcumu`, ön-kayıt kartı EXE-2026-002) ve kilit
     # GERÇEK bir hesaba bağlı. Kilidin kapalı kalması bir başarısızlık değil: kapalılığın GEREKÇESİ
     # "üreten kod yok"tan ölçülmüş bir cümleye ("örneklem n/20", "CI sıfırı içeriyor", "kill#4
@@ -177,7 +177,7 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
     from . import faz5_cikis as _f5
     n_4a = len(store.read_jsonl("intraday_decisions.jsonl"))
     _golge = store.read_jsonl("intraday_shadow_orders.jsonl")
-    # ÖLÇÜM ÇAĞRISI SARILI — gerekçe SISTEM-DENETIMI-2026-08-02 §891'de yazılı: `/api/diagnostics`
+    # ÖLÇÜM ÇAĞRISI SARILI — gerekçe: `/api/diagnostics`
     # bu zinciri TEK `return {...}` içinde korumasız çağırıyor ve buradan sızan bir istisna
     # Operasyon sayfasının TAMAMINI karartır (sessiz_hat, watchdog, alarm bütçesi dahil — yani bir
     # şey bozukken operatörün bakacağı satırlar da onunla gider). Yakalayıcı SESSİZ DEĞİL: istisna
@@ -232,7 +232,7 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
                       "eşikler ship yoluyla AYNI yerden (validation.DSR_HARD_MIN) gelir")}
 
 
-# ---- REDDEDİLEN GÖNDERİMLERİN KAPATILMASI (2026-07-27) ------------------------------------------
+# ---- REDDEDİLEN GÖNDERİMLERİN KAPATILMASI -------------------------------------------------------
 # Operatör şikâyeti: triyaj şeridi "senden bir şey bekliyor · 4 emir reddedildi" diyordu ve o retler
 # BEŞ GÜNLÜKTÜ. Kapatmanın hiçbir yolu yoktu, yani kırmızı bant sonsuza dek kalıyordu — ve KALICI
 # bir kırmızı, hiç kırmızı olmamakla aynı bilgiyi taşır: kimse bakmaz. Şeridin tek işi "şu an
@@ -271,7 +271,7 @@ def split_rejections(rows: list | None) -> dict:
 
 
 def write_heartbeat(**fields) -> dict:
-    """Nabzı güncelle. ALAN SAHİPLİĞİ (2026-07-22, sahiplik dedektörü canlıda yakaladı): nabız TEK
+    """Nabzı güncelle. ALAN SAHİPLİĞİ (sahiplik dedektörü canlıda yakaladı): nabız TEK
     dosya ama ÇOK yazarlı — günlük döngü `regime/equity/last_bar/exposure_budget_pct` damgalar,
     replay tohumu ve worker yalnız kendi alanlarını yazar. Dosya her seferinde SIFIRDAN kurulduğu
     için ikinci yazar birincinin alanlarını sessizce siliyordu: pano "rejim yok / sermaye yok"

@@ -36,14 +36,14 @@ import threading
 import time
 
 from . import config, store, memory, reflect, health, obs, secrets
-# 2026-08-13 (v238): şema enum'unun TEK kaynağı için modül düzeyinde gerekli (aşağıda
+# 2026-08-13: şema enum'unun TEK kaynağı için modül düzeyinde gerekli (aşağıda
 # HYP_SCHEMA sabit bir sözlük). Döngü YOK: `skills` MODÜL DÜZEYİNDE yalnız `config`+`store` çeker.
-# v242 NOTU (2026-08-13): `skills.catalog()` artık ÇAĞRI ANINDA buraya geri bakıyor
+# NOT (2026-08-13): `skills.catalog()` artık ÇAĞRI ANINDA buraya geri bakıyor
 # (`skills._ajan_skill_dizini` → `AGENT_SKILLS_DIR`) — ajan kullanım sayacının yolu TEK yerde
 # tanımlı kalsın diye. Bu bir modül-düzeyi döngüsü DEĞİLDİR (geç ithal + `getattr` savunması);
 # yukarıdaki cümlenin koruduğu özellik — skills'in modül düzeyinde hermes'i çekmemesi — DURUYOR.
 from . import skills as _skills
-from . import agent_telemetry as _at        # D3 modül 1+2: çağrı telemetrisi + ham iz + MASKELEME
+from . import agent_telemetry as _at        # çağrı telemetrisi + ham iz + MASKELEME
 
 MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 
@@ -54,7 +54,7 @@ SEARCH_PROGRESS: dict = {}
 
 
 def _progress(**alanlar) -> None:
-    """SEARCH_PROGRESS'in TEK yazım kapısı (v236, 2026-08-12 asılı-arama vakası): her yazım
+    """SEARCH_PROGRESS'in TEK yazım kapısı (2026-08-12 asılı-arama vakası): her yazım
     `updated_at` (UTC ISO, kanonik `memory.now_iso`) damgası taşır.
 
     NEDEN: canlı vakada bayrak günlerce `running=True` kaldı ve "bu bayrak EN SON ne zaman
@@ -70,7 +70,7 @@ def _progress(**alanlar) -> None:
 HYP_SCHEMA = {
     "type": "object",
     "properties": {
-        # `variable@regime` AÇIKÇA YAZILIR (2026-07-27): açıklama "exactly one key from bounds.yaml"
+        # `variable@regime` AÇIKÇA YAZILIR: açıklama "exactly one key from bounds.yaml"
         # diyordu ama bağlamdaki `note_regime_conditional` rejim-koşullu biçimi ÖNERİYORDU — model
         # iki çelişen talimat görüyordu ve rejim düğmesini kullanmaktan kaçınıyordu. Şema hâlâ TEK
         # değişken ister; `@regime` soneki o değişkenin yalnız bir rejimdeki değerini hedefler.
@@ -231,7 +231,7 @@ def build_context() -> str:
         "gate_anchor": _gate_anchor(),                       # predicted_delta'nın ölçeği + kapının kuralı
         "your_calibration": calib,  # Brier + hit-rate of your own past confidence — stay honest with yourself
         "skill_attribution": analytics.skill_attribution(),  # per-skill avg_r/win_rate (Axis-2 evolve signal)
-        "vs_benchmark": analytics.benchmark_relative(),      # are you beating SPY, or just riding beta? (#33)
+        "vs_benchmark": analytics.benchmark_relative(),      # are you beating SPY, or just riding beta?
         "skill_library": _skill_library(),                   # your full toolkit + how each skill performs
         "note_regime_conditional": "You may tune one knob for one regime with 'variable@regime' "
                                     f"(regimes: {', '.join(config.VALID_REGIMES)}); it stays one_variable_only.",
@@ -255,7 +255,7 @@ def _skill_library() -> dict:
             does = str(s.get("description") or "")
             if len(does) > SKILL_DOES_CAP:
                 does = does[:SKILL_DOES_CAP - 1] + "…"
-            # cf KATMANI DA GÖRÜNÜR (v240, 2026-08-13). Ölçülen arıza: model `n=1`lik bir skill için
+            # cf KATMANI DA GÖRÜNÜR (2026-08-13). Ölçülen arıza: model `n=1`lik bir skill için
             # "Strong live performance of 0.918 avg_r" yazdı — çünkü gördüğü SATIRDA örneklemin
             # yeterli olup olmadığını söyleyen HİÇBİR ŞEY yoktu ve karşı-olgusal katman (bu skill'de
             # n_cf=12, cf ort 0,328) prompt'a hiç girmiyordu. `skills.catalog()` iki alanı ZATEN
@@ -289,7 +289,7 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
                  max_tokens: int = 4000) -> str | None:
     """Claude çağrısının TEK GÖVDESİ — METİN döner, ayrıştırma çağıranın işi.
 
-    NEDEN AYRIŞTIRILDI (2026-07-30, nous sistem-değerlendirme katmanı): Katman B beyin zincirini
+    NEDEN AYRIŞTIRILDI (nous sistem-değerlendirme katmanı): Katman B beyin zincirini
     hipotez ÜRETMEK için değil MEKANİZMA DEĞERLENDİRMESİ için çağırıyor — aynı taşıma, farklı görev.
     İkinci bir HTTP gövdesi yazmak, `spend.record` muhasebesinin, `cache_control` sözleşmesinin ve
     boş-cevap sınıflandırmasının İKİ KOPYAYA çıkması demekti; bu dosyanın tarihi tam olarak "iki
@@ -316,7 +316,7 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
         return None
     client = anthropic.Anthropic(api_key=api_key)
     _fmt = ({"type": "json_schema", "schema": schema} if schema else {"type": "text"})
-    # SÜRE ÖLÇÜMÜ (D3 modül 1, `tasiyici="http"`): zincirin bu bacağında alt süreç YOKTUR, yani
+    # SÜRE ÖLÇÜMÜ (`tasiyici="http"`): zincirin bu bacağında alt süreç YOKTUR, yani
     # `-Q`/araç sayısı gibi olgular da yoktur (`arac_cagri_n=None` = ÖLÇÜLEMEDİ). Ölçülen tek şey
     # duvar süresidir ve o da "gece koşusu neden 40 dk sürdü" sorusunun bu bacaktaki payıdır.
     _kr = _at.Kronometre()
@@ -362,7 +362,7 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
 
 
 def propose_with_claude() -> dict | None:
-    # TEK TALİMAT KAYNAĞI (2026-07-27): burada inline bir kopya vardı ve `_user_prompt` ile
+    # TEK TALİMAT KAYNAĞI: burada inline bir kopya vardı ve `_user_prompt` ile
     # ayrışabiliyordu — üstelik bu yol `evidence_pack()`i HİÇ eklemiyordu, yani en pahalı beyin
     # ölçülmüş kalibrasyonları görmeden öneri üretiyordu. Şema API'de zorlandığı için sözleşme
     # metni tekrarlanmaz (with_schema=True).

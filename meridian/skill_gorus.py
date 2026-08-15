@@ -37,7 +37,7 @@ import time
 from . import store
 
 # ==================================================================================================
-# KART SABİTLERİ (EDG-2026-019 — ÖLÇÜMDEN ÖNCE DONDURULDU; kod bunları değiştiremez)
+# KART SABİTLERİ (ÖLÇÜMDEN ÖNCE DONDURULDU; kod bunları değiştiremez)
 # ==================================================================================================
 KART = "EDG-2026-019"
 KART_FDR_Q = 0.10           # Benjamini-Hochberg; aile = O YÜZEYDEKİ tüm aktif-korumasız skill'ler
@@ -151,7 +151,7 @@ def _anahtar(g: dict) -> tuple:
 # ==================================================================================================
 # NEREDEN GELİYOR. İki yüzeyin ham maddesi ZATEN yazılı ve iki defterde duruyor:
 #   * karşı-olgusal defter (`counterfactual.resolved_rows`) — her satır `screener` alanıyla HANGİ
-#     skill'in adayı olduğunu taşır (2026-07-24'ten beri), `score` alanıyla o skill'in plan anındaki
+#     skill'in adayı olduğunu taşır, `score` alanıyla o skill'in plan anındaki
 #     SIRALAMA GÖRÜŞÜNÜ, `date` ile seansı;
 #   * gerçek işlem defteri (`trades.jsonl`) — `skill_chain[0]` aynı atfı, `score` aynı görüşü taşır.
 # Yani görüş defteri yeni bir ölçüm ALETİ değil, dağınık duran bir görüşün YAPILANDIRILMIŞ hâlidir.
@@ -167,7 +167,7 @@ def _trade_satirlari() -> list[dict]:
 
 
 # ==================================================================================================
-# ALAN SEÇİMİ: KANONİK AD TEKTİR, YEDEK-AD ZİNCİRİ YOKTUR (parity, 2026-08-09)
+# ALAN SEÇİMİ: KANONİK AD TEKTİR, YEDEK-AD ZİNCİRİ YOKTUR (parity)
 # ==================================================================================================
 # İlk yazımda iki `a or b` takası vardı ve İKİSİ DE sessiz bir ölçüm hatasıydı — kozmetik değil:
 #

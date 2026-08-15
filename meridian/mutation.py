@@ -121,7 +121,7 @@ UNIVERSE = [("AAPL", "tech"), ("JPM", "financials"), ("UNH", "health"), ("CAT", 
 SESSIONS = [f"2026-06-{d:02d}" for d in range(1, 25)]      # 24 seans
 BOOK_DATE = "2026-06-25"                                    # defterin son tarihi (planlar bundan eski)
 
-# C18 (denetim 2026-08-02) — FİKSTÜR ATR'si. SENTETİKTİR VE ÖYLE BEYAN EDİLİR: bu koşumun fiyatları
+# FİKSTÜR ATR'si. SENTETİKTİR VE ÖYLE BEYAN EDİLİR: bu koşumun fiyatları
 # da sentetiktir (px = 100 + i) ve bu tickerların barı YOKTUR, yani ölçülmüş bir ATR14 yoktur.
 # UYDURMA YASAĞI ihlali değildir çünkü hiçbir yerde "ölçüldü" diye sunulmuyor — burada üretilen şey
 # bir PİYASA BÜYÜKLÜĞÜ değil, dedektör bataryasının yargılayacağı bir DEFTERdir ve o defterin gerçek
@@ -189,7 +189,7 @@ def _build_ledgers(state: Path) -> None:
         candidates.append({"date": sess, "ticker": tkr, "score": plan["score"],
                            "setup": "breakout_vcp", "sector": sec, "source_skill": "vcp-screener"})
 
-        # C18 (denetim 2026-08-02) — E1 GİRİŞ YASASININ ATR BACAĞI BU MOTORDA DA TAŞINIR.
+        # E1 GİRİŞ YASASININ ATR BACAĞI BU MOTORDA DA TAŞINIR.
         # ÖNCESİ: `fill_entry`e `atr=` HİÇ geçmiyordu → `broker.entry_limit_price` `a > 0` dalına
         # giremiyor ve limit DAİMA yüzde tavanına düşüyordu. Canlı motor ise min(0,5·ATR14, %1) ile
         # koşuyor. Yani DEDEKTÖRLERİ ölçen fikstür, ölçtüğü sistemin icra yasasının yarısını hiç
@@ -218,7 +218,7 @@ def _build_ledgers(state: Path) -> None:
                                         f"2026-06-{min(28, int(sess[-2:]) + 3):02d}")
             if row:
                 trades.append(row)
-        # cf ŞEMASI counterfactual.collect ile HİZALI olmalı (2026-07-23, tarama bulgusu): build_state
+        # cf ŞEMASI counterfactual.collect ile HİZALI olmalı: build_state
         # yalnız `gate_verdict`/`plan_id` yazıyordu ama validation_report.py:30-31 `verdict` ve `taken`
         # okuyor — ikisi de None kalıyor ve o tüketiciyi bozan mutasyonlar TEMEL DURUMDA da None gördüğü
         # için asla yakalanamıyordu (kapsama sahte yüksek). Kanonik alanlar da yazılır.
@@ -340,8 +340,8 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # Canlıda bu yolun sahibi günlük döngüdür; burada geçici kopya üzerinde çalışılıyor.
     rep = wd.integrity_report(persist=True)
 
-    # ---- DÜŞEN DEDEKTÖR "BULGU YOK" DEĞİLDİR (2026-08-02; sınıf: SAHTE YEŞİL) ------------------
-    # C21'den beri `integrity_report` dedektör-başına yalıtımlıdır: düşen bir dedektör diğerlerini
+    # ---- DÜŞEN DEDEKTÖR "BULGU YOK" DEĞİLDİR (sınıf: SAHTE YEŞİL) ------------------
+    # `integrity_report` dedektör-başına yalıtımlıdır: düşen bir dedektör diğerlerini
     # götürmez, `{**iskelet, "ok": False, "dedektor_dustu": True, ...}` döner. İSKELET bu modül İÇİN
     # kondu (watchdog docstring'i çağıran olarak buranın adını veriyor) — ama aşağıdaki okuma
     # iskeletin BOŞ listelerini "bu dedektör bir şey bulmadı" diye okuyordu. Sonuç iki yönlü yalan:
@@ -357,7 +357,7 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # `watchdog._DEDEKTOR_BOS`un ikinci, elle bakımlı bir kopyasıydı: 8. dedektör (`divergence`)
     # eklendiğinde bu liste SESSİZCE geride kalır, düşen bir dedektör "düşmedi" sayılır ve körlük
     # haritası yalan söylerdi — üstelik bu bloğun kendi gerekçesi tam olarak o yalana karşı yazılmış.
-    # Aynı çift-kaynak sınıfının bu turda kapatılan kardeşi: pano başlığının sabit "(7 desen)"i.
+    # Aynı çift-kaynak sınıfının kapatılan kardeşi: pano başlığının sabit "(7 desen)"i.
     _DEDEKTORLER = tuple(wd._DEDEKTOR_BOS)
     dustu: set[str] = set()
     for _ad in _DEDEKTORLER:
@@ -514,7 +514,7 @@ def _m_zero_out_calibration(state: Path) -> None:
 
 def _m_duplicate_trade_rows(state: Path) -> None:
     """Canlıda yaşandı: döngü ortasında istisna → her 300 sn'lik yeniden deneme aynı satırı
-    yeniden yazıyordu (audit #11)."""
+    yeniden yazıyordu."""
     rows = rjsonl(state, "trades.jsonl")
     _wjsonl(state, "trades.jsonl", rows + rows[:5])
 
@@ -698,10 +698,10 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 baseline = detector_red(log, dusen_baz)   # 2. geçiş: GERÇEK temel durum
             result["baseline_red"] = sorted(baseline)
             result["baseline_clean"] = not baseline
-            # TEMEL DURUM "TEMİZ" İLE "ÖLÇÜLDÜ" AYRI İKİ İDDİADIR (2026-08-02): `baseline_clean`
+            # TEMEL DURUM "TEMİZ" İLE "ÖLÇÜLDÜ" AYRI İKİ İDDİADIR: `baseline_clean`
             # yalnız "kırmızı jeton yok" der. Batarya yarım koştuysa bu cümle doğrudur ve
             # YANILTICIDIR — bu yüzden düşen dedektörler AYRI bir alanda taşınır ve rapor onları
-            # kapsama satırının hemen altında basar. KOŞUM DURDURULMAZ (C21 yalıtımının gerekçesi:
+            # kapsama satırının hemen altında basar. KOŞUM DURDURULMAZ (yalıtımın gerekçesi:
             # bir dedektörün çöküşü diğer altısının hükmünü götürmemeli); durduran şey yalnız
             # KİRLİ temel durumdur, çünkü orada ölçülen sayı yalan söyler, eksik değil.
             result["baseline_olculemedi"] = dict(dusen_baz)
@@ -743,7 +743,7 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 "n_mutations": n, "n_caught": len(caught), "n_missed": len(missed),
                 "coverage_pct": round(100.0 * len(caught) / n, 1) if n else 0.0,
                 "caught": caught, "missed": missed, "rows": rows,
-                # KAPSAMA SAYISININ ÇEKİNCESİ, SAYININ YANINDA (2026-08-02): `n_olculemedi`>0 ise
+                # KAPSAMA SAYISININ ÇEKİNCESİ, SAYININ YANINDA: `n_olculemedi`>0 ise
                 # `coverage_pct` payı EKSİK ölçülmüş bir bataryadan gelir. Sayı düzeltilmez
                 # (düzeltmek, düşen dedektörün ne bulacağını UYDURMAK olurdu) — çekince beyan edilir.
                 "olculemedi": olculemedi, "n_olculemedi": len(olculemedi),
@@ -768,7 +768,7 @@ def format_report(res: dict) -> str:
                 f"'ölçüldü' aynı şey değil" if _bd else ""))
     L.append(f"mutasyon: {res['n_mutations']}  ·  yakalanan: {res['n_caught']}  ·  "
              f"KAÇAN: {res['n_missed']}  ·  kapsama: %{res['coverage_pct']}")
-    # ÖLÇÜLEMEDİ SATIRI — kapsama sayısının HEMEN ALTINDA (2026-08-02, sahte-yeşil sınıfı): düşen
+    # ÖLÇÜLEMEDİ SATIRI — kapsama sayısının HEMEN ALTINDA (sahte-yeşil sınıfı): düşen
     # bir dedektörün boş listesi eskiden "bulgu yok" diye okunuyordu ve mutasyon MISSED sayılıyordu.
     # "Göremedi" ile "ölçülemedi" aynı kutuya girerse körlük haritası kendi körlüğünü gizler.
     _ol = res.get("olculemedi") or {}
@@ -779,7 +779,7 @@ def format_report(res: dict) -> str:
             L.append(f"  ! {m:38s} → {', '.join(f'{k} ({v})' for k, v in sorted(d.items()))}")
     else:
         # SAYI TÜRETİLİR (2026-08-13): burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
-        # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, bu turda kapatılan pano
+        # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, kapatılan pano
         # başlığının kardeşi. Aile üreticiden okunur.
         from . import watchdog as _wd_ad
         L.append(f"ÖLÇÜLEMEDİ: yok — {len(_wd_ad._DEDEKTOR_BOS)} dedektörün hepsi her koşumda "

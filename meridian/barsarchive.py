@@ -212,7 +212,7 @@ class BarsArchiver:
         self._groups.add(key)
 
     def _forget_nogroup(self, err: Exception, keys: list[str]) -> list[str]:
-        """NOGROUP ONARIMI (kopukluk avı, 2026-07-30) — TTL'li anahtarda GRUP ÖLÜMÜ.
+        """NOGROUP ONARIMI (kopukluk avı) — TTL'li anahtarda GRUP ÖLÜMÜ.
 
         VAKA: `mrd:bars:{T}` anahtarının TTL'i (BARS_TTL_S = 2 gün) hafta sonu dolar → anahtar SİLİNİR
         ve consumer-group'u onunla birlikte ölür. Pazartesi ilk bar XADD ile anahtarı YENİDEN yaratır
@@ -462,7 +462,7 @@ def summary(limit_days: int | None = None) -> dict:
             "per_day": per_day, "dir": str(base)}
 
 
-# --- SEANS-İÇİ KESİNTİ/BOŞLUK DEDEKTÖRÜ (5.3, 2026-08-01) ---------------------------------------
+# --- SEANS-İÇİ KESİNTİ/BOŞLUK DEDEKTÖRÜ (5.3) ---------------------------------------------------
 # NE DEĞİL: tarihsel tarama değil. `summary()` arşivin BÜYÜKLÜĞÜNÜ ölçer ("kaç gün, kaç satır") ve
 # sıfır satırla dolu bir günü "arşiv var" diye okur. Bu ise CANLI AKIŞ SAĞLIĞIdır: seans İÇİNDE,
 # son `GAP_WINDOW_MIN` dakikada beklenen dakikalık barların gelmediği bir pencere var mı?
@@ -500,7 +500,7 @@ def _seans_araligi(gun: str) -> tuple:
     durum: `"ok"` (seans günü; açılış/kapanış dolu) · `"seans_disi"` (takvim OKUNDU ve o gün seans
     değil: hafta sonu/tam tatil) · `"takvim_yok"` (takvim okunamadı → HÜKÜM YOK).
 
-    NEDEN `barclock.is_market_open` DEĞİL (denetim 2026-08-02, hafif bulgu): o fonksiyon kendi
+    NEDEN `barclock.is_market_open` DEĞİL: o fonksiyon kendi
     docstring'inde "TATİLLER hariç (yaklaşık)" der ve bunu şöyle meşrulaştırır — "Alpaca zaten
     kapalıyken bar göndermez, o yüzden bu yalnız bir KOLAYLIK kapısıdır". Gerekçe `is_admissible`
     için doğru, `gap_scan` için TERSİNE ÇEVRİLMİŞTİR: burada semantik "bar YOKSA kesinti VAR"dır,

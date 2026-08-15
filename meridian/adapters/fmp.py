@@ -30,13 +30,13 @@ BASE = "https://financialmodelingprep.com/stable"
 
 def available() -> bool:
     """ANAHTAR VAR demektir (birincil YA DA yedek) — ÇALIŞIYOR demek DEĞİL. Kotalı bir anahtar 429
-    döndürürken de True'dur; üretim sorusunun cevabı health() (adapters.data denetim turu 2, 2026-07-21)."""
+    döndürürken de True'dur; üretim sorusunun cevabı health()."""
     return bool(_active_keys())
 
 
 # Sağlık kaydı: her çağrı bunu günceller. available()=True ama sürekli 429 ise BU söyler; eskiden
 # tüm hatalar `except: return []` ile yutuluyordu ve FMP'nin ölü olduğunu hiçbir yer bilmiyordu.
-# `blocked_until` KALDIRILDI (2026-07-26): yazılıyordu ama üretimde HİÇBİR yerde okunmuyordu —
+# `blocked_until` KALDIRILDI: yazılıyordu ama üretimde HİÇBİR yerde okunmuyordu —
 # gerçek kota bloğu anahtar-başına `_KEY_BLOCKED` ile tutuluyor. Okunmayan bir alan, "kota bloğu
 # izleniyor" izlenimi verip hiçbir şey yapmıyordu. `last_key`/`last_body` ise ÖLÇÜM: 418 başarısız
 # çağrının sebebini (kota mı, auth mı, ağ mı) tahminle değil kayıtla cevaplamak için.
@@ -44,7 +44,7 @@ _HEALTH = {"ok": None, "calls": 0, "fails": 0, "last_status": None, "last_error"
            "last_key": None, "last_body": ""}
 QUOTA_COOLDOWN_S = 3600     # 429 sonrası toplu tüketicilerin bekleyeceği süre
 
-# --- YEDEK ANAHTAR ROTASYONU (2026-07-23, operatör isteği) -----------------------------------
+# --- YEDEK ANAHTAR ROTASYONU (operatör isteği) -----------------------------------
 # Birincil FMP anahtarı günlük kotayı (ücretsiz katman ~250/gün) doldurup 429 yeyince İKİNCİ bir
 # anahtara OTOMATİK geçilir. İkinci anahtar ayrı bir ücretsiz hesaptan alınır ve günlük kotayı fiilen
 # İKİYE katlar — "çalışmıyor"un baskın sebebi tam da bu kota tükenmesiydi. Kota-bloğu ANAHTAR-BAŞINA
@@ -56,7 +56,7 @@ _KEY_BLOCKED: dict[str, float] = {}   # anahtar-adı -> blocked_until (epoch)
 def _active_keys() -> list[tuple[str, str]]:
     """Sıralı (ad, değer): birincil önce, sonra yedek. Boş/None atlanır; AYNI değer iki kez sayılmaz
     (operatör yanlışlıkla aynısını girerse boş yere ikinci 429 çağrısı yapılmaz). Anahtar OKUMANIN
-    TEK KAYNAĞI — dağılırsa sızma/sürüklenme riski (denetim turu 2, 'anahtar tek yerde')."""
+    TEK KAYNAĞI — dağılırsa sızma/sürüklenme riski ('anahtar tek yerde')."""
     out: list[tuple[str, str]] = []
     seen: set[str] = set()
     for name in ("FMP_API_KEY", BACKUP_KEY):
@@ -85,10 +85,10 @@ USAGE_FILE = "fmp_usage.json"       # {date, calls, fails, blocked_at} — günl
 
 
 def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body: str = "") -> None:
-    """Günlük çağrı sayacı (denetim turu 4): ücretsiz katman ~250/gün ve 250 ticker'lık BİR bar
+    """Günlük çağrı sayacı: ücretsiz katman ~250/gün ve 250 ticker'lık BİR bar
     tazelemesi bunun tamamını yakıyor. Sayaç olmadan 'kota neden bitti' sorusu tahminle cevaplanıyordu.
 
-    HER OLGU PARAMETRE OLARAK GELİR, `_HEALTH`TEN OKUNMAZ (2026-07-26). Eskiden durum/anahtar adı
+    HER OLGU PARAMETRE OLARAK GELİR, `_HEALTH`TEN OKUNMAZ. Eskiden durum/anahtar adı
     modül-globalinden geri okunuyordu ve bu iki yoldan birden yanlış atıf üretiyordu:
       * BAYAT ATIF — `ping()` `_HEALTH["last_key"]`i hiç yazmıyordu; yedek anahtarın testi, bir
         ÖNCEKİ çağrının anahtar adıyla `by_key`e işleniyordu.
@@ -96,7 +96,7 @@ def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body
         çağırdığında biri diğerinin durumunu okuyup kendi satırını onun adına yazıyordu.
     İkisi de sessizdi: sayılar tutuyordu, KİME ait olduğu yanlıştı — ve teşhis o dağılımdan çıkıyor.
 
-    GÖVDE KİLİTLİDİR (2026-07-26): oku-değiştir-yaz idi ama `read_json` ile `write_json` AYRI kilit
+    GÖVDE KİLİTLİDİR: oku-değiştir-yaz idi ama `read_json` ile `write_json` AYRI kilit
     bölümleriydi — aradaki pencerede ikinci bir iş parçacığı (zamanlayıcı vs. API `ping`) aynı belgeyi
     okuyup kendi artırımını yazınca birinci çağrı SAYILMAMIŞ oluyordu. Kota muhasebesinin eksik
     sayması, tam da 'kota neden bitti' sorusunu cevaplayamamak demektir. `store.file_lock` bir RLock
@@ -109,13 +109,13 @@ def _usage(ok: bool, *, status: int | None, key_name: str, error: str = "", body
         with store.file_lock(USAGE_FILE):
             u = store.read_json(USAGE_FILE, {}) or {}
             if u.get("date") != today:
-                # GÜN DÖNÜMÜ: sayaçlar sıfırlanır ama `quota_hits` TAŞINIR (2026-07-26). O defterin
+                # GÜN DÖNÜMÜ: sayaçlar sıfırlanır ama `quota_hits` TAŞINIR. O defterin
                 # tek amacı sağlayıcının kota RESET SAATİNİ ölçmek; ölçüm ancak gün SINIRINI aşan bir
                 # pencerede yapılabilir. Her gece silmek, tam da ölçülmek istenen olguyu siliyordu.
                 u = {"date": today, "calls": 0, "fails": 0, "blocked_at": None,
                      "quota_hits": list(u.get("quota_hits") or [])[-20:]}
             u["calls"] = int(u.get("calls", 0)) + 1
-            # SEBEP DAĞILIMI (2026-07-26): "510 çağrı / 418 başarısız" tek başına kota mı, auth mı,
+            # SEBEP DAĞILIMI: "510 çağrı / 418 başarısız" tek başına kota mı, auth mı,
             # ağ mı olduğunu söylemiyordu — ve yanlış teşhis yanlış politikayı doğurur (bir
             # çağrı-sayısı bütçesi, sorun ConnectError ise TAMAMEN yanlış araçtır). Yanıt
             # ALINMADIYSA anahtar istisna SINIF ADIdır, "None" değil: "yanıt gelmedi" ile "yanıt
@@ -229,7 +229,7 @@ def _get_with_key(path: str, params: dict | None, timeout: float, key: str, key_
         r = httpx.get(f"{BASE}/{path.lstrip('/')}", params=q, timeout=timeout)
         status = r.status_code
         _HEALTH["last_status"] = status
-        # GÖVDEYİ YALNIZCA KAYDET, ÜZERİNDE DAL AÇMA (2026-07-26). Sağlayıcının 429 gövdesi kotanın
+        # GÖVDEYİ YALNIZCA KAYDET, ÜZERİNDE DAL AÇMA. Sağlayıcının 429 gövdesi kotanın
         # ne zaman sıfırlandığını çoğu zaman yazar; onu okumadan "bütçe" kurmak varsayım eklemek
         # olurdu. `getattr` zorunlu: testlerdeki sahte yanıt nesnelerinde `.text` yok.
         body = _redact(getattr(r, "text", "") or "")[:200]
@@ -286,7 +286,7 @@ def earnings_dates(symbol: str, strict: bool = False) -> list[str]:
     """Sembolün kazanç RAPOR tarihleri (ISO, geçmiş+yakın gelecek). Stable: earnings?symbol=X.
     PEAD çapası + kazanç-karartma guard'ı bunu tüketir. Hata/anahtarsızlıkta boş liste.
 
-    strict=True → HATA YUTULMAZ (denetim turu 4, 2026-07-21). Sebep: boş liste "bu şirket kazanç
+    strict=True → HATA YUTULMAZ. Sebep: boş liste "bu şirket kazanç
     açıklamıyor" ile "istek başarısız" arasında ayrım yapmıyordu; kotanın pas ortasında bitmesi
     (bugün olduğu gibi) YARIM bir kazanç takvimi üretiyor, karartma guard'ı da veri yokken
     FAIL-OPEN olduğundan o isimlerde kazanç günü işlem açılıyordu."""

@@ -96,7 +96,7 @@ def _tavan_s() -> float:
 
 
 def _nabiz(asama: str) -> None:
-    """İLERLEME NABZI (v186 deseni) — biçim kararları `loop._nabiz` / `adapters.data._nabiz` ile
+    """İLERLEME NABZI — biçim kararları `loop._nabiz` / `adapters.data._nabiz` ile
     AYNI (fonksiyon-içi geç import, hüküm zamanlayıcıda, istisna yutulur).
 
     NEDEN BURADA MEŞRU: nabız yalnız ölçüm ipliği YAŞARKEN ve yalnız SÜRE TAVANI dolana kadar
@@ -116,7 +116,7 @@ def _simdi() -> str:
 def _bar_parmak(bars) -> str:
     """Ölçümün HANGİ bar sürümüyle koştuğunun parmak izi (sembol · satır sayısı · son tarih).
     Arka planda biten bir ölçüm rapora yazılırken bu damga da yazılır: sayıların hangi veriye ait
-    olduğu okunabilir olmalıdır (barlar arada tazelenmiş olabilir — denetim #30'un okuyucu tarafı)."""
+    olduğu okunabilir olmalıdır (barlar arada tazelenmiş olabilir)."""
     h = hashlib.sha256()
     try:
         for t in sorted(bars or {}):
@@ -158,8 +158,7 @@ def _dormant_setups() -> list[str]:
 
 def _olculemedi(neden: str, **ek) -> dict:
     """"ÖLÇÜLEMEDİ" terminali — `gate_undefined`in (ölçüm YAPILDI, sayı tanımsız) AKRABASI ama
-    AYNISI DEĞİL: burada ölçüm HİÇ tamamlanmadı. İkisini tek etikete toplamak, 2026-07-21 denetim
-    turunun kapattığı "ölçülemedi = reddedildi" hatasının yeni bir kopyası olurdu. Sayı alanları
+    AYNISI DEĞİL: burada ölçüm HİÇ tamamlanmadı. İkisini tek etikete toplamak, "ölçülemedi = reddedildi" hatasının yeni bir kopyası olurdu. Sayı alanları
     None kalır (UYDURMA YASAĞI) ve `neden` her zaman yazılıdır."""
     return {"status": "olculemedi", "neden": neden,
             "search_p": None, "p_required": None,
@@ -334,7 +333,7 @@ def _measure(setup: str, bars=None, index=None) -> dict:
     cand = reflect._wf_cached(cand_params, int(cur.get("version", 1)), bars, index, goal,
                               cur.get("params_by_regime"), windows=w)
     passes, gate, why = reflect._gate_eval(inc, cand, k_probes=1)
-    # ÖLÇÜLEMEDİ ≠ REDDEDİLDİ (denetim turu 7, 2026-07-21 — canlıda yakalandı):
+    # ÖLÇÜLEMEDİ ≠ REDDEDİLDİ (canlıda yakalandı):
     # momentum_burst raporda "gate_rejected" görünüyordu ama gerekçe "candidate OOS score undefined
     # (below min_sample)" idi; yani kapı ölçüm YAPAMAMIŞTI. Bu, "denedik ve kaybetti" diye okunuyor,
     # kurulumu haksızca gömüyor ve "neden hâlâ uyuyor" sorusunu yanlış cevaplıyordu.

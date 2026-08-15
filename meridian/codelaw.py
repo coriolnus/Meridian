@@ -216,7 +216,7 @@ DECLARED_SINKS: dict[str, str] = {
     "pool_exhausted_seen.json": "hermes kimlik-havuzu son-tükenme-zamanı çivisi (v188) — okuyucu "
         "aynı modülde (_pool_seen_at, süreç-yeniden-başlatma sonrası kota-sıfırlama kıyası için "
         "kalıcı olmak ZORUNDA); statik graf modül-içi okumayı göremiyor (finviz vakasındaki sınıf)",
-    # NOT (2026-07-27): `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
+    # NOT: `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte
     # kullanıyor ve gerekçesini panonun Piyasa sekmesine taşıyor. Muafiyet işi bittikten sonra
@@ -226,7 +226,7 @@ DECLARED_SINKS: dict[str, str] = {
                               "'amnestied' alanıyla dışa verir ve pano gerekçesiyle birlikte gösterir. "
                               "Meşru küçülmenin (re-seed) yazılı kaydı — bkz. 2026-07-22 trades 129→96",
     # --- erişimci fonksiyon üzerinden dolaylı tüketim (pano → api → fonksiyon → dosya) ---
-    # NOT (2026-07-26): `learning_loop_open.json` buradan ÇIKARILDI. Beyanı "watchdog makullük
+    # NOT: `learning_loop_open.json` buradan ÇIKARILDI. Beyanı "watchdog makullük
     # dedektörü toplamı okur" diyordu ama böyle bir okuyucu YOKTU — beyanın kendisi eksik tüketiciyi
     # örtüyordu. Okuyucu artık gerçek (`watchdog.parity_report` → `learning_loop` satırı → pano), o
     # yüzden artefakt bir lağım değil; beyan kalsaydı `stale_sinks` ihlali olurdu (bir muafiyet, işi
@@ -264,7 +264,7 @@ DECLARED_SINKS: dict[str, str] = {
                                "sayılardan çıkar",
     "agent_tooluse.json": "hermes.integrations_status() okur; api /api/hermes → pano 'entegrasyonlar' "
                           "panelinde MCP araç kullanım oranı olarak görünür",
-    # NOT (D3, 2026-08-07): KARDEŞ defter `agent_calls.jsonl` BİLEREK burada DEĞİLDİR. Onun DIŞ
+    # NOT: KARDEŞ defter `agent_calls.jsonl` BİLEREK burada DEĞİLDİR. Onun DIŞ
     # okuyucusu gerçektir ve statik graf onu görür: `hermes.integrations_status()` satırları
     # `store.read_jsonl(_at.CAGRI_DEFTERI, ...)` ile KENDİ okur, yorumu `agent_telemetry.ozet()`e
     # verir. Muafiyet yerine gerçek tüketici tercih edildi — YASA 6'nın kaçış yolu, kapatabildiğin
@@ -309,14 +309,14 @@ DECLARED_SINKS: dict[str, str] = {
                            "analytics/loop dosyaya değil SINIFA bakar — durum sınıfın iç meselesidir",
     "sp500_constituents.json": "endeks bileşen listesinin ağ önbelleği; tüketici adapters.constituents "
                                "erişimcileridir, dosya değil",
-    # BEYAN, "OKUYUCUSU YOK" DEĞİL "STATİK GRAF GÖREMİYOR" DİYOR — okuyucu ÖLÇÜLDÜ (2026-08-07).
+    # BEYAN, "OKUYUCUSU YOK" DEĞİL "STATİK GRAF GÖREMİYOR" DİYOR — okuyucu ÖLÇÜLDÜ.
     # `yeniden_hesap:orphan_state_files` bu dosyayı 7 yetimden biri sayıyordu; ölçüm hükmü şu:
     # okuyucusu VAR ve canlı yolun tam ortasında. Tarayıcının körlüğü sınıfsal — `artifact_graph`
     # yalnız `store.read_*`/`write_*` çağrılarını görür, auth kendi dosya erişimini kullanır
     # (`_auth_file().read_text()`), tıpkı `secrets.json` gibi. Beyan edilmeseydi dedektör her turda
     # gerçek olmayan bir bulgu bağırır, gerçek bir yetim o gürültüde kaybolurdu.
-    # ÇAPA SATIR DEĞİL SEMBOL (2026-08-14, v246-A — A17 sınıfının kendi yüzeyinde onarımı): bu
-    # satırda önce `api.py:420` yazıyordu, kayan-oturum turundan (v245-B) sonra gerçek satır 426
+    # ÇAPA SATIR DEĞİL SEMBOL: bu
+    # satırda önce `api.py:420` yazıyordu, kayan-oturum turundan sonra gerçek satır 426
     # oldu ve HİÇBİR test kırmızı vermedi — çünkü kapı yalnız terimin VARLIĞINA bakıyordu. Satır
     # numarası gömen her çapa, çapaladığı dosyanın her düzenlemesinde bayatlar; `codelaw`ın kendi
     # kovaladığı sınıf tam budur. Bu yüzden çapa artık FONKSİYON ADI + ÇAĞRI DİZGİSİDİR
@@ -340,7 +340,7 @@ DECLARED_SINKS: dict[str, str] = {
                  "okunmasa 51 uç 401 dönerdi — ölü değil, panonun kapısı. `secrets.json` ile AYNI "
                  "sınıf (recompute.accessor_read): store.* dışından okunuyor, statik graf göremiyor",
 
-    # --- Y4 veri katmanı (ROADMAP §3.4): TÜKETİCİ BİLİNÇLİ OLARAK ERTELENDİ ---------------------
+    # --- Y4 veri katmanı: TÜKETİCİ BİLİNÇLİ OLARAK ERTELENDİ ------------------------------------
     # Bu dört artefaktın bugünkü tüketicisi adaptörlerin KENDİ CLI'ı ve v117 testleridir; loop/api/cf
     # bağlantısı SONRAKİ tura ertelendi. Erteleme bir üşenme değil, ÖLÇÜLMÜŞ bir gerekçe:
     #   * insider: rutin/fırsatçı sınıflaması 3 YILLIK bir geçmiş penceresi ister. FMP'nin
@@ -352,7 +352,7 @@ DECLARED_SINKS: dict[str, str] = {
     #     filtresi kapıya bağlanırsa, hiç ölçülmemiş bir kısıt canlı stratejiyi daraltmış olur.
     # Beyan bu yüzden burada duruyor: erteleme yazılı, gerekçeli ve süresi ölçülebilir. Tüketici
     # bağlandığı gün bu satırlar KALDIRILMALI — yoksa `stale_sinks` ihlali olarak geri döner.
-    # BEYAN TAZELENDİ (2026-08-08, B-4 mekanizması ölçtü): "DIŞ tüketici ertelendi" cümlesi
+    # BEYAN TAZELENDİ (mekanizma ölçtü): "DIŞ tüketici ertelendi" cümlesi
     # ÇÜRÜTÜLDÜ — `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
     "insider_trades.json": "Form 4 ham defteri (artımlı; su işareti + kapsam burada). Okuma "
                            "`insider.defter_oku()` içindedir (insider.py:281, aynı modül → statik "
@@ -368,7 +368,7 @@ DECLARED_SINKS: dict[str, str] = {
                             "tests/test_insider_v117.py; loop/api bağlantısı `kapsam.siniflama_hazir_mi` "
                             "True olana kadar BİLİNÇLİ olarak ertelendi — bugün bağlanan bir okuyucu "
                             "`siniflanamadi` dolu bir dosyayı sinyal sanardı",
-    # BEYAN TAZELENDİ (2026-08-08, B-4): "bugünkü tüketici CLI + testler" ÇÜRÜTÜLDÜ —
+    # BEYAN TAZELENDİ: "bugünkü tüketici CLI + testler" ÇÜRÜTÜLDÜ —
     # `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
     "short_interest.json": "FINRA kısa pozisyon özeti + bayatlık damgası (yayın tarihi, gecikme, "
                            "bayat_mi). Okuma `shortinterest.durum()` içindedir "
@@ -384,7 +384,7 @@ DECLARED_SINKS: dict[str, str] = {
                                  "shortinterest.ozet() — SI%float paydası; dosya kendi başına bir "
                                  "sinyal değil, kota tasarrufu için tutulan yardımcı defterdir",
 
-    # NOT (2026-07-30, Hafta 3b): `shadow_variants.jsonl` buradan ÇIKARILDI — beyan SÜRELİYDİ ve
+    # NOT: `shadow_variants.jsonl` buradan ÇIKARILDI — beyan SÜRELİYDİ ve
     # devri yazılıydı ("Hafta 3b `/api/diagnostics`e özeti bağladığı gün BU SATIR KALDIRILMALI").
     # Devir yapıldı: `analytics.shadow_variant_summary()` defteri DIŞ bir modülden okuyor,
     # `/api/diagnostics` onu taşıyor, pano gölge-varyant kartını çiziyor (varyant başına son karar +
@@ -412,16 +412,16 @@ DECLARED_SINKS: dict[str, str] = {
     "watchdog_alarmed.json": "alarm tekilleştirme durumu — aynı alarmın her turda yeniden basılmasını "
                              "engeller; dışarıya çıkan şey alarmın kendisidir",
     "integrity_alarmed.json": "aynı disiplin, bütünlük alarmları için",
-    # NOT (D3-UI, 2026-08-07): `mechanism_beats.json` buradan ÇIKARILDI ve gerekçesi bu listenin
+    # NOT: `mechanism_beats.json` buradan ÇIKARILDI ve gerekçesi bu listenin
     # KENDİ kuralıdır ("muafiyet işi bittikten sonra da yerinde dursaydı liste kimsenin bakmadığı
     # çöplüğe dönerdi" — aynı gerekçeyle monotonic_state, finviz_universe ve learning_loop_open
     # çıkmıştı). Beyan doğruydu: nabızları yalnız `watchdog` okuyor, dışarıya taşınan şey
     # `integrity_report`ın GECİKME hükmüydü — yani "bu adım saat 03:12'de koştu" bilgisi hiçbir
-    # uçtan gelmiyordu. D2-b bunu bir BORÇ olarak yazdı (app.js `RENDER.cizelge`: "adım başına
-    # damga mechanism_beats.json'da var ama panoya açılmamış"); D3-UI borcu kapattı:
+    # uçtan gelmiyordu. Bu bir BORÇ olarak yazılmıştı (app.js `RENDER.cizelge`: "adım başına
+    # damga mechanism_beats.json'da var ama panoya açılmamış"); sonraki tur borcu kapattı:
     # `api._hat_cizelgesi` dosyayı DOĞRUDAN okur, `/api/diagnostics` `cizelge` alanıyla servis
     # eder, pano `firsatCizelgeIzi` kartında gerçek saatiyle çizer. Zincir tam, muafiyet gereksiz.
-    # NOT (2026-08-01): `monotonic_state.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu yalnız
+    # NOT: `monotonic_state.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu yalnız
     # kendi modülündeydi (watchdog.monotonicity_report), statik graf onu "dış okuyucusu yok" diye
     # görüyordu. Artık DIŞ bir okuyucusu var: `sermaye._peak_affi` affın `was` değerini dedektörün
     # KENDİ TABANINDAN okur — kitaptaki `peak_equity`den değil, çünkü af TAM eşleşme ister ve
@@ -439,7 +439,7 @@ DECLARED_SINKS: dict[str, str] = {
                          "bellek-içi bir taban 2026-08-04 sınıfı bir yazımı sessizce yutardı",
     "bars_fingerprint.json": "bar dosyalarının parmak izi; determinizm dedektörünün karşılaştırma tabanı",
 
-    # --- eleme muhasebesi: BEYAN 2026-08-08'de GERÇEKLE DEĞİŞTİRİLDİ (B-4) ---------------------
+    # --- eleme muhasebesi: BEYAN GERÇEKLE DEĞİŞTİRİLDİ ------------------------------------------
     "sieve.json": "eleme muhasebesi (sieve.py iş kolunun ürünü). DIŞ TÜKETİCİ GERÇEK ve bir KARAR "
                   "GİRDİSİDİR — ölçüldü 2026-08-08. Zincir: `store.read_json` çağrısı "
                   "`sieve.stages()` içindedir (aynı modül → statik graf göremez), sarmalayıcısı "
@@ -458,21 +458,21 @@ DECLARED_SINKS: dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# BEYAN EDİLEBİLİRLİĞİN İKİ BOŞLUĞU (v215, 2026-08-08) — B-5 ve B-7
+# BEYAN EDİLEBİLİRLİĞİN İKİ BOŞLUĞU
 # ---------------------------------------------------------------------------
 # `DECLARED_SINKS`in anahtarı bir ARTEFAKT ADIDIR ve o ad `unread` listesinden gelir. Bu iki şeyi
 # yapısal olarak beyan EDİLEMEZ kılıyordu:
-#   (B-5) TARİHLİ AD. `bararchive.archive_frame` `f"{ARCHIVE_DIR}/{day}.jsonl"` yazar; ad hiç
+#   (a) TARİHLİ AD. `bararchive.archive_frame` `f"{ARCHIVE_DIR}/{day}.jsonl"` yazar; ad hiç
 #         çözülmez, `artifacts`a girmez, `DECLARED_SINKS`e yazılan satır ölü bir muafiyet olur
 #         (üstelik anahtar hiç eşleşmediği için kimse fark etmez). `bararchive.py`nin kendi
-#         başlığı bu sapmayı 2026-07-27'de Rol-1'e RAPORLAMIŞTI — yani bilinen, yazılı bir boşluk.
-#   (B-7) DIŞ OKUYUCUSU OLAN ama o okuyucusu YALNIZ BİR CLI BAYRAĞINDAN çağrılan defter.
+#         başlığı bu sapmayı Rol-1'e RAPORLAMIŞTI — yani bilinen, yazılı bir boşluk.
+#   (b) DIŞ OKUYUCUSU OLAN ama o okuyucusu YALNIZ BİR CLI BAYRAĞINDAN çağrılan defter.
 #         `unread` False olduğu için `DECLARED_SINKS`e konamaz: anında `stale_sinks` ihlali olurdu.
 # İkisi için iki AYRI kayıt açıldı. Ayrı olmalarının sebebi kozmetik değil: üçünün İDDİASI ve
 # dolayısıyla ÇÜRÜME ŞARTI farklıdır (bkz. `declared_claims`).
 
-#: DESEN BEYANI (B-5). Anahtar, `_joined_glob` tarafından KODDAN TÜRETİLEN şekildir — elle yazılan
-#: bir glob değil. Değer yapısaldır (düz metin değil), çünkü B-4'ün dersi şuydu: serbest metne
+#: DESEN BEYANI. Anahtar, `_joined_glob` tarafından KODDAN TÜRETİLEN şekildir — elle yazılan
+#: bir glob değil. Değer yapısaldır (düz metin değil), çünkü ders şuydu: serbest metne
 #: gömülü iddia sessizce çürür. `sinanamaz` alanı ZORUNLUDUR ya da iddia SINANIR.
 DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
     "intraday_bars/*.jsonl": {
@@ -498,7 +498,7 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
     },
 }
 
-#: ÇAĞIRANI İNSAN OLAN DEFTER (B-7). §6.1 disiplini: "çağıranı YOK" ile "çağıranı İNSAN" ayrı
+#: ÇAĞIRANI İNSAN OLAN DEFTER. Disiplin: "çağıranı YOK" ile "çağıranı İNSAN" ayrı
 #: şeylerdir ve taramanın kendisi bu ayrımı korudu. Bu kayıt `DECLARED_SINKS`ten AYRIDIR çünkü
 #: buradaki artefaktın DIŞ okuyucusu VARDIR (`unread` False) — `DECLARED_SINKS`e konsa anında
 #: `stale_sinks` ihlali olurdu. İddia SINANABİLİR ve sınanır: `cli` alanındaki modül+bayrak
@@ -565,10 +565,10 @@ def _looks_like_artifact(s: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# TARAYICININ KENDİ KÖRLÜĞÜNÜN ADLANDIRILMASI (v214, 2026-08-08)
+# TARAYICININ KENDİ KÖRLÜĞÜNÜN ADLANDIRILMASI
 # ---------------------------------------------------------------------------
-# ÖLÇÜM ÖNCE, HÜKÜM SONRA. Denetim (ARTEFAKT-TARAMASI-2026-08-07, B-2) `_store().read_json(...)`
-# desenini "grafikte HİÇ görünmüyor" diye kaydetmişti. ÖLÇÜLDÜ (2026-08-08) ve bu YANLIŞ çıktı:
+# ÖLÇÜM ÖNCE, HÜKÜM SONRA. Denetim `_store().read_json(...)`
+# desenini "grafikte HİÇ görünmüyor" diye kaydetmişti. ÖLÇÜLDÜ ve bu YANLIŞ çıktı:
 # o çağrıların AST şekli `Call(func=Attribute(value=Call(func=Name('_store')), attr='read_json'))`
 # ve eski filtre yalnız `isinstance(n.func, ast.Attribute)` diye sorup TABANA hiç bakmadığı için
 # dokuzunun da adı çözülüyordu — hepsi writer_sites/reader_sites'ta duruyordu
@@ -621,8 +621,8 @@ def _joined_glob(a: ast.AST, consts: dict, gconsts: dict) -> str | None:
     değişkenler değerine, çözülemeyenler `*`a döner.
         f"{ARCHIVE_DIR}/{day}.jsonl"  →  "intraday_bars/*.jsonl"
 
-    NEDEN TÜRETİLİYOR, ELLE YAZILMIYOR (v215 tasarım kararı): desen anahtarı KODDAN ÖLÇÜLÜR.
-    İnsan bir glob yazsaydı, kod değiştiğinde glob sessizce yanlış kalırdı — B-4'ün hastalığının
+    NEDEN TÜRETİLİYOR, ELLE YAZILMIYOR (tasarım kararı): desen anahtarı KODDAN ÖLÇÜLÜR.
+    İnsan bir glob yazsaydı, kod değiştiğinde glob sessizce yanlış kalırdı — bayat-beyan hastalığının
     aynısı, bu sefer desen katmanında. Türetilmiş anahtar, ad şekli değiştiği an eşleşmeyi
     bırakır ve dosya yeniden `ad_cozulemedi`ye düşer. Yani beyan otomatik olarak BAYATLAR."""
     if not isinstance(a, ast.JoinedStr):
@@ -662,7 +662,7 @@ def artifact_graph(root: str = "meridian") -> dict:
     """Her artefakt için: yazarlar, okuyucular ve BAŞKA hiçbir modül tarafından okunmuyorsa
     `unread` bayrağı. Çözülemeyen adlar (f-string, değişken, çağrı) sessizce yutulmaz —
     `unresolved` listesine yazılır; tarayıcının kendi körlüğünü gizlemesi bu yasanın ihlali olurdu."""
-    # ÖNBELLEK — KAYNAK MTIME'INA BAĞLI (2026-07-28). Bu fonksiyon projenin TÜM Python
+    # ÖNBELLEK — KAYNAK MTIME'INA BAĞLI. Bu fonksiyon projenin TÜM Python
     # kaynağını ast ile ayrıştırır ve panonun /api/diagnostics ucundan HER Operasyon açılışında
     # iki kez çağrılıyordu. Ölçüm: uç 4,18 sn; 1,17 sn'i burası, 419 ast.parse + 614.836 ast.walk.
     # Sonuç yalnız kaynağa bağlı: sunucu koşarken kaynak değişmez, değişirse damga değişir ve
@@ -695,7 +695,7 @@ def artifact_graph(root: str = "meridian") -> dict:
             if role is None:
                 continue
             # BURADAN AŞAĞISI BİR `store` ERİŞİMİDİR. Hiçbir çıkış yolu sessiz olamaz: ya artefakt
-            # grafiğine, ya ADLI bir `unresolved` kovasına gider (v214 — yukarıdaki blok).
+            # grafiğine, ya ADLI bir `unresolved` kovasına gider (yukarıdaki blok).
             patterns[base] = patterns.get(base, 0) + 1
             site = {"file": str(f), "line": n.lineno, "call": attr, "role": role, "base": base}
             if not n.args:
@@ -756,10 +756,10 @@ def artifact_graph(root: str = "meridian") -> dict:
     orphan_patterns = sorted(set(DECLARED_SINK_PATTERNS) - set(desen_yerleri))
     _res = {"artifacts": out,
             "unresolved": unresolved,
-            # KÖRLÜĞÜN SAYIMI (v214): "kaç tane göremedim" sorusunun tek satırlık cevabı.
+            # KÖRLÜĞÜN SAYIMI: "kaç tane göremedim" sorusunun tek satırlık cevabı.
             "unresolved_by_reason": by_reason,
             "access_patterns": dict(sorted(patterns.items())),
-            # DESEN KATMANI (v215, B-5): hangi beyanlı desen kodda nerede karşılanıyor.
+            # DESEN KATMANI: hangi beyanlı desen kodda nerede karşılanıyor.
             "declared_patterns": {k: sorted(v) for k, v in sorted(desen_yerleri.items())},
             "orphan_patterns": orphan_patterns,
             "unread": sorted(unread),
@@ -772,9 +772,9 @@ def artifact_graph(root: str = "meridian") -> dict:
 
 
 # ---------------------------------------------------------------------------
-# (6b) BEYANIN KENDİSİNİN DENETİMİ — "YANLIŞ MUAFİYET" SINIFI (v214, 2026-08-08)
+# (6b) BEYANIN KENDİSİNİN DENETİMİ — "YANLIŞ MUAFİYET" SINIFI
 # ---------------------------------------------------------------------------
-# YAPISAL DELİK (denetim B-4). `stale_sinks` tek bir sinyale bakar:
+# YAPISAL DELİK (denetim bulgusu). `stale_sinks` tek bir sinyale bakar:
 #     stale_sinks = [k for k in DECLARED_SINKS if k in out and not out[k]["unread"]]
 # Yani bir muafiyetin bayatladığını ancak GRAFİK dış okuyucu görürse anlar. `sieve.json` tam bu
 # deliğe düşmüştü: beyanı "panoya bağlı değil, tek okuyucusu kendi testi" diyordu; gerçekte
@@ -848,8 +848,8 @@ def _call_index(mods: dict) -> dict[tuple[str, str], list[str]]:
 
     Çözülen çağrı biçimleri: `_sv.report()` (takma adlı import), `meridian.sieve.report()`,
     `from .sieve import report` sonrası `report()`, ve `__import__("meridian.sieve",
-    fromlist=["report"]).report()`. SONUNCUSU api.py'nin GERÇEK biçimidir — görülmeseydi B-4
-    yine sessiz kalırdı, yani bu satır bulgunun kendisidir.
+    fromlist=["report"]).report()`. SONUNCUSU api.py'nin GERÇEK biçimidir — görülmeseydi o çürük
+    beyan yine sessiz kalırdı, yani bu satır bulgunun kendisidir.
 
     NEDEN İNDEKS: beyan başına tüm ağacı yeniden yürümek 36× maliyetti (ölçüldü: 9,6 sn).
     Tek geçişte 0,6 sn. `report()` test/ops yolundadır ama 9 saniyelik bir bekçi koşturulmaz,
@@ -986,7 +986,7 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
                     "external_accessors": {k: sorted(v) for k, v in sorted(accessors.items())},
                     "stale_claim": bool(claim) and bool(accessors)})
 
-    # --- kind="pattern" (B-5): sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------
+    # --- kind="pattern": sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------------
     kod_desenleri = graph["declared_patterns"]
     for pat, spec in pats.items():
         sinanamaz = (spec or {}).get("sinanamaz")
@@ -1005,7 +1005,7 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
                     "external_accessors": {}, "stale_reasons": nedenler,
                     "stale_claim": bool(nedenler)})
 
-    # --- kind="human" (B-7): "çağıranı İNSAN" iddiası CLI düzeyinde sınanır ----------------
+    # --- kind="human": "çağıranı İNSAN" iddiası CLI düzeyinde sınanır ----------------------
     for art, spec in hum.items():
         cli = (spec or {}).get("cli") or ""
         modul, _, bayrak = cli.partition(" ")
@@ -1080,18 +1080,18 @@ def report(root: str = "meridian") -> dict:
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
             "unresolved_artifact_calls": len(graph["unresolved"]),
-            # KÖRLÜĞÜN ADI ve SAYISI (v214): "kaç çağrıyı çözemedim, hangi sınıftan" — sessiz
+            # KÖRLÜĞÜN ADI ve SAYISI: "kaç çağrıyı çözemedim, hangi sınıftan" — sessiz
             # `continue` yerine sayılabilir kova. `access_patterns` ise "hangi erişim biçimlerini
             # GÖRÜYORUM"un sayımıdır; kapsam bilinmeden sıfır-ihlal iddiası vakumdur.
             "unresolved_by_reason": graph["unresolved_by_reason"],
             "store_access_patterns": graph["access_patterns"],
-            # DESEN BEYANLARI (v215, B-5): tarihli/dinamik adın SAHİPLENİLDİĞİ yer.
+            # DESEN BEYANLARI: tarihli/dinamik adın SAHİPLENİLDİĞİ yer.
             "declared_patterns": graph["declared_patterns"],
             "orphan_patterns": graph["orphan_patterns"],
-            # ÇÜRÜTÜLMÜŞ MUAFİYET BEYANLARI (v214, B-4) — `stale_sinks`in yapısal kör noktası.
-            # Üç kaydı da kapsar: sink · pattern · human (v215).
+            # ÇÜRÜTÜLMÜŞ MUAFİYET BEYANLARI — `stale_sinks`in yapısal kör noktası.
+            # Üç kaydı da kapsar: sink · pattern · human.
             "stale_claims": [c["artifact"] for c in curuk],
-            # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri (v215, B-5).
+            # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri.
             "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(root)],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED}

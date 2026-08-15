@@ -34,7 +34,7 @@ _SCHEME_WARNED = False   # taşıma yükseltmesi süreç başına BİR kez duyur
 
 # ===== MARKET-DATA STREAM (Faz 2) — TRADING host'tan AYRI, SABİT host =====
 # Piyasa verisi WS'i trading host'uyla KARIŞTIRILMAZ: bu SABİT bir data host'udur, operatör-ayarlı
-# uç nokta YOKTUR → kilitlenecek girdi ve audit-#51 kimlik-sızıntı vektörü de yoktur (o, dashboard-
+# uç nokta YOKTUR → kilitlenecek girdi ve kimlik-sızıntı vektörü de yoktur (o, dashboard-
 # ayarlı trading host'una özgü). READ-ONLY veri; bu yoldan gerçek-para emri geçemez.
 DATA_STREAM_HOST = "stream.data.alpaca.markets"
 _DATA_FEEDS = ("iex", "sip", "test")   # iex ücretsiz/varsayılan · sip entitlement ister · test = FAKEPACA
@@ -173,12 +173,12 @@ def live_guard() -> None:
 # tanımın kendisiydi. Kağıt yürütme bu modülde SDK'yı hiç kullanmıyor — REST/httpx yolundan gidiyor
 # (bkz. aşağıdaki "PAPER execution (REST, httpx, no SDK)" bölümü), yani sarmalayıcının üretimde
 # doldurduğu bir boşluk yoktu. `_client` KORUNDU: `live_client`ın tek dayanağı odur ve o yol
-# operatör-kalemidir (ROADMAP §6).
+# operatör-kalemidir.
 # GERİ-AL: `def paper_client(): return _client(paper=True)` — bu yorumun yerine.
 
 
 def live_client():
-    """LIVE client — guarded. Only reachable when the human has flipped both flags and passed §8."""
+    """LIVE client — guarded. Only reachable when the human has flipped both flags and passed the promotion gates."""
     live_guard()
     return _client(paper=False)
 
@@ -197,7 +197,7 @@ def _paper_base() -> str:
     base = endpoint()
     # HOSTNAME check, not substring: 'paper-api.alpaca.markets.evil.example.com' or a path segment
     # containing the string passed the old `in` test and would receive the operator's API key headers
-    # (audit #51 credential-leak vector via the dashboard-settable endpoint).
+    # (credential-leak vector via the dashboard-settable endpoint).
     semali = "://" in base
     try:
         from urllib.parse import urlparse
@@ -277,7 +277,7 @@ def orders(status: str = "open", limit: int = 50, nested: bool = False,
     The reconciler MUST pass nested=True (verified against the live paper account: flat→3 rows/legs=0,
     nested→1 parent/legs=2).
 
-    B7a (teşhis 2026-08-10): `after`/`until` Alpaca'nın `submitted_at` süzgeçleridir ve SAYFALAMANIN
+    B7a: `after`/`until` Alpaca'nın `submitted_at` süzgeçleridir ve SAYFALAMANIN
     yapı taşıdır — `until=<önceki sayfanın en eski submitted_at'i>` ile geriye doğru sayfalanır.
     Bu fonksiyon TEK sayfa döndürür; sayfalayan (ve pencere kapsamını BEYAN eden) katman
     `loop._alpaca_emir_penceresi`dir — hüküm orada, burada yalnız geçirgen parametre."""
@@ -295,7 +295,7 @@ def orders(status: str = "open", limit: int = 50, nested: bool = False,
         return r.json()
     except Exception as e:
         # A1: [] dönüyoruz ama SESSİZ değil — mutabakat bunu 'emir yok' sanıp her açık pozisyonu
-        # 'Alpaca'da kayıp' diye alarma boğuyordu (denetim 2026-07-21).
+        # 'Alpaca'da kayıp' diye alarma boğuyordu.
         _note(False, f"orders: {type(e).__name__}: {e}")
         return []
 
@@ -331,14 +331,14 @@ def submit_bracket(symbol: str, qty: int, entry_stop: float, take_profit: float,
     id) is the JOIN KEY the reconciler uses to match this order back to the internal plan/trade and
     audit divergence.
 
-    E1 (WP-E, 2026-07-31) — GİRİŞ BACAĞI ARTIK MARKETABLE STOP-LIMIT / LIMIT (yasa: `broker.entry_law`):
+    E1 — GİRİŞ BACAĞI ARTIK MARKETABLE STOP-LIMIT / LIMIT (yasa: `broker.entry_law`):
       * `stop_limit` : stop=entry_stop, limit=entry_limit  → tetik teyidi KORUNUR, ödenen fiyat TAVANLI.
       * `limit`      : yalnız limit=entry_limit            → gap dalı (gönderim anında fiyat zaten
                        tetiğin üstünde; buy-stop bu durumda GEÇERSİZ ve Alpaca "stop price must be
                        greater than current price" ile reddediyordu — 95/95 satırın kökü).
       * `stop`       : ESKİ davranış. Yalnız `entry_limit` verilmediğinde kalır (geriye dönük yol);
                        yeni çağıran bu dala girmez.
-    TIF varsayılanı DAY (GTC'den değişim, kart EXE-2026-001): GTC emri bir sonraki seansa sinyal barına
+    TIF varsayılanı DAY (GTC'den değişim): GTC emri bir sonraki seansa sinyal barına
     sabitlenmiş BAYAT bir tetik taşır."""
     if qty <= 0:
         return {"ok": False, "detail": "qty<=0"}
@@ -374,7 +374,7 @@ def submit_bracket(symbol: str, qty: int, entry_stop: float, take_profit: float,
         return {"ok": True, "order": r.json()}
     except Exception as e:
         # ULAŞILAMADI ≠ REDDEDİLDİ. Çağıran bu ayrımı yapamazsa geçici bir ağ hatası, geçerli bir
-        # silahlı planı kalıcı olarak 'broker reddi' diye düşürür (denetim 2026-07-21).
+        # silahlı planı kalıcı olarak 'broker reddi' diye düşürür.
         _note(False, f"submit_bracket: {type(e).__name__}: {e}")
         return {"ok": False, "detail": f"{type(e).__name__}: {e}", "reachable": False}
 
@@ -389,7 +389,7 @@ def cancel_order(order_id: str) -> dict:
 
 
 # ==================================================================================================
-# SÜPÜRÜCÜNÜN SINIF SÖZLÜĞÜ (v220) — "DOLMAMIŞ MOTOR EMRİ" ≠ "GİRİŞ EMRİ"
+# SÜPÜRÜCÜNÜN SINIF SÖZLÜĞÜ — "DOLMAMIŞ MOTOR EMRİ" ≠ "GİRİŞ EMRİ"
 # ==================================================================================================
 # VAKA (canlı A1, 2026-08-07 20:32:39Z): operatörün v211 yoluyla kurduğu DÖRT bağımsız koruma
 # OCO'su (`P-KORUMA-20260807-1623-{AMGN,BKNG,EMR,NUE}`) günlük kadansın süpürmesinde iptal edildi;
@@ -401,11 +401,11 @@ def cancel_order(order_id: str) -> dict:
 # yazılırken YOKTU. Sonuç bir kaza değil YAPISAL bir çarpışmaydı: koruma her kurulduğunda bir
 # sonraki süpürmede ölüyordu.
 #
-# İKİ KEMER, İKİSİ DE — biri ötekinin yedeği DEĞİL, ikisi iki AYRI olguyu tutuyor (v221'de ÜÇÜNCÜ
+# İKİ KEMER, İKİSİ DE — biri ötekinin yedeği DEĞİL, ikisi iki AYRI olguyu tutuyor (sonradan ÜÇÜNCÜ
 # bir GRUP KEMERİ eklendi — `coid_sinifi` üstündeki bloğa bakın; OCO stop bacağının kör noktası):
 #   YÖN KEMERİ  : bu motorun GİRİŞ emri BUY'dur. VARSAYILMADI, ÖLÇÜLDÜ — emir üreten tek giriş
 #                 yolu `submit_bracket`tir (`"side": "buy"`, gövde sabiti) ve `submit_plan` ondan
-#                 geçer; bu modülde ikinci bir giriş göndericisi yoktur (v220 kaynak-düzeyi
+#                 geçer; bu modülde ikinci bir giriş göndericisi yoktur (kaynak-düzeyi
 #                 çivisi). SELL bir emir bu sistemde giriş OLAMAZ → süpürülemez.
 #   AİLE KEMERİ : `koruma_coid()` ailesi (`P-KORUMA-`) AÇIK DIŞLAMADIR. Yön kemeri tek başına
 #                 yetmez: yarın kısa tarafa koruma kurulursa koruyucu bacak BUY-stop olur ve yön
@@ -421,7 +421,7 @@ GIRIS_EMRI_YONU = "buy"                             # long-only motor: giriş = 
 SINIF_GIRIS, SINIF_KORUMA, SINIF_YABANCI = "giris", "koruma", "yabanci"
 # Süpürmenin SINIF DÖKÜMÜ olayı. NEDEN AYRI BİR SATIR: iptalin olayını çağıran yazıyor
 # (`loop._cancel_mirror_entries` → `mirror_stale_entries_cancelled`) ve o satır yalnız SAYI taşıyor
-# — 08-07'de "cancelled:4" derken NEYİ iptal ettiğini söylemiyordu (devir tatbikatı §4 bu boşluğu
+# — 08-07'de "cancelled:4" derken NEYİ iptal ettiğini söylemiyordu (devir tatbikatı bu boşluğu
 # "ölçülemedi" diye kayda geçirdi: `cancelled[]` içeriği olaya yazılmalı). Çağıranlar bu turda
 # dokunulmaz kapsamda; dürüstlük bu yüzden İPTALİ YAPAN katmanda yaşıyor — hangi uç çağırırsa
 # çağırsın (döngü, pano tuşu, kopuş devre kesicisi) döküm aynı yerden düşer.
@@ -434,7 +434,7 @@ def is_koruma_order(o: dict) -> bool:
 
 
 # ==================================================================================================
-# ÜÇÜNCÜ KEMER (v221) — OCO/BRACKET GRUBUNUN BİR BACAĞI KORUMA İSE GRUBUN TAMAMI KORUMA
+# ÜÇÜNCÜ KEMER — OCO/BRACKET GRUBUNUN BİR BACAĞI KORUMA İSE GRUBUN TAMAMI KORUMA
 # ==================================================================================================
 # ÖLÇÜM (canlı A1 paper, salt-okuma GET, 2026-08-09; VARSAYILMADI): `koruma_kur` dört OCO gönderdi
 # ve her biri `orders(status="open", nested=True)` yanıtında ŞÖYLE görünüyor —
@@ -448,7 +448,7 @@ def is_koruma_order(o: dict) -> bool:
 # `legs[]`'i altından erişilebilir. Kemer bu ölçülen yapıya dayanır — "aynı sembolde iki sell" gibi
 # KIRILGAN bir çıkarıma DEĞİL (yarın aynı sembolde iki ayrı koruma olabilirdi; içerme bağı yapısaldır).
 #
-# KÖK NEDEN — STOP BACAĞI NEDEN `yabanci` DÜŞÜYORDU (hüküm sırası, ölçüldü): v220 `coid_sinifi`
+# KÖK NEDEN — STOP BACAĞI NEDEN `yabanci` DÜŞÜYORDU (hüküm sırası, ölçüldü): eski `coid_sinifi`
 # SAHİPLİK KAPISINI (`is_engine_order`) EN BAŞA koyuyordu. Stop bacağının coid'i Alpaca UUID'si →
 # `is_engine_order` False → fonksiyon YÖN KEMERİNE ULAŞMADAN `yabanci` dönüyordu. Oysa stop bacağı
 # SELL'dir ve yön kemeri ("SELL giriş olamaz → koruma") onu tutmalıydı; kapı sırası buna izin
@@ -472,8 +472,8 @@ def coid_sinifi(o: dict, grup_koruma: bool = False) -> tuple[str, str]:
 
     ÜÇ KEMER, ÖNCELİK SIRASIYLA (her biri AYRI bir olguyu tutar — biri ötekinin yedeği değil):
       1. AİLE KEMERİ : `is_koruma_order(o)` — `P-KORUMA-` coid'i taşıyan emir (açık dışlama).
-      2. GRUP KEMERİ : emir bir OCO/bracket grubunun üyesi VE grubun bir bacağı koruma ailesinden
-                       (v221). Emrin KENDİ coid'i Alpaca UUID'si olsa BİLE grup koruma sayılır.
+      2. GRUP KEMERİ : emir bir OCO/bracket grubunun üyesi VE grubun bir bacağı koruma ailesinden.
+                       Emrin KENDİ coid'i Alpaca UUID'si olsa BİLE grup koruma sayılır.
                        Sinyal iki yoldan gelir: (a) emrin KENDİ `legs[]`'inde bir koruma bacağı varsa
                        (üst düzey emir kendi kendine yeter — hangi bacağın damgayı taşıdığını
                        VARSAYMAZ); (b) `grup_koruma=True` — bir bacağı TEK BAŞINA sınıflarken çağıran
@@ -543,12 +543,12 @@ def cancel_open_entries() -> dict:
     canlı pozisyonu koruyor; onları iptal etmek pozisyonu çıplak bırakır (yasak, mirror_stream ile
     aynı ilke). Dönen: {cancelled:[...], kept:[...], foreign:[...], siniflar:{...}}.
 
-    SAHİPLİK (A3, denetim 2026-07-21): bu kağıt hesap yalnız motorun değil — operatörün kendi
+    SAHİPLİK (A3): bu kağıt hesap yalnız motorun değil — operatörün kendi
     emirleri de burada. Eskiden bu fonksiyon AÇIK olan HER dolmamış emri iptal ediyordu; panodaki
     tek tuş operatörün elle girdiği emri de sessizce siliyordu. Artık yalnız ENGINE_COID_PREFIX
     taşıyan (motorun gönderdiği) emirlere dokunur; yabancılar `foreign` altında sayılır.
 
-    KORUMA (v220, canlı vaka 2026-08-07 — yukarıdaki blok): sahiplik ve terminallik ölçütleri bir
+    KORUMA (canlı vaka 2026-08-07 — yukarıdaki blok): sahiplik ve terminallik ölçütleri bir
     emrin GİRİŞ olduğunu KANITLAMAZ. Süpürme adayı olabilmek için emir ayrıca `giris` SINIFINDAN
     olmalıdır (yön kemeri + aile kemeri, `coid_sinifi`). Koruma sınıfı emirler `kept` altına
     `sinif: koruma` etiketiyle düşer — sayılırlar, GÖRÜNÜRLER, ama süpürülmezler.
@@ -563,11 +563,11 @@ def cancel_open_entries() -> dict:
             st = str(o.get("status", "")).lower()
             filled = float(o.get("filled_qty") or 0)
             sym = o.get("symbol")
-            # GRUP KEMERİ (v221): `nested=True` her OCO/bracket'ın bacaklarını `o["legs"]` altında
+            # GRUP KEMERİ: `nested=True` her OCO/bracket'ın bacaklarını `o["legs"]` altında
             # getirir (ZORUNLU — düz çekimde OCO stop bacağı hiç görünmez, ölçüm 2026-08-09) ve
             # `coid_sinifi` üst düzey emri KENDİ bacaklarına bakarak sınıflar: grubun bir bacağı
             # `P-KORUMA-` ise üst düzey emir, coid'i aile öneki taşımasa da `koruma` düşer, süpürülmez.
-            # Süpürücü YALNIZ ÜST DÜZEYDE işlem/sayım yapar (bacaklar `legs` altında; v220 sınıf
+            # Süpürücü YALNIZ ÜST DÜZEYDE işlem/sayım yapar (bacaklar `legs` altında; sınıf
             # dökümü sayıları KORUNUR) — grup-farkındalığı hükmü bozmayan, kör noktayı kapatan katman.
             sinif, gerekce = coid_sinifi(o)
             out["siniflar"][sinif] = out["siniflar"].get(sinif, 0) + 1
@@ -613,7 +613,7 @@ _LIVE_ORDER_STATES = ("new", "accepted", "pending_new", "held", "open", "accepte
 def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     """İÇ MOTORUN ÇIKIŞ KARARINI AYNAYA TAŞI: yalnız MOTORUN KENDİ bracket'ını kapatır.
 
-    NEDEN VAR (C9, denetim 2026-08-02): time_stop / regime_flip / giveback / erken-itlaf çıkışları
+    NEDEN VAR (C9): time_stop / regime_flip / giveback / erken-itlaf çıkışları
     iç defteri kapatıyor ama aynadaki bracket AÇIK kalıyordu. Sonuç mutabakatta "motor yetimi"
     olarak HER TURDA alarm basıyor ve sembol `loop._mirror_busy` üzerinden kalıcı olarak karar
     dışında kalıyordu (huninin kendi kendini aç bırakması). Bu depoda pozisyon kapatan tek yol
@@ -639,11 +639,11 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     (loop._mirror_exit_sync) bunu ALARM'a çevirir ve bir sonraki döngüde yeniden dener. Bu pencere
     sessiz DEĞİLDİR.
 
-    KORUMA AİLESİ (B4, teşhis 2026-08-10 — 08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
+    KORUMA AİLESİ (B4 — 08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
     süzgeci v211'in BAĞIMSIZ koruma OCO'sunu (coid `P-KORUMA-…`, plan_id DEĞİL) görmüyordu; canlı
     satış bacakları hisseleri rehin tutarken DELETE her turda reddediliyor ve çıkış sonsuz
     `cikis_yetimi` dönüyordu. Artık kapatmadan önce AYNI SEMBOLÜN koruma-sınıfı emirleri de iptal
-    edilir. Sınıf hükmü TEK yerden okunur (`coid_sinifi` — v220 aile+yön, v221 grup kemerleri;
+    edilir. Sınıf hükmü TEK yerden okunur (`coid_sinifi` — aile+yön ve grup kemerleri;
     ikinci bir süzgeç YAZILMAZ) ve `yabanci` sınıfı yine dokunulmazdır (A3).
 
     İPTAL→KAPAT SIRASI (B4 davranış sözleşmesi — Alpaca'nın redd semantiğinden BAĞIMSIZ doğru sıra):
@@ -653,7 +653,7 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     hisseyle redd turu ya da yarı-sökülmüş koruma) üretmek yerine alarm + bir sonraki tur yeniden
     dener (kuyruk zaten yeniden dener, loop._mirror_exit_sync).
 
-    KAPATMA EMRİNİN KİMLİĞİ (B1, teşhis 2026-08-10): DELETE cevabının gövdesi, kapatmayı yapan
+    KAPATMA EMRİNİN KİMLİĞİ (B1): DELETE cevabının gövdesi, kapatmayı yapan
     YENİ market emrinin kendisidir (coid Alpaca-üretimi — plan_id ile ASLA eşleşmez). Emrin `id`si
     dönüşte `close_order_id` olarak taşınır ki reconcile o emrin `filled_avg_price`ını sonraki
     turda okuyup trades satırına yamayabilsin (E2 giriş-yamasının çıkış simetriği). Gövde/id
@@ -814,10 +814,9 @@ def submit_plan(plan: dict, equity: float, size_mult: float = 1.0,
                 atr: float | None = None, ref_price: float | None = None) -> dict:
     """Size a plan against the Alpaca paper account equity (same 1R=1% rule as the internal broker) and
     submit it as a paper bracket order. size_mult: the internal broker's drawdown de-risk multiplier —
-    without it the mirror over-sized ~2x in every drawdown and tripped spurious qty-drift alarms
-    (audit #50).
+    without it the mirror over-sized ~2x in every drawdown and tripped spurious qty-drift alarms.
 
-    E1 (WP-E, 2026-07-31): emir tipi/limiti/TIF'i ARTIK `broker.entry_order_decision` söyler — İÇ
+    E1: emir tipi/limiti/TIF'i ARTIK `broker.entry_order_decision` söyler — İÇ
     MOTORLA AYNI YASA, ikinci bir kopya YOK. `atr` sinyal barının ATR14'ü (None = ölçülemedi),
     `ref_price` gönderim anında bilinen son fiyat. Dönen sözlük `law` altında kararın TAMAMINI
     taşır: çağıran (loop) onu E2 defterine yazar, böylece "hangi yasayla, hangi limitle gönderdik"
@@ -833,7 +832,7 @@ def submit_plan(plan: dict, equity: float, size_mult: float = 1.0,
     qty = min(qty, int(MAX_NOTIONAL_PCT * equity / trigger))   # same notional cap as the internal broker
     if qty <= 0:
         return {"ok": False, "detail": "qty rounds to 0", "law": dec}
-    # GAP-RİSK VETOSU (kart grid'inin 2. noktası): emir HİÇ gönderilmez. `reachable` BİLEREK True —
+    # GAP-RİSK VETOSU: emir HİÇ gönderilmez. `reachable` BİLEREK True —
     # bu bir broker arızası değil BİZİM kararımızdır; çağıran onu 'ulaşılamadı' diye planı silahlı
     # bırakmamalı, ama 'broker reddi' diye de saymamalı (ret dağılımını kirletirdi).
     if dec["mode"] == "veto":
@@ -857,7 +856,7 @@ def exit_fill_price(order: dict) -> float | None:
         return None
     for leg in (order.get("legs") or []):
         # partially_filled carries a real filled_avg_price too — skipping it made the divergence audit
-        # silently no-op exactly when execution got messy (audit #54)
+        # silently no-op exactly when execution got messy
         if str(leg.get("status")) in ("filled", "partially_filled") and leg.get("filled_avg_price") not in (None, ""):
             try:
                 return float(leg["filled_avg_price"])
@@ -869,7 +868,7 @@ def exit_fill_price(order: dict) -> float | None:
 def koruma_fill(order: dict) -> dict | None:
     """Koruma emrinde DOLMUŞ bacağı bul — B3'ün okuma ucu (`exit_fill_price`in koruma kardeşi).
 
-    `exit_fill_price` YETMEZ, çünkü o yalnız `legs[]`e bakar; koruma OCO'sunda ise (ölçüm v221,
+    `exit_fill_price` YETMEZ, çünkü o yalnız `legs[]`e bakar; koruma OCO'sunda ise (ölçüm,
     canlı 2026-08-09) HEDEF bacağı primary'nin KENDİSİDİR (limit, coid `P-KORUMA-…`) ve stop bacağı
     `legs[0]`dadır. İki dolum şekli iki ayrı yerde yaşar:
       * hedef doldu → primary `filled`, fiyat primary'nin `filled_avg_price`ında;
@@ -878,7 +877,7 @@ def koruma_fill(order: dict) -> dict | None:
     DOLUMDUR — yalnız statüye bakmak onu kaçırırdı.
 
     SINIF HÜKMÜ BURADA VERİLMEZ: emrin koruma olup olduğuna `coid_sinifi` karar verir (tek hüküm
-    noktası, v220 yasası); bu fonksiyon yalnız verilen emrin İÇİNDEN dolumu okur.
+    noktası); bu fonksiyon yalnız verilen emrin İÇİNDEN dolumu okur.
 
     Dönüş: dolum yoksa None; varsa
       {"bacak": "stop"|"hedef"|None, "price": float|None, "neden": str, "filled_qty": float,
@@ -914,7 +913,7 @@ def replace_order_stop(order_id: str, new_stop: float, cur_stop: float | None = 
     trailing-stop ayna senkronu için: iç defterin iz süren stop'u yükseldikçe aynadaki koruma da
     yükselir. Paper-kilitli.
 
-    MONOTONLUK (A4, denetim 2026-07-21): koruma ASLA gevşetilmez. Bunu eskiden yalnız çağıran
+    MONOTONLUK (A4): koruma ASLA gevşetilmez. Bunu eskiden yalnız çağıran
     katmanın `ts > cur_stop*1.001` kontrolü sağlıyordu — yani kural koddaydı ama SINIRDA değildi;
     ikinci bir çağıran (elle senkron, gelecekteki bir yol) sessizce stop'u aşağı çekebilirdi.
     cur_stop verilirse sınırın kendisi reddeder."""
@@ -934,13 +933,13 @@ def replace_order_stop(order_id: str, new_stop: float, cur_stop: float | None = 
 
 
 # ==================================================================================================
-# KORUMANIN YENİDEN KURULMASI (v211) — ÇIPLAK KALAN POZİSYONA **OCO**
+# KORUMANIN YENİDEN KURULMASI — ÇIPLAK KALAN POZİSYONA **OCO**
 # ==================================================================================================
 # NEDEN VAR (canlı vaka, A1 2026-08-07): dört motor pozisyonu broker'da KORUMASIZ duruyor ve açık
 # emir SIFIR. Kök neden ölçüldü — bracket TIF'i emrin TAMAMINA uygulanır, `day` koruma bacaklarını
-# her seans kapanışında öldürüyordu. E1-v2 TIF'i `gtc`ye çekti (d47060b) ama o düzeltme YALNIZ
+# her seans kapanışında öldürüyordu. E1-v2 TIF'i `gtc`ye çekti ama o düzeltme YALNIZ
 # BUNDAN SONRA gönderilen bracket'ları bağlar; hâlihazırda çıplak duran pozisyonlar için bu depoda
-# hiçbir yol yoktu. `watchdog.koruma_report()` (v209) onları GÖRÜYOR ama görmek düzeltmek değildir:
+# hiçbir yol yoktu. `watchdog.koruma_report()` onları GÖRÜYOR ama görmek düzeltmek değildir:
 # bekçi haber verir, dokunmaz. Bu fonksiyon o boşluğun İCRA ucudur.
 #
 # ⚠ NEDEN OCO, NEDEN "İKİ AYRI EMİR" DEĞİL — BU BİR TASARIM TERCİHİ DEĞİL, BİR RİSK YASASI:
@@ -954,7 +953,7 @@ def replace_order_stop(order_id: str, new_stop: float, cur_stop: float | None = 
 #
 # TIF `gtc` (E1-v2 yasası): `day` tam da bu vakanın kök nedeniydi. Sabit burada TEKRAR yazılmaz —
 # `broker.PROTECTIVE_TIF` yok, ama `ENTRY_TIF`ten de TÜRETİLMEZ: giriş bacağının TIF'i bilinçli
-# olarak `day` olabilir (bayat tetik yasası, kart EXE-2026-001) ve koruma onu MİRAS ALMAMALIDIR.
+# olarak `day` olabilir (bayat tetik yasası) ve koruma onu MİRAS ALMAMALIDIR.
 # İki ayrı gerçek, iki ayrı sabit.
 KORUMA_TIF = "gtc"
 # ONAY JETONU — `CLOSE_ALL_CONFIRM` ile aynı gerekçe (A3): hiçbir otomatik yol (döngü, ajan, bekçi)
@@ -973,7 +972,7 @@ def koruma_coid(symbol: str, when=None) -> str:
     Dakika, çift-tıklamayı (asıl kaza sınıfı) yakalar, meşru yeniden kurmayı engellemez.
     BİRİNCİL idempotans bu değildir: o, gönderim öncesi canlı koruma denetimidir (api katmanı).
 
-    ÖNEK BİR SÖZLEŞMEDİR (v220): `KORUMA_COID_ONEK` aynı zamanda toplu süpürücünün AİLE KEMERİdir
+    ÖNEK BİR SÖZLEŞMEDİR: `KORUMA_COID_ONEK` aynı zamanda toplu süpürücünün AİLE KEMERİdir
     (`cancel_open_entries` → `coid_sinifi`). Bu yüzden burada elle yazılmaz, sabitten türetilir —
     iki yerde iki metin, 08-07'de dört korumayı öldüren çarpışmanın sessizce geri gelmesi olurdu."""
     stamp = (when or _dt.datetime.now(_dt.timezone.utc)).strftime("%Y%m%d-%H%M")
@@ -1047,7 +1046,7 @@ def submit_protective_oco(symbol: str, qty: float, stop_loss: float, take_profit
 def close_all(confirm: str = "") -> dict:
     """Cancel open orders + flatten all PAPER positions. Operator panic control for the mirror account.
 
-    SAHİPLİK + KAZA KORUMASI (A3, denetim 2026-07-21): bu çağrı motorun SAHİBİ OLMADIĞI pozisyonları
+    SAHİPLİK + KAZA KORUMASI (A3): bu çağrı motorun SAHİBİ OLMADIĞI pozisyonları
     da düzleştirir — operatörün kendi NVDA'sı bugün bu hesapta duruyor. Yani bu, ajanın kendi
     defterini toplaması değil, İNSANIN varlığına dokunmasıdır. O yüzden artık açık bir onay jetonu
     ister: hiçbir otomatik yol (döngü, ajan, bekçi) yanlışlıkla çağıramaz; yalnız operatörün
@@ -1068,7 +1067,7 @@ def close_all(confirm: str = "") -> dict:
 
 
 # ==================================================================================================
-# AYNI-AKŞAM GÜNLÜK BAR BACAĞI — VERİ UCU (data.alpaca.markets), TİCARET UCUNDAN AYRI (2026-07-30)
+# AYNI-AKŞAM GÜNLÜK BAR BACAĞI — VERİ UCU (data.alpaca.markets), TİCARET UCUNDAN AYRI
 # ==================================================================================================
 # NEDEN VAR (Rol 1'in kanıtlı teşhisi): bar zincirinin birincisi (Massive ücretsiz katmanı) grouped
 # günlük barı T+1 yayınlıyor — canlı kanıt state/massive_grouped_last.json: date 07-28, fetched_at
@@ -1079,7 +1078,7 @@ def close_all(confirm: str = "") -> dict:
 #
 # HOST AYRIMI — `_paper_base()` KİLİDİNE DOKUNULMADI: o kilit TİCARET ucu içindir (gerçek-para emri
 # imkânsız olsun diye). Veri ucu AYRI bir hosttur ve operatör-ayarlı DEĞİLDİR (DATA_STREAM_HOST ile
-# aynı ilke): kilitlenecek girdi yok, audit-#51 kimlik-sızıntı vektörü yok. Bu yoldan emir geçemez.
+# aynı ilke): kilitlenecek girdi yok, kimlik-sızıntı vektörü yok. Bu yoldan emir geçemez.
 #
 # UÇ SEÇİMİ (Rol 1 eki, resmi dokümandan teyitli): aynı-akşam için `/v2/stocks/snapshots` —
 # sembol başına `dailyBar` TEK çağrıda gelir, sayfalama yok. `/v2/stocks/bars` (sayfalamalı) yalnız

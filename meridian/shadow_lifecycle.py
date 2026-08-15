@@ -59,7 +59,7 @@ BOOK_SCHEMA = 1
 #   V3 — G3b erken itlaf. `exit.early_kill_bars` VARSAYILANDA (1) bırakıldı: ikinci düğmeyi de
 #        oynatmak iki değişkenli bir kol yapardı ve "hangisi etkiledi" sorusu ölçülemez hâle gelirdi.
 #        Pivot GEREKLİDİR ve bu motor onu taşır (armed yan haritası → fill_entry(pivot=...) →
-#        Position.pivot). C13 (2026-08-02): canlı yol da artık taşıyor — bu satır eskiden "canlıda
+#        Position.pivot). Canlı yol da artık taşıyor — bu satır eskiden "canlıda
 #        pivot 0.0, orada atıldır" diyordu, yani bu kolun ölçtüğü kazanç terfi etse canlıda sessiz
 #        no-op olurdu. Kol artık CANLIDA UYGULANABİLİR bir düğmeyi ölçüyor.
 #   V6 — Batch L #8 kısmi kâr alma. YALNIZ `scale_out_frac`: `scale_out_r` zaten 2.0 (üretim
@@ -236,7 +236,7 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
         bar = _bar_on(df, d)
         if bar is not None and not breaker_tripped and size_mult > 0 \
                 and len(b.positions) < eff_max_open and t not in b.positions:
-            # C11+C18 (denetim 2026-08-02): `atr` de pivot ile AYNI yan haritadan geçer. Geçmediği
+            # `atr` de pivot ile AYNI yan haritadan geçer. Geçmediği
             # sürece `broker.entry_limit_price` ATR bacağını hiç göremiyor ve bu motor limiti DAİMA
             # %1 tavanıyla kuruyordu — canlı motor min(0,5·ATR14, %1) ile koşarken. Gölge-v2 terfi
             # kanıtı üretir; canlının reddedeceği dolumları yazması, terfi kararını iyimser bir icra
@@ -359,9 +359,9 @@ def _day(doc: dict, date: str, live: dict, *, tickers, tail_of, rs_of, sector_of
             # Bar bulunamayan sembolde çağıranın girdisine düşülür — uydurma sıfır yerine bilinen kaynak.
             _corr = _corr_fn(bars_of, d, list((bk.get("positions") or {})), max_corr_of)
             armed_next = []
-            # C12 KAPSAM BEYANI (2026-08-02) — GÖLGE KOLU Y3 NAV TAVANLARINI GÖREMEZ. Kapının
+            # C12 KAPSAM BEYANI — GÖLGE KOLU Y3 NAV TAVANLARINI GÖREMEZ. Kapının
             # portföy sözlüğünü bu modül DEĞİL `sv._judge` kurar (v1 ve v2 aynı yüzeyi paylaşır);
-            # canlı/replay/cf üçlüsüne bu turda eklenen `equity`/`sector_notional`/`heat_pct` +
+            # canlı/replay/cf üçlüsüne eklenen `equity`/`sector_notional`/`heat_pct` +
             # plan `notional`/`risk_dollars` alanları orada YOKTUR. SONUCU: `portfolio.sector_cap`
             # ya da `portfolio.heat_cap` taşıyan bir KOL kurulursa, gölge defteri o tavanı hiç
             # uygulamaz ve kolun ölçtüğü ΔS canlıda karşılığı olmayan bir sayı olur — yani C13'ün
@@ -481,7 +481,7 @@ def run_cycle(date: str, *, tickers, tail_of, rs_of, sector_of, max_corr_of, eff
     `write=False` testler için: kitap/işlemler ÜRETİLİR, diske YAZILMAZ (canlı state'e yazan test yok).
     Dönüş: {"trades": [...], "books": {...}, "dropped_arms": [...], "seeded": [...]} ya da None (kapalı).
 
-    KİLİT (B3, 2026-07-31): gövde bir OKU-DEĞİŞTİR-YAZdır (kitap okunur, tur işlenir, kitap geri
+    KİLİT: gövde bir OKU-DEĞİŞTİR-YAZdır (kitap okunur, tur işlenir, kitap geri
     yazılır) ve kilitsizdi. Tek yazar OLMASI kilidi gereksiz kılmaz: aynı kodu iki SÜREÇ koşarsa
     (zamanlayıcı + elle tetiklenen tur) geç biten, öbürünün tüm kollarını eski kopyasıyla geri
     alır. Kilit YALNIZ `write=True` iken alınır — `write=False` hiçbir bayta dokunmaz ve testlerin

@@ -106,7 +106,7 @@ def _note_down(exc: BaseException) -> None:
     _HEALTH["fails"] += 1
     _HEALTH["last_error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
     _HEALTH["at"] = _now_iso()
-    # KURT MASALI YASAĞI (çekişmeli inceleme bulgusu, 2026-07-23): girdi hataları (float(None) vb.)
+    # KURT MASALI YASAĞI (çekişmeli inceleme bulgusu): girdi hataları (float(None) vb.)
     # Redis'in DOWN olduğu anlamına GELMEZ — TypeError/ValueError/KeyError sağlığı DÜŞÜRMEZ, yalnız
     # sayaç artırır. Aksi hâlde bozuk tek bir değer panoyu "Redis erişilemez" diye yanlış-kırmızıya boyar.
     if isinstance(exc, (TypeError, ValueError, KeyError)):

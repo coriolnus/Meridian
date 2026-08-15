@@ -31,7 +31,7 @@ STATUS_FILE = "hermes_status.json"
 REFLECTION_MIN_DAYS = int(os.environ.get("HERMES_REFLECTION_MIN_DAYS", "30"))   # Phase 3 overfitting horizon
 WARMUP_EVERY_POLLS = int(os.environ.get("MERIDIAN_WARMUP_EVERY_POLLS", "12"))   # ısınma sprinti sıklığı (poll)
 
-# ---- ISINMA SPRİNTİ SÜRE TAVANI (WP-H/H11, 2026-07-31) -----------------------------------------
+# ---- ISINMA SPRİNTİ SÜRE TAVANI ----------------------------------------------------------------
 # 300 dk = 5 sa, ısınmanın NOMİNAL üst bandı (ölçülmüş aralık 1-5 sa). Tavan bir kısıtlama değil,
 # ANOMALİ SINIRI: nominal bandın içinde kalan hiçbir koşum kesilmez; 5 saati aşan koşum tanım gereği
 # artık nominal değildir ve döngüyü daha fazla rehin tutmasının hiçbir gerekçesi yoktur.
@@ -71,15 +71,15 @@ def _warmup_tavan_dk() -> float:
 
 
 def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | None:
-    """#2 REJİM-HEDEFLİ ARKA PLAN YANSIMASI: canlı rejimin ufku dolmadığında boşta beklemek,
+    """REJİM-HEDEFLİ ARKA PLAN YANSIMASI: canlı rejimin ufku dolmadığında boşta beklemek,
     diğer rejimlerin BİRİKMİŞ kanıtını israf etmekti (chop'ta yaşarken trend_up defterinde 80+
     işlem kullanılmadan duruyordu). Ufku DOLU (katı-VE, rejim-dilimli) canlı-dışı rejimlerden,
     son arka-plan yansımasından beri EN ÇOK yeni işlem birikmişi seçilir. Rejim başına taban:
     aynı kanıta ikinci kez yansıma yok.
 
-    GÜVENLİK BEYANI ARTIK KODDA KARŞILIĞI OLAN BİR CÜMLE (C16, 2026-08-02). Beyan: "ship yalnız
+    GÜVENLİK BEYANI ARTIK KODDA KARŞILIĞI OLAN BİR CÜMLE. Beyan: "ship yalnız
     params_by_regime[o rejim]'i değiştirir — canlı davranış rejim dönene dek değişmez ve o güne
-    kadar kapı+defterde denetlenmiştir." Bu cümle 2026-08-02'ye dek KARŞILIKSIZDI: bu fonksiyon
+    kadar kapı+defterde denetlenmiştir." Bu cümle bir süre KARŞILIKSIZDI: bu fonksiyon
     `trend_up` döndürdüğünde `reflect_once` içindeki `!= "trend_up"` istisnası aramayı GLOBAL
     koşturuyor, `versioning.bump` '@' göremediği için düz `params`a yazıyordu — yani chop canlıyken
     chop davranışı, chop'un hiç sertifika vermediği kanıtla anında değişiyordu. UYGULAMA YERİ BU
@@ -101,13 +101,13 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
 
 
 def _warmup_sprint() -> None:
-    """Boş-döngü ısınması (öneri #4): coordinate_descent_search'i SHIP ETMEDEN koştur — yalnız UCB
-    önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz) VE C17'den beri bu
+    """Boş-döngü ısınması: coordinate_descent_search'i SHIP ETMEDEN koştur — yalnız UCB
+    önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz) VE artık bu
     beyan DEFTER tarafında da geçerli: `record_session=False` ile resmî aşınma/doğrulama kaydı
     düşmez. En iyi probe'un özeti hermes_status'a yazılır (görünürlük). Ağ/veri hatası sessizce
     yutulur — ısınma asla döngüyü kırmaz.
 
-    WP-H/H11 (2026-07-31) — İKİ KUSUR BİRDEN KAPANIR, İKİSİ DE AYNI KÖKTEN:
+    İKİ KUSUR BİRDEN KAPANIR, İKİSİ DE AYNI KÖKTEN:
 
       (1) POLL AÇLIĞI. Bu fonksiyon hermes bekleme döngüsünün KENDİ iş parçacığında koşar ve nominal
           süresi 1-5 saattir. O süre boyunca `_run` döngüsü bir sonraki tura dönemez, yani
@@ -128,7 +128,7 @@ def _warmup_sprint() -> None:
         from . import hermes, reflect, dataset
         from . import watchdog as _wd8
         bars, index = dataset.load()
-        # #2: önce sıradaki muhtemel yansımaların incumbent'ları (global + canlı + ufku dolu arka plan
+        # önce sıradaki muhtemel yansımaların incumbent'ları (global + canlı + ufku dolu arka plan
         # rejimi) — yansıma anında kapı beklemesin; sonra sonda ısınması.
         try:
             trades = store.read_jsonl("trades.jsonl")
@@ -148,13 +148,13 @@ def _warmup_sprint() -> None:
             _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
 
         _tavan = _warmup_tavan_dk()
-        # `record_session=False` (C17, 2026-08-02): "Nothing ships" beyanı artık DEFTER tarafında da
+        # `record_session=False`: "Nothing ships" beyanı artık DEFTER tarafında da
         # doğru. Isınma her 12 poll'da bir koşar ve sonda başına resmî kayıt düşerken tek bir gecede
         # aşınma sayacını yüzlerle besliyordu (`EROSION_QUERY_LIMIT=20` ilk ısınma gecesinde aşılıyor,
         # +0.01 ek marj ömür boyu açık kalıyordu) — hiçbir şey ship edemeyen bir turun kapıyı KALICI
         # olarak sıkması. Sıfır kayıt bir muafiyet değil, beyanın uygulanması: ship yetkisi olmayan
         # tur resmî soru sormaz.
-        # BÜTÇE ARTIK SABİT DEĞİL (v190, 2026-08-06): `cleared: 0` ile biten her koşum bir sonrakini
+        # BÜTÇE ARTIK SABİT DEĞİL: `cleared: 0` ile biten her koşum bir sonrakini
         # bir kademe genişletir, ilk clearing tabana döndürür, süre tavanına takılan koşum duvarı
         # ÖLÇER. Yasa ve durum TEK YERDE (`hermes.warmup_budget`) — burada sayı yok, çağrı var.
         _wb = hermes.warmup_budget()
@@ -213,7 +213,7 @@ def _now() -> str:
 def _brain() -> str:
     """Aktif beyin: HERMES_BRAIN_ORDER zincirinde anahtarı hazır VE soğumada olmayan ilk sağlayıcı
     (claude/nous/gemini), hiçbiri yoksa deterministik. Görüntü katmanı da bu tek kaynaktan okur.
-    Soğuma farkı v66'da eklendi: gemini üç gün 429 yerken pano hâlâ bir LLM beyni gösteriyordu, yani
+    Soğuma farkının kökeni ölçülmüş bir vaka: gemini üç gün 429 yerken pano hâlâ bir LLM beyni gösteriyordu, yani
     deterministik yola düşüş LLM görüşü gibi okunuyordu — bozunmanın gizlenmesi tam olarak budur."""
     try:
         from . import hermes
@@ -236,7 +236,7 @@ def _brain_chain() -> dict:
     """Zincirin YEDEKLİLİĞİ hakkında yalnız ölçülen olgular (bkz. hermes.brain_chain_facts):
     ad saymak kota saymak değildir. Bağımsız uç sayısı burada da ÜRETİLMEZ.
 
-    İSTİSNA ARTIK YUTULMUYOR (2026-07-26): boş sözlük dönmek "hermes hiç koşmadı" (taze kurulum)
+    İSTİSNA ARTIK YUTULMUYOR: boş sözlük dönmek "hermes hiç koşmadı" (taze kurulum)
     ile "ÖLÇÜM ARIZALANDI" (hermes import'u/çağrısı düştü) arasındaki farkı siliyordu — ve bekçi
     tarafındaki `if _ch:` kapısı ikisini birden düşürüyordu. Yani yedeklilik denetiminin KENDİSİ
     bozulduğunda pano hiçbir şey söylemiyor, kör noktayı sessizlik gibi gösteriyordu. Hata SINIFI
@@ -331,7 +331,7 @@ _acilis_senkron_calisti = False      # SÜREÇ BAŞINA bir kez (start/stop döng
 
 
 def _acilis_senkron_dogrula() -> dict:
-    """(a) AÇILIŞ SENKRON-DOĞRULAMASI — SÜREÇ BAŞINA BİR KEZ (HERMES-DAYANIKLILIK, 2026-08-02).
+    """AÇILIŞ SENKRON-DOĞRULAMASI — SÜREÇ BAŞINA BİR KEZ.
 
     CANLI VAKA (6 gün sessiz ölüm): A1 taşınmasında `~/.hermes` yapılandırması TAŞINMADI (hiçbir
     dağıtım kanalının parçası değildi), `sync_local_agent_gemini` yalnız operatör panodan anahtar
@@ -397,7 +397,7 @@ def _run(poll_seconds: int) -> None:
             _state["last_poll"] = _now()
             _persist()      # poll BAŞLARKEN yaz: aşağıdaki yansıma dakikalar sürebilir ve tek yazma
                             # poll sonundaysa dosya o süre boyunca donar, panoda "hiç poll yapılmadı"
-                            # görünür (gözlem boşluğu, 2026-07-22).
+                            # görünür (gözlem boşluğu).
             from . import watchdog as _wd7
             _wd7.beat("hermes_poll")
             try:
@@ -441,7 +441,7 @@ def _run(poll_seconds: int) -> None:
                         _state["_warm_skip"] = "bg_reflect"
                         obs.log("bg_reflection_start", regime=bg,
                                 detail="canlı ufuk dolu değil — birikmiş kanıtlı rejim arka planda işleniyor")
-                        # `background=True` ARKA PLAN TURUNUN KİMLİĞİDİR (C16): `reflect_once` bu
+                        # `background=True` ARKA PLAN TURUNUN KİMLİĞİDİR: `reflect_once` bu
                         # bayrak olmadan kanıtın canlı-dışı bir rejimden geldiğini BİLEMİYORDU ve
                         # bg=trend_up hâlinde ship yüzeyi GLOBAL oluyordu. Bayrak, aramayı `bg`
                         # rejimine zorlar ve global (@'sız) önerileri o turda reddettirir.
@@ -451,7 +451,7 @@ def _run(poll_seconds: int) -> None:
                         _reflect_lock.release()
                 elif os.environ.get("MERIDIAN_WARMUP_SPRINTS", "1") == "1" and \
                         _reflect_lock.acquire(blocking=False):
-                    # ISINMA SPRINTİ (öneri #4): yansıma ateşlemeye HAK KAZANMADI (ufuk dolmadı) ama işlemci
+                    # ISINMA SPRINTİ: yansıma ateşlemeye HAK KAZANMADI (ufuk dolmadı) ama işlemci
                     # boşta. Sandbox koordinat araması koştur — HİÇBİR ŞEY SHIP ETMEDEN, yalnız UCB
                     # önceliklerini ısıtmak için (probe'lar defter-kalıcı çıkmaz yaratmaz — bilinçli tasarım).
                     # Gerçek yansıma ateşlediğinde arama bilgili sıralamadan başlar. Sık koşmasın diye

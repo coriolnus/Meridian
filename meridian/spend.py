@@ -30,7 +30,7 @@ PRICE_IN_PER_M = float(os.environ.get("HERMES_PRICE_IN", "15.0"))
 PRICE_OUT_PER_M = float(os.environ.get("HERMES_PRICE_OUT", "75.0"))
 MONTHLY_BUDGET_USD = float(os.environ.get("HERMES_MONTHLY_BUDGET_USD", "20.0"))
 
-# MODEL BAŞINA fiyat (denetim turu 31, 2026-07-21). Eskiden TEK bir fiyat vardı ve `record(model=...)`
+# MODEL BAŞINA fiyat. Eskiden TEK bir fiyat vardı ve `record(model=...)`
 # onu YOK SAYIYORDU: ücretsiz katmandaki Gemini ya da yerelde koşan Nous çağrıları da Opus listesi
 # ($15/$75 per M) ile fiyatlanıyordu. Sonuç: HARCANMAMIŞ para bütçeyi doldurur, over_budget() true
 # olur ve LLM katmanı sessizce kapanırdı — "beyin neden susuyor" sorusunun görünmez cevabı.
@@ -56,7 +56,7 @@ def price_for(model: str | None) -> tuple[float, float]:
 
 def _now_iso() -> str:
     """UTC — defterin geri kalanıyla (obs, memory, watchdog) AYNI saat dilimi. Eskiden yerel saatti;
-    ay sınırı diğer kayıtlarla kayıyor ve satırlar olay defteriyle yan yana okunamıyordu (turu 31)."""
+    ay sınırı diğer kayıtlarla kayıyor ve satırlar olay defteriyle yan yana okunamıyordu."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 

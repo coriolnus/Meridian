@@ -386,7 +386,7 @@ def _bounds() -> dict:
 
 
 # =================================================================================================
-# OTOMATİK YÖNLENDİRME BORUSU (v192, 2026-08-06 — operatör: "öneriler duruyor, kimse işlemiyor")
+# OTOMATİK YÖNLENDİRME BORUSU (operatör: "öneriler duruyor, kimse işlemiyor")
 # =================================================================================================
 # ÖLÇÜLEN KUSUR (canlı defter, 2026-W32): üç öneri kabul edildi, ÜÇÜ DE `sekil="tasarim"`, ÜÇÜNÜN DE
 # `kuyruk="yol_yok"`. Yani kalite kapısı çalıştı, defter yazıldı, pano gösterdi — ve sonra HİÇBİR ŞEY
@@ -406,7 +406,7 @@ def _bounds() -> dict:
 #   (c) cekirdek_hakkinda→ ANAYASAL RED. `CekirdekIhlali` FIRLATILMAZ ve ALARM BASILMAZ: o istisna
 #                          bir KOD HATASININ (köprünün yanlış yönlendirmesinin) işaretidir — burada
 #                          ise sistem DOĞRU çalışıyor, yalnızca sınıf kapalı. Anayasanın normal
-#                          işleyişini alarm diye raporlamak, bu turun kapattığı alarm-yorgunluğu
+#                          işleyişini alarm diye raporlamak, alarm-yorgunluğu
 #                          kusurunun ta kendisi olurdu. Sade bir olay yazılır; docstring'in Katman-D
 #                          sözü (kuyruk yolu YAPISAL olarak kapalı) DEĞİŞMEDEN durur.
 #
@@ -508,7 +508,7 @@ def boru(kabul: list, *, hafta: str, yaz: bool = True) -> dict:
 
 
 # =================================================================================================
-# ⑤ GERİ BESLEME: ÖNCEKİ ÖNERİLERİN AKIBETİ (H1 deseninin mekanizma-düzeyi ikizi)
+# ⑤ GERİ BESLEME: ÖNCEKİ ÖNERİLERİN AKIBETİ
 # =================================================================================================
 def onceki_akibet(n_hafta: int = 2, hafta: str | None = None) -> dict:
     """Geçen haftaların önerilerine NE OLDU — beynin KENDİ önerilerinin karnesi.
@@ -578,7 +578,7 @@ def _akibet(satir: dict, kuyruk: dict) -> str:
     if st == "pending":
         return "SIRADA (bütçe açıldığında ölçülecek)"
     if st == "measure_failed":
-        # C14 (2026-08-02) kuyruk durum alfabesine `measure_failed` ekledi; bu okuma o gün genel
+        # Kuyruk durum alfabesine `measure_failed` eklendi; bu okuma eskiden genel
         # dala düşüyordu ("kuyruk durumu: measure_failed"). Teknik olarak doğru, PRATİKTE ÖLÜ:
         # beyin bir sonraki haftanın önerisini `neden`e göre değiştirir ve iki başarısızlık İKİ AYRI
         # derstir — "guard bütün adayları reddetti" (öneri fizibilitesizdi, ŞEKLİNİ değiştir) ile
@@ -705,7 +705,7 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
                   "sekil_dagilimi": _say(kabul, "sekil"), "oncelik_dagilimi": _say(kabul, "oncelik"),
                   "n_kuyruk": len(kopru["kuyruga_giren"]), "devreden": kopru["devreden"],
                   "slot": kopru["slot"], "haftalik_butce": kopru["haftalik_butce"]})
-    # DEFTER ÖNCE, BORU SONRA (v192): fiş satırı önerinin `id`sini taşımalı ve o kimlik burada,
+    # DEFTER ÖNCE, BORU SONRA: fiş satırı önerinin `id`sini taşımalı ve o kimlik burada,
     # `_oneri_kaydet` içinde doğuyor. Ters sıra fişleri kimliksiz bırakır ve iki koşum aynı öneri
     # için iki fiş üretirdi (tekilleştirme anahtarı kimliktir).
     if yaz:

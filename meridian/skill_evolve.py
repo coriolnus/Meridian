@@ -44,7 +44,7 @@ def _skills_root() -> str:
 
 
 def _repo_skill_dir(name: str) -> str:
-    """Skill adından dizin — ADI DOĞRULAYARAK (denetim turu 29, 2026-07-21).
+    """Skill adından dizin — ADI DOĞRULAYARAK.
 
     Eskiden ad doğrudan os.path.join'e giriyordu: `../../..` içeren bir ad skills/ dışına çıkar ve
     apply_revision o yolda DOSYA DEĞİŞTİRİRDİ (os.replace). Ad panodan geliyor; yetki gerekiyor ama
@@ -182,7 +182,7 @@ def draft_revision(skill_name: str) -> dict | None:
             rationale = line.split(":", 1)[1].strip()[:300]
             break
     draft_path = path + ".v2-draft"
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): düz open(w) → store.write_text (atomik tmp+fsync+flock). NEDEN
+    # KAPI-DIŞI TAŞIMA: düz open(w) → store.write_text (atomik tmp+fsync+flock). NEDEN
     # ATOMİK ŞART: yarım/sıfır-baytlık taslak, operatör ONAY YOLUNDA os.replace ile CANLI SKILL.md'ye
     # taşınır → ajan bozuk skill okur. draft_path skills/ altında (STATE DIŞI) → store mutlak adı
     # olduğu gibi kullanır; tek yazar (bu fonksiyon) için kilit yeterli. YASA-6 OKUYUCU: onay yolu

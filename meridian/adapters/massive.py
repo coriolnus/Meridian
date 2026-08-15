@@ -166,7 +166,7 @@ class MassiveError(RuntimeError):
 
 
 # ==================================================================================================
-# GÜN-İÇİ YETKİ KAPISI (v186, 2026-08-04) — 401/403 GEÇİCİ DEĞİLDİR, YENİDEN DENENMEZ
+# GÜN-İÇİ YETKİ KAPISI — 401/403 GEÇİCİ DEĞİLDİR, YENİDEN DENENMEZ
 # ==================================================================================================
 # ÖLÇÜM (state/events.jsonl, 2026-07-29 21:15:12Z → 23:51:08Z): AYNI seans (`date=2026-07-30`) için
 # 24 kez `massive_grouped_failed reason="HTTP 403"`. Ardışık damgalar arası ~300 sn — yani tam olarak
@@ -262,7 +262,7 @@ def _get(path: str, params: dict | None = None, timeout: float = 30.0,
 
     Anahtar `Authorization: Bearer` BAŞLIĞINDA gider, sorgu parametresinde DEĞİL — parametre olsaydı
     her hata metni ve her ara-vekil logu anahtarı taşırdı (FMP tarafında tam olarak bu yüzden
-    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır — ve v186'dan beri
+    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır — ve artık
     çağrılar ARASINDA da hatırlanır (bkz. GÜN-İÇİ YETKİ KAPISI).
 
     `kapi_atla=True` YALNIZ operatörün elle tetiklediği ölçüm içindir (`ping`): bir insan "test et"
@@ -316,7 +316,7 @@ def _get(path: str, params: dict | None = None, timeout: float = 30.0,
             reason = f"HTTP {status}"
             _HEALTH["fails"] += 1
             if status in YETKI_RET_KODLARI:
-                # v186: hüküm bu ÇAĞRIYI değil GÜNÜ bağlar. Ölçüm: aynı seans için 24 kez, 300 sn
+                # Hüküm bu ÇAĞRIYI değil GÜNÜ bağlar. Ölçüm: aynı seans için 24 kez, 300 sn
                 # arayla, tamamen boşuna (bkz. GÜN-İÇİ YETKİ KAPISI bloğu).
                 _yetki_reddi_yaz(path, status)
             break
@@ -594,7 +594,7 @@ def covers(start: str) -> bool:
 def reset_cache() -> None:
     """Süreç-içi anlık görüntü memosunu (ve başarısızlık soğumasını) temizle — testler, gün dönümü.
 
-    YETKİ DEFTERİ DE SİLİNİR (v186) ve gerekçesi diğer ikisiyle AYNI DEĞİLDİR, o yüzden yazılı:
+    YETKİ DEFTERİ DE SİLİNİR ve gerekçesi diğer ikisiyle AYNI DEĞİLDİR, o yüzden yazılı:
     üretimdeki tek çağıran `scheduler.advance_once`ın "yeni seansın kovalaması BAŞLARKEN" dalıdır
     (seans başına bir kez). Yani kapı yeni bir seansta bir kez daha ölçülür — "günde bir kez dene"
     yasasının seans sınırındaki ikizi, ve ücreti tek bir istektir."""
@@ -854,7 +854,7 @@ def ping() -> dict:
     if not available():
         return {"ok": False, "detail": f"{KEY_NAME} girilmemiş"}
     try:
-        # KAPIYI ATLA (v186): operatör "Test et"e bastığında ölçüm İSTEMİŞTİR. Gün-içi yetki
+        # KAPIYI ATLA: operatör "Test et"e bastığında ölçüm İSTEMİŞTİR. Gün-içi yetki
         # kapısından cevap vermek, hiç istek atmadan "ölçtüm" demek olurdu (uydurma yasağı) — ve
         # tam da anahtar/plan DÜZELTİLDİKTEN sonra basılan düğme, düzelmeyi göremezdi.
         d = _get("/v3/reference/tickers", {"market": "stocks", "limit": 1}, timeout=12.0,

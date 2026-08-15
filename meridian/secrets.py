@@ -47,7 +47,7 @@ ALLOWED: frozenset[str] = frozenset({
     "NOUS_API_KEY",             # Nous Hermes brain (Nous Portal / hermes-agent OpenAI-compat endpoint)
     "NOUS_ENDPOINT",            # optional base URL override (default https://inference.nousresearch.com/v1)
     "NOUS_MODEL",               # optional model id override
-    # 2026-07-22: kod bu adı OKUYORDU (hermes._agent_call düşüş zinciri + ajan fallback_providers)
+    # Kod bu adı OKUYORDU (hermes._agent_call düşüş zinciri + ajan fallback_providers)
     # ama izin listesinde YOKTU — yani `secrets.set` onu reddediyor, operatör hiçbir zaman
     # ayarlayamıyordu. Sonuç: "düşüş zinciri" ömrü boyunca tek elemanlı kaldı ve olay kaydı
     # "tüm model zinciri cevapsız (tried=1)" diyordu; yedeğin YOKLUĞU, BAŞARISIZLIĞI gibi okunuyordu.
@@ -57,7 +57,7 @@ ALLOWED: frozenset[str] = frozenset({
     "GEMINI_MODEL",             # optional model id override
     "HERMES_BRAIN_ORDER",       # brain chain priority, e.g. "gemini,nous,claude"
     "ANTHROPIC_API_KEY",
-    # 2026-07-23: Finviz otonom aday kaynağı. Elite CSV export için (1 haftalık trial). YOKKEN veya
+    # Finviz otonom aday kaynağı. Elite CSV export için (1 haftalık trial). YOKKEN veya
     # süresi dolunca adapter public HTML'e düşer, o da olmazsa evren REPLAY_UNIVERSE'e döner — hepsi
     # dürüst bozunma (adapters/finviz.py). Yalnız evreni genişletir; karar/kapı asla Finviz'e bakmaz.
     "FINVIZ_API_KEY",
@@ -82,7 +82,7 @@ def _read_file() -> dict:
     global _PERM_WARNED
     try:
         p = _path()
-        # İZİN DENETİMİ (denetim turu 28, 2026-07-21): yazarken 0600 uyguluyoruz ama OKURKEN hiç
+        # İZİN DENETİMİ: yazarken 0600 uyguluyoruz ama OKURKEN hiç
         # bakmıyorduk. Dosya bir kopyalama/geri yükleme/eski sürüm yüzünden gruba ya da dünyaya
         # açıksa anahtarlar sessizce okunabilir durumda kalır ve bunu kimse söylemez. Süreç başına
         # BİR kez uyar (spam yok) — düzeltmeyi operatöre bırak, çalışmayı engelleme.
@@ -104,7 +104,7 @@ def _read_file() -> dict:
         # kurmamış olabilir) — hata değil yapılandırma; burada uyarmak her çağrıda gürültü üretirdi.
         return {}
     except Exception as e:
-        # YASA 4 (2026-07-21): dosya VARDIR ama okunamıyorsa boş sözlük dönmek "hiç sır
+        # YASA 4: dosya VARDIR ama okunamıyorsa boş sözlük dönmek "hiç sır
         # yapılandırılmamış" ile AYNI görünür — ajan sessizce deterministik moda düşer, hiçbir
         # sağlayıcı çağrılmaz ve kimse bunu bir hata sanmaz. Yalnız hatanın TÜRÜ kaydedilir;
         # dosya içeriği/anahtar ASLA loglanmaz.

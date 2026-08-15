@@ -27,7 +27,7 @@ from . import indicators as ind
 TREND_UP, TREND_DOWN, CHOP, HIGH_VOL = "trend_up", "trend_down", "chop", "high_vol"
 
 
-# ÇIKARILDI 2026-07-30 (temizlik turu): `_slice(bars, upto_idx)` → `bars.iloc[: upto_idx + 1]`.
+# ÇIKARILDI 2026-07-30: `_slice(bars, upto_idx)` → `bars.iloc[: upto_idx + 1]`.
 # ÇAĞIRAN TARAMASI (meridian/ + tests/): bu modülde de repo genelinde de tek eşleşme tanımın
 # kendisiydi ("_slice" araması yalnız `has_slices`/`atr_slice` gibi ALAKASIZ adlara düşüyor).
 # NEDEN ÖLÜ: tek satırlık bir dilimleme yardımcısı; `classify` çağıranın verdiği barları OLDUĞU
@@ -42,7 +42,7 @@ def classify(index_bars: pd.DataFrame) -> tuple[str, dict]:
     """Classify the market regime from index bars ending at the last CLOSED bar.
     Returns (regime, metrics).
 
-    ISINMA DOLMADAN TREND SINIFLANMAZ (2026-07-22, sinyal-matematiği turu). Eski kod iki ayrı
+    ISINMA DOLMADAN TREND SINIFLANMAZ. Eski kod iki ayrı
     uydurma yapıyordu ve ikisi de "ölçülmemiş bir şeyi ölçülmüş gibi" sunuyordu:
       (1) 200 bar yoksa `sma(close, min(len-1, 150))` hesaplayıp metriklere `"sma200"` ADIYLA
           yazıyordu. 60 barlık bir endeksle `classify` çağrısı `sma200: 113.72` döndürüyordu —
@@ -160,8 +160,8 @@ def build_regime_json(index_bars: pd.DataFrame, params: dict, date: str) -> dict
         "rationale": f"{regime}: exposure_score={score} vs min={min_exp} -> budget={budget}%; "
                      f"distribution_days={dd}, ftd={ftd}",
     }
-    # --- `entry_gates` ANAHTARI BURADA YAZILMAZ — EDG-005 HÜKMÜ: GÖSTERGE, KAPI DEĞİL (2026-08-01)
-    # 2026-07-31'de bu satır, üretici-tüketici paritesini kurmak için eklenmişti: `guard` hükmü
+    # --- `entry_gates` ANAHTARI BURADA YAZILMAZ — HÜKÜM: GÖSTERGE, KAPI DEĞİL
+    # Bu satır önce üretici-tüketici paritesini kurmak için eklenmişti: `guard` hükmü
     # `regime["entry_gates"]`ten okuyor ama anahtarı yalnız pano yolu üretiyordu (kapı panoda vardı,
     # kararda yoktu). Parite kuruldu ve AYNI GÜN kapının kendisi ÖLÇÜLDÜ: kart EDG-2026-005 arşive
     # düştü — "KAPI AÇILMAZ, pano göstergesi yeter". Dolayısıyla doğru düzeltme paritenin diğer
@@ -178,23 +178,23 @@ def build_regime_json(index_bars: pd.DataFrame, params: dict, date: str) -> dict
 
 
 # ==================================================================================================
-# Y3 REJİM/RİSK DÖRTLÜSÜ — İKİ PİYASA GÖSTERGESİ (Hafta 3b, 2026-07-30; EDG-005 sonrası 2026-08-01)
+# Y3 REJİM/RİSK DÖRTLÜSÜ — İKİ PİYASA GÖSTERGESİ
 # ==================================================================================================
-# EDG-005 HÜKMÜ (2026-07-31, kart arşiv): bu bölümün İKİ PİYASA KAPISI ARTIK KAPI DEĞİL, GÖSTERGEdir.
+# HÜKÜM (kart arşiv): bu bölümün İKİ PİYASA KAPISI ARTIK KAPI DEĞİL, GÖSTERGEdir.
 # SPY 200-SMA kapısı ölçüldü ve kill#1 tetiklendi (tek atfedilebilir pencerede Sharpe −0,25→−0,90,
 # PARA-v3 −0,029→−0,088; vol anlamlı düşüyor ama bedeli getiri) — OOS'ta 55 bloke günde 0 giriş
 # engelledi, yani kill#2'nin "pano göstergesi yeter" hükmü fiilen geçerli. VIX bacağı ise doğrulanmış
 # VERİ-YOK. İkisinin de hükmü ÖLÇÜLÜR ve PANODA görünür; hiçbiri karar yoluna girmez (tüketici
 # guard'dan, üretici `build_regime_json`dan kaldırıldı — bkz. o iki gövdedeki geri-alma notu).
-# BEKLENTİ (ROADMAP §3.1 Y3): getiri DEĞİL risk — vol ~-1/3, MaxDD ~yarı. Bu yüzden dördü de
+# BEKLENTİ: getiri DEĞİL risk — vol ~-1/3, MaxDD ~yarı. Bu yüzden dördü de
 # "kâr getirir" iddiasıyla değil "düşüşü kısar" iddiasıyla gelir ve ikisi de ÖLÇÜMDEN geçecek
 # (gölge-varyant / prescreen). Bugün hiçbiri açık değil: knob satırı bounds.yaml'da var,
 # strategy.yaml onları TAŞIMIYOR, dolayısıyla canlı etkileri SIFIRDIR (Batch L deseni).
 #
 # ZORLA TASFİYE YOKTUR VE ARTIK YENİ GİRİŞ DE KAPANMAZ. Tasfiye yasağının gerekçesi ölçülebilirlikti
 # (zorla tasfiye açık pozisyonların ömrünü kesip defterin çıkış istatistiğini bozar ve "kapı mı işe
-# yaradı, çıkış mı" sorusu bir daha ayrıştırılamaz); yeni-giriş kapatma ise ÖLÇÜLDÜ ve ELENDİ
-# (EDG-005). Geriye ölçülen ve gösterilen bir hüküm kalır.
+# yaradı, çıkış mı" sorusu bir daha ayrıştırılamaz); yeni-giriş kapatma ise ÖLÇÜLDÜ ve ELENDİ.
+# Geriye ölçülen ve gösterilen bir hüküm kalır.
 
 SPY_SMA_GATE_WINDOW = 200      # 200 günlük ortalama — literatürün en belgeli trend filtresi
 VIX_BACKWARDATION_MIN = 1.0    # VIX/VIX3M bu oranın ÜSTÜ = backwardation (akut stres)
@@ -225,7 +225,7 @@ def vix_term_structure() -> dict:
     return {"oran": None, "vix": None, "vix3m": None, **VIX_DATA_STATUS}
 
 
-# EDG-005 KARARININ MAKİNE-OKUNUR HÂLİ. Metin çıktının içinde durur (pano ve beyin koda inmeden
+# KARARIN MAKİNE-OKUNUR HÂLİ. Metin çıktının içinde durur (pano ve beyin koda inmeden
 # "bu satır neden karar vermiyor?" sorusunu cevaplayabilmeli) ve hükmün adresi kartın kendisidir.
 SPY_SMA_EMEKLI = {
     "karar": "EDG-2026-005", "tarih": "2026-07-31", "durum": "arşiv",
@@ -237,7 +237,7 @@ SPY_SMA_EMEKLI = {
 
 
 def spy_sma_gate(index_bars, params: dict | None = None) -> dict:
-    """SPY 200-SMA HÜKMÜ — **PANO GÖSTERGESİ, KAPI DEĞİL** (EDG-005 hükmü, 2026-08-01).
+    """SPY 200-SMA HÜKMÜ — **PANO GÖSTERGESİ, KAPI DEĞİL**.
 
     Endeksin kapanışı 200 günlük ortalamanın altında mı üstünde mi — ÖLÇÜLÜR ve gösterilir.
     Hiçbir karar yoluna GİRMEZ: `blocks_new_entries` SABİT False'tur ve `regime.spy_sma_gate`
@@ -246,17 +246,17 @@ def spy_sma_gate(index_bars, params: dict | None = None) -> dict:
     Knob'un adı çıktıda KALIR — hükmü hangi düğmenin taşıdığı, düğme emekli olduktan sonra da
     okunabilir olmalı.
 
-    ARAMA UZAYI HALKASI DA KAPANDI (8b6bbbc, 2026-08-01): `state/bounds.yaml`daki
+    ARAMA UZAYI HALKASI DA KAPANDI (8b6bbbc): `state/bounds.yaml`daki
     `regime.spy_sma_gate` satırı DÜŞTÜ — makine bu adı artık hiç örneklemez (satır dururken altı
-    değerlendirme, sonucu yapısal olarak sabit bir eksene harcanmıştı). Bu docstring 2026-08-02'ye
-    kadar "satır düşürülene dek makine o adı hâlâ örnekleyebilir" diyordu; doğru görünen ama
+    değerlendirme, sonucu yapısal olarak sabit bir eksene harcanmıştı). Bu docstring daha önce
+    "satır düşürülene dek makine o adı hâlâ örnekleyebilir" diyordu; doğru görünen ama
     GERÇEĞE UYMAYAN bir cümleydi. Bugünkü durum: satırın yerinde bounds.yaml'da bir MEZAR TAŞI
     yorumu var (nereye emekli olduğu + hüküm kaynağı + çivilerin adresi); sessiz-diriliş çivileri
     `tests/test_altyapi_kucukler_v172.py` (satır GERİ GELEMEZ) ve `tests/test_hafta3b_v125.py`
     (satır geri gelse DAHİ karar yolu değişmez — ikinci savunma hattı) dosyalarında.
 
     Isınma dolmadan hüküm ÜRETİLMEZ: 200 barlık bir ortalama 150 bardan hesaplanıp "sma200" adıyla
-    sunulamaz (classify'ın 2026-07-22'de düzelttiği uydurmanın aynısı). Isınma yoksa `hukum` BEYANLI
+    sunulamaz (classify'ın düzelttiği uydurmanın aynısı). Isınma yoksa `hukum` BEYANLI
     None döner — sessiz bir "ustunde" değil."""
     istendi = bool(int((params or {}).get("regime.spy_sma_gate", 0) or 0))
     out = {"knob": "regime.spy_sma_gate", "enabled": False, "window": SPY_SMA_GATE_WINDOW,
@@ -314,8 +314,8 @@ def vix_backwardation_gate(params: dict | None = None) -> dict:
 def entry_gates(index_bars, params: dict | None = None) -> dict:
     """Y3'ün iki piyasa GÖSTERGESİNİN birleşik hükmü — TEK tüketicisi pano satırı (`api._y3_gate_row`).
 
-    ADI TARİHSEL, ANLAMI DEĞİL: 2026-08-01'e kadar bu sözlük guard'ın giriş zincirinde okunuyordu;
-    EDG-005 hükmüyle (kapı açılmaz, pano göstergesi yeter) tüketici de üretici de kaldırıldı. Ad
+    ADI TARİHSEL, ANLAMI DEĞİL: bu sözlük önceden guard'ın giriş zincirinde okunuyordu;
+    arşiv kartının hükmüyle (kapı açılmaz, pano göstergesi yeter) tüketici de üretici de kaldırıldı. Ad
     korundu çünkü panonun sözleşmesi (`y3_entry_gates`) ve kartların/raporların atıfları bu ad
     üzerinden yazılı — iki ad iki gerçek riskini yeniden doğurmamak için burada TEK ad, tek yer.
 

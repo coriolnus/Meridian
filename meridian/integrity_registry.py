@@ -32,62 +32,62 @@ PATTERNS = ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", 
 # Boş liste = HİÇ denetlenmemiş (dürüst başlangıç; dönüşümlü denetim bunları doldurur).
 COVERED: dict[str, list[str]] = {
     # --- otomatik dedektörlerin fiilen kapsadıkları ---
-    # boşluk turu 5: cf SIFIR YETKİ (submit/commit/dump_yaml/heartbeat çağrısı yok) ve yalnız kendi
+    # cf SIFIR YETKİ (submit/commit/dump_yaml/heartbeat çağrısı yok) ve yalnız kendi
     # iki dosyasını yazar; çözümleme aynı girdide aynı satırları verir.
     "counterfactual":   ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- boşluk kapatma turu 2 (2026-07-21): loop ---
+    # --- loop ---
     # Motorun kalbi. korunum+monotonluk zaten vardı (geriye-seans bekçisi + plan korunumu); kalan 4:
     # bir döngü GERÇEKTEN artefakt üretir (regime/data_quality/portfolio/nabız); aynı gün iki kez
-    # işlenince defter ÇOĞALMAZ (audit #11 regresyon kilidi); regime.json İŞLENEN günün tarihini
+    # işlenince defter ÇOĞALMAZ (regresyon kilidi); regime.json İŞLENEN günün tarihini
     # taşır; döngü goal/bounds/strategy/secrets'a ASLA yazmaz + yazdığı dosyalar beyan listesiyle
     # sınırlı. Testler: test_loop_gaps_v48.py (9).
     "loop":             ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # boşluk turu 5: sabit defterde kalibrasyonlar tekrarlanabilir; analytics ölçer, KARAR VERMEZ
+    # sabit defterde kalibrasyonlar tekrarlanabilir; analytics ölçer, KARAR VERMEZ
     # (commit/dump_yaml çağrısı yok) ve yalnız kendi kalibrasyon dosyalarını yazar.
     "analytics":        ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # --- dönüşümlü denetim turu 2 (2026-07-21): adapters.data ---
-    # D1 kaynak-ölçeği dikişi (pin + geçmiş-değişti → rev bump) → determinizm+tutarlilik;
-    # D3 satır-kaybı reddi → monotonluk; D4 atomik yazım + D5 evren-küçülme kaydı → korunum;
-    # D2 kaynak sağlığı (FMP 429 artık görünür) → uretkenlik; kaynak sabitlemesi → sahiplik.
+    # --- adapters.data ---
+    # Kaynak-ölçeği dikişi (pin + geçmiş-değişti → rev bump) → determinizm+tutarlilik;
+    # satır-kaybı reddi → monotonluk; atomik yazım + evren-küçülme kaydı → korunum;
+    # kaynak sağlığı (FMP 429 artık görünür) → uretkenlik; kaynak sabitlemesi → sahiplik.
     # Testler: test_data_audit_v17.py (12).
     "adapters.data":    ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- boşluk kapatma turu 1 (2026-07-21): reflect ---
+    # --- reflect ---
     # Ship YETKİSİ. determinizm zaten vardı (havuz işçisi load_cached); kalan 5 desen kapatıldı:
     # her DEĞERLENDİRİLEN öneri bir hipotez satırı üretir ve kayıtlı bir terminale ulaşır (guard/
     # kapı/teyit/ship/öğrenme-durdu/kilit); wf önbelleği bar revizyonuna bağlı; ship sürümü İLERİ
     # taşır ve red canlıya dokunmaz; versioning.commit'i çağıran TEK yer burası + süreçler-arası
     # kilit. Testler: test_reflect_gaps_v47.py (10).
     "reflect":          ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # boşluk turu 5: pencereler sabit+sıralı ve env'den ayarlanamaz; fetch_end HER çağrıda bugün
-    # (audit #41 donmuş sabit hatası); load_cached ağ/tazeleme yollarına hiç dokunmaz.
+    # pencereler sabit+sıralı ve env'den ayarlanamaz; fetch_end HER çağrıda bugün
+    # (donmuş sabit hatası); load_cached ağ/tazeleme yollarına hiç dokunmaz.
     "dataset":          ["uretkenlik", "determinizm", "tutarlilik", "sahiplik"],
-    # --- boşluk kapatma turu 3 (2026-07-21) ---
+    # --- health + scheduler ---
     # health: nabız ÜRETİLİR + zorunlu alanları taşır; yaş dürüst ölçülür (bozuk/eksik damga = BAYAT,
     # taze değil); zaman ileri gider; halt/learn-halt ayrı kapılar ve nabızla tutarlı.
     "health":           ["uretkenlik", "tutarlilik", "monotonluk", "sahiplik"],
     # scheduler: nabız damgası + işlenen son seans kaydı (tekrar/atlama görünür), ileri-only ilerleme.
     "scheduler":        ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # boşluk turu 5: yetersiz örneklemde SESSİZ kalmaz (skip olayı + w=None + predict_proba None,
+    # yetersiz örneklemde SESSİZ kalmaz (skip olayı + w=None + predict_proba None,
     # uydurma p_win yok); aynı veriden aynı katsayılar (saf-numpy GD).
     "shadow_model":     ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # boşluk turu 5: rapor HER çağrıda üretilir ve diske düşer; sabit durumda birebir tekrarlanır.
+    # rapor HER çağrıda üretilir ve diske düşer; sabit durumda birebir tekrarlanır.
     "selfreview":       ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # versioning: her commit bir SNAPSHOT üretir (geri alma onsuz çalışmaz — turu 25'te ısırdı);
+    # versioning: her commit bir SNAPSHOT üretir (geri alma onsuz çalışmaz — canlıda ısırdı);
     # sürüm numarası geri alma sonrası bile ASLA yeniden kullanılmaz; karne satırları birleşir, ezilmez.
     "versioning":       ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
     "watchdog": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # boşluk turu 4: SIFIR YETKİ statik olarak kanıtlandı (yalnız cf defterine yazar; commit/
+    # SIFIR YETKİ statik olarak kanıtlandı (yalnız cf defterine yazar; commit/
     # dump_yaml/heartbeat/submit çağrısı YOK), ağa çıkmaz (önbellek CSV), rastgelelik kullanmaz.
     "cf_backfill":      ["uretkenlik", "korunum", "determinizm", "sahiplik"],
-    # --- dönüşümlü denetim turu 1 (2026-07-21): adapters.alpaca ---
-    # A1 taşıma kaydı (yutulan hata görünür) → korunum+üretkenlik; A2 coid birleştirme anahtarı +
-    # broker_reconcile tazeliği → tutarlılık; A3 önek süzgeci + close_all onay jetonu → sahiplik;
-    # A4 sınırda stop-gevşetme reddi → monotonluk. Testler: test_alpaca_audit_v16.py (14).
+    # --- adapters.alpaca ---
+    # Taşıma kaydı (yutulan hata görünür) → korunum+üretkenlik; coid birleştirme anahtarı +
+    # broker_reconcile tazeliği → tutarlılık; önek süzgeci + close_all onay jetonu → sahiplik;
+    # sınırda stop-gevşetme reddi → monotonluk. Testler: test_alpaca_audit_v16.py (14).
     # DETERMİNİZM: aynı plan → aynı emir gövdesi testi var (test_determinism_same_plan_same_body),
     # ama gerçek broker yanıtı deterministik DEĞİL (fill fiyatı) — bu hücreyi dürüstlük gereği
     # 'covered' saymıyorum: kontrol yalnız BİZİM gönderdiğimiz tarafı bağlıyor.
     "adapters.alpaca": ["determinizm", "korunum", "monotonluk", "sahiplik", "tutarlilik", "uretkenlik"],
-    # --- dönüşümlü denetim turu 3 (2026-07-21): adapters.constituents ---
+    # --- adapters.constituents ---
     # ÜRETKENLİK: modülün HİÇ tüketicisi yoktu (üç denetimlik düzeltme ölü kodda) → artık P5'te
     # universe_drift() çağrılıyor + health() watchdog'a bağlı. TUTARLILIK: makullük kapısı +
     # gelecek-tarih reddi (üretim önbelleği test fixture'ıydı: 3 sembol, as_of 2099).
@@ -96,22 +96,22 @@ COVERED: dict[str, list[str]] = {
     # Testler: test_constituents_audit_v18.py (13).
     "adapters.constituents": ["determinizm", "sahiplik", "tutarlilik", "uretkenlik"],
     # --- HENÜZ DENETLENMEMİŞ (dönüşümlü denetimin kuyruğu) ---
-    # --- tur 4 (2026-07-21): adapters.fmp ---
-    # F1 strict mod + kısmi-hata koruması (yarım kazanç takvimi guard'ı FAIL-OPEN yapıyordu) →
-    # korunum; F2 günlük kota muhasebesi + 429 soğuması → uretkenlik; F3 anahtar maskesi ve
+    # --- adapters.fmp ---
+    # Strict mod + kısmi-hata koruması (yarım kazanç takvimi guard'ı FAIL-OPEN yapıyordu) →
+    # korunum; günlük kota muhasebesi + 429 soğuması → uretkenlik; anahtar maskesi ve
     # "anahtar tek yerde okunur" testi → sahiplik. Testler: test_fmp_audit_v19.py (7).
     "adapters.fmp": ["uretkenlik", "korunum", "sahiplik"],
-    # --- tur 5 (2026-07-21): adapters.macro + adapters.news ---
+    # --- adapters.macro + adapters.news ---
     # macro: DONMUŞ son tarih ("2026-07-10") → her çağrıda bugün + test (tutarlilik); "tüketicisi yok"
     # artık status()'ta yazılı (uretkenlik'in dürüst cevabı, gerçek bir kontrolle: status testi).
     # news: 'anahtar var' ≠ 'çalışıyor' → status() kaynak sağlığını taşır (uretkenlik); 20 sembol
     # üstü SESSİZ kırpma → kayıt (korunum). Testler: test_macro_news_audit_v20.py (7).
     "adapters.macro": ["determinizm", "tutarlilik", "uretkenlik"],
     "adapters.news": ["uretkenlik", "korunum", "determinizm"],
-    # --- tur 6 (2026-07-21): api ---
-    # P1 "her mutasyon ucu yetki ister" bugün doğruydu ama ZORLANMIYORDU → statik kural testi
+    # --- api ---
+    # "Her mutasyon ucu yetki ister" bugün doğruydu ama ZORLANMIYORDU → statik kural testi
     # (19/19 authed, yeni yetkisiz POST eklenirse test kırılır) + yetkisiz GET izin listesi;
-    # P2 /metrics yetkisiz olarak öz sermaye/P&L/harcama yayınlıyordu, /halt tünelden açıldığı için
+    # /metrics yetkisiz olarak öz sermaye/P&L/harcama yayınlıyordu, /halt tünelden açıldığı için
     # bu dışarı bakan bir yüzey → uzak+yetkisiz istekte yalnız canlılık. Testler: test_api_audit_v21 (8).
     "api": ["uretkenlik", "korunum", "tutarlilik", "sahiplik"],
     # --- tur 7 (2026-07-21): arming ---

@@ -48,7 +48,7 @@ _MAXMEM = 64 * 1024 * 1024          # n*r*128*2 üstü; varsayılan 32 MB sını
 SESSION_TTL_S = 12 * 3600           # bir çalışma günü; sonrasında yeniden giriş
 COOKIE_NAME = "meridian_session"
 
-# ---- KAYAN OTURUMUN MUTLAK TAVANI (2026-08-14, operatör arızası: "arayüz bir süre sonra kayboluyor")
+# ---- KAYAN OTURUMUN MUTLAK TAVANI (operatör arızası: "arayüz bir süre sonra kayboluyor")
 # ARIZA NEYDİ: `SESSION_TTL_S` SABİT bir pencereydi ve çerezi tazeleyen HİÇBİR yol yoktu — çerez
 # yalnız girişte ve ilk-parola-kurulumunda yazılıyordu. Pano 12 saat KESİNTİSİZ kullanılsa bile
 # saat dolduğu an `_auth` 401 verir, pano kapağı açar; çerez ORTAK olduğu için bütün sekmeler AYNI
@@ -188,7 +188,7 @@ def rotate_key() -> None:
 
 
 # ---- oturum --------------------------------------------------------------------------------
-# İKİ JETON BİÇİMİ, BİLİNÇLİ ve GEÇİCİ (2026-08-14):
+# İKİ JETON BİÇİMİ, BİLİNÇLİ ve GEÇİCİ:
 #   v2 (BUGÜN VERİLEN)  `<exp>.<iat>.<nonce>.<imza>`  — imzalanan ileti `v2.<exp>.<iat>.<nonce>`
 #   v1 (ESKİ, YALNIZ OKUNUR) `<exp>.<nonce>.<imza>`   — imzalanan ileti `<exp>.<nonce>`
 #

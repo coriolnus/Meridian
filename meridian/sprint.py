@@ -52,7 +52,7 @@ EVAL_START = "2024-07-01"
 STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, NOT a learning ledger
 # bars symlinked; sprint subtree excluded; keys not needed; HALT must NEVER enter the sandbox — the
 # operator halting LIVE trading is the natural moment to run an offline sprint, but a copied kill-switch
-# makes every sandbox session suppress entries → n_v1=0 and a uselessly "inconclusive" sprint (audit #23).
+# makes every sandbox session suppress entries → n_v1=0 and a uselessly "inconclusive" sprint.
 # SEANS-İÇİ ARŞİVLER DE ATLANIR (2026-08-02 A1 ölçümü). state/bars_intraday 43M + state/intraday_bars 40M
 # = 83M, yani bir kum havuzunun ~110M'inin dörtte üçü (state/sprint 438M = 4 × ~110M). Bu iki dizin bu
 # küme yazıldıktan SONRA doğdu — SKIP_COPY yalnız "bars"ı atlıyordu, yeni gelenler sessizce kopyalanır
@@ -60,8 +60,7 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
 # yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
 # değil BEYANLA karşılıyor (barsarchive.py:748 — "arşivi YOK ... henüz hiç tur koşmadı").
-# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (2026-08-02 ölçümü). WP-H/H9'dan
-# (07-31) beri altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
+# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (2026-08-02 ölçümü). Altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
 # `storage.active`; yol her çağrıda `config.STATE`ten türer). DB kum havuzuna kopyalanınca
 # `_reset_sandbox_state`in HAM DOSYA yazımları çocuğun store okumalarına GÖRÜNMEZ olur: çocuk
 # canlının `portfolio.json`unu DB kopyasından okur, `last_date="2026-07-31"` görür ve
@@ -73,9 +72,9 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # `storage.active()` False döner ve dosya-tabanlı davranışa, yani migrasyon ÖNCESİ ÖLÇÜLMÜŞ-İYİ yola
 # (07-22 sprinti: n_v1=100) dönülür. İKİNCİ KAZANÇ AYNI SATIRDA: canlı worker yazarken SICAK bir WAL
 # veritabanını `shutil` ile kopyalamak tutarlı bir anlık görüntü DEĞİLDİR (ana dosya ile -wal/-shm
-# ayrı anlarda okunur) — o risk de kapanır. Sınıf: audit #23'ün (kopyalanan HALT tüm sandbox
+# ayrı anlarda okunur) — o risk de kapanır. Sınıf: (kopyalanan HALT tüm sandbox
 # girişlerini bastırır) ikinci kuşağı, artı "SKIP_COPY denylist'i state'e yeni gelen artefaktları
-# sessizce kaçırır" (hemen üstteki bars_intraday vakasıyla aynı tur).
+# sessizce kaçırır" (hemen üstteki bars_intraday vakasıyla aynı sınıf).
 SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT",
              "meridian.db", "meridian.db-wal", "meridian.db-shm"}
 
@@ -98,7 +97,7 @@ def status() -> dict:
     if pid:
         try:
             # Reap first: os.kill(pid, 0) SUCCEEDS on a zombie, so a finished child read as 'active'
-            # forever and start() refused with 'already_running' for the life of the server (audit #22).
+            # forever and start() refused with 'already_running' for the life of the server.
             # WNOHANG waitpid clears the zombie (harmless ChildProcessError if it wasn't our child).
             try:
                 os.waitpid(int(pid), os.WNOHANG)
@@ -108,29 +107,29 @@ def status() -> dict:
             alive = True
         except (OSError, ValueError):  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
             alive = False
-    # ORPHAN GÖSTERGESİ (v224): pid KAYITLI ama ÖLÜ ve faz TERMİNAL DEĞİL → sprint YARIDA KALDI.
-    # Ölçülen kusur (2026-08-09 triyajı, kalem 2): pid 96924 ölü, phase='baseline', progress
+    # ORPHAN GÖSTERGESİ: pid KAYITLI ama ÖLÜ ve faz TERMİNAL DEĞİL → sprint YARIDA KALDI.
+    # Ölçülen kusur: pid 96924 ölü, phase='baseline', progress
     # 281/527, dosya yaşı 42,6 sa. `active` (=alive) ZATEN False idi; ama okuyucu (pano) `phase`+
     # `progress`ten "%53 koşuyor" çiziyordu — yani `active` tek başına "koşuyor mu?"yu yanıtlamıyor,
     # çünkü DONMUŞ bir faz/ilerleme canlıymış gibi taşınıyor. Bu bayrak o ayrımı SPRINT.PY
     # KATMANINDA dürüstleştirir (Ajan B panoda bunu okuyup yansıtır — çakışma yok). Ölü pid +
     # TERMİNAL faz NORMALDİR (done/stopped/…: iş bitti) → orphan DEĞİL. Faz YOKSA "koşuyor" gibi de
     # okunmaz → orphan DEĞİL (zombie-reap testi v45 o hâli yalnız `active False` diye çiviler).
-    # BURADA DİRİLTİLMEZ: status() salt okur. YENİDEN BAŞLATMA v235'ten beri KADANSIN işidir —
+    # BURADA DİRİLTİLMEZ: status() salt okur. YENİDEN BAŞLATMA KADANSIN işidir —
     # `should_run` yetimi tetik sayar (sebep=yetim_sprint_yeniden, ≥YETIM_YENIDEN_SAAT fren).
     faz = st.get("phase")
     orphan = bool(pid) and not alive and faz is not None and faz not in _TERMINAL_PHASES
-    # YASA 6 (2026-07-21): sprint_run.py her aramadan sonra `sprint_runs.jsonl`'a satır yazıyordu ve
+    # YASA 6: sprint_run.py her aramadan sonra `sprint_runs.jsonl`'a satır yazıyordu ve
     # KOD İÇİNDE HİÇBİR OKUYUCUSU YOKTU — üretildi, kimse tüketmedi; yedi desenli bütünlük raporunun
     # panoya hiç bağlanmamasıyla aynı kusur. Son koşular buradan durumun içine girer (pano zaten
     # sprint.status()'u render ediyor), böylece defterin bir tüketicisi olur.
-    # TERS ORPHAN GÖRÜNÜR OLUR (K1, 2026-07-30): yukarıdaki YASA-6 düzeltmesi okuyucuyu kurdu ama
+    # TERS ORPHAN GÖRÜNÜR OLUR: yukarıdaki YASA-6 düzeltmesi okuyucuyu kurdu ama
     # defter DİSKTE HİÇ YOK — `read_jsonl` her zaman [] döndürüyor ve pano "son koşu yok" çiziyor.
     # 2026-07-22 sprinti aramayı TAMAMLADI (sprint_status.json: search.evaluated=8, phase=done) ve
     # satır yine yok: defter ya hiç doğmadı ya 07-23 depo taşımasında kayboldu. Hiçbir dedektör bu
     # yönü sormuyor — orphan taraması yalnız VAR OLAN dosyaları sorgular, "okuyucusu var ama dosyası
     # yok"u değil. `runs_ledger` o ayrımı taşır: "henüz satır yok" ile "defter hiç yok" AYRI hükümler.
-    # TERS ORPHAN'IN KÖK NEDENİ BULUNDU (2026-07-30). Yukarıdaki not "defter ya hiç doğmadı ya
+    # TERS ORPHAN'IN KÖK NEDENİ BULUNDU. Yukarıdaki not "defter ya hiç doğmadı ya
     # taşımada kayboldu" diyordu — İKİSİ DE DEĞİL. Defter HER SPRINTTE doğuyor, yalnız BAŞKA BİR
     # YERE: `sprint_run` çocuk süreçtir ve `MERIDIAN_ROOT=<sbroot>` ile koşar, yani onun
     # `store.append_jsonl("sprint_runs.jsonl", …)` çağrısı KUM HAVUZUNUN state'ine yazar. Ölçüm:
@@ -190,7 +189,7 @@ def _reset_sandbox_state(sbstate: Path) -> None:
     """Blank the sandbox ledgers so the sprint measures ITS OWN forward trades, starting from a fresh v1
     with parent=None (exactly the live starting condition, minus the accumulated history).
 
-    KISIT (2026-08-02): buradaki HAM YOL yazımları yalnız kum havuzu DEPOLAMA ARTEFAKTISIZ (yani
+    KISIT: buradaki HAM YOL yazımları yalnız kum havuzu DEPOLAMA ARTEFAKTISIZ (yani
     `meridian.db`siz) doğduğu için store-görünür bir gerçektir — `state/`e yeni bir depolama
     artefaktı gelirse SKIP_COPY'ye girmek ZORUNDADIR, aksi halde bu sıfırlama sessizce hiçbir şeyi
     sıfırlamaz (gerekçe ve ölçüm SKIP_COPY'nin üstünde)."""
@@ -206,7 +205,7 @@ def _reset_sandbox_state(sbstate: Path) -> None:
     if hist.exists():
         shutil.rmtree(hist)
     hist.mkdir(exist_ok=True)
-    # SNAPSHOT the v1 seed into the sandbox history (M4). run.bootstrap_v01 does this in production; the
+    # SNAPSHOT the v1 seed into the sandbox history. run.bootstrap_v01 does this in production; the
     # sandbox reset skipped it, so after Phase B shipped v2 (parent=1) a forward-LOSING v2 routed into
     # rollback.revert_to(1) → FileNotFoundError (swallowed by daily_cycle): the negative calibration point
     # was never written and the sprint could only ever close on WINNERS (a systematic training bias). Write
@@ -244,12 +243,12 @@ def _prune_old_sandboxes(keep: int = SANDBOX_KEEP) -> None:
 def _kur_kum_havuzu(sid: str) -> Path:
     """Kum havuzunu kur ve KÖKÜNÜ döndür: kopya → bars bağı → skills bağı → defter sıfırlama.
 
-    `start()`TEN AYRI BİR FONKSİYON OLMASININ SEBEBİ ÖLÇÜLEBİLİRLİKTİR (2026-08-02): izolasyon
+    `start()`TEN AYRI BİR FONKSİYON OLMASININ SEBEBİ ÖLÇÜLEBİLİRLİKTİR: izolasyon
     sözleşmesini sınayan test YASANIN KENDİSİNİ çağırabilmelidir. Sırayı (kopya, bağlar, sıfırlama)
     teste yeniden yazmak bu depoda tekrar tekrar yaşanan "aynı yasanın iki uygulaması" hatasıdır —
     testteki kopya yeşil kalırken üretim yolu sessizce ayrışır ve dedektör hiçbir şey ölçmez.
     Fonksiyon SAFtır: yalnız diski kurar, süreç doğurmaz, durum dosyası yazmaz."""
-    # SBROOT KANONİK YOLA DAMGALANIR (K1, 2026-07-30). `state/sprint_status.json` hâlâ
+    # SBROOT KANONİK YOLA DAMGALANIR. `state/sprint_status.json` hâlâ
     # `/Users/erdemozturk/Documents/Claude/AI-Trading/...` yolunu taşıyor — 2026-07-22 sprintinden
     # kalma bir damga, ve o yol 07-23 taşımasından beri gerçek depoya SYMLINK. Sembolik yolu
     # damgalamak iki sorun doğurur: (1) damga, aynı dizini gösteren iki farklı dizgeyle kaydedilir
@@ -350,7 +349,7 @@ def kum_havuzunda() -> bool:
 # — ör. yerel macOS geliştirmesi) eski `Popen` yoluna DÜŞÜLÜR, ama ASLA sessizce: `sprint_systemd_yok`
 # olayı ADLI bir sebeple düşer ve `sprint_status.json`a `kosum_yolu:"systemd"|"popen"` damgalanır.
 # Yani "sprint neden yine öldü?" sorusu bir sonraki turda ÖLÇÜMLE cevaplanır, tahminle değil.
-# (Damganın çocuk yazımlarında hayatta kalması `sprint_run.STAMP_KEYS`e bağlıdır — C15 mekanizması.)
+# (Damganın çocuk yazımlarında hayatta kalması `sprint_run.STAMP_KEYS`e bağlıdır.)
 #
 # ÇİFT-SPRINT YASAĞI, DÜŞÜŞ YOLUNUN TEK GERÇEK RİSKİ: aynı kum havuzuna iki yazar, ölçümün kendisini
 # çöpe atardı. Bu yüzden `Popen`a düşmeden ÖNCE birimin GERÇEKTEN koşmadığı `MainPID` ile SORULUR;
@@ -593,7 +592,7 @@ def start(cfg: dict | None = None) -> dict:
     # HİPOTEZ SAYACI BAŞLANGIÇTA DAMGALANIR: otomatik kadansın ikinci tetiği ("son sprintten beri
     # taze aday birikti mi") ancak bir TABAN varsa ölçülebilir. Damga olmadan `taze = len(hyps) − 0`
     # olurdu ve tetik her gece yanardı — haftalık disiplin sessizce kaybolurdu.
-    # DAMGAYI ÇOCUK SÜREÇ SİLİYORDU (C15, 2026-08-02). Yukarıdaki `Popen` çocuğa
+    # DAMGAYI ÇOCUK SÜREÇ SİLİYORDU. Yukarıdaki `Popen` çocuğa
     # `MERIDIAN_SPRINT_STATUS` ile BU dosyayı verir ve `sprint_run._write_live_status` onu
     # birleştirmeden eziyordu: aşağıdaki damga İLK ilerleme yazımında yok oluyor, `should_run`
     # tabanı 0 sayıp her gece tetikliyordu. Koruma çocuk tarafında (`sprint_run._damgayi_koru`) —
@@ -621,7 +620,7 @@ def start(cfg: dict | None = None) -> dict:
 
 
 # ==================================================================================================
-# OTOMATİK KADANS (2026-07-30) — TETİK, EŞZAMANLILIK BEKÇİSİ, BÜTÇE ÖZ-AYARI
+# OTOMATİK KADANS — TETİK, EŞZAMANLILIK BEKÇİSİ, BÜTÇE ÖZ-AYARI
 # ==================================================================================================
 # NEDEN OTOMATİK. Canlı ölçüm: `sprint_status.json` son koşuyu 2026-07-22'de gösteriyor (phase=done,
 # n_v1=100, shipped=false) ve `sprint_runs.jsonl` diskte HİÇ YOK. Yani sekiz gündür koşmadı ve
@@ -698,7 +697,7 @@ def auto_config() -> dict:
 
 
 # ------------------------------------------------------------------------------------------------
-# CANLI-ARAMA BAYRAĞI: BAYATLIK YASASI (v235, 2026-08-12 canlı vakası).
+# CANLI-ARAMA BAYRAĞI: BAYATLIK YASASI (2026-08-12 canlı vakası).
 # ÖLÇÜLEN ARIZA: `sprint_cadence_skip sebep=mesgul:canli_arama` 4+ gün boyunca HER döngüde tekrar
 # etti; aynı pencerede sprint yetim (pid ölü, faz 'baseline') ve 9,6 gündür yeni hipotez yok.
 # `hermes.SEARCH_PROGRESS` süreç-içi bir sözlüktür ve `reflect_once` onu normal/istisna çıkışta
@@ -723,7 +722,7 @@ def auto_config() -> dict:
 ARAMA_BAYAT_SAAT = 6.0
 # Süreç-içi gözlem defteri — izlediği bayrakla AYNI ömürde (restart ikisini birden sıfırlar).
 _ARAMA_GOZLEM: dict = {"iz": None, "beri": None, "olayli": False}
-# YETİM YENİDEN-BAŞLATMA FRENİ (v235): yetim tetiği ancak yetim başlangıç bu kadar eskiyse yanar.
+# YETİM YENİDEN-BAŞLATMA FRENİ: yetim tetiği ancak yetim başlangıç bu kadar eskiyse yanar.
 # 12 saat = gece penceresinin (8 sa) üstü — aynı gece içinde ölen bir çocuk AYNI pencerede ikinci
 # kez doğamaz, en erken ertesi gece denenir (çökme döngüsü ≤1 deneme/gece'ye sınırlanır).
 YETIM_YENIDEN_SAAT = 12.0
@@ -737,10 +736,10 @@ _YETIM_OLAYLI: set = set()
 # ÖLÇÜLEN ARIZA — canlı olay defteri, aynı satır her poll'de:
 #     sprint_cadence_skip{sebep:"mesgul:canli_arama", yetim:true, gecen_gun:5,
 #                         arama_bayrak_yasi_sa:0.17, arama_bayat:false}
-# v235 yetimi bir TETİK yapmıştı (`yetim_sprint_yeniden`) ama tetik, gövdede meşguliyet
+# Yetim bir TETİK yapılmıştı (`yetim_sprint_yeniden`) ama tetik, gövdede meşguliyet
 # kapılarının ARDINA konmuştu. Beyin zinciri ~5 dakikada bir yansıma turu açtığı için
 # `SEARCH_PROGRESS` parmak izi sürekli DEĞİŞİYOR → bayatlık saati her turda sıfırlanıyor →
-# `arama["mesgul"]` ASLA False olmuyor. Yani v235'in bayatlık yasası (ARAMA_BAYAT_SAAT) doğru
+# `arama["mesgul"]` ASLA False olmuyor. Yani bayatlık yasası (ARAMA_BAYAT_SAAT) doğru
 # çalışıyor ve tam da bu yüzden tetik hiç yanmıyor: bayrak asılı değil, gerçekten meşgul. Sonuç
 # yetim-restart'ın ÖLÜ bir mekanizma olması — 5 gündür ölü bir çocuk, 5 gündür yeniden doğmuyor.
 #
@@ -816,19 +815,19 @@ def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
 
 
 def _search_busy() -> bool:
-    """GERİYE UYUM SARICI (v235): karar `_arama_durumu`dadır — bayatlık yasası oradadır."""
+    """GERİYE UYUM SARICI: karar `_arama_durumu`dadır — bayatlık yasası oradadır."""
     return bool(_arama_durumu()["mesgul"])
 
 
 def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> dict:
     """Kadans bu an sprint başlatmalı mı? DÖNÜŞ her zaman bir SEBEP taşır — `False` tek başına
-    "arıza mı, disiplin mi" sorusunu cevaplamaz ve tam olarak o belirsizlik bu turda kapatılıyor."""
+    "arıza mı, disiplin mi" sorusunu cevaplamaz ve tam olarak o belirsizlik kapatılıyor."""
     from . import memory
     st = status()
     now = now or dt.datetime.now()
     hyps = memory.all_hypotheses()
     son = st.get("started_at")
-    # GÜN BACAĞI ARTIK ENJEKTE `now`DAN TÜRER (v224 — "kararın ânı" seam'i kapatıldı). `son`
+    # GÜN BACAĞI ARTIK ENJEKTE `now`DAN TÜRER ("kararın ânı" seam'i kapatıldı). `son`
     # (started_at) her zaman tz-AWARE UTC'dir (`_now()`); gün farkı ancak KARŞILAŞTIRILABİLİR bir
     # MUTLAK anla hesaplanabilir. Çağıran tz-aware bir `now` verdiyse karar ânı ODUR ve gün bacağı
     # onu kullanır → karar test-edilebilir olur, saat ve gün bacakları TEK ana dayanır.
@@ -848,11 +847,11 @@ def should_run(*, mesgul: str | None = None, now: dt.datetime | None = None) -> 
     taze = len(hyps) - int(st.get("n_hyp_at_start") or 0)
     # ARAMA BAYRAĞI GÖZLEMİ AYNI KARAR ÂNIYLA (gun_ref) OKUNUR — yaş, skip olayına aynen çıkar.
     arama = _arama_durumu(gun_ref)
-    # YETİM SPRINT (v235): pid ÖLÜ + faz terminal DEĞİL (status():orphan). Yetim bir koşu "koştu"
+    # YETİM SPRINT: pid ÖLÜ + faz terminal DEĞİL (status():orphan). Yetim bir koşu "koştu"
     # SAYILMAZ — sayılırsa haftalık taban, YARIDA KALMIŞ bir başlangıçtan ölçülür ve kadans 7 gün
     # boşa susar (2026-08-12 canlı vakası: 4,4 gündür ölü çocuk, faz='baseline', kadans
-    # `tetik_yok/mesgul` arasında salınıyordu). YENİDEN BAŞLATMA KADANSIN İŞİDİR (2026-07-30
-    # operatör mandası "elle tetik beklemeden tam fonksiyonlu") — o yüzden yetim bir TETİKTİR,
+    # `tetik_yok/mesgul` arasında salınıyordu). YENİDEN BAŞLATMA KADANSIN İŞİDİR (operatör
+    # mandası "elle tetik beklemeden tam fonksiyonlu") — o yüzden yetim bir TETİKTİR,
     # yalnız gösterge değil. ÇÖKME DÖNGÜSÜ FRENİ: tetik ancak yetim başlangıç YETIM_YENIDEN_SAAT'ten
     # eskiyse yanar; hemen ölen bir çocuk aynı gece 5 dakikada bir yeniden doğamaz (≤1 deneme/12sa).
     yetim = bool(st.get("orphan"))
@@ -898,7 +897,7 @@ def maybe_start(*, mesgul: str | None = None) -> dict:
     düşer, çünkü "gece değil" ile "sprint çöktü" aynı seviyede raporlanırsa ikincisi kaybolur."""
     from . import obs
     karar = should_run(mesgul=mesgul)
-    # YETİM TESPİTİ OLAYLIDIR (v235) — skip'ten ÖNCE, çünkü yetim bir sprint kapılara takılıp
+    # YETİM TESPİTİ OLAYLIDIR — skip'ten ÖNCE, çünkü yetim bir sprint kapılara takılıp
     # (arama/pencere) günlerce başlatılamayabilir ve o hâl SESSİZ kalamaz (YASA 4). Episode başına
     # bir satır: sid anahtarı, aynı yetim için 300 sn'de bir tekrarını keser.
     if karar.get("yetim") and karar.get("sid") and karar["sid"] not in _YETIM_OLAYLI:
