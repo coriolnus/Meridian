@@ -332,8 +332,20 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
 
 def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool) -> str:
     """Reddin İNSAN OKUNUR gerekçesini üretir: hangi kapı dalı düşürdü (skor/marj, fold-çoğunluğu,
-    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir; buradaki sıra o hükmün dal
-    sırasıyla aynıdır."""
+    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir.
+
+    KAPSAM BEYANI — BU ÜÇ DAL, HÜKMÜN BEŞİ DEĞİL: `_gate_eval`in `passes` bağlacı beş terimlidir
+    (büyüklük · fold-çoğunluğu · kuyruk · kapanmış-işlem düşüş vetosu · M2M düşüş vetosu) ve kendi
+    gerekçe zinciri bu sırayı izler: büyüklük → çoğunluk → düşüş → M2M düşüş → kuyruk. Buradaki
+    zincirde İKİ DÜŞÜŞ DALI HİÇ YOKTUR; kalan üçünün göreli sırası `_gate_eval`inkiyle aynıdır ama
+    "aynı dal sırası" cümlesi yanlıştı ve kaldırıldı.
+
+    EKSİKLİK BUGÜN NEDEN GÖRÜNMÜYOR: bu fonksiyonun tek çağıranı `_gate_eval`in LEGACY dalıdır
+    (dilim yok → `law="legacy_margin"`) ve orası `majority`/`tail_ok` yerine sabit `True` geçer,
+    yani zincir pratikte yalnız büyüklük gerekçesini üretir. Aynı legacy dünyada `_trades_search`/
+    `_mtm_search` dilimleri de yoktur; iki düşüş bacağı ölçülemez (`dd_durum`/`dd_mtm_durum` =
+    "olculemedi") ve tanım gereği ret sebebi olamaz. Dilimli (olasılıksal) yolda gerekçeyi zaten
+    `_gate_eval`in kendi zinciri yazar — düşüş vetoları oradan, adıyla çıkar."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
     inc_tail, cand_tail = inc.get("oos_tail_risk"), cand.get("oos_tail_risk")
     if cand_oos is None:

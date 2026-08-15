@@ -112,8 +112,12 @@ HEARTBEAT = "heartbeat.json"
 # tohumlanırsa) geçmişini SİLMEDEN üstüne yazabilsin diye. `ofset()` toplamı alır, yani mutabakat
 # kimliği kaç reset olursa olsun aynı formülle ölçer.
 RESET_KEY = "sermaye_resetleri"
-# EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi);
-# `storage._ddl` zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
+# EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi) ve
+# SQLite çağında da yaşar. KORUYAN ŞEY ŞEMA DEĞİL YAZIM YOLUDUR: `storage._ddl` yalnız
+# `entity_meta.env_json` KOLONUNU tanımlar (tek başına hiçbir anahtarı korumaz); işareti asıl
+# yaşatan, `storage.do_write_series`in zarfın points-dışı anahtarlarını ayırıp `_touch`a vermesi
+# ve `_touch`un onu diskteki MEVCUT zarfla BİRLEŞTİRMESİDİR ({**mevcut, **env}) — yabancı zarf
+# anahtarı ezilmez, yalnız yazarın sahiplendiği anahtar güncellenir.
 CURVE_MARK_KEY = "reset_isaretleri"
 
 # GEREKÇE EŞİĞİ. YASA 4'ün burada karşılığı: sermaye tabanını taşımak geri alınabilir ama
@@ -142,13 +146,15 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
           kadar farkla iki yöne yuvarlanır. Burada Σ SENT TAMSAYISIYLA alınır: defter satırları
           zaten 2 haneli yazılır (`PaperBroker.close_position` → `round(pnl, 2)`), yani `round(x*100)` terim başına
           KESİNDİR ve toplam, toplama sırasından/temsil tozundan bağımsız aynı tamsayıdır.
-      (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
-          (`PaperBroker.scale_out` / `PaperBroker.close_position`) ama defter satırını yuvarlayıp
-          yazar (aynı satır-yazımı) — `broker` modül başlığının kendi
-          sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
-          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır
-          (yama: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
-          bugünkü dünyada ise en azından (a) bacağını ve ölçüm-anı tozunu keser.
+      (b) KAYNAK KAYMASI — BU BACAK KAPANDI (mezar taşı olarak duruyor): broker `realized_pnl`i
+          bir zamanlar HAM (yuvarlanmamış) pnl ile biriktirirken defter satırını yuvarlayıp
+          yazıyordu; `broker` modül başlığının kendi sözleşmesi ("realized_pnl == Σ
+          row.pnl_dollars") sent altı kalıntılarla sürükleniyor ve taban GERÇEKTEN yarım-sent
+          sınırlarına oturuyordu. Yama YAZAR tarafında uygulandı: `PaperBroker.scale_out` ve
+          `PaperBroker.close_position` birikimi artık `round(..., 2)` ile yapar (üç akümülatör —
+          realized_pnl / cash / banked_pnl — aynı sent-tam artışı alır). Yani bu bacak BUGÜN
+          AÇIK DEĞİLDİR; buradaki sent-tam türetim tek başına (a) bacağına ve ölçüm-anı tozuna
+          karşı durur, iki taraf birden yamalı olduğu için sonuç bit-bit aynıdır.
 
     KARŞILAŞTIRMA EPSILON'U BİLEREK YOK: eşik gevşetmek gerçek 1-sentlik silinmeyi de yutardı.
     Yazım/türetim stabilize edilir, dedektörün `v < p` kıyası DOKUNULMADAN kalır — aynı defter iki

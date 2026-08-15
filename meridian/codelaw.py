@@ -62,6 +62,16 @@ OTHER_TRACK_FILES = frozenset({"analytics.py", "shadow_model.py", "sieve.py", "w
 UNSCANNED: list[dict] = []
 
 
+# KAYNAK OKUMA SÖZLEŞMESİ (bu modüldeki HER `read_text` için).
+#   (a) `encoding="utf-8"` AÇIKÇA verilir. Verilmezse çözücü `locale.getpreferredencoding()`e
+#       düşer: `LC_ALL=C` bir kabukta (CI kabukları, systemd birimleri, cron) kodlama ASCII olur
+#       ve bu deponun Türkçe kaynak dosyalarının neredeyse HEPSİ okunamaz hâle gelir. Tarayıcının
+#       hükmü koştuğu kabuğun yerel ayarına bağlı olamaz.
+#   (b) `except` demetinde `ValueError` BULUNUR. `UnicodeDecodeError` bir `ValueError` alt
+#       sınıfıdır ve `OSError`ın altında DEĞİLDİR; demet yalnız `(SyntaxError, OSError)` olduğu
+#       sürece kodlaması bozuk tek bir dosya, tarayıcıyı UNSCANNED'e yazdırmak yerine ÇÖKERTİRDİ.
+#       Bu, bu modülün var oluş sebebinin tam tersidir: bekçi kendi körlüğünü RAPOR eder, körlükte
+#       ölmez. Okunamayan dosya `UNSCANNED`e düşer ve `report()["ok"]` bu yüzden False olur.
 def _note_unscanned(path, exc: BaseException, phase: str) -> None:
     """Taranamayan dosyayı `UNSCANNED` defterine (dosya + evre + hata TÜRÜ) yazar; aynı kayıt
     iki kez düşmez. Tarayıcının kendi körlüğü sessiz kalmasın diye: eksik tarama raporda görünür."""
@@ -567,8 +577,8 @@ def _global_consts(root: str) -> dict[str, str]:
     seen: dict[str, str | None] = {}
     for f in _py_files(root):
         try:
-            tree = ast.parse(f.read_text())
-        except (SyntaxError, OSError) as e:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "artifact_graph:consts")
             continue
         for k, v in _module_consts(tree).items():
@@ -668,6 +678,24 @@ def _joined_glob(a: ast.AST, consts: dict, gconsts: dict) -> str | None:
     return glob if _looks_like_artifact(glob) else None
 
 
+def _site_key(site: str) -> tuple[str, int]:
+    """`dosya.py:<satır>` biçimindeki bir ÇAĞRI YERİNİN sıralama anahtarı: `(dosya, int(satır))`.
+
+    Düz `sorted()` SÖZLÜKSELdir ve satır numarasını METİN sayar: aynı dosyanın 3074. satırı,
+    573. satırından ÖNCE gelir (çünkü `'3' < '5'`). Bu listeler denetim çıktısıdır ve insan
+    gözüyle kaynağa KARŞI okunur — kaynağın akışıyla ilgisiz bir sıra, okuyanı gösterilen yerin
+    gerçekten var olup olmadığını aramaya zorlar. Ayraç yoksa ya da parça sayı değilse satır 0
+    sayılır: hüküm UYDURULMAZ, yalnız ad sırası korunur.
+
+    ÖRNEK ÇAPA BİLEREK YAZILMADI: bu docstring'e gerçek bir `dosya.py` + numara çifti koymak,
+    `stale_line_anchors`ın kovaladığı sınıftan YENİ bir çapa üretirdi — kendi yasasını ihlal eden
+    bir yardımcı."""
+    dosya, ayrac, satir = site.rpartition(":")
+    if not ayrac or not satir.isdigit():
+        return (site, 0)
+    return (dosya, int(satir))
+
+
 _GRAPH_CACHE: dict = {}
 
 
@@ -699,9 +727,9 @@ def artifact_graph(root: str = "meridian") -> dict:
 
     for f in _py_files(root):
         try:
-            src = f.read_text()
+            src = f.read_text(encoding="utf-8")
             tree = ast.parse(src)
-        except (SyntaxError, OSError) as e:
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "artifact_graph")
             continue
         consts = _module_consts(tree)
@@ -759,8 +787,9 @@ def artifact_graph(root: str = "meridian") -> dict:
         # O bütünlük raporu da kendi içinde tutarlıydı, eksik olan DIŞARIDAN okunmasıydı.
         external = sorted(set(readers) - set(writers))
         out[name] = {"writers": writers, "readers": readers, "external_readers": external,
-                     "writer_sites": sorted(rec["writer_sites"]),
-                     "reader_sites": sorted(rec["reader_sites"]),
+                     # SIRA (dosya, SAYISAL satır) — sözlüksel değil; bkz. `_site_key`
+                     "writer_sites": sorted(rec["writer_sites"], key=_site_key),
+                     "reader_sites": sorted(rec["reader_sites"], key=_site_key),
                      "unread": bool(writers) and not external}
 
     unread = [k for k, v in out.items() if v["unread"]]
@@ -780,7 +809,8 @@ def artifact_graph(root: str = "meridian") -> dict:
             "unresolved_by_reason": by_reason,
             "access_patterns": dict(sorted(patterns.items())),
             # DESEN KATMANI: hangi beyanlı desen kodda nerede karşılanıyor.
-            "declared_patterns": {k: sorted(v) for k, v in sorted(desen_yerleri.items())},
+            "declared_patterns": {k: sorted(v, key=_site_key)
+                                  for k, v in sorted(desen_yerleri.items())},
             "orphan_patterns": orphan_patterns,
             "unread": sorted(unread),
             "declared_sinks": sorted(k for k in unread if k in DECLARED_SINKS),
@@ -980,8 +1010,8 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
     mods: dict[str, tuple] = {}
     for f in _py_files(root):
         try:
-            mods[f.name] = (ast.parse(f.read_text()), f)
-        except (SyntaxError, OSError) as e:
+            mods[f.name] = (ast.parse(f.read_text(encoding="utf-8")), f)
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "declared_claims")
 
     graph = artifact_graph(root)
@@ -1086,8 +1116,8 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
     """Panonun gerçekten okuyup okumadığını app.js'i tarayarak DOĞRULAR (salt okuma). "Panoda
     gösteriliyor" gerekçesi, kanıtlanabilir olmadıkça gerekçe değildir."""
     try:
-        return term in pathlib.Path(path).read_text()
-    except OSError as e:
+        return term in pathlib.Path(path).read_text(encoding="utf-8")
+    except (OSError, ValueError) as e:          # ValueError: UnicodeDecodeError'ı da kapsar
         # Pano dosyası okunamadıysa "pano okumuyor" DEĞİL, "doğrulayamadım" doğru cevaptır; körlük
         # kayda geçer, aksi hâlde gerekçe kanıtsız kabul edilmiş olurdu.
         _note_unscanned(path, e, "dashboard_mentions")
@@ -1132,7 +1162,11 @@ def stale_line_anchors(root: str = "meridian") -> list[dict]:
         try:
             satirlar = f.read_text(encoding="utf-8").splitlines()
         except (OSError, ValueError) as e:            # ValueError: UnicodeDecodeError'ı da kapsar
-            _note_unscanned(str(f), f"{type(e).__name__}: {e}")
+            # ÇAĞRI DÜZELTİLDİ: `_note_unscanned(path, exc, phase)` ÜÇ argüman ister; burada iki
+            # veriliyordu (ikincisi de istisna değil ÖNCEDEN BİÇİMLENMİŞ metindi). Yani okunamayan
+            # tek bir dosya, körlüğü kayda geçirmek yerine bekçiyi TypeError ile çökertirdi —
+            # yakalayıcının kendisi yeni bir çökme yolu açmıştı.
+            _note_unscanned(str(f), e, "stale_line_anchors")
             continue
         for i, satir in enumerate(satirlar, 1):
             if MUAFIYET in satir:
