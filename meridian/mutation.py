@@ -1,32 +1,28 @@
-"""mutation.py — MUTASYON KOŞUMU: dedektörlerin NEYİ GÖREMEDİĞİNİ ölçer (2026-07-22).
+"""mutation.py — MUTASYON KOŞUMU: bütünlük dedektörlerinin NEYİ GÖREMEDİĞİNİ ölçen körlük haritası.
 
-NEDEN VAR: 2026-07-21'de tek günde on üç hata çıktı ve HİÇBİRİ istisna fırlatmadı. Ardından yedi
-bütünlük dedektörü (watchdog) ve yazılı bir defter sözleşmesi (ledgers) eklendi. Ama şu soru hiç
-sorulmadı: **bu dedektörler hangi bozulma sınıflarını GERÇEKTEN yakalar?**
+NEDEN VAR: tek bir günde onlarca hata çıkıp HİÇBİRİ istisna fırlatmayınca bütünlük dedektörleri
+(watchdog) ve yazılı defter sözleşmesi (ledgers) eklendi — ama "bu dedektörler hangi bozulma
+sınıflarını GERÇEKTEN yakalar?" sorusu hiç sorulmamıştı. Gelecekteki hataları sayamayız;
+yapılabilecek tek dürüst ölçüm, bilinen bozulma sınıflarını TEK TEK, kontrollü üretip bataryanın
+kırmızıya dönüp dönmediğine bakmaktır. Bu, mutasyon testinin KODA değil VERİ SÖZLEŞMELERİNE
+uygulanmış hâlidir — o günün hataları kod değil şema/kayıt hatalarıydı.
 
-Gelecekteki hataları sayamayız. Yapabileceğimiz tek dürüst ölçüm şudur: bilinen bozulma sınıflarını
-TEK TEK, kontrollü biçimde üretip dedektör bataryasının kırmızıya dönüp dönmediğine bakmak. Bu,
-mutasyon testinin KODA değil VERİ SÖZLEŞMELERİNE uygulanmış hâlidir — çünkü 2026-07-21'in hataları
-kod hatası değil, şema/kayıt hatalarıydı.
+KİLİT GİRİŞLER: `run(workdir, keep, strict)` + `main()` (`python -m meridian.mutation`);
+`build_state` gerçekçi temel defteri GERÇEK üreticilerle kurar (broker.fill_entry,
+guard.classify_gate); `detector_red` bataryayı kırmızı-jeton kümesine indirger (watchdog
+integrity_report + ledgers.report + sieve); `MUTATIONS` kataloğu — her biri TEK şeyi bozar;
+`format_report` insan-okur körlük listesini basar.
 
-ÇIKTI BİR KÖRLÜK HARİTASIDIR. Düşük bir kapsama sayısı burada BAŞARISIZLIK DEĞİL, en değerli
-bulgudur: her MISSED satırı, sistemin bugün göremediği bir hata sınıfının adıdır. Sayıyı yukarı
-çekmek için mutasyonu zayıflatmak, ölçümün kendisini yalana çevirir.
+DEĞİŞMEZLER: ÇIKTI BİR KÖRLÜK HARİTASIDIR — düşük kapsama başarısızlık değil en değerli bulgudur;
+sayıyı yükseltmek için mutasyon zayıflatılmaz. TEMEL DURUM TEMİZ OLMALI (kirliyse run() dürüstçe
+patlar: kirli temelde her mutasyon "yakalandı" görünür). Durumlu dedektörler için batarya temel
+durumda İKİ KEZ koşar (ilki görüntü yazar, ikincisi ölçer). DÜŞEN dedektör "bulgu yok" DEĞİL
+"ölçülemedi"dir: jeton kümesine girmez, ayrı raporlanır. Defterlere `store.*` ile YAZILMAZ
+(yazar-beyanı dedektörünü kirletirdi — dosyalar doğrudan yazılır).
 
-TASARIM KARARLARI (hepsi acıyla öğrenilmiş):
-  * TEMEL DURUM ÖNCE TEMİZ OLMALI. Kirli bir temel durumda her mutasyon "yakalandı" görünür ve
-    kapsama sayısı yalan söyler. run() bunu ölçer ve temel kirliyse DÜRÜSTÇE patlar.
-  * Dedektörlerin üçü DURUMLUDUR (determinizm/monotonluk/sahiplik önceki anlık görüntüyle kıyaslar).
-    Bu yüzden batarya temel durumda İKİ KEZ koşturulur: birincisi görüntüyü yazar, ikincisi gerçek
-    temel durumu ölçer. Mutasyon kopyası bu görüntüleri de taşır — yani "defter kısaldı" gibi
-    ihlaller ancak böyle görülebilir.
-  * KOŞUM DEFTERLERE `store.*` İLE YAZMAZ. Yazsaydı `ledgers.declared_writers()` bu modülü beyan
-    edilmemiş bir yazar sayar, `ledger_writers` satırı kırmızıya döner ve TEMEL DURUM kirlenirdi:
-    dedektörü ölçen araç, dedektörün ölçtüğü şeyi bozmuş olurdu. Dosyalar doğrudan yazılır.
-  * CANLI `state/` DİZİNİNE ASLA DOKUNMAZ (aşağıdaki _assert_not_live her yolda çağrılır).
-
-Kullanım:  python -m meridian.mutation        (ya da: from meridian.mutation import run)
-"""
+OKUR/YAZAR: canlıdan yalnız goal.yaml + bounds.yaml kopyalanır (salt okuma); tüm yazım geçici
+çalışma dizinindedir, `_assert_not_live` her yolda canlı `state/`i korur; ağ kontrolleri
+(sp500_membership, fmp_source) beyanla kapsam dışıdır."""
 from __future__ import annotations
 
 import argparse

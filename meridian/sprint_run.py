@@ -1,17 +1,24 @@
-"""sprint_run.py — the CHILD process of a learning sprint (launched by sprint.start()).
+"""sprint_run.py — öğrenme sprintinin ÇOCUK SÜRECİ: kum havuzunda üç fazlı ileri-yürüyüş ölçümü.
 
-Invoked as `python -m meridian.sprint_run <sbroot> <cfg-json>` with MERIDIAN_ROOT pointed at the sandbox, so
-every config/store read-write lands in the sandbox — the live book is untouched. Three phases:
+`python -m meridian.sprint_run <sbroot> <cfg-json>` olarak, MERIDIAN_ROOT kum havuzunu gösterirken
+çağrılır (`sprint.start()` doğurur): her config/store okuma-yazması kum havuzuna düşer, canlı
+deftere dokunulmaz. Üç faz (`_run`):
 
-  A. v1 FORWARD BASELINE — walk daily_cycle over the eval window from a flat book (parent=None, so the
-     unmodified evaluate_outcomes no-ops). Produces the honest same-window v1 trade sample.
-  B. SEARCH + SHIP — reflect.search_and_submit through the UNCHANGED gate on the DISJOINT select window.
-     Ships v2 (parent=v1) or reports no_clearing_candidate.
-  C. v2 FORWARD CANDIDATE — reset to a flat book, walk the SAME eval window. daily_cycle tags v2 trades and
-     calls evaluate_outcomes; when v2 clears min_sample the loop closes with a leakage-free realized_delta.
+  A. v1 İLERİ TABAN — `loop.daily_cycle` eval penceresi (sprint.EVAL_START→bugün) boyunca düz
+     kitaptan yürütülür (parent=None → evaluate_outcomes no-op); dürüst aynı-pencere v1 örneklemi
+     doğar. min_sample'a ulaşılamazsa tur "yetersiz örnek" beyanıyla biter.
+  B. ARAMA + GEMİ — `reflect.search_and_submit` DEĞİŞMEMİŞ kapıyla, AYRIK seçim penceresinde
+     (sprint.SELECT_WINDOWS) koşar; v2 gemiye biner ya da "hiçbir aday kapıyı geçemedi" yazılır.
+  C. v2 İLERİ ADAY — kitap aynı düz duruma sıfırlanır (day_before = EVAL_START'tan kesin önceki
+     seans; aynı-pencere değişmezi bozulmasın), AYNI pencere yeniden yürünür; v2 min_sample'a
+     ulaşınca döngü sızıntısız bir realized_delta + calibration_hit ile kapanır.
 
-Progress is copied to the LIVE sprint_status.json ($MERIDIAN_SPRINT_STATUS) every few sessions so the
-dashboard shows a live bar."""
+DEĞİŞMEZLER: v1 ve v2 aynı pencereyi AYNI düz kitaptan yürür (rejim ortak-mod); sonuç yalnız
+antrenman kalibrasyon noktasıdır, canlı defter v1'de kalır; `STOP` dosyası her seansta yoklanır.
+
+OKUR/YAZAR: kum havuzu state'i (trades/hypotheses/portfolio/strategy) + arama özeti
+`sprint_runs.jsonl`a; ilerleme canlı `sprint_status.json`a ($MERIDIAN_SPRINT_STATUS) ATOMİK yazılır
+ve ebeveynin kadans damgası (STAMP_KEYS, `_damgayi_koru`) her yazımda korunur."""
 from __future__ import annotations
 import datetime as dt
 import json

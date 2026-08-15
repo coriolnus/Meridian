@@ -1,14 +1,23 @@
-"""selfreview.py — Haftalık Öz-Değerlendirme (#2) + Çelişki Dedektörü (#3).
+"""selfreview.py — haftalık öz-değerlendirme sentezi + katmanlar-arası çelişki dedektörü.
 
-v3→v10 telemetrisi dört panele dağılmıştı; sentezi operatör kafasında yapıyordu. Bu modül sentezi
-SİSTEME verir: haftada bir (ve istendiğinde) tüm kalibrasyon/defter/bekçi sinyallerini tek raporda
-toplar, kural-tabanlı bir DİKKAT listesi çıkarır ve katmanların birbiriyle ÇELİŞTİĞİ yerleri
-listeler (her çelişki ya öğrenme fırsatı ya hata işareti). Rapor ayrıca ajanın kanıt paketine girer.
+NE YAPAR. Telemetri panellere dağılmıştı ve sentezi operatör kafasında yapıyordu; bu modül sentezi
+SİSTEME verir. `build()` haftada bir (ve istendiğinde, `weekly()` üzerinden) tüm kalibrasyon/
+defter/bekçi sinyallerini tek raporda toplar: hafta özeti (hipotez/gemi/red sayıları, çözülen cf,
+MECHANISM_STALE olayları — pencere-kesildi zarfıyla), ilerleme sayaçları ("karara ne kadar kaldı"),
+kural-tabanlı DİKKAT listesi (`_attention`; near-miss eşik önerileri NEAR_MISS_KNOB eşlemesi ve
+NM_MIN_N/NM_MIN_AVG_R eşikleriyle) ve `contradictions()` — katmanların birbiriyle ÇELİŞTİĞİ yerler
+(her çelişki ya öğrenme fırsatı ya hata işareti). Rapor ajanın kanıt paketine de girer.
 
-Rapor ayrıca DANIŞMA KATMANI MEKANİZMALARININ SAĞLIK DEFTERİdir (mechanisms): bir mekanizma çıktı
-üretemiyorsa bu, boş bir rapordan ayırt edilebilir biçimde burada durur (aşağıdaki MECH_KEY notu).
+Rapor ayrıca DANIŞMA KATMANI MEKANİZMALARININ SAĞLIK DEFTERİdir (MECH_KEY="mechanisms"):
+`mechanism_ok`/`mechanism_failed` üst üste düşüş sayacını tutar; kesinti DİKKAT listesine düşer ve
+MECHANISM_STALE alarmı basılır — üst üste düşen mekanizma uyarı değil KESİNTİdir, sakin sistemle
+arızalı sistem ayırt edilir. Skor IC'si yalnız GERÇEK dilimden okunur (`_score_ic`): havuzlanmış,
+cf-ağırlıklı IC "skorun tahmin gücü" diye sunulmaz; ölçülemeyen None + kaynak beyanıyla taşınır.
 
-Yalnız OKUR ve yazar (state/self_review.json) — hiçbir karara dokunmaz."""
+OKUR: hypotheses.jsonl, counterfactual.resolved_rows, score/gate/llm kalibrasyon artefaktları,
+cf_fidelity, exit_efficiency, arming_report, agent_budget, events.jsonl, skill revizyonları.
+YAZAR: yalnız state/self_review.json (kilit altında; sağlık kayıtları korunarak) — hiçbir karara
+ve kapıya dokunmaz."""
 from __future__ import annotations
 import datetime as dt
 

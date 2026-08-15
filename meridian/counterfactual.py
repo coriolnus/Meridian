@@ -1,19 +1,28 @@
-"""counterfactual.py — Karşı-olgusal defter (öneri #1). Motorun ANA darboğazı kanıt bant genişliği:
-tarayıcı her gün ~50 ticker için tam plan kuruyor ama yalnız alınan 1-2 işlem etiket üretiyor. Bu modül
-alınmayan her tam-şekilli adayı — NO_GO/REVIEW kalanları, slot yetmeyenleri VE uyuyan kurulumların
-ateşlemelerini (küme ARMED_SETUPS'tan TÜRER; momentum_burst 2026-08-12'de silahlandı, bugün uyuyan
-olarak episodic_pivot/pead/canslim kalır) — simüle bracket ile sonuna kadar izleyip ayrı bir
-deftere yazar: girer miydi, stop mu hedef mi, kaç R, MFE/MAE.
+"""counterfactual.py — karşı-olgusal defter: alınmayan her tam-şekilli adayı simüle edip kanıta çevirir.
 
-YASA AYNASI: giriş, motorun birebir yasasıyla simüle edilir (bir SONRAKİ seans açılışı; boşluk
-korumaları MAX_ENTRY_GAP_PCT ve stop-altı açılış; slipaj fiyatın içinde). Çıkış ise STATİK bracket'tır:
-sert stop / hedef (stop-önce muhafazakârlığı, broker._touch_exit ile aynı sıra) + zaman stopu.
-Trail / scale-out / rejim-dönüşü çıkışları BİLEREK yok — amaç seçilim kalitesini ölçmek, birebir
-P&L kopyası değil; bu sapma dürüstçe burada belgelidir.
+NEDEN VAR. Motorun ana darboğazı kanıt bant genişliğidir: tarayıcı her gün onlarca ticker için tam
+plan kurar ama yalnız alınan 1-2 işlem etiket üretir. Bu modül alınmayan her adayı — NO_GO/REVIEW
+kalanları, slot yetmeyenleri, eşiğin hemen altında ölen near-miss'leri VE uyuyan kurulumların
+ateşlemelerini (uyuyan küme ARMED_SETUPS'tan TÜRER; silahlanan kurulum kümeden çıkar) — simüle
+bracket ile sonuna kadar izleyip ayrı bir deftere yazar: girer miydi, stop mu hedef mi, kaç R,
+MFE/MAE. Her satıra o seansın rejimi damgalanır (rejimsiz kanıt, rejim-bazlı öneriyi taşıyamaz).
+
+KİLİT GİRİŞLER: `collect` (P3 sonunda o günün planları + uyuyan sinyaller + near-miss'ler açılır;
+çift-kayıt koruması hem açık satırlara hem çözülmüş defter kimliklerine bakar; sınıf muhasebesi
+SON_TOPLAMA'ya düşer), `advance` (her seans açık satırları KENDİ giriş-sonrası barlarıyla çözer),
+`resolved_rows` (tüketicilerin okuduğu süzülmüş görünüm), MAX_OPEN tavanı, DEFAULT_TIME_STOP.
+
+YASA AYNASI: giriş motorun birebir yasasıyla simüle edilir (bir SONRAKİ seans açılışı; boşluk
+koruması MAX_ENTRY_GAP_PCT ve stop-altı açılış; slipaj fiyatın içinde). Çıkış STATİK bracket'tır:
+sert stop / hedef (stop-önce muhafazakârlığı, broker._touch_exit ile aynı sıra) + zaman stopu;
+trail / scale-out / rejim-dönüşü çıkışları BİLEREK yok — amaç seçilim kalitesini ölçmek, birebir
+P&L kopyası değil; sapma burada belgelidir.
 
 SIFIR YETKİ: bu defter hiçbir kapı kararına kanıt OLAMAZ (seçilim yanlılığı + doldurma gerçekçiliği
-eksik). Yalnız gölge katmanları besler: gölge modelin eğitim seti, uyuyan kurulumların silahlanma
-ölçümü, skor kalibrasyonu (analytics). Yetkisizlik test-zorlamalıdır (test_evidence_v4)."""
+eksik); yalnız gölge katmanları besler — gölge modelin eğitim seti, silahlanma ölçümü, skor
+kalibrasyonu. Yetkisizlik test-zorlamalıdır (test_evidence_v4).
+OKUR: goal.yaml (slipaj), barlar. YAZAR: yalnız cf_open.json (OPEN_FILE) + counterfactuals.jsonl
+(LEDGER)."""
 from __future__ import annotations
 
 from . import store, obs, config
