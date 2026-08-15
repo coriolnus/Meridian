@@ -26,14 +26,59 @@ from meridian import codelaw
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 
-#: Denetimin B-2'de saydığı dokuz çağrı yeri — dosya, satır, rol.
-DOKUZ_CAGRI = [
-    ("insider.py", 224, "reader"), ("insider.py", 580, "writer"),
-    ("shortinterest.py", 160, "reader"), ("shortinterest.py", 303, "reader"),
-    ("shortinterest.py", 342, "reader"),
-    ("massive.py", 532, "reader"), ("massive.py", 541, "writer"),
-    ("massive.py", 609, "reader"), ("massive.py", 833, "writer"),
-]
+#: Denetimin B-2'de saydığı dokuz çağrı yeri — dosya ve (satır sırasına göre) ROL.
+#: SATIR NUMARASI BİLEREK YOK (A17 çürüme sınıfı): kaynağa bir satır eklenince çivi bayatlar ve
+#: test yanlış yere "kırık" derdi. Satırlar `_store_cagri_yerleri()` ile AST'den TAZE ölçülür;
+#: satır yalnız hata mesajında görünür, hiçbir assert'in ÖLÇÜTÜ değildir.
+DOKUZ_CAGRI_ROLLERI: dict[str, list[str]] = {
+    "insider.py": ["reader", "writer"],
+    "shortinterest.py": ["reader", "reader", "reader"],
+    "massive.py": ["reader", "writer", "reader", "writer"],
+}
+DOKUZ = sum(len(r) for r in DOKUZ_CAGRI_ROLLERI.values())   # 9
+
+
+def _rw_cagrilari(dosya: str) -> list[ast.Call]:
+    """`meridian/adapters/<dosya>` içindeki TÜM `X.read_json(...)`/`X.write_json(...)` biçimli
+    çağrılar — tabanı ne olursa olsun. Teşhis mesajları bunun üzerinden kurulur."""
+    p = REPO / "meridian" / "adapters" / dosya
+    return [n for n in ast.walk(ast.parse(p.read_text()))
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+            and n.func.attr in (codelaw.READ_CALLS | codelaw.WRITE_CALLS)]
+
+
+def _store_cagri_yerleri(dosya: str) -> list[tuple[int, str, str]]:
+    """B-2'nin çağrı yerlerini TAZE ölçer: `_store().read_json(AD, ...)` biçimindeki her çağrı
+    için `(satır, rol, çözülen artefakt adı)`, satıra göre sıralı. Kaynak dosyaya satır
+    eklenip silinmesi bu ölçümü etkilemez — çapa BİÇİM + SEMBOL, satır değil."""
+    p = REPO / "meridian" / "adapters" / dosya
+    consts = codelaw._module_consts(ast.parse(p.read_text()))
+    yerler: list[tuple[int, str, str]] = []
+    for n in _rw_cagrilari(dosya):
+        taban = n.func.value
+        if not (isinstance(taban, ast.Call) and isinstance(taban.func, ast.Name)
+                and taban.func.id == "_store"):
+            continue
+        rol = "writer" if n.func.attr in codelaw.WRITE_CALLS else "reader"
+        ad = consts.get(n.args[0].id, "") if n.args and isinstance(n.args[0], ast.Name) else ""
+        yerler.append((n.lineno, rol, ad))
+    return sorted(yerler)
+
+
+def _olculen_dokuz() -> list[tuple[str, int, str]]:
+    """Dokuz çağrı yerinin bugünkü hâli: `(dosya, satır, rol)` — hepsi ölçülmüş."""
+    return [(d, satir, rol) for d in DOKUZ_CAGRI_ROLLERI
+            for satir, rol, _ad in _store_cagri_yerleri(d)]
+
+
+def _bararchive_desen_satiri() -> int:
+    """`bararchive`in f-string adlı `append_jsonl` çağrısının satırı — TAZE ölçülür."""
+    src = (REPO / "meridian" / "bararchive.py").read_text()
+    satirlar = [n.lineno for n in ast.walk(ast.parse(src))
+                if isinstance(n, ast.Call) and getattr(n.func, "attr", None) == "append_jsonl"
+                and n.args and isinstance(n.args[0], ast.JoinedStr)]
+    assert len(satirlar) == 1, f"desenli `append_jsonl` tekil değil: {satirlar}"
+    return satirlar[0]
 
 
 # ---------------------------------------------------------------------------
@@ -42,26 +87,20 @@ DOKUZ_CAGRI = [
 
 def test_dokuz_cagrinin_ast_bicimi_olculdu_taban_bir_CAGRIDIR():
     """Biçim varsayılmaz, ÖLÇÜLÜR: `Call(func=Attribute(value=Call(Name('_store')), attr=...))`.
-    Bu test bir gün kırılırsa çağrı yeri değişmiştir ve B-2'nin kaydı yeniden ölçülmelidir."""
-    hedef: dict[str, set[int]] = {}
-    for dosya, satir, _rol in DOKUZ_CAGRI:
-        hedef.setdefault(dosya, set()).add(satir)
-
+    Bu test bir gün kırılırsa çağrı yeri değişmiştir ve B-2'nin kaydı yeniden ölçülmelidir.
+    ÖLÇÜT DOSYA + SAYI + ROL DİZİSİDİR; satır numarası yalnız teşhis mesajında görünür. Tabanı
+    artık bir `_store()` çağrısı olmayan bir yer, ölçümden DÜŞER ve rol dizisi tutmaz."""
     gorulen = 0
-    for dosya, satirlar in hedef.items():
-        p = REPO / "meridian" / "adapters" / dosya
-        tree = ast.parse(p.read_text())
-        for n in ast.walk(tree):
-            if not (isinstance(n, ast.Call) and n.lineno in satirlar
-                    and isinstance(n.func, ast.Attribute)
-                    and n.func.attr in (codelaw.READ_CALLS | codelaw.WRITE_CALLS)):
-                continue
-            gorulen += 1
-            assert isinstance(n.func.value, ast.Call), \
-                f"{dosya}:{n.lineno} taban artık bir çağrı değil: {type(n.func.value).__name__}"
-            assert isinstance(n.func.value.func, ast.Name) and n.func.value.func.id == "_store"
-            assert isinstance(n.args[0], ast.Name), "ad modül sabiti olarak geçmiyor"
-    assert gorulen == len(DOKUZ_CAGRI), f"9 çağrının {gorulen}'i bulundu"
+    for dosya, roller in DOKUZ_CAGRI_ROLLERI.items():
+        yerler = _store_cagri_yerleri(dosya)
+        tum = [(n.lineno, n.func.attr, type(n.func.value).__name__) for n in _rw_cagrilari(dosya)]
+        assert [rol for _s, rol, _a in yerler] == roller, (
+            f"{dosya}: `_store()` tabanlı okuma/yazma deseni değişti — ölçülen {yerler}; "
+            f"dosyadaki tüm okuma/yazma çağrıları (satır, çağrı, taban tipi): {tum}")
+        for satir, _rol, ad in yerler:
+            assert ad, f"{dosya}:{satir} ad modül sabiti olarak geçmiyor"
+        gorulen += len(yerler)
+    assert gorulen == DOKUZ, f"9 çağrının {gorulen}'i bulundu"
 
 
 def test_dokuz_store_cagrisi_grafikte_gorunuyor_dosya_ve_satir_duzeyinde():
@@ -72,16 +111,27 @@ def test_dokuz_store_cagrisi_grafikte_gorunuyor_dosya_ve_satir_duzeyinde():
     for info in g["artifacts"].values():
         yerler |= set(info["writer_sites"]) | set(info["reader_sites"])
 
-    eksik = [f"{d}:{s}" for d, s, _ in DOKUZ_CAGRI if f"{d}:{s}" not in yerler]
+    olculen = _olculen_dokuz()
+    assert len(olculen) == DOKUZ, f"ölçüm dokuz çağrıyı bulamadı: {olculen}"
+
+    eksik = [f"{d}:{s}" for d, s, _ in olculen if f"{d}:{s}" not in yerler]
     assert not eksik, f"grafikte görünmeyen `_store()` çağrısı: {eksik}"
 
-    for d, s, rol in DOKUZ_CAGRI:
+    for d, s, rol in olculen:
         anahtar = "writer_sites" if rol == "writer" else "reader_sites"
         assert any(f"{d}:{s}" in info[anahtar] for info in g["artifacts"].values()), \
             f"{d}:{s} yanlış rolde görünüyor"
 
+    # Emniyet anahtarının yazarı ve okuyucusu TEKİL ve `massive.py`de. Dosya adı ölçüt, satır
+    # AST'den taze ölçülür — `massive.py`ye satır eklenmesi bu çiviyi bayatlatamaz.
+    massive = _store_cagri_yerleri("massive.py")
+    yaz = [s for s, rol, ad in massive if rol == "writer" and ad == "massive_verify.json"]
+    oku = [s for s, rol, ad in massive if rol == "reader" and ad == "massive_verify.json"]
+    assert len(yaz) == 1 and len(oku) == 1, \
+        f"massive_verify.json erişimi tekil değil (yazan {yaz}, okuyan {oku})"
     ev = g["artifacts"]["massive_verify.json"]
-    assert ev["writer_sites"] == ["massive.py:833"] and ev["reader_sites"] == ["massive.py:609"]
+    assert ev["writer_sites"] == [f"massive.py:{yaz[0]}"] \
+        and ev["reader_sites"] == [f"massive.py:{oku[0]}"], ev
 
 
 def test_erisim_deseni_sayimi_store_cagri_bicimini_ADIYLA_raporlar():
@@ -89,7 +139,7 @@ def test_erisim_deseni_sayimi_store_cagri_bicimini_ADIYLA_raporlar():
     rapora çıkar. `cagri:_store()` kovası B-2'nin desenidir ve dokuz çağrıyı taşır."""
     g = codelaw.artifact_graph()
     desenler = g["access_patterns"]
-    assert desenler.get("cagri:_store()") == len(DOKUZ_CAGRI), desenler
+    assert desenler.get("cagri:_store()") == DOKUZ, desenler
     assert desenler.get("ad:store", 0) > 100, "kanonik `store.` deseni kaybolmuş"
     assert codelaw.report()["store_access_patterns"] == desenler
 
@@ -311,7 +361,9 @@ def test_intraday_bars_DECLARED_gorunuyor_desen_katmaninda():
     """B-5'in ölçülen hükmü: yazım SÖKÜLMEDİ, beyan katmanı açıldı. Tarihli ad hâlâ ÇÖZÜLEMİYOR
     (artefakt sözlüğüne girmiyor) ama artık SAHİPSİZ değil."""
     g = codelaw.artifact_graph()
-    assert g["declared_patterns"] == {"intraday_bars/*.jsonl": ["bararchive.py:110"]}
+    # Yazım yerinin DOSYASI ölçüt, satırı taze ölçülür (bararchive.py'ye satır eklenebilir).
+    assert g["declared_patterns"] == {
+        "intraday_bars/*.jsonl": [f"bararchive.py:{_bararchive_desen_satiri()}"]}
     assert g["orphan_patterns"] == [], "kodda karşılığı olmayan desen beyanı: ölü muafiyet"
 
     kayit = [u for u in g["unresolved"] if u["file"].endswith("bararchive.py")]
