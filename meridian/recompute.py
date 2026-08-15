@@ -25,7 +25,7 @@ değildir); yazdığı tek şey obs uyarılarıdır.
 from __future__ import annotations
 
 import ast
-import re                       # v238: damgalı göç arşivi desenini TÜRETMEK için (_orphan_state_files)
+import re                       # damgalı göç arşivi desenini TÜRETMEK için (_orphan_state_files)
 
 from . import store
 
@@ -42,7 +42,7 @@ def _start_equity() -> float:
 
 
 def _sermaye_ofseti(pf: dict) -> float:
-    """BEYAN EDİLMİŞ SERMAYE TABANI KAYMASI (sermaye tohum-ayrıştırması, 2026-08-01).
+    """BEYAN EDİLMİŞ SERMAYE TABANI KAYMASI (sermaye tohum-ayrıştırması).
 
     Aşağıdaki üç kimlik "kitap ne diyor?" ile "defter/eğri ne diyor?"yu karşılaştırır ve ikisinin
     AYNI TABANDA olduğunu varsayar. `meridian.sermaye` o varsayımı BİLEREK ve BEYANLA bozar: kitap
@@ -68,6 +68,7 @@ def _ofset_notu(ofset: float) -> str:
 
 
 def _f(x, d=0.0) -> float:
+    """Değeri float'a çevirir; biçimsiz/eksikse verilen varsayılana düşer."""
     try:
         return float(x)
     except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
@@ -75,27 +76,29 @@ def _f(x, d=0.0) -> float:
 
 
 def _row(check: str, ok: bool, a, b, detail: str, a_yol: str, b_yol: str) -> dict:
+    """Tek denetim satırını kurar: ad, hüküm, iki bağımsız yoldan gelen değerler (a/b), açıklama ve
+    her iki değerin HANGİ yoldan geldiği (a_yol/b_yol) — okuyucu kaynağı görmeden hükme inanmasın."""
     return {"check": check, "ok": bool(ok), "a": a, "b": b, "detail": detail,
             "a_yol": a_yol, "b_yol": b_yol}
 
 
 def _seed_notu(haric: int) -> str:
-    """Dışlanan tohum diliminin GÖRÜNÜR beyanı (v243, 2026-08-13). Sessiz bir filtre, paydayı
+    """Dışlanan tohum diliminin GÖRÜNÜR beyanı. Sessiz bir filtre, paydayı
     okuyucudan gizler: "95 işlem birebir" cümlesi 885 satır atlanmışken de aynı görünürdü."""
     return "" if not haric else f"  · replay_seed_haric: {haric} satır (pano yolu; `--deep` görür)"
 
 
 _CORPUS_CACHE: dict = {}
-# Orphan taramasının KÖK+dizin kesiti için kaynak metni (K1, 2026-07-30). `codelaw.artifact_graph`
+# Orphan taramasının KÖK+dizin kesiti için kaynak metni. `codelaw.artifact_graph`
 # yalnız `store.*` çağrılarını ve .json/.jsonl adlarını çözer; yaml/csv/log/dizin artefaktları o
 # grafın DIŞINDA. Bir adın gerçekten okuyucusuz olduğunu kanıtlamanın ucuz ve dürüst yolu:
 # kaynak+betik ağacında adını aramak (denetimin kendi yöntemi).
-# TESTLER KORPUSA GİRMEZ — bu bir tercih değil, denetimin KENDİ ölçütü (K1, 2026-07-30).
-# Bu turun en önemli bulgusu şuydu: `crosscheck_report()`in tek çağıranı testlerdi ve bu
+# TESTLER KORPUSA GİRMEZ — bu bir tercih değil, denetimin KENDİ ölçütü.
+# En önemli bulgu şuydu: `crosscheck_report()`in tek çağıranı testlerdi ve bu
 # "HİÇ OKUNMUYOR" sayıldı — haklı olarak, çünkü bir test üretim tüketicisi DEĞİLDİR. Korpusa
 # tests/ dâhil edilirse dedektör kendi ölçütünü ihlal eder: yalnız testte adı geçen bir artefakt
 # "okunuyor" görünür ve üretimdeki yetimliği gizlenir.
-# CANLI OLARAK YAKALANDI: bu turda yazılan v122 testi sahte bir orphan kurmak için `server.log`
+# CANLI OLARAK YAKALANDI: v122 testi sahte bir orphan kurmak için `server.log`
 # adını string olarak içeriyordu ve tests/ korpusta olduğu sürece o ad ÜRETİMDE de bağışık hâle
 # geliyordu — yani testin varlığı dedektörü kör ediyordu.
 # ops/ ve deploy/ DÂHİLDİR: onlar gerçek işletim tüketicileridir (betikler dosyaları okur/taşır).
@@ -128,7 +131,7 @@ def _source_corpus() -> str:
 
 
 def _code_only(p) -> str:
-    """Dosyanın YALNIZ KOD kısmı: yorumlar ve docstring'ler ATILIR (K1, 2026-07-30).
+    """Dosyanın YALNIZ KOD kısmı: yorumlar ve docstring'ler ATILIR.
 
     NEDEN — BU DEDEKTÖR YAZILIRKEN CANLI OLARAK YAKALANDI: korpus ham metin olarak kurulunca
     dedektör sessizce kör kaldı, çünkü aradığı dosya adlarını bu modülün KENDİ açıklama yorumları
@@ -167,13 +170,13 @@ def report(deep: bool = False) -> dict:
 
     deep=True, önbellek barlarını okuyup evren kapsamasını YENİDEN hesaplar (pahalı; gece işi).
     deep=True AYRICA `ledger_matches_bars`ı defterin TAMAMINA açar (tohum dilimi dahil) — pano
-    yolu yalnız canlı dilime bakar, gerekçesi aşağıda (v243, 2026-08-13).
+    yolu yalnız canlı dilime bakar, gerekçesi aşağıda.
     """
     rows: list[dict] = []
     pf = store.read_json("portfolio.json", {}) or {}
     trades = store.read_jsonl("trades.jsonl")
 
-    # 0) DEFTER ↔ BAR TUTARLILIĞI (2026-07-23). Kanıt: 21:15'te `bar_history_rewritten` +
+    # 0) DEFTER ↔ BAR TUTARLILIĞI. Kanıt: 21:15'te `bar_history_rewritten` +
     #    `corporate_action_cache_reset` ateşledi (GE HealthCare spin-off düzeltmesi) ve GE'nin
     #    Ocak 2023 barları 63$ bandından 78$ bandına taşındı. Ama 17:48'de o barlardan TÜRETİLMİŞ
     #    işlem defteri olduğu gibi kaldı: T00005 girişi 63.16, aynı günün bar açılışı 78.55.
@@ -182,7 +185,7 @@ def report(deep: bool = False) -> dict:
     #    R-katı, her skor sessizce başka bir dünyaya ait olur.
     #    A yolu: defterin kaydettiği giriş fiyatı.  B yolu: o günün barından OKUNAN açılış.
     #
-    #    PANO YOLU YALNIZ CANLI DİLİME BAKAR (v243, 2026-08-13) — ÖLÇÜMLE gerekçeli:
+    #    PANO YOLU YALNIZ CANLI DİLİME BAKAR — ÖLÇÜMLE gerekçeli:
     #    2026-08-13 18:54Z tohum yenilemesi `trades.jsonl`ı 97→887 satıra çıkardı. Bu blok
     #    baktığı HER satır için `load_bars` çağırıyor ve o çağrı ucuz DEĞİL: sembolün TÜM
     #    önbellek CSV'sini okur, tam `sanitize_bars` koşturur (takvim taraması + düzeltilmemiş
@@ -196,7 +199,8 @@ def report(deep: bool = False) -> dict:
     #
     #    NEDEN TOHUM DİLİMİ PANO YOLUNDAN ÇIKIYOR — ve neden bu bir körlük DEĞİL: `replay_seed`
     #    satırları tohum koşusunun O ANKİ bar önbelleğinden TÜRETİLİR ve tohum yazımı defterin
-    #    TAMAMINI yeniden yazar (ledgerstamp.py:202). Yani yenilemeden hemen sonra bu dilim
+    #    TAMAMINI yeniden yazar (`run.replay_seed` → `ledgerstamp.stamp_rows`). Yani yenilemeden
+    #    hemen sonra bu dilim
     #    KURULUŞ GEREĞİ tutar; tutmadığı hâlin çaresi de canlı bir müdahale değil, YENİ BİR
     #    TOHUMDUR — bu dosyanın kendi GE/T00005 notu tam olarak bunu söylüyor ("bir sonraki tam
     #    re-seed'de düşecek, operatör kararı"). 15 saniyede bir anketlenen pano ucunun soracağı
@@ -223,7 +227,7 @@ def report(deep: bool = False) -> dict:
                 # YALNIZ ÖNBELLEK: soru "motorun KULLANDIĞI barlar defterle tutuyor mu" — ağdaki taze
                 # veri değil. Cache dosyası yoksa ATLA, ASLA ağa düşme. Bu hem doğru (motor cache'ten
                 # okur) hem de mutation harness'ın sentetik ortamında gerçek AAPL barını çekip sahte
-                # entry'yle karşılaştırıp yanlış-pozitif üretmesini önler (2026-07-23).
+                # entry'yle karşılaştırıp yanlış-pozitif üretmesini önler.
                 if not _dt._cache_path(tk).exists():
                     continue
                 bars = _dt.load_bars(tk, d0, d0, use_cache=True)
@@ -237,7 +241,7 @@ def report(deep: bool = False) -> dict:
                 sapan.append({"id": t.get("id"), "ticker": tk, "date": d0,
                               "defter": round(_f(e), 2), "bar": round(o, 2)})
         if karsilastirilan:
-            # BİLİNEN, TEŞHİS EDİLMİŞ SAPMA (2026-07-23): T00005/GE bir HAYALET işlemdir. GE
+            # BİLİNEN, TEŞHİS EDİLMİŞ SAPMA: T00005/GE bir HAYALET işlemdir. GE
             # HealthCare spin-off'u (2023-01) barları geriye düzeltince eski bölünme-öncesi fiyattan
             # (63$) doğmuş bu işlem, düzeltilmiş barlarda (78$) kurulumu artık ateşlemediği için
             # motorun yeniden oynatmasında HİÇ üretilmiyor (salt-okunur probe: 95 işlem, GE 0).
@@ -314,7 +318,7 @@ def report(deep: bool = False) -> dict:
                                 else " — panoda gösterilen eğri kitabı temsil ETMİYOR"),
                              "equity_curve.json[-1] + sermaye reset ofseti", "portfolio.cash"))
 
-    # 3b) TABAN KAYMASI — kitabın ZIMNİ tabanı, BEYAN EDİLMİŞ tabanla aynı mı? (SB-3, 2026-08-09)
+    # 3b) TABAN KAYMASI — kitabın ZIMNİ tabanı, BEYAN EDİLMİŞ tabanla aynı mı?
     #    A: realized_pnl − Σ trades.pnl_dollars  (kitabın zımni tabanı — "defterin dışından gelen $")
     #    B: sermaye.ofset()                      (beyan edilmiş taban — operatörün YAZILI kaydı)
     #
@@ -323,7 +327,7 @@ def report(deep: bool = False) -> dict:
     #    sorusunun makine-okunur bir cevabı yoktu — 2026-08-04 soruşturmasının ilk yarısı tam olarak
     #    bu sayıyı elle yeniden kurmakla geçti.
     #
-    #    NE EKLEMEZ — VE BU BEYAN EDİLİYOR (B3 önerisinin ölçülen kusuru): bu satır 2026-08-04'ün
+    #    NE EKLEMEZ — VE BU BEYAN EDİLİYOR (önerinin ölçülen kusuru): bu satır 2026-08-04'ün
     #    TERS ONARIMINI YAKALAYAMAZ ve yakalayamadığı için susturulmuyor, adlandırılıyor. O gün
     #    beyan ZATEN silinmişti (ofset 0) ve onarım kitabı defterin eski tabanına çekerken
     #    DENKLEMİN İKİ TARAFINI birlikte taşıdı: A = 0, B = 0 → satır YEŞİL. Bu bir uygulama hatası
@@ -462,7 +466,7 @@ def report(deep: bool = False) -> dict:
 def _orphan_state_files() -> dict:
     """Diskteki her defter/artefaktın bir OKUYUCUSU var mı? Statik `artifact_graph` yalnız kodda
     YAZILAN adları görür; bir mekanizma çalışma anında hiç kimsenin okumadığı bir dosya üretirse
-    (2026-07-22 mutasyon koşumu: `phantom_metrics.jsonl`) statik tarama onu göremez. Bu dedektör
+    (mutasyon koşumu: `phantom_metrics.jsonl`) statik tarama onu göremez. Bu dedektör
     diskten gerçek dosya listesini alıp kaynaktaki okuyucularla ve beyan edilmiş kanallarla
     çapraz kontrol eder — 'üretilip tüketilmeyen kanıt' sınıfının çalışma-anı dedektörü."""
     from . import config
@@ -479,10 +483,10 @@ def _orphan_state_files() -> dict:
         # secrets.py kendi dosya erişimini kullanır. Bunları orphan saymak yanlış pozitif olurdu.
         accessor_read = {"secrets.json"}
         known = read_names | sinks | contracts | accessor_read
-        # SQLite GEÇİŞİNİN İKİ YANLIŞ-POZİTİF SINIFI (WP-H/H9, 2026-07-31) — BEYAZ LİSTE DEĞİL,
+        # SQLite GEÇİŞİNİN İKİ YANLIŞ-POZİTİF SINIFI — BEYAZ LİSTE DEĞİL,
         # TÜRETME. İkisi de bu dedektörün "okuyucusu yok" testinden kendiliğinden geçemez ama
         # ikisinin de kökeni BİLİNEN bir artefakttır; elle bir liste tutmak, hemen aşağıda
-        # (K1 bloğunda) reddedilen hastalığın ta kendisi olurdu:
+        # reddedilen hastalığın ta kendisi olurdu:
         #   (a) `<defter>.migrated` — `dbmigrate` taşıma sonrası kaynak dosyayı SİLMEZ, adını
         #       değiştirir. Arşivin okuyucusu yoktur ÇÜNKÜ arşiv olması istenmiştir (geri dönüş
         #       yolu). Kökü (`trades.jsonl`) `known` içindeyse arşiv de bilinir.
@@ -492,8 +496,8 @@ def _orphan_state_files() -> dict:
         _db_yan = {f"{_sg.DB_NAME}{s}" for s in ("", "-wal", "-shm", "-journal")}
         known = known | _db_yan | {f"{n}{_sg.MIGRATED_SUFFIX}" for n in known}
 
-        # ---- DAMGALI GÖÇ ARŞİVİ: TANINMIŞ TERMİNAL SINIF, SESSİZ MUAFİYET DEĞİL (v238) ---------
-        # CANLI BULGU (2026-08-12 dağıtım penceresi): `state/scoreboard.json.migrated-20260812-
+        # ---- DAMGALI GÖÇ ARŞİVİ: TANINMIŞ TERMİNAL SINIF, SESSİZ MUAFİYET DEĞİL ---------
+        # CANLI BULGU (dağıtım penceresi): `state/scoreboard.json.migrated-20260812-
         # 201359-p192112` yetim sayıldı. Dedektör HAKSIZ DEĞİLDİ — dosyanın gerçekten okuyucusu
         # yok. Ama sınıfı yanlıştı: bu bir "üretilip tüketilmeyen kanıt" değil, BİLEREK bırakılmış
         # bir ARŞİVdir ve yukarıdaki `.migrated` türetmesi onu ZATEN tanıyor olmalıydı.
@@ -501,7 +505,7 @@ def _orphan_state_files() -> dict:
         #   duruyorsa `.migrated`a çekilir; HEDEF DOLUYSA ad `.migrated-<ts>-p<pid>` olur, çünkü
         #   POSIX `rename` dolu hedefi SESSİZCE EZERDİ. Yani damgalı ad, tanınan `.migrated`
         #   yeniden-adlandırmasının ÇARPIŞMA DALIDIR — ayrı bir mekanizma değil.
-        # NEDEN "GEVŞETME" DEĞİL (v204 kuralı: deseni gevşetmek = bekçiyi kör etmek): tanıma
+        # NEDEN "GEVŞETME" DEĞİL (kural: deseni gevşetmek = bekçiyi kör etmek): tanıma
         # TÜRETİLİR, elle liste değil — kök ad `known` içinde OLMAK ZORUNDA ve son ek yazıcının
         # kendi damga biçimine (`%Y%m%d-%H%M%S` + `-p<pid>`) uymak zorunda. Uydurma bir
         # `foo.json.migrated-elle` ya da bilinmeyen bir kökün arşivi bu kapıdan GEÇMEZ, yetim kalır.
@@ -515,6 +519,8 @@ def _orphan_state_files() -> dict:
         _damga = re.compile(re.escape(_sg.MIGRATED_SUFFIX) + r"-\d{8}-\d{6}-p\d+$")
 
         def _migrasyon_artigi(nm: str) -> bool:
+            """Dosya adı, bilinen bir artefaktın DAMGALI migrasyon arşivi mi? Kök ad bilinenler kümesinde OLMALI
+            ve son ek yazıcının kendi damga biçimine uymalı — uydurma bir ek bu kapıdan geçmez, yetim kalır."""
             m = _damga.search(nm)
             return bool(m) and nm[:m.start()] in known
 
@@ -534,7 +540,7 @@ def _orphan_state_files() -> dict:
                 continue
             orphans.append(nm)
 
-        # ---- KÖR KESİT KAPATILDI: KÖK + .json* OLMAYAN ARTEFAKTLAR (K1, 2026-07-30) ----------
+        # ---- KÖR KESİT KAPATILDI: KÖK + .json* OLMAYAN ARTEFAKTLAR ----------
         # Tarama `config.STATE.glob("*.json*")` idi; yani üç şeyi HİÇ göremiyordu: (1) depo
         # KÖKÜNDEKİ artefaktlar, (2) `.log`/`.csv` gibi başka uzantılar, (3) DİZİNLER. Canlı
         # kanıt: kökteki `provenance_report.json` 8 gün bayat + sıfır referanslı duruyordu,
@@ -554,6 +560,8 @@ def _orphan_state_files() -> dict:
         _src_text = _source_corpus()
 
         def _unreferenced(nm: str) -> bool:
+            """Dosya adı kaynak ağacında hiç geçmiyor mu (okuyucusuz mu)? Kaynak metni okunamadıysa False —
+            kanıt yokken "yetim" iddiası KURULMAZ."""
             return bool(_src_text) and nm not in _src_text
 
         for f in config.STATE.parent.glob("*.json*"):
@@ -584,9 +592,9 @@ def _orphan_state_files() -> dict:
                 continue
 
         ok = not orphans
-        # ADIYLA SAYILIR (v238): `migrasyon_artigi` satırı DÜŞÜRMEZ (`ok`a girmez) ama `detail`e
+        # ADIYLA SAYILIR: `migrasyon_artigi` satırı DÜŞÜRMEZ (`ok`a girmez) ama `detail`e
         # YAZILIR. `detail` bilerek seçildi: watchdog rows'a yalnız `check`/`ok`/`detail` taşıyor
-        # (watchdog.py:1068), yani operatörün gördüğü TEK metin bu. Sayıyı ek bir alana koyup
+        # (`watchdog.parity_report`), yani operatörün gördüğü TEK metin bu. Sayıyı ek bir alana koyup
         # burada susmak, "sessizce yok say" ile aynı sonucu verirdi.
         _artik_not = ("" if not migrasyon_artigi else
                       f" | migrasyon_artigi: {len(migrasyon_artigi)} damgalı göç arşivi "
@@ -661,6 +669,8 @@ def _universe_recompute() -> dict:
 
 
 def render_text(deep: bool = False) -> str:
+    """Yeniden-hesap raporunu operatör için metin dökümüne çevirir: her denetimin hükmü, açıklaması ve
+    kıyaslanan iki yolun adı. `deep` derin denetimleri de kapsar."""
     rep = report(deep=deep)
     out = [f"YENİDEN HESAP · {rep['n']} denetim · {'TEMİZ' if rep['ok'] else 'AYRIŞMA VAR'}"]
     for r in rep["rows"]:

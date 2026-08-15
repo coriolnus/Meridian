@@ -45,7 +45,7 @@ MIN_FIT_N = 40                      # bunun altında model kurulmaz — gürült
 FEATURES_NOTE = "score/100, r_multiple_expected, regime one-hot (VALID_REGIMES)"
 
 # ==================================================================================================
-# ANTRENMAN DAMGALARI — İKİ AYRI OLGU, İKİ AYRI DAMGA (v207, 2026-08-07)
+# ANTRENMAN DAMGALARI — İKİ AYRI OLGU, İKİ AYRI DAMGA
 # ==================================================================================================
 # ÖLÇÜLEN KUSUR (Rol-1, canlı): `scheduler_status.last_learn.antrenman` =
 # {fitted: True, n_fit: 2217, brier_train: 0.2428, ts: 2026-08-06T20:13:37} — kadans DÜN KOŞTU VE
@@ -64,7 +64,7 @@ FEATURES_NOTE = "score/100, r_multiple_expected, regime one-hot (VALID_REGIMES)"
 # HİÇ kapanmıyordu — kadans her seans yeniden fit ediyordu. Damgayı düzeltmek o kapıyı da geri
 # açar; bu bir yan etki değil, damganın asıl işlevidir.
 #
-# SÖZLEŞME (bu turda yazıya geçti):
+# SÖZLEŞME:
 #   fit_attempt_ts  — HER DENEME. Fit edilsin ya da edilmesin: "veri_seti_degismedi" dalı da,
 #                     eşik-altı dalı da, yarıda kalan bir fit de damga bırakır.
 #   fit_ts          — YALNIZ BAŞARILI FİT (model kuruldu, katsayı yazıldı).
@@ -74,6 +74,7 @@ _DAMGA_ALANLARI = ("fit_attempt_ts", "fit_ts", "fit_fingerprint", "fit_skip_reas
 
 
 def _simdi() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir (damga alanlarının ortak zaman kaynağı)."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -92,6 +93,8 @@ class ShadowTradeOutcomeModel:
     """fit → predict_proba → brier → save/load. Katsayılar + standardizasyon durumu tek JSON'da."""
 
     def __init__(self):
+        """Boş model kurar: katsayı/standardizasyon yok, sayaçlar sıfır. Eğitim seti künyesi (n_real/n_cf)
+        fit'e kadar None kalır — kaynak kırılımı asla uydurulmaz."""
         self.w: np.ndarray | None = None
         self.mu: np.ndarray | None = None
         self.sd: np.ndarray | None = None
@@ -103,6 +106,7 @@ class ShadowTradeOutcomeModel:
     # ---- özellik mühendisliği ----
     @staticmethod
     def _plan_index() -> dict:
+        """`trade_plans.jsonl`i plan id → plan sözlüğü haritasına çevirir (işlem↔plan birleştirmesi için)."""
         return {p.get("id"): p for p in store.read_jsonl("trade_plans.jsonl")}
 
     @classmethod
@@ -138,6 +142,9 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def _dataset(cls) -> tuple[np.ndarray, np.ndarray, int]:
+        """Eğitim matrisini (X, y, n) kurar: gerçek işlemler (`trades.jsonl` × plan birleşimi) + karşı-olgusal
+        defterin çözülmüş satırları. Etiket `r_multiple > 0`. Her iki aşama AYRI `sieve.Sieve` ile sayılır ve
+        gerçek/simüle kırılımı `_LAST_SPLIT`e yazılır — "gerçek 0, simüle 241" gizlenemez."""
         plans = cls._plan_index()
         X, y = [], []
         n_real = 0
@@ -189,10 +196,14 @@ class ShadowTradeOutcomeModel:
     # ---- çekirdek matematik (saf numpy) ----
     @staticmethod
     def _sigmoid(z):
+        """Sayısal taşmaya karşı ±30'a kırpılmış lojistik sigmoid."""
         return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
     def fit(self, X: np.ndarray | None = None, y: np.ndarray | None = None,
             iters: int = 600, lr: float = 0.3, l2: float = 1e-2) -> "ShadowTradeOutcomeModel":
+        """Lojistik regresyonu tam-batch gradyan inişi + L2 (bias hariç) ile eğitir; `self`i döndürür.
+        X/y verilmezse `_dataset()` kullanılır ve kaynak kırılımı künyeye işlenir; dışarıdan matris
+        gelirse künye None bırakılır. n < MIN_FIT_N ise model KURULMAZ (olay kaydı düşer, katsayı yazılmaz)."""
         if X is None or y is None:
             X, y, n = self._dataset()
             self.n_real, self.n_cf = _LAST_SPLIT["n_real"], _LAST_SPLIT["n_cf"]
@@ -239,9 +250,12 @@ class ShadowTradeOutcomeModel:
 
     # ---- kalıcılık ----
     def save(self) -> None:
+        """Model katsayılarını + eğitim künyesini durum defterine OKU-BİRLEŞTİR-YAZ ile kaydeder.
+        Model yoksa hiçbir şey yazmaz. Defterin diğer sahibinin alanları (kadans damgaları, `promotion`)
+        korunur; kaynak künyesi bu fit'inkiyle bilerek ezilir."""
         if self.w is None:
             return
-        # OKU-BİRLEŞTİR-YAZ — ÜSTÜNE-YAZ DEĞİL (v207 kökü, yukarıdaki damga sözleşmesi). Eski hâl
+        # OKU-BİRLEŞTİR-YAZ — ÜSTÜNE-YAZ DEĞİL (yukarıdaki damga sözleşmesi). Eski hâl
         # `write_json`e SIFIRDAN kurulmuş bir sözlük veriyordu; `write_json` tam bir üstüne-yazma
         # olduğu için bu çağrı dört kadans damgasını (`_DAMGA_ALANLARI`) birden siliyordu. Model
         # alanları yine TAM yazılır — korunan yalnız bu defterin DİĞER sahibinin (kadans damgaları
@@ -265,6 +279,8 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def load(cls) -> "ShadowTradeOutcomeModel":
+        """Durum defterinden katsayı/standardizasyon/sayaçları okuyup model nesnesi kurar.
+        Defter yoksa ya da katsayı boşsa boş (tahmin üretmeyen) model döner."""
         m = cls()
         st = store.read_json(STATE_FILE, None)
         if st and st.get("w"):
@@ -322,7 +338,7 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def refit_and_save(cls) -> "ShadowTradeOutcomeModel":
-        """FİT DENEMESİNİN TA KENDİSİ — ve bu yüzden DAMGAYI ATAN YER BURASI (v207).
+        """FİT DENEMESİNİN TA KENDİSİ — ve bu yüzden DAMGAYI ATAN YER BURASI.
 
         Damga eskiden yalnız `maybe_refit`te yazılıyordu; oysa canlıda fit'i atan iki yol var
         (kadans + `loop.P5_LEARN`) ve ikincisi damgasızdı. Damgayı çağıranın değil FİİLİN yanına
@@ -361,11 +377,12 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def is_promoted(cls) -> bool:
+        """Modelin terfi etmiş olup olmadığını durum defterinden okur (terfi yoksa False)."""
         return bool(store.read_json(STATE_FILE, {}).get("promotion", {}).get("promoted"))
 
 
 # ==================================================================================================
-# OTOMATİK ANTRENMAN KADANSI (öğrenme otomasyonu turu, 2026-07-30)
+# OTOMATİK ANTRENMAN KADANSI
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KUSUR — ve o kusurun GERÇEK adı. `refit_and_save` "hiç çağrılmıyor" DEĞİLDİ: `loop.py`nin
 # P5_LEARN bloğu onu her döngüde çağırıyor ve canlı `shadow_model.json` bunun kanıtı (n_fit=2201,
@@ -392,7 +409,7 @@ def dataset_fingerprint() -> dict:
     """Eğitim setini besleyen defterlerin (boyut, mtime_ns) parmak izi. Okunamayan/olmayan dosya
     `None` olarak GEÇER (0 değil): "dosya yok" ile "dosya boş" ayrı hâllerdir ve ikincisi bir
     seferlik bir kaza, birincisi kalıcı bir kurulum eksiğidir."""
-    # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): iki kaynak defter (`trades.jsonl`,
+    # DAMGA ARTIK `store.stamp`: iki kaynak defter (`trades.jsonl`,
     # `trade_plans.jsonl`) SQLite'a taşındığında dosyaları `.migrated` ekiyle DONAR — (boyut,
     # mtime) çifti bir daha değişmez ve "veri seti değişmedi" parmak izi SONSUZA kadar taze
     # görünürdü. `store.stamp` iki arka uçta da yalnız İÇERİK değişince değişir.
@@ -468,11 +485,11 @@ def maybe_refit(*, force: bool = False) -> dict:
         # DENEME DAMGASI YİNE YAZILIR: "kadans koştu ama gerek yoktu" ile "kadans hiç koşmadı"
         # ayrı hâllerdir ve karne ikisini ayırt edemezse sessiz bir duruş taze görünür.
         # BU DAL FİT ÇAĞIRMAZ, dolayısıyla damgayı `refit_and_save` atamaz — kadansın kendi
-        # damgasını attığı TEK yer burasıdır (v207'de diğer iki dal fiilin yanına taşındı).
+        # damgasını attığı TEK yer burasıdır (diğer iki dal fiilin yanına taşındı).
         _damga_yaz(fit_attempt_ts=now, fit_skip_reason="veri_seti_degismedi")
         return {"fitted": False, "reason": "veri_seti_degismedi", "n_fit": st.get("n_fit"),
                 "promoted": (st.get("promotion") or {}).get("promoted"), "ts": now}
-    # DAMGALARI ARTIK `refit_and_save` ATAR (v207): fit'i o yapıyor, deneme onun denemesi. Burada
+    # DAMGALARI ARTIK `refit_and_save` ATAR: fit'i o yapıyor, deneme onun denemesi. Burada
     # ikinci kez yazmak iki `now` arasında sahte bir fark üretir ve — daha kötüsü — damganın
     # KADANSA ait olduğu izlenimini sürdürürdü; oysa canlıdaki kusur tam olarak buydu (fit'i atan
     # ikinci çağıran, `loop.P5_LEARN`, damgasızdı ve `save()` kadansınkini siliyordu).

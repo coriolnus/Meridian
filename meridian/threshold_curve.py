@@ -133,7 +133,7 @@ def build() -> dict | None:
                 sv.drop("sema:bar_yok:sembol"); continue
             d = pd.Timestamp(dstr)
             if d not in frame.index:
-                # AYNI KÖK, AYNI YASA (2026-08-07): bu aşama `component_ic` ile BİREBİR aynı
+                # AYNI KÖK, AYNI YASA: bu aşama `component_ic` ile BİREBİR aynı
                 # çerçeveyi (cic._load_universe) ve aynı satırları görüyor, bu yüzden aynı 7 satırı
                 # (hepsi DD, bütünlük defterinin dışladığı 2025-11-04 öncesi) düşürüyordu. Sınıflama
                 # tek yerde: `cic.eslesme_nedeni` — gerekçe orada yazılı.

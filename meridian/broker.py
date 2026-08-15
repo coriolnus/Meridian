@@ -35,13 +35,13 @@ IMPACT_COEF = 0.10         # linear price-impact: participation of ADV adds IMPA
 MAX_NOTIONAL_PCT = 0.25    # a single position's notional (qty·entry) may not exceed this share of equity —
 #                            bounds the gap-through-stop tail: a tight-ATR name otherwise buys huge share
 #                            counts and a gap-down at bar-open loses NOTIONAL, not the intended 1R.
-# --- DE-RISK RAMPASI: KOD-İÇİ FAIL-SAFE VARSAYILANLARI (OPT Faz-1 kablolaması, 2026-08-12) -------
+# --- DE-RISK RAMPASI: KOD-İÇİ FAIL-SAFE VARSAYILANLARI ------------------------------------------
 # Bu iki sayı 2026-08-12'ye kadar `derisk_mult` GÖVDESİNDE gömülüydü (0.03 / 0.08) — yani ne
-# operatörün değişmez zarfında ne arama uzayında görünüyorlardı; EDG-023/026 ölçümleri onları
+# operatörün değişmez zarfında ne arama uzayında görünüyorlardı; ölçümler onları
 # ancak MONKEYPATCH ile oynatabildi (research/olcumler/edg026_slot20_2026-08-12/olcum.py:178).
 # Artık goal.yaml `limits` bloğundan okunur (`derisk_ramp()`), buradaki değerler yalnız FAIL-SAFE:
 # dosya/anahtar yoksa ya da değer bozuksa yasa YOK olmaz, BENİMSENEN banda düşer.
-# DEĞERLER = operatör kararı 2026-08-12 (KARAR-PAKETİ §E.1/§E.3): 15/36, TEK RAMPA HER MODDA
+# DEĞERLER = operatör kararı 2026-08-12: 15/36, TEK RAMPA HER MODDA
 # (kâğıt = gerçek-para birebir; eski 3/8'e kod-yolu YOKTUR).
 DERISK_FULL_DD = 0.15      # bu çekilmeye KADAR tam boy (rampanın üst ucu)
 DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
@@ -52,9 +52,9 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 # mezar taşıyla beyan edilmiştir.
 
 # =================================================================================================
-# E1 — GİRİŞ İCRA YASASI: TEK YASA, İKİ MOTOR (WP-E / kart EXE-2026-001, 2026-07-31)
+# E1 — GİRİŞ İCRA YASASI: TEK YASA, İKİ MOTOR
 # =================================================================================================
-# BULGU (WP0 matrisi #1, canlı kanıt): iki motor FARKLI icra modeli koşuyordu.
+# BULGU (canlı kanıt): iki motor FARKLI icra modeli koşuyordu.
 #   * İÇ MOTOR (`fill_entry`): ertesi açılışta KOŞULSUZ dolum — açılış tetikten ne kadar yukarıda
 #     olursa olsun (%4 max-chase tavanına dek) alınmış sayılıyordu.
 #   * AYNA (`alpaca.submit_bracket`): buy-stop GTC bracket. `entry_trigger` sinyal barının
@@ -71,7 +71,7 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 #   3. GAP     : gönderim anında referans fiyat tetiğin ÜSTÜNDEyse buy-stop GEÇERSİZDİR (bugünkü
 #                retlerin kökü). Kart grid'inin iki noktası: `marketable_limit` (varsayılan —
 #                limit fiyatlı emir, tavan yine limit) veya `cancel` (gap-risk vetosu).
-#   4. TIF     : GTC — ve bu bir tercih değil KELEPÇEDİR (E1-v2, 2026-08-07).
+#   4. TIF     : GTC — ve bu bir tercih değil KELEPÇEDİR (E1-v2).
 #                MEKANİZMA: Alpaca bracket'ında `time_in_force` alanı TEKTİR ve emrin TAMAMINA
 #                uygulanır. Giriş bacağı için seçtiğimiz ömür, KORUMA bacaklarının (take-profit +
 #                stop-loss) da ömrüdür — ikisi ayrı ayrı seçilemez, çünkü ayrı ayrı gönderilmez.
@@ -87,7 +87,7 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 #                ESKİ GEREKÇE — SİLİNMEDİ, SINIRI BEYAN EDİLDİ: "DAY. GTC bir sonraki seansa BAYAT
 #                TETİK taşır (sinyal barı kapanışına sabitlenmiş bir seviye iki gün sonra artık o
 #                kurulumu temsil etmez)". Bu cümle GİRİŞ bacağı için hâlâ doğrudur; kusuru
-#                eksikliğiydi — çıkış bacağının TIF'ini ne bu blok ne kart EXE-2026-001 HİÇ
+#                eksikliğiydi — çıkış bacağının TIF'ini ne bu blok ne de kart HİÇ
 #                konuşmuyordu, dolayısıyla korumanın ömrü hiç kimsenin kararı olmadan girişin
 #                yan etkisi olarak belirlendi.
 #                BAYAT TETİK NEREYE GİTTİ: TIF'e HAVALE EDİLEMEZ, motorun kendi eline alındı.
@@ -109,7 +109,7 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 ENTRY_LIMIT_ATR_MULT = 0.5     # kart grid'inin VARSAYILAN noktası: min(0.5·ATR14, %1.0)
 ENTRY_LIMIT_PCT_CAP = 0.01
 ENTRY_TIF = "gtc"
-# TIF BEYAZ-LİSTESİ — TEK NOKTA (E1-v2, 2026-08-07). "day" bu listeden ÇIKARILDI: madde 4'teki
+# TIF BEYAZ-LİSTESİ — TEK NOKTA (E1-v2). "day" bu listeden ÇIKARILDI: madde 4'teki
 # ölçülen vaka, DAY'in koruma bacaklarını her seans kapanışında öldürdüğünü gösterdi. Liste
 # `entry_law`in kelepçesidir: yapılandırma "day" dese bile yasa onu KABUL ETMEZ ve `ENTRY_TIF`e
 # düşer — çünkü korumanın ömrü bir arama değişkeni değildir. Yürürlükteki değer her gönderimde
@@ -243,7 +243,7 @@ def derisk_ramp(override: dict | None = None) -> dict:
     """Yürürlükteki de-risk rampası. Kaynak: `goal.yaml` → `limits.derisk_full_dd` /
     `limits.derisk_floor_dd` (DEĞİŞMEZ dosya, OPERATÖR KALEMİ — `guard.LIMIT_KEYS`; Hermes
     öneremez ve bounds.yaml'da satırı YOKTUR: risk-artıran vanalar karar penceresinden geçer,
-    makine evriltmez — ROADMAP §2-10(3) uygulama politikası).
+    makine evriltmez — uygulama politikası).
 
     Dönüş: {"full_dd", "floor_dd", "kaynak"} — `kaynak` her alan için "goal.yaml" | "kod
     varsayilani" der (config.live_expectancy_rule emsali: sessiz bir varsayılan, okuyucuya
@@ -288,9 +288,9 @@ def derisk_mult(equity: float, peak: float, cfg: dict | None = None) -> float:
     """Graded de-risk: shrink new-position size CONTINUOUSLY as the book draws down from its peak — a
     smooth linear ramp (was a 4-step cliff). Full size until `full_dd`, then linearly to 0 at
     `floor_dd`. Applied identically in live and backtest at fill time — TEK RAMPA, mod dallanması
-    YOK (operatör kararı 2026-08-12 §E.3: kâğıt = gerçek-para birebir).
+    YOK (operatör kararı 2026-08-12: kâğıt = gerçek-para birebir).
 
-    Bant `derisk_ramp()`ten gelir (goal.yaml → limits). Gövde EDG-026'nın ölçtüğü fonksiyonun
+    Bant `derisk_ramp()`ten gelir (goal.yaml → limits). Gövde ölçülen fonksiyonun
     BİREBİR aynısıdır (olcum.py:178 `_rampa_fn`) — yalnız 0.03/0.08 yerine parametre; yuvarlama
     hanesi (4) ve sınır yönleri (`<=` / `>=`) dahil hiçbir şey değişmedi."""
     if peak <= 0:
@@ -311,8 +311,8 @@ def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None
     is permitted; 0 once the de-risk floor is hit.
 
     ÜÇÜNCÜ ARGÜMAN YALNIZ VERİLDİĞİNDE GEÇİLİR — kolaylık değil UYUMLULUK: dondurulmuş ölçüm
-    şasileri `broker.derisk_mult`i İKİ argümanlı bir fonksiyonla monkeypatch'liyor (EDG-023/026,
-    olcum.py:299) ve `max_positions_at` yamayı GLOBAL çözümle görüyor (yayılım çivisi
+    şasileri `broker.derisk_mult`i İKİ argümanlı bir fonksiyonla monkeypatch'liyor
+    (olcum.py:299) ve `max_positions_at` yamayı GLOBAL çözümle görüyor (yayılım çivisi
     olcum.py:306-307). Koşulsuz `derisk_mult(e, p, cfg)` çağrısı o şasileri TypeError'la
     düşürürdü — yani bugünkü kablonun doğrulandığı ölçümler bir daha koşturulamazdı."""
     m = derisk_mult(equity, peak) if cfg is None else derisk_mult(equity, peak, cfg)
@@ -325,6 +325,12 @@ def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None
 
 @dataclass
 class Position:
+    """Açık bir pozisyonun tam durumu: plan kimliği, giriş/stop/hedef seviyeleri, miktar, risk
+    büyüklüğü ve yönetim sayaçları.
+
+    Kapanışta defter satırına damgalanacak bağlam (rejim, kurulum, skor, keşif bayrağı, MFE/MAE su
+    seviyeleri) pozisyonla birlikte TAŞINIR ki eğitim tarafı ayrı bir join'e muhtaç olmasın."""
+
     plan_id: str
     ticker: str
     side: str
@@ -351,7 +357,7 @@ class Position:
     exploration: bool = False     # keşif sondası (bütçe %0 rejimde kanıt işlemi — 0.25R tavanlı)
     hi_water: float = 0.0         # öneri #2: pozisyon ömrü boyunca görülen en yüksek high (MFE için)
     lo_water: float = 0.0         # ve en düşük low (MAE için); 0.0 = eski kayıt, damga atlanır
-    # G3b (2026-07-30): kurulumun YAPI çizgisi (sinyal barında hesaplanan pivot), pozisyonla birlikte
+    # Kurulumun YAPI çizgisi (sinyal barında hesaplanan pivot), pozisyonla birlikte
     # taşınır. `strategy.early_kill_pivot_exit` bunu okur. 0.0 = "çağıran pivot geçirmedi" (canlı yol
     # bugün geçirmiyor; loop.py bu turun yüzeyi değil) → erken itlaf ateşlemez, UYDURMA seviye yok.
     # Yönetim barında YENİDEN hesaplanmaz: `ind.pivot_high` yuvarlanan bir seri olduğu için sonraki
@@ -366,10 +372,10 @@ class Position:
 # NE ÖLÇER: `portfolio.json`daki SERMAYE BEYANININ (`sermaye_resetleri`) büyüklüğü. Beyan, kitabın
 # tabanının defterin tabanından ne kadar ve NEDEN ayrıldığını söyleyen kayıttır; `recompute`in üç
 # kimliği (realized_pnl · cash_identity · equity_curve_tail) ofseti ondan okur. Kayıt kaybolursa
-# ofset 0'a düşer ve üç kimlik birden kırılır — canlıda tam olarak bu oldu (KOKNEDEN §1).
+# ofset 0'a düşer ve üç kimlik birden kırılır — canlıda tam olarak bu oldu.
 #
-# NEDEN BURADA (leaf) YAŞIYOR: İKİ tüketicisi var — `loop._save_broker`ın yazım kapısı (D2) ve
-# `watchdog.monotonicity_report`ın monotonluk tabanı (D4). Ölçüyü iki yerde ayrı ayrı yazmak, bu
+# NEDEN BURADA (leaf) YAŞIYOR: İKİ tüketicisi var — `loop._save_broker`ın yazım kapısı ve
+# `watchdog.monotonicity_report`ın monotonluk tabanı. Ölçüyü iki yerde ayrı ayrı yazmak, bu
 # deponun adıyla kovaladığı kusurun ta kendisi olurdu ("aynı yasanın iki uygulaması"): biri
 # güncellenir, diğeri unutulur ve kapı ile dedektör AYNI olayda farklı şey söyler. `broker.py`
 # ikisinin de döngüsüz ithal edebildiği tek modüldür (watchdog → loop bir ithal halkası olurdu).
@@ -382,6 +388,9 @@ BEYAN_TOL = 0.01
 
 
 def _abs_ofset(v) -> float:
+    """Tek bir beyan kaydının ofsetini mutlak float'a çevirir; çevrilemiyorsa 0.0 katkı verir.
+
+    0.0 "bu kaydın büyüklüğü ölçülemedi" demektir — kayıt yine de `n` sayacında görünür."""
     try:
         return abs(float(v))
     except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — kayıt `n` sayacında GÖRÜNÜR ve kimlik kapısı onu saymaya devam eder; ölçülemeyen bir ofseti sayıya çevirmek UYDURMA olurdu, 0 katkı "bu kaydın büyüklüğü ölçülmedi" demektir
@@ -422,7 +431,16 @@ def beyan_gerilemesi(eski: dict, yeni: dict) -> dict | None:
 
 
 class PaperBroker:
+    """Kâğıt (simülasyon) icra motoru: pozisyon açar/kapatır, nakit ve gerçekleşmiş P&L defterini
+    tutar, kayma + komisyon sürtünmesini uygular.
+
+    AYNI YASA, İKİ MOTOR: canlı döngü ile geri-test bu SINIFI paylaşır; giriş/çıkış kuralları
+    burada tek yerde yaşar ki iki motor birbirinden ayrışamasın."""
+
     def __init__(self, equity: float, slippage_bps: float, commission_per_share: float):
+        """Broker'ı başlangıç sermayesi, baz kayma (bps) ve hisse başı komisyonla kurar.
+
+        Boş defterle başlar: açık pozisyon yok, kapanan satır yok, gerçekleşmiş P&L 0."""
         self.start_equity = equity
         self.cash = equity
         self.realized_pnl = 0.0
@@ -452,6 +470,11 @@ class PaperBroker:
 
     # ---- entries ----
     def size_position(self, entry_fill: float, stop: float, size_r: float, equity: float) -> tuple[int, float]:
+        """R büyüklüğünden lot ve risk dolarını hesaplar: `(qty, risk_dollars)`.
+
+        Risk = size_r · RISK_PCT_PER_R · özsermaye; lot, hisse başı riske BÖLÜNÜP AŞAĞI yuvarlanır
+        (tavan asla aşılmaz). Giriş stopun altındaysa (hisse başı risk ≤ 0) `(0, 0.0)` — geçersiz
+        bir kurulum için uydurma miktar üretilmez."""
         risk_dollars = size_r * RISK_PCT_PER_R * equity
         per_share = entry_fill - stop
         if per_share <= 0:
@@ -471,14 +494,14 @@ class PaperBroker:
         slippage — so a size the market couldn't absorb can't fill at a fantasy price. adv=None keeps
         the original fixed-slippage behavior (unit tests, thin/synthetic bars).
 
-        `pivot` (G3b, 2026-07-30): kurulumun YAPI çizgisi, `strategy.early_kill_pivot_exit`in okuduğu
+        `pivot`: kurulumun YAPI çizgisi, `strategy.early_kill_pivot_exit`in okuduğu
         seviye. PLAN SÖZLÜĞÜNDEN DEĞİL AYRI ARGÜMANDAN gelir — plan defteri şeması iki motorda AYNI
         kalmak zorundadır (test_differential_v60), pivot ise bir defter alanı değil icra girdisidir.
-        Geçirmeyen çağıran için 0.0 = "bilinmiyor" → erken itlaf ateşlemez. C13 (2026-08-02): canlı
+        Geçirmeyen çağıran için 0.0 = "bilinmiyor" → erken itlaf ateşlemez. Canlı
         `loop.py` de artık geçiriyor (`entry_law` yan tablosu) — bu satır eskiden "canlı geçirmez"
         diyordu ve tam olarak o kopukluk, knob terfi ederse canlıda sessiz no-op üretiyordu.
 
-        E1 (WP-E, 2026-07-31) — AYNI YASA, İKİ MOTOR. `atr` / `gap_at_submit` de PLAN SÖZLÜĞÜNDEN
+        E1 — AYNI YASA, İKİ MOTOR. `atr` / `gap_at_submit` de PLAN SÖZLÜĞÜNDEN
         DEĞİL ayrı argümandan gelir (pivot ile aynı gerekçe: ikisi de defter alanı değil İCRA
         girdisidir ve plan şeması iki motorda AYNI kalmak zorundadır — test_differential_v60).
           * `atr`          : sinyal barında hesaplanmış ATR14. None = ölçülemedi → limit yalnız
@@ -491,6 +514,9 @@ class PaperBroker:
                              işlemdir ve çağıran onu olay + defter satırı olarak ölçer (yutulmaz).
         """
         def _red(reason: str, **ek):
+            """Girişi reddeder: nedeni (varsa) `reject_out` sözlüğüne yazar ve None döner.
+
+            Ret yutulmaz — çağıran bu sözlükten okuyup olay/defter satırı olarak ölçer."""
             if reject_out is not None:
                 reject_out.clear()
                 reject_out.update({"reason": reason, "ticker": plan.get("ticker"),
@@ -550,7 +576,7 @@ class PaperBroker:
             risk_dollars = qty * (base_fill - stop)
         if qty <= 0:
             return _red("notional_cap", equity=round(float(equity), 2))
-        # H1 — slippage is EMBEDDED in `fill` (= pos.entry), so it is already reflected in every mark-to-market
+        # Slippage is EMBEDDED in `fill` (= pos.entry), so it is already reflected in every mark-to-market
         # (equity uses mark-entry) and in the exit P&L (gross uses pos.entry). Charging it a SECOND time as a
         # cash cost double-counted it: broker equity, the trade-row pnl_dollars, and the true round-trip all
         # disagreed by exactly the slippage, and the gate (reads pnl_dollars) ran off a different equity than
@@ -568,7 +594,7 @@ class PaperBroker:
             setup=plan.get("setup", "?"), plan_score=plan.get("score"),
             rr_expected=plan.get("r_multiple_expected"), exploration=bool(plan.get("exploration")),
             hi_water=fill, lo_water=fill,
-            # G3b: çağıran pivot geçirmediyse 0.0 — "bilinmiyor" ile "sıfır" aynı şey değil, ama bu
+            # Çağıran pivot geçirmediyse 0.0 — "bilinmiyor" ile "sıfır" aynı şey değil, ama bu
             # alan yalnız `pivot > 0` koşuluyla okunduğu için 0.0 dürüstçe "ölçülemedi" anlamına gelir.
             pivot=float(pivot or 0.0),
         )
@@ -582,7 +608,7 @@ class PaperBroker:
              (stop altında ya da hedef üstünde açılış) barın içindeki BELİRSİZ sıradan ÖNCE çözülür.
           2) bar içi — high/low sırası OHLC'den bilinemez → stop önce (muhafazakârlık).
 
-        DENETİM (2026-07-22, v75): eski sıra `l <= eff_stop`ı `o >= target`ın ÖNÜNE koyuyordu, yani
+        DENETİM: eski sıra `l <= eff_stop`ı `o >= target`ın ÖNÜNE koyuyordu, yani
         bar-içi BELİRSİZ bir stop dokunuşu, açılışta GARANTİ dolmuş bir hedef boşluğunu eziyordu.
         Hedefin ÜSTÜNDE açılan bir bar, gün içinde stop'a da uğrarsa işlem tam stop zararı olarak
         yazılıyordu — oysa pozisyon o barın ilk fiyatında zaten kapanmıştı; low'a ulaşan bir pozisyon
@@ -626,7 +652,7 @@ class PaperBroker:
         level = pos.entry + float(params.get("exit.scale_out_r", 2.0)) * pos.r_per_share
         if bar["high"] < level:
             return False
-        # HEDEF ÖNCE (2026-07-22, v75): kısmi satış seviyesi hedefin ÜSTÜNDEyse o seviyeye giden yol
+        # HEDEF ÖNCE: kısmi satış seviyesi hedefin ÜSTÜNDEyse o seviyeye giden yol
         # hedefin İÇİNDEN geçer — hedef emri önce dolar ve pozisyonun TAMAMINI kapatır; `level`de
         # satılacak hisse KALMAZ. Eski kod yine de bankalıyordu ve işlem hem +scale_out_r'yi hem
         # +hedefi yazıyordu. bounds.yaml bunu SERBEST bırakıyor (scale_out_r ≤ 4.0, profit_target_r
@@ -640,7 +666,7 @@ class PaperBroker:
         # STOP-BEFORE-TARGET conservatism (the same convention _touch_exit documents): when the bar's
         # open or low breached the effective stop, the intrabar order of stop-vs-high is unknowable from
         # OHLC — banking the +NR partial first (and ratcheting to breakeven before the stop check) would
-        # book optimistic profit on a bar that may have stopped out first (audit #2/#8). Skip the
+        # book optimistic profit on a bar that may have stopped out first. Skip the
         # scale-out; _touch_exit then resolves the bar conservatively as a full stop exit.
         eff_stop = max(pos.stop, pos.trail_stop or pos.stop)
         if bar.get("open") is not None and float(bar["open"]) <= eff_stop:
@@ -652,15 +678,15 @@ class PaperBroker:
             return False
         fill = level * (1.0 - self.slip)                      # bank at the scale level (slippage IN the price)
         partial_commission = sell_qty * self.commission
-        # WP-E SENT-TAM BİRİKİM (2026-08-12 canlı alarmı: "GERİLEME sermaye_taban 5542.09 → 5542.08").
+        # SENT-TAM BİRİKİM (2026-08-12 canlı alarmı: "GERİLEME sermaye_taban 5542.09 → 5542.08").
         # Defter satırı 2 haneye YUVARLANARAK yazılır (`close_position` satır-yazımı `round(pnl, 2)`)
         # ama birikim HAM pnl ile yapılıyordu — `entry_commission` alanının kendi sözleşmesi
         # ("realized_pnl == Σ row.pnl_dollars") sent-altı kalıntılarla sürükleniyor ve zımni taban
-        # (watchdog SB-3 / sermaye.sermaye_taban) yarım-sent sınırına oturuyordu. Yuvarlama artışın
+        # (watchdog / sermaye.sermaye_taban) yarım-sent sınırına oturuyordu. Yuvarlama artışın
         # KAYNAĞINDA ve TEK yerde: üç akümülatör (realized_pnl / cash / banked_pnl) AYNI sent-tam
         # artışı alır — banked ham kalsaydı kapanış satırı (`pnl = rem + banked`) birikimden bir
         # sente kadar ayrışırdı. Fiyat/komisyon/eşik aritmetiği DEĞİŞMEZ: yalnız birikim noktası.
-        pnl_partial = round(sell_qty * (fill - pos.entry) - partial_commission, 2)   # H1: slippage already in `fill`; charge commission once
+        pnl_partial = round(sell_qty * (fill - pos.entry) - partial_commission, 2)   # slippage already in `fill`; charge commission once
         self.realized_pnl += pnl_partial
         self.cash += pnl_partial
         pos.banked_pnl += pnl_partial
@@ -670,12 +696,12 @@ class PaperBroker:
         return True
 
     def close_position(self, ticker: str, raw_exit: float, reason: str, ts: str) -> dict:
-        """Kapanmış işlem satırını ÜRETİR — ama `kaynak` damgasını BİLEREK basmaz (BT-1, 2026-07-31).
+        """Kapanmış işlem satırını ÜRETİR — ama `kaynak` damgasını BİLEREK basmaz.
 
         Bu fabrika ORTAKTIR: canlı döngü (`loop.daily_cycle`), replay tohumu (`backtest.replay`),
         gölge varyant kitapları ve karşı-olgusal defter aynı `PaperBroker`ı kullanır. Buraya sabit
         bir damga koymak, üretilen satırın NEREYE yazıldığını bilmeyen bir katmanın o soruyu
-        cevaplaması olurdu — ve yanlış cevap tam olarak BT-1'in yarattığı hasarı üretirdi
+        cevaplaması olurdu — ve yanlış cevap tam olarak o hasarı üretirdi
         (simülasyon satırı "canlı" damgasıyla öğrenme defterine girer).
 
         Damgayı YAZAR basar, üretici değil: `loop._persist_trade` → `live_paper`,
@@ -685,9 +711,9 @@ class PaperBroker:
         exit_slip_dollars = pos.qty * (raw_exit - exit_fill)
         exit_commission = pos.qty * self.commission
         gross = pos.qty * (exit_fill - pos.entry)                # true round-trip P&L — both slippages in the fills
-        pnl_remaining = gross - pos.entry_commission - exit_commission   # H1: charge commission ONCE (each side); slippage already priced in
+        pnl_remaining = gross - pos.entry_commission - exit_commission   # charge commission ONCE (each side); slippage already priced in
         costs = pos.entry_slippage_cost + exit_slip_dollars + exit_commission   # informational total friction
-        # WP-E SENT-TAM BİRİKİM (gerekçe: scale_out'taki blok). Satır-yazımı `round(rem + banked, 2)`
+        # SENT-TAM BİRİKİM (gerekçe: scale_out'taki blok). Satır-yazımı `round(rem + banked, 2)`
         # ve `banked` yukarıda sent-tamdır → sent ızgarası tam-sent kaymayla değişmediğinden
         # round(rem + banked, 2) == round(rem, 2) + banked: birikim de round(rem, 2) alınca
         # realized_pnl defterle SENT-TAM kapanır. `pnl_remaining` DEĞİŞKENİNİN kendisi yuvarlanmaz:

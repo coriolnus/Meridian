@@ -43,7 +43,7 @@ from .adapters import data as data_adapter
 FRICTION_BPS = 10.0        # engine.py:21  — 10 bps / bacak (alış ve satış)
 ATR_LEN = 22               # engine.py:22  — ATR22
 CHANDELIER_K = 3.5         # engine.py:23  — chandelier = tepe - 3.5 × ATR22
-N_SLOTS = 10               # kart EDG-2026-009 incumbent hücresi (N=10)
+N_SLOTS = 10               # incumbent hücresi (N=10)
 MOM_LOOKBACK = 12          # 12-1: P(ay-sonu t-1) / P(ay-sonu t-12) - 1  (engine.py:171-190)
 INIT_EQUITY = 100_000.0    # SANAL sermaye (brief); şaside 1M — oransal muhasebe, getiri aynı
 
@@ -58,7 +58,7 @@ EQUITY_CAP = 2500          # ~10 yıl günlük M2M; kırpma SAYILIR (equity_duse
 CLOSED_CAP = 500           # kapanan işlem kuyruğu; kırpma SAYILIR (closed_toplam)
 CATCHUP_MAX = 40           # bu kadar seanstan büyük boşluk UYARI üretir (yine de işlenir)
 DELIST_GRACE = 10          # tutulan sembolün son barı bu kadar seans geride kaldıysa "no_data"
-# İLERİ-DOLDURMA BAYRAĞININ KOLON ADI (v196/KALEM-2). Alt çizgi bilerek: bu bir PİYASA kolonu
+# İLERİ-DOLDURMA BAYRAĞININ KOLON ADI. Alt çizgi bilerek: bu bir PİYASA kolonu
 # değil, hücrenin KÖKENİ hakkında bir şerh. Kolon `_dilim`de üretilir ve `_karar` onu sayarak
 # kararın kendi bayrağını yazar — böylece "hangi karar hangi doldurmayla alındı" cevaplanabilir.
 DOLDU_KOL = "_dolduruldu"
@@ -74,6 +74,8 @@ PIT_SERH = (
 
 # ---------------------------------------------------------------- kitap
 def yeni_kitap(now: str | None = None) -> dict:
+    """Sıfırdan gölge kitabı kurar: boş pozisyon/kapanış/sermaye listeleri, başlangıç nakdi, PIT şerhi ve
+    sayaç bloğu. Bu defter SANALDIR — sıfır yetki."""
     return {"schema": SCHEMA, "created": now or _now(), "positions": {}, "closed": [],
             "equity": [], "last_run": None, "pit_serh": PIT_SERH,
             # --- şemanın taşıyıcı ekleri (brief'in çekirdeğinin üstüne) ---
@@ -85,10 +87,12 @@ def yeni_kitap(now: str | None = None) -> dict:
 
 
 def _now() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _kaydet(kitap: dict) -> None:
+    """Kitabı disk üzerindeki gölge defterine yazar."""
     store.write_json(BOOK, kitap)
 
 
@@ -168,7 +172,7 @@ def _dilim(per: dict, semboller, tail: pd.DatetimeIndex) -> dict:
     indekslenir ve KENDİ ÖMRÜ İÇİNDE ffill edilir (listelenmeden önce/sonrası NaN kalır —
     bakma-ileri yok, engine.py:55-61).
 
-    HÜCRE DÜZEYİNDE KÖKEN BAYRAĞI (v196/KALEM-2 · BASELINE-2026-08-06 T12). Bu ffill EKRANA
+    HÜCRE DÜZEYİNDE KÖKEN BAYRAĞI. Bu ffill EKRANA
     ULAŞIYOR — sıralama buradan çıkıyor, karar oradan, defter oradan, `api.py`nin `trend_kitabi`
     alanı da oradan. Doldurma sınırlı ve docstring'de dürüstçe belgelenmişti, ama ETİKETSİZDİ:
     web katmanında "dolduruldu" dizesi SIFIR kez geçiyordu, yani okuyucu ileri-taşınmış bir
@@ -238,6 +242,8 @@ def _uygunluk() -> dict:
 
 
 def _uygun(harita: dict, t: str, rd) -> bool:
+    """Ticker `rd` tarihinde işlem evrenine uygun mu? Bütünlük haritasında geçerlilik başlangıcı varsa
+    yalnız o tarihten itibaren uygundur; haritada yoksa kısıtsız uygun sayılır."""
     gs = harita.get(t.upper())
     return (not gs) or str(pd.Timestamp(rd).date()) >= str(gs)
 
@@ -253,6 +259,8 @@ def _icra(kitap: dict, xd, per: dict, mpos: dict) -> None:
     say = kitap["sayaclar"]
 
     def _acilis(t):
+        """İcra fiyatı: `xd` seansının AÇILIŞI; açılış yoksa/geçersizse karar gününün son kapanışına düşer
+        (şasinin yedeği). Fiyat UYDURULMAZ — kaynak her iki hâlde de gerçek bardır."""
         df = per.get(t)
         if df is not None and xd in df.index:
             p = df.at[xd, "open"]
@@ -339,7 +347,7 @@ def _isaretle(kitap: dict, s, per: dict) -> list:
     """GÜNLÜK M2M + chandelier tepe takibi. Barı olmayan sembol için ŞASİNİN ffill'i uygulanır
     (son bilinen kapanış); atlanan sembol SAYILIR ve olayla duyurulur — sessiz boşluk yok.
 
-    SATIR DÜZEYİNDE KÖKEN BAYRAĞI (v196/KALEM-2): olay defterine yazılan sayı bir OLAYdır, satırın
+    SATIR DÜZEYİNDE KÖKEN BAYRAĞI: olay defterine yazılan sayı bir OLAYdır, satırın
     kendisinde durmuyordu — yani eğrideki bir noktaya bakıp "bu değer ölçüldü mü, taşındı mı"
     sorusu ekrandan da defterden de cevaplanamıyordu. Bayrak artık SATIRIN İÇİNDE: `dolduruldu` =
     o seans kendi barı olmadığı için SON BİLİNEN KAPANIŞLA işaretlenen pozisyon sayısı.
@@ -448,7 +456,7 @@ def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni
     kalan = [t for t in tutulan if t not in cikan]
     slots = N_SLOTS - len(kalan)
     entries = [t for t in picks if t not in kitap["positions"]][:max(slots, 0)] if slots > 0 else []
-    # KARARIN KÖKEN BAYRAĞI (v196/KALEM-2). Sıralama penceresinde kaç hücre İLERİ DOLDURULDU ve
+    # KARARIN KÖKEN BAYRAĞI. Sıralama penceresinde kaç hücre İLERİ DOLDURULDU ve
     # kaç sembol en az bir doldurulmuş hücre taşıdı — karar nesnesinin İÇİNDE, ayrı bir defterde
     # değil. Ayrı yazılsaydı ilk düzenlemede karardan ayrışır ve "hangi karar hangi doldurmayla
     # alındı" sorusu cevapsız kalırdı. `dolduruldu_sembol` sıralamaya GİREN sembol sayısı değildir:
@@ -463,7 +471,7 @@ def _karar(kitap: dict, rd, per: dict, master: pd.DatetimeIndex, mpos: dict, uni
 def ozet(kitap: dict | None) -> dict:
     """daily_cycle olayının + panonun okuduğu ÖZET. Kitap yoksa 'doğmadı' der (boş kart dürüsttür).
 
-    DOLDURMA KÖKENİ RAKAMLA BİRLİKTE ÇIKAR (v196/KALEM-2, T12). `equity` alanı EĞRİNİN SON
+    DOLDURMA KÖKENİ RAKAMLA BİRLİKTE ÇIKAR. `equity` alanı EĞRİNİN SON
     SATIRIDIR ve o satır ileri-doldurulmuş olabilir; şerhi ayrı bir uca koymak, rakamı şerhsiz
     okutmanın en kolay yoluydu (aynı gerekçe `pit_serh` için de yazılı — bu kartın kendi dersi).
       son_dolduruldu    → BASILAN sayının kendi bayrağı: o seans kaç pozisyon taşındı

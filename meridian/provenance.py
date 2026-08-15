@@ -44,7 +44,7 @@ KEYSET_TAVAN = 256      # bellek sınırı; imza çeşitliliği bu sayıya kadar
 # ÇOK-BİÇİMLİ DEFTER EŞİĞİ. events.jsonl gibi defterlerde her olay TÜRÜ farklı alan taşır: birlik
 # kümesi 40+, tipik satır 4-5 anahtar. Böyle bir defterde "hiçbir satırda yok" ARGÜMAN DEĞİLDİR —
 # o alanı taşıyan olay türü henüz yaşanmamış olabilir. İlk koşuda tam bu oldu: dedektör
-# events.jsonl'de `plan_id` sürüklenmesi bildirdi, oysa üretici (loop.py:114) alanı doğru yazıyor;
+# events.jsonl'de `plan_id` sürüklenmesi bildirdi, oysa üretici (`loop` olay yazarları) alanı doğru yazıyor;
 # yalnızca o beş olay türünden dördü bu defterde hiç ateşlememişti. Kanıtlayamadığımız yere
 # "ihlal" değil "belirsiz" yazarız — kurt masalı yasağı dedektörün KENDİSİ için de geçerlidir.
 HETEROJEN_KAT = 3.0
@@ -88,10 +88,14 @@ class _Izlenen(dict):
     __slots__ = ("_art",)
 
     def __init__(self, art: str, data: dict):
+        """İzlenen sözlüğü kurar: veriyi olduğu gibi devralır, hangi artefakta ait olduğunu saklar."""
         super().__init__(data)
         self._art = art
 
     def get(self, key, default=None):
+        """`dict.get` ile BİREBİR aynı sonucu döndürür; yan etkisi okumayı kaydetmektir: anahtar varsa
+        İSABET, yoksa ve varsayılan verilmişse VARSAYILANLI (ihlal değil), yoksa ISKA sayılır.
+        """
         var = dict.__contains__(self, key)
         with _lock:
             if var:
@@ -106,6 +110,9 @@ class _Izlenen(dict):
     def __getitem__(self, key):
         # d[k] ıskada KeyError fırlatır, yani zaten gürültülüdür; burada yalnız İSABETİ sayıyoruz
         # ki "yazılıyor ama hiç okunmuyor" ölçümü eksik çıkmasın.
+        """`dict[k]` ile birebir aynı; yalnız İSABET kaydedilir — ıska zaten KeyError'la gürültülüdür ve
+        'yazılıyor ama hiç okunmuyor' ölçümü bu isabetlere dayanır.
+        """
         if dict.__contains__(self, key):
             with _lock:
                 _read_hit[self._art].add(key)
@@ -141,6 +148,9 @@ def sar(art: str, obj):
 
 
 def basla() -> None:
+    """Ölçümü açar: tüm sayaç ve küme tablolarını sıfırlayıp izlemeyi etkinleştirir. Hiçbir dosyaya
+    yazmaz; her şey süreç-içi bellekte birikir.
+    """
     global _active
     with _lock:
         _read_hit.clear(); _read_miss.clear(); _read_defaulted.clear()
@@ -150,11 +160,17 @@ def basla() -> None:
 
 
 def dur() -> None:
+    """Ölçümü kapatır — `sar` bundan sonra nesneleri değiştirmeden döndürür. Biriken tablolar
+    SİLİNMEZ, `rapor()` hâlâ okunabilir.
+    """
     global _active
     _active = False
 
 
 def _anlik() -> dict:
+    """Toplama durumunun kopya görüntüsü (etkinlik bayrağı + bütün tablolar); `oturum`un
+    yeniden-girişliliği bu görüntüye dayanır.
+    """
     return {"a": _active,
             "hit": {k: set(v) for k, v in _read_hit.items()},
             "miss": {k: set(v) for k, v in _read_miss.items()},
@@ -166,6 +182,9 @@ def _anlik() -> dict:
 
 
 def _geri(sn: dict) -> None:
+    """`_anlik()` görüntüsünü geri yükler: iç içe bir ölçüm bittiğinde dıştakinin biriktirdiği veri
+    ve etkinlik durumu aynen geri döner.
+    """
     global _active
     with _lock:
         for d, k in ((_read_hit, "hit"), (_read_miss, "miss"), (_read_defaulted, "def"),
@@ -183,19 +202,22 @@ class oturum:
     """YENİDEN-GİRİŞLİ ÖLÇÜM. İç içe bir ölçüm (ör. dedektörün kendi testi) DIŞTAKİNİ ezmemeli.
     Canlıda yaşandı: test fikstürü `basla()` çağırınca oturum boyu biriken 145 bin satırlık ölçüm
     sıfırlandı ve paket sonundaki rapor "1 artefakt" dedi. Bir bekçi, ölçtüğü şeyi perturbe
-    etmemeli — kendi kendini de (2026-07-22)."""
+    etmemeli — kendi kendini de."""
 
     def __enter__(self):
+        """Dıştaki ölçümün görüntüsünü alır, sonra temiz bir ölçüm başlatır."""
         self._sn = _anlik()
         basla()
         return self
 
     def __exit__(self, *_):
+        """İç ölçümü kapatıp dıştaki görüntüyü geri yükler; `False` döndürerek istisnayı yutmaz."""
         _geri(self._sn)
         return False
 
 
 def aktif() -> bool:
+    """Ölçüm şu anda açık mı? (salt okuma)"""
     return _active
 
 

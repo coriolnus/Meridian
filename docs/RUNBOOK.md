@@ -41,7 +41,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **15 ops betiği** başlığıyla okundu
+- **16 ops betiği** başlığıyla okundu
 - **77 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -75,8 +75,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/rollback.py:221` → mesaj şablonu: `f"GERİ ALMA BAŞARISIZ: v{version} kötü ama v{parent} anlık görüntüsü yok — " f"kötü sürüm CANLI kalıyor, elle müdahale gerekli"`
-  - `meridian/rollback.py:253` → mesaj şablonu: `f"v{version} → v{parent} underperformed by {round(karar['par'] - karar['cur'], 4)} " f"({karar['yontem']})"`
+  - `meridian/rollback.py:246` → mesaj şablonu: `f"GERİ ALMA BAŞARISIZ: v{version} kötü ama v{parent} anlık görüntüsü yok — " f"kötü sürüm CANLI kalıyor, elle müdahale gerekli"`
+  - `meridian/rollback.py:278` → mesaj şablonu: `f"v{version} → v{parent} underperformed by {round(karar['par'] - karar['cur'], 4)} " f"({karar['yontem']})"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -92,7 +92,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:1318` → mesaj şablonu: `f"günlük kayıp devre kesici: {day_pnl_pct:.2%}"`
+  - `meridian/loop.py:1366` → mesaj şablonu: `f"günlük kayıp devre kesici: {day_pnl_pct:.2%}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -108,21 +108,21 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **15 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/adapters/data.py:963` → mesaj şablonu: `f"BAR KAYNAK UYUŞMAZLIĞI: {ticker.upper()} {d} — {src} {round(pc, 4)} vs " f"massive {round(mc, 4)} (%{round(dev * 100, 3)} > tol %{round(MASSIVE_TOL * 100, 3)})"`
-  - `meridian/adapters/data.py:2120` → mesaj şablonu: `f"{ticker}: {streak} ardışık turda hiçbir kaynak satır vermedi (istek hatası YOK) " f"— evren bakımı gerekiyor olabilir"`
-  - `meridian/api.py:40` → mesaj şablonu: `"MERIDIAN_DASH_TOKEN ASCII-DIŞI: HTTP başlığında gönderilemez, yani pano " "kimlik doğrulaması FİİLEN İMKÂNSIZ. ASCII bir token ile değiştir."`
-  - `meridian/hotstate.py:167` → mesaj şablonu: `f"hotstate ÇIRPINMA: {DOWN_REASSERT_S}s içinde {bastirilan} kopma"`
-  - `meridian/loop.py:859` → mesaj şablonu: `f"evren sapması: {rep['n_stale']} sembol S&P 500'de yok — {', '.join(rep['stale'][:8])}"`
-  - `meridian/loop.py:978` → mesaj şablonu: `"portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı"`
-  - `meridian/loop.py:988` → mesaj şablonu: `"sermaye beyanı silinecekti — kitap yazımı REDDEDİLDİ"`
-  - `meridian/loop.py:1270` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
-  - `meridian/loop.py:1277` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
-  - `meridian/scheduler.py:340` → mesaj şablonu: `f"SEANS ATLANDI: {session} — bir sonraki seans kapandı, bu seansın barı hâlâ " f"gelmedi (kapsama %{100 * float(cov or 0):.0f} < %{100 * need:.0f})"`
-  - `meridian/watchdog.py:1791` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
-  - `meridian/watchdog.py:1863` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
-  - `meridian/watchdog.py:1870` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
-  - `meridian/watchdog.py:2966` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
-  - `meridian/watchdog.py:3403` → mesaj şablonu: `rep.get("beyan")`
+  - `meridian/adapters/data.py:1004` → mesaj şablonu: `f"BAR KAYNAK UYUŞMAZLIĞI: {ticker.upper()} {d} — {src} {round(pc, 4)} vs " f"massive {round(mc, 4)} (%{round(dev * 100, 3)} > tol %{round(MASSIVE_TOL * 100, 3)})"`
+  - `meridian/adapters/data.py:2189` → mesaj şablonu: `f"{ticker}: {streak} ardışık turda hiçbir kaynak satır vermedi (istek hatası YOK) " f"— evren bakımı gerekiyor olabilir"`
+  - `meridian/api.py:57` → mesaj şablonu: `"MERIDIAN_DASH_TOKEN ASCII-DIŞI: HTTP başlığında gönderilemez, yani pano " "kimlik doğrulaması FİİLEN İMKÂNSIZ. ASCII bir token ile değiştir."`
+  - `meridian/hotstate.py:168` → mesaj şablonu: `f"hotstate ÇIRPINMA: {DOWN_REASSERT_S}s içinde {bastirilan} kopma"`
+  - `meridian/loop.py:892` → mesaj şablonu: `f"evren sapması: {rep['n_stale']} sembol S&P 500'de yok — {', '.join(rep['stale'][:8])}"`
+  - `meridian/loop.py:1022` → mesaj şablonu: `"portfolio.json bir sözlük DEĞİL — kitap tam belge olarak yeniden yazıldı"`
+  - `meridian/loop.py:1032` → mesaj şablonu: `"sermaye beyanı silinecekti — kitap yazımı REDDEDİLDİ"`
+  - `meridian/loop.py:1318` → mesaj şablonu: `f"endeks çapraz-doğrulama sapması: {_xc.get('divergence')}"`
+  - `meridian/loop.py:1325` → mesaj şablonu: `f"veri kalitesi kapısı: index_ok={idx_ok}, {len(tick_bad)} hisse başarısız"`
+  - `meridian/scheduler.py:363` → mesaj şablonu: `f"SEANS ATLANDI: {session} — bir sonraki seans kapandı, bu seansın barı hâlâ " f"gelmedi (kapsama %{100 * float(cov or 0):.0f} < %{100 * need:.0f})"`
+  - `meridian/watchdog.py:1826` → mesaj şablonu: `f"BAR DETERMİNİZMİ ÖLÇÜLEMEDİ: {rep['determinism'].get('detail')}" if _olcum_yok else f"SESSİZ BAR MUTASYONU: {rep['determinism'].get('detail')}"`
+  - `meridian/watchdog.py:1898` → mesaj şablonu: `f"GERİLEME: {rg['field']} {rg['was']} → {rg['now']} (ileri-only olmalıydı)"`
+  - `meridian/watchdog.py:1905` → mesaj şablonu: `f"ALAN EZİLDİ: {lo['file']}.{lo['field']} bir kez doluydu, şimdi kayıp"`
+  - `meridian/watchdog.py:3012` → mesaj şablonu: `f"DAMGASIZ YAZIM: {ad} bu tur DIŞARIDAN değişti — içerik değişti ama " f"rev/updated_at damgası ilerlemedi, yani yazım `store` kapısından GEÇMEDİ " f"(doğrudan SQL ya da elle kurulmuş belge yazımı)"`
+  - `meridian/watchdog.py:3450` → mesaj şablonu: `rep.get("beyan")`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -138,7 +138,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/api.py:5357` → mesaj şablonu: `"HALT via dashboard"`
+  - `meridian/api.py:5491` → mesaj şablonu: `"HALT via dashboard"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -154,13 +154,13 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **7 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:247` → mesaj şablonu: `f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada " f"AÇIK; {info['tries']}. deneme" + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else "")`
-  - `meridian/loop.py:2780` → mesaj şablonu: `f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca " f"{round(af, 4)} (%{div*100:.2f})"`
-  - `meridian/loop.py:2890` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
-  - `meridian/loop.py:3091` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
-  - `meridian/loop.py:3123` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
-  - `meridian/loop.py:3191` → mesaj şablonu: `f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç " f"defterde yok — {_yn}"`
-  - `meridian/loop.py:3196` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
+  - `meridian/loop.py:266` → mesaj şablonu: `f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada " f"AÇIK; {info['tries']}. deneme" + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else "")`
+  - `meridian/loop.py:2835` → mesaj şablonu: `f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca " f"{round(af, 4)} (%{div*100:.2f})"`
+  - `meridian/loop.py:2950` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
+  - `meridian/loop.py:3155` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
+  - `meridian/loop.py:3187` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
+  - `meridian/loop.py:3263` → mesaj şablonu: `f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç " f"defterde yok — {_yn}"`
+  - `meridian/loop.py:3268` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -176,9 +176,9 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **3 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:682` → mesaj şablonu: `f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı"`
-  - `meridian/loop.py:763` → mesaj şablonu: `f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}"`
-  - `meridian/mirror_stream.py:158` → mesaj şablonu: `f"akıştan anlık RET: {order.get('symbol')}"`
+  - `meridian/loop.py:710` → mesaj şablonu: `f"Alpaca ulaşılamıyor — ayna atlandı, {len(meta['armed'])} plan silahlı kaldı"`
+  - `meridian/loop.py:791` → mesaj şablonu: `f"Alpaca reddi: {pl['ticker']} — {res.get('detail','')}"`
+  - `meridian/mirror_stream.py:186` → mesaj şablonu: `f"akıştan anlık RET: {order.get('symbol')}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -194,7 +194,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/loop.py:2353` → mesaj şablonu: `f"trail PATCH reddedildi: {sym} {frm}→{to}"`
+  - `meridian/loop.py:2408` → mesaj şablonu: `f"trail PATCH reddedildi: {sym} {frm}→{to}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -210,21 +210,21 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **15 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/selfreview.py:103` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
-  - `meridian/watchdog.py:274` → mesaj şablonu: `f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)"`
-  - `meridian/watchdog.py:1765` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
-  - `meridian/watchdog.py:1774` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
-  - `meridian/watchdog.py:1780` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
-  - `meridian/watchdog.py:1831` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
-  - `meridian/watchdog.py:1838` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
-  - `meridian/watchdog.py:1848` → mesaj şablonu: `f"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT " f"değer taşıyor ({_k}) · {dv['neden']}"`
-  - `meridian/watchdog.py:1856` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
-  - `meridian/watchdog.py:3075` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
-  - `meridian/watchdog.py:3082` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
-  - `meridian/watchdog.py:3334` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:3340` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
-  - `meridian/watchdog.py:3346` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
-  - `meridian/watchdog.py:3352` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
+  - `meridian/selfreview.py:123` → mesaj şablonu: `f"mekanizma ÜRETEMİYOR: {name} — {detail} (üst üste {box['streak']} koşum)"`
+  - `meridian/watchdog.py:296` → mesaj şablonu: `f"mekanizma gecikti: {ad} — {x['gap_h']} sa (pencere {x['expected_h']} sa)"`
+  - `meridian/watchdog.py:1800` → mesaj şablonu: `f"BÜTÜNLÜK DEDEKTÖRÜ DÜŞTÜ: {_ad} hüküm veremedi — {_dr.get('error')}"`
+  - `meridian/watchdog.py:1809` → mesaj şablonu: `f"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)"`
+  - `meridian/watchdog.py:1815` → mesaj şablonu: `f"KORUNUM İHLALİ: {rep['conservation']['unexplained']} plan kayıtsız kayboldu"`
+  - `meridian/watchdog.py:1866` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
+  - `meridian/watchdog.py:1873` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
+  - `meridian/watchdog.py:1883` → mesaj şablonu: `f"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT " f"değer taşıyor ({_k}) · {dv['neden']}"`
+  - `meridian/watchdog.py:1891` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
+  - `meridian/watchdog.py:3122` → mesaj şablonu: `f"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}"`
+  - `meridian/watchdog.py:3129` → mesaj şablonu: `f"BAYAT MUTABAKAT: {rep['neden']}"`
+  - `meridian/watchdog.py:3381` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:3387` → mesaj şablonu: `f"SPRINT ORPHAN: {sp.get('beyan')}"`
+  - `meridian/watchdog.py:3393` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`
+  - `meridian/watchdog.py:3399` → mesaj şablonu: `f"ÖĞRENME DURDU: {lr.get('beyan')}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -242,8 +242,8 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/arming.py:205` → mesaj şablonu: `f"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor"`
-  - `meridian/arming.py:301` → mesaj şablonu: `f"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor"`
+  - `meridian/arming.py:215` → mesaj şablonu: `f"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor"`
+  - `meridian/arming.py:311` → mesaj şablonu: `f"uyuyan kurulum kapıyı GEÇTİ: {setup} — silahlanma operatör onayı bekliyor"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -255,13 +255,13 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Belirti
 
 - bir mekanizmanın yetkisi açıldı/geri alındı *(kaynak: `meridian/obs.py` — `ALARM_AUTHORITY`)*
-- Neden ayrı bir sınıf: KALİBRASYON YETKİ DEĞİŞİMİ 'BENİ UYANDIR' SINIFIDIR (operatör kararı 2026-07-27): bir danışmanın yetkisi EŞİK DOLUNCA KENDİLİĞİNDEN açılır ve pano bunu yalnız DUYURUR — yani operatör onay vermez, haberdar edilir. Haberin kendisi obs.log seviyesinde kalsaydı yetki devri olay defterinin içinde sıradan bir satır olurdu ve kimse bakmadan geçerdi. Kayıp da kazanım kadar yüksek sesli olmalı: yetkinin GERİ ALINMASI, sessizce alınırsa "danışman hâlâ konuşuyor" sanılır. *(kaynak: `meridian/obs.py`)*
+- Neden ayrı bir sınıf: KALİBRASYON YETKİ DEĞİŞİMİ 'BENİ UYANDIR' SINIFIDIR (operatör kararı): bir danışmanın yetkisi EŞİK DOLUNCA KENDİLİĞİNDEN açılır ve pano bunu yalnız DUYURUR — yani operatör onay vermez, haberdar edilir. Haberin kendisi obs.log seviyesinde kalsaydı yetki devri olay defterinin içinde sıradan bir satır olurdu ve kimse bakmadan geçerdi. Kayıp da kazanım kadar yüksek sesli olmalı: yetkinin GERİ ALINMASI, sessizce alınırsa "danışman hâlâ konuşuyor" sanılır. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/analytics.py:1172` → mesaj şablonu: `f"LLM danışman yetkisi {'AÇILDI' if promoted else 'GERİ ALINDI'} — " f"R farkı {gap if gap is not None else 'ölçülmedi'}, n={len(pairs)} çift " f"(yetki: yalnız REVIEW+karşı dolum vetosu)"`
-  - `meridian/nous_eval.py:312` → mesaj şablonu: `f"ÇEKİRDEK-ŞEKİLLİ ÖNERİ KUYRUĞA SOKULMAYA ÇALIŞILDI (sekil={sekil})"`
+  - `meridian/analytics.py:1222` → mesaj şablonu: `f"LLM danışman yetkisi {'AÇILDI' if promoted else 'GERİ ALINDI'} — " f"R farkı {gap if gap is not None else 'ölçülmedi'}, n={len(pairs)} çift " f"(yetki: yalnız REVIEW+karşı dolum vetosu)"`
+  - `meridian/nous_eval.py:306` → mesaj şablonu: `f"ÇEKİRDEK-ŞEKİLLİ ÖNERİ KUYRUĞA SOKULMAYA ÇALIŞILDI (sekil={sekil})"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -273,12 +273,12 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Belirti
 
 - realized_30d < goal.failure_below — sözleşme hükmü *(kaynak: `meridian/obs.py` — `ALARM_GOAL_FAILURE`)*
-- Neden ayrı bir sınıf: SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ (K1, 2026-07-30). goal.yaml `failure_below` hükmünü ("30g getiri bu eşiğin altına düşerse deney BAŞARISIZ") tanımlandığı 2026-07-14'ten beri hiçbir kod ölçmüyordu: score.py hedef tarafını (target_return_30d/max_drawdown/min_sharpe) composite'e katıyor, failure tarafını asla okumuyordu. Deney başarısız olsa bunu söyleyecek tek satır kod yoktu. Bu kendi sınıfıdır: DATA_QUALITY "veri bozuk" der, MECHANISM_STALE "mekanizma üretmiyor" der — ikisi de "mekanizma çalıştı ve sonuç sözleşmenin başarısızlık eşiğinin altında" demez. *(kaynak: `meridian/obs.py`)*
+- Neden ayrı bir sınıf: SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ. goal.yaml `failure_below` hükmünü ("30g getiri bu eşiğin altına düşerse deney BAŞARISIZ") tanımlandığından beri hiçbir kod ölçmüyordu: score.py hedef tarafını (target_return_30d/max_drawdown/min_sharpe) composite'e katıyor, failure tarafını asla okumuyordu. Deney başarısız olsa bunu söyleyecek tek satır kod yoktu. Bu kendi sınıfıdır: DATA_QUALITY "veri bozuk" der, MECHANISM_STALE "mekanizma üretmiyor" der — ikisi de "mekanizma çalıştı ve sonuç sözleşmenin başarısızlık eşiğinin altında" demez. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:1748` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
+  - `meridian/watchdog.py:1783` → mesaj şablonu: `f"SÖZLEŞME BAŞARISIZLIK EŞİĞİ: {_gf['detail']}"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -290,13 +290,13 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Belirti
 
 - açık pozisyonun broker'da canlı koruyucu stop'u YOK *(kaynak: `meridian/obs.py` — `ALARM_NAKED_POSITION`)*
-- Neden ayrı bir sınıf: KORUMASIZ POZİSYON KENDİ JETONUNU HAK EDER (N1, 2026-08-09 — operatör kararı; v209'da ölçülüp ertelenmişti). `watchdog.check_koruma_and_alarm` v209'da MIRROR_DRIFT jetonunu ÖDÜNÇ alıyordu çünkü o tur `obs.py` yazım kapsamı dışındaydı ve listede olmayan bir jeton yazılıp operatöre HİÇ ulaşmazdı (NOTIFY_TOKENS türetmesi, aşağıda). Ödüncün BEDELİ o gün ölçülmüş ve docstring'e yazılmıştı: `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa), yani gürültülü bir mutabakat gecesinde ADET SAPMASI alarmları pencereyi doldurup KORUMASIZ POZİSYON alarmının TESLİMATINI bastırabiliyordu. İki olgu ayrı: "ayna kitabın söylediği adette değil" bir MUHASEBE sapmasıdır, "pozisyonun broker'da canlı stop'u yok" bir SERMAYE riskidir (sev-1) ve birincisi ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır. *(kaynak: `meridian/obs.py`)*
+- Neden ayrı bir sınıf: KORUMASIZ POZİSYON KENDİ JETONUNU HAK EDER (N1 — operatör kararı; v209'da ölçülüp ertelenmişti). `watchdog.check_koruma_and_alarm` v209'da MIRROR_DRIFT jetonunu ÖDÜNÇ alıyordu çünkü o tur `obs.py` yazım kapsamı dışındaydı ve listede olmayan bir jeton yazılıp operatöre HİÇ ulaşmazdı (NOTIFY_TOKENS türetmesi, aşağıda). Ödüncün BEDELİ o gün ölçülmüş ve docstring'e yazılmıştı: `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa), yani gürültülü bir mutabakat gecesinde ADET SAPMASI alarmları pencereyi doldurup KORUMASIZ POZİSYON alarmının TESLİMATINI bastırabiliyordu. İki olgu ayrı: "ayna kitabın söylediği adette değil" bir MUHASEBE sapmasıdır, "pozisyonun broker'da canlı stop'u yok" bir SERMAYE riskidir (sev-1) ve birincisi ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
 - Bu jetonu **2 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:2783` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
-  - `meridian/watchdog.py:2796` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
+  - `meridian/watchdog.py:2829` → mesaj şablonu: `f"KORUMA ÖLÇÜLEMEDİ: broker okunamadı — {rep.get('neden')} " f"(bu 'korumasız 0' DEĞİL: açık pozisyonların koruma durumu BİLİNMİYOR)"`
+  - `meridian/watchdog.py:2842` → mesaj şablonu: `f"KORUMASIZ POZİSYON: {r['ticker']} {r['adet']:g} adet açık, broker'da " f"canlı koruyucu stop YOK — {r['neden']} " f"({rep['korumasiz']}/{rep['toplam']} motor pozisyonu korumasız)"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -307,12 +307,12 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Belirti
 
-- Neden ayrı bir sınıf: ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (İŞ-3b, 2026-08-11; P-2026-08-07-VLO vakası). Aday alternatif MIRROR_DRIFT'in yeni bir `drift_sinifi` değeriydi ve ÜÇ ölçülmüş gerekçeyle REDDEDİLDİ: (1) N1 emsali birebir — `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa): gürültülü bir mutabakat gecesinde adet-sapması MIRROR_DRIFT'leri pencereyi doldurur ve "operatörün onayladığı emir broker'a HİÇ gitmedi" alarmının TESLİMATINI bastırırdı — bu sınıf tam da operatörün "büyük fiyasko" dediği sınıftır, muhasebe gürültüsünün arkasında bekleyemez. (2) C9 yasası ("iki teşhis aynı isimle sayılırsa ikisi de okunamaz"): split_brain BELİRTİ adıdır (sebep bilinmiyor), bu jeton SEBEBİ BİLİNEN ve EYLEMİ BELLİ bir alt sınıftır (onay verildi, iç motor doldu, gönderim hiç olmadı → gönderim yolunu onar / elle emirle). (3) Teslim zinciri değişmez: NOTIFY_TOKENS her ALARM_ sabitinden TÜRETİLİR (aşağıda) — jeton eklendiği an bildirim kapsamındadır, el listesi eskimez. Üretici: watchdog (İŞ-3b bekçisi); reconcile'ın MIRROR_DRIFT/split_brain alarmı AYNEN kalır (o genel belirtiyi anlatmaya devam eder). *(kaynak: `meridian/obs.py`)*
+- Neden ayrı bir sınıf: ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (P-2026-08-07-VLO vakası). Aday alternatif MIRROR_DRIFT'in yeni bir `drift_sinifi` değeriydi ve ÜÇ ölçülmüş gerekçeyle REDDEDİLDİ: (1) N1 emsali birebir — `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa): gürültülü bir mutabakat gecesinde adet-sapması MIRROR_DRIFT'leri pencereyi doldurur ve "operatörün onayladığı emir broker'a HİÇ gitmedi" alarmının TESLİMATINI bastırırdı — bu sınıf tam da operatörün "büyük fiyasko" dediği sınıftır, muhasebe gürültüsünün arkasında bekleyemez. (2) C9 yasası ("iki teşhis aynı isimle sayılırsa ikisi de okunamaz"): split_brain BELİRTİ adıdır (sebep bilinmiyor), bu jeton SEBEBİ BİLİNEN ve EYLEMİ BELLİ bir alt sınıftır (onay verildi, iç motor doldu, gönderim hiç olmadı → gönderim yolunu onar / elle emirle). (3) Teslim zinciri değişmez: NOTIFY_TOKENS her ALARM_ sabitinden TÜRETİLİR (aşağıda) — jeton eklendiği an bildirim kapsamındadır, el listesi eskimez. Üretici: watchdog (İŞ-3b bekçisi); reconcile'ın MIRROR_DRIFT/split_brain alarmı AYNEN kalır (o genel belirtiyi anlatmaya devam eder). *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py:3189` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
+  - `meridian/watchdog.py:3236` → mesaj şablonu: `f"ONAYLI PLAN GÖNDERİLMEDİ: {v.get('ticker')} ({v.get('plan_id')}) — operatör " f"onayladı ({v.get('onay_ts') or 'ts?'}), iç motor doldurdu, Alpaca'da NE EMİR NE " f"POZİSYON var ({iz}). VLO-2026-08-10 sınıfı: gönderim yolunu onar ya da elle emirle"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -339,7 +339,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:872`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:900`
 - Son damga: `state/mechanism_beats.json` → `scheduler_poll`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -354,11 +354,11 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 - Beklenen azami sessizlik **30 dk**; aşılırsa `MECHANISM_STALE` ve sessiz hatta `bekçiler` segmenti açılır *(kaynak: `meridian/watchdog.py::EXPECTED`)*.
 - Pencere gerekçesi: bekleme döngüsü + ısınma sprinti (sonda başına nabız) *(kaynak: `meridian/watchdog.py`)*
-- `hermes_poll` PENCERESİ 30 DK KALIR AMA ANLAMI 2026-07-31'DE (WP-H/H11) DEĞİŞTİ: nabzı artık yalnız `_run` döngüsünün turu atmıyor, ISINMA SPRİNTİ de her sondada atıyor. Eskiden ısınma koşarken (nominal 1-5 sa) döngü tura dönemiyor, nabız susuyor ve bekçi SAHTE bir MECHANISM_STALE üretiyordu — mekanizma ölü değil MEŞGULdü. Nabzın sorduğu soru "döngü turladı mı" değil, "hermes ipliği canlı ve ilerliyor mu"dur; ısınma içinden atılan nabız o soruya DOĞRU cevap verir. Pencereyi ısınmaya göre genişletmek yanlış olurdu: o zaman gerçekten ölmüş bir poll ipliği de saatlerce görünmezdi. *(kaynak: `meridian/watchdog.py`)*
+- `hermes_poll` PENCERESİ 30 DK KALIR AMA ANLAMI DEĞİŞTİ: nabzı artık yalnız `_run` döngüsünün turu atmıyor, ISINMA SPRİNTİ de her sondada atıyor. Eskiden ısınma koşarken (nominal 1-5 sa) döngü tura dönemiyor, nabız susuyor ve bekçi SAHTE bir MECHANISM_STALE üretiyordu — mekanizma ölü değil MEŞGULdü. Nabzın sorduğu soru "döngü turladı mı" değil, "hermes ipliği canlı ve ilerliyor mu"dur; ısınma içinden atılan nabız o soruya DOĞRU cevap verir. Pencereyi ısınmaya göre genişletmek yanlış olurdu: o zaman gerçekten ölmüş bir poll ipliği de saatlerce görünmezdi. *(kaynak: `meridian/watchdog.py`)*
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes_runtime.py:150` · `meridian/hermes_runtime.py:133` · `meridian/hermes_runtime.py:387`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes_runtime.py:165` · `meridian/hermes_runtime.py:148` · `meridian/hermes_runtime.py:418`
 - Son damga: `state/mechanism_beats.json` → `hermes_poll`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -372,11 +372,11 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 ### Belirti
 
 - Beklenen azami sessizlik **8 sa**; aşılırsa `MECHANISM_STALE` ve sessiz hatta `bekçiler` segmenti açılır *(kaynak: `meridian/watchdog.py::EXPECTED`)*.
-- `warmup_sprint` EŞİĞİ 8 SA'DA KALIR — VE ARTIK GERÇEK BİR ANOMALİ ÖLÇER. Nominal ~1-5 sa; H11'den beri aramanın KENDİ süre tavanı var (HERMES_WARMUP_MAX_MIN, varsayılan 300 dk = 5 sa) ve tavana takılan koşum kibarca kesilir. Yani 8 sa'lık bir sessizlik artık "ısınma uzun sürdü" olamaz: tavan onu 5 saatte keserdi. Kalan tek açıklama tavanın ÇALIŞMAMASIDIR (iplik asıldı, sonda içinde kilitlendi, süreç öldü) — eşiği eskiden gürültü üreten bir sayı, şimdi teşhis. *(kaynak: `meridian/watchdog.py`)*
+- `warmup_sprint` EŞİĞİ 8 SA'DA KALIR — VE ARTIK GERÇEK BİR ANOMALİ ÖLÇER. Nominal ~1-5 sa; Aramanın KENDİ süre tavanı var (HERMES_WARMUP_MAX_MIN, varsayılan 300 dk = 5 sa) ve tavana takılan koşum kibarca kesilir. Yani 8 sa'lık bir sessizlik artık "ısınma uzun sürdü" olamaz: tavan onu 5 saatte keserdi. Kalan tek açıklama tavanın ÇALIŞMAMASIDIR (iplik asıldı, sonda içinde kilitlendi, süreç öldü) — eşiği eskiden gürültü üreten bir sayı, şimdi teşhis. *(kaynak: `meridian/watchdog.py`)*
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes_runtime.py:149` · `meridian/hermes_runtime.py:132`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes_runtime.py:164` · `meridian/hermes_runtime.py:147`
 - Son damga: `state/mechanism_beats.json` → `warmup_sprint`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -394,7 +394,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:1518`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:1566`
 - Son damga: `state/mechanism_beats.json` → `cf_advance`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -412,7 +412,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:2079`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:2127`
 - Son damga: `state/mechanism_beats.json` → `p5_calibrations`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -430,7 +430,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:3270`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/loop.py:3342`
 - Son damga: `state/mechanism_beats.json` → `mirror_reconcile`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -448,7 +448,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1226`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1254`
 - Son damga: `state/mechanism_beats.json` → `crosscheck`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -466,7 +466,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1039`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1067`
 - Son damga: `state/mechanism_beats.json` → `earnings_refresh`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -484,7 +484,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1097`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:1125`
 - Son damga: `state/mechanism_beats.json` → `arming_eval`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -499,11 +499,11 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 - Beklenen azami sessizlik **4 gün**; aşılırsa `MECHANISM_STALE` ve sessiz hatta `bekçiler` segmenti açılır *(kaynak: `meridian/watchdog.py::EXPECTED`)*.
 - Pencere gerekçesi: seans-bağımlı (öğrenme kadansı seans başına 1×) *(kaynak: `meridian/watchdog.py`)*
-- ---- ÖĞRENME KADANSLARI (öğrenme-otomasyonu turu 2026-07-30; listeye temizlik turunda girdi) -- NEDEN GECİKMELİ GİRDİ: dört mekanizma `beat()` damgasını ZATEN atıyordu (scheduler._learning_ cadence → shadow_fit/axis2_cycle, hermes.backfill → opinion_backfill, sprint.maybe_start → sprint_cadence) ama EXPECTED'de olmadıkları için `report()` onları hiç ARAMIYORDU. Nabız atılıp kimsenin beklemediği bir mekanizma, durduğunda MECHANISM_STALE üretmez — yani bekçinin kör noktası. Dördü de artık izleniyor. *(kaynak: `meridian/watchdog.py`)*
+- ---- ÖĞRENME KADANSLARI -- NEDEN GECİKMELİ GİRDİ: dört mekanizma `beat()` damgasını ZATEN atıyordu (scheduler._learning_ cadence → shadow_fit/axis2_cycle, hermes.backfill → opinion_backfill, sprint.maybe_start → sprint_cadence) ama EXPECTED'de olmadıkları için `report()` onları hiç ARAMIYORDU. Nabız atılıp kimsenin beklemediği bir mekanizma, durduğunda MECHANISM_STALE üretmez — yani bekçinin kör noktası. Dördü de artık izleniyor. *(kaynak: `meridian/watchdog.py`)*
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:518`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:541`
 - Son damga: `state/mechanism_beats.json` → `shadow_fit`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -521,7 +521,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:528`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:551`
 - Son damga: `state/mechanism_beats.json` → `axis2_cycle`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -539,7 +539,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3804`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/hermes.py:3881`
 - Son damga: `state/mechanism_beats.json` → `opinion_backfill`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -557,7 +557,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/sprint.py:930`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/sprint.py:944`
 - Son damga: `state/mechanism_beats.json` → `sprint_cadence`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -572,12 +572,12 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 ### Belirti
 
 - Beklenen azami sessizlik **4 gün**; aşılırsa `MECHANISM_STALE` ve sessiz hatta `bekçiler` segmenti açılır *(kaynak: `meridian/watchdog.py::EXPECTED`)*.
-- Pencere gerekçesi: seans-sonrası Y4 toplama (insider delta + short interest) *(kaynak: `meridian/watchdog.py`)*
-- ---- TEMİZLİK TURUNDA EKLENEN KADANSLAR (2026-07-30) --------------------------------------- *(kaynak: `meridian/watchdog.py`)*
+- Pencere gerekçesi: seans-sonrası toplama (insider delta + short interest) *(kaynak: `meridian/watchdog.py`)*
+- ---- EK KADANSLAR --------------------------------------- *(kaynak: `meridian/watchdog.py`)*
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:646`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:669`
 - Son damga: `state/mechanism_beats.json` → `y4_collect`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -595,7 +595,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:682`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:710`
 - Son damga: `state/mechanism_beats.json` → `validation_report`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -613,7 +613,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:698`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:726`
 - Son damga: `state/mechanism_beats.json` → `massive_verify`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -631,7 +631,7 @@ Nabız defteri: `state/mechanism_beats.json` (ad → son damga, epoch saniye).
 
 ### Teşhis adımları
 
-- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:710`
+- Nabzı atan kod yolu — **ilk soru bu yolun koşup koşmadığıdır**: `meridian/scheduler.py:738`
 - Son damga: `state/mechanism_beats.json` → `shadowlaw_drift`; rapor: `watchdog.report()` (panoda Operasyon → bekçi rozeti).
 - mekanizma kadansı durdu — RUNBOOK: süreç canlı mı, kadans kapısı ne diyor *(kaynak: `meridian/api.py::_sessiz_hat`)*
 - nabız hiç atılmadı — mekanizma üretim yolunda mı (kablolama) *(kaynak: `meridian/api.py::_sessiz_hat`)*
@@ -747,6 +747,36 @@ start  : arşivciyi ayrı bir süreçte başlatır (nohup, kabuk kapansa da yaş
 stop   : pidfile sahibini durdurur (SIGTERM → barsarchive KeyboardInterrupt yolunda temiz kapanır)
 status : koşuyor mu + arşiv özeti (YASA 6 tüketicisi: `--ozet`)
 once   : tek tur koş ve çık (duman testi / cron); Redis yoksa çıkış kodu 2
+```
+
+## `ops/ci_duman.sh` {#ops-ci-duman-sh}
+
+```
+ci_duman.sh — CI DUMAN KAPISI (2026-08-15).
+
+NEDEN VAR. Tam suite 4 çekirdekte ~50 dk sürer ve canlı-benzeri `state/` + lokal hermes-agent +
+doğrudan ağ varsayar (ölçüm ve küme sınıflandırması: docs/MODUL-ENVANTERI-2026-08-15.md §5).
+CI'ın 15 dk sınırı bu paketi HİÇ bitirememişti — her koşu zaman aşımıyla iptal oluyordu, yani
+fiilen kapı yoktu. Bu betik CI'ın gerçekten BİTİREBİLECEĞİ, state-bağımsız duman kapısıdır.
+
+BU TAM SUITE DEĞİLDİR VE ONUN YERİNE GEÇMEZ (CLAUDE.md kural 6: tam suite Rol-1'de tek-otoriter).
+Yerel hızlı kapı ops/kapilar.sh'tır; bu betik onun CI ikizidir — farkları: bayt-derleme taban
+kontrolü eklidir ve pytest kapsamı daha geniştir (CI'ın dakikaları vardır, operatörün saniyeleri).
+
+SIRA ucuzdan pahalıya, ilk kırmızıda DUR:
+[1] compileall   (~5 sn)   — beyan edilen Python tabanında (>=3.11) SÖZDİZİMİ. CI, venv'i
+bilerek 3.11'e sabitler: 3.12+'da geçerli olup 3.11'de patlayan
+sözdizimi (PEP 701 f-string vakası, 2026-08-15) burada yakalanır.
+O vaka test TOPLAMASINI kesiyordu — tek satır, sıfır koşan test.
+[2] lint-imports (~2 sn)   — 5 mimari sözleşme (pyproject [tool.importlinter]).
+[3] uv audit     (~2 sn)   — tedarik zinciri. Kırmızıysa dağıtım da PR de bekler.
+[4] pytest duman (~2-4 dk) — state-bağımsız çekirdek: anayasa property paketi (kapilar [3]
+ile aynı 6 dosya) + modül-yasası audit ailesi + bounds/seed
+çivileri + son regresyon sitesi. Ölçüldü (2026-08-15, 4 çekirdek):
+390 test · ~1 dk 50 sn · 0 kırmızı.
+
+LİSTE ELLE VE DAR TUTULUR — yavaşlayan kapı, atlanan kapıdır (kapilar.sh dersi). Dosya eklerken
+iki şart: (a) taze klonda state'siz geçtiği kanıtlı, (b) toplam süre < 5 dk kalmalı.
 ```
 
 ## `ops/haftalik_mutasyon.sh` {#ops-haftalik-mutasyon-sh}

@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from . import store
 
 # Plan kimliği: canlı döngü, backtest ve cf_backfill'in ORTAK anahtarı. Bu formatın dışındaki bir
-# kimlik, cf↔gerçek birleştirmesini imkânsız kılar (2026-07-21'de tam olarak bu oldu).
+# kimlik, cf↔gerçek birleştirmesini imkânsız kılar (canlıda tam olarak bu oldu).
 PLAN_ID_RE = re.compile(r"^P-\d{4}-\d{2}-\d{2}-.+")
 CF_ID_RE = re.compile(r"^CF-\d{4}-\d{2}-\d{2}-.+")
 
@@ -55,7 +55,7 @@ CONTRACTS: dict[str, Contract] = {
         required=("id", "ts_open", "ts_close", "ticker", "r_multiple", "pnl_dollars",
                   "plan_id", "regime", "score", "setup", "strategy_version"),
         # satırı broker üretir, loop/run diske yazar. ledgerstamp: TEK SEFERLİK migrasyon yazarı
-        # (BT-1, 2026-07-31) — hiçbir satır eklemez/silmez, YALNIZ `kaynak` damgasını basar ve
+        # — hiçbir satır eklemez/silmez, YALNIZ `kaynak` damgasını basar ve
         # elle koşulur (kuru koşu varsayılan, canlı-süreç kilidi). Beyan edilmeden bırakılsaydı
         # bu sözleşmenin var olma sebebi olan "kimsenin haberi olmadan ikinci bir yazar"
         # sınıfının yeni bir örneği olurdu.
@@ -84,15 +84,16 @@ CONTRACTS: dict[str, Contract] = {
         aliases=(("r_multiple_expected", "rr_expected"),),
         consumers=("arming", "analytics", "shadow_model", "selfreview"),
         note="regime '?' olabilir (rejim bilinmiyorsa) ama ALAN bulunmalı — dilimleme ona bakar"),
-    # G2 ALAN ADI KANONİKLEŞTİRME (K1, 2026-07-30). 2026-07-29'da deftere üç G2 alanı eklendi
+    # G2 ALAN ADI KANONİKLEŞTİRME. 2026-07-29'da deftere üç G2 alanı eklendi
     # (`rvol20`, `mom_12_1`, `rmom`) ve ad dikişi AYNI GÜN ayrıştı: defter `mom_12_1` yazıyor
-    # (strategy.py:137), component_ic raporu `mom12_1` kullanıyor (component_ic.py:102). ledgers.py
-    # 2026-07-21'de TAM BU "takma ad" hastalığı için kurulmuştu, ama candidates sözleşmesi ne
+    # (`strategy.EntrySignal.as_row`), component_ic raporu `mom12_1` kullanıyor
+    # (`component_ic.COMPONENTS`). ledgers.py
+    # TAM BU "takma ad" hastalığı için kurulmuştu, ama candidates sözleşmesi ne
     # alanları ne alias'ı beyan ediyordu — yani kurulma sebebi olan hata kendi kapsamı dışında
     # yeniden açıldı.
     #
     # KANONİK AD = DEFTERİN ADI (`mom_12_1`): sözleşmenin konusu DİSKTEKİ satırdır, ve diskte 10
-    # satırda `mom_12_1` var (canlı sayım 2026-07-30: rvol20 10/2 non-null, mom_12_1 10/2,
+    # satırda `mom_12_1` var (canlı sayım: rvol20 10/2 non-null, mom_12_1 10/2,
     # rmom 10/0). component_ic'in `mom12_1`'i RAPOR tarafının yazımıdır; alias olarak beyan edilir,
     # böylece bir yazar yarın rapor yazımıyla deftere yazarsa validate_row onu SESSİZ değil İHLAL
     # olarak görür. Yeniden adlandırma bilinçli olarak YAPILMADI: iki canlı yüzey de üretimde.
@@ -114,8 +115,8 @@ CONTRACTS: dict[str, Contract] = {
         # canlı state/hypotheses.jsonl'a yazan tek modül memory'dir.
         writers=("memory.py",),
         key="id", key_format=re.compile(r"^H\d{5}$"),
-        # `api` EKSİKTİ (v130): api.py:1270 bu defteri OKUYOR (pano ship geçmişi/diff şeridi) ve
-        # v130'da o okuma DSR damgalarını da taşıyor — sayılmayan bir tüketici, şema kararlarında
+        # `api` EKSİKTİ: `api.py` → `_regresyon_kirilimi` bu defteri OKUYOR (pano ship geçmişi/diff şeridi) ve
+        # o okuma DSR damgalarını da taşıyor — sayılmayan bir tüketici, şema kararlarında
         # hesaba katılmayan bir tüketicidir (events.jsonl'da aynı eksik aynı turda düzeltilmişti).
         consumers=("reflect", "rollback", "probgate", "analytics", "selfreview", "api"),
         note="kimlik ASLA yeniden kullanılmaz (max+1) — defter kısalsa bile. "
@@ -131,8 +132,9 @@ CONTRACTS: dict[str, Contract] = {
              "girmez). Damgalar ZORUNLU alan DEĞİLDİR ve olmayacaktır: v130 öncesi satırlarda "
              "yokturlar ve retro damga yasağı gereği doldurulmazlar — damgasız satır 'sert kapı "
              "öncesi' demektir"),
-    # TÜKETİCİ LİSTESİ EKSİKTİ (K1, 2026-07-30): `notify.inbox` (notify.py:78) ve
-    # `analytics.autonomy` devre-kesici sayacı (analytics.py:106) da bu defteri okuyor. Sözleşmenin
+    # TÜKETİCİ LİSTESİ EKSİKTİ: `notify.inbox` ve
+    # `analytics.autonomy_ladder`ın devre-kesici sayacı (`analytics.py` → `_breaker_trips_since`) da bu
+    # defteri okuyor. Sözleşmenin
     # TEK işi tam olmaktır: budama/şema kararları bu listeye bakılarak verilirse, sayılmayan iki
     # okuyucu hesaba katılmaz — ve ikisi de PENCERELİ okur (4000/400 satır), yani defterin hacmi
     # onların gördüğü tarihi doğrudan belirler.
@@ -148,14 +150,14 @@ CONTRACTS: dict[str, Contract] = {
         required=("run_id", "pipeline", "started", "status"),
         writers=("skills.py",),
         consumers=("api",)),
-    # Y1 DOĞRULAMA DEFTERİ (Hafta 3a, 2026-07-30). `seri` ZORUNLU alandır çünkü defterin VAR OLMA
+    # Y1 DOĞRULAMA DEFTERİ. `seri` ZORUNLU alandır çünkü defterin VAR OLMA
     # SEBEBİ odur: PBO/CSCV, N adayın AYNI zaman ızgarasındaki getirilerini ister ve serisiz bir
     # satır PBO'ya hiç giremez — yani sessizce paydadan düşer (tam olarak `trades.jsonl`ın
     # `setup`/`score` dersinin aynısı: alan yoksa tüketici satırı sessizce eler).
     # `sharpe_gozlem` de zorunlu: DSR'nin deneme-varyansı bu alandan ÖLÇÜLÜR; eksikse hesap
     # gürültülü null yaklaşımına düşer ve bunun neden olduğu görünmez kalırdı.
-    # 2.4 GÖLGE-VARYANT DEFTERİ SÖZLEŞMEYE GİRİYOR (3b, 2026-07-30). Sadeleştirme turu bu defteri
-    # `codelaw.DECLARED_SINKS`e SÜRELİ bir beyanla koymuştu ("pano/api tüketicisi Hafta 3b'ye
+    # GÖLGE-VARYANT DEFTERİ SÖZLEŞMEYE GİRİYOR. Sadeleştirme turu bu defteri
+    # `codelaw.DECLARED_SINKS`e SÜRELİ bir beyanla koymuştu ("pano/api tüketicisi sonraki tura
     # devredildi"). Devir BU TURDA yapıldı: tüketici artık api `/api/diagnostics` → pano gölge-varyant
     # kartı, beyan satırı KALDIRILDI. Sözleşme o devrin ikinci yarısıdır — defterin ALANLARI da
     # yazılı olmalı, yoksa `trades.jsonl`ın `setup`/`score` dersi burada yeniden yaşanır.
@@ -167,11 +169,11 @@ CONTRACTS: dict[str, Contract] = {
         key=None,
         consumers=("analytics", "api", "shadow_variants"),
         note="ship yolu YOKTUR — kâğıt karar defteri; only_variant/only_live ayrışmayı taşır"),
-    # H3 BİLEŞİK ÖNERİ KUYRUĞU (Hermes paketi, 2026-07-30). `composite` ZORUNLU: kuyruğun VAR OLMA
+    # H3 BİLEŞİK ÖNERİ KUYRUĞU. `composite` ZORUNLU: kuyruğun VAR OLMA
     # SEBEBİ odur ve düğme demeti olmadan satır prescreen'e hiç giremez. `status` ZORUNLU çünkü
     # kuyruğun tam-döngülü olması (pending → measuring → measured) yalnız o alanla denetlenebilir;
     # eksikse "öner→ölç→öğren" halkasının koptuğu görünmez kalır.
-    # DURUM ALFABESİ TAM HÂLİ (C14, 2026-08-02): pending → measuring → measured | measure_failed
+    # DURUM ALFABESİ TAM HÂLİ: pending → measuring → measured | measure_failed
     # (+ giriş redleri: rejected_shape). `measure_failed` bir BAŞARISIZLIK KAYDIDIR, bir ara durum
     # değil: ölçüm süreci sonucu geri yazmadan öldü (pid yoklaması), guard bütün adayları reddetti ya
     # da prescreen patladı. Ayrı bir durum olmasının sebebi ölçülebilirlik: 'pending'e geri düşseydi
@@ -184,7 +186,7 @@ CONTRACTS: dict[str, Contract] = {
         key="id",
         consumers=("analytics", "api", "loop", "hermes"),
         note="kuyruğa girmek ONAY DEĞİL ölçüm sırasıdır; k_probes alanı aşınma defteriyle aynı dil"),
-    # NOUS SİSTEM-ÖNERİ DEFTERİ (Katman B, ROADMAP §3.2, 2026-07-30). Beynin MEKANİZMA düzeyindeki
+    # NOUS SİSTEM-ÖNERİ DEFTERİ (Katman B). Beynin MEKANİZMA düzeyindeki
     # önerileri. Zorunlu alanların her biri bir karardır ve `trades.jsonl`ın `setup`/`score` dersinin
     # doğrudan uygulanmasıdır — alan yoksa tüketici satırı SESSİZCE eler:
     #   `gozlem`         : KANIT ATIFI burada yaşar. Kalite kapısı (nous_eval.kanit_atifi) bu alanda
@@ -263,12 +265,12 @@ CONTRACTS: dict[str, Contract] = {
              "düşük bir R1 sayacı 'aşınma yok' demek değil 'R1'de henüz ölçülmedi' demektir. "
              "HABERSİZ KIYAS YASAK; R0 kayıtları silinmedi, `arsiv_R0` işareti aldı "
              "(oos_erosion.arsivle — içerik değişmez, yalnız etiket eklenir)"),
-    # İKİ İNTRADAY DEFTERİ SÖZLEŞMEYE GİRİYOR (K1, 2026-07-30). Faz 4a/4b defterleri bugüne kadar
+    # İKİ İNTRADAY DEFTERİ SÖZLEŞMEYE GİRİYOR. Faz 4a/4b defterleri bugüne kadar
     # sözleşme yasasının TAMAMEN dışındaydı: `watchdog.parity_report` yalnız CONTRACTS'ı gezer, ve
-    # CONTRACTS 8 eski defterle sınırlıydı. Yani 2026-07-21'de yedi hatayı doğuran "sözleşmesiz
+    # CONTRACTS 8 eski defterle sınırlıydı. Yani yedi hatayı doğuran "sözleşmesiz
     # defter" deseni en YENİ iki defterde aynen yeniden açıktı.
     #
-    # ÜÇ DAMGA — İDDİANIN CANLI DENETÇİSİ: intraday_shadow.py:241 "as_of >= close_ts sonradan
+    # ÜÇ DAMGA — İDDİANIN CANLI DENETÇİSİ: `intraday_shadow._satir` "as_of >= close_ts sonradan
     # denetlenebilir" diyor, ama tek denetim fixture'lı birim testlerdi; diskteki GERÇEK satırlara
     # bakan hiçbir canlı dedektör yoktu. Üç damga (`decision_as_of`, `bar_t`, `close_ts`) burada
     # ZORUNLU alan olur — eksikse look-ahead denetimi hiç yapılamaz — ve karşılaştırmayı
@@ -276,7 +278,8 @@ CONTRACTS: dict[str, Contract] = {
     #
     # ALANLAR YAZARDAN DOĞRULANDI, DİSKTEN DEĞİL: iki defter de henüz 0 satır (bilinen açlık —
     # 4a saha 0 satır, gölge hiç satır görmedi). UYDURMA YASAĞI gereği kaynak uydurulmaz: adlar
-    # intraday_cycle.py:125-131 ve intraday_shadow.py:230-243 yazım satırlarından alındı.
+    # `intraday_cycle.IntradayConsumer._handle_symbol` ve `intraday_shadow._satir` yazım
+    # satırlarından alındı.
     "intraday_decisions.jsonl": Contract(
         required=("ts", "ticker", "source", "decision_as_of", "bar_t", "close_ts",
                   "admissible_bars", "fired"),
@@ -294,16 +297,16 @@ CONTRACTS: dict[str, Contract] = {
         note="4b GÖLGE defteri — emir yolu BİLEREK yok. `gate_inputs_as_of` zorunlu: kapı "
              "girdilerinin hangi ana ait olduğu yazılmazsa 'look-ahead yok' iddiası "
              "DOĞRULANAMAZ (bugüne kadar repo genelinde tek geçtiği yer yazıldığı satırdı)"),
-    # 4B'NİN İKİNCİ KOLU (kart EXE-2026-003, v217/60181a1) — DOĞDUĞU DALGADA DEĞİL, BİR TUR SONRA
+    # 4B'NİN İKİNCİ KOLU — DOĞDUĞU DALGADA DEĞİL, BİR TUR SONRA
     # sözleşmeye giriyor ve bu bir kayıttır: yukarıdaki iki defter için yazılan "sözleşmesiz defter
     # deseni üçüncü kez açılmasın" cümlesi, üçüncü defterde bir tur boyunca AÇIK KALDI. Sınıf
     # kapanmıyor, sayacı ilerliyor: yeni defter doğduğu commit'te buraya da satır ister.
     #
     # ALANLAR DİSKTEN DEĞİL YAZARDAN ÖLÇÜLDÜ (defter henüz 0 satır; UYDURMA YASAĞI): satırı
-    # `intraday_shadow._satir()` (intraday_shadow.py:384-408) kurar, `intraday_cycle` (intraday_
-    # cycle.py:256) diske yazar. Ölçülen tam anahtar kümesi silahli kolun ALTIN SATIRIYLA
+    # `intraday_shadow._satir()` kurar, `intraday_cycle.IntradayConsumer._handle_symbol`
+    # diske yazar. Ölçülen tam anahtar kümesi silahli kolun ALTIN SATIRIYLA
     # (26 anahtar, test_golge_planli_kol_v217.ALTIN_ANAHTARLAR) BİREBİR aynıdır, ARTI tek fark:
-    # `kol` (intraday_shadow.py:411). Tek gövde, tek şema.
+    # `kol` (`intraday_shadow._satir`). Tek gövde, tek şema.
     #
     # `kol` NEDEN ZORUNLU: bu defterin varlık sebebi nüfus ayrımıdır (silahlanmamış GO/REVIEW
     # planları). Etiket düşerse iki kol tek havuzda okunabilir hâle gelir — kartın kill#4'ünün
@@ -313,11 +316,11 @@ CONTRACTS: dict[str, Contract] = {
     #
     # ÜÇ DAMGA + `gate_inputs_as_of` kardeş sözleşmeyle AYNI GEREKÇEYLE zorunludur: look-ahead
     # denetimini `watchdog.intraday_stamp_report()` yapar ve bu defter onun taradığı
-    # `INTRADAY_STAMP_LEDGERS` kümesindedir (watchdog.py:1567-1568).
+    # `INTRADAY_STAMP_LEDGERS` kümesindedir (`watchdog.INTRADAY_STAMP_LEDGERS`).
     #
-    # `consumers` ÖLÇÜLDÜ, W2'nin önerisinden İKİ NOKTADA AYRIŞTI: (a) `watchdog` EKLENDİ — damga
-    # denetimi defteri gerçekten okuyor (watchdog.py:1582); (b) `api` YAZILMADI — pano yolu
-    # (api.py:3475) YALNIZ silahli defteri okur, planli kol henüz uca çıkmıyor. Belgeleme alanı
+    # `consumers` ÖLÇÜLDÜ, öneriden İKİ NOKTADA AYRIŞTI: (a) `watchdog` EKLENDİ — damga
+    # denetimi defteri gerçekten okuyor (`watchdog.intraday_stamp_report`); (b) `api` YAZILMADI — pano yolu
+    # (`api._eylemsizlik`) YALNIZ silahli defteri okur, planli kol henüz uca çıkmıyor. Belgeleme alanı
     # olması onu bir dilek listesine çevirmez: yazılmayan tüketici, YASA-6 borcunun kaydıdır.
     "intraday_shadow_planli_orders.jsonl": Contract(
         required=("plan_id", "ticker", "date", "status", "kol", "sim_fill", "decision_as_of",
@@ -335,8 +338,8 @@ CONTRACTS: dict[str, Contract] = {
              "`eod_yok`a düşer, eşleşmeme %20 tavanını aşar ve Faz-5 kilidi 'ölçüldü'den "
              "'ölçülemedi'ye GERİ ALINIRDI (kart EXE-2026-003 kill#4)"),
 
-    # AJAN TELEMETRİSİ + HAM İZ (D3 modül 1/2, 2026-08-07). İki defter DOĞUŞTA sözleşmeye giriyor:
-    # 2026-07-21'in yedi hatasının altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
+    # AJAN TELEMETRİSİ + HAM İZ. İki defter DOĞUŞTA sözleşmeye giriyor:
+    # O yedi hatanın altısı "sözleşmesiz defter" sınıfındandı ve o sınıf en YENİ iki
     # defterde (4a/4b) bir kez daha açılmıştı — üçüncü kez açılmasın diye alanlar burada, defterin
     # ilk satırı yazılmadan önce çivilendi.
     "agent_calls.jsonl": Contract(
@@ -374,7 +377,7 @@ def validate_row(ledger: str, row: dict) -> list[str]:
     if not c or not isinstance(row, dict):
         return []
     out = [f"eksik alan: {k}" for k in c.required if k not in row]
-    # TAKMA AD, KANONİK ADIN YERİNİ ALAMAZ (2026-07-22, mutasyon koşumu yakaladı): sözleşme takma
+    # TAKMA AD, KANONİK ADIN YERİNİ ALAMAZ (mutasyon koşumu yakaladı): sözleşme takma
     # adı yalnız GERİYE DÖNÜK uyumluluk için tanır. Satır sadece eski adı taşıyorsa, yaması olmayan
     # her tüketici onu sessizce eler — mutasyon "yeniden adlandır" tam bu yüzden görünmezdi.
     for canonical, alias in c.aliases:
@@ -445,11 +448,11 @@ def _kardes_modul_baglari(tree: ast.Module) -> dict[str, str]:
 def declared_writers(root: str = "meridian") -> dict[str, set]:
     """Statik tarama: hangi modül hangi deftere YAZIYOR (sabit adları da çözer).
 
-    ÖNBELLEKLİ (2026-07-28): tüm kaynağı ast ile ayrıştırır ve /api/diagnostics'ten her
+    ÖNBELLEKLİ: tüm kaynağı ast ile ayrıştırır ve /api/diagnostics'ten her
     Operasyon açılışında iki kez çağrılıyordu (ölçüm: 0,87 sn). Sonuç yalnız kaynağa bağlı;
     damga kaynak mtime'ıdır, kod değişince önbellek kendiliğinden düşer.
 
-    KARDEŞ-MODÜL SABİTİ DE ÇÖZÜLÜR (W2 devri, 2026-08-09). Önceki tarayıcı yalnız LİTERAL ve
+    KARDEŞ-MODÜL SABİTİ DE ÇÖZÜLÜR. Önceki tarayıcı yalnız LİTERAL ve
     AYNI DOSYADAKİ sabiti çözüyordu; `store.append_jsonl(intraday_shadow.PLANLI_ORDERS_FILE, …)`
     biçimi (defterin adı bir modülde, yazımı başka bir modülde) taramadan sessizce düşüyordu.
     Bu bir kolaylık eklemesi değil, sözleşmenin ÇALIŞMA ŞARTIDIR: o biçim çözülmezse `writers`
@@ -465,7 +468,7 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
 
     İKİ VARSAYIM, İKİSİ DE ÖLÇÜLDÜ: (1) sabit tablosu modül DOSYA ADIYLA anahtarlanır ve ağaçta
     `__init__.py` dışında yinelenen dosya adı YOKTUR (yinelense, iki farklı alt paketin aynı adlı
-    sabiti karışırdı); (2) maliyet — soğuk tarama 0,625 sn (ölçüm 2026-08-09; ikinci ast.walk
+    sabiti karışırdı); (2) maliyet — soğuk tarama 0,625 sn (ölçüldü; ikinci ast.walk
     içeri-import'ları da görsün diye eklendi, `tree.body` taraması onları kaçırırdı), sıcak yol
     önbellekten ~1 ms. Önbellek damgası kaynak mtime'ı olduğu için ölçüm yalnız kod değişince
     yeniden ödenir."""

@@ -62,7 +62,7 @@ def _frekans(n: int, span_days) -> float | None:
     return round(n / (span_days / YIL_GUN), 4)
 
 
-# ---- LIKE-FOR-LIKE ROLLBACK KIYASI (Aşama 2.3, 2026-07-29) ------------------------------------
+# ---- LIKE-FOR-LIKE ROLLBACK KIYASI -----------------------------------------------
 # TEŞHİS. Bugünkü geri-alma kararı ELMA-ARMUTtu: çocuğun CANLI skoru (95 işlem, ~4 ay, canlı motor,
 # `score_mod.score` ile o kümenin KENDİ süresine göre yıllıklandırılmış) ile ebeveynin BACKTEST OOS
 # skoru (2,5 yıllık pencere, replay motoru, `span_days=903` ile yıllıklandırılmış) karşılaştırılıyordu.
@@ -171,6 +171,8 @@ def would_have_replay(version: int, parent: int, goal: dict | None = None,
             cur_strat = None
 
     def _replay_skor(params, pbr, ver):
+        """Verilen parametrelerle pencereyi yeniden oynatır; (segment skoru, işlem satırları) döndürür.
+        Rejim ship'inde satırlar o rejime süzülür — iki bacak AYNI popülasyonda kıyaslansın diye."""
         res = backtest.replay(params, bars, index, goal, lo, hi, strategy_version=ver,
                               params_by_regime=pbr)
         rows = ([t for t in res.trades if str(t.get("regime")) == eval_regime] if eval_regime

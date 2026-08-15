@@ -76,6 +76,9 @@ class _Seri:
     __slots__ = ("birincil_tag", "filed", "val", "gecersiz", "B", "B_son", "kirik_filed")
 
     def __init__(self, birincil_tag, filed, val, gecersiz, B, B_son, kirik_filed):
+        """Bir sembolün hazır as-of serisini alanlara bağlar (birincil etiket, artan `filed` dizisi,
+        dosyalama günündeki bazda `val`, ölçek-hatası maskesi, baz çarpanları ve kırık dosyalamalar).
+        Hesap yapmaz; seriyi `_seri()` kurar."""
         self.birincil_tag = birincil_tag
         self.filed = filed          # np.array[str] — artan
         self.val = val              # np.array[float] — dosyalama günündeki bazda
@@ -86,6 +89,8 @@ class _Seri:
 
 
 def _snap(r: float) -> float | None:
+    """Ham oranı en yakın "temiz" bölünme oranına (SPLIT_ADAY_ORAN) oturtur; bağıl sapma SNAP_TOL'ü
+    aşarsa None — yani oran bir bölünme olarak SAYILMAZ (birleşme/ihraç kaynaklı sıçramayı eler)."""
     best, bd = None, 9e99
     for c in SPLIT_ADAY_ORAN:
         d = abs(r - c) / c
@@ -287,6 +292,8 @@ def _seri(sym: str) -> "_Seri | None":
 
 
 def _say(neden: str) -> None:
+    """Tek bir hücre sonucunu `_SAYAC`a işler: neden kodu varsa "ölçülemedi" + neden kırılımı,
+    boşsa "ölçüldü". UYDURMA YASAĞI'nın muhasebesi — okuma_raporu bu sayaçları yayımlar."""
     if neden:
         _SAYAC["olculemedi"] += 1
         _SAYAC["neden"][neden] = _SAYAC["neden"].get(neden, 0) + 1

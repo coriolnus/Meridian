@@ -36,6 +36,11 @@ _WARNED: set = set()
 
 
 def _warn_once(event: str, **fields) -> None:
+    """Aynı arıza jetonunu SÜREÇ BAŞINA BİR kez `obs.warn`a düşürür.
+
+    Sıcak yolda (binlerce seans × yüzlerce sembol) her turda loglamak olay defterini boğar ve
+    gerçek uyarıları görünmez kılardı; ama uyarı tümüyle de susturulmaz.
+    """
     if event in _WARNED:
         return
     _WARNED.add(event)
@@ -79,7 +84,7 @@ SECTORS = {
     "WFC": "financials", "C": "financials", "MS": "financials", "SCHW": "financials", "BLK": "financials", "BX": "financials", "KKR": "financials",
     "APO": "financials", "CB": "financials", "PGR": "financials", "TRV": "financials", "ALL": "financials", "MET": "financials", "PRU": "financials",
     "AFL": "financials", "AIG": "financials", "COF": "financials", "PNC": "financials", "SYF": "financials", "USB": "financials",
-    # FISV (2026-07-30) — ödeme işlemcisi; GICS 2023'ten beri financials, akranları V/MA/PYPL ile aynı etiket.
+    # FISV — ödeme işlemcisi; GICS 2023'ten beri financials, akranları V/MA/PYPL ile aynı etiket.
     "FISV": "financials",
     # genişleme · health
     "TMO": "health", "DHR": "health", "ABT": "health", "BMY": "health", "AMGN": "health", "GILD": "health", "VRTX": "health",
@@ -112,6 +117,12 @@ SECTORS = {
 
 @dataclass
 class BacktestResult:
+    """Bir replay koşumunun sonucu: kapanmış işlemler, sermaye eğrisi, kullanılan parametreler,
+    dönem uçları ve ölçüm defterleri (plan/aday kaydı, giriş ret sayacı, karartma kapısı sayacı).
+
+    Sayaçlarda None ile {} AYRI anlam taşır: None = bu alan hiç doldurulmadı (eski çağrı),
+    {} = dolduruldu ve hiç olay yaşanmadı.
+    """
     trades: list
     equity: list          # [(date, equity)]
     params: dict
@@ -119,22 +130,28 @@ class BacktestResult:
     end: str
     plan_log: list = None       # every armed/rejected plan, dated (for the Signals page)
     candidate_log: list = None  # top candidates scanned per day, dated
-    # C18 (2026-08-02): silahlı planın dolmama NEDENLERİ, neden → adet. `entry_missed_limit` burada
+    # Silahlı planın dolmama NEDENLERİ, neden → adet. `entry_missed_limit` burada
     # görünür olmadan "replay canlının reddettiği dolumları yazıyor mu?" sorusu ÖLÇÜLEMİYORDU (canlı
     # taraf aynı sayacı `entry_exec.jsonl`in `karar` alanına yazıyor, replay tarafında karşılığı yoktu).
     # None = bu sonuç eski bir çağrıdan geliyor / sayaç hiç doldurulmadı; {} = doldu ve HİÇ ret olmadı.
     entry_rejects: dict = None
-    # 2026-08-03 (Rol-1 kararı 2): replay'de kazanç-karartması ÖLÇÜLEMEZ (PIT takvim yok) ve artık
+    # Replay'de kazanç-karartması ÖLÇÜLEMEZ (PIT takvim yok) ve artık
     # ölçülmüş GİBİ davranmıyor. Bu sayaç "kaç plan karartma kapısı KONUŞAMADAN karar aldı"yı taşır;
     # None = eski bir çağrı, {} = doldu. Üretilen kanıt TÜKETİLİR (YASA 6): replay raporunu okuyan
     # her yer, o tabloda karartma etkisinin SIFIR olduğunu buradan görür.
     earnings_gate: dict = None
 
     def detail(self, goal: dict) -> dict:
+        """Sonucun işlemlerinden hedef sözleşmesine göre ayrıntılı karneyi (`score.score_detail`) üretir
+        — saf okuma, hiçbir şey yazmaz.
+        """
         return score_mod.score_detail(self.trades, goal)
 
 
 def _indexed(bars: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    """Her sembolün bar çerçevesini `date` sütununa indeksler ve yeni bir sözlük döndürür; tarih
+    bazlı `.loc` erişimini mümkün kılar.
+    """
     return {t: df.set_index("date") for t, df in bars.items()}
 
 
@@ -157,19 +174,30 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
            goal: dict, start: str, end: str, strategy_version: int = 1,
            params_by_regime: dict | None = None,
            with_gate_detail: bool = False) -> BacktestResult:
+    """`start`–`end` arasını gün gün yeniden oynatır ve `BacktestResult` üretir.
+
+    Her seans üç fazda işlenir — OPEN(D): bekleyen çıkışlar ve D-1'de silahlanan girişler;
+    INTRADAY(D): dokunma çıkışları; CLOSE(D): trail/rejim/tarama ve D+1 için silahlanma. Kapı
+    kararını `guard.classify_gate`, icrayı `PaperBroker` verir — canlıyla AYNI üreticiler.
+    `params_by_regime` verilirse o günün rejimine göre parametre seti çözülür; `with_gate_detail`
+    kapı ayrıntısını plan kaydına ekler. Dolmayan girişlerin nedenleri `entry_rejects`te,
+    PIT takvimi olmadığı için susan karartma kapısı `earnings_gate`te sayılır.
+
+    SAF HESAP: state'e yazmaz; yalnız bar ve hedef sözleşmesi okur.
+    """
     limits = goal["limits"]
     max_open = int(limits["max_open_positions"])
     max_pos_r = float(limits["max_position_r"])
-    # SEKTÖR TAVANI BURADA OKUNMAZ — VE BU BİLİNÇLİDİR (2026-08-14, ROADMAP §2-35b).
+    # SEKTÖR TAVANI BURADA OKUNMAZ — VE BU BİLİNÇLİDİR.
     # BURADA ŞU SATIR VARDI: `max_sector_pct = float(limits["max_sector_exposure_pct"])`. Atanıyor,
     # HİÇBİR YERDE okunmuyordu (ölü yerel; repo genelinde `max_sector_pct` adının meridian/ içindeki
     # TEK geçtiği yerdi). Replay sektör tavanını `guard.classify_gate`e DEVREDER: kapıya
     # `portfolio["sector_counts"]` (bu fonksiyonda `sector_ct`ten kurulur) ve `goal` gider, kural
     # guard'ın `sector_cap` satırında işler, paydasını `guard.sector_cap_basis` belirler. Yani ikinci
-    # bir uygulama YOKTUR ve olmaması İYİDİR — WP-15g'nin payda ayrıştırması replay'i bu yüzden
+    # bir uygulama YOKTUR ve olmaması İYİDİR — payda ayrıştırması replay'i bu yüzden
     # otomatik kapsadı. Ölü yerel KALDIRILDI çünkü politikanın ADINI taşıyordu ve kullanılan
     # `max_open`/`max_pos_r` satırlarının dibinde duruyordu: "birileri bağlarsa" ikinci ve AYRIŞMIŞ
-    # bir sektör kuralı doğardı (`guard.check_trade` docstring'indeki tur-12 ayrışma sınıfı).
+    # bir sektör kuralı doğardı (`guard.check_trade` docstring'indeki ayrışma sınıfı).
     # BURAYA YENİ BİR SEKTÖR KURALI YAZILMAZ — tavan guard'ta TEKtir, replay onu ÇAĞIRIR.
     # ÖLÇÜLEN TEK YAN ETKİ (gizlenmiyor): satırın gözlenebilir tek işlevi, `max_sector_exposure_pct`
     # anahtarı EKSİK bir goal sözlüğünde KeyError'ı replay GİRİŞİNDE yükseltmesiydi. Artık aynı
@@ -189,21 +217,21 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     per = _indexed(bars)
 
     armed: list[dict] = []          # plans to fill at next open
-    # G3b (2026-07-30): kurulumun YAPI çizgisi (pivot), silahlı plan için AYRI bir yan haritada taşınır
+    # Kurulumun YAPI çizgisi (pivot), silahlı plan için AYRI bir yan haritada taşınır
     # — plan SÖZLÜĞÜNE alan olarak EKLENMEZ. GEREKÇE, ve bu bilinçli bir tasarım kararıdır:
     # `test_differential_v60.test_plan_dicts_have_the_same_field_set` iki plan üreticisinin (canlı
     # loop.py P3_PLAN + replay) alan kümelerinin AYNI olmasını şart koşar ve CANLI-only alanlar için
     # bir allowlist tutarken REPLAY-only alanlar için BİLİNÇLİ OLARAK tutmaz: replay'in bilip canlının
-    # bilmediği bir alan, tam olarak "backtest sayıları yalan olur" ayrışmasıdır (§4). Pivot bir
+    # bilmediği bir alan, tam olarak "backtest sayıları yalan olur" ayrışmasıdır. Pivot bir
     # DEFTER alanı değil bir İCRA girdisidir (broker.fill_entry → Position.pivot →
     # strategy.early_kill_pivot_exit), o yüzden defter şemasına değil icra yoluna konur.
-    # C13 (2026-08-02) — DİKİŞ KAPANDI: canlı yol da artık pivotu taşıyor (loop.py `entry_law` yan
+    # DİKİŞ KAPANDI: canlı yol da artık pivotu taşıyor (loop.py `entry_law` yan
     # tablosu → fill_entry(pivot=...) → Position.pivot → manage_position sözlüğü). Eskiden burada
     # "canlı fill_entry'e pivot GEÇİRMEZ → erken itlaf canlıda atıl" yazıyordu; o cümle artık YANLIŞ
     # olurdu ve `exit.early_kill_pivot` terfi ederse canlıda sessiz no-op üreten sahte-terfi yolunun
     # ta kendisiydi.
     armed_pivots: dict[str, float] = {}
-    # C11+C18 (denetim 2026-08-02): ATR de AYNI yan-harita deseniyle taşınır. ÖNCESİ: replay
+    # ATR de AYNI yan-harita deseniyle taşınır. ÖNCESİ: replay
     # `fill_entry`e `atr=` HİÇ geçmiyordu → `broker.entry_limit_price` `a > 0` dalına giremiyor ve
     # limit DAİMA yüzde tavanına (%1) düşüyordu; canlı motor ise min(0,5·ATR14, %1) ile koşuyordu.
     # Yani "TEK YASA, İKİ MOTOR" (broker.py başlığı) giriş limitinde KIRIKTI ve kırılma tek yönlüydü:
@@ -212,11 +240,11 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     # ATR ölçülemezse None KALIR (0.0 değil): `entry_limit_price` None'ı "ölçülemedi" diye okur ve
     # yalnız yüzde tavanını bağlar — uydurma ATR yok (UYDURMA YASAĞI).
     armed_atr: dict[str, float | None] = {}
-    # C18: kaçan dolumlar SAYILIR, yutulmaz. `reject_out` sözlüğü fill başına doldurulur ve nedenler
+    # Kaçan dolumlar SAYILIR, yutulmaz. `reject_out` sözlüğü fill başına doldurulur ve nedenler
     # burada birikir; `BacktestResult.entry_rejects` iki motorun kaçırdığı dolumları kıyaslanabilir
     # kılar (canlı taraf aynı sayacı `entry_exec` defterine `karar` alanıyla zaten yazıyor).
     entry_rejects: dict[str, int] = {}
-    # Replay'de kazanç-kapısının SAYACI (2026-08-03, Rol-1 kararı 2). Gerekçe karar satırının
+    # Replay'de kazanç-kapısının SAYACI. Gerekçe karar satırının
     # yanında; burada yalnız kabı var. Boş kalırsa ({}) "hiç plan değerlendirilmedi" demektir ve
     # bu, "kapı konuştu ve hiçbir şey bulmadı"dan farklı bir olgudur.
     _eg: dict[str, int] = {}
@@ -235,11 +263,18 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     _id = [0]
 
     def marks_on(d):
+        """Açık pozisyonların o günün KAPANIŞ fiyatıyla işaretleme haritası; o gün barı olmayan sembol
+        haritaya girmez.
+        """
         return {t: per[t].loc[d, "close"] for t in broker.positions if d in per[t].index}
 
     def marks_open_on(d):
         # OPEN-phase equity must be marked at D's OPEN — using D's close during the open phase let the
-        # breaker/de-risk/sizing "know" the afternoon's move at the morning open (audit #1 look-ahead)
+        # breaker/de-risk/sizing "know" the afternoon's move at the morning open (look-ahead)
+        """Açık pozisyonların o günün AÇILIŞ fiyatıyla işaretleme haritası. Açılış fazındaki sermaye
+        kapanışla işaretlenirse devre kesici/risk azaltma/büyüklük öğleden sonrayı 'bilir' —
+        ileri-bakış budur, o yüzden ayrı bir harita tutulur.
+        """
         return {t: per[t].loc[d, "open"] for t in broker.positions if d in per[t].index}
 
     for bar_i, d in enumerate(calendar):
@@ -249,7 +284,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 broker.close_position(t, per[t].loc[d, "open"], reason, str(d.date()))
         pending_exits.clear()
 
-        eq_now = broker.equity(marks_open_on(d))           # OPEN marks — no same-day close look-ahead (#1)
+        eq_now = broker.equity(marks_open_on(d))           # OPEN marks — no same-day close look-ahead
         peak_equity = max(peak_equity, eq_now)
         size_mult = brk.derisk_mult(eq_now, peak_equity)   # graded de-risk on the running drawdown
         eff_max_open = brk.max_positions_at(eq_now, peak_equity, max_open)   # + concurrent-position throttle
@@ -261,13 +296,13 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                 _rej: dict = {}
                 broker.fill_entry(plan, per[t].loc[d, "open"], str(d.date()), eq_now,
                                   size_mult=size_mult, adv=_adv(per[t], d),
-                                  pivot=armed_pivots.get(t, 0.0),   # G3b: yapı çizgisi (icra girdisi)
-                                  atr=armed_atr.get(t),             # C11/C18: E1 limitinin ATR bacağı
+                                  pivot=armed_pivots.get(t, 0.0),   # yapı çizgisi (icra girdisi)
+                                  atr=armed_atr.get(t),             # E1 limitinin ATR bacağı
                                   reject_out=_rej)
                 if _rej.get("reason"):
                     entry_rejects[_rej["reason"]] = entry_rejects.get(_rej["reason"], 0) + 1
-        # KASITLI REPLAY↔CANLI FARKI (2026-07-23, tarama "diverged" işaretledi ama sürüklenme DEĞİL):
-        # canlı loop._carry_armed_without_bar bar-yok planı bir seans TAŞIR (GS-1140), replay burada
+        # KASITLI REPLAY↔CANLI FARKI (tarama "diverged" işaretledi ama sürüklenme DEĞİL):
+        # canlı loop._carry_armed_without_bar bar-yok planı bir seans TAŞIR, replay burada
         # armed'ı SIFIRLAR. İki senaryo AYRIdır: canlıda bar-yok = EOD YAYIN GECİKMESİ (geçici, plan
         # hâlâ geçerli → taşınır); replay geçmiş veriyle koşar, orada bar-yok = TATİL/DELİSTİNG (kalıcı
         # boşluk, plan gerçekten dolmaz → düşer). Replay'e carry eklemek tatilde plan taşımak olurdu.
@@ -295,8 +330,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         # ---- 3. CLOSE(D): manage trails, regime, scan+arm ----
         idx_slice = idx.loc[:d]
         rj = regime_mod.build_regime_json(idx_slice.reset_index(), params, str(d.date()))
-        # LİDER SEKTÖRLER — canlı döngü ve cf_backfill bunu dolduruyordu, BACKTEST doldurmuyordu
-        # (denetim turu 23, 2026-07-21). Sonuç: guard'ın 'leading_sector' soft kontrolü kapıda HİÇ
+        # LİDER SEKTÖRLER — canlı döngü ve cf_backfill bunu dolduruyordu, BACKTEST doldurmuyordu.
+        # Sonuç: guard'ın 'leading_sector' soft kontrolü kapıda HİÇ
         # ateşlenmiyor, canlıda ateşleniyordu; yani kapının ölçtüğü karar akışı ile canlınınki
         # ayrışıyordu. NO_GO'yu değiştirmediği için işlem sayısı aynı kalıyor ama REVIEW dağılımı
         # (ve ona bakan her katman) yanlış. Aynı yasa, tek uygulama.
@@ -315,7 +350,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             df_t = per[t].loc[:d].reset_index()
             dec = strat.manage_position(df_t, {"entry": pos.entry, "stop": pos.stop,
                     "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share,
-                    "pivot": pos.pivot},          # G3b: yapı çizgisi (erken itlaf okur; 0.0 → atıl)
+                    "pivot": pos.pivot},          # yapı çizgisi (erken itlaf okur; 0.0 → atıl)
                     eff, pos.bars_held, regime_ok)
             pos.trail_stop = dec.trail_stop
             if dec.exit_now:
@@ -338,10 +373,10 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             for t in broker.positions:
                 sector_ct[SECTORS.get(t, "?")] = sector_ct.get(SECTORS.get(t, "?"), 0) + 1
             others_rets = [ind.returns_tail(per[o].loc[:d, "close"]) for o in broker.positions if o in per]  # once/day
-            # C12: Y3 NAV tavanlarının üretici tarafı (canlı döngüyle AYNI yasa — `guard.y3_*`
+            # Y3 NAV tavanlarının üretici tarafı (canlı döngüyle AYNI yasa — `guard.y3_*`
             # ÇAĞRILIR, kopyalanmaz). Kitap seansta bir kez ölçülür; `armed` aday başına eklenir.
             # NAV kapanış markıyla (`marks_on`), çünkü arm CLOSE(D) fazındadır — `marks_open_on`
-            # AÇILIŞ fazının (devre kesici/kısma) markıdır ve buraya konması denetim #1'in
+            # AÇILIŞ fazının (devre kesici/kısma) markıdır ve buraya konması
             # ileri-bakış hatasının aynadaki hâli olurdu.
             _y3_mk = marks_on(d)
             _y3_eq = broker.equity(_y3_mk)
@@ -369,7 +404,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             for sig in candidates:
                 sec = SECTORS.get(sig.ticker, "?")
                 plan_seq += 1
-                # PLAN KİMLİĞİ = CANLI ŞEMANIN AYNISI (2026-07-21). Eskiden backtest `P00140` gibi bir
+                # PLAN KİMLİĞİ = CANLI ŞEMANIN AYNISI. Eskiden backtest `P00140` gibi bir
                 # SIRA numarası veriyordu; canlı döngü ve cf_backfill ise `P-{tarih}-{ticker}`. Sonuç:
                 # cf_fidelity — simülasyonun gerçeğe uyup uymadığını ölçen TEK mekanizma —
                 # plan_id'yi `P-YYYY-MM-DD-TICKER` diye ayrıştırdığı için replay'den tohumlanmış
@@ -392,28 +427,28 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                              "max_corr": ind.corr_max(per[sig.ticker].loc[:d, "close"], others_rets),
                              **guard.y3_portfolio_inputs(_y3_book, armed, equity=_y3_eq,
                                                          size_fn=broker.size_position)}
-                # KARAR AĞACI (ikinci tur denetimi, 2026-07-21): plan defterini İKİ üretici yazıyor —
+                # KARAR AĞACI: plan defterini İKİ üretici yazıyor —
                 # canlı döngü (gate_checks ile) ve replay tohumu (gate_checks OLMADAN). Defter replay ile
                 # tohumlandığı için panonun karar-ağacı tablosu 144 satırın 144'ünde BOŞTU: "neden GO
                 # verdi?" sorusu (geçen kontroller dahil) kayıttan cevaplanamıyordu. Aynı yasanın iki
                 # uygulaması deseninin ŞEMA hâli. detay yalnız İSTENDİĞİNDE üretilir: arama yolunda
                 # binlerce replay koşuyor, her plana 8 sözlük eklemek belleği şişirirdi.
                 _det = [] if with_gate_detail else None
-                # C12: dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider (canlı döngüyle aynı
+                # Dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider (canlı döngüyle aynı
                 # desen ve aynı gerekçe: plan defterinin şeması iki motorda EŞİT kalmalı —
                 # test_differential_v60 tam bunu çiviliyor).
                 _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=_y3_eq,
                                                              size_fn=broker.size_position)}
                 verdict, greasons = guard.classify_gate(_gate_plan, portfolio, rj, goal, eff, detail_out=_det)
-                # KARAR AĞACININ SATIRI da tek yasa olmalı (diferansiyel motor testi, 2026-07-22):
+                # KARAR AĞACININ SATIRI da tek yasa olmalı (diferansiyel motor testi):
                 # karartma kuralını İKİ motor da uyguluyordu ama KANITINI yalnız canlı döngü yazıyordu —
                 # replay'den tohumlanan planların gate_checks'inde 'earnings_blackout' satırı YOKTU.
                 # gate_checks'in 144/144 boş çıkmasıyla aynı desenin satır seviyesindeki hâli: kural
                 # aynı, kayıt farklı; "neden GO verdi?" sorusu tohum döneminde eksik cevaplanıyordu.
                 # Karar mantığı DEĞİŞMEDİ (aynı koşul, aynı sıra) — yalnız kanıt iki motorda da var.
                 #
-                # ---- REPLAY-PIT DÜZELTMESİ (2026-08-03, Rol-1 kararı 2) --------------------------
-                # ÖLÇÜLDÜ (research/olcumler/wpd_earnings_failopen/RAPOR.md §3c): bu satır
+                # ---- REPLAY-PIT DÜZELTMESİ ------------------------------------------------------
+                # ÖLÇÜLDÜ (research/olcumler/wpd_earnings_failopen/RAPOR.md): bu satır
                 # `in_blackout(ticker, <2023 tarihli replay günü>)` çağırıyordu ama `earnings.csv`
                 # PIT DEĞİL — bugünün ileri-pencere snapshot'ı. 390 planın YALNIZ 10'unda takvimde
                 # plan tarihinden sonraki 0-5 gün içinde bir rapor tarihi vardı; yani 380 planda
@@ -446,8 +481,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                                  "coverage": "olculemedi_replay",
                                  "note": "replay: PIT kazanç takvimi yok — karartma kapısı bu kararda "
                                          "KONUŞMADI (bugünün takvimi tarihsel plana uygulanmaz)"})
-                # BEYANLI FAIL-OPEN NOTU — AYNI YASA, İKİ MOTOR (2026-08-01). Yukarıdaki 2026-07-22
-                # dersinin birebir tekrarı: kural iki motorda da uygulanıyor, KAYDI yalnız canlıda
+                # BEYANLI FAIL-OPEN NOTU — AYNI YASA, İKİ MOTOR. Yukarıdaki
+                # dersin birebir tekrarı: kural iki motorda da uygulanıyor, KAYDI yalnız canlıda
                 # yazılsaydı `test_differential_v60` haklı olarak ayrışma derdi ve replay'den
                 # tohumlanan planlar "kapsam bilgisi hiç yokmuş" gibi görünürdü. Not KARAR
                 # DEĞİŞTİRMEZ; sıra da canlıyla AYNI (önce karartma vetosu, sonra not).
@@ -460,8 +495,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
                     plan["gate_checks"] = _det
                 if verdict != "NO_GO":                 # GO or REVIEW arm (== old pass); NO_GO does not
                     armed.append(plan)
-                    armed_pivots[sig.ticker] = float(sig.pivot)     # G3b: yapı çizgisi plana DEĞİL yana
-                    # C11/C18: ATR SİNYAL BARINDA ölçülmüştür (strategy.EntrySignal.atr) — silahlanma
+                    armed_pivots[sig.ticker] = float(sig.pivot)     # yapı çizgisi plana DEĞİL yana
+                    # ATR SİNYAL BARINDA ölçülmüştür (strategy.EntrySignal.atr) — silahlanma
                     # anında sabitlenir, dolum anında yeniden hesaplanmaz (canlı `entry_law` tablosuyla
                     # aynı yasa: aynı plan iki motorda iki farklı limitle dolamaz).
                     _a = float(sig.atr) if sig.atr else 0.0
@@ -481,7 +516,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             else:
                 # ticker's data ENDED before the final bar (delisting/halt — PARA/WBA class): without this
                 # the position silently vanished from grading — its loss never hit n/avg_r/drawdown/tail
-                # (audit #7/#46 survivorship no-op). Close at the last AVAILABLE bar's close instead.
+                # (survivorship no-op). Close at the last AVAILABLE bar's close instead.
                 try:
                     last_d = per[t].index.max()
                     broker.close_position(t, per[t].loc[last_d, "close"], "delisted_markout",
@@ -497,7 +532,7 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
 
 
 def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:
-    """TIME-STOP KALİBRASYON EĞRİSİ (G3b ③, 2026-07-30) — SAF fonksiyon, I/O yok, knob DEĞİL.
+    """TIME-STOP KALİBRASYON EĞRİSİ — SAF fonksiyon, I/O yok, knob DEĞİL.
 
     Soru: `exit.time_stop_days` = 15 doğru yerde mi? Şelale ölçümünde time_stop, çıkışın TEK güçlü
     bileşeniydi (+%50 verim) — yani zaman kesişi PARA KAZANDIRIYOR ve "nerede kesmeli" sorusu
@@ -565,15 +600,15 @@ def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:
             "gunler": gunler, "kumulatif": kumulatif}
 
 
-# ---- ② AÇIK-POZİSYON DÜŞÜŞÜ: M2M EĞRİSİNİN KENDİ RAPORU (WP-M borcu, 2026-08-01) ---------------
+# ---- AÇIK-POZİSYON DÜŞÜŞÜ: M2M EĞRİSİNİN KENDİ RAPORU -----------------------------------------
 # NEDEN VAR. Kapının okuduğu `max_drawdown`, `score.score_detail` içinde KAPANMIŞ-İŞLEM eğrisiyle
-# günlük M2M eğrisinin KÖTÜSÜ olarak birleşiyor (audit #6 düzeltmesi) — yani M2M zaten sayılıyor,
+# günlük M2M eğrisinin KÖTÜSÜ olarak birleşiyor — yani M2M zaten sayılıyor,
 # ama AYRI BİR SAYI OLARAK HİÇBİR YERDE DURMUYOR. Sonuç: "kapalı işlem düşüşü %4,6 ama açık
-# pozisyonlarla M2M %12,9" gibi bir bulgu ancak ÖLÇÜM BETİĞİYLE elde ediliyordu (EDG-2026-003
-# kill#2 tam olarak böyle ölçüldü) ve her ölçüm turunda elle yeniden üretiliyordu.
+# pozisyonlarla M2M %12,9" gibi bir bulgu ancak ÖLÇÜM BETİĞİYLE elde ediliyordu (kill ölçütü
+# tam olarak böyle ölçüldü) ve her ölçüm turunda elle yeniden üretiliyordu.
 #
 # BU BLOK HÜKÜM VERMEZ — adı "veto" ama kapı değildir, VETONUN EŞİĞİNE GÖRE OKUNAN BİR RAPORDUR.
-# Eşik `shadowlaw.DD_VETO_MARGIN`den gelir çünkü EDG-2026-003'ün kill ölçütü ("rampa-kapalı koşulda
+# Eşik `shadowlaw.DD_VETO_MARGIN`den gelir çünkü kill ölçütü ("rampa-kapalı koşulda
 # maxDD veto sınırını aşarsa") o sabiti adıyla anıyor; ikinci bir eşik tanımlamak aynı yasanın ikinci
 # uygulaması olurdu. Kapının kendi düşüş vetosu (`reflect._gate_eval`, aday↔incumbent FARKI üzerinden)
 # DEĞİŞMEDİ ve bu blok ona hiçbir girdi vermez.
@@ -630,7 +665,7 @@ def mtm_dd_veto(equity_curve: list, esik: float | None = None,
             "pencere": {"ilk": pts[0][0], "son": pts[-1][0]}, "neden": None}
 
 
-# ---- ② DEVAMI: M2M EĞRİSİNİN DİLİMLENMESİ — TEK YASA, İKİ OKUYUCU (WP-M ②, 2026-08-02) ---------
+# ---- DEVAMI: M2M EĞRİSİNİN DİLİMLENMESİ — TEK YASA, İKİ OKUYUCU --------------------------------
 # NEDEN AYRI FONKSİYON. Bu dilimleme yasası `segment_score` içinde satır-içiydi ve şimdi İKİNCİ bir
 # okuyucu doğuyor (`walk_forward._mtm_search` → kapının açık-pozisyon düşüş bacağı). Aynı yasanın iki
 # kopyası, bu depoda tekrar tekrar bulunan sürüklenme sınıfıdır (wf_fixtures'ın var oluş sebebi):
@@ -643,7 +678,7 @@ def mtm_slice(equity_curve: list, lo: str, seg_end: str) -> list:
 
 
 def _regime_slice(trades: list, eval_regime: str | None) -> list:
-    """Phase 3 regime-isolated learning: when a hypothesis targets ONE regime (var@regime), it must be
+    """Regime-isolated learning: when a hypothesis targets ONE regime (var@regime), it must be
     graded only on trades that occurred UNDER that regime. Every replay trade already carries the tag
     (broker writes pos.regime_at_plan as 'regime'). None → no filter (global hypothesis, global grading)."""
     if not eval_regime:
@@ -653,9 +688,9 @@ def _regime_slice(trades: list, eval_regime: str | None) -> list:
 
 def _in_segment(t: dict, lo: str, seg_end: str) -> bool:
     """Segment membership: opened in [lo, seg_end) — HALF-OPEN so a boundary-date trade can never be
-    counted in two adjacent segments/folds (audit #4) — AND closed by seg_end, so P&L realized from
+    counted in two adjacent segments/folds — AND closed by seg_end, so P&L realized from
     price action AFTER the segment (e.g. an OOS trade riding into the frozen holdout) can never leak
-    into this segment's score (audit #3: 'holdout never drives acceptance' now holds by construction).
+    into this segment's score ('holdout never drives acceptance' now holds by construction).
     A still-open trade near the boundary is graded in NO segment — a purge, not a leak."""
     op = str(t.get("ts_open", ""))[:10]
     cl = str(t.get("ts_close", ""))[:10]
@@ -668,7 +703,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
     law. Annualization uses the SEGMENT's calendar length (not the trade cluster's span), and drawdown
     folds in the daily mark-to-market curve when provided.
 
-    --- FORMÜLÜN DÜZ-YAZI AÇIKLAMASI (Hafta 3a "ölçünün ölçümü" raporu, 2026-07-30) ---
+    --- FORMÜLÜN DÜZ-YAZI AÇIKLAMASI ---
 
     Bu fonksiyon `score.score_detail`e delege eder; kapının BÜYÜKLÜK yasasının okuduğu `oos_score`
     oradan gelir ve şudur:
@@ -697,7 +732,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
     Yani kapının BÜYÜKLÜK yasası fiilen bir DÜŞÜŞ+DÜZGÜNLÜK yasasıdır; kâr terimi, ölçek
     seçiminden (aylık %7 hedef × 30/span indirgemesi) dolayı kendi aralığının ~1/20'sine
     sıkıştırılmıştır. Bir aday, kârı artırıp düşüşü ya da Sharpe'ı hafifçe bozarak bu skorda
-    KAYBEDEBİLİR — ROADMAP §3.1'in "büyüklük yasası revizyonu gerekir mi?" sorusunun sayısal
+    KAYBEDEBİLİR — "büyüklük yasası revizyonu gerekir mi?" sorusunun sayısal
     zemini budur. (Bu bir HATA raporu değil ÖLÇÜM: yasa bilinçli olarak risk-ağırlıklıdır; ölçülen
     şey, o ağırlığın nominal 0,3+0,2 değil fiilen ~0,88 olduğudur.)
 
@@ -723,7 +758,7 @@ def segment_score(trades: list, goal: dict, seg_start: str, seg_end: str, embarg
 
 def _embargoed_start(seg_start: str, embargo_days: int = 0) -> str:
     """Lower bound of a segment after the purge zone: seg_start + embargo_days (calendar). Shared by the
-    magnitude gate AND the tail-risk veto so they can never drift onto different trade populations (L1)."""
+    magnitude gate AND the tail-risk veto so they can never drift onto different trade populations."""
     if not embargo_days:
         return seg_start
     import datetime as dt
@@ -758,7 +793,7 @@ def _fold_metrics(trades: list, fold_bounds: list, embargo_days: int) -> list:
     return out
 
 
-# ---- N-DENGELİ FOLD KESİMİ (Kârlılık Programı Aşama 2.1, 2026-07-28) --------------------------
+# ---- N-DENGELİ FOLD KESİMİ --------------------------------------------------------------------
 # NEDEN: fold sınırları bugüne kadar TAKVİMDEN geliyordu (`dataset.OOS_FOLDS` = sabit tarih listesi).
 # Takvim eşit uzunlukta pencereler üretir; PİYASA eşit sayıda işlem üretmez. Canlı ölçüm: OOS fold
 # dağılımı [45, 46, 7]. Üçüncü fold 7 işlemle kapı OYLAMASINA eşit ağırlıkla katılıyordu — yani üç
@@ -828,8 +863,8 @@ def balanced_fold_bounds(trades: list, hi: str, embargo_days: int = 0,
             aday_sinirlar.append((k, temiz))
     # SEÇİM: SERT TABANI TUTTURAN EN ÇOK FOLD'LU KESİM.
     #
-    # BURADA BİR TASARIM DÜZELTMESİ VAR (ölçülerek bulundu, 2026-07-28 — brief'in düz okunuşundan
-    # SAPMA, gerekçesi şu): "önce hedefi (n>=25) tutturan kesim, olmazsa fold sayısını düşür" kuralı
+    # BURADA BİR TASARIM DÜZELTMESİ VAR (ölçülerek bulundu, gerekçesi şu):
+    # "önce hedefi (n>=25) tutturan kesim, olmazsa fold sayısını düşür" kuralı
     # DAHA ÇOK VERİYLE DAHA AZ FOLD üretiyordu. Ölçüldü: 50 işlem → 3 fold [16,16,15]; 90 işlem →
     # 2 fold [45,42]. Sebep, ambargo ve "kapanışı dilim içinde" kuralının k=3'te bir fold'u 24'e
     # (hedefin bir altına) tıraşlaması; kural o zaman k=2'ye düşüyor ve hedefi orada buluyordu.
@@ -857,7 +892,7 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
       * ROBUSTNESS — per-fold avg_r across SEVERAL purged+embargoed folds, so the edge can't hinge on
         one lucky window. Folds use avg_r (no min_sample floor) since each is short.
     The frozen holdout is reported to the human only and never drives acceptance.
-    eval_regime (Phase 3): grade ONLY trades tagged with that regime — the REPLAY itself is untouched
+    eval_regime: grade ONLY trades tagged with that regime — the REPLAY itself is untouched
     (portfolio effects stay realistic); only the scoring population narrows. The min_sample floor then
     applies to the regime slice, so a thin regime honestly yields score=None (cannot ship) instead of a
     noisy small-sample verdict. The caller must use the same eval_regime for incumbent AND candidate."""
@@ -867,7 +902,7 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
     is_d = segment_score(graded, goal, is_start, oos_start, mtm_equity=res.equity)
     oos_d = segment_score(graded, goal, oos_start, oos_end, embargo_days, mtm_equity=res.equity)
     hold_d = segment_score(graded, goal, oos_end, holdout_end, mtm_equity=res.equity)
-    # ---- CONFIRM-OOS SIZINTISI KAPATILDI (2026-07-22, kapı denetimi bulgu #1) ----
+    # ---- CONFIRM-OOS SIZINTISI KAPATILDI ----
     # `oos_pipeline` Confirm dilimini "aramanın ASLA dokunmadığı %30" diye tanımlıyor. Ama fold'lar
     # ve kuyruk riski TAM OOS üzerinde hesaplanıyordu ve `reflect._gate_eval` bunları HER SONDADA
     # okuyordu. Ölçüldü: fold 3 = [2025-01-11, 2025-12-31) Confirm penceresinin 354 gününün 274'ünü
@@ -887,12 +922,12 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
     folds_full = _fold_metrics(graded, oos_folds, embargo_days) if oos_folds else []
     # tail-risk on the OOS window's trades (capital-preservation gate; None below TAIL_MIN_SAMPLE). Uses the
     # SAME membership law (embargoed lower bound + half-open + closed-by) as the magnitude gate — the hard
-    # tail veto must never run on a different trade population than the rest of the gate (L1 + #3/#4).
+    # tail veto must never run on a different trade population than the rest of the gate.
     _tail_lo = _embargoed_start(oos_start, embargo_days)
     # KUYRUK DA SEARCH'E DARALTILDI (aynı bulgu): veto popülasyonu Confirm'in tamamını kapsıyordu.
     tail = score_mod.tail_risk([t for t in graded if _in_segment(t, _tail_lo, _search_end)])
     tail_full = score_mod.tail_risk([t for t in graded if _in_segment(t, _tail_lo, oos_end)])
-    # v3 olasılıksal kapı dilimleri: OOS kronolojik %70 Search / %30 Confirm. Arama adayları yalnız
+    # Olasılıksal kapı dilimleri: OOS kronolojik %70 Search / %30 Confirm. Arama adayları yalnız
     # Search'te yarışır; kazanan Confirm'de teyit yürüyüşüne girer (oos_pipeline). Embargo Search'ün
     # alt sınırına aynen uygulanır — kapının hiçbir parçası farklı popülasyon göremez.
     _s_end = _search_end
@@ -903,7 +938,7 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
                       "confirm_start": _s_end, "confirm_end": oos_end},
         "_trades_search": [t for t in graded if _in_segment(t, _tail_lo, _s_end)],
         "_trades_confirm": [t for t in graded if _in_segment(t, _s_end, oos_end)],
-        # ② AÇIK-POZİSYON DÜŞÜŞÜNÜN KAPIYA GİDEN YOLU (WP-M ②, 2026-08-02). `reflect._gate_eval`in
+        # AÇIK-POZİSYON DÜŞÜŞÜNÜN KAPIYA GİDEN YOLU. `reflect._gate_eval`in
         # düşüş vetosu bugüne kadar YALNIZ kapanmış-işlem eğrisini okuyabiliyordu ve bunun sebebi
         # kendi yorumunda adıyla yazılıydı: "walk_forward o eğriyi DİLİM BAŞINA döndürmüyor".
         # Artık döndürüyor. Dilim, `_trades_search` ile BİREBİR aynı sınırlardır (embargolu alt
@@ -925,11 +960,11 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
         "oos_folds_full": folds_full, "oos_tail_risk_full": tail_full,
         "holdout_score": hold_d["score"], "holdout_detail": hold_d,
         "full_detail": res.detail(goal),
-        # ② AÇIK-POZİSYON DÜŞÜŞÜ (WP-M, 2026-08-01): TAM replay penceresinin ([is_start,
+        # AÇIK-POZİSYON DÜŞÜŞÜ: TAM replay penceresinin ([is_start,
         # holdout_end]) M2M eğrisi üzerinden. Dilim SEÇİLMEZ çünkü blok kapıya girmez ve dilim
         # seçmek "hangi pencerede kırmızı?" sorusunu rapor okuyucusundan gizlerdi; pencere
         # `pencere` alanında adıyla yazılıdır. `oos_detail.max_drawdown` bu eğriyi ZATEN
         # kapanmış-işlem eğrisiyle birleştirip tek sayıya indiriyor — bu blok o birleşmeden ÖNCEKİ
-        # M2M sayısını ayrı tutar (EDG-2026-003'ün "kapalı %9,7 / M2M %12,9" bulgusunun kalıcı hâli).
+        # M2M sayısını ayrı tutar ("kapalı %9,7 / M2M %12,9" bulgusunun kalıcı hâli).
         "mtm_dd_veto": mtm_dd_veto(res.equity),
     }

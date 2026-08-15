@@ -32,13 +32,13 @@ from . import config
 BLACKOUT_DAYS = 5   # no fresh entry within this many calendar days before a scheduled report
 
 # --------------------------------------------------------------------------------------------------
-# TAZELEME PENCERESİ SABİTLERİ — "2 GÜN MARJ" BULGUSUNUN KALICI VE BEYANLI HÂLİ (2026-08-01)
+# TAZELEME PENCERESİ SABİTLERİ — "2 GÜN MARJ" BULGUSUNUN KALICI VE BEYANLI HÂLİ
 # --------------------------------------------------------------------------------------------------
-# BULGU (temizlik turu C-avı, ROADMAP §4-④; ölçüm, tahmin değil): tazeleme penceresi [bugün-7,
+# BULGU (ölçüm, tahmin değil): tazeleme penceresi [bugün-7,
 # bugün+14], kadans HAFTALIK, BLACKOUT_DAYS = 5. Normal işleyişte bir sonraki tazelemeden hemen
 # ÖNCEKİ asgari ileri kapsama 14-7 = 7 gün olur; karartma 5 gün ister → marj yalnız 2 GÜN.
 #
-# KARAR (Rol-1, 2026-08-01 mikro-tur): İLERİ PENCERE 14 → 21. Yukarıdaki bulgunun ucuz çözümü
+# KARAR (Rol-1): İLERİ PENCERE 14 → 21. Yukarıdaki bulgunun ucuz çözümü
 # scheduler.py'nin `earnings_calendar_gave_up` dalında ZATEN adıyla yazılıydı ("ileri pencereyi
 # genişletmek; Nasdaq ucu ANAHTARSIZ ve ~15 istek — kota maliyeti ≈ 0") ve karar verildi.
 # Marj TÜRETİLDİĞİ için tek sabit değişti: 21 − 7 − 5 = 9 GÜN (2 değil). NE DEĞİŞMEDİ: karartma
@@ -62,17 +62,17 @@ BLACKOUT_DAYS = 5   # no fresh entry within this many calendar days before a sch
 # sözleşmesi) ve aynı dosyaya iki yazar çakışmadır. Sabitler burada TEK yerde ve tek modülün malı;
 # `config.py`ye taşınması istenirse üç satırlık bir taşımadır (türetme `margin_days`te kalır).
 REFRESH_BACK_DAYS = 7      # tazelemede geriye bakılan gün (PEAD çapası)
-REFRESH_FWD_DAYS = 21      # tazelemede ileriye bakılan gün (karartma penceresini besleyen uç; 14→21, 2026-08-01)
+REFRESH_FWD_DAYS = 21      # tazelemede ileriye bakılan gün (karartma penceresini besleyen uç; 14→21)
 REFRESH_CADENCE_DAYS = 7   # tazeleme kadansı — scheduler'ın HAFTALIK isocalendar kapısı (advance_once)
 
 # --------------------------------------------------------------------------------------------------
-# FMP YEDEĞİNE DÜŞME EŞİĞİ — KISMİ PENCERE (denetim C25 / FMP yarısı, 2026-08-02; OPERATÖR ONAYLI)
+# FMP YEDEĞİNE DÜŞME EŞİĞİ — KISMİ PENCERE (OPERATÖR ONAYLI)
 # --------------------------------------------------------------------------------------------------
 # ÖNCEKİ HÂL: `refresh` FMP'yi YALNIZ `not rows` (TAM boşluk) hâlinde deniyordu. Nasdaq ucu gün
 # başına sorgulanır ve düşen günü GÜN BAZINDA yutar; "20 iş gününün 19'u düştü" hâlinde tek gün
 # satır döndürdüğü sürece tur "başarı" sayılıyor ve yedek HİÇ denenmiyordu. Kaçan gün-diliminde
 # duyurulan bir rapor tarihi bir sonraki tazelemeye kadar BİLİNMEZ; `in_blackout` o sembolde (veri
-# yokken FAIL-OPEN) False döner ve motor bilanço gününe pozisyonla girer. Sayaç yarısı 2026-08-02'de
+# yokken FAIL-OPEN) False döner ve motor bilanço gününe pozisyonla girer. Sayaç yarısı daha önce
 # indi (`stats` + `earnings_refresh_window_partial`) ama o yalnız GÖRÜNÜRLÜKTÜ — hüküm yoktu.
 #
 # KARAR: gün kapsaması bu eşiğin ALTINDAYSA FMP yedeği DENENİR. Nasdaq'ın getirdiği satırlar
@@ -116,6 +116,8 @@ _LAST_WINDOW: dict = {}
 
 
 def _load() -> dict:
+    """`earnings.csv`i mtime-önbellekli okur: ticker → sıralı tekil tarih listesi ve (ticker, tarih) →
+    seans saati haritası. Dosya yoksa boş önbellek; dosya değişmediyse disk hiç okunmaz."""
     global _CACHE, _CACHE_MTIME, _TIMES
     path = config.STATE / "earnings.csv"
     if not path.exists():
@@ -147,7 +149,7 @@ def _load() -> dict:
                     if tm in ("bmo", "amc"):
                         times[(tkr, d)] = tm
     except Exception as e:
-        # YASA 4 (2026-07-21) — BU SESSİZLİK PARA KAYBETTİRİR: takvim boş dönerse kazanç karartması
+        # YASA 4 — BU SESSİZLİK PARA KAYBETTİRİR: takvim boş dönerse kazanç karartması
         # tamamen KAPANIR ve motor bilanço gününe pozisyonla girer. Hiçbir istisna yükselmez, hiçbir
         # test kırılmaz; yalnız "bugün karartma yok" der. Davranış korunuyor (boş takvim), sinyal var.
         try:
@@ -166,6 +168,7 @@ def _load() -> dict:
 
 
 def clear_cache() -> None:
+    """Takvim önbelleğini geçersiz kılar (bir sonraki `_load()` diskten yeniden okur)."""
     global _CACHE_MTIME
     _CACHE_MTIME = None
 
@@ -182,7 +185,7 @@ def report_time(ticker: str, on_date: str) -> str | None:
 def margin_days() -> int:
     """KARARTMA MARJI = ileri kapsama − kadans − karartma penceresi. Bugün: 21 − 7 − 5 = 9 GÜN.
 
-    (2026-08-01 ÖNCESİ 14 − 7 − 5 = 2 GÜNDÜ; ileri pencere kararla 21'e çıkarıldı — bkz. modül
+    (ÖNCEDEN 14 − 7 − 5 = 2 GÜNDÜ; ileri pencere kararla 21'e çıkarıldı — bkz. modül
     başındaki KARAR bloğu. Karartma semantiği DEĞİŞMEDİ; genişleyen yalnız FETCH penceresidir.)
 
     NE ÖLÇER: iki tazeleme arasındaki EN KÖTÜ anda (bir sonraki tazelemeden hemen önce) takvimin
@@ -230,13 +233,13 @@ def _pair(x) -> tuple:
 
 
 def refresh(tickers: list[str]) -> int:
-    """#5 — birleşik tazeleme: BİRİNCİL kaynak Nasdaq takvimi (anahtarsız, evren-boyundan bağımsız
+    """Birleşik tazeleme: BİRİNCİL kaynak Nasdaq takvimi (anahtarsız, evren-boyundan bağımsız
     ~15 istek: geriye REFRESH_BACK_DAYS [PEAD çapası] + ileriye REFRESH_FWD_DAYS [karartma
     penceresi]; marjı `margin_days()` söyler); Nasdaq boş dönerse FMP'ye düşülür (anahtar varsa;
     250 ticker = 250 istek = günlük kota — o yüzden yedek). Sonuç MEVCUT csv ile BİRLEŞTİRİLİR
     (kaynak değişimi geçmiş çapaları silmez).
 
-    BİRLEŞTİRME YASASI — İKİ DAL, TEK BEYAN (denetim hafif bulgusu, 2026-08-02). Denetim bu
+    BİRLEŞTİRME YASASI — İKİ DAL, TEK BEYAN (denetim hafif bulgusu). Denetim bu
     docstring'in yalnız BİR dalı anlattığını ve iki dalın da yanlış tarafta olduğunu ölçtü:
 
       (i) NASDAQ DALI YALNIZ EKLİYORDU. Kazanç tarihi REVİZE edilip kaydığında (modülün kendi PIT
@@ -255,7 +258,7 @@ def refresh(tickers: list[str]) -> int:
           Nasdaq'tan birikmiş tarihleri yazımdan sessizce düşüyordu — yani docstring'in "kaynak
           değişimi geçmiş çapaları silmez" cümlesi tam da kaynak değişimi anında ihlal ediliyor ve
           `days_since_report` (PEAD çapası) o sembollerde körelıyordu. YENİ: o yol da ÜST KÜME
-          kuralına çekildi (mevcut takvimin TAMAMI ∪ FMP satırları) — C25 kısmi-yolundaki
+          kuralına çekildi (mevcut takvimin TAMAMI ∪ FMP satırları) — kısmi-yolundaki
           "yedek Nasdaq'ı EZMEZ" deseninin `refresh_from_fmp`in KENDİ yazımına uygulanmış hâli.
 
     İKİ DEĞİŞİKLİĞİN KARARTMAYA ETKİSİ ZIT YÖNDEDİR ve bilerek öyledir: (ii) fail-open'ı KAPATIR
@@ -268,14 +271,14 @@ def refresh(tickers: list[str]) -> int:
     Karar yolunu BUGÜN etkilemez (`TIME_TIGHTEN=False`); alan birikmeye BUGÜN başlar çünkü geçmiş
     takvim geriye doğru zenginleşmez — bugün yazılmayan saat bilgisi bir daha gelmez.
 
-    KISMİ PENCERE ARTIK SESSİZ DEĞİL (denetim C25, 2026-08-02): Nasdaq ucu gün başına sorgulanır ve
+    KISMİ PENCERE ARTIK SESSİZ DEĞİL: Nasdaq ucu gün başına sorgulanır ve
     düşen günü GÜN BAZINDA yutar. Eskiden "20 iş gününün 19'u düştü" ile "hepsi geldi" buraya AYNI
     şekilde geliyordu — tek gün satır döndürdüğü sürece tur "başarı" sayılıyor, kaç gün-diliminin
     kaçtığı HİÇBİR yere yazılmıyordu; yeni duyurulan bir kazanç tarihi kaçan dilimde kalırsa
     `in_blackout` o sembolde (veri yokken fail-open) False döner ve motor bilanço gününe pozisyonla
     girer. Artık adaptör `stats` sayacını doldurur, eksik kapsama `earnings_refresh_window_partial`
     olarak UYARI basar ve sayılar `earnings_refreshed`e alan olarak geçer.
-    YEDEĞE DÜŞME EŞİĞİ ARTIK KISMİ PENCEREYİ DE KAPSIYOR (KOVA B, 2026-08-02, operatör onaylı):
+    YEDEĞE DÜŞME EŞİĞİ ARTIK KISMİ PENCEREYİ DE KAPSIYOR (operatör onaylı):
     kapsama `EARNINGS_FMP_FALLBACK_COVERAGE`ın (0,90) ALTINDAYSA FMP yedeği denenir ve düşüş
     `earnings_fallback_partial_window` ile BEYAN EDİLİR. Nasdaq'ın getirdiği satırlar ATILMAZ —
     yedek onların ÜSTÜNE değil, YANINA eklenir (nihai yazım her ikisinin ÜST KÜMESİDİR). Eşiğin
@@ -288,7 +291,7 @@ def refresh(tickers: list[str]) -> int:
     _gun: dict = {}
     fetched = _da.nasdaq_earnings_window(_s, _e, with_time=True, stats=_gun)
     _gun_dusen = _gun.get("dusen")
-    # PENCERENİN SAĞLIĞI KARAR YOLUNA BURADAN GEÇER (2026-08-03, Rol-1 A1). Eskiden bu ölçüm yalnız
+    # PENCERENİN SAĞLIĞI KARAR YOLUNA BURADAN GEÇER (Rol-1 kararı). Eskiden bu ölçüm yalnız
     # bir UYARI metnine giriyordu — yani kısmi pencere görünürdü ama hiçbir kapıyı bağlamıyordu.
     # Kaydı `calendar_untrustworthy()` okur. `kapsama` None ise ölçülmedi demektir ve None hiçbir
     # eşiği tetiklemez (bu modülün her yerinde aynı kural).
@@ -317,7 +320,7 @@ def refresh(tickers: list[str]) -> int:
         src = "fmp"
         n = refresh_from_fmp(tickers)
         if not n:
-            # YASA 4 — HER İKİ KAYNAK DA BOŞ (2026-07-26). Bu yol SESSİZ dönüyordu: `refresh` 0
+            # YASA 4 — HER İKİ KAYNAK DA BOŞ. Bu yol SESSİZ dönüyordu: `refresh` 0
             # döndürüyor, çağıran onu "yeni satır yok" diye okuyor ve takvim OLDUĞU GİBİ kalıyordu.
             # Ama takvim bayatladığında (gelecek tarih kalmadığında) `in_blackout` herkes için
             # False döner, yani karartma guard'ı FAIL-OPEN kapanır ve motor bilanço gününe
@@ -342,7 +345,7 @@ def refresh(tickers: list[str]) -> int:
     prev = _load()
     merged: dict = {(t, d): _TIMES.get((t, d)) for t, ds in prev.items() for d in ds}
 
-    # ---- KISMİ PENCEREDE FMP YEDEĞİ (C25 / FMP yarısı — eşik ve gerekçe: sabitin yanında) --------
+    # ---- KISMİ PENCEREDE FMP YEDEĞİ (eşik ve gerekçe: sabitin yanında) ---------------------------
     # HÜKÜM BURADA VERİLİR, ADAPTÖRDE DEĞİL: `nasdaq_earnings_window` yalnız SAYAR (kendi
     # docstring'inde beyanlı). Ölçülemeyen kapsama (None) eşiği tetiklemez — bkz. sabitin gerekçesi.
     _kapsama = _gun.get("kapsama")
@@ -406,7 +409,7 @@ def refresh(tickers: list[str]) -> int:
     for t, d, tm in rows:
         if tm or (t, d) not in merged:
             merged[(t, d)] = tm or merged.get((t, d))
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
+    # KAPI-DIŞI TAŞIMA: elle mkstemp+os.replace (fsync YOK, flock YOK) → store.write_text.
     # STATE'e GÖRELİ ad ("earnings.csv") → kilit refresh_from_fmp ile PAYLAŞILIR (iki yol AYNI dosyayı
     # yazar; mutlak ad ayrı kilide düşer = kilit yok). Biçim (CSV başlık + satırlar) BİREBİR korunur.
     # YASA-6 OKUYUCU: _load() (satır ~111) → PEAD çapası + kazanç-karartma guard (in_blackout).
@@ -420,11 +423,11 @@ def refresh(tickers: list[str]) -> int:
     obs.log("earnings_refreshed", source=src, new_rows=len(rows), total=len(merged),
             # SAAT ALANI KAÇ SATIRDA BİLİNİYOR — birikimin sayacı (ölçüm 2026-08-01: ~%34 bekleniyor)
             time_known=sum(1 for v in merged.values() if v),
-            # GÜN KAPSAMASI (C25): "yeni satır sayısı" tek başına kapsamayı ANLATMAZ — 1 gün cevap
+            # GÜN KAPSAMASI: "yeni satır sayısı" tek başına kapsamayı ANLATMAZ — 1 gün cevap
             # verip 19 gün düşse de `new_rows` pozitif görünür. Ölçülmediyse None + neden.
             gun_istenen=_gun.get("istenen"), gun_cevaplayan=_gun.get("cevaplayan"),
             gun_dusen=_gun.get("dusen"), gun_kapsama=_gun.get("kapsama"),
-            # KISMİ-PENCERE YEDEĞİ (KOVA B): None = eşik tetiklenmedi/ölçülemedi, 0 = denendi ama
+            # KISMİ-PENCERE YEDEĞİ: None = eşik tetiklenmedi/ölçülemedi, 0 = denendi ama
             # satır gelmedi (anahtar yok ya da kota) — iki olgu aynı sayıyla anlatılamaz.
             fmp_yedek=_fmp_yedek, fmp_yedek_esigi=EARNINGS_FMP_FALLBACK_COVERAGE,
             # İLERİ-YÖNLÜ REVİZYON: kaç hayalet GELECEK tarih emekliye ayrıldı. 0 = tur koştu,
@@ -440,7 +443,7 @@ def refresh_from_fmp(tickers: list[str]) -> int:
     çapasını hem MEVCUT kazanç-karartma guard'ını (bugüne dek boş veriyle no-op'tu) gerçek veriyle
     besler. Anahtar yoksa 0 döner; kısmi hata bir ticker'ı atlar, dosyayı bozmaz.
 
-    YAZIM ÜST KÜMEDİR (denetim hafif bulgusu, 2026-08-02 — `refresh` docstring'i (ii) ile AYNI yasa):
+    YAZIM ÜST KÜMEDİR (denetim hafif bulgusu — `refresh` docstring'i (ii) ile AYNI yasa):
     dosya BAŞTAN yazılır ama içeriği "MEVCUT takvimin TAMAMI ∪ bu turun FMP satırları"dır. Eskiden
     yalnız `failed` ticker'ların önbellek satırları kurtarılıyordu; yani BAŞARIYLA çekilen bir
     ticker'ın Nasdaq'tan birikmiş tarihleri sessizce DÜŞÜYORDU (`days_since_report` körelir,
@@ -466,7 +469,7 @@ def refresh_from_fmp(tickers: list[str]) -> int:
         _t.sleep(0.1)                                     # polite delay — refetch ile aynı görgü kuralı
     if not rows:
         return 0
-    # KISMİ BAŞARISIZLIK KORUMASI (adapters.fmp denetimi, tur 4 — 2026-07-21):
+    # KISMİ BAŞARISIZLIK KORUMASI (adapters.fmp denetimi):
     # Eskiden dosya, gelen ne varsa ONUNLA ÜZERİNE YAZILIYORDU. Kota pasın ortasında biterse
     # (bugün oldu) 100 ticker gelir, 150'si düşerdi; in_blackout() veri yokken FAIL-OPEN olduğu için
     # o 150 isimde KAZANÇ GÜNÜ işlem açılırdı — sert bir guard sessizce no-op'a dönerdi.
@@ -489,7 +492,7 @@ def refresh_from_fmp(tickers: list[str]) -> int:
     # kasıtlı — "kaç satır getirdim" ile "takvimde kaç satır var" aynı sayı değildir.
     _yazilacak = ({(t, d) for t, ds in prev.items() for d in ds}
                   | {(str(t).upper(), str(d)[:10]) for t, d in rows})
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): bkz. refresh() — STATE'e göreli "earnings.csv" adı kilidi
+    # KAPI-DIŞI TAŞIMA: bkz. refresh() — STATE'e göreli "earnings.csv" adı kilidi
     # refresh() ile PAYLAŞTIRIR (iki yol aynı dosyayı yazar). Biçim BİREBİR korunur.
     from . import store
     _csv = "ticker,date,time\n" + "".join(
@@ -501,17 +504,18 @@ def refresh_from_fmp(tickers: list[str]) -> int:
 
 
 def _bilinen_saat(bilinen: dict, t: str, d: str) -> str:
+    """Bilinen (ticker, tarih) çifti için seans saatini verir; bilinmiyorsa BOŞ dize — saat UYDURULMAZ."""
     return bilinen.get((t, d)) or ""
 
 
 # --------------------------------------------------------------------------------------------------
-# PIT BİRİKİM DEFTERİ — `state/history/earnings_snapshots.jsonl` (D kalemi, 2026-08-01)
+# PIT BİRİKİM DEFTERİ — `state/history/earnings_snapshots.jsonl`
 # --------------------------------------------------------------------------------------------------
-# SORUN (EDG-011'i ASKI'ya düşüren): `earnings.csv` TEK bir ANLIK GÖRÜNTÜdür. Haftalık tazeleme onu
+# SORUN (kazanç ölçüm kartını ASKI'ya düşüren): `earnings.csv` TEK bir ANLIK GÖRÜNTÜdür. Haftalık tazeleme onu
 # `os.replace` ile bütünüyle değiştirir; yani "bugün ne biliniyordu" sorusunun cevabı yalnız BUGÜN
 # için vardır. Kazanç takvimi, borsanın en çok REVİZE EDİLEN takvimlerinden biridir (tarih kayar,
 # şirket teyit eder, sağlayıcı düzeltir) — ve revizyonun kendisi ölçülebilir bir olgudur. Tarihsel
-# takvim hiç birikmediği için PIT'li bir kazanç ölçümü (EDG-011) bugün YAPILAMIYOR.
+# takvim hiç birikmediği için PIT'li bir kazanç ölçümü bugün YAPILAMIYOR.
 #
 # ÇÖZÜM: her tazelemeden SONRA o anki takvimin TAMAMI, fetch damgasıyla, EKLENİR. Semantik dar ve
 # net: "bu (ticker,date,time) üçlüleri, `fetch_date` gününde biliniyordu." Geriye dönük hiçbir şey
@@ -523,7 +527,7 @@ def _bilinen_saat(bilinen: dict, t: str, d: str) -> str:
 #
 # YASA 6 — OKUYUCU BEYANI: bugünkü tüketici `snapshot_stats()` → `/api/diagnostics` `risk` bloğu
 # (sayaç: kaç anlık görüntü, hangi aralık, kaç kayıt). ASIL tüketici GELECEKTEKİ ölçüm turlarıdır
-# (EDG-011 kartı yeniden açıldığında). Bu, YASA 6'nın yasakladığı "kimsenin bilmediği okunmayan
+# (kart yeniden açıldığında). Bu, YASA 6'nın yasakladığı "kimsenin bilmediği okunmayan
 # artefakt" değil, BEYAN EDİLMİŞ ve sayacı panoda duran bir BİRİKİM DEFTERİdir — tıpkı
 # `barsarchive`ın seans-içi arşivi gibi (aynı gerekçe, aynı desen).
 SNAPSHOT_FILE = "history/earnings_snapshots.jsonl"
@@ -605,7 +609,7 @@ def in_blackout(ticker: str, on_date: str, days: int = BLACKOUT_DAYS) -> bool:
     """True if `on_date` is within `days` calendar days *before* (or on) the ticker's next scheduled
     earnings date. Unknown ticker / no CSV -> False (never blocks when there is no information).
 
-    BMO DARALTMASI (yol var, `TIME_TIGHTEN` ile KAPALI — 2026-08-01): `on_date` raporun TAM günüyse
+    BMO DARALTMASI (yol var, `TIME_TIGHTEN` ile KAPALI): `on_date` raporun TAM günüyse
     ve kaynak o raporu "bmo" (seans öncesi) diye biliyorsa, baskı `on_date`in AÇILIŞINDAN ÖNCE
     düşmüştür; plan ise bir SONRAKİ açılışta girer, yani pozisyon baskıya maruz kalmaz. Saat
     bilinmiyorsa (satırların ~%66'sı) hiçbir şey daralmaz — None mantığı, uydurma yok.
@@ -629,11 +633,11 @@ def in_blackout(ticker: str, on_date: str, days: int = BLACKOUT_DAYS) -> bool:
 
 
 # --------------------------------------------------------------------------------------------------
-# FAIL-OPEN'IN BEYANI — kapsam-dışı sembolde karartma kapısı SESSİZCE geçirgendi (2026-08-01)
+# FAIL-OPEN'IN BEYANI — kapsam-dışı sembolde karartma kapısı SESSİZCE geçirgendi
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜM: evrenin 251 sembolünden 194'ü takvimde var, 57'si YOK. O 57'de `in_blackout` her zaman
 # False döner — "kontrol edildi, temiz" ile "HİÇ VERİ YOK" plan kaydında AYNI görünürdü
-# (`gate_checks.coverage` alanı 2026-07-21'de eklendi ama karar satırında, yani operatörün ve
+# (`gate_checks.coverage` alanı eklenmişti ama karar satırında, yani operatörün ve
 # panonun ilk baktığı `gate_reasons`ta, iz yoktu).
 # BU İŞARET BİR CEZA DEĞİL: veri yokluğu sembolün suçu değildir, karar yolu DEĞİŞMEZ (NO_GO yok,
 # REVIEW'e düşürme yok). Yalnız GÖRÜNÜRLÜK — kapının o plan için konuşamadığı yazılı olsun.
@@ -664,7 +668,7 @@ def coverage_tally(tickers) -> dict:
 
 def known(ticker: str) -> bool:
     """Bu sembol için takvimde HİÇ tarih var mı? in_blackout() False dönüyorsa iki şey demek olabilir:
-    'kontrol edildi, temiz' ya da 'hiç veri yok'. İkisi aynı şey DEĞİL (denetim turu 11)."""
+    'kontrol edildi, temiz' ya da 'hiç veri yok'. İkisi aynı şey DEĞİL."""
     return bool(_load().get((ticker or "").upper()))
 
 
@@ -696,9 +700,9 @@ def coverage(tickers: list | None = None) -> dict:
 
 
 # --------------------------------------------------------------------------------------------------
-# TAKVİM GÜVENİLMEZLİĞİ — FAIL-CLOSED SEMBOLE DEĞİL, TAKVİME BAĞLI (2026-08-03, Rol-1 kararı A1)
+# TAKVİM GÜVENİLMEZLİĞİ — FAIL-CLOSED SEMBOLE DEĞİL, TAKVİME BAĞLI (Rol-1 kararı)
 # --------------------------------------------------------------------------------------------------
-# ÖLÇÜLEN AYRIM (WP-D KALEM 3 raporu, research/olcumler/wpd_earnings_failopen/RAPOR.md):
+# ÖLÇÜLEN AYRIM (research/olcumler/wpd_earnings_failopen/RAPOR.md):
 #   "194/251 kapsama" bir KORUMA ölçüsü DEĞİL — önümüzdeki ~4 haftada rapor veren sembol sayısıdır.
 #   Kapsam-dışı 59 sembolün büyük çoğunluğu raporu UFKUN ÖTESİNDE olduğu için bilinmiyor ve raporu
 #   4 hafta ötede olan bir sembol zaten 5 günlük karartmaya GİREMEZ. Bu yüzden "sembol bilinmiyor →

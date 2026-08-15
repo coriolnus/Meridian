@@ -50,7 +50,7 @@ BACKOFF_BASE_S = 2.0             # 2, 4, 8 sn üstel geri çekilme
 SNAPSHOT_FILE = "massive_grouped_last.json"   # {date, fetched_at, bars:{T:{...}}} — süreçler arası tek çağrı
 VERIFY_FILE = "massive_verify.json"           # --dogrula ölçümünün SONUCU; write_enabled() bunu okur
 
-# --- TABAN ÖLÇÜMÜ: yazım kapısının dayandığı KANIT (Rol 1, 2026-07-29) -------------------------
+# --- TABAN ÖLÇÜMÜ: yazım kapısının dayandığı KANIT (Rol 1) -------------------------
 # Brief'in 2. maddesi "ayarlama (adjusted) tutarlılığı ÖLÇÜLECEK, varsayılmayacak" diyordu. Ölçümü
 # Rol 1 yaptı (operatör Massive'i Claude eklentisi olarak kurmuştu; MCP kanalı üzerinden canlı API).
 # Bu sabit, kapının HANGİ kanıta dayandığını koda yazar — kapı "öylesine açık" değil, ATIFLI ve
@@ -126,6 +126,8 @@ def available() -> bool:
 
 
 def health() -> dict:
+    """Massive HTTP yolunun son durumunun kopyası — "anahtar var mı" değil, çağrı GERÇEKTEN üretti mi
+    sorusunun cevabı (available() ile ayrımı budur)."""
     return dict(_HEALTH)
 
 
@@ -159,6 +161,9 @@ class MassiveError(RuntimeError):
     istekten AYIRT ETMEK zorundadır — aksi hâlde tek bir reddi çağrı sayısı kadar loglar."""
 
     def __init__(self, reason: str, status: int | None = None, kapi: bool = False):
+        """Hatayı makine-okunur `reason`, HTTP `status` ve `kapi` bayrağıyla kurar. `kapi=True`
+        AĞA HİÇ ÇIKILMADI demektir (gün-içi yetki kapısı isteği baştan reddetti) — çağıran bunu
+        gerçekten atılıp patlamış bir istekten ayırmak zorundadır."""
         super().__init__(f"massive isteği başarısız: {reason}")
         self.reason = reason
         self.status = status
@@ -166,7 +171,7 @@ class MassiveError(RuntimeError):
 
 
 # ==================================================================================================
-# GÜN-İÇİ YETKİ KAPISI (v186, 2026-08-04) — 401/403 GEÇİCİ DEĞİLDİR, YENİDEN DENENMEZ
+# GÜN-İÇİ YETKİ KAPISI — 401/403 GEÇİCİ DEĞİLDİR, YENİDEN DENENMEZ
 # ==================================================================================================
 # ÖLÇÜM (state/events.jsonl, 2026-07-29 21:15:12Z → 23:51:08Z): AYNI seans (`date=2026-07-30`) için
 # 24 kez `massive_grouped_failed reason="HTTP 403"`. Ardışık damgalar arası ~300 sn — yani tam olarak
@@ -197,6 +202,8 @@ _YETKI_RET_DUYURULDU: dict[str, str] = {}   # {uç ailesi: UTC gün} — gerekç
 
 
 def _bugun_utc() -> str:
+    """Bugünün UTC tarihi (ISO `YYYY-MM-DD`). Gün-içi yetki kapısının gün damgası budur: gün dönünce
+    reddedilen yol BİR KEZ yeniden denenir."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).date().isoformat()
 
@@ -262,7 +269,7 @@ def _get(path: str, params: dict | None = None, timeout: float = 30.0,
 
     Anahtar `Authorization: Bearer` BAŞLIĞINDA gider, sorgu parametresinde DEĞİL — parametre olsaydı
     her hata metni ve her ara-vekil logu anahtarı taşırdı (FMP tarafında tam olarak bu yüzden
-    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır — ve v186'dan beri
+    `_redact` yazılmıştı). 401/403 geri çekilmeyle çözülmez, hemen fırlatılır — ve artık
     çağrılar ARASINDA da hatırlanır (bkz. GÜN-İÇİ YETKİ KAPISI).
 
     `kapi_atla=True` YALNIZ operatörün elle tetiklediği ölçüm içindir (`ping`): bir insan "test et"
@@ -316,7 +323,7 @@ def _get(path: str, params: dict | None = None, timeout: float = 30.0,
             reason = f"HTTP {status}"
             _HEALTH["fails"] += 1
             if status in YETKI_RET_KODLARI:
-                # v186: hüküm bu ÇAĞRIYI değil GÜNÜ bağlar. Ölçüm: aynı seans için 24 kez, 300 sn
+                # Hüküm bu ÇAĞRIYI değil GÜNÜ bağlar. Ölçüm: aynı seans için 24 kez, 300 sn
                 # arayla, tamamen boşuna (bkz. GÜN-İÇİ YETKİ KAPISI bloğu).
                 _yetki_reddi_yaz(path, status)
             break
@@ -395,6 +402,8 @@ def all_tickers(limit: int = 1000, active: bool = True) -> list[dict] | None:
 
 
 def _warn(event: str, **fields) -> None:
+    """Uyarı olayını `obs.warn`a geçiren ince sarmalayıcı (obs geç içe aktarılır). Kayıt kanalının
+    kendisi düşerse sessizce yutar — telemetri denemesi çağıranın kararını ASLA düşüremez."""
     try:
         from .. import obs
         obs.warn(event, **fields)
@@ -457,6 +466,8 @@ def to_frame(rows: list[dict], date=None):
 
 # ---------------------------------------------------------------- günlük anlık görüntü (tek çağrı)
 def _store():
+    """`meridian.store` modülünü geç (tembel) içe aktarıp döndürür — ağır/döngüsel içe aktarmayı
+    modül yükleme anından uzak tutmak için. Anlık görüntü ve ölçüm dosyaları bu kapıdan geçer."""
     from .. import store
     return store
 
@@ -528,6 +539,9 @@ def snapshot(date: str | None = None, max_back: int = 3, end=None) -> dict:
 
 
 def _read_snapshot_disk() -> dict:
+    """Süreçler arası paylaşılan grouped anlık görüntüsünü diskten okur
+    (state/massive_grouped_last.json). Okunamazsa boş sözlük — en kötü ihtimalle bir çağrı fazladan
+    atılır, karar etkilenmez."""
     try:
         return _store().read_json(SNAPSHOT_FILE, {}) or {}
     except Exception:
@@ -536,6 +550,9 @@ def _read_snapshot_disk() -> dict:
 
 
 def _write_snapshot_disk(date: str, bars: dict) -> None:
+    """Seansın grouped barlarını disk önbelleğine yazar (tarih, sembol sayısı, UTC çekim damgası,
+    barlar) ki diğer süreçler aynı günü tekrar sormasın. Yazım başarısızlığı YUTULMAZ: `_warn` ile
+    `massive_snapshot_write_failed` olayı basılır."""
     import datetime as _dt
     try:
         _store().write_json(SNAPSHOT_FILE, {
@@ -594,7 +611,7 @@ def covers(start: str) -> bool:
 def reset_cache() -> None:
     """Süreç-içi anlık görüntü memosunu (ve başarısızlık soğumasını) temizle — testler, gün dönümü.
 
-    YETKİ DEFTERİ DE SİLİNİR (v186) ve gerekçesi diğer ikisiyle AYNI DEĞİLDİR, o yüzden yazılı:
+    YETKİ DEFTERİ DE SİLİNİR ve gerekçesi diğer ikisiyle AYNI DEĞİLDİR, o yüzden yazılı:
     üretimdeki tek çağıran `scheduler.advance_once`ın "yeni seansın kovalaması BAŞLARKEN" dalıdır
     (seans başına bir kez). Yani kapı yeni bir seansta bir kez daha ölçülür — "günde bir kez dene"
     yasasının seans sınırındaki ikizi, ve ücreti tek bir istektir."""
@@ -605,6 +622,8 @@ def reset_cache() -> None:
 
 # ---------------------------------------------------------------- yazım kapısı (ölçüm → karar)
 def verify_state() -> dict:
+    """`--dogrula` ölçümünün diskteki sonucunu okur (state/massive_verify.json); write_enabled()
+    kapısının yerel kanıtı budur. Okunamazsa boş sözlük — kapı KAPALI sayılır (muhafazakâr taraf)."""
     try:
         return _store().read_json(VERIFY_FILE, {}) or {}
     except Exception:
@@ -652,7 +671,7 @@ def write_enabled() -> bool:
         return taban        # ölçüm yok / yetersiz örneklem / ölçülemedi → ÇÜRÜTME DEĞİL, tabana dön
     if int(v.get("samples") or 0) < VERIFY_MIN_SAMPLES:
         return taban        # zayıf onay da çürütme değildir
-    # BAYATLIK ≠ ÇELİŞKİ (2026-07-29). İlk yazımda bayat ölçüm kapıyı KAPATIYORDU ve bu sessiz bir
+    # BAYATLIK ≠ ÇELİŞKİ. İlk yazımda bayat ölçüm kapıyı KAPATIYORDU ve bu sessiz bir
     # ZAMAN BOMBASIYDI: 30 gün sonra yazım modu kendiliğinden kapanır, zincir sembol-başına FMP'ye
     # döner ve kota yağmuru (250 istek/tazeleme) hiçbir şey değişmemiş gibi geri gelirdi — kimse de
     # sebebini bilmezdi. Ölçümün ESKİMESİ, ölçeklerin AYRIŞTIĞININ kanıtı değildir. Doğru davranış:
@@ -737,6 +756,9 @@ def _cache_closes(ticker: str, since: str) -> dict:
 
 
 def _massive_closes(ticker: str, start: str, end: str) -> dict | None:
+    """Massive'den [start, end] aralığının kapanışlarını {ISO tarih: close} olarak getirir
+    (ayarlama tutarlılık ölçümünün Massive tarafı). İstek başarısızsa None — HATA≠BOŞ:
+    boş sözlük "veri yok", None "ölçülemedi" demektir."""
     rows = custom_bars(ticker, start, end)
     if rows is None:
         return None
@@ -749,6 +771,8 @@ def _massive_closes(ticker: str, start: str, end: str) -> dict | None:
 
 
 def _fmp_closes(ticker: str, since: str) -> dict:
+    """FMP historical-EOD'den `since` gününden itibaren kapanışları {ISO tarih: close} olarak toplar
+    (doğrulamanın isteğe bağlı ikinci referansı; SEMBOL BAŞINA 1 FMP İSTEĞİ). Biçimsiz satır atlanır."""
     from . import fmp
     out = {}
     for r in fmp.historical_eod(ticker) or []:
@@ -854,7 +878,7 @@ def ping() -> dict:
     if not available():
         return {"ok": False, "detail": f"{KEY_NAME} girilmemiş"}
     try:
-        # KAPIYI ATLA (v186): operatör "Test et"e bastığında ölçüm İSTEMİŞTİR. Gün-içi yetki
+        # KAPIYI ATLA: operatör "Test et"e bastığında ölçüm İSTEMİŞTİR. Gün-içi yetki
         # kapısından cevap vermek, hiç istek atmadan "ölçtüm" demek olurdu (uydurma yasağı) — ve
         # tam da anahtar/plan DÜZELTİLDİKTEN sonra basılan düğme, düzelmeyi göremezdi.
         d = _get("/v3/reference/tickers", {"market": "stocks", "limit": 1}, timeout=12.0,
@@ -878,6 +902,9 @@ def ping() -> dict:
 
 
 def status() -> dict:
+    """Panoya tek satırlık sağlayıcı durumu: anahtar/mod, yazım kapısının açık olup olmadığı ve
+    HANGİ kanıta dayandığı (yerel ölçüm mü Rol 1 tabanı mı), son doğrulama hükmü, hız limiti ve
+    geçmiş derinliği. Ağa GİTMEZ (canlı test için ping() vardır)."""
     v = verify_state()
     return {"provider": "Massive", "available": available(), "mode": mode(),
             "write_enabled": write_enabled(), "basis": verify_basis(),
@@ -889,6 +916,10 @@ def status() -> dict:
 
 # ---------------------------------------------------------------- CLI
 def main(argv=None) -> int:
+    """CLI girişi: --durum (ağ yok), --anlik (TEK grouped çağrısı + özet), --dogrula (ayarlama
+    tutarlılık ölçümü; --fmp ile FMP kıyası, --sembol/--gun ile kapsam) — yazım kapısının hükmünü
+    bu ölçüm yazar. Sonuç JSON basılır; hüküm "uyumsuz"/"olculemedi" ise 1, argümansız çağrıda 2,
+    aksi hâlde 0 döner."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.adapters.massive",
         description="Massive EOD adaptörü. AĞ ÇAĞRISI YALNIZ BURADAN (ve zincirin artımlı yolundan).")

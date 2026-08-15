@@ -40,11 +40,12 @@ CORE_NEVER = {"pre-trade-discipline-gate", "position-sizer", "backtest-expert"}
 
 
 def _skills_root() -> str:
+    """Depo içindeki `skills/` kökünün mutlak yolunu verir."""
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills")
 
 
 def _repo_skill_dir(name: str) -> str:
-    """Skill adından dizin — ADI DOĞRULAYARAK (denetim turu 29, 2026-07-21).
+    """Skill adından dizin — ADI DOĞRULAYARAK.
 
     Eskiden ad doğrudan os.path.join'e giriyordu: `../../..` içeren bir ad skills/ dışına çıkar ve
     apply_revision o yolda DOSYA DEĞİŞTİRİRDİ (os.replace). Ad panodan geliyor; yetki gerekiyor ama
@@ -133,6 +134,8 @@ def revisions() -> list[dict]:
 
 
 def pending_drafts() -> list[dict]:
+    """Bekleyen (status=draft) revizyon kayıtlarını verir. `skill` alanı olmayan kayıtlar DIŞLANIR —
+    adsız kayıt panoyu/api'yi düşürürdü."""
     # `skill` alanı ŞART: api/gelen kutusu r["skill"] ile okuyor — adsız bir kayıt orayı 500 yapardı.
     return [r for r in revisions() if r.get("status") == "draft" and r.get("skill")]
 
@@ -182,7 +185,7 @@ def draft_revision(skill_name: str) -> dict | None:
             rationale = line.split(":", 1)[1].strip()[:300]
             break
     draft_path = path + ".v2-draft"
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): düz open(w) → store.write_text (atomik tmp+fsync+flock). NEDEN
+    # KAPI-DIŞI TAŞIMA: düz open(w) → store.write_text (atomik tmp+fsync+flock). NEDEN
     # ATOMİK ŞART: yarım/sıfır-baytlık taslak, operatör ONAY YOLUNDA os.replace ile CANLI SKILL.md'ye
     # taşınır → ajan bozuk skill okur. draft_path skills/ altında (STATE DIŞI) → store mutlak adı
     # olduğu gibi kullanır; tek yazar (bu fonksiyon) için kilit yeterli. YASA-6 OKUYUCU: onay yolu
@@ -263,6 +266,8 @@ def apply_revision(skill_name: str) -> dict:
 
 
 def reject_revision(skill_name: str) -> dict:
+    """Bir skill'in revizyon taslağını reddeder: `SKILL.md.v2-draft` dosyasını siler ve defterdeki draft
+    kayıtlarını `rejected` yapar. Ad doğrulaması başarısızsa hiçbir şey silinmez ve `ok=False` döner."""
     try:
         path = os.path.join(_repo_skill_dir(skill_name), "SKILL.md.v2-draft")
     except ValueError as e:

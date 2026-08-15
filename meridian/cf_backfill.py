@@ -122,7 +122,7 @@ def _plans_for_session(d, dstr, per, idx, params, by_regime, goal, version, eg: 
         # desen; `plans` listesine ve cf defterine yazılan sözlük `plan`ın kendisidir).
         _gate_plan = {**plan, **guard.y3_plan_inputs(plan, equity=START_EQUITY, size_fn=_SIZE_FN)}
         verdict, reasons = guard.classify_gate(_gate_plan, flat_pf, rj, goal, eff)
-        # ---- KARDEŞ-PIT DÜZELTMESİ (2026-08-03) — `backtest.replay`in 89d4497'deki kararı 2'sinin
+        # ---- KARDEŞ-PIT DÜZELTMESİ — `backtest.replay`in kararı 2'sinin
         # BİREBİR KARDEŞİ. Burada eskiden `earnings.in_blackout(c["ticker"], dstr)` vardı ve `dstr`
         # 2022→bugün aralığındaki TARİHSEL bir seanstı; `state/earnings.csv` ise PIT DEĞİL, bugünün
         # ~21 günlük İLERİ-PENCERE snapshot'ı (sembol başına 1,0 tarih; geçmiş çapa biriktirmiyor).
@@ -171,7 +171,7 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
             continue
         try:
             df, _ = data_adapter.sanitize_bars(pd.read_csv(cp, parse_dates=["date"]), t)
-            # BÜTÜNLÜK DEFTERİ (2026-07-31, hayalet-round-2): çözülmemiş ölçek/kimlik kırılmasından
+            # BÜTÜNLÜK DEFTERİ (hayalet-round-2): çözülmemiş ölçek/kimlik kırılmasından
             # önceki dönem cf evreninden düşer — `component_ic` ile AYNI çağrı, aynı defter. cf
             # satırları geçmiş seansların KARŞI-OLGUSUdur; yanlış ölçekte bir geçmiş, olmamış bir
             # işlemin "ne olurdu"sunu üretir ve tablo o uydurmayı gerçek gibi taşır.
@@ -179,7 +179,7 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
             if df is not None and len(df) > 320:
                 per[t] = df.set_index("date").sort_index()
         except Exception as e:
-            # YASA 4 (2026-07-21): `continue` ticker'ı karşı-olgu evreninden SESSİZCE düşürür —
+            # YASA 4: `continue` ticker'ı karşı-olgu evreninden SESSİZCE düşürür —
             # cf kapsaması küçülür, hiçbir hata görünmez ve "cf neden bu kadar az satır üretti?"
             # sorusu cevapsız kalır. Davranış aynı (atla), ama artık kim atlandı belli.
             obs.warn("cf_bars_unreadable", ticker=t, error=f"{type(e).__name__}: {e}")
@@ -198,7 +198,7 @@ def run(start: str | None = None, end: str | None = None, progress_every: int = 
         sessions = [d for d in sessions if str(d.date()) <= end]
 
     n_open = 0
-    # KAZANÇ-KAPISI SAYACI (2026-08-03, kardeş-PIT). YASA 6: üretilen kanıt TÜKETİLİR — bu sayaç
+    # KAZANÇ-KAPISI SAYACI (kardeş-PIT). YASA 6: üretilen kanıt TÜKETİLİR — bu sayaç
     # `out`a girer, `cf_backfill_done` olayına yazılır ve defteri okuyan her yer "bu tabloda karartma
     # etkisi SIFIRDIR, çünkü kapı hiç konuşmadı" bilgisini oradan görür. Sessiz sıfır değil, beyanlı.
     eg: dict[str, int] = {}

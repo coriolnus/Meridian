@@ -56,13 +56,17 @@ class IntradayConsumer:
     """Tek tüketici (barfeed callback'i). Kendi thread'i YOK — barfeed daemon thread'inde koşar."""
 
     def __init__(self):
+        """Tüketiciyi sıfır sayaçlarla kurar: olay/karar sayaçları, izlenen nüfus, iki kolun gölge
+        sayaçları, 4b gönderim sayacı ve atlama nedenleri.
+
+        Hepsi SÜREÇ-İÇİdir (restart'ta sıfırlanır); kalıcı iz defterlerdedir."""
         self.events_handled = 0
         self.decisions_written = 0
         self.last_decision_at: str | None = None
         self.last_error: str = ""
         self.watched = 0
         self.watched_planned = 0        # ilgi kümesinin PLAN nüfusundan geleni (silahlanma kuraklığı görünür olsun)
-        # NÜFUS AYRIMI SAYAÇTA (2026-07-30): defterin `fired` toplamı artık SİLAHSIZ planları da
+        # NÜFUS AYRIMI SAYAÇTA: defterin `fired` toplamı artık SİLAHSIZ planları da
         # içeriyor. Dış tüketici (api) toplamı bölmeden okuduğu için, ayrımı ÜRETİCİ tarafında
         # sayıyoruz — yoksa panodaki "fired" sayısı sessizce anlam değiştirir ve kimse görmez.
         # Bunlar SÜREÇ-İÇİ sayaçlardır (restart'ta sıfırlanır); defter toplamı api'de kalır.
@@ -73,7 +77,7 @@ class IntradayConsumer:
         # panoda o adla okunuyor (app.js "gölge kararı"). Yeni kolu ona eklemek, silahli kolun
         # sayımını değiştirmek olurdu — kartın derhal geri alma sebebi.
         self.shadow_planli_written = 0
-        # FAZ 4B SAYACI (2026-08-11): gönderilen GERÇEK bracket sayısı — gölge sayaçlarından AYRI
+        # FAZ 4B SAYACI: gönderilen GERÇEK bracket sayısı — gölge sayaçlarından AYRI
         # (gölge ölçümdür, bu icradır; ikisini tek sayaçta toplamak kartın kill#3 sınıfı bir
         # anlam kaymasıdır). Süreç-içi; kalıcı iz E2 defteri + olay defterindedir.
         self.submitted_4b = 0
@@ -81,6 +85,9 @@ class IntradayConsumer:
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
     def _interest_set(self, pf: dict, planned: dict) -> set:
+        """İlgi kümesi: günün planları ∪ açık pozisyonlar ∪ silahlı planlar (hepsi BÜYÜK harf ticker).
+
+        Salt-okuma; bu kümenin dışındaki semboller olay akışında görmezden gelinir."""
         out = set(planned)
         for t in (pf.get("positions") or {}):
             out.add(str(t).upper())
@@ -92,6 +99,9 @@ class IntradayConsumer:
 
     @staticmethod
     def _armed_plan(tk: str, pf: dict) -> dict | None:
+        """Portföyün `armed` listesinde bu ticker'a ait plan varsa onu döner, yoksa None.
+
+        Silahlı nüsha kararı üreten kopyadır (keşif sondası boyutu, gate_reasons onda yaşar)."""
         for pl in (pf.get("armed") or []):
             if str(pl.get("ticker", "")).upper() == tk:
                 return pl
@@ -110,7 +120,7 @@ class IntradayConsumer:
         pdate = pf.get("last_date")
         if not pdate:
             return {}
-        # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): plan defteri SQLite'a taşındığında
+        # DAMGA ARTIK `store.stamp`: plan defteri SQLite'a taşındığında
         # dosya `.migrated` ekiyle donar; mtime tabanlı önbellek anahtarı bir daha DEĞİŞMEZ ve
         # gözlem katmanı sonsuza kadar ilk turun plan nüfusunu gösterirdi. (0, 0) = defter yok.
         mt = store.stamp(PLANS_FILE)
@@ -138,6 +148,12 @@ class IntradayConsumer:
             obs.warn("intraday_event_failed", error=self.last_error)
 
     def _handle(self, fields: dict) -> None:
+        """Tek bir barfeed olayını işler: seans/HALT kapılarını geçer, ilgi kümesini kurar ve olaydaki
+        her ilgili sembolü `_handle_symbol`a verir.
+
+        FAIL-CLOSED: RTH dışıysa (takvim yoksa dahil) ya da kill-switch açıksa hiçbir şey yapmaz,
+        yalnız `skipped` sayacını artırır. Olay başına TEK karar anı kullanılır (çapraz-sembol
+        tutarlılığı)."""
         as_of = barclock.now()                          # olay başına TEK karar anı (çapraz-sembol tutarlı)
         if not barclock.is_market_open(as_of):          # RTH dışı (mcal yok → fail-closed)
             self.skipped["session"] += 1
@@ -157,6 +173,13 @@ class IntradayConsumer:
                 self._handle_symbol(tk, as_of, pf, armed, planned)
 
     def _handle_symbol(self, tk: str, as_of, pf: dict, armed: bool, planned: dict) -> None:
+        """Tek sembolün gözlem/karar turu: sıcak durumdan barları okur, yalnız KAPANMIŞ ve taze
+        barları alır, plan varsa tetik-geçişini ölçer ve kararı gözlem defterine yazar.
+
+        Tetik kesildiyse iki AYRI kola gider: silahlı plan → gölge kaydı (+ INTRADAY_ARM açıksa
+        Faz 4b gerçek gönderim denemesi), silahlanmamış GO/REVIEW planı → ayrı planlı-kol defteri.
+        Bar yoksa/bayatsa sembol atlanır, tur DÜŞMEZ; kol hataları yutulmaz, sayaç + uyarı ile
+        görünür."""
         raw = hotstate.read_bars(tk, INTRADAY_LOOKBACK)
         if not raw:                                     # Redis down / bar yok → sembol atlanır, tur düşmez
             self.skipped["no_bars"] += 1
@@ -259,13 +282,13 @@ class IntradayConsumer:
             except Exception as e:
                 self.last_error = f"shadow_planli: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_planli_failed", ticker=tk, error=self.last_error)
-        # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol, 2026-08-11). Eski
+        # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol). Eski
         # `intraday_arm_flag_on_but_4b_not_built` uyarısı kaldırıldı: cümlesi ("4b uygulanmadı")
         # artık YANLIŞ olurdu ve yanlış bir uyarı, susan bir uyarıdan tehlikelidir. Bayrak açıkken
         # gönder(eme)me artık sessiz değil — her dal kendi olayını yazar (intraday_4b_*).
 
 
-    # ---- FAZ 4B — GERÇEK İNTRADAY GÖNDERİM (İCRA turu, operatör onayı 2026-08-11) --------------
+    # ---- FAZ 4B — GERÇEK İNTRADAY GÖNDERİM (operatör onayı 2026-08-11) -------------------------
     def _faz4b(self, plan: dict, satir: dict | None, tk: str, pf: dict, as_of) -> None:
         """Tetik kesişimi + INTRADAY_ARM → TEK KAPIDAN gerçek bracket gönderimi.
 
@@ -363,6 +386,7 @@ _CONSUMER: IntradayConsumer | None = None
 
 
 def consumer() -> IntradayConsumer:
+    """Süreçteki TEK tüketiciyi döner, yoksa ilk çağrıda kurar (tembel singleton)."""
     global _CONSUMER
     if _CONSUMER is None:
         _CONSUMER = IntradayConsumer()

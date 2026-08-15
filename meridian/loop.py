@@ -43,7 +43,7 @@ EXPLORE_MAX_POS = 5        # öğrenme debisi (operatör, 2026-07-20 akşam): k�
 EXPLORE_TOTAL_R = 1.25     # 5 × 0.25R — toplam keşif riski hâlâ hesabın %1.25'i (kâğıt)
 MIRROR_DRIFT_TOL = 0.005   # >0.5% gap between internal sim fill and actual Alpaca fill → mirror_drift alarm
 
-# ---- E2: GİRİŞ İCRA / SLİPAJ DEFTERİ (WP-E, kart EXE-2026-001, 2026-07-31) --------------------
+# ---- E2: GİRİŞ İCRA / SLİPAJ DEFTERİ ----------------------------------------------------------
 # NEDEN AYRI DEFTER: `trades.jsonl` KAPANMIŞ işlemi yazar; girişin İCRASI (hangi yasa, hangi limit,
 # doldu mu, dolmadıysa neden, dolduysa resmî açılışa göre kaç bps) orada yeri olmayan ve çoğu zaman
 # HİÇ KAPANMAYAN bir olgudur — kaçan bir giriş asla bir trade satırı doğurmaz, yani mevcut deftere
@@ -53,11 +53,11 @@ MIRROR_DRIFT_TOL = 0.005   # >0.5% gap between internal sim fill and actual Alpa
 # ayrıca E3 kalibratörü (analytics.pessimistic_band_update) ampirik bandı buradan üretir.
 ENTRY_LEDGER = "entry_execution.jsonl"
 ENTRY_LEDGER_CAP = 4000    # satır tavanı — defter büyür, sonsuza dek değil
-# KALEM 4 (2026-08-09): iç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir — dolum fiyatı
+# İÇ-MOTOR TOTOLOJİSİ: iç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir — dolum fiyatı
 # açılıştan SABİT slippage ile türetilir (broker.fill_entry: base_fill = açılış × (1+slippage_bps/1e4)
 # + modellenmiş likidite etkisi), gerçek bir piyasa dolumu değildir. Açılışa göre bps ölçmek tanımı
 # gereği slippage_bps sabitini geri üretir. UYDURMA YASAĞI + ÖLÇÜLEMEDİ≠0 → satıra None + bu beyan
-# yazılır (E1 grid'i EXE-2026-001 bu bacağı KAPSAMAZ; o `fill_vs_limit_bps` limit-bacağını ölçer).
+# yazılır (E1 grid'i bu bacağı KAPSAMAZ; o `fill_vs_limit_bps` limit-bacağını ölçer).
 IC_ACILIS_TOTOLOJI_BEYAN = (
     "ÖLÇÜLEMEDİ: iç-motor dolumu açılıştan SABİT slippage ile türetiliyor "
     "(base_fill = açılış × (1+slippage_bps/1e4) + likidite etkisi), gerçek piyasa dolumu DEĞİL — "
@@ -68,7 +68,7 @@ def _entry_exec_write(row: dict) -> None:
     """E2 defterine tek satır. ASLA döngüyü bozmaz (ölçüm katmanı kararı bloklamaz), ama sessizce
     de kaybolmaz: yazım düşerse olay defterine uyarı düşer.
 
-    KİLİT (KALEM 8, 2026-08-09): append `file_lock(ENTRY_LEDGER)` altında. `store.append_jsonl`in
+    KİLİT: append `file_lock(ENTRY_LEDGER)` altında. `store.append_jsonl`in
     dosya dalı KİLİTSİZdir (store.py) ve aynı deftere `_entry_exec_trim`/`_patch_entry_slippage`
     OKU-DEĞİŞTİR-YAZ uygular; kilit olmadan bir trim/patch, araya düşen bir append'i EZERDİ (write
     tüm defteri yeniden yazar). Üç E2 yazarı da aynı kilidi paylaşır — `_save_broker`ın PORTFOLIO
@@ -111,7 +111,7 @@ def _reject_class(detail, veto=None, reachable=None) -> str:
 def _entry_exec_trim() -> None:
     """Tavanı aşan defteri en yeni ENTRY_LEDGER_CAP satıra indirir (döngü sonunda, ucuz).
 
-    KİLİT (KALEM 8): oku-değiştir-yaz TEK kritik bölge — read ile write `file_lock(ENTRY_LEDGER)`
+    KİLİT: oku-değiştir-yaz TEK kritik bölge — read ile write `file_lock(ENTRY_LEDGER)`
     altında; araya bir append/patch girip yeni satırı kaybettiremez."""
     try:
         with store.file_lock(ENTRY_LEDGER):
@@ -131,7 +131,7 @@ class _MirrorUnreachable(Exception):
 
 
 # ==================================================================================================
-# AYNA ÇIKIŞ KUYRUĞU (C9, denetim 2026-08-02) — İÇ MOTORUN ÇIKIŞ KARARI AYNAYA İLETİLİR
+# AYNA ÇIKIŞ KUYRUĞU — İÇ MOTORUN ÇIKIŞ KARARI AYNAYA İLETİLİR
 # ==================================================================================================
 # BULGU: `pending_exits` → `close_position` yolu (time_stop / regime_flip / giveback / erken itlaf)
 # YALNIZ iç defteri kapatıyordu. Aynadaki bracket TP/SL taşıdığı için pozisyon AÇIK kalıyor,
@@ -148,15 +148,15 @@ class _MirrorUnreachable(Exception):
 MIRROR_EXIT_KEY = "mirror_exit_pending"
 
 # ==================================================================================================
-# ÇIKIŞ DOLUM-YAMASI KUYRUĞU (B1+B2, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
+# ÇIKIŞ DOLUM-YAMASI KUYRUĞU (teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
 # ==================================================================================================
 # İKİ BOŞLUK, TEK MEKANİZMA:
-#   B1 — karar-çıkışı dolum körlüğü: `DELETE /v2/positions` kapatması coid'i Alpaca-üretimi YENİ bir
+#   "karar" kolu — karar-çıkışı dolum körlüğü: `DELETE /v2/positions` kapatması coid'i Alpaca-üretimi YENİ bir
 #        market emri doğurur; trades-yaması yalnız `by_coid[plan_id]`in bacaklarını okuduğu için o
 #        dolum HİÇBİR deftere akmıyordu (fotoğrafta kapanışların ~%38'i — slipaj örneklemi sistematik
 #        olarak TP/SL-bacağına yanlıydı). Artık kapatma cevabındaki emir kimliği (`close_order_id`)
 #        kuyruğa yazılır ve reconcile o emrin `filled_avg_price`ını okuyup satırı yamalar.
-#   B2 — tek-atış yaması: eski (1.3) yalnız AYNI TURDA kapananlara bakıyordu; kapanış turundaki API
+#   "bacak" kolu — tek-atış yaması: eski (1.3) yalnız AYNI TURDA kapananlara bakıyordu; kapanış turundaki API
 #        arızası ya da bacağın FARKLI GÜNDE dolması yamayı SONSUZA DEK kaybediyordu (E2'nin giriş
 #        yarısı her tur yeniden denerken çıkış yarısı denemiyordu — asimetri). Kuyruk kalıcıdır
 #        (_save_broker anahtarı), her reconcile turunda yeniden denenir, tavana varınca VAZGEÇİŞ
@@ -170,9 +170,9 @@ EXIT_FILL_CAP = 80          # kuyruk tavanı (kapanış debisi küçük; taşma 
 def _exit_fill_kaydet(meta: dict, plan_id, ticker, *, kaynak: str, dstr: str,
                       order_id=None, order_id_neden=None, reason=None) -> None:
     """Kapanan işlemi çıkış dolum-yaması kuyruğuna yaz. `kaynak`:
-      * "karar" — DELETE kapatması; dolum `close_order_id`li emirden okunacak (B1).
+      * "karar" — DELETE kapatması; dolum `close_order_id`li emirden okunacak.
       * "bacak" — dokunuş çıkışı; dolum parent bracket'ın TP/SL bacağından okunacak (eski 1.3 yolu,
-                  artık yeniden-denemeli — B2).
+                  artık yeniden-denemeli).
     İdempotent: plan_id kuyruktaysa üzerine YAZILMAZ (karar kaydının order_id'si korunur; yalnız
     eksik order_id sonradan gelirse tamamlanır). plan_id yoksa satır eşlenemez → dürüst uyarı."""
     if not plan_id:
@@ -241,7 +241,7 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
             res = {"ok": False, "detail": f"{type(e).__name__}: {e}", "naked": False}
         if res.get("ok"):
             out["closed"].append({"ticker": t, "qty": res.get("closed_qty"), "tries": info["tries"]})
-            # B1: kapatma emrinin kimliği dolum-yaması kuyruğuna — reconcile o emrin
+            # KARAR KOLU: kapatma emrinin kimliği dolum-yaması kuyruğuna — reconcile o emrin
             # `filled_avg_price`ını okuyup trades satırına yamalar (E2 giriş-yamasının simetriği).
             # `closed_qty=0` dalı (pozisyon zaten yoktu) kuyruğa YAZILMAZ: ölçülecek dolum yok.
             if float(res.get("closed_qty") or 0.0) > 0:
@@ -252,7 +252,7 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
             obs.log("mirror_exit_closed", ticker=t, plan_id=info.get("plan_id"),
                     reason=info.get("reason"), qty=res.get("closed_qty"), tries=info["tries"],
                     cancelled=len(res.get("cancelled") or []),
-                    # B1 (olay-katmanı yüzü): kapatma EMRİNİN kimliği olayda taşınır — dolum fiyatı
+                    # OLAY-KATMANI YÜZÜ: kapatma EMRİNİN kimliği olayda taşınır — dolum fiyatı
                     # bu anda HENÜZ yok (market emri az önce doğdu), fiyatı reconcile yaması yazar.
                     close_order_id=res.get("close_order_id"),
                     close_order_neden=res.get("close_order_neden"),
@@ -263,13 +263,13 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
         info["owned"] = bool(res.get("owned"))
         kalan[t] = info
         out["failed"].append({"ticker": t, **{k: info[k] for k in ("tries", "naked", "son_detay")}})
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (çıkış icra edilemedi, sizing değil)
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SABİT sapma sınıfı (çıkış icra edilemedi, sizing değil)
                   f"ayna çıkışı kapatılamadı: {t} ({info.get('reason')}) — iç defter KAPALI, aynada "
                   f"AÇIK; {info['tries']}. deneme"
                   + (" — KORUMA BACAĞI İPTAL EDİLDİ, pozisyon ÇIPLAK" if info["naked"] else ""),
                   ticker=t, plan_id=info.get("plan_id"), tries=info["tries"],
                   naked=info["naked"], owned=info["owned"], detail=info["son_detay"],
-                  # B4: iptal→kapat kapısı — True ise kapatma hiç DENENMEDİ (koruma/bacak iptali
+                  # iptal→kapat kapısı — True ise kapatma hiç DENENMEDİ (koruma/bacak iptali
                   # düştü ve emir hâlâ canlı); yarım-durum yerine bu turu alarmla geçirdik.
                   cancel_failed=bool(res.get("cancel_failed")),
                   drift_sinifi="cikis_yetimi")
@@ -278,7 +278,7 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
 
 
 # ==================================================================================================
-# SİLAHLI PLANIN KAPI-DIŞI DÜŞÜRÜLMESİ (C23, denetim 2026-08-02) — SESSİZ DEĞİL
+# SİLAHLI PLANIN KAPI-DIŞI DÜŞÜRÜLMESİ — SESSİZ DEĞİL
 # ==================================================================================================
 # BULGU: `if not halted and not breaker and not data_bad and size_mult > 0:` tutmazsa TÜM silahlı
 # planlar `carried=[]` ile hiçbir olay / defter satırı / `broker_status` damgası olmadan yok
@@ -297,6 +297,9 @@ def _stamp_plan_status(plans: list) -> None:
         return
 
     def _yama(rows: list) -> bool:
+        """Plan defteri satırlarına yeni `broker_status` damgasını basar; değişiklik olduysa True.
+
+        Yalnız DEĞİŞEN satıra dokunur — araya giren yazarların satırları korunur."""
         ch = False
         for r in rows:
             s = by_id.get(r.get("id"))
@@ -317,7 +320,7 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
     E2'DE `motor="kapi"` — BİLİNÇLİ: bu satır ne iç motorun ne aynanın bir İCRA kararıdır, plan
     ikisine de ULAŞMADAN kapıda düştü. `motor="ic"` yazsaydık `analytics.entry_execution_summary`
     kartın kill-ölçütü olan `dolmama_orani`nın PAYDASINI şişirirdi — ölçüm eşiği kod değişikliğiyle
-    sessizce kayardı (kill-list dokunulmazdır). ÖLÇÜM BORCU KAPANDI (2026-08-02):
+    sessizce kayardı (kill-list dokunulmazdır). ÖLÇÜM BORCU KAPANDI:
     `analytics.entry_execution_summary` artık `kapi` kovasını AYRI sayıyor (`kapi_dagilimi` —
     betimleyici, oran/eşik ÜRETMEZ) ve pano mutabakat masası onu yüzeye çıkarıyor; eski okuyucular
     — olay defteri (`armed_dropped`) ve plan satırının `broker_status` damgası — yanında aynen
@@ -334,18 +337,18 @@ def _armed_drop_row(pl: dict, dstr: str, gate: str, **extra) -> None:
                        "red_detay": {"kapi": gate, **extra}})
 
 
-# İKİ ÇAĞIRAN, İKİ OLAY ADI (v210, 2026-08-07): aynı iptal YOLU iki FARKLI olguyu anlatır.
+# İKİ ÇAĞIRAN, İKİ OLAY ADI: aynı iptal YOLU iki FARKLI olguyu anlatır.
 # HALT/breaker "motor durduruldu, ayna da dursun" der; günlük kadans "bu emrin seansı bitti, tetiği
 # bayatladı" der. Tek adla yazılsalardı olay defterini okuyan her gece "HALT oldu" sanardı — ve o
 # okuma UYDURMA olurdu (YASA 6: okuyucusuz/yanlış-okunan yazım yok).
-EV_MIRROR_ENTRIES_CANCELLED = "mirror_entries_cancelled"        # HALT/breaker kapısı (C23)
-EV_STALE_ENTRIES_CANCELLED = "mirror_stale_entries_cancelled"   # günlük kadans — bayat tetik (v210)
+EV_MIRROR_ENTRIES_CANCELLED = "mirror_entries_cancelled"        # HALT/breaker kapısı
+EV_STALE_ENTRIES_CANCELLED = "mirror_stale_entries_cancelled"   # günlük kadans — bayat tetik
 
 
 def _cancel_mirror_entries(dstr: str, gate: str, *, olay: str = EV_MIRROR_ENTRIES_CANCELLED,
                            detail: str = "HALT/breaker: aynadaki dolmamış giriş emirleri "
                                          "kapatıldı (sahiplik önekli)") -> dict:
-    """Aynadaki DOLMAMIŞ giriş emirlerini kapat — İKİ çağıranın ORTAK yolu (C23 + v210).
+    """Aynadaki DOLMAMIŞ giriş emirlerini kapat — İKİ çağıranın ORTAK yolu.
 
     Eskiden HALT yalnız İÇ tarafı durduruyordu; ayna emri D-1 akşamından TIF=day ile canlıydı ve
     HALT onu iptal etmiyordu — iç motor "bugün giriş yok" derken ayna dolabiliyordu. Sahiplik
@@ -372,7 +375,7 @@ def _cancel_mirror_entries(dstr: str, gate: str, *, olay: str = EV_MIRROR_ENTRIE
 
 
 # ==================================================================================================
-# BAYAT TETİK ARTIK TIF'e HAVALE EDİLEMEZ (v210, 2026-08-07) — GÜNLÜK KADANS İPTALİ
+# BAYAT TETİK ARTIK TIF'e HAVALE EDİLEMEZ — GÜNLÜK KADANS İPTALİ
 # ==================================================================================================
 # NEDEN DOĞDU: `broker.ENTRY_TIF` DAY iken bayat-tetik korumasını BROKER yapıyordu — dolmamış giriş
 # emri seans kapanışında kendiliğinden sönüyordu. Ama Alpaca bracket'ında `time_in_force` TEKTİR ve
@@ -428,7 +431,7 @@ def _armed_dropped_by_gate(meta: dict, dstr: str, gate: str) -> None:
 
 
 # ==================================================================================================
-# OPERATÖR ONAYI — REVIEW PLANININ TEK KOŞUL NOKTASI (v190, 2026-08-05)
+# OPERATÖR ONAYI — REVIEW PLANININ TEK KOŞUL NOKTASI
 # ==================================================================================================
 # OPERATÖR ŞİKÂYETİ: "review edebiliyorum, işlem yapamıyorum". Ölçüm doğruladı: kapı REVIEW
 # hükmü verdiğinde pano planı GÖSTERİYOR ama operatörün elinde tek bir eylem yoktu — ve keşif
@@ -486,7 +489,7 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
     boşluğunu kanıtladı: döngüden SONRA gelen onay, bir sonraki turun açılış fazında iç motorca
     dolup silahlı kümeden çıkıyor ve `mirror_submit_armed`ın P3-sonu çağrısı onu HİÇ görmüyordu —
     onaylı emir Alpaca'ya hiç gitmedi. Artık onay anında AYNI TEK KAPIDAN gönderilir
-    (`mirror_submit_ve_kalicilastir` → `mirror_submit_armed` — ikinci emir gövdesi YOK, C8 korunur);
+    (`mirror_submit_ve_kalicilastir` → `mirror_submit_armed` — ikinci emir gövdesi YOK, tek kapı korunur);
     dolum bir sonraki açılışta iç motorun kapılarından geçerek olur.
 
     YARIŞ PENCERESİ, BEYANLI: `_save_broker` kitabı yazarken `armed`ı DÖNGÜNÜN belleğinden basar.
@@ -543,6 +546,9 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
                   "kanal": str(kanal)[:24]})
     if not zaten_onayli:
         def _onay_yaz(rows_: list) -> bool:
+            """Plan defterinde bu plana operatör onayı damgasını basar (yalnız onay alanı BOŞSA).
+
+            Hüküm alanına (`gate_verdict`) DOKUNULMAZ; ikinci kez çağrılırsa yeniden yazmaz."""
             ch = False
             for r in rows_:
                 if r.get("id") == plan_id and not r.get(ONAY_ALANI):
@@ -552,6 +558,9 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
         store.update_jsonl("trade_plans.jsonl", _onay_yaz)
 
     def _arm_yama(doc):
+        """Onaylanan planı kitabın silahlı kümesine ekler; zaten varsa hiçbir şey yazmaz.
+
+        DEDUP: ikinci onay ikinci emir doğurmaz — aynı plan kimliği kümede varsa False döner."""
         if not isinstance(doc, dict):
             return False
         arm = list(doc.get("armed") or [])
@@ -635,7 +644,7 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
 
 
 # ==================================================================================================
-# AYNAYA GÖNDERİM — TEK KAPI (C8, denetim 2026-08-02)
+# AYNAYA GÖNDERİM — TEK KAPI
 # ==================================================================================================
 # BULGU: bu gövde YALNIZ `daily_cycle`ın içinde yaşıyordu ve panodaki "gönder" düğmesi
 # (api.py /api/alpaca/submit_armed) kendi ÇIPLAK `submit_plan` çağrısını kuruyordu. Sonuç: ikinci
@@ -660,7 +669,7 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
     `eq_now`: İÇ defterin güncel öz sermayesi — de-risk çarpanının PAYDASI `meta['peak_equity']` ile
     aynı defterden gelmek zorundadır (Alpaca öz sermayesiyle karıştırmak çarpanı bozar). None ise
     nabızdan okunur; nabız da yoksa gönderim REDDEDİLİR (UYDURMA YASAĞI: ölçülemeyen çarpan 1.0
-    varsayılamaz — tam olarak C8'in düzelttiği kusur budur)."""
+    varsayılamaz — tam olarak tek-kapı yasasının düzelttiği kusur budur)."""
     out: dict = {"ok": False, "submitted": 0, "results": [], "equity": None, "detail": "",
                  "source": source, "submitted_ids": [], "dropped_ids": []}
     if config.BROKER != "alpaca_paper":
@@ -673,14 +682,14 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
         return {**out, "ok": True, "detail": "silahlı plan yok"}
     from .adapters import alpaca
     if not alpaca.paper_available():
-        # DAVRANIŞ FARKI, BEYANLI (C8): döngü eskiden bu kapıyı hiç kontrol etmiyor, anahtarsız
+        # DAVRANIŞ FARKI, BEYANLI: döngü eskiden bu kapıyı hiç kontrol etmiyor, anahtarsız
         # hâlde `account()`u çağırıp `_MirrorUnreachable` üzerinden HER TUR bir BROKER_REJECT
         # ALARMI basıyordu. Anahtar YOKLUĞU bir broker arızası değil bir YAPILANDIRMA hâlidir —
         # alarm sınıfını kirletiyordu. Sessizleşmedi, SINIFI DÜŞTÜ: uyarı olarak kayda geçer.
         obs.warn("mirror_submit_skipped", kaynak=source, n=len(meta.get("armed") or []),
                  detail="ALPACA_PAPER_KEY yok — ayna gönderimi atlandı, planlar SİLAHLI kaldı")
         return {**out, "detail": "Alpaca paper anahtarları yok"}
-    # SB-1 (KALEM 5): boyut makbuzunun `eq_kaynak` alanı — çarpanın PAYININ HANGİ DAL'dan geldiği.
+    # BOYUT MAKBUZU: makbuzun `eq_kaynak` alanı — çarpanın PAYININ HANGİ DAL'dan geldiği.
     # Döngü kendi `eq_now`unu geçirir ("eq_now"); pano düğmesi geçirmez ve nabızdan okunur ("nabiz").
     # BAYAT-SERMAYE vakasında 6 Ağustos AMGN bacağı tam olarak bayat NABIZDAN boyutlandı — makbuz
     # bu ayrımı tek alanda söyler. Fallback `eq_now`u yeniden atamadan ÖNCE yakalanır.
@@ -706,7 +715,7 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
         out["equity"] = eq
         submitted, sent, rejected, kept = set(meta.get("alpaca_submitted", [])), 0, [], []
         vetoed: list = []              # E1 gap-risk vetosu — ret DEĞİL, kendi kararımız
-        # SB-1 (KALEM 5): kitabın o anki KİMLİĞİ — makbuzdaki `kitap_rev`. Bir sonraki tur dolum
+        # BOYUT MAKBUZU: kitabın o anki KİMLİĞİ — makbuzdaki `kitap_rev`. Bir sonraki tur dolum
         # anındaki rev ile kıyaslanırsa "kitap gönderim↔dolum arasında DEĞİŞTİ Mİ" (bayat-sermaye
         # sınıfı) tek bakışta okunur. Arka-uç bağımsız: DB'de entity rev, dosyada boyut damgası —
         # ikisi de yalnız İÇERİK değişince değişen bir sayaç (store.stamp). `peak` de bir kez okunur.
@@ -721,8 +730,8 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
             # E1: ayna İÇ MOTORLA AYNI icra girdilerini alır — ATR ve referans fiyat
             # yan tablodan (silahlanma anında sabitlendi), yasa `broker.entry_law`dan.
             _lw = (meta.get("entry_law") or {}).get(pl.get("id")) or {}
-            _smult = derisk_mult(eq_now, _peak)   # mirror the SAME drawdown de-risk as the internal fill (#50)
-            # SB-1 (KALEM 5) — BOYUT MAKBUZU: plan başına, çarpanın ÜÇ girdisi (eq_now · peak ·
+            _smult = derisk_mult(eq_now, _peak)   # mirror the SAME drawdown de-risk as the internal fill
+            # BOYUT MAKBUZU: plan başına, çarpanın ÜÇ girdisi (eq_now · peak ·
             # size_mult) + hangi daldan geldiği (eq_kaynak) + kitabın kimliği (kitap_rev). Yeni defter/
             # gerçek kaynağı YOK: meta["size_law"] `_save_broker`ın 14. anahtarı olarak kalıcılaşır.
             # Gönderim SONUCUNDAN bağımsız yazılır — reddedilen/veto edilen planın da boyut TABANI
@@ -818,12 +827,12 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
 # AÇILIŞ fazında iç motorca dolup silahlı kümeden çıkıyor, :1640 onu hiç görmüyordu → Alpaca'ya emir
 # hiç gitmedi, reconcile split_brain alarmladı. Bu yardımcı, pano ucundaki gönderim+kalıcılaştırma
 # desenini (api_alpaca_submit_armed) fonksiyonlaştırır ki onay anı ve intraday 4b AYNI tek kapıdan
-# (mirror_submit_armed — C8) geçsin; İKİNCİ bir emir gövdesi yazılmaz.
+# (mirror_submit_armed) geçsin; İKİNCİ bir emir gövdesi yazılmaz.
 def mirror_submit_ve_kalicilastir(dstr: str | None = None, *, source: str,
                                   sadece_plan_id: str | None = None) -> dict:
     """Diskteki kitabı okuyarak silahlı planları aynaya gönderir ve yan etkileri portfolio.json'a
     KİLİT ALTINDA yamalar (tam-belge yazımı YASAK — canlı worker'ın armed setini ezerdi; pano ucuyla
-    birebir aynı yama: dedup kümesine ekle, düşenleri kimlikle çıkar, SB-1 makbuzunu bas).
+    birebir aynı yama: dedup kümesine ekle, düşenleri kimlikle çıkar, boyut makbuzunu bas).
 
     `sadece_plan_id`: verilirse YALNIZ o plan gönderilir (görünüm-meta: armed daraltılır; dedup /
     entry_law / peak / size_law kitaptan). intraday 4b bunu kullanır — silahlı kümedeki DİĞER
@@ -850,6 +859,11 @@ def mirror_submit_ve_kalicilastir(dstr: str | None = None, *, source: str,
     gonderilen, dusen = set(res.get("submitted_ids") or []), set(res.get("dropped_ids") or [])
     if gonderilen or dusen:
         def _yama(doc):
+            """Gönderim sonucunu kitaba kalıcılaştırır: gönderilen kimlikler biriktirilir, veto/ret yiyen
+            planlar silahlı kümeden KİMLİKLE düşer, ret listesi ve boyut makbuzu tazelenir.
+
+            STRICT yasa: düşen plan kümede kalmaz — iç motor bir sonraki açılışta hayalet dolum
+            yapamaz."""
             if not isinstance(doc, dict):
                 return False
             doc["alpaca_submitted"] = list(dict.fromkeys(
@@ -858,7 +872,7 @@ def mirror_submit_ve_kalicilastir(dstr: str | None = None, *, source: str,
             # iç motor bir sonraki açılışta hayalet dolum yapamaz.
             doc["armed"] = [p for p in (doc.get("armed") or []) if p.get("id") not in dusen]
             doc["broker_rejected"] = meta.get("broker_rejected", doc.get("broker_rejected", []))
-            # SB-1 makbuzu (pano bacağıyla aynı kilit-altı desen): meta'nın makbuzu diskteki belgeye
+            # boyut makbuzu (pano bacağıyla aynı kilit-altı desen): meta'nın makbuzu diskteki belgeye
             # basılır; meta'nınki kitabın kendi sözlüğünden tohumlandığı için içerik-koruyucudur.
             doc["size_law"] = meta.get("size_law", doc.get("size_law", {}))
             return True
@@ -883,6 +897,11 @@ def _universe_drift_check() -> None:
 
 
 def _load_broker() -> tuple[PaperBroker, dict]:
+    """Kitabı diskten yükler: `(PaperBroker, meta)`.
+
+    Nakit, gerçekleşmiş K/Z, son emir kimliği ve açık pozisyonlar `portfolio.json`dan geri kurulur;
+    kayma/komisyon hedef sözleşmesinden okunur. Defter yoksa boş bir meta (silahlı küme, bekleyen
+    çıkışlar, gün-başı sermaye) döner — uydurma durum üretilmez."""
     goal = config.goal()
     slip = float(goal.get("slippage_bps", 5))
     comm = float(goal.get("commission_per_share", 0.0))
@@ -901,7 +920,7 @@ _HOTSTATE_OFF_LOGGED: set = set()
 
 
 def _hotstate_off_once(key: str, where: str, reader: str) -> None:
-    """Kapatılmış sıcak-yazımın SÜREÇ BAŞINA BİR KEZ kaydı (sadeleştirme turu, 2026-07-30).
+    """Kapatılmış sıcak-yazımın SÜREÇ BAŞINA BİR KEZ kaydı.
 
     Neden hiç kaydetmemek değil: sessizce kaldırılmış bir yazım, aylar sonra "Redis'te fiyat neden
     yok?" sorusunu kaynaksız bırakır. Neden her turda değil: statik bir olgu için günlük olay yazmak,
@@ -929,10 +948,10 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
     olurdu — bir sonraki beyan anahtarını yazan kişi aynı tuzağa düşerdi. Yapısal kapı, sahipliği
     yazarın KENDİ listesiyle sınırlamaktır: `update_json` diskteki belgeyi kilit altında okur,
     üstüne yalnız aşağıdaki 14 alanı basar; yabancı anahtarlar (bugünkü beyan VE gelecekteki her
-    beyan) yerinde yaşar. Aynı aile: `health.py:239` çok-yazarlı nabız alanları, `storage._touch`
+    beyan) yerinde yaşar. Aynı aile: `health.write_heartbeat` çok-yazarlı nabız alanları, `storage._touch`
     eğri zarfı.
 
-    RATCHET (D2): yazımdan ÖNCE, aynı kilit altında, beyan ölçüsü İKİ kaynakla kıyaslanır —
+    RATCHET: yazımdan ÖNCE, aynı kilit altında, beyan ölçüsü İKİ kaynakla kıyaslanır —
     diskteki belge ve döngünün tur başında okuduğu `meta`. Ölçü düşüyorsa yazım REDDEDİLİR ve
     alarm basılır: `_save_broker` bu kaybı çimentolayan yazar olamaz."""
     from dataclasses import asdict
@@ -945,27 +964,27 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
           # broker_rejected is the failed-submission ledger the dashboard reads via broker_reconcile.
           "alpaca_submitted": meta.get("alpaca_submitted", []),
           "broker_rejected": meta.get("broker_rejected", []),
-          # E1 (WP-E): silahlı planların icra kararı (limit/ATR/gap) — RESTART'I ATLATMALI. Yoksa
+          # E1: silahlı planların icra kararı (limit/ATR/gap) — RESTART'I ATLATMALI. Yoksa
           # yeniden başlatma sonrası dolum yasası "ATR ölçülemedi"ye düşer ve aynı plan iki farklı
           # limitle iki motorda ayrışır (tam olarak bu turun kapattığı kusur).
           "entry_law": meta.get("entry_law", {}),
           # peak_equity MUST survive restarts/reloads: every cycle reloads meta from disk, so without
           # this the running peak collapsed to max(START_EQUITY, current) — drawdown always read ~0 and
-          # the graded de-risk ramp + position throttle were PERMANENTLY inert (audit critical #10).
+          # the graded de-risk ramp + position throttle were PERMANENTLY inert.
           "peak_equity": meta.get("peak_equity", START_EQUITY),
-          # C9: aynada kapatılamamış çıkışlar RESTART'I ATLATMALI. Kaybolursa iç defteri kapalı,
+          # AYNA ÇIKIŞ KUYRUĞU: aynada kapatılamamış çıkışlar RESTART'I ATLATMALI. Kaybolursa iç defteri kapalı,
           # aynası açık bir pozisyon sessizce kalıcı yetim olur — bu bulgunun ta kendisi.
           MIRROR_EXIT_KEY: meta.get(MIRROR_EXIT_KEY, {}),
-          # SB-1 (KALEM 5; docs/BAYAT-SERMAYE-KOK-2026-08-07.md §8 B1): plan başına BOYUT MAKBUZU —
+          # BOYUT MAKBUZU (docs/BAYAT-SERMAYE-KOK-2026-08-07.md): plan başına —
           # RESTART'I ATLATMALI (entry_law ile aynı gerekçe, 14. sahiplenilen anahtar). Bayat-sermaye
           # turunun bekçisi: 08-05 aynanın yarım boyutlu emrini çözmek ÜÇ ayrı deftere (portfolio /
           # events / trade_plans) bakmayı gerektirmişti; makbuz boyut kararının girdilerini TEK
-          # satırda söyler (eq_kaynak · eq_now · peak · size_mult · kitap_rev; B6'dan beri iç dolum
+          # satırda söyler (eq_kaynak · eq_now · peak · size_mult · kitap_rev; dolum-anı damgasından beri iç dolum
           # anında `dolum_eq`/`dolum_peak` ikinci yarısı damgalanır). Yazan: mirror_submit_armed.
           "size_law": meta.get("size_law", {}),
-          # B1/B2 (teşhis 2026-08-10): çıkış dolum-yaması kuyruğu RESTART'I ATLATMALI (15. anahtar).
+          # ÇIKIŞ DOLUM-YAMASI KUYRUĞU (teşhis 2026-08-10): RESTART'I ATLATMALI (15. anahtar).
           # Kaybolursa kapanan işlemin gerçek ayna dolumu bir daha ARANMAZ — tek-atış kusuru
-          # (B2) restart kılığında geri gelirdi. Yazanlar: `_mirror_exit_sync` (karar kapatmaları,
+          # restart kılığında geri gelirdi. Yazanlar: `_mirror_exit_sync` (karar kapatmaları,
           # close_order_id ile) + `reconcile_broker_state` başı (bacak kapatmaları); tüketen:
           # `_exit_fill_yamasi` (her reconcile turu).
           EXIT_FILL_KEY: meta.get(EXIT_FILL_KEY, {})}
@@ -977,6 +996,12 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
         red: dict = {}
 
         def _yama(doc):
+            """Kitabın SAHİPLENİLEN alanlarını diskteki belgeye işler; yabancı anahtarlar yerinde kalır.
+
+            BEYAN KAPISI: yazımdan sonraki beyan ölçüsü hem diskteki hem döngüdeki hâle göre
+            gerilerse yazım REDDEDİLİR (False) ve neden `red` sözlüğüne bırakılır — sermaye beyanı
+            sessizce kaybolamaz. Belge sözlük değilse de reddedilir; çağıran alarm basıp tam yazım
+            yapar."""
             if not isinstance(doc, dict):
                 # Diskteki belge sözlük değil (dış hasar). Korunacak yabancı anahtar YOKTUR;
                 # yazımı atlamak kitabın o turunu kaybettirirdi → aşağıda alarm + tam yazım.
@@ -1010,7 +1035,7 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
                       detail="beyan yalnız EKLENEBİLİR (grant_amnesty ailesi): meşru bir küçülme "
                              "YAZILI olmak zorundadır. Kitap bu tur yazılmadı; beyanı silen yazar "
                              "aranmalı (KOKNEDEN 2026-08-04).")
-    # SICAK KOPYA — DEVRE DIŞI (sadeleştirme turu, 2026-07-30). Bu satır pozisyonları `mrd:pos`a
+    # SICAK KOPYA — DEVRE DIŞI. Bu satır pozisyonları `mrd:pos`a
     # yazıyordu ("intraday'de ms-latency erişim"). ÖLÇÜM: `hotstate.get_positions`ın PRODÜKSİYONDA
     # hiçbir çağıranı yok — yalnız testler okuyor. Yani katman YALNIZ-YAZILIRDI: her turda Redis'e
     # gidiliyor, kimse okumuyordu. Tüketici bağlamak pano/api tarafını ister (bu turun dokunma
@@ -1023,7 +1048,7 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
 
 
 def _llm_veto_filter(meta: dict) -> None:
-    """Kademe-3 (LLM danışman): YALNIZ terfili ajan (analytics.llm_promoted — yazılı kalibrasyon kuralı),
+    """LLM danışman katmanı: YALNIZ terfili ajan (analytics.llm_promoted — yazılı kalibrasyon kuralı),
     YALNIZ 'REVIEW + karşı' planı DOLUMDAN düşürebilir. GO'ya dokunamaz, NO_GO'yu açamaz, boyut/çıkış
     yetkisi yok. AYNA TUTARLILIK YASASI: plan Alpaca'ya gönderildiyse önce ORADA iptal doğrulanır;
     doğrulanamazsa plan düşürülMEZ — iki defterin ayrışması vetodan büyük risktir."""
@@ -1052,11 +1077,15 @@ def _llm_veto_filter(meta: dict) -> None:
                 continue
         obs.log("llm_veto_strip", ticker=pl.get("ticker"), plan_id=pl.get("id"),
                 detail="terfili ajan vetosu: REVIEW + karşı → dolum düşürüldü")
-        # KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31): eskiden çıplak read+write idi ve AYNI
+        # KİLİTLİ oku-değiştir-yaz: eskiden çıplak read+write idi ve AYNI
         # deftere Hermes'in görüş damgası (`store.update_jsonl`, kilitli) ile `merge_dated_jsonl`
         # de yazıyor. Kilit tek taraflıysa kilit yoktur: kaybeden yazar bütün araya girmiş
         # satırları eski kopyasıyla geri alırdı ve hiçbir yerde iz kalmazdı.
         def _veto_patch(rows, _pid=pl["id"]):
+            """Plan defterindeki bu plana `llm_veto=True` damgasını basar; satır bulunduysa True.
+
+            Kilitli oku-değiştir-yaz içinde koşar: aynı deftere yazan diğer yazarların satırları
+            geri alınmaz."""
             hit = False
             for _pr in rows:
                 if _pr.get("id") == _pid:
@@ -1086,7 +1115,7 @@ def _scan_debt_add(ticker: str, dstr: str) -> None:
 
 
 def _nabiz(asama: str, i: int | None = None, n: int | None = None) -> None:
-    """İLERLEME NABZI (v186) — gerekçe `scheduler.py`nin İLERLEME NABZI bloğunda; biçim kararları
+    """İLERLEME NABZI — gerekçe `scheduler.py`nin İLERLEME NABZI bloğunda; biçim kararları
     `adapters/data.py:_nabiz` ile AYNI (geç import, hüküm zamanlayıcıda). İki kopya değil iki
     ÇAĞIRAN: hüküm veren tek fonksiyon `scheduler.nabiz`tır, buradaki yalnız onu güvenli çağırır."""
     try:
@@ -1154,7 +1183,7 @@ def _near_miss_blockers(sig, eff: dict) -> list:
 
 
 def _carry_armed_without_bar(armed: list, has_bar) -> tuple[list, list]:
-    """P4 dolum ayrıştırıcısı — GS-1140 kök nedeni (canlıda 2026-07-15): dolum anında bar henüz
+    """P4 dolum ayrıştırıcısı — kök neden (canlıda 2026-07-15): dolum anında bar henüz
     YAYINLANMAMIŞSA plan sessizce buharlaşıyordu, hiçbir olay yazılmadan. Tek-seans yasası "bayat
     sinyalle girme" içindir; YAYINLANMAMIŞ seans görülmemiş seanstır. Bar'ı olan planlar dolum
     adayı; olmayanlar BİR seans taşınır (olaylı), ikinci seansta da bar yoksa olaylı düşer."""
@@ -1204,7 +1233,7 @@ def _reconcile_gunu_atlandi(sinif: str, dstr: str) -> None:
 def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> dict:
     """Process the latest closed trading day. Returns a summary dict."""
     # goal/bounds lru_cache'i uzun ömürlü süreçte dosyayı DONDURUYORDU: operatörün goal.yaml'da
-    # elle değiştirdiği limit, sunucu yeniden başlatılana dek hiç görülmezdi (denetim turu 10).
+    # elle değiştirdiği limit, sunucu yeniden başlatılana dek hiç görülmezdi.
     config.reload_config()
     goal = config.goal()
     limits = goal["limits"]
@@ -1221,7 +1250,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     if not all_dates:
         return {"error": "no dates"}
     d = all_dates[-1]
-    # ---- EVREN BÜTÜNLÜĞÜ KAPISI (2026-07-21, canlı kanıtla bulundu) ----
+    # ---- EVREN BÜTÜNLÜĞÜ KAPISI (canlı kanıtla bulundu) ----
     # Seans tarihini ENDEKSİN son barı belirliyordu. Ama ücretsiz kaynaklar sembol bazında farklı
     # hızda güncelleniyor: canlıda SPY 07-21 barına sahipken 250 sembolün yalnız 46'sı sahipti.
     # Tazelik koruması kalan 204'ü "bayat kuyruk" diye ATLIYOR — yani motor evrenin %18'ini tarayıp
@@ -1248,7 +1277,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                  detail="hiçbir yakın seansta evren kapsaması yeterli değil — endeksin seansıyla devam")
     dstr = str(d.date())
 
-    # KAPSAMA ERTELEMESİ ile MONOTONLUK BEKÇİSİ çarpışması (2026-07-21): kitap, düzeltme öncesi
+    # KAPSAMA ERTELEMESİ ile MONOTONLUK BEKÇİSİ çarpışması: kitap, düzeltme öncesi
     # %18 kapsamalı bir seansta ilerletilmiş olabilir. O zaman tam-kapsamalı seans kitabın GERİSİNDE
     # kalır ve bekçi haklı olarak reddeder — ama sebep "bayat/yedek kaynak" DEĞİL, "evren henüz
     # yetişmedi"dir. İkisini aynı alarmla anlatmak teşhisi bozar: bu bir BEKLEME, bir arıza değil.
@@ -1280,7 +1309,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         if not ok:
             tick_bad.append(t)
     data_bad = (not idx_ok) or (len(tick_bad) > len(per) * 0.25)
-    # öneri #5b: bağımsız kaynak AYNI seans kapanışında >%1.5 sapma raporladıysa bar güvenilmez —
+    # bağımsız kaynak AYNI seans kapanışında >%1.5 sapma raporladıysa bar güvenilmez —
     # gecikme/kaynak-yok durumları ('source_lagging', 'fetch_failed') ASLA halt sebebi değildir.
     _xc = store.read_json("index_crosscheck.json", {})
     xc_bad = (_xc.get("date") == dstr and _xc.get("status") == "diverged")
@@ -1299,7 +1328,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     b, meta = _load_broker()
     if meta.get("last_date") == dstr:
         # already processed this bar; just refresh heartbeat.
-        # REJİM DE TAZELENİR (2026-07-22, sahiplik dedektörü yakaladı): bu kısa yol rejimi ve
+        # REJİM DE TAZELENİR (sahiplik dedektörü yakaladı): bu kısa yol rejimi ve
         # bütçeyi damgalamıyordu. Nabız çok yazarlı olduğu için alanlar bir kez düştüğünde HUD
         # "rejim yok / bütçe yok" gösteriyor ve bir daha kendiliğinden dolmuyordu — seans zaten
         # işlenmişse rejim BİLİNMİYOR değildir, diskte durur.
@@ -1314,21 +1343,21 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
 
     marks = _marks(per, d)
     # OPEN-phase risk decisions (breaker, de-risk, sizing) mark at D's OPEN — the close isn't known at
-    # the open (audit #1: close-marks here let the morning decisions see the afternoon's move).
+    # the open (close-marks here let the morning decisions see the afternoon's move).
     marks_open = {t: per[t].loc[d, "open"] for t in b.positions if t in per and d in per[t].index}
     day_start_equity = meta.get("day_start_equity", b.equity(marks_open))
 
     # ---- 1. OPEN(D): pending exits + armed entries from the prior cycle ----
     for t, reason in list(meta.get("pending_exits", {}).items()):
         if t in b.positions and t in per and d in per[t].index:
-            # C9: plan kimliği pozisyon kapanMADAN önce okunur — kapandıktan sonra `b.positions`ta
+            # ÇIKIŞ KUYRUĞU: plan kimliği pozisyon kapanMADAN önce okunur — kapandıktan sonra `b.positions`ta
             # yoktur ve aynadaki bracket'ı hangi emre bağlayacağımızı söyleyen TEK anahtar odur.
             _pid = getattr(b.positions[t], "plan_id", None)
             b.close_position(t, per[t].loc[d, "open"], reason, dstr)
             _persist_trade(b.closed[-1])
             _mirror_exit_enqueue(meta, t, _pid, reason, dstr)
     meta["pending_exits"] = {}
-    _mirror_exit_sync(meta, dstr)     # C9: kuyruk + önceki turlardan kalan yeniden denemeler
+    _mirror_exit_sync(meta, dstr)     # kuyruk + önceki turlardan kalan yeniden denemeler
 
     halted = health.halted()
     day_pnl_pct = (b.equity(marks_open) - day_start_equity) / day_start_equity if day_start_equity else 0.0
@@ -1345,18 +1374,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     meta["peak_equity"] = max(meta.get("peak_equity", START_EQUITY), eq_now)
     size_mult = derisk_mult(eq_now, meta["peak_equity"])   # graded de-risk on running drawdown
     eff_max_open = max_positions_at(eq_now, meta["peak_equity"], limits["max_open_positions"])  # + throttle
-    with skills.pipeline_run("P4_EXECUTE", artifact="state/trades.jsonl"):   # executions must be auditable (#39)
+    with skills.pipeline_run("P4_EXECUTE", artifact="state/trades.jsonl"):   # executions must be auditable
         try:
-            _llm_veto_filter(meta)   # Kademe-3: yalnız TERFİLİ ajanın dar vetosu (fonksiyona bak)
+            _llm_veto_filter(meta)   # yalnız TERFİLİ ajanın dar vetosu (fonksiyona bak)
         except Exception as e:
             obs.warn("llm_veto_layer_failed", error=f"{type(e).__name__}: {e}")
         carried = []
-        # C23: kapı hangi sebeple kapandı? Sıra ÖNEMLİ — birden çok koşul aynı anda tutabilir ve
+        # kapı hangi sebeple kapandı? Sıra ÖNEMLİ — birden çok koşul aynı anda tutabilir ve
         # damga TEK olmalı; en sert/en dıştaki sebep kazanır (HALT > breaker > veri > kısma).
         _kapi = ("halt" if halted else "breaker" if breaker else "data_bad" if data_bad
                  else "throttle" if size_mult <= 0 else None)
         _dusen: list = []
-        # İŞ-2-EOD KEMERİ, TOPLAMA YARISI (2026-08-11, P-2026-08-07-VLO): iç motorun BU turda
+        # İŞ-2-EOD KEMERİ, TOPLAMA YARISI (P-2026-08-07-VLO): iç motorun BU turda
         # doldurduğu ama aynaya HİÇ gönderilmemiş planlar (onay-anı gönderimi düşmüş/ulaşamamış,
         # unreachable-kalmış ya da düzeltme-öncesi silahlanmış her plan). Küme dolum ANINDA ölçülür
         # — dolumdan sonra plan silahlı kümeden çıkar ve P3-sonu `mirror_submit_armed` onu göremez.
@@ -1377,7 +1406,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     _rej: dict = {}
                     _pos = b.fill_entry(plan, _open, dstr, eq_now, size_mult=size_mult,
                                         adv=_adv(per[t], d), atr=_lw.get("atr"),
-                                        pivot=float(_lw.get("pivot") or 0.0),   # C13: yapı çizgisi
+                                        pivot=float(_lw.get("pivot") or 0.0),   # yapı çizgisi
                                         gap_at_submit=_lw.get("gap_at_submit"), reject_out=_rej)
                     _base = {"date": dstr, "plan_id": plan.get("id"), "ticker": t, "motor": "ic",
                              "entry_trigger": plan.get("entry_trigger"), "limit": _lw.get("limit"),
@@ -1385,18 +1414,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                              "gap_at_submit": _lw.get("gap_at_submit"),
                              "resmi_acilis": round(_open, 4)}
                     if _pos is not None:
-                        # KALEM 4 — İÇ-MOTOR TOTOLOJİSİ: `_pos.entry` açılıştan SABİT slippage ile
+                        # İÇ-MOTOR TOTOLOJİSİ: `_pos.entry` açılıştan SABİT slippage ile
                         # türetilir (broker.fill_entry), yani resmî açılışa göre bps ölçmek
                         # slippage_bps sabitini geri üretir — bir ÖLÇÜM değil totoloji. None + beyan
                         # (bkz. IC_ACILIS_TOTOLOJI_BEYAN). `fill_vs_limit_bps` AYRIDIR (dolum limit
-                        # TAVANINA göre; E1 grid EXE-2026-001 tam onu ölçer) ve KALIR.
+                        # TAVANINA göre; E1 grid tam onu ölçer) ve KALIR.
                         _entry_exec_write({**_base, "karar": "fill", "fill": round(_pos.entry, 4),
                                            "qty": _pos.qty,
                                            "fill_vs_resmi_acilis_bps": None,
                                            "fill_vs_resmi_acilis_beyan": IC_ACILIS_TOTOLOJI_BEYAN,
                                            "fill_vs_limit_bps": _bps(_pos.entry, _lw.get("limit"))})
-                        # B6 (teşhis 2026-08-10): SB-1 makbuzunun İKİNCİ YARISI — DOLUM anının
-                        # boyut tabanı makbuza damgalanır. SB-2 sınıflandırıcısı yaşlı pozisyonda
+                        # DOLUM-ANI DAMGASI (teşhis 2026-08-10): boyut makbuzunun İKİNCİ YARISI — DOLUM anının
+                        # boyut tabanı makbuza damgalanır. Sapma sınıflandırıcısı yaşlı pozisyonda
                         # "dolum tabanı" diye BUGÜNÜN eq'sini kıyaslayıp sebep UYDURUYORDU; damga
                         # varsa kıyas dolum gününün GERÇEK tabanıyla yapılır, yoksa `olculemedi`.
                         # Yalnız MEVCUT makbuza yazılır: makbuzsuz plana yarım makbuz üretmek,
@@ -1428,7 +1457,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                      detail="E1 giriş yasası: dolum yazılmadı — cf defteri aynı "
                                             "plan_id ile kaçan işlemin sonucunu ölçmeye devam eder")
                 else:
-                    # C23 (plan-başı sessizlik): bu dalın else'i YOKTU — slot dolduğu ya da sembol
+                    # PLAN-BAŞI SESSİZLİK: bu dalın else'i YOKTU — slot dolduğu ya da sembol
                     # zaten defterde olduğu için düşen plan hiçbir iz bırakmadan yok oluyordu.
                     # KARAR AYNI (plan düşer), yalnız SEBEBİ artık okunabilir.
                     _armed_drop_row(plan, dstr,
@@ -1440,7 +1469,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
         else:
             _armed_dropped_by_gate(meta, dstr, _kapi)
         meta["armed"] = carried
-        # v210 — BAYAT TETİK KADANSI. Buranın SEBEBİ: (1) yukarıdaki blok bu seansın dolum
+        # BAYAT TETİK KADANSI. Buranın SEBEBİ: (1) yukarıdaki blok bu seansın dolum
         # kararlarını VERDİ (dolan doldu, dolmayan `entry_missed_limit`/kapı damgasıyla düştü),
         # yani hâlâ dolmamış duran her motor giriş emri artık bayattır; (2) yeni planların
         # üretimi/silahlanması ve `mirror_submit_armed` HENÜZ koşmadı (P3, aşağıda) — bu akşam
@@ -1494,9 +1523,9 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                          detail="geç-gönderim kemeri istisnayla düştü — aynasız iç dolumları "
                                 "reconcile split_brain + ONAYLI_PLAN_GONDERILMEDI bekçisi yakalar")
 
-    # C19 (denetim 2026-08-02) — GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
+    # GÜNLÜK KESİCİ PENCERESİ İKİ MOTORDA AYNI. Bu yazım seansın SONUNDA
     # ve KAPANIŞ markıyla yapılıyordu (`b.equity(_marks(per, d))`); okuma tarafı ise D+1'in AÇILIŞ
-    # markıyla (`marks_open`, denetim #1 düzeltmesi). Sonuç: canlı kesicinin penceresi
+    # markıyla (`marks_open`). Sonuç: canlı kesicinin penceresi
     # KAPANIŞ(D)→AÇILIŞ(D+1), yani YALNIZ GECELİK BOŞLUK — portföy düzeyinde −%3'lük bir gecelik
     # boşluk pratikte oluşmadığı için `max_daily_loss_pct: 3.0` canlıda fiilen ATILDI. Replay
     # (backtest.py `day_start_equity = broker.equity(marks_open_on(d))`, dolumlardan SONRA) ve
@@ -1520,18 +1549,18 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     for t in list(b.positions.keys()):
         if t in per and d in per[t].index:
             bar = per[t].loc[d]
-            _pos = b.positions[t]                       # öneri #2: MFE/MAE su işaretleri her seans güncellenir
+            _pos = b.positions[t]                       # MFE/MAE su işaretleri her seans güncellenir
             _pos.hi_water = max(_pos.hi_water, float(bar["high"]))
             _pos.lo_water = min(_pos.lo_water or float(bar["low"]), float(bar["low"]))
             b.scale_out(b.positions[t], {"high": bar["high"], "low": bar["low"], "open": bar["open"]},
-                        eff_intraday)   # #8 bank partial before full exit (stop-first conservatism inside)
+                        eff_intraday)   # bank partial before full exit (stop-first conservatism inside)
             ex = b._touch_exit(b.positions[t], {"open": bar["open"], "high": bar["high"], "low": bar["low"]})
             if ex:
                 b.close_position(t, ex[0], ex[1], dstr); _persist_trade(b.closed[-1])
             else:
                 b.positions[t].bars_held += 1
 
-    try:                                   # öneri #1: karşı-olgusal defter ilerler — dönüş görmezden gelinir,
+    try:                                   # karşı-olgusal defter ilerler — dönüş görmezden gelinir,
         from . import counterfactual, watchdog as _wd   # hiçbir karar bu deftere bakmaz (sıfır yetki)
         counterfactual.advance(per, d, dstr)
         _wd.beat("cf_advance")
@@ -1555,7 +1584,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             pos_regime_ok = (rj["regime"] in ("trend_up", "chop")) if getattr(pos, "exploration", False) else regime_ok
             dec = strat.manage_position(df_t, {"entry": pos.entry, "stop": pos.stop,
                     "trail_stop": pos.trail_stop, "r_per_share": pos.r_per_share,
-                    # C13: SÖZLÜĞÜN İKİNCİ KOPUKLUĞU. Pivot fill_entry'e geçse bile bu sözlükte
+                    # SÖZLÜĞÜN İKİNCİ KOPUKLUĞU. Pivot fill_entry'e geçse bile bu sözlükte
                     # yoksa `early_kill_pivot_exit` yine None okuyup False dönerdi — iki kopukluk
                     # bağımsızdı, ikisi de kapanmadan knob canlıda ateşleyemez. Replay
                     # (backtest.py) ve gölge-v2 (shadow_lifecycle.py) bu alanı zaten taşıyordu.
@@ -1577,7 +1606,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # ve koşmadığı turda sayaç TANIMSIZ kalırdı — `daily_cycle` olayı o turda NameError'la düşerdi.
     _kapsam_disi = 0         # bu turda karartma kapısının KONUŞAMADIĞI plan sayısı (beyanlı fail-open)
     _takvim_dusen = 0        # …ve takvim güvenilmezliği yüzünden GO→REVIEW düşen plan sayısı
-    # TAKVİM GÜVENİLMEZLİĞİ — TUR BAŞINA BİR KEZ ÖLÇÜLÜR (2026-08-03, Rol-1 A1). Aday başına
+    # TAKVİM GÜVENİLMEZLİĞİ — TUR BAŞINA BİR KEZ ÖLÇÜLÜR. Aday başına
     # çağırmak `_load()`u aday sayısı kadar `stat()`latırdı; hüküm zaten TÜM sembolleri aynı anda
     # bağladığı için tur başına tek ölçüm hem doğru hem ucuzdur. Sabit yerde tanımlanır (`_kapsam_disi`
     # ile aynı gerekçe): P3 bloğu koşmadığı turda da `daily_cycle` olayı bu değeri okur.
@@ -1618,7 +1647,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 if len(sub) > strat.RS_LOOKBACK + 1:
                     rets[t] = float(sub["close"].iloc[-1] / sub["close"].iloc[-1 - strat.RS_LOOKBACK] - 1.0)
             rs_map = ind.rs_rating(rets)
-            # darboğaz turu (2026-07-20): huni ölçümü, aday kuraklığında ölümlerin ezici kısmının
+            # Huni ölçümü: aday kuraklığında ölümlerin ezici kısmının
             # kırılım-SONRASI eşiklerde (hacim×1.5, RS 70) olduğunu gösterdi. Gevşek bir GÖLGE taraması
             # eşiğin hemen altında ölenleri karşı-olgusal deftere yazar ki "hangi eşik masada para
             # bırakıyor?" ÖLÇÜLSÜN. Sıfır yetki: karar/kapı bu satırları asla okumaz; eşik değişikliği
@@ -1626,14 +1655,14 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             _rx = strat.relax_for_near_miss(eff)             # TEK KAYNAK (strategy.py) — cf_backfill ile aynı
             late_by_date = _scan_debt_collect(per, d, eff)   # barı sonradan gelenlerin kaçan kesişimleri
             for _i_p, (t, df_t) in enumerate(per.items(), 1):
-                # v186 NABIZ: evren boyu tarama — sembol başına İKİ `scan_all` (sıkı + gevşek) ve
+                # NABIZ: evren boyu tarama — sembol başına İKİ `scan_all` (sıkı + gevşek) ve
                 # her biri gösterge penceresi hesaplar. Ağ yok ama CPU var; uzun bir yetişme turunda
                 # bu blok tek başına bekçi eşiğini yiyebilir.
                 _nabiz("tarama", _i_p, len(per))
                 if t in b.positions or t in _quarantine:
                     continue
                 if d not in df_t.index:                      # güncellik: bu seansın barı henüz yok →
-                    _cut = df_t.loc[:d]                      # bayat kuyrukla taranMAZ (GS-1140 sınıfı
+                    _cut = df_t.loc[:d]                      # bayat kuyrukla taranMAZ (kök-neden sınıfı
                     if len(_cut) and (d.date() - _cut.index[-1].date()).days <= SCAN_DEBT_MAX_AGE_D:
                         _scan_debt_add(t, dstr)              # taze gecikme → borç; kadim kuyruk → sessiz geç
                     continue
@@ -1642,10 +1671,10 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 for _su, _s3 in strat.scan_all(_tail, _rx, rs_map.get(t, 50), ticker=t).items():
                     if _su in strat.ARMED_SETUPS and _su not in _all:
                         near_miss_sigs.append((_s3, _near_miss_blockers(_s3, eff)))
-                for _s2 in _all.values():              # öneri #1: uyuyan kurulum ateşlemeleri karşı-olgusala
+                for _s2 in _all.values():              # uyuyan kurulum ateşlemeleri karşı-olgusala
                     if _s2.setup not in strat.ARMED_SETUPS:
                         dormant_sigs.append(_s2)
-                        # operatör öğrenme-modu (2026-07-20): uyuyan kurulumun ateşlemesi ADAY da olur —
+                        # operatör öğrenme-modu: uyuyan kurulumun ateşlemesi ADAY da olur —
                         # kapıdan geçer, ama YALNIZ keşif sondası olarak (0.25R) silahlanabilir. Gerçek-R
                         # kanıtı yalnız cf simülasyonundan değil küçük gerçek işlemlerden de birikir;
                         # tam silahlanma kararı yine haftalık değerlendirme + kapı ölçümünündür.
@@ -1675,7 +1704,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 from .mirror_stream import pending_symbols_snapshot
                 _mirror_busy |= pending_symbols_snapshot()
             except Exception as e:
-                # YASA 4 (2026-07-21): bu düşerse _mirror_busy EKSİK kalır ve aynada zaten bekleyen
+                # YASA 4: bu düşerse _mirror_busy EKSİK kalır ve aynada zaten bekleyen
                 # bir sembole İKİNCİ emir gidebilir. Sessizken tek belirtisi "bir gün fazladan bir
                 # emir" olurdu — yani hata değil, miktar değişimi.
                 obs.warn("mirror_pending_snapshot_failed", error=f"{type(e).__name__}: {e}",
@@ -1685,7 +1714,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             for t in b.positions:
                 sector_ct[SECTORS.get(t, "?")] = sector_ct.get(SECTORS.get(t, "?"), 0) + 1
             slots = limits["max_open_positions"] - len(b.positions)
-            # OPERATÖR ONAYI TAŞINIR (v190). `merge_dated_jsonl` bu TARİHİN tüm satırlarını yeniden
+            # OPERATÖR ONAYI TAŞINIR. `merge_dated_jsonl` bu TARİHİN tüm satırlarını yeniden
             # yazar; aynı seans yeniden işlenirse (re-seed sonu ya da elle tetik — monotonluk bekçisi
             # EŞİT güne izin verir) operatörün onayı SESSİZCE silinir ve onaylı plan bir daha
             # silahlanamazdı. Onay bir OLAYdır: yeniden üretilen satıra aynen taşınır, hüküm değişmez.
@@ -1694,7 +1723,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         if r.get("date") == dstr and r.get(ONAY_ALANI)}
             _plan_law: dict = {}     # plan_id → E1 icra kararı (aşağıda silahlananlar için saklanır)
             others_rets = [ind.returns_tail(per[o].loc[:d, "close"]) for o in b.positions if o in per]  # once/day
-            # C12 (denetim 2026-08-02): Y3 NAV TAVANLARININ ÜRETİCİ TARAFI. `guard._y3_portfolio_caps`
+            # NAV TAVANLARININ ÜRETİCİ TARAFI. `guard._y3_portfolio_caps`
             # equity/sector_notional/heat_pct (portföy) + notional/risk_dollars (plan) okuyor; canlı
             # döngü BUNLARIN HİÇBİRİNİ göndermiyordu, yani `portfolio.sector_cap`/`heat_cap` knob'ları
             # açılsa bile yapısal olarak bağlayamıyordu (en sıkı tavanla bile hüküm birebir aynı).
@@ -1711,7 +1740,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                              # 0.0 at ARM time — identical to the backtest (backtest.py "breaker enforced
                              # at fill, not at arm"): the live loop passing the real day P&L here NO_GO'd
                              # candidates the walk-forward would have armed on the same bars, silently
-                             # diverging live from simulated behavior (audit #15). The breaker still
+                             # diverging live from simulated behavior. The breaker still
                              # blocks the FILL next open in both engines.
                              "sector_counts": sector_ct, "day_pnl_pct": 0.0,
                              "open_risk_r": sum(p.size_r for p in b.positions.values())
@@ -1730,10 +1759,10 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                         "dormant_setup": bool(c.get("dormant_setup")),
                         "profit_target": c["profit_target"], "strategy_version": version,
                         "skill_chain": [skills.screener_for(c.get("setup", "breakout_vcp")), "position-sizer", "pre-trade-discipline-gate"]}
-                if _onaylar.get(_pid):                  # v190: önceki turda verilmiş onay taşınır
+                if _onaylar.get(_pid):                  # önceki turda verilmiş onay taşınır
                     plan[ONAY_ALANI] = _onaylar[_pid]
                 _checks = []                            # Faz 3 (5b): yapılandırılmış karar ağacı
-                # C12: dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider — `armed_pivots`/`atr`
+                # dolar büyüklükleri kapıya PLAN ŞEMASINI BOZMADAN gider — `armed_pivots`/`atr`
                 # yan haritalarıyla aynı gerekçe: `notional`/`risk_dollars` bir DEFTER alanı değil,
                 # tavanın girdisidir. E2'ye (`trade_plans.jsonl`) yazılan sözlük `plan`dır ve şeması
                 # değişmedi; kapıya giden onun zenginleştirilmiş KOPYASIDIR.
@@ -1743,7 +1772,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 _bl = earnings.in_blackout(c["ticker"], dstr)
                 # DOĞRULANDI mı yoksa VERİ YOK mu? İkisi de "passed" görünüyordu; canlıda evrenin
                 # %28'inde (250'nin 69'u) takvim yok, yani guard o isimlerde sessizce kapalı. Plan
-                # kaydı artık bunu taşıyor (denetim turu 11).
+                # kaydı artık bunu taşıyor.
                 _ek = earnings.known(c["ticker"])
                 _checks.append({"check": "earnings_blackout", "passed": not _bl, "severity": "hard",
                                 "value": c["ticker"], "threshold": None,
@@ -1752,7 +1781,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                          else (None if _ek else "kazanç takvimi YOK — kontrol edilemedi"))})
                 if verdict != "NO_GO" and _bl:
                     verdict = "NO_GO"; greasons = list(greasons) + ["kazanç öncesi karartma (earnings blackout)"]
-                # FAIL-OPEN ARTIK BEYANLI (2026-08-01). `gate_checks.coverage` bunu 2026-07-21'den
+                # FAIL-OPEN ARTIK BEYANLI. `gate_checks.coverage` bunu 2026-07-21'den
                 # beri taşıyordu ama KARAR SATIRINDA — panonun ve operatörün ilk baktığı
                 # `gate_reasons`ta — iz yoktu: evrenin 57/251'inde karartma kapısı sessizce
                 # geçirgendi. Not KARAR DEĞİŞTİRMEZ (NO_GO değil, REVIEW'e düşürme değil): veri
@@ -1761,7 +1790,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 if not _ek:
                     greasons = list(greasons) + [earnings.COVERAGE_NOTE]
                     _kapsam_disi += 1
-                # TAKVİM GÜVENİLMEZSE KAPI SEMBOLE DEĞİL TURA KAPANIR (2026-08-03, Rol-1 A1).
+                # TAKVİM GÜVENİLMEZSE KAPI SEMBOLE DEĞİL TURA KAPANIR.
                 # Ölçüm ve iki bilinçli istisna `earnings.calendar_untrustworthy` blokunda.
                 # NEDEN NO_GO DEĞİL REVIEW: kapının kör olması bir SEMBOLÜN kusuru değildir; red
                 # etmek, bilgi yokluğunu kanıt sayıp planı gömmek olurdu (arming'in `gate_undefined`
@@ -1794,7 +1823,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     pw = _shadow.predict_proba(plan) if _shadow else None
                     if pw is not None:
                         plan["p_win_shadow"] = pw
-                        # TERFİLİ modelin TEK yetkisi (öneri #3): REVIEW + çok düşük P(kazanç) → NO_GO.
+                        # TERFİLİ modelin TEK yetkisi: REVIEW + çok düşük P(kazanç) → NO_GO.
                         # GO ve NO_GO kararlarına hiçbir koşulda dokunmaz; terfi kriteri shadow_model'de
                         # yazılı (canlı Brier taban-oranı yenmeden bu blok hiç çalışmaz).
                         from .shadow_model import ShadowTradeOutcomeModel as _SMv
@@ -1807,13 +1836,13 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                             greasons = list(greasons) + [f"gölge model (terfili): P(kazanç) %{int(pw*100)} < %{int(_SMv.REVIEW_VETO_P*100)}"]
                             plan["gate_verdict"], plan["gate_reasons"] = verdict, greasons
                 except Exception as e:
-                    # YASA 4 (2026-07-21) — EN TEHLİKELİ SINIF: burası bir KAPI KARARI. Sessizce
+                    # YASA 4 — EN TEHLİKELİ SINIF: burası bir KAPI KARARI. Sessizce
                     # düşerse gölge model vetosu HİÇ uygulanmaz, plan GO kalır ve karar ağacında
                     # "shadow_veto" satırı da hiç görünmez (gate_checks 144/144 boş kalmasının aynısı).
                     obs.warn("shadow_veto_check_failed", plan_id=plan.get("id"),
                              ticker=plan.get("ticker"), error=f"{type(e).__name__}: {e}")
                 plans.append(plan)
-                # E1 İCRA GİRDİLERİ — SİNYAL BARI KAPANIŞINDA SABİTLENİR (kart: "emir parametreleri
+                # E1 İCRA GİRDİLERİ — SİNYAL BARI KAPANIŞINDA SABİTLENİR ("emir parametreleri
                 # plan anında sabitlenir; as-of ihlali yok"). Referans fiyat o kapanıştır: emir
                 # kapanıştan SONRA, ertesi açılıştan ÖNCE gider. `entry_trigger` çoğu kurulumda tam
                 # olarak bu kapanıştır — buy-stop'un "stop price must be greater than current price"
@@ -1822,7 +1851,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     _ref = float(per[c["ticker"]].loc[d, "close"])
                 except Exception:  # sessiz-yutma: referans ÖLÇÜLEMEDİ ve karar sözlüğü bunu `ref_kaynak` ile beyan eder (uydurma fiyat yok)
                     _ref = None
-                # C13 (denetim 2026-08-02): PİVOT DA BU YAN TABLODA TAŞINIR. Kurulumun yapı çizgisi
+                # PİVOT DA BU YAN TABLODA TAŞINIR. Kurulumun yapı çizgisi
                 # `strategy.early_kill_pivot_exit`in okuduğu TEK girdidir; replay (backtest.armed_pivots)
                 # ve gölge-v2 onu taşıyordu, canlı motor TAŞIMIYORDU → `Position.pivot` daima 0.0 →
                 # knob terfi etse canlıda SESSİZ NO-OP, replayde ateşler (sahte-terfi yolu). Plan
@@ -1834,7 +1863,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     **BR.entry_order_decision(float(c["entry_trigger"]), ref_price=_ref,
                                               atr=c.get("atr")),
                     "pivot": (_pv if _pv > 0 else None)}
-                # v190 TEK KOŞUL NOKTASI (`girise_uygun`): iki keşif dalı da eskiden `verdict == "GO"`
+                # TEK KOŞUL NOKTASI (`girise_uygun`): iki keşif dalı da eskiden `verdict == "GO"`
                 # yazıyordu ve operatörün REVIEW planına verdiği onayın hiçbir yolu yoktu — kapı
                 # "insan baksın" diyor, insan bakıyor, sonra hiçbir şey olmuyordu. Çıta GEVŞEMEDİ:
                 # onaysız REVIEW bu iki dalda hâlâ silahlanmaz, NO_GO hiçbir koşulda geçmez.
@@ -1893,23 +1922,23 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             # Sınırlıdır (silahlı sayısı ≤ max_open_positions + keşif tavanı) → sonsuz büyüme yok.
             _prev_law = dict(meta.get("entry_law") or {})
             _prev_law.update(_plan_law)
-            # v190: SİLAHLILARA EK OLARAK BU SEANSIN REVIEW PLANLARI DA YASASINI KORUR. Operatör
+            # SİLAHLILARA EK OLARAK BU SEANSIN REVIEW PLANLARI DA YASASINI KORUR. Operatör
             # onayı döngüden SONRA gelir; onaylanan plan ancak SİLAHLANMA ANINDAKİ (sinyal barı
             # kapanışı) icra girdileriyle kuyruğa alınabilir. Yasa atılsaydı onaylı plan
             # atr/ref_price'sız dolardı: aynı planda iki farklı limit tavanı ve kırılım teyidinin
-            # kaybı — C8'in kapattığı kusurun ta kendisi. SINIR KORUNUR: küme her seans SIFIRDAN
+            # kaybı — tek-kapı yasasının kapattığı kusurun ta kendisi. SINIR KORUNUR: küme her seans SIFIRDAN
             # kurulur (silahlı ≤ tavan + o seansın REVIEW planları), yani birikim yok.
             _yasa_tut = {a["id"] for a in meta["armed"] if a.get("id")} | \
                         {p2["id"] for p2 in plans
                          if p2.get("gate_verdict") == "REVIEW" and p2.get("id")}
             meta["entry_law"] = {pid: _prev_law[pid] for pid in _yasa_tut if pid in _prev_law}
             store.merge_dated_jsonl("trade_plans.jsonl", dstr, plans)
-            try:                                   # öneri #1: günün TÜM planları + uyuyan ateşlemeler
+            try:                                   # günün TÜM planları + uyuyan ateşlemeler
                 from . import counterfactual       # karşı-olgusal deftere açılır (dönüş görmezden gelinir)
                 counterfactual.collect(dstr, plans, {a["id"] for a in meta["armed"]}, dormant_sigs,
                                        int(float(eff.get("exit.time_stop_days", 15))),
                                        near_miss=near_miss_sigs, regime=rj["regime"])
-                # ANA collect'in muhasebesi geç-borç çağrıları EZMEDEN kopyalanır (2026-08-12):
+                # ANA collect'in muhasebesi geç-borç çağrıları EZMEDEN kopyalanır:
                 # özet olaydaki `near_miss_yazilan` bu seansın satırlarını sayar, geç-borcunkini değil.
                 _nm_toplama = dict(counterfactual.SON_TOPLAMA)
                 for _ds, _rows in (late_by_date or {}).items():    # kaçan seanslar kendi tarihleriyle
@@ -1918,12 +1947,12 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                            near_miss=_rows, regime=rj["regime"])
             except Exception as e:
                 obs.warn("cf_collect_failed", error=f"{type(e).__name__}: {e}")
-            if meta["armed"]:                              # #42 push a single new-plans alert (no-op if unconfigured)
+            if meta["armed"]:                              # push a single new-plans alert (no-op if unconfigured)
                 try:
                     from . import notify
                     if notify.configured():
                         top = meta["armed"][0]
-                        # K1 DEVRİ (3b): ham `notify.send` metni yerine `notify.new_plan` — üretilip
+                        # ham `notify.send` metni yerine `notify.new_plan` — üretilip
                         # HİÇ çağrılmayan sarmalayıcı buraya bağlandı ve metin TEK yerde kaldı.
                         # Kapı hükmü de metne girer (GO ile REVIEW aynı bildirim değil).
                         notify.new_plan(top["ticker"], top.get("gate_verdict") or "?",
@@ -1932,7 +1961,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                 except Exception:  # sessiz-yutma: obs alarmı/kaydı bu noktada ZATEN yazıldı; ikincil bildirim kanalının (Telegram/webhook) düşmesi alarmı asla düşüremez
                     pass
             # mirror the agent's armed BUY decisions to the Alpaca PAPER account (opt-in backend, paper-only)
-            # C8 (2026-08-02): GÖVDE `mirror_submit_armed`A TAŞINDI — pano düğmesi de AYNI kapıdan
+            # GÖVDE `mirror_submit_armed`A TAŞINDI — pano düğmesi de AYNI kapıdan
             # geçsin diye. Mantık değişmedi; buradaki tek fark çağrı olması.
             mirror_submit_armed(meta, dstr, eq_now=eq_now, plans=plans, halted=halted, source="loop")
 
@@ -1957,7 +1986,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                     for t, p in b.positions.items()},
                       "equity": eq_now, "peak_equity": meta.get("peak_equity", START_EQUITY)},
                 live_armed=[a["ticker"] for a in meta["armed"]], explore_mode=bool(explore_mode),
-                # GÖLGE-v2 (2026-07-30): barlar + indeks + rejim bayrağı GEÇİLİRSE aynı kanca
+                # GÖLGE-v2: barlar + indeks + rejim bayrağı GEÇİLİRSE aynı kanca
                 # yaşam-döngüsü motorunu da koşturur (fill → yönetim → çıkış → mark, varyant başına
                 # kalıcı kâğıt kitap). `per`/`idx` ZATEN burada; ikinci bir bar yükleyici YOK.
                 bars=per, index_bars=idx, regime_ok=regime_ok)
@@ -1965,7 +1994,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             obs.warn("shadow_variants_failed", error=f"{type(e).__name__}: {e}")
 
     if not _p2_kostu:
-        # YASA 4 (2026-08-12): P2 koşmayınca near-miss gölge bacağı da koşmaz — bugüne dek bu
+        # YASA 4: P2 koşmayınca near-miss gölge bacağı da koşmaz — bugüne dek bu
         # sessizdi ve "defterde near-miss neden yok?" sorusu iki hafta cevapsız kaldı. Sebep
         # türetimi blok koşulunun birebir tersidir; explore_mode budget≤0 hâlini zaten kapsadığı
         # için (halted/data_bad değilse) kalan tek sebep kitap doluluğudur.
@@ -1984,7 +2013,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
             pass
 
     meta["last_date"] = dstr
-    # SICAK FİYAT — DEVRE DIŞI (sadeleştirme turu, 2026-07-30). Bu blok seansın kapanış fiyatlarını
+    # SICAK FİYAT — DEVRE DIŞI. Bu blok seansın kapanış fiyatlarını
     # `mrd:price`a yazıyordu. ÖLÇÜM: `hotstate.get_price`ın PRODÜKSİYONDA hiçbir çağıranı yok (yalnız
     # testler); intraday tüketicisi bilerek sıcak fiyatı DEĞİL admissible barın OHLC'sini okuyor
     # (intraday_cycle: "ASLA sıcak fiyattan"). Yani EOD kapanışlarını Redis'e kopyalamak evrenin
@@ -1999,14 +2028,14 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # except Exception:  # sessiz-yutma: hotstate uçucu türev; fiyat kopyalama hatası günlük turu düşüremez
     #     pass
     _hotstate_off_once("mrd:price", "daily_cycle", "get_price")
-    # C19: `meta["day_start_equity"]` ARTIK BURADA YAZILMIYOR. Eski satır
+    # `meta["day_start_equity"]` ARTIK BURADA YAZILMIYOR. Eski satır
     # (`b.equity(_marks(per, d))` — KAPANIŞ markı) canlı devre kesicisini bir GECELİK BOŞLUK
     # kesicisine indiriyordu; yazım açılış fazına, replay ile aynı noktaya taşındı (yukarıda
-    # "C19" bloğu). Buraya ikinci bir yazım koymak, iki motoru yeniden ayrıştırırdı.
+    # GÜNLÜK KESİCİ bloğu). Buraya ikinci bir yazım koymak, iki motoru yeniden ayrıştırırdı.
     mirror = {}
     try:
         mirror = reconcile_broker_state(meta, dstr, b.closed,   # Phase 1: reconcile internal book ↔ Alpaca mirror
-                                        # B6: `ts_open` sapma sınıflandırıcısının YAŞ sinyalidir —
+                                        # `ts_open` sapma sınıflandırıcısının YAŞ sinyalidir —
                                         # bugün dolmayan pozisyonda bugünün eq'siyle kıyas YAPILMAZ.
                                         open_positions={t: {"qty": p.qty, "scaled_out": p.scaled_out,
                                                             "trail_stop": p.trail_stop, "plan_id": p.plan_id,
@@ -2016,11 +2045,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                         # katmanı ikinci bir bar kaynağı açmaz (tek gerçek).
                                         opens={t: float(df.loc[d, "open"]) for t, df in per.items()
                                                if d in df.index},
-                                        # SB-2: DOLUM anının boyut tabanı — iç motor bu `eq_now`la
+                                        # DOLUM anının boyut tabanı — iç motor bu `eq_now`la
                                         # doldurdu (yukarıda :1114). Adet sapması sınıflandırması bunu
-                                        # SB-1 gönderim makbuzuyla kıyaslar (drift_sinifi).
+                                        # gönderim makbuzuyla kıyaslar (drift_sinifi).
                                         fill_eq_now=eq_now,
-                                        # B3: koruma-OCO dolumu kitaba kapanış olarak işlenebilsin
+                                        # koruma-OCO dolumu kitaba kapanış olarak işlenebilsin
                                         # diye kitabın kendisi geçilir (_save_broker aşağıda, kapanış
                                         # aynı turda kalıcılaşır).
                                         broker=b)
@@ -2030,14 +2059,14 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     _save_broker(b, meta)
 
     try:
-        with skills.pipeline_run("P5_LEARN", artifact="state/hypotheses.jsonl"):   # learning is auditable too (#39)
+        with skills.pipeline_run("P5_LEARN", artifact="state/hypotheses.jsonl"):   # learning is auditable too
             outcome = rollback.evaluate_outcomes(goal)   # close the learning loop: promote/rollback + writeback
             try:
                 from .shadow_model import ShadowTradeOutcomeModel as _SM
                 _SM.refit_and_save()                     # v3 gölge model — her döngü ucuz yeniden-eğitim
                 from .regime_trigger import DeferredRegimeBudgetTrigger
                 DeferredRegimeBudgetTrigger().evaluate() # v3 ertelenmiş bütçe tetikleyicisi (yalnız sinyal)
-                from . import analytics as _an           # öneri #3: skor kalibrasyonu — rapor, karar değil
+                from . import analytics as _an           # skor kalibrasyonu — rapor, karar değil
                 _cal = _an.score_calibration()
                 if _cal:
                     store.write_json("score_calibration.json", _cal)
@@ -2046,11 +2075,11 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     # (idempotent — aynı gün ikinci koşu yazmaz). "IC yükseliyor mu?" sorusu
                     # ancak defterde tarih tarih duran bir seriyle cevaplanabilir.
                     _an.record_score_calibration_point(dstr, _cal)
-                from . import probgate as _pg            # öneri #4: kapı meta-kalibrasyonu (kendini sıkılaştırır)
+                from . import probgate as _pg            # kapı meta-kalibrasyonu (kendini sıkılaştırır)
                 _pg.refresh_meta_calibration()
-                _an.llm_opinion_calibration()            # Kademe-2: LLM görüş kalibrasyonu (terfi kuralı yazılı)
-                _an.exit_efficiency()                    # #4: MFE/MAE muhasebesi (rapor + UCB dürtme bayrağı)
-                _an.cf_fidelity()                        # v10 #2: cf simülasyonunun canlıya sadakati
+                _an.llm_opinion_calibration()            # LLM görüş kalibrasyonu (terfi kuralı yazılı)
+                _an.exit_efficiency()                    # MFE/MAE muhasebesi (rapor + UCB dürtme bayrağı)
+                _an.cf_fidelity()                        # cf simülasyonunun canlıya sadakati
                 # Aşama 1.2: bileşen IC'si (rs/tight/vol/prox × 5/10/20 bar × katman). Bileşenler
                 # defterde alan olarak durmadığı için barlardan yeniden hesaplanır — bu yüzden
                 # P5'in en pahalı adımı (evren CSV'leri okunur). Günde bir koşar ve SIFIR yetkisi
@@ -2069,7 +2098,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                     _tc.build()
                 except Exception as e:
                     obs.warn("threshold_curve_failed", error=f"{type(e).__name__}: {e}")
-                # H4 — ÖNER→ÖLÇ→ÖĞREN OTOMASYONU (Hermes paketi, 2026-07-30). Kuyrukta bekleyen
+                # ÖNER→ÖLÇ→ÖĞREN OTOMASYONU (Hermes paketi). Kuyrukta bekleyen
                 # bileşik varsa HAFTALIK YOKLAMA BÜTÇESİ içinde prescreen AYRI BİR SÜREÇTE başlar.
                 # GECE DÖNGÜSÜNÜ BLOKLAMAZ: prescreen dakikalar sürer, senkron çağrılsaydı EOD işleri
                 # gecikirdi (ops/barsarchive-run.sh nohup deseni). Kendi korumasında: kuyruk yolu
@@ -2082,17 +2111,17 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                 butce_kalan=_sp.get("butce_kalan"))
                 except Exception as e:
                     obs.warn("composite_spawn_hook_failed", error=f"{type(e).__name__}: {e}")
-                # H5 — SKILL ÖZ-YÖNETİMİ: atıf kanıtı eşiğini aşan skiller. PROTECTED beşlisi ASLA;
+                # SKILL ÖZ-YÖNETİMİ: atıf kanıtı eşiğini aşan skiller. PROTECTED beşlisi ASLA;
                 # motor-içi skiller yalnız RAPORLANIR (bayrak yazımı davranışı değiştirmez).
                 try:
                     from . import skills as _sk5
                     _sk5.auto_shadow_from_evidence()
                 except Exception as e:
                     obs.warn("skill_auto_shadow_failed", error=f"{type(e).__name__}: {e}")
-                _an.mae_profile()                        # K1 devri: stopların kör ikizi (MAE muhasebesi)
+                _an.mae_profile()                        # stopların kör ikizi (MAE muhasebesi)
                 _an.near_miss_report()                   # darboğaz: hangi eşik masada para bırakıyor?
                 _an.regime_edge()                        # cf-bootstrap bulgusu: rejim başına edge (ajana besleme)
-                _universe_drift_check()                  # denetim turu 3: evren ölü isim taşıyor mu?
+                _universe_drift_check()                  # evren ölü isim taşıyor mu?
                 from . import watchdog as _wd5
                 _wd5.check_integrity_and_alarm()         # ÜRETKENLİK+KORUNUM+DETERMİNİZM (sessiz hata avı)
                 _wd5.beat("p5_calibrations")
@@ -2103,8 +2132,8 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     except Exception as e:
         obs.warn("evaluate_outcomes_failed", error=f"{type(e).__name__}: {e}")
 
-    # ---- WP-K TREND KOLU GÖLGE-KİTABI (2026-07-31) — ANA İŞTEN SONRA, SIFIR YETKİ ----
-    # EDG-2026-009'un incumbent kolu (chandelier × N=10) canlı barlarda SANAL bir defterde yürür.
+    # ---- TREND KOLU GÖLGE-KİTABI — ANA İŞTEN SONRA, SIFIR YETKİ ----
+    # İncumbent kol (chandelier × N=10) canlı barlarda SANAL bir defterde yürür.
     # Emir yolu, portföy, plan, karne: HİÇBİRİNE dokunmaz — tek yazdığı `trend_book.json`.
     # HATA ANA DÖNGÜYÜ ASLA KIRMAZ (YASA 4): bir gölge defterinin muhasebesi, gerçek kitabın
     # nabzını/kapanışını rehin alamaz. Yutma SESSİZ DEĞİL — olay adıyla kaydedilir ve gölge
@@ -2131,19 +2160,19 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                            breaker_tripped=breaker, halted=halted, data_ok=not data_bad,
                            explore_mode=bool(explore_mode),
                            **ayna_sapma_alanlari(mirror))
-    # KAPSAM SAYACI (2026-08-01): "kaç plan üretildi" ile "kaç planda karartma kapısı KONUŞABİLDİ"
+    # KAPSAM SAYACI: "kaç plan üretildi" ile "kaç planda karartma kapısı KONUŞABİLDİ"
     # ayrı sayılardır. İkincisi bugüne dek hiçbir olayda yoktu; fail-open sessizken bir eğilim
     # (kapsamın aşınması) yalnız plan plan bakılarak görülebilirdi. `takvim_bos` üçüncü hâli taşır:
     # "57 sembol eksik" ile "takvim HİÇ yok" aynı sayıyla anlatılmaz.
     _kapsam = {"plan": len(plans), "kapsanan": len(plans) - _kapsam_disi, "kapsam_disi": _kapsam_disi,
                "takvim_bos": not earnings._load(),
-               # TAKVİM SAĞLIĞI AYNI SATIRDA (2026-08-03): "kaç planda kapı konuşamadı" ile "kapı
+               # TAKVİM SAĞLIĞI AYNI SATIRDA: "kaç planda kapı konuşamadı" ile "kapı
                # BU TUR hiç konuşamadı" ayrı olgulardır ve ikincisi birincisini anlamsız kılar.
                # Sayaç üretilip TÜKETİLİYOR (YASA 6): karne/pano bu alandan okur.
                "takvim_guvenilmez": (_takvim_kusuru or {}).get("kod"),
                "takvim_guvenilmez_sebep": (_takvim_kusuru or {}).get("sebep"),
                "takvim_dusen_plan": _takvim_dusen}
-    # NEAR-MISS KURAKLIK BEKÇİSİ (2026-08-12): ana tarama aday bulmuşken GEVŞEK gölgenin 0 bulması
+    # NEAR-MISS KURAKLIK BEKÇİSİ: ana tarama aday bulmuşken GEVŞEK gölgenin 0 bulması
     # yapısal olarak şüphelidir (Temmuz tabanı: her aday gününde ≥1 near-miss; 07-16: 1 aday/12 nm,
     # 07-28: 6/19). 2026-07-30→08-12 sessiz ölümü tam bu geometriyle yaşandı ve hiçbir olay yoktu.
     # Olay eşik tablosunu [sıkı, gevşek] çiftleriyle taşır: iki sütun eşitse gevşetme fiilen ÖLÜdür
@@ -2157,7 +2186,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                     "entry.min_score", "entry.pivot_proximity_pct")},
                  detail="ana tarama aday buldu ama gevşek gölge 0 near-miss üretti — bant boş ya da "
                         "bacak ölü; esikler[k]=[sıkı, gevşek], çiftler eşitse gevşetme etkisiz")
-    # BU SATIR PANONUN "DÜN GECE" KARTININ KAYNAĞIDIR (v190, YASA 6 zinciri):
+    # BU SATIR PANONUN "DÜN GECE" KARTININ KAYNAĞIDIR (YASA 6 zinciri):
     # `api._son_dongu` olay defterinin KUYRUĞUNDAN bu satırı okur → `/api/today.son_dongu` → kart.
     # Kart eskiden `/api/events`in SON 80 KAYDINDA bunu arıyordu; günde BİR yazılan bir olay, gün
     # içindeki poll/uyarı satırlarıyla o pencereden taşınca kart "ölçülemedi" diyordu — oysa döngü
@@ -2165,7 +2194,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
     # dosyası AÇILMADI: döngünün yazdığı dosya kümesi bilinçli ve sınırlı bir listedir
     # (test_loop_gaps_v48::test_loop_writes_only_declared_state_files) ve olgu ZATEN bu satırda
     # yazılı — ikinci bir kopya, aynı olgunun iki sahibi demek olurdu.
-    # `near_miss*` sayaçları (2026-08-12): üretim `near_miss` (bacak koşmadıysa None — uydurma 0
+    # `near_miss*` sayaçları: üretim `near_miss` (bacak koşmadıysa None — uydurma 0
     # yok), deftere düşen `near_miss_yazilan` (cf.collect muhasebesi; collect konuşmadıysa None),
     # geç-bar borcundan gelen `near_miss_gec`. Okuyucu: pano "dün gece" kartı + teşhis.
     obs.log("daily_cycle", date=dstr, regime=rj["regime"], candidates=len(candidates), plans=len(plans),
@@ -2189,7 +2218,7 @@ SCAN_TAIL_BARS = 340       # P2 tarama penceresi: 252-bar ısınma + haftalık r
 
 
 def _scan_tail(df_t, d):
-    """P2'nin tarama dilimi — TEK TANIM (sadeleştirme turu, 2026-07-30).
+    """P2'nin tarama dilimi — TEK TANIM.
 
     `.loc[:d]` NEDENSELLİK kesimidir (d'den sonrası görünmez), `.tail(SCAN_TAIL_BARS)` maliyet
     kesimidir. Bu ikisi bir tarife: gölge-varyant katmanı AYNI dilim üzerinde ölçmek zorundadır,
@@ -2199,6 +2228,9 @@ def _scan_tail(df_t, d):
 
 
 def _marks(per, d):
+    """`d` seansında barı OLAN sembollerin kapanış fiyatları: `{ticker: close}`.
+
+    O tarihte verisi olmayan sembol sözlüğe HİÇ girmez (eksik fiyat ileri taşınmaz)."""
     return {t: per[t].loc[d, "close"] for t in per if d in per[t].index}
 
 
@@ -2209,10 +2241,10 @@ def _persist_trade(trade: dict) -> None:
     identical row again — one crash-day could stack dozens of duplicates into the learning ledger
     (audit #11). Identity = (plan_id|ticker, ts_close, exit_reason, exit price).
 
-    KAYNAK DAMGASI (BT-1, 2026-07-31): BURASI defterin İLERİ yoludur — bu fonksiyondan geçen her
+    KAYNAK DAMGASI: BURASI defterin İLERİ yoludur — bu fonksiyondan geçen her
     satır canlı kâğıt döngünün GERÇEKTEN kapattığı bir işlemdir. Tohum yolu (`run.replay_seed`)
     defterin tamamını tek seferde yazar ve kendi damgasını basar. Damga satır diske DÜŞMEDEN
-    basılır: sonradan damgalamak, damgasız bir aralık doğurur ve BT-1 tam olarak o aralıktı."""
+    basılır: sonradan damgalamak, damgasız bir aralık doğurur ve bulgu tam olarak o aralıktı."""
     ledgerstamp.stamp(trade, ledgerstamp.LIVE_PAPER)
     key = (trade.get("plan_id") or trade.get("ticker"), str(trade.get("ts_close")),
            str(trade.get("exit_reason")), round(float(trade.get("exit") or 0.0), 6))
@@ -2240,7 +2272,7 @@ def _persist_trade(trade: dict) -> None:
 # HANGİ TABANDA YAZILIR — EĞRİNİN KENDİ TABANINDA, KİTABINKİNDE DEĞİL. `sermaye.uygula` kitabı yeni
 # bir tabana taşır (canlı çağ 100.000$'dan başlar) ama eğri noktalarını SİLMEZ; kırılma `ofset`
 # olarak BEYAN edilir ve `recompute`in `equity_curve_tail` kimliği eğrinin sonuna tam olarak o
-# ofseti EKLEYEREK ölçer (recompute.py:295-305). Ham `eq_now` yazmak iki şeyi birden bozardı:
+# ofseti EKLEYEREK ölçer (`recompute.report` kimlik kıyasları). Ham `eq_now` yazmak iki şeyi birden bozardı:
 #   (a) kimlik ofseti İKİ KEZ sayar → kalıcı kırmızı bir mutabakat satırı (kurt masalı),
 #   (b) eğri, reset gününde ofset kadar SIÇRAR → hiç kazanılmamış bir günlük kâr çizilir; sermaye.py
 #       :339 bu hatayı adıyla ("%5,87'lik UYDURMA bir günlük kâr") zaten uyarıyordu.
@@ -2318,6 +2350,10 @@ def _persist_equity_point(dstr: str, eq_now, meta: dict) -> dict:
         red: dict = {}
 
         def _ekle(doc):
+            """Bu seansın noktasını özsermaye eğrisine ekler ya da aynı günün noktasını YERİNDE tazeler.
+
+            ÜÇ RET: kuyruk ayrıştırılamıyorsa, son nokta bu seanstan İLERİDEYSE (geriye yazım) ve
+            aynı gün-aynı değerse hiçbir bayt yazılmaz; neden `red` sözlüğüne bırakılır."""
             pts = (doc or {}).setdefault("points", [])
             son = pts[-1] if pts else None
             son_t = None
@@ -2377,7 +2413,7 @@ def _trail_patch_alarm(sym: str, res: dict, frm: float, to: float) -> None:
 def _entry_fill_price(order: dict) -> float | None:
     """Bir emrin KENDİ dolum fiyatı (`filled_avg_price`). İki tüketici, tek hüküm: (a) bracket
     PARENT'ının GİRİŞ dolumu — `exit_fill_price`in ikizi: o BACAKLARA bakar (çıkış), bu emrin
-    kendisine; (b) B1 kapatma emri (`DELETE /positions`ın doğurduğu market SELL) — o da düz bir
+    kendisine; (b) karar kapatma emri (`DELETE /positions`ın doğurduğu market SELL) — o da düz bir
     emirdir, dolumu kendi gövdesindedir. `partially_filled` de gerçek bir `filled_avg_price`
     taşır ve atlanırsa slipaj ölçümü tam icra karıştığında sessizce boşalır (denetim #54'ün dersi)."""
     if not isinstance(order, dict):
@@ -2413,7 +2449,7 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
     süpürülür/iptal olursa (`canceled` + filled_qty>0) o da bir SONdur: ortalama fiyat son kez
     yazılır ve satır gerçek statüsüyle donar."""
     out = {"eslesen": 0, "yazilan": 0, "acilis_yok": 0, "kismi_tazelenen": 0}
-    # KİLİT (KALEM 8, 2026-08-09): read_jsonl → (değiştir) → write_jsonl TEK kritik bölge, hepsi
+    # KİLİT: read_jsonl → (değiştir) → write_jsonl TEK kritik bölge, hepsi
     # `file_lock(ENTRY_LEDGER)` altında. Eskiden read KİLİTSİZdi ve write kendi kilidini AYRI
     # alıyordu; ikisinin arasına aynı deftere düşen bir append/patch, write tüm defteri yeniden
     # yazınca EZİLİYORDU (kayıp-güncelleme). `write_jsonl`in mkstemp+os.replace'i ATOMİKLİK verir
@@ -2478,13 +2514,13 @@ def _patch_entry_slippage(by_coid: dict, opens: dict | None, dstr: str) -> dict:
 
 
 # =============================================================================================
-# SB-2 (2026-08-09) — MIRROR_DRIFT SAPMA SINIFI (`drift_sinifi`)
+# MIRROR_DRIFT SAPMA SINIFI (`drift_sinifi`)
 # =============================================================================================
-# VAKA (docs/BAYAT-SERMAYE-KOK-2026-08-07.md §8/B2): 08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı,
+# VAKA (docs/BAYAT-SERMAYE-KOK-2026-08-07.md): 08-05 gecesi DÖRT MIRROR_DRIFT alarmı bastı,
 # dördü de ADET sapması dedi (54 vs 25 …) ve HİÇBİRİ sebebi ADLANDIRMADI — belirti (%49 sapma)
 # görüldü, SINIF söylenmedi. Gerçek kök: gönderim anında kitabın boyut tabanı 94.457,91$, dolum
-# anında 100.000$ (bayat sermaye). Bu yardımcı, adet sapmasını SB-1 boyut makbuzuyla
-# (`meta["size_law"]`, v222 — GÖNDERİM anının girdileri) DOLUM anının girdilerine kıyaslayıp
+# anında 100.000$ (bayat sermaye). Bu yardımcı, adet sapmasını boyut makbuzuyla
+# (`meta["size_law"]` — GÖNDERİM anının girdileri) DOLUM anının girdilerine kıyaslayıp
 # sapmayı ADLANDIRIR. ALARMIN KENDİSİ/EŞİĞİ (>%25) DEĞİŞMEZ — yalnız SEBEP alanı eklenir.
 # Türetilemeyen sınıf UYDURULMAZ: `olculemedi` + neden (0/boş DEĞİL — YASA: UYDURMA YASAĞI).
 _DRIFT_EPS_EQ   = 1.0        # eq_now farkı: makbuz 2 ondalığa yuvarlı — $1 altı yuvarlama gürültüsü
@@ -2494,28 +2530,28 @@ _DRIFT_SEANS_S  = 24 * 3600  # "nabız yaşı > 1 seans" eşiği (sermaye_kaynag
 
 def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
                        dolum_taze: bool | None = None) -> tuple[str, str]:
-    """ADET sapmasının (`reconcile_broker_state` 1.2b) SEBEP SINIFINI türet — SB-2/B2 tablosu.
+    """ADET sapmasının (`reconcile_broker_state` 1.2b) SEBEP SINIFINI türet — sapma sınıfı tablosu.
 
-    Girdi: `receipt` = SB-1 boyut makbuzu (`meta["size_law"][plan_id]`, GÖNDERİM anının girdileri:
-    eq_kaynak/eq_now/peak/size_mult/kitap_rev; B6'dan beri iç dolum anında `dolum_eq`/`dolum_peak`
+    Girdi: `receipt` = boyut makbuzu (`meta["size_law"][plan_id]`, GÖNDERİM anının girdileri:
+    eq_kaynak/eq_now/peak/size_mult/kitap_rev; dolum-anı damgasından beri iç dolum anında `dolum_eq`/`dolum_peak`
     İKİNCİ YARISI damgalanır) · `fill_eq_now`/`fill_peak` = BU TURUN açılış girdileri ·
     `dolum_taze` = pozisyon BU seansta mı doldu (`ts_open == dstr`; None = yaş okunamadı).
     Sınıf, iki bacağın SEBEBİNİ ayırt ETTİĞİ kadar kesindir; ayırt edilemiyorsa `olculemedi` —
     0/boş DEĞİL, ADI OLAN üçüncü hâl (UYDURMA YASAĞI).
 
-    B6 (fill_eq_now anakronizmi, teşhis 2026-08-10): `fill_eq_now` DOLUM anının değil BU TURUN
+    ANAKRONİZM (fill_eq_now, teşhis 2026-08-10): `fill_eq_now` DOLUM anının değil BU TURUN
     tabanıdır — yalnız pozisyon bu seansta dolduysa ikisi aynı şeydir. Yaşlı pozisyonda kıyasın sağ
     bacağı makbuzun `dolum_eq` damgasıdır; damga da yoksa kıyas YAPILMAZ (`olculemedi` + neden) —
     "gönderim eq X ≠ dolum eq Y" cümlesindeki Y'nin bugünün sayısı olması sebep UYDURMAKTI.
 
     Sıra NEDENLİdir (ilk eşleşen kazanır):
-      makbuzsuz_boyut         — SB-1 makbuzu YOK (restart-öncesi / makbuzsuz gönderim): boyut
+      makbuzsuz_boyut         — boyut makbuzu YOK (restart-öncesi / makbuzsuz gönderim): boyut
                                 kararının girdileri kayıtsız. `olculemedi`nin ADLI alt-hâli —
-                                2026-08-12 forensiği (ROADMAP §2-7): eski pozisyon sapmalarının
+                                2026-08-12 forensiği: eski pozisyon sapmalarının
                                 tamamı bu addır, jenerik `olculemedi` teşhisi gizliyordu.
       olculemedi(dolum yok)   — reconcile eq_now'suz çağrıldı (eski çağıran): kıyas yapılamaz.
       olculemedi(anakronizm)  — pozisyon BU seansta dolmadı ve makbuzda `dolum_eq` damgası yok:
-                                dolum-anı tabanı bilinmiyor, bugünün tabanıyla kıyas YAPILMAZ (B6).
+                                dolum-anı tabanı bilinmiyor, bugünün tabanıyla kıyas YAPILMAZ.
       sermaye_kaynagi         — makbuz eq_kaynak=nabiz VE nabız yaşı>1 seans: boyut PAYINI bayat
                                 nabızdan aldı (kitap değil) — KANAL-özgü kök, generic tabandan ÖNCE.
       boyutlama_tabani        — çarpan iki bacakta farklı VE makbuz eq_now ≠ dolum eq: boyut
@@ -2524,15 +2560,15 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
       kitap_kaydi             — çarpan aynı ama makbuz kitap_rev ≠ dolum rev: kitap arada DEĞİŞTİ.
       olculemedi(beyan/icra)  — tüm ölçülebilir girdiler eşit: kalan fark icra (limit/slipaj/kısmi)
                                 VEYA beyan_kaydi — makbuz beyan_n/ofset TAŞIMADIĞINDAN ayrılamaz
-                                (SB-1 makbuz genişletme AYRI kalem).
+                                (makbuz genişletme AYRI kalem).
     KISMİ DOLUM bu tabloda DEĞİL: onun kanıtı makbuz değil EMRİN KENDİSİdir (filled_qty<qty) ve
-    çağıran (1.2b) `_kismi_dolum_tespiti` ile bu fonksiyona hiç gelmeden sınıflar (B5)."""
+    çağıran (1.2b) `_kismi_dolum_tespiti` ile bu fonksiyona hiç gelmeden sınıflar."""
     if not receipt:
         return "makbuzsuz_boyut", ("plan için SB-1 boyut makbuzu (size_law) yok — restart-öncesi "
                                    "ya da makbuzsuz gönderim; boyut kararının girdileri kayıtsız, "
                                    "gönderim↔dolum kıyası kurulamaz (ROADMAP §2-7, 2026-08-12 "
                                    "forensiği: 'olculemedi'nin adlı alt-hâli)")
-    # B6 — kıyasın SAĞ bacağı (dolum-anı tabanı) üç kaynaktan, güven sırasıyla:
+    # kıyasın SAĞ bacağı (dolum-anı tabanı) üç kaynaktan, güven sırasıyla:
     #   1. makbuz `dolum_eq` damgası (iç dolum anında basıldı — yaşdan bağımsız doğru taban),
     #   2. `fill_eq_now`, YALNIZ pozisyon bu seansta dolduysa (bu turun açılış tabanı = dolum tabanı),
     #   3. yoksa kıyas YOK — bugünün sayısını dolum tabanı diye kullanmak sebep uydurmaktı.
@@ -2558,7 +2594,7 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
     except (TypeError, ValueError):  # sessiz-yutma: dolum-anı eq/peak sayı DEĞİL (biçimsiz/None) — çarpan yeniden üretilemez; hüküm UYDURULMAZ, `olculemedi`ye düşer (dönüşteki neden bunu söyler)
         return "olculemedi", "dolum-anı eq/peak sayıya çevrilemedi — çarpan yeniden üretilemedi"
     # sermaye_kaynagi: nabız KANALI + bayatlık. KANAL-özgü kök, generic taban kıyasından ÖNCE gelir
-    # (canlı AMGN bacağı: pano dalı `eq_now` almaz, boyutu bayat nabızdan okur — §6).
+    # (canlı AMGN bacağı: pano dalı `eq_now` almaz, boyutu bayat nabızdan okur).
     if r_eqk == "nabiz":
         age = health.heartbeat_age_seconds()
         if age is not None and age > _DRIFT_SEANS_S:
@@ -2588,23 +2624,23 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
 
 
 def _kismi_dolum_tespiti(order) -> tuple[str, str] | None:
-    """B5 (teşhis 2026-08-10): adet sapmasının DOĞRUDAN kanıtı — giriş emri KISMÎ mi doldu?
+    """KISMİ DOLUM TESPİTİ (teşhis 2026-08-10): adet sapmasının DOĞRUDAN kanıtı — giriş emri KISMÎ mi doldu?
 
-    SB-2 tablosunda `kismi_dolum` diye bir sınıf YOKTU; kısmi dolum ancak `olculemedi` gerekçe
+    Sapma sınıfı tablosunda `kismi_dolum` diye bir sınıf YOKTU; kısmi dolum ancak `olculemedi` gerekçe
     METNİNDE geçiyor, eq/çarpan kıyası tesadüfen tutarsa sapma yanlışlıkla boyutlama sınıflarına
     yazılıyordu. Kanıt makbuz kıyası değil EMRİN KENDİSİdir: `filled_qty < qty` (ya da statü
     `partially_filled`) ise ayna adedi tanım gereği eksiktir — makbuz heuristiğinden ÖNCE gelir.
     NOT: 08-06 dört-pozisyon vakası kısmi dolum ÇIKMADI (emirler tam dolmuştu, fark boyutlamaydı) —
-    sınıf GELECEK vakalar için var; tespit ölçülemiyorsa None döner ve hüküm SB-2 tablosuna kalır."""
+    sınıf GELECEK vakalar için var; tespit ölçülemiyorsa None döner ve hüküm sapma sınıfı tablosuna kalır."""
     if not isinstance(order, dict):
         return None
     try:
         istenen = float(order.get("qty") or 0.0)
-    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm SB-2 tablosuna düşer (uydurma sınıf yok)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm sapma sınıfı tablosuna düşer (uydurma sınıf yok)
         istenen = 0.0
     try:
         dolan = float(order.get("filled_qty") or 0.0)
-    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm SB-2 tablosuna düşer (uydurma sınıf yok)
+    except (TypeError, ValueError):  # sessiz-yutma: biçimsiz tek alan; kanıt kurulamaz, hüküm sapma sınıfı tablosuna düşer (uydurma sınıf yok)
         return None
     st = str(order.get("status", "")).lower()
     if st == "partially_filled" or (istenen > 0 and 0 < dolan < istenen - 1e-9):
@@ -2667,7 +2703,7 @@ def _emir_penceresi_hedefi(meta: dict, dstr: str) -> str | None:
 def _alpaca_emir_penceresi(alpaca_mod, hedef: str | None) -> tuple[list, dict]:
     """Emir listesini SAYFALI çek (en yeniden geriye). Dönüş: (emirler, pencere_özeti).
 
-    İlk sayfanın taşıma arızası ESKİ davranışla bire bir yukarı fırlar (çağıranın A1 arıza dalı);
+    İlk sayfanın taşıma arızası ESKİ davranışla bire bir yukarı fırlar (çağıranın arıza dalı);
     SONRAKİ sayfaların arızası eldekini düşürmez — toplanan pencere `kapsandi=False` + nedenle
     döner (yarım pencere, tam pencere GİBİ konuşamaz)."""
     pencere = {"sayfa": 0, "n_emir": 0, "kapsandi": True, "en_eski": None, "hedef": hedef,
@@ -2725,16 +2761,16 @@ def _alpaca_emir_penceresi(alpaca_mod, hedef: str | None) -> tuple[list, dict]:
 
 
 # ==================================================================================================
-# ÇIKIŞ DOLUM-YAMASI İŞLEME (B1+B2) — kuyruk her reconcile turunda denenir, vazgeçiş OLAYLI
+# ÇIKIŞ DOLUM-YAMASI İŞLEME — kuyruk her reconcile turunda denenir, vazgeçiş OLAYLI
 # ==================================================================================================
 def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: dict,
                       alpaca_mod) -> None:
     """Kuyruktaki her kapanışın AYNA dolum fiyatını ara ve trades satırına yamala.
 
     İki okuma yolu (kayıttaki `kaynak`):
-      * "karar" — B1: `close_order_id`li market emri; önce bu turun penceresinden (`by_id`),
+      * "karar" — `close_order_id`li market emri; önce bu turun penceresinden (`by_id`),
         yoksa kimlikle tekil GET (`alpaca.order_by_id` — pencere boşluğundan bağımsız).
-      * "bacak" — B2: parent bracket'ın dolan TP/SL bacağı (`alpaca.exit_fill_price`).
+      * "bacak" — parent bracket'ın dolan TP/SL bacağı (`alpaca.exit_fill_price`).
     Bulunursa: kilitli yama `alpaca_fill_price + mirror_divergence` (+eşik aşımında `icra` sınıflı
     MIRROR_DRIFT — eski 1.3 ile aynı eşik/alarm) ve kuyruktan düşer. Bulunamazsa `tries` artar;
     `EXIT_FILL_MAX_TRIES` turda VAZGEÇİŞ: olay + satıra dürüst `alpaca_fill_beyan` (fiyat
@@ -2792,7 +2828,7 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
                     alpaca_fill=round(af, 4), sim=round(sim, 4), divergence=round(div, 5),
                     detail="kapanan işlemin GERÇEK ayna dolumu satıra yamalandı (B1/B2)")
             if div > MIRROR_DRIFT_TOL:
-                # SB-2: SABİT sınıf `icra` — eski 1.3 ile AYNI eşik, AYNI alarm (davranış korunur).
+                # SABİT sapma sınıfı `icra` — eski 1.3 ile AYNI eşik, AYNI alarm (davranış korunur).
                 out["drift"].append({"ticker": info.get("ticker"), "sim": round(sim, 4),
                                      "alpaca": round(af, 4), "div_pct": round(div * 100, 3),
                                      "drift_sinifi": "icra"})
@@ -2819,6 +2855,10 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
     out["exit_fill"]["bekleyen"] = len(kalan)
     if yamalar or beyanlar:
         def _yama(rows, _y=yamalar, _b=beyanlar):
+            """İşlem defterine ayna çıkış dolumlarını (ölçüm) ya da beyanlarını işler.
+
+            Plan başına EN YENİ satır hedeflenir ve yalnız `alpaca_fill_price` HÂLÂ boşsa yazılır;
+            gerçek ölçüm gelince eski beyan kalkar. Ölçüm varken beyan yazılmaz."""
             hedefte: dict = {}
             for _i, _t in enumerate(rows):         # plan başına EN YENİ satır (yeniden okunur)
                 if _t.get("plan_id") in _y or _t.get("plan_id") in _b:
@@ -2839,9 +2879,9 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
 
 
 # ==================================================================================================
-# KORUMA-OCO DOLUMU → KİTAP KAPANIŞI (B3, teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
+# KORUMA-OCO DOLUMU → KİTAP KAPANIŞI (teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
 # ==================================================================================================
-# BULGU: koruma OCO'sunun (v211, coid `P-KORUMA-…`) bir bacağı DOLUNCA pozisyon aynada gerçekten
+# BULGU: koruma OCO'sunun (coid `P-KORUMA-…`) bir bacağı DOLUNCA pozisyon aynada gerçekten
 # kapanıyor; ama mutabakat yalnız `by_coid[plan_id]` ile eşleştiğinden bu dolumu göremiyor, sembolü
 # her tur YANLIŞ sınıfla (`split_brain`) alarmlıyor ve kapanış hiçbir deftere işlenmiyordu — iç
 # kitap günler sonra kendi bar-simülasyonuyla (farklı gün/fiyat) kapanıyor, GERÇEK çıkış fiyatı
@@ -2871,7 +2911,8 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
     """Koruma dolumunu KİTABA işle + DOĞRU sınıfla alarmla (split_brain değil `koruma_dolumu`).
 
     Çıkış tipi dolan bacağa göre `koruma_stop` / `koruma_hedef` — çıkış-tipi sözlüğü AÇIKTIR
-    (tüketiciler group-by okur: analytics.py:1349 `by_reason.setdefault`, api.py:1693; sabit bir
+    (tüketiciler group-by okur: `analytics.py` → `profit_waterfall` → `by_reason.setdefault`,
+    `api.api_plots` → `exits`; sabit bir
     enum yok — `CF_SIM_EXITS` yalnız CF simülasyon çıkışlarının listesidir), yeni ad kendi kovasını
     açar ve görünür kalır.
 
@@ -2917,7 +2958,7 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
 
 # ==================================================================================================
 # AYNA SAPMASI İKİ BOYUTLUDUR — NABIZ BUGÜNE DEK YALNIZ BİRİNİ TAŞIYORDU
-# (2026-08-13 · `docs/DENETIM-SPLIT-SINIFI-2026-08-13.md` §3.1; canlı ölçüm 2026-08-12T22:01Z)
+# (`docs/DENETIM-SPLIT-SINIFI-2026-08-13.md`; canlı ölçüm 2026-08-12T22:01Z)
 # --------------------------------------------------------------------------------------------------
 # `mirror_drift` FİYAT sapmasıdır (`MIRROR_DRIFT_TOL`, bu dosyanın :25'i — iç sim dolumu ile gerçek
 # Alpaca dolumu arasındaki fark). ADET sapması BAŞKA bir gerçektir (`position_drift`, :3075 —
@@ -2930,7 +2971,7 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
 #
 # ALAN YAYAN TARAFA EKLENİR, TÜKETİCİYE YAMA ATILMAZ: nabzı okuyan HER tüketici (pano rozeti,
 # /api/today, digest ve bundan sonra yazılacak olanlar) böylece otomatik kapsanır. Tüketiciyi
-# yamalamak, "kapının kapsamı elle tutulan bir liste" kusurunu (denetim §3.8) bir kez daha üretirdi.
+# yamalamak, "kapının kapsamı elle tutulan bir liste" kusurunu bir kez daha üretirdi.
 #
 # ÖLÇÜLMEDİ ≠ TEMİZ (UYDURMA YASAĞI). Mutabakat atlandıysa/düştüyse `checked` False'tur (:2778 iskelet
 # + :2833 damga; `daily_cycle`daki `except` dalında `mirror` boş sözlüktür) ve o hâlde sapma hakkında
@@ -2979,11 +3020,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     Matched by client_order_id == plan_id. Guarded to BROKER==alpaca_paper; any Alpaca API failure is logged,
     never fatal to the cycle. Writes state/broker_reconcile.json for the dashboard.
 
-    `fill_eq_now` (SB-2): DOLUM anının boyut tabanı (iç motorun `daily_cycle`de kullandığı `eq_now`).
-    ADET sapması (1.2b) tespit edilince SB-1 boyut makbuzuyla kıyaslanıp `drift_sinifi` türetilir.
+    `fill_eq_now`: DOLUM anının boyut tabanı (iç motorun `daily_cycle`de kullandığı `eq_now`).
+    ADET sapması (1.2b) tespit edilince boyut makbuzuyla kıyaslanıp `drift_sinifi` türetilir.
     OPSİYONELdir (varsayılan None) — eski çağıranlar bozulmaz; None ise sınıf `olculemedi` olur.
 
-    `broker` (B3, teşhis 2026-08-10): iç kitabın kendisi (PaperBroker). Koruma-OCO dolumu tespit
+    `broker` (teşhis 2026-08-10): iç kitabın kendisi (PaperBroker). Koruma-OCO dolumu tespit
     edilince pozisyon kapanışını kitaba İŞLEMEK için gerekir. OPSİYONELdir — eski çağıranlar
     bozulmaz; None ise koruma dolumu yine DOĞRU SINIFLANIR (split_brain değil `koruma_dolumu`)
     ama kitaba işlenemez ve alarm bunu nedeniyle söyler (bir sonraki günlük tur işler)."""
@@ -2993,12 +3034,16 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     # ATLAMA DA BİR SONUÇTUR. Bu iki dal HİÇBİR ŞEY YAZMADAN dönüyordu: broker_reconcile.json dünkü
     # içeriğiyle diskte kalıyor, pano onu GÜNCEL mutabakat sanıp okuyordu — "kontrol edilmedi" ile
     # "kontrol edildi, temiz" ayırt edilemiyordu. Arıza dalı (aşağıda) zaten api_ok=False yazıyor;
-    # atlama dalları da nedenini yazmalı, yoksa bayat artefakt taze konuşur (2026-07-22).
-    # ATLAMA SINIFI (2026-08-13): "AYNA YOK" ile "AYNA OKUNAMADI" aynı şey değildir ve nabza
+    # atlama dalları da nedenini yazmalı, yoksa bayat artefakt taze konuşur.
+    # ATLAMA SINIFI: "AYNA YOK" ile "AYNA OKUNAMADI" aynı şey değildir ve nabza
     # taşınırken ayrılmaları gerekir. Dahili brokerde kıyaslanacak bir ayna HİÇ YOKTUR — o hâli
     # "ölçülemedi" diye amber basmak, hiç var olmayan bir arızayı sonsuza dek raporlamak olurdu
     # (kurt masalı). Kimlik/erişim yokluğu ise GERÇEKTEN ölçülemeyen bir olgudur.
     def _skip(reason: str, sinif: str = "olculemedi") -> dict:
+        """Mutabakatı atlar: artefakta `checked=False` + atlama nedeni/sınıfı yazar ve özeti döner.
+
+        Sınıf ayrımı bilinçlidir: `ayna_yok` (kıyaslanacak ayna hiç yok) ile `olculemedi` (ayna var
+        ama okunamadı) aynı şey değildir; bayat artefaktın taze konuşmasını engeller."""
         prev = store.read_json("broker_reconcile.json", {})
         store.write_json("broker_reconcile.json", {**prev, "checked": False, "skip_reason": reason,
                          "skip_sinifi": sinif, "date": dstr,
@@ -3010,11 +3055,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         return _skip(f"broker={config.BROKER} — ayna mutabakatı yalnız alpaca_paper'da anlamlı",
                      "ayna_yok")
     from .adapters import alpaca
-    # B2 (teşhis 2026-08-10): bu turda kapananlar KALICI dolum-yaması kuyruğuna — TEK-ATIŞ DEĞİL.
+    # BACAK KOLU (teşhis 2026-08-10): bu turda kapananlar KALICI dolum-yaması kuyruğuna — TEK-ATIŞ DEĞİL.
     # Kayıt, aşağıdaki paper_available/API arıza dallarından ÖNCE düşer: kapanış turundaki geçici
     # arıza artık yamayı sonsuza dek kaybettiremez (kuyruk meta'da yaşar, `_save_broker` kalıcılaştırır,
-    # sonraki reconcile yeniden dener). İki süzgeç: (a) satır zaten gerçek dolum taşıyor (B3
-    # koruma_dolumu yolu satırı kapanış anında yazar), (b) ayna kapatması HÂLÂ kuyruktaysa
+    # sonraki reconcile yeniden dener). İki süzgeç: (a) satır zaten gerçek dolum taşıyor (koruma_dolumu
+    # yolu satırı kapanış anında yazar), (b) ayna kapatması HÂLÂ kuyruktaysa
     # (`MIRROR_EXIT_KEY`) ölçülecek dolum henüz YOK — kapatma başarınca `karar` kaydı kimlikle düşer.
     _bekleyen_kapatma = set((meta.get(MIRROR_EXIT_KEY) or {}).keys())
     for _tr in (closed_this_cycle or []):
@@ -3030,11 +3075,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         # nested=True is REQUIRED: the flat list endpoint splits a bracket into 3 top-level orders with
         # legs=[], so exit_fill_price() (which reads the parent's legs) would always see nothing and the
         # divergence audit below would silently no-op. nested returns the parent carrying its TP/SL legs.
-        # B7a: pencere artık SAYFALIdır — hedef, dolum bekleyen en eski kayıt (E2 + çıkış kuyruğu);
+        # pencere artık SAYFALIdır — hedef, dolum bekleyen en eski kayıt (E2 + çıkış kuyruğu);
         # kapsanamayan pencere beyanlıdır (`emir_penceresi.kapsandi=False` + olay), sessiz değil.
         all_orders, out["emir_penceresi"] = _alpaca_emir_penceresi(
             alpaca, _emir_penceresi_hedefi(meta, dstr))
-        # A1 (denetim 2026-07-21): alpaca.orders() İSTİSNA FIRLATMAZ — hata durumunda [] döner. Yani
+        # alpaca.orders() İSTİSNA FIRLATMAZ — hata durumunda [] döner. Yani
         # aşağıdaki `except` ÖLÜ KOD'du ve API arızası "hiç emir yok" gibi okunuyordu: a_by_sym da boş
         # kalıp AÇIK HER POZİSYON 'Alpaca'da kayıp' diye split-brain alarmı üretiyor, pano ise
         # api_ok=True gösteriyordu. Arızayı artık taşıma kaydı söylüyor (ilk sayfa arızası helper'dan
@@ -3050,7 +3095,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         return out
     out["checked"] = True
     by_coid = {o.get("client_order_id"): o for o in (all_orders or []) if o.get("client_order_id")}
-    by_id = {str(o.get("id")): o for o in (all_orders or []) if o.get("id")}   # B1: kapatma emri kimlikle
+    by_id = {str(o.get("id")): o for o in (all_orders or []) if o.get("id")}   # kapatma emri kimlikle
     DEAD = {"rejected", "canceled", "cancelled", "expired", "done_for_day"}
 
     # (1.1) E2 — GİRİŞ SLİPAJ DEFTERİNİN DOLUM YARISI. Emirler ZATEN okundu; ikinci bir çağrı yok.
@@ -3073,7 +3118,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     # "missing" requires no position AND no live (non-dead, non-filled) order for that symbol.
     try:
         apos = alpaca.positions()
-        if not alpaca.transport()["ok"]:                 # A1: [] burada 'pozisyon yok' DEĞİL, arıza
+        if not alpaca.transport()["ok"]:                 # [] burada 'pozisyon yok' DEĞİL, arıza
             raise RuntimeError(alpaca.transport().get("error") or "alpaca transport down")
     except Exception as e:
         obs.warn("reconcile_positions_failed", error=f"{type(e).__name__}: {e}")
@@ -3094,7 +3139,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         ap = a_by_sym.get(sym)
         if ap is None:
             if sym not in alive_order_syms:
-                # B3 (teşhis 2026-08-10): "iç açık + aynada ne pozisyon ne canlı emir" İKİ ayrı
+                # KORUMA-OCO DALI (teşhis 2026-08-10): "iç açık + aynada ne pozisyon ne canlı emir" İKİ ayrı
                 # olgunun ortak görüntüsüdür ve ikisi ayrı sınıftır:
                 #   koruma_dolumu → sembolün KORUMA-sınıfı emri (yapısal kemerler: coid_sinifi,
                 #                   v220/v221) DOLMUŞ — pozisyon aynada korumayla KAPANDI; kitaba
@@ -3105,7 +3150,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                     _koruma_dolumu_isle(kd, sym, out, dstr, broker)
                     continue
                 out["positions"]["missing_on_alpaca"].append(sym)
-                # SB-2: SABİT sınıf — sizing/sermaye sapması DEĞİL, durum ayrışması (iç açık, aynada
+                # SABİT sapma sınıfı — sizing/sermaye sapması DEĞİL, durum ayrışması (iç açık, aynada
                 # ne pozisyon ne emir). Sizing taksonomisi uymaz; brief-sanction ile ADI konur.
                 obs.alarm(obs.ALARM_MIRROR_DRIFT,
                           f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var",
@@ -3121,16 +3166,16 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         # sizing runs off two slightly different equities (internal book vs Alpaca account), so small qty
         # gaps are expected; >25% relative gap is real drift, not rounding.
         if qty > 0 and abs(aq - qty) / qty > 0.25:
-            # SB-2: sapmayı ADLANDIR — SB-1 boyut makbuzunu (`size_law`) dolum-anı girdilerine
+            # sapmayı ADLANDIR — boyut makbuzunu (`size_law`) dolum-anı girdilerine
             # kıyasla. Alarm/eşik (>%25) DEĞİŞMEZ; yalnız `drift_sinifi` + neden eklenir. Makbuz
-            # yoksa `makbuzsuz_boyut` (B5/ROADMAP §2-7), türetilemezse `olculemedi` (0/boş DEĞİL).
+            # yoksa `makbuzsuz_boyut`, türetilemezse `olculemedi` (0/boş DEĞİL).
             # Türetme ASLA fırlamaz (helper içi).
-            # B5: KISMİ DOLUM makbuz kıyasından ÖNCE — kanıtı emrin kendisi (filled_qty<qty).
+            # KISMİ DOLUM makbuz kıyasından ÖNCE — kanıtı emrin kendisi (filled_qty<qty).
             _kismi = _kismi_dolum_tespiti(by_coid.get(info.get("plan_id")))
             if _kismi is not None:
                 _sinif, _neden = _kismi
             else:
-                # B6: yaş sinyali — pozisyon BU seansta mı doldu? (ts_open yoksa None = okunamadı;
+                # yaş sinyali — pozisyon BU seansta mı doldu? (ts_open yoksa None = okunamadı;
                 # sınıflandırıcı yaşlı/yaşsız pozisyonda bugünün eq'siyle kıyas YAPMAZ.)
                 _ts0 = str(info.get("ts_open") or "")[:10]
                 _rcpt = (meta.get("size_law") or {}).get(info.get("plan_id"))
@@ -3150,27 +3195,27 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     engine_syms = {o.get("symbol") for o in (all_orders or [])
                    if str(o.get("client_order_id", "")).startswith("P-")
                    and str(o.get("status", "")).lower() in ("filled", "partially_filled")}
-    # C9: ÇIKIŞ-KAYNAKLI YETİM AYRI SINIFTIR. İki teşhis aynı isimle sayılırsa ikisi de okunamaz:
+    # ÇIKIŞ-KAYNAKLI YETİM AYRI SINIFTIR. İki teşhis aynı isimle sayılırsa ikisi de okunamaz:
     #   engine_orphans → "iç defter planı düşürdü, ayna DOLDU" (split-brain, sebebi bilinmiyor)
     #   exit_orphans   → "iç motor ÇIKTI, aynayı kapatmayı denedik, kapanmadı" (sebep BİLİNİYOR,
     #                     kuyrukta duruyor ve her döngüde yeniden deneniyor)
     # Ayrımın ikinci sonucu: `_mirror_busy` (P3 karar kilidi) yalnız `engine_orphans`ı okur, yani
     # çıkış-kaynaklı yetim sembolü SONSUZA DEK karar dışı bırakmaz — huninin kendi kendini aç
-    # bırakması C9'un asıl zararıydı. Koruma kaybolmaz: bracket'ın canlı bacakları varken sembol
+    # bırakması bu bulgunun asıl zararıydı. Koruma kaybolmaz: bracket'ın canlı bacakları varken sembol
     # `alive_order_syms` üzerinden zaten kilitlidir.
     _exit_pending = set((meta.get(MIRROR_EXIT_KEY) or {}).keys())
     _tum_yetim = sorted(sym for sym in a_by_sym if sym not in local and sym in engine_syms)
     orphans = [s for s in _tum_yetim if s not in _exit_pending]
     exit_orphans = [s for s in _tum_yetim if s in _exit_pending]
     # ==============================================================================================
-    # B8 (teşhis 2026-08-10): "motor_yetimi" ÜÇ AYRI OLGUNUN ortak adıydı ve üçü tek isimle
-    # okunamıyordu (C9'un kendi gerekçesinin giriş tarafındaki ihlali). SINIF AYRIMI (yalnız
+    # YETİM SINIFLAMASI (teşhis 2026-08-10): "motor_yetimi" ÜÇ AYRI OLGUNUN ortak adıydı ve üçü tek isimle
+    # okunamıyordu (çıkış kuyruğu gerekçesinin giriş tarafındaki ihlali). SINIF AYRIMI (yalnız
     # görünürlük — kabul/kapatma OPERATÖR kararıdır, bu tur EMİR ÜRETMEZ; `engine_orphans`
     # listesi ve `_mirror_busy` karar kilidi BİREBİR aynı kalır):
     #   tasima_gecikmesi — plan hâlâ SİLAHLI kümede (taşınan/bar bekleyen/onaylı): ayna gün içi
     #                      doldu, iç dolum bir sonraki açılışta — bekleme, arıza değil.
     #   cikis_gecikmesi  — iç kitap sembolü YAKIN ZAMANDA kapattı (dolum-yaması kuyruğunda ya da
-    #                      son satırlarda) ama ayna pozisyonu duruyor: bacak/kapatma dolumu gecikti (B2).
+    #                      son satırlarda) ama ayna pozisyonu duruyor: bacak/kapatma dolumu gecikti.
     #   giris_yetimi     — ikisi de değil: aynanın DOLDURDUĞU girişin iç kitapta karşılığı yok
     #                      (gerçek yetim; kabul-mü-kapat-mı politikası operatörde).
     # ==============================================================================================
@@ -3183,6 +3228,9 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             _son_kapanis[str(_r["ticker"])] = str(_r.get("ts_close") or "")
 
     def _yakin_kapanis(sym: str) -> bool:
+        """İç kitap bu sembolü son 7 gün içinde kapattı mı? (son 60 defter satırından bakılır).
+
+        Tarih ayrıştırılamıyorsa False — yakınlık KANITLANAMADI, uydurulmaz."""
         ts = _son_kapanis.get(sym)
         if not ts:
             return False
@@ -3192,6 +3240,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             return False
 
     def _yetim_sinifla(sym: str) -> tuple[str, str]:
+        """Aynada açık ama iç kitapta olmayan sembolü sınıflar: `(sinif, neden)`.
+
+        Üç sınıf: `tasima_gecikmesi` (plan hâlâ silahlı — bekleme, arıza değil), `cikis_gecikmesi`
+        (iç kitap yakında kapattı, kapatma dolumu bekleniyor) ve `giris_yetimi` (gerçek yetim,
+        kabul-mü-kapat-mı OPERATÖR kararı). SALT SINIFLANDIRMA — emir üretmez."""
         if sym in _armed_syms:
             return "tasima_gecikmesi", ("plan hâlâ silahlı kümede (taşınan/bar bekleyen) — ayna "
                                         "gün içi doldu, iç dolum bir sonraki açılışta; bekleme, "
@@ -3207,19 +3260,19 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     for sym in orphans:
         _ys, _yn = _yetim_sinifla(sym)
         orphans_sinifli.append({"ticker": sym, "sinif": _ys, "neden": _yn})
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: durum ayrışması, sizing değil (B8 alt-adlı)
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # durum ayrışması, sizing değil (sınıflı alt-ad)
                   f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç "
                   f"defterde yok — {_yn}",
                   ticker=sym, drift_sinifi=_ys)
     for sym in exit_orphans:
-        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SB-2: SABİT sınıf (çıkış icra edilemedi, sizing değil)
+        obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SABİT sapma sınıfı (çıkış icra edilemedi, sizing değil)
                   f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, "
                   f"bir sonraki döngüde yeniden denenecek",
                   ticker=sym, reason=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("reason"),
                   tries=(meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}).get("tries"),
                   drift_sinifi="cikis_yetimi")
     out["positions"]["engine_orphans"] = orphans          # eski okuyucular (pano sayacı, _mirror_busy) BOZULMAZ
-    out["positions"]["engine_orphans_sinifli"] = orphans_sinifli   # B8: sınıflı görünürlük (pano passthrough)
+    out["positions"]["engine_orphans_sinifli"] = orphans_sinifli   # sınıflı görünürlük (pano passthrough)
     out["positions"]["exit_orphans"] = exit_orphans
     out["positions"]["external"] = sorted(sym for sym in a_by_sym
                                           if sym not in local and sym not in engine_syms)  # info only, no alarm
@@ -3244,14 +3297,14 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             except (TypeError, ValueError):  # sessiz-yutma: ağ/sağlayıcı hatası bu yolun NORMAL hâli; çağıran boş sonuç üzerinden yedek kaynağa düşer ve kaynak seçimi ayrıca kaydedilir
                 continue
             if float(ts) > cur_stop * 1.001:               # anlamlı yükseliş; asla aşağı çekme
-                res = alpaca.replace_order_stop(leg.get("id"), float(ts), cur_stop=cur_stop)  # A4: sınır da reddeder
+                res = alpaca.replace_order_stop(leg.get("id"), float(ts), cur_stop=cur_stop)  # sınır da reddeder
                 out["trail_synced"].append({"ticker": sym, "from": cur_stop, "to": round(float(ts), 2),
                                             "ok": bool(res.get("ok"))})
                 obs.log("mirror_trail_synced", ticker=sym, from_stop=cur_stop, to_stop=round(float(ts), 2),
                         ok=bool(res.get("ok")), detail=str(res.get("detail", ""))[:120])
                 _trail_patch_alarm(sym, res, cur_stop, float(ts))
 
-    # (1.3) execution-divergence audit — ARTIK KUYRUK-GÜDÜMLÜ (B1+B2, teşhis 2026-08-10).
+    # (1.3) execution-divergence audit — ARTIK KUYRUK-GÜDÜMLÜ (teşhis 2026-08-10).
     # Eski dal yalnız `closed_this_cycle` üzerinde TEK ATIŞtı: kapanış turundaki API arızası ya da
     # farklı günde dolan bacak yamayı sonsuza dek kaybediyordu; DELETE-kapatmalarının (karar
     # çıkışları, ~%38) dolumu ise YAPISAL olarak hiç okunamıyordu. Kuyruk turun başında dolduruldu
@@ -3268,7 +3321,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     try:
         _known |= set((store.read_json("mirror_orders.json", {}) or {}).get("orders", {}).keys())
     except Exception as e:
-        # YASA 4 (2026-07-21): bu okuma sessizce düşerse _known EKSİK kalır ve motorun kendi emirleri
+        # YASA 4: bu okuma sessizce düşerse _known EKSİK kalır ve motorun kendi emirleri
         # "hayalet" diye panoya kırmızı düşer — yani sessiz yutma burada YANLIŞ ALARM üretiyordu.
         obs.warn("mirror_orders_unreadable", error=f"{type(e).__name__}: {e}",
                  detail="hayalet listesi eksik bilinen-emir kümesiyle hesaplandı")
@@ -3296,9 +3349,9 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         # broker API sağlığı (kesinti panoda görünür olmalı) + trail senkron kaydı
         "alive_order_syms": sorted(s for s in alive_order_syms if s),
         "api_ok": True, "trail_synced": out.get("trail_synced", []),
-        # WP-E görünürlük üçlüsü (teşhis 2026-08-10; okuyucu: /api/alpaca `reconcile` passthrough +
+        # Görünürlük üçlüsü (teşhis 2026-08-10; okuyucu: /api/alpaca `reconcile` passthrough +
         # /api/diagnostics — pano mutabakat masası):
-        #   entry_slippage  — E2 yama sayaçları. Teşhis §3'ün TEK okuyucusuz-yazım bulgusu buydu
+        #   entry_slippage  — E2 yama sayaçları. Teşhisin TEK okuyucusuz-yazım bulgusu buydu
         #                     (üretiliyor, hiçbir artefakta girmiyordu — YASA-6 ihlali kapandı).
         #   exit_fill       — çıkış dolum-yaması kuyruğunun tur özeti (bekleyen/yamalanan/vazgeçilen).
         #   emir_penceresi  — B7a sayfalı pencerenin kapsam beyanı (kapsandi=False sessiz değil).

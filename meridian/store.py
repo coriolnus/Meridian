@@ -40,10 +40,13 @@ from . import storage
 
 
 def _state():
+    """Geçerli `state/` dizini — HER ÇAĞRIDA `config`ten okunur (ölçüm sandbox'ları onu değiştirir;
+    yolu modül yüklenirken dondurmak sandbox'ları canlı state'e yazdırırdı)."""
     return config.STATE
 
 
 def _path(name: str) -> Path:
+    """Defter adını yola çevirir: göreli ad `state/` altına bağlanır, MUTLAK yol olduğu gibi kalır."""
     return _state() / name if not os.path.isabs(name) else Path(name)
 
 
@@ -58,8 +61,8 @@ def db_backed(name: str) -> bool:
     return aktif
 
 
-# ---- BAYAT-DEFTER-KALINTISI SÜZGECİ (ROADMAP §2-6, 2026-08-12) ---------------------------------
-# BULGU (VLO adli incelemesi, 2026-08-11): defterler 07-31'de DB'ye göçtü ama canlıda
+# ---- BAYAT-DEFTER-KALINTISI SÜZGECİ ---------------------------------
+# BULGU (VLO adli incelemesi): defterler 07-31'de DB'ye göçtü ama canlıda
 # `state/trades.jsonl` 95 satırda DONUK bir kalıntı olarak kanonik adında kaldı (DB 97; portfolio/
 # shadow_books `.migrated` olmuş, trades OLMAMIŞTI) ve Rol-1'i "pozisyon izsiz kayboldu" yanılgısına
 # düşürdü — gerçek: T00097 DB'de düzgündü. `dbmigrate.apply` arşivlemeyi yalnız O KOŞUDA taşıdığı
@@ -152,7 +155,7 @@ def _bayat_defter_suzgeci() -> None:
 def sanitize(obj: Any) -> Any:
     """Recursively convert numpy scalars/arrays to native python for JSON.
 
-    SONLU OLMAYAN FLOAT → None (2026-07-26). Eski hâli np tiplerini çeviriyor ama NaN/±Inf'i OLDUĞU
+    SONLU OLMAYAN FLOAT → None. Eski hâli np tiplerini çeviriyor ama NaN/±Inf'i OLDUĞU
     GİBİ geçiriyordu; oysa JSON'da böyle bir değer YOKTUR ve bu iki yerde birden patlar:
       * telde: Starlette `JSONResponse` gövdeyi `allow_nan=False` ile dump eder → tek bir NaN ucun
         tamamını HTTP 500'e çevirir (numpy sızıntısının yaptığının aynısı, başka kapıdan);
@@ -192,6 +195,8 @@ _IO = {"n": 0, "recent": [], "warned": False}
 
 
 def _record_io(ms: float) -> None:
+    """Bir yazımın süresini (ms) telemetriye işler; son 200 ölçüm tutulur. p95 > 50 ms olursa
+    SÜREÇ BAŞINA BİR KEZ `io_latency_high` uyarısı basar (bayrak özyinelemeyi de keser)."""
     _IO["n"] += 1
     r = _IO["recent"]
     r.append(ms)
@@ -209,6 +214,8 @@ def _record_io(ms: float) -> None:
 
 
 def io_stats() -> dict:
+    """Atomik yazım gecikmesinin özeti: {writes, recent_n, p50_ms, p95_ms, max_ms}.
+    Ölçüm yetersizse (p95 için <20 örnek) ilgili alan None kalır — sayı UYDURULMAZ."""
     r = sorted(_IO["recent"])
     return {"writes": _IO["n"], "recent_n": len(r),
             "p50_ms": round(r[len(r) // 2], 2) if r else None,
@@ -218,13 +225,13 @@ def io_stats() -> dict:
 
 _CORRUPT_SEEN: set = set()      # dosya başına BİR kez uyar (turu 34)
 
-# ---- DOSYA BAŞINA OKU-DEĞİŞTİR-YAZ KİLİDİ (N/A yeniden sorgulaması, 2026-07-21) ----
+# ---- DOSYA BAŞINA OKU-DEĞİŞTİR-YAZ KİLİDİ ----
 # BULGU: portfolio.json'u İKİ iş parçacığı yazıyordu — zamanlayıcı (daily_cycle) ve Hermes
 # (LLM görüş damgası). Kilit yoktu: damga, döngünün ARADA yazdığı defteri (silahlı set, pozisyonlar,
-# nakit) BAYAT bir kopyayla geri alabilirdi. memory.py'de aynı desen audit #19'da veri kaybettirmişti;
+# nakit) BAYAT bir kopyayla geri alabilirdi. memory.py'de aynı desen veri kaybettirmişti;
 # burada kaybedilecek şey CANLI DEFTER. Aynı süreçteki iş parçacıkları için RLock yeterli.
 #
-# SÜREÇLER ARASI KATMAN (B2, 2026-07-31): RLock süreç-içiydi ve bu depoda BELGELİ bir tehlike
+# SÜREÇLER ARASI KATMAN: RLock süreç-içiydi ve bu depoda BELGELİ bir tehlike
 # sınıfıydı — canlı worker, pano API'si ve sprint AYNI dosyalara yazabiliyor; `update_scoreboard`
 # gibi oku-değiştir-yaz yazarları kilitsizdi. `fcntl.flock` aynı kilidi süreçler arasına taşır:
 # API aynı, çağıran aynı, garanti farklı. RLock KALIR (aynı süreçteki iplikler için flock YETMEZ:
@@ -249,6 +256,8 @@ class _FileLock:
     __slots__ = ("name", "_rlock", "_depth", "_fd", "_dir")
 
     def __init__(self, name: str, lock_dir: Path):
+        """Kilit nesnesini kurar (ad, RLock, derinlik sayacı, kilit dizini). HİÇBİR BAYT YAZMAZ:
+        kilit dosyası ilk `acquire`da tembel açılır."""
         self.name = name
         self._rlock = _th.RLock()
         self._depth = 0
@@ -256,9 +265,13 @@ class _FileLock:
         self._dir = lock_dir
 
     def _lock_path(self) -> Path:
+        """Kilit dosyasının yolu: `state/.locks/<ad>.lock` (yol ayracı `_` ile düzleştirilir)."""
         return self._dir / (str(self.name).replace(os.sep, "_") + ".lock")
 
     def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+        """Kilidi alır: önce süreç-içi RLock, ilk derinlikte ayrıca süreçler-arası `flock(LOCK_EX)`.
+        flock kurulamazsa (salt-okunur dizin, NFS, fd tükenmesi) süreç-İÇİ kilide düşülür ve
+        ad başına BİR KEZ uyarılır — kilitsiz kalınmaz. Yeniden girişte derinlik sayacı artar."""
         if not self._rlock.acquire(blocking, timeout):
             return False
         if self._depth == 0:
@@ -285,6 +298,9 @@ class _FileLock:
         return True
 
     def release(self) -> None:
+        """Kilidi bir kat bırakır. Derinlik sıfıra inince flock çözülür ve kilit tanıtıcısı
+        KAPATILIR (askıda açık fd kalmaz — `kilit_budamasi` canlılığı tam bunun üzerinden ölçer),
+        en son süreç-içi RLock bırakılır."""
         self._depth -= 1
         if self._depth == 0 and self._fd is not None:
             try:
@@ -296,10 +312,12 @@ class _FileLock:
         self._rlock.release()
 
     def __enter__(self):
+        """`with` girişi: kilidi (bloklayarak) alır ve nesnenin kendisini verir."""
         self.acquire()
         return self
 
     def __exit__(self, *exc):
+        """`with` çıkışı: kilidi bırakır. `False` döner — gövdedeki istisna YUTULMAZ."""
         self.release()
         return False
 
@@ -316,11 +334,11 @@ def file_lock(name: str):
         return lk
 
 
-# ---- .LOCKS BUDAMASI (ROADMAP §2-5, 2026-08-12) ------------------------------------------------
+# ---- .LOCKS BUDAMASI ------------------------------------------------
 def kilit_budamasi(lock_dir: Path | str | None = None, max_yas_saat: float = 24.0) -> dict:
     """`state/.locks` altındaki ESKİ ve SERBEST kilit dosyalarını budar; sonucu raporlar.
 
-    NEDEN VAR (WP-S2 turu ölçümü, 2026-08-10): pytest sandbox'ları MUTLAK tmp yollarını
+    NEDEN VAR (ölçüldü): pytest sandbox'ları MUTLAK tmp yollarını
     kilitleyince `.locks/` altında oturum-başına-benzersiz hash'li adlar birikir (tek koşu +2,
     budama yoktu → sınırsız birikinti). Kilit dosyası içerik taşımaz; tek tehlike YANLIŞ SİLMEdir:
 
@@ -458,7 +476,7 @@ def _atomic_write(path: Path, data: str) -> None:
 
 
 # ================================================================================================
-# KADEME B (2026-08-03) — KİLİT ARTIK KAPININ İÇİNDE, ÇAĞIRANIN ELİNDE DEĞİL
+# KİLİT ARTIK KAPININ İÇİNDE, ÇAĞIRANIN ELİNDE DEĞİL
 # ================================================================================================
 # ÖNCESİ: `_atomic_write` yalnız ATOMİKLİK veriyordu; flock'u ÇAĞIRAN alırdı (`update_json`,
 # `update_jsonl`, `merge_dated_jsonl`). Yani kilit bir SÖZLEŞMEydi, YAPISAL bir garanti değil —
@@ -468,7 +486,7 @@ def _atomic_write(path: Path, data: str) -> None:
 # kapılar tam olarak onu görünür kılar.
 #
 # NEDEN `db_backed` DALINDA FLOCK YOK — İKİ KİLİT REJİMİ BİRBİRİNE KARIŞTIRILMAZ: DB'ye giden ad
-# zaten SQLite'ın süreçler-arası kilidiyle (WAL + `busy_timeout`, Kademe A) korunur. Üstüne flock
+# zaten SQLite'ın süreçler-arası kilidiyle (WAL + `busy_timeout`) korunur. Üstüne flock
 # koymak ikinci bir kilit SIRASI doğururdu (flock→SQLite burada, SQLite→flock `dbmigrate`in tek
 # transaction'ında) ve iki farklı sırayla alınan iki kilit kilitlenmenin tanımıdır. Her ad TEK
 # rejimde yaşar: dosya arka ucu → flock, DB arka ucu → SQLite. Sınır `db_backed`tir.
@@ -477,6 +495,9 @@ def _atomic_write(path: Path, data: str) -> None:
 # `write_json` (aynı adı yeniden alır) zinciri kendini bloklamaz — bu zaten bugünkü sıcak yoldur.
 
 def write_json(name: str, obj: Any) -> Path:
+    """Belgeyi `sanitize` edip yazar ve yazılan yolu döner. DB'ye giden adlar `storage`a yönlenir
+    (kilit SQLite'ındır), aksi hâlde flock ALTINDA atomik yazım (tmp+fsync+replace). Süre
+    telemetriye işlenir."""
     t0 = _time.perf_counter()
     payload = sanitize(obj)
     if db_backed(name):
@@ -493,7 +514,7 @@ def write_json(name: str, obj: Any) -> Path:
 def write_text(name: str, text: str) -> Path:
     """JSON OLMAYAN metin defterleri için AYNI TEK KAPI — atomik tmp+fsync+rename + flock.
 
-    NEDEN VAR (Kademe B envanteri, 2026-08-03): `state/` altındaki her yazım JSON değildir ve
+    NEDEN VAR: `state/` altındaki her yazım JSON değildir ve
     JSON olmayanlar kapının DIŞINDA kalmıştı. Ölçülen kapı-dışı yollar aynı iki sınıfa düşüyordu:
 
       * ATOMİK OLMAYAN düz `write_text` — `memory.py` (`state/lessons.md`) ve `run.py`
@@ -521,6 +542,9 @@ def write_text(name: str, text: str) -> Path:
 
 
 def read_json(name: str, default: Any = None) -> Any:
+    """Belgeyi okur; dosya/kayıt yoksa `default` döner. DB'ye giden adlar `storage`tan okunur.
+    Bozuk ya da okunamayan dosya da varsayılana düşer ama SESSİZ DEĞİL: dosya başına bir kez
+    `state_file_unreadable` uyarısı basılır. Dönen nesne köken takibi için sarmalanır."""
     if db_backed(name):
         doc = storage.read_entity(name)
         return default if doc is None else _prov.sar(name, doc)
@@ -535,7 +559,7 @@ def read_json(name: str, default: Any = None) -> Any:
     except (json.JSONDecodeError, OSError) as e:
         # a corrupt/unreadable state file must degrade to the default, never 500 an endpoint or kill a
         # cycle — writers are atomic, so this only fires on external damage (ops audit hardening).
-        # AMA SESSİZ OLMAZ (denetim turu 34, 2026-07-21): portfolio.json bozulursa defter BOŞ görünür
+        # AMA SESSİZ OLMAZ: portfolio.json bozulursa defter BOŞ görünür
         # ve motor pozisyonları yokmuş gibi davranır. "Varsayılana düştük" bir olay olarak kaydedilir;
         # dosya başına bir kez (log seli yok).
         if name not in _CORRUPT_SEEN:
@@ -550,6 +574,9 @@ def read_json(name: str, default: Any = None) -> Any:
 
 
 def append_jsonl(name: str, row: dict) -> None:
+    """Satır defterine tek satır ekler (`sanitize` edilmiş). DB'ye giden ad `storage.append_row`a
+    yönlenir (satır+damga tek transaction); dosya yolunda satır sonuna eklenir. Süre telemetriye
+    işlenir."""
     t0 = _time.perf_counter()
     payload = sanitize(row)
     if db_backed(name):
@@ -564,6 +591,9 @@ def append_jsonl(name: str, row: dict) -> None:
 
 
 def read_jsonl(name: str, limit: int | None = None) -> list[dict]:
+    """Satır defterini okur; `limit` verilirse SON `limit` satır. Defter yoksa boş liste.
+    Çözümlenemeyen satırlar atlanır ama SESSİZ DEĞİL: dosya başına bir kez `jsonl_rows_skipped`
+    uyarısı (atlanan/kalan sayısıyla) basılır — yarım satır sessiz veri kaybı olmasın diye."""
     if db_backed(name):
         return _prov.sar(name, storage.read_rows(name, limit=limit))
     path = _path(name)
@@ -595,7 +625,7 @@ def merge_dated_jsonl(name: str, date_value: str, new_rows: list[dict], cap: int
     """Idempotent per-date write: drop any existing rows for date_value, append new_rows, keep the
     last `cap`. Lets candidates/plans accumulate a dated history without duplicating on re-run.
 
-    KİLİT (B3, 2026-07-31): bu bir OKU-DEĞİŞTİR-YAZdır ve kilitsizdi. `loop.daily_cycle` bunu
+    KİLİT: bu bir OKU-DEĞİŞTİR-YAZdır ve kilitsizdi. `loop.daily_cycle` bunu
     `trade_plans.jsonl` için çağırırken Hermes'in görüş damgası (`update_jsonl`, KİLİTLİ) aynı
     deftere yazabiliyordu — kilitli taraf kilitsiz tarafı bekletemez, yani kilit tek taraflıysa
     kilit YOKTUR. Aynı ada bağlanır, böylece iki yol aynı sırayı paylaşır."""
@@ -605,11 +635,13 @@ def merge_dated_jsonl(name: str, date_value: str, new_rows: list[dict], cap: int
 
 
 def write_jsonl(name: str, rows: list[dict]) -> None:
+    """Satır defterinin TAMAMINI değiştirir (`sanitize` edilmiş satırlarla). DB'ye giden ad tek
+    transaction'lık `storage.replace_rows`a yönlenir; dosya yolunda flock ALTINDA atomik yazım."""
     if db_backed(name):
         storage.replace_rows(name, [sanitize(r) for r in rows])
         return
     path = _path(name)
-    with file_lock(name):        # Kademe B — gerekçe write_json'ın üstündeki blokta
+    with file_lock(name):        # gerekçe write_json'ın üstündeki blokta
         _atomic_write(path, "".join(json.dumps(sanitize(r)) + "\n" for r in rows))
 
 

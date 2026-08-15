@@ -48,7 +48,7 @@ _MAXMEM = 64 * 1024 * 1024          # n*r*128*2 üstü; varsayılan 32 MB sını
 SESSION_TTL_S = 12 * 3600           # bir çalışma günü; sonrasında yeniden giriş
 COOKIE_NAME = "meridian_session"
 
-# ---- KAYAN OTURUMUN MUTLAK TAVANI (2026-08-14, operatör arızası: "arayüz bir süre sonra kayboluyor")
+# ---- KAYAN OTURUMUN MUTLAK TAVANI (operatör arızası: "arayüz bir süre sonra kayboluyor")
 # ARIZA NEYDİ: `SESSION_TTL_S` SABİT bir pencereydi ve çerezi tazeleyen HİÇBİR yol yoktu — çerez
 # yalnız girişte ve ilk-parola-kurulumunda yazılıyordu. Pano 12 saat KESİNTİSİZ kullanılsa bile
 # saat dolduğu an `_auth` 401 verir, pano kapağı açar; çerez ORTAK olduğu için bütün sekmeler AYNI
@@ -85,7 +85,7 @@ _FAILS: dict[str, list[float]] = {}
 def _auth_file() -> Path:
     """Kimlik dosyasının yolu — HER ÇAĞRIDA yeniden çözülür, modül düzeyinde DONDURULMAZ.
 
-    NEDEN FONKSİYON (2026-07-29): burası `AUTH_FILE = config.STATE / "auth.json"` idi, yani yol
+    NEDEN FONKSİYON: burası `AUTH_FILE = config.STATE / "auth.json"` idi, yani yol
     `import meridian.auth` ANINDA bağlanıyordu. `config.STATE`i SONRADAN yönlendiren her çağıran —
     test sandbox'ı, `MERIDIAN_ROOT` ile ikinci bir kök, bir kurtarma kopyası — auth'un hâlâ ESKİ
     dizini okuduğunu HİÇBİR YERDE göremiyordu. Somut bedeli: sandbox'lı testler kendi state
@@ -102,6 +102,8 @@ def _auth_file() -> Path:
 
 
 def _read() -> dict:
+    """`state/auth.json` kaydını sözlük olarak okur. Dosya yoksa (ilk kurulum) ya da bozuksa `{}`
+    döner — yani "kimlik yapılandırılmamış", ki bu KAPALI taraftır: kimse içeri alınmaz."""
     try:
         return json.loads(_auth_file().read_text())
     except (OSError, ValueError):  # sessiz-yutma: dosya yok (ilk kurulum) ya da bozuk — {} "kimlik yapılandırılmamış" demektir; parola ve oturum doğrulaması KAPALI tarafa düşer, kimse içeri alınmaz
@@ -134,6 +136,8 @@ def _write(d: dict) -> None:
 
 # ---- parola --------------------------------------------------------------------------------
 def _derive(password: str, salt: bytes) -> bytes:
+    """Parolayı verilen tuzla `hashlib.scrypt` (RFC 7914 etkileşimli profil, n=2^15/r=8/p=1) ile
+    32 baytlık anahtara türetir. Parola diskte asla düz durmaz; dönen ham türetme loglanmaz."""
     return hashlib.scrypt(password.encode("utf-8"), salt=salt, maxmem=_MAXMEM, **_SCRYPT)
 
 
@@ -152,11 +156,15 @@ def set_password(password: str) -> None:
 
 
 def password_set() -> bool:
+    """Kimlik defterinde kurulu bir parola VAR MI? (hash + salt ikisi de dolu mu.)"""
     d = _read()
     return bool(d.get("hash") and d.get("salt"))
 
 
 def verify_password(password: str) -> bool:
+    """Parolayı kayıttaki tuz + hash ile doğrular. Karşılaştırma `hmac.compare_digest` ile
+    SABİT ZAMANLIdır (`!=` ilk uyumsuz baytta kısa devre yapar, CWE-208); parola kurulmamışsa
+    ya da kayıt bozuksa False — kapalı tarafa düşülür."""
     d = _read()
     if not (d.get("hash") and d.get("salt")):
         return False
@@ -170,6 +178,8 @@ def verify_password(password: str) -> bool:
 
 # ---- imza anahtarı -------------------------------------------------------------------------
 def _key() -> bytes:
+    """Oturum imza anahtarını (32 bayt) verir; kayıtta yoksa rastgele üretip deftere yazar
+    (0600 izniyle). Anahtarın kendisi hiçbir zaman loglanmaz."""
     d = _read()
     k = d.get("key")
     if not k:
@@ -188,7 +198,7 @@ def rotate_key() -> None:
 
 
 # ---- oturum --------------------------------------------------------------------------------
-# İKİ JETON BİÇİMİ, BİLİNÇLİ ve GEÇİCİ (2026-08-14):
+# İKİ JETON BİÇİMİ, BİLİNÇLİ ve GEÇİCİ:
 #   v2 (BUGÜN VERİLEN)  `<exp>.<iat>.<nonce>.<imza>`  — imzalanan ileti `v2.<exp>.<iat>.<nonce>`
 #   v1 (ESKİ, YALNIZ OKUNUR) `<exp>.<nonce>.<imza>`   — imzalanan ileti `<exp>.<nonce>`
 #
@@ -256,6 +266,8 @@ def issue_session(ttl_s: int = SESSION_TTL_S) -> str:
 
 
 def verify_session(token: str | None) -> bool:
+    """Oturum jetonu ŞU AN geçerli mi: imza doğrulanır (`_parse_session`, sabit zamanlı) ve
+    ardından `exp` geleceğe mi bakıyor diye ölçülür. Her iki kapıdan biri düşerse False."""
     ayristirilmis = _parse_session(token)
     if ayristirilmis is None:
         return False
@@ -319,6 +331,8 @@ def note_session_drop(ip: str) -> bool:
 
 # ---- kaba kuvvet ---------------------------------------------------------------------------
 def _prune(ip: str, now: float) -> list[float]:
+    """IP'nin başarısızlık defterinden pencere (`FAIL_WINDOW_S`) dışına düşmüş damgaları atar ve
+    pencere İÇİNDE kalanları döner. Defter boşalırsa IP anahtarı da silinir (sınırsız büyümesin)."""
     xs = [t for t in _FAILS.get(ip, []) if now - t < FAIL_WINDOW_S]
     if xs:
         _FAILS[ip] = xs
@@ -328,20 +342,26 @@ def _prune(ip: str, now: float) -> list[float]:
 
 
 def locked_out(ip: str) -> bool:
+    """Bu IP kaba-kuvvet kilidinde mi: kayan pencerede başarısızlık sayısı `FAIL_MAX`e ulaştı mı?"""
     return len(_prune(ip, time.time())) >= FAIL_MAX
 
 
 def note_failure(ip: str) -> None:
+    """Başarısız giriş denemesini IP'nin defterine damgalar ve pencere dışını budar.
+    Defter süreç-içidir (tek süreçli dağıtımda yeterli; başka iddia yok)."""
     now = time.time()
     _FAILS.setdefault(ip, []).append(now)
     _prune(ip, now)
 
 
 def note_success(ip: str) -> None:
+    """Başarılı girişte IP'nin başarısızlık defterini tamamen siler — sayaç sıfırlanır."""
     _FAILS.pop(ip, None)
 
 
 def retry_after_s(ip: str) -> int:
+    """Kilitli IP'nin kaç saniye sonra yeniden deneyebileceği (en az 1); kilitli değilse 0.
+    Süre penceredeki EN ESKİ başarısızlığın düşmesine kalan zamandan hesaplanır."""
     xs = _prune(ip, time.time())
     if len(xs) < FAIL_MAX:
         return 0

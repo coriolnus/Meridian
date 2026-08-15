@@ -28,14 +28,14 @@ import sys
 
 # KADANS DAMGASI — ebeveynin (`sprint.start`) yazdığı, çocuğun ÜRETMEDİĞİ alanlar. Çocuğun her
 # yazımında KORUNUR; bkz. `_damgayi_koru`.
-# `kosum_yolu`/`birim` v241'de EKLENDİ (systemd koşum yolu): ebeveyn hangi yoldan başlattığını
+# `kosum_yolu`/`birim` EKLENDİ (systemd koşum yolu): ebeveyn hangi yoldan başlattığını
 # damgalar, çocuk bunu BİLEMEZ ve ilk ilerleme yazımında silerdi — C15'in birebir aynı sınıfı.
 # Damganın okuyucusu operatörün doğrulama adımıdır ("kosum_yolu 'systemd' mi?") ve panodur.
 STAMP_KEYS = ("cfg", "n_hyp_at_start", "kosum_yolu", "birim")
 
 
 def _damgayi_koru(path: str, payload: dict) -> dict:
-    """Mevcut durum dosyasındaki KADANS DAMGASINI payload'a geri koy (C15, 2026-08-02).
+    """Mevcut durum dosyasındaki KADANS DAMGASINI payload'a geri koy.
 
     KUSUR. `sprint.start()` `n_hyp_at_start` (+ `cfg`) damgasını CANLI `sprint_status.json`a yazar
     ve kendi yorumunda nedenini beyan eder: "Damga olmadan `taze = len(hyps) − 0` olurdu ve tetik
@@ -72,9 +72,9 @@ def _damgayi_koru(path: str, payload: dict) -> dict:
 def _write_live_status(payload: dict) -> None:
     """ATOMIC — the API process polls this file every few seconds while the child rewrites it; a plain
     truncate-then-write let /api/sprint (and /api/hermes, which embeds it) read half-written JSON and
-    500 intermittently (audit #29).
+    500 intermittently.
 
-    KADANS DAMGASI KORUNUR (C15): payload yalnız ÇOCUĞUN ürettiği alanları taşır; dosyadaki
+    KADANS DAMGASI KORUNUR: payload yalnız ÇOCUĞUN ürettiği alanları taşır; dosyadaki
     `n_hyp_at_start`/`cfg` bu yazımda silinirse sprint kadansı haftalık tabanını kaybeder."""
     path = os.environ.get("MERIDIAN_SPRINT_STATUS")
     if not path:
@@ -82,13 +82,13 @@ def _write_live_status(payload: dict) -> None:
     from pathlib import Path
     from . import config, store
     payload = _damgayi_koru(path, payload)
-    # KAPI-DIŞI TAŞIMA (H9 Kademe C): elle mkstemp+os.replace (fsync YOK, flock YOK, sanitize YOK)
+    # KAPI-DIŞI TAŞIMA: elle mkstemp+os.replace (fsync YOK, flock YOK, sanitize YOK)
     # → store.write_json. ATOMİKLİK korunur; fsync EKLENİR (güç kesintisinde sıfır-baytlık status →
     # /api/sprint {} okurdu); sanitize EKLENİR (search sonucu np.float sızarsa çıplak json.dump
     # patlardı). Kilit ADI: çocuk sandbox STATE'inde koşar, canlı status yolu STATE DIŞI → relative_to
     # ValueError → mutlak ad → kendi kilidi. Ebeveynle (sprint.start, CANLI süreç) süreçler-arası
     # serileştirme flock'la SAĞLANAMAZ (ayrı STATE → ayrı kilit); damga güvenliği yapısaldır:
-    # _damgayi_koru birleşimi + ebeveynin ömürde TEK yazımı (C15, yukarıdaki docstring).
+    # _damgayi_koru birleşimi + ebeveynin ömürde TEK yazımı (yukarıdaki docstring).
     # YASA-6 OKUYUCU: /api/sprint + /api/hermes (gömülü) birkaç saniyede bir poll eder.
     try:
         name = str(Path(path).relative_to(config.STATE))
@@ -101,10 +101,16 @@ def _write_live_status(payload: dict) -> None:
 
 
 def _sessions(index, lo: str, hi: str) -> list[str]:
+    """Veri indeksinden [lo, hi] aralığındaki (İKİ UÇ DAHİL) seans tarihlerini ISO metin listesi
+    olarak süzer.
+    """
     return [str(d.date()) for d in index["date"] if lo <= str(d.date()) <= hi]
 
 
 def _slim(res: dict) -> dict:
+    """Arama sonucunu durum dosyasına sığacak kadar küçültür: durum, denenen/kapıyı geçen sayısı,
+    mevcut sürümün OOS skoru, en iyi aday ve kapıyı geçen ilk altı iz satırı.
+    """
     s = res.get("search") or res
     best = s.get("best")
     return {"status": res.get("status"), "evaluated": s.get("evaluated"), "cleared": s.get("cleared"),
@@ -113,6 +119,13 @@ def _slim(res: dict) -> dict:
 
 
 def _run(sbroot: str, cfg: dict) -> None:
+    """Sprintin üç fazını KUM HAVUZUNDA yürütür: (A) v1 ileri taban, (B) ayrık seçim penceresinde
+    arama + gemi, (C) sıfırlanmış düz kitapla AYNI pencerede v2 ileri koşusu.
+
+    Her adımda ilerleme canlı `sprint_status.json`a yazılır ve `STOP` dosyası yoklanır. Faz A
+    min_sample'a ulaşmazsa ya da hiçbir aday kapıyı geçemezse tur beyanla biter. Yazımların
+    tamamı kum havuzu state'ine düşer; canlı defter v1'de kalır.
+    """
     from . import config, store, dataset, loop, reflect, memory, sprint as S
 
     started = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -120,9 +133,13 @@ def _run(sbroot: str, cfg: dict) -> None:
     pid = os.getpid()
 
     def _count(v) -> int:
+        """Kum havuzu işlem defterinde verilen strateji sürümüyle damgalı kapanmış işlem sayısı."""
         return sum(1 for t in store.read_jsonl("trades.jsonl") if t.get("strategy_version") == v)
 
     def _v2_realized(v2):
+        """v2'ye ait GERÇEKLEŞMİŞ hipotez sonucunu (realized_delta, durum, kalibrasyon isabeti, tahmin)
+        döndürür; yoksa None. Döngünün kapanıp kapanmadığının ölçüsü budur.
+        """
         for h in memory.all_hypotheses():
             if h.get("version_to") == v2 and h.get("realized_delta") is not None:
                 return {"realized_delta": h.get("realized_delta"), "status": h.get("status"),
@@ -130,15 +147,22 @@ def _run(sbroot: str, cfg: dict) -> None:
         return None
 
     def _reset_flat(day_before: str) -> None:
+        """Kum havuzu portföyünü düz başlangıç durumuna sıfırlar ve son tarihi `day_before` yapar.
+        C fazının v1 ile AYNI pencereyi AYNI düz kitaptan yürümesi bu sıfırlamaya dayanır.
+        """
         from .score import START_EQUITY
         store.write_json("portfolio.json", {
             "cash": START_EQUITY, "realized_pnl": 0.0, "last_id": 0, "positions": {},
             "armed": [], "pending_exits": {}, "last_date": day_before, "day_start_equity": START_EQUITY})
 
     def _stopped() -> bool:
+        """Operatörün durdurma işareti: kum havuzu state'inde `STOP` dosyası var mı?"""
         return (config.STATE / "STOP").exists()
 
     def status(**kw) -> None:
+        """İlerleme görüntüsünü canlı `sprint_status.json`a ATOMİK yazar; pid/sid/pencere alanları
+        sabittir, geri kalanı çağrıdan gelir (ebeveynin kadans damgası korunur).
+        """
         _write_live_status({"pid": pid, "sid": sid, "started_at": started, "sbroot": sbroot,
                             "eval_start": S.EVAL_START, "cutoff": S.CUTOFF,
                             "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), **kw})
@@ -151,7 +175,7 @@ def _run(sbroot: str, cfg: dict) -> None:
     total = len(fwd)
     if total == 0:
         return status(phase="done", loop_closed=False, note="eval penceresinde seans yok")
-    # STRICTLY before EVAL_START (M5). _sessions uses an INCLUSIVE upper bound, so when EVAL_START is itself
+    # STRICTLY before EVAL_START. _sessions uses an INCLUSIVE upper bound, so when EVAL_START is itself
     # a session, day_before == fwd[0] — Phase C's _reset_flat(day_before) sets last_date=fwd[0], the first
     # daily_cycle(on_date=fwd[0]) hits loop.py's same-day dedup and no-ops, so v2 skips the first eval
     # session that v1 (reset with last_date=None) processes. That breaks the "same window, same flat book"
@@ -208,6 +232,10 @@ def _run(sbroot: str, cfg: dict) -> None:
 
 
 def main(argv=None):
+    """Çocuk sürecin girişi: `<sbroot> <cfg-json>` argümanlarını çözer ve `_run`u koşturur.
+    İstisna çıkarsa durum dosyasına `phase="error"` yazılır ve istisna YENİDEN fırlatılır —
+    sprint sessizce ölmez.
+    """
     argv = argv or sys.argv[1:]
     if len(argv) < 2:
         raise SystemExit("usage: python -m meridian.sprint_run <sbroot> <cfg-json>")

@@ -36,13 +36,13 @@ from . import config, store, guard, memory, versioning, backtest, dataset, oos_e
 GATE_MARGIN = 0.02   # candidate must beat incumbent OOS by at least this
 TAIL_MARGIN_R = 0.5  # capital preservation: candidate may not raise OOS tail loss (VaR AND CVaR) by >this many R
 
-# ---- PARA-v3 (2026-07-30): marj para ölçeğine çevrildi, düşüş vetosu eklendi -------------------
+# ---- PARA-v3: marj para ölçeğine çevrildi, düşüş vetosu eklendi --------------------------------
 # `GATE_MARGIN` BİLEŞİK ölçekte tanımlıydı ve yasanın karar değişkeni artık PARA. İki sabit, tek
 # kaynaktan (`shadowlaw`) gelir çünkü türetimleri ölçüme dayanır ve ölçüm kaydı orada durur:
 #   MONEY_GATE_MARGIN = 0.004  ← 0.02 × σ(ΔS_v3)/σ(S_eski) = 0.02 × 0.1908 (σ-eşdeğerliği)
 #   DD_VETO_MARGIN    = 0.08   ← düşüş bütçesinin YARISI (goal.max_drawdown=0,16, operatör
 #                                kararı 2026-08-13) ve σ(düşüş)=0,0343'ün DIŞINDA — türetim
-#                                shadowlaw.py:90-97'de, sayı ORADAN gelir (burada kopya YOK)
+#                                `shadowlaw.DD_VETO_MARGIN` başlığında, sayı ORADAN gelir (burada kopya YOK)
 # `GATE_MARGIN` SİLİNMEDİ ve 0.02 kaldı: LEGACY yolun (dilimsiz fikstür/sandbox) yasası odur ve o
 # yol bileşik skor karşılaştırır — orada para ölçeği hesaplanamaz (dilim yok, span yok). Yani
 # 0.02 artık "eski yasanın marjı", 0.004 ise "yürürlükteki yasanın marjı"dır ve hangisinin koştuğu
@@ -51,7 +51,7 @@ DD_VETO_MARGIN = shadowlaw.DD_VETO_MARGIN      # düşüş vetosunun marjı (par
 MONEY_GATE_MARGIN = shadowlaw.MONEY_GATE_MARGIN  # GATE_MARGIN'ın para-ölçek eşdeğeri
 HOLDOUT_DIVERGENCE = 0.10   # OOS→holdout drop beyond this flags overfit_suspect (does NOT block the ship)
 
-# ---- ② AÇIK-POZİSYON DÜŞÜŞÜ: ÖLÇÜLÜR, HÜKÜM VERMEZ (WP-M ②, 2026-08-02) -----------------------
+# ---- AÇIK-POZİSYON DÜŞÜŞÜ: ÖLÇÜLÜR, HÜKÜM VERMEZ ----------------------------------------------
 # EŞİK İCAT EDİLMEDİ, BU YÜZDEN BAĞLANMADI. M2M bacağı kapanmış-işlem bacağının YAPISINI aynen
 # alır (aday > incumbent + marj, tek yönlü) ama `DD_VETO_MARGIN`in türetimi KAPANMIŞ-İŞLEM düşüş
 # dağılımı üzerinde yapılmıştı: σ(düşüş)=0,0343 (blok-yeniden-örnekleme, 2000 replikasyon) ve "%8
@@ -71,7 +71,7 @@ def _dd_mtm_bagli() -> bool:
 
 # incumbent walk-forward is identical across every candidate in a reflection session — compute once.
 _INC_CACHE: dict = {}
-INC_DISK_FILE = "inc_cache.json"     # #2: incumbent walk'ları da bar-revizyonuyla diskte yaşar
+INC_DISK_FILE = "inc_cache.json"     # incumbent walk'ları da bar-revizyonuyla diskte yaşar
 INC_DISK_CAP = 40
 _INC_DISK_LOADED = False
 
@@ -81,6 +81,10 @@ _CACHE_WARNED: set = set()
 
 
 def _cache_warn(event: str, exc: BaseException) -> None:
+    """Önbellek G/Ç hatasını OLAY TÜRÜ BAŞINA BİR KEZ uyarı olarak düşer (YASA 4).
+
+    Arama döngüsü bu yolu yüzlerce kez geçer; her seferinde uyarmak asıl sinyali log seline
+    gömerdi. Kayıt kanalının kendisi düşerse sessiz kalır — telemetri aramayı düşüremez."""
     if event in _CACHE_WARNED:
         return
     _CACHE_WARNED.add(event)
@@ -94,6 +98,10 @@ def _cache_warn(event: str, exc: BaseException) -> None:
 
 
 def _inc_disk_load() -> None:
+    """Diskteki incumbent walk-forward önbelleğini süreç-içi `_INC_CACHE`e SÜREÇ BAŞINA bir kez yükler.
+
+    Yalnız dosyadaki bar revizyonu yürürlükteki revizyonla AYNIYSA alınır — bayat barların walk'ı
+    yeni barların adayıyla kıyaslanamaz. Okuma düşerse yalnız süre uzar, uyarı bırakılır."""
     global _INC_DISK_LOADED
     if _INC_DISK_LOADED:
         return
@@ -105,13 +113,16 @@ def _inc_disk_load() -> None:
             for k, v in (blob.get("entries") or {}).items():
                 _INC_CACHE.setdefault(k, v)
     except Exception as e:
-        # YASA 4 (2026-07-21): önbellek okuması sessizce düşerse hata görünmez, YALNIZ SÜRE uzar —
+        # YASA 4: önbellek okuması sessizce düşerse hata görünmez, YALNIZ SÜRE uzar —
         # her aday incumbent walk-forward'ı sıfırdan hesaplar. "Refleksiyon neden 40 dakika sürüyor?"
         # sorusunun cevabı diskteki bozuk bir JSON olabilir; artık iz bırakıyor.
         _cache_warn("inc_cache_load_failed", e)
 
 
 def _inc_disk_save() -> None:
+    """Süreç-içi incumbent önbelleğinin SON `INC_DISK_CAP` girdisini yürürlükteki bar revizyonuyla
+    damgalayıp diske yazar. Yazım düşerse önbellek hiç kalıcı olmaz (tek belirti yavaşlama) —
+    bu yüzden uyarı bırakılır."""
     try:
         rev = int(store.read_json(PROBE_REV_FILE, {}).get("rev", 0))
         keys = list(_INC_CACHE.keys())[-INC_DISK_CAP:]
@@ -126,15 +137,15 @@ def clear_wf_caches() -> None:
     """Drop every cached walk-forward. MUST be called when the bar data changes (the scheduler's
     once-per-session refetch): cache keys carry params/windows/regime but nothing identifying the bars
     revision, so after a refetch (dividend/split re-adjustment, backfilled sessions) a cached incumbent
-    from the OLD bars would be compared against a candidate walked on the NEW bars (audit #30).
-    #3: DİSK önbelleği de bar-revizyonuyla yaşar — revizyon burada artar, eski dosya silinir; bayat
-    önbellek (audit #30 sınıfı) diskten de dönemez."""
+    from the OLD bars would be compared against a candidate walked on the NEW bars.
+    DİSK önbelleği de bar-revizyonuyla yaşar — revizyon burada artar, eski dosya silinir; bayat
+    önbellek diskten de dönemez."""
     _INC_CACHE.clear()
     _PROBE_CACHE.clear()
     global _PROBE_DISK_LOADED, _INC_DISK_LOADED
     _PROBE_DISK_LOADED = False
     _INC_DISK_LOADED = False
-    # MONOTON revizyon (2026-07-21): eski hali oku-artır-yaz sayacıydı; okuma boş dönerse rev 1'e
+    # MONOTON revizyon: eski hali oku-artır-yaz sayacıydı; okuma boş dönerse rev 1'e
     # SIFIRLANIYOR ve bayat önbellekler yeniden "geçerli" oluyordu (monotonluk dedektörü canlıda
     # 4→1 gerilemesini yakaladı). Zaman damgası hem sıfırlanamaz hem eşzamanlı yazımda kayıp-güncelleme
     # üretmez; yine de prev+1 tabanıyla korunur (saat geri alınsa bile ileri gider).
@@ -149,6 +160,9 @@ def clear_wf_caches() -> None:
 
 
 def _default_windows() -> tuple:
+    """Üretim pencere demeti: (IS_START, OOS_START, OOS_END, HOLDOUT_END, OOS_FOLDS, EMBARGO_DAYS).
+
+    `dataset` sabitlerinden okunur; sprint aramaları kendi kaydırılmış pencerelerini verir."""
     return (dataset.IS_START, dataset.OOS_START, dataset.OOS_END,
             dataset.HOLDOUT_END, dataset.OOS_FOLDS, dataset.EMBARGO_DAYS)
 
@@ -164,7 +178,7 @@ def _eval_regime_of(variable: str) -> str | None:
     return regime if regime in config.VALID_REGIMES else None
 
 
-# ---- v189 (2026-08-05): ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
+# ---- 2026-08-05: ANAHTAR YASAYI TAŞIR · TUR-İÇİ TEK HESAP · REVİZYON KORUMASI ----------
 # ÖLÇÜLEN VAKA (canlı A1, 2026-08-04/05, py-spy): EOD döngüsü iki gece üst üste BİTMEDİ; yığın
 # `scheduler.advance_once → arming.evaluate → _measure → _wf_cached → backtest.walk_forward →
 # replay → scan_entry` içinde AKTİF dönüyordu.
@@ -189,15 +203,15 @@ def _eval_regime_of(variable: str) -> str | None:
 #       dosya değişmez), yani aynı turdaki tekrar çağrılar AYNI anahtara düşer — tek hesap.
 #
 #   (b) AYNI ANAHTAR İKİ KEZ HESAPLANABİLİYORDU. `if key not in _INC_CACHE: hesapla` iki iş
-#       parçacığı arasında yarışa açıktı ve v189 bu yarışı GERÇEK kılıyor: `arming` ölçümü süre
+#       parçacığı arasında yarışa açıktı ve süre tavanı bu yarışı GERÇEK kılıyor: `arming` ölçümü süre
 #       tavanını aşarsa arka planda SÜRMEYE devam eder; bir sonraki tur aynı anahtarı isteseydi
 #       İKİNCİ bir (canlıda ölçülen) 30+ dakikalık walk başlardı. Anahtar başına hesap kilidi:
 #       ikinci çağıran BEKLER ve birincinin sonucunu kullanır.
 #
 #   (c) HESAP SÜRERKEN BARLAR TAZELENEBİLİYORDU. `clear_wf_caches()` HER taze poll'de koşar
 #       (scheduler.py, `if fresh:` bloğu). Uzun bir walk sürerken temizlik geçerse, hesap bitince
-#       sözlüğe yazmak TEMİZLENMİŞ önbelleğe ESKİ barların sonucunu geri koymak olurdu — denetim
-#       #30'un ta kendisi, üstelik `clear_wf_caches`in kendi docstring'inde yasaklanmış hâliyle.
+#       sözlüğe yazmak TEMİZLENMİŞ önbelleğe ESKİ barların sonucunu geri koymak olurdu —
+#       `clear_wf_caches`in kendi docstring'inde yasaklanan kusurun ta kendisi.
 #       Revizyon hesaptan ÖNCE okunur ve sonra kıyaslanır; değiştiyse sonuç ÇAĞIRANA döner (o tur
 #       kendi barlarıyla tutarlıdır) ama ÖNBELLEĞE YAZILMAZ.
 import hashlib as _hl
@@ -248,7 +262,7 @@ def _yasa_parmak(goal: dict) -> str:
 
 def _param_parmak(params: dict) -> tuple:
     """Paramların anahtar-sıralı (ad, değer) demeti — SAYISAL değerlerde eski davranışla bit-bit
-    aynı (`round(float(x), 6)`). Sayısal OLMAYAN değer artık fırlatmıyor: #3 silahlanma ölçümünün
+    aynı (`round(float(x), 6)`). Sayısal OLMAYAN değer artık fırlatmıyor: silahlanma ölçümünün
     `entry.armed_extra` LİSTESİ `float()`e giremediği için aday walk'ları önbelleğe HİÇ
     giremiyordu (her tur sıfırdan hesap); kararlı JSON metniyle temsil edilir."""
     out = []
@@ -283,6 +297,11 @@ def _wf_key(params: dict, version: int, goal: dict, by_regime: dict | None,
 
 def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: dict | None = None,
                windows: tuple | None = None, eval_regime: str | None = None) -> dict:
+    """Walk-forward'ı önbellekli koşar — aynı anahtar bir turda YALNIZ BİR KEZ hesaplanır.
+
+    Anahtar `_wf_key`den gelir (paramlar + sürüm + yasa parmak izi + pencere + eval_regime).
+    Anahtar başına hesap kilidi: ikinci çağıran bekler, birincinin sonucunu kullanır. Hesap
+    sürerken barlar tazelenirse (revizyon değişti) sonuç ÇAĞIRANA döner ama ÖNBELLEĞE YAZILMAZ."""
     w = windows or _default_windows()
     key = _wf_key(params, version, goal, by_regime, w, eval_regime)
     _inc_disk_load()
@@ -312,6 +331,9 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
 
 
 def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool) -> str:
+    """Reddin İNSAN OKUNUR gerekçesini üretir: hangi kapı dalı düşürdü (skor/marj, fold-çoğunluğu,
+    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir; buradaki sıra o hükmün dal
+    sırasıyla aynıdır."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
     inc_tail, cand_tail = inc.get("oos_tail_risk"), cand.get("oos_tail_risk")
     if cand_oos is None:
@@ -341,7 +363,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     yasasına güvenli fallback. Fold-çoğunluğu ve kuyruk vetosu her iki yasada da aynen yürürlükte."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
 
-    # ---- N-DENGELİ FOLD KESİMİ (Aşama 2.1, 2026-07-28) -----------------------------------------
+    # ---- N-DENGELİ FOLD KESİMİ -----------------------------------------------------------------
     # Sınırlar INCUMBENT'ın Search-OOS işlemlerinden TEK KEZ türetilir, sonra İKİ TARAFA DA aynen
     # uygulanır. `walk_forward`ın takvim fold'ları bozulmadan yerinde kalır (önbellek anahtarı
     # değişmez, rapor alanları korunur); kapının OKUDUĞU fold'lar burada yeniden kesilir.
@@ -372,7 +394,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             fold_wins += 1 if cf["avg_r"] > incf["avg_r"] else 0
         elif inc_var:
             itiraz_edilmemis += 1
-    # FOLD ÇOĞUNLUĞU KANIT İSTER (2026-07-22, kapı denetimi). Eskiden `fold_total < 2` iken
+    # FOLD ÇOĞUNLUĞU KANIT İSTER. Eskiden `fold_total < 2` iken
     # çoğunluk VARSAYILAN True'ydu — yani var olma sebebi olan hatayı serbest bırakıyordu: yalnız
     # TEK pencerede işlem yapan bir aday (fold 1'de 60 işlem, fold 2-3'te sıfır) diğer fold'ları
     # `n>=3` eşiğinin altına düşürüyor, `fold_total=1` oluyor ve çoğunluk otomatik geçiyordu.
@@ -387,7 +409,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     # edge, sağlamlığın kanıtı değil ZITTIDIR; "birkaç pencerede sağlam" etiketiyle ship ediliyordu.
     majority = True if fold_total == 0 else (fold_wins >= (fold_total + 1) // 2 if fold_total >= 2
                                              else False)
-    # ---- BOŞ BIRAKILAN PENCERE = SAĞLAMLIK İDDİASI YOK (2026-07-28, n-dengeli kesimin GEREKTİRDİĞİ
+    # ---- BOŞ BIRAKILAN PENCERE = SAĞLAMLIK İDDİASI YOK (n-dengeli kesimin GEREKTİRDİĞİ
     # koruma; SAPMA BEYANI: brief "fold çoğunluğu aynen kalır" diyordu, bu ek kural onu GEVŞETMEZ,
     # SIKILAŞTIRIR — ve eklenmeseydi mevcut bir koruma sessizce kaybolurdu).
     # ÖLÇÜLDÜ: takvim fold'ları, işlemleri tek bir patlamaya sıkışmış bir adayı "fold 1'de 60 işlem,
@@ -405,14 +427,14 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     if inc_tail and cand_tail:
         worse_var = cand_tail["var_r"] > inc_tail["var_r"] + TAIL_MARGIN_R
         worse_cvar = cand_tail["cvar_r"] > inc_tail["cvar_r"] + TAIL_MARGIN_R
-        # AND → OR (2026-07-22, kapı denetimi). "İkisi BİRDEN kötüleşsin" demek, sermaye korumasında
+        # AND → OR. "İkisi BİRDEN kötüleşsin" demek, sermaye korumasında
         # fazla hoşgörülü: VaR'ı AYNI kalıp CVaR'ı 3.5R → 9.0R'ye çıkan bir aday geçiyordu — marjın
         # 11 KATI ve kalın-kuyruğun ders kitabı tanımı. Kuyruk riski tek metrikte bile anlamlı
         # kötüleşiyorsa bu bir vetodur; iki metrik iki AYRI soru sorar (tipik en kötü / en kötülerin
         # ortalaması), biri diğerini affedemez.
         tail_ok = not (worse_var or worse_cvar)
 
-    # ---- DÜŞÜŞ VETOSU (PARA-v3, 2026-07-30) ----------------------------------------------------
+    # ---- DÜŞÜŞ VETOSU (PARA-v3) ----------------------------------------------------------------
     # ÇİFT-SAYIM BİTTİ AMA KORUMA BİTMEDİ. `dd_c` skordan çıktı (varyansının %82'sini oradan
     # alıyordu ve AYNI ANDA kuyruk vetosunda da sayılıyordu). Çıkardığımız şey bir ÖLÇÜT değil bir
     # ÇİFT SAYIMdı; ölçütün kendisi buraya, SERT kapıya taşınır ve burada DAHA GÜÇLÜdür: skorda
@@ -428,10 +450,10 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     # (fikstür/legacy) düşüş ölçülemez → `dd_ok=True` ve kayıtta `dd_durum="olculemedi"` yazar.
     # Sessizce "geçti" demez; ÖLÇÜLEMEDİĞİNİ söyler.
     #
-    # BEYAN EDİLMİŞ SINIR (audit #6'nın kapsamı): VETONUN TETİKLEYİCİSİ Search diliminin
+    # BEYAN EDİLMİŞ SINIR: VETONUN TETİKLEYİCİSİ Search diliminin
     # KAPANMIŞ-İŞLEM sermaye eğrisidir. `score_detail` düşüşü hesaplarken günlük mark-to-market
     # eğrisini de katlıyor ("açık pozisyon düşüşü saklanamasın") ama o sayı `oos_detail`in içinde
-    # birleşmiş hâlde duruyor. 2026-08-02 itibarıyla `walk_forward` M2M eğrisini DİLİM BAŞINA
+    # birleşmiş hâlde duruyor. Artık `walk_forward` M2M eğrisini DİLİM BAŞINA
     # döndürüyor (`_mtm_search`) ve aşağıdaki ikinci bacak onu AYRI ölçüyor — ama ÖLÇER, HÜKÜM
     # VERMEZ (bkz. `DD_MTM_VETO_ENV` yorumu: marj kapanmış-işlem dağılımından türetildi, M2M
     # dağılımının σ'sı ölçülmedi). Yani bu satırın hükmü DEĞİŞMEDİ; yanına ölçülen bir ikiz kondu.
@@ -467,10 +489,10 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             dd_mtm_durum = ("gecti" if not dd_mtm_ihlal else
                             ("veto" if _mtm_bagli else "ihlal_baglanmadi"))
     # HÜKME GİDEN TEK KAPI: bayrak kapalıyken bu değer HER ZAMAN True'dur, yani `passes` bu turda
-    # bit-bit eski davranıştadır (çivi: v178).
+    # bit-bit eski davranıştadır (test çivisiyle sabit).
     dd_mtm_ok = not (dd_mtm_ihlal and _mtm_bagli)
 
-    # ---- OOS AŞINMA DEFTERİ (Aşama 2.2, 2026-07-28) --------------------------------------------
+    # ---- OOS AŞINMA DEFTERİ --------------------------------------------------------------------
     # Bu değerlendirme, bu pencere geometrisine sorulan KAÇINCI sorudur? Parmak izi fold sınırlarını
     # DA kapsar (n-dengeli kesim onları incumbent'tan türettiği için geometrinin parçası oldular).
     # Ceza kapıyı kapatmaz, çıtayı yükseltir — ve HER İKİ YASAYA da biner: aşınma, oturum içi
@@ -494,7 +516,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     from .oos_pipeline import OutOfSamplePipeline
     pipe = OutOfSamplePipeline(config.goal())
     prob = pipe.evaluate_search(inc, cand, k_probes=k_probes)
-    # ---- 28f: "ÖLÇÜLEMEDİ" ÜÇÜNCÜ HÂLDİR — "GEÇTİ" DEĞİL ---------------------------------------
+    # ---- "ÖLÇÜLEMEDİ" ÜÇÜNCÜ HÂLDİR — "GEÇTİ" DEĞİL --------------------------------------------
     # `evaluate_search` İKİ SEBEPLE `law="legacy"` döner ve ikisi AYNI ŞEY DEĞİLDİR:
     #   (a) DİLİM YOK      → olasılıksal yasa bu ortamda hiç YÜRÜRLÜKTE DEĞİL (fikstür/sandbox);
     #                        eski marj yasası o dünyanın MEŞRU yasasıdır ve aynen koşar.
@@ -512,7 +534,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         # da en az min_sample·0.7 işlem yoksa olasılıksal karar dürüst değildir → magnitude geçmez.
         floor = max(10, int(config.goal().get("min_sample", 30) * 0.7))
         thin = min(len(inc.get("_trades_search", [])), len(cand.get("_trades_search", []))) < floor
-        # `goal.min_sample` DEĞİŞMEZ bir sözleşmedir (2026-07-22, kapı denetimi): olasılıksal yasa
+        # `goal.min_sample` DEĞİŞMEZ bir sözleşmedir: olasılıksal yasa
         # kendi tabanını icat ediyordu (0.7·30 = 21) ve `cand_oos is not None` kontrolü YOKTU. Sonuç:
         # 26 kapanmış OOS işlemiyle bir aday `passes=True, candidate_oos=None` alıp ship ediliyor,
         # karneye `backtest_oos: None` yazılıyordu — yani skoru DÜRÜSTÇE tanımsız olan bir sürüm
@@ -552,7 +574,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                          f"{inc_para})" if not erosion_ok else prob.why))
         law = "probabilistic"
     elif _dilimli:
-        # ÖLÇÜLEMEDİ (28f): yasa yürürlükte, ölçüm yok → GEÇEMEZ. Eski marj yasasına DÜŞMEZ, çünkü
+        # ÖLÇÜLEMEDİ: yasa yürürlükte, ölçüm yok → GEÇEMEZ. Eski marj yasasına DÜŞMEZ, çünkü
         # düşmek "ölçemedim" ile "başka bir yasaya göre geçti"yi aynı şey saymak olurdu.
         inc_para = cand_para = None
         erosion_margin_para = None
@@ -586,14 +608,14 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     _yasa_damga = (shadowlaw.YASA_SURUMU if law == "probabilistic"
                    else ("olculemedi" if law == "olculemedi" else "eski_bilesik_marj"))
 
-    # ---- Y1 DOĞRULAMA: DSR (ADVISORY) + ADAY GETİRİ DEFTERİ (Hafta 3a, 2026-07-30) -------------
+    # ---- Y1 DOĞRULAMA: DSR (ADVISORY) + ADAY GETİRİ DEFTERİ ------------------------------------
     # DSR, kapının SORMADIĞI soruyu sorar: "kaç aday denedik de bu geçti?" Aşınma defteri o yükü
     # SAYIYOR ve marja çeviriyor; DSR onu Sharpe'ın kendi ölçeğinde bir OLASILIĞA çevirir
     # (Bailey & López de Prado 2014, çarpıklık/basıklık düzeltmeli).
     #
     # ADVISORY — `passes` YUKARIDA HESAPLANDI VE BU BLOK ONA DOKUNMAZ. Bu, bilinçli bir sıralamadır:
     # DSR alanı `passes` satırının ALTINDA üretilir, yani hükmü değiştirmesi kod düzeninde de
-    # imkânsızdır. Hard-gate'e geçiş (ROADMAP §3.1 önerisi: DSR>0.95) AYRI bir operatör kararıdır ve
+    # imkânsızdır. Hard-gate'e geçiş (DSR>0.95) AYRI bir operatör kararıdır ve
     # kapı yasasının passes-semantiği bu turda DEĞİŞMEZ.
     #
     # DENEME SAYISI İKİ KANALDAN: aşınma defterinin bu pencereye ömür-boyu sorgu sayısı (oturumlar
@@ -619,7 +641,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     dsr = validation.deflated_sharpe(_ret, _n_trials, _trial_sh)
 
     gate = {"incumbent_oos": inc_oos, "candidate_oos": cand_oos, "margin": effective_margin,
-            # ---- PENCERE DAMGASI (HOLDOUT ROTASYONU R1, 2026-07-30) ----
+            # ---- PENCERE DAMGASI (HOLDOUT ROTASYONU R1) ----
             # `fingerprint` geometrinin HASH'idir — makine için yeter, insan için yetmez. Bir kapı
             # kaydını altı ay sonra okuyan biri, o `p`/`ΔS`in HANGİ SINAV KÂĞIDINA ait olduğunu 16
             # haneli bir hash'ten çıkarmak zorunda kalmamalı. `pencere_id` o soruyu tek kelimeyle
@@ -631,7 +653,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             # DSR: ADVISORY alan — `passes` hükmüne GİRMEZ (bkz. yukarıdaki blok). None =
             # ölçülemedi (seri DSR_MIN_N altında ya da varyansı sıfır), 0.0 DEĞİL.
             "dsr": dsr, "dsr_n_trials": _n_trials,
-            # ROL METNİ v130'da GÜNCELLENDİ ama "ADVISORY" KELİMESİ YERİNDE KALDI ve bu doğrudur:
+            # ROL METNİ GÜNCELLENDİ ama "ADVISORY" KELİMESİ YERİNDE KALDI ve bu doğrudur:
             # DSR `_gate_eval`in `passes` hükmüne HÂLÂ girmez (blok `passes` satırının ALTINDA).
             # Sertlik SHIP yolunda (`_submit_locked`) ve MOD-FARKINDALIKLIDIR — iki ayrı yerdeki
             # iki ayrı hüküm tek cümlede karışmasın.
@@ -640,7 +662,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
             # `margin` ARTIK YÜRÜRLÜKTEKİ marjdır (taban + aşınma). Tabanı ayrı yazmak şart: kapı
             # kaydını sonradan okuyan biri 0.03 görüp "GATE_MARGIN değişmiş" sanmasın.
             "gate_margin_base": GATE_MARGIN, "erosion": erosion,
-            # ---- PARA-v3 DAMGASI (2026-07-30) ----
+            # ---- PARA-v3 DAMGASI ----
             # Bir kapı kaydını altı ay sonra okuyan biri, o `search_p`nin HANGİ yasanın p'si
             # olduğunu tahmin etmek zorunda kalmamalı. Damga + geçiş tarihi kayda GİRER; geçiş
             # ÖNCESİ kayıtlarda alan YOKTUR ve yokluğu "eski bileşik yasa" demektir (retro damga
@@ -667,7 +689,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                              "(DD_VETO_MARGIN) kapanmış-işlem düşüş dağılımından türetildi, M2M "
                              "dağılımının σ'sı ölçülmedi; bağlanması ölçüm kartı ister"),
             "gate_law": law, "k_probes": k_probes, **prob.as_gate_fields("search"),
-            # ÜÇ DEĞERLİ BÜYÜKLÜK HÜKMÜ (28f): "gecti" · "gecmedi" · "olculemedi". `magnitude_ok`
+            # ÜÇ DEĞERLİ BÜYÜKLÜK HÜKMÜ: "gecti" · "gecmedi" · "olculemedi". `magnitude_ok`
             # tek başına iki-değerlidir ve ÖLÇÜLEMEYENİ GEÇMEYENDEN ayıramaz; bir okuyucu (ya da
             # bekçi) "kapı neyi eliyor?" sorusunu ancak bu alanla dürüstçe cevaplayabilir.
             "magnitude_durum": ("gecti" if magnitude_ok else
@@ -708,7 +730,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
                f"(VaR {cand_tail['var_r']} vs {inc_tail['var_r']}, "
                f"CVaR {cand_tail['cvar_r']} vs {inc_tail['cvar_r']})")
 
-    # ---- D1: ADAY GETİRİ SERİSİ KALICI DEFTERE (PBO'nun ham maddesi) ---------------------------
+    # ---- ADAY GETİRİ SERİSİ KALICI DEFTERE (PBO'nun ham maddesi) -------------------------------
     # HÜKÜM YAZILDIKTAN SONRA, HÜKMÜ DEĞİŞTİRMEYEN BİR YAN ETKİ. `passes` ve `why` yukarıda
     # kesinleşti; buradaki yazım yalnız KAYIT tutar ve başarısız olursa (disk dolu, izin) kapı
     # kararı düşmez — `validation.record_candidate` uyarır ve None döner (YASA 4: sessiz değil,
@@ -720,7 +742,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
     #
     # `oos_detail.components` DE SAKLANIR VE BU KENDİ BAŞINA BİR ÖLÇÜM BORCUNU KAPATIR: bileşik
     # skorun (0,5·ret + 0,3·dd + 0,2·sharpe) hangi teriminin bir adayı reddettiği bugüne kadar
-    # HİÇBİR kayıtta yoktu (S1/S2 ve G3a ölçümleri yalnız `oos_score` yazdı, bu yüzden o vakaların
+    # HİÇBİR kayıtta yoktu (geçmiş ölçümler yalnız `oos_score` yazdı, bu yüzden o vakaların
     # terim ayrıştırması artık yeniden koşmadan çıkarılamıyor). Bundan sonra her resmî
     # değerlendirmede duruyor.
     if record_erosion:
@@ -729,7 +751,7 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         _od = cand.get("oos_detail") or {}
         validation.record_candidate({
             "ts": memory.now_iso(), "fingerprint": _fp,
-            # PENCERE DAMGASI (R1, 2026-07-30): PBO/DSR bu defteri TEK POPÜLASYON sanarak okur.
+            # PENCERE DAMGASI (R1): PBO/DSR bu defteri TEK POPÜLASYON sanarak okur.
             # `fingerprint` zaten geometriyi ayırt eder ama `pencere_id` onu OKUNABİLİR yapar —
             # ve tüketici uyarısı (ledgers sözleşmesi) bu alana dayanır: iki farklı `pencere_id`
             # iki farklı SINAV KÂĞIDIdır ve tek PBO ızgarasında karıştırılamaz.
@@ -800,19 +822,21 @@ def _ucb_rank(candidates: list, hyps: list, c: float = 1.2) -> list:
     ledger always yields the same order (reproducible, testable — no wall-clock/random)."""
     stats = _ledger_stats(hyps)
     total = max(1, sum(s["trials"] for s in stats.values()))
-    # #4: çıkış-verimliliği dürtmesi — MFE muhasebesi "masada R kalıyor" diyorsa (rapor eşiği),
+    # çıkış-verimliliği dürtmesi — MFE muhasebesi "masada R kalıyor" diyorsa (rapor eşiği),
     # exit.* düğmeleri sıralamada KÜÇÜK bir bonus alır. Yalnız arama SIRASI etkilenir; kapı yasası,
     # ödüller ve karar mekanizması değişmez. Dosya yoksa bonus 0 → davranış birebir eski hal.
     try:
         _ee = store.read_json("exit_efficiency.json", {})
         exit_bonus = 0.05 if _ee.get("nudge_active") else 0.0
     except Exception as e:
-        # YASA 4 (2026-07-21): dosya bozuksa dürtü sessizce KAPANIR ve arama sırası "masada R kalıyor"
+        # YASA 4: dosya bozuksa dürtü sessizce KAPANIR ve arama sırası "masada R kalıyor"
         # bulgusunu hiç duymadan koşar. Davranış aynı kalır (bonus 0) ama artık nedeni görünür.
         _cache_warn("exit_efficiency_unreadable", e)
         exit_bonus = 0.0
 
     def ucb(v):
+        """Tek değişkenin UCB1 skoru: hiç denenmemişse +inf (iyimserlik → önce keşif), denenmişse
+        ortalama ödül + c·sqrt(ln(toplam)/deneme) + (varsa) exit.* dürtü bonusu."""
         s = stats.get(v)
         bonus = exit_bonus if str(v).startswith("exit.") else 0.0
         if not s or s["trials"] == 0:
@@ -825,14 +849,14 @@ def _ucb_rank(candidates: list, hyps: list, c: float = 1.2) -> list:
 def propose_deterministic(explore: bool = False) -> dict:
     """Form ONE single-variable hypothesis. No LLM, one_variable_only preserved.
 
-    EMEKLİ EDİLMEDİ — OPERATÖR KALEMİ (temizlik turu 2026-07-30, av adayı #çürütüldü).
+    EMEKLİ EDİLMEDİ — OPERATÖR KALEMİ (av adayıydı, çürütüldü).
     AV İDDİASI: "üretim yolu kalmadı — `skills.axis2_cycle` bugün `recommend_from_attribution`ı
     DOĞRUDAN çağırıyor". Doğrulandı: Eksen-2 kolu artık buradan geçmiyor. AMA çürütme şu:
     bu fonksiyonun kalan tek yolu `reflect --auto` CLI'ıdır (aşağıda `main`) ve o CLI ÖLÜ DEĞİL —
     `README.md` satır 81'de operatörün elle koşturduğu komutlar listesinde yazılı duruyor
     ("force a reflection cycle (deterministic proposer — no LLM)"). Beyinsiz/kotasız bir gecede
     TEK hamle üretmenin elle tetiği budur; hermes'in canlı yolu onu çağırmaz (bkz. hermes.py
-    ~2550'deki not). Belgesi: ROADMAP §6 OPERATÖR tablosu. Yeni bir üretim çağıranı EKLENMEZ —
+    ~2550'deki not). Belgesi: OPERATÖR tablosu. Yeni bir üretim çağıranı EKLENMEZ —
     eklenirse aynı gecede iki yansıma yarışır (`_submit_locked`in engellediği hâl).
 
     Two selection modes over the SAME single-variable move:
@@ -842,7 +866,7 @@ def propose_deterministic(explore: bool = False) -> dict:
         in the ledger, preferring under-tried ones, so the loop widens its search instead of hammering
         the same few knobs. Either way the result is a single validated-shape proposal for the gate.
 
-    HAFIZA HER İKİ KİPTE DE OKUNUR (2026-08-14, ROADMAP §1 WP3-A/28c): defterde `rejected_by_backtest` ya da
+    HAFIZA HER İKİ KİPTE DE OKUNUR: defterde `rejected_by_backtest` ya da
     `rolled_back` ile duran bir (değişken, değer) çifti yeniden ÖNERİLMEZ. Exploit kipinde bu,
     sezgiselin yönünde bir sonraki denenmemiş ADIMA geçmek demektir (yön ve değişken değişmez).
     Tüm adımlar elenirse öneri yine döner ama `memory_exhausted=True` taşır ve
@@ -866,16 +890,18 @@ def propose_deterministic(explore: bool = False) -> dict:
         return int(new) if typ == "int" else round(new, 4)
 
     def explore_dir(var):
+        """Keşif yönü: mevcut değer aralığın ortasının altındaysa +1, üstündeyse −1 — adım hep
+        aralığın HENÜZ DENENMEMİŞ yarısına doğru atılır."""
         b = bounds[var]
         mid = (b["min"] + b["max"]) / 2.0
         return +1 if params.get(var, mid) <= mid else -1   # step toward the untested half of the range
 
-    # HAFIZA TEK TANIMDAN OKUNUR (ROADMAP §1 WP3-A/28c, 2026-08-14). Burada eskiden aynı işi yapan İKİNCİ bir
+    # HAFIZA TEK TANIMDAN OKUNUR. Burada eskiden aynı işi yapan İKİNCİ bir
     # `already_failed` kapanışı vardı; modül düzeyindeki `_already_failed` (koordinat-inişi aramasının
     # da kullandığı tanım) ile tek farkı @regime son-ekini çözememesiydi — `bounds[var]["type"]`
     # son-ekli adla aranıyor ve defterde o adla bir satır VARSA KeyError fırlatıyordu (yani hafızanın
     # tam da iş göreceği anda). "Başarısız" tanımı DEĞİŞMEDİ: guard'ın kalıcı kara listesiyle birebir
-    # aynı küme — `status in ("rejected_by_backtest", "rolled_back")` (guard.py:236).
+    # aynı küme — `status in ("rejected_by_backtest", "rolled_back")` (`guard.validate_change`).
 
     # exploit heuristic — the one variable most implicated by recent behavior
     if reasons.get("stop", 0) + reasons.get("stop_gap", 0) > 0.4 * n:
@@ -906,9 +932,9 @@ def propose_deterministic(explore: bool = False) -> dict:
         var = hvar
 
     # =============================================================================================
-    # EXPLOIT YOLUNA HAFIZA (ROADMAP §1 WP3-A, kalem 28c; 2026-08-14) — 21 TEKRARIN KÖKÜ
+    # EXPLOIT YOLUNA HAFIZA — 21 TEKRARIN KÖKÜ
     # ---------------------------------------------------------------------------------------------
-    # ÖLÇÜLEN BEDEL (docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md §2): `already_failed` kontrolü
+    # ÖLÇÜLEN BEDEL (docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md): `already_failed` kontrolü
     # YALNIZ explore dalının içindeydi; varsayılan exploit yolunda hafıza YOKTU. Sezgisel "stop'lar
     # baskın → stop'a yer aç" dediği sürece `move()` HER TURDA aynı tek adımı üretiyordu:
     # `stop_loss_atr_mult=2.1` defterde 21 kez (1 backtest reti + 20 guard reti), oysa bounds o
@@ -970,6 +996,11 @@ def propose_deterministic(explore: bool = False) -> dict:
 
 
 def _proposal(var, new, params, why, explore=False, memory_exhausted: bool = False) -> dict:
+    """Deterministik üreticinin tek-değişkenli öneri sözlüğünü kurar (kaynak: "deterministic").
+
+    Güven değeri sabit DEĞİL: ≥5 sonuç varsa ajanın KENDİ gerçekleşmiş isabet oranından türetilir
+    (0.30..0.70), yoksa soğuk başlangıç önselidir. `memory_exhausted` her öneride yazılır (False
+    olsa bile) — eksik alan sıfır sanılamaz."""
     from . import skills, analytics
     recs = skills.recommend_from_attribution()      # Axis-2 from measured skill contribution (no LLM)
     # confidence anchored to the agent's OWN realized calibration (how often its past predictions held),
@@ -1000,9 +1031,11 @@ class _ProcessLock:
     """CROSS-PROCESS reflection lock (fcntl.flock on state/.reflect.lock). The in-process
     _reflect_lock in hermes_runtime can't stop a SECOND process (tmux `hermes --loop`, a manual
     `reflect --auto`) from shipping concurrently — two multi-minute reflections racing versioning.commit
-    would clobber strategy.yaml/version state (audit #24). Non-blocking: the loser gets an honest
+    would clobber strategy.yaml/version state. Non-blocking: the loser gets an honest
     'locked' result instead of silently corrupting."""
     def __enter__(self):
+        """Kilit dosyasını açıp BLOKSUZ flock dener; alınamazsa `self.held=False` ile döner
+        (bekleme yok — kaybeden çağıran dürüst 'locked' cevabı alır)."""
         import fcntl
         self.fh = open(config.STATE / ".reflect.lock", "w")
         try:
@@ -1013,6 +1046,7 @@ class _ProcessLock:
         return self
 
     def __exit__(self, *a):
+        """Kilidi (tutuluyorsa) bırakır ve dosyayı kapatır; temizlik hatası asıl iş yolunu düşürmez."""
         try:
             if self.held:
                 import fcntl
@@ -1023,8 +1057,13 @@ class _ProcessLock:
 
 
 def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+    """Ship yetkisinin TEK KAPISI: öğrenme-durdurma bayrağını ve süreçler-arası yansıma kilidini
+    kontrol edip asıl boru hattını (`_submit_locked`) çağırır.
+
+    LEARN_HALT aktifse hiç ilerlemez ("learning_halted"); kilit başkasındaysa bloklamadan
+    "locked" döner — iki eşzamanlı yansıma strategy.yaml/sürüm durumunu ezemez."""
     from . import health as _health, obs as _obs
-    if _health.learn_halted():                 # Faz 3 (5a-4): öğrenme durduruldu — işlemler sürer,
+    if _health.learn_halted():                 # Faz 3: öğrenme durduruldu — işlemler sürer,
         _obs.log("submit_blocked_learn_halt")  # ama YENİ versiyon ship edilemez (operatör bayrağı)
         return {"status": "learning_halted", "detail": "state/LEARN_HALT aktif — ship engellendi"}
     with _ProcessLock() as pl:
@@ -1034,6 +1073,15 @@ def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = Non
 
 
 def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+    """Her hipotezin geçtiği boru hattı — kilit ALINMIŞKEN koşar (yalnız `submit` çağırır).
+
+    Sıra: guard (şekil/kara liste; bileşik öneri kuyruğa) → OOS kapısı (incumbent ve aday AYNI
+    motor ve AYNI pencerelerde) → teyit yürüyüşü → Y1 sert kapıları (DSR/PBO) → ship (sürüm
+    artırımı, anlık görüntü, skor tablosu, defter). Her dal deftere bir statüyle yazılır.
+
+    Fail-closed: teyit ÖLÇÜLEMEDİĞİNDE (dilimler var ama hüküm yok) ship ENGELLENİR —
+    "ölçülemedi" ne "geçti" ne "reddedildi"dir. DSR gerçek-parada sert, kâğıtta damga; PBO
+    ölçülebiliyorsa iki modda da serttir."""
     goal = goal or config.goal()
     rec = proposal.get("skill_recommendation")       # Axis-2: record the skill note (operator applies it)
     if isinstance(rec, dict) and rec.get("skill"):
@@ -1059,12 +1107,12 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
         "market_regime": store.read_json("regime.json", {}).get("regime", "any"),
     }
     if not v.ok:
-        # H3 — BİLEŞİK ÖNERİ KUYRUĞA BURADA YAZILIR (guard'da DEĞİL). guard SAF kalmak zorunda:
+        # BİLEŞİK ÖNERİ KUYRUĞA BURADA YAZILIR (guard'da DEĞİL). guard SAF kalmak zorunda:
         # sert zarf yasası (test_gate_statistics_v74) o modülde hiçbir defter/LLM/ağ kanalı
         # bulunmamasını çiviliyor ve bir kuyruk yazımı tam olarak o kanaldır. guard yalnız ŞEKİL
         # hükmü verir (`composite_pending_queue`), yazımı ÇAĞIRAN yapar. Bileşik öneri CANLIYA
         # GİRMEZ — statüsü `rejected_by_guard` DEĞİL `queued_composite`tir: "reddedildi" demek,
-        # ölçüme giden bir fikri mezarlığa yazmak olurdu (H2'nin ölü-aile sayımını da kirletirdi).
+        # ölçüme giden bir fikri mezarlığa yazmak olurdu (ölü-aile sayımını da kirletirdi).
         comp = proposal.get("composite")
         if isinstance(comp, dict) and comp and any("composite_pending_queue" in str(r)
                                                    for r in v.reasons):
@@ -1118,7 +1166,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     from .oos_pipeline import OutOfSamplePipeline
     conf = OutOfSamplePipeline(goal).confirm(inc, cand)
     gate.update(conf.as_gate_fields("confirm"))
-    # ---- 28f: SHIP KAPISINDAKİ DELİK — "ÖLÇÜLEMEDİ" ARTIK "GEÇTİ" DEĞİL ------------------------
+    # ---- SHIP KAPISINDAKİ DELİK — "ÖLÇÜLEMEDİ" ARTIK "GEÇTİ" DEĞİL -----------------------------
     # ESKİSİ: `if conf.law == "probabilistic":` — yani teyit yürüyüşü olasılıksal bir hüküm
     # VEREMEDİĞİNDE bütün blok ATLANIYOR ve aday teyit edilmeden SHIP ediliyordu. `confirm()` DÖRT
     # ayrı sebeple `law="legacy"` döner ve ÖLÇÜLDÜ (hepsi p=None, n_valid=0):
@@ -1128,7 +1176,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     #     [C] teyit dilimi boş    → aynı taban dalı (0 < 21)
     #     [D] dilim sınırı bozuk / geçerli replikasyon yetersiz → probgate.evaluate legacy döner
     # GEÇMİŞ VAKA (ADIYLA, retro DÜZELTİLMEDİ): **H00029 → v0003** (`entry.w_prox` None→0,15,
-    # 2026-07-20) `confirm_p=null`, `confirm_n_valid=0` ile SHIP edildi; değeri `strategy.py:419`
+    # 2026-07-20) `confirm_p=null`, `confirm_n_valid=0` ile SHIP edildi; değeri `strategy.evaluate_entry`
     # varsayılanının aynısıydı, yani ölçülemeyen bir NO-OP canlıya çıktı. Defter GERİYE DÖNÜK
     # DÜZELTİLMEZ (tarihçe bozulur); bu düzeltme yalnız bundan sonrasını bağlar.
     #
@@ -1172,12 +1220,11 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
         base["predicted_delta"] = conf.mean_delta                      # sapmasız teyit deltası
 
     # ---- 2c. Y1 SERT KAPI: DSR (MOD-FARKINDALIKLI) + PBO (İKİ MODDA SERT) ----------------------
-    # (DSR hard-gate turu, 2026-07-30 — operatör onaylı; ROADMAP §3.1 Y1 hard-gate kalemi)
     #
     # NEREDE DURDUĞU BİR TASARIM KARARIDIR. Kural `_gate_eval`in İÇİNDE DEĞİL, SHIP yolunda:
     #   * `_gate_eval` arama döngüsünde binlerce kez çağrılıyor ve `passes` semantiği ORADA
     #     değişmedi — DSR o fonksiyonda hâlâ `passes` satırının ALTINDA üretilir, yani hükme
-    #     girmesi kod düzeninde imkânsız kalır (Hafta 3a'nın kasıtlı sıralaması korundu).
+    #     girmesi kod düzeninde imkânsız kalır (kasıtlı sıralama korundu).
     #   * SHIP yolu ise "bu sürüm CANLI DEFTERE giriyor" noktasıdır ve bu turda sertleşen tam
     #     olarak o noktadır. Aramayı sertleştirmek, ölçüm aracını ölçüm yapmadan kısmak olurdu.
     #
@@ -1242,7 +1289,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     # deltas, false promote/rollback). Regime ships rely on the hypothesis gate record instead, and
     # rollback slices its live population to the same regime (population-consistent by construction).
     if ereg is None:
-        # EBEVEYN SATIRI ARTIK HÜKÜMLE BİRLİKTE YAZILIR (2026-07-27). Eskiden yalnız bir SAYI
+        # EBEVEYN SATIRI ARTIK HÜKÜMLE BİRLİKTE YAZILIR. Eskiden yalnız bir SAYI
         # düşüyordu ve "bu sayı taban olarak KULLANILABİLİR mi" sorusu okuyanın çıkarımına kalıyordu;
         # `baseline.measure_parent_baseline` ise aynı satıra hükmüyle yazıyor. İki yol AYNI alan
         # ailesini konuşmazsa `rollback._no_parent_diagnostics` birinden okuduğunu diğerinde göremez
@@ -1257,7 +1304,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
         #
         # ÖLÇÜLMEMİŞ TABAN DALI YOK, ÇÜNKÜ ULAŞILAMAZ: `_gate_eval` (magnitude_ok, her iki yasada da)
         # `inc_oos is not None` şartını taşır — kapıdan geçen her global ship'in ebeveyn tabanı
-        # TANIMLIDIR. 2026-07-22 öncesi böyle değildi ve v3 tam o delikten skorsuz ship edildi;
+        # TANIMLIDIR. Eskiden böyle değildi ve v3 tam o delikten skorsuz ship edildi;
         # `test_ship_baseline_v100` bu şartı çiviliyor, gevşerse orası kırmızı yanar.
         #
         # `set_row_fields` DEĞİL `update_scoreboard`: ship yolu zaten `current_version`'ı yönetir ve
@@ -1268,7 +1315,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
             baseline_measured_at=memory.now_iso(),
             baseline_n_trades=sum(int(f.get("n") or 0) for f in inc["oos_folds"]))
     # a regime ship's cand_oos is a SLICED score: store it regime-annotated so a future GLOBAL child of
-    # this version can never mistake it for a global baseline (audit #18 — the plain-key fallbacks in
+    # this version can never mistake it for a global baseline (the plain-key fallbacks in
     # rollback read only unannotated keys, so annotated entries fall through to population-consistent
     # sources by construction).
     oos_field = {f"backtest_oos@{ereg}": cand_oos} if ereg else {"backtest_oos": cand_oos}
@@ -1277,7 +1324,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
                                  backtest_folds=cand["oos_folds"],
                                  backtest_holdout=cand["holdout_score"], overfit_suspect=overfit_suspect,
                                  changed_variable=v.variable, live_since=memory.now_iso(), **oos_field)
-    # öneri #5: SPY-üstü alfa DAMGASI — kapının bileşeni DEĞİL (hedef fonksiyonunu uçuşta değiştirmek
+    # SPY-üstü alfa DAMGASI — kapının bileşeni DEĞİL (hedef fonksiyonunu uçuşta değiştirmek
     # karşılaştırılabilirliği bozar), yalnız her ship'e yazılan raporlanan-veto-adayı. 20-30 gözlem
     # birikince kapıya kuyruk-vetosu gibi eklenip eklenmeyeceğine veriyle karar verilir.
     try:
@@ -1292,6 +1339,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
 
 
 def params_of(strategy: dict) -> dict:
+    """Strateji sözlüğünün düz `params` haritasını döndürür (yoksa boş sözlük)."""
     return strategy.get("params", {})
 
 
@@ -1300,7 +1348,7 @@ def params_of(strategy: dict) -> dict:
 # 3-4 dead moves forever and nothing ever shipped. This searches SEVERAL values per knob across ALL knobs,
 # magnitude-first (bigger moves first), through the SAME _gate_eval law. It NOMINATES; submit() still SHIPS.
 _PROBE_CACHE: dict = {}
-# #3 SONDA ÖNBELLEĞİ DİSKE: ısınma sprintleri her yeniden başlatmada aynı walk-forward'ları yeniden
+# SONDA ÖNBELLEĞİ DİSKE: ısınma sprintleri her yeniden başlatmada aynı walk-forward'ları yeniden
 # hesaplıyordu (bellek-içi önbellek uçucu). Sonuçlar bar-revizyon anahtarlı tek JSON'da birikir:
 # sprintler üst üste eklenir, 20 dakikalık aramalar önbellek isabetiyle kısalır. Revizyon uyuşmayan
 # dosya YOK sayılır (bayat bar dersi). LRU tavanı: dosya şişmesin.
@@ -1311,6 +1359,10 @@ _PROBE_DISK_LOADED = False
 
 
 def _probe_disk_load() -> None:
+    """Diskteki sonda önbelleğini `_PROBE_CACHE`e SÜREÇ BAŞINA bir kez yükler.
+
+    Yalnız bar revizyonu uyuşuyorsa alınır — revizyonu uymayan dosya YOK sayılır (bayat bar
+    dersi). Okuma düşerse tek belirti koordinat inişinin yavaşlamasıdır, uyarı bırakılır."""
     global _PROBE_DISK_LOADED
     if _PROBE_DISK_LOADED:
         return
@@ -1328,6 +1380,8 @@ def _probe_disk_load() -> None:
 
 
 def _probe_disk_save() -> None:
+    """Sonda önbelleğinin son `PROBE_DISK_CAP` girdisini yürürlükteki bar revizyonuyla damgalayıp
+    diske yazar (LRU tavanı dosyayı şişmekten korur)."""
     try:
         rev = int(store.read_json(PROBE_REV_FILE, {}).get("rev", 0))
         keys = list(_PROBE_CACHE.keys())[-PROBE_DISK_CAP:]
@@ -1338,6 +1392,11 @@ def _probe_disk_save() -> None:
 
 
 def _already_failed(var: str, val, hyps: list, bounds: dict) -> bool:
+    """Bu (değişken, değer) çifti defterde daha önce ÇÖKTÜ mü — hafızanın TEK tanımı.
+
+    "Başarısız" kümesi guard'ın kalıcı kara listesiyle birebir aynıdır:
+    `rejected_by_backtest` ya da `rolled_back`. `@rejim` son-eki taban ada çözülerek tip
+    aranır, böylece rejim-hedefli düğmelerde de KeyError'suz çalışır."""
     base = str(var).split("@", 1)[0]
     typ = bounds[base]["type"] if base in bounds else "float"
     for h in hyps:
@@ -1348,6 +1407,11 @@ def _already_failed(var: str, val, hyps: list, bounds: dict) -> bool:
 
 
 def _probe_key(cand_strat: dict, var: str, new, w: tuple) -> str:
+    """Sonda önbellek anahtarı: pencere + TÜM parametre dünyası (düz + rejim-tablosu) + değişken +
+    değer.
+
+    Sürüm NUMARASI anahtara girmez (geri alma sonrası aynı numara farklı paramlarla dönebilir);
+    `var` anahtarda kalır çünkü eval_regime'i, yani notlandırma nüfusunu belirler."""
     wkey = tuple(w[:4]) + (tuple(w[4]), w[5])
     return repr((wkey,
                  tuple(sorted((k, round(float(x), 6)) for k, x in params_of(cand_strat).items())),
@@ -1394,13 +1458,18 @@ def _havuz_tavani(tavan: int = 4) -> int:
     "cpu-2 = 0" hesabını EZİP yine iki işçi açıyordu, yani tavan orada hiç yoktu. Taban 1'e indi.
     Arama SONUÇLARI değişmez — işçi sayısı yalnız duvar-saatini belirler (sonuçlar `_havuz_sonuclari`
     üzerinden tamamlanma sırasıyla gelir ama her sonda bağımsız ve `_PROBE_CACHE` ANAHTARLIDIR;
-    determinizm sıraya değil anahtara dayanır — v236 atalet bekçisi de bu yüzden sırayı korumak
+    determinizm sıraya değil anahtara dayanır — atalet bekçisi de bu yüzden sırayı korumak
     zorunda değildir)."""
     return max(1, min(tavan, (os.cpu_count() or 4) - 2))
 
 
 def _pool_worker_init():
-    # KİBARLIK ÖNCE (2026-08-03): işçi AĞIR işe başlamadan önce nice'lanır — dataset yüklemesinin
+    """Süreç havuzu işçisinin açılış kancası: önce `nice(15)` (pano/işlem döngüsü CPU isteyince
+    öncelik onlarındır), sonra barları AĞA ÇIKMADAN önbellekten yükler.
+
+    Ebeveyn önbelleği doldurduğu için işçiler donmuş AYNI barları okur — aksi hâlde işçiler
+    birbirinin bar dosyalarını yeniden yazardı. Kibarlık kurulamazsa iş sürer (yalnız pano yavaşlar)."""
+    # KİBARLIK ÖNCE: işçi AĞIR işe başlamadan önce nice'lanır — dataset yüklemesinin
     # kendisi de (I/O + pandas) rekabet eden bir yüktür. `nice(15)` bir CPU TAVANI değildir: işçiler
     # boş makinede yine tam hızda koşar, YALNIZ pano/uvicorn ya da işlem döngüsü CPU isteyince
     # zamanlayıcı onlara öncelik verir. Canlıda elle atılan `renice`in kalıcı hâli budur.
@@ -1413,13 +1482,17 @@ def _pool_worker_init():
         pass
     # AĞA ÇIKMAYAN yükleme ŞART: load() bayat önbellekte fetch eder, fetch corporate-action tespitiyle
     # bar CSV'lerini yeniden yazar — her işçi kendi load()'unu çağırdığında işçiler BİRBİRİNİN barlarını
-    # değiştiriyor, aynı aramanın sondaları farklı bar durumlarında ölçülüyordu (2026-07-21, canlıda
+    # değiştiriyor, aynı aramanın sondaları farklı bar durumlarında ölçülüyordu (canlıda
     # bulundu). Ebeveyn load() ile önbelleği yerleştirir; işçiler o donmuş hali okur → birebir aynı barlar.
     from meridian import dataset as _ds
     _POOL_WORKER_DATA["bars"], _POOL_WORKER_DATA["index"] = _ds.load_cached()
 
 
 def _pool_probe_job(args: dict) -> tuple:
+    """İşçi sürecinde TEK sondanın walk-forward'ını koşar ve `(önbellek_anahtarı, sonuç)` döndürür.
+
+    Barlar `_pool_worker_init`in donmuş kopyasından okunur; ebeveyn sonucu anahtarla eşler, yani
+    determinizm tamamlanma sırasına DEĞİL anahtara dayanır."""
     from meridian import backtest as _bt
     w = args["w"]
     wf = _bt.walk_forward(args["params"], _POOL_WORKER_DATA["bars"], _POOL_WORKER_DATA["index"],
@@ -1429,11 +1502,11 @@ def _pool_probe_job(args: dict) -> tuple:
     return args["key"], wf
 
 
-# ---- HAVUZ TOPLAM-ATALET TAVANI (v236, 2026-08-12 asılı-arama vakası) ---------------------------
-# ÖLÇÜLEN ARIZA (sprint.py:404 bloğunun kök tarafı): canlı arama ProcessPoolExecutor açar ve
+# ---- HAVUZ TOPLAM-ATALET TAVANI (2026-08-12 asılı-arama vakası) ---------------------------------
+# ÖLÇÜLEN ARIZA (`sprint._arama_durumu` bayatlık yasasının kök tarafı): canlı arama ProcessPoolExecutor açar ve
 # `ex.map` sonuç-beklemesi SINIRSIZDIR — ölen/kilitlenen bir işçi süreci ebeveyn iş parçacığını
 # sonsuza dek bekletir; SEARCH_PROGRESS.running=True donar ve öğrenme zinciri kilitlenir (canlıda
-# 4+ gün ölçüldü; sprint'in bayatlık yasası v235 semptomu 6 saatte söker, bu tavan KAYNAĞI onarır:
+# 4+ gün ölçüldü; sprint'in bayatlık yasası semptomu 6 saatte söker, bu tavan KAYNAĞI onarır:
 # asılı bekleyiş kendini kurtarır, iş parçacığı geri gelir).
 #
 # YASA: tavan FUTURE-BAŞINA DEĞİL, TOPLAM-ATALETTİR — "son biten işten beri HAVUZ_ATALET_SN boyunca
@@ -1441,7 +1514,7 @@ def _pool_probe_job(args: dict) -> tuple:
 # saatler sürer) ASLA kesilmez: her biten iş sayacı sıfırlar.
 #
 # EŞİK TÜRETİMDİR, UYDURMA DEĞİL: bir havuz işi TEK walk-forward'dır ve incumbent-walk ~90 sn
-# ÖLÇÜLÜDÜR (sprint.py:422 bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
+# ÖLÇÜLÜDÜR (`sprint.ARAMA_BAYAT_SAAT` bayatlık eşiği de aynı ölçümden türetildi). 1800 sn = o işin 20 katı —
 # işçi 20 kata kadar yavaşlasa bile (soğuk önbellek + nice(15) + dolu makine) tavana çarpmaz;
 # çarpan havuz, 30 dakikadır TEK iş bitirememiş havuzdur. 30 dk << bayatlık eşiği (6 sa): kurtarma
 # bayrak bayatlamadan, aynı gece penceresi içinde olur.
@@ -1451,6 +1524,8 @@ HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN", "1800"))
 class _HavuzAtaleti(RuntimeError):
     """Havuz toplam-atalet tavanına çarptı: son bitenden beri HAVUZ_ATALET_SN geçti, hiçbir iş bitmedi."""
     def __init__(self, bekleyen: int, biten: int):
+        """İstisnayı sayılabilir olguyla kurar: kaç iş bitti, kaçı hâlâ bekliyor (mesaj metnine de
+        girer, alanlar `bekleyen`/`biten` olarak saklanır)."""
         super().__init__(f"havuz {HAVUZ_ATALET_SN:.0f} sn'dir tek iş bitirmedi "
                          f"(biten {biten}, bekleyen {bekleyen})")
         self.bekleyen, self.biten = bekleyen, biten
@@ -1511,7 +1586,7 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
             return
         workers = _havuz_tavani(4)          # kibarlık + tavan gerekçesi: `_havuz_tavani` docstring'i
         ctx = mp.get_context("spawn")
-        # `with` BİLEREK YOK (v236): with-çıkışı `shutdown(wait=True)`dır ve kilitlenmiş bir işçide
+        # `with` BİLEREK YOK: with-çıkışı `shutdown(wait=True)`dır ve kilitlenmiş bir işçide
         # sonsuza dek bekler — asılı-arama vakasının mekanizmasının ta kendisi. Kapatma üç yolda da
         # AÇIK: normal (bekle — işler bitti, join anlık), atalet (öldür), istisna (öldür + yeniden fırlat).
         ex = ProcessPoolExecutor(max_workers=workers, mp_context=ctx, initializer=_pool_worker_init)
@@ -1541,7 +1616,7 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime) -> None:
 
 def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
                        windows: tuple | None = None) -> dict:
-    """#2 — boşta incumbent ön-hesabı: sıradaki muhtemel yansımaların (global + canlı rejim + ufku dolu
+    """Boşta incumbent ön-hesabı: sıradaki muhtemel yansımaların (global + canlı rejim + ufku dolu
     arka plan rejimi) incumbent walk'ları ÖNCEDEN hesaplanıp diske yazılır. Yansıma tetiklendiğinde
     kapı sıfır beklemeyle açılır; boş CPU bileşik çalışır. Havuz açıksa varyantlar paralel; değilse
     sıralı (_wf_cached zaten diske yazar). Dönüş: {hesaplanan, önbellekte} — çağıran görmezden gelir."""
@@ -1568,10 +1643,10 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
                      "goal": goal, "w": (w[0], w[1], w[2], w[3], list(w[4]), w[5]), "eval_regime": er}
                     for k, er in missing]
             ctx = mp.get_context("spawn")
-            # AYNI TAVAN BURADA DA (2026-08-03): incumbent ön-hesabı da aynı süreçte, aynı
+            # AYNI TAVAN BURADA DA: incumbent ön-hesabı da aynı süreçte, aynı
             # çekirdekleri paylaşarak koşuyor. Kendi 3'lük sınırı KORUNUR (tavan onu yükseltmez,
             # yalnız düşürebilir) — kibarlaştırma hiçbir yolda yükü ARTIRMAmalı.
-            # `with` bilerek yok + atalet bekçisi (v236) — gerekçe `_parallel_prefill_probes`teki
+            # `with` bilerek yok + atalet bekçisi — gerekçe `_parallel_prefill_probes`teki
             # blokla AYNI: bu havuz da hermes iş parçacığını sonsuza dek bekletebiliyordu.
             ex = ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
                                      initializer=_pool_worker_init)
@@ -1622,7 +1697,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     regime's trades. The current value each probe steps from is the regime override when one exists,
     else the global value (that IS the effective value the regime trades under today).
 
-    SÜRE TAVANI (WP-H/H11, 2026-07-31) — `max_minutes` / `deadline_ts`, VARSAYILAN YOK.
+    SÜRE TAVANI — `max_minutes` / `deadline_ts`, VARSAYILAN YOK.
     Vaka: `hermes_runtime._warmup_sprint` bu aramayı hermes döngüsünün KENDİ iş parçacığında koşturur
     ve nominal süresi 1-5 SAATtir. O süre boyunca döngü bir sonraki `hermes_poll` nabzına gelemez;
     bekçi 8 saatte MECHANISM_STALE üretir ve operatör hiçbir arıza yokken alarma koşar. Daha kötüsü:
@@ -1644,7 +1719,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     değil. Kesinti K'yı küçültseydi kazananın-laneti cezası hafifler ve tavan, kapıyı GEVŞETEN bir
     kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur.
 
-    ---- RESMÎ KAYIT: OTURUM BAŞINA BİR (C17, 2026-08-02) --------------------------------------
+    ---- RESMÎ KAYIT: OTURUM BAŞINA BİR --------------------------------------------------------
     `record_session` — oturum sonunda TEK resmî değerlendirme kaydı düşürülür mü?
 
     VAKA (ölçülmüş): sonda döngüsü `_gate_eval(..., record_erosion=True)` çağırıyordu, yani HER
@@ -1695,6 +1770,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         _tavan_ts = _t_basla + float(max_minutes) * 60.0
 
     def _tavan_asildi() -> bool:
+        """Süre tavanı aşıldı mı? Tavan kurulmamışsa (None) daima False — yani tavansız arama
+        kesilmez. Saat incumbent yürüyüşü DAHİL en başta başlatılmıştır."""
         return _tavan_ts is not None and _time.time() > _tavan_ts
 
     def _kesinti(evaluated: int, kalan: int) -> dict:
@@ -1741,7 +1818,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         for var in ranked:
             if regime and var.startswith("regime."):
                 continue    # regime.* feeds regime DETECTION (pre-regime) — a @regime override is
-                            # structurally dead; probing it burns budget on guaranteed rejections (#33)
+                            # structurally dead; probing it burns budget on guaranteed rejections
             b = bounds[var]
             lo, hi, step, typ = b["min"], b["max"], b["step"], b["type"]
             cur = overrides.get(var, params.get(var, lo)) if regime else params.get(var, lo)
@@ -1757,7 +1834,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                     continue
                 seen.add(sig)
                 probes.append(sig)
-    # v10 #3 — UYARLANABİLİR BÜTÇE: `budget` artık TAZE (önbellek-ıskası) hesap sayısıdır. Önbellekte
+    # UYARLANABİLİR BÜTÇE: `budget` artık TAZE (önbellek-ıskası) hesap sayısıdır. Önbellekte
     # hazır duran sonda BEDAVA değerlendirilir (bütçe yemez) — önbellek-sıcak gecelerde aynı sürede
     # 2-3 kat hipotez taranır; soğukta davranış birebir eski hal. K-cezası DÜRÜST kalır: kapıya giden
     # K = planlanan TOPLAM değerlendirme sayısı (bedavalar dahil — kazananın-laneti aday sayısını
@@ -1782,7 +1859,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
 
     evaluated = cleared = 0
     best, trace = None, []
-    # OTURUM TEMSİLCİSİ (C17): resmî kayıt oturum SONUNDA bir kez düşer ve bir adayın walk-forward
+    # OTURUM TEMSİLCİSİ: resmî kayıt oturum SONUNDA bir kez düşer ve bir adayın walk-forward
     # sözlüğünü ister. `rep_cand` = en yüksek OOS'lu DEĞERLENDİRİLMİŞ aday — yani oturumun en güçlü
     # ölçümü. Kapıyı geçen bir aday varsa resmî satırı zaten `submit` yazar (o adayla), bu yüzden
     # temsilci yalnız "hiçbiri geçmedi" dalında kullanılır ve `passes` ölçütüne göre seçilmesi
@@ -1816,7 +1893,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         if not _is_cached:
             _fresh_done += 1
         cand = _probe_wf(cand_strat, var, new, version, bars, index, goal, w)
-        # SONDA DEĞERLENDİRMESİ KAYITSIZDIR (C17, 2026-08-02). Yasa AYNEN koşar (tam kapı + K-aday
+        # SONDA DEĞERLENDİRMESİ KAYITSIZDIR. Yasa AYNEN koşar (tam kapı + K-aday
         # kazanan-laneti cezası + yürürlükteki aşınma MARJI); yazılmayan tek şey SAYIM'dır. Buradaki
         # `record_erosion=True` kodun kendi beyanının tam tersini yapıyordu: yorum "oturum pencereye
         # BİR soru sorar" derken defter sonda başına bir soru sayıyordu. Oturumun tek resmî kaydı
@@ -1831,7 +1908,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                       "fold_wins": gate["fold_wins"], "tail_ok": gate["tail_ok"], "passes": passes})
         if passes:
             cleared += 1
-            # explicit None checks — `or -1e9` treated a legitimate 0.0 score as missing (audit #34)
+            # explicit None checks — `or -1e9` treated a legitimate 0.0 score as missing
             _c = c_oos if c_oos is not None else -1e9
             _b = best["candidate_oos"] if (best and best["candidate_oos"] is not None) else -1e9
             if best is None or _c > _b:
@@ -1842,7 +1919,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                 on_probe(i, total, var, new, c_oos, inc_oos, passes, best)
             except Exception:  # sessiz-yutma: yardımcı/telemetri yolu; başarısızlığı karara girmez ve çağıran yedek değerle aynen devam eder
                 pass                      # progress reporting must NEVER break the search
-    # ---- OTURUMUN TEK RESMÎ KAYDI (C17) --------------------------------------------------------
+    # ---- OTURUMUN TEK RESMÎ KAYDI --------------------------------------------------------------
     # Üç koşul da ZORUNLU ve her biri ayrı bir sahtelik sınıfını kapatır:
     #   `record_session` — ship edemeyen çağıran (ısınma) resmî soru saymaz.
     #   `evaluated > 0`  — hiç sonda koşmadıysa pencereye soru SORULMADI; sıfır ölçümü bir soru gibi
@@ -1886,7 +1963,7 @@ def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple |
     submit() re-derives the same eval_regime from the winning variable's @suffix, so search and ship grade
     on the identical population."""
     goal = goal or config.goal()
-    # RESMÎ KAYIT ZİNCİRİ (C17): arama `record_session=True` (varsayılan) ile koşar. Kapıyı geçen aday
+    # RESMÎ KAYIT ZİNCİRİ: arama `record_session=True` (varsayılan) ile koşar. Kapıyı geçen aday
     # ÇIKARSA kaydı aşağıdaki `submit` düşürür (ship otoritesi, aynı kapı, aynı K); çıkmazsa aramanın
     # kendisi düşürür. İki dalın toplamı DEĞİŞMEZDİR: oturum başına TAM BİR resmî soru.
     res = coordinate_descent_search(bars, index, goal, windows=windows, k_max=k_max, budget=budget,
@@ -1916,6 +1993,11 @@ def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple |
 
 
 def main(argv=None):
+    """`reflect` CLI'ı: öneriyi ya `--hypothesis` JSON'undan (--hermes) ya da deterministik
+    üreticiden alır, `submit()`e verir ve sonucu (statü, kapı, ret nedenleri) basar.
+
+    Ship yolu yine `submit`tir — bu fonksiyon kapı yasasını atlatmaz, yalnız operatörün elle
+    tetiklediği giriştir."""
     ap = argparse.ArgumentParser(description="Meridian reflection — propose a strategy change.")
     ap.add_argument("--auto", action="store_true", help="use the deterministic fallback proposer")
     ap.add_argument("--hermes", action="store_true", help="hypothesis supplied by Hermes")

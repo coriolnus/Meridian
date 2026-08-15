@@ -35,7 +35,7 @@ ATR_PERIOD = 14
 RS_LOOKBACK = 63  # ~one quarter
 
 # =================================================================================================
-# G2 SKOR ŞEKİLLERİ (ROADMAP §E Aşama 7 G2, 2026-07-29) — ham bileşenden [0,100] puana dönüşüm.
+# SKOR ŞEKİLLERİ (2026-07-29) — ham bileşenden [0,100] puana dönüşüm.
 # İKİSİ DE BU TURDA UYKUDA: karşılık gelen ağırlıklar (entry.w_rvolband / entry.w_mom) bounds.yaml'a
 # VARSAYILAN 0.0 ile girdi (Batch L deseni). Ağırlık 0 iken bileşik skor BİREBİR eskisidir.
 # =================================================================================================
@@ -59,7 +59,7 @@ RVOL_BAND_HALFWIDTH = 0.75
 #       göre yüzdelik rütbesi alınır: "bu isim kendi son çeyreğine göre ne kadar momentumlu?"
 #   (b) 63 ÇÜNKÜ CANLI KUYRUK 340 BAR. mom_12_1 ilk değerini 253. barda verir; 340 barlık kuyrukta
 #       en fazla 88 mom okuması vardır. Pencere 88'i aşsaydı canlı tarama (loop/cf_backfill/backtest,
-#       hepsi tail(340)) ile TAM SERİYİ okuyan ölçüm yolları FARKLI sayı üretirdi — §4'ün "canlı ve
+#       hepsi tail(340)) ile TAM SERİYİ okuyan ölçüm yolları FARKLI sayı üretirdi — "canlı ve
 #       backtest aynı fonksiyon" yasasının sessizce ihlali. 252+63=315 ≤ 340, 25 bar marjla.
 #   (c) SINIR, YAZILI OLSUN: g2_olcum HAM mom_12_1'in IC'sini ölçtü. Yüzdelik-rütbe, pencere İÇİNDE
 #       monoton bir dönüşümdür ama pencere bardan bara kaydığı için GLOBAL olarak monoton DEĞİLDİR;
@@ -68,14 +68,14 @@ RVOL_BAND_HALFWIDTH = 0.75
 MOM_RANK_WINDOW = 63
 
 # =================================================================================================
-# EDG-2026-016 TURNOVER — ÖLÇÜLMÜŞ YOLUN KABLOLANMASI (2026-08-01). AĞIRLIK VARSAYILAN 0.0.
+# EDG-2026-016 TURNOVER — ÖLÇÜLMÜŞ YOLUN KABLOLANMASI. AĞIRLIK VARSAYILAN 0.0.
 # =================================================================================================
 # HÜKÜM (kart status bloğu, Rol-1 onaylı SUCCESS): turnover21 = medyan21(hacim)/as_of_shares(t)
 # kesitte MONOTON bilgi taşıyor — üst %20 dilim evren-fazlası @10 +0,31% CI[+0,15,+0,49], @20
 # +0,65% CI[+0,34,+1,01]; rvol20+mom21 kontrolünden sonra ARTIK üç yöntemle birden sağ (etkinin
 # ~%85'i kontrolden sağ çıkıyor); q5 TEKDÜZE monoton; maliyet-sonrası @20 net +0,55%.
 # ENTEGRASYON KARARI: ELLE AĞIRLIK YOK. Bileşen kablolanır, düğmesi bounds.yaml'a VARSAYILAN 0 ile
-# iner, ölçüsünü ÖĞRENME DÖNGÜSÜ kendi verir (Batch L / G2 / G3b deseninin birebir aynısı).
+# iner, ölçüsünü ÖĞRENME DÖNGÜSÜ kendi verir (Batch L deseninin birebir aynısı).
 #
 # ÖLÇEK: ÖLÇÜLMÜŞ EVREN YÜZDELİKLERİ — UYDURMA EĞRİ DEĞİL. Kanıt kesitseldir ("o gün evrenin üst
 # %20'si"), bu fonksiyon ise SAF ve TEK SEMBOLLÜDÜR: günün kesiti burada YOKTUR (kesitsel rütbe
@@ -124,7 +124,7 @@ def _turnover_now(df: pd.DataFrame, ticker: str) -> tuple[Optional[float], str]:
     edilmedi.
 
     TARİH SÜTUNU YOKSA OKUMA DA YOK: as-of bir okuma tarihsiz yapılamaz ve "bugünü" varsaymak
-    (duvar saati) tam da §4'ün yasakladığı şey olurdu — sentetik/tarihsiz çerçevelerde bileşen
+    (duvar saati) tam da saflık yasasının yasakladığı şey olurdu — sentetik/tarihsiz çerçevelerde bileşen
     dürüstçe ölçülemez kalır."""
     if "date" not in df.columns:
         return None, "tarih_yok"
@@ -141,7 +141,7 @@ def _turnover_now(df: pd.DataFrame, ticker: str) -> tuple[Optional[float], str]:
 
 
 def _align_index_close(df: pd.DataFrame, index_close: pd.Series) -> pd.Series:
-    """Endeks serisini `bars`ın SATIR EKSENİNE oturtur (G2, 2026-07-29).
+    """Endeks serisini `bars`ın SATIR EKSENİNE oturtur (2026-07-29).
 
     Tarama yolundaki `bars` KONUM indekslidir ve tarihi bir SÜTUNDA taşır (loop/backtest hepsi
     `.reset_index()` ile üretir); endeks serisi ise doğal olarak TARİH indekslidir. İkisi doğrudan
@@ -176,7 +176,7 @@ def mom_rank_score(mom_series: pd.Series) -> Optional[float]:
     """Son barın mom_12_1 değerinin KENDİ son 63 okuması içindeki yüzdelik rütbesi → [0,100].
 
     Pencere dolmamışsa (ya da içinde NaN varsa) None — yarım pencereyle hesaplanmış bir "yüzdelik"
-    ölçülmüş gibi raporlanmaz (trend_template'in 2026-07-22 dersi). Yalnız SON barın penceresine
+    ölçülmüş gibi raporlanmaz (trend_template dersi). Yalnız SON barın penceresine
     bakar: geçmiş barların rütbesi bu kararı ilgilendirmez ve tam seri üzerinde yuvarlanan bir
     rütbe hesabı her sembolde 340 pencere kurardı."""
     if mom_series is None or len(mom_series) < MOM_RANK_WINDOW:
@@ -188,11 +188,11 @@ def mom_rank_score(mom_series: pd.Series) -> Optional[float]:
 
 
 # =================================================================================================
-# G3b ÇIKIŞ REFORMU (ROADMAP §3.2 "G3b", 2026-07-30) — YAPI-TABANLI STOP + ERKEN İTLAF.
+# ÇIKIŞ REFORMU — YAPI-TABANLI STOP + ERKEN İTLAF.
 # İKİSİ DE BU TURDA UYKUDA (bounds.yaml varsayılanları 0). Batch L deseni: satır bounds'ta olduğu için
 # kum havuzunda aranabilir, strategy.yaml onları taşımadığı için canlı davranış BİREBİR eskisidir.
 #
-# NEDEN ÇIKIŞ TARAFI: şelale ölçümü (Hafta 3) sinyalin +0.965R ürettiğini, çıkışın -0.985R'sini geri
+# NEDEN ÇIKIŞ TARAFI: şelale ölçümü sinyalin +0.965R ürettiğini, çıkışın -0.985R'sini geri
 # İADE ETTİĞİNİ gösterdi — stop verimi -%76, stop_gap -%209; time_stop TEK güçlü bileşen (+%50).
 # Yani kalan kâr çıkış tarafında kayboluyor ve reformun yeri burasıdır.
 # =================================================================================================
@@ -212,7 +212,7 @@ def structural_stop(entry_ref: float, pivot: float, atr: float, params: dict) ->
     RİSK 1R'dir; değişen tek şey o 1R'nin FİYAT cinsinden genişliği (ve dolayısıyla hisse adedi).
     Bu yüzden `stop_mode=1` "daha az riskli" bir mod DEĞİL, riski BAŞKA BİR YERE demirleyen bir moddur.
 
-    AMA BİR KARIŞTIRICI VAR VE ÖLÇÜLDÜ — YAZILI OLSUN (2026-07-30): R-nötrlük FORMÜL düzeyinde
+    AMA BİR KARIŞTIRICI VAR VE ÖLÇÜLDÜ — YAZILI OLSUN: R-nötrlük FORMÜL düzeyinde
     korunur, İCRA düzeyinde korunmaz. `broker.fill_entry`ın `MAX_NOTIONAL_PCT` (=%25 sermaye) tavanı
     adet üzerinden bağladığı için, stop yakınlaştıkça tavan devreye girer ve `risk_dollars` AŞAĞI
     yeniden türetilir. Cebir: tavan, stop mesafesi fiyatın `RISK_PCT_PER_R/MAX_NOTIONAL_PCT` = %4'ünden
@@ -225,7 +225,7 @@ def structural_stop(entry_ref: float, pivot: float, atr: float, params: dict) ->
     ve kuyruğu iyileştirmesi bu yüzden BEKLENEN bir yan etkidir ve "yapı-tabanlı stop işe yarıyor"
     diye okunamaz. Ayrıştırma yolu: `MAX_NOTIONAL_PCT`i ölçüm süresince gevşetmek AYRI bir tur
     (broker'ın sermaye-koruma tavanı bir çıkış hipotezi için gevşetilemez), ya da dolar-bazlı mercek
-    (ROADMAP §3.1 büyüklük yasası revizyonu). Bu tur SAYIYI ölçer ve karıştırıcıyı ADIYLA raporlar.
+    (büyüklük yasası revizyonu). Bu tur SAYIYI ölçer ve karıştırıcıyı ADIYLA raporlar.
 
     SINIR, YAZILI OLSUN: yalnız `evaluate_entry` (breakout_vcp) bu fonksiyonu çağırır. Diğer altı
     kurulumun stopu ZATEN yapısaldır ve her biri KENDİ yapı çizgisine demirlidir (burst = patlama
@@ -249,17 +249,17 @@ def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars
     ÇİFT UYGULAMA YOKTUR: kural `manage_position` içinden çağrılır ve `manage_position`ı İKİ tüketici
     çağırır — `backtest.replay` (CLOSE(D) döngüsü) ve `loop.daily_cycle` (canlı CLOSE(D) döngüsü),
     ikisi de aynı imza + aynı rejim-çözümlü `eff` ile. Yani yasa tek yerde yazılıdır ve iki motorun
-    ayrışması yapısal olarak imkânsızdır (§4). Canlı yola AYRI bir çıkış kuralı EKLENMEDİ.
+    ayrışması yapısal olarak imkânsızdır. Canlı yola AYRI bir çıkış kuralı EKLENMEDİ.
 
-    NEDEN "PİVOT-ALTI" VE NEDEN "ARALIĞIN ALT YARISI" DEĞİL: ROADMAP §3.2 iki biçim öneriyordu; G3b
-    ön-ölçümü (2026-07-29, cf n≈2100) bunlardan BİRİNİ ÇÜRÜTTÜ — kapanışın bar aralığı içindeki
+    NEDEN "PİVOT-ALTI" VE NEDEN "ARALIĞIN ALT YARISI" DEĞİL: iki biçim önerilmişti; ön-ölçüm
+    (2026-07-29, cf n≈2100) bunlardan BİRİNİ ÇÜRÜTTÜ — kapanışın bar aralığı içindeki
     KONUMU sürekli sinyal olarak SIFIR bilgi taşıyor (IC ≈ 0, her iki katmanda). Ölçüm YALNIZ
     pivot-altı kapanışı destekliyor (@5 bar −0.74% vs pivot-üstü +0.32%, n=302; @20 barda kısmen
     toparlıyor). Bu yüzden burada TEK biçim var: çürütülmüş biçim kod olarak da yazılmadı.
 
     PENCERE NEDEN VAR: kanıt KISA ufuklu ve @20'de zayıflıyor. Penceresiz bir kural (her barda
     pivot-altı kapanış → çık) uzun süren bir kazananı, aylar sonra pivotu bir gün delip geri alan bir
-    salınımda keserdi — trail'in işini ikinci kez, daha kaba yapmak olurdu. Varsayılan 1 = ROADMAP'in
+    salınımda keserdi — trail'in işini ikinci kez, daha kaba yapmak olurdu. Varsayılan 1 = tasarımın
     düz okunuşu: pozisyonun GÖRDÜĞÜ ilk kapanış (giriş barının kapanışı; sinyal barının kapanışı
     tanım gereği pivotun ÜSTÜNDEDİR — `c_prev < pivot <= c_now` — yani orada sınanacak bir şey yok).
 
@@ -267,7 +267,7 @@ def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars
     Motorun ELEME yasası ölçülemeyen GİRİŞ kapısı girdisini eler; bir ÇIKIŞTA aynı refleks tersine
     çalışırdı — ölçülemeyen bir seviyeden UYDURMA bir çıkış üretmek olurdu.
 
-    C13 (denetim 2026-08-02) — KABLO ARTIK ÜÇ MOTORDA DA VAR. Buraya kadar "canlı planlar bu alanı
+    KABLO ARTIK ÜÇ MOTORDA DA VAR. Buraya kadar "canlı planlar bu alanı
     taşımıyor, yani bayrak açılsa bile canlıda ateşlemez" yazıyordu: replay/gölge ölçerken canlının
     YAPISAL olarak ateşleyemediği bir düğme, terfi ettiğinde canlıda sessiz no-op olurdu (sahte
     terfi). Kopukluk İKİ yerdeydi ve ikisi de kapandı — `loop.py` pivotu `entry_law` yan tablosunda
@@ -296,6 +296,8 @@ def early_kill_pivot_exit(bars: pd.DataFrame, position: dict, params: dict, bars
 
 @dataclass(frozen=True)
 class EntrySignal:
+    """Sinyal barında üretilen GİRİŞ SİNYALİ — donmuş (frozen) kayıt: pivot/stop/ATR/skor ve skor
+    bileşenleri. Ölçülemeyen bileşen None kalır (0.0 DEĞİL — uydurma yasağı)."""
     ticker: str
     setup: str
     entry_trigger: float      # reference price at the signal bar's close
@@ -308,7 +310,7 @@ class EntrySignal:
     size_r: float
     r_per_share: float
     notes: str
-    # --- G2 BİLEŞENLERİ: DEFTERDE ALAN, METİNDE DEĞİL (2026-07-29) --------------------------------
+    # --- SKOR BİLEŞENLERİ: DEFTERDE ALAN, METİNDE DEĞİL (2026-07-29) ------------------------------
     # `component_ic` modül başlığının 1. tasarım kararı şunu tespit etmişti: tt/vr/prox hiçbir deftere
     # ALAN olarak yazılmıyor, yalnız `notes` METNİNİN içinde ("prox=1.2% vr=2.1 tt=0.83") duruyor ve
     # orada da 313 satırın 13'ünde kayıp. Sonuç: bileşen ölçümü ya bir string'i regex'le ayrıştırmak
@@ -318,12 +320,14 @@ class EntrySignal:
     rvol20: Optional[float] = None      # volume / SMA20(volume) — ham (bant dönüşümü skor tarafında)
     mom_12_1: Optional[float] = None    # close[t-21]/close[t-252]-1
     rmom: Optional[float] = None        # artık 12-1 momentum; endeks serisi verilmezse None
-    # EDG-016 (2026-08-01): medyan21(hacim)/as_of_shares(t) — HAM oran (yüzdelik puanı skor
+    # medyan21(hacim)/as_of_shares(t) — HAM oran (yüzdelik puanı skor
     # tarafında). Aynı gerekçe: sinyal barında hesaplanan değer, hesaplandığı yerde ALAN olarak
     # yazılır ki gelecekteki ölçüm onu regex'siz okusun. Ölçülemeyen hücre None (0.0 DEĞİL).
     turnover21: Optional[float] = None
 
     def as_row(self) -> dict:
+        """Sinyali deftere yazılacak düz sözlüğe çevirir (fiyat alanları yuvarlı). Bileşen alanları HER
+        satırda bulunur; ölçülemeyen None olarak yazılır — "eksik alan" ile "ölçülemedi" karışmasın."""
         return {
             "ticker": self.ticker, "setup": self.setup, "pivot": round(self.pivot, 4),
             "stop": round(self.stop, 4), "atr": round(self.atr, 4), "rs_rating": self.rs_rating,
@@ -340,6 +344,7 @@ class EntrySignal:
 
 
 def _f(params: dict, key: str, default: float) -> float:
+    """Parametre sözlüğünden bir düğmeyi float olarak okur; anahtar yoksa verilen varsayılana düşer."""
     return float(params.get(key, default))
 
 
@@ -348,7 +353,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     """Decide whether the last CLOSED bar is a fresh breakout entry. Returns None if no setup.
     `bars` must be sorted ascending with columns open,high,low,close,volume; -1 is the last close.
 
-    `index_close` (G2, 2026-07-29): artık momentum için endeks kapanış serisi. VERİLMEZSE `rmom`
+    `index_close` (2026-07-29): artık momentum için endeks kapanış serisi. VERİLMEZSE `rmom`
     alanı None kalır — bugün hiçbir çağıran vermiyor (scan_all/scan_entry imzası değişmedi, çünkü
     orada YEDİ kurulum aynı imzayla çağrılıyor ve yalnız birine ek argüman geçirmek o döngüyü
     özel-durumlu hâle getirirdi). rmom bu turda skora GİRMEDİĞİ için bu bir eksiklik değil, bilinçli
@@ -397,7 +402,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
         return None
     if vr < vr_min:
         return None
-    # --- G2 bileşenleri: BURADA hesaplanır, BURADA deftere yazılır (bkz. EntrySignal alanları) ---
+    # --- Skor bileşenleri: BURADA hesaplanır, BURADA deftere yazılır (bkz. EntrySignal alanları) ---
     rvol_now = ind.rvol20(df["volume"]).iloc[-1]
     rvol_val = None if pd.isna(rvol_now) else float(rvol_now)
     # RVOL TABAN FİLTRESİ (kalem C) — 0.0 = KAPALI (varsayılan, bu turda canlı davranış değişmez).
@@ -410,14 +415,14 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
         return None
     if proximity_pct > prox_max:   # too extended past the pivot — don't chase
         return None
-    # extension-from-50SMA climax filter (#13): reject entries that are already stretched far above the
+    # extension-from-50SMA climax filter: reject entries that are already stretched far above the
     # 50-day mean (distance in ATR units) — buying a climax is the classic momentum trap. 0 = off (default).
     max_ext = _f(params, "entry.max_ext_atr", 0.0)
     if max_ext > 0:
         sma50 = close.rolling(50).mean().iloc[-1]
         if not pd.isna(sma50) and sma50 > 0 and (c_now - sma50) / a > max_ext:
             return None
-    # dual-horizon RS / acceleration gate (#12): only buy names CLIMBING the leaderboard — the short
+    # dual-horizon RS / acceleration gate: only buy names CLIMBING the leaderboard — the short
     # (21d) momentum must at least match the long (63d) momentum's pro-rata pace. 0 = off (default).
     if int(_f(params, "entry.rs_dual_horizon", 0)) == 1 and len(close) > 64:
         mom_short = c_now / close.iloc[-22] - 1.0
@@ -426,7 +431,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
             return None
 
     # --- composite score in [0,100] ---
-    # öneri #3: bileşen ağırlıkları artık tunable (bounds.yaml entry.w_*) — seçilim fonksiyonunun kendisi
+    # bileşen ağırlıkları artık tunable (bounds.yaml entry.w_*) — seçilim fonksiyonunun kendisi
     # öğrenme döngüsüne açıldı. Toplama normalize edildiği için ağırlık oynadıkça ölçek [0,100] kalır;
     # varsayılanlar eski sabitlerin birebir aynısı (0.35/0.30/0.20/0.15) → temel davranış değişmez.
     prox_score = 100.0 * (1.0 - min(proximity_pct / prox_max, 1.0)) if prox_max > 0 else 0.0
@@ -437,7 +442,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     score_num = (w_rs * rs_rating_value + w_tt * (tt * 100.0)
                  + w_vol * vol_score + w_px * prox_score)
     score_den = w_sum
-    # --- G2 EKLERİ (2026-07-29): SIFIR-ETKİLİ. Ağırlık 0 iken ne pay ne payda değişir, yani skor
+    # --- EK BİLEŞENLER (2026-07-29): SIFIR-ETKİLİ. Ağırlık 0 iken ne pay ne payda değişir, yani skor
     # yukarıdaki dört terimli ifadenin BİREBİR kendisidir (çivi testi: test_score_rebuild_v115).
     # Bileşen değerleri ağırlıktan BAĞIMSIZ olarak hesaplanır ve deftere yazılır — ölçüm ancak
     # kayıt varsa mümkündür ve kaydı ağırlığa bağlamak, "önce aç sonra ölç" kısır döngüsü olurdu.
@@ -451,7 +456,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
     mom_score = mom_rank_score(mom_series)
     # ÖLÇÜLEMEYEN AĞIRLIKLI BİLEŞEN = KURULUM YOK, "kalanlara göre normalize et" DEĞİL. İkincisi,
     # ısınması dolmamış bir sembolün skorunu üç bileşenden hesaplayıp dört bileşenlik bir sayı gibi
-    # raporlamak olurdu — trend_template'in 2026-07-22'de düzeltilen hatasının aynısı. Ağırlık 0
+    # raporlamak olurdu — trend_template'in daha önce düzeltilen hatasının aynısı. Ağırlık 0
     # iken bu dal HİÇ çalışmaz, yani bugün tek bir sembolü bile elemez.
     w_rvb = _f(params, "entry.w_rvolband", 0.0)
     w_mom = _f(params, "entry.w_mom", 0.0)
@@ -465,7 +470,7 @@ def evaluate_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int,
             return None
         score_num += w_mom * mom_score
         score_den += w_mom
-    # --- EDG-016 TURNOVER TERİMİ (2026-08-01): SIFIR-ETKİLİ. `entry.w_turnover` varsayılanı 0.0
+    # --- TURNOVER TERİMİ: SIFIR-ETKİLİ. `entry.w_turnover` varsayılanı 0.0
     # olduğu sürece ne pay ne payda değişir; skor yukarıdaki ifadenin BİREBİR kendisidir (çivi:
     # test_turnover_kablolama_v149). Değer ağırlıktan BAĞIMSIZ hesaplanır ve deftere yazılır.
     #
@@ -647,7 +652,7 @@ def evaluate_episodic_pivot(bars: pd.DataFrame, params: dict, rs_rating_value: i
     """Dördüncü kurulum — Stockbee EPISODIC PIVOT / PEAD: kazanç açıklamasına DEMİRLİ büyük boşluk/patlama
     günü (haber-güdümlü kurumsal alım), aşırı-uzamamış bir isimde, sürüklenme (drift) devamına oynar.
     ZORUNLU çapa: son 2 seans içinde kazanç raporu (earnings.days_since_report — veri yoksa kurulum
-    DÜRÜSTÇE hiç ateşlemez, uydurma tetik yok). Kapalı barlar; keşif menüsünü genişletme turu (#2)
+    DÜRÜSTÇE hiç ateşlemez, uydurma tetik yok). Kapalı barlar; keşif menüsünü genişletme turu
     ile eklendi — momentum_burst emsali gibi önce DORMANT, silahlanma kararını olasılıksal kapı verir."""
     if bars is None or len(bars) < 60:
         return None
@@ -1025,28 +1030,28 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
 # pullback) öncelikli kalır, exhaustion_hammer aynı ticker'da ancak onlar ateşlemediyse aday üretir.
 # momentum_burst ve episodic_pivot DORMANT KALIR (onay yalnız exhaustion_hammer içindir).
 #
-# momentum_burst — SİLAHLI, OPERATÖR ONAYI 2026-08-12 (karar penceresi §E.2: "momentum_burst:
-# MANUEL SİLAHLANMA ONAYI"). Emsal exhaustion_hammer/v233; yol aynı: OTOMATİK silahlanma OLMADI,
+# momentum_burst — SİLAHLI, OPERATÖR ONAYI 2026-08-12 (karar penceresi: "momentum_burst:
+# MANUEL SİLAHLANMA ONAYI"). Emsal exhaustion_hammer; yol aynı: OTOMATİK silahlanma OLMADI,
 # insan verdi. Yukarıdaki 2026-07 paragrafı ÇÜRÜTÜLMEDİ, AŞILDI — silinmiyor çünkü o gün ölçülen
 # şey (full-replay skor katkısı 0,281 → 0,100) gerçekti; değişen, kararın dayandığı ölçüm tabanı:
-#   * EDG-2026-025 (karne): donuk üçlü eşiğin (i) replay-CI>0 ayağı KIL PAYI DÜŞTÜ
+#   * Karne ölçümü: donuk üçlü eşiğin (i) replay-CI>0 ayağı KIL PAYI DÜŞTÜ
 #     (CI [−0,0046, +0,5606], n=106) → OTOMATİK silahlanma tetiklenMEDİ; (ii) portföy-etkisi
 #     GEÇTİ (+11,9k$); (iii) "−0,114R çelişkisi" hiç ölçüm değilmiş (prompt figürü) — çözüldü.
-#   * EDG-2026-032 (final-paket doğrulaması, 3/3 GEÇTİ): C dünyası + mb = 885 işlem, +20.685$,
+#   * Final-paket doğrulaması (3/3 GEÇTİ): C dünyası + mb = 885 işlem, +20.685$,
 #     dd %12,7, sharpe 0,521. O koşum mb'yi `entry.armed_extra` ÖLÇÜM kanalıyla silahladı
 #     (ARMED_SETUPS'a dokunmadan) — bu satır, ölçülen davranışın kablosudur.
 # ŞERH (hükme iliştirik, silinmez): mb'nin yıl-deseni 2022 ve 2026'da ZAYIF (cf H2 −1,03 n=7;
 # replay 2026 +0,014 n=16) → canlı izleme kalemi, sessiz bir zafer değil.
 # SIRA ÖNEMLİ ve TARİHÇE-KORUMALI: tuple sırası `scan_entry`/`cf_backfill`teki "ilk eşleşen silahlı
 # kurulum" önceliğidir. Mevcut üçlü YENİDEN SIRALANMADI; mb SONA eklendi — yani aynı ticker'da
-# ancak breakout_vcp, pullback ve exhaustion_hammer ateşlemediyse aday üretir. Bu, 032'nin ölçtüğü
+# ancak breakout_vcp, pullback ve exhaustion_hammer ateşlemediyse aday üretir. Bu, final-paket koşumunun ölçtüğü
 # önceliğin birebir aynısıdır (`ARMED_SETUPS + extra` → extra her zaman sonda).
 # episodic_pivot (ve pead/canslim) DORMANT KALIR — onay yalnız momentum_burst içindi.
 ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer", "momentum_burst")
 
 
 def relax_for_near_miss(eff: dict) -> dict:
-    """near-miss GÖLGE taramasının gevşetilmiş eşik tablosu — TEK KAYNAK (2026-07-23, tarama bulgusu).
+    """near-miss GÖLGE taramasının gevşetilmiş eşik tablosu — TEK KAYNAK (tarama bulgusu).
     loop.daily_cycle ve cf_backfill bu dört satırı AYRI AYRI elle yazıyordu ('birebir' yorumuyla); iki
     ayrı dosyada elle bakımlı ikiz, near_miss_report'un beslendiği iki üreticidir — birinde eşik
     değişirse near-miss ölçümü sessizce ayrışırdı. Kırılım-sonrası eşiklerin hemen altında ölenleri
@@ -1062,7 +1067,7 @@ def relax_for_near_miss(eff: dict) -> dict:
 
 def scan_all(bars: pd.DataFrame, params: dict, rs_rating_value: int, ticker: str = "?") -> dict:
     """Her ekran BU ticker'da HER ZAMAN koşar (kısa devre yok) → {setup: EntrySignal}. Silahlı/uyuyan
-    ayrımı yapmaz — karşı-olgusal defter (öneri #1) uyuyan kurulumların ateşlemelerini de görebilsin
+    ayrımı yapmaz — karşı-olgusal defter uyuyan kurulumların ateşlemelerini de görebilsin
     diye ham sonuç döner; işlem seçimi scan_entry'de kalır (davranış birebir)."""
     by_setup = {}
     for fn in (evaluate_entry, evaluate_momentum_burst, evaluate_pullback, evaluate_episodic_pivot,
@@ -1079,7 +1084,7 @@ def scan_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int, ticker: s
     logged as invoked in the P2_SCREEN pipeline. Only setups in ARMED_SETUPS produce a tradeable candidate;
     the rest are evaluated-but-dormant (measured to lack edge)."""
     by_setup = scan_all(bars, params, rs_rating_value, ticker)
-    # #3 silahlanma ÖLÇÜM kanalı: entry.armed_extra paramı bu taramada ek kurulumları silahlı sayar.
+    # silahlanma ÖLÇÜM kanalı: entry.armed_extra paramı bu taramada ek kurulumları silahlı sayar.
     # Param üzerinden aktığı için canlı döngüyle yarışmaz; yalnız arming._measure'ın walk'ları geçirir.
     extra = tuple(params.get("entry.armed_extra") or ())
     for setup in ARMED_SETUPS + extra:                                        # only proven setups arm a trade
@@ -1090,6 +1095,7 @@ def scan_entry(bars: pd.DataFrame, params: dict, rs_rating_value: int, ticker: s
 
 @dataclass
 class ManageDecision:
+    """Bir barlık pozisyon yönetimi kararı: şimdi çıkılacak mı, çıkış nedeni ve GEVŞEMEYEN takip stopu."""
     exit_now: bool
     exit_reason: Optional[str]
     trail_stop: float          # updated trailing stop level (never loosens)
@@ -1101,7 +1107,7 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     time-stop or regime-flip exit fires. Price-touch exits (hard stop / target) are applied
     by broker.py against the NEXT bar so there is no look-ahead.
 
-    G3b (2026-07-30): `early_kill_pivot` de BURADAN çıkar — bu fonksiyon replay'in ve canlı döngünün
+    `early_kill_pivot` de BURADAN çıkar — bu fonksiyon replay'in ve canlı döngünün
     PAYLAŞTIĞI tek çıkış-karar yüzeyidir, yani yeni bir çıkış yasası eklemenin doğru yeri burasıdır
     (loop.py'a ikinci bir uygulama YAZILMADI). `position` sözlüğü artık `pivot` da taşıyabilir;
     taşımayan çağıranlarda erken itlaf sessizce ateşlemez (bkz. early_kill_pivot_exit)."""
@@ -1124,12 +1130,12 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     be_r = _f(params, "exit.breakeven_r", 1.0)
     if be_r > 0 and bars["high"].iloc[-1] >= entry + be_r * position["r_per_share"]:
         new_trail = max(new_trail, entry)
-    # chandelier trail (#9): anchor the trail to the recent SWING HIGH minus ATR·mult, not just close −
+    # chandelier trail: anchor the trail to the recent SWING HIGH minus ATR·mult, not just close −
     # ATR·mult. Rides trends further while still ratcheting. exit.chandelier_lookback=0 → off (default).
-    # PENCERE GİRİŞTEN ÖNCESİNE UZANAMAZ (2026-07-22, sinyal-matematiği turu). Chandelier tanımı gereği
+    # PENCERE GİRİŞTEN ÖNCESİNE UZANAMAZ. Chandelier tanımı gereği
     # GİRİŞTEN BU YANA en yüksek zirveye demirlenir; `iloc[-chand_lb:]` ise pozisyon 1 bar tutulmuşken
     # 19 bar GİRİŞ ÖNCESİNE uzanıyordu — yani pozisyonun hiç görmediği bir zirveden stop hesaplanıyordu.
-    # giveback için ZATEN düzeltilmiş olan hatanın (bkz. aşağıdaki M1 notu) birebir aynısı, iki satır arayla.
+    # giveback için ZATEN düzeltilmiş olan hatanın (bkz. aşağıdaki giveback notu) birebir aynısı, iki satır arayla.
     # Gerçek barlarda ölçüldü (chand_lb=20, trail 2.5·ATR, 1-5 bar tutuş, kârda olan yönetim barları):
     # %22,0'ında stop gerçek chandelier'den DAHA SIKI çıkıyor; %3,70'inde stop GÜNCEL KAPANIŞIN ÜSTÜNE
     # çıkıyor (ertesi bar kesin çıkış) — gerçek chandelier ise çıkarmıyor. Bugün uykuda (varsayılan 0)
@@ -1140,7 +1146,7 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
         new_trail = max(new_trail, hh - trail_mult * a)
     new_trail = max(new_trail, hard_stop)
 
-    # ERKEN İTLAF (G3b) — SIRA GEREKÇESİ: diğer tüm çıkış dallarından ÖNCE sınanır çünkü sorduğu soru
+    # ERKEN İTLAF — SIRA GEREKÇESİ: diğer tüm çıkış dallarından ÖNCE sınanır çünkü sorduğu soru
     # en temel olanıdır ("tez hâlâ ayakta mı?") ve yalnız ilk birkaç barda sorulabilir. Sonraya
     # konsaydı aynı barda ateşleyen bir giveback/time_stop onu maskeler ve çıkış SEBEBİ yanlış
     # etiketlenirdi — sebep dağılımı çıkış şelalesinin ham maddesi olduğu için bu bir ölçüm hatası
@@ -1149,12 +1155,12 @@ def manage_position(bars: pd.DataFrame, position: dict, params: dict,
     if early_kill_pivot_exit(bars, position, params, bars_held):
         return ManageDecision(True, "early_kill_pivot", new_trail)
 
-    # peak-profit give-back (#10): once a trade has run past 1R favorable, exit if it hands back more than
+    # peak-profit give-back: once a trade has run past 1R favorable, exit if it hands back more than
     # exit.giveback_pct of its PEAK open profit — protects momentum give-back on parabolic rollovers.
     # =0 → off (default). Uses the bars held so far to estimate the peak. bars_held is incremented ON the
     # entry day (backtest.py/loop.py), so the peak window is exactly the last `bars_held` bars — NOT
     # bars_held+1, which reached one bar BEFORE entry (the breakout/signal high) and fabricated a peak
-    # profit the position never held, firing spurious 'giveback' exits (M1). Latent today (default 0).
+    # profit the position never held, firing spurious 'giveback' exits. Latent today (default 0).
     giveback = _f(params, "exit.giveback_pct", 0.0)
     if giveback > 0 and bars_held >= 1:
         window = bars["high"].iloc[-bars_held:]

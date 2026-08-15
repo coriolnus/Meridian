@@ -61,6 +61,7 @@ _HEALTH: dict = {"ok": None, "reads": 0, "writes": 0, "fails": 0, "last_error": 
 
 
 def _now_iso() -> str:
+    """Şimdiki UTC anı, saniye çözünürlüklü ISO dizesi (sağlık/fiyat damgaları için)."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 
@@ -102,11 +103,15 @@ def _blocking_redis():
 
 
 def _note_down(exc: BaseException) -> None:
+    """Bir istisnayı sağlık defterine işler. GİRDİ hataları (TypeError/ValueError/KeyError) yalnız
+    sayaç artırır — Redis'i DOWN saymaz (kurt masalı yasağı). Bağlantı hatasında iki client da
+    bırakılır (sonraki çağrı yeniden ping'lesin); ilk kenarda `hotstate_down` yazılır, kopuş
+    sürüyorsa bastırılan sayılır ve DOWN_REASSERT_S'te bir yeniden basılır."""
     global _client, _blocking_client
     _HEALTH["fails"] += 1
     _HEALTH["last_error"] = f"{type(exc).__name__}: {str(exc)[:120]}"
     _HEALTH["at"] = _now_iso()
-    # KURT MASALI YASAĞI (çekişmeli inceleme bulgusu, 2026-07-23): girdi hataları (float(None) vb.)
+    # KURT MASALI YASAĞI (çekişmeli inceleme bulgusu): girdi hataları (float(None) vb.)
     # Redis'in DOWN olduğu anlamına GELMEZ — TypeError/ValueError/KeyError sağlığı DÜŞÜRMEZ, yalnız
     # sayaç artırır. Aksi hâlde bozuk tek bir değer panoyu "Redis erişilemez" diye yanlış-kırmızıya boyar.
     if isinstance(exc, (TypeError, ValueError, KeyError)):
@@ -175,12 +180,16 @@ REASSERT_ALARM_MIN = 20
 
 
 def _maybe_reassert_down() -> None:
+    """Süregelen kopuşu YENİDEN kayda geçirir — yalnız son basımın üzerinden DOWN_REASSERT_S geçtiyse
+    (sel kesilir, gerçek kaybolmaz: arada bastırılanlar sayılıp kayıtta görünür)."""
     import time as _t
     if (_t.monotonic() - _LAST_DOWN_EMIT) >= DOWN_REASSERT_S:
         _emit_down(reassert=True)
 
 
 def _mask(url: str) -> str:
+    """Redis URL'ini kayda basılabilir hâle getirir: `redis://user:pass@host` içindeki PAROLAYI `***`
+    ile değiştirir (sır asla olay defterine girmez)."""
     # redis://user:pass@host — parolayı maskele
     import re
     return re.sub(r"(//[^:@/]+:)[^@/]+@", r"\1***@", url)
@@ -193,11 +202,15 @@ def available() -> bool:
 
 
 def health() -> dict:
+    """Sıcak katman sağlık sayaçlarının KOPYASI: ok (hiç denenmediyse None), okuma/yazma/hata
+    sayaçları, son hata, son damga, kopuş başlangıcı. Ping ATMAZ — anlık yoklama için available()."""
     return dict(_HEALTH)
 
 
 # ---------------- FİYAT (en sık okunan sıcak veri) ----------------
 def set_price(ticker: str, price: float, ts: str | None = None) -> bool:
+    """Tek sembolün sıcak fiyatını `mrd:price:{TICKER}` hash'ine yazar (PRICE_TTL_S ile bayatlar).
+    Redis yoksa ya da yazım düşerse False — no-op ama sağlık defterinde görünür."""
     r = _redis()
     if r is None:
         return False
@@ -249,6 +262,9 @@ def get_price(ticker: str) -> dict | None:
 # Kaynak HÂLÂ portfolio.json (kalıcı, denetlenebilir). Bunlar intraday hızlı-okuma kopyası.
 # Yazan taraf her değişimde hem dosyayı (kalıcı) hem burayı (sıcak) günceller.
 def cache_positions(positions: dict) -> bool:
+    """Açık pozisyonların SICAK KOPYASINI `mrd:pos` hash'ine yazar (önce siler → kapanan pozisyon
+    hayalet kalmaz). Kalıcı gerçek portfolio.json'dır; burası yalnız intraday hızlı-okumadır.
+    Redis yoksa False."""
     r = _redis()
     if r is None:
         return False
@@ -264,6 +280,8 @@ def cache_positions(positions: dict) -> bool:
 
 
 def get_positions() -> dict | None:
+    """`mrd:pos` sıcak kopyasını {TICKER: pozisyon} olarak çözer. Redis yoksa/okuma düşerse None —
+    çağıran kalıcı kaynağa (portfolio.json) düşer; boş sözlük 'pozisyon yok' demektir."""
     r = _redis()
     if r is None:
         return None

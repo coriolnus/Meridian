@@ -41,20 +41,20 @@ ALARM_BROKER_REJECT = "BROKER_REJECT"      # Alpaca rejected an order the intern
 ALARM_TRAIL_DESYNC = "TRAIL_DESYNC"        # trailing-stop PATCH reddedildi — iç HWM ile broker stopu ayrıştı
 ALARM_MECHANISM_STALE = "MECHANISM_STALE"  # bir mekanizma üretmiyor/bayatladı (bütünlük dedektörleri)
 ALARM_ARMING_READY = "ARMING_READY"        # silahlanma eşiği karşılandı — operatör kararı bekleniyor
-# KALİBRASYON YETKİ DEĞİŞİMİ 'BENİ UYANDIR' SINIFIDIR (operatör kararı 2026-07-27): bir danışmanın
+# KALİBRASYON YETKİ DEĞİŞİMİ 'BENİ UYANDIR' SINIFIDIR (operatör kararı): bir danışmanın
 # yetkisi EŞİK DOLUNCA KENDİLİĞİNDEN açılır ve pano bunu yalnız DUYURUR — yani operatör onay vermez,
 # haberdar edilir. Haberin kendisi obs.log seviyesinde kalsaydı yetki devri olay defterinin içinde
 # sıradan bir satır olurdu ve kimse bakmadan geçerdi. Kayıp da kazanım kadar yüksek sesli olmalı:
 # yetkinin GERİ ALINMASI, sessizce alınırsa "danışman hâlâ konuşuyor" sanılır.
 ALARM_AUTHORITY = "AUTHORITY_CHANGE"       # bir mekanizmanın yetkisi açıldı/geri alındı
-# SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ (K1, 2026-07-30). goal.yaml `failure_below` hükmünü ("30g getiri bu
-# eşiğin altına düşerse deney BAŞARISIZ") tanımlandığı 2026-07-14'ten beri hiçbir kod ölçmüyordu:
+# SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ. goal.yaml `failure_below` hükmünü ("30g getiri bu
+# eşiğin altına düşerse deney BAŞARISIZ") tanımlandığından beri hiçbir kod ölçmüyordu:
 # score.py hedef tarafını (target_return_30d/max_drawdown/min_sharpe) composite'e katıyor, failure
 # tarafını asla okumuyordu. Deney başarısız olsa bunu söyleyecek tek satır kod yoktu. Bu kendi
 # sınıfıdır: DATA_QUALITY "veri bozuk" der, MECHANISM_STALE "mekanizma üretmiyor" der — ikisi de
 # "mekanizma çalıştı ve sonuç sözleşmenin başarısızlık eşiğinin altında" demez.
 ALARM_GOAL_FAILURE = "GOAL_FAILURE"        # realized_30d < goal.failure_below — sözleşme hükmü
-# KORUMASIZ POZİSYON KENDİ JETONUNU HAK EDER (N1, 2026-08-09 — operatör kararı; v209'da ölçülüp
+# KORUMASIZ POZİSYON KENDİ JETONUNU HAK EDER (N1 — operatör kararı; v209'da ölçülüp
 # ertelenmişti). `watchdog.check_koruma_and_alarm` v209'da MIRROR_DRIFT jetonunu ÖDÜNÇ alıyordu
 # çünkü o tur `obs.py` yazım kapsamı dışındaydı ve listede olmayan bir jeton yazılıp operatöre HİÇ
 # ulaşmazdı (NOTIFY_TOKENS türetmesi, aşağıda). Ödüncün BEDELİ o gün ölçülmüş ve docstring'e
@@ -65,7 +65,7 @@ ALARM_GOAL_FAILURE = "GOAL_FAILURE"        # realized_30d < goal.failure_below �
 # ikincisini susturamaz. Teslim zinciri DEĞİŞMEZ — jeton buraya eklendiği an NOTIFY_TOKENS onu
 # kendiliğinden kapsar (el listesi yok); kanalın kendisi operatör yapılandırmasıdır.
 ALARM_NAKED_POSITION = "NAKED_POSITION"    # açık pozisyonun broker'da canlı koruyucu stop'u YOK
-# ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (İŞ-3b, 2026-08-11; P-2026-08-07-VLO vakası). Aday
+# ONAYLI PLAN GÖNDERİLMEDİ — KENDİ JETONU (P-2026-08-07-VLO vakası). Aday
 # alternatif MIRROR_DRIFT'in yeni bir `drift_sinifi` değeriydi ve ÜÇ ölçülmüş gerekçeyle REDDEDİLDİ:
 # (1) N1 emsali birebir — `_maybe_notify` susturma penceresi JETON BAŞINADIR (6 sa): gürültülü bir
 #     mutabakat gecesinde adet-sapması MIRROR_DRIFT'leri pencereyi doldurur ve "operatörün onayladığı
@@ -84,6 +84,9 @@ _EVENTS = "events.jsonl"
 
 
 def _emit(level: str, event: str, fields: dict) -> dict:
+    """Olayı TEK JSON satırı olarak kurar, stdout'a basar (systemd/launchd yakalar) VE
+    `state/events.jsonl`a aynalar; kaydın kendisini döner. Aynalama düşerse olay yine
+    stdout'a basılmıştır — kayıt denemesi çağıranı düşüremez."""
     rec = {"ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "level": level, "event": event, **fields}
     line = json.dumps(_san(rec), ensure_ascii=False)
@@ -97,6 +100,8 @@ def _emit(level: str, event: str, fields: dict) -> dict:
 
 
 def _san(o):
+    """Kaydı JSON'a çevrilebilir hâle getirir: olduğu gibi dump edilebiliyorsa dokunmaz, aksi
+    hâlde yalnız serileştirilemeyen alanları `str()`e çevirir — tek kötü alan olayı düşürmesin."""
     try:
         json.dumps(o)
         return o
@@ -105,6 +110,7 @@ def _san(o):
 
 
 def _ok(v):
+    """Tek bir değer JSON'a serileştirilebiliyor mu? (`_san` alan süzgecinin ölçüsü.)"""
     try:
         json.dumps(v)
         return True
@@ -118,11 +124,12 @@ def log(event: str, **fields) -> dict:
 
 
 def warn(event: str, **fields) -> dict:
+    """Uyarı seviyesinde yapılandırılmış olay — alarm DEĞİLDİR: bildirim zincirini tetiklemez."""
     return _emit("warn", event, fields)
 
 
-# BİLDİRİLECEK JETONLAR — EL LİSTESİ DEĞİL, TÜRETME (2026-07-26).
-# DENETİM turu 20 (2026-07-21) "beni uyandır" sınıfının ÜÇÜNÜ listede bulamamıştı: HALT (motor
+# BİLDİRİLECEK JETONLAR — EL LİSTESİ DEĞİL, TÜRETME.
+# DENETİM "beni uyandır" sınıfının ÜÇÜNÜ listede bulamamıştı: HALT (motor
 # durdu), ROLLBACK (canlı strateji geri alındı), HEARTBEAT_STALE (döngü ölmüş). Sebep tek tek
 # unutkanlık değil YAPIYDI: liste elle bakımlıydı ve yeni bir ALARM_ sabiti eklemek onu sessizce
 # ESKİTİYORDU — en kritik alarmlar tam da bu yolla dışarıda kalmıştı.
@@ -138,7 +145,7 @@ _SUPPRESS_LOGGED: dict[str, float] = {}
 
 
 def _maybe_notify(token: str, message: str) -> None:
-    """v11 #1 — kritik alarm sınıfları paneli açmadan operatöre ulaşır (Telegram/webhook; yapılandırılmamışsa
+    """Kritik alarm sınıfları paneli açmadan operatöre ulaşır (Telegram/webhook; yapılandırılmamışsa
     sessiz no-op). Token başına 6 saatlik sessizlik penceresi; bildirim hatası alarmı ASLA düşürmez."""
     if token not in NOTIFY_TOKENS:
         return
@@ -146,13 +153,15 @@ def _maybe_notify(token: str, message: str) -> None:
         import time
         from . import store, notify
         if not notify.configured():
-            # KANAL YOKSA ALARM HİÇBİR YERE GİTMEZ — ve bu sessizce olurdu (2026-07-22 bulgusu:
+            # KANAL YOKSA ALARM HİÇBİR YERE GİTMEZ — ve bu sessizce olurdu (ölçülmüş bulgu:
             # canlı defterde 23 MECHANISM_STALE alarmı vardı, hiçbiri operatöre ulaşmamıştı).
             # "Alarm yazıldı" ile "alarm ULAŞTI" ayrı şeylerdir; teslim edilemeyen alarm sayılır ve
             # makullük dedektöründe görünür. Log'a satır BASILMAZ — alarm zaten yazıldı, ikinci
             # satır yalnız gürültü olurdu.
             try:
                 def _bump(d):
+                    """Teslim edilemeyen alarm sayacını yerinde artırır (jeton + `_toplam`) ve
+                    `store.update_json` sözleşmesi gereği True döner."""
                     # store.update_json SÖZLEŞMESİ: belgeyi YERİNDE değiştir ve True dön. Yeni bir
                     # sözlük döndürmek sessizce hiçbir şey yazmaz (ilk denememde tam bu oldu — dosya
                     # oluştu ama boş kaldı). Sözleşmeyi yanlış okumanın cezası yine SESSİZLİK.
@@ -167,12 +176,12 @@ def _maybe_notify(token: str, message: str) -> None:
         sent = store.read_json("notify_sent.json", {})
         _win = float(sent.get(token, 0))
         if time.time() - _win < _NOTIFY_MIN_GAP_S:
-            # ÜÇÜNCÜ SESSİZ DELİK (2026-07-26): kanal BAĞLIYKEN bile 6 saatlik pencere mesajı
+            # ÜÇÜNCÜ SESSİZ DELİK: kanal BAĞLIYKEN bile 6 saatlik pencere mesajı
             # düşürüyordu ve bunun hiçbir izi yoktu — "susturuldu" ile "hiç alarm yoktu" yine
             # ayırt edilemiyordu. Alarmın kendisi deftere zaten yazılıyor; burada susturmanın
             # KENDİSİ kayda geçer, böylece "telefonuma gelmedi" sorusunun cevabı defterde durur.
             #
-            # PENCERE BAŞINA TEK SATIR (2026-07-26, ikinci düzeltme): bu kayıt HER bastırmada
+            # PENCERE BAŞINA TEK SATIR (ikinci düzeltme): bu kayıt HER bastırmada
             # düşüyordu. Susturma penceresinin amacı 6 saatte bir mesaj; ama aynı pencerede 200 kez
             # alarm üreten bir dedektör 200 `notify_suppressed` satırı yazıyor ve olay defterini —
             # yani gelen kutusunun ve tüm makullük dedektörlerinin okuduğu kaynağı — boğuyordu.
@@ -188,7 +197,7 @@ def _maybe_notify(token: str, message: str) -> None:
             sent[token] = time.time()
             store.write_json("notify_sent.json", sent)
         else:
-            # DÖRDÜNCÜ SESSİZ DELİK (C7, 2026-08-02): kanal BAĞLIYKEN teslimatın BAŞARISIZ olması
+            # DÖRDÜNCÜ SESSİZ DELİK: kanal BAĞLIYKEN teslimatın BAŞARISIZ olması
             # hiçbir sayaca girmiyordu. `notify_undelivered.json`ı besleyen tek yol yukarıdaki
             # "kanal YOK" dalıydı; yani "kanal yok" ölçülüyor, "kanal var ama cevap vermiyor"
             # ölçülmüyordu. Sonuç: `parity_report`ın `alarm_delivery` satırı yığın ACK ile
@@ -207,6 +216,8 @@ def _maybe_notify(token: str, message: str) -> None:
             # GERÇEKTEN gönderilmiş bir mesajla kurulur, yoksa başarısız bir deneme kanalı
             # 6 saat susturur ve alarm kaybolur.
             def _bump_fail(d):
+                """Kanal BAĞLIYKEN düşen teslimatı sayar: jeton + `_toplam` + ayrı
+                `_teslim_hatasi` sayacı; `store.update_json` sözleşmesi gereği True döner."""
                 # store.update_json SÖZLEŞMESİ: belgeyi YERİNDE değiştir ve True dön (yeni sözlük
                 # döndürmek sessizce hiçbir şey yazmaz — yukarıdaki kardeş dalın dersi).
                 d[token] = int(d.get(token, 0)) + 1
@@ -219,13 +230,13 @@ def _maybe_notify(token: str, message: str) -> None:
         pass
 
 
-# ---- İMZA-MANDALI: tekrar-eden BİLİNEN durum → DURUM, yalnız DEĞİŞİM → alarm (2026-08-12) ----
+# ---- İMZA-MANDALI: tekrar-eden BİLİNEN durum → DURUM, yalnız DEĞİŞİM → alarm ----
 # ÖLÇÜLEN GÜRÜLTÜ: aynı (ticker, local_qty, alpaca_qty, drift_sinifi) içerikli MIRROR_DRIFT
-# adet-sapması HER GÜN ×4 (NUE/EMR/BKNG/AMGN `olculemedi` — kök bilinen: makbuzsuz boyut,
-# ROADMAP §2-7) ve aynı (ticker, date, source, dev_pct) içerikli DATA_QUALITY bar-kaynak
+# adet-sapması HER GÜN ×4 (NUE/EMR/BKNG/AMGN `olculemedi` — kök bilinen: makbuzsuz
+# boyut) ve aynı (ticker, date, source, dev_pct) içerikli DATA_QUALITY bar-kaynak
 # uyuşmazlığı (MNST %50) her gün yeniden alarmlanıyordu. Çözülmemiş ama DEĞİŞMEMİŞ bir durumu
-# her gün yeniden anlatmak alarm-yorgunluğudur (EEMUA, ROADMAP WP-P); susup yok saymak ise yasak.
-# KURAL (dikiş defteri `bar_source_seams.json` + v192 bastırma-sayacı emsali): imza İLK görüşte
+# her gün yeniden anlatmak alarm-yorgunluğudur (EEMUA); susup yok saymak ise yasak.
+# KURAL (dikiş defteri `bar_source_seams.json` + bastırma-sayacı emsali): imza İLK görüşte
 # alarmlanır; AYNI imza tekrarları SAYILIR ama satır üretmez; imzanın HERHANGİ bir alanı değişirse
 # (adet/sınıf/sapma) bu YENİ bir imzadır ve ANINDA alarmlanır; imza `MANDAL_SERBEST_S` boyunca hiç
 # görünmezse durum ÇÖZÜLMÜŞ sayılır ve yeniden belirmesi YENİDEN alarmlanır (`mandal_yeniden`).
@@ -275,9 +286,12 @@ def _mandal_yakala(token: str, fields: dict) -> dict | None:
     karar: dict = {}
 
     def _mut(doc: dict) -> bool:
+        """Mandal defterini yerinde günceller: imza serbest penceresi içinde ZATEN varsa tekrarı
+        sayar (bastırma kararı), yoksa/eskimişse yeni satır açar (yayın kararı). Kararı dış
+        `karar` sözlüğüne yazar, 2× serbest penceresinden eski imzaları süpürür ve True döner."""
         row = doc.get(imza)
         if isinstance(row, dict) and (now - float(row.get("son_ts") or 0)) < MANDAL_SERBEST_S:
-            # BİLİNEN-AKTİF DURUM: satır yok, sayaç var (v192 — bastırılan SAYILIR ve görünür).
+            # BİLİNEN-AKTİF DURUM: satır yok, sayaç var (bastırılan SAYILIR ve görünür).
             row["n"] = int(row.get("n") or 0) + 1
             row["bastirilan"] = int(row.get("bastirilan") or 0) + 1
             row["son_ts"] = now
@@ -324,5 +338,6 @@ def alarm(token: str, message: str, **fields) -> dict:
 
 
 def recent(limit: int = 50) -> list[dict]:
+    """Son `limit` olayı `state/events.jsonl`dan okur (pano ve testlerin log kazıyıcısız okuma yolu)."""
     from . import store
     return store.read_jsonl(_EVENTS, limit=limit)

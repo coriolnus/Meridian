@@ -342,6 +342,10 @@ def replay_seed(start: str, end: str) -> dict:
 
 
 def once() -> dict:
+    """TEK ATIŞ: v01 tohumunu doğrular, yeniden-oynatım evrenini yükler ve günlük döngüyü BİR kez
+    koşturup özetini döndürür. 24/7 kadans DEĞİLDİR (o `scheduler.advance_once`tir); süreç hemen
+    çıkacağı için danışma katmanının arka plan ipliği bilerek beklenir — yoksa o seansın görüşü
+    sessizce kaybolur."""
     bootstrap_v01()
     bars, index = dataset.load()
     summary = loop.daily_cycle(bars, index)
@@ -392,6 +396,10 @@ def worker(poll_seconds: int = 60) -> None:
 
 
 def main(argv=None):
+    """CLI girişi: tohumlama (`--replay`), tek atış (`--once`), karşı-olgusal doldurma ve ebeveyn
+    taban ölçümü gibi TEK SEFERLİK işleri çalıştırır. 24/7 worker yolu bu modülde EMEKLİDİR ve
+    çağrılırsa gürültüyle reddedilir; ölçmek yayınlamak değildir — karneye yazım ayrı bayrak
+    (`--publish`) ister."""
     ap = argparse.ArgumentParser(description="Meridian worker")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--replay", type=str, help="START:END, e.g. 2023-01-01:2024-12-31")

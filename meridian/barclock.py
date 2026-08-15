@@ -30,6 +30,7 @@ BAR_SECONDS = 60                      # dakikalık bar: close = open(t) + 60s
 
 
 def _default_now() -> dt.datetime:
+    """Varsayılan saat kaynağı: gerçek şimdi (tz-aware UTC)."""
     return dt.datetime.now(UTC)
 
 
@@ -43,6 +44,7 @@ def set_clock(fn) -> None:
 
 
 def reset_clock() -> None:
+    """Saat kaynağını gerçek zamana geri alır (`set_clock` enjeksiyonunu iptal eder — test temizliği)."""
     global _now_fn
     _now_fn = _default_now
 

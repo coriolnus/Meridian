@@ -28,6 +28,9 @@ from . import secrets
 
 
 def _post(url: str, payload: dict, timeout: float = 8.0) -> bool:
+    """JSON gövdesini verilen adrese POST eder; teslim edildiyse True, herhangi bir ağ/sağlayıcı
+    hatasında False. Yalnız stdlib (`urllib`) kullanır ve istisna yukarı sızmaz — bildirim
+    denemesi çağıranı asla düşüremez."""
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                      headers={"Content-Type": "application/json"})
@@ -38,12 +41,14 @@ def _post(url: str, payload: dict, timeout: float = 8.0) -> bool:
 
 
 def configured() -> bool:
+    """En az bir bildirim kanalı yapılandırılmış mı: Telegram (bot jetonu + sohbet kimliği)
+    ya da genel webhook adresi? Sır DEĞERLERİ okunur ama hiçbir yere yazılmaz/loglanmaz."""
     return bool((secrets.get("TELEGRAM_BOT_TOKEN") and secrets.get("TELEGRAM_CHAT_ID"))
                 or secrets.get("MERIDIAN_WEBHOOK_URL"))
 
 
 # --------------------------------------------------------------------------------------------
-# YEREL GELEN KUTUSU (2026-07-26) — uzak kanal yokken alarmın KAYBOLMAMASI için.
+# YEREL GELEN KUTUSU — uzak kanal yokken alarmın KAYBOLMAMASI için.
 #
 # NEDEN YENİ BİR DEFTER YOK: `events.jsonl` her alarmı zaten ts + level="alarm" + alarm=<jeton> +
 # message ile taşıyor (obs.alarm) ve dış okuyucuları var. Alarm metnini ikinci bir deftere
@@ -57,7 +62,7 @@ def _signature(ev: dict) -> str:
     """Aynı kusurun tekrarını TEK satırda topla: jeton + onu doğuran mekanizma. Rakamlar tekilliği
     şişirdiği için (ör. '23 plan kayıtsız kayboldu' → '# plan...') mesajda normalize edilir.
 
-    TICKER İKİ YÖNE BİRDEN ÇALIŞIR (2026-07-26) — ve eskiden ikisinde de yanlış tarafta duruyordu:
+    TICKER İKİ YÖNE BİRDEN ÇALIŞIR — ve eskiden ikisinde de yanlış tarafta duruyordu:
       * KABA BİRLEŞME: anahtar alanı VARKEN `kind` gibi geniş bir anahtar farklı olayları tek gruba
         çökertiyordu — "SESSİZ BAR MUTASYONU: AAPL 07-20" ile ":TSLA 07-24" ikisi de `kind=determinism`
         olduğu için TEK satıra düşüyor, iki ayrı sembolün bozulması bir sayaç olarak okunuyordu.
@@ -104,7 +109,7 @@ def inbox(limit: int = 60) -> dict:
                                     "last_ts": ev.get("ts"), "message": ev.get("message")})
         g["n"] += 1
         g["last_ts"] = ev.get("ts")
-        # GRUBUN METNİ SON MESAJDIR (2026-07-26): imza aynı olsa da mesaj DEĞİŞİR (ör. "%18 kapsama"
+        # GRUBUN METNİ SON MESAJDIR: imza aynı olsa da mesaj DEĞİŞİR (ör. "%18 kapsama"
         # → "%41 kapsama"). İlk mesajı göstermek operatöre penceredeki EN ESKİ hâli okutuyordu ve
         # durum düzelirken de kötüleşirken de aynı satır duruyordu. Grup bir SAYAÇ + bir DURUM
         # taşır; durum en taze gözlemdir.
@@ -123,7 +128,7 @@ def inbox(limit: int = 60) -> dict:
 
 
 def scrub(text: str) -> str:
-    """Giden metinden BİLİNEN sır değerlerini temizle (denetim turu 19, 2026-07-21).
+    """Giden metinden BİLİNEN sır değerlerini temizle.
 
     Bu modül dışarıya veri gönderen TEK yol. Bir alarm metni bir gün bir hata dizgisini taşırsa
     (ör. 'HTTPStatusError ... ?apikey=…'), o anahtar Telegram'a/webhook'a gider — yani sır, kendi
@@ -167,23 +172,29 @@ def send(text: str) -> bool:
 
 # convenience wrappers keyed to the alarm classes (safe no-op if unconfigured)
 def breaker(day_pnl_pct: float):
+    """Devre-kesici bildirimi: günlük kayıp yüzdesiyle "yeni giriş durdu" mesajını iter.
+    Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send(f"⚠️ Meridian devre kesici: günlük kayıp {day_pnl_pct:.2%} — yeni giriş durdu.")
 
 
 def rollback(frm: int, to: int, delta: float):
+    """Otomatik geri alma bildirimi: hangi strateji sürümünden hangisine dönüldüğünü ve skor
+    farkını iter. Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send(f"↩️ Meridian rollback: v{frm} → v{to} (skor {delta:+.3f}) otomatik geri alındı.")
 
 
 def halted(on: bool):
+    """HALT durum değişimi bildirimi: `on` ise "DURDURULDU", değilse "devam ediyor" mesajını iter.
+    Kanal yapılandırılmamışsa güvenli no-op (False)."""
     return configured() and send("🛑 Meridian DURDURULDU (HALT)." if on else "▶️ Meridian devam ediyor.")
 
 
-# ---- BAĞLANMAMIŞ İKİ İTME: DURUMLARI AYRI, KARARLARI AYRI (K1, 2026-07-30) ------------------
+# ---- BAĞLANMAMIŞ İKİ İTME: DURUMLARI AYRI, KARARLARI AYRI -----------------------------------
 # Denetim ikisini de "hiç tetiklenmiyor" diye buldu (AST ile doğrulandı: breaker 1, halted 2,
 # rollback 1, send 6, inbox 3 çağrı — bu ikisi SIFIR). Ama sebepleri AYNI DEĞİL ve bu yüzden
 # kararları da aynı olamaz. "İkisi de ölü" demek, birini yanlış yola bağlamaya davetiye olurdu.
 def new_plan(ticker: str, verdict: str, rr, n: int = 1, date: str | None = None):
-    """BAĞLANDI (3b, 2026-07-30) — tetiği `loop.daily_cycle`ın plan-silahlama dalıdır.
+    """BAĞLANDI — tetiği `loop.daily_cycle`ın plan-silahlama dalıdır.
 
     Kapıyı geçen bir plan ALARM DEĞİLDİR (bilgi sınıfı), dolayısıyla `obs.alarm` → `_maybe_notify`
     yolu onu ASLA itmez: bu fonksiyonun bağlanacağı tek yer üretim döngüsüdür. K1 turunda loop.py
@@ -201,7 +212,7 @@ def new_plan(ticker: str, verdict: str, rr, n: int = 1, date: str | None = None)
                                  f"Panoyu kontrol et.")
 
 
-# ÇIKARILDI 2026-07-30 (temizlik turu): `data_quality(detail)` — veri kalitesi bildirim
+# ÇIKARILDI 2026-07-30: `data_quality(detail)` — veri kalitesi bildirim
 # sarmalayıcısı. K1 turunda (aynı gün) kendi docstring'i zaten "EMEKLİ — bağlanması ÇİFT bildirim
 # üretirdi; çağıran eklenmez" diyordu; bu tur beyanı fiiliyata geçirdi.
 # ÇAĞIRAN TARAMASI (meridian/ + tests/): `notify.data_quality` için tek eşleşme tanımın kendisiydi.

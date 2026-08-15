@@ -37,7 +37,7 @@ import time
 from . import store
 
 # ==================================================================================================
-# KART SABİTLERİ (EDG-2026-019 — ÖLÇÜMDEN ÖNCE DONDURULDU; kod bunları değiştiremez)
+# KART SABİTLERİ (ÖLÇÜMDEN ÖNCE DONDURULDU; kod bunları değiştiremez)
 # ==================================================================================================
 KART = "EDG-2026-019"
 KART_FDR_Q = 0.10           # Benjamini-Hochberg; aile = O YÜZEYDEKİ tüm aktif-korumasız skill'ler
@@ -70,6 +70,7 @@ P_ARAMA_ADIM = 7            # bootstrap p ikili aramasının adım sayısı → 
 
 
 def _now() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -143,6 +144,7 @@ def defter() -> list[dict]:
 
 
 def _anahtar(g: dict) -> tuple:
+    """Bir görüş kaydının kimlik anahtarı: (skill, yüzey, hedef) üçlüsü — tekilleştirme/eşleştirme için."""
     return (g.get("skill"), g.get("yuzey"), g.get("hedef"))
 
 
@@ -151,23 +153,25 @@ def _anahtar(g: dict) -> tuple:
 # ==================================================================================================
 # NEREDEN GELİYOR. İki yüzeyin ham maddesi ZATEN yazılı ve iki defterde duruyor:
 #   * karşı-olgusal defter (`counterfactual.resolved_rows`) — her satır `screener` alanıyla HANGİ
-#     skill'in adayı olduğunu taşır (2026-07-24'ten beri), `score` alanıyla o skill'in plan anındaki
+#     skill'in adayı olduğunu taşır, `score` alanıyla o skill'in plan anındaki
 #     SIRALAMA GÖRÜŞÜNÜ, `date` ile seansı;
 #   * gerçek işlem defteri (`trades.jsonl`) — `skill_chain[0]` aynı atfı, `score` aynı görüşü taşır.
 # Yani görüş defteri yeni bir ölçüm ALETİ değil, dağınık duran bir görüşün YAPILANDIRILMIŞ hâlidir.
 # `setup`tan skill'e düşme yolu BİLEREK kullanılmaz: `screener`/`skill_chain` YAZILI atıftır,
 # `screener_for(setup)` ise bir TAHMİNDİR ve tahmini kanıt gibi deftere yazmak uydurmadır.
 def _cf_satirlari() -> list[dict]:
+    """Karşı-olgusal defterin ÇÖZÜLMÜŞ ve girilmiş satırları (görüş türetmenin ham maddesi; saf okuma)."""
     from . import counterfactual
     return counterfactual.resolved_rows(entered_only=True)
 
 
 def _trade_satirlari() -> list[dict]:
+    """Gerçek işlem defterinin `r_multiple`ı ölçülmüş satırları (sonucu olmayan işlem görüş üretmez; saf okuma)."""
     return [t for t in store.read_jsonl("trades.jsonl") if t.get("r_multiple") is not None]
 
 
 # ==================================================================================================
-# ALAN SEÇİMİ: KANONİK AD TEKTİR, YEDEK-AD ZİNCİRİ YOKTUR (parity, 2026-08-09)
+# ALAN SEÇİMİ: KANONİK AD TEKTİR, YEDEK-AD ZİNCİRİ YOKTUR (parity)
 # ==================================================================================================
 # İlk yazımda iki `a or b` takası vardı ve İKİSİ DE sessiz bir ölçüm hatasıydı — kozmetik değil:
 #
@@ -571,6 +575,7 @@ def rapor() -> dict:
 # KADANS + p95 ÖLÇÜM DÜZENEĞİ (kill#1)
 # ==================================================================================================
 def _yuzdelik(vals: list[float], q: float):
+    """Sıralı listenin q yüzdeliği (en yakın-sıra yöntemi, 2 ondalık). Liste boşsa None — değer uydurulmaz."""
     if not vals:
         return None
     s = sorted(vals)

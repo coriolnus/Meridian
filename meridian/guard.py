@@ -29,45 +29,45 @@ GOAL_KEYS = {"schema_version", "universe", "style", "session_tz", "target_return
              "max_drawdown", "failure_below", "reflection_every", "min_sample", "one_variable_only",
              "backtest_gate", "rollback_if_worse_by", "explore_rate", "max_accepted_changes_per_month",
              "commission_per_share", "slippage_bps", "fill",
-             # WP-E (2026-07-31): giriş İCRA yasası ve kötümser maliyet bandı goal.yaml'a girdi ve
+             # Giriş İCRA yasası ve kötümser maliyet bandı goal.yaml'a girdi ve
              # ikisi de DEĞİŞMEZ olmak ZORUNDA — icra yasası bir arama değişkeni olsaydı ajan kendi
              # dolum fiyatını, maliyet bandı düğme olsaydı kendi karnesinin paydasını seçerdi.
-             # GU1 sürüklenme testi (test_guard_audit_v27) bu iki adı burada görmezse kırmızı yanar.
+             # Sürüklenme testi (test_guard_audit_v27) bu iki adı burada görmezse kırmızı yanar.
              "execution_v2", "pessimistic_band_v2"}
 LIMIT_KEYS = {"autonomy_level", "max_position_r", "max_open_positions", "max_daily_loss_pct",
               "max_sector_exposure_pct", "no_trade_before_bars", "kill_switch_file",
-              # C24 (denetim 2026-08-02): portföy-ısısı ve korelasyon eşikleri KOD SABİTİYDİ — ne
+              # Portföy-ısısı ve korelasyon eşikleri KOD SABİTİYDİ — ne
               # operatörün değişmez zarfında (goal.yaml) ne arama uzayında (bounds.yaml). Yani
               # canlı defterde plan kesen bir risk eşiği HİÇBİR yönetişim yüzeyinde görünmüyordu
               # (adı konmuş sınıfın ikinci örneği: `broker.max_positions_at` rampası). Üçü de
               # goal.yaml `limits`e OPERATÖR KALEMİ olarak indi: Hermes öneremez (bu liste), arama
               # göremez (bounds'ta yok), operatör tek satırla değiştirir. DEĞERLER KORUNDU.
               "heat_hard_r", "heat_review_r", "corr_review",
-              # OPT Faz-1 kablolaması (2026-08-12, karar penceresi §E.1/§E.3): de-risk rampasının
-              # iki ucu. C24 yorumunun "adı konmuş sınıfın ikinci örneği: `broker.max_positions_at`
+              # De-risk rampasının
+              # iki ucu. Yukarıdaki yorumun "adı konmuş sınıfın ikinci örneği: `broker.max_positions_at`
               # rampası" dediği kalem TAM BUYDU — fonksiyon gövdesinde gömülü iki sabit, hiçbir
               # yönetişim yüzeyinde görünmüyordu ve ölçüm ancak monkeypatch'le yapılabiliyordu.
               # Aynı yere, AYNI yetkiyle indi: operatör kalemi (Hermes öneremez — bu liste; arama
-              # göremez — bounds.yaml'da satırı yok; risk-artıran vana pencereden geçer,
-              # ROADMAP §2-10(3)). Okuyan tek yer `broker.derisk_ramp()`.
+              # göremez — bounds.yaml'da satırı yok; risk-artıran vana pencereden geçer).
+              # Okuyan tek yer `broker.derisk_ramp()`.
               "derisk_full_dd", "derisk_floor_dd",
-              # WP-15g AYRIŞTIRMASI (2026-08-14): sektör tavanının KENDİ paydası. C24/de-risk
+              # Sektör tavanının KENDİ paydası. De-risk
               # deseniyle AYNI yetki sınıfı — operatör kalemi: Hermes öneremez (bu liste), arama
               # göremez (bounds.yaml'da satırı YOK; risk/çeşitlendirme vanası arama uzayına
               # girmez). Bugün goal.yaml'da SATIRI DA YOK ve olmaması DOĞRUDUR: anahtar yokken
               # payda `max_open_positions`tan TÜRETİLİR (bkz. `sector_cap_basis`), yani bu tur
               # davranış değiştirmez. Ad burada ŞİMDİDEN durur ki, operatör bir gün satırı
-              # yazdığında Hermes'e açık bir düğme olarak DOĞMASIN (GU1 kayma sınıfı).
+              # yazdığında Hermes'e açık bir düğme olarak DOĞMASIN (kayma sınıfı).
               "sector_cap_basis"}
 
-# --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI (C13b, 2026-08-02) ------------------------------------
+# --- CANLI MOTORUN OKUYAMADIĞI KNOB SINIFI -------------------------------------------------------
 # Bir knob replay/gölgede ÖLÇÜLÜR ama canlı motorda yapısal olarak hiçbir şey yapmazsa, terfi yolu
 # ölçülmemiş bir ΔS'i kazanç sayar: aday kapıdan geçer, strategy.yaml'a iner, canlıda SESSİZ NO-OP
 # olur ve `rollback.evaluate_outcomes` gerçekleşmeyen tahmini o değişkenin suçu gibi deftere yazar.
 # `validate_change` bu sınıfı `regime.*@regime` için ADIYLA reddediyordu ama SINIF korumasızdı —
-# `exit.early_kill_pivot` (denetim C13) tam bu deliğe oturmuştu.
+# `exit.early_kill_pivot` tam bu deliğe oturmuştu.
 #
-# LİSTE BUGÜN BOŞ VE BOŞ OLMASI DOĞRUDUR: pivot kablosu 2026-08-02'de canlıya bağlandı
+# LİSTE BUGÜN BOŞ VE BOŞ OLMASI DOĞRUDUR: pivot kablosu canlıya bağlandı
 # (`loop.fill_entry(pivot=…)` + `manage_position` sözlüğünde `pivot`). Bu dal İKİNCİ savunma
 # hattıdır; BİRİNCİ hat motor-eşitliği çivisidir (tests/test_kovab_ikimotor_v164: üç motorun
 # yönetim-sözlüğü alan kümesi EŞİT, yani yeni bir ayrışma adsız yakalanır). Birinci hat kırmızı
@@ -79,6 +79,8 @@ LIVE_DEAD_KNOBS: dict[str, str] = {
 
 @dataclass
 class Verdict:
+    """Parametre değişikliği hükmü: geçti mi (`ok`), ret gerekçeleri ve konu olan değişken ile
+    eski/yeni değeri."""
     ok: bool
     reasons: list
     variable: Optional[str] = None
@@ -87,6 +89,8 @@ class Verdict:
 
 
 def _on_step(new, lo, step, typ, tol=1e-6) -> bool:
+    """Yeni değer, `lo`dan başlayan `step` ızgarasının bir noktasında mı (tolerans dahilinde)?
+    `int` tipinde ayrıca tam sayı olma şartı aranır."""
     k = round((new - lo) / step)
     nearest = lo + k * step
     if typ == "int":
@@ -187,7 +191,7 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
             # regime detection runs BEFORE the regime is known — build_regime_json consumes FLAT params
             # in both engines, so a regime.* override can never take effect: the candidate replays
             # byte-identical to the incumbent, the gate rejects, and a false permanent dead end lands in
-            # the ledger (audit #33). Reject honestly instead.
+            # the ledger. Reject honestly instead.
             return Verdict(False, [f"'{base}' rejim tespitinin kendisini besler — rejim bilinmeden çalışır, "
                                    f"@{regime} override'ı yapısal olarak etkisizdir"], variable=variable)
 
@@ -197,11 +201,11 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
         return Verdict(False, [f"'{base}' is immutable (goal/limits block); Hermes may not propose it"],
                        variable=variable)
 
-    # --- canlı motorun OKUYAMADIĞI knob: yapısal etkisizlik (C13b) — regime.* dalının İKİZİ -------
+    # --- canlı motorun OKUYAMADIĞI knob: yapısal etkisizlik — regime.* dalının İKİZİ -------------
     # Buradaki ret, yukarıdaki `regime.*@regime` reddiyle AYNI gerekçeye dayanır ve aynı zararı
     # önler: replay ΔS ölçer, kapı kabul eder, canlı uygulayamaz → defterde SAHTE kazanç ya da
     # SAHTE kalıcı çıkmaz sokak. Fark, o reddin YALNIZ @regime son ekiyle gelen öneriyi kapatması,
-    # bunun DÜZ öneriyi de kapatmasıdır (C13'ün kaçtığı tek yol düz öneriydi).
+    # bunun DÜZ öneriyi de kapatmasıdır (önceki vakanın kaçtığı tek yol düz öneriydi).
     if base in LIVE_DEAD_KNOBS:
         return Verdict(False, [f"'{base}' canlı motorda YAPISAL olarak ölü ({LIVE_DEAD_KNOBS[base]}) — "
                                f"replay/gölge ΔS ölçer, canlı uygulayamaz; kablo bağlanmadan terfi "
@@ -214,7 +218,7 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
     spec = bounds[base]
     lo, hi, step, typ = spec["min"], spec["max"], spec["step"], spec["type"]
 
-    # --- SAYIYA ÇEVRİLEBİLİR Mİ (2026-07-22, öğrenme-döngüsü denetimi) ---
+    # --- SAYIYA ÇEVRİLEBİLİR Mİ ---
     # `float("abc")` ValueError atıyordu ve `submit` bunu genel bir `except`'e düşürüyordu: HİÇBİR
     # defter satırı yazılmıyordu. Oysa bu deponun yasası "değerlendirilen her öneri KAYITLI bir
     # terminale ulaşır". Çöp değer artık istisna değil, GEREKÇELİ RET olur.
@@ -271,6 +275,8 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
 
 
 def _equalish(a, b, typ) -> bool:
+    """İki değeri tipine göre "aynı mı" diye karşılaştırır (int'te tam eşitlik, float'ta 1e-9 toleransı).
+    Taraflardan biri None ise False — ölçülmemiş değer eşit SAYILMAZ."""
     if a is None or b is None:
         return False
     if typ == "int":
@@ -281,6 +287,7 @@ def _equalish(a, b, typ) -> bool:
 # --------- runtime trade-envelope guard ---------
 @dataclass
 class TradeVerdict:
+    """Tek bir işlem planının risk zarfı hükmü: geçti mi (`ok`) ve düşen kontrollerin gerekçeleri."""
     ok: bool
     reasons: list
 
@@ -288,7 +295,7 @@ class TradeVerdict:
 def check_trade(plan: dict, portfolio: dict, regime: dict, goal: dict) -> TradeVerdict:
     """Sert risk zarfı — TEK YASA, tek uygulama.
 
-    DENETİM 2026-07-21 (tur 12): bu fonksiyon zarfın İKİNCİ bir kopyasını taşıyordu ve docstring'i
+    DENETİM BULGUSU: bu fonksiyon zarfın İKİNCİ bir kopyasını taşıyordu ve docstring'i
     "canlı döngü bunu kullanır" diyordu — ikisi de artık doğru DEĞİLDİ. Canlı döngü, backtest ve
     cf_backfill'in üçü de classify_gate çağırıyor; classify_gate ise zamanla R:R tabanını ve
     portföy-ısısı tavanını SERT kurala çevirmişti. Yani iki yüzey sessizce ayrışmıştı: buradaki
@@ -310,18 +317,18 @@ def check_trade(plan: dict, portfolio: dict, regime: dict, goal: dict) -> TradeV
 DISCIPLINE_MIN_RR = 2.0        # pre-trade-discipline-gate R:R floor — a HARD veto (R:R now varies per plan)
 REVIEW_RR_BAND = 0.3           # R:R below floor+band -> REVIEW (marginal)
 REVIEW_SCORE_BAND = 10         # score within this of entry.min_score -> REVIEW
-# ÜÇ EŞİK ARTIK OPERATÖR KALEMİDİR (C24, 2026-08-02) — buradakiler YALNIZ FAIL-SAFE VARSAYILANDIR.
+# ÜÇ EŞİK ARTIK OPERATÖR KALEMİDİR — buradakiler YALNIZ FAIL-SAFE VARSAYILANDIR.
 # Kanonik kaynak `goal.yaml`ın `limits` bloğudur ve `classify_gate` onu ORADAN okur; anahtar yoksa
 # bu değerlere düşer, yani eski goal.yaml'lı bir kopya (ya da elle kurulmuş bir goal sözlüğü taşıyan
 # test) davranış DEĞİŞTİRMEDEN koşar. TAŞIMA turu bir yönetişim turuydu, eşik turu değil: değerler
 # 4,5 / 3,5 / 0,85 olarak KORUNMUŞTU. `heat_hard_r` o günden BERİ değişti — OPERATÖR KARARI
-# 2026-08-03 (d01ccb5) onu 4,5→5,0R'ye taşıdı (ilan edilen zarfa eşitleme); aşağıdaki fail-safe de
-# aynı karara göre güncellendi (7e99eff). Diğer ikisi taşındıkları gibi durur.
+# onu 4,5→5,0R'ye taşıdı (ilan edilen zarfa eşitleme); aşağıdaki fail-safe de
+# aynı karara göre güncellendi. Diğer ikisi taşındıkları gibi durur.
 HEAT_REVIEW_R = 3.5            # total open risk (R) above this -> REVIEW (book getting concentrated)
-HEAT_HARD_R = 5.0             # OPERATÖR KARARI 2026-08-03 (d01ccb5): zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)
+HEAT_HARD_R = 5.0             # OPERATÖR KARARI: zarf aritmetiğine eşitlendi; fail-safe = operatör değerinin yedeği (eşitlik çivisi v166-c24)
 CORR_REVIEW = 0.85           # candidate return-correlation with a held name above this -> REVIEW
 
-# --- SEKTÖR TAVANI PAYDASI — WP-15g YAPIŞIKLIK AYRIŞTIRMASI (2026-08-14) ------------------------
+# --- SEKTÖR TAVANI PAYDASI — YAPIŞIKLIK AYRIŞTIRMASI --------------------------------------------
 # ÖLÇÜLEN GERÇEK (EDG-2026-035 `yapisal_bulgu`, kart research/cards/EDG-2026-035-yerel-duyarlilik.yaml):
 # sektör tavanı oranının PAYDASI `max_open_positions`tı — yani KAPASİTE knob'u sessizce
 # ÇEŞİTLENDİRME politikasını da belirliyordu (max_open 20 → sektör başına 8 isim; 15 → 6 isim).
@@ -374,7 +381,7 @@ def sector_cap_basis(limits: dict):
         return limits["max_open_positions"], f"değer sayıya çevrilemedi ({ham!r}) — türetilmiş paydaya düşüldü"
     if not deger > 0.0:
         # 0 / negatif / NaN aynı dalda (NaN her karşılaştırmada False verir). Isı eşiklerinin
-        # aksine burada 0 MEŞRU DEĞİLDİR: 0 bir eşik değil bir PAYDADIR (bkz. C24 `.get` şerhi —
+        # aksine burada 0 MEŞRU DEĞİLDİR: 0 bir eşik değil bir PAYDADIR (bkz. `.get` şerhi —
         # orada 0.0 "her planı kes" demekti ve operatörün sayısıydı; payda olarak 0 tanımsızdır).
         return limits["max_open_positions"], f"payda pozitif değil ({ham!r}) — türetilmiş paydaya düşüldü"
     return deger, None
@@ -387,7 +394,7 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     REVIEW = passes every hard rule but carries a soft flag a human should eyeball (== a flagged GO).
     GO = clean. At L0 both GO and REVIEW trade autonomously; at L1 both wait for approval; NO_GO never trades.
 
-    BU FONKSİYON SERT ZARFIN TEK KAYNAĞIDIR (denetim turu 12, 2026-07-21). Eskiden bu docstring
+    BU FONKSİYON SERT ZARFIN TEK KAYNAĞIDIR. Eskiden bu docstring
     "sert kurallar eski check_trade zarfının aynısı" diyordu; artık DEĞİL — R:R tabanı ve portföy-ısısı
     sert tavanı sonradan HARD'a çevrildi ve check_trade'deki kopya geride kaldı. check_trade şimdi bunu
     çağırıyor, dolayısıyla iki yüzeyin ayrışması yapısal olarak imkânsız.
@@ -397,7 +404,7 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     ödüllü kurulumları eliyor, tüm işlemi sıfırlayamıyor. (Eski gerekçe: her plan aynı R:R'yi
     taşırken sert taban, Hermes profit_target_r'yi düşürdüğünde TÜM işlemi durdururdu.)"""
     limits = goal["limits"]
-    # C24: ısı/korelasyon eşikleri OPERATÖR ZARFINDAN gelir; anahtar yoksa modül varsayılanı
+    # Isı/korelasyon eşikleri OPERATÖR ZARFINDAN gelir; anahtar yoksa modül varsayılanı
     # (fail-safe — eski bir goal.yaml ya da elle kurulmuş goal sözlüğü davranışı değiştirmez).
     # `float(... or default)` DEĞİL `.get(..., default)`: 0.0 meşru bir eşiktir (her planı keser)
     # ve `or` onu sessizce modül varsayılanına (bugün 5,0R) çevirirdi — operatörün yazdığı sayı
@@ -410,14 +417,18 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     sc = portfolio.get("sector_counts", {})
     rr = float(plan.get("r_multiple_expected", 0.0))
 
-    # Faz 3 (5b): yapılandırılmış karar ağacı — detail_out verilirse HER kontrol pass/fail olarak
+    # Yapılandırılmış karar ağacı — detail_out verilirse HER kontrol pass/fail olarak
     # kaydedilir ("neden GO verdi?" sorusu geçen kontrolleri de gerektirir; yalnız vetolar yetmez).
     # Karar mantığı DEĞİŞMEZ: hard/soft listeleri birebir aynı dizgilerle dolar.
     def _chk(name: str, failed: bool, why: str, sev: str, value=None, threshold=None,
              gecse_de_yaz: bool = False):
+        """Tek bir kapı kontrolünü işler: `detail_out` verilmişse kontrolü pass/fail olarak KAYDEDER,
+        düşmüşse gerekçeyi sertlik derecesine göre hard/soft listesine ekler. Gerekçe kuralı: yalnız
+        DÜŞEN kontrole not yazılır — tek istisna `gecse_de_yaz` ("ÖLÇÜLEMEDİ" dalları hükmü değiştirmez
+        ama sebebini taşır)."""
         # `note` KURAL OLARAK yalnız DÜŞEN kontrolde yazılır: geçen bir satıra ret gerekçesi yazmak
-        # kararı okuyan herkesi yanıltırdı. TEK İSTİSNA `gecse_de_yaz` (C12 ek bulgusu, 2026-08-02,
-        # Rol-1 hükmü): "ÖLÇÜLEMEDİ" dalları `failed=False` ile çağrılır (fail-open BİLİNÇLİ — Y3
+        # kararı okuyan herkesi yanıltırdı. TEK İSTİSNA `gecse_de_yaz`
+        # (Rol-1 hükmü): "ÖLÇÜLEMEDİ" dalları `failed=False` ile çağrılır (fail-open BİLİNÇLİ — Y3
         # alanlarını hâlâ göndermeyen üreticiler var, `failed=True` onların TÜM planlarını keserdi)
         # ve satır `passed=True, note=None` olarak, yani tam olarak "tavan tuttu" görünümünde
         # düşüyordu. ÖLÇÜLEMEDİ ≠ HÜKÜM: hüküm DEĞİŞMEZ, ama satır sebebini TAŞIR.
@@ -435,7 +446,7 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     _chk("max_open_positions", portfolio.get("open_positions", 0) >= limits["max_open_positions"],
          f"max {limits['max_open_positions']} pozisyon dolu", "hard",
          value=portfolio.get("open_positions", 0), threshold=f"<{limits['max_open_positions']}")
-    # WP-15g: sektör tavanının paydası ARTIK KENDİ anahtarını taşır (yukarıdaki `sector_cap_basis`).
+    # Sektör tavanının paydası ARTIK KENDİ anahtarını taşır (yukarıdaki `sector_cap_basis`).
     # Anahtar yokken payda `max_open_positions`tan TÜRETİLİR → bugünkü hüküm ZERRE değişmez.
     # BURADA HESAPLANIR, fonksiyon başında DEĞİL — DEĞERLENDİRME SIRASI da davranışın parçası:
     # `max_open_positions` eksik bir goal sözlüğünde eski kod KeyError'ı BİR ÜSTTEKİ `_chk` satırında
@@ -446,7 +457,7 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     # yönetişim notu için hüküm yüzeyi kirletilmez. Neden sessiz DEĞİL, ÇAĞRILABİLİR: aynı saf
     # fonksiyon `guard.sector_cap_basis(limits)[1]` ile dışarıdan okunur ve testlerde çivilenir.
     sector_basis = sector_cap_basis(limits)[0]
-    # AYRIŞTIRILDI (WP-15g, 2026-08-14): payda artık `max_open_positions` DEĞİL `sector_basis`.
+    # AYRIŞTIRILDI: payda artık `max_open_positions` DEĞİL `sector_basis`.
     # Anahtar yokken `sector_basis` TAM OLARAK `limits["max_open_positions"]`tır (aynı nesne, ham) —
     # ifade, `max(1, ...)` katmanı, karşılaştırma yönü, hüküm metni ve value/threshold alanları
     # DEĞİŞMEDİ. Sektör başına fiili isim tavanı = floor(payda × max_sector_exposure_pct/100).
@@ -505,8 +516,8 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     # gösterir (çivi testi: params={} ile hüküm değişmez). Açılışları ÖLÇÜMDEN geçecek
     # (gölge-varyant/prescreen) — bugün yalnız yolu ve beyanı iniyor.
     #
-    # Y3'ün İKİ PİYASA KAPISI (SPY 200-SMA, VIX backwardation) BU ZİNCİRDEN ÇIKARILDI — EDG-005
-    # hükmü: GÖSTERGE, KAPI DEĞİL (gerekçe `_y3_portfolio_caps` gövdesinde).
+    # Y3'ün İKİ PİYASA KAPISI (SPY 200-SMA, VIX backwardation) BU ZİNCİRDEN ÇIKARILDI —
+    # hüküm: GÖSTERGE, KAPI DEĞİL (gerekçe `_y3_portfolio_caps` gövdesinde).
     _y3_portfolio_caps(plan, portfolio, params, _chk)
 
     if hard:
@@ -516,15 +527,15 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     return "GO", []
 
 
-# Y3 PORTFÖY TAVANLARININ BANTLARI (ROADMAP §3.1: sektör ≤ %25-30, ısı ≤ NAV %6-8). Knob DEĞERİ
+# Y3 PORTFÖY TAVANLARININ BANTLARI (sektör ≤ %25-30, ısı ≤ NAV %6-8). Knob DEĞERİ
 # bandın içinden seçilir ve bounds.yaml onu zorlar; buradaki sabitler yalnız "knob verilmemişse
 # hangi değer varsayılır" sorusunun cevabıdır ve kapı KAPALIYKEN hiç okunmaz.
 SECTOR_CAP_DEFAULT_PCT = 25.0     # bandın ALT ucu (muhafazakâr): açılırsa en sıkı hâliyle açılır
 HEAT_CAP_DEFAULT_PCT = 6.0        # NAV yüzdesi — bandın alt ucu, aynı gerekçe
 
 
-# --- Y3 ÜRETİCİ↔TÜKETİCİ SÖZLEŞMESİ (C12, 2026-08-02) --------------------------------------------
-# `_y3_portfolio_caps` ÜÇ portföy + İKİ plan alanı okur. Denetim C12: ÜRETİM ÇAĞIRANLARININ HİÇBİRİ
+# --- Y3 ÜRETİCİ↔TÜKETİCİ SÖZLEŞMESİ --------------------------------------------------------------
+# `_y3_portfolio_caps` ÜÇ portföy + İKİ plan alanı okur. Denetim bulgusu: ÜRETİM ÇAĞIRANLARININ HİÇBİRİ
 # bu alanları göndermiyordu — ampirik kanıt, en sıkı tavanla (sector_cap=0,1 / heat_cap=0,1) bile
 # hükmün BİREBİR aynı kalmasıydı. Yani knob "açık" görünüyor (pano `enabled: true`), arama uzayında
 # duruyor (bounds.yaml), Hermes önerebiliyor — ama yapısal olarak HİÇBİR yapılandırmada bağlayamıyor:
@@ -533,7 +544,7 @@ HEAT_CAP_DEFAULT_PCT = 6.0        # NAV yüzdesi — bandın alt ucu, aynı gere
 #
 # Alan adları burada SÖZLEŞME olarak durur (üretici testi bu iki demeti okur) ve ölçüm yardımcıları
 # da burada: aynı büyüklüğün dört üreticide ayrı ayrı yazılması bu deponun ilk günden beri kovaladığı
-# sınıftır (iki yüzey, sessiz ayrışma — `check_trade` kopyası GU2'de tam bundan patlamıştı).
+# sınıftır (iki yüzey, sessiz ayrışma — `check_trade` kopyası tam bundan patlamıştı).
 Y3_PORTFOLIO_FIELDS = ("equity", "sector_notional", "heat_pct")
 Y3_PLAN_FIELDS = ("notional", "risk_dollars")
 
@@ -601,11 +612,11 @@ def y3_portfolio_inputs(positions, armed_plans=(), *, equity: float, size_fn) ->
 
 
 def _olculemedi_notu(eksik: list, tavan: str) -> str:
-    """ÖLÇÜLEMEDİ ≠ HÜKÜM (Rol-1 hükmü, 2026-08-02). Açık bir tavanın ölçüm yapamadığı tur karar
+    """ÖLÇÜLEMEDİ ≠ HÜKÜM (Rol-1 hükmü). Açık bir tavanın ölçüm yapamadığı tur karar
     ağacında `passed=True` düşer — fail-open BİLİNÇLİDİR, çünkü Y3 alanlarını hâlâ göndermeyen
     üreticiler var (gölge-v1/v2, mutation) ve `passed=False` onların TÜM planlarını keserdi. Ama
     satır sebebini taşımak ZORUNDA: eksik alan adıyla yazılmazsa denetimde "tavan tuttu"dan
-    ayırt edilemez ve operatör panoda `enabled: true` görürken hiçbir koruma almaz (C12'nin
+    ayırt edilemez ve operatör panoda `enabled: true` görürken hiçbir koruma almaz (bulgunun
     kendisi tam olarak bu sessizlikten doğdu)."""
     return (f"ölçülemedi: {', '.join(eksik)} — {tavan} tavanının HÜKMÜ YOK (fail-open); "
             f"bu satır 'tavan tuttu' diye okunamaz")
@@ -624,7 +635,7 @@ def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -
         beyanı knob açılana kadar birebir geçerli kalır. Ölçüm katmanının ADI burada bilerek
         yazılmaz: guard SAF kalmak zorunda ve o modülü ne çağırır ne içe aktarır; ısı `portfolio`
         sözlüğünden `heat_pct` alanı olarak GELİR (çağıranın sorumluluğu).
-    (3)(4) İKİ PİYASA KAPISI BU ZİNCİRDEN ÇIKTI — EDG-005 HÜKMÜ: GÖSTERGE, KAPI DEĞİL (2026-08-01).
+    (3)(4) İKİ PİYASA KAPISI BU ZİNCİRDEN ÇIKTI — HÜKÜM: GÖSTERGE, KAPI DEĞİL.
         `regime.spy_sma_gate` ÖLÇÜLDÜ (kart EDG-2026-005, arşiv): tek atfedilebilir pencerede kill#1
         tetiklendi (Sharpe −0,25→−0,90, PARA-v3 −0,029→−0,088); vol düşüyor ama bedeli getiri. OOS'ta
         55 bloke günde 0 girişi engelledi → kill#2'nin "pano göstergesi yeter" hükmü yürürlükte.
@@ -654,7 +665,7 @@ def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -
                  value=round(pay, 2), threshold=f"<={cap_pct:.0f}%")
         else:
             # NAV ölçülemedi → tavan UYGULANMAZ ve bu SESSİZ KALMAZ: açık bir knob'un ölçüm
-            # yapamadığı tur, "tavan tuttu" diye okunamaz. ÖLÇÜLEMEDİ ≠ HÜKÜM (2026-08-02): satır
+            # yapamadığı tur, "tavan tuttu" diye okunamaz. ÖLÇÜLEMEDİ ≠ HÜKÜM: satır
             # GEÇER (fail-open bilinçli) ama EKSİK ALANI adıyla taşır — okuyucu "tavan çalıştı" ile
             # "tavan ölçemedi"yi ayırt edemezse açık bir knob sessizce atıl kalır.
             _chk("y3_sector_cap", False, _olculemedi_notu(["equity"], "Y3 sektör"),
@@ -677,4 +688,4 @@ def _y3_portfolio_caps(plan: dict, portfolio: dict, params: dict | None, _chk) -
             _chk("y3_heat_cap", toplam > heat_pct_cap,
                  f"Y3 ısı tavanı: açık risk %{toplam:.2f} NAV > %{heat_pct_cap:.1f}", "hard",
                  value=round(toplam, 3), threshold=f"<={heat_pct_cap:.1f}%")
-    # (3)(4) YOK — bilerek. Rejim katmanının piyasa kapıları artık GÖSTERGEdir (docstring, EDG-005).
+    # (3)(4) YOK — bilerek. Rejim katmanının piyasa kapıları artık GÖSTERGEdir (bkz. docstring).

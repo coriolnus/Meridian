@@ -44,7 +44,7 @@ from .score import START_EQUITY
 # Varsayılan AÇIK: tek yan etkisi kendi defterine yazmaktır, hiçbir yetki taşımaz. Kapatma anahtarı
 # yine de vardır — ölçüm bile olsa, operatör bir katmanı susturabilmelidir.
 ENABLED = os.environ.get("MERIDIAN_SHADOW", "1") != "0"
-# PLANLI KOLUN KENDİ ANAHTARI (kart EXE-2026-003 kill#1/kill#2): "kol kapatılır — gözlem, icrayı
+# PLANLI KOLUN KENDİ ANAHTARI (kill#1/kill#2): "kol kapatılır — gözlem, icrayı
 # yavaşlatamaz" ve "20 seansta < 10 dolum → yazım durur, defter kalır" cümlelerinin ikisi de bir
 # KAPATMA yolu ister. `MERIDIAN_SHADOW=0` iki kolu birden susturur; bu anahtar YALNIZ yeni kolu
 # kapatır ve silahli kol (EXE-2026-002'nin kanıt zinciri) çalışmaya devam eder.
@@ -56,7 +56,7 @@ ORDERS_FILE = "intraday_shadow_orders.jsonl"
 PLANLI_ORDERS_FILE = "intraday_shadow_planli_orders.jsonl"
 PORTFOLIO = "portfolio.json"
 
-# KOL ETİKETİ (kart EXE-2026-003, `universe`): iki kolun her satırı bir kol adı taşır. `silahli`
+# KOL ETİKETİ (`universe`): iki kolun her satırı bir kol adı taşır. `silahli`
 # bugünkü davranıştır ve DEĞİŞMEDİ; etiket okuma anında basılır (bkz. `kollar`).
 KOL_SILAHLI = "silahli"
 KOL_PLANLI = "planli"
@@ -159,7 +159,7 @@ def _daily_adv(ticker: str, session: str):
 
 
 def _gates(b: PaperBroker, meta: dict, ticker: str) -> tuple[dict, dict]:
-    """EOD dolgu kapısının (loop.py:368 + 373) gölgedeki karşılığı + her girdinin KAYNAĞI.
+    """EOD dolgu kapısının (`loop.daily_cycle` kapı bloğu) gölgedeki karşılığı + her girdinin KAYNAĞI.
 
     Kapı yasası burada yeniden ÖLÇÜLÜR, kopyalanmaz: `halted`/`circuit_breaker_tripped`/`derisk_mult`
     /`max_positions_at` üretimin kendi fonksiyonlarıdır. Ama girdilerin bir kısmı seans içinde
@@ -199,7 +199,7 @@ def _gates(b: PaperBroker, meta: dict, ticker: str) -> tuple[dict, dict]:
 
 
 def _blocking(gates: dict) -> str | None:
-    """İlk engelleyen kapının ADI — loop.py:368/373'teki sırayla.
+    """İlk engelleyen kapının ADI — `loop.daily_cycle`in kapı sırasıyla.
 
     `breaker`/`data_bad` None ise (kaynak dosya hiç yok) kapı ÖLÇÜLEMEDİ demektir; bu durumda
     'geçti' saymak fail-open olurdu, o yüzden ölçülemeyen kapı da engeller ve adıyla yazılır."""
@@ -282,7 +282,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
     gates, kaynak = _gates(b, meta, ticker)
     engel = _blocking(gates)
 
-    # C18 (denetim 2026-08-02) — E1 GİRİŞ YASASININ ATR BACAĞI. ÖNCESİ: `fill_entry`e `atr=` HİÇ
+    # C18 — E1 GİRİŞ YASASININ ATR BACAĞI. ÖNCESİ: `fill_entry`e `atr=` HİÇ
     # geçmiyordu → limit DAİMA %1 yüzde tavanındaydı, canlı EOD motoru ise min(0,5·ATR14, %1) ile
     # koşuyordu. Kırılma TEK YÖNLÜ: gölge, canlının REDDEDECEĞİ dolumları "would_submit" diye yazar
     # → Faz 4b'nin kanıt tabanı (bu defterin varlık sebebi) iyimser bir icra modeli üzerine kurulur.
@@ -303,7 +303,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
         plan_id, _lw, "atr",
         "silahlanma anında ÖLÇÜLEMEDİ; limit yalnız yüzde tavanıyla kuruldu")
 
-    # ---- AYNI YAN TABLONUN OKUNMAYAN İKİ BACAĞI (borçlar turu, 2026-08-02) --------------------
+    # ---- AYNI YAN TABLONUN OKUNMAYAN İKİ BACAĞI -----------------------------------------------
     # C18 ATR'yi bağladı; `entry_law` satırı ise ÜÇ icra girdisi taşıyor. Kalan ikisi burada
     # okunmuyordu ve ikisinin kırılma sınıfı AYRI:
     #
@@ -319,7 +319,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
     #   * `pivot` — bugün `fill_entry`in HÜKMÜNÜ DEĞİŞTİRMEZ ve bu böyle YAZILIYOR (uydurma yasağı:
     #     bağlanan her bacak "kaçan dolum" bulur diye sunulamaz). Yalnız `Position.pivot` alanına
     #     düşer, gölge de kopya broker'ı atar. Yine de geçirilir, İKİ SEBEPLE: (1) çağrı canlı
-    #     `loop.py:820` ile ARGÜMAN ARGÜMAN aynı olur — C13'ün kapattığı kopukluk ("replay taşıyor,
+    #     `loop.daily_cycle`in `fill_entry` çağrısı ile ARGÜMAN ARGÜMAN aynı olur — C13'ün kapattığı kopukluk ("replay taşıyor,
     #     canlı taşımıyor → knob terfi edince bir motorda SESSİZ NO-OP") tam olarak bir motorun
     #     eksik argümanla çağrılmasından doğmuştu ve gölge o listede kalan son motordu;
     #     (2) yapı çizgisi satıra yazılır — hangi girdiyle karar verildiği, kararın kendisi kadar
@@ -343,7 +343,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
         pos = b.fill_entry(plan, sim_price, as_of.isoformat(), b.equity(),
                            size_mult=gates["size_mult"], adv=_daily_adv(ticker, session),
                            atr=atr_icra,
-                           # `pivot or 0.0` = canlı loop.py:823 ile BİREBİR aynı ifade; 0.0 orada da
+                           # `pivot or 0.0` = canlı `loop.daily_cycle` `fill_entry` çağrısıyla BİREBİR aynı ifade; 0.0 orada da
                            # "bilinmiyor" demektir (broker.fill_entry docstring'i).
                            pivot=float(pivot_icra or 0.0),
                            # None BİLEREK None kalır: `False`a çevirmek "gap YOKTU" iddiasını
@@ -376,7 +376,7 @@ def _satir(plan: dict, plan_id, ticker: str, bar: dict, as_of, session: str, kol
         # C18: hangi ATR ile ve NEREDEN gelen bir limitle karar verildiği satırda durur — bir
         # kapının hangi girdiyle değerlendirildiği, kapının kendisi kadar önemlidir (bkz. `_gates`).
         "atr": atr_icra, "limit": _lw.get("limit"), "atr_kaynak": atr_kaynak,
-        # BORÇLAR TURU (2026-08-02): yan tablonun diğer iki icra girdisi de satırda durur —
+        # Yan tablonun diğer iki icra girdisi de satırda durur —
         # `atr`/`atr_kaynak` ile AYNI desen, aynı gerekçe. JETON ADLARI DEĞİŞMEZ: `status` hâlâ
         # `would_submit`/`blocked:*` sözlüğünden gelir (pano app.js SH_TR sabit bir jeton sözlüğü
         # çeviriyor; yeni jeton orada çevrilmeden ham görünürdü — C18'in kararı, aynen korunuyor).
@@ -404,7 +404,7 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
     kez yazılmaz (aynı admissible bar, aynı karar anı). Dönüş: yazılan satır ya da None (kapalı /
     tekrar / biçimsiz girdi).
 
-    v217'DE DAVRANIŞI DEĞİŞMEDİ: gövde `_satir`e taşındı, sıra (kapalı → kimlik → seans → dedup →
+    DAVRANIŞI DEĞİŞMEDİ: gövde `_satir`e taşındı, sıra (kapalı → kimlik → seans → dedup →
     biçim → hesap → yazım → sayaç → log) korundu ve yazılan satır BAYT olarak aynıdır (çivisi:
     tests/test_golge_planli_kol_v217.py, değişiklikten ÖNCE alınmış altın satır)."""
     if not ENABLED:
@@ -428,7 +428,7 @@ def record(plan: dict, bar: dict, as_of) -> dict | None:
 
 
 def planli_satir(plan: dict, bar: dict, as_of) -> dict | None:
-    """PLANLI KOL — satırı HESAPLAR, YAZMAZ (kart EXE-2026-003).
+    """PLANLI KOL — satırı HESAPLAR, YAZMAZ.
 
     Silahlanmamış (GO/REVIEW ama `portfolio.json.armed` dışındaki) bir planın tetiği seans içinde
     kesildiğinde "ne olurdu"yu ölçer. SIFIR EK PAZAR RİSKİ: silahlanmamış bir plan bu satır
@@ -514,12 +514,12 @@ def vs_eod(limit: int = 10, rows: list[dict] | None = None) -> dict:
 def summarize(rows: list[dict], limit: int = 12) -> dict:
     """Gölge defterinin pano özeti — satırları ÇAĞIRAN okur, bu fonksiyon yalnız derler.
 
-    NEDEN DEFTERİ BURADA OKUMUYORUZ (2026-07-27): `intraday_cycle.health` ile aynı yasa —
+    NEDEN DEFTERİ BURADA OKUMUYORUZ: `intraday_cycle.health` ile aynı yasa —
     "kendi yazdığını kendi geri okuyan modül TÜKETİCİ SAYILMAZ" (codelaw.artifact_graph). Defteri
     dışarıdan okuyan api.py'dir; okuma orada kalırsa artefakt grafiği gerçek tüketiciyi görür.
     Buraya bir `read_jsonl` koymak, kanıtı kendi içine kapatıp yasayı statik olarak ihlal ederdi.
 
-    PLANLI KOL BURAYA GİRMEZ (v217, bilerek): bu özet `/api/diagnostics` → panonun 4b kartıdır ve
+    PLANLI KOL BURAYA GİRMEZ (bilerek): bu özet `/api/diagnostics` → panonun 4b kartıdır ve
     `total`/`today_n`/`would_submit_n` sayıları SİLAHLI kolun sayımıdır. Yeni kolu bu sözlüğe
     katmak kartın kill#3'ünü ("silahli kolun ... SAYIMINDA herhangi bir fark") ihlal eder ve
     panodaki "gölge kararı" satırı sessizce anlam değiştirirdi. Planli kolun raporu ayrı yüzeydedir
@@ -538,7 +538,7 @@ def summarize(rows: list[dict], limit: int = 12) -> dict:
 
 
 # ==================================================================================================
-# İKİ KOL — OKUMA YÜZEYİ (kart EXE-2026-003)
+# İKİ KOL — OKUMA YÜZEYİ
 # ==================================================================================================
 # Aşağısı SAF OKUMADIR: hiçbir dosyaya yazmaz, hiçbir bayrağa dokunmaz, Faz-5 kilidine BAĞLANMAZ.
 KART = "EXE-2026-003"
@@ -692,7 +692,7 @@ def _cf_sec(adaylar: list[dict], trigger) -> tuple:
 
 def golge_cf_eslestirme(satirlar: list[dict] | None = None,
                         cf_rows: list[dict] | None = None) -> dict:
-    """İKİNCİL HAT (kart EXE-2026-003): gölge dakika-sim × cf EOD-sim eşleştirilmiş farkı.
+    """İKİNCİL HAT: gölge dakika-sim × cf EOD-sim eşleştirilmiş farkı.
 
     FAZ-5 KİLİDİNİ AÇMAZ VE KİLİT KODUNA DOKUNMAZ. Kilidin hükmü `faz5_cikis.cikis_olcumu`ta,
     GERÇEK-ÇİFT hattında yaşar ve o hat YALNIZ silahli kolun defterini okur. Burası ayrı bir rapor
@@ -705,7 +705,7 @@ def golge_cf_eslestirme(satirlar: list[dict] | None = None,
     İŞARET TERİMİ YOK — VE BU BİR EKSİKLİK DEĞİL, ÖLÇÜLMÜŞ BİR SINIR. `faz5_cikis` kısa tarafta
     işareti çevirir çünkü iç EOD defteri `side` taşır. cf defterinde `side` alanı HİÇ YOKTUR
     (counterfactual._push) ve kartın formülünde de işaret terimi yoktur; formül olduğu gibi
-    uygulanır ve sınır satırda BEYAN EDİLİR. Bugün canlı yol yalnız long üretiyor (loop.py:1374),
+    uygulanır ve sınır satırda BEYAN EDİLİR. Bugün canlı yol yalnız long üretiyor (`loop.daily_cycle`),
     ama bu varsayım koda gömülmez — cf defterine `side` geldiği gün burası da düzeltilmelidir.
 
     EŞLEŞME ANAHTARI (kart: `plan_id`) — cf tarafında `plan_id` ALANI YOKTUR (ölçüldü: 0 kayıt).
@@ -786,6 +786,8 @@ def golge_cf_eslestirme(satirlar: list[dict] | None = None,
                         "kazanc_bps": round((giris - sf) / giris * 10000.0, 4)})
 
     def _kol_ozeti(alt: list[dict]) -> dict:
+        """Tek kolun eşleşme özeti: kazanç (bps) üzerinden tarih-kümeli bootstrap GA, örneklem tabanının
+        dolup dolmadığı ve (tavana kırpılmış) çift listesi. Ölçülemeyen GA alanları None kalır."""
         ci = tarih_kumeli_bootstrap([c["kazanc_bps"] for c in alt], [c["date"] for c in alt],
                                     seviye=IKINCIL_CI)
         return {"n": len(alt), "n_min_dolu_mu": len(alt) >= IKINCIL_N_MIN,

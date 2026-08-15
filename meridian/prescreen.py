@@ -36,7 +36,7 @@ import shutil
 import sys
 import time
 
-# SAF YAPRAK — döngüsel bağımlılık yok, canlı state'e dokunmaz, yalnız damga üretir (WP-M 2026-08-02).
+# SAF YAPRAK — döngüsel bağımlılık yok, canlı state'e dokunmaz, yalnız damga üretir.
 from . import olcum_araclari
 
 KISMI_DOSYA = "prescreen_kismi.json"     # her adaydan SONRA yazılır (süreç ölürse ölçüm kaybolmasın)
@@ -168,6 +168,8 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path) -> pathlib.Path:
 
 
 def _oku_kismi(workdir: pathlib.Path) -> dict:
+    """Çalışma dizinindeki kısmi ölçüm dosyasını okur. Dosya yoksa ya da bozuksa boş sözlük —
+    `--resume` "varsa atla" demektir, "olmalı" değil."""
     try:
         return json.loads((workdir / KISMI_DOSYA).read_text())
     except (OSError, ValueError):  # sessiz-yutma: kısmi dosya YOKSA ya da bozuksa devam etmenin tek dürüst yolu sıfırdan ölçmektir; --resume zaten "varsa atla" demek, "olmalı" değil
@@ -182,7 +184,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     # ortasında checkout yapılırsa iki rapor iki farklı SHA gösterirdi), hem de aday başına bir
     # `git` alt süreci koşmayalım.
     damga = olcum_araclari.kod_surumu_damgasi()
-    # ÜRETİM ZAMANI, DAMGANIN İKİNCİ YARISI (WP-M, 2026-08-03). SHA "hangi kod" sorusunu
+    # ÜRETİM ZAMANI, DAMGANIN İKİNCİ YARISI. SHA "hangi kod" sorusunu
     # cevaplıyordu; "NE ZAMAN" sorusunun cevabı hâlâ raporun DIŞINDAYDI (dosya mtime'ı — kopyalanan,
     # rsync'lenen, arşivden çıkarılan bir raporda mtime YENİDEN YAZILIR ve sessizce yalan söyler).
     # Aynı SHA'da iki kez koşulmuş bir ön-eleme de yalnız SHA ile ayırt edilemez. Damgayla AYNI ANDA
@@ -232,7 +234,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             gecerli.append(a)
         log(f"[guard] {a['key']}  {'GEÇTİ' if not nedenler else 'RED ' + str(nedenler)}")
     if not gecerli:
-        # BAŞARISIZ KOŞU DA DAMGALANIR (WP-M, 2026-08-03): bu dal `kuyruk_geri_yaz`ın hata yoluna
+        # BAŞARISIZ KOŞU DA DAMGALANIR: bu dal `kuyruk_geri_yaz`ın hata yoluna
         # gider ve kuyrukta kalıcı bir satır bırakır. Damgasız bırakmak, "hangi bounds/kod hâlinde
         # reddedildi?" sorusunu cevapsız bırakırdı — guard redleri tam olarak kod/bounds değişince
         # anlam değiştiren kayıtlardır.
@@ -254,6 +256,8 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     log(f"[veri] {len(bars)} sembol ({time.time() - t0:.1f}s)")
 
     def _wf(params):
+        """Verilen parametrelerle ileri-yürüyen (walk-forward) ölçümü koşar — pencereler, katlar ve
+        rejim-koşullu düğmeler bütün adaylarda AYNI kaynaktan gelir."""
         return backtest.walk_forward(params, bars, index, goal, w[0], w[1], w[2], w[3],
                                      strategy_version=ver, oos_folds=w[4], embargo_days=w[5],
                                      params_by_regime=strat.get("params_by_regime"))
@@ -264,6 +268,8 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     log(f"   incumbent OOS={inc['oos_score']} n={inc_n} folds={[f.get('n') for f in inc['oos_folds']]}")
 
     def _yaz_kismi(adaylar, kalan):
+        """Kısmi ilerlemeyi diske yazar: incumbent künyesi, k_probes, ölçülmüş adaylar ve kalanlar.
+        `--resume` bu dosyadan devam eder."""
         (workdir / KISMI_DOSYA).write_text(json.dumps(
             {"incumbent": {"version": ver, "oos_score": inc["oos_score"], "n": inc_n,
                            "folds": [f.get("n") for f in inc["oos_folds"]]},
@@ -313,7 +319,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             "tail_delta": kuyruk, "tail_ok": gate.get("tail_ok"),
             "gate_law": gate.get("gate_law"), "k_probes": gate.get("k_probes"),
             "passes": bool(passes), "why": why, "margin": gate.get("margin"),
-            # ---- PARA-v3 (2026-07-30): ÖN-ELEME ARTIK YASANIN GERÇEK SAYILARINI KAYDEDER ----
+            # ---- PARA-v3: ÖN-ELEME ARTIK YASANIN GERÇEK SAYILARINI KAYDEDER ----
             # Bu satır bugüne dek yalnız BİLEŞİK `oos_score` farkını (`delta`) yazıyordu. O sayı
             # artık kapının KARAR değişkeni DEĞİL — bir RAPOR metriği. Kaydı olduğu gibi bırakmak,
             # ölçüm aracının yasadan geri kalması olurdu: rapor "Δ −0,03 → geçmez" der, oysa hüküm
@@ -321,7 +327,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
             # (modül başlığındaki "ölçüm aracı turdan tura değişmesin" ilkesinin ta kendisi —
             # değişen ölçüm aracı değil YASA olduğunda araç ONU izlemek zorundadır).
             "yasa_surumu": gate.get("yasa_surumu"),
-            # PENCERE DAMGASI (HOLDOUT ROTASYONU R1, 2026-07-30): ön-eleme satırları tur raporlarına
+            # PENCERE DAMGASI (HOLDOUT ROTASYONU R1): ön-eleme satırları tur raporlarına
             # elle taşınıyor ve orada başka turların sayılarıyla yan yana duruyor. Damgasız bir satır,
             # R0'da ölçülmüş bir Δ'yı R1 Δ'sıyla kıyaslamayı DAVET eder — pencere kimliği satırın
             # kendisinde durmak zorunda (rapor envelope'undaki `pencereler` bloğu satır kopyalanınca
@@ -366,7 +372,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         "adaylar": sonuc, "guard_reddi": reddedilen,
         "pencereler": {"is_start": w[0], "oos_start": w[1], "oos_end": w[2], "holdout_end": w[3],
                        "folds": w[4], "embargo_days": w[5],
-                       # PENCERE KİMLİĞİ + HABERSİZ KIYAS YASAĞI raporun İÇİNDE (R1, 2026-07-30):
+                       # PENCERE KİMLİĞİ + HABERSİZ KIYAS YASAĞI raporun İÇİNDE (R1):
                        # tarihler zaten yazılıydı ama "bu tarihler hangi rotasyon" ve "eski
                        # sayılarla kıyaslanamaz" cümleleri yazılı DEĞİLDİ — raporu okuyanın o
                        # çıkarımı kendi yapmasını beklemek, tam olarak habersiz kıyasın yolu.
@@ -376,7 +382,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
         # CANLI STATE KANITI RAPORUN İÇİNDE: "dokunmadım" iddiası, raporu okuyanın kontrol
         # edebileceği bir sayıya bağlanır. Boş liste = tek bayt yazılmadı.
         "canli_state_degisen_dosyalar": degisen,
-        # KOD-SÜRÜMÜ DAMGASI (WP-M, 2026-08-02): "bu rapor hangi kod hâliyle üretildi?" sorusu
+        # KOD-SÜRÜMÜ DAMGASI: "bu rapor hangi kod hâliyle üretildi?" sorusu
         # bugüne kadar raporun DIŞINDA aranıyordu (dosya tarihi, oturum kaydı, hafıza) ve orada
         # tahmine dönüşüyordu. git HEAD + `kirli_agac` + ölçüm-araçları sürüm listesi artık raporun
         # İÇİNDE durur. Git yoksa/başarısızsa alan None + neden'dir (UYDURMA YASAĞI) — rapor yine
@@ -407,7 +413,7 @@ def kuyruk_ozeti(rapor: dict) -> dict:
     DEĞİLDİR; `pencere_id` habersiz kıyas yasağının taşıyıcısı (R0 sayısıyla R1 sayısı yan yana
     konamaz); `why` reddin gerekçesi. Ölçülemeyen alan None kalır ve None "0" demek DEĞİLDİR.
 
-    KOD KİMLİĞİ ÖZETE DE GİRER (WP-M, 2026-08-03): tam damga (`kod_surumu`) `workdir`de kalır ama
+    KOD KİMLİĞİ ÖZETE DE GİRER: tam damga (`kod_surumu`) `workdir`de kalır ama
     kuyruk satırını okuyan (pano/analytics) "bu sonuç hangi kodla, ne zaman üretildi?" sorusunu
     workdir'e gitmeden cevaplayabilmeli — kum havuzu silinmiş olabilir, satır kalıcıdır. Bu yüzden
     KISA sha + üretim zamanı özete kopyalanır; git ölçülemediyse alan None'dır (damganın kendi
@@ -437,7 +443,7 @@ def kuyruk_ozeti(rapor: dict) -> dict:
 
 
 def kuyruk_geri_yaz(queue_id: str, live: pathlib.Path, rapor: dict) -> dict | None:
-    """Ölçüm bitişini kuyruk satırına damgala (C14). Dönen: yazılan alanlar ya da None (yazılamadı).
+    """Ölçüm bitişini kuyruk satırına damgala. Dönen: yazılan alanlar ya da None (yazılamadı).
 
     ASLA YÜKSELTMEZ: bir durum defterinin, tamamlanmış bir ölçümün raporunu düşürme yetkisi yoktur
     (YASA 4: sessiz de kalmaz — uyarı defterine düşer). Rapor `--workdir`de zaten duruyor.
@@ -463,7 +469,7 @@ def kuyruk_geri_yaz(queue_id: str, live: pathlib.Path, rapor: dict) -> dict | No
                        "olcum_k_probes": rapor.get("k_probes")}
             hermes_composite.mark(str(queue_id), "measure_failed", **alanlar)
             return {"status": "measure_failed", **alanlar}
-        # `olcum_k_probes` AYRI ALAN: satırdaki `k_probes` H4 BÜTÇE dilidir ("bu satır bütçeden bir
+        # `olcum_k_probes` AYRI ALAN: satırdaki `k_probes` BÜTÇE dilidir ("bu satır bütçeden bir
         # yoklama yedi"); prescreen'in `k_probes`ı KAPI dilidir ("bu ölçümde kapıya kaç aday gitti").
         # Tek alana yazmak iki farklı sayacı sessizce birbirine çevirirdi.
         alanlar = {"result": kuyruk_ozeti(rapor), "olcum_k_probes": rapor.get("k_probes"),
@@ -487,6 +493,9 @@ def kuyruk_geri_yaz(queue_id: str, live: pathlib.Path, rapor: dict) -> dict | No
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: adayları (tek-değişkenli ve/veya bileşik) ayrıştırır, ön-elemeyi koşar ve raporu
+    JSON olarak basar. Canlı state'e YAZMAZ (kopya üstünde ölçer). Ölçüm çökse bile kuyruk satırı
+    akıbetle damgalanır ve istisna aynen yükseltilir. Dönüş: hata varsa 1, yoksa 0."""
     ap = argparse.ArgumentParser(prog="meridian.prescreen",
                                  description="Aday parametreleri kapının yasasıyla ön-ele "
                                              "(canlı state'e yazmaz).")

@@ -33,7 +33,7 @@ from pathlib import Path
 import pandas as pd
 
 from . import barclock, config, earnings, hotstate, store
-# EMEKLİLİK DEFTERİ TEK KAYNAKTAN (2026-07-30): hangi sembolün delist olduğu `adapters.data`da
+# EMEKLİLİK DEFTERİ TEK KAYNAKTAN: hangi sembolün delist olduğu `adapters.data`da
 # yazılıdır. Buraya ikinci bir liste kopyalamak, zamanla AYRIŞAN iki gerçek demekti.
 from .adapters import data as _data
 # TAZELİK YASASI TEK KAYNAKTAN: intraday_cycle karar verirken hangi eşiği kullanıyorsa ölçüm de
@@ -251,6 +251,8 @@ def build() -> dict:
         durumlar.append(durum)
 
     def _satir(ticker: str, source: str, core: dict) -> dict:
+        """Tek tickerın pano satırını kurar: çekirdek bar alanları + gün-içi kapanış/damgası, pozisyon /
+        silahlı / emekli bayrakları, plan sayımı ve sıradaki bilanço tarihi."""
         ic_kapanis, ic_damga = intraday.get(ticker, (None, None))
         return {
             "ticker": ticker, "source": source,

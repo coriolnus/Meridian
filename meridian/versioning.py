@@ -28,6 +28,7 @@ from . import config, store
 
 
 def snapshot(strategy: dict) -> Path:
+    """Strateji sözlüğünü `history/vNNNN.yaml` olarak diske çekip yolunu döndürür (sürüm arşivi)."""
     v = int(strategy.get("version", 1))
     path = config.HISTORY / f"v{v:04d}.yaml"
     config.dump_yaml(strategy, path)
@@ -39,7 +40,7 @@ def _next_version(current: dict) -> int:
     makes strategy.yaml carry the parent's number, so the next ship would reuse the rolled-back child's
     number — and then be judged on the DEAD version's trades (trades.jsonl rows keep the old tag) while
     update_scoreboard merges its fields into the dead row (rolled_back:true and all). Allocate past the
-    max of: current, every scoreboard entry, every history snapshot (audit #17/#31)."""
+    max of: current, every scoreboard entry, every history snapshot."""
     hi = int(current.get("version", 1))
     for v in scoreboard().get("versions", {}):
         try:
@@ -58,6 +59,9 @@ def _next_version(current: dict) -> int:
 
 
 def bump(current: dict, variable: str, new, note: str = "") -> dict:
+    """Mevcut stratejiden, tek bir değişkeni `new` yapan ÇOCUK sürüm sözlüğü üretir (derin kopya).
+    `base@regime` biçimindeki düğme `params_by_regime` altına yazılır, düz `params` bozulmaz.
+    Yalnız sözlük döndürür — diske YAZMAZ, canlıya almaz (onu `commit` yapar)."""
     child = copy.deepcopy(current)
     child["version"] = _next_version(current)
     child["parent"] = int(current.get("version", 1))
@@ -82,10 +86,12 @@ def commit(child: dict) -> None:
 
 
 def scoreboard() -> dict:
+    """Karneyi (`scoreboard.json`) okur; dosya yoksa boş varsayılan şemayı verir."""
     return store.read_json("scoreboard.json", _sb_default())
 
 
 def _sb_default() -> dict:
+    """Karnenin boş varsayılan şeması: canlı sürüm işareti yok, sürüm sözlüğü boş."""
     return {"current_version": None, "versions": {}}
 
 
@@ -93,7 +99,7 @@ def _sb_default() -> dict:
 # karneye TOPTAN yazan modülleri AST ile sayar ve sabit adı çözemez. Sabite çevirmek o dedektörü
 # SESSİZCE köreltirdi — "karneyi kim yazıyor?" sorusunun tek statik cevabı kaybolurdu.
 def update_scoreboard(version: int, **fields) -> dict:
-    """KİLİTLİ oku-değiştir-yaz (B3, 2026-07-31).
+    """KİLİTLİ oku-değiştir-yaz.
 
     Eskiden kilitsizdi ve bu depoda BELGELİ bir kayıp-güncelleme yoluydu: karneye ship yolu
     (reflect), ölçüm yolu (baseline.set_row_fields) ve replay (run.py) yazıyor — üçü ayrı
@@ -103,6 +109,7 @@ def update_scoreboard(version: int, **fields) -> dict:
     v = str(version)
 
     def _patch(sb: dict) -> bool:
+        """Karne yamacı: `versions[v]` satırına alanları birleştirir ve canlı sürüm işaretini `version` yapar."""
         sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
         sb["current_version"] = version
         return True
@@ -122,12 +129,13 @@ def set_row_fields(version: int, **fields) -> dict:
 
     Yalnız `versions[str(version)]` satırına yazar; `current_version` olduğu gibi bırakılır.
 
-    KİLİTLİ (B3, 2026-07-31): `update_scoreboard` ile AYNI gerekçe — bu fonksiyon canlı worker
+    KİLİTLİ: `update_scoreboard` ile AYNI gerekçe — bu fonksiyon canlı worker
     koşarken elle tetiklenen bir ölçüm yolundan (baseline backfill) çağrılıyor, yani iki süreçli
     kayıp-güncellemenin en olası kapısı buydu."""
     v = str(version)
 
     def _patch(sb: dict) -> bool:
+        """Karne yamacı: yalnız `versions[v]` satırına alanları birleştirir — `current_version`a DOKUNMAZ."""
         sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
         return True
 

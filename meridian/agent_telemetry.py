@@ -56,7 +56,7 @@ IZ_USTBILGI_KR = 600           # iz satırının ham-metin DIŞI alanları (öl�
 IZ_DISK_TAVANI_MB = round(IZ_SATIR_TAVANI * (2 * IZ_AKIS_TAVANI_KR + IZ_USTBILGI_KR) / 1_000_000, 2)
 
 # ---- SONUÇ SINIFLARI — ADLI, KAPALI KÜME -------------------------------------------------------
-# Sınıf adı "boş" gibi tek kelimeye çökerse teşhis de çöker: v190/v193'ün tüm dersi buydu.
+# Sınıf adı "boş" gibi tek kelimeye çökerse teşhis de çöker — ölçülmüş ders.
 SINIF_DOLU = "dolu"                          # cevap geldi ve kullanılabilir
 SINIF_BOS = "bos"                            # rc!=0 ya da boş stdout ya da 'Messages: <=1'
 SINIF_YAPILANDIRMASIZ = "yapilandirmasiz"    # CLI ağa hiç çıkmadı (ilk-koşum rehberi bastı)
@@ -76,9 +76,9 @@ TASIYICILAR = (TASIYICI_AJAN, TASIYICI_HTTP)
 ARAC_OLCULEMEDI = "-Q sessiz mod CLI oturum özetini bastırır — araç sayısı bu çağrıda ÖLÇÜLEMEDİ"
 
 # ================================================================================================
-# ÇAĞRI BAŞINA SKILL ADLARI (v242, 2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL
+# ÇAĞRI BAŞINA SKILL ADLARI (2026-08-13) — GERİLEME ONARIMI, YENİ ÖZELLİK DEĞİL
 # ================================================================================================
-# NE KAYBEDİLDİ (ölçüldü: docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §2.4/§B1). `nous_call_skills`
+# NE KAYBEDİLDİ (ölçüldü: docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md). `nous_call_skills`
 # olayı çağrı başına ön-yüklenen skill'lerin TAM AD LİSTESİNİ yazıyordu:
 #     {"ts":"2026-07-20T09:59:21+00:00","event":"nous_call_skills","kind":"review","preloaded":5,
 #      "names":["vcp-screener","pullback-screener","pre-trade-discipline-gate",…]}
@@ -86,7 +86,7 @@ ARAC_OLCULEMEDI = "-Q sessiz mod CLI oturum özetini bastırır — araç sayıs
 # birleştirildi ve liste `preloaded: <sayı>`ya ÇÖKTÜ. Bugün Meridian'ın ÜÇ defteri de
 # (`events.jsonl`, `agent_calls.jsonl`, `agent_traces.jsonl`) yalnız SAYIYI taşıyor: "kaç tane"
 # yazılı, "hangileri" yazılı değil. Gerçek ad izi üçüncü-taraf bir sayaca (`~/.hermes/skills/
-# .usage.json`) düşüyor ve o sayaç KÜMÜLATİF — gün gün dağılım geriye dönük KURTARILAMAZ (§B8).
+# .usage.json`) düşüyor ve o sayaç KÜMÜLATİF — gün gün dağılım geriye dönük KURTARILAMAZ.
 # Bu yüzden buradaki ekleme bir özellik değil, bir GERİLEMENİN onarımıdır.
 #
 # HACİM ÖLÇÜLDÜ, TAHMİN EDİLMEDİ (2026-08-13, canlı ön-yükleme listeleriyle):
@@ -117,7 +117,7 @@ def skill_adlari(preload) -> tuple[list[str], int]:
 
 
 # ================================================================================================
-# MASKELEME — TEK KAYNAK (gövde `hermes._ham_ozet`ten taşındı, v190/v193 sözleşmesi korunarak)
+# MASKELEME — TEK KAYNAK (gövde `hermes._ham_ozet`ten taşındı, mevcut sözleşme korunarak)
 # ================================================================================================
 # ÜÇ DESEN, ÜÇ AYRI SIZINTI BİÇİMİ (ölçülmüş biçimler; sıra ÖNEMLİ — genelden özele):
 #   (1) ADLI ATAMA: `GEMINI_API_KEY=…` / `dash_token: …`. Ad `\b`ın içinde kalabilir
@@ -158,7 +158,7 @@ def sirlari_maskele(metin: str | None, *, ciplak_jeton: bool = True) -> str:
     o, veriyi bozardı ve dondurulmuş vaka gerçeğe benzemez olurdu. Sır mantığı yine de TEK
     yerdedir: `maskele()` de bu fonksiyonu çağırır, ikinci bir uygulama yoktur.
 
-    `ciplak_jeton` — ÖLÇÜLMÜŞ BİR YANLIŞ POZİTİFİN KAPISI (2026-08-07). Üçüncü desen (≥24
+    `ciplak_jeton` — ÖLÇÜLMÜŞ BİR YANLIŞ POZİTİFİN KAPISI. Üçüncü desen (≥24
     karakterlik harf+rakam sözcüğü) SERBEST METİN için bir sezgidir: CLI çıktısında bir sır
     adsız/çıplak durabilir ve yakalanmasının tek yolu budur. YAPILANDIRILMIŞ VERİDE ise aynı
     sezgi ZARARLIDIR ve bu ölçüldü: fikstür dondurulurken `plan_id = "P-2026-07-23-TMO-
@@ -249,7 +249,7 @@ def kaydet(*, kind: str, model: str | None, deneme: int, alt: int, sure_ms: floa
     araç kullanılmadı. İkisini tek alana katlamak, MCP yatırımının atıl olup olmadığını sonsuza
     dek cevapsız bırakırdı (`agent_tooluse.json`'daki `olculemeyen` sayacının aynı dersi).
 
-    `on_yukleme` (v242, 2026-08-13) = ön-yüklenen skill ADLARI — `on_yukleme_n`in YANINA, onu
+    `on_yukleme` (2026-08-13) = ön-yüklenen skill ADLARI — `on_yukleme_n`in YANINA, onu
     SİLMEDEN (mevcut okuyucular sayıyı okumaya devam eder). Verilmezse alan hiç yazılmaz: bu
     yolun (HTTP taşıyıcısı) ön-yükleme kavramı YOKTUR ve boş liste yazmak "ölçüldü, hiç skill
     yoktu" diye okunurdu. Gerekçe ve hacim ölçümü: `skill_adlari` üstündeki blok."""
@@ -441,6 +441,7 @@ class Kronometre:
     __slots__ = ("_t0", "ms")
 
     def __init__(self):
+        """Kronometreyi kurar: monotonik saatten başlangıcı alır, ölçülen süreyi sıfırlar."""
         self._t0 = time.perf_counter()
         self.ms = 0.0
 
@@ -450,10 +451,12 @@ class Kronometre:
         return self.ms
 
     def __enter__(self):
+        """`with` girişinde başlangıcı ve süreyi yeniden sıfırlar; kronometrenin kendisini döndürür."""
         self._t0 = time.perf_counter()
         self.ms = 0.0
         return self
 
     def __exit__(self, *exc):
+        """`with` çıkışında süreyi kapatır. İstisnayı YUTMAZ (False döner) — telemetri bir hatayı gizleyemez."""
         self.dur()
         return False

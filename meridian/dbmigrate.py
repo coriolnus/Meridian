@@ -56,6 +56,8 @@ DIVERGENT_SUFFIX = ".ayrisik-"
 # NEDEN DOĞRUDAN DOSYA: `store.read_jsonl` DB varsa DB'den okur. Migrasyonun kaynağı DOSYADIR;
 # store üzerinden okumak, taşımanın ikinci koşuda kendi çıktısını kaynak sanmasına yol açardı.
 def source_path(name: str) -> Path:
+    """Varlığın KAYNAK dosya yolu (`state/<ad>`) — store yönlendirmesini ATLAR: migrasyonun
+    kaynağı her zaman dosyadır, yoksa ikinci koşu kendi çıktısını kaynak sanardı."""
     return Path(config.STATE) / name
 
 
@@ -105,6 +107,8 @@ def normalize(payload: Any) -> Any:
 
 
 def digest(payload: Any) -> str:
+    """Yükün parite digesti: `normalize` sonrası kanonik JSON'ın sha256'sının ilk 32 karakteri.
+    Anahtar sırası/biçim elenir, DEĞER ve TİP korunur — kaynak ile DB'nin aynılığı bununla sınanır."""
     blob = json.dumps(normalize(payload), sort_keys=True, ensure_ascii=False,
                       separators=(",", ":"), default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]
@@ -138,7 +142,7 @@ def plan() -> dict:
 def db_state() -> list[dict]:
     """DB'deki varlıkların CANLI sayaçları (iddia değil, tablodan sayım).
 
-    ŞEMA KURMAZ (C4, 2026-08-02). Eskiden `connect(create=True)` + `ensure_schema(c)` çağırıyordu;
+    ŞEMA KURMAZ. Eskiden `connect(create=True)` + `ensure_schema(c)` çağırıyordu;
     yani SALT-OKUMA diye çağrılan bir rapor, DB dosyasını yaratıp şemayı KALICI COMMIT ediyordu.
     İki sonucu vardı: (1) `plan()` "hiçbir bayt yazılmaz, DB açılmaz" diye beyan ederken bu yoldan
     geçtiğinde tam tersini yapıyordu, (2) `apply()`in şemayı transaction'ın İÇİNE alan düzeltmesi
@@ -163,7 +167,7 @@ def db_state() -> list[dict]:
 
 # ---- BAŞARISIZ MİGRASYONDAN SONRA: DB'Yİ KENARA AL ---------------------------------------------
 def _karantina(rapor: dict, db_yeni: bool, sebep: str) -> None:
-    """Bu koşuda DOĞAN DB'yi `meridian.db.failed-<ts>` diye kenara al ve BEYAN ET (C4, 2026-08-02).
+    """Bu koşuda DOĞAN DB'yi `meridian.db.failed-<ts>` diye kenara al ve BEYAN ET.
 
     NEDEN GEREKLİ. Şema artık migrasyon transaction'ının içinde kurulduğu için geri alma onu da
     götürür ve `active()` zaten False döner — ama geride ŞEMASIZ bir `meridian.db` DOSYASI kalır.
@@ -499,6 +503,9 @@ def _worker_running() -> bool:
 
 
 def _print(rapor: dict) -> None:
+    """Plan/uygula raporunu insan-okur tabloya basar: mod (kuru koşu/uygulandı), DB yolu ve şema
+    sürümü, varlık başına satır+digest, parite satırları, arşivlenen kaynaklar, hata ve karantina
+    hükmü. Yalnız BASAR — hiçbir karar vermez, hiçbir bayt yazmaz."""
     mod = ("UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA İSTENDİ ama taşınacak varlık yok" if rapor.get("applied")
             else "KURU KOŞU (hiçbir bayt yazılmadı)"))
@@ -537,6 +544,8 @@ def _print(rapor: dict) -> None:
 
 
 def _print_geri_al(rapor: dict) -> None:
+    """`--geri-al` raporunu insan-okur tabloya basar: DB'nin kenara alınıp alınmadığı, varlık
+    başına arşiv/geri-dönüş durumu, DB-dosya satır farkı ve digest eşitliği, hatalar ve beyan."""
     print(f"[dbmigrate] GERİ AL ({rapor['ts']})")
     k = rapor["db_kenara"]
     print(f"  db: {rapor['db']}  (koşu öncesi vardı: {rapor['db_var_idi']})")
@@ -563,6 +572,9 @@ def _print_geri_al(rapor: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Komut satırı girişi: `--durum` / `--geri-al` / `--uygula` (varsayılan kuru koşu), `--json`,
+    `--zorla`. Çelişkili niyet (`--uygula` + `--geri-al`) ve canlı worker görülen yazan koşular
+    REDDEDİLİR (çıkış 2). Dönüş: 0 başarı, 1 raporun `ok=False` hükmü, 2 ret."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.dbmigrate",
         description="defter çekirdeğini (6 varlık) SQLite'a taşır — parite digesti zorunlu")

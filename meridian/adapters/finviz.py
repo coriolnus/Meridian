@@ -33,7 +33,7 @@ import httpx
 
 from .. import secrets
 
-# 2026-07-23 (operatör Finviz notu): kanonik export yolu artık `/export/screener`. Eski `.ashx`
+# OPERATÖR FINVIZ NOTU: kanonik export yolu artık `/export/screener`. Eski `.ashx`
 # uçları ÇALIŞIR ama 301 REDIRECT döner — httpx (curl gibi) varsayılan olarak yönlendirmeyi İZLEMEZ
 # ve BOŞ gövde alır. Eski değer `export.ashx` idi: geçerli bir token'la bile CSV boş gelir, 0 satır
 # parse edilir ve `_plausible([])` False olduğu için token SESSİZCE "çalışmıyor" sanılırdı. İki kat
@@ -70,6 +70,8 @@ def elite() -> bool:
 
 
 def health() -> dict:
+    """Finviz screener yolunun son durumunun kopyası (ok/kaynak/n, çağrı-hata sayaçları, son HTTP
+    kodu ve maskelenmiş hata). Token'ın VARLIĞI değil, çağrının GERÇEKTEN üretip üretmediğini söyler."""
     return dict(_HEALTH)
 
 
@@ -79,6 +81,8 @@ def _mask_url(msg: str) -> str:
 
 
 def _note(ok: bool, source: str | None, n: int, status=None, error: str = "") -> None:
+    """Bir çekim denemesini `_HEALTH`e işler: çağrı/başarısızlık sayaçlarını artırır, kaynak-sonuç-
+    HTTP kodunu ve _mask_url'den geçirilmiş (auth token'ı gizlenmiş) hata metnini damgayla saklar."""
     _HEALTH["calls"] += 1
     if not ok:
         _HEALTH["fails"] += 1
@@ -87,6 +91,7 @@ def _note(ok: bool, source: str | None, n: int, status=None, error: str = "") ->
 
 
 def _now_iso() -> str:
+    """Şu anın UTC ISO-8601 damgası (saniye çözünürlüğünde, mikrosaniyesiz) — sağlık kayıtları için."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 
@@ -121,7 +126,7 @@ def export_rows(filters: str, timeout: float = 20.0, view: str = "111") -> list[
         raise RuntimeError("FINVIZ_API_KEY absent")
     params = {"v": view, "f": filters, "auth": token}
     # follow_redirects=True ZORUNLU: Finviz eski/alternatif yolları 301'le kanonik export'a taşır;
-    # izlenmezse gövde BOŞ gelir ve geçerli token 'çalışmıyor' sanılır (operatör notu, 2026-07-23).
+    # izlenmezse gövde BOŞ gelir ve geçerli token 'çalışmıyor' sanılır (operatör notu).
     r = httpx.get(ELITE_EXPORT, params=params, timeout=timeout,
                   headers={"User-Agent": _UA}, follow_redirects=True)
     # 401/403 = token geçersiz/süresi dolmuş (1 haftalık trial bitti). Bu bir OLAY, sessizlik değil.
@@ -227,7 +232,7 @@ def discover_universe(preset: str = DEFAULT_PRESET, limit: int = MAX_TICKERS,
     allow_public None ise MERIDIAN_FINVIZ_PUBLIC ortam değişkeninden okunur (varsayılan KAPALI): token
     yoksa otonom döngü sürekli public scraping yapıp ban riski almaz — Finviz dürüstçe devre dışı kalır.
 
-    ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI (sınıf avı, 2026-07-30 temizlik turu) ----------------
+    ---- ÖRTÜK ZAMAN VARSAYIMI, ARTIK YAZILI ----------------
     T+1 kusurunun sınıfı "kodda örtük yayın-zamanı/TTL varsayımı"ydı. Bu fonksiyonun da BİR TANE
     var ve bugüne dek hiçbir yerde yazmıyordu. ÖLÇÜLDÜ, DEĞİŞTİRİLMEDİ (bugün DOĞRU çalışıyor):
 
@@ -266,15 +271,15 @@ def discover_universe(preset: str = DEFAULT_PRESET, limit: int = MAX_TICKERS,
     if res["source"] == "none":
         # DÜRÜST BOZUNMA: Finviz katkısı bu tur sıfır; NEDENİ söyle, sessiz kalma.
         #
-        # UYARI KADANSI ≠ KEŞİF KADANSI (2026-08-12, gelen-kutusu hijyeni). "none" kaydı yukarıdaki
+        # UYARI KADANSI ≠ KEŞİF KADANSI (gelen-kutusu hijyeni). "none" kaydı yukarıdaki
         # önbellek kapısını ASLA geçemez (source ∈ {elite, public} şartı), yani token yokken HER
         # keşif turu buraya düşüyordu → canlıda ~5 dakikada bir `finviz_unavailable` (~200+/gün).
-        # EDG-2026-022 hükmü FINVIZ alınmayacak diyor; değişmeyen bir yokluğu günde 200 kez anlatmak
+        # Yürürlükteki hüküm FINVIZ alınmayacak diyor; değişmeyen bir yokluğu günde 200 kez anlatmak
         # gerçek alarmları okunmaz yapar. KEŞİF DENEMESİ AYNEN SÜRÜYOR (token gelirse davranış bu
         # satırlara dokunmadan kendiliğinden canlanır); yalnız UYARI kadansı düşer:
         #   * durum (source=none + AYNI reason) değişmedikçe günde EN FAZLA 1 uyarı,
         #   * reason DEĞİŞİRSE (başka bir arıza sınıfı) aynı gün bile ANINDA yeni uyarı,
-        #   * bastırılan her tekrar SAYILIR (v192 yasası) — sayaç bu kayıtta (`bastirilan`) durur,
+        #   * bastırılan her tekrar SAYILIR — sayaç bu kayıtta (`bastirilan`) durur,
         #     `status()["last"]` onu panoya taşır; günlük uyarı satırı da toplamı üstünde taşır.
         onceki = store.read_json(CACHE_FILE, {}) or {}
         ayni_durum = (onceki.get("source") == "none"

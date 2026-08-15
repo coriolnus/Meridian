@@ -45,7 +45,7 @@ EROSION_EXTRA_MARGIN = 0.01
 
 
 def fingerprint(is_start, oos_start, oos_end, holdout_end, fold_bounds, embargo_days) -> str:
-    """Pencere GEOMETRİSİNİN kimliği. Fold sınırları HASH'E DAHİLDİR: n-dengeli kesim (Aşama 2.1)
+    """Pencere GEOMETRİSİNİN kimliği. Fold sınırları HASH'E DAHİLDİR: n-dengeli kesim
     fold sınırlarını incumbent'ın işlemlerinden türetiyor, yani incumbent değişince geometri de
     değişir. Sınırlar hash'in dışında kalsaydı, gerçekte FARKLI bir sınavı aynı sayaca yazardık."""
     ham = json.dumps({"is": str(is_start), "oos": str(oos_start), "oos_end": str(oos_end),
@@ -181,7 +181,7 @@ def report() -> dict:
     """Pano/diagnostics için özet: en çok sorulmuş pencereler + yürürlükteki ek marj.
     Dosya yoksa sayılar SIFIR değil None: "hiç sorgu olmadı" ile "henüz ölçmüyoruz" ayrı hâllerdir.
 
-    ROTASYONDAN SONRA `en_cok` YALNIZ YÜRÜRLÜKTEKİ PENCEREDEN SEÇİLİR (R1, 2026-07-30). Eski hâli
+    ROTASYONDAN SONRA `en_cok` YALNIZ YÜRÜRLÜKTEKİ PENCEREDEN SEÇİLİR. Eski hâli
     defterin TAMAMINDA maksimum arıyordu ve rotasyondan sonra bu SESSİZ BİR YANLIŞ HÜKÜM üretirdi:
     arşivlenmiş R0 satırı 434 sorgu taşıyor, R1 ise sıfırdan başlıyor — `max` R0'ı seçer, pano
     "aşınma 434/20, ek marj yürürlükte" yazar ve rotasyonun SONUCU rotasyonun GEREKÇESİ gibi

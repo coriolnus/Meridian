@@ -42,7 +42,7 @@ P_CEIL: float = 0.999
 P_CONFIRM = 0.70           # teyit dilimi alt sınırı
 BLOCK_MIN_D, BLOCK_MAX_D = 5, 21
 
-# ---- öneri #4: META-KALİBRASYON — kapı kendi iyimserliğini ölçüp kendini SIKILAŞTIRIR ----
+# ---- META-KALİBRASYON — kapı kendi iyimserliğini ölçüp kendini SIKILAŞTIRIR ----
 # Tek tek her öneri sağlam test edilir, ama aylar içinde biriken önerilerle aile-çapı hata sessizce
 # büyür. Panzehir: her ship'in (deflate edilmiş) predicted_delta'sı ile writeback'te ölçülen
 # realized_delta'sı karşılaştırılır. Son META_MIN_N ship'te medyan(gerçekleşen/öngörülen) sistematik
@@ -52,7 +52,7 @@ META_FILE = "gate_calibration.json"
 META_MIN_N = 5             # bunun altında kanıt → ayar yok (gürültüyle eşik oynatılmaz)
 META_LOOKBACK = 8          # son bu kadar ölçülmüş ship'e bakılır
 
-# BİLEŞİK OLDUĞU **BİLİNEN** DAMGALAR — BEYAZ LİSTE (2026-08-03, Rol-1 kararı).
+# BİLEŞİK OLDUĞU **BİLİNEN** DAMGALAR — BEYAZ LİSTE.
 # ESKİSİ: "damga GÜNCEL yasaya EŞİTSE atla" (`_law == shadowlaw.YASA_SURUMU`). O ölçüt yalnız
 # BUGÜNKÜ etiket için doğruydu: yasa etiketi bir gün `para_v4` olsaydı, `para_v3` damgalı bütün
 # satırlar sessizce yeniden BİLEŞİK gerçekleşmeyle bölünmeye başlardı — birim karışımı, hiçbir test
@@ -64,7 +64,7 @@ META_LOOKBACK = 8          # son bu kadar ölçülmüş ship'e bakılır
 #   "eski_bilesik_marj"  — açıkça eski yasa damgası → bileşik
 BILESIK_DAMGALAR: frozenset = frozenset({None, "eski_bilesik_marj"})
 
-# ÜÇ DURUM, ÜÇ FARKLI CÜMLE (2026-08-03). `extra_p = 0.0` bugüne kadar ÜÇ ayrı gerçeği aynı sayıyla
+# ÜÇ DURUM, ÜÇ FARKLI CÜMLE. `extra_p = 0.0` bugüne kadar ÜÇ ayrı gerçeği aynı sayıyla
 # anlatıyordu: "ölçtüm, düzeltme gerekmedi" · "yeterli çift yok" · "çiftler var ama birim borcu
 # yüzünden sayılamıyor". Bir bekçi (watchdog.production_report) ilkini sağlık, ikincisini sabır,
 # üçüncüsünü ARIZA saymalı — ama üçü de aynı görünüyordu.
@@ -77,13 +77,17 @@ _META_WARNED = False
 
 
 def _meta_extra_p() -> float:
+    """Meta-kalibrasyonun ölçtüğü ek sıkılaştırma ofsetini (`extra_p`) durum dosyasından okur.
+
+    Emniyet olarak [0, +0.10] bandına kıstırılır — yalnız SIKILAŞTIRIR. Dosya okunamazsa
+    fail-open değil, uyarı basıp 0.0 döner (süreç başına tek uyarı, YASA 4)."""
     from . import store
     global _META_WARNED
     try:
         x = float(store.read_json(META_FILE, {}).get("extra_p", 0.0))
         return min(max(x, 0.0), 0.10)          # emniyet: ayar [0, +0.10] bandında kalır
     except Exception as e:
-        # YASA 4 (2026-07-21): dosya bozuksa/şema kaydıysa ayar SESSİZCE 0'a düşer ve kapı, ölçülmüş
+        # YASA 4: dosya bozuksa/şema kaydıysa ayar SESSİZCE 0'a düşer ve kapı, ölçülmüş
         # iyimserlik düzeltmesi olmadan koşar. Tam olarak "hata değil, miktar değişimi" sınıfı: hiçbir
         # test kırılmaz, yalnız kapı biraz gevşer. Süreç başına BİR kez uyarılır (her aday için değil).
         if not _META_WARNED:
@@ -97,7 +101,7 @@ def refresh_meta_calibration() -> dict:
     """P5'te her döngü çağrılır. writeback_outcome'un ölçtüğü (predicted, realized) çiftlerinden
     medyan gerçekleşme oranını çıkarır; sistematik iyimserlikte extra_p yazar ve obs'a haber verir.
 
-    ÖLÇEK KARIŞIMI YASAĞI (PARA-v3, 2026-07-30). Oran `realized/predicted`'dır ve İKİ TARAFIN AYNI
+    ÖLÇEK KARIŞIMI YASAĞI (PARA-v3). Oran `realized/predicted`'dır ve İKİ TARAFIN AYNI
     BİRİMDE olmasına bağlıdır. Yasa geçişinden sonra bu kendiliğinden doğru DEĞİL:
         predicted_delta ← teyit diliminin ΔS'i, artık **PARA** ölçeğinde (`ret_c_v3`)
         realized_delta  ← `rollback`ın canlı/ebeveyn skor farkı, **BİLEŞİK** ölçekte (ve öyle KALIR:
@@ -106,7 +110,7 @@ def refresh_meta_calibration() -> dict:
     MİKTAR DEĞİŞİMİ" sınıfı: hiçbir test kırılmaz, hiçbir istisna atılmaz, kapı yalnız YANLIŞ yerde
     sıkışır ya da gevşer. σ(ΔS_v3)/σ(S_eski) ≈ 0,19 olduğundan oran ~5× ŞİŞERDİ.
 
-    PARA İKİZİ MEKANİZMAYI DİRİLTTİ (2026-08-03, Rol-1 kararı). 2026-07-30'un çözümü "para damgalı
+    PARA İKİZİ MEKANİZMAYI DİRİLTTİ. Önceki çözüm "para damgalı
     çifti ATLA"ydı ve mekanizmayı muhafazakâr değil ÖLÜ yapıyordu: para_v3 altında hiçbir YENİ çift
     sayılamıyor, `n_measured` META_MIN_N'e ulaşamıyor, `extra_p` sonsuza dek 0 kalıyordu — yani
     sistematik iyimserliği cezalandıran emniyet sessizce kapalıydı. Artık `rollback` gerçekleşmenin
@@ -185,11 +189,10 @@ def refresh_meta_calibration() -> dict:
     return out
 
 
-# ---- 28e: `p = 0,000` İKİ AYRI GERÇEĞİ AYNI SAYIYLA SÖYLÜYORDU -------------------------------
+# ---- `p = 0,000` İKİ AYRI GERÇEĞİ AYNI SAYIYLA SÖYLÜYORDU -------------------------------
 # `p = float(np.mean(arr > 0))` KESİN eşitsizliktir: aday ebeveynle bit-bit AYNIYSA ΔS her
 # replikasyonda tam 0 olur, `arr > 0` hep False, p = 0,000 — yani "aday ebeveynden AYIRT EDİLEMİYOR"
-# ile "aday ebeveynden KÖTÜ" tek sayıya çöküyordu. ÖLÇÜLDÜ (defter tam sayımı, teşhis belgesi §0
-# Kanıt-3): `P=0,000` yazan BEŞ satırın DÖRDÜ no-op (H00046/49/50/51, mean_delta = 0,0), yalnız
+# ile "aday ebeveynden KÖTÜ" tek sayıya çöküyordu. ÖLÇÜLDÜ (defter tam sayımı): `P=0,000` yazan BEŞ satırın DÖRDÜ no-op (H00046/49/50/51, mean_delta = 0,0), yalnız
 # biri gerçek felaket (H00031, mean_delta = −0,0921). Dördü de YAPISAL OLARAK ATIL bir düğmeden
 # geliyordu (`scale_out_r` frac=0 iken · `early_kill_bars` pivot=0 iken · `entry.w_tight`
 # None→0,3 = kodun varsayılanının AYNISI). "Düğme atıl" bir RET değil, kendi başına bir HÜKÜMdür.
@@ -223,14 +226,19 @@ class GateResult:
     k_probes: int = 1
     law: str = "probabilistic"      # "probabilistic" | "legacy" (fallback sinyali)
     why: str = ""
-    # 28e: "aday ebeveynden AYIRT EDİLEMİYOR" ile "aday ebeveynden KÖTÜ" AYRI hükümlerdir.
+    # "aday ebeveynden AYIRT EDİLEMİYOR" ile "aday ebeveynden KÖTÜ" AYRI hükümlerdir.
     # None = ölçülemedi (legacy yol / replikasyon yok) — "ayrışıyor" DEĞİL.
     ayrim: str | None = None
     ayrim_n: int | None = None      # |ΔS| ≤ 1 ULP olan replikasyon sayısı
     extra: dict = field(default_factory=dict)
 
     def as_gate_fields(self, prefix: str) -> dict:
-        # n_boot DA yazılır (2026-07-22): n_valid tek başına PAYDASIZ bir sayıdır. Skorlanamayan
+        """Sonucu `prefix` ön ekli düz kapı-kaydı alanlarına çevirir (defter/pano tüketir).
+
+        Payda da yazılır (`n_boot` + `n_valid`): P yalnız ayakta kalan replikasyonlardan
+        hesaplanır, okuyucu seçilmiş altkümeyi ayırt edebilmelidir. Gölge yasa alanları
+        (`_eski_yasa`, `_yasa_surumu`) yalnız varsa eklenir ve karara GİRMEZ."""
+        # n_boot DA yazılır: n_valid tek başına PAYDASIZ bir sayıdır. Skorlanamayan
         # replikasyonlar sessizce düşüyor (evaluate: si/sc None → continue) ve P yalnız AYAKTA KALAN
         # replikasyonlar üzerinden hesaplanıyor. Defterde 1200 görüp bunun 1200/1200 mü yoksa
         # 1200/2000 (=%40 düşmüş, seçilmiş bir altküme) mü olduğunu kimse ayırt edemiyordu —
@@ -239,7 +247,7 @@ class GateResult:
                f"{prefix}_mean_delta": self.mean_delta, f"{prefix}_n_valid": self.n_valid,
                f"{prefix}_n_boot": self.n_boot,
                f"{prefix}_block_days": self.block_days,
-               # 28e AYRIM: `p` alanının anlamı DEĞİŞMEDİ; bu EK alan `p=0,000`ın hangi gerçeği
+               # AYRIM: `p` alanının anlamı DEĞİŞMEDİ; bu EK alan `p=0,000`ın hangi gerçeği
                # anlattığını söyler. None = ölçülemedi (legacy yol), "ayrisiyor" DEĞİL.
                f"{prefix}_ayrim": self.ayrim, f"{prefix}_ayrim_n": self.ayrim_n}
         if self.extra.get("hist"):
@@ -263,6 +271,9 @@ class PairedProbabilisticGate:
     örneklemler gücü düşürmesin); dilimin kendisine taban reflect katmanında uygulanır."""
 
     def __init__(self, goal: dict, n_boot: int = N_BOOT_DEFAULT, seed: int = SEED_DEFAULT):
+        """Kapıyı hedef sözleşmesi, replikasyon sayısı ve RNG tohumuyla kurar.
+
+        Tohum sabittir (varsayılan SEED_DEFAULT) — aynı girdi aynı kapı kararını verir."""
         self.goal = goal
         self.n_boot = int(n_boot)
         self.seed = int(seed)
@@ -270,6 +281,7 @@ class PairedProbabilisticGate:
     # ---- yardımcılar ----
     @staticmethod
     def _day(t: dict) -> str:
+        """İşlemin açılış gününü ISO tarih önekine (YYYY-MM-DD) indirger; alan yoksa boş dizge."""
         return str(t.get("ts_open", ""))[:10]
 
     @staticmethod
@@ -295,7 +307,7 @@ class PairedProbabilisticGate:
     def _score_pair(self, trades: list, span_days: float) -> tuple[float | None, float | None]:
         """(karar_skoru_PARA_v3, gölge_skoru_ESKİ_YASA) — TEK `score_detail` çağrısıyla.
 
-        TERS GÖLGELEME (PARA-v3, 2026-07-30). 3b'de bu satır tersiydi: karar eski bileşikteydi, v2
+        TERS GÖLGELEME (PARA-v3). Eskiden bu satır tersiydi: karar eski bileşikteydi, v2
         gölgeydi. Artık KARAR yalnız PARA terimindedir (`shadowlaw.ret_c_v3`) ve ESKİ BİLEŞİK
         gölgeye geçmiştir — `score_detail`in DÖNDÜRDÜĞÜ `score` alanı zaten eski yasanın ta
         kendisidir, yani gölge hesap BEDAVAdır (ek çağrı yok, ek üs alma bile yok).
@@ -323,7 +335,7 @@ class PairedProbabilisticGate:
 
     @staticmethod
     def p_required_for(k_probes: int, p_base: float = P_BASE) -> float:
-        """Aile-bazlı hata kontrolü — GERÇEK Bonferroni (2026-07-22'de düzeltildi).
+        """Aile-bazlı hata kontrolü — GERÇEK Bonferroni.
 
         ESKİSİ: `min(0.95, p_base + 0.01·(K−1))`. Doğrusal artış 0.95 TAVANINA K=16'da çarpıyordu ve
         ORADA KALIYORDU: K=16 da, K=40 da, K=400 de aynı 0.95'i istiyordu. Ölçüldü — üretim araması
@@ -346,6 +358,13 @@ class PairedProbabilisticGate:
     # ---- çekirdek ----
     def evaluate(self, inc_trades: list, cand_trades: list, seg_start: str, seg_end: str,
                  k_probes: int = 1, p_base: float = P_BASE) -> GateResult:
+        """Ana ölçüm: incumbent ile adayı AYNI yeniden-örneklenmiş takvim bloklarında skorlayıp
+        P(ΔS>0)'ı ve K-sonda cezalı gerekli eşiği döndürür.
+
+        Fail-closed: dilim sınırları çözülemez, taraflardan biri boş ya da geçerli replikasyon
+        sayısı eşiğin (≥200 veya n_boot/10) altındaysa `passes=False` + `law="legacy"` ile döner
+        — çağıran legacy marj yasasına düşer. Ek olarak ULP tabanlı AYRIM hükmü ("aday ayırt
+        edilemiyor" ≠ "aday kötü") ve eski yasanın gölge hükmü kayda basılır; gölge karara GİRMEZ."""
         p_req = self.p_required_for(k_probes, p_base)
         try:
             d0 = dt.date.fromisoformat(seg_start[:10])
@@ -363,6 +382,8 @@ class PairedProbabilisticGate:
 
         # blok -> işlem indeksleri (her iki taraf için önceden kovala; replikasyonlar O(blok) olur)
         def _bucketize(trades):
+            """İşlemleri açılış gününe göre `n_blocks` takvim bloğuna kovalar (replikasyon O(blok)
+            olsun diye önceden). Tarihi çözülemeyen ya da dilim dışına düşen işlem alınmaz."""
             buckets = [[] for _ in range(n_blocks)]
             for t in trades:
                 try:
@@ -377,7 +398,7 @@ class PairedProbabilisticGate:
         rng = np.random.default_rng(self.seed)
         deltas = []
         deltas_eski = []         # ESKİ YASA (gölge) — aynı replikasyonlarda, karara GİRMEZ
-        olcekler = []            # 28e: replikasyon başına skor BÜYÜKLÜĞÜ — ULP ayrımının paydası
+        olcekler = []            # replikasyon başına skor BÜYÜKLÜĞÜ — ULP ayrımının paydası
         for _ in range(self.n_boot):
             picks = rng.integers(0, n_blocks, size=n_blocks)
             ri = [t for i in picks for t in b_inc[i]]
@@ -399,7 +420,7 @@ class PairedProbabilisticGate:
         p = float(np.mean(arr > 0))
         mean_d = float(np.mean(arr))
         passes = bool(p >= p_req)
-        # ---- 28e AYRIM: no-op mu, kayıp mı? (modül başındaki gerekçeye bak) --------------------
+        # ---- AYRIM: no-op mu, kayıp mı? (modül başındaki gerekçeye bak) ------------------------
         # `np.spacing(x)` = x'ten bir SONRAKİ temsil edilebilir kayan noktaya olan uzaklık, yani o
         # büyüklükte kodun ifade edebildiği EN KÜÇÜK fark. `|ΔS| ≤ 1 ULP` demek "iki skor ya aynı
         # ya da komşu float" demektir; bundan daha ince bir "aynı" tanımı YOKTUR. Eşik değil, sınır.
@@ -424,10 +445,10 @@ class PairedProbabilisticGate:
                       "law": "eski_yasa", "yasa_metni": shadowlaw.OLD_LAW_METNI,
                       "decides": False}
         why = "" if passes else f"P(ΔS>0)={p:.3f} < gerekli {p_req:.2f} (K={k_probes} aday cezası dahil)"
-        # NO-OP BİR RET DEĞİL, AYRI BİR HÜKÜMDÜR (28e). Gerekçe dizgesi deftere `reject_reasons`
+        # NO-OP BİR RET DEĞİL, AYRI BİR HÜKÜMDÜR. Gerekçe dizgesi deftere `reject_reasons`
         # olarak düşüyor; bugüne kadar atıl bir düğme ile zararlı bir aday ORADA da aynı cümleyi
         # alıyordu. "P(ΔS>0)=..." parçası KORUNUR (tüketiciler o dizgeyi arıyor), önüne hükmün
-        # kendisi yazılır — ve okuyucu §2-25a (atıl düğme ayıklama) adayını doğrudan görür.
+        # kendisi yazılır — ve okuyucu atıl-düğme-ayıklama adayını doğrudan görür.
         if not passes and ayrim == AYRIM_AYNI:
             why = (f"AYIRT EDİLEMEZ: aday ebeveynden ölçülebilir biçimde FARKLI DEĞİL — "
                    f"{n_ayni}/{n_valid} replikasyonda |ΔS| ≤ 1 ULP (bit-bit aynı skor). Bu bir "
@@ -436,7 +457,7 @@ class PairedProbabilisticGate:
         elif not passes and ayrim == AYRIM_KISMEN:
             why = (f"KISMEN AYIRT EDİLEMEZ: {n_ayni}/{n_valid} replikasyonda aday ebeveynle "
                    f"bit-bit aynı skoru üretti — düğme yalnız bazı bloklarda iş yapıyor. {why}")
-        # Faz 4 (3b): 40-kutu histogram — panodaki çan eğrisi + K-ceza eşik çizgisi buradan çizilir.
+        # Faz 4: 40-kutu histogram — panodaki çan eğrisi + K-ceza eşik çizgisi buradan çizilir.
         # Ham 2000 replikasyonu saklamak şişkinlik olur; histogram deterministik ve yeterli.
         counts, edges = np.histogram(arr, bins=40)
         hist = {"counts": [int(c) for c in counts],

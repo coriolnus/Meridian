@@ -42,6 +42,7 @@ SEMA_ESCALATE_MIN_N = 5     # bunun altında oran istatistik değil gürültüd�
 
 
 def _now() -> str:
+    """Şimdiki UTC zamanı, saniye çözünürlüklü ISO-8601 metni olarak."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -73,6 +74,9 @@ class Sieve:
     """
 
     def __init__(self, stage: str, persist: bool = True):
+        """Aşama defterini kurar; aşama adı ZORUNLUDUR (sahipsiz eleme muhasebesi olmaz).
+        `persist=False` diske yazmayan geçici muhasebe içindir. Sayaçlar sıfırdan başlar.
+        """
         if not isinstance(stage, str) or not stage.strip():
             raise ValueError("aşama adı zorunlu — sahipsiz eleme muhasebesi olmaz")
         self.stage = stage
@@ -83,6 +87,7 @@ class Sieve:
 
     # ---- sayaçlar ----
     def keep(self, n: int = 1) -> None:
+        """`n` satırı KULLANILDI diye say: hem girdiyi (`in`) hem çıktıyı (`out`) artırır."""
         self.n_in += n
         self.n_out += n
 
@@ -101,6 +106,7 @@ class Sieve:
 
     # ---- rapor / kalıcılık ----
     def snapshot(self) -> dict:
+        """Aşamanın o anki görüntüsü: girdi, çıktı, neden→adet eleme dökümü ve zaman damgası (saf okuma)."""
         return {"in": self.n_in, "out": self.n_out, "drops": dict(self.drops), "ts": _now()}
 
     def flush(self) -> dict:
@@ -112,6 +118,9 @@ class Sieve:
             return snap
 
         def _apply(doc):
+            """`sieve.json` belgesini yerinde günceller: bu aşamanın anahtarına son görüntüyü koyar
+            (aşama başına SON koşu tutulur, kümülatif değil).
+            """
             if not isinstance(doc, dict):
                 doc = {}
             doc[self.stage] = snap
@@ -130,15 +139,22 @@ class Sieve:
         return snap
 
     def __enter__(self) -> "Sieve":
+        """Bağlam yöneticisi girişi — defterin kendisini döndürür."""
         return self
 
     def __exit__(self, exc_type, exc, tb) -> bool:
+        """Çıkışta muhasebeyi diske işler (istisna çıkmış olsa bile) ve `False` döndürerek istisnayı
+        ASLA yutmaz.
+        """
         self.flush()          # istisna çıksa bile o ana kadarki muhasebe diske düşer
         return False          # istisnayı ASLA yutma
 
 
 # ---------------------------------------------------------------- rapor / dedektör
 def stages(doc: dict | None = None) -> dict:
+    """Aşama tablosunu döndürür: `doc` verilmezse state/sieve.json'dan okunur, sözlük değilse boş
+    sözlük (salt okuma).
+    """
     d = doc if doc is not None else (store.read_json(SIEVE_FILE, {}) or {})
     return d if isinstance(d, dict) else {}
 
@@ -167,7 +183,7 @@ def report(doc: dict | None = None) -> dict:
         out_stages[name] = {"in": n_in, "out": n_out, "drops": drops, "sema_drops": sema_n,
                             "piyasa_drops": piyasa_n, "sema_frac": frac, "ts": st.get("ts")}
         top = max(drops.items(), key=lambda kv: kv[1])[0] if drops else "—"
-        # KURT MASALI YASAĞI (2026-07-22): tamamı ELENDİ ama elemelerin HEPSİ `piyasa:` ise bu
+        # KURT MASALI YASAĞI: tamamı ELENDİ ama elemelerin HEPSİ `piyasa:` ise bu
         # "veri elendi" (bug) DEĞİL, "bu kanıt türü henüz yok" (bilgi) demektir — replay'de LLM
         # görüşü ya da canlı gölge-tahmin çifti bulunmaması gibi. Sınıfa bakmadan kırmızı yakmak,
         # tam olarak sieve'in engellemek için var olduğu şeydir: operatör kırmızıyı yok saymayı
@@ -200,6 +216,7 @@ def report(doc: dict | None = None) -> dict:
 
 
 def ok(doc: dict | None = None) -> bool:
+    """Eleme muhasebesi ihlalsiz mi? `report()`un `ok` alanının kısayolu (salt okuma)."""
     return bool(report(doc)["ok"])
 
 

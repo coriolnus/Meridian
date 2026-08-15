@@ -30,7 +30,7 @@ PRICE_IN_PER_M = float(os.environ.get("HERMES_PRICE_IN", "15.0"))
 PRICE_OUT_PER_M = float(os.environ.get("HERMES_PRICE_OUT", "75.0"))
 MONTHLY_BUDGET_USD = float(os.environ.get("HERMES_MONTHLY_BUDGET_USD", "20.0"))
 
-# MODEL BAŞINA fiyat (denetim turu 31, 2026-07-21). Eskiden TEK bir fiyat vardı ve `record(model=...)`
+# MODEL BAŞINA fiyat. Eskiden TEK bir fiyat vardı ve `record(model=...)`
 # onu YOK SAYIYORDU: ücretsiz katmandaki Gemini ya da yerelde koşan Nous çağrıları da Opus listesi
 # ($15/$75 per M) ile fiyatlanıyordu. Sonuç: HARCANMAMIŞ para bütçeyi doldurur, over_budget() true
 # olur ve LLM katmanı sessizce kapanırdı — "beyin neden susuyor" sorusunun görünmez cevabı.
@@ -47,6 +47,8 @@ PRICES: dict[str, tuple[float, float]] = {
 
 
 def price_for(model: str | None) -> tuple[float, float]:
+    """Model adına göre (girdi, çıktı) milyon-token fiyat çiftini verir; tanınmayan model varsayılan
+    fiyata düşer."""
     m = str(model or "").lower()
     for key, pair in PRICES.items():
         if key in m:
@@ -56,11 +58,13 @@ def price_for(model: str | None) -> tuple[float, float]:
 
 def _now_iso() -> str:
     """UTC — defterin geri kalanıyla (obs, memory, watchdog) AYNI saat dilimi. Eskiden yerel saatti;
-    ay sınırı diğer kayıtlarla kayıyor ve satırlar olay defteriyle yan yana okunamıyordu (turu 31)."""
+    ay sınırı diğer kayıtlarla kayıyor ve satırlar olay defteriyle yan yana okunamıyordu."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def estimate_cost(in_tokens: int, out_tokens: int, model: str | None = None) -> float:
+    """Tek çağrının USD maliyetini hesaplar: (girdi + çıktı tokenları) × modelin milyon-token fiyatı,
+    4 ondalığa yuvarlı."""
     p_in, p_out = price_for(model)
     return round(in_tokens * p_in / 1_000_000 + out_tokens * p_out / 1_000_000, 4)
 
@@ -87,17 +91,21 @@ def record(in_tokens: int, out_tokens: int, model: str, note: str = "", ts: str 
 
 
 def month_spend(month: str | None = None) -> float:
+    """Verilen ayın (varsayılan: içinde bulunulan UTC ayı) toplam harcamasını defterden toplar."""
     m = month or _now_iso()[:7]                      # YYYY-MM
     rows = store.read_jsonl("spend.jsonl")
     return round(sum(float(r.get("cost_usd", 0.0)) for r in rows if str(r.get("ts", ""))[:7] == m), 4)
 
 
 def over_budget(budget: float | None = None, month: str | None = None) -> bool:
+    """O ayki harcama bütçe tavanına ulaştı mı? Tavan 0/negatifse bütçe kapalı sayılır ve hep False döner."""
     cap = MONTHLY_BUDGET_USD if budget is None else budget
     return cap > 0 and month_spend(month) >= cap
 
 
 def summary(month: str | None = None) -> dict:
+    """Ayın harcama özeti: harcanan, bütçe, kalan, tavan aşıldı mı, çağrı sayısı ve düşünce tokenı toplamı.
+    Hiçbir satır düşünce tokenı taşımıyorsa toplam None kalır — 0 yazmak ölçülmemişi ölçülmüş göstermek olurdu."""
     m = month or _now_iso()[:7]
     rows = store.read_jsonl("spend.jsonl")
     this_month = [r for r in rows if str(r.get("ts", ""))[:7] == m]

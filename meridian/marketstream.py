@@ -64,6 +64,8 @@ class MarketState:
     ÇAĞRILMAZ — disk yok, her süreç taze başlar."""
 
     def __init__(self):
+        """Bar sayacını/son bar damgasını sıfırlar ve ORTAK sağlık nesnesini persist=no-op ile kurar
+        (piyasa-verisi telemetrisi UÇUCU: diske yeşil bayrak donmaz)."""
         self.bars_seen = 0
         self.last_bar_at: str | None = None
         # persist=no-op → market sağlığı DİSKE yazmaz (mirror'da diske yazar). Yasa yine tek.
@@ -74,6 +76,7 @@ STATE: MarketState | None = None
 
 
 def state() -> MarketState:
+    """Süreç-içi TEKİL MarketState'i döndürür (ilk çağrıda kurar). Disk yok — her süreç taze başlar."""
     global STATE
     if STATE is None:
         STATE = MarketState()
@@ -87,6 +90,8 @@ class MarketStreamListener:
     connect_kwargs = {"ping_interval": 20, "ping_timeout": 20}
 
     def __init__(self):
+        """Dinleyiciyi süreç-içi MarketState'e bağlar (sağlık nesnesi ondan ödünç), dur-olayı/KANITLI
+        canlılık bayrağı/kopuş saatini sıfırlar ve abonelik evrenini KURULUM ANINDA dondurur."""
         self.state = state()
         self.health = self.state.health
         self._stop = asyncio.Event()
@@ -98,19 +103,26 @@ class MarketStreamListener:
     # --- run_stream(spec) protokolü ---
     @property
     def stop_event(self) -> asyncio.Event:
+        """run_stream protokolü: sürücünün her turda yokladığı durdurma olayı."""
         return self._stop
 
     @staticmethod
     def _url() -> str:
+        """Seçili feed'in (FEED) Alpaca data WS adresi — yürütme hostundan AYRI bir hosttur."""
         return alpaca.data_ws_url(FEED)
 
     def url(self) -> str:
+        """run_stream protokolü: bağlanılacak data WS adresi."""
         return self._url()
 
     async def pause(self, s: float) -> None:
+        """run_stream protokolü: backoff beklemesi; modül-global `_pause`a devreder (test monkeypatch'i
+        görünür kalsın)."""
         return await _pause(s)
 
     def on_grace_exceeded(self) -> None:
+        """run_stream protokolü: kopuş grace'i aşınca çağrılır — burada BİLİNÇLİ no-op (bu yolda emir
+        yok, iptal edilecek koruma bacağı yok; devre-kesici mirror'a özgüdür)."""
         # BİLİNÇLİ no-op: piyasa-verisi kesintisinde iptal edilecek koruma bacağı YOK (bu yolda emir
         # yok). Görünürlük set_stream/touch'tan gelir; devre-kesici mirror'a özgüdür.
         pass
@@ -156,6 +168,8 @@ class MarketStreamListener:
                 hotstate.ingest_bars(batch)          # append + set_price, TEK pipeline (tek yazma yolu)
 
     def _on_error(self, m: dict) -> None:
+        """Sunucudan gelen `T=="error"` mesajını koda göre AYIRT EDİLEBİLİR bir uyarıya çevirir:
+        406 tek-bağlantı ihlali, 401-404 kimlik, 405/409/410 feed/kota kısıtı, kalanı genel hata."""
         code = int(m.get("code", 0) or 0)
         if code == 406:
             obs.warn("marketstream_conn_limit",
@@ -169,9 +183,12 @@ class MarketStreamListener:
             obs.warn("marketstream_error", error=f"code={code}: {str(m.get('msg'))[:80]}")
 
     async def run(self) -> None:
+        """Dinleyiciyi başlatır: reconnect/backoff/nabız/down-saati ORTAK sürücüde
+        (streamhealth.run_stream) koşar; bu sınıf yalnız `spec` protokolünü sağlar."""
         await streamhealth.run_stream(self)
 
     def stop(self) -> None:
+        """Dur-olayını basar: ortak sürücü ile nabız görevi bir sonraki yoklamada temiz çıkar."""
         self._stop.set()
 
     def snapshot(self) -> dict:
@@ -190,6 +207,8 @@ _TASK = None
 
 
 def listener() -> MarketStreamListener:
+    """Süreç-içi TEKİL dinleyiciyi döndürür (ilk çağrıda kurar). Tekillik zorunludur: iex hesap başına
+    TEK data bağlantısına izin verir (ikinci soket 406 alır)."""
     global _LISTENER
     if _LISTENER is None:
         _LISTENER = MarketStreamListener()
@@ -208,6 +227,7 @@ def start(loop=None):
 
 
 def stop() -> None:
+    """Tekil dinleyiciye dur der (hiç kurulmamışsa no-op) — görevi kendisi beklemez/iptal etmez."""
     if _LISTENER is not None:
         _LISTENER.stop()
 

@@ -44,7 +44,7 @@ def _score_ic(sc: dict | None):
     if not sc:
         return None, 0, ""
     if "real" in sc:
-        # YENİ ŞEMA. `real` ANAHTARI VARSA hüküm ORADADIR — değeri None olsa bile (2026-07-26).
+        # YENİ ŞEMA. `real` ANAHTARI VARSA hüküm ORADADIR — değeri None olsa bile.
         # Eski hâl havuza DÜŞÜYORDU: gerçek dilim <30 olduğu için ölçülememişken, dosyada duran
         # havuzlanmış IC (fiilen cf'in IC'si) devreye giriyor ve "skorun tahmin gücü" diye
         # okunuyordu. Yani "ölçemedim" cevabı, tam da yerine geçmemesi gereken sayıyla doldurulmuş
@@ -59,14 +59,19 @@ def _score_ic(sc: dict | None):
 
 
 def _now() -> str:
+    """Şimdiki UTC zamanı, saniye çözünürlüklü ISO-8601 metni olarak."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _week_ago_iso() -> str:
+    """Yedi gün öncesinin UTC ISO-8601 damgası — haftalık pencerenin alt sınırı."""
     return (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7)).isoformat(timespec="seconds")
 
 
 def _health() -> dict:
+    """Mekanizma sağlık kayıtlarını (`self_review.json` → `mechanisms`) sözlük olarak okur; yoksa
+    boş sözlük (salt okuma).
+    """
     h = (store.read_json(REVIEW_FILE, {}) or {}).get(MECH_KEY)
     return dict(h) if isinstance(h, dict) else {}
 
@@ -74,6 +79,9 @@ def _health() -> dict:
 def mechanism_ok(name: str) -> None:
     """Mekanizma bu koşumda çıktı ÜRETTİ — seri sayacı sıfırlanır, DİKKAT satırı kalkar."""
     def _fn(doc):
+        """Rapor belgesini yerinde günceller: mekanizmayı sağlıklı damgalar (seri 0) ve ona ait kesinti
+        satırını DİKKAT listesinden düşürür.
+        """
         if not isinstance(doc, dict):
             return False
         doc.setdefault(MECH_KEY, {})[name] = {"ok": True, "streak": 0, "at": _now()}
@@ -95,6 +103,9 @@ def mechanism_failed(name: str, err: BaseException) -> None:
     box = {"streak": 1}
 
     def _fn(doc):
+        """Rapor belgesini yerinde günceller: üst üste düşüş sayacını artırır, hata metnini kaydeder ve
+        DİKKAT listesinin BAŞINA kesinti satırını koyar (eskisini değiştirerek).
+        """
         if not isinstance(doc, dict):
             return False
         prev = (doc.get(MECH_KEY) or {}).get(name) or {}
@@ -120,11 +131,15 @@ _OUTAGE_PREFIX = "MEKANİZMA ÜRETEMİYOR"
 
 
 def _outage_row(name: str, detail: str, streak: int) -> dict:
+    """DİKKAT listesine düşecek kesinti satırını üretir: Türkçe gerekçe + 'yüksek' önem + mekanizma adı."""
     return {"why": f"{_OUTAGE_PREFIX}: {name} — {detail} (üst üste {streak} koşum)",
             "sev": "yüksek", "mechanism": name}
 
 
 def _is_outage_row(row, name: str) -> bool:
+    """Bir DİKKAT satırı, verilen mekanizmanın kesinti satırı mı? (mekanizma adı + `MEKANİZMA
+    ÜRETEMİYOR` öneki birlikte aranır.)
+    """
     return isinstance(row, dict) and row.get("mechanism") == name \
         and str(row.get("why", "")).startswith(_OUTAGE_PREFIX)
 
@@ -157,7 +172,7 @@ def build() -> dict:
     from . import skill_evolve as _se
     revs = _se.revisions()
 
-    # HAFTALIK RAPOR GERÇEKTEN HAFTAYI GÖRÜYOR MU (K1, 2026-07-30).
+    # HAFTALIK RAPOR GERÇEKTEN HAFTAYI GÖRÜYOR MU.
     #
     # ESKİ HÂL: `limit=4000` + `ts >= since` (7 gün). Süzgeç doğruydu ama PENCERE yanlıştı: 4000
     # satır nominal hacimde (~1.700/gün) ~2,3 gün, `hotstate_down` selinde ~16 SAAT ediyordu (canlı
@@ -235,7 +250,7 @@ def _attention(rep: dict) -> list:
     cal = rep["calibrations"]
     sc = cal.get("score")
     _ic, _n, _kay = _score_ic(sc)
-    # NEGATİF IC SATIRI ÜÇ KOŞULA BAĞLANDI (2026-07-26). Eskiden `_ic < 0` yetiyordu ve satır
+    # NEGATİF IC SATIRI ÜÇ KOŞULA BAĞLANDI. Eskiden `_ic < 0` yetiyordu ve satır
     # canlıda sürekli "yüksek" önem derecesiyle çıkıyordu; oysa (a) kaynak havuzlanmış olabiliyor
     # (yani cf'in IC'si), (b) -0.01 gibi bir değer gürültüden ayırt EDİLEMEZKEN de satır düşüyordu.
     # Ölçülmemiş bir sinyalle operatörü strateji ağırlıklarını değiştirmeye çağırmak, dikkat
@@ -276,7 +291,7 @@ def _attention(rep: dict) -> list:
     return out[:8]
 
 
-# eşik-altı ölüm-nedeni → gate-uygun ayar (near-miss → arama köprüsü, 2026-07-20)
+# eşik-altı ölüm-nedeni → gate-uygun ayar (near-miss → arama köprüsü)
 NEAR_MISS_KNOB = {"hacim": "entry.min_volume_ratio", "rs": "entry.rs_rating_min",
                   "skor": "entry.min_score", "uzamış": "entry.pivot_proximity_pct"}
 NM_MIN_N = 30          # kovada en az bu kadar SONUÇLU eşik-altı satır (cf-bootstrap sonrası yüzlerce var)
@@ -300,7 +315,7 @@ def _near_miss_attention() -> list:
             continue
         n_r, avg_r = d.get("n_r", 0), d.get("avg_r")
         if n_r >= NM_MIN_N and avg_r is not None and avg_r >= NM_MIN_AVG_R:
-            # HANGİ REJİM? (ikinci tur denetimi, 2026-07-21) Eskiden öneri "knob@rejim" diyordu ama
+            # HANGİ REJİM? Eskiden öneri "knob@rejim" diyordu ama
             # kanıtta rejim YOKTU (cf'nin eşik-altı satırları "?" ile yazılıyordu). Artık kanıtın en
             # güçlü rejim dilimi adlandırılır; yeterli dilim yoksa DÜRÜSTÇE global önerilir.
             slices = [(rg, v) for rg, v in (d.get("by_regime") or {}).items()

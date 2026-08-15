@@ -37,7 +37,8 @@ noktaları da SİLİNMEZ — eğrinin tarihi korunur, kırılma noktası BEYAN e
 
 NEDEN EĞRİYE YENİ NOKTA EKLENMİYOR (ölçülmüş yan etki). `points`e bir nokta eklemek cazip: eğri
 kırılmayı kendi çizerdi. Ama `ledgerstamp.seed_boundary()` tohum penceresinin sınırını EĞRİNİN SON
-NOKTASININ TARİHİNDEN okur (ledgerstamp.py:149, tek yazar run.py:171). Reset günü bir nokta
+NOKTASININ TARİHİNDEN okur (`ledgerstamp.seed_boundary`; eğrinin tek yazarı `run.replay_seed`).
+Reset günü bir nokta
 eklenseydi tohum sınırı bugüne kayar ve bundan sonraki HER canlı satır `replay_seed` diye
 damgalanırdı — yani bu turun kapattığı kusuru, tam da onu kapatan araç geri açardı. İşaret ayrı bir
 zarf anahtarında durur; `points` dokunulmaz kalır.
@@ -112,7 +113,7 @@ HEARTBEAT = "heartbeat.json"
 # kimliği kaç reset olursa olsun aynı formülle ölçer.
 RESET_KEY = "sermaye_resetleri"
 # EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi);
-# storage.py:196 zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
+# `storage._ddl` zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
 CURVE_MARK_KEY = "reset_isaretleri"
 
 # GEREKÇE EŞİĞİ. YASA 4'ün burada karşılığı: sermaye tabanını taşımak geri alınabilir ama
@@ -127,7 +128,7 @@ VARSAYILAN_GEREKCE = (
 EVENT = "paper_equity_reset"
 
 
-# ---- KANONİK SERMAYE TABANI (v235, 2026-08-12 canlı vakası) ------------------------------------
+# ---- KANONİK SERMAYE TABANI (canlı vaka) ------------------------------------------
 def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> float:
     """ZIMNİ SERMAYE TABANININ KANONİK (SENT-TAM) TÜRETİMİ — tek yerde, 2 hane.
 
@@ -139,13 +140,14 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
       (a) TOPLAMA TOZU: watchdog:1976 `round(realized − Σ float, 2)` hesabında Σ, her çağrıda ham
           float'ların o günkü sırasıyla toplanır; yarım-sent (x.xx5) sınırındaki bir taban, toz
           kadar farkla iki yöne yuvarlanır. Burada Σ SENT TAMSAYISIYLA alınır: defter satırları
-          zaten 2 haneli yazılır (broker.py:605 `round(pnl, 2)`), yani `round(x*100)` terim başına
+          zaten 2 haneli yazılır (`PaperBroker.close_position` → `round(pnl, 2)`), yani `round(x*100)` terim başına
           KESİNDİR ve toplam, toplama sırasından/temsil tozundan bağımsız aynı tamsayıdır.
       (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
-          (broker.py:569/595) ama defter satırını yuvarlayıp yazar (:605) — broker.py:258'in kendi
+          (`PaperBroker.scale_out` / `PaperBroker.close_position`) ama defter satırını yuvarlayıp
+          yazar (aynı satır-yazımı) — `broker` modül başlığının kendi
           sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
-          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır (WP-E
-          yaması: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
+          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır
+          (yama: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
           bugünkü dünyada ise en azından (a) bacağını ve ölçüm-anı tozunu keser.
 
     KARŞILAŞTIRMA EPSILON'U BİLEREK YOK: eşik gevşetmek gerçek 1-sentlik silinmeyi de yutardı.
@@ -172,6 +174,9 @@ def _hedef() -> float:
 
 
 def resetler(pf: dict | None = None) -> list[dict]:
+    """Kitaptaki sermaye reset (beyan) kayıtlarını döner — kayıtları okuyan TEK yer.
+
+    Salt-okuma; `pf` verilmezse portföy diskten okunur. Sözlük olmayan girdiler elenir."""
     pf = store.read_json(PORTFOLIO, {}) if pf is None else pf
     r = (pf or {}).get(RESET_KEY) or []
     return [x for x in r if isinstance(x, dict)]
@@ -186,15 +191,18 @@ def ofset(pf: dict | None = None) -> float:
 
 
 def ayrisik(pf: dict | None = None) -> bool:
+    """Kitabın tabanı defterin tabanından ayrıştırılmış mı? (en az bir reset kaydı varsa True)."""
     return bool(resetler(pf))
 
 
 def son_reset(pf: dict | None = None) -> dict | None:
+    """En son sermaye reset kaydı; hiç reset yoksa None."""
     r = resetler(pf)
     return r[-1] if r else None
 
 
 def _egri_isaretleri(eq: dict | None = None) -> list[dict]:
+    """Özsermaye eğrisine düşülmüş reset işaretlerini döner (salt-okuma; `points` DOKUNULMAZ)."""
     eq = store.read_json(EQUITY, {}) if eq is None else eq
     m = (eq or {}).get(CURVE_MARK_KEY) or []
     return [x for x in m if isinstance(x, dict)]
@@ -309,7 +317,7 @@ def durum() -> dict:
                  "n_isaret": len(isaretler), "isaretler": isaretler},
         "hedef_cash": _hedef(),
         "resetler": resetler(pf),
-        # ZIMNİ TABAN — KANONİK (v235): monotonluk dedektörünün izlediği büyüklüğün sent-tam hâli.
+        # ZIMNİ TABAN — KANONİK: monotonluk dedektörünün izlediği büyüklüğün sent-tam hâli.
         # Burada yüzeye çıkar ki operatör "taban kaç?" sorusunu alarm beklemeden ölçebilsin.
         "sermaye_taban_kanonik": sermaye_taban(pf),
     }
@@ -446,7 +454,7 @@ def uygula(gerekce: str = VARSAYILAN_GEREKCE) -> dict:
         isaret = {"id": reset_id, "tarih": ts, "tip": "paper_equity_reset",
                   "onceki_deger": onceki["cash"], "yeni_deger": round(hedef, 2),
                   "egri_son_nokta": egri_son, "gerekce": str(gerekce).strip(),
-                  # İŞARETİN METNİ DE BİR BEYANDIR ve koddan geri kalamaz (2026-08-14, v245-D):
+                  # İŞARETİN METNİ DE BİR BEYANDIR ve koddan geri kalamaz:
                   # eski cümle "nokta eklenmez ÇÜNKÜ eğrinin son noktası tohum sınırıdır" diyordu;
                   # sınır artık son noktadan okunmuyor (bu işaretin DONMUŞ `egri_son_nokta`
                   # alanından okunuyor) ve eğriye her seans kadanslı yazar nokta ekliyor. Gerekçe
@@ -462,7 +470,7 @@ def uygula(gerekce: str = VARSAYILAN_GEREKCE) -> dict:
     rapor["egri_isareti"] = isaret
 
     # (2) KİTAP — dört alan + reset defteri. Kilit altında oku-değiştir-yaz (loop `_save_broker` ve
-    #     hermes damgası aynı dosyaya yazıyor; `store.file_lock` 2026-07-31'den beri süreçler arası).
+    #     hermes damgası aynı dosyaya yazıyor; `store.file_lock` süreçler arası).
     with store.file_lock(PORTFOLIO):
         pf = store.read_json(PORTFOLIO, {}) or {}
         yeni = _yeni_kitap(pf, hedef)
@@ -534,6 +542,9 @@ def _worker_running() -> bool:
 
 # ---- YAZDIRMA ----------------------------------------------------------------------------------
 def _p(x, birim="$") -> str:
+    """Sayıyı binlik ayraçlı, 2 ondalıklı metne çevirir; None ise "—", çevrilemiyorsa ham değer.
+
+    Yalnız biçimleme yoludur — hiçbir ölçümü değiştirmez ya da yutmaz."""
     if x is None:
         return "—"
     try:
@@ -543,6 +554,8 @@ def _p(x, birim="$") -> str:
 
 
 def _durum_yaz(d: dict, baslik: bool = True) -> None:
+    """Köken ölçümünü (ayrışıklık, gerçek-canlı sermaye, tohum etkisi, kitap, eğri, uyarılar)
+    operatör için stdout'a basar. Hiçbir bayt YAZMAZ, yalnız gösterir."""
     k = d["koken"]
     if baslik:
         print("[sermaye] KÖKEN ÖLÇÜMÜ (hiçbir bayt yazılmadı)")
@@ -571,6 +584,9 @@ def _durum_yaz(d: dict, baslik: bool = True) -> None:
 
 
 def _yaz(rapor: dict) -> None:
+    """Ayrıştırma raporunu insan okunur biçimde basar: kip (kuru koşu / uygulandı / reddedildi),
+    yazılan-yazılacak kitap alanları, ofset, eğri işareti, DOKUNULMAYAN defterler, gerekçe ve
+    engeller. Yalnız yazdırır — karar vermez, dosya değiştirmez."""
     mod = ("UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA REDDEDİLDİ" if rapor.get("applied") else "KURU KOŞU (hiçbir bayt yazılmadı)"))
     print(f"[sermaye] {mod}")
@@ -605,6 +621,11 @@ def _yaz(rapor: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """`python -m meridian.sermaye` giriş noktası: --durum / --uygula / --json / --gerekce / --zorla.
+
+    VARSAYILAN KURU KOŞUDUR (hiçbir bayt yazılmaz). `--uygula` canlı Meridian süreci görülüyorsa
+    REDDEDİLİR (worker koşarken kitap taşınamaz; `--zorla` ile geçilir). Dönüş: 0 başarı, 1 rapor
+    ok değil, 2 canlı süreç engeli."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.sermaye",
         description="antrenman tohumunun K/Z'sini canlı-kâğıt sermayeden ayrıştırır "

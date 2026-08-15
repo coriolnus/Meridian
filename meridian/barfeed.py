@@ -39,6 +39,9 @@ class BarfeedConsumer:
     """Tek tüketici. `run()` bir daemon thread'de sürer; `register(cb)` ile Faz 4 kancası takılır."""
 
     def __init__(self):
+        """Tüketiciyi kurar: dur-olayı, boş geri-çağrı kancası ve süreç-içi sayaçlar (okunan olay,
+        tetiklenen bar sayısı, düşürülen bayat PEL girişi, son okuma/son hata). Disk yok, thread yok —
+        thread'i `start()` açar."""
         self._stop = threading.Event()
         self.callback = None            # Faz 4 intraday_cycle: fn(fields: dict) -> None
         self.events_read = 0
@@ -49,9 +52,15 @@ class BarfeedConsumer:
         self.started_at: str | None = None
 
     def register(self, callback) -> None:
+        """Yeni-bar olaylarında çağrılacak geri-çağrıyı takar (fn(fields)->None); öncekinin yerine geçer."""
         self.callback = callback
 
     def run(self) -> None:
+        """Tüketici döngüsü (daemon thread'de koşar): grubu kurar, `mrd:barfeed`i XREADGROUP ile
+        bloklu okur, her olayda sayaçları güncelleyip geri-çağrıyı çağırır ve grubu ACK'ler.
+        DEĞİŞMEZ: geri-çağrı patlasa da olay ACK'lenir (sonsuz yeniden-teslim kilidi yok). ~60 sn'de
+        bir bayat PEL girişleri XAUTOCLAIM+ACK ile düşürülür; Redis düşerse nazikçe beklenir ve grup
+        yeniden kurulur."""
         self.started_at = _now_iso()
         hotstate.ensure_barfeed_group(GROUP)
         _iter = 0
@@ -90,9 +99,13 @@ class BarfeedConsumer:
             hotstate.ack_barfeed(GROUP, ids)   # işlendi → ACK (restart'ta yeniden teslim edilmez)
 
     def stop(self) -> None:
+        """Dur-olayını basar; döngü içinde bulunduğu bloklu okumayı bitirince çıkar."""
         self._stop.set()
 
     def snapshot(self) -> dict:
+        """Süreç-içi sayaçların anlık görüntüsü + Redis'ten ANLIK okunan PEL (`pending`) sayısı:
+        okunan olay, tetiklenen bar, düşürülen bayat giriş, son okuma yaşı, kancanın takılı olup
+        olmadığı ve son hata."""
         return {"events_read": self.events_read, "frames_seen": self.frames_seen,
                 "stale_dropped": self.stale_dropped,
                 "last_read_at": self.last_read_at, "last_read_age_s": _age_s(self.last_read_at),
@@ -106,6 +119,7 @@ _THREAD: threading.Thread | None = None
 
 
 def consumer() -> BarfeedConsumer:
+    """Süreç-içi TEKİL BarfeedConsumer'ı döndürür (ilk çağrıda kurar) — çift tüketici yapısal önlenir."""
     global _CONSUMER
     if _CONSUMER is None:
         _CONSUMER = BarfeedConsumer()
@@ -128,6 +142,7 @@ def start() -> threading.Thread:
 
 
 def stop() -> None:
+    """Tekil tüketiciye dur der (hiç kurulmamışsa no-op); thread'i beklemez (daemon)."""
     if _CONSUMER is not None:
         _CONSUMER.stop()
 

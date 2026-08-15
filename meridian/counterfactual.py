@@ -35,6 +35,8 @@ DEFAULT_TIME_STOP = 15              # exit.time_stop_days ile aynı varsayılan
 
 
 def _slip() -> float:
+    """Kayma (slippage) oranını `goal.yaml`dan okur (bps → oran). Okunamazsa 5 bps sabitine düşer ve
+    bu düşüş YASA 4 uyarısıyla işaretlenir — sessiz sapma yok."""
     try:
         return float(config.goal().get("slippage_bps", 5)) / 10000.0
     except Exception as e:
@@ -46,7 +48,7 @@ def _slip() -> float:
 
 _LEDGER_IDS: dict = {"mtime": None, "ids": set()}
 
-# SON TOPLAMANIN MUHASEBESİ (2026-08-12, near-miss gölge bacağı ölümü). `collect` dönüşü int kalır
+# SON TOPLAMANIN MUHASEBESİ (near-miss gölge bacağı ölümü). `collect` dönüşü int kalır
 # (22 test + cf_backfill o sözleşmeye bağlı); sınıf-bazlı sayım BURADAN okunur. OKUYUCULAR (YASA 6):
 # loop.daily_cycle özet olayı (`near_miss_yazilan`) + testler. Süreç-içi ve çağrı-başına ezilir;
 # loop ana collect'ten HEMEN sonra kopyalar (geç-borç collect'leri ezmeden önce).
@@ -73,21 +75,21 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
     """P3 sonunda çağrılır: o günün TÜM planları (silahlı/silahsız) + uyuyan kurulum sinyalleri
     bekleyen karşı-olgusal olarak açılır. Dönüş: eklenen kayıt sayısı (loop görmezden gelir).
     near_miss: (EntrySignal, blocked_by listesi) çiftleri — eşiğin HEMEN altında ölen adaylar
-    (darboğaz turu, 2026-07-20). Sıfır yetki; resolved_rows bunları VARSAYILAN dışlar.
+    Sıfır yetki; resolved_rows bunları VARSAYILAN dışlar.
 
-    regime: O SEANSIN rejimi. İKİNCİ TUR DENETİMİ (2026-07-21) — plan satırları rejimi plandan
+    regime: O SEANSIN rejimi. DENETİM BULGUSU — plan satırları rejimi plandan
     alıyordu ama UYUYAN ve EŞİK-ALTI satırlar "?" ile yazılıyordu: canlı defterin %70'i (7115'in
     4950'si) rejimsizdi. Sonuç, sessiz bir mantık boşluğuydu: selfreview eşik-altı kanıtından
     "`knob`@rejim sondası aramaya değer" ÖNERİSİ üretiyor — ama kanıtın kendisinde rejim YOK.
     Öneri hangi rejime yazılacağını dayandıramıyordu. Rejim artık her satıra damgalanıyor."""
     open_rows = store.read_json(OPEN_FILE, [])
-    # ÇİFT KAYIT KORUMASI (2026-07-21, backfill tekrarından ÖNCE bulundu): eskiden yalnız AÇIK
+    # ÇİFT KAYIT KORUMASI (backfill tekrarından ÖNCE bulundu): eskiden yalnız AÇIK
     # satırlar eleniyordu. Çözülmüş bir satır artık open_rows'ta olmadığı için, defteri yeniden
     # üreten her koşu AYNI kanıtı İKİNCİ kez açar ve çözer → 7115 satır 14000 olur, her ölçüm
     # (kazanma oranı, ort. R, skill katkısı) çift sayılmış kanıtla hesaplanır. Kimse fark etmezdi.
     seen = {r["id"] for r in open_rows} | _ledger_ids()
     added, dropped = 0, 0
-    # SINIF MUHASEBESİ (2026-08-12): near-miss bacağı 2026-07-30→08-12 arası İKİ HAFTA sessizce ölü
+    # SINIF MUHASEBESİ: near-miss bacağı 2026-07-30→08-12 arası İKİ HAFTA sessizce ölü
     # kaldı ve bu fonksiyonun içinden hiçbir sayı dışarı sızmadığı için kimse görmedi. Düşme
     # nedenleri ayrı sayılır: tavan (MAX_OPEN — yazım sırası plan→uyuyan→near-miss olduğundan tavan
     # ÖNCE near-miss'i aç bırakır), çift (dedup — zararsız: satır zaten defterde; yeniden-koşularda
@@ -103,6 +105,8 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
         _scr = lambda s2: None
 
     def _push(row, sinif="plan"):
+        """Bir karşı-olgusal satırı açık listeye ekler ve sınıf bazında sayar. Kimlik zaten varsa çift
+        olarak, tavan doluysa düşen olarak sayılır — her iki hâlde de satır EKLENMEZ."""
         nonlocal added, dropped
         if row["id"] in seen:
             _cift[sinif] += 1
@@ -121,14 +125,14 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                "ticker": p["ticker"], "setup": p.get("setup", "?"), "score": p.get("score"),
                "entry_trigger": float(p["entry_trigger"]), "stop": float(p["stop"]),
                "target": float(p.get("profit_target") or (p.get("targets") or [0])[0]),
-               # KANONİK AD + eski ad (2026-07-21): sınır geçişlerinde alan adı değişiyordu —
+               # KANONİK AD + eski ad: sınır geçişlerinde alan adı değişiyordu —
                # plan `r_multiple_expected` yazıyor, cf onu `rr_expected` diye YENİDEN ADLANDIRIYORDU.
                # Tüketiciler bunu "iki ad da olabilir" yamasıyla telafi ediyor; yaması olmayan her
                # yeni tüketici satırı SESSİZCE eler. Artık ikisi de yazılıyor.
                "rr_expected": p.get("r_multiple_expected"),
                "r_multiple_expected": p.get("r_multiple_expected"),
                "regime": p.get("regime_at_plan", "?"),
-               # DANIŞMAN GÖRÜŞÜ PLANDAN TAŞINIR (2026-07-22, köken takibi bulgusu). `_resolve`
+               # DANIŞMAN GÖRÜŞÜ PLANDAN TAŞINIR (köken takibi bulgusu). `_resolve`
                # satır 163'te `row.get("llm_opinion")` arıyor ve BULAMIYORDU: açık cf satırı bu
                # alanı hiç taşımıyordu. Ölçüldü: 69.945 cf satırının SIFIRI. Sonuç, panodaki
                # "sim 0 çift" — LLM kalibrasyonunun karşıolgusal kanadı kalıcı olarak ölüydü ve
@@ -136,7 +140,7 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                "llm_opinion": p.get("llm_opinion"),
                "verdict": p.get("gate_verdict", "?"), "taken": p["id"] in armed_ids,
                "screener": (p.get("skill_chain") or [None])[0] or _scr(p.get("setup", "?")),
-               # UYUYAN ETİKETİ PLANDAN OKUNUR (2026-07-22): burada sabit `False` yazılıyordu. Ama
+               # UYUYAN ETİKETİ PLANDAN OKUNUR: burada sabit `False` yazılıyordu. Ama
                # cf_backfill uyuyan kurulum sinyallerini HEM `plans`e HEM `dormant_sigs`e koyuyor ve
                # ikisinin cf kimliği AYNI biçimde (`CF-{gün}-{ticker}-{setup}`). Plan döngüsü önce
                # koştuğu için kimliği kapıyor, dormant push'u çift-kayıt korumasına takılıp eleniyor.
@@ -174,13 +178,13 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
                "screener": _scr(sig.setup),
                "status": "pending", "time_stop_days": int(time_stop_days), "bars_held": 0}, "near_miss")
     if dropped:
-        # SINIF KIRILIMI EKLENDİ (2026-08-12): toplam sayı hangi kanıt sınıfının aç kaldığını
+        # SINIF KIRILIMI EKLENDİ: toplam sayı hangi kanıt sınıfının aç kaldığını
         # söylemiyordu — yazım sırası gereği tavana İLK kurban hep near-miss'tir.
         obs.warn("cf_ledger_full", dropped=dropped, cap=MAX_OPEN,
                  plan=_tavan["plan"], dormant=_tavan["dormant"], near_miss=_tavan["near_miss"],
                  detail="açık defter tavanda — yazım sırası plan→uyuyan→near-miss olduğundan tavan "
                         "önce near-miss bacağını aç bırakır (gölge kanıtı sessizce eksilirdi)")
-    # NEAR-MISS KAYIP OLAYI (2026-08-12, YASA 4): rps/tavan kaybı deftere hiç girmemiş kanıttır ve
+    # NEAR-MISS KAYIP OLAYI (YASA 4): rps/tavan kaybı deftere hiç girmemiş kanıttır ve
     # bugüne dek İZSİZDİ — 07-30 sonrası iki haftalık sessiz ölüm bu fonksiyonda görünmez kalmıştı.
     # Çift (dedup) kayıp SAYILIR ama tek başına olay üretmez: yeniden-koşuların normal davranışıdır.
     _nm_kayip = _nm_rps + _tavan["near_miss"]
@@ -203,7 +207,7 @@ def _resolve(row: dict, dstr: str, status: str, exit_px: float | None = None,
     """Açık kaydı kapat → deftere yazılacak satır. entered=False satırlar da yazılır (no_fill istatistiği
     seçilim analizinde anlamlı) ama r_multiple'ları None — model eğitimi entered=True'yu süzer."""
     # `row[k]` YERİNE `.get()`: açık defter uzun ömürlüdür — şema büyüdüğünde diskte hâlâ eski
-    # satırlar durur ve KeyError bütün çözümleme turunu düşürürdü (2026-07-21: `r_multiple_expected`
+    # satırlar durur ve KeyError bütün çözümleme turunu düşürürdü (`r_multiple_expected`
     # eklenince tam bu oldu). Eksik alan satırı düşürmez; None taşır ve tüketici süzer.
     out = {k: row.get(k) for k in ("id", "date", "ticker", "setup", "score", "entry_trigger", "stop",
                                    "target", "rr_expected", "r_multiple_expected", "regime", "verdict",
@@ -266,7 +270,7 @@ def advance(per: dict, d, dstr: str) -> dict:
         if row["status"] == "active":
             row["hi"] = max(row.get("hi", h), h); row["lo"] = min(row.get("lo", l), l)
             ex = None
-            # broker._touch_exit ile AYNI iki kademe (2026-07-22, v75): önce AÇILIŞ (barın ilk basılan
+            # broker._touch_exit ile AYNI iki kademe: önce AÇILIŞ (barın ilk basılan
             # fiyatı — sırası kesin), sonra bar içi (sıra bilinemez → stop önce). Eski sıra bar-içi
             # stop dokunuşunu açılıştaki hedef boşluğunun ÖNÜNE koyuyordu; bu defterde GERÇEKLEŞTİ:
             # CF-2025-10-28-SWKS-momentum_burst, bar(o=83.14, h=84.53, l=78.59), hedef 82.74,

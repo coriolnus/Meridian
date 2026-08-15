@@ -16,7 +16,7 @@ sızdığı yaşandı; kapı tam onu reddeder, gelecek tarihli `as_of` da bozuk 
 sessiz değildir: bayat/uydurma liste asla servis edilmez, hiçbir kaynak makul liste veremezse []
 döner ve çağıran elle bakımlı evrene düşer. `as_of()`un [] dönüşü "o tarihte kimse yoktu" değil
 "BİLMİYORUZ"dur. YANLIŞLANDI dersleri korunur: pandas 3'te read_html ham HTML dizgesini dosya-yolu
-sanır — girdi io.StringIO ile sarılır ve flavor="lxml" sabitlenir ki tablosuz 403 gövdesi "paket
+sanır ve FileNotFoundError üretir (2026-08-13 ölçümü) — girdi io.StringIO ile sarılır ve flavor="lxml" sabitlenir ki tablosuz 403 gövdesi "paket
 eksik" gibi YANLIŞ sınıf yerine dürüst "No tables found" üretsin; değişiklik-günlüğü tarihleri
 sözlüksel değil ISO'ya çevrilerek karşılaştırılır (aksi PIT kurulumunu tersine çevirmişti) ve
 'nan' hücreleri temizlenir (hayalet 'NAN' sembolü üretmişti).
@@ -41,6 +41,8 @@ def health() -> dict:
 
 
 def _note(ok: bool, source: str | None = None, n: int = 0, error: str = "") -> None:
+    """Son çekim denemesinin sonucunu (başarı, kaynak etiketi, sembol sayısı, kırpılmış hata metni)
+    UTC damgasıyla `_HEALTH`e yazar; health() bunu okur. HATA≠BOŞ: yutulan hata burada görünür kalır."""
     _HEALTH.update({"ok": ok, "source": source, "n": int(n), "error": error[:200],
                     "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
 
@@ -88,13 +90,13 @@ def _fetch_tables():
         if r.status_code >= 400:
             _note(False, "wikipedia", 0, f"HTTP {r.status_code}")
             return None, None
-        # 2026-08-13 (v238): `pd.read_html(r.text)` — HAM DİZGE — pandas 3'te DOSYA YOLU sanılıyor.
+        # `pd.read_html(r.text)` — HAM DİZGE — pandas 3'te DOSYA YOLU sanılıyor.
         # Canlı kanıt: universe_drift.json `reason: "FileNotFoundError: ... <!DOCTYPE html>..."`;
         # yani evren denetimi survivorship kanıtı üretmiyordu ve neden diye YANLIŞ bir sınıf
         # (dosya yok) yazıyordu. `io.StringIO` pandas'ın KENDİ geçiş yolu (2.1'de uyarı, 3.0'da
         # hata) — davranışı değiştirmez, yalnız girdiyi "bu bir yol değil, içerik" diye işaretler.
         #
-        # 2026-08-13 · `flavor="lxml"` DE BİLEREK: varsayılan zincir lxml TABLO BULAMAZSA bs4+
+        # `flavor="lxml"` DE BİLEREK: varsayılan zincir lxml TABLO BULAMAZSA bs4+
         # html5lib'e düşer ve html5lib kurulu olmadığı için hata `ImportError: Import html5lib
         # failed` olur. Ölçüldü: 403 gövdesi (141 bayt, tablosuz) tam bunu üretiyor — yani gerçek
         # sebep "tablo yok" iken `health()` "paket eksik" diye YANLIŞ sınıf yazardı ve bu, bu
@@ -119,6 +121,8 @@ def _fetch_tables():
         # True, so `nan or ""` returned nan and str(nan)=='nan' — as_of() then added a fabricated 'NAN'
         # ticker to point-in-time membership. Coalesce NaN/None to "" explicitly.
         def _cell(v):
+            """Wikipedia değişiklik-günlüğü hücresini NaN-güvenli dizgeye çevirir: None/NaN → ""
+            (aksi hâlde str(nan)=='nan' PIT üyeliğine uydurma 'NAN' sembolü sokuyordu), yoksa kırpılmış str."""
             return "" if v is None or (isinstance(v, float) and pd.isna(v)) else str(v).strip()
         for _, row in ch.iterrows():
             changes.append({"date": _cell(row.get(dcol)), "added": _cell(row.get(acol)),
@@ -164,7 +168,7 @@ def current(use_cache: bool = True) -> list[str]:
 def _iso(d) -> str | None:
     """Normalize a change-log date to ISO YYYY-MM-DD. Wikipedia's column is human-readable ('October 1,
     2024'); the old code sliced [:10] and compared LEXICALLY, so every letter-leading date read as
-    'after any query date' and the PIT reconstruction INVERTED (audit #52). None if unparseable."""
+    'after any query date' and the PIT reconstruction INVERTED. None if unparseable."""
     s = str(d or "").strip()
     if not s:
         return None
@@ -183,7 +187,7 @@ def _iso(d) -> str | None:
 def _tick(v) -> str:
     """Ticker cell → clean symbol; '' for NaN-ish junk. The fetch path sanitizes, but PERSISTED caches
     written before that fix still carry literal 'nan' strings that fabricated a phantom 'NAN' instrument
-    in PIT membership (audit #49 — live on disk)."""
+    in PIT membership (live on disk)."""
     s = str(v or "").strip().upper()
     return "" if s in ("", "NAN", "NONE", "N/A", "-", "—") else s
 
@@ -200,7 +204,7 @@ def as_of(date: str) -> list[str]:
         members = set(current())
         data = _cached()                     # current() just wrote the cache — re-read so the change-log
         if not members:                      # is actually applied instead of iterating the stale pre-fetch
-            return []                        # snapshot (audit #53: cold cache returned CURRENT membership
+            return []                        # snapshot (cold cache returned CURRENT membership
                                              # for any historical date — survivorship bias)
     for ch in data.get("changes", []):
         d = _iso(ch.get("date"))
@@ -219,7 +223,7 @@ def universe_drift() -> dict:
     tam da bu modülün söylemesi gereken şey. Kaynak yoksa 'unknown' döner: 'sapma yok' DEMEZ."""
     from . import data as _data
     REPLAY_UNIVERSE = _data.REPLAY_UNIVERSE
-    # İKİNCİ, BAĞIMSIZ KANIT (2026-07-22): üyelik kaynağı bu kurulumda ÇALIŞMIYOR (Wikipedia 403,
+    # İKİNCİ, BAĞIMSIZ KANIT: üyelik kaynağı bu kurulumda ÇALIŞMIYOR (Wikipedia 403,
     # FMP kotası) ve rapor haklı olarak "unknown" diyor — ama o zaman ölü sembol sorusu CEVAPSIZ
     # kalıyordu. Bar hattının verisiz-sembol defteri tam bu soruyu başka bir yerden cevaplıyor:
     # "her kaynak DÜZGÜN cevap verip sıfır satır döndü" hükmünün ARDIŞIK tekrarı. Üyelik listesi
@@ -227,7 +231,7 @@ def universe_drift() -> dict:
     _nd = store.read_json(_data.NO_DATA_FILE, {}) or {}
     no_data = sorted(t for t, v in _nd.items()
                      if int((v or {}).get("streak") or 0) >= _data.NO_DATA_CONFIRM_STREAK)
-    # ÜÇÜNCÜ KANIT — EMEKLİLİK DEFTERİ VE ONUN BEKÇİSİ (2026-07-30). 2026-07-21'de ELLE bulunan
+    # ÜÇÜNCÜ KANIT — EMEKLİLİK DEFTERİ VE ONUN BEKÇİSİ. ELLE bulunan
     # ölü isimler artık `data.RETIRED_SYMBOLS`ta hükümle yazılı ve evrenden çıkarılmış. Rapor iki
     # şeyi söyler: kaç isme emeklilik hükmü verildiği (bakımın YAPILDIĞININ kanıtı), ve o isimlerden
     # herhangi biri evrene GERİ girmiş mi. `retired_in_universe` normalde BOŞTUR; boş değilse biri

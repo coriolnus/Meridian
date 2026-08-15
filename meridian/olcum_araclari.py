@@ -113,6 +113,9 @@ def _satirlar(getiriler):
 
 
 def _ilk(d: dict, adlar: tuple):
+    """Sözlükte verilen ad adaylarından İLK bulunanın değerini döndürür; hiçbiri yoksa KeyError.
+    Sessiz None dönmez — çözülemeyen satır görünmeden geçmemelidir.
+    """
     for a in adlar:
         if a in d:
             return d[a]
@@ -237,7 +240,7 @@ def temiz_taban(getiriler, olay_gunleri, pencere) -> dict:
 
 
 # ==================================================================================================
-# OLAY-DIŞI KIYAS — `temiz_taban`ın GÜN BAZLI ikizi (WP-M, 2026-08-02)
+# OLAY-DIŞI KIYAS — `temiz_taban`ın GÜN BAZLI ikizi
 # ==================================================================================================
 # NEDEN AYRI BİR FONKSİYON. `temiz_taban` tek bir HAVUZ döndürür: "olay penceresine değmemiş tüm
 # satırlar". Ders #3 ise tabanı AYNI GÜNÜN evreninde ister — çünkü havuz tabanı, olay günlerinin
@@ -258,6 +261,7 @@ _OZETLER = ("medyan", "ortalama")
 
 
 def _medyan(vals: list) -> float:
+    """Değer listesinin medyanı; çift sayıda elemanda ortadaki iki değerin ortalaması."""
     s = sorted(vals)
     n = len(s)
     orta = n // 2
@@ -265,6 +269,7 @@ def _medyan(vals: list) -> float:
 
 
 def _ozetle(vals: list, ozet: str) -> float:
+    """Listeyi seçilen ölçütle özetler: 'medyan' ise medyan, aksi hâlde aritmetik ortalama."""
     return _medyan(vals) if ozet == "medyan" else (sum(float(v) for v in vals) / len(vals))
 
 
@@ -312,6 +317,9 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
     olaylar, birimler, n_olay = _olaylari_ordinalle(olay_gunleri)
 
     def _kirli_mi(kimlik, o) -> bool:
+        """Verilen ordinal gün, bu kimliğe ait HERHANGİ bir olayın penceresi (−once … +sonra) içinde mi?
+        Yani satır taban hesabına giremeyecek kadar KİRLİ mi?
+        """
         return any(-once <= (o - oe) <= sonra for oe in olaylar.get(kimlik) or ())
 
     # ---- 1) evreni gün gün sınıflandır ----------------------------------------------------------
@@ -436,7 +444,7 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
 
 
 # ==================================================================================================
-# 2B — BLOK-BOOTSTRAP CI STANDARDI (WP-M, 2026-08-02)
+# 2B — BLOK-BOOTSTRAP CI STANDARDI
 # ==================================================================================================
 # NEDEN BLOK, NEDEN IID DEĞİL. Zaman serisi gözlemleri bağımsız DEĞİLDİR: getiriler kümelenir
 # (volatilite kümelenmesi), kayıplar seri hâlinde gelir, aynı rejimdeki günler birlikte hareket
@@ -444,7 +452,7 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
 # DAR gösterir — yani aralık, ölçülmemiş bir kesinlik yazar. Bu tek yönlü bir hatadır: IID daima
 # "daha anlamlı" görünür, hiçbir zaman daha az. Bu yüzden IID bir tercih değil, bir HATA SINIFIDIR.
 #
-# DEPODAKİ CANLI KANIT (analytics, 2026-07-30, n=95): işlem başına ortalama $ için IID aralık
+# DEPODAKİ CANLI KANIT (analytics, n=95): işlem başına ortalama $ için IID aralık
 # [−116,86, −0,00] sıfırı KIL PAYI dışarıda bırakıyordu ("kaybettiğimiz kanıtlandı"), blok aralığı
 # [−137,75, +14,53] ise sıfırı İÇERİYOR ("n=95'te henüz kanıtlanmadı"). Aynı defter, iki hüküm.
 #
@@ -575,7 +583,7 @@ def blok_bootstrap_ci(seri, blok: int | None = None, n_ornek: int = BOOTSTRAP_N,
 
 
 # ==================================================================================================
-# 2C — EMPİRİK-BAYES KÜÇÜLTME (SE tabanlı; WP-M, 2026-08-02)
+# 2C — EMPİRİK-BAYES KÜÇÜLTME (SE tabanlı)
 # ==================================================================================================
 # NEDEN VAR — EN İYİ HÜCRE SEÇİM YANLILIĞI ("kazananın laneti"). Çok hücreli bir kart özeti (K
 # grid'i: bileşen × ufuk, rejim × kurulum, eşik × pencere) hücrelerin HAM tahminlerini yazar ve
@@ -707,6 +715,9 @@ def eb_kucult(etkiler, seler, min_hucre: int = EB_MIN_HUCRE) -> dict:
         hucreler[ad] = {"ham": x, "se": se, "kucultulmus": km, "agirlik": w, "cekim": x - km}
 
     def _en_iyi(anahtar: str):
+        """Verilen anahtara ('ham' ya da 'kucultulmus') göre en yüksek hücreyi bulur ve o hücrenin
+        ham/küçültülmüş değerini, çekimini ve ağırlığını döndürür.
+        """
         ad = max((a for a, _, _ in kullanilabilir), key=lambda a: hucreler[a][anahtar])
         h = hucreler[ad]
         return {"hucre": ad, "ham": h["ham"], "kucultulmus": h["kucultulmus"],
@@ -737,7 +748,7 @@ def eb_kucult(etkiler, seler, min_hucre: int = EB_MIN_HUCRE) -> dict:
 
 
 # ==================================================================================================
-# KOD-SÜRÜMÜ DAMGASI (WP-M, 2026-08-02)
+# KOD-SÜRÜMÜ DAMGASI
 # ==================================================================================================
 # NEDEN VAR. Bir ölçüm raporu okunurken sorulan ilk soru "bu sayı hangi kodla üretildi?"dir ve bu
 # soru bugüne kadar hiçbir raporun İÇİNDE cevaplanmıyordu. Cevap dışarıda (dosya tarihi, oturum
@@ -763,6 +774,9 @@ def kod_surumu_damgasi(kok=None, zaman_asimi: float = 10.0) -> dict:
     head = kisa = kirli = neden = None
 
     def _git(*argv):
+        """Depo kökünde YALNIZ-OKUMA bir `git` alt süreci koşar (zaman aşımı sınırlı) ve tamamlanmış
+        süreç nesnesini döndürür; hiçbir şey yazmaz.
+        """
         return subprocess.run(["git", *argv], cwd=str(kok), capture_output=True, text=True,
                               timeout=zaman_asimi)
     try:

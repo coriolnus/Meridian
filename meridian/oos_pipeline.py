@@ -40,6 +40,8 @@ class OutOfSamplePipeline:
 
     def __init__(self, goal: dict, p_base: float = P_BASE, p_confirm: float = P_CONFIRM,
                  n_boot: int = 2000, seed: int = 42):
+        """Kapıyı hedef sözleşmesi ve olasılık eşikleriyle kurar; eşleştirilmiş olasılıksal kapı nesnesini
+        (bootstrap sayısı + tohumla, yani deterministik) hazırlar."""
         self.goal = goal
         self.p_base = p_base
         self.p_confirm = p_confirm
@@ -47,6 +49,8 @@ class OutOfSamplePipeline:
 
     @staticmethod
     def has_slices(wf: dict) -> bool:
+        """Walk-forward çıktısı kapının okuyabileceği dilimleri (oos_split + arama/teyit işlem listeleri)
+        taşıyor mu? Taşımıyorsa çağıran legacy yasaya düşer."""
         return isinstance(wf, dict) and isinstance(wf.get("oos_split"), dict) \
             and "_trades_search" in wf and "_trades_confirm" in wf
 
@@ -67,7 +71,7 @@ class OutOfSamplePipeline:
             return GateResult(False, None, self.p_confirm, None, law="legacy",
                               why="teyit dilimi yok — legacy yasa")
         sp = cand_wf["oos_split"]
-        # TABAN ÖRNEKLEM (2026-07-22, kapı denetimi): arama diliminin tabanı vardı
+        # TABAN ÖRNEKLEM: arama diliminin tabanı vardı
         # (`max(10, 0.7·min_sample)`), teyit yürüyüşünün HİÇ YOKTU. Bootstrap'ın iç `min_sample: 1`
         # baypası bunu erişilebilir kılıyordu: taraf başına 6 işlemle kapı `passes=True, p=0.886`
         # diyordu — ve o 6 işlemden türeyen `predicted_delta` deftere "yansız" diye yazılıyordu.

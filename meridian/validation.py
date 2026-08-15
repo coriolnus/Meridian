@@ -61,7 +61,7 @@ DSR_TRIAL_VAR_MIN_N = 5
 
 # PBO/CSCV: defterde en az kaç AYRI aday olmalı. CSCV, S bloklu bir ızgarada C(S,S/2) kombinasyon
 # üretir ve her kombinasyonda ADAYLAR ARASINDA en iyiyi seçer — 2-3 adayla "en iyinin OOS sırası"
-# neredeyse hep 1. veya 2. çıkar, yani ölçüt bilgi taşımaz. 8, ROADMAP §3.1'in yazdığı taban.
+# neredeyse hep 1. veya 2. çıkar, yani ölçüt bilgi taşımaz. 8, önceden yazılmış taban.
 PBO_MIN_ADAY = 8
 
 # Zaman ızgarasının kaç bloğa bölüneceği. Bailey ve arkadaşları örneklerinde S=16 kullanır
@@ -70,10 +70,10 @@ PBO_MIN_ADAY = 8
 # bloklar kalın kalır ve defterin ilk dolduğu haftalarda ölçüt fiilen ulaşılabilir olur.
 PBO_BLOCKS = 8
 
-# ---- SERT KAPI EŞİKLERİ — TEK YER (DSR hard-gate turu, 2026-07-30) ----------------------------
-# ROADMAP §3.1'in Y1 hard-gate kalemi bu iki sayıdır. Sabit olarak durmaları ŞART: ship yolu ve
+# ---- SERT KAPI EŞİKLERİ — TEK YER ----------------------------
+# Y1 hard-gate kalemi bu iki sayıdır. Sabit olarak durmaları ŞART: ship yolu ve
 # Faz-6 kilit zinciri ikisi de bunları okur ve bir eşiğin iki kopyası, sessizce ayrışan iki kapı
-# demektir (2026-07-21'in `min_sample` dersi birebir aynıydı — olasılıksal yasa kendi tabanını
+# demektir (`min_sample` dersi birebir aynıydı — olasılıksal yasa kendi tabanını
 # icat etmişti). Eşiği DEĞİŞTİRMEK bir operatör kararıdır; iki tüketici de aynı anda değişir.
 DSR_HARD_MIN = 0.95            # geçmek için DSR > 0.95 (kesin eşitsizlik: tam 0.95 GEÇMEZ)
 PBO_HARD_MAX = 0.20            # geçmek için PBO < %20 (tam %20 GEÇMEZ)
@@ -322,7 +322,7 @@ def _matris(rows: list) -> tuple[list, list, list]:
     seriler = []
     for i, r in enumerate(rows):
         # `etiket` SÖZLEŞMEDE ZORUNLU (ledgers.CONTRACTS) ve BAŞKA BİR ALANA DÜŞÜLMEZ: "iki ad da
-        # olabilir" yaması 2026-07-21'in yedi hatasından birinin ta kendisiydi (aynı olgunun iki
+        # olabilir" yaması yedi hatadan birinin ta kendisiydi (aynı olgunun iki
         # şeması → yaması olan tüketici çalışır, olmayan satırı sessizce eler). Etiketsiz bir satır
         # PBO'ya YİNE girer (düşürmek bir adayı paydadan sessizce silmek olurdu) ama adı eksikliği
         # SÖYLER — başka bir alandan ad uydurmak sözleşmeyi ikinci bir isimle çoğaltmaktı.
@@ -345,6 +345,8 @@ def _matris(rows: list) -> tuple[list, list, list]:
 
 
 def _sharpe(xs: list) -> float:
+    """Dizinin örneklem Sharpe'ı (ortalama / standart sapma, yıllıklandırılmamış). n<2 ya da varyans
+    sıfırsa 0.0 döner."""
     n = len(xs)
     if n < 2:
         return 0.0
@@ -358,7 +360,7 @@ def pbo_cscv(rows: list | None = None, blocks: int = PBO_BLOCKS) -> dict:
 
     SORDUĞU SORU KAPININ SORDUĞUNDAN FARKLIDIR. Kapı "bu aday geçti mi?" der; PBO **seçim
     yönteminin kendisini** yargılar: "in-sample'da en iyiyi seçtiğimde, out-of-sample'da
-    adayların medyanının ALTINA düşme olasılığım nedir?" %50 = yöntem yazı-tura; ROADMAP §3.1'in
+    adayların medyanının ALTINA düşme olasılığım nedir?" %50 = yöntem yazı-tura; yazılı
     kapı önerisi <%20.
 
     YÖNTEM: ortak takvim ızgarası S bloğa bölünür, C(S, S/2) kombinasyonun her birinde bloklar

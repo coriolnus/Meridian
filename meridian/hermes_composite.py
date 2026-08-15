@@ -50,16 +50,20 @@ COMPOSITE_MAX_KNOBS = 3
 
 
 def _week_key(ts: str | None = None) -> str:
+    """Haftalık bütçe damgasını ISO takvimden üretir: "YYYY-Www" (ts yoksa bugün).
+
+    Damganın TEK kaynağı burasıdır — bütçeyi sayan modül damgayı da tanımlar; ikinci bir
+    biçim yılbaşı haftasında sessizce ayrışırdı."""
     d = dt.date.fromisoformat((ts or dt.date.today().isoformat())[:10])
     iso = d.isocalendar()
     return f"{iso[0]}-W{iso[1]:02d}"
 
 
 def week_key(ts: str | None = None) -> str:
-    """Hafta damgasının DIŞ tüketicilere açık hâli (Katman C, 2026-07-30).
+    """Hafta damgasının DIŞ tüketicilere açık hâli (Katman C).
 
     NEDEN AYNI FONKSİYON: `nous_eval` önerileri hafta damgasıyla kaydeder ve Katman C köprüsü AYNI
-    haftanın H4 bütçesinden düşer. İkinci bir damga biçimi (ör. `%Y-%W`, ya da ISO yılı yerine takvim
+    haftanın yoklama bütçesinden düşer. İkinci bir damga biçimi (ör. `%Y-%W`, ya da ISO yılı yerine takvim
     yılı) sessizce ayrışır ve yılbaşı haftasında "bu hafta kaç yoklama harcandı" sorusu iki farklı
     cevap verirdi — bütçe bir hafta boyunca İKİ KEZ dolardı ya da hiç dolmazdı. Bütçeyi SAYAN modül
     damganın da tek kaynağıdır."""
@@ -70,7 +74,7 @@ def validate_composite(composite: dict, bounds: dict) -> tuple[bool, list]:
     """Bileşik önerinin ŞEKİL denetimi. Yasa TEK YERDE: `guard.composite_shape_reasons`.
 
     Burada YİNELENMEZ — iki yerde iki şekil denetimi olsaydı kuyruğa GİREN aday ile guard'ın
-    hüküm verdiği aday sessizce ayrışırdı (2026-07-21'in "her defteri 2-3 modül yazıyor, arada
+    hüküm verdiği aday sessizce ayrışırdı ("her defteri 2-3 modül yazıyor, arada
     yazılı anlaşma yok" dersinin şekil-denetimi hâli)."""
     from . import guard
     nedenler = guard.composite_shape_reasons(composite, bounds)
@@ -106,6 +110,7 @@ def enqueue(composite: dict, *, rationale: str = "", source: str = "hermes",
 
 
 def _next_seq() -> int:
+    """Sıradaki kuyruk sıra numarası: mevcut satır sayısı + 1 (C%05d kimliğinin sayısal kısmı)."""
     return len(store.read_jsonl(QUEUE_FILE)) + 1
 
 
@@ -124,7 +129,7 @@ def queue_status(rows: list | None = None) -> dict:
         by[str(r.get("status") or "?")] = by.get(str(r.get("status") or "?"), 0) + 1
     bekleyen = [r for r in rows if r.get("status") == "pending"]
     olculen = [r for r in rows if r.get("status") == "measured"]
-    # BAŞARISIZ ÖLÇÜM AYRI SAYILIR (C14): `measure_failed`, `pending`den de `measured`dan da
+    # BAŞARISIZ ÖLÇÜM AYRI SAYILIR: `measure_failed`, `pending`den de `measured`dan da
     # BAŞKA bir olgudur — "sıra bekliyor" değil, "ölçüldü ve sonuç yok" da değil; ÖLÇÜM DENENDİ,
     # BÜTÇE HARCANDI, SONUÇ YOK. Tek sayaca katlansaydı halkanın koptuğu yer yine görünmezdi.
     basarisiz = [r for r in rows if r.get("status") == "measure_failed"]
@@ -147,6 +152,9 @@ def queue_status(rows: list | None = None) -> dict:
 
 
 def _budget_used(hafta: str | None = None) -> int:
+    """Verilen haftada (varsayılan: bu hafta) şimdiye dek harcanmış yoklama sayısını okur.
+
+    Sayaç `composite_budget.json` içindedir; kayıt yoksa 0 döner."""
     h = hafta or _week_key()
     st = store.read_json(BUDGET_STATE, {}) or {}
     return int((st.get("weeks") or {}).get(h, 0))
@@ -160,8 +168,12 @@ def _budget_take(hafta: str | None = None) -> bool:
     # diske yazar; `st = st or {}` satırı BOŞ bir sözlükte (falsy!) YENİ bir nesne yaratıyordu ve
     # bütün mutasyonlar o yeni nesneye gidiyordu → dosyaya `{}` yazılıyor, sayaç hiç artmıyor, bütçe
     # SINIRSIZ oluyordu. İlk koşuda tam olarak bu yakalandı (10 yoklamanın 10'u da izin aldı) ve
-    # bu, H4'ün tek emniyetinin sessizce yok olması demekti — DSR paydası sınırsız şişerdi.
+    # bu, bileşik yolun tek emniyetinin sessizce yok olması demekti — DSR paydası sınırsız şişerdi.
     def _f(st):
+        """`store.update_json` mutasyonu: hafta sayacını yerinde artırır, tavanda `_denied` basar.
+
+        `st` YENİDEN BAĞLANMAZ — aynı nesne diske yazılır; yeni bir sözlük yaratmak sayacı
+        sessizce sıfırlar ve haftalık bütçeyi sınırsız yapardı."""
         if st is None:                       # default `{}` verildiği için normalde olmaz
             return False
         weeks = st.setdefault("weeks", {})
@@ -182,6 +194,8 @@ def _budget_take(hafta: str | None = None) -> bool:
 def mark(row_id: str, status: str, **fields) -> None:
     """Kuyruk satırının durumunu güncelle (JSONL yeniden yazımı — kuyruk küçük ve tavanlı)."""
     def _f(rows):
+        """`store.update_jsonl` mutasyonu: kimliği tutan satır(lar)ın durumunu, ek alanlarını ve
+        `status_ts` damgasını yerinde günceller."""
         for r in rows:
             if r.get("id") == row_id:
                 r["status"] = status
@@ -191,7 +205,7 @@ def mark(row_id: str, status: str, **fields) -> None:
     store.update_jsonl(QUEUE_FILE, _f)
 
 
-# ---- H4: gece döngüsünün kancası ---------------------------------------------------------------
+# ---- Gece döngüsünün kancası -------------------------------------------------------------------
 SPAWN_LOG = "logs/composite-prescreen.log"
 
 
@@ -226,7 +240,7 @@ def _pid_canli(pid) -> bool | None:
 
 
 def reap_measuring(rows: list | None = None) -> dict:
-    """'measuring' satırların süreç canlılığını yokla; ölmüş süreç → `measure_failed` (C14).
+    """'measuring' satırların süreç canlılığını yokla; ölmüş süreç → `measure_failed`.
 
     NEDEN: prescreen ayrı bir süreçte koşar (`start_new_session`). O süreç çökerse, VM yeniden
     başlarsa ya da OOM killer alırsa satır SONSUZA DEK 'measuring' kalırdı — `nous_eval._akibet`
@@ -236,7 +250,7 @@ def reap_measuring(rows: list | None = None) -> dict:
 
     BÜTÇE İADE EDİLMEZ. `_budget_take` spawn'dan ÖNCE çağrılır ve o yoklama GERÇEKTEN harcandı
     (süreç açıldı, CPU yandı, belki yarım ölçüm yazıldı). Başarısızlığı bahane edip sayacı geri
-    almak, bütçeyi "başarılı ölçüm sayacı"na çevirirdi — oysa H4 bütçesi DENEME sayar (DSR paydası
+    almak, bütçeyi "başarılı ölçüm sayacı"na çevirirdi — oysa bu bütçe DENEME sayar (DSR paydası
     da denemeleri sayar), başarıyı değil.
 
     ÜÇ DAL, ÜÇÜ DE GÖRÜNÜR: ölü → damga; canlı → dokunulmaz; ölçülemedi (pid yok/biçimsiz) →
@@ -289,7 +303,7 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
     ölse ölçüm devam eder ve tersi).
 
     Sonuç YAZIMI ölçümü yapan süreçtedir (prescreen çıktısı) — burada satır `measuring` olur ve
-    ölçüm bitince O SÜREÇ `--queue-id` ile aynı satıra `measured` yazar (C14 kablosu). Ertesi gece
+    ölçüm bitince O SÜREÇ `--queue-id` ile aynı satıra `measured` yazar (halkayı kapatan kablo). Ertesi gece
     `evidence_pack` kuyruğun durumunu görür. `dry_run`: testler için (süreç açmaz).
 
     ÖLÜ SÜREÇ TOPLAMA İLK ADIMDIR: yeni ölçüm başlatmadan önce eski 'measuring' satırların akıbeti
@@ -314,7 +328,7 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
         # Kuyruk satırı TEK bir bileşik adaydır → yalnız `;` kullanılır. `--workdir` zorunlu ve
         # kuyruk kimliğiyle adlandırılır: iki ölçüm birbirinin state kopyasını EZMESİN.
         #
-        # `--queue-id` HALKAYI KAPATAN TEK BAYTTIR (C14): alt süreç kuyruk kimliğini bilmeden
+        # `--queue-id` HALKAYI KAPATAN TEK BAYTTIR: alt süreç kuyruk kimliğini bilmeden
         # sonucu geri yazamaz — ve bilgi ona verilmediği için bugüne dek yazamadı. Kimlik komut
         # satırından taşınır (dosya/ortam değişkeni değil): `logs/composite-prescreen.log`a düşen
         # komut satırı, hangi sürecin hangi kuyruk satırını ölçtüğünün DENETLENEBİLİR kaydı olsun.
@@ -351,6 +365,9 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
 
 
 def _cli() -> int:
+    """Kuyruğun komut satırı yüzü: --ekle / --yokla / --spawn / --durum (varsayılan: durum).
+
+    Çıktı JSON'dur; karar vermez, yalnız bu modülün fonksiyonlarını çağırıp sonucu basar."""
     import argparse
     ap = argparse.ArgumentParser(description="Bileşik öneri kuyruğu (H3/H4)")
     ap.add_argument("--durum", action="store_true", help="kuyruk durumu")

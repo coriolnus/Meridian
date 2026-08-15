@@ -40,8 +40,8 @@ from . import config, store
 REGISTRY = "skills_registry.json"
 # Kayıt defteri oku-değiştir-yaz ile güncelleniyor ve BUNU İKİ DAEMON İŞ PARÇACIĞI yapıyor
 # (zamanlayıcı döngüsü pipeline_run içinde last_run damgalar, Hermes/pano gölge bayrağı yazar).
-# memory.py'de aynı desen audit #19'da veri kaybına yol açmıştı: araya giren bir yazım, diğerinin
-# değişikliğini yok eder — burada bir 'shadow' kararı ya da bir enable geri döner (denetim turu 30).
+# memory.py'de aynı desen veri kaybına yol açmıştı: araya giren bir yazım, diğerinin
+# değişikliğini yok eder — burada bir 'shadow' kararı ya da bir enable geri döner.
 _REG_LOCK = threading.Lock()
 RUNS = "pipeline_runs.jsonl"
 SKILL_RECS = "skill_recommendations.jsonl"
@@ -50,7 +50,7 @@ SKILL_RECS = "skill_recommendations.jsonl"
 PROTECTED = frozenset({"pre-trade-discipline-gate", "drawdown-circuit-breaker", "data-quality-checker",
                        "position-sizer", "portfolio-manager"})
 
-# ---- EYLEM SÖZLÜĞÜ: "ÖNERİLEBİLİR" İLE "UYGULANABİLİR" AYRI KÜMELERDİR (v238, 2026-08-13) -------
+# ---- EYLEM SÖZLÜĞÜ: "ÖNERİLEBİLİR" İLE "UYGULANABİLİR" AYRI KÜMELERDİR -------
 # ÖLÇÜLEN ARIZA (operatör vakası): öneri üreteci ve kayıt kapısı ÜÇ eylem tanıyordu
 # (shadow/activate/lean_in) ama `apply_skill_action` yalnız İKİsini uyguluyordu. Üç liste üç ayrı
 # yerde elle yazılıydı (burada, `record_recommendation`da, `hermes.HYP_SCHEMA`da, ayrıca
@@ -62,7 +62,7 @@ PROTECTED = frozenset({"pre-trade-discipline-gate", "drawdown-circuit-breaker", 
 #   UYGULANABILIR — `apply_skill_action`ın gerçekten YAZABİLECEĞİ eylemler (kayıt defteri alanına
 #                   karşılık gelenler). ONERILEBILIR'in ALT KÜMESİDİR.
 #
-# `lean_in` NEDEN UYGULANABİLİR DEĞİL — ÖLÇÜLDÜ, VARSAYILMADI (2026-08-13):
+# `lean_in` NEDEN UYGULANABİLİR DEĞİL — ÖLÇÜLDÜ, VARSAYILMADI:
 #   (1) KAYIT ŞEMASINDA KARŞILIĞI YOK. Canlı `skills_registry.json` 67 kaydının alan kümesi
 #       sayıldı: category · fmp · alpaca · api_free · enabled · reason · pipeline · style_active ·
 #       mode · shadow · agent_authored · last_run · last_artifact · failure_count · retired(+_at/
@@ -77,11 +77,11 @@ PROTECTED = frozenset({"pre-trade-discipline-gate", "drawdown-circuit-breaker", 
 #       skiller pratikte tarayıcılardır ve hepsi `ENGINE_IMPLEMENTED` kümesindedir (canlı örnek:
 #       `stockbee-exhaustion-hammer-screener` — hem ENGINE_IMPLEMENTED hem `strategy.ARMED_SETUPS`
 #       içinde). Bu sınıfın hükmü bu dosyada ZATEN yazılı ve ölçülü: `auto_shadow_from_evidence`
-#       içindeki `motor_ici_esik_asan` kovası (2026-08-07) — "registry'ye bayrak yazmak davranışı
+#       içindeki `motor_ici_esik_asan` kovası — "registry'ye bayrak yazmak davranışı
 #       DEĞİŞTİRMEZ; gerçek aksiyon knob/kapı düzeyindedir".
 # HÜKÜM: `lean_in` ÖNERİ olarak kalır (ölçüm gerçektir ve operatörün görmesi gerekir) ama
 # "uygulanabilir" gibi SUNULMAZ — `arming:{setup}` emsali (api.py: `actions: []` + dürüst not).
-# Sıra DEĞİŞMEZ: `hermes.HYP_SCHEMA` enum'u bu tuple'dan türer ve enum sırası çivili (v106).
+# Sıra DEĞİŞMEZ: `hermes.HYP_SCHEMA` enum'u bu tuple'dan türer ve enum sırası çivili.
 ONERILEBILIR_EYLEMLER: tuple[str, ...] = ("shadow", "activate", "lean_in")
 UYGULANABILIR_EYLEMLER: tuple[str, ...] = ("shadow", "activate")
 
@@ -108,6 +108,7 @@ _SCREENER_BY_SETUP = {"breakout_vcp": "vcp-screener", "pullback": "pullback-scre
 
 
 def screener_for(setup: str) -> str:
+    """Setup adına karşılık gelen tarayıcı (screener) skill adını verir; eşleşme yoksa `vcp-screener`e düşer."""
     return _SCREENER_BY_SETUP.get(setup, "vcp-screener")
 
 
@@ -119,9 +120,9 @@ def screener_for(setup: str) -> str:
 ENGINE_IMPLEMENTED = {
     "vcp-screener", "pullback-screener", "stockbee-momentum-burst-screener", "data-quality-checker",  # P2
     "stockbee-episodic-pivot-analyzer",
-    # 2026-07-24: iki declared-only screener artık motor-uygulandı → scan_all'da HER ticker'da koşar,
+    # İki declared-only screener artık motor-uygulandı → scan_all'da HER ticker'da koşar,
     # karşı-olgusal defterde per-skill avg_r ölçülür (öğrenme artık kör değil). O gün ikisi de
-    # ARMED_SETUPS dışıydı (canlı deftere sıfır risk); 2026-08-11 operatör onayıyla exhaustion_hammer
+    # ARMED_SETUPS dışıydı (canlı deftere sıfır risk); operatör onayıyla exhaustion_hammer
     # SİLAHLANDI (strategy.ARMED_SETUPS — gerekçe orada), pead DORMANT kalır. exhaustion-hammer KEYLESS
     # (anında ölçer); pead FMP-kapılı ama earnings.csv anahtarsız Nasdaq'tan dolduğu için ölçer
     # (veri yoksa dürüstçe None).
@@ -130,7 +131,7 @@ ENGINE_IMPLEMENTED = {
     # `earnings.canslim_fundamentals` + FMP nokta-zamanlı temel önbelleği (Faz C) inşa edilene kadar DAİMA
     # None döner. ENGINE_IMPLEMENTED'a erken eklemek pipeline_run'ı "invoked" yalanına sürükler (skills.py'nin
     # tam olarak önlediği dürüstlük ihlali) — helper landıktan SONRA eklenecek; o zamana dek declared-only.
-    # 2026-07-23: artık gerçekten koşuyor — adapters/finviz.discover EVRENİ genişletir (REPLAY_UNIVERSE'e
+    # Artık gerçekten koşuyor — adapters/finviz.discover EVRENİ genişletir (REPLAY_UNIVERSE'e
     # bugünün momentum/kırılım listesini katar), dataset.load_live canlı döngüde çağırır. Karar yine
     # Meridian'ın vcp/pullback/momentum yasasının; Finviz yalnız "hangi hisselere bakılsın" evreni.
     "finviz-screener",
@@ -140,9 +141,9 @@ ENGINE_IMPLEMENTED = {
 
 _DESC_CACHE: dict | None = None
 
-# Pipeline -> ordered skill chain (from §3). Presence here does not mean enabled — the registry decides.
+# Pipeline -> ordered skill chain. Presence here does not mean enabled — the registry decides.
 PIPELINES = {
-    # 2026-07-30 denetimi: arşivlenen skill'ler zincirlerden çıkarıldı (P1'de breadth-chart-analyst,
+    # Arşivlenen skill'ler zincirlerden çıkarıldı (P1'de breadth-chart-analyst,
     # ftd-detector, us-market-bubble-detector, downtrend-duration-analyzer, sector-analyst; P3'te
     # breakout-trade-planner, scenario-analyzer, options-strategy-advisor; P5'te signal-postmortem,
     # news-reaction-failure-analyzer, trader-memory-core, trade-performance-coach,
@@ -164,6 +165,7 @@ PIPELINES = {
 
 
 def registry() -> dict:
+    """Skill kayıt defterini (registry JSON) okur; defter yoksa boş `{"skills": {}}` döner."""
     return store.read_json(REGISTRY, {"skills": {}})
 
 
@@ -190,7 +192,7 @@ def reconcile_enablement() -> dict:
     changed = []
     for name, info in skills.items():
         if info.get("retired"):
-            # 2026-07-30 denetimi: arşivlenmiş (emekli/birleştirilmiş) kayıt. Anahtar gelse bile
+            # Arşivlenmiş (emekli/birleştirilmiş) kayıt. Anahtar gelse bile
             # DİRİLTİLMEZ — klasörü skills/_emekli/ altında, zincirde üyeliği yok. Anahtar-kapısı
             # bu kararı ezerse denetimin gerekçesi de silinir (fmp='req' + anahtar mevcut olan iki
             # kayıt tam bunu yapıyordu). Geri dönüş yolu: 'retired' alanını kaldır + klasörü taşı.
@@ -202,11 +204,11 @@ def reconcile_enablement() -> dict:
             # NEVER key-disable these: PROTECTED skills are the safety layer ('may never be shadowed or
             # disabled' — broker.py keeps enforcing them regardless of any key), and ENGINE_IMPLEMENTED
             # screeners run natively on keyless data. Registry metadata marking them fmp/alpaca 'req'
-            # describes an ENHANCEMENT, not a dependency (audit #36: deleting the Alpaca key disabled
+            # describes an ENHANCEMENT, not a dependency (deleting the Alpaca key disabled
             # the PROTECTED portfolio-manager).
             continue
         if info.get("shadow"):
-            continue                                   # an operator/Axis-2 shadow decision outranks key-gating (audit #38)
+            continue                                   # an operator/Axis-2 shadow decision outranks key-gating
         required_ok = (not needs_fmp or fmp_ok) and (not needs_alp or alp_ok)
         style_ok = bool(info.get("style_active", True))
         want = style_ok and required_ok
@@ -239,7 +241,7 @@ def _skill_descriptions() -> dict:
     if base.exists():
         for d in sorted(base.iterdir()):
             if d.name.startswith("_"):
-                continue        # skills/_emekli/ arşivi (2026-07-30 denetimi) katalogda görünmez:
+                continue        # skills/_emekli/ arşivi katalogda görünmez:
                                 # arşiv bir skill değil, geri-alınabilir bir depo. Alt klasörleri de
                                 # taranmaz, çünkü tarama tek seviyedir.
             f = d / "SKILL.md"
@@ -257,9 +259,9 @@ def _skill_descriptions() -> dict:
 
 
 # ==================================================================================================
-# YAŞAM DÖNGÜSÜ — TEK YER (Ç3 kökü, 2026-08-09)
+# YAŞAM DÖNGÜSÜ — TEK YER
 # ==================================================================================================
-# ÖLÇÜLMÜŞ KUSUR. Kayıt defteri `retired: true` alanını 2026-07-30 denetiminden beri TAŞIYOR (36
+# ÖLÇÜLMÜŞ KUSUR. Kayıt defteri `retired: true` alanını TAŞIYOR (36
 # kayıt) ama `catalog()` o alanı ÇIKTIYA GEÇİRMİYORDU. Katalog 67 satırı DÜZ döküyordu; yani
 # katalogtan beslenen HER tüketici (Eksen-2 teşhisi, pano özeti, hermes brifingi) arşivi canlı skill
 # sanıyordu. Sayı doğruydu, ETİKET yanlıştı — "gercek_katman_olculmemis 57" satırının 36'sı fiilen
@@ -298,7 +300,7 @@ def envanter() -> dict:
     bir mezar taşını (`skills/_emekli/shadow`) da sayınca 37 veriyordu, kayıt defteri ise gerçek arşiv
     KAYITLARINI (36). O mezar taşı v121'de HAYALET sınıfına alınıp DİZİNİ kaldırıldı — çünkü aşağıdaki
     `fark` kovaları onu ADIYLA yakaladı (`arsiv_dizin_ama_kayitsiz` + `arsiv_dizin_skill_md_yok`; ölçüm
-    docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §245). BUGÜN dizin = SKILL.md = kayıt = 36 ve `ls`in fazlası
+    docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md). BUGÜN dizin = SKILL.md = kayıt = 36 ve `ls`in fazlası
     yalnız README.md'dir (`arsiv_disi_girdi` kovası) — yani üçlü ayrışma kapandı, ama üç payda hâlâ AYRI
     ölçülür ki mezar taşı geri belirirse `fark` onu yine ADIYLA döksün. Sayılar çelişmiyordu; PAYDALARI
     farklıydı ve hiçbiri yazılı değildi. Bu fonksiyon üç paydayı da ölçer ve farkı ADIYLA döker — bir
@@ -311,8 +313,10 @@ def envanter() -> dict:
     base = config.SKILLS
     ars = base / "_emekli"
     def _dizinler(p):
+        """Verilen dizinin doğrudan alt klasör adlarını sıralı verir; dizin yoksa boş liste."""
         return sorted(d.name for d in p.iterdir() if d.is_dir()) if p.exists() else []
     def _skillli(p):
+        """Verilen dizinin `SKILL.md` içeren alt klasör adlarını sıralı verir; dizin yoksa boş liste."""
         return sorted(d.name for d in p.iterdir() if d.is_dir() and (d / "SKILL.md").exists()) \
             if p.exists() else []
     klasor_aktif = [a for a in _skillli(base) if not a.startswith("_")]
@@ -340,12 +344,12 @@ def envanter() -> dict:
 
 
 # ==================================================================================================
-# AJANIN KENDİ KULLANIM SAYACI (v242, 2026-08-13) — "ENJEKTE EDİLDİ" ≠ "MODEL KENDİ AÇTI"
+# AJANIN KENDİ KULLANIM SAYACI — "ENJEKTE EDİLDİ" ≠ "MODEL KENDİ AÇTI"
 # ==================================================================================================
-# NEDEN VAR (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md §B3 / Ö2). Bir skill'in LLM tarafında ne
+# NEDEN VAR (docs/DENETIM-SKILL-CAGRI-IZI-2026-08-13.md). Bir skill'in LLM tarafında ne
 # olduğunun gerçek izi ÜÇÜNCÜ TARAF bir deftere düşüyor — `~/.hermes/skills/.usage.json` — ve bu
 # depoda o dosyayı okuyan TEK SATIR kod yoktu. Meridian'ın kendi defterleri yalnız SAYI taşıyor
-# (`preloaded`, `on_yukleme_n`; ad izi v242'de geri kondu ama BUGÜNDEN İLERİYE); dosyadaki iki sayaç
+# (`preloaded`, `on_yukleme_n`; ad izi geri kondu ama BUGÜNDEN İLERİYE); dosyadaki iki sayaç
 # ise geçmişi kümülatif olarak taşıyor ve İKİ AYRI OLGUYU ölçüyor:
 #
 #   `use_count`  → BİZ bastık.  `-s` ile isteme ön-yüklendi (`build_preloaded_skills_prompt` yolu).
@@ -382,7 +386,8 @@ def _ajan_kullanim_uyar(neden: str, yol: str) -> None:
 def _ajan_skill_dizini() -> str | None:
     """Ajanın skill dizini — TEK TANIM `hermes.AGENT_SKILLS_DIR`tir, burada YENİDEN YAZILMAZ.
 
-    GEÇ İTHAL, BİLİNÇLİ: `hermes` MODÜL DÜZEYİNDE `skills`i çekiyor (hermes.py:25) ve o yöndeki
+    GEÇ İTHAL, BİLİNÇLİ: `hermes` MODÜL DÜZEYİNDE `skills`i çekiyor (`hermes.py` modül başındaki
+    `from . import skills as _skills`) ve o yöndeki
     yokluk ("skills yalnız config+store çeker") bir import döngüsünü engelleyen özelliktir. Buradaki
     ithal ÇAĞRI ANINDA olur, yani modül düzeyinde bir döngü DOĞURMAZ. Yine de `getattr` ile
     savunulur: `hermes` YARIM yüklenmişken (ithal zincirinin ortasında bir çağrı) sabit henüz
@@ -448,7 +453,7 @@ def catalog() -> list[dict]:
     mode / key-requirements (registry), and LIVE performance (attribution — n, win_rate, avg_r). This
     is the toolkit briefing the brain reasons with when it improves the system.
 
-    v242 (2026-08-13): AJAN KATMANI da taşınır (`ajan_yukleme_n` / `ajan_acilma_n` + son damgalar).
+    AJAN KATMANI da taşınır (`ajan_yukleme_n` / `ajan_acilma_n` + son damgalar).
     `last_run` deterministik boru hattının damgasıdır, LLM'in değil — ikisi AYRI katmanlardır ve
     katalog bugüne dek yalnız birincisini gösteriyordu. Kaynak `ajan_kullanim()`; ölçülemediğinde
     dört alan da None ve `ajan_kullanim_neden` doludur."""
@@ -462,7 +467,7 @@ def catalog() -> list[dict]:
     out = []
     for name in names:
         info, a = reg.get(name, {}), attr.get(name, {})
-        # AJAN KATMANI (v242, 2026-08-13). `last_run` LLM'i DEĞİL deterministik boru hattını damgalar
+        # AJAN KATMANI. `last_run` LLM'i DEĞİL deterministik boru hattını damgalar
         # (`_touch_registry_run`ın tek çağıranı `pipeline_run`) — yani "bu skill'i LLM kullandı mı"
         # sorusunun bugüne dek hiçbir alanı yoktu. Bu iki sayaç o boşluğu kapatır ve BİRBİRİNE
         # KARIŞTIRILMAZ: `ajan_yukleme_n` = biz isteme bastık, `ajan_acilma_n` = model kendi açtı.
@@ -473,19 +478,19 @@ def catalog() -> list[dict]:
             "category": info.get("category"), "enabled": bool(info.get("enabled")),
             "mode": info.get("mode"), "shadow": bool(info.get("shadow")),
             "pipeline": info.get("pipeline"), "protected": name in PROTECTED,
-            # YAŞAM DÖNGÜSÜ ARTIK ÇIKTIDA (Ç3, 2026-08-09). Kayıt defteri bunu BİLİYORDU ve katalog
+            # YAŞAM DÖNGÜSÜ ARTIK ÇIKTIDA. Kayıt defteri bunu BİLİYORDU ve katalog
             # düşürüyordu; düşen alan, arşivi canlı sanan bir teşhis kovası ve 67'lik bir pano
             # paydası üretti. İki alan birden taşınır: ham `retired` (kaynağın kendi dili) ve
             # `yasam_dongusu` (tüketicinin okuduğu kova adı) — ikisi TEK yardımcıdan türer.
             "retired": bool(info.get("retired")), "yasam_dongusu": yasam_dongusu(info),
             "requires": [k.upper() for k in ("fmp", "alpaca") if info.get(k) == "req"],
             "n": a.get("n", 0), "win_rate": a.get("win_rate"), "avg_r": a.get("avg_r"),
-            # CF KATMANI DA TAŞINIR (H5, 2026-07-30). `skill_attribution` bu iki alanı ZATEN
+            # CF KATMANI DA TAŞINIR. `skill_attribution` bu iki alanı ZATEN
             # üretiyordu ama katalog onları düşürüyordu — yani hermes'in gördüğü skill brifingi ve
-            # H5'in kanıt eşiği, geniş örneklemli cf katmanını HİÇ göremiyordu. Gerçek katmanın n'i
+            # kanıt eşiği, geniş örneklemli cf katmanını HİÇ göremiyordu. Gerçek katmanın n'i
             # çoğu skill için 0-4 arasında; karar yalnız oradan verilemez.
             "n_cf": a.get("n_cf", 0), "cf_avg_r": a.get("cf_avg_r"),
-            # --- AJAN KATMANI (v242) — iki AYRI olgu, iki AYRI alan; toplanmaları YASAK -----------
+            # --- AJAN KATMANI — iki AYRI olgu, iki AYRI alan; toplanmaları YASAK -----------
             "ajan_yukleme_n": u.get("ajan_yukleme_n") if olculdu else None,   # `-s` ile isteme BİZ bastık
             "ajan_acilma_n": u.get("ajan_acilma_n") if olculdu else None,     # MODEL kendi açtı (skill_view)
             "son_yukleme": u.get("son_yukleme") if olculdu else None,
@@ -505,14 +510,14 @@ def catalog() -> list[dict]:
     return out
 
 
-# ÖRNEKLEM EŞİĞİ TEK SABİTTEN OKUNUR (v240, 2026-08-13). Eskiden `8` İKİ imza varsayılanında
+# ÖRNEKLEM EŞİĞİ TEK SABİTTEN OKUNUR. Eskiden `8` İKİ imza varsayılanında
 # (`recommend_from_attribution`, `axis2_diagnosis`) elle yazılıydı ve ÜÇÜNCÜ bir tüketici
 # (`record_recommendation`in örneklem künyesi) eklenirken üçüncü bir kopya doğacaktı — bu dosyanın
-# tarihi tam olarak "aynı eşik üç yerde, biri sessizce ayrışır" vakalarından ibaret (v238 eylem
+# tarihi tam olarak "aynı eşik üç yerde, biri sessizce ayrışır" vakalarından ibaret (eylem
 # sözlüğü, `_SCREENER_BY_SETUP` yıldızı). Değer DEĞİŞMEDİ: 8.
 MIN_N = 8
 
-# CF KOLUNUN ORANLARI (Rol 1 tasarım kararı, 2026-07-30 temizlik turu). Sabit DEĞİL, TÜREV:
+# CF KOLUNUN ORANLARI (Rol 1 tasarım kararı). Sabit DEĞİL, TÜREV:
 # ikisi de `min_n`den türer, yani eşik tek yerde ayarlanınca kol da onunla birlikte kayar.
 CF_REAL_FRACTION = 0.5    # cf-destekli kolun istediği ASGARİ gerçek örneklem = min_n'in yarısı
 CF_SAMPLE_MULT = 5        # ve ASGARİ cf örneklemi = min_n'in 5 katı
@@ -527,7 +532,7 @@ def _cf_arm(s: dict, min_n: int) -> bool:
           sadakati ölçülmüş ve SINIRLI (`analytics.cf_fidelity` — korelasyon + sapma raporlanır);
           sadakati sınırlı bir defterin tek başına bir skill'i gölgeye atması, ölçülmemiş bir
           kısıtı canlı stratejiye uygulamak olurdu.
-      (2) AMA GÖRMEZDEN DE GELİNEMEZ. `axis2_diagnosis`ın canlı ölçümü (2026-07-30) yapısal körlüğü
+      (2) AMA GÖRMEZDEN DE GELİNEMEZ. `axis2_diagnosis`ın canlı ölçümü yapısal körlüğü
           sayıyla gösterdi: stockbee-momentum-burst n=0 / n_cf=1080, vcp-screener n=91 / n_cf=1004.
           En büyük örneklemli kanıt, YALNIZ gerçek katmana bakan bir eşiğin gözünde YOKTU.
     HÜKÜM YİNE GERÇEK KATMANDAN: aşağıdaki yön karşılaştırmaları (`avg_r <= -0.15` / `>= 0.30`)
@@ -538,7 +543,7 @@ def _cf_arm(s: dict, min_n: int) -> bool:
 
 
 # =================================================================================================
-# ÖRNEKLEM KÜNYESİ (v240, 2026-08-13) — "güçlü canlı performans" cümlesi ÖLÇÜLEN n'e bağlanır
+# ÖRNEKLEM KÜNYESİ — "güçlü canlı performans" cümlesi ÖLÇÜLEN n'e bağlanır
 # =================================================================================================
 # ÖLÇÜLEN ARIZA (operatör vakası, canlı): gelen kutusundaki bir Eksen-2 önerisi
 # `stockbee-exhaustion-hammer-screener` için "Strong live performance of 0.918 avg_r" diyordu; aynı
@@ -558,13 +563,13 @@ def _cf_arm(s: dict, min_n: int) -> bool:
 #   Üstelik hermes'in gördüğü kütüphane (`hermes._skill_library`) skill'i `n >= 1` ile "ölçülü"
 #   rafına koyuyor — yani n=1 modelin gözünde meşru bir kanıt satırıydı.
 #
-# HÜKÜM (bu tur): öneri SUSTURULMAZ — ölçüm gerçektir ve operatörün görmesi gerekir (v238'in
-# `lean_in` hükmüyle aynı çizgi). DEĞİŞEN: her öneri satırı, KAYIT ANINDA ÖLÇÜLEN künyeyi taşır
+# HÜKÜM: öneri SUSTURULMAZ — ölçüm gerçektir ve operatörün görmesi gerekir
+# (`lean_in` hükmüyle aynı çizgi). DEĞİŞEN: her öneri satırı, KAYIT ANINDA ÖLÇÜLEN künyeyi taşır
 # (n · avg_r · n_cf · cf_avg_r) ve künye eşiği geçmiyorsa bunu ADIYLA yazar. Künye ÖNERİ METNİNDEN
 # DEĞİL KATALOGDAN okunur: metni yazan taraf (LLM) aynı zamanda kendi kanıtını beyan edemez.
 ORNEK_YETERSIZ_ETIKET = "ÖRNEKLEM EŞİĞİN ALTINDA"
 
-#: Künyesi hiç yazılmamış (v240 öncesi) defter satırları için dürüst not. UYDURMA YASAĞI: eski
+#: Künyesi hiç yazılmamış defter satırları için dürüst not. UYDURMA YASAĞI: eski
 #: satıra bugünkü ölçümü basmak, o öneri anında var olmayan bir kanıtı geçmişe yazmak olurdu.
 ORNEK_OLCULEMEDI_NOT = ("örneklem künyesi ÖLÇÜLEMEDİ — bu satır künye damgası eklenmeden "
                         "(v240 öncesi) yazılmış; öneri anındaki n/cf değerleri kayıtta yok")
@@ -618,11 +623,11 @@ def recommend_from_attribution(min_n: int = MIN_N) -> list[dict]:
     negative avg_r over >= min_n trades, not protected, currently enabled) and skills to LEAN ON (strong
     positive avg_r). Advisory — surfaced for the operator; not auto-applied.
 
-    ÖRNEKLEM KAPISI İKİ KOLLUDUR (2026-07-30): gerçek katman `n >= min_n` VEYA cf-destekli kol
+    ÖRNEKLEM KAPISI İKİ KOLLUDUR: gerçek katman `n >= min_n` VEYA cf-destekli kol
     (`_cf_arm`). cf-destekli bir öneri `kanit: "gercek+cf"` taşır ve rationale'inde cf payını
     AÇIKÇA yazar — kanıt türü şeffaf olmadan operatör iki farklı sertlikteki iddiayı aynı sanardı."""
     recs = []
-    for s in aktif_katalog():          # ARŞİV ADAY DEĞİL (Ç3): `enabled=False` zaten eliyordu ama
+    for s in aktif_katalog():          # ARŞİV ADAY DEĞİL: `enabled=False` zaten eliyordu ama
                                        # eleme ile TANIM ayrı şeydir — arşiv aday HİÇ olmaz
         if s["protected"] or s["avg_r"] is None:
             continue
@@ -653,7 +658,7 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
     """Log an Axis-2 skill recommendation as PENDING (operator applies it). Dedups: skips if an identical
     un-applied recommendation for the same skill already exists. Refuses protected/unknown skills."""
     skill, action = rec.get("skill"), rec.get("action")
-    # 2026-08-13 (v238): elle yazılı üçlü yerine TEK sözlük. Bu satır ile `apply_skill_action`ın
+    # Elle yazılı üçlü yerine TEK sözlük. Bu satır ile `apply_skill_action`ın
     # kabul ettiği küme arasındaki sessiz ayrışma, "Uygula" düğmesinin sessizce ölmesinin ta
     # kendisiydi; artık ikisi de aynı tuple ailesinden okur ve fark BEYANLIDIR (alt küme).
     if not skill or skill in PROTECTED or action not in ONERILEBILIR_EYLEMLER:
@@ -669,9 +674,9 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
                 applied_ts = max(applied_ts, str(r.get("ts", "")))
     if pending_ts and pending_ts > applied_ts:
         return False   # a genuinely OPEN pending rec exists — no duplicate. An old pending row that a
-                       # LATER applied row superseded must NOT block forever (audit #37: after one
+                       # LATER applied row superseded must NOT block forever (after one
                        # apply cycle the same skill+action could never be recommended again).
-    # ÖRNEKLEM KÜNYESİ BURADA BASILIR — ÖNERİ ANINDA, ÖLÇÜMDEN (v240, 2026-08-13). Üç gerekçe:
+    # ÖRNEKLEM KÜNYESİ BURADA BASILIR — ÖNERİ ANINDA, ÖLÇÜMDEN. Üç gerekçe:
     #   (1) BU, İKİ YOLUN BİRLEŞTİĞİ TEK NOKTA. Deterministik üreteç de LLM yolu da buradan geçer
     #       (`axis2_cycle` · `reflect._submit_locked` · `auto_shadow_from_evidence`); kapı burada
     #       olmazsa örneklem sorusu yine iki ayrı yerde iki ayrı cevap alırdı — arızanın kökü bu.
@@ -681,7 +686,7 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
     #   (3) SNAPSHOT'TIR, CANLI SORGU DEĞİL: karar defterinin künyesi "öneri anındaki n" olmalı;
     #       satır yarın okunduğunda n değişmiş olabilir ve o zaman öneri BAŞKA bir kanıta
     #       dayanıyormuş gibi görünürdü.
-    # ÖNERİ YİNE KAYDEDİLİR (eşik altı olsa da): v238'in `lean_in` hükmüyle aynı çizgi — ölçüm
+    # ÖNERİ YİNE KAYDEDİLİR (eşik altı olsa da): `lean_in` hükmüyle aynı çizgi — ölçüm
     # gerçektir, operatörün görmesi gerekir; değişen, "güçlü" gibi SUNULMAMASIDIR.
     kunye = ornek_kunyesi(skill)
     store.append_jsonl(SKILL_RECS, {
@@ -694,11 +699,11 @@ def record_recommendation(rec: dict, source: str = "hermes") -> bool:
 
 def pending_recommendations() -> list[dict]:
     """Un-applied recommendations, newest-first, deduped by skill. An APPLIED marker shadows any OLDER
-    pending row for the same skill (M3): apply_skill_action APPENDS a {applied:True} row rather than
+    pending row for the same skill: apply_skill_action APPENDS a {applied:True} row rather than
     flipping the original {pending:True} one, so without this the apply button and the (N) badge never
     cleared and every re-click appended another row (unbounded growth).
 
-    UYGULANABİLİRLİK BURADA DAMGALANIR (v238, 2026-08-13). Üç yüzey de (gelen kutusu · öğrenme
+    UYGULANABİLİRLİK BURADA DAMGALANIR. Üç yüzey de (gelen kutusu · öğrenme
     öneri kartı · beceri sayfası) bu TEK üreticiden besleniyor; damgayı burada basmak, "hangi öneri
     gerçekten uygulanabilir" sorusunun üç yerde üç kez cevaplanmasını (ve birinin sessizce
     ayrışmasını — ölçülen arızanın ta kendisi) yapısal olarak imkânsız kılar. Alan EK'tir: defter
@@ -717,7 +722,7 @@ def pending_recommendations() -> list[dict]:
             r["uygulanabilir"] = eylem_uygulanabilir(r.get("action"))
             if not r["uygulanabilir"]:
                 r["uygulanamama_notu"] = UYGULANAMAZ_NOT
-            # KÜNYE DEFTERDEN GELİR, BURADA YENİDEN ÖLÇÜLMEZ (v240): bu fonksiyon her istekte üç
+            # KÜNYE DEFTERDEN GELİR, BURADA YENİDEN ÖLÇÜLMEZ: bu fonksiyon her istekte üç
             # yüzeyi besliyor ve burada `catalog()` çağırmak her gelen kutusu çizimine bir atıf
             # hesabı bindirirdi. Künyesi olmayan ESKİ satır için değer UYDURULMAZ: `ornek_yeterli`
             # None kalır ("ölçülemedi"), `False` ("eşiği geçemedi") DEĞİL.
@@ -733,11 +738,11 @@ def apply_skill_action(skill: str, action: str) -> dict:
     the skill running but marks it under-review (does not touch the deterministic live engine, which never
     executes LLM skills); 'activate' clears shadow. Logged; fully reversible.
 
-    RET SÖZLEŞMESİ (v238, 2026-08-13): her ret artık `reason`ın YANINDA makine-okunur bir `kod`
+    RET SÖZLEŞMESİ: her ret artık `reason`ın YANINDA makine-okunur bir `kod`
     taşır. Neden: bu fonksiyonun İKİ çağıranı var ve ikisinin ihtiyacı farklı — süreç-içi otomatik
     yol (`auto_shadow_from_evidence`) `reason` metnini kanıta yazar, HTTP yüzeyi ise reddi doğru
     duruma çevirmek zorunda ve bunu SERBEST METİN eşleştirerek yapmak (yarın metin değişince
-    sessizce 500'e/200'e kayacak bir kapı) bu turda kapattığımız sınıfın kendisi olurdu."""
+    sessizce 500'e/200'e kayacak bir kapı) kapattığımız sınıfın kendisi olurdu."""
     if action not in UYGULANABILIR_EYLEMLER:
         # `lean_in` TAM OLARAK BURAYA DÜŞÜYORDU ve HTTP 200 ile sessizce dönüyordu. Kod ayrımı
         # önemli: ÖNERİLEBİLİR ama uygulanamaz bir eylem (lean_in) ile hiç tanınmayan bir eylem
@@ -750,7 +755,7 @@ def apply_skill_action(skill: str, action: str) -> dict:
         return {"ok": False, "kod": "korumali",
                 "reason": f"'{skill}' korumalı — gölgelenemez/kapatılamaz"}
     # kilit: OKUMA+YAZMA aynı kilit altında olmalı — aynı anda koşan pipeline damgası bu kararı
-    # ezmesin (memory.py'deki audit #19 kayıp-güncelleme deseninin aynısı; turu 30)
+    # ezmesin (memory.py'deki kayıp-güncelleme deseninin aynısı)
     with _REG_LOCK:
         reg = registry()
         info = reg.get("skills", {}).get(skill)
@@ -769,6 +774,8 @@ def apply_skill_action(skill: str, action: str) -> dict:
 
 
 def _touch_registry_run(skill: str, artifact: str | None):
+    """Bir skill'in kayıt defterindeki `last_run` (ve varsa `last_artifact`) damgasını kilit altında günceller.
+    Skill defterde yoksa hiçbir şey yazılmaz."""
     with _REG_LOCK:
         reg = registry()
         if skill in reg.get("skills", {}):
@@ -807,12 +814,12 @@ def pipeline_run(pipeline: str, artifact: str | None = None):
 
 
 # ==================================================================================================
-# H5 — SKILL ÖZ-YÖNETİMİ: KANIT EŞİĞİNDE OTOMATİK GÖLGELEME (Hermes paketi, 2026-07-30)
+# SKILL ÖZ-YÖNETİMİ: KANIT EŞİĞİNDE OTOMATİK GÖLGELEME
 # ==================================================================================================
 # NEDEN. `recommend_from_attribution` iki yıldır doğru sayıyı üretiyordu ve hiçbir şey OLMUYORDU:
 # öneri `pending` olarak deftere yazılıyor, operatörün panodaki düğmesini bekliyordu. Yani atıf
 # ölçümü (Axis-2'nin bütün amacı) bir KARARA hiç bağlanmamıştı — "üretilip tüketilmeyen kanıt"
-# deseninin skill katmanındaki hâli. Operatör yönü (2026-07-30): "self-learning'i daha aktif/
+# deseninin skill katmanındaki hâli. Operatör yönü: "self-learning'i daha aktif/
 # efektif kullan".
 #
 # NE DEĞİŞTİ, NE DEĞİŞMEDİ.
@@ -846,7 +853,7 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
 
     Kilitli desen: registry yazımı `apply_skill_action` üzerinden gider, yani `_REG_LOCK` altında
     okuma+yazma birlikte olur. Doğrudan `store.write_json(REGISTRY, ...)` yazmak, eşzamanlı koşan
-    pipeline damgasının bu kararı EZMESİ demekti (audit #19 kayıp-güncelleme deseni)."""
+    pipeline damgasının bu kararı EZMESİ demekti (kayıp-güncelleme deseni)."""
     from . import obs
     uygulanan, advisory, atlanan, dogrulama, motor_ici = [], [], [], [], []
     for s in aktif_katalog():          # ARŞİV: ne otomatik karar adayı ne eşik doğrulaması adayı —
@@ -944,22 +951,22 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
 
 
 # ==================================================================================================
-# EKSEN-2 ÜRETECİNİN KADANSI + SESSİZLİĞİNİN TEŞHİSİ (öğrenme otomasyonu turu, 2026-07-30)
+# EKSEN-2 ÜRETECİNİN KADANSI + SESSİZLİĞİNİN TEŞHİSİ
 # ==================================================================================================
 # TEŞHİS — "üretici hiç koşmuyor" DEĞİL, "üretici koşuyor ve HİÇBİR ŞEY üretmiyor, sebebi de hiçbir
 # yerde yazmıyor". Üretici İKİ TANE ve ikisi de bulundu:
 #
 #   (a) `recommend_from_attribution()` — deterministik Eksen-2 sinyali. TEK çağıranı
-#       `reflect._proposal` (reflect.py:643) ve oradan çıktısı yalnızca öneri sözlüğünün
+#       `reflect._proposal` ve oradan çıktısı yalnızca öneri sözlüğünün
 #       `skill_recommendation` alanına gömülür; deftere ancak o öneri `reflect._submit_locked`e
-#       (reflect.py:706) ulaşırsa yazılır. Yani üreteç, BİR HİPOTEZ ÖNERİSİNİN YAN ÜRÜNÜYDÜ.
+#       ulaşırsa yazılır. Yani üreteç, BİR HİPOTEZ ÖNERİSİNİN YAN ÜRÜNÜYDÜ.
 #       Ve hermes'in canlı yollarının İKİSİ de o alanı boş bırakır: beyin zinciri (`propose_with_llm`)
 #       alanı hiç doldurmaz, bakir-düğme yolu ise BİLEREK `None` yazar (hermes.py, "AXIS-2 NOTU
 #       EKLENMEZ" notu). Sonuç: canlı gecede üreteç sonuçsuz koşar.
-#   (b) `auto_shadow_from_evidence()` — H5 (bugün eklendi), `loop.py:848`den çağrılır; yani
+#   (b) `auto_shadow_from_evidence()` — `loop.daily_cycle`in P5_LEARN bloğundan çağrılır; yani
 #       `daily_cycle` ⊂ "yeni seansın barı geldi" rehineliğinde (bkz. scheduler._learning_cadence).
 #
-# EŞİK ÖLÇÜMÜ (canlı katalog, 2026-07-30 — DEĞİŞTİRİLMEDİ, ÖLÇÜLDÜ):
+# EŞİK ÖLÇÜMÜ (canlı katalog — DEĞİŞTİRİLMEDİ, ÖLÇÜLDÜ):
 #     position-sizer              n=95  avg_r=−0,042   n_cf=0      → PROTECTED, aday değil
 #     pre-trade-discipline-gate   n=95  avg_r=−0,042   n_cf=0      → PROTECTED, aday değil
 #     vcp-screener                n=91  avg_r=+0,000   n_cf=1004   → eşik aralığında (−0,15..+0,30)
@@ -970,7 +977,7 @@ def auto_shadow_from_evidence(apply: bool = True) -> dict:
 # YAPISAL bir körlüğü var ve ölçüm onu gösteriyor: eşik YALNIZ gerçek katmana bakıyor (`n`,`avg_r`)
 # ve `catalog()`ün BUGÜN taşımaya başladığı cf katmanını (`n_cf`,`cf_avg_r`) hiç okumuyor. En büyük
 # örneklemli iki skill (1080 ve 1004 cf satırı) gerçek katmanda n=0/n=91 olduğu için üretecin
-# gözünde YOK. EŞİK BU TURDA DEĞİŞTİRİLMEDİ (yönerge: "kafadan değiştirme") — teşhis raporlanır ve
+# gözünde YOK. EŞİK DEĞİŞTİRİLMEDİ (yönerge: "kafadan değiştirme") — teşhis raporlanır ve
 # `axis2_cycle` her koşuda hangi kolun kimi elediğini SAYIYLA yazar, ki eşik tartışması bir daha
 # tahminle değil ölçümle yapılsın.
 AXIS2_FILE = "axis2_status.json"      # kadansın son koşusu (okuyan: analytics + api)
@@ -983,7 +990,7 @@ def axis2_diagnosis(min_n: int = MIN_N) -> dict:
     (2) kanıt hiç ölçülmemiş. İkisini ayırmak için her skill bir KOVAYA düşer ve kova adı sebebin
     kendisidir. Hiçbir şey UYGULAMAZ, hiçbir eşiği DEĞİŞTİRMEZ.
 
-    ÜÇÜNCÜ HÂL AYRILDI (Ç3, 2026-08-09): `arsiv`. Emekli/birleştirilmiş kayıtlar "ölçülmemiş"
+    ÜÇÜNCÜ HÂL AYRILDI: `arsiv`. Emekli/birleştirilmiş kayıtlar "ölçülmemiş"
     DEĞİLDİR — ölçülecek bir şeyleri YOKTUR, çünkü zincirde üyelikleri yok ve klasörleri
     `skills/_emekli/` altında. Eskiden hepsi `gercek_katman_olculmemis` kovasına düşüyordu ve o
     kova, 36 arşiv kaydıyla şişmiş hâlde "üretecin körlüğü" diye okunuyordu. Sayı doğruydu,
@@ -1022,13 +1029,13 @@ def axis2_diagnosis(min_n: int = MIN_N) -> dict:
         kova.setdefault(k, []).append(satir)
     return {"kovalar": {k: v for k, v in sorted(kova.items())},
             "sayim": {k: len(v) for k, v in sorted(kova.items())},
-            # PAYDA KAYNAĞI ÇIKTIDA (Ç3 · C10): pano paydayı SABİT YAZMAZ, buradan okur. `arsiv`
+            # PAYDA KAYNAĞI ÇIKTIDA: pano paydayı SABİT YAZMAZ, buradan okur. `arsiv`
             # kovası paydanın DIŞINDADIR — "ölçülmüş / aktif küme" oranı, arşivi bölene de paydaya
             # da katmaz. Sayı burada üretilir çünkü kovaları üreten dal yapısı burada.
             "arsiv_kova": ARSIV,
             "aktif_payda": sum(len(v) for k, v in kova.items() if k != ARSIV),
             "esik": {"min_n": min_n, "shadow_avg_r": -0.15, "lean_in_avg_r": 0.30,
-                     # BEYAN GÜNCELLENDİ (2026-07-30 temizlik turu): cf katmanı ARTIK OKUNUYOR —
+                     # BEYAN GÜNCELLENDİ: cf katmanı ARTIK OKUNUYOR —
                      # ama yalnız ÖRNEKLEM kolunda. Eski metin ("cf OKUNMUYOR") artık yanlış
                      # olurdu ve bu alan tam da eşiğin ne yaptığını okunur kılmak için var.
                      "cf_kol": {"gercek_asgari": min_n * CF_REAL_FRACTION,

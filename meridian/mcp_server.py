@@ -24,12 +24,16 @@ from . import store, analytics
 
 
 def _regime(_args: dict) -> dict:
+    """Güncel rejim kaydı: tarih, rejim, maruziyet bütçesi/skoru, dağıtım günleri ve genişlik skoru.
+    SALT OKUMA."""
     r = store.read_json("regime.json", {})
     return {k: r.get(k) for k in ("date", "regime", "exposure_budget_pct", "exposure_score",
                                   "min_exposure_score", "distribution_days", "breadth_score")}
 
 
 def _calibrations(_args: dict) -> dict:
+    """Kalibrasyon artefaktlarını tek sözlükte toplar (skor IC, LLM görüşü, kapı meta, çıkış verimliliği,
+    cf sadakati). Bulunmayan artefakt None kalır — uydurma değer yok. SALT OKUMA."""
     return {
         "score": store.read_json("score_calibration.json", None),
         "llm_opinion": store.read_json("llm_calibration.json", None),
@@ -59,6 +63,8 @@ def _cf_summary(_args: dict) -> dict:
 
 
 def _selfreview(_args: dict) -> dict:
+    """Haftalık öz-değerlendirmenin özeti: üretim damgası, dikkat maddeleri, çelişkiler ve ilerleme.
+    SALT OKUMA."""
     r = store.read_json("self_review.json", {})
     return {"generated": r.get("generated"), "attention": r.get("attention", []),
             "contradictions": r.get("contradictions", []),

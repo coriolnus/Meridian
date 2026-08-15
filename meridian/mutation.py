@@ -56,6 +56,11 @@ _LIVE_STATE = (Path(config.ROOT) / "state").resolve()
 # YOL GÜVENLİĞİ + DURUM BAĞLAMI
 # =============================================================================================
 def _assert_not_live(p: Path) -> Path:
+    """Yolu çözümleyip CANLI `state/` ile çakışmadığını doğrular; çakışırsa RuntimeError.
+
+    Mutasyon koşumunun her yazım yolu buradan geçer: canlı defterin kendisi, üstü ya da altı
+    hedef gösterilirse koşum başlamadan durur.
+    """
     rp = Path(p).resolve()
     if rp == _LIVE_STATE or _LIVE_STATE in rp.parents or rp in _LIVE_STATE.parents:
         raise RuntimeError(f"mutasyon koşumu canlı defterin yakınına yazamaz: {rp}")
@@ -97,14 +102,17 @@ def quiet_externals():
 # GERÇEKÇİ, SÖZLEŞMEYE UYAN TEMEL DURUM
 # =============================================================================================
 def _wjson(state: Path, name: str, obj) -> None:
+    """Nesneyi `state/<name>` dosyasına girintili JSON olarak yazar (fikstür kurulumu)."""
     (state / name).write_text(json.dumps(obj, indent=2))
 
 
 def _wjsonl(state: Path, name: str, rows: list) -> None:
+    """Satır listesini `state/<name>` dosyasına JSONL (satır başına bir nesne) olarak yazar."""
     (state / name).write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
 def rjsonl(state: Path, name: str) -> list:
+    """`state/<name>` JSONL defterini satır listesi olarak okur; dosya yoksa boş liste (salt okuma)."""
     p = state / name
     if not p.exists():
         return []
@@ -112,6 +120,7 @@ def rjsonl(state: Path, name: str) -> list:
 
 
 def rjson(state: Path, name: str, default=None):
+    """`state/<name>` JSON dosyasını okur; dosya yoksa `default` döner (salt okuma)."""
     p = state / name
     return json.loads(p.read_text()) if p.exists() else default
 
@@ -121,7 +130,7 @@ UNIVERSE = [("AAPL", "tech"), ("JPM", "financials"), ("UNH", "health"), ("CAT", 
 SESSIONS = [f"2026-06-{d:02d}" for d in range(1, 25)]      # 24 seans
 BOOK_DATE = "2026-06-25"                                    # defterin son tarihi (planlar bundan eski)
 
-# C18 (denetim 2026-08-02) — FİKSTÜR ATR'si. SENTETİKTİR VE ÖYLE BEYAN EDİLİR: bu koşumun fiyatları
+# FİKSTÜR ATR'si. SENTETİKTİR VE ÖYLE BEYAN EDİLİR: bu koşumun fiyatları
 # da sentetiktir (px = 100 + i) ve bu tickerların barı YOKTUR, yani ölçülmüş bir ATR14 yoktur.
 # UYDURMA YASAĞI ihlali değildir çünkü hiçbir yerde "ölçüldü" diye sunulmuyor — burada üretilen şey
 # bir PİYASA BÜYÜKLÜĞÜ değil, dedektör bataryasının yargılayacağı bir DEFTERdir ve o defterin gerçek
@@ -151,6 +160,13 @@ def build_state(dest: Path) -> Path:
 
 
 def _build_ledgers(state: Path) -> None:
+    """Temel durumun HAM defterlerini 24 sentetik seans üzerinden yazar: plan, işlem, karşı-olgusal,
+    aday, hipotez, harcama, boru-hattı koşumu ve olay defteri.
+
+    Satır şekilleri GERÇEK üreticilerden gelir — kapı kararını `guard.classify_gate`, işlem
+    satırını `PaperBroker` üretir. Bir dolum reddedilirse RuntimeError ile durur: GO damgalı ama
+    işlemsiz bir plan temel durumu kirletir ve kirli temelde her mutasyon 'yakalandı' görünürdü.
+    """
     from . import guard
     from .broker import PaperBroker
 
@@ -189,7 +205,7 @@ def _build_ledgers(state: Path) -> None:
         candidates.append({"date": sess, "ticker": tkr, "score": plan["score"],
                            "setup": "breakout_vcp", "sector": sec, "source_skill": "vcp-screener"})
 
-        # C18 (denetim 2026-08-02) — E1 GİRİŞ YASASININ ATR BACAĞI BU MOTORDA DA TAŞINIR.
+        # E1 GİRİŞ YASASININ ATR BACAĞI BU MOTORDA DA TAŞINIR.
         # ÖNCESİ: `fill_entry`e `atr=` HİÇ geçmiyordu → `broker.entry_limit_price` `a > 0` dalına
         # giremiyor ve limit DAİMA yüzde tavanına düşüyordu. Canlı motor ise min(0,5·ATR14, %1) ile
         # koşuyor. Yani DEDEKTÖRLERİ ölçen fikstür, ölçtüğü sistemin icra yasasının yarısını hiç
@@ -218,8 +234,8 @@ def _build_ledgers(state: Path) -> None:
                                         f"2026-06-{min(28, int(sess[-2:]) + 3):02d}")
             if row:
                 trades.append(row)
-        # cf ŞEMASI counterfactual.collect ile HİZALI olmalı (2026-07-23, tarama bulgusu): build_state
-        # yalnız `gate_verdict`/`plan_id` yazıyordu ama validation_report.py:30-31 `verdict` ve `taken`
+        # cf ŞEMASI counterfactual.collect ile HİZALI olmalı: build_state
+        # yalnız `gate_verdict`/`plan_id` yazıyordu ama `validation_report.build` `verdict` ve `taken`
         # okuyor — ikisi de None kalıyor ve o tüketiciyi bozan mutasyonlar TEMEL DURUMDA da None gördüğü
         # için asla yakalanamıyordu (kapsama sahte yüksek). Kanonik alanlar da yazılır.
         cfs.append({"id": f"CF-{sess}-{tkr}", "date": sess, "ticker": tkr, "setup": "breakout_vcp",
@@ -257,6 +273,13 @@ def _build_ledgers(state: Path) -> None:
 
 
 def _build_artifacts(state: Path) -> None:
+    """Ham defterlerden TÜREYEN artefaktları yazar: portföy, rejim, veri kalitesi, nabız, sermaye
+    eğrisi, eleme muhasebesi, barlar, kazanç takvimi ve kalibrasyon/karne dosyaları.
+
+    Kaynaklar türevlerden ÖNCE yazılır (tutarlılık dedektörü mtime sırasına bakar) ve sayılar
+    gerçek işlem defterinden türetilir — yeniden-hesap dedektörünün iki yoldan bulduğu değerler
+    temel durumda tutmak zorundadır.
+    """
     trades = rjsonl(state, "trades.jsonl")
     n_tr = len(trades)
     # YENİDEN HESAP dedektörü (recompute.py) aynı büyüklüğü iki yoldan hesaplayıp kıyaslıyor:
@@ -340,8 +363,8 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # Canlıda bu yolun sahibi günlük döngüdür; burada geçici kopya üzerinde çalışılıyor.
     rep = wd.integrity_report(persist=True)
 
-    # ---- DÜŞEN DEDEKTÖR "BULGU YOK" DEĞİLDİR (2026-08-02; sınıf: SAHTE YEŞİL) ------------------
-    # C21'den beri `integrity_report` dedektör-başına yalıtımlıdır: düşen bir dedektör diğerlerini
+    # ---- DÜŞEN DEDEKTÖR "BULGU YOK" DEĞİLDİR (sınıf: SAHTE YEŞİL) ------------------
+    # `integrity_report` dedektör-başına yalıtımlıdır: düşen bir dedektör diğerlerini
     # götürmez, `{**iskelet, "ok": False, "dedektor_dustu": True, ...}` döner. İSKELET bu modül İÇİN
     # kondu (watchdog docstring'i çağıran olarak buranın adını veriyor) — ama aşağıdaki okuma
     # iskeletin BOŞ listelerini "bu dedektör bir şey bulmadı" diye okuyordu. Sonuç iki yönlü yalan:
@@ -353,11 +376,11 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
     # yakalandı" diye okunur. Düşen bir dedektör jetonu, çöken bir dedektörü YAKALAMA sayardı ve
     # kapsama sayısını yukarı çekerdi — bu modülün ilk tasarım kararının (sayıyı şişirmek ölçümü
     # yalana çevirir) tam tersi. Ölçülemeyen ölçülemedi kalır, AYRI raporlanır.
-    # AİLE TÜRETİLİR, ELLE YAZILMAZ (2026-08-13). Burada yedi adlık SABİT bir tuple duruyordu ve
+    # AİLE TÜRETİLİR, ELLE YAZILMAZ. Burada yedi adlık SABİT bir tuple duruyordu ve
     # `watchdog._DEDEKTOR_BOS`un ikinci, elle bakımlı bir kopyasıydı: 8. dedektör (`divergence`)
     # eklendiğinde bu liste SESSİZCE geride kalır, düşen bir dedektör "düşmedi" sayılır ve körlük
     # haritası yalan söylerdi — üstelik bu bloğun kendi gerekçesi tam olarak o yalana karşı yazılmış.
-    # Aynı çift-kaynak sınıfının bu turda kapatılan kardeşi: pano başlığının sabit "(7 desen)"i.
+    # Aynı çift-kaynak sınıfının kapatılan kardeşi: pano başlığının sabit "(7 desen)"i.
     _DEDEKTORLER = tuple(wd._DEDEKTOR_BOS)
     dustu: set[str] = set()
     for _ad in _DEDEKTORLER:
@@ -396,7 +419,7 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
         for pr in rep["parity"].get("rows", []):
             if not pr.get("ok"):
                 red.add(f"parity:{pr['check']}")
-    if "divergence" not in dustu:      # 8. desen (2026-08-13): olgu-başına jeton, akranlarıyla aynı
+    if "divergence" not in dustu:      # 8. desen: olgu-başına jeton, akranlarıyla aynı
         for dv in rep.get("divergence", {}).get("ayrik", []):
             red.add(f"divergence:{dv['olgu']}")
 
@@ -437,12 +460,18 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
 # =============================================================================================
 @dataclass(frozen=True)
 class Mutation:
+    """Katalogdaki tek bir bozulma sınıfı: adı, hangi gerçek olayın sınıfı olduğunu anlatan Türkçe
+    not ve durumu bozan `apply` işlevi. Donuk (frozen) — katalog koşum sırasında değişmez.
+    """
     name: str
     note: str                      # Türkçe: bu hangi gerçek olayın sınıfı?
     apply: Callable[[Path], None]
 
 
 def _m_plan_id_legacy(state: Path) -> None:
+    """MUTASYON: plan kimliklerini sözleşmedeki biçimden çıkarıp eski `P00140` şemasına döndürür —
+    birleştirme anahtarını kıran canlı hatanın sınıfı.
+    """
     rows = rjsonl(state, "trade_plans.jsonl")
     for i, r in enumerate(rows):
         r["id"] = f"P{i:05d}"
@@ -450,6 +479,9 @@ def _m_plan_id_legacy(state: Path) -> None:
 
 
 def _m_trade_plan_id_legacy(state: Path) -> None:
+    """MUTASYON: işlem satırlarındaki `plan_id`yi eski şemaya çevirir; sim↔gerçek kıyasının
+    birleştirme anahtarı kopar.
+    """
     rows = rjsonl(state, "trades.jsonl")
     for i, r in enumerate(rows):
         r["plan_id"] = f"P{i:05d}"
@@ -457,6 +489,7 @@ def _m_trade_plan_id_legacy(state: Path) -> None:
 
 
 def _m_cf_id_legacy(state: Path) -> None:
+    """MUTASYON: karşı-olgusal satır kimliklerini eski `CF0001` şemasına çevirir."""
     rows = rjsonl(state, "counterfactuals.jsonl")
     for i, r in enumerate(rows):
         r["id"] = f"CF{i:04d}"
@@ -464,6 +497,7 @@ def _m_cf_id_legacy(state: Path) -> None:
 
 
 def _m_drop_setup_from_trades(state: Path) -> None:
+    """MUTASYON: işlem satırlarından zorunlu `setup` alanını siler ('gerçek 0 / simüle 241' olayının kökü)."""
     rows = rjsonl(state, "trades.jsonl")
     for r in rows:
         r.pop("setup", None)
@@ -471,6 +505,7 @@ def _m_drop_setup_from_trades(state: Path) -> None:
 
 
 def _m_drop_status_from_cf(state: Path) -> None:
+    """MUTASYON: karşı-olgusal satırlardan zorunlu `status` alanını siler."""
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r.pop("status", None)
@@ -478,6 +513,9 @@ def _m_drop_status_from_cf(state: Path) -> None:
 
 
 def _m_rename_to_legacy_alias(state: Path) -> None:
+    """MUTASYON: `r_multiple_expected` alanını `rr_expected` takma adına çevirir — yaması olmayan
+    tüketici satırı sessizce eler.
+    """
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r["rr_expected"] = r.pop("r_multiple_expected", None)
@@ -485,6 +523,9 @@ def _m_rename_to_legacy_alias(state: Path) -> None:
 
 
 def _m_regime_is_question_mark(state: Path) -> None:
+    """MUTASYON: tüm karşı-olgusal satırların rejim etiketini '?' yapar; rejim bazlı her dilimleme
+    boşa düşer.
+    """
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r["regime"] = "?"
@@ -492,11 +533,13 @@ def _m_regime_is_question_mark(state: Path) -> None:
 
 
 def _m_truncate_trades(state: Path) -> None:
+    """MUTASYON: işlem defterinin yarısını keser (kötü restore / yarım yazım sınıfı)."""
     rows = rjsonl(state, "trades.jsonl")
     _wjsonl(state, "trades.jsonl", rows[: max(1, len(rows) // 2)])
 
 
 def _m_truncate_events(state: Path) -> None:
+    """MUTASYON: olay defterinin üçte ikisini keser — teşhis geçmişi silinir."""
     rows = rjsonl(state, "events.jsonl")
     _wjsonl(state, "events.jsonl", rows[: max(1, len(rows) // 3)])
 
@@ -509,17 +552,19 @@ def _m_stale_derived(state: Path) -> None:
 
 
 def _m_zero_out_calibration(state: Path) -> None:
+    """MUTASYON: skor kalibrasyon artefaktını sıfırlar — mekanizma 'koşuyor' ama hiçbir şey üretmiyor."""
     _wjson(state, "score_calibration.json", {"n": 0, "n_real": 0, "n_cf": 0, "buckets": {}})
 
 
 def _m_duplicate_trade_rows(state: Path) -> None:
     """Canlıda yaşandı: döngü ortasında istisna → her 300 sn'lik yeniden deneme aynı satırı
-    yeniden yazıyordu (audit #11)."""
+    yeniden yazıyordu."""
     rows = rjsonl(state, "trades.jsonl")
     _wjsonl(state, "trades.jsonl", rows + rows[:5])
 
 
 def _m_size_out_of_bounds(state: Path) -> None:
+    """MUTASYON: ilk beş planın `size_r` değerini bounds.yaml tavanının çok üstüne (99.0) çıkarır."""
     rows = rjsonl(state, "trade_plans.jsonl")
     for r in rows[:5]:
         r["size_r"] = 99.0                     # bounds.yaml tavanının çok üstünde
@@ -534,18 +579,25 @@ def _m_unread_writer_output(state: Path) -> None:
 
 
 def _m_heartbeat_field_clobbered(state: Path) -> None:
+    """MUTASYON: nabızdaki (`heartbeat.json`) `regime` alanını siler — sahipli bir alanın başka bir
+    yazıcı tarafından ezilmesi sınıfı.
+    """
     hb = rjson(state, "heartbeat.json", {})
     hb.pop("regime", None)
     _wjson(state, "heartbeat.json", hb)
 
 
 def _m_book_date_regression(state: Path) -> None:
+    """MUTASYON: portföyün `last_date` alanını geriye alır — defter tarihinin geri gitmesi hatası."""
     pf = rjson(state, "portfolio.json", {})
     pf["last_date"] = "2026-05-01"
     _wjson(state, "portfolio.json", pf)
 
 
 def _m_bars_file_shrinks(state: Path) -> None:
+    """MUTASYON: ilk bar CSV'sini yarıya indirir ama wf-revizyonuna dokunmaz; önbelleklenmiş
+    walk-forward sonuçları artık var olmayan barlara ait kalır.
+    """
     p = sorted((state / "bars").glob("*.csv"))[0]
     lines = p.read_text().splitlines()
     p.write_text("\n".join(lines[: len(lines) // 2]) + "\n")
@@ -561,6 +613,7 @@ def _m_hypothesis_id_reused(state: Path) -> None:
 
 
 def _m_candidates_emptied(state: Path) -> None:
+    """MUTASYON: aday defterini boşaltır — huninin girişi görünmez olur."""
     _wjsonl(state, "candidates.jsonl", [])
 
 
@@ -595,6 +648,9 @@ def _m_realized_pnl_drift(state: Path) -> None:
 
 
 def _m_negative_edge_everywhere(state: Path) -> None:
+    """MUTASYON: ölçülen edge'i her rejimde negatife çevirir. Bu bir SONUÇtur; ölçülen şey
+    dedektörün bunu alarm sayıp saymadığıdır.
+    """
     _wjson(state, "regime_edge.json", {"chop": {"n": 40, "avg_r": -0.5},
                                        "trend_up": {"n": 25, "avg_r": -0.8}})
 
@@ -698,10 +754,10 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 baseline = detector_red(log, dusen_baz)   # 2. geçiş: GERÇEK temel durum
             result["baseline_red"] = sorted(baseline)
             result["baseline_clean"] = not baseline
-            # TEMEL DURUM "TEMİZ" İLE "ÖLÇÜLDÜ" AYRI İKİ İDDİADIR (2026-08-02): `baseline_clean`
+            # TEMEL DURUM "TEMİZ" İLE "ÖLÇÜLDÜ" AYRI İKİ İDDİADIR: `baseline_clean`
             # yalnız "kırmızı jeton yok" der. Batarya yarım koştuysa bu cümle doğrudur ve
             # YANILTICIDIR — bu yüzden düşen dedektörler AYRI bir alanda taşınır ve rapor onları
-            # kapsama satırının hemen altında basar. KOŞUM DURDURULMAZ (C21 yalıtımının gerekçesi:
+            # kapsama satırının hemen altında basar. KOŞUM DURDURULMAZ (yalıtımın gerekçesi:
             # bir dedektörün çöküşü diğer altısının hükmünü götürmemeli); durduran şey yalnız
             # KİRLİ temel durumdur, çünkü orada ölçülen sayı yalan söyler, eksik değil.
             result["baseline_olculemedi"] = dict(dusen_baz)
@@ -743,7 +799,7 @@ def run(workdir: Path | None = None, keep: bool = False, strict: bool = True) ->
                 "n_mutations": n, "n_caught": len(caught), "n_missed": len(missed),
                 "coverage_pct": round(100.0 * len(caught) / n, 1) if n else 0.0,
                 "caught": caught, "missed": missed, "rows": rows,
-                # KAPSAMA SAYISININ ÇEKİNCESİ, SAYININ YANINDA (2026-08-02): `n_olculemedi`>0 ise
+                # KAPSAMA SAYISININ ÇEKİNCESİ, SAYININ YANINDA: `n_olculemedi`>0 ise
                 # `coverage_pct` payı EKSİK ölçülmüş bir bataryadan gelir. Sayı düzeltilmez
                 # (düzeltmek, düşen dedektörün ne bulacağını UYDURMAK olurdu) — çekince beyan edilir.
                 "olculemedi": olculemedi, "n_olculemedi": len(olculemedi),
@@ -768,7 +824,7 @@ def format_report(res: dict) -> str:
                 f"'ölçüldü' aynı şey değil" if _bd else ""))
     L.append(f"mutasyon: {res['n_mutations']}  ·  yakalanan: {res['n_caught']}  ·  "
              f"KAÇAN: {res['n_missed']}  ·  kapsama: %{res['coverage_pct']}")
-    # ÖLÇÜLEMEDİ SATIRI — kapsama sayısının HEMEN ALTINDA (2026-08-02, sahte-yeşil sınıfı): düşen
+    # ÖLÇÜLEMEDİ SATIRI — kapsama sayısının HEMEN ALTINDA (sahte-yeşil sınıfı): düşen
     # bir dedektörün boş listesi eskiden "bulgu yok" diye okunuyordu ve mutasyon MISSED sayılıyordu.
     # "Göremedi" ile "ölçülemedi" aynı kutuya girerse körlük haritası kendi körlüğünü gizler.
     _ol = res.get("olculemedi") or {}
@@ -778,8 +834,8 @@ def format_report(res: dict) -> str:
         for m, d in sorted(_ol.items()):
             L.append(f"  ! {m:38s} → {', '.join(f'{k} ({v})' for k, v in sorted(d.items()))}")
     else:
-        # SAYI TÜRETİLİR (2026-08-13): burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
-        # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, bu turda kapatılan pano
+        # SAYI TÜRETİLİR: burada sabit "yedi" yazıyordu ve 8. dedektör eklendiğinde
+        # rapor sessizce yalan söyleyecekti — aynı çift-kaynak sınıfı, kapatılan pano
         # başlığının kardeşi. Aile üreticiden okunur.
         from . import watchdog as _wd_ad
         L.append(f"ÖLÇÜLEMEDİ: yok — {len(_wd_ad._DEDEKTOR_BOS)} dedektörün hepsi her koşumda "
@@ -805,6 +861,10 @@ def format_report(res: dict) -> str:
 
 
 def main(argv=None) -> int:
+    """CLI girişi (`python -m meridian.mutation`): `--json`/`--keep`/`--workdir` bayraklarını işler,
+    koşumu yürütür ve raporu basar. Temel durum kirliyse ölçüm yapılmaz: hata mesajı yazılır ve
+    2 ile çıkılır.
+    """
     ap = argparse.ArgumentParser(description="Mutasyon koşumu: dedektörlerin körlüğünü ölçer.")
     ap.add_argument("--json", action="store_true", help="raporu JSON olarak yaz")
     ap.add_argument("--keep", action="store_true", help="geçici dizini silme (inceleme için)")

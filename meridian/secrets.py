@@ -47,7 +47,7 @@ ALLOWED: frozenset[str] = frozenset({
     "NOUS_API_KEY",             # Nous Hermes brain (Nous Portal / hermes-agent OpenAI-compat endpoint)
     "NOUS_ENDPOINT",            # optional base URL override (default https://inference.nousresearch.com/v1)
     "NOUS_MODEL",               # optional model id override
-    # 2026-07-22: kod bu adı OKUYORDU (hermes._agent_call düşüş zinciri + ajan fallback_providers)
+    # Kod bu adı OKUYORDU (hermes._agent_call düşüş zinciri + ajan fallback_providers)
     # ama izin listesinde YOKTU — yani `secrets.set` onu reddediyor, operatör hiçbir zaman
     # ayarlayamıyordu. Sonuç: "düşüş zinciri" ömrü boyunca tek elemanlı kaldı ve olay kaydı
     # "tüm model zinciri cevapsız (tried=1)" diyordu; yedeğin YOKLUĞU, BAŞARISIZLIĞI gibi okunuyordu.
@@ -57,11 +57,11 @@ ALLOWED: frozenset[str] = frozenset({
     "GEMINI_MODEL",             # optional model id override
     "HERMES_BRAIN_ORDER",       # brain chain priority, e.g. "gemini,nous,claude"
     "ANTHROPIC_API_KEY",
-    # 2026-07-23: Finviz otonom aday kaynağı. Elite CSV export için (1 haftalık trial). YOKKEN veya
+    # Finviz otonom aday kaynağı. Elite CSV export için (1 haftalık trial). YOKKEN veya
     # süresi dolunca adapter public HTML'e düşer, o da olmazsa evren REPLAY_UNIVERSE'e döner — hepsi
     # dürüst bozunma (adapters/finviz.py). Yalnız evreni genişletir; karar/kapı asla Finviz'e bakmaz.
     "FINVIZ_API_KEY",
-    # 2026-07-29: Massive EOD bar sağlayıcısı. TEK grouped çağrısı TÜM ABD piyasasının o günkü
+    # Massive EOD bar sağlayıcısı. TEK grouped çağrısı TÜM ABD piyasasının o günkü
     # barlarını verir — bugünkü "sembol başına 1 FMP isteği" yağmurunu (250 istek = FMP günlük
     # kotasının tamamı, canlı kanıt state/fmp_usage.json) 1 isteğe indirir. YOKKEN adaptör dürüstçe
     # devre dışı ve zincir FMP→Cboe→Nasdaq ile aynen sürer (adapters/massive.py). Anahtar girilse
@@ -79,10 +79,13 @@ _PERM_WARNED = False
 
 
 def _read_file() -> dict:
+    """Yerel operatör deposunu (`state/secrets.json`) sözlük olarak okur; dosya yoksa `{}`.
+    Okurken İZNİ de denetler: sahibi dışına açıksa süreç başına BİR kez uyarır. Okunamayan dosya
+    "hiç sır yok" gibi görünmez — hatanın yalnız TÜRÜ kaydedilir, içerik/anahtar ASLA loglanmaz."""
     global _PERM_WARNED
     try:
         p = _path()
-        # İZİN DENETİMİ (denetim turu 28, 2026-07-21): yazarken 0600 uyguluyoruz ama OKURKEN hiç
+        # İZİN DENETİMİ: yazarken 0600 uyguluyoruz ama OKURKEN hiç
         # bakmıyorduk. Dosya bir kopyalama/geri yükleme/eski sürüm yüzünden gruba ya da dünyaya
         # açıksa anahtarlar sessizce okunabilir durumda kalır ve bunu kimse söylemez. Süreç başına
         # BİR kez uyar (spam yok) — düzeltmeyi operatöre bırak, çalışmayı engelleme.
@@ -104,7 +107,7 @@ def _read_file() -> dict:
         # kurmamış olabilir) — hata değil yapılandırma; burada uyarmak her çağrıda gürültü üretirdi.
         return {}
     except Exception as e:
-        # YASA 4 (2026-07-21): dosya VARDIR ama okunamıyorsa boş sözlük dönmek "hiç sır
+        # YASA 4: dosya VARDIR ama okunamıyorsa boş sözlük dönmek "hiç sır
         # yapılandırılmamış" ile AYNI görünür — ajan sessizce deterministik moda düşer, hiçbir
         # sağlayıcı çağrılmaz ve kimse bunu bir hata sanmaz. Yalnız hatanın TÜRÜ kaydedilir;
         # dosya içeriği/anahtar ASLA loglanmaz.
@@ -139,6 +142,9 @@ def _write_file(data: dict) -> None:
 
 # ---------------- read ----------------
 def _fetch(name: str) -> str | None:
+    """Sırrı ÖNBELLEKSİZ çözer, sırayla: (1) süreç env'i, (2) yerel 0600 deposu,
+    (3) `MERIDIAN_GCP_PROJECT` kuruluysa GCP Secret Manager. Hiçbiri veremezse None —
+    env HER ZAMAN kazanır ve değer hiçbir yolda loglanmaz."""
     v = os.environ.get(name)
     if v:
         return v
@@ -159,6 +165,8 @@ def _fetch(name: str) -> str | None:
 
 
 def get(name: str) -> str | None:
+    """Sır erişiminin TEK kapısı: `_fetch` sonucunu süreç-içi önbellekten (TTL 300 sn) verir.
+    Yokluk da önbelleğe alınır; rotasyondan sonra `clear_cache()` anında tazeler."""
     now = time.monotonic()
     hit = _cache.get(name)
     if hit and (now - hit[0]) < TTL_SECONDS:
@@ -169,6 +177,7 @@ def get(name: str) -> str | None:
 
 
 def present(name: str) -> bool:
+    """Bu sır AYARLI MI? (yalnız varlık/yokluk — değer çağırana hiç verilmez)."""
     return bool(get(name))
 
 
@@ -194,6 +203,8 @@ def set(name: str, value: str) -> None:
 
 
 def delete(name: str) -> None:
+    """Sırrı yerel operatör deposundan siler; ALLOWED dışındaki her adı REDDEDER. Dosya yalnız
+    gerçekten bir kayıt düştüyse yeniden yazılır (atomik, 0600) ve okuma önbelleği temizlenir."""
     if name not in ALLOWED:
         raise ValueError(f"'{name}' is not a settable secret")
     data = _read_file()
@@ -204,6 +215,8 @@ def delete(name: str) -> None:
 
 # ---------------- status (masked only — never a full value) ----------------
 def mask(value: str | None) -> str | None:
+    """Değeri gösterilebilir ipucuna indirger: 8 karakterden uzunsa `••••` + SON 4 karakter,
+    değilse yalnız `••••`; boş/None ise None. Tam değer hiçbir koşulda dönmez."""
     if not value:
         return None
     v = str(value)
@@ -211,6 +224,8 @@ def mask(value: str | None) -> str | None:
 
 
 def _source_of(name: str) -> str | None:
+    """Bu sır HANGİ kaynaktan geliyor: "env" | "file" | "gcp"; hiçbiri veremiyorsa None.
+    Sıra `_fetch` ile aynıdır — durum raporu gerçek çözüm sırasını yansıtsın diye."""
     if os.environ.get(name):
         return "env"
     if _read_file().get(name):

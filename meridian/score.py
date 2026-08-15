@@ -28,6 +28,7 @@ START_EQUITY = 100_000.0
 
 
 def _clip(x: float, lo: float = -1.0, hi: float = 1.0) -> float:
+    """Değeri [lo, hi] aralığına kırpar (varsayılan [-1, +1])."""
     return max(lo, min(hi, x))
 
 
@@ -51,6 +52,9 @@ def _span_warn(exc: BaseException, ilk: str, son: str) -> None:
 
 
 def _span_days(trades: list[dict]) -> float:
+    """İşlem defterinin ilk ve son damgası arasındaki gün sayısı (yıllıklandırmanın paydası).
+    İki damgadan az varsa ya da tarih çözülemezse 30 güne düşer — düşüş SESSİZ DEĞİLDİR,
+    YASA 4 uyarısı bir kez yazılır."""
     ts = []
     for t in trades:
         for k in ("ts_open", "ts_close"):
@@ -66,7 +70,7 @@ def _span_days(trades: list[dict]) -> float:
         b = dt.date.fromisoformat(ts[-1])
         return max(1.0, (b - a).days)
     except Exception as e:
-        # YASA 4 (2026-07-21): burası SESSİZ KALAMAZ — süre, yıllıklandırmanın paydasıdır. Biçimsiz
+        # YASA 4: burası SESSİZ KALAMAZ — süre, yıllıklandırmanın paydasıdır. Biçimsiz
         # bir ts_open/ts_close 30 güne düşerse skor (dolayısıyla kapı kararı) sistematik olarak
         # kayar ve hiçbir yerde hata görünmez; tam olarak "hata değil, miktar değişimi" sınıfı.
         _span_warn(e, ts[0], ts[-1])
@@ -74,6 +78,7 @@ def _span_days(trades: list[dict]) -> float:
 
 
 def equity_curve(trades: list[dict], start_equity: float = START_EQUITY) -> list[float]:
+    """İşlemleri kapanış sırasına dizip kümülatif sermaye eğrisini kurar (başlangıç sermayesiyle başlar)."""
     eq = start_equity
     curve = [eq]
     for t in sorted(trades, key=lambda x: str(x.get("ts_close", ""))):
@@ -83,6 +88,7 @@ def equity_curve(trades: list[dict], start_equity: float = START_EQUITY) -> list
 
 
 def max_drawdown(curve: list[float]) -> float:
+    """Sermaye eğrisinin azami tepe-dip düşüşünü oran olarak verir (0.0 = hiç düşmemiş)."""
     peak = curve[0]
     mdd = 0.0
     for v in curve:
@@ -96,9 +102,9 @@ def score_detail(trades: list[dict], goal: dict, start_equity: float = START_EQU
                  span_days: float | None = None, mtm_equity: list | None = None) -> dict:
     """span_days: the EVALUATION WINDOW's calendar length. Without it, annualization derives from the
     trade cluster's own span — a 20-day burst inside a 183-day OOS window inflated realized_30d ~9x and
-    sqrt-scaled Sharpe absurdly (audit #5; regime slices cluster by construction, so this mattered).
+    sqrt-scaled Sharpe absurdly (regime slices cluster by construction, so this mattered).
     mtm_equity: the replay's daily mark-to-market curve [(date, eq)] — drawdown becomes the WORSE of the
-    closed-trade curve and the daily M2M curve, so open-position drawdowns can't hide (audit #6)."""
+    closed-trade curve and the daily M2M curve, so open-position drawdowns can't hide."""
     min_sample = int(goal.get("min_sample", 20))
     n = len(trades)
     if n < min_sample:
@@ -119,7 +125,7 @@ def score_detail(trades: list[dict], goal: dict, start_equity: float = START_EQU
     r = np.array([float(t.get("r_multiple", 0.0)) for t in trades], dtype=float)
     per_trade_ret = np.array([float(t.get("pnl_dollars", 0.0)) for t in trades]) / start_equity
     trades_per_year = n / (span / 365.0) if span > 0 else n
-    # SIRA ÖNEMLİ (2026-07-22): `std(ddof=1)` ÖNCE değerlendiriliyordu ve n<2 iken numpy
+    # SIRA ÖNEMLİ: `std(ddof=1)` ÖNCE değerlendiriliyordu ve n<2 iken numpy
     # "Degrees of freedom <= 0" uyarısı basıp NaN üretiyordu. Sonuç doğru çıkıyordu (NaN > 0 False)
     # ama hesap boşuna yapılıyor ve testler her koşuda RuntimeWarning yağdırıyordu — gürültü, gerçek
     # uyarıyı gizler. Örneklem yeterli DEĞİLSE varyans hiç hesaplanmaz.
@@ -191,7 +197,7 @@ def tail_risk(trades: list[dict], horizon: int = 20, sims: int = TAIL_SIMS,
     seed) — the point is relative tail behavior, not an absolute forecast. Returns None below
     TAIL_MIN_SAMPLE (honest 'unknown').
 
-    İKİ DÜZELTME (2026-07-22, kapı istatistiği denetimi):
+    İKİ DÜZELTME (kapı istatistiği denetimi):
 
     (1) "AYNI ÇEKİLİŞ" İDDİASI DOĞRU DEĞİLDİ. Eski satır `rng.integers(0, rs.size, ...)` idi; ÜST
         SINIR rs.size olduğundan aynı tohum farklı uzunluktaki iki seride FARKLI tamsayılar üretir.

@@ -21,7 +21,12 @@ yolu YOKTUR — canlıya geçiş yalnız OOS kapısından (prescreen/reflect); p
 hızlandırıcısıdır, onay değil. YASALAR ÇAĞRILIR, KOPYALANMAZ: fill/kısmi satış/dokunuş çıkışı
 `broker.PaperBroker`ın kendisi, yönetim `strategy.manage_position`, likidite `backtest._adv`,
 kısma `broker.derisk_mult`/`max_positions_at`, tarama+kapı `shadow_variants._signals`/`._judge` —
-ikinci bir icra kopyası ilk düzeltmede çatallanır ve defter kendini ölçmeye başlardı. KİMLİK
+ikinci bir icra kopyası ilk düzeltmede çatallanır ve defter kendini ölçmeye başlardı.
+KOPYALANAN TEK ŞEY SÜRÜCÜDÜR (`step()`in faz sırası) ve kaynağı ADIYLA yazılıdır: `backtest.replay`in
+olay düzeni — OPEN(D) bekleyen çıkışlar+fill, INTRADAY(D) scale_out+dokunuş, CLOSE(D) yönetim+arm.
+Sıra bir "yasa" değil bir OLAY DÜZENİDİR ve ileri-dönüklüğü olmayan tek düzendir; onu çağırmanın
+yolu yok (replay kendi takvimini ve kendi brokerını kurar), o yüzden burada tek yardımcıya çıkarıldı.
+KİMLİK
 AYRIKLIĞI: her işlem/plan kimliği `SV-` öneklidir ve canlı PLAN_ID_RE ile asla eşleşmez. İKİ SORU
 İKİ PAYDA: `k_variants` (karar) ≠ `k_lifecycle` (para, = len(arms())) — tek sayıya indirgenmez.
 
@@ -59,7 +64,7 @@ BOOK_SCHEMA = 1
 #   V3 — G3b erken itlaf. `exit.early_kill_bars` VARSAYILANDA (1) bırakıldı: ikinci düğmeyi de
 #        oynatmak iki değişkenli bir kol yapardı ve "hangisi etkiledi" sorusu ölçülemez hâle gelirdi.
 #        Pivot GEREKLİDİR ve bu motor onu taşır (armed yan haritası → fill_entry(pivot=...) →
-#        Position.pivot). C13 (2026-08-02): canlı yol da artık taşıyor — bu satır eskiden "canlıda
+#        Position.pivot). Canlı yol da artık taşıyor — bu satır eskiden "canlıda
 #        pivot 0.0, orada atıldır" diyordu, yani bu kolun ölçtüğü kazanç terfi etse canlıda sessiz
 #        no-op olurdu. Kol artık CANLIDA UYGULANABİLİR bir düğmeyi ölçüyor.
 #   V6 — Batch L #8 kısmi kâr alma. YALNIZ `scale_out_frac`: `scale_out_r` zaten 2.0 (üretim
@@ -146,6 +151,8 @@ _POS_FIELDS = tuple(f.name for f in dataclasses.fields(brk.Position))
 
 
 def _new_book(vid: str) -> dict:
+    """Tek varyant için sıfırdan kitap sözlüğü: başlangıç sermayesi, boş pozisyon/silahlı/bekleyen-çıkış
+    kovaları ve sayaçlar."""
     return {"variant": vid, "start_equity": score_mod.START_EQUITY, "realized_pnl": 0.0,
             "peak_equity": score_mod.START_EQUITY, "day_start_equity": score_mod.START_EQUITY,
             "positions": {}, "armed": [], "pending_exits": {}, "equity_curve": [],
@@ -153,6 +160,8 @@ def _new_book(vid: str) -> dict:
 
 
 def _new_doc() -> dict:
+    """Boş gölge defteri belgesi kurar: şema sürümü, kuruluş anı, kol sayısı, `paper_only` yetkisi ve
+    boş tohumlama/varyant blokları."""
     return {"schema": BOOK_SCHEMA, "created": barclock.now().isoformat(),
             "k_lifecycle": len(arms()), "authority": "paper_only",
             "seed": {"done": False, "dates": [], "at": None, "sessions": SEED_SESSIONS},
@@ -174,12 +183,16 @@ def _to_broker(bk: dict, goal: dict) -> brk.PaperBroker:
 
 
 def _from_broker(b: brk.PaperBroker, bk: dict) -> None:
+    """Broker nesnesinin durumunu (gerçekleşmiş P&L, işlem sırası, pozisyonlar) kitap sözlüğüne geri yazar —
+    `_to_broker`ın tersi."""
     bk["realized_pnl"] = round(b.realized_pnl, 4)
     bk["trade_seq"] = b._id
     bk["positions"] = {t: {k: getattr(p, k) for k in _POS_FIELDS} for t, p in b.positions.items()}
 
 
 def _bar_on(df, d):
+    """Bir tickerın verilen tarihteki OHLC barını sözlük olarak verir. Veri yoksa ya da o gün endekste
+    yoksa None — bar UYDURULMAZ."""
     if df is None or d not in df.index:
         return None
     r = df.loc[d]
@@ -195,7 +208,8 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
     `armed_next`: bu seansın KAPANIŞINDA silahlanacak planlar —
     `[{"plan": {...}, "pivot": float, "atr": float|None}]`. Pivot ve ATR plan SÖZLÜĞÜNE konmaz, YAN
     haritada taşınır: `backtest.replay`in `armed_pivots`/`armed_atr` deseni ve aynı gerekçe (ikisi de
-    bir defter alanı değil bir İCRA girdisidir; G3b notu, broker.py:132). `atr` yoksa/None ise E1
+    bir defter alanı değil bir İCRA girdisidir; G3b notu, `broker.PaperBroker.fill_entry`). `atr`
+    yoksa/None ise E1
     limiti yalnız yüzde tavanıyla kurulur — uydurma ATR yok, ama o durumda bu motor canlıdan GEVŞEK
     kalır, o yüzden `_day` onu silahlanma anındaki sinyalden DOLDURUR (C11/C18).
 
@@ -207,8 +221,10 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
     closed: list[dict] = []
 
     def _marks_open():
+        """Açık pozisyonların o günkü AÇILIŞ fiyatlarını ticker→fiyat haritası olarak verir; barı olmayan
+        ticker haritaya girmez."""
         # AÇILIŞ MARKI (replay `marks_open_on`): açılış fazının sermayesi D'nin KAPANIŞIYLA
-        # işaretlenirse devre kesici/kısma/boyutlandırma sabahtan öğleden sonrayı bilir (denetim #1).
+        # işaretlenirse devre kesici/kısma/boyutlandırma sabahtan öğleden sonrayı bilir.
         out = {}
         for t in b.positions:
             bar = _bar_on(bars_of(t), d)
@@ -236,7 +252,7 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
         bar = _bar_on(df, d)
         if bar is not None and not breaker_tripped and size_mult > 0 \
                 and len(b.positions) < eff_max_open and t not in b.positions:
-            # C11+C18 (denetim 2026-08-02): `atr` de pivot ile AYNI yan haritadan geçer. Geçmediği
+            # `atr` de pivot ile AYNI yan haritadan geçer. Geçmediği
             # sürece `broker.entry_limit_price` ATR bacağını hiç göremiyor ve bu motor limiti DAİMA
             # %1 tavanıyla kuruyordu — canlı motor min(0,5·ATR14, %1) ile koşarken. Gölge-v2 terfi
             # kanıtı üretir; canlının reddedeceği dolumları yazması, terfi kararını iyimser bir icra
@@ -359,9 +375,9 @@ def _day(doc: dict, date: str, live: dict, *, tickers, tail_of, rs_of, sector_of
             # Bar bulunamayan sembolde çağıranın girdisine düşülür — uydurma sıfır yerine bilinen kaynak.
             _corr = _corr_fn(bars_of, d, list((bk.get("positions") or {})), max_corr_of)
             armed_next = []
-            # C12 KAPSAM BEYANI (2026-08-02) — GÖLGE KOLU Y3 NAV TAVANLARINI GÖREMEZ. Kapının
+            # C12 KAPSAM BEYANI — GÖLGE KOLU Y3 NAV TAVANLARINI GÖREMEZ. Kapının
             # portföy sözlüğünü bu modül DEĞİL `sv._judge` kurar (v1 ve v2 aynı yüzeyi paylaşır);
-            # canlı/replay/cf üçlüsüne bu turda eklenen `equity`/`sector_notional`/`heat_pct` +
+            # canlı/replay/cf üçlüsüne eklenen `equity`/`sector_notional`/`heat_pct` +
             # plan `notional`/`risk_dollars` alanları orada YOKTUR. SONUCU: `portfolio.sector_cap`
             # ya da `portfolio.heat_cap` taşıyan bir KOL kurulursa, gölge defteri o tavanı hiç
             # uygulamaz ve kolun ölçtüğü ΔS canlıda karşılığı olmayan bir sayı olur — yani C13'ün
@@ -412,6 +428,8 @@ def _corr_fn(bars_of, d, held: list, fallback):
             others.append(ind.returns_tail(dfx.loc[:d, "close"]))
 
     def _of(t):
+        """Tek ticker için, `d`ye kadarki kapanışlardan diğer tutulanlara azami korelasyon. Bar yoksa
+        `fallback` çağrılır."""
         df = bars_of(t)
         if df is None:
             return fallback(t)
@@ -481,7 +499,7 @@ def run_cycle(date: str, *, tickers, tail_of, rs_of, sector_of, max_corr_of, eff
     `write=False` testler için: kitap/işlemler ÜRETİLİR, diske YAZILMAZ (canlı state'e yazan test yok).
     Dönüş: {"trades": [...], "books": {...}, "dropped_arms": [...], "seeded": [...]} ya da None (kapalı).
 
-    KİLİT (B3, 2026-07-31): gövde bir OKU-DEĞİŞTİR-YAZdır (kitap okunur, tur işlenir, kitap geri
+    KİLİT: gövde bir OKU-DEĞİŞTİR-YAZdır (kitap okunur, tur işlenir, kitap geri
     yazılır) ve kilitsizdi. Tek yazar OLMASI kilidi gereksiz kılmaz: aynı kodu iki SÜREÇ koşarsa
     (zamanlayıcı + elle tetiklenen tur) geç biten, öbürünün tüm kollarını eski kopyasıyla geri
     alır. Kilit YALNIZ `write=True` iken alınır — `write=False` hiçbir bayta dokunmaz ve testlerin
