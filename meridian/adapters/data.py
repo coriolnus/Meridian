@@ -42,7 +42,7 @@ FRESH_DAYS = 3             # cache within this many days of `end` is considered 
 CORP_ACTION_PCT = 0.25     # overlapping-date adjusted-close divergence beyond this ⇒ split/dividend re-adjustment
 _WARMUP_WARNED: set = set()   # once-per-process telemetry for caches that can't reach FETCH_START
 BAR_EPS = 1e-6                # relative close delta above this = the bar CHANGED (not float noise)
-SOURCE_FILE = "bars_source.json"   # {ticker: {"source": ..., "at": ...}} — hangi kaynak yazdı (D1)
+SOURCE_FILE = "bars_source.json"   # {ticker: {"source": ..., "at": ...}} — hangi kaynak yazdı
 _LAST_SOURCE: dict[str, str] = {}  # fetch() bu turda hangi kaynağın verdiğini buraya yazar
 
 # ---- MASSIVE ARTIMLI YOLU (2026-07-29) --------------------------------------------------------
@@ -57,7 +57,7 @@ _LAST_SOURCE: dict[str, str] = {}  # fetch() bu turda hangi kaynağın verdiğin
 # isimler dahil, maksimum sapma %0.0000 → aynı bölünme-düzeltmeli ölçek). Yerel `--dogrula` bu tabanı
 # EZER ve "uyumsuz" derse kapı kapanır. Ölçümsüz yazıma geçmek, iki farklı ayarlama ölçeğini
 # birbirine ekleyip sahte bir gecelik uçurum imal etmek olurdu — bu depoda canlıda YAŞANMIŞ hata
-# sınıfı (aşağıdaki D1 dikiş koruması).
+# sınıfı (aşağıdaki dikiş koruması).
 #
 # İKİ AYRI KOL, İKİ AYRI KAYNAK ADI (kasıtlı):
 #   "massive"      → grouped daily; TEK çağrıda tüm piyasa, sembol başına TEK bar. Yalnız EKLER:
@@ -1630,7 +1630,7 @@ def _overwrite_bar(ticker: str, bar: dict) -> bool:
         return True                # satır zaten konsolide değerlerde: damga güncellenir, disk değil
     merged, _rep = sanitize_bars(upd, ticker)
     if len(merged) < len(cached):
-        # SATIR KAYBI REDDİ (D3 ikizi): düzeltme geçmişi KISALTAMAZ. Sessiz kalmaz.
+        # SATIR KAYBI REDDİ: düzeltme geçmişi KISALTAMAZ. Sessiz kalmaz.
         try:
             from .. import obs
             obs.warn("sip_correct_row_loss_refused", ticker=ticker.upper(), session=d,
@@ -2193,7 +2193,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
         _raw = pd.read_csv(cp, parse_dates=["date"])
         cached_raw_rows = len(_raw)
         cached, _rep = sanitize_bars(_raw, ticker)         # repair any legacy glitch on read
-        # KAPININ DÜŞÜRDÜĞÜ SATIR "KAYIP" DEĞİLDİR. Aşağıdaki D3 monotonluk koruması
+        # KAPININ DÜŞÜRDÜĞÜ SATIR "KAYIP" DEĞİLDİR. Aşağıdaki monotonluk koruması
         # DİSKTEKİ ham satır sayısıyla kıyaslar ve haklı olarak öyle yapar (kaybın gerçek yolu
         # sanitize'ın düşürdüğü satırların geri yazılmasıydı). Ama takvim kapısı SAYILI, OLAYLI ve
         # KASITLI bir düşüştür: baz ondan arındırılmazsa her tur `bar_row_loss_refused` basar,
@@ -2314,7 +2314,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
         fetched = fetched[(fetched["date"] > cached["date"].max()) | _fd.isin(_prov)]
         if fetched.empty:
             return _window(cached, start, end)
-    # ---- D1: KAYNAK-ÖLÇEĞİ DİKİŞİ (canlıda yakalandı) ----
+    # ---- KAYNAK-ÖLÇEĞİ DİKİŞİ (canlıda yakalandı) ----
     # FMP tam TEMETTÜ+bölünme düzeltmeli seri döner; Cboe yalnız bölünme düzeltmelidir. FMP kotası
     # dolunca (bugün: 429 — 250 ticker'lık tazeleme günlük kotanın tamamını yakıyor) zincir Cboe'ye
     # düşer ve Cboe DE tam geçmiş döndürdüğü için keep="last" TÜM geçmişi başka bir düzeltme ölçeğine
@@ -2344,7 +2344,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
     # (keep="first" kept `cached` and poisoned every downstream indicator across the split date).
     merged = fetched if cached is None else (pd.concat([cached, fetched]).drop_duplicates("date", keep="last")
                                              .sort_values("date").reset_index(drop=True))
-    # ---- D3: MONOTONLUK — bar geçmişi kısalamaz ----
+    # ---- MONOTONLUK — bar geçmişi kısalamaz ----
     # Salt-ekleme dışında bir yazım satır SAYISINI düşürüyorsa bu düzeltme değil KAYIPTIR (kırpılmış
     # indirme, dar pencereli fallback, yarım okuma). Corporate-action sıfırlaması bilinçli istisnadır.
     # NOT: karşılaştırma DİSKTEKİ ham satır sayısıyla yapılır, sanitize edilmiş kopyayla değil —
@@ -2374,7 +2374,7 @@ def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_
                         changed=n_ch, max_pct=round(worst * 100, 3))
             except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
                 pass
-    _write_bars(merged, cp)                              # D4: atomik (yarım CSV okunamaz)
+    _write_bars(merged, cp)                              # atomik (yarım CSV okunamaz)
     # ---- YAZIM BAŞARILI: geçici damga KONUR ya da KALKAR ----
     # Sıra kasıtlı: damga ancak satır DİSKE düştükten sonra anlamlıdır. Önce damgalayıp sonra
     # yazımdan vazgeçmek (satır-kaybı reddi, boş fetched) defterde OLMAYAN bir bar hakkında hüküm
@@ -2406,7 +2406,7 @@ def _corporate_action(cached: pd.DataFrame, fetched: pd.DataFrame) -> bool:
         m = cached[["date", "close"]].merge(fetched[["date", "close"]], on="date", suffixes=("_c", "_f"))
         if m.empty:
             # DISJOINT ranges (stale cache + a narrow windowed fallback fetch): no overlap to diff, but a
-            # seam between two adjustment scales is exactly what must not be spliced (audit #48). Check
+            # seam between two adjustment scales is exactly what must not be spliced. Check
             # boundary continuity with a DOUBLE threshold so a legitimate gap between the ranges never
             # false-positives — only a catastrophic scale jump (>±50%) flags.
             a, b = (cached, fetched) if cached["date"].max() < fetched["date"].min() else \
@@ -2531,7 +2531,7 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     if quarantined:
         print(f"[data] QUARANTINED {len(quarantined)} on integrity failure: "
               + ", ".join(f'{t}({",".join(c)})' for t, c in quarantined[:8]))
-    # D5 KORUNUM: evrenden düşen ticker'lar yalnız STDOUT'a yazılıyordu — olay
+    # KORUNUM: evrenden düşen ticker'lar yalnız STDOUT'a yazılıyordu — olay
     # defterinde iz yoktu. Evren 250'den 180'e insin, hiçbir kayıtta görünmezdi. Artık kayıtlı.
     # TUR SONU: aynı-akşam defteri diske iner ve biriken ıraksama olayı SEANS BAŞINA tek satır
     # olarak duyurulur (eşik-tabanlı flush turun ortasında kalmasın diye — 250 sembolde defterin

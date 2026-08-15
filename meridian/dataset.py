@@ -61,13 +61,13 @@ FETCH_END = fetch_end()   # import-time snapshot kept ONLY for display (run.py b
 #
 # (1) AŞINMA LİMİTİ KAT KAT AŞTI, VE AŞMAYA DEVAM ETTİ. `oos_erosion` defteri R0 geometrisine sorulan
 #     soruları sayıyor ve sayı bu rotasyon TASARLANIRKEN bile büyüdü — üç ölçüm, üç tarih:
-#       ROADMAP §7 yazıldığında  290 sorgu (14,5× limit)
+#       Kural yazıldığında       290 sorgu (14,5× limit)
 #       Rol 1 tasarımı yazıldığında 367 sorgu (18,4×)
 #       R1 UYGULANDIĞINDA        **434 sorgu (21,7×)**   ← limit 20 (`EROSION_QUERY_LIMIT`)
 #     Bu artış, gerekçenin kendisinin bir parçası: pencere biz onu tartışırken de aşınıyordu, yani
 #     "biraz daha bekleyip toplayalım" seçeneği maliyetsiz DEĞİLDİ. Ek marj (`EROSION_EXTRA_MARGIN`) bir SEMPTOM
 #     tedavisidir ve sahada bunu kanıtladı: PARA-v3 kabul sınavında aşınma marjı S2 adayını
-#     vetoladı (§7, 2026-07-30). 434 kez sorulmuş bir pencere artık out-of-sample DEĞİLDİR ve hiçbir
+#     vetoladı (2026-07-30). 434 kez sorulmuş bir pencere artık out-of-sample DEĞİLDİR ve hiçbir
 #     marj onu yeniden out-of-sample yapmaz — tek gerçek çözüm pencereyi DÖNDÜRMEKTİR (analytics
 #     `holdout_rotation_advice`, 2D değerlendiricisi; ÖNERİR, uygulamaz — uygulama operatör kararı).
 #
@@ -76,7 +76,7 @@ FETCH_END = fetch_end()   # import-time snapshot kept ONLY for display (run.py b
 #     İNSANA RAPORLANDI: pano ve tur raporları `holdout_score`u aylarca gösterdi. İnsan bir sayıyı
 #     gördüyse, sonraki hipotezleri o sayıdan etkilenmiş olabilir — ölçmediğimiz ama VAR OLDUĞUNU
 #     bildiğimiz bir seçilim kanalı. Bu yüzden o dilim R1'de **YARI-TEMİZ** sayılır: taze OOS verisi
-#     olarak KULLANILIR (kanıt kıtlığı gerçek: n≈81-96'da P tavanı ~0,66, §7), ama "hiç görülmemiş
+#     olarak KULLANILIR (kanıt kıtlığı gerçek: n≈81-96'da P tavanı ~0,66), ama "hiç görülmemiş
 #     veri" DİYE SUNULMAZ. Aradaki fark bu yorumun kendisidir ve rapora da girer.
 #
 # R1 ÇİFTE KAZANCI:
@@ -198,7 +198,7 @@ def load(use_cache: bool = True) -> tuple[dict, pd.DataFrame]:
     end = fetch_end()                                  # per-call TODAY — never the import-time snapshot
     index = data.load_bars(data.INDEX_SYMBOL, FETCH_START, end, use_cache=use_cache)
     bars = data.load_many(data.REPLAY_UNIVERSE, FETCH_START, end, use_cache=use_cache)
-    # the ONE series that drives regime classification was the only one never validated (audit #47)
+    # the ONE series that drives regime classification was the only one never validated
     hard = _index_hard_issues(index)
     if hard:
         from . import obs

@@ -114,168 +114,168 @@ COVERED: dict[str, list[str]] = {
     # /metrics yetkisiz olarak öz sermaye/P&L/harcama yayınlıyordu, /halt tünelden açıldığı için
     # bu dışarı bakan bir yüzey → uzak+yetkisiz istekte yalnız canlılık. Testler: test_api_audit_v21 (8).
     "api": ["uretkenlik", "korunum", "tutarlilik", "sahiplik"],
-    # --- tur 7 (2026-07-21): arming ---
-    # R1 modülün MERKEZİ iddiası ("yalnız ölçer, silahlandırmaz") yazılıydı ama zorlanmıyordu →
-    # kaynak + davranış testi (sahiplik). R2 CANLIDA: "ölçülemedi" (candidate OOS undefined)
+    # --- arming ---
+    # Modülün MERKEZİ iddiası ("yalnız ölçer, silahlandırmaz") yazılıydı ama zorlanmıyordu →
+    # kaynak + davranış testi (sahiplik). CANLIDA: "ölçülemedi" (candidate OOS undefined)
     # "gate_rejected" diye kaydediliyordu — kurulumu haksızca gömen sahte kanıt; artık
     # gate_undefined ayrı bir terminal (korunum). Testler: test_arming_audit_v22.py (6).
-    # boşluk turu 4: rapor HER koşuda diske düşer, aynı kanıtla aynı ölçüm, cf defterinden türer.
+    # rapor HER koşuda diske düşer, aynı kanıtla aynı ölçüm, cf defterinden türer.
     "arming": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # --- tur 8 (2026-07-21): backtest (KAPININ KENDİSİ) ---
-    # B1 ileri-dönük sızıntı: docstring'de anlatılıyor, kanıtlanmıyordu → "geleceği kes, geçmiş
-    # değişmesin" testi (determinizm); B2 replay + walk_forward tekrarlanabilirliği + girdiye
-    # duyarlılık ikizi; B3 SECTORS evreni tam kapsıyor mu + canlıyla AYNI harita mı (tutarlilik).
+    # --- backtest (KAPININ KENDİSİ) ---
+    # İleri-dönük sızıntı: docstring'de anlatılıyor, kanıtlanmıyordu → "geleceği kes, geçmiş
+    # değişmesin" testi (determinizm); replay + walk_forward tekrarlanabilirliği + girdiye
+    # duyarlılık ikizi; SECTORS evreni tam kapsıyor mu + canlıyla AYNI harita mı (tutarlilik).
     # Testler: test_backtest_audit_v23.py (8).
-    # boşluk turu 5: replay tam kanıt paketi üretir (işlemler + plan/aday defteri + öz sermaye
+    # replay tam kanıt paketi üretir (işlemler + plan/aday defteri + öz sermaye
     # eğrisi) ve DEĞERLENDİRİLEN her plan bir karar taşır (sessizce düşen plan yok).
-    "backtest": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- tur 10 (2026-07-21): config ---
-    # G1 boş/bozuk strategy.yaml {} döndürüyordu (motor params={} ile koşabilirdi) → varsayılana
-    # düşer + kayıt (korunum); G2 goal/bounds lru_cache uzun ömürlü süreçte DONUYORDU, operatörün
+    "backtest": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- config ---
+    # Boş/bozuk strategy.yaml {} döndürüyordu (motor params={} ile koşabilirdi) → varsayılana
+    # düşer + kayıt (korunum); goal/bounds lru_cache uzun ömürlü süreçte DONUYORDU, operatörün
     # elle değişikliği yeniden başlatmaya dek yok sayılırdı → her döngüde reload_config (tutarlilik);
-    # G3 VALID_REGIMES ≡ regime.py etiketleri artık test edilir; G4 override yeni knob icat edemez.
+    # VALID_REGIMES ≡ regime.py etiketleri artık test edilir; override yeni knob icat edemez.
     # Testler: test_config_audit_v25.py (12).
     "config": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # --- tur 9 (2026-07-21): broker (SAYILAN P&L) ---
-    # K1 muhasebe özdeşliği: equity == start + Σ pnl_dollars, çok işlemli + kısmi satışlı dizide
-    # BİREBİR (H1 çifte-ücretlendirme hatası tam burada patlardı) → korunum; K2 iz süren stop yalnız
+    # --- broker (SAYILAN P&L) ---
+    # Muhasebe özdeşliği: equity == start + Σ pnl_dollars, çok işlemli + kısmi satışlı dizide
+    # BİREBİR (çifte-ücretlendirme hatası tam burada patlardı) → korunum; iz süren stop yalnız
     # yukarı + bar stop'u kırdıysa iyimser bankalama yasak → monotonluk. Testler: test_broker_audit_v24 (9).
-    # boşluk turu 5: kapanan her pozisyon bir SATIR üretir; aynı bar/plan → aynı dolum ve aynı P&L.
+    # kapanan her pozisyon bir SATIR üretir; aynı bar/plan → aynı dolum ve aynı P&L.
     "broker": ["uretkenlik", "korunum", "determinizm", "monotonluk"],
-    # --- tur 11 (2026-07-21): earnings ---
-    # E1 "in_blackout False" = 'temiz' mi 'HİÇ VERİ YOK' mu ayrılmıyordu; CANLI: 250 evrenin 181'i
+    # --- earnings ---
+    # "in_blackout False" = 'temiz' mi 'HİÇ VERİ YOK' mu ayrılmıyordu; CANLI: 250 evrenin 181'i
     # biliniyor → 69 isimde guard sessizce kapalıydı. known()/coverage() + plan kaydında coverage
-    # damgası (korunum). E2 takvim bayatlarsa guard HERKES için kapanır → watchdog 'earnings_calendar'
+    # damgası (korunum). takvim bayatlarsa guard HERKES için kapanır → watchdog 'earnings_calendar'
     # (uretkenlik). Ayrıca dedektörün kendi sessiz hatası bulundu ve kilitlendi.
     # Testler: test_earnings_audit_v26.py (10).
-    "earnings": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"], # --- tur 12 (2026-07-21): guard ---
-    # GU2 BULGU: sert zarfın İKİ kopyası vardı ve AYRIŞMIŞLARDI — classify_gate R:R tabanını/ısı
+    "earnings": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"], # --- guard ---
+    # BULGU: sert zarfın İKİ kopyası vardı ve AYRIŞMIŞLARDI — classify_gate R:R tabanını/ısı
     # tavanını HARD'a çevirmiş, check_trade'deki kopya geride kalmış, canlıda NO_GO olan plana
     # "geçti" diyordu. check_trade artık classify_gate'i çağırıyor (yapısal tek yasa) + 144 senaryo
-    # eşdeğerlik testi (tutarlilik). GU1 GOAL_KEYS/LIMIT_KEYS ≡ goal.yaml drift testi (sahiplik).
+    # eşdeğerlik testi (tutarlilik). GOAL_KEYS/LIMIT_KEYS ≡ goal.yaml drift testi (sahiplik).
     # Testler: test_guard_audit_v27.py (10).
-    "guard": ["korunum", "determinizm", "tutarlilik", "sahiplik"], # --- tur 13 (2026-07-21): hermes ---
-    # H1 sistemin MERKEZİ iddiası ("LLM önerir, kapı karar verir") hiçbir yerde zorlanmıyordu →
+    "guard": ["korunum", "determinizm", "tutarlilik", "sahiplik"], # --- hermes ---
+    # Sistemin MERKEZİ iddiası ("LLM önerir, kapı karar verir") hiçbir yerde zorlanmıyordu →
     # AST tabanlı yetki testi (dump_yaml/bump/save_strategy ÇAĞRISI yok) + davranışsal delege testi +
-    # sertifikasız-rejim yan kapısı (sahiplik). H2 anahtar değeri log/ping cevabında yok (sahiplik).
-    # H3 RPD dolunca sessiz açlık değil, günde bir kayıt + deterministik yola düşüş (korunum).
+    # sertifikasız-rejim yan kapısı (sahiplik). Anahtar değeri log/ping cevabında yok (sahiplik).
+    # RPD dolunca sessiz açlık değil, günde bir kayıt + deterministik yola düşüş (korunum).
     # Testler: test_hermes_audit_v28.py (11).
-    "hermes": ["korunum", "sahiplik", "tutarlilik", "uretkenlik"], # --- tur 14 (2026-07-21): hermes_runtime ---
-    # HR1 ufuk koşulu İKİ yerde hesaplanıyor (karar + panoya yazılan) → 144 senaryo eşdeğerlik testi
-    # (tutarlilik; guard'daki iki-yüzey hatasının aynı sınıfı, burada ayrışma YOKTU). HR3 yeniden
-    # başlatmada taban geri sarmaz/sıfırlanmaz — livelock koruması (monotonluk). HR2 tek-yansıma
-    # kilidi + HR4 arka plan rejimi canlıyı hedeflemez. Testler: test_hermes_runtime_audit_v29.py (10).
-    # boşluk turu 4: durum dosyası üretilir, her yansıma sonucu kaydedilir, YALNIZ kendi dosyasını yazar.
-    "hermes_runtime": ["uretkenlik", "korunum", "tutarlilik", "monotonluk", "sahiplik"], # --- tur 15 (2026-07-21): indicators ---
-    # I1 ÖNEK KARARLILIĞI: seriyi kesip hesapla, geçmiş DEĞİŞMESİN — 7 fonksiyon için ileri-dönük
-    # kanıtı (determinizm). I2 rs_rating BERABERLİK HATASI BULUNDU: argsort beraberlere keyfî ayrı
+    "hermes": ["korunum", "sahiplik", "tutarlilik", "uretkenlik"], # --- hermes_runtime ---
+    # Ufuk koşulu İKİ yerde hesaplanıyor (karar + panoya yazılan) → 144 senaryo eşdeğerlik testi
+    # (tutarlilik; guard'daki iki-yüzey hatasının aynı sınıfı, burada ayrışma YOKTU). Yeniden
+    # başlatmada taban geri sarmaz/sıfırlanmaz — livelock koruması (monotonluk). Tek-yansıma
+    # kilidi + arka plan rejimi canlıyı hedeflemez. Testler: test_hermes_runtime_audit_v29.py (10).
+    # durum dosyası üretilir, her yansıma sonucu kaydedilir, YALNIZ kendi dosyasını yazar.
+    "hermes_runtime": ["uretkenlik", "korunum", "tutarlilik", "monotonluk", "sahiplik"], # --- indicators ---
+    # ÖNEK KARARLILIĞI: seriyi kesip hesapla, geçmiş DEĞİŞMESİN — 7 fonksiyon için ileri-dönük
+    # kanıtı (determinizm). rs_rating BERABERLİK HATASI BULUNDU: argsort beraberlere keyfî ayrı
     # sıra veriyordu (aynı getiri → RS 50 vs 99) ve rs_rating_min sert eşik olduğu için AYNI kanıt
     # zıt kararlar üretiyordu; ortalama-sıra + sıradan bağımsızlık testi (tutarlilik).
     # Testler: test_indicators_audit_v30.py (23).
     "indicators": ["uretkenlik", "determinizm", "tutarlilik"],
-    # --- tur 16 (2026-07-21): mcp_server ---
-    # MC1 "MUTLAK: yalnız getter" iddiası iki katmanlı kanıtla bağlandı — AST'de yazma çağrısı yok +
-    # tüm araçlar koştuktan sonra state klasörünün SHA'ları değişmiyor (sahiplik). MC2 öngörü saflığı:
+    # --- mcp_server ---
+    # "MUTLAK: yalnız getter" iddiası iki katmanlı kanıtla bağlandı — AST'de yazma çağrısı yok +
+    # tüm araçlar koştuktan sonra state klasörünün SHA'ları değişmiyor (sahiplik). Öngörü saflığı:
     # candidate_context r_multiple/pnl/exit_reason DÖNMEZ (korunum — sonuç sızarsa ajanın "tahmini"
-    # geriye dönük kusursuz olur). MC3 protokol dayanıklılığı. Testler: test_mcp_audit_v31.py (9).
-    "mcp_server": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"], # --- tur 17 (2026-07-21): memory ---
-    # ME1 kimlik `len+1` idi → defter kısalınca GERİ SARIYORDU (iki hipotez aynı kimlik); artık
-    # max(mevcut)+1, tek yönlü (monotonluk). ME2 terfi mandalı + ME3 durum damgası yalnız GEÇİŞTE
+    # geriye dönük kusursuz olur). Protokol dayanıklılığı. Testler: test_mcp_audit_v31.py (9).
+    "mcp_server": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"], # --- memory ---
+    # Kimlik `len+1` idi → defter kısalınca GERİ SARIYORDU (iki hipotez aynı kimlik); artık
+    # max(mevcut)+1, tek yönlü (monotonluk). Terfi mandalı + durum damgası yalnız GEÇİŞTE
     # (aylık kota ve kalibrasyon kapısı bunlara dayanıyor) → korunum.
     # Testler: test_memory_audit_v32.py (9).
-    # boşluk turu 4: defter + dersler üretilir, dersler defter değişince TAZELENİR, memory canlı
+    # defter + dersler üretilir, dersler defter değişince TAZELENİR, memory canlı
     # stratejiye yazmaz (defter tutar, karar vermez).
-    "memory": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"], # --- tur 18 (2026-07-21): mirror_stream ---
-    # MS1 kaçan tek bir terminal olay sembolü SONSUZA dek karar dışı bırakıyordu (sessiz açlık) →
-    # 24 sa bayatlık ufku + kayıt (korunum). MS2 BULGU: kopuş yolunda iptal mantığının ikinci
+    "memory": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"], # --- mirror_stream ---
+    # Kaçan tek bir terminal olay sembolü SONSUZA dek karar dışı bırakıyordu (sessiz açlık) →
+    # 24 sa bayatlık ufku + kayıt (korunum). BULGU: kopuş yolunda iptal mantığının ikinci
     # kopyası vardı; operatörün emirlerini de iptal ediyor ve `partially_filled` PENDING'de olduğu
     # için KISMEN DOLMUŞ parent'ı iptal edip pozisyonu ÇIPLAK bırakabiliyordu → adaptörün
     # denetlenmiş yoluna delege edildi (sahiplik). Testler: test_mirror_stream_audit_v33.py (10).
-    "mirror_stream": ["korunum", "sahiplik", "tutarlilik", "uretkenlik"], # --- tur 19 (2026-07-21): notify ---
-    # N1 dışarıya veri gönderen TEK yol; giden metinden bilinen sır değerleri temizlenir (sahiplik).
-    # N2 teslimat başarısızlığı artık kayıtlı — "bildirim gelmedi" ile "alarm yoktu" ayrıldı (korunum).
+    "mirror_stream": ["korunum", "sahiplik", "tutarlilik", "uretkenlik"], # --- notify ---
+    # Dışarıya veri gönderen TEK yol; giden metinden bilinen sır değerleri temizlenir (sahiplik).
+    # Teslimat başarısızlığı artık kayıtlı — "bildirim gelmedi" ile "alarm yoktu" ayrıldı (korunum).
     "notify": ["korunum", "sahiplik", "uretkenlik"],
-    # --- tur 20 (2026-07-21): obs ---
-    # O1 BULGU: bildirim izin listesinde HALT_ACTIVE, ROLLBACK ve HEARTBEAT_STALE YOKTU — "beni
+    # --- obs ---
+    # BULGU: bildirim izin listesinde HALT_ACTIVE, ROLLBACK ve HEARTBEAT_STALE YOKTU — "beni
     # uyandır" sınıfının tamamı sessizdi. Eklendi + her ALARM_* sabitinin sınıflandırıldığı test
     # (unutkanlık değil, karar). Alarm hattı: bildirim çökse bile kayıt düşer (korunum).
     "obs": ["uretkenlik", "korunum", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- tur 21 (2026-07-21): probgate ---
-    # PG1 meta-kalibrasyon YALNIZ sıkıştırır (negatif/dev/bozuk dosya kelepçelenir) → monotonluk;
-    # PG2 verdikt TOHUMDAN bağımsız (4 tohumda net vakalar aynı karar) → determinizm; PG3 aynı/kötü
-    # aday asla geçmez; PG4 K-cezası monoton. Testler: test_probgate_audit_v35.py (12).
+    # --- probgate ---
+    # Meta-kalibrasyon YALNIZ sıkıştırır (negatif/dev/bozuk dosya kelepçelenir) → monotonluk;
+    # verdikt TOHUMDAN bağımsız (4 tohumda net vakalar aynı karar) → determinizm; aynı/kötü
+    # aday asla geçmez; K-cezası monoton. Testler: test_probgate_audit_v35.py (12).
     "probgate": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- tur 22 (2026-07-21): oos_pipeline ---
+    # --- oos_pipeline ---
     # Modülün merkezi iddiası ("teyit dilimine arama ASLA dokunmaz") hiçbir yerde kanıtlanmıyordu:
     # dilimleri backtest kuruyor, kapı hazır alıyor. Artık gerçek walk_forward çıktısında AYRIKLIK +
     # kronoloji + sınırı aşan işlemin purge edilmesi test ediliyor (tutarlilik); dilim yoksa sessiz
     # 'geçti' değil dürüst legacy (korunum). Testler: test_oos_pipeline_audit_v36.py (8).
-    "oos_pipeline": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- tur 23 (2026-07-21): regime ---
-    # RG1 BULGU: canlı döngü + cf_backfill leading_sectors'ı dolduruyor, BACKTEST doldurmuyordu →
+    "oos_pipeline": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- regime ---
+    # BULGU: canlı döngü + cf_backfill leading_sectors'ı dolduruyor, BACKTEST doldurmuyordu →
     # guard'ın soft kontrolü kapıda ölü, canlıda diri (aynı yasanın ayrışmış iki uygulaması).
-    # Backtest de dolduruyor artık (tutarlilik). RG2 bütçe sert tavan + skor sıralaması (monotonluk).
+    # Backtest de dolduruyor artık (tutarlilik). Bütçe sert tavan + skor sıralaması (monotonluk).
     # Testler: test_regime_audit_v37.py (11).
     "regime": ["determinizm", "monotonluk", "tutarlilik", "uretkenlik"],
-    # --- tur 24 (2026-07-21): regime_trigger ---
+    # --- regime_trigger ---
     # Modülün tek iddiası "KARAR VERMEZ": yalnız sayar, rejim başına BİR kez haber verir, hiçbir
     # bütçe/strateji alanına dokunmaz — üçü de test altında (sahiplik + korunum).
-    "regime_trigger": ["uretkenlik", "korunum", "determinizm", "monotonluk", "sahiplik"], # --- tur 25 (2026-07-21): rollback ---
-    # RB1 evaluate_outcomes ile check_and_rollback skorları AYRI hesaplıyor → "geri al" kararının
+    "regime_trigger": ["uretkenlik", "korunum", "determinizm", "monotonluk", "sahiplik"], # --- rollback ---
+    # evaluate_outcomes ile check_and_rollback skorları AYRI hesaplıyor → "geri al" kararının
     # gerçekten geri aldığı uçtan uca test edildi (korunum). Yeni: ebeveyn anlık görüntüsü kayıpsa
     # geri alma sessiz bir uyarıya gömülüyordu; artık ALARM + dürüst "hâlâ canlı" raporu.
-    # RB3 rejim ship'i kendi diliminde ölçülür, GLOBAL live_score kirletilmez (tutarlilik).
+    # Rejim ship'i kendi diliminde ölçülür, GLOBAL live_score kirletilmez (tutarlilik).
     # Testler: test_rollback_audit_v38.py (9).
-    # boşluk turu 4: sonuç kaydı üretilir (realized_delta + karne), terfi tek yönlü mandal,
+    # sonuç kaydı üretilir (realized_delta + karne), terfi tek yönlü mandal,
     # strateji YALNIZ versioning.revert_to üzerinden değişir (ham yazım yok).
     "rollback": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- tur 26 (2026-07-21): run ---
-    # RU1 BULGU: --replay scoreboard.json'u TEK sürümlük sözlükle EZİYORDU; v2/v3 sonrası bir re-seed
+    # --- run ---
+    # BULGU: --replay scoreboard.json'u TEK sürümlük sözlükle EZİYORDU; v2/v3 sonrası bir re-seed
     # tüm öğrenme karnesini yok eder ve rollback'in ebeveyn-skoru geri düşüşünü körleştirirdi. Artık
     # çok sürümlü karne varsa REDDEDER, zorlanırsa ARŞİVLER (korunum + sahiplik: yıkıcı yol açık niyet ister).
     # Testler: test_run_audit_v39.py (7).
     "run": ["korunum", "sahiplik", "uretkenlik"],
-    # --- tur 27 (2026-07-21): score ---
-    # SC1 bilinmeyen skor None (0.0 değil); SC2 yıllıklaştırma PENCEREYE bağlı — kümeye sıkışmış
-    # patlama şişmiyor (audit #5 regresyon kilidi); SC3 M2M drawdown'ı yalnız KÖTÜLEŞTİREBİLİR
-    # (açık pozisyon saklanamaz); SC4/SC5 kuyruk bootstrap'ı ve skorlama deterministik.
+    # --- score ---
+    # bilinmeyen skor None (0.0 değil); yıllıklaştırma PENCEREYE bağlı — kümeye sıkışmış
+    # patlama şişmiyor (regresyon kilidi); M2M drawdown'ı yalnız KÖTÜLEŞTİREBİLİR
+    # (açık pozisyon saklanamaz); kuyruk bootstrap'ı ve skorlama deterministik.
     # Testler: test_score_audit_v40.py (12).
-    "score": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- tur 28 (2026-07-21): secrets ---
-    # SE1 yazma izin listesi (PATH/MERIDIAN_MODE panodan ASLA set edilemez) + sınır davranışları;
-    # SE2 0600 YAZARKEN uygulanıyordu ama OKURKEN bakılmıyordu → gevşek izin bir kez raporlanır
-    # (çalışmayı engellemeden); SE3 repo genelinde "sır değeri loga gitmiyor" statik ağı + mask.
+    "score": ["uretkenlik", "korunum", "determinizm", "tutarlilik"], # --- secrets ---
+    # Yazma izin listesi (PATH/MERIDIAN_MODE panodan ASLA set edilemez) + sınır davranışları;
+    # 0600 YAZARKEN uygulanıyordu ama OKURKEN bakılmıyordu → gevşek izin bir kez raporlanır
+    # (çalışmayı engellemeden); repo genelinde "sır değeri loga gitmiyor" statik ağı + mask.
     # Testler: test_secrets_audit_v41.py (10).
-    "secrets": ["korunum", "determinizm", "tutarlilik", "sahiplik"], # --- tur 29 (2026-07-21): skill_evolve ---
-    # SK1 BULGU: koruma YALNIZ taslak üretimindeydi; apply_revision hiçbir kontrol yapmıyordu —
-    # elde taslağı olan KORUNAN bir skill (kapı skill'i dahil) onayla EZİLEBİLİRDİ. SK2 BULGU: skill
+    "secrets": ["korunum", "determinizm", "tutarlilik", "sahiplik"], # --- skill_evolve ---
+    # BULGU: koruma YALNIZ taslak üretimindeydi; apply_revision hiçbir kontrol yapmıyordu —
+    # elde taslağı olan KORUNAN bir skill (kapı skill'i dahil) onayla EZİLEBİLİRDİ. BULGU: skill
     # adı doğrudan os.path.join'e giriyordu; '../..' içeren bir ad skills/ DIŞINDA dosya değiştirirdi.
-    # İkisi de kapatıldı + reddedişler kayda geçiyor (sahiplik). SK3 otomatik uygulama yok (korunum).
+    # İkisi de kapatıldı + reddedişler kayda geçiyor (sahiplik). Otomatik uygulama yok (korunum).
     # Testler: test_skill_evolve_audit_v42.py (15).
-    "skill_evolve": ["korunum", "sahiplik", "uretkenlik"], # --- tur 30 (2026-07-21): skills ---
-    # SL2 BULGU: kayıt defteri KİLİTSİZ oku-değiştir-yaz ile İKİ daemon iş parçacığından yazılıyordu
-    # (pipeline damgası + pano gölge kararı) — memory.py'deki audit #19 kayıp-güncelleme deseninin
+    "skill_evolve": ["korunum", "sahiplik", "uretkenlik"], # --- skills ---
+    # BULGU: kayıt defteri KİLİTSİZ oku-değiştir-yaz ile İKİ daemon iş parçacığından yazılıyordu
+    # (pipeline damgası + pano gölge kararı) — memory.py'deki kayıp-güncelleme deseninin
     # aynısı; bir 'shadow' kararı sessizce geri dönebilirdi. Kilit + eşzamanlılık testi (sahiplik).
-    # SL1 korunan skill hiçbir yoldan kapatılamaz; SL3 'koşan' ile 'mevcut' ayrı (korunum).
+    # Korunan skill hiçbir yoldan kapatılamaz; 'koşan' ile 'mevcut' ayrı (korunum).
     # Testler: test_skills_audit_v43.py (9).
     "skills": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"],
-    # --- tur 31 (2026-07-21): spend ---
-    # SP1 BULGU: tek global fiyat vardı ve record(model=...) onu YOK SAYIYORDU — ücretsiz Gemini/Nous
+    # --- spend ---
+    # BULGU: tek global fiyat vardı ve record(model=...) onu YOK SAYIYORDU — ücretsiz Gemini/Nous
     # çağrıları Opus listesiyle fiyatlanıp HARCANMAMIŞ parayla bütçeyi doldurabiliyor ve beyni
-    # sessizce kapatabiliyordu. Model başına fiyat tablosu (tutarlilik). SP2 defter UTC'ye alındı.
+    # sessizce kapatabiliyordu. Model başına fiyat tablosu (tutarlilik). defter UTC'ye alındı.
     # Testler: test_spend_audit_v44.py (9).
     "spend": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk", "sahiplik"],
-    # --- tur 32-33 (2026-07-21): sprint + sprint_run ---
-    # SR1 izolasyon üç ayağa dayanıyordu (kopyalama, MERIDIAN_ROOT, SKIP_COPY) ve hiçbiri test
+    # --- sprint + sprint_run ---
+    # İzolasyon üç ayağa dayanıyordu (kopyalama, MERIDIAN_ROOT, SKIP_COPY) ve hiçbiri test
     # edilmiyordu → üçü de kilitli; _reset_sandbox_state'in CANLI deftere dokunmadığı davranışsal
-    # olarak kanıtlandı (sahiplik). SR2 pencereler sabit ve AYRIK — env'den ayarlanamaz (p-hacking
-    # koruması, tutarlilik). SR3 eğitim sonucu canlı kalibrasyona karışmıyor. SR4 HALT/sırlar
+    # olarak kanıtlandı (sahiplik). pencereler sabit ve AYRIK — env'den ayarlanamaz (p-hacking
+    # koruması, tutarlilik). Eğitim sonucu canlı kalibrasyona karışmıyor. HALT/sırlar
     # kum havuzuna kopyalanmıyor. Testler: test_sprint_audit_v45.py (11).
     "sprint": ["korunum", "sahiplik", "tutarlilik", "uretkenlik"],
-    "sprint_run": ["korunum", "sahiplik", "uretkenlik"], # --- tur 34 (2026-07-21): store ---
-    # ST1 bozuk state dosyası SESSİZCE varsayılana düşüyordu — portfolio.json bozulursa defter BOŞ
+    "sprint_run": ["korunum", "sahiplik", "uretkenlik"], # --- store ---
+    # Bozuk state dosyası SESSİZCE varsayılana düşüyordu — portfolio.json bozulursa defter BOŞ
     # görünür ve motor pozisyonlar yokmuş gibi davranır (sistemin en tehlikeli sessiz hatası).
-    # ST2 append atomik değil; yarım satır sessizce atlanıyordu. İkisi de artık dosya başına bir kez
+    # Append atomik değil; yarım satır sessizce atlanıyordu. İkisi de artık dosya başına bir kez
     # KAYDA geçiyor (korunum) + atomik yazım/numpy temizliği kilitli (determinizm).
-    # --- tur 35: strategy — sinyal determinizmi + stop tetiğin altında + trail sert stopu gevşetmez.
-    # --- tur 36: validation_report — yalnız KAYITLI kanıtı gösterir, kendi ölçümünü yapmaz.
+    # --- strategy — sinyal determinizmi + stop tetiğin altında + trail sert stopu gevşetmez.
+    # --- validation_report — yalnız KAYITLI kanıtı gösterir, kendi ölçümünü yapmaz.
     # Testler: test_store_strategy_audit_v46.py (10).
     "store": ["uretkenlik", "korunum", "determinizm", "sahiplik"],
     "strategy": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "monotonluk"],
@@ -283,7 +283,7 @@ COVERED: dict[str, list[str]] = {
 }
 
 # =============================================================================================
-# UYGULANABİLİRLİK (2026-07-21, ilk tam turdan sonra)
+# UYGULANABİLİRLİK
 #
 # %33 sayısı YANILTICIYDI ve bunu kayıt üretti: payda 49×6=294, yani HER bileşende HER desenin
 # doldurulması gerekiyormuş gibi. Oysa bazı sorular bazı modüller için ANLAMSIZ:

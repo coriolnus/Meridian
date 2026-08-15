@@ -705,9 +705,9 @@ def fontlar(request: Request, ad: str):
 def landing(request: Request):
     """The original marketing landing page — the design reference the dashboard is cut from.
 
-    ÖNBELLEK NOTU (küçük-kuyruk turu): bu rota ve `/workflow` `_NOCACHE`i HİÇ göndermiyordu — yani
-    tanıtım sayfası, panonun aksine, tarayıcının sezgisel tazelik hesabına bırakılmıştı. C10
-    bekçisinin canlı-sayı sözleşmesi (landing.js → /api/public/summary) tam da bu sayfada geçerli
+    ÖNBELLEK NOTU: bu rota ve `/workflow` `_NOCACHE`i HİÇ göndermiyordu — yani
+    tanıtım sayfası, panonun aksine, tarayıcının sezgisel tazelik hesabına bırakılmıştı. Bekçinin
+    canlı-sayı sözleşmesi (landing.js → /api/public/summary) tam da bu sayfada geçerli
     ve bayat bir HTML kabuğu o sözleşmeyi sessizce boşa çıkarırdı."""
     return _statik(request, "landing.html")
 
@@ -1622,7 +1622,7 @@ def api_skills(request: Request):
 #     mekanizmasının üstüne İKİNCİ bir onay yolu açmak olurdu (app.js:8470'in reddettiği desen).
 #   * `skills.auto_shadow_from_evidence` (skills.py:499, süreç-içi, HTTP değil): operatör kararı
 #     DEĞİLDİR — gelen kutusunda kimliği yoktur (`pending: False` yazar), dolayısıyla ona ait bir
-#     onay satırı HİÇBİR ZAMAN var olamaz; kapı oraya konsaydı L1'de H5 döngüsünü kalıcı ve
+#     onay satırı HİÇBİR ZAMAN var olamaz; kapı oraya konsaydı L1'de skill öz-yönetim döngüsünü kalıcı ve
 #     açılamaz biçimde dondururdu. Ayrıca tek yönlüdür (yalnız `shadow`, PROTECTED hariç, koşu
 #     başına en çok 1) — kanıtı negatif çıkan bir skill'i incelemeye almak, kullanmayı bırakma
 #     yönüdür.
@@ -1883,10 +1883,10 @@ def _onay_kapisi(kimlik: str, *, yol: str, **ek) -> dict:
 
 @app.post("/api/skills/revision")
 async def api_skill_revision(request: Request):
-    """v10 #5 — skill revizyon taslağı: operatör onayı (apply) ya da ret (reject). Taslaklar ajan
+    """Skill revizyon taslağı: operatör onayı (apply) ya da ret (reject). Taslaklar ajan
     tarafından yazılır ama YALNIZ burada, insan kararıyla yürürlüğe girer.
 
-    v215 (B-6): `apply` kolu L1+'ta ONAY DEFTERİNE bakar (`rev:{skill}`); `reject` kolu bakmaz —
+    `apply` kolu L1+'ta ONAY DEFTERİNE bakar (`rev:{skill}`); `reject` kolu bakmaz —
     ret hiçbir şeyi yürürlüğe koymaz. Gerekçeler `_onay_kapisi` bloğunda yazılı."""
     _auth(request)
     body = await request.json()
@@ -4052,7 +4052,7 @@ def api_diagnostics(request: Request, taze: int = 0):
                       **stream,                 # kesinti süresi + son hata da görünür (hud ile AYNI
                       "hwm_pairs": hwm,         # okuma: tek yanıtta iki farklı gerçek olamaz)
                       "partial_fills": partial,
-                      # AÇIK / KAPATILMIŞ AYRIMI (2026-07-27): şeridi besleyen sayı yalnız `open`.
+                      # AÇIK / KAPATILMIŞ AYRIMI: şeridi besleyen sayı yalnız `open`.
                       # Kapatılanlar pakette KALIR (tarihçe silinmez, sesi kısılır) — /api/alpaca
                       # aynı ayrımı uygular, iki uç aynı alanı iki farklı şekilde servis edemez.
                       "failed_submissions": health.split_rejections(rc.get("failed_submissions")),
@@ -4247,7 +4247,7 @@ def api_diagnostics(request: Request, taze: int = 0):
                   "component_ic": store.read_json("component_ic.json", None),
                   # MIN_SCORE EŞİK EĞRİSİ: "kapıyı yükseltsek kâr artar mı?"
                   # sorusunun tek ölçüm yüzeyi. Dilim istatistiği ile tam replay 07-28'de ÇELİŞTİ
-                  # (H2: 60→80 replay'de Δ-0.095); eğri o çelişkiyi panoda görünür tutar.
+                  # (60→80 replay'de Δ-0.095); eğri o çelişkiyi panoda görünür tutar.
                   "threshold_curve": store.read_json("threshold_curve.json", None),
                   # KÂR ŞELALESİ: "edge var mı?" ile "para var mı?" ayrı sorular.
                   # Sinyalin sunduğu (MFE) → çıkışın geri verdiği → friksiyon → net ayrıştırması,
@@ -4340,11 +4340,11 @@ def api_diagnostics(request: Request, taze: int = 0):
                      # hakemliği. İki ayrı gerçek, iki ayrı anahtar.
                      "massive_crosscheck": __import__("meridian.adapters.data",
                                                       fromlist=["crosscheck_report"]).crosscheck_report(),
-                     # YASA 6 (2026-07-21): fmp_usage.json her istekte YAZILIYOR ama `fmp.usage()`
+                     # YASA 6: fmp_usage.json her istekte YAZILIYOR ama `fmp.usage()`
                      # erişimcisini kod içinde kimse çağırmıyordu — kota telemetrisi diskte birikip
                      # görünmez kalıyordu. 429 kesintileri tam bu sayıdan okunur.
                      "fmp_usage": __import__("meridian.adapters.fmp", fromlist=["usage"]).usage(),
-                     # FINVIZ — /api/hermes'ten TAŞINDI (K1, 2026-07-30): evren keşif kaynağının
+                     # FINVIZ — /api/hermes'ten TAŞINDI: evren keşif kaynağının
                      # sağlığı hermes yükünde servis ediliyordu ve hiçbir yüzeyi yoktu (app.js'teki
                      # finviz geçişleri /api/market src.finviz_extra ve sırlar ekranıydı). Kaynak
                      # sağlığı pipeline kartına aittir — seam_report/no_data_report'un yanına.
@@ -4354,12 +4354,12 @@ def api_diagnostics(request: Request, taze: int = 0):
         "ledgers": {"cf_open": len(store.read_json("cf_open.json", [])), "cf_cap": 2500,
                     "cf_resolved": len(store.read_jsonl("counterfactuals.jsonl")),
                     "trades": len(store.read_jsonl("trades.jsonl"))},
-        # DEFTER SÖZLEŞMESİ (2026-07-21): sayaç "defter dolu mu" der, sözleşme "içindekiler söz
+        # DEFTER SÖZLEŞMESİ: sayaç "defter dolu mu" der, sözleşme "içindekiler söz
         # verdiği alanları taşıyor mu" der. Bugünün altı hatasının kökü ikincisiydi.
         "ledger_contract": __import__("meridian.ledgers", fromlist=["report"]).report(),
         # ELEME MUHASEBESİ: "veri yok" ile "veri elendi" ayrı şeylerdir. Hangi satırın NEDEN
         # düştüğü sayılmazsa, sessiz eleme ekranda "henüz kanıt birikmedi" gibi okunur.
-        "sieve": _sieve_rep})                 # tek okuma anı (v192) — yukarıda hesaplandı
+        "sieve": _sieve_rep})                 # tek okuma anı — yukarıda hesaplandı
 
 
 # ---------- Hermes (the reflection brain) ----------
@@ -4371,10 +4371,10 @@ def api_hermes(request: Request):
     hyps = memory.all_hypotheses()
     from . import hermes as _hm
     return {"status": hermes_runtime.status(), "spend": spend.summary(),
-            # GECE MALİYET/TOKEN KARNESİ (D3-UI · C1-3). `spend.summary()` aylık TOPLAMI verir;
+            # GECE MALİYET/TOKEN KARNESİ. `spend.summary()` aylık TOPLAMI verir;
             # "hangi kol yedi, hangi model yedi, hangi gece?" sorusu çağrı-başına kırılım ister ve
             # o kırılım `spend.jsonl`de ZATEN yazılı, hiçbir uçtan servis edilmiyordu.
-            # NEDEN /api/spend'E BAĞLANMADI: o uç K1'de EMEKLİ ("bu uçlara YENİ tüketici bağlanmaz
+            # NEDEN /api/spend'E BAĞLANMADI: o uç EMEKLİ ("bu uçlara YENİ tüketici bağlanmaz
             # — kanonik yüzey /api/hermes `spend`"). Kırılım o yüzden kanonik ucun İÇİNDE doğar.
             "spend_detay": _spend_detay(),
             "autostart": os.environ.get("MERIDIAN_AUTOSTART_HERMES") == "1",
@@ -4385,7 +4385,7 @@ def api_hermes(request: Request):
             "scheduler": __import__("meridian.scheduler", fromlist=["status"]).status(),
             "sprint": sprint.status(),                                   # öğrenme antrenmanı (sandbox loop-closer)
             "integrations": _hm.integrations_status(),                   # MCP/hook/cache/pool + görüş dolgusu
-            # ---- BEŞ ÖLÜ SAĞLIK BLOĞU EMEKLİ EDİLDİ (K1, 2026-07-30) ------------------------
+            # ---- BEŞ ÖLÜ SAĞLIK BLOĞU EMEKLİ EDİLDİ ---------------------------------------
             # Buradan beş blok servis ediliyordu: finviz, hotstate, marketstream, barfeed,
             # intraday. RENDER.hermes (app.js) hiçbirini okumuyordu — hotstate/marketstream/
             # barfeed/intraday panelleri verilerini /api/diagnostics'ten alıyor. Yani AYNI gerçek
@@ -4528,7 +4528,7 @@ def api_alpaca(request: Request):
             # `failed_submissions` BURADA DA açık/kapatılmış olarak ayrışır: bu uç ile
             # /api/diagnostics aynı alanı farklı şekillerde servis ederse pano hangi uçtan
             # okuduğuna göre farklı bir gerçek görür — tek yanıtta iki gerçek olamaz kuralının
-            # uçlar arası hâli (2026-07-27).
+            # uçlar arası hâli.
             "reconcile": {**(_rcraw := store.read_json("broker_reconcile.json", {}) or {}),
                           "failed_submissions": health.split_rejections(_rcraw.get("failed_submissions"))},
             # `stream_ok` HAM hâliyle gitmez: dürüst değeri yanına ikinci bir anahtar olarak eklemek
@@ -4543,7 +4543,7 @@ def api_alpaca_submit_armed(request: Request):
     """Submit the currently-armed plans to Alpaca paper now (manual trigger; the scheduler also does this
     each cycle when MERIDIAN_BROKER=alpaca_paper). Refuses when halted.
 
-    E1 YASASI ARTIK TEK KAPIDAN (C8, denetim 2026-08-02): bu uç EskİDEN kendi gönderim mantığını
+    E1 YASASI ARTIK TEK KAPIDAN: bu uç EskİDEN kendi gönderim mantığını
     kuruyordu — `alpaca.submit_plan(p, eq)` çıplak varsayılanlarıyla. Yani de-risk çarpanı YOK
     (%5 düşüşte döngü 0,6 ile doldururken düğme TAM boyut gönderiyordu), atr/ref_price YOK (aynı
     planda iki farklı limit tavanı + gap dalında kırılım teyidinin tümden kalkması), dedup YOK
@@ -4556,9 +4556,9 @@ def api_alpaca_submit_armed(request: Request):
     KALICILIK ARTIK TEK YERDE (İŞ-2-EOD, 2026-08-11): gönderim + kilit-altı yama gövdesi
     `loop.mirror_submit_ve_kalicilastir`a taşındı — onay anı (operator_onay_ver), intraday 4b ve bu
     uç AYNI kalıcılaştırma yasasını paylaşır (tam-belge yazımı YASAK; gönderilenler dedup kümesine
-    EKLENİR, düşen veto/ret planları armed'dan kimlikle ÇIKARILIR, SB-1 makbuzu basılır — 08-06
+    EKLENİR, düşen veto/ret planları armed'dan kimlikle ÇIKARILIR, boyut makbuzu basılır — 08-06
     AMGN pano/nabız vakasının kuralları aynen o gövdede). Davranış birebir; buradaki tek fark
-    çağrı olması (C8'in taşıma deseninin aynısı)."""
+    çağrı olması (aynı taşıma deseni)."""
     _auth(request)
     from . import loop as _loop
     if health.halted():
@@ -4594,11 +4594,11 @@ def api_alpaca_close_all(request: Request, confirm: str = ""):
 
 
 # ==================================================================================================
-# KORUMAYI YENİDEN KURAN YOL (v211) — ÖNERİ ÜRETİCİ + ONAY KAPISI + İCRA
+# KORUMAYI YENİDEN KURAN YOL — ÖNERİ ÜRETİCİ + ONAY KAPISI + İCRA
 # --------------------------------------------------------------------------------------------------
 # EKSİK MEKANİZMA (canlı A1, 2026-08-07): panoda üç uç vardı — `/api/alpaca` (oku),
 # `submit_armed` (gir), `close_all` (düzleştir). "Korumayı yeniden kur" YOKTU. `watchdog
-# .koruma_report()` (v209) çıplak motor pozisyonlarını GÖRÜYOR ama bekçi haber verir, düzeltmez;
+# .koruma_report()` çıplak motor pozisyonlarını GÖRÜYOR ama bekçi haber verir, düzeltmez;
 # aradaki boşluğu tek dolduran şey operatörün elle Alpaca arayüzüne gitmesiydi.
 #
 # YETKİ ŞEKLİ — OPERATÖR KARARI (2026-08-07): "emri SİSTEM gönderir, operatör PANODAN onaylar".
@@ -4617,13 +4617,13 @@ def api_alpaca_close_all(request: Request, confirm: str = ""):
 #
 # HALT BU YOLU KAPATMAZ — VE BU BİLİNÇLİ. `/api/alpaca/submit_armed` HALT'ta reddeder çünkü o YENİ
 # RİSK ALIR. Bu yol var olan riski AZALTIR: çıplak bir pozisyona stop koymak, acil durdurma
-# sırasında yapılacak şeyin ta kendisidir. Kademe-2 (`cancel_open_entries`) zaten aynı ayrımı
+# sırasında yapılacak şeyin ta kendisidir. `cancel_open_entries` zaten aynı ayrımı
 # yapıyor — dolu pozisyonların koruma bacaklarına DOKUNMUYOR.
 KORUMA_KART_SEV = "sev-1"
 # Emir listesi tavanı — `watchdog.KORUMA_EMIR_TAVANI` ile AYNI gerekçe (sahiplik kanıtı tavanın
 # dışında kalabilir) ama İKİNCİ BİR OKUMA: bu modül bekçinin `rows`unu kullanır, bekçi ise emir
-# FİYATLARINI döndürmez ve `watchdog.py` bu turda yazma kapsamı dışındadır (v209 dokunulmaz).
-# A4 denetimi (mevcut stop'un ÜSTÜNE çıkma) fiyatsız yapılamaz, o yüzden emirler burada bir kez
+# FİYATLARINI döndürmez ve `watchdog.py` bu turda yazma kapsamı dışındadır.
+# GEVŞETME denetimi (mevcut stop'un ÜSTÜNE çıkma) fiyatsız yapılamaz, o yüzden emirler burada bir kez
 # daha OKUNUR. Bedeli beyanlıdır: tur başına bir fazla GET; kazancı, korumayı düşürmenin arka
 # kapısının kapalı kalması.
 KORUMA_EMIR_TAVANI = 500
@@ -4640,7 +4640,7 @@ def _koruma_sayi(v):
 
 
 def _koruma_canli_stop_seviyeleri(ords: list) -> dict:
-    """Sembol → broker'da CANLI duran koruyucu stop'ların EN YÜKSEĞİ (A4'ün tabanı).
+    """Sembol → broker'da CANLI duran koruyucu stop'ların EN YÜKSEĞİ (gevşetme denetiminin tabanı).
 
     `watchdog._koruma_duz` ile aynı düzleştirme yapılır (bracket bacakları `legs` altındadır) ama
     o özel ada dokunulmaz — bekçi modülü bu turda salt okunur ve özel bir yardımcıya bağlanmak,
@@ -4676,7 +4676,7 @@ def koruma_onerileri() -> dict:
     """Çıplak MOTOR pozisyonları için OCO önerileri — SALT OKUMA, hiçbir emir göndermez.
 
     KAYNAKLAR ve her birinin NEDEN o kaynak olduğu:
-      · çıplak listesi → `watchdog.koruma_report()` (v209). Yeniden yazılmaz: ikinci bir "koruma
+      · çıplak listesi → `watchdog.koruma_report()`. Yeniden yazılmaz: ikinci bir "koruma
         var mı?" tanımı, ilk düzenlemede bekçininkinden ayrışır ve pano ile alarm iki farklı
         gerçeği anlatmaya başlardı.
       · ADET → BROKER (`koruma_report` satırlarındaki `adet`, kaynağı `alpaca.positions()`).
@@ -4735,7 +4735,7 @@ def koruma_onerileri() -> dict:
         d = defter.get(sym) if isinstance(defter, dict) else None
         defter_adet = _koruma_sayi((d or {}).get("qty")) if isinstance(d, dict) else None
         # KİTABIN BEYAN ETTİĞİ KORUMA SEVİYESİ. `trail_stop` iz süren stop'tur ve sert stop'un
-        # ÜSTÜNDE olabilir; ikisinin BÜYÜĞÜ alınır çünkü A4 "koruma gevşetilmez" der — küçüğünü
+        # ÜSTÜNDE olabilir; ikisinin BÜYÜĞÜ alınır çünkü kural "koruma gevşetilmez" der — küçüğünü
         # seçmek, kitabın kendi yükselttiği korumayı aynada geri indirmek olurdu.
         sert = _koruma_sayi((d or {}).get("stop")) if isinstance(d, dict) else None
         iz = _koruma_sayi((d or {}).get("trail_stop")) if isinstance(d, dict) else None
@@ -4755,7 +4755,7 @@ def koruma_onerileri() -> dict:
             "gonderilir": False, "neden": "",
         }
         if not satir["motor"]:
-            # A3: motor sahibi olmadığı pozisyona emir göndermez. GÖRÜNÜR olur, öneri ÜRETMEZ.
+            # SAHİPLİK SINIRI: motor sahibi olmadığı pozisyona emir göndermez. GÖRÜNÜR olur, öneri ÜRETMEZ.
             satir["neden"] = ("motor-DIŞI pozisyon (operatörün kendi emri) — A3 sahiplik sınırı: "
                               "bu satır için emir ÜRETİLMEZ, yalnız görünürlük")
             disi.append(satir)
@@ -4773,7 +4773,7 @@ def koruma_onerileri() -> dict:
             satir["neden"] = (f"kitabın stop'u hedefin üstünde/eşit (stop={stop:g} hedef={hedef:g}) — "
                               f"OCO kurulamaz, defter satırı denetlenmeli")
         elif mstop is not None and stop <= mstop:
-            # A4 — ARKA KAPI KAPALI: bu yol var olan bir korumayı DÜŞÜREMEZ.
+            # ARKA KAPI KAPALI: bu yol var olan bir korumayı DÜŞÜREMEZ.
             satir["neden"] = (f"mevcut canlı stop {mstop:g}, önerilen {stop:g} — koruma yalnız "
                               f"YUKARI taşınır (A4), gevşetme reddedildi")
         else:
@@ -4825,7 +4825,7 @@ def koruma_kur(onay: str = "", oneri_id: str = "", onaylayan: str = "?") -> dict
       1. ÖLÇÜM — broker okunamıyorsa emir YOK + neden. "Sessiz başarı" burada SAHTE olurdu:
          ölçemediğimiz bir dünyaya emir göndermek, koruma kurduğumuzu SANMAMIZ demektir.
       2. ONAY JETONU — jetonsuz çağrı KURU KOŞUdur: ne göndereceğini raporlar, hiçbir şeye
-         dokunmaz (`close_all` ile aynı desen, A3).
+         dokunmaz (`close_all` ile aynı desen).
       3. ÖNERİ KİMLİĞİ — jeton doğru olsa bile kimlik EŞLEŞMEK zorunda. Eşleşmezse operatörün
          onayladığı liste ile şu an gönderilecek liste FARKLIDIR; emir gitmez.
 
@@ -4950,7 +4950,7 @@ async def api_alpaca_koruma_kur(request: Request):
     2026-07-28'de `?token=`i kaldırma gerekçesinin aynısı. Buradaki jeton bir sır değil ama bir
     YETKİ işaretidir ve log'a düşen bir yetki işareti, tekrar oynatılabilir bir onaydır.
 
-    UÇ DÜZEYİ DENETİM İZİ (2026-08-07, v211'in eksik yarısı). v211 Y8 "her GÖNDERİM olay bırakır"
+    UÇ DÜZEYİ DENETİM İZİ. Kural "her GÖNDERİM olay bırakır"
     der ve o çivi tutuyor — ama bu ucun dallarının ÇOĞU hiçbir yere düşmüyordu: onaysız çağrı
     (kuru koşu), ölçüm düşükken dönen tur, gönderilecek öneri kalmamış tur ve JETONSUZ gelen bayat
     kimlik. Kalan tek kayıtlı ret (`koruma_onay_bayat`) yalnız jeton DOĞRUYKEN yazılıyordu.
@@ -5012,7 +5012,7 @@ async def api_alpaca_koruma_kur(request: Request):
 
 
 # ---------- Batch N: ops & UX ----------
-# ---- /halt SATIR İÇİ BETİĞİ DIŞARI ALINDI (v203, 2026-08-07) ---------------------------------
+# ---- /halt SATIR İÇİ BETİĞİ DIŞARI ALINDI -----------------------------------------------------
 # ÖLÇÜLEN VE KAPATILAN GERİLEME. Bu sayfa gövdeli bir `<script>` taşıyordu ve `script-src 'self'`
 # onu — `<script src>` olmayan HER bloğu — BLOKLAR. Başlık bugüne dek hiçbir yerde zorlanmadığı
 # için (Caddy koşmuyor; yukarıdaki "GÜVENLİK BAŞLIKLARI" notu) arıza görünmüyordu; politikayı
@@ -5056,7 +5056,7 @@ def mobile_halt():
     """#44 — a standalone, phone-friendly panic page. One giant button → POST /api/halt.
     Reads the token from ?token= so it works over the tunnel. No dependency on the SPA.
 
-    "Self-contained" ARTIK TAM DOĞRU DEĞİL ve cümle bu yüzden düzeltildi (v203): betik
+    "Self-contained" ARTIK TAM DOĞRU DEĞİL ve cümle bu yüzden düzeltildi: betik
     `/halt.js`ten gelir. Bağımlılık AYNI ORIGIN'de, aynı süreçte, aynı dosyada üretilen tek bir
     rotadır — SPA'ya, diske ya da bir dış host'a bağlanmaz — ama "hiçbir şey istemez" demek
     yanlış olurdu: o rota düşerse düğme ölür (çivisi tests/test_guvenlik_basliklari_v203.py Ç5)."""
@@ -5085,7 +5085,7 @@ def api_state_snapshot(request: Request):
             p = config.STATE / name
             if p.exists():
                 tar.add(str(p), arcname=f"meridian_state/{name}")
-            # SQLite GEÇİŞİ SONRASI YEDEK BOŞALMASIN (WP-H/H9, 2026-07-31): yukarıdaki listenin
+            # SQLite GEÇİŞİ SONRASI YEDEK BOŞALMASIN: yukarıdaki listenin
             # dördü (`trades`, `portfolio`, `scoreboard`, `equity_curve`) DB'ye taşındığında
             # dosyaları `.migrated` ekiyle durur ve `p.exists()` False döner — yedek, öğrenmenin
             # yeniden üretilemez kısmını SESSİZCE dışarıda bırakırdı. `.migrated` arşivi de
@@ -5177,7 +5177,7 @@ def api_approvals(request: Request):
     seviyesinden bağımsız): kapıyı geçmiş silahlanma ölçümleri, skill revizyon taslakları,
     Eksen-2 önerileri, (L1+) canlı emir onayları. Her öğe: kanıt + yapılabilir eylem.
 
-    KİMLİKLER `onay_kimligi()`DEN ÇIKAR (v215, B-6): aynı dizgeyi L1 onay kapısı da arıyor. Burada
+    KİMLİKLER `onay_kimligi()`DEN ÇIKAR: aynı dizgeyi L1 onay kapısı da arıyor. Burada
     satır içi `f"rev:{...}"` kurmak, kimliği İKİ yerde üretmek ve önek değiştiği gün kapıyı sessizce
     ayrıştırmak olurdu. Dizgeler DEĞİŞMEDİ — üretim yeri tekleşti."""
     _auth(request)
@@ -5204,7 +5204,7 @@ def api_approvals(request: Request):
                                         # aynı yanıtın içinde N farklı okuma anı demek olurdu; hiç
                                         # kayıt-önerisi yoksa da defter boşuna okunmamalı
     for rec in _sk2.pending_recommendations():
-        # EYLEM LİSTESİ ARTIK ÖLÇÜLÜR (v238, 2026-08-13). Eskiden HER Eksen-2 önerisi koşulsuz
+        # EYLEM LİSTESİ ARTIK ÖLÇÜLÜR. Eskiden HER Eksen-2 önerisi koşulsuz
         # `actions: ["apply"]` taşıyordu; `lean_in` önerisi için de bir "Uygula" düğmesi çiziliyor,
         # düğme sunucuda reddediliyor ve ret ekranda görünmüyordu. Uygulayıcısı olmayan bir eylemi
         # uygulanabilir gibi sunmak, kusurun İLK adımı — `arming:{setup}` öğesi bu deseni zaten
@@ -5213,7 +5213,7 @@ def api_approvals(request: Request):
         _uyg = bool(rec.get("uygulanabilir", _sk2.eylem_uygulanabilir(rec.get("action"))))
         _oge = {"type": "skill_rec", "id": onay_kimligi("skill_rec", str(rec.get("skill"))),
                 "title": f"Eksen-2: {rec.get('skill')} → {rec.get('action')}",
-                # ÖRNEKLEM KANITIN YANINDA (v240): kanıt satırı öneri METNİDİR ve o metni LLM
+                # ÖRNEKLEM KANITIN YANINDA: kanıt satırı öneri METNİDİR ve o metni LLM
                 # yazıyor olabilir ("Strong live performance of 0.918 avg_r" — canlı vaka, n=1).
                 # Ölçülen künye metnin YANINA konur, metnin İÇİNE değil: iddia ile ölçü ayrı
                 # okunabilmeli, yoksa "düzeltilmiş metin" ile "doğru metin" karışır.
@@ -5225,7 +5225,7 @@ def api_approvals(request: Request):
                 "uygulanabilir": _uyg}
         if not _uyg:
             _oge["note"] = rec.get("uygulanamama_notu") or _sk2.UYGULANAMAZ_NOT
-            # KARAR YOLU (v240): uygulanabilir karşılığı olmayan öneri artık "görülüp geçilen" bir
+            # KARAR YOLU: uygulanabilir karşılığı olmayan öneri artık "görülüp geçilen" bir
             # satır değil — operatör KABUL/RET diyebilir ve karar deftere düşer. `actions` BOŞ
             # KALIR (orası UYGULAMA eylemlerinin listesi; oraya kayıt düğmesi koymak, v238'de
             # kapattığımız "uygulanabilir gibi sunma" kusurunu geri getirirdi).
@@ -5286,7 +5286,7 @@ def _enrich_stale_plans(plans: list, latest_session: str | None) -> None:
 def _onay_bekleyen_damgala(planlar: list) -> int:
     """Onay bekleyen REVIEW planlarını DAMGALAR (`onay_bekliyor`) ve sayar — TEK yasa, tek geçiş.
 
-    KUSUR (UX denetimi 2026-08-06, B2): Genel Bakış'ın "Bugün ne var" kartı `inbox_count` okuyordu
+    KUSUR: Genel Bakış'ın "Bugün ne var" kartı `inbox_count` okuyordu
     ve o sayım YALNIZ silahlanma ölçümü + skill revizyonu + Eksen-2 önerisini kapsıyordu. Operatörün
     onayını bekleyen REVIEW planları HİÇ girmiyordu: üç plan onay beklerken açılış ekranı
     "0 bekleyen onay — senden bir şey beklenmiyor" yazıyordu. Ölçülmüş bir gerçeğin yanlış
@@ -5317,7 +5317,7 @@ def _onay_bekleyen_damgala(planlar: list) -> int:
 def _inbox_count(planlar: list | None = None) -> int:
     """Kenar çubuğu rozeti + "Bugün ne var" kartı: senden İŞ isteyen karar sayısı (ucuz sayım).
 
-    DÖRT KAYNAK (v195-a'da dördüncü eklendi): silahlanma kapısını geçen ölçüm · skill revizyon
+    DÖRT KAYNAK: silahlanma kapısını geçen ölçüm · skill revizyon
     taslağı · Eksen-2 önerisi · onay bekleyen REVIEW planı.
 
     PLAN SAYIMI ÇAĞIRANDAN GELİR, DEFTERDEN DEĞİL: `todays_plans` zaten `analytics.today()`de
@@ -5332,7 +5332,7 @@ def _inbox_count(planlar: list | None = None) -> int:
         ar = store.read_json("arming_report.json", {}) or {}
         n = sum(1 for m2 in (ar.get("measurements") or {}).values() if m2.get("status") == "gate_passed")
         n += len(_se.pending_drafts())
-        # KARAR VERİLMİŞ ÖNERİ ROZETİ ŞİŞİRMEZ (v240): rozet "senden İŞ isteyen karar" sayar.
+        # KARAR VERİLMİŞ ÖNERİ ROZETİ ŞİŞİRMEZ: rozet "senden İŞ isteyen karar" sayar.
         # Operatör bir kayıt-önerisine Kabul/Ret dedikten sonra o satır gelen kutusunda damgasıyla
         # DURUR (üreteç aynı öneriyi yeniden yazabilir, karar geçmişi görünür kalmalı) ama artık iş
         # istemez. Sayım gelen kutusuyla AYNI yardımcıdan (`_karar_kaydi`) geçer; ölçütü burada
@@ -5431,7 +5431,7 @@ def api_plan_onayla(plan_id: str, request: Request):
 async def api_approve(approval_id: str, request: Request):
     """Operatörün onay/ret kararını deftere yazar. YALNIZ YAZAR — hiçbir şey uygulamaz.
 
-    v215 (B-6) ile bu satır artık BAĞLAYICI: `approval_id`, `GET /api/approvals` gelen kutusunun
+    Bu satır artık BAĞLAYICI: `approval_id`, `GET /api/approvals` gelen kutusunun
     `id` alanıyla AYNI dizge olmalıdır (`onay_kimligi()`: `rev:{skill}` · `rec:{skill}` ·
     `arming:{setup}`) — L1+ uygulama kapıları (`_onay_kapisi`) o kimlikle bu deftere bakar.
     Tanınmayan bir kimliğe yazılan karar hiçbir yolu açmaz; kapı fail-closed'dır.
@@ -5440,7 +5440,7 @@ async def api_approve(approval_id: str, request: Request):
     olay kaydıdır ve operatörün yazdığı ham karar aynen saklanır); okunamayan bir karar kapıda
     "onay YOK" sayılır ve nedeni olay akışına düşer (`approval_missing_refused`).
 
-    L0 İSTİSNASI — KAPI-BAĞLAMAYAN KİMLİKLER (v240, 2026-08-13). L1+ kısıtı BURADA DEĞİL, kısıtın
+    L0 İSTİSNASI — KAPI-BAĞLAMAYAN KİMLİKLER. L1+ kısıtı BURADA DEĞİL, kısıtın
     KORUDUĞU ŞEYDE anlamlıdır: bir `approve` satırı L1'de bir UYGULAMA KAPISINI açar
     (`_onay_kapisi` ← `rev:` / `rec:`), yani L0'da yazılan karar yarın icraya dönüşebilirdi.
     `KAPI_OKUYAN_ONEKLER` DIŞINDAKİ kimlikleri (bugün `kayit:` ve `arming:`) HİÇBİR kapı okumaz —
@@ -5478,7 +5478,7 @@ async def api_approve(approval_id: str, request: Request):
         memory.distill_lessons()
     # L0'da 403 YUKARIDA fırladı (zarf düşmez); buraya gelen istek onay defterine satır yazmıştır.
     _diag_onbellek_bosalt("approval_decision")
-    # YANIT KENDİ SINIRINI SÖYLER (v240): "ok: true" tek başına "yapıldı" gibi okunur ve bir
+    # YANIT KENDİ SINIRINI SÖYLER: "ok: true" tek başına "yapıldı" gibi okunur ve bir
     # kayıt-önerisinde bu YANLIŞ GÜVEN üretirdi — operatör davranışın değiştiğini sanırdı. Alan
     # her kararda taşınır (bağlayıcıda da), çünkü "davranışsal mı" sorusunun cevabı istemcinin
     # kimlik önekini kendi ayrıştırmasına bırakılamaz.

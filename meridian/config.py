@@ -96,8 +96,8 @@ def limits() -> dict:
     return goal()["limits"]
 
 
-# --- WP-M: CANLI-BEKLENTİ TAVANI (ROADMAP §WP-M borç kalemi, 2026-08-01) -------------------------
-# KURAL (ROADMAP'te yazılı, bugüne kadar HİÇBİR KOD OKUMUYORDU): canlı beklenti tavanı =
+# --- CANLI-BEKLENTİ TAVANI ------------------------------------------------------------------
+# KURAL (yazılı, bugüne kadar HİÇBİR KOD OKUMUYORDU): canlı beklenti tavanı =
 # backtest × 0,5; canlı/backtest oranı × 0,4'ün altına düşerse SÜSPANSİYON DEĞERLENDİRMESİ.
 # Yazılı ama bağlanmamış bir kural, `explore_rate`/`kill_switch_file` sınıfındadır: operatör onu
 # yürürlükte sanır, gerçekte hiçbir yüzey onu ölçmez. Bu tur kuralı KONFİGÜRE EDİLEBİLİR yapar ve
@@ -242,7 +242,7 @@ def reload_config() -> None:
 VALID_REGIMES = ("trend_up", "trend_down", "chop", "high_vol")
 
 
-# --- G3b ④ REJİM-KOŞULLU ÇIKIŞ ALTYAPISI (ROADMAP §3.2, 2026-07-30) ------------------------------
+# --- REJİM-KOŞULLU ÇIKIŞ ALTYAPISI ----------------------------------------------------------
 # Rejim başına çözülmesine İZİN VERİLEN çıkış anahtarları — flat params'ta OLMASALAR BİLE.
 #
 # ÖNCE DÜRÜST TESPİT: "params_by_regime yalnız girişte çalışıyor" TAM DOĞRU DEĞİLDİ. Replay ve canlı
@@ -251,7 +251,8 @@ VALID_REGIMES = ("trend_up", "trend_down", "chop", "high_vol")
 # exit.profit_target_r) rejim başına ZATEN çözülüyordu. Gerçek boşluk daha dar ve daha sinsiydi:
 # overlay YALNIZ `k in params` olduğunda uygulandığı için, strategy.yaml'ın TAŞIMADIĞI bir knob için
 # yazılmış bir rejim override'ı SESSİZCE DÜŞÜYORDU. Batch L deseniyle eklenen her yeni knob (giveback,
-# chandelier, scale_out ve şimdi G3b'nin dördü) tam bu sınıftadır: bounds'ta var, flat params'ta yok.
+# chandelier, scale_out ve şimdi rejim-koşullu çıkışın dördü) tam bu sınıftadır: bounds'ta var,
+# flat params'ta yok.
 # Yani "rejim başına erken itlaf" denemesi, denenmiş sanılırken hiç denenmemiş olurdu.
 #
 # NEDEN LİSTE, NEDEN GENEL BİR GEVŞETME DEĞİL: `k in params` kuralının VAR OLMA SEBEBİ bir knob
@@ -273,14 +274,14 @@ VALID_REGIMES = ("trend_up", "trend_down", "chop", "high_vol")
 REGIME_EXIT_KEYS = (
     "exit.time_stop_days", "exit.trail_atr_mult", "exit.breakeven_r", "exit.profit_target_r",
     "exit.giveback_pct", "exit.chandelier_lookback", "exit.scale_out_r", "exit.scale_out_frac",
-    "exit.early_kill_pivot", "exit.early_kill_bars",          # G3b ①
-    "stop_loss_atr_mult", "stop_mode", "stop_buffer_atr",     # G3b ② (stop da bir çıkış parametresidir)
+    "exit.early_kill_pivot", "exit.early_kill_bars",
+    "stop_loss_atr_mult", "stop_mode", "stop_buffer_atr",     # stop da bir çıkış parametresidir
 )
 
 
 def resolve_params(params: dict, by_regime: dict | None, regime: str) -> dict:
     """Effective flat params for a regime = base params overlaid with that regime's overrides.
-    Only keys that already exist in base params — OR are named in REGIME_EXIT_KEYS (G3b ④, see the
+    Only keys that already exist in base params — OR are named in REGIME_EXIT_KEYS (see the
     block above) — are overlaid, so an override can retune a real knob but never invent one. With no
     overrides (the default) this returns an unchanged copy and behavior is byte-identical to the
     flat-param engine. Overrides live at strategy['params_by_regime'][regime], keeping params itself a
@@ -296,7 +297,7 @@ def resolve_params(params: dict, by_regime: dict | None, regime: str) -> dict:
 def default_strategy() -> dict:
     """v01 seed params. Every value sits inside bounds.yaml. Midpoint-ish, sensible for swing momentum.
 
-    `position_size_r` NEDEN 1,0 DEĞİL 0,5 (ROADMAP §2-30, 2026-08-14) — bu yedek CANLIYLA AYRIŞIKTI.
+    `position_size_r` NEDEN 1,0 DEĞİL 0,5 — bu yedek CANLIYLA AYRIŞIKTI.
     `state/goal.yaml:123-125` kendi metninde şunu BEYAN ediyor: *"BERABERİNDE GİDEN AYAR:
     `position_size_r` 1,0 → 0,5 … İkisi AYRILMAZ: slot 20 tek başına ısı zarfını 5R'de bağlar ve
     boyut yarıya inmeden ölçülen davranışı vermez."* Ama çiftin YARISI (`max_open_positions: 20`)
@@ -306,9 +307,9 @@ def default_strategy() -> dict:
 
     SEVİYE DÜRÜSTÇE: bu bir toplam-risk patlaması DEĞİL — `heat_hard_r` 5,0R yine bağlar. Değişen
     portföyün ŞEKLİdir: aynı ısıda YARI SAYIDA, İKİ KAT büyük pozisyon. Ölçülmemiş bir bileşim, ve
-    EDG-2026-026'nın ölçtüğü şeyin tam tersi kol (B: slot5 + 1,0R → 410 işlem, +775$, dd %17,8,
+    ölçülen şeyin tam tersi kol (B: slot5 + 1,0R → 410 işlem, +775$, dd %17,8,
     sharpe 0,018; benimsenen C: slot20 + 0,5R → 772 işlem, +9.869$, dd %12,4, sharpe 0,285;
-    final-paket doğrulaması EDG-2026-032'de 3/3).
+    final-paket doğrulaması 3/3).
 
     NEDEN TÜRETİLMEDİ, NEDEN LİTERAL: `goal.limits`te 0,5 taşıyan HİÇBİR anahtar yok ve iki aday
     türetme de UYDURMA olurdu:
@@ -316,8 +317,7 @@ def default_strategy() -> dict:
         tavandan türetmek, bu kusurun kendi şeklidir — bugün 1,0 yazmasının sebebi de tam buydu.
       * `heat_hard_r / max_open_positions` = 5,0/20 = 0,25 — bambaşka bir sayı; üstelik operatör
         iki limitten birine dokunduğu gün yedek sessizce yeniden ayarlanırdı (ölçülmemiş bir boyut).
-    Değer bu yüzden operatörün ÖLÇÜLMÜŞ kararından (2026-08-12 karar penceresi §E.1, EDG-2026-026 C
-    kolu + EDG-2026-032) gelir ve canlı yüzeyle (`state/strategy.yaml` v5 · `position_size_r: 0.5`)
+    Değer bu yüzden operatörün ÖLÇÜLMÜŞ kararından (2026-08-12 karar penceresi, C kolu) gelir ve canlı yüzeyle (`state/strategy.yaml` v5 · `position_size_r: 0.5`)
     HİZALIDIR. Çivisi: `tests/test_wp2d_pano_beyani_v246.py::KALEM-2` — üç arıza hâlinde de
     (yok/boş/bozuk) yedeğin değeri ölçülür, ve depoda `state/strategy.yaml` varsa CANLI değerle
     birebir kıyaslanır (sürüklenme dedektörü).
@@ -339,7 +339,7 @@ def default_strategy() -> dict:
             "exit.trail_atr_mult": 2.5,
             "exit.breakeven_r": 1.0,
             "stop_loss_atr_mult": 2.0,
-            # CANLIYLA HİZALI (0,5 — operatör kararı 2026-08-12 §E.1). Gerekçenin tamamı ve neden
+            # CANLIYLA HİZALI (0,5 — operatör kararı 2026-08-12). Gerekçenin tamamı ve neden
             # `goal.limits`ten TÜRETİLMEDİĞİ bu fonksiyonun docstring'inde; `goal.yaml:123-125`
             # invaryantının bu yarısı buraya bakar.
             "position_size_r": 0.5,

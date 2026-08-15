@@ -110,7 +110,7 @@ class IntradayConsumer:
         pdate = pf.get("last_date")
         if not pdate:
             return {}
-        # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): plan defteri SQLite'a taşındığında
+        # DAMGA ARTIK `store.stamp`: plan defteri SQLite'a taşındığında
         # dosya `.migrated` ekiyle donar; mtime tabanlı önbellek anahtarı bir daha DEĞİŞMEZ ve
         # gözlem katmanı sonsuza kadar ilk turun plan nüfusunu gösterirdi. (0, 0) = defter yok.
         mt = store.stamp(PLANS_FILE)

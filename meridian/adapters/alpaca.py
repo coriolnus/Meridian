@@ -32,7 +32,7 @@ from .. import secrets, config
 PAPER_BASE = "https://paper-api.alpaca.markets"
 _SCHEME_WARNED = False   # taşıma yükseltmesi süreç başına BİR kez duyurulur (gürültü değil sinyal)
 
-# ===== MARKET-DATA STREAM (Faz 2) — TRADING host'tan AYRI, SABİT host =====
+# ===== MARKET-DATA STREAM — TRADING host'tan AYRI, SABİT host =====
 # Piyasa verisi WS'i trading host'uyla KARIŞTIRILMAZ: bu SABİT bir data host'udur, operatör-ayarlı
 # uç nokta YOKTUR → kilitlenecek girdi ve kimlik-sızıntı vektörü de yoktur (o, dashboard-
 # ayarlı trading host'una özgü). READ-ONLY veri; bu yoldan gerçek-para emri geçemez.
@@ -301,7 +301,7 @@ def orders(status: str = "open", limit: int = 50, nested: bool = False,
 
 
 def order_by_id(order_id: str) -> dict | None:
-    """Tek emri KİMLİĞİYLE oku (GET /v2/orders/{id}) — B1'in (karar-çıkışı dolum körlüğü) okuma ucu.
+    """Tek emri KİMLİĞİYLE oku (GET /v2/orders/{id}) — karar-çıkışı dolum körlüğünün okuma ucu.
 
     NEDEN VAR: `DELETE /v2/positions` kapatması coid'i Alpaca-üretimi olan YENİ bir market emri
     doğurur; o emir `by_coid[plan_id]` ile ASLA eşleşmez ve liste penceresinden (limit/kesinti)
@@ -380,7 +380,7 @@ def submit_bracket(symbol: str, qty: int, entry_stop: float, take_profit: float,
 
 
 def cancel_order(order_id: str) -> dict:
-    """Tek emri iptal et (DELETE /v2/orders/{id}). Faz 3 kademe-2'nin yapı taşı."""
+    """Tek emri iptal et (DELETE /v2/orders/{id})."""
     try:
         r = httpx.delete(f"{_paper_base()}/v2/orders/{order_id}", headers=_headers(), timeout=15)
         return {"ok": r.status_code in (200, 204, 207), "status": r.status_code}
@@ -391,13 +391,13 @@ def cancel_order(order_id: str) -> dict:
 # ==================================================================================================
 # SÜPÜRÜCÜNÜN SINIF SÖZLÜĞÜ — "DOLMAMIŞ MOTOR EMRİ" ≠ "GİRİŞ EMRİ"
 # ==================================================================================================
-# VAKA (canlı A1, 2026-08-07 20:32:39Z): operatörün v211 yoluyla kurduğu DÖRT bağımsız koruma
+# VAKA (canlı A1, 2026-08-07 20:32:39Z): operatörün kurduğu DÖRT bağımsız koruma
 # OCO'su (`P-KORUMA-20260807-1623-{AMGN,BKNG,EMR,NUE}`) günlük kadansın süpürmesinde iptal edildi;
 # olay defteri `cancelled:4, kept:0, foreign:0` yazdı ve aynı satırın metni "Koruma bacakları YAŞAR"
 # diyordu. Katil bu fonksiyondu: koruma OCO'su A2/A3 gereği `P-` önekini TAŞIR (sahiplik kanıtı —
 # bilinçli) ve doğası gereği DOLMAMIŞtır, yani eski iki ölçütün (önek + `filled_qty=0`) ikisini de
 # sağlıyordu. Fonksiyonun "dolmuş parent'ın koruma bacaklarına DOKUNULMAZ" güvencesi ise yalnız
-# BRACKET'A BAĞLI bacakları (`legs[]`) tanıyordu; v211'in BAĞIMSIZ koruma OCO'su bu fonksiyon
+# BRACKET'A BAĞLI bacakları (`legs[]`) tanıyordu; BAĞIMSIZ koruma OCO'su bu fonksiyon
 # yazılırken YOKTU. Sonuç bir kaza değil YAPISAL bir çarpışmaydı: koruma her kurulduğunda bir
 # sonraki süpürmede ölüyordu.
 #
@@ -538,7 +538,7 @@ def _supurme_dokumunu_yaz(out: dict) -> None:
 
 
 def cancel_open_entries() -> dict:
-    """Faz 3 (5a-2) Cancel-Open: YALNIZ henüz DOLMAMIŞ GİRİŞ emirlerini (filled_qty=0, canlı parent)
+    """Cancel-Open: YALNIZ henüz DOLMAMIŞ GİRİŞ emirlerini (filled_qty=0, canlı parent)
     iptal eder. Kısmen/tam dolmuş parent'lara DOKUNULMAZ — onların koruyucu bacakları (stop/hedef)
     canlı pozisyonu koruyor; onları iptal etmek pozisyonu çıplak bırakır (yasak, mirror_stream ile
     aynı ilke). Dönen: {cancelled:[...], kept:[...], foreign:[...], siniflar:{...}}.
@@ -613,7 +613,7 @@ _LIVE_ORDER_STATES = ("new", "accepted", "pending_new", "held", "open", "accepte
 def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     """İÇ MOTORUN ÇIKIŞ KARARINI AYNAYA TAŞI: yalnız MOTORUN KENDİ bracket'ını kapatır.
 
-    NEDEN VAR (C9): time_stop / regime_flip / giveback / erken-itlaf çıkışları
+    NEDEN VAR: time_stop / regime_flip / giveback / erken-itlaf çıkışları
     iç defteri kapatıyor ama aynadaki bracket AÇIK kalıyordu. Sonuç mutabakatta "motor yetimi"
     olarak HER TURDA alarm basıyor ve sembol `loop._mirror_busy` üzerinden kalıcı olarak karar
     dışında kalıyordu (huninin kendi kendini aç bırakması). Bu depoda pozisyon kapatan tek yol
@@ -639,21 +639,21 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     (loop._mirror_exit_sync) bunu ALARM'a çevirir ve bir sonraki döngüde yeniden dener. Bu pencere
     sessiz DEĞİLDİR.
 
-    KORUMA AİLESİ (B4 — 08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
-    süzgeci v211'in BAĞIMSIZ koruma OCO'sunu (coid `P-KORUMA-…`, plan_id DEĞİL) görmüyordu; canlı
+    KORUMA AİLESİ (08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
+    süzgeci BAĞIMSIZ koruma OCO'sunu (coid `P-KORUMA-…`, plan_id DEĞİL) görmüyordu; canlı
     satış bacakları hisseleri rehin tutarken DELETE her turda reddediliyor ve çıkış sonsuz
     `cikis_yetimi` dönüyordu. Artık kapatmadan önce AYNI SEMBOLÜN koruma-sınıfı emirleri de iptal
     edilir. Sınıf hükmü TEK yerden okunur (`coid_sinifi` — aile+yön ve grup kemerleri;
     ikinci bir süzgeç YAZILMAZ) ve `yabanci` sınıfı yine dokunulmazdır (A3).
 
-    İPTAL→KAPAT SIRASI (B4 davranış sözleşmesi — Alpaca'nın redd semantiğinden BAĞIMSIZ doğru sıra):
+    İPTAL→KAPAT SIRASI (davranış sözleşmesi — Alpaca'nın redd semantiğinden BAĞIMSIZ doğru sıra):
     bir iptal denemesi başarısız görünürse kapatma DENENMEZ. Önce açık-emir listesinden doğrulanır
     (iptali düşen emir gerçekten hâlâ canlı mı — 422 "zaten dolmuş/iptal" yarışı burada aklanır);
     hâlâ canlıysa `cancel_failed: True` ile dönülür, DELETE hiç yapılmaz: yarım-durum (rehinli
     hisseyle redd turu ya da yarı-sökülmüş koruma) üretmek yerine alarm + bir sonraki tur yeniden
     dener (kuyruk zaten yeniden dener, loop._mirror_exit_sync).
 
-    KAPATMA EMRİNİN KİMLİĞİ (B1): DELETE cevabının gövdesi, kapatmayı yapan
+    KAPATMA EMRİNİN KİMLİĞİ: DELETE cevabının gövdesi, kapatmayı yapan
     YENİ market emrinin kendisidir (coid Alpaca-üretimi — plan_id ile ASLA eşleşmez). Emrin `id`si
     dönüşte `close_order_id` olarak taşınır ki reconcile o emrin `filled_avg_price`ını sonraki
     turda okuyup trades satırına yamayabilsin (E2 giriş-yamasının çıkış simetriği). Gövde/id
@@ -673,7 +673,7 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
         # A1 deseni: [] burada "emir yok" DEĞİL, arıza. Arızada sahiplik doğrulanamaz → dokunma.
         return {**out, "reachable": False,
                 "detail": transport().get("error") or "alpaca transport down"}
-    # SAHİPLİK ADAYLARI: koruma-sınıfı emirler parents'a GİRMEZ (B4). İki gerekçe: (a) plan_id=None
+    # SAHİPLİK ADAYLARI: koruma-sınıfı emirler parents'a GİRMEZ. İki gerekçe: (a) plan_id=None
     # çağrıda dolmuş bir koruma SATIŞI `filled` listesine düşüp owned_qty'yi şişirirdi — satış dolumu
     # uzun pozisyonun sahiplik KANITI değildir (kanıt = dolmuş GİRİŞ, aşağıdaki docstring yasası);
     # (b) koruma iptali kendi adımında (1b) kendi `kind` etiketiyle yapılır ki `naked` hesabı ve olay
@@ -699,8 +699,8 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
                 res = cancel_order(str(leg["id"]))
                 out["cancelled"].append({"id": str(leg["id"]), "kind": "leg", "ok": bool(res.get("ok"))})
 
-    # 1b) KORUMA AİLESİ (B4): aynı sembolün koruma-SINIFI emirleri — v211 bağımsız OCO'su dahil.
-    # Hüküm `coid_sinifi`den (v220/v221 kemerleri): `P-KORUMA-` ailesi + koruma-kardeşli OCO grubu +
+    # 1b) KORUMA AİLESİ: aynı sembolün koruma-SINIFI emirleri — bağımsız OCO da dahil.
+    # Hüküm `coid_sinifi`den (aile/grup kemerleri): `P-KORUMA-` ailesi + koruma-kardeşli OCO grubu +
     # motor SELL. Yalnız kapatılacak pozisyonu rehin tutan CANLI kayıtlar iptal edilir; `yabanci`
     # (operatörün kendi emri) bu süzgece hiç girmez — A3 korunur.
     for o in (ords or []):
@@ -716,7 +716,7 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
                 out["cancelled"].append({"id": str(leg["id"]), "kind": "koruma_leg",
                                         "ok": bool(res.get("ok"))})
 
-    # 1c) İPTAL→KAPAT KAPISI (B4): iptali düşen emir varsa, kapatmayı denemeden ÖNCE açık-emir
+    # 1c) İPTAL→KAPAT KAPISI: iptali düşen emir varsa, kapatmayı denemeden ÖNCE açık-emir
     # listesinden doğrula. "İptal düştü" iki ayrı olguyu örter: (a) emir gerçekten canlı kaldı —
     # kapatma rehin yüzünden reddedilir ve pozisyon yarı-sökülmüş korumayla kalır → DENEME;
     # (b) emir aradan dolmuş/iptal olmuş (422 yarışı) — artık rehin yok → kapatma güvenle sürer.
@@ -771,7 +771,7 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
             except Exception:  # sessiz-yutma: gövde JSON değil (sağlayıcı HTML/boş dönebilir); durum kodu tek başına yeterli kanıttır
                 det = f"HTTP {r.status_code}"
             return {**out, "ok": False, "naked": _naked(out), "detail": str(det)[:200]}
-        # B1: kapatma emrinin kimliği cevaptan okunur — okunamazsa None + NEDEN (uydurma yasağı).
+        # Kapatma emrinin kimliği cevaptan okunur — okunamazsa None + NEDEN (uydurma yasağı).
         oid, oneden = None, None
         try:
             govde = r.json()
@@ -791,13 +791,14 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
 
 def _naked(out: dict) -> bool:
     """Koruma bacağı BAŞARIYLA iptal edildi mi? (kapatma düşerse pozisyon çıplak kalır)
-    `koruma`/`koruma_leg` de sayılır (B4): v211 OCO'sunun iptali de pozisyonu aynı şekilde soyar."""
+    `koruma`/`koruma_leg` de sayılır: bağımsız koruma OCO'sunun iptali de pozisyonu aynı şekilde
+    soyar."""
     return any(c.get("kind") in ("leg", "koruma", "koruma_leg") and c.get("ok")
                for c in (out.get("cancelled") or []))
 
 
 def asset_tradable(symbol: str) -> bool | None:
-    """Faz 3 LULD vekili: emir göndermeden önce varlık işleme açık mı? Alpaca assets ucu tradable ve
+    """LULD vekili: emir göndermeden önce varlık işleme açık mı? Alpaca assets ucu tradable ve
     status taşır (halted/delist → tradable=false). Ulaşılamazsa None → FAIL-OPEN (emri Alpaca'nın
     kendi reddine bırak; ağ hatası işlem engeli değildir)."""
     try:
@@ -866,7 +867,7 @@ def exit_fill_price(order: dict) -> float | None:
 
 
 def koruma_fill(order: dict) -> dict | None:
-    """Koruma emrinde DOLMUŞ bacağı bul — B3'ün okuma ucu (`exit_fill_price`in koruma kardeşi).
+    """Koruma emrinde DOLMUŞ bacağı bul — okuma ucu (`exit_fill_price`in koruma kardeşi).
 
     `exit_fill_price` YETMEZ, çünkü o yalnız `legs[]`e bakar; koruma OCO'sunda ise (ölçüm,
     canlı 2026-08-09) HEDEF bacağı primary'nin KENDİSİDİR (limit, coid `P-KORUMA-…`) ve stop bacağı

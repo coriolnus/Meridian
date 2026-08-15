@@ -247,7 +247,7 @@ def _gunluk_oku() -> dict:
 
 
 def check_and_alarm() -> None:
-    """v11 #1 — bayat-GEÇİŞ alarmı: bir mekanizma penceresini İLK aştığında bir kez MECHANISM_STALE
+    """#1 — bayat-GEÇİŞ alarmı: bir mekanizma penceresini İLK aştığında bir kez MECHANISM_STALE
     (bildirim beyaz-listesinde → telefona düşer); toparlanınca kayıt silinir ki bir sonraki bayatlama
     yine görünsün. Her poll'da ucuz; bekçi felsefesi aynı — yalnız haber verir.
 
@@ -404,7 +404,7 @@ def production_report() -> dict:
     # yazıyor; bekçi onu OKUR ve üçüncü bir kova açar. Dosya yoksa/eski şemadaysa `durum` None'dır
     # ve davranış BİREBİR eskisi gibi kalır (geriye uyum).
     _gate_durum = (store.read_json("gate_calibration.json", {}) or {}).get("durum")
-    # AYNA ÜRETKENLİĞİ (adapters.alpaca denetimi 2026-07-21): motor plan silahlandırıyor ama aynaya
+    # AYNA ÜRETKENLİĞİ: motor plan silahlandırıyor ama aynaya
     # tek emir gitmiyorsa bu 'sabır' değil ARIZADIR — eskiden hiçbir şey söylemezdi. Yalnız ayna
     # açıkken sorulur; iç broker modunda soru anlamsız (yanlış alarm üretmesin).
     from . import config as _cfg
@@ -425,7 +425,7 @@ def production_report() -> dict:
                             "note": f"üyelik kaynağı üretmiyor — {str(_h.get('error'))[:60]}"})
     except Exception as e:                       # dedektörün KENDİ arızası da sessiz kalmasın
         starved.append({"name": "sp500_membership", "note": f"dedektör hatası: {type(e).__name__}"})
-    # KAZANÇ TAKVİMİ (earnings denetimi 2026-07-21): takvimde GELECEK tarih kalmazsa karartma guard'ı
+    # KAZANÇ TAKVİMİ: takvimde GELECEK tarih kalmazsa karartma guard'ı
     # herkes için sessizce KAPANIR — "sert guard" görünür, hiçbir şey engellemez.
     try:
         from . import earnings as _earn
@@ -553,7 +553,7 @@ def conservation_report(olaylar: list[dict] | None = None) -> dict:
                  detail="açıklanamayan plan sayısı ŞİŞMİŞ olabilir")
     # CANLI dönem sınırı: replay tohumu planları trade_plans.jsonl'a yazar ama HİÇ olay kaydı tutmaz,
     # dolayısıyla "neden silahlanmadı" (seans-içi arming rekabeti) orada yapısal olarak görünmez.
-    # Ölçüldü (2026-07-21): 31 bayrağın 30'u replay dönemiydi, 1'i GERÇEK canlı sızıntıydı (GS 07-14).
+    # Ölçüldü: 31 bayrağın 30'u replay dönemiydi, 1'i GERÇEK canlı sızıntıydı (GS 07-14).
     # Bu yüzden sayı DÖNEME göre ayrılır: canlı = eyleme dönüşür sinyal, replay = kayıt körlüğü.
     # SINIR DEFTERİN TAMAMINDAN OKUNUR, PENCEREDEN DEĞİL: `limit=20000` ile ilk daily_cycle
     # 2026-07-22 görünüyordu, defterdeki GERÇEK ilk daily_cycle ise 2026-07-10 — aradaki 12 günde
@@ -648,7 +648,7 @@ def determinism_report(persist: bool = False) -> dict:
 # =============================================================================================
 # 7. DESEN — MAKULLÜK / EŞLEŞME
 #
-# Neden var: 2026-07-21'de motorun evrenin %18'inde karar verdiği bulundu. HER BİLEŞEN DOĞRUYDU —
+# Neden var: motorun evrenin %18'inde karar verdiği bulundu. HER BİLEŞEN DOĞRUYDU —
 # tazelik koruması, seans seçimi, tarama; üçünün de testi geçiyordu. Hata BİLEŞİMDEYDİ: doğru
 # parçalar yanlış bir sistem sonucu üretiyordu. İlk altı desen bileşen bazlıdır ("üretiyor mu,
 # koruyor mu, deterministik mi") ve bu sınıfı yapısal olarak göremez.
@@ -703,7 +703,7 @@ def events_since(days: int, limit_hint: int | None = None,
     """Olay defterinin TARİH tabanlı penceresi.
 
     NEDEN SATIR LİMİTİ YETMİYOR: `limit=4000` nominal hacimde (~1.700/gün) ~2,3 gün demekti; ama
-    `hotstate_down` seli defterin %60'ını tek olaya çevirdi (canlı sayım 2026-07-30: 26.319 satırın
+    `hotstate_down` seli defterin %60'ını tek olaya çevirdi (canlı sayım: 26.319 satırın
     15.863'ü) ve pencere ~16 SAATE düştü. Sonuç: satır-limitli her tüketici geçmişe kör oldu —
     `universe_coverage` kontrolü "işlenen seanslar tam evreni gördü" diyordu, oysa aynı defterde
     164 atlanmış seans yazılıydı. Gürültü, dedektörleri kapatan bir saldırı yüzeyine dönüştü.
@@ -722,7 +722,7 @@ def events_since(days: int, limit_hint: int | None = None,
 
 
 # ---- EVREN KAPSAMASI: ŞU AN ile GEÇMİŞİN AYRILMASI --------------------------
-# ÖLÇÜLEN ÇELİŞKİ (canlı A1, 2026-08-07): satır "165 seans evren kapsaması yetersiz olduğu için
+# ÖLÇÜLEN ÇELİŞKİ (canlı A1): satır "165 seans evren kapsaması yetersiz olduğu için
 # ATLANDI (son: 2026-07-29 %17) — kaynak yayınlamıyor" diyordu. Aynı defterde ölçülen gerçek:
 #   * 165 sayısı OLAY sayısıdır, SEANS sayısı değil — yerel defter kopyasında 165 olay yalnız
 #     YEDİ ayrık seansa aitti ve 159'u TEK seansa (2026-07-15) düşmüştü. O 159, scheduler'ın
@@ -731,7 +731,7 @@ def events_since(days: int, limit_hint: int | None = None,
 #   * son atlanan seans 2026-07-29 — hükmün verildiği günden DOKUZ gün önce. Aradaki seanslarda
 #     ölçülen kapsama 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 1,0 / 0,996 idi (canlı
 #     `session_deferred_for_coverage` olayları). Yani BUGÜN kapsama sorunu YOK.
-# Kusurun sınıfı: KALICI KIRMIZI. Bu deponun `alarm_delivery` satırında 2026-07-26'da tam olarak
+# Kusurun sınıfı: KALICI KIRMIZI. Bu deponun `alarm_delivery` satırında daha önce tam olarak
 # aynı hastalık tedavi edilmişti ("_toplam kümülatiftir ve azalmaz; satır bir kez kırmızıya
 # döndüğünde sonsuza dek kırmızı kalıyordu... Kalıcı kırmızı bir dedektör, hiç olmayan bir
 # dedektörle aynıdır") — reçete de aynıdır: HÜKÜM güncel pencereye bakar, KÜMÜLATİF SAYI ayrı bir
@@ -955,7 +955,7 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     # 3) KANIT KAYNAĞI — kalibrasyon yalnız SİMÜLASYONDAN besleniyorsa öğrenme gerçeğe değmiyor
     sc = store.read_json("score_calibration.json", {}) or {}
     n_real, n_cf = sc.get("n_real"), sc.get("n_cf")
-    # TEK OKUMA (2026-08-13): defter aşağıda (5) `trades_all` olarak zaten okunuyordu ve
+    # TEK OKUMA: defter aşağıda (5) `trades_all` olarak zaten okunuyordu ve
     # burada İKİNCİ kez okunuyordu — tohum yenilemesinden sonra 887 satır × 2. Sayı aynı sayıdır;
     # ikinci okumanın tek ürettiği şey iki farklı ana ait iki fotoğraf olma İHTİMALİYDİ.
     trades_all = store.read_jsonl("trades.jsonl")
@@ -996,7 +996,7 @@ def parity_report(olaylar: list[dict] | None = None) -> dict:
     # 6) LLM GÖRÜŞ↔SONUÇ — damga düşüyor ama çift birikmiyor mu? (join/kapanış kopukluğu)
     lc = store.read_json("llm_calibration.json", None)
     if lc is not None:
-        # TEK OKUMA (2026-08-13): plan defteri iki satır arayla İKİ kez okunuyordu (1013
+        # TEK OKUMA: plan defteri iki satır arayla İKİ kez okunuyordu (1013
         # satır × 2). İki okuma arasında `hermes` bir görüş damgası yazabilir — o hâlde `stamped`
         # ile `stamped_closed` FARKLI defterlerden sayılır ve "damgalı 12, kapanmış 13" gibi
         # kendi içinde imkânsız bir satır doğar. Tek fotoğraf, tek hüküm.
@@ -1317,7 +1317,7 @@ _DEDEKTOR_BOS: dict[str, dict] = {
     "monotonicity": {"regressions": [], "amnestied": [], "tracked": 0},
     "ownership":    {"lost": []},
     "parity":       {"rows": [], "n_cycles": 0},
-    # 8. desen (2026-08-13): DEĞER eşitliği. `olculemeyen` adı BİLEREK `olculemedi` DEĞİL —
+    # 8. desen: DEĞER eşitliği. `olculemeyen` adı BİLEREK `olculemedi` DEĞİL —
     # `_tut` düşen dedektöre `olculemedi: True` (bool) koyar ve pano `=== true` ile onu üçüncü
     # duruma çevirir; aynı adı bir LİSTE alanı için kullanmak iki ayrı hükmü tek ada bindirirdi.
     "divergence":   {"ayrik": [], "esit": 0, "total": 0, "olculemeyen": [], "beyanli": []},
@@ -1329,13 +1329,13 @@ def integrity_report(persist: bool = False) -> dict:
     7. desen (parity/makullük): ilk altısı bileşen bazlıdır ve 'doğru
     parçalar, yanlış sistem sonucu' sınıfını göremez — motorun evrenin %18'inde karar verdiği
     hata tam olarak o sınıftandı.
-    8. desen (divergence/değer-eşitliği) 2026-08-13'te eklendi: ilk yedisinin hiçbiri "iki kaynak
+    8. desen (divergence/değer-eşitliği): ilk yedisinin hiçbiri "iki kaynak
     AYNI ŞEYİ mi söylüyor?" sorusunu sormuyordu — `coherence` ZAMAN ölçer, dolayısıyla aynı saniyede
-    yazılmış ZIT DEĞERLİ iki dosya bütün kapılardan yeşil geçiyordu (2026-08-13).
+    yazılmış ZIT DEĞERLİ iki dosya bütün kapılardan yeşil geçiyordu.
 
     DEDEKTÖR SAYISI ≠ KAPSAM MATRİSİ DESEN SAYISI. Buradaki aile 8'dir; `integrity_registry.PATTERNS`
     ise 6'dır ve o bir BİLEŞEN × DESEN kapsam matrisidir. İki sayı aynı görünümde yan yana basılıp
-    ikisi de "desen" diye adlandırıldığı için panoda 2026-08-13'e dek "7 desen / 6 desen" çelişkisi
+    ikisi de "desen" diye adlandırıldığı için panoda bir süre "7 desen / 6 desen" çelişkisi
     duruyordu; ikisi artık AYRI adlandırılır (app.js Bölüm 5).
 
     DEĞERLEME SIRASI SÖZLEŞMESİ: `parity_report()` persist'li ÜÇLÜDEN
@@ -1392,7 +1392,7 @@ def integrity_report(persist: bool = False) -> dict:
                 "monotonicity": _tut("monotonicity", lambda: monotonicity_report(persist=persist)),
                 "ownership": _tut("ownership", lambda: ownership_report(persist=persist)),
                 "parity": _par,
-                # 8. desen (2026-08-13): DEĞER eşitliği. `coherence`ın kardeşi — o ZAMAN ölçer,
+                # 8. desen: DEĞER eşitliği. `coherence`ın kardeşi — o ZAMAN ölçer,
                 # bu DEĞER. Persist YOK (taban ilerletmez), yan etkisi YOK: saf okuma.
                 "divergence": _tut("divergence", divergence_report)}
     finally:
@@ -1463,7 +1463,7 @@ ALARM_TEPE_PENCERE_S = 10 * 60        # tepe ölçümünün kayan penceresi
 ALARM_TEPE_TAVAN = 10                 # EEMUA 191: kabul edilebilir tepe ≤10 alarm / 10 dk
 ALARM_DURAN_TAVAN = 10                # EEMUA 191: aynı anda DURAN alarm ≤10
 
-# ---- RESTART-PATLAMASI MUAFİYETİ (küçük-kuyruk turu, 2026-08-02) -----------------------------
+# ---- RESTART-PATLAMASI MUAFİYETİ -----------------------------
 # BU SAYILAR ÖLÇÜLDÜ, SEÇİLMEDİ. Canlı defter (A1, /opt/meridian/state/events.jsonl, 31.040 satır;
 # 24 saatlik bütçe penceresinde 459 warn+alarm, damgasız 0, bozuk 0):
 #   * ham 10 dk tepesi          = 18   (tavan 10 → AŞIM)   pencere başı 2026-08-02T16:48:03Z
@@ -1703,7 +1703,7 @@ def intraday_stamp_report(sample: int = 500) -> dict:
 
 # ---- SÖZLEŞMENİN BAŞARISIZLIK HÜKMÜ ---------------------------------------
 # `state/goal.yaml:14` şunu yazıyor: failure_below: -0.04 — yani "30 günlük gerçekleşen getiri
-# -%4'ün altına düşerse bu deney BAŞARISIZDIR". Hüküm 2026-07-14'te yazıldı ve BUGÜNE KADAR hiçbir
+# -%4'ün altına düşerse bu deney BAŞARISIZDIR". Hüküm yazılıydı ve BUGÜNE KADAR hiçbir
 # kod onu okumadı: `guard.GOAL_KEYS` yalnız üyelik seti (drift koruması), `score.score_detail`
 # hedef üçlüsünü composite'e katıyor ama failure tarafını asla. Deney başarısız olsa bunu
 # söyleyecek tek satır kod yoktu. codelaw bunu göremez — artefakt yasası .json/.jsonl uzantısına
@@ -1906,7 +1906,6 @@ DERIVED_SOURCES = {
     "self_review.json":       ["score_calibration.json", "near_miss.json"],
     # eşik eğrisi iki defterden de beslenir (gerçek + cf katmanı); defterler ilerleyip eğri
     # ilerlemiyorsa panodaki "en iyi eşik" cümlesi BAYAT bir örneklemden konuşuyor demektir
-    # (Aşama 1.3, 2026-07-29)
     "threshold_curve.json":   ["counterfactuals.jsonl", "trades.jsonl"],
     # BİLEŞEN IC: karar girdisi. Üreticisi loop.py'de istisna yutup obs.warn'a
     # düşüyor — çağrı sessizce düşerse pano ve hermes kanıt paketi ESKİ IC tablosundan konuşur.
@@ -1919,9 +1918,8 @@ DERIVED_SOURCES = {
     # huni ölçümü bayat demektir ve "sıfır ihlal" yanıltıcı olur
     "sieve.json":             ["counterfactuals.jsonl", "trades.jsonl"],
     # defter ilerlerken ayna mutabakatı ilerlemiyorsa panodaki broker görünümü BAYAT konuşuyor
-    # (adapters.alpaca denetimi 2026-07-21)
     "broker_reconcile.json":  ["portfolio.json"],
-    # SERMAYE EĞRİSİ (`docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md` §4.1). Bu depodaki
+    # SERMAYE EĞRİSİ (`docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md`). Bu depodaki
     # tek genel bayatlık dedektörü `equity_curve.json`a BAKMIYORDU ve bulgunun en ağırı tam
     # oradaydı: eğrinin son noktası 19 gün geride, reset ÖNCESİ tabanda duruyor ve
     # `analytics._realized_drawdown` onu "GÜNCEL piyasaya-göre eğri" sanarak bir Faz-6 kilidini
@@ -1964,7 +1962,6 @@ def coherence_report() -> dict:
 
 # ==================================================================================================
 # #8 DEĞER-EŞİTLİĞİ (AYRIŞMA) — ŞABLONUN ÖLÇTÜĞÜ NİCELİK YANLIŞTI
-# (2026-08-13 · `docs/DENETIM-SPLIT-SINIFI-2026-08-13.md`)
 # --------------------------------------------------------------------------------------------------
 # ÖLÇÜLEN BOŞLUK: yukarıdaki `coherence_report` yalnız **mtime** kıyaslar ("türev kaynağından eski
 # mi?"). Sormadığı soru şudur: **"iki kaynak AYNI ŞEYİ mi söylüyor?"** — ve yedi dedektörün hiçbiri
@@ -2059,7 +2056,7 @@ def _yaml_yukle(metin: str):
 
     NEDEN: bu dedektörün maliyeti okuduğu DOSYA sayısıyla büyür ve saf-Python ayrıştırıcı
     `state/goal.yaml`ı 3,8 ms, `bounds.yaml`ı 5,7 ms'de çözüyor — iki dosya, deseni %77 şişiriyordu
-    (ölçüldü, 2026-08-14). `CSafeLoader` AYNI güvenli şemadır (`safe_load` = `load(…, SafeLoader)`);
+    (ölçüldü). `CSafeLoader` AYNI güvenli şemadır (`safe_load` = `load(…, SafeLoader)`);
     değiştirilen tek şey ayrıştırıcının dili, kabul edilen belge sınıfı DEĞİL — eşitlik testle
     çivili (`test_deger_esitligi_deseni_v239`).
 
@@ -2078,7 +2075,7 @@ def _sunum_uyuyan_iddialari() -> frozenset:
     tooltip iki cümleyle iki ayrı şey söylüyor). Yani dedektör yalnız TARTIŞMASIZ hâli bildirir;
     şüpheli hâlde susar. Yanlış alarm, bu depoda ölçülmüş en pahalı kusur sınıfıdır (kurt masalı).
 
-    TÜRKÇE KÜÇÜLTME TUZAĞI (ölçüldü, 2026-08-13): `"TAM SİLAHLANDI".lower()` Python'da
+    TÜRKÇE KÜÇÜLTME TUZAĞI (ölçüldü): `"TAM SİLAHLANDI".lower()` Python'da
     `'tam si̇lahlandi'` verir — noktalı `İ`, `i` + BİRLEŞTİREN NOKTA'ya (U+0307) açılır ve düz bir
     `"silahlandi" in metin` kontrolü SESSİZCE kaçar. İlk koşumda tam bu yüzden yanlış pozitif
     üretti. Normalleştirici birleştiren noktayı düşürür.
@@ -2103,7 +2100,7 @@ def _pano_alarm_jetonlari() -> frozenset:
     """Panonun olay kartlarına ELLE kopyalanmış alarm jetonları (`app.js` `jetonlar:` dizileri).
 
     NEDEN KAPI GEREKİYOR: `obs.NOTIFY_TOKENS` her `ALARM_` sabitinden TÜRETİLİR (obs.py:122) — yani
-    Python tarafında elle bakımlı liste sorunu 2026-07 turunda çözüldü. Ama panonun kart tanımları
+    Python tarafında elle bakımlı liste sorunu daha önce çözüldü. Ama panonun kart tanımları
     aynı jetonları JS dizilerine ELLE kopyalar ve o kopya hiçbir şeyden türemez: dil sınırını aşan
     tek yüzey burasıdır. Yeni bir alarm eklenip karta yazılmazsa jeton ÜRETİLİR ama panoda hiçbir
     kartın altına düşmez — YASA 6'nın (okuyucusuz yazım yok) tam tersi: okuyucusuz ALARM.
@@ -2225,7 +2222,7 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
              "beyanli-ayri"),
         ],
     },
-    # Sunum katmanı `momentum_burst`ü "UYUYAN" ilan ediyordu; kurulum 2026-08-12'de
+    # Sunum katmanı `momentum_burst`ü "UYUYAN" ilan ediyordu; kurulum ise
     # silahlanmıştı. Metin tarafı MUHAFAZAKÂR okunur (bkz. `_sunum_uyuyan_iddialari`).
     "silahli_kurulumlar": {
         "neden": "hangi kurulum silahlı: kod (`strategy.ARMED_SETUPS`) ↔ sunum anlatısı",
@@ -2303,7 +2300,7 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
         ],
     },
     # BİLİNÇLİ İKİZLEME (kıyasa girmez, kayda girer). `broker.DERISK_FLOOR_DD` bir zamanlar
-    # `goal.max_drawdown`dan türetiliyordu; bağ 2026-08-12'de BİLEREK koparıldı (`broker.py:33`
+    # `goal.max_drawdown`dan türetiliyordu; bağ BİLEREK koparıldı (`broker.py:33`
     # "ŞERH — KOPAN BAĞ") ve mezar-taşı testiyle sessiz yeniden-bağlanmaya karşı çivilendi. Kayda
     # giriyor ki muafiyet SESSİZ olmasın: bugünkü değeri raporda görünür, ama ayrışma SAYILMAZ.
     "derisk_tabani": {
@@ -2588,7 +2585,7 @@ def ownership_report(persist: bool = False) -> dict:
 # =============================================================================================
 # #8 KORUMA — "elimde pozisyon var; BROKER'DA canlı bir stop'u var mı?"
 # =============================================================================================
-# VAKA (canlı A1, ölçüm 2026-08-07): broker'da 5 açık pozisyon, açık emir SIFIR — beşi de
+# VAKA (canlı A1): broker'da 5 açık pozisyon, açık emir SIFIR — beşi de
 # korumasız. `state/portfolio.json` dört pozisyon için stop BEYAN EDİYORDU (NUE 257,4033 ·
 # EMR 152,4839 · BKNG 191,5372 · AMGN 389,4209); broker'da hiçbirinin karşılığı yoktu. Kök neden
 # ölçüldü: bracket TIF'i emrin TAMAMINA (giriş + iki koruma bacağına) uygulanır ve E1 yasası
@@ -2658,7 +2655,7 @@ def koruma_report() -> dict:
 
     SÖZLEŞME (dördü de bilinçli):
       1. `ok` DÖNER. Hüküm vermeyen bir dedektör bakanı hiçbir şey öğrenmeden geçirir
-         (`conservation_report`ın 2026-07-22'de öğrendiği ders, bu dosyanın :518'i).
+         (`conservation_report`ın öğrendiği ders, bu dosyanın :518'i).
       2. PAYDA BEYANLI: `korumasiz / toplam` + `payda_beyani` metni. Paydasız bir sayı ("3 korumasız")
          okuyucuya risk oranını söylemez.
       3. BROKER OKUNAMAZSA `ok=None` + `neden` — **0 DEĞİL**. "0 korumasız" ile "ölçemedim" aynı şey
@@ -2836,7 +2833,7 @@ def check_koruma_and_alarm() -> dict:
 # =============================================================================================
 # #9 DAMGASIZ YAZIM — "kitap `store` kapısı DIŞINDAN mı değişti?"
 # =============================================================================================
-# VAKA (docs/BAYAT-SERMAYE-KOK-2026-08-07.md §7, canlı A1): 2026-08-04 07:54 ↔ 21:47 arasında
+# VAKA (docs/BAYAT-SERMAYE-KOK-2026-08-07.md, canlı A1): 2026-08-04 07:54 ↔ 21:47 arasında
 # `portfolio.json` defterin ESKİ tabanına geri çekildi (cash 94.457,91 / realized −5.542,09). O
 # yazımı yapan komut ÖLÇÜLEMEDİ ama yazımın SINIFI ölçüldü ve kanıtı kesindir:
 #   * `entity_meta.rev` o gün yalnız İKİ kez ilerledi (3→4→5) ve ikisi de kanıtlı `_save_broker`;
@@ -2870,7 +2867,7 @@ def check_koruma_and_alarm() -> dict:
 # Kural YALNIZ DB arka ucunda ayırt edicidir. Dosya arka ucunda `store.stamp` = (mtime_ns, size)
 # döner ve dosyaya yazan HER yol mtime'ı oynatır — yani "damgasız yazım" orada TANIMSIZDIR. Rapor
 # bunu `ayirt_edici=False` + `hüküm None` ile söyler; "temiz" DEMEZ. Canlı kitap DB'dedir
-# (`state/portfolio.json` dosya olarak yoktur — aynı belge §7'de ölçüldü), yani üretimde kural tam
+# (`state/portfolio.json` dosya olarak yoktur — aynı belgede ölçüldü), yani üretimde kural tam
 # güçle çalışır.
 # İKİNCİ SINIR (maskeleme): damgasız yazımın ARDINDAN, bir sonraki poll'dan ÖNCE meşru bir `store`
 # yazımı gelirse damga ilerler ve olay "meşru" görünür. 08-04'te bu pencere 13,9 saatti; poll
@@ -2998,7 +2995,7 @@ def check_kitap_damga_and_alarm() -> dict:
 # =============================================================================================
 # #10 MUTABAKAT TAZELİĞİ — "ayna görünümü HANGİ SEANSTAN konuşuyor?"
 # =============================================================================================
-# ÖLÇÜM (docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §4.2/§4.5): `broker_reconcile.json` kaynağının
+# ÖLÇÜM (docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md): `broker_reconcile.json` kaynağının
 # 24,3 saat gerisindeydi ve panonun ayna görünümü dünden konuşuyordu. Var olan üç ölçünün ÜÇÜ DE
 # bu soruya yanlış cevap veriyor ve üçü de ölçüldü:
 #   (1) `EXPECTED["mirror_reconcile"]` = 4 GÜN. Pencere seans-bağımlı işler için doğru genişlikte
@@ -3028,7 +3025,7 @@ def mutabakat_tazelik_report() -> dict:
       * `ok=None`      — kayıt yok / damgası okunamadı: ÖLÇÜLEMEDİ. "Taze" DEĞİL.
       * `ok=False`     — kayıt kitabın işlediği seansın GERİSİNDE ya da mutlak tavanı aşmış.
     `checked`/`api_ok`/`skip_reason` HER HÂLDE taşınır: TAZE ama `checked=False` bir kayıt bir ayna
-    görünümü DEĞİLDİR (loop `_skip` dalı) ve bu ikisini karıştırmak, tam da 2026-07-22'de kapatılan
+    görünümü DEĞİLDİR (loop `_skip` dalı) ve bu ikisini karıştırmak, tam da daha önce kapatılan
     "bayat artefakt taze konuşuyor" kusurunun tersten tekrarı olurdu."""
     import datetime as _dt
     out = {"ok": None, "olculemedi": True, "kapsam_disi": False, "neden": "",
@@ -3221,7 +3218,7 @@ def check_onayli_gonderim_and_alarm() -> dict:
 #
 # KÖK: `mechanism_beats.json`daki `sprint_cadence`/`shadow_fit`/`axis2_cycle` NABZI, KADANS
 # KONTROLÜNÜN attığı damgadır — "kadans turu çalıştı" der, "sprint çocuğu canlı" ya da "yeni
-# hipotez üretildi" DEMEZ. Canlı kanıt (2026-08-09 triyajı): sprint pid'i 2 gündür ölü, faz
+# hipotez üretildi" DEMEZ. Canlı kanıt (triyaj): sprint pid'i 2 gündür ölü, faz
 # 'baseline'da takılı (281/527) ama kadans nabzı taze olduğu için pano mekanizmayı "penceresinde"
 # sayıyordu; hipotez defteri 166 sa donuk ama öğrenme kadansı her seans nabız atıyordu. Bu, gece
 # kapatılan kadans-damgası sınıfının kardeşi: GÖSTERGE yanlış damgayı okuyor.

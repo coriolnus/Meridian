@@ -255,7 +255,7 @@ def refresh(tickers: list[str]) -> int:
           Nasdaq'tan birikmiş tarihleri yazımdan sessizce düşüyordu — yani docstring'in "kaynak
           değişimi geçmiş çapaları silmez" cümlesi tam da kaynak değişimi anında ihlal ediliyor ve
           `days_since_report` (PEAD çapası) o sembollerde körelıyordu. YENİ: o yol da ÜST KÜME
-          kuralına çekildi (mevcut takvimin TAMAMI ∪ FMP satırları) — C25 kısmi-yolundaki
+          kuralına çekildi (mevcut takvimin TAMAMI ∪ FMP satırları) — kısmi-yolundaki
           "yedek Nasdaq'ı EZMEZ" deseninin `refresh_from_fmp`in KENDİ yazımına uygulanmış hâli.
 
     İKİ DEĞİŞİKLİĞİN KARARTMAYA ETKİSİ ZIT YÖNDEDİR ve bilerek öyledir: (ii) fail-open'ı KAPATIR
@@ -698,7 +698,7 @@ def coverage(tickers: list | None = None) -> dict:
 # --------------------------------------------------------------------------------------------------
 # TAKVİM GÜVENİLMEZLİĞİ — FAIL-CLOSED SEMBOLE DEĞİL, TAKVİME BAĞLI (Rol-1 kararı)
 # --------------------------------------------------------------------------------------------------
-# ÖLÇÜLEN AYRIM (WP-D KALEM 3 raporu, research/olcumler/wpd_earnings_failopen/RAPOR.md):
+# ÖLÇÜLEN AYRIM (research/olcumler/wpd_earnings_failopen/RAPOR.md):
 #   "194/251 kapsama" bir KORUMA ölçüsü DEĞİL — önümüzdeki ~4 haftada rapor veren sembol sayısıdır.
 #   Kapsam-dışı 59 sembolün büyük çoğunluğu raporu UFKUN ÖTESİNDE olduğu için bilinmiyor ve raporu
 #   4 hafta ötede olan bir sembol zaten 5 günlük karartmaya GİREMEZ. Bu yüzden "sembol bilinmiyor →

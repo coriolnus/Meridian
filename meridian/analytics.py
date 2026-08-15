@@ -149,7 +149,7 @@ def skill_attribution() -> dict:
 
 
 def autonomy_ladder(goal: dict | None = None) -> dict:
-    """L0->L1 promotion criteria (§8), each computed from real state. Manual/infra items are flagged.
+    """L0->L1 promotion criteria, each computed from real state. Manual/infra items are flagged.
     guard.py enforces these; the dashboard renders how far the agent is from being trusted with money."""
     goal = goal or config.goal()
     trades = _trades()
@@ -164,8 +164,8 @@ def autonomy_ladder(goal: dict | None = None) -> dict:
     # count REAL circuit-breaker alarms from the event log (was hardcoded True — a vanity pass on a
     # criterion that gates real money). obs.alarm() tags the event with fields["alarm"]=<token>.
     #
-    # SAYIM TS-TABANLI OLDU (K1 devri, 2026-07-30). ESKİSİ `obs.recent(400)` idi — SATIR sayısıyla
-    # sınırlı bir pencere. K1 denetimi olay defterinin %91'inin `hotstate_down` olduğunu ölçtü
+    # SAYIM TS-TABANLI OLDU. ESKİSİ `obs.recent(400)` idi — SATIR sayısıyla
+    # sınırlı bir pencere. Denetim olay defterinin %91'inin `hotstate_down` olduğunu ölçtü
     # (6.834 kopma / 24 saat): 400 satır, sel varken YARIM SAATİ kapsıyor. Yani "son 400 olayda
     # devre kesici tetiklenmedi" cümlesi, otonomi merdiveninde "temiz sicil" olarak okunuyordu ama
     # fiilen "son yarım saatte" demekti — ve gürültü arttıkça pencere KENDİLİĞİNDEN daralıyordu.
@@ -293,7 +293,7 @@ def calibration(hyps: list | None = None) -> dict:
             "hit_rate": round(sum(o for _, o in pts) / len(pts), 3), "reliability": reliability}
 
 
-# ---- MARUZİYET-DÜZELTİLMİŞ KIYAS (S3C, 2026-07-29) --------------------------------------------
+# ---- MARUZİYET-DÜZELTİLMİŞ KIYAS --------------------------------------------
 BENCH_BOOTSTRAP_N = 2000     # yeniden örnekleme sayısı — 2000, %95 aralığın uç noktalarını iki
                              # ondalıkta oturtan ilk taban (500'de aralık koşudan koşuya oynuyordu).
 BENCH_BOOTSTRAP_SEED = 20260729   # SABİT TOHUM: aynı defter iki kez ölçüldüğünde AYNI aralığı
@@ -369,7 +369,7 @@ def benchmark_relative() -> dict | None:
     system that returns +3% while SPY did +40% is not finding edge, it is underperforming beta — the
     single most important thing a return number can hide. None below a handful of trades / no SPY data.
 
-    MARUZİYET DÜZELTMESİ (S3C, 2026-07-29). HAM FARK NEDEN YANILTICI: `excess_return` stratejinin
+    MARUZİYET DÜZELTMESİ. HAM FARK NEDEN YANILTICI: `excess_return` stratejinin
     getirisinden SPY'ın TAM DÖNEM getirisini çıkarır — yani stratejiyi, parası sürekli piyasada duran
     bir SPY tutucusuyla kıyaslar. Oysa strateji sermayesinin yalnız bir kısmını, zamanın yalnız bir
     kısmında taşır. BOĞA piyasasında bu, stratejiye hak etmediği bir ceza yazar (SPY'ın tam maruziyetle
@@ -418,7 +418,7 @@ def benchmark_relative() -> dict | None:
            # which is NOT JSON-serializable and 500s any endpoint carrying it (see reflect._gate_eval).
            "excess_return": round(excess, 4), "beat_benchmark": bool(excess > 0)}
 
-    # ---- MARUZİYET DÜZELTMESİ + BOOTSTRAP ARALIĞI (S3C) ----------------------------------------
+    # ---- MARUZİYET DÜZELTMESİ + BOOTSTRAP ARALIĞI ----------------------------------------
     maruziyet, mdetay = _exposure_ratio(trades, start, end)
     out["maruziyet"] = {"oran": maruziyet, "yontem":
                         "ortalama günlük (Σ açık pozisyon notional) / başlangıç sermayesi", **mdetay}
@@ -442,8 +442,8 @@ def benchmark_relative() -> dict | None:
     # pnl'leri sermayeye ekleyip oranlıyor, yani toplam getiri = Σpnl / başlangıç sermayesi; aynı
     # formül burada da kullanılır, yoksa aralık başka bir büyüklüğün etrafında kurulurdu.
     #
-    # 2B — BLOK BOOTSTRAP'A GEÇTİ (Hafta 3b, 2026-07-30). Buradaki aralık 3a'da BİLİNÇLİ olarak IID
-    # bırakılmıştı ("2. ölçütün hükmü habersiz kaymasın" gerekçesiyle). §3.1'in 2B kalemi tam olarak
+    # BLOK BOOTSTRAP'A GEÇTİ. Buradaki aralık ÖNCEDEN BİLİNÇLİ olarak IID
+    # bırakılmıştı ("2. ölçütün hükmü habersiz kaymasın" gerekçesiyle). Blok bootstrap kalemi tam olarak
     # o bilinçli istisnayı kapatmaktır: kayıp SERİLERİ bu büyüklükte de vardır, IID onları kırar ve
     # aralığı sistematik DARALTIR — yani ölçülmemiş bir kesinlik yazar.
     # HÜKÜM KAYMASI AÇIKÇA BEYAN EDİLİR (habersiz kayma yasak): aralık GENİŞLEDİĞİ için `anlamli`
@@ -485,7 +485,7 @@ def benchmark_relative() -> dict | None:
     return out
 
 
-# ---- İŞLEM-PENCERESİ ATRİBÜSYONU: ALFA vs BETA (AT-1, 2026-07-31) -----------------------------
+# ---- İŞLEM-PENCERESİ ATRİBÜSYONU: ALFA vs BETA -----------------------------
 # NEDEN AYRI BİR ÖLÇÜM (ve neden `benchmark_relative` yetmiyor): `benchmark_relative` PORTFÖY
 # düzeyinde konuşur — tüm dönemin getirisini, ortalama maruziyetle ölçeklenmiş SPY'a karşı koyar.
 # O rakam "sermayem SPY'a karşı ne yaptı?"yı cevaplar. Ama denetimin sorduğu soru başkaydı:
@@ -494,7 +494,7 @@ def benchmark_relative() -> dict | None:
 # bazı pencerelerde durur ve o pencereleri SEÇER; portföy düzeyi ölçüm bu seçimin iyi mi kötü mü
 # olduğunu gizler.
 #
-# 2026-07-30 gecesi bu ölçüm ELLE yapıldı (denetim FAZ 4): defter −%0,225 vs SPY +%0,411 →
+# 2026-07-30 gecesi bu ölçüm ELLE yapıldı: defter −%0,225 vs SPY +%0,411 →
 # işlem başına kaba alfa −%0,64; kazanan işlemler SPY'ın +%1,89 koştuğu pencerelerdeydi (yani
 # kazançların karakteri TIMING değil BETA). Bu fonksiyon o elle ölçümün KALICI hâlidir — aynı
 # tanım, aynı sayı, artık bir uçtan servis ediliyor.
@@ -506,8 +506,8 @@ def benchmark_relative() -> dict | None:
 # edilir — okur hangi kıyası gördüğünü tahmin etmek zorunda kalmaz.
 #
 # SPY BARLARI KAPIDAN GEÇER: `data.load_bars` okuma yolunda `sanitize_bars` çalıştırır (hayalet
-# seans + düzeltilmemiş fiyat kapısı, BT-2). Ham CSV okumak, BT-2'nin kirlettiği barları BT-1'in
-# çözümüne taşımak olurdu.
+# seans + düzeltilmemiş fiyat kapısı). Ham CSV okumak, kapının elediği kirli barları bu
+# ölçüme taşımak olurdu.
 # "0g" GERÇEK BİR DİLİMDİR, ÖLÇÜM BOŞLUĞU DEĞİL: aynı seans içinde açılıp kapanan işlem (canlı
 # defterde var — T00070/TDG 2025-05-06) `bars_held=0` taşır. İlk sürümde alt sınır 1'di ve o satır
 # "olculemedi" kovasına düşüyordu; yani ÖLÇÜLMÜŞ bir tutuşu ölçülmemiş gibi göstermek olurdu.
@@ -563,9 +563,9 @@ def trade_alpha_beta() -> dict:
     olmayan işlem `n_olculemeyen`e yazılır ve HİÇBİR ortalamaya girmez; hiçbir SPY penceresi
     ölçülemezse fonksiyon `ort_fark: None` ile döner (tüm kırılımlar boş).
 
-    KAYNAK DAMGASI KIRILIMI (BT-1 bağlantısı): aynı ölçüm `live_paper`/`replay_seed`/`belirsiz`
+    KAYNAK DAMGASI KIRILIMI: aynı ölçüm `live_paper`/`replay_seed`/`belirsiz`
     paydalarında AYRI verilir. Tohum satırlarının alfası "kuralların karakteri"dir, canlı
-    performans DEĞİL — ikisini tek ortalamada toplamak, denetimin BT-1'de şikâyet ettiği karışımın
+    performans DEĞİL — ikisini tek ortalamada toplamak, denetimin şikâyet ettiği karışımın
     ta kendisi olurdu."""
     from . import ledgerstamp
     trades = _trades()
@@ -680,7 +680,7 @@ def learning_scorecard(goal: dict | None = None) -> dict:
     ever_shipped = sc.get("live", 0) + sc.get("promoted", 0) + sc.get("rolled_back", 0)
     trades = store.read_jsonl("trades.jsonl")
     trades_total = len(trades)
-    # ---- DEFTERİN KAYNAK AYRIŞTIRMASI (BT-1, 2026-07-31) ---------------------------------------
+    # ---- DEFTERİN KAYNAK AYRIŞTIRMASI ---------------------------------------
     # BU KARNENİN EN BÜYÜK YALANI BURADAYDI: `trades_total` 95 diyordu ve altındaki her cümle o 95'i
     # "canlı defter" sayıyordu — oysa gövdesi replay tohumuydu (tek toplu yazım, bugünkü evrenle,
     # survivorship'li). Yani "v4 yayında, 95/30 işlem birikti" cümlesi ölçülmemiş bir olgunluk
@@ -705,7 +705,7 @@ def learning_scorecard(goal: dict | None = None) -> dict:
         loop_state = "no_ship_v1_stands"
     elif not outcomes:
         cur_v = sb.get("current_version")
-        # TOHUM SATIRI OLGUNLUK SAYMAZ (BT-1): eskiden payda `strategy_version == cur_v` olan HER
+        # TOHUM SATIRI OLGUNLUK SAYMAZ: eskiden payda `strategy_version == cur_v` olan HER
         # satırdı ve tohum koşusu defterin tamamını cur_v ile damgaladığı için sayaç bir gecede
         # dolu görünüyordu. Payda artık tohum-olmayan satırlardır; tohumun kendisi cümlede
         # "training" olarak AYRICA söylenir — gizlenmez, ama olgunluk diye sayılmaz.
@@ -729,7 +729,7 @@ def learning_scorecard(goal: dict | None = None) -> dict:
             "rolled_back": sc.get("rolled_back", 0), "rejected_by_backtest": sc.get("rejected_by_backtest", 0),
             "rejected_by_guard": sc.get("rejected_by_guard", 0),
             "outcomes_measured": len(outcomes), "trades_total": trades_total, "loop_state": loop_state,
-            # DEFTERİN KAYNAK SAYAÇLARI — panonun ve /api/today'in okuduğu alan (BT-1).
+            # DEFTERİN KAYNAK SAYAÇLARI — panonun ve /api/today'in okuduğu alan.
             # `trades_total` geriye dönük uyum için AYNEN kalır (ham satır sayısı); karar verecek
             # olan `defter.gercek_canli_n`dir.
             "defter": defter,
@@ -738,7 +738,7 @@ def learning_scorecard(goal: dict | None = None) -> dict:
             "versions": len(sb.get("versions", {})), "current_version": sb.get("current_version"),
             "min_sample": min_s,   # UI binds captions to THIS, never a hardcoded 30 (dashboard audit)
             "regime_budget_triggers": __import__("meridian.regime_trigger", fromlist=["DeferredRegimeBudgetTrigger"]).DeferredRegimeBudgetTrigger().evaluate(trades),
-            # BESLEME KANALLARI KARNEYE GİRER (2026-07-30). Yukarıdaki sayılar (0 ship / 0 terfi /
+            # BESLEME KANALLARI KARNEYE GİRER. Yukarıdaki sayılar (0 ship / 0 terfi /
             # 1 ölçülmüş sonuç) DÜRÜSTTÜR ve bu tur onları UYDURMADI — ama "neden 0?" sorusunun
             # cevabı bu karnede hiç yoktu. İki besleme kanalı burada görünür:
             #   `antrenman` — gölge model taze mi, terfi kaç çift uzakta (ölçüm: n_live=0/30 ve
@@ -770,7 +770,7 @@ def _learning_feeds() -> dict:
         from . import obs as _o2
         _o2.warn("learning_scorecard_backfill_failed", error=f"{type(e).__name__}: {e}",
                  detail="dolgu kuyruğu karneye GİRMEDİ (uydurulmadı)")
-    # ÖĞRENME ANTRENMANI (sprint) DA BİR BESLEME KANALIDIR (2026-07-30). `outcomes_measured` bugün
+    # ÖĞRENME ANTRENMANI (sprint) DA BİR BESLEME KANALIDIR. `outcomes_measured` bugün
     # 1 ve o TEK satır H00026'dır (`source: sprint_search`, realized_delta −0,0364, 2026-07-14) —
     # yani karnedeki tek ölçülmüş sonuç sprint kökenli. Kanalın kendisi sekiz gündür atıl duruyordu
     # ve karnede bunun HİÇBİR izi yoktu: sayı "1" görünüyor, "1'de kalmasının sebebi" görünmüyordu.
@@ -801,8 +801,8 @@ def agent_view() -> dict:
             "calibration": calibration(hyps), "skill_attribution": skill_attribution()}
 
 
-# ---- SIRALAMA MATEMATİĞİ TEK YERDE (2026-07-28) ----------------------------------------------
-# Bu iki yardımcı `score_calibration()`ın İÇİNDE kapalıydı. Bileşen IC'si (Aşama 1.2) aynı Spearman
+# ---- SIRALAMA MATEMATİĞİ TEK YERDE ----------------------------------------------
+# Bu iki yardımcı `score_calibration()`ın İÇİNDE kapalıydı. Bileşen IC'si aynı Spearman
 # hesabını yapmak zorunda ve onu kendi dosyasında yeniden yazmak, aynı büyüklüğün iki uygulaması
 # demekti — beraberlik kırma ya da tanımsızlık kuralı birinde değişirse iki rakam sessizce ayrışır
 # ve hangisinin doğru olduğu hiçbir yerde yazmaz. Modül düzeyine çıkarıldı; davranış birebir aynı.
@@ -843,7 +843,7 @@ def spearman_ic(rows: list):
     rs2, rr2 = _rank_avg(a2[:, 0]), _rank_avg(a2[:, 1])
     den = rs2.std() * rr2.std()
     if den <= 0:
-        # ÖLÇÜLEMEDİ, "0.0 KORELASYON" DEĞİL (2026-07-26): bir tarafta hiç rütbe değişimi yoksa
+        # ÖLÇÜLEMEDİ, "0.0 KORELASYON" DEĞİL: bir tarafta hiç rütbe değişimi yoksa
         # (tüm skorlar aynı) korelasyon TANIMSIZDIR. Eski kod burada 0.0 döndürüyordu ve bu sayı
         # "ölçtük, ilişki yok" diye okunuyordu — ölçülmemiş bir değeri varsayılanla doldurmak.
         return None
@@ -858,12 +858,12 @@ def score_calibration() -> dict | None:
     import numpy as np
     from . import counterfactual, sieve
     pairs = []
-    # ELEME MUHASEBESİ — İKİ AYRI AŞAMA, TEK HARMAN DEĞİL (2026-07-21): eski `.get() is not None`
+    # ELEME MUHASEBESİ — İKİ AYRI AŞAMA, TEK HARMAN DEĞİL: eski `.get() is not None`
     # sınaması eski şemayla tohumlanmış 90 GERÇEK işlemin 90'ını da sessizce eledi ("gerçek 0 /
     # simüle 241"). Gerçek ve cf akışları TEK sayaçta toplansaydı dedektör yine susardı — 241>0
     # olduğu için "hiç çıkmadı" kuralı tetiklenmezdi. Ayrı aşama = ayrı payda = görünür sıfır.
     from . import ledgerstamp as _ls
-    # KAYNAK DAMGASI ÜÇÜNCÜ BİR AYRIM AÇAR (BT-1, 2026-07-31). "gerçek" dilimi bugüne kadar TEK
+    # KAYNAK DAMGASI ÜÇÜNCÜ BİR AYRIM AÇAR. "gerçek" dilimi bugüne kadar TEK
     # popülasyondu; oysa içindeki satırların gövdesi replay tohumuydu. Yani "skorun tahmin gücü"
     # diye raporlanan IC, fiilen SİMÜLE bir defterin IC'siydi — cf dilimini ayırmakla çözülen
     # sorunun aynısı, bu kez gerçek dilimin İÇİNDE. Damga `pairs` üçlüsünün kaynak alanına yazılır;
@@ -928,13 +928,13 @@ def score_calibration() -> dict | None:
         real_ic.update({"anlamli": anlamli, "se_yontem": "i.i.d._varsayimi"})
     if cf_ic:
         cf_ic["anlamli"] = None
-        # CF DİLİMİ SADAKAT UYARISINI YANINDA TAŞIR (Aşama 1.1, 2026-07-28): bu IC ALINMAMIŞ
+        # CF DİLİMİ SADAKAT UYARISINI YANINDA TAŞIR: bu IC ALINMAMIŞ
         # hipotetik girişlerin, üstelik canlı motorun çıkış mekanizmalarının BİR KISMIYLA simüle
         # edilmiş sonuçlarının korelasyonudur. Etiketi sayının yanında durmazsa okur onu gerçek
         # işlem IC'siyle aynı kefeye koyar — cf 2100 satırla gerçeğin 95'ini 22:1 boğduğu için
         # bu karışım tam olarak havuzlanmış rakamı değersiz kılan şeydi.
         cf_ic["sadakat"] = CF_EXIT_FIDELITY_NOTE
-    # ---- ÜÇ KATMAN AÇIK ADLA (Aşama 1.1, 2026-07-28) -------------------------------------------
+    # ---- ÜÇ KATMAN AÇIK ADLA -------------------------------------------
     # `real`/`cf`/`rank_ic` alanları geriye dönük uyum için AYNEN kalır (eski tüketiciler kırılmasın).
     # `katmanlar` onların üstüne TEK ŞEKİLLİ bir sözlük koyar: pano, evidence_pack ve bileşen IC'si
     # üç katmanı aynı biçimde dolaşabilsin diye. Ayrı şekiller = her tüketicide ayrı ayrıştırma kodu
@@ -946,7 +946,7 @@ def score_calibration() -> dict | None:
         "havuz": ({"rank_ic": round(ic, 4), "n": len(pairs), "anlamli": None,
                    "karisim": f"{n_real} gerçek / {n_cf} sim"} if ic is not None else None),
     }
-    # GERÇEK DİLİMİN İÇİ AÇILIR (BT-1): canlı kâğıt satırlar ile replay tohumu AYNI popülasyON
+    # GERÇEK DİLİMİN İÇİ AÇILIR: canlı kâğıt satırlar ile replay tohumu AYNI popülasyON
     # değildir — tohum bugünkü evrenle (survivorship) üretilmiş bir simülasyondur. Ayrı IC'ler
     # <30 örneklemde None döner (`_rank_ic` kuralı): ölçülmeyen sayı UYDURULMAZ.
     # AYRI EKSEN, AYRI ALAN: `katmanlar` "gerçek / cf / havuz" ÜÇLÜSÜDÜR ve tüketiciler onu
@@ -966,10 +966,10 @@ def score_calibration() -> dict | None:
             "gercek_kaynak": kaynak_katman,
             "rank_ic": None if ic is None else round(ic, 4), "quintiles": quint,
             "katmanlar": katmanlar,
-            # AYRIŞTIRILMIŞ ÖLÇÜM (2026-07-26): `rank_ic` geriye dönük uyum için HAVUZLANMIŞ
+            # AYRIŞTIRILMIŞ ÖLÇÜM: `rank_ic` geriye dönük uyum için HAVUZLANMIŞ
             # değer olarak kalır (eski tüketiciler kırılmasın), ama karar verecek olan bunlardır.
             "real": real_ic, "cf": cf_ic,
-            # HÜKÜM METNİ İKİ AYRI ÖLÇÜLEMEYİŞİ BİRLİKTE ANLATIR (2026-07-26): dilim <30 olabilir ya
+            # HÜKÜM METNİ İKİ AYRI ÖLÇÜLEMEYİŞİ BİRLİKTE ANLATIR: dilim <30 olabilir ya
             # da 30+ olup rütbe değişimi hiç olmayabilir (tüm skorlar aynı → korelasyon tanımsız).
             # İkisi de "ÖLÇÜLMEDİ"dir; hangisi olduğu n_real alanından okunur.
             "verdict": (f"gerçek dilim ÖLÇÜLMEDİ (n={n_real}; <30 ya da rütbe değişimi yok) — "
@@ -986,7 +986,7 @@ SCORE_CAL_HISTORY = "score_calibration_history.jsonl"
 
 
 def record_score_calibration_point(date: str, cal: dict) -> bool:
-    """SKOR IC'sinin ZAMAN SERİSİ — "yükseliyor mu?" tek bir sayıdan CEVAPLANAMAZ (2026-07-27).
+    """SKOR IC'sinin ZAMAN SERİSİ — "yükseliyor mu?" tek bir sayıdan CEVAPLANAMAZ.
 
     `score_calibration.json` her P5 turunda ÜZERİNE yazılır: panoda hep bugünün IC'si durur, dünkü
     hiç var olmamış gibi. Oysa operatörün sorduğu soru "IC bugün kaç?" değil "IC YÜKSELİYOR MU?" —
@@ -1011,7 +1011,7 @@ def record_score_calibration_point(date: str, cal: dict) -> bool:
         "date": date,
         "rank_ic": cal.get("rank_ic"),          # havuzlanmış — cf satırları gerçekleri boğar, etiketi panoda
         "real_ic": real.get("rank_ic"),         # kararın dayanacağı ölçüm; ölçülmediyse None
-        # ÜÇÜNCÜ KATMAN SERİYE DE GİRER (Aşama 1.1, 2026-07-28): trend grafiği iki çizgi çiziyordu
+        # ÜÇÜNCÜ KATMAN SERİYE DE GİRER: trend grafiği iki çizgi çiziyordu
         # (gerçek + havuz) ve aradaki farkın NEREDEN geldiği okunamıyordu. cf dilimi ayrı çizilmeden
         # "havuz neden gerçekten farklı?" sorusu her bakışta yeniden tahmin edilmek zorundaydı.
         "cf_ic": cfl.get("rank_ic"),
@@ -1050,7 +1050,7 @@ def prediction_hit_rate() -> dict:
 
 
 def deflate_stats() -> dict | None:
-    """öneri 3c — Model Aşırı-Güven sayacı: her ship'te arama-OOS iyimserliği (predicted_delta_search)
+    """Model Aşırı-Güven sayacı: her ship'te arama-OOS iyimserliği (predicted_delta_search)
     onay yürüyüşü ortalamasıyla (predicted_delta) DEFLATE ediliyor. Bu fonksiyon o kırpmanın oranını
     raporlar: deflasyon% = 1 − onay/arama. Yüksek ortalama deflasyon = arama katmanı sistematik
     iyimser demektir (kapının bunu kırptığının kanıtı). Ship'siz defter → None."""
@@ -1070,7 +1070,7 @@ def deflate_stats() -> dict | None:
 
 
 def deflate_why() -> dict:
-    """BOŞ GÖSTERGENİN GEREKÇESİ — ölçülmüş, uydurulmamış (2026-07-22).
+    """BOŞ GÖSTERGENİN GEREKÇESİ — ölçülmüş, uydurulmamış.
 
     Pano boş deflasyon halkasını "henüz ship yok — ilk ship'te dolar" diye açıklıyordu. Bu iddia
     `deflate_stats() is None`'dan TÜRETİLMİŞTİ, ship sayısından değil — ve defterde ship VARDI
@@ -1088,7 +1088,7 @@ def deflate_why() -> dict:
             "legacy_ships": max(0, shipped - olculu)}
 
 
-# ---- LLM danışman kalibrasyonu (Kademe 2) + terfi kuralı (Kademe 3 — ŞİMDİDEN yazılı, yetki uykuda) ----
+# ---- LLM danışman kalibrasyonu + terfi kuralı (ŞİMDİDEN yazılı, yetki uykuda) ----
 LLM_CAL_FILE = "llm_calibration.json"
 LLM_PROMOTE_MIN_PAIRS = 30      # toplam taze görüş-sonuç çifti tabanı
 LLM_PROMOTE_MIN_BUCKET = 8      # hem 'destekle' hem 'karşı' kovasında en az bu kadar örnek
@@ -1161,7 +1161,7 @@ def llm_opinion_calibration() -> dict:
     cf_out = {op: {"n": b["n"], "avg_r": round(b["sum_r"] / b["n"], 3)} for op, b in cf_buckets.items()}
     prev = store.read_json(LLM_CAL_FILE, {})
     _n_cf = sum(b["n"] for b in cf_out.values())
-    # ÖNCÜ GÖSTERGE — ÇİFTLERDEN ÖNCE GELİR (2026-07-27). `n_pairs` ancak KAPANAN işlemlerle dolar,
+    # ÖNCÜ GÖSTERGE — ÇİFTLERDEN ÖNCE GELİR. `n_pairs` ancak KAPANAN işlemlerle dolar,
     # yani 0→30 yolu haftalar sürer. Beyin 07-21'den 07-26'ya ölüydü ve o süre boyunca damgalama da
     # durmuştu; bugün diriltildi. "Damgalama gerçekten geri döndü mü" sorusunun cevabı plan
     # defterinde çiftlerden GÜNLER önce görünür: yeni bir plan görüş taşıyorsa `_stamp_llm_opinions`
@@ -1185,7 +1185,7 @@ def llm_opinion_calibration() -> dict:
                                                      "llm_opinion_calibration.cf"))}
     store.write_json(LLM_CAL_FILE, out)
     if promoted != bool(prev.get("promoted")):
-        # YETKİ DEĞİŞİMİ ALARM SEVİYESİDİR (2026-07-27). Buradaki flip, bir danışmanın CANLI karar
+        # YETKİ DEĞİŞİMİ ALARM SEVİYESİDİR. Buradaki flip, bir danışmanın CANLI karar
         # yüzeyine dokunma hakkını EŞİK DOLDUĞU İÇİN kendiliğinden kazanması ya da kaybetmesidir —
         # operatör onaylamaz, HABERDAR EDİLİR. `obs.log` ile yazıldığında bu devir olay defterinin
         # içinde sıradan bir satırdı ve panel açılmadan hiçbir yere ulaşmıyordu.
@@ -1257,18 +1257,18 @@ def exit_efficiency() -> dict | None:
     return out
 
 
-# ---- KÂR ŞELALESİ (S1A, 2026-07-29) -----------------------------------------------------------
+# ---- KÂR ŞELALESİ -----------------------------------------------------------
 # NEDEN. "Edge var mı?" ile "para var mı?" AYNI SORU DEĞİL. Bir sinyal doğru yönü gösterip yine de
 # para kaybettirebilir: tepe görülür ama geri verilir, ya da friksiyon kalanı yer. Bugüne kadar bu
 # üç kayıp kaynağı tek bir sayının (`r_multiple`) içinde eriyordu ve "hangisini düzeltirsek para
-# gelir?" sorusunun cevabı yoktu — Aşama 3'ün (çıkış mimarisi) bütün kararları buna bakacak.
+# gelir?" sorusunun cevabı yoktu — çıkış mimarisinin bütün kararları buna bakacak.
 #
 # ÖZDEŞLİK (yaklaşık değil, TAM): net_R = MFE_R + (brüt_R − MFE_R) − friksiyon_R
 #   * MFE_R          = `mfe_r` — sinyalin SUNDUĞU en iyi nokta (friksiyonsuz, fiyat tabanlı).
 #   * brüt_R − MFE_R = tepeden çıkışa GERİ VERİLEN kısım (çıkış kuralının imzası; hep ≤ 0).
 #   * friksiyon_R    = `costs` / risk_dolar — komisyon + kayma.
 #   * net_R          = `r_multiple` (defterdeki gerçekleşen).
-# ALAN ANLAMLARI CANLI KAYNAKTAN DOĞRULANDI (broker.close_position, 2026-07-29):
+# ALAN ANLAMLARI CANLI KAYNAKTAN DOĞRULANDI (broker.close_position):
 #   `pnl_dollars` NET'tir (komisyonlar düşülmüş, kayma zaten fiyatın içinde), `r_multiple` =
 #   pnl/risk_dolar yani O DA NET, `costs` = giriş kayması + çıkış kayması + ÇIKIŞ komisyonu.
 #   `costs` GİRİŞ komisyonunu İÇERMEZ (broker onu "informational total friction" diye toplar);
@@ -1379,7 +1379,7 @@ def profit_waterfall() -> dict | None:
     ozdeslik = (None if any(b is None for b in bacaklar) or genel["net_r"] is None
                 else round(genel["sinyal_mfe_r"] + genel["geri_verilen_r"]
                            - genel["friksiyon_r"] - genel["net_r"], 4))
-    # E3 İKİZ SÜTUN (WP-E): şelalenin friksiyon bacağı, kötümser açılış varsayımıyla ne olurdu?
+    # KÖTÜMSER İKİZ SÜTUN: şelalenin friksiyon bacağı, kötümser açılış varsayımıyla ne olurdu?
     # Bacaklara KARIŞMAZ (özdeşlik korunur) — yanına ayrı bir sözlük olarak konur.
     return {"genel": genel, "exit_reason": nedenler, "n": len(rows),
             "net_kotumser": net_kotumser(),
@@ -1393,7 +1393,7 @@ def profit_waterfall() -> dict | None:
 
 CF_FIDELITY_FILE = "cf_fidelity.json"
 
-# ---- CF ÜRETİM SADAKATİ DENETİMİ (Aşama 1.1, 2026-07-28) --------------------------------------
+# ---- CF ÜRETİM SADAKATİ DENETİMİ --------------------------------------
 # DENETİM SORUSU: cf_backfill'in çıkış simülasyonu canlı çıkış kurallarını ve friksiyonu BİREBİR
 # uyguluyor mu? CEVAP: HAYIR — ve bu bugüne kadar yalnız `note` alanındaki bir cümlede ("trail/
 # scale-out farkı") serbest metin olarak duruyordu. Serbest metin denetlenemez: kod değişince cümle
@@ -1422,7 +1422,7 @@ CF_EXIT_FIDELITY_NOTE = (f"statik parantez: yalnız {'/'.join(CF_SIM_EXITS)} sim
 
 
 def cf_fidelity() -> dict | None:
-    """v10 #2 — cf defterinin GÜVEN ÇAPASI: alınan planlar hem cf'de simüle ediliyor hem gerçekte
+    """cf defterinin GÜVEN ÇAPASI: alınan planlar hem cf'de simüle ediliyor hem gerçekte
     yaşanıyor — o kesişimde simülasyon R'si ile gerçek R sürekli karşılaştırılır (korelasyon +
     ortalama sapma). Statik-bracket yaklaşımının canlı yasadan (trail/scale-out) sapması böylece
     ölçülü hale gelir; cf-beslemeli her kalibrasyon bu bayrağa bakarak okunmalı. Kesişim <5 → None
@@ -1470,7 +1470,7 @@ def cf_fidelity() -> dict | None:
            "fidelity_ok": bool(len(pairs) >= 10 and corr is not None
                                and corr >= 0.6 and abs(mean_diff) <= 0.5),
            "note": "sim − gerçek; pozitif = simülasyon iyimser (trail/scale-out farkı)",
-           # SADAKAT BEYANI SAYININ YANINDA (2026-07-28): `fidelity_ok: true` tek başına "simülasyon
+           # SADAKAT BEYANI SAYININ YANINDA: `fidelity_ok: true` tek başına "simülasyon
            # canlıyı temsil ediyor" diye okunuyordu. Oysa o bayrak yalnız KORELASYON ve ORTALAMA
            # SAPMA eşiğini söyler — hangi mekanizmaların hiç simüle EDİLMEDİĞİNİ değil. İkisi ayrı
            # sorudur ve ikincisi cevapsız kaldığı sürece birincisi yanlış güven üretir.
@@ -1487,7 +1487,7 @@ def cf_fidelity() -> dict | None:
 
 
 def near_miss_report() -> dict:
-    """Darboğaz turu (2026-07-20) — eşik-altı gölge adayların karnesi: ölüm-nedeni (blocked_by) kovası
+    """Eşik-altı gölge adayların karnesi: ölüm-nedeni (blocked_by) kovası
     başına adet / giriş / ortalama R. Cevapladığı soru: "hangi eşik masada para bırakıyor?" Sıfır yetki —
     yalnız rapor; bir eşik ancak bu kanıt biriktikten sonra arama+OOS kapısından geçerek değişebilir."""
     from . import counterfactual as cf, sieve
@@ -1521,7 +1521,7 @@ def near_miss_report() -> dict:
                 d["entered"] += 1
                 if r.get("r_multiple") is not None:
                     d["rs"].append(float(r["r_multiple"]))
-                    # REJİM DİLİMİ (ikinci tur denetimi, 2026-07-21): selfreview bu kanıttan
+                    # REJİM DİLİMİ: selfreview bu kanıttan
                     # "knob@rejim sondası aramaya değer" ÖNERİSİ üretiyor; kanıtta rejim yoksa
                     # öneri hangi rejime yazılacağını dayandıramaz. Artık kova başına rejim kırılımı.
                     d["by_regime"].setdefault(rg, []).append(float(r["r_multiple"]))
@@ -1574,7 +1574,7 @@ def regime_edge() -> dict:
     return out
 
 
-# ---- EDGE HÜKMÜ: BEŞ ölçütün TEK yazılı kararı (2026-07-27; 5. ölçüt 2026-07-30) --------------
+# ---- EDGE HÜKMÜ: BEŞ ölçütün TEK yazılı kararı --------------
 # NEDEN: pano dört ölçütü yan yana gösteriyordu ama "peki KENAR VAR MI?" sorusunu okurun kafasında
 # birleştirmesini bekliyordu. Dört ayrı sayıdan hüküm çıkarmak her bakışta yeniden yapılan, yazılı
 # olmayan ve bu yüzden HER SEFERİNDE FARKLI çıkabilen bir işlemdir. Eşikler burada, kodda, tek yerde
@@ -1583,7 +1583,7 @@ def regime_edge() -> dict:
 # ÜÇÜNCÜ DURUM ZORUNLUDUR. Bir ölçüt "geçti/kaldı" ikilisine sıkıştırılırsa ÖLÇÜLMEMİŞ olan sessizce
 # "kaldı" sayılır — ve dört ölçütün üçü ölçülemezken pano kırmızı yanıp "edge yok" der; oysa doğru
 # cevap "henüz bilmiyoruz"dur. Sabır ile başarısızlık aynı renge boyanamaz (UYDURMA YASAĞI).
-# EŞİKLER — HEPSİ ADLANDIRILMIŞ SABİT, HEPSİ GEREKÇELİ (v2, 2026-07-28 Kuzey Yıldızı turu).
+# EŞİKLER — HEPSİ ADLANDIRILMIŞ SABİT, HEPSİ GEREKÇELİ.
 # v1 (07-27) eşikleri havuzlanmış IC gövdesine göre seçilmişti; bu tur 1. ölçütü GERÇEK katmana
 # taşıdığı için taban da yeniden ayarlandı — aynı eşiği 2100 satırlık sim havuzuna ve 95 satırlık
 # gerçek deftere uygulamak, iki farklı büyüklüğü tek isimle yönetmek olurdu.
@@ -1616,7 +1616,7 @@ EDGE_DURUM_ADI = {"gecti": "SAGLANDI", "kaldi": "SAGLANMADI", "olculemedi": "OLC
                   "zayif": "ZAYIF"}
 
 
-# ---- 3A BEŞİNCİ ÖLÇÜT: KUYRUK (Hafta 3a, 2026-07-30) -----------------------------------------
+# ---- BEŞİNCİ ÖLÇÜT: KUYRUK -----------------------------------------
 # NEDEN BEŞİNCİ BİR ÖLÇÜT. Dört ölçütün dördü de "seçim doğru mu?" sorusunun bir türevi: skor
 # sonucu öngörüyor mu, SPY'ı geçiyor mu, tahmin tutuyor mu, hangi rejimde tutuyor. Hiçbiri
 # "SERMAYE HAYATTA KALIR MI?" sorusunu sormuyordu — ve bir momentum sistemini öldüren şey ortalama
@@ -1655,7 +1655,7 @@ EDGE_CVAR5_MIN_R = -1.5     # işlem-R dağılımının en kötü %5'inin ORTALA
 
 def _realized_drawdown() -> dict:
     """Gerçekleşen maksimum düşüş — KAPANMIŞ İŞLEM eğrisi ile GÜNLÜK piyasaya-göre eğrinin
-    KÖTÜ OLANI. `score.score_detail`in `mtm_equity` yasası (denetim #6) ile birebir aynı kural:
+    KÖTÜ OLANI. `score.score_detail`in `mtm_equity` yasası ile birebir aynı kural:
     yalnız kapanmış işlemlere bakan bir eğri, açık pozisyonların düşüşünü GİZLER.
 
     CANLI ÖLÇÜM BU AYRIMIN NE KADAR ÖNEMLİ OLDUĞUNU GÖSTERDİ (2026-07-30): kapanmış-işlem eğrisi
@@ -1666,8 +1666,8 @@ def _realized_drawdown() -> dict:
     ölçütünün ilk bacağı) aynı fonksiyonu çağırır. İki ayrı hesap olsaydı iki hüküm aynı olgu
     hakkında farklı şey söyleyebilirdi.
 
-    ---- SERİ, KAPSADIĞI DÖNEMLE ETİKETLENİR (Ç1, 2026-08-09) -----------------------------------
-    ÖLÇÜLEN KUSUR (docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md §4.1, canlı A1 2026-08-08 21:52Z):
+    ---- SERİ, KAPSADIĞI DÖNEMLE ETİKETLENİR -----------------------------------
+    ÖLÇÜLEN KUSUR (canlı A1 2026-08-08 21:52Z):
     `equity_curve.json`ın son noktası **2026-07-20 / 94.457,91$** — yani 19 gün geride VE 1 Ağustos
     sermaye resetinden ÖNCEKİ tabanda. Bu bir arıza değil TASARIM: eğrinin tek canlı yazarları
     `run.replay_seed` / `sermaye.uygula` / `mutation`dır ve `ledgerstamp.seed_boundary()` onu
@@ -1745,7 +1745,7 @@ def _realized_drawdown() -> dict:
             # VAR OLAN bir seri YANLIŞ DÖNEMİ anlatırken. "Eğri hiç yok" ve "eğri okunamadı"
             # hâlleri AYNI SINIFTAN olsa da bu turda DEĞİŞTİRİLMEDİ: ikisi de zaten kendi
             # gerekçeleriyle beyanlı (YASA 4 uyarısı + `kaynak` metni) ve bugünkü hükümlerin
-            # tabanı onların üstünde duruyor; bayrağı oraya genişletmek Ç1'in ölçtüğü kusuru
+            # tabanı onların üstünde duruyor; bayrağı oraya genişletmek bu kusuru
             # değil, hüküm tabanının tamamını oynatırdı. Ölçülen kusur BAYAT SERİDİR.
             "max_dd_alt_sinir": bool(m2m_durum == "donem_disi"),
             "m2m_durum": m2m_durum, "m2m_neden": m2m_neden,
@@ -1754,7 +1754,7 @@ def _realized_drawdown() -> dict:
             "kaynak": kaynak}
 
 
-# ---- BLOK BOOTSTRAP (Hafta 3a) ----------------------------------------------------------------
+# ---- BLOK BOOTSTRAP ----------------------------------------------------------------
 # NEDEN BLOK, NEDEN IID DEĞİL. İşlem sonuçları bağımsız değildir: aynı rejimde açılan pozisyonlar
 # birlikte kazanır, birlikte kaybeder (kayıp SERİLERİ). IID yeniden örnekleme o bağımlılığı kırar
 # ve aralığı SİSTEMATİK OLARAK DARALTIR — yani ölçülmemiş bir kesinlik yazar. CANLI ÖLÇÜM
@@ -1762,13 +1762,13 @@ def _realized_drawdown() -> dict:
 # dışarıda bırakıyor, blok aralığı [−137,75, +14,53] ise sıfırı İÇERİYOR. Yani IID okuma
 # "kaybettiğimiz kanıtlandı" derdi; blok okuma dürüst cevabı verir: n=95'te henüz kanıtlanmadı.
 #
-# KAPSAM BEYANI: bu, ROADMAP §3.1'in "genel blok-bootstrap CI standardı" (2B) kalemi DEĞİLDİR.
+# KAPSAM BEYANI: bu, "genel blok-bootstrap CI standardı" kalemi DEĞİLDİR.
 # Burada YALNIZ dolar beklentisi için bir aralık üretilir; `benchmark_relative` kendi IID
 # işlem-düzeyi bootstrap'ında (BENCH_BOOTSTRAP_*) bilinçli olarak DEĞİŞMEDEN bırakıldı, çünkü onun
 # ölçtüğü büyüklük (toplam getiri farkı) ve o alanın tüketicileri bu turun kapsamı dışında ve
 # sessizce değiştirilmesi mevcut hükmü (2. ölçüt) haber vermeden kaydırırdı.
 #
-# 2B NEREYE İNDİ (2026-08-02): genel standart `olcum_araclari.blok_bootstrap_ci`dir (MOVING blok,
+# BU KALEM NEREYE İNDİ: genel standart `olcum_araclari.blok_bootstrap_ci`dir (MOVING blok,
 # n^(1/3) kuralı, getiri serileri için) ve İLERİYE dönük ölçüm şablonlarını bağlar. AŞAĞIDAKİ
 # HESAP ONA DEVREDİLMEDİ ve bir hanesi bile oynatılmadı: burası CIRCULAR blok, blok=5 İŞLEM ekseni
 # ve YAYIMLANMIŞ hükümlerin tabanı; ortak bir gövdeye indirgemek `result_verdict`in aralıklarını
@@ -1826,7 +1826,7 @@ def _cvar(vals: list, yuzde: float = 5.0) -> dict | None:
                       "büyüklüğü sözleşmesinden AYRI"}
 
 
-# ---- DÖRDÜNCÜ DURUM: ZAYIF (Rol 1 kararı, 2026-07-29) -----------------------------------------
+# ---- DÖRDÜNCÜ DURUM: ZAYIF -----------------------------------------
 # NEDEN. 2026-07-29 sabahı 1. ölçüt "SAGLANDI" yanıyordu: gerçek katman IC 0.0492, eşik 0.03. Aynı
 # payload'ın iki alan ötesinde `anlamli: False` yazıyordu — çünkü n=95'te i.i.d. güven aralığı
 # ±0.20 civarı ve 0.0492 o aralığın içinde, yani yazı-turadan AYIRT EDİLEMEZ. Kuzey yıldızı
@@ -1869,18 +1869,18 @@ def edge_verdict() -> dict:
     hem sayılır (`unmeasured`) hem de hüküm cümlesinde AÇIKÇA anılır; beşi de geçmeden "TAM" kelimesi
     kullanılmaz ve `passed == 5` ancak `unmeasured == 0` iken mümkündür (beş ölçüt, tek payda).
 
-    BEŞİNCİ ÖLÇÜT KUYRUK (Hafta 3a, 2026-07-30): ilk dördü "seçim doğru mu?"nun türevleriydi;
+    BEŞİNCİ ÖLÇÜT KUYRUK: ilk dördü "seçim doğru mu?"nun türevleriydi;
     kuyruk "sermaye hayatta kalır mı?" sorusunu sorar. Kapı yasası kuyruğu 2026-07-22'den beri
     VETO olarak taşıyordu, kuzey yıldızı ise hiç görmüyordu — aynı depoda iki risk iştahı.
 
-    HÜKMÜN KULLANIM YERİ (ROADMAP §3.1): rafineri kararları (emir bacağı, otonomi, çıkış reformu)
+    HÜKMÜN KULLANIM YERİ: rafineri kararları (emir bacağı, otonomi, çıkış reformu)
     YALNIZ bu hükme bakar; sermaye artırımı ve silahlanma İKİ hükme birden bakar (bu + SONUÇ
     HÜKMÜ, `result_verdict`). Ayrım kasıtlı: EDGE "bir kenar var mı?" sorusunu R biriminde sorar,
     SONUÇ "para var mı?" sorusunu DOLAR biriminde. R-birimi geniş stopa yapısal önyargılıdır
-    (ROADMAP §4 okuma düzeltmeleri), yani sermaye kararı tek başına ona bırakılamaz."""
+    (okuma düzeltmeleri), yani sermaye kararı tek başına ona bırakılamaz."""
     cal = store.read_json("score_calibration.json", None) or {}
     # --- 1) SKOR → SONUÇ (rank-IC) --------------------------------------------------------------
-    # KANIT GÖVDESİ ARTIK YALNIZ GERÇEK KATMAN (Aşama 1.1 kararı, 2026-07-28 — v1'in havuz kararının
+    # KANIT GÖVDESİ ARTIK YALNIZ GERÇEK KATMAN (v1'in havuz kararının
     # geri alınması). v1 gerekçesi "gerçek dilim aylarca <30 kalır, hüküm sonsuza kadar ölçülemedi
     # der" idi. Ölçüldü ve gerekçe artık geçerli değil: gerçek dilim n=95'e ulaştı. Buna karşılık
     # havuzun bedeli ölçüldü ve büyüktü — 2102 cf satırı 95 gerçeği 22:1 boğuyor, yani "skorun tahmin
@@ -1894,7 +1894,7 @@ def edge_verdict() -> dict:
     cf_kat = kat.get("cf") or cal.get("cf") or {}
     ic, ic_n = real.get("rank_ic"), real.get("n")
     ic_kaynak = "gerçek kapanmış işlem (cf HARİÇ)"
-    # EŞİK ARTIK TEK BAŞINA YETMEZ (2026-07-29): `anlamli` alanı v108'den beri ZATEN payload'ın
+    # EŞİK ARTIK TEK BAŞINA YETMEZ: `anlamli` alanı ZATEN payload'ın
     # içindeydi ve `False` diyordu; hüküm onu okumuyordu. Aynı sözlükten iki farklı cevap çıkması —
     # kart "SAGLANDI", iki satır altı "gürültüden ayırt EDİLEMİYOR" — kuzey yıldızının kendi
     # içindeki en büyük çelişkiydi. Eşik metni bu yüzden anlamlılığı da ADIYLA anar.
@@ -1906,7 +1906,7 @@ def edge_verdict() -> dict:
           "dogrulama_bandi": havuz.get("rank_ic") if havuz.get("rank_ic") is not None else "ölçülmedi",
           "havuz_ic": havuz.get("rank_ic"), "cf_ic": cf_kat.get("rank_ic"),
           "n_real": cal.get("n_real"), "n_cf": cal.get("n_cf"),
-          # ANLAMLILIK ARTIK EŞİĞE GİRER (2026-07-29 — 07-28'in "eşiğe girmez ama gizlenmez" sapma
+          # ANLAMLILIK ARTIK EŞİĞE GİRER (ÖNCEKİ "eşiğe girmez ama gizlenmez" sapma
           # beyanının GERİ ALINMASI). Gerekçe ölçüldü: n=60-95 bandında i.i.d. güven aralığı ±0.20
           # civarı, yani 0.03 eşiğini geçen bir IC gürültüden ayırt edilemeyebilir — canlıda tam
           # olarak bu oldu (IC 0.0492, anlamli=False, kart yine de SAGLANDI yanıyordu). Alan hem
@@ -1914,7 +1914,7 @@ def edge_verdict() -> dict:
           "anlamli": real.get("anlamli"),
           "anlamlilik_hesabi": True,
           "sadakat": "gerçek defter — simülasyon sadakati sorusu bu ölçüte GİRMEZ"}
-    # EŞİK ARTIK TEK BAŞINA YETMEZ (2026-07-29): `anlamli` alanı v108'den beri ZATEN payload'ın
+    # EŞİK ARTIK TEK BAŞINA YETMEZ: `anlamli` alanı ZATEN payload'ın
     # içindeydi ve `False` diyordu; hüküm onu okumuyordu. Aynı sözlükten iki farklı cevap çıkması —
     # kart "SAGLANDI", iki satır altı "gürültüden ayırt EDİLEMİYOR" — kuzey yıldızının kendi
     # içindeki en büyük çelişkiydi.
@@ -1929,7 +1929,7 @@ def edge_verdict() -> dict:
     # Pozitiflik ölçütü `benchmark_relative()`ın KENDİ alanına bağlanır: `beat_benchmark` (o fonksiyon
     # `excess_return > 0`u zaten numpy sigortasından geçirip bool'a çeviriyor). Burada ikinci bir
     # eşik tanımlamak, aynı olgunun iki farklı yerde iki farklı hesabı olurdu.
-    # ÖLÇÜT ARTIK MARUZİYET-DÜZELTİLMİŞ FARKI OKUR (S3C, 2026-07-29). Ham `excess_return`, parası
+    # ÖLÇÜT ARTIK MARUZİYET-DÜZELTİLMİŞ FARKI OKUR. Ham `excess_return`, parası
     # sürekli piyasada duran bir SPY tutucusuyla kıyas yapıyordu; strateji ise sermayesinin bir
     # kısmını, zamanın bir kısmında taşır (canlı defterde ortalama maruziyet 1.0'ın epey altında).
     # Boğa piyasasında bu, taşınmamış betanın getirisini stratejiden DÜŞERek hak edilmemiş bir
@@ -2001,7 +2001,7 @@ def edge_verdict() -> dict:
                        re_esik, re_kaynak, rejim_sayisi=len(rejimler), esik_ustu_rejim=len(yeterli),
                        anlamlilik_hesabi=False)
 
-    # --- 5) KUYRUK: SERMAYE HAYATTA KALIR MI? (3A, Hafta 3a 2026-07-30) -------------------------
+    # --- 5) KUYRUK: SERMAYE HAYATTA KALIR MI? -------------------------
     # İKİ BACAK, İKİSİ BİRDEN: gerçekleşen maks düşüş ≤ EDGE_MAXDD_MAX **VE** işlem-R CVaR(%5) ≥
     # EDGE_CVAR5_MIN_R. Gerekçeler sabitlerin yanında yazılı. n < EDGE_TAIL_N_MIN iken OLCULEMEDI
     # ve ölçülen değerler YİNE raporlanır: "%8,04 düşüş gördük ama n yetersiz" ile "hiç ölçüm yok"
@@ -2030,7 +2030,7 @@ def edge_verdict() -> dict:
     if len(_rs) < EDGE_TAIL_N_MIN or dd["max_dd"] is None or cv is None:
         kuyruk = _olcut("olculemedi", _kdeger, kuyruk_esik, kuyruk_kaynak, **kuyruk_ek)
     else:
-        # ALT SINIR HÜKMÜ (Ç1, 2026-08-09) — EŞİĞE DOKUNULMADI, OKUMA DÜRÜSTLEŞTİRİLDİ.
+        # ALT SINIR HÜKMÜ — EŞİĞE DOKUNULMADI, OKUMA DÜRÜSTLEŞTİRİLDİ.
         # m2m bacağı ölçülemediğinde `max_dd` KAPANMIŞ bacaktan gelen bir ALT SINIRDIR; gerçek
         # düşüş bundan yalnız KÖTÜ olabilir (yasanın kendisi "kötü olanı" der). Üç hâl:
         #   * alt sınır eşiği ZATEN AŞIYORSA → hüküm KESİNDİR: kaldı (eksik bacak iyileştiremez);
@@ -2055,7 +2055,7 @@ def edge_verdict() -> dict:
 
     criteria = {"skor_sonuc": skor, "spy_ustu": spy, "tahmin_isabeti": ph_olcut,
                 "rejim_edge": rejim, "kuyruk": kuyruk}
-    # ÜÇ DURUMUN YAZILI DİLİ (2026-07-28): makine değerleri `gecti/kaldi/olculemedi` AYNEN kalır —
+    # ÜÇ DURUMUN YAZILI DİLİ: makine değerleri `gecti/kaldi/olculemedi` AYNEN kalır —
     # pano ve testler onlara bağlı ve bir sözleşmeyi yalnız okunabilirlik için kırmak, kırılan her
     # tüketicide sessiz bir dal açar. `durum` alanı o değerin insan dilindeki karşılığını TAŞIR;
     # tek yerde eşleşir, her tüketicide yeniden çevrilmez (iki farklı çeviri = iki farklı hüküm).
@@ -2065,12 +2065,12 @@ def edge_verdict() -> dict:
     failed = sum(1 for c in criteria.values() if c["status"] == "kaldi")
     unmeasured = sum(1 for c in criteria.values() if c["status"] == "olculemedi")
     zayif = sum(1 for c in criteria.values() if c["status"] == "zayif")
-    # TEK YAZILI HÜKÜM (Örgü A3'ün kapanış cümlesi). Sayılar DÖRT kovadan gelir ve DÖRDÜ DE cümlede
+    # TEK YAZILI HÜKÜM. Sayılar DÖRT kovadan gelir ve DÖRDÜ DE cümlede
     # geçer: "x/5 sağlandı" tek başına, kalanların başarısız mı, henüz ölçülemez mi, yoksa eşiği
     # geçip anlamlılığı geçemeyen mi olduğunu gizlerdi — sabır, başarısızlık ve gürültü aynı cümleye
     # sıkıştırılamaz. `passed` YALNIZ eşik+anlamlılık birlikte sağlananları sayar; ZAYIF olan bir
-    # ölçüt paydaya girer ama paya GİRMEZ (2026-07-29).
-    # PAYDA ARTIK 5 (Hafta 3a): `len(criteria)`den TÜREYİP sabit yazılmadığı için beşinci ölçüt
+    # ölçüt paydaya girer ama paya GİRMEZ.
+    # PAYDA ARTIK 5: `len(criteria)`den TÜREYİP sabit yazılmadığı için beşinci ölçüt
     # eklendiğinde cümle kendiliğinden düzeldi — ama tüketiciler (pano şeridi, testler) 4'ü sabit
     # yazmıştı ve onlar bu turda elle güncellendi.
     n = len(criteria)
@@ -2084,23 +2084,23 @@ def edge_verdict() -> dict:
             "unmeasured": unmeasured, "zayif": zayif, "verdict": verdict}
 
 
-# ---- SONUÇ HÜKMÜ: EDGE'İN İKİZİ, DOLAR MERCEĞİ (1B, Hafta 3a 2026-07-30) ----------------------
+# ---- SONUÇ HÜKMÜ: EDGE'İN İKİZİ, DOLAR MERCEĞİ ----------------------
 # NEDEN VAR. Sistem "para var mı?" sorusunu bugüne kadar R ORTALAMASIYLA yargılıyordu ve R birimi
 # geniş stopa YAPISAL OLARAK ÖNYARGILI: stop genişlerse boyut R-nötr biçimde küçülür, aynı fiyat
 # hareketi daha az R üretir, kazananların R'leri daralır. Yani "ortalama R düştü" cümlesi "daha az
 # para kazandık" cümlesiyle AYNI ŞEY DEĞİLDİR — ve çıkış reformunun bütün adayları tam bu iki
 # cümlenin karıştığı yerde reddedildi:
-#   * G3a üç paketi: kuyruk KAZANDI (CVaR farkı −2,20 / −2,33 / −3,46R), bileşik skor kaybetti.
-#   * S2 bant filtresi: fold 3/3 + kuyruk farkı −2,26R + n 98→106, bileşik skor yine kaybetti.
+#   * Üç çıkış paketi: kuyruk KAZANDI (CVaR farkı −2,20 / −2,33 / −3,46R), bileşik skor kaybetti.
+#   * Bant filtresi: fold 3/3 + kuyruk farkı −2,26R + n 98→106, bileşik skor yine kaybetti.
 # Üç bağımsız ölçümde aynı desen görüldüğünde şüphe artık adayda değil ÖLÇÜTTEDİR. Bu hüküm o
 # şüpheyi giderecek İKİNCİ MERCEĞİ kurar: aynı defter, dolar biriminde.
 #
-# KARAR KULLANIMI (ROADMAP §3.1, birebir): **rafineri kararları EDGE'e, sermaye/silahlanma
+# KARAR KULLANIMI: **rafineri kararları EDGE'e, sermaye/silahlanma
 # İKİSİNE bakar.** Yani bir çıkış kuralı ya da otonomi kademesi EDGE hükmüyle yargılanır; sermaye
 # artırımı ve Faz 6 silahlanması EDGE **ve** SONUÇ hükmünün İKİSİNİ birden ister. Bu hüküm EDGE'in
 # yerine geçmez ve EDGE'i gevşetmez — payda ayrıdır, cümle ayrıdır, eşikler ayrıdır.
 #
-# FRİKSİYON İKİ KEZ KESİLMEZ (canlı kaynaktan doğrulandı — broker.close_position, 2026-07-30):
+# FRİKSİYON İKİ KEZ KESİLMEZ (canlı kaynaktan doğrulandı — broker.close_position):
 # `pnl_dollars` ZATEN NET'tir (kayma dolum fiyatının İÇİNDE, iki bacağın komisyonu düşülmüş) ve
 # `costs` alanı broker'ın kendi ifadesiyle "informational total friction" — YENİDEN KESİLMEZ.
 # "Friksiyon-sonrası dolar beklentisi" bu yüzden `pnl_dollars`ın ortalamasıdır; `costs`tan bir kez
@@ -2113,7 +2113,7 @@ RESULT_N_MIN = 30              # dolar hükmü için asgari kapanmış işlem. `
 RESULT_PF_MIN = 1.3            # profit factor tabanı (Σkazanç / |Σkayıp|). 1,0 tam başabaştır;
                                # 1,0-1,2 bandı 95 işlemlik bir defterde örneklem gürültüsünün
                                # içindedir VE dolum kalitesindeki mütevazı bir kötüleşmeyle silinir
-                               # (Alpaca paper dolumları iyimser — Y2/TCA hâlâ ölçülmedi). 1,3
+                               # (Alpaca paper dolumları iyimser — TCA hâlâ ölçülmedi). 1,3
                                # friksiyonun üstünde ~%30 tampon bırakır.
 RESULT_MAXDD_MAX = 0.16        # gerçekleşen maks düşüş tavanı — `goal.yaml`ın `max_drawdown`'ı ve
                                # `EDGE_MAXDD_MAX` ile BİREBİR AYNI. Üç yerde aynı sayı bilinçli:
@@ -2139,13 +2139,13 @@ def _pf(pnls: list) -> dict:
             "n_kazanan": sum(1 for p in pnls if p > 0), "n_kaybeden": sum(1 for p in pnls if p < 0)}
 
 
-# ---- WP-M: CANLI-BEKLENTİ TAVANI — YAZILI KURALIN ÖLÇÜLEN HÂLİ (2026-08-01) -------------------
-# NEDEN BURADA VE NEDEN BİR KOLON. ROADMAP'in WP-M borç listesinde şu kural yazılıydı: "canlı
+# ---- CANLI-BEKLENTİ TAVANI — YAZILI KURALIN ÖLÇÜLEN HÂLİ -------------------
+# NEDEN BURADA VE NEDEN BİR KOLON. Borç listesinde şu kural yazılıydı: "canlı
 # beklenti tavanı backtest×0,5 ve <×0,4 süspansiyon". Kural yazılıydı ama HİÇBİR KOD onu OKUMUYORDU
 # ve bu tam olarak `explore_rate`/`kill_switch_file` sınıfıdır: operatör yürürlükte sanır, hiçbir
 # yüzey ölçmez.
 #
-# ARANDI VE BULUNAMADI — bağlanacak MEVCUT bir karar noktası YOK (2026-08-01 taraması: probgate,
+# ARANDI VE BULUNAMADI — bağlanacak MEVCUT bir karar noktası YOK (tarama: probgate,
 # reflect/rollback, guard, arming, autonomy_ladder, oos_erosion, watchdog, versioning). Depoda
 # canlı ile backtest'i kıyaslayan TEK mekanizma `probgate.refresh_meta_calibration`dır ve o,
 # BEKLENTİ SEVİYESİNİ değil ΔS FARKINI kıyaslar (predicted_delta ↔ realized_delta) — üstelik kendi
@@ -2162,7 +2162,7 @@ LIVE_CEILING_DURUMLAR = ("olculemedi", "tavan_altinda", "tavan_ustunde", "suspan
 
 
 def live_expectancy_ceiling(goal: dict | None = None) -> dict:
-    """Canlı beklenti ↔ backtest beklentisi kıyası (WP-M kuralı). SAF OKUMA, HÜKÜM YOK.
+    """Canlı beklenti ↔ backtest beklentisi kıyası. SAF OKUMA, HÜKÜM YOK.
 
     İKİ TARAF, TEK BİRİM (R = işlem başına ortalama):
       canlı    — `trades.jsonl`ın YÜRÜRLÜKTEKİ sürüme ait, TOHUM OLMAYAN satırlarının `r_multiple`
@@ -2357,7 +2357,7 @@ def result_verdict() -> dict:
         dd_olcut = _olcut("olculemedi", dd["max_dd"], dd_esik,
                           "kapanmış işlem + günlük piyasaya-göre sermaye eğrisi", **dd_ek)
     else:
-        # ALT SINIR HÜKMÜ — EDGE'in kuyruk bacağıyla BİREBİR aynı kural (Ç1, 2026-08-09).
+        # ALT SINIR HÜKMÜ — EDGE'in kuyruk bacağıyla BİREBİR aynı kural.
         # İki hüküm aynı olgu hakkında farklı şey söyleyemez: `_realized_drawdown` tek kaynaktı,
         # okuma kuralı da tek olmak zorunda.
         if dd["max_dd"] > RESULT_MAXDD_MAX:
@@ -2402,7 +2402,7 @@ def result_verdict() -> dict:
     else:
         verdict = (f"SONUÇ: {passed}/{nn} sağlandı ({zayif} zayıf, {failed} sağlanmadı, "
                    f"{unmeasured} ölçülemedi) — para kanıtlanmadı")
-    # --- BETA-DÜZELTİLMİŞ KOLON (AT-1, 2026-07-31) ----------------------------------------------
+    # --- BETA-DÜZELTİLMİŞ KOLON ----------------------------------------------
     # NEDEN BEŞİNCİ ÖLÇÜT DEĞİL, KOLON: dört ölçüt bu depoda YAZILI bir sözleşmedir (`passed/4`
     # cümlesi, health.py'nin sonuc_hukmu kapısı, /api/diagnostics tüketicisi ve testler onu dört
     # sayıyor). Beşinci bir ölçüt eklemek, hiçbir eşiği değiştirmeden hükmü kaydırırdı — bu depoda
@@ -2410,7 +2410,7 @@ def result_verdict() -> dict:
     # (passed/failed/unmeasured/zayif) HİÇ dokunmaz.
     #
     # NE SÖYLER: dört dolar ölçütü "para kazandık mı?" diye sorar, hiçbiri "kazandıysak bu piyasa
-    # mıydı?" diye sormaz. 2026-07-30 denetimi bu boşluğu MAJÖR (AT-1) işaretledi: defter −%0,225
+    # mıydı?" diye sormaz. 2026-07-30 denetimi bu boşluğu MAJÖR işaretledi: defter −%0,225
     # üretirken aynı pencerelerde SPY +%0,411 koşuyordu ve kazananlar SPY'ın +%1,89 koştuğu
     # pencerelerdeydi. Bu kolon o ölçümün kalıcı hâlidir.
     _ab = trade_alpha_beta()
@@ -2431,7 +2431,7 @@ def result_verdict() -> dict:
                    "ölçütünün hiçbirini değiştirmez ve passed/failed sayaçlarına girmez; "
                    "'kazandık' cümlesinin beta mı alfa mı olduğunu söyler"),
     }
-    # --- E3 KÖTÜMSER İKİZ SÜTUN (WP-E, 2026-07-31) ----------------------------------------------
+    # --- KÖTÜMSER İKİZ SÜTUN ----------------------------------------------
     # `beta_duzeltilmis` ile AYNI SINIF: kolon, ölçüt değil. Dört ölçüt bu depoda yazılı bir
     # sözleşmedir (`passed/4`, health.sonuc_hukmu kapısı, /api/diagnostics tüketicisi, testler);
     # beşinci bir ölçüt eklemek hiçbir eşiği değiştirmeden hükmü kaydırırdı. Bu sütun ölçümü
@@ -2447,10 +2447,10 @@ def result_verdict() -> dict:
         "durum": ("olculemedi" if _kot.get("net_kotumser") is None
                   else ("pozitif" if _kot["net_kotumser"] > 0 else "negatif")),
     }
-    # --- WP-M CANLI-BEKLENTİ TAVANI KOLONU (2026-08-01) -----------------------------------------
+    # --- CANLI-BEKLENTİ TAVANI KOLONU -----------------------------------------
     # `beta_duzeltilmis`/`net_kotumser` ile AYNI SINIF ve aynı gerekçe: kolon, ölçüt değil. Dört
     # ölçüt bu depoda yazılı bir sözleşmedir (`passed/4`, health.sonuc_hukmu kapısı, testler);
-    # beşinci bir ölçüt eklemek hiçbir eşiği değiştirmeden hükmü kaydırırdı. Bu kolon, ROADMAP'te
+    # beşinci bir ölçüt eklemek hiçbir eşiği değiştirmeden hükmü kaydırırdı. Bu kolon,
     # yazılı ama bugüne kadar hiçbir kodun okumadığı canlı-beklenti tavanı kuralını GÖRÜNÜR yapar.
     return {"criteria": criteria, "passed": passed, "failed": failed,
             "unmeasured": unmeasured, "zayif": zayif, "verdict": verdict,
@@ -2462,16 +2462,16 @@ def result_verdict() -> dict:
                                 "silahlanma İKİ hükme birden (EDGE + SONUÇ) bakar — ROADMAP §3.1")}
 
 
-# ---- 3B PORTFÖY ISISI: MASADAKİ TOPLAM RİSK (Hafta 3a, 2026-07-30) ---------------------------
+# ---- PORTFÖY ISISI: MASADAKİ TOPLAM RİSK ---------------------------
 # NEDEN VAR. Pozisyon başına risk kapılı (max_position_r) ve pozisyon SAYISI kapılı
 # (max_open_positions), ama TOPLAM AÇIK RİSK hiçbir yerde tek sayı olarak durmuyordu: beş pozisyon
 # × 1R = masada 5R, yani NAV'ın %5'i, ve bu sayı ne panoda ne bir kapıda vardı. `analytics.today`
 # `risk_dollars` toplamını `current_exposure_pct` diye taşıyor ama o alan GİRİŞTEKİ riski toplar —
 # stop yukarı taşındıkça gerçek risk düşer ve pano olduğundan sıcak görünür.
 #
-# BU TURDA YALNIZ GÖSTERGEDİR — HİÇBİR KAPIYA BAĞLANMAZ. Isı TAVANI (açık risk ≤ NAV %6-8) Hafta
-# 3b'nin Y3 rejim/risk dörtlüsündeki default-OFF knob'u olacak; onu bu turda bağlamak, ölçülmemiş
-# bir eşiğin canlı emir akışını kesmesi demekti. Ölçüm ÖNCE, kapı SONRA (ROADMAP §4 ölçüm-önce).
+# BU TURDA YALNIZ GÖSTERGEDİR — HİÇBİR KAPIYA BAĞLANMAZ. Isı TAVANI (açık risk ≤ NAV %6-8)
+# ilerideki rejim/risk dörtlüsünde default-OFF knob olacak; onu bu turda bağlamak, ölçülmemiş
+# bir eşiğin canlı emir akışını kesmesi demekti. Ölçüm ÖNCE, kapı SONRA.
 #
 # İKİ SAYI BİRDEN, ÇÜNKÜ İKİ AYRI SORU: `acik_risk_dolar` YÜRÜRLÜKTEKİ stopa göredir (trail dahil)
 # = "şu an masada ne kadar para var?"; `ilk_stop_riski_dolar` GİRİŞ stopuna göredir = "bu
@@ -2515,7 +2515,7 @@ def portfolio_heat() -> dict:
                          "risk_dolar": round(r_simdi, 2), "ilk_stop_riski_dolar": round(r_ilk, 2)})
     if eksik:
         # YASA 4 — SAYAÇ UYARIYA ÇEVRİLİR: eksik alanlı bir pozisyon ısıyı olduğundan SOĞUK
-        # gösterir (risk sayıya girmez) ve ısı tavanı Hafta 3b'de kapıya bağlanacak. O gün sessiz
+        # gösterir (risk sayıya girmez) ve ısı tavanı İLERİDE kapıya bağlanacak. O gün sessiz
         # bir eksik satır, kapının göremediği bir risk demek olurdu.
         from . import obs
         obs.warn("heat_position_incomplete", n_eksik=eksik, n_pozisyon=len(pos),
@@ -2534,12 +2534,12 @@ def portfolio_heat() -> dict:
                     "≤ NAV %6-8) Hafta 3b'nin Y3 dörtlüsünde default-OFF knob olarak gelir.")}
 
 
-# ---- Y1 DOĞRULAMA ÜÇLÜSÜNÜN OKUMA MODELİ (Hafta 3a) ------------------------------------------
+# ---- DOĞRULAMA ÜÇLÜSÜNÜN OKUMA MODELİ ------------------------------------------
 # YASA 6: `validation.py` aday getiri defterini YAZAR; onu BAŞKA bir modülden okuyan taraf burasıdır
 # (statik artefakt grafı, kendi yazdığını kendi okuyan modülü tüketici saymaz). Pano bu fonksiyonu
 # /api/diagnostics üzerinden görür.
 #
-# K-CEZASI KALİBRASYONU — DENGELEME REFERANSI (WP-M M9, 2026-08-10; GEVŞETME DEĞİL). Bu dosyanın
+# K-CEZASI KALİBRASYONU — DENGELEME REFERANSI (GEVŞETME DEĞİL). Bu dosyanın
 # K-cezası okumaları (`validation_trio`nun DSR n_trials'ı; `dead_families`in "K büyür → p_required
 # yükselir" beyanı; cezanın kendisi `probgate.p_required_for`) bilinçli olarak SIKI gelenektedir
 # (Harvey-Liu-Zhu 2016 "kesitte t>3" ailesi; DSR da [Bailey & López de Prado] aynı damar).
@@ -2548,7 +2548,7 @@ def portfolio_heat() -> dict:
 # KÜÇÜK olduğunu, çıtayı körce yükseltmenin bedelinin kaçırılan gerçek edge (yanlış-red) olduğunu,
 # hurdle seçiminin iki hata türü arasında bir DENGE olduğunu savunur. BU NOT BİR GEVŞETME DEĞİLDİR:
 # hiçbir eşik/formül değişmedi (eşik sonradan değişmez; kill-list dokunulmaz) — not, K-cezası
-# şeffaflığının METODOLOJİ bacağıdır (yüzey bacağı: pano/F13, WP-UX). Künye bellekten yazıldı
+# şeffaflığının METODOLOJİ bacağıdır (yüzey bacağı: pano/F13). Künye bellekten yazıldı
 # (yazar/yıl/başlıkta eminiz); yayın yeri/nihai sürüm için operatör literatür doğrulaması gerekir
 # (UYDURMA YASAĞI şerhi — doğrulanmadan künyeye dergi/cilt EKLENMEZ).
 def validation_trio() -> dict:
@@ -2583,7 +2583,7 @@ def validation_trio() -> dict:
     # `validation.py` (yazarı) olurdu ve artefakt "okuyucusu yok" diye görünürdü — YASA 6 ihlali.
     # api.py'deki `component_ic.json` satırı aynı gerekçeyle literal yazılmıştır.
     defter = store.read_jsonl("validation_ledger.jsonl", limit=validation.LEDGER_CAP)
-    # ---- PBO PENCERE BAŞINA (HOLDOUT ROTASYONU R1, 2026-07-30) ----------------------------------
+    # ---- PBO PENCERE BAŞINA (HOLDOUT ROTASYONU R1) ----------------------------------
     # PBO/CSCV, N adayı AYNI zaman ızgarasında yarıştırıp "en iyi seçilenin OOS sırası" dağılımını
     # ölçer. Rotasyondan sonra defter İKİ FARKLI SINAV KÂĞIDININ satırlarını taşıyor: R0 satırlarının
     # serileri 2023-07→2025-12 ızgarasında, R1 satırlarının serileri 2024-01→2026-04 ızgarasında.
@@ -2616,7 +2616,7 @@ def validation_trio() -> dict:
                                  "pencere iki AYRI sınav kâğıdıdır ve tek ızgarada havuzlanamaz "
                                  "(ledgers sözleşmesi). Önceki pencere satırları SİLİNMEDİ, "
                                  "PBO paydasına GİRMEZ.")},
-            # ROL GÜNCELLENDİ (DSR hard-gate turu, v130) — "ADVISORY" hâlâ DOĞRU ama artık YALNIZ
+            # ROL GÜNCELLENDİ — "ADVISORY" hâlâ DOĞRU ama artık YALNIZ
             # KAPI İÇİN doğru: `_gate_eval.passes` semantiği değişmedi (DSR o satırın altında
             # üretilir). Sertlik SHIP yolunda ve MOD-FARKINDALIKLI; ayrıca bu fonksiyonun DSR'si
             # Faz-6 kilit zincirinin BEŞİNCİ kilidini besliyor. Eski cümleyi bırakmak, sertleşmiş
@@ -2627,13 +2627,13 @@ def validation_trio() -> dict:
 
 
 # ==================================================================================================
-# HERMES ETKİNLEŞTİRME PAKETİ — ÜRETİCİLER (Hafta 3b, 2026-07-30)
+# HERMES ETKİNLEŞTİRME PAKETİ — ÜRETİCİLER
 # İlke (operatör yönü): "daha aktif ≠ daha çok hipotez; daha az + TAM DÖNGÜLÜ + KENDİ KARNESİNİ
 # GÖREN". Buradaki her fonksiyon, hermes'in bugüne kadar GÖRMEDİĞİ ölçülmüş bir gerçeği prompt'un
 # kanıt paketine taşımak için vardır — yeni bileşen değil, kopuk kablonun bağlanması.
 # ==================================================================================================
 
-# H1 — A4 TAHMİN-İSABET BANDI ---------------------------------------------------------------------
+# TAHMİN-İSABET BANDI ---------------------------------------------------------------------
 # NEDEN. `probgate.refresh_meta_calibration` predicted/realized çiftlerinin MEDYAN ORANINI zaten
 # ölçüyor ve kapı eşiğini sıkılaştırıyor. Ama hermes bunu HİÇ GÖRMÜYOR: kendi tahminlerinin ne
 # kadar tuttuğunu bilmeden her tur yeni bir predicted_delta yazıyor. Bant, o karnenin hermes'e
@@ -2648,7 +2648,7 @@ A4_BAND_TARGET_RATIO = 1.0  # gerçekleşen/öngörülen = 1 ⇔ kusursuz kalibr
 
 
 def prediction_accuracy_band() -> dict:
-    """A4 — hermes'in öngörülen ΔS'i ile GERÇEKLEŞEN ΔS'inin karnesi.
+    """hermes'in öngörülen ΔS'i ile GERÇEKLEŞEN ΔS'inin karnesi.
 
     Çift kaynakları (ikisi de like-for-like, yani AYNI ölçüm yasasıyla):
       * rollback kayıtları — `hypotheses.jsonl`ın `realized_delta` alanı (writeback_outcome yazar)
@@ -2659,7 +2659,7 @@ def prediction_accuracy_band() -> dict:
     büyüklük hatasıyla yön hatası aynı sayıda erirse hermes "biraz iyimserim" diye okur, oysa
     bugünkü tek kayıt "ters yöne gitti" diyor.
 
-    PARA ÖLÇEĞİ SÜTUNU (WP-M ①, 2026-08-01 — `shadowlaw.realized_usd`in okuyucusu, YASA 6).
+    PARA ÖLÇEĞİ SÜTUNU (`shadowlaw.realized_usd`in okuyucusu, YASA 6).
     `oran` BİLEŞİK ölçekte bir sayıdır: `realized_delta`yı rollback eski bileşik skordan yazıyor
     (`probgate.refresh_meta_calibration` bunu `olcek_borcu` alanıyla adıyla beyan ediyor). Yani bu
     karne "SKOR ne kadar tuttu?" sorusunu cevaplıyor, "PARA ne yaptı?" sorusunu DEĞİL — ve ikisi
@@ -2756,7 +2756,7 @@ def prediction_accuracy_band() -> dict:
     return out
 
 
-# H2 — RET-NEDENİ AİLE HAFIZASI -------------------------------------------------------------------
+# RET-NEDENİ AİLE HAFIZASI -------------------------------------------------------------------
 # NEDEN. Kapı kayıtlarındaki `why`/`reject_reasons` alanları 41 hipotezlik bir mezarlık taşıyor ama
 # hermes onları GÖRMÜYOR; her tur aynı ailelere dönüyor. ÖLÇÜLDÜ: 41 hipotezin 21'i (%51) TEK bir
 # değişkende — `stop_loss_atr_mult` — ve hepsi reddedildi. Buna karşılık bounds.yaml'daki düğmelerin
@@ -2800,7 +2800,7 @@ def dead_families() -> dict:
                "denenen_degerler": a["denenen_degerler"][:8]}
            for f, a in aile.items() if a["n"] >= DEAD_FAMILY_MIN_N and a["shipped"] == 0}
     # HİÇ ÖNERİLMEMİŞ DÜĞMELER — kopukluk avının bulgusu (bounds 24 düğmeden 10'u; sayı DİNAMİK
-    # okunur, sabitlenmez: G3b/G2 turları bounds'a satır ekliyor ve donmuş bir sayı yalan söylerdi).
+    # okunur, sabitlenmez: sonraki turlar bounds'a satır ekliyor ve donmuş bir sayı yalan söylerdi).
     try:
         tum = sorted(config.bounds().keys())
     except Exception as e:
@@ -2823,10 +2823,10 @@ def dead_families() -> dict:
     }
 
 
-# §5 YAPMA LİSTESİNİN MAKİNE-OKUNUR KISA HÂLİ. Kaynağı ROADMAP §5'tir (ölçülmüş/belgeli çürükler).
-# NEDEN KODDA: prompt'a giren her satır DETERMİNİSTİK olmalı; ROADMAP'i ayrıştırmak (markdown → madde)
+# YAPMA LİSTESİNİN MAKİNE-OKUNUR KISA HÂLİ. Kaynağı yol haritasıdır (ölçülmüş/belgeli çürükler).
+# NEDEN KODDA: prompt'a giren her satır DETERMİNİSTİK olmalı; yol haritasını ayrıştırmak (markdown → madde)
 # sessizce bozulabilecek bir bağımlılıktır ve bozulduğunda hermes YASAK bilgisini kaybederdi. Liste
-# kısa tutulur ve ROADMAP değişince BURASI da güncellenir (tek satırlık bakım borcu, beyanlı).
+# kısa tutulur ve yol haritası değişince BURASI da güncellenir (tek satırlık bakım borcu, beyanlı).
 DO_NOT_LIST: tuple[str, ...] = (
     "min_score yükseltmek: ölçüldü, havuzu kurutur ve edge getirmez",
     "aynı (variable,value) çiftini yeniden önermek: reject_reasons'da zaten var",
@@ -2837,7 +2837,7 @@ DO_NOT_LIST: tuple[str, ...] = (
 
 
 def hermes_scorecard() -> dict:
-    """H1+H2'nin TEK ÇATISI — evidence_pack'in okuduğu ve panonun çizdiği kaynak.
+    """TAHMİN İSABETİ + AİLE HAFIZASININ TEK ÇATISI — evidence_pack'in okuduğu ve panonun çizdiği kaynak.
 
     Adı "karne": içinde hermes'in KENDİ performansı (tahmin isabeti), KENDİ mezarlığı (ölü aileler)
     ve KENDİ kör noktası (hiç denenmemiş düğmeler) var. Üçü bir arada, "daha az + tam-döngülü"
@@ -2851,7 +2851,7 @@ def hermes_scorecard() -> dict:
         from . import obs as _o
         _o.warn("hermes_scorecard_queue_failed", error=f"{type(e).__name__}: {e}")
         out["composite_queue"] = None
-    # KEŞİF PAYI KARNEYE GİRER (YASA 6, 2026-07-30). `hermes.exploration_share` bugün eklendi ve
+    # KEŞİF PAYI KARNEYE GİRER (YASA 6). `hermes.exploration_share` bugün eklendi ve
     # TEK tüketicisi hermes'in KENDİ istemiydi (`_exploration_sections`) — yani üreteç kendi
     # dağılımını beyne anlatıyor ama OPERATÖR onu hiçbir yerde göremiyordu. Kanıt üretip yalnız
     # kendine tüketmek, bu depoda tekrar tekrar bulunan "üretilip tüketilmeyen kanıt" deseninin
@@ -2875,7 +2875,7 @@ def hermes_scorecard() -> dict:
     return out
 
 
-# ---- ÖĞRENME OTOMASYONUNUN DIŞ OKUYUCUSU (YASA 6, 2026-07-30) ----------------------------------
+# ---- ÖĞRENME OTOMASYONUNUN DIŞ OKUYUCUSU (YASA 6) ----------------------------------
 # `scheduler._learning_cadence` `learning_cadence.json`u, `skills.axis2_cycle` `axis2_status.json`u
 # YAZAR; ikisini de BAŞKA bir modülden okuyan taraf burasıdır → /api/diagnostics + /api/hermes.
 # DOSYA ADLARI LİTERAL yazılır (`scheduler.LEARN_FILE` üzerinden DEĞİL): `codelaw.artifact_graph`
@@ -2955,7 +2955,7 @@ def learning_automation() -> dict:
 
 
 def composite_queue_status() -> dict:
-    """H3/H4 — bileşik öneri kuyruğunun durumu (bekleyen/ölçülen/haftalık bütçe kalanı).
+    """Bileşik öneri kuyruğunun durumu (bekleyen/ölçülen/haftalık bütçe kalanı).
 
     YASA 6: `hermes_composite.py` deftere YAZAR; onu BAŞKA bir modülden okuyan taraf burasıdır.
     DOSYA ADI LİTERAL yazılır (`hermes_composite.QUEUE_FILE` üzerinden DEĞİL): `codelaw.artifact_graph`
@@ -2988,9 +2988,9 @@ def threshold_cross_note() -> dict | None:
             "ufuk": "ileri getiri @20 bar (yoksa @5) — gerçek katman, cf hariç"}
 
 
-# ---- 2.4 GÖLGE-VARYANT DEFTERİNİN DIŞ OKUYUCUSU (3b devri, 2026-07-30) -------------------------
+# ---- GÖLGE-VARYANT DEFTERİNİN DIŞ OKUYUCUSU -------------------------
 # YASA 6 + `codelaw.DECLARED_SINKS`ten ÇIKARMANIN ŞARTI: defteri BAŞKA bir modül okumalı. Sadeleştirme
-# turu beyanı süreliydi ("pano/api tüketicisi Hafta 3b'ye devredildi"); devir burada tamamlanıyor.
+# turu beyanı süreliydi ("pano/api tüketicisi sonraya devredildi"); devir burada tamamlanıyor.
 # DOSYA ADI LİTERAL: `codelaw.artifact_graph` statik bir graftır ve `shadow_variants.LEDGER`
 # üzerinden okumak, okuyucuyu yine yazarın kendisi gibi gösterirdi (bkz. validation_trio'daki not).
 def shadow_variant_summary(days: int = 10) -> dict:
@@ -3026,9 +3026,9 @@ def shadow_variant_summary(days: int = 10) -> dict:
     }
 
 
-# ---- GÖLGE YASA v2'NİN PANO/API YÜZEYİ (3b) ----------------------------------------------------
+# ---- GÖLGE YASA v2'NİN PANO/API YÜZEYİ ----------------------------------------------------
 def _dd_veto_okumasi() -> dict:
-    """`DD_VETO_MARGIN` NASIL OKUNUR — tek cümlelik ilişki beyanı (WP-M borç kalemi, 2026-08-03).
+    """`DD_VETO_MARGIN` NASIL OKUNUR — tek cümlelik ilişki beyanı.
 
     NEDEN VAR. Marj panoda/kayıtlarda ÇIPLAK bir sayı olarak (0,04) duruyordu ve bir ölçüm
     raporunda tam da korkulan biçimde okundu: MUTLAK bir M2M düşüşü (%7,2) bu sayıyla kıyaslanıp
@@ -3069,9 +3069,9 @@ def _dd_veto_okumasi() -> dict:
 
 
 def shadow_law_row() -> dict:
-    """Büyüklük yasası satırı — panonun tek kaynağı. **TERS GÖLGELEME** (PARA-v3, 2026-07-30).
+    """Büyüklük yasası satırı — panonun tek kaynağı. **TERS GÖLGELEME** (PARA-v3).
 
-    3b'de bu satır "v2 olsaydı" diyordu: karar eski bileşik skordaydı, v2 kayda geçiyordu. Yasa
+    ÖNCEDEN bu satır "v2 olsaydı" diyordu: karar eski bileşik skordaydı, v2 kayda geçiyordu. Yasa
     yeniden tasarlandıktan sonra yön TERSİNE döndü ve satırın işi de tersine döndü:
 
       (1) YÜRÜRLÜKTEKİ yasa PARA-v3'tür ve `passes`i O üretir (`law_transition: True`),
@@ -3112,7 +3112,7 @@ def shadow_law_row() -> dict:
         "money_gate_margin": shadowlaw.MONEY_GATE_MARGIN,
         "gate_margin_eski": 0.02, "margin_scale": shadowlaw.MARGIN_MONEY_SCALE,
         "dd_veto_margin": shadowlaw.DD_VETO_MARGIN,
-        # ÇIPLAK SAYININ YANINDA OKUMA KURALI (WP-M, 2026-08-03): `dd_veto_margin` tek başına
+        # ÇIPLAK SAYININ YANINDA OKUMA KURALI: `dd_veto_margin` tek başına
         # basıldığında mutlak bir düşüş tavanı gibi okunabiliyordu (ve bir raporda öyle okundu).
         # İlişki beyanı artık sayının YANINDA durur; mutlak çıpa goal.yaml'dan ölçülür.
         "dd_veto_okumasi": _dd_veto_okumasi(),
@@ -3144,7 +3144,7 @@ def shadow_law_row() -> dict:
     }
 
 
-# ---- K1 DEVRİ: MAE MUHASEBESİ — STOPLARIN KÖR İKİZİ (3b, 2026-07-30) ---------------------------
+# ---- MAE MUHASEBESİ — STOPLARIN KÖR İKİZİ ---------------------------
 # NEDEN. `exit_efficiency` MFE'yi (görülen en iyi nokta) çıkış nedeni başına muhasebeleştiriyor ve
 # "masada ne bıraktık?" sorusunu cevaplıyor. `mae_r` alanı defterde 95 satırın hepsinde VAR ama
 # HİÇBİR tüketicisi yoktu — yani stop mesafesinin karnesi ölçülmüyordu. MAE, MFE'nin ikizidir:
@@ -3209,7 +3209,7 @@ def mae_profile() -> dict | None:
 
 
 # ==================================================================================================
-# 2C — EMPİRİK BAYES KÜÇÜLTME (Hafta 3b, 2026-07-30)
+# EMPİRİK BAYES KÜÇÜLTME
 # ==================================================================================================
 # SORUN. Rejim hücreleri ve bileşen IC'leri KÜÇÜK örneklemli tahminlerdir ve panoda HAM okunuyorlar.
 # n=21'lik bir `pullback` hücresinin −0,968R'si ile n=1338'lik `trend_up`ın +0,112R'si aynı yazı
@@ -3238,7 +3238,7 @@ def _empirical_bayes(cells: dict) -> dict:
     küçültmenin NE KADAR olduğunu görmeden küçültülmüş sayıya güvenmek, ham sayıya güvenmekten
     daha iyi değildir.
 
-    İKİZİ VAR, BİLEREK AYRI (2026-08-02): `olcum_araclari.eb_kucult` aynı momentler yöntemini
+    İKİZİ VAR, BİLEREK AYRI: `olcum_araclari.eb_kucult` aynı momentler yöntemini
     doğrudan SE ile ve düz-ortalama hedefiyle uygular; o, KART ÖZETLERİNİN ileriye dönük standardı
     ve "en iyi hücre" seçim yanlılığına karşı yazıldı. BURASI n-ağırlıklı tabanla çalışır ve
     YAYIMLANMIŞ sayıların (`component_ic.json` `eb` sütunu, pano) kaynağıdır — ikisini tek gövdeye
@@ -3300,7 +3300,7 @@ def shrunk_regime_cells(goal: dict | None = None) -> dict:
     return out
 
 
-# σᵢ YASASI, TEK YERDE (2C, WP-M turu 2026-08-01). Küçültme HAM IC ÖLÇEĞİNDE (r) yapılır ve orada
+# σᵢ YASASI, TEK YERDE. Küçültme HAM IC ÖLÇEĞİNDE (r) yapılır ve orada
 # Var(r) ≈ 1/(n−1)'dir. Aynı hücrenin YAYIMLANAN güven aralığı ise Fisher-z ölçeğinde kurulur ve
 # orada Var(z) = 1/(n−3)'tür (`component_ic._fisher_ci`). İKİ FARKLI SABİT, İKİ FARKLI ÖLÇEK —
 # çelişki değil; ama yazılı olmazsa "aynı tabloda iki cetvel" gibi okunur, o yüzden burada duruyor.
@@ -3311,7 +3311,7 @@ def _ic_hucreleri(katman_tablo: dict) -> dict:
     (`component_ic._eb_blok`). İkinci bir yerde hücre kurmak, aynı adı taşıyan iki farklı küçültme
     üretirdi ve fark ancak üçüncü haneyi karşılaştıran biri tarafından görülürdü.
 
-    ŞEMA KAYNAKTAN DOĞRULANDI (2026-07-30): tablo[katman][bileşen][ufuk] = {ic, n, ci, anlamli}.
+    ŞEMA KAYNAKTAN DOĞRULANDI: tablo[katman][bileşen][ufuk] = {ic, n, ci, anlamli}.
     Tahmin edilen bir şema ("hucreler" listesi) SESSİZCE 0 hücre veriyordu ve okuyucu "küçültme
     yapılmadı" diyerek DOĞRU ama YANLIŞ NEDENLE dürüst kalıyordu — tam olarak `trades.jsonl`ın
     setup/score dersi: alan adı tutmazsa tüketici satırı sessizce eler."""
@@ -3338,7 +3338,7 @@ def shrunk_component_ic() -> dict:
     dahil EDİLMEZ (farklı popülasyon — alınmamış hipotetik girişler; ikisini bir havuzda küçültmek
     iki farklı gerçeği tek ortalamaya çekerdi).
 
-    `tablo_ici_eb` (WP-M 2C, 2026-08-01): tablonun KENDİ `eb` bloğunun DIŞ OKUYUCUSU (YASA 6).
+    `tablo_ici_eb`: tablonun KENDİ `eb` bloğunun DIŞ OKUYUCUSU (YASA 6).
     Bu fonksiyon hesabı eskisi gibi kendisi yapmaya devam eder — blok yalnız GÖRÜNÜR olur, hükme
     girmez. Blok yoksa (dosya `eb` alanı eklenmeden önce üretilmişse) bu dürüstçe söylenir;
     "yok"u "sıfır küçültme" diye raporlamak uydurma olurdu."""
@@ -3359,7 +3359,7 @@ def _tablo_ici_eb_ozeti(doc: dict) -> dict:
     Ham `ic` alanlarına DOKUNMAZ ve hiçbir hüküm üretmez; yalnız "blok var mı, kaç hücre
     küçültüldü, en çok hangi hücre çekildi" sorularını cevaplar. En çok çekilen hücre bilerek
     seçilir: küçültmenin NE KADAR olduğunu görmeden küçültülmüş bir sayıya güvenmek, ham sayıya
-    güvenmekten daha iyi değildir (2C bloğunun kendi gerekçesi)."""
+    güvenmekten daha iyi değildir (bu bloğun kendi gerekçesi)."""
     eb = doc.get("eb")
     if not isinstance(eb, dict) or not (eb.get("katmanlar") or {}):
         return {"var": False,
@@ -3382,7 +3382,7 @@ def _tablo_ici_eb_ozeti(doc: dict) -> dict:
 
 
 # ==================================================================================================
-# 2D — HOLDOUT ROTASYON DEĞERLENDİRİCİSİ (Hafta 3b, 2026-07-30)
+# HOLDOUT ROTASYON DEĞERLENDİRİCİSİ
 # ==================================================================================================
 # SORUN. Aşınma defteri aynı pencereye kaç kez sorulduğunu sayıyor (canlı: bir parmak izinde 290
 # sorgu) ve eşik aşılınca kapıya ek marj yazıyor. Ama ek marj bir SEMPTOM tedavisidir: 290 kez
@@ -3399,7 +3399,7 @@ ROTATION_RECOMMEND_RATIO = 1.0   # sorgu/limit oranı bunu aşarsa öneri doğar
 def holdout_rotation_advice() -> dict:
     """Aşınma sayacı eşiğindeyken holdout rotasyonu ÖNERİR (uygulamaz).
 
-    R1 UYGULANDIKTAN SONRAKİ HÂLİ (2026-07-30). Bu değerlendirici R1'in GEREKÇESİYDİ: R0'a 434 sorgu
+    R1 UYGULANDIKTAN SONRAKİ HÂLİ. Bu değerlendirici R1'in GEREKÇESİYDİ: R0'a 434 sorgu
     sorulmuştu (limit 20 → 21,7×) ve öneri üretiliyordu. Operatör öneriyi uyguladı. Artık fonksiyonun
     iki AYRI şeyi söylemesi gerekiyor ve ikisini karıştırmamak zorunda:
       (a) HANGİ ROTASYON YÜRÜRLÜKTE (R1, tarihiyle) — yoksa panoyu okuyan biri öneriyi hâlâ bekliyor
@@ -3498,7 +3498,7 @@ def holdout_rotation_advice() -> dict:
 
 
 # =================================================================================================
-# NOUS SİSTEM-DEĞERLENDİRME KATMANI · KATMAN A: TELEMETRİ PAKETİ (ROADMAP §3.2, 2026-07-30)
+# NOUS SİSTEM-DEĞERLENDİRME KATMANI · KATMAN A: TELEMETRİ PAKETİ
 # =================================================================================================
 # OPERATÖR YÖNÜ: "bütün mekanizmaları değerlendirip güncellenmesi gerekenleri nous bulmalı; sistem
 # kısıtlı alanda kalmadan sürekli kendini geliştirmeli". Katman B (nous'un haftalık MEKANİZMA
@@ -3610,7 +3610,7 @@ def gate_veto_tally() -> dict:
             "n_reject_reasons_alanli": n_reason_alanli,
             "ret_nedeni_aileleri": _top(hyp_reasons),
         },
-        # DÜĞME AİLELERİ H2'DEN GELİR, BURADA YENİDEN SAYILMAZ: iki yerde iki aile tanımı olsaydı
+        # DÜĞME AİLELERİ TEK KAYNAKTAN GELİR, BURADA YENİDEN SAYILMAZ: iki yerde iki aile tanımı olsaydı
         # panodaki "ölü aile" ile prompt'taki "ölü aile" sessizce ayrışırdı.
         "dugme_aileleri": dead_families(),
         "rol": "RAPOR — hiçbir kapıya bağlı DEĞİL; sayım kapı kararlarını değiştirmez",
@@ -3783,7 +3783,7 @@ def _beyan_edilen_bosluklar(bolumler: dict) -> list:
 
 
 def _time_stop_curve() -> dict | None:
-    """time-stop gün-gün R eğrisi (G3b ③). Üreticisi `backtest.holding_day_r_curve` SAF bir
+    """time-stop gün-gün R eğrisi. Üreticisi `backtest.holding_day_r_curve` SAF bir
     fonksiyondur, state artefaktı YOKTUR ve bugüne kadar ÜRETİM ÇAĞIRANI DA YOKTU (tek çağıranı
     testlerdi) — YASA 6'nın bir başka hâli. Paket onun ilk üretim tüketicisidir."""
     from . import backtest as _bt
@@ -3862,12 +3862,12 @@ def improvement_proposals_status(limit_hafta: int = 3) -> dict:
 
 
 # =================================================================================================
-# WP-E — İCRA GERÇEKLİĞİ: E2 SLİPAJ ÖZETİ · E3 KÖTÜMSER BAND · E4 GECE/GÜNDÜZ (2026-07-31)
+# İCRA GERÇEKLİĞİ: SLİPAJ ÖZETİ · KÖTÜMSER BAND · GECE/GÜNDÜZ
 # =================================================================================================
 # Üçü de SAF OKUMA: hiçbir dosyaya yazmaz, hiçbir kapıya bağlı değildir, `probgate`/`prescreen`
-# çıktılarına DOKUNMAZ. Kart EXE-2026-001 bir EDGE kartı değil İCRA kartıdır — bu yüzden buradaki
+# çıktılarına DOKUNMAZ. Ölçüm kartı bir EDGE kartı değil İCRA kartıdır — bu yüzden buradaki
 # sayılar bir hüküm üretmez, hükümlerin YANINA ikiz sütun/kolon olarak durur.
-ENTRY_LEDGER = "entry_execution.jsonl"     # yazan: loop (E1/E2 yolu) — bkz. loop.ENTRY_LEDGER
+ENTRY_LEDGER = "entry_execution.jsonl"     # yazan: loop (giriş icra yolu) — bkz. loop.ENTRY_LEDGER
 ENTRY_SUMMARY_DAYS = 7                     # "haftalık özet" penceresi (takvim günü)
 BAND_MIN_N = 20                            # ampirik banda geçiş için asgari ÖLÇÜLMÜŞ dolum
 
@@ -3881,7 +3881,7 @@ def _entry_rows(days: int | None = None) -> list:
 
 
 def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
-    """E2 — GİRİŞ İCRA / SLİPAJ DEFTERİNİN HAFTALIK ÖZETİ.
+    """GİRİŞ İCRA / SLİPAJ DEFTERİNİN HAFTALIK ÖZETİ.
 
     ÜÇ SORUYU AYRI AYRI CEVAPLAR (biri diğerinin yerine geçemez):
       1. AYNA GÖNDERİYOR MU? — gönderim/ret/veto sayıları + RET NEDENİ DAĞILIMI. Kartın başarı
@@ -3933,10 +3933,10 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
         "dolum_orani": (round(len(dolan) / gonderilen, 4) if gonderilen else None),
         "fill_vs_resmi_acilis_bps": _bps_ozet([r.get("fill_vs_resmi_acilis_bps") for r in dolan]),
         "fill_vs_limit_bps": _bps_ozet([r.get("fill_vs_limit_bps") for r in dolan]),
-        # KALEM 4 (2026-08-09): "tavan gevşetilebilir" bir HÜKÜMdür ve n_dolan<BAND_MIN_N iken
+        # "tavan gevşetilebilir" bir HÜKÜMdür ve n_dolan<BAND_MIN_N iken
         # SUSTURULUR — dört dolumla "tavan gevşetilebilir" demek az örnekten hüküm uydurmaktır
         # (UYDURMA YASAĞI). Dağılım yine gösterilir; yalnız HÜKÜM cümlesi ampirik eşiğe bağlanır
-        # (aynı eşik E3 ampirik bandının BAND_MIN_N'i — tek eşik, iki okuyucu).
+        # (aynı eşik ampirik bandın BAND_MIN_N'i — tek eşik, iki okuyucu).
         "yorum": (
             ("fill_vs_limit_bps ≈ 0 → limit BAĞLADI (tavanda dolduk); belirgin NEGATİF → "
              "yasa para bıraktı, tavan gevşetilebilir (kart grid'inin ölçüm girdisi)")
@@ -3948,7 +3948,7 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
     # --- 3) İÇ MOTOR: dolum / kaçan işlem ------------------------------------------------------
     ic_karar = _sayac(ic, "karar")
     ic_dolan = [r for r in ic if r.get("karar") == "fill"]
-    # KALEM 4 (2026-08-09): iç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir (dolum açılıştan
+    # İç motorun "dolum vs resmî açılış" bps'i TOTOLOJİKtir (dolum açılıştan
     # sabit slippage ile türer) → yazar (loop) satıra None + beyan bırakır. Özet o beyanı satırdan
     # SURFACE eder (modül-bağımsız: analytics loop'u import etmez). `_bps_ozet` None'ları paydadan
     # düşürür (ort=None, n_olculemeyen=n) — 0 basmaz. `fill_vs_limit_bps` (limit-bacağı) AYRIDIR.
@@ -3963,12 +3963,12 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
         "gap_veto_n": ic_karar.get("entry_gap_veto", 0),
         "kill_esigi": 0.40,
         "fill_vs_resmi_acilis_bps": _bps_ozet([r.get("fill_vs_resmi_acilis_bps") for r in ic_dolan]),
-        "fill_vs_resmi_acilis_beyan": _ic_beyan,   # totoloji: yazar None + beyan bıraktı (KALEM 4)
+        "fill_vs_resmi_acilis_beyan": _ic_beyan,   # totoloji: yazar None + beyan bıraktı
     })
     # --- 4) KAPIDA DÜŞEN SİLAHLI PLANLAR (BETİMLEYİCİ SAYIM — ORAN/EŞİK YOK) -------------------
     # `motor="kapi"` satırlarını yazan `loop._armed_drop_row`tur: plan silahlıydı, kapı kapalıydı,
     # dolum HİÇ denenmedi. Burada YALNIZ sayılır — oran/eşik üretmek ön-kayıtsız YENİ bir ölçüt
-    # doğururdu (kart EXE-2026-001 grid'inin dışında kalırdı). Gate adı üç kademede okunur:
+    # doğururdu (ölçüm grid'inin dışında kalırdı). Gate adı üç kademede okunur:
     # `red_detay.kapi` → `karar`ın `armed_dropped_` öneki soyulmuş hâli → "?" (BİLİNMEYEN GİZLENMEZ:
     # sınıflanamayan satır ham olarak sayılır, sessizce düşürülmez).
     kapi_dag: dict = defaultdict(int)
@@ -4033,7 +4033,7 @@ def _bps_ozet(vals: list) -> dict:
             "min": round(s[0], 3), "maks": round(s[-1], 3)}
 
 
-# ---- E3: KÖTÜMSER MALİYET BANDI ---------------------------------------------------------------
+# ---- KÖTÜMSER MALİYET BANDI ---------------------------------------------------------------
 # NEDEN VAR. Yürürlükteki friksiyon modeli tek yönde 5 bps'tir ve bu GÜN İÇİ ortalama bir spread
 # varsayar. Ama bu sistemin girişlerinin TAMAMI AÇILIŞTA olur; açılış müzayedesinin efektif
 # spread'i gün ortasının katıdır ve large-cap'te bile onlarca bps'e çıkar (Bogousslavsky-Muravyev
@@ -4079,7 +4079,7 @@ def pessimistic_band(goal: dict | None = None) -> dict:
 
 
 def pessimistic_band_update(days: int | None = None) -> dict:
-    """E2 DEFTERİNDEN AMPİRİK BAND — ÖLÇER, UYGULAMAZ.
+    """GİRİŞ İCRA DEFTERİNDEN AMPİRİK BAND — ÖLÇER, UYGULAMAZ.
 
     `goal.yaml` DEĞİŞMEZDİR ve bu fonksiyon ona YAZMAZ (bir ajanın kendi maliyet paydasını
     güncellemesi, karnesini kendisinin yazması olurdu). Ölçümü döndürür; `ampirik_bps` alanının
@@ -4147,16 +4147,16 @@ def net_kotumser() -> dict:
     }
 
 
-# ---- E4: GECE / GÜNDÜZ AYRIŞTIRMASI ------------------------------------------------------------
+# ---- GECE / GÜNDÜZ AYRIŞTIRMASI ------------------------------------------------------------
 # NEDEN VAR (Lou-Polk-Skouras 2019 JFE): momentum getirisinin İŞARETİ gece ve gündüz bacaklarında
 # ZITTIR — momentum geceye, tersine-dönüş gündüze yığılır. Bu sistemin girişleri AÇILIŞTA olur,
 # yani her işlem önce bir GECE bacağı satın alır. "Kâr nereden geliyor?" sorusunun bu ekseni bugüne
-# dek hiç sorulmadı; BT-1'in bulduğu "yalnız 8-15 gün diliminde pozitif" kırılımı ile çaprazlanır.
+# dek hiç sorulmadı; ölçülen "yalnız 8-15 gün diliminde pozitif" kırılımı ile çaprazlanır.
 #
 # ÖZDEŞLİK (yaklaşık değil, TAM): close_N − open_0 = Σ(close_i − open_i) + Σ(open_i − close_{i-1}).
 # Yani gündüz + gece = TUTULAN YOLUN tamamı. İşlemin GERÇEK pnl_pct'i bundan farklıdır (çıkış
 # bar-içi bir seviyededir ve friksiyon fiyatın içindedir) — fark `icra_farki` olarak AYRI raporlanır
-# ve tam olarak E1/E2'nin ölçtüğü şeydir. Üçünü tek sayıda toplamak, icra maliyetini piyasa
+# ve tam olarak giriş icra ölçümünün konusudur. Üçünü tek sayıda toplamak, icra maliyetini piyasa
 # hareketiymiş gibi göstermek olurdu.
 NIGHTDAY_HUCRE_MIN_N = 5
 _ND_CACHE: dict = {}       # (defter damgası) → sonuç. Bkz. night_day_split gerekçesi.
@@ -4171,7 +4171,7 @@ def _nd_stamp() -> tuple:
     STATE YOLU DA DAMGANIN İÇİNDE: testler her koşuda AYRI bir sandbox'a yönlendirilir ve yol
     olmasaydı "defter yok" hâli (0, 0) iki farklı sandbox'ta AYNI anahtara düşerdi — bir testin
     sonucu diğerine sızardı (conftest'in `_clear_module_caches` yazarken şikâyet ettiği sınıf)."""
-    # DAMGA ARTIK `store.stamp` (WP-H/H9, 2026-07-31): defter SQLite'a taşındığında
+    # DAMGA ARTIK `store.stamp`: defter SQLite'a taşındığında
     # `state/trades.jsonl` `.migrated` ekiyle DONAR ve mtime'ı bir daha değişmez — bu önbelleği
     # SONSUZA kadar bayat yapardı ve hiçbir yerde görünmezdi. `store.stamp` iki arka uçta da
     # "yalnız içerik değişince değişen" bir demet verir (dosyada mtime+boyut, DB'de updated_at+rev).
@@ -4197,21 +4197,21 @@ def _nd_ozet(kayitlar: list[dict]) -> dict:
 
 
 def night_day_split() -> dict:
-    """E4 — HER İŞLEMİN TUTUŞ YOLUNU GECE (close→open) ve GÜNDÜZ (open→close) BACAKLARINA AYIRIR.
+    """HER İŞLEMİN TUTUŞ YOLUNU GECE (close→open) ve GÜNDÜZ (open→close) BACAKLARINA AYIRIR.
 
-    Saf okuma: `trades.jsonl` × günlük barlar (`adapters.data.load_bars` — BT-2 kapısından geçmiş
+    Saf okuma: `trades.jsonl` × günlük barlar (`adapters.data.load_bars` — sanitize kapısından geçmiş
     hâl; ham CSV okumak kirletilmiş barları bu ölçüme taşırdı).
 
-    KAYNAK DAMGASI AYRI SATIR (BT-1): `replay_seed` satırları `training` etiketiyle KENDİ
+    KAYNAK DAMGASI AYRI SATIR: `replay_seed` satırları `training` etiketiyle KENDİ
     kırılımında durur. Tohumun gece/gündüz karakteri "kuralların karakteri"dir, canlı icra DEĞİL;
-    ikisini tek ortalamada toplamak BT-1'in kapattığı karışımın ta kendisi olurdu.
+    ikisini tek ortalamada toplamak, kapatılan karışımın ta kendisi olurdu.
 
     GİRİŞ GAP'İ AYRI ÖLÇÜLÜR: `giris_gap_bps` = (open_0 / close_{-1} − 1) — bu, SATIN ALDIĞIMIZ
-    gece bacağıdır ve tutulan yolun İÇİNDE DEĞİLDİR (yol open_0'da başlar). E1'in limit tavanı tam
+    gece bacağıdır ve tutulan yolun İÇİNDE DEĞİLDİR (yol open_0'da başlar). Giriş yasasının limit tavanı tam
     olarak bu sayıyı kelepçeler, o yüzden yan yana durmaları gerekir.
 
     SÜREÇ-İÇİ MEMO (ölçüldü: 95 satırlık defterde ~2,4 sn — 76 ayrı sembolün barları diskten
-    okunur ve BT-2 kapısından geçirilir). `/api/diagnostics` her pano anketinde koşuyor; bu maliyeti
+    okunur ve sanitize kapısından geçirilir). `/api/diagnostics` her pano anketinde koşuyor; bu maliyeti
     her istekte ödemek `system_telemetry`nin uçtan çıkarılma gerekçesinin aynısını doğururdu.
     Damga defterin mtime'ıdır: defter değişince önbellek KENDİLİĞİNDEN düşer, yani bayat sayı
     gösterme penceresi YOKTUR."""
@@ -4292,7 +4292,7 @@ def night_day_split() -> dict:
         kayitlar.append({
             "gece": gece / op[i0], "gunduz": gunduz / op[i0], "yol": yol / op[i0],
             "islem": islem, "dilim": _tutus_dilimi(t.get("bars_held")),
-            # BT-1 ETİKETİ: `replay_seed` = eğitim satırı, canlı kanıt DEĞİL.
+            # KAYNAK ETİKETİ: `replay_seed` = eğitim satırı, canlı kanıt DEĞİL.
             "kaynak": ("training" if kn == ledgerstamp.REPLAY_SEED else kn),
             "aile": t.get("setup") or "?",
         })
@@ -4305,7 +4305,7 @@ def night_day_split() -> dict:
                              sorted(_grupla(kayitlar, lambda x: x["kaynak"]).items())}
     out["tutus_dilimi"] = {k: _nd_ozet(v) for k, v in
                            sorted(_grupla(kayitlar, lambda x: x["dilim"]).items())}
-    # ÇAPRAZ TABLO: kaynak × tutuş-dilimi — BT-1'in "8-15g tek pozitif dilim" kırılımı bu eksende
+    # ÇAPRAZ TABLO: kaynak × tutuş-dilimi — "8-15g tek pozitif dilim" kırılımı bu eksende
     # okunur ve tohum/canlı ayrımı korunur (aynı hücrede karışmaz).
     capraz = _grupla(kayitlar, lambda x: (x["kaynak"], x["dilim"]))
     out["capraz"] = [{"kaynak": k, "tutus_dilimi": d, **_nd_ozet(v)}

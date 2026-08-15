@@ -31,7 +31,7 @@ from . import config, store, health
 
 STATUS_FILE = "scheduler_status.json"
 LEARN_FILE = "learning_cadence.json"    # öğrenme kadansının son koşusu (okuyan: analytics + api)
-# HAFTALIK KANIT RAPORU (temizlik turu 2026-07-30). Ad LİTERAL sabittir çünkü `codelaw.artifact_graph`
+# HAFTALIK KANIT RAPORU. Ad LİTERAL sabittir çünkü `codelaw.artifact_graph`
 # statik bir graftır; yazan bu modül, DIŞ okuyucu `api.api_diagnostics` (mlops.validation_report) —
 # yani artefakt YASA 6 anlamında tüketicilidir ve DECLARED_SINKS muafiyeti GEREKMEZ.
 VALIDATION_FILE = "validation_report.json"
@@ -53,7 +53,7 @@ def _persist() -> None:
 
 
 # ==================================================================================================
-# İLERLEME NABZI (v186, 2026-08-04) — bekçinin varsayımı "tick=ilerleme"ydi, gerçeği "tick=döngü SONU"
+# İLERLEME NABZI — bekçinin varsayımı "tick=ilerleme"ydi, gerçeği "tick=döngü SONU"
 # ==================================================================================================
 # ÖLÇÜLMÜŞ VAKA (A1 canlı, 2026-08-03 20:00→23:30 UTC): asılı-tick bekçisi
 # (`deploy/oracle-a1/tick_watchdog.sh`, eşik 2700 sn) Pazartesi EOD döngüsünü ÜÇ kez öldürdü ve
@@ -153,12 +153,12 @@ def nabiz(asama: str, i: int | None = None, n: int | None = None) -> bool:
 _DURABLE = ("last_refetch_session", "refetch_attempts", "last_processed", "last_refetch_coverage",
             "refetch_chase", "refetch_sparse_attempts", "refetch_next_at", "refetch_latest_bar",
             "last_repair_session",
-            # ÖĞRENME KADANSI (2026-07-30) DA KALICIDIR ve nedeni `refetch_attempts`inkiyle AYNI
+            # ÖĞRENME KADANSI DA KALICIDIR ve nedeni `refetch_attempts`inkiyle AYNI
             # sınıf: süreç başına sıfırlanan bir seans damgası, her yeniden başlatmada kadansı
             # BAŞTAN koşturur. Antrenman ucuzdur ama dolgu her plan-günü için bir LLM çağrısı
             # yakar — bir gecede üç kez yeniden başlatılan bir pano, gecelik bütçeyi üç kez harcardı.
             "learn_session", "last_learn",
-            # DOLGU DAMGASI AYRIDIR ve bu bir tasarım kararıdır (v190, 2026-08-06). `learn_session`
+            # DOLGU DAMGASI AYRIDIR ve bu bir tasarım kararıdır. `learn_session`
             # "kadans bu seans için koştu" der; `dolgu_session` "dolgu GERÇEKTEN başladı" der. Tek
             # damga ikisini birden taşırken şu oluyordu: kadans anında hermes havuzu soğumadaysa
             # `backfill_budget()` tavan 0 döndürüyor, dolgu HİÇ başlamıyor, ama damga yine de
@@ -166,7 +166,7 @@ _DURABLE = ("last_refetch_session", "refetch_attempts", "last_processed", "last_
             # Kalıcılığın gerekçesi akranlarınınkiyle aynı: yeniden başlatma dolguyu (ve gecelik
             # LLM bütçesini) baştan yakmamalı.
             "dolgu_session",
-            # TEMİZLİK TURU KADANSLARI (2026-07-30) — AYNI SINIF, AYNI GEREKÇE. Y4 toplaması FMP
+            # TEMİZLİK TURU KADANSLARI — AYNI SINIF, AYNI GEREKÇE. Y4 toplaması FMP
             # kotası yakar (insider `/latest` akışı); haftalık üçlü (doğrulama raporu, massive
             # verify, yasa kayması) ise 2000 replikasyonluk bootstrap ve sembol-başına Massive
             # isteği demektir. Süreç başına sıfırlanan bir damga, her yeniden başlatmada bunları
@@ -176,14 +176,14 @@ _DURABLE = ("last_refetch_session", "refetch_attempts", "last_processed", "last_
             # `shadowlaw_drift` son ÖLÇÜMÜ taşır: yeniden başlatmada kaybolursa pano "hiç ölçülmedi"
             # der ve bir sonraki haftaya kadar öyle kalırdı (2000 replikasyon boşuna yanardı).
             "y4_session", "last_y4", "validation_week", "shadowlaw_drift",
-            # ARMING + HAFTALIK KADANS DAMGALARI (2026-08-06, v189 teşhisi) — AYNI SINIF: bunlar
+            # ARMING + HAFTALIK KADANS DAMGALARI — AYNI SINIF: bunlar
             # kalıcı olmayınca her yeniden başlatma 27-100 dk'lık arming walk'ını ve haftalık
             # öz-değerlendirme zincirini BAŞTAN tetikliyordu (canlı kanıt: 07-27/07-29 çift
             # arming_measured; 08-05/06 iki gece süren ölç→öl→yeniden-ölç kilidi).
             "arming_week", "selfreview_week", "orphan_sweep_week", "nous_eval_week",
             "revision_week")
 
-# ---- SON TARİHLİ YENİDEN-DENEME MERDİVENİ (2026-07-30) -------------------------------------------
+# ---- SON TARİHLİ YENİDEN-DENEME MERDİVENİ -------------------------------------------
 # ESKİ YASA: 8 deneme × 300 sn = 40 dakika, sonra seans KALICI atlanır ve "SEANS ATLANDI" alarmı
 # atılır. İki ölçülmüş kusuru vardı:
 #   (1) BÜTÇE YANLIŞ YERDEYDİ. Zincirin en taze kolu T+1 yayınlıyor (massive_grouped_last.json:
@@ -204,7 +204,7 @@ SPARSE_MAX_S = 3600.0            # üst sınır: 60 dk (aralık 1,5 kat büyür,
 def _rehydrate() -> dict:
     """Kalıcı sayaçları diskten geri yükle.
 
-    NEDEN (2026-07-22, veri hattı denetimi bunu kanıtla buldu): `_state` YALNIZ süreç belleğindeydi.
+    NEDEN (veri hattı denetimi bunu kanıtla buldu): `_state` YALNIZ süreç belleğindeydi.
     `_persist()` yazıyordu ama kimse geri okumuyordu. Sonuç: 8 denemelik tazeleme tavanı SÜREÇ
     BAŞINAydı — her yeniden başlatma tavanı sıfırdan yakıyor ve her deneme 250 sembol × 3 kaynaklık,
     önbelleği baypas eden bir ağ süpürmesi demek. Canlı kanıt: TEK bir seans (2026-07-15) için 159
@@ -240,7 +240,7 @@ def _last_closed_session() -> str | None:
         closed = [str(d.date()) for d, row in sched.iterrows() if row["market_close"] <= now]
         return closed[-1] if closed else None
     except Exception as e:
-        # SESSİZ DEĞİL ama SÜREÇ BAŞINA BİR KEZ (C2, 2026-08-02). Eski işaretin gerekçesi
+        # SESSİZ DEĞİL ama SÜREÇ BAŞINA BİR KEZ. Eski işaretin gerekçesi
         # ("asıl karar bu değere bağlı DEĞİL ve çağıran yokluğu yedek değerle karşılıyor")
         # GERÇEĞE AYKIRIYDI — repoda 13 yerde harfi harfine tekrarlanan bir şablon damgaydı ve
         # burada tutmuyordu: `last_closed` None dönerse `advance_once` içinde `_dense` ve
@@ -253,7 +253,7 @@ def _last_closed_session() -> str | None:
         #
         # TEKRAR-UYARI YOK: bu yol her poll'de (300 sn) çalışır; koşulsuz uyarı 288 satır/gün
         # üretir ve olay defterini — gelen kutusunun ve tüm makullük dedektörlerinin okuduğu
-        # kaynağı — boğardı (K1 seli dersi). Anlatılacak olgu "takvim YOK", "her poll" değil.
+        # kaynağı — boğardı (alarm seli dersi). Anlatılacak olgu "takvim YOK", "her poll" değil.
         if not _CALENDAR_WARNED:
             _CALENDAR_WARNED = True
             from . import obs
@@ -415,7 +415,7 @@ def _repair_once_per_session(session: str) -> None:
 
 
 # ==================================================================================================
-# ÖĞRENME KADANSI — SEANS BAŞINA BİR KEZ, BAR VARIŞINDAN BAĞIMSIZ (2026-07-30)
+# ÖĞRENME KADANSI — SEANS BAŞINA BİR KEZ, BAR VARIŞINDAN BAĞIMSIZ
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KUSUR. Üç öğrenme mekanizması da KOD OLARAK vardı ve üçü de AYNI yere asılıydı:
 # `loop.daily_cycle`ın P5_LEARN bloğu (shadow_model.refit_and_save → loop.py:796,
@@ -437,7 +437,7 @@ LEARN_STEPS = ("antrenman", "eksen2", "gorus", "dolgu")
 
 
 # ==================================================================================================
-# KANIT DOLGUSU — KADANSA BAĞLI AMA KENDİ DAMGASIYLA (v190, 2026-08-06)
+# KANIT DOLGUSU — KADANSA BAĞLI AMA KENDİ DAMGASIYLA
 # ==================================================================================================
 # ÖLÇÜLMÜŞ KUSUR (canlı: "dolgu otomatik HİÇ koşmuyor, elle tetik çalışıyor"). Zincir eksik DEĞİLDİ —
 # `_learning_cadence` üçüncü adımı olarak dolguyu ZATEN çağırıyordu. Kusur damgadaydı:
@@ -522,7 +522,7 @@ def _learning_cadence(session: str) -> dict:
     DOLGU ASENKRONDUR: gün başına bir LLM çağrısı × tavan kadar gün, poll'ü dakikalarca bloklardı
     (`review_candidates_async` ile aynı gerekçe ve aynı sözleşme — Thread döner).
 
-    GÖRÜŞ DEFTERİ EKSEN-2'DEN SONRA (EDG-2026-019, 2026-08-09): o da deterministik ve KOTASIZ,
+    GÖRÜŞ DEFTERİ EKSEN-2'DEN SONRA: o da deterministik ve KOTASIZ,
     yani Eksen-2 ile aynı emsalden geçer; dolgunun ÖNÜNDE durur çünkü tek kota tüketicisi dolgudur.
     Adımın süresi ÖLÇÜLÜR (`oncesi_ms`) — kartın kill#1'i "gözlem icrayı yavaşlatamaz" der ve
     ölçülmeyen bir gecikme, olmayan bir gecikme sayılamaz."""
@@ -578,9 +578,9 @@ def _learning_cadence(session: str) -> dict:
 
 
 # ==================================================================================================
-# Y4 VERİ TOPLAMA KADANSI (temizlik turu, 2026-07-30) — ROADMAP §3.4
+# Y4 VERİ TOPLAMA KADANSI
 # ==================================================================================================
-# TEŞHİS. `insider.fetch_delta` ve `shortinterest.fetch` yazıldı, test edildi (v117) ve YALNIZ kendi
+# TEŞHİS. `insider.fetch_delta` ve `shortinterest.fetch` yazıldı, test edildi ve YALNIZ kendi
 # CLI'larından çağrılabilir kaldı: yani defterler ancak operatör elle koştururken doluyordu. Y4'ün
 # tüketici bağlantısı BİLİNÇLİ olarak ertelenmiş durumda (bkz. codelaw.DECLARED_SINKS'teki gerekçe:
 # insider sınıflaması 3 yıllık pencere ister ve FMP `search` ucu ücretsiz planda 402 dönüyor) — ama
@@ -749,9 +749,9 @@ def _weekly_validation(wk: list) -> dict:
 
 GAP_SEEN_MAX = 200          # tekrar-bastırma defterinin tavanı (imza başına tek uyarı, sınırsız değil)
 
-# TAKVİM ARIZASI SÜREÇ BAŞINA BİR KEZ ANLATILIR (WP-D kuyruğu, 2026-08-02). `_intraday_gap_check`
+# TAKVİM ARIZASI SÜREÇ BAŞINA BİR KEZ ANLATILIR. `_intraday_gap_check`
 # her poll'de (300 sn) koşar; koşulsuz bir uyarı 288 satır/gün üretir ve olay defterini — gelen
-# kutusunun ve tüm makullük dedektörlerinin okuduğu kaynağı — boğardı (K1 seli dersi). Kardeş
+# kutusunun ve tüm makullük dedektörlerinin okuduğu kaynağı — boğardı (alarm seli dersi). Kardeş
 # `_CALENDAR_WARNED` ile AYNI desen ve AYNI gerekçe; anlatılacak olgu "takvim YOK", "her poll" değil.
 # GERİ SIFIRLANMAZ (emsalle aynı): takvim döndüğünde bayrağı temizlemek, modül gidip geldikçe tam da
 # bastırmak istediğimiz seli geri açardı.
@@ -761,7 +761,7 @@ GAP_SEEN_MAX = 200          # tekrar-bastırma defterinin tavanı (imza başına
 _GAP_CALENDAR_WARNED = False
 
 # ==================================================================================================
-# BOŞLUK OLAYININ SEVİYESİ VE KÜNYESİ (v244, 2026-08-14) — K1+K2
+# BOŞLUK OLAYININ SEVİYESİ VE KÜNYESİ
 # --------------------------------------------------------------------------------------------------
 # DEDEKTÖR DOĞRU, BEKLENTİNİN ZEMİNİ YANLIŞTI. Ölçüldü (docs/TESHIS-ALARM-GURULTUSU-IEX-SEYREKLIGI-
 # 2026-08-14.md): seans-içi akış IEX'tir (`marketstream.FEED`), IEX ABD hacminin küçük bir payını
@@ -780,9 +780,9 @@ _GAP_CALENDAR_WARNED = False
 #   · Tekrar-bastırma (`intraday_gap_seen`) ve `_state["intraday_gap"]` gövdesi AYNEN — olay
 #     defterine yazım SÜRER, VERİ KAYBI YOK. Değişen yalnız SEVİYE ve KÜNYE.
 #   · `tur="akis"` (BÜTÜN sembollerde eş-anlı susma) `warn` KALIR: o gerçekten soket/besleme
-#     kesintisidir ve nadir gerçek kesinti K2'den sonra da bu kanalda görünür.
+#     kesintisidir ve nadir gerçek kesinti bu değişiklikten sonra da bu kanalda görünür.
 #   · `tur="sembol"` bilgi seviyesine (`obs.log`) iner — hüküm verilmiyor, ÖLÇÜM kaydediliyor.
-# K3 (eşiği besleme kimliğinden türetme) BİLEREK YAPILMADI: SIP aboneliği kararı gündeme gelmeden
+# EŞİĞİN BESLEME KİMLİĞİNDEN TÜRETİLMESİ BİLEREK YAPILMADI: SIP aboneliği kararı gündeme gelmeden
 # eşiği oynatmak, bugün doğru olan hassasiyeti ölçüsüz değiştirirdi.
 GAP_SEMBOL_SEYREKLIK_NOTU = ("IEX TEK BORSADIR: sembol-boşluğu çoğu vakada arıza değil, o dakikada "
                              "o borsada işlem geçmemesidir (yapısal seyreklik) — 15 rastgele alarmın "
@@ -844,7 +844,7 @@ def _intraday_gap_check() -> dict | None:
         return rapor
     gorulen = list(_state.get("intraday_gap_seen") or [])
     yeni = 0
-    feed, feed_neden = _akis_beslemesi()          # K1 künyesi — döngü BAŞINA bir kez ölçülür
+    feed, feed_neden = _akis_beslemesi()          # besleme künyesi — döngü BAŞINA bir kez ölçülür
     for b in rapor.get("bosluklar") or []:
         imza = f"{rapor['gun']}|{b['tur']}|{b['sembol'] or '*'}|{b['baslangic']}"
         if imza in gorulen:
@@ -852,14 +852,14 @@ def _intraday_gap_check() -> dict | None:
         gorulen.append(imza)
         yeni += 1
         sembol_boslugu = b["tur"] != "akis"
-        # K2 — SEVİYE TÜRE GÖRE (gerekçe: GAP_SEMBOL_SEYREKLIK_NOTU üstündeki blok). `akis` warn
+        # SEVİYE TÜRE GÖRE (gerekçe: GAP_SEMBOL_SEYREKLIK_NOTU üstündeki blok). `akis` warn
         # KALIR; `sembol` bilgi seviyesine iner. Olay ADI, alanları ve tekilleştirmesi AYNI —
         # defterdeki satır sürüyor, yalnız alarm kutusuna düşmüyor.
         yaz = obs.log if sembol_boslugu else obs.warn
         yaz("intraday_gap_detected", tur=b["tur"], sembol=b["sembol"], gun=rapor["gun"],
             aralik=f"{b['baslangic'][11:16]}-{b['bitis'][11:16]}Z", eksik_dk=b["eksik_dk"],
             beklenen=b["beklenen"], gelen=b["gelen"], pencere_dk=rapor["esik"]["pencere_dk"],
-            # K1 — BESLEME KÜNYESİ: "hangi beslemeye baktığımız, ölçtüğümüz şeyin ne olduğunu
+            # BESLEME KÜNYESİ: "hangi beslemeye baktığımız, ölçtüğümüz şeyin ne olduğunu
             # değiştiriyor" (aynı ders aynı gün TCA ölçütünde de çıktı). Ölçülemediyse ad None
             # kalır ve neden yazılır — uydurma yasağı.
             feed=feed, **({} if feed else {"feed_neden": feed_neden}),
@@ -929,7 +929,7 @@ def advance_once() -> dict:
                 _state.get("last_refetch_session") != last_closed:
             _state.update(refetch_chase=last_closed, refetch_attempts=0,
                           refetch_sparse_attempts=0, refetch_next_at=None)
-            # BAKIM YOLU (temizlik turu 2026-07-30): `massive.reset_cache()` — süreç-içi anlık
+            # BAKIM YOLU: `massive.reset_cache()` — süreç-içi anlık
             # görüntü memosu + başarısızlık soğuması. AV BULGUSU: üretim çağıranı YOKTU, yalnız
             # testler çağırıyordu; docstring'i "testler, gün dönümü" diyordu ama GÜN DÖNÜMÜ diye
             # bir çağıran hiç yazılmamıştı. EMEKLİ EDİLMEDİ, BAĞLANDI — ölçülmüş gerekçe:
@@ -1029,9 +1029,9 @@ def advance_once() -> dict:
                 _schedule_sparse()
             try:
                 from . import reflect
-                reflect.clear_wf_caches()   # new bars revision → stale walk-forwards must not survive (#30)
+                reflect.clear_wf_caches()   # new bars revision → stale walk-forwards must not survive
             except Exception as e:
-                # YASA 4 (2026-07-21): bu sessizlik #30'u GERİ GETİRİR — barlar yeniden çekildikten
+                # YASA 4: bu sessizlik o kusuru GERİ GETİRİR — barlar yeniden çekildikten
                 # sonra önbellek temizlenmezse motor ARTIK VAR OLMAYAN barlara ait walk-forward'la
                 # karar verir ve sonuç tutarlı ama YANLIŞ görünür. Temizlik yine denenmez, ama sessiz kalmaz.
                 from . import obs as _obs_wf
@@ -1040,12 +1040,12 @@ def advance_once() -> dict:
             try:                             # kazanç takvimi: haftada bir tazele (PEAD çapası + karartma)
                 import datetime as _dt
                 wk = _dt.date.today().isocalendar()[:2]
-                # PES-FRENİ ARTIK HAFTA DEĞİL GÜN (2026-08-03, Rol-1 A1b — aşağıdaki "İKİNCİSİ HÂLÂ
+                # PES-FRENİ ARTIK HAFTA DEĞİL GÜN (aşağıdaki "İKİNCİSİ HÂLÂ
                 # AÇIK" maddesinin kapanışı): sabır sınırı korunur (günde en çok 5 deneme) ama fren
                 # ERTESİ GÜN açılır, 7 gün sonra değil.
                 _bugun = _dt.date.today().isoformat()
                 if _state.get("earnings_week") != list(wk) and _state.get("earnings_gaveup_day") != _bugun:
-                    # öneri #5a: hafta bayrağı yalnız VERİ GELİNCE tüketilir — 429/kesintide eski kod
+                    # hafta bayrağı yalnız VERİ GELİNCE tüketilir — 429/kesintide eski kod
                     # haftayı boşa yakıyordu ve takvim 7 gün daha boş kalıyordu. Sınırlı sabır:
                     # haftada en çok 5 deneme, sonra pes edildiği LOGLANIR (sessiz açlık yok).
                     from . import earnings, obs, watchdog
@@ -1064,7 +1064,7 @@ def advance_once() -> dict:
                         # T+1 kusurunun sınıfı buydu: "kodda örtük yayın-zamanı varsayımı". Buradaki
                         # varsayım ÖLÇÜLDÜ ve marjı DAR çıktı — davranış DEĞİŞTİRİLMEDİ, yalnız
                         # sayı yazıldı ki bir dahaki karar tahminle değil ölçümle verilsin.
-                        # KALICI HÂLE GETİRİLDİ (2026-08-01): üç girdi (ileri pencere / kadans /
+                        # KALICI HÂLE GETİRİLDİ: üç girdi (ileri pencere / kadans /
                         # karartma) artık `earnings.py`de ADLANDIRILMIŞ sabitler ve marj onlardan
                         # TÜRETİLİYOR (`earnings.margin_days()` → bugün 21-7-5 = 9 gün). Sayı
                         # buradan da, `coverage()`ten de AYNI türetmeden okunur; üç sayıdan biri
@@ -1076,11 +1076,11 @@ def advance_once() -> dict:
                         #     `in_blackout` veri yokken FAIL-OPEN'dır (bilerek: bilgi yokken
                         #     bloklamaz), dolayısıyla o hafta karartma guard'ı HERKES için kapanır
                         #     ve motor bilanço gününe pozisyonla girebilir.
-                        # İKİ UCUZ ÇÖZÜM VARDI (davranış kararı, Rol-1). BİRİNCİSİ UYGULANDI
-                        # (2026-08-01): ileri pencere `REFRESH_FWD_DAYS` 14 → 21 (Nasdaq ucu
+                        # İKİ UCUZ ÇÖZÜM VARDI (davranış kararı). BİRİNCİSİ UYGULANDI:
+                        # ileri pencere `REFRESH_FWD_DAYS` 14 → 21 (Nasdaq ucu
                         # ANAHTARSIZ ve gün-başına sorgulanıyor — kota maliyeti ≈ 0), marj 2 → 9
                         # gün. Yani bu dal pes etse bile ileri kapsama bir hafta daha dayanır.
-                        # İKİNCİSİ DE UYGULANDI (2026-08-03, Rol-1 A1b): pes ederken HAFTA DAMGASI
+                        # İKİNCİSİ DE UYGULANDI: pes ederken HAFTA DAMGASI
                         # ARTIK YAKILMIYOR. Eski satır (`earnings_week = wk`) haftayı tüketiyordu ve
                         # ardışık iki pes ileri kapsamayı 0'a indiriyordu — yani sabır sınırı, tam da
                         # korumaya çalıştığı kapıyı kapatıyordu. Yerine GÜN damgası: sabır sınırı
@@ -1127,7 +1127,7 @@ def advance_once() -> dict:
             except Exception as e:
                 from . import obs as _obs6
                 _obs6.warn("selfreview_failed", error=f"{type(e).__name__}: {e}")
-            try:    # K1 (2026-07-30): haftalık YETİM HİPOTEZ SÜPÜRMESİ — kusur #1 onarımı raftaydı
+            try:    # haftalık YETİM HİPOTEZ SÜPÜRMESİ — onarım raftaydı
                 # `rollback.sweep_orphan_hypotheses` 2026-07-22'de yazıldı, test edildi ve HİÇBİR
                 # KADANSA ASILMADI: repo genelinde tek çağıranı testlerdi (loop/scheduler/reflect/api
                 # hiçbirinde yok). Onarım kod olarak vardı, süreç olarak yoktu.
@@ -1153,7 +1153,7 @@ def advance_once() -> dict:
                 # YASA 4: süpürme düşerse yetimler birikmeye DEVAM eder ve muhasebe şişer — sessiz kalamaz.
                 from . import obs as _obs7b
                 _obs7b.warn("orphan_sweep_failed", error=f"{type(e).__name__}: {e}")
-            try:    # NOUS SİSTEM-DEĞERLENDİRME KATMANI B (ROADMAP §3.2, 2026-07-30) — haftalık
+            try:    # NOUS SİSTEM-DEĞERLENDİRME KATMANI B — haftalık
                 # MEKANİZMA değerlendirmesi. Operatör yönü: "bütün mekanizmaları değerlendirip
                 # güncellenmesi gerekenleri nous bulmalı; sistem kısıtlı alanda kalmadan sürekli
                 # kendini geliştirmeli."
@@ -1161,7 +1161,7 @@ def advance_once() -> dict:
                 # AYNI desende ve doğru sıklık haftalıktır — telemetrinin girdileri (kapanmış işlem,
                 # kapı kaydı, aşınma sayacı) günlük ölçekte anlamlı değişmiyor, ve her koşu bir LLM
                 # çağrısı + potansiyel bir ölçüm sırasıdır.
-                # NE YAPMAZ: hiçbir şeyi UYGULAMAZ. En fazla bir parametre demetini H4'ün 3/hafta
+                # NE YAPMAZ: hiçbir şeyi UYGULAMAZ. En fazla bir parametre demetini Hermes'in 3/hafta
                 # bütçesi içinde ölçüm sırasına sokar (ayrı bütçe AÇILMAZ); çekirdek hakkındaki
                 # öneriler YALNIZ rapora gider (Katman D).
                 import datetime as _dt8
@@ -1184,7 +1184,7 @@ def advance_once() -> dict:
                 # kadar tekrarlanmaz ve uyarı defterde tek satır olur.
                 from . import obs as _obs8b
                 _obs8b.warn("nous_eval_failed", error=f"{type(e).__name__}: {e}")
-            try:    # ÖĞRENME KADANSI (2026-07-30) — SEANS başına bir kez, bar varışından BAĞIMSIZ.
+            try:    # ÖĞRENME KADANSI — SEANS başına bir kez, bar varışından BAĞIMSIZ.
                 # NEDEN HAFTALIK DEĞİL (akranlarının aksine): girdileri GÜNLÜK ölçekte değişiyor —
                 # her seans yeni kapanış, yeni karşı-olgusal satır, yeni plan. Haftalık bir antrenman
                 # altı gün bayat bir modelle tahmin üretmek demekti. Ve maliyeti akranlarınınkinden
@@ -1264,7 +1264,7 @@ def advance_once() -> dict:
             health.write_heartbeat(**{k: v for k, v in hb.items()
                                       if k not in ("ts", "mode", "autonomy_level", "halted")})
             _persist()
-            # GÖRÜŞ TELAFİSİ (2026-07-22): danışma katmanı bir seansı kaçırırsa döngü o seansı ikinci
+            # GÖRÜŞ TELAFİSİ: danışma katmanı bir seansı kaçırırsa döngü o seansı ikinci
             # kez işlemez ve o gün SONSUZA KADAR görüşsüz kalır — LLM görüş↔sonuç kalibrasyonu da
             # hiç birikmez. "Güncel" turda ucuz bir telafi: planı olup görüşü olmayan son seansı incele.
             try:
@@ -1274,7 +1274,7 @@ def advance_once() -> dict:
                 from . import obs as _o
                 _o.warn("candidate_review_backlog_failed", error=f"{type(e).__name__}: {e}",
                         detail="bu seans görüşsüz kalabilir — LLM kalibrasyonu beslenmiyor")
-            # DOLGU TELAFİSİ (v190) — YUKARIDAKİ GÖRÜŞ TELAFİSİYLE AYNI SINIF, AYNI GEREKÇE.
+            # DOLGU TELAFİSİ — YUKARIDAKİ GÖRÜŞ TELAFİSİYLE AYNI SINIF, AYNI GEREKÇE.
             # Öğrenme kadansı `fresh` dalında koşar ve bar geldiği anda o dal SESSİZLEŞİR; kadans
             # anında hermes havuzu askıdaysa dolgu ertelenir ve `dolgu_session` damgası BASILMAZ.
             # O erteleme burada — seanslar arası ~24 saatlik "current" dalında, her poll'de — ucuza
