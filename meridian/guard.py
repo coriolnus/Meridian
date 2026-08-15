@@ -79,6 +79,8 @@ LIVE_DEAD_KNOBS: dict[str, str] = {
 
 @dataclass
 class Verdict:
+    """Parametre değişikliği hükmü: geçti mi (`ok`), ret gerekçeleri ve konu olan değişken ile
+    eski/yeni değeri."""
     ok: bool
     reasons: list
     variable: Optional[str] = None
@@ -87,6 +89,8 @@ class Verdict:
 
 
 def _on_step(new, lo, step, typ, tol=1e-6) -> bool:
+    """Yeni değer, `lo`dan başlayan `step` ızgarasının bir noktasında mı (tolerans dahilinde)?
+    `int` tipinde ayrıca tam sayı olma şartı aranır."""
     k = round((new - lo) / step)
     nearest = lo + k * step
     if typ == "int":
@@ -271,6 +275,8 @@ def validate_change(proposal: dict, current_params: dict, bounds: dict, goal: di
 
 
 def _equalish(a, b, typ) -> bool:
+    """İki değeri tipine göre "aynı mı" diye karşılaştırır (int'te tam eşitlik, float'ta 1e-9 toleransı).
+    Taraflardan biri None ise False — ölçülmemiş değer eşit SAYILMAZ."""
     if a is None or b is None:
         return False
     if typ == "int":
@@ -281,6 +287,7 @@ def _equalish(a, b, typ) -> bool:
 # --------- runtime trade-envelope guard ---------
 @dataclass
 class TradeVerdict:
+    """Tek bir işlem planının risk zarfı hükmü: geçti mi (`ok`) ve düşen kontrollerin gerekçeleri."""
     ok: bool
     reasons: list
 
@@ -415,6 +422,10 @@ def classify_gate(plan: dict, portfolio: dict, regime: dict, goal: dict, params:
     # Karar mantığı DEĞİŞMEZ: hard/soft listeleri birebir aynı dizgilerle dolar.
     def _chk(name: str, failed: bool, why: str, sev: str, value=None, threshold=None,
              gecse_de_yaz: bool = False):
+        """Tek bir kapı kontrolünü işler: `detail_out` verilmişse kontrolü pass/fail olarak KAYDEDER,
+        düşmüşse gerekçeyi sertlik derecesine göre hard/soft listesine ekler. Gerekçe kuralı: yalnız
+        DÜŞEN kontrole not yazılır — tek istisna `gecse_de_yaz` ("ÖLÇÜLEMEDİ" dalları hükmü değiştirmez
+        ama sebebini taşır)."""
         # `note` KURAL OLARAK yalnız DÜŞEN kontrolde yazılır: geçen bir satıra ret gerekçesi yazmak
         # kararı okuyan herkesi yanıltırdı. TEK İSTİSNA `gecse_de_yaz`
         # (Rol-1 hükmü): "ÖLÇÜLEMEDİ" dalları `failed=False` ile çağrılır (fail-open BİLİNÇLİ — Y3
