@@ -1,12 +1,27 @@
-"""broker.py — the paper broker. Realistic frictions or the agent learns a fantasy (Hard Rule 7).
+"""broker.py — kâğıt broker: gerçekçi sürtünmeli dolum/çıkış simülatörü ve giriş-icra yasası.
 
-Contract (§4):
-  entry  = next bar OPEN + slippage
-  exit   = on stop / target / trail / time-stop / regime-flip
-  writes one JSON line per CLOSED trade.
+Ne yapar: geçen planları ertesi barın AÇILIŞINDA doldurur, açık pozisyonları bar-bar sürer ve
+kapanan her işlemi tek satır (JSON sözlüğü) olarak üretir. Sürtünme gerçekçidir — slipaj fiyatın
+içinde, komisyon her bacakta bir kez, likidite tavanı (ADV payı) + katılım-orantılı fiyat etkisi,
+tek-isim nominal tavanı ve düşüşte boyutu/pozisyon sayısını sürekli kısan de-risk rampası — yoksa
+ajan bir fanteziden öğrenir (Hard Rule 7). Giriş-icra yasası (limit tavanı, gap davranışı, TIF
+kelepçesi) TEK yerde burada yazılıdır; iç motor da broker aynası da aynı yasayı okur.
 
-This simulator is driven bar-by-bar by backtest.py and by the live loop (against real bars).
-No clock reads, no network — it only knows the bars it is handed."""
+Kilit girişler: PaperBroker (fill_entry, close_position, scale_out, equity, size_position) ve
+Position; icra yasası entry_law / entry_limit_price / entry_order_decision ve bps_delta; risk
+rampası derisk_ramp / derisk_mult / max_positions_at; kitap beyanı beyan_olcusu /
+beyan_gerilemesi.
+
+Değişmezler: saat okuma yok, ağ yok — simülatör yalnız kendisine verilen barları bilir ve backtest
+ile canlı döngü aynı gövdeyi koşar. Limitin üstünde dolum yazılamaz; çıkışta açılışın KESİN sırası
+bar-içi belirsiz sıradan önce çözülür ve bar içinde stop hedeften önce gelir (muhafazakârlık bar
+içindedir, açılışta değil). Slipaj yalnız fiyattadır, ikinci kez nakit maliyeti olarak yazılmaz;
+birikim sent-tamdır (realized_pnl == Σ satır.pnl_dollars). Ölçülemeyen girdi (ATR, referans fiyat)
+uydurulmaz, beyan alanıyla dışarı söylenir. Kapanış satırına kaynak damgası BASILMAZ — satırın
+nereye yazıldığını üretici bilemez, damga yazarındır.
+
+Okur/yazar: goal.yaml'dan icra yasasını ve de-risk bandını okur (kelepçeli: bozuk/ters değer
+sessizce geçmez, fail-safe varsayılana düşer); dosyaya kendisi yazmaz, satırları çağırana verir."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional

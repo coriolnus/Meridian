@@ -1,51 +1,39 @@
-"""shadowlaw.py — BÜYÜKLÜK YASASI **PARA-v3**: yeni yasanın tanımı + ESKİ YASANIN GÖLGESİ.
+"""shadowlaw.py — BÜYÜKLÜK YASASI **PARA-v3**: kapının karar değişkeninin tanımı + ESKİ YASANIN GÖLGESİ.
 
-TERS GÖLGELEME (2026-07-30, operatör onayı "1 numaradan başla"). Bu dosya 3b'de "v2 gölge yasası"
-idi: karar eski bileşik skordaydı, v2 kayda geçiyordu. Yasa yeniden tasarlandıktan sonra yön TERSİNE
-döndü — **karar PARA-v3'te, ESKİ YASA kayda geçiyor.** Modülün makinesi aynı makinedir (tek
-`score_detail` çağrısından iki yasa türetmek); yalnız hangisinin hüküm verdiği değişti.
+TERS GÖLGELEME. Bu dosya önceleri "v2 gölge yasası" idi: karar eski bileşik skordaydı, v2 kayda
+geçiyordu. Yasa yeniden tasarlanınca yön TERSİNE döndü — **karar PARA-v3'te, ESKİ YASA kayda
+geçiyor.** Makine aynı makinedir: tek `score_detail` çağrısından iki yasa türetilir.
 
-NEDEN DEĞİŞTİ — ÖLÇÜLMÜŞ ZİNCİR (uydurma yok, üçü de bu depoda ölçüldü):
-
-  (1) 3a E RAPORU: kapının gerçek karar değişkeni `P(ΔS>0) ≥ 1 − 0,20/K` ve ΔS varyansının
-      **%82'si düşüş, %17,7'si Sharpe, %0,3'ü PARA** terimiydi. Yani "büyüklük kapısı" fiilen bir
-      düşüş+düzgünlük kapısıydı; kârın kapı kararına katkısı üç binde üçtü.
-  (2) 3b GÖLGE-YASA ÖLÇÜMÜ (v2 rötuşu): ret_c'nin ÖLÇEĞİNİ düzeltmek PARA payını %0,3 → %3,2
-      yaptı; hedef ≥%40 TUTMADI, üç ağırlık denemesi de tutmadı (bkz. `MEASURED_V2`,
-      `V2_WEIGHT_TRIALS`, `WHY_40_UNREACHABLE` — o ölçüm kaydı SİLİNMEDİ, v3'ün GEREKÇESİDİR).
-  (3) KÖK NEDEN: ölçek değil ÇİFT-SAYIM. σ(dd_c)=0,4182 ve σ(sharpe_c)=0,2917, σ(ret_c)≈0,015-0,050
-      iken — çünkü dd ve Sharpe'ın PAYDALARI (maks düşüş %8, 2·min_sharpe=2,4) kendi gerçekleşen
-      dağılımlarına göre DAR. Ve bu iki bacak HEM skorun varyansında HEM ayrı sert kapılarda
-      sayılıyordu (kuyruk vetosu + 3A kuyruk ölçütü + maks düşüş ölçütü). PARA tek uygulanan bacaktı.
+NEDEN DEĞİŞTİ — ÖLÇÜLMÜŞ ZİNCİR (üçü de bu depoda ölçüldü): (1) kapının gerçek karar değişkeni
+`P(ΔS>0) ≥ 1 − 0,20/K` iken ΔS varyansının **%82'si düşüş, %17,7'si Sharpe, %0,3'ü PARA**
+terimiydi — "büyüklük kapısı" fiilen bir düşüş+düzgünlük kapısıydı. (2) v2 rötuşu (ret_c ölçek
+düzeltmesi) PARA payını ancak %3,2 yaptı; ≥%40 hedefi üç ağırlık denemesinde de TUTMADI (bkz.
+`MEASURED_V2`, `V2_WEIGHT_TRIALS`, `WHY_40_UNREACHABLE` — o ölçüm kaydı SİLİNMEDİ, v3'ün
+GEREKÇESİDİR). (3) KÖK NEDEN ölçek değil ÇİFT-SAYIM: dd ve Sharpe'ın paydaları kendi gerçekleşen
+dağılımlarına göre DARdı ve bu iki bacak HEM skorun varyansında HEM ayrı sert kapılarda sayılıyordu.
 
 YENİ YASA — TEK TERİM, ÇARPITMASIZ:
-
     ΔS_v3 = ret_c_v3(aday) − ret_c_v3(incumbent)        ← kapının KARAR değişkeni
-
     ret_c_v3 = kıs( pencere_bileşik_getirisi / hedef_pencere )
     hedef_pencere = (1 + %25)^(span/365) − 1            ← yıllık %25'in pencere-eşlenik karşılığı
 
-30-GÜNE İNDİRGEME YOK. Eski yasa payı `(1+R)^(30/span) − 1` yazıyordu; 1274 günlük bir defterde üs
-30/1274 = 0,0235'tir, yani yeniden-örneklemenin ürettiği getiri oynaklığının ~%98'ini SÖNDÜRÜR
-(ölçüldü: σ(ret_c_eski) = 0,0151). v3'te pay HAM bileşik getiridir ve payda sabittir, dolayısıyla
-ret_c_v3 getiride DOĞRUSALDIR — ölçülen σ 0,0356, yani eski terimin 2,36 katı oynaklık. Aynı
-ölçek ailesinden (`ANNUAL_TARGET_RETURN`) ama çarpıtmasız.
-
-dd_c ve sharpe_c SKORDAN ÇIKTI. Kaybolmadılar — GÜÇLENEREK vetolara taşındılar (`reflect`):
-fold-çoğunluğu + VaR/CVaR kuyruk vetosu (`TAIL_MARGIN_R`) + **düşüş vetosu** (`DD_VETO_MARGIN`,
-bu turda EKLENDİ) + aşınma marjı + 3A kuyruk ölçütü. Sharpe hiçbir yerde AYRICA sayılmaz: fold
-çoğunluğu (pencere-pencere tutarlılık), kuyruk vetosu (dağılımın sol ucu) ve DSR (deneme-düzeltmeli
-Sharpe) onu üç ayrı açıdan zaten kapsıyor. Çift-sayım biter, koruma bitmez.
+30-GÜNE İNDİRGEME YOK. Eski yasa payı `(1+R)^(30/span) − 1` yazıyordu; uzun bir defterde bu üs,
+yeniden-örneklemenin ürettiği getiri oynaklığının ~%98'ini SÖNDÜRÜR (ölçüldü: σ(ret_c_eski) =
+0,0151). v3'te pay HAM bileşik getiridir, payda sabittir → ret_c_v3 getiride DOĞRUSALDIR (ölçülen
+σ 0,0356 = eski terimin 2,36 katı). dd_c/sharpe_c skordan ÇIKTI ama kaybolmadı — güçlenerek sert
+vetolara taşındı (fold çoğunluğu + VaR/CVaR kuyruk vetosu + `DD_VETO_MARGIN` düşüş vetosu + DSR).
 
 ANNUAL_TARGET_RETURN = %25 NEDEN: literatürdeki en iyi belgelenmiş uzun-vadeli momentum/kırılım
-programlarının net bandı yıllık %15-30'dur; bu depoda ayrıca 3A kuyruk ölçütü (maks düşüş ≤ %8) ve
-ısı tavanı gibi risk kısıtları AYNI ANDA yürürlüktedir, yani hedef yalnız getiriyle değil
-düşüş-bütçesiyle de tutarlı olmak zorundadır. %25/yıl, %8 düşüş bütçesiyle Calmar ≈ 3 demektir —
-iddialı ama uydurma değil. Eski yasanın aylık %7 hedefi yılda %125'e denk geliyordu (gerçekçi bir
-programın 2-3 katı): payda şişince pay küçülür ve terim ikinci kez ezilirdi.
+programlarının net bandı yıllık %15-30'dur ve hedef, aynı anda yürürlükteki düşüş bütçesi/kuyruk
+ölçütü ile tutarlı olmak zorundadır (%8 düşüş bütçesiyle Calmar ≈ 3 — iddialı ama uydurma değil).
+Eski yasanın aylık %7 hedefi yılda %125'e denk geliyordu: payda şişince pay küçülür, terim ikinci
+kez ezilirdi.
 
-BU MODÜL HÜKÜM VERMEZ. Hükmü `reflect.submit` verir, ölçümü `probgate` yapar; burada yasanın
-TANIMI, ölçülmüş sabitleri ve eski yasanın gölge hesabı durur."""
+KİLİT GİRİŞLER: money_score_detail/money_score (kapının okuduğu sayı; `realized_usd` kırpılmamış
+DOLAR ikizini de taşır), variance_attribution + variance_drift (MEASURED_V3 kayma bekçisi),
+divergence_table/gecis_satiri (iki yasanın hüküm kıyası), `--olc`/`--iraksama` CLI'ı.
+BU MODÜL HÜKÜM VERMEZ — hükmü `reflect.submit` verir, ölçümü `probgate` yapar. Yalnız kıyas
+tablosu için hypotheses.jsonl + validation_ledger.jsonl OKUR; hiçbir dosyaya YAZMAZ."""
 from __future__ import annotations
 
 import datetime as dt

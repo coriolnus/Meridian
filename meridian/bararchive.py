@@ -1,30 +1,29 @@
-"""bararchive.py — Faz 5 KANIT KATMANININ İLK TAŞI: dakikalık bar çerçevelerinin kalıcı arşivi.
+"""bararchive.py — dakikalık WS bar çerçevelerinin gün-dosyalı kalıcı disk arşivi (kanıt katmanının ilk taşı).
 
-NEDEN ŞİMDİ: intraday hattı (hotstate → mrd:bars) UÇUCUDUR ve bilerek öyledir — Redis ring'i ~2
-seans tutar, TTL sonrası bar yoktur. Bu, sıcak okuma için doğru; ama "dakika-hassas icra EOD icradan
-gerçekten daha mı iyi?" sorusu ancak GEÇMİŞ dakikalık çerçeveler biriktikten SONRA cevaplanabilir.
-Bugün başlamayan bir birikim, üç ay sonra da üç aylık olmaz. Arşiv bu yüzden ölçümden ÖNCE açılır.
+NE YAPAR: `hotstate.ingest_bars` her başarılı çerçeve yazımından sonra `archive_frame(bars, ts)`
+çağırır; çerçeve `{ts, bars:{ticker:bar}}` satırı olarak `state/intraday_bars/YYYY-MM-DD.jsonl`e
+eklenir. Neden var: intraday hattı (hotstate → mrd:bars) BİLEREK uçucudur — Redis ring'i ~2 seans
+tutar, TTL sonrası bar yoktur. "Dakika-hassas icra EOD icradan gerçekten daha mı iyi?" sorusu ancak
+geçmiş dakikalık çerçeveler biriktikten SONRA cevaplanabilir; bugün başlamayan birikim üç ay sonra
+üç aylık olmaz — arşiv bu yüzden ölçümden ÖNCE açılır. Tüketicisi bugün yoktur ve bu BİLİNÇLİDİR
+(tüketici gelecekteki "dakika-hassas icra vs EOD" ölçüm raporu): okuyucusuz-yazım yasağına bilerek
+ve beyanla verilmiş bir cevaptır — ihlal, kimsenin bilmeden bıraktığı okunmayan dosyadır.
 
-TÜKETİCİSİ BUGÜN YOK VE BU BİLİNÇLİDİR. Tüketici GELECEK "dakika-hassas icra vs EOD" ölçüm
-raporudur. Bunu yazmak, YASA 6'nın (üretilip tüketilmeyen artefakt) bilerek verilmiş bir cevabıdır:
-ihlal, kimsenin OKUMADIĞI bir dosyayı kimsenin BİLMEDEN bırakmasıdır — kararın kendisi değil.
+KİLİT GİRİŞLER: archive_frame(bars, ts) (tek dış giriş; yazıldıysa True), ARCHIVE_DIR=
+"intraday_bars", ARCHIVE_KEEP_DAYS=120 (takvim günü — kaba ve kasıtlı basit retention),
+ENABLED (MERIDIAN_BAR_ARCHIVE=0 yalnız arşivi susturur, ingest'i değil).
 
-CODELAW BULGUSU (2026-07-27, ölçüldü — varsayılmadı): `codelaw.artifact_graph` bir yazma/okuma
-çağrısının İLK ARGÜMANINI yalnız üç biçimde çözer: dize sabiti, modül/global sabit adı, ya da bir
-attribute. Buradaki hedef ad TARİHLİDİR ve f-string ile kurulur (`intraday_bars/2026-07-27.jsonl`),
-yani `ast.JoinedStr`dir → statik graf onu ÇÖZEMEZ ve `artifacts` sözlüğüne HİÇ girmez; bunun yerine
-`unresolved` listesine yazılır (tarayıcı kendi körlüğünü gizlemez — tests/test_codelaw_v59.py'deki
-`test_dinamik_adli_artefaktlar_unresolved_olarak_raporlanir` bu davranışı çiviler).
-SONUÇ: `DECLARED_SINKS`'e bir satır EKLENEMEZ (anahtarlar `unread` artefakt adlarıyla eşleşir; tarihli
-ad hiç artefakt olarak görünmediği için yazılan satır ölü bir muafiyet olurdu — üstelik `stale_sinks`
-ihlali doğururdu) ve GEREKMEZ (graf zaten "ihlal" demiyor, "göremiyorum" diyor ve bunu raporluyor).
-`codelaw.report()["ok"]` bu yüzden True kalır: `ok`, `unresolved` sayısına DEĞİL, `violations` ve
-`unscanned` listelerine bakar.
+DEĞİŞMEZLER: arşiv arızası ingest'i ASLA düşüremez — her istisna burada yakalanır, False dönülür ve
+süreç başına TEK uyarı basılır (dakikalık akışta her karede uyarı, olay defterini boğardı). Hedef
+dosya UTC gününe göredir: NY seansı 13:30-20:00 UTC aralığında tek UTC gününe düşer, gün sınırı
+seansı bölmez. Retention yalnız yeni gün dosyasının İLK yazımında koşar; silinen dosyalar SAYILIR.
+Türev-bayatlık dedektörlerine bilerek bağlanmadı: arşiv yalnız seans saatlerinde büyüdüğünden her
+gece/hafta sonu sahte bayat alarmı doğardı — gürültüyle susturulmuş bir dedektör, dedektör değildir.
 
-WATCHDOG'A BAĞLANMADI (ilmek-1'deki v102 kararının aynısı): `DERIVED_SOURCES` (türev bayatlığı) ve
-benzeri haritalara bir satır eklemek, seans-dışı her gün ve her hafta sonu SAHTE bayat alarmı
-üretirdi — çünkü arşiv yalnız NY seansında (13:30-20:00 UTC) büyür ve akşamdan ertesi açılışa kadar
-"kaynak ilerledi, türev ilerlemedi" görünür. Gürültüyle susturulmuş bir dedektör, dedektör değildir.
+OKUR/YAZAR: `state/intraday_bars/*.jsonl`e store.append_jsonl ile yazar; Redis'i okumaz. Tarihli
+f-string dosya adı statik artefakt grafında çözülemez ve `unresolved` olarak raporlanır — bu bilinen,
+test edilmiş davranıştır; DECLARED_SINKS'e satır eklenmez ve gerekmez (graf "ihlal" değil
+"göremiyorum" der).
 """
 from __future__ import annotations
 

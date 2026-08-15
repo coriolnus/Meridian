@@ -1,7 +1,25 @@
-"""regime.py — tags every trade (trend_up | trend_down | chop | high_vol) and builds the P1
-regime.json artifact. With no FMP breadth feed, signals are derived from the index (SPY) itself
-and labeled index-derived — an honest proxy, not faked breadth. exposure_budget_pct is a HARD cap
-on new risk enforced in guard.py; if 0, no new positions that day."""
+"""regime.py — endeks (SPY) barlarından piyasa rejimi sınıflaması ve günlük rejim artefaktı.
+
+Ne yapar: kapalı endeks barlarından rejimi (trend_up | trend_down | chop | high_vol) sınıflar,
+dağıtım-günü ve follow-through vekillerini sayar, sektör momentumunu evrenin kendisinden
+sıralar ve build_regime_json ile günün rejim çıktısını kurar. exposure_budget_pct SERT bir
+yeni-risk tavanıdır ve guard.py'de uygulanır; 0 ise o gün yeni pozisyon açılmaz. Genişlik
+(breadth) beslemesi olmadığından tüm sinyaller endeks-türevi vekildir ve öyle etiketlenir —
+uydurma genişlik yok.
+
+Kilit girişler: classify, distribution_days, follow_through, exposure_score, sector_momentum,
+build_regime_json; pano göstergeleri spy_sma_gate, vix_backwardation_gate, vix_term_structure
+ve birleşik entry_gates.
+
+Değişmezler: saf hesap — I/O yok, saat yok, ağ yok; yalnız verilen kapalı barları okur,
+dilimleme/look-ahead karantinası çağıranın katmanındadır. Isınma (TREND_WARMUP) dolmadan trend
+SINIFLANMAZ: eksik pencereyle "sma200" raporlamak uydurmadır; buradaki CHOP "yatay piyasa" değil
+"trend BİLİNMİYOR" demektir ve reason bunu söyler. İki piyasa göstergesi (SPY 200-SMA hükmü ve
+VIX/VIX3M vade yapısı) ölçülür ve YALNIZ panoda görünür: biri ölçülüp elendi, öteki veri-kilitli;
+blocks_new_entries SABİT False'tur, hiçbir karar yoluna girmez ve knob açılsa bile değişmez.
+VIX kaynağı doğrulandı ve yok — oran uydurulmaz, yakın bir vekil VIX adıyla sunulmaz.
+
+Okur/yazar: dosya ve ağ erişimi yoktur; rejim sözlüğünü ÜRETİR, kalıcılaştırma çağıranındır."""
 from __future__ import annotations
 import pandas as pd
 from . import indicators as ind

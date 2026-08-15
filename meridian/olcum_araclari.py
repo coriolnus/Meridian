@@ -1,37 +1,29 @@
-"""olcum_araclari.py — ÖLÇÜM ŞABLONLARININ ORTAK YARDIMCILARI (WP-M, 2026-08-01/02).
+"""olcum_araclari.py — ölçüm şablonlarının ORTAK YARDIMCILARI: temiz taban, blok bootstrap, küçültme, damga.
 
-BU DOSYADAKİ ARAÇLAR (hepsi İLERİYE dönük standart, hiçbiri hüküm vermez):
-  * `temiz_taban`        — olay-penceresi DIŞI havuz tabanı + kirlilik oranı   (2026-08-01)
-  * `olay_disi_kiyas`    — GÜN BAZINDA temiz evren tabanı + taban-fazlası      (2026-08-02)
-  * `blok_bootstrap_ci`  — örtüşen-blok (moving block) güven aralığı           (2026-08-02)
-  * `eb_kucult`          — empirik-Bayes/James-Stein küçültme (SE tabanlı)     (2026-08-02)
-  * `kod_surumu_damgasi` — rapor hangi kod hâliyle üretildi (git HEAD + sürüm) (2026-08-02)
+ARAÇLAR (hepsi İLERİYE dönük standart, hiçbiri hüküm vermez):
+  * `temiz_taban`        — olay-penceresi DIŞI havuz tabanı + kirlilik oranı
+  * `olay_disi_kiyas`    — GÜN BAZINDA temiz evren tabanı + taban-fazlası
+  * `blok_bootstrap_ci`  — örtüşen-blok (moving block) güven aralığı (BOOTSTRAP_TOHUM/BOOTSTRAP_N)
+  * `eb_kucult`          — empirik-Bayes/James-Stein küçültme (SE tabanlı; EB_MIN_HUCRE altı yok)
+  * `kod_surumu_damgasi` — rapor hangi kod hâliyle üretildi (git HEAD + SURUM/ARAC_SURUMLERI)
 
-NEDEN VAR — KIYAS KİRLENMESİ (EAP'nin yan bulgusu, kart-adayı). Olay-çalışması ölçümlerinde
-"olayın getirisi" tek başına bir bulgu değildir; taban (aynı gün evrenin geri kalanı) ondan
-çıkarılır. EAP ölçümünde bu tabanın KENDİSİ kirliydi: olay penceresinin içindeki bir günde
-evrenin %64-74'ü de KENDİ olay penceresindeydi. Yani "olay - evren medyanı" farkı, olayı olayla
-kıyaslıyordu ve fark sistematik olarak SIKIŞIYORDU. Hiçbir test kırılmaz, hiçbir istisna atılmaz;
-yalnız her etki olduğundan küçük görünür — bu deponun en sevmediği hata sınıfı ("hata değil,
-miktar değişimi").
+NEDEN VAR — KIYAS KİRLENMESİ. Olay-çalışması ölçümlerinde "olayın getirisi" tek başına bulgu
+değildir; taban (aynı gün evrenin geri kalanı) ondan çıkarılır. Ölçülen vaka: tabanın KENDİSİ
+kirliydi — olay penceresi içindeki bir günde evrenin %64-74'ü de kendi olay penceresindeydi, yani
+"olay − evren medyanı" farkı olayı olayla kıyaslıyor ve sistematik SIKIŞIYORDU. Test kırılmaz,
+istisna atılmaz; her etki olduğundan küçük görünür ("hata değil, miktar değişimi" sınıfı).
+`temiz_taban` olay-penceresi-İÇİ satırları düşürür ve KAÇINI düşürdüğünü birinci sınıf alan olarak
+raporlar. Gün birimi (takvim günü mü, bar indeksi mi) çıkarımla bulunur ama GİZLENMEZ; tip karışımı
+sessizce çevrilmez, hata verir.
 
-NE YAPAR. `temiz_taban` tabandan olay-penceresi-İÇİ satırları düşürür ve KAÇ TANESİNİ düşürdüğünü
-raporlar. Kirlilik oranı çıktının birinci sınıf alanıdır: temizlenmiş bir taban "temiz" diye
-sunulup ne kadar kirli olduğu söylenmezse, okuyucu düzeltmenin büyüklüğünü göremez.
+DEĞİŞMEZLER: GEÇMİŞE DÖNÜK DÜZELTME YOK — `research/`deki tarihi betikler kendi kartlarının hükmünü
+taşır, buradaki araçlarla yeniden yazılmaz; bir aracın eklenmesi eski hiçbir kart hükmünü
+geçersizleştirmez, tazelemek yeni ön-kayıt kartı ister (kural `docs/olcum_standartlari.md`).
+Ölçülemeyen uydurulmaz: eşik altı girdide lo/hi None + neden.
 
-NE YAPMAZ — GEÇMİŞE DÖNÜK DÜZELTME YOK. Bu modül İLERİYE dönük bir standarttır. Bugün
-`research/`de duran ölçüm betikleri TARİHE aittir ve kendi kartlarının hükmünü taşırlar; onları
-bu fonksiyonla yeniden yazmak, hükümleri sessizce değiştirmek olurdu. Kullanım kuralı
-`docs/olcum_standartlari.md`de yazılıdır.
-
-SAF YAPRAK: hiçbir `meridian` modülünü import etmez, hiçbir dosyaya yazmaz, ağa çıkmaz. Ölçüm
-şablonlarının bir kum havuzundan da çağırabilmesi için böyle. TEK BEYANLI İSTİSNA:
-`kod_surumu_damgasi` YALNIZ-OKUMA bir `git` alt süreci koşar (yazmaz, ağa çıkmaz, git yoksa
-None + neden döner).
-
-GERİYE DÖNÜK HÜKÜM YOK — bu dosyaya bir araç eklenmesi, o araç olmadan verilmiş HİÇBİR kart
-hükmünü geçersizleştirmez. Eski bir hükmü tazelemek yeni bir ön-kayıt kartı gerektirir
-(`docs/olcum_standartlari.md`, "İLERİYE DÖNÜKLÜK ŞERHİ").
+SAF YAPRAK: hiçbir `meridian` modülünü import etmez, hiçbir dosyaya yazmaz, ağa çıkmaz (kum
+havuzundan da çağrılabilsin diye). TEK BEYANLI İSTİSNA: `kod_surumu_damgasi` YALNIZ-OKUMA bir
+`git` alt süreci koşar (yazmaz; git yoksa None + neden döner).
 """
 from __future__ import annotations
 

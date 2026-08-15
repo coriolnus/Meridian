@@ -1,35 +1,26 @@
-"""codelaw.py — İKİ STATİK YASA (2026-07-21).
+"""codelaw.py — iki statik yasanın (sessiz-yutma, okuyucusuz-yazım) kaynak-kod denetçisi.
 
-NEDEN VAR: 2026-07-21'de tek günde on üç hata çıktı ve **hiçbiri istisna fırlatmadı**. Denetim
-iki YAPISAL taşıyıcı buldu; bu modül ikisini de kaynak koddan, çalışma zamanına hiç dokunmadan
-ölçer:
+Tek günde çıkan bir hata dalgasının hiçbiri istisna fırlatmamıştı; denetim iki YAPISAL taşıyıcı
+buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kaynaktan ölçer:
 
-  (4) SESSİZ YUTMA. `except Exception: pass` gerçek bir kusuru sessiz bir MİKTAR DEĞİŞİMİNE
-      çevirir. En kötü örneği sessiz-hata dedektörünün KENDİ içindeydi: `starved.append(...)`
-      satırı `starved` tanımlanmadan önce duruyordu ve çıplak bir `except Exception: pass`
-      `NameError`'ı yutuyordu — yani sessiz hataları bulmak için var olan dedektör sessizce
-      başarısız oluyordu. Kaçış yolu vardır ama AÇIK olmak zorundadır: `# sessiz-yutma: <gerekçe>`.
-      "Üşendim"i "karar verdim ve nedenini yazdım"a çevirir; bütün mesele bu.
+  YASA 4 — SESSİZ YUTMA: sinyal üretmeyen `except` bloğu ihlaldir; gerçek bir kusur sessiz bir
+  miktar değişimine dönüşür. Kaçış yolu vardır ama AÇIK olmak zorundadır: `# sessiz-yutma:
+  <gerekçe>` (gerekçesiz işaret de ihlal — "üşendim"i "karar verdim ve nedenini yazdım"a çevirir).
+  Girişler: `scan_source`/`silent_handlers`/`annotated_handlers`; sinyal tanımı SIGNAL_ATTRS/
+  SIGNAL_NAMES. Ders kalıcı: sessiz hataları bulan dedektörün kendisi çıplak bir `except` yüzünden
+  sessizce başarısız olmuştu — bekçinin kendi körlüğünü bilmemesi bekçiliğin tersidir.
 
-  (6) ÜRETİLİP TÜKETİLMEYEN ARTEFAKT. Yedi desenli bütünlük raporu diske yazıldı, API'den
-      servis edildi — ve **hiçbir pano paneli okumadı**. Aynı şekilde `gate_checks` yalnız canlı
-      motorda üretildiği için panonun karar-ağacı tablosu 144 satırın 144'ünde boştu. Kimsenin
-      okumadığı bir artefakt, üretilmemiş artefakttan ayırt edilemez.
+  YASA 6 — ÜRETİLİP TÜKETİLMEYEN ARTEFAKT: kimsenin okumadığı artefakt, üretilmemişten ayırt
+  edilemez. `artifact_graph` her `store` okuma/yazma çağrısını yazar/okuyucu grafına çözer;
+  çözemediğini ADLI `unresolved` kovasına düşürür ve her erişim biçimini sayar (`access_patterns`);
+  taranamayan dosya `UNSCANNED`e yazılır — sıfır-ihlal iddiası eksik taramaya dayanamaz. Meşru
+  okuyucusuzluk BEYANLA olur: `DECLARED_SINKS` (gerekçeli tekil beyan), `DECLARED_SINK_PATTERNS`
+  (koddan türetilen desen beyanı — tarihli/dinamik adlar), `HUMAN_INVOKED_SINKS` (dış okuyucusu
+  olan ama çağıranı insan olan defter). Beyanın kendisi de denetlenir: `declared_claims`/
+  `stale_claims`/`unverifiable_claims` iddiaları fonksiyon-çağrı düzeyinde sınar.
 
-Bu modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz. Yalnız "şu satırda sinyal
-üretmeyen bir yakalayıcı var" ve "şu defteri kimse okumuyor" der.
-
-v214 (2026-08-08) — BEKÇİNİN KENDİ ÜZERİNE İKİ EK. İkisi de aynı cümlenin sonucudur: *bir bekçinin
-kendi körlüğünü bilmemesi, bekçiliğin tersidir.*
-  (a) GÖREMEDİĞİNİ SAY. `artifact_graph` artık her `store` okuma/yazma çağrısını ya çözer ya da
-      ADLANDIRILMIŞ bir `unresolved` kovasına yazar (`unresolved_by_reason`), ve gördüğü her
-      erişim biçimini sayar (`access_patterns`). Eskiden iki sınıf HİÇBİR SAYACA girmiyordu:
-      çıplak-ad çağrısı (`read_json(...)`) ve konumsal argümansız çağrı.
-  (b) BEYANIN KENDİSİNİ DENETLE. `declared_claims()` bir muafiyet metninin "üretimde okuyucusu
-      yok" iddiasını FONKSİYON-ÇAĞRI düzeyinde sınar. `stale_sinks` bunu yapısal olarak
-      yapamıyordu: tetikleyicisi `unread` bayrağıdır ve okuma yazarla aynı modüldeyse bayrak
-      hiç düşmez — `sieve.json` beyanı tam bu delikte 6 ay bayat kaldı.
-"""
+Modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz; yalnız kaynak ağacını
+(meridian/*.py) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
 from __future__ import annotations
 
 import ast

@@ -1,52 +1,35 @@
-"""intraday_shadow.py — FAZ 4B GÖLGE MODU (2026-07-27). SIFIR YETKİ, TAM KARAR.
+"""intraday_shadow.py — seans içinde tetiği kesilen planın TAM icra kararını ("emir çıkar mıydı, kaç lot, hangi fiyattan") kendi defterine ölçen gölge katmanı.
 
-Faz 4a "tetik kesildi mi?"yi ölçüyordu. Cevaplayamadığı soru şuydu: **kesildiğinde NE OLURDU?**
-Bir eşik geçişi tek başına bir karar değildir — kapılar, boyutlandırma, likidite tavanı ve gap
-korumaları bir emri tamamen iptal edebilir. "Tetik 14 kez kesildi" cümlesi, o 14 geçişin kaçının
-gerçek bir emre dönüşeceğini SÖYLEMEZ; Faz 4b'yi bu kanıt olmadan açmak, ölçülmemiş bir yetkiyi
-açmak olurdu.
+NE YAPAR. Bir eşik geçişi tek başına karar değildir — kapılar, boyutlandırma, likidite tavanı ve
+gap korumaları emri tamamen iptal edebilir; "tetik N kez kesildi" cümlesi kaçının gerçek emre
+dönüşeceğini söylemez. Bu modül tetik kesildiği anda KOPYA bir PaperBroker üzerinde üretimin
+dolgu yasasını (broker.fill_entry) koşturur, tam kararı (kapılar + kaynakları, qty, risk,
+sim dolum, ret sebebi) satır olarak üretir ve nesneyi atar. İKİ KOL vardır ve ikisi de
+`_satir()`in TEK gövdesinden çıkar: `silahli` (silahlanmış planlar — satırı burası yazar) ve
+`planli` (silahlanmamış GO/REVIEW planları — satır burada hesaplanır, yazımı `intraday_cycle`
+yapar). Planli kol AYRI defterdedir: çıkış-ölçümü kilidi silahli defteri kol süzgeci olmadan
+okur ve karışan planli satırlar o ölçümü "ölçülemedi"ye geriletirdi; silahli satırın şeması bu
+yüzden bayt düzeyinde korunur (`kol` alanı bile eklenmez, etiketi okuma anında basılır).
 
-BU MODÜL EMİR GÖNDERMEZ. Tek yazdığı kendi defteridir (`intraday_shadow_orders.jsonl`).
-Canlı defteri (portfolio.json) OKUR, asla YAZMAZ; broker'ı KOPYA bir nesne üzerinde çalıştırır ve
-nesneyi atar. `state/INTRADAY_ARM` (gerçek icra bayrağı) ile HİÇBİR İLİŞKİSİ yoktur — bayrak kapalı
-olsa da gölge ölçer, çünkü ölçüm yetki değildir.
+KİLİT GİRİŞLER. `record` (silahli kol: hesapla + yaz), `planli_satir`/`planli_yazildi` (planli
+kol: hesapla; satır DİSKE indikten SONRA işaretle — sıra bir karardır), `summarize` (pano özeti;
+satırları çağıran okur), `vs_eod` (gölge sim_fill × gerçek EOD dolumu kıyası, friksiyon-sonrası),
+`kollar`/`planli_kol_uretimi`/`golge_cf_eslestirme` (iki kolun saf okuma yüzeyi), `reset_dedup`.
 
-NEDEN KOPYA BROKER, "boyutlandırmayı yeniden yaz" DEĞİL: qty/risk hesabı gap koruması, ADV tavanı,
-katılım etkisi ve notional tavanını içerir (broker.fill_entry). İkinci bir kopya yazmak, iki hesabın
-zamanla AYRIŞMASI demekti — ve ayrıştığı gün gölge defteri EOD'yi değil KENDİNİ ölçüyor olurdu.
-Aynı fonksiyon çağrılır; sonuç okunur; nesne atılır.
+YASALAR — GÖLGE KATMANI. SIFIR YETKİ: EMİR GÖNDERMEZ; gerçek icra bayrağıyla (state/INTRADAY_ARM)
+hiçbir ilişkisi yoktur — bayrak kapalıyken de ölçer, çünkü ölçüm yetki değildir; canlı karara ve
+canlı defterlere hiçbir yazım yolu çıkmaz. İKİNCİ HESAP YAZILMAZ: boyutlandırma/ret sebebi
+üretimin kendi broker'ından okunur — ikinci kopya zamanla ayrışır ve defter EOD'yi değil KENDİNİ
+ölçmeye başlar (loop import edilmez, `_load_broker` deseni salt-okunur yeniden kurulur). SİM
+FİYAT SÖZLEŞMESİ satıra da yazılır: `sim_price = max(bar_open, entry_trigger)` — bar içi sıralama
+OHLC'den bilinemez, sözleşme bilinçle muhafazakârdır (asla tetikten ucuza dolmaz). Plan başına
+seansta TEK satır (dedup restart'a karşı diskten tazelenir); ölçülemeyen kapı girdisi fail-open
+sayılmaz, adıyla engeller.
 
-SİM FİYAT SÖZLEŞMESİ (satıra da yazılır): `sim_price = max(bar_open, entry_trigger)`.
-Bar tetiğin ÜSTÜNDE açıldıysa açılışı ödersin; altında açtıysa tetikte dolarsın. Bar İÇİ sıralama
-OHLC'den bilinemez, o yüzden sözleşme bilinçli olarak muhafazakârdır (asla tetikten ucuza dolmaz).
-
-loop.py'ye SIFIR TEMAS: canlı EOD motoru bu turda hiç değişmedi. `_load_broker` DESENİ burada
-yeniden kurulur (fonksiyon import edilmez) ki gölge katmanı canlı hattın çağrı grafiğine girmesin.
-
-İKİ KOL (kart EXE-2026-003, v217 — 2026-08-09). Bugüne dek yalnız SİLAHLANMIŞ planlar gölge dolumu
-yazıyordu (6 seansta 4 satır). Tetiği kesilen ama silahlanmamış GO/REVIEW planları da ölçülüyor;
-`kol: planli`. İki kolun DOLUM KURALI BİREBİR AYNIDIR ve bu YAPISALDIR, bir söz değil: iki kol da
-`_satir()`in TEK gövdesinden çıkar, yani `sim_price = max(bar_open, entry_trigger)` ikinci kez
-yazılmaz (ayrı iki gövde, ayrıştığı gün kol karşılaştırmasını anlamsız kılardı).
-
-NEDEN AYRI DEFTER, "aynı deftere `kol` alanı" DEĞİL — ÖLÇÜLDÜ, TERCİH EDİLMEDİ. `faz5_cikis`
-(EXE-2026-002 kilidi) `intraday_shadow_orders.jsonl`i HİÇBİR kol süzgeci olmadan okur
-(`health.py:162` → `cikis_olcumu(rows=_golge)`); evreni "sim_fill üretmiş her satır"dır.
-Silahlanmamış bir plan iç EOD defterinde HİÇ DOLMAZ, yani her planli satır `eod_yok` sınıfına
-düşerdi: bugünkü 4 satırlık deftere 2 planli satır eklemek eşleşmeme oranını %33'e çıkarır ve
-KILL#4'ü ateşlerdi (kilit "ölçüldü — örneklem yetersiz"ten "ölçülemedi"ye GERİLERDİ). Kartın
-kill#3'ü bunu zaten yasaklıyor: "silahli kolun şemasında/sayımında HERHANGİ bir fark → geri alınır".
-Bu yüzden silahli kolun deftere yazdığı satır BAYT DÜZEYİNDE değişmedi — `kol` alanı bile
-EKLENMEDİ; silahli kolun etiketi OKUMA ANINDA basılır (`kollar()`), planli satır ise kendi
-defterinde etiketini TAŞIR (tek başına okunan bir satır kendi kolunu söyleyebilmeli).
-
-YAZAN KİM: planli defterin `store.append_jsonl` çağrısı `intraday_cycle`dadır, burada DEĞİL. Bu da
-bir tercih değil, yürürlükteki bir çivinin sonucudur: `test_intraday_shadow_v105.py`
-(`test_statik_hicbir_emir_yolu_yok`) bu dosyadaki HER `append_jsonl` hedefinin `ORDERS_FILE` olmasını
-şart koşuyor — "gölge modülünün TEK bir lağımı vardır" yasası. Nüfus kararını zaten `intraday_cycle`
-veriyor (hangi plan izleniyor, hangi kol); ikinci defter de o kararın yanında yaşıyor. Bu modül
-planli satırı HESAPLAR (`planli_satir`) ve defteri OKUR (tekilleştirme + ikincil hat); yazım
-`intraday_cycle`, okuma burası — statik artefakt grafiği de gerçek bir dış tüketici görür.
+OKUR: portfolio.json (salt-okunur; `entry_law` yan tablosu dahil), heartbeat/data_quality,
+trades.jsonl, counterfactuals.jsonl, bar CSV'leri.
+YAZAR: yalnız `state/intraday_shadow_orders.jsonl` — bu dosyanın tek lağımı odur (statik testle
+çakılı); planli defteri (`intraday_shadow_planli_orders.jsonl`) `intraday_cycle` yazar.
 """
 from __future__ import annotations
 

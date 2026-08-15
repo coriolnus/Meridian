@@ -1,9 +1,28 @@
-"""loop.py — the live forward paper cycle. Runs once per trading day after the close: builds the
-regime, manages open positions on the new bar, screens + plans + guards new entries, arms them for
-the next session's open, and writes a heartbeat. Portfolio state persists in state/portfolio.json so
-learning survives restarts. strategy.yaml is hot-reloaded on mtime change — no redeploy for a
-parameter change (§4). Uses the SAME strategy.py / broker.py as the backtest, so live and simulated
-behavior cannot diverge."""
+"""loop.py — canlı ileri-yönlü kâğıt döngüsü: kapanan her işlem günü için bir kez koşan günlük
+karar motoru.
+
+Yeni kapanmış barın üzerine tam bir tur işler: rejimi kurar, açık pozisyonları yeni barda yönetir,
+evreni tarayıp giriş planları üretir ve koruma kapılarından geçirir, uygun planları bir sonraki
+seansın açılışı için silahlandırır, öğrenme katmanını besler ve kalp atışını yazar. Ayna (Alpaca
+kâğıt) tarafında gerçek emrin TEK kapısı da buradadır; dolum/ret/koruma mutabakatı da bu modülde işlenir.
+
+Kilit girişler: `daily_cycle(bars, index, on_date)` (ana giriş; zamanlayıcı/worker bunu çağırır),
+`mirror_submit_armed` / `mirror_submit_ve_kalicilastir` (tek gönderim kapısı — intraday gönderim
+bacağı da buradan geçer), `reconcile_broker_state` (broker mutabakatı), `operator_onay_ver` /
+`girise_uygun` (plan onay yolu), `_persist_trade` (kapanan işlem, tekilleştirilmiş),
+`_persist_equity_point` (sermaye eğrisinin kadanslı yazarı).
+
+Değişmezler: backtest ile AYNI strategy.py/broker.py kullanılır — canlı ve simüle davranış
+ayrışamaz; kararlar ancak evrenin ÇOĞUNLUĞUNUN barı olan seansta alınır (kapsama kapısı: yanlı bir
+kesitte karar vermektense bir gün geride olmak dürüsttür); strategy.yaml mtime değişince sıcak
+yüklenir — parametre değişikliği için yeniden dağıtım yok; ölçüm katmanı (giriş-icra/slipaj defteri)
+kararı ASLA bloklamaz ama düşerse sessiz de kalmaz; keşif sondaları sert R tavanlarıyla sınırlıdır
+(rejim kilitlenmesini kırmak için — kanıt birikmeyen rejim sonsuza dek aç kalıyordu).
+
+Okur/yazar: portfolio.json (kalıcı defter — öğrenme yeniden başlatmayı atlatır), trade_plans.jsonl,
+trades.jsonl, entry_execution.jsonl (okuyan: analytics → tanılama → pano), equity_curve.json,
+kalp atışı (health.write_heartbeat). Komşular: strategy, broker, regime, guard, dataset, skills,
+adapters.data, adapters.alpaca, obs."""
 from __future__ import annotations
 import datetime as dt
 import pandas as pd

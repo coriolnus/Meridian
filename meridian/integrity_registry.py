@@ -1,19 +1,27 @@
-"""integrity_registry.py — BİLEŞEN × DESEN kapsam kaydı (2026-07-21).
+"""integrity_registry.py — bileşen × değişmez-desen kapsam kaydı: "nereye bakmadık?" tablosu.
 
-Sorun: "gözden kaçan çok fazla eksiklik olabilir" — ve haklı. Bugün bulunan 8 sessiz hatanın 8'i de
-mevcut testlerden geçti. Çözüm her modüle özel test icat etmek DEĞİL; çünkü hatalar bileşen değişse de
-DESEN olarak tekrar ediyor. Bu kayıt, 50 modülü 6 değişmez-deseniyle çaprazlar:
+Sessiz hatalar bileşen değişse de DESEN olarak tekrar eder ve hepsi mevcut testlerden geçer;
+çözüm her modüle özel test icat etmek değil, modülleri altı değişmez-deseniyle çaprazlamaktır
+(`PATTERNS`):
+  ÜRETKENLİK  — çıktı üretiyor mu?                    (kanıt defteri ömrü boyunca boş kalabilir)
+  KORUNUM     — giren, kayıtlı terminale ulaşıyor mu? (silahlı plan kayıtsız buharlaşabilir)
+  DETERMİNİZM — aynı girdi aynı sonucu mu veriyor?    (işçiler barları yeniden yazabilir)
+  TUTARLILIK  — türev, kaynağından taze mi?           (tüketici binlerce satırı görmeyebilir)
+  MONOTONLUK  — ileri-only nicelik geri gidiyor mu?   (kitap geriye sarabilir)
+  SAHİPLİK    — yazan, sahibi olmadığı alanı eziyor mu? (nabız ezilmesi sınıfı)
+Amaç bilinmeyen yüzeyi SONLU ve GÖRÜNÜR kılmak: "nereye bakmadık?" sorusunun cevabı tahmin değil,
+bir tablodur.
 
-  ÜRETKENLİK  — çıktı üretiyor mu?                (cf defteri ömrü boyunca boştu)
-  KORUNUM     — giren kayıtlı terminale ulaşıyor mu? (silahlı plan kayıtsız buharlaştı)
-  DETERMİNİZM — aynı girdi aynı sonucu mu veriyor?   (havuz işçileri barları yeniden yazıyordu)
-  TUTARLILIK  — türev kaynağından taze mi?           (gölge model 7115 satırı görmedi)
-  MONOTONLUK  — ileri-only nicelik geri gidiyor mu?  (kitap geriye sardı)
-  SAHİPLİK    — yazan, sahibi olmadığı alanı eziyor mu? (nabız ezilmesi)
+GİRİŞLER: `COVERED` (bileşen → GERÇEK bir kontrol/test altındaki desenler; hücre gerekçeleri satır
+içi yorumlarda), `APPLICABLE` (desenin o bileşen için SORULABİLİR olduğu hücreler — ham payda
+yanıltıcıdır, gerçek kapsam = dolu/uygulanabilir), `gaps` (uygulanabilir ama boş hücreler:
+denetimin gerçek kuyruğu), `coverage_report` (iki paydalı kapsam tablosu; pano tüketir),
+`next_audit_target` (dönüşümlü denetim: en uzun süredir denetlenmemiş bileşen önce),
+`record_audit` (denetim tarihini damgalar — "denetledim sanıyordum" hatasını engeller).
 
-BU KAYDIN AMACI: bilinmeyen yüzeyi SONLU ve GÖRÜNÜR kılmak. "Nereye bakmadık?" sorusunun cevabı
-artık bir tahmin değil, bir tablo. Dürüstlük kuralı: bir hücre ancak GERÇEK bir kontrol/test varsa
-'covered' işaretlenir — iyi niyet 'covered' saymaz."""
+DÜRÜSTLÜK KURALLARI: bir hücre ancak GERÇEK bir kontrol/test varsa 'covered' işaretlenir — iyi
+niyet saymaz; şüphe varsa desen UYGULANABİLİR sayılır (muhafazakâr). Okur/yazar: yalnız
+integrity_audit_log.json (bileşen → son denetim tarihi); kapsam matrisi kodda güncellenir."""
 from __future__ import annotations
 
 from . import store

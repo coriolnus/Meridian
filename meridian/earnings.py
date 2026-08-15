@@ -1,9 +1,28 @@
-"""earnings.py — the earnings blackout. A swing-momentum entry taken right into an earnings print
-is a coin flip on a gap, not an edge (Hard Rule 7: no fantasy fills). If state/earnings.csv exists
-(rows: ticker,date  — one scheduled report date per line, YYYY-MM-DD), a plan whose date falls within
-BLACKOUT_DAYS *before* the next scheduled report is not armed. No CSV -> no-op, so the gate is present
-and testable now and simply activates the day an earnings feed (FMP) writes the file. Deterministic,
-network-free: it only reads the file it is handed."""
+"""earnings.py — kazanç takvimi: karartma kapısı, PEAD çapası ve takvim tazeleme/birikim katmanı.
+
+Ne yapar: bilanço baskısına denk gelen girişleri engeller — bir sonraki planlı rapordan önceki
+BLACKOUT_DAYS gün içindeki plan silahlanmaz, çünkü kazanç açıklamasının hemen öncesinde alınan
+swing girişi kenar değil, boşluk üzerine yazı-turadır (Hard Rule 7: hayal dolum yok). Aynı takvim
+PEAD/episodik-pivot kurulumlarının "rapordan hemen sonra" çapasını da verir. Takvimi periyodik
+tazeler (birincil kaynak anahtarsız Nasdaq takvimi; boş ya da kapsaması eşik-altı kısmi pencerede
+FMP yedeği denenir ve birleştirme geçmiş çapaları silmez), her tazelemenin anlık görüntüsünü
+nokta-zamanlı (PIT) birikim defterine EKLER ve kapsam/güvenilirlik sayaçlarını üretir.
+
+Kilit girişler: in_blackout (karartma hükmü), days_since_report (PEAD çapası), report_time
+(bmo/amc), refresh / refresh_from_fmp (tazeleme), margin_days / refresh_window, known / coverage /
+coverage_note / coverage_tally, calendar_untrustworthy / last_refresh_window, blackout_radar,
+snapshot_stats.
+
+Değişmezler: karar yolu determinist ve ağsızdır — hüküm yalnız state/earnings.csv'den okunur
+(mtime önbelleği; yeniden yazılan dosya restart'sız görülür); ağa yalnız tazeleme yolları çıkar.
+Veri yokluğu iki ayrı olgudur: SEMBOL kapsam dışıysa kapı fail-open kalır (beyanlı not, karar
+değişmez), TAKVİMİN kendisi karartma ufkunu taşıyamıyorsa fail-closed'a düşülür ve tüm sembolleri
+etkiler. CSV hiç yoksa kapı no-op'tur — "henüz silahlanmadı", arıza değil. Bilinmeyen saat/kapsama
+None'dur (varsayılan uydurulmaz); bilinen saat bilinmeyeni ezer, tersi olmaz.
+
+Okur/yazar: state/earnings.csv'yi okur ve tazelemede store üzerinden yeniden yazar (iki yazım yolu
+aynı kilidi paylaşır); PIT birikimini state/history/earnings_snapshots.jsonl'a ekler; boş kaynak,
+kısmi pencere ve okunamayan takvim sessiz kalmaz, obs kanalına uyarı düşer."""
 from __future__ import annotations
 import csv
 import datetime as dt

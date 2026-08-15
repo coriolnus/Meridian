@@ -1,59 +1,28 @@
-"""ledgerstamp.py — İŞLEM DEFTERİNİN KAYNAK DAMGASI (denetim bulgusu BT-1'in kapanışı).
+"""ledgerstamp.py — işlem defterine kaynak damgası: canlı kanıt ile tohum simülasyonunu ayırır.
 
-NEDEN VAR. `state/trades.jsonl` iki AYRI yazardan besleniyor ve satırlar birbirinden ayırt
-edilemiyordu:
+`state/trades.jsonl` iki ayrı yazardan beslenir: canlı kâğıt döngünün kapattığı işlem (GERÇEK
+KANIT; `loop._persist_trade` → append) ve replay tohumunun tek toplu yazımla ürettiği satır
+(SİMÜLASYON; `run.replay_seed` — bugünkü evrenle koşulduğu için survivorship taşır). Damga
+(`kaynak` alanı: live_paper | replay_seed | belirsiz) olmadan karne, skor kalibrasyonu ve
+alfa/beta ölçümü tüm defteri "canlı" sanır. Modül üç şey yapar: (1) ileri yolun damgasını sağlar
+(`stamp`/`stamp_rows` — var olan damga ASLA ezilmez), (2) mevcut satırları kanıta dayanarak
+geriye dönük damgalar (`migrate` — kuru koşu varsayılan, tek atomik yazım, süreçler-arası kilit),
+(3) okuyucuların payda ayırdığı tek sayaç yüzeyini verir (`counts`/`split`/`kaynak_of`).
 
-  * İLERİ YOL — `loop._persist_trade` → `store.append_jsonl`: canlı kâğıt döngünün gerçekten
-    kapattığı işlem. Bu satır GERÇEK KANITTIR.
-  * TOHUM YOLU — `run.replay_seed` → `store.write_jsonl` (deftere TEK toplu yazım): geçmiş barlar
-    üzerinde `backtest.replay` koşturularak ÜRETİLMİŞ satırlar. Bu satır bir SİMÜLASYONDUR ve
-    üstelik BUGÜNKÜ evrenle koşturulduğu için survivorship taşır.
+TOHUM SINIRI UYDURULMAZ, DONMUŞ KANITTAN OKUNUR (`seed_boundary`), sırayla: eğri zarfındaki SON
+reset işaretinin `egri_son_nokta` alanı (bir kez yazılır; eğriye nokta eklemek onu kıpırdatmaz) →
+yedek yol `trades.kaynak`: `replay_seed` damgalı satırların en geç `ts_close`u → hiçbiri
+ölçülemezse `replay_end` None'dır ve TÜM satırlar `belirsiz` kalır ("sınır 0" ya da "bugün"
+uydurulmaz); hangi yolun konuştuğu `kaynak`/`yollar` alanlarında beyanlıdır. Eğrinin SON
+NOKTASINDAN okuma YANLIŞLANDI: eğrinin kadanslı bir yazarı var, oradan okunan sınır her seans
+bugüne kayar ve her canlı satırı tohum diye damgalardı. Toplu-yazım mtime imzası da aynı nedenle
+İKİNCİL ve ZAYIFTIR: sınırı belirlemez, yalnız `classify`ın çelişki kuralını besler; çelişki
+`live_paper`a değil `belirsiz`e çözülür — sınıflandırıcı kendi kanıtını yalanlayamaz.
 
-Damga olmadan `learning_scorecard`, skor kalibrasyonu ve alfa/beta ölçümü 95 satırın tamamını
-"canlı defter" sanıyordu — yani sistemin kendi hakkındaki en temel sayısı (gerçek canlı n) hiçbir
-yerde YOKTU. Bu modül üç şey yapar: (1) ileri yolun damgasını sağlar, (2) mevcut satırları
-KANITA dayanarak geriye dönük damgalar, (3) okuyucuların damgayı ayrıştırabileceği tek sayaç
-yüzeyini verir.
-
-TOHUM SINIRI UYDURULMAZ, ÖLÇÜLÜR — VE ARTIK EĞRİNİN SON NOKTASINDAN OKUNMAZ (WP2-D bacak-1,
-2026-08-14). Eski okuma şu iki satıra dayanıyordu:
-
-    run.py:203   store.write_jsonl("trades.jsonl", res.trades)      # defterin TAMAMI
-    run.py:204   store.write_json("equity_curve.json", {...})       # HEMEN ardından
-
-ve "eğriyi üretimde başka hiçbir yol yazmaz" varsayımı üzerinde duruyordu. O VARSAYIM İKİ KEZ
-ÖLDÜ: (1) `sermaye.uygula` eğri zarfına reset işareti yazıyor (2026-08-01), (2) `loop.daily_cycle`
-artık her seans sonunda eğriye NOKTA ekliyor (bacak-2, aşağıdaki yazar). Son noktadan okunan bir
-sınır, kadanslı yazarın eklediği her noktayla BUGÜNE kayardı ve bundan sonraki HER canlı satır
-`replay_seed` diye damgalanırdı — köken defterinin aktif olarak bozulması. Üstelik tehlike zaten
-gerçekleşmişti: tohum 2026-08-13'te yenilendi, eğri 2026-07-20'de duruyordu, yani sınır YANLIŞTI.
-
-SINIR ARTIK DONMUŞ KANITTAN OKUNUR, sırayla:
-  * YOL-1 `reset_isareti` — eğri zarfındaki SON reset işaretinin `egri_son_nokta` alanı. İşaret
-    bir kez yazılır ve bir daha yeniden yazılmaz; eğriye nokta eklemek onu KIPIRDATMAZ.
-  * YOL-2 `trades.kaynak` — kartın yazılı yedek çaresi (EDG-2026-036:178): `replay_seed` damgalı
-    satırların EN GEÇ `ts_close`u. İşaret yoksa ya da alanı okunamıyorsa bu yol konuşur.
-  * YOL-3 `yok` — hiçbiri ölçülemezse `replay_end` None'dır ve TÜM satırlar `belirsiz` kalır.
-    "Sınır 0" ya da "bugün" gibi bir varsayılan UYDURULMAZ.
-Hangi yolun konuştuğu `kaynak` alanında BEYAN EDİLİR; iki yol aynı sayıyı verse bile okuyucu
-hangisine baktığını görür (`yollar` alanı ikisini yan yana taşır).
-
-TOPLU YAZIM İMZASI (mtime çifti) İKİNCİL VE ARTIK ZAYIFTIR: eğrinin kadanslı bir yazarı olduğu
-için iki dosyanın mtime'ı "defter o yazımdan beri hiç eklenmedi" KANITI değildir. Alan yine
-ölçülür ve taşınır (sınıflandırıcının çelişki kuralı onu okur) ama SINIRI belirlemez. AYIRT
-EDİLEMEYENE İSİM TAKMAK, ölçümü tam da BT-1'in şikâyet ettiği yere geri götürürdü.
-
-CANLI WORKER KOŞARKEN YAZMA: migrasyon CLI'si canlı süreç görürse `--uygula`yı REDDEDER
-(`--zorla` ile ezilir) — `barrepair` ile AYNI desen ve AYNI ölçüm fonksiyonu (iki kopya = iki
-farklı "canlı" tanımı). Bu kural, `store.file_lock` 2026-07-31'de SÜREÇLER ARASI olduktan sonra
-da GEÇERLİDİR ve gerekçesi değişti: kilit artık yarışı önler, ama defteri iki farklı NİYETLE
-yeniden yazmayı önlemez — canlı döngü satır eklerken migrasyonun defteri toptan yeniden yazması
-teknik olarak güvenli, operasyonel olarak yine yanlıştır.
-
-KULLANIM:
-    python -m meridian.ledgerstamp                 # kuru koşu — sınıflandırma raporu
-    python -m meridian.ledgerstamp --json          # aynı rapor, makine-okunur
-    python -m meridian.ledgerstamp --uygula        # YAZAR (worker durdurulmuş olmalı)
+CANLI WORKER KOŞARKEN YAZMAZ: CLI canlı süreç görürse `--uygula`yı reddeder (`--zorla` ile
+ezilir) — kilit yarışı önler ama defteri iki farklı NİYETLE yeniden yazmayı önlemez. Kullanım:
+`python -m meridian.ledgerstamp [--json | --uygula | --zorla]`. Okur: trades.jsonl +
+equity_curve.json; yalnız `--uygula` yolunda trades.jsonl'ı yeniden yazar.
 """
 from __future__ import annotations
 

@@ -1,7 +1,13 @@
-"""sermaye.py — ANTRENMAN TOHUMUNUN CANLI SERMAYEDEN AYRIŞTIRILMASI (BT-1'in nakit ayağı).
+"""sermaye.py — antrenman tohumunun (replay_seed) K/Z'sini canlı-kâğıt sermayeden ayrıştıran, kuru-koşu-varsayılanlı reset aracı.
 
-NEDEN VAR. BT-1 defterin KÖKENİNİ ayırdı (`ledgerstamp`: live_paper / replay_seed / belirsiz) ama
-NAKDİ ayırmadı. Ölçülen hâl (2026-08-01, canlı state):
+NE YAPAR. Kitabın (portfolio.json) dört sermaye alanını (cash / realized_pnl / day_start_equity /
+peak_equity) canlı-kâğıt çağ için START_EQUITY tabanına taşır; ayrıştırmayı SİLEREK değil BEYAN
+EDEREK yapar — kitapta `sermaye_resetleri` kaydı, eğri zarfında `reset_isaretleri` işareti, olay
+defterinde `paper_equity_reset` satırı. Defterlere dokunmaz; mutabakat kimlikleri ofsetle ölçmeye
+devam eder. Panonun ve CLI'nin okuduğu tek köken yüzeyi `koken()`tir.
+
+NEDEN VAR. Defter-köken damgalama turu (`ledgerstamp`: live_paper / replay_seed / belirsiz)
+defterin KÖKENİNİ ayırdı ama NAKDİ ayırmadı. Ölçülen hâl (canlı state, reset öncesi):
 
     portfolio.json  cash = 94.457,91$   realized_pnl = −5.542,09$   positions = {}
     trades.jsonl    95 satır, ledgerstamp 95/95 = replay_seed      canlı-kâğıt işlem = 0
@@ -20,8 +26,8 @@ sayıya "Sermaye" diyordu ve iki ayrı yalan söylüyordu:
 
 ÖLÇÜLEN İNCE NOKTA — NAKDİ RESETLEMEK TEK BAŞINA HİÇBİR ŞEY YAPMAZDI. `broker.equity()` `cash`i
 OKUMAZ (`PaperBroker.equity`: `eq = self.start_equity + self.realized_pnl` — ÇAPA SEMBOLDÜR;
-burada "broker.py:263" yazıyordu, o satır bugün de-risk rampasına ait: A17 çürüme sınıfı, 2026-08-14
-ölçümüyle düzeltildi). Yalnız `cash`i 100.000'e
+burada "broker.py:263" yazıyordu, o satır bugün de-risk rampasına ait — satır-numarası çürümesi
+sınıfı, ölçümle düzeltildi ve çapa sembole bağlandı). Yalnız `cash`i 100.000'e
 çekmek panoyu düzeltir, boyutlandırmayı DÜZELTMEZ — kozmetik bir yama olurdu. Bu yüzden reset
 kitabın DÖRT alanına birden dokunur ve dördünün de gerekçesi ayrı yazılıdır (aşağıda `_yeni_kitap`).
 
@@ -36,7 +42,7 @@ eklenseydi tohum sınırı bugüne kayar ve bundan sonraki HER canlı satır `re
 damgalanırdı — yani bu turun kapattığı kusuru, tam da onu kapatan araç geri açardı. İşaret ayrı bir
 zarf anahtarında durur; `points` dokunulmaz kalır.
 
-  ↑ ÜSTTEKİ GEREKÇE YANLIŞLANDI (2026-08-14, v245-D; paragraf tarihçe için duruyor). İKİ
+  ↑ ÜSTTEKİ GEREKÇE YANLIŞLANDI (paragraf tarihçe için duruyor). İKİ
   DAYANAĞI DA ÖLDÜ: (1) `ledgerstamp.seed_boundary()` sınırı artık eğrinin son noktasından
   OKUMUYOR — sıra (a) son reset işaretinin DONMUŞ `egri_son_nokta` alanı, (b) yedek yol
   `trades.jsonl` `replay_seed` damgalarının en geç `ts_close`u; güncel son nokta rapora yalnız
@@ -69,6 +75,17 @@ ile AYNI desen ve AYNI ölçüm fonksiyonu (iki kopya = iki farklı "canlı" tan
 İDEMPOTENT. İkinci `--uygula` hiçbir bayt yazmaz ve `zaten_ayrisik` der. Ayrışıklığın kanıtı
 kitaptaki `sermaye_resetleri` kaydıdır — nakdin 100.000 olması DEĞİL (canlı çağ kâr ederse nakit
 100.000'den ayrılır ama ayrışıklık sürer).
+
+KİLİT GİRİŞLER. `koken` (sermayenin köken bloğu — pano `/api/today` ve `--durum` aynı fonksiyonu
+okur), `durum` (tam ölçüm + engeller/uyarılar), `plan` (kuru koşu), `uygula` (yazım sırası
+bilinçli: eğri işareti → kitap → tepe affı → olay), `ofset`/`resetler`/`ayrisik`/`son_reset`
+(mutabakatın okuduğu beyanlar), `sermaye_taban` (zımni tabanın sent-tam kanonik türetimi —
+monotonluk dedektörünün izlediği büyüklük), `main` (CLI).
+
+OKUR: portfolio.json, equity_curve.json, heartbeat.json, trades.jsonl (ledgerstamp damgalarıyla).
+YAZAR (yalnız --uygula ile, kilit altında): portfolio.json (dört alan + reset kaydı),
+equity_curve.json (yalnız `reset_isaretleri` zarf anahtarı — `points` DOKUNULMAZ), watchdog af
+kaydı + olay defteri.
 
 KULLANIM:
     python -m meridian.sermaye --durum      # köken ölçümü (hiçbir bayt yazılmaz)

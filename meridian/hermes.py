@@ -1,11 +1,31 @@
-"""hermes.py — the brain. Reads state, forms ONE single-variable hypothesis with Claude, and
-submits it through the SAME guarded pipeline the deterministic proposer uses (guard -> backtest
-gate -> version bump -> memory). Hermes never edits strategy.yaml by hand; the engine decides what
-ships. Every constraint stated to Hermes here is ALSO enforced in guard.py (Hard Rule 6) — this
-prompt is a suggestion, guard.py is the law.
+"""hermes.py — Meridian'ın öneri üreten beyni: durum okur, TEK değişkenlik bir hipotez kurar ve
+onu karar yetkisi olmayan bir danışman olarak kapıya sunar.
 
-Runs on the VM in a detached tmux session (installed LAST, §7). Falls back to the deterministic
-proposer when HERMES_API_KEY is absent, so the loop is never dead."""
+Ne yapar: defter/rejim/skill durumundan bir kanıt paketi kurar, beyin zincirindeki ilk hazır
+sağlayıcıdan (Claude → Nous → Gemini) tek-değişkenlik bir hipotez ister ve `reflect.submit`e
+teslim eder. Beyin boş dönerse ya da öneri kapıdan dönerse üretim pencerelerinde sistematik
+koordinat-inişi araması (`reflect.search_and_submit`) koşulur. Canlıda ayrık bir tmux
+oturumunda `--loop` ile yaşar; anahtar yokken deterministik yola düşer — döngü asla ölmez.
+
+Kilit girişler: `reflect_once` (tek canlı yansıma: LLM önerisi → bakir düğme → arama),
+`propose_with_llm` (beyin zinciri: bütçe kapısı, soğuma, boş-cevap sınıflandırması),
+`propose_virgin_knob` (beyinsiz turda hiç denenmemiş düğmeden deterministik öneri, guard
+ön-denetimli), arka plan süzgeci (`background=True` turunda `@`siz öneri sertifikalı rejime
+çivilenir; farklı-rejim/sertifikasız öneri `_bg_on_eleme_kaydi` ile reddedilir).
+
+Değişmezler: tek-değişken yasası (buradaki her kısıt guard.py'de AYRICA zorlanır — istem öneri,
+guard yasadır); öneri=danışma, karar=kapı — tek ship yetkisi `reflect.submit`tedir ve hermes
+strategy.yaml'a asla elle dokunmaz; aylık bütçe kapısı (`spend.over_budget`) tüm ücretli
+beyinleri kapatır; aramanın K sondası kazananın-laneti cezası olarak `probes_tested` ile
+kapıya beyan edilir.
+
+Okur/yazar: bounds.yaml, goal.yaml, regime.json, hypotheses.jsonl (bağlam; memory üzerinden)
+okur; events.jsonl'a olay (obs), spend.jsonl'a maliyet, agent_calls/agent_traces defterlerine
+çağrı telemetrisi yazar; `SEARCH_PROGRESS` canlı arama durumunu /api/hermes → panoya taşır.
+YAŞAYAN UYARI: arka plan süzgecinin retleri hypotheses.jsonl'a DEĞİL events.jsonl'a yazılır —
+hipotez defterinin sekiz tüketicisi satırı duruma bakmadan sayar (ölü-aile ilanı, öğrenme-
+canlılık alarmı, selfreview pencereleri, kamuya açık ship-oranı paydası) ve reddedilen öneri
+"aday" değildir; deftere aday gibi girmesi öneri uzayını daraltır ve alarm maskeler."""
 from __future__ import annotations
 import argparse
 import calendar

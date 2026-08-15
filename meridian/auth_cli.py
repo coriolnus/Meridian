@@ -1,15 +1,25 @@
-"""auth_cli.py — operatör parolasını kabuktan yönet.
+"""auth_cli.py — operatör parolasını ve oturum imza anahtarını kabuktan yöneten CLI.
 
     .venv/bin/python -m meridian.auth_cli set        # parola belirle / değiştir
-    .venv/bin/python -m meridian.auth_cli status     # kurulu mu, dosya izni doğru mu
+    .venv/bin/python -m meridian.auth_cli status     # kurulu mu, dosya izni doğru mu, oturum ömrü
     .venv/bin/python -m meridian.auth_cli logout-all # imza anahtarını döndür → tüm oturumlar düşer
 
-NEDEN KABUKTAN: `POST /api/setup-password` yalnız parola HENÜZ KURULU DEĞİLKEN çalışır. Kurulduktan
-sonra parolayı değiştirmenin tek yolu buradan geçer, yani state/auth.json'a erişim gerekir — ki o da
-sunucuya erişim demektir. Web üzerinden "parolamı unuttum" akışı BİLEREK yoktur: tek operatörlü bir
-sistemde o akış, saldırgan için ikinci bir giriş kapısından başka bir şey değildir.
+NE YAPAR. `set` parolayı kurar/değiştirir (kuruluysa önce MEVCUT parola doğrulanır); `status`
+parolanın kurulu olup olmadığını, `state/auth.json` yolunu ve iznini (0600 olmalı), bağlanma
+adresinin genel olup olmadığını ve oturum ömrünü basar; `logout-all` imza anahtarını döndürür —
+açık tüm oturumlar düşer, parola DEĞİŞMEZ. Genel arayüz + parolasız durumda `status` 1 döner
+(sunucu böyle açılmayı zaten reddeder).
 
-Parola ekrana YAZILMAZ (getpass) ve kabuk geçmişine düşmez — argüman olarak da alınmaz.
+NEDEN KABUKTAN. `POST /api/setup-password` yalnız parola HENÜZ KURULU DEĞİLKEN çalışır;
+kurulduktan sonra değiştirmenin tek yolu buradan geçer, yani `state/auth.json`a — dolayısıyla
+sunucuya — erişim gerekir. Web üzerinden "parolamı unuttum" akışı BİLEREK yoktur: tek operatörlü
+bir sistemde o akış, saldırgan için ikinci bir giriş kapısından başka bir şey değildir.
+
+SIR DİSİPLİNİ. Parola getpass ile alınır: ekrana yazılmaz, kabuk geçmişine düşmez, argüman olarak
+da alınmaz; hiçbir değer loglanmaz. `status` çıktısındaki oturum-ömrü sayıları auth sabitlerinden
+OKUNUR, metne gömülmez — sabit değişince beyan kendiliğinden doğru kalır (tek sayı basmak kayan
+pencereyi ya "12 saatte kapanır" ya "sonsuza dek açık" diye yanlış okuturdu). Okur/yazar: yalnız
+auth.py üzerinden `state/auth.json`.
 """
 from __future__ import annotations
 

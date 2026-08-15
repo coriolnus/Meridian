@@ -1,48 +1,36 @@
-"""nous_eval.py — NOUS SİSTEM-DEĞERLENDİRME KATMANI (ROADMAP §3.2, 2026-07-30).
+"""nous_eval.py — NOUS SİSTEM-DEĞERLENDİRME KATMANI: telemetriden kanıt-atıflı iyileştirme önerileri.
 
-OPERATÖR YÖNÜ: "bütün mekanizmaları değerlendirip güncellenmesi gerekenleri nous bulmalı; sistem
-kısıtlı alanda kalmadan sürekli kendini geliştirmeli."
-
-SORUN. Hermes bugüne kadar TEK bir soruyu soruyordu: "hangi STRATEJİ PARAMETRESİNİ oynatayım?" —
-bounds.yaml'daki 14 düğmenin içinde, 15 gündür aynı ailelerde dönerek (H2'nin ölçtüğü kör nokta).
-Ama sistemin iyileştirilebilir yüzeyi bounds.yaml'dan ÇOK büyük: kapı kalibrasyonu, veto dağılımı,
-skill atıfları, ölçülmeyen mekanizmalar, kopuk kablolar, boş defterler, dolmamış tabanlar. Bunların
-hiçbiri bir "hipotez" biçimine sığmıyordu ve bu yüzden hiç önerilmiyordu. Sistem, kendi kısıtlı
+SORUN. Hermes bugüne kadar tek bir soruyu soruyordu: "hangi STRATEJİ PARAMETRESİNİ oynatayım?" —
+bounds.yaml'ın düğmeleri içinde, aynı ailelerde dönerek. Oysa iyileştirilebilir yüzey çok daha
+büyük: kapı kalibrasyonu, veto dağılımı, skill atıfları, ölçülmeyen mekanizmalar, kopuk kablolar,
+boş defterler. Bunlar "hipotez" biçimine sığmadığı için hiç önerilmiyordu; sistem kendi kısıtlı
 alanının içinde optimize ediyordu.
 
-ÇÖZÜM — DÖRT KATMAN (tasarım ROADMAP §3.2'de):
-  A) TELEMETRİ PAKETİ (`analytics.system_telemetry`) — 12 bölüm, hepsi MEVCUT üreticilerden. Yeni
-     ölçüm İCAT EDİLMEZ; "ölçülemedi" dürüstçe taşınır.
-  B) MEKANİZMA DEĞERLENDİRMESİ (bu modül) — paket + görev şablonu, hermes'in YERLEŞİK beyin
-     zinciriyle (`hermes.chain_text`). Çıktı ZORUNLU ALANLI bir şemadır ve KANIT ATIFI olmayan
-     öneri DÜŞÜRÜLÜR. Düşme sayısı ve nedeni kaydedilir — kalite kapısı sessiz çalışmaz.
-  C) KÖPRÜ — `sekil="parametre"` olan, bounds-içi ve guard-doğrulanabilir öneriler otomatik
-     `composite_queue`ya düşer. AYRI BÜTÇE AÇILMAZ: H4'ün 3/hafta yoklama bütçesine tabidir; bütçe
-     doluysa öneri SIRADAKİ HAFTAYA DEVREDER ve devir GÖRÜNÜR (sessiz kuyruk = kuyruk değil çöplük).
-  D) ANAYASAL KORUMA — çekirdek HAKKINDAKİ öneri (kapı yasaları, guard, PROTECTED, risk vetoları)
-     YALNIZ rapora gider. Kuyruk yolu YAPISAL olarak imkânsızdır: kuyruğa yazan TEK fonksiyon
-     `_kuyruga_yaz`tır, ilk satırı şekil denetimidir, ve çekirdek-şekilli bir deneme SESSİZCE
-     DÜŞMEZ — `CekirdekIhlali` fırlatır ve AUTHORITY_CHANGE alarmı basar.
+ÇÖZÜM — DÖRT KATMAN:
+  A) TELEMETRİ PAKETİ (`analytics.system_telemetry`) — hepsi MEVCUT üreticilerden; yeni ölçüm
+     İCAT EDİLMEZ, "ölçülemedi" dürüstçe taşınır.
+  B) MEKANİZMA DEĞERLENDİRMESİ (bu modül; `haftalik_degerlendirme`) — paket + görev şablonu,
+     hermes'in yerleşik beyin zinciriyle (`hermes.chain_text`). Çıktı ZORUNLU_ALANLAR şemasıdır
+     (`ayristir`) ve KANIT ATIFI olmayan öneri DÜŞÜRÜLÜR (`kanit_jetonlari`/`kanit_atifi`: atıf,
+     pakette GERÇEKTEN bulunan alan adı ya da sayıdır). Düşme sayısı ve nedeni kaydedilir.
+  C) KÖPRÜ (`koprule`) — `sekil="parametre"`, bounds-içi ve guard-doğrulanabilir öneriler otomatik
+     `composite_queue`ya düşer. AYRI BÜTÇE AÇILMAZ: haftalık 3'lük yoklama bütçesine tabidir; bütçe
+     doluysa öneri SIRADAKİ HAFTAYA DEVREDER ve devir GÖRÜNÜR (sessiz kuyruk = çöplük).
+  D) ANAYASAL KORUMA — çekirdek HAKKINDAKİ öneri (CORE_FILES/CORE_CONCEPTS: kapı yasaları, guard,
+     PROTECTED, risk vetoları) YALNIZ rapora gider. Kuyruk yolu YAPISAL olarak imkânsızdır: kuyruğa
+     yazan TEK fonksiyon `_kuyruga_yaz`tır, ilk satırı şekil denetimidir ve çekirdek-şekilli deneme
+     SESSİZCE DÜŞMEZ — `CekirdekIhlali` fırlatır, AUTHORITY_CHANGE alarmı basar.
 
-OTOMATİK YÖNLENDİRME BORUSU (v192, 2026-08-06): haftalık koşunun SONUNDA `boru()` üç şeklin
-ÜÇÜNÜ DE bir yola bağlar — (a) parametre → Katman C'nin composite kuyruğu (yeni yol AÇILMADI,
-mevcut köprünün sonucu okunur), (b) tasarim → FİŞ (`nous_fisler.json` + `nous_oneri_fisi` olayı;
-otomatik uygulama yolu YOK, görünür operatör kalemi VAR), (c) cekirdek_hakkinda → sade
-`nous_oneri_red_anayasal` olayı. Katman D'nin sözü DEĞİŞMEDİ: kuyruk yolu hâlâ yapısal olarak
-kapalıdır, boru `hermes_composite.enqueue`ı ÇAĞIRMAZ ve (c) sınıfında `CekirdekIhlali`
-FIRLATILMAZ — o istisna köprünün yanlış yönlendirmesinin (bir KOD HATASININ) işaretidir, anayasanın
-normal işleyişinin değil.
+`boru()` haftalık koşunun sonunda üç şekli üç yola bağlar: parametre → Katman C kuyruğu, tasarim →
+fiş (`nous_fisler.json` + olay; otomatik uygulama yolu YOK), cekirdek_hakkinda → adlı red olayı
+(istisnasız — istisna, köprünün yanlış yönlendirmesinin işaretidir). Şekil beynin beyanına
+güvenmez: `sekil_sinifla` şekli KODDA yeniden türetir ve muhafazakâr yönde ezer (fazla-sınıflama
+bir hafta geciktirir, az-sınıflama anayasayı deler).
 
-YASA: HÂKİM KENDİ YASASINI YAZAMAZ. Bu modül hiçbir şeyi UYGULAMAZ. En fazla yaptığı şey, bir
-parametre demetini ÖLÇÜM SIRASINA sokmaktır — ship yolu yine kapı + operatördür ve tek-değişken
-yasası kaldırılmamıştır. Çekirdek hakkında KONUŞABİLİR (ve konuşması istenir: kör nokta oradadır),
-ama çekirdeği DEĞİŞTİREMEZ.
-
-ŞEKİL SINIFLANDIRMASI BEYNİN BEYANINA GÜVENMEZ: `sekil` alanı modelin kendi etiketidir ve model
-çekirdek hakkındaki bir öneriyi "parametre" diye etiketlerse kuyruğa sızardı. Bu yüzden şekil
-KODDA YENİDEN TÜRETİLİR (`sekil_sinifla`) ve çekirdek işareti bulunursa etiket EZİLİR. Yön bilinçli
-olarak MUHAFAZAKÂRDIR: fazla-sınıflandırma bir kuyruk kaydını kaçırtır (maliyet: bir hafta gecikme),
-az-sınıflandırma anayasayı deler (maliyet: geri dönüşsüz).
+YASA: HÂKİM KENDİ YASASINI YAZAMAZ — modül hiçbir şeyi UYGULAMAZ; ship yolu yine kapı + operatördür
+ve tek-değişken yasası yerindedir. Çekirdek hakkında KONUŞABİLİR ama çekirdeği DEĞİŞTİREMEZ.
+OKUR: telemetri paketi, bounds.yaml, önceki koşular/akıbetler. YAZAR: improvement_proposals.jsonl,
+nous_eval_runs.json, nous_fisler.json (+ olay defteri).
 """
 from __future__ import annotations
 

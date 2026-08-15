@@ -1,60 +1,32 @@
-"""intraday_cycle.py — Faz 4 KAPANMIŞ-BAR TÜKETİCİSİ (GÖZLEM-MODU / Faz 4a).
+"""intraday_cycle.py — kapanmış dakikalık barların tüketicisi: sıfır-yetkili gözlem/gölge ölçümü ve
+dar koşullu gönderim bacağı.
 
-barfeed her yeni-bar olayında `on_barfeed_event`i uyandırır. GÖZLEM-MODU (SIFIR YETKİ): admissible
-(kapanmış) dakikalık barlarda GÜNÜN TÜM PLANLARININ TETİK-GEÇİŞİNİ ölçer ve `intraday_decisions.jsonl`e
-3 damgalı (decision_as_of / bar_t / close_ts) yazar. Emir GÖNDERMEZ, CANLI DEFTERİ fill ETMEZ,
-portfolio.json'a DOKUNMAZ.
+barfeed her yeni-bar olayında `IntradayConsumer.on_barfeed_event`i uyandırır (kayıt api._autostart'ta;
+`consumer()` tekil örneği, `health()` durum özetini verir). Gözlem modu SIFIR YETKİLİDİR: yalnız
+admissible (kapanmış) dakikalık barlarda günün planlarının tetik-geçişini ölçer ve
+`intraday_decisions.jsonl`e 3 damgalı (decision_as_of / bar_t / close_ts) satır yazar — emir
+göndermez, canlı defteri fill etmez, portfolio.json'a dokunmaz. İlgi kümesi günün plan üretiminin
+TAMAMIdır (son EOD turunun `trade_plans.jsonl` satırları ∪ açık pozisyonlar ∪ silahlı planlar):
+yalnız silahlı planları izlemek, silahlanma kuraklığında izlenen sembol sayısını sıfıra indiriyor ve
+dakika-bar kanıt katmanını aç bırakıyordu. Yetki farkı satırda etikettir (`eod_armed`, `plan_source`)
+— silahsız planın tetiğini ÖLÇMEK onu silahlandırmak değildir.
 
-TÜM PLANLAR (sadeleştirme turu, 2026-07-30): gözlem katmanı bugüne dek YALNIZ `portfolio.json.armed`
-listesindeki planları izliyordu. Canlıdaki ölçüm sonucu: son EOD turunda 10 plan üretildi, 0'ı
-silahlandı, açık pozisyon yok → izlenen ticker sayısı SIFIR, yani aç bir intraday yığını hiçbir kanıt
-biriktirmiyordu. Faz 5/6'nın ("dakika-hassas icra EOD'ye ne katardı?") kanıt tabanı silahlanma
-kuraklığına rehin kalıyordu. Artık ilgi kümesi GÜNÜN PLAN ÜRETİMİNİN TAMAMIdır (en son EOD turunun
-`trade_plans.jsonl` satırları) ∪ açık pozisyonlar ∪ silahlı planlar.
+Gölge katmanı: tetik kesildiğinde `intraday_shadow.record` o anın TAM icra kararını (kapılar +
+boyutlandırma + emir niyeti) KOPYA bir PaperBroker üzerinde hesaplar, kendi defterine yazar ve
+nesneyi atar. Gölge iki kolludur: silahlı kolun defteri ve onu okuyan ölçümler (vs_eod, dakika-bar
+çıkış ölçümü) değişmeden durur; planlı kol AYRI deftere (`intraday_shadow.PLANLI_ORDERS_FILE`) yazar
+ki vs_eod eşleştirmesi sulanmasın. Gönderim bacağı (`_faz4b`) YALNIZ operatörün elle açtığı
+state/INTRADAY_ARM bayrağıyla, silahlı kolun gölge satırı `would_submit` dediyse ve plan icra-uygunsa
+gerçek bracket emrini TEK KAPIDAN (loop.mirror_submit_ve_kalicilastir) gönderir — güvenlik kapıları
+EOD yoluyla aynı gövdeden uygulanır; bayrak kapalıyken davranış gözlem moduyla birebir aynıdır.
 
-YETKİ FARKI KAYBOLMADI — SATIRDA ETİKET OLARAK DURUR: `eod_armed` alanının anlamı BİREBİR aynıdır
-("bu plan portfolio.json.armed içinde mi"), yanına `plan_source` ("armed" / "planned") eklendi.
-Silahsız bir planın tetik geçişini ÖLÇMEK, onu silahlandırmak değildir: bu dosya hâlâ hiçbir emir
-göndermez ve INTRADAY_ARM bayrağına dokunmaz.
-
-4B GÖLGE ARTIK İKİ KOLLU (kart EXE-2026-003, v217 — 2026-08-09). 2026-07-30'da gölge kancası
-BİLEREK yalnız SİLAHLI planda çalışıyordu; gerekçe `vs_eod` eşleştirmesinin sulanmamasıydı ve o
-gerekçe kalkmadı, ÇÖZÜLDÜ: yeni kol (`kol: planli`) AYRI BİR DEFTERE yazıyor
-(`intraday_shadow.PLANLI_ORDERS_FILE`), silahli kolun defteri ve onu okuyan iki ölçüm (`vs_eod`,
-`faz5_cikis`/EXE-2026-002) bayt düzeyinde DEĞİŞMEDİ. Yeni kolun `store.append_jsonl` çağrısı bu
-dosyadadır; hesabı gölge katmanı yapar (gerekçe kancanın yanında yazılı).
-
-GÖLGE KATMANI (Faz 4b, 2026-07-27): tetik KESİLDİĞİNDE `intraday_shadow.record` çağrılır ve o anın
-TAM icra kararı (kapılar + boyutlandırma + emir niyeti) hesaplanıp kendi defterine yazılır. Sıfır
-yetki cümlesi gölgeyi de kapsar: gölge boyutlandırmayı KOPYA bir PaperBroker üzerinde simüle eder
-ve nesneyi atar — canlı defter fill EDİLMEZ, emir gönderilmez, INTRADAY_ARM bayrağına dokunulmaz.
-Kanca bilerek minimaldir: look-ahead mantığı (admissible bar + as_of) burada zaten çözülmüştür ve
-gölge onu İKİNCİ kez yazmaz, hazır üçlüyü (plan, bar, as_of) devralır.
-
-NEDEN GÖZLEM-ÖNCE (Faz 4 tasarım sentezi): (1) mrd:bars öğrenmeye/backtest'e girmez → dakikalık kararın
-OOS kanıtı YOK; (2) strateji GÜNLÜK-kalibre (252-bar ısınma, haftalık resample, time_stop_days) → ham
-dakikalık barda 'karar' KATEGORİ HATASIDIR; (3) otonom intraday silahlanma yeni ve SONUÇLU (arming.py:
-'silahlanma otomatik değildir'). Gerçek silahlanma (Faz 4b) YALNIZ operatörün elle açtığı
-state/INTRADAY_ARM bayrağı + EOD ile BİREBİR aynı güvenlik kapılarıyla açılır.
-
-FAZ 4B GÖNDERİM BACAĞI ARTIK VAR (İCRA turu, operatör onayı 2026-08-11 — P-2026-08-07-VLO vakası):
-`_faz4b` yalnız INTRADAY_ARM açıkken, SİLAHLI kolun gölge satırı `would_submit` dediyse ve plan
-icra-uygunsa ((setup ARMED_SETUPS'ta VE kapı GO) YA DA operatör-onaylı) GERÇEK bracket emrini TEK
-KAPIDAN (loop.mirror_submit_ve_kalicilastir → mirror_submit_armed) gönderir. "EOD ile BİREBİR aynı
-güvenlik kapıları" sözü İKİ katmanda tutulur, kopya yazılmadan: (1) gölge satırı o ANIN kapılarını
-üretimin kendi fonksiyonlarıyla yeniden ölçer (halt/breaker/veri/size_mult/pozisyon/slot —
-intraday_shadow._gates) ve `would_submit` değilse 4b HİÇ denemez; (2) tek kapı gönderim anında
-HALT + E1-v2 yasası + de-risk çarpanı + dedup + E2 satırını EOD yoluyla AYNI gövdeden uygular.
-INTRADAY_ARM kapalıyken davranış gözlem-moduyla BİREBİR aynıdır (4b hiç çağrılmaz).
-
-TETİK-GEÇİŞ ÖLÇÜMÜ kategori hatası DEĞİLDİR: dakikalık barın high'ı bir EŞİĞİ (entry_trigger) geçti mi —
-strateji GİRDİSİ değil, eşik kontrolü. 'Dakika-hassas icra EOD next-open'a kıyasla ne kazandırırdı'yı
-ölçer; gösterge HESAPLAMAZ.
-
-LOOK-AHEAD (bkz. barclock): karar anı `as_of=barclock.now()` olay başına TEK kez; yalnız admissible
-(kapanmış) barlar; girdi DEĞERLENDİRİLEN admissible barın OHLC'sinden, ASLA sıcak fiyattan (get_price);
-her satır 3 damgalı → `as_of >= close_ts` sonradan denetlenebilir.
-"""
+Look-ahead yasası (bkz. barclock): karar anı `as_of=barclock.now()` olay başına TEK kez; girdi
+DEĞERLENDİRİLEN admissible barın OHLC'sinden, ASLA sıcak fiyattan; her satır 3 damgalı →
+`as_of >= close_ts` sonradan denetlenebilir. Gözlem-önce gerekçesi: dakikalık bar öğrenmeye/backtest'e
+girmez (OOS kanıtı yok) ve strateji GÜNLÜK kalibredir — ham dakikalık barda "karar" kategori
+hatasıdır; tetik-geçiş ölçümü değildir (eşik kontrolüdür, gösterge hesaplamaz). Okur: barfeed
+olayları, portfolio.json, trade_plans.jsonl; yazar: intraday_decisions.jsonl. Komşular: barclock,
+hotstate, intraday_shadow, loop."""
 from __future__ import annotations
 import os
 

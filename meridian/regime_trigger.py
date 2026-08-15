@@ -1,10 +1,22 @@
-"""regime_trigger.py — Ertelenmiş Rejim Bütçe Tetikleyicisi (karar mekanizması v3, Component 4).
+"""regime_trigger.py — ertelenmiş rejim-bütçe tetikleyicisi: rejim başına örneklem sayacı + "kanıt hazır" sinyali.
 
-Mevcut statik duruş ("chop → %0") KİLİTLİ kalır — chop'ta yalnız 8 gerçekleşmiş işlem varken dinamik
-kenar-bütçelemesi süs olur. Bu modül karar VERMEZ: rejim başına kapanmış işlem sayısını sayar ve
-N ≥ 30 eşiği aşıldığında karne API'sine bir tetikleyici bayrağı fırlatır (+ bir kez obs.log) —
-dinamik bootstrap/edge bütçelemesine geçişin "artık kanıt var" sinyali. Geçişin kendisi ayrı ve
-bilinçli bir tasarım kararıdır."""
+NE YAPAR. Mevcut statik duruş ("chop → %0 maruziyet") KİLİTLİ kalır — bir rejimde yalnız bir avuç
+gerçekleşmiş işlem varken dinamik kenar-bütçelemesi süs olur. Bu modül karar VERMEZ; kanıtın
+biriktiği anı görünür kılar: `DeferredRegimeBudgetTrigger.evaluate` kapanmış işlem defterini rejim
+etiketine göre sayar (evren config.VALID_REGIMES), rejim başına {n, threshold, ready} döndürür ve
+bir rejim eşiği İLK kez aştığında tek seferlik `regime_budget_trigger` olayı basar — dinamik
+bootstrap/edge bütçelemesine geçişin "artık kanıt var" sinyali.
+
+KİLİT GİRİŞLER: THRESHOLD_N = 30 (rejim başına asgari kapanmış işlem), STATE_FILE
+("regime_trigger.json" — ateşlenmiş rejimlerin kalıcı listesi), `evaluate(trades=None)` (defteri
+kendisi okur ya da çağıranın verdiği listeyi sayar).
+
+DEĞİŞMEZLER: eşik aşımı rejim başına yalnız BİR kez olaylanır (fired listesi kalıcı); geçişin
+kendisi bu modülün DIŞINDA, ayrı ve bilinçli bir operatör/tasarım kararıdır — burada hiçbir bütçe,
+kapı ya da parametre değişmez.
+
+OKUR: trades.jsonl (ya da verilen liste), regime_trigger.json. YAZAR: regime_trigger.json
+("fired") + obs olay defteri."""
 from __future__ import annotations
 
 from . import config, store, obs

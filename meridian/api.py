@@ -1,7 +1,24 @@
-"""api.py — FastAPI read-model over state/ + a tiny write surface (HALT / resume / approvals).
-The dashboard NEVER talks to the broker directly; it reads state and posts operator intents.
-Single-operator: reach it over an IAP tunnel (no inbound firewall on the VM). Optional shared-token
-gate for local use. Research system. Paper mode. Not financial advice."""
+"""api.py — state/ üzerinde FastAPI okuma-modeli ve dar bir operatör yazma yüzeyi (HALT/DEVAM, onaylar).
+
+Pano sunucusudur: motorun state/ altına yazdığı defter ve anlık görüntüleri okuyup JSON/HTML olarak
+servis eder, pano statik dosyalarını (app.js, theme.js, fontlar) dağıtır. Pano broker'la ASLA
+doğrudan konuşmaz — tarayıcı durumu okur, yalnız operatör NİYETİ gönderir (HALT/devam, plan ve
+koruma onayı, skill kararları, sır yönetimi). Tek-operatör tasarımı: erişim loopback/IAP tüneli
+üzerinden; parola oturumu + isteğe bağlı x-meridian-token başlığı. Araştırma sistemi, kâğıt mod;
+yatırım tavsiyesi değildir.
+
+Kilit girişler: `app` (uvicorn'un yüklediği FastAPI uygulaması), `_lifespan`→`_autostart` (bayraklara
+göre scheduler, hermes_runtime, mirror_stream, marketstream/barfeed ve intraday_cycle tüketicisini
+ayağa kaldırır), `_auth` (oturum çerezi + başlık token'ı), `_auth_posture_check` (açılış yetki
+duruşu), `_NativeRoute` (her uç dönüşü `store.sanitize`den geçer: numpy tipleri ve NaN/±Inf telden
+çıkamaz). Uç aileleri: /healthz, /metrics, /api/summary, /api/diagnostics, /api/hermes,
+/api/scheduler, /api/alpaca, /api/approvals, /api/halt, /api/resume…
+
+Değişmezler: loopback DIŞINA parolasız bağlanma süreci BAŞLATMAZ (fail-closed RuntimeError); okuma
+uçları durum ÜRETMEZ (hesabı analytics/health/scheduler yapar); yazma yüzeyi operatör niyetiyle
+sınırlıdır ve karar/onay kayıtları deftere düşer. Okur: state/ (store üzerinden) + analytics
+türevleri; yazar: HALT/onay/sır gibi niyetleri yine store/secrets üzerinden. Komşular: auth,
+analytics, health, obs, scheduler, hermes_runtime."""
 from __future__ import annotations
 import functools
 import hmac

@@ -1,19 +1,27 @@
-"""cf_backfill.py — karşı-olgusal defteri TÜM TARİHE koşturarak doldurur (2026-07-21).
+"""cf_backfill.py — karşı-olgusal defteri TÜM TARİHİ SEANSLARA koşturarak dolduran tek-seferlik motor.
 
-KÖK NEDEN: counterfactual.collect/advance YALNIZ canlı daily_cycle'da çağrılıyor; 2022→bugün replay'i
-90 gerçek işlem üretti ama SIFIR karşı-olgusal kanıt — kanıt motoru hiç tarihin üstünden geçmemiş.
-Bu modül o boşluğu kapatır: her tarihi seansta daily_cycle'ın P2 (tarama) + P3 (plan+kapı) BLOKLARINI
-BİREBİR AYNI CANLI FONKSİYONLARLA (regime.build_regime_json, config.resolve_params, strategy.scan_all,
-guard.classify_gate, counterfactual.collect/advance) yeniden koşar — P4/P5 (dolum/kalibrasyon) YÜKÜ
-OLMADAN. Sonuç: yüzlerce simüle aday sonucu, bir gecede, tarihten.
+KÖK NEDEN. counterfactual.collect/advance yalnız canlı daily_cycle'da çağrılır; tarihi replay
+gerçek işlemler üretmişken SIFIR karşı-olgusal kanıt bırakmıştı — kanıt motoru tarihin üstünden hiç
+geçmemişti. Bu modül o boşluğu kapatır: `run(start, end)` her tarihi seansta daily_cycle'ın P2
+(tarama) + P3 (plan+kapı) bloklarını BİREBİR AYNI CANLI FONKSİYONLARLA yeniden koşar
+(`_plans_for_session`: regime_mod.build_regime_json, config.resolve_params, strat.scan_all,
+guard.classify_gate; sonra cf.collect + cf.advance) — P4/P5 (dolum/kalibrasyon) yükü OLMADAN.
+Sonuç: yüzlerce simüle aday sonucu, bir gecede, tarihten.
 
-DÜRÜSTLÜK:
-  • İleri-yönlü sim — cf.advance her satırı yalnız KENDİ giriş-sonrası barlarıyla çözer (look-ahead yok).
-  • SIFIR kapı yetkisi — cf yalnız ölçüm besler (skor kalibrasyonu, skill katkısı, near-miss, fidelity);
-    hiçbir kararı/kapıyı etkilemez (counterfactual.py yasası).
-  • Portföy-BAĞIMSIZ kapı — gate'e düz portföy verilir (0 pozisyon): cf, PER-ADAY seçim kalitesini ölçer,
-    o günkü tesadüfi holdinglerin ısı/korelasyon durumunu değil. Bu bilinçli ve dürüst bir seçimdir.
-Yeniden mekanizma DEĞİL — mevcut motoru tasarlandığı derinlikte çalıştırma."""
+KİLİT GİRİŞLER: önbellekli barlar (ağa çıkılmaz — taze veri çekmek barları değiştirir ve replay'i
+bozar), goal/bounds/params, strategy.ARMED_SETUPS (uyuyan/silahlı ayrımı), near-miss gevşek
+eşikleri tek kaynaktan (strat.relax_for_near_miss).
+
+DÜRÜSTLÜK DEĞİŞMEZLERİ:
+  • İleri-yönlü sim — cf.advance her satırı yalnız KENDİ giriş-sonrası barlarıyla çözer
+    (look-ahead yok); rastgelelik yok, aynı barlar + aynı aralık → aynı satırlar.
+  • SIFIR kapı yetkisi — cf yalnız ölçüm besler (skor kalibrasyonu, skill katkısı, near-miss,
+    fidelity); hiçbir kararı/kapıyı etkilemez (counterfactual.py yasası).
+  • Portföy-BAĞIMSIZ kapı — gate'e düz portföy (0 pozisyon) verilir: cf, PER-ADAY seçim kalitesini
+    ölçer, o günkü tesadüfi holdinglerin ısı/korelasyon durumunu değil — bilinçli bir seçim.
+Yeniden mekanizma DEĞİL — mevcut motoru tasarlandığı derinlikte çalıştırma.
+OKUR: bar önbelleği, state sözleşme dosyaları. YAZAR: yalnız karşı-olgusal defter (cf motoru
+üzerinden) — portföye, işlem defterine, stratejiye ve karneye ASLA dokunmaz."""
 from __future__ import annotations
 import pandas as pd
 

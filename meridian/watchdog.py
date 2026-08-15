@@ -1,12 +1,30 @@
-"""watchdog.py — Mekanizma Bekçisi (#1): 15+ periyodik dişlinin canlılık nabzı.
+"""watchdog.py — mekanizma bekçisi: periyodik dişlilerin canlılık nabzı + bütünlük/makullük rapor ailesi.
 
-Panel bugüne dek VERİNİN tazeliğini gösteriyordu; MEKANİZMANIN kendisi sessizce durduğunda kimse
-görmüyordu (canlı örnek: ısınma kadansı anomalisi günlerce 'not edildi' kaldı). Her mekanizma
-koştuğunda `beat(ad)` damgalar; `report()` beklenen pencereyle karşılaştırır ve gecikenleri listeler.
-Pencereler takvim-gerçekçi: seans-bağımlı işler hafta sonunu tolere eder (4 gün), haftalıklar 9 gün.
+NE YAPAR. Panel verinin tazeliğini gösteriyordu; MEKANİZMANIN kendisi sessizce durduğunda kimse
+görmüyordu (canlı örnek: ısınma kadansı anomalisi günlerce "not edildi" kaldı). Her mekanizma
+koştuğunda `beat(ad)` `state/mechanism_beats.json`a damga atar; `report()` EXPECTED penceresiyle
+karşılaştırıp gecikenleri listeler; `check_and_alarm()` MECHANISM_STALE üretir. Pencereler
+takvim-gerçekçi: seans-bağımlılar hafta sonunu tolere eder (4 gün), haftalıklar 9 gün.
 
-Yalnız GÖZLEM: bekçi hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı etkilemez — amber satır
-üretir, teşhisi operatöre/paneline bırakır."""
+ALARM HİJYENİ. Askıda ≠ gecikmiş: beklemeye alınmış mekanizma (ör. hermes kota soğuması) OK
+sayılmaz ama alarm da üretmez — kendi kovasında görünür; sistemin kendi bildirdiği meşru bir hâli
+arıza diye operatöre yollamak yasak. Histerezis + günlük tekilleştirme (GUNLUK_ALARM_TAVANI)
+pencere sınırında salınan mekanizmanın çırpınma alarmlarını keser; bastırılan her satır
+`watchdog_alarm_gunluk.json` sayacında GÖRÜNÜR — bekçi kendi körlüğünü hijyen sanmaz.
+
+RAPOR AİLESİ (pano /api/diagnostics tüketir; hepsi ölçüm, hüküm operatörün):
+`production_report`, `conservation_report`, `determinism_report`, `parity_report` (alarm
+teslimi/kapsama dahil), `integrity_report`, `alarm_budget`, `intraday_stamp_report`,
+`goal_failure_report`, `coherence_report`, `divergence_report` (+`grant_amnesty`),
+`monotonicity_report`, `ownership_report`, `koruma_report`/`check_koruma_and_alarm` (korumasız
+pozisyon → NAKED_POSITION), `kitap_damga_report`, `mutabakat_tazelik_report`,
+`onayli_gonderim_report` (onaylı plan gönderilmedi bekçisi), `liveness_report`,
+`universe_audit_report`, `uyuyan_iddia_tara`.
+
+DEĞİŞMEZLER. Bekçi YALNIZ GÖZLEMdir: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı
+etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazılamazsa sessiz kalınmaz
+(`watchdog_beat_write_failed`): bekçi kendi körlüğünü üretkenlik sanamaz. Okur/yazar: kendi iki
+damga/sayaç dosyası + defterlerin geniş salt-okunur kesiti; alarmlar obs üzerinden."""
 from __future__ import annotations
 import datetime as dt
 

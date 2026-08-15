@@ -1,68 +1,29 @@
-"""validation.py — Y1 DOĞRULAMA ÜÇLÜSÜ: DSR/PSR + PBO/CSCV + aday getiri defteri
-(Hafta 3a turu, 2026-07-30 · ROADMAP §3.1 "Y1 doğrulama üçlüsü")
+"""validation.py — doğrulama üçlüsü: aday getiri defteri + DSR/PSR + PBO/CSCV ve ship hükümleri.
 
-NEDEN VAR. Kapı bugün TEK bir soruya cevap veriyor: "bu aday, bu pencerede incumbent'ı yeterince
-büyük bir farkla geçti mi?" Sormadığı soru şu: **kaç aday denedik de bu geçti?** 289 sorgu sorulmuş
-bir pencerede en iyi görüneni seçmek, bir kenar bulmak değil bir maksimum seçmektir — ve rastgele
-sayılardan oluşan 289 adayın en iyisi de "OOS'ta kazandı" der. Aşınma defteri (Aşama 2.2) bu yükü
-SAYIYOR ve marja çeviriyor, ama marj bir SEZGİdir: "kaç denemeden sonra bu Sharpe şaşırtıcı olmayı
-bırakır?" sorusunun istatistiği ayrıdır ve adı DSR'dir (Bailey & López de Prado, 2014).
+Kapı "bu aday incumbent'ı geçti mi?" diye sorar; sormadığı soru şudur: **kaç aday denedik de bu
+geçti?** Çok sorgulanmış bir pencerede en iyi görüneni seçmek kenar bulmak değil maksimum
+seçmektir. ÜÇ PARÇA: (1) ADAY GETİRİ DEFTERİ (`validation_ledger.jsonl`; `record_candidate`/
+`ledger`, tavan LEDGER_CAP) — her RESMÎ kapı değerlendirmesinin işlem-getiri serisi kalıcıdır,
+PBO'nun ham maddesi; (2) `deflated_sharpe`/`psr`/`expected_max_sharpe` (Bailey & López de Prado)
+— Sharpe, deneme sayısına ve çarpıklık/basıklığa göre düzeltilir; ÖLÇER, hüküm vermez;
+(3) `pbo_cscv` — "bu SEÇİM YÖNTEMİ in-sample'da en iyiyi seçtiğinde OOS'ta medyanın altına düşme
+olasılığı" (aday değil SÜREÇ testi).
 
-ÜÇ PARÇA:
+SHIP HÜKMÜ TEK YERDE: `dsr_kapi`/`pbo_kapi` saf fonksiyonlardır ve eşikleri (DSR_HARD_MIN,
+PBO_HARD_MAX) buradaki sabitlerdir — ship yolu (reflect) ve silahlanma kilit zinciri (health)
+AYNI eşiği buradan okur; bir eşiğin iki kopyası, sessizce ayrışan iki kapı demektir. Kural
+matrisi: KÂĞIT modunda DSR bloklamaz (yalnız damga: `dsr_dusuk`/`dsr_durum` — kâğıt evrimi ölçüm
+aracıdır, öğrenme hızı kanıtsız kısılmaz), PBO ise ÖLÇÜLEBİLİYORSA kâğıtta da SERTTİR;
+GERÇEK-PARA bağlamında ikisi de SERT ve FAIL-CLOSED — ölçülemeyen kontrol de RETtir (kanıt yoksa
+kapı kapalı). Simetrik kural: UYGULANAMAYAN KONTROL VETO OLAMAZ — taban dolmadan PBO kâğıtta
+hükümsüzdür.
 
-  D1 ADAY GETİRİ DEFTERİ (`validation_ledger.jsonl`) — her RESMÎ kapı değerlendirmesinde adayın
-     işlem-getiri serisi (tarih + R) kalıcı olarak saklanır. PBO'nun ham maddesi budur: PBO, N
-     adayın AYNI zaman ızgarasındaki getirilerini ister ve o ızgara ancak seriler saklanırsa kurulur.
-     Bugüne kadar seriler `walk_forward`ın dönüş sözlüğünde doğup istek sonunda ölüyordu.
-
-  D2 DSR/PSR — adayın Sharpe'ı, DENEME SAYISINA ve dağılımının çarpıklık/basıklığına göre
-     düzeltilir. `deflated_sharpe` ÖLÇER, hüküm vermez.
-
-  D3 PBO/CSCV — "bu seçim yöntemi, in-sample'da en iyiyi seçtiğinde out-of-sample'da medyanın
-     altına düşme olasılığı nedir?" Defterde ≥8 aday (PBO_MIN_ADAY) birikmeden HESAPLANAMAZ ve o hâlde
-     dürüstçe OLCULEMEDI döner (uydurma yasağı: az veriyle üretilmiş bir PBO, ölçüm değil süstür).
-
---- SERT KAPI (DSR HARD-GATE TURU, 2026-07-30 — operatör onaylı MOD-FARKINDALIKLI tasarım) ---
-
-D2/D3 ARTIK SALT ADVISORY DEĞİL. `_gate_eval`in `passes` hükmü DEĞİŞMEDİ (DSR hâlâ o satırın
-ALTINDA üretilir ve ona dokunamaz); değişen yer SHIP YOLUDUR (`reflect._submit_locked`) ve kural
-`dsr_kapi`/`pbo_kapi` ile TEK YERDE yazılıdır — iki tüketici (ship yolu + Faz-6 kilit zinciri) aynı
-eşiği iki kez tanımlarsa iki farklı kapı doğar. Kural matrisi:
-
-  KÂĞIT MODU (bugünkü durum: MERIDIAN_MODE=paper)
-    * DSR  — BLOKLAMAZ. Ship kaydına damga: `dsr` + `dsr_dusuk` + `dsr_durum`. GEREKÇE: kâğıt
-      evrimi ÖLÇÜM ARACIDIR; ana defterin öğrenme hızını istatistiksel bir uyarıyla kısmak,
-      kanıt üretim hızını kanıt olmadan düşürmek olurdu. Damga o uyarıyı KAYDEDER, susturmaz.
-    * PBO  — ÖLÇÜLEBİLİYORSA SERT (paper dahil). Bu bir ADAY testi değil SÜREÇ testidir: PBO
-      "bu SEÇİM YÖNTEMİ aşırı-uydurulmuş mu?" diye sorar ve aşırı-uydurulmuş bir süreçten çıkan
-      aday kâğıda bile inmemeli — kâğıt defter o adayın kanıtı olarak birikir ve süreç bozuksa
-      biriken şey kanıt değil gürültüdür.
-
-  GERÇEK-PARA BAĞLAMI (MERIDIAN_MODE=live + MERIDIAN_I_ACCEPT_RISK=true zinciri; bugün KAPALI)
-    * İKİSİ DE SERT ve FAIL-CLOSED: ölçülemeyen DSR ya da ölçülemeyen PBO da RET. "Kanıt yoksa
-      gerçek para kapısı kapalı" — UYDURMA YASAĞI'nın kapı hâli. Ölçülemeyen bir kontrolü
-      "geçti" saymak, yapılmamış bir testin sonucunu uydurmaktır ve tam bu modül onu yasaklar.
-
-UYGULANAMAYAN KONTROL VETO OLAMAZ (kâğıt tarafın simetrik kuralı): PBO taban dolmadan
-(<PBO_MIN_ADAY aday, TEK pencere-ızgarası) hükümsüzdür ve kâğıtta veto etmez. Havuzlama YASAK —
-iki `pencere_id` iki sınav kâğıdıdır (ledgers sözleşmesi; R1 düzeltmesi).
-
---- ÜÇ BEYAN ---
-
-(1) SANDBOX SAYMAZ. `config.STATE` yönlendirilmiş her ölçüm (test, sprint kumu, ön-eleme) kendi
-    kopyasına yazar; resmî defter dokunulmaz. Aşınma defterinin (oos_erosion) beyanı (2) ile birebir
-    aynı gerekçe — resmî defter yalnız RESMÎ kapı değerlendirmelerini görür.
-
-(2) RETRO DAMGA YOK. Geçmiş 19 kapı kaydı geriye dönük seri üretilerek deftere işlenMEZ: o
-    adayların işlem serileri hiçbir yerde saklanmadı (kapı kaydı yalnız `oos_score` taşıyor) ve
-    yeniden koşularak "geçmişte de ölçmüştük" gibi sunulması, tam olarak bu modülün önlemek için
-    var olduğu şeydir. Defter BUGÜNDEN sayar.
-
-(3) DENEME-SAHRE VARYANSI İKİ KAYNAKTAN GELİR VE HANGİSİ OLDUĞU ÇIKTIDA YAZAR. DSR formülü
-    E[max SR] için denemelerin Sharpe'larının VARYANSINI ister. Defterde yeterli kayıt varsa o
-    varyans ÖLÇÜLÜR (`varyans_kaynagi: "deneme_defteri"`); yoksa sıfır-beceri null dağılımının
-    analitik yaklaşımına düşülür (`varyans_kaynagi: "sifir_beceri_null"`). İkisi AYNI sayı değildir
-    ve hangisinin kullanıldığını gizlemek, düzeltmenin kendisini uydurma yapardı.
+UYDURMA YASAĞI her katmanda: taban dolmadan (DSR_MIN_N, PBO_MIN_ADAY) sayı üretilmez, dürüstçe
+None/olculemedi döner; deneme-varyansının kaynağı çıktıda beyanlıdır (`varyans_kaynagi`:
+deneme_defteri | sifir_beceri_null); iki farklı pencere/parmak izi tek havuzda karıştırılamaz;
+geçmiş kayıtlara retro seri üretilmez (defter bugünden sayar); sandbox ölçümleri kendi kopyasına
+yazar, resmî defter yalnız resmî değerlendirmeleri görür. Okur/yazar: yalnız
+validation_ledger.jsonl (yazım kapıyı asla düşürmez; başarısızlık uyarıyla kayda geçer).
 """
 from __future__ import annotations
 

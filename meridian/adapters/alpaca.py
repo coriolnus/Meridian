@@ -1,25 +1,29 @@
-"""adapters/alpaca.py — Alpaca broker adapter. PAPER by default. The LIVE path is refused unless
-BOTH env flags are hand-set (MERIDIAN_MODE=live AND MERIDIAN_I_ACCEPT_RISK=true) AND goal.limits
-.autonomy_level >= 1 (enforced in guard.py). alpaca-py is imported lazily so the engine runs at L0
-without it installed. PnL/fills that count are ALWAYS the internal broker.py simulator's; this module
-is the MIRROR. But note: with MERIDIAN_BROKER=alpaca_paper (serve.sh's default, and what runs today)
-the mirror path IS live every cycle — submit_plan() is called from loop.py on every armed plan. The
-old docstring claimed this module "is only reached once the live path is enabled"; that was false and
-hid the fact that a mirror failure can drop a real armed plan (audit 2026-07-21).
+"""adapters/alpaca.py — Alpaca broker adaptörü: varsayılan olarak PAPER; iç broker simülatörünün
+dışa bakan AYNASI + salt-okuma piyasa verisi düzlemi.
 
-YAZILI VARSAYIMLAR (denetim 2026-07-21 — her biri artık bir kontrol ya da testle bağlı):
-  A1 read-only uçlar (account/positions/orders) HİÇBİR ZAMAN istisna fırlatmaz; hata durumunda
-     None/[] döner. Bu yüzden çağıranın try/except'i ÖLÜ KOD'dur ve "broker ulaşılamıyor" ile
-     "hiç emir yok" ayırt edilemez → `transport()` sağlık kaydı bu ayrımı taşır. Çağıran, boş
-     listeye bakıp mutabakat kararı vermeden ÖNCE transport()["ok"] kontrol etmelidir.
-  A2 client_order_id == iç plan kimliği ve ENGINE_COID_PREFIX ile başlar. Mutabakat "motor yetimi"
-     tespitini bu önekle yapar; önek kayarsa yetimler sessizce 'external' altında saklanır.
-  A3 Bu hesap YALNIZ motora ait DEĞİL — operatörün kendi pozisyonları (bugün: NVDA) ve elle
-     girdiği emirler aynı kağıt hesapta. Motor SAHİBİ OLMADIĞI emri iptal edemez / pozisyonu
-     düzleştiremez (cancel_open_entries önek süzgeci + close_all onay jetonu).
-  A4 Koruma (stop) asla gevşetilmez: replace_order_stop yalnız YUKARI. Eskiden bunu yalnız çağıran
-     katman garanti ediyordu; artık sınırın kendisi reddediyor.
-"""
+(a) Ne yapar: kağıt (paper) yürütme SDK'sız, doğrudan REST/httpx ile gider (bracket gönderimi, emir
+listeleme/iptal, motor pozisyonu kapatma, koruyucu OCO); PnL/dolumların hükmü HER ZAMAN iç
+broker.py simülatörünündür, burası aynadır. AMA ayna yolu MERIDIAN_BROKER=alpaca_paper iken HER
+döngüde canlıdır — submit_plan() her silahlı planda çağrılır. Eski docstring "bu modüle yalnız canlı
+yol açılınca girilir" diyordu; bu YANLIŞLANDI: ayna arızası gerçek bir silahlı planı düşürebilir.
+Ayrıca AYRI bir piyasa-verisi düzlemi taşır (data.alpaca.markets REST + stream host; iex/sip
+feed'leri, seans/günlük barlar, aynı-akşam bacağı) — o yol salt-okumadır, emir geçemez.
+(b) Kilit girişler: submit_plan()/submit_bracket(), orders(nested=True)/order_by_id(), account()/
+positions()/transport(), cancel_open_entries(), close_engine_position(), submit_protective_oco()/
+koruma_coid(), replace_order_stop(), close_all(CLOSE_ALL_CONFIRM), ping(); veri düzlemi:
+session_bars()/daily_bars()/snapshots()/sip_session_bars()/same_evening_bars()/data_ws_url().
+(c) Değişmezler — PAPER KİLİDİ: LIVE yolu bayraksız REDDEDİLİR (live_guard: MERIDIAN_MODE=live VE
+MERIDIAN_I_ACCEPT_RISK=true elle kurulmadan VE goal.limits.autonomy_level >= 1 olmadan live_client
+fırlatır); REST yolu _paper_base() ile paper-api.alpaca.markets HOSTNAME'ine sert kilitlidir (yabancı
+host anahtar başlığı alamaz, şema https'e yükseltilir) — bu modülden gerçek-para emri ÇIKAMAZ.
+Yazılı varsayımlar: A1 salt-okuma uçlar istisna fırlatmaz, None/[] döner — "ulaşılamadı" ile "emir
+yok" ayrımını transport() taşır, çağıran karar ÖNCESİ ona bakar; A2 client_order_id iç plan kimliği
+= ENGINE_COID_PREFIX ("P-") öneki, mutabakatın birleştirme anahtarı; A3 hesap yalnız motorun değil —
+sahibi olunmayan emir/pozisyona dokunulmaz (süpürücü hükmü coid_sinifi'nin aile/grup/yön
+kemerlerinden okur; close_all onay jetonlu); A4 koruma stop'u asla gevşetilmez, replace_order_stop
+yalnız YUKARI taşır. alpaca-py tembel import edilir (L0 kurulumsuz koşar).
+(d) Okur/yazar: state'e dosya yazmaz; sırlar secrets'tan okunur ve asla loglanmaz; taşıma sağlığı ve
+süpürme/sınıf dökümü süreç-içi sayaç + olay defteri (obs) üzerinden görünür kılınır."""
 from __future__ import annotations
 import datetime as _dt
 import httpx

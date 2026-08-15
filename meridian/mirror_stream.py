@@ -1,25 +1,32 @@
-"""mirror_stream.py — Olay-güdümlü YÜRÜTME-DURUMU katmanı (operatör mimari isteği, 2026-07-19).
+"""mirror_stream.py — Alpaca trade_updates akışından beslenen olay-güdümlü YÜRÜTME-DURUMU katmanı.
 
-Alpaca `trade_updates` WebSocket akışını dinler ve ayna emirlerinin YEREL DURUM MAKİNESİNİ anlık
-besler: dolum/kısmi-dolum/ret/iptal artık bir sonraki döngünün uzlaştırmasını (300 sn+) beklemez.
+NE YAPAR: Alpaca `trade_updates` WebSocket akışını dinler ve ayna emirlerinin YEREL DURUM MAKİNESİNİ
+(MirrorOrderStateMachine, client_order_id anahtarlı) anlık besler: dolum/kısmi-dolum/ret/iptal artık
+bir sonraki döngünün uzlaştırmasını (300 sn+) beklemez. Operatörün mimari kararıyla eklenmiş kalıcı
+bir katmandır. Bayatlık/nabız/backoff/down-reassert/reconnect YASASI `streamhealth`e çıkarılmıştır —
+mirror onu İÇE AKTARIR (aynı nesne), marketstream da aynı yasayı tüketir; "aynı yasa iki uygulama,
+sessiz ayrışma" kusuru (54→2 down vakası) yapısal olarak imkânsızdır. Burada yalnız yürütmeye-özgü
+olan yaşar: emir durum makinesi, paper host-kilidi, devre-kesici ve mirror_orders.json kalıcılığı.
 
-FAZ 2 REFACTOR (2026-07-23): bayatlık/nabız/backoff/down-reassert/reconnect YASASI `streamhealth`e
-ÇIKARILDI — mirror onu İÇE AKTARIR (aynı nesne), marketstream de aynı yasayı tüketir. `next_backoff`,
-`set_stream`, `touch`, reconnect döngüsü artık TEK yerde; "aynı yasa iki uygulama, sessiz ayrışma"
-kusuru (54→2 down) YAPISAL olarak imkânsız. Bu modülde YALNIZ emre-özgü olan kalır: emir durum makinesi
-(`apply`/`pending_symbols`), paper host-kilidi (`_url`), devre-kesici (`_maybe_cancel_entries`) ve
-`mirror_orders.json` kalıcılığı (yürütme gerçeği restart-güvenli olmalı). Davranış BİREBİR aynı —
-mevcut v33/v68/v72 testleri sıfır düzenlemeyle geçer (davranış-koruma kanıtı).
+KİLİT GİRİŞLER: machine() (süreç-içi tekil durum makinesi), MirrorOrderStateMachine.apply(event,
+order) / pending_symbols() ("bu hissede canlı emir var, yeni karar üretme" kuralının anlık kaynağı;
+PENDING_MAX_AGE_H bayatlık ufku — kaçan terminal olay sembolü sonsuza dek kilitleyemez),
+stream_health() (panonun okuması gereken tek sağlık şekli: ham bayrak nabızla çarpılır),
+pending_symbols_snapshot() / decay_stale_stream_flag() (süreç-dışı okuyucular; bayat yeşil bayrak
+diskte düşürülür), MirrorStreamListener (streamhealth.run_stream `spec` protokolü).
 
-SINIR ÇİZGİLERİ (bilinçli):
-  * KARAR HATTI DOKUNULMAZ — sinyaller kapalı-bar EOD yasasıyla üretilir; bu katman yalnız YÜRÜTME
-    durumunu taşır. bars/quotes akışına bilerek abone OLUNMAZ (o Faz 2 marketstream'in işidir; karar
-    hattına ASLA sızmaz — look-ahead yasası).
-  * Zamanlayıcı poll'u KALIR — akış koptuğunda uzlaştırma güvenlik ağıdır (kemer + pantolon askısı).
-  * Hostname-kilitli PAPER akışı — gerçek-para stream'ine bu modülden çıkış yoktur.
-  * Kopuş devre-kesicisi KORUMA BACAKLARINI ASLA iptal etmez; görünürlük sağlar (stream_ok=false → amber).
-    İstenirse YALNIZ dolmamış GİRİŞ emirlerinin iptali MERIDIAN_WS_DISCONNECT_CANCEL_ENTRIES=1 ile
-    açılır (varsayılan KAPALI)."""
+DEĞİŞMEZLER (WS dinleyici ortak yasası + sınır çizgileri): KARAR HATTI DOKUNULMAZ — sinyaller
+kapalı-bar EOD yasasıyla üretilir, bu katman yalnız yürütme durumu taşır; bars/quotes aboneliği
+bilerek yoktur (o marketstream'in işidir, karar hattına asla sızmaz — look-ahead yasası).
+Zamanlayıcı poll'u kalır (akış koparsa uzlaştırma güvenlik ağıdır). Hostname-kilitli PAPER akışı —
+gerçek-para stream'ine buradan çıkış yoktur. Terminal emir EMİCİDİR: yeniden bağlanan akışın tekrar
+olayları geri saramaz ve birebir tekrar ikinci sinyal üretmez. Kopuş devre-kesicisi koruma
+bacaklarını ASLA iptal etmez; yalnız dolmamış giriş emri iptali opsiyoneldir
+(MERIDIAN_WS_DISCONNECT_CANCEL_ENTRIES=1, varsayılan kapalı).
+
+OKUR/YAZAR: state/mirror_orders.json'ı okur/atomik yazar (yürütme gerçeği restart-güvenli; sağlık
+alanları streamhealth.to_dict ile birlikte); Redis'e ve bar akışlarına dokunmaz; olaylar obs
+defterine yazılır (ret → anlık BROKER_REJECT alarmı)."""
 from __future__ import annotations
 import asyncio
 import datetime as dt

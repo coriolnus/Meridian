@@ -1,8 +1,24 @@
-"""score.py — composite performance score in [-1, +1] from realized return vs target, drawdown
-vs max, and Sharpe vs min. Returns None (NOT 0.0) when there are fewer than goal.min_sample closed
-trades: an unknown score must never be mistaken for a mediocre one (§4). The absolute value is a
-heuristic; what matters is that incumbent and candidate are scored by the identical function so the
-backtest gate compares like with like."""
+"""score.py — kapanmış işlem defterinden [-1, +1] aralığında bileşik performans skoru.
+
+Ne yapar: gerçekleşen getiriyi hedefe, düşüşü (drawdown) tavana ve Sharpe'ı tabana oranlayıp
+0.5/0.3/0.2 ağırlıkla tek sayıya indirger; kapı, yürürlükteki stratejiyle adayı bu sayıyla
+karşılaştırır. Mutlak değer sezgiseldir — önemli olan iki tarafın BİREBİR aynı fonksiyonla
+puanlanması, yani kapının benzeri benzerle kıyaslamasıdır. Ayrıca stratejinin kendi gerçekleşmiş
+kenarından boyut tavsiyesi (Kelly) ve blok-bootstrap kuyruk riski (VaR/CVaR) üretir.
+
+Kilit girişler: score / score_detail (kapının sayısı; span_days ve mtm_equity ile), equity_curve,
+max_drawdown, kelly_fraction, tail_risk.
+
+Değişmezler: saf hesap — dosya yazmaz, ağ yok, duvar saati okumaz (süre yalnız işlem
+damgalarından türetilir). goal.min_sample altındaki örneklemde skor None'dur, 0.0 DEĞİL:
+bilinmeyen skor vasat skorla karıştırılamaz. Sharpe ölçülemediğinde sayı muhafazakâr 0.0 kalır
+ama ayrı sharpe_measurable bayrağı "ölçülemedi"yi söyler. tail_risk sabit tohumla determinist,
+çekilişi seri boyundan bağımsız ve blok-örneklemelidir (kayıp serileri korunur; IID örnekleme
+kuyruğu sistematik küçültürdü). Süre hesabı düşerse yıllıklandırma paydası sabite iner ve bu
+tek-seferlik uyarıyla beyan edilir — sessiz miktar kayması yok.
+
+Okur/yazar: yalnız verilen trades/goal yapılarını okur; tek yan etkisi arıza uyarısının obs
+kanalına düşmesidir (uyarı denemesi skor hesabını asla düşüremez)."""
 from __future__ import annotations
 from typing import Optional
 import math

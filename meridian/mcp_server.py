@@ -1,12 +1,21 @@
-"""mcp_server.py — Meridian'ın SALT-OKUNUR durumunu yerel hermes-agent'a MCP aracı olarak açar.
+"""mcp_server.py — Meridian'ın SALT-OKUNUR durumunu yerel hermes-agent'a MCP aracı olarak açan stdio sunucusu.
 
-Neden: evidence_pack'i prompt'a tıkıştırmak yerine (ne koyacağımızı biz tahmin ediyoruz), ajan bir
-adayı düşünürken İHTİYACI OLAN veriyi kendisi sorgular — kalibrasyonlar, near-miss karnesi, rejim,
-cf özeti, öz-değerlendirme. Bağımsız, bağımlılıksız bir stdio JSON-RPC (MCP) sunucusu: satır-ayrımlı
-JSON-RPC 2.0 konuşur; hermes `~/.hermes/config.yaml` içindeki mcp_servers kaydıyla başlatır.
+NE YAPAR. Kanıt paketini prompt'a tıkıştırmak (ne gerekeceğini önceden bizim tahmin etmemiz)
+yerine, ajan bir adayı düşünürken İHTİYACI OLAN veriyi kendisi sorgular. Bağımsız ve bağımlılıksız
+bir stdio JSON-RPC (MCP) sunucusudur: satır-ayrımlı JSON-RPC 2.0 konuşur; hermes
+`~/.hermes/config.yaml` içindeki mcp_servers kaydıyla başlatır. `serve()` EOF'a kadar döner;
+initialize / ping / tools-list / tools-call metotları desteklenir, bozuk satır parse-error alır.
 
-YETKİ SINIRI — MUTLAK: yalnız getter'lar. Hiçbir araç state yazmaz, emir vermez, kapıya dokunmaz.
-Kapı yasası bozulamaz çünkü sunucu yalnızca okur. Her araç savunmacı: hata metne dönüşür, döngü ölmez."""
+ARAÇLAR (hepsi getter): `meridian_regime` (rejim + maruziyet bütçesi), `meridian_calibrations`
+(skor IC, LLM görüş, kapı meta, çıkış verimliliği, cf sadakati), `meridian_near_miss` (eşik-altı
+adayların ölüm-nedeni karnesi), `meridian_cf_summary` (karşı-olgusal defter + skill katkısı),
+`meridian_selfreview` (haftalık öz-değerlendirme), `meridian_candidate_context` (bir ticker için
+karar-anı planı ve kapı gerekçeleri; sonuç/r_multiple DÖNMEZ — öngörü saflığı korunur).
+
+DEĞİŞMEZLER. YETKİ SINIRI MUTLAKTIR: yalnız getter'lar — hiçbir araç state yazmaz, emir vermez,
+kapıya dokunmaz; kapı yasası bozulamaz çünkü sunucu yalnızca okur. Her araç savunmacıdır: istisna
+metne dönüşür (isError), döngü ölmez. Okur: store/analytics üzerinden state/ (regime.json,
+kalibrasyon artefaktları, trade_plans.jsonl, cf_open.json, self_review.json). Hiçbir şey yazmaz."""
 from __future__ import annotations
 import json
 import sys

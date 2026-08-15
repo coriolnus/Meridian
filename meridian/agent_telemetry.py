@@ -1,62 +1,32 @@
-"""agent_telemetry.py — AJAN ÇAĞRI TELEMETRİSİ + HAM İZ DEFTERİ (D3 modül 1 ve 2, 2026-08-07).
+"""agent_telemetry.py — ajan/LLM çağrılarının telemetri ve ham-iz defterleri: süre ölçüm anında
+yazılır, ham çıktı kırpılmadan önce sır-maskelenir.
 
-Kaynak: `docs/PATTERN-ETUDU-2026-08-06.md` C2-1 (S) ve C2-2 (M) · `docs/TASARIM-YONU-2026-08-07.md` §4.
+Ne yapar: iki ölçülmüş körlüğü tek modülde kapatır. (1) Olay defteri süre taşımıyordu — iki
+satırın arasından süre ÇIKARSAmak ölçmek değildir (aradaki farkta bütçe bekleyişi, skill
+senkronu, süreç doğuşu da vardır); süre ölçüm anında yazılır, sonradan türetilen süre
+ölçülmemiş süredir (UYDURMA YASAĞI). (2) Ham çıktı tek satırlık olay alanında 200 karakterde
+kesiliyordu — bir traceback ya da sağlayıcı hata gövdesi sığmaz, "boş yanıt, neden bilinmiyor"
+hâli sürerdi; tam iz AYRI deftere iner, çünkü events.jsonl canlıda ~11 MB ve ham izle beslemek
+okunabilir tek defteri öldürürdü. `kaydet` çağrı başına iki satır üretir; `ozet` pano özetini
+(/api/hermes yolunda akar), `iz_oku`/`iz_durum` teşhis okumasını verir; `Kronometre` süre
+ölçer. Sonuç sınıfları adlı, kapalı kümedir (SINIFLAR — "boş" tek kelimesine çökerse teşhis
+de çöker); taşıyıcı `yerel_ajan`/`http` ayrımıyla yazılır.
 
-NEDEN VAR — İKİ ÖLÇÜLMÜŞ KÖRLÜK, TEK MODÜL:
+Değişmezler: MASKELEME TEK KAYNAKTIR — sır desenleri ve `maskele` burada yaşar,
+`hermes._ham_ozet` buraya delege eden ince sarmalayıcıdır; ikinci bir kopya sessizce ayrışır
+ve ayrışan taraf SIZDIRIR (`sirlari_maskele` yalnız sır desenleri, `maskele` ek olarak
+defter-alanı biçimi: ANSI sök + katla + kırp). Tavanlar doğuşta çivilidir ve testlidir:
+akış başına IZ_AKIS_TAVANI_KR karakter (maskeleme SONRASI, kırpma beyanlı), iz defteri
+IZ_SATIR_TAVANI, telemetri defteri CAGRI_SATIR_TAVANI satırlık halkasal budama — üst sınır
+(~5 MB) ölçülmüş gerçek sınırdır, dilek değil. Ölçülemeyen araç sayısı None yazılır, 0 değil
+(eksik alan sıfır sanılmasın).
 
-  (1) SÜRE TÜRETİLEMEZ. Bugünkü `agent_call` olayı model/deneme/boş/araç taşıyor ama SÜRE
-      TAŞIMIYOR. Canlı defterde 2026-08-04T01:14'te iki satır var (attempt=1 @01:14:07,
-      attempt=2 @01:14:17) ve aradaki 10 sn'yi ancak ÇIKARSAyabilirsiniz — o farkın içinde
-      bütçe bekleyişi, skill senkronu ve iki ayrı süreç doğuşu da vardır. "Gece koşusu neden
-      40 dk sürdü, hangi çağrı takıldı" sorusu bu yüzden cevapsızdı. Süre ÖLÇÜM ANINDA yazılır;
-      sonradan türetilen bir süre, ölçülmemiş bir süredir (UYDURMA YASAĞI).
-
-  (2) HAM ÇIKTI 200 KARAKTERDE KESİLİYORDU. v193'te `agent_call_empty` olayına eklenen
-      `ham_stdout`/`ham_stderr` alanları TEK SATIRLIK olay alanlarıdır ve 200 karakterde
-      biter. Bir Python traceback'i ya da bir sağlayıcı hata gövdesi oraya sığmaz — yani
-      "boş yanıt, neden bilinmiyor" hâli 200 karakterin ötesinde hâlâ mümkündü. Tam iz AYRI
-      bir deftere iner, çünkü `events.jsonl` canlıda zaten ~11 MB (ölçüldü: 2026-08-04
-      yedeği, 11.190.074 bayt) ve onu ham izlerle beslemek okunabilir tek defteri öldürürdü.
-
-MASKELEME TEK KAYNAKTIR. Sır desenleri (`_GIZLI_DESENLER` + `_JETON_RE`) ve `maskele()` gövdesi
-`hermes._ham_ozet`ten BURAYA TAŞINDI; `hermes._ham_ozet` artık bu modüle DELEGE eden ince bir
-sarmalayıcıdır (tarihsel ad ve v193 sözleşmesi korunur). İkinci bir maskeleme uygulaması YASAK:
-iki kopya sessizce ayrışır ve ayrışan taraf sızdırır. `sirlari_maskele` ile `maskele` ayrı
-işlerdir ve bu bilinçlidir — birincisi YALNIZ sır desenlerini uygular (metnin biçimine dokunmaz,
-`ops/vaka_sabitle.py` fikstür dondururken onu kullanır), ikincisi defter-alanı biçimini de
-uygular (ANSI sök + satırları katla + kırp).
-
-DEFTERLER (ikisi de append-only JSONL, mevcut `store` desenine uyar; yeni biçim İCAT EDİLMEDİ):
-  * `agent_calls.jsonl`  — çağrı başına KÜÇÜK telemetri satırı (süre/deneme/araç/sonuç sınıfı).
-  * `agent_traces.jsonl` — çağrı başına BÜYÜK ham iz satırı (sır-maskeli stdout+stderr).
-İkisi `iz_id` ile birleşir; `iz_id` ayrıca `spend.jsonl` satırının `note` alanına konabilir
-(bugün konmuyor — HTTP bacağının kendi muhasebesi var, bkz. `tasiyici` alanı).
-
-TAVANLAR ÇİVİLİDİR (C2-2'nin "budama kuralı doğuşta yazılmalı" şartı). Sayılar aşağıdaki
-sabitlerde yaşar ve `tests/test_ajan_telemetri_v197.py` onları test eder:
-  * ham iz: akış başına {IZ_AKIS_TAVANI_KR} karakter (maskeleme SONRASI, kırpma BEYANLI),
-  * ham iz defteri: son {IZ_SATIR_TAVANI} satır (halkasal budama),
-  * telemetri defteri: son {CAGRI_SATIR_TAVANI} satır,
-  * türetilen en kötü hâl: ~{IZ_SATIR_TAVANI} × (2×{IZ_AKIS_TAVANI_KR} + ~600 üstbilgi) ≈ 5 MB.
-TAVAN ÖLÇÜLDÜ (2026-08-07, yerel; halka tam dolu + iki akış da tavanda): ham iz defteri
-4.887.600 bayt, telemetri defteri 144.460 bayt — yani türetilen 4,98 MB üst sınırı GERÇEKTEN
-üst sınırdır, dilek değil. Ölçüm koşumu `tests/test_ajan_telemetri_v197.py` içinde küçültülmüş
-sabitlerle tekrarlanır (tam ölçekli koşum bir testin işi değil, bir kez yapılmış bir ölçümdür).
-
-YASA 6 (okuyucusuz yazım yok):
-  * `agent_calls.jsonl` — DIŞ okuyucusu `hermes.integrations_status()` (satırları KENDİ okur,
-    yorumu `ozet()`e verir) → `/api/hermes` → pano. Bu yüzden `codelaw.DECLARED_SINKS`te
-    muafiyeti YOKTUR ve olmamalıdır.
-  * `agent_traces.jsonl` — ham satırlar bilerek panoya TAŞINMAZ (5 MB'lık ham izi HTTP'ye
-    koymak hem maliyet hem sızıntı yüzeyidir). Tüketicisi `iz_oku()` (teşhis) ve
-    `ops/vaka_sabitle.py` (fikstür dondurucusu, `meridian/` DIŞINDA → statik graf göremez);
-    DOLULUK durumu `ozet()["iz"]` ile aynı pano yolundan çıkar. Muafiyeti `DECLARED_SINKS`te
-    gerekçesiyle beyanlıdır.
-
-PANO NOTU (D3-UI dalgasına devir): bugün bu özet `/api/hermes` gövdesinde AKIYOR ama panoda
-ÇİZİLMİYOR — `meridian/web/*` bu turun dokunma yasağındaydı. Kart (④ Öğrenme yüzeyi,
-`TASARIM-YONU` §3) D3-UI dalgasının işidir; veri hazır bekliyor.
-"""
+Okur/yazar: agent_calls.jsonl (küçük telemetri satırı: süre/deneme/araç/sonuç sınıfı +
+ön-yüklenen skill ADLARI) ve agent_traces.jsonl (büyük ham iz satırı) — ikisi de append-only
+JSONL (store deseni), `iz_id` ile birleşir. YASA 6: telemetri defterinin dış okuyucusu
+`hermes.integrations_status()` → /api/hermes → pano; ham satırlar bilerek panoya taşınmaz
+(maliyet + sızıntı yüzeyi) — tüketicisi `iz_oku()` ve fikstür dondurucusu, doluluk
+`ozet()["iz"]` ile aynı pano yolundan çıkar (muafiyeti DECLARED_SINKS'te beyanlı)."""
 from __future__ import annotations
 
 import datetime as dt

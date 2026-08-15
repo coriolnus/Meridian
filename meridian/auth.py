@@ -1,34 +1,31 @@
-"""auth.py — operatör kimliği: parola doğrulama + imzalı oturum çerezi.
+"""auth.py — operatör kimliği: scrypt parola doğrulama + HMAC-imzalı, kayan-pencereli oturum çerezi.
 
-NEDEN VAR (2026-07-28, Oracle Cloud dağıtımı öncesi): pano bugüne kadar YALNIZ `--host 127.0.0.1`
-bağlanmasıyla korunuyordu. `MERIDIAN_DASH_TOKEN` hiçbir yerde ayarlı değildi, dolayısıyla
-`api._auth` 51 uçta çağrılıyor ama hepsinde anında dönüyordu — fiilen kimlik doğrulaması yoktu.
-Genel bir IP'ye çıkıldığı an bu, hesap durumunu okuyan ve HALT/DEVAM/Flatten/mutasyon tetikleyen
-bir yüzeyin yetkisiz açılması demektir.
+NEDEN VAR. Pano bir dönem YALNIZ `--host 127.0.0.1` bağlanmasıyla korunuyordu; token hiçbir yerde
+ayarlı olmadığı için `api._auth` onlarca uçta çağrılıyor ama hepsinde anında dönüyordu — fiilen
+kimlik doğrulaması yoktu. Genel bir IP'ye çıkıldığı an bu, HALT/DEVAM/Flatten/mutasyon tetikleyen
+bir yüzeyin yetkisiz açılması demekti.
 
-TASARIM KARARLARI ve GEREKÇELERİ
+TASARIM KARARLARI. (1) Parola diskte asla düz durmaz: `hashlib.scrypt` (stdlib; RFC 7914
+etkileşimli-giriş profili n=2^15, r=8, p=1) ile tuzlanmış türetme; doğrulama `hmac.compare_digest`
+ile sabit zamanlı — `!=` ilk uyumsuz baytta kısa devre yapar ve hash'i bayt bayt kurtarmaya izin
+verir (CWE-208). (2) Oturum ÇEREZDE, localStorage'da DEĞİL: localStorage JS'e açıktır, tek XSS
+kalıcı erişim demekti; HttpOnly + SameSite=Strict (CSRF, tek-POST'luk HALT/Flatten uçları için
+teorik kaygı değildir). (3) Oturum durumsuz ve İMZALI: v2 jetonu `<exp>.<iat>.<nonce>.<imza>` —
+sunucuda oturum tablosu yok, yeniden başlatma oturum düşürmez; imza anahtarı diskte (0600),
+`rotate_key()` hepsini düşürür. Eski v1 jetonu yalnız DOĞRULANIR, yenilenmez: `iat` taşımaz ve
+tavanı geriye hesaplamak UYDURMA olurdu. (4) URL'de token YOK: URL'ler sunucu loglarına, tarayıcı
+geçmişine ve Referer'a düşer. (5) Kaba kuvvet IP başına kayan pencereyle sınırlanır; sayaç
+süreç-içidir (tek süreçli dağıtımda yeterli — başka iddia yok).
 
-* **Parola diskte asla düz durmaz.** `hashlib.scrypt` (stdlib; yeni bağımlılık yok) ile
-  tuzlanmış türetme. Parametreler RFC 7914'ün etkileşimli-giriş profilinden: n=2^15, r=8, p=1.
-  Doğrulama `hmac.compare_digest` ile sabit zamanlı — `!=` ilk uyumsuz baytta kısa devre yapar
-  ve hash'i bayt bayt kurtarmaya izin verir (CWE-208).
+KAYAN OTURUM. Sabit pencere, kesintisiz kullanılan panoyu saat dolunca kapıya çarpıyordu ("arayüz
+kayboluyor" arızası oturumun kendisiydi); sınırsız kayma ise çalınmış çerezi ölümsüz yapardı.
+`refresh_session` yarı-ömürden sonra uzatır ama `iat + SESSION_ABSOLUTE_MAX_S` MUTLAK TAVANINI
+asla aşamaz — tavana varan oturum kullanılıyor olsa bile düşer.
 
-* **Oturum ÇEREZDE, localStorage'da DEĞİL.** Eski akış token'ı `localStorage`'a yazıyordu; orası
-  JavaScript'e açıktır, yani tek bir XSS kalıcı erişim demektir. Çerez `HttpOnly` olduğunda JS
-  onu okuyamaz. `SameSite=Strict` çapraz-site istek sahteciliğini (CSRF) kapatır — HALT ve
-  Flatten gibi tek POST'la iş gören uçlar için bu teorik bir kaygı değildir.
-
-* **Oturum durumsuz ve İMZALI.** `<exp>.<nonce>.<hmac>` — sunucu tarafında oturum tablosu yok,
-  yani yeniden başlatma oturumları düşürmez ama imza anahtarı değişirse HEPSİ düşer. Anahtar
-  diskte (0600) tutulur; yoksa üretilir.
-
-* **URL'de token YOK.** Eski `_auth` `?token=` kabul ediyordu ve indirme bağlantıları token'ı
-  oraya koyuyordu. URL'ler sunucu loglarına, tarayıcı geçmişine ve `Referer` başlığına düşer.
-  Çerez tabanlı oturum indirmelerde de çalışır, çünkü tarayıcı onu kendiliğinden gönderir.
-
-* **Kaba kuvvet sınırlanır.** IP başına kayan pencere; eşiği aşınca kilit. Sayaç süreç-içidir:
-  tek süreçli dağıtımda yeterli, yatay ölçeklenirse paylaşımlı bir depoya taşınmalıdır (bu
-  dosyada başka bir iddiada bulunulmuyor).
+GİRİŞLER: `set_password`/`verify_password`/`password_set`, `issue_session`/`verify_session`/
+`refresh_session`, `rotate_key`, `locked_out`/`note_failure`/`note_success`/`retry_after_s`,
+`note_session_drop` (düşüş olayı sel kapısı). Okur/yazar: yalnız `state/auth.json` — yazım
+store tek kapısından geçer ve 0600 izni AÇIKÇA doğrulanır; hiçbir sır/parola loglanmaz.
 """
 from __future__ import annotations
 

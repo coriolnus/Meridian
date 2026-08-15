@@ -1,9 +1,24 @@
-"""spend.py — the Hermes cost ledger + budget guard. A self-improving agent that calls an LLM every
-few closed trades can quietly run up a bill; this makes the spend explicit and bounded. Every real
-Claude call appends its token usage and estimated USD to state/spend.jsonl, and before a call
-over_budget() refuses once the month's spend hits the budget (Hermes then falls back to the free
-deterministic proposer — the loop keeps learning, just without paid inference). Nothing here needs a
-key to build; it simply activates when Hermes runs. Prices are env-overridable for when they change."""
+"""spend.py — Hermes LLM çağrılarının maliyet defteri ve aylık bütçe kapısı.
+
+Ne yapar: birkaç kapanmış işlemde bir LLM çağıran, kendini geliştiren bir ajan faturayı
+sessizce kabartabilir; bu modül harcamayı açık ve sınırlı tutar. Her gerçek sağlayıcı
+çağrısının token kullanımı ve tahmini USD maliyeti `record` ile state/spend.jsonl'a eklenir.
+Çağrı öncesi `over_budget` ayın harcaması bütçeye (HERMES_MONTHLY_BUDGET_USD, varsayılan $20)
+ulaştığında True döner; Hermes o zaman ücretsiz deterministik öneriye düşer — döngü öğrenmeye
+devam eder, yalnız ücretli çıkarım kapanır. `summary` ay özetini üretir (/api/spend → pano);
+`estimate_cost`/`price_for` maliyeti model-başına fiyat tablosundan hesaplar (PRICES:
+opus/sonnet/haiku/gemini/nous — model adında alt-dizge eşleşmesi; bilinmeyen model
+muhafazakâr varsayılana düşer).
+
+Değişmezler: fiyat MODEL BAŞINA olmak zorundadır — tek fiyatla ücretsiz katman çağrıları da
+Opus listesinden fiyatlanır, harcanmamış para bütçeyi doldurur ve LLM katmanı sessizce
+kapanırdı ("beyin neden susuyor" sorusunun görünmez cevabı); saat dilimi UTC'dir ki satırlar
+diğer defterlerle (obs, memory, watchdog) yan yana okunabilsin; `thought_tokens` yalnız
+sağlayıcı bildirdiğinde yazılır (UYDURMA YASAĞI: alan yokluğu "ölçülmedi"dir, sıfır değil) ve
+maliyete katılmaz — fiyatlanan tek çıktı `out_tokens`tır.
+
+Okur/yazar: spend.jsonl (append-only, store üzerinden). Anahtar gerektirmez; Hermes koşunca
+kendiliğinden etkinleşir. Fiyatlar değiştiğinde env ile geçersiz kılınabilir."""
 from __future__ import annotations
 import datetime as dt
 import os

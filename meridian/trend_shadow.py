@@ -1,38 +1,32 @@
-"""trend_shadow.py — UZUN-UFUK TREND KOLU · CANLI PARALEL GÖLGE-KİTAP (WP-K, 2026-07-31).
+"""trend_shadow.py — hükümlü uzun-ufuk trend kolunu canlı barlar üzerinde ileri yürüten sanal gölge-kitap.
 
-NE: EDG-2026-009'un HÜKÜMLÜ incumbent kolunu (chandelier çıkış × full_251 × N=10) canlı barlar
-üzerinde SANAL bir defterde ileri yürütür. Ölçüm DEĞİL — ölçülmüş bir hükmün canlı-birikimi.
-Kartın ölçüm şasisine (backtest/dataset/score/shadowlaw) HİÇ dokunmaz.
+NE YAPAR. Ölçülmüş bir hükmün (chandelier çıkış × geniş evren × N=10 slot, 12-1 momentum) canlı
+birikimidir — yeni bir ölçüm değil; hükmün ölçüm şasisine (backtest/dataset/score/shadowlaw) hiç
+dokunmaz. Her seans kitabı günlük M2M ile işaretler; her ay-sonu 12-1 momentum sıralamasıyla
+karar alır ve kararı ERTESİ seans açılışında icra eder (bakma-ileri yok): çıkışlar → 1/N'e
+denkleştirme → girişler. Referans şasinin sabitleri birebir taşınır (FRICTION_BPS=10, ATR22,
+CHANDELIER_K=3.5, N_SLOTS=10); canlı çevirinin üç açık farkı vardır ve sessiz değildir —
+sermaye 100k (oransal muhasebe, getiri aynı), uygunluk katmanı deponun kendi bütünlük defteri
+(`adapters.data.bars_integrity`; ikinci kopya aynı yasanın iki sürümünü doğururdu) ve kitabın
+GEÇMİŞSİZ doğması (geri-doldurma yok; ilk giriş ilk ay-sonunda).
 
-SIFIR YETKİ — YAPISAL, BEYAN DEĞİL: bu modül broker/alpaca/emir yolunu IMPORT BİLE ETMEZ.
-Tek yan etkisi kendi defterine (`trend_book.json`) yazmaktır; portföy, plan, karne, silahlanma ve
-strateji dosyalarının hiçbirine dokunmaz. Çivisi tests/test_trend_shadow_v144.py'de AST ile
-kurulmuştur: yarın eklenecek bir `from .broker import ...` satırı orada kırmızı yakar.
+KİLİT GİRİŞLER. `run_cycle(bars, index, on_date)` (loop.daily_cycle kancası — kitabı
+`last_session`dan bugüne yürütür), `ozet` (pano/CLI özeti; doldurma kökeni rakamla birlikte),
+`ay_sonu_mu` (fail-closed takvim kapısı), `_karar`/`_icra`/`_isaretle` (karar → icra → M2M),
+`_dilim`/`dolduruldu_n`/`DOLDU_KOL` (ileri-doldurma köken bayrağı), `yeni_kitap`.
 
-ŞASİ BİREBİRLİĞİ (kaynak: scratchpad/trend_kolu/engine.py — SALT-OKUNUR referans; hüküm koşumu
-scratchpad/trend_rafine/poskontrol.py: `engine.run_arm(panel, uni, 10, sizing="rebalance", elig=ELIG)`):
-  FRICTION_BPS=10   ATR_LEN=22   CHANDELIER_K=3.5   N=10   12-1 momentum   ay-sonu kararı,
-  ERTESİ SEANS AÇILIŞI icrası, her ay 1/N'e denkleştirme. Sabitler aşağıda satır referanslarıyla.
+YASALAR — GÖLGE KATMANI. SIFIR YETKİ, YAPISAL (beyan değil): broker/alpaca/emir yolu IMPORT BİLE
+EDİLMEZ — çivisi tests/test_trend_shadow_v144.py'de AST ile kurulu. Tek yan etkisi kendi
+defteridir; portföy, plan, karne, silahlanma ve strateji dosyalarına, yani canlı karara hiçbir
+yol çıkmaz. PIT şerhi kitabın İÇİNDE taşınır (`pit_serh`, her yazımda yeniden çakılır): ölçülen
+fazlanın büyük kısmı evren-seçim yanlılığıdır ve rakam şerhsiz okunamaz. Takvim kapısı
+FAIL-CLOSED: XNYS takvimi yoksa "ay-sonu mu" sorusu CEVAPSIZDIR ve karar alınmaz (olaylı
+sessizlik); ay-sonunu barlardan türetmek canlıda yanlış olurdu. İleri-doldurulan hücre, eğri
+satırı ve karar BAYRAKLA ayırt edilir; fiyatsız satış uydurulmaz, ölçülemeyen bayatlık iddia
+edilmez, kırpmalar sayaçla beyanlıdır.
 
-CANLI ÇEVİRİNİN ÜÇ AÇIK FARKI (sessiz değil — okuyan bilsin):
-  1. SERMAYE 100k (şaside 1M). Boyutlandırma 1/N ve tüm muhasebe oransal olduğundan getiri
-     serisini değiştirmez; yalnız defterdeki dolar rakamları ölçeklenir.
-  2. UYGUNLUK (elig) katmanı: şasi ölçüm-içi L1-L5 katmanını kullanıyordu (integrity.py — TARİHSEL
-     bar temizliği: ölçek/kimlik kırılması karartması, 300 temiz bar, 63g medyan dolar hacmi).
-     Canlıda bunun karşılığı deponun KENDİ bütünlük defteridir (`adapters.data.bars_integrity` →
-     `guvenli_baslangic`); ikinci bir kopya yazmak aynı yasanın iki sürümünü doğururdu. L5 (dolar
-     hacmi) canlıda YENİDEN KURULMADI — şasi onu "mega-cap evreninde bağlayıcı değil" diye
-     beyan etmişti ve yeniden yazmak, ölçülmemiş bir eşiği canlıya sokmak olurdu.
-  3. KİTAP GEÇMİŞSİZ DOĞAR: ilk koşumda pozisyon yok, nakit 100k. Bu bir geri-doldurma değil;
-     ilk giriş ilk AY-SONUNDA olur. Kitabın eğrisi ancak ileriye doğru birikir.
-
-PIT ŞERHİ KİTABIN İÇİNDE TAŞINIR (`pit_serh` alanı): defteri okuyan herkes yanlılık beyanını
-rakamla aynı anda görür. Şerhi rakamdan ayırmak, +13,1p/yıl'ı şerhsiz okutmanın en kolay yoludur.
-
-TAKVİM KAPISI FAIL-CLOSED: "bugün ay-sonu mu?" sorusunu XNYS takvimi (adapters.data'nın süreç-içi
-tek takvimi) cevaplar. Takvim yoksa CEVAP YOKTUR ve o gün KARAR ALINMAZ (uydurma ay-sonu yerine
-sessizlik değil, OLAYLI sessizlik). Ay-sonunu barlardan "o ayın en son barı" diye türetmek canlıda
-YANLIŞ olurdu: ayın 12'sinde de "şimdiye kadarki en son bar" o aya aittir.
+OKUR: çağıranın geçirdiği barlar + endeks; adapters.data (XNYS seansları, bütünlük defteri,
+REPLAY_UNIVERSE).  YAZAR: yalnız kendi defteri `state/trend_book.json`.
 """
 from __future__ import annotations
 

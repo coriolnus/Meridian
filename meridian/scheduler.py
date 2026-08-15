@@ -1,9 +1,27 @@
-"""scheduler.py — the local paper-advance loop. On a laptop there is no systemd worker, so nothing
-calls loop.daily_cycle: within ~15 min the heartbeat goes stale, /healthz 503s, and hermes_runtime
-stops reflecting — the "self-improving local agent" silently freezes. This daemon thread (started by
-the dashboard when MERIDIAN_AUTOSTART_CYCLE=1) polls the XNYS calendar and runs ONE daily cycle each
-time a new session has closed — the same job run.worker does on the VM, but in-process and stoppable.
-Dedupes on portfolio last_date; respects HALT; never advances on a non-session day."""
+"""scheduler.py — süreç-içi kâğıt-ilerletme döngüsü: kapanan her XNYS seansı için loop.daily_cycle'ı
+bir kez koşturan daemon iş parçacığı ve tüm seans-sonrası kadansların tek tetik yeri.
+
+Dizüstünde systemd worker'ı yoktur; bu modül olmasa loop.daily_cycle'ı kimse çağırmaz — kalp atışı
+~15 dakikada bayatlar, /healthz 503 verir ve "kendini geliştiren yerel ajan" sessizce donar. Pano
+açılışında (MERIDIAN_AUTOSTART_CYCLE=1) başlar, XNYS takvimini yoklar ve yeni bir seans GERÇEKTEN
+kapandığında VM'deki run.worker ile aynı işi süreç içinde, durdurulabilir biçimde koşar. Ayrıca:
+bar tazeleme merdiveni (sık faz + son-tarihli seyrek faz; terminal atlama alarmı YALNIZ bir sonraki
+seans da kapanınca), onarım geçidi (`_repair_once_per_session`: sip düzeltici + kapsama onarımı +
+hacim kalibrasyonu), öğrenme kadansı (`_learning_cadence`: antrenman → Eksen-2 → görüş defteri →
+bütçeli kanıt dolgusu `_dolgu_kadansi`), Y4 toplaması (`_y4_collect`) ve haftalık doğrulama üçlüsü.
+
+Kilit girişler: `start`/`stop`/`status`, `advance_once` (tek tur; elle tetik de bu kapıdan geçer),
+`nabiz` (uzun iş İLERLEDİKÇE asılı-tick damgasını tazeler — yalnız döngünün sahip iş parçacığı,
+en az NABIZ_MIN_ARA_S arayla).
+
+Değişmezler: aynı anda TEK döngü (_run_lock); portfolio last_date ile tekilleşir; HALT'a uyar; seans
+olmayan günde ilerlemez; kalıcı damgalar (_DURABLE) yeniden başlatmada `_rehydrate` ile diskten döner
+(tazeleme/öğrenme/dolgu bütçeleri süreç başına sıfırlanmaz); takvim okunamazsa seans-sonrası kadansın
+tamamı durur ve süreç başına BİR kez uyarı düşer (yedek değer yok, uydurma yok).
+
+Okur/yazar: scheduler_status.json (durum + nabız; asılı-tick bekçisinin okuduğu damga),
+learning_cadence.json (okuyan: analytics + api), validation_report.json (okuyan: api tanılaması).
+Komşular: loop (günlük döngü), adapters.data (tazeleme/onarım), hermes (dolgu bütçesi), obs, watchdog."""
 from __future__ import annotations
 import datetime as dt
 import threading

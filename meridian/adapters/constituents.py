@@ -1,40 +1,29 @@
-"""adapters/constituents.py — point-in-time S&P 500 üyeliği (#36).
+"""adapters/constituents.py — point-in-time S&P 500 üyeliği: FMP birincil, Wikipedia en iyi-çaba
+ikincil; makullük kapılı önbellek ve evren-sapma raporu.
 
-DENETİM 2026-07-21 (dönüşümlü tur 3) — bu modül hakkında DÜRÜST DURUM:
-  * Hiçbir üretim yolu bunu ÇAĞIRMIYORDU. `current()`/`as_of()` yalnız testlerden çağrılıyor; canlı
-    evren elle bakımlı `data.REPLAY_UNIVERSE`. Yani #49/#52/#53 denetimlerinde düzeltilen üç gerçek
-    hata, hiçbir zaman koşmayan bir kodda düzeltilmişti. (Desen 1: koşuyor mu değil, ÜRETİYOR mu.)
-  * Wikipedia yolu bu kurulumda ÇALIŞAMAZ: (a) `pandas.read_html` lxml/bs4/html5lib ister — üçü de
-    kurulu değil; (b) Wikipedia bu User-Agent'a **403** dönüyor (bot politikası). İkisi de
-    `except: return None` ile yutuluyordu, dolayısıyla modül sessizce hep bayat önbelleği döndürürdü.
-
-BU BEYAN 2026-08-13'TE YENİDEN ÖLÇÜLDÜ — YARISI ÇÜRÜMÜŞTÜ (v238 arıza turu):
-  * (a) ARTIK YANLIŞ. lxml 6.1.1 KURULU ve `pyproject.toml`da ANA bağımlılık (satır 29). Ayrıştırıcı
-    yokluğu 2026-07 kökü olarak GEÇMİŞTE kaldı; beyan güncellenmediği için canlıdaki gerçek arıza
-    aylarca "eski, bilinen bir sınır" sanıldı. ÖLÇÜLEN GERÇEK KÖK BAŞKAYDI: pandas 3.0.3'te
-    `read_html` ham HTML DİZGESİ kabul etmiyor — dizgeyi dosya-yolu sanıyor ve canlı
-    `state/universe_drift.json` `reason: "FileNotFoundError: [Errno 2] ... <!DOCTYPE html>..."`
-    yazıyordu. Yerelde birebir üretildi (pandas 3.0.3): ham dizge → FileNotFoundError,
-    `io.StringIO(...)` → parse OK. Düzeltme `_fetch_tables` içinde, gerekçesiyle.
-  * (b) HÂLÂ DOĞRU. 2026-08-13 ölçümü: `GET` + `User-Agent: Meridian/1.0` → **HTTP 403**, gövde 141
-    bayt. Yani StringIO düzeltmesinden SONRA da bu kurulumda Wikipedia'dan üyelik listesi GELMEZ;
-    değişen şey, gelen HTML'in artık ayrıştırılabilir olması (kaynak açılırsa/UA değişirse yol
-    çalışır) ve `health()`in artık DOĞRU nedeni yazması (`HTTP 403`, uydurma bir dosya-yolu hatası
-    değil). Zincirdeki birincil kaynak FMP'dir; Wikipedia en iyi-çaba ikincil olarak KALIR.
-  * Diskteki ÜRETİM önbelleği TEST VERİSİYDİ: {"as_of": "2099-01-01", "current":
-    ["AAPL","MSFT","NVDA"], changes:[{removed:"nan"}]} — bir test koşusu gerçek state klasörüne
-    sızmıştı (2026-07-18). Bir tüketici olsaydı S&P 500 diye ÜÇ sembol alacaktı ve `as_of()` uydurma
-    bir tarihsel üyelik üretecekti. Karantina: state/quarantine/.
-
-BU YÜZDEN artık: (1) kaynak zinciri FMP'yi (anahtarlı, zaten kullanımda) birincil yapar, Wikipedia
-en iyi-çaba ikincildir; (2) her okuma/yazım MAKULLUK KAPISINDAN geçer — 400'den az sembol S&P 500
-değildir, reddedilir; (3) başarısızlık SESSİZ değildir: `health()` + watchdog üretkenlik dedektörü;
-(4) `universe_drift()` gerçek bir tüketicidir — elle bakımlı evrendeki ölü isimleri söyler.
-
-HONEST LIMIT (değişmedi): bu, üyelik survivorship'ini düzeltir; gerçekten yanlılıksız bir backtest
-delisted isimlerin BARLARINI da ister ve ücretsiz kaynaklar onu taşımaz. PIT iskelesi, bias-free
-evren değil.
-"""
+(a) Ne yapar: güncel S&P 500 üyelik listesini kaynak zincirinden kurar (FMP sp500-constituent —
+anahtarlı ve zaten kullanımda olduğu için BİRİNCİL; Wikipedia List_of_S%26P_500_companies sayfası
+en iyi-çaba İKİNCİL) ve değişiklik günlüğünü geriye sararak `as_of(date)` ile tarihsel üyeliği
+yeniden kurar. Gerçek üretim tüketicisi `universe_drift()`tir: elle bakımlı REPLAY_UNIVERSE'ü
+güncel üyelik + verisiz-sembol defteri + emeklilik defteriyle karşılaştırıp ölü/geri-sızmış
+isimleri söyler. Wikipedia yolu bu kurulumda fiilen kapalıdır: sayfa bu User-Agent'a HTTP 403
+döner; health() nedeni ADIYLA yazar (UA/kaynak değişirse yol kendiliğinden çalışır).
+(b) Kilit girişler: current(use_cache=...), as_of(date), universe_drift(), health(); MIN_MEMBERS
+makullük tabanı, CACHE (sp500_constituents.json).
+(c) Değişmezler — MAKULLUK KAPISI: 400'den az sembol S&P 500 DEĞİLDİR; hem çekim hem önbellek
+okuma bu kapıdan geçer (canlı önbelleğe bir test fikstürünün — 3 sembol, gelecek tarihli damga —
+sızdığı yaşandı; kapı tam onu reddeder, gelecek tarihli `as_of` da bozuk sayılır). Başarısızlık
+sessiz değildir: bayat/uydurma liste asla servis edilmez, hiçbir kaynak makul liste veremezse []
+döner ve çağıran elle bakımlı evrene düşer. `as_of()`un [] dönüşü "o tarihte kimse yoktu" değil
+"BİLMİYORUZ"dur. YANLIŞLANDI dersleri korunur: pandas 3'te read_html ham HTML dizgesini dosya-yolu
+sanır — girdi io.StringIO ile sarılır ve flavor="lxml" sabitlenir ki tablosuz 403 gövdesi "paket
+eksik" gibi YANLIŞ sınıf yerine dürüst "No tables found" üretsin; değişiklik-günlüğü tarihleri
+sözlüksel değil ISO'ya çevrilerek karşılaştırılır (aksi PIT kurulumunu tersine çevirmişti) ve
+'nan' hücreleri temizlenir (hayalet 'NAN' sembolü üretmişti).
+(d) Okur/yazar, önbellek: state/sp500_constituents.json — günlük önbellek (as_of=bugün ise ağa
+gidilmez); yazım yalnız makul listeyle olur, kaynak etiketi (fmp|wikipedia) birlikte saklanır.
+DÜRÜST SINIR: bu modül üyelik survivorship'ini düzeltir; yanlılıksız backtest delisted isimlerin
+BARLARINI da ister ve ücretsiz kaynaklar onu taşımaz — PIT iskelesi, bias-free evren değil."""
 from __future__ import annotations
 import datetime as dt
 

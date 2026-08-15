@@ -1,17 +1,34 @@
-"""skills.py — the pipeline runner. Skills are bound into five DETERMINISTIC pipelines (§3), each
-with a fixed trigger, fixed inputs, and a fixed output artifact — this is what makes the agent
-auditable. Every run appends to pipeline_runs.jsonl; nothing the agent does is invisible.
+"""skills.py — skill kütüphanesinin kayıt, koşu ve öneri katmanı: deterministik boru hattı koşucusu + katalog + Eksen-2 önerileri.
 
-At L0 the engine's deterministic core (regime.py, strategy.py) produces the pipeline artifacts.
-The Claude skills are the brain's toolkit: LLM-driven skills are invoked by Hermes during
-reflection/research; FMP-`req` skills enrich candidates once a key is present. Disabled skills are
-recorded as skipped-with-reason, never faked.
+NE YAPAR. Skill'ler beş DETERMİNİSTİK boru hattına bağlıdır (PIPELINES: P1_REGIME…P5_LEARN);
+sabit tetik, sabit girdi, sabit çıktı artefaktı — ajanı denetlenebilir kılan budur ve her koşu
+pipeline_runs.jsonl'e düşer: ajanın yaptığı hiçbir şey görünmez değildir. Motorun deterministik
+çekirdeği (regime/strategy) artefaktları üretir; LLM-bağlamlı skill'ler Hermes'in araç setidir.
+Kayıt defteri (skills_registry.json) hangi skill'in etkin/gölgede/emekli olduğunu söyler; katalog
+bunu SKILL.md açıklamaları, canlı atıf ölçümleri (n/win_rate/avg_r + cf katmanı) ve ajanın kendi
+kullanım sayacıyla birleştirir. Atıf ölçümünden deterministik Eksen-2 önerileri türetilir; öneri
+kayda düşer, uygulaması operatöründür. Kapalı skill sebebiyle kaydedilir, asla "koştu" diye
+uydurulmaz; arşiv (retired) kayıtları dürüst envanter için silinmeden durur ama zincirlerde ve
+aday kümelerinde yer almaz.
 
-2026-07-30 SKILL DENETİMİ: 68 klasörden 37'si `skills/_emekli/` altına ARŞİVLENDİ (22 emekli +
-15 birleştirilen; silme yok, geri alınabilir) — geride 31 canlı SKILL.md kaldı. Arşivlenenlerin
-kayıtları `retired: true` ile duruyor (kayıt silinmedi: dürüst envanter + geri dönüş yolu) ve
-PIPELINES zincirlerinden çıkarıldı, çünkü zincirde durup her koşuda 'declared_not_run' yazılmak
-"çalışıyor" izlenimi üretiyordu. Katalog taraması `_` ile başlayan dizinleri atlar."""
+KİLİT GİRİŞLER. `pipeline_run`, `registry`/`enabled_in`/`reconcile_enablement` (anahtar-kapısı),
+`catalog`/`aktif_katalog`/`yasam_dongusu`/`envanter`, `ajan_kullanim` (üçüncü-taraf kullanım
+sayacı, salt okuma), `recommend_from_attribution`/`record_recommendation`/`apply_skill_action`,
+`ornek_kunyesi`/`ornek_notu`, `auto_shadow_from_evidence`, `axis2_diagnosis`/`axis2_cycle`,
+`screener_for`, `eylem_uygulanabilir`.
+
+DEĞİŞMEZLER. `PROTECTED` güvenlik katmanıdır: Hermes ya da anahtar-kapısı onları ASLA gölgeleyemez/
+kapatamaz. `ENGINE_IMPLEMENTED` dürüstlük kümesidir: koşu defteri yalnız motorun FİİLEN
+çalıştırdığı skill'leri "invoked" sayar — etiketi geçen ama koşmayan skill koşmuş gibi yazılamaz.
+"Önerilebilir" ile "uygulanabilir" AYRI kümelerdir (UYGULANABILIR ⊂ ONERILEBILIR) ve uygulayıcısı
+olmayan eylem düğme gibi sunulmaz. Örneklem eşiği TEK sabittir (MIN_N; cf-destekli kol ondan
+türer) ve öneri künyesi kayıt anında ÖLÇÜMDEN basılır, öneri metninden değil. Sayaç/kayıt yokluğu
+0 değil None + neden. Kayıt defteri yazımları oku-değiştir-yaz kilidi altındadır.
+
+OKUR: skills_registry.json, skills/<ad>/SKILL.md, analytics.skill_attribution, ajanın .usage.json
+sayacı (üçüncü taraf — şeması bizim sözleşmemiz değil).
+YAZAR: skills_registry.json, pipeline_runs.jsonl, skill_recommendations.jsonl + Eksen-2/otomatik
+gölgeleme durum dosyaları."""
 from __future__ import annotations
 import datetime as dt
 import re

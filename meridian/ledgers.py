@@ -1,27 +1,27 @@
-"""ledgers.py — DEFTER SÖZLEŞMESİ (2026-07-21).
+"""ledgers.py — paylaşılan defterlerin yazılı sözleşmesi: zorunlu alanlar, izinli yazarlar, anahtarlar.
 
-NEDEN VAR: 2026-07-21'de tek günde yedi hata çıktı ve altısı aynı kökten geliyordu — **her defteri
-2-3 modül yazıyor, 5-8 modül okuyor, ve arada yazılı bir anlaşma yok.** Somut sonuçlar:
+Her defteri birkaç modül yazar, daha çoğu okur; aradaki anlaşma yazılı olmayınca hatalar istisna
+fırlatmadan yaşar: `.get()` None döner, satır sessizce elenir, sayı küçülür, kimse fark etmez.
+Somut sınıf örnekleri: gerçek işlemlerin tamamının eksik `setup`/`score` yüzünden kalibrasyondan
+elenmesi; aynı plan kimliğinin iki ayrı şemada yazılıp cf↔gerçek birleştirmesinin hiç kurulamaması;
+bir alanın takma ada dönüşüp yaması olmayan tüketiciyi sessizce aç bırakması. Yüzlerce test bunu
+yakalayamaz, çünkü fixture'ı üretici ile tüketicinin beklentisini AYNI el yazar.
 
-  * `trades.jsonl` satırlarında `setup`/`score` YOKTU (eski şemayla tohumlanmış defter, güncel kod)
-    → skor kalibrasyonu ve gölge model 90 gerçek işlemin 90'ını da SESSİZCE eledi ("gerçek 0").
-  * `plan_id` iki şemadaydı: backtest `P00140`, canlı döngü `P-{tarih}-{ticker}`
-    → `cf_fidelity` — simülasyonun gerçeğe uyup uymadığını ölçen TEK mekanizma — hiç kurulamadı.
-  * cf satırları `r_multiple_expected`'i `rr_expected` diye YENİDEN ADLANDIRIYORDU
-    → yaması olan tüketici çalıştı, olmayan sessizce satır eledi.
-  * `gate_checks` yalnız canlı döngüde üretiliyordu → panonun karar-ağacı tablosu 144/144 boştu.
+SÖZLEŞME her defter için dört şeyi çiviler: (a) zorunlu alanlar, (b) İZİNLİ yazar modüller,
+(c) birleştirme anahtarı ve biçimi (PLAN_ID_RE / CF_ID_RE), (d) kanonik ad ↔ beyanlı takma adlar;
+`consumers` alanı belgelemedir. Üç yerden doğrulanır: üretici testleri (gerçek satır sözleşmeye
+uyar mı), statik tarama (beyan edilmemiş yazar belirdi mi) ve canlı dedektör (diskteki satırlar —
+watchdog.parity_report).
 
-Hiçbiri istisna fırlatmadı: `.get()` None döner, satır atlanır, sayı küçülür, kimse fark etmez.
-800 testin hiçbiri yakalamadı çünkü testler KENDİ fixture'larını üretiyor — gerçek defterle
-konuşmuyorlar.
+GİRİŞLER: `Contract` (dondurulmuş kayıt) + `CONTRACTS` (defter → sözleşme; hücre gerekçeleri satır
+içi yorumlarda), `validate_row` (tek satırın ihlal listesi), `validate_live` (diskten örneklem),
+`declared_writers` (statik ast taraması — dizgi sabitlerini ve kardeş-modül sabitlerini de çözer;
+kaynak-mtime önbellekli), `writer_violations` (beyan edilmemiş / beyan edilip yazmayan),
+`report` (pano + makullük dedektörünün okuduğu toplu durum). Ayrıştırılamayan modül `UNPARSED`e
+yazılır — "sıfır ihlal" iddiası eksik taramaya dayanamaz.
 
-SÖZLEŞME NE YAPAR: her defter için (a) zorunlu alanlar, (b) İZİNLİ yazarlar, (c) birleştirme
-anahtarı ve formatı, (d) kanonik ad ↔ beyan edilmiş takma adlar. Üç yerden doğrulanır:
-  1. üretici testleri — modül GERÇEK bir satır üretir, sözleşmeye uyar mı?
-  2. statik tarama    — beyan edilmemiş bir yazar belirdi mi?
-  3. canlı dedektör   — diskteki satırlar sözleşmeye uyuyor mu? (watchdog.parity_report)
-
-Sözleşme KARAR VERMEZ; yalnız "bu defter söz verdiği şeyi taşımıyor" der.
+Sözleşme KARAR VERMEZ; yalnız "bu defter söz verdiği şeyi taşımıyor" der. Okur: state defterleri
+(validate_live) ve kaynak ağacı (declared_writers); diske hiçbir şey yazmaz.
 """
 from __future__ import annotations
 

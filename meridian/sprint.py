@@ -1,28 +1,30 @@
-"""sprint.py — the 'öğrenme antrenmanı' (learning sprint) CONTROL SURFACE.
+"""sprint.py — öğrenme sprintinin KONTROL YÜZEYİ: kum havuzu kurulumu, otomatik kadans ve koşum yolu.
 
-TETİK: OTOMATİK KADANS + operatör override (2026-07-30, operatör mandası "elle tetik beklemeden tam
-fonksiyonlu"). Başlığı 2026-07-30 öncesinde "Operator-triggered" diyordu ve bu ÖLÇÜLEBİLİR bir kusur
-üretiyordu: son sprint 2026-07-22'de koştu, sekiz gün önce, çünkü kimse düğmeye basmadı — döngüyü
-DAKİKALARDA kapatabilen tek mekanizma, operatörün hafızasına asılıydı. Kadans `maybe_start()`tedir;
-pano/CLI düğmesi (`start()`) OVERRIDE olarak aynen durur ve hiçbir kapıya uğramaz.
+NE YAPAR. Canlı döngü işlem-kıtıdır: gemiye alınmış bir v2'nin min_sample işlem biriktirmesi canlı
+kâğıt defterde yıllar alır, yani yansıt→sonuç döngüsü hiç kapanmaz. Sprint o döngüyü tarihi İLERİ
+veri üzerinde DAKİKALARDA ve dürüstçe kapatır: `start()` canlı state'i `state/sprint/<sid>` altına
+kopyalar (`_kur_kum_havuzu`; SKIP_COPY barları/sırları/HALT'ı/SQLite artefaktını dışarıda tutar,
+bars + skills symlink'lenir), defterleri düz kitaba sıfırlar ve `sprint_run` çocuğunu KENDİ
+MERIDIAN_ROOT'uyla ayrı süreçte doğurur — canlı defter, karne ve koşan zamanlayıcıya dokunulmaz.
+Koşum yolu önce ayrı systemd birimidir (`meridian-sprint@.service`; worker restart'ı sprinti
+öldürmesin diye), kullanılamazsa ADLI sebeple `Popen`a düşülür (`kosum_yolu` damgası).
 
-Why it exists: the live loop is trade-starved — a shipped v2 would take ~1.5 years of live paper to accrue
-min_sample trades, so the reflect→outcome loop never closes. The sprint closes it in MINUTES on historical
-FORWARD data, honestly:
+TETİK: otomatik kadans (`maybe_start`/`should_run`: gece penceresi SPRINT_HOURS, haftalık taban
+SPRINT_STALE_DAYS, taze-hipotez tetiği SPRINT_MIN_NEW_HYP, yetim yeniden-başlatma freni
+YETIM_YENIDEN_SAAT, meşguliyet kapıları) + hiçbir kapıya uğramayan pano/CLI override'ı `start()`.
+Bütçe makineden türetilir (`auto_config`); `status()` yetim/koşu göstergelerini de taşır.
 
-  * It runs in a SEPARATE OS SUBPROCESS with its own MERIDIAN_ROOT (a sandbox under state/sprint/<id>).
-    The live paper book, ledgers, scoreboard, and the running scheduler/Hermes are NEVER touched — there is
-    no rewind and nothing to restore.
-  * Selection and measurement use DISJOINT calendar windows: the coordinate-descent search selects a v2
-    through the UNCHANGED OOS gate on data ≤ CUTOFF; the realized_delta is then measured ONLY on trades from
-    the strictly-later eval window. No look-ahead leakage.
-  * v1 and v2 are each walked forward over the SAME eval window from an identically-reset FLAT book, so the
-    market regime is common-mode and cancels — the delta reflects the parameter change, not a regime gap.
-  * The result is a clearly-labeled TRAINING calibration point. It is NEVER merged into live calibration(),
-    the real-money autonomy ladder, or the live proposer. To close the LIVE loop for real, the discovered
-    candidate must still clear the PRODUCTION gate and accrue production trades — the sprint de-risks
-    discovery, it never bypasses the law.
-"""
+DEĞİŞMEZLER. Seçim ve ölçüm AYRIK takvim pencerelerindedir (aday CUTOFF'a kadar veride, DEĞİŞMEMİŞ
+OOS kapısıyla seçilir; realized_delta yalnız EVAL_START sonrası işlemlerde ölçülür — sızıntı yok)
+ve pencereler operatör-ayarlı DEĞİLDİR (oynar cutoff = p-hacking). v1 ve v2 AYNI pencereyi AYNI düz
+kitaptan yürür: rejim ortak-mod olur, delta parametre değişimini ölçer. Sonuç açıkça "antrenman"
+etiketli bir kalibrasyon noktasıdır — canlı calibration()'a, otonomi merdivenine ve canlı önericiye
+ASLA karışmaz; üretim kapısı bypass edilmez. `kum_havuzunda()` süreç-dışı paylaşımlı kaynaklara
+(ör. ajanın skills dizini) yazmadan önce sorulan izolasyon kapısıdır.
+
+OKUR: canlı `state/` (kopya kaynağı), `hermes.SEARCH_PROGRESS` (meşguliyet), `hypotheses.jsonl`
+(taze-aday tabanı), kum havuzlarındaki `sprint_runs.jsonl`. YAZAR: canlı `sprint_status.json`
+(etiketli okuma-modeli, öğrenme defteri DEĞİL) ve kum havuzu ağacı (kurulum/budama)."""
 from __future__ import annotations
 import datetime as dt
 import json

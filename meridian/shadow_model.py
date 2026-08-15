@@ -1,15 +1,32 @@
-"""shadow_model.py — Gölge Sonuç-Modeli (karar mekanizması v3, Component 3).
+"""shadow_model.py — plan özelliklerinden P(kazanç) tahmin eden, yetkisiz gölge sonuç-modeli.
 
-Saf-numpy, rejim-koşullu lojistik regresyon: P(kazanç | plan özellikleri). YETKİSİ YOKTUR —
-kapı kararlarını kesemez/reddedemez; ürettiği olasılık Adaylar arayüzüne yalnızca KANIT olarak
-basılır ve Brier skoru kalibre olduğunu kanıtlayana kadar gölgede kalır (skill-gölgeleme felsefesinin
-aynısı). scikit-learn bilinçli olarak YOK: n≈111 örneklemde basitlik = dürüstlük.
+NE YAPAR. Saf-numpy, rejim-koşullu lojistik regresyon: kapanmış işlemlerden (eğitim setini
+büyütmek için karşı-olgusal defterle birlikte) "bu plan kazanır mı?" olasılığını öğrenir.
+Üretilen olasılık plana `p_win_shadow` olarak damgalanır ve Adaylar yüzeyine yalnızca KANIT
+olarak basılır; canlı Brier'i kalibre olduğunu kanıtlayana kadar model gölgede kalır
+(skill-gölgeleme felsefesinin aynısı). scikit-learn bilinçli olarak YOK: küçük örneklemde
+basitlik = dürüstlük.
 
-SPEC DÜZELTMESİ (sızıntı): şartnamede özellik olarak 'r_multiple' yazıyordu — o GERÇEKLEŞEN sonuçtur
-ve etiket (win = r_multiple>0) ondan türetilir; özellik olarak kullanmak modele cevabı göstermek olur.
-Doğrusu plandaki r_multiple_expected (hedeflenen R:R) — burada o kullanılır. İşlem satırları plan
-özelliklerini taşımadığından geçmiş veriler plan_id→trade_plans join'iyle beslenir (kapsama 90/90);
-broker artık yeni kapanışlara özellikleri damgalar, join zamanla gereksizleşir."""
+KİLİT GİRİŞLER. `ShadowTradeOutcomeModel` (fit / predict_proba / brier / save / load),
+`refit_and_save` (fit denemesinin kendisi — deneme/başarı damgalarını da o atar),
+`maybe_refit` (seans-sonrası antrenman kadansı; `dataset_fingerprint` değişmedikçe koşmaz),
+`evaluate_promotion` (yazılı terfi kuralı), `training_status` (karne satırı — analytics +
+/api/diagnostics okur), `is_promoted`.
+
+YASALAR — GÖLGE KATMANI: SIFIR YETKİ. Kapı kararlarını kesemez/reddedemez, canlı GO/NO_GO'ya
+dokunamaz. Tek istisna yazılı terfi kuralıdır: son taze kapanışlarda canlı Brier naif taban-oran
+tahmincisini yenerse model 'promoted' olur — o zaman bile tek yetkisi REVIEW eşiğinde vetodur
+(REVIEW_VETO_P). Simüle (cf) satırlar YALNIZ eğitime girer; terfi kanıtı tanımı gereği yalnız
+gerçek işlemlerden gelir. Ölçülemeyen değer None + neden — uydurma tahmin/sayı yok; eğitim
+setinin gerçek/simüle kırılımı (n_real/n_cf) künyeyle yayınlanır.
+
+TARİHÇE (sızıntı dersi): şartname özellik olarak 'r_multiple' diyordu — o GERÇEKLEŞEN sonuçtur
+ve etiket (win = r_multiple>0) ondan türetilir; özellik olarak kullanmak modele cevabı göstermek
+olurdu. Doğrusu plandaki `r_multiple_expected` ve burada o kullanılır; eski işlem satırları plan
+özelliklerini plan_id→trade_plans join'iyle alır, broker yeni kapanışlara özellikleri damgalar.
+
+OKUR: trades.jsonl, trade_plans.jsonl, counterfactuals.jsonl (sieve eleme muhasebesiyle).
+YAZAR: yalnız kendi defteri `state/shadow_model.json` (katsayılar + kadans damgaları + terfi)."""
 from __future__ import annotations
 import datetime as dt
 import json

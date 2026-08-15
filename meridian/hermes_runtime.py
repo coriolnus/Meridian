@@ -1,10 +1,25 @@
-"""hermes_runtime.py — in-process supervisor for the Hermes reflection brain, for LOCAL running. On app
-open (serve.sh sets MERIDIAN_AUTOSTART_HERMES=1) a daemon thread runs a standby loop: it watches the
-heartbeat and reflects when `reflection_every` new trades have closed and the system is healthy (not
-halted, not stale). The operator can also trigger one cycle on demand via reflect_now(). Every
-reflection goes through reflect.submit → the backtest gate decides; the brain only proposes. A single
-reflection lock guarantees the standby loop and a manual trigger never run two reflections at once.
-Status mirrors to state/hermes_status.json for the dashboard's Hermes section."""
+"""hermes_runtime.py — Hermes yansıma beyninin süreç-içi süpervizörü: bekleme döngüsü,
+tetikleyiciler ve pano durum aynası.
+
+Ne yapar: uygulama açılışında (serve.sh `MERIDIAN_AUTOSTART_HERMES=1` verir) bir daemon iş
+parçacığı `_run` bekleme döngüsünü koşturur. Sistem sağlıklıyken (HALT yok, veri bayat değil)
+canlı rejimin ufku dolunca — `reflection_every` yeni kapanmış işlem VE asgari takvim süresi,
+rejim-dilimli katı-VE (`_horizon_ok`) — `hermes.reflect_once` çağrılır. Ufuk dolu değilse
+`_bg_ready_regime` birikmiş kanıtlı bir canlı-dışı rejim seçer ve yansıma `background=True`
+ile o rejime kapsanmış koşar; o da yoksa ısınma sprinti (`_warmup_sprint`) hiçbir şey ship
+etmeden UCB önceliklerini ve sonda önbelleğini ısıtır (süre tavanlı, `_warmup_tavan_dk`).
+Operatör `reflect_now()` ile tek turu elle tetikler (arka plan iş parçacığında — HTTP isteği
+bloklanmaz); `status()` süreç/ufuk/beyin durumunu döndürür ve state/hermes_status.json'a
+aynalanır (panonun Hermes bölümü).
+
+Değişmezler: beyin yalnız önerir — her yansıma `reflect.submit`ten geçer, ship kararını kapı
+verir; tek yansıma kilidi (`_reflect_lock`) bekleme döngüsü ile elle tetiklemenin aynı anda
+iki yansıma koşmasını engeller; arka plan turunun ship yüzeyi seçilen rejimle sınırlıdır
+(kanıt kendi rejimini terk etmez — kapsama `reflect_once(background=True)` dalında uygulanır
+ve iki dosya birbirini adıyla gösterir); ısınma tavanının aşımı kadans değil anomalidir.
+
+Okur/yazar: trades.jsonl, regime.json, goal.yaml okur; hermes_status.json yazar; watchdog'a
+`hermes_poll` nabzı atar; olayları events.jsonl'a (obs) düşer."""
 from __future__ import annotations
 import datetime as dt
 import os

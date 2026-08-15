@@ -1,38 +1,34 @@
-"""hotstate.py — Redis SICAK-DURUM katmanı (intraday, 2026-07-23, operatör mimari isteği).
+"""hotstate.py — Redis SICAK-DURUM katmanı: intraday'in ~ms hızlı-okuma ve bar-akışı ara katmanı.
 
-NEDEN: intraday (dakikalık bar) için son fiyatlar / açık pozisyonlar / emirler saniyeler içinde,
-defalarca okunur. Bunları her seferinde JSON dosyadan okuyup parse etmek (counterfactuals 4.9M değil
-ama portfolio/heartbeat her tick) EOD kadansında sorun değildi; dakikalık döngüde I/O darboğazı olur.
-Redis in-memory bu okumaları ~ms'e indirir.
+NE YAPAR: dakikalık kadansta defalarca okunan sıcak veriyi (son fiyat, pozisyon kopyası, kapanmış
+bar tamponu, bar-tetiği olay akışı) Redis'te tutar; operatörün mimari kararıyla eklenmiştir. JSON
+dosyadan her okuyup parse etmek EOD kadansında sorun değildi, dakikalık döngüde I/O darboğazı olur.
 
-İKİ SIKI İLKE — bu kod tabanının dürüstlük/denetlenebilirlik kimliğini korur:
+ANAHTAR ŞEMASI (hepsi `mrd:` önekli, TTL'li — bayat sıcak veri birikmesin):
+  mrd:price:{TICKER} → hash {price, ts}   (son bar fiyatı; yazan: ingest_bars, TTL PRICE_TTL_S)
+  mrd:pos            → hash {TICKER: json} (açık pozisyon sıcak kopyası; cache_positions)
+  mrd:bars:{TICKER}  → Redis Stream; her giriş bir KAPANMIŞ dakikalık bar {o,h,l,c,v,vw,n,t};
+                       MAXLEN~ ring (BARS_MAXLEN) + EXPIRE (BARS_TTL_S ≈ 2 seans) — UÇUCU türev
+  mrd:barfeed        → tek birleşik "yeni bar geldi" olay akışı {ts,n,syms}; consumer-group'la
+                       (barfeed.py) okunur — dayanıklı tetik, restart'ta son ACK'ten devam
 
-  1. REDIS UÇUCUDUR, KALICI GERÇEK DEĞİL. İşlemler, kararlar, cf, hipotezler HÂLÂ store.py JSON/JSONL
-     defterlerinde yaşar — 7 katmanlı bütünlük/provenance dedektörü onları okur, grep'lenir, denetlenir.
-     Redis yalnız TÜREV/UÇUCU tutar: son fiyat, pozisyon/emir SICAK KOPYASI, hesaplama cache. Redis
-     tamamen silinse bile hiçbir kalıcı gerçek kaybolmaz — kaynak dosyadır, Redis hızlı okuma katmanı.
+KİLİT GİRİŞLER: ingest_bars/ingest_bar (SICAK YOL: tek pipeline'da fiyat + bar + barfeed olayı; `t`
+zorunlu — look-ahead sözleşmesi close_ts=t+60s'e dayanır, `t`siz bar akışa giremez; başarılı yazım
+sonrası bararchive.archive_frame'e düşer), read_bars/bars_len, set_price(s)/get_price,
+cache_positions/get_positions, ensure_barfeed_group/read_barfeed/ack_barfeed/barfeed_pending/
+claim_and_drop_stale_barfeed, available()/health(), flush() (test/reset).
 
-  2. GRACEFUL DEGRADATION. Redis yoksa/çökse sistem DURMAZ: her okuma None döner (çağıran dosyaya
-     düşer), her yazma sessizce no-op'lar ama bir kez olay yazar. `mirror_stream`'in "sahte güvenli-
-     başarısızlık değil, görünür başarısızlık" dersi: down durumu health()'te ve panoda görünür.
-
-Anahtar şeması (hepsi `mrd:` önekli, TTL'li — bayat sıcak veri birikmesin):
-  mrd:price:{TICKER}   → hash {price, ts}          (son işlem/bar fiyatı; yazan: ingest_bars)
-  mrd:pos              → hash {TICKER: json}        (açık pozisyon sıcak kopyası)
-
-`mrd:ord` (açık emir sıcak kopyası) BEYANI KALDIRILDI (kopukluk avı, 2026-07-30): şema burada
-yazılıydı ama bu anahtara yazan/okuyan TEK BİR fonksiyon bile yoktu — yani belge, var olmayan bir
-katmanı var gibi gösteriyordu. Ölü bir şema beyanı yalnız fazlalık değildir: sonraki okuyucuyu
-"emirler zaten sıcak katmanda" diye yanlış yönlendirir. Açık emirlerin gerçek kaynağı
-`broker_reconcile.json` + `mirror_stream`'dir. Emir sıcak kopyası gerçekten gerekirse şema o gün,
-yazan fonksiyonuyla birlikte gelir.
-
-YALNIZ-YAZILIR KATMAN KARARI (aynı tur): `mrd:price` ve `mrd:pos`ın PRODÜKSİYONDA HİÇBİR OKUYUCUSU
-yok — `get_price`/`get_positions` yalnız testlerden çağrılıyor (statik tarama: 2026-07-30). EOD
-döngüsündeki iki yazım noktası (loop._save_broker → cache_positions, loop.daily_cycle → set_prices)
-bu yüzden DEVRE DIŞI bırakıldı; gerekçe ve geri açma yolu loop.py'deki iki yorumda. Fonksiyonlar
-BURADA KALIR (silinmedi): 4b/pano tüketicisi geldiği gün kanca tek satırdır. `mrd:price`ın intraday
-yazıcısı (`ingest_bars`) DEĞİŞMEDİ — kapanmış bar → sıcak fiyat TEK yazma yolu hâlâ oradadır.
+DEĞİŞMEZLER: (1) REDIS UÇUCUDUR, KALICI GERÇEK DEĞİL — işlemler/kararlar/cf/hipotezler store.py
+JSON/JSONL defterlerinde yaşar; Redis tamamen silinse hiçbir kalıcı gerçek kaybolmaz. mrd:bars
+backtest/recompute'a ASLA girmez; kalıcı öğrenme kaynağı EOD immutable dosya barlarıdır.
+(2) GRACEFUL DEGRADATION: Redis yoksa okuma None (çağıran dosyaya düşer), yazma no-op — ama görünür:
+down olayı yazılır, süregelen kopuş DOWN_REASSERT_S'te bir yeniden basılır (bastırılanlar sayılır;
+çırpınma eşiği aşılırsa DATA_QUALITY alarmı). Girdi hataları (TypeError/ValueError) sağlığı
+DÜŞÜRMEZ — kurt masalı yasağı. Bloklu stream okumaları AYRI client kullanır (hot-path'in 0.5s
+socket_timeout'u bloklu okumayı keser, sahte 'Redis down' churn'ü yapardı). Not: `mrd:ord` beyanı
+kaldırıldı (yazanı/okuyanı olmayan ölü şema okuyucuyu yanıltır; emirlerin gerçek kaynağı
+broker_reconcile.json + mirror_stream); `mrd:price`/`mrd:pos`ın prodüksiyonda okuyucusu yok —
+EOD yazım noktaları devre dışı, fonksiyonlar tüketici geldiği gün için burada durur.
 """
 from __future__ import annotations
 

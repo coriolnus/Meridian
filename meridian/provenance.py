@@ -1,33 +1,24 @@
-"""provenance.py — ANAHTAR KÖKEN TAKİBİ: baskın kusur sınıfının GENEL biçimi (2026-07-22).
+"""provenance.py — anahtar köken takibi: üretici↔tüketici alan ayrışmasının çalışma-anı dedektörü.
 
-Bu hafta bulunan sessiz hataların hepsi tek bir cümleye indirgeniyordu:
-
-    "aynı yasanın iki uygulaması var ve sessizce ayrışmış."
-
+Baskın sessiz-kusur sınıfı tek cümledir: "aynı yasanın iki uygulaması var ve sessizce ayrışmış."
 Veri biçiminde bu şu demek: bir modül `{"dormant_setup": ...}` yazar, başka modül `.get("dormant")`
-okur. İstisna YOKTUR. Okuma None döner, dal `continue` ile atlanır, sayaç sessizce küçülür ve
-7139 satırın hepsi yanlış etiketle deftere geçer. 1257 test bunu göremez, çünkü her test KENDİ
-fikstürünü kurar: üretici ile tüketicinin beklentisini aynı el yazar, dolayısıyla ayrışamazlar.
+okur — istisna yoktur, okuma None döner, dal `continue` ile atlanır, sayaç sessizce küçülür ve
+binlerce satır yanlış etiketle deftere geçer. Testler bunu göremez, çünkü her test KENDİ
+fikstürünü kurar: üretici ile tüketicinin beklentisini aynı el yazar. Alan alan parite testi
+yazmak da çözüm değildir (unutulan ilk alanda sınıf geri döner); bu modül sınıfı YAPISAL ölçer —
+uygulamanın KENDİ koşusu sondadır. `store.read_json/read_jsonl` sonuçları izlenen sözlüklerle
+sarılır; her `.get(k)` ve `d[k]` isabet/ıska olarak kaydedilir. Koşu bitince:
+okunan ∧ hiçbir satırda YOK → SÜRÜKLENME · yazılan ∧ hiç okunmayan → ÖLÜ ALAN.
 
-TEK TEK yakalamak çözüm değil — her yeni alanda yeni bir parite testi yazmayı gerektirir ve
-unutulan ilk alanda sınıf geri döner. Bu modül sınıfı YAPISAL olarak ölçer:
+GİRİŞLER: `sar` (store okuma yollarının çağırdığı sarmalayıcı; kapalıyken nesneyi değiştirmeden
+döndürür — sıfır maliyet), `basla`/`dur`/`aktif`, `oturum` (yeniden-girişli ölçüm bağlamı: iç içe
+ölçüm dıştakini ezmez), `rapor` (salt-okunur hüküm: drift / dead_fields / inconclusive).
 
-    Uygulamanın KENDİ koşusunu sonda olarak kullan.
-
-`store.read_json/read_jsonl` sonuçları izlenen sözlüklerle sarılır. Her `.get(k)` ve `d[k]`
-çağrısı (artefakt, anahtar, isabet/ıska) olarak kaydedilir. Koşu bitince:
-
-    okunan ∧ hiçbir satırda YOK  →  SÜRÜKLENME (tüketici, üreticinin yazmadığı alanı istiyor)
-    yazılan ∧ hiç OKUNMAYAN      →  ölü alan (üretilip tüketilmeyen kanıt)
-
-KURT MASALI YASAĞI burada da geçerlidir — üç koruma:
-  1. Yalnız BOŞ OLMAYAN artefaktlar yargılanır. Boş defterde her anahtar "yok"tur; bu sürüklenme
-     değil kanıt yokluğudur.
-  2. Varsayılanlı okuma (`.get(k, x)`) tasarımca isteğe bağlıdır — ayrı sayılır, ihlal sayılmaz.
-  3. `OPSIYONEL` listesi GEREKÇE ister. Gerekçesiz muafiyet, muafiyet değil sessizliktir.
-
-Dedektör kendi tabanını YAZMAZ: her şey süreç-içi bellekte birikir, rapor salt-okunurdur.
-Varsayılan KAPALI; test oturumu ve günlük döngü açar (bkz. tests/conftest.py, cli).
+KURT MASALI YASAĞI dedektörün kendisine de uygulanır: boş artefakt yargılanmaz (kanıt yokluğu ≠
+sürüklenme); varsayılanlı okuma (`.get(k, x)`) ayrı sayılır, ihlal değildir; `OPSIYONEL` muafiyeti
+GEREKÇE ister; `HARITA` anahtarı ŞEMA değil VERİ olan artefaktları beyan eder; çok-biçimli
+defterde (events gibi) yokluk hüküm vermez, "belirsiz" yazılır. Dedektör hiçbir taban YAZMAZ:
+her şey süreç-içi bellekte birikir. Varsayılan KAPALI; test oturumu ve günlük döngü açar.
 """
 from __future__ import annotations
 

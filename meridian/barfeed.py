@@ -1,20 +1,26 @@
-"""barfeed.py — DAYANIKLI bar-tetiği tüketicisi (Faz 3, 2026-07-23).
+"""barfeed.py — `mrd:barfeed` akışını consumer-group ile okuyan DAYANIKLI bar-tetiği tüketicisi.
 
-marketstream her dakikalık frame'i `hotstate.ingest_bars` ile yazarken `mrd:barfeed` akışına tek bir
-"yeni bar geldi" olayı da XADD eder. BU modül o akışı bir CONSUMER-GROUP ile (XREADGROUP + ACK) okur ve
-kayıtlı bir geri-çağrıyı (Faz 4 intraday_cycle buraya bağlanır) uyandırır.
+NE YAPAR: marketstream her dakikalık çerçeveyi `hotstate.ingest_bars` ile yazarken `mrd:barfeed`
+akışına tek bir "yeni bar geldi" olayı XADD eder; bu modül o akışı XREADGROUP + XACK ile okur ve
+`register()` ile takılmış geri-çağrıyı (intraday karar döngüsünün kancası) uyandırır. Bare pub/sub
+BİLEREK seçilmedi: pub/sub fire-and-forget'tir, tüketici o an düşükse mesaj KAYBOLUR; consumer-group
+ACK'lenmemiş olayları tutar — süreç yeniden başlarsa tetik düşmez, son ACK'ten devam eder. redis-py
+senkron olduğundan ve XREADGROUP block=Nms çağrısı thread'i bloklardığından ayrı bir daemon
+thread'de koşar; uvicorn event-loop'una (marketstream/mirror/API) dokunmaz.
 
-NEDEN consumer-group (bare pub/sub DEĞİL): pub/sub fire-and-forget'tir — tüketici o an düşükse mesaj
-KAYBOLUR. Consumer-group teslim edilen ama ACK'lenmemiş olayları tutar; süreç/görev bir an yeniden
-başlarsa tetik DÜŞMEZ, son ACK'ten devam eder. "Yeni bar → karar uyandır" kancasının dayanıklı hâli.
+KİLİT GİRİŞLER: `register(cb)` (her yeni-bar olayında fn(fields)->None), `start()`/`stop()`
+(idempotent daemon thread — çift tüketici yapısal önlenir), `health()` (pano/API; hiç başlamamışsa
+ok=None üçüncü hâli), `consumer()` (süreç-içi tekil BarfeedConsumer), GROUP="meridian-intraday",
+CONSUMER (MERIDIAN_BARFEED_CONSUMER ortam değişkeni).
 
-NEDEN THREAD (asyncio DEĞİL): redis-py senkron; XREADGROUP block=Nms çağrısı thread'i bloklar. asyncio
-görevinde koşarsa uvicorn event-loop'unu (marketstream/mirror/API dahil) dondururdu. Bu yüzden ayrı bir
-daemon thread'de koşar — event-loop'a dokunmaz.
+DEĞİŞMEZLER: geri-çağrı hata verse de olay YİNE ACK'lenir (sonsuz yeniden-teslim kilidi yok; hata
+last_error'da görünür kalır). Kayıtlı geri-çağrı yoksa olaylar yalnız sayılır ve ACK'lenir —
+mekanizmanın çalıştığının panoda görünen kanıtı. ~60 sn'de bir bayat PEL girişleri XAUTOCLAIM +
+ACK ile düşürülür (churn kalıntısı PEL'i şişirmesin). Redis düşerse nazik bekleme + grup yeniden
+kurulur; ok bayrağı thread canlılığı × Redis erişilebilirliğidir.
 
-Faz 3 KAPSAMI: dayanıklı tetik mekanizması + görünürlük (events_read/lag). Kayıtlı geri-çağrı yoksa
-olaylar yalnız SAYILIR ve ACK'lenir (mekanizmanın çalıştığının kanıtı, panoda görünür). Faz 4 gerçek
-intraday_cycle'ı `register()` ile bağlar.
+OKUR/YAZAR: `mrd:barfeed` Redis Stream'ini hotstate.read_barfeed/ack_barfeed üzerinden okur ve
+ACK'ler; diske hiçbir şey yazmaz — durum süreç-içi sayaçlardır (events_read/frames_seen/pending).
 """
 from __future__ import annotations
 import os

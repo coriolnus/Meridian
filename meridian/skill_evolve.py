@@ -1,15 +1,30 @@
-"""skill_evolve.py — Skill Revizyon Döngüsü v1 (#5): içerik evriminin güvenli ilk adımı.
+"""skill_evolve.py — ölçülmüş-zayıf skill'ler için revize SKILL.md TASLAĞI üreten, operatör-onaylı içerik-evrim döngüsü.
 
-Karne artık cf hızında doluyor (skill başına gerçek+sim katkı) ama karnesi kötü skill'in İÇERİĞİ
-sonsuza dek aynı kalıyordu. Bu modül döngüyü TASLAK-DÜZEYİNDE kapatır: ölçülmüş-zayıf bir skill için
-ajan — katkı verisi, çıkış-verimliliği ve derslerle temellendirilmiş — revize SKILL.md TASLAĞI yazar.
+NE YAPAR. Karne (gerçek + karşı-olgusal katkı) hızla dolarken karnesi kötü skill'in İÇERİĞİ
+sonsuza dek aynı kalıyordu. Bu modül döngüyü taslak düzeyinde kapatır: gerçek işlemde yeterli izi
+olan (MIN_REAL_N) ve ortalama katkısı eşiğin altındaki (MAX_AVG_R) bir skill için ajan — katkı
+verisi, çıkış-verimliliği ve derslerle temellendirilmiş — revize bir SKILL.md taslağını YAN
+dosyaya (SKILL.md.v2-draft) yazar; taslak Skiller sayfasında görünür, operatör onaylarsa
+yürürlüğe girer (eski sürüm SKILL.md.v{N}.bak olarak arşivlenir), reddederse silinir.
 
-SINIRLAR (v1, bilinçli mütevazı):
-  * OTOMATİK HİÇBİR ŞEY DEĞİŞMEZ: taslak yan dosyaya yazılır (SKILL.md.v2-draft), Skiller sayfasında
-    görünür; operatör ONAYLARSA yürürlüğe girer (eski sürüm arşivlenir), REDDEDERSE silinir.
-  * Korunan skill'ler (kapı, devre kesici…) ve çekirdek üçlü ASLA aday olmaz.
-  * Haftada en fazla BİR taslak (ajan bütçesi + operatör dikkati şişmesin).
-  * Uygulama tarihi kayda geçer — karne ileride sürüm-öncesi/sonrası kıyaslanabilsin."""
+KİLİT GİRİŞLER. `weekly_draft` (haftada en fazla BİR taslak; mekanizma arızası sessiz kalamaz —
+sağlık defterine kesinti yazılır ve hata yükseltilir), `weak_skills` (aday süzgeci),
+`draft_revision` (ajan çağrısı + atomik taslak yazımı), `apply_revision`/`reject_revision`
+(operatör kararı), `revisions`/`pending_drafts` (defter okuma), `_repo_skill_dir` (ad doğrulamalı
+yol çözümü).
+
+DEĞİŞMEZLER. OTOMATİK HİÇBİR ŞEY DEĞİŞMEZ: canlı SKILL.md yalnız operatör onay yolundan değişir.
+Korunan skill'ler (skills.PROTECTED) ve çekirdek küme (CORE_NEVER) hem taslak üretiminde hem
+UYGULAMADA reddedilir — savunma iki uçta da durur (tek uçlu hâli, elde taslağı bulunan korunan
+skill'in apply ile ezilmesine açıktı). Skill adı doğrulanır ve çözülen yol skills/ altında kalmak
+zorundadır (yol-kaçışı reddedilir). Defterin dönüş tipi tek noktada garanti list[dict]'tir: bozuk
+disk şekli onarılır, onarım kayda geçer (bozuk şekil iki mekanizmayı sessizce düşürmüştü ve pano
+sakin sistemle arızalı sistemi ayırt edemiyordu — ders korunur). Uygulama tarihi kayda geçer ki
+karne sürüm-öncesi/sonrası kıyaslanabilsin.
+
+OKUR: analytics.skill_attribution, exit_efficiency.json, state/lessons.md, skills/<ad>/SKILL.md.
+YAZAR: state/skill_revisions.json + skills/<ad>/SKILL.md.v2-draft (SKILL.md'nin kendisi yalnız
+onay yolunda değişir, eski sürüm arşivlenerek)."""
 from __future__ import annotations
 import datetime as dt
 import json

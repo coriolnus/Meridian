@@ -1,43 +1,32 @@
-"""faz5_cikis.py — FAZ-5 ÇIKIŞ ÖLÇÜMÜ: dakika-hassas icranın CI'lı kazancı (kart EXE-2026-002).
+"""faz5_cikis.py — dakika-hassas icra ÇIKIŞ ÖLÇÜMÜ: gölge dolumlarının EOD zamanlamasına karşı CI'lı kazancı.
 
-NEDEN VAR. `health.faz6_kilitleri`nin ÜÇÜNCÜ kilidi (`faz5_cikisi`) bugüne kadar SABİT `False` /
-`olculemedi` yazıyordu ve gerekçesi kendi kodunda duruyordu: "Faz-5 çıkış ölçümünü (dakika-hassas
-icranın CI'lı kazancı) ÜRETEN kod yok". Merdivendeki dört kapalı kilidin üçü KANIT eksikliğinden
-kapalıdır (edge 1/5, sonuç 0/4, DSR 1e-06) ve kodla açılamaz — kârlı işlem geçmişi ister. Bu kilit
-TEK istisnaydı: kapalı olma sebebi ÖLÇÜMÜN YOKLUĞUydu. Bu modül o ölçümü üretir. Kilit bundan sonra
-da kapalı kalabilir, ama gerekçesi "üreten kod yok"tan ÖLÇÜLMÜŞ bir cümleye döner ("örneklem 4/20"
-gibi) — ve ikincisi zamanla kendiliğinden dolar, birincisi dolmaz.
+NEDEN VAR. `health.faz6_kilitleri` merdivenindeki `faz5_cikisi` kilidi bugüne kadar sabit
+`False`/`olculemedi` yazıyordu ve gerekçesi "ölçümü ÜRETEN kod yok"tu. Merdivendeki öbür kapalı
+kilitler KANIT eksikliğinden kapalıdır ve kodla açılamaz — kârlı işlem geçmişi ister; bu kilit tek
+istisnaydı: kapalı olma sebebi ÖLÇÜMÜN YOKLUĞUydu. Bu modül o ölçümü üretir (`cikis_olcumu`):
+seans-içi GÖLGE defterinin dolumlarını iç EOD dolumlarıyla eşleştirir (`_cift`), farkı BPS
+biriminde tarih-kümeli bootstrap ile aralıklandırır ve hükmü ölçülmüş bir cümleye çevirir
+("örneklem 4/20" gibi) — o cümle zamanla kendiliğinden dolar, "kod yok" dolmaz. Modülün adı
+kilidin adıyla aynıdır; ayrı modüldür çünkü analytics kendi bootstrap gövdesini DEVRETMEZ
+(AST-çivili test; yayımlanmış sayıların tabanı korunur) ve okuduğu defter farklıdır (kapanmış
+işlemler değil, gölge emir defteri).
 
-NEDEN AYRI MODÜL, `analytics.py` DEĞİL (üç ölçülmüş sebep, bir tercih değil):
-  1. `tests/test_wpm_sasi_v173::test_A_analytics_KENDI_bootstrapini_DEVRETMEDI` AST seviyesinde
-     çivileniyor: `analytics.py` `olcum_araclari`yı import ETMEZ. Gerekçe yayımlanmış sayıların
-     korunmasıdır (`analytics._blok_bootstrap_ci`, CIRCULAR blok=5 İŞLEM, `result_verdict`in
-     tabanı). Bu ölçüm bir bootstrap ister; analytics'e konsaydı ya çivi kırılırdı ya da analytics
-     içinde ÜÇÜNCÜ bir bootstrap gövdesi doğardı — ikisi de o testin engellediği sınıf.
-  2. OKUDUĞU DEFTER FARKLI. `edge_verdict`/`result_verdict` KAPANMIŞ İŞLEM defterini okur
-     (trades + kalibrasyon) ve "kenar var mı / para var mı" sorusuna R ve DOLAR biriminde cevap
-     verir. Bu ölçüm 4b GÖLGE defterini okur ve "dakika-hassas GİRİŞ, EOD zamanlamasına göre ne
-     kazandırırdı" sorusuna BPS biriminde cevap verir. Ortak tek şey hükmün tüketicisidir
-     (Faz-6 zinciri), gövdesi değil.
-  3. `health.faz6_kilitleri` üç hesabı ZATEN geç-import ile alıyor (`analytics`, `validation`,
-     `dataset`). Dördüncüsü aynı desenle gelir; `analytics` içine konsaydı 4.173 satırlık dosyanın
-     ithal maliyeti hiç değişmezdi ama kartın ölçümü onun yayımlanmış yüzeyine karışırdı.
-Modülün adı kilidin adıyla AYNI (`faz5_cikisi` ↔ `faz5_cikis.py`): kilidi panoda gören okuyucu,
-sayının hangi dosyadan geldiğini aramak zorunda kalmasın.
+EŞİKLER ÖN-KAYIT KARTINDAN GELİR VE KOD DEĞİŞTİREMEZ (`research/cards/` altında, ölçümden ÖNCE
+donduruldu): N_MIN = 20 eşleşmiş çift · %95 CI · TARİH-KÜMELİ bootstrap 10.000 (BOOTSTRAP_TOHUM
+sabit — tekrarlanabilirlik) · kazanç, ölçülmüş maliyet bandının ÜSTÜNDE olmalı. `kill_criteria`
+dokunulmazdır: sonuç hoşa gitmediğinde değişecek şey eşik değil hükümdür. Eşleşmeme BOZULMA oranı
+KILL_ESLESMEME_ORANI'nı aşarsa hüküm YOK (fail-closed); meşru dolmama sınıfı KAPSAM_DISI_SINIFLARI
+yalnız çift sayısını düşürür. Düz (IID) bootstrap BİLEREK yok: aynı günün dolumları bağımsız
+değildir, IID aralığı hep "daha anlamlı" gösterir — kilidi hak etmeden açma yönünde yanlıdır.
 
-EŞİKLER KARTTAN GELİR VE KOD BUNLARI DEĞİŞTİREMEZ (`research/cards/EXE-2026-002-faz5-cikis-
-olcumu.yaml`, ölçümden ÖNCE donduruldu): n_min = 20 · %95 · TARİH-KÜMELİ bootstrap 10.000 ·
-kazanç E3 maliyet bandının ÜSTÜNDE. `kill_criteria` dokunulmazdır. Ölçüm sonucu hoşa gitmediğinde
-değişecek olan şey eşik değil, hükümdür.
+METODOLOJİK SINIR (kartta yazılı, burada yumuşatılmaz): gölge `sim_fill` de iç EOD dolumu da
+ÜRETİLMİŞ modeldir; birincil karşılaştırma MODEL-MODEL'dir ve ZAMANLAMA etkisini ölçer, gerçek icra
+kalitesini değil. Gerçek broker dolumlarıyla kıyas ayrı satırdır (`gerceklik_capasi`) ve
+`hukme_girmez: True` damgası taşır — modeli gerçekle kıyaslamak modeli kayırır.
 
-METODOLOJİK SINIR (kartta yazılı, burada YUMUŞATILMAZ). 4b'nin `sim_fill`i GÖZLENMİŞ bir dolum
-DEĞİLDİR: `max(bar_open, entry_trigger)` kuralıyla ÜRETİLMİŞ bir modeldir; iç EOD dolumu da bir
-simülasyondur. Yani BİRİNCİL karşılaştırma MODEL-MODEL'dir ve ölçtüğü şey ZAMANLAMA etkisidir,
-gerçek icra kalitesi değil. İkisi de AYNI maliyet modelini taşır, fark yalnız zamanlamadan gelir.
-Gerçek Alpaca dolumlarıyla kıyas AYRI bir satırdır (`gerceklik_capasi`), hüküm VERMEZ ve
-`hukme_girmez: True` ile damgalanır — bir modeli gerçekle kıyaslamak modeli KAYIRIR.
-
-BU MODÜL SAF OKUMADIR: hiçbir dosyaya yazmaz, hiçbir bayrağı çevirmez, hiçbir emir yolu açmaz.
+OKUR: gölge emir defteri (adı tek kaynaktan: intraday_shadow.ORDERS_FILE), trades.jsonl,
+portfolio.json, entry_execution.jsonl (gerçeklik çapası). BU MODÜL SAF OKUMADIR: hiçbir dosyaya
+yazmaz, hiçbir bayrağı çevirmez, hiçbir emir yolu açmaz.
 """
 from __future__ import annotations
 

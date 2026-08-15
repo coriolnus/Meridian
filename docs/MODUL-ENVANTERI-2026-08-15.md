@@ -2,8 +2,12 @@
 
 **Okuyucu (YASA 6):** oturum açan her Claude rolü + operatör. `CLAUDE.md` kural 1'in yol arkadaşı:
 mühendislik günlüğü "şu an ne var"ı anlatır, bu belge "neresi nerede ve ne iş yapar"ı. 96 modül,
-~66.8k satır. **Tek gerçek kaynak modüllerin kendi başlık docstring'leridir** — bu belge onların
+~67k satır. **Tek gerçek kaynak modüllerin kendi başlık docstring'leridir** — bu belge onların
 dizinidir; Görev sütunu her modülün kendi başlık satırından (kırpılmış) alınmıştır.
+
+**2026-08-15 sonrası kural:** başlık docstring'i 'ne yapar'ı anlatır (Türkçe, detaylı); WP/tur/
+kart/tarih köken etiketleri kodda DURMAZ — arşivi `docs/MODUL-KOKENLERI-2026-08-15.md`'dedir.
+İstisnalar: `run.py` ve `adapters/{macro,news}.py` mezar taşlarıdır, docstring'leri kaydın kendisidir.
 
 **Güncelleme yöntemi:** docstring'ler değiştikçe tablo yeniden üretilir (basit `ast` taraması:
 her `meridian/**/*.py` için `ast.get_docstring` ilk satırı + satır sayısı). Elle satır düzeltme
@@ -18,130 +22,129 @@ döngüsüz). Bilinçli istisnalar ve bilinen `config→obs→store→config` d�
 
 ## 1) Katman katman modüller
 
-
 ### 1. Giriş & Kadans (canlı döngü)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/api.py` | 5472 | FastAPI read-model over state/ + a tiny write surface (HALT / resume / approvals). |
-| `meridian/scheduler.py` | 1382 | the local paper-advance loop. On a laptop there is no systemd worker, so nothing |
-| `meridian/loop.py` | 3290 | the live forward paper cycle. Runs once per trading day after the close: builds the |
-| `meridian/intraday_cycle.py` | 419 | Faz 4 KAPANMIŞ-BAR TÜKETİCİSİ (GÖZLEM-MODU / Faz 4a). |
+| `meridian/api.py` | 5489 | state/ üzerinde FastAPI okuma-modeli ve dar bir operatör yazma yüzeyi (HALT/DEVAM, onaylar). |
+| `meridian/scheduler.py` | 1400 | süreç-içi kâğıt-ilerletme döngüsü: kapanan her XNYS seansı için loop.daily_cycle'ı |
+| `meridian/loop.py` | 3309 | canlı ileri-yönlü kâğıt döngüsü: kapanan her işlem günü için bir kez koşan günlük |
+| `meridian/intraday_cycle.py` | 391 | kapanmış dakikalık barların tüketicisi: sıfır-yetkili gözlem/gölge ölçümü ve |
 | `meridian/run.py` | 433 | entrypoint (TOHUMLAMA + TEK ATIŞ). 24/7 KADANS BURADA DEĞİL: `scheduler.advance_once`. |
 
 ### 2. Sinyal Çekirdeği (saf karar)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/strategy.py` | 1154 | PURE. No I/O, no clock reads, no network. Index -1 is ALWAYS a closed bar. |
-| `meridian/score.py` | 212 | composite performance score in [-1, +1] from realized return vs target, drawdown |
-| `meridian/regime.py` | 317 | tags every trade (trend_up \| trend_down \| chop \| high_vol) and builds the P1 |
-| `meridian/indicators.py` | 333 | Pure technical indicators over closed OHLCV bars. No I/O, no clock. numpy/pandas only. |
-| `meridian/earnings.py` | 768 | the earnings blackout. A swing-momentum entry taken right into an earnings print |
+| `meridian/strategy.py` | 1170 | saf sinyal mantığı: yedi giriş kurulumunun değerlendirmesi ve kapalı-bar pozisyon yönetimi. |
+| `meridian/score.py` | 228 | kapanmış işlem defterinden [-1, +1] aralığında bileşik performans skoru. |
+| `meridian/regime.py` | 335 | endeks (SPY) barlarından piyasa rejimi sınıflaması ve günlük rejim artefaktı. |
+| `meridian/indicators.py` | 352 | kapalı OHLCV barları üzerinde saf, determinist teknik gösterge kütüphanesi. |
+| `meridian/earnings.py` | 787 | kazanç takvimi: karartma kapısı, PEAD çapası ve takvim tazeleme/birikim katmanı. |
 
 ### 3. Kısıt & Yasa Katmanı
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/guard.py` | 667 | the real constraint layer. An instruction to an LLM is a suggestion; a validator is |
-| `meridian/health.py` | 295 | heartbeat, stale-data detection, kill-switch, circuit-breaker state. A silent agent |
-| `meridian/codelaw.py` | 1106 | İKİ STATİK YASA (2026-07-21). |
-| `meridian/ledgers.py` | 538 | DEFTER SÖZLEŞMESİ (2026-07-21). |
-| `meridian/ledgerstamp.py` | 490 | İŞLEM DEFTERİNİN KAYNAK DAMGASI (denetim bulgusu BT-1'in kapanışı). |
-| `meridian/provenance.py` | 251 | ANAHTAR KÖKEN TAKİBİ: baskın kusur sınıfının GENEL biçimi (2026-07-22). |
-| `meridian/integrity_registry.py` | 410 | BİLEŞEN × DESEN kapsam kaydı (2026-07-21). |
-| `meridian/sieve.py` | 260 | ELEME MUHASEBESİ (2026-07-21'in doğrudan çıktısı). |
-| `meridian/validation.py` | 454 | Y1 DOĞRULAMA ÜÇLÜSÜ: DSR/PSR + PBO/CSCV + aday getiri defteri |
-| `meridian/validation_report.py` | 131 | "hangi mekanizma/edge KANITLANIYOR?" (2026-07-21). |
-| `meridian/recompute.py` | 664 | AYNI SORUYU İKİ YOLDAN CEVAPLA (2026-07-22). |
+| `meridian/guard.py` | 680 | parametre önerileri ve işlem planları için saf, statik kısıt katmanı. |
+| `meridian/health.py` | 312 | operatörün kontrol durumu: kill-switch, nabız, bayatlık ve silahlanma kilitleri. |
+| `meridian/codelaw.py` | 1097 | iki statik yasanın (sessiz-yutma, okuyucusuz-yazım) kaynak-kod denetçisi. |
+| `meridian/ledgers.py` | 538 | paylaşılan defterlerin yazılı sözleşmesi: zorunlu alanlar, izinli yazarlar, anahtarlar. |
+| `meridian/ledgerstamp.py` | 459 | işlem defterine kaynak damgası: canlı kanıt ile tohum simülasyonunu ayırır. |
+| `meridian/provenance.py` | 242 | anahtar köken takibi: üretici↔tüketici alan ayrışmasının çalışma-anı dedektörü. |
+| `meridian/integrity_registry.py` | 418 | bileşen × değişmez-desen kapsam kaydı: "nereye bakmadık?" tablosu. |
+| `meridian/sieve.py` | 254 | eleme muhasebesi: her sessiz `continue`yi sayılı ve gerekçeli bir kayda çevirir. |
+| `meridian/validation.py` | 415 | doğrulama üçlüsü: aday getiri defteri + DSR/PSR + PBO/CSCV ve ship hükümleri. |
+| `meridian/validation_report.py` | 143 | "hangi mekanizma/edge KANITLANIYOR?" sorusunun salt-okuma tek tablosu. |
+| `meridian/recompute.py` | 674 | aynı büyüklüğü iki BAĞIMSIZ yoldan hesaplayıp kıyaslayan mutabakat dedektörü. |
 
 ### 4. Öğrenme Beyni (Hermes + Kapı)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/hermes.py` | 4597 | the brain. Reads state, forms ONE single-variable hypothesis with Claude, and |
-| `meridian/hermes_runtime.py` | 547 | in-process supervisor for the Hermes reflection brain, for LOCAL running. On app |
-| `meridian/hermes_composite.py` | 389 | BİLEŞİK ÖNERİ YOLU (Hermes paketi H3 + H4, 2026-07-30). |
-| `meridian/reflect.py` | 1928 | the reflection entrypoint. Routes a hypothesis through the honest pipeline: |
-| `meridian/probgate.py` | 453 | Eşleştirilmiş Olasılıksal Kapı (karar mekanizması v3, Component 1). |
-| `meridian/backtest.py` | 921 | walk-forward out-of-sample engine. THE learning gate. Replays through the exact |
-| `meridian/oos_pipeline.py` | 73 | 70/30 OOS bölümleme + teyit yürüyüşü (karar mekanizması v3, Component 2). |
-| `meridian/oos_erosion.py` | 229 | OOS AŞINMA DEFTERİ: aynı sınav kâğıdı kaç kez soruldu? |
-| `meridian/memory.py` | 217 | the thing that makes it actually learn. Records every hypothesis with its full |
-| `meridian/versioning.py` | 127 | strategy.yaml version bumps, immutable history snapshots, and the scoreboard. |
-| `meridian/rollback.py` | 442 | automatic, no human in the loop. Once min_sample trades have run under the |
-| `meridian/prescreen.py` | 580 | HİPOTEZ ÖN-ELEMESİ: adayları KAPININ KENDİ YASASIYLA ölç, canlıya dokunma. |
-| `meridian/sprint.py` | 975 | the 'öğrenme antrenmanı' (learning sprint) CONTROL SURFACE. |
-| `meridian/sprint_run.py` | 217 | the CHILD process of a learning sprint (launched by sprint.start()). |
-| `meridian/baseline.py` | 322 | EBEVEYN SÜRÜMÜN TABANINI GERÇEKTEN ÖLÇ (2026-07-26). |
-| `meridian/threshold_curve.py` | 221 | MIN_SCORE EŞİK EĞRİSİ: kapıyı yükseltmek kâr getirir mi? |
-| `meridian/component_ic.py` | 870 | BİLEŞEN IC'si: skorun DÖRT HAM PARÇASINDAN hangisi tahmin gücü taşıyor? |
-| `meridian/counterfactual.py` | 292 | Karşı-olgusal defter (öneri #1). Motorun ANA darboğazı kanıt bant genişliği: |
-| `meridian/cf_backfill.py` | 222 | karşı-olgusal defteri TÜM TARİHE koşturarak doldurur (2026-07-21). |
-| `meridian/mutation.py` | 828 | MUTASYON KOŞUMU: dedektörlerin NEYİ GÖREMEDİĞİNİ ölçer (2026-07-22). |
-| `meridian/nous_eval.py` | 875 | NOUS SİSTEM-DEĞERLENDİRME KATMANI (ROADMAP §3.2, 2026-07-30). |
-| `meridian/regime_trigger.py` | 39 | Ertelenmiş Rejim Bütçe Tetikleyicisi (karar mekanizması v3, Component 4). |
-| `meridian/shadowlaw.py` | 624 | BÜYÜKLÜK YASASI **PARA-v3**: yeni yasanın tanımı + ESKİ YASANIN GÖLGESİ. |
-| `meridian/arming.py` | 349 | Silahlanma Değerlendiricisi (#3): uyuyan→ölç→silahla döngüsünün eksik son halkası. |
-| `meridian/selfreview.py` | 400 | Haftalık Öz-Değerlendirme (#2) + Çelişki Dedektörü (#3). |
-| `meridian/agent_telemetry.py` | 489 | AJAN ÇAĞRI TELEMETRİSİ + HAM İZ DEFTERİ (D3 modül 1 ve 2, 2026-08-07). |
-| `meridian/spend.py` | 98 | the Hermes cost ledger + budget guard. A self-improving agent that calls an LLM every |
-| `meridian/olcum_araclari.py` | 804 | ÖLÇÜM ŞABLONLARININ ORTAK YARDIMCILARI (WP-M, 2026-08-01/02). |
-| `meridian/faz5_cikis.py` | 481 | FAZ-5 ÇIKIŞ ÖLÇÜMÜ: dakika-hassas icranın CI'lı kazancı (kart EXE-2026-002). |
+| `meridian/hermes.py` | 4617 | Meridian'ın öneri üreten beyni: durum okur, TEK değişkenlik bir hipotez kurar ve |
+| `meridian/hermes_runtime.py` | 562 | Hermes yansıma beyninin süreç-içi süpervizörü: bekleme döngüsü, |
+| `meridian/hermes_composite.py` | 381 | bileşik (çok-düğmeli) önerilerin ölçüm kuyruğu: tek-değişken yasasını |
+| `meridian/reflect.py` | 1946 | yansıma boru hattının motoru ve TEK ship kapısı: hipotez nereden gelirse gelsin |
+| `meridian/probgate.py` | 458 | eşleştirilmiş olasılıksal kapı: nokta-eşik yerine blok-bootstrap ile P(ΔS>0) |
+| `meridian/backtest.py` | 935 | walk-forward simülasyon motoru: öğrenme kapısının tek ölçüm zemini. |
+| `meridian/oos_pipeline.py` | 83 | OOS penceresinin 70/30 Search/Confirm bölümlemesi ve teyit yürüyüşü. |
+| `meridian/oos_erosion.py` | 225 | OOS aşınma defteri: aynı sınav kâğıdına kaç kez soru soruldu? |
+| `meridian/memory.py` | 233 | hipotez defteri ve damıtılmış dersler: sistemi gerçekten öğrenir kılan katman. |
+| `meridian/versioning.py` | 146 | strategy.yaml sürüm zinciri: bump, değişmez tarih anlık görüntüleri ve karne. |
+| `meridian/rollback.py` | 462 | otomatik ebeveyn-dönüşü: kötüleşen sürüm insansız geri alınır, sonuç deftere işlenir. |
+| `meridian/prescreen.py` | 539 | hipotez ön-elemesi: adayları kapının KENDİ yasasıyla ölç, canlı state'e dokunma. |
+| `meridian/sprint.py` | 977 | öğrenme sprintinin KONTROL YÜZEYİ: kum havuzu kurulumu, otomatik kadans ve koşum yolu. |
+| `meridian/sprint_run.py` | 224 | öğrenme sprintinin ÇOCUK SÜRECİ: kum havuzunda üç fazlı ileri-yürüyüş ölçümü. |
+| `meridian/baseline.py` | 330 | ebeveyn sürümün tabanını UYDURMADAN ölçmek: backfill + like-for-like would-have kıyası. |
+| `meridian/threshold_curve.py` | 216 | entry.min_score eşik eğrisi: kapıyı yükseltmek/alçaltmak kâr getirir mi? |
+| `meridian/component_ic.py` | 830 | bileşen IC tablosu: bileşik skorun ham parçalarından hangisi tahmin gücü taşıyor? |
+| `meridian/counterfactual.py` | 301 | karşı-olgusal defter: alınmayan her tam-şekilli adayı simüle edip kanıta çevirir. |
+| `meridian/cf_backfill.py` | 230 | karşı-olgusal defteri TÜM TARİHİ SEANSLARA koşturarak dolduran tek-seferlik motor. |
+| `meridian/mutation.py` | 824 | MUTASYON KOŞUMU: bütünlük dedektörlerinin NEYİ GÖREMEDİĞİNİ ölçen körlük haritası. |
+| `meridian/nous_eval.py` | 863 | NOUS SİSTEM-DEĞERLENDİRME KATMANI: telemetriden kanıt-atıflı iyileştirme önerileri. |
+| `meridian/regime_trigger.py` | 51 | ertelenmiş rejim-bütçe tetikleyicisi: rejim başına örneklem sayacı + "kanıt hazır" sinyali. |
+| `meridian/shadowlaw.py` | 612 | BÜYÜKLÜK YASASI **PARA-v3**: kapının karar değişkeninin tanımı + ESKİ YASANIN GÖLGESİ. |
+| `meridian/arming.py` | 356 | silahlanma değerlendiricisi: uyuyan→ölç→silahla döngüsünün kapı-ölçümü halkası. |
+| `meridian/selfreview.py` | 409 | haftalık öz-değerlendirme sentezi + katmanlar-arası çelişki dedektörü. |
+| `meridian/agent_telemetry.py` | 459 | ajan/LLM çağrılarının telemetri ve ham-iz defterleri: süre ölçüm anında |
+| `meridian/spend.py` | 113 | Hermes LLM çağrılarının maliyet defteri ve aylık bütçe kapısı. |
+| `meridian/olcum_araclari.py` | 796 | ölçüm şablonlarının ORTAK YARDIMCILARI: temiz taban, blok bootstrap, küçültme, damga. |
+| `meridian/faz5_cikis.py` | 470 | dakika-hassas icra ÇIKIŞ ÖLÇÜMÜ: gölge dolumlarının EOD zamanlamasına karşı CI'lı kazancı. |
 
 ### 5. Gölge Katman (sıfır yetki)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/shadow_model.py` | 471 | Gölge Sonuç-Modeli (karar mekanizması v3, Component 3). |
-| `meridian/shadow_variants.py` | 650 | 2.4 GÖLGE-VARYANT PORTFÖYLERİ (2026-07-30). SIFIR YETKİ, KENDİ DEFTERİ. |
-| `meridian/shadow_lifecycle.py` | 579 | GÖLGE-v2 YAŞAM-DÖNGÜSÜ MOTORU (2026-07-30). SIFIR YETKİ, KENDİ KÂĞIT DEFTERİ. |
-| `meridian/trend_shadow.py` | 577 | UZUN-UFUK TREND KOLU · CANLI PARALEL GÖLGE-KİTAP (WP-K, 2026-07-31). |
-| `meridian/intraday_shadow.py` | 844 | FAZ 4B GÖLGE MODU (2026-07-27). SIFIR YETKİ, TAM KARAR. |
+| `meridian/shadow_model.py` | 488 | plan özelliklerinden P(kazanç) tahmin eden, yetkisiz gölge sonuç-modeli. |
+| `meridian/shadow_variants.py` | 621 | aynı günün canlı aday akışına farklı parametre kümeleriyle KÂĞIT karar uygulayan gölge-varyant karar defteri. |
+| `meridian/shadow_lifecycle.py` | 554 | varyant başına kalıcı kâğıt kitap yürüten gölge yaşam-döngüsü motoru (fill → yönetim → çıkış → mark). |
+| `meridian/trend_shadow.py` | 571 | hükümlü uzun-ufuk trend kolunu canlı barlar üzerinde ileri yürüten sanal gölge-kitap. |
+| `meridian/intraday_shadow.py` | 827 | seans içinde tetiği kesilen planın TAM icra kararını ("emir çıkar mıydı, kaç lot, hangi fiyattan") kendi defterine ölçen gölge katmanı. |
 
 ### 6. Beceri Katmanı (Axis-2)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/skills.py` | 1068 | the pipeline runner. Skills are bound into five DETERMINISTIC pipelines (§3), each |
-| `meridian/skill_evolve.py` | 263 | Skill Revizyon Döngüsü v1 (#5): içerik evriminin güvenli ilk adımı. |
-| `meridian/skill_gorus.py` | 614 | GÖRÜŞ DEFTERİ v1 (ön-kayıt kartı EDG-2026-019, 2026-08-09). |
+| `meridian/skills.py` | 1085 | skill kütüphanesinin kayıt, koşu ve öneri katmanı: deterministik boru hattı koşucusu + katalog + Eksen-2 önerileri. |
+| `meridian/skill_evolve.py` | 278 | ölçülmüş-zayıf skill'ler için revize SKILL.md TASLAĞI üreten, operatör-onaylı içerik-evrim döngüsü. |
+| `meridian/skill_gorus.py` | 623 | skill'lerin yapılandırılmış GÖRÜŞ yazıp gerçekleşen sonuçla puanlandığı, icraya dokunmayan görüş defteri. |
 
 ### 7. İcra (paper broker)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/broker.py` | 704 | the paper broker. Realistic frictions or the agent learns a fantasy (Hard Rule 7). |
-| `meridian/sermaye.py` | 626 | ANTRENMAN TOHUMUNUN CANLI SERMAYEDEN AYRIŞTIRILMASI (BT-1'in nakit ayağı). |
+| `meridian/broker.py` | 719 | kâğıt broker: gerçekçi sürtünmeli dolum/çıkış simülatörü ve giriş-icra yasası. |
+| `meridian/sermaye.py` | 643 | antrenman tohumunun (replay_seed) K/Z'sini canlı-kâğıt sermayeden ayrıştıran, kuru-koşu-varsayılanlı reset aracı. |
 
 ### 8. Bar / Akış Altyapısı
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/barfeed.py` | 140 | DAYANIKLI bar-tetiği tüketicisi (Faz 3, 2026-07-23). |
-| `meridian/barclock.py` | 125 | Intraday LOOK-AHEAD saati (Faz 4). TEK ortak zaman kaynağı + kapanmış-bar admissibility |
-| `meridian/bararchive.py` | 119 | Faz 5 KANIT KATMANININ İLK TAŞI: dakikalık bar çerçevelerinin kalıcı arşivi. |
-| `meridian/barsarchive.py` | 820 | `mrd:bars:{T}` akışlarının DAYANIKLI disk arşivi (Faz 5 ham maddesi, 2026-07-29). |
-| `meridian/barrepair.py` | 397 | DİSKTEKİ bar defterlerinden HAYALET SEANS satırlarını temizleyen onarım aracı. |
-| `meridian/marketstream.py` | 216 | PİYASA-VERİSİ dinleyicisi: Alpaca dakikalık KAPANMIŞ bar akışı → mrd:bars (Faz 2). |
-| `meridian/mirror_stream.py` | 338 | Olay-güdümlü YÜRÜTME-DURUMU katmanı (operatör mimari isteği, 2026-07-19). |
-| `meridian/streamhealth.py` | 288 | WS DİNLEYİCİLERİNİN ORTAK YASASI (2026-07-23, Faz 2). |
-| `meridian/hotstate.py` | 525 | Redis SICAK-DURUM katmanı (intraday, 2026-07-23, operatör mimari isteği). |
-| `meridian/dataset.py` | 310 | shared loader + backtest windows for the replay universe. One place so reflect.py |
+| `meridian/barfeed.py` | 146 | `mrd:barfeed` akışını consumer-group ile okuyan DAYANIKLI bar-tetiği tüketicisi. |
+| `meridian/barclock.py` | 134 | intraday'in TEK ortak zaman kaynağı: kapanmış-bar admissibility + NY seans kapıları. |
+| `meridian/bararchive.py` | 118 | dakikalık WS bar çerçevelerinin gün-dosyalı kalıcı disk arşivi (kanıt katmanının ilk taşı). |
+| `meridian/barsarchive.py` | 781 | `mrd:bars:{T}` akışlarının DAYANIKLI disk arşivcisi (kanıt katmanının ham maddesi). |
+| `meridian/barrepair.py` | 379 | diskteki bar defterlerinden HAYALET SEANS satırlarını temizleyen onarım/envanter aracı. |
+| `meridian/marketstream.py` | 223 | Alpaca dakikalık KAPANMIŞ bar WS dinleyicisi: piyasa verisi → mrd:bars + sıcak fiyat. |
+| `meridian/mirror_stream.py` | 345 | Alpaca trade_updates akışından beslenen olay-güdümlü YÜRÜTME-DURUMU katmanı. |
+| `meridian/streamhealth.py` | 300 | WS dinleyicilerinin ORTAK YASASI: bayatlık/nabız/backoff/down-reassert/reconnect. |
+| `meridian/hotstate.py` | 521 | Redis SICAK-DURUM katmanı: intraday'in ~ms hızlı-okuma ve bar-akışı ara katmanı. |
+| `meridian/dataset.py` | 338 | replay evreninin ORTAK yükleyicisi + backtest pencere sabitleri. |
 
 ### 9. Veri Kenarı (adapters/)
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/adapters/data.py` | 2737 | real daily OHLCV, no API key. Primary: Cboe delayed_quotes historical |
-| `meridian/adapters/alpaca.py` | 1552 | Alpaca broker adapter. PAPER by default. The LIVE path is refused unless |
-| `meridian/adapters/massive.py` | 951 | Massive (massive.com) EOD bar sağlayıcısı. |
-| `meridian/adapters/fmp.py` | 365 | Financial Modeling Prep (STABLE API). Enriches live candidates (fundamentals, |
-| `meridian/adapters/finviz.py` | 333 | Finviz'i OTONOM ADAY KAYNAĞI yapar (2026-07-23). |
-| `meridian/adapters/insider.py` | 705 | Form 4 (içeriden işlem) verisi: FMP insider-trading uçları (ROADMAP §3.4 Y4). |
-| `meridian/adapters/shortinterest.py` | 403 | FINRA Equity Short Interest (ROADMAP §3.4 Y4, "kaçınma filtresi" ayağı). |
-| `meridian/adapters/edgar_shares.py` | 430 | EDGAR AS-OF DOLAŞIMDAKİ HİSSE SAYIMI: SALT-OKUNUR VERİ KÖPRÜSÜ. |
-| `meridian/adapters/constituents.py` | 259 | point-in-time S&P 500 üyeliği (#36). |
+| `meridian/adapters/data.py` | 2755 | günlük OHLCV bar hattının tek boğazı: çok kaynaklı zincir, artımlı önbellek, |
+| `meridian/adapters/alpaca.py` | 1556 | Alpaca broker adaptörü: varsayılan olarak PAPER; iç broker simülatörünün |
+| `meridian/adapters/massive.py` | 928 | Massive (massive.com) EOD bar sağlayıcısı: tüm piyasayı TEK çağrıda veren |
+| `meridian/adapters/fmp.py` | 379 | Financial Modeling Prep (STABLE API) istemcisi: kotalı, çift-anahtarlı, |
+| `meridian/adapters/finviz.py` | 339 | Finviz momentum/kırılım ekranını OTONOM ADAY KAYNAĞI yapan keşif adaptörü. |
+| `meridian/adapters/insider.py` | 648 | Form 4 (içeriden işlem) verisi: FMP insider-trading akışından artımlı |
+| `meridian/adapters/shortinterest.py` | 353 | FINRA Equity Short Interest: kaçınma filtresinin veri ayağı — |
+| `meridian/adapters/edgar_shares.py` | 397 | EDGAR as-of dolaşımdaki hisse sayımı: salt-okunur PIT veri köprüsü. |
+| `meridian/adapters/constituents.py` | 248 | point-in-time S&P 500 üyeliği: FMP birincil, Wikipedia en iyi-çaba |
 | `meridian/adapters/macro.py` | 24 | EMEKLİ MODÜL (ÇIKARILDI 2026-07-30, temizlik turu). |
 | `meridian/adapters/news.py` | 28 | EMEKLİ MODÜL (ÇIKARILDI 2026-07-30, temizlik turu). |
 
@@ -149,31 +152,31 @@ döngüsüz). Bilinçli istisnalar ve bilinen `config→obs→store→config` d�
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/store.py` | 638 | state persistence helpers. Atomic JSON writes, JSONL append, and numpy sanitization |
-| `meridian/storage.py` | 716 | DEFTER ÇEKİRDEĞİNİN SQLite ARKA UCU (WP-H/H9, Kademe A). |
-| `meridian/dbmigrate.py` | 634 | DOSYA DEFTERİ → SQLite, PARİTE KANITIYLA (WP-H/H9, Kademe A4). |
-| `meridian/config.py` | 361 | Central config + path resolution. Loads the immutable goal.yaml/bounds.yaml and the |
+| `meridian/store.py` | 642 | state/ defterlerinin tek okuma-yazma kapısı: atomik yazım + file_lock + db_backed yönlendirmesi. |
+| `meridian/storage.py` | 700 | altı defter varlığının SQLite arka ucu: `state/meridian.db` varlık kaydı + WAL + tek transaction. |
+| `meridian/dbmigrate.py` | 614 | dosya defterlerini SQLite'a parite kanıtıyla taşıyan ve geri alan operatör aracı. |
+| `meridian/config.py` | 385 | merkezi yapılandırma ve yol çözümü: goal/bounds/strategy yükleme + varsayılan tohum. |
 
 ### 11. Gözlem, Pano & Operasyon
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/obs.py` | 319 | structured JSON logging + the ALARM_ tokens the notification chain keys on. |
-| `meridian/watchdog.py` | 3407 | Mekanizma Bekçisi (#1): 15+ periyodik dişlinin canlılık nabzı. |
-| `meridian/analytics.py` | 4297 | read-model computations over state/ for the dashboard. Pure reads; no mutation. |
-| `meridian/marketview.py` | 306 | İZLENEN EVRENİN TEK BAKIŞTA OKUNAN GÖRÜNTÜSÜ (2026-07-27). |
-| `meridian/notify.py` | 198 | push a short message to the operator (Telegram or a generic webhook). stdlib only. |
-| `meridian/secrets.py` | 221 | Secret Manager, a local 0600 store, or nothing (Hard Rule 5). |
-| `meridian/auth.py` | 351 | operatör kimliği: parola doğrulama + imzalı oturum çerezi. |
-| `meridian/auth_cli.py` | 96 | operatör parolasını kabuktan yönet. |
-| `meridian/mcp_server.py` | 164 | Meridian'ın SALT-OKUNUR durumunu yerel hermes-agent'a MCP aracı olarak açar. |
+| `meridian/obs.py` | 328 | yapılandırılmış JSON olay kaydı + bildirim zincirinin anahtarlandığı ALARM_ jetonları. |
+| `meridian/watchdog.py` | 3425 | mekanizma bekçisi: periyodik dişlilerin canlılık nabzı + bütünlük/makullük rapor ailesi. |
+| `meridian/analytics.py` | 4321 | panonun okuma-modeli: state/ üzerinden türetilen analitik hesapların tek çatısı. |
+| `meridian/marketview.py` | 311 | izlenen evrenin tek bakışta okunan görüntüsü; pano "Piyasa" sekmesinin tek kaynağı. |
+| `meridian/notify.py` | 215 | operatöre kısa mesaj itme (Telegram / genel webhook) + yerel alarm gelen kutusu; yalnız stdlib. |
+| `meridian/secrets.py` | 230 | sır erişiminin tek kapısı: env → yerel 0600 deposu → Secret Manager, ya da hiçbiri (Hard Rule 5). |
+| `meridian/auth.py` | 348 | operatör kimliği: scrypt parola doğrulama + HMAC-imzalı, kayan-pencereli oturum çerezi. |
+| `meridian/auth_cli.py` | 106 | operatör parolasını ve oturum imza anahtarını kabuktan yöneten CLI. |
+| `meridian/mcp_server.py` | 173 | Meridian'ın SALT-OKUNUR durumunu yerel hermes-agent'a MCP aracı olarak açan stdio sunucusu. |
 
 ### 0. Paket Kökleri
 
 | Modül | Satır | Görev |
 |---|---:|---|
-| `meridian/__init__.py` | 6 | Paket kökü — katman haritasına (bu belge) işaret eder. _(docstring bu turda eklendi)_ |
-| `meridian/adapters/__init__.py` | 6 | Kenar katman kökü — importlinter sözleşme 1'e işaret eder. _(docstring bu turda eklendi)_ |
+| `meridian/__init__.py` | 5 | Meridian — kapalı-bar swing paper-trading motoru + Hermes öğrenme döngüsü. |
+| `meridian/adapters/__init__.py` | 5 | meridian.adapters — dış dünya kenar katmanı (veri sağlayıcılar + Alpaca broker). |
 
 ---
 

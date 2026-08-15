@@ -1,11 +1,29 @@
-"""reflect.py — the reflection entrypoint. Routes a hypothesis through the honest pipeline:
-    guard.validate_change  ->  backtest OOS gate  ->  version bump + snapshot  ->  memory write-back
+"""reflect.py — yansıma boru hattının motoru ve TEK ship kapısı: hipotez nereden gelirse gelsin
+aynı dürüst yoldan geçer.
 
-Two sources of hypotheses, same pipeline:
-  * deterministic fallback proposer (--auto): proves the whole loop before an LLM is anywhere near it
-  * Hermes (--hermes --hypothesis '<json>'): the brain proposes; the engine validates and gates
+Ne yapar: bir hipotezi guard.validate_change → walk-forward OOS kapısı → teyit yürüyüşü →
+DSR/PBO doğrulama kapısı → sürüm artırma + skor tahtası + defter kaydı zincirinden geçirir.
+İki hipotez kaynağı aynı boru hattını kullanır: deterministik önerici (`--auto`; LLM daha
+ortada yokken tüm halkayı kanıtlar) ve Hermes (`--hermes --hypothesis '<json>'`; beyin önerir,
+motor doğrular ve kapılar). `coordinate_descent_search`/`search_and_submit` tüm düğmelerde
+sistematik arama koşar ve kazananı yine aynı kapıya verir.
 
-The engine — not the LLM — decides what ships. An instruction is a suggestion; the gate is the law."""
+Kilit girişler: `submit`/`_submit_locked` (süreçler-arası fcntl kilidi altında tek ship
+yetkisi), `_gate_eval` (TEK yasa — arama ve submit birebir aynısını okur, iki yerde iki yasa
+sessizce ayrışırdı), `_wf_cached`/`clear_wf_caches` (incumbent walk-forward önbelleği,
+bar-revizyon korumalı), `propose_deterministic` (UCB sıralı sezgisel önerici).
+
+Değişmezler: öneri danışmadır, kararı kapı verir — motor ship eder, LLM etmez; büyüklük hükmü
+dilim varken olasılıksaldır (blok-bootstrap P(ΔS>0) ≥ p_required(K); K = o oturumda denenen
+aday sayısı, kazananın-laneti cezası), dilim yokken legacy nokta-marj (GATE_MARGIN) koşar ve
+hangisinin koştuğu kapı kaydında damgalıdır; fold-çoğunluğu kanıt ister, kuyruk (VaR/CVaR) ve
+düşüş vetoları tek yönlüdür; "ölçülemedi" üçüncü hâldir ve fail-closed'dur — asla "geçti"
+sayılmaz; OOS aşınma defteri aynı pencereye sorulan her resmî soruyu sayar ve marjı yükseltir.
+
+Okur/yazar: hypotheses.jsonl (memory.record — her hüküm, ret dahil, deftere iner),
+inc_cache.json + probe_cache.json + wf_cache_rev.json (walk-forward önbellekleri, bar
+revizyonuyla yaşar), strategy.yaml ve skor tahtası (versioning), aşınma/doğrulama defterleri
+(oos_erosion, validation); goal.yaml ve bounds.yaml'ı config üzerinden okur."""
 from __future__ import annotations
 import argparse
 import json

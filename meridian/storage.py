@@ -1,47 +1,31 @@
-"""storage.py — DEFTER ÇEKİRDEĞİNİN SQLite ARKA UCU (WP-H/H9, Kademe A).
+"""storage.py — altı defter varlığının SQLite arka ucu: `state/meridian.db` varlık kaydı + WAL + tek transaction.
 
-NEDEN VAR. Bugüne kadar altı defter dosyaydı (JSON/JSONL) ve `store.py` onları atomik yazıyordu.
-Atomiklik TEK bir yazım için doğruydu ama şu iki sınıf açıktı:
+NE YAPAR. `trades.jsonl`, `trade_plans.jsonl`, `scoreboard.json`, `portfolio.json`,
+`equity_curve.json`, `shadow_books.json` varlıklarını (ENTITIES kaydı: kanonik ad → tablo + tür
+rows/doc/series) SQLite'ta tutar. Dosya çağında iki sınıf açıktı: süreçler-arası oku-değiştir-yaz
+yarışı (RLock yalnız aynı süreçte anlam taşır; canlı worker + pano API + sprint aynı dosyaya
+yazabiliyordu) ve atomik olmayan JSONL ekleme (çökme yarım satır bırakır). SQLite ikisini
+YAPISAL olarak kapatır: kazanç ŞEMA değil, atomiklik + süreçler-arası kilittir (WAL +
+busy_timeout). Uygulama kodu bu modülü DOĞRUDAN çağırmaz; `store.py` yönlendirir ve çağıranlar
+aynı dict/list yapılarını alır — depolama migrasyonu, davranış migrasyonu değil.
 
-  * OKU-DEĞİŞTİR-YAZ yarışı SÜREÇLER ARASINDA: `store.file_lock` bir `threading.RLock`tur, yani
-    YALNIZ aynı süreçte anlam taşır. Canlı worker + pano API + sprint AYNI dosyaya yazabiliyordu;
-    kaybeden yazım hiçbir yerde görünmüyordu (bu depoda belgeli tehlike sınıfı).
-  * JSONL EKLEME ATOMİK DEĞİLDİ: çökme ya da disk dolması yarım satır bırakır; `store.read_jsonl`
-    o satırı sessizce eler (`jsonl_rows_skipped` uyarısı bunu SAYAR ama kaybı geri getirmez).
+KİLİT GİRİŞLER. `active(ad)` anahtarlama kapısı: DB dosyası/şeması yoksa her şey dosyadan sürer.
+`connect()` (yol başına tek bağlantı; `create=False` SİGORTADIR — sqlite3.connect olmayan yolu
+sessizce yaratır ve boş doğan bir DB defterleri boş okuturdu; yaratma yetkisi yalnız
+`ensure_schema`/dbmigrate yolunda). `read_entity`/`write_entity` ortak yüzeyi; `read_rows`/
+`append_row`/`replace_rows`, `read_doc`/`write_doc`, `read_series`/`write_series`; `meta`/`stamp`
+(entity_meta damgası — dosya çağındaki mtime'ın karşılığı, önbellek anahtarı + tazelik ölçümü);
+`backup_to` (çevrimiçi yedek — WAL modunda cp/tar sessizce eksik kopya verir); `close_connections`.
+`db_path()` her çağrıda `config.STATE`ten türetilir: yol dondurmak ölçüm sandbox'larını kırar.
 
-SQLite ikisini de YAPISAL olarak kapatır: tek transaction + WAL + süreçler-arası kilit çekirdeğin
-kendisindedir. Kazanç ŞEMA DEĞİL, ATOMİKLİK + SÜREÇLER-ARASI KİLİTtir — bu yüzden tekil-belgeler
-(scoreboard/portfolio/shadow_books) tek-satır-belge tablosudur; aşırı-normalizasyon yapılmadı.
-
-DIŞ İMZALAR DEĞİŞMEZ. Bu modülü uygulama kodu DOĞRUDAN çağırmaz; `store.py` altı defter adını
-buraya yönlendirir ve çağıranlar bugünkü dict/list yapılarını almaya devam eder. Bu bir DEPOLAMA
-migrasyonudur, davranış migrasyonu DEĞİL.
-
-ANAHTARLAMA KAPISI (`active`). DB YOKSA her şey eskisi gibi dosyadan okur/yazar. DB `dbmigrate`
-ile DOĞDUĞU an altı defter DB'ye geçer. Yani kod dağıtımı ile veri geçişi AYRI iki olaydır:
-Rol-1 bakım penceresinde `python -m meridian.dbmigrate --uygula` koşana kadar davranış birebir
-bugünküdür.
-
-`MERIDIAN_DB=off` TEK BAŞINA GERİ DÖNÜŞ DEĞİLDİR (C5, 2026-08-02 — bu satır eskiden onu "acil geri
-dönüş anahtarı" ilan ediyordu ve YANLIŞTI). Migrasyondan sonra kaynak dosyalar `.migrated` ADIYLA
-durur; `store._path` kanonik ada bakar, bulamaz ve çağıranın VARSAYILANINA düşer. Yani anahtarı tek
-başına çeken operatör "eski hâle döndüm" sanırken altı defteri BOŞ okur ve ilk yazımda AYRIŞIK
-ikinci bir kitap doğar (`last_id` sıfırlanır → kimlik çakışması). Bugünkü sözleşme İKİ parçalıdır:
-  * GERİ DÖNÜŞ KOLU: `python -m meridian.dbmigrate --geri-al` — DB'yi kenara alır, `.migrated`
-    arşivlerini ASIL adlarına döndürür, DB ile dosya satır sayılarını rapor eder. Veri SİLMEZ.
-  * ANAHTAR (`MERIDIAN_DB=off`): kolun ÇEKİLDİĞİNİ varsaymaz, ÖLÇER. Anahtar açıkken DB dosyası
-    dururken kaynaklar hâlâ `.migrated` ise `active()` süreç başına BİR KEZ `obs.warn` basar
-    (`db_off_kaynaklar_arsivde`) — sessizce boş varsayılana düşmek bu bulgunun kendisiydi.
-
-YOL ÇAĞRI ANINDA ÇÖZÜLÜR. `config.STATE` ölçüm sandbox'larında (testler, sprint, mutasyon)
-değiştirilir; modül yükleme anında yol dondurmak o sandbox'ları KIRAR — bu yüzden `db_path()`
-her çağrıda `config.STATE`i okur ve bağlantı havuzu YOLA göre anahtarlanır.
-
-TİP KORUMA (parite sözleşmesi). Tipli kolonlar sorgulanabilirlik içindir; DOĞRULUK kaynağı
-değildir. Bir alanın Python tipi kolonun beklediğinden farklıysa (ör. `score` int beklenirken
-float gelirse) alan AYRICA `extra_json`a yazılır ve okumada `extra_json` KAZANIR. Böylece
-SQLite'ın tip afinitesi (60 → 60.0 dönüşümü) sessizce veriyi değiştiremez: parite digesti
-`dbmigrate`de bunu ölçer ve eşleşmezse migrasyon BAŞARISIZ sayılır.
+DEĞİŞMEZLER. Tip koruma (parite sözleşmesi): tipli kolonlar sorgulanabilirlik içindir, DOĞRULUK
+kaynağı değil — tipi uymayan alan (−0.0 dahil: REAL kolon işaret bitini kaybeder) ayrıca
+`extra_json`a yazılır ve okumada extra KAZANIR; SQLite tip afinitesi veriyi sessizce değiştiremez.
+`MERIDIAN_DB=off` TEK BAŞINA GERİ DÖNÜŞ DEĞİLDİR (eski "acil geri dönüş anahtarı" beyanı
+YANLIŞLANDI): kaynaklar `.migrated` adında dururken anahtarı çeken operatör altı defteri BOŞ okur
+ve ilk yazımda ayrışık ikinci bir kitap doğar — geri dönüş kolu `dbmigrate --geri-al`dır; yarım
+hâl varsayılmaz, ÖLÇÜLÜR ve süreç başına bir kez beyan edilir (`db_off_kaynaklar_arsivde`).
+Okur/yazar: yalnız `state/meridian.db` (+ -wal/-shm).
 """
 from __future__ import annotations
 

@@ -1,16 +1,26 @@
-"""recompute.py — AYNI SORUYU İKİ YOLDAN CEVAPLA (2026-07-22).
+"""recompute.py — aynı büyüklüğü iki BAĞIMSIZ yoldan hesaplayıp kıyaslayan mutabakat dedektörü.
 
-NEDEN VAR: 2026-07-21'de çıkan on üç hatanın hiçbiri istisna fırlatmadı. Hepsi aynı biçimde
-davrandı — bir satır sessizce elendi, bir sayı küçüldü, kimse fark etmedi. Böyle bir hatayı
-yakalayan tek şey, **aynı büyüklüğü birbirinden BAĞIMSIZ iki yoldan hesaplayıp karşılaştırmaktı**:
-canlı döngü "aday: 0" diyordu, aynı önbellek barları doğrudan tarandığında 25 seansta 43 sinyal
-çıkıyordu. Fark, hatanın kendisiydi (motor evrenin %18'inde karar veriyordu).
+İstisna fırlatmayan hata sınıfını (satır sessizce elenir, sayı küçülür, kimse fark etmez)
+yakalayan tek şey çift hesaptır: sayıyı üreten muhasebe ile sayıyı taşıyan defter AYRI AYRI
+ölçülür ve fark, hatanın kendisidir — canlı örnek: döngü "aday: 0" derken aynı önbellek barlarının
+doğrudan taranması onlarca sinyal veriyordu; motor evrenin küçük bir kesitinde karar veriyordu.
+TASARIM KURALI (ihlali modülü değersizleştirir): iki yol GERÇEKTEN bağımsız olmalı; aynı
+fonksiyonu iki kez çağırmak hiçbir şey kanıtlamaz. Her denetim satırı A ve B yolunu adıyla taşır
+(`a_yol`/`b_yol`).
 
-TASARIM KURALI (ihlal edilirse modül değersizleşir): iki yol GERÇEKTEN bağımsız olmalı. Aynı
-fonksiyonu iki kez çağırmak hiçbir şey kanıtlamaz; sayıyı üreten muhasebe ile sayıyı taşıyan
-defteri karşılaştırmak kanıtlar. Her denetim aşağıda "A yolu" ve "B yolu" diye açıkça yazılır.
+GİRİŞLER: `report(deep=False)` — kimlik satırları: defter↔bar tutarlılığı (pano yolu canlı dilime
+bakar, tohum dilimini BEYANLA dışlar; `deep` gece işi tamamını görür), gerçekleşen K/Z kimliği,
+nakit kimliği, sermaye eğrisi↔kitap, taban kayması (kitabın zımni tabanı ↔ beyanlı sermaye-reset
+ofseti — `sermaye.ofset` kimliklere ADIYLA girer), karne n'i ↔ defter uzunluğu, karşı-olgusal
+korunumu, kalibrasyon paydaları, hipotez kimliği monotonluğu, rejim etiketi kalitesi, bounds
+uyumu; `_orphan_state_files` — diskteki her artefaktın okuyucusu/beyanı var mı (kök ve .json-dışı
+kesit dâhil; damgalı göç arşivi tanınmış terminal sınıftır, yetim değil); `deep` ayrıca evren
+kapsamasını barlardan yeniden sayar (`_universe_recompute`); `render_text` metin döküm.
 
-Modül KARAR VERMEZ, düzeltmez, hiçbir şey yazmaz — yalnız "iki cevap tutmuyor" der.
+DEĞİŞMEZLER: modül KARAR VERMEZ, düzeltmez, hiçbir state yazmaz — yalnız "iki cevap tutmuyor"
+der; dedektörün kendi arızası sessiz kalmaz, bulgu olarak raporlanır. Okur: portföy/işlem/eğri/
+karne/cf/hipotez defterleri + kaynak korpusu (yorum ve docstring'ler atılır — adı anmak okumak
+değildir); yazdığı tek şey obs uyarılarıdır.
 """
 from __future__ import annotations
 

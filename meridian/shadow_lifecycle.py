@@ -1,57 +1,32 @@
-"""shadow_lifecycle.py — GÖLGE-v2 YAŞAM-DÖNGÜSÜ MOTORU (2026-07-30). SIFIR YETKİ, KENDİ KÂĞIT DEFTERİ.
+"""shadow_lifecycle.py — varyant başına kalıcı kâğıt kitap yürüten gölge yaşam-döngüsü motoru (fill → yönetim → çıkış → mark).
 
-NE DEĞİŞTİ. `shadow_variants` (v1) bir GİRİŞ-KARARI anlık görüntüsüdür: "bugün hangi varyant neyi
-silahlandırırdı". Pozisyon taşımaz, fill görmez, çıkış görmez. Bu sınır iki bedel doğurmuştu ve
-ikisi de yazılıydı: (a) ÇIKIŞ düğmeli kollar (V3/V6/V7) kontrol koluyla KARAR-ÖZDEŞ çıkıyor,
-ölçüm kazancı sıfır olduğu için defterden ÇIKARILDILAR; (b) "bu varyant PARA kazandırır mıydı"
-sorusu gölge katmanında hiç sorulamıyordu — yalnız `backtest.walk_forward` (geçmişe bakan, pencere
-tüketen) yanıtlıyordu. Bu modül o eksik katmandır: **varyant başına kalıcı kâğıt defteri** —
-fill → yönetim → çıkış → mark, her gün, canlı akışın taze barlarıyla.
+NE YAPAR. Karar defteri (`shadow_variants`) yalnız giriş-kararı anlık görüntüsü ölçer: pozisyon
+taşımaz, fill/çıkış görmez — bu yüzden çıkış-düğmeli kollar orada kontrol koluyla karar-özdeş
+kalır ve "bu varyant PARA kazandırır mıydı" sorusu gölge katmanında sorulamazdı. Bu modül o eksik
+katmandır: her kol için kalıcı bir `PaperBroker` kitabını canlı akışın taze barlarıyla her gün
+ileri yürütür — bekleyen çıkışlar + girişler D+1 açılışında, kısmi satış + dokunuş çıkışları gün
+içinde, yönetim + silahlanma D kapanışında. Defter boşken son seanslar bir kez deterministik
+tohumlanır ve tohum satırları `seeded: true` damgası taşır (kanıtın kökeni görünür kalır).
 
-YASALAR ÇAĞRILIR, KOPYALANMAZ — VE BURADA BU DAHA DA KRİTİKTİR. v1'de kopyalanacak şey kapı
-hükmüydü; v2'de kopyalanacak şey İCRA yasasının TAMAMI olurdu (gap koruması, likidite tavanı,
-notional tavanı, kısmi satış sırası, bar-içi muhafazakârlık, komisyon/kayma muhasebesi). Onlarca
-satırlık bir kopya, ilk düzeltmede sessizce çatallanır ve defter zamanla stratejiyi değil KENDİNİ
-ölçmeye başlardı. Bu yüzden:
-  * FILL / KISMİ SATIŞ / DOKUNUŞ ÇIKIŞI / KAPANIŞ SATIRI  → `broker.PaperBroker`ın TA KENDİSİ.
-    Her varyantın kitabı bir `PaperBroker` örneğidir; diskteki JSON yalnız o nesnenin serileşmiş
-    hâlidir (`dataclasses.fields(Position)` ile — Position'a yarın eklenen alan kendiliğinden taşınır).
-  * TRAIL / BREAKEVEN / CHANDELIER / GIVEBACK / TIME-STOP / ERKEN İTLAF → `strategy.manage_position`.
-  * LİKİDİTE (ADV) → `backtest._adv`.  KISMA/TAVAN → `broker.derisk_mult` / `broker.max_positions_at`.
-  * TARAMA + KAPI → `shadow_variants._signals` / `._judge` (onlar da `strategy.scan_all` /
-    `guard.classify_gate` çağırır). İkinci bir tarama ya da ikinci bir kapı YOKTUR.
-KOPYALANAN TEK ŞEY SÜRÜCÜDÜR (`step()`in faz sırası) ve kaynağı ADIYLA yazılıdır: `backtest.replay`
-satır 182-351 — OPEN(D) bekleyen çıkışlar+fill, INTRADAY(D) scale_out+dokunuş, CLOSE(D) yönetim+arm.
-Sıra bir "yasa" değil bir OLAY DÜZENİDİR ve ileri-dönüklüğü olmayan tek düzendir; onu çağırmanın yolu
-yok (replay kendi takvimini ve kendi brokerını kurar), o yüzden burada tek yardımcıya çıkarıldı.
+KİLİT GİRİŞLER. `run_cycle` (tek çağıranı `shadow_variants.record_cycle`; write=True'da dosya
+kilidiyle oku-değiştir-yaz), `step` (bir kol × bir seans; faz sırası `backtest.replay`in olay
+düzeninden alınmış tek kopyadır ve kaynağı adıyla yazılıdır), `arms`/`LIFECYCLE_ONLY` (çıkış
+kolları — yalnız kitapta ayrışırlar), `noop_arms`/`divergent_keys` + `LIFECYCLE_READ_DEFAULTS`
+(kontrol kolundan hiçbir okunan-anahtarda ayrışmayan kol turdan düşer; varsayılan tablosu AST
+testiyle kaynağa çakılıdır).
 
-KİMLİK AYRIKLIĞI. Kapanan her işlem `SV-` önekli bir kimlik taşır (`SV-<varyant>-<tarih>-<ticker>`)
-ve satırdaki `plan_id` de `SV-` öneklidir (`shadow_variants._plan_of`). `ledgers.PLAN_ID_RE`
-(`^P-\\d{4}-\\d{2}-\\d{2}-`) ile ASLA eşleşmez: canlı defterin eşleştirmeleri (trades.plan_id,
-cf_fidelity) hayali bir planla eşleşmeye çalışmaz. v1'in gerekçesi aynen geçerlidir, burada bir de
-İŞLEM satırı ürettiğimiz için daha yüksek bedellidir.
+YASALAR — GÖLGE KATMANI. SIFIR YETKİ: canlı portfolio.json'a, trades.jsonl'e, trade_plans.jsonl'e,
+aynaya (Alpaca) ve strategy.yaml'a hiçbir yol çıkmaz; canlı karara dokunamaz. Bu defterden ship
+yolu YOKTUR — canlıya geçiş yalnız OOS kapısından (prescreen/reflect); para sayıları kanıt
+hızlandırıcısıdır, onay değil. YASALAR ÇAĞRILIR, KOPYALANMAZ: fill/kısmi satış/dokunuş çıkışı
+`broker.PaperBroker`ın kendisi, yönetim `strategy.manage_position`, likidite `backtest._adv`,
+kısma `broker.derisk_mult`/`max_positions_at`, tarama+kapı `shadow_variants._signals`/`._judge` —
+ikinci bir icra kopyası ilk düzeltmede çatallanır ve defter kendini ölçmeye başlardı. KİMLİK
+AYRIKLIĞI: her işlem/plan kimliği `SV-` öneklidir ve canlı PLAN_ID_RE ile asla eşleşmez. İKİ SORU
+İKİ PAYDA: `k_variants` (karar) ≠ `k_lifecycle` (para, = len(arms())) — tek sayıya indirgenmez.
 
-ÇOKLU KARŞILAŞTIRMA — İKİ SORU, İKİ PAYDA (bu turun BİLİNÇLİ tasarım sapması, ROADMAP §7'de yazılı).
-v1 defteri KARAR ayrışmasını ölçer; orada V3/V6 kontrol koluyla karar-özdeştir (bu YAPISAL bir olgu
-ve `tests/test_sadelestirme_v123.py` ile çakılıdır — çıkış düğmeleri `scan_all`/`classify_gate`
-yolunda HİÇ okunmaz). Bu yüzden `shadow_variants.VARIANTS` DEĞİŞMEDİ ve `k_variants` 4 kaldı:
-karar sorusunun paydasını karar-özdeş kollarla şişirmek, gerçekten ayrışan kolların (V1/V2/V4)
-cezasını sıfır ölçüm kazancı karşılığında artırmak olurdu — 2026-07-30'da tam bu gerekçeyle
-temizlenmişti. PARA sorusunun paydası ise BAŞKADIR: kitapta V3/V6 gerçekten ayrışır. O yüzden
-`k_lifecycle` (= `len(arms())`) ayrı bir alandır, kitap ve işlem satırlarında taşınır ve karnede
-yazılır. Tek bir sayıya indirgemek, iki farklı çoklu-karşılaştırma ailesini birbirine karıştırmak
-olurdu; iki sayı tutmak onları AYIRT EDİLEBİLİR kılar.
-
-NO-OP KOL YASAĞI (E4 tuzağı). `exit.scale_out_r` üretim varsayılanı ZATEN 2.0'dır — onu 2.0'a
-"ayarlayan" bir kol hiçbir şeyi değiştirmez ama paydayı büyütür ve defterine yazacağı sıfır ayrışma
-bir ÖLÇÜM değil bir KURGU olur. `noop_arms()` her kolun ETKİN parametre sözlüğünü kontrol kolununkiyle
-OKUNAN anahtar düzeyinde karşılaştırır; farkı boş olan kol turdan DÜŞÜRÜLÜR (sessizce değil: obs.warn
-+ kitap satırında `dropped_arms`). Kural testle çakılıdır.
-
-SIFIR YETKİ. Yazdığı iki dosya vardır: `shadow_books.json` ve `shadow_trades.jsonl`. Canlı
-`portfolio.json`a, `trades.jsonl`a, `trade_plans.jsonl`a, aynaya (Alpaca) ve strategy.yaml'a HİÇBİR
-yol çıkmaz. Bu defterden ship yolu YOKTUR — canlıya geçiş yalnız OOS kapısından (prescreen/reflect)
-geçer; buradaki para sayıları bir KANIT HIZLANDIRICISIDIR, bir onay değil.
+OKUR: canlı akışın barları/rejim/limits/goal (çağıran geçirir), bounds; kitaplarını kendisi kurar.
+YAZAR: yalnız kendi iki defteri `state/shadow_books.json` + `state/shadow_trades.jsonl`.
 """
 from __future__ import annotations
 

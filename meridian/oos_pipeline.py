@@ -1,13 +1,23 @@
-"""oos_pipeline.py — 70/30 OOS bölümleme + teyit yürüyüşü (karar mekanizması v3, Component 2).
+"""oos_pipeline.py — OOS penceresinin 70/30 Search/Confirm bölümlemesi ve teyit yürüyüşü.
 
-OOS penceresi KRONOLOJİK ikiye bölünür: Search-OOS (%70, arama adayları burada yarışır) ve
-Confirm-OOS (%30, aramanın ASLA dokunmadığı teyit dilimi). Aramanın kazananı ne kadar parlarsa
-parlasın, teyit diliminde P(ΔS>0) ≥ 0.70 veremezse REDDEDİLİR — kazananın-laneti burada ölür.
-Deftere yazılan predicted_delta, arama dilimindeki şişkin sayı değil, teyit dilimindeki sapmasız
-ortalama farktır (dürüst kalibrasyon).
+Ne yapar: Out-of-sample penceresini KRONOLOJİK ikiye böler: Search-OOS (%70) arama adaylarının
+yarıştığı dilim, Confirm-OOS (%30) aramanın ASLA dokunmadığı teyit dilimidir. Arama kazananı ne
+kadar parlarsa parlasın, teyit diliminde P(ΔS>0) çıtasını veremezse REDDEDİLİR — kazananın-laneti
+burada ölür. Deftere yazılan predicted_delta, arama dilimindeki şişkin sayı değil, teyit dilimindeki
+sapmasız ortalama farktır (dürüst kalibrasyon).
 
-Not: buradaki 'Confirm-OOS', insana-raporlanan donmuş 2026 HOLDOUT penceresiyle AYRI şeydir —
-o pencere hâlâ hiçbir kararı etkilemez."""
+Kilit girişler: `split_date(oos_start, oos_end)` bölünme tarihi (SEARCH_FRACTION = 0.70, takvim
+günü hassasiyetinde); `OutOfSamplePipeline.evaluate_search(inc_wf, cand_wf, k_probes)` arama dilimi
+kararı — K aday cezası (probgate.p_required_for) burada uygulanır; `.confirm(inc_wf, cand_wf)` TEK
+kazananı, K cezasız ama daha alçak olmayan p_confirm çıtasıyla ve max(10, 0.7·min_sample) taban
+örneklemiyle sınar — teyit, ship yetkisinin son kapısıdır ve aramadan gevşek olamaz.
+
+Değişmezler: walk_forward'ın hazır dilimleri (`_trades_search`/`_trades_confirm` + `oos_split`)
+üzerinde çalışır, dilimleri kendisi KESMEZ; dilimler yoksa (eski fixture/sandbox) GateResult
+law='legacy' döner ve çağıran katman eski marj yasasına güvenle düşer; ince teyit dilimi ship
+yetkisi VERMEZ (taban altı → red, gerekçesiyle). Buradaki Confirm-OOS, insana-raporlanan donmuş
+HOLDOUT penceresinden AYRI şeydir — o pencere hâlâ hiçbir kararı etkilemez.
+Okumaz/yazmaz: saf değerlendirme katmanı; olasılıksal hükmü probgate'e devreder."""
 from __future__ import annotations
 import datetime as dt
 

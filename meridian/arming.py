@@ -1,18 +1,25 @@
-"""arming.py — Silahlanma Değerlendiricisi (#3): uyuyan→ölç→silahla döngüsünün eksik son halkası.
+"""arming.py — silahlanma değerlendiricisi: uyuyan→ölç→silahla döngüsünün kapı-ölçümü halkası.
 
-Uyuyan kurulumlar karşı-olgusal defterde ileriye dönük ölçülür (küme SABİT DEĞİL: `_dormant_setups()`
-motor listesinden ARMED_SETUPS'ı düşerek TÜRETİR — 2026-08-11 exhaustion_hammer, 2026-08-12
-momentum_burst operatör onayıyla silahlandı ve kümeden çıktı, bugün geriye episodic_pivot kalır); bu
-modül o kanıt YAZILI eşiği geçtiğinde KAPI ölçÜMÜNÜ otomatik koşar: incumbent (mevcut silahlı set)
-vs aday (aynı parametreler + kurulum silahlı) üretim pencerelerinde walk edilir ve karar TAMAMEN
-mevcut yasaya bırakılır (_gate_eval: blok-bootstrap + K-ceza + fold çoğunluğu + kuyruk vetosu).
+NE YAPAR. Uyuyan kurulumlar karşı-olgusal defterde ileriye dönük ölçülür; küme SABİT DEĞİL,
+`_dormant_setups()` motor listesinden ARMED_SETUPS'ı düşerek TÜRETİR (silahlanan kurulum kümeden
+kendiliğinden çıkar). Kanıt YAZILI eşiği geçince (kurulum başına en az MIN_CF_ENTERED=30 girilmiş
+cf kaydı VE cf ortalama R'si MIN_CF_AVG_R üstünde) `evaluate` kapı ölçümünü otomatik koşar:
+incumbent (mevcut silahlı set) vs aday (aynı parametreler + kurulum silahlı) üretim pencerelerinde
+walk edilir ve karar TAMAMEN mevcut yasaya bırakılır (blok-bootstrap + K-ceza + fold çoğunluğu +
+kuyruk vetosu). Ölçüm kanalı params["entry.armed_extra"]dır — scan_entry bu listedeki kurulumları
+da silahlı sayar; global ARMED_SETUPS'a dokunulmadığı için canlı döngüyle YARIŞMAZ.
 
-SİLAHLANMA OTOMATİK DEĞİLDİR: kapı GEÇSE bile ARMED_SETUPS değişmez — sonuç panele/deftere
-"silahlanmaya hazır (P=…)" olarak düşer ve operatör onayı beklenir (canlı davranış değişikliği
-bilinçli bir insan kararıdır; momentum_burst emsali). Kapı kalırsa ölçülen sayılar dürüstçe kalır.
+DEĞİŞMEZLER. SİLAHLANMA OTOMATİK DEĞİLDİR: kapı GEÇSE bile ARMED_SETUPS değişmez — sonuç rapora
+"silahlanmaya hazır (P=…)" düşer, operatör onayı beklenir (canlı davranış değişikliği bilinçli bir
+insan kararıdır). ÖLÇÜM TURU BLOKE EDEMEZ: walk çifti bir SÜRE TAVANIYLA koşar (SURE_TAVANI_S=600
+sn; env SURE_TAVANI_ENV ile operatör-ayarlı); tavan aşılırsa tur "ölçülemedi" damgasıyla DEVAM
+eder, hesap arka planda tek uçuş olarak (nabız atarak) sürer ve bitince raporu KENDİ işler —
+ölçüm iptal değil ERTELENMİŞ olur. Tavan aşımı hiçbir kapıyı gevşetmez, hiçbir kurulumu
+silahlandırmaz; ölçülemeyen sayı None + neden (UYDURMA YASAĞI). Rapora bar parmak izi damgalanır
+(sayıların hangi veri sürümüne ait olduğu okunabilir kalsın).
 
-Ölçüm kanalı: params["entry.armed_extra"] — scan_entry bu listedeki kurulumları da silahlı sayar;
-paramlar üzerinden aktığı için canlı döngüyle YARIŞMAZ (global ARMED_SETUPS'a dokunulmaz)."""
+OKUR: karşı-olgusal defter (kanıt eşiği), barlar/endeks (walk girdisi). YAZAR: arming_report.json
+(+ obs olayları); başka hiçbir deftere ya da karara yazmaz."""
 from __future__ import annotations
 
 import datetime as _dt

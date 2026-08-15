@@ -1,6 +1,23 @@
-"""health.py — heartbeat, stale-data detection, kill-switch, circuit-breaker state. A silent agent
-is an unmonitored agent (§9). The kill-switch is a file: touch state/HALT and new entries stop
-within one bar (§0/§11)."""
+"""health.py — operatörün kontrol durumu: kill-switch, nabız, bayatlık ve silahlanma kilitleri.
+
+Sessiz bir ajan izlenmeyen bir ajandır; bu modül "şu an müdahale gerekiyor mu?" sorusunun
+dosya-tabanlı durum katmanıdır. Üç bayrak dosyası tutar (yeniden başlatmada yaşar, elle de
+yönetilir): state/HALT — kill-switch, dosya VARSA yeni giriş bir bar içinde durur
+(`halted`/`set_halt`); state/LEARN_HALT — işlemler sürer ama yeni sürüm ship edilemez
+(`learn_halted`/`set_learn_halt`); state/INTRADAY_ARM — TERS mantık, dosya VARSA silahlı; hiçbir
+otomatik yol açamaz, yalnız operatör (`intraday_armed`/`set_intraday_arm`). `write_heartbeat`
+nabzı sıfırdan kurmaz, ÜZERİNE BİNDİRİR: nabız çok yazarlıdır ve her yazar yalnız kendi alanını
+damgalar — ikinci yazarın birincinin alanlarını sessizce silmesi canlıda yaşandı, bindirme onun
+düzeltmesidir. `heartbeat_age_seconds`/`stale` bayatlığı, `circuit_breaker_tripped` günlük kayıp
+kesicisini ölçer.
+
+`faz6_kilitleri` otonom intraday silahlanmanın ön-koşulunu BEŞ kilitle rapor eder
+(`FAZ6_KILITLERI`: edge_kaniti, sonuc_hukmu, faz5_cikisi, operator_onayi, dsr_gecer): SAF
+okumadır — hiçbir şeyi silahlamaz, hiçbir dosyaya yazmaz; ölçülemeyen kilit KAPALIdır
+(fail-closed) ve DSR eşiği ship yoluyla AYNI yerden (`validation.DSR_HARD_MIN`) okunur.
+Reddedilen gönderimler ack ile SUSTURULUR, SİLİNMEZ (`reject_key`/`split_rejections`;
+broker_reject_ack.json'u api yazar, burası okur). Okur/yazar: state bayrak dosyaları,
+heartbeat.json ve intraday defter sayımları (store üzerinden)."""
 from __future__ import annotations
 import datetime as dt
 from pathlib import Path

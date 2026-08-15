@@ -1,9 +1,21 @@
-"""validation_report.py — "hangi mekanizma/edge KANITLANIYOR?" (2026-07-21).
+"""validation_report.py — "hangi mekanizma/edge KANITLANIYOR?" sorusunun salt-okuma tek tablosu.
 
-cf-tarih bootstrap sonrası dolu karşı-olgusal defter üzerinden, sistemin sinyallerini/edge'ini TEK
-tabloda dürüstçe raporlar: temel edge, skor kalibrasyonu, ekran/kurulum katkısı, rejim edge'i, eşik
-karnesi (near-miss) ve cf↔gerçek sadakati. SALT-OKUMA analiz — hiçbir karar/kapı etkilenmez; her satır
-n ve anlamlılık taşır (yetersiz örneklemde 'kanıt yok' der, uydurmaz)."""
+Dolu karşı-olgusal defter + gerçek işlem defteri üzerinden sistemin sinyal/edge kanıtını tek
+raporda toplar: temel edge (kapı hükmü başına ve silahlanan dilim), skor kalibrasyonu, kurulum
+katkısı, rejim edge'i, eşik karnesi (near-miss: hangi eşik masada para bırakıyor) ve cf↔gerçek
+sadakati (simülasyona ne kadar güvenilebilir). SALT-OKUMA analizdir: hiçbir karar/kapı etkilenmez
+ve KENDİ ölçümünü yapmaz — yalnız KAYITLI kanıtı (analytics kalibrasyonları, çözülmüş cf
+satırları, defter sayımları) gösterir.
+
+GİRİŞLER: `build` — makine-okunur rapor sözlüğü (evidence_base, base_edge, score_calibration,
+setup_edge, regime_edge, near_miss, cf_fidelity); `render_text` — operatör için metin döküm
+(`__main__` yolu basar); `_verdict` — n ve ortalama R'den hüküm cümlesi (taban MIN_N=30).
+
+DEĞİŞMEZLER: her satır n ve anlamlılık taşır; yetersiz örneklemde "KANIT YOK (n=...)" der,
+uydurmaz. Gerçek ve karşı-olgusal popülasyonlar AYRI raporlanır — havuzlanmış tek sayı, gerçek
+işlemlerin sinyalini görünmez kılar; standart-hata yönteminin künyesi basılır ki "anlamlı"
+damgasının dayanağı okunabilsin. Okur: counterfactual çözülmüş satırları, trades.jsonl ve
+analytics raporları; hiçbir şey yazmaz."""
 from __future__ import annotations
 
 from . import store, analytics, counterfactual as cf

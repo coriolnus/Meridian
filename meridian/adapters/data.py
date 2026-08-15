@@ -1,9 +1,27 @@
-"""adapters/data.py — real daily OHLCV, no API key. Primary: Cboe delayed_quotes historical
-(clean full-history JSON, split-adjusted). Fallback: Nasdaq historical API. Cached to state/bars/.
+"""adapters/data.py — günlük OHLCV bar hattının tek boğazı: çok kaynaklı zincir, artımlı önbellek,
+bütünlük kapıları.
 
-Adds: validate_bars() — an integrity gate so a single unadjusted split can't inject fake gaps that
-poison the backtest (Hard Rule 7); incremental cache (fetch only when the cache is stale, then merge);
-and exponential backoff on transient fetch errors."""
+(a) Ne yapar: [start, end] günlük barlarını çok kaynaklı bir zincirden çeker — Massive grouped
+(artımlı tek bar) → Massive custom-bars (~2 yıl içi) → FMP (derin backfill) → Cboe delayed_quotes →
+Nasdaq historical; açık kalan seans için zincirin SONUNDA aynı-akşam Alpaca/IEX bacağı boşluğu
+doldurur (otoriter kaynak gelince ezilir). Cboe/Nasdaq ANAHTARSIZ birincil kaynaklardır: hiçbir API
+anahtarı olmadan tam geçmiş gelir. Zincir tazelik-farkındadır: veri döndüren ama istenen pencerenin
+gerisinde kalan kaynak zinciri KESMEZ, en taze sonuç kazanır. HATA ≠ BOŞ: her kolun sonucu
+`outcomes`ta ayrıdır; istek arızası sembol hakkında hüküm değildir.
+(b) Kilit girişler: fetch(), load_bars(), load_many(), sanitize_bars(), validate_bars(),
+measurement_bars(), bars_integrity()/safe_start(), ghost_report()/integrity_report(),
+crosscheck_report(), seam_report(), no_data_report(), nasdaq_earnings_window(), REPLAY_UNIVERSE.
+(c) Değişmezler: takvim kapısı (geçerli XNYS seansı olmayan tarihin satırı düşer; KİTLESEL uyuşmazlık
+silinmez, adjudikasyon REDDEDİLİR ve duyurulur) ile düzeltilmemiş-satır karantinası sanitize_bars'ın
+tek boğazından her kaynak/okuma yoluna uygulanır; kaynak sabitleme + dikiş koruması aynı sembole iki
+farklı ayarlama ölçeğinin dikilmesini engeller; bars_integrity defteri YALNIZ ölçüm çerçevesini
+(measurement_bars) kırpar, canlı karar yoluna BİLEREK bağlanmamıştır; bütünlük kapıları fail-open'dır
+(takvim okunamazsa satır düşmez ama yokluk adıyla uyarılır); düşen/dışlanan her satır sayılır.
+(d) Okur/yazar, önbellek: bar önbelleği state/bars/<ticker>.csv — atomik, dosya-başına kilitli, hep
+store kapısından; FRESH_DAYS içindeki önbellek yeniden çekilmez, çekim önbellekle TARİH BİRLEŞİMİYLE
+kaynaşır (körlemesine ezme yok, satır-kaybı reddi + kurumsal-aksiyon denetimiyle). Defterler:
+bars_source.json (sahiplik), bar_source_seams.json, massive_crosscheck.json, symbol_no_data.json,
+bars_integrity.json (okur); bar geçmişi değişince wf_cache_rev.json revizyonu monoton artar."""
 from __future__ import annotations
 import time
 from pathlib import Path
