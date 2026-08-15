@@ -368,8 +368,8 @@ def dump_yaml(obj: dict, path: Path) -> None:
 
     strategy.yaml SICAK-yeniden-yüklenir ve scheduler cycle + Hermes reflection thread + API
     handler'ları tarafından EŞZAMANLI OKUNUR. Düz kes-ve-yaz bir okuyucuyu yazımın ORTASINDA
-    yakalayıp {} → params={}, version=1 yedeğine düşürüyordu (audit #32); bunu mkstemp+os.replace
-    zaten kapatmıştı. H9 kapı-dışı taşıması İKİ EKSİĞİ kapatır: (1) `fsync` YOKTU — güç kesintisinde
+    yakalayıp {} → params={}, version=1 yedeğine düşürüyordu; bunu mkstemp+os.replace
+    zaten kapatmıştı. Kapı-dışı taşıması İKİ EKSİĞİ kapatır: (1) `fsync` YOKTU — güç kesintisinde
     sıfır-baytlık strategy.yaml; (2) `flock` YOKTU — `versioning.commit` + Hermes + scheduler AYNI
     dosyaya yazabilir ve kilitsiz iki yazar birbirinin tmp'siyle yarışırdı.
 

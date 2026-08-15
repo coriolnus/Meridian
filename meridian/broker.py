@@ -640,7 +640,7 @@ class PaperBroker:
         # STOP-BEFORE-TARGET conservatism (the same convention _touch_exit documents): when the bar's
         # open or low breached the effective stop, the intrabar order of stop-vs-high is unknowable from
         # OHLC — banking the +NR partial first (and ratcheting to breakeven before the stop check) would
-        # book optimistic profit on a bar that may have stopped out first (audit #2/#8). Skip the
+        # book optimistic profit on a bar that may have stopped out first. Skip the
         # scale-out; _touch_exit then resolves the bar conservatively as a full stop exit.
         eff_stop = max(pos.stop, pos.trail_stop or pos.stop)
         if bar.get("open") is not None and float(bar["open"]) <= eff_stop:

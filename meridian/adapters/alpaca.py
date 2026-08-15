@@ -1422,7 +1422,7 @@ def daily_bars(symbols: list[str], start: str, end: str, feed: str = DATA_FEED,
     KALİBRASYONU bootstrap'ıdır: son ~30 seansın IEX hacimleriyle diskteki konsolide hacimleri
     eşleştirip sembol başına oran çıkarmak (bkz. adapters/data.calibrate_volume).
     adjustment=split: zincirin geri kalanı (FMP /full, Cboe) BÖLÜNME düzeltmelidir — ham ölçekte
-    bar almak, iki ayrı ayarlama ölçeğini birbirine eklemek olurdu (D1 dikiş dersi)."""
+    bar almak, iki ayrı ayarlama ölçeğini birbirine eklemek olurdu (dikiş dersi)."""
     syms = sorted({str(s).upper().strip() for s in (symbols or []) if str(s or "").strip()})
     if not syms:
         return {}
