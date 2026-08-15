@@ -296,7 +296,7 @@ def envanter() -> dict:
     NEDEN VAR. Aynı kütüphane üç ayrı sayıyla anılıyordu (38 / 37 / 36) ve üçü de farklı bir şeyi
     sayıyordu: `ls skills/_emekli` DOSYA sayardı (README.md dâhil → 38), dizin sayımı GİT-İZSİZ boş
     bir mezar taşını (`skills/_emekli/shadow`) da sayınca 37 veriyordu, kayıt defteri ise gerçek arşiv
-    KAYITLARINI (36). O mezar taşı HAYALET sınıfına alınıp DİZİNİ kaldırıldı — çünkü aşağıdaki
+    KAYITLARINI (36). O mezar taşı v121'de HAYALET sınıfına alınıp DİZİNİ kaldırıldı — çünkü aşağıdaki
     `fark` kovaları onu ADIYLA yakaladı (`arsiv_dizin_ama_kayitsiz` + `arsiv_dizin_skill_md_yok`; ölçüm
     docs/CIFT-KAYNAK-TARAMASI-2026-08-09.md). BUGÜN dizin = SKILL.md = kayıt = 36 ve `ls`in fazlası
     yalnız README.md'dir (`arsiv_disi_girdi` kovası) — yani üçlü ayrışma kapandı, ama üç payda hâlâ AYRI
