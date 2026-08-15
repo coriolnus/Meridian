@@ -1,7 +1,19 @@
+# ci — DUMAN KAPISI (2026-08-15'te tam-suite'ten dumana indirildi).
+#
+# NEDEN: tam suite ~50 dk (4 çekirdek) ve canlı-benzeri state/hermes/ağ ister; 15 dk'lık CI onu
+# HİÇ bitirememişti (bütün koşular zaman aşımı iptali — ölçüm: MODUL-ENVANTERI-2026-08-15.md §5).
+# Kapının içeriği TEK yerde tanımlıdır: ops/ci_duman.sh. Tam suite Rol-1'de tek-otoriter koşar.
+#
+# Python bilerek 3.11'e sabitlenir: requires-python >= 3.11 tabanını CI zorlasın diye
+# (3.12+'da derlenen ama 3.11'de test toplamasını kesen f-string vakası, 2026-08-15).
 name: ci
 on:
   push:
+    branches: [main]
   pull_request:
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -11,7 +23,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      - name: Sync deps
-        run: ~/.local/bin/uv sync --extra dev
-      - name: Tests (pytest + network-free synthetic replay smoke)
-        run: ~/.local/bin/uv run pytest -q
+      - name: Sync deps (Python 3.11 = beyan edilen taban)
+        run: |
+          ~/.local/bin/uv python install 3.11
+          ~/.local/bin/uv sync --extra dev --python 3.11
+      - name: Duman kapısı (compileall + lint-imports + audit + pytest duman)
+        run: UV=~/.local/bin/uv ./ops/ci_duman.sh
