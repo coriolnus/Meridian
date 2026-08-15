@@ -52,7 +52,7 @@ _SKIP_DIRS = {"__pycache__", ".venv", "node_modules", ".git"}
 # Bu turda BAŞKA iş kollarına ait olduğu için düzenlenemeyen dosyalar. İhlalleri BEYAN EDİLİR ve
 # raporlanır — allowlist DEĞİL: yasa hepsini saymaya devam eder, yalnız "sıfır" iddiası düzenlenebilir
 # yüzeyle sınırlıdır. Bir dosya bu listeden çıktığında ihlalleri anında teste düşer.
-OTHER_TRACK_FILES = frozenset({"analytics.py", "shadow_model.py", "sieve.py", "watchdog.py",
+OTHER_TRACK_FILES = frozenset({"shadow_model.py", "sieve.py", "watchdog.py",
                                "ledgers.py", "mutation.py", "backtest.py"})
 
 # TARAYICININ KENDİ KÖRLÜĞÜ. Ayrıştırılamayan ya da okunamayan her dosya BURAYA yazılır ve

@@ -30,7 +30,7 @@ import pathlib
 import re
 from dataclasses import dataclass, field
 
-from . import store
+from . import codelaw, store
 
 # Plan kimliği: canlı döngü, backtest ve cf_backfill'in ORTAK anahtarı. Bu formatın dışındaki bir
 # kimlik, cf↔gerçek birleştirmesini imkânsız kılar (canlıda tam olarak bu oldu).
@@ -408,8 +408,13 @@ _WRITERS_CACHE: dict = {}
 
 
 def _src_stamp(root: str) -> tuple:
-    """Kaynak ağacının parmak izi — bkz. codelaw._src_stamp, aynı gerekçe."""
-    ps = sorted(pathlib.Path(root).rglob("*.py"))
+    """Kaynak ağacının parmak izi — bkz. codelaw._src_stamp, aynı gerekçe.
+
+    DOSYA KÜMESİ `codelaw._py_files`TAN GELİR, ham `rglob`dan değil: damga ile taramanın aynı
+    dosyaları görmesi şart. Ham `rglob` `__pycache__`/`.venv` altındaki kopyaları da sayardı ve
+    o dizinler dokunulunca (derleme, kurulum) hiçbir KAYNAK değişmediği hâlde önbellek düşerdi;
+    daha kötüsü, taranmayan bir dosyanın mtime'ı damgaya girerdi."""
+    ps = list(codelaw._py_files(root))
     return (len(ps), max((q.stat().st_mtime_ns for q in ps), default=0))
 
 
@@ -480,10 +485,16 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
     # İKİ GEÇİŞ: kardeş modülün sabitini okuyabilmek için önce TÜM modüllerin sabit tablosu.
     agac: dict[pathlib.Path, ast.Module] = {}
     sabitler: dict[str, dict[str, str]] = {}
-    for f in pathlib.Path(root).rglob("*.py"):
+    # KAYNAK OKUMA SÖZLEŞMESİ (bkz. codelaw'daki aynı başlıklı blok): dosya kümesi
+    # `codelaw._py_files` — `_SKIP_DIRS` elemesi ORADAN gelir, burada kopyalanmaz (iki elemenin
+    # ayrışması, iki tarayıcının farklı ağaç görmesi demekti). Okuma `encoding="utf-8"` ile
+    # AÇIK; `except` demetinde `ValueError` var çünkü `UnicodeDecodeError` onun alt sınıfıdır ve
+    # `OSError`ın altında DEĞİLDİR: demet onsuzken `LC_ALL=C` bir kabukta tek bir Türkçe dosya
+    # tarayıcıyı UNPARSED'e yazdırmak yerine ÇÖKERTİRDİ.
+    for f in codelaw._py_files(root):
         try:
-            tree = ast.parse(f.read_text())
-        except (SyntaxError, OSError) as e:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             # Ayrıştırılamayan modül taramadan SESSİZCE düşerse, o modülün beyansız yazarı da
             # düşer: "0 ihlal" iddiası, atlanan dosyalar yüzünden BOŞ bir iddia olur. Körlük
             # kaydedilir ve report() tarafından dışarı verilir.
