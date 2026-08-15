@@ -394,6 +394,8 @@ karşı-gerekçesini taşıyor (`hermes.py:4003-4007`) — "tek satır aç" diye
       deftere HİÇ girmedi**; ~~`hermes.py:3889`~~ **`hermes.py:4002` (repo; olay `:4008`)** arka plan turu `chop` sertifikalıysa GLOBAL (`@`siz)
       her öneriyi atıyor. Aynı pencerede deftere giren: **1**. İlk 2026-08-02T14:00, **son bugün
       17:26**. Yani "52 hipotez" üretimin değil, ÖN-ELEMENİN hayatta kalanları. *öncelik: ACİL.*
+      **DURUM (2026-08-14): düzeltme v247'de yazıldı ama DAĞITILMADI — canlıda hâlâ akıyor;
+      kuru-koşum akıbet ölçümü §2-48'de.**
     · **28b "52 RET" ASLINDA 23:** 22'si TEKRAR (guard hafızası kesti, hepsi tek gün 07-14), 4'ü
       NO-OP (aday bit-bit aynı), 1 ölçülemeyen, 2 ship. Sayı olduğundan büyük görünüyordu.
     · **28c TEKRAR DESENİNİN KÖKÜ TEK SATIR:** `reflect.propose_deterministic`de `already_failed`
@@ -1279,7 +1281,8 @@ Y2 vol-hedef `−3.924$` → otomatik YOK. **Tam metin §6 arşivde.** İki art�
 
 ## §2 ÖNERİ HAVUZU (backlog) — sınıflandırılmamış yeni öneriler
 
-**BU BÖLÜM BOŞ (2026-08-13'ten beri).** Burası artık yalnız **sahibi henüz belirlenmemiş** yeni
+**BU BÖLÜM 2026-08-13'te BOŞALTILDI; 2026-08-14'ten beri 30-48 dalgası yine burada birikiyor —
+sahipli kalemler ilk fırsatta WP'lerine taşınmalı.** Burası artık yalnız **sahibi henüz belirlenmemiş** yeni
 önerilerin bekleme odasıdır: bir öneri buraya yazılır, sahibi (cephe) belirlenince ilgili
 **WP1-WP11**'e taşınır ve burada yalnız tek satırlık taşıma izi kalır. Biçim:
 `gerekçe · tahmini boyut · bağımlılık · öncelik`. Ölçüm önerileri karta (§4) dönüşür; operatör
@@ -1301,31 +1304,45 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
-- **🔴 48. ÜRETİCİ HAYALET DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, canlıda ölçüldü; sahibi WP3)_
-  28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü: **17'si kapıya varıyor, 30'u eleniyor.**
+- **🔴 48. ÜRETİCİ CANLIDA TAŞINMAYAN DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, akıbet **kuru koşumda** ölçüldü — v247 DAĞITILMADI; KÖK canlıda ölçüldü; sahibi WP3)_
+  28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü (kuru koşum; v247 **DAĞITILMADI** — canlıda
+  hâlâ v246): **17'si kapıya varıyor, 30'u eleniyor.**
   30'un dağılımı:
   · **21 × `entry.w_turnover`** → canlı stratejide **YOK**
-  · **8 × `regime.vix_backwardation_gate`** → canlı stratejide **YOK**
+  · **8 × `regime.vix_backwardation_gate`** → canlı stratejide **YOK** _(aynı 8 örnek 28e'de
+    kayıtlı: düğme motorda kablolu, "veri_yok → atıl" — tamiratı 28e'nin veri hattına düşer)_
   · **1 × `exit.time_stop_days@trend_up`** → sertifika `chop`, öneri `trend_up` = **korkuluğun ASIL
     hedefi, meşru ret**
-  Yani **30'un 29'u, motorda var olmayan düğmelere yapılmış önerilerdi.**
+  Yani **30'un 29'u, canlı params'ta taşınmayan düğmelere yapılmış önerilerdi** (iki düğme de
+  motorda kablolu: `w_turnover` `strategy.py:477`, `vix_backwardation_gate` `regime.py:272`).
   **KÖK (canlıda ölçüldü):** `bounds.yaml` **32** düğme taşıyor, canlı `strategy.yaml` params **18**;
   **14 düğme bounds'ta VAR canlıda YOK** (`entry.min_rvol` · `entry.w_mom` · `entry.w_rs` ·
   `entry.w_rvolband` · `entry.w_tight` · `entry.w_turnover` · `entry.w_vol` · `exit.early_kill_bars` ·
   `exit.early_kill_pivot` · `portfolio.heat_cap` · `portfolio.sector_cap` ·
   `regime.vix_backwardation_gate` · …). Keşif üreticisi (`propose_virgin_knob`) adaylarını
   **`bounds.yaml`dan** seçiyor ve kendi gerekçesi *"bounds.yaml'da var ama defterde hiç hipotez
-  taşımamış"* diyor — yani **"hiç denenmiş mi"ye bakıyor, "motorda var mı"ya BAKMIYOR.**
+  taşımamış"* diyor — yani **"hiç denenmiş mi"ye bakıyor, "canlı params'ta var mı"ya BAKMIYOR.**
   **BU KUSUR 28a SAYESİNDE GÖRÜNÜR OLDU:** dün bu 29 öneri guard'a hiç ulaşmıyordu, arka plan
-  süzgeci onları guard'dan ÖNCE imha ediyordu. Üretici aylardır hayalet düğmelere öneri üretiyordu
-  ve kimse bilmiyordu. **Boruyu açmanın ilk ürünü bir kazanç değil, bir teşhis oldu.**
-  **ÖLÇÜLMEDİ — TAMİRAT YÖNÜ AÇIK:** o 14 öksüzün bir kısmı ölü görünmüyor (`portfolio.sector_cap`,
-  `portfolio.heat_cap`, `entry.w_mom`, `entry.w_rs`); motor bunları **goal limitlerinden** okuyor
-  olabilir. O hâlde sorun "ölü düğme" DEĞİL, **`bounds.yaml`ın arama uzayını motorun gerçek
-  parametre yüzeyiyle eşleştirmemesi** olur. İki tanı iki farklı tamirat ister:
-  (a) üretici canlı params'a süzgeç uygular · (b) bounds ile motorun okuma yüzeyleri eşleştirilir ·
-  (c) gerçekten ölü olanlar §2-25a'ya gider. **Hangisi olduğu ÖLÇÜLMEDİ — kart-önce.**
-  *öncelik: YÜKSEK — keşif bütçesinin %62'si (29/47) hayalet düğmeye gidiyordu.*
+  süzgeci onları guard'dan ÖNCE imha ediyordu. Üretici **~2 haftadır** (ilk ateşleme 2026-08-02;
+  iki düğme bounds'a 2026-07-30/2026-08-01'de girdi) bu düğmelere öneri üretiyordu. `w_turnover`
+  tarafı bilinmez DEĞİLDİ: WP10 (2026-08-10, kalem KAPANDI) bounds-var/params-yok durumunu bilinçli
+  gölge-okuyucu tasarımı olarak kayda geçirmiş, aynı ret olayını "canlı ret kanıtı" saymıştı —
+  görünmez olan, süzgecin guard-öncesi imhasıydı. **Boruyu açmanın ilk ürünü bir kazanç değil, bir
+  teşhis oldu.**
+  **TAMİRAT YÖNÜ AÇIK (okuma yüzeyi kodda SABİT — bu soru için kart gerekmez):** o 14 öksüzden
+  yalnız `entry.w_rs` ölü görünmüyor — params'ta yokken kod varsayılanı 0.35 ile gölgede çalışır
+  (`strategy.py:418`). `entry.w_mom` (varsayılan 0.0 + `if w_mom > 0`, `strategy.py:441,447`) ile
+  `portfolio.sector_cap`/`portfolio.heat_cap` (varsayılan 0 + `if cap_pct > 0`/`if heat_pct_cap > 0`,
+  `guard.py:631-651`) params'ta yokken YAPISAL ATIL; motor hiçbirini goal limitlerinden OKUMAZ —
+  `max_sector_exposure_pct`/`heat_hard_r` AYRI mekanizmadır, bilinçli ayrı adlandırılmıştır
+  (`guard.py:602-607`, `goal.yaml:123-124`). `entry.w_turnover` kablolu-ama-taşınmıyor (WP10,
+  bilinçli) ve `regime.vix_backwardation_gate` kablolu-ama-veri_yok (28e) — ikisi de hayalet değil.
+  İki tanı iki farklı tamirat ister:
+  (a) üretici canlı params'a süzgeç uygular (`w_turnover`'ı WP10'un gölge-okuyucu tasarımından
+  koparmadan — o kalem bu reddi bilinçli kanıt sayar) · (b) bounds ile motorun okuma yüzeyleri
+  eşleştirilir · (c) gerçekten ölü olanlar §2-25a'ya gider. **Tamirat SEÇİMİ ölçülmedi — kart-önce;
+  okuma-yüzeyi sorusu ise yukarıda kodla kapalı.**
+  *öncelik: YÜKSEK — keşif bütçesinin %62'si (29/47) canlıda taşınmayan düğmeye gidiyordu.*
 
 - **🔴 45. 28d TEŞHİSİ — EŞİK DÜŞÜRMEK BU TIKANIKLIĞI AÇMAZ** _(2026-08-14, v247-B ölçtü; **planı DEĞİŞTİRİR**)_
   ROADMAP 28d'yi "kapı ölçemiyor, `chop` dilimi 27 < eşik 30" diye taşıyordu ve örtük çözüm eşikti.
