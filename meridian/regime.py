@@ -122,6 +122,8 @@ def follow_through(index_bars: pd.DataFrame) -> bool:
 
 
 def exposure_score(regime: str, metrics: dict) -> int:
+    """Rejime karşılık gelen 0-100 maruziyet skorunu verir; rejim HIGH_VOL değilken yüksek oynaklık
+    ölçülmüşse taban 25 puan düşürülür. Sonuç [0, 100] aralığına kırpılır."""
     base = {TREND_UP: 80, CHOP: 45, TREND_DOWN: 15, HIGH_VOL: 25}[regime]
     if metrics.get("high_vol") and regime != HIGH_VOL:
         base -= 25

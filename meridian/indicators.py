@@ -25,6 +25,8 @@ import pandas as pd
 
 
 def true_range(df: pd.DataFrame) -> pd.Series:
+    """Gerçek aralık (True Range) serisi: max(yüksek−düşük, |yüksek−önceki kapanış|, |düşük−önceki kapanış|).
+    Girdi serisini değiştirmez, yeni seri döndürür."""
     high, low, close = df["high"], df["low"], df["close"]
     prev_close = close.shift(1)
     tr = pd.concat([
@@ -42,6 +44,8 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 
 def sma(series: pd.Series, period: int) -> pd.Series:
+    """Basit hareketli ortalama. `min_periods=period` — pencere dolmadan değer ÜRETİLMEZ (ısınma
+    satırları NaN kalır, uydurma değer yok)."""
     return series.rolling(period, min_periods=period).mean()
 
 

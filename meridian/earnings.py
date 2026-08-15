@@ -116,6 +116,8 @@ _LAST_WINDOW: dict = {}
 
 
 def _load() -> dict:
+    """`earnings.csv`i mtime-önbellekli okur: ticker → sıralı tekil tarih listesi ve (ticker, tarih) →
+    seans saati haritası. Dosya yoksa boş önbellek; dosya değişmediyse disk hiç okunmaz."""
     global _CACHE, _CACHE_MTIME, _TIMES
     path = config.STATE / "earnings.csv"
     if not path.exists():
@@ -166,6 +168,7 @@ def _load() -> dict:
 
 
 def clear_cache() -> None:
+    """Takvim önbelleğini geçersiz kılar (bir sonraki `_load()` diskten yeniden okur)."""
     global _CACHE_MTIME
     _CACHE_MTIME = None
 
@@ -501,6 +504,7 @@ def refresh_from_fmp(tickers: list[str]) -> int:
 
 
 def _bilinen_saat(bilinen: dict, t: str, d: str) -> str:
+    """Bilinen (ticker, tarih) çifti için seans saatini verir; bilinmiyorsa BOŞ dize — saat UYDURULMAZ."""
     return bilinen.get((t, d)) or ""
 
 
