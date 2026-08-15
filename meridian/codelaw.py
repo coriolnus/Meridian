@@ -72,9 +72,17 @@ def _note_unscanned(path, exc: BaseException, phase: str) -> None:
 
 def _py_files(root: str):
     """`root` altındaki `.py` dosyalarını ad sırasıyla üretir; `_SKIP_DIRS` (`__pycache__`,
-    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır."""
-    for f in sorted(pathlib.Path(root).rglob("*.py")):
-        if any(p in _SKIP_DIRS for p in f.parts):
+    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır.
+
+    ELEME KÖK ALTINDA YAPILIR, MUTLAK YOLDA DEĞİL. Eski hâl `f.parts` diyordu, yani yolun
+    TÜM bileşenlerini — deponun KENDİSİ `.venv` (ya da `.git`, `node_modules`) adlı bir dizinin
+    altında duruyorsa her dosya eleniyor, tarayıcı SIFIR dosya dönüyor ve "ihlal yok" diyordu.
+    Sıfır-ihlal, sıfır-tarama demekti: bekçinin kendi körlüğünü yeşil sanması. Eleme artık
+    `f.relative_to(kok).parts` üzerindedir — karar deponun NEREYE kurulduğuna değil, kökün
+    ALTINDAKİ yapıya bakar."""
+    kok = pathlib.Path(root)
+    for f in sorted(kok.rglob("*.py")):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
             continue
         yield f
 
@@ -161,7 +169,10 @@ def scan_source(src: str, filename: str = "<string>") -> list[dict]:
     beslenir — tarayıcının gerçekten çalıştığını sentetik bir kaynakla kanıtlayabilmek için.)"""
     try:
         tree = ast.parse(src)
-    except SyntaxError as e:
+    except (SyntaxError, ValueError) as e:
+        # ValueError: `ast.parse` NUL baytlı kaynakta SyntaxError DEĞİL ValueError fırlatır
+        # ("source code string cannot contain null bytes") — demete alınmasaydı tarayıcı
+        # UNSCANNED'e yazmak yerine ÇÖKERDİ. Ayrıştıramamak kayda geçer, çökmek geçmez.
         _note_unscanned(filename, e, "silent_handlers")
         return []
     lines = src.splitlines()
@@ -189,8 +200,8 @@ def silent_handlers(root: str = "meridian", include_annotated: bool = False) -> 
     out: list[dict] = []
     for f in _py_files(root):
         try:
-            src = f.read_text()
-        except OSError as e:
+            src = f.read_text(encoding="utf-8")
+        except (OSError, ValueError) as e:      # ValueError: UnicodeDecodeError'ı da kapsar
             _note_unscanned(f, e, "silent_handlers")
             continue
         for hit in scan_source(src, str(f)):

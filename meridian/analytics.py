@@ -32,7 +32,13 @@ from . import store, config, score as score_mod, health, memory
 
 
 def _trades():
-    """Kapanmış işlem defterinin (`trades.jsonl`) tüm satırları — bu modülün TEK okuma kapısı."""
+    """Kapanmış işlem defterinin (`trades.jsonl`) tüm satırları — bu modülün ANA okuma kapısı.
+
+    TEK KAPI DEĞİL (borç kaydı, ölçüldü): `learning_scorecard` aynı defteri
+    `store.read_jsonl("trades.jsonl")` ile DOĞRUDAN, bu fonksiyona uğramadan ikinci kez okur
+    (defterin damga ayrıştırmasını `ledgerstamp.counts` ile kendisi yapar). İkinci okuyucu
+    ADIYLA beyanlıdır ki "tek kapı" cümlesi denetlenmemiş bir tekillik iddia etmesin; kapı
+    gerçekten tekleşirse o çağrı buraya bağlanmalı ve bu paragraf silinmelidir."""
     return store.read_jsonl("trades.jsonl")
 
 
