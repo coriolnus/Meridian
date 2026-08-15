@@ -1,5 +1,29 @@
-"""analytics.py — read-model computations over state/ for the dashboard. Pure reads; no mutation.
-Everything the dashboard shows is derived here from real state, never fixtures."""
+"""analytics.py — panonun okuma-modeli: state/ üzerinden türetilen analitik hesapların tek çatısı.
+
+NE YAPAR. Panonun gösterdiği her sayı burada GERÇEK state'ten türetilir, asla fikstürden değil.
+Skor/kalibrasyon ölçümleri, kenar ve sonuç hükümleri, portföy ısısı, otonomi merdiveni, rejim
+hücreleri ve öğrenme karneleri tek modülde durur ki iki yüzey aynı ölçüyü iki ayrı formülle
+anlatmasın.
+
+KİLİT GİRİŞLER. `edge_verdict()` / `result_verdict()` — istatistiksel anlamlılıkla (blok
+bootstrap CI, CVaR) ölçüt satırları; `portfolio_heat()` — açık risk toplamı; `autonomy_ladder()`
+(+`_breaker_trips_since`: takvim-günü penceresi — satır penceresi olay seli altında sessizce
+daralıyordu, ts-tabanlıya düzeltildi ve taranan kapsam BEYAN edilir); `per_regime_scores`,
+`skill_attribution`, `score_calibration`/`spearman_ic`, `llm_opinion_calibration`,
+`exit_efficiency`, `profit_waterfall`, `cf_fidelity`, `near_miss_report`, `regime_edge`,
+`benchmark_relative`, `trade_alpha_beta`, `live_expectancy_ceiling` (ölçer ve beyan eder, hükme
+girmez), `learning_scorecard`, `hermes_scorecard`, `shadow_law_row`, `mae_profile`,
+`shrunk_regime_cells` (empirik Bayes büzülmesi).
+
+DEĞİŞMEZLER. Defterlere (trades/plans/portfolio/scoreboard) ASLA yazılmaz; salt-okunur
+read-model'in tek istisnası, kendi türetilmiş kalibrasyon artefaktını kalıcılaştıran üreticilerdir
+(`llm_calibration.json`, `exit_efficiency.json`, `cf_fidelity.json`, `near_miss.json`,
+`regime_edge.json`, `mae_profile.json`, `score_calibration_history.jsonl` — idempotent nokta
+kaydı). Ölçülemeyen değer None döner, sıfırla doldurulmaz (UYDURMA YASAĞI); pencere/kapsama
+iddiası ölçülen gerçeğe göre beyan edilir ("son 30 gün" tavana çarptıysa bunu söyler).
+
+NEYİ OKUR. `trades.jsonl`, `trade_plans.jsonl`, `events.jsonl`, portföy/karne/eğri defterleri ve
+kalibrasyon artefaktları — hepsi store üzerinden."""
 from __future__ import annotations
 import datetime as dt
 from collections import defaultdict

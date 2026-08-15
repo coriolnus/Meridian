@@ -1,50 +1,30 @@
-"""dbmigrate.py — DOSYA DEFTERİ → SQLite, PARİTE KANITIYLA (WP-H/H9, Kademe A4).
+"""dbmigrate.py — dosya defterlerini SQLite'a parite kanıtıyla taşıyan ve geri alan operatör aracı.
 
 NE YAPAR. Altı varlığı (`trades.jsonl`, `trade_plans.jsonl`, `scoreboard.json`, `portfolio.json`,
-`equity_curve.json`, `shadow_books.json`) `state/meridian.db`ye taşır. İLERİ YÖNLÜ ve İDEMPOTENT:
-ikinci koşu hiçbir şeyi tekrarlamaz, aynı raporu üretir.
+`equity_curve.json`, `shadow_books.json`) `state/meridian.db`ye TEK transaction'da taşır; ileri
+yönlü ve idempotenttir (ikinci koşu hiçbir şeyi tekrarlamaz). KURU KOŞU VARSAYILANDIR: veri
+taşıyan bir aracın varsayılanı yazmak olamaz (`barrepair`/`ledgerstamp` ile aynı kural) —
+`--uygula` olmadan tek bayt yazılmaz. Parite kanıtı İDDİA DEĞİL ÖLÇÜMDÜR: kaynak → DB'ye yaz →
+DB'den tekrar oku → normalize digest; digestler eşit değilse TAMAMI geri alınır (yarısı taşınmış
+defter, taşınmamış defterden tehlikelidir) ve bu koşuda DOĞAN DB `.failed-<ts>` ile karantinaya
+alınır — şema transaction'ın İÇİNDE kurulduğu için düşen migrasyon geride aktif-ama-boş bir DB
+bırakamaz. Digest anahtar sırasına duyarsız, DEĞERE ve TİPE duyarlıdır; listeler SIRALANMAZ
+(satır sırası defterin anlamıdır — sıralamak ölçümü ölçtüğü şeye kör yapardı).
 
-KURU KOŞU VARSAYILANDIR. Veri taşıyan bir aracın varsayılanı yazmak olamaz (`barrepair` /
-`ledgerstamp` ile aynı kural). `--uygula` olmadan tek bayt yazılmaz; kuru koşu ne taşınacağını
-SAYAR ve KAYNAK PARİTE-DİGESTİNİ basar.
+KAYNAK DOSYALAR SİLİNMEZ: taşıma sonrası `.migrated` ekiyle yerinde durur — silmek geri dönüşü
+olan bir adımı geri dönüşsüz yapardı; iki okunabilir gerçek kaynağı bırakmamak için ad değişir.
+Kaynak DOĞRUDAN DOSYADAN okunur (store yönlendirmesi bilinçli atlanır: ikinci koşu kendi
+çıktısını kaynak sanmasın).
 
-PARİTE KANITI ZORUNLUDUR — İDDİA DEĞİL ÖLÇÜM. Her varlık için:
+GERİ DÖNÜŞ KOLU `--geri-al`DIR, `MERIDIAN_DB=off` DEĞİL (eski "acil anahtar" beyanı YANLIŞLANDI:
+anahtarı tek başına çeken operatör altı defteri BOŞ okur ve ayrışık ikinci bir kitap doğar).
+`rollback()` veri silmez, yalnız yeniden adlandırır: DB `.rolledback-<ts>` ile kenara (migrasyon
+SONRASI yazımların tek kopyası ondadır; `db_n − dosya_n` farkı + digest paritesi rapora basılır),
+`.migrated` arşivleri asıl adlarına döner, kanonik adı işgal eden ayrışık dosya `.ayrisik-<ts>`
+ile kenara alınır. Canlı worker koşarken `--uygula` VE `--geri-al` REDDEDİLİR (`--zorla` ezer).
 
-    JSON kaynak → DB'ye yaz → DB'den TEKRAR oku → yeniden serileştir → normalize digest
-
-İki digest EŞİT DEĞİLSE migrasyon BAŞARISIZ sayılır ve TAMAMI geri alınır (altı varlık TEK
-transaction'dadır — yarısı taşınmış bir defter, taşınmamış bir defterden daha tehlikelidir).
-Digest anahtar sırasına duyarsızdır (`sort_keys`) ama DEĞERE ve TİPE duyarlıdır: SQLite'ın tip
-afinitesi bir int'i float'a çevirseydi (60 → 60.0) bu ölçüm onu YAKALAR. Bu yüzden `storage`
-tip uyuşmazlığında alanı ayrıca `extra_json`a yazar ve okumada `extra_json` kazanır.
-
-KAYNAK DOSYALAR SİLİNMEZ. Taşıma sonrası aynı dizinde `.migrated` son-ekiyle bırakılır. Silmek,
-geri dönüşü olan bir adımı geri dönüşü olmayan bir adıma çevirirdi. (Adı değiştirilir, çünkü aynı
-anda İKİ okunabilir gerçek kaynağı bırakmak, hangisinin doğru olduğunu belirsizleştirirdi.)
-
-GERİ DÖNÜŞ KOLU `--geri-al`DIR, `MERIDIAN_DB=off` DEĞİL (C5, 2026-08-02 — bu başlık eskiden anahtarı
-"acil anahtar" diye anıyor ve dosyaların DURMASINI yeterli sayıyordu; YANLIŞTI). Dosyalar `.migrated`
-ADIYLA duruyor, yani anahtarı tek başına çeken operatör altı defteri BOŞ okur (kanonik ad yok →
-çağıranın varsayılanı) ve ilk yazımda AYRIŞIK ikinci bir kitap doğar. `--geri-al` bu adımı bir kola
-indirir: DB kenara alınır (`meridian.db.rolledback-<ts>`), arşivler ASIL adlarına döner, ve DB ile
-dosya satır sayıları YAN YANA raporlanır.
-
-GERİ-AL VERİ SİLMEZ, YALNIZ YENİDEN ADLANDIRIR. Üç şey birden korunur ve üçü de rapora yazılır:
-(1) DB dosyası (`.rolledback-<ts>`) — migrasyondan SONRA yazılanların TEK kopyası ondadır, o yüzden
-kenarda tutulur ve fark (`db_n − dosya_n`) operatörün önüne basılır; (2) `.migrated` arşivi asıl
-adına döner; (3) kanonik adda ZATEN bir dosya varsa (anahtar çekiliyken doğmuş ayrışık kitap) o da
-silinmez, `.ayrisik-<ts>` ekiyle kenara alınır. Hüküm tek cümledir: geri-al'dan sonra defterler
-DOSYADAN, migrasyon ÖNCESİ hâliyle okunur; başka her şey kenarda, adıyla durur.
-
-CANLI WORKER KOŞARKEN YAZMA. `ledgerstamp`/`barrepair` ile AYNI desen ve AYNI ölçüm fonksiyonu:
-canlı süreç görülürse `--uygula` VE `--geri-al` REDDEDİLİR (`--zorla` ile ezilir).
-
-KULLANIM:
-    python -m meridian.dbmigrate                 # kuru koşu — sayım + parite digestleri
-    python -m meridian.dbmigrate --json          # aynı rapor, makine-okunur
-    python -m meridian.dbmigrate --uygula        # TAŞI (worker durdurulmuş olmalı)
-    python -m meridian.dbmigrate --durum         # yalnız DB durumu (şema sürümü, varlık sayaçları)
-    python -m meridian.dbmigrate --geri-al       # GERİ DÖN: DB kenara, arşivler asıl adına
+KULLANIM: `python -m meridian.dbmigrate` (kuru koşu) · `--json` · `--uygula` · `--durum` ·
+`--geri-al`. Okur/yazar: state/ altı kaynak dosya + `state/meridian.db`; olaylar obs'a.
 """
 from __future__ import annotations
 

@@ -1,15 +1,24 @@
-"""secrets.py — Secret Manager, a local 0600 store, or nothing (Hard Rule 5). Reads a secret from,
-in order:
-  1) process env,
-  2) a local operator store  (state/secrets.json, chmod 0600, gitignored)  ← app-entered keys land here,
-  3) GCP Secret Manager      (if google-cloud-secret-manager + MERIDIAN_GCP_PROJECT set).
-Env still wins, so nothing an env var sets can be silently overridden by the file. The local store
-exists so the single operator can paste keys through the dashboard on a local L0 box; on the VM the
-keys belong in Secret Manager (source 3) and the file is never copied there.
+"""secrets.py — sır erişiminin tek kapısı: env → yerel 0600 deposu → Secret Manager, ya da hiçbiri (Hard Rule 5).
 
-Never logs a value. Only the operator (source 1/2) or Secret Manager (source 3) ever holds it, and
-status()/mask() only ever expose a masked hint (last 4 chars). Writes are whitelisted (ALLOWED) so a
-dashboard POST can only ever set a KNOWN key name — never an arbitrary env-like variable."""
+NE YAPAR. `get(name)` bir sırrı SIRAYLA çözer: (1) süreç env'i, (2) yerel operatör deposu
+(`state/secrets.json`, chmod 0600, gitignore'lu — pano üzerinden girilen anahtarlar buraya düşer),
+(3) GCP Secret Manager (google-cloud-secret-manager + MERIDIAN_GCP_PROJECT kuruluysa). Env HER
+ZAMAN kazanır: dosya, bir env değerini sessizce ezemez. Yerel depo tek operatörün yerel L0
+kutusunda panodan anahtar yapıştırabilmesi içindir; VM'de anahtarların yeri Secret Manager'dır ve
+dosya oraya asla kopyalanmaz. 300 sn TTL'li süreç-içi önbellek; `clear_cache()` rotasyon sonrası
+anında tazeler.
+
+DEĞİŞMEZLER. DEĞER ASLA LOGLANMAZ: hata yollarında yalnız hatanın TÜRÜ kaydedilir, içerik/anahtar
+asla; `status()`/`mask()` en fazla maskeli ipucu (son 4 karakter) gösterir. Yazım BEYAZ
+LİSTELİDİR: `set`/`delete` yalnız ALLOWED'daki BİLİNEN adları kabul eder — pano POST'u PATH,
+MERIDIAN_MODE, otonomi bayrağı gibi keyfi bir env-değişkeni ekemez. Buradaki veri/paper
+anahtarları icraya karşı ETKİSİZDİR: girilmeleri ekranları/bildirimleri açar ama canlı alım-satımı
+ASLA açamaz (canlı broker yolu ayrıca iki elle-kurulan env bayrağı + otonomi seviyesiyle
+kapılıdır). Dosya izni OKURKEN de denetlenir: sahibi dışına açık `secrets.json` süreç başına bir
+kez uyarılır (`secrets_file_permissions`); okunamayan dosya "hiç sır yapılandırılmamış" gibi
+görünmez, türüyle uyarılır (YASA 4).
+
+OKUR/YAZAR. `state/secrets.json` (atomik yazım, 0600); env ve Secret Manager salt-okunur."""
 from __future__ import annotations
 import json
 import os

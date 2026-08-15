@@ -1,21 +1,30 @@
-"""obs.py — structured JSON logging + the ALARM_ tokens the notification chain keys on.
+"""obs.py — yapılandırılmış JSON olay kaydı + bildirim zincirinin anahtarlandığı ALARM_ jetonları.
 
-A silent agent is an unmonitored agent (§9). Every notable event emits ONE JSON line to stdout
-(captured by systemd/launchd) AND a mirrored row in `state/events.jsonl`.
+NE YAPAR. Sessiz ajan izlenmeyen ajandır: kayda değer her olay TEK JSON satırı olarak stdout'a
+basılır (systemd/launchd yakalar) VE `state/events.jsonl`a aynalanır. Üç seviye: `log`/`warn`/
+`alarm`; `alarm(token, message)` jetonu satırın METNİNE koyar (düz alt-dize filtresi yakalasın)
+ve `_maybe_notify` ile operatöre iter.
 
-JETONLARIN GERÇEK TÜKETİCİSİ (K1, 2026-07-30 düzeltmesi): bu docstring eskiden jetonların "Cloud
-Monitoring log-based metrics fire" için basıldığını söylüyordu. O beyan bayattı ve yanlış güven
-üretiyordu: deploy/monitoring.sh gcloud/gce_instance'a bağlıdır, fiilî işletim ise yerel
-keepalive + Oracle A1 systemd — yani GCP tüketicisi bu kurulumda var OLAMAZ. Üstelik o betiğin
-filtresi 11 jetondan yalnız 3'ünü tanıyordu.
-BUGÜNÜN GERÇEK ZİNCİRİ, sırayla:
-  1. `_maybe_notify` → `notify.send` (Telegram/webhook; jeton başına 6 sa susturma penceresi),
-  2. `notify.inbox` → panonun YEREL alarm gelen kutusu (ACK'lenmemiş olanları imzaya göre gruplar),
-  3. `watchdog.parity_report` → teslim edilemeyen alarm sayacı (`notify_undelivered.json`).
-Kanal yapılandırılmamışsa 1 sessiz no-op olur; 2 ve 3 yine çalışır — "alarm yazıldı" ile "alarm
-ULAŞTI" ayrı şeylerdir ve ikincisini yalnız ACK kanıtlar.
-deploy/monitoring.sh yaşamaya devam ediyor (GCP'ye dönülürse) ama artık filtresini bu dosyadaki
-NOTIFY_TOKENS'tan TÜRETİYOR — elle liste, yeni jeton eklendikçe sessizce eskiyordu."""
+JETONLAR (gerçek adlar): ALARM_HEARTBEAT_STALE, ALARM_ROLLBACK, ALARM_CIRCUIT_BREAKER,
+ALARM_DATA_QUALITY, ALARM_HALT ("HALT_ACTIVE"), ALARM_MIRROR_DRIFT, ALARM_BROKER_REJECT,
+ALARM_TRAIL_DESYNC, ALARM_MECHANISM_STALE, ALARM_ARMING_READY, ALARM_AUTHORITY
+("AUTHORITY_CHANGE"), ALARM_GOAL_FAILURE, ALARM_NAKED_POSITION, ALARM_ONAYLI_PLAN_GONDERILMEDI.
+NOTIFY_TOKENS el listesi DEĞİL TÜRETMEdir: her ALARM_ sabiti kendiliğinden bildirim
+kapsamındadır — elle bakımlı liste tam da en kritik alarmları sessizce dışarıda bırakarak
+eskimişti; bilerek susacak jeton açık bir çıkarma ister (bugün yok).
+
+TESLİM ZİNCİRİ (eski "GCP Cloud Monitoring tüketir" beyanı YANLIŞLANDI — o tüketici bu kurulumda
+var olamaz): (1) `_maybe_notify` → `notify.send` (jeton başına 6 sa susturma; bastırma pencere
+başına BİR satırla kayda geçer, kanal yokken/teslim düşünce `notify_undelivered.json` sayacı
+artar), (2) `notify.inbox` yerel gelen kutusu, (3) `watchdog.parity_report` teslim sayaçları.
+"Alarm yazıldı" ile "alarm ULAŞTI" ayrı şeylerdir; ikincisini yalnız ACK kanıtlar.
+
+İMZA-MANDALI: çözülmemiş ama DEĞİŞMEMİŞ bilinen durumun aynı imzalı tekrarları (MANDAL_IMZALAR:
+MIRROR_DRIFT adet-sapması, DATA_QUALITY bar-kaynak uyuşmazlığı) satır üretmez,
+`state/alarm_mandal.json`da SAYILIR; imzanın herhangi bir alanı değişir ya da serbest penceresi
+aşılıp durum geri gelirse yeniden alarmlanır. Sermaye-sınıfı jetonlar mandallanmaz; mandal
+arızası alarmı asla yutmaz (fail-open). Okur/yazar: `state/events.jsonl` (+`recent` ile okur),
+`notify_sent.json`, `notify_undelivered.json`, `alarm_mandal.json`."""
 from __future__ import annotations
 import datetime as dt
 import json

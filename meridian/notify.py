@@ -1,8 +1,25 @@
-"""notify.py — push a short message to the operator (Telegram or a generic webhook). stdlib only.
-No-op when no channel is configured, so it is always safe to call. Never sends secrets or PII.
-Wired to the alarm events: circuit-breaker trips, rollbacks, HALT, new plans, fills.
+"""notify.py — operatöre kısa mesaj itme (Telegram / genel webhook) + yerel alarm gelen kutusu; yalnız stdlib.
 
-Config (env or Secret Manager): TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID, and/or MERIDIAN_WEBHOOK_URL."""
+NE YAPAR. `send(text)` yapılandırılmış kanallara iletir; kanal yoksa güvenli no-op'tur — her
+yerden çağrılabilir. Alarm sınıflarına bağlıdır: devre-kesici, rollback, HALT, yeni plan.
+`inbox()` ACK'lenmemiş alarmları `events.jsonl`dan imzaya göre gruplar: gelen kutusu ikinci bir
+defter DEĞİL bir GÖRÜNÜMDÜR — tek kaynak olaylardır, burada yalnız "nereye kadar okudum"
+(`alerts_ack.json`) durur ve ACK hiçbir alarmı silmez, yalnız "gördüm" der. `_signature` aynı
+kusurun tekrarını tek satıra toplar (anahtar varsa ticker ile İNCELTİR, mesaj yedeğinde bilinen
+ticker'ı normalize eder — kaba birleşme de yanlış bölme de ölçülüp düzeltilmiş iki ayrı hataydı).
+
+DEĞİŞMEZLER. Sır disiplini: `scrub()` giden metinden BİLİNEN sır değerlerini (secrets.ALLOWED)
+siler — bu modül dışarıya veri gönderen TEK yoldur ve "asla sır göndermez" iddiasının uygulaması
+tam budur (iddia bir dönem docstring'de vardı, uygulaması yoktu). Teslimat başarısızlığı sessiz
+kalmaz (`notify_delivery_failed`): "telefonuma bildirim gelmedi" ile "zaten alarm yoktu" ayırt
+edilebilmelidir. "Operatöre ulaştı" ile "operatör GÖRDÜ" ayrı şeylerdir; ikincisini yalnız ACK
+kanıtlar. Kapıyı geçen plan (`new_plan`) alarm değil BİLGİ sınıfıdır — obs alarm zinciri onu
+asla itmez, tetiği üretim döngüsüdür.
+
+GİRİŞLER: `configured()`, `send()`, `inbox()`, `scrub()`, `breaker`/`rollback`/`halted`/
+`new_plan`. Yapılandırma (env ya da sır deposu): TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID ve/veya
+MERIDIAN_WEBHOOK_URL. Okur: `events.jsonl`; yazar: yalnız ağ kanalları (dosyaya yazmaz;
+`alerts_ack.json`u yazan pano ucudur)."""
 from __future__ import annotations
 import json
 import urllib.request

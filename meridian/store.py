@@ -1,25 +1,29 @@
-"""store.py — state persistence helpers. Atomic JSON writes, JSONL append, and numpy sanitization
-so nothing on disk carries np.float64 (which breaks json). state/ is the only mutable directory.
+"""store.py — state/ defterlerinin tek okuma-yazma kapısı: atomik yazım + file_lock + db_backed yönlendirmesi.
 
-WP-H/H9 (2026-07-31) — İKİ SERTLEŞTİRME + BİR YÖNLENDİRME, DIŞ İMZA DEĞİŞMEDEN:
+NE YAPAR. state/ (tek mutasyona açık dizin) altındaki JSON/JSONL/metin defterlerinin tüm G/Ç'sini
+tek boğazdan geçirir. Yazım dayanıklı-atomiktir: mkstemp + write + fsync + os.replace + dizin
+fsync — `os.replace` tek başına yalnız yer değiştirmenin atomikliğini garanti eder, verinin diske
+indiğini ETMEZ; fsync'siz hâli güç kesintisi sonrası sıfır-baytlık dosya bırakabiliyordu.
+`sanitize` numpy skalerlerini yerli tiplere çevirir; NaN/±Inf → None (UYDURMA YASAĞI: ölçülemeyen
+değer 0.0 diye yazılmaz). Bozuk dosya/satır varsayılana düşer ama SESSİZ DEĞİL
+(`state_file_unreadable` / `jsonl_rows_skipped`, dosya başına bir kez).
 
-  (B1) ATOMİK YAZIM ARTIK DAYANIKLI: mkstemp + write + **fsync** + os.replace + dizin fsync.
-       `os.replace` yer değiştirmenin ATOMİK olduğunu garanti eder ama VERİNİN diske indiğini
-       etmez — güç kesintisi/panic sonrası dosya var ama SIFIR baytlık olabilirdi. fsync o sınıfı
-       kapatır. Dizin fsync'i yer değiştirmenin kendisini kalıcı kılar (en iyi çaba: bazı dosya
-       sistemlerinde dizin fd'si fsync kabul etmez).
+KİLİT GİRİŞLER. `write_json`/`read_json`, `append_jsonl`/`read_jsonl`/`write_jsonl`, `write_text`
+(JSON olmayan defterler için AYNI kapı), `update_json`/`update_jsonl`/`merge_dated_jsonl` (kilitli
+oku-değiştir-yaz — kayıp-güncelleme yapısal olarak imkânsız), `file_lock(ad)` (süreç-içi RLock +
+süreçler-arası `fcntl.flock`; RLock tek başına YETMİYORDU — yalnız aynı süreçte anlam taşır, kilit
+dosyası `state/.locks/<ad>.lock`tur çünkü veri dosyası os.replace ile inode değiştirir),
+`db_backed(ad)` (altı defter adı `state/meridian.db` varsa storage.py'ye yönlenir; depolama
+migrasyonudur, davranış migrasyonu değil), `stamp`/`mtime` (arka-uç bağımsız tazelik damgası),
+`kilit_budamasi`, `io_stats`.
 
-  (B2) `file_lock` ARTIK SÜREÇLER ARASI: `fcntl.flock` + `state/.locks/<ad>.lock`. Eski hâli
-       `threading.RLock`ti, yani YALNIZ aynı süreçte anlam taşıyordu; canlı worker + pano API +
-       sprint aynı dosyaya yazabiliyordu ve kaybeden yazım hiçbir yerde görünmüyordu. API AYNI
-       (`with store.file_lock(ad):`), yeniden girişli (RLock) davranış AYNI — tüm mevcut
-       çağıranlar bedavaya sertleşir.
-
-  (A3) ALTI DEFTER SQLite'a YÖNLENDİRİLİR: `meridian/storage.py` DB dosyası VARSA (yani Rol-1
-       bakım penceresinde `dbmigrate --uygula` koşulduysa) `trades.jsonl`, `trade_plans.jsonl`,
-       `scoreboard.json`, `portfolio.json`, `equity_curve.json`, `shadow_books.json` okuma/yazması
-       DB'ye gider. DB YOKSA davranış BİREBİR bugünküdür. Çağıranlar aynı dict/list yapılarını
-       almaya devam eder: bu bir DEPOLAMA migrasyonudur, davranış migrasyonu DEĞİL.
+DEĞİŞMEZLER. Kilit çağıranın elinde değil KAPININ İÇİNDEdir — kilitsiz yazmak store'u bypass
+etmeyi gerektirir. DB'ye giden adda flock ALINMAZ: o adlar SQLite'ın kendi kilidiyle (WAL +
+busy_timeout) korunur; iki kilit rejimini üst üste koymak iki farklı sırayla alınan iki kilit,
+yani kilitlenme demekti. DB devredeyken kanonik adda kalan göç-edilmiş bayat dosya `.migrated`
+disiplinine çekilir (hiçbir şey silinmez/ezilmez); göçü kanıtsız dosyaya `.migrated` denMEZ,
+yalnız beyan edilir. Okur/yazar: yalnız state/ altı defterler + `state/.locks/`; DB devredeyken
+altı varlık storage.py üzerinden `state/meridian.db`.
 """
 from __future__ import annotations
 import fcntl

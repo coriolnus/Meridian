@@ -1,5 +1,29 @@
-"""Central config + path resolution. Loads the immutable goal.yaml/bounds.yaml and the
-mutable strategy.yaml. Nothing here talks to a broker or the network."""
+"""config.py — merkezi yapılandırma ve yol çözümü: goal/bounds/strategy yükleme + varsayılan tohum.
+
+NE YAPAR. Proje yollarını (ROOT/STATE/SKILLS/BARS/HISTORY) ve işletim modunu (MODE,
+I_ACCEPT_RISK, BROKER) ortamdan çözer; DEĞİŞMEZ sözleşmeleri (`state/goal.yaml`,
+`state/bounds.yaml`) ve DEĞİŞKEN parametre setini (`state/strategy.yaml`) yükler. Broker'la ve
+ağla asla konuşmaz; goal/bounds dosyalarına buradan asla yazılmaz.
+
+KİLİT GİRİŞLER. `goal()`/`bounds()` — önbellekli ama DERİN KOPYA döner: paylaşılan sözlüğü
+yerinde değiştiren tek bir modül, "değişmez sözleşme"yi bellekte izsiz deliyordu; dosya için
+geçerli olan değişmezlik artık bellekteki kopya için de geçerli. `reload_config()` önbelleği
+boşaltır (uzun ömürlü süreç dosyayı sonsuza kadar dondurmasın). `load_strategy()` — dosya
+yok/boş/bozuksa `default_strategy()` tohumuna düşer ve `strategy_file_unusable` uyarısı basar
+(YASA 4: motorun params={} ile sessizce koşduğu sınıf kapalı). `default_strategy()` v01 tohumu —
+`position_size_r` canlı yüzeyle hizalı 0.5'tir: goal.yaml'daki slot/boyut invaryantının yarısı
+buraya bakar ve değer tavandan TÜRETİLMEZ (türetmek uydurma olurdu; gerekçe fonksiyonun
+docstring'inde). `resolve_params()` — rejim override'ı yalnız var olan bir knob'u ya da
+REGIME_EXIT_KEYS'te ADIYLA izinli bir çıkış anahtarını ezebilir, knob İCAT EDEMEZ.
+`live_expectancy_rule()` — canlı-beklenti tavanı; her değerin KAYNAĞI (goal.yaml | kod
+varsayılanı) beyan edilir, geçersiz/tutarsız değer sessizce kabul edilmez (uyarılır, varsayılana
+dönülür). `live_enabled()` — canlı yol iki elle-kurulan bayrak ister. `dump_yaml()` YAML yazımını
+`store.write_text` tek kapısından geçirir (atomik + fsync + flock).
+
+DEĞİŞMEZLER. VALID_REGIMES regime.py'nin yaydığı etiketlerle birebir aynıdır — ayrışırsa gerçek
+rejim knob'u "bilinmeyen" diye reddedilir, hayalet rejim knob'u sessizce ölü kalır.
+Okur: state/ altındaki üç YAML; tek yazım yolu `dump_yaml` (çağıran adına).
+"""
 from __future__ import annotations
 import os
 from pathlib import Path

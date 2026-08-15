@@ -1,23 +1,28 @@
-"""marketview.py — İZLENEN EVRENİN TEK BAKIŞTA OKUNAN GÖRÜNTÜSÜ (2026-07-27).
+"""marketview.py — izlenen evrenin tek bakışta okunan görüntüsü; pano "Piyasa" sekmesinin tek kaynağı.
 
-Pano bugüne kadar yalnız KARARA girmiş sembolleri gösteriyordu: aday, plan, pozisyon. Oysa motorun
-izlediği evren `state/bars/*.csv` ve operatörün "bugün neyi izliyorum?" sorusunun panoda hiçbir
-cevabı yoktu — evrenin varlığı yalnız bir dizindeki DOSYA SAYISIYDI. Kapının elediği 250 sembol,
-elenmedikleri için değil, hiç GÖRÜNMEDİKLERİ için yoktu.
+NE YAPAR. Pano eskiden yalnız KARARA girmiş sembolleri gösteriyordu (aday, plan, pozisyon); kapının
+elediği 250 sembol, elenmedikleri için değil hiç GÖRÜNMEDİKLERİ için yoktu. `build()` motorun bar
+tuttuğu evreni (`state/bars/*.csv`) satır satır özetler — son kapanış, 1g/20g değişim, 52 haftalık
+zirveye uzaklık, ADV20, spark — ve defterlerden bağlam ekler: pozisyon/silahlı bayrakları, plan
+sayısı ve son plan tarihi, bir SONRAKİ kazanç-raporu tarihi. CSV çekirdekleri mtime anahtarlı
+süreç-içi önbellekten okunur; okunamayan bar dosyası sembolü DÜŞÜRMEZ (ölçümsüz satır + uyarı —
+"izleniyor ama okunamıyor" bilgisinin kendisi sinyaldir).
 
-BU BİR FİYAT SERVİSİ DEĞİLDİR. Gövdedeki her sayı EOD (kapanmış günlük) bardan türer; canlı fiyat
-İDDİA EDİLMEZ. En taze bar hangi seanstansa `as_of` odur ve ondan geride kalan satırlar `stale_n`
-ile ADIYLA sayılır: bayat bir kapanışı taze gibi göstermek, panonun okura yalan söylemesidir.
+DEĞİŞMEZLER. Bu bir FİYAT SERVİSİ DEĞİLDİR: her sayı EOD (kapanmış günlük) bardan türer, canlı
+fiyat iddia edilmez; en taze bar hangi seanstansa `as_of` odur ve geride kalanlar `stale_n` ile
+ADIYLA sayılır — bayat kapanışı taze göstermek panonun okura yalan söylemesidir. `intraday_close`
+bu çizgiyi bozmaz, DARALTIR: yalnız SİLAHLI sembollerde doludur (dakikalık akış yalnız onları
+izler) ve değeri sıcak fiyat değil KAPANMIŞ dakikalık barın kapanışıdır; tazelik eşiği
+(STALE_TOL_S) intraday_cycle'dan TEK KAYNAK alınır — ikinci bir eşik kopyası zamanla ayrışan iki
+yasa demekti. ÖLÇÜLEMEYEN None KALIR (UYDURMA YASAĞI): 21 barı olmayan sembolün 20 günlük
+değişimi yoktur, 0.0 "değişmedi" diye okunurdu. Emekli semboller satır olarak KALIR (bar geçmişi
+gerçek) ama bayatlık ölçümüne GİRMEZ — delist gününde donmuş bar kalıcı gürültü üretirdi. Seans
+içi kolonun boşluğu da nedenli beyan edilir: "silahlı yok" / "akış yok" / "akış bayat" aynı
+sessizliğe indirgenmez.
 
-SEANS İÇİ KOLON (2026-07-27) BU ÇİZGİYİ BOZMAZ, DARALTIR. `intraday_close` YALNIZ silahlı
-sembollerde doludur — çünkü dakikalık bar akışı (barfeed) yalnız onları izler — ve değeri sıcak
-fiyat değil, KAPANMIŞ dakikalık barın kapanışıdır. İzlenmeyen bir sembole fiyat yazmak, ölçülmemiş
-bir şeyi ölçülmüş göstermekti; kapanmamış barın "kapanışını" yazmak look-ahead'i panoya taşımaktı.
-Bugün silahlı plan sıfır olduğu için kolon baştan sona "—"dır: bu bir arıza değil, DOĞRU cevap.
-
-ÖLÇÜLEMEYEN None KALIR (UYDURMA YASAĞI). 21 barı olmayan bir sembolün 20 günlük değişimi YOKTUR;
-oraya 0.0 yazmak "değişmedi" diye okunur. Her pencere kendi asgari bar sayısını ister, yoksa alan
-None döner ve pano onu "—" olarak gösterir.
+NEYİ OKUR. `state/bars/*.csv`, `portfolio.json`, `trade_plans.jsonl`, `regime.json`,
+`finviz_universe.json`, kazanç takvimi (earnings) ve sıcak katman (hotstate — yalnız silahlılar).
+Hiçbir şey yazmaz.
 """
 from __future__ import annotations
 
