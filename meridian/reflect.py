@@ -1465,7 +1465,7 @@ def _havuz_tavani(tavan: int = 4) -> int:
 
 def _pool_worker_init():
     """Süreç havuzu işçisinin açılış kancası: önce `nice(15)` (pano/işlem döngüsü CPU isteyince
-    öncelik onlarındır), sonra barları AĞA ÇIKMADAN `load_cached()` ile yükler.
+    öncelik onlarındır), sonra barları AĞA ÇIKMADAN önbellekten yükler.
 
     Ebeveyn önbelleği doldurduğu için işçiler donmuş AYNI barları okur — aksi hâlde işçiler
     birbirinin bar dosyalarını yeniden yazardı. Kibarlık kurulamazsa iş sürer (yalnız pano yavaşlar)."""
