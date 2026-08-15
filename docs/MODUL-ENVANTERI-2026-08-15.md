@@ -5,6 +5,19 @@ mühendislik günlüğü "şu an ne var"ı anlatır, bu belge "neresi nerede ve 
 ~67k satır. **Tek gerçek kaynak modüllerin kendi başlık docstring'leridir** — bu belge onların
 dizinidir; Görev sütunu her modülün kendi başlık satırından (kırpılmış) alınmıştır.
 
+**KAPSAM (2026-08-15 ölçümü):** 2038 fonksiyon/sınıfın **TAMAMI** "ne yapar" docstring'i taşır
+(tur başında 636'sı eksikti → 0). Modül başlıkları da 91 dosyada yeniden yazıldı; istisnalar
+`run.py` + `adapters/{macro,news}.py` mezar taşlarıdır.
+
+**SATIR-ÇAPASI YASASI (bu turda kuruldu):** hiçbir test ve hiçbir beyan `dosya.py:NNN` biçimine
+ÇİVİLENMEZ — çünkü docstring/yorum eklemek satırları kaydırır ve kaydırma yanlış "kırık" üretir.
+Testler hedefi AST ile TAZE ÖLÇER (`test_codelaw_kor_nokta_v214` deseni: dosya + sayı + rol
+ölçütü, satır yalnız hata mesajında); kod içi atıflar SEMBOL adı kullanır (`loop.daily_cycle`).
+Bu turda ~117 kod atıfı sembole çevrildi, 12 test çapası taze ölçüme alındı ve kanıtlandı
+(kaynağa geçici satır eklendi → testler yine yeşil). Yeni yazımda da aynı kural geçerlidir.
+Ayrıca DOCSTRING METNİ de kaynak-metin ölçen testleri etkileyebilir: bir docstring'de geçen
+`load_cached` kelimesi sıra ölçen bir testi kırdı — metin yeniden yazılarak çözüldü.
+
 **2026-08-15 sonrası kural:** başlık docstring'i 'ne yapar'ı anlatır (Türkçe, detaylı); WP/tur/
 kart/tarih köken etiketleri kodda DURMAZ — arşivi `docs/MODUL-KOKENLERI-2026-08-15.md`'dedir.
 İstisnalar: `run.py` ve `adapters/{macro,news}.py` mezar taşlarıdır, docstring'leri kaydın kendisidir.
