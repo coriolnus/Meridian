@@ -1223,7 +1223,9 @@ def _data_fail(key: str, e: "AlpacaDataError", **fields) -> None:
 
 def _chunks(seq: list, n: int):
     """Diziyi en fazla n öğelik ardışık dilimler hâlinde üretir (çok-sembollü veri isteklerini
-    sağlayıcının sembol sınırına bölmek için). Kopya üretmez, dilim döndürür."""
+    sağlayıcının sembol sınırına bölmek için). Her dilim YENİ bir liste ayırır (`seq[i:i+n]` liste
+    dilimidir, görünüm değil) — öğeler kopyalanmaz ama liste nesneleri çoğalır; jeneratör olduğu için
+    tüketici aynı anda tek dilim tutar."""
     for i in range(0, len(seq), n):
         yield seq[i:i + n]
 

@@ -79,8 +79,12 @@ _META_WARNED = False
 def _meta_extra_p() -> float:
     """Meta-kalibrasyonun ölçtüğü ek sıkılaştırma ofsetini (`extra_p`) durum dosyasından okur.
 
-    Emniyet olarak [0, +0.10] bandına kıstırılır — yalnız SIKILAŞTIRIR. Dosya okunamazsa
-    fail-open değil, uyarı basıp 0.0 döner (süreç başına tek uyarı, YASA 4)."""
+    Emniyet olarak [0, +0.10] bandına kıstırılır — ofset yalnız SIKILAŞTIRIR (p_required'ı yükseltir).
+    Dosya okunamazsa FAIL-OPEN'dır ve öyle olduğu burada açıkça yazılıdır: ofset tek yönlü bir
+    sıkılaştırma olduğu için 0.0 dönmek "düzeltme yok" demektir, yani kapı ölçülmüş iyimserlik
+    düzeltmesi olmadan, kalibrasyonsuz hâlinden daha GEVŞEK koşar. Fail-closed seçilmedi çünkü
+    okunamayan bir kalibrasyon dosyası tüm adayları reddetmeyi haklı çıkarmaz; bedeli uyarıyla
+    görünür kılınır (süreç başına tek uyarı, YASA 4)."""
     from . import store
     global _META_WARNED
     try:
@@ -362,7 +366,7 @@ class PairedProbabilisticGate:
         P(ΔS>0)'ı ve K-sonda cezalı gerekli eşiği döndürür.
 
         Fail-closed: dilim sınırları çözülemez, taraflardan biri boş ya da geçerli replikasyon
-        sayısı eşiğin (≥200 veya n_boot/10) altındaysa `passes=False` + `law="legacy"` ile döner
+        sayısı eşiğin (`max(200, n_boot // 10)` — İKİSİNİN BÜYÜĞÜ) altındaysa `passes=False` + `law="legacy"` ile döner
         — çağıran legacy marj yasasına düşer. Ek olarak ULP tabanlı AYRIM hükmü ("aday ayırt
         edilemiyor" ≠ "aday kötü") ve eski yasanın gölge hükmü kayda basılır; gölge karara GİRMEZ."""
         p_req = self.p_required_for(k_probes, p_base)

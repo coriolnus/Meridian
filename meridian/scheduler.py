@@ -685,14 +685,20 @@ def _y4_collect(session: str) -> dict:
 #   * massive.verify    : grouped-vs-zincir ayarlama tutarlılığı. Yazım kapısının (`write_enabled`)
 #     DAYANAĞI bu ölçümdür ve ölçüm bayatlarsa kapı bayat kanıtla açık kalır.
 #   * shadowlaw kayması : MEASURED_V3'ten türetilmiş marjların hâlâ yerinde olup olmadığı.
-# HİÇBİRİ KARAR DEĞİŞTİRMEZ: rapor yazılır, ölçüm yazılır, kayma UYARI olur. Sabit güncellemesi ve
-# kapı kararı operatörde kalır.
+# RAPOR VE KAYMA GÖZLEMDİR (sabit güncellemesi operatörde kalır); MASSIVE DOĞRULAMASI DEĞİL —
+# `massive_verify.json`a yazar ve yazım kapısı o dosyayı okur, yani kapının kararını tazeler.
 def _weekly_validation(wk: list) -> dict:
     """Haftada bir koşan ÜÇ pahalı doğrulamayı sırayla yürütür ve sonuç özetini döner.
 
     (1) kanıt raporunu üretip state dosyasına yazar, (2) massive grouped-vs-zincir doğrulamasını
-    tazeler, (3) MEASURED_V3 kayma bekçisini uyarı olarak koşar. HİÇBİRİ KARAR DEĞİŞTİRMEZ; her
-    adım kendi `try` bloğunda izole edilir ve düşerse YASA 4 uyarısı + `error` alanı bırakır."""
+    tazeler, (3) MEASURED_V3 kayma bekçisini uyarı olarak koşar.
+
+    (1) ve (3) GÖZLEMDİR: rapor yazılır, kayma yalnız uyarı olur; hiçbir sabit ve hiçbir kapı
+    onlardan etkilenmez. (2) İSE KARAR GİRDİSİ TAZELER: `massive.verify()` varsayılan `write=True`
+    ile `massive_verify.json`a hüküm yazar ve YAZIM KAPISI (`massive.write_enabled()`) tam o dosyayı
+    okur — yani bu adım massive barlarının yazım zincirine girip girmeyeceğini değiştirebilir.
+    Düşerse karar değişmez ama kapı BAYAT kanıtla koşar (adımın except metni bunu söyler).
+    Her adım kendi `try` bloğunda izole edilir ve düşerse YASA 4 uyarısı + `error` alanı bırakır."""
     from . import obs, watchdog
     out: dict = {"hafta": wk, "ts": _now()}
     try:                                   # 1) KANIT RAPORU → state dosyası + api özeti
