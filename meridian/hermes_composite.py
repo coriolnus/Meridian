@@ -174,7 +174,7 @@ def _budget_take(hafta: str | None = None) -> bool:
 
         `st` YENİDEN BAĞLANMAZ — aynı nesne diske yazılır; yeni bir sözlük yaratmak sayacı
         sessizce sıfırlar ve haftalık bütçeyi sınırsız yapardı."""
-        if st is None:                     # default `{}` verildiği için normalde olmaz
+        if st is None:                       # default `{}` verildiği için normalde olmaz
             return False
         weeks = st.setdefault("weeks", {})
         cur = int(weeks.get(h, 0))

@@ -251,6 +251,8 @@ def build() -> dict:
         durumlar.append(durum)
 
     def _satir(ticker: str, source: str, core: dict) -> dict:
+        """Tek tickerın pano satırını kurar: çekirdek bar alanları + gün-içi kapanış/damgası, pozisyon /
+        silahlı / emekli bayrakları, plan sayımı ve sıradaki bilanço tarihi."""
         ic_kapanis, ic_damga = intraday.get(ticker, (None, None))
         return {
             "ticker": ticker, "source": source,

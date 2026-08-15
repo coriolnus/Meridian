@@ -68,6 +68,7 @@ def _ofset_notu(ofset: float) -> str:
 
 
 def _f(x, d=0.0) -> float:
+    """Değeri float'a çevirir; biçimsiz/eksikse verilen varsayılana düşer."""
     try:
         return float(x)
     except (TypeError, ValueError):  # sessiz-yutma: biçimsiz/eksik tek alan; yalnız bu değer düşer, satır başına uyarı asıl sinyali log seline gömerdi
@@ -75,6 +76,8 @@ def _f(x, d=0.0) -> float:
 
 
 def _row(check: str, ok: bool, a, b, detail: str, a_yol: str, b_yol: str) -> dict:
+    """Tek denetim satırını kurar: ad, hüküm, iki bağımsız yoldan gelen değerler (a/b), açıklama ve
+    her iki değerin HANGİ yoldan geldiği (a_yol/b_yol) — okuyucu kaynağı görmeden hükme inanmasın."""
     return {"check": check, "ok": bool(ok), "a": a, "b": b, "detail": detail,
             "a_yol": a_yol, "b_yol": b_yol}
 
@@ -516,6 +519,8 @@ def _orphan_state_files() -> dict:
         _damga = re.compile(re.escape(_sg.MIGRATED_SUFFIX) + r"-\d{8}-\d{6}-p\d+$")
 
         def _migrasyon_artigi(nm: str) -> bool:
+            """Dosya adı, bilinen bir artefaktın DAMGALI migrasyon arşivi mi? Kök ad bilinenler kümesinde OLMALI
+            ve son ek yazıcının kendi damga biçimine uymalı — uydurma bir ek bu kapıdan geçmez, yetim kalır."""
             m = _damga.search(nm)
             return bool(m) and nm[:m.start()] in known
 
@@ -555,6 +560,8 @@ def _orphan_state_files() -> dict:
         _src_text = _source_corpus()
 
         def _unreferenced(nm: str) -> bool:
+            """Dosya adı kaynak ağacında hiç geçmiyor mu (okuyucusuz mu)? Kaynak metni okunamadıysa False —
+            kanıt yokken "yetim" iddiası KURULMAZ."""
             return bool(_src_text) and nm not in _src_text
 
         for f in config.STATE.parent.glob("*.json*"):
@@ -662,6 +669,8 @@ def _universe_recompute() -> dict:
 
 
 def render_text(deep: bool = False) -> str:
+    """Yeniden-hesap raporunu operatör için metin dökümüne çevirir: her denetimin hükmü, açıklaması ve
+    kıyaslanan iki yolun adı. `deep` derin denetimleri de kapsar."""
     rep = report(deep=deep)
     out = [f"YENİDEN HESAP · {rep['n']} denetim · {'TEMİZ' if rep['ok'] else 'AYRIŞMA VAR'}"]
     for r in rep["rows"]:

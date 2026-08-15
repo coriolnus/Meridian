@@ -4590,6 +4590,8 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     _progress(running=True, phase="incumbent", i=0, total=None)
 
     def _on_probe(i, total, var, new, cand_oos, inc_oos, passes, best):
+        """Arama geri çağrısı: her sondada canlı ilerlemeyi (`SEARCH_PROGRESS`, pano okur) günceller
+        ve `hermes_search_probe` olayını basar. Karar VERMEZ — yalnız görünürlük."""
         _progress(running=True, phase="probing" if i else "planned", i=i, total=total,
                   variable=var, new=new,
                   candidate_oos=cand_oos, incumbent_oos=inc_oos, passes=passes, best=best)
@@ -4613,6 +4615,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
 
 
 def _closed_count() -> int:
+    """Kapanmış işlem sayısı = trades.jsonl satır sayısı (bekleme döngüsünün tetik tabanı)."""
     return len(store.read_jsonl("trades.jsonl"))
 
 
@@ -4657,6 +4660,8 @@ def loop(poll_seconds: int = 1800) -> None:
 
 
 def main(argv=None):
+    """Hermes CLI'ı: `--kesif` keşif payı karnesi + bakir düğmeleri JSON basar (hiçbir şey
+    YAZMAZ), `--once` tek yansıma koşar, aksi hâlde bekleme döngüsünü (`--poll` saniye) başlatır."""
     ap = argparse.ArgumentParser(description="Hermes — Meridian's reflection brain")
     ap.add_argument("--once", action="store_true", help="run a single reflection now")
     ap.add_argument("--loop", action="store_true", help="run the 30-min standby loop")

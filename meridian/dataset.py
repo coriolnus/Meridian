@@ -286,6 +286,8 @@ _LOAD_WARNED: set = set()   # ticker başına bir kez — evren 500 sembol, log 
 
 
 def _load_warn(ticker: str, exc: BaseException) -> None:
+    """Okunamayan önbellek barı için ticker başına TEK KEZ uyarı yazar (evren yüzlerce sembol — log seli
+    olmasın). Uyarı kanalının kendisi düşerse yükleme ASLA düşmez."""
     if ticker in _LOAD_WARNED:
         return
     _LOAD_WARNED.add(ticker)
@@ -311,6 +313,8 @@ def load_cached() -> tuple[dict, pd.DataFrame]:
     end = fetch_end()
 
     def _read(t: str):
+        """Tek tickerın disk önbelleğini okur, temizler ve pencereye kırpar. Dosya yoksa ya da temizlik
+        sonrası boşsa None. AĞA ÇIKMAZ — bu yolun tüm varlık sebebi budur."""
         cp = data._cache_path(t)
         if not cp.exists():
             return None

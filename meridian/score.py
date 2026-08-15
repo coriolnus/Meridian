@@ -28,6 +28,7 @@ START_EQUITY = 100_000.0
 
 
 def _clip(x: float, lo: float = -1.0, hi: float = 1.0) -> float:
+    """Değeri [lo, hi] aralığına kırpar (varsayılan [-1, +1])."""
     return max(lo, min(hi, x))
 
 
@@ -51,6 +52,9 @@ def _span_warn(exc: BaseException, ilk: str, son: str) -> None:
 
 
 def _span_days(trades: list[dict]) -> float:
+    """İşlem defterinin ilk ve son damgası arasındaki gün sayısı (yıllıklandırmanın paydası).
+    İki damgadan az varsa ya da tarih çözülemezse 30 güne düşer — düşüş SESSİZ DEĞİLDİR,
+    YASA 4 uyarısı bir kez yazılır."""
     ts = []
     for t in trades:
         for k in ("ts_open", "ts_close"):
@@ -74,6 +78,7 @@ def _span_days(trades: list[dict]) -> float:
 
 
 def equity_curve(trades: list[dict], start_equity: float = START_EQUITY) -> list[float]:
+    """İşlemleri kapanış sırasına dizip kümülatif sermaye eğrisini kurar (başlangıç sermayesiyle başlar)."""
     eq = start_equity
     curve = [eq]
     for t in sorted(trades, key=lambda x: str(x.get("ts_close", ""))):
@@ -83,6 +88,7 @@ def equity_curve(trades: list[dict], start_equity: float = START_EQUITY) -> list
 
 
 def max_drawdown(curve: list[float]) -> float:
+    """Sermaye eğrisinin azami tepe-dip düşüşünü oran olarak verir (0.0 = hiç düşmemiş)."""
     peak = curve[0]
     mdd = 0.0
     for v in curve:

@@ -53,6 +53,8 @@ def live_enabled() -> bool:
 
 
 def _read_yaml(path: Path) -> dict:
+    """YAML dosyasını sözlük olarak okur; boş dosya `{}` verir. Dosya YOKSA `FileNotFoundError` —
+    zorunlu yapılandırma sessizce varsayılana düşmez."""
     if not path.exists():
         raise FileNotFoundError(f"required config missing: {path}")
     with open(path) as f:
@@ -61,6 +63,8 @@ def _read_yaml(path: Path) -> dict:
 
 @lru_cache(maxsize=1)
 def _goal_cached() -> dict:
+    """`goal.yaml`ı bir kez okuyup önbelleğe alır (süreç ömrü boyunca tek okuma). Dışarıya bu sözlük
+    DOĞRUDAN verilmez — `goal()` derin kopya döndürür."""
     return _read_yaml(STATE / "goal.yaml")
 
 
@@ -77,6 +81,7 @@ def goal() -> dict:
 
 @lru_cache(maxsize=1)
 def _bounds_cached() -> dict:
+    """`bounds.yaml`ı bir kez okuyup önbelleğe alır. Dışarıya `bounds()` üzerinden derin kopya verilir."""
     return _read_yaml(STATE / "bounds.yaml")
 
 
@@ -93,6 +98,7 @@ bounds.cache_clear = _bounds_cached.cache_clear   # type: ignore[attr-defined]
 
 
 def limits() -> dict:
+    """Hedef sözleşmesinin `limits` bloğunu verir (azami açık pozisyon, günlük zarar tavanı vb.)."""
     return goal()["limits"]
 
 
@@ -197,6 +203,7 @@ def live_expectancy_rule(goal_doc: dict | None = None) -> dict:
 
 
 def strategy_path() -> Path:
+    """Canlı, sürümlenen `strategy.yaml`ın yolunu verir."""
     return STATE / "strategy.yaml"
 
 
