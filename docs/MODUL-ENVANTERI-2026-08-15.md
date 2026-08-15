@@ -250,7 +250,7 @@ bağlı. Boşluk docstring + bu envanterle kapatıldı. Operatör yine de isters
 | `lint-imports` (5 sözleşme) | **5 KEPT / 0 broken** (96 dosya, 573 bağımlılık) |
 | `python -m compileall meridian/` | **TEMİZ** (3.11 bayt-derleme, 96 modül) |
 | `python -m compileall tests/` | **1 HATA bulundu ve düzeltildi** — aşağıda |
-| `uv run pytest -q` (tam paket, tek otorite bu oturum) | _(sonuç aşağıda — koşum bu turda)_ |
+| `uv run pytest -q` (tam paket; ~50 dk / 4 çekirdek) | **6222 test: 6093 geçti (%97,9) · 52 başarısız · 50 fikstür hatası · 27 atlandı** — sınıflandırma aşağıda |
 | `uv audit` | **BU ORTAMDA KOŞULAMADI** — uv 0.8.17 `audit` alt-komutunu tanımıyor (dagit [0b] kapısı A1'deki uv'yi ister); tedarik-zinciri kapısı bir sonraki `dagit.sh` koşumuna kalır |
 
 **Bulunan ve düzeltilen hata:** `tests/test_firsat_yuzeyleri_v200.py:342` — f-string ifadesi
@@ -261,8 +261,33 @@ CI yeşilse koşucusunun 3.12+ olmasındandır; beyan edilen taban kırıktı. D
 f-string dışına alındı (`n_kart` ara değişkeni) — iki sürümde de geçerli, çift `count` çağrısı da
 tekilleşti. Tüm test ağacı 3.11 ile yeniden derlendi: başka vaka YOK.
 
-**Test paketi sonucu:** koşum bu commit atılırken sürüyordu — sayılar bitince bu satıra ayrı
-commit'le işlenecek (UYDURMA YASAĞI: bitmemiş koşuma sonuç yazılmaz).
+**Test paketi sonucu ve sınıflandırma (tam koşum, bu ortam):** 6222 test denendi — **6093 geçti,
+52 başarısız, 50 fikstür (setup) hatası, 27 atlandı**. Düşenlerin tamamı üç ortam-bağımlı kümede
+toplanıyor; **kod kusuru kanıtı yok** (bu turun tek gerçek kod kusuru yukarıdaki f-string idi,
+düzeltildi):
+
+1. **Canlı-state bağımlı aileler** (büyük çoğunluk): taze klonda `state/` yalnız goal+bounds
+   taşır — `skills_registry.json`, hipotez/işlem defterleri, koşum damgaları yok. Düşen aileler:
+   `test_navigator_retirement_gate_v126` ("canlı kayıt defteri okunamadı: bundled ≠ registry"),
+   `test_skill_cleanup_v121`, `test_llm_advisor_v6`, `test_hafta3b_v125` (boş defterde `assert
+   0 > 0` sınıfı), `test_hafta3a_v119`, `test_score_rebuild_v115`, `test_para_yasasi_v127`,
+   `test_golge_planli_kol_v217`, `test_execution_fidelity_v75`, `test_cf_backfill_v14`,
+   `test_audit_fixes`, `test_bottleneck_v12`.
+2. **Hermes ikilisi yok:** `test_mutation_v61` fikstürü temel durumu `parity:brain_availability`
+   kırmızısıyla KİRLİ bulup dürüstçe durdu ("kirli temelde her mutasyon yakalandı görünür") —
+   lokal hermes-agent bu konteynerde kurulu değil.
+3. **Ağ semantiği:** `test_kadans_ag_kapisi_v177` dış adresin bağlantı DENENMEDEN adli istisnayla
+   düşmesini bekler; bu ortamın zorunlu HTTPS proxy'si o varsayımı değiştiriyor.
+
+Bu tablo CLAUDE.md kural 6'nın ("tam suite yalnız Rol-1'de tek-otoriter") mekanik gerekçesidir:
+paket canlı-benzeri state + lokal hermes + doğrudan ağ varsayar; taze klon/CI bu üçünü de taşımaz.
+
+**CI gerçeği (2026-08-15 ölçümü):** `.github/workflows/ci.yml` 15 dakikalık `timeout-minutes`
+taşır; paket 4 çekirdekte ~50 dk. Sonuç: **bugüne dek hiçbir CI koşusu paketi bitirememiş** —
+son koşuların tümü ~15. dakikada `cancelled` (koşu listesi ölçüldü), main'deki tek `failure`
+(4ad7684, 2026-08-14) pytest'e hiç ulaşmamış bir altyapı arızası (`actions/checkout` indirme 429).
+İyileştirme adayı (bu turda YAPILMADI, operatör kararı): CI'ı state-bağımsız hızlı duman
+alt-kümesine indirmek ya da zaman sınırını gerçekçi yapmak.
 
 ---
 

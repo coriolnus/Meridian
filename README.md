@@ -1,164 +1,202 @@
 # Meridian
 
-A self-improving US-equity **research** agent. It screens the S&P 500, plans swing-momentum trades,
-sizes and enters them **on paper**, grades every closed trade, and rewrites its own strategy inside a
-fixed sandbox — and it **cannot touch a dollar until it has earned it**.
+Kendi stratejisini **ölçerek** iyileştiren, ABD hisseleri üzerinde çalışan bir **araştırma**
+ajanı. S&P 500'ü tarar, swing-momentum işlemleri planlar, **kâğıt üzerinde** (Alpaca paper)
+boyutlandırıp girer, kapanan her işlemi notlar ve stratejisini sabit bir kum havuzunun içinde
+yeniden yazar — **hak etmeden tek bir dolara dokunamaz.**
 
-> **Research system. Paper mode. Not financial advice.** Meridian is a research harness for studying
-> whether an agent can learn an edge honestly. It does not provide investment advice, and it does not
-> trade real money at its shipped autonomy level (L0).
+> **Araştırma sistemi. Paper modu. Yatırım tavsiyesi değildir.** Meridian, "bir ajan dürüstçe
+> edge öğrenebilir mi?" sorusunu incelemek için kurulmuş bir araştırma düzeneğidir. Sevk edilen
+> otonomi seviyesinde (L0) gerçek para işlemez.
 
----
-
-## What it is
-
-Three layers on one VM sharing one state directory:
-
-- **Skill layer** — Claude trading skills (regime, screeners, planners, post-mortem, edge
-  research, meta/skill-authoring), bound into 5 deterministic, auditable pipelines. The live count
-  is served, never written down: `GET /api/public/summary` → `skills_live`; the registry of record
-  is `state/skills_registry.json` (retired entries carry `retired: true`).
-- **Engine layer** — deterministic Python: `strategy.py` (pure signal, closed bars only), `broker.py`
-  (realistic frictions), `backtest.py` (walk-forward OOS — the learning gate), `guard.py` (the real
-  constraint layer), `score.py`, `memory.py`, `rollback.py`, `regime.py`, `health.py`.
-- **Brain layer** — Hermes: reads state, forms one-variable hypotheses, and submits them through the
-  engine's gate. It never edits the strategy by hand.
-- **Control plane** — a FastAPI read-model + dashboard in the Meridian design language.
-
-The product is **the loop, not the alpha**. The engine's job is to make the agent's learning honest:
-realistic frictions, out-of-sample gates, written-back outcomes, automatic rollback. A "score went up"
-is never confused with "an edge was found".
-
-## The learning loop (why this exists)
-
-1. Hermes may **propose** a change every `reflection_every` (5) closed trades.
-2. A change only **ships** if it beats the incumbent on a **walk-forward out-of-sample backtest** by
-   >0.02 AND there are ≥ `min_sample` (30) closed trades. Otherwise it's fitting noise.
-3. Every hypothesis is logged with its prediction. Once enough live trades run under a version, the
-   realised delta is written back and compared to what was predicted (calibration).
-4. If a version underperforms its parent, `rollback.py` reverts it automatically.
-
-Enforcement lives in **code, not prompts**. Everything Hermes is told, `guard.py` enforces.
-
-## Two axes of self-improvement
-
-- **Axis 1 — parameters.** `strategy.yaml` moves inside `bounds.yaml`, gated by the backtest.
-- **Axis 2 — capability.** Hermes may author new skills for itself. Every new/modified skill runs in
-  shadow mode on live data — scored against outcomes, unable to influence a trade — and is promoted
-  only with **explicit human approval** in the dashboard. The agent may never promote its own skill.
-  Shadow mode is a `shadow` flag on the registry entry (`meridian/skills.py`), not a directory; the
-  promotion window is whatever that entry records, so this page states no number.
-
-## Autonomy ladder — how live trading is *earned*
-
-```
-L0  PAPER, FULLY AUTONOMOUS      ← ships today. Human watches. Zero real money.
-L1  LIVE, EVERY ORDER APPROVED   ← every order waits in a queue, expires in 5 min.
-L2  LIVE, AUTONOMOUS             ← real money inside the limits block.
-```
-
-Promotion L0 → L1 requires, and `guard.py` enforces: ≥ 60 closed paper trades · a positive score in
-≥ 2 regimes · max drawdown within `goal.max_drawdown` for the whole paper period · ≥ 3 accepted
-hypotheses whose realised outcome matched their prediction · zero unexplained circuit-breaker trips
-inside the ladder's calendar window (`analytics.LADDER_BREAKER_WINDOW_DAYS`; a *session-count*
-window silently narrowed itself as event volume grew, so the window is days, not rows) · a broker
-key with withdrawals disabled and this VM's IP allow-listed · **two
-env flags flipped by hand** (`MERIDIAN_MODE=live`, `MERIDIAN_I_ACCEPT_RISK=true`) · a phone kill
-switch. Meridian ships at **L0** and never flips a flag itself. The dashboard's **Today** page renders
-exactly how far it is from being trusted with money.
+Ürün **döngünün kendisidir, alfa değil**: gerçekçi sürtünmeler, örneklem-dışı kapılar, geri
+yazılan sonuçlar, otomatik geri alma. "Skor yükseldi" ile "edge bulundu" asla karıştırılmaz.
+Uygulanan her kural **prompt'ta değil kodda** yaşar: Hermes'e söylenen her şeyi `guard.py` zorlar.
 
 ---
 
-## Run it locally
+## Sistem bir bakışta
+
+Tek süreçte (FastAPI) iki döngü + bir kontrol düzlemi; tek durum dizini (`state/`):
+
+- **İşlem döngüsü** — kapanan her XNYS seansında bir kez: veri tazele → rejimi etiketle →
+  kurulumları tara → risk kapıları → GO/REVIEW/NO_GO → Alpaca paper emri → defter.
+- **Öğrenme döngüsü (Hermes)** — tek-değişkenli parametre hipotezleri üretir; hepsi tek kapıdan
+  (`reflect.submit` → `guard` → walk-forward ölçüm → teyit yürüyüşü) geçmeden hiçbir şey ship
+  edilmez; ship sonrası gerçekleşen sonuç tahminle karşılaştırılır, kötüyse otomatik geri alınır.
+- **Kontrol düzlemi** — pano + JSON read-model + HALT/onay yüzeyi (`meridian/api.py`).
+
+Görsel harita: **`workflow-diagram.html`** (etkileşimli; iki kulvar, düğüm başına açıklama,
+log oynatıcı). Modül-modül tam envanter: **`docs/MODUL-ENVANTERI-2026-08-15.md`**.
+
+## Bileşenler — katman katman
+
+96 Python modülü, ~67k satır. Görev cümleleri her modülün kendi başlık docstring'inde yaşar;
+aşağısı anlatı, tam tablo envanterdedir.
+
+**1. Giriş & kadans.** `api.py` FastAPI uygulaması — pano, 77 uç, kimlik doğrulama, HALT/onay
+yazma yüzeyi; 24/7 kadansı uygulama açılışında iki iplikle başlatır: `scheduler.py` (günlük
+döngünün zamanlayıcısı) ve `hermes_runtime.py` (öğrenme bekleme döngüsü). `loop.py` günlük paper
+döngüsünün kendisidir; `intraday_cycle.py` kapanmış-bar gözlem tüketicisi. `run.py` bilinçli bir
+nöbetçi taştır: ikinci bir kadans yasası yaşamasın diye çalışmayı reddeder (tohumlama `--replay`
+yolu yaşar).
+
+**2. Sinyal çekirdeği (saf).** `strategy.py` — I/O'suz, saatsiz, ağsız saf sinyal; yalnız kapalı
+barlar; yürürlükteki kurulum kümesi `strategy.ARMED_SETUPS`'tır (README'ye liste yazılmaz —
+bayatlar). `regime.py` her işlemi trend_up/trend_down/chop/high_vol etiketler; `score.py` PARA-v3
+bileşik skoru; `indicators.py` saf teknik gösterge yaprağı; `earnings.py` kazanç karartması.
+
+**3. Kısıt & yasa katmanı.** `guard.py` gerçek kısıt katmanıdır: öneri doğrulama
+(`validate_change` — tek-değişken şekli, `bounds.yaml` üyeliği, tip/aralık/adım, no-op, kota) ve
+işlem kapısı (`classify_gate` — GO/REVIEW/NO_GO, sektör/ısı tavanları). `health.py` kalp atışı +
+HALT/LEARN_HALT; `codelaw.py` iki statik kod yasasını tarar; `ledgers.py` defter sözleşmeleri;
+`ledgerstamp.py`/`provenance.py` kaynak damgaları; `integrity_registry.py`, `sieve.py`,
+`validation.py` (DSR/PSR + PBO/CSCV), `validation_report.py`, `recompute.py` (aynı soruyu iki
+yoldan cevapla) denetim ailesi.
+
+**4. Öğrenme beyni.** `hermes.py` beyindir: bağlam kurar, LLM zinciriyle (claude → lokal ajan →
+gemini) ya da zincir boşsa determinist `propose_virgin_knob` ile TEK değişkenli öneri üretir;
+arka plan süzgeci sertifika-uyumsuz önerileri ele alır (28a). `reflect.py` tek ship kapısıdır:
+guard → `backtest.walk_forward` (yeniden oynatım, IS/OOS/holdout) → `_gate_eval` ("TEK yasa":
+büyüklük + fold çoğunluğu + kuyruk vetosu + drawdown vetosu; `probgate.py` P(ΔS>0) eşiği, K-sonda
+cezalı) → `oos_pipeline.py` %30 Confirm teyidi (ölçülemeyen onay ship'i BLOKLAR) →
+`versioning.py` sürüm + anlık görüntü → `rollback.py` otomatik geri alma. `memory.py` hipotez
+defteri; `hermes_composite.py` çok-düğmeli fikirlerin ölçüm kuyruğu; `prescreen.py` kapının kendi
+yasasıyla ön eleme; `sprint.py`/`sprint_run.py` kum havuzunda öğrenme antrenmanı; `baseline.py`,
+`threshold_curve.py`, `component_ic.py`, `counterfactual.py`/`cf_backfill.py`, `oos_erosion.py`,
+`mutation.py` (dedektör körlük haritası), `nous_eval.py` (haftalık öz-değerlendirme),
+`shadowlaw.py`, `arming.py`, `selfreview.py`, `agent_telemetry.py`, `spend.py` (LLM bütçe
+bekçisi), `olcum_araclari.py`, `faz5_cikis.py` ölçüm/denetim aileleridir.
+
+**5. Gölge katman (sıfır yetki).** `shadow_model.py` (P(kazanç) damgası), `shadow_variants.py`,
+`shadow_lifecycle.py`, `trend_shadow.py`, `intraday_shadow.py` — hiçbiri canlı karara dokunamaz;
+kendi defterlerinde kanıt biriktirirler.
+
+**6. Beceri katmanı (Eksen-2).** `skills.py` Claude trading becerilerini beş determinist boru
+hattına bağlar; `skill_evolve.py` içerik evrimi; `skill_gorus.py` ön-kayıtlı görüş defteri.
+Beceri sayısı sayfaya yazılmaz: `GET /api/public/summary → skills_live`.
+
+**7. İcra.** `broker.py` gerçekçi sürtünmeli paper broker; `sermaye.py` antrenman tohumu ↔ canlı
+sermaye ayrımı.
+
+**8. Bar / akış altyapısı.** `marketstream.py` Alpaca kapanmış-bar WS dinleyicisi →
+`hotstate.py` (Redis sıcak durum) → `barfeed.py`/`barclock.py` tüketiciler; `bararchive.py`/
+`barsarchive.py` kalıcı arşiv, `barrepair.py` onarım; `mirror_stream.py` emir-durumu aynası;
+`streamhealth.py` WS dinleyicilerinin ortak yasası; `dataset.py` yeniden-oynatım evreninin tek
+yükleyicisi + sabit backtest pencereleri.
+
+**9. Veri kenarı (`adapters/`).** `data.py` günlük OHLCV merkezi (Cboe birincil), `alpaca.py`
+broker adaptörü (paper kilidi; LIVE yolu bayraklar olmadan reddedilir), `massive.py` EOD
+sağlayıcı, `fmp.py` temel veri, `finviz.py` otonom aday kaynağı, `insider.py` Form 4,
+`shortinterest.py` FINRA kısa pozisyon, `edgar_shares.py` as-of hisse sayımı,
+`constituents.py` point-in-time S&P 500 üyeliği. `macro.py`/`news.py` emeklidir (güdük).
+Yasa: kenar katman motoru tanımaz (importlinter sözleşme 1).
+
+**10. Kalıcılık & yapılandırma.** `storage.py` defter çekirdeğinin SQLite arka ucu
+(`state/meridian.db`, WAL; 6 varlık), `store.py` atomik yazım + flock + JSONL, `dbmigrate.py`
+parite kanıtlı göç, `config.py` yol çözümü + değişmez `goal.yaml`/`bounds.yaml` yükleyicisi +
+v01 tohumu.
+
+**11. Gözlem, pano & operasyon.** `obs.py` yapısal JSON olaylar + ALARM_ jetonları;
+`watchdog.py` 15+ dişlinin canlılık bekçisi; `analytics.py` pano read-model'i;
+`marketview.py` evren görüntüsü; `notify.py` operatör bildirimi; `secrets.py`/`auth.py`/
+`auth_cli.py` sır ve kimlik; `mcp_server.py` salt-okunur durumu lokal hermes-ajana MCP olarak açar.
+
+## Durum yüzeyleri
+
+| Yüzey | Ne | Nerede |
+|---|---|---|
+| `state/goal.yaml` | DEĞİŞMEZ hedef/risk sözleşmesi (Hermes dokunamaz) | repo + canlı |
+| `state/bounds.yaml` | Parametre kum havuzu — aramanın sınırları | repo + canlı |
+| `state/strategy.yaml` | Canlı, değişebilir parametre yüzeyi (kapıdan geçen ship'ler yazar) | yalnız canlı |
+| `state/meridian.db` | İşlem/plan/portföy defter çekirdeği (SQLite) | yalnız canlı |
+| `state/hypotheses.jsonl` | Hipotez defteri — kabul VE retler ölçülen sayılarla | yalnız canlı |
+| `state/history/vNNNN.yaml` | Değişmez sürüm anlık görüntüleri | yalnız canlı |
+
+Sayılar (eşikler, tavanlar, pozisyon boyutu) README'ye **bilerek** yazılmaz — adres söylenir,
+değer söylenmez; pano canlı basar. (Bu sayfanın eski sürümleri sabit sayı taşıyıp iki kez
+bayatladı; ders sayfaya işlendi.)
+
+## Disiplin (ölçüm dürüstlüğü)
+
+- **Kart-önce ölçüm:** `research/cards/` ön-kayıt kartı olmadan ölçüm kodu yazılmaz; eşik sonradan
+  değişmez; denenen K, kapının eşiğini yükseltir (çok deneyen daha güçlü kanıt borçlanır).
+- **Tek-değişken yasası:** bir öneri tek parametre değiştirir; bileşikler ship edilmez, ölçüm
+  kuyruğuna gider.
+- **UYDURMA YASAĞI:** ölçülemeyen şey None + nedenidir; "ölçtük, sıfır" ile "ölçemedik" aynı
+  piksele düşemez.
+- **Statik yasalar:** sessiz-yutma işaretli ve gerekçeli (YASA 4), okuyucusuz yazım yok (YASA 6) —
+  `codelaw.py` tarar.
+- **Örneklem hijyeni:** IS / Search-OOS (%70) / Confirm-OOS (%30) / dokunulmaz holdout;
+  fold'lar ve kuyruk riski yalnız Search'te; teyit ortalaması tahmini DEFLATE eder.
+
+## Otonomi merdiveni — canlı işlem *kazanılır*
+
+```
+L0  PAPER, TAM OTONOM            ← bugün burada. İnsan izler. Sıfır gerçek para.
+L1  CANLI, HER EMİR ONAYLI       ← her emir kuyrukta bekler, 5 dk'da düşer.
+L2  CANLI, OTONOM                ← limits bloğunun içinde gerçek para.
+```
+
+L0→L1 terfisini `guard.py` zorlar (yeterli kapalı işlem, ≥2 rejimde pozitif skor, tüm dönem
+drawdown sözleşme içinde, tahmini tutan kabuller, açıklanamayan devre-kesici sıfır, çekimleri
+kapalı broker anahtarı, elle çevrilen iki ortam bayrağı, telefonda kill-switch). Meridian bayrağı
+asla kendisi çevirmez; panonun **Today** sayfası paraya güvenilmekten ne kadar uzak olduğunu basar.
+
+## Çalıştırma (yerel)
 
 ```bash
 uv sync --extra dev
-# seed real state from a historical replay on real bars (Cboe daily OHLCV, no key needed)
-uv run python -m meridian.run --dry-run --replay 2023-01-01:2026-07-10
-# tests (purity, frictions, guard rejections, score=None, rollback)
-uv run pytest -q
-# dashboard (read-only) → http://127.0.0.1:8080
-uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080
-# one live paper cycle
-uv run python -m meridian.run --once
-# THE 24/7 PATH — dashboard + in-process scheduler. `./serve.sh` does exactly this (plus keepalive).
+uv run python -m meridian.run --dry-run --replay 2023-01-01:2026-07-10   # tohumlama (tek seferlik)
+uv run pytest -q                                                          # test paketi (uzun; aşağıya bak)
 MERIDIAN_AUTOSTART_CYCLE=1 CYCLE_POLL_SECONDS=300 \
-  uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080
-# force a reflection cycle (deterministic proposer — no LLM)
-uv run python -m meridian.reflect --auto
+  uv run uvicorn meridian.api:app --host 127.0.0.1 --port 8080            # pano + kadans (serve.sh bunu yapar)
+uv run python -m meridian.reflect --auto                                  # determinist yansıma (LLM'siz)
 ```
 
-> **`python -m meridian.run` is NOT the 24/7 worker (retired 2026-08-02, C3).** Its `worker()` was a
-> *second* implementation of the daily cadence that never ran in production — every real start path
-> (`serve.sh`, `ops/com.meridian.agent.plist`, `deploy/oracle-a1/meridian.service`) has always been
-> uvicorn + the in-process scheduler. Because it never ran, it never got the fixes the scheduler did
-> (session-close definition, `load_live` data path, ladder/repair progress gating). Calling it now
-> refuses loudly and points here; the module docstring in `meridian/run.py` carries the full
-> reasoning and the reversibility note. **Two cadence laws cannot live in one repository.**
+> **DİKKAT:** Canlı sistem A1'de koşarken yerelde `./serve.sh` KOŞMA — çift emir riski
+> (çalışma sözleşmesi: `CLAUDE.md` kural 5). `python -m meridian.run` 24/7 worker DEĞİLDİR —
+> emekli; gerekçe modül docstring'inde.
 
-Config lives in two **immutable** files Hermes may never edit: `state/goal.yaml` (success/failure/risk
-contract) and `state/bounds.yaml` (the parameter sandbox).
+## Dağıtım & operasyon (kanonik yol: Oracle A1)
 
-## Deploy (GCP Compute Engine) — ⚠️ STALE, NOT the canonical path (marked 2026-07-30, K1)
+- **Dağıtım yalnız `./dagit.sh` iledir** ve kapılıdır: temiz-ağaç → `uv audit` → `lint-imports`
+  (5 mimari sözleşme) → rsync kuru-koşum → versiyonlu-state anahtar-düzeyi diff → bakım penceresi
+  (durdur → bayt-doğrulamalı yedek → başlat) → sağlık doğrulaması. **Push dağıtım değildir;
+  parametre değişikliği dağıtım istemez** (kapıdan ship edilir).
+- **A1 üzerinde systemd:** `meridian.service` (uvicorn), `meridian-barsarchive`, gece yedeği
+  (timer), tick-watchdog, litestream; ayrıntı `deploy/oracle-a1/` + `docs/RUNBOOK.md`.
+- **Yedekler:** A1 gece tar'ı → operatör makinesine çekilir (`ops/pull-a1-backups.sh`, LaunchAgent).
+- **Acil durdurma:** panodaki büyük kırmızı düğme = `state/HALT` dosyası; kaldırınca devam eder.
+- `Dockerfile`/`docker-compose.yml`/`deploy.sh` + GCP betikleri **BAYATTIR** (K1, 2026-07-30):
+  geri alınabilirlik için durur; ölçülmüş üç sapması düzeltilmeden kullanılamaz (eski README
+  notu `docs/` denetimlerinde ve dosya başlarında yaşar).
 
-> **Bu bölüm ve `Dockerfile`/`docker-compose.yml` GÜNCEL MİMARİDEN KOPMUŞTUR.** Kanonik dağıtım
-> hedefi **Oracle Cloud A1**'dir: `deploy/oracle-a1/` (+ `RUNBOOK.md`, `meridian.service`), yerel
-> işletim ise `./serve.sh` + `ops/keepalive.sh`. Bu yığın geri alınabilirlik için duruyor; ölçülen
-> üç sapma, kullanılmadan önce düzeltilmelidir:
->
-> 1. **Bağımlılıklar ayrışmış:** `Dockerfile` bağımlılık listesini EL İLE sayıyor ve
->    `pyproject.toml`'a sonradan giren `websockets` ile `redis` orada YOK. Konteyner, intraday
->    (Faz 2–4) ve WS ayna zincirini çalıştıramaz. Liste `pyproject.toml`'dan türetilmeli.
-> 2. **Pano dışarıdan erişilemez:** `docker-compose.yml` uvicorn'u konteyner İÇİNDE `127.0.0.1`'e
->    bağlayıp portu publish ediyor — yayınlanan port konteyner loopback'ine ulaşmaz.
-> 3. **Broker varsayılanı yanlış:** compose `MERIDIAN_BROKER` set etmiyor → `config.py` varsayılanı
->    `internal`. Diğer TÜM başlatma yolları (`serve.sh`, launchd plist, `oracle-a1/meridian.service`)
->    `alpaca_paper` kullanıyor — operatör kararı 2026-07-18. Sessiz bir broker sapması.
->
-> Ayrıca `monitoring.sh` yalnız GCP'de anlamlıdır (bkz. o dosyanın başındaki not) ve **Redis hiçbir
-> ops katmanında kurulmuyor** — A1'e deploy edilirse sıcak-durum zinciri kalıcı `down` başlar.
+## Test & doğrulama
 
-See `deploy/`. In order: `gcp_provision.sh` (VM + Cloud NAT + GCS bucket + Secret Manager, each create
-confirmation-gated and cost-stated), `push_secret.sh` (secrets → Secret Manager, never to disk),
-`deploy.sh` (code → VM over IAP), install the systemd unit (`deploy/meridian.service`), cron
-`state_backup.sh` nightly, `monitoring.sh` for a stale-heartbeat alert, and — **last** —
-`install_hermes.sh`. The dashboard binds to localhost only; reach it over an IAP tunnel:
+- ~5.4k+ test, 319 dosya (`tests/`); adlandırma `test_<konu>_v<N>.py` — N, testin çivilendiği tur.
+  `bounds.yaml` içindeki bazı düğmeler adlı testlerle mühürlüdür (ör. sıfır-etki kablolama çivileri).
+- **Tam paket tek-otoriterdir ve uzundur** (4 çekirdekte ~50 dk): canlı-benzeri `state/` ve yerel
+  servisler ister; taze klonda state-bağımlı aileler düşer (bkz. envanter §5 sınıflandırması).
+- CI (`.github/workflows/ci.yml`) 15 dakikalık sınırıyla tam paketi TAŞIYAMAZ — bugüne dek hiçbir
+  CI koşusu paketi bitirememiştir (zaman aşımı iptali). CI'ı hızlı bir duman alt-kümesine indirmek
+  açık bir iyileştirme adayıdır; karar operatöründür.
+- Hızlı yerel kapı: `ops/kapilar.sh` (lint-imports → audit → kapsam testleri) — tam paketin
+  yerine geçmez.
 
-```bash
-gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE -- -L 8080:localhost:8080
-```
+## Belge haritası
 
-## Day-after check-in
+| Belge | Ne |
+|---|---|
+| `ROADMAP.md` | Planların tek gerçek kaynağı: sözleşme, WP'ler, karar günlüğü, arşiv |
+| `MERIDIAN_ENGINEERING_LOG.md` | "Şu an gerçekte ne var" — her oturum önce bunu okur |
+| `docs/MODUL-ENVANTERI-2026-08-15.md` | 96 modülün katman katman envanteri + doğrulama |
+| `workflow-diagram.html` | Etkileşimli sistem diyagramı (iki kulvar + iç akışlar) |
+| `docs/RUNBOOK.md` | A1 işletim el kitabı (üretilir; `/runbook`'ta servis edilir) |
+| `research/cards/` + `research/olcumler/` | Ön-kayıt kartları + ölçüm kanıtları |
+| `DESIGN.md` / `PRODUCT.md` | Tasarım dili / ürün şeması |
+| `docs/DENETIM-*`, `AUDIT-*` | Denetim ve teşhis ailesi |
 
-```bash
-# heartbeat should be < 2 min old
-gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE --command "cat /opt/meridian/state/heartbeat.json"
-gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE --command "cd /opt/meridian && sudo docker compose ps"
-tmux attach -t hermes            # watch the brain (on the VM); detach with Ctrl-b d
-```
+---
 
-## Emergency stop
-
-```bash
-# stops all new entries within one bar (the big red button on the dashboard does the same)
-gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE --command "touch /opt/meridian/state/HALT"
-# resume
-gcloud compute ssh --tunnel-through-iap $VM_NAME --zone $VM_ZONE --command "rm -f /opt/meridian/state/HALT"
-```
-
-## Locked strategy (this deployment)
-
-S&P 500 · swing momentum · skill evolution on (shadow-mode). Every number of this contract lives in
-config and is **deliberately not copied here**: risk envelope and limits in `state/goal.yaml`
-(`target_return_30d`, `max_drawdown`, `min_sharpe`, `limits.max_open_positions`,
-`limits.max_daily_loss_pct`, `min_sample`, `slippage_bps`), position sizing in
-`state/strategy.yaml` (`position_size_r`). The dashboard renders them live.
-
-> Why no numbers here: this line carried `max drawdown 8% · 5 positions · 1.0R` long after the
-> operator had moved all three (2026-08-12/13). A README cannot go stale relative to a source it
-> never reads — so it states the address, not the value. Same rule as the live skill count above.
-
-FMP and Alpaca keys not yet present — FMP screeners auto-enable when a key lands; until then the
-engine trades on its internal broker using its self-contained momentum-breakout signal.
-
-_Meridian is a research system. Paper mode. Not financial advice._
+_Meridian bir araştırma sistemidir. Paper modu. Yatırım tavsiyesi değildir._
