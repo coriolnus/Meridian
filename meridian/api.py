@@ -3684,8 +3684,9 @@ def _spend_detay() -> dict:
     iki farklı şekilde servis edilmez; yalnız kanonik olan zenginleşir.
 
     HESAP YOK, TOPLAM VAR: `cost_usd`/`in_tokens`/`out_tokens` satırlarda ZATEN yazılı; burada
-    yalnız gruplanıyor. Alanı hiç taşımayan satır o toplama girmez ve `olculemeyen_satir` ile
-    sayılır — eksik alanı 0 saymak "bedava çağrı" demek olurdu."""
+    yalnız gruplanıyor. `cost_usd` alanını hiç taşımayan satır toplama 0 katkısıyla GİRER (ve `n`
+    içinde sayılır), ama ayrıca `olculemeyen_satir` ile beyan edilir: toplam tek başına okunursa
+    "bedava çağrı" gibi görünür, bu yüzden payda (`satir_n`) ve ölçülemeyen sayısı yanında durur."""
     import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
     rows = store.read_jsonl("spend.jsonl")
     if not rows:
@@ -3698,8 +3699,11 @@ def _spend_detay() -> dict:
     def _topla(kume):
         """Bir satır kümesinin n/token/maliyet toplamlarını çıkarır (maliyet 4 haneye yuvarlanır).
 
-        `cost_usd` alanı olmayan satır `olculemeyen` sayacını artırır; ayrıştırılamayan alan o
-        satırı toplama katmaz — eksik alan 0 SAYILMAZ."""
+        SAYIM ÖNCE, AYRIŞTIRMA SONRA: `n` her satır için koşulsuz artar — satır ayrıştırılabilse de
+        ayrıştırılamasa da SAYILMIŞTIR. `cost_usd` alanı None/eksik olan satır ayrıca `olculemeyen`
+        sayacını artırır (sayaç toplamdan BAĞIMSIZ beyan edilir, toplamı kısmaz). Alan bazında:
+        eksik/None alan `or 0` ile 0 EKLENİR; yalnız `float()` ayrıştırması patlayan alan atlanır ve
+        atlanan O ALANDIR, satır değil — satırın öteki alanları toplama girmeye devam eder."""
         nonlocal olculemeyen
         c = {"n": 0, "in_tokens": 0, "out_tokens": 0, "cost_usd": 0.0, "thought_tokens": 0}
         for r in kume:
@@ -3709,7 +3713,7 @@ def _spend_detay() -> dict:
             for alan in ("in_tokens", "out_tokens", "cost_usd", "thought_tokens"):
                 try:
                     c[alan] += float(r.get(alan) or 0)
-                except (TypeError, ValueError):  # sessiz-yutma: dizgi/None token alanı — o SATIR toplama katılmaz ve `olculemeyen_satir` sayacı ayrıca beyan edilir; toplamın kendisi bozulmaz
+                except (TypeError, ValueError):  # sessiz-yutma: sayıya çevrilemeyen (dizgi vb.) alan — `continue` iç döngüdedir, yani yalnız O ALAN atlanır; satır `n` içinde ZATEN sayılmıştır ve `olculemeyen_satir` sayacı ayrıca beyan edilir
                     continue
         c["cost_usd"] = round(c["cost_usd"], 4)
         return c
