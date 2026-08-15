@@ -16,7 +16,7 @@ sızdığı yaşandı; kapı tam onu reddeder, gelecek tarihli `as_of` da bozuk 
 sessiz değildir: bayat/uydurma liste asla servis edilmez, hiçbir kaynak makul liste veremezse []
 döner ve çağıran elle bakımlı evrene düşer. `as_of()`un [] dönüşü "o tarihte kimse yoktu" değil
 "BİLMİYORUZ"dur. YANLIŞLANDI dersleri korunur: pandas 3'te read_html ham HTML dizgesini dosya-yolu
-sanır — girdi io.StringIO ile sarılır ve flavor="lxml" sabitlenir ki tablosuz 403 gövdesi "paket
+sanır ve FileNotFoundError üretir (2026-08-13 ölçümü) — girdi io.StringIO ile sarılır ve flavor="lxml" sabitlenir ki tablosuz 403 gövdesi "paket
 eksik" gibi YANLIŞ sınıf yerine dürüst "No tables found" üretsin; değişiklik-günlüğü tarihleri
 sözlüksel değil ISO'ya çevrilerek karşılaştırılır (aksi PIT kurulumunu tersine çevirmişti) ve
 'nan' hücreleri temizlenir (hayalet 'NAN' sembolü üretmişti).

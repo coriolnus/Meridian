@@ -28,11 +28,11 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 
 #: Denetimin B-2'de saydığı dokuz çağrı yeri — dosya, satır, rol.
 DOKUZ_CAGRI = [
-    ("insider.py", 281, "reader"), ("insider.py", 637, "writer"),
-    ("shortinterest.py", 210, "reader"), ("shortinterest.py", 353, "reader"),
-    ("shortinterest.py", 392, "reader"),
-    ("massive.py", 555, "reader"), ("massive.py", 564, "writer"),
-    ("massive.py", 632, "reader"), ("massive.py", 856, "writer"),
+    ("insider.py", 224, "reader"), ("insider.py", 580, "writer"),
+    ("shortinterest.py", 160, "reader"), ("shortinterest.py", 303, "reader"),
+    ("shortinterest.py", 342, "reader"),
+    ("massive.py", 532, "reader"), ("massive.py", 541, "writer"),
+    ("massive.py", 609, "reader"), ("massive.py", 833, "writer"),
 ]
 
 
@@ -81,7 +81,7 @@ def test_dokuz_store_cagrisi_grafikte_gorunuyor_dosya_ve_satir_duzeyinde():
             f"{d}:{s} yanlış rolde görünüyor"
 
     ev = g["artifacts"]["massive_verify.json"]
-    assert ev["writer_sites"] == ["massive.py:856"] and ev["reader_sites"] == ["massive.py:632"]
+    assert ev["writer_sites"] == ["massive.py:833"] and ev["reader_sites"] == ["massive.py:609"]
 
 
 def test_erisim_deseni_sayimi_store_cagri_bicimini_ADIYLA_raporlar():
@@ -311,7 +311,7 @@ def test_intraday_bars_DECLARED_gorunuyor_desen_katmaninda():
     """B-5'in ölçülen hükmü: yazım SÖKÜLMEDİ, beyan katmanı açıldı. Tarihli ad hâlâ ÇÖZÜLEMİYOR
     (artefakt sözlüğüne girmiyor) ama artık SAHİPSİZ değil."""
     g = codelaw.artifact_graph()
-    assert g["declared_patterns"] == {"intraday_bars/*.jsonl": ["bararchive.py:111"]}
+    assert g["declared_patterns"] == {"intraday_bars/*.jsonl": ["bararchive.py:110"]}
     assert g["orphan_patterns"] == [], "kodda karşılığı olmayan desen beyanı: ölü muafiyet"
 
     kayit = [u for u in g["unresolved"] if u["file"].endswith("bararchive.py")]
@@ -349,7 +349,7 @@ def test_GELECEK_tuketici_iddiasi_yanlis_pozitif_uretmez():
     assert "intraday_bars/*.jsonl" in codelaw.report()["unverifiable_claims"]
 
     spec = codelaw.DECLARED_SINK_PATTERNS["intraday_bars/*.jsonl"]
-    for kanit in ("bararchive.py:111", "_retention", "EXE-2026-002"):
+    for kanit in ("bararchive.py:110", "_retention", "EXE-2026-002"):
         assert kanit in spec["gerekce"], f"beyan ölçülen olguyu anmıyor: {kanit}"
     assert "KALDIRILMALI" in spec["sinanamaz"], "devir şartı yazılmamış"
 

@@ -478,7 +478,7 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
     "intraday_bars/*.jsonl": {
         "sinif": "gelecek_tuketici",
         "gerekce": "DAKİKALIK BAR ARŞİVİ — Faz-5/6 KANIT KORPUSU. YAZAN: `bararchive.archive_frame` "
-                   "(bararchive.py:111, `store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)`), "
+                   "(bararchive.py:110, `store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)`), "
                    "çağıranı `hotstate` — CANLI SICAK YOL, dakikalık. BUGÜN TÜKETİCİSİ YOK ve bu "
                    "ÖLÇÜLMÜŞ bir karardır, ihmal değil: intraday hattı (hotstate → mrd:bars) "
                    "uçucudur (~2 seans TTL), 'dakika-hassas icra EOD'dan gerçekten iyi mi?' sorusu "
