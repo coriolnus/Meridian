@@ -1,50 +1,32 @@
-"""barrepair.py — DİSKTEKİ bar defterlerinden HAYALET SEANS satırlarını temizleyen onarım aracı.
+"""barrepair.py — diskteki bar defterlerinden HAYALET SEANS satırlarını temizleyen onarım/envanter aracı.
 
-NEDEN AYRI BİR ARAÇ VAR (ve neden kapının kendisi yetmiyor):
-`adapters.data.sanitize_bars` kapısı 2026-07-30'da takvim doğrulaması kazandı — o günden sonra
-hiçbir hayalet satır belleğe GİREMEZ. Ama diskte ZATEN duran satırlar ancak o sembol yeniden
-yazıldığında temizlenir; yazım da yalnız kaynak yeni bir bar verdiğinde olur. Yani düzeltmesiz
-bırakılırsa: emekli/bayat semboller hayaleti sonsuza dek taşır, ve `state/bars` üzerinden ÜRETİLMİŞ
-artefaktlar (component_ic, cf defterleri, eşik eğrileri) hangi tabandan çıktığı belirsiz kalır.
-Bu araç migrasyon adımıdır: bir kez koşar, defterleri kapının bugünkü yasasıyla hizalar.
+NE YAPAR: `adapters.data.sanitize_bars` kapısı takvim doğrulaması kazandığından beri hiçbir hayalet
+satır belleğe giremez; ama diskte ZATEN duran satırlar ancak o sembol yeniden yazıldığında temizlenir
+ve emekli/bayat semboller hayaleti sonsuza dek taşırdı — `state/bars` üzerinden üretilmiş artefaktlar
+(component_ic, cf defterleri, eşik eğrileri) hangi tabandan çıktığı belirsiz kalırdı. Bu araç o
+migrasyon adımıdır: defterleri tarar, düşecek satırları sınıflandırır (birebir_kopya / yakin_kopya /
+duz_bar_sifir_hacim / duzeltilmemis_fiyat) ve istenirse kapıdan geçirip atomik yeniden yazar.
+Ölçülmüş taban (sayım, tahmin değil): kapalı 2025-05-26 (Memorial Day) ve 2018-11-22 (Thanksgiving)
+günlerinde toplam 442 hayalet satır; geçerli seanslarda 3 izole düzeltilmemiş satır.
 
-ÖLÇÜLMÜŞ TABAN (2026-07-30, 259 dosya / 1.344.334 satır — sayım, tahmin değil):
-  2025-05-26 (Memorial Day, kapalı) → 258 dosya: 199 birebir kopya, 52 yakın kopya,
-                                       7 bölünme-düzeltilmemiş ham fiyat (BKNG ×25 … DD ×0,333)
-  2018-11-22 (Thanksgiving, kapalı) → 184 dosya: 169 düz bar (hacim 0), 15 ham fiyat
-  Toplam 442 hayalet satır. Geçerli seanslarda izole düzeltilmemiş satır: 3 (CHD/EL/PINS).
+KİLİT GİRİŞLER: scan()/repair() (hayalet temizliği), integrity_scan()/integrity_apply()
+(`--integrity-tara`: satır SİLMEYEN kırılma envanteri), CLI `python -m meridian.barrepair`
+(--uygula / --sembol / --json / --zorla / --integrity-tara).
 
-İKİ KURAL, İKİSİ DE BİLEREK:
-  1. KURU KOŞU VARSAYILANDIR. `--uygula` verilmeden hiçbir bayt yazılmaz; araç yalnız RAPOR basar.
-     Veri silen bir aracın varsayılanının yazmak olması, bu depoda yaşanmış hata sınıfıdır.
-  2. YAZIM SANCTIONED YOLDAN GEÇER. Satır silmek dosyayı KÜÇÜLTÜR ve `watchdog.determinism_report`
-     küçülmeyi haklı olarak "SESSİZ BAR MUTASYONU" sayar — wf-revizyonu bumplanmadıkça. Bu yüzden
-     `data._bump_wf_rev()` İLK YAZIMDAN ÖNCE çağrılır (bugünkü veri turunun `_changed_rows` →
-     `_bump_wf_rev` deseninin aynısı). Erken bump zararsızdır (yalnız önbelleklenmiş walk-forward'ları
-     geçersizler); GEÇ bump ölümcüldür — süreç yazımın ortasında ölürse defterler küçülmüş, revizyon
-     sabit kalır ve dedektör haklı olarak alarm basar.
+DEĞİŞMEZLER: (1) KURU KOŞU VARSAYILANDIR — `--uygula` verilmeden hiçbir bayt yazılmaz; veri silen
+bir aracın varsayılanının yazmak olması bu depoda yaşanmış hata sınıfıdır. (2) YAZIM SANCTIONED
+YOLDAN: satır silmek dosyayı küçültür ve determinizm dedektörü küçülmeyi haklı olarak "sessiz bar
+mutasyonu" sayar — `data._bump_wf_rev()` bu yüzden İLK yazımdan ÖNCE çağrılır (erken bump zararsız,
+geç bump ölümcül: süreç yazım ortasında ölürse defter küçülmüş, revizyon sabit kalır). (3) Canlı
+worker görülürse `--uygula` REDDEDİLİR (`--zorla` ezer): store kilidi süreç-içidir, yazım atomik
+olsa da aynı defteri iki sürecin aynı anda yeniden yazması önlenir. (4) İkinci kusur sınıfı olan
+dönemsel ölçek/kimlik kırılmaları SİLİNMEZ — kırılma satırı yeni ölçeğin ilk barıdır; önceki dönem
+`state/bars_integrity.json`da "ölçüm için güvensiz" damgalanır ve ölçüm yolları (component_ic,
+cf_backfill) o dönemi defterden öğrenip dışlar; bu yazım da wf-revizyonu bumplar.
 
-CANLI WORKER KOŞARKEN KOŞMA: `store` kilidi SÜREÇ-İÇİDİR (bu depoda belgeli). Araç, canlı süreci
-görürse `--uygula`yı REDDEDER (`--zorla` ile ezilir). Yazımın kendisi atomiktir (`data._write_bars`
-→ mkstemp + os.replace), yani okuyucu asla yarım dosya görmez; reddin sebebi yarım dosya değil,
-aynı defteri iki sürecin AYNI ANDA yeniden yazmasıdır.
-
-İKİNCİ MOD — `--integrity-tara` (2026-07-31, hayalet-round-2): satır SİLEN onarımın YANINDA, satır
-SİLMEYEN bir envanter. Ölçüldü ki kapıdan geçen ikinci bir kusur sınıfı var ve o sınıf tek satır
-değil DÖNEMdir: 60 sembolde 97 çözülmemiş ölçek/kimlik kırılması (CHTR ×1158, AVGO ×162, PINS'in
-kuruş "geçmişi", GOOGL ×2,6, RTX ×3,8, ABT/DD/HON spinoff'ları, TDG'nin bozuk kesiti). Bu satırlar
-SİLİNMEZ — yeni ölçeğin İLK barıdır ve silmek geçmişi delik yapar; kırılmadan ÖNCEKİ dönem
-`state/bars_integrity.json` defterinde "ölçüm için güvensiz" damgalanır ve ölçüm yolları
-(`component_ic`, `cf_backfill`) o dönemi DEFTERDEN öğrenip dışlar. Yazım yine SANCTIONED yoldan:
-defter ölçüm evrenini daraltır, bu yüzden wf-revizyonu bumplanır.
-
-KULLANIM:
-    python -m meridian.barrepair                     # kuru koşu — tam envanter
-    python -m meridian.barrepair --json              # aynı rapor, makine-okunur
-    python -m meridian.barrepair --sembol BKNG,ORLY  # yalnız bu semboller
-    python -m meridian.barrepair --uygula            # YAZAR (worker durdurulmuş olmalı)
-    python -m meridian.barrepair --integrity-tara    # kırılma envanteri (satır SİLMEZ)
-    python -m meridian.barrepair --integrity-tara --uygula   # bars_integrity.json YAZAR (TAM evren)
+OKUR/YAZAR: `state/bars/*.csv` defterlerini okur; --uygula ile onları atomik (`data._write_bars`)
+yeniden yazar; --integrity-tara --uygula ile `state/bars_integrity.json` yazar (yalnız TAM evren —
+kısmi tarama, taranmayan sembollerin damgasını silerdi ve reddedilir).
 """
 from __future__ import annotations
 

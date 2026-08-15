@@ -1,22 +1,29 @@
-"""marketstream.py — PİYASA-VERİSİ dinleyicisi: Alpaca dakikalık KAPANMIŞ bar akışı → mrd:bars (Faz 2).
+"""marketstream.py — Alpaca dakikalık KAPANMIŞ bar WS dinleyicisi: piyasa verisi → mrd:bars + sıcak fiyat.
 
-mirror_stream (yürütme) trade_updates taşır; BU katman AYRI bir hosttan (stream.data.alpaca.markets)
-dakikalık kapanmış barları dinler ve `hotstate.ingest_bars` ile Redis Stream'e (mrd:bars) + sıcak
-fiyata yazar. Reconnect/backoff/nabız/down-reassert YASASI `streamhealth.run_stream`ten gelir — KOPYA
-YOK (mirror ile AYNI nesne). Bu modülde yalnız emre-özgü olan var: data URL, batched-array parse,
-`b`→ingest.
+NE YAPAR: mirror_stream (yürütme) trade_updates taşırken BU katman AYRI bir hosttan
+(stream.data.alpaca.markets, `alpaca.data_ws_url(FEED)`) dakikalık kapanmış barları dinler ve her
+WS çerçevesini `hotstate.ingest_bars` ile Redis'e (mrd:bars akışları + mrd:price sıcak fiyat) yazar.
+Bir WS frame'i birden çok mesaj taşıyabilir (karışık sembol/tip) — batched-array parse burada yaşar.
+Reconnect/backoff/nabız/down-reassert YASASI `streamhealth.run_stream`ten gelir, KOPYA YOK (mirror
+ile aynı nesne); bu modülde yalnız akışa-özgü olan vardır: data URL, auth+`bars` aboneliği, `b`→ingest.
 
-LOOK-AHEAD (yapısal): abonelik YALNIZ `bars` kanalıdır. Yalnız `T=="b"` (dakika kapanınca gelen
-TAMAMLANMIŞ bar) ingest edilir; `u`(düzeltme)/`d`(forming günlük)/`t`/`q` ASLA. Forming/partial fiyat
-mrd:price'a/mrd:bars'a yazılmaz. Bar `t` = dakika BAŞLANGICI; close_ts = t+60s (hotstate sözleşmesi).
-mrd:bars backtest/recompute'a ASLA girmez — kalıcı öğrenme kaynağı yine EOD immutable dosya barları.
+KİLİT GİRİŞLER: start()/stop() (idempotent singleton görev), listener(), health() (hiç koşmamışsa
+ok=None — 'unknown ≠ broken'), subscribed_symbols() (açık pozisyonlar → SPY → REPLAY_UNIVERSE;
+pozisyonlar en başta — izlenmeyen pozisyon sıcak-fiyat kör noktasıdır), FEED (MERIDIAN_DATA_FEED,
+varsayılan iex), MAX_SYMBOLS (opsiyonel güvenlik valfi; iex `bars` kanalı sembol-sınırsız).
 
-SAĞLIK UÇUCU (disk YOK, K5): marketstream emir tutmaz, yalnız telemetri; okuyan tek yer aynı süreçteki
-API. Disk bayrağı olmadığından "ölü dinleyici diskte yeşil bırakır" alt-sınıfı YAPISAL olarak yok.
-Tazelik yasası yine geçerli: görev ölürse `checked_at` donar → `ok` False.
+DEĞİŞMEZLER — WS dinleyici ortak yasası + kapalı-bar disiplini: abonelik YALNIZ `bars` kanalıdır ve
+yalnız `T=="b"` (dakika kapanınca gelen TAMAMLANMIŞ bar) ingest edilir; `u`(düzeltme)/`d`(forming
+günlük)/`t`/`q` ASLA — forming/partial fiyat mrd:price'a/mrd:bars'a yazılmaz. Bar `t` = dakika
+BAŞLANGICI; close_ts = t+60s (hotstate sözleşmesi). mrd:bars backtest/recompute'a ASLA girmez —
+kalıcı öğrenme kaynağı EOD immutable dosya barlarıdır. 'alive' yalnız KANITLI olayda (auth'lı /
+abonelik / bar) işaretlenir; auth hatasında (401-404) yanlış anahtarla çekiçleme yok — uzun bekleme.
+Sağlık UÇUCUDUR (persist=no-op, disk bayrağı yok): "ölü dinleyici diskte yeşil bırakır" alt-sınıfı
+yapısal olarak yoktur; görev ölürse checked_at donar → ok False. iex hesap başına TEK data
+bağlantısına izin verir (ikincisi 406) — idempotent singleton çift bağlantıyı yapısal önler.
 
-TEK SAHİP (406): iex hesap başına TEK data bağlantısına izin verir; ikincisi 406. `start()` idempotent
-singleton — çift bağlantı yapısal önlenir.
+OKUR/YAZAR: portfolio.json'ı (abonelik evreni için) okur; Redis'e yalnız hotstate.ingest_bars
+üzerinden yazar (tek yazma yolu); diske hiçbir şey yazmaz.
 """
 from __future__ import annotations
 import asyncio

@@ -1,15 +1,24 @@
-"""barclock.py — Intraday LOOK-AHEAD saati (Faz 4). TEK ortak zaman kaynağı + kapanmış-bar admissibility
-+ NY seans kapıları. (Faz 2'de K6 ile ertelenmişti; intraday-tüketici fazının BİRİNCİ görevi.)
+"""barclock.py — intraday'in TEK ortak zaman kaynağı: kapanmış-bar admissibility + NY seans kapıları.
 
-LOOK-AHEAD YASASININ intraday hâli (Faz 2 look-ahead adverserinin verdiği KESİN kural): bir dakikalık bar
-bir karara ancak `close_ts = parse_utc(t) + 60s` VE `karar_anı >= close_ts` iken girer. `t` dakika
-BAŞLANGICI olduğundan bara `t` anında değil `t+60s` (dakika KAPANIŞI) sonrasında güvenilir — aksi hâlde
-60 sn erken kabul = look-ahead deler. İki damga da BU modülden gelir (tek saat); aksi "aynı zaman iki
-kaynak" ayrışmasıdır (bu kod tabanının baskın kusuru).
+NE YAPAR: dakikalık barların bir karara girip giremeyeceğini tek saatten yargılar. Look-ahead
+yasasının intraday hâli: bir dakikalık bar bir karara ancak `close_ts = parse_utc(t) + 60s` VE
+`karar_anı >= close_ts` iken girer. `t` dakika BAŞLANGICI olduğundan bara `t` anında değil dakika
+KAPANIŞINDAN sonra güvenilir — aksi hâlde 60 sn erken kabul = look-ahead deler. Hem bar damgası hem
+karar anı BU modülden ölçülür; aksi "aynı zamanın iki kaynağı" ayrışmasıdır — bu kod tabanının
+baskın kusur sınıfı.
 
-FAIL-CLOSED: damgasız/biçimsiz bar admissible DEĞİL — bilinmeyen tazelik 'kabul etme' demektir.
+KİLİT GİRİŞLER: now() (tz-aware UTC tek ŞİMDİ), parse_utc(ts) (RFC-3339 → UTC; okunamazsa None),
+close_ts(bar_t), is_admissible / admissible_bars (look-ahead kapısı; liste tek `as_of` ile ölçülür),
+age_s / is_fresh (kapanıştan bu yana bayatlık — bayat kapanmış bar look-ahead güvenli ama karara
+girmemeli), is_market_open / session_date (NY seansı; DST'yi zoneinfo halleder), set_clock /
+reset_clock (YALNIZ test: saat enjeksiyonu), BAR_SECONDS=60.
 
-Saat ENJEKTE edilebilir (set_clock): testler gerçek zamandan bağımsız admissibility doğrular.
+DEĞİŞMEZLER: FAIL-CLOSED — damgasız/biçimsiz bar admissible DEĞİLDİR (bilinmeyen tazelik = kabul
+etme). Bayatlık karşılaştırması da burada yaşar, tüketicilere saçılmaz ("tek saat, tek yer").
+is_market_open tatilleri bilmez ve yalnız kolaylık kapısıdır; look-ahead güvenliği is_admissible'a
+dayanır.
+
+OKUR/YAZAR: hiçbir şey — saf zaman/aritmetik modülüdür; Redis'e, diske ve ağa dokunmaz.
 """
 from __future__ import annotations
 import datetime as dt

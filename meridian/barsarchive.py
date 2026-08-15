@@ -1,73 +1,34 @@
-"""barsarchive.py — `mrd:bars:{T}` akışlarının DAYANIKLI disk arşivi (Faz 5 ham maddesi, 2026-07-29).
+"""barsarchive.py — `mrd:bars:{T}` akışlarının DAYANIKLI disk arşivcisi (kanıt katmanının ham maddesi).
 
-NE YAPAR: `mrd:bars:*` Redis Stream'lerini KENDİ consumer-group'uyla okur ve her kapanmış dakikalık
-barı `state/bars_intraday/YYYY-MM-DD.jsonl` içine BİR SATIR olarak düşürür. Diske yazım fsync'lenip
-BAŞARILI olduktan SONRA XACK atar — arada çökerse giriş PEL'de kalır, yeniden teslim edilir ve
-(ticker,t) tekilleştirmesi çift satırı düşürür. Yani en-az-bir-kez teslim + idempotent yazım =
-pratikte tam-bir-kez arşiv.
+NE YAPAR: `mrd:bars:*` Redis Stream'lerini KENDİ consumer-group'uyla (GROUP="archive") okur ve her
+kapanmış dakikalık barı `state/bars_intraday/YYYY-MM-DD.jsonl` içine bir satır olarak düşürür.
+`mrd:bars` bir RING'tir (BARS_MAXLEN=900, BARS_TTL_S≈2 seans) — TTL sonrası o dakika YOKTUR;
+"dakika-hassas icra EOD'den iyi mi?" sorusu ancak geçmiş çerçeveler birikmişse cevaplanır, arşiv bu
+yüzden ölçümden ÖNCE açılır. Ayrıca `summary()`/`render_summary()` arşiv istatistiği ile `gap_scan()`
+seans-içi kesinti/boşluk dedektörünü (SAF ölçüm; kaydı çağıran scheduler yapar) barındırır.
 
-NEDEN ŞİMDİ: `mrd:bars` bir RING'tir — `BARS_MAXLEN=900`, `BARS_TTL_S=172800` (~2 seans). TTL sonrası
-o dakika YOKTUR. "Dakika-hassas icra EOD icradan gerçekten daha mı iyi?" sorusu ancak GEÇMİŞ dakikalık
-çerçeveler birikmişse cevaplanabilir; birikim bugün başlamazsa üç ay sonra üç aylık olmaz. Arşiv bu
-yüzden ölçümden ÖNCE açılır — veri birikimi bileşik getirir, ölçüm sonradan gelir.
+KİLİT GİRİŞLER: BarsArchiver.poll() (tek tur; Redis yoksa None — "bar yoktu" ile "Redis yok" aynı
+değer olamaz) / run() (uzun koşu), summary(), gap_scan(), CLI: `python -m meridian.barsarchive`
+(--ozet / --bosluk / --once). Şema üreticiden TÜRETİLİR: BAR_FIELDS = hotstate._BAR_FIELDS,
+ayrıştırma hotstate._bar_parse — alan listesi burada kopyalanmaz.
 
---------------------------------------------------------------------------------------------------
-CONSUMER-GROUP İZOLASYON KANITI (varsayım değil, Redis semantiği + bu depodaki olgular)
---------------------------------------------------------------------------------------------------
-1) FARKLI ANAHTAR. `barfeed.py`'nin grubu (`GROUP = "meridian-intraday"`) `mrd:barfeed` anahtarı
-   üzerindedir (hotstate.BARFEED). BU modülün grubu (`GROUP = "archive"`) `mrd:bars:{TICKER}`
-   anahtarları üzerindedir. Ortak anahtar YOK → ortak PEL, ortak last-delivered-id YOK. barfeed'in
-   ACK'ine dokunmak yapısal olarak imkânsızdır: bu modül `mrd:barfeed`e HİÇ komut göndermez.
-2) AYNI ANAHTARDA OLSAYDI BİLE İZOLE OLURDU. Redis'te consumer-group durumu (last-delivered-id +
-   PEL) GRUP BAŞINADIR. Bir grubun XREADGROUP/XACK'i başka bir grubun teslim konumunu ilerletmez;
-   XADD her gruba bağımsız teslim eder. Yeni grup eklemek mevcut tüketicileri ETKİLEMEZ.
-3) MEVCUT `mrd:bars` OKUYUCULARI GRUP KULLANMIYOR. `hotstate.read_bars` XREVRANGE, `hotstate.bars_len`
-   XLEN kullanır — ikisi de grup-farkında DEĞİLDİR: ne PEL'e yazarlar ne ondan okurlar. Bu modülün
-   grubu onların gördüğü veriyi değiştirmez (XREADGROUP giriş SİLMEZ; ring'i yalnız MAXLEN budar).
-4) YAZMA YOK. Bu modül `mrd:*` altında YALNIZ üç komut çalıştırır: SCAN (keşif), XGROUP CREATE
-   (yalnız kendi grubu), XREADGROUP/XACK (yalnız kendi grubu). Hiçbir XADD/DEL/EXPIRE yoktur —
-   canlı worker'ın yazdığı akışa dokunmaz.
+DEĞİŞMEZLER (atomik arşiv): SIRA fsync → XACK. Yazım başarısızsa ACK ATILMAZ; giriş PEL'de kalır,
+yeniden teslim edilir ve diskten kurulan (ticker,t) günlük tekilleştirme kümesi çift satırı düşürür —
+en-az-bir-kez teslim + idempotent yazım = pratikte tam-bir-kez arşiv. Grup `id="0"` ile kurulur
+(barfeed'in "$" tetiğinden bilerek farklı: arşiv ring'de duran geçmişi de kurtarır, tetik replay
+etmez). barfeed'den tam izole: farklı anahtar + grup durumu Redis'te grup başınadır; `mrd:*` altında
+yalnız SCAN / XGROUP CREATE / XREADGROUP / XACK koşar, hiçbir XADD/DEL/EXPIRE yok — canlı worker'ın
+akışına dokunmaz. TTL'li anahtarda grup ölümü (hafta sonu anahtar silinir, ilk bar grubu olmadan
+yeniden yaratır) NOGROUP onarımıyla kendini toparlar; onarım sayılır ve uyarıyla görünür kılınır.
+`t`siz giriş kimliksizdir: sayılır, ACK'lenir (sonsuz yeniden-teslim kilidi olmasın). Seans dışında
+bekleme sunucu tarafındadır (XREADGROUP BLOCK); hiç akış yokken ucuz `idle_s` uykusu vardır.
 
-BAŞLANGIÇ KONUMU `id="0"` (barfeed'in `"$"`inden BİLEREK FARKLI): barfeed bir TETİKTİR, geçmişi
-replay etmek yanlış olurdu ("60 dakika önceki bar için şimdi karar uyandır" saçmadır). Bu ise bir
-ARŞİVDİR: ilk koşuda ring'de HÂLÂ duran ~2 seansı da diske almak, kaybedilecek kanıtı kurtarır.
-Tekilleştirme zaten çift satırı imkânsız kıldığı için replay bedelsizdir.
-
---------------------------------------------------------------------------------------------------
-YAZAR TEKLİĞİ — `state/bars_intraday/`
---------------------------------------------------------------------------------------------------
-Bu dizine YALNIZ bu modül yazar. Depoda başka hiçbir modül `bars_intraday` adını üretmez
-(tests/test_barsarchive_v116.py bunu her koşuda kaynak taramasıyla ÇİVİLER — iddia değil, test).
-Dizin YENİDİR; mevcut hiçbir okuyucunun beklentisini değiştirmez.
-
-KOMŞU MODÜLLE İLİŞKİ — `bararchive.py` (DİKKAT: ad bir harf farkla benzer, kasıtlı DEĞİL, devralındı):
-`bararchive.py` AYRI ve DAHA ESKİ bir yoldur: `hotstate.ingest_bars` içinden SATIR-İÇİ çağrılır ve
-`state/intraday_bars/` altına ÇERÇEVE-şekilli satırlar (`{ts, bars:{ticker:bar}}`) yazar. İkisi aynı
-olguyu farklı yollardan saklar ve BİLEREK yan yana durur, çünkü dayanıklılıkları farklıdır:
-  - `bararchive` yazımı BİR KEZ dener; istisnayı yutup False döner (ingest'i düşürmemek için doğru
-    karardır) — ama o çerçeve o an yazılamazsa TEMELLİ kaybolur. Yeniden deneme yoktur.
-  - BU modül Redis ring'ini kaynak alır: yazım başarısızsa ACK ATMAZ, giriş PEL'de kalır ve sonraki
-    turda yeniden denenir. Arşivci saatlerce düşse bile ring'de duran (~2 seans) her şeyi kurtarır.
-İki arşivin BİRLEŞTİRİLMESİ (ya da `bararchive`ın emekliye ayrılması) bir MİMARİ karardır ve Rol 1'e
-aittir; bu tur onu ALMAZ ve `bararchive.py`/`hotstate.py` dosyalarına DOKUNMAZ. Sapma raporlanmıştır.
-
---------------------------------------------------------------------------------------------------
-YASA 6 (üretilip tüketilmeyen artefakt) — BUGÜNKÜ TÜKETİCİ
---------------------------------------------------------------------------------------------------
-Bugünkü tüketici `python -m meridian.barsarchive --ozet` (gün/satır/sembol istatistiği) ve
-tests/test_barsarchive_v116.py'dir. api/pano bağlantısı BU TURA ALINMADI ve bu bir ihmal değil
-BEYANDIR: `api.py` ve `web/app.js` şu anda PARALEL bir ajanın (G2 skor turu) yüzeyindedir; aynı
-dosyaya iki yazar = çakışma. Bağlantı SONRAKİ tura ertelendi. YASA 6'nın yasakladığı şey kimsenin
-BİLMEDEN bıraktığı okunmayan artefakttır; bilinen, ölçülebilen ve CLI'dan okunan bir artefakt değil.
-
-CODELAW: yazım `store.*` üzerinden DEĞİL, doğrudan `open()`+`fsync` ile yapılır (ACK'ten önce
-dayanıklılık gerekir; `store.append_jsonl` fsync ETMEZ). Bu yüzden `codelaw.artifact_graph`'ın
-WRITE_CALLS tarayıcısı burada bir artefakt GÖRMEZ — `DECLARED_SINKS`'e satır eklenmez ve gerekmez
-(zaten tarihli f-string ad `unresolved`a düşerdi; bkz. bararchive.py'deki 2026-07-27 ölçümü).
-
-SEANS DIŞI: akış boştur. Bekleme SUNUCU TARAFINDA yapılır (XREADGROUP BLOCK) — istemci meşgul döngü
-kurmaz. Hiç `mrd:bars:*` anahtarı yoksa XREADGROUP'a verilecek akış da yoktur; o durumda ucuz bir
-`idle_s` uykusu vardır (varsayılan 5 sn) ve Redis'e tur başına yalnız bir SCAN gider.
+OKUR/YAZAR: `mrd:bars:{T}` akışlarını okur/ACK'ler; `state/bars_intraday/*.jsonl`e doğrudan
+open()+fsync ile yazar (store.append_jsonl fsync etmez — ACK öncesi dayanıklılık şart; bu dizine
+YALNIZ bu modül yazar, tests/test_barsarchive_v116.py bunu kaynak taramasıyla çiviler). Komşu
+`bararchive.py` (ad benzerliği devralındı) AYRI ve daha eski yoldur: ingest içinden çerçeve-şekilli
+satırları BİR KEZ dener, başarısızsa çerçeve temelli kaybolur; bu modül ring kaynaklı olduğundan
+yeniden dener — ikisi bilerek yan yana durur, birleştirme/emeklilik ayrı bir mimari karardır.
 """
 from __future__ import annotations
 

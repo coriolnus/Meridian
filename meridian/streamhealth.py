@@ -1,20 +1,32 @@
-"""streamhealth.py — WS DİNLEYİCİLERİNİN ORTAK YASASI (2026-07-23, Faz 2).
+"""streamhealth.py — WS dinleyicilerinin ORTAK YASASI: bayatlık/nabız/backoff/down-reassert/reconnect.
 
-TEK KAYNAK: bayatlık/nabız/backoff/down-reassert/reconnect disiplini burada YAŞAR ve hem
-`mirror_stream` (yürütme: trade_updates) hem `marketstream` (piyasa verisi: dakikalık bar) onu
-İÇE AKTARARAK kullanır — `mirror_stream.next_backoff IS streamhealth.next_backoff` (aynı nesne).
+NE YAPAR: bir WebSocket akışının sağlık disiplini burada TEK yerde yaşar ve hem `mirror_stream`
+(yürütme: trade_updates) hem `marketstream` (piyasa verisi: dakikalık bar) onu İÇE AKTARARAK
+kullanır — `mirror_stream.next_backoff IS streamhealth.next_backoff` (aynı nesne). Neden ayrı modül
+(operatör kararı — ERADİKASYON, hafifletme değil): bu kod tabanının baskın kusuru "aynı yasanın iki
+uygulaması, sessizce ayrışmış"tır; mirror'ın 54→2 `down` kusuru (kopuş saati her turda sıfırlanıyor,
+"ne kadardır kopuk" yalnız son uykuyu ölçüyordu) tam da bu durumsal yasada yaşadı. İkinci akış onu
+kopyalasaydı en riskli kodu korumasız ikiye bölerdik; tek nesne divergence'ı yapısal imkânsız kılar
+(`test_streamhealth_parity_v84` bunu kimlik `is` + AST-yokluk taramasıyla kilitler).
 
-NEDEN AYRI MODÜL (operatör mandası — ERADİKASYON, hafifletme değil): bu kod tabanının baskın kusuru
-"aynı yasanın İKİ uygulaması, sessizce ayrışmış"tır. mirror_stream'in 54→2 `down` kusuru (kopuş saati
-her turda sıfırlanıyordu) tam da bu DURUMSAL yasada yaşadı. İkinci bir akış (marketstream) o yasayı
-KOPYALASAYDI, en riskli kodu korumasız ikiye bölerdik. Ayrıştırma divergence'ı YAPISAL olarak imkânsız
-kılar: iki tanım yok, tek nesne var. `test_streamhealth_parity_v84` bunu kimlik (`is`) + AST-yokluk
-ile kilitler (kopya yeniden-girerse tarayıcı işaretler).
+KİLİT GİRİŞLER: StreamHealth (set_stream: durum KENARI, yalnız değişimde kayıt; touch: NABIZ —
+damgayı tazeler + süregelen kopuşu DOWN_REASSERT_S'te bir yeniden basar; hydrate: bayat stream_ok
+taze nabız yoksa false'a çekilir — "3 gün eski damgayla ilk saniyeden yeşil" kusuru),
+run_stream(spec) (ortak reconnect sürücüsü; spec = stop_event/health/url()/session(ws, mark_alive)/
+on_grace_exceeded()/pause()), next_backoff (saf; DNS düşmüşse taban DNS_BACKOFF_FLOOR),
+health_snapshot / decay_stale_flag (ham bayrak × nabız tazeliği), sabitler: HEARTBEAT_S,
+STALE_AFTER_S, DOWN_REASSERT_S, GRACE_SECONDS, BACKOFF_START/MAX.
 
-SINIR: store/disk BİLMEZ. Kalıcılık, StreamHealth'e enjekte edilen `persist` geri-çağrısıyla gelir —
-mirror'da `write_json` (yürütme gerçeği restart-güvenli olmalı; loop.py `pending_symbols`'ı süreç-DIŞI
-okur), market'ta `no-op` (piyasa verisi UÇUCU; okuyan tek yer aynı süreçteki API). Disk-vs-bellek farkı
-TEK parametre; yasa hâlâ tek.
+DEĞİŞMEZLER: 'up' soket açılınca DEĞİL, sunucudan ilk KANITLI (auth'lı) veri gelince basılır —
+kabul edilip hemen kapatılan soket canlı okunmaz. Kopuş saati tur başında sıfırlanmaz; kesinti
+boyunca AYNI saat. Nabız bağımsız görevdedir (olay akışına bağlansa sakin bir gün "akış öldü"
+okunurdu); damga donarsa okuyucular STALE_AFTER_S sonra bayrağı yeşil saymaz. Ham `stream_ok`
+tek başına okunmaz — health_snapshot nabızla çarpar.
+
+OKUR/YAZAR: store/disk BİLMEZ — kalıcılık StreamHealth'e enjekte edilen `persist` geri-çağrısıdır
+(mirror'da write_json: yürütme gerçeği restart-güvenli; market'ta no-op: telemetri uçucu). Olaylar
+`{prefix}_up/_down/_stale_flag/...` adlarıyla obs defterine yazılır; disk-vs-bellek farkı tek
+parametre, yasa hâlâ tek.
 """
 from __future__ import annotations
 import asyncio

@@ -1,6 +1,34 @@
-"""dataset.py — shared loader + backtest windows for the replay universe. One place so reflect.py
-and run.py evaluate on identical data/splits. Warmup year (2021) precedes the IS window so the
-252-day trend template is valid from the first tradable day."""
+"""dataset.py — replay evreninin ORTAK yükleyicisi + backtest pencere sabitleri.
+
+NE YAPAR: bar verisini ve pencere/dilim tanımlarını TEK yerde toplar ki reflect ve run birebir aynı
+veri ve aynı bölmeler üzerinde değerlendirsin. Isınma yılı (2021) IS penceresinin önündedir — 252
+günlük trend şablonu ilk işlem gününden itibaren geçerli olsun. Endeks (SPY) serisi sert bütünlük
+kapısından geçemezse ve elde iyi bir süreç-içi kopya yoksa IndexUnavailable FIRLATILIR: boş endeksle
+devam etmek "veri yok" demek değil, bilinmeyen bir rejimi UYDURMAK olurdu (uydurma yasağı).
+
+KİLİT GİRİŞLER: load() (replay evreni: bars_by_ticker + index_bars, süreç-içi önbellekli),
+load_live() (canlı tarama: REPLAY_UNIVERSE + Finviz keşfi; `session` yalnız KAPANMIŞ seans için
+aynı-akşam bacağını açar), load_cached() (ağa hiç çıkmadan yalnız diskteki CSV önbelleğinden —
+havuz işçileri birbirinin barlarını yeniden yazmasın, tüm walk-forward'lar aynı donmuş barları
+görsün), fetch_end() (çağrı başına BUGÜN; import anında donmuş sabit uzun ömürlü süreçte
+zamanlayıcıyı kalıcı kilitlemişti), pencere sabitleri: FETCH_START, IS_START, OOS_START, OOS_END,
+HOLDOUT_END (DONMUŞ — yuvarlanırsa aşınma parmak izi her gün değişir ve aşınma sayacı birikemez;
+insana-rapor tazeliği holdout_report_end()'te), OOS_FOLDS + EMBARGO_DAYS (purged/embargolu ardışık
+fold'lar), ROTATION_ID/PENCERE_ID + PENCERE_KIYAS_UYARISI + ARSIV_GEOMETRILER (pencere rotasyonu:
+eski geometri arşivlenir, silinmez; farklı geometrilerin skorları habersiz kıyaslanamaz).
+
+DEĞİŞMEZLER: walk-forward bölmeleri SABİTTİR (bugünü izlemez) — kapı tekrarlanabilir, holdout donmuş
+ve yeniden-değerlendirilmeyen bir pencere kalır. LOOK-AHEAD KARANTİNASI: Finviz'in bugünkü listesi
+geçmişe uygulanamaz — genişletme load()'a değil load_live'a konur ve `_cache`'i KİRLETMEZ (yeni
+sözlük döner); aksi hâlde canlı tur cache'i genişletir ve gelecek bilgisi replay'e sızardı. Bozuk
+endeks asla önbelleğe çivilenmez; geçici kesintide son iyi süreç-içi kopya servis edilir. Okunamayan
+ticker SESSİZCE düşmez — ticker başına bir kez uyarı yazılır. Emekli (delist) semboller keşiften
+evrene geri giremez ve eleme sebebiyle birlikte kayda geçer.
+
+OKUR/YAZAR: adapters.data üzerinden state/bars/*.csv önbelleğini okur (load fetch edebilir,
+load_cached asla etmez); kendisi diske yazmaz — yazım adapters.data'nın işidir; olaylar obs
+defterine düşer.
+"""
 from __future__ import annotations
 import datetime as dt
 import pandas as pd
