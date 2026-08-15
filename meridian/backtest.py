@@ -1,11 +1,25 @@
-"""backtest.py — walk-forward out-of-sample engine. THE learning gate. Replays through the exact
-same strategy.py + broker.py used live, so backtest numbers are honest (§4).
+"""backtest.py — walk-forward simülasyon motoru: öğrenme kapısının tek ölçüm zemini.
 
-Event ordering per trading day D (no look-ahead — decisions use bars <= D, executions at D+1 open):
-  1. OPEN(D):   execute time-stop/regime-flip exits flagged at D-1 close; fill entries armed at D-1 close
-  2. INTRADAY(D): gap-aware touch exits (stop/trail/target) for all open positions, using levels set <= D-1
-  3. CLOSE(D):  update trailing stops; recompute regime; scan + rank new entry signals; arm for D+1
-"""
+Ne yapar: Canlının kullandığı strategy.py + broker.py'nin BİREBİR aynısıyla geçmiş barlar üzerinde
+gün gün replay koşar — backtest sayılarının dürüstlüğü bu ortaklıktan gelir. Seans başına olay
+sırası ileri-bakışı yapısal olarak engeller (kararlar <=D barlarıyla, icra D+1 açılışında):
+  1. OPEN(D):    D-1 kapanışında işaretlenen çıkışlar icra edilir; D-1'de silahlanan girişler dolar
+  2. INTRADAY(D): gap'e duyarlı dokunma çıkışları (stop/trail/target), yalnız <=D-1 kurulmuş seviyelerle
+  3. CLOSE(D):   trail güncellenir, rejim yeniden hesaplanır, yeni sinyaller taranır, D+1 için silahlanır
+
+Kilit girişler: `replay(params, bars, index_bars, goal, start, end, ...)` → BacktestResult
+(trades/equity/plan_log/candidate_log/entry_rejects); `walk_forward(...)` tek replay'i IS/OOS/holdout
+dilimlerine puanlayıp kapının okuduğu sözlüğü döner; `segment_score` dilim puanı,
+`balanced_fold_bounds` işlem-sayısı-dengeli fold kesimi, `holding_day_r_curve` ve `mtm_dd_veto`
+salt-rapor eğrileri (hüküm vermezler).
+
+Değişmezler: dilim üyeliği yarı-açık [lo, seg_end) + "kapanışı dilim içinde" — sınır işlemi iki
+dilimde sayılamaz, dilim sonrası fiyat hareketinin K/Z'si dilim skoruna sızamaz; ambargolu alt sınır
+büyüklük kapısına ve kuyruk vetosuna AYNI uygulanır (iki bacak farklı popülasyon göremez); arama
+yasasının gördüğü fold ve kuyruk YALNIZ Search-OOS'tan hesaplanır (Confirm sızıntısı kapalı); donmuş
+holdout yalnız insana raporlanır, hiçbir kabul kararını etkilemez. Replay'de PIT kazanç takvimi yok:
+karartma kapısı "olculemedi_replay" beyanıyla susar — bugünün takvimi tarihsel plana uygulanmaz.
+Saf hesap: state'e yazmaz; bar/goal okur, uyarılar obs'a bir kez düşer."""
 from __future__ import annotations
 from dataclasses import dataclass
 import pandas as pd

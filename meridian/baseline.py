@@ -1,21 +1,29 @@
-"""baseline.py — EBEVEYN SÜRÜMÜN TABANINI GERÇEKTEN ÖLÇ (2026-07-26).
+"""baseline.py — ebeveyn sürümün tabanını UYDURMADAN ölçmek: backfill + like-for-like would-have kıyası.
 
-Neden var: `rollback.evaluate_outcomes` bugün `no_parent_score` ile açık duruyor. v4'ün ebeveyni
-v3'ün karnede ne satırı ne skoru var (re-seed kanıtı yeniden üretir, ata satırı yalnız KARARI taşır
-ve skor alanı bilerek boştur — bkz. `run._ancestor_from_history`). Taban yoksa delta yoktur; delta
-yoksa hiçbir hipotez terminale ulaşmaz ve kalibrasyon n=0 kalır.
+Ne yapar: Öğrenme döngüsü ebeveyn skoru olmadan kapanamaz — taban yoksa delta yoktur; delta yoksa
+hiçbir hipotez terminale ulaşmaz ve kalibrasyon n=0 kalır (re-seed sonrası ebeveynin karnede ne
+satırı ne skoru olabilir). Bu modül tabanı UYDURMAZ, ÖLÇER: ebeveynin state/history/vNNNN.yaml
+anlık görüntüsündeki parametreleri, adayın geçtiği kapının GÖRDÜĞÜ walk-forward'ın birebir
+aynısından geçirir (aynı bar seti, aynı pencereler, aynı fold/ambargo). Ayrıca geri-alma kararının
+simetrik kıyasını kurar; eski kıyas YANLIŞLANDI: çocuğun canlı skoru ile ebeveynin backtest OOS
+skoru üç ayrı eksende (dönem, motor, yıllıklandırma) ayrışıyordu ve ölçülen sapma geri-alma
+eşiğinin iki katıydı — karar beceriyi değil takvimi ölçüyordu.
 
-Bu modül tabanı UYDURMAZ, ÖLÇER: ebeveynin `state/history/vNNNN.yaml` anlık görüntüsündeki
-parametreleri, adayın geçtiği kapının GÖRDÜĞÜ walk-forward'ın BİREBİR aynısından geçirir
-(`reflect._submit_locked` ile aynı düzen: aynı bar seti, aynı pencereler, aynı fold/ambargo).
+Kilit girişler: `would_have_replay(version, parent, goal, eval_regime)` — ebeveyn parametrelerini
+çocuğun CANLI DÖNEMİNDE replay eder ve iki tarafı da AYNI backtest.segment_score penceresiyle
+puanlar (dönem + yıllıklandırma eksenleri kapanır); kapanmayan motor ekseni gizlenmez, üçüncü
+bacakla ölçülür: motor_sapmasi = çocuk_replay − çocuk_canlı. `measure_parent_baseline(publish)` —
+ebeveyni walk-forward'dan geçirir, hükmünü verir, yalnız istenirse karneye yazar.
 
-ÜÇ AYRI ŞEY, ÜÇ AYRI KARAR:
-  1. ÖLÇMEK — her zaman yapılır, hiçbir yere yazmaz.
-  2. HÜKÜM — ölçüm KARŞILAŞTIRILABİLİR mi? Bir sayının var olması, onun ebeveyn tabanı olarak
-     kullanılabileceği anlamına gelmez (aşağıdaki `verdict`).
-  3. YAYINLAMAK — karneye yazmak AYRI bir bayrak ister (`publish=True`). Ölçmek yayınlamak değildir;
-     yayınlanan taban, canlı sürümün otomatik geri alınmasına yol açabilecek bir KARAR girdisidir.
-"""
+Değişmezler: ölçmek / hüküm / yayınlamak ÜÇ AYRI karardır — bir sayının var olması taban olarak
+kullanılabileceği anlamına gelmez (verdict: olculebilir | olculemez_orneklem | olculemez_frekans;
+would-have'de olculdu | olculemez_pencere | olculemez_replay). Ölçülemeyen hâlde delta UYDURULMAZ:
+None + neden döner ve çağıran eski yola damgayla düşer. Frekans oranı FREQ_RATIO_MAX'ı aşarsa delta
+beceri değil işlem sıklığı ölçer — skor karneye YAZILMAZ. Karar yolunda ağa çıkılmaz
+(dataset.load_cached: determinizm + kararın kendi verisini değiştirmemesi); canlı worker koşarken
+yayın reddedilir (kilitsiz karne yazımı worker satırını ezebilir). Okur: history anlık görüntüleri,
+trades.jsonl, bar önbelleği; yazar: yalnız publish=True ile karne satır alanları
+(versioning.set_row_fields — current_version'a dokunmaz)."""
 from __future__ import annotations
 import datetime as dt
 import os

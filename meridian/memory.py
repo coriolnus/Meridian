@@ -1,12 +1,28 @@
-"""memory.py — the thing that makes it actually learn. Records every hypothesis with its full
-lifecycle, closes the loop by writing the realized score delta back onto the hypothesis once
-min_sample trades have run under a version, and distills lessons.md into blunt reusable lines.
+"""memory.py — hipotez defteri ve damıtılmış dersler: sistemi gerçekten öğrenir kılan katman.
 
-hypothesis schema (§4):
-  {id, ts, version_from, version_to, variable, old, new, rationale, predicted_direction,
-   confidence, regime, status, predicted_delta?, realized_delta?, backtest?}
-status ∈ {proposed, rejected_by_guard, rejected_by_backtest, live, promoted, rolled_back}
-"""
+Ne yapar: Her hipotezi tam yaşam döngüsüyle kaydeder; bir sürüm altında min_sample işlem birikince
+gerçekleşen skor farkını (realized_delta + calibration_hit) ship eden hipoteze geri yazarak öğrenme
+döngüsünü kapatır; defteri lessons.md'ye kaba, yeniden kullanılabilir satırlar hâlinde damıtır —
+o dosya her reflection'a enjekte edilir ki ajan çıkmaz sokakları tekrarlamasın.
+
+Hipotez şeması: {id, ts, version_from, version_to, variable, old, new, rationale,
+predicted_direction, confidence, regime, status, predicted_delta?, realized_delta?, backtest?}.
+status LEGAL_STATUS kümesinden gelir; TERMINAL_STATUS'ten geri dönüş yoktur.
+
+Kilit girişler: `record(hyp)` deftere ekler (kimlik/ts otomatik) ve yüksek-su işaretini yazar;
+`next_id()` SAF sorgu — en büyük mevcut numara ile ayrı dosyadaki monoton işaretin üstünden verir;
+`update_status(hyp_id, status, **extra)` geçiş yasasını uygular; `writeback_outcome(version_to,
+realized_delta, detail)` gerçekleşen sonucu hipoteze yazar; `accepted_this_month()` aylık
+aşırı-uyum kotasının sayacı; `distill_lessons()` lessons.md'yi defterden yeniden üretir.
+
+Değişmezler: hipotez kimliği ASLA yeniden kullanılmaz — defter kısalsa da tamamen boşalsa da
+(monoton yüksek-su işareti; iki farklı hipotez aynı kimliği taşıyamaz); terminal statüden geri
+dönüş REDDEDİLİR ve status_ts yalnız gerçek geçişte damgalanır (nötr tazeleme ship tarihini ve
+kota izini yeniden yazamaz); promoted bir hipotezin kaydedilmiş sonucu tek yönlü kilitlidir
+(sonraki piyasa sürüklenmesi kalibrasyonu ileri-geri çeviremez); defterin bütün mutasyonları tek
+kilit (_HYP_LOCK) altındadır — append ile tam-dosya yeniden yazım ayrı daemon thread'lerde yarışır
+ve kilitsiz araya girme yeni ship'lenmiş bir satırı kalıcı silebilirdi. Okur/yazar:
+hypotheses.jsonl, hypothesis_id_hwm.json, lessons.md (atomik tek kapı: store)."""
 from __future__ import annotations
 import datetime as dt
 import threading

@@ -1,36 +1,31 @@
-"""threshold_curve.py — MIN_SCORE EŞİK EĞRİSİ: kapıyı yükseltmek kâr getirir mi?
-(Kârlılık Programı Aşama 1.3, 2026-07-29)
+"""threshold_curve.py — entry.min_score eşik eğrisi: kapıyı yükseltmek/alçaltmak kâr getirir mi?
 
-CEVAPLADIĞI SORU. `entry.min_score` canlıda 60. Bu sayı bir ÖLÇÜMDEN değil, ilk günkü bir
-varsayımdan geliyor. "Yükseltsek daha az ama daha iyi işlem mi alırız?" sorusunun bugüne kadarki
-tek kanıtı, 95 işlemin skor dilimlerine bakılarak yapılmış bir çıkarımdı (skor 70-80 dilimi
--0.285R, >=80 dilimi +0.066R) — ve o çıkarım TAM REPLAY'de TUTMADI: 2026-07-28 Aşama 0 turunda
-H2 (min_score 60→80) OOS'u Δ-0.095 KÖTÜLEŞTİRDİ (P=0.089, ÇÜRÜDÜ). Bu modül o çelişkinin
-kalıcı ölçüm yüzeyidir: dilim istatistiği ile eşik taraması aynı panoda yan yana durur.
+Ne yapar: Canlı giriş eşiği bir ölçümden değil ilk günkü bir varsayımdan geliyor; bu modül
+"yükseltsek daha az ama daha iyi işlem mi alırız?" sorusunun kalıcı ölçüm yüzeyidir — skor dilim
+istatistiği ile eşik taraması aynı panoda yan yana durur. Tarihî ders korunur ve YANLIŞLAMA
+kayıtlıdır: "yüksek skor dilimi daha iyi R veriyor" çıkarımı tam replay'de TUTMADI — eşiği
+yükseltmek OOS'u kötüleştirdi. Çelişki değil, iki FARKLI soru: eşik eğrisi yalnız SEÇİM etkisini
+ölçer (geçen adayların ortalama ileri getirisi; sabit ufuk, çıkış kuralından bağımsız); tam replay
+(backtest.walk_forward) SİSTEM etkisini ölçer (daha az aday, farklı eşzamanlılık, farklı sermaye
+kullanımı, farklı çıkışlar). Bir eşik seçim kalitesini artırıp sistem sonucunu kötüleştirebilir —
+bu yüzden eğri KARAR değil hipotez kaynağıdır; kapı tek hakemdir ve çıktının `capraz_not` alanı bu
+uyarıyı sayının YANINDA taşır.
 
-DİLİM İSTATİSTİĞİ NEDEN REPLAY'İ YANLIŞLAMAZ (ve tersi). İkisi FARKLI SORULAR sorar:
-  * eşik eğrisi (bu modül): "eşiği yükseltseydik, GEÇEN adayların ortalama ileri getirisi ne olurdu?"
-    — yalnız SEÇİM etkisini ölçer, sabit ufukta, çıkış kuralından bağımsız.
-  * tam replay (backtest.walk_forward): "eşiği yükseltseydik SİSTEM ne yapardı?" — daha az aday,
-    farklı pozisyon sırası, farklı sermaye kullanımı, farklı eşzamanlılık, farklı çıkışlar.
-Bir eşik, seçim kalitesini artırıp sistem sonucunu kötüleştirebilir (ör. en iyi adayları alırken
-portföyü boş bırakmak, ya da kalan adayların hepsini aynı rejimde toplamak). Bu yüzden buradaki
-eğri BİR KARAR DEĞİL, bir hipotez kaynağıdır; kapı hâlâ tek hakemdir (replay + olasılıksal kapı).
-Çıktının `capraz_not` alanı bu uyarıyı sayının YANINDA taşır.
+Kilit girişler: `build()` eşik × katman tablosunu kurar ve state/threshold_curve.json'a yazar.
+Izgara THRESHOLDS = 40..90 adım 5 (alt uç canlı eşiğin belirgin altından başlar ki DÜŞÜRMEK de
+seçenek olarak görünsün; üst uç 90'da hücre örneklemi tek haneye düşer). x ekseni aday skoru
+(`score` alanı, hem trades.jsonl hem cf defterinde); y ekseni İKİ tane ve ayrı raporlanır:
+`ileri_getiri` — 5/10/20 bar sonraki yüzde getiri, BARLARDAN (component_ic.forward_returns, tek
+tanım; cf sadakat kusurundan bağımsız, cf satırından yalnız giriş anı alınır) ve `gerceklesen_r` —
+defterdeki r_multiple (gerçek katmanda canlı çıkış; cf katmanında SİMÜLE çıkış — sadakat kusuru
+burayı kirletir, etiketi alanın yanındadır).
 
-ÖLÇÜM TANIMI. x ekseni: aday skoru (`score`, hem `trades.jsonl` hem cf defterinde ALAN olarak var —
-canlı dosyadan doğrulandı). y ekseni İKİ TANE ve ikisi de ayrı raporlanır:
-  * `ileri_getiri` — sinyal barından 5/10/20 bar sonraki yüzde getiri, BARLARDAN
-    (`component_ic.forward_returns`, tek tanım). Çıkış kuralından ve cf sadakat kusurundan
-    BAĞIMSIZDIR: cf satırından yalnız giriş anı alınır (bkz. component_ic modül başlığı, karar 4).
-  * `gerceklesen_r` — defterdeki `r_multiple`. Gerçek katmanda bu CANLI çıkışın sonucudur; cf
-    katmanında SİMÜLE edilmiş çıkışın (sadakat kusuru burayı KİRLETİR — etiketi alanın yanında).
-Roadmap 1.3 "kâr/işlem eğrisi" der; kâr/işlem tam olarak `gerceklesen_r`dir, ama tek başına
-bırakılırsa cf tarafında sadakat kusurunu taşır — bu yüzden ikisi birlikte verilir.
-
-KATMANLAR AYRI SATIR. gerçek (n≈95) ile cf (n≈2100) asla havuzlanmaz: 22:1 oranıyla cf, gerçeği
-boğar ve raporlanan eğri fiilen cf'in eğrisi olur (`score_calibration`ın yıllarca yaptığı hata).
-"""
+Değişmezler: gerçek ile cf katmanı ASLA havuzlanmaz — sayıca ezici cf, gerçeği boğar ve eğri fiilen
+cf'in eğrisi olur; n<MIN_N hücreye ortalama YAZILMAZ (None) ve her ortalama %95 güven aralığıyla
+verilir — eğrinin sağ ucu doğası gereği en az veriye dayanır ve aralıksız en ikna edici görünür;
+popülasyon component_ic._rows ile AYNIDIR (iki farklı popülasyonun yan yana kıyası sessizce
+geçersizdir); hüküm cümlesi yalnız gerçek katmandan ve ölçülebilen noktalardan kurulur.
+Okur: trades.jsonl, cf defteri, bar önbelleği; yazar: state/threshold_curve.json."""
 from __future__ import annotations
 
 import math

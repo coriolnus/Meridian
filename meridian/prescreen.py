@@ -1,72 +1,31 @@
-"""prescreen.py — HİPOTEZ ÖN-ELEMESİ: adayları KAPININ KENDİ YASASIYLA ölç, canlıya dokunma.
-(Kârlılık Programı Aşama 2.6, 2026-07-29 — scratchpad'deki `onelem.py` deseninin kalıcılaştırılması)
+"""prescreen.py — hipotez ön-elemesi: adayları kapının KENDİ yasasıyla ölç, canlı state'e dokunma.
 
-NE İŞE YARAR. Bir hipotezi canlı döngüye sokmadan önce "kapıdan geçer mi?" sorusunun cevabı bugün
-yalnız P5 turunu bekleyerek ya da elle bir script yazarak alınabiliyordu. Elle yazılan script her
-seferinde biraz farklı oluyordu (farklı pencere, farklı k_probes, farklı fold) — yani ÖLÇÜM ARACININ
-KENDİSİ turdan tura değişiyordu ve iki turun sonucu kıyaslanamıyordu. Bu modül o aracı sabitler.
+Ne yapar: "Bu düğme kapıdan geçer mi?" sorusunu canlı turu beklemeden, sabit ve tekrarlanabilir bir
+araçla cevaplar. Elle yazılan ölçüm betikleri her seferinde biraz farklı oluyordu (farklı pencere,
+farklı k_probes, farklı fold) — yani ölçüm aracının KENDİSİ turdan tura değişiyor ve iki turun
+sonucu kıyaslanamıyordu; bu modül o aracı sabitler. Canlı state çalışma dizinine kopyalanır,
+config.STATE/HISTORY/BARS kopyaya çevrilir (store çağrı anında okur → bütün yazımlar kuma iner);
+koşu sonunda canlı state'in mtime parmak izi karşılaştırılıp rapora yazılır — "dokunmadım" bir
+iddia değil, ÖLÇÜLMÜŞ bir olgudur.
 
-ÜÇ SIKI KURAL — ÜÇÜ DE ÖLÇÜMÜN GEÇERLİLİĞİ İÇİN:
+Kilit girişler: `run(candidates, workdir, live, resume)` ölçümün gövdesi; CLI: `python -m
+meridian.prescreen --candidates 'knob=deger,knob2=deger2' --workdir ...` (virgül = AYRI tek-değişkenli
+adaylar), `--composite 'k1=v1;k2=v2|k3=v3'` bileşik adaylar ('|' adayları, ';' bir adayın
+düğmelerini ayırır; ikisi birlikte verilebilir ve tek koşuda, aynı k_probes paydasıyla ölçülür),
+`--resume` ölçülmüş adayları atlar, `--queue-id` bileşik kuyruk satırını ölçüm bitişinde damgalar
+(`kuyruk_geri_yaz` → measured / measure_failed).
 
-(1) CANLI STATE'E TEK BAYT YAZILMAZ. Canlı worker koşarken `walk_forward`/`reflect` yolundaki her
-    yazım (`inc_cache.json`, `events.jsonl`, `sieve.json`, `score_calibration.json` ...) canlı
-    deftere düşerdi. Çözüm: canlı `state/` çalışma dizinine KOPYALANIR ve `config.STATE/HISTORY/BARS`
-    kopyaya çevrilir. `store._state()` config.STATE'i ÇAĞRI ANINDA okuduğu için bütün yazımlar
-    kopyaya iner. Koşu sonunda canlı state'in mtime PARMAK İZİ karşılaştırılır ve rapora yazılır —
-    "dokunmadım" bir iddia değil, ÖLÇÜLMÜŞ bir olgu olsun diye.
-
-(2) KAPININ YASASI KOPYALANMAZ, ÇAĞRILIR. Pencereler `reflect._default_windows()`, parametreler
-    `reflect.params_of`, ölçüm `backtest.walk_forward`, hüküm `reflect._gate_eval`. İkinci bir kapı
-    yasası yazmak, ön-elemenin GEÇTİ dediği bir adayın canlı kapıda KALMASI (ya da tersi) demekti.
-
-(3) `k_probes` DENENEN ADAY SAYISIDIR — ölçülen değil. `--resume` ile yarıda kalan bir koşu devam
-    ettiğinde, daha önce ölçülmüş adaylar atlanır ama k_probes DEĞİŞMEZ. Kazananın-laneti cezası
-    "bu turda kaç kapı yoklaması yaptık"a göredir; bir süreç kazası yüzünden cezayı düşürmek,
-    istatistiksel çıtayı kazara gevşetmek olurdu (ve tam olarak böyle bir gevşetme fark edilmez).
-
-KULLANIM:
-    .venv/bin/python -m meridian.prescreen \
-        --candidates 'entry.min_score=80,exit.breakeven_r=0.5' \
-        --workdir /tmp/prescreen-001
-    .venv/bin/python -m meridian.prescreen --candidates '...' --workdir /tmp/prescreen-001 --resume
-
-Her aday TEK DEĞİŞKENdir (`knob=deger`), virgül ayraçlı liste AYRI adaylar demektir — birleşik bir
-değişiklik değil. Tek değişken disiplini burada da geçerlidir: iki düğmeyi birlikte çeviren bir
-ölçüm, hangisinin işe yaradığını söyleyemez.
-
-BİLEŞİK ADAYLAR (`--composite`, 2026-07-30 — sadeleştirme turu ③). Tek-değişken disiplini bir ÖLÇÜM
-kuralıdır, bir yasak değil: bazı hipotezler ancak iki düğme BİRLİKTE çevrildiğinde anlam taşır
-(ör. "geniş stop + breakeven kapalı" ya da "hacim tabanını gevşet ↔ rvol tabanı koy" TAKASI). Bu
-ölçüm bugüne dek scratchpad'de elle yazılan `g3a_bilesik.py` betiğiyle yapılıyordu — yani ölçüm aracı
-yine turdan tura değişiyordu (modül başlığının çözdüğü sorunun aynısı, bir kat aşağıda). Artık kalıcı:
-
-    .venv/bin/python -m meridian.prescreen \
-        --composite 'stop_loss_atr_mult=3.0;exit.breakeven_r=0.0|entry.min_volume_ratio=1.0;entry.min_rvol=1.5' \
-        --workdir /tmp/prescreen-bilesik
-
-`|` ADAYLARI, `;` bir adayın DÜĞMELERİNİ ayırır. ÜÇ KURAL BİLEŞİKTE DE AYNEN GEÇERLİ:
-  (1) Doğrulama DÜĞME DÜZEYİNDEdir: `guard.validate_change` her düğme için AYRI çağrılır (aralık +
-      adım + tip). Bileşik olmak bir düğmeyi bounds dışına çıkarma ruhsatı değildir; bir düğme
-      reddedilirse ADAYIN TAMAMI reddedilir ve hangi düğme yüzünden olduğu rapora yazılır.
-  (2) `k_probes` YİNE ADAY SAYISIDIR — düğme sayısı değil. Bir bileşik aday kapıya BİR yoklama
-      gönderir; düğme başına saymak kazananın-laneti cezasını sahte biçimde ŞİŞİRİRDİ.
-  (3) Satır `bilesik=True` + `knobs={...}` taşır. Bir bileşik sonucu tek-değişkenli bir sonuç gibi
-      okunursa "hangi düğme işe yaradı?" sorusunun cevabı YOK sanılır — oysa cevap "bu ölçüm onu
-      sormadı"dır ve bunun satırda yazılı olması gerekir.
-
-KUYRUK GERİ-YAZIMI (`--queue-id`, C14, 2026-08-02) — KURAL (1)'İN TEK ADLANDIRILMIŞ DELİĞİ.
-`hermes_composite.spawn_pending` bu modülü ayrı bir süreçte başlatır ve satırı `measuring` damgalar;
-ölçüm bitişini AYNI satıra yazacak olan da bu süreçtir (kimlik `--queue-id` ile taşınır). Yani bu
-yol canlı state'e TEK BİR defterde, TEK BİR satır yazar: `composite_queue.jsonl`. Delik ADLIDIR ve
-sınırları kodda dar tutulur:
-  * Yazım `run()`un DIŞINDADIR (yalnız `main`). `run()` hâlâ canlı state'e sıfır bayt yazar ve
-    `canli_state_degisen_dosyalar` kanıtı ONUN kapsamını ölçer — yani "ölçüm canlıya dokunmadı"
-    iddiası bozulmaz, çünkü geri-yazım ölçüm BİTTİKTEN ve parmak izi alındıktan SONRA olur.
-  * Yazan taraf `config.STATE`i CANLIYA geri çevirir, yazar, sonra sandbox'a geri döner: aksi hâlde
-    damga sandbox kopyasındaki kuyruğa düşer ve HİÇ KİMSE onu okumazdı (halka yine açık kalırdı).
-  * Kuyruk satırı yazılmadan ölçüm yapmak, C14'ün ta kendisiydi: `measured` yazan üretim yolu YOKTU,
-    `n_olculen` yapısal olarak 0'dı ve ölmüş süreçler sonsuza dek "ÖLÇÜLÜYOR" görünüyordu.
-"""
+Değişmezler: (1) `run()` canlı state'e TEK BAYT yazmaz; tek adlandırılmış delik `--queue-id`
+geri-yazımıdır — run() dışında, parmak izi alındıktan SONRA, config.STATE geçici olarak canlıya
+çevrilerek tek satır damgalanır (yazılmazsa ölmüş süreçler sonsuza dek "ölçülüyor" görünürdü).
+(2) Kapının yasası KOPYALANMAZ, ÇAĞRILIR: pencereler reflect._default_windows, parametreler
+reflect.params_of, ölçüm backtest.walk_forward, hüküm reflect._gate_eval — ikinci bir yasa,
+ön-elemenin GEÇTİ dediği adayın canlı kapıda kalması demekti. (3) `k_probes` DENENEN aday
+sayısıdır ve `--resume` onu DEĞİŞTİRMEZ: süreç kazası kazananın-laneti cezasını gevşetemez;
+bileşik aday kaç düğme çevirse de BİR yoklamadır, doğrulama ise düğme düzeyindedir
+(guard.validate_change) ve tek düğme reddi adayın tamamını gerekçesiyle düşürür.
+Okur: canlı state (kopyalamak için) + bar önbelleği; yazar: workdir'e prescreen_kismi.json /
+prescreen_sonuc.json / canli_fingerprint.json, ve yalnız --queue-id ile composite_queue damgası."""
 from __future__ import annotations
 
 import argparse

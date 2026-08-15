@@ -1,32 +1,28 @@
-"""oos_erosion.py — OOS AŞINMA DEFTERİ: aynı sınav kâğıdı kaç kez soruldu?
-(Kârlılık Programı Aşama 2.2, 2026-07-28)
+"""oos_erosion.py — OOS aşınma defteri: aynı sınav kâğıdına kaç kez soru soruldu?
 
-NEDEN VAR. Bir out-of-sample penceresi "dokunulmamış" olduğu SÜRECE kanıt taşır. Her kapı
-değerlendirmesi o pencereye bir soru daha sorar ve her soru onu biraz daha in-sample yapar — kimse
-parametreye elle dokunmasa bile, çünkü seçilim zaten "o pencerede iyi görüneni" seçmektir. Canlı
-defterde bugüne kadar ~38 hipotez AYNI pencerelere sorulmuş; hiçbiri sayılmamış. Sayılmayan bir
-aşınma, kapı hükümlerini sessizce değersizleştirir: kapı hâlâ "OOS'ta kazandı" der, ama o OOS
-artık kimsenin görmediği bir sınav değildir.
+Ne yapar: Bir out-of-sample penceresi "dokunulmamış" olduğu SÜRECE kanıt taşır; her kapı
+değerlendirmesi ona bir soru daha sorar ve her soru onu biraz daha in-sample yapar — kimse
+parametreye elle dokunmasa bile, çünkü seçilim zaten "o pencerede iyi görüneni" seçmektir.
+Sayılmayan aşınma kapı hükümlerini sessizce değersizleştirir: kapı hâlâ "OOS'ta kazandı" der, ama
+o OOS artık kimsenin görmediği bir sınav değildir. Bu modül pencere geometrisinin (IS/OOS/holdout +
+fold sınırları + ambargo) parmak izini alır, o parmak izine ÖMÜR BOYU sorulan soru sayısını tutar
+ve eşik aşılınca kapı çıtasına ek marj bindirir (EROSION_QUERY_LIMIT üstünde EROSION_EXTRA_MARGIN —
+bilinçli olarak tam marjın yarısı: ölçülmemiş bir aşınma miktarına iki kat ceza uydurma olurdu).
 
-NE YAPAR. Pencere geometrisinin (IS/OOS/holdout + fold sınırları + ambargo) parmak izini alır ve o
-parmak izine ÖMÜR BOYU sorulan soru sayısını tutar. Eşik aşılınca kapıya ek marj bindirir.
+Kilit girişler: `fingerprint(...)` geometri kimliği (fold sınırları hash'e DAHİL — incumbent
+değişince geometri de değişir); `record(fp, meta)` resmî değerlendirmeyi sayar ve güncel durumu
+döner; `note(fp, meta)` record'un ASLA yükseltmeyen sargısı (telemetri defteri kapı kararını
+düşüremez, ama sessiz de kalamaz); `status(fp)` sayacı ARTIRMADAN okur — kapı yasası marjı
+uygulamak zorundadır ama saymak zorunda değildir; `report()` pano özeti; `arsivle(doc)` rotasyon
+öncesi satırlara idempotent arşiv İŞARETİ koyar (içerik değişmez).
 
---- ÜÇ BEYAN, ÜÇÜ DE KODDA DURUR ---
-
-(1) RETRO DAMGA YASAĞI. Geçmiş ~38 sorgu geriye dönük damgalanMAZ. O sorguların hangi pencere
-    geometrisiyle koştuğunu bugün bilmiyoruz (pencereler bu arada değişti) ve tahmin edilmiş bir
-    sayacı gerçek sayaç gibi sunmak, tam olarak bu modülün önlemek için var olduğu şeydir. Sayaç
-    BUGÜNDEN başlar; bu, aşınmanın olmadığı değil ÖLÇÜLMEDİĞİ anlamına gelir ve rapor bunu söyler.
-
-(2) SANDBOX SAYMAZ — BİLİNÇLİ. `config.STATE` yönlendirilmiş her ölçüm (test, sprint kumu, ön-eleme
-    koşusu) sayacı KENDİ kopyasına yazar; resmî defter dokunulmadan kalır. Bu bir kaçak değil,
-    tasarımın kendisidir: resmî sayaç yalnız RESMÎ kapı değerlendirmelerini sayar. Ön-elemenin
-    çoklu-test yükü ayrı bir kanaldan, `k_probes` beyanıyla taşınır (probgate'in kazananın-laneti
-    cezası). İki yükü tek sayaca toplamak, aynı cezayı iki kez kesmek olurdu.
-
-(3) SAYAÇ CEZALANDIRIR, ENGELLEMEZ. Eşik aşımı kapıyı kapatmaz; geçme çıtasını yükseltir. Bir
-    pencereyi yakmanın doğru cevabı "artık soru sorma" değil, "artık daha büyük bir fark iste"dir.
-"""
+Değişmezler: (1) RETRO DAMGA YASAĞI — geçmiş sorgular geriye dönük damgalanmaz; sayaç dosyanın ilk
+yazımından itibaren sayar ve bu "aşınma yok" değil "ÖLÇÜLMEDİ" demektir, rapor bunu söyler.
+(2) SANDBOX SAYMAZ — config.STATE yönlendirilmiş ölçümler sayacı kendi kopyasına yazar; oturum-içi
+çoklu-test yükü ayrı kanaldan (k_probes) taşınır, iki yükü tek sayaca toplamak aynı cezayı iki kez
+kesmek olurdu. (3) SAYAÇ CEZALANDIRIR, ENGELLEMEZ — pencereyi yakmanın cevabı "soru sorma" değil
+"daha büyük fark iste"dir. Rapor yalnız yürürlükteki pencereden seçer; arşiv ayrı blokta,
+"karşılaştırılamaz" uyarısıyla durur. Okur/yazar: state/oos_erosion.json (store üzerinden)."""
 from __future__ import annotations
 
 import hashlib

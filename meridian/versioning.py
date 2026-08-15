@@ -1,6 +1,25 @@
-"""versioning.py — strategy.yaml version bumps, immutable history snapshots, and the scoreboard.
-A parameter change is a version bump + a state/history/vNNNN.yaml snapshot + a hot-reloadable
-strategy.yaml. No redeploy for a parameter change (§5); deploy.sh is for code only."""
+"""versioning.py — strategy.yaml sürüm zinciri: bump, değişmez tarih anlık görüntüleri ve karne.
+
+Ne yapar: Bir parametre değişikliği = sürüm artışı + state/history/vNNNN.yaml anlık görüntüsü +
+sıcak-yüklenen (bir bar içinde) yeni strategy.yaml. Parametre değişikliği için yeniden dağıtım
+gerekmez; dağıtım yalnız kod içindir. Karne (scoreboard.json) sürüm başına skor ve işaret
+satırlarını (live_score, backtest_oos, rolled_back, promoted...) tutar.
+
+Kilit girişler: `bump(current, variable, new, note)` çocuk sürümü türetir — 'base@regime' biçimli
+düğme params_by_regime'e yazılır, düz params bozulmaz; `commit(child)` strategy.yaml'ı yazar ve
+`snapshot` ile tarihe mühürler; `revert_to(version)` tarihî anlık görüntüyü yeniden canlı yapar
+(görüntü yoksa FileNotFoundError — sessiz düşüş yok); `scoreboard()` okuma,
+`update_scoreboard(version, **fields)` ship yolunun yazımı, `set_row_fields(version, **fields)`
+onun canlı-sürüm işaretine DOKUNMAYAN kardeşi.
+
+Değişmezler: sürüm numarası ASLA yeniden kullanılmaz — geri almadan sonra salt current+1, ölü
+çocuğun numarasını yeni ship'e verir ve yeni sürüm ölü sürümün işlemleriyle yargılanırdı;
+`_next_version` mevcut sürüm, karnedeki her satır ve history'deki her anlık görüntünün
+MAKSİMUMUNUN üstünden tahsis eder. Karne yazımları kilitli oku-değiştir-yaz (store.update_json):
+ship, ölçüm ve replay yolları ayrı süreçlerden yazar; kilitsiz hâli belgeli bir kayıp-güncelleme
+yoluydu. `set_row_fields` current_version'ı olduğu gibi bırakır: geçmişe dönük bir ölçüm hangi
+sürümün canlı olduğunu değiştiremez — iki gerçek kaynağı birbirini yalanlayamaz.
+Okur/yazar: strategy.yaml, state/history/v*.yaml, scoreboard.json."""
 from __future__ import annotations
 import copy
 from pathlib import Path

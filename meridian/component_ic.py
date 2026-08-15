@@ -1,76 +1,36 @@
-"""component_ic.py — BİLEŞEN IC'si: skorun DÖRT HAM PARÇASINDAN hangisi tahmin gücü taşıyor?
-(Kârlılık Programı Aşama 1.2, 2026-07-28)
+"""component_ic.py — bileşen IC tablosu: bileşik skorun ham parçalarından hangisi tahmin gücü taşıyor?
 
-CEVAPLADIĞI SORU. `score_calibration` tek bir soru sorar: 0-100 bileşik skor sonucu öngörüyor mu?
-Canlı cevap "hayır" (gerçek katman IC 0.049, gürültüden ayrılmıyor). Ama bileşik skor DÖRT ayrı
-büyüklüğün ağırlıklı toplamıdır ve o toplam, içindeki bir sinyali diğer üçünün gürültüsüyle
-söndürebilir. "Skorun IC'si sıfır" ile "skorun hiçbir parçası bilgi taşımıyor" AYNI CÜMLE DEĞİLDİR
-— ve ikisini ayırmadan ağırlıkları (entry.w_*) hangi yöne çevireceğimizi bilemeyiz. Bu modül dört
-parçayı ayrı ayrı, üç ufukta ve katman etiketli ölçer.
+Ne yapar: Bileşik 0-100 skor ağırlıklı bir toplamdır ve toplam, içindeki bir sinyali diğerlerinin
+gürültüsüyle söndürebilir — "skorun IC'si sıfır" ile "skorun hiçbir parçası bilgi taşımıyor" AYNI
+cümle değildir ve ikisi ayrılmadan ağırlıkların (entry.w_*) hangi yöne çevrileceği bilinemez. Bu
+modül sekiz bileşeni (COMPONENTS: rs, tight, vol, prox, rvol20, mom12_1, rmom, turnover21 — eski
+çekirdek silinmedi, kıyas sürsün diye yenilerle yan yana ölçülür) üç ufukta (HORIZONS: 5/10/20 bar)
+ve katman etiketiyle (gercek / cf / havuz) ayrı ayrı ölçer; her hücre Fisher-z güven aralığı ve
+`anlamli` alanı taşır, `eb` alanı ham IC'ye DOKUNMAYAN paralel empirik-Bayes küçültme sütunudur.
+SIFIR YETKİ: hiçbir kapıya, karara, silahlanmaya girmez — yalnız rapor yazar; bir bileşenin IC'si
+yüksek çıksa bile ağırlığı ancak olasılıksal kapıdan geçen bir hipotezle değişebilir.
 
-SIFIR YETKİ. Hiçbir kapıya, hiçbir karara, hiçbir silahlanmaya girmez — yalnız rapor yazar
-(`state/component_ic.json`) ve pano/evidence_pack onu okur. Bir bileşenin IC'si yüksek çıksa bile
-ağırlığı ancak olasılıksal kapıdan geçen bir hipotezle değişebilir.
+Kilit girişler: `component_ic(write=True)` tabloyu kurar ve state/component_ic.json'a yazar
+(write=False kuru koşu: artefakta dokunmaz, telemetriye sessizlik vaat etmez); `forward_returns(df)`
+ileri getirinin TEK tanımı (close[t+h]/close[t]-1 — eşik eğrisi de aynı tanımı tüketir);
+`compact_lines()` beyin için kompakt özet; `eslesme_nedeni(ticker, tarih)` çerçeve dışı tarihin
+eleme sınıfı (bütünlük defterinin beyanlı piyasa dışlaması ≠ şema hatası).
 
---- ÜÇ TASARIM KARARI, ÜÇÜ DE ÖLÇÜMÜ DEĞİŞTİRDİĞİ İÇİN BURADA YAZILI ---
-
-(1) BİLEŞENLER DEFTERDE YOK, BARLARDAN YENİDEN HESAPLANIR. Denetlendi: `tt`, `vr`, `proximity_pct`
-    hiçbir deftere ALAN olarak yazılmıyor — yalnız `candidates.jsonl`in `notes` metninde
-    ("prox=1.2% vr=2.1 tt=0.83") ve orada da 313 satırın 13'ünde (replay yazıcısı `notes`u düşürüyor).
-    Bir string'i regex'le ayrıştırıp istatistik kurmak, ölçümü metin biçimine bağımlı yapardı.
-    Bunun yerine bileşenler `meridian.indicators`ın AYNI fonksiyonlarıyla bardan yeniden üretilir —
-    yani ölçümün kaynağı, canlı skorun kaynağıyla aynı koddur (tek yasa, tek uygulama).
-    Göstergelerin hepsi nedensel (causal) yuvarlanan pencerelerdir ve en uzun pencere 252 bar; canlı
-    yol 340 barlık kuyrukta hesapladığı için TAM SERİDE hesaplanan değer aynı barda BİREBİR aynıdır.
-
-(2) İLERİ GETİRİ SABİT UFUKTA VE YÜZDE — R DEĞİL. Defterdeki `r_multiple` işlemin KENDİ çıkışında
-    ölçülür; çıkış süresi işlemden işleme değişir (canlı defterde 1 ile 15 bar arası). Değişken
-    ufuklu bir getiriyle bileşen IC'si ölçmek, sinyalin gücünü çıkış kuralının davranışıyla
-    KARIŞTIRIR — ki bu turun asıl sorusu tam da o ikisini ayırmak. Ufuk sabitlenir (5/10/20 bar) ve
-    getiri sinyal barının kapanışından ölçülür: `close[t+h]/close[t] - 1`. Bu, sinyalin ÖNGÖRÜ
-    içeriğidir; icra (giriş kayması, stop, trail) ölçümün dışında kalır ve orası ayrı bir sorudur.
-    R'ye bölmek ayrıca satır başına farklı bir ölçekleyiciyle bölmek demekti — Spearman monoton
-    dönüşüme dayanıklıdır ama satır-başına-farklı bir bölen monoton dönüşüm DEĞİLDİR.
-
-(3) HAVUZ KATMANI TEKİLLEŞTİRİLİR. Alınmış (taken) bir cf satırı ile ona karşılık gelen gerçek
-    işlem AYNI (ticker, tarih) gözlemidir; bileşen değeri de ileri getirisi de bardan geldiği için
-    İKİSİ BİREBİR AYNI çifti üretir. `score_calibration`ın havuzu bunları iki kez sayar (orada
-    y ekseni farklı: gerçek çıkış R'si ile sim çıkış R'si gerçekten iki ayrı ölçümdür). Burada ise
-    aynı sayıyı iki kez saymak paydayı şişiren düpedüz bir yalan olurdu — havuz (ticker, tarih)
-    anahtarında tekilleştirilir, gerçek katman önceliklidir.
-
-(4) CF KATMANI BU TABLODA SADAKAT SORUSUNDAN BAĞIMSIZDIR (2026-07-29, Aşama 1.4'ün karar girdisi).
-    Bu, deponun her yerinde geçerli olan "cf sayıları simülasyondur, hüküm taşıyamaz" kuralının
-    GEREKÇELİ ve DAR bir istisnasıdır; gerekçe yazılı olmazsa istisna sessizce genelleşir.
-    cf defterinin bilinen kusuru ÇIKIŞ tarafındadır: `cf.advance` yalnız stop/target/time_stop
-    simüle eder (trail/breakeven/chandelier/giveback/regime_flip/scale_out ve komisyon/ADV/impact
-    YOK — bkz. `analytics.CF_EXIT_FIDELITY_NOTE`). Bu kusur, cf satırının `r_multiple`ını —
-    yani ÇIKIŞTA ölçülen her büyüklüğü — kirletir. Bu modülün y ekseni ise `r_multiple` DEĞİL:
-    ileri getiri, sinyal barının kapanışından BAR SERİSİNDEN hesaplanır (`close[t+h]/close[t]-1`).
-    Yani cf satırından alınan tek şey GİRİŞ ANIdır (ticker + tarih); geri kalan her şey barlardan
-    gelir ve o barlar gerçek işlemlerinkiyle AYNI barlardır. Bir çıkış kuralının simüle edilip
-    edilmemesi, giriş barından 5/10/20 bar sonraki fiyatı DEĞİŞTİRMEZ.
-    Bunun bedeli n≈95 → n≈2100'dür: gerçek katmanda her hücrenin güven aralığı ±0.20 genişliğinde
-    ve HİÇBİR hücre anlamlı değil; cf katmanında aralık ~±0.043'e iner. Aşama 1.4'ün ("hiçbir
-    bileşen anlamlı IC taşımıyorsa tez revizyonu") cevaplanabilir olması için gereken örneklem
-    yalnız buradan gelebilir — gerçek defter aylarca 100'ün altında kalacak.
-    SINIR: cf katmanı hâlâ ALINMAMIŞ hipotetik girişlerdir (seçim yanlılığı sorusu ayrı ve açık
-    durur) ve bu yüzden tabloda AYRI SATIR olarak, "sim" etiketiyle görünür — gerçek katmanla
-    aynı kefeye konmaz, yalnız yanında durur.
-
-(5) TABLO ARTIK YEDİ BİLEŞENLİ (G2, 2026-07-29). Başlıktaki "dört parça" 1.4 karar kapısının
-    girdisiydi; kapı "ağırlık ayarı değil YENİDEN İNŞA" hükmünü verdi ve üç yeni aday (rvol20,
-    mom12_1, rmom) buraya eklendi. Eski dördü SİLİNMEDİ: bir çekirdeğin diğerinden iyi olduğu
-    ancak ikisi aynı popülasyonda, aynı ufuklarda ve aynı CI disiplininde yan yana durursa
-    söylenebilir. Yeni satırların ölçek beyanı (ham seri mi, skora giren dönüşüm mü) COMPONENTS
-    tanımının yanında ve çıktının `yeni_bilesen_notu` alanında yazılıdır.
-
-(6) EMPİRİK-BAYES SÜTUNU PARALELDİR, YERİNE GEÇMEZ (WP-M 2C, 2026-08-01). Çıktıya `eb` alanı
-    eklendi: her hücrenin ham IC'sinin yanında, o katmanın ortak ortalamasına küçültülmüş ikizi
-    (`eb_ic`) ve küçültme katsayısı (`shrink_katsayisi`). `tablo` sözlüğü BİT-BİT AYNI kalır;
-    bugünün okuyucuları (beyin `compact_lines`, pano, `yeniden_uret` farkı) ham `ic` okumaya
-    devam eder. Gerekçe, σ yasası ve beyan edilen sınır `_eb_blok`un üstündeki blokta.
-"""
+Ölçüm kararları (değişmezler): bileşenler defterden değil BARLARDAN, canlı skorun kullandığı AYNI
+indicators fonksiyonlarıyla yeniden hesaplanır (tek yasa, tek uygulama; göstergeler nedensel —
+tam seride hesap, canlı kuyruk hesabıyla aynı barda birebir aynıdır). İleri getiri SABİT ufukta ve
+YÜZDE olarak ölçülür, R DEĞİL: değişken çıkış ufku sinyal gücünü çıkış kuralının davranışıyla
+karıştırır ve satır-başına-farklı bir bölen monoton dönüşüm olmadığından Spearman'ı da bozar.
+Havuz katmanı (ticker, tarih) anahtarında tekilleştirilir, gerçek katman önceliklidir — aynı
+gözlemi iki kez saymak paydayı şişirmektir. cf katmanı bu tabloda sadakat sorusundan BAĞIMSIZDIR;
+bu, "cf sayıları hüküm taşıyamaz" kuralının GEREKÇELİ ve DAR bir istisnasıdır (yazılmazsa sessizce
+genelleşir): cf defterinin bilinen sadakat kusuru ÇIKIŞ simülasyonundadır ve r_multiple'ı kirletir,
+oysa bu tablonun y ekseni barlardan gelir — cf satırından alınan tek şey GİRİŞ ANIdır (ticker +
+tarih) ve bir çıkış kuralının simüle edilip edilmemesi, giriş barından h bar sonraki fiyatı
+DEĞİŞTİRMEZ. Yine de cf satırları ALINMAMIŞ hipotetik girişlerdir: tabloda ayrı satırda, "sim"
+etiketiyle durur — kanıt değil bağlamdır; hüküm cümlesi yalnız gerçek katmandan kurulur.
+Ölçülemeyen hücre None kalır (sıfır değil). Okur: trades.jsonl, cf defteri, bar önbelleği, EDGAR
+pay sayımı; yazar: state/component_ic.json + gecelik olay satırı."""
 from __future__ import annotations
 
 import json

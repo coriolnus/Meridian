@@ -1,7 +1,27 @@
-"""rollback.py — automatic, no human in the loop. Once min_sample trades have run under the
-current version, if it underperforms its parent by more than goal.rollback_if_worse_by, revert
-strategy.yaml to the parent snapshot and mark the shipping hypothesis rolled_back. The agent does
-not get to argue with the rollback — it only explains, afterward, why it thinks the change failed."""
+"""rollback.py — otomatik ebeveyn-dönüşü: kötüleşen sürüm insansız geri alınır, sonuç deftere işlenir.
+
+Ne yapar: Canlı sürüm altında min_sample işlem birikince sürümü ebeveyniyle karşılaştırır. Fark
+goal.rollback_if_worse_by eşiğinden kötüyse strategy.yaml ebeveyn anlık görüntüsüne döndürülür
+(versioning.revert_to) ve ship eden hipotez rolled_back işaretlenir — ajan geri almayla tartışamaz,
+yalnız sonradan değişikliğin neden başarısız olduğunu açıklar. Kötü değilse gerçekleşen delta +
+calibration_hit hipoteze geri yazılır; eşiği aşan kalıcı bir kazanç promoted'a terfi eder.
+
+Kilit girişler: `evaluate_outcomes(goal)` döngüyü SİMETRİK kapatan ana yol (geri al / tut / terfi;
+idempotent, v01'de ve örneklem altında no-op); `check_and_rollback(goal, would_have)` negatif yarı
+(revert + writeback + alarm); `sweep_orphan_hypotheses()` yeni ship'le aşılmış 'live' satırları
+superseded'a taşır (defter sonsuza dek açık satır taşımasın). Karar girdisi `_karar_girdisi` ile
+TEK yerde seçilir ve `karar_yontemi` damgasıyla kayda geçer: like_for_like_replay_v1 (ebeveyn
+parametreleri çocuğun canlı döneminde replay edilir — baseline.would_have_replay; maliyet kapısı
+gereği yalnız geri-alma adayı tetiklenince koşar) ya da legacy_scoreboard_oos (ölçülemeyen hâllerde
+damgalı yedek — kaldırılmadı, çünkü kaldırmak veri kesintisinde geri-almayı sessizce dondururdu).
+
+Değişmezler: gürültüyle asla geri alınmaz (min_sample tabanı); rejim ship'i yalnız o rejimin
+işlem dilimiyle ölçülür — global karne skoru dilimli skorla karşılaştırılamaz (sahte delta);
+geri alma başarısızlığı geri almanın kendisi kadar yüksek seslidir (alarm + elle müdahale çağrısı);
+realized_delta BİLEŞİK skor biriminde kalır, para-ölçekli ikizi ölçülemiyorsa None + neden yazılır;
+döngü kapanamıyorsa bu "kanıt bekliyorum"dan AYRI bir olaydır ve sayılır (learning_loop_open.json).
+Okur: trades.jsonl, strategy.yaml, karne, hipotez defteri; yazar: karne satırları, hipotez
+statüleri/sonuçları, lessons.md, açık-döngü kaydı."""
 from __future__ import annotations
 from typing import Optional
 
