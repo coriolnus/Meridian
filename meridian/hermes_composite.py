@@ -194,6 +194,8 @@ def _budget_take(hafta: str | None = None) -> bool:
 def mark(row_id: str, status: str, **fields) -> None:
     """Kuyruk satırının durumunu güncelle (JSONL yeniden yazımı — kuyruk küçük ve tavanlı)."""
     def _f(rows):
+        """`store.update_jsonl` mutasyonu: kimliği tutan satır(lar)ın durumunu, ek alanlarını ve
+        `status_ts` damgasını yerinde günceller."""
         for r in rows:
             if r.get("id") == row_id:
                 r["status"] = status
@@ -363,6 +365,9 @@ def spawn_pending(limit: int = 1, dry_run: bool = False) -> dict:
 
 
 def _cli() -> int:
+    """Kuyruğun komut satırı yüzü: --ekle / --yokla / --spawn / --durum (varsayılan: durum).
+
+    Çıktı JSON'dur; karar vermez, yalnız bu modülün fonksiyonlarını çağırıp sonucu basar."""
     import argparse
     ap = argparse.ArgumentParser(description="Bileşik öneri kuyruğu (H3/H4)")
     ap.add_argument("--durum", action="store_true", help="kuyruk durumu")

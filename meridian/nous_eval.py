@@ -121,6 +121,9 @@ def kanit_jetonlari(telemetri: dict) -> dict:
     sayilar: set[str] = set()
 
     def _gez(x, derinlik: int = 0):
+        """Telemetri ağacında özyinelemeli gezinir: ayırt edici alan ADLARINI `adlar`a, yeterince uzun
+        sayı yazımlarını `sayilar`a toplar. Derinlik 8'de durur (derin/döngüsel yapıya karşı).
+        """
         if derinlik > 8:
             return
         if isinstance(x, dict):
@@ -239,6 +242,9 @@ def ayristir(text: str, telemetri: dict) -> dict:
     bolumler = set((telemetri or {}).get("bolum_adlari") or ())
 
     def _dus(neden: str, oneri) -> None:
+        """Bir öneriyi kalite kapısından DÜŞÜR: sayacı, neden dökümünü ve düşen satırın özetini `out`a
+        yazar — düşme sessiz kalmaz, koşu kaydında sayılı ve gerekçeli durur.
+        """
         out["n_dusen"] += 1
         out["dusme_nedenleri"][neden] = out["dusme_nedenleri"].get(neden, 0) + 1
         out["dusenler"].append({"neden": neden,
@@ -381,6 +387,7 @@ def koprule(kabul: list, *, yaz: bool = True, bounds: dict | None = None) -> dic
 
 
 def _bounds() -> dict:
+    """Bounds sözleşmesini config'ten okur; yoksa boş sözlük döner (salt okuma)."""
     from . import config
     return config.bounds() or {}
 
@@ -432,6 +439,9 @@ def _fis_anahtari(o: dict, hafta: str) -> str:
 def _fis_yaz(satirlar: list[dict]) -> dict:
     """Fişleri kuyruğa ekle (anahtar bazında TEKİL). Aynı öneri iki koşuda iki fiş üretmez."""
     def _mut(cur):
+        """Fiş defterini yerinde günceller: anahtarı henüz olmayan fişleri ekler, sayacı ve güncelleme
+        damgasını tazeler. `store.update_json` çağrısının değiştiricisi.
+        """
         if not isinstance(cur.get("fisler"), list):
             cur["fisler"] = []
         var = {str(f.get("anahtar")) for f in cur["fisler"] if isinstance(f, dict)}
@@ -724,6 +734,7 @@ def haftalik_degerlendirme(*, telemetri: dict | None = None, yaz: bool = True,
 
 
 def _say(rows: list, alan: str) -> dict:
+    """Satırlarda verilen alanın değerlerini sayar (değer → adet); boş/None değerler '?' kovasına düşer."""
     out: dict[str, int] = {}
     for r in rows:
         out[str(r.get(alan) or "?")] = out.get(str(r.get(alan) or "?"), 0) + 1
@@ -731,6 +742,7 @@ def _say(rows: list, alan: str) -> dict:
 
 
 def _now() -> str:
+    """Şimdiki UTC zamanı, saniye çözünürlüklü ISO-8601 metni olarak."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -761,11 +773,16 @@ def _oneri_kaydet(o: dict, hafta: str, kayit: dict) -> None:
 
 
 def _next_seq() -> int:
+    """Sıradaki öneri numarası: defterdeki satır sayısı + 1 (N00001 kimliğinin sayacı)."""
     return len(store.read_jsonl(PROPOSALS_FILE)) + 1
 
 
 def _kosu_kaydet(kayit: dict) -> None:
+    """Haftalık koşu kaydını `nous_eval_runs.json` içine hafta anahtarıyla yazar (kilitli
+    oku-değiştir-yaz) ve `son` damgasını tazeler.
+    """
     def _f(st):
+        """Koşu belgesini yerinde günceller: kaydı `haftalar[hafta]` altına koyar, `son` damgasını atar."""
         if st is None:
             return False
         st.setdefault("haftalar", {})[str(kayit.get("hafta"))] = kayit
@@ -810,6 +827,13 @@ def ozet_metni(limit_hafta: int = 3) -> str:
 
 
 def _cli() -> int:
+    """CLI girişi (`python -m meridian.nous_eval`).
+
+    `--boru` defterdeki kabul edilmiş önerileri yönlendirme borusundan geçirir (LLM ÇAĞIRMAZ),
+    `--telemetri` paketi basar, `--kosu` haftalık değerlendirmeyi koşturur (LLM çağırır), `--json`
+    durum özetini JSON verir; bayraksız çağrı defter özetini yazar. `--kuru` verildiğinde deftere
+    ve kuyruğa YAZILMAZ.
+    """
     import argparse
     ap = argparse.ArgumentParser(description="Nous sistem-değerlendirme katmanı (Katman B/C/D)")
     ap.add_argument("--ozet", action="store_true",

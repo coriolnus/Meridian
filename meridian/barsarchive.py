@@ -61,6 +61,7 @@ def archive_dir():
 
 
 def _day_path(day: str):
+    """`YYYY-MM-DD` gününün arşiv dosyası yolu (state/bars_intraday/YYYY-MM-DD.jsonl)."""
     return archive_dir() / f"{day}.jsonl"
 
 
@@ -103,6 +104,9 @@ class _DayIndex:
     diskten kurulan küme onları ÇİFT SATIR yazmadan düşürür. İdempotensin çalıştığı yer burasıdır."""
 
     def __init__(self, day: str):
+        """Gün indeksini kurar: dosya varsa DİSKTEN okuyup (ticker,t) tekilleştirme kümesini ve
+        yüklenen satır sayısını doldurur (yarım/bozuk satır sessizce atlanır — ACK'lenmemiş bar
+        yeniden teslim edilecektir). Dosya tanıtıcısı ilk yazımda tembel açılır."""
         self.day = day
         self.seen: set[tuple[str, str]] = set()
         self.loaded_rows = 0
@@ -124,6 +128,8 @@ class _DayIndex:
                     self.loaded_rows += 1
 
     def _handle(self):
+        """Gün dosyasının ekleme (append) tanıtıcısını döndürür; ilk çağrıda dizini yaratıp dosyayı
+        açar (tembel açılış — okuma-amaçlı indeks boş dosya bırakmaz)."""
         if self._fh is None:
             path = _day_path(self.day)
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -144,6 +150,7 @@ class _DayIndex:
         return len(rows)
 
     def close(self) -> None:
+        """Açık gün dosyasını kapatır (açıksa). Veri zaten fsync'lenmiştir; kapatma hatası yutulur."""
         if self._fh is not None:
             try:
                 self._fh.close()
@@ -157,6 +164,9 @@ class BarsArchiver:
 
     def __init__(self, poll_ms: int = DEFAULT_POLL_MS, idle_s: float = DEFAULT_IDLE_S,
                  count: int = DEFAULT_COUNT, consumer: str = CONSUMER):
+        """Arşivciyi kurar. `poll_ms` [100, MAX_POLL_MS] aralığına KIRPILIR (BLOCK, Redis soket
+        zaman aşımından küçük kalmalı — yoksa sahte 'Redis down' churn'ü doğar). Gün indeksleri,
+        kurulmuş grup/tahliye edilmiş PEL kümeleri ve kümülatif sayaçlar (YASA 4) boş başlar."""
         self.poll_ms = max(100, min(int(poll_ms), MAX_POLL_MS))
         self.idle_s = float(idle_s)
         self.count = int(count)
@@ -398,14 +408,19 @@ class BarsArchiver:
         time.sleep(s)
 
     def stop(self) -> None:
+        """`run()` döngüsüne dur bayrağını basar; içinde bulunulan tur tamamlanır."""
         self._stop = True
 
     def close(self) -> None:
+        """Açık tüm gün dosyalarını kapatır ve indeksi boşaltır (yazılan satırlar zaten fsync'li)."""
         for idx in self._days.values():
             idx.close()
         self._days.clear()
 
     def snapshot(self) -> dict:
+        """KÜMÜLATİF sayaçların anlık görüntüsü (tur deltaları `poll()`ün döndürdüğü sözlüktedir):
+        okunan/yazılan/çift/ACK'li giriş, yazım başarısızlığı, NOGROUP onarım sayısı, son yazım ve
+        son hata."""
         return {"group": GROUP, "consumer": self.consumer, "polls": self.polls, "read": self.read,
                 "written": self.written, "duplicate": self.duplicate,
                 "skipped_no_t": self.skipped_no_t, "acked": self.acked,
@@ -415,6 +430,7 @@ class BarsArchiver:
 
 
 def _now_iso() -> str:
+    """Şimdiki UTC anı, saniye çözünürlüklü ISO dizesi (kayıt/rapor damgaları için)."""
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
 
@@ -695,6 +711,7 @@ def gap_scan(as_of=None, day: str | None = None, rows=None,
 
 
 def _dakikalar(ilk, son) -> list:
+    """`ilk`ten `son`a (İKİSİ DE DAHİL) birer dakikalık damgaların listesi — bağlam/koşu hesapları için."""
     out, m = [], ilk
     while m <= son:
         out.append(m)
@@ -729,6 +746,9 @@ def render_summary(limit_days: int | None = None) -> str:
 
 # --- CLI -----------------------------------------------------------------------------------------
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: `--ozet` arşiv istatistiğini, `--bosluk` seans-içi boşluk taramasını basar ve çıkar;
+    `--once` tek tur koşar (Redis yoksa çıkış kodu 2 — "Redis yok" ile "bar yoktu" karışmasın),
+    aksi hâlde arşivci uzun koşuya girer (Ctrl-C'de anlık görüntü basılır)."""
     import argparse
     p = argparse.ArgumentParser(
         prog="python -m meridian.barsarchive",

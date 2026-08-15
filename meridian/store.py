@@ -40,10 +40,13 @@ from . import storage
 
 
 def _state():
+    """Geçerli `state/` dizini — HER ÇAĞRIDA `config`ten okunur (ölçüm sandbox'ları onu değiştirir;
+    yolu modül yüklenirken dondurmak sandbox'ları canlı state'e yazdırırdı)."""
     return config.STATE
 
 
 def _path(name: str) -> Path:
+    """Defter adını yola çevirir: göreli ad `state/` altına bağlanır, MUTLAK yol olduğu gibi kalır."""
     return _state() / name if not os.path.isabs(name) else Path(name)
 
 
@@ -192,6 +195,8 @@ _IO = {"n": 0, "recent": [], "warned": False}
 
 
 def _record_io(ms: float) -> None:
+    """Bir yazımın süresini (ms) telemetriye işler; son 200 ölçüm tutulur. p95 > 50 ms olursa
+    SÜREÇ BAŞINA BİR KEZ `io_latency_high` uyarısı basar (bayrak özyinelemeyi de keser)."""
     _IO["n"] += 1
     r = _IO["recent"]
     r.append(ms)
@@ -209,6 +214,8 @@ def _record_io(ms: float) -> None:
 
 
 def io_stats() -> dict:
+    """Atomik yazım gecikmesinin özeti: {writes, recent_n, p50_ms, p95_ms, max_ms}.
+    Ölçüm yetersizse (p95 için <20 örnek) ilgili alan None kalır — sayı UYDURULMAZ."""
     r = sorted(_IO["recent"])
     return {"writes": _IO["n"], "recent_n": len(r),
             "p50_ms": round(r[len(r) // 2], 2) if r else None,
@@ -249,6 +256,8 @@ class _FileLock:
     __slots__ = ("name", "_rlock", "_depth", "_fd", "_dir")
 
     def __init__(self, name: str, lock_dir: Path):
+        """Kilit nesnesini kurar (ad, RLock, derinlik sayacı, kilit dizini). HİÇBİR BAYT YAZMAZ:
+        kilit dosyası ilk `acquire`da tembel açılır."""
         self.name = name
         self._rlock = _th.RLock()
         self._depth = 0
@@ -256,9 +265,13 @@ class _FileLock:
         self._dir = lock_dir
 
     def _lock_path(self) -> Path:
+        """Kilit dosyasının yolu: `state/.locks/<ad>.lock` (yol ayracı `_` ile düzleştirilir)."""
         return self._dir / (str(self.name).replace(os.sep, "_") + ".lock")
 
     def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
+        """Kilidi alır: önce süreç-içi RLock, ilk derinlikte ayrıca süreçler-arası `flock(LOCK_EX)`.
+        flock kurulamazsa (salt-okunur dizin, NFS, fd tükenmesi) süreç-İÇİ kilide düşülür ve
+        ad başına BİR KEZ uyarılır — kilitsiz kalınmaz. Yeniden girişte derinlik sayacı artar."""
         if not self._rlock.acquire(blocking, timeout):
             return False
         if self._depth == 0:
@@ -285,6 +298,9 @@ class _FileLock:
         return True
 
     def release(self) -> None:
+        """Kilidi bir kat bırakır. Derinlik sıfıra inince flock çözülür ve kilit tanıtıcısı
+        KAPATILIR (askıda açık fd kalmaz — `kilit_budamasi` canlılığı tam bunun üzerinden ölçer),
+        en son süreç-içi RLock bırakılır."""
         self._depth -= 1
         if self._depth == 0 and self._fd is not None:
             try:
@@ -296,10 +312,12 @@ class _FileLock:
         self._rlock.release()
 
     def __enter__(self):
+        """`with` girişi: kilidi (bloklayarak) alır ve nesnenin kendisini verir."""
         self.acquire()
         return self
 
     def __exit__(self, *exc):
+        """`with` çıkışı: kilidi bırakır. `False` döner — gövdedeki istisna YUTULMAZ."""
         self.release()
         return False
 
@@ -477,6 +495,9 @@ def _atomic_write(path: Path, data: str) -> None:
 # `write_json` (aynı adı yeniden alır) zinciri kendini bloklamaz — bu zaten bugünkü sıcak yoldur.
 
 def write_json(name: str, obj: Any) -> Path:
+    """Belgeyi `sanitize` edip yazar ve yazılan yolu döner. DB'ye giden adlar `storage`a yönlenir
+    (kilit SQLite'ındır), aksi hâlde flock ALTINDA atomik yazım (tmp+fsync+replace). Süre
+    telemetriye işlenir."""
     t0 = _time.perf_counter()
     payload = sanitize(obj)
     if db_backed(name):
@@ -521,6 +542,9 @@ def write_text(name: str, text: str) -> Path:
 
 
 def read_json(name: str, default: Any = None) -> Any:
+    """Belgeyi okur; dosya/kayıt yoksa `default` döner. DB'ye giden adlar `storage`tan okunur.
+    Bozuk ya da okunamayan dosya da varsayılana düşer ama SESSİZ DEĞİL: dosya başına bir kez
+    `state_file_unreadable` uyarısı basılır. Dönen nesne köken takibi için sarmalanır."""
     if db_backed(name):
         doc = storage.read_entity(name)
         return default if doc is None else _prov.sar(name, doc)
@@ -550,6 +574,9 @@ def read_json(name: str, default: Any = None) -> Any:
 
 
 def append_jsonl(name: str, row: dict) -> None:
+    """Satır defterine tek satır ekler (`sanitize` edilmiş). DB'ye giden ad `storage.append_row`a
+    yönlenir (satır+damga tek transaction); dosya yolunda satır sonuna eklenir. Süre telemetriye
+    işlenir."""
     t0 = _time.perf_counter()
     payload = sanitize(row)
     if db_backed(name):
@@ -564,6 +591,9 @@ def append_jsonl(name: str, row: dict) -> None:
 
 
 def read_jsonl(name: str, limit: int | None = None) -> list[dict]:
+    """Satır defterini okur; `limit` verilirse SON `limit` satır. Defter yoksa boş liste.
+    Çözümlenemeyen satırlar atlanır ama SESSİZ DEĞİL: dosya başına bir kez `jsonl_rows_skipped`
+    uyarısı (atlanan/kalan sayısıyla) basılır — yarım satır sessiz veri kaybı olmasın diye."""
     if db_backed(name):
         return _prov.sar(name, storage.read_rows(name, limit=limit))
     path = _path(name)
@@ -605,6 +635,8 @@ def merge_dated_jsonl(name: str, date_value: str, new_rows: list[dict], cap: int
 
 
 def write_jsonl(name: str, rows: list[dict]) -> None:
+    """Satır defterinin TAMAMINI değiştirir (`sanitize` edilmiş satırlarla). DB'ye giden ad tek
+    transaction'lık `storage.replace_rows`a yönlenir; dosya yolunda flock ALTINDA atomik yazım."""
     if db_backed(name):
         storage.replace_rows(name, [sanitize(r) for r in rows])
         return

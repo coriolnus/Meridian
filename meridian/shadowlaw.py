@@ -145,6 +145,7 @@ WHY_40_UNREACHABLE = (
 
 
 def _clip(x: float) -> float:
+    """Değeri [-1, +1] aralığına kırpar."""
     return max(-1.0, min(1.0, x))
 
 
@@ -298,6 +299,9 @@ def money_score(trades: list[dict], goal: dict, span_days: float | None = None) 
 
 # ---- VARYANS ATAMASI: yeni yasanın kendi çivisi -------------------------------------------------
 def _blocks(trades: list[dict]) -> tuple[list[list[dict]], int, int, str]:
+    """İşlem defterini AÇILIŞ tarihine göre bloklara böler (blok boyu = tutuş süresi medyanı, 5-21 gün
+    arası kırpılı). Dönüş: (bloklar, toplam gün açıklığı, blok boyu, ilk gün). Defter boş/biçimsizse
+    boş blok listesi — blok UYDURULMAZ; tarihi çözülemeyen satır hiçbir bloğa girmez."""
     days = sorted(str(t.get("ts_open", ""))[:10] for t in trades if t.get("ts_open"))
     closes = sorted(str(t.get("ts_close", ""))[:10] for t in trades if t.get("ts_close"))
     if not days or not closes:
@@ -361,6 +365,8 @@ def variance_attribution(trades: list[dict], goal: dict, n_boot: int = 2000, see
     w_r, w_d, w_s = weights
 
     def _paylar(parts: np.ndarray) -> dict:
+        """Bileşen kolonlarından varyans paylarını hesaplar: `Var(bileşen) / Σ Var` ve skorun standart sapması.
+        Toplam varyans sıfırsa paylar sıfır verilir (bölme yok)."""
         pv = parts.var(axis=0)
         tot = float(pv.sum())
         share = (pv / tot) if tot > 0 else pv * 0.0
@@ -578,6 +584,9 @@ E_REPORT_CANDIDATES: tuple[dict, ...] = (
 
 # ---- CLI (YASA 6 tüketicisi) --------------------------------------------------------------------
 def _cli() -> int:
+    """CLI girişi: `--olc` canlı defterde varyans atamasını, `--iraksama` iki yasanın hüküm kıyas tablosunu
+    basar; ikisi de verilmezse yardım yazar. Ölçüm kurulamazsa "ÖLÇÜLEMEDİ" der ve 1 döner —
+    sıfır basılmaz."""
     import argparse
     import json
     from . import config, store

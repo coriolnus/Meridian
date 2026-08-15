@@ -146,6 +146,8 @@ _POS_FIELDS = tuple(f.name for f in dataclasses.fields(brk.Position))
 
 
 def _new_book(vid: str) -> dict:
+    """Tek varyant için sıfırdan kitap sözlüğü: başlangıç sermayesi, boş pozisyon/silahlı/bekleyen-çıkış
+    kovaları ve sayaçlar."""
     return {"variant": vid, "start_equity": score_mod.START_EQUITY, "realized_pnl": 0.0,
             "peak_equity": score_mod.START_EQUITY, "day_start_equity": score_mod.START_EQUITY,
             "positions": {}, "armed": [], "pending_exits": {}, "equity_curve": [],
@@ -153,6 +155,8 @@ def _new_book(vid: str) -> dict:
 
 
 def _new_doc() -> dict:
+    """Boş gölge defteri belgesi kurar: şema sürümü, kuruluş anı, kol sayısı, `paper_only` yetkisi ve
+    boş tohumlama/varyant blokları."""
     return {"schema": BOOK_SCHEMA, "created": barclock.now().isoformat(),
             "k_lifecycle": len(arms()), "authority": "paper_only",
             "seed": {"done": False, "dates": [], "at": None, "sessions": SEED_SESSIONS},
@@ -174,12 +178,16 @@ def _to_broker(bk: dict, goal: dict) -> brk.PaperBroker:
 
 
 def _from_broker(b: brk.PaperBroker, bk: dict) -> None:
+    """Broker nesnesinin durumunu (gerçekleşmiş P&L, işlem sırası, pozisyonlar) kitap sözlüğüne geri yazar —
+    `_to_broker`ın tersi."""
     bk["realized_pnl"] = round(b.realized_pnl, 4)
     bk["trade_seq"] = b._id
     bk["positions"] = {t: {k: getattr(p, k) for k in _POS_FIELDS} for t, p in b.positions.items()}
 
 
 def _bar_on(df, d):
+    """Bir tickerın verilen tarihteki OHLC barını sözlük olarak verir. Veri yoksa ya da o gün endekste
+    yoksa None — bar UYDURULMAZ."""
     if df is None or d not in df.index:
         return None
     r = df.loc[d]
@@ -208,6 +216,8 @@ def step(bk: dict, params: dict, date: str, bars_of, *, regime_ok: bool, limits:
     closed: list[dict] = []
 
     def _marks_open():
+        """Açık pozisyonların o günkü AÇILIŞ fiyatlarını ticker→fiyat haritası olarak verir; barı olmayan
+        ticker haritaya girmez."""
         # AÇILIŞ MARKI (replay `marks_open_on`): açılış fazının sermayesi D'nin KAPANIŞIYLA
         # işaretlenirse devre kesici/kısma/boyutlandırma sabahtan öğleden sonrayı bilir.
         out = {}
@@ -413,6 +423,8 @@ def _corr_fn(bars_of, d, held: list, fallback):
             others.append(ind.returns_tail(dfx.loc[:d, "close"]))
 
     def _of(t):
+        """Tek ticker için, `d`ye kadarki kapanışlardan diğer tutulanlara azami korelasyon. Bar yoksa
+        `fallback` çağrılır."""
         df = bars_of(t)
         if df is None:
             return fallback(t)

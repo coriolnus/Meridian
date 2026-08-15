@@ -56,6 +56,10 @@ class IntradayConsumer:
     """Tek tüketici (barfeed callback'i). Kendi thread'i YOK — barfeed daemon thread'inde koşar."""
 
     def __init__(self):
+        """Tüketiciyi sıfır sayaçlarla kurar: olay/karar sayaçları, izlenen nüfus, iki kolun gölge
+        sayaçları, 4b gönderim sayacı ve atlama nedenleri.
+
+        Hepsi SÜREÇ-İÇİdir (restart'ta sıfırlanır); kalıcı iz defterlerdedir."""
         self.events_handled = 0
         self.decisions_written = 0
         self.last_decision_at: str | None = None
@@ -81,6 +85,9 @@ class IntradayConsumer:
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
     def _interest_set(self, pf: dict, planned: dict) -> set:
+        """İlgi kümesi: günün planları ∪ açık pozisyonlar ∪ silahlı planlar (hepsi BÜYÜK harf ticker).
+
+        Salt-okuma; bu kümenin dışındaki semboller olay akışında görmezden gelinir."""
         out = set(planned)
         for t in (pf.get("positions") or {}):
             out.add(str(t).upper())
@@ -92,6 +99,9 @@ class IntradayConsumer:
 
     @staticmethod
     def _armed_plan(tk: str, pf: dict) -> dict | None:
+        """Portföyün `armed` listesinde bu ticker'a ait plan varsa onu döner, yoksa None.
+
+        Silahlı nüsha kararı üreten kopyadır (keşif sondası boyutu, gate_reasons onda yaşar)."""
         for pl in (pf.get("armed") or []):
             if str(pl.get("ticker", "")).upper() == tk:
                 return pl
@@ -138,6 +148,12 @@ class IntradayConsumer:
             obs.warn("intraday_event_failed", error=self.last_error)
 
     def _handle(self, fields: dict) -> None:
+        """Tek bir barfeed olayını işler: seans/HALT kapılarını geçer, ilgi kümesini kurar ve olaydaki
+        her ilgili sembolü `_handle_symbol`a verir.
+
+        FAIL-CLOSED: RTH dışıysa (takvim yoksa dahil) ya da kill-switch açıksa hiçbir şey yapmaz,
+        yalnız `skipped` sayacını artırır. Olay başına TEK karar anı kullanılır (çapraz-sembol
+        tutarlılığı)."""
         as_of = barclock.now()                          # olay başına TEK karar anı (çapraz-sembol tutarlı)
         if not barclock.is_market_open(as_of):          # RTH dışı (mcal yok → fail-closed)
             self.skipped["session"] += 1
@@ -157,6 +173,13 @@ class IntradayConsumer:
                 self._handle_symbol(tk, as_of, pf, armed, planned)
 
     def _handle_symbol(self, tk: str, as_of, pf: dict, armed: bool, planned: dict) -> None:
+        """Tek sembolün gözlem/karar turu: sıcak durumdan barları okur, yalnız KAPANMIŞ ve taze
+        barları alır, plan varsa tetik-geçişini ölçer ve kararı gözlem defterine yazar.
+
+        Tetik kesildiyse iki AYRI kola gider: silahlı plan → gölge kaydı (+ INTRADAY_ARM açıksa
+        Faz 4b gerçek gönderim denemesi), silahlanmamış GO/REVIEW planı → ayrı planlı-kol defteri.
+        Bar yoksa/bayatsa sembol atlanır, tur DÜŞMEZ; kol hataları yutulmaz, sayaç + uyarı ile
+        görünür."""
         raw = hotstate.read_bars(tk, INTRADAY_LOOKBACK)
         if not raw:                                     # Redis down / bar yok → sembol atlanır, tur düşmez
             self.skipped["no_bars"] += 1
@@ -363,6 +386,7 @@ _CONSUMER: IntradayConsumer | None = None
 
 
 def consumer() -> IntradayConsumer:
+    """Süreçteki TEK tüketiciyi döner, yoksa ilk çağrıda kurar (tembel singleton)."""
     global _CONSUMER
     if _CONSUMER is None:
         _CONSUMER = IntradayConsumer()

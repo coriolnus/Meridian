@@ -80,6 +80,7 @@ SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json",
 
 
 def _now() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -92,6 +93,9 @@ _TERMINAL_PHASES = frozenset({"done", "stopped", "stopping", "error"})
 
 
 def status() -> dict:
+    """Sprint durumunu okur ve canlılığı ÖLÇEREK zenginleştirir: zombi süreç toplanır, pid sinyalle
+    yoklanır (`active`), ölü pid + terminal-olmayan faz `orphan` işaretlenir, son koşu satırları kum
+    havuzu defterlerinden eklenir. SALT OKUMA — hiçbir sprinti diriltmez/öldürmez."""
     st = store.read_json(STATUS_FILE, {})
     pid, alive = st.get("pid"), False
     if pid:
@@ -554,6 +558,9 @@ def _systemd_baslat(sid: str, sbroot: Path, ortam: dict) -> tuple[int | None, st
 
 
 def start(cfg: dict | None = None) -> dict:
+    """Yeni bir sprint başlatır: eski kum havuzlarını budar, sid'li havuzu kurar ve çocuğu ÖNCE systemd
+    biriminde, olmazsa `Popen` yedeğiyle doğurur. Zaten koşan sprint varsa `already_running` döner.
+    Durum dosyasına pid/faz/koşum yolu + taze-aday tetiğinin hipotez sayacı tabanı damgalanır."""
     cfg = cfg or {}
     if status().get("active"):
         return {"status": "already_running", **status()}

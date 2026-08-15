@@ -74,6 +74,8 @@ PIT_SERH = (
 
 # ---------------------------------------------------------------- kitap
 def yeni_kitap(now: str | None = None) -> dict:
+    """Sıfırdan gölge kitabı kurar: boş pozisyon/kapanış/sermaye listeleri, başlangıç nakdi, PIT şerhi ve
+    sayaç bloğu. Bu defter SANALDIR — sıfır yetki."""
     return {"schema": SCHEMA, "created": now or _now(), "positions": {}, "closed": [],
             "equity": [], "last_run": None, "pit_serh": PIT_SERH,
             # --- şemanın taşıyıcı ekleri (brief'in çekirdeğinin üstüne) ---
@@ -85,10 +87,12 @@ def yeni_kitap(now: str | None = None) -> dict:
 
 
 def _now() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _kaydet(kitap: dict) -> None:
+    """Kitabı disk üzerindeki gölge defterine yazar."""
     store.write_json(BOOK, kitap)
 
 
@@ -238,6 +242,8 @@ def _uygunluk() -> dict:
 
 
 def _uygun(harita: dict, t: str, rd) -> bool:
+    """Ticker `rd` tarihinde işlem evrenine uygun mu? Bütünlük haritasında geçerlilik başlangıcı varsa
+    yalnız o tarihten itibaren uygundur; haritada yoksa kısıtsız uygun sayılır."""
     gs = harita.get(t.upper())
     return (not gs) or str(pd.Timestamp(rd).date()) >= str(gs)
 
@@ -253,6 +259,8 @@ def _icra(kitap: dict, xd, per: dict, mpos: dict) -> None:
     say = kitap["sayaclar"]
 
     def _acilis(t):
+        """İcra fiyatı: `xd` seansının AÇILIŞI; açılış yoksa/geçersizse karar gününün son kapanışına düşer
+        (şasinin yedeği). Fiyat UYDURULMAZ — kaynak her iki hâlde de gerçek bardır."""
         df = per.get(t)
         if df is not None and xd in df.index:
             p = df.at[xd, "open"]

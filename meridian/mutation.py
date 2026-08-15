@@ -56,6 +56,11 @@ _LIVE_STATE = (Path(config.ROOT) / "state").resolve()
 # YOL GÜVENLİĞİ + DURUM BAĞLAMI
 # =============================================================================================
 def _assert_not_live(p: Path) -> Path:
+    """Yolu çözümleyip CANLI `state/` ile çakışmadığını doğrular; çakışırsa RuntimeError.
+
+    Mutasyon koşumunun her yazım yolu buradan geçer: canlı defterin kendisi, üstü ya da altı
+    hedef gösterilirse koşum başlamadan durur.
+    """
     rp = Path(p).resolve()
     if rp == _LIVE_STATE or _LIVE_STATE in rp.parents or rp in _LIVE_STATE.parents:
         raise RuntimeError(f"mutasyon koşumu canlı defterin yakınına yazamaz: {rp}")
@@ -97,14 +102,17 @@ def quiet_externals():
 # GERÇEKÇİ, SÖZLEŞMEYE UYAN TEMEL DURUM
 # =============================================================================================
 def _wjson(state: Path, name: str, obj) -> None:
+    """Nesneyi `state/<name>` dosyasına girintili JSON olarak yazar (fikstür kurulumu)."""
     (state / name).write_text(json.dumps(obj, indent=2))
 
 
 def _wjsonl(state: Path, name: str, rows: list) -> None:
+    """Satır listesini `state/<name>` dosyasına JSONL (satır başına bir nesne) olarak yazar."""
     (state / name).write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
 def rjsonl(state: Path, name: str) -> list:
+    """`state/<name>` JSONL defterini satır listesi olarak okur; dosya yoksa boş liste (salt okuma)."""
     p = state / name
     if not p.exists():
         return []
@@ -112,6 +120,7 @@ def rjsonl(state: Path, name: str) -> list:
 
 
 def rjson(state: Path, name: str, default=None):
+    """`state/<name>` JSON dosyasını okur; dosya yoksa `default` döner (salt okuma)."""
     p = state / name
     return json.loads(p.read_text()) if p.exists() else default
 
@@ -151,6 +160,13 @@ def build_state(dest: Path) -> Path:
 
 
 def _build_ledgers(state: Path) -> None:
+    """Temel durumun HAM defterlerini 24 sentetik seans üzerinden yazar: plan, işlem, karşı-olgusal,
+    aday, hipotez, harcama, boru-hattı koşumu ve olay defteri.
+
+    Satır şekilleri GERÇEK üreticilerden gelir — kapı kararını `guard.classify_gate`, işlem
+    satırını `PaperBroker` üretir. Bir dolum reddedilirse RuntimeError ile durur: GO damgalı ama
+    işlemsiz bir plan temel durumu kirletir ve kirli temelde her mutasyon 'yakalandı' görünürdü.
+    """
     from . import guard
     from .broker import PaperBroker
 
@@ -257,6 +273,13 @@ def _build_ledgers(state: Path) -> None:
 
 
 def _build_artifacts(state: Path) -> None:
+    """Ham defterlerden TÜREYEN artefaktları yazar: portföy, rejim, veri kalitesi, nabız, sermaye
+    eğrisi, eleme muhasebesi, barlar, kazanç takvimi ve kalibrasyon/karne dosyaları.
+
+    Kaynaklar türevlerden ÖNCE yazılır (tutarlılık dedektörü mtime sırasına bakar) ve sayılar
+    gerçek işlem defterinden türetilir — yeniden-hesap dedektörünün iki yoldan bulduğu değerler
+    temel durumda tutmak zorundadır.
+    """
     trades = rjsonl(state, "trades.jsonl")
     n_tr = len(trades)
     # YENİDEN HESAP dedektörü (recompute.py) aynı büyüklüğü iki yoldan hesaplayıp kıyaslıyor:
@@ -437,12 +460,18 @@ def detector_red(log: list | None = None, dusen: dict | None = None) -> set[str]
 # =============================================================================================
 @dataclass(frozen=True)
 class Mutation:
+    """Katalogdaki tek bir bozulma sınıfı: adı, hangi gerçek olayın sınıfı olduğunu anlatan Türkçe
+    not ve durumu bozan `apply` işlevi. Donuk (frozen) — katalog koşum sırasında değişmez.
+    """
     name: str
     note: str                      # Türkçe: bu hangi gerçek olayın sınıfı?
     apply: Callable[[Path], None]
 
 
 def _m_plan_id_legacy(state: Path) -> None:
+    """MUTASYON: plan kimliklerini sözleşmedeki biçimden çıkarıp eski `P00140` şemasına döndürür —
+    birleştirme anahtarını kıran canlı hatanın sınıfı.
+    """
     rows = rjsonl(state, "trade_plans.jsonl")
     for i, r in enumerate(rows):
         r["id"] = f"P{i:05d}"
@@ -450,6 +479,9 @@ def _m_plan_id_legacy(state: Path) -> None:
 
 
 def _m_trade_plan_id_legacy(state: Path) -> None:
+    """MUTASYON: işlem satırlarındaki `plan_id`yi eski şemaya çevirir; sim↔gerçek kıyasının
+    birleştirme anahtarı kopar.
+    """
     rows = rjsonl(state, "trades.jsonl")
     for i, r in enumerate(rows):
         r["plan_id"] = f"P{i:05d}"
@@ -457,6 +489,7 @@ def _m_trade_plan_id_legacy(state: Path) -> None:
 
 
 def _m_cf_id_legacy(state: Path) -> None:
+    """MUTASYON: karşı-olgusal satır kimliklerini eski `CF0001` şemasına çevirir."""
     rows = rjsonl(state, "counterfactuals.jsonl")
     for i, r in enumerate(rows):
         r["id"] = f"CF{i:04d}"
@@ -464,6 +497,7 @@ def _m_cf_id_legacy(state: Path) -> None:
 
 
 def _m_drop_setup_from_trades(state: Path) -> None:
+    """MUTASYON: işlem satırlarından zorunlu `setup` alanını siler ('gerçek 0 / simüle 241' olayının kökü)."""
     rows = rjsonl(state, "trades.jsonl")
     for r in rows:
         r.pop("setup", None)
@@ -471,6 +505,7 @@ def _m_drop_setup_from_trades(state: Path) -> None:
 
 
 def _m_drop_status_from_cf(state: Path) -> None:
+    """MUTASYON: karşı-olgusal satırlardan zorunlu `status` alanını siler."""
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r.pop("status", None)
@@ -478,6 +513,9 @@ def _m_drop_status_from_cf(state: Path) -> None:
 
 
 def _m_rename_to_legacy_alias(state: Path) -> None:
+    """MUTASYON: `r_multiple_expected` alanını `rr_expected` takma adına çevirir — yaması olmayan
+    tüketici satırı sessizce eler.
+    """
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r["rr_expected"] = r.pop("r_multiple_expected", None)
@@ -485,6 +523,9 @@ def _m_rename_to_legacy_alias(state: Path) -> None:
 
 
 def _m_regime_is_question_mark(state: Path) -> None:
+    """MUTASYON: tüm karşı-olgusal satırların rejim etiketini '?' yapar; rejim bazlı her dilimleme
+    boşa düşer.
+    """
     rows = rjsonl(state, "counterfactuals.jsonl")
     for r in rows:
         r["regime"] = "?"
@@ -492,11 +533,13 @@ def _m_regime_is_question_mark(state: Path) -> None:
 
 
 def _m_truncate_trades(state: Path) -> None:
+    """MUTASYON: işlem defterinin yarısını keser (kötü restore / yarım yazım sınıfı)."""
     rows = rjsonl(state, "trades.jsonl")
     _wjsonl(state, "trades.jsonl", rows[: max(1, len(rows) // 2)])
 
 
 def _m_truncate_events(state: Path) -> None:
+    """MUTASYON: olay defterinin üçte ikisini keser — teşhis geçmişi silinir."""
     rows = rjsonl(state, "events.jsonl")
     _wjsonl(state, "events.jsonl", rows[: max(1, len(rows) // 3)])
 
@@ -509,6 +552,7 @@ def _m_stale_derived(state: Path) -> None:
 
 
 def _m_zero_out_calibration(state: Path) -> None:
+    """MUTASYON: skor kalibrasyon artefaktını sıfırlar — mekanizma 'koşuyor' ama hiçbir şey üretmiyor."""
     _wjson(state, "score_calibration.json", {"n": 0, "n_real": 0, "n_cf": 0, "buckets": {}})
 
 
@@ -520,6 +564,7 @@ def _m_duplicate_trade_rows(state: Path) -> None:
 
 
 def _m_size_out_of_bounds(state: Path) -> None:
+    """MUTASYON: ilk beş planın `size_r` değerini bounds.yaml tavanının çok üstüne (99.0) çıkarır."""
     rows = rjsonl(state, "trade_plans.jsonl")
     for r in rows[:5]:
         r["size_r"] = 99.0                     # bounds.yaml tavanının çok üstünde
@@ -534,18 +579,25 @@ def _m_unread_writer_output(state: Path) -> None:
 
 
 def _m_heartbeat_field_clobbered(state: Path) -> None:
+    """MUTASYON: nabızdaki (`heartbeat.json`) `regime` alanını siler — sahipli bir alanın başka bir
+    yazıcı tarafından ezilmesi sınıfı.
+    """
     hb = rjson(state, "heartbeat.json", {})
     hb.pop("regime", None)
     _wjson(state, "heartbeat.json", hb)
 
 
 def _m_book_date_regression(state: Path) -> None:
+    """MUTASYON: portföyün `last_date` alanını geriye alır — defter tarihinin geri gitmesi hatası."""
     pf = rjson(state, "portfolio.json", {})
     pf["last_date"] = "2026-05-01"
     _wjson(state, "portfolio.json", pf)
 
 
 def _m_bars_file_shrinks(state: Path) -> None:
+    """MUTASYON: ilk bar CSV'sini yarıya indirir ama wf-revizyonuna dokunmaz; önbelleklenmiş
+    walk-forward sonuçları artık var olmayan barlara ait kalır.
+    """
     p = sorted((state / "bars").glob("*.csv"))[0]
     lines = p.read_text().splitlines()
     p.write_text("\n".join(lines[: len(lines) // 2]) + "\n")
@@ -561,6 +613,7 @@ def _m_hypothesis_id_reused(state: Path) -> None:
 
 
 def _m_candidates_emptied(state: Path) -> None:
+    """MUTASYON: aday defterini boşaltır — huninin girişi görünmez olur."""
     _wjsonl(state, "candidates.jsonl", [])
 
 
@@ -595,6 +648,9 @@ def _m_realized_pnl_drift(state: Path) -> None:
 
 
 def _m_negative_edge_everywhere(state: Path) -> None:
+    """MUTASYON: ölçülen edge'i her rejimde negatife çevirir. Bu bir SONUÇtur; ölçülen şey
+    dedektörün bunu alarm sayıp saymadığıdır.
+    """
     _wjson(state, "regime_edge.json", {"chop": {"n": 40, "avg_r": -0.5},
                                        "trend_up": {"n": 25, "avg_r": -0.8}})
 
@@ -805,6 +861,10 @@ def format_report(res: dict) -> str:
 
 
 def main(argv=None) -> int:
+    """CLI girişi (`python -m meridian.mutation`): `--json`/`--keep`/`--workdir` bayraklarını işler,
+    koşumu yürütür ve raporu basar. Temel durum kirliyse ölçüm yapılmaz: hata mesajı yazılır ve
+    2 ile çıkılır.
+    """
     ap = argparse.ArgumentParser(description="Mutasyon koşumu: dedektörlerin körlüğünü ölçer.")
     ap.add_argument("--json", action="store_true", help="raporu JSON olarak yaz")
     ap.add_argument("--keep", action="store_true", help="geçici dizini silme (inceleme için)")

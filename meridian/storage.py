@@ -480,6 +480,8 @@ def _touch(conn, name: str, *, n: int, present: bool = True, env: dict | None = 
 
 
 def read_rows(name: str, limit: int | None = None) -> list[dict]:
+    """Satır defterini ekleme sırasıyla (`seq`) okur. `limit` verilirse SON `limit` satır alınır
+    ve sıra yeniden eskiden yeniye çevrilir — `store.read_jsonl(limit=…)` sözleşmesiyle aynı."""
     tbl = _TABLE[name]
     c = connect()
     with _GUARD:
@@ -492,6 +494,8 @@ def read_rows(name: str, limit: int | None = None) -> list[dict]:
 
 
 def append_row(name: str, row: dict) -> None:
+    """Satır defterine tek satır ekler ve damgayı ilerletir — ikisi TEK `BEGIN IMMEDIATE`
+    transaction'ında, hata hâlinde ROLLBACK (JSONL eklemenin yarım satır bırakma sınıfı kapanır)."""
     tbl = _TABLE[name]
     cols = [c for c, _ in _COLS[name]]
     vals, extra = _row_to_cols(name, row)
@@ -567,6 +571,7 @@ def do_write_doc(c: sqlite3.Connection, name: str, doc: Any) -> None:
 
 
 def write_doc(name: str, doc: Any) -> None:
+    """Tekil belgeyi tek transaction'da yazar (`do_write_doc` + COMMIT/ROLLBACK sarmalayıcısı)."""
     c = connect()
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
@@ -636,6 +641,7 @@ def do_write_series(c: sqlite3.Connection, doc: Any, name: str = EQUITY) -> int:
 
 
 def write_series(doc: Any, name: str = EQUITY) -> None:
+    """Nokta serisini zarfıyla birlikte tek transaction'da yazar (`do_write_series` sarmalayıcısı)."""
     c = connect()
     with _GUARD:
         c.execute("BEGIN IMMEDIATE")
@@ -649,6 +655,8 @@ def write_series(doc: Any, name: str = EQUITY) -> None:
 
 # ---- ORTAK YÜZEY (store.py buradan çağırır) ----------------------------------------------------
 def read_entity(name: str) -> Any:
+    """Varlığı türüne göre okur (doc → `read_doc`, series → `read_series`, aksi → `read_rows`).
+    `store.py`nin yönlendirdiği ortak okuma yüzeyi."""
     kind = _KIND[name]
     if kind == "doc":
         return read_doc(name)
@@ -658,6 +666,9 @@ def read_entity(name: str) -> Any:
 
 
 def write_entity(name: str, payload: Any) -> None:
+    """Varlığı türüne göre TAMAMEN yazar (doc → `write_doc`, series → `write_series`, aksi →
+    `replace_rows`). `store.py`nin yönlendirdiği ortak yazma yüzeyi; her yol kendi transaction'ını
+    açar."""
     kind = _KIND[name]
     if kind == "doc":
         write_doc(name, payload)
@@ -708,6 +719,8 @@ def backup_to(hedef: Path | str) -> Path:
 
 
 def mark_migrated(name: str, *, digest: str, conn: sqlite3.Connection | None = None) -> None:
+    """Varlığın damgasına migrasyon kanıtını basar: `migrated_at` + kaynak `source_digest`.
+    TRANSACTION YÖNETMEZ — `dbmigrate` bunu kendi tek transaction'ı içinde çağırır."""
     c = conn or connect()
     c.execute("UPDATE entity_meta SET migrated_at=?, source_digest=? WHERE entity=?",
               (time.time(), digest, name))

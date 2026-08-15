@@ -42,6 +42,8 @@ from .adapters import data
 
 
 def _files(symbols: list[str] | None):
+    """Taranacak bar defterlerinin yolları: `symbols` verilirse YALNIZ diskte VAR OLANLARI, yoksa
+    `state/bars/*.csv` defterlerinin tamamı (sıralı)."""
     if symbols:
         return [data._cache_path(s) for s in symbols if data._cache_path(s).exists()]
     return sorted(config.BARS.glob("*.csv"))
@@ -273,6 +275,9 @@ def integrity_apply(rapor: dict) -> dict:
 
 
 def _print_integrity(rapor: dict) -> None:
+    """Bütünlük taraması raporunu insan-okur metne döker: damgalanan sembol/kırılma sayıları, ölçümden
+    düşen bar sayısına göre ilk 20 sembol, damgalanmayan büyük kalıcı adım adayları (elle denetim) ve
+    okunamayan defterler. Yalnız basar — dosya yazmaz."""
     print(f"[barrepair] BÜTÜNLÜK TARAMASI — {rapor['taranan']} defter")
     print(f"  damgalanan sembol: {rapor['sembol_sayisi']}, kırılma: {rapor['kirilma_sayisi']}, "
           f"ölçümden düşen bar: {rapor['dislanan_bar_toplam']}")
@@ -306,6 +311,9 @@ def _worker_running() -> bool:
 
 
 def _print(rapor: dict) -> None:
+    """Onarım raporunu insan-okur metne döker: kip (uygulandı / kuru koşu), takvim durumu, taranan
+    defter/satır, hayalet ve karantina satır sayıları, tarih kırılımı, yazılan defterler (türetilmiş
+    artefakt uyarısıyla), kapının reddettiği ve okunamayan defterler. Yalnız basar — dosya yazmaz."""
     mod = "UYGULANDI" if rapor.get("applied") else "KURU KOŞU (hiçbir bayt yazılmadı)"
     print(f"[barrepair] {mod} — takvim {rapor['calendar']} "
           f"({'okundu' if rapor['calendar_ok'] else 'OKUNAMADI → kapı FAIL-OPEN, satır düşmez'})")
@@ -333,6 +341,10 @@ def _print(rapor: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi. Varsayılan KURU KOŞUdur; `--uygula` yazar ve canlı Meridian süreci görülüyorsa
+    (`--zorla` yoksa) REDDEDER — aynı defteri iki süreç yeniden yazamaz. `--integrity-tara` satır
+    silmeyen kırılma envanterini üretir; onun `--uygula`sı TAM evren ister (kısmi tarama, taranmayan
+    sembollerin damgasını silerdi). Çıkış kodu: 0 başarı, 2 reddedildi."""
     ap = argparse.ArgumentParser(prog="python -m meridian.barrepair",
                                  description="state/bars defterlerinden hayalet seans satırlarını temizler")
     ap.add_argument("--uygula", action="store_true", help="YAZ (varsayılan: kuru koşu)")

@@ -559,6 +559,8 @@ def render_karne(books: dict, trades: list[dict], goal: dict, k_lifecycle: int |
            "  kol  islem tohum   ortR      PF    para  dParaV5   maxDD  acik  etiket"]
     for vid, p in sorted(s["per_variant"].items()):
         def _f2(x, w=7, nd=3):
+            """Karne hücresi biçimlendirici: None ise sağa yaslı `n/a`, değilse `w` genişlikte `nd` ondalıklı sayı.
+            Ölçülemeyen değer sıfır gibi gösterilmez."""
             return f"{'   n/a':>{w}}" if x is None else f"{x:>{w}.{nd}f}"
         out.append(f"  {vid:<4} {p['n_islem']:>5} {p['n_tohum']:>5} {_f2(p['ort_R'])} "
                    f"{_f2(p['PF'])} {_f2(p['para'], 7, 4)} {_f2(p['para_delta'], 8, 4)} "
@@ -579,6 +581,9 @@ def _load_books() -> tuple[dict, list, int]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: `--varyantlar` tanımlı kolları, `--karne` gölge-v2 kitap karnesini, aksi hâlde karar
+    defteri özetini yazar (`--json` ile makine okunur). Yalnız RAPORLAR — hiçbir defteri değiştirmez,
+    canlıya ship yolu yoktur. Dönüş: çıkış kodu."""
     import argparse
     import json
     from . import config as _config

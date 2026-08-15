@@ -59,14 +59,19 @@ def _score_ic(sc: dict | None):
 
 
 def _now() -> str:
+    """Şimdiki UTC zamanı, saniye çözünürlüklü ISO-8601 metni olarak."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _week_ago_iso() -> str:
+    """Yedi gün öncesinin UTC ISO-8601 damgası — haftalık pencerenin alt sınırı."""
     return (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=7)).isoformat(timespec="seconds")
 
 
 def _health() -> dict:
+    """Mekanizma sağlık kayıtlarını (`self_review.json` → `mechanisms`) sözlük olarak okur; yoksa
+    boş sözlük (salt okuma).
+    """
     h = (store.read_json(REVIEW_FILE, {}) or {}).get(MECH_KEY)
     return dict(h) if isinstance(h, dict) else {}
 
@@ -74,6 +79,9 @@ def _health() -> dict:
 def mechanism_ok(name: str) -> None:
     """Mekanizma bu koşumda çıktı ÜRETTİ — seri sayacı sıfırlanır, DİKKAT satırı kalkar."""
     def _fn(doc):
+        """Rapor belgesini yerinde günceller: mekanizmayı sağlıklı damgalar (seri 0) ve ona ait kesinti
+        satırını DİKKAT listesinden düşürür.
+        """
         if not isinstance(doc, dict):
             return False
         doc.setdefault(MECH_KEY, {})[name] = {"ok": True, "streak": 0, "at": _now()}
@@ -95,6 +103,9 @@ def mechanism_failed(name: str, err: BaseException) -> None:
     box = {"streak": 1}
 
     def _fn(doc):
+        """Rapor belgesini yerinde günceller: üst üste düşüş sayacını artırır, hata metnini kaydeder ve
+        DİKKAT listesinin BAŞINA kesinti satırını koyar (eskisini değiştirerek).
+        """
         if not isinstance(doc, dict):
             return False
         prev = (doc.get(MECH_KEY) or {}).get(name) or {}
@@ -120,11 +131,15 @@ _OUTAGE_PREFIX = "MEKANİZMA ÜRETEMİYOR"
 
 
 def _outage_row(name: str, detail: str, streak: int) -> dict:
+    """DİKKAT listesine düşecek kesinti satırını üretir: Türkçe gerekçe + 'yüksek' önem + mekanizma adı."""
     return {"why": f"{_OUTAGE_PREFIX}: {name} — {detail} (üst üste {streak} koşum)",
             "sev": "yüksek", "mechanism": name}
 
 
 def _is_outage_row(row, name: str) -> bool:
+    """Bir DİKKAT satırı, verilen mekanizmanın kesinti satırı mı? (mekanizma adı + `MEKANİZMA
+    ÜRETEMİYOR` öneki birlikte aranır.)
+    """
     return isinstance(row, dict) and row.get("mechanism") == name \
         and str(row.get("why", "")).startswith(_OUTAGE_PREFIX)
 

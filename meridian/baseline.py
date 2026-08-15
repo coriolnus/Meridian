@@ -171,6 +171,8 @@ def would_have_replay(version: int, parent: int, goal: dict | None = None,
             cur_strat = None
 
     def _replay_skor(params, pbr, ver):
+        """Verilen parametrelerle pencereyi yeniden oynatır; (segment skoru, işlem satırları) döndürür.
+        Rejim ship'inde satırlar o rejime süzülür — iki bacak AYNI popülasyonda kıyaslansın diye."""
         res = backtest.replay(params, bars, index, goal, lo, hi, strategy_version=ver,
                               params_by_regime=pbr)
         rows = ([t for t in res.trades if str(t.get("regime")) == eval_regime] if eval_regime

@@ -786,6 +786,8 @@ def golge_cf_eslestirme(satirlar: list[dict] | None = None,
                         "kazanc_bps": round((giris - sf) / giris * 10000.0, 4)})
 
     def _kol_ozeti(alt: list[dict]) -> dict:
+        """Tek kolun eşleşme özeti: kazanç (bps) üzerinden tarih-kümeli bootstrap GA, örneklem tabanının
+        dolup dolmadığı ve (tavana kırpılmış) çift listesi. Ölçülemeyen GA alanları None kalır."""
         ci = tarih_kumeli_bootstrap([c["kazanc_bps"] for c in alt], [c["date"] for c in alt],
                                     seviye=IKINCIL_CI)
         return {"n": len(alt), "n_min_dolu_mu": len(alt) >= IKINCIL_N_MIN,

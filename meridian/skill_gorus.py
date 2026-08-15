@@ -70,6 +70,7 @@ P_ARAMA_ADIM = 7            # bootstrap p ikili aramasının adım sayısı → 
 
 
 def _now() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -143,6 +144,7 @@ def defter() -> list[dict]:
 
 
 def _anahtar(g: dict) -> tuple:
+    """Bir görüş kaydının kimlik anahtarı: (skill, yüzey, hedef) üçlüsü — tekilleştirme/eşleştirme için."""
     return (g.get("skill"), g.get("yuzey"), g.get("hedef"))
 
 
@@ -158,11 +160,13 @@ def _anahtar(g: dict) -> tuple:
 # `setup`tan skill'e düşme yolu BİLEREK kullanılmaz: `screener`/`skill_chain` YAZILI atıftır,
 # `screener_for(setup)` ise bir TAHMİNDİR ve tahmini kanıt gibi deftere yazmak uydurmadır.
 def _cf_satirlari() -> list[dict]:
+    """Karşı-olgusal defterin ÇÖZÜLMÜŞ ve girilmiş satırları (görüş türetmenin ham maddesi; saf okuma)."""
     from . import counterfactual
     return counterfactual.resolved_rows(entered_only=True)
 
 
 def _trade_satirlari() -> list[dict]:
+    """Gerçek işlem defterinin `r_multiple`ı ölçülmüş satırları (sonucu olmayan işlem görüş üretmez; saf okuma)."""
     return [t for t in store.read_jsonl("trades.jsonl") if t.get("r_multiple") is not None]
 
 
@@ -571,6 +575,7 @@ def rapor() -> dict:
 # KADANS + p95 ÖLÇÜM DÜZENEĞİ (kill#1)
 # ==================================================================================================
 def _yuzdelik(vals: list[float], q: float):
+    """Sıralı listenin q yüzdeliği (en yakın-sıra yöntemi, 2 ondalık). Liste boşsa None — değer uydurulmaz."""
     if not vals:
         return None
     s = sorted(vals)

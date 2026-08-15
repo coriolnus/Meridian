@@ -79,6 +79,9 @@ _PERM_WARNED = False
 
 
 def _read_file() -> dict:
+    """Yerel operatör deposunu (`state/secrets.json`) sözlük olarak okur; dosya yoksa `{}`.
+    Okurken İZNİ de denetler: sahibi dışına açıksa süreç başına BİR kez uyarır. Okunamayan dosya
+    "hiç sır yok" gibi görünmez — hatanın yalnız TÜRÜ kaydedilir, içerik/anahtar ASLA loglanmaz."""
     global _PERM_WARNED
     try:
         p = _path()
@@ -139,6 +142,9 @@ def _write_file(data: dict) -> None:
 
 # ---------------- read ----------------
 def _fetch(name: str) -> str | None:
+    """Sırrı ÖNBELLEKSİZ çözer, sırayla: (1) süreç env'i, (2) yerel 0600 deposu,
+    (3) `MERIDIAN_GCP_PROJECT` kuruluysa GCP Secret Manager. Hiçbiri veremezse None —
+    env HER ZAMAN kazanır ve değer hiçbir yolda loglanmaz."""
     v = os.environ.get(name)
     if v:
         return v
@@ -159,6 +165,8 @@ def _fetch(name: str) -> str | None:
 
 
 def get(name: str) -> str | None:
+    """Sır erişiminin TEK kapısı: `_fetch` sonucunu süreç-içi önbellekten (TTL 300 sn) verir.
+    Yokluk da önbelleğe alınır; rotasyondan sonra `clear_cache()` anında tazeler."""
     now = time.monotonic()
     hit = _cache.get(name)
     if hit and (now - hit[0]) < TTL_SECONDS:
@@ -169,6 +177,7 @@ def get(name: str) -> str | None:
 
 
 def present(name: str) -> bool:
+    """Bu sır AYARLI MI? (yalnız varlık/yokluk — değer çağırana hiç verilmez)."""
     return bool(get(name))
 
 
@@ -194,6 +203,8 @@ def set(name: str, value: str) -> None:
 
 
 def delete(name: str) -> None:
+    """Sırrı yerel operatör deposundan siler; ALLOWED dışındaki her adı REDDEDER. Dosya yalnız
+    gerçekten bir kayıt düştüyse yeniden yazılır (atomik, 0600) ve okuma önbelleği temizlenir."""
     if name not in ALLOWED:
         raise ValueError(f"'{name}' is not a settable secret")
     data = _read_file()
@@ -204,6 +215,8 @@ def delete(name: str) -> None:
 
 # ---------------- status (masked only — never a full value) ----------------
 def mask(value: str | None) -> str | None:
+    """Değeri gösterilebilir ipucuna indirger: 8 karakterden uzunsa `••••` + SON 4 karakter,
+    değilse yalnız `••••`; boş/None ise None. Tam değer hiçbir koşulda dönmez."""
     if not value:
         return None
     v = str(value)
@@ -211,6 +224,8 @@ def mask(value: str | None) -> str | None:
 
 
 def _source_of(name: str) -> str | None:
+    """Bu sır HANGİ kaynaktan geliyor: "env" | "file" | "gcp"; hiçbiri veremiyorsa None.
+    Sıra `_fetch` ile aynıdır — durum raporu gerçek çözüm sırasını yansıtsın diye."""
     if os.environ.get(name):
         return "env"
     if _read_file().get(name):

@@ -903,12 +903,14 @@ def _md_render(md: str) -> tuple[str, str]:
     alinti: list[str] = []
 
     def _liste_kapat():
+        """Açık kalmış `<ul>` katmanlarını (iç içe olanlar dahil) gövdeye kapatır."""
         nonlocal liste_derinlik
         while liste_derinlik > 0:
             govde.append("</ul>")
             liste_derinlik -= 1
 
     def _alinti_kapat():
+        """Biriken alıntı satırlarını tek bir `<blockquote>` olarak gövdeye yazar ve tamponu boşaltır."""
         if alinti:
             govde.append("<blockquote><p>" + " ".join(alinti) + "</p></blockquote>")
             alinti.clear()
@@ -1110,9 +1112,14 @@ class KayanOturumMiddleware:
     biri artarsa test söyler, yorum sessizce eskimez."""
 
     def __init__(self, app):
+        """Sarılacak ASGI uygulamasını saklar (başka durum tutmaz)."""
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        """Çerezli HTTP isteklerinde oturumu tazeleyip yanıta yeni `set-cookie` iliştirir.
+
+        Çerezsiz istek ve HTTP dışı kapsamlar hiç dallanmadan geçer — o yolda tek bir disk
+        okuması bile yapılmaz. Tazeleme yalnız `auth.refresh_session` bir jeton döndürürse olur."""
         if scope["type"] != "http":       # lifespan/websocket: çerez kavramı yok
             await self.app(scope, receive, send)
             return
@@ -1131,6 +1138,10 @@ class KayanOturumMiddleware:
         yazildi = False
 
         async def _send(mesaj):
+            """Yanıt başlığına tazelenmiş oturum çerezini ekler (uç zaten yazmışsa dokunmaz).
+
+            Yalnız İLK `http.response.start` mesajında iş görür; çerez gönderildikten SONRA
+            `session_refresh` kaydını düşer (kayıt arızası tazelemeyi geri almasın diye)."""
             nonlocal yazildi
             if mesaj["type"] != "http.response.start" or yazildi:
                 await send(mesaj)
@@ -1194,6 +1205,10 @@ def api_login(request: Request, body: dict):
 
 @app.post("/api/logout")
 def api_logout(request: Request):
+    """`POST /api/logout`: oturum çerezini siler ve `{"ok": true}` döner.
+
+    Yetki İSTEMEZ (zaten düşmüş bir oturumun da kapatılabilmesi için); sunucu tarafında
+    hiçbir duruma yazmaz, tek yan etkisi çerezin silinmesidir."""
     r = JSONResponse({"ok": True})
     r.delete_cookie(auth.COOKIE_NAME, path="/")
     return r
@@ -1231,6 +1246,10 @@ def api_setup_password(request: Request, body: dict):
 
 @app.get("/healthz")
 def healthz():
+    """`GET /healthz`: yetkisiz sağlık ucu — kalp atışı yaşı, HALT, mod ve son bar.
+
+    Salt-okuma. Kalp atışı bayatsa HTTP 503 (`status: "stale"`), değilse 200 döner —
+    dış izleyicinin (systemd/uptime) sonda olarak kullandığı sözleşme budur."""
     hb = store.read_json("heartbeat.json", {})
     age = health.heartbeat_age_seconds()
     stale = health.stale()
@@ -1269,6 +1288,7 @@ def metrics(request: Request):
     detail = analytics.score_mod.score_detail(trades, config.goal()) if full else {}
     age = health.heartbeat_age_seconds()
     def g(name, val, help_):
+        """Tek bir Prometheus gauge bloğu (HELP+TYPE+değer) üretir; None→0, bool→1/0 çevrilir."""
         v = 0 if val is None else (1 if val is True else (0 if val is False else val))
         return f"# HELP {name} {help_}\n# TYPE {name} gauge\n{name} {v}\n"
     live = "".join([
@@ -1298,6 +1318,7 @@ def metrics(request: Request):
 
 
 def _spend_summary():
+    """Hermes/LLM harcama özetini döndürür; `spend` modülünü gecikmeli (fonksiyon içi) içe alır."""
     from . import spend
     return spend.summary()
 
@@ -1320,6 +1341,10 @@ def _spend_summary():
 # K1-EMEKLİ: kanonik yüzey /api/hermes `spend`. Yeni tüketici bağlanmaz.
 @app.get("/api/spend")
 def api_spend(request: Request):
+    """`GET /api/spend` (EMEKLİ): aylık LLM harcama özeti + son 30 harcama kaydı, yeniden eskiye.
+
+    Yetki gerektirir, salt-okuma. Kanonik yüzey `/api/hermes` `spend` alanıdır — buraya YENİ
+    tüketici bağlanmaz."""
     _auth(request)
     from . import spend
     return {**spend.summary(), "recent": list(reversed(store.read_jsonl("spend.jsonl")[-30:]))}
@@ -1327,12 +1352,16 @@ def api_spend(request: Request):
 
 @app.get("/api/events")
 def api_events(request: Request):
+    """`GET /api/events`: son 80 gözlem olayını yeniden eskiye döndürür. Yetkili, salt-okuma."""
     _auth(request)
     return {"events": list(reversed(obs.recent(80)))}
 
 
 @app.get("/api/summary")
 def summary(request: Request):
+    """`GET /api/summary`: hedef, mod, özerklik düzeyi, strateji sürümü, skor kırılımı ve merdiven.
+
+    Yetki gerektirir, salt-okuma — hiçbir duruma yazmaz."""
     _auth(request)
     goal = config.goal()
     detail = analytics.score_mod.score_detail(store.read_jsonl("trades.jsonl"), goal)
@@ -1432,6 +1461,12 @@ def _son_dongu() -> dict:
 
 @app.get("/api/today")
 def api_today(request: Request):
+    """`GET /api/today`: panonun ana yükü — günün görünümü + son döngü + kitap + sermaye kökeni.
+
+    Yetki gerektirir, salt-okuma. `analytics.today()` çıktısını uç katmanında zenginleştirir:
+    `son_dongu`, `latest_session`, `kitap`, `defter`, `sermaye_koken`, planlarda bayatlık/onay
+    damgaları ve `inbox_count`. SIRA ZORUNLU — `inbox_count` damgalamadan SONRA hesaplanır,
+    yoksa süresi dolmuş planlar da "onay bekliyor" diye sayılır."""
     _auth(request)
     d = analytics.today()
     # `inbox_count` AŞAĞIDA, `_enrich_stale_plans`TEN SONRA yazılır: sayım artık onay
@@ -1489,6 +1524,10 @@ def api_today(request: Request):
 
 @app.get("/api/signals")
 def api_signals(request: Request):
+    """`GET /api/signals`: son 120 aday + son 120 planı yeniden eskiye, kırpma BEYANIYLA birlikte.
+
+    Yetki gerektirir, salt-okuma. Defterin tamamı dönmez; `ledger` bloğu toplam/gösterilen
+    sayıları ve tavanı açıkça bildirir. En taze sinyal gününün planları bayatlık damgası alır."""
     _auth(request)
     # TAVAN DÜRÜSTÇE BİLDİRİLİR: defterde 368 plan varken uç 120 döndürüyordu ve pano
     # "GEÇMİŞ SİNYALLER · DENETİM İZİ (110)" yazıyordu. Sayı iç tutarlıydı ama DENETİM İZİ olduğunu
@@ -1548,6 +1587,9 @@ def api_agent(request: Request):
 
 @app.get("/api/memory")
 def api_memory(request: Request):
+    """`GET /api/memory`: `state/lessons.md` ham metni + tüm hipotezler. Yetkili, salt-okuma.
+
+    Dosya yoksa ders metni yerine `_No lessons yet._` döner (uydurma değil, açık boşluk beyanı)."""
     _auth(request)
     p = config.STATE / "lessons.md"
     return {"lessons_md": p.read_text() if p.exists() else "_No lessons yet._",
@@ -1556,6 +1598,11 @@ def api_memory(request: Request):
 
 @app.get("/api/skills")
 def api_skills(request: Request):
+    """`GET /api/skills`: skill kayıt defteri + katalog + öneriler + revizyonlar + son koşular.
+
+    Yetki gerektirir. TEK YAN ETKİSİ `skills.reconcile_enablement()`tır: anahtar durumuna göre
+    skill'lerin açık/kapalı alanını defterde günceller (uç bunun dışında salt-okuma). Sayımlar
+    kayıttaki bayat alandan değil, o uzlaştırmadan SONRA canlı hesaplanır."""
     from . import skill_evolve as _se
     _auth(request)
     from . import skills
@@ -2288,6 +2335,11 @@ def _egri_beyani(ec: dict | None, pf: dict | None) -> dict:
 
 @app.get("/api/performance")
 def api_performance(request: Request):
+    """`GET /api/performance`: sermaye eğrisi + pencere beyanı, skor kırılımı, Kelly, kuyruk riski,
+    ölçülen slipaj, benchmark farkı, rejim/skill kırılımları ve son 40 işlem.
+
+    Yetki gerektirir, salt-okuma. Ölçülemeyen alanlar (ör. `slippage_measured`) sıfır değil None
+    döner — pano onları "henüz ölçülmedi" diye çizer."""
     _auth(request)
     goal = config.goal()
     trades = store.read_jsonl("trades.jsonl")
@@ -2434,6 +2486,12 @@ async def api_set_secret(name: str, request: Request):
 
 @app.delete("/api/secrets/{name}")
 def api_delete_secret(name: str, request: Request):
+    """`DELETE /api/secrets/{name}`: saklanan anahtarı siler. YETKİLİ ve YAZAN uç.
+
+    Yalnız `secrets_mod.ALLOWED` içindeki adlar kabul edilir (aksi 400). Yan etkileri: anahtara
+    bağlı skill'ler yeniden kapatılır, `secret_cleared` olayı yazılır, teşhis önbelleği boşaltılır
+    ve `GEMINI_API_KEY` silinirse yerel ajan yedeklenen Nous ayarına döndürülür. Anahtarın
+    kendisini DÖNMEZ, yalnız durum özetini."""
     _auth(request)
     if name not in secrets_mod.ALLOWED:
         raise HTTPException(status_code=400, detail="unknown secret name")
@@ -2656,6 +2714,10 @@ async def api_broker_reject_ack(request: Request):
     ts = memory.now_iso()
 
     def _mut(doc):
+        """Ack defterine bilinen anahtarları İDEMPOTENT ekler; ilk görülme anını EZMEZ.
+
+        `store.update_json` geri-çağrısıdır: defteri yerinde değiştirir ve gerçekten yeni satır
+        eklenip eklenmediğini bool olarak döner (yazımın gerekip gerekmediğini o belirler)."""
         yeni = 0
         for k in bilinen:
             if k not in doc:                       # İDEMPOTENT: ikinci ack ilk görülme anını EZMEZ
@@ -3627,6 +3689,10 @@ def _spend_detay() -> dict:
     olculemeyen = 0
 
     def _topla(kume):
+        """Bir satır kümesinin n/token/maliyet toplamlarını çıkarır (maliyet 4 haneye yuvarlanır).
+
+        `cost_usd` alanı olmayan satır `olculemeyen` sayacını artırır; ayrıştırılamayan alan o
+        satırı toplama katmaz — eksik alan 0 SAYILMAZ."""
         nonlocal olculemeyen
         c = {"n": 0, "in_tokens": 0, "out_tokens": 0, "cost_usd": 0.0, "thought_tokens": 0}
         for r in kume:
@@ -3642,6 +3708,10 @@ def _spend_detay() -> dict:
         return c
 
     def _grup(anahtar):
+        """Tüm harcama satırlarını verilen alana göre gruplayıp her grubun toplamını döndürür.
+
+        Alanı boş olan satırlar "—" adı altında toplanır; sonuç maliyete (sonra n'e) göre azalan
+        sıralanır."""
         out = {}
         for r in rows:
             k = str(r.get(anahtar) or "—")
@@ -3741,6 +3811,7 @@ def _regresyon_kirilimi() -> dict:
     AZ = 10        # yalnız GÖRÜNÜRLÜK çizgisi (app.js `AZ_ORNEK_N` ile aynı sayı, aynı gerekçe)
 
     def _ort(xs):
+        """Sayısal olanların ortalamasını 3 haneye yuvarlar; hiç sayı yoksa None döner (0 DEĞİL)."""
         xs = [float(x) for x in xs if isinstance(x, (int, float))]
         return round(sum(xs) / len(xs), 3) if xs else None
 
@@ -3759,6 +3830,10 @@ def _regresyon_kirilimi() -> dict:
     cikti = []
     for v, s in sorted(surum.items(), key=lambda t: -int(t[0]) if t[0].isdigit() else 0):
         def _dilim(d):
+            """Eksen sözlüğünü {ad, n, avg_r, az_ornek} dilimlerine çevirip n'e göre sıralar.
+
+            `az_ornek`, dilimin örneklemi görünürlük çizgisi `AZ`ın altındaysa işaretlenir —
+            hüküm değil uyarıdır."""
             return sorted(({"ad": k, "n": len(xs), "avg_r": _ort(xs), "az_ornek": len(xs) < AZ}
                            for k, xs in d.items()), key=lambda x: -x["n"])
         cikti.append({"version": v, "n": s["n"], "avg_r": _ort(s["r"]),
@@ -4446,6 +4521,12 @@ async def api_hermes_pool_key(request: Request):
 
 @app.post("/api/hermes/{action}")
 def api_hermes_control(action: str, request: Request):
+    """`POST /api/hermes/{action}`: yerel ajan denetimi. YETKİLİ ve YAN ETKİLİ uç.
+
+    Tanınan eylemler: `start`/`stop` (ajan koşucusu), `backfill` (görüş dolgusunu arka planda
+    başlatır — tavan `hermes.backfill_budget()`ten gelir, bu uçtan `max_days` VERİLMEZ),
+    `sync_integrations` (MCP/hook/cache/pool ayarlarını tazeler). Başkası 400 döner. Gerçekten
+    iş gören her dalda teşhis önbelleği boşaltılır."""
     _auth(request)
     from . import hermes_runtime, hermes
     if action == "start":
@@ -4480,6 +4561,9 @@ def api_hermes_control(action: str, request: Request):
 # K1-EMEKLİ: kanonik yüzey /api/hermes `scheduler`. Yeni tüketici bağlanmaz.
 @app.get("/api/scheduler")
 def api_scheduler(request: Request):
+    """`GET /api/scheduler` (EMEKLİ): zamanlayıcı durumunu döner. Yetkili, salt-okuma.
+
+    Kanonik yüzey `/api/hermes` `scheduler` alanıdır — buraya YENİ tüketici bağlanmaz."""
     _auth(request)
     from . import scheduler
     return scheduler.status()
@@ -4502,6 +4586,9 @@ def api_scheduler_advance(request: Request):
 # K1-EMEKLİ: kanonik yüzey /api/hermes `sprint`. Yeni tüketici bağlanmaz.
 @app.get("/api/sprint")
 def api_sprint(request: Request):
+    """`GET /api/sprint` (EMEKLİ): öğrenme sprintinin durumunu döner. Yetkili, salt-okuma.
+
+    Kanonik yüzey `/api/hermes` `sprint` alanıdır — buraya YENİ tüketici bağlanmaz."""
     _auth(request)
     from . import sprint
     return sprint.status()
@@ -4525,6 +4612,10 @@ async def api_sprint_start(request: Request):
 
 @app.post("/api/sprint/stop")
 def api_sprint_stop(request: Request):
+    """`POST /api/sprint/stop`: koşan öğrenme sprintini durdurur. YETKİLİ ve YAN ETKİLİ.
+
+    Yalnız kum havuzundaki alt süreci sonlandırır — canlı kitaba dokunmaz. Ardından teşhis
+    önbelleği boşaltılır."""
     _auth(request)
     from . import sprint
     out = sprint.stop()
@@ -5184,6 +5275,9 @@ def api_trade(trade_id: str, request: Request):
 # K1-EMEKLİ: kanonik yüzey /api/skills `recent_runs` (K1'de bağlandı). Yeni tüketici bağlanmaz.
 @app.get("/api/pipeline_runs")
 def api_pipeline_runs(request: Request):
+    """`GET /api/pipeline_runs` (EMEKLİ): son 60 skill koşusunu yeniden eskiye döner (salt-okuma).
+
+    Yetki gerektirir. Kanonik yüzey `/api/skills` `recent_runs` alanıdır — YENİ tüketici bağlanmaz."""
     _auth(request)
     return {"runs": list(reversed(store.read_jsonl("pipeline_runs.jsonl")[-60:]))}
 
@@ -5258,6 +5352,7 @@ def api_approvals(request: Request):
 
 
 def esc_ev(x):
+    """Gelen kutusu kanıt metnini güvenli kısa dizgiye çevirir: None → "", en fazla 200 karakter."""
     return str(x or "")[:200]
 
 
@@ -5375,6 +5470,11 @@ def _inbox_count(planlar: list | None = None) -> int:
 # ---------- write surface (operator intents only) ----------
 @app.post("/api/halt")
 def api_halt(request: Request):
+    """`POST /api/halt`: kill-switch'i AÇAR — yeni girişler bir bar içinde durur. YETKİLİ, YAZAR.
+
+    Bayrak dosyasına kendi eliyle dokunmaz, `health.set_halt(True)`e delege eder (tek kapı).
+    Yan etkileri: nabız notuyla yeniden yazılır (mevcut alanlar korunur, sıfırdan yazılmaz),
+    `ALARM_HALT` alarmı düşer, ikincil bildirim kanalı denenir ve teşhis önbelleği boşaltılır."""
     _auth(request)
     # TEK KAPI (temizlik turu 2026-07-30): eskiden burada `health.halt_path().touch()` vardı ve
     # `api_resume` de dosyayı KENDİ eliyle `unlink` ediyordu — yani kill-switch'in yasası İKİ
@@ -5400,6 +5500,10 @@ def api_halt(request: Request):
 
 @app.post("/api/resume")
 def api_resume(request: Request):
+    """`POST /api/resume`: kill-switch'i KALDIRIR. YETKİLİ, YAZAR — `api_halt`ın tersi.
+
+    `health.set_halt(False)`e delege eder ve İDEMPOTENTtir (bayrak dosyası yoksa no-op).
+    `resume` olayı yazılır, bildirim kanalı denenir, teşhis önbelleği boşaltılır."""
     _auth(request)
     health.set_halt(False)      # TEK KAPI — bkz. api_halt'taki gerekçe (idempotent: dosya yoksa no-op)
     obs.log("resume", via="dashboard")

@@ -108,6 +108,7 @@ _SCREENER_BY_SETUP = {"breakout_vcp": "vcp-screener", "pullback": "pullback-scre
 
 
 def screener_for(setup: str) -> str:
+    """Setup adına karşılık gelen tarayıcı (screener) skill adını verir; eşleşme yoksa `vcp-screener`e düşer."""
     return _SCREENER_BY_SETUP.get(setup, "vcp-screener")
 
 
@@ -164,6 +165,7 @@ PIPELINES = {
 
 
 def registry() -> dict:
+    """Skill kayıt defterini (registry JSON) okur; defter yoksa boş `{"skills": {}}` döner."""
     return store.read_json(REGISTRY, {"skills": {}})
 
 
@@ -311,8 +313,10 @@ def envanter() -> dict:
     base = config.SKILLS
     ars = base / "_emekli"
     def _dizinler(p):
+        """Verilen dizinin doğrudan alt klasör adlarını sıralı verir; dizin yoksa boş liste."""
         return sorted(d.name for d in p.iterdir() if d.is_dir()) if p.exists() else []
     def _skillli(p):
+        """Verilen dizinin `SKILL.md` içeren alt klasör adlarını sıralı verir; dizin yoksa boş liste."""
         return sorted(d.name for d in p.iterdir() if d.is_dir() and (d / "SKILL.md").exists()) \
             if p.exists() else []
     klasor_aktif = [a for a in _skillli(base) if not a.startswith("_")]
@@ -770,6 +774,8 @@ def apply_skill_action(skill: str, action: str) -> dict:
 
 
 def _touch_registry_run(skill: str, artifact: str | None):
+    """Bir skill'in kayıt defterindeki `last_run` (ve varsa `last_artifact`) damgasını kilit altında günceller.
+    Skill defterde yoksa hiçbir şey yazılmaz."""
     with _REG_LOCK:
         reg = registry()
         if skill in reg.get("skills", {}):

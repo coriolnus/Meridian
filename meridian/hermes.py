@@ -196,6 +196,12 @@ def _compact_hypotheses(rows: list) -> list:
 
 
 def build_context() -> str:
+    """Beynin göreceği TÜM bağlamı tek JSON metnine toplar: hedef, sınırlar, güncel strateji,
+    dersler, son işlemler, skor tablosu, rejim penceresi, son hipotezler, kapı çıpası, ajanın kendi
+    kalibrasyonu, skill atıfları ve kütüphanesi.
+
+    SESSİZ KIRPMA YOK: dersler `LESSONS_CAP`ı aşarsa kırpılır ama kırpıldığı metinde SÖYLENİR —
+    model okumadığı bir şeyi okuduğunu sanmasın."""
     goal = config.goal()
     bounds = config.bounds()
     strat = config.load_strategy()
@@ -362,6 +368,10 @@ def _claude_text(user: str, *, note: str, schema: dict | None = None,
 
 
 def propose_with_claude() -> dict | None:
+    """Claude kolundan TEK tek-değişkenli hipotez ister; metin boşsa ya da şema ayrıştırması
+    düşerse None döner (uydurma yok — zincir bir sonraki sağlayıcıya düşer).
+
+    Talimat TEK KAYNAKTAN (`_user_prompt`) gelir; şema API'de zorlanır (with_schema=True)."""
     # TEK TALİMAT KAYNAĞI: burada inline bir kopya vardı ve `_user_prompt` ile
     # ayrışabiliyordu — üstelik bu yol `evidence_pack()`i HİÇ eklemiyordu, yani en pahalı beyin
     # ölçülmüş kalibrasyonları görmeden öneri üretiyordu. Şema API'de zorlandığı için sözleşme
@@ -551,6 +561,8 @@ def _trace_note(reason: str, detail: str | None = None) -> None:
 
 
 def _trace_take() -> tuple[str | None, str | None]:
+    """Bu iş parçacığında bırakılmış 'boş cevap' nedenini (sebep, ayrıntı) alır ve kutuyu TEMİZLER —
+    aynı neden ikinci bir olaya yapışmasın."""
     r, d = getattr(_BRAIN_TRACE, "reason", None), getattr(_BRAIN_TRACE, "detail", None)
     _BRAIN_TRACE.reason = _BRAIN_TRACE.detail = None
     return r, d
@@ -570,6 +582,8 @@ def brain_stand_down(provider: str, reason: str, retry_after: float | None = Non
     tabandan kısaysa yok sayılır: gemini 'retry in 11.8s' der ama tükenen kota GÜNLÜKTÜR — 12 sn
     sonra dönmek 45 başarısızlığı üreten davranışın ta kendisiydi."""
     def _mut(cur):
+        """Soğuma kaydını yerinde günceller: seriyi 1 artırır, üstel (tavanlı) süreyi hesaplar ve
+        `until`/`seconds`/`streak`/`reason` alanlarını yazar."""
         row = cur.get(provider) or {}
         streak = int(row.get("streak") or 0) + 1
         secs = min(BRAIN_COOLDOWN_BASE_S * (2 ** (streak - 1)), BRAIN_COOLDOWN_MAX_S)
@@ -585,6 +599,7 @@ def brain_stand_down(provider: str, reason: str, retry_after: float | None = Non
 def brain_recovered(provider: str) -> None:
     """Sağlayıcı kullanılabilir bir cevap üretti — soğuma ve seri sıfırlanır (yalnız kayıt varsa yazar)."""
     def _mut(cur):
+        """Sağlayıcının soğuma kaydını siler; kayıt yoksa False döner (gereksiz yazım olmaz)."""
         return cur.pop(provider, None) is not None
     store.update_json(BRAIN_COOLDOWN_FILE, _mut, default={})
 
@@ -598,6 +613,8 @@ def brain_pause(provider: str, reason: str, seconds: float) -> float:
     bindirmek üç turda hattı 6 saat kilitliyordu — hem de kotası dolmamış BİRİNCİ modeli de
     kapsayarak. Kısa pencere birinciyi bir sonraki turda yeniden denenebilir bırakır."""
     def _mut(cur):
+        """Kısa dinlenmeyi yerinde yazar: `until` mevcut cezayla MAX'lanır (uzun bir ceza
+        kısaltılmaz) ve `streak` olduğu gibi bırakılır (bu bir kota cezası değildir)."""
         row = cur.get(provider) or {}
         try:
             mevcut = float(row.get("until") or 0)
@@ -719,12 +736,19 @@ def brain_chain_facts() -> dict:
 
 
 def brain_order() -> list[str]:
+    """Beyin zincirinin sırası: HERMES_BRAIN_ORDER (sır → ortam → varsayılan) virgüllü listesi.
+
+    Yalnız TANINAN sağlayıcılar (claude/nous/gemini) geçer; bilinmeyen adlar sessizce elenir."""
     raw = secrets.get("HERMES_BRAIN_ORDER") or os.environ.get("HERMES_BRAIN_ORDER") or DEFAULT_BRAIN_ORDER
     known = {"claude", "nous", "gemini"}
     return [p.strip().lower() for p in raw.split(",") if p.strip().lower() in known]
 
 
 def _provider_ready(p: str) -> bool:
+    """Sağlayıcının KİMLİK BİLGİSİ hazır mı (anahtar/token, nous'ta yerel kurulum da yeter).
+
+    Yalnız kimlik bilgisini ölçer — soğumayı DEĞİL; "şu an konuşabilen beyin" için
+    `active_brain()` ikisini birlikte bakar."""
     if p == "claude":
         return bool(secrets.get("HERMES_API_KEY") or secrets.get("ANTHROPIC_API_KEY"))
     if p == "nous":
@@ -805,6 +829,10 @@ _REFUSAL_MARKS = ("i can't", "i cannot", "i'm unable", "i am unable", "as an ai"
 
 
 def _looks_like_refusal(t: str) -> bool:
+    """Metnin BAŞI (ilk 400 karakter) bilinen ret kalıplarından birini taşıyor mu?
+
+    Reddi "bozuk JSON"dan ayırmak için: ilki prompt/politika sorunudur (yeniden deneme işe
+    yaramaz), ikincisi biçim sorunudur — aynı kovaya atmak ikisini de görünmez ediyordu."""
     head = (t or "")[:400].lower()
     return any(m in head for m in _REFUSAL_MARKS)
 
@@ -1448,6 +1476,8 @@ def _agent_budget_refund(reason: str) -> bool:
     iade = {"oldu": False}
 
     def _mut(st):
+        """GÜN (RPD) sayacından bir düşüm iade eder; gün damgası bugünün değilse ya da sayaç
+        zaten 0 ise dokunmaz (dünün sayacını değiştirmek bugünü iki kez muhasebe etmek olurdu)."""
         if st.get("date") != today or int(st.get("day", 0) or 0) <= 0:
             return False            # dünün sayacına dokunmak, bugünü iki kez muhasebe etmektir
         st["day"] = int(st["day"]) - 1
@@ -1671,6 +1701,8 @@ def warmup_budget_feedback(res: dict | None) -> dict:
                           int(duvar) if duvar else WARMUP_SCALE_MAX, WARMUP_SCALE_MAX), "cleared=0"
 
     def _mut(st):
+        """Merdiven durumunu yazar: yeni çarpan, (varsa) duvar kademesi ve son koşumun künyesi
+        (evaluated/cleared/kesildi + zaman damgası)."""
         st["carpan"] = int(yeni)
         st["duvar"] = int(duvar) if duvar else None
         import datetime as _dtw
@@ -2354,6 +2386,8 @@ def _unwrap_strings(t: str) -> str:
 
 
 def _balanced_json(t: str, start: int) -> str | None:
+    """`start`ten sonraki İLK `{`ten başlayıp süslü parantezleri dengeleyerek tam JSON nesnesini
+    keser. Nesne bulunamaz ya da denge kapanmazsa None (kesik gövde uydurulmaz)."""
     depth = 0
     i = t.find("{", start)
     if i < 0:
@@ -2725,15 +2759,20 @@ def sync_local_agent_gemini(enable: bool) -> dict:
     backup_path = os.path.join(home, "meridian-model-backup.json")
 
     def _cfg(key, val):
+        """Yerel hermes-agent config anahtarını `config set` ile yazar (30 sn zaman aşımı)."""
         subprocess.run([bin_, "config", "set", key, val], capture_output=True, text=True, timeout=30)
 
     def _cfg_get(key):
+        """Config anahtarını TEK ölçüm yolundan (`_agent_cfg_get`) okur; ayarsız anahtar "" döner."""
         # TEK ÖLÇÜM YOLU (`_agent_cfg_get`): yedekleme burada, teşhis `local_agent_config_state`te
         # aynı sözleşmeyi okumalı — iki ayrı ayrıştırıcı sessizce ayrışırdı. Davranış aynı: ayarsız
         # anahtar (stdout boş) "" olarak yedeklenir ve geri yüklemede atlanır.
         return _agent_cfg_get(bin_, key)[0] or ""
 
     def _write_env(key_value: str | None):
+        """`~/.hermes/.env` dosyasını yeniden yazar: eski GEMINI/GOOGLE anahtar satırları süzülür,
+        `key_value` verilmişse GEMINI_API_KEY olarak eklenir. Yazım `store.write_text` üzerinden
+        ve dosya İZNİ açıkça 0600'e çekilir (sır diskte)."""
         lines = []
         if os.path.exists(env_path):
             with open(env_path) as fh:
@@ -2795,6 +2834,7 @@ AGENT_CONFIG = os.path.expanduser("~/.hermes/config.yaml")
 
 
 def _repo_root() -> str:
+    """Depo kökünün mutlak yolu (`config.ROOT`) — skill/config bağlantılarının TEK taban kaynağı."""
     from . import config as _cfg
     return str(_cfg.ROOT)
 

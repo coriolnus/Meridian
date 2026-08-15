@@ -46,10 +46,14 @@ _WARNED = False
 
 
 def _archive_path(day: str):
+    """`YYYY-MM-DD` gününün çerçeve arşivi yolu (state/intraday_bars/YYYY-MM-DD.jsonl); gün başına
+    TEK dosya."""
     return config.STATE / ARCHIVE_DIR / f"{day}.jsonl"
 
 
 def _warn_once(event: str, **fields) -> None:
+    """Arşiv arızasını SÜREÇ BAŞINA yalnız BİR KEZ uyarı olarak basar; sonraki çağrılar sessizdir —
+    dakikalık akışta her çerçevede uyarmak olay defterini boğardı."""
     global _WARNED
     if _WARNED:
         return

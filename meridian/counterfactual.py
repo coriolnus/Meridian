@@ -35,6 +35,8 @@ DEFAULT_TIME_STOP = 15              # exit.time_stop_days ile aynı varsayılan
 
 
 def _slip() -> float:
+    """Kayma (slippage) oranını `goal.yaml`dan okur (bps → oran). Okunamazsa 5 bps sabitine düşer ve
+    bu düşüş YASA 4 uyarısıyla işaretlenir — sessiz sapma yok."""
     try:
         return float(config.goal().get("slippage_bps", 5)) / 10000.0
     except Exception as e:
@@ -103,6 +105,8 @@ def collect(dstr: str, plans: list, armed_ids: set, dormant_sigs: list, time_sto
         _scr = lambda s2: None
 
     def _push(row, sinif="plan"):
+        """Bir karşı-olgusal satırı açık listeye ekler ve sınıf bazında sayar. Kimlik zaten varsa çift
+        olarak, tavan doluysa düşen olarak sayılır — her iki hâlde de satır EKLENMEZ."""
         nonlocal added, dropped
         if row["id"] in seen:
             _cift[sinif] += 1

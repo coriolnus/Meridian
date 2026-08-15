@@ -83,6 +83,7 @@ EXPECTED: dict[str, int] = {
 
 
 def _now() -> float:
+    """Şu anki UTC zamanı epoch saniyesi olarak (nabız damgalarının tek biçimi)."""
     return dt.datetime.now(dt.timezone.utc).timestamp()
 
 
@@ -266,6 +267,9 @@ def check_and_alarm() -> None:
                                               # sistemde defterde değişecek hiçbir şey yok)
 
     def _satir(ad: str) -> dict:
+        """Mekanizma defterinde bu adın satırını döner; yoksa ya da bozuksa boş satırla YENİDEN kurar.
+
+        Bozuk tek satır defterin tamamını düşürmez."""
         row = mek.get(ad)
         if not isinstance(row, dict):         # bozuk tek satır defterin tamamını düşürmez
             row = {}
@@ -382,6 +386,10 @@ def production_report() -> dict:
     (waiting) DÜRÜSTÇE ayrılır — biri hata işareti, diğeri sabır. cf defteri ömrü boyunca 0 satırdaydı
     ve bunu hiçbir denetim söylemedi; bu fonksiyon onu ilk gün söylerdi."""
     def _cal(f, key):
+        """Kalibrasyon artefaktından bir sayaç okur; dosya HİÇ yoksa None döner.
+
+        None ("artefakt yok") ile 0 ("var ama üretmemiş") ayrımı bilinçlidir — dedektörün üretkenlik
+        hükmü bu ikisini karıştıramaz."""
         d = store.read_json(f, None)
         return None if d is None else (d.get(key) or 0)
 
@@ -804,10 +812,14 @@ def _kapsama_satiri(olaylar: list[dict]) -> dict:
         kanit.append((ad, e))
 
     def _seans(ad: str, e: dict) -> str | None:
+        """Olayın seans tarihini imza adına göre doğru alandan okur; yoksa None."""
         v = e.get(_KAPSAMA_SEANS_ALANI[ad])
         return str(v) if v else None
 
     def _kapsama(e: dict) -> float | None:
+        """Olaydaki evren kapsama oranını float olarak döner; alan yoksa ya da ayrıştırılamıyorsa None.
+
+        Ayrıştırılamayan bir ÖLÇÜ, ölçünün YOKLUĞUdur — uydurulmaz ve metin o cümleyi hiç kurmaz."""
         for alan in ("universe_coverage", "coverage"):
             v = e.get(alan)
             if v is not None:
@@ -1359,6 +1371,10 @@ def integrity_report(persist: bool = False) -> dict:
     DEĞİŞMEDİ — paylaşım iplik-yerel bağlamdan akar, çünkü yalıtım sözleşmesi dedektörleri argümansız
     saplamalarla sınıyor."""
     def _tut(ad: str, fn) -> dict:
+        """Tek bir dedektörü YALITILMIŞ koşturur: düşerse diğerlerini düşürmez.
+
+        Hata hâlinde uyarı basar ve `ok=False, dedektor_dustu=True, olculemedi=True` taşıyan boş
+        hüküm döner — ölçülemeyen hüküm 'temiz' SAYILMAZ."""
         try:
             return fn()
         except Exception as e:
@@ -1946,6 +1962,9 @@ def coherence_report() -> dict:
     # ekiyle DONAR — `os.path.getmtime` "kaynak hiç güncellenmiyor" derdi, yani bayatlık
     # dedektörü tam da ölçmek için var olduğu şeyi göremez hâle gelirdi.
     def _m(name):
+        """Artefaktın son değişim damgası — `store.mtime` üzerinden, ARKA UÇTAN BAĞIMSIZ.
+
+        SQLite'a taşınıp dosyası donan kaynaklarda `os.path.getmtime` yanıltırdı; bu yol yanıltmaz."""
         return store.mtime(name)
     stale, ok, absent = [], 0, []
     for art, srcs in DERIVED_SOURCES.items():
@@ -2343,6 +2362,11 @@ def divergence_report() -> dict:
 
 
 def _divergence_hesapla() -> dict:
+    """DEĞER-EŞİTLİĞİ ölçümü: aynı olguyu söyleyen kaynaklar AYNI şeyi mi söylüyor?
+
+    `EQUIVALENT_TRUTHS` kaydındaki her olgu için kaynakları okur, ilişki kuralıyla normalize eder ve
+    kıyaslar. Okunamayan kaynak `olculemeyen`e, beyan edilmiş ayrılığı olan kaynak `beyanli`ya
+    düşer — sessizce eşit sayılmaz. En az İKİ ölçülmüş kaynak yoksa olgu kıyaslanmaz. SALT-OKUMA."""
     ayrik, olculemeyen, beyanli, esit = [], [], [], 0
     for olgu, kayit in EQUIVALENT_TRUTHS.items():
         degerler: dict = {}
@@ -2428,6 +2452,9 @@ def grant_amnesty(field: str, was, now, reason: str, by: str = "operatör") -> d
 
 
 def _amnesty_index() -> dict:
+    """Monotonluk aflarını `{alan: af_kaydı}` olarak indeksler.
+
+    GEREKÇESİZ KAYIT AF SAYILMAZ: `reason` alanı boş olan kayıtlar indekse girmez."""
     out = {}
     for a in (store.read_json(AMNESTY_FILE, []) or []):
         if isinstance(a, dict) and a.get("field") and str(a.get("reason") or "").strip():
@@ -2436,6 +2463,7 @@ def _amnesty_index() -> dict:
 
 
 def _now_iso() -> str:
+    """Şu anki UTC zamanı saniye hassasiyetinde ISO metin (af/durum kayıtlarının damgası)."""
     import datetime as _dt
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 

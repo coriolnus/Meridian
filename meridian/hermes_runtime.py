@@ -207,6 +207,7 @@ _state: dict = {"reflections": 0, "last_reflection": None, "last_poll": None,
 
 
 def _now() -> str:
+    """Şimdiki UTC zamanı, saniye çözünürlüklü ISO dizgesi olarak (tüm damgaların tek kaynağı)."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -292,6 +293,10 @@ def _horizon_progress(trades: list, last_at: int, regime: str | None,
 
 
 def _persist() -> None:
+    """Bellekteki `_state`i beyin/model/zincir olgularıyla birlikte STATUS_FILE'a yazar.
+
+    DÜRÜST BOZUNMA: deterministik yola düşülmüşse `brain_degraded=True` açıkça kaydedilir —
+    LLM'siz koşum LLM görüşü gibi okunamaz."""
     try:
         from . import hermes
         model = hermes.active_model()
@@ -306,6 +311,10 @@ def _persist() -> None:
 
 
 def _record(res: dict) -> None:
+    """Biten bir yansımanın sonucunu `_state`e işler (sayaç, zaman damgası, durum, değişken).
+
+    Geri sayım tabanını (`last_reflect_at`) da güncel defter uzunluğuna çeker: ELLE tetiklenen
+    yansıma da bekleme döngüsünün tetiğini ileri iter, aynı işlemler üzerinde tekrarlanmaz."""
     _state["reflections"] += 1
     _state["last_reflection"] = _now()
     _state["last_result"] = res.get("status")
@@ -379,6 +388,13 @@ def _acilis_senkron_dogrula() -> dict:
 
 
 def _run(poll_seconds: int) -> None:
+    """Bekleme döngüsünün gövdesi: `poll_seconds` aralıkla yoklar, koşulları ölçer ve tek bir dalı
+    seçer — yansıma / arka plan yansıması / ısınma sprinti / atlama.
+
+    Tek-kapı: bütün dallar `_reflect_lock`u bloksuz almaya çalışır, aynı anda YALNIZ BİR yansıma
+    koşar. HALT ya da bayat veri varsa hiçbir dal koşmaz. Her poll'da durum diske yazılır (poll
+    BAŞLARKEN de) ve `_warm_skip` tokeni "koşmadı" ile "koşamaz"ı ayırt eder. Açılış senkron-
+    doğrulaması süreç başına bir kez, `start()` içinde değil BURADA koşar (açılışı bloklamasın)."""
     from . import hermes
     global _acilis_senkron_calisti
     if not _acilis_senkron_calisti:
@@ -477,6 +493,9 @@ def _run(poll_seconds: int) -> None:
 
 
 def start(poll_seconds: int = 300) -> dict:
+    """Bekleme döngüsünü daemon iş parçacığı olarak başlatır; zaten koşuyorsa yenisini AÇMAZ
+    (`{"already_running": True}`). Başlamadan önce ajan skill seti ve entegrasyon config'ini
+    eşitler (öz-onarım)."""
     global _thread
     with _lock:
         if _thread and _thread.is_alive():
@@ -494,6 +513,7 @@ def start(poll_seconds: int = 300) -> dict:
 
 
 def stop() -> dict:
+    """Durdurma olayını kurar — döngü bir sonraki uyanışında çıkar (iş parçacığını beklemez)."""
     _stop.set()
     return {"stopping": True}
 
@@ -515,6 +535,10 @@ def reflect_now() -> dict:
                                        f"{hz.get('span_days', 0)}/{hz.get('min_days', '?')} gün) — elle tetikleme bunu bilerek atlar")
 
     def _bg():
+        """Arka plan iş parçacığının gövdesi: tek yansımayı koşar, sonucu kaydeder, durumu yazar.
+
+        Kilidi bloksuz alır — alamazsa sessizce döner (tek-kapı: aynı anda tek yansıma). Hata
+        `last_result`a sınıf adıyla düşer; `_persist` + kilit bırakma her hâlde koşar."""
         if not _reflect_lock.acquire(blocking=False):
             return
         try:
@@ -531,6 +555,11 @@ def reflect_now() -> dict:
 
 
 def status() -> dict:
+    """Panonun okuduğu tek durum modeli: `_state` + canlılık, beyin/model, arama ilerlemesi ve
+    DÜRÜST geri sayım.
+
+    "Sonraki yansımaya kaç işlem kaldı" ve ufuk ilerlemesi HER çağrıda TAZE ölçülür (HALT/bayat
+    hâlde ve ilk poll'dan önce de) — tek kaynak burasıdır, arayüz kendi formülünü üretmez."""
     alive = bool(_thread and _thread.is_alive())
     try:
         from . import hermes

@@ -81,6 +81,10 @@ _CACHE_WARNED: set = set()
 
 
 def _cache_warn(event: str, exc: BaseException) -> None:
+    """Önbellek G/Ç hatasını OLAY TÜRÜ BAŞINA BİR KEZ uyarı olarak düşer (YASA 4).
+
+    Arama döngüsü bu yolu yüzlerce kez geçer; her seferinde uyarmak asıl sinyali log seline
+    gömerdi. Kayıt kanalının kendisi düşerse sessiz kalır — telemetri aramayı düşüremez."""
     if event in _CACHE_WARNED:
         return
     _CACHE_WARNED.add(event)
@@ -94,6 +98,10 @@ def _cache_warn(event: str, exc: BaseException) -> None:
 
 
 def _inc_disk_load() -> None:
+    """Diskteki incumbent walk-forward önbelleğini süreç-içi `_INC_CACHE`e SÜREÇ BAŞINA bir kez yükler.
+
+    Yalnız dosyadaki bar revizyonu yürürlükteki revizyonla AYNIYSA alınır — bayat barların walk'ı
+    yeni barların adayıyla kıyaslanamaz. Okuma düşerse yalnız süre uzar, uyarı bırakılır."""
     global _INC_DISK_LOADED
     if _INC_DISK_LOADED:
         return
@@ -112,6 +120,9 @@ def _inc_disk_load() -> None:
 
 
 def _inc_disk_save() -> None:
+    """Süreç-içi incumbent önbelleğinin SON `INC_DISK_CAP` girdisini yürürlükteki bar revizyonuyla
+    damgalayıp diske yazar. Yazım düşerse önbellek hiç kalıcı olmaz (tek belirti yavaşlama) —
+    bu yüzden uyarı bırakılır."""
     try:
         rev = int(store.read_json(PROBE_REV_FILE, {}).get("rev", 0))
         keys = list(_INC_CACHE.keys())[-INC_DISK_CAP:]
@@ -149,6 +160,9 @@ def clear_wf_caches() -> None:
 
 
 def _default_windows() -> tuple:
+    """Üretim pencere demeti: (IS_START, OOS_START, OOS_END, HOLDOUT_END, OOS_FOLDS, EMBARGO_DAYS).
+
+    `dataset` sabitlerinden okunur; sprint aramaları kendi kaydırılmış pencerelerini verir."""
     return (dataset.IS_START, dataset.OOS_START, dataset.OOS_END,
             dataset.HOLDOUT_END, dataset.OOS_FOLDS, dataset.EMBARGO_DAYS)
 
@@ -283,6 +297,11 @@ def _wf_key(params: dict, version: int, goal: dict, by_regime: dict | None,
 
 def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: dict | None = None,
                windows: tuple | None = None, eval_regime: str | None = None) -> dict:
+    """Walk-forward'ı önbellekli koşar — aynı anahtar bir turda YALNIZ BİR KEZ hesaplanır.
+
+    Anahtar `_wf_key`den gelir (paramlar + sürüm + yasa parmak izi + pencere + eval_regime).
+    Anahtar başına hesap kilidi: ikinci çağıran bekler, birincinin sonucunu kullanır. Hesap
+    sürerken barlar tazelenirse (revizyon değişti) sonuç ÇAĞIRANA döner ama ÖNBELLEĞE YAZILMAZ."""
     w = windows or _default_windows()
     key = _wf_key(params, version, goal, by_regime, w, eval_regime)
     _inc_disk_load()
@@ -312,6 +331,9 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
 
 
 def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool) -> str:
+    """Reddin İNSAN OKUNUR gerekçesini üretir: hangi kapı dalı düşürdü (skor/marj, fold-çoğunluğu,
+    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir; buradaki sıra o hükmün dal
+    sırasıyla aynıdır."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
     inc_tail, cand_tail = inc.get("oos_tail_risk"), cand.get("oos_tail_risk")
     if cand_oos is None:
@@ -813,6 +835,8 @@ def _ucb_rank(candidates: list, hyps: list, c: float = 1.2) -> list:
         exit_bonus = 0.0
 
     def ucb(v):
+        """Tek değişkenin UCB1 skoru: hiç denenmemişse +inf (iyimserlik → önce keşif), denenmişse
+        ortalama ödül + c·sqrt(ln(toplam)/deneme) + (varsa) exit.* dürtü bonusu."""
         s = stats.get(v)
         bonus = exit_bonus if str(v).startswith("exit.") else 0.0
         if not s or s["trials"] == 0:
@@ -866,6 +890,8 @@ def propose_deterministic(explore: bool = False) -> dict:
         return int(new) if typ == "int" else round(new, 4)
 
     def explore_dir(var):
+        """Keşif yönü: mevcut değer aralığın ortasının altındaysa +1, üstündeyse −1 — adım hep
+        aralığın HENÜZ DENENMEMİŞ yarısına doğru atılır."""
         b = bounds[var]
         mid = (b["min"] + b["max"]) / 2.0
         return +1 if params.get(var, mid) <= mid else -1   # step toward the untested half of the range
@@ -970,6 +996,11 @@ def propose_deterministic(explore: bool = False) -> dict:
 
 
 def _proposal(var, new, params, why, explore=False, memory_exhausted: bool = False) -> dict:
+    """Deterministik üreticinin tek-değişkenli öneri sözlüğünü kurar (kaynak: "deterministic").
+
+    Güven değeri sabit DEĞİL: ≥5 sonuç varsa ajanın KENDİ gerçekleşmiş isabet oranından türetilir
+    (0.30..0.70), yoksa soğuk başlangıç önselidir. `memory_exhausted` her öneride yazılır (False
+    olsa bile) — eksik alan sıfır sanılamaz."""
     from . import skills, analytics
     recs = skills.recommend_from_attribution()      # Axis-2 from measured skill contribution (no LLM)
     # confidence anchored to the agent's OWN realized calibration (how often its past predictions held),
@@ -1003,6 +1034,8 @@ class _ProcessLock:
     would clobber strategy.yaml/version state. Non-blocking: the loser gets an honest
     'locked' result instead of silently corrupting."""
     def __enter__(self):
+        """Kilit dosyasını açıp BLOKSUZ flock dener; alınamazsa `self.held=False` ile döner
+        (bekleme yok — kaybeden çağıran dürüst 'locked' cevabı alır)."""
         import fcntl
         self.fh = open(config.STATE / ".reflect.lock", "w")
         try:
@@ -1013,6 +1046,7 @@ class _ProcessLock:
         return self
 
     def __exit__(self, *a):
+        """Kilidi (tutuluyorsa) bırakır ve dosyayı kapatır; temizlik hatası asıl iş yolunu düşürmez."""
         try:
             if self.held:
                 import fcntl
@@ -1023,6 +1057,11 @@ class _ProcessLock:
 
 
 def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+    """Ship yetkisinin TEK KAPISI: öğrenme-durdurma bayrağını ve süreçler-arası yansıma kilidini
+    kontrol edip asıl boru hattını (`_submit_locked`) çağırır.
+
+    LEARN_HALT aktifse hiç ilerlemez ("learning_halted"); kilit başkasındaysa bloklamadan
+    "locked" döner — iki eşzamanlı yansıma strategy.yaml/sürüm durumunu ezemez."""
     from . import health as _health, obs as _obs
     if _health.learn_halted():                 # Faz 3: öğrenme durduruldu — işlemler sürer,
         _obs.log("submit_blocked_learn_halt")  # ama YENİ versiyon ship edilemez (operatör bayrağı)
@@ -1034,6 +1073,15 @@ def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = Non
 
 
 def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+    """Her hipotezin geçtiği boru hattı — kilit ALINMIŞKEN koşar (yalnız `submit` çağırır).
+
+    Sıra: guard (şekil/kara liste; bileşik öneri kuyruğa) → OOS kapısı (incumbent ve aday AYNI
+    motor ve AYNI pencerelerde) → teyit yürüyüşü → Y1 sert kapıları (DSR/PBO) → ship (sürüm
+    artırımı, anlık görüntü, skor tablosu, defter). Her dal deftere bir statüyle yazılır.
+
+    Fail-closed: teyit ÖLÇÜLEMEDİĞİNDE (dilimler var ama hüküm yok) ship ENGELLENİR —
+    "ölçülemedi" ne "geçti" ne "reddedildi"dir. DSR gerçek-parada sert, kâğıtta damga; PBO
+    ölçülebiliyorsa iki modda da serttir."""
     goal = goal or config.goal()
     rec = proposal.get("skill_recommendation")       # Axis-2: record the skill note (operator applies it)
     if isinstance(rec, dict) and rec.get("skill"):
@@ -1291,6 +1339,7 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
 
 
 def params_of(strategy: dict) -> dict:
+    """Strateji sözlüğünün düz `params` haritasını döndürür (yoksa boş sözlük)."""
     return strategy.get("params", {})
 
 
@@ -1310,6 +1359,10 @@ _PROBE_DISK_LOADED = False
 
 
 def _probe_disk_load() -> None:
+    """Diskteki sonda önbelleğini `_PROBE_CACHE`e SÜREÇ BAŞINA bir kez yükler.
+
+    Yalnız bar revizyonu uyuşuyorsa alınır — revizyonu uymayan dosya YOK sayılır (bayat bar
+    dersi). Okuma düşerse tek belirti koordinat inişinin yavaşlamasıdır, uyarı bırakılır."""
     global _PROBE_DISK_LOADED
     if _PROBE_DISK_LOADED:
         return
@@ -1327,6 +1380,8 @@ def _probe_disk_load() -> None:
 
 
 def _probe_disk_save() -> None:
+    """Sonda önbelleğinin son `PROBE_DISK_CAP` girdisini yürürlükteki bar revizyonuyla damgalayıp
+    diske yazar (LRU tavanı dosyayı şişmekten korur)."""
     try:
         rev = int(store.read_json(PROBE_REV_FILE, {}).get("rev", 0))
         keys = list(_PROBE_CACHE.keys())[-PROBE_DISK_CAP:]
@@ -1337,6 +1392,11 @@ def _probe_disk_save() -> None:
 
 
 def _already_failed(var: str, val, hyps: list, bounds: dict) -> bool:
+    """Bu (değişken, değer) çifti defterde daha önce ÇÖKTÜ mü — hafızanın TEK tanımı.
+
+    "Başarısız" kümesi guard'ın kalıcı kara listesiyle birebir aynıdır:
+    `rejected_by_backtest` ya da `rolled_back`. `@rejim` son-eki taban ada çözülerek tip
+    aranır, böylece rejim-hedefli düğmelerde de KeyError'suz çalışır."""
     base = str(var).split("@", 1)[0]
     typ = bounds[base]["type"] if base in bounds else "float"
     for h in hyps:
@@ -1347,6 +1407,11 @@ def _already_failed(var: str, val, hyps: list, bounds: dict) -> bool:
 
 
 def _probe_key(cand_strat: dict, var: str, new, w: tuple) -> str:
+    """Sonda önbellek anahtarı: pencere + TÜM parametre dünyası (düz + rejim-tablosu) + değişken +
+    değer.
+
+    Sürüm NUMARASI anahtara girmez (geri alma sonrası aynı numara farklı paramlarla dönebilir);
+    `var` anahtarda kalır çünkü eval_regime'i, yani notlandırma nüfusunu belirler."""
     wkey = tuple(w[:4]) + (tuple(w[4]), w[5])
     return repr((wkey,
                  tuple(sorted((k, round(float(x), 6)) for k, x in params_of(cand_strat).items())),
@@ -1399,6 +1464,11 @@ def _havuz_tavani(tavan: int = 4) -> int:
 
 
 def _pool_worker_init():
+    """Süreç havuzu işçisinin açılış kancası: önce `nice(15)` (pano/işlem döngüsü CPU isteyince
+    öncelik onlarındır), sonra barları AĞA ÇIKMADAN `load_cached()` ile yükler.
+
+    Ebeveyn önbelleği doldurduğu için işçiler donmuş AYNI barları okur — aksi hâlde işçiler
+    birbirinin bar dosyalarını yeniden yazardı. Kibarlık kurulamazsa iş sürer (yalnız pano yavaşlar)."""
     # KİBARLIK ÖNCE: işçi AĞIR işe başlamadan önce nice'lanır — dataset yüklemesinin
     # kendisi de (I/O + pandas) rekabet eden bir yüktür. `nice(15)` bir CPU TAVANI değildir: işçiler
     # boş makinede yine tam hızda koşar, YALNIZ pano/uvicorn ya da işlem döngüsü CPU isteyince
@@ -1419,6 +1489,10 @@ def _pool_worker_init():
 
 
 def _pool_probe_job(args: dict) -> tuple:
+    """İşçi sürecinde TEK sondanın walk-forward'ını koşar ve `(önbellek_anahtarı, sonuç)` döndürür.
+
+    Barlar `_pool_worker_init`in donmuş kopyasından okunur; ebeveyn sonucu anahtarla eşler, yani
+    determinizm tamamlanma sırasına DEĞİL anahtara dayanır."""
     from meridian import backtest as _bt
     w = args["w"]
     wf = _bt.walk_forward(args["params"], _POOL_WORKER_DATA["bars"], _POOL_WORKER_DATA["index"],
@@ -1450,6 +1524,8 @@ HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN", "1800"))
 class _HavuzAtaleti(RuntimeError):
     """Havuz toplam-atalet tavanına çarptı: son bitenden beri HAVUZ_ATALET_SN geçti, hiçbir iş bitmedi."""
     def __init__(self, bekleyen: int, biten: int):
+        """İstisnayı sayılabilir olguyla kurar: kaç iş bitti, kaçı hâlâ bekliyor (mesaj metnine de
+        girer, alanlar `bekleyen`/`biten` olarak saklanır)."""
         super().__init__(f"havuz {HAVUZ_ATALET_SN:.0f} sn'dir tek iş bitirmedi "
                          f"(biten {biten}, bekleyen {bekleyen})")
         self.bekleyen, self.biten = bekleyen, biten
@@ -1694,6 +1770,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         _tavan_ts = _t_basla + float(max_minutes) * 60.0
 
     def _tavan_asildi() -> bool:
+        """Süre tavanı aşıldı mı? Tavan kurulmamışsa (None) daima False — yani tavansız arama
+        kesilmez. Saat incumbent yürüyüşü DAHİL en başta başlatılmıştır."""
         return _tavan_ts is not None and _time.time() > _tavan_ts
 
     def _kesinti(evaluated: int, kalan: int) -> dict:
@@ -1915,6 +1993,11 @@ def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple |
 
 
 def main(argv=None):
+    """`reflect` CLI'ı: öneriyi ya `--hypothesis` JSON'undan (--hermes) ya da deterministik
+    üreticiden alır, `submit()`e verir ve sonucu (statü, kapı, ret nedenleri) basar.
+
+    Ship yolu yine `submit`tir — bu fonksiyon kapı yasasını atlatmaz, yalnız operatörün elle
+    tetiklediği giriştir."""
     ap = argparse.ArgumentParser(description="Meridian reflection — propose a strategy change.")
     ap.add_argument("--auto", action="store_true", help="use the deterministic fallback proposer")
     ap.add_argument("--hermes", action="store_true", help="hypothesis supplied by Hermes")

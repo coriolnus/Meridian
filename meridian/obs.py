@@ -84,6 +84,9 @@ _EVENTS = "events.jsonl"
 
 
 def _emit(level: str, event: str, fields: dict) -> dict:
+    """Olayı TEK JSON satırı olarak kurar, stdout'a basar (systemd/launchd yakalar) VE
+    `state/events.jsonl`a aynalar; kaydın kendisini döner. Aynalama düşerse olay yine
+    stdout'a basılmıştır — kayıt denemesi çağıranı düşüremez."""
     rec = {"ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "level": level, "event": event, **fields}
     line = json.dumps(_san(rec), ensure_ascii=False)
@@ -97,6 +100,8 @@ def _emit(level: str, event: str, fields: dict) -> dict:
 
 
 def _san(o):
+    """Kaydı JSON'a çevrilebilir hâle getirir: olduğu gibi dump edilebiliyorsa dokunmaz, aksi
+    hâlde yalnız serileştirilemeyen alanları `str()`e çevirir — tek kötü alan olayı düşürmesin."""
     try:
         json.dumps(o)
         return o
@@ -105,6 +110,7 @@ def _san(o):
 
 
 def _ok(v):
+    """Tek bir değer JSON'a serileştirilebiliyor mu? (`_san` alan süzgecinin ölçüsü.)"""
     try:
         json.dumps(v)
         return True
@@ -118,6 +124,7 @@ def log(event: str, **fields) -> dict:
 
 
 def warn(event: str, **fields) -> dict:
+    """Uyarı seviyesinde yapılandırılmış olay — alarm DEĞİLDİR: bildirim zincirini tetiklemez."""
     return _emit("warn", event, fields)
 
 
@@ -153,6 +160,8 @@ def _maybe_notify(token: str, message: str) -> None:
             # satır yalnız gürültü olurdu.
             try:
                 def _bump(d):
+                    """Teslim edilemeyen alarm sayacını yerinde artırır (jeton + `_toplam`) ve
+                    `store.update_json` sözleşmesi gereği True döner."""
                     # store.update_json SÖZLEŞMESİ: belgeyi YERİNDE değiştir ve True dön. Yeni bir
                     # sözlük döndürmek sessizce hiçbir şey yazmaz (ilk denememde tam bu oldu — dosya
                     # oluştu ama boş kaldı). Sözleşmeyi yanlış okumanın cezası yine SESSİZLİK.
@@ -207,6 +216,8 @@ def _maybe_notify(token: str, message: str) -> None:
             # GERÇEKTEN gönderilmiş bir mesajla kurulur, yoksa başarısız bir deneme kanalı
             # 6 saat susturur ve alarm kaybolur.
             def _bump_fail(d):
+                """Kanal BAĞLIYKEN düşen teslimatı sayar: jeton + `_toplam` + ayrı
+                `_teslim_hatasi` sayacı; `store.update_json` sözleşmesi gereği True döner."""
                 # store.update_json SÖZLEŞMESİ: belgeyi YERİNDE değiştir ve True dön (yeni sözlük
                 # döndürmek sessizce hiçbir şey yazmaz — yukarıdaki kardeş dalın dersi).
                 d[token] = int(d.get(token, 0)) + 1
@@ -275,6 +286,9 @@ def _mandal_yakala(token: str, fields: dict) -> dict | None:
     karar: dict = {}
 
     def _mut(doc: dict) -> bool:
+        """Mandal defterini yerinde günceller: imza serbest penceresi içinde ZATEN varsa tekrarı
+        sayar (bastırma kararı), yoksa/eskimişse yeni satır açar (yayın kararı). Kararı dış
+        `karar` sözlüğüne yazar, 2× serbest penceresinden eski imzaları süpürür ve True döner."""
         row = doc.get(imza)
         if isinstance(row, dict) and (now - float(row.get("son_ts") or 0)) < MANDAL_SERBEST_S:
             # BİLİNEN-AKTİF DURUM: satır yok, sayaç var (bastırılan SAYILIR ve görünür).
@@ -324,5 +338,6 @@ def alarm(token: str, message: str, **fields) -> dict:
 
 
 def recent(limit: int = 50) -> list[dict]:
+    """Son `limit` olayı `state/events.jsonl`dan okur (pano ve testlerin log kazıyıcısız okuma yolu)."""
     from . import store
     return store.read_jsonl(_EVENTS, limit=limit)

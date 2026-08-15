@@ -44,12 +44,14 @@ _HYP_LOCK = threading.Lock()
 
 
 def now_iso(ts: Optional[str] = None) -> str:
+    """Verilen damgayı olduğu gibi, verilmezse şimdiki UTC anını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     if ts:
         return ts
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def all_hypotheses() -> list[dict]:
+    """Hipotez defterinin tüm satırlarını verir (saf okuma)."""
     return store.read_jsonl(HYP)
 
 
@@ -78,6 +80,8 @@ def next_id() -> str:
 
 
 def record(hyp: dict) -> dict:
+    """Hipotezi deftere ekler: kimlik/damga eksikse doldurur, satırı JSONL'e yazar ve kimlik
+    YÜKSEK-SU İŞARETİNİ ilerletir. İşareti yazan TEK yer burasıdır — `next_id()` saf sorgudur."""
     with _HYP_LOCK:
         hyp.setdefault("id", next_id())
         hyp.setdefault("ts", now_iso())
@@ -107,6 +111,9 @@ TERMINAL_STATUS = {"rejected_by_guard", "rejected_by_gate", "rejected_by_backtes
 
 
 def update_status(hyp_id: str, status: str, **extra) -> Optional[dict]:
+    """Bir hipotezin statüsünü GEÇİŞ YASASINA göre günceller ve `extra` alanlarını satıra işler.
+    Tanınmayan statü ya da terminal durumdan geri dönüş REDDEDİLİR (uyarı düşer, None döner).
+    `status_ts` yalnız GERÇEK geçişlerde damgalanır — aynı statünün tazelenmesi tarihi kaydırmaz."""
     if status not in LEGAL_STATUS:
         obs.warn("illegal_hypothesis_status", hyp_id=hyp_id, status=status,
                  legal=sorted(LEGAL_STATUS),

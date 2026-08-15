@@ -174,6 +174,9 @@ def _hedef() -> float:
 
 
 def resetler(pf: dict | None = None) -> list[dict]:
+    """Kitaptaki sermaye reset (beyan) kayıtlarını döner — kayıtları okuyan TEK yer.
+
+    Salt-okuma; `pf` verilmezse portföy diskten okunur. Sözlük olmayan girdiler elenir."""
     pf = store.read_json(PORTFOLIO, {}) if pf is None else pf
     r = (pf or {}).get(RESET_KEY) or []
     return [x for x in r if isinstance(x, dict)]
@@ -188,15 +191,18 @@ def ofset(pf: dict | None = None) -> float:
 
 
 def ayrisik(pf: dict | None = None) -> bool:
+    """Kitabın tabanı defterin tabanından ayrıştırılmış mı? (en az bir reset kaydı varsa True)."""
     return bool(resetler(pf))
 
 
 def son_reset(pf: dict | None = None) -> dict | None:
+    """En son sermaye reset kaydı; hiç reset yoksa None."""
     r = resetler(pf)
     return r[-1] if r else None
 
 
 def _egri_isaretleri(eq: dict | None = None) -> list[dict]:
+    """Özsermaye eğrisine düşülmüş reset işaretlerini döner (salt-okuma; `points` DOKUNULMAZ)."""
     eq = store.read_json(EQUITY, {}) if eq is None else eq
     m = (eq or {}).get(CURVE_MARK_KEY) or []
     return [x for x in m if isinstance(x, dict)]
@@ -536,6 +542,9 @@ def _worker_running() -> bool:
 
 # ---- YAZDIRMA ----------------------------------------------------------------------------------
 def _p(x, birim="$") -> str:
+    """Sayıyı binlik ayraçlı, 2 ondalıklı metne çevirir; None ise "—", çevrilemiyorsa ham değer.
+
+    Yalnız biçimleme yoludur — hiçbir ölçümü değiştirmez ya da yutmaz."""
     if x is None:
         return "—"
     try:
@@ -545,6 +554,8 @@ def _p(x, birim="$") -> str:
 
 
 def _durum_yaz(d: dict, baslik: bool = True) -> None:
+    """Köken ölçümünü (ayrışıklık, gerçek-canlı sermaye, tohum etkisi, kitap, eğri, uyarılar)
+    operatör için stdout'a basar. Hiçbir bayt YAZMAZ, yalnız gösterir."""
     k = d["koken"]
     if baslik:
         print("[sermaye] KÖKEN ÖLÇÜMÜ (hiçbir bayt yazılmadı)")
@@ -573,6 +584,9 @@ def _durum_yaz(d: dict, baslik: bool = True) -> None:
 
 
 def _yaz(rapor: dict) -> None:
+    """Ayrıştırma raporunu insan okunur biçimde basar: kip (kuru koşu / uygulandı / reddedildi),
+    yazılan-yazılacak kitap alanları, ofset, eğri işareti, DOKUNULMAYAN defterler, gerekçe ve
+    engeller. Yalnız yazdırır — karar vermez, dosya değiştirmez."""
     mod = ("UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA REDDEDİLDİ" if rapor.get("applied") else "KURU KOŞU (hiçbir bayt yazılmadı)"))
     print(f"[sermaye] {mod}")
@@ -607,6 +621,11 @@ def _yaz(rapor: dict) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """`python -m meridian.sermaye` giriş noktası: --durum / --uygula / --json / --gerekce / --zorla.
+
+    VARSAYILAN KURU KOŞUDUR (hiçbir bayt yazılmaz). `--uygula` canlı Meridian süreci görülüyorsa
+    REDDEDİLİR (worker koşarken kitap taşınamaz; `--zorla` ile geçilir). Dönüş: 0 başarı, 1 rapor
+    ok değil, 2 canlı süreç engeli."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.sermaye",
         description="antrenman tohumunun K/Z'sini canlı-kâğıt sermayeden ayrıştırır "

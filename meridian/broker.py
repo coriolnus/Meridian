@@ -325,6 +325,12 @@ def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None
 
 @dataclass
 class Position:
+    """Açık bir pozisyonun tam durumu: plan kimliği, giriş/stop/hedef seviyeleri, miktar, risk
+    büyüklüğü ve yönetim sayaçları.
+
+    Kapanışta defter satırına damgalanacak bağlam (rejim, kurulum, skor, keşif bayrağı, MFE/MAE su
+    seviyeleri) pozisyonla birlikte TAŞINIR ki eğitim tarafı ayrı bir join'e muhtaç olmasın."""
+
     plan_id: str
     ticker: str
     side: str
@@ -382,6 +388,9 @@ BEYAN_TOL = 0.01
 
 
 def _abs_ofset(v) -> float:
+    """Tek bir beyan kaydının ofsetini mutlak float'a çevirir; çevrilemiyorsa 0.0 katkı verir.
+
+    0.0 "bu kaydın büyüklüğü ölçülemedi" demektir — kayıt yine de `n` sayacında görünür."""
     try:
         return abs(float(v))
     except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — kayıt `n` sayacında GÖRÜNÜR ve kimlik kapısı onu saymaya devam eder; ölçülemeyen bir ofseti sayıya çevirmek UYDURMA olurdu, 0 katkı "bu kaydın büyüklüğü ölçülmedi" demektir
@@ -422,7 +431,16 @@ def beyan_gerilemesi(eski: dict, yeni: dict) -> dict | None:
 
 
 class PaperBroker:
+    """Kâğıt (simülasyon) icra motoru: pozisyon açar/kapatır, nakit ve gerçekleşmiş P&L defterini
+    tutar, kayma + komisyon sürtünmesini uygular.
+
+    AYNI YASA, İKİ MOTOR: canlı döngü ile geri-test bu SINIFI paylaşır; giriş/çıkış kuralları
+    burada tek yerde yaşar ki iki motor birbirinden ayrışamasın."""
+
     def __init__(self, equity: float, slippage_bps: float, commission_per_share: float):
+        """Broker'ı başlangıç sermayesi, baz kayma (bps) ve hisse başı komisyonla kurar.
+
+        Boş defterle başlar: açık pozisyon yok, kapanan satır yok, gerçekleşmiş P&L 0."""
         self.start_equity = equity
         self.cash = equity
         self.realized_pnl = 0.0
@@ -452,6 +470,11 @@ class PaperBroker:
 
     # ---- entries ----
     def size_position(self, entry_fill: float, stop: float, size_r: float, equity: float) -> tuple[int, float]:
+        """R büyüklüğünden lot ve risk dolarını hesaplar: `(qty, risk_dollars)`.
+
+        Risk = size_r · RISK_PCT_PER_R · özsermaye; lot, hisse başı riske BÖLÜNÜP AŞAĞI yuvarlanır
+        (tavan asla aşılmaz). Giriş stopun altındaysa (hisse başı risk ≤ 0) `(0, 0.0)` — geçersiz
+        bir kurulum için uydurma miktar üretilmez."""
         risk_dollars = size_r * RISK_PCT_PER_R * equity
         per_share = entry_fill - stop
         if per_share <= 0:
@@ -491,6 +514,9 @@ class PaperBroker:
                              işlemdir ve çağıran onu olay + defter satırı olarak ölçer (yutulmaz).
         """
         def _red(reason: str, **ek):
+            """Girişi reddeder: nedeni (varsa) `reject_out` sözlüğüne yazar ve None döner.
+
+            Ret yutulmaz — çağıran bu sözlükten okuyup olay/defter satırı olarak ölçer."""
             if reject_out is not None:
                 reject_out.clear()
                 reject_out.update({"reason": reason, "ticker": plan.get("ticker"),

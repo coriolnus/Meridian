@@ -74,6 +74,7 @@ _DAMGA_ALANLARI = ("fit_attempt_ts", "fit_ts", "fit_fingerprint", "fit_skip_reas
 
 
 def _simdi() -> str:
+    """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir (damga alanlarının ortak zaman kaynağı)."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
@@ -92,6 +93,8 @@ class ShadowTradeOutcomeModel:
     """fit → predict_proba → brier → save/load. Katsayılar + standardizasyon durumu tek JSON'da."""
 
     def __init__(self):
+        """Boş model kurar: katsayı/standardizasyon yok, sayaçlar sıfır. Eğitim seti künyesi (n_real/n_cf)
+        fit'e kadar None kalır — kaynak kırılımı asla uydurulmaz."""
         self.w: np.ndarray | None = None
         self.mu: np.ndarray | None = None
         self.sd: np.ndarray | None = None
@@ -103,6 +106,7 @@ class ShadowTradeOutcomeModel:
     # ---- özellik mühendisliği ----
     @staticmethod
     def _plan_index() -> dict:
+        """`trade_plans.jsonl`i plan id → plan sözlüğü haritasına çevirir (işlem↔plan birleştirmesi için)."""
         return {p.get("id"): p for p in store.read_jsonl("trade_plans.jsonl")}
 
     @classmethod
@@ -138,6 +142,9 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def _dataset(cls) -> tuple[np.ndarray, np.ndarray, int]:
+        """Eğitim matrisini (X, y, n) kurar: gerçek işlemler (`trades.jsonl` × plan birleşimi) + karşı-olgusal
+        defterin çözülmüş satırları. Etiket `r_multiple > 0`. Her iki aşama AYRI `sieve.Sieve` ile sayılır ve
+        gerçek/simüle kırılımı `_LAST_SPLIT`e yazılır — "gerçek 0, simüle 241" gizlenemez."""
         plans = cls._plan_index()
         X, y = [], []
         n_real = 0
@@ -189,10 +196,14 @@ class ShadowTradeOutcomeModel:
     # ---- çekirdek matematik (saf numpy) ----
     @staticmethod
     def _sigmoid(z):
+        """Sayısal taşmaya karşı ±30'a kırpılmış lojistik sigmoid."""
         return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
     def fit(self, X: np.ndarray | None = None, y: np.ndarray | None = None,
             iters: int = 600, lr: float = 0.3, l2: float = 1e-2) -> "ShadowTradeOutcomeModel":
+        """Lojistik regresyonu tam-batch gradyan inişi + L2 (bias hariç) ile eğitir; `self`i döndürür.
+        X/y verilmezse `_dataset()` kullanılır ve kaynak kırılımı künyeye işlenir; dışarıdan matris
+        gelirse künye None bırakılır. n < MIN_FIT_N ise model KURULMAZ (olay kaydı düşer, katsayı yazılmaz)."""
         if X is None or y is None:
             X, y, n = self._dataset()
             self.n_real, self.n_cf = _LAST_SPLIT["n_real"], _LAST_SPLIT["n_cf"]
@@ -239,6 +250,9 @@ class ShadowTradeOutcomeModel:
 
     # ---- kalıcılık ----
     def save(self) -> None:
+        """Model katsayılarını + eğitim künyesini durum defterine OKU-BİRLEŞTİR-YAZ ile kaydeder.
+        Model yoksa hiçbir şey yazmaz. Defterin diğer sahibinin alanları (kadans damgaları, `promotion`)
+        korunur; kaynak künyesi bu fit'inkiyle bilerek ezilir."""
         if self.w is None:
             return
         # OKU-BİRLEŞTİR-YAZ — ÜSTÜNE-YAZ DEĞİL (yukarıdaki damga sözleşmesi). Eski hâl
@@ -265,6 +279,8 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def load(cls) -> "ShadowTradeOutcomeModel":
+        """Durum defterinden katsayı/standardizasyon/sayaçları okuyup model nesnesi kurar.
+        Defter yoksa ya da katsayı boşsa boş (tahmin üretmeyen) model döner."""
         m = cls()
         st = store.read_json(STATE_FILE, None)
         if st and st.get("w"):
@@ -361,6 +377,7 @@ class ShadowTradeOutcomeModel:
 
     @classmethod
     def is_promoted(cls) -> bool:
+        """Modelin terfi etmiş olup olmadığını durum defterinden okur (terfi yoksa False)."""
         return bool(store.read_json(STATE_FILE, {}).get("promotion", {}).get("promoted"))
 
 

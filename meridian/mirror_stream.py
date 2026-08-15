@@ -282,16 +282,22 @@ class MirrorStreamListener:
     # --- run_stream(spec) protokolü ---
     @property
     def stop_event(self) -> asyncio.Event:
+        """run_stream protokolü: sürücünün her turda yokladığı durdurma olayı."""
         return self._stop
 
     def url(self) -> str:
+        """run_stream protokolü: bağlanılacak WS adresi (kilitli PAPER trade_updates uç noktası)."""
         return self._url()
 
     async def pause(self, s: float) -> None:
+        """run_stream protokolü: backoff beklemesi. Modül-global `_pause`u ÇAĞRI ANINDA çözer ki
+        testlerin monkeypatch'i görünür olsun."""
         # modül-global _pause'u ÇAĞRI ANINDA çözer (test `ms._pause` monkeypatch'i görünür)
         return await _pause(s)
 
     def on_grace_exceeded(self) -> None:
+        """run_stream protokolü: kopuş GRACE_SECONDS'ı aşınca kesinti başına BİR kez çağrılır —
+        opsiyonel devre-kesiciyi (yalnız dolmamış giriş emirleri) tetikler."""
         self._maybe_cancel_entries()
 
     async def session(self, ws, mark_alive) -> None:
@@ -322,10 +328,15 @@ class MirrorStreamListener:
                 break
 
     async def run(self) -> None:
+        """Dinleyiciyi başlatır: reconnect/backoff/nabız/down-saati YASASI ortak sürücüde
+        (streamhealth.run_stream) koşar; bu sınıf ona yalnız `spec` protokolünü verir."""
         await streamhealth.run_stream(self)
 
     @staticmethod
     def _url() -> str:
+        """PAPER REST tabanından trade_updates WS adresini türetir. Şemasız/bozuk taban gaierror'un en
+        sinsi kaynağıdır: uyarı basılıp kilitli PAPER hostuna dönülür (yalnız şema://host/yol basılır,
+        anahtar/parola/sorgu ASLA)."""
         from .adapters.alpaca import _paper_base
         base = _paper_base()
         if base.startswith("https://"):
@@ -368,4 +379,5 @@ class MirrorStreamListener:
             obs.warn("disconnect_cancel_failed", error=f"{type(e).__name__}: {e}"[:120])
 
     def stop(self) -> None:
+        """Dur-olayını basar: ortak sürücü ile nabız görevi bir sonraki yoklamada temiz çıkar."""
         self._stop.set()

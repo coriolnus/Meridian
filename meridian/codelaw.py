@@ -63,12 +63,16 @@ UNSCANNED: list[dict] = []
 
 
 def _note_unscanned(path, exc: BaseException, phase: str) -> None:
+    """Taranamayan dosyayı `UNSCANNED` defterine (dosya + evre + hata TÜRÜ) yazar; aynı kayıt
+    iki kez düşmez. Tarayıcının kendi körlüğü sessiz kalmasın diye: eksik tarama raporda görünür."""
     rec = {"file": str(path), "phase": phase, "error": f"{type(exc).__name__}: {exc}"}
     if rec not in UNSCANNED:
         UNSCANNED.append(rec)
 
 
 def _py_files(root: str):
+    """`root` altındaki `.py` dosyalarını ad sırasıyla üretir; `_SKIP_DIRS` (`__pycache__`,
+    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır."""
     for f in sorted(pathlib.Path(root).rglob("*.py")):
         if any(p in _SKIP_DIRS for p in f.parts):
             continue
@@ -80,6 +84,8 @@ def _enclosing(tree: ast.AST) -> list[tuple[ast.ExceptHandler, str]]:
     out: list[tuple[ast.ExceptHandler, str]] = []
 
     def visit(node: ast.AST, scope: str) -> None:
+        """Ağacı özyineli gezer: fonksiyon/sınıf düğümlerinde kapsam yolunu uzatır ve rastladığı
+        her `ExceptHandler`ı o anki kapsamla birlikte `out`a ekler."""
         for child in ast.iter_child_nodes(node):
             nxt = scope
             if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
@@ -118,6 +124,8 @@ def _has_signal(h: ast.ExceptHandler) -> bool:
 
 
 def _handler_span(h: ast.ExceptHandler) -> tuple[int, int]:
+    """Yakalayıcının kaynak satır aralığı `(ilk, son)` — gövdedeki ifadelerin en büyük bitiş
+    satırıyla genişletilir. `# sessiz-yutma:` işaretinin aranacağı pencereyi belirler."""
     end = getattr(h, "end_lineno", None) or h.lineno
     for stmt in h.body:
         end = max(end, getattr(stmt, "end_lineno", stmt.lineno))
@@ -561,6 +569,7 @@ def _global_consts(root: str) -> dict[str, str]:
 
 
 def _looks_like_artifact(s: str) -> bool:
+    """Dize bir artefakt adına benziyor mu? (yalnız `.json`/`.jsonl` uzantısı ölçülür)."""
     return s.endswith((".json", ".jsonl"))
 
 
@@ -812,6 +821,8 @@ def _func_index(tree: ast.AST) -> dict[str, list]:
     out: dict[str, list] = {}
 
     def visit(n: ast.AST) -> None:
+        """Ağacı özyineli gezip her fonksiyon/async fonksiyon tanımını NİTELENMEMİŞ adıyla
+        `out` dizinine ekler (ad çakışırsa aynı ada birden çok düğüm birikir)."""
         for ch in ast.iter_child_nodes(n):
             if isinstance(ch, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 out.setdefault(ch.name, []).append(ch)
@@ -822,6 +833,8 @@ def _func_index(tree: ast.AST) -> dict[str, list]:
 
 
 def _called_names(node: ast.AST) -> set[str]:
+    """Bu düğümün gövdesinde çağrılan fonksiyonların çözülebilen adları (küme).
+    Adı `_callee` ile çözülemeyen çağrılar kümeye girmez — yanlış ad UYDURULMAZ."""
     return {c for c in (_callee(n)[0] for n in ast.walk(node) if isinstance(n, ast.Call)) if c}
 
 

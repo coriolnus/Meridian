@@ -40,6 +40,7 @@ CORE_NEVER = {"pre-trade-discipline-gate", "position-sizer", "backtest-expert"}
 
 
 def _skills_root() -> str:
+    """Depo içindeki `skills/` kökünün mutlak yolunu verir."""
     return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills")
 
 
@@ -133,6 +134,8 @@ def revisions() -> list[dict]:
 
 
 def pending_drafts() -> list[dict]:
+    """Bekleyen (status=draft) revizyon kayıtlarını verir. `skill` alanı olmayan kayıtlar DIŞLANIR —
+    adsız kayıt panoyu/api'yi düşürürdü."""
     # `skill` alanı ŞART: api/gelen kutusu r["skill"] ile okuyor — adsız bir kayıt orayı 500 yapardı.
     return [r for r in revisions() if r.get("status") == "draft" and r.get("skill")]
 
@@ -263,6 +266,8 @@ def apply_revision(skill_name: str) -> dict:
 
 
 def reject_revision(skill_name: str) -> dict:
+    """Bir skill'in revizyon taslağını reddeder: `SKILL.md.v2-draft` dosyasını siler ve defterdeki draft
+    kayıtlarını `rejected` yapar. Ad doğrulaması başarısızsa hiçbir şey silinmez ve `ok=False` döner."""
     try:
         path = os.path.join(_repo_skill_dir(skill_name), "SKILL.md.v2-draft")
     except ValueError as e:

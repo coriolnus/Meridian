@@ -49,10 +49,12 @@ DNS_MARKERS = ("gaierror", "getaddrinfo", "name or service not known", "nodename
 
 
 def _now() -> dt.datetime:
+    """Şimdiki an, tz-aware UTC (tüm sağlık damgalarının tek saat kaynağı)."""
     return dt.datetime.now(dt.timezone.utc)
 
 
 def _now_iso() -> str:
+    """Şimdiki UTC anı, saniye çözünürlüklü ISO dizesi (checked_at/down_since damgaları)."""
     return _now().isoformat(timespec="seconds")
 
 
@@ -67,6 +69,8 @@ def _age_s(iso) -> float | None:
 
 
 def _fresh(iso) -> bool:
+    """Damga TAZE mi (yaşı ≤ STALE_AFTER_S)? Yaş okunamıyorsa taze DEĞİL — bilinmeyen tazelik yeşil
+    sayılmaz."""
     age = _age_s(iso)
     return age is not None and age <= STALE_AFTER_S
 
@@ -136,6 +140,9 @@ class StreamHealth:
     insan metnidir. Yapısal alanlar iki akışta ÖZDEŞtir."""
 
     def __init__(self, prefix: str, role: str, persist: Callable[[], None], lock=None):
+        """Sağlık durumunu KOPUK (stream_ok=False, damgasız) başlatır. `prefix` olay adlarını türetir,
+        `role` yalnız insan metnidir, `persist` her durum yazımında çağrılan kalıcılık geri-çağrısıdır
+        (mirror=write_json, market=no-op); `lock` verilmezse kendi kilidini kurar."""
         import threading
         self.prefix = prefix
         self.role = role
@@ -171,6 +178,8 @@ class StreamHealth:
             self.stream_ok = was_ok
 
     def to_dict(self) -> dict:
+        """Kalıcılık/anlık görüntü şekli: `stream_ok`, `stream_checked_at`, `down_since`, `last_error`.
+        `health_snapshot`ın beklediği anahtarlardır — ham bayrak burada nabızla ÇARPILMAZ."""
         return {"stream_ok": self.stream_ok, "stream_checked_at": self.checked_at,
                 "down_since": self.down_since, "last_error": self.last_error}
 

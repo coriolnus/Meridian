@@ -45,10 +45,14 @@ _state: dict = {"last_processed": None, "last_tick": None, "last_summary": None,
 
 
 def _now() -> str:
+    """Şu anki UTC zamanı saniye hassasiyetinde ISO metin olarak (durum damgalarının tek biçimi)."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
 
 
 def _persist() -> None:
+    """Zamanlayıcı durumunu `updated` damgasıyla birlikte diske yazar.
+
+    Asılı-tick bekçisinin okuduğu damga budur; nabız da bu yolla tazelenir."""
     store.write_json(STATUS_FILE, {**_state, "updated": _now()})
 
 
@@ -105,6 +109,7 @@ def _nabiz_sahiplen() -> None:
 
 
 def _nabiz_birak() -> None:
+    """Döngü bitti — nabız yetkisini bırakır, artık hiçbir iş parçacığı damgayı tazeleyemez."""
     global _nabiz_sahibi
     _nabiz_sahibi = None
 
@@ -683,6 +688,11 @@ def _y4_collect(session: str) -> dict:
 # HİÇBİRİ KARAR DEĞİŞTİRMEZ: rapor yazılır, ölçüm yazılır, kayma UYARI olur. Sabit güncellemesi ve
 # kapı kararı operatörde kalır.
 def _weekly_validation(wk: list) -> dict:
+    """Haftada bir koşan ÜÇ pahalı doğrulamayı sırayla yürütür ve sonuç özetini döner.
+
+    (1) kanıt raporunu üretip state dosyasına yazar, (2) massive grouped-vs-zincir doğrulamasını
+    tazeler, (3) MEASURED_V3 kayma bekçisini uyarı olarak koşar. HİÇBİRİ KARAR DEĞİŞTİRMEZ; her
+    adım kendi `try` bloğunda izole edilir ve düşerse YASA 4 uyarısı + `error` alanı bırakır."""
     from . import obs, watchdog
     out: dict = {"hafta": wk, "ts": _now()}
     try:                                   # 1) KANIT RAPORU → state dosyası + api özeti
@@ -1354,6 +1364,11 @@ def advance_once() -> dict:
 
 
 def _run(poll_seconds: int) -> None:
+    """Arka plan iş parçacığının gövdesi: durdurma bayrağı kalkana dek `advance_once`ı poll aralığıyla
+    tekrarlar.
+
+    Bir turda hata çıkarsa döngü ÖLMEZ; hata durum dosyasına `error` olarak damgalanır ve bir
+    sonraki poll normal şekilde denenir."""
     _state.update(started_at=_now(), poll_seconds=poll_seconds)
     _persist()
     while not _stop.is_set():
@@ -1366,6 +1381,10 @@ def _run(poll_seconds: int) -> None:
 
 
 def start(poll_seconds: int = 300) -> dict:
+    """Zamanlayıcı iş parçacığını başlatır (daemon); zaten koşuyorsa `{"already_running": True}`.
+
+    Başlamadan önce tavanları `_rehydrate()` ile diskten geri yükler — tavan süreç ömrüne bağlı
+    olamaz."""
     global _thread
     with _lock:
         if _thread and _thread.is_alive():
@@ -1378,11 +1397,17 @@ def start(poll_seconds: int = 300) -> dict:
 
 
 def stop() -> dict:
+    """Durdurma bayrağını kaldırır; iş parçacığı bir sonraki poll uyanışında çıkar (blokesiz döner)."""
     _stop.set()
     return {"stopping": True}
 
 
 def status() -> dict:
+    """Zamanlayıcının dış durum yüzeyi: iç durum + canlılık, son kapanan seans, portföyün son tarihi
+    ve bar yükseltme ÖZETİ.
+
+    SALT-OKUMA. Aynı-akşam defterinin TAMAMI değil özeti döner (uç şişmesin); ölçüm yoksa None —
+    0 değil."""
     # AYNI-AKŞAM BACAĞININ DIŞ TÜKETİCİSİ (YASA 6, 2026-07-30). Defteri `adapters/data.py` yazar;
     # burası onu DIŞARIDAN okuyan tek yerdir → /api/hermes `scheduler` ve /api/scheduler üzerinden
     # panoya çıkar. Neden `data_quality.json` değil: `loop.daily_cycle` o dosyayı her seansta

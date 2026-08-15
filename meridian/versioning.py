@@ -28,6 +28,7 @@ from . import config, store
 
 
 def snapshot(strategy: dict) -> Path:
+    """Strateji sözlüğünü `history/vNNNN.yaml` olarak diske çekip yolunu döndürür (sürüm arşivi)."""
     v = int(strategy.get("version", 1))
     path = config.HISTORY / f"v{v:04d}.yaml"
     config.dump_yaml(strategy, path)
@@ -58,6 +59,9 @@ def _next_version(current: dict) -> int:
 
 
 def bump(current: dict, variable: str, new, note: str = "") -> dict:
+    """Mevcut stratejiden, tek bir değişkeni `new` yapan ÇOCUK sürüm sözlüğü üretir (derin kopya).
+    `base@regime` biçimindeki düğme `params_by_regime` altına yazılır, düz `params` bozulmaz.
+    Yalnız sözlük döndürür — diske YAZMAZ, canlıya almaz (onu `commit` yapar)."""
     child = copy.deepcopy(current)
     child["version"] = _next_version(current)
     child["parent"] = int(current.get("version", 1))
@@ -82,10 +86,12 @@ def commit(child: dict) -> None:
 
 
 def scoreboard() -> dict:
+    """Karneyi (`scoreboard.json`) okur; dosya yoksa boş varsayılan şemayı verir."""
     return store.read_json("scoreboard.json", _sb_default())
 
 
 def _sb_default() -> dict:
+    """Karnenin boş varsayılan şeması: canlı sürüm işareti yok, sürüm sözlüğü boş."""
     return {"current_version": None, "versions": {}}
 
 
@@ -103,6 +109,7 @@ def update_scoreboard(version: int, **fields) -> dict:
     v = str(version)
 
     def _patch(sb: dict) -> bool:
+        """Karne yamacı: `versions[v]` satırına alanları birleştirir ve canlı sürüm işaretini `version` yapar."""
         sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
         sb["current_version"] = version
         return True
@@ -128,6 +135,7 @@ def set_row_fields(version: int, **fields) -> dict:
     v = str(version)
 
     def _patch(sb: dict) -> bool:
+        """Karne yamacı: yalnız `versions[v]` satırına alanları birleştirir — `current_version`a DOKUNMAZ."""
         sb.setdefault("versions", {}).setdefault(v, {}).update(fields)
         return True
 

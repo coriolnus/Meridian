@@ -168,6 +168,8 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path) -> pathlib.Path:
 
 
 def _oku_kismi(workdir: pathlib.Path) -> dict:
+    """Çalışma dizinindeki kısmi ölçüm dosyasını okur. Dosya yoksa ya da bozuksa boş sözlük —
+    `--resume` "varsa atla" demektir, "olmalı" değil."""
     try:
         return json.loads((workdir / KISMI_DOSYA).read_text())
     except (OSError, ValueError):  # sessiz-yutma: kısmi dosya YOKSA ya da bozuksa devam etmenin tek dürüst yolu sıfırdan ölçmektir; --resume zaten "varsa atla" demek, "olmalı" değil
@@ -254,6 +256,8 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     log(f"[veri] {len(bars)} sembol ({time.time() - t0:.1f}s)")
 
     def _wf(params):
+        """Verilen parametrelerle ileri-yürüyen (walk-forward) ölçümü koşar — pencereler, katlar ve
+        rejim-koşullu düğmeler bütün adaylarda AYNI kaynaktan gelir."""
         return backtest.walk_forward(params, bars, index, goal, w[0], w[1], w[2], w[3],
                                      strategy_version=ver, oos_folds=w[4], embargo_days=w[5],
                                      params_by_regime=strat.get("params_by_regime"))
@@ -264,6 +268,8 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     log(f"   incumbent OOS={inc['oos_score']} n={inc_n} folds={[f.get('n') for f in inc['oos_folds']]}")
 
     def _yaz_kismi(adaylar, kalan):
+        """Kısmi ilerlemeyi diske yazar: incumbent künyesi, k_probes, ölçülmüş adaylar ve kalanlar.
+        `--resume` bu dosyadan devam eder."""
         (workdir / KISMI_DOSYA).write_text(json.dumps(
             {"incumbent": {"version": ver, "oos_score": inc["oos_score"], "n": inc_n,
                            "folds": [f.get("n") for f in inc["oos_folds"]]},
@@ -487,6 +493,9 @@ def kuyruk_geri_yaz(queue_id: str, live: pathlib.Path, rapor: dict) -> dict | No
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: adayları (tek-değişkenli ve/veya bileşik) ayrıştırır, ön-elemeyi koşar ve raporu
+    JSON olarak basar. Canlı state'e YAZMAZ (kopya üstünde ölçer). Ölçüm çökse bile kuyruk satırı
+    akıbetle damgalanır ve istisna aynen yükseltilir. Dönüş: hata varsa 1, yoksa 0."""
     ap = argparse.ArgumentParser(prog="meridian.prescreen",
                                  description="Aday parametreleri kapının yasasıyla ön-ele "
                                              "(canlı state'e yazmaz).")

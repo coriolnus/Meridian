@@ -36,6 +36,11 @@ _WARNED: set = set()
 
 
 def _warn_once(event: str, **fields) -> None:
+    """Aynı arıza jetonunu SÜREÇ BAŞINA BİR kez `obs.warn`a düşürür.
+
+    Sıcak yolda (binlerce seans × yüzlerce sembol) her turda loglamak olay defterini boğar ve
+    gerçek uyarıları görünmez kılardı; ama uyarı tümüyle de susturulmaz.
+    """
     if event in _WARNED:
         return
     _WARNED.add(event)
@@ -112,6 +117,12 @@ SECTORS = {
 
 @dataclass
 class BacktestResult:
+    """Bir replay koşumunun sonucu: kapanmış işlemler, sermaye eğrisi, kullanılan parametreler,
+    dönem uçları ve ölçüm defterleri (plan/aday kaydı, giriş ret sayacı, karartma kapısı sayacı).
+
+    Sayaçlarda None ile {} AYRI anlam taşır: None = bu alan hiç doldurulmadı (eski çağrı),
+    {} = dolduruldu ve hiç olay yaşanmadı.
+    """
     trades: list
     equity: list          # [(date, equity)]
     params: dict
@@ -131,10 +142,16 @@ class BacktestResult:
     earnings_gate: dict = None
 
     def detail(self, goal: dict) -> dict:
+        """Sonucun işlemlerinden hedef sözleşmesine göre ayrıntılı karneyi (`score.score_detail`) üretir
+        — saf okuma, hiçbir şey yazmaz.
+        """
         return score_mod.score_detail(self.trades, goal)
 
 
 def _indexed(bars: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    """Her sembolün bar çerçevesini `date` sütununa indeksler ve yeni bir sözlük döndürür; tarih
+    bazlı `.loc` erişimini mümkün kılar.
+    """
     return {t: df.set_index("date") for t, df in bars.items()}
 
 
@@ -157,6 +174,17 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
            goal: dict, start: str, end: str, strategy_version: int = 1,
            params_by_regime: dict | None = None,
            with_gate_detail: bool = False) -> BacktestResult:
+    """`start`–`end` arasını gün gün yeniden oynatır ve `BacktestResult` üretir.
+
+    Her seans üç fazda işlenir — OPEN(D): bekleyen çıkışlar ve D-1'de silahlanan girişler;
+    INTRADAY(D): dokunma çıkışları; CLOSE(D): trail/rejim/tarama ve D+1 için silahlanma. Kapı
+    kararını `guard.classify_gate`, icrayı `PaperBroker` verir — canlıyla AYNI üreticiler.
+    `params_by_regime` verilirse o günün rejimine göre parametre seti çözülür; `with_gate_detail`
+    kapı ayrıntısını plan kaydına ekler. Dolmayan girişlerin nedenleri `entry_rejects`te,
+    PIT takvimi olmadığı için susan karartma kapısı `earnings_gate`te sayılır.
+
+    SAF HESAP: state'e yazmaz; yalnız bar ve hedef sözleşmesi okur.
+    """
     limits = goal["limits"]
     max_open = int(limits["max_open_positions"])
     max_pos_r = float(limits["max_position_r"])
@@ -235,11 +263,18 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     _id = [0]
 
     def marks_on(d):
+        """Açık pozisyonların o günün KAPANIŞ fiyatıyla işaretleme haritası; o gün barı olmayan sembol
+        haritaya girmez.
+        """
         return {t: per[t].loc[d, "close"] for t in broker.positions if d in per[t].index}
 
     def marks_open_on(d):
         # OPEN-phase equity must be marked at D's OPEN — using D's close during the open phase let the
         # breaker/de-risk/sizing "know" the afternoon's move at the morning open (look-ahead)
+        """Açık pozisyonların o günün AÇILIŞ fiyatıyla işaretleme haritası. Açılış fazındaki sermaye
+        kapanışla işaretlenirse devre kesici/risk azaltma/büyüklük öğleden sonrayı 'bilir' —
+        ileri-bakış budur, o yüzden ayrı bir harita tutulur.
+        """
         return {t: per[t].loc[d, "open"] for t in broker.positions if d in per[t].index}
 
     for bar_i, d in enumerate(calendar):

@@ -190,6 +190,11 @@ def _would_have(version: int, parent, goal: dict, ereg: Optional[str]) -> Option
 
 def check_and_rollback(goal: Optional[dict] = None,
                        would_have: Optional[dict] = None) -> Optional[dict]:
+    """Canlı sürümü ebeveyniyle kıyaslar ve eşiği aşan bir kötüleşme varsa GERİ ALIR.
+    Ebeveyn yoksa, `min_sample` dolmamışsa ya da iki skordan biri ölçülemiyorsa None döner —
+    gürültüyle geri alma YOKTUR. Geri alındığında karne/hipotez/dersler güncellenir, alarm ve
+    bildirim yazılır; ebeveyn anlık görüntüsü yoksa sessizce geçilmez, alarm basılır.
+    `would_have` verilmişse yeniden hesaplanmaz (iki replay = iki farklı karar riski)."""
     goal = goal or config.goal()
     strat = config.load_strategy()
     version = int(strat.get("version", 1))
@@ -304,6 +309,7 @@ def _open_loop(reason: str, **fields) -> None:
                         "kalibrasyon beslenmez. 'kanıt bekleniyor' ile karıştırılmamalı.")
 
     def _bump(d):
+        """Açık-döngü durum dosyasının yamacı: nedeni yazar, sayacı bir artırır, alanları ve son damgayı tazeler."""
         d["reason"] = reason
         d["n"] = int(d.get("n", 0)) + 1
         d.update({k: v for k, v in fields.items()})

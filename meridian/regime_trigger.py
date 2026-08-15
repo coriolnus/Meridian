@@ -26,7 +26,10 @@ STATE_FILE = "regime_trigger.json"
 
 
 class DeferredRegimeBudgetTrigger:
+    """Rejim başına işlem sayısı eşiği aşınca TEK SEFERLİK haber veren tetik. Yalnız ölçer ve olay
+    yazar — SIFIR YETKİ: dinamik kenar-bütçelemesine geçiş operatör kararıdır."""
     def __init__(self, threshold: int = THRESHOLD_N):
+        """Tetiği örneklem eşiğiyle kurar (varsayılan `THRESHOLD_N`)."""
         self.threshold = int(threshold)
 
     def evaluate(self, trades: list | None = None) -> dict:

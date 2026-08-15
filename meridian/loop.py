@@ -297,6 +297,9 @@ def _stamp_plan_status(plans: list) -> None:
         return
 
     def _yama(rows: list) -> bool:
+        """Plan defteri satırlarına yeni `broker_status` damgasını basar; değişiklik olduysa True.
+
+        Yalnız DEĞİŞEN satıra dokunur — araya giren yazarların satırları korunur."""
         ch = False
         for r in rows:
             s = by_id.get(r.get("id"))
@@ -543,6 +546,9 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
                   "kanal": str(kanal)[:24]})
     if not zaten_onayli:
         def _onay_yaz(rows_: list) -> bool:
+            """Plan defterinde bu plana operatör onayı damgasını basar (yalnız onay alanı BOŞSA).
+
+            Hüküm alanına (`gate_verdict`) DOKUNULMAZ; ikinci kez çağrılırsa yeniden yazmaz."""
             ch = False
             for r in rows_:
                 if r.get("id") == plan_id and not r.get(ONAY_ALANI):
@@ -552,6 +558,9 @@ def operator_onay_ver(plan_id: str, *, kanal: str = ONAY_KANALI) -> dict:
         store.update_jsonl("trade_plans.jsonl", _onay_yaz)
 
     def _arm_yama(doc):
+        """Onaylanan planı kitabın silahlı kümesine ekler; zaten varsa hiçbir şey yazmaz.
+
+        DEDUP: ikinci onay ikinci emir doğurmaz — aynı plan kimliği kümede varsa False döner."""
         if not isinstance(doc, dict):
             return False
         arm = list(doc.get("armed") or [])
@@ -850,6 +859,11 @@ def mirror_submit_ve_kalicilastir(dstr: str | None = None, *, source: str,
     gonderilen, dusen = set(res.get("submitted_ids") or []), set(res.get("dropped_ids") or [])
     if gonderilen or dusen:
         def _yama(doc):
+            """Gönderim sonucunu kitaba kalıcılaştırır: gönderilen kimlikler biriktirilir, veto/ret yiyen
+            planlar silahlı kümeden KİMLİKLE düşer, ret listesi ve boyut makbuzu tazelenir.
+
+            STRICT yasa: düşen plan kümede kalmaz — iç motor bir sonraki açılışta hayalet dolum
+            yapamaz."""
             if not isinstance(doc, dict):
                 return False
             doc["alpaca_submitted"] = list(dict.fromkeys(
@@ -883,6 +897,11 @@ def _universe_drift_check() -> None:
 
 
 def _load_broker() -> tuple[PaperBroker, dict]:
+    """Kitabı diskten yükler: `(PaperBroker, meta)`.
+
+    Nakit, gerçekleşmiş K/Z, son emir kimliği ve açık pozisyonlar `portfolio.json`dan geri kurulur;
+    kayma/komisyon hedef sözleşmesinden okunur. Defter yoksa boş bir meta (silahlı küme, bekleyen
+    çıkışlar, gün-başı sermaye) döner — uydurma durum üretilmez."""
     goal = config.goal()
     slip = float(goal.get("slippage_bps", 5))
     comm = float(goal.get("commission_per_share", 0.0))
@@ -977,6 +996,12 @@ def _save_broker(b: PaperBroker, meta: dict) -> None:
         red: dict = {}
 
         def _yama(doc):
+            """Kitabın SAHİPLENİLEN alanlarını diskteki belgeye işler; yabancı anahtarlar yerinde kalır.
+
+            BEYAN KAPISI: yazımdan sonraki beyan ölçüsü hem diskteki hem döngüdeki hâle göre
+            gerilerse yazım REDDEDİLİR (False) ve neden `red` sözlüğüne bırakılır — sermaye beyanı
+            sessizce kaybolamaz. Belge sözlük değilse de reddedilir; çağıran alarm basıp tam yazım
+            yapar."""
             if not isinstance(doc, dict):
                 # Diskteki belge sözlük değil (dış hasar). Korunacak yabancı anahtar YOKTUR;
                 # yazımı atlamak kitabın o turunu kaybettirirdi → aşağıda alarm + tam yazım.
@@ -1057,6 +1082,10 @@ def _llm_veto_filter(meta: dict) -> None:
         # de yazıyor. Kilit tek taraflıysa kilit yoktur: kaybeden yazar bütün araya girmiş
         # satırları eski kopyasıyla geri alırdı ve hiçbir yerde iz kalmazdı.
         def _veto_patch(rows, _pid=pl["id"]):
+            """Plan defterindeki bu plana `llm_veto=True` damgasını basar; satır bulunduysa True.
+
+            Kilitli oku-değiştir-yaz içinde koşar: aynı deftere yazan diğer yazarların satırları
+            geri alınmaz."""
             hit = False
             for _pr in rows:
                 if _pr.get("id") == _pid:
@@ -2199,6 +2228,9 @@ def _scan_tail(df_t, d):
 
 
 def _marks(per, d):
+    """`d` seansında barı OLAN sembollerin kapanış fiyatları: `{ticker: close}`.
+
+    O tarihte verisi olmayan sembol sözlüğe HİÇ girmez (eksik fiyat ileri taşınmaz)."""
     return {t: per[t].loc[d, "close"] for t in per if d in per[t].index}
 
 
@@ -2318,6 +2350,10 @@ def _persist_equity_point(dstr: str, eq_now, meta: dict) -> dict:
         red: dict = {}
 
         def _ekle(doc):
+            """Bu seansın noktasını özsermaye eğrisine ekler ya da aynı günün noktasını YERİNDE tazeler.
+
+            ÜÇ RET: kuyruk ayrıştırılamıyorsa, son nokta bu seanstan İLERİDEYSE (geriye yazım) ve
+            aynı gün-aynı değerse hiçbir bayt yazılmaz; neden `red` sözlüğüne bırakılır."""
             pts = (doc or {}).setdefault("points", [])
             son = pts[-1] if pts else None
             son_t = None
@@ -2819,6 +2855,10 @@ def _exit_fill_yamasi(meta: dict, by_coid: dict, by_id: dict, dstr: str, out: di
     out["exit_fill"]["bekleyen"] = len(kalan)
     if yamalar or beyanlar:
         def _yama(rows, _y=yamalar, _b=beyanlar):
+            """İşlem defterine ayna çıkış dolumlarını (ölçüm) ya da beyanlarını işler.
+
+            Plan başına EN YENİ satır hedeflenir ve yalnız `alpaca_fill_price` HÂLÂ boşsa yazılır;
+            gerçek ölçüm gelince eski beyan kalkar. Ölçüm varken beyan yazılmaz."""
             hedefte: dict = {}
             for _i, _t in enumerate(rows):         # plan başına EN YENİ satır (yeniden okunur)
                 if _t.get("plan_id") in _y or _t.get("plan_id") in _b:
@@ -3000,6 +3040,10 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     # "ölçülemedi" diye amber basmak, hiç var olmayan bir arızayı sonsuza dek raporlamak olurdu
     # (kurt masalı). Kimlik/erişim yokluğu ise GERÇEKTEN ölçülemeyen bir olgudur.
     def _skip(reason: str, sinif: str = "olculemedi") -> dict:
+        """Mutabakatı atlar: artefakta `checked=False` + atlama nedeni/sınıfı yazar ve özeti döner.
+
+        Sınıf ayrımı bilinçlidir: `ayna_yok` (kıyaslanacak ayna hiç yok) ile `olculemedi` (ayna var
+        ama okunamadı) aynı şey değildir; bayat artefaktın taze konuşmasını engeller."""
         prev = store.read_json("broker_reconcile.json", {})
         store.write_json("broker_reconcile.json", {**prev, "checked": False, "skip_reason": reason,
                          "skip_sinifi": sinif, "date": dstr,
@@ -3184,6 +3228,9 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             _son_kapanis[str(_r["ticker"])] = str(_r.get("ts_close") or "")
 
     def _yakin_kapanis(sym: str) -> bool:
+        """İç kitap bu sembolü son 7 gün içinde kapattı mı? (son 60 defter satırından bakılır).
+
+        Tarih ayrıştırılamıyorsa False — yakınlık KANITLANAMADI, uydurulmaz."""
         ts = _son_kapanis.get(sym)
         if not ts:
             return False
@@ -3193,6 +3240,11 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
             return False
 
     def _yetim_sinifla(sym: str) -> tuple[str, str]:
+        """Aynada açık ama iç kitapta olmayan sembolü sınıflar: `(sinif, neden)`.
+
+        Üç sınıf: `tasima_gecikmesi` (plan hâlâ silahlı — bekleme, arıza değil), `cikis_gecikmesi`
+        (iç kitap yakında kapattı, kapatma dolumu bekleniyor) ve `giris_yetimi` (gerçek yetim,
+        kabul-mü-kapat-mı OPERATÖR kararı). SALT SINIFLANDIRMA — emir üretmez."""
         if sym in _armed_syms:
             return "tasima_gecikmesi", ("plan hâlâ silahlı kümede (taşınan/bar bekleyen) — ayna "
                                         "gün içi doldu, iç dolum bir sonraki açılışta; bekleme, "

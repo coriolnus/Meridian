@@ -113,6 +113,9 @@ def _satirlar(getiriler):
 
 
 def _ilk(d: dict, adlar: tuple):
+    """Sözlükte verilen ad adaylarından İLK bulunanın değerini döndürür; hiçbiri yoksa KeyError.
+    Sessiz None dönmez — çözülemeyen satır görünmeden geçmemelidir.
+    """
     for a in adlar:
         if a in d:
             return d[a]
@@ -258,6 +261,7 @@ _OZETLER = ("medyan", "ortalama")
 
 
 def _medyan(vals: list) -> float:
+    """Değer listesinin medyanı; çift sayıda elemanda ortadaki iki değerin ortalaması."""
     s = sorted(vals)
     n = len(s)
     orta = n // 2
@@ -265,6 +269,7 @@ def _medyan(vals: list) -> float:
 
 
 def _ozetle(vals: list, ozet: str) -> float:
+    """Listeyi seçilen ölçütle özetler: 'medyan' ise medyan, aksi hâlde aritmetik ortalama."""
     return _medyan(vals) if ozet == "medyan" else (sum(float(v) for v in vals) / len(vals))
 
 
@@ -312,6 +317,9 @@ def olay_disi_kiyas(getiriler, olay_gunleri, pencere, hedefler=None,
     olaylar, birimler, n_olay = _olaylari_ordinalle(olay_gunleri)
 
     def _kirli_mi(kimlik, o) -> bool:
+        """Verilen ordinal gün, bu kimliğe ait HERHANGİ bir olayın penceresi (−once … +sonra) içinde mi?
+        Yani satır taban hesabına giremeyecek kadar KİRLİ mi?
+        """
         return any(-once <= (o - oe) <= sonra for oe in olaylar.get(kimlik) or ())
 
     # ---- 1) evreni gün gün sınıflandır ----------------------------------------------------------
@@ -707,6 +715,9 @@ def eb_kucult(etkiler, seler, min_hucre: int = EB_MIN_HUCRE) -> dict:
         hucreler[ad] = {"ham": x, "se": se, "kucultulmus": km, "agirlik": w, "cekim": x - km}
 
     def _en_iyi(anahtar: str):
+        """Verilen anahtara ('ham' ya da 'kucultulmus') göre en yüksek hücreyi bulur ve o hücrenin
+        ham/küçültülmüş değerini, çekimini ve ağırlığını döndürür.
+        """
         ad = max((a for a, _, _ in kullanilabilir), key=lambda a: hucreler[a][anahtar])
         h = hucreler[ad]
         return {"hucre": ad, "ham": h["ham"], "kucultulmus": h["kucultulmus"],
@@ -763,6 +774,9 @@ def kod_surumu_damgasi(kok=None, zaman_asimi: float = 10.0) -> dict:
     head = kisa = kirli = neden = None
 
     def _git(*argv):
+        """Depo kökünde YALNIZ-OKUMA bir `git` alt süreci koşar (zaman aşımı sınırlı) ve tamamlanmış
+        süreç nesnesini döndürür; hiçbir şey yazmaz.
+        """
         return subprocess.run(["git", *argv], cwd=str(kok), capture_output=True, text=True,
                               timeout=zaman_asimi)
     try:

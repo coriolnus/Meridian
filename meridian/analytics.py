@@ -32,6 +32,7 @@ from . import store, config, score as score_mod, health, memory
 
 
 def _trades():
+    """Kapanmış işlem defterinin (`trades.jsonl`) tüm satırları — bu modülün TEK okuma kapısı."""
     return store.read_jsonl("trades.jsonl")
 
 
@@ -74,6 +75,10 @@ def _breaker_trips_since(days: int = LADDER_BREAKER_WINDOW_DAYS) -> tuple[int, d
 
 
 def per_regime_scores(goal: dict | None = None) -> dict:
+    """Rejim başına skor karnesi: `{rejim: {n, score, win_rate, avg_r, total_return}}`.
+
+    İşlemler `regime` alanına göre gruplanır (alan yoksa "?" kovası) ve her grup ayrı ayrı
+    `score.score_detail`den geçer. Salt-okuma."""
     goal = goal or config.goal()
     trades = _trades()
     by = defaultdict(list)
@@ -186,6 +191,9 @@ def autonomy_ladder(goal: dict | None = None) -> dict:
         breaker_window = {"okunamadi": True}
 
     def crit(label, met, detail_str, manual=False):
+        """Merdiven ölçütünü tek satırda paketler: etiket, sağlandı mı, açıklama ve ELLE mi.
+
+        `manual=True` olan ölçütler operatör/altyapı adımıdır; otomatik ilerleme sayacına girmez."""
         return {"label": label, "met": bool(met), "detail": detail_str, "manual": manual}
 
     l0_l1 = [
@@ -224,6 +232,10 @@ def autonomy_ladder(goal: dict | None = None) -> dict:
 
 
 def today() -> dict:
+    """Panonun "bugün" görünümü: nabız + bayatlık/HALT, rejim, açık pozisyonlar, EN SON tarihli plan
+    kümesi ve hüküm dağılımı, açık risk ve maruziyet yüzdesi.
+
+    SALT-OKUMA: yalnız state artefaktlarını okur, hiçbir dosyaya yazmaz ve hiçbir kapıyı beslemez."""
     hb = store.read_json("heartbeat.json", {})
     regime = store.read_json("regime.json", {})
     portfolio = store.read_json("portfolio.json", {})
@@ -260,6 +272,9 @@ def today() -> dict:
 
 
 def _alpaca_present() -> bool:
+    """Alpaca kâğıt aynası kullanılabilir mi? YOKLAMA — herhangi bir arızada False.
+
+    Başarısızlık bilginin kendisidir: "ayna var mı?" sorusunun cevabı zaten False olurdu."""
     try:
         from .adapters import alpaca
         return alpaca.paper_available()
@@ -452,6 +467,10 @@ def benchmark_relative() -> dict | None:
     # `hukum_kaymasi` (iki yöntemin anlamlılık hükmü ayrışıyor mu). Eski aralık SİLİNMEZ —
     # karşılaştırma, kaymanın kanıtıdır.
     def _bench_dagilim(blok: int) -> np.ndarray:
+        """Maruziyet-düzeltilmiş fazla getirinin CIRCULAR BLOK bootstrap dağılımı.
+
+        `blok` işlem uzunluğunda bloklar çekilir (blok=1 ⇔ eski IID yöntem); tohum SABİTtir, yani
+        aynı defter aynı aralığı verir. Dönen dizi B adet yeniden örneklenmiş fazla getiridir."""
         n = pnl.size
         b = max(1, min(int(blok), n))
         n_blok = -(-n // b)
@@ -547,6 +566,9 @@ def _alfa_ozet(kayitlar: list[dict]) -> dict:
 
 
 def _alfa_grupla(kayitlar: list[dict], anahtar) -> dict:
+    """Alfa kayıtlarını `anahtar(kayit)` fonksiyonuna göre gruplar ve her grubun `_alfa_ozet`ini döner.
+
+    Gruplar anahtarın metin hâline göre SIRALI çıkar (rapor çıktısı kararlı olsun)."""
     by = defaultdict(list)
     for k in kayitlar:
         by[anahtar(k)].append(k)
@@ -792,6 +814,10 @@ def _learning_feeds() -> dict:
 
 
 def agent_view() -> dict:
+    """Öğrenme ajanının pano görünümü: skor tahtası, tüm hipotezler, kalibrasyon saçılımı
+    (tahmin↔gerçekleşen), Brier kalibrasyonu ve beceri atribüsyonu.
+
+    Salt-okuma; saçılıma yalnız `realized_delta`sı YAZILMIŞ (sonuçlanmış) hipotezler girer."""
     sb = store.read_json("scoreboard.json", {"versions": {}})
     hyps = memory.all_hypotheses()
     scatter = [{"predicted": h.get("predicted_delta"), "realized": h.get("realized_delta"),
@@ -1202,6 +1228,7 @@ def llm_opinion_calibration() -> dict:
 
 
 def llm_promoted() -> bool:
+    """LLM görüşü kalibrasyon dosyasında TERFİ ETMİŞ olarak işaretli mi? (salt-okuma, dosya yoksa False)."""
     return bool(store.read_json(LLM_CAL_FILE, {}).get("promoted"))
 
 
@@ -1329,6 +1356,7 @@ def _waterfall_rows(trades: list) -> tuple[list, dict]:
 
 
 def _ort(vals: list) -> float | None:
+    """Listenin ortalaması (4 ondalık); liste BOŞSA None — boş örneklem 0.0 SAYILMAZ."""
     return None if not vals else round(sum(vals) / len(vals), 4)
 
 
@@ -1348,6 +1376,10 @@ def profit_waterfall() -> dict | None:
         return None
 
     def _blok(rs: list) -> dict:
+        """Bir satır kümesinin şelale bloğu: sinyal MFE, geri verilen, friksiyon, net R ve çıkış verimi.
+
+        Her büyüklük KENDİ ölçülmüş paydasından hesaplanır ve payda sayıları (`n_mfe`, `n_friksiyon`,
+        `n_verim`) ayrıca raporlanır; "geri verilen" yalnız HER İKİ ucu da ölçülü satırlardan alınır."""
         mfe = [r["mfe_r"] for r in rs if r["mfe_r"] is not None]
         fr = [r["friksiyon_r"] for r in rs if r["friksiyon_r"] is not None]
         net = [r["net_r"] for r in rs]
@@ -3179,6 +3211,7 @@ def mae_profile() -> dict | None:
         return None
 
     def _ozet(xs: list) -> dict | None:
+        """MAE değerlerinin dağılım özeti (n, medyan, ort, p90, maks); liste boşsa None."""
         if not xs:
             return None
         a = np.asarray(xs, dtype=float)
@@ -3592,6 +3625,9 @@ def gate_veto_tally() -> dict:
                 hyp_reasons[aile] = hyp_reasons.get(aile, 0) + 1
 
     def _top(d: dict) -> list:
+        """Sayaç sözlüğünü en sık görülenden başlayarak `[{"veto": ad, "n": sayı}]` listesine çevirir.
+
+        `GATE_TALLY_CAP` ile kırpılır — kuyruk raporu şişirmez."""
         return [{"veto": k, "n": v} for k, v in
                 sorted(d.items(), key=lambda kv: -kv[1])[:GATE_TALLY_CAP]]
 
@@ -3766,6 +3802,10 @@ def _beyan_edilen_bosluklar(bolumler: dict) -> list:
     out = []
 
     def _gez(x, yol: str, derinlik: int = 0):
+        """Rapor ağacında özyinelemeli gezinip BOŞLUK işaretlerini ("olculemedi" / "DEFTER BOŞ...")
+        nokta-ayraçlı yollarıyla `out` listesine toplar.
+
+        Derinlik 6 ve liste başına 20 öğe ile sınırlıdır (rapor gezintisi patlamasın)."""
         if derinlik > 6 or not isinstance(x, (dict, list, tuple)):
             return
         if isinstance(x, dict):
@@ -3873,6 +3913,7 @@ BAND_MIN_N = 20                            # ampirik banda geçiş için asgari 
 
 
 def _entry_rows(days: int | None = None) -> list:
+    """Giriş icra defterinin satırları; `days` verilirse yalnız son o kadar TAKVİM gününe ait olanlar."""
     rows = store.read_jsonl(ENTRY_LEDGER)
     if not days:
         return rows
@@ -4010,6 +4051,9 @@ def entry_execution_summary(days: int = ENTRY_SUMMARY_DAYS) -> dict:
 
 
 def _sayac(rows: list, alan: str) -> dict:
+    """Satırlarda bir alanın değer dağılımını sayar: `{deger: adet}`.
+
+    Alanı None olan satır HİÇ sayılmaz — ölçülemeyen bir değer kendi kovasını doldurmaz."""
     out: dict = defaultdict(int)
     for r in rows:
         v = r.get(alan)
@@ -4179,6 +4223,11 @@ def _nd_stamp() -> tuple:
 
 
 def _nd_ozet(kayitlar: list[dict]) -> dict:
+    """Gece/gündüz bacak kayıtlarının özeti: ortalama gece, gündüz, tutulan yol, işlem getirisi,
+    icra farkı ve gecenin PAYI.
+
+    Kayıt yoksa tüm alanlar None (`yeterli=False`) — boş örneklem 0.0 sayılmaz. Pay MUTLAK
+    büyüklüklerden alınır: zıt işaretli bacaklarda net yol küçülüp oran anlamsızlaşırdı."""
     n = len(kayitlar)
     if not n:
         return {"n": 0, "gece": None, "gunduz": None, "yol": None, "islem": None,
@@ -4221,6 +4270,9 @@ def night_day_split() -> dict:
         return _ND_CACHE[_key]
 
     def _ret(o: dict) -> dict:
+        """Sonucu damga anahtarıyla önbelleğe koyup döner (TEK girişlik: eski damga temizlenir).
+
+        Fonksiyonun bütün çıkış dallarının paylaştığı tek kapı — bir dal önbelleği atlayamaz."""
         _ND_CACHE.clear()          # TEK giriş: eski damga bir daha sorulmaz, bellek sabit kalır
         _ND_CACHE[_key] = o
         return o
@@ -4315,6 +4367,7 @@ def night_day_split() -> dict:
 
 
 def _grupla(kayitlar: list[dict], anahtar) -> dict:
+    """Kayıtları `anahtar(kayit)` fonksiyonuna göre gruplar: `{anahtar: [kayıt, ...]}` (özet almaz)."""
     by = defaultdict(list)
     for k in kayitlar:
         by[anahtar(k)].append(k)

@@ -508,6 +508,9 @@ def component_ic(write: bool = True) -> dict | None:
                         buk[("havuz", c, h)].append((x, float(y)))
 
     def _hucre(pairs: list) -> dict:
+        """Tek IC hücresinin özeti: örneklem eşiği altındaysa `ic=None` + neden; rütbe değişimi yoksa yine
+        None ("0.0 ilişki" DEĞİL, tanımsız). Aksi hâlde Spearman IC + Fisher %95 aralığı ve aralığın
+        sıfırı dışlayıp dışlamadığı (anlamlılık)."""
         if len(pairs) < IC_MIN_SAMPLE:
             return {"ic": None, "n": len(pairs), "neden": f"n<{IC_MIN_SAMPLE}",
                     "ci": None, "anlamli": None}
@@ -766,6 +769,8 @@ def yeniden_uret(uygula: bool = False) -> dict:
 
 
 def _fark_yazdir(rapor: dict, max_satir: int = 40) -> None:
+    """Yeniden-üretim raporunu insan okunur biçimde basar: kuru koşu mu uygulandı mı, değişen hücre
+    sayımları, gözlem/anlamlılık kırılımları, bar tabanları ve (tavana kırpılmış) fark tablosu."""
     mod = "UYGULANDI" if rapor.get("uygulandi") else "KURU KOŞU (hiçbir bayt yazılmadı)"
     print(f"[component_ic] {mod}")
     if not rapor.get("olculdu"):
@@ -799,6 +804,9 @@ def _fark_yazdir(rapor: dict, max_satir: int = 40) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI girişi: `component_ic.json`ı boru hattından yeniden üretir. Varsayılan KURU KOŞU — `--uygula`
+    olmadan tek bayt yazılmaz, `--uygula` da canlı worker görünürken `--zorla` olmadan REDDEDİLİR
+    (iki süreç aynı defteri iki farklı bar tabanıyla yazamasın). Dönüş: çıkış kodu."""
     import argparse
     import sys
 
