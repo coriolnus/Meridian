@@ -44,8 +44,14 @@ def test_marj_mutlak_tavanin_YARISI_olarak_OLCULUR_yazilmaz(sandbox_state):
     assert r["mutlak_tavan"] == tavan
     assert r["mutlak_tavan_kaynagi"] == "goal.max_drawdown"
     assert r["marj_tavan_orani"] == pytest.approx(shadowlaw.DD_VETO_MARGIN / tavan)
-    # Bugünkü sözleşme: 0,04 / 0,08 = bütçenin tam yarısı (shadowlaw türetim (2)).
-    assert r["marj_tavan_orani"] == 0.5
+    # ÇİVİLENEN ŞEY ORANDIR, SAYILAR DEĞİL: `DD_VETO_MARGIN` bütçenin tam yarısıdır (shadowlaw
+    # türetim (2)). Burada "bugünkü sözleşme: 0,04 / 0,08" yazıyordu ve İKİSİ DE İKİYE KATLANDIĞI
+    # için (bugün 0,08 / 0,16) yorum sessizce bayatladı — oran değişmediğinden test yeşil kaldı ve
+    # bayatlık GÖRÜNMEDİ. Bu, satır çapası çürümesiyle aynı sınıftır: donmuş bir literal, kaynağını
+    # göstermeyen bir iddiadır. Gerçek değerler artık yorumdan değil, hata mesajından okunur.
+    assert r["marj_tavan_orani"] == 0.5, (
+        f"marj bütçenin yarısı olmalı — ölçülen: DD_VETO_MARGIN={shadowlaw.DD_VETO_MARGIN} / "
+        f"goal.max_drawdown={tavan} = {r['marj_tavan_orani']}")
 
 
 def test_beyan_MUTLAK_ESIK_OKUMASINI_adiyla_reddeder(sandbox_state):

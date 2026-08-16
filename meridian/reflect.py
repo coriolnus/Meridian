@@ -350,12 +350,18 @@ def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total:
     yoktur (büyüklük → çoğunluk → kuyruk); yani bu üç dalın göreli sırası `_gate_eval`in gerekçe
     zincirininkiyle aynı, `passes` bağlacınınkiyle DEĞİLDİR.
 
-    EKSİKLİK BUGÜN NEDEN GÖRÜNMÜYOR: bu fonksiyonun tek çağıranı `_gate_eval`in LEGACY dalıdır
+    EKSİKLİK BUGÜN NEDEN GÖRÜNMÜYOR: ÜRETİMDEKİ tek çağıran `_gate_eval`in LEGACY dalıdır
     (dilim yok → `law="legacy_margin"`) ve orası `majority`/`tail_ok` yerine sabit `True` geçer,
     yani zincir pratikte yalnız büyüklük gerekçesini üretir. Aynı legacy dünyada `_trades_search`/
     `_mtm_search` dilimleri de yoktur; iki düşüş bacağı ölçülemez (`dd_durum`/`dd_mtm_durum` =
     "olculemedi") ve tanım gereği ret sebebi olamaz. Dilimli (olasılıksal) yolda gerekçeyi zaten
-    `_gate_eval`in kendi zinciri yazar — düşüş vetoları oradan, adıyla çıkar."""
+    `_gate_eval`in kendi zinciri yazar — düşüş vetoları oradan, adıyla çıkar.
+
+    "ÜRETİMDEKİ" NİTELEMESİ 2026-08-16'DA EKLENDİ: eski cümle "tek çağıranı `_gate_eval`" diyordu
+    ve bu YANLIŞTI — `tests/test_audit_fixes.py::test_gate_why_handles_none_incumbent_oos` İKİNCİ
+    çağırandır, üstelik `margin` GEÇMEZ (yani çıplak `GATE_MARGIN` yolunu sınayan tek yer odur).
+    "Tek çağıran" iddiası, bir parametrenin gerçekte hangi değerlerle geldiğini gizler; kapsamı
+    daraltan her beyan gibi ölçülerek yazılmalıdır."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
     inc_tail, cand_tail = inc.get("oos_tail_risk"), cand.get("oos_tail_risk")
     if cand_oos is None:
@@ -369,6 +375,15 @@ def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total:
             return ("fold-robustness UNPROVABLE: only 1 window had enough trades — a single-window "
                     "edge is not robustness (2026-07-22)")
         return f"candidate lost the fold-robustness majority ({fold_wins}/{fold_total})"
+    # `tail_ok` ARTIK OKUNUYOR (2026-08-16). Bu parametre imzada VARDI ama gövdede HİÇ geçmiyordu:
+    # son dal, kuyruk geçmiş olsa bile koşulsuz "kuyruk düşürdü" gerekçesi yazıyordu. Beyan edilip
+    # okunmayan bir parametre, okuyucuya kapının o bacağa BAKTIĞINI söyleyen sessiz bir yalandır —
+    # ve buraya `tail_ok=True` ile düşmek, gerekçenin bu zincirde OLMADIĞI anlamına gelir (hüküm
+    # `_gate_eval`in beş terimli bağlacından, örneğin bir düşüş vetosundan gelmiştir). O durumda
+    # kuyruğu suçlamak sebep UYDURMAKTIR; zincir kendi kapsamının dışını gösterir.
+    if tail_ok:
+        return ("gate rejected but NOT by this chain (magnitude/majority/tail all held here) — "
+                "the binding reason is in _gate_eval's own chain (drawdown or M2M drawdown veto)")
     # SON DAL SAVUNMALI: buraya düşmek "kuyruk düşürdü" demektir, ama kuyruk ÖLÇÜLMEMİŞ olabilir
     # (legacy/fikstür sözlüklerinde `oos_tail_risk` yoktur). Ölçülmemiş kuyruğu sayı gibi okumak
     # önce TypeError'dı; sayı UYDURMAK ise daha kötüsü olurdu. UYDURMA YASAĞI: ölçülemediğini söyle.

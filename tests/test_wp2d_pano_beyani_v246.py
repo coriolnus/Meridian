@@ -231,7 +231,7 @@ def test_son_dongu_MAKBUZSUZ_satirda_None_yazildi_DEMEZ(sandbox_state):
 
 @pytest.mark.parametrize("durum", ["yazildi", "tazelendi", "idempotent_atlandi", "yazilmadi"])
 def test_beyan_SON_YAZIM_makbuzunu_DORT_HALDE_de_tasir(sandbox_state, durum):
-    """`loop._persist_equity_point`in DÖRT hâli (loop.py:2262) beyana OLDUĞU GİBİ geçer — pano
+    """`loop._persist_equity_point`in DÖRT hâli (`loop._persist_equity_point`) beyana OLDUĞU GİBİ geçer — pano
     `neden` metnine göre dizge eşleştirmek zorunda kalmasın diye o alan zaten makine-okunur."""
     _daily_cycle_yaz(sandbox_state, {"durum": durum, "tarih": "2026-08-14", "neden": "x"})
     b = api._egri_beyani(_zarf([["2026-08-14", 1.0]]), {})

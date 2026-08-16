@@ -58,7 +58,7 @@ def _tohum_yazimi(trades: list, egri_son: str, *, isaret: bool = True) -> None:
     """CANLI DİSK İZİNİN BİREBİR TAKLİDİ — İKİ YAZIM, İKİ SAHİP:
 
       1. `run.replay_seed` defterin TAMAMINI ve HEMEN ardından `equity_curve.json`ı yazar
-         (run.py:203-204);
+         (`run.replay_seed`);
       2. `sermaye.uygula` eğrinin ZARFINA reset işaretini basar (sermaye.py:413-421) ve o işaret
          `egri_son_nokta`yı DONDURUR.
 

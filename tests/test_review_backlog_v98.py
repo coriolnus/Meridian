@@ -111,7 +111,7 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         "NAKED_POSITION",
         # İCRA-SÖZLEŞMESİ (2026-08-12, v233 — VLO vakası): onaylı plan broker'a gitmediyse bu
         # sermaye-sınıfı alarm split_brain gürültüsüne gömülmesin diye AYRI jeton; NOTIFY türetmesi
-        # bildirime otomatik bağlar. Bu literal güncellemesi o kararın kaydıdır (obs.py:71 gerekçesi).
+        # bildirime otomatik bağlar. Bu literal güncellemesi o kararın kaydıdır (`obs._maybe_notify` jeton-başına susturma gerekçesi).
         "ONAYLI_PLAN_GONDERILMEDI"}
 
 

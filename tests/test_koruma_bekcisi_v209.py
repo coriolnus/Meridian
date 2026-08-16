@@ -103,7 +103,7 @@ def test_canli_vaka_dort_motor_pozisyonu_KORUMASIZ_sayilir(ayna, monkeypatch):
 
 
 def test_ok_alani_DONER_hukum_veren_dedektor(ayna, monkeypatch):
-    """`ok` alanı SÖZLEŞMEDİR (watchdog.py:518 dersi): hüküm vermeyen dedektör bakanı boş geçirir."""
+    """`ok` alanı SÖZLEŞMEDİR (`watchdog.conservation_report` dersi): hüküm vermeyen dedektör bakanı boş geçirir."""
     _sap(monkeypatch, CANLI_POZISYONLAR, CANLI_EMIRLER)
     assert "ok" in watchdog.koruma_report()
     # POZİTİF KONTROL: temiz durumda da alan DÖNER ve True olur (None kalmaz)
@@ -117,7 +117,7 @@ def test_KORUMALI_pozisyon_yakalanmaz_bacak_coidi_UUID_olsa_bile(ayna, monkeypat
     """TUZAK: koruma bacağının coid'i Alpaca üretimidir → `is_engine_order` HER ZAMAN False.
 
     Dedektör "canlı stop var mı" sorusunu motor önekiyle süzseydi, KORUNAN her pozisyon çıplak
-    görünürdü (alpaca.py:411 dersi). Bu test o süzgecin girmediğini kanıtlar."""
+    görünürdü (`alpaca` OCO süpürme bloğunun dersi). Bu test o süzgecin girmediğini kanıtlar."""
     poz = [_poz("EMR", 37)]
     emir = [_parent("EMR", "P-1-EMR", 37,
                     legs=[_bacak("EMR", 37, "limit", "new", coid="tp-uuid"),

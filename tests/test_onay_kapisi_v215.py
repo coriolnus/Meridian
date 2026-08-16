@@ -38,7 +38,7 @@ def _alpaca_tasima_kaydi_geri_alinir():
 
     NEDEN ÖLÇÜLDÜ (2026-08-08, otoriter suite kırmızısı): `loop.reconcile_broker_state`
     `alpaca.orders`/`positions` yamalanmış OLSA BİLE `alpaca.transport()["ok"]`i ayrıca sınar
-    (loop.py:1942, 1976) ve False görünce mutabakatı ERKEN döndürür. Sonuç: `test_regime_patch`
+    (`loop.mirror_submit_armed` ve `loop._alpaca_emir_penceresi`) ve False görünce mutabakatı ERKEN döndürür. Sonuç: `test_regime_patch`
     ve `test_robustness_patch` yalıtımda yeşil, bu dosyanın ARDINDAN kırmızı — klasik sıra
     bağımlılığı. `conftest._MUTABLE_GLOBALS` yalnız `backtest.SECTORS`ı gözlüyor, yani bekçi bu
     sızıntıya KÖRDÜ; kaydı bu dosya kendi kirletiyorsa kendi de geri almalı.

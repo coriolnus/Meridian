@@ -57,7 +57,7 @@ _MODUL_DURUMLARI = (
     # test_onay_kapisi_v215.py` kontrol uçlarına POST atıyor; bir uç broker'a uzanınca adaptör
     # `_note(False, …)` ile taşıma kaydını `ok=False`a çekiyor ve kayıt DOSYA BİTİNCE de öyle
     # kalıyordu. `loop.reconcile_broker_state` `alpaca.orders`/`positions` YAMALANMIŞ OLSA BİLE
-    # `alpaca.transport()["ok"]`i AYRICA sınar (loop.py:1942, 1976) → `test_regime_patch` ve
+    # `alpaca.transport()["ok"]`i AYRICA sınar (`loop.mirror_submit_armed` ve `loop._alpaca_emir_penceresi`) → `test_regime_patch` ve
     # `test_robustness_patch` yalıtımda yeşil, v215'in ARDINDAN kırmızı. v215 kendi dosya-yerel
     # fikstürüyle kendi kirini geri alıyor (ve almalı — açan kapatır), ama SINIF orada kapanmaz:
     # taşıma kaydını kirleten bir SONRAKİ dosya aynı fikstürü yeniden yazmak zorunda kalırdı.

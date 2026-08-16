@@ -2195,8 +2195,13 @@ def _benchmark_veto_tally() -> dict:
             # Eşik `reflect._submit_locked` yorumundan gelir; sayaç onu YENİDEN tanımlamaz, gösterir.
             "decision_n": 20,
             "ready": len(rows) >= 20,
+            # ÇAPA SEMBOLE ÇEVRİLDİ (2026-08-16): burada `reflect.py:721` yazıyordu ve `reflect.py`ye  # çapa-mezar-taşı
+            # dokuz satır eklenince çapa bir YORUM satırını göstermeye başladı — `stale_line_anchors`
+            # onu aynı turda yakaladı. Sembol kayar, satır kaymaz: kaynak `reflect._submit_locked`
+            # içindeki "SPY-üstü alfa DAMGASI" bloğudur (`base["vs_benchmark_at_ship"]` yazımı).
             "note": ("her ship'e damgalanan 'SPY'ı geçti mi' anlık görüntüsü; 20 gözlemde kapıya "
-                     "eklenip eklenmeyeceğine veriyle karar verilir (reflect.py:721)")}
+                     "eklenip eklenmeyeceğine veriyle karar verilir "
+                     "(reflect._submit_locked → 'SPY-üstü alfa DAMGASI' bloğu)")}
 
 
 # ---- EĞRİNİN PENCERE BEYANI ---------------------------------------

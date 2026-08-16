@@ -461,7 +461,7 @@ def test_web_katmaninda_dolduruldu_dizesi_ARTIK_VAR():
 # Dalga-2 (01ba684 + ff55a18) süpürücü ailesine 15 yeni `?? 0` guard'ı ekledi: olay çekmecesi EV_TR
 # (`app.js:1179-1187`) + iptal tuşu sınıf dökümü (`app.js:3439`). ON BEŞİ de ELLE (b) SINIFLANDI —
 # hepsi ÜRETİCİ-GARANTİLİ bölümleme sayaçlarıdır (YASA-6, uçtan doğrulandı: alpaca.py:487-491 ·
-# api.py:2045 · loop.py:280-281 HER olayda koşulsuz int(...)/len(...) basar, boş kova KAYNAKTA 0'a
+# api/loop olay yazıcıları HER olayda koşulsuz int(...)/len(...) basar, boş kova KAYNAKTA 0'a
 # düşer = ÖLÇÜLMÜŞ sıfır, bu deponun zaten (b) saydığı biriktirici/bölümleme deseni). Hiçbiri
 # liveness/manşet ölçülemedi-dalına sızmadı (manşet `!= null` üçlemesi kullanır, `?? 0` değil).
 # `opCancelOpen`inki AYRICA v225 (test_dalga2_kucukler_v225.py:190) tarafından ZORUNLU. Satır satır:
