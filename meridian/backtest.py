@@ -53,7 +53,13 @@ from . import skills as skills_mod
 from . import broker as brk
 from .broker import PaperBroker
 
-# Sector map for the replay universe — enables the max_sector_exposure_pct guard in backtest.
+# Sektör HARİTASI: replay evreninin ticker→sektör ETİKETLERİ. Bu tablo yalnız ETİKET üretir —
+# sektör tavanını HESAPLAMAZ (eski başlık "enables the max_sector_exposure_pct guard in backtest"
+# diyordu; tavanın burada işlediğini ima ettiği için değiştirildi, 2026-08-14). Etiketler replay()
+# içinde `sector_ct` sayımına dönüşür, `portfolio["sector_counts"]` olarak `guard.classify_gate`e
+# girer; kuralın KENDİSİ (`sector_cap`) ve PAYDASI (`guard.sector_cap_basis`, WP-15g) yalnız
+# guard.py'de yaşar. TEK yasa, TEK uygulama: bu dosyada sektör tavanına dair ikinci bir hesap
+# YOKTUR ve yazılmamalıdır — gerekçe ve kaldırılan ölü yerelin vakası replay() girişindedir.
 SECTORS = {
     "AAPL": "tech", "MSFT": "tech", "NVDA": "tech", "AVGO": "tech", "AMD": "tech", "CRM": "tech",
     "ADBE": "tech", "ORCL": "tech", "GOOGL": "comms", "META": "comms", "NFLX": "comms",
