@@ -25,7 +25,14 @@ WorkingDirectory=/opt/meridian
 Environment=MERIDIAN_BROKER=alpaca_paper
 Environment=MERIDIAN_AUTOSTART_CYCLE=1
 Environment=CYCLE_POLL_SECONDS=300
-Environment=MERIDIAN_AUTOSTART_HERMES=1
+# 0 = BU SÜREÇ ÖĞRENME DÖNGÜSÜNÜ KOŞTURMAZ (ROADMAP §2-50, 2026-08-16 ölçümü).
+# Döngü artık `meridian-learn.service` biriminde. Gerekçe ölçüldü: döngü burada bir daemen ipliği
+# olarak koşarken API süreci %93-100 CPU'da kalıyor ve GIL yüzünden pano isteği backtest hesabının
+# arkasına diziliyordu (`/api/public/summary` 2,6-14,0 sn; 4 çekirdeğin biri dolu, üçü boş).
+# BU SATIRI 1 YAPMAK ESKİ ARIZAYI GERİ GETİRİR — ve iki birim aynı anda 1 olursa iki bekleme
+# döngüsü koşar; `reflect._ProcessLock` yansımaları serileştirir ama boşuna CPU yakılır.
+# Elle tetikleme (`/api/hermes/reflect_now`) bu bayraktan BAĞIMSIZ ve burada KALIR.
+Environment=MERIDIAN_AUTOSTART_HERMES=0
 Environment=HERMES_POLL_SECONDS=300
 # --- ÇEKİRDEK AYARI (4 OCPU, sunucuda ÖLÇÜLDÜ 2026-07-30: nproc=4 / 12GB). Eski "2 OCPU → havuzu
 #     KAPAT" notu ESKİDİ: operatör 4 OCPU'luk instance açabildi. Havuz artık AÇIK ve kendini

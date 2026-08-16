@@ -1,0 +1,92 @@
+[Unit]
+# Meridian öğrenme (Hermes yansıma) bekleme döngüsü — KENDİ SÜRECİNDE.
+#
+# NEDEN AYRI BİRİM (ROADMAP §2-50, ölçüldü 2026-08-16 canlıda):
+#   Döngü API sunucusunun içinde bir daemon ipliğiydi. py-spy yığını `hermes-standby →
+#   coordinate_descent_search → walk_forward → replay`; API süreci %93-100 CPU'da kesintisiz,
+#   `/api/public/summary` 2,6-14,0 sn, yük ortalaması 1,14 — 4 çekirdeğin BİRİ dolu, ÜÇÜ boş.
+#   Sebep patoloji değil GIL (25 sn / 50 Hz / 1392 örnek profil temiz çıktı): pano isteği backtest
+#   hesabının arkasına diziliyordu. Emsal bu depoda hazırdı — `meridian-sprint@.service` zaten
+#   ayrı birim; sertleştirme oradan birebir devralındı.
+Description=Meridian öğrenme döngüsü (Hermes yansıma) — API sürecinden ayrı, GIL çekişmesiz
+Documentation=file:/opt/meridian/docs/TASARIM-OGRENME-SURECI-AYRIMI-2026-08-17.md
+Documentation=file:/opt/meridian/meridian/learn_run.py
+# Öğrenme canlı defteri OKUR; ana birim ayaktayken başlaması doğal sıra. Zorunluluk DEĞİL
+# (`Wants`, `Requires` değil): ana birim düşerse öğrenme de düşsün istemiyoruz — okuduğu şey
+# dosya sistemi, ayakta bir HTTP sunucusu değil.
+Wants=meridian.service
+After=meridian.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/meridian
+
+# `Restart=always` — sprint'ten AYRILDIĞIMIZ tek davranış (orada `no`). Gerekçe: sprint tek
+# seferlik bir iştir, bu ise kalıcı bir hizmettir; düşerse öğrenme sessizce durur ve tek belirtisi
+# "hiç öneri gelmiyor" olurdu. `learn_run.main` başlatılamazsa 1 ile çıkar ve sebebi log'a yazar —
+# sonsuz yeniden başlatma döngüsü sessiz kalmaz.
+Restart=always
+RestartSec=30
+
+# CPU AĞIRLIĞI, TAVAN DEĞİL. Ana birimin varsayılanı 100; buraya 50 vererek ÇEKİŞMEDE panonun
+# kazanmasını sağlıyoruz. Bilerek `CPUQuota=` KULLANILMADI: quota bir tavandır ve boştaki
+# çekirdekleri de yasaklardı — oysa bu işin bütün amacı boş çekirdekleri öğrenmeye AÇMAKTI.
+CPUWeight=50
+
+# Bu döngü öğrenmeyi KOŞTURAN taraftır: bayrak burada 1, `meridian.service`te 0.
+Environment=MERIDIAN_AUTOSTART_HERMES=1
+Environment=HERMES_POLL_SECONDS=300
+# ARAMA DÜĞMELERİ BİLEREK İKİ YERDE (burada + meridian.service) ve DEĞERLERİ AYNI OLMAK ZORUNDA.
+# Taşımak istemiştik; tasarım denetimi engelledi: elle tetiklenen yansıma (`/api/hermes/reflect_now`)
+# API sürecinde KALIYOR ve aynı düğmeleri okuyor. Buradan kaldırsaydık bekleme döngüsü ile elle
+# tetikleme FARKLI bütçelerle koşardı — "aynı yasanın iki uygulaması" kusurunun tam hâli.
+# `dagit [1c]` repo↔/etc ayrışmasını yakalar ama BİRİM↔BİRİM ayrışmasını YAKALAMAZ; eşitlik
+# şimdilik bu yorumla ve `test_ogrenme_birimi_ayrimi` çivisiyle korunuyor.
+Environment=MERIDIAN_PARALLEL_PROBES=1
+Environment=MERIDIAN_SEARCH_MAX_MIN=60
+Environment=HERMES_SEARCH_BUDGET=8
+Environment=MERIDIAN_AGENT_RPD=600
+# Motor/veri dalları `config.BROKER`a bakar; ana birimle AYNI değeri taşımak zorunda.
+Environment=MERIDIAN_BROKER=alpaca_paper
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Sırlar dosyadan (birim dosyasında düz metin sır YOK — meridian.service'teki aynı gerekçe).
+EnvironmentFile=-/opt/meridian/.dash.env
+
+ExecStart=/opt/meridian/.venv/bin/python -m meridian.learn_run
+
+# DURDURMA: SIGTERM → `learn_run._isaret` → `hermes_runtime.stop()` → döngü turunu bitirip iner.
+# Koşan bir yansıma DAKİKALAR sürebilir (ölçülen arama süreleri 1s55dk-3s14dk), ama `stop()` yalnız
+# bayrak koyar ve döngü bir sonraki kontrol noktasında görür — bu yüzden 120 sn yeterli tampon.
+# Süre dolarsa SIGKILL: yarım yansıma `.reflect.lock`u bırakır (flock süreç ölümünde çekirdekçe
+# serbest bırakılır) ve `search_progress.json` `running=True` DONAR — bilinçli, çünkü sprint'in
+# bayatlık yasası (`ARAMA_BAYAT_SAAT`) donmuş bayrağı zaten yakalayıp temizler.
+KillMode=control-group
+TimeoutStopSec=120
+
+StandardOutput=journal
+StandardError=journal
+
+# ---- SERTLEŞTİRME (meridian-sprint@.service'ten birebir) ----
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target
