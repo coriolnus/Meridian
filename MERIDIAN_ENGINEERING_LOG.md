@@ -1,7 +1,9 @@
 # MERIDIAN ENGINEERING LOG
 Her oturumun BAŞINDA önce bu dosya okunur (§8 protokolü, 2026-07-30'da operatör kurdu).
 İçerik bir İPUCUDUR, gerçek-kaynak değildir — koda karşı doğrulanmadan güvenilmez.
-Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerçekte ne var ve ne açık" fotoğrafıdır.
+Tur notlarının kronolojik defteri ROADMAP.md §5'tedir (eski adıyla §7 — 2026-08-13 yeniden
+yapılandırmada numaralandı, içerik aynen taşındı); bu dosya "şu an gerçekte ne var ve ne açık"
+fotoğrafıdır.
 
 **SUPERPOWERS PROTOKOLÜ (2026-08-17, operatör kurdu — CLAUDE.md §9, commit 1d10a75):** bu
 depoda çalışan her Claude oturumu `superpowers` plugin bileşenlerini (brainstorming,
