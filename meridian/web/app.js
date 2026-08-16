@@ -10013,10 +10013,31 @@ const KEY_GROUPS = [
     // Sabit metin "gemini-2.5-pro" yazıyordu, kod ise 3.1-pro koşuyor: çelişik varsayılan beyanı.
     ["GEMINI_MODEL", "Gemini modeli (opsiyonel)", "Boşsa {default}."],
   ]],
-  ["Bildirim", "Alarm ve önemli olayları telefonuna iletir (isteğe bağlı).", [
-    ["TELEGRAM_BOT_TOKEN", "Telegram bot token", "BotFather'dan alınan bot anahtarı."],
-    ["TELEGRAM_CHAT_ID", "Telegram chat ID", "Mesajın gideceği sohbet kimliği."],
-    ["MERIDIAN_WEBHOOK_URL", "Webhook URL (alternatif)", "Telegram yerine kendi webhook adresin."],
+  // SÜRTÜNME KALDIRILDI (2026-08-16). Bu üç alan ROADMAP §3'te "sıranın başı ve EN UCUZ kalem"
+  // diye duruyor ve 2026-08-09'dan beri AÇIK; beklerken ödenen bedel ölçülü (29 alarm teslim
+  // edilemedi). Kod tarafında eksik YOK: zincir (`obs.alarm → notify.send`) hazır, uç hazır
+  // (`POST /api/secrets/{name}`), alanlar burada. Eksik olan tek şey operatörün elindeki DEĞER.
+  // Eski açıklamalar ("BotFather'dan alınan bot anahtarı.") bir TANIMDI, YÖNERGE değil — ve
+  // chat ID adımı Telegram'da gerçekten dolambaçlıdır (botla konuşmadan kimlik doğmaz).
+  // Beş dakikalık bir işin bir hafta açık kalmasının en olası sebebi buydu; metin artık
+  // tıklanabilir bir sırayla yazılı. HİÇBİR YENİ UÇ/AKIŞ EKLENMEDİ — yalnız yönerge.
+  ["Bildirim", "Alarm ve önemli olayları telefonuna iletir (isteğe bağlı ama ÖNERİLİR: kanal "
+   + "boşken alarmlar yalnız panoda birikir — 'alarm öttü, kimse duymadı' sınıfı).", [
+    ["TELEGRAM_BOT_TOKEN", "Telegram bot token",
+     "SIRA: (1) Telegram'da @BotFather'a yaz → /newbot → bota bir ad ve @kullanıcı_adı ver. "
+     + "(2) BotFather sana `123456789:AA...` biçiminde bir jeton verir — TAMAMINI buraya yapıştır. "
+     + "(3) Kaydettikten sonra AŞAĞIDAKİ chat ID alanına geç; jeton tek başına yetmez."],
+    ["TELEGRAM_CHAT_ID", "Telegram chat ID",
+     "SIRA: (1) Yeni oluşturduğun bota Telegram'dan HERHANGİ bir mesaj gönder (ör. `merhaba`) — "
+     + "bu şart: bot sana ilk mesajı atamaz, sohbet ancak sen yazınca doğar. "
+     + "(2) Tarayıcıda şunu aç: `https://api.telegram.org/bot<JETON>/getUpdates` (<JETON> yerine "
+     + "yukarıdaki tokenı koy). (3) Dönen JSON'da `\"chat\":{\"id\":123456789` değerini buraya "
+     + "yapıştır (negatif olabilir — grup sohbetlerinde `-100...` ile başlar, eksi işareti DAHİL). "
+     + "(4) Kaydedince 'Test et' düğmesi çıkar; telefonuna deneme mesajı düşerse kanal AÇIKTIR."],
+    ["MERIDIAN_WEBHOOK_URL", "Webhook URL (alternatif)",
+     "Telegram YERİNE: alarm metnini POST edeceğin kendi adresin (Slack/Discord incoming webhook "
+     + "ya da kendi ucun). Gövde JSON `{\"text\": \"...\"}` biçiminde gider. Telegram alanları "
+     + "doluysa buna GEREK YOK — ikisinden biri yeterlidir, ikisi de doluysa ikisine de gider."],
   ]],
   ["Kağıt broker", "Alpaca KAĞIT hesabı (sanal para). Girmen CANLI işlemi AÇMAZ — sistem L0 kağıt modunda kalır, motor içsel simülatörü kullanır. Not: Alpaca genelde Key ID + Secret ister (Secret üretimde bir kez gösterilir; görmediysen anahtarı yeniden üret). Yalnızca Endpoint + Key'in varsa ikisini gir, Secret'ı boş bırak.", [
     ["ALPACA_PAPER_ENDPOINT", "Endpoint (isteğe bağlı)", "Boş bırakılırsa paper-api.alpaca.markets kullanılır."],
