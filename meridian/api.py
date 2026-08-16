@@ -4550,13 +4550,9 @@ def api_hermes_control(action: str, request: Request):
     iş gören her dalda teşhis önbelleği boşaltılır."""
     _auth(request)
     from . import hermes_runtime, hermes
-    if action == "start":
-        out = hermes_runtime.start(poll_seconds=int(os.environ.get("HERMES_POLL_SECONDS", "300")))
-        _diag_onbellek_bosalt("hermes_start")
-        return out
-    if action == "stop":
-        out = hermes_runtime.stop()
-        _diag_onbellek_bosalt("hermes_stop")
+    if action in ("start", "stop"):
+        out = _ogrenme_kumanda(action)
+        _diag_onbellek_bosalt(f"hermes_{action}")
         return out
     if action == "backfill":                       # çevrimdışı görüş dolgusu (kalibrasyon hızlandırma)
         # DÜĞME KALIR ama artık ELLE HIZLANDIRMADIR, tek tetik DEĞİL: varsayılan akış zamanlayıcının
@@ -4576,6 +4572,52 @@ def api_hermes_control(action: str, request: Request):
         _diag_onbellek_bosalt("hermes_sync_integrations")
         return out
     raise HTTPException(status_code=400, detail="unknown action")
+
+
+OGRENME_BIRIMI = "meridian-learn"
+
+
+def _ogrenme_kumanda(action: str) -> dict:
+    """Pano `start`/`stop` düğmelerini DOĞRU sürece yönlendirir (ROADMAP §2-50).
+
+    NEDEN VAR — BU BİR EMNİYET KAPISIDIR, kolaylık değil: öğrenme döngüsü artık
+    `meridian-learn.service` biriminde koşuyor ve bu süreçte `MERIDIAN_AUTOSTART_HERMES=0`.
+    Düğme eskisi gibi `hermes_runtime.start()` çağırsaydı, döngüyü TAM DA BOŞALTTIĞIMIZ YERDE —
+    API sürecinin içinde — yeniden başlatırdı: ölçülen arıza (GIL çekişmesi, pano 2,6-14,0 sn)
+    bir düğmeye basmakla geri gelirdi.
+
+    İKİ KİP, ve hangisinde olduğumuz VARSAYILMAZ, `MERIDIAN_AUTOSTART_HERMES`ten OKUNUR:
+      "1" → döngü BU süreçte (yerel geliştirme, `serve.sh`): eski süreç-içi yol aynen korunur.
+      aksi → döngü AYRI birimde: `systemctl start|stop meridian-learn`.
+
+    Tetik komutu `sprint._systemctl_komutu()`den gelir — ikinci bir uygulama YAZILMADI. O fonksiyon
+    `NoNewPrivileges` altında `sudo`nun geçmeyebileceğini ve operatörün polkit yolunu seam olarak
+    zaten çözmüş durumda; aynı yasanın iki uygulaması bu depoda tekrar eden kusurdur."""
+    from . import hermes_runtime, sprint
+    if os.environ.get("MERIDIAN_AUTOSTART_HERMES") == "1":
+        if action == "start":
+            return {**hermes_runtime.start(poll_seconds=int(os.environ.get("HERMES_POLL_SECONDS", "300"))),
+                    "kip": "surec_ici"}
+        return {**hermes_runtime.stop(), "kip": "surec_ici"}
+    onek, sebep = sprint._systemctl_komutu()
+    if onek is None:
+        # UYDURMA YASAĞI: "durduruldu" demek bir iddiadır. Komut kurulamadıysa hiçbir şey olmadı.
+        return {"ok": False, "kip": "birim", "birim": OGRENME_BIRIMI, "action": action,
+                "neden": sebep, "detail": f"systemctl tetiği kurulamadı ({sebep}) — HİÇBİR ŞEY YAPILMADI; "
+                                          f"operatör: systemctl {action} {OGRENME_BIRIMI}"}
+    import subprocess
+    komut = [*onek, action, f"{OGRENME_BIRIMI}.service"]
+    try:
+        p = subprocess.run(komut, capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as e:
+        obs.warn("ogrenme_birimi_kumanda_dustu", action=action, error=f"{type(e).__name__}: {e}")
+        return {"ok": False, "kip": "birim", "birim": OGRENME_BIRIMI, "action": action,
+                "neden": f"{type(e).__name__}: {e}"}
+    ok = p.returncode == 0
+    (obs.log if ok else obs.warn)("ogrenme_birimi_kumanda", action=action, rc=p.returncode,
+                                  stderr=(p.stderr or "").strip()[:300])
+    return {"ok": ok, "kip": "birim", "birim": OGRENME_BIRIMI, "action": action,
+            "rc": p.returncode, "stderr": (p.stderr or "").strip()[:300]}
 
 
 # ---------- paper-advance scheduler (keeps the local agent from freezing) ----------

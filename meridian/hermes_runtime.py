@@ -419,7 +419,7 @@ def _kalp_canliligi(disk: dict) -> tuple[bool | None, str | None]:
         return None, "kayıt var ama kalp damgası/poll aralığı yok — canlılık ÖLÇÜLEMEDİ"
     try:
         yas = (_dt.datetime.now(_dt.timezone.utc) - _dt.datetime.fromisoformat(kalp)).total_seconds()
-    except (TypeError, ValueError):
+    except (TypeError, ValueError):  # sessiz-yutma: bozuk damga YUTULMUYOR, canlılık None ("ölçülemedi") olarak dönüyor — "durdu" demek uydurma olurdu, pano ikisini ayrı gösterir
         return None, f"kalp damgası çözümlenemedi: {kalp!r}"
     if yas <= KALP_PAY * poll:
         return True, None

@@ -326,6 +326,13 @@ DECLARED_SINKS: dict[str, str] = {
                               "→ statik graf göremez). İçerik ÖLÜ DEĞİL: monotonicity_report onu "
                               "'amnestied' alanıyla dışa verir ve pano gerekçesiyle birlikte gösterir. "
                               "Meşru küçülmenin (re-seed) yazılı kaydı — bkz. 2026-07-22 trades 129→96",
+    "search_progress.json": "canlı arama ilerlemesinin SÜREÇLER-ARASI nüshası (ROADMAP §2-50). "
+        "Yazan `hermes._progress_aynala`, okuyan `hermes.search_progress_oku` — ikisi de AYNI "
+        "modülde, o yüzden statik graf dış okuyucu göremiyor. GERÇEK tüketiciler başka modüllerde "
+        "ve erişimci fonksiyon üzerinden geliyor: `hermes_runtime.status` → /api/hermes → pano, ve "
+        "`sprint._arama_durumu` → sprint kapısı. İkincisi EMNİYET tüketicisidir: öğrenme döngüsü "
+        "kendi systemd biriminde koştuğu için sprint bu bayrağı bellekte GÖREMEZ; dosya olmasaydı "
+        "boş sözlüğü 'meşgul değil' okur ve koşan aramanın üstüne 8 çekirdeklik antrenman başlatırdı",
     # --- erişimci fonksiyon üzerinden dolaylı tüketim (pano → api → fonksiyon → dosya) ---
     # NOT: `learning_loop_open.json` buradan ÇIKARILDI. Beyanı "watchdog makullük
     # dedektörü toplamı okur" diyordu ama böyle bir okuyucu YOKTU — beyanın kendisi eksik tüketiciyi

@@ -139,7 +139,7 @@ def search_progress_oku(ayni_surec: bool = False) -> dict:
         try:
             yas = max(0.0, (_dt.datetime.now(_dt.timezone.utc)
                             - _dt.datetime.fromisoformat(dmg)).total_seconds())
-        except (TypeError, ValueError):
+        except (TypeError, ValueError):  # sessiz-yutma: bozuk damga YUTULMUYOR, "olculemedi" olarak ÇAĞIRANA DÖNÜYOR ve neden alanında ham değer taşınıyor — çağıran muhafazakâr tarafa düşer
             return {"durum": "olculemedi", "kayit": ham, "yas_s": None,
                     "neden": f"updated_at çözümlenemedi: {dmg!r}"}
     elif ham.get("running"):

@@ -551,7 +551,14 @@ SINK_TABANI = frozenset({
     "integrity_audit_log.json", "massive_crosscheck.json", "massive_grouped_last.json",
     "massive_verify.json", "monotonic_amnesty.json", "notify_sent.json", "oos_erosion.json",
     "ownership_state.json", "pool_exhausted_seen.json", "probe_cache.json", "regime_trigger.json",
-    "scan_debt.json", "short_interest.json", "short_interest_float.json", "sieve.json",
+    "scan_debt.json",
+    # 2026-08-17 EKLENDİ (ROADMAP §2-50): `search_progress.json`. Yazan/okuyan aynı modülde
+    # (`hermes._progress_aynala` ↔ `hermes.search_progress_oku`), o yüzden statik graf dış okuyucu
+    # göremiyor — muafiyetin sebebi bu. Ama artefakt ÖLÜ DEĞİL: gerçek tüketicileri
+    # `hermes_runtime.status` (→ pano) ve `sprint._arama_durumu` (→ sprint kapısı, EMNİYET).
+    # Öğrenme döngüsü kendi systemd biriminde koştuğu için bu bayrak artık bellekte paylaşılamıyor.
+    "search_progress.json",
+    "short_interest.json", "short_interest_float.json", "sieve.json",
     "skill_recommendations.jsonl", "skill_revisions.json", "sp500_constituents.json",
     "sprint_status.json", "warmup_scale.json", "watchdog_alarmed.json",
 })
