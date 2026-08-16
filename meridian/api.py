@@ -3686,7 +3686,8 @@ def _spend_detay() -> dict:
     HESAP YOK, TOPLAM VAR: `cost_usd`/`in_tokens`/`out_tokens` satırlarda ZATEN yazılı; burada
     yalnız gruplanıyor. `cost_usd` alanını hiç taşımayan satır toplama 0 katkısıyla GİRER (ve `n`
     içinde sayılır), ama ayrıca `olculemeyen_satir` ile beyan edilir: toplam tek başına okunursa
-    "bedava çağrı" gibi görünür, bu yüzden payda (`satir_n`) ve ölçülemeyen sayısı yanında durur."""
+    "bedava çağrı" gibi görünür, bu yüzden payda (`satir_n`) ve ölçülemeyen sayısı yanında durur.
+    Pay ve payda AYNI kümeden (`rows`) tek geçişte sayılır — bkz. gövdedeki sayaç notu."""
     import datetime as _dt          # dosyanın konvansiyonu: datetime fonksiyon içinde import edilir
     rows = store.read_jsonl("spend.jsonl")
     if not rows:
@@ -3694,22 +3695,26 @@ def _spend_detay() -> dict:
                            "'Maliyet sıfır' DEĞİL: ölçüm defteri hiç yazılmamış olabilir.")
     ay = _dt.datetime.now(_dt.timezone.utc).isoformat()[:7]
     bu_ay = [r for r in rows if str(r.get("ts", ""))[:7] == ay]
-    olculemeyen = 0
+    # PAY VE PAYDA AYNI KÜMEDEN SAYILIR. Bu sayaç eskiden `_topla` içinde `nonlocal` olarak
+    # artıyordu; oysa `_topla` AYNI satırları defalarca gezer (toplam, bu_ay, modeller, kollar,
+    # günler — beşi de `rows`un tamamını ya da bir dilimini kapsar), yani her eksik satır ~5 kez
+    # sayılıyordu. Panoda alan `olculemeyen_satir/satir_n` biçiminde çiziliyor (app.js harcama
+    # kartı), dolayısıyla kusur ekrana "5/2" gibi İMKÂNSIZ bir kesir olarak düşüyordu — payı
+    # şişmiş bir dürüstlük sayacı, dürüstlüğün kendisini çürütür. Sayım artık paydayla AYNI
+    # küme üzerinden, TEK geçişte yapılır.
+    olculemeyen = sum(1 for r in rows if r.get("cost_usd") is None)
 
     def _topla(kume):
         """Bir satır kümesinin n/token/maliyet toplamlarını çıkarır (maliyet 4 haneye yuvarlanır).
 
         SAYIM ÖNCE, AYRIŞTIRMA SONRA: `n` her satır için koşulsuz artar — satır ayrıştırılabilse de
-        ayrıştırılamasa da SAYILMIŞTIR. `cost_usd` alanı None/eksik olan satır ayrıca `olculemeyen`
-        sayacını artırır (sayaç toplamdan BAĞIMSIZ beyan edilir, toplamı kısmaz). Alan bazında:
-        eksik/None alan `or 0` ile 0 EKLENİR; yalnız `float()` ayrıştırması patlayan alan atlanır ve
-        atlanan O ALANDIR, satır değil — satırın öteki alanları toplama girmeye devam eder."""
-        nonlocal olculemeyen
+        ayrıştırılamasa da SAYILMIŞTIR. Alan bazında: eksik/None alan `or 0` ile 0 EKLENİR; yalnız
+        `float()` ayrıştırması patlayan alan atlanır ve atlanan O ALANDIR, satır değil — satırın
+        öteki alanları toplama girmeye devam eder. Eksik-maliyet sayacı burada TUTULMAZ: bu
+        fonksiyon çakışan kümeler üzerinde birden çok kez çağrılır (yukarıdaki nota bak)."""
         c = {"n": 0, "in_tokens": 0, "out_tokens": 0, "cost_usd": 0.0, "thought_tokens": 0}
         for r in kume:
             c["n"] += 1
-            if r.get("cost_usd") is None:
-                olculemeyen += 1
             for alan in ("in_tokens", "out_tokens", "cost_usd", "thought_tokens"):
                 try:
                     c[alan] += float(r.get(alan) or 0)

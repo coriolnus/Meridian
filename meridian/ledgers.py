@@ -477,10 +477,19 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
     içeri-import'ları da görsün diye eklendi, `tree.body` taraması onları kaçırırdı), sıcak yol
     önbellekten ~1 ms. Önbellek damgası kaynak mtime'ı olduğu için ölçüm yalnız kod değişince
     yeniden ödenir."""
+    # ÖNBELLEK + KÖRLÜK SÖZLEŞMESİ (kardeşi: codelaw._onbellek_oku, aynı sınıfın aynı kusuru).
+    # İsabet dalı HİÇBİR dosya okumaz, dolayısıyla `UNPARSED`i de DOLDURMAZ: `UNPARSED` bir kez
+    # temizlendikten sonra ikinci çağrı "ayrıştıramadığım modül yok" derdi ve `report()["ok"]`
+    # eksik taramaya dayanan bir sıfır-ihlal iddiası üretirdi. Bu yüzden önbellek `(yazarlar,
+    # ayrıştırılamayanlar)` çifti saklar ve isabette körlüğü İDEMPOTENT geri yazar. `UNPARSED`
+    # dosya adıyla anahtarlı olduğundan geri yazma `setdefault`tır: taze kayıt eskiyi ezmez.
     _key = (root, _src_stamp(root))
     _hit = _WRITERS_CACHE.get(_key)
     if _hit is not None:
-        return {k: set(v) for k, v in _hit.items()}   # çağıran set'leri mutasyona uğratabilir
+        _yazarlar, _korluk = _hit
+        for _ad, _hata in _korluk.items():
+            UNPARSED.setdefault(_ad, _hata)
+        return {k: set(v) for k, v in _yazarlar.items()}   # çağıran set'leri mutasyona uğratabilir
 
     # İKİ GEÇİŞ: kardeş modülün sabitini okuyabilmek için önce TÜM modüllerin sabit tablosu.
     agac: dict[pathlib.Path, ast.Module] = {}
@@ -522,7 +531,7 @@ def declared_writers(root: str = "meridian") -> dict[str, set]:
                 if name in CONTRACTS:
                     out.setdefault(name, set()).add(f.name)
     _WRITERS_CACHE.clear()
-    _WRITERS_CACHE[_key] = out
+    _WRITERS_CACHE[_key] = ({k: set(v) for k, v in out.items()}, dict(UNPARSED))
     return {k: set(v) for k, v in out.items()}
 
 

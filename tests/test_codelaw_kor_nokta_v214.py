@@ -22,7 +22,7 @@ from __future__ import annotations
 import ast
 import pathlib
 
-from meridian import codelaw
+from meridian import codelaw, ledgers
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 
@@ -651,6 +651,41 @@ def test_capa_yasasi_MEZAR_TASINI_muaf_tutar(tmp_path):
     assert codelaw.stale_line_anchors(str(tmp_path)) == []
 
 
+def test_capa_yasasi_COZULEMEYENI_SESSIZCE_ATMAZ(tmp_path):
+    """Hükmü kurulamayan çapa SAYILIR. Yasa "0 çürük" derken kaçının hakkında hüküm KURAMADIĞINI
+    da söylemek zorundadır — yoksa kendi kovaladığı sınıfın (körlüğü gizleme) örneği olur."""
+    (tmp_path / "hedef.py").write_text("x = 1\n")
+    (tmp_path / "beyan.py").write_text('S = "yok_boyle_bir_dosya.py:12 ve hedef.py:1"\n')
+    kor: list[dict] = []
+    assert codelaw.stale_line_anchors(str(tmp_path), cozulemeyen_out=kor) == []
+    assert [k["neden"] for k in kor] == ["hedef_yok"], kor
+    assert kor[0]["capa"] == "yok_boyle_bir_dosya.py:12"
+
+
+def test_capa_yasasi_IKIRCIKLI_hedefi_ADIYLA_sayar(tmp_path):
+    """Aynı ad iki dosyada → hüküm YOK, ama kayıt VAR ve nedeni `hedef_yok`tan AYRIDIR: ikisi
+    farklı sorunlardır (biri silinmiş dosya, öteki çözümlenemeyen ad)."""
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    (tmp_path / "a" / "ayni.py").write_text("x = 1\n")
+    (tmp_path / "b" / "ayni.py").write_text("y = 2\n")
+    (tmp_path / "beyan.py").write_text('S = "ayni.py:99"\n')
+    kor: list[dict] = []
+    assert codelaw.stale_line_anchors(str(tmp_path), cozulemeyen_out=kor) == []
+    assert [(k["neden"], k["aday_n"]) for k in kor] == [("ikircikli", 2)], kor
+
+
+def test_capa_KORLUGU_ok_HUKMUNU_ETKILEMEZ(tmp_path):
+    """Çözülemeyen çapa İHLAL DEĞİLDİR: `report()["ok"]`i False'a çekmez. Ölçülemeyeni ihlal
+    saymak UYDURMA YASAĞInın ihlali olurdu — sayılır, ama suçlanmaz."""
+    r = codelaw.report()
+    assert isinstance(r["line_anchor_unresolved"], list)
+    assert set(r["line_anchor_unresolved_by_reason"]) <= {"hedef_yok", "ikircikli"}
+    assert sum(r["line_anchor_unresolved_by_reason"].values()) == len(r["line_anchor_unresolved"])
+    # canlı ağaçta çözülemeyen çapa VAR (bugün 16) ve yasa yine de yeşil:
+    assert r["ok"] is True or r["stale_line_anchors"], "ok yalnız ÇÜRÜK çapayla düşmeli"
+
+
 def test_onbellek_KORLUGU_YUTMAZ(tmp_path):
     """ÖNBELLEK İSABETİ KÖRLÜĞÜ SİLMEZ. İsabet dalı hiçbir dosya okumaz; körlük kayıtları
     sonuçla birlikte saklanmasaydı ikinci çağrı "hiç kör noktam yok" derdi — bekçinin kendi
@@ -664,3 +699,60 @@ def test_onbellek_KORLUGU_YUTMAZ(tmp_path):
     codelaw.artifact_graph(str(tmp_path))          # aynı mtime → önbellek İSABETİ
     assert len(codelaw.UNSCANNED) == ilk, "önbellek isabeti körlüğü yuttu"
     codelaw.UNSCANNED.clear()
+
+
+def test_onbellek_YABANCI_korlugu_TASIMAZ(tmp_path):
+    """Geri yazılan körlük YALNIZ bu taramanınkidir. Önceki hâlde saklama filtresi
+    `u.get("_kok") == root` idi; `_note_unscanned` `_kok` anahtarını hiç yazmadığı için filtre
+    DAİMA boş dönüyor ve `or list(UNSCANNED)` yedeği tüm defteri önbelleğe koyuyordu — yani
+    grafiğin önbelleği, ilgisiz bir taramanın körlüğünü isabette geri yazıp `report()["ok"]`i
+    yabancı kayıtla False'a çekebilirdi. Seçim artık EVRE ADIYLA yapılır."""
+    (tmp_path / "bozuk.py").write_text("def (\n")
+    codelaw._GRAPH_CACHE.clear()
+    codelaw.UNSCANNED.clear()
+    yabanci = {"file": "baska/tarama.py", "phase": "dashboard_mentions",
+               "error": "OSError: bu taramaya ait DEĞİL"}
+    codelaw.UNSCANNED.append(yabanci)
+    codelaw.artifact_graph(str(tmp_path))          # ıska → körlüğü sakla
+    codelaw.UNSCANNED.clear()
+    codelaw.artifact_graph(str(tmp_path))          # isabet → körlüğü geri yaz
+    geri = list(codelaw.UNSCANNED)
+    codelaw.UNSCANNED.clear()
+    assert yabanci not in geri, f"önbellek BAŞKA taramanın körlüğünü taşıdı: {geri}"
+    assert geri, "kendi körlüğünü de taşımadı — pozitif kontrol düştü"
+
+
+def test_iddia_onbellegi_KORLUGU_YUTMAZ(tmp_path):
+    """`_CLAIMS_CACHE` grafik önbelleğiyle AYNI sınıftandır. Üstelik isabet dalında
+    `artifact_graph` HİÇ çağrılmaz, dolayısıyla onun körlüğünü kendi önbelleği geri yazamaz —
+    iddia önbelleği grafiğin evrelerini de saklamak ZORUNDADIR."""
+    (tmp_path / "bozuk.py").write_text("def (\n")
+    codelaw._CLAIMS_CACHE.clear()
+    codelaw._GRAPH_CACHE.clear()
+    codelaw.UNSCANNED.clear()
+    codelaw.declared_claims(str(tmp_path))
+    ilk = sorted(str(u) for u in codelaw.UNSCANNED)
+    assert ilk, "ilk tarama körlüğü hiç kaydetmedi — pozitif kontrol düştü"
+    codelaw.UNSCANNED.clear()
+    codelaw._GRAPH_CACHE.clear()                   # grafik yardım EDEMESİN: yalnız iddia önbelleği
+    codelaw.declared_claims(str(tmp_path))         # aynı mtime → önbellek İSABETİ
+    ikinci = sorted(str(u) for u in codelaw.UNSCANNED)
+    codelaw.UNSCANNED.clear()
+    assert ikinci == ilk, f"iddia önbelleği körlüğü yuttu: {ilk} → {ikinci}"
+
+
+def test_yazar_onbellegi_KORLUGU_YUTMAZ(tmp_path):
+    """`ledgers.declared_writers` sınıfın ÜÇÜNCÜ örneğidir: körlük defteri `UNPARSED` ve isabet
+    dalı onu doldurmazsa `ledgers.report()["ok"]` eksik taramaya dayanan bir sıfır-ihlal iddiası
+    olur. Sınıf ancak üçü birden kapanınca kapanır."""
+    (tmp_path / "bozuk.py").write_text("def (\n")
+    ledgers._WRITERS_CACHE.clear()
+    ledgers.UNPARSED.clear()
+    ledgers.declared_writers(str(tmp_path))
+    ilk = dict(ledgers.UNPARSED)
+    assert ilk, "ilk tarama ayrıştıramadığını hiç kaydetmedi — pozitif kontrol düştü"
+    ledgers.UNPARSED.clear()
+    ledgers.declared_writers(str(tmp_path))        # aynı mtime → önbellek İSABETİ
+    ikinci = dict(ledgers.UNPARSED)
+    ledgers.UNPARSED.clear()
+    assert ikinci == ilk, f"yazar önbelleği körlüğü yuttu: {ilk} → {ikinci}"

@@ -1352,9 +1352,59 @@ kararı gerektirenler §3'e geçer.
     (`sharpe_gozlem=1.9e15`) — yani ölçülemeyen yerde SAYI ÜRETİYOR. Bu doğrudan UYDURMA
     YASAĞI ihlalidir ve DSR yolu ship hükmüne bağlı olduğu için değeri yüksektir.
     Çivisi zaten var ve KIRMIZI: `test_hafta3a_v119::test_D_dsr_taban_altinda_None_doner_SIFIR_DEGIL`.
-  *öncelik: orta — hiçbiri canlı kararı bozmuyor (DSR ihlali HARİÇ: o canlı hükümdedir);
-  önbellek körlüğü ve `_gate_why` çağıran beyanı
-  en yüksek değerli olanlar.*
+  **ÜÇÜNCÜ DALGA — KAPANANLAR (2026-08-16, ölçüldü, testli):**
+  · **ÖNBELLEK KÖRLÜĞÜ SINIFI KAPANDI (üç örneğin ÜÇÜ de).** İkinci dalgada yalnız
+    `_GRAPH_CACHE` düzeltilmişti ve o düzeltme de BOZUKTU: saklama filtresi `u.get("_kok") == root`
+    idi, oysa `_note_unscanned` `_kok` anahtarını HİÇ yazmıyor → filtre daima boş → `or
+    list(UNSCANNED)` yedeği tüm defteri (BAŞKA taramaların körlüğü dâhil) önbelleğe koyup isabette
+    geri yazıyordu. Artık seçim EVRE ADIYLA yapılıyor ve saklama/geri-yazma TEK gövdede
+    (`_onbellek_oku` / `_onbellege_yaz`); `_CLAIMS_CACHE` (grafiğin evrelerini de saklar, çünkü
+    isabet dalında `artifact_graph` hiç çağrılmaz) ve `ledgers._WRITERS_CACHE` (`UNPARSED`,
+    `setdefault` ile) aynı gövdeye bağlandı. Dört yeni test, üçü negatif-kontrollü.
+  · **ÇAPA YASASININ KENDİ KÖRLÜĞÜ SAYILIR OLDU.** `stale_line_anchors` hükmü kurulamayan çapayı
+    (`hedef_yok` / `ikircikli`) sessiz `continue` ile atıyordu — körlük-raporlama yasasının kendi
+    körlüğünü gizlemesi. `cozulemeyen_out` + `report()['line_anchor_unresolved']`(_by_reason)
+    eklendi; canlı ağaçta **16 çapa** (hepsi `hedef_yok`: olcum.py, skill_usage.py,
+    hermes_constants.py, engine.py — ağaçta olmayan dosyalar). `ok`u ETKİLEMEZ (ölçülemeyen ihlal
+    değildir), ama artık ADIYLA sayılır.
+  · **KAPI TUTARSIZLIĞI KAPANDI.** `uv audit` yoklaması yalnız `ci_duman.sh`e eklenmişti;
+    `ops/kapilar.sh` bu yüzden KALICI KIRMIZI'ydı (uv 0.8.17'de alt-komut yok). Aynı ÖLÇÜLEMEDİ
+    hükmü oraya da taşındı. Ayrıca duman kapısına bekçinin KENDİ testi eklendi
+    (`test_codelaw_kor_nokta_v214`, +40 test / ~4 sn) — sözleşmeyi kıran değişiklik artık PR'da
+    görünür, yalnız Rol-1'in tam suite'inde değil.
+  · **ÜÇ CANLI UYDURMA DÜZELTİLDİ.** (a) `api._spend_detay` `olculemeyen` sayacı `nonlocal` olarak
+    ÇAKIŞAN kümeler üzerinde ~5 kez artıyordu ve panoda `olculemeyen_satir/satir_n` kesirine
+    düşüyordu — yani "5/2" gibi imkânsız bir dürüstlük sayacı; pay artık paydayla aynı kümeden tek
+    geçişte. (b) `analytics.learning_automation` `bekci_notu` panoda "mechanism_beats.json beyanlı
+    bir lağımdır ve dışarıdan okunmaz" yazıyordu; dosya DECLARED_SINKS'ten çıkarılmış ve
+    `api._hat_cizelgesi` onu panoya taşımıştı — metin gerçeğe çekildi, KARAR (kadans damgasından
+    ölçme) gerekçesiyle birlikte korundu. (c) `recompute._source_corpus` YASA 4 gerekçesi TERS
+    kutupluydu ("eksik korpus yalnız DAHA AZ bulgu üretir"); okuyucu testi `nm not in _src_text`
+    olduğu için kısalan korpus DAHA ÇOK yetim üretir — yön düzeltildi ve `__pycache__` elenerek
+    düşen dosya sayısı 2→0 yapıldı. Docstring'i de `tests/`i korpusta sayıyordu (modülün KENDİ
+    ölçütünün tersi) — düzeltildi.
+  · **İKİ DAYANIKLILIK DELİĞİ KAPANDI.** (a) `secrets._write_file` atomik ama fsync'SİZDİ —
+    `os.replace` yer değiştirmeyi garanti eder, verinin diske indiğini ETMEZ; güç kesintisi
+    SIRLARI siler ve ajan sessizce deterministik moda düşerdi (modülün kendi
+    `secrets_file_unreadable` notunun anlattığı sınıf). `store._atomic_write` sözleşmesine
+    hizalandı: fsync + dizin fsync (en iyi çaba). (b) `health.write_heartbeat` "çok yazarlı nabız"
+    docstring'iyle birlikte KİLİTSİZ oku-değiştir-yaz yapıyordu — yani onardığı kayıp-güncelleme
+    hatasının daha dar bir penceresi. `store.file_lock` kapsamı oku+değiştir+yaz'ın tamamına
+    çekildi.
+  · **MİMARİ SAYILARI YENİDEN ÖLÇÜLDÜ.** `pyproject.toml` "20 modüllük güçlü-bağlı bileşen"
+    diyordu: gerçek **33** (84 modülün %39'u; grimp + Tarjan, ad listesi yorumda). Çekirdek-altyapı
+    döngüsü "config→obs→store→config" (3) yazılıydı: gerçek **6 modüllük SCC** (+notify, secrets,
+    storage). "Her ikisi de SIFIR istisnayla geçiyor" iddiası da yanlıştı — iki sözleşmenin
+    dördü `ignore_imports` kaydı taşıyor. README: uç sayısı 77→**73** (58'i `/api`), "onay 5 dk'da
+    düşer" → gerçek ömür **tek seans** (`_enrich_stale_plans`, `expired`), "L0→L1 terfisini
+    guard.py zorlar" → ölçen `analytics.py` (karne, 3 kalem `manual=True`), reddeden `guard.py`
+    (TEK kural: `autonomy_level < 1` + canlı mod).
+  **HÂLÂ AÇIK (bu turda kapatılmadı):** yasa kapsamı (`docs/`, `tests/`, `ops/` taranmıyor; düz
+  metin ve çapraz-biçim çapaları desen dışı) · çapa BAŞKA bir kod satırına kaymışsa yakalanmıyor
+  (yalnız boş/yorum/menzil-dışı ölçülür) · `report()` altı kez tarıyor (7,75 sn) · tek-slot
+  önbellek · `_gate_why` tail dalı · `_site_key` `isdigit()`/docstring · `runbook_uret.py` kopyası ·
+  DSR sıfır-varyans ihlali · 33'lük SCC'nin BÖLÜNMESİ (operatör kararı, mekanik düzeltme değil).
+  *öncelik: orta — hiçbiri canlı kararı bozmuyor (DSR ihlali HARİÇ: o canlı hükümdedir).*
 
 - **🔴 48. ÜRETİCİ CANLIDA TAŞINMAYAN DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, akıbet **kuru koşumda** ölçüldü — v247 DAĞITILMADI; KÖK canlıda ölçüldü; sahibi WP3)_
   28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü (kuru koşum; v247 **DAĞITILMADI** — canlıda

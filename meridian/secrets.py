@@ -122,16 +122,36 @@ def _read_file() -> dict:
 
 
 def _write_file(data: dict) -> None:
-    """Atomic write with owner-only (0600) permissions. The value never touches a log."""
+    """Atomic write with owner-only (0600) permissions. The value never touches a log.
+
+    DAYANIKLILIK `store._atomic_write` SÖZLEŞMESİNE HİZALANDI (2026-08-16): tmp → write → fsync →
+    os.replace → DİZİN fsync. `os.replace` YALNIZ yer değiştirmenin atomik olduğunu söyler,
+    verinin diske indiğini SÖYLEMEZ — store'da fsync'siz hâl güç kesintisi sonrası sıfır-baytlık
+    dosya bırakıyordu (o modülün başlık notu) ve burada aynı kesinti SIRLARI siler: ajan sessizce
+    deterministik moda düşer ve bu, yukarıdaki `secrets_file_unreadable` notunun anlattığı tam
+    sınıftır. Bu modül `store`u BİLEREK kullanmaz (0600 + telemetriye/loga hiç dokunmama), o
+    yüzden dayanıklılık burada ELDE tekrarlanır — kopyalanan şey davranış, kod değil."""
     path = _path()
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".secrets_", suffix=".tmp")
     try:
         os.write(fd, json.dumps(data, indent=0).encode("utf-8"))
+        os.fsync(fd)                      # veri diske insin; replace tek başına bunu GARANTİ ETMEZ
         os.close(fd)
         os.chmod(tmp, 0o600)
         os.replace(tmp, path)
         os.chmod(path, 0o600)
+        # DİZİN fsync: yeni adın (dizin girdisinin) kendisi de kalıcı olsun. Dizin açılamıyorsa
+        # (ör. izin) yazım BAŞARILIDIR — bu yalnız ek bir dayanıklılık adımıdır ve onun düşmesi
+        # sırrı kaydetmiş bir çağrıyı hataya çeviremez.
+        try:
+            dfd = os.open(str(path.parent), os.O_RDONLY)
+            try:
+                os.fsync(dfd)
+            finally:
+                os.close(dfd)
+        except OSError:  # sessiz-yutma: dizin fsync'i EN İYİ ÇABA; dosya zaten yerine konmuş ve içeriği fsync'lenmiştir, bu adımın düşmesi yazımı geçersiz kılmaz (store._atomic_write ile aynı hüküm)
+            pass
     except Exception:
         try:
             os.unlink(tmp)

@@ -27,6 +27,12 @@
 #                                ile aynı 6 dosya) + modül-yasası audit ailesi + bounds/seed
 #                                çivileri + son regresyon sitesi. Ölçüldü (2026-08-15, 4 çekirdek):
 #                                390 test · ~1 dk 50 sn · 0 kırmızı.
+#                                BEKÇİNİN KENDİ TESTİ DE LİSTEDE (test_codelaw_kor_nokta_v214.py,
+#                                2026-08-16): `codelaw.report()["ok"]` bu turda üç önbelleğin körlük
+#                                sözleşmesine dayanıyor; sözleşmeyi kıran değişiklik kapıda değil
+#                                yalnız Rol-1'in tam suite'inde görünürse, aradaki her PR "kör
+#                                noktam yok" diyen bir bekçiyle birleşirdi. Dosya state'siz
+#                                (tmp_path + kaynak ağacı) ve +37 test / ~4 sn ekler.
 #
 # LİSTE ELLE VE DAR TUTULUR — yavaşlayan kapı, atlanan kapıdır (kapilar.sh dersi). Dosya eklerken
 # iki şart: (a) taze klonda state'siz geçtiği kanıtlı, (b) toplam süre < 5 dk kalmalı.
@@ -99,7 +105,8 @@ if "$UV" run pytest -q \
     tests/test_gate_statistics_v74.py \
     tests/test_turnover_kablolama_v149.py \
     tests/test_wp2d_pano_beyani_v246.py \
-    tests/test_firsat_yuzeyleri_v200.py; then
+    tests/test_firsat_yuzeyleri_v200.py \
+    tests/test_codelaw_kor_nokta_v214.py; then
   echo "  ✓ duman kapsamı YEŞİL"
 else
   echo "!! DUMAN KAPSAMI KIRMIZI — tam grep ile bak: pytest çıktısında FAILED|ERROR ara."

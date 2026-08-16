@@ -10,7 +10,8 @@
 #   [1] lint-imports  (~2 sn)  — mimari sözleşmeler. En ucuz ve en yapısal: bir yukarı-yön
 #                                bağımlılık doğduysa altındaki hiçbir ölçüm güvenilir değildir.
 #   [2] uv audit      (~1 sn)  — tedarik zinciri. Kırmızıysa koşturduğumuz kodun kim olduğunu
-#                                bilmiyoruz demektir; test yeşilliği bunu telafi etmez.
+#                                bilmiyoruz demektir; test yeşilliği bunu telafi etmez. Alt-komut
+#                                bu uv sürümünde YOKSA hüküm KIRMIZI değil ÖLÇÜLEMEDİ'dir.
 #   [3] pytest kapsamı(~30 sn) — anayasa yasalarının property paketi + doğrudan komşuları.
 #
 # BU TAM SUITE DEĞİLDİR VE ONUN YERİNE GEÇMEZ. Tam suite turda BİR kez, Rol-1'de, tek-otoriter
@@ -39,11 +40,25 @@ else
 fi
 
 baslik "[2/3] uv audit — tedarik zinciri"
-if "$UV" audit --preview-features audit-command; then
-  echo "  ✓ bilinen açık YOK"
+# ARAÇ YOKLAMASI (ci_duman.sh [3] ile AYNI hüküm — iki kapının aynı soruya farklı cevap vermesi,
+# operatörün hangisine inanacağını bilememesi demekti). `uv audit` bu depodaki uv sürümünde
+# (0.8.17) YOK: alt-komut tanınmadığında `uv` sıfırdan farklı dönüyor ve yoklamasız hâl bu kapıyı
+# KALICI KIRMIZI yapıyordu — yani "bağımlılıkta açık var" ile "ölçen araç yok" ayrışmıyordu.
+# Sürekli kırmızı bir kapı bakılmayan kapıdır ve ölçülemeyeni ihlal saymak UYDURMA YASAĞInın
+# ihlalidir. Alt-komut VARSA ve gerçek açık bulursa hüküm yine KIRMIZI'dır; yoksa ÖLÇÜLEMEDİ
+# ADIYLA ekrana düşer — sessizce yeşile yazılmaz.
+if "$UV" audit --help >/dev/null 2>&1; then
+  if "$UV" audit --preview-features audit-command; then
+    echo "  ✓ bilinen açık YOK"
+  else
+    echo "!! TEDARİK ZİNCİRİ KIRMIZI — bağımlılıkta bilinen açık var. Dağıtım YOK."
+    KIRMIZI=1
+  fi
 else
-  echo "!! TEDARİK ZİNCİRİ KIRMIZI — bağımlılıkta bilinen açık var. Dağıtım YOK."
-  KIRMIZI=1
+  echo "  ? ÖLÇÜLEMEDİ (araç yok): bu uv sürümü '$UV audit' alt-komutunu tanımıyor."
+  echo "    Sürüm: $("$UV" --version 2>/dev/null || echo 'okunamadı')"
+  echo "    Tedarik zinciri bu koşumda DENETLENMEDİ — yeşil DEĞİL, ölçüsüz. Bu kapının geçmesi"
+  echo "    dağıtım için GEREK şarttır, tedarik zinciri güvencesi VERMEZ."
 fi
 
 if [[ "$HIZLI" == "--hizli" ]]; then

@@ -2939,11 +2939,15 @@ def hermes_scorecard() -> dict:
 # not "eksik olan yalnız bekçinin penceresi" diyordu; o borç `watchdog.py` tarafında kapandı ve
 # buradaki ölçüm bekçinin YERİNE değil YANINDA durur (aşağıdaki gerekçe).
 #
-# TAZELİK `mechanism_beats.json`DAN OKUNMAZ — VE BU BİLİNÇLİ. O defter `codelaw.DECLARED_SINKS`te
-# "yalnız watchdog'un kendi işletim durumu" diye beyanlıdır; buradan LİTERAL adla okumak beyanı
-# BAYATLATIR (`stale_sinks` ihlali) ve muafiyet listesini "kimsenin bakmadığı çöplüğe" çevirirdi.
-# Yasayı zayıflatmak yerine ölçüm KENDİ defterlerinden yapılır — üç kadansın üçü de zaten kendi
-# damgasını yazıyor ve bu damgalar nabızdan DAHA bilgilidir (yalnız "koştu mu" değil, "ne çıktı"):
+# TAZELİK `mechanism_beats.json`DAN OKUNMAZ — VE BU BİLİNÇLİ. GEREKÇE 2026-08-16'DA GÜNCELLENDİ:
+# eski gerekçe "o defter `codelaw.DECLARED_SINKS`te beyanlıdır, literal adla okumak beyanı
+# bayatlatırdı" diyordu. O gerekçe ARTIK GEÇERSİZ — `mechanism_beats.json` DECLARED_SINKS'ten
+# ÇIKARILDI (bkz. codelaw.py, aynı adın geçtiği NOT bloğu) ve dosyanın dış okuyucusu VAR:
+# `api._hat_cizelgesi` onu doğrudan okuyup `/api/diagnostics` `cizelge` alanıyla panoya servis
+# ediyor. Yani buradan okumak bugün hiçbir beyanı bayatlatmazdı.
+# KARAR YİNE DE AYNI KALIYOR, ÇÜNKÜ İKİNCİ GEREKÇE HÂLÂ DOĞRU: nabız yalnız "koştu mu" der;
+# kadansın KENDİ damgası "ne çıktı"yı da taşır ve bu ekranın sorusu tam olarak budur. Yani seçim
+# artık bir yasa kısıtı değil, BİLGİ İÇERİĞİ tercihidir:
 #   shadow_fit       → shadow_model.json  `fit_attempt_ts`  (training_status üzerinden)
 #   axis2_cycle      → axis2_status.json  `ts`
 #   opinion_backfill → learning_cadence.json `ts` + `dolgu`
@@ -2999,11 +3003,16 @@ def learning_automation() -> dict:
         "nabiz": nabiz,
         "durum": ("kadans HİÇ koşmadı — zamanlayıcı seans-sonrası kancası tetiklenmemiş"
                   if not doc else "koştu"),
+        # PANODA GÖRÜNÜR METİN (app.js `RENDER` → "Bekçi notu"). Bu yüzden içeriği ölçülmüş
+        # olmak ZORUNDA: eski hâli "mechanism_beats.json beyanlı bir lağımdır ve dışarıdan
+        # okunmaz" diyordu — dosya DECLARED_SINKS'ten çıkarıldıktan ve `api._hat_cizelgesi`
+        # onu panoya taşıdıktan sonra bu cümle operatöre YANLIŞ bilgi veriyordu (2026-08-16).
         "bekci_notu": ("bu üç ad `watchdog.EXPECTED` sözlüğünde VAR — `beat()` yazılıyor ve "
                        "MECHANISM_STALE onları izliyor. Buradaki tazelik yine de kadansların "
-                       "KENDİ damgalarından ölçülür (mechanism_beats.json beyanlı bir lağımdır "
-                       "ve dışarıdan okunmaz; ayrıca kadans damgası nabızdan daha bilgilidir — "
-                       "yalnız 'koştu mu' değil 'ne çıktı'). İki ölçüm rakip değil, tamamlayıcı."),
+                       "KENDİ damgalarından ölçülür: kadans damgası nabızdan daha bilgilidir — "
+                       "yalnız 'koştu mu' değil 'ne çıktı'. Nabızların kendisi panoda ayrıca "
+                       "var (çizelge kartı, /api/diagnostics `cizelge`). İki ölçüm rakip "
+                       "değil, tamamlayıcı."),
     }
 
 
