@@ -1304,6 +1304,34 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🔴 50. ÖĞRENME API SÜRECİNİN İÇİNDE KOŞUYOR — GIL PANOYU BOĞUYOR, İŞÇİ TAVANI BUNUN YAMASI** _(2026-08-16, py-spy ile ölçüldü; sahibi WP3 + WP6)_
+  **BELİRTİ (operatör bildirdi):** v248 dağıtımından sonra pano yavaşladı; Oracle panelinde toplam
+  CPU kullanımı **%25** — 4 OCPU'nun üçü kalıcı boşta.
+  **ÖLÇÜM:** yakan iplik `hermes-standby`; yığın `hermes_runtime._run → reflect.search_and_submit →
+  coordinate_descent_search → _wf_cached → backtest.walk_forward → strategy.scan_entry`.
+  `/api/public/summary` **2,6 / 14,0 / 3,3 sn** · yük ortalaması **1,14** (yalnız 1 çekirdek dolu) ·
+  25 sn profil (50 Hz, 1392 örnek) **patoloji göstermedi** — dağınık normal backtest yükü
+  (`storage.read_rows` %6,6 · json çözme %8,4 · `rolling.calc` %4,1).
+  **REGRESYON DEĞİL, ÖLÇÜLDÜ:** geçmiş altı aramanın süresi **1s55dk – 3s14dk**; bugünkü aynı
+  bantta. Yığındaki 8 modülün 7'si (`hermes`, `hermes_runtime`, `backtest`, `strategy`,
+  `indicators`, `storage`, `store`) v248 merge'inde AST düzeyinde HİÇ değişmedi; `_param_parmak`
+  (önbellek anahtarı) da aynı. Son `hermes_search_done` 2026-08-14 10:35'ti — sistem o tarihten beri
+  boştaydı, **dağıtımın restart'ı uykudaki aramayı uyandırdı**. Yani dağıtım tetikledi, sebep olmadı.
+  **KÖK NEDEN:** öğrenme döngüsü **API sunucusuyla AYNI SÜREÇTE** bir Python ipliği. GIL, pano
+  isteğini backtest hesabının arkasına diziyor — üç çekirdek boşken pano 14 saniyeye çıkıyor.
+  **VE ASIL BULGU — TAVAN BİR TASARIM TERCİHİ DEĞİL, YAMA:** `_havuz_tavani` = `max(1, min(4, cpu−2))`
+  → 4 çekirdekte **2 işçi**. Docstring gerekçeyi yazıyor: *"CANLI OLAY (2026-08-03, A1 4 OCPU): iki
+  işçi iki saat %99,9 CPU'da koştu ve pano API'sini boğdu (8,8-10,4 sn) — operatör elle renice attı."*
+  Yani paralellik, **süreç paylaşımı kusuru yüzünden** kısılmış. Üstelik hot faz (`_wf_cached`
+  incumbent walk'ı, `coordinate_descent_search:127`) havuza HİÇ girmiyor — seri; havuz yalnız
+  `_parallel_prefill_probes` fazında (satır 171). Üç sebep tek köke bağlı.
+  **ÖNERİ:** öğrenme döngüsünü kendi systemd birimine taşı — **emsal depoda var**: `meridian-sprint`
+  zaten ayrı birim (v241, worker restart'ı onu öldürmüyor). Kazanç zinciri: (a) pano GIL'de hiç
+  beklemez → `renice` gereği ve 2026-08-03 vakası sınıf olarak kapanır; (b) tavan `cpu−2`'den
+  `cpu−1`'e çıkabilir çünkü uvicorn artık aynı süreçte değil; (c) faz-1 fold'lar arasında
+  bölünebilir hâle gelir. **ÖNCE KART:** kazanç duvar-saati cinsinden ölçülmeden tavan
+  DEĞİŞTİRİLMEZ (eşik-önce yasası). *boyut: M · bağımlılık: yok · öncelik: yüksek (her öğrenme turu
+  2-3 saat pano bozuyor).*
 - **🟡 49. ÇAPA/BEYAN ÇÜRÜMESİ: YASA KURULDU, SINIF TAM KAPANMADI — AÇIK KALEMLER** _(2026-08-15, ölçüldü; sahibi WP-H)_
   Docstring turu iki dersi ölçümle kanıtladı ve ikisi de bu turda TAM kapanmadı:
   · **ELLE SÜPÜRME SINIF KAPATMAZ.** ~117 satır çapası elle sembole çevrildi ve "sınıf kapandı"
