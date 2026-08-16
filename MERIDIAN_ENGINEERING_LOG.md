@@ -3,6 +3,16 @@ Her oturumun BAŞINDA önce bu dosya okunur (§8 protokolü, 2026-07-30'da opera
 İçerik bir İPUCUDUR, gerçek-kaynak değildir — koda karşı doğrulanmadan güvenilmez.
 Tur notlarının kronolojik defteri ROADMAP.md §7'dedir; bu dosya "şu an gerçekte ne var ve ne açık" fotoğrafıdır.
 
+**SUPERPOWERS PROTOKOLÜ (2026-08-17, operatör kurdu — CLAUDE.md §9, commit 1d10a75):** bu
+depoda çalışan her Claude oturumu `superpowers` plugin bileşenlerini (brainstorming,
+systematic-debugging, test-driven-development, writing-plans/executing-plans,
+requesting/receiving-code-review, verification-before-completion, using-git-worktrees vb.)
+kullanmak ZORUNDADIR. Bu, §2'deki rol ayrımının (Fable=mimari/brief/denetim,
+Opus=implementasyon) ÜSTÜNE eklenir, onu iptal etmez — hangi rol kod/karar üretiyorsa kendi
+kapsamında ilgili skill akışını izler. Çelişki halinde CLAUDE.md madde 1-8'deki Meridian'a özgü
+disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıtım kuralları) önceliklidir
+— superpowers akışı bu kısıtları gevşetemez.
+
 ---
 
 ## HEDEF SÖZLEŞMESİ (yürürlükte — 2026-07-30, operatör mandası)
