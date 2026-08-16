@@ -1347,7 +1347,13 @@ kararı gerektirenler §3'e geçer.
     oran testi ikisi de ikiye katlandığı için YEŞİL kalıyor (görünmez bayatlık).
   · `declared_claims` `host_modules` iki ŞEKİL döndürüyor: sink/human'da modül adı, pattern'de
     çağrı-yeri dizgesi — tüketici sessizce atlar.
-  *öncelik: orta — hiçbiri canlı kararı bozmuyor; önbellek körlüğü ve `_gate_why` çağıran beyanı
+  **TABANDAN DEVRALINAN CANLI YASA İHLALİ (bu turun eseri DEĞİL, ölçüldü):**
+  · `validation.deflated_sharpe` SIFIR VARYANSLI seride `None` yerine SÖZLÜK döndürüyor
+    (`sharpe_gozlem=1.9e15`) — yani ölçülemeyen yerde SAYI ÜRETİYOR. Bu doğrudan UYDURMA
+    YASAĞI ihlalidir ve DSR yolu ship hükmüne bağlı olduğu için değeri yüksektir.
+    Çivisi zaten var ve KIRMIZI: `test_hafta3a_v119::test_D_dsr_taban_altinda_None_doner_SIFIR_DEGIL`.
+  *öncelik: orta — hiçbiri canlı kararı bozmuyor (DSR ihlali HARİÇ: o canlı hükümdedir);
+  önbellek körlüğü ve `_gate_why` çağıran beyanı
   en yüksek değerli olanlar.*
 
 - **🔴 48. ÜRETİCİ CANLIDA TAŞINMAYAN DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, akıbet **kuru koşumda** ölçüldü — v247 DAĞITILMADI; KÖK canlıda ölçüldü; sahibi WP3)_
