@@ -138,7 +138,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/api.py:5502` → mesaj şablonu: `"HALT via dashboard"`
+  - `meridian/api.py:5507` → mesaj şablonu: `"HALT via dashboard"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
@@ -780,6 +780,12 @@ PR de bekler. Alt-komut bu uv sürümünde YOKSA sonuç KIRMIZI değil
 ile aynı 6 dosya) + modül-yasası audit ailesi + bounds/seed
 çivileri + son regresyon sitesi. Ölçüldü (2026-08-15, 4 çekirdek):
 390 test · ~1 dk 50 sn · 0 kırmızı.
+BEKÇİNİN KENDİ TESTİ DE LİSTEDE (test_codelaw_kor_nokta_v214.py,
+2026-08-16): `codelaw.report()["ok"]` bu turda üç önbelleğin körlük
+sözleşmesine dayanıyor; sözleşmeyi kıran değişiklik kapıda değil
+yalnız Rol-1'in tam suite'inde görünürse, aradaki her PR "kör
+noktam yok" diyen bir bekçiyle birleşirdi. Dosya state'siz
+(tmp_path + kaynak ağacı) ve +40 test / ~4 sn ekler.
 
 LİSTE ELLE VE DAR TUTULUR — yavaşlayan kapı, atlanan kapıdır (kapilar.sh dersi). Dosya eklerken
 iki şart: (a) taze klonda state'siz geçtiği kanıtlı, (b) toplam süre < 5 dk kalmalı.
@@ -825,7 +831,8 @@ SIRA GEREKÇELİ, keyfi değil — ucuzdan pahalıya VE dıştan içe:
 [1] lint-imports  (~2 sn)  — mimari sözleşmeler. En ucuz ve en yapısal: bir yukarı-yön
 bağımlılık doğduysa altındaki hiçbir ölçüm güvenilir değildir.
 [2] uv audit      (~1 sn)  — tedarik zinciri. Kırmızıysa koşturduğumuz kodun kim olduğunu
-bilmiyoruz demektir; test yeşilliği bunu telafi etmez.
+bilmiyoruz demektir; test yeşilliği bunu telafi etmez. Alt-komut
+bu uv sürümünde YOKSA hüküm KIRMIZI değil ÖLÇÜLEMEDİ'dir.
 [3] pytest kapsamı(~30 sn) — anayasa yasalarının property paketi + doğrudan komşuları.
 
 BU TAM SUITE DEĞİLDİR VE ONUN YERİNE GEÇMEZ. Tam suite turda BİR kez, Rol-1'de, tek-otoriter

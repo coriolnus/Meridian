@@ -32,7 +32,7 @@
 #                                sözleşmesine dayanıyor; sözleşmeyi kıran değişiklik kapıda değil
 #                                yalnız Rol-1'in tam suite'inde görünürse, aradaki her PR "kör
 #                                noktam yok" diyen bir bekçiyle birleşirdi. Dosya state'siz
-#                                (tmp_path + kaynak ağacı) ve +37 test / ~4 sn ekler.
+#                                (tmp_path + kaynak ağacı) ve +40 test / ~4 sn ekler.
 #
 # LİSTE ELLE VE DAR TUTULUR — yavaşlayan kapı, atlanan kapıdır (kapilar.sh dersi). Dosya eklerken
 # iki şart: (a) taze klonda state'siz geçtiği kanıtlı, (b) toplam süre < 5 dk kalmalı.
