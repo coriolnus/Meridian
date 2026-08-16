@@ -704,6 +704,52 @@ def _site_key(site: str) -> tuple[str, int]:
 
 _GRAPH_CACHE: dict = {}
 
+# ---------------------------------------------------------------------------
+# ÖNBELLEK + KÖRLÜK SÖZLEŞMESİ — TEK GÖVDE
+# ---------------------------------------------------------------------------
+# SINIF (tek örnek değil): mtime-damgalı bir tarama önbelleği, isabet dalında HİÇBİR dosya
+# okumadığı için körlük kaydı da ÜRETMEZ. `UNSCANNED` boş kalır, `report()["ok"]` "kör noktam
+# yok" der — oysa tarama hiç yapılmamıştır. Bu modülde üç örneği vardı (`_GRAPH_CACHE`,
+# `_CLAIMS_CACHE`, `ledgers._WRITERS_CACHE`); biri düzeltilip ikisi bırakılırsa sınıf kapanmaz.
+# Bu yüzden saklama ve geri-yazma TEK gövdededir: her önbellek `(sonuç, körlük)` çifti saklar.
+#
+# KÖRLÜĞÜN SEÇİMİ EVRE ADIYLA YAPILIR, "bu turda eklendi mi" ile DEĞİL: `_note_unscanned`
+# yinelenen kaydı ikinci kez EKLEMEZ (idempotent defter), dolayısıyla "tur öncesi/sonrası uzunluk
+# farkı" ölçümü zaten defterde duran bir kaydı bu taramanın körlüğü saymaz ve `UNSCANNED.clear()`
+# sonrası geri yazamazdı. Evre adı ise taramanın KİMLİĞİDİR ve her çağrıda aynıdır.
+# (Önceki hâli `u.get("_kok") == root` filtresiydi; `_note_unscanned` `_kok` anahtarını HİÇ
+# yazmadığı için filtre daima boş dönüp `or list(UNSCANNED)` yedeğine düşüyordu — yani önbelleğe
+# BAŞKA taramaların körlüğü de giriyor ve isabette geri yazılıyordu. Ölü filtre kaldırıldı.)
+_YOK = object()   # "önbellekte yok" ile "önbellekte None var"ı ayıran nöbetçi
+
+
+def _onbellek_oku(cache: dict, key) -> Any:
+    """Önbellek isabetinde SONUCU döndürür ve o taramanın körlük kayıtlarını `UNSCANNED`e
+    İDEMPOTENT biçimde geri yazar; ıska hâlinde `_YOK` nöbetçisini döndürür.
+
+    Sonuç derin kopyalanır: çağıranın mutasyonu önbelleği kirletmesin."""
+    hit = cache.get(key, _YOK)
+    if hit is _YOK:
+        return _YOK
+    res, korluk = hit
+    for kayit in korluk:
+        if kayit not in UNSCANNED:
+            UNSCANNED.append(kayit)
+    return copy.deepcopy(res)
+
+
+def _onbellege_yaz(cache: dict, key, res: Any, evreler: tuple[str, ...]) -> Any:
+    """Sonucu, o taramanın körlük kayıtlarıyla BİRLİKTE saklar ve sonucun kopyasını döndürür.
+
+    `evreler`: bu taramanın `_note_unscanned` evre adlarının ön ekleri. Önbellek TEK girdilik
+    tutulur (`clear()`): damga değişince eski girdi zaten geçersizdir, biriktirmek yalnız bellek
+    tüketirdi."""
+    korluk = [dict(u) for u in UNSCANNED
+              if str(u.get("phase", "")).startswith(evreler)]
+    cache.clear()
+    cache[key] = (copy.deepcopy(res), korluk)
+    return res
+
 
 def _src_stamp(root: str) -> tuple:
     """Kaynak ağacının parmak izi: dosya sayısı + en yeni değişiklik zamanı.
@@ -728,13 +774,9 @@ def artifact_graph(root: str = "meridian") -> dict:
     # Bu, bu modülün kendi sözleşmesini (bekçi körlüğünü RAPOR eder) çürütüyordu. Çözüm: körlük
     # kayıtları sonuçla BİRLİKTE saklanır ve isabette İDEMPOTENT biçimde geri yazılır.
     _key = (root, _src_stamp(root))
-    _hit = _GRAPH_CACHE.get(_key)
-    if _hit is not None:
-        _res_hit, _korluk = _hit
-        for _kayit in _korluk:
-            if _kayit not in UNSCANNED:
-                UNSCANNED.append(_kayit)
-        return copy.deepcopy(_res_hit)   # çağıran mutasyonu önbelleği kirletmesin
+    _hit = _onbellek_oku(_GRAPH_CACHE, _key)
+    if _hit is not _YOK:
+        return _hit
 
     gconsts = _global_consts(root)
     arts: dict[str, dict[str, Any]] = {}
@@ -832,12 +874,9 @@ def artifact_graph(root: str = "meridian") -> dict:
             "declared_sinks": sorted(k for k in unread if k in DECLARED_SINKS),
             "violations": sorted(k for k in unread if k not in DECLARED_SINKS),
             "stale_sinks": sorted(k for k in DECLARED_SINKS if k in out and not out[k]["unread"])}
-    _GRAPH_CACHE.clear()
-    # Bu taramanın ürettiği körlük kayıtları sonuçla birlikte saklanır (yukarıdaki isabet dalı
-    # onları geri yazar); aksi hâlde önbellek körlüğü yutardı.
-    _bu_tur = [u for u in UNSCANNED if u.get("_kok") == root] or list(UNSCANNED)
-    _GRAPH_CACHE[_key] = (_res, [dict(u) for u in _bu_tur])
-    return copy.deepcopy(_res)
+    # Bu taramanın körlüğü sonuçla BİRLİKTE saklanır (isabet dalı onları geri yazar). İki evre:
+    # dosyaların kendi ayrıştırması ("artifact_graph") ve sabit tablosu ("artifact_graph:consts").
+    return _onbellege_yaz(_GRAPH_CACHE, _key, _res, ("artifact_graph",))
 
 
 # ---------------------------------------------------------------------------
@@ -1020,10 +1059,13 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
     pats = DECLARED_SINK_PATTERNS if _canli else (patterns or {})
     hum = HUMAN_INVOKED_SINKS if _canli else (human or {})
     if _canli:
+        # ÖNBELLEK + KÖRLÜK: bkz. `_onbellek_oku`. İsabet dalında `artifact_graph` HİÇ
+        # çağrılmadığı için onun körlüğünü kendi önbelleği geri yazamaz — bu yüzden burada
+        # saklanan evre kümesi grafiğinkini de KAPSAR.
         _key = (root, _src_stamp(root))
-        _hit = _CLAIMS_CACHE.get(_key)
-        if _hit is not None:
-            return copy.deepcopy(_hit)
+        _hit = _onbellek_oku(_CLAIMS_CACHE, _key)
+        if _hit is not _YOK:
+            return _hit
 
     gconsts = _global_consts(root)
     mods: dict[str, tuple] = {}
@@ -1121,8 +1163,8 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
                     "stale_reasons": nedenler, "stale_claim": bool(nedenler)})
 
     if _canli:
-        _CLAIMS_CACHE.clear()
-        _CLAIMS_CACHE[(root, _src_stamp(root))] = out
+        return _onbellege_yaz(_CLAIMS_CACHE, (root, _src_stamp(root)), out,
+                              ("declared_claims", "artifact_graph"))
     return copy.deepcopy(out)
 
 
@@ -1160,7 +1202,8 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
 _CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
 
 
-def stale_line_anchors(root: str = "meridian") -> list[dict]:
+def stale_line_anchors(root: str = "meridian",
+                       cozulemeyen_out: list | None = None) -> list[dict]:
     """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
 
     Çapa üç biçimde çürür ve üçü de burada yakalanır:
@@ -1171,6 +1214,15 @@ def stale_line_anchors(root: str = "meridian") -> list[dict]:
     Hedef dosya BASENAME ile çözülür; aynı adlı iki dosya varsa (`ikircikli`) hüküm verilmez —
     ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Kendi kendini de tarar: bu modülün
     beyanlarındaki çapalar da ölçülür.
+
+    ÇÖZÜLEMEYEN ÇAPA SESSİZCE DÜŞMEZ (2026-08-16 denetim bulgusu). Hüküm verilemeyen çapa —
+    hedef ağaçta YOK (`hedef_yok`) ya da aynı ad birden çok dosyada (`ikircikli`) — eskiden
+    `continue` ile atılıyordu: yani yasa "0 çürük" derken kaçının hakkında hüküm KURAMADIĞINI
+    söylemiyordu. Bu tam olarak `artifact_graph`ın `unresolved` kovasıyla kapattığı sınıftır ve
+    bir körlük-raporlama yasasının kendi körlüğünü gizlemesi, yasanın kendi ihlaliydi.
+    `cozulemeyen_out` verilirse bu kayıtlar ORAYA yazılır ve `report()` onları
+    `line_anchor_unresolved` ADIYLA dışarı verir. İHLAL SAYILMAZLAR (`ok`u False'a çekmezler):
+    ölçülemeyen şey ihlal değildir — ama SAYILIR.
 
     Neden burada: `stale_claims` beyanın ULAŞILABİLİRLİĞİNİ doğrular, METNİNİ değil — çapa
     metnin içinde yaşadığı için o kapının yapısal kör noktasıdır.
@@ -1204,7 +1256,13 @@ def stale_line_anchors(root: str = "meridian") -> list[dict]:
                 hedef_ad, n = m.group(1), int(m.group(2))
                 hedefler = adres.get(hedef_ad, [])
                 if len(hedefler) != 1:
-                    continue                          # yok ya da ikircikli → hüküm YOK
+                    # hüküm YOK — ama kayıt VAR (yukarıdaki "çözülemeyen çapa" notu).
+                    if cozulemeyen_out is not None:
+                        cozulemeyen_out.append(
+                            {"kaynak": f"{f.name}:{i}", "capa": m.group(0),
+                             "neden": "hedef_yok" if not hedefler else "ikircikli",
+                             "aday_n": len(hedefler)})
+                    continue
                 try:
                     hedef_satirlar = hedefler[0].read_text(encoding="utf-8").splitlines()
                 except (OSError, ValueError):  # sessiz-yutma: HEDEF dosya okunamıyorsa çapa hakkında hüküm veremeyiz; ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI) — taranamayan dosyanın kendisi zaten _note_unscanned ile kayda geçer
@@ -1229,7 +1287,8 @@ def report(root: str = "meridian") -> dict:
     ann = annotated_handlers(root)
     graph = artifact_graph(root)
     curuk = stale_claims(root)
-    capalar = stale_line_anchors(root)
+    capa_kor: list[dict] = []
+    capalar = stale_line_anchors(root, cozulemeyen_out=capa_kor)
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -1251,5 +1310,13 @@ def report(root: str = "meridian") -> dict:
             # ÇÜRÜK SATIR ÇAPALARI: beyanın METNİ ölçülür (stale_claims yalnız ULAŞILABİLİRLİĞİ
             # ölçer, bu onun yapısal kör noktasıydı). Elle süpürme sınıfı kapatmadı; yasa kapatır.
             "stale_line_anchors": capalar,
+            # ÇAPA YASASININ KENDİ KÖRLÜĞÜ: hükmü KURULAMAYAN çapalar (hedef ağaçta yok, ya da
+            # aynı ad birden çok dosyada). `unresolved_by_reason` ile aynı disiplin — "0 çürük"
+            # iddiası, kaçının ölçülemediği bilinmeden okunamaz. `ok`u ETKİLEMEZ: ölçülemeyen şey
+            # ihlal DEĞİLDİR (UYDURMA YASAĞI), ama sayılmayan körlük de körlüğü gizlemektir.
+            "line_anchor_unresolved": capa_kor,
+            "line_anchor_unresolved_by_reason": {
+                n: sum(1 for c in capa_kor if c["neden"] == n)
+                for n in sorted({c["neden"] for c in capa_kor})},
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
                   and not capalar}

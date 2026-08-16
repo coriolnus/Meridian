@@ -119,8 +119,12 @@ ignore_imports = [
 # ---- SÖZLEŞME 2: ÇEKİRDEK-ALTYAPI KATMANI ------------------------------------------------------
 # store/storage/config/obs HERKESİN import ettiği tabandır. Taban bir üst katmanı import ederse
 # grafik tersine döner ve "yalnız store'u içe aktar" diyen bir test aslında tüm uygulamayı yükler.
-# (Not: bu dörtlünün KENDİ arasında döngü VARDIR — config→obs→store→config. Bu bilinen bir borçtur
-#  ve sözleşme 4'ün kapsamı dışında bırakıldı; bu sözleşme yalnız DIŞARI-YUKARI yönü ölçer.)
+# (Not: tabanın KENDİ arasında döngü VARDIR ve bu sözleşme onu ÖLÇMEZ — yalnız DIŞARI-YUKARI
+#  yönü ölçer. DÖNGÜNÜN GERÇEK BOYU 6 MODÜLDÜR, 3 DEĞİL: {config, notify, obs, secrets, storage,
+#  store} tek bir güçlü-bağlı bileşendir (Tarjan, grimp grafiği üzerinde, 2026-08-16). Eski not
+#  burada `config→obs→store→config` yazıyordu — o üçlü, altı modüllük bileşenin yalnız GÖRÜNEN bir
+#  turudur; `notify`, `secrets` ve `storage` da aynı bileşenin içindedir. Borcun boyu iki kat
+#  küçük yazılırsa borç kapanmış gibi okunur.)
 [[tool.importlinter.contracts]]
 name = "çekirdek-altyapı üst katmanları import etmez"
 type = "forbidden"
@@ -178,10 +182,22 @@ modules = [
 # DOLAYLI olarak loop'a bağlı:
 #     meridian.backtest → skills (l.33) → analytics (l.198) → shadow_variants (l.2658)
 #                       → shadow_lifecycle (l.373…) → loop (l.439: `from .loop import _scan_tail`)
-# Yani "backtest loop'un altındadır" iddiası BUGÜN YANLIŞTIR. Bu, repo genelindeki 20 modüllük
+# Yani "backtest loop'un altındadır" iddiası BUGÜN YANLIŞTIR. Bu, repo genelindeki büyük
 # güçlü-bağlı bileşenin (analytics/hermes/loop/reflect/watchdog/skills/shadow_*) backtest'i de
-# içine çektiğinin kanıtı. İddiayı `ignore_imports` ile bastırmak yerine sözleşme İKİYE bölündü:
-# her ikisi de SIFIR istisnayla geçiyor, ve geçmedikleri yer (aradaki köprü) burada YAZILI.
+# içine çektiğinin kanıtı. İddiayı `ignore_imports` ile bastırmak yerine sözleşme İKİYE bölündü.
+#
+# BİLEŞENİN BOYU YENİDEN ÖLÇÜLDÜ (2026-08-16): 33 MODÜL — burada uzun süre "20 modüllük" yazıyordu
+# ve o sayı artık doğru değildi. Ölçüm (grimp grafiği + Tarjan, `meridian.*` birinci düzey, 84
+# modül): analytics, arming, backtest, baseline, broker, cf_backfill, component_ic, counterfactual,
+# faz5_cikis, health, hermes, hermes_runtime, intraday_shadow, ledgerstamp, loop, nous_eval,
+# recompute, reflect, rollback, run, scheduler, selfreview, sermaye, shadow_lifecycle,
+# shadow_model, shadow_variants, skill_evolve, skill_gorus, skills, sprint, threshold_curve,
+# validation_report, watchdog. Yani repodaki 84 modülün %39'u TEK bir düğümdür.
+#
+# İKİ SÖZLEŞMENİN DE `ignore_imports`I VAR — "sıfır istisnayla geçiyor" İDDİASI DOĞRU DEĞİLDİ ve
+# 2026-08-16'da düzeltildi. Kadans zinciri iki kenar, karar çekirdeği iki kenar bastırıyor;
+# dördünün de gerekçesi ve borç yönü ilgili `ignore_imports` bloğunda ADIYLA yazılı. İstisnalar
+# bastırma DEĞİL kayıtlı borçtur — ama sayısı sıfır değildir ve öyle yazılmamalıdır.
 [[tool.importlinter.contracts]]
 name = "üst kadans zinciri katmanlı ve döngüsüz (api > scheduler > loop)"
 type = "layers"

@@ -287,18 +287,29 @@ def write_heartbeat(**fields) -> dict:
     dosya ama ÇOK yazarlı — günlük döngü `regime/equity/last_bar/exposure_budget_pct` damgalar,
     replay tohumu ve worker yalnız kendi alanlarını yazar. Dosya her seferinde SIFIRDAN kurulduğu
     için ikinci yazar birincinin alanlarını sessizce siliyordu: pano "rejim yok / sermaye yok"
-    gösteriyor, hiçbir istisna fırlamıyordu. Artık mevcut nabız üzerine BİNDİRİLİR."""
-    hb = store.read_json(HEARTBEAT, {}) or {}
-    if not isinstance(hb, dict):
-        hb = {}
-    hb.update({
-        "ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-        "mode": config.MODE,
-        "autonomy_level": config.limits()["autonomy_level"],
-        "halted": halted(),
-    })
-    hb.update(fields)
-    store.write_json(HEARTBEAT, hb)
+    gösteriyor, hiçbir istisna fırlamıyordu. Artık mevcut nabız üzerine BİNDİRİLİR.
+
+    BİNDİRME KİLİT ALTINDA YAPILIR (2026-08-16). İlk düzeltme `read_json` + `write_json`
+    çiftiydi; bu, TAM OLARAK onardığı hatanın daha dar bir penceresidir: iki yazar aynı anda
+    okursa ikisi de ESKİ belgeyi görür, ikincinin yazımı birincinin alanını yine siler — yalnız
+    çakışma penceresi milisaniyelere iner, kaybolmaz. Nabzın çok yazarlı olduğu bu docstring'in
+    kendi konusu olduğu için "nadiren olur" bir gerekçe değildir. `store.update_json` bu iş için
+    var; burada `update_json` yerine `file_lock` DOĞRUDAN kullanılıyor çünkü `update_json`
+    belgeyi YERİNDE değiştirmeyi şart koşar ve diskteki nabız bozulup sözlük OLMAYAN bir değere
+    dönmüşse (aşağıdaki `isinstance` kapısı) yerinde onarılamaz — o hâlde belge DEĞİŞTİRİLMEZ,
+    YENİDEN KURULUR. Kilidin kapsamı ikisinde de aynıdır: oku + değiştir + yaz."""
+    with store.file_lock(HEARTBEAT):
+        hb = store.read_json(HEARTBEAT, {}) or {}
+        if not isinstance(hb, dict):
+            hb = {}
+        hb.update({
+            "ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+            "mode": config.MODE,
+            "autonomy_level": config.limits()["autonomy_level"],
+            "halted": halted(),
+        })
+        hb.update(fields)
+        store.write_json(HEARTBEAT, hb)
     return hb
 
 

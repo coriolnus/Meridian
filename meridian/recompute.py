@@ -106,14 +106,23 @@ _CORPUS_GLOBS = (("meridian", "*.py"), ("ops", "*"), ("deploy", "*"), ("skills",
 
 
 def _source_corpus() -> str:
-    """meridian/ + tests/ + ops/ + deploy/ + skills/ metinlerinin TEK dizgesi (mtime önbellekli).
+    """meridian/ + ops/ + deploy/ + skills/ metinlerinin TEK dizgesi (mtime önbellekli).
+
+    `tests/` KORPUSA GİRMEZ — yukarıdaki `_CORPUS_GLOBS` bloğuna bak: bir test üretim tüketicisi
+    DEĞİLDİR ve tests/ dâhil edilseydi yalnız testte adı geçen artefaktın üretimdeki yetimliği
+    gizlenirdi. (Bu satır 2026-08-16'da düzeltildi: eski hâli listeye `tests/` yazıyordu, yani
+    docstring modülün KENDİ ölçütünün tersini söylüyordu.)
 
     Boş dönerse çağıran hiçbir orphan iddiası KURMAZ: tarama yapılamadıysa "okuyucusu yok" demek,
     körlüğü bulguya çevirmek olurdu."""
     import pathlib
     root = pathlib.Path(__file__).resolve().parent.parent
     try:
-        files = [p for sub, pat in _CORPUS_GLOBS for p in (root / sub).rglob(pat) if p.is_file()]
+        # `__pycache__` ELENİR: içindeki .pyc'ler zaten korpustaki .py'lerin derlenmiş ikizidir,
+        # metin olarak okunamazlar ve aşağıdaki düşme dalını gereksiz yere besliyorlardı
+        # (ölçüm 2026-08-16: 395 dosyanın düşen 2'sinin İKİSİ de ops/__pycache__/*.pyc idi).
+        files = [p for sub, pat in _CORPUS_GLOBS for p in (root / sub).rglob(pat)
+                 if p.is_file() and "__pycache__" not in p.parts]
         stamp = (len(files), max((p.stat().st_mtime_ns for p in files), default=0))
     except OSError:  # sessiz-yutma: kaynak ağacı listelenemiyorsa iddia KURULAMAZ — boş korpus çağıranı susturur (aşağıdaki `bool(_src_text)` kapısı)
         return ""
@@ -123,7 +132,7 @@ def _source_corpus() -> str:
     for p in files:
         try:
             parts.append(_code_only(p))
-        except (OSError, ValueError):  # sessiz-yutma: tek dosya okunamadı (ValueError: UnicodeDecodeError — ops/ ve deploy/ globları "*" olduğu için UTF-8 OLMAYAN ikili dosyalar da listeye girer); korpus eksik kalır ve eksik korpus yalnız DAHA AZ bulgu üretir (yanlış pozitif ÜRETMEZ)
+        except (OSError, ValueError):  # sessiz-yutma: tek dosya okunamadı (ValueError: UnicodeDecodeError — ops/ ve deploy/ globları "*" olduğu için UTF-8 OLMAYAN ikili dosyalar hâlâ listeye girebilir); YÖN DÜZELTİLDİ 2026-08-16: düşen dosya korpusu KISALTIR, okuyucu testi `nm not in _src_text` olduğu için kısalan korpus DAHA ÇOK "yetim" üretir — yani risk yanlış NEGATİF değil yanlış POZİTİFTİR (eski yorum tam tersini yazıyordu). Bulgu yine de sessiz değildir: yetim listesi operatöre ADIYLA gösterilir ve elle doğrulanır; __pycache__ elemesiyle bugünkü düşme sayısı 0'dır
             continue
     text = "\n".join(parts)
     _CORPUS_CACHE.update({"stamp": stamp, "text": text})

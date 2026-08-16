@@ -34,7 +34,8 @@ log oynatıcı). Modül-modül tam envanter: **`docs/MODUL-ENVANTERI-2026-08-15.
 96 Python modülü, ~67k satır. Görev cümleleri her modülün kendi başlık docstring'inde yaşar;
 aşağısı anlatı, tam tablo envanterdedir.
 
-**1. Giriş & kadans.** `api.py` FastAPI uygulaması — pano, 77 uç, kimlik doğrulama, HALT/onay
+**1. Giriş & kadans.** `api.py` FastAPI uygulaması — pano, 73 yol (58'i `/api/…`; ölçüm:
+`len([r for r in api.app.routes if hasattr(r, "methods")])`, 2026-08-16), kimlik doğrulama, HALT/onay
 yazma yüzeyi; 24/7 kadansı uygulama açılışında iki iplikle başlatır: `scheduler.py` (günlük
 döngünün zamanlayıcısı) ve `hermes_runtime.py` (öğrenme bekleme döngüsü). `loop.py` günlük paper
 döngüsünün kendisidir; `intraday_cycle.py` kapanmış-bar gözlem tüketicisi. `run.py` bilinçli bir
@@ -134,14 +135,26 @@ bayatladı; ders sayfaya işlendi.)
 
 ```
 L0  PAPER, TAM OTONOM            ← bugün burada. İnsan izler. Sıfır gerçek para.
-L1  CANLI, HER EMİR ONAYLI       ← her emir kuyrukta bekler, 5 dk'da düşer.
+L1  CANLI, HER EMİR ONAYLI       ← her emir onay kuyruğunda bekler; geçerlilik TEK SEANSTIR.
 L2  CANLI, OTONOM                ← limits bloğunun içinde gerçek para.
 ```
 
-L0→L1 terfisini `guard.py` zorlar (yeterli kapalı işlem, ≥2 rejimde pozitif skor, tüm dönem
-drawdown sözleşme içinde, tahmini tutan kabuller, açıklanamayan devre-kesici sıfır, çekimleri
-kapalı broker anahtarı, elle çevrilen iki ortam bayrağı, telefonda kill-switch). Meridian bayrağı
-asla kendisi çevirmez; panonun **Today** sayfası paraya güvenilmekten ne kadar uzak olduğunu basar.
+Onayın ömrü **dakika değil seanstır**: `_enrich_stale_plans` bir planı `expired` damgalar (plan
+tarihi son işlenmiş seanstan eskiyse) ve onay gelen kutusu süresi geçmiş planı göstermez.
+
+İŞ BÖLÜMÜ AÇIK OLSUN — terfi ölçütlerini **ölçen** ile canlı modu **reddeden** aynı modül değildir:
+
+- **Ölçen:** `analytics.py` (`L0->L1 promotion criteria`) — yeterli kapalı işlem, ≥2 rejimde
+  pozitif skor, tüm dönem drawdown sözleşme içinde, tahmini tutan kabuller, açıklanamayan
+  devre-kesici sıfır. Bu bir KARNEDİR; kapı değildir. Üç kalem (çekimleri kapalı broker anahtarı,
+  elle çevrilen iki ortam bayrağı, telefonda kill-switch) kodda `manual=True` işaretlidir —
+  ölçülmezler, operatör terfi anında elle doğrular.
+- **Reddeden:** `guard.py` — TEK sert kural şudur: `autonomy_level < 1` iken canlı mod istenirse
+  emir reddedilir (`live mode requested but autonomy_level<1 — refused`). Karnenin kalemlerini
+  `guard.py` ZORLAMAZ; bayrağı çeviren operatördür.
+
+Meridian bayrağı asla kendisi çevirmez; panonun **Today** sayfası paraya güvenilmekten ne kadar
+uzak olduğunu basar.
 
 ## Çalıştırma (yerel)
 
