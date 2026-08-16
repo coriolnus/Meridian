@@ -77,23 +77,33 @@ def test_ogrenme_birimi_giris_noktasi_gercek():
 def test_search_progress_uc_degerli_okuyucu():
     """Emniyet kalemi: "ölçülemedi" ile "arama yok" AYRI cevaplar olmalı. Birleşirlerse sprint
     kapısı boş sözlüğü "meşgul değil" okur ve koşan aramanın üstüne antrenman başlatır."""
-    from meridian import hermes
-    assert callable(hermes.search_progress_oku)
-    bos = hermes.search_progress_oku(ayni_surec=True)      # bellekteki sözlük testte boştur
-    assert bos["durum"] in {"yok", "kosuyor"}, bos
-    # Diskte dosya YOKKEN okuma "olculemedi" demeli — "yok" DEMEMELİ.
     from unittest import mock
-    with mock.patch.object(hermes.store, "read_json", return_value=None):
-        assert hermes.search_progress_oku()["durum"] == "olculemedi"
-    # Damgasız `running=True`nın yaşı bilinemez → ölçülemedi.
-    with mock.patch.object(hermes.store, "read_json", return_value={"running": True}):
-        assert hermes.search_progress_oku()["durum"] == "olculemedi"
-    # Damgalı ve koşan → kosuyor.
-    from meridian import memory
-    with mock.patch.object(hermes.store, "read_json",
-                           return_value={"running": True, "updated_at": memory.now_iso()}):
-        o = hermes.search_progress_oku()
-        assert o["durum"] == "kosuyor" and o["yas_s"] is not None
+    from meridian import hermes, memory
+    assert callable(hermes.search_progress_oku)
+    # Bellek DOLUYSA bellek yetkilidir (aynı süreçteki yazar diskten tazedir) — o yüzden disk
+    # dallarını sınarken belleği boşaltıyoruz, yoksa disk hiç okunmaz.
+    with mock.patch.dict(hermes.SEARCH_PROGRESS, {}, clear=True):
+        # AYRIM: dosya YOKLUĞU ≠ dosya BOZUKLUĞU.
+        # Yokluk kanıttır — bayrak aramanın BAŞINDA yazılır, yoksa arama başlamamıştır → "yok".
+        # (Önce burada "olculemedi" bekliyordum; o hüküm sprint'i temiz kurulumda kalıcı MEŞGUL'e
+        #  kilitliyordu — dosya hiç doğmadığı için sprint hiç başlayamazdı.)
+        with mock.patch.object(hermes.store, "read_json", return_value=None):
+            assert hermes.search_progress_oku()["durum"] == "yok"
+        with mock.patch.object(hermes.store, "read_json", return_value="bozuk"):
+            assert hermes.search_progress_oku()["durum"] == "olculemedi"
+        # BİLGİ EKSİKLİĞİ ≠ bilgi yokluğu: damgasız `running=True` yine ÖLÇÜLÜR, yalnız yaşı yok.
+        # (Asıl tüketici `sprint._arama_durumu` damgayı zaten kullanmıyor — kendi saati var.)
+        with mock.patch.object(hermes.store, "read_json", return_value={"running": True}):
+            o = hermes.search_progress_oku()
+            assert o["durum"] == "kosuyor" and o["yas_s"] is None
+        # Damgalı ve koşan → yaş da ölçülür.
+        with mock.patch.object(hermes.store, "read_json",
+                               return_value={"running": True, "updated_at": memory.now_iso()}):
+            o = hermes.search_progress_oku()
+            assert o["durum"] == "kosuyor" and o["yas_s"] is not None
+        # Boş sözlük = temizlenmiş bayrak → ÖLÇÜLDÜ, arama yok.
+        with mock.patch.object(hermes.store, "read_json", return_value={}):
+            assert hermes.search_progress_oku()["durum"] == "yok"
 
 
 def test_temizleme_kapidan_gecer():

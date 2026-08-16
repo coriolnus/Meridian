@@ -137,7 +137,7 @@ def test_p1_gercek_gerileme_HALA_alarmlar_ve_af_yolu_hazir(sandbox_state):
 # ==================================================================================================
 # P3a — SEARCH_PROGRESS: updated_at damgası (tek yazım kapısı)
 # ==================================================================================================
-def test_p3a_progress_damgasi_kanonik_ve_tum_yazimlar_kapidan(monkeypatch):
+def test_p3a_progress_damgasi_kanonik_ve_tum_yazimlar_kapidan(monkeypatch, sandbox_state):
     """Her `_progress` yazımı tz-aware UTC ISO `updated_at` taşır; hermes kaynağında `_progress`
     dışında çıplak `SEARCH_PROGRESS.update(` KALMADI (kapı tekliği — kaynak taraması, codelaw
     deseni). Damga yazımdan yazıma İLERLER (asılı aramada donmuş görünmesinin ön şartı)."""
@@ -174,7 +174,7 @@ def test_p3a_damga_sprint_parmak_izini_TAZELEMEZ(sandbox_state, monkeypatch):
 # ==================================================================================================
 # P3b — reflect_once finally güvenlik ağı
 # ==================================================================================================
-def test_p3b_finally_agi_istisna_yolunda_bayragi_indirir(monkeypatch):
+def test_p3b_finally_agi_istisna_yolunda_bayragi_indirir(monkeypatch, sandbox_state):
     """Gövde bayrağı kaldırıp İSTİSNAYLA çıkarsa (bugün var olmayan bir yol dahil) sarmalayıcı
     bayrağı İNDİRİR — canlı vakanın 'günlerce running=True' hâli süreç-içi birinci hatta ölür."""
     monkeypatch.setattr(hermes, "SEARCH_PROGRESS", {}, raising=False)
@@ -191,7 +191,7 @@ def test_p3b_finally_agi_istisna_yolunda_bayragi_indirir(monkeypatch):
     assert hermes.SEARCH_PROGRESS.get("updated_at")
 
 
-def test_p3b_finally_agi_temiz_cikista_NOOP(monkeypatch):
+def test_p3b_finally_agi_temiz_cikista_NOOP(monkeypatch, sandbox_state):
     """Ağ yalnız güvenlik ağıdır: gövde bayrağı zaten indirmişse (normal 'done' yolu) sarmalayıcı
     HİÇBİR alanı ezmez — mevcut hata/başarı yazımları aynen kalır."""
     monkeypatch.setattr(hermes, "SEARCH_PROGRESS", {}, raising=False)

@@ -124,10 +124,24 @@ def search_progress_oku(ayni_surec: bool = False) -> dict:
     `ayni_surec=True` verilirse bellekteki sözlük yetkilidir (öğrenme döngüsünün KENDİ süreci
     içindeki çağrılar) — disk turu boşuna yapılmaz."""
     import datetime as _dt
-    ham = dict(SEARCH_PROGRESS) if ayni_surec else store.read_json(SEARCH_PROGRESS_FILE, None)
+    # KAYNAK SIRASI (2026-08-17, suite 12 kırmızıyla öğretti): BELLEK DOLUYSA BELLEK YETKİLİDİR.
+    # İlk hâlde varsayılan doğrudan diske gidiyordu ve bu YANLIŞTI: aynı süreçte koşan bir yazar
+    # (bekleme döngüsü, ya da `SEARCH_PROGRESS`i doğrudan kuran testler) belleği diskten DAHA TAZE
+    # tutar — diske düşmek o süreci kendi yazdığı bayrağa kör bırakırdı.
+    # EMNİYET BOZULMUYOR, çünkü ayrımın kapattığı tuzak "BOŞ bellek" tuzağıydı: öğrenme kendi
+    # biriminde koşarken sprint'in belleği boştur → disk okunur → doğru cevap. Dolu bellek ise
+    # zaten o süreçte gerçek bir yazarın varlığının kanıtıdır.
+    ham = dict(SEARCH_PROGRESS) if (ayni_surec or SEARCH_PROGRESS) else store.read_json(SEARCH_PROGRESS_FILE, None)
     if ham is None:
-        return {"durum": "olculemedi", "kayit": {}, "yas_s": None,
-                "neden": f"{SEARCH_PROGRESS_FILE} yok ya da okunamadı"}
+        # DOSYA YOKLUĞU = ARAMA YOK (2026-08-17, suite 7 kırmızıyla düzeltti; `_kalp_canliligi`
+        # ile AYNI hüküm — tutarlı olmak zorundayım). Gerekçe mekanizmada: `_progress` bayrağı
+        # aramanın BAŞINDA yazar, yani koşan bir arama varsa dosya VARDIR. Yokluğu bir ölçüm
+        # boşluğu değil, "hiç arama koşmadı"nın kanıtıdır.
+        # ÖNCE "olculemedi" DİYORDUM ve bu sprint'i kalıcı MEŞGUL'e kilitliyordu: temiz bir
+        # kurulumda dosya hiç doğmaz, sprint hiç başlayamazdı. Muhafazakârlık iyidir, kilitlemek
+        # değil. Yazım DÜŞERSE sessiz kalmıyoruz — `_progress_aynala` uyarı basıyor.
+        return {"durum": "yok", "kayit": {}, "yas_s": None,
+                "neden": f"{SEARCH_PROGRESS_FILE} yok — arama başlamamış (bayrak arama başında yazılır)"}
     if not isinstance(ham, dict):
         return {"durum": "olculemedi", "kayit": {}, "yas_s": None,
                 "neden": f"{SEARCH_PROGRESS_FILE} sözlük değil: {type(ham).__name__}"}
@@ -142,11 +156,14 @@ def search_progress_oku(ayni_surec: bool = False) -> dict:
         except (TypeError, ValueError):  # sessiz-yutma: bozuk damga YUTULMUYOR, "olculemedi" olarak ÇAĞIRANA DÖNÜYOR ve neden alanında ham değer taşınıyor — çağıran muhafazakâr tarafa düşer
             return {"durum": "olculemedi", "kayit": ham, "yas_s": None,
                     "neden": f"updated_at çözümlenemedi: {dmg!r}"}
-    elif ham.get("running"):
-        # Damgasız bir `running=True`nun yaşı bilinemez → asılı mı taze mi ÖLÇÜLEMEZ.
-        return {"durum": "olculemedi", "kayit": ham, "yas_s": None,
-                "neden": "running=True ama updated_at damgası yok — yaş ölçülemez"}
     else:
+        # DAMGASIZ KAYIT "ÖLÇÜLEMEDİ" DEĞİLDİR (2026-08-17, suite 12 kırmızıyla düzeltti).
+        # İlk hâlde damgasız bir `running=True`yu "ölçülemedi" sayıyordum; yanlıştı. `olculemedi`
+        # BİLGİ YOKLUĞU içindir (dosya yok/bozuk), bilgi EKSİKLİĞİ için değil: `running` alanı
+        # başlı başına bir olgudur. Üstelik asıl tüketici (`sprint._arama_durumu`) damgayı HİÇ
+        # kullanmıyor — yaşı kendi parmak-izi saatiyle (`_ARAMA_GOZLEM`) ölçüyor ve `_progress`
+        # docstring'i damganın parmak izine BİLEREK girmediğini yazıyor. Tüketicinin istemediği
+        # bir şartı dayatmıştım; `yas_s` None döner, `durum` yine ölçülür.
         yas = None
     return {"durum": "kosuyor" if ham.get("running") else "yok",
             "kayit": ham, "yas_s": yas, "neden": None}
