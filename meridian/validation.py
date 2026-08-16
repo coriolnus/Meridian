@@ -54,6 +54,11 @@ EULER_GAMMA = 0.5772156649015329
 # çok ince dilimleri eler.
 DSR_MIN_N = 20
 
+# DEJENERE SERİ KAPISI (`_moments`; gerekçenin tamamı orada). Serinin std'si kendi ölçeğinin bu
+# katından küçükse yayılım YOKTUR — ölçüm kurulamaz, hüküm None'dır. Araştırma eşiği DEĞİL:
+# çift-duyarlıklı kayan noktanın bağıl hassasiyet tabanının (~1e-16) dört mertebe üstü.
+_DEJENERE_YAYILIM_ORANI = 1e-12
+
 # Deneme-Sharpe varyansının ÖLÇÜLEBİLMESİ için defterde gereken asgari kayıt. 5'in altında bir
 # örneklem varyansı, varyansın kendisinden daha gürültülüdür → null yaklaşımı DAHA dürüsttür
 # (bilinen bir varsayım, ölçülmüş gibi sunulan bir gürültüden iyidir).
@@ -174,7 +179,23 @@ def _moments(xs: list) -> dict | None:
     scipy YOK (bilinçli — depo bağımlılığı): momentler elle hesaplanır. `bias=False` düzeltmesi
     UYGULANMAZ ve bu bir tercih değil BEYANDIR: Bailey-López de Prado'nun PSR formülü ham
     (yanlı) momentlerle yazılmıştır; düzeltilmiş momentleri aynı formüle koymak, kaynağın
-    kalibrasyonundan sapmak olurdu."""
+    kalibrasyonundan sapmak olurdu.
+
+    DEJENERE SERİ → None (UYDURMA YASAĞI; 2026-08-16'da düzeltildi). `var <= 0` kapısı VARDI ama
+    eşiği MUTLAK SIFIRDI ve kayan noktada sabit bir seri oraya HİÇ inmez: `[0.01]*40` için
+    ortalama 0,01'den 1 ulp sapar, kalan kareler toplamı ~1e-35 olur, `std` ~5e-18 çıkar ve
+    Sharpe = 0,01/5e-18 ≈ **1,9e15** olarak "ölçülmüş" görünür. `deflated_sharpe`in kendi
+    docstring'i "varyansı sıfırsa None" diyordu; kod bunu tutmuyordu ve
+    `test_hafta3a_v119::test_D_dsr_taban_altinda_None_doner_SIFIR_DEGIL` tam bu yüzden kırmızıydı.
+    Ölçülemeyen yerde sayı üretmek bu deponun birinci yasasının ihlalidir ve DSR yolu ship
+    hükmüne bağlı olduğu için bedeli yüksekti.
+
+    KAPI GÖRELİDİR, mutlak değil: dağılımın "var olup olmadığı" ancak serinin KENDİ ölçeğine göre
+    sorulabilir ($ getirilerde 1e-9 gerçek bir yayılım, oranlarda gürültüdür). `1e-12` çarpanı bir
+    araştırma eşiği DEĞİL, çift-duyarlıklı kayan noktanın bağıl hassasiyet tabanıdır (~1e-16):
+    ondan dört büyüklük mertebesi yukarısı, "bu yayılım yuvarlama artığından ibarettir" demenin
+    muhafazakâr hâlidir. Bu kapının altındaki her seri için Sharpe zaten 1e12 mertebesinde çıkar —
+    yani hüküm "ölçülemedi"dir, "sıfır" değil."""
     v = [x for x in (_isaret(x) for x in xs) if x is not None]
     n = len(v)
     if n < 3:
@@ -184,6 +205,12 @@ def _moments(xs: list) -> dict | None:
     if var <= 0:
         return None
     s = math.sqrt(var)
+    # Ölçek: serinin kendi büyüklüğü. Ortalaması sıfır olan (ama gerçek yayılımı olan) seri
+    # `abs(m)` ile ölçülemezdi, o yüzden en büyük mutlak gözlem de ölçeğe girer. Buraya gelen her
+    # seride en az bir gözlem sıfırdan farklıdır (hepsi sıfır olsaydı `var <= 0` yakalardı).
+    olcek = max(abs(m), max(abs(x) for x in v))
+    if s <= _DEJENERE_YAYILIM_ORANI * olcek:
+        return None
     g3 = sum((x - m) ** 3 for x in v) / n / s ** 3
     g4 = sum((x - m) ** 4 for x in v) / n / s ** 4
     return {"n": n, "mean": m, "std": s, "skew": g3, "kurtosis": g4, "n_elenen": len(xs) - n}

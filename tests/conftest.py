@@ -823,6 +823,223 @@ def make_bars(n=320, seed=7, trend=0.0006, breakout_at=None):
                          "close": close, "volume": vol})
 
 
+# ================================================================================================
+# CANLI-STATE GEREKTİREN TESTLER — BEYANLI ATLAMA (2026-08-16)
+# ================================================================================================
+# ÖLÇÜLEN DURUM. Taze bir klonda (cloud oturumu, CI, yeni makine) tam suite 82 kırmızı sonuç
+# veriyordu ve bunların 80'i bir HATA değildi: `state/` versiyonlanmıyor (CLAUDE.md kural 8;
+# yalnız goal.yaml + bounds.yaml izli), gerçek defterler A1'de. Yani testler kodun bozuk
+# olduğunu değil, VERİNİN OLMADIĞINI raporluyordu.
+#
+# NEDEN BU BİR KUSUR. Bu deponun her yerinde yazan ayrım burada tutulmuyordu: "ölçtük, kötü" ile
+# "ölçemedik" AYNI piksele düşüyordu. 80 kırmızının içinde 2 gerçek bulgu vardı (DSR sıfır-varyans
+# ihlali ve bayat RUNBOOK) ve ikisi de aylarca görünmedi — çünkü kimse 82 satırlık bir kırmızı
+# listeyi okumaz. Sürekli kırmızı bir kapı, bakılmayan kapıdır (`ops/kapilar.sh` dersinin aynısı).
+#
+# ÇÖZÜM VE SINIRI. Eksik state ATLAMA'dır, başarısızlık değil — ve atlama ADIYLA görünür
+# (`pytest -rs` nedeni basar). Depo bu deseni zaten kullanıyor (`pytest.skip("node yok")`,
+# `pytest.skip("beyin zinciri bu ortamda yapılandırılmamış (temiz klon/CI)")`); yeni olan tek şey
+# listenin BEYANLI ve DENETLENEBİLİR olması.
+#
+# ÜÇ GÜVENLİK ŞARTI — yoksa bu mekanizma "kırmızıyı halının altına süpürme" aracına dönerdi:
+#   (1) KOŞUL YALNIZ DOSYANIN VARLIĞIDIR. Artefakt varsa test NORMAL koşar ve düşerse DÜŞER.
+#       A1'de ve state'i olan her makinede davranış BİREBİR eskisi gibidir; hiçbir hüküm yumuşamaz.
+#   (2) LİSTE BAYATLARSA KOŞUM KIRILIR. Bir beyan hiçbir teste karşılık gelmiyorsa (test yeniden
+#       adlandırıldı/silindi) aşağıdaki kapı hata verir. Beyan, işi bitince kalamaz — bu deponun
+#       `stale_sinks`/`stale_claims` disiplininin test tarafındaki karşılığı.
+#   (3) LİSTE ELLE VE DAR TUTULUR. Buraya bir test EKLEMEK, "bu testin ölçtüğü şey canlı defterdir"
+#       demektir. Ölçtüğü şey KOD olan bir test buraya YAZILAMAZ — yazılırsa gerçek bir regresyon
+#       taze klonda sessizce atlanır. Ekleme gerekçesi ilgili kovanın başlığında yazılıdır.
+_CANLI_STATE_BEYANI: dict[str, tuple[tuple[str, ...], str, dict[str, tuple[str, ...]]]] = {
+    # kova adı: ((gereken state artefaktları), neden, {dosya: (test fonksiyonu, ...)})
+    "skills_registry": (
+        ("state/skills_registry.json",),
+        "canlı skill kayıt defteri A1'de; bu çiviler o defterin İÇERİĞİNİ ölçer (arşivlenmiş "
+        "kayıt disabled mı, zincir tutarlı mı, damga bayat mı) — defter yokken hüküm KURULAMAZ. "
+        "Depodaki `skills/` klasörü defterin yerine geçmez: kayıt defteri etkinlik/emeklilik "
+        "durumunu taşır, klasör yalnız içeriği.",
+        {
+            "test_skill_cleanup_v121.py": (
+                "test_c1c_hayalet_arsivde_YOKTUR_ve_skill_SAYILMAZ",
+                "test_c2_archived_registry_entries_are_disabled_unchained_and_reasoned",
+                "test_c2b_merged_entries_name_their_target",
+                "test_c2c_chain_contradictions_are_cleared_for_survivors",
+                "test_c3b_live_registry_has_no_enabled_retired_entry",
+                "test_c3c_archived_entries_are_outside_the_key_gate_with_provenance",
+                "test_c4b_every_chained_skill_is_live_and_registered",
+                "test_c5b_enabled_skills_all_have_a_live_folder",
+                "test_c6_protected_five_untouched",
+                "test_c6b_hermes_and_skill_evolve_preloads_point_at_live_skills",
+                "test_c7_no_stale_run_stamps_survive",
+                "test_c7b_archived_skills_have_no_run_stamp_and_keep_provenance",
+                "test_c7c_cleared_stamp_is_recorded_not_silently_dropped",
+                "test_c9_measure_then_activate_carries_its_condition",
+                "test_c9b_activation_conditions_are_measurement_gated",
+                "test_c10c_public_summary_computes_skill_counts_from_the_registry",
+            ),
+            "test_navigator_retirement_gate_v126.py": (
+                "test_r1_digest_matches_live_registry_byte_for_byte",
+                "test_r1b_digest_carries_every_retired_entry_and_merge_target",
+                "test_r2_no_archived_name_in_actionable_fields",
+                "test_r3_archived_primary_becomes_an_honest_gap",
+                "test_r3b_dividend_gap_suggests_only_the_live_portfolio_manager",
+                "test_r4_archived_secondary_is_excluded_and_named",
+                "test_r5_registry_and_bundled_facts_agree_modulo_declared_source",
+                "test_r7_protected_five_survive_the_gate",
+                "test_r8_gate_is_pure_idempotent_and_output_is_stable",
+                "test_r9_cli_reports_registry_source_from_repo_root",
+                "test_r9b_digest_builder_check_passes",
+            ),
+            # `skills.enabled_in` / önyükleme kümeleri kayıt defterinden doğar: defter yokken
+            # etkin skill listesi BOŞ döner ve iki çivi de boş kümeyle karşılaşır.
+            "test_audit_fixes.py": ("test_pipeline_run_reports_only_engine_implemented_as_invoked",),
+            "test_llm_advisor_v6.py": ("test_skill_preload_sets_are_curated_and_capped",),
+        }),
+    "strateji_yaml": (
+        ("state/strategy.yaml",),
+        "çalışan strateji parametreleri canlıda üretilir ve versiyonlanmaz; bu çiviler dosyanın "
+        "İÇERİĞİNİ (sürüm, düğme değerleri, dokunulmazlık) ölçer.",
+        {
+            "test_bottleneck_v12.py": ("test_daily_cycle_refuses_regressive_session",
+                                       "test_operator_budget_floor_is_versioned"),
+            "test_cf_backfill_v14.py": ("test_backfill_only_touches_cf_files",
+                                        "test_plans_for_session_shape_and_gate"),
+            "test_score_rebuild_v115.py": ("test_h3_strategy_yaml_DOKUNULMADI",),
+            "test_wpd_kardes_pit_v185.py": ("test_cf_backfill_karartma_VETOSU_URETMEZ",),
+        }),
+    "canli_defter": (
+        ("state/trades.jsonl",),
+        "canlı işlem defteri — bu çiviler GERÇEK satırlar üzerinde ölçüm yapar (varyans ataması, "
+        "geçiş tablosu, MAE karnesi, otonomi sayımı, gölge-görüş kesişimi). Fikstür üretmek bu "
+        "testlerin AMACINI ortadan kaldırır: ölçtükleri şey canlı defterin kendisidir.",
+        {
+            "test_hafta3b_v125.py": (
+                "test_2C_component_ic_SEMASI_kaynaktan_dogrulandi",
+                "test_2C_kucultme_verdict_TABANLARINA_girmez",
+                "test_H1_karne_tek_ciftte_SAYI_uydurmaz",
+                "test_H2_olu_aileler_ve_hic_onerilmemis_dugmeler_DINAMIK",
+                "test_MAE_karnesi_kazanan_kaybeden_AYRI_olcer",
+                "test_canli_kanit_paketi_H_paketini_TASIR",
+                "test_gecis_tablosu_canli_defterden_kosar_ve_GECIS_BEYAN_EDER",
+                "test_otonomi_sayimi_TS_TABANLI_satir_penceresi_DEGIL",
+                "test_varyans_atamasi_E_raporunu_replike_eder_ve_v3_TEK_TERIM",
+            ),
+            "test_execution_fidelity_v75.py": (
+                "test_gercek_defter_girisleri_BASILMIS_bir_barin_ACILISI",
+                "test_gercek_barlarda_yeni_cikis_sirasi_islem_defterini_bozmuyor",
+            ),
+            "test_para_yasasi_v127.py": ("test_varyans_atamasi_PARA_payi_YUZDE_YUZ",),
+            "test_skill_gorus_v218.py": (
+                "test_katman_IKI_YONLU_keser_negatif_kanit_EMEKLILIK_isaretine_duser",),
+        }),
+    "mutasyon_tabani": (
+        ("state/trades.jsonl", "state/skills_registry.json"),
+        "mutasyon koşum hattı TEMİZ bir tabanda başlar (kendi kapısı: 'kirli bir temelde her "
+        "mutasyon yakalandı görünür ve kapsama sayısı yalan söyler'). Taze klonda taban kirlidir "
+        "çünkü `parity:brain_availability` dedektörü canlı beyin zincirini bulamaz — yani hattın "
+        "KENDİ ön şartı sağlanmıyor, hattın kendisi bozuk değil.",
+        {"test_mutation_v61.py": (
+            "test_a_full_run_leaves_the_live_ledgers_untouched",
+            "test_baseline_state_is_genuinely_clean",
+            "test_blind_spots_are_reported_with_their_reason",
+            "test_caught_inventory_is_pinned",
+            "test_coverage_number_matches_the_inventory",
+            "test_each_caught_mutation_names_the_detector_that_saw_it",
+            "test_every_mutation_is_classified",
+            "test_human_report_names_every_missed_class",
+            "test_missed_inventory_is_pinned",
+            "test_network_dependent_checks_are_declared_out_of_scope",
+            "test_the_harness_records_that_each_mutation_changed_the_state",
+            "test_the_sieve_detector_is_either_used_or_its_absence_is_logged",
+        )}),
+}
+
+# ORTAM KOŞULLARI — state değil, KONTEYNERİN kendisi. Aynı üç şart geçerli; koşul yine ölçülür,
+# varsayılmaz (bir sonraki makinede IPv6 varsa test koşar ve düşerse düşer).
+_ORTAM_BEYANI: dict[str, tuple[str, str, dict[str, tuple[str, ...]]]] = {
+    "ipv6": ("ipv6_yok",
+             "çekirdek/konteyner IPv6 soketi açtırmıyor (socket.AF_INET6 → EAFNOSUPPORT); çivi "
+             "dış adrese bağlanmamayı ölçer, IPv6 yokluğunu değil.",
+             {"test_kadans_ag_kapisi_v177.py": ("test_dis_adres_baglanmadan_adli_istisnayla_duser",)}),
+    "sudo": ("sudo_gereksiz",
+             "süreç ROOT koşuyor, dolayısıyla `sprint._systemctl_komutu()` doğru davranıp "
+             "`sudo -n` öneki OLMADAN dönüyor; çivi ÜRETİM kurulumunu (root olmayan servis "
+             "kullanıcısı) ölçer ve bu konteynerde o kurulum yok.",
+             {"test_sprint_systemd_v241.py": ("test_tetik_komutu_uretimde_sudo_n_systemctl",)}),
+}
+
+
+def _ortam_kosulu(ad: str) -> bool:
+    """Beyan edilen ortam şartı SAĞLANIYOR mu? (True → test normal koşar.) Ölçülür, varsayılmaz."""
+    if ad == "ipv6_yok":
+        try:
+            socket.socket(socket.AF_INET6, socket.SOCK_STREAM).close()
+            return True
+        except OSError:
+            return False
+    if ad == "sudo_gereksiz":
+        return os.geteuid() != 0
+    raise AssertionError(f"bilinmeyen ortam şartı: {ad}")   # beyan bayatladı
+
+
+def _eksik_artefaktlar(gerekli: tuple[str, ...]) -> list[str]:
+    """Beyan edilen state artefaktlarının HANGİLERİ diskte yok? (Repo kökünden bakılır — bu
+    beyanların konusu SANDBOX değil, deponun yanındaki gerçek `state/` dizinidir.)"""
+    kok = pathlib.Path(__file__).resolve().parents[1]
+    return [a for a in gerekli if not (kok / a).exists()]
+
+
+def pytest_collection_modifyitems(config, items):
+    """Beyanlı canlı-state/ortam şartı sağlanmayan testleri ADIYLA atlar (bkz. yukarıdaki blok).
+
+    BAYAT BEYAN KOŞUMU KIRAR: bir beyan hiçbir toplanan teste karşılık gelmiyorsa hata verilir —
+    ama YALNIZ ilgili dosya bu koşuma dahilse. `pytest -k` ya da tek dosya koşumlarında beyanın
+    karşılıksız kalması normaldir; bayatlık ancak dosya toplandığı hâlde AD tutmadığında ölçülür."""
+    toplanan: dict[str, set[str]] = {}
+    for it in items:
+        toplanan.setdefault(pathlib.Path(str(it.fspath)).name, set()).add(
+            it.originalname or it.name.split("[")[0])
+
+    isaretli: list[tuple[str, str, str]] = []      # (dosya, fonksiyon, sebep)
+    for _kova, (gerekli, neden, hedefler) in _CANLI_STATE_BEYANI.items():
+        eksik = _eksik_artefaktlar(gerekli)
+        for dosya, fonksiyonlar in hedefler.items():
+            if dosya not in toplanan:
+                continue
+            bilinmeyen = [f for f in fonksiyonlar if f not in toplanan[dosya]]
+            if bilinmeyen:
+                # `UsageError`: `assert` burada INTERNALERROR olarak çıkar ve okunmaz; bu bir
+                # kurulum hatasıdır, çökme değil — pytest onu adıyla ve tek satırda raporlasın.
+                raise pytest.UsageError(
+                    f"BAYAT CANLI-STATE BEYANI — {dosya} toplandı ama şu adlar yok: {bilinmeyen}. "
+                    f"Test yeniden adlandırıldıysa beyanı da güncelle; silindiyse beyanı SİL "
+                    f"(conftest._CANLI_STATE_BEYANI). Beyan, işi bitince yerinde duramaz.")
+            if eksik:
+                for f in fonksiyonlar:
+                    isaretli.append((dosya, f, f"{', '.join(eksik)} YOK (temiz klon/CI) — {neden}"))
+
+    for _kova, (sart, neden, hedefler) in _ORTAM_BEYANI.items():
+        saglaniyor = _ortam_kosulu(sart)
+        for dosya, fonksiyonlar in hedefler.items():
+            if dosya not in toplanan:
+                continue
+            bilinmeyen = [f for f in fonksiyonlar if f not in toplanan[dosya]]
+            if bilinmeyen:
+                raise pytest.UsageError(
+                    f"BAYAT ORTAM BEYANI — {dosya}: {bilinmeyen} (conftest._ORTAM_BEYANI)")
+            if not saglaniyor:
+                for f in fonksiyonlar:
+                    isaretli.append((dosya, f, f"ortam şartı sağlanmıyor — {neden}"))
+
+    if not isaretli:
+        return
+    sebepler = {(d, f): s for d, f, s in isaretli}
+    for it in items:
+        anahtar = (pathlib.Path(str(it.fspath)).name, it.originalname or it.name.split("[")[0])
+        if anahtar in sebepler:
+            it.add_marker(pytest.mark.skip(reason=sebepler[anahtar]))
+
+
 # ---- KÖKEN TAKİBİ: paketin kendisi sonda olur (2026-07-22) ----
 # Baskın kusur sınıfı ("üretici X yazar, tüketici Y okur") hiçbir testte görünmez, çünkü her test
 # KENDİ fikstürünü kurar: iki tarafın beklentisini aynı el yazar, ayrışamazlar. Çözüm tek tek
