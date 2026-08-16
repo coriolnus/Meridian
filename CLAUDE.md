@@ -19,3 +19,14 @@
    beri; remote: github.com/coriolnus/Meridian, özel) — cloud oturumları GitHub'daki hali
    klonlar, push'lanmamış iş cloud'da görünmez. Push canlıya dağıtım DEĞİLDİR; dağıtım hâlâ
    dagit.sh üzerinden.
+9. SUPERPOWERS ZORUNLU (2026-08-17'den beri): Bu depoda çalışan her Claude oturumu,
+   `superpowers` plugin'ini ve bileşenlerini (brainstorming, systematic-debugging,
+   test-driven-development, writing-plans, executing-plans, requesting/receiving-code-review,
+   verification-before-completion, using-git-worktrees vb.) kullanmak ZORUNDADIR — madde 2'deki
+   rol ayrımının (Fable=mimari/brief/denetim, Opus=implementasyon) ÜSTÜNE eklenir, onu iptal
+   etmez: hangi rol kod/karar üretiyorsa, kendi kapsamında ilgili superpowers skill akışını
+   (örn. karar/tasarım işi → brainstorming; implementasyon → TDD; bitirmeden önce →
+   verification-before-completion) izler. Çelişki halinde bu dosyadaki madde 1-8 (Meridian'a
+   özgü ölçüm/git/dağıtım disiplini) önceliklidir — superpowers akışı bu kısıtları gevşetemez
+   (örn. "bekleme betiği yasak" [madde 7] veya "tam suite tek-otoriter" [madde 6] superpowers
+   önerisiyle çakışırsa Meridian kuralı kazanır).
