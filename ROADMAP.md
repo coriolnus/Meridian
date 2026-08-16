@@ -1399,12 +1399,54 @@ kararı gerektirenler §3'e geçer.
     düşer" → gerçek ömür **tek seans** (`_enrich_stale_plans`, `expired`), "L0→L1 terfisini
     guard.py zorlar" → ölçen `analytics.py` (karne, 3 kalem `manual=True`), reddeden `guard.py`
     (TEK kural: `autonomy_level < 1` + canlı mod).
-  **HÂLÂ AÇIK (bu turda kapatılmadı):** yasa kapsamı (`docs/`, `tests/`, `ops/` taranmıyor; düz
-  metin ve çapraz-biçim çapaları desen dışı) · çapa BAŞKA bir kod satırına kaymışsa yakalanmıyor
-  (yalnız boş/yorum/menzil-dışı ölçülür) · `report()` altı kez tarıyor (7,75 sn) · tek-slot
-  önbellek · `_gate_why` tail dalı · `_site_key` `isdigit()`/docstring · `runbook_uret.py` kopyası ·
-  DSR sıfır-varyans ihlali · 33'lük SCC'nin BÖLÜNMESİ (operatör kararı, mekanik düzeltme değil).
-  *öncelik: orta — hiçbiri canlı kararı bozmuyor (DSR ihlali HARİÇ: o canlı hükümdedir).*
+  **DÖRDÜNCÜ DALGA — AÇIK KALEMLER KAPATILDI (2026-08-16, ölçüldü):**
+  · **DSR SIFIR-VARYANS İHLALİ KAPANDI** (listenin canlı hükümdeki tek kalemiydi).
+    `validation._moments`teki `var <= 0` kapısının eşiği MUTLAK SIFIRDI ve kayan noktada sabit bir
+    seri oraya HİÇ inmez: `[0.01]*40` için ortalama 1 ulp sapar, std ~5e-18 çıkar, Sharpe
+    **1,9e15** olarak "ölçülmüş" görünürdü. Kapı artık GÖRELİ (serinin kendi ölçeğinin `1e-12`
+    katı — araştırma eşiği değil, float64 bağıl hassasiyet tabanının dört mertebe üstü). Gerçek
+    seriler DEĞİŞMEDİ (dsr 0,791686 aynı); `test_hafta3a_v119` 61/61.
+  · **`report()` ALTI TARAMADAN BİRE İNDİ.** Ölçüm (aynı makine, öncesi/sonrası): soğuk
+    **20,09 → 10,50 sn**, `ast.parse` **576 → 96** (modül başına tam bir kez = teorik alt sınır),
+    sıcak **1,54 → 0,82 sn** ve sıcak yolda `ast.parse` **192 → 0**. Yol: dosya-başına
+    mtime+boyut damgalı `_kaynak_oku`/`_ast_oku` memosu; `scan_source`un gövdesi `_scan_agac`a
+    ayrıldı ki dosyadan gelen çağıran ağacı memodan alsın. Bedel: tepe bellek 110,5 → 122,7 MB.
+    Memo SONUÇ değil GİRDİ önbelleğidir: ayrıştırma düşerse memoya hiçbir şey girmez ve
+    `_note_unscanned` her fazda eskisi gibi çalışır — körlük sözleşmesi etkilenmez.
+  · **TEK-SLOT ÖNBELLEK KALKTI.** `clear()` gerekçesi "damga değişince eski girdi geçersiz" idi,
+    ama anahtar `(root, damga)` ÇİFTİ: farklı bir `root` ile tek bir çağrı üretim girdisini damgası
+    HÂLÂ GEÇERLİYKEN atıyordu. Artık ekleme sıralı, sekiz slotlu, en eski düşer.
+  · **YASA KAPSAMI `tests/` ve `ops/`a AÇILDI** ve açılır açılmaz **14 çürük çapa** buldu (hata
+    ayıklayan kişiyi yanlış satıra gönderen CANLI iddialar; `ops/` zaten temizdi). On dördü de
+    sembole çevrildi (`loop.py:1942` → `loop.mirror_submit_armed` gibi); biri yapılandırma
+    dosyasını da kapsıyordu (`litestream.yml` → `storage.PRAGMAS`).
+  · **`_gate_why` İKİ KUSURU.** (a) `tail_ok` parametresi imzada VARDI ama gövdede HİÇ okunmuyordu
+    — son dal, kuyruk geçmiş olsa bile koşulsuz "kuyruk düşürdü" yazıyordu; artık `tail_ok=True`
+    ile buraya düşmek "gerekçe BU ZİNCİRDE değil" der (sebep uydurmaz). (b) "tek çağıranı
+    `_gate_eval`" beyanı yanlıştı — `test_audit_fixes.py` ikinci çağıran ve `margin` geçmiyor.
+  · **`_site_key` DOCSTRING'İ.** "`isascii() and isdigit()` tam olarak `int()`in aldığı kümedir"
+    YANLIŞTI: `int()` ASCII-dışı ondalıkları da alır (`isdecimal()`). Guard bilinçli bir ALT
+    KÜMEDİR (satır numaraları ASCII'dir) — davranış korundu, iddia düzeltildi.
+  · **`runbook_uret.py` KOPYASI KALKTI.** İki uygulama zaten ayrışmıştı (kopya sayı olmayan
+    parçada `ValueError` ile çöküyor, `_site_key` `(site, 0)`a düşüyordu); betik artık
+    `codelaw._site_key`i içe aktarıyor. Üretilen RUNBOOK **birebir aynı** (diff boş).
+  · **`declared_claims.host_modules` TEK ŞEKLE İNDİ.** sink/human'da modül adı, pattern'de çağrı
+    yeri taşıyordu — tek ad, iki şekil. Pattern'de modül adları yerlerden TÜRETİLİYOR, yerler
+    `desen_yerleri` alanında ADIYLA duruyor (alan üç kayıtta da VAR).
+  · **`test_wpm_okuma_netligi_v182` BAYAT LİTERALİ.** Yorum "bugünkü sözleşme: 0,04 / 0,08"
+    diyordu; ikisi de ikiye katlandığı için (bugün 0,08 / 0,16) oran testi yeşil kalmış ve
+    bayatlık GÖRÜNMEMİŞTİ. Çivilenen şey artık oran; sayılar hata mesajından okunuyor.
+  **HÂLÂ AÇIK — ve ikisi de ÖLÇÜLDÜ, sonra BİLİNÇLİ bırakıldı:**
+  · **`docs/` yasa kapsamına ALINMADI.** Ölçüm: 2324 çapa, **704 çürük**. Ama 668'i TARİHLİ teşhis
+    belgelerinde (`SISTEM-DENETIMI-2026-08-02.md` 190, `ARTEFAKT-TARAMASI-2026-08-07.md` 158, …) —
+    onlar tarihli birer KAYITTIR, yazıldıkları gün doğruydular ve geriye dönük "düzeltmek" tarihi
+    tahrif etmek olurdu. Kalan **36'sı üretilen `RUNBOOK.md`de** ve kaynağın kendi yorum
+    bloklarının kopyasıdır: gerçek kalem budur ve üreticinin işidir (mezar-taşı işareti kopyaya
+    taşınmıyor). Düz metin (`satır NNN`) ve çapraz biçim (`goal.yaml:27`) çapaları hâlâ desen dışı.
+  · **Çapa BAŞKA bir kod satırına kaymışsa yakalanmıyor** (yalnız boş/yorum/menzil-dışı ölçülür).
+    Bunu kapatmak için çapanın gösterdiği İFADEyi de saklamak gerekir — biçim değişikliği, ayrı tur.
+  · **33'lük SCC'nin BÖLÜNMESİ** — operatör kararı, mekanik düzeltme değil.
+  *öncelik: düşük — canlı hükümde açık kalem KALMADI (DSR bu turda kapandı).*
 
 - **🔴 48. ÜRETİCİ CANLIDA TAŞINMAYAN DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, akıbet **kuru koşumda** ölçüldü — v247 DAĞITILMADI; KÖK canlıda ölçüldü; sahibi WP3)_
   28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü (kuru koşum; v247 **DAĞITILMADI** — canlıda

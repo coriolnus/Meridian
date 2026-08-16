@@ -158,7 +158,7 @@ def test_ortam_dosyasi_conf_ve_uc_degiskeni_TASIR(ortam):
     assert json.loads(e["MERIDIAN_SPRINT_CONF"]) == {"k_max": 2, "budget": 6}
     assert " " not in e["MERIDIAN_SPRINT_CONF"], "conf BOŞLUKSUZ olmalı (`$VAR` bölünmesine karşı)"
     assert e["MERIDIAN_SPRINT_SBROOT"] == res["sbroot"]
-    # sprint.py:297-298 ile BİREBİR üçlü
+    # `sprint`in kum-havuzu izolasyon sözleşmesi bloğu ile BİREBİR üçlü
     assert e["MERIDIAN_ROOT"] == res["sbroot"] and e["MERIDIAN_BROKER"] == "internal"
     assert e["MERIDIAN_SPRINT_STATUS"].endswith(sprint.STATUS_FILE)
 

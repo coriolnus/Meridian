@@ -423,7 +423,10 @@ def test_yapilandirma_dosyasi_olculmus_gercekleri_tasiyor():
         ("db.go:1030", "DB yoksa YARATMAZ ölçümü (MERIDIAN_DB=off güvenliği)"),
         ("İKİNCİ FİZİKSEL DİSK YOK", "aynı-disk sınırı"),
         ("lsblk", "sınırın ölçümle desteklenmesi"),
-        ("storage.py:139", "busy_timeout eşitlemesinin kaynağı"),
+        # ÇAPA SEMBOLE ÇEVRİLDİ (2026-08-16): burada `storage.py:139` çivisi vardı ve `storage.py`ye  # çapa-mezar-taşı
+        # satır eklenince yapılandırmadaki yorum sessizce yanlış yeri gösteriyordu. Sembol adı
+        # kayar, satır kaymaz — ve testin çivilediği şey de artık semboldür.
+        ("storage.PRAGMAS", "busy_timeout eşitlemesinin kaynağı"),
         ("auto-recover", "dokunulmayan varsayılanın beyanı"),
     ):
         assert parca in metin, f"litestream.yml'de eksik ({neden}): {parca!r}"

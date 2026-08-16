@@ -51,6 +51,14 @@ import sys
 KOK = pathlib.Path(__file__).resolve().parents[1]
 HEDEF = KOK / "docs" / "RUNBOOK.md"
 
+# ÇAĞRI-YERİ SIRALAMASI TEK KAYNAKTAN GELİR (2026-08-16). Burada `(dosya, int(satır))` anahtarının
+# KOPYASI yaşıyordu ve iki uygulama ZATEN AYRIŞMIŞTI: kopya sayı olmayan bir parçada `ValueError`
+# ile çöküyor, `codelaw._site_key` ise `(site, 0)`a düşüp ad sırasını koruyordu. Yani aynı sorunun
+# iki cevabı vardı ve biri üretici betiği öldürebiliyordu. `sys.path` eklemesi ZORUNLU: betik
+# `python ops/runbook_uret.py` ile depo kökünden koşuluyor ve o hâlde kök `sys.path`te olmuyor.
+sys.path.insert(0, str(KOK))
+from meridian.codelaw import _site_key as _cagri_yeri_anahtari   # noqa: E402 (yol eklemesinden SONRA)
+
 # Sentinel — brief'in çivilediği ifade. Testler bu dizgeyi arar; değiştirilirse test kırılır.
 YAZILMADI = "runbook girdisi henüz yazılmadı"
 
@@ -541,9 +549,9 @@ def uret() -> str:
             teshis.append(f"Bu jetonu **{len(yerler)} kod yolu** ateşliyor — hangisinin konuştuğu "
                           "olay kaydındaki `detail` alanından okunur:")
             # SIRA (dosya, SATIR NUMARASI) — düz metin sıralaması `…:1077`u `…:125`ten önce
-            # koyuyordu; okuyan kişi listeyi dosyada takip edemez.
-            for y in sorted(yerler, key=lambda x: (x["yer"].rsplit(":", 1)[0],
-                                                   int(x["yer"].rsplit(":", 1)[1]))):
+            # koyuyordu; okuyan kişi listeyi dosyada takip edemez. Anahtar `codelaw._site_key`ten
+            # gelir (yukarıdaki içe-aktarma notu): kopya, sayı olmayan bir parçada çöküyordu.
+            for y in sorted(yerler, key=lambda x: _cagri_yeri_anahtari(x["yer"])):
                 mesaj = f" → mesaj şablonu: `{y['mesaj']}`" if y["mesaj"] else ""
                 teshis.append(f"  `{y['yer']}`{mesaj}")
         else:

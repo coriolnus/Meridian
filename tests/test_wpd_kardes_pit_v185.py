@@ -6,7 +6,7 @@
 snapshot'tır; geçmiş çapa biriktirmez. Buna rağmen İKİ kardeş modül onu TARİHSEL bir karara
 uyguluyordu:
   · `cf_backfill.py:112` — `in_blackout(ticker, dstr)`, `dstr` 2022→bugün aralığında bir seans,
-  · `shadow_variants.py:252` — `in_blackout(ticker, date)`, `date` `shadow_lifecycle._seed`
+  · `shadow_variants.in_blackout` — `in_blackout(ticker, date)`, `date` `shadow_lifecycle._seed`
     bacağında GEÇMİŞ seans.
 Sonuç replay'dekiyle aynı sınıftı: kapı bu motorlarda ÖLÜ (ölçüldü: replay tarafında 390 planın
 380'i, %97,4, yapısal olarak False dönüyordu) ama defter onu UYGULANMIŞ gibi taşıyordu.

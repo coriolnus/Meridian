@@ -18,7 +18,7 @@ AYNI `store.write_text`e indiği için o garantiyi devralır — burada her ça�
 tuttuğu (derinlik>0) ayrıca ölçülür.
 
 SAHİPLİK/YASA-6: taşınan artefaktların okuyucuları belgelidir — auth.json (auth._read),
-lessons.md (hermes.py:153 reflection prompt + skill_evolve.py:143), strategy.yaml/history yaml'ları
+lessons.md (`hermes._gate_anchor` reflection prompt + `skill_evolve` taslak üreticisi), strategy.yaml/history yaml'ları
 (config.load_strategy + versioning + run._ancestor_from_history), scoreboard arşivi (kurtarma:
 operatör; run.py'deki console satırı yolunu verir).
 """

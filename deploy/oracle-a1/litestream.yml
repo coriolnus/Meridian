@@ -44,7 +44,7 @@
 #       tablo hiçbir kapıyı kırmaz. Yine de yedeğe/pariteye bakan bir sonraki tur onları GÖRDÜĞÜNDE
 #       "bu nereden geldi" diye sormasın diye burada yazılıdır.
 #   (c) checkpoint'ler Meridian'ın yazarlarıyla kilit yarışına girer → `busy-timeout` aşağıda
-#       Meridian'ın kendi PRAGMA'sıyla (storage.py:139 `busy_timeout=5000`) EŞİTLENDİ.
+#       Meridian'ın kendi PRAGMA'sıyla (`storage.PRAGMAS` → `busy_timeout=5000`) EŞİTLENDİ.
 #
 # GÜVENLİ TARAF (bu da ölçüldü, çünkü ters olsaydı `MERIDIAN_DB=off` acil anahtarı tehlikeliydi):
 # DB dosyası YOKSA litestream onu YARATMAZ — db.go:1030 `if os.IsNotExist(err) { return nil }`
@@ -105,7 +105,7 @@ dbs:
     # Meta içeriği YENİDEN ÜRETİLEBİLİR yerel muhasebedir — yedeklenmesi GEREKMEZ.
     meta-path: /var/lib/litestream/meridian.db
 
-    # Meridian'ın kendi bağlantısıyla AYNI: storage.py:139 `("busy_timeout", 5000)`. Litestream
+    # Meridian'ın kendi bağlantısıyla AYNI: `storage.PRAGMAS` → `("busy_timeout", 5000)`. Litestream
     # varsayılanı 1sn'dir (db.go:35) ve bizim yazarlarımız bir checkpoint'i 1sn'den uzun
     # bloklayabilir; ayrışan iki timeout, journal'i "database is locked" ile doldurup gerçek
     # arızayı gürültüye gömerdi.

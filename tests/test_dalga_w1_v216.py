@@ -63,7 +63,7 @@ def db_kitap(sandbox_state):
 def _db_disi_yazim(doc: dict) -> None:
     """`store` KAPISINI ATLAYAN yazım — 2026-08-04'ün ölçülmüş imzası.
 
-    `store.write_json` → `storage.write_doc` → `do_write_doc` + `_touch` (storage.py:480) yolu
+    `store.write_json` → `storage.write_doc` → `do_write_doc` + `_touch` (`storage.do_write_doc`) yolu
     `entity_meta.rev`i HER yazımda artırır. Buradaki yazım o son adımı ATLAR: içerik değişir,
     damga yerinde kalır. Canlı kanıt tam buydu — 08-04'te rev yalnız İKİ kez ilerledi (3→4→5) ve
     ikisi de kanıtlı `_save_broker`dı, oysa kitabın içeriği ÜÇÜNCÜ kez değişmişti."""

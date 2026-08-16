@@ -156,7 +156,7 @@ def test_kusur2b_cf_bar_ici_belirsizlikte_hala_stop_onceligi(sandbox_state):
 # =================================================================================================
 
 def _walk_like_backtest(b: PaperBroker, pos: Position, bars: list[dict], params: dict | None = None):
-    """backtest.replay'in INTRADAY(D) bloğunun BİREBİR çağrı dizisi (backtest.py:199-204):
+    """backtest.replay'in INTRADAY(D) bloğunun BİREBİR çağrı dizisi (`backtest.replay`):
     scale_out(pos, bar, prev_eff) → _touch_exit → (çıkış yoksa) bars_held++. Su işaretlerine DOKUNMAZ.
 
     params, gerçek çağrıdaki `prev_eff`'in (o günün çözülmüş strateji parametreleri) karşılığıdır.
