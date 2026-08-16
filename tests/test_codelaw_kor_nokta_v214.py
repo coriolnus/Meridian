@@ -649,3 +649,18 @@ def test_capa_yasasi_MEZAR_TASINI_muaf_tutar(tmp_path):
     (tmp_path / "hedef.py").write_text("x = 1\n")
     (tmp_path / "beyan.py").write_text('S = "hedef.py:999 bayatladı"  # çapa-mezar-taşı\n')
     assert codelaw.stale_line_anchors(str(tmp_path)) == []
+
+
+def test_onbellek_KORLUGU_YUTMAZ(tmp_path):
+    """ÖNBELLEK İSABETİ KÖRLÜĞÜ SİLMEZ. İsabet dalı hiçbir dosya okumaz; körlük kayıtları
+    sonuçla birlikte saklanmasaydı ikinci çağrı "hiç kör noktam yok" derdi — bekçinin kendi
+    sözleşmesini (körlüğünü RAPOR eder) ikinci çağrıdan itibaren çürüten sınıf."""
+    (tmp_path / "bozuk.py").write_text("def (\n")
+    codelaw.UNSCANNED.clear()
+    codelaw.artifact_graph(str(tmp_path))
+    ilk = len(codelaw.UNSCANNED)
+    assert ilk > 0, "ilk tarama körlüğü hiç kaydetmedi — pozitif kontrol düştü"
+    codelaw.UNSCANNED.clear()
+    codelaw.artifact_graph(str(tmp_path))          # aynı mtime → önbellek İSABETİ
+    assert len(codelaw.UNSCANNED) == ilk, "önbellek isabeti körlüğü yuttu"
+    codelaw.UNSCANNED.clear()

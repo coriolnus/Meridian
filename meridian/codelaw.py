@@ -721,10 +721,20 @@ def artifact_graph(root: str = "meridian") -> dict:
     # iki kez çağrılıyordu. Ölçüm: uç 4,18 sn; 1,17 sn'i burası, 419 ast.parse + 614.836 ast.walk.
     # Sonuç yalnız kaynağa bağlı: sunucu koşarken kaynak değişmez, değişirse damga değişir ve
     # önbellek kendiliğinden düşer. Zaman aşımı YOK — bayatlık değil, doğruluk garantisi.
+    # KÖRLÜK ÖNBELLEĞE DE GİRER (ölçülmüş kusurun kapanışı): isabet dalı hiçbir dosya OKUMADIĞI
+    # için `_note_unscanned` çalışmaz ve `UNSCANNED` BOŞ kalırdı — yani ikinci çağrıdan itibaren
+    # bekçi "hiç kör noktam yok" der, oysa taramayı hiç yapmamıştır. Reprodüksiyon: bozuk dosyalı
+    # ağaçta ilk çağrı körlüğü kaydeder, `UNSCANNED.clear()` sonrası ikinci çağrı 0 kaydeder.
+    # Bu, bu modülün kendi sözleşmesini (bekçi körlüğünü RAPOR eder) çürütüyordu. Çözüm: körlük
+    # kayıtları sonuçla BİRLİKTE saklanır ve isabette İDEMPOTENT biçimde geri yazılır.
     _key = (root, _src_stamp(root))
     _hit = _GRAPH_CACHE.get(_key)
     if _hit is not None:
-        return copy.deepcopy(_hit)   # çağıran mutasyonu önbelleği kirletmesin
+        _res_hit, _korluk = _hit
+        for _kayit in _korluk:
+            if _kayit not in UNSCANNED:
+                UNSCANNED.append(_kayit)
+        return copy.deepcopy(_res_hit)   # çağıran mutasyonu önbelleği kirletmesin
 
     gconsts = _global_consts(root)
     arts: dict[str, dict[str, Any]] = {}
@@ -823,7 +833,10 @@ def artifact_graph(root: str = "meridian") -> dict:
             "violations": sorted(k for k in unread if k not in DECLARED_SINKS),
             "stale_sinks": sorted(k for k in DECLARED_SINKS if k in out and not out[k]["unread"])}
     _GRAPH_CACHE.clear()
-    _GRAPH_CACHE[_key] = _res
+    # Bu taramanın ürettiği körlük kayıtları sonuçla birlikte saklanır (yukarıdaki isabet dalı
+    # onları geri yazar); aksi hâlde önbellek körlüğü yutardı.
+    _bu_tur = [u for u in UNSCANNED if u.get("_kok") == root] or list(UNSCANNED)
+    _GRAPH_CACHE[_key] = (_res, [dict(u) for u in _bu_tur])
     return copy.deepcopy(_res)
 
 
