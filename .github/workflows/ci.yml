@@ -11,6 +11,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # ELLE TETİK: PR'da koşu kuyruğa hiç girmediği iki vaka yaşandı (PR #5 ve #6; aynı dosya,
+  # aynı tetiklerle #3/#4'te sorunsuz koşmuştu). `workflow_dispatch` olmadan böyle bir durumda
+  # kapıyı canlandırmanın API yolu YOKTUR — koşu beklenir ya da boş commit atılır. Bu satır
+  # kapıyı operatörün ve API'nin erişimine açar; davranışı DEĞİŞTİRMEZ.
+  workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

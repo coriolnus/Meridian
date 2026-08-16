@@ -401,7 +401,9 @@ def test_GELECEK_tuketici_iddiasi_yanlis_pozitif_uretmez():
     assert "intraday_bars/*.jsonl" in codelaw.report()["unverifiable_claims"]
 
     spec = codelaw.DECLARED_SINK_PATTERNS["intraday_bars/*.jsonl"]
-    for kanit in ("bararchive.py:110", "_retention", "EXE-2026-002"):
+    # ÇAPA SEMBOL: beyan artık satır numarası DEĞİL çağrının kendisini anar (satır çapası
+    # bayatlar; codelaw.stale_line_anchors o sınıfı yasa olarak kapatır).
+    for kanit in ("store.append_jsonl", "ARCHIVE_DIR", "_retention", "EXE-2026-002"):
         assert kanit in spec["gerekce"], f"beyan ölçülen olguyu anmıyor: {kanit}"
     assert "KALDIRILMALI" in spec["sinanamaz"], "devir şartı yazılmamış"
 
@@ -443,7 +445,7 @@ def test_shadow_trades_CLI_tuketicisi_olculdu():
                                            "shadow_variants.main": []}
     spec = codelaw.HUMAN_INVOKED_SINKS["shadow_trades.jsonl"]
     assert spec["sinif"] == "cagirani_insan"
-    for kanit in ("shadow_lifecycle.py:574", "_load_books", "--karne", "SIFIR YETKİ"):
+    for kanit in ("store.append_jsonl(TRADES_FILE", "_load_books", "--karne", "SIFIR YETKİ"):
         assert kanit in spec["gerekce"], f"beyan ölçülen olguyu anmıyor: {kanit}"
 
 
@@ -613,3 +615,52 @@ def test_pozitif_kontrol_iki_yasa_da_hala_yakaliyor():
             "    store.write_json('oksuz.json', {})\n")
         g = codelaw.artifact_graph(d)
         assert g["violations"] == ["oksuz.json"]
+
+
+# ---------------------------------------------------------------------------
+# SATIR ÇAPASI YASASI — sınıfın MEKANİK kapanışı
+# ---------------------------------------------------------------------------
+# NEDEN BU TESTLER VAR. Bir tur boyunca ~117 satır çapası ELLE sembole çevrildi ve sınıf
+# "kapandı" ilan edildi. Kapanmadı: aynı turda docstring eklemek bir çapayı yeniden bayatlattı,
+# üstelik bir test o bayat değeri DONDURDU (literalin literale eşitliğini sınıyordu, dolayısıyla
+# asla kırılamazdı). Ders: elle süpürme örnek kapatır, YASA sınıf kapatır.
+
+def test_satir_capalari_CURUK_DEGIL():
+    """Depodaki hiçbir `dosya.py:NNN` çapası menzil-dışı/boş/yorum satırı göstermez.
+
+    Bu testin kırılması bir REGRESYON DEĞİL bir ÖLÇÜMdür: birileri satır ekledi ve bir çapa
+    bayatladı. Doğru tepki numarayı güncellemek değil, çapayı SEMBOLE çevirmektir."""
+    curuk = codelaw.stale_line_anchors()
+    assert curuk == [], f"çürük satır çapası: {curuk}"
+
+
+def test_capa_yasasi_CURUGU_GERCEKTEN_GORUR(tmp_path):
+    """Pozitif kontrol (test_codelaw_v59 disiplini): sıfır iddiası ancak dedektör çalışıyorsa
+    anlamlıdır. Sentetik bir menzil-dışı çapa verilir, yakalanması beklenir."""
+    (tmp_path / "hedef.py").write_text("x = 1\n")
+    (tmp_path / "beyan.py").write_text('S = "kaynak: hedef.py:999"\n')
+    curuk = codelaw.stale_line_anchors(str(tmp_path))
+    assert [c["neden"] for c in curuk] == ["menzil_disi"], curuk
+
+
+def test_capa_yasasi_MEZAR_TASINI_muaf_tutar(tmp_path):
+    """Bayat çapayı KANIT olarak alıntılayan satır (ders anlatısı) bulgu değildir — ama muafiyet
+    GÖRÜNÜR bir işaret ister; işaretsiz hiçbir çapa muaf değildir."""
+    (tmp_path / "hedef.py").write_text("x = 1\n")
+    (tmp_path / "beyan.py").write_text('S = "hedef.py:999 bayatladı"  # çapa-mezar-taşı\n')
+    assert codelaw.stale_line_anchors(str(tmp_path)) == []
+
+
+def test_onbellek_KORLUGU_YUTMAZ(tmp_path):
+    """ÖNBELLEK İSABETİ KÖRLÜĞÜ SİLMEZ. İsabet dalı hiçbir dosya okumaz; körlük kayıtları
+    sonuçla birlikte saklanmasaydı ikinci çağrı "hiç kör noktam yok" derdi — bekçinin kendi
+    sözleşmesini (körlüğünü RAPOR eder) ikinci çağrıdan itibaren çürüten sınıf."""
+    (tmp_path / "bozuk.py").write_text("def (\n")
+    codelaw.UNSCANNED.clear()
+    codelaw.artifact_graph(str(tmp_path))
+    ilk = len(codelaw.UNSCANNED)
+    assert ilk > 0, "ilk tarama körlüğü hiç kaydetmedi — pozitif kontrol düştü"
+    codelaw.UNSCANNED.clear()
+    codelaw.artifact_graph(str(tmp_path))          # aynı mtime → önbellek İSABETİ
+    assert len(codelaw.UNSCANNED) == ilk, "önbellek isabeti körlüğü yuttu"
+    codelaw.UNSCANNED.clear()

@@ -7106,7 +7106,8 @@ function firsatMaliyetKarnesi(d) {
                 ${(sd.gunler || []).map(gunSatir).join("")}</div>`)}
          <p class="hint" style="margin-top:10px">Maliyet defteri <b>${trn(sd.satir_n)}</b> satır.
            Ücretsiz yola düşen çağrılar <b>$0,00</b> yazar ve bu bir ÖLÇÜMdür — alanı hiç taşımayan
-           satırlar ayrıca <b>${trn(sd.olculemeyen_satir)}</b> olarak sayılır, sıfır sayılmaz.</p>`}</div>`;
+           satırlar toplama <b>0</b> katkısıyla girer, ayrıca <b>${trn(sd.olculemeyen_satir)}</b>
+           olarak sayılır — toplam bu sayı okunmadan "maliyet" diye okunamaz.</p>`}</div>`;
 }
 
 // ---- HERMES ÇAĞRI TELEMETRİSİ (④ ogrenme#hermes · v219 iş 4) --------------------------------

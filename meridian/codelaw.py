@@ -52,7 +52,7 @@ _SKIP_DIRS = {"__pycache__", ".venv", "node_modules", ".git"}
 # Bu turda BAŞKA iş kollarına ait olduğu için düzenlenemeyen dosyalar. İhlalleri BEYAN EDİLİR ve
 # raporlanır — allowlist DEĞİL: yasa hepsini saymaya devam eder, yalnız "sıfır" iddiası düzenlenebilir
 # yüzeyle sınırlıdır. Bir dosya bu listeden çıktığında ihlalleri anında teste düşer.
-OTHER_TRACK_FILES = frozenset({"analytics.py", "shadow_model.py", "sieve.py", "watchdog.py",
+OTHER_TRACK_FILES = frozenset({"shadow_model.py", "sieve.py", "watchdog.py",
                                "ledgers.py", "mutation.py", "backtest.py"})
 
 # TARAYICININ KENDİ KÖRLÜĞÜ. Ayrıştırılamayan ya da okunamayan her dosya BURAYA yazılır ve
@@ -62,6 +62,16 @@ OTHER_TRACK_FILES = frozenset({"analytics.py", "shadow_model.py", "sieve.py", "w
 UNSCANNED: list[dict] = []
 
 
+# KAYNAK OKUMA SÖZLEŞMESİ (bu modüldeki HER `read_text` için).
+#   (a) `encoding="utf-8"` AÇIKÇA verilir. Verilmezse çözücü `locale.getpreferredencoding()`e
+#       düşer: `LC_ALL=C` bir kabukta (CI kabukları, systemd birimleri, cron) kodlama ASCII olur
+#       ve bu deponun Türkçe kaynak dosyalarının neredeyse HEPSİ okunamaz hâle gelir. Tarayıcının
+#       hükmü koştuğu kabuğun yerel ayarına bağlı olamaz.
+#   (b) `except` demetinde `ValueError` BULUNUR. `UnicodeDecodeError` bir `ValueError` alt
+#       sınıfıdır ve `OSError`ın altında DEĞİLDİR; demet yalnız `(SyntaxError, OSError)` olduğu
+#       sürece kodlaması bozuk tek bir dosya, tarayıcıyı UNSCANNED'e yazdırmak yerine ÇÖKERTİRDİ.
+#       Bu, bu modülün var oluş sebebinin tam tersidir: bekçi kendi körlüğünü RAPOR eder, körlükte
+#       ölmez. Okunamayan dosya `UNSCANNED`e düşer ve `report()["ok"]` bu yüzden False olur.
 def _note_unscanned(path, exc: BaseException, phase: str) -> None:
     """Taranamayan dosyayı `UNSCANNED` defterine (dosya + evre + hata TÜRÜ) yazar; aynı kayıt
     iki kez düşmez. Tarayıcının kendi körlüğü sessiz kalmasın diye: eksik tarama raporda görünür."""
@@ -72,9 +82,17 @@ def _note_unscanned(path, exc: BaseException, phase: str) -> None:
 
 def _py_files(root: str):
     """`root` altındaki `.py` dosyalarını ad sırasıyla üretir; `_SKIP_DIRS` (`__pycache__`,
-    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır."""
-    for f in sorted(pathlib.Path(root).rglob("*.py")):
-        if any(p in _SKIP_DIRS for p in f.parts):
+    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır.
+
+    ELEME KÖK ALTINDA YAPILIR, MUTLAK YOLDA DEĞİL. Eski hâl `f.parts` diyordu, yani yolun
+    TÜM bileşenlerini — deponun KENDİSİ `.venv` (ya da `.git`, `node_modules`) adlı bir dizinin
+    altında duruyorsa her dosya eleniyor, tarayıcı SIFIR dosya dönüyor ve "ihlal yok" diyordu.
+    Sıfır-ihlal, sıfır-tarama demekti: bekçinin kendi körlüğünü yeşil sanması. Eleme artık
+    `f.relative_to(kok).parts` üzerindedir — karar deponun NEREYE kurulduğuna değil, kökün
+    ALTINDAKİ yapıya bakar."""
+    kok = pathlib.Path(root)
+    for f in sorted(kok.rglob("*.py")):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
             continue
         yield f
 
@@ -161,7 +179,10 @@ def scan_source(src: str, filename: str = "<string>") -> list[dict]:
     beslenir — tarayıcının gerçekten çalıştığını sentetik bir kaynakla kanıtlayabilmek için.)"""
     try:
         tree = ast.parse(src)
-    except SyntaxError as e:
+    except (SyntaxError, ValueError) as e:
+        # ValueError: `ast.parse` NUL baytlı kaynakta SyntaxError DEĞİL ValueError fırlatır
+        # ("source code string cannot contain null bytes") — demete alınmasaydı tarayıcı
+        # UNSCANNED'e yazmak yerine ÇÖKERDİ. Ayrıştıramamak kayda geçer, çökmek geçmez.
         _note_unscanned(filename, e, "silent_handlers")
         return []
     lines = src.splitlines()
@@ -189,8 +210,8 @@ def silent_handlers(root: str = "meridian", include_annotated: bool = False) -> 
     out: list[dict] = []
     for f in _py_files(root):
         try:
-            src = f.read_text()
-        except OSError as e:
+            src = f.read_text(encoding="utf-8")
+        except (OSError, ValueError) as e:      # ValueError: UnicodeDecodeError'ı da kapsar
             _note_unscanned(f, e, "silent_handlers")
             continue
         for hit in scan_source(src, str(f)):
@@ -363,7 +384,7 @@ DECLARED_SINKS: dict[str, str] = {
     # BEYAN TAZELENDİ (mekanizma ölçtü): "DIŞ tüketici ertelendi" cümlesi
     # ÇÜRÜTÜLDÜ — `declared_claims()` üretim yolunda gerçek bir dış çağıran buldu.
     "insider_trades.json": "Form 4 ham defteri (artımlı; su işareti + kapsam burada). Okuma "
-                           "`insider.defter_oku()` içindedir (insider.py:281, aynı modül → statik "
+                           "`insider.defter_oku()` içindedir (aynı modül → statik "
                            "graf göremez); sarmalayıcıları `ozet()`/`durum()`. DIŞ ÇAĞIRAN ÖLÇÜLDÜ "
                            "(2026-08-08): `scheduler._y4_collect` seans başına bir kez "
                            "`insider.ozet()` ve `insider.durum()` çağırır, sonucu "
@@ -486,7 +507,7 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
     "intraday_bars/*.jsonl": {
         "sinif": "gelecek_tuketici",
         "gerekce": "DAKİKALIK BAR ARŞİVİ — Faz-5/6 KANIT KORPUSU. YAZAN: `bararchive.archive_frame` "
-                   "(bararchive.py:110, `store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)`), "
+                   "(`store.append_jsonl(f'{ARCHIVE_DIR}/{day}.jsonl', ...)` çağrısı), "
                    "çağıranı `hotstate` — CANLI SICAK YOL, dakikalık. BUGÜN TÜKETİCİSİ YOK ve bu "
                    "ÖLÇÜLMÜŞ bir karardır, ihmal değil: intraday hattı (hotstate → mrd:bars) "
                    "uçucudur (~2 seans TTL), 'dakika-hassas icra EOD'dan gerçekten iyi mi?' sorusu "
@@ -516,10 +537,10 @@ HUMAN_INVOKED_SINKS: dict[str, dict[str, str]] = {
         "sinif": "cagirani_insan",
         "cli": "meridian.shadow_variants --karne",
         "gerekce": "GÖLGE-v2 YAŞAM-DÖNGÜSÜ İŞLEM DEFTERİ. YAZAN: `shadow_lifecycle` "
-                   "(shadow_lifecycle.py:574, `TRADES_FILE` sabiti satır 73'te) — modülün başlığı "
+                   "(`store.append_jsonl(TRADES_FILE, ...)`; ad `TRADES_FILE` sabitinde) — modülün başlığı "
                    "SIFIR YETKİ bloğudur: canlı portfolio/trades/trade_plans'a ve aynaya HİÇBİR yol "
                    "çıkmaz, buradaki para sayıları bir KANIT HIZLANDIRICISIDIR, onay değil. OKUYAN: "
-                   "`shadow_variants._load_books` (shadow_variants.py:607) — DIŞ modüldür, bu yüzden "
+                   "`shadow_variants._load_books` — DIŞ modüldür, bu yüzden "
                    "`unread` False'tur ve artefakt bir ihlal DEĞİLDİR. BEYANIN SEBEBİ o okuyucunun "
                    "TEK ÇAĞIRANIDIR: `shadow_variants.main()`in `--karne` kolu, yani ÇAĞIRAN BİR "
                    "İNSANDIR; hiçbir üretim yolu (loop/scheduler/api/pano) bu defteri okumaz. "
@@ -556,8 +577,8 @@ def _global_consts(root: str) -> dict[str, str]:
     seen: dict[str, str | None] = {}
     for f in _py_files(root):
         try:
-            tree = ast.parse(f.read_text())
-        except (SyntaxError, OSError) as e:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "artifact_graph:consts")
             continue
         for k, v in _module_consts(tree).items():
@@ -657,6 +678,30 @@ def _joined_glob(a: ast.AST, consts: dict, gconsts: dict) -> str | None:
     return glob if _looks_like_artifact(glob) else None
 
 
+def _site_key(site: str) -> tuple[str, int]:
+    """`dosya.py:<satır>` biçimindeki bir ÇAĞRI YERİNİN sıralama anahtarı: `(dosya, int(satır))`.
+
+    Düz `sorted()` SÖZLÜKSELdir ve satır numarasını METİN sayar: aynı dosyanın 3074. satırı,
+    573. satırından ÖNCE gelir (çünkü `'3' < '5'`). Bu listeler denetim çıktısıdır ve insan
+    gözüyle kaynağa KARŞI okunur — kaynağın akışıyla ilgisiz bir sıra, okuyanı gösterilen yerin
+    gerçekten var olup olmadığını aramaya zorlar. Ayraç yoksa ya da parça sayı değilse satır 0
+    sayılır: hüküm UYDURULMAZ, yalnız ad sırası korunur.
+
+    ÖRNEK ÇAPA BİLEREK YAZILMADI: bu docstring'e gerçek bir `dosya.py` + numara çifti koymak,
+    `stale_line_anchors`ın kovaladığı sınıftan YENİ bir çapa üretirdi — kendi yasasını ihlal eden
+    bir yardımcı.
+
+    `isascii()` GUARD'I ZORUNLU: `str.isdigit()` Unicode'da RAKAM SAYILAN her şeye True der —
+    üst-simge ve daire içi biçimler dâhil — ama `int()` onları KABUL ETMEZ. Yani yalnız
+    `isdigit()` bakan bir guard, sıralamayı korumak için yazıldığı hâlde `ValueError` ile
+    çökerdi: koruyucunun kendisi yeni bir çökme yolu. `isascii() and isdigit()` tam olarak
+    `int()`in aldığı kümedir."""
+    dosya, ayrac, satir = site.rpartition(":")
+    if not ayrac or not (satir.isascii() and satir.isdigit()):
+        return (site, 0)
+    return (dosya, int(satir))
+
+
 _GRAPH_CACHE: dict = {}
 
 
@@ -676,10 +721,20 @@ def artifact_graph(root: str = "meridian") -> dict:
     # iki kez çağrılıyordu. Ölçüm: uç 4,18 sn; 1,17 sn'i burası, 419 ast.parse + 614.836 ast.walk.
     # Sonuç yalnız kaynağa bağlı: sunucu koşarken kaynak değişmez, değişirse damga değişir ve
     # önbellek kendiliğinden düşer. Zaman aşımı YOK — bayatlık değil, doğruluk garantisi.
+    # KÖRLÜK ÖNBELLEĞE DE GİRER (ölçülmüş kusurun kapanışı): isabet dalı hiçbir dosya OKUMADIĞI
+    # için `_note_unscanned` çalışmaz ve `UNSCANNED` BOŞ kalırdı — yani ikinci çağrıdan itibaren
+    # bekçi "hiç kör noktam yok" der, oysa taramayı hiç yapmamıştır. Reprodüksiyon: bozuk dosyalı
+    # ağaçta ilk çağrı körlüğü kaydeder, `UNSCANNED.clear()` sonrası ikinci çağrı 0 kaydeder.
+    # Bu, bu modülün kendi sözleşmesini (bekçi körlüğünü RAPOR eder) çürütüyordu. Çözüm: körlük
+    # kayıtları sonuçla BİRLİKTE saklanır ve isabette İDEMPOTENT biçimde geri yazılır.
     _key = (root, _src_stamp(root))
     _hit = _GRAPH_CACHE.get(_key)
     if _hit is not None:
-        return copy.deepcopy(_hit)   # çağıran mutasyonu önbelleği kirletmesin
+        _res_hit, _korluk = _hit
+        for _kayit in _korluk:
+            if _kayit not in UNSCANNED:
+                UNSCANNED.append(_kayit)
+        return copy.deepcopy(_res_hit)   # çağıran mutasyonu önbelleği kirletmesin
 
     gconsts = _global_consts(root)
     arts: dict[str, dict[str, Any]] = {}
@@ -688,9 +743,9 @@ def artifact_graph(root: str = "meridian") -> dict:
 
     for f in _py_files(root):
         try:
-            src = f.read_text()
+            src = f.read_text(encoding="utf-8")
             tree = ast.parse(src)
-        except (SyntaxError, OSError) as e:
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "artifact_graph")
             continue
         consts = _module_consts(tree)
@@ -748,8 +803,9 @@ def artifact_graph(root: str = "meridian") -> dict:
         # O bütünlük raporu da kendi içinde tutarlıydı, eksik olan DIŞARIDAN okunmasıydı.
         external = sorted(set(readers) - set(writers))
         out[name] = {"writers": writers, "readers": readers, "external_readers": external,
-                     "writer_sites": sorted(rec["writer_sites"]),
-                     "reader_sites": sorted(rec["reader_sites"]),
+                     # SIRA (dosya, SAYISAL satır) — sözlüksel değil; bkz. `_site_key`
+                     "writer_sites": sorted(rec["writer_sites"], key=_site_key),
+                     "reader_sites": sorted(rec["reader_sites"], key=_site_key),
                      "unread": bool(writers) and not external}
 
     unread = [k for k, v in out.items() if v["unread"]]
@@ -769,14 +825,18 @@ def artifact_graph(root: str = "meridian") -> dict:
             "unresolved_by_reason": by_reason,
             "access_patterns": dict(sorted(patterns.items())),
             # DESEN KATMANI: hangi beyanlı desen kodda nerede karşılanıyor.
-            "declared_patterns": {k: sorted(v) for k, v in sorted(desen_yerleri.items())},
+            "declared_patterns": {k: sorted(v, key=_site_key)
+                                  for k, v in sorted(desen_yerleri.items())},
             "orphan_patterns": orphan_patterns,
             "unread": sorted(unread),
             "declared_sinks": sorted(k for k in unread if k in DECLARED_SINKS),
             "violations": sorted(k for k in unread if k not in DECLARED_SINKS),
             "stale_sinks": sorted(k for k in DECLARED_SINKS if k in out and not out[k]["unread"])}
     _GRAPH_CACHE.clear()
-    _GRAPH_CACHE[_key] = _res
+    # Bu taramanın ürettiği körlük kayıtları sonuçla birlikte saklanır (yukarıdaki isabet dalı
+    # onları geri yazar); aksi hâlde önbellek körlüğü yutardı.
+    _bu_tur = [u for u in UNSCANNED if u.get("_kok") == root] or list(UNSCANNED)
+    _GRAPH_CACHE[_key] = (_res, [dict(u) for u in _bu_tur])
     return copy.deepcopy(_res)
 
 
@@ -969,8 +1029,8 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
     mods: dict[str, tuple] = {}
     for f in _py_files(root):
         try:
-            mods[f.name] = (ast.parse(f.read_text()), f)
-        except (SyntaxError, OSError) as e:
+            mods[f.name] = (ast.parse(f.read_text(encoding="utf-8")), f)
+        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "declared_claims")
 
     graph = artifact_graph(root)
@@ -990,13 +1050,21 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
             for fn in _reach_in_module(tree, art, consts, gconsts):
                 # kendi modülünden gelen çağrı tüketici DEĞİLDİR (grafiğin `external_readers`
                 # kuralıyla aynı disiplin: kendi yazdığını kendi okuyan modül sayılmaz)
-                yerler = sorted(s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:"))
+                # SIRA (dosya, SAYISAL satır) — bkz. `_site_key`. Bu listeler `writer_sites`/
+                # `reader_sites` ile AYNI raporda yan yana okunur; biri sayısal biri sözlüksel
+                # sıralanırsa aynı çıktı iki farklı sıra gösterir ve okuyan, farkı bir BULGU
+                # sanar. Sıra tek yasadan gelir.
+                yerler = sorted((s for s in idx.get((stem, fn), []) if not s.startswith(f"{m}:")),
+                                key=_site_key)
                 if yerler:
                     accessors[f"{stem}.{fn}"] = yerler
         out.append({"kind": "sink", "artifact": art, "claim_patterns": claim,
                     "claims_no_prod_reader": bool(claim),
                     "host_modules": host_mods, "unverifiable": None,
-                    "external_accessors": {k: sorted(v) for k, v in sorted(accessors.items())},
+                    # değer listeleri ÇAĞRI YERİ (`_site_key`); anahtarlar `modul.fn` adıdır ve
+                    # ad sırası (düz `sorted`) onlar için doğrudur.
+                    "external_accessors": {k: sorted(v, key=_site_key)
+                                           for k, v in sorted(accessors.items())},
                     "stale_claim": bool(claim) and bool(accessors)})
 
     # --- kind="pattern": sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------------
@@ -1040,7 +1108,9 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
             elif "main" not in reach:
                 # okuyucu var ama CLI girişinden erişilemiyor → "çağıranı insan" iddiası yanlış
                 nedenler.append("okuyucu_main_kolundan_erisilemiyor")
-            erisimciler = {f"{stem}.{fn}": sorted(idx.get((stem, fn), [])) for fn in sorted(reach)}
+            # SIRA (dosya, SAYISAL satır) — bkz. `_site_key`; aynı raporda iki farklı sıra olmasın.
+            erisimciler = {f"{stem}.{fn}": sorted(idx.get((stem, fn), []), key=_site_key)
+                           for fn in sorted(reach)}
         info = graph["artifacts"].get(art) or {}
         if info and info.get("unread"):
             # dış okuyucusu YOK — bu kayda değil `DECLARED_SINKS`e ait (yanlış dosyalanmış beyan)
@@ -1075,12 +1145,82 @@ def dashboard_mentions(term: str, path: str = "meridian/web/app.js") -> bool:
     """Panonun gerçekten okuyup okumadığını app.js'i tarayarak DOĞRULAR (salt okuma). "Panoda
     gösteriliyor" gerekçesi, kanıtlanabilir olmadıkça gerekçe değildir."""
     try:
-        return term in pathlib.Path(path).read_text()
-    except OSError as e:
+        return term in pathlib.Path(path).read_text(encoding="utf-8")
+    except (OSError, ValueError) as e:          # ValueError: UnicodeDecodeError'ı da kapsar
         # Pano dosyası okunamadıysa "pano okumuyor" DEĞİL, "doğrulayamadım" doğru cevaptır; körlük
         # kayda geçer, aksi hâlde gerekçe kanıtsız kabul edilmiş olurdu.
         _note_unscanned(path, e, "dashboard_mentions")
         return False
+
+
+#: Satır çapası deseni: `dosya.py:NNN`. Beyanlarda ve yorumlarda geçen bu biçim, çapaladığı
+#: dosyanın HER düzenlemesinde bayatlar — bir docstring eklemek onlarca çapayı sessizce yanlışa
+#: çevirir. Bu depoda tam olarak bu sınıf ölçüldü ve elle ~117 yerde düzeltildi; ELLE DÜZELTME
+#: SINIFI KAPATMADI (aynı turda yenisi doğdu ve bir test onu dondurdu). Yasa bu yüzden var.
+_CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
+
+
+def stale_line_anchors(root: str = "meridian") -> list[dict]:
+    """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
+
+    Çapa üç biçimde çürür ve üçü de burada yakalanır:
+      * `menzil_disi` — numara dosyanın satır sayısını aşıyor (çapa artık hiçbir şeyi göstermiyor),
+      * `bos_satir`   — gösterdiği satır boş,
+      * `yorum`       — gösterdiği satır bir yorum (çapa kod göstermeliydi).
+
+    Hedef dosya BASENAME ile çözülür; aynı adlı iki dosya varsa (`ikircikli`) hüküm verilmez —
+    ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI). Kendi kendini de tarar: bu modülün
+    beyanlarındaki çapalar da ölçülür.
+
+    Neden burada: `stale_claims` beyanın ULAŞILABİLİRLİĞİNİ doğrular, METNİNİ değil — çapa
+    metnin içinde yaşadığı için o kapının yapısal kör noktasıdır.
+    """
+    kok = pathlib.Path(root)
+    adres: dict[str, list[pathlib.Path]] = {}
+    for f in kok.rglob("*.py"):
+        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+            continue
+        adres.setdefault(f.name, []).append(f)
+
+    # BEYANLI MUAFİYET (YASA 4'ün deseni): bir satır bayat çapayı KANIT olarak alıntılıyorsa —
+    # yani dersin kendisi "şu çapa bayatladı" ise — çürüklüğü bulgu değil, anlatının parçasıdır.
+    # İşaret zorunlu ve GÖRÜNÜR: `çapa-mezar-taşı`. İşaretsiz hiçbir çapa muaf değildir.
+    MUAFIYET = "çapa-mezar-taşı"
+    curuk: list[dict] = []
+    for f in _py_files(root):
+        try:
+            satirlar = f.read_text(encoding="utf-8").splitlines()
+        except (OSError, ValueError) as e:            # ValueError: UnicodeDecodeError'ı da kapsar
+            # ÇAĞRI DÜZELTİLDİ: `_note_unscanned(path, exc, phase)` ÜÇ argüman ister; burada iki
+            # veriliyordu (ikincisi de istisna değil ÖNCEDEN BİÇİMLENMİŞ metindi). Yani okunamayan
+            # tek bir dosya, körlüğü kayda geçirmek yerine bekçiyi TypeError ile çökertirdi —
+            # yakalayıcının kendisi yeni bir çökme yolu açmıştı.
+            _note_unscanned(str(f), e, "stale_line_anchors")
+            continue
+        for i, satir in enumerate(satirlar, 1):
+            if MUAFIYET in satir:
+                continue
+            for m in _CAPA_DESENI.finditer(satir):
+                hedef_ad, n = m.group(1), int(m.group(2))
+                hedefler = adres.get(hedef_ad, [])
+                if len(hedefler) != 1:
+                    continue                          # yok ya da ikircikli → hüküm YOK
+                try:
+                    hedef_satirlar = hedefler[0].read_text(encoding="utf-8").splitlines()
+                except (OSError, ValueError):  # sessiz-yutma: HEDEF dosya okunamıyorsa çapa hakkında hüküm veremeyiz; ölçülemeyen şey ihlal SAYILMAZ (UYDURMA YASAĞI) — taranamayan dosyanın kendisi zaten _note_unscanned ile kayda geçer
+                    continue
+                if n < 1 or n > len(hedef_satirlar):
+                    neden = "menzil_disi"
+                else:
+                    govde = hedef_satirlar[n - 1].strip()
+                    if not govde:
+                        neden = "bos_satir"
+                    elif govde.startswith("#"):
+                        neden = "yorum"
+                    else:
+                        continue                      # kod satırı → çapa AYAKTA
+                curuk.append({"kaynak": f"{f.name}:{i}", "capa": m.group(0), "neden": neden})
+    return curuk
 
 
 def report(root: str = "meridian") -> dict:
@@ -1089,6 +1229,7 @@ def report(root: str = "meridian") -> dict:
     ann = annotated_handlers(root)
     graph = artifact_graph(root)
     curuk = stale_claims(root)
+    capalar = stale_line_anchors(root)
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
             "artifact_violations": graph["violations"],
@@ -1107,4 +1248,8 @@ def report(root: str = "meridian") -> dict:
             # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri.
             "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(root)],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
-            "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED}
+            # ÇÜRÜK SATIR ÇAPALARI: beyanın METNİ ölçülür (stale_claims yalnız ULAŞILABİLİRLİĞİ
+            # ölçer, bu onun yapısal kör noktasıydı). Elle süpürme sınıfı kapatmadı; yasa kapatır.
+            "stale_line_anchors": capalar,
+            "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
+                  and not capalar}

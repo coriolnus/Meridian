@@ -32,7 +32,13 @@ from . import store, config, score as score_mod, health, memory
 
 
 def _trades():
-    """Kapanmış işlem defterinin (`trades.jsonl`) tüm satırları — bu modülün TEK okuma kapısı."""
+    """Kapanmış işlem defterinin (`trades.jsonl`) tüm satırları — bu modülün ANA okuma kapısı.
+
+    TEK KAPI DEĞİL (borç kaydı, ölçüldü): `learning_scorecard` aynı defteri
+    `store.read_jsonl("trades.jsonl")` ile DOĞRUDAN, bu fonksiyona uğramadan ikinci kez okur
+    (defterin damga ayrıştırmasını `ledgerstamp.counts` ile kendisi yapar). İkinci okuyucu
+    ADIYLA beyanlıdır ki "tek kapı" cümlesi denetlenmemiş bir tekillik iddia etmesin; kapı
+    gerçekten tekleşirse o çağrı buraya bağlanmalı ve bu paragraf silinmelidir."""
     return store.read_jsonl("trades.jsonl")
 
 
@@ -1704,12 +1710,24 @@ def _realized_drawdown() -> dict:
     sermaye resetinden ÖNCEKİ tabanda. Bu bir arıza değil TASARIM: eğrinin tek canlı yazarları
     `run.replay_seed` / `sermaye.uygula` / `mutation`dır ve `ledgerstamp.seed_boundary()` onu
     DOĞRU okur — son nokta TOHUM SINIRIDIR. Kusur İKİNCİ TÜKETİCİDEYDİ: burası aynı noktaları
-    "GÜNCEL piyasaya-göre eğri" sanıp %8,04'ü hükme sokuyordu ve o sayı `EDGE_MAXDD_MAX`ı (0,08)
-    kıl payı aşarak bir Faz-6 KİLİDİNİ düşürüyordu. Yani canlı kâğıt döneminin (2026-07-21 →)
-    m2m düşüşü hükümde HİÇ yokken, tohum döneminin düşüşü güncelmiş gibi sayılıyordu.
+    "GÜNCEL piyasaya-göre eğri" sanıp TOHUM döneminin %8,04'ünü CANLI dönemin m2m düşüşü diye
+    hükme sokuyordu. Yani canlı kâğıt döneminin (2026-07-21 →) m2m düşüşü hükümde HİÇ yokken,
+    tohum döneminin düşüşü güncelmiş gibi sayılıyordu.
 
-    DÜZELTME İLKESİ — EŞİĞE DOKUNULMADI: `EDGE_MAXDD_MAX`/`RESULT_MAXDD_MAX` bir hane bile
-    oynamadı. Değişen tek şey, serinin KAPSADIĞI DÖNEMİN ölçülmesi:
+    MEKANİZMA DÜZELTMESİ (bu paragrafın eski hâli YANLIŞ bir kapı anlatıyordu): %8,04 bugünkü
+    `EDGE_MAXDD_MAX`/`RESULT_MAXDD_MAX`ın (0,16 — `goal.max_drawdown` ile birebir aynı sayı)
+    ALTINDADIR, yani tavanı AŞARAK hiçbir kilidi düşürmez; eski metnin dayandığı 0,08 tavanı
+    bugün yürürlükte değildir (0,08 → 0,16 taşıması operatör kararıdır, 2026-08-13; eşitliği
+    `test_hafta3a_v119` ve `test_orgu2_v103` çiviler). Bayat serinin GERÇEK hasarı eşik aşımı
+    değil, HAK EDİLMEMİŞ BİR "GEÇTİ"dir: tohum dönemine ait düşüş güncel sayılınca m2m bacağı
+    ÖLÇÜLMÜŞ görünür ve `edge_verdict`in kuyruk ölçütü ile `result_verdict`in düşüş ölçütü
+    tavanın altında kalan bir sayıyla "gecti" yazar. Düzeltmeden sonra o seri hükümden çekilir,
+    bacak ÖLÇÜLEMEDİ olur, `max_dd` bir ALT SINIRA döner (`max_dd_alt_sinir=True`) ve iki hüküm
+    de "gecti" yerine "olculemedi" verir.
+
+    DÜZELTME İLKESİ — BU TURDA EŞİĞE DOKUNULMADI: düzeltme `EDGE_MAXDD_MAX`/`RESULT_MAXDD_MAX`ın
+    bir hanesini bile oynatmadı (sonraki 0,16 kararı AYRI bir operatör kararıdır, bu mekanizmanın
+    parçası değil). Değişen tek şey, serinin KAPSADIĞI DÖNEMİN ölçülmesi:
       * seri kitabın işlediği seansı KAPSIYORSA → m2m bacağı ölçülür, davranış BİREBİR eskisi gibi;
       * KAPSAMIYORSA → m2m bacağı **ÖLÇÜLEMEDİ**'dir. Bayat seriyle "kötüsü" HESAPLANMAZ, ama
         görülen sayı da GİZLENMEZ: `bayat_seri_dd` alanında ADIYLA durur (değeri saklamak hükmü
@@ -2914,10 +2932,12 @@ def hermes_scorecard() -> dict:
 # statik bir graftır ve sabitten gelen adı çözemez — defter o zaman "okuyucusu yok" görünür ve
 # YASA 6 denetimi onu hiç göremez (composite_queue_status'taki notla aynı gerekçe).
 #
-# NABIZ TAZELİĞİ BURADA HESAPLANIR, `watchdog.report()`ta DEĞİL. Üç yeni mekanizma adı
-# (`shadow_fit`, `axis2_cycle`, `opinion_backfill`) `watchdog.EXPECTED` sözlüğüne girmeli ki
-# MECHANISM_STALE onları da izlesin — ama `watchdog.py` bu turun dosya sınırının DIŞINDA. Nabızlar
-# YAZILIYOR (üç kadans da `beat()` atıyor), yani veri var; eksik olan yalnız bekçinin penceresi.
+# NABIZ TAZELİĞİ BURADA HESAPLANIR, `watchdog.report()`ta DEĞİL — AMA BEKÇİ DE ARTIK İZLİYOR.
+# Üç mekanizma adı (`shadow_fit`, `axis2_cycle`, `opinion_backfill`) `watchdog.EXPECTED` sözlüğüne
+# GİRDİ (shadow_fit/axis2_cycle seans-bağımlı pencere, opinion_backfill haftalık+pay: bütçe
+# kısılınca damga atılmadığı için daha geniş), yani MECHANISM_STALE onları da üretebiliyor. Eski
+# not "eksik olan yalnız bekçinin penceresi" diyordu; o borç `watchdog.py` tarafında kapandı ve
+# buradaki ölçüm bekçinin YERİNE değil YANINDA durur (aşağıdaki gerekçe).
 #
 # TAZELİK `mechanism_beats.json`DAN OKUNMAZ — VE BU BİLİNÇLİ. O defter `codelaw.DECLARED_SINKS`te
 # "yalnız watchdog'un kendi işletim durumu" diye beyanlıdır; buradan LİTERAL adla okumak beyanı
@@ -2979,10 +2999,11 @@ def learning_automation() -> dict:
         "nabiz": nabiz,
         "durum": ("kadans HİÇ koşmadı — zamanlayıcı seans-sonrası kancası tetiklenmemiş"
                   if not doc else "koştu"),
-        "bekci_notu": ("bu üç ad `watchdog.EXPECTED` sözlüğünde YOK — `beat()` yazılıyor ama "
-                       "MECHANISM_STALE onları izlemiyor. Tazelik burada, kadansların KENDİ "
-                       "damgalarından ölçülür (mechanism_beats.json beyanlı bir lağımdır ve "
-                       "dışarıdan okunmaz). EXPECTED'e üç satır eklemek watchdog.py'nin işidir."),
+        "bekci_notu": ("bu üç ad `watchdog.EXPECTED` sözlüğünde VAR — `beat()` yazılıyor ve "
+                       "MECHANISM_STALE onları izliyor. Buradaki tazelik yine de kadansların "
+                       "KENDİ damgalarından ölçülür (mechanism_beats.json beyanlı bir lağımdır "
+                       "ve dışarıdan okunmaz; ayrıca kadans damgası nabızdan daha bilgilidir — "
+                       "yalnız 'koştu mu' değil 'ne çıktı'). İki ölçüm rakip değil, tamamlayıcı."),
     }
 
 
@@ -3062,11 +3083,15 @@ def shadow_variant_summary(days: int = 10) -> dict:
 def _dd_veto_okumasi() -> dict:
     """`DD_VETO_MARGIN` NASIL OKUNUR — tek cümlelik ilişki beyanı.
 
-    NEDEN VAR. Marj panoda/kayıtlarda ÇIPLAK bir sayı olarak (0,04) duruyordu ve bir ölçüm
-    raporunda tam da korkulan biçimde okundu: MUTLAK bir M2M düşüşü (%7,2) bu sayıyla kıyaslanıp
-    'ihlal' yazıldı. Oysa 0,04 hiçbir zaman bir düşüş TAVANI değildi — `reflect._gate_eval`in
+    NEDEN VAR. Marj panoda/kayıtlarda ÇIPLAK bir sayı olarak duruyordu ve bir ölçüm raporunda tam
+    da korkulan biçimde okundu: MUTLAK bir M2M düşüşü (%7,2) o sayıyla kıyaslanıp 'ihlal' yazıldı.
+    Oysa marj hiçbir zaman bir düşüş TAVANI değildi — `reflect._gate_eval`in
     veto koşulu `candidate_dd > incumbent_dd + marj`dır, yani marj İKİ ADAY ARASINDAKİ FARKA
     uygulanır ve tek yönlüdür. Mutlak okumanın çıpası AYRI bir sayıdır: `goal.max_drawdown`.
+
+    MARJ DA YAZILMAZ, OKUNUR: değeri tek kaynaktan (`shadowlaw.DD_VETO_MARGIN`) alınır ve
+    `marj` alanında döner. Bu docstring'e bir sayı gömmek, kendi öğüdünü çiğnemek olurdu —
+    nitekim eski hâli marjı "(0,04)" diye anıyordu ve sabit o değerde değildi.
 
     ORAN ÖLÇÜLÜR, YAZILMAZ: tavan dosyadan (goal.yaml) okunur ve oran her çağrıda hesaplanır.
     Böylece operatör bir gün bütçeyi değiştirirse bu satır sessizce yalan söylemez. Tavan

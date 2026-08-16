@@ -211,10 +211,10 @@ def replay_seed(start: str, end: str) -> dict:
     #   İMZASI üretir ve rapora teşhis olarak girer. Yani bu iki satır ayrılırsa SINIR ölçümü
     #   değil, TEŞHİS zayıflar — ve aşağıdaki kilit gerekçesi (tek sıraya alma) aynen geçerlidir.
     #   YAN ETKİ BEYANI (A17, sessiz bırakılmıyor): bu düzeltme aşağıdaki iki yazımı ~13 satır
-    #   aşağı kaydırdı, dolayısıyla `ledgerstamp.py`nin `run.py:203`/`run.py:204` SATIR çapaları
+    #   aşağı kaydırdı, dolayısıyla `ledgerstamp.py`nin `run.py:203`/`run.py:204` SATIR çapaları  (çapa-mezar-taşı)
     #   bayatladı (metin çapaları — alıntıladıkları kod satırları — geçerli). O dosya bu turun
     #   dosya sınırının DIŞINDA, düzeltme sahibine devredildi; `ledgerstamp.py:82`nin
-    #   "run.py:157 ve 158" çapası zaten bu turdan ÖNCE de bayattı. DERS: satır-numarası çapası,
+    #   "run.py:157 ve 158" çapası zaten bu turdan ÖNCE de bayattı (çapa-mezar-taşı). DERS: satır-numarası çapası,
     #   BAŞKA bir dosyadaki yorum düzenlemesini sessizce yük taşıyan bir işlem hâline getirir.
     # KİLİT (B3): iki yazım ARDIŞIK kalmalı (yukarıdaki gerekçe) ve ikisi de defterin tamamını
     # ezer — kilit ikisini tek sıraya alır, aradaki adım hâlâ tek bir sözlük kurmaktır.

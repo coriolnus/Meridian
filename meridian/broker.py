@@ -713,11 +713,17 @@ class PaperBroker:
         gross = pos.qty * (exit_fill - pos.entry)                # true round-trip P&L — both slippages in the fills
         pnl_remaining = gross - pos.entry_commission - exit_commission   # charge commission ONCE (each side); slippage already priced in
         costs = pos.entry_slippage_cost + exit_slip_dollars + exit_commission   # informational total friction
-        # SENT-TAM BİRİKİM (gerekçe: scale_out'taki blok). Satır-yazımı `round(rem + banked, 2)`
-        # ve `banked` yukarıda sent-tamdır → sent ızgarası tam-sent kaymayla değişmediğinden
-        # round(rem + banked, 2) == round(rem, 2) + banked: birikim de round(rem, 2) alınca
-        # realized_pnl defterle SENT-TAM kapanır. `pnl_remaining` DEĞİŞKENİNİN kendisi yuvarlanmaz:
-        # r_multiple/pnl_pct satır aritmetiği bu yamanın kapsamı dışıdır (yalnız birikim noktaları).
+        # SENT-TAM BİRİKİM (gerekçe: scale_out'taki blok). Satır-yazımı `round(rem + banked, 2)`,
+        # birikim ise `round(rem, 2) + banked` alır.
+        # ÖLÇÜLDÜ — İKİSİ HER ZAMAN EŞİT DEĞİLDİR: bu blok eskiden
+        # `round(rem + banked, 2) == round(rem, 2) + banked` özdeşliğini iddia ediyordu; ikili
+        # kayan noktada YARIM-SENT sınırında bozulur (karşı örnek rem=0,005 · banked=0,01 →
+        # satır 0,01, birikim 0,02). 400.000 rastgele çiftte 17 ayrışma (≈%0,004) ölçüldü ve
+        # hepsi TAM 1 senttir. Yani yuvarlama yaması sapmayı KÜÇÜLTÜR ama SIFIRLAMAZ.
+        # KALAN RİSK ADIYLA: `sermaye_taban` (realized − Σ satır) epsilonsuz karşılaştırıldığı
+        # için böyle bir sent, gerçek bir beyan silinmesinden ayrılamayan bir GERİLEME alarmı
+        # üretebilir. `pnl_remaining` DEĞİŞKENİNİN kendisi yuvarlanmaz: r_multiple/pnl_pct satır
+        # aritmetiği bu yamanın kapsamı dışıdır (yalnız birikim noktaları).
         self.realized_pnl += round(pnl_remaining, 2)
         self.cash += round(pnl_remaining, 2)
         self._id += 1

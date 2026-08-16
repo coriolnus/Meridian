@@ -1304,6 +1304,58 @@ kararı gerektirenler §3'e geçer.
 > 20, 16, 17, 18, sonra 23-27, 29, 28) ve §2-16'nın gövdesi §2-15'in kuyruğunu taşıyordu — ikisi de
 > birleştirme artefaktıydı ve bu boşaltmayla yapısal olarak kapandı (kuyruk WP11-F'ye taşındı).
 
+- **🟡 49. ÇAPA/BEYAN ÇÜRÜMESİ: YASA KURULDU, SINIF TAM KAPANMADI — AÇIK KALEMLER** _(2026-08-15, ölçüldü; sahibi WP-H)_
+  Docstring turu iki dersi ölçümle kanıtladı ve ikisi de bu turda TAM kapanmadı:
+  · **ELLE SÜPÜRME SINIF KAPATMAZ.** ~117 satır çapası elle sembole çevrildi ve "sınıf kapandı"
+    ilan edildi; aynı turda docstring eklemek YENİ bir çürük üretti ve bir test onu DONDURDU
+    (literalin literale eşitliği — asla kırılamaz). Çözüm `codelaw.stale_line_anchors` YASASI oldu
+    (report() `ok` kapısında, pozitif kontrol + `çapa-mezar-taşı` muafiyetiyle). Yasa kurulur
+    kurulmaz kendi kodunu iki kez yakaladı (işaretsiz `except`; `_note_unscanned` yanlış arite).
+  · **YASA KAPSAMI DAR.** Ölçüldü, KAPATILMADI: (a) yasa yalnız `meridian/**.py` tarar — `docs/`
+    ve `tests/` içindeki çapalar denetimsiz (RUNBOOK'ta 73 çapa var ve üretici yeniden ürettikçe
+    elle bayatlıyor); (b) DÜZ METİN çapaları (`satır NNN`) ve ÇAPRAZ BİÇİM çapaları
+    (`goal.yaml:27`) desenin DIŞINDA — ölçülmüş bayat örnekleri var; (c) docstring'e gömülü
+    SABİT SAYI aynı çürüme sınıfı ve hiçbir dedektör görmüyor (bu turda `0,08`→`0,16` ve `0,04`
+    vakaları elle düzeltildi, yerine `0,16` YENİDEN gömüldü).
+  **AÇIK KUSURLAR (ölçüldü, bu turda kapatılmadı):**
+  · `reflect._gate_why` tail dalı savunmasız: çağıran `effective_margin` (aşınma dahil) ile
+    reddediyor ama `_gate_why` çıplak `GATE_MARGIN` ile sınıyor; aşınma devredeyken akış son
+    return'e düşüp `cand_tail['var_r']` okuyor — legacy sözlükte tail YOK → `TypeError`.
+  · `codelaw.report()` aynı ağacı ALTI kez tarıyor: 7,75 sn, 576 `ast.parse`, 30,3 MB (ölçüldü).
+    Tek paylaşılan parse memosu 96 parse'a indirir.
+  · `_GRAPH_CACHE`/`_CLAIMS_CACHE` `clear()` ile TEK SLOT: farklı `root` ile bir çağrı üretim
+    girdisini atıyor; testlerde ~16 zorunlu yeniden kurulum ≈ 23 sn (ölçüldü).
+  · `declared_claims` site listeleri hâlâ SÖZLÜKSEL sıralı (`_site_key` yalnız `artifact_graph`
+    çıktılarına takıldı) — tek raporda iki farklı sıra.
+  · `_site_key` guard'ı `isdigit()`: Unicode üst-simge rakam `int()`i patlatır (`isascii()` gerek).
+  · `ops/runbook_uret.py` aynı sıralama mantığının KOPYASINI taşıyor ve ikisi zaten farklı
+    davranıyor (biri ValueError atar, diğeri (site, 0)'a düşer).
+  **EK AÇIK KUSURLAR (2026-08-15 ikinci inceleme dalgası, ölçüldü):**
+  · **ÖNBELLEK KÖRLÜĞÜ YUTUYOR (en değerlisi):** `artifact_graph` `_GRAPH_CACHE` isabetinde
+    HİÇBİR dosya okumadan döner, dolayısıyla `_note_unscanned` çalışmaz ve `UNSCANNED` BOŞ kalır.
+    Reprodüksiyon: bozuk dosyalı ağaçta ilk çağrı 2 körlük kaydeder, `UNSCANNED.clear()` sonrası
+    ikinci çağrı (aynı mtime → isabet) 0 kaydeder. Bu, bu turda yazılan "bekçi kendi körlüğünü
+    RAPOR eder" sözleşmesini ikinci çağrıdan itibaren çürütür; `report()` yalnız DİĞER (önbeleksiz)
+    fazlar yeniden kaydettiği için tesadüfen doğru kalıyor. Düzeltme: körlük kayıtlarını da
+    önbelleğe koy ve isabette idempotent biçimde geri yaz.
+  · `_gate_why` "tek çağıranı `_gate_eval`" iddiası YANLIŞ: `tests/test_audit_fixes.py` ikinci
+    çağıran ve `margin` GEÇMİYOR (yani çıplak `GATE_MARGIN` yolunu sınıyor).
+  · `_gate_why`ın `tail_ok` parametresi gövdede HİÇ okunmuyor (kuyruk dalı koşulsuz düşüş).
+  · `_site_key` docstring'i `isascii() and isdigit()`i "int()'in kabul ettiği küme" sayıyor;
+    gerçekte int() ASCII-dışı ondalıkları da kabul eder (`isdecimal()` doğru yüklemdir).
+  · `tests/test_wpm_okuma_netligi_v182.py` hâlâ "0,04 / 0,08" eski sayılarını yorumda taşıyor;
+    oran testi ikisi de ikiye katlandığı için YEŞİL kalıyor (görünmez bayatlık).
+  · `declared_claims` `host_modules` iki ŞEKİL döndürüyor: sink/human'da modül adı, pattern'de
+    çağrı-yeri dizgesi — tüketici sessizce atlar.
+  **TABANDAN DEVRALINAN CANLI YASA İHLALİ (bu turun eseri DEĞİL, ölçüldü):**
+  · `validation.deflated_sharpe` SIFIR VARYANSLI seride `None` yerine SÖZLÜK döndürüyor
+    (`sharpe_gozlem=1.9e15`) — yani ölçülemeyen yerde SAYI ÜRETİYOR. Bu doğrudan UYDURMA
+    YASAĞI ihlalidir ve DSR yolu ship hükmüne bağlı olduğu için değeri yüksektir.
+    Çivisi zaten var ve KIRMIZI: `test_hafta3a_v119::test_D_dsr_taban_altinda_None_doner_SIFIR_DEGIL`.
+  *öncelik: orta — hiçbiri canlı kararı bozmuyor (DSR ihlali HARİÇ: o canlı hükümdedir);
+  önbellek körlüğü ve `_gate_why` çağıran beyanı
+  en yüksek değerli olanlar.*
+
 - **🔴 48. ÜRETİCİ CANLIDA TAŞINMAYAN DÜĞMELERE ÖNERİ ÜRETİYOR — 28a'nın İLK ÜRÜNÜ BİR TEŞHİS** _(2026-08-14, akıbet **kuru koşumda** ölçüldü — v247 DAĞITILMADI; KÖK canlıda ölçüldü; sahibi WP3)_
   28a uygulandıktan sonra 47 önerinin akıbeti ölçüldü (kuru koşum; v247 **DAĞITILMADI** — canlıda
   hâlâ v246): **17'si kapıya varıyor, 30'u eleniyor.**

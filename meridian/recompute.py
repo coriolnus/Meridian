@@ -123,7 +123,7 @@ def _source_corpus() -> str:
     for p in files:
         try:
             parts.append(_code_only(p))
-        except OSError:  # sessiz-yutma: tek dosya okunamadı; korpus eksik kalır ve eksik korpus yalnız DAHA AZ bulgu üretir (yanlış pozitif ÜRETMEZ)
+        except (OSError, ValueError):  # sessiz-yutma: tek dosya okunamadı (ValueError: UnicodeDecodeError — ops/ ve deploy/ globları "*" olduğu için UTF-8 OLMAYAN ikili dosyalar da listeye girer); korpus eksik kalır ve eksik korpus yalnız DAHA AZ bulgu üretir (yanlış pozitif ÜRETMEZ)
             continue
     text = "\n".join(parts)
     _CORPUS_CACHE.update({"stamp": stamp, "text": text})
@@ -142,13 +142,21 @@ def _code_only(p) -> str:
 
     .py için AST kullanılır: `ast` yorumları hiç taşımaz, docstring'ler ayrıca düşürülür ve kalan
     ağaç yeniden metne çevrilir — yani geride SADECE gerçek kod (dizge sabitleri dâhil) kalır.
-    Ayrıştırılamayan dosya ham metne düşer: körlük, yanlış pozitiften iyidir."""
-    src = p.read_text(errors="ignore")
+    Ayrıştırılamayan dosya ham metne düşer: körlük, yanlış pozitiften iyidir.
+
+    KAYNAK OKUMA SÖZLEŞMESİ (bkz. codelaw'daki aynı başlıklı blok): `encoding="utf-8"` AÇIK ve
+    `errors="ignore"` KALDIRILDI. Eskiden çözülemeyen bayt SESSİZCE ATILIYORDU; bu, bir denetim
+    aracında çökmekten kötüdür — `LC_ALL=C` bir kabukta Türkçe kaynak, adı korpusa hiç girmemiş
+    gibi kırpılır ve dedektör "okuyucusu yok" derdi (körlüğü BULGUYA çevirmek). Artık okunamayan
+    dosya istisna atar; hükmü çağıran `_source_corpus` verir: o dosya korpustan DÜŞER (eksik
+    korpus yalnız daha az bulgu üretir) — ve `except` demetinde `ValueError` vardır, çünkü
+    `UnicodeDecodeError` onun alt sınıfıdır, `OSError`ın değil."""
+    src = p.read_text(encoding="utf-8")
     if p.suffix != ".py":
         return "\n".join(ln.split("#", 1)[0] for ln in src.splitlines())
     try:
         tree = ast.parse(src)
-    except SyntaxError:  # sessiz-yutma: ayrıştırılamayan modül ham metne düşer — bu yalnız DAHA AZ bulgu üretir (referans fazla görünür), yanlış pozitif üretmez
+    except (SyntaxError, ValueError):  # sessiz-yutma: ayrıştırılamayan modül ham metne düşer — bu yalnız DAHA AZ bulgu üretir (referans fazla görünür), yanlış pozitif üretmez
         return src
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):

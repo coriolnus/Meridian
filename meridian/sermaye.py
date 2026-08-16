@@ -112,8 +112,12 @@ HEARTBEAT = "heartbeat.json"
 # tohumlanırsa) geçmişini SİLMEDEN üstüne yazabilsin diye. `ofset()` toplamı alır, yani mutabakat
 # kimliği kaç reset olursa olsun aynı formülle ölçer.
 RESET_KEY = "sermaye_resetleri"
-# EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi);
-# `storage._ddl` zarfın points-dışı anahtarlarını `env_json`da korur, yani SQLite çağında da yaşar.
+# EĞRİ ZARFINDAKİ İŞARET. `points` DIŞINDAdır (modül başlığındaki seed_boundary gerekçesi) ve
+# SQLite çağında da yaşar. KORUYAN ŞEY ŞEMA DEĞİL YAZIM YOLUDUR: `storage._ddl` yalnız
+# `entity_meta.env_json` KOLONUNU tanımlar (tek başına hiçbir anahtarı korumaz); işareti asıl
+# yaşatan, `storage.do_write_series`in zarfın points-dışı anahtarlarını ayırıp `_touch`a vermesi
+# ve `_touch`un onu diskteki MEVCUT zarfla BİRLEŞTİRMESİDİR ({**mevcut, **env}) — yabancı zarf
+# anahtarı ezilmez, yalnız yazarın sahiplendiği anahtar güncellenir.
 CURVE_MARK_KEY = "reset_isaretleri"
 
 # GEREKÇE EŞİĞİ. YASA 4'ün burada karşılığı: sermaye tabanını taşımak geri alınabilir ama
@@ -142,17 +146,37 @@ def sermaye_taban(pf: dict | None = None, rows: list[dict] | None = None) -> flo
           kadar farkla iki yöne yuvarlanır. Burada Σ SENT TAMSAYISIYLA alınır: defter satırları
           zaten 2 haneli yazılır (`PaperBroker.close_position` → `round(pnl, 2)`), yani `round(x*100)` terim başına
           KESİNDİR ve toplam, toplama sırasından/temsil tozundan bağımsız aynı tamsayıdır.
-      (b) KAYNAK KAYMASI: broker `realized_pnl`i HAM (yuvarlanmamış) pnl ile biriktirir
-          (`PaperBroker.scale_out` / `PaperBroker.close_position`) ama defter satırını yuvarlayıp
-          yazar (aynı satır-yazımı) — `broker` modül başlığının kendi
-          sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı kalıntılarla sürüklenir ve
-          taban GERÇEKTEN yarım-sent sınırlarına oturur. Bu bacak YAZAR tarafında kapanır
-          (yama: birikimi de `round(pnl, 2)` ile yap) — bu fonksiyon o dünyada TAM sabittir,
-          bugünkü dünyada ise en azından (a) bacağını ve ölçüm-anı tozunu keser.
+      (b) KAYNAK KAYMASI — BACAK DARALDI, KAPANMADI: broker `realized_pnl`i bir zamanlar HAM
+          (yuvarlanmamış) pnl ile biriktirirken defter satırını yuvarlayıp yazıyordu; `broker`
+          modül başlığının kendi sözleşmesi ("realized_pnl == Σ row.pnl_dollars") sent altı
+          kalıntılarla sürükleniyor ve taban GERÇEKTEN yarım-sent sınırlarına oturuyordu. Yama
+          YAZAR tarafında uygulandı ama KAPSAMI, buranın eskiden iddia ettiğinden dardır —
+          ölçülmüş hâli:
+            * `PaperBroker.scale_out` ÜÇ akümülatörü de günceller ve üçü AYNI sent-tam artışı
+              alır: `realized_pnl` / `cash` / `pos.banked_pnl` += `round(pnl_partial, 2)`.
+            * `PaperBroker.close_position` İKİ akümülatör günceller: `realized_pnl` ve `cash`,
+              her biri `round(pnl_remaining, 2)`. `banked_pnl`i YALNIZ OKUR (satırın `pnl`ini
+              kurmak için) — ona hiçbir şey yazmaz. Yani "üç akümülatör aynı artışı alır" cümlesi
+              yalnız `scale_out` için doğrudur; kapanışta banked bir GİRDİdir, akümülatör değil.
+            * `pnl_remaining` DEĞİŞKENİ yuvarlanmaz; satır `pnl_dollars = round(rem + banked, 2)`
+              yazarken birikim `round(rem, 2) + banked` alır.
+          KİMLİK BU YÜZDEN HÂLÂ TAM DEĞİL: `round(rem + banked, 2)` ile `round(rem, 2) + banked`
+          ikili float'ta her zaman eşit değildir. ÖLÇÜLDÜ — karşı örnek rem=0,005 / banked=0,01:
+          birincisi 0,01, ikincisi 0,02 verir; rastgele 400.000 (rem, banked) çiftinde 17 ayrışma
+          (≈%0,004) ve her biri TAM 1 senttir (temsil tozu değil). Sürükleyen şey `rem`in
+          yarım-sent sınırına oturması ve `banked`ın ikili toplamada tam-sent ızgarasından kayması
+          (`0.1 + 0.2 = 0.30000000000000004`) — yani "sonuç bit-bit aynıdır" iddiası ÖLÇÜMLE
+          yanlıştı ve kaldırıldı.
+          KALAN RİSK, ADIYLA: `realized_pnl == Σ row.pnl_dollars` sözleşmesi tek bir işlemde
+          1 sent kırılabilir; aşağıdaki KARŞILAŞTIRMA EPSILON'U bilerek yok olduğu için böyle bir
+          sent, dedektörde GERÇEK bir silinmeden ayırt edilemeyen bir "GERİLEME" olarak alarmlar.
+          Bu bacak bugün ÖLÇÜLMÜŞ olarak nadirdir, ama YOK değildir; buradaki sent-tam türetim
+          (a) bacağını ve ölçüm-anı tozunu kapatır, (b)nin bu kalıntısını KAPATMAZ.
 
     KARŞILAŞTIRMA EPSILON'U BİLEREK YOK: eşik gevşetmek gerçek 1-sentlik silinmeyi de yutardı.
-    Yazım/türetim stabilize edilir, dedektörün `v < p` kıyası DOKUNULMADAN kalır — aynı defter iki
-    yoldan yazılınca sonuç bit-bit aynıdır, GERÇEK gerileme yine alarmlar.
+    Yazım/türetim stabilize edilir, dedektörün `v < p` kıyası DOKUNULMADAN kalır — GERÇEK gerileme
+    yine alarmlar. "Aynı defter iki yoldan yazılınca sonuç bit-bit aynıdır" cümlesi (b) bacağının
+    ölçümüyle YANLIŞLANDI ve kaldırıldı: (a) bacağı kapalı, (b)nin 1-sentlik kalıntısı açık.
 
     Bozuk satır SEMANTİĞİ watchdog ifadesiyle BİREBİR: `pnl_dollars` None/boş → 0; sayıya
     çevrilemeyen değer istisna fırlatır (watchdog kendi try'ında 'kaynak okunamadı' der — sahte bir

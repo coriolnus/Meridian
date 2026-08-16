@@ -330,23 +330,53 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
         return sonuc
 
 
-def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool) -> str:
+def _gate_why(inc: dict, cand: dict, majority: bool, fold_wins: int, fold_total: int, tail_ok: bool,
+              margin: float = GATE_MARGIN) -> str:
     """Reddin İNSAN OKUNUR gerekçesini üretir: hangi kapı dalı düşürdü (skor/marj, fold-çoğunluğu,
-    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir; buradaki sıra o hükmün dal
-    sırasıyla aynıdır."""
+    kuyruk riski). Yalnız METİN üretir — hükmü `_gate_eval` verir.
+
+    MARJ DIŞARIDAN GELİR, ÇIPLAK SABİT DEĞİL. `margin` parametresi olmadan bu fonksiyon çıplak
+    `GATE_MARGIN` ile sınıyordu; oysa çağıran legacy dal hükmü `effective_margin = GATE_MARGIN +
+    erosion_margin` ile veriyor. Aşınma marjı devredeyken (`extra_margin > 0`) ikisi AYRIŞIYORDU:
+    hüküm "büyüklük düştü" derken gerekçe zinciri büyüklük dalını ATLIYOR, `majority`/`tail_ok`
+    çağrıda sabit `True` olduğu için akış SON return'e düşüyor ve `cand_tail['var_r']` okunuyordu —
+    legacy sözlüklerde `oos_tail_risk` yoktur, yani `TypeError: 'NoneType' object is not
+    subscriptable`. Gerekçe üreten yol, hükmü veren yolla AYNI eşiği okumak zorundadır.
+
+    KAPSAM BEYANI — BU ÜÇ DAL, HÜKMÜN BEŞİ DEĞİL: `_gate_eval`in `passes` bağlacı beş terimlidir
+    ve sırası `magnitude_ok · majority · tail_ok · dd_ok · dd_mtm_ok` — yani KUYRUK ORADA 3.
+    terimdir. `_gate_eval`in KENDİ gerekçe zinciri ise başka bir sıra izler: büyüklük → çoğunluk →
+    düşüş → M2M düşüş → kuyruk; orada kuyruk 5. ve SONdur. Buradaki zincirde iki düşüş dalı HİÇ
+    yoktur (büyüklük → çoğunluk → kuyruk); yani bu üç dalın göreli sırası `_gate_eval`in gerekçe
+    zincirininkiyle aynı, `passes` bağlacınınkiyle DEĞİLDİR.
+
+    EKSİKLİK BUGÜN NEDEN GÖRÜNMÜYOR: bu fonksiyonun tek çağıranı `_gate_eval`in LEGACY dalıdır
+    (dilim yok → `law="legacy_margin"`) ve orası `majority`/`tail_ok` yerine sabit `True` geçer,
+    yani zincir pratikte yalnız büyüklük gerekçesini üretir. Aynı legacy dünyada `_trades_search`/
+    `_mtm_search` dilimleri de yoktur; iki düşüş bacağı ölçülemez (`dd_durum`/`dd_mtm_durum` =
+    "olculemedi") ve tanım gereği ret sebebi olamaz. Dilimli (olasılıksal) yolda gerekçeyi zaten
+    `_gate_eval`in kendi zinciri yazar — düşüş vetoları oradan, adıyla çıkar."""
     inc_oos, cand_oos = inc["oos_score"], cand["oos_score"]
     inc_tail, cand_tail = inc.get("oos_tail_risk"), cand.get("oos_tail_risk")
     if cand_oos is None:
         return "candidate OOS score undefined (below min_sample)"
     if inc_oos is None:                          # L2: _gate_eval's `passes` guards this, but _gate_why did
-        return "incumbent OOS score undefined (below min_sample)"   # not — `None + GATE_MARGIN` → TypeError
-    if not (cand_oos > inc_oos + GATE_MARGIN):
-        return f"candidate OOS {cand_oos} did not beat incumbent {inc_oos} + {GATE_MARGIN}"
+        return "incumbent OOS score undefined (below min_sample)"   # not — `None + margin` → TypeError
+    if not (cand_oos > inc_oos + margin):
+        return f"candidate OOS {cand_oos} did not beat incumbent {inc_oos} + {margin}"
     if not majority:
         if fold_total == 1:
             return ("fold-robustness UNPROVABLE: only 1 window had enough trades — a single-window "
                     "edge is not robustness (2026-07-22)")
         return f"candidate lost the fold-robustness majority ({fold_wins}/{fold_total})"
+    # SON DAL SAVUNMALI: buraya düşmek "kuyruk düşürdü" demektir, ama kuyruk ÖLÇÜLMEMİŞ olabilir
+    # (legacy/fikstür sözlüklerinde `oos_tail_risk` yoktur). Ölçülmemiş kuyruğu sayı gibi okumak
+    # önce TypeError'dı; sayı UYDURMAK ise daha kötüsü olurdu. UYDURMA YASAĞI: ölçülemediğini söyle.
+    if not (isinstance(inc_tail, dict) and isinstance(cand_tail, dict)):
+        eksik = [ad for ad, v in (("incumbent", inc_tail), ("candidate", cand_tail))
+                 if not isinstance(v, dict)]
+        return ("gate rejected but the reason is UNMEASURED: no oos_tail_risk record on "
+                f"{' and '.join(eksik)} — no cause is invented here")
     return (f"candidate worsens OOS tail risk beyond {TAIL_MARGIN_R}R "
             f"(VaR {cand_tail['var_r']} vs {inc_tail['var_r']}, "
             f"CVaR {cand_tail['cvar_r']} vs {inc_tail['cvar_r']})")
@@ -594,7 +624,11 @@ def _gate_eval(inc: dict, cand: dict, k_probes: int = 1,
         erosion_margin_para = None
         magnitude_ok = bool(cand_oos is not None and inc_oos is not None
                             and cand_oos > inc_oos + effective_margin)
-        mag_why = "" if magnitude_ok else _gate_why(inc, cand, True, fold_wins, fold_total, True)
+        # ETKİN MARJ GEÇİRİLİR: hüküm `effective_margin` ile verildi, gerekçe de onunla yazılmalı.
+        # Çıplak `GATE_MARGIN` ile sınayan eski çağrı, aşınma marjı devredeyken büyüklük dalını
+        # atlayıp akışı kuyruk dalına düşürüyordu (bkz. `_gate_why` MARJ DIŞARIDAN GELİR notu).
+        mag_why = "" if magnitude_ok else _gate_why(inc, cand, True, fold_wins, fold_total, True,
+                                                    margin=effective_margin)
         law = "legacy_margin"
 
     # `dd_mtm_ok` bayrak kapalıyken TANIM GEREĞİ True — bu terim varsayılan yolda NO-OP'tur ve

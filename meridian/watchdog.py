@@ -2051,7 +2051,10 @@ def _dosya_metni(p) -> str:
     """Bir sunum/kaynak dosyasının metni (tur başına tek okuma)."""
     from pathlib import Path as _P
     p = _P(p)
-    return _bir_kez(("metin", str(p)), p.read_text)
+    # KAYNAK OKUMA SÖZLEŞMESİ (bkz. codelaw'daki aynı başlıklı blok): `encoding="utf-8"` AÇIK.
+    # Verilmezse çözücü yerel ayara düşer ve `LC_ALL=C` bir birimde (systemd/cron) bu deponun
+    # Türkçe sunum dosyaları okunamaz — bekçi yerel ayara bağlı hüküm veremez.
+    return _bir_kez(("metin", str(p)), lambda: p.read_text(encoding="utf-8"))
 
 
 def _yaml_alan(dosya: str, *yol: str):
@@ -2065,7 +2068,8 @@ def _yaml_alan(dosya: str, *yol: str):
     sorusunun cevabı her turda diskten yeniden gelir; yalnız aynı turun ikinci alanı bedavadır."""
     from . import config
     p = config.STATE / dosya
-    doc = _bir_kez(("yaml", str(p)), lambda: _yaml_yukle(p.read_text()) or {})
+    # `encoding="utf-8"` AÇIK — KAYNAK OKUMA SÖZLEŞMESİ; `state/*.yaml` Türkçe metin taşır.
+    doc = _bir_kez(("yaml", str(p)), lambda: _yaml_yukle(p.read_text(encoding="utf-8")) or {})
     for k in yol:
         doc = doc[k]
     return doc
@@ -2112,7 +2116,10 @@ def _sunum_uyuyan_iddialari() -> frozenset:
     armed = set(_sabit("strategy", "ARMED_SETUPS"))
     bulunan: set = set()
     for p in mevcut:
-        bulunan |= uyuyan_iddia_tara(p.read_text(), armed)
+        # `encoding="utf-8"` AÇIK — KAYNAK OKUMA SÖZLEŞMESİ: `workflow.js` /
+        # `workflow-diagram.html` Türkçe tooltip metni taşır; yerel ayara düşen çözücü onları
+        # okuyamaz ve dedektör sunum yüzeyini GÖRMEDEN "uyuyan iddia yok" derdi.
+        bulunan |= uyuyan_iddia_tara(p.read_text(encoding="utf-8"), armed)
     return frozenset(bulunan)
 
 

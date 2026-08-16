@@ -10,13 +10,19 @@
 # Yerel hızlı kapı ops/kapilar.sh'tır; bu betik onun CI ikizidir — farkları: bayt-derleme taban
 # kontrolü eklidir ve pytest kapsamı daha geniştir (CI'ın dakikaları vardır, operatörün saniyeleri).
 #
-# SIRA ucuzdan pahalıya, ilk kırmızıda DUR:
+# SIRA ucuzdan pahalıya; AMA İLK KIRMIZI KOŞUMU DURDURMAZ. Dört kapının HEPSİ koşar, hepsinin
+# hükmü ekranda görünür ve kırmızılar sonda TEK bir `exit 1`e toplanır. Bu BİLİNÇLİ: bir turda
+# tüm kapıların durumu bir kerede görülsün — kısa devre yapan bir kapı, ikinci kırmızıyı bir
+# sonraki koşuma erteler ve turu gereksiz yere ikiye böler. Sıra yine de ucuzdan pahalıyadır,
+# çünkü ucuz kapının hükmü saniyeler içinde ekrana düşer (bekleme değil, okuma sırası).
 #   [1] compileall   (~5 sn)   — beyan edilen Python tabanında (>=3.11) SÖZDİZİMİ. CI, venv'i
 #                                bilerek 3.11'e sabitler: 3.12+'da geçerli olup 3.11'de patlayan
 #                                sözdizimi (PEP 701 f-string vakası, 2026-08-15) burada yakalanır.
 #                                O vaka test TOPLAMASINI kesiyordu — tek satır, sıfır koşan test.
 #   [2] lint-imports (~2 sn)   — 5 mimari sözleşme (pyproject [tool.importlinter]).
-#   [3] uv audit     (~2 sn)   — tedarik zinciri. Kırmızıysa dağıtım da PR de bekler.
+#   [3] uv audit     (~2 sn)   — tedarik zinciri. Gerçek bir açık bulunursa KIRMIZI: dağıtım da
+#                                PR de bekler. Alt-komut bu uv sürümünde YOKSA sonuç KIRMIZI değil
+#                                ÖLÇÜLEMEDİ'dir ve ekranda öyle görünür (aşağıdaki bloğa bak).
 #   [4] pytest duman (~2-4 dk) — state-bağımsız çekirdek: anayasa property paketi (kapilar [3]
 #                                ile aynı 6 dosya) + modül-yasası audit ailesi + bounds/seed
 #                                çivileri + son regresyon sitesi. Ölçüldü (2026-08-15, 4 çekirdek):
@@ -50,11 +56,26 @@ else
 fi
 
 baslik "[3/4] uv audit — tedarik zinciri"
-if "$UV" audit --preview-features audit-command; then
-  echo "  ✓ bilinen açık YOK"
+# ARAÇ YOKLUĞU İHLAL DEĞİLDİR — AMA SESSİZ YEŞİL DE DEĞİLDİR.
+# Bu ortamdaki uv (0.8.17) `audit` alt-komutunu TANIMIYOR. Eski hâlde adım bu yüzden KALICI
+# kırmızıydı: kapı her koşuda exit 1 veriyor, ama kırmızının ANLAMI ("bağımlılıkta bilinen açık
+# var") ile GERÇEĞİ ("ölçen araç yok") ayrışıyordu. Sürekli kırmızı bir kapı, bakılmayan kapıdır —
+# ve ölçülemeyen bir şeyi ihlal saymak UYDURMA YASAĞInın ihlalidir. Ayrım bir YOKLAMAYLA yapılır:
+# alt-komut yoksa hüküm ÖLÇÜLEMEDİ'dir, KIRMIZI sayılmaz; alt-komut VARSA ve gerçek bir açık
+# bulursa KIRMIZI sayılır. Ölçülemedi sessizce yeşile de yazılmaz: ekranda ADIYLA görünür, yoksa
+# "denetlendi" ile "denetlenemedi" bir daha ayırt edilemezdi.
+if "$UV" audit --help >/dev/null 2>&1; then
+  if "$UV" audit --preview-features audit-command; then
+    echo "  ✓ bilinen açık YOK"
+  else
+    echo "!! TEDARİK ZİNCİRİ KIRMIZI — bağımlılıkta bilinen açık var. Dağıtım da PR de bekler."
+    KIRMIZI=1
+  fi
 else
-  echo "!! TEDARİK ZİNCİRİ KIRMIZI (ya da uv bu alt-komutu tanımıyor) — PR bekler."
-  KIRMIZI=1
+  echo "  ? ÖLÇÜLEMEDİ (araç yok): bu uv sürümü '$UV audit' alt-komutunu tanımıyor."
+  echo "    Sürüm: $("$UV" --version 2>/dev/null || echo 'okunamadı')"
+  echo "    Tedarik zinciri bu koşumda DENETLENMEDİ — yeşil DEĞİL, ölçüsüz. uv yükseltilince"
+  echo "    yoklama kendiliğinden geçer ve adım gerçek hüküm vermeye başlar."
 fi
 
 baslik "[4/4] pytest duman — state-bağımsız çekirdek (tam suite DEĞİL)"
