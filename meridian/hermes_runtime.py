@@ -387,6 +387,45 @@ def _acilis_senkron_dogrula() -> dict:
         return {"yapildi": False, "sebep": f"hata: {type(e).__name__}", "senkron_ts": ts}
 
 
+# Kalp atışı bayatlık PAYI (§2-50). Mutlak saniye DEĞİL, poll aralığının katı — yeni eşik icat
+# etmemek için (madde 3): aralık değişirse pay kendiliğinden ölçeklenir. 3 = bir kaçırılan poll
+# tolere edilir, ikisi edilmez.
+KALP_PAY = 3
+
+
+def _kalp_vur() -> None:
+    """Döngünün "hâlâ buradayım" damgası + kalıcılaştırma. YALNIZ `_run` çağırır: `_persist`in
+    içine konsaydı `reflect_now` (API sürecinden elle tetikleme) de kalp atardı ve pano, döngü
+    başka süreçte ölü olsa bile onu CANLI görürdü — ölçmediğimiz şeyi iddia etmiş olurduk."""
+    _state["kalp"] = _now()
+    _persist()
+
+
+def _kalp_canliligi(disk: dict) -> tuple[bool | None, str | None]:
+    """Diskteki kalp damgasından canlılık hükmü — `(canli, neden)`.
+
+    ÜÇ DEĞERLİ: `None` = ÖLÇÜLEMEDİ. "Durdu" demek bir İDDİADIR ve ölçülmemiş hâlin adı değildir
+    (UYDURMA YASAĞI); pano bu ikisini ayrı göstermeli."""
+    import datetime as _dt
+    if not disk:
+        # HİÇ KAYIT YOK — bu bir ölçüm boşluğu DEĞİL, kanıttır: döngü bu kurulumda hiç koşmamış
+        # (ne bu süreçte ne bir başkasında; `STATUS_FILE` ilk `_persist`te doğar). "Ölçülemedi"
+        # demek burada dürüst değil AŞIRI-İHTİYATLI olurdu ve panoyu boş yere belirsiz gösterirdi.
+        return False, None
+    kalp, poll = disk.get("kalp"), int(disk.get("poll_seconds") or 0)
+    if not kalp or poll <= 0:
+        # Kayıt VAR ama damga yok: döngü kalp atışı olmayan bir sürümde koşmuş ya da yazım düşmüş.
+        # Burada "durdu" demek uydurma olur — yaş gerçekten ölçülemez.
+        return None, "kayıt var ama kalp damgası/poll aralığı yok — canlılık ÖLÇÜLEMEDİ"
+    try:
+        yas = (_dt.datetime.now(_dt.timezone.utc) - _dt.datetime.fromisoformat(kalp)).total_seconds()
+    except (TypeError, ValueError):
+        return None, f"kalp damgası çözümlenemedi: {kalp!r}"
+    if yas <= KALP_PAY * poll:
+        return True, None
+    return False, f"kalp atışı {yas:.0f}sn eski (eşik {KALP_PAY}×{poll}sn)"
+
+
 def _run(poll_seconds: int) -> None:
     """Bekleme döngüsünün gövdesi: `poll_seconds` aralıkla yoklar, koşulları ölçer ve tek bir dalı
     seçer — yansıma / arka plan yansıması / ısınma sprinti / atlama.
@@ -411,7 +450,7 @@ def _run(poll_seconds: int) -> None:
     while not _stop.is_set():
         try:
             _state["last_poll"] = _now()
-            _persist()      # poll BAŞLARKEN yaz: aşağıdaki yansıma dakikalar sürebilir ve tek yazma
+            _kalp_vur()     # poll BAŞLARKEN yaz: aşağıdaki yansıma dakikalar sürebilir ve tek yazma
                             # poll sonundaysa dosya o süre boyunca donar, panoda "hiç poll yapılmadı"
                             # görünür (gözlem boşluğu).
             from . import watchdog as _wd7
@@ -560,16 +599,38 @@ def status() -> dict:
 
     "Sonraki yansımaya kaç işlem kaldı" ve ufuk ilerlemesi HER çağrıda TAZE ölçülür (HALT/bayat
     hâlde ve ilk poll'dan önce de) — tek kaynak burasıdır, arayüz kendi formülünü üretmez."""
-    alive = bool(_thread and _thread.is_alive())
+    # SÜREÇ-İÇİ Mİ? (§2-50) Döngü kendi systemd biriminde koşuyorsa BU süreçte iplik YOKTUR ve
+    # `_state` boş varsayılanlarla durur — o hâlde yetkili kaynak DİSKtir (`STATUS_FILE`).
+    icerde = bool(_thread and _thread.is_alive())
+    disk = (store.read_json(STATUS_FILE, {}) or {}) if not icerde else {}
+    taban = {**_state, **disk} if not icerde else dict(_state)
     try:
         from . import hermes
-        model, search = hermes.active_model(), dict(hermes.SEARCH_PROGRESS)
+        model = hermes.active_model()
+        okuma = hermes.search_progress_oku(ayni_surec=icerde)
+        search, search_durumu, search_yas = okuma["kayit"], okuma["durum"], okuma["yas_s"]
     except Exception:  # sessiz-yutma: geç bağlanan yardımcı modül/çağrı; asıl karar bu değere bağlı değil ve çağıran yokluğu yedek değerle karşılıyor
-        model, search = None, {}
+        model, search, search_durumu, search_yas = None, {}, "olculemedi", None
+    # CANLILIK: süreç-içindeyse iplik yetkili; değilse KALP ATIŞI. `systemctl is-active` bilerek
+    # KULLANILMADI — o yalnız sürecin VAR olduğunu söyler, İLERLEDİĞİNİ değil; asılı bir döngü
+    # "active" görünürdü. Kalp atışı ikisini birden ölçer. Yaş ölçülemiyorsa `active` None kalır
+    # (UYDURMA YASAĞI: "durdu" demek bir iddiadır, ölçülmemiş hâlin adı değildir).
+    if icerde:
+        alive, alive_neden = True, None
+    else:
+        alive, alive_neden = _kalp_canliligi(disk)
+        # UZUN ARAMA KALBİ BASTIRIR — ve bu bir istisna değil, ÖLÇÜLMÜŞ normaldir: geçmiş altı
+        # aramanın süresi 1s55dk–3s14dk (2026-08-16 günlük ölçümü). O saatler boyunca poll dönmez,
+        # yani kalp bayatlar; ama arama ilerlemesi TAZE ise döngü kanıtlı biçimde çalışıyordur.
+        # Tazelik ölçüsü yine kalbin payıdır — ikinci bir eşik icat edilmedi.
+        if alive is not True and search_durumu == "kosuyor" and search_yas is not None:
+            poll = int(disk.get("poll_seconds") or 0)
+            if poll > 0 and search_yas <= KALP_PAY * poll:
+                alive, alive_neden = True, "kalp bayat ama arama ilerlemesi taze (uzun yansıma)"
     every = int(config.goal().get("reflection_every", 5))
     trades = store.read_jsonl("trades.jsonl")
     closed = len(trades)
-    base = _state.get("last_reflect_at")
+    base = taban.get("last_reflect_at")
     # Honest countdown: how many NEW trades must close before the standby loop reflects again. The old UI
     # formula was `every - closed_trades`, which is 0 for any book with more trades than `every` — i.e. it
     # always read "hazır" (ready), which was simply false. Computed here so there is ONE source of truth.
@@ -580,7 +641,8 @@ def status() -> dict:
     live_reg = live_reg if live_reg in config.VALID_REGIMES else None
     horizon = _horizon_progress(trades, int(base) if base is not None else closed, live_reg, every)
     brain = _brain()
-    return {**_state, "active": alive, "brain": brain, "model": model,
+    return {**taban, "active": alive, "active_neden": alive_neden, "surec_ici": icerde,
+            "search_durumu": search_durumu, "brain": brain, "model": model,
             "brain_availability": _brain_availability(), "brain_chain": _brain_chain(),
             "brain_degraded": brain == "deterministic",
             "reflection_every": every, "closed_trades": closed,

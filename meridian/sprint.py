@@ -781,19 +781,33 @@ MESGUL_YETKI_KAPILARI = frozenset({"elle_tik"})
 
 
 def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
-    """Canlı koordinat-inişi araması ŞU AN meşguliyet kanıtı mı? `hermes.SEARCH_PROGRESS`ten okunur
-    (zamanlayıcı ve api AYNI süreçtedir — daemon thread). Okunamıyorsa MEŞGUL SAYILIR: muhafazakâr
-    taraf, "emin değilsen 8 çekirdeği ikiye bölme"dir. Dönüş her zaman yaş taşır: `yas_sa` bayrağın
-    SON İLERLEMEDEN beri kaç saattir değişmediğidir (skip olayına aynen çıkar — bkz. maybe_start).
-    `simdi` yalnız tz-AWARE ise saat kabul edilir (should_run'ın `gun_ref` seam'iyle aynı kural)."""
+    """Canlı koordinat-inişi araması ŞU AN meşguliyet kanıtı mı? `hermes.search_progress_oku()`dan
+    okunur. Okunamıyorsa MEŞGUL SAYILIR: muhafazakâr taraf, "emin değilsen 8 çekirdeği ikiye
+    bölme"dir. Dönüş her zaman yaş taşır: `yas_sa` bayrağın SON İLERLEMEDEN beri kaç saattir
+    değişmediğidir (skip olayına aynen çıkar — bkz. maybe_start).
+    `simdi` yalnız tz-AWARE ise saat kabul edilir (should_run'ın `gun_ref` seam'iyle aynı kural).
+
+    KAYNAK DEĞİŞTİ (2026-08-17, §2-50): eskiden `hermes.SEARCH_PROGRESS` sözlüğü DOĞRUDAN okunurdu
+    ve docstring gerekçesi "zamanlayıcı ve api AYNI süreçtedir — daemon thread" idi. Öğrenme
+    döngüsü kendi systemd birimine taşınınca bu varsayım ÇÖKER ve çöküş SESSİZDİR: sözlük okunamaz
+    hâle gelmez, BOŞ kalır → `running` falsy → "meşgul değil" → sprint KOŞAN BİR ARAMANIN ÜSTÜNE
+    8 çekirdeklik antrenman başlatırdı. Aşağıdaki `except` yedeği bunu YAKALAYAMAZDI çünkü ortada
+    istisna yoktu. Üç değerli okuyucu tam bu yüzden var: "ölçülemedi" ile "arama yok" ayrı
+    cevaplardır ve yalnız ikincisi sprint'i serbest bırakır."""
     try:
         from . import hermes
-        sp = dict(hermes.SEARCH_PROGRESS or {})
+        okuma = hermes.search_progress_oku()
     except Exception as e:
         from . import obs
         obs.warn("sprint_search_busy_unreadable", error=f"{type(e).__name__}: {e}",
                  detail="arama durumu okunamadı — sprint MEŞGUL sayıp başlamadı (muhafazakâr taraf)")
         return {"mesgul": True, "bayat": False, "yas_sa": None, "faz": None, "kaynak": "okunamadi"}
+    if okuma["durum"] == "olculemedi":
+        from . import obs
+        obs.warn("sprint_search_busy_unreadable", error=okuma.get("neden"),
+                 detail="arama durumu ÖLÇÜLEMEDİ — sprint MEŞGUL sayıp başlamadı (muhafazakâr taraf)")
+        return {"mesgul": True, "bayat": False, "yas_sa": None, "faz": None, "kaynak": "olculemedi"}
+    sp = okuma["kayit"]
     if not sp.get("running"):
         _ARAMA_GOZLEM.update(iz=None, beri=None, olayli=False)
         return {"mesgul": False, "bayat": False, "yas_sa": None, "faz": sp.get("phase"),
@@ -816,7 +830,11 @@ def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
                          "dürüst görünsün diye 'bayat_temizlendi' ile işaretlendi; asılı iş "
                          "parçacığı uyanırsa kendi yazımı gözlemi sıfırlar"))
         try:
-            hermes.SEARCH_PROGRESS.update(
+            # KAPIDAN GEÇER (§2-50): eskiden `SEARCH_PROGRESS.update(...)` doğrudan çağrılıyordu.
+            # Süreç ayrımından sonra o yazım HİÇBİR İŞE YARAMAZDI — sprint kendi belleğindeki
+            # sözlüğü yazar, panonun okuduğu süreç onu asla görmezdi. `_progress` hem belleği hem
+            # disk aynasını yazar, yani "bayat temizlendi" beyanı gerçekten okuyucuya ulaşır.
+            hermes._progress(
                 running=False, phase="bayat_temizlendi", bayat_yas_sa=round(yas_sa, 1),
                 bayat_temizleyen="sprint_kadansi",
                 bayat_ts=simdi.isoformat(timespec="seconds"))

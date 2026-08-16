@@ -52,6 +52,10 @@ MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 # without this the operator sees only "reflecting: true" and cannot tell progress from a hang.
 SEARCH_PROGRESS: dict = {}
 
+# Bellekteki `SEARCH_PROGRESS`in SÜREÇLER-ARASI nüshası (§2-50). Okuyucu sözleşmesi ÜÇ DEĞERLİDİR
+# ve `search_progress_oku()`dadır — "dosya yok / bayat" ile "arama yok" AYNI ŞEY DEĞİLDİR.
+SEARCH_PROGRESS_FILE = "search_progress.json"
+
 
 def _progress(**alanlar) -> None:
     """SEARCH_PROGRESS'in TEK yazım kapısı (2026-08-12 asılı-arama vakası): her yazım
@@ -64,8 +68,88 @@ def _progress(**alanlar) -> None:
 
     Sprint'in bayatlık yasasına (`sprint._arama_durumu`) BİLEREK GİRMEZ: parmak izi faz/i/total/değişken/
     değer beşlisidir; damga ize girseydi içeriksiz her yazım "ilerleme" gibi okunur, bayatlık
-    yasası körleşirdi. Damga parmak-izine EK sinyaldir, parçası değil."""
+    yasası körleşirdi. Damga parmak-izine EK sinyaldir, parçası değil.
+
+    DİSK AYNASI (2026-08-17, §2-50 süreç ayrımı): bellek sözlüğü artık `SEARCH_PROGRESS_FILE`a da
+    yansıtılır. NEDEN: öğrenme döngüsü kendi systemd birimine taşınınca bu sözlüğün İKİ tüketicisi
+    (`hermes_runtime.status` → pano, `sprint._arama_durumu` → sprint kapısı) başka SÜREÇTE kalır ve
+    orada sözlük boş görünür. `sprint`in muhafazakâr yedeği ("okunamıyorsa MEŞGUL say") bu durumda
+    ATEŞLENMEZ — sözlük okunamaz değil, BOŞtur → `running` falsy → koşan aramanın üstüne antrenman
+    başlatılırdı. Ayna bu yüzden kozmetik değil EMNİYET kalemidir.
+    Yazım burada, çünkü burası tek kapıdır: üç üretici de otomatik kapsanır, yeni yazım yolu
+    açılmaz. Kısma (throttle) YOK ve gerekmiyor — her yazım bir sondanın (walk-forward backtest)
+    ardından gelir, yani saniyeler-dakikalar aralıklı; dosya küçük ve yazım atomiktir."""
     SEARCH_PROGRESS.update(dict(alanlar, updated_at=memory.now_iso()))
+    _progress_aynala()
+
+
+def _progress_aynala() -> None:
+    """`SEARCH_PROGRESS`i diske yansıtır. Yazım düşerse arama DURMAZ (YASA 4: beyanlı yutma —
+    ayna bir teşhis/emniyet yüzeyidir, arama onun başarısına bağlı değildir; düşerse okuyucular
+    'ölçülemedi' görür ve muhafazakâr tarafa düşer, sessizce 'meşgul değil' okumazlar)."""
+    try:
+        store.write_json(SEARCH_PROGRESS_FILE, dict(SEARCH_PROGRESS))
+    except Exception as e:  # sessiz-yutma: ayna yazımı düşse bile arama sürmeli; okuyucu tarafı bayatlıktan ölçülemedi der ve muhafazakâr tarafa düşer
+        obs.warn("search_progress_ayna_yazilamadi", error=f"{type(e).__name__}: {e}",
+                 detail="disk aynası yazılamadı — tüketiciler 'ölçülemedi' görecek (muhafazakâr taraf)")
+
+
+def _progress_temizle() -> None:
+    """Bayrağı sıfırlar — `SEARCH_PROGRESS.clear()`in KAPIDAN GEÇEN hâli.
+
+    NEDEN VAR: `_progress`in docstring'i kendini "TEK yazım kapısı" ilan ediyordu ama çıplak bir
+    `.clear()` çağrısı (eski `_reflect_once_govde` girişi) kapıyı ATLIYORDU. Bellekte bu zararsızdı
+    (aynı sözlük); diske aynayınca zararlı olurdu: dosya `running=True` DONAR ve sprint kapısı
+    sonsuza dek kapalı kalırdı. Temizleme de kapıdan geçer."""
+    SEARCH_PROGRESS.clear()
+    _progress_aynala()
+
+
+def search_progress_oku(ayni_surec: bool = False) -> dict:
+    """Arama ilerlemesini SÜREÇLER-ARASI okur. Tüketici: pano (`hermes_runtime.status`) ve sprint
+    kapısı (`sprint._arama_durumu`) — ikisi de §2-50 ayrımından sonra başka süreçte olabilir.
+
+    ÜÇ DEĞERLİ, ve bu ayrım UYDURMA YASAĞInın gereğidir: "dosya yok / bayrak bayat" ile "arama
+    koşmuyor" AYNI ŞEY DEĞİLDİR. İkisini birleştirmek tam olarak §2-50'nin kapattığı tuzaktır
+    (boş sözlük sessizce "meşgul değil" diye okunuyordu).
+
+      durum="kosuyor"     — kayıt var ve `running` doğru
+      durum="yok"         — kayıt var, `running` yanlış (arama gerçekten koşmuyor)
+      durum="olculemedi"  — dosya yok / bozuk / damgasız. ÇAĞIRAN MUHAFAZAKÂR TARAFA DÜŞER.
+
+    EŞİK BURADA YOK — `yas_s` (damganın yaşı, saniye) döner ve bayatlık hükmünü her tüketici KENDİ
+    yasasıyla verir (sprint'in `ARAMA_BAYAT_SAAT`i onun kanunudur, bu modülün değil; ayrıca
+    `hermes → sprint` içe aktarımı döngü olurdu). Yeni eşik icat EDİLMEDİ (madde 3).
+
+    `ayni_surec=True` verilirse bellekteki sözlük yetkilidir (öğrenme döngüsünün KENDİ süreci
+    içindeki çağrılar) — disk turu boşuna yapılmaz."""
+    import datetime as _dt
+    ham = dict(SEARCH_PROGRESS) if ayni_surec else store.read_json(SEARCH_PROGRESS_FILE, None)
+    if ham is None:
+        return {"durum": "olculemedi", "kayit": {}, "yas_s": None,
+                "neden": f"{SEARCH_PROGRESS_FILE} yok ya da okunamadı"}
+    if not isinstance(ham, dict):
+        return {"durum": "olculemedi", "kayit": {}, "yas_s": None,
+                "neden": f"{SEARCH_PROGRESS_FILE} sözlük değil: {type(ham).__name__}"}
+    if not ham:
+        # BOŞ SÖZLÜK = temizlenmiş bayrak (`_progress_temizle`) — bu ÖLÇÜLDÜ, arama yok demektir.
+        return {"durum": "yok", "kayit": {}, "yas_s": None, "neden": None}
+    dmg = ham.get("updated_at")
+    if dmg:
+        try:
+            yas = max(0.0, (_dt.datetime.now(_dt.timezone.utc)
+                            - _dt.datetime.fromisoformat(dmg)).total_seconds())
+        except (TypeError, ValueError):
+            return {"durum": "olculemedi", "kayit": ham, "yas_s": None,
+                    "neden": f"updated_at çözümlenemedi: {dmg!r}"}
+    elif ham.get("running"):
+        # Damgasız bir `running=True`nun yaşı bilinemez → asılı mı taze mi ÖLÇÜLEMEZ.
+        return {"durum": "olculemedi", "kayit": ham, "yas_s": None,
+                "neden": "running=True ama updated_at damgası yok — yaş ölçülemez"}
+    else:
+        yas = None
+    return {"durum": "kosuyor" if ham.get("running") else "yok",
+            "kayit": ham, "yas_s": yas, "neden": None}
 
 HYP_SCHEMA = {
     "type": "object",
@@ -4476,7 +4560,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     `versioning.bump` onu `params_by_regime[rejim]`e yazar, canlı davranış rejim dönene dek değişmez.
     Atlama yalnız SON ÇARE olarak kalır: rejim adı geçerli değilse (kapsanamıyorsa) tur koşmaz —
     çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir."""
-    SEARCH_PROGRESS.clear()
+    _progress_temizle()          # kapıdan geçen temizleme — disk aynası da sıfırlanır (§2-50)
     proposal = propose_with_llm()
     if proposal is None and VIRGIN_FALLBACK:
         # BEYİNSİZ TUR ARTIK BOŞ GEÇMİYOR: tek akıllı hamle yuvası bakir bir düğmeyle doldurulur.
