@@ -163,11 +163,12 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
 durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
-#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (4 kalem)
+#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (5 kalem)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| **`Ö-51` limit bacağı hüküm sınaması** | WP1 | `EXE-2026-006-limit-bacagi-hukum-sinamasi` | kart ÖN-KAYITLI 2026-08-17 (K=8). **KAPALI DÖNGÜ KIRILIYOR:** E1'in "limit bacağı monoton zararlı" hükmü ABARTILMIŞ replay'le verildi → hüküm uygulanıp bacak canlıda KAPATILDI (`goal.yaml execution_v2` 100.0/0.04, kod varsayılanı 0.5/0.01) → 23c abartıyı ölçemedi, örneklem BOŞ. Bu kart bacağı ÖLÇÜM KOLUNDA silahlandırıp hükmü `bar_low` düzeltmesiyle sınar. Canlı `goal.yaml` DEĞİŞMEZ |
+| **`Ö-51b` Ö1'in KİMLİKLİ yeniden tanımı** | WP1 | `EXE-2026-006` `verdict.O1_ABARTI_ORANI` | 🆕 **HÜKÜMDEN DOĞDU (2026-08-17).** Ö1 ölçülemedi çünkü payda (`entry_missed_limit`) bir RED OLAYI sayacı, pay DİSTİNKT İŞLEM — ham bölme %132/%141 verdi. Abartının BÜYÜKLÜĞÜ, ret sayacı **plan kimliği** taşımadan hiç hesaplanamaz. Kartın "Ö1 > %20 → K1 şerhi" kuralı bu yüzden ne AÇILDI ne KAPANDI (askıda). `B4` kararının ÖN-KOŞULU |
+| **`Ö-51c` Ö3 ΔP&L bootstrap CI** | WP1 | `EXE-2026-006` `verdict.O3_PORTFOY_ETKISI` | 🆕 **HÜKÜMDEN DOĞDU (2026-08-17).** ΔP&L dört tavanda da POZİTİF (+146/+7.163/+5.759/+7.355$) ve üçlü ayrıştırma SENTE kapanıyor — ama **CI koşulmadı**, yani "pozitif" bir nokta tahmini. Kart istiyordu, bu turda yapılmadı (beyanlı). Aynı hücreler → **K harcamaz**. `B4` kararının ÖN-KOŞULU |
 | friksiyon dayanıklılığı | WP1 | `EDG-2026-040-friksiyon-dayaniklilik` | kart ön-kayıtlı, ölçüm bekliyor |
 | gölge kapsam / planlı kol | WP3 | `EXE-2026-003-golge-planli-kol` | kart ön-kayıtlı |
 | `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** |
@@ -176,7 +177,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H3 İCRADA — A KOLU KAPISI GEÇTİ 2026-08-17** (`research/olcumler/exe005_23c_a_kolu_2026-08-17/`: işlemler+seanslar bayt-özdeş, tek ayrışan alan `n_endeks_satir` ve o ADIYLA muaf). Çiviler **6/6** · `bar_low` uygulandı · bayrak kuruldu · **B KOLU DA KOŞULDU (a83c5e9)** ve örneklem BOŞ çıktı — sebebi yapısal, bkz. `Ö-51`. **H5 incelemesi yapıldı (2026-08-17): 2 kritik + 4 önemli bulgu, HEPSİ KAPATILDI** (kol kimliği damgası · AST sızıntı taraması · tolerans totolojisi · YASA 6 ret alanı). 23c'nin kendi ürünü (Ö1/Ö2/Ö3) `Ö-51` çözülmeden ÜRETİLEMEZ. Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
+| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H3 İCRADA — A KOLU KAPISI GEÇTİ 2026-08-17** (`research/olcumler/exe005_23c_a_kolu_2026-08-17/`: işlemler+seanslar bayt-özdeş, tek ayrışan alan `n_endeks_satir` ve o ADIYLA muaf). Çiviler **6/6** · `bar_low` uygulandı · bayrak kuruldu · **B KOLU DA KOŞULDU (a83c5e9)** ve örneklem BOŞ çıktı — sebebi yapısal, bkz. `Ö-51`. **H5 incelemesi yapıldı (2026-08-17): 2 kritik + 4 önemli bulgu, HEPSİ KAPATILDI** (kol kimliği damgası · AST sızıntı taraması · tolerans totolojisi · YASA 6 ret alanı). ⚠ **`Ö-51` KAPANDI 2026-08-17 (`EXE-2026-006` measured) — ama 23c'nin kendi Ö1/Ö2/Ö3'ü BUNUNLA ÜRETİLMİŞ SAYILMAZ:** 006 DAR tavanlı (0,005-0,03) bir ölçüm kolunda koştu, 23c'nin sorusu CANLI yasadaki (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) sadakattir ve orada kapı hâlâ YAPISAL OLARAK ÖLÜ (`BULGU-B-KOLU.md`: limit = `trigger·1.04` = `max_chase` tavanıyla birebir, `max_chase` ÖNCE sınanır → boş küme). Yani 006 hükmü 23c'yi ÇÖZMEDİ, sorusunun canlı yasada CEVAPLANAMAZ olduğunu TEYİT etti; 005'in kendi Rol-1 hükmü hâlâ AÇIK (aşağıda). Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
 | `tests/` §-atıf çevrimi (120 satır) | WP6 | `scratchpad/roadmap_donusum.py` | `meridian/` **ÇEVRİLDİ ✅** (10 dosya/18 satır, codelaw temiz). `tests/` BİLEREK bekliyor: 86 satır yorum-DIŞI ve assert içinde olabilir → tam suite koşumuyla doğrulanmadan dokunulmaz |
 
 #### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
@@ -209,6 +210,8 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | kalem | WP | durum |
 |---|---|---|
 | `A1` koruma yeniden-kurulumu — **4 pozisyon ÇIPLAK** | WP2 | **BLOKE: operatör** · `EDG-2026-038` · bugün bedel ödeniyor |
+| **`B4` E1 limit bacağı — canlıda AÇILSIN MI** | WP1 | 🆕 **BLOKE: operatör (2026-08-17)** · `EXE-2026-006` measured → **E1 hükmü YENİDEN AÇILDI** (H1 düştü, H2 ölçülemedi) → bacağın canlıda etkisiz olmasının gerekçesi ARTIK KANITLI DEĞİL. Kart açmayı **ÖNERMEZ** (kendi sınırı) · strateji kimliği kalemi → §5 KOVA-2 · ÖN-KOŞUL: `Ö-51b` + `Ö-51c` |
+| **`Ö-51d` `EXE-2026-005` Rol-1 hükmü + K kaydı** | WP1 | 🆕 **BEKLİYOR: Rol-1 (2026-08-17)** · B kolu koştu, örneklem BOŞ ve sebebi YAPISAL (`BULGU-B-KOLU.md` yazılı) ama kart hâlâ `status: registered`. Belge kendi son satırında **"Rol-1 hükmü ve K-defteri kaydı ister"** diyor — `parameter_grid`e (dar tavan) dokunulduğu için K kararı gerekiyor. Aynı sınıf `v251` çivisiyle ölçülür hâle geldi ama o çivi yalnız `HUKUM*.md` yazılmış kartları bağlar; bu kartın belgesi `BULGU-*.md` |
 | `A2` bildirim kanalı (N1) | — | **BLOKE: operatör** · kanal kimliği yok, 29 alarm teslim edilemedi |
 | `B1` pullback silahsızlanması | WP11 | **BLOKE: operatör** · `EDG-2026-039` ölçüldü; strateji kimliği değişikliği |
 | `B2` koruma politikası (a/b/c) | WP2 | **BLOKE: operatör** |
@@ -222,6 +225,8 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | kanıt |
 |---|---|---|
+| **`Ö-51` limit bacağı hüküm sınaması** | WP1 | 🆕 **`EXE-2026-006` measured (2026-08-17)** — TAM pencere, K=8 (4 tavan × 2 dolum kuralı), altı kill kriterinin HEPSİ geçti. **HÜKÜM: E1 YENİDEN AÇILIR** (H1 monotonluk DÜŞTÜ: 9.773→**19.452**→17.948→17.858, tepe 0,01'de · H2 ÖLÇÜLEMEDİ: dört tavanda da bootstrap CI'ı sıfır İÇERİYOR). Ö1 ÖLÇÜLEMEDİ (birim uyuşmazlığı — ham bölme %132/%141, bir oran %100'ü aşamaz → None+neden) · Ö3 ÖLÇÜLDÜ ve **SENTE KAPANDI** (yan kanal büyük: cap=0,005'te 251 yeni işleme karşı 154 YERİNDEN, ve yerinden olanlar dört tavanda da kaybeden). **KAPALI DÖNGÜ KIRILDI** — E1'in "monoton zararlı" hükmü artık canlı yapılandırmayı GEREKÇELENDİRMİYOR. Türeyen kalemler: `Ö-51b` · `Ö-51c` (H1) · `B4` (operatör) · `Ö-51d` (005 hükmü). **DERS (ölçüm-şablonu):** duman penceresi Ö2'yi dört tavanda da NEGATİF gösteriyordu, tam pencerede işaret DÖNDÜ ve CI'ya girince ölçülemez oldu — küçük örneklem yalnız gürültülü değil **YÖN OLARAK YANILTICI** |
+| **kart↔hüküm beyan çürümesi (`Ö-49` yüzeyi)** | WP6 | 🆕 **`v251` çivisi (2026-08-17)** — `a033256` hükmü 24 ölçüm artefaktı taşıdı, kart/§2/§6/§7'ye DOKUNMADI: kart `registered` derken hükmü diskte yazılıydı. Ölçüm ajanı DOĞRU davrandı (CLAUDE.md §3), eksik olan **Rol-1 devir adımının çivisiz** olmasıydı. Çivi kırmızı doğdu, hüküm işlenince yeşile döndü; 5 pozitif kontrol + düzenek çivisi |
 | `Ö-50` öğrenme süreç ayrımı | WP3 | v249 · pano 14,0 → **0,027 sn**, API CPU %93 → %2 |
 | `28a` görünmez süzgeç | WP3 | `EDG-2026-041` status=`measured` (D1+D2) · v247 |
 | `28c` · `28e` · `28f` | WP3 | v247 |
@@ -1980,6 +1985,29 @@ Kaynak: `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md` §F + §H-17..21. Aşağ
   operatör eylemi. (Ölçülen seans-içi çıplaklık eşiği aşmadı — ama tolerans, kanıt değil.)
 - **bağımlı kalemler:** A1 (acil eylem) · A2 (c seçeneği kanalı ŞART koşar).
 
+**B4 · E1 LİMİT BACAĞI — CANLIDA AÇILSIN MI** _(WP1; kart `EXE-2026-006` — ölçüldü 2026-08-17, hüküm: E1 YENİDEN AÇILIR)_
+- **ne bekleniyor:** `state/goal.yaml` `execution_v2`de bacağı fiilen ÖLÜ bırakan iki değerin
+  (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) değiştirilip değiştirilmeyeceği kararı — **ama
+  ÖNCE iki ön-koşul** (`Ö-51b` Ö1'in kimlikli tanımı · `Ö-51c` ΔP&L bootstrap CI'ı). Kart bir değer
+  ÖNERMEZ ve önermemesi bilinçlidir.
+- **neden:** bacağın kapalı olmasının gerekçesi E1'in "limit bacağı MONOTON zararlı · kaçanlar
+  sistematik KAZANAN" hükmüydü. `EXE-2026-006` o hükmü düzeltilmiş dolum kuralıyla sınadı:
+  **monotonluk ayağı DÜŞTÜ** (tepe 0,01'de, sonra azalıyor) ve **işaret ayağı ÖLÇÜLEMEDİ** (dört
+  tavanda da CI sıfırı içeriyor). Yani hüküm ÇÜRÜTÜLMEDİ ama **DOĞRULANMADI da** — canlı
+  yapılandırma bugün KANITSIZ bir gerekçeye yaslanıyor. Kartın ölçümden ÖNCE yazdığı asimetri
+  beyanı burada bağlıyor: *"hüküm düştü" sonucu canlıda para bırakıyor olabileceğimiz anlamına
+  gelir* — iki sonucun bedeli EŞİT DEĞİL.
+- **beklerken bedel:** ÖLÇÜLEN YÖN pozitif ama CI'sız — dar tavanlı ölçüm kolunda ΔP&L dört
+  tavanda da POZİTİF (+146 / +7.163 / +5.759 / +7.355$). ⚠ **BU BİR KÂR VAADİ DEĞİL:** (a) CI
+  koşulmadı, (b) `max_chase` kırpması yüzünden hüküm bir ALT SINIRDIR, (c) yan kanal büyük
+  (154 işlem yerinden oldu) ve ölçüm dar tavanda koştu — canlı yasa geniş tavanda. Bedel
+  "kaçırılan X dolar" diye YAZILAMAZ; yazılabilecek olan şudur: **karar verilene dek bacak,
+  gerekçesi çürümüş bir yapılandırmayla ölü duruyor.**
+- **bağımlı kalemler:** `Ö-51b` + `Ö-51c` (ÖN-KOŞUL, ikisi de H1) · `Ö-51d` (`EXE-2026-005` Rol-1
+  hükmü + K kaydı) · WP1-B 23c limit-tavanı kararı (D5: "kapanmadan limit-tavanı kararı YOK") ·
+  `EDG-2026-037/038` friksiyon hükmü (bacak açılırsa işlem sayısı artar → friksiyon emilimi de artar,
+  ve mutlak P&L iddiaları friksiyona ASILI).
+
 **B3 · FAZ-6 `sonuc_hukmu` YAPISAL KAPALILIĞI — ⚠ KARAR DEĞİL, BİLGİ** _(WP5-E/20b; denetim A14/F4)_
 - **ne bekleniyor:** **hiçbir şey — operatörden karar İSTENMİYOR.** Bu satır yalnız bilgilendirme
   olarak §5'te duruyor, çünkü daha önce "KARAR GEREKİR" diye kayıtlıydı ve o kayıt artık yanlış.
@@ -2169,6 +2197,8 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 | **EDG-2026-039** pullback-silahsizlanma | measured (08-13) | **SİLAHSIZLANMA ÖNERİLİR** ama gerekçe "çıkarmak kazandırıyor" değil **KANIT ASİMETRİSİ** (ΔP&L +3.121$ CI 0-içi, dd −0,0005, sharpe +0,073, **n SABİT 885→885**); pullback'in zararı üç kaynakta tutarlı. **EN SAĞLAM KART** (eşit-n → friksiyonla güçlenir). Karar operatörde → §5 KOVA-2. |
 | **KYS-2026-002** pbo-dsr-r1-taban | measured_partial (08-10) | R1 tabanında **PBO = 0,6286** → kapı her iki modda **BLOKLAR** (ilk gerçek taban; damgalama gerçek iş yapıyor). **DSR yarısı kill#2** — araç borcu (WP5-C). |
 
+| **EXE-2026-005** dinlenen-limit | **registered (08-17)** · ⚠ **hüküm BEKLİYOR (Rol-1)** | 🆕 A kolu ÖZDEŞLİK KAPISI GEÇTİ (işlemler+seanslar bayt-özdeş) · **B kolu koştu, örneklem BOŞ** ve sebebi ÖRNEKLEM KÜÇÜKLÜĞÜ DEĞİL **YAPISAL**: canlı yasada (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) limit fiyatı tam `trigger·1,04`e oturur = `max_chase` tavanıyla BİREBİR AYNI, ve `max_chase` ÖNCE sınandığı için limit kapısının ateşleyebileceği aralık **BOŞ KÜMEDİR** (ölçüldü: `trigger=100`, atr ∈ {None,1,2,4} → dördünde de ulaşılmaz). HÜKÜM KOŞULLU, mutlak değil: ATR bacağının bağlaması için `ATR/trigger < 4 bps` gerekir — hissede pratikte erişilemez. **Kart ÇÜRÜMEDİ** — sorusu geçerli, sorulacağı KONFİGÜRASYON canlı yasa değil → `EXE-2026-006` o dar tavanı koştu. **AÇIK:** `parameter_grid`e dokunulduğu için Rol-1 hükmü + K kaydı gerekiyor → §2 TAHTA `Ö-51d`. Belge: `research/olcumler/exe005_23c_a_kolu_2026-08-17/BULGU-B-KOLU.md` |
+| **EXE-2026-006** limit-bacagi-hukum-sinamasi | **measured (08-17)** | 🆕 **E1 HÜKMÜ YENİDEN AÇILIR.** TAM pencere (2022-01-01→2026-07-30, evren 251), **K=8** (4 tavan × 2 dolum kuralı), altı kill kriterinin HEPSİ geçti. Kartın ölçümden ÖNCE yazdığı kural "H1 ∧ H2 ayakta ⇒ E1 doğrulanır" idi: **H1 monotonluk DÜŞTÜ** (net P&L 9.773 → **19.452** → 17.948 → 17.858; tepe 0,01'de) · **H2 ÖLÇÜLEMEDİ** (ay-kümeli bootstrap B=5000: dört tavanda da CI **sıfırı içeriyor**; nokta tahminleri +0,041/+0,101/+0,117 tavanla ARTIYOR ama hiçbiri ayrışmıyor) → şart sağlanmadı. **Ö1 ÖLÇÜLEMEDİ** (birim uyuşmazlığı: payda RED OLAYI sayacı, pay DİSTİNKT İŞLEM → ham bölme %132/%141, bir oran %100'ü aşamaz; None+neden). **Ö3 ÖLÇÜLDÜ, SENTE KAPANDI** (ΔP&L +146/+7.163/+5.759/+7.355$; yan kanal BÜYÜK — cap=0,005'te 251 yeni işleme karşı **154 yerinden**, ve yerinden olanlar dört tavanda da KAYBEDEN, çıkmaları P&L'i iyileştirdi; ⚠ **CI koşulmadı**). SONUÇ: bacağın canlıda etkisiz olmasının gerekçesi **ARTIK KANITLI DEĞİL** — kart açmayı **ÖNERMEZ** (kendi sınırı), karar §5 KOVA-2 `B4`. Ön-koşul: `Ö-51b` (Ö1 kimlikli tanım) + `Ö-51c` (ΔP&L CI). **KALICI DERS:** duman penceresi Ö2'yi dört tavanda da NEGATİF gösterdi, tam pencerede İŞARET DÖNDÜ → küçük örneklem **YÖN OLARAK yanıltıcı** |
 | **EDG-2026-040** friksiyon-dayaniklilik | **registered (08-13)** | 🆕 **ÖLÇÜLMEDİ — ön-kayıt.** Denetim §E'nin adlandırdığı tek açık takip: dokuz replay hükmüne şerh düşüldü ama hiçbiri friksiyon ARTIRILARAK yeniden koşulmadı. Aşama-1 (K+=3): C+mb @ `slippage_bps` {15,25,35}. Aşama-2 (KOŞULLU, K+=2): B ve C @ 15 — yalnız Aşama-1'de net P&L>0 ise. Ölçüm v243 dağıtımı sonrası temiz ağaçta. |
 
 > **✅ FRİKSİYON ŞERHİ TURU — KAPANDI (2026-08-13, commit 025ef1d; hüküm metni işi, ölçüm gerekmedi):**
@@ -2267,6 +2297,29 @@ karar penceresinin UYGULANMASI, `max_drawdown` operatör kararı, tohum yenileme
 v237-v243 dağıtımları vardı; hepsi yalnız §4 maddelerinin İÇİNDE yaşıyordu ve §4 temizlenince
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§3'de.)_
 
+- **2026-08-17 `EXE-2026-006` HÜKMÜ İŞLENDİ → E1 YENİDEN AÇILDI + kart↔hüküm çürümesi ÇİVİLENDİ (`v251`):**
+  ölçüm hükmü (`a033256`) diske YAZILMIŞ ama **hiçbir karara/karta işlenmemişti** — o commit 24 dosya
+  taşıdı ve hepsi ölçüm artefaktıydı; kart `status: registered` ("ölçüm bekliyor") derken hükmü
+  `HUKUM.md`de duruyordu, `§2 TAHTA` kalemi H1'de bekliyordu, `§6` indeksinde kartın SATIRI HİÇ YOKTU.
+  Bu bir iş bölümü kusuru DEĞİL: `CLAUDE.md §3` "ölçüm ajanı karta DOKUNMAZ, hükmü Rol-1 işler" der ve
+  ölçüm ajanı doğru davrandı — eksik olan, **Rol-1 devir adımının hiçbir yerde ÇİVİLİ olmamasıydı**
+  (sözleşme kendi devir noktasında sessizdi). **HÜKÜM:** kartın ölçümden ÖNCE yazdığı kural "H1 ∧ H2
+  ayakta ⇒ E1 doğrulanır" idi; **H1 monotonluk DÜŞTÜ** (9.773 → **19.452** → 17.948 → 17.858, tepe
+  0,01'de) ve **H2 ÖLÇÜLEMEDİ** (ay-kümeli bootstrap B=5000, dört tavanda da CI sıfırı İÇERİYOR) →
+  **E1 HÜKMÜ YENİDEN AÇILIR**, bacağın canlıda etkisiz olmasının gerekçesi ARTIK KANITLI DEĞİL.
+  Ö1 ÖLÇÜLEMEDİ (birim uyuşmazlığı — payda RED OLAYI sayacı, pay DİSTİNKT İŞLEM; ham bölme %132/%141
+  ve bir oran %100'ü aşamaz → None+neden), Ö3 ÖLÇÜLDÜ ve **SENTE KAPANDI** (yan kanal büyük: cap=0,005'te
+  251 yeni işleme karşı **154 yerinden**, yerinden olanlar dört tavanda da KAYBEDEN). Kart açmayı
+  **ÖNERMEZ** (kendi sınırı) → **yeni operatör kalemi `B4`** (§5 KOVA-2), ön-koşulu `Ö-51b`+`Ö-51c`.
+  İŞLENEN YÜZEYLER: kart (`status` + 9 alanlı `verdict` bloğu + `k_registry` K=8 harcandı; ön-kayıt
+  metninin TEK SATIRI silinmedi) · `§2 TAHTA` (Ö-51→H6 ✅, türeyen `Ö-51b/c/d` + `B4`) · `§6` (005 ve
+  006 satırları EKLENDİ) · `§5 KOVA-2` (`B4` dört satırlı paket) · bu kayıt. **ÇİVİ (`v251`, TDD —
+  kırmızı doğdu):** yazılı `HUKUM*.md` ile o hükmün adlandırdığı kartın `status`u çelişemez; 5 pozitif
+  kontrol + düzenek çivisi (boş taramanın sessiz-yeşili kapatıldı), tek yönlü olması BEYANLI (ters yön
+  26 `measured` kartı yanlış-kırmızıya düşürürdü). Sınıf `Ö-49 çapa/beyan çürümesi`nin kart↔hüküm
+  yüzeyi. **KALICI DERS (ölçüm-şablonu):** duman penceresi (n=1..3) Ö2'yi dört tavanda da NEGATİF
+  gösteriyordu; 885 işlemde işaret DÖNDÜ ve CI'ya girince ölçülemez oldu — küçük örneklem yalnız
+  gürültülü değil **YÖN OLARAK YANILTICIDIR**, duman bir hükmün İŞARETİ için delil sayılmaz.
 - **2026-08-17 SUPERPOWERS PROTOKOLÜ KURULDU (CLAUDE.md §9, commit 1d10a75 + 44d8a06):** bu
   depoda çalışan her Claude oturumu `superpowers` plugin bileşenlerini (brainstorming,
   systematic-debugging, TDD, writing/executing-plans, code-review, verification-before-completion,

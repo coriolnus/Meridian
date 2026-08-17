@@ -68,10 +68,15 @@ kill_criteria:
   - "E1'in ORİJİNAL çıktısı yeniden üretilirse geçersiz — o dondurulmuş kanıttır; bu kart YENİ koşum yapar, eskisini EZMEZ"
   - "H1/H2 hükmü tek bir tavandan verilirse geçersiz: 'monoton' bir EĞRİ iddiasıdır, tek nokta onu sınayamaz"
 
-k_registry: {registered_at: "2026-08-17", trial_ids: [pending-EXE-006-limit-bacagi-hukum]}
+k_registry: {registered_at: "2026-08-17", trial_ids: [EXE-006-limit-bacagi-hukum/K8-4tavan-x-2dolum]}
+# K HARCANDI: 8 (4 tavan × 2 dolum kuralı), ön-kayıttaki grid AYNEN — ekleme/çıkarma YOK. Duman
+# taraması (K=8, `BULGU-DUMAN.md`) AYRI sayılmaz: aynı grid, aynı kart, KESİLMİŞ pencere — yeni bir
+# sınama değil aynı sınamanın ön provası (`EXE-2026-002` emsali: "değişen yalnız ölçütün UYGULANDIĞI
+# KÜME, K defterine sayılmaz"). Ö3'ün eksik ΔP&L CI'ı K harcamaz (aynı hücreler, yeniden koşum yok).
 
-status: registered   # 2026-08-17 Rol-1 — ön-kayıt, operatör onaylı kapsam ("A ile devam et").
-                     # Ölçüm TEMİZ ağaçta ve EXE-2026-005 H4 kapısı yeşile döndükten SONRA koşulur.
+status: measured   # 2026-08-17 Rol-1 — ölçüldü + hüküm: E1 YENİDEN AÇILIR (H1 düştü, H2 ölçülemedi).
+                   # Ön-kayıt notu (tarihçe): "ölçüm TEMİZ ağaçta ve EXE-2026-005 H4 kapısı yeşile
+                   # döndükten SONRA koşulur" — İKİSİ DE sağlandı, kill kriterlerinde doğrulandı.
 
 beyanlı_sinirlar: >
   (1) BU KART E1'İN YERİNE GEÇMEZ. E1 kendi penceresinde, kendi evreninde koştu; bu kart onun
@@ -92,3 +97,67 @@ beyanlı_sinirlar: >
   içerir, ayrıcalıklı değil.
   (5) Bu kart canlı bacağın AÇILMASINI önermez; yalnız hükmün ayakta olup olmadığını ölçer.
   Açma kararı strateji kimliğine dokunur ve §5 operatör bloğuna gider.
+
+# =================================================================================================
+# HÜKÜM — Rol-1, 2026-08-17. Tam metin: research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md
+# Ölçüm ajanı bu bloğa DOKUNMADI (CLAUDE.md §3); hükmü Rol-1 işledi. Yukarıdaki ön-kayıt
+# metninin TEK SATIRI değişmedi — hüküm ÜSTÜNE yazılır, ön-kayıt SİLİNMEZ.
+# =================================================================================================
+verdict:
+  kapsam: >
+    Pencere 2022-01-01→2026-07-30 · evren 251 · K=8 (4 tavan {0,005 · 0,01 · 0,02 · 0,03} × 2 dolum
+    kuralı {`yalniz_acilis` · `dinlenen_limit`}) · TAM koşum. ALTI KILL KRİTERİNİN HEPSİ GEÇTİ:
+    her tavan `MAX_ENTRY_GAP_PCT`(0,04) ALTINDA (ölü hücre yok) · şasi kapısı her hücrede yeniden
+    koşuldu (`frame_miss=0 dup=0 scan!=plan=0`) · `state/goal.yaml` DEĞİŞMEDİ (yasa yalnız süreç-içi
+    yamayla) · dolum kuralı tek yerde (`broker.fill_entry`) · E1'in orijinal çıktısı EZİLMEDİ
+    (sandbox yönlendirmesi — yapısal) · hüküm tek tavandan verilmedi (dört tavan).
+  O1_ABARTI_ORANI: >
+    **ÖLÇÜLEMEDİ — None + neden (UYDURMA YASAĞI).** Kartın tanımı bu veriyle HESAPLANAMIYOR: payda
+    `entry_missed_limit` yani bir RED OLAYI sayacı (aynı plan günlerce reddedilebilir), pay ise
+    DİSTİNKT İŞLEM sayısı. Ham bölme %132 ve %141 verdi — bir oran %100'ü AŞAMAZ; bu bir sonuç
+    değil, BİRİM UYUŞMAZLIĞININ belirtisidir. İKİNCİ KUSUR: yerinden-etme HİÇ KAÇMAMIŞ işlemleri de
+    içeri alıyor, yani pay saf değil. SONUÇ: kartın "Ö1 > %20 ise K1 şerhi açılır" kuralı bu turda
+    İŞLETİLEMEZ — ve bu kural, ölçülemediği için ne AÇILDI ne KAPANDI (askıda kalır).
+    Ö1 ancak kaçan PLANLARIN KİMLİĞİ kaydedilirse hesaplanır; bugünkü ret sayacı kimlik taşımıyor.
+  O2_ISARET: >
+    **İŞARET ÖLÇÜLEMEDİ — dört tavanda da CI sıfırı İÇERİYOR.** Ay-kümeli bootstrap (B=5000,
+    seed 20260812, yeniden örneklenen birim = AY): ort-R −0,0436 [−0,1870 · +0,0978] · +0,0411
+    [−0,1717 · +0,2788] · +0,1007 [−0,1977 · +0,3773] · +0,1167 [−0,1672 · +0,3839]. Nokta
+    tahminleri pozitif ve tavanla ARTIYOR ama dördü de sıfırdan AYRIŞMIYOR. "Kaçanlar sistematik
+    KAZANAN" DA "sistematik KAYBEDEN" DE söylenemez: E1'in bu iddiası DOĞRULANMADI ama
+    ÇÜRÜTÜLMEDİ de — ölçüm ayırt edemiyor. Monoton artış bir DESEN'dir, hüküm değil; CI onu taşımıyor.
+  O3_PORTFOY_ETKISI: >
+    **ÖLÇÜLDÜ ve SENTE KAPANDI** (kartın Ö3 şartı): üçlü ayrıştırma (yeni + yerinden + ortak Δ)
+    gerçek farkı 0,00 kuruşla kapatıyor — ΔP&L +146 / +7.163 / +5.759 / +7.355$ (dört tavanda da
+    POZİTİF). YAN KANAL BÜYÜK ve kartın "etki TOPLAMSAL DEĞİLDİR" beyanını DOĞRULUYOR: cap=0,005'te
+    251 yeni işleme karşı **154 işlem yerinden oldu**; yerinden olanlar DÖRT TAVANDA DA kaybedendi
+    (ort-R −0,052 / −0,034 / −0,003 / −0,025), yani ÇIKMALARI P&L'i iyileştirdi.
+    ⚠ **CI KOŞULMADI** — nokta tahmini pozitif, güven aralığı YOK. Bu turun açık kalemi (aşağıda).
+  H1_MONOTONLUK: >
+    **DÜŞTÜ.** `dinlenen_limit` kolunda net P&L: 9.773 → **19.452** → 17.948 → 17.858; tepe 0,01'de,
+    sonra AZALIYOR. E1'in "limit bacağı MONOTON zararlı" iddiasının monotonluk ayağı bu kolda AYAKTA
+    DEĞİL. (Tek başına E1'i ÇÜRÜTMEZ — E1 kendi penceresinde, kendi dolum kuralıyla koştu;
+    beyanlı_sinirlar (1).)
+  hukum: >
+    Kartın ölçümden ÖNCE yazdığı kural: *"H1 ve H2'nin İKİSİ de ayakta kalırsa E1 DOĞRULANIR;
+    biri düşerse hüküm YENİDEN AÇILIR."* **H1 DÜŞTÜ · H2 ÖLÇÜLEMEDİ** (yani "ayakta kaldı"
+    denemez) → kuralın şartı SAĞLANMADI → **E1 HÜKMÜ YENİDEN AÇILIR.** Canlı yapılandırmanın
+    (bacağın `limit_pct_cap=0,04` + `limit_atr_mult=100,0` ile ETKİSİZLEŞTİRİLMİŞ olması)
+    gerekçesi ARTIK KANITLI DEĞİLDİR. Kartın ASİMETRİ BEYANI (ölçümden önce yazılı) şimdi
+    bağlıyor: *"hüküm düştü" sonucu canlıda para bırakıyor olabileceğimiz anlamına gelir.*
+    **BU KART BACAĞIN AÇILMASINI ÖNERMEZ** (beyanlı_sinirlar (5), kartın kendi sınırı): açma
+    kararı strateji kimliğine dokunur → §5 KOVA-2 `B4`. Karara girmeden ÖNCE kapatılması gereken
+    ÜÇ kalem hükümde ADIYLA yazılı: (1) Ö1 kimlikli yeniden tanım (ret sayacı plan kimliği
+    taşımalı), (2) Ö3 için ΔP&L bootstrap CI, (3) Ö2'nin ölçülememesi bir SONUÇtur — örneklem bu
+    soruyu ayırt edemiyor, daha fazla veri ya da farklı bir ölçüt gerekir.
+  DUMAN_YANILTTI_kayda_gecti: >
+    Kalıcı ders, ölçüm-şablonu kalemi: duman penceresinde (n=1..3) Ö2 DÖRT TAVANDA DA NEGATİF
+    görünüyordu; 885 işlemlik tam pencerede İŞARET DÖNDÜ ve CI'ya girince ÖLÇÜLEMEZ oldu. Yani
+    küçük örneklem yalnız GÜRÜLTÜLÜ değil, **YÖN OLARAK YANILTICIYDI** — duman taraması bir
+    hükmün İŞARETİ için asla delil sayılmaz. (Ölçüm ajanının kendi kaydı: "CI koşulmasaydı 'H2
+    düştü' diye yazacaktım — koştum, yazmadım." Bu, YASA 4'ün doğru işlediği bir vaka.)
+  BU_TURDA_YAPILMAYANLAR: >
+    BEYANLI (YASA 4): (a) Ö3 ΔP&L bootstrap CI'ı — kart istiyor, KOŞULMADI; (b) Ö1'in kimlikli
+    yeniden tanımı; (c) `max_chase` kırpması (beyanlı_sinirlar (3)) KALDIRILMADI, yani Ö1 paydası
+    ve Ö3 portföy etkisi hâlâ ALT SINIRDIR.
+  artefakt: "research/olcumler/exe006_limit_bacagi_2026-08-17/ (HUKUM.md · sonuc_grid.json · O2_bootstrap_ci.json · yan_kanal_ayristirma.json · BULGU-DUMAN.md)"

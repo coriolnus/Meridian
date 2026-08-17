@@ -62,6 +62,31 @@ disiplin (ölçüm kartı, waiter yasağı, tam-suite tek-otoriter, git/dağıt�
 
 ## BU OTURUMDA BULUNAN + ÇÖZÜLEN (kök nedenleriyle)
 
+- **HÜKÜM YAZILDI, HİÇBİR KARARA İŞLENMEDİ (2026-08-17; sınıf: `Ö-49` çapa/beyan çürümesi — kart↔hüküm
+  yüzeyi):** `EXE-2026-006` ölçümü TAM koşuldu (K=8, altı kill kriteri de geçti) ve hükmü
+  `research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`e yazıldı: **E1 HÜKMÜ YENİDEN AÇILIR**.
+  Ama hüküm commit'i (`a033256`) **24 dosya taşıdı ve hepsi ölçüm artefaktıydı** — karta, `§2 TAHTA`ya,
+  `§6` indeksine, `§7` karar günlüğüne DOKUNMADI. Sonuç: kart `status: registered` ("ölçüm bekliyor")
+  derken hükmü diskte YAZILI duruyordu; `§6`da kartın satırı HİÇ YOKTU; `§2 TAHTA` kalemi hâlâ
+  "kart ÖN-KAYITLI · ölçüm bekliyor" kovasındaydı. **KÖK NEDEN BİR İŞ BÖLÜMÜ KUSURU DEĞİL, TAM TERSİ:**
+  `CLAUDE.md §3` "ölçüm ajanı karta DOKUNMAZ — hükmü Rol-1 işler" der ve ölçüm ajanı DOĞRU davrandı.
+  Eksik olan, **Rol-1'in devralma adımının hiçbir yerde ÇİVİLİ olmamasıydı** — yani sözleşme kendi
+  DEVİR NOKTASINDA sessizdi: hükmü yazan taraf karta dokunamaz, karta dokunacak taraf ise "hüküm hazır"
+  sinyalini yalnız HATIRLAYARAK alır. Üç okuyucu birden yanılıyordu: `§6` durumu karttan okur ·
+  **K defteri kart kimliğinden okunur ve `registered` bir kart K HARCAMAMIŞ görünür** (006 K=8 harcadı;
+  eksik K, eşiği HAK ETMEDEN geçme yönünde YANLIDIR — `test_kart_kimlik_v219`un ölçtüğü yanlılığın
+  birebir aynısı, farklı yüzeyden) · `§2 TAHTA` triyajı aşamayı "kart ön-kayıtlı mı" sorusundan türetir.
+  **ÇİVİ (`tests/test_kart_hukum_damgasi_v251.py`, TDD — KIRMIZI DOĞDU):** yazılı bir `HUKUM*.md` ile
+  o hükmün adlandırdığı kartın `status`u ÇELİŞEMEZ (+ hükmün adlandırdığı kart VAR olmalı). 5 pozitif
+  kontrol + **düzenek çivisi** (desen kayarsa tarama boş döner ve çekirdek çivi hiçbir şey ölçmeden
+  yeşil geçerdi — o sessiz-yeşil kapatıldı). TEK YÖNLÜ olması BEYANLI: "hüküm yok ama kart `measured`"
+  ters yönü sınanmaz, çünkü hüküm `HUKUM.md` dışında da yazılabilir (kartın `verdict` bloğu, `§7`,
+  `BULGU-*.md`) ve bugün 26 `measured` kartın yalnız BİRİNİN ayrı `HUKUM.md`si var — zorunlu kılmak
+  25 kartı yanlış-kırmızıya düşürür, yani kusur değil BİÇİM ölçerdi. **AÇIK KALAN AYNI SINIFTA:**
+  `EXE-2026-005` de `registered` ve hükmü `BULGU-B-KOLU.md`de yazılı ("Rol-1 hükmü ve K-defteri kaydı
+  ister") — `v251` onu YAKALAMAZ (dosya adı `HUKUM*` değil) ve bu bilinçli; kalem `§2 TAHTA`ya
+  `Ö-51d` olarak yazıldı, kapatılması `parameter_grid` dokunuşu yüzünden K kararı gerektirir.
+
 - **CANLI-BEKÇİ YANLIŞ ALARMI, bounds.yaml (2026-08-02; sınıf: "git-izli dosyada mtime sızıntıyı
   değil git trafiğini ölçer"):** KATMAN-2 bekçisi `test_scheduler_flag_survives_publish_lag`
   teardown'unda `['bounds.yaml']` ile düştü; şüphe test alt-süreçlerine (hermes CLI + mcp_server)
