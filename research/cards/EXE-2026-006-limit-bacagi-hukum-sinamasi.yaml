@@ -1,0 +1,86 @@
+card_id: EXE-2026-006
+family: limit_bacagi_hukum_sinamasi   # BİR HÜKMÜ sınar (edge hipotezi değil) — E1 grid'in yeniden okunması
+thesis: >
+  `EXE-2026-001-R2`nin E1 grid hükmü — **"limit bacağı MONOTON ZARARLI · kaçanlar sistematik
+  KAZANAN"** (2026-08-03) — replay'in kaçan-işlem maliyetini SİSTEMATİK ABARTTIĞI bir dünyada
+  verildi; `EXE-2026-005` bu yüzden ona K1 şerhi düşürdü. Hüküm UYGULANDI: canlı `goal.yaml`
+  `execution_v2` bacağı ETKİSİZLEŞTİRDİ (`limit_atr_mult: 100.0` → ATR hiç bağlamaz ·
+  `limit_pct_cap: 0.04` → `broker.MAX_ENTRY_GAP_PCT` ile BİREBİR aynı, `max_chase` önce sınandığı
+  için limit kapısı YAPISAL OLARAK ULAŞILMAZ). Kod varsayılanı bunun TERSİ (`0.5` / `0.01`).
+  KAPALI DÖNGÜ: düzeltilmesi gereken ölçüm, düzeltmeyi gereksiz kılan yapılandırmayı üretti —
+  `EXE-2026-005`in B kolu bu yüzden BOŞ örneklemle döndü (2026-08-17, entry_missed_limit = 0).
+  BU KART O DÖNGÜYÜ KIRAR: bacağı ÖLÇÜM KOLUNDA silahlandırıp E1 taramasını `bar_low` düzeltmesiyle
+  (dinlenen limit) YENİDEN koşar ve hükmün düzeltilmiş dünyada ayakta kalıp kalmadığını sınar.
+
+evidence_refs:
+  - "EXE-2026-001-R2 E1 grid hükmü (2026-08-03): 'limit bacağı MONOTON ZARARLI · kaçanlar sistematik KAZANAN'"
+  - "EXE-2026-005 K1 şerhi + thesis: 'E1 grid hükmü tam olarak bu abartılmış maliyetle verildi'"
+  - "ÖLÇÜLDÜ 2026-08-17: goal.yaml execution_v2 = {limit_atr_mult: 100.0, limit_pct_cap: 0.04}; kod varsayılanı {0.5, 0.01}"
+  - "ÖLÇÜLDÜ 2026-08-17: trigger=100 · atr ∈ {None,1,2,4} dördünde de limit=104,0000 = max_chase tavanı → kapı ulaşılmaz"
+  - "ÖLÇÜLDÜ 2026-08-17 (EXE-005 B kolu, duman): entry_rejects = {open_below_stop: 1}, entry_missed_limit = 0; A↔B blokları birebir"
+  - "research/olcumler/exe005_23c_a_kolu_2026-08-17/BULGU-B-KOLU.md"
+
+universe: >
+  Replay motoru, C+mb @5R dünyası (edg032b şasisi) — `EXE-2026-005` ile AYNI şasi ve AYNI pencere.
+  Şasi kapısı O KARTTA geçti (2026-08-17: işlemler+seanslar bayt-özdeş; `ozdeslik_hukmu` uyarınca
+  `n_endeks_satir` adıyla muaf) ve bu kart o kapıyı DEVRALIR — yeniden koşulur, gevşetilmez.
+  CANLI DOKUNULMAZ: `state/goal.yaml` DEĞİŞMEZ. Bacak yalnız ölçüm kolunda, `entry_law(override=…)`
+  ile silahlandırılır. Canlı bacağı açmak STRATEJİ KİMLİĞİ değişikliğidir ve operatör kararıdır;
+  bu kart onu ÖNEREBİLİR, kendisi YAPAMAZ.
+
+features_asof: >
+  İKİ EKSEN, aynı şasi:
+  (1) LİMİT TAVANI — E1'in süpürdüğü bant; bacak SİLAHLI (cap < MAX_ENTRY_GAP_PCT olmak ZORUNDA,
+      yoksa kapı ölüdür ve hücre ölçüm DEĞİL gürültü olur).
+  (2) DOLUM KURALI — `yalniz_acilis` (E1'in gördüğü dünya) ↔ `dinlenen_limit` (`bar_low` düzeltmesi,
+      `EXE-2026-005` H3'te uygulandı ve çivilendi).
+  ÖLÇÜLECEK: her tavanda net P&L, işlem n, `entry_missed_limit` sayısı ve kaçanların ort-R'si —
+  İKİ dolum kuralı altında ayrı ayrı.
+
+parameter_grid:
+  limit_pct_cap: [0.005, 0.01, 0.02, 0.03]   # K += 4 · hepsi MAX_ENTRY_GAP_PCT(0.04) ALTINDA — üstü ölü hücre
+  dolum_kurali: [yalniz_acilis, dinlenen_limit]   # K += 2
+  # K TOPLAM = 4 × 2 = 8 hücre (ÇARPILARAK sayılır, madde 3)
+
+cost_model: pessimistic_band_v2   # EXE-2026-005 ile AYNI bant; bu kart da GÖRECELİ kıyas yapıyor
+                                  # (iki dolum kuralı, aynı bant) → EDG-040'ın iyimserlik şerhi ayrı kalem
+
+success_metric: >
+  BU KART BİR HÜKMÜ SINAR, YENİ BİR TERCİH ÜRETMEZ. Ürün üç cevap:
+  H1 — MONOTONLUK AYAKTA MI: `dinlenen_limit` kolunda net P&L tavana göre HÂLÂ monoton mu?
+       E1 "monoton zararlı" dedi; monotonluk BOZULUYORSA hükmün ana iddiası düşer.
+  H2 — İŞARET AYAKTA MI: kaçanların ort-R'si `dinlenen_limit` altında HÂLÂ pozitif mi (CI ile)?
+       "Kaçanlar sistematik KAZANAN" iddiası doğrudan buradan sınanır.
+  H3 — ABARTININ BÜYÜKLÜĞÜ: her tavanda `entry_missed_limit` sayısının yüzde kaçı dinlenen
+       limitle DOLUYOR — `EXE-2026-005`in Ö1'i, artık BOŞ OLMAYAN bir örneklemle.
+  HÜKÜM KURALI (ölçümden ÖNCE yazıldı): H1 ve H2'nin İKİSİ de ayakta kalırsa E1 hükmü
+  DOĞRULANIR ve bacağın canlıda kapalı olması GEREKÇELİDİR. Biri düşerse hüküm YENİDEN AÇILIR
+  ve canlı yapılandırma bir OPERATÖR KARARI kalemine dönüşür (bu kart o kararı VERMEZ).
+  ASİMETRİ BEYANI: "hüküm doğrulandı" sonucu hiçbir şeyi değiştirmez; "hüküm düştü" sonucu ise
+  canlıda para bırakıyor olabileceğimiz anlamına gelir. İki sonucun bedeli EŞİT DEĞİLDİR ve bu
+  ölçümden ÖNCE yazılmıştır.
+
+kill_criteria:
+  - "cap >= MAX_ENTRY_GAP_PCT olan bir hücre ÖLÇÜLÜRSE geçersiz: limit kapısı orada yapısal olarak ateşlemez, hücre ölçüm değil gürültüdür (2026-08-17'de ölçüldü)"
+  - "şasi kapısı (EXE-2026-005 ozdeslik_hukmu) YENİDEN koşulmazsa geçersiz — devralınır, VARSAYILMAZ"
+  - "`state/goal.yaml` DEĞİŞİRSE geçersiz: bu bir ölçüm kartıdır, canlı davranışa dokunmaz"
+  - "dolum kuralı `broker.fill_entry` DIŞINDA ikinci bir yerde uygulanırsa geçersiz (EXE-2026-005 ile aynı kill)"
+  - "E1'in ORİJİNAL çıktısı yeniden üretilirse geçersiz — o dondurulmuş kanıttır; bu kart YENİ koşum yapar, eskisini EZMEZ"
+  - "H1/H2 hükmü tek bir tavandan verilirse geçersiz: 'monoton' bir EĞRİ iddiasıdır, tek nokta onu sınayamaz"
+
+k_registry: {registered_at: "2026-08-17", trial_ids: [pending-EXE-006-limit-bacagi-hukum]}
+
+status: registered   # 2026-08-17 Rol-1 — ön-kayıt, operatör onaylı kapsam ("A ile devam et").
+                     # Ölçüm TEMİZ ağaçta ve EXE-2026-005 H4 kapısı yeşile döndükten SONRA koşulur.
+
+beyanlı_sinirlar: >
+  (1) BU KART E1'İN YERİNE GEÇMEZ. E1 kendi penceresinde, kendi evreninde koştu; bu kart onun
+  HÜKMÜNÜ düzeltilmiş dolum kuralı altında sınar. Sayılar birebir kıyaslanabilir olmayabilir ve
+  farklıysa bu bir çelişki DEĞİL, pencere/kural farkıdır — raporda AYRI sütun olarak durur.
+  (2) `EXE-2026-005`in günlük-bar sınırı AYNEN geçerlidir: `low <= limit` "dokunuldu" der ama
+  SIRAYI söylemez; aynı gün stop da dokunmuşsa hangisinin önce olduğu ÖLÇÜLEMEZ ve kötümser
+  tarafa yazılır. Yani H3 hâlâ bir ALT SINIRDIR.
+  (3) Kod varsayılanının (`0.5`/`0.01`) "doğru" olduğu VARSAYILMAZ — grid onu da bir nokta olarak
+  içerir, ayrıcalıklı değil.
+  (4) Bu kart canlı bacağın AÇILMASINI önermez; yalnız hükmün ayakta olup olmadığını ölçer.
+  Açma kararı strateji kimliğine dokunur ve §5 operatör bloğuna gider.

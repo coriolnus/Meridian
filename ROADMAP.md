@@ -163,10 +163,11 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
 durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
-#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (3 kalem)
+#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (4 kalem)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
+| **`Ö-51` limit bacağı hüküm sınaması** | WP1 | `EXE-2026-006-limit-bacagi-hukum-sinamasi` | kart ÖN-KAYITLI 2026-08-17 (K=8). **KAPALI DÖNGÜ KIRILIYOR:** E1'in "limit bacağı monoton zararlı" hükmü ABARTILMIŞ replay'le verildi → hüküm uygulanıp bacak canlıda KAPATILDI (`goal.yaml execution_v2` 100.0/0.04, kod varsayılanı 0.5/0.01) → 23c abartıyı ölçemedi, örneklem BOŞ. Bu kart bacağı ÖLÇÜM KOLUNDA silahlandırıp hükmü `bar_low` düzeltmesiyle sınar. Canlı `goal.yaml` DEĞİŞMEZ |
 | friksiyon dayanıklılığı | WP1 | `EDG-2026-040-friksiyon-dayaniklilik` | kart ön-kayıtlı, ölçüm bekliyor |
 | gölge kapsam / planlı kol | WP3 | `EXE-2026-003-golge-planli-kol` | kart ön-kayıtlı |
 | `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** |
