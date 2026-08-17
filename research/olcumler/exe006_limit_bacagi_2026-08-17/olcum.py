@@ -117,7 +117,14 @@ def hucre_kos(ref, cap: float, kural: str, smoke: bool) -> dict:
             f"KOL KİMLİĞİ TUTMADI: beklenen={kural} damga={damga} — hücre ölçüm DEĞİL, koşum DURUR")
 
     islem = d.get("islem") or {}
+    perf = d.get("performans") or {}
     rejects = dict(islem.get("entry_rejects") or {})
+    # İŞLEM DEFTERİ de saklanır: H2/H3 kol FARKINDAN çıkar (özet alanlardan değil).
+    defter_yol = (BURASI / "smoke" / "islemler_tam_kontrol_smoke.json") if smoke \
+        else (BURASI / "islemler_tam_kontrol.json")
+    defter = json.load(open(defter_yol, encoding="utf-8")) if defter_yol.exists() else []
+    (BURASI / f"defter_cap{cap}_{kural}{'_smoke' if smoke else ''}.json").write_text(
+        json.dumps(defter, ensure_ascii=False), encoding="utf-8")
     # hücre çıktısı ADIYLA saklanır (üzerine yazılmasın)
     (BURASI / f"hucre_cap{cap}_{kural}{'_smoke' if smoke else ''}.json").write_text(
         json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -125,8 +132,14 @@ def hucre_kos(ref, cap: float, kural: str, smoke: bool) -> dict:
             "yasa": {k: yasa[k] for k in ("limit_atr_mult", "limit_pct_cap", "version")},
             "entry_rejects": rejects,
             "entry_missed_limit": int(rejects.get("entry_missed_limit", 0)),
-            "performans": d.get("performans"), "islem_ozet": {k: islem.get(k) for k in
-                                                              ("n", "net_pnl", "avg_r")}}
+            # NET P&L KANONİK ALANDAN (2026-08-17 düzeltmesi): önce `islem.net_pnl` okunuyordu
+            # ve o alan YOK — `None` geliyordu, yani H1 (monotonluk) ölçülemiyordu. Doğru yer
+            # `performans.net_pnl_trades`. `net_pnl_equity` ile aynı çıkıyor; ikisi de yazılır ki
+            # ayrışırlarsa GÖRÜNSÜN (ayrışma tek başına bir bulgudur).
+            "net_pnl_trades": perf.get("net_pnl_trades"),
+            "net_pnl_equity": perf.get("net_pnl_equity"),
+            "islem_n": islem.get("n"),
+            "defter": defter}
 
 
 def main() -> int:
@@ -139,10 +152,48 @@ def main() -> int:
             h = hucre_kos(ref, cap, kural, smoke)
             out.append(h)
             print(f"  cap={cap:<6} {kural:<15} damga={str(h['dolum_kurali_damgasi']):<15} "
-                  f"missed_limit={h['entry_missed_limit']:<4} {h['islem_ozet']}")
+                  f"missed_limit={h['entry_missed_limit']:<4} n={h['islem_n']} "
+                  f"net_pnl={h['net_pnl_trades']}")
+    # ── H2/H3: KOL FARKI ── dinlenen kolda DOLAN ama açılış kolunda KAÇAN işlemler.
+    # Özet alanlardan çıkmaz; iki defterin FARKI gerekir. Kimlik = (ticker, giriş tarihi).
+    def _kimlik(t):
+        # Alan adları DEFTERDEN OKUNDU, tahmin edilmedi (2026-08-17): ilk hâl `entry_date`/`date`
+        # deniyordu, hiçbiri yok — `r` de yoktu ve Ö2 sessizce None kalıyordu.
+        return (t.get("ticker"), t.get("ts_open"))
+    fark = {}
+    for cap in TAVANLAR:
+        a = next(h for h in out if h["limit_pct_cap"] == cap and h["dolum_kurali"] == "yalniz_acilis")
+        b = next(h for h in out if h["limit_pct_cap"] == cap and h["dolum_kurali"] == "dinlenen_limit")
+        ak = {_kimlik(t) for t in a["defter"]}
+        yalniz_b = [t for t in b["defter"] if _kimlik(t) not in ak]
+        rler = [float(t["r_multiple"]) for t in yalniz_b if t.get("r_multiple") is not None]
+        fark[str(cap)] = {
+            "kacan_sayisi_acilis_kolunda": a["entry_missed_limit"],
+            "dinlenen_kolda_DOLAN_ek_islem": len(yalniz_b),
+            # Ö1: kaçtı denilenlerin yüzde kaçı gerçekte doluyor
+            "O1_abarti_orani": (round(100.0 * len(yalniz_b) / a["entry_missed_limit"], 1)
+                                if a["entry_missed_limit"] else None),
+            "O1_olculemedi_nedeni": (None if a["entry_missed_limit"]
+                                     else "açılış kolunda HİÇ kaçan yok — payda sıfır, oran TANIMSIZ"),
+            # Ö2: o işlemlerin ort-R'si — "kaçanlar sistematik KAZANAN" iddiası buradan sınanır
+            "O2_ek_islem_ort_r": (round(sum(rler) / len(rler), 4) if rler else None),
+            "O2_n": len(rler),
+            "O2_olculemedi_nedeni": None if rler else "ek işlem yok ya da r_multiple boş — ort-R ÖLÇÜLEMEDİ",
+            # H1 girdisi
+            "net_pnl_yalniz_acilis": a["net_pnl_trades"],
+            "net_pnl_dinlenen": b["net_pnl_trades"],
+            "delta_pnl": (round(b["net_pnl_trades"] - a["net_pnl_trades"], 2)
+                          if None not in (a["net_pnl_trades"], b["net_pnl_trades"]) else None)}
+    print("── KOL FARKI ──")
+    for c, f in fark.items():
+        print(f"  cap={c:<6} kaçan={f['kacan_sayisi_acilis_kolunda']} → dolan={f['dinlenen_kolda_DOLAN_ek_islem']} "
+              f"Ö1={f['O1_abarti_orani']}% Ö2ort-R={f['O2_ek_islem_ort_r']} ΔP&L={f['delta_pnl']}")
+
     yol = BURASI / f"sonuc_grid{'_smoke' if smoke else ''}.json"
     json.dump({"kart": "EXE-2026-006", "smoke": smoke, "K_hucre": len(out),
-               "tavanlar": TAVANLAR, "dolum_kurallari": DOLUM_KURALLARI, "hucreler": out},
+               "tavanlar": TAVANLAR, "dolum_kurallari": DOLUM_KURALLARI,
+               "kol_farki": fark,
+               "hucreler": [{k: v for k, v in h.items() if k != "defter"} for h in out]},
               open(yol, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print(f"yazıldı: {yol} · K={len(out)}")
     return 0
