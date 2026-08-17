@@ -21,6 +21,7 @@ holdout yalnız insana raporlanır, hiçbir kabul kararını etkilemez. Replay'd
 karartma kapısı "olculemedi_replay" beyanıyla susar — bugünün takvimi tarihsel plana uygulanmaz.
 Saf hesap: state'e yazmaz; bar/goal okur, uyarılar obs'a bir kez düşer."""
 from __future__ import annotations
+import os
 from dataclasses import dataclass
 import pandas as pd
 
@@ -52,6 +53,12 @@ from . import config
 from . import skills as skills_mod
 from . import broker as brk
 from .broker import PaperBroker
+
+# 23c DİNLENEN LİMİT A/B BAYRAĞI (kart EXE-2026-005). VARSAYILAN KAPALI: A kolu =
+# bugünkü davranış ve `edg032b` ile BİT-ÖZDEŞ olmak zorunda (kartın kill kriteri). ENV ile açılır,
+# çünkü ölçüm iki kolu AYNI kodla koşmalı — iki dal, iki şasi demek olurdu.
+# HER ÇAĞRIDA DEĞİL, modül düzeyinde okunur: bir koşum ortasında kol değişmesi ölçümü bozar.
+DINLENEN_LIMIT = os.environ.get("MERIDIAN_DINLENEN_LIMIT", "0") == "1"
 
 # Sektör HARİTASI: replay evreninin ticker→sektör ETİKETLERİ. Bu tablo yalnız ETİKET üretir —
 # sektör tavanını HESAPLAMAZ (eski başlık "enables the max_sector_exposure_pct guard in backtest"
@@ -300,7 +307,15 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
             if t in per and d in per[t].index and not breaker_tripped and size_mult > 0 \
                     and len(broker.positions) < eff_max_open and t not in broker.positions:
                 _rej: dict = {}
+                # 23c A/B BAYRAĞI (kart EXE-2026-005 · plan 2026-08-17). VARSAYILAN KAPALI ve bu
+                # kartın kill kriteridir: A kolu (`bar_low` geçilmeyen hâl) `edg032b` ile BİT-ÖZDEŞ
+                # olmak ZORUNDA — değilse şasi bozuktur ve hüküm verilmez. Bayrak açıkken B kolu
+                # koşar: dinlenen limit (gün içinde limite dokunulduysa emir dolar).
+                # Yer BURASI çünkü `per[t].loc[d]` tam bar satırını taşır — `low` ek veri çekmeden
+                # erişilebilir (kart: "dakika barı GEREKMEZ"). Canlı yol (`loop.py`) bu satırdan
+                # geçmez ve o günün low'unu karar anında zaten BİLEMEZ.
                 broker.fill_entry(plan, per[t].loc[d, "open"], str(d.date()), eq_now,
+                                  bar_low=(float(per[t].loc[d, "low"]) if DINLENEN_LIMIT else None),
                                   size_mult=size_mult, adv=_adv(per[t], d),
                                   pivot=armed_pivots.get(t, 0.0),   # yapı çizgisi (icra girdisi)
                                   atr=armed_atr.get(t),             # E1 limitinin ATR bacağı
