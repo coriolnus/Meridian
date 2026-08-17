@@ -80,7 +80,15 @@ beyanlı_sinirlar: >
   (2) `EXE-2026-005`in günlük-bar sınırı AYNEN geçerlidir: `low <= limit` "dokunuldu" der ama
   SIRAYI söylemez; aynı gün stop da dokunmuşsa hangisinin önce olduğu ÖLÇÜLEMEZ ve kötümser
   tarafa yazılır. Yani H3 hâlâ bir ALT SINIRDIR.
-  (3) Kod varsayılanının (`0.5`/`0.01`) "doğru" olduğu VARSAYILMAZ — grid onu da bir nokta olarak
+  (3) **MAX_CHASE KIRPMASI — ÖLÇÜMDEN ÖNCE BEYAN EDİLDİ (inceleme Önemli 3, 2026-08-17).**
+  `broker.py`de kapı sırası `max_chase` → limit'tir. Açılış `trigger·(1+0.04)`ün ÜSTÜNDEyse
+  `max_chase` önce reddeder ve dinlenen-limit dalına HİÇ gelinmez. Bu kart tavanı 0,005-0,03'e
+  indirdiği için dinlenen limitin dönüştürebileceği aralık `(trigger·(1+cap), trigger·1.04]` ile
+  SINIRLIDIR: %4'ün üstünde açılan bir gün, low limite dokunmuş olsa bile `max_chase` etiketiyle
+  kaybolur. SONUÇ: Ö1'in paydası ve Ö3'ün portföy etkisi EKSİK ölçülür ve hüküm yine bir
+  ALT SINIRDIR. Bu kırpma kaldırılmadı — kaldırmak `MAX_ENTRY_GAP_PCT`e dokunmak olurdu ve o
+  ayrı bir emniyet sınırıdır (kart değil, operatör kalemi).
+  (4) Kod varsayılanının (`0.5`/`0.01`) "doğru" olduğu VARSAYILMAZ — grid onu da bir nokta olarak
   içerir, ayrıcalıklı değil.
-  (4) Bu kart canlı bacağın AÇILMASINI önermez; yalnız hükmün ayakta olup olmadığını ölçer.
+  (5) Bu kart canlı bacağın AÇILMASINI önermez; yalnız hükmün ayakta olup olmadığını ölçer.
   Açma kararı strateji kimliğine dokunur ve §5 operatör bloğuna gider.

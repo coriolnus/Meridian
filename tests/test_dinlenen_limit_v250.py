@@ -19,6 +19,8 @@ o yüzden `loop.py` onu geçemez; değişmezlik disiplinle korunan bir söz değ
 import pathlib
 import re
 
+import pytest
+
 
 from meridian import broker as B
 
@@ -99,8 +101,12 @@ def test_low_limite_dokunduysa_LIMIT_FIYATINDAN_DOLAR(monkeypatch):
     pos = b.fill_entry(_plan(trig, stop), _acilis(lim), "2026-01-05", 100_000.0,
                        bar_low=lim - 0.50, reject_out=red)
     assert pos is not None, f"low limite dokundu ({lim - 0.5} <= {lim}) — emir DOLMALIYDI · {red}"
-    assert abs(float(pos.entry) - lim) < 0.5 * lim, (
-        f"dolum fiyatı limite yakın olmalı (dinlenen emir kendi fiyatından dolar): {pos.entry} vs {lim}")
+    # TOLERANS KAPALI FORMDA (inceleme Önemli 5): ilk hâl `< 0.5*lim` idi — lim=101 için kabul
+    # aralığı [50,5 · 151,5], yani `next_open`tan (102 → 102,05) dolsa da geçerdi. Totolojiydi.
+    # Beklenen değer hesaplanabilir: adv=None olduğu için ETKİ terimi yok, yalnız sabit slipaj.
+    beklenen = lim * (1.0 + b.slip)
+    assert float(pos.entry) == pytest.approx(beklenen, abs=0.01), (
+        f"dolum LİMİT fiyatından olmalı (slipaj dahil {beklenen:.4f}), açılıştan değil: {pos.entry}")
 
 
 def test_low_limitin_ustundeyse_DOLMAZ_uydurma_dolum_yasak(monkeypatch):
@@ -113,6 +119,11 @@ def test_low_limitin_ustundeyse_DOLMAZ_uydurma_dolum_yasak(monkeypatch):
     pos = b.fill_entry(_plan(trig, stop), _acilis(lim), "2026-01-05", 100_000.0,
                        bar_low=lim + 0.01, reject_out=red)
     assert pos is None, "low limitin ÜSTÜNDE — dolum UYDURMA olurdu, kart bunu kill kriteri yapıyor"
+    # RET NEDENİ DE SINANIR (inceleme Küçük 8): yalnız `pos is None` bakmak yetmez — `qty_zero`,
+    # `notional_cap`, `already_open` da None döndürür. Limit kapısı bir gün tamamen kaldırılsa ve
+    # dolum başka bir kapıya takılsa, kill-kriteri çivisi YEŞİL raporlardı.
+    assert red.get("reason") == B.EV_MISSED_LIMIT, (
+        f"ret LİMİT kapısından gelmeli, başka bir kapıdan değil: {red}")
 
 
 def test_canli_cagiran_bar_low_GECMEZ():
@@ -120,19 +131,72 @@ def test_canli_cagiran_bar_low_GECMEZ():
 
     `fill_entry`nin ALTI çağıranı var; YALNIZ replay (`backtest.py`) `bar_low` geçebilir. Canlı
     (`loop.py`) ve gölge yolları geçemez — ve bu bir tercih değil olgudur: canlıda karar anında
-    o günün low'u BİLİNMEZ. Çivi bunu kaynaktan ölçer, beyana güvenmez."""
+    o günün low'u BİLİNMEZ.
+
+    AST İLE TARANIR, DÜZ METİNLE DEĞİL (2026-08-17 inceleme bulgusu — Kritik 2). İlk hâl
+    `metin.split(")")[0]` ile çağrıyı İLK KAPANAN PARANTEZDE kesiyordu; `loop.py:1407` için
+    çivinin gördüğü metin `adv=_adv(per[t], d`'de bitiyordu. Yani CANLI çağrıya `bar_low=`
+    eklenebilir ve çivi YEŞİL kalırdı — kartın 1 numaralı kill kriterinin tek bekçisi, korumakla
+    görevli olduğu yerde KÖRDÜ. AST üç sızıntı yolunu birden görür: anahtar sözcük, `**sözlük`,
+    ve KONUMSAL (imzada `bar_low` 9. argüman). Ayrıştırılamayan dosya da körlüktür → çivi düşer."""
+    import ast
     kok = pathlib.Path(__file__).resolve().parents[1] / "meridian"
     izinli = {"backtest.py", "broker.py"}
     suclular = []
     for py in sorted(kok.rglob("*.py")):
         if py.name in izinli:
             continue
-        metin = py.read_text(encoding="utf-8")
-        for m in re.finditer(r"fill_entry\(", metin):
-            kuyruk = metin[m.end():m.end() + 400]
-            kesik = kuyruk.split(")")[0]
-            if "bar_low" in kesik:
-                suclular.append(f"{py.name}:{metin[:m.start()].count(chr(10)) + 1}")
+        try:
+            agac = ast.parse(py.read_text(encoding="utf-8"))
+        except SyntaxError as e:      # sessiz-yutma DEĞİL: ayrıştırılamayan dosya körlüktür, ÇİVİ DÜŞER
+            raise AssertionError(f"{py.name} ayrıştırılamadı, tarama KÖR kalırdı: {e}") from e
+        for d in ast.walk(agac):
+            if not isinstance(d, ast.Call):
+                continue
+            f = d.func
+            ad = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", None)
+            if ad != "fill_entry":
+                continue
+            # (a) anahtar sözcükle: bar_low=...   (b) **sozluk ile dolaylı  (c) KONUMSAL: imzada
+            # `bar_low` 9. parametre (self hariç 8.) — o kadar konumsal argüman verilirse de sızar.
+            if any(k.arg == "bar_low" for k in d.keywords):
+                suclular.append(f"{py.name}:{d.lineno} (bar_low=)")
+            elif any(k.arg is None for k in d.keywords):
+                suclular.append(f"{py.name}:{d.lineno} (**sözlük — bar_low taşıyor OLABİLİR, tarama kesin diyemez)")
+            elif len(d.args) >= 9:
+                suclular.append(f"{py.name}:{d.lineno} (KONUMSAL {len(d.args)} argüman — bar_low konumuna ulaşıyor)")
     assert not suclular, (
         f"CANLI/GÖLGE yol `bar_low` geçiyor: {suclular} — replay sadakat düzeltmesi canlı davranışa "
         f"SIZDI; kartın ayrışma kill kriteri tetiklendi")
+
+
+def test_kol_kimligi_SONUCA_damgalanir_ve_backtest_baglantisi_YASAR():
+    """KRİTİK 1 (inceleme, 2026-08-17): B kolunun koştuğunun KANITI olmalı.
+
+    İlk B kolu koşumunda A↔B çıktıları YALNIZ zaman damgasında farklıydı; "bayrak açıktı ama
+    vaka yoktu" ile "bayrak hiç uygulanmadı" AYIRT EDİLEMİYORDU. Damga o ayrımı yapar.
+
+    İkinci ayak: `backtest.py`nin `bar_low`u GERÇEKTEN barın `low`undan aldığını sınar. Bu
+    bağlantının hiç kapsamı yoktu — `"low"` yerine `"close"` yazılsa hiçbir çivi ötmezdi ve
+    B koşumu bayt-özdeş çıktığı için ölçüm de yakalamazdı."""
+    import ast
+    from meridian import backtest as BT
+
+    # (a) DAMGA ALANI VAR ve iki kolu ayırt eder
+    assert "dolum_kurali" in BT.BacktestResult.__dataclass_fields__, (
+        "kol kimliği sonuca damgalanmıyor — B kolunun koştuğu KANITLANAMAZ")
+
+    # (b) BAĞLANTI: fill_entry çağrısı bar_low'u barın `low` SÜTUNUNDAN alıyor mu?
+    kaynak = pathlib.Path(BT.__file__).read_text(encoding="utf-8")
+    cagri = next(d for d in ast.walk(ast.parse(kaynak))
+                 if isinstance(d, ast.Call)
+                 and getattr(d.func, "attr", None) == "fill_entry"
+                 and any(k.arg == "bar_low" for k in d.keywords))
+    kw = next(k for k in cagri.keywords if k.arg == "bar_low")
+    sabitler = [n.value for n in ast.walk(kw.value) if isinstance(n, ast.Constant)]
+    assert "low" in sabitler, (
+        f"backtest fill_entry çağrısı `bar_low`u 'low' sütunundan ALMIYOR (gördüğüm sabitler: "
+        f"{sabitler}) — dinlenen limit yanlış seriye bakıyor olabilir ve bu SESSİZ bir kusurdur")
+
+    # (c) bayrak damgayı GERÇEKTEN sürüyor mu — iki yönü de
+    assert BT.DINLENEN_LIMIT is False, "test ortamında A kolu beklenir (bayrak ayarsız)"

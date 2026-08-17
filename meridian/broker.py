@@ -66,7 +66,12 @@ DERISK_FLOOR_DD = 0.36     # at/beyond this drawdown from peak, take no new size
 # YASA (tek yer, iki okuyucu — kopyalanmaz):
 #   1. LİMİT   : limit = tetik + min(atr_mult·ATR14, pct_cap·tetik). ATR ölçülemezse yalnız
 #                yüzde tavanı bağlar ve bu `offset_kaynak` alanıyla BEYAN EDİLİR (uydurma ATR yok).
-#   2. DOLUM   : hiçbir motor limitin ÜSTÜNDE dolum yazamaz. İç motor: `next_open <= limit`.
+#   2. DOLUM   : hiçbir motor limitin ÜSTÜNDE dolum yazamaz — İFADE SLİPAJ ÖNCESİDİR
+#                (inceleme Küçük 7, 2026-08-17). Baz fiyat limiti aşamaz; `base_fill`
+#                ona slipajı EKLER, yani dinlenen dolumda gerçekleşen fiyat daima
+#                `limit·(1+slip)`tir. Sapma KÖTÜMSER yöndedir (Ö2/Ö3'ü aşağı çeker)
+#                ve kartın 'belirsizlik kötümser tarafa' ilkesiyle uyumludur.
+#                İç motor: `next_open <= limit`.
 #                Ayna: limit fiyatlı emir (limitin üstünde zaten dolmaz — sınır brokerdadır).
 #   3. GAP     : gönderim anında referans fiyat tetiğin ÜSTÜNDEyse buy-stop GEÇERSİZDİR (bugünkü
 #                retlerin kökü). Kart grid'inin iki noktası: `marketable_limit` (varsayılan —
@@ -567,7 +572,14 @@ class PaperBroker:
                                 asim_bps=round((float(next_open) / _limit - 1.0) * 10000, 2)
                                          if _limit > 0 else None,
                                 atr=(round(float(atr), 4) if atr else None),
-                                bar_low=(round(float(bar_low), 4) if bar_low is not None else None),
+                                # YASA 6 (inceleme Önemli 4): alan YALNIZ ölçülmüşse yazılır.
+                                # Çıplak `None` yazmak canlı deftere (`loop.py` → `red_detay`)
+                                # daima-null bir sütun sızdırırdı: canlı yol `bar_low` GEÇMEZ,
+                                # yani orada bu alanın tek olası değeri null'dı — okuyucusuz bir
+                                # alanı canlı makbuza eklemek şema genişletmekten başka bir şey
+                                # yapmazdı. Replay tarafında ise değer GERÇEK ve Ö1'in paydasını
+                                # ayrıştırmakta kullanılır.
+                                **({"bar_low": round(float(bar_low), 4)} if bar_low is not None else {}),
                                 law=_law["version"])
         if next_open <= stop:
             return _red("open_below_stop", stop=round(float(stop), 4),

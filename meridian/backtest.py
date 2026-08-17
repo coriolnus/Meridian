@@ -153,6 +153,14 @@ class BacktestResult:
     # None = eski bir çağrı, {} = doldu. Üretilen kanıt TÜKETİLİR (YASA 6): replay raporunu okuyan
     # her yer, o tabloda karartma etkisinin SIFIR olduğunu buradan görür.
     earnings_gate: dict = None
+    # 23c DOLUM KURALI DAMGASI (inceleme bulgusu Kritik 1, 2026-08-17). Hangi kolun koştuğu
+    # SONUCUN KENDİSİNDE yazar. NEDEN ZORUNLU: A ve B kolları bayrak DIŞINDA birebir aynı kodu
+    # koşar; bayrak unutulursa iki koşum da AYNI çıktıyı verir ve "B koşuldu ama vaka yoktu" ile
+    # "B hiç koşmadı" AYIRT EDİLEMEZ. İlk B kolu koşumu (2026-08-17) tam bu yüzden ayırt edici
+    # güç taşımıyordu: A↔B çıktıları yalnız zaman damgasında farklıydı.
+    # TÜKETİCİ (YASA 6): ölçüm koşumları bu alanı sonuç JSON'una yazar ve kol kimliğini oradan
+    # okur; `test_dinlenen_limit_v250` de bağlantının kopmadığını buradan sınar.
+    dolum_kurali: str = None
 
     def detail(self, goal: dict) -> dict:
         """Sonucun işlemlerinden hedef sözleşmesine göre ayrıntılı karneyi (`score.score_detail`) üretir
@@ -549,7 +557,8 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
 
     return BacktestResult(trades=broker.closed, equity=equity_curve, params=params, start=start,
                           end=end, plan_log=plan_log, candidate_log=candidate_log,
-                          entry_rejects=entry_rejects, earnings_gate=_eg)
+                          entry_rejects=entry_rejects, earnings_gate=_eg,
+                          dolum_kurali=("dinlenen_limit" if DINLENEN_LIMIT else "yalniz_acilis"))
 
 
 def holding_day_r_curve(trades: list, max_day: int = 40) -> dict:

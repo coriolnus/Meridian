@@ -8,7 +8,7 @@
 | net_pnl | −2163,48 | −2163,48 |
 | `performans` bloğu | — | **A ile birebir** |
 | `islem` bloğu | — | **A ile birebir** |
-| `entry_rejects` | — | `{"open_below_stop": 1}` |
+| `entry_rejects` | `{"open_below_stop": 1}` | `{"open_below_stop": 1}` | ← **AYNI** (boş hücre yanıltıcıydı, düzeltildi 2026-08-17) |
 | **`entry_missed_limit`** | — | **SIFIR** |
 
 `bar_low` B kolunda geçildi ve kural koştu; uygulanacak **tek bir vaka bulamadı**.
@@ -27,6 +27,10 @@ limit fiyatı tam olarak `trigger * 1.04` olur — yani **`max_chase` tavanıyla
 
 Ölçüldü (2026-08-17): `trigger=100` için atr ∈ {None, 1.0, 2.0, 4.0} → limit = 104,0000 ve
 tavan = 104,00; dört durumda da "limit kapısı ULAŞILMAZ".
+
+**HÜKÜM MUTLAK DEĞİL, KOŞULLUDUR (inceleme Küçük 9):** `entry_limit_price` `min(atr_mult·ATR, pct_cap·trigger)` alır; ATR bacağının bağlaması için `ATR/trigger < pct_cap/atr_mult = 0,04/100 = **4 bps** gerekir. Hisse senedinde bu eşik pratikte erişilemez, yani hüküm ayakta — ama "mantıksal olarak imkânsız" değil, **ölçülen aralıkta erişilemez**.
+
+**AYRICA — B KOLUNUN İLK KOŞUMU AYIRT EDİCİ DEĞİLDİ (inceleme Kritik 1):** o koşumda kol kimliği hiçbir çıktıya damgalanmıyordu; A↔B dosyaları yalnız zaman damgasında farklıydı. "Bayrak açıktı ama vaka yoktu" ile "bayrak hiç uygulanmadı" ayırt EDİLEMİYORDU. Damga 2026-08-17'de eklendi (`BacktestResult.dolum_kurali`) ve bu belgenin ampirik ayağı ANCAK damgalı bir yeniden koşumla geçerli olur. **Yapısal ayak (eşik özdeşliği) bundan bağımsız ve ayakta.**
 
 Duman penceresindeki sıfır red bu yapısal olgunun DOĞRULAMASIDIR, kendi başına kanıtı değil:
 8 işlemlik bir pencerede sıfır görmek zayıf kanıt olurdu; eşik özdeşliği ise kesin.
