@@ -486,6 +486,7 @@ class PaperBroker:
                    size_mult: float = 1.0, adv: float | None = None,
                    pivot: float = 0.0, atr: float | None = None,
                    gap_at_submit: bool | None = None,
+                   bar_low: float | None = None,
                    reject_out: dict | None = None) -> Optional[Position]:
         """Fill a passing plan at next bar open + slippage. Returns the Position or None if unsizable
         or blocked by a gap guard. size_mult (<=1) scales risk down for graded de-risk. `adv` (average
@@ -544,12 +545,30 @@ class PaperBroker:
         if trigger > 0:
             _limit = entry_limit_price(trigger, atr, _law)
             if next_open > _limit:
-                return _red(EV_MISSED_LIMIT, trigger=round(float(trigger), 4),
-                            limit=round(_limit, 4), open=round(float(next_open), 4),
-                            asim_bps=round((float(next_open) / _limit - 1.0) * 10000, 2)
-                                     if _limit > 0 else None,
-                            atr=(round(float(atr), 4) if atr else None),
-                            law=_law["version"])
+                # DİNLENEN LİMİT (23c, kart EXE-2026-005 · 2026-08-17). Buraya gelmek "açılış
+                # limitin üstünde" demektir — ama GERÇEK bir limit emri gün boyu DİNLER. `bar_low`
+                # VERİLMİŞSE ve fiyat gün içinde limite dokunmuşsa emir DOLAR, ve dolum fiyatı
+                # `next_open` DEĞİL `_limit`tir: dinlenen bir emir kendi fiyatından dolar.
+                #
+                # NEDEN PARAMETRE, NEDEN MOD BAYRAĞI DEĞİL: bayrak iki davranışı motora gömer ve
+                # hangisinin koştuğu ÇAĞRI YIĞININA bağlı olur — kartın kill kriteri yaptığı
+                # canlı↔replay ayrışmasının tam tanımı. `bar_low` ise VERİdir: canlıda (`loop.py`)
+                # karar anında o günün low'u BİLİNMEZ, dolayısıyla canlı yol bu parametreyi
+                # geçemez. Canlı davranışın değişmezliği böylece disiplinle korunan bir söz değil,
+                # YAPISAL bir olgudur. Altı çağırandan yalnız `backtest.py` bunu geçer.
+                #
+                # `low > _limit` İSE DOLDURULMAZ ve bu kartın KILL KRİTERİDİR: fiyatın hiç
+                # dokunmadığı bir limitten dolum yazmak UYDURMA DOLUMdur.
+                if bar_low is not None and float(bar_low) <= _limit:
+                    next_open = _limit
+                else:
+                    return _red(EV_MISSED_LIMIT, trigger=round(float(trigger), 4),
+                                limit=round(_limit, 4), open=round(float(next_open), 4),
+                                asim_bps=round((float(next_open) / _limit - 1.0) * 10000, 2)
+                                         if _limit > 0 else None,
+                                atr=(round(float(atr), 4) if atr else None),
+                                bar_low=(round(float(bar_low), 4) if bar_low is not None else None),
+                                law=_law["version"])
         if next_open <= stop:
             return _red("open_below_stop", stop=round(float(stop), 4),
                         open=round(float(next_open), 4))

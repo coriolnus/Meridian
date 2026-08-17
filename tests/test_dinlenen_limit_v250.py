@@ -24,7 +24,11 @@ from meridian import broker as B
 
 
 def _plan(trigger: float, stop: float) -> dict:
-    return {"ticker": "TEST", "stop": stop, "entry_trigger": trigger, "score": 1.0}
+    # Alan kümesi `tests/test_batch_l.py`nin BİLİNEN-İYİ kurulumundan alındı (id + stop +
+    # profit_target + size_r). Kendi asgari sözlüğümü alan alan tahmin etmek yerine dolum yolunu
+    # zaten uçtan uca geçen bir emsali örnek almak, çivinin ölçtüğü şeyi kurulum gürültüsünden ayırır.
+    return {"id": "P-23C", "ticker": "TEST", "stop": stop, "profit_target": trigger * 1.30,
+            "entry_trigger": trigger, "size_r": 1.0, "score": 1.0}
 
 
 # DAR TAVANLI YASA — ÖLÇÜLDÜ 2026-08-17, ve bu çivilerin var olma şartı:
