@@ -163,19 +163,19 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
 durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
-#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (4 kalem)
+#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (3 kalem)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005-dinlenen-limit` | kart ön-kayıtlı · **D5: kapanmadan hiçbir limit-tavanı kararı verilemez** |
 | friksiyon dayanıklılığı | WP1 | `EDG-2026-040-friksiyon-dayaniklilik` | kart ön-kayıtlı, ölçüm bekliyor |
 | gölge kapsam / planlı kol | WP3 | `EXE-2026-003-golge-planli-kol` | kart ön-kayıtlı |
 | `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** |
 
-#### H2 — PLAN VAR, icra bekliyor (1 kalem)
+#### H2 — PLAN VAR, icra bekliyor (2 kalem)
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
+| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H2 PLAN KAPANDI 2026-08-17.** Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
 | `tests/` §-atıf çevrimi (120 satır) | WP6 | `scratchpad/roadmap_donusum.py` | `meridian/` **ÇEVRİLDİ ✅** (10 dosya/18 satır, codelaw temiz). `tests/` BİLEREK bekliyor: 86 satır yorum-DIŞI ve assert içinde olabilir → tam suite koşumuyla doğrulanmadan dokunulmaz |
 
 #### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
