@@ -1,0 +1,15 @@
+# EXE-2026-006 — limit bacağı hüküm sınaması · komut zinciri (2026-08-17)
+# Kart: research/cards/EXE-2026-006-limit-bacagi-hukum-sinamasi.yaml (OKU-DOKUNMA)
+#
+# TASARIM: şasi YENİDEN KURULMAZ, referans koşumun `kosum("kontrol", smoke)` yolu ÇAĞRILIR.
+#          Eklenen tek şey iki yama: `yasa_silahli(cap)` + `MERIDIAN_DINLENEN_LIMIT` bayrağı.
+# ARTEFAKT KORUMASI YAPISAL: referans modülün SANDBOX'ı BU dizine yönlendirilir; edg032b
+#          dizinine yazım İMKÂNSIZ (git checkout ile sonradan-temizlik DEĞİL).
+# KOL KİMLİĞİ: `replay` sarmalanır ve damga SONUCUN KENDİSİNDEN okunur — referans koşumun
+#          JSON'u `dolum_kurali` alanını taşımıyor, o yüzden dosyadan okumak kapıyı ATIL bırakırdı.
+#
+# [1] DUMAN taraması (K=8, ~1 dk) — KOŞULDU 2026-08-17
+.venv/bin/python research/olcumler/exe006_limit_bacagi_2026-08-17/olcum.py --smoke
+#
+# [2] TAM pencere (2022-01-01→2026-07-30) — HENÜZ KOŞULMADI
+.venv/bin/python research/olcumler/exe006_limit_bacagi_2026-08-17/olcum.py
