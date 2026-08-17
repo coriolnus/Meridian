@@ -1,0 +1,34 @@
+{
+ "0.005": {
+  "yeni_pnl": -4144.73,
+  "yerinden_pnl": 3629.19,
+  "ortak_delta_pnl": 661.23,
+  "toplam_hesap": 145.69,
+  "toplam_gercek": 145.69,
+  "kapanis_farki": 0.0
+ },
+ "0.01": {
+  "yeni_pnl": 3127.15,
+  "yerinden_pnl": 2201.73,
+  "ortak_delta_pnl": 1834.01,
+  "toplam_hesap": 7162.89,
+  "toplam_gercek": 7162.89,
+  "kapanis_farki": -0.0
+ },
+ "0.02": {
+  "yeni_pnl": 4443.9,
+  "yerinden_pnl": 712.5,
+  "ortak_delta_pnl": 602.92,
+  "toplam_hesap": 5759.32,
+  "toplam_gercek": 5759.32,
+  "kapanis_farki": 0.0
+ },
+ "0.03": {
+  "yeni_pnl": 5930.65,
+  "yerinden_pnl": 1693.5,
+  "ortak_delta_pnl": -268.85,
+  "toplam_hesap": 7355.3,
+  "toplam_gercek": 7355.3,
+  "kapanis_farki": -0.0
+ }
+}

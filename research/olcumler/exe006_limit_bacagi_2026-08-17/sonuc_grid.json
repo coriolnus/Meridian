@@ -1,0 +1,219 @@
+{
+ "kart": "EXE-2026-006",
+ "smoke": false,
+ "K_hucre": 8,
+ "tavanlar": [
+  0.005,
+  0.01,
+  0.02,
+  0.03
+ ],
+ "dolum_kurallari": [
+  "yalniz_acilis",
+  "dinlenen_limit"
+ ],
+ "kol_farki": {
+  "0.005": {
+   "kacan_sayisi_acilis_kolunda": 342,
+   "dinlenen_kolda_DOLAN_ek_islem": 251,
+   "O1_abarti_orani": 73.4,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": -0.0436,
+   "O2_n": 251,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": 9627.49,
+   "net_pnl_dinlenen": 9773.18,
+   "delta_pnl": 145.69
+  },
+  "0.01": {
+   "kacan_sayisi_acilis_kolunda": 181,
+   "dinlenen_kolda_DOLAN_ek_islem": 175,
+   "O1_abarti_orani": 96.7,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": 0.0411,
+   "O2_n": 175,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": 12288.86,
+   "net_pnl_dinlenen": 19451.75,
+   "delta_pnl": 7162.89
+  },
+  "0.02": {
+   "kacan_sayisi_acilis_kolunda": 80,
+   "dinlenen_kolda_DOLAN_ek_islem": 106,
+   "O1_abarti_orani": 132.5,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": 0.1007,
+   "O2_n": 106,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": 12188.34,
+   "net_pnl_dinlenen": 17947.66,
+   "delta_pnl": 5759.32
+  },
+  "0.03": {
+   "kacan_sayisi_acilis_kolunda": 72,
+   "dinlenen_kolda_DOLAN_ek_islem": 102,
+   "O1_abarti_orani": 141.7,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": 0.1167,
+   "O2_n": 102,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": 10502.97,
+   "net_pnl_dinlenen": 17858.27,
+   "delta_pnl": 7355.3
+  }
+ },
+ "hucreler": [
+  {
+   "limit_pct_cap": 0.005,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.005,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "entry_missed_limit": 342,
+    "open_below_stop": 24,
+    "max_chase": 28
+   },
+   "entry_missed_limit": 342,
+   "net_pnl_trades": 9627.49,
+   "net_pnl_equity": 9627.49,
+   "islem_n": 765
+  },
+  {
+   "limit_pct_cap": 0.005,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.005,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 23,
+    "entry_missed_limit": 69,
+    "max_chase": 31
+   },
+   "entry_missed_limit": 69,
+   "net_pnl_trades": 9773.18,
+   "net_pnl_equity": 9773.18,
+   "islem_n": 862
+  },
+  {
+   "limit_pct_cap": 0.01,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 21,
+    "entry_missed_limit": 181,
+    "max_chase": 29
+   },
+   "entry_missed_limit": 181,
+   "net_pnl_trades": 12288.86,
+   "net_pnl_equity": 12288.86,
+   "islem_n": 836
+  },
+  {
+   "limit_pct_cap": 0.01,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 22,
+    "entry_missed_limit": 28,
+    "max_chase": 30
+   },
+   "entry_missed_limit": 28,
+   "net_pnl_trades": 19451.75,
+   "net_pnl_equity": 19451.75,
+   "islem_n": 877
+  },
+  {
+   "limit_pct_cap": 0.02,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.02,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 21,
+    "entry_missed_limit": 80,
+    "max_chase": 32
+   },
+   "entry_missed_limit": 80,
+   "net_pnl_trades": 12188.34,
+   "net_pnl_equity": 12188.34,
+   "islem_n": 869
+  },
+  {
+   "limit_pct_cap": 0.02,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.02,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 23,
+    "entry_missed_limit": 14,
+    "max_chase": 29
+   },
+   "entry_missed_limit": 14,
+   "net_pnl_trades": 17947.66,
+   "net_pnl_equity": 17947.66,
+   "islem_n": 884
+  },
+  {
+   "limit_pct_cap": 0.03,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.03,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 21,
+    "entry_missed_limit": 72,
+    "max_chase": 32
+   },
+   "entry_missed_limit": 72,
+   "net_pnl_trades": 10502.97,
+   "net_pnl_equity": 10502.97,
+   "islem_n": 871
+  },
+  {
+   "limit_pct_cap": 0.03,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.03,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 23,
+    "entry_missed_limit": 13,
+    "max_chase": 29
+   },
+   "entry_missed_limit": 13,
+   "net_pnl_trades": 17858.27,
+   "net_pnl_equity": 17858.27,
+   "islem_n": 885
+  }
+ ]
+}
