@@ -209,12 +209,11 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | durum |
 |---|---|---|
-| `A1` koruma yeniden-kurulumu — **4 pozisyon ÇIPLAK** | WP2 | **BLOKE: operatör** · `EDG-2026-038` · bugün bedel ödeniyor |
+| `A1` koruma yeniden-kurulumu — **4 pozisyon ÇIPLAK** | WP2 | ⚡ **OPERATÖR EMRİ VERİLDİ 2026-08-17: "şimdi kur".** Karar aşaması KAPANDI; kalan şey İCRA ve icra CANLIDA olur (A1/Oracle, pano `koruma_kur`, üç kapı). **CLOUD OTURUMU KOŞAMAZ ve bu bir kapasite eksiği değil EMNİYET SINIRI:** (a) bu kapta `.env` ve Alpaca kimliği YOK, (b) kimlik olsa bile canlı worker koşarken ikinci bir süreçten emir göndermek CLAUDE.md §5'in yasakladığı **çift-emir** riskidir. Adım listesi §5 KOVA-1'de. `EDG-2026-038` · bedel ödenmeye DEVAM ediyor (ölçülen çıplaklık duvarı 56,4 sa) |
 | **`B4` E1 limit bacağı — canlıda AÇILSIN MI** | WP1 | 🆕 **BLOKE: operatör (2026-08-17)** · `EXE-2026-006` measured → **E1 hükmü YENİDEN AÇILDI** (H1 düştü, H2 ölçülemedi) → bacağın canlıda etkisiz olmasının gerekçesi ARTIK KANITLI DEĞİL. Kart açmayı **ÖNERMEZ** (kendi sınırı) · strateji kimliği kalemi → §5 KOVA-2 · ÖN-KOŞUL: `Ö-51b` + `Ö-51c` |
 | **`Ö-51d` `EXE-2026-005` Rol-1 hükmü + K kaydı** | WP1 | 🆕 **BEKLİYOR: Rol-1 (2026-08-17)** · B kolu koştu, örneklem BOŞ ve sebebi YAPISAL (`BULGU-B-KOLU.md` yazılı) ama kart hâlâ `status: registered`. Belge kendi son satırında **"Rol-1 hükmü ve K-defteri kaydı ister"** diyor — `parameter_grid`e (dar tavan) dokunulduğu için K kararı gerekiyor. Aynı sınıf `v251` çivisiyle ölçülür hâle geldi ama o çivi yalnız `HUKUM*.md` yazılmış kartları bağlar; bu kartın belgesi `BULGU-*.md` |
-| `A2` bildirim kanalı (N1) | — | **BLOKE: operatör** · kanal kimliği yok, 29 alarm teslim edilemedi |
+| `A2` bildirim kanalı (N1) — ⚡ **`B2`(c) ARTIK BUNA BAĞLI** | — | **BLOKE: operatör** · kanal kimliği yok, 29 alarm teslim edilemedi. 2026-08-17'ye kadar "en ucuz kalem"di; **`B2`(c) seçildiği an politikanın TESLİM BACAĞI oldu**: (c)'nin tek içeriği "çıplaklık alarmı kanala bağlansın"dır ve alarm ZATEN kanal kapsamında (`obs.ALARM_NAKED_POSITION` ∈ `NOTIFY_TOKENS`, çivi `v216`) — eksik olan yalnız KİMLİK. Kimlik girilene dek (c) yazılı ama **teslim etmeyen** bir politikadır (`notify.configured()` False → `notify_undelivered.json` sayar) |
 | `B1` pullback silahsızlanması | WP11 | **BLOKE: operatör** · `EDG-2026-039` ölçüldü; strateji kimliği değişikliği |
-| `B2` koruma politikası (a/b/c) | WP2 | **BLOKE: operatör** |
 | PIT mid-cap üst-sınır | WP4 | **ASKIDA: veri kapısı** · `EDG-2026-018` status=`askiya_veri_kapisi` |
 | delist-bar kaynağı + FINVIZ · `dataset.load↔bars_integrity` | WP4 | **BLOKE: erişim** |
 | `C2-4` LEAN fizibilite · notebook koşumu | WP9 | **BLOKE: erişim** (QC login) |
@@ -225,6 +224,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | kanıt |
 |---|---|---|
+| **`B2` koruma politikası — OPERATÖR (c)'yi SEÇTİ** | WP2 | ⚡ **2026-08-17 operatör kararı: seçenek (c)** — "mevcut üç kapı KALSIN + çıplaklık alarmı bildirim kanalına bağlansın". Yani `koruma_kur` üç kapılı (ölçüm + onay jetonu + öneri kimliği) KALIR; otomatik yeniden-kurulum (a) ve jeton-yalnız (b) REDDEDİLDİ. **KOD İŞİ GEREKMEDİ — (c) ZATEN YÜRÜRLÜKTEYDİ ve bu ölçüldü, varsayılmadı:** çıplaklık alarmı kendi jetonunu taşıyor (`obs.ALARM_NAKED_POSITION`, `watchdog.py:2836/2849` — v209'un ÖDÜNÇ aldığı `MIRROR_DRIFT` bitti) · `NOTIFY_TOKENS` el listesi değil **türetme** (`obs.py:138`) olduğu için jeton eklendiği an teslim kapsamında · zincir `obs.alarm → _maybe_notify → notify.send`. ÜÇ ÇİVİ: `v216:85` (jeton ∈ NOTIFY_TOKENS) · **`v216:130-141`** — (c)'nin ASIL güvencesi: gürültülü bir MIRROR_DRIFT susturma penceresi kurulduktan SONRA bile NAKED_POSITION teslim edilir, yani **muhasebe gürültüsü sermaye riskini SUSTURAMAZ** · `v209:248` (teslim edilen jeton sınıfı). **KALAN TEK BACAK `A2`** (kanal kimliği) — (c) onu ŞART koşar; o yüzden A2 satırı yükseltildi. Politika kapandı, teslim kapanmadı |
 | **`Ö-51` limit bacağı hüküm sınaması** | WP1 | 🆕 **`EXE-2026-006` measured (2026-08-17)** — TAM pencere, K=8 (4 tavan × 2 dolum kuralı), altı kill kriterinin HEPSİ geçti. **HÜKÜM: E1 YENİDEN AÇILIR** (H1 monotonluk DÜŞTÜ: 9.773→**19.452**→17.948→17.858, tepe 0,01'de · H2 ÖLÇÜLEMEDİ: dört tavanda da bootstrap CI'ı sıfır İÇERİYOR). Ö1 ÖLÇÜLEMEDİ (birim uyuşmazlığı — ham bölme %132/%141, bir oran %100'ü aşamaz → None+neden) · Ö3 ÖLÇÜLDÜ ve **SENTE KAPANDI** (yan kanal büyük: cap=0,005'te 251 yeni işleme karşı 154 YERİNDEN, ve yerinden olanlar dört tavanda da kaybeden). **KAPALI DÖNGÜ KIRILDI** — E1'in "monoton zararlı" hükmü artık canlı yapılandırmayı GEREKÇELENDİRMİYOR. Türeyen kalemler: `Ö-51b` · `Ö-51c` (H1) · `B4` (operatör) · `Ö-51d` (005 hükmü). **DERS (ölçüm-şablonu):** duman penceresi Ö2'yi dört tavanda da NEGATİF gösteriyordu, tam pencerede işaret DÖNDÜ ve CI'ya girince ölçülemez oldu — küçük örneklem yalnız gürültülü değil **YÖN OLARAK YANILTICI** |
 | **kart↔hüküm beyan çürümesi (`Ö-49` yüzeyi)** | WP6 | 🆕 **`v251` çivisi (2026-08-17)** — `a033256` hükmü 24 ölçüm artefaktı taşıdı, kart/§2/§6/§7'ye DOKUNMADI: kart `registered` derken hükmü diskte yazılıydı. Ölçüm ajanı DOĞRU davrandı (CLAUDE.md §3), eksik olan **Rol-1 devir adımının çivisiz** olmasıydı. Çivi kırmızı doğdu, hüküm işlenince yeşile döndü; 5 pozitif kontrol + düzenek çivisi |
 | `Ö-50` öğrenme süreç ayrımı | WP3 | v249 · pano 14,0 → **0,027 sn**, API CPU %93 → %2 |
@@ -1937,6 +1937,23 @@ Kaynak: `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md` §F + §H-17..21. Aşağ
 #### KOVA 1 — ACİL (bugün bir bedel ödeniyor)
 
 **A1 · KORUMA YENİDEN-KURULUMU — 4 POZİSYON ÇIPLAK** _(WP2; kaynak: `DENETIM-OLU-BILESEN-ENVANTERI:397-398`, `EDG-2026-038…yaml:142-149`)_
+- **⚡ EMİR VERİLDİ (2026-08-17, operatör): "A1 korumayı şimdi kur."** Karar aşaması KAPANDI.
+  Kalem açık kalmaya devam ediyor çünkü **icra edilmedi** — ve icrayı emrin verildiği oturum
+  YAPAMAZ: o oturum bir cloud kabıdır, `.env`/Alpaca kimliği YOK, ve kimlik olsa bile canlı worker
+  koşarken ikinci bir süreçten emir göndermek **CLAUDE.md §5'in yasakladığı çift-emir riskidir**
+  (bu bir kapasite eksiği değil, emniyet sınırı). İcra A1'de, operatörün elinde.
+  **ADIM LİSTESİ (koddan doğrulandı, ezberden değil — `api.py:4846/4992/5115`, `alpaca.py:969-972`):**
+  (1) panoya SSH tünelinden bağlan; (2) **önce ÖLÇ** — `GET /api/alpaca/koruma_onerileri` çıplak
+  motor pozisyonlarını ve bir `oneri_id` döndürür; (3) o `oneri_id`yi AYNEN al ve
+  `POST /api/alpaca/koruma_kur` gövdesine `{"onay": "KORUMA-KUR", "oneri_id": "<o kimlik>"}`
+  yaz (**jeton GÖVDEDE, sorguda DEĞİL** — sorgu dizesi log/geçmiş/`Referer`'a düşer ve oradaki bir
+  yetki işareti yeniden oynatılabilir onaydır). (4) Jetonsuz çağrı **KURU KOŞUdur**: ne göndereceğini
+  raporlar, hiçbir şeye dokunmaz — önce onu koşmak güvenlidir. (5) `oneri_id` eşleşmezse emir
+  GİTMEZ (`koruma_onay_bayat` uyarısı) ve bu doğru davranıştır: ekrandaki liste onaydan sonra
+  değiştiyse eski onay yeni listeye uygulanmaz — listeyi tazeleyip yeniden onayla.
+  **DÖNEN CEVABI OKU:** `ok` yalnız TÜM öneriler gittiğinde True'dur; kısmi başarı "2/4 gönderildi
+  + 2 neden" der ve "tamam" DEMEZ. Düşen her satır `koruma_oco_dusuru` uyarısı bırakır ve o
+  pozisyon **HÂLÂ çıplaktır**.
 - **ne bekleniyor:** NUE/EMR/BKNG/AMGN'in korumasının **şimdi** yeniden kurulması — panodan
   `koruma_kur` (üç kapı: ölçüm + operatör onay jetonu + öneri kimliği). Bu bir kod işi değil,
   operatörün tek oturumluk eylemi.
@@ -1976,9 +1993,24 @@ Kaynak: `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md` §F + §H-17..21. Aşağ
   (`EDG-039:63-64`) bu bedel doğrudan başka bir adayın yerini yiyor.
 - **bağımlı kalemler:** WP11-B ARSENAL POLİTİKASI (giriş/çıkış ortak çıtası) · WP11-D uzlaştırma.
 
-**B2 · KORUMA YENİDEN-KURULUMU OTOMATİKLEŞSİN Mİ (kalıcı politika)** _(WP2-B; denetim F2)_
-- **ne bekleniyor:** üç seçenekten biri — **(a)** tam otomatik yeniden-kurulum · **(b)** onay-jetonlu
-  ama ölçüm-kapısız · **(c)** mevcut üç kapı kalsın + çıplaklık alarmı bildirim kanalına bağlansın.
+**B2 · KORUMA YENİDEN-KURULUMU OTOMATİKLEŞSİN Mİ (kalıcı politika) — ✅ KARAR VERİLDİ: (c)** _(WP2-B; denetim F2)_
+- **⚡ OPERATÖR KARARI (2026-08-17): seçenek (c).** Yani `koruma_kur`un ÜÇ KAPISI (ölçüm + onay
+  jetonu + öneri kimliği) **KALIR**; (a) tam otomatik ve (b) ölçüm-kapısız REDDEDİLDİ. Sermaye
+  yüzeyine dokunan bir eylem, ölçülmüş bir listeye ve tura-özel bir onaya bağlı kalmaya devam eder.
+- **KOD İŞİ GEREKMEDİ — (c)'nin ikinci yarısı ZATEN YÜRÜRLÜKTEYDİ, ve bu ölçüldü:** "çıplaklık
+  alarmı bildirim kanalına bağlansın" şartı bugün sağlanıyor — alarm kendi jetonunu taşıyor
+  (`obs.ALARM_NAKED_POSITION`; `watchdog.py:2836/2849`, v209'un `MIRROR_DRIFT` ödüncü bitti),
+  `NOTIFY_TOKENS` bir **türetmedir** (`obs.py:138`) yani jeton eklendiği an teslim kapsamındadır,
+  ve zincir `obs.alarm → _maybe_notify → notify.send` işliyor. Çiviler: `v216:85` · **`v216:130-141`
+  ((c)'nin asıl güvencesi: MIRROR_DRIFT susturma penceresi kurulduktan sonra bile NAKED_POSITION
+  TESLİM EDİLİR — muhasebe gürültüsü sermaye riskini susturamaz)** · `v209:248`.
+- **BU YÜZDEN (c) BUGÜN YARIM BİR POLİTİKADIR ve yarısı `A2`dir:** kanal kimliği (`TELEGRAM_*` ya da
+  `MERIDIAN_WEBHOOK_URL`) girilene dek `notify.configured()` False döner, alarm yazılır ama
+  TESLİM EDİLMEZ ve yalnız `notify_undelivered.json` sayacı artar. (c) seçilerek A2 "en ucuz kalem"
+  olmaktan çıkıp **seçilmiş politikanın teslim bacağı** oldu — sıra önceliği buna göre yükseltildi.
+- **eski karar metni (tarihçe — SİLİNMEDİ):** üç seçenekten biri — **(a)** tam otomatik
+  yeniden-kurulum · **(b)** onay-jetonlu ama ölçüm-kapısız · **(c)** mevcut üç kapı kalsın +
+  çıplaklık alarmı bildirim kanalına bağlansın.
 - **neden:** yön **risk-AZALTAN** ve `api.py`nin kendi şerhi bu sınıfı onaya bağlamamayı savunuyor;
   ama koruma kurmak sermaye yüzeyine dokunur → politika kararı operatörün.
 - **beklerken bedel:** A1 her `day`-TIF gecesinden sonra ELLE tekrarlanır; iki gecede bir aynı
@@ -2297,6 +2329,24 @@ karar penceresinin UYGULANMASI, `max_drawdown` operatör kararı, tohum yenileme
 v237-v243 dağıtımları vardı; hepsi yalnız §4 maddelerinin İÇİNDE yaşıyordu ve §4 temizlenince
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§3'de.)_
 
+- **2026-08-17 OPERATÖR İKİ KARAR VERDİ: `A1` "korumayı şimdi kur" + `B2` = seçenek (c):**
+  **`B2`(c)** — `koruma_kur`un ÜÇ KAPISI (ölçüm + onay jetonu + öneri kimliği) KALIR, çıplaklık
+  alarmı bildirim kanalına bağlanır; (a) tam otomatik ve (b) ölçüm-kapısız REDDEDİLDİ. **Kod işi
+  gerekmedi ve bu ölçülerek söylendi:** (c)'nin ikinci yarısı zaten yürürlükteydi — alarm kendi
+  jetonunu taşıyor (`obs.ALARM_NAKED_POSITION`, `watchdog.py:2836/2849`), `NOTIFY_TOKENS` bir
+  TÜRETME (`obs.py:138`) olduğu için jeton kendiliğinden teslim kapsamında, zincir
+  `obs.alarm → _maybe_notify → notify.send`. Üç çivi zaten vardı: `v216:85`, **`v216:130-141`**
+  ((c)'nin asıl güvencesi — MIRROR_DRIFT susturma penceresinden SONRA bile NAKED_POSITION teslim
+  edilir; muhasebe gürültüsü sermaye riskini susturamaz), `v209:248`. **SONUÇ — POLİTİKA KAPANDI,
+  TESLİM KAPANMADI:** (c) kanal kimliğini ŞART koşuyor, o yüzden `A2` "en ucuz kalem" olmaktan çıkıp
+  **seçilmiş politikanın teslim bacağı** oldu ve tahtada yükseltildi; kimlik girilene dek
+  `notify.configured()` False, alarm yazılır ama TESLİM EDİLMEZ (`notify_undelivered.json` sayar).
+  **`A1`** — emir verildi, **icra EDİLMEDİ ve emri alan oturum icra EDEMEZ**: cloud kabında `.env`
+  ve Alpaca kimliği yok, üstelik kimlik olsa bile canlı worker koşarken ikinci süreçten emir
+  göndermek CLAUDE.md §5'in yasakladığı **çift-emir** riskidir (kapasite eksiği değil, emniyet
+  sınırı). Kalem DİK DURUM'da AÇIK bırakıldı ve "karar bekliyor"dan "**icra bekliyor**"a geçti;
+  koddan doğrulanmış adım listesi §5 KOVA-1'e yazıldı (ölç → `oneri_id` al → jetonu GÖVDEDE gönder;
+  jetonsuz çağrı kuru koşu; `oneri_id` eşleşmezse emir gitmez; `ok` yalnız TÜMÜ gittiğinde True).
 - **2026-08-17 `EXE-2026-006` HÜKMÜ İŞLENDİ → E1 YENİDEN AÇILDI + kart↔hüküm çürümesi ÇİVİLENDİ (`v251`):**
   ölçüm hükmü (`a033256`) diske YAZILMIŞ ama **hiçbir karara/karta işlenmemişti** — o commit 24 dosya
   taşıdı ve hepsi ölçüm artefaktıydı; kart `status: registered` ("ölçüm bekliyor") derken hükmü

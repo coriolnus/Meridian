@@ -544,6 +544,23 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## AÇIK KALANLAR (bilinçli, sahipli)
 
+- **`A1` KORUMA İCRASI — EMİR VERİLDİ, İCRA EDİLMEDİ (2026-08-17; sınıf: "karar aşaması kapandı,
+  icra aşaması başka bir yerde"):** operatör "A1 korumayı şimdi kur" dedi ve `B2` politikasını
+  **(c)** olarak seçti. `B2`(c) KAPANDI — üç kapı kalır ve çıplaklık alarmının kanala bağlı olması
+  şartı ZATEN sağlanıyordu (`obs.ALARM_NAKED_POSITION` kendi jetonu · `NOTIFY_TOKENS` türetmesi ·
+  çiviler `v216:85`, `v216:130-141`, `v209:248`); kod işi gerekmedi. **`A1` ise AÇIK KALDI ve
+  gerekçesi kayda geçmelidir:** emri alan oturum bir CLOUD KABIDIR ve icrayı yapamaz — (a) `.env`
+  ve Alpaca kimliği bu kapta YOK (ölçüldü: dosya yok, ortam değişkenleri boş), (b) kimlik olsa
+  bile canlı worker koşarken ikinci bir süreçten emir göndermek **CLAUDE.md §5'in yasakladığı
+  çift-emir riskidir**. İkinci gerekçe birincisinden ÖNEMLİDİR: kimlik bir gün bu kaba girse bile
+  icra buradan yapılMAMALIdır. Kalem "karar bekliyor"dan "**icra bekliyor**"a geçti; koddan
+  doğrulanmış adım listesi ROADMAP §5 KOVA-1'de. **DEVAM EDEN BEDEL:** dört pozisyon (NUE/EMR/
+  BKNG/AMGN) korumasız kabul edilmelidir — bu oturum canlı durumu GÖREMEZ ve "hâlâ çıplak mı"
+  sorusunu ölçemez; son ölçülen değer çıplaklık duvarı 56,4 sa (2026-08-13). **`B2`(c)'NİN AÇIK
+  YARISI `A2`:** kanal kimliği girilene dek alarm yazılır ama TESLİM EDİLMEZ — yani seçilen
+  politika bugün yarım çalışıyor ve eksik yarısı bir operatör kalemidir (`TELEGRAM_*` ya da
+  `MERIDIAN_WEBHOOK_URL`).
+
 - **DAĞITIM KUYRUĞU (2026-08-02 gece, state-şişmesi turu):** (a) **KAPANDI (aynı gece ~20:50 UTC,
   operatör talimatlı pencere):** birim A1'e kuruldu (sha256 doğrulamalı scp + geri-alma yedeği
   `~/meridian-backup.service.bak-20260802` + sudo cp + daemon-reload) ve İKİ kez elle
