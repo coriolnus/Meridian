@@ -1,0 +1,22 @@
+{
+ "kapi": "EXE-2026-005 A kolu — DARALTILMIŞ özdeşlik (ozdeslik_hukmu 2026-08-17)",
+ "muaf_alanlar": [
+  "n_endeks_satir"
+ ],
+ "bayt_ozdeslik": {
+  "islemler": true,
+  "seanslar": true
+ },
+ "esit_olmayan_bloklar": [
+  "replay"
+ ],
+ "blok_ayrisan_alanlar": {
+  "replay": [
+   "n_endeks_satir"
+  ]
+ },
+ "muaf_disi_ihlal": {},
+ "kill1_ham": false,
+ "HUKUM": "GECTI",
+ "not": "ham kapı n_endeks_satir yüzünden DÜŞER; daraltılmış kapı o alanı ADIYLA muaf tutar"
+}

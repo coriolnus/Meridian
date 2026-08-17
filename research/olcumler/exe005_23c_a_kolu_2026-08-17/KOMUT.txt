@@ -1,0 +1,15 @@
+# EXE-2026-005 (23c dinlenen limit) — A KOLU ÖZDEŞLİK KAPISI · 2026-08-17
+# Kart: research/cards/EXE-2026-005-dinlenen-limit.yaml (OKU-DOKUNMA) — `ozdeslik_hukmu` bloğu
+#
+# A KOLU = MERIDIAN_DINLENEN_LIMIT AYARSIZ (bayrak KAPALI) → backtest.py `bar_low=None` geçer
+#          → broker.fill_entry bugünkü davranışı koşar. Kolun tanımı budur.
+#
+# [1] koşum + ham kapı (eski EDG-032b koşumunun harness'i — DEĞİŞTİRİLMEDİ)
+.venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py kontrol  --smoke
+.venv/bin/python research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py ozdeslik --smoke
+# [2] kanıt BU dizine kopyalandı, tarihsel dizin `git checkout` ile GERİ YÜKLENDİ
+#     (tamamlanmış bir ölçümün artefaktı üzerine yazılmaz)
+# [3] DARALTILMIŞ kapı burada uygulandı → ozdeslik_daraltilmis.json
+#
+# SONUÇ: bayt_ozdeslik{islemler:true, seanslar:true} · tek ayrışan alan n_endeks_satir
+#        (1408 yerel ↔ 1403 ref_032, endeks verisi taban tarihinden beri büyüdü) → GECTI

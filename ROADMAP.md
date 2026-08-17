@@ -175,7 +175,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H2 PLAN KAPANDI 2026-08-17.** Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
+| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005` + `docs/superpowers/plans/2026-08-17-23c-dinlenen-limit-plan.md` | **H3 İCRADA — A KOLU KAPISI GEÇTİ 2026-08-17** (`research/olcumler/exe005_23c_a_kolu_2026-08-17/`: işlemler+seanslar bayt-özdeş, tek ayrışan alan `n_endeks_satir` ve o ADIYLA muaf). Çiviler 4/4 · `bar_low` uygulandı · bayrak kuruldu. **Sırada B kolu.** Ön-koşullar ölçüldü (temiz ağaç · edg032b tabanı · `low` erişilebilir). Kill riski somutlaştı ve çözüldü: `fill_entry`nin **6 çağıranı** var, biri CANLI → kural tek yerde, davranışı `bar_low` parametresi seçer (bayrak DEĞİL — canlıda o veri yok, yani değişmezlik YAPISAL). H3 sırası bağlayıcı: **çivi önce**, sonra A kolu bit-özdeşlik kapısı. · **D5: kapanmadan limit-tavanı kararı YOK** |
 | `tests/` §-atıf çevrimi (120 satır) | WP6 | `scratchpad/roadmap_donusum.py` | `meridian/` **ÇEVRİLDİ ✅** (10 dosya/18 satır, codelaw temiz). `tests/` BİLEREK bekliyor: 86 satır yorum-DIŞI ve assert içinde olabilir → tam suite koşumuyla doğrulanmadan dokunulmaz |
 
 #### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
