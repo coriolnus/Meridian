@@ -66,6 +66,31 @@ k_registry: {registered_at: "2026-08-14T2x", trial_ids: [pending-EXE-005-dinlene
 
 status: registered   # 2026-08-14 Rol-1 — ön-kayıt. Ölçüm v245 dağıtımı sonrası TEMİZ ağaçta (EDG-033 dersi).
 
+ozdeslik_hukmu: >
+  **A KOLU ÖZDEŞLİK KAPISININ TANIMI DARALTILDI — ROL-1 HÜKMÜ, operatör onaylı (2026-08-17).**
+  Kill kriteri "A kolu edg032b ile bit-özdeş DEĞİLSE ölçüm DURUR" AYNEN geçerlidir; değişen
+  "bit-özdeş"in HANGİ ALANLAR üzerinde ölçüldüğüdür.
+  ÖLÇÜLEN (duman penceresi 2022-01-01→2022-06-30, `bar_low` A kolunda HİÇ geçilmeden):
+  `islemler bayt-özdeş=True` · `seanslar bayt-özdeş=True` · sonuç bloklarının 12'sinden 11'i eşit
+  (performans · doluluk · tepe_isi · betim · tasnif_tum_seans · birincil · ci95_ay_kumeli · islem ·
+  mb_sayaclari · butunluk_ortak · config_sha_sandbox). TEK farklı blok `replay`, ve o blokta TEK
+  farklı alan: **`n_endeks_satir` 1408 (yerel) ↔ 1403 (ref_032)**. Bloğun geri kalanı — start, end,
+  strategy_version, params_by_regime, n_sembol=251, max_open, no_trade_before, cost_model — birebir.
+  HÜKÜM: `n_endeks_satir` özdeşlik kümesinden ÇIKARILIR. Gerekçe üç ayaklı:
+  (a) O alan bir GİRDİ ENVANTERİ SAYACIdır, şasi özelliği değil — `olcum.py:659` onu
+  `dataset.load_cached()`in döndürdüğü endeksin uzunluğundan üretir ve endeks HER YENİ SEANSLA
+  büyür. (b) Bu yüzden kapı, taban tarihinden (2026-08-12) sonra **YAPISAL OLARAK GEÇİLEMEZ**;
+  geçilemeyen bir kapı kill kriteri değil, ölü bir kapıdır. (c) Şasinin ÜRÜNÜ sağlam olduğu
+  ÖLÇÜLDÜ — işlem defteri VE seanslar bayt-özdeş; bir dolum kuralı farkı orada görünürdü.
+  DOKUNULMAYAN: `research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py` DEĞİŞTİRİLMEDİ ve
+  `edg032_final_paket_2026-08-12` DOKUNULMADI — ikisi de tamamlanmış ölçümlerin dondurulmuş
+  artefaktıdır. Daraltma yalnız BU kartın A kolu kabulünde geçerlidir; eski koşumun kapısı ne
+  yaptıysa öyle kalır.
+  REDDEDİLEN ALTERNATİF: "tabanı yeniden üret" ÖNERİLDİ ve GERİ ÇEKİLDİ — referans EDG-032'nin
+  dondurulmuş kanıtıdır, yeniden üretmek taban yenilemek değil TARİHİ TAHRİF ETMEK olurdu.
+  KAPSAM: bu hüküm YALNIZ `n_endeks_satir`ı kapsar. Başka bir alan ayrışırsa kill kriteri AYNEN
+  ateşler ve ölçüm DURUR — daraltma bir emsal değil, adıyla sınırlı tek bir istisnadır.
+
 beyanlı_sinirlar: >
   (1) GÜNLÜK BAR SINIRI: `low <= limit` "gün içinde dokunuldu" der ama SIRAYI söylemez. Aynı gün
   hem stop hem limit dokunmuşsa hangisinin önce olduğu ÖLÇÜLEMEZ. Kart bunu kötümser tarafa
