@@ -2215,8 +2215,13 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 > iddiaları (net P&L, PF, sharpe seviyesi).)_
 
 **AKTİF / YENİ KARTLAR (hüküm işlenmiş ya da ölçümde):**
-- **EXE-2026-006** limit-bacagi-hukum-sinamasi — **registered (2026-08-17); ön-kayıt, operatör onaylı
-  kapsam ("A ile devam et").** _(indekse 2026-08-17'de eklendi — mutabakat.)_ **BİR HÜKMÜ sınar**,
+- **EXE-2026-006** limit-bacagi-hukum-sinamasi — **kart `status: registered` (2026-08-17) AMA ÖLÇÜM
+  KOŞULDU VE HÜKÜM YAZILDI** (`research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`, commit
+  `a033256`). _(indekse 2026-08-17'de eklendi — mutabakat.)_ ⚠ **KART↔ARTEFAKT AYRIŞMASI, AÇIK
+  KALEM:** hüküm yazıldı ama kartın `status:` alanı `registered` kaldı ve `verdict:` bloğu
+  yazılmadı — yani disk-sayımı bu kartı hâlâ "ölçülmedi" kovasında görüyor (yukarıdaki mutabakat
+  tablosunda `registered` 5'in biri). Hükmü karta işlemek **Rol-1 kalemidir** (madde 3: ölçüm ajanı
+  karta dokunmaz); bu satır ayrışmayı KAYDEDER, kapatmaz. **BİR HÜKMÜ sınar**,
   edge hipotezi değil: `EXE-2026-001-R2`nin "limit bacağı MONOTON ZARARLI · kaçanlar sistematik
   KAZANAN" hükmü, replay'in kaçan-işlem maliyetini ABARTTIĞI bir dünyada verildi. **KAPALI DÖNGÜ:**
   hüküm UYGULANDI → canlı `goal.yaml execution_v2` bacağı etkisizleştirdi (`limit_atr_mult: 100.0` ·
@@ -2231,6 +2236,27 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
   günlük-bar sıra belirsizliği kötümser tarafa yazılır · **`max_chase` kırpması ölçümden ÖNCE beyan
   edildi** (dinlenen limitin dönüştürebileceği aralık `(trigger·(1+cap), trigger·1,04]` ile sınırlı)
   → hüküm bir **ALT SINIR**dır. Şasi kapısı EXE-005'ten DEVRALINIR ama **yeniden koşulur, varsayılmaz**.
+  **✅ HÜKÜM (2026-08-17, TAM koşum: pencere 2022-01-01→2026-07-30 · evren 251 · K=8; altı kill
+  kriterinin ALTISI da geçti) — `E1 HÜKMÜ YENİDEN AÇILIR`.** Kartın ölçümden ÖNCE yazdığı kural
+  ("H1 ve H2'nin İKİSİ de ayakta kalırsa E1 doğrulanır; biri düşerse hüküm yeniden açılır") işledi:
+  **H1 DÜŞTÜ** — `dinlenen_limit` kolunda net P&L 9.773 → **19.452** → 17.948 → 17.858, tepe 0,01'de,
+  yani "MONOTON zararlı" iddiasının monotonluk ayağı bu kolda AYAKTA DEĞİL. **H2 ÖLÇÜLEMEDİ** — Ö2'nin
+  ay-kümeli bootstrap'ı (B=5000, seed 20260812) dört tavanda da CI'yı sıfırın İÇİNDE bıraktı
+  (−0,0436 · +0,0411 · +0,1007 · +0,1167; nokta tahminleri tavanla monoton ARTIYOR ama bu bir
+  **desen**, hüküm değil) → "kaçanlar sistematik KAZANAN" da "KAYBEDEN" de **söylenemez**; E1'in
+  iddiası doğrulanmadı ama çürütülmedi de. **SONUÇ: canlı yapılandırmanın (bacağın
+  `limit_pct_cap=0,04` ile etkisizleştirilmiş olması) gerekçesi ARTIK KANITLI DEĞİLDİR** — ve kart
+  bacağın AÇILMASINI ÖNERMEZ (kendi sınırı; açma kararı strateji kimliğidir → §5 operatör bloğu).
+  **Ö1 ÖLÇÜLEMEDİ (UYDURMA YASAĞI: None + neden)** — birim uyuşmazlığı: payda `entry_missed_limit`
+  bir RED OLAYI sayacı, pay DİSTİNKT İŞLEM; ham bölme %132/%141 verdi ve bir oran %100'ü aşamaz.
+  Kartın "Ö1 > %20 ise K1 şerhi açılır" kuralı bu turda **İŞLETİLEMEDİ**. **Ö3 ÖLÇÜLDÜ, sente
+  kapandı** (ΔP&L dört tavanda da POZİTİF: +146 · +7.163 · +5.759 · +7.355) ve yan kanal kartın
+  "etki TOPLAMSAL DEĞİLDİR" beyanını doğruladı — `cap=0,005`te 251 yeni işleme karşı **154 işlem
+  yerinden oldu** ve yerinden olanlar dört tavanda da KAYBEDENDİ, yani çıkmaları P&L'i iyileştirdi.
+  **BU TURDA YAPILMAYANLAR (beyanlı):** ΔP&L bootstrap CI'ı (kart istiyor, koşulmadı) · Ö1'in
+  kimlikli yeniden tanımı (ret sayacı kimlik taşımalı) · **duman penceresinin YANILTTIĞI kayda
+  geçti** — n=1..3'te Ö2 dört tavanda da NEGATİF görünüyordu, 885 işlemlik dünyada işaret DÖNDÜ ve
+  CI'ya girince ölçülemez oldu: küçük örneklem yalnız gürültülü değil **YÖN OLARAK YANILTICIYDI**.
 - **EXE-2026-005** dinlenen-limit (23c) — **registered (2026-08-14); H3 İCRADA, A kolu kapısı GEÇTİ
   (2026-08-17).** _(indekse 2026-08-17'de eklendi — mutabakat.)_ Replay limit girişini yalnız bir
   sonraki barın AÇILIŞINA karşı sınıyor; gerçek limit emri gün boyu DİNLENİR → replay "limit tavanı
