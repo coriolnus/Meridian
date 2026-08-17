@@ -787,7 +787,7 @@ def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
     değişmediğidir (skip olayına aynen çıkar — bkz. maybe_start).
     `simdi` yalnız tz-AWARE ise saat kabul edilir (should_run'ın `gun_ref` seam'iyle aynı kural).
 
-    KAYNAK DEĞİŞTİ (2026-08-17, §2-50): eskiden `hermes.SEARCH_PROGRESS` sözlüğü DOĞRUDAN okunurdu
+    KAYNAK DEĞİŞTİ (2026-08-17, Ö-50): eskiden `hermes.SEARCH_PROGRESS` sözlüğü DOĞRUDAN okunurdu
     ve docstring gerekçesi "zamanlayıcı ve api AYNI süreçtedir — daemon thread" idi. Öğrenme
     döngüsü kendi systemd birimine taşınınca bu varsayım ÇÖKER ve çöküş SESSİZDİR: sözlük okunamaz
     hâle gelmez, BOŞ kalır → `running` falsy → "meşgul değil" → sprint KOŞAN BİR ARAMANIN ÜSTÜNE
@@ -830,7 +830,7 @@ def _arama_durumu(simdi: dt.datetime | None = None) -> dict:
                          "dürüst görünsün diye 'bayat_temizlendi' ile işaretlendi; asılı iş "
                          "parçacığı uyanırsa kendi yazımı gözlemi sıfırlar"))
         try:
-            # KAPIDAN GEÇER (§2-50): eskiden `SEARCH_PROGRESS.update(...)` doğrudan çağrılıyordu.
+            # KAPIDAN GEÇER (Ö-50): eskiden `SEARCH_PROGRESS.update(...)` doğrudan çağrılıyordu.
             # Süreç ayrımından sonra o yazım HİÇBİR İŞE YARAMAZDI — sprint kendi belleğindeki
             # sözlüğü yazar, panonun okuduğu süreç onu asla görmezdi. `_progress` hem belleği hem
             # disk aynasını yazar, yani "bayat temizlendi" beyanı gerçekten okuyucuya ulaşır.

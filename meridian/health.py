@@ -239,7 +239,7 @@ def faz6_kilitleri(edge: dict | None = None, sonuc: dict | None = None,
             "rol": ("SAF OKUMA — hiçbir şey silahlamaz, hiçbir dosyaya yazmaz. Faz 4b/6 emir "
                     "bacağı yazıldığında ön-koşul kontrolü BURAYA bağlanır; bugün hiçbir kod "
                     "yolu otonom intraday emir göndermiyor"),
-            "beyan": ("FAIL-CLOSED: ölçülemeyen kilit KAPALIdır. ROADMAP §3.5'in 'dört kilit' "
+            "beyan": ("FAIL-CLOSED: ölçülemeyen kilit KAPALIdır. ROADMAP §5.5'in 'dört kilit' "
                       "cümlesi bu turda BEŞE çıktı (DSR) ve ilk kez makine okunur oldu — "
                       "eşikler ship yoluyla AYNI yerden (validation.DSR_HARD_MIN) gelir")}
 

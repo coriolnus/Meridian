@@ -2509,7 +2509,7 @@ def result_verdict() -> dict:
             "tavan_durumu": live_expectancy_ceiling(),
             "birim": "USD (başlangıç sermayesi $100.000)",
             "karar_kullanimi": ("rafineri kararları EDGE hükmüne bakar; sermaye artırımı ve "
-                                "silahlanma İKİ hükme birden (EDGE + SONUÇ) bakar — ROADMAP §3.1")}
+                                "silahlanma İKİ hükme birden (EDGE + SONUÇ) bakar — ROADMAP §5.1")}
 
 
 # ---- PORTFÖY ISISI: MASADAKİ TOPLAM RİSK ---------------------------

@@ -140,7 +140,7 @@ def _bayat_defter_suzgeci() -> None:
                      detail="DB devredeyken kanonik adda duran göç-edilmiş defter dosyaları "
                             ".migrated disiplinine çekildi — okuma yolu zaten DB-otoriterdi, bu "
                             "dosyaları yalnız insan ve harici araç okuyordu (bayat-defter "
-                            "tuzağı, ROADMAP §2-6; hiçbir dosya silinmedi/ezilmedi)")
+                            "tuzağı, ROADMAP Ö-6; hiçbir dosya silinmedi/ezilmedi)")
         if gocsuz:
             obs.warn("db_aktif_kanonik_dosya_gocsuz", dosyalar=gocsuz,
                      detail="DB devrede AMA bu adların kanonik dosyası migrated_at damgası "

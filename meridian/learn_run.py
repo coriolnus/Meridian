@@ -3,7 +3,7 @@
 Ne yapar: `hermes_runtime` bekleme döngüsünü KENDİ sürecinde, ön planda koşturur. `meridian-learn`
 systemd birimi bunu `ExecStart` olarak çağırır; süreç yaşadığı sürece döngü yaşar.
 
-NEDEN VAR (ROADMAP §2-50, ölçüldü 2026-08-16):
+NEDEN VAR (ROADMAP Ö-50, ölçüldü 2026-08-16):
 Döngü bugüne kadar API sunucusunun İÇİNDE bir daemon ipliğiydi. Ölçüm: `py-spy` yığını
 `hermes-standby → coordinate_descent_search → walk_forward → replay`; API süreci %93-100 CPU'da
 kesintisiz, `/api/public/summary` 2,6-14,0 sn, yük ortalaması 1,14 (4 çekirdekte → biri dolu, ÜÇÜ
@@ -59,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, _isaret)
     obs.log("learn_run_basladi", poll_seconds=poll, pid=os.getpid(),
-             detail="öğrenme bekleme döngüsü AYRI SÜREÇTE (ROADMAP §2-50)")
+             detail="öğrenme bekleme döngüsü AYRI SÜREÇTE (ROADMAP Ö-50)")
     sonuc = hermes_runtime.start(poll_seconds=poll)
     th = getattr(hermes_runtime, "_thread", None)
     if th is None:

@@ -52,7 +52,7 @@ MODEL = os.environ.get("HERMES_MODEL", "claude-opus-4-8")
 # without this the operator sees only "reflecting: true" and cannot tell progress from a hang.
 SEARCH_PROGRESS: dict = {}
 
-# Bellekteki `SEARCH_PROGRESS`in SÜREÇLER-ARASI nüshası (§2-50). Okuyucu sözleşmesi ÜÇ DEĞERLİDİR
+# Bellekteki `SEARCH_PROGRESS`in SÜREÇLER-ARASI nüshası (Ö-50). Okuyucu sözleşmesi ÜÇ DEĞERLİDİR
 # ve `search_progress_oku()`dadır — "dosya yok / bayat" ile "arama yok" AYNI ŞEY DEĞİLDİR.
 SEARCH_PROGRESS_FILE = "search_progress.json"
 
@@ -70,7 +70,7 @@ def _progress(**alanlar) -> None:
     değer beşlisidir; damga ize girseydi içeriksiz her yazım "ilerleme" gibi okunur, bayatlık
     yasası körleşirdi. Damga parmak-izine EK sinyaldir, parçası değil.
 
-    DİSK AYNASI (2026-08-17, §2-50 süreç ayrımı): bellek sözlüğü artık `SEARCH_PROGRESS_FILE`a da
+    DİSK AYNASI (2026-08-17, Ö-50 süreç ayrımı): bellek sözlüğü artık `SEARCH_PROGRESS_FILE`a da
     yansıtılır. NEDEN: öğrenme döngüsü kendi systemd birimine taşınınca bu sözlüğün İKİ tüketicisi
     (`hermes_runtime.status` → pano, `sprint._arama_durumu` → sprint kapısı) başka SÜREÇTE kalır ve
     orada sözlük boş görünür. `sprint`in muhafazakâr yedeği ("okunamıyorsa MEŞGUL say") bu durumda
@@ -107,10 +107,10 @@ def _progress_temizle() -> None:
 
 def search_progress_oku(ayni_surec: bool = False) -> dict:
     """Arama ilerlemesini SÜREÇLER-ARASI okur. Tüketici: pano (`hermes_runtime.status`) ve sprint
-    kapısı (`sprint._arama_durumu`) — ikisi de §2-50 ayrımından sonra başka süreçte olabilir.
+    kapısı (`sprint._arama_durumu`) — ikisi de Ö-50 ayrımından sonra başka süreçte olabilir.
 
     ÜÇ DEĞERLİ, ve bu ayrım UYDURMA YASAĞInın gereğidir: "dosya yok / bayrak bayat" ile "arama
-    koşmuyor" AYNI ŞEY DEĞİLDİR. İkisini birleştirmek tam olarak §2-50'nin kapattığı tuzaktır
+    koşmuyor" AYNI ŞEY DEĞİLDİR. İkisini birleştirmek tam olarak Ö-50'nin kapattığı tuzaktır
     (boş sözlük sessizce "meşgul değil" diye okunuyordu).
 
       durum="kosuyor"     — kayıt var ve `running` doğru
@@ -4577,7 +4577,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     `versioning.bump` onu `params_by_regime[rejim]`e yazar, canlı davranış rejim dönene dek değişmez.
     Atlama yalnız SON ÇARE olarak kalır: rejim adı geçerli değilse (kapsanamıyorsa) tur koşmaz —
     çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir."""
-    _progress_temizle()          # kapıdan geçen temizleme — disk aynası da sıfırlanır (§2-50)
+    _progress_temizle()          # kapıdan geçen temizleme — disk aynası da sıfırlanır (Ö-50)
     proposal = propose_with_llm()
     if proposal is None and VIRGIN_FALLBACK:
         # BEYİNSİZ TUR ARTIK BOŞ GEÇMİYOR: tek akıllı hamle yuvası bakir bir düğmeyle doldurulur.

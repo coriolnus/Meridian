@@ -4578,7 +4578,7 @@ OGRENME_BIRIMI = "meridian-learn"
 
 
 def _ogrenme_kumanda(action: str) -> dict:
-    """Pano `start`/`stop` düğmelerini DOĞRU sürece yönlendirir (ROADMAP §2-50).
+    """Pano `start`/`stop` düğmelerini DOĞRU sürece yönlendirir (ROADMAP Ö-50).
 
     NEDEN VAR — BU BİR EMNİYET KAPISIDIR, kolaylık değil: öğrenme döngüsü artık
     `meridian-learn.service` biriminde koşuyor ve bu süreçte `MERIDIAN_AUTOSTART_HERMES=0`.

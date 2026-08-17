@@ -326,7 +326,7 @@ DECLARED_SINKS: dict[str, str] = {
                               "→ statik graf göremez). İçerik ÖLÜ DEĞİL: monotonicity_report onu "
                               "'amnestied' alanıyla dışa verir ve pano gerekçesiyle birlikte gösterir. "
                               "Meşru küçülmenin (re-seed) yazılı kaydı — bkz. 2026-07-22 trades 129→96",
-    "search_progress.json": "canlı arama ilerlemesinin SÜREÇLER-ARASI nüshası (ROADMAP §2-50). "
+    "search_progress.json": "canlı arama ilerlemesinin SÜREÇLER-ARASI nüshası (ROADMAP Ö-50). "
         "Yazan `hermes._progress_aynala`, okuyan `hermes.search_progress_oku` — ikisi de AYNI "
         "modülde, o yüzden statik graf dış okuyucu göremiyor. GERÇEK tüketiciler başka modüllerde "
         "ve erişimci fonksiyon üzerinden geliyor: `hermes_runtime.status` → /api/hermes → pano, ve "
@@ -1319,7 +1319,7 @@ _CAPA_DESENI = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.py):(\d+)\b")
 #: `docs/` BİLEREK DIŞARIDA: 2324 çapanın 704'ü çürük, ama 668'i TARİHLİ teşhis belgelerinde
 #: (`…-2026-08-02.md`) — onlar tarihli birer KAYITTIR, yazıldıkları gün doğruydular ve geriye
 #: dönük "düzeltmek" tarihi tahrif etmek olurdu. Kalan 36'sı üretilen `RUNBOOK.md`de ve kaynağın
-#: kendi yorum bloklarının kopyasıdır; orası üreticinin işidir (ROADMAP §2-49, açık kalem).
+#: kendi yorum bloklarının kopyasıdır; orası üreticinin işidir (ROADMAP Ö-49, açık kalem).
 _EK_CAPA_KOKLERI = ("tests", "ops")
 
 

@@ -176,7 +176,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | artefakt | kapı durumu |
 |---|---|---|---|
-| `meridian/`+`tests/` §-atıf çevrimi (212) | WP6 | `scratchpad/roadmap_donusum.py` | betik hazır, kayıpsızlık kanıtı kasıtlı-kırmızıyla sınandı; koşulmadı |
+| `tests/` §-atıf çevrimi (120 satır) | WP6 | `scratchpad/roadmap_donusum.py` | `meridian/` **ÇEVRİLDİ ✅** (10 dosya/18 satır, codelaw temiz). `tests/` BİLEREK bekliyor: 86 satır yorum-DIŞI ve assert içinde olabilir → tam suite koşumuyla doğrulanmadan dokunulmaz |
 
 #### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
 

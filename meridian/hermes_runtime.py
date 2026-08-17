@@ -387,7 +387,7 @@ def _acilis_senkron_dogrula() -> dict:
         return {"yapildi": False, "sebep": f"hata: {type(e).__name__}", "senkron_ts": ts}
 
 
-# Kalp atışı bayatlık PAYI (§2-50). Mutlak saniye DEĞİL, poll aralığının katı — yeni eşik icat
+# Kalp atışı bayatlık PAYI (Ö-50). Mutlak saniye DEĞİL, poll aralığının katı — yeni eşik icat
 # etmemek için (madde 3): aralık değişirse pay kendiliğinden ölçeklenir. 3 = bir kaçırılan poll
 # tolere edilir, ikisi edilmez.
 KALP_PAY = 3
@@ -599,7 +599,7 @@ def status() -> dict:
 
     "Sonraki yansımaya kaç işlem kaldı" ve ufuk ilerlemesi HER çağrıda TAZE ölçülür (HALT/bayat
     hâlde ve ilk poll'dan önce de) — tek kaynak burasıdır, arayüz kendi formülünü üretmez."""
-    # SÜREÇ-İÇİ Mİ? (§2-50) Döngü kendi systemd biriminde koşuyorsa BU süreçte iplik YOKTUR ve
+    # SÜREÇ-İÇİ Mİ? (Ö-50) Döngü kendi systemd biriminde koşuyorsa BU süreçte iplik YOKTUR ve
     # `_state` boş varsayılanlarla durur — o hâlde yetkili kaynak DİSKtir (`STATUS_FILE`).
     icerde = bool(_thread and _thread.is_alive())
     disk = (store.read_json(STATUS_FILE, {}) or {}) if not icerde else {}

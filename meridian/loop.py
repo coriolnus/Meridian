@@ -2566,7 +2566,7 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
     if not receipt:
         return "makbuzsuz_boyut", ("plan için SB-1 boyut makbuzu (size_law) yok — restart-öncesi "
                                    "ya da makbuzsuz gönderim; boyut kararının girdileri kayıtsız, "
-                                   "gönderim↔dolum kıyası kurulamaz (ROADMAP §2-7, 2026-08-12 "
+                                   "gönderim↔dolum kıyası kurulamaz (ROADMAP Ö-7, 2026-08-12 "
                                    "forensiği: 'olculemedi'nin adlı alt-hâli)")
     # kıyasın SAĞ bacağı (dolum-anı tabanı) üç kaynaktan, güven sırasıyla:
     #   1. makbuz `dolum_eq` damgası (iç dolum anında basıldı — yaşdan bağımsız doğru taban),
