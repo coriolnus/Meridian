@@ -21,8 +21,8 @@ haritası §7'in tepesindeki 2026-08-09 kaydında.)_
 | eski | yeni | bölüm |
 |---|---|---|
 | §0 | **§0** | SÖZLEŞME — anayasa (numarası bilerek SABİT) |
-| — | **§1** | HAT — yaşam döngüsü ve kapıları (H0…H6) · _yazılacak_ |
-| — | **§2** | TAHTA — aktif kalemler, tek satır tek aşama · _yazılacak_ |
+| — | **§1** | HAT — yaşam döngüsü ve kapıları (H0…H6) |
+| — | **§2** | TAHTA — aktif kalemler, tek satır tek aşama |
 | §1 | **§3** | AKTİF WP'ler (cepheler) |
 | §2 | **§4** | ÖNERİ HAVUZU |
 | §3 | **§5** | OPERATÖR BLOKLARI |
@@ -108,6 +108,78 @@ _Aşağıdaki sıra 2026-07-31 gecesinden; güncel öncelikler §3 GÜNCEL DURUM
 **WP-R** → 1.1+1.3+1.5 (S2) → WP-G SMA kartı → WP-U (PIT) → WP-K → WP-M + WP-H sürekli-serpiştirilmiş.
 Sprint çıkışı = DoD + testler yeşil + K-defteri güncel; kapanmadan sonraki sprinte geçilmez.
 
+
+## §1 HAT — geliştirme yaşam döngüsü ve kapıları
+
+> **Operatör kararı 2026-08-17:** *"bundan sonra superpowers roadmapten bağımsız olarak bütün
+> geliştirme cycle'inin belkemiği olacak."* Bu bölüm o hattın **tek kaynağıdır**. Hat ROADMAP'e
+> bağlı değildir: burada kalemi olmayan bir iş de aynı kapılardan geçer.
+
+Bu döngü depoda **zaten vardı ama dağınık ve isimsizdi** — kart burada, brief şurada, hüküm
+başka yerde. Superpowers'ın katkısı yeni bir süreç icat etmek değil, **aşamalara ad ve kapı
+vermek**. Aşağıdaki tablo hattın kendisidir.
+
+| # | aşama | ürettiği artefakt | ÇIKIŞ KAPISI (bu olmadan sonraki aşamaya geçilmez) |
+|---|---|---|---|
+| **H0** | FİKİR | §4 havuz satırı (`Ö-N`) | bir kart ya da tasarım belgesi doğdu |
+| **H1** | TASARIM | ölçüm işi → `research/cards/*.yaml` · mimari iş → `docs/TASARIM-*.md` | Rol-1 onayı; **eşikler DONDU** ve bir daha değişmez |
+| **H2** | PLAN | `docs/superpowers/plans/*.md` | dosya-ayrıklık sözleşmesi YAZILI (sohbette değil) |
+| **H3** | İCRA | kod + çivi | **çivi ÖNCE yazılır** — düşen testi görmeden kod yazılmaz |
+| **H4** | DOĞRULAMA | suite çıktısı + `dagit` günlüğü | otoriter suite YEŞİL (tam `grep -E "FAILED\|ERROR"`, tail-kesme YOK) + `dagit [5]` healthz |
+| **H5** | İNCELEME | hüküm metni | Rol-1 denetimi ya da cloud PR turu bir HÜKÜM yazdı |
+| **H6** | KAPANIŞ | §7 karar günlüğü satırı | commit + `git push origin main` |
+
+**AŞAMA DEĞİL, DİK DURUM (blocker).** Bir kalem aynı anda hem bir aşamada hem bloke olabilir; bu
+ikisini karıştırmak §5'in kalemlerini tahtadan görünmez kılıyordu:
+`BLOKE: operatör` (§5) · `BLOKE: erişim/anahtar` · `ASKIDA: kanıt bekliyor`
+
+### Hattın deponun yasalarıyla ilişkisi — ÇATIŞMA HÂLİNDE DEPO KAZANIR
+
+Superpowers 14 skill taşıyor; **11'inin deposal karşılığı zaten vardı** (kök-neden avı, doğrulama,
+inceleme, dal kapanışı, worktree, paralel ajan, alt-ajan, plan icrası…). Gerçekten eksik olan
+**üçtü** ve hat onları kapatıyor: **H1 mimari tasarım artefaktı · H2 kalıcı plan · H3 test-önce.**
+
+Ters yönde de fark var ve o fark KORUNUR — deponun superpowers'ta **olmayan** disiplinleri:
+ön-kayıt kartı (eşiği ölçümden ÖNCE dondurur; spec'ten KATIdır), UYDURMA YASAĞI, YASA 4, YASA 6,
+kill-list, K-defteri, `dagit` kapı hattı. Bu yüzden iki bilinçli sapma yazılıdır:
+skill "spec'i `docs/superpowers/specs/` altına yaz" der → **depo düzeni kazanır** (`docs/TASARIM-*.md`);
+ölçüm işinde spec'in yerini **kart** alır.
+
+### Hattın kendi kanıtı (H3'ün bedeli ölçüldü)
+
+2026-08-17'de `Ö-50` H3'ü **atlayarak** yazıldı (önce kod, sonra çivi). Suite üç yasa borcu ve
+**16 kırmızı** çıkardı; kırmızıların üçü tasarımın varsayımlarını çürüttü ve biri gerçek bir üretim
+arızasıydı (sprint temiz kurulumda kalıcı MEŞGUL'e kilitleniyordu). Test-önce aynı yere daha ucuz
+varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
+
+## §2 TAHTA — aktif kalemler: tek satır, tek aşama
+
+> Bugüne dek "açık kalemler" §3'ün WP tablosunda **düzyazı yığınıydı** ve hangi kalemin nerede
+> olduğu okunamıyordu. Tahta onu satırlaştırır. **Tek kural: her aktif kalem tam bir satır ve tam
+> bir aşama.** İki aşamadaysa kalem İKİYE bölünür.
+
+| kalem | WP | aşama | artefakt | kapı durumu / bloke |
+|---|---|---|---|---|
+| `Ö-50` öğrenme süreç ayrımı | WP3 | **H6 ✅** | `docs/TASARIM-OGRENME-SURECI-AYRIMI-2026-08-17.md` | v249 dağıtıldı; pano 14,0→0,027 sn ölçüldü |
+| `23c` dinlenen limit sadakati | WP1 | **H1** | `research/cards/EXE-2026-005-dinlenen-limit.yaml` | kart ÖN-KAYITLI, ölçüm bekliyor (D5: kapanmadan limit-tavanı kararı YOK) |
+| friksiyon dayanıklılığı | WP1 | **H1** | `research/cards/EDG-2026-040-friksiyon-dayaniklilik.yaml` | kart ÖN-KAYITLI, ölçüm bekliyor |
+| `Ö-48` hayalet düğmeler | WP3 | **H0** | — | teşhis yazılı (keşif bütçesinin %62'si motorda karşılığı olmayan düğmelere); kart YOK |
+| `Ö-49` çapa/beyan çürümesi kalanı | WP6 | **H0** | — | yasa kuruldu, sınıf tam kapanmadı |
+| ROADMAP `§1`+`§2` metinleri | WP6 | **H6 ✅** | bu bölüm | yazıldı |
+| ROADMAP `meridian/`+`tests/` §-atıf çevrimi | WP6 | **H2** | `scratchpad/roadmap_donusum.py` | betik hazır + kayıpsızlık kanıtı sınandı; koşulmadı (212 atıf) |
+| Operatör bloklarının kimliklendirilmesi (`§5`/A1 → `B-A1`) | WP6 | **H0** | — | `Ö-N` ile aynı gerekçe: kimlik konumdan ayrılmalı |
+| havuz tavanı `cpu−2` → `cpu−1` | WP3 | **H0** | — | `Ö-50` kapsam DIŞI bıraktı: **kart-önce** (2026-08-03 vakası tam o tavanla yaşandı) |
+| `A1` koruma yeniden-kurulumu | WP2 | — | `EDG-2026-038` | **BLOKE: operatör** (4 pozisyon çıplak — §5 KOVA-1) |
+| `A2` bildirim kanalı (N1) | — | — | — | **BLOKE: operatör** (kanal kimliği; 29 alarm teslim edilemedi) |
+| `B1` pullback silahsızlanması | WP11 | — | `EDG-2026-039` | **BLOKE: operatör** (strateji kimliği değişikliği) |
+| `B2` koruma politikası (a/b/c) | WP2 | — | — | **BLOKE: operatör** |
+
+**BEYAN — TAHTA HENÜZ TAM DEĞİL.** Yukarıdaki satırlar **ölçülmüş** kalemlerdir (bu turda kartı,
+belgesi ya da hükmü elle doğrulananlar). §3'teki WP tablolarının "açık kalemler" düzyazısında
+**bunların dışında da kalemler var** (WP4 PIT/delist · WP5 M1/M2/M7-M9 · WP7 24b-24g · WP8 D3-b/D3-c ·
+WP9 C2-4 · WP11 15d/15g) ve onların aşaması **HENÜZ TRİYAJ EDİLMEDİ**. Uydurma yerine boşluk
+yazıldı: bir kalemin aşamasını bilmeden tahtaya koymak, tahtanın kendisini yalancı yapar.
+**Sıradaki iş: §3'ün düzyazı kalemlerini tek tek triyaj edip bu tabloya taşımak.**
 
 ## §3 AKTİF WP'ler — açık cepheler _(eski: §1)_
 
