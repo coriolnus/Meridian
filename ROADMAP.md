@@ -158,28 +158,85 @@ varırdı. Bu satır burada bir **hatıra değil kapı gerekçesidir**.
 > olduğu okunamıyordu. Tahta onu satırlaştırır. **Tek kural: her aktif kalem tam bir satır ve tam
 > bir aşama.** İki aşamadaysa kalem İKİYE bölünür.
 
-| kalem | WP | aşama | artefakt | kapı durumu / bloke |
-|---|---|---|---|---|
-| `Ö-50` öğrenme süreç ayrımı | WP3 | **H6 ✅** | `docs/TASARIM-OGRENME-SURECI-AYRIMI-2026-08-17.md` | v249 dağıtıldı; pano 14,0→0,027 sn ölçüldü |
-| `23c` dinlenen limit sadakati | WP1 | **H1** | `research/cards/EXE-2026-005-dinlenen-limit.yaml` | kart ÖN-KAYITLI, ölçüm bekliyor (D5: kapanmadan limit-tavanı kararı YOK) |
-| friksiyon dayanıklılığı | WP1 | **H1** | `research/cards/EDG-2026-040-friksiyon-dayaniklilik.yaml` | kart ÖN-KAYITLI, ölçüm bekliyor |
-| `Ö-48` hayalet düğmeler | WP3 | **H0** | — | teşhis yazılı (keşif bütçesinin %62'si motorda karşılığı olmayan düğmelere); kart YOK |
-| `Ö-49` çapa/beyan çürümesi kalanı | WP6 | **H0** | — | yasa kuruldu, sınıf tam kapanmadı |
-| ROADMAP `§1`+`§2` metinleri | WP6 | **H6 ✅** | bu bölüm | yazıldı |
-| ROADMAP `meridian/`+`tests/` §-atıf çevrimi | WP6 | **H2** | `scratchpad/roadmap_donusum.py` | betik hazır + kayıpsızlık kanıtı sınandı; koşulmadı (212 atıf) |
-| Operatör bloklarının kimliklendirilmesi (`§5`/A1 → `B-A1`) | WP6 | **H0** | — | `Ö-N` ile aynı gerekçe: kimlik konumdan ayrılmalı |
-| havuz tavanı `cpu−2` → `cpu−1` | WP3 | **H0** | — | `Ö-50` kapsam DIŞI bıraktı: **kart-önce** (2026-08-03 vakası tam o tavanla yaşandı) |
-| `A1` koruma yeniden-kurulumu | WP2 | — | `EDG-2026-038` | **BLOKE: operatör** (4 pozisyon çıplak — §5 KOVA-1) |
-| `A2` bildirim kanalı (N1) | — | — | — | **BLOKE: operatör** (kanal kimliği; 29 alarm teslim edilemedi) |
-| `B1` pullback silahsızlanması | WP11 | — | `EDG-2026-039` | **BLOKE: operatör** (strateji kimliği değişikliği) |
-| `B2` koruma politikası (a/b/c) | WP2 | — | — | **BLOKE: operatör** |
+**TRİYAJ KURALI (2026-08-17, §3'ün düzyazı kalemleri bu kurala göre taşındı — ezberden değil):**
+`H1` = ön-kayıtlı **kart** ya da **tasarım belgesi** VAR · `H0` = ikisi de YOK (fikir/teşhis
+aşamasında) · `H6 ✅` = kapandı ve kanıtı §7'de yazılı · `BLOKE`/`ASKIDA` = aşama değil **dik
+durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'dır.
 
-**BEYAN — TAHTA HENÜZ TAM DEĞİL.** Yukarıdaki satırlar **ölçülmüş** kalemlerdir (bu turda kartı,
-belgesi ya da hükmü elle doğrulananlar). §3'teki WP tablolarının "açık kalemler" düzyazısında
-**bunların dışında da kalemler var** (WP4 PIT/delist · WP5 M1/M2/M7-M9 · WP7 24b-24g · WP8 D3-b/D3-c ·
-WP9 C2-4 · WP11 15d/15g) ve onların aşaması **HENÜZ TRİYAJ EDİLMEDİ**. Uydurma yerine boşluk
-yazıldı: bir kalemin aşamasını bilmeden tahtaya koymak, tahtanın kendisini yalancı yapar.
-**Sıradaki iş: §3'ün düzyazı kalemlerini tek tek triyaj edip bu tabloya taşımak.**
+#### H1 — TASARIM VAR, ölçüm/uygulama bekliyor (4 kalem)
+
+| kalem | WP | artefakt | kapı durumu |
+|---|---|---|---|
+| `23c` dinlenen limit sadakati | WP1 | `EXE-2026-005-dinlenen-limit` | kart ön-kayıtlı · **D5: kapanmadan hiçbir limit-tavanı kararı verilemez** |
+| friksiyon dayanıklılığı | WP1 | `EDG-2026-040-friksiyon-dayaniklilik` | kart ön-kayıtlı, ölçüm bekliyor |
+| gölge kapsam / planlı kol | WP3 | `EXE-2026-003-golge-planli-kol` | kart ön-kayıtlı |
+| `24b-24d` skill görüş defteri | WP7 | `EDG-2026-019-skill-gorus-defteri` | kart ön-kayıtlı · 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** |
+
+#### H2 — PLAN VAR, icra bekliyor (1 kalem)
+
+| kalem | WP | artefakt | kapı durumu |
+|---|---|---|---|
+| `meridian/`+`tests/` §-atıf çevrimi (212) | WP6 | `scratchpad/roadmap_donusum.py` | betik hazır, kayıpsızlık kanıtı kasıtlı-kırmızıyla sınandı; koşulmadı |
+
+#### H0 — TASARIM ARTEFAKTI YOK (kart-önce açılacaklar)
+
+| kalem | WP | not |
+|---|---|---|
+| `23d` bar-içi stop varsayımı (stop slipajı SIFIR) | WP1 | 23c'nin kapattığı asimetrinin DİĞER yarısı |
+| `23e` gün-içi pencere · `23f` `gap_behavior:cancel` · `13` scale-out | WP1 | 23e bugünkü replayde MODELLENEMEZ (`1Day` tek yol) |
+| WP-E 6 boşluk sınıfı + E2 canlı-geçiş | WP1 | |
+| `equity_curve` zinciri / `seed_boundary` kadanslı yazar | WP2 | pano reset-penceresi dahil |
+| `SB-2` `drift_sinifi` · davranışsal EOD süpürme kanıtı | WP2 | ikincisi hâlâ KAYITSIZ (A4) |
+| `28d` kapı ÖLÇEMİYOR | WP3 | teşhis YAZILI: eşik düşürmek açamaz (confirm tabanı `max(10,…)`, chop dilimi 0 işlem); kök = chop rejimi 2025-07'den beri hiç oluşmadı |
+| `28g` · `28h` · `28i` incumbent holdout −0,5366 | WP3 | 28i'nin sapması fold geometrisinden DEĞİL (ölçüldü) |
+| `Ö-48` hayalet düğmeler | WP3 | keşif bütçesinin **%62'si** motorda karşılığı olmayan düğmelere gidiyor |
+| havuz tavanı `cpu−2` → `cpu−1` | WP3 | `Ö-50` bilerek kapsam dışı bıraktı — **kart-önce** (2026-08-03 vakası tam o tavanla yaşandı) |
+| OPT Faz-1 (serbest) · Faz-2 (28d'ye bağımlı) | WP3 | |
+| türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama · MNST split | WP4 | |
+| `M1` kıyas-kirlenmesi | WP5 | ROADMAP'in kendi ifadesi: **en yüksek kaldıraç** |
+| `M2` DSR-yarısı (`Ö-4` aracı) · `M7/M8/M9` · `M11` · `2B/2C/2D/A4` · kill#4 · `20c/20d` · korunum kovası (3) | WP5 | |
+| `26` değer-eşitliği kapısı (26 kapısız çift) | WP6 | D3 ACİL — ama tasarımsız, o yüzden H0 |
+| `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi |
+| `F9` dagit kapsamı dışı 4 canlı artefakt · `H3` tur-2 seccomp · gözlemlenebilirlik a-e | WP6 | F9'un ajanı 529 ile düştü, hiç yazılmadı |
+| `Ö-49` çapa/beyan çürümesi kalanı | WP6 | yasa kuruldu, sınıf TAM kapanmadı |
+| operatör bloklarının kimliklendirilmesi (`§5`/A1 → `B-A1`) | WP6 | `Ö-N` ile aynı gerekçe: kimlik konumdan ayrılmalı |
+| `24e` çekimser teşviki · `24f` SKILL.md↔kod bağı · `24g` sprint sızıntısı · skill rozeti | WP7 | 24e "terfinin ASIL duvarı" |
+| `F8` durum sözlüğü · 15 bekçi mekanizması + `halt_learning` | WP8 | F8 kanonik okuyucu ön-şartlı |
+| ARSENAL POLİTİKASI (15e giriş + 29 çıkış) · `15d` PIT-temiz faktör seti · `15c` evren genişletme | WP11 | 15c'nin askısı C6 uzlaştırmasıyla KALKTI |
+
+#### DİK DURUM — aşamada ilerleyemez (bloke/askıda)
+
+| kalem | WP | durum |
+|---|---|---|
+| `A1` koruma yeniden-kurulumu — **4 pozisyon ÇIPLAK** | WP2 | **BLOKE: operatör** · `EDG-2026-038` · bugün bedel ödeniyor |
+| `A2` bildirim kanalı (N1) | — | **BLOKE: operatör** · kanal kimliği yok, 29 alarm teslim edilemedi |
+| `B1` pullback silahsızlanması | WP11 | **BLOKE: operatör** · `EDG-2026-039` ölçüldü; strateji kimliği değişikliği |
+| `B2` koruma politikası (a/b/c) | WP2 | **BLOKE: operatör** |
+| PIT mid-cap üst-sınır | WP4 | **ASKIDA: veri kapısı** · `EDG-2026-018` status=`askiya_veri_kapisi` |
+| delist-bar kaynağı + FINVIZ · `dataset.load↔bars_integrity` | WP4 | **BLOKE: erişim** |
+| `C2-4` LEAN fizibilite · notebook koşumu | WP9 | **BLOKE: erişim** (QC login) |
+| `23b` çıkış slipajı | WP1 | **ASKIDA: örneklem bekliyor** |
+| Faz-6 BEŞ KİLİT | WP3 | **ASKIDA: kanıt-şartlı** |
+
+#### H6 ✅ — bu tur/önceki turlarda kapandı (kanıt §7'de)
+
+| kalem | WP | kanıt |
+|---|---|---|
+| `Ö-50` öğrenme süreç ayrımı | WP3 | v249 · pano 14,0 → **0,027 sn**, API CPU %93 → %2 |
+| `28a` görünmez süzgeç | WP3 | `EDG-2026-041` status=`measured` (D1+D2) · v247 |
+| `28c` · `28e` · `28f` | WP3 | v247 |
+| `/api/diagnostics` 16,7 sn üretim arızası | WP8 | v243 · kök: tohum yenilemesi `load_bars` 95→400 |
+| `D3-b F3-F13/F15` · `D3-c` | WP8 | tur kapanışlarında |
+| `15g` slot↔sektör tavanı yapışıklığı | WP11 | `sector_cap_basis` ayrıldı; 620-hücre kalıcı matris |
+| `C6` uzlaştırma (evren mi ısı mı) | WP11 | çelişki DEĞİLMİŞ — huninin iki katı; 15c askısı kalktı |
+| ROADMAP `§1 HAT` + `§2 TAHTA` | WP6 | bu bölüm |
+| WP10 referans verisi | WP10 | 🟢 açık borç YOK — tahtada satırı yok |
+
+**BEYAN — TAHTANIN SINIRI.** Aşamalar **kart varlığından** türetildi, iş hacminden değil: bir kalem
+acil olabilir ve yine H0'da durabilir (`26` değer-eşitliği, `A1` koruma gibi). `H0` bir küçümseme
+değil, *"tasarım artefaktı henüz yok"* demektir ve bu kalemlerin hepsi **kart-önce** açılır. §3'ün
+WP metinlerinde bu satırların TAM gerekçesi durmaya devam eder; tahta onların yerine geçmez,
+**hangi aşamada olduklarını** söyler.
 
 ## §3 AKTİF WP'ler — açık cepheler _(eski: §1)_
 
