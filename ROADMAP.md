@@ -193,7 +193,6 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | havuz tavanı `cpu−2` → `cpu−1` | WP3 | `Ö-50` bilerek kapsam dışı bıraktı — **kart-önce** (2026-08-03 vakası tam o tavanla yaşandı) |
 | OPT Faz-1 (serbest) · Faz-2 (28d'ye bağımlı) | WP3 | |
 | türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama · MNST split | WP4 | |
-| `M1` kıyas-kirlenmesi | WP5 | ROADMAP'in kendi ifadesi: **en yüksek kaldıraç** |
 | `M2` DSR-yarısı (`Ö-4` aracı) · `M7/M8/M9` · `M11` · `2B/2C/2D/A4` · kill#4 · `20c/20d` · korunum kovası (3) | WP5 | |
 | `26` değer-eşitliği kapısı (26 kapısız çift) | WP6 | D3 ACİL — ama tasarımsız, o yüzden H0 |
 | `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi |
@@ -230,6 +229,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | `15g` slot↔sektör tavanı yapışıklığı | WP11 | `sector_cap_basis` ayrıldı; 620-hücre kalıcı matris |
 | `C6` uzlaştırma (evren mi ısı mı) | WP11 | çelişki DEĞİLMİŞ — huninin iki katı; 15c askısı kalktı |
 | ROADMAP `§1 HAT` + `§2 TAHTA` | WP6 | bu bölüm |
+| `M1` kıyas-kirlenmesi | WP5 | `KYS-2026-001` **kill#1 · 2026-08-02** — yanlılık iki yüzeyde de CI-0-içi ve \|fark\|<10bps → PRATİK-ÖNEMSİZ; temiz-kıyas aracı OPSİYONEL, yeniden-okuma envanteri BOŞ. **KILL-LIST: tur harcanmaz.** ⚠ §3'ün 'en yüksek kaldıraç' cümlesi ÖLÇÜMDEN ÖNCEye aitti ve bayattı — 2026-08-17'de düzeltildi |
 | WP10 referans verisi | WP10 | 🟢 açık borç YOK — tahtada satırı yok |
 
 **BEYAN — TAHTANIN SINIRI.** Aşamalar **kart varlığından** türetildi, iş hacminden değil: bir kalem
@@ -290,13 +290,19 @@ detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kal�
 > buradaki WP1/WP3 ile İLGİSİZDİR. Arşiv başlıkları tarihçe-koru gereği değiştirilmedi, ayrım §8'nın
 > tepesindeki notla yapılır.
 
+> **AŞAMA BU TABLODA DEĞİL, §2 TAHTA'DADIR (2026-08-17).** Aşağıdaki "açık kalemler" sütunu bir kalemin
+> **GEREKÇESİNİ** taşır, **DURUMUNU** değil — hangi aşamada olduğu, bloke mi, kapandı mı: hepsi tahtada.
+> İkisi çeliştiğinde **TAHTA YETKİLİDİR**; bu sütun düzyazı olduğu için bayatlamaya açıktır ve bugün
+> bayat bir örneği yakalandı (M1 'en yüksek kaldıraç' derken kart 15 gündür kill#1'le arşivdeydi).
+> Metin SİLİNMEDİ (tarihçe-koru) — yetkisi daraltıldı.
+
 | WP | durum | kapsam | açık kalemler | dosya-sınırı | kanıt-kartı |
 |---|---|---|---|---|---|
 | **WP1 İcra ve Friksiyon** _(eski: WP-E + Ö-23 + Ö-13)_ | 🔴 aktif | emrin doğduğu andan dolduğu ana kadar: iki-motor icra sadakati · E1-E5 hattı · gerçek TCA/friksiyon defteri | **23c K1 dinlenen limit (D5 — kapanmadan hiçbir limit-tavanı kararı verilemez)** · 23d bar-içi stop varsayımı · 23e gün-içi pencere (altyapı) · 23f `gap_behavior:cancel` elenmeli · 23b çıkış slipajı (örneklem bekler) · WP-E 6 boşluk sınıfı (#1/#2/#5/#6/#7/#8) + E2 canlı-geçiş · 13 scale-out latent (düşük) · A6 şerh önerisi (Rol-1 kararı) | `loop.py` · `adapters/alpaca.py` · `broker.py` · `analytics`(cf) | EXE-2026-001(+R1/R2) · EXE-2026-002 · EDG-2026-037/038 |
 | **WP2 Sermaye ve Koruma** _(eski: WP-S + Ö-27 + Ö-7 + Ö-9/Ö-18)_ | 🔴 aktif — **ACİL** | sermaye defterinin, pozisyon korumasının ve P&L görünürlüğünün aynı gerçeği söylemesi | **koruma yeniden-kurulumu — 4 pozisyon ÇIPLAK (§5 KOVA-1)** · **equity_curve zinciri (D1 ACİL: `seed_boundary` ONARIMI → kadanslı yazar → pano reset-penceresi)** · davranışsal EOD süpürme kanıtı hâlâ KAYITSIZ (A4) · SB-2 `drift_sinifi` · 4 pozisyon adet-sapması (operatör yön kararı) · melez pozisyonlar + dormant icra (§5) | `adapters/alpaca.py` · `store.py` · `obs.py` · `ledgerstamp.py` · `loop.py` | EXE-2026-001-R1/R2 · EXE-2026-002(+R1) · EDG-2026-036/038 |
 | **WP3 Öğrenme Döngüsü** _(eski: WP-L + Ö-28 + Ö-10 + Ö-19)_ | 🔴 aktif _(eski "📋 tetik-şartlı" — A1 ile ÇÜRÜDÜ)_ | hipotez üretiminden ship'e giden döngünün kendisi + OPT parametre-evrim boru hattı + Faz-6 merdiveni | **28a görünmez süzgeç (EN ÜST — 2026-08-13 17:26'da hâlâ ateşliyordu)** · **28d kapı ÖLÇEMİYOR (chop 27 < 30)** · 28c tek satır / 21 tekrar · 28e/28f/28g/28h · 28i incumbent holdout −0,5366 · OPT Faz-1 serbest / Faz-2 28d'ye bağımlı · Faz-6 BEŞ KİLİT kanıt-şartlı | `hermes.py` · `reflect.py` · `probgate.py` · `bounds.yaml` | EDG-2026-036 · KYS-2026-002 |
 | **WP4 Veri ve Evren** _(eski: WP-U + WP-D + Ö-8)_ | 🔶 aktif (stratejik ana cephe) | girdi verisinin bütünlüğü + ölçülen evrenin kendisi (PIT üyelik, delist-bar, karantina, split) | PIT mid-cap üst-sınır (EDG-018 veri-kapısı) · delist-bar kaynağı + FINVIZ (§5) · `dataset.load↔bars_integrity` bağlama (§5) · türetilmiş artefakt yeniden üretimi · seans-içi boşluk · earnings kapsama+fail-open · MNST split düzeltmesi (kart-önce) | `research/pit_universe/` · `adapters/data.py` | EDG-2026-018/021/022 |
-| **WP5 Ölçüm Altyapısı** _(eski: WP-M + WP-S2 + Ö-4 + Ö-14 + Ö-20 + Ö-16)_ | 📋 aktif | ölçümün kendisinin doğru olması: metodoloji/yasa borçları · görünürlük borçları · K-defteri · paket-bağımlı eşikler · korunum kovaları | M1 kıyas-kirlenmesi (en yüksek kaldıraç) · M2 DSR-yarısı → Ö-4 aracı (D6) · M7/M8/M9 · M11 · 2B/2C/2D/A4 · kill#4 uygulama · Faz-5 örneklem (iş ister, kod değil) · 20c yönetişim asimetrisi · 20d ince marjlar · korunum kovası (kalan **3**) · kart biçim/lint | `analytics` · `reflect` · `dataset` · `api.py` · `web/app.js` · `guard.py` | KYS-2026-001(ARŞİV) · KYS-2026-002 · EXE-2026-002-R1 |
+| **WP5 Ölçüm Altyapısı** _(eski: WP-M + WP-S2 + Ö-4 + Ö-14 + Ö-20 + Ö-16)_ | 📋 aktif | ölçümün kendisinin doğru olması: metodoloji/yasa borçları · görünürlük borçları · K-defteri · paket-bağımlı eşikler · korunum kovaları | ~~M1 kıyas-kirlenmesi~~ **KAPANDI: kill#1, KYS-2026-001, 2026-08-02 — yanlılık pratik-önemsiz** · M2 DSR-yarısı → Ö-4 aracı (D6) · M7/M8/M9 · M11 · 2B/2C/2D/A4 · kill#4 uygulama · Faz-5 örneklem (iş ister, kod değil) · 20c yönetişim asimetrisi · 20d ince marjlar · korunum kovası (kalan **3**) · kart biçim/lint | `analytics` · `reflect` · `dataset` · `api.py` · `web/app.js` · `guard.py` | KYS-2026-001(ARŞİV) · KYS-2026-002 · EXE-2026-002-R1 |
 | **WP6 Sistem Bütünlüğü** _(eski: WP-H + Ö-25 + Ö-26 + Ö-2)_ | 🟡 aktif | kodun ve dağıtımın kendine sadakati: sürüm kontrolü · atomik yazım · sertleştirme · ölü/ezilen bileşen · "aynı gerçek iki yerde" kapıları | **26 değer-eşitliği kapısı (D3 ACİL — 26 kapısız çift)** · 25a KALDIR(14) / 25b DAMGALA(6) / 25c DİRİLT(3) / 25d ezilme zinciri / 25e öğrenme 0 ship → WP3 · **F9 dagit kapsamı dışı dört canlı artefakt** · H3 tur-2 seccomp · LoadCredential+OCI (§5) · gözlemlenebilirlik adayları a-e · A17 kaynak-içi çapa bayatlığı | `store.py` · `auth.py` · `watchdog.py` · `hermes.py` · `deploy/` · `dagit.sh` | — |
 | **WP7 Skill Katmanı** _(YENİ CEPHE 2026-08-13; eski: Ö-24 — bugüne dek WP'si yoktu)_ | 🆕 aktif | skill'in çağrılıp çağrılmadığı, izinin tutulduğu ve karar yüzeyine bağlandığı hat | 24b SOUL kilidi açıldı ama **HİÇ SINANMADI** · 24c ana danışma yolu ÖLÜ (§5 KOVA-3) · 24d pilot-S1 A/B · **24e çekimser teşviki (terfinin ASIL duvarı)** · 24f SKILL.md↔kod bağı yok · 24g sprint sızıntısı · skill rozeti damgası (C10, eski Ö-25b) | `skills.py` · `hermes.py` · `SOUL.md` · `skills/` | EDG-2026-019 |
 | **WP8 Pano ve Operatör** _(eski: WP-UX + WP-P + Ö-3)_ | 🟡 frontend esasen bitti | operatörün gördüğü yüzey (icra) + kontrol-odası doktrini (kabul çıtası) | **AÇIK ÜRETİM ARIZASI: `/api/diagnostics` soğuk çağrıda 16,7s (v243 kapatıyor)** · D3-b F3-F13/F15 · D3-c C2-4/C2-5/6. çalışma · F8 durum sözlüğü (kanonik okuyucu ön-şartlı) · 15 bekçi mekanizması + halt_learning | `web/app.js` · `api.py` · `docs/RUNBOOK.md` | harita: WP8 detayı |
@@ -2208,7 +2214,7 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 - **EDG-2026-017** rvol-form-revizyonu — registered (K+=2); rvol≥2,5 bölgesi form-şartsız + sürekli-rvol artığı (1.4'ün torun-kartı; ölçüm-sonrası-seçim yasağına uyuldu).
 - **EDG-2026-018** pit-midcap-üst-sınır — registered (K+=1); **askıda:veri-kapısı** (delist-bar; feasibility-gate önce; §5-9).
 - **EDG-2026-020** postevent-inplay — **archived (2026-08-03):** kill#1+#3 (havuz-fazlası CI-0-içi/negatif; ham +%1,1 taban-sürüklenmesi = ders#3 vakası); 011'e aleyhte-önsel not.
-- **KYS-2026-001** kıyas-kirlenmesi — registered (K+=2); **ALTYAPI kartı, retro-hüküm yok**; WP-M şasi aracına bağımlı (M1 = en yüksek kaldıraç — TÜM evren-medyanı ölçümlerini etkiliyor).
+- **KYS-2026-001** kıyas-kirlenmesi — **ARŞİV / kill#1 (2026-08-02)**; ALTYAPI kartı, retro-hüküm yok. HÜKÜM: yanlılık iki yüzeyde de CI-0-içi ve |fark|<10bps → **pratik-önemsiz**; temiz-kıyas aracı OPSİYONEL kaldı, yeniden-okuma envanteri BOŞ. _(2026-08-17 DÜZELTME: bu satır 'registered' yazıyordu ve 'M1 = en yüksek kaldıraç' iddiasını taşıyordu — ikisi de ÖLÇÜMDEN ÖNCEye aitti; kart 15 gündür arşivdeydi.)_
 - **EXE-2026-001** entry-execution — **E1-R2 (2026-08-07):** işletim noktası REF·limitsiz rejimi
   (`limit_atr_mult:100`/`limit_pct_cap:0,04`); limit-bacağı MONOTON ZARARLI; kaçanlar sistematik kazanan.
   E2 defteri gerçek dolumla accrues → canlı-geçiş kapısında E2 kanıtıyla yeniden hüküm (WP-E §3).
