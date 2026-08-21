@@ -1,0 +1,307 @@
+{
+ "kart": "EXE-2026-006",
+ "smoke": true,
+ "K_hucre": 8,
+ "tavanlar": [
+  0.005,
+  0.01,
+  0.02,
+  0.03
+ ],
+ "dolum_kurallari": [
+  "yalniz_acilis",
+  "dinlenen_limit"
+ ],
+ "kol_farki": {
+  "0.005": {
+   "kacan_sayisi_acilis_kolunda": 3,
+   "dinlenen_kolda_DOLAN_ek_islem": 3,
+   "O1_HAM_GECERSIZ_olay_paydali": 100.0,
+   "O1_distinkt_plan_paydasi": 3,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": -0.789,
+   "O2_n": 3,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": -1186.32,
+   "net_pnl_dinlenen": -2112.48,
+   "delta_pnl": -926.16
+  },
+  "0.01": {
+   "kacan_sayisi_acilis_kolunda": 1,
+   "dinlenen_kolda_DOLAN_ek_islem": 1,
+   "O1_HAM_GECERSIZ_olay_paydali": 100.0,
+   "O1_distinkt_plan_paydasi": 1,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": -0.681,
+   "O2_n": 1,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": -1861.8,
+   "net_pnl_dinlenen": -2132.48,
+   "delta_pnl": -270.68
+  },
+  "0.02": {
+   "kacan_sayisi_acilis_kolunda": 1,
+   "dinlenen_kolda_DOLAN_ek_islem": 1,
+   "O1_HAM_GECERSIZ_olay_paydali": 100.0,
+   "O1_distinkt_plan_paydasi": 1,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": -0.719,
+   "O2_n": 1,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": -1861.8,
+   "net_pnl_dinlenen": -2147.33,
+   "delta_pnl": -285.53
+  },
+  "0.03": {
+   "kacan_sayisi_acilis_kolunda": 1,
+   "dinlenen_kolda_DOLAN_ek_islem": 1,
+   "O1_HAM_GECERSIZ_olay_paydali": 100.0,
+   "O1_distinkt_plan_paydasi": 1,
+   "O1_olculemedi_nedeni": null,
+   "O2_ek_islem_ort_r": -0.719,
+   "O2_n": 1,
+   "O2_olculemedi_nedeni": null,
+   "net_pnl_yalniz_acilis": -1861.8,
+   "net_pnl_dinlenen": -2147.33,
+   "delta_pnl": -285.53
+  }
+ },
+ "hucreler": [
+  {
+   "limit_pct_cap": 0.005,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.005,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "entry_missed_limit": 3,
+    "open_below_stop": 1
+   },
+   "entry_missed_limit": 3,
+   "net_pnl_trades": -1186.32,
+   "net_pnl_equity": -1186.32,
+   "islem_n": 5,
+   "red_kimlik": {
+    "entry_missed_limit": [
+     [
+      "AMAT",
+      "2022-01-13"
+     ],
+     [
+      "LYV",
+      "2022-01-12"
+     ],
+     [
+      "MRVL",
+      "2022-01-12"
+     ]
+    ],
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.005,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.005,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "entry_missed_limit": 0,
+   "net_pnl_trades": -2112.48,
+   "net_pnl_equity": -2112.48,
+   "islem_n": 8,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.01,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1,
+    "entry_missed_limit": 1
+   },
+   "entry_missed_limit": 1,
+   "net_pnl_trades": -1861.8,
+   "net_pnl_equity": -1861.8,
+   "islem_n": 7,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ],
+    "entry_missed_limit": [
+     [
+      "AMAT",
+      "2022-01-13"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.01,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.01,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "entry_missed_limit": 0,
+   "net_pnl_trades": -2132.48,
+   "net_pnl_equity": -2132.48,
+   "islem_n": 8,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.02,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.02,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1,
+    "entry_missed_limit": 1
+   },
+   "entry_missed_limit": 1,
+   "net_pnl_trades": -1861.8,
+   "net_pnl_equity": -1861.8,
+   "islem_n": 7,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ],
+    "entry_missed_limit": [
+     [
+      "AMAT",
+      "2022-01-13"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.02,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.02,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "entry_missed_limit": 0,
+   "net_pnl_trades": -2147.33,
+   "net_pnl_equity": -2147.33,
+   "islem_n": 8,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.03,
+   "dolum_kurali": "yalniz_acilis",
+   "dolum_kurali_damgasi": "yalniz_acilis",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.03,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1,
+    "entry_missed_limit": 1
+   },
+   "entry_missed_limit": 1,
+   "net_pnl_trades": -1861.8,
+   "net_pnl_equity": -1861.8,
+   "islem_n": 7,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ],
+    "entry_missed_limit": [
+     [
+      "AMAT",
+      "2022-01-13"
+     ]
+    ]
+   }
+  },
+  {
+   "limit_pct_cap": 0.03,
+   "dolum_kurali": "dinlenen_limit",
+   "dolum_kurali_damgasi": "dinlenen_limit",
+   "yasa": {
+    "limit_atr_mult": 0.5,
+    "limit_pct_cap": 0.03,
+    "version": "E1-v2"
+   },
+   "entry_rejects": {
+    "open_below_stop": 1
+   },
+   "entry_missed_limit": 0,
+   "net_pnl_trades": -2147.33,
+   "net_pnl_equity": -2147.33,
+   "islem_n": 8,
+   "red_kimlik": {
+    "open_below_stop": [
+     [
+      "LLY",
+      "2022-01-12"
+     ]
+    ]
+   }
+  }
+ ]
+}
