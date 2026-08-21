@@ -1,0 +1,42 @@
+{
+ "0.005": {
+  "delta_pnl": 145.69,
+  "ci95": [
+   -16657.17,
+   17319.48
+  ],
+  "n_ay": 42,
+  "sifir_disinda": "hayır (0 içinde)",
+  "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+ },
+ "0.01": {
+  "delta_pnl": 7162.89,
+  "ci95": [
+   -10148.1,
+   24399.92
+  ],
+  "n_ay": 42,
+  "sifir_disinda": "hayır (0 içinde)",
+  "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+ },
+ "0.02": {
+  "delta_pnl": 5759.32,
+  "ci95": [
+   -8402.9,
+   20662.14
+  ],
+  "n_ay": 42,
+  "sifir_disinda": "hayır (0 içinde)",
+  "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+ },
+ "0.03": {
+  "delta_pnl": 7355.3,
+  "ci95": [
+   -4819.53,
+   21380.78
+  ],
+  "n_ay": 42,
+  "sifir_disinda": "hayır (0 içinde)",
+  "yontem": "EŞLENİK ay-kümeli bootstrap · yeniden örneklenen birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+ }
+}

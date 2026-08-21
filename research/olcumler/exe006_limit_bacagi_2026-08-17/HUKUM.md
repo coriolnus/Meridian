@@ -52,10 +52,25 @@ NOT: nokta tahminlerinin tavanla monoton artması bir DESEN'dir, hüküm değil;
 | 0,03 | +5.931 | +1.694 | −269 | **+7.355** | −0,00 |
 
 Üç bileşenin toplamı gerçek farkı SENTE kapatıyor (kartın Ö3 şartı).
+
+**CI EKLENDİ (Ö-51c, 2026-08-21) ve HÜKMÜ SERTLEŞTİRDİ.** Eşlenik ay-kümeli bootstrap
+(B=5000, seed 20260812, yeniden örneklenen birim = AY, 42 ay; iki kol AYNI ayı görür):
+
+| tavan | ΔP&L | CI95 | hüküm |
+|---|---|---|---|
+| 0,005 | +146 | [−16.657 · +17.319] | 0 içinde |
+| 0,01 | +7.163 | [−10.148 · +24.400] | 0 içinde |
+| 0,02 | +5.759 | [−8.403 · +20.662] | 0 içinde |
+| 0,03 | +7.355 | [−4.820 · +21.381] | 0 içinde |
+
+**ΔP&L DE SIFIRDAN AYRIŞMIYOR.** Yukarıdaki "+7.163" bir NOKTA TAHMİNİDİR, kanıtlanmış para
+DEĞİL. Bu satır, aşağıdaki hükmün ilk hâlinde eksikti ve düzeltildi: "ΔP&L dört tavanda da
+POZİTİF" cümlesi anlamlılık İDDİA ETMİYOR ve etmemeli.
 YAN KANAL BÜYÜK ve kartın "etki TOPLAMSAL DEĞİLDİR" beyanını doğruluyor: `cap=0,005`te 251 yeni
 işleme karşı **154 işlem yerinden oldu**. Yerinden olanlar DÖRT TAVANDA DA kaybedendi
 (ort-R −0,052 / −0,034 / −0,003 / −0,025), yani çıkmaları P&L'i İYİLEŞTİRDİ.
-**ΔP&L dört tavanda da POZİTİF** — ama CI hesaplanmadı (bu turun açık kalemi).
+**ΔP&L dört tavanda da POZİTİF (nokta tahmini)** — CI 2026-08-21'de hesaplandı ve DÖRDÜ DE
+sıfırı içeriyor; yukarıdaki tabloya bakın. İşaret tutarlı ama anlamlı DEĞİL.
 
 ## H1 — MONOTONLUK DÜŞTÜ
 
@@ -77,7 +92,9 @@ etkisizleştirilmiş olması) gerekçesi ARTIK KANITLI DEĞİLDİR.
 **BU KART BACAĞIN AÇILMASINI ÖNERMEZ** (kartın kendi sınırı). Açma kararı strateji kimliğine
 dokunur ve §5 operatör bloğuna gider. Karara girmeden ÖNCE kapatılması gerekenler:
 1. **Ö1 yeniden tanımlanmalı** — ret sayacı kimlik taşımalı, yoksa abartı oranı hiç ölçülemez.
-2. **ΔP&L için CI** — Ö3 nokta tahmini pozitif ama güven aralığı yok.
+2. ~~**ΔP&L için CI**~~ — ✅ KAPANDI (Ö-51c, 2026-08-21): dördü de sıfırı içeriyor. Sonuç
+   hükmü DEĞİŞTİRMEZ ama GÜÇLENDİRİR: ne H2 ne Ö3 anlamlılığa ulaşıyor, yani "bacağı aç" kararı
+   bu ölçümden TEK BAŞINA çıkarılamaz. Çıkaran tek ayak H1'in (monotonluk) kırılmasıdır.
 3. Ö2'nin ölçülememesi bir SONUÇtur: örneklem bu soruyu ayırt edemiyor, daha fazla veri ya da
    farklı bir ölçüt gerekir.
 
