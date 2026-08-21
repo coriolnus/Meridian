@@ -55,7 +55,17 @@ hiç dolmasa bile. Bu, deponun bildiği **`MIRROR_DRIFT`** sınıfının bir vak
     ALL : **0 emir**
     VLO : **0 emir**
 
-Reddedilmiş DEĞİL, iptal edilmiş DEĞİL — **HİÇ GÖNDERİLMEMİŞ.** İç motor bu iki pozisyonu
+Reddedilmiş DEĞİL, iptal edilmiş DEĞİL — **HİÇ GÖNDERİLMEMİŞ.** Olay defteri de aynı şeyi
+söylüyor ve o defter bu günleri KAPSIYOR (61.511 satır, 2026-07-14 → 2026-08-21; ALL/VLO'nun
+işlem günlerinde 10.426 olay var):
+
+    alpaca_submit olayı: 19 kez · semboller:
+      AMGN BDX BKNG CRM DE EMR HUM LLY MRK MRNA MRVL NSC NUE PANW RTX TMO UNP
+    → ALL ve VLO bu listede YOK.
+
+Ve `alpaca_submit` BAŞARISIZLIKLARI da logluyor ("stop price must be greater than current
+price", "qty rounds to 0"), yani "denendi ama hata verdi" olsaydı görünürdü. **Deneme bile
+yapılmamış.** İç motor bu iki pozisyonu
 tamamen kendi defterinde açıp kapatmış ve ayna bir emir denemesi BİLE yapmamış. Yani kusur
 "emir gönderildi ama dolmadı" değil, **"emir hiç doğmadı ama defter dolmuş sayıldı"**.
 
