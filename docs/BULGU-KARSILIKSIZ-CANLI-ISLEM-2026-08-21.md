@@ -69,6 +69,34 @@ yapılmamış.** İç motor bu iki pozisyonu
 tamamen kendi defterinde açıp kapatmış ve ayna bir emir denemesi BİLE yapmamış. Yani kusur
 "emir gönderildi ama dolmadı" değil, **"emir hiç doğmadı ama defter dolmuş sayıldı"**.
 
+## ✅ KÖK NEDEN TAMAMLANDI (2026-08-21, ölçümle)
+
+Zincirin son halkası bulundu. `submit_plan` **ONAY ANINDA** çağrılıyor
+(`loop.py:743`, kendi ifadesiyle *"aynaya gönderim ONAY ANINDA tek kapıdan denendi"*).
+Olay defteri:
+
+    plan_operator_approved : 7 olay      ← yalnızca 7 plan onaylanmış
+    alpaca_submit          : 19 olay · 17 sembol
+    ALL : 145 olay — hiçbiri onay/silahlanma/gönderim DEĞİL
+    VLO : 334 olay — aynı
+    MRK : alpaca_submit VAR
+
+**ZİNCİR:**
+1. İç motor (`PaperBroker`) stratejiyi **onaydan BAĞIMSIZ** koşar — pozisyonu kendi defterinde açar.
+2. Alpaca aynası **YALNIZ onaylanmış** planları gönderir.
+3. `ALL`/`VLO` hiç onaylanmadı → hiç gönderilmedi → broker'da hiç var olmadı.
+4. İç motor onları kendi işaretlerinde kapattı (stop / target).
+5. `loop._persist_trade` satırı **`live_paper`** damgaladı.
+
+**KUSUR TANIMSALDIR VE ASIL MESELE BUDUR:** `live_paper` damgası *"canlı döngünün İÇ MOTORU
+bunu kapattı"* demektir; *"broker bunu uyguladı"* DEMEZ. Ama iki tüketici de ikincisini
+varsayıyor — operatör panoda "canlı işlem" okuyor, öğrenme döngüsü `_horizon_ok` ile onu
+canlı KANIT sayıyor. Damganın adı ile taşıdığı anlam AYRIŞMIŞ durumda.
+
+**BU BİR "BOZUK KOD" DEĞİL, EKSİK BİR AYRIMDIR:** onaysız planların iç motorda koşması
+tasarım gereği olabilir (kâğıt motor stratejiyi tam koşar). Eksik olan, defterin bu iki sınıfı
+AYIRMASI: *broker-teyitli* ↔ *yalnız-iç-motor*. Bugün ikisi de tek damga altında.
+
 ## ARAŞTIRILAN VE ELENEN BİR SİNYAL
 
 `mirror_divergence` alanı umut vericiydi: karşılıksız iki işlemin ikisi de `None` taşıyor,
