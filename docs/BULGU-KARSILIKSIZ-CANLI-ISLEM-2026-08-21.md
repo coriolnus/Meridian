@@ -21,8 +21,18 @@ Net etki **+277,99**. Diğer altı işlemin (NUE·MRK·MRNA·HUM·MRVL·LLY) hep
 
 1. **Kanıt tabanı kirli.** `sermaye.durum()` `canli_islem_n: 8` diyor; ölçülen gerçek **6 gerçek +
    2 karşılıksız**. Kitabın `realized_pnl 6.350,22`'si +277,99 karşılıksız kâr içeriyor.
-2. **Öğrenme bunları kanıt sayıyor.** Yansıma ufku `trades.jsonl` üzerinden hesaplanıyor
-   (`_horizon_ok`), yani karşılıksız işlemler ufku ilerletiyor ve rejim dilimlerine giriyor.
+2. **Öğrenme bunları kanıt sayıyor — ama ETKİSİ ÖLÇÜLDÜ ve sanıldığından DAR.**
+   Yansıma ufku `trades.jsonl` üzerinden hesaplanıyor (`_horizon_ok`). Ölçüm:
+
+       defter 893 · yansıma tabanı 887 · tabandan sonraki 6
+       ufku BUGÜN besleyen 6 işlemin **0'ı** karşılıksız (NUE·MRK·MRNA·HUM·MRVL·LLY hepsi teyitli)
+       karşılıksız ALL indeks **885** · VLO indeks **886** → TABANIN ALTINDA
+
+   Yani **bugünkü ufuk penceresi TEMİZ**. Ama iki karşılıksız satır 887 tabanının altında, yani
+   **2026-08-17'de koşan TEK yansımanın** (`reflections: 1`) penceresindeydi ve orada tüketildi.
+   Sonuç: gelecek yansımalar bu kirlilikten etkilenmiyor; GERÇEKLEŞMİŞ olan tek yansıma
+   kısmen karşılıksız kanıtla beslendi. Bu, "öğrenme bozuk" DEĞİL ama "o turun kanıtı %25
+   karşılıksızdı" demektir ve o turun ürettiği ne varsa bu şerhi taşır.
 3. **Damga yanıltıyor.** `kaynak: live_paper` bu deponun tohum/canlı ayrımının TAM olarak
    güvendiği alan (`ledgerstamp`). Bu iki satır o ayrımı geçersiz kılıyor: damga "canlı" diyor,
    broker "böyle bir işlem olmadı" diyor.
