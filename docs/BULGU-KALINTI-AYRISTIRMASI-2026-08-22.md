@@ -64,12 +64,47 @@ equity'si 99.992,62. Zararsız ama köprüde sonsuza dek "açıklanamayan" olara
 **DEĞİŞMEDİ:** canlı davranışa DOKUNULMADI. Bu bir ölçüm/teşhis çalışmasıdır; emir gönderimi,
 onay kapısı, boyutlandırma ve iç motor aynen duruyor.
 
-**AÇIK KALAN — B sınıfının KÖK NEDENİ.** Adetlerin neden ayrıştığı bu turda ÖLÇÜLMEDİ ve
-UYDURULMAYACAK. Aday açıklamalar (hiçbiri sınanmadı): kısmî dolum, boyutlandırmanın broker
-equity'si yerine kitap equity'siyle hesaplanması, ölçek-çıkışın (`scaled_out`) yalnız bir
-defterde işlenmesi, ya da `EXE-2026-007`in kök nedeninin (iç motorun onaydan bağımsız koşması)
-adet düzeyindeki karşılığı. Sonuncusu en olası — çünkü aynı zincir zaten iki tam işlemi
-karşılıksız üretti. Sıradaki kalem bu.
+## B SINIFININ KÖK NEDENİ — BULUNDU (aynı gün, ölçümle)
+
+**ÖNCE BİR HİPOTEZ ÇÜRÜTÜLDÜ.** "Kısmî dolum + gün sonu expiry" akla yatkındı (olay defterinde
+`partially_filled` var). Emir kaydı bunu ÇÜRÜTTÜ: her giriş emri TAM doldu, kayıp sıfır —
+AMGN 22→22, BDX 40→40, BKNG 22→22, CRM 19→19, EMR 37→37. `partially_filled` `filled`e giden
+geçici bir durumdu. Yani broker'dan zaten 22 istenmişti; kitap 33 yazdı.
+
+**KÖK NEDEN `loop.py`DE, TEK ANLAMLI:**
+
+```python
+eq_now = float(_hb["equity"])                       # KİTABIN sermayesi (nabız)
+eq     = float(acct["equity"]) ...                  # BROKER'ın sermayesi (Alpaca hesabı)
+_smult = derisk_mult(eq_now, _peak)                 # de-risk KİTABIN sermayesinden
+meta["size_law"][plan] = {"eq_now": eq_now, ...}    # makbuz KİTABINKİNİ yazıyor
+alpaca.submit_plan(pl, eq, size_mult=_smult, ...)   # ayna BROKER'ınkiyle boyutlanıyor
+```
+
+Aynı `1R = %1` kuralı, İKİ FARKLI sermaye tabanına uygulanıyor → iki farklı adet. Oranın sabit
+olmaması da bundan (CRM'de broker fazla): iki taban birbirinden bağımsız hareket ediyor —
+broker equity'si piyasaya göre değerlenir, kitap nakdi gerçekleşene göre.
+
+**BU FARKIN KENDİSİ KUSUR DEĞİL.** Her defterin kendi parasına göre boyutlanması savunulabilir.
+Kusur, farkın KAYITSIZ olmasıydı: makbuz aynanın FİİLEN kullandığı sayıyı hiç taşımıyordu, bu
+yüzden makbuzu OLAN dört planda bile (CRM·BDX·MRK·MRNA) sapma açıklanamıyor ve `MIRROR_DRIFT`
+"gönderim↔dolum kıyası kurulamaz" diyordu.
+
+**KAPATILDI (2026-08-22):** makbuza `eq_ayna` eklendi ve sapma sınıfı tablosuna `ayna_taban`
+sınıfı girdi. Artık teşhis şunu basıyor:
+
+> `kitap 107288.55$ ile boyutlandı, AYNA 99800.00$ ile (fark +7488.55$) — iki defter FARKLI
+> sermaye tabanına göre boyutlandı; adet sapmasının sebebi bu, icra değil`
+
+Sınıf YALNIZ tablonun pes ettiği son dalda konuşur (önceki sınıflar kitabın iç tutarsızlığını
+açıklar ve daha kesindir), ve `eq_ayna` TAŞIMAYAN eski makbuzları "ayrıştı" saymaz — alan
+yokluğu ayrışma değildir.
+
+**HÂLÂ AÇIK — POLİTİKA SORUSU (operatörde).** Teşhis kapandı, KARAR kapanmadı: iki defterin
+farklı tabanlara göre boyutlanması SÜRSÜN MÜ. Sürerse adetler ayrışmaya devam eder ve köprüde
+kalıcı bir kalıntı üretir; tek tabana geçmek ise hangi tabanın doğru olduğu sorusunu açar
+(broker'ınki gerçek para, kitabınki stratejinin kendi muhasebesi). Bu bir ölçüm değil tercih
+kalemidir ve bu belge onu VERMEZ.
 
 **`mirror_divergence` BU İŞİ YAPMIYOR.** Tam da bunu yakalaması gereken alan, yedi pozisyonun
 yedisinde de ayrışma varken `None` döndürüyor (`EXE-2026-007`in beyanlı sınırı: NUE'nin 7 fill'i
