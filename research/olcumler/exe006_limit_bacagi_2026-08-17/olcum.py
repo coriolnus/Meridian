@@ -95,6 +95,8 @@ def hucre_kos(ref, cap: float, kural: str, smoke: bool) -> dict:
     def _sarmal(*a, **k):
         r = asil_replay(*a, **k)
         yakalanan["damga"] = getattr(r, "dolum_kurali", None)
+        # RET KİMLİĞİ (Ö-51b): Ö1'in paydası DİSTİNKT PLAN olmalı, red OLAYI değil.
+        yakalanan["red_kimlik"] = getattr(r, "entry_reject_ids", None)
         return r
 
     BT.replay = _sarmal
@@ -139,6 +141,9 @@ def hucre_kos(ref, cap: float, kural: str, smoke: bool) -> dict:
             "net_pnl_trades": perf.get("net_pnl_trades"),
             "net_pnl_equity": perf.get("net_pnl_equity"),
             "islem_n": islem.get("n"),
+            # Ö-51b: distinkt reddedilen plan sayısı (payda), olay sayısı DEĞİL
+            "red_kimlik": {k: sorted(set(map(tuple, v)))
+                           for k, v in (yakalanan.get("red_kimlik") or {}).items()},
             "defter": defter}
 
 
@@ -171,8 +176,11 @@ def main() -> int:
             "kacan_sayisi_acilis_kolunda": a["entry_missed_limit"],
             "dinlenen_kolda_DOLAN_ek_islem": len(yalniz_b),
             # Ö1: kaçtı denilenlerin yüzde kaçı gerçekte doluyor
-            "O1_abarti_orani": (round(100.0 * len(yalniz_b) / a["entry_missed_limit"], 1)
+            # Ö1 HAM (GEÇERSİZ, tarihçe): payda RED OLAYI sayacı — birim uyuşmazlığı, %100 aşabilir
+            "O1_HAM_GECERSIZ_olay_paydali": (round(100.0 * len(yalniz_b) / a["entry_missed_limit"], 1)
                                 if a["entry_missed_limit"] else None),
+            # Ö1 DÜZGÜN (Ö-51b): payda DİSTİNKT REDDEDİLEN PLAN
+            "O1_distinkt_plan_paydasi": len(set(map(tuple, (a.get("red_kimlik") or {}).get("entry_missed_limit", [])))),
             "O1_olculemedi_nedeni": (None if a["entry_missed_limit"]
                                      else "açılış kolunda HİÇ kaçan yok — payda sıfır, oran TANIMSIZ"),
             # Ö2: o işlemlerin ort-R'si — "kaçanlar sistematik KAZANAN" iddiası buradan sınanır
@@ -187,7 +195,9 @@ def main() -> int:
     print("── KOL FARKI ──")
     for c, f in fark.items():
         print(f"  cap={c:<6} kaçan={f['kacan_sayisi_acilis_kolunda']} → dolan={f['dinlenen_kolda_DOLAN_ek_islem']} "
-              f"Ö1={f['O1_abarti_orani']}% Ö2ort-R={f['O2_ek_islem_ort_r']} ΔP&L={f['delta_pnl']}")
+              f"Ö1ham={f['O1_HAM_GECERSIZ_olay_paydali']}% "
+              f"distinkt_plan={f['O1_distinkt_plan_paydasi']} "
+              f"Ö2ort-R={f['O2_ek_islem_ort_r']} ΔP&L={f['delta_pnl']}")
 
     yol = BURASI / f"sonuc_grid{'_smoke' if smoke else ''}.json"
     json.dump({"kart": "EXE-2026-006", "smoke": smoke, "K_hucre": len(out),
