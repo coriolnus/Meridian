@@ -1,4 +1,4 @@
-"""test_bayat_defter_kalintisi_v234.py — bayat-defter-kalıntısı tuzağı (ROADMAP §2-6).
+"""test_bayat_defter_kalintisi_v234.py — bayat-defter-kalıntısı tuzağı (ROADMAP Ö-6).
 
 NE ÖLÇER (VLO adli incelemesi bulgusunun kapanışı, 2026-08-11): defterler DB'ye göçtükten sonra
 kanonik adda kalan/yeniden doğan DÜZ dosyalar insan+araç tarafından bayat okunuyordu (canlıda

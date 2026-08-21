@@ -1,4 +1,4 @@
-"""test_wp2d_pano_beyani_v246.py — WP2-D BACAK-3 (pano reset/pencere beyanı) + ROADMAP §2-30.
+"""test_wp2d_pano_beyani_v246.py — WP2-D BACAK-3 (pano reset/pencere beyanı) + ROADMAP Ö-30.
 
 =================================================================================================
 KALEM 1 — WP2-D BACAK-3: PANO HANGİ PENCEREYİ GÖSTERDİĞİNİ SÖYLER
@@ -23,7 +23,7 @@ BU TURUN ÇÖZÜMÜ: hesap SUNUCUDA (`api._egri_beyani`), pano yalnız ÇİZER. 
 docstring'indeki "iki hesap" kusuru).
 
 =================================================================================================
-KALEM 2 — `config.default_strategy()` YEDEĞİ CANLIYLA AYRIŞIKTI (ROADMAP §2-30)
+KALEM 2 — `config.default_strategy()` YEDEĞİ CANLIYLA AYRIŞIKTI (ROADMAP Ö-30)
 =================================================================================================
 `state/goal.yaml:123-125` kendi metninde BEYAN EDİYOR: *"BERABERİNDE GİDEN AYAR: `position_size_r`
 1,0 → 0,5 … İkisi AYRILMAZ."* Ama çiftin yarısı git-izli `goal.yaml`da (`max_open_positions: 20`),
@@ -343,7 +343,7 @@ def test_CIVI_YASA6_beyanin_HER_ALANININ_panoda_okuyucusu_var(sandbox_state):
 
 
 # =================================================================================================
-# §8 — KALEM 2: YEDEK STRATEJİ CANLIYLA HİZALI (ROADMAP §2-30)
+# §8 — KALEM 2: YEDEK STRATEJİ CANLIYLA HİZALI (ROADMAP Ö-30)
 # =================================================================================================
 CANLI_STRATEJI = SRC / "state" / "strategy.yaml"
 BEKLENEN_BOYUT = 0.5          # operatör kararı 2026-08-12 §E.1 · EDG-2026-026 C kolu + 032

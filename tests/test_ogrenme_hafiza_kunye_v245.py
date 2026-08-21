@@ -1,6 +1,6 @@
 """test_ogrenme_hafiza_kunye_v245.py — İKİ KÖK: exploit yolunda HAFIZA + künyede CEVAP VEREN model.
 
-KALEM 1 — TEKRAR DESENİNİN KÖKÜ (ROADMAP §2-28c; ölçüm docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md)
+KALEM 1 — TEKRAR DESENİNİN KÖKÜ (ROADMAP Ö-28c; ölçüm docs/TESHIS-OGRENME-TIKANIKLIGI-2026-08-13.md)
 `reflect.propose_deterministic`te `already_failed` kontrolü YALNIZ `explore` dalının içindeydi;
 varsayılan exploit yolunda hafıza YOKTU. Ölçülen bedel: `stop_loss_atr_mult=2.1` defterde 21 kez
 (1 backtest reti + 20 guard reti) — bounds o düğmede 33 adım-üstü değer taşırken 32'sine HİÇ

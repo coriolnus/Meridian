@@ -3,7 +3,7 @@
 KAYIT ÇAPI — NEDEN BU DOSYA VAR. `EXE-2026-006` ölçümü TAM koşuldu (K=8, altı kill kriteri de
 geçti) ve hükmü `research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`e YAZILDI: *"E1 HÜKMÜ
 YENİDEN AÇILIR"*. Hüküm commit'i (`a033256`) 24 dosya taşıdı ve **hepsi ölçüm artefaktıydı** —
-kart dosyasına, `ROADMAP §2 TAHTA`ya, `§6` kart indeksine ve `§7` karar günlüğüne DOKUNMADI.
+kart dosyasına, `ROADMAP §4 TAHTA`ya, `§6` kart indeksine ve `§7` karar günlüğüne DOKUNMADI.
 Sonuç: kart `status: registered` ("ölçüm bekliyor") derken hükmü diskte YAZILI duruyordu ve
 `§2 TAHTA` kalemi "kart ÖN-KAYITLI · ölçüm bekliyor" satırında kalmıştı.
 

@@ -1054,7 +1054,7 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     import os
-    # ---- .locks BUDAMASI (ROADMAP §2-5, 2026-08-12) ----
+    # ---- .locks BUDAMASI (ROADMAP Ö-5, 2026-08-12) ----
     # pytest sandbox'ları MUTLAK tmp yollarını kilitleyince repo `state/.locks` altında
     # oturum-başına-benzersiz kilit adları birikiyordu (WP-S2 ölçümü: tek koşu +2, budama yok).
     # Mekanizma ve güvenlik sözleşmesi `store.kilit_budamasi`dadır (yalnız SERBEST — non-blocking

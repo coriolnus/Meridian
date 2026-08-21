@@ -4,7 +4,7 @@ Bu dosya tek bir kusur sınıfını kovalar: kod değişir, onu anlatan BEYAN (y
 CLI çıktısı, yapılandırma listesi) olduğu yerde kalır ve hiçbir test kırmızı vermez. Sessizliğin
 sebebi hep aynıdır — kapılar beyanın VARLIĞINA bakar, KAYNAKLA UYUŞMASINA değil.
 
-BEŞ KALEM (ROADMAP §2-34a/b, §2-35a/b, §2-38) ve her birinin çivisi:
+BEŞ KALEM (ROADMAP Ö-34a/b, Ö-35a/b, Ö-38) ve her birinin çivisi:
   A) `pyproject.toml` mutasyon seçimi — kendi türetme kuralına uyuyor mu (kaynak-metin çivisi).
   B) `backtest.py` ölü yereli KALDIRILDI — replay'in sektör kararı DEĞİŞMEDİ (davranış çivisi):
      kural guard'ta TEK, replay onu ÇAĞIRIYOR ve kapı hâlâ ısırıyor.
@@ -14,7 +14,7 @@ BEŞ KALEM (ROADMAP §2-34a/b, §2-35a/b, §2-38) ve her birinin çivisi:
   E) v245-D ile yanlışlanan iki modül yorumu mezar taşlı: eski cümle DURUYOR, üstüne "artık şöyle"
      yazıldı ve düzeltmenin adlandırdığı mekanizmalar GERÇEKTEN var.
 
-NEDEN "VARLIK DEĞİL UYUŞMA": §2-34a'nın kendisi bu dersin vakasıdır — `auth.json` beyanı
+NEDEN "VARLIK DEĞİL UYUŞMA": Ö-34a'nın kendisi bu dersin vakasıdır — `auth.json` beyanı
 `api.py:420` diyordu, satır 426 olmuştu ve mevcut test yalnız terimlerin geçtiğine baktığı için
 sessiz kaldı. Bir çapa, çapaladığı şeyle kıyaslanmıyorsa çapa değildir.
 """
@@ -37,7 +37,7 @@ KARAR_CEKIRDEGI = ("broker", "guard", "score")
 
 
 # ================================================================================================
-# A — MUTASYON SEÇİMİ KENDİ KURALINA UYUYOR MU (KALEM 1 · ROADMAP §2-35a)
+# A — MUTASYON SEÇİMİ KENDİ KURALINA UYUYOR MU (KALEM 1 · ROADMAP Ö-35a)
 # ================================================================================================
 def _mutmut() -> dict:
     return tomllib.loads((KOK / "pyproject.toml").read_text())["tool"]["mutmut"]
@@ -118,7 +118,7 @@ def test_A3_turetme_kurali_MEKANIK_olarak_uygulanabiliyor_ve_sapma_BEYANLI():
 
 
 # ================================================================================================
-# B — ÖLÜ YEREL KALDIRILDI, SEKTÖR KARARI DEĞİŞMEDİ (KALEM 2 · ROADMAP §2-35b)
+# B — ÖLÜ YEREL KALDIRILDI, SEKTÖR KARARI DEĞİŞMEDİ (KALEM 2 · ROADMAP Ö-35b)
 # ================================================================================================
 def test_B1_backtest_te_IKINCI_sektor_kurali_YOK():
     """Yapısal çivi (AST — yorumları görmez, yalnız KODU ölçer): `backtest.py` sektör politikasını
@@ -210,7 +210,7 @@ def test_B3_replay_sektor_karari_GUARD_tan_geliyor_ve_ISIRIYOR(sandbox_state):
 
 
 # ================================================================================================
-# C — `auth.json` ÇAPASI: VARLIK DEĞİL UYUŞMA (KALEM 3 · ROADMAP §2-34a)
+# C — `auth.json` ÇAPASI: VARLIK DEĞİL UYUŞMA (KALEM 3 · ROADMAP Ö-34a)
 # ================================================================================================
 def _auth_yazan_girisler() -> set[str]:
     """auth.py'de `_write`e ULAŞAN AÇIK girişler (modül-içi çağrı kapanışı). Liste ezberlenmez,
@@ -232,7 +232,7 @@ def _auth_yazan_girisler() -> set[str]:
 
 
 def test_C1_capa_SEMBOLDUR_ve_kaynakla_UYUSUYOR():
-    """§2-34a'nın kendisi: eski çapa `api.py:420` idi, satır 426 oldu, hiçbir test görmedi. Çapa
+    """Ö-34a'nın kendisi: eski çapa `api.py:420` idi, satır 426 oldu, hiçbir test görmedi. Çapa
     artık SEMBOL (fonksiyon adı + çağrı dizgisi) ve UYUŞMASI ölçülüyor — beyan `api._auth` diyorsa
     api.py'de o fonksiyon VAR ve gövdesinde `auth.verify_session(` GERÇEKTEN çağrılıyor olmalı."""
     beyan = codelaw.DECLARED_SINKS["auth.json"]
@@ -264,7 +264,7 @@ def test_C3_yazan_listesi_TAM_kaynaktan_turetiliyor():
 
 
 # ================================================================================================
-# D — `auth_cli status` İKİ SAYIYI DA KODDAN TÜRETİYOR (KALEM 4 · ROADMAP §2-34b)
+# D — `auth_cli status` İKİ SAYIYI DA KODDAN TÜRETİYOR (KALEM 4 · ROADMAP Ö-34b)
 # ================================================================================================
 def test_D1_status_oturum_omru_KODDAN_turetiyor(sandbox_state, monkeypatch, capsys):
     """Sabitler saplanır, çıktı İZLEMELİ. Metne gömülü bir "12 saat" bu testte hayatta kalamaz —
@@ -290,7 +290,7 @@ def test_D2_gercek_sabitlerle_bugunku_beyan(sandbox_state, monkeypatch, capsys):
 
 
 # ================================================================================================
-# E — v245-D İLE YANLIŞLANAN İKİ YORUM (KALEM 5 · ROADMAP §2-38)
+# E — v245-D İLE YANLIŞLANAN İKİ YORUM (KALEM 5 · ROADMAP Ö-38)
 # ================================================================================================
 def test_E1_run_py_yorumu_MEZAR_TASLI_duzeltilmis():
     """TARİHÇE-KORU: eski cümle SİLİNMEZ, üstüne "artık şöyle" yazılır ve düzeltme yeni mekanizmayı

@@ -1,6 +1,6 @@
-"""test_zincir_kunye_v246.py — v245 künye kusurunun ADIYLA devredilen İKİ KARDEŞİ (ROADMAP §2-31).
+"""test_zincir_kunye_v246.py — v245 künye kusurunun ADIYLA devredilen İKİ KARDEŞİ (ROADMAP Ö-31).
 
-KALEM 1 (§2-31a) — `chain_text` künyesi "istenen"i değil CEVAP VERENİ yazar.
+KALEM 1 (Ö-31a) — `chain_text` künyesi "istenen"i değil CEVAP VERENİ yazar.
 `hermes.py` `chain_text` → `out.update({..., "model": active_model()})` idi: zincir KOŞTUKTAN sonra
 YAPILANDIRMA yeniden okunuyordu. Zincirin varlık sebebi ayakların düşmesi olduğu için alan tam da
 düşüş anında yanlış oluyordu. `candidate_review`de ölçülen bedel: `tencent/hy3:free` 56 çağrıda 0
@@ -10,7 +10,7 @@ None + neden · (d) TÜKETEN-OKUMA NOKTASI DOĞRU: agent kutusu yalnız kendi ay
 gemini'nin künyesini None'a çevirir (ters yön!) ne de bayat bir künyeyi claude'un cevabına yapıştırır
 · (e) ayrışma OLAY basar · (f) tüketici (`nous_eval`) sözleşmesi kırılmadı.
 
-KALEM 2 (§2-31b) — `active_model()` uydurma korumasını TAŞIMIYORDU.
+KALEM 2 (Ö-31b) — `active_model()` uydurma korumasını TAŞIMIYORDU.
 `_model_id("nous")` 2026-07-26'dan beri "yerel ajan + `NOUS_MODEL` yok → None" diyor; `active_model()`
 aynı durumda `'Hermes-4-405B'` döndürüyordu, yani HİÇ ÇAĞRILMAMIŞ bir ad deftere/panoya düşebiliyordu.
 ÇİVİLER: (a) yerel+adsız → None · (b) `_model_id(active_brain())` ile HER sağlayıcıda AYNI (ikinci

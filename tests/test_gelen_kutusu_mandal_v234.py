@@ -4,7 +4,7 @@ Operatör şikâyeti "çok fazla alarm var" ÖLÇÜLDÜ (canlı defter):
   * `finviz_unavailable` ~5 dakikada bir (~200+/gün) — token yok, durum DEĞİŞMİYOR (EDG-2026-022:
     FINVIZ alınmayacak), ama her keşif turu aynı yokluğu yeniden anlatıyordu.
   * MIRROR_DRIFT adet-sapması her gün ×4 AYNI içerikle (NUE/EMR/BKNG/AMGN `olculemedi` — kök
-    bilinen: makbuzsuz boyut, ROADMAP §2-7).
+    bilinen: makbuzsuz boyut, ROADMAP Ö-7).
   * DATA_QUALITY bar-kaynak uyuşmazlığı (MNST %50) aynı (ticker, tarih, kaynak, sapma) ile günlük.
 
 FELSEFE: gürültü SAKLANMAZ — bilinen-durum bir kez alarmlanır, tekrarı SAYILIR ve görünür kalır
