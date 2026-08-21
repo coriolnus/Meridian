@@ -2204,6 +2204,28 @@ eşik ölçümden SONRA değişmez; kill-list dokunulmaz; ölçüm ajanı karta 
 Durumlar: registered → measuring → promoted | archived. Kuzey yıldızı canlı hüküm (§0): **EDGE 1/5 ·
 SONUÇ 0/4** — edge/para kanıtlanmadı. Aşağısı ÖZET-indeks; tam hüküm ilgili §8 WP / §7 kararında.
 
+**🆕 İNDEKS ↔ DİSK MUTABAKATI (2026-08-17 — indeks diske göre güncellendi):** indeks **47** kart
+sayıyordu, `research/cards/*.yaml` **50** taşıyor. Ayrışan üç kart — `EDG-2026-041` ·
+`EXE-2026-005` · `EXE-2026-006` — indekse HİÇ işlenmemişti (üçü de 2026-08-14…17 arasında doğdu,
+yani indeksin son tazelemesinden [2026-08-13] SONRA). Kalem bu turda kapatıldı: üçü de aşağıya
+KENDİ kart metinlerinden yazıldı. Bu, A17/Ö-49 **beyan bayatlığı** sınıfının bir örneğidir —
+kartların kendisi doğruydu, onları sayan indeks bayattı. Sayım diskten okundu:
+
+| durum (`status:` alanı, diskten) | sayı | not |
+|---|---|---|
+| `measured` | 26 | ölçüldü + hüküm yazıldı |
+| `archived` | 15 | ölçülmüş-red / kill |
+| `registered` | 5 | ön-kayıtlı, ÖLÇÜLMEDİ — EDG-017/018/019/040 · EXE-003 |
+| `measured_partial` | 2 | EXE-004 (Aşama-2 dondu) · KYS-002 (DSR yarısı kill#2) |
+| `askiya_veri_kapisi` | 1 | EDG-018 |
+| `askida` | 1 | EDG-011 |
+| **TOPLAM** | **50** | EDG ×41 (001-041, boşluksuz) · EXE ×6 (001-006) · KYS ×2 · BASE ×1 |
+
+_(SINIR BEYANI: sayım `grep -m1 "^ *status:"` ile her karttan TEK satır okur; bir kartta ikinci bir
+`status:` anahtarı varsa görülmez. EDG-038'in çift-`verdict` kalemi bu sınıfın komşusudur — kart
+biçim/lint kalemi WP5-A'da açık. Ayrıca aşağıdaki "46/46 YAML temiz" beyanı 2026-08-13 tarihlidir
+ve o günün 46 kartını kapsar; sonradan doğan üç kart o taramaya GİRMEDİ.)_
+
 
 **🆕 2026-08-12/13 ÖLÇÜM DALGASI — EDG-023…039 (denetim E.2: bu kartlar §6'te HİÇ YOKTU, yalnız §4
 maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" diyor. İndeks 2026-08-13'te tazelendi.)**
@@ -2232,6 +2254,7 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 | **EXE-2026-005** dinlenen-limit | **registered (08-17)** · ⚠ **hüküm BEKLİYOR (Rol-1)** | 🆕 A kolu ÖZDEŞLİK KAPISI GEÇTİ (işlemler+seanslar bayt-özdeş) · **B kolu koştu, örneklem BOŞ** ve sebebi ÖRNEKLEM KÜÇÜKLÜĞÜ DEĞİL **YAPISAL**: canlı yasada (`limit_pct_cap=0,04` · `limit_atr_mult=100,0`) limit fiyatı tam `trigger·1,04`e oturur = `max_chase` tavanıyla BİREBİR AYNI, ve `max_chase` ÖNCE sınandığı için limit kapısının ateşleyebileceği aralık **BOŞ KÜMEDİR** (ölçüldü: `trigger=100`, atr ∈ {None,1,2,4} → dördünde de ulaşılmaz). HÜKÜM KOŞULLU, mutlak değil: ATR bacağının bağlaması için `ATR/trigger < 4 bps` gerekir — hissede pratikte erişilemez. **Kart ÇÜRÜMEDİ** — sorusu geçerli, sorulacağı KONFİGÜRASYON canlı yasa değil → `EXE-2026-006` o dar tavanı koştu. **AÇIK:** `parameter_grid`e dokunulduğu için Rol-1 hükmü + K kaydı gerekiyor → §2 TAHTA `Ö-51d`. Belge: `research/olcumler/exe005_23c_a_kolu_2026-08-17/BULGU-B-KOLU.md` |
 | **EXE-2026-006** limit-bacagi-hukum-sinamasi | **measured (08-17)** | 🆕 **E1 HÜKMÜ YENİDEN AÇILIR.** TAM pencere (2022-01-01→2026-07-30, evren 251), **K=8** (4 tavan × 2 dolum kuralı), altı kill kriterinin HEPSİ geçti. Kartın ölçümden ÖNCE yazdığı kural "H1 ∧ H2 ayakta ⇒ E1 doğrulanır" idi: **H1 monotonluk DÜŞTÜ** (net P&L 9.773 → **19.452** → 17.948 → 17.858; tepe 0,01'de) · **H2 ÖLÇÜLEMEDİ** (ay-kümeli bootstrap B=5000: dört tavanda da CI **sıfırı içeriyor**; nokta tahminleri +0,041/+0,101/+0,117 tavanla ARTIYOR ama hiçbiri ayrışmıyor) → şart sağlanmadı. **Ö1 ÖLÇÜLEMEDİ** (birim uyuşmazlığı: payda RED OLAYI sayacı, pay DİSTİNKT İŞLEM → ham bölme %132/%141, bir oran %100'ü aşamaz; None+neden). **Ö3 ÖLÇÜLDÜ, SENTE KAPANDI** (ΔP&L +146/+7.163/+5.759/+7.355$; yan kanal BÜYÜK — cap=0,005'te 251 yeni işleme karşı **154 yerinden**, ve yerinden olanlar dört tavanda da KAYBEDEN, çıkmaları P&L'i iyileştirdi; ⚠ **CI koşulmadı**). SONUÇ: bacağın canlıda etkisiz olmasının gerekçesi **ARTIK KANITLI DEĞİL** — kart açmayı **ÖNERMEZ** (kendi sınırı), karar §5 KOVA-2 `B4`. Ön-koşul: `Ö-51b` (Ö1 kimlikli tanım) + `Ö-51c` (ΔP&L CI). **KALICI DERS:** duman penceresi Ö2'yi dört tavanda da NEGATİF gösterdi, tam pencerede İŞARET DÖNDÜ → küçük örneklem **YÖN OLARAK yanıltıcı** |
 | **EDG-2026-040** friksiyon-dayaniklilik | **registered (08-13)** | 🆕 **ÖLÇÜLMEDİ — ön-kayıt.** Denetim §E'nin adlandırdığı tek açık takip: dokuz replay hükmüne şerh düşüldü ama hiçbiri friksiyon ARTIRILARAK yeniden koşulmadı. Aşama-1 (K+=3): C+mb @ `slippage_bps` {15,25,35}. Aşama-2 (KOŞULLU, K+=2): B ve C @ 15 — yalnız Aşama-1'de net P&L>0 ise. Ölçüm v243 dağıtımı sonrası temiz ağaçta. |
+| **EDG-2026-041** gorunmez-suzgec | measured (08-14) | _(indekse 2026-08-17'de eklendi — mutabakat)_ **D3 ELENDİ, D1 + D2 TETİKLENDİ.** WP3-A/28a'nın canlı defterden ölçümü (motor DEĞİŞMEDEN ÖNCE): 47 red, ilk 2026-08-02T14:00:41Z, son 2026-08-13T17:26:34Z — teşhis belgesinin sayısı BİREBİR doğrulandı. Korkuluk **körlükten değil AYRIMSIZLIKTAN** kesiyormuş: `bg_regime` **47/47'de biliniyor** ve hepsi `chop`; `None(auto)` **SIFIR** → D3'ün şartı çürüdü. D2 eşiği (≥%50 yeniden yazılabilir) **%97,9 ile aşıldı** (46/47). Hüküm: `@`siz öneri ATILMAK yerine `x@<certified>` biçimine ÇİVİLENİR — **korkuluk bozulmuyor, GÜÇLENİYOR** (denetim #27 deliği kapalı kalır); tek istisna aynen reddedilir (`exit.time_stop_days@trend_up`, 1/47). K += 0 (betimsel; EDG-036 emsali). **YAN BULGU:** 28a ile 28c birbirini besliyor — 47'nin 37'si iki değişkende (`entry.w_turnover` 21 + `exit.trail_atr_mult` 16). **UYGULAMA (v247-A):** D1'in YERİ kartın lafzından AYRILDI (Rol-1 onayı, gerekçeli) — reddedilen öneri `hypotheses.jsonl`'a girseydi kartın KENDİ kill kriterini dört ayrı yerde ihlal ederdi (`dead_families` öneri uzayını daraltırdı · `_learning_liveness` "öğrenme durdu" alarmını kendi kaydıyla maskelerdi · `selfreview` düğmeyi "denendi" sayardı). |
 
 > **✅ FRİKSİYON ŞERHİ TURU — KAPANDI (2026-08-13, commit 025ef1d; hüküm metni işi, ölçüm gerekmedi):**
 > altı kartın altısı da işlendi — **026 · 032** (paketin kendi seçim ve kabul gerekçesi) + **033 ·
@@ -2254,6 +2277,63 @@ maddeleri içinde yaşıyorlardı; §0 "ölçüm ön-kaydı / hüküm → §6" d
 > iddiaları (net P&L, PF, sharpe seviyesi).)_
 
 **AKTİF / YENİ KARTLAR (hüküm işlenmiş ya da ölçümde):**
+- **EXE-2026-006** limit-bacagi-hukum-sinamasi — **kart `status: registered` (2026-08-17) AMA ÖLÇÜM
+  KOŞULDU VE HÜKÜM YAZILDI** (`research/olcumler/exe006_limit_bacagi_2026-08-17/HUKUM.md`, commit
+  `a033256`). _(indekse 2026-08-17'de eklendi — mutabakat.)_ ⚠ **KART↔ARTEFAKT AYRIŞMASI, AÇIK
+  KALEM:** hüküm yazıldı ama kartın `status:` alanı `registered` kaldı ve `verdict:` bloğu
+  yazılmadı — yani disk-sayımı bu kartı hâlâ "ölçülmedi" kovasında görüyor (yukarıdaki mutabakat
+  tablosunda `registered` 5'in biri). Hükmü karta işlemek **Rol-1 kalemidir** (madde 3: ölçüm ajanı
+  karta dokunmaz); bu satır ayrışmayı KAYDEDER, kapatmaz. **BİR HÜKMÜ sınar**,
+  edge hipotezi değil: `EXE-2026-001-R2`nin "limit bacağı MONOTON ZARARLI · kaçanlar sistematik
+  KAZANAN" hükmü, replay'in kaçan-işlem maliyetini ABARTTIĞI bir dünyada verildi. **KAPALI DÖNGÜ:**
+  hüküm UYGULANDI → canlı `goal.yaml execution_v2` bacağı etkisizleştirdi (`limit_atr_mult: 100.0` ·
+  `limit_pct_cap: 0.04` = `MAX_ENTRY_GAP_PCT` ile birebir, `max_chase` önce sınandığı için limit
+  kapısı YAPISAL OLARAK ULAŞILMAZ; kod varsayılanı bunun TERSİ 0,5/0,01) → `EXE-2026-005`in B kolu
+  bu yüzden BOŞ örneklemle döndü (`entry_missed_limit = 0`). Kart döngüyü kırar: bacağı ÖLÇÜM
+  KOLUNDA silahlandırıp E1 taramasını `bar_low` düzeltmesiyle yeniden koşar. **K = 8**
+  (`limit_pct_cap` {0,005·0,01·0,02·0,03} × `dolum_kurali` {yalniz_acilis·dinlenen_limit} — ÇARPILARAK,
+  madde 3; hepsi `MAX_ENTRY_GAP_PCT` ALTINDA, üstü ölü hücre). **CANLI DOKUNULMAZ:** `state/goal.yaml`
+  DEĞİŞMEZ; bacağı canlıda açmak strateji kimliği değişikliğidir ve §5 operatör bloğuna gider — kart
+  önerebilir, kendisi yapamaz. Beyanlı sınırlar: E1'in YERİNE GEÇMEZ (pencere/evren farkı ayrı sütun) ·
+  günlük-bar sıra belirsizliği kötümser tarafa yazılır · **`max_chase` kırpması ölçümden ÖNCE beyan
+  edildi** (dinlenen limitin dönüştürebileceği aralık `(trigger·(1+cap), trigger·1,04]` ile sınırlı)
+  → hüküm bir **ALT SINIR**dır. Şasi kapısı EXE-005'ten DEVRALINIR ama **yeniden koşulur, varsayılmaz**.
+  **✅ HÜKÜM (2026-08-17, TAM koşum: pencere 2022-01-01→2026-07-30 · evren 251 · K=8; altı kill
+  kriterinin ALTISI da geçti) — `E1 HÜKMÜ YENİDEN AÇILIR`.** Kartın ölçümden ÖNCE yazdığı kural
+  ("H1 ve H2'nin İKİSİ de ayakta kalırsa E1 doğrulanır; biri düşerse hüküm yeniden açılır") işledi:
+  **H1 DÜŞTÜ** — `dinlenen_limit` kolunda net P&L 9.773 → **19.452** → 17.948 → 17.858, tepe 0,01'de,
+  yani "MONOTON zararlı" iddiasının monotonluk ayağı bu kolda AYAKTA DEĞİL. **H2 ÖLÇÜLEMEDİ** — Ö2'nin
+  ay-kümeli bootstrap'ı (B=5000, seed 20260812) dört tavanda da CI'yı sıfırın İÇİNDE bıraktı
+  (−0,0436 · +0,0411 · +0,1007 · +0,1167; nokta tahminleri tavanla monoton ARTIYOR ama bu bir
+  **desen**, hüküm değil) → "kaçanlar sistematik KAZANAN" da "KAYBEDEN" de **söylenemez**; E1'in
+  iddiası doğrulanmadı ama çürütülmedi de. **SONUÇ: canlı yapılandırmanın (bacağın
+  `limit_pct_cap=0,04` ile etkisizleştirilmiş olması) gerekçesi ARTIK KANITLI DEĞİLDİR** — ve kart
+  bacağın AÇILMASINI ÖNERMEZ (kendi sınırı; açma kararı strateji kimliğidir → §5 operatör bloğu).
+  **Ö1 ÖLÇÜLEMEDİ (UYDURMA YASAĞI: None + neden)** — birim uyuşmazlığı: payda `entry_missed_limit`
+  bir RED OLAYI sayacı, pay DİSTİNKT İŞLEM; ham bölme %132/%141 verdi ve bir oran %100'ü aşamaz.
+  Kartın "Ö1 > %20 ise K1 şerhi açılır" kuralı bu turda **İŞLETİLEMEDİ**. **Ö3 ÖLÇÜLDÜ, sente
+  kapandı** (ΔP&L dört tavanda da POZİTİF: +146 · +7.163 · +5.759 · +7.355) ve yan kanal kartın
+  "etki TOPLAMSAL DEĞİLDİR" beyanını doğruladı — `cap=0,005`te 251 yeni işleme karşı **154 işlem
+  yerinden oldu** ve yerinden olanlar dört tavanda da KAYBEDENDİ, yani çıkmaları P&L'i iyileştirdi.
+  **BU TURDA YAPILMAYANLAR (beyanlı):** ΔP&L bootstrap CI'ı (kart istiyor, koşulmadı) · Ö1'in
+  kimlikli yeniden tanımı (ret sayacı kimlik taşımalı) · **duman penceresinin YANILTTIĞI kayda
+  geçti** — n=1..3'te Ö2 dört tavanda da NEGATİF görünüyordu, 885 işlemlik dünyada işaret DÖNDÜ ve
+  CI'ya girince ölçülemez oldu: küçük örneklem yalnız gürültülü değil **YÖN OLARAK YANILTICIYDI**.
+- **EXE-2026-005** dinlenen-limit (23c) — **registered (2026-08-14); H3 İCRADA, A kolu kapısı GEÇTİ
+  (2026-08-17).** _(indekse 2026-08-17'de eklendi — mutabakat.)_ Replay limit girişini yalnız bir
+  sonraki barın AÇILIŞINA karşı sınıyor; gerçek limit emri gün boyu DİNLENİR → replay "limit tavanı
+  yüzünden kaçtı" dediği işlemlerin bir kısmını YANLIŞ sayıyor ve hata **TEK YÖNLÜ** (kaçan-işlem
+  maliyetini abartır). Veri yeterli: günlük bar `low` taşıyor, dakika barı GEREKMEZ (o 23e'dir).
+  **✅ A KOLU ÖZDEŞLİK HÜKMÜ (Rol-1, operatör onaylı):** işlemler+seanslar **bayt-özdeş**, 12 sonuç
+  bloğunun 11'i eşit; TEK ayrışan alan `n_endeks_satir` (1408 ↔ 1403) ve o **ADIYLA muaf tutuldu** —
+  bir GİRDİ ENVANTERİ SAYACIdır, şasi özelliği değil, ve her yeni seansla büyüdüğü için taban
+  tarihinden sonra kapı YAPISAL OLARAK GEÇİLEMEZDİ (geçilemeyen kapı kill kriteri değil, ölü kapıdır).
+  Daraltma **emsal değil, adıyla sınırlı tek istisna**; başka alan ayrışırsa kill AYNEN ateşler.
+  REDDEDİLEN ALTERNATİF: "tabanı yeniden üret" — EDG-032'nin dondurulmuş kanıtını yeniden üretmek
+  taban yenilemek değil TARİHİ TAHRİF ETMEK olurdu. **B KOLU KOŞULDU ve örneklem BOŞ çıktı** —
+  sebebi yapısal, kartın kendi ürünü (Ö1/Ö2/Ö3) `EXE-2026-006` çözülmeden ÜRETİLEMEZ. Beyanlı sınır:
+  `low <= limit` "dokunuldu" der ama SIRAYI söylemez → ölçüm bir ALT SINIRdır; 23d'yi (bar-içi stop
+  slipajı SIFIR) ÇÖZMEZ, yalnız asimetrinin yarısını kapatıp diğer yarıyı daha görünür kılar.
 - **EDG-2026-022** evren-bağlayıcı-kısıt — **measured (2026-08-09):** de-risk+tavan BİRLİKTE %65,84
   (CI 58,73–72,14; tamamı >%50) BASKIN → FINVIZ token harcaması **GEREKÇESİZ**; evren bağlayıcı DEĞİL
   (%34,17). Bağlayan: `tavan_sifir` %57,54 + `derisk_bagladi` %8,28 (asıl kaldıraç de-risk rampası/
