@@ -1532,7 +1532,16 @@ def api_today(request: Request):
         _rt = (_ko.get("reset_tarihi") or "")[:10] or None
         _bre, _brn = (_alp.equity_on(_rt) if _rt else (None, "reset tarihi YOK — köprü kurulamaz"))
         _acct = _alp.account() or {}
-        _upl = sum(float(x.get("unrealized_pl") or 0.0) for x in (_alp.positions() or []))
+        _bpos = _alp.positions()
+        _upl = sum(float(x.get("unrealized_pl") or 0.0) for x in (_bpos or []))
+        # Ö-53 (2026-08-22): köprü farkın BÜYÜKLÜĞÜNÜ verir, bu alan NEREDEN geldiğini. Ölçüldü ki
+        # yedi açık pozisyonun yedisinde de adet ayrışıyordu ve panoda hiçbir izi yoktu.
+        # `positions` OKUNAMAZSA `None` gider — `pozisyon_mutabakati` onu "0 ayrışma"ya ÇEVİRMEZ.
+        _kpos = {t: (v or {}).get("qty") for t, v in ((_pf or {}).get("positions") or {}).items()}
+        d["pozisyon_mutabakati"] = _sr.pozisyon_mutabakati(
+            kitap_pozisyonlar=(_kpos if (_pf or {}).get("positions") is not None else None),
+            broker_pozisyonlar=({x["symbol"]: float(x["qty"]) for x in _bpos}
+                                if _bpos is not None else None))
         d["broker_mutabakati"] = {
             **_sr.broker_mutabakati(
                 broker_equity=(float(_acct["equity"]) if _acct.get("equity") is not None else None),
@@ -1544,6 +1553,9 @@ def api_today(request: Request):
     except Exception as e:   # sessiz-yutma: mutabakat bir GÖRÜNÜRLÜK yüzeyidir; broker/ağ düşerse panonun geri kalanı ayakta kalmalı ve sebep alanda görünür
         d["broker_mutabakati"] = {"aciklanamayan": None,
                                   "olculemedi_neden": f"{type(e).__name__}: {e}"}
+        d["pozisyon_mutabakati"] = {"ayrisan_sayisi": None, "ayrisan": [],
+                                    "yalniz_kitapta": [], "yalniz_brokerda": [],
+                                    "olculemedi_neden": f"köprü düştü: {type(e).__name__}: {e}"}
     _enrich_stale_plans(d.get("todays_plans") or [], d["latest_session"])
     # ---- BEKLEYEN ONAY SAYIMI ------------------------------------
     # SIRA ZORUNLU: damgalama `expired`e bakar, o alan hemen yukarıda yazıldı. TEK KAYNAK:

@@ -738,3 +738,48 @@ def broker_mutabakati(broker_equity: float | None, gerceklesmemis_pnl: float | N
     out.update(broker_maliyet_bazli=round(mb, 2), broker_reset_sonrasi=round(brs, 2),
                kitap_reset_sonrasi=round(krs, 2), aciklanamayan=round(brs - krs, 2))
     return out
+
+
+def pozisyon_mutabakati(kitap_pozisyonlar: dict | None,
+                        broker_pozisyonlar: dict | None) -> dict:
+    """Açık pozisyonların ADET mutabakatı: {ticker: adet} × 2 → ayrışma dökümü.
+
+    NEDEN VAR (ölçüldü 2026-08-22, `docs/BULGU-KALINTI-AYRISTIRMASI-2026-08-22.md`): yedi açık
+    pozisyonun YEDİSİNDE de kitap ile broker adet tutmuyordu (kitap 15.661,22 fazla maliyet
+    taşıyor) ve panoda bunun hiçbir izi yoktu — operatör yalnız toplamda "açıklanamayan 2.623,34"
+    görüyordu. Terim terim köprü (`broker_mutabakati`) FARKIN BÜYÜKLÜĞÜNÜ veriyor; bu fonksiyon
+    NEREDEN geldiğini veriyor.
+
+    YÖN KAYBOLMAZ: "kitapta var broker'da yok" ile tersi AYNI ŞEY DEĞİLDİR. İlki karşılıksız
+    pozisyondur (Ö-52 sınıfı), ikincisi kitabın hiç bilmediği bir pozisyondur (2026-08-22'de
+    broker'da bir NVDA bulundu). İkisi ayrı kovalarda durur.
+
+    UYDURMA YASAĞI: taraflardan biri OKUNAMAZSA sonuç "0 ayrışma" DEĞİL, `None` + nedendir.
+    `mirror_divergence`in bugünkü kusuru tam budur — yedide yedi ayrışma varken `None` döndürüyor
+    ve pano `None`ı "ayrışma yok" gibi gösteriyor. O tuzak burada TEKRARLANMAZ.
+    İKİ TARAF DA BOŞ olmak bir bilgi yokluğu DEĞİLDİR: ölçülmüş bir gerçektir (pozisyon yok).
+    """
+    out: dict = {"ayrisan": [], "yalniz_kitapta": [], "yalniz_brokerda": [],
+                 "ayrisan_sayisi": None, "toplam_sembol": None, "olculemedi_neden": None}
+    eksik = [ad for ad, v in (("kitap", kitap_pozisyonlar), ("broker", broker_pozisyonlar))
+             if v is None]
+    if eksik:
+        out["olculemedi_neden"] = (
+            "pozisyon defteri OKUNAMADI: " + ", ".join(eksik)
+            + " — ayrışma UYDURULMADI ('0 ayrışma' ile 'ölçülemedi' AYRI cevaplardır)")
+        return out
+
+    k, b = dict(kitap_pozisyonlar), dict(broker_pozisyonlar)
+    out["toplam_sembol"] = len(set(k) | set(b))
+    for t in sorted(set(k) & set(b)):
+        ka, ba = float(k[t]), float(b[t])
+        if abs(ka - ba) > 1e-9:
+            out["ayrisan"].append({"ticker": t, "kitap": ka, "broker": ba,
+                                   "fark": round(ka - ba, 6)})
+    out["yalniz_kitapta"] = [{"ticker": t, "kitap": float(k[t]), "broker": 0.0}
+                             for t in sorted(set(k) - set(b))]
+    out["yalniz_brokerda"] = [{"ticker": t, "kitap": 0.0, "broker": float(b[t])}
+                              for t in sorted(set(b) - set(k))]
+    out["ayrisan_sayisi"] = (len(out["ayrisan"]) + len(out["yalniz_kitapta"])
+                             + len(out["yalniz_brokerda"]))
+    return out
