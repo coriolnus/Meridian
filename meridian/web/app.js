@@ -9188,13 +9188,22 @@ function tradeRows(trades) {
       : '<span class="mut">—</span>';
     // Satır altı sütuna sığar; işlemin geri kalanı (giriş/çıkış fiyatı, MFE/MAE, plan, zincir,
     // maliyet) çekmecede. Kırpmak yerine yanında açmak — matrisin hareketi, defterde.
+    // PARA SÜTUNU (operatör şikâyeti 2026-08-21: "hangi işlemin ne kadar kazandırdığını net
+    // göremiyorum"). Önce yalnız R vardı ve `pnl_dollars` ÇEKMECEDEYDİ — operatör her işlemin
+    // parasını görmek için satırı tek tek açmak zorundaydı. Kuzey yıldızı bunu ayrıca yasaklıyor:
+    // "R-birimi geniş stopa YAPISAL ÖNYARGILIDIR; dolar merceği olmadan sermaye kararı verilemez."
+    // R KALDIRILMADI — ikisi yan yana: R karşılaştırılabilirlik, dolar gerçeklik verir.
+    // `null` ise "—" yazılır, 0 YAZILMAZ: sıfır dolar "başabaş kapandı" demektir, ölçülmemiş değil.
+    const pd = tr.pnl_dollars;
+    const pdTxt = (pd == null) ? "—" : money(pd);
     const k = rec("trade", tr);
-    return `<button ${rowAttrs(k, `${tr.ticker || "?"} · ${String(tr.ts_close || "").slice(0, 10)} · ${rTxt} · ${EXIT_TR[tr.exit_reason] || tr.exit_reason || ""}. Kaydı aç.`)}
-      class="trow rowbtn" style="grid-template-columns:78px 60px 1fr 64px 96px 96px">
+    return `<button ${rowAttrs(k, `${tr.ticker || "?"} · ${String(tr.ts_close || "").slice(0, 10)} · ${rTxt} · ${pdTxt} · ${EXIT_TR[tr.exit_reason] || tr.exit_reason || ""}. Kaydı aç.`)}
+      class="trow rowbtn" style="grid-template-columns:78px 60px 1fr 64px 92px 96px 96px">
       <span class="mono-num mut">${esc(String(tr.ts_close || "").slice(0, 10))}</span>
       <span class="tick">${esc(tr.ticker || "?")}</span>
       <span class="mut">${esc(EXIT_TR[tr.exit_reason] || tr.exit_reason || "")}</span>
       <span class="mono-num ${cls(r)}">${rTxt}</span>
+      <span class="mono-num ${pd == null ? "mut" : cls(Number(pd))}" style="text-align:right">${pdTxt}</span>
       <span><span class="tag t-vi">${esc(REGIME_TR[tr.regime] || tr.regime || "—")}</span></span>
       <span style="text-align:right">${div}</span></button>`;
   }).join("");

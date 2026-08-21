@@ -686,3 +686,55 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def broker_mutabakati(broker_equity: float | None, gerceklesmemis_pnl: float | None,
+                      broker_reset_gunu_equity: float | None, kitap_cash: float | None,
+                      sermaye_tabani: float | None) -> dict:
+    """BROKER ↔ KİTAP köprüsü: iki sayının farkını TERİM TERİM açar.
+
+    OPERATÖR ŞİKÂYETİ (2026-08-21): *"Alpaca'daki toplam para ile panodaki tutar farklı."*
+    Şikâyet HAKLI, ama fark tek bir sayı değil — biri mark-to-market ve hesap-ömrü boyunca
+    kümülatif (broker), diğeri gerçekleşmiş ve bir RESET'ten sonra yeniden tabanlanmış (kitap).
+    İkisini çıplak kıyaslamak elmayla armut kıyaslamaktır; bu fonksiyon köprüyü kurar:
+
+        broker_equity                       (mark-to-market)
+          − gerceklesmemis_pnl              → maliyet bazlı broker
+          − broker_reset_gunu_equity        → broker'ın RESET SONRASI kazancı
+        kitap_cash − sermaye_tabani         → kitabın RESET SONRASI kazancı
+        ────────────────────────────────────────────────────────────
+        aciklanamayan = broker_reset_sonrasi − kitap_reset_sonrasi
+
+    `sermaye.durum()` ayrışmayı ZATEN biliyordu (`ayrisik: True`) ama köprüyü kurmuyordu:
+    operatör iki sayı görüyor, aradaki terimleri göremiyordu. Bir farkı BİLMEK ile onu
+    AÇIKLAYABİLMEK aynı şey değildir.
+
+    UYDURMA YASAĞI — KALINTI ASLA TAHMİN EDİLMEZ: terimlerden biri bile ölçülemezse
+    `aciklanamayan` **None** döner ve `olculemedi_neden` yazılır. Aksi hâlde bizim
+    bilgisizliğimiz (örn. broker geçmişi alınamadı) bir PARA FARKI gibi okunur ve operatörü
+    yanlış yere baktırır.
+
+    ÖLÇÜLEN İLK DEĞERLER (2026-08-21, canlı): broker 109.701,49 · gerçekleşmemiş 735,31 ·
+    reset günü 99.992,62 · kitap 106.350,22 · taban 100.000 → **açıklanamayan 2.623,34**.
+    Reset günü iki taraf MUTABIKTI (100.000 ↔ 99.992,62); ayrışma ondan SONRA doğdu, yani
+    tarihî bir artefakt değil YAŞAYAN bir kayıt eksiğidir."""
+    eksik = [ad for ad, v in (("broker_equity", broker_equity),
+                              ("gerceklesmemis_pnl", gerceklesmemis_pnl),
+                              ("broker_reset_gunu_equity", broker_reset_gunu_equity),
+                              ("kitap_cash", kitap_cash),
+                              ("sermaye_tabani", sermaye_tabani)) if v is None]
+    out = {"broker_equity": broker_equity, "gerceklesmemis_pnl": gerceklesmemis_pnl,
+           "broker_reset_gunu_equity": broker_reset_gunu_equity,
+           "kitap_cash": kitap_cash, "sermaye_tabani": sermaye_tabani,
+           "broker_maliyet_bazli": None, "broker_reset_sonrasi": None,
+           "kitap_reset_sonrasi": None, "aciklanamayan": None, "olculemedi_neden": None}
+    if eksik:
+        out["olculemedi_neden"] = ("köprü terimleri ÖLÇÜLEMEDİ: " + ", ".join(eksik) +
+                                   " — kalıntı UYDURULMADI (ölçülemeyen terim para farkı gibi okunamaz)")
+        return out
+    mb = float(broker_equity) - float(gerceklesmemis_pnl)
+    brs = mb - float(broker_reset_gunu_equity)
+    krs = float(kitap_cash) - float(sermaye_tabani)
+    out.update(broker_maliyet_bazli=round(mb, 2), broker_reset_sonrasi=round(brs, 2),
+               kitap_reset_sonrasi=round(krs, 2), aciklanamayan=round(brs - krs, 2))
+    return out

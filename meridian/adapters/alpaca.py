@@ -266,6 +266,41 @@ def account() -> dict | None:
         return None
 
 
+def equity_on(tarih: str) -> tuple[float | None, str | None]:
+    """Broker'ın BELİRLİ BİR GÜNDEKİ equity'si → (değer, None) | (None, neden).
+
+    NEDEN VAR (2026-08-21, operatör şikâyeti "Alpaca'daki para panodakinden farklı"): kitap bir
+    RESET'ten sonra yeniden tabanlanmıştır (2026-08-01: 94.457,91 → 100.000), broker ise hesap
+    ömrü boyunca kümülatiftir. İki sayıyı kıyaslamak için broker'ın RESET GÜNÜNDEKİ değeri
+    ZORUNLUDUR — o olmadan köprü kurulamaz ve "fark" yalnız bir gizem olarak kalır.
+
+    NEDEN DEMET DÖNER: `None` iki AYRI şey demek olabilirdi — "o gün equity sıfırdı" ya da
+    "okuyamadım". İkincisi bir ölçüm boşluğudur ve kalıntıya KARIŞMAMALIDIR
+    (`sermaye.broker_mutabakati` bunu `olculemedi_neden` ile ayırıyor). Sebep metin olarak döner.
+
+    SALT-OKUNUR: `/v2/account/portfolio/history` yalnız geçmiş okur, hiçbir emir yüzeyine
+    dokunmaz."""
+    try:
+        r = httpx.get(f"{_paper_base()}/v2/account/portfolio/history",
+                      params={"period": "3M", "timeframe": "1D"},
+                      headers=_headers(), timeout=20)
+        r.raise_for_status()
+        d = r.json()
+    except Exception as e:
+        _note(False, f"equity_on: {type(e).__name__}: {e}")
+        return None, f"portfolio/history okunamadı: {type(e).__name__}: {e}"
+    ts, eq = d.get("timestamp") or [], d.get("equity") or []
+    if not ts or len(ts) != len(eq):
+        return None, f"portfolio/history biçimi beklenmedik (ts={len(ts)} eq={len(eq)})"
+    import datetime as _dt
+    hedef = str(tarih)[:10]
+    for t, e in zip(ts, eq):
+        if _dt.datetime.fromtimestamp(t, _dt.timezone.utc).date().isoformat() == hedef and e:
+            _note(True)
+            return float(e), None
+    return None, f"{hedef} portfolio/history penceresinde YOK (3 ay geriye bakıldı)"
+
+
 def positions() -> list:
     """[] => ya gerçekten pozisyon yok YA DA API ulaşılamadı; ayrımı transport() taşır (A1)."""
     try:

@@ -1519,6 +1519,31 @@ def api_today(request: Request):
     # sermaye" söyleyebilirdi.
     from . import sermaye as _sr
     d["sermaye_koken"] = _sr.koken()
+    # BROKER ↔ KİTAP MUTABAKATI (operatör şikâyeti 2026-08-21: "Alpaca'daki para panodakinden
+    # farklı"). Şikâyet HAKLIYDI ve fark tek bir sayı DEĞİL: broker mark-to-market ve hesap-ömrü
+    # kümülatif, kitap ise gerçekleşmiş ve 2026-08-01 reset'inden sonra yeniden tabanlanmış.
+    # Sistem ayrışmayı ZATEN biliyordu (`sermaye_koken.ayrisik`) ama KÖPRÜYÜ kurmuyordu — operatör
+    # iki sayı görüp aradaki terimleri göremiyordu. Bir farkı BİLMEK ile AÇIKLAYABİLMEK ayrı şey.
+    # HER TERİM ÖLÇÜLÜR: broker geçmişi okunamazsa `aciklanamayan` None kalır + neden yazılır;
+    # bilgisizliğimiz para farkı gibi okunamaz (uydurma yasağı).
+    try:
+        from .adapters import alpaca as _alp
+        _ko = d["sermaye_koken"] or {}
+        _rt = (_ko.get("reset_tarihi") or "")[:10] or None
+        _bre, _brn = (_alp.equity_on(_rt) if _rt else (None, "reset tarihi YOK — köprü kurulamaz"))
+        _acct = _alp.account() or {}
+        _upl = sum(float(x.get("unrealized_pl") or 0.0) for x in (_alp.positions() or []))
+        d["broker_mutabakati"] = {
+            **_sr.broker_mutabakati(
+                broker_equity=(float(_acct["equity"]) if _acct.get("equity") is not None else None),
+                gerceklesmemis_pnl=(_upl if _acct.get("equity") is not None else None),
+                broker_reset_gunu_equity=_bre,
+                kitap_cash=(_pf or {}).get("cash"),
+                sermaye_tabani=_ko.get("sermaye_tabani")),
+            "reset_tarihi": _rt, "broker_gecmis_neden": _brn}
+    except Exception as e:   # sessiz-yutma: mutabakat bir GÖRÜNÜRLÜK yüzeyidir; broker/ağ düşerse panonun geri kalanı ayakta kalmalı ve sebep alanda görünür
+        d["broker_mutabakati"] = {"aciklanamayan": None,
+                                  "olculemedi_neden": f"{type(e).__name__}: {e}"}
     _enrich_stale_plans(d.get("todays_plans") or [], d["latest_session"])
     # ---- BEKLEYEN ONAY SAYIMI ------------------------------------
     # SIRA ZORUNLU: damgalama `expired`e bakar, o alan hemen yukarıda yazıldı. TEK KAYNAK:
