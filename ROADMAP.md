@@ -1522,7 +1522,30 @@ kararı gerektirenler §5'e geçer.
     (`goal.yaml:27`) desenin DIŞINDA — ölçülmüş bayat örnekleri var; (c) docstring'e gömülü
     SABİT SAYI aynı çürüme sınıfı ve hiçbir dedektör görmüyor (bu turda `0,08`→`0,16` ve `0,04`
     vakaları elle düzeltildi, yerine `0,16` YENİDEN gömüldü).
-  **AÇIK KUSURLAR (ölçüldü, bu turda kapatılmadı):**
+  **⚡ 2026-08-21 YENİDEN ÖLÇÜLDÜ — LİSTELENEN KUSURLARIN ÇOĞU ZATEN KAPANMIŞ.** Bu kalem
+  bayatlık HAKKINDAYDI ve kendisi bayatlamıştı; aşağıdaki liste ölçümle güncellendi:
+  · ~~`_site_key` `isdigit()` guard'ı~~ ✅ **KAPALI** — `codelaw.py:786` artık `isascii() and isdigit()`
+  · ~~`_gate_why` tail dalı savunmasız~~ ✅ **KAPALI** — `margin` artık PARAMETRE (dışarıdan gelir)
+  · ~~`report()` altı kez tarıyor (7,75 sn / 576 parse)~~ ✅ **KAPALI** — ölçüldü: **1,75 sn / 97 parse**
+    (kalemin kendi tahmini "96 parse'a iner"di; 97 çıktı)
+  · ~~`ops/runbook_uret.py` sıralama KOPYASI~~ ✅ **KAPALI** — artık `codelaw._site_key`i İMPORT ediyor
+  · ~~`_GRAPH_CACHE` tek slot~~ ✅ **KAPALI** — anahtar `(root, damga)` çiftine çevrildi (cloud turu)
+  · ~~yasa yalnız `meridian/**` tarar~~ 🟡 **KISMEN** — `tests/` ve `ops/` eklendi
+    (`_EK_CAPA_KOKLERI`); **`docs/` HÂLÂ DIŞARIDA** ve RUNBOOK'ta 73 çapa var.
+  **GERÇEKTEN AÇIK KALANLAR (2026-08-21 ölçümü):**
+  · **`docs/` çapa yasasının dışında** — RUNBOOK üretilirken satır numaraları kayar, denetimsiz.
+  · **28 çözülemeyen çapa** (`line_anchor_unresolved`, hepsi `hedef_yok`): `broker.py` yorumları
+    `olcum.py:178`e bakıyor ama o ad ölçüm dizinlerinde ÇOK KEZ geçiyor, tarayıcı hangisi
+    olduğunu seçemiyor. Kapıyı DÜŞÜRMÜYOR (körlük RAPORLANIYOR, sessizce yutulmuyor) ama
+    çapraz-dizin çapası hâlâ çözülemez bir sınıf.
+  · Düz metin (`satır NNN`) ve docstring'e gömülü SABİT SAYI çürümesi — dedektör yok.
+  **BU TURDA YAKALANAN TAZE VAKA (yasa çalışıyor):** `alpaca.py`ye `equity_on` eklenince
+  `test_acil_dogruluk_v196.py:463`teki `alpaca.py:487-491` çapası BAYATLADI ve yasa onu
+  ANINDA yakaladı (`report()["ok"]=False`). Düzeltme satır güncellemek DEĞİL, **sembole
+  çevirmek** oldu (`alpaca.coid_sinifi docstring GRUP KEMERİ maddesi`) — doktrin gereği:
+  satır çapası sessizce çürür, sembol çapası yüksek sesle.
+
+  **ESKİ AÇIK KUSUR LİSTESİ (tarihçe — 2026-08-15, çoğu yukarıda kapandı):**
   · `reflect._gate_why` tail dalı savunmasız: çağıran `effective_margin` (aşınma dahil) ile
     reddediyor ama `_gate_why` çıplak `GATE_MARGIN` ile sınıyor; aşınma devredeyken akış son
     return'e düşüp `cand_tail['var_r']` okuyor — legacy sözlükte tail YOK → `TypeError`.

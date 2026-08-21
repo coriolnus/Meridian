@@ -460,7 +460,7 @@ def test_web_katmaninda_dolduruldu_dizesi_ARTIK_VAR():
 # BİLİNÇLİ GÜNCELLEME — v-dalga2 (2026-08-09): 181 → 192 (körce DEĞİL; kapının kendi kuralı işledi).
 # Dalga-2 (01ba684 + ff55a18) süpürücü ailesine 15 yeni `?? 0` guard'ı ekledi: olay çekmecesi EV_TR
 # (`app.js:1179-1187`) + iptal tuşu sınıf dökümü (`app.js:3439`). ON BEŞİ de ELLE (b) SINIFLANDI —
-# hepsi ÜRETİCİ-GARANTİLİ bölümleme sayaçlarıdır (YASA-6, uçtan doğrulandı: alpaca.py:487-491 ·
+# hepsi ÜRETİCİ-GARANTİLİ bölümleme sayaçlarıdır (YASA-6, uçtan doğrulandı: alpaca.coid_sinifi docstring GRUP KEMERİ maddesi ·
 # api/loop olay yazıcıları HER olayda koşulsuz int(...)/len(...) basar, boş kova KAYNAKTA 0'a
 # düşer = ÖLÇÜLMÜŞ sıfır, bu deponun zaten (b) saydığı biriktirici/bölümleme deseni). Hiçbiri
 # liveness/manşet ölçülemedi-dalına sızmadı (manşet `!= null` üçlemesi kullanır, `?? 0` değil).
