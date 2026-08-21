@@ -48,8 +48,16 @@ işlemdir"* diyor — ama "gerçekten kapattığı" iç motorun (`PaperBroker`) 
 doğru; Alpaca için değil. İç motor pozisyonu kapatırsa satır `live_paper` damgası alır, ayna
 hiç dolmasa bile. Bu, deponun bildiği **`MIRROR_DRIFT`** sınıfının bir vakası olabilir.
 
-**BU BİR ADAY, HÜKÜM DEĞİL:** iki işlemin emrinin gönderilip gönderilmediği, gönderildiyse
-reddedilip reddedilmediği ÖLÇÜLMEDİ.
+**ADAY ARTIK HÜKÜM — EMİR DEFTERİ ÖLÇÜLDÜ (2026-08-21):**
+
+    /v2/orders?status=all&after=2026-08-01 → 62 emir
+    durum dağılımı: filled 19 · canceled 18 · held 11 · new 7 · expired 4 · replaced 1 · accepted 2
+    ALL : **0 emir**
+    VLO : **0 emir**
+
+Reddedilmiş DEĞİL, iptal edilmiş DEĞİL — **HİÇ GÖNDERİLMEMİŞ.** İç motor bu iki pozisyonu
+tamamen kendi defterinde açıp kapatmış ve ayna bir emir denemesi BİLE yapmamış. Yani kusur
+"emir gönderildi ama dolmadı" değil, **"emir hiç doğmadı ama defter dolmuş sayıldı"**.
 
 ## ARAŞTIRILAN VE ELENEN BİR SİNYAL
 
