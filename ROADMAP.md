@@ -185,6 +185,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 
 | kalem | WP | not |
 |---|---|---|
+| **`Ö-53` kitap↔broker ADET AYRIŞMASI** | WP2 | 🆕 **ÖLÇÜLDÜ 2026-08-22** (`docs/BULGU-KALINTI-AYRISTIRMASI-2026-08-22.md`). Açık pozisyonların **YEDİSİNDE DE** kitap ile broker adet tutmuyor (AMGN 33/22 · BDX 43/40 · BKNG 43/22 · CRM 17/19 · EMR 64/37 · MRK 76/65 · MRNA 13/8), üstelik broker'da kitabın hiç bilmediği bir **NVDA** var. Kitap **15.661,22** fazla maliyet taşıyor. Yön TEK YÖNLÜ DEĞİL (CRM'de broker fazla) → basit "kısmî dolum" hikâyesi DEĞİL. Bu sembollerde broker SATIŞI YOK → fark satıştan değil **GİRİŞTEN**. Panonun "açıklanamayan 2.623,34"ünün ezici çoğunluğu bu. **KÖK NEDEN ÖLÇÜLMEDİ ve UYDURULMADI** — adaylar (hiçbiri sınanmadı): kısmî dolum · boyutlandırmanın broker equity'si yerine kitap equity'siyle hesaplanması · `scaled_out`un tek defterde işlenmesi · `Ö-52`nin kök nedeninin (iç motor onaydan bağımsız koşuyor) adet düzeyindeki karşılığı — sonuncusu EN OLASI, aynı zincir zaten iki tam işlemi karşılıksız üretti. ⚠ **`mirror_divergence` bu işi YAPMIYOR:** yedide yedi ayrışma varken alan `None` — ve panoda `None` "ayrışma yok" gibi okunuyor, oysa "ölçülmedi" demek. Kart-önce açılacak |
 | `23d` bar-içi stop varsayımı (stop slipajı SIFIR) | WP1 | 23c'nin kapattığı asimetrinin DİĞER yarısı |
 | `23e` gün-içi pencere · `23f` `gap_behavior:cancel` · `13` scale-out | WP1 | 23e bugünkü replayde MODELLENEMEZ (`1Day` tek yol) |
 | WP-E 6 boşluk sınıfı + E2 canlı-geçiş | WP1 | |
@@ -2441,6 +2442,7 @@ karar penceresinin UYGULANMASI, `max_drawdown` operatör kararı, tohum yenileme
 v237-v243 dağıtımları vardı; hepsi yalnız §4 maddelerinin İÇİNDE yaşıyordu ve §4 temizlenince
 neden-kaydı da silinecekti. Aşağıdaki girişler madde başına TEK SATIRDIR; ayrıntı kartlarda/§3'de.)_
 
+- **2026-08-22 "açıklanamayan 2.623,34" SENTE KAPANDI** — 2.615,96 defter ayrışması + 7,38 taban farkı (kitap 100.000,00 yuvarlak, broker reset günü 99.992,62). Ezici çoğunluk `Ö-53` ADET AYRIŞMASI (yeni), −277,99'u `Ö-52` karşılıksız işlem. Yöntem varsayımsız (broker'ın kendi cost_basis'i; FIFO/ortalama-maliyet VARSAYILMADI). Kitap tarafı bağımsız doğrulandı (6.350,23 ↔ realized_pnl 6.350,22314). Canlıya dokunulmadı.
 - **2026-08-22 DÜZELTME: `Ö-51c` (Ö3 ΔP&L CI) aslında 2026-08-21'de KAPANMIŞTI** — ROADMAP onu beş gün H1'de açık gösterdi ve `B4` operatör kararını gereksiz bekletti. CI dört tavanda da sıfırı içeriyor, yani limit bacağını açma gerekçesi ZAYIFLADI. Bayat-beyan sınıfı (A17/Ö-49); kanıt diskten okundu, ezberden değil.
 - **2026-08-22 BULGU: `live_paper` damgası broker teyidi DEĞİL, kod yolu beyanı** — reset sonrası 8 canlı işlemin 2'si (`ALL`/`VLO`) Alpaca'da hiç var olmamış (62 emir · 55 aktivite · 61.511 olay, üçünde de sıfır iz). Kök neden kapalı: `submit_plan` ONAY ANINDA, iç motor onaydan BAĞIMSIZ koşuyor. Kart `EXE-2026-007` ön-kayıtlı, tahta kalemi `Ö-52`. Öğrenme etkisi ölçüldü ve DAR (satırlar yansıma tabanının altında). Davranış DEĞİŞTİRİLMEDİ — bu bir ölçüm/damga kalemidir.
 - **2026-08-17 OPERATÖR İKİ KARAR VERDİ: `A1` "korumayı şimdi kur" + `B2` = seçenek (c):**
