@@ -1,0 +1,69 @@
+# BULGU — CANLI DEFTERDE BROKER'DA KARŞILIĞI OLMAYAN İKİ İŞLEM (2026-08-21)
+
+**Sınıf:** veri bütünlüğü · **Etki:** canlı kanıt tabanının **%25'i** · **Durum:** ÖLÇÜLDÜ, KÖK NEDEN AÇIK
+
+## ÖLÇÜM
+
+Operatörün "Alpaca'daki para panodakinden farklı" şikâyetini kovalarken çıktı.
+
+`trades.jsonl`, 2026-08-01 reset'inden sonra **8 canlı işlem** taşıyor. Alpaca aktivite defteri
+(TAM sayfalanmış, 55 kayıt, en eskisi 2026-07-14) ile kıyaslandığında **ikisinin broker'da HİÇ
+fill'i yok**:
+
+| kitap kaydı | id | kaynak damgası | plan_id | P&L | broker fill |
+|---|---|---|---|---|---|
+| `ALL` 2026-08-07 → 2026-08-07 | T00096 | **`live_paper`** | `P-2026-08-06-ALL-momentum_burst` | −450,38 | **0** |
+| `VLO` 2026-08-10 → 2026-08-11 | T00097 | **`live_paper`** | `P-2026-08-07-VLO-exhaustion_hammer` | +728,37 | **0** |
+
+Net etki **+277,99**. Diğer altı işlemin (NUE·MRK·MRNA·HUM·MRVL·LLY) hepsinin broker'da fill'i VAR.
+
+## NEDEN ÖNEMLİ
+
+1. **Kanıt tabanı kirli.** `sermaye.durum()` `canli_islem_n: 8` diyor; ölçülen gerçek **6 gerçek +
+   2 karşılıksız**. Kitabın `realized_pnl 6.350,22`'si +277,99 karşılıksız kâr içeriyor.
+2. **Öğrenme bunları kanıt sayıyor.** Yansıma ufku `trades.jsonl` üzerinden hesaplanıyor
+   (`_horizon_ok`), yani karşılıksız işlemler ufku ilerletiyor ve rejim dilimlerine giriyor.
+3. **Damga yanıltıyor.** `kaynak: live_paper` bu deponun tohum/canlı ayrımının TAM olarak
+   güvendiği alan (`ledgerstamp`). Bu iki satır o ayrımı geçersiz kılıyor: damga "canlı" diyor,
+   broker "böyle bir işlem olmadı" diyor.
+
+## NE ÖLÇÜLDÜ, NE ÖLÇÜLMEDİ
+
+**ÖLÇÜLDÜ:** iki işlemin broker'da fill'i yok (tam sayfalama, `after=2026-06-01`, 55 kayıt) ·
+ikisi de `live_paper` damgalı · ikisinin de gerçek `plan_id`si ve `strategy_version 3`ü var ·
+diğer altı işlemin fill'i var.
+
+**ÖLÇÜLMEDİ (hipotez bile denmez, aday):** emir gönderildi mi · gönderildiyse reddedildi mi ·
+motor dolumu broker onayı olmadan mı yazdı · gölge/ayna katmanı canlı deftere mi sızdı ·
+Alpaca tarafında hesap sıfırlaması oldu mu. **Kök neden BULUNMADI.**
+
+## KÖK NEDEN ADAYI (ölçüldü ama KANITLANMADI)
+
+`loop._persist_trade` damgayı **KOD YOLUNA** göre basıyor, broker kanıtına göre DEĞİL:
+
+    ledgerstamp.stamp(trade, ledgerstamp.LIVE_PAPER)   # broker onayı SORULMUYOR
+
+Docstring'i *"bu fonksiyondan geçen her satır canlı kâğıt döngünün GERÇEKTEN kapattığı bir
+işlemdir"* diyor — ama "gerçekten kapattığı" iç motorun (`PaperBroker`) kendi defteri için
+doğru; Alpaca için değil. İç motor pozisyonu kapatırsa satır `live_paper` damgası alır, ayna
+hiç dolmasa bile. Bu, deponun bildiği **`MIRROR_DRIFT`** sınıfının bir vakası olabilir.
+
+**BU BİR ADAY, HÜKÜM DEĞİL:** iki işlemin emrinin gönderilip gönderilmediği, gönderildiyse
+reddedilip reddedilmediği ÖLÇÜLMEDİ.
+
+## ARAŞTIRILAN VE ELENEN BİR SİNYAL
+
+`mirror_divergence` alanı umut vericiydi: karşılıksız iki işlemin ikisi de `None` taşıyor,
+broker'da fill'i olan beşinin hepsi sayı taşıyor. Ama **NUE istisnası bu sinyali çürüttü** —
+NUE'nin broker'da 7 fill'i (3 alış + 4 satış) VAR ve `mirror_divergence` yine `None`.
+Yani `None`, "broker'da karşılık yok"un GÜVENİLİR göstergesi DEĞİLDİR; örtüşme var, kural yok.
+Panoda o sütun `None` iken **"—"** basıyor ve bu tire hiçbir şey ayırt etmiyor.
+
+## SIRADAKİ ADIM (kart-önce)
+
+Bu bir ölçüm kartı ister: "canlı defterdeki her işlemin broker'da karşılığı VAR MI" sorusunu
+**sürekli** ölçen bir mutabakat — bugünkü tek seferlik kıyas değil. Kart yazılmadan kod
+değiştirilmez; ama `sermaye.broker_mutabakati()` köprüsü bu bulgunun görünür kalmasını sağlıyor.
+
+**Bu bulgu 2.623,34'lük açıklanamayan kalıntıyı AÇIKLAMIYOR** — tersine, karşılıksız işlemler
+çıkarılırsa kalıntı **2.901,33**'e ÇIKAR. İki ayrı kusur olabilir.
