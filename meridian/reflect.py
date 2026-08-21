@@ -1952,9 +1952,15 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         c_oos = cand.get("oos_score")
         if rep_cand is None or (c_oos is not None and (rep_oos is None or c_oos > rep_oos)):
             rep_cand, rep_oos = cand, c_oos
+        # RED GEREKÇESİ İZE GİRER (2026-08-21, canlı kuraklık teşhisi). `_gate_eval` gerekçeyi
+        # ZATEN üretiyordu ve `_why` burada ATILIYORDU — üretilip çöpe atılan bir alan YASA 6'nın
+        # tam tersidir. Canlı belirti: `warmup_sprint evaluated=40 cleared=0` günlerce basıldı ve
+        # operatör NEDEN'i hiçbir yerden okuyamadı; kuraklık teşhis EDİLEMEZ bir sayıydı.
+        # Yalnız GEÇMEYEN sonda için yazılır: geçen sondanın "gerekçesi" yoktur.
         trace.append({"variable": var, "new": new, "old": old,
                       "candidate_oos": c_oos, "incumbent_oos": inc_oos,
-                      "fold_wins": gate["fold_wins"], "tail_ok": gate["tail_ok"], "passes": passes})
+                      "fold_wins": gate["fold_wins"], "tail_ok": gate["tail_ok"], "passes": passes,
+                      "why": (None if passes else _why)})
         if passes:
             cleared += 1
             # explicit None checks — `or -1e9` treated a legitimate 0.0 score as missing

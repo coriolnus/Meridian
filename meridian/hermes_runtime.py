@@ -100,6 +100,28 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
     return best
 
 
+def _red_neden_dagilimi(iz: list) -> dict:
+    """Geçmeyen sondaların red gerekçelerini KOVALARA toplar → {kova: sayı}.
+
+    NEDEN KOVA, NEDEN HAM METİN DEĞİL: `_gate_why` sayısal ayrıntı taşıyan bir cümle üretir
+    ("skor marjı: -0.004 < 0.010"). Ham metni saymak her sonda için AYRI satır üretir ve
+    "hangi kapı dalı baskın" sorusu cevapsız kalır — oysa `cleared=0` teşhisinin tek sorusu
+    budur. Kova = cümlenin iki nokta ÖNCESİ, yani dalın adı.
+
+    Yalnız `passes=False` satırlar sayılır: geçen sondanın gerekçesi yoktur."""
+    import collections
+    say = collections.Counter()
+    for r in iz or []:
+        if r.get("passes"):
+            continue
+        w = r.get("why")
+        if not w:
+            say["gerekçe ÖLÇÜLEMEDİ (iz `why` taşımıyor)"] += 1     # UYDURMA YASAĞI: boşluk gizlenmez
+            continue
+        say[str(w).split(":", 1)[0].strip()] += 1
+    return dict(say)
+
+
 def _warmup_sprint() -> None:
     """Boş-döngü ısınması: coordinate_descent_search'i SHIP ETMEDEN koştur — yalnız UCB
     önceliklerini + probe cache'ini ısıtmak için. Nothing ships (submit çağrılmaz) VE artık bu
@@ -186,7 +208,10 @@ def _warmup_sprint() -> None:
                                  "butce": _wb["budget"], "butce_carpani": _wb["carpan"],
                                  "k_max": _wb["k_max"], "butce_formulu": _wb["formul"]}
         from . import obs
+        # GEREKÇE DAĞILIMI LOG'A GİRER: `cleared=0` tek başına teşhis edilemez bir sayıdır.
+        _nd = _red_neden_dagilimi(res.get("trace") or [])
         obs.log("warmup_sprint", evaluated=res.get("evaluated"), cleared=res.get("cleared"),
+                neden_dagilim=_nd,
                 best=(res.get("best") or {}).get("variable"),
                 kesildi=bool(res.get("kesildi")), tavan_dk=_tavan,
                 kalan_sonda=res.get("kalan_sonda"),
