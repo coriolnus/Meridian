@@ -745,12 +745,22 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
             # İKİ TABANIN FARKLI OLMASI KUSUR DEĞİL (her defter kendi parasına göre boyutlanır);
             # kusur farkın KAYITSIZ olmasıydı. İki alan AYRI durur: aynı ada yazmak, iki tabanı
             # ayırt edilemez kılardı.
+            # ── Ö-53/B: AYNA KİTABIN TABANIYLA BOYUTLANIR (operatör kararı 2026-08-22) ──
+            # ÖNCESİ: ayna `eq` (broker hesabının equity'si) ile, kitap `eq_now` ile boyutlanıyordu.
+            # Aynı `1R = %1` kuralı İKİ FARKLI tabana uygulanınca adetler ayrışıyordu (ölçüldü:
+            # −%2,1 … +%6,5). Ayna artık kitabın SADIK GÖLGESİDİR: aynı taban, aynı yasa.
+            # BACKTEST↔CANLI PARİTE korunur — motora DOKUNULMADI; değişen yalnız aynanın girdisi.
+            # BROKER TAVANI (guard): kitap equity'si broker'ınkini AŞABİLİR ve o hâlde emir
+            # broker'ın parasını aşıp reddedilirdi. `min` iki tabanı da gözetir; tavan BAĞLARSA
+            # ayrışma geri gelir ama ARTIK ADIYLA — makbuz üç sayıyı da taşır ve `ayna_taban`
+            # sınıfı yalnız o durumda konuşur (yani sınıfın kendisi guard'ın nabzıdır).
+            _eq_boyut = min(float(eq_now), float(eq))
             meta.setdefault("size_law", {})[pl.get("id")] = {
                 "eq_kaynak": _eq_kaynak, "eq_now": round(float(eq_now), 2),
-                "eq_ayna": round(float(eq), 2),
+                "eq_broker": round(float(eq), 2), "eq_ayna": round(_eq_boyut, 2),
                 "peak": round(float(_peak), 2), "size_mult": round(float(_smult), 4),
                 "kitap_rev": _kitap_rev}
-            res = alpaca.submit_plan(pl, eq, size_mult=_smult,
+            res = alpaca.submit_plan(pl, _eq_boyut, size_mult=_smult,
                                      atr=_lw.get("atr"), ref_price=_lw.get("ref_price"))
             out["results"].append({"ticker": pl.get("ticker"), **res})
             _law_out = res.get("law") or _lw
@@ -2656,6 +2666,71 @@ def _drift_sinifi_adet(receipt: dict | None, fill_eq_now, fill_peak,
                           "taşımadığından ayrım YAPILAMADI (SB-1 makbuz genişletme AYRI kalem)")
 
 
+def _adet_benimse(broker, sym: str, kitap_qty: float, ayna_qty: float,
+                  dstr: str, out: dict, sinif: str | None = None) -> float | None:
+    """Kitap AYNANIN adedini BENİMSER — Ö-53/D (operatör kararı 2026-08-22).
+
+    NEDEN. Yedi açık pozisyonun yedisinde de adet ayrıştı ve baskın sebep YAPISAL: ayna emri
+    DOLUMDAN ÖNCE vermek zorunda (`per_share = tetik − stop`), kitap dolumdan SONRA yazar
+    (`per_share = dolum − stop`). CRM'de birebir ölçüldü: ayna 19, kitap 17, ikisi de kendi
+    girdisiyle SENTE doğru. İki taraf da haklı; fark ORTADAN KALDIRILAMAZ. Ama broker'daki adet
+    GERÇEKTEN VAR OLAN adettir — kitap onu tahmin edemez, o hâlde dolumdan sonra BENİMSER.
+    `Ö-53/B` (ayna kitabın tabanıyla boyutlanır) ikinci mekanizmayı kaynağında kurutur; bu
+    fonksiyon birincisinin kaçınılmaz artığını uzlaştırır. İkisi ayrı iş, ikisi de gerekli.
+
+    EŞİKTEN BAĞIMSIZ. Yukarıdaki `%25` bir ALARM eşiğidir, ayrışma eşiği değil: BDX %7 · CRM %12 ·
+    MRK %14 üçü de altında kalıp SESSİZCE ayrışıyordu. Benimseme eşiğe bağlanırsa D amacını yitirir.
+
+    KAPSAM DAR ve BİLEREK — yalnız İKİ defterde de VAR OLAN pozisyonun adedi. Dışarıda kalanlar:
+      · yalnız kitapta  → `split_brain` / karşılıksız işlem (`Ö-52`); benimseme pozisyon SİLERDİ
+      · yalnız broker'da → motor-dışı, operatörün kendi malı (NVDA vakası); sahiplik sınırı
+      · `scaled`        → ölçek-çıkış BİLİNÇLİ bir boşluktur (çağrı yeri zaten `continue` eder)
+      · `ayna_qty <= 0` → "aynada yok" demektir; kitabı SIFIRLAMAK bu fonksiyonun işi DEĞİL
+
+    UYDURMA YASAĞI: `broker` geçilmediyse (pano force-sync gibi eski çağıranlar) ya da sembol iç
+    kitapta yoksa kitap DEĞİŞTİRİLMEZ — neden `out`a yazılır, sessizce geçilmez.
+    SESSİZ DÜZELTME = KAYIP: her benimseme öncesi/sonrası adetle olay akışına ve
+    `broker_reconcile.json`a düşer (YASA 6: pano + bekçi okuyucuları mevcut).
+
+    Döner: benimsenen yeni adet, ya da None (değişiklik yapılmadı).
+    """
+    kayit = {"ticker": sym, "onceki": kitap_qty, "ayna": ayna_qty,
+             "drift_sinifi": sinif, "benimsendi": False, "neden": None}
+    _yaz = lambda: out.setdefault("positions", {}).setdefault("adet_benimsendi", []).append(kayit)
+    try:
+        yeni = int(float(ayna_qty))
+    except (TypeError, ValueError):  # sessiz-yutma: aynanın adedi biçimsiz/None geldi (sağlayıcı yanıtı bozuk) — kitap DEĞİŞTİRİLMEZ ve neden `out`a yazılır; hüküm uydurmak yerine bir sonraki tura bırakılır
+        kayit["neden"] = "aynanın adedi sayıya çevrilemedi — benimseme YAPILMADI (uydurma yok)"
+        _yaz(); return None
+    if yeni <= 0:
+        kayit["neden"] = ("aynada adet sıfır/negatif — bu 'boyut sapması' DEĞİL durum ayrışmasıdır "
+                          "(split_brain dalı işler); kitap SIFIRLANMAZ")
+        _yaz(); return None
+    if int(float(kitap_qty)) == yeni:
+        return None                      # ayrışma yok — kayıt da gürültüdür
+    if broker is None:
+        kayit["neden"] = "iç kitap erişimi yok (broker geçilmedi) — benimseme bir sonraki tura kaldı"
+        _yaz(); return None
+    poz = getattr(broker, "positions", {}).get(sym)
+    if poz is None:
+        kayit["neden"] = "iç kitapta pozisyon bulunamadı (anlık görüntü ile kitap ayrışmış olabilir)"
+        _yaz(); return None
+    if hasattr(poz, "qty"):
+        poz.qty = yeni
+    elif isinstance(poz, dict):
+        poz["qty"] = yeni
+    else:
+        kayit["neden"] = f"pozisyon nesnesi adet taşımıyor ({type(poz).__name__}) — benimseme YAPILMADI"
+        _yaz(); return None
+    kayit.update(benimsendi=True, yeni=yeni, tarih=dstr)
+    _yaz()
+    obs.warn("adet_benimsendi",
+             f"kitap aynanın adedini benimsedi: {sym} {kitap_qty:g} → {yeni:g}"
+             + (f" (sapma sınıfı: {sinif})" if sinif else ""),
+             ticker=sym, onceki=kitap_qty, yeni=yeni, drift_sinifi=sinif)
+    return float(yeni)
+
+
 def _kismi_dolum_tespiti(order) -> tuple[str, str] | None:
     """KISMİ DOLUM TESPİTİ (teşhis 2026-08-10): adet sapmasının DOĞRUDAN kanıtı — giriş emri KISMÎ mi doldu?
 
@@ -3196,6 +3271,10 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         if scaled:
             continue   # internal book banked a partial (qty reduced by design); the mirror bracket still
                        # holds full size — a KNOWN, intentional gap, not drift (audit #16 false alarm)
+        # SINIF HER SEMBOLDE SIFIRLANIR (2026-08-22): `_sinif` yalnız eşiği aşan dalda atanıyor.
+        # Benimseme eşiğin DIŞINDA koştuğu için `locals()`ten okumak, bir ÖNCEKİ sembolün sınıfını
+        # bu sembole yapıştırırdı — sessiz ve teşhisi zehirleyen bir hata. Döngü-taşması kapatıldı.
+        _sinif = _neden = None
         # sizing runs off two slightly different equities (internal book vs Alpaca account), so small qty
         # gaps are expected; >25% relative gap is real drift, not rounding.
         if qty > 0 and abs(aq - qty) / qty > 0.25:
@@ -3222,6 +3301,15 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                       f" · sapma sınıfı: {_sinif} — {_neden}",
                       ticker=sym, local_qty=qty, alpaca_qty=aq,
                       drift_sinifi=_sinif, drift_neden=_neden)
+        # ── Ö-53/D: KİTAP AYNANIN ADEDİNİ BENİMSER ── (operatör kararı 2026-08-22)
+        # GİRİNTİ BİLEREK BİR SEVİYE DIŞARIDA: yukarıdaki `%25` bir ALARM eşiğidir, ayrışma
+        # eşiği DEĞİL. Ölçüldü: BDX %7 · CRM %12 · MRK %14 üçü de eşiğin altında kalıp SESSİZCE
+        # ayrışıyordu. Benimseme eşiğe bağlansaydı D bu üçünü hiç görmezdi.
+        # SIRA DA BİLEREK: sınıflandırma+alarm ÖNCE koşar (mevcut davranış bir bayt değişmedi),
+        # benimseme SONRA — yani "neden ayrıştı" kaydı, düzeltmeden ÖNCE deftere düşer.
+        _yeni_adet = _adet_benimse(broker, sym, qty, aq, dstr, out, sinif=_sinif)
+        if _yeni_adet is not None:
+            qty = _yeni_adet
     # engine-orphans vs true externals: a bracket the ENGINE submitted (client_order_id 'P-…') can fill
     # on Alpaca after the internal side dropped its plan (breaker day, slot race, gap guard) — that is
     # split-brain and must ALARM, not hide under 'external' with the operator's own holdings (audit #14).

@@ -251,16 +251,36 @@ def test_k5_makbuz_bes_alan_eq_now_dali(ayna):
     # aynanın FİİLEN boyutlandığı sayı hiç kayıtlı değildi ve yedi pozisyondaki adet sapması
     # kayıttan açıklanamıyordu. Tam-küme iddiası KORUNUYOR (alan sızması hâlâ kırar); genişletme
     # bu satırı bilerek değiştirmeyi gerektirdi — kapının amacı tam olarak bu.
-    assert set(mk) == {"eq_kaynak", "eq_now", "eq_ayna", "peak", "size_mult", "kitap_rev"}, \
-        f"makbuz 6 alanla yazılmadı: {sorted(mk)}"
-    # İKİ TABAN AYRI SAYI TAŞIR: fikstürde broker 100.000, kitap 95.000. Eşit çıkarlarsa makbuz
-    # aynı sayıyı iki kez yazıyor demektir ve sapmayı açıklama gücü SIFIRDIR.
-    assert mk["eq_ayna"] == 100_000.0, "eq_ayna aynanın (broker hesabının) tabanını taşımıyor"
-    assert mk["eq_ayna"] != mk["eq_now"], "iki taban aynı sayıya çökmüş — makbuz sapmayı açıklayamaz"
+    # YEDİ ALAN (2026-08-22, Ö-53/B). Makbuz ÜÇ tabanı da taşır: kitabınki · broker'ınki ·
+    # FİİLEN KULLANILAN. Üçüncüsü olmadan guard'ın bağlayıp bağlamadığı kayıttan çıkarılamaz.
+    # Tam-küme iddiası KORUNUYOR (alan sızması hâlâ kırar).
+    assert set(mk) == {"eq_kaynak", "eq_now", "eq_broker", "eq_ayna",
+                       "peak", "size_mult", "kitap_rev"}, f"makbuz 7 alanla yazılmadı: {sorted(mk)}"
+    assert mk["eq_broker"] == 100_000.0, "eq_broker broker hesabının tabanını taşımıyor"
+    # B: ayna KİTABIN tabanıyla boyutlanır. Fikstürde kitap (95.000) broker'dan (100.000) DÜŞÜK,
+    # yani guard BAĞLAMAZ ve kullanılan taban kitabınkidir.
+    assert mk["eq_ayna"] == 95_000.0 == mk["eq_now"], \
+        "kitap tabanı broker'dan düşükken ayna yine de broker'ınkiyle boyutlanmış — B uygulanmamış"
     assert mk["eq_kaynak"] == "eq_now"
     assert mk["eq_now"] == 95_000.0 and mk["peak"] == 100_000.0
     assert mk["size_mult"] == round(derisk_mult(95_000.0, 100_000.0), 4)   # 0,6 — %5 düşüşün çarpanı
     assert isinstance(mk["kitap_rev"], int)
+
+
+def test_k5_broker_tavani_BAGLAYINCA(ayna, monkeypatch):
+    """GUARD (Ö-53/B): kitap equity'si broker'ınkini AŞARSA emir broker'ın parasını aşardı.
+    O hâlde kullanılan taban BROKER'ınki olur ve makbuz bunu GÖSTERİR — `eq_ayna != eq_now`
+    tam olarak "guard bağladı" demektir ve `ayna_taban` sapma sınıfı da yalnız o an konuşur.
+    Ölçüldü (2026-08-22): kitap tabanı broker'ınkini +%6,5'e kadar aşabiliyor."""
+    monkeypatch.setattr(alpaca, "account", lambda: {"equity": "90000"})   # broker DÜŞÜK
+    meta = {"armed": [{"id": "P-G", "ticker": "T9", "entry_trigger": 10.0}],
+            "peak_equity": 100_000.0}
+    out = loop.mirror_submit_armed(meta, "2026-08-02", eq_now=95_000.0, halted=False)
+    assert out["ok"] is True
+    mk = meta["size_law"]["P-G"]
+    assert mk["eq_now"] == 95_000.0 and mk["eq_broker"] == 90_000.0
+    assert mk["eq_ayna"] == 90_000.0, \
+        "kitap broker'dan YÜKSEKKEN tavan bağlamamış — emir broker'ın parasını aşardı"
 
 
 def test_k5_makbuz_nabiz_dali(ayna):
