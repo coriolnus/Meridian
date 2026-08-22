@@ -28,6 +28,17 @@ k_registry: {registered_at: "2026-07-31T01:0x", trial_ids: [e1_grid/a_mkt, e1_gr
 # K += 1 (2026-08-07, R2): `ref_limitsiz` kart-DIŞI referans koldu; İŞLETİM NOKTASINA terfi
 # ettirilince bir KARAR olur ve K defterine girer. Grid hücresi eklenmedi, referans terfi etti.
 status: measured   # 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
+gap_ekseni_kapanisi_2026_08_22: >
+  ROL-1 KAYIT-DÜŞME (23f kapanışı; kanıt: docs/TASARIM-23E-23F-13-2026-08-22.md §2).
+  Grid'in `gap_davranisi` ekseni (K+=2 harcanmış) YAPISAL olarak ölçülemedi: replay
+  `gap_at_submit` geçirmediği sürece mkt↔cancel bayt-özdeş çıkar (kod beyanı broker.py —
+  bayrak yürürlük tanımıyla totolojik: E2'de gap 29/30, ayna gönderimlerinde 15/15).
+  ANLAMLI tanımla ("bar tetiğin üstünde açtı") soru ZATEN KANONİK ÖLÇÜLMÜŞ (ARASTIRMA-SLIPAJ
+  §B.1/§C.3, n=885): cancel işlemlerin %51,07'sini (452/885) keser ve +11.233$ bırakır —
+  defter 20.685→9.452. HÜKÜM: `cancel` ELENİR; yeniden ölçüm İSRAFTIR (ölçülebilir tek tanım
+  ölçülmüş, yürürlük tanımı yapısal-boş). CANLANMA KOŞULU (tek beyanlı yol): tetik tanımı
+  sinyal-kapanışından farklı pivota taşınırsa bayrak gerçek filtreye döner (EV_STOP_LIMIT
+  defterde görünmeye başlar) — o gün bu eksen yeni kartla yeniden açılabilir.
 # HÜKÜM (Rol-1): kill#1 TETİKLENMEDİ (hiçbir hücre dolmama>%40 değil; A 0,347 · B 0,165 · C 0,096).
 # ANA BULGU: limit-bacağı geriye-dönük defterde MONOTON ZARARLI — net$ A −7.202 · B −1.182 ·
 # C −2.878 · LİMİTSİZ +2.957 (E3-kötümserle de +1.959; iki maliyet modelinde de tek artı kolon).
