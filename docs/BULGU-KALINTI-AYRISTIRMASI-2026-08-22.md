@@ -100,6 +100,12 @@ Sınıf YALNIZ tablonun pes ettiği son dalda konuşur (önceki sınıflar kitab
 açıklar ve daha kesindir), ve `eq_ayna` TAŞIMAYAN eski makbuzları "ayrıştı" saymaz — alan
 yokluğu ayrışma değildir.
 
+⚠ **İLERİYE DÖNÜK, GERİYE DEĞİL.** Bugün canlıda açık olan yedi pozisyonun makbuzları bu alanı
+TAŞIMIYOR; teşhis onlar için `olculemedi` demeye devam edecek. Geriye dönük doldurmak, gönderim
+anındaki broker equity'sini bugünden TAHMİN etmek olurdu — yani tam olarak UYDURMA. Sınıf
+bundan sonra açılan pozisyonlarda konuşur. Bugünkü yedi pozisyonun sebebi zaten bu belgede
+ölçümle yazılı; eksik olan tekrarlanabilir OTOMATİK teşhisti ve o kapandı.
+
 **HÂLÂ AÇIK — POLİTİKA SORUSU (operatörde).** Teşhis kapandı, KARAR kapanmadı: iki defterin
 farklı tabanlara göre boyutlanması SÜRSÜN MÜ. Sürerse adetler ayrışmaya devam eder ve köprüde
 kalıcı bir kalıntı üretir; tek tabana geçmek ise hangi tabanın doğru olduğu sorusunu açar
