@@ -855,16 +855,22 @@ function mutabakatSatirlari(today) {
   // ── Ö-52: defter teyidi — "canlı" damgalı işlemlerin kaçı GERÇEKTEN broker'da ──────────────
   // `karsiliksiz > 0` panoda kırmızıdır: kitap, broker'da hiç var olmamış işlem taşıyor demektir
   // (ALL/VLO vakası). `olculemedi` ayrı görünür — "bakılamadı" ile "yok" karışmaz.
+  // `|| 0` BİLEREK YOK (v196 yasası: null = ölçülemedi ≠ 0): `teyit_counts` dört anahtarı da
+  // HER ZAMAN üretir; eksikse yük biçimsizdir ve satır HİÇ çizilmez — eksik alanı 0'a
+  // bulaştırmak "ölçülemedi"yi "temiz" gösterirdi (ilk hâl tam bunu yapıyordu, çırçır yakaladı).
   const dt_ = today.defter_teyit;
-  if (dt_) {
-    const kk = Number(dt_.karsiliksiz || 0), tt = Number(dt_.teyitli || 0), oo = Number(dt_.olculemedi || 0);
-    const ipu = `teyitli ${tt} · karşılıksız ${kk} · ölçülemedi ${oo} · kapsam dışı ${dt_.kapsam_disi ?? 0}`;
-    if (kk > 0)
+  const dtTam = dt_ && [dt_.teyitli, dt_.karsiliksiz, dt_.olculemedi, dt_.kapsam_disi]
+    .every(v => typeof v === "number");
+  if (dtTam) {
+    const kk = dt_.karsiliksiz, tt = dt_.teyitli, oo = dt_.olculemedi;
+    const ipu = `teyitli ${tt} · karşılıksız ${kk} · ölçülemedi ${oo} · kapsam dışı ${dt_.kapsam_disi}`;
+    if (kk > 0) {
       out.push(`<div class="r"><span>Defter teyidi</span><b class="neg" title="${esc(ipu)}">${kk} karşılıksız</b></div>`);
-    else if (oo > 0)
+    } else if (oo > 0) {
       out.push(`<div class="r"><span>Defter teyidi</span><b class="mut" title="${esc(ipu)}">${tt} teyitli · ${oo} ölçülemedi</b></div>`);
-    else if (tt > 0)
+    } else if (tt > 0) {
       out.push(`<div class="r"><span>Defter teyidi</span><b class="pos" title="${esc(ipu)}">tam (${tt})</b></div>`);
+    }
   }
   return out.join("");
 }
