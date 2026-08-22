@@ -48,7 +48,15 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-13T2x", trial_ids: [pending-039-pullback-cikar]}
 
-status: measured   # 2026-08-13 Rol-1 — ölçüldü + hüküm: SİLAHSIZLANMA ÖNERİLİR (kanıt asimetrisiyle); karar operatörün.
+status: measured   # 2026-08-13 Rol-1 hükmü → 2026-08-22 OPERATÖR KARARI: A (UYGULANDI).
+
+operator_karari_2026_08_22: >
+  SEÇENEK A — SİLAHSIZLANDIRILDI. `strategy.ARMED_SETUPS`ten `pullback` çıkarıldı (tek satır +
+  karar yorumu; çiviler v260, v92 sıra çivisi niyet korunarak arındırıldı). Karar günü ek ölçüm:
+  cf n 21→29 (ort-R −0,885, profil aynen) · 13-22 Ağu arası canlı pullback işlemi 0 (silahlı ama
+  ateşlemiyor — her seans ısı/slot bedeli, karşılıksız). YENİDEN-SİLAHLANMA KAPISI DONUK:
+  cf'de n≥30 VE ort-R CI-alt > 0 → KART-ÖNCE yeniden değerlendirme; doğrudan geri ekleme yasak.
+  Kanıt birikimi yapısal olarak sürüyor (cf_backfill dormant dalı — v260 çivisi bağlar).
 
 verdict:   # Rol-1 hükmü.
   olcum: >

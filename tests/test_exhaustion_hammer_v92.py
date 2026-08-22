@@ -97,7 +97,9 @@ def test_armed_by_operator_2026_08_11():
     kırılırdı. Korunan asıl yasa — "kanıtlı iki kurulum ÖNCE gelir" — aşağıda doğrudan ölçülüyor."""
     assert "exhaustion_hammer" in strat.ARMED_SETUPS, \
         "operatör onayı (2026-08-11) geri alınmış görünüyor — silahlanma bilinçli karardı"
-    assert strat.ARMED_SETUPS.index("exhaustion_hammer") > strat.ARMED_SETUPS.index("pullback") \
+    # 2026-08-22: `pullback` B1 kararıyla silahsızlandı (EDG-2026-039, v260) — sıra zinciri
+    # ondan arındırıldı; çivinin NİYETİ aynen: sonradan silahlanan, öncekilerin ARKASINA eklenir.
+    assert strat.ARMED_SETUPS.index("exhaustion_hammer") \
         > strat.ARMED_SETUPS.index("breakout_vcp"), \
         "öncelik sırası değişti: kanıtlı kurulumlar (breakout_vcp, pullback) önce gelmeli"
     df = _hammer_bars()

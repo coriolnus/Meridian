@@ -1047,7 +1047,16 @@ def evaluate_canslim(bars: pd.DataFrame, params: dict, rs_rating_value: int,
 # ancak breakout_vcp, pullback ve exhaustion_hammer ateşlemediyse aday üretir. Bu, final-paket koşumunun ölçtüğü
 # önceliğin birebir aynısıdır (`ARMED_SETUPS + extra` → extra her zaman sonda).
 # episodic_pivot (ve pead/canslim) DORMANT KALIR — onay yalnız momentum_burst içindi.
-ARMED_SETUPS = ("breakout_vcp", "pullback", "exhaustion_hammer", "momentum_burst")
+# PULLBACK SİLAHSIZ (B1 operatör kararı 2026-08-22; kart EDG-2026-039, hüküm: KANIT ASİMETRİSİ).
+# Zarar üç bağımsız kaynakta tutarlıydı: replay n=6 kazanma %0 (ort-R −0,787) · canlı n=4 −1,00R ·
+# cf n=29 −0,885R (karar günü). Çıkarmanın faydası kanıtsız (ΔP&L +3.121$ ama CI 0-içi, tek işlem
+# domine) AMA zararı da yok; silahlı tutmak her seans ısı/slot/sermaye yerken kanıt üretmiyordu
+# (13-22 Ağu: 0 canlı işlem). Kanıt birikimi DURMAZ: cf_backfill'in dormant dalı silahsız
+# kurulumu `dormant_setup` damgasıyla taramaya devam eder (çivi: v260).
+# YENİDEN-SİLAHLANMA KAPISI (kartın önerdiği eşik, karar gereği DONUK): cf'de n≥30 VE ort-R
+# CI-alt > 0 olursa KART-ÖNCE yeniden değerlendirme açılır — doğrudan geri ekleme YASAK.
+# Sıra disiplini korunur: sonradan silahlanan, mevcutların ARKASINA eklenir (v92).
+ARMED_SETUPS = ("breakout_vcp", "exhaustion_hammer", "momentum_burst")
 
 
 def relax_for_near_miss(eff: dict) -> dict:
