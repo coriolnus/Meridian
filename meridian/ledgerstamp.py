@@ -266,7 +266,7 @@ def _sinir_damgadan(rows: list[dict]) -> tuple[str | None, dict]:
                     "ts_olculemeyen": n - olculebilen}
 
 
-def seed_boundary(rows: list[dict] | None = None) -> dict:
+def seed_boundary(rows: list[dict] | None = None, eq: dict | None = None) -> dict:
     """TOHUM PENCERESİNİN SINIRI — DONMUŞ kanıttan, tahminsiz.
 
     ÜÇ YOL, SIRAYLA (modül başlığındaki onarım gerekçesi):
@@ -283,8 +283,10 @@ def seed_boundary(rows: list[dict] | None = None) -> dict:
     donduruyordu). Kadanslı yazar (bacak-2) bu alanı her seans ileri taşır; `replay_end`i TAŞIMAZ.
 
     `rows` verilirse defter yeniden okunmaz (çağıran zaten elinde tutuyorsa — `_migrate_locked`
-    kilidin içinde tam olarak bunu yapar); verilmezse diskten okunur."""
-    eq = store.read_json(EQUITY, None)
+    kilidin içinde tam olarak bunu yapar); verilmezse diskten okunur. `eq` de aynı sözleşme
+    (v264): eğri zarfını elinde tutan çağıran (`/api/performance` beyanı) onu verir ve zarf
+    İKİNCİ kez okunmaz — aynı istekte iki okuma anı, iki farklı eğri demek olabilirdi."""
+    eq = store.read_json(EQUITY, None) if eq is None else eq
     pts = (eq or {}).get("points") or []
     egri_son = _tarih(pts[-1]) if pts else None
     d_reset, m_reset = _sinir_reset_isaretinden(eq)

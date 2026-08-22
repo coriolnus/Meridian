@@ -19,7 +19,8 @@ teslimi/kapsama dahil), `integrity_report`, `alarm_budget`, `intraday_stamp_repo
 `monotonicity_report`, `ownership_report`, `koruma_report`/`check_koruma_and_alarm` (korumasız
 pozisyon → NAKED_POSITION), `kitap_damga_report`, `mutabakat_tazelik_report`,
 `onayli_gonderim_report` (onaylı plan gönderilmedi bekçisi), `liveness_report`,
-`universe_audit_report`, `uyuyan_iddia_tara`.
+`universe_audit_report`, `eod_supurme_report`/`check_eod_supurme_and_alarm` (EOD süpürme
+kanıtı — A4), `uyuyan_iddia_tara`.
 
 DEĞİŞMEZLER. Bekçi YALNIZ GÖZLEMdir: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı
 etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazılamazsa sessiz kalınmaz
@@ -350,6 +351,14 @@ def check_and_alarm() -> None:
         obs.warn("evren_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="evren denetimi bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
                         "'evren sapması yok' sayılmaz")
+    # A4 EOD SÜPÜRME KANITI: risk kalemi (bayat GTC girişi sonraki seansa taşınabilir), bu
+    # poll'un kadansında ve KENDİ try'ında — akranlarıyla aynı yalıtım disiplini.
+    try:
+        check_eod_supurme_and_alarm()
+    except Exception as e:
+        obs.warn("eod_supurme_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
+                 detail="EOD süpürme kanıt bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
+                        "'süpürme koştu' sayılmaz")
 
 
 # =============================================================================================
@@ -3458,4 +3467,169 @@ def check_universe_and_alarm() -> dict:
                       kind="universe_drift", olculemedi=True, reason=rep.get("reason"))
     _UNIVERSE_ALARMED.clear()
     _UNIVERSE_ALARMED.update(simdi)
+    return rep
+
+
+# =============================================================================================
+# EOD SÜPÜRME KANITI BEKÇİSİ (WP2 · denetim A4 — "davranış var, KAYIT yok" sınıfı)
+#
+# KÖK: v220+v221 koruma×süpürücü kök düzeltmesinin kapanış maddesi "davranışsal EOD kanıtı
+# Pazartesi 13:30 UTC sonrası ilk gerçek süpürmede" diye söz verdi; o Pazartesi (2026-08-10)
+# geçti, KAYIT hiç doğmadı (ROADMAP :503). Ölçüm (research/olcumler/wp2_eod_supurme_2026-08-22,
+# canlı, salt-okuma): davranış ASLINDA VAR — son 10 işlenen seansın 10'unda günlük-kadans
+# süpürme olayı defterde (20:31-20:50 UTC), 10'unda da cancelled=0 / koruma sınıfına
+# DOKUNULMAMIŞ (`mirror_cancel_sinif_dokumu` 10/10; broker emir defterinde v220 sonrası tek bir
+# canceled/expired motor emri yok). Eksik olan HÜKÜM YÜZEYİ: hiçbir bekçi "kitabın işlediği son
+# seansın süpürme kanıtı defterde mi" sorusunu sormuyordu — süpürme bir gün sessizce koşmasa
+# (import düşer, paper_available False kalır, obs.log yolu kırılır) bayat GTC girişleri ertesi
+# seansa taşınır ve kimse duymazdı.
+#
+# loop.py'ye DOKUNULMAZ (süpürmeyi loop yapar ve olayını kendisi yazar): burada yalnız olay
+# defteri + kitap seansı OKUNUR ve hüküm {kosdu, n, son_tarih, olculemedi_neden} olarak kurulur.
+# Okuyucu (YASA 6): `check_and_alarm` zinciri — pano bağlama işi ayrı kalemdir (v261 deseni),
+# alarm satırı bugünden operatöre ulaşır. Jeton `MECHANISM_STALE`: "mekanizmanın koştuğu
+# kanıtlanamıyor" bu jetonun tam tanımıdır (liveness/mutabakat akranlarıyla aynı gerekçe;
+# NOTIFY_TOKENS yeni ALARM_* sabiti kabul etmez — KORUMASIZ-ödünç dersi).
+# =============================================================================================
+
+# Yedekler BEYANLIDIR; asıl kaynak motorun/adaptörün kendi sabitidir (`_kapsama_penceresi`
+# deseni). Drift çivisi tests/test_eod_supurme_kaniti_v265.py'de: yedek ile kaynak ayrışamaz.
+EOD_SUPURME_OLAY_YEDEK = "mirror_stale_entries_cancelled"   # asıl: loop.EV_STALE_ENTRIES_CANCELLED
+EOD_SUPURME_DOKUM_YEDEK = "mirror_cancel_sinif_dokumu"      # asıl: adapters.alpaca.EV_SUPURME_SINIFLARI
+
+_EOD_SUPURME_ALARMED: set = set()   # mandal süreç-içi (koruma/mutabakat bekçileriyle aynı gerekçe)
+
+
+def _eod_supurme_olay_adlari() -> tuple[str, str]:
+    """Süpürme olay adları — motorun/adaptörün KENDİ sabitlerinden, beyanlı yedekle.
+
+    YASA 4: okuma düşerse sessiz kalınmaz — bekçi yedek adla hüküm vermeye devam eder ve bunu
+    duyurur (adı ölçemeyen bir bekçi, sessizce yanlış adı arayan bir bekçiden iyidir)."""
+    kadans, dokum = EOD_SUPURME_OLAY_YEDEK, EOD_SUPURME_DOKUM_YEDEK
+    try:
+        from . import loop as _lp
+        kadans = str(getattr(_lp, "EV_STALE_ENTRIES_CANCELLED", kadans))
+    except Exception as e:
+        from . import obs
+        obs.warn("eod_supurme_olay_adi_okunamadi", error=f"{type(e).__name__}: {e}",
+                 detail="loop.EV_STALE_ENTRIES_CANCELLED okunamadı — bekçi watchdog'daki beyanlı "
+                        "yedek olay adıyla hüküm veriyor (drift çivisi v265 testinde)")
+    try:
+        from .adapters import alpaca as _alp
+        dokum = str(getattr(_alp, "EV_SUPURME_SINIFLARI", dokum))
+    except Exception as e:
+        from . import obs
+        obs.warn("eod_supurme_dokum_adi_okunamadi", error=f"{type(e).__name__}: {e}",
+                 detail="alpaca.EV_SUPURME_SINIFLARI okunamadı — bekçi watchdog'daki beyanlı "
+                        "yedek olay adıyla hüküm veriyor (drift çivisi v265 testinde)")
+    return kadans, dokum
+
+
+def eod_supurme_report(olaylar: list[dict] | None = None) -> dict:
+    """A4 kanıt hükmü: kitabın işlediği SON seansın EOD süpürme olayı defterde mi?
+
+    DÖRT HÂL (mutabakat bekçisinin üç-hâl disiplini + bilgi hâli):
+      * `kapsam_disi`       — BROKER != alpaca_paper: ayna yok, süpürme diye bir şey yok.
+      * `kosdu=None` + `olculemedi_neden` — olay defteri OKUNAMADI: 'süpürüldü' DEMEZ (alarm).
+      * `kosdu=None` + `beklenir=False`   — kitap hiç seans işlememiş: hüküm referanssız (bilgi).
+      * `kosdu=True/False`  — kanıt son kitap seansında VAR / YOK. Seans kıyası asıl ölçüdür
+        (ISO metin kıyası): duvar saati değil, çünkü hafta sonu/uzun tatil bayatlığı süpürme
+        arızası değildir (mutabakat bekçisindeki gerekçenin aynısı).
+
+    `n` = son süpürme seansında iptal edilen emir TOPLAMI ("süpürme koştu ve N emri süpürdü" —
+    A4'ün istediği cümlenin N'i); `kept`/`foreign` son olayın anlık envanter fotoğrafıdır,
+    TOPLANMAZ (iki olayda aynı duran emri iki kez saymak uydurma sayı üretirdi). Süpürme hiç
+    yoksa/ölçülemediyse n=None ≠ 0 (v196). `koruma_dokumu` en taze sınıf-döküm olayını taşır:
+    "süpürücü korumayla karşılaştı ve DOKUNMADI" kanıtının satırı."""
+    out = {"kosdu": None, "n": None, "son_tarih": None, "son_ts": None,
+           "kept": None, "foreign": None, "kitap_seansi": None, "seans_gerisinde": False,
+           "beklenir": None, "koruma_dokumu": None, "olculemedi_neden": None,
+           "kapsam_disi": False, "neden": ""}
+    from . import config as _cfg
+    if getattr(_cfg, "BROKER", "internal") != "alpaca_paper":
+        return {**out, "kapsam_disi": True, "beklenir": False,
+                "neden": f"broker={getattr(_cfg, 'BROKER', '?')} — EOD süpürmesi yalnız "
+                         f"alpaca_paper aynasında var"}
+    olay_kadans, olay_dokum = _eod_supurme_olay_adlari()
+    try:
+        rows = _olay_satirlari(olaylar=olaylar)
+    except Exception as e:
+        return {**out, "olculemedi_neden": f"olay defteri okunamadı: {type(e).__name__}: {e}",
+                "neden": "süpürme kanıtı ÖLÇÜLEMEDİ — 'süpürme koştu' sayılMAZ"}
+    kadans = [r for r in rows if r.get("event") == olay_kadans]
+    dokumlar = [r for r in rows if r.get("event") == olay_dokum]
+    if dokumlar:
+        d = max(dokumlar, key=lambda r: str(r.get("ts") or ""))
+        out["koruma_dokumu"] = {"ts": d.get("ts"), "giris": d.get("giris"),
+                                "koruma": d.get("koruma"), "yabanci": d.get("yabanci"),
+                                "cancelled": d.get("cancelled")}
+    pf = store.read_json("portfolio.json", {}) or {}
+    bs = pf.get("last_date")
+    out["kitap_seansi"] = bs
+    if kadans:
+        son_tarih = max(str(r.get("date") or "") for r in kadans) or None
+        out["son_tarih"] = son_tarih
+        gunun = [r for r in kadans if str(r.get("date") or "") == son_tarih]
+        son = max(gunun, key=lambda r: str(r.get("ts") or ""))
+        out["son_ts"] = son.get("ts")
+        try:
+            out["n"] = sum(int(r.get("cancelled") or 0) for r in gunun)
+            out["kept"] = None if son.get("kept") is None else int(son.get("kept"))
+            out["foreign"] = None if son.get("foreign") is None else int(son.get("foreign"))
+        except (TypeError, ValueError):  # sessiz-yutma: sayı alanı biçimsizse None kalır ve None "ölçülemedi" beyanıdır (v196) — hüküm (kosdu) tarih kıyasından bağımsız kurulur, sayı uydurulmaz
+            pass
+    if not bs:
+        return {**out, "beklenir": False,
+                "neden": "kitap hiç seans işlememiş (portfolio.last_date yok) — süpürme hükmü "
+                         "referanssız; bu bir arıza beyanı değil bilgidir (kitap yokluğunun "
+                         "bekçileri ayrı: kitap_damga/mutabakat)"}
+    out["beklenir"] = True
+    if not kadans:
+        return {**out, "kosdu": False,
+                "neden": (f"kitap {bs} seansını işledi ama olay defterinde TEK BİR günlük-kadans "
+                          f"süpürme olayı ({olay_kadans}) yok — 'süpürme koştu' KANITSIZ")}
+    out["seans_gerisinde"] = bool(out["son_tarih"] and str(out["son_tarih"]) < str(bs))
+    if out["seans_gerisinde"]:
+        return {**out, "kosdu": False,
+                "neden": (f"son süpürme kanıtı {out['son_tarih']} seansından, kitap {bs} seansını "
+                          f"işledi — o seansın EOD süpürmesi ya koşmadı ya kayıtsız kaldı; bayat "
+                          f"GTC giriş emri sonraki seansa taşınmış olabilir")}
+    return {**out, "kosdu": True,
+            "neden": (f"süpürme koştu ve {out['n']} emri süpürdü ({out['son_tarih']}, "
+                      f"kept={out['kept']}, foreign={out['foreign']}) — davranışsal EOD kanıtı "
+                      f"defterde")}
+
+
+def check_eod_supurme_and_alarm() -> dict:
+    """A4 alarm geçişi — kanıt kaybı/ölçülemezlik başına BİR alarm (mandal, `MECHANISM_STALE`).
+
+    İHLAL jetonu kitap seansıyla anahtarlanır: yeni seansın kanıt kaybı YENİ olgudur (aynı
+    seansın kaybı ikinci kez anlatılmaz). Temiz/bilgi/kapsam-dışı hâlleri mandalı düşürür."""
+    from . import obs
+    rep = eod_supurme_report()
+    if rep.get("kapsam_disi"):
+        _EOD_SUPURME_ALARMED.clear()
+        return rep
+    simdi = set()
+    if rep.get("olculemedi_neden"):
+        tok = "eod_supurme_olculemedi"
+        simdi.add(tok)
+        if tok not in _EOD_SUPURME_ALARMED:
+            obs.alarm("MECHANISM_STALE",
+                      f"EOD SÜPÜRME KANITI ÖLÇÜLEMEDİ: {rep.get('olculemedi_neden')}",
+                      kind="eod_supurme_kaniti", olculemedi=True)
+    elif rep.get("kosdu") is False:
+        tok = "eod_supurme_kanitsiz:" + str(rep.get("kitap_seansi"))
+        simdi.add(tok)
+        if tok not in _EOD_SUPURME_ALARMED:
+            dokum = rep.get("koruma_dokumu") or {}
+            obs.alarm("MECHANISM_STALE",
+                      f"EOD SÜPÜRME KANITI YOK: {rep.get('neden')}",
+                      kind="eod_supurme_kaniti", kitap_seansi=rep.get("kitap_seansi"),
+                      son_tarih=rep.get("son_tarih"), son_ts=rep.get("son_ts"),
+                      n=rep.get("n"), kept=rep.get("kept"), foreign=rep.get("foreign"),
+                      seans_gerisinde=rep.get("seans_gerisinde"),
+                      dokum_koruma=dokum.get("koruma"), dokum_ts=dokum.get("ts"))
+    _EOD_SUPURME_ALARMED.clear()
+    _EOD_SUPURME_ALARMED.update(simdi)
     return rep

@@ -1,0 +1,260 @@
+{
+  "kaynak": "canli_ham.json",
+  "cekim_zamani": "2026-08-22T18:31:10+00:00",
+  "kitap_son_seans": "2026-08-21",
+  "son10_islenen_seans": [
+    {
+      "seans": "2026-08-10",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0,
+      "ts": [
+        "2026-08-10T20:50:08+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-11",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0,
+      "ts": [
+        "2026-08-11T20:33:01+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-12",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0,
+      "ts": [
+        "2026-08-12T20:44:37+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-13",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0,
+      "ts": [
+        "2026-08-13T20:36:48+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-14",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 2,
+      "ts": [
+        "2026-08-14T20:31:08+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-17",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 3,
+      "ts": [
+        "2026-08-17T20:39:44+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-18",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 3,
+      "ts": [
+        "2026-08-18T20:43:10+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-19",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 1,
+      "ts": [
+        "2026-08-19T20:32:56+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-20",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 6,
+      "ts": [
+        "2026-08-20T20:34:06+00:00"
+      ]
+    },
+    {
+      "seans": "2026-08-21",
+      "kadans_supurme_kosdu": true,
+      "n_olay": 1,
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 4,
+      "ts": [
+        "2026-08-21T20:31:58+00:00"
+      ]
+    }
+  ],
+  "sayimlar": {
+    "kadans_supurme_toplam_olay": 11,
+    "kadans_kosan_seans": 10,
+    "kadans_kosMAyan_seans": 0,
+    "toplam_cancelled_son10": 0,
+    "halt_breaker_olay": 0,
+    "sinif_dokumu_olay": 10,
+    "cancel_failed_olay": 0
+  },
+  "kadans_tum_gecmis": [
+    {
+      "ts": "2026-08-07T20:32:40+00:00",
+      "date": "2026-08-07",
+      "cancelled": 4,
+      "kept": 0,
+      "foreign": 0
+    },
+    {
+      "ts": "2026-08-10T20:50:08+00:00",
+      "date": "2026-08-10",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0
+    },
+    {
+      "ts": "2026-08-11T20:33:01+00:00",
+      "date": "2026-08-11",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0
+    },
+    {
+      "ts": "2026-08-12T20:44:37+00:00",
+      "date": "2026-08-12",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0
+    },
+    {
+      "ts": "2026-08-13T20:36:48+00:00",
+      "date": "2026-08-13",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 0
+    },
+    {
+      "ts": "2026-08-14T20:31:08+00:00",
+      "date": "2026-08-14",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 2
+    },
+    {
+      "ts": "2026-08-17T20:39:44+00:00",
+      "date": "2026-08-17",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 3
+    },
+    {
+      "ts": "2026-08-18T20:43:10+00:00",
+      "date": "2026-08-18",
+      "cancelled": 0,
+      "kept": 4,
+      "foreign": 3
+    },
+    {
+      "ts": "2026-08-19T20:32:56+00:00",
+      "date": "2026-08-19",
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 1
+    },
+    {
+      "ts": "2026-08-20T20:34:06+00:00",
+      "date": "2026-08-20",
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 6
+    },
+    {
+      "ts": "2026-08-21T20:31:58+00:00",
+      "date": "2026-08-21",
+      "cancelled": 0,
+      "kept": 3,
+      "foreign": 4
+    }
+  ],
+  "v220_sonrasi_ilk_gercek_supurme": [
+    "2026-08-10T20:50:08+00:00",
+    0
+  ],
+  "broker": {
+    "n_pencere_20g": 18,
+    "n_canceled_expired": 5,
+    "n_aksam_19_22_utc": 4,
+    "saat_dagilimi_utc": {
+      "17": 1,
+      "20": 4
+    },
+    "status_dagilimi": {
+      "filled": 13,
+      "canceled": 5
+    },
+    "aksam_ornek": [
+      {
+        "symbol": "NUE",
+        "client_order_id": "P-KORUMA-20260807-1623-NUE",
+        "status": "canceled",
+        "side": "sell",
+        "canceled_at": "2026-08-07T20:32:39.085715Z",
+        "expired_at": null,
+        "filled_qty": "0"
+      },
+      {
+        "symbol": "EMR",
+        "client_order_id": "P-KORUMA-20260807-1623-EMR",
+        "status": "canceled",
+        "side": "sell",
+        "canceled_at": "2026-08-07T20:32:39.394967Z",
+        "expired_at": null,
+        "filled_qty": "0"
+      },
+      {
+        "symbol": "BKNG",
+        "client_order_id": "P-KORUMA-20260807-1623-BKNG",
+        "status": "canceled",
+        "side": "sell",
+        "canceled_at": "2026-08-07T20:32:39.69825Z",
+        "expired_at": null,
+        "filled_qty": "0"
+      },
+      {
+        "symbol": "AMGN",
+        "client_order_id": "P-KORUMA-20260807-1623-AMGN",
+        "status": "canceled",
+        "side": "sell",
+        "canceled_at": "2026-08-07T20:32:40.007217Z",
+        "expired_at": null,
+        "filled_qty": "0"
+      }
+    ]
+  }
+}

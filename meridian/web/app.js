@@ -9242,6 +9242,20 @@ RENDER.karne = async () => {
         return `<div class="mrow">
         ${mc("Yayınlanan", L.shipped, null, alt.shipped)}${mc("Terfi eden", L.promoted, "var(--green)", alt.promoted)}${mc("Geri alınan", L.rolled_back, "var(--red)", alt.rolled_back)}${mc("Ölçülen sonuç", L.outcomes_measured, "var(--amber)", alt.outcomes)}</div>`; })()}
       <p class="hint" style="margin-top:8px">Kalibrasyon: ${L.calibration?.n||0} sonuç · isabet ${L.calibration?.hit_rate!=null?pctf(L.calibration.hit_rate,0):'—'} · sürüm v${String(L.current_version??1).padStart(2,'0')} · zamanlayıcı ${(L0.scheduler||{}).active?'<b class="pos">aktif</b>':'<b class="warn">kapalı</b>'} · son seans ${esc((L0.scheduler||{}).portfolio_last_date||'—')}</p>
+      ${(() => {
+        // ÖLÇÜM ZEMİNİ (YASA 6, v264): `/api/hermes → learning.defter` v245'ten beri sınırın
+        // KAYNAĞINI taşıyordu (analytics.learning_scorecard → ledgerstamp.seed_boundary) ama
+        // panoda OKUYUCUSU yoktu — karne "n işlem" derken kaçının canlı kanıt, kaçının antrenman
+        // tohumu olduğunu ve tohum penceresinin NEREDE bittiğini söylemiyordu. Alan yoksa satır
+        // UYDURULMAZ (beyansızlık adıyla yazılır); `warn` yalnız ayrışma kapısında (v197 yasası:
+        // renk YALNIZ anomalide — sınırın kendisi nötr, iki kanıt yolunun ayrışması anomali).
+        const df = L.defter, sn = (df || {}).sinir || {};
+        if (!df) return `<p class="hint" style="margin-top:4px"><span class="mut">ölçüm zemini beyanı yok — karne ucu defter alanını vermedi (canlı/tohum ayrımı ölçülemedi)</span></p>`;
+        return `<p class="hint" style="margin-top:4px">Ölçüm zemini: canlı <b>${df.gercek_canli_n == null ? "—" : trn(df.gercek_canli_n)}</b> · tohum ${df.replay_seed_n == null ? "—" : trn(df.replay_seed_n)} · belirsiz ${df.belirsiz_n == null ? "—" : trn(df.belirsiz_n)} — ${
+          sn.replay_end == null ? '<span class="mut">tohum sınırı ölçülemedi</span>'
+            : `tohum sınırı <b>${esc(String(sn.replay_end))}</b> (${esc(String(sn.kaynak || "—"))})${
+                sn.yollar_ayrisik ? ' · <span class="warn">iki kanıt yolu ayrışık</span>' : ""}`}</p>`;
+      })()}
       ${regimeTriggerRows(L.regime_budget_triggers, L.status_counts, L.overfit_suspects)}</div>`;
   $("page-karne").innerHTML = bolumBasHTML("karne", "Karne · öğreniyor mu?",
     "Hükmün kendisi: kaç değişiklik yayınlandı, kaçı tuttu, kaçı geri alındı; kâğıt defterin "
@@ -9402,16 +9416,28 @@ function line(pts, b) {
     return `<line x1="${x}" y1="${pad - 8}" x2="${x}" y2="${H - pad}" stroke="var(--tx2)" stroke-width="1" stroke-dasharray="5 3"/>
       <text x="${sag ? x - 4 : +x + 4}" y="${pad + 2}" text-anchor="${sag ? "end" : "start"}" fill="var(--tx2)" font-size="10">sermaye reset · ${esc(String(m.tarih || "").slice(0, 10))}</text>`;
   }).join("");
+  // ---- TOHUM → CANLI SINIRI (v264) -----------------------------------------------------------
+  // Reset işaretiyle AYNI mekanik: indis SUNUCUDAN gelir (`beyan.tohum_siniri.i`), null ise
+  // ÇİZİLMEZ — yer uydurulmaz; şerit sınırı yine listeler ve nedenini yazar. Sınır SON noktadaysa
+  // sağında canlı nokta yoktur: çizgi eğrinin dışına düşerdi, çizilmez (o hâli şerit söylüyor).
+  // Renk NÖTR (var(--tx2)) ve desen resetten farklı (noktalı): iki kırılma türü karışmasın.
+  const sinB = bo.tohum_siniri || null;
+  const sinIsaret = (sinB && sinB.i != null && sinB.i < pts.length - 1) ? (() => {
+    const x = sx(sinB.i + 0.5).toFixed(1), sag = sinB.i > pts.length * 0.75;
+    return `<line x1="${x}" y1="${pad - 8}" x2="${x}" y2="${H - pad}" stroke="var(--tx2)" stroke-width="1" stroke-dasharray="1 4"><title>tohum (antrenman) penceresi ${esc(String(sinB.replay_end || ""))} tarihinde biter — sağı kadanslı yazarın canlı noktaları</title></line>
+      <text x="${sag ? x - 4 : +x + 4}" y="${H - pad - 4}" text-anchor="${sag ? "end" : "start"}" fill="var(--tx2)" font-size="10">tohum → canlı · ${esc(String(sinB.replay_end || "").slice(0, 10))}</text>`;
+  })() : "";
   // ARIA ETİKETİ DE BEYANI TAŞIR: ekran okuyucuya "şu iki uç arasında bir çizgi" demek, tam da
   // gizlenen olguyu (donukluk + kırılma) gizlemenin sesli hâli olurdu.
   const aria = `Para eğrisi: ${money(pts[0][1])} (${esc(pts[0][0])}) → ${money(pts[pts.length-1][1])} (${esc(pts[pts.length-1][0])})`
     + (bo.n_isaret ? `. ${bo.n_isaret} sermaye reset işareti` : "")
     + (bo.n_bosluk ? `. ${bo.n_bosluk} boşluk` : "")
+    + (sinB && sinB.replay_end ? `. Tohum penceresi ${esc(String(sinB.replay_end))} tarihinde biter` : "")
     + (bo.gecikme_gun ? `. Son nokta kitabın son seansından ${bo.gecikme_gun} gün geride` : "");
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="${esc(aria)}">
     <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
     <path d="${area}" fill="url(#eg)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-    ${bosIsaret}${resIsaret}
+    ${bosIsaret}${resIsaret}${sinIsaret}
     <text x="${pad}" y="16" fill="var(--tx2)" font-size="11">${money(pts[0][1])} · ${esc(pts[0][0])}</text>
     <text x="${W - pad}" y="16" text-anchor="end" fill="var(--green)" font-size="11">${money(pts[pts.length - 1][1])} · ${esc(pts[pts.length - 1][0])}</text></svg>`;
 }
@@ -9479,6 +9505,31 @@ function egriBeyani(b) {
       m.id ? ` · <code>${esc(m.id)}</code>` : ""}${
       m.konum_neden ? ` · <span class="mut">${esc(m.konum_neden)}</span>` : ""}`);
   });
+  // ④b TOHUM SINIRI (v264): DÖRDÜNCÜ pencere — serinin hangi kısmı antrenman tohumu
+  //    (`replay_seed`, survivorship'li training), hangisi kadanslı yazarın CANLI noktaları.
+  //    Hesap SUNUCUDA (`ledgerstamp.seed_boundary` → beyanın `tohum_siniri` bloğu); pano ikinci
+  //    bir sınır yasası KURMAZ. ÜÇ HÂL AYRI: beyan yok (uç vermedi) ≠ ölçülemedi (kaynak yok)
+  //    ≠ ölçüldü — ilk ikisi "sınır sağlam" diye OKUNMAZ. Satırın kendisi NÖTRDÜR (tohum
+  //    bilinçli bir kurulumdur, arıza değil — ④'ün reset-nötrlüğü gerekçesinin aynısı); `warn`
+  //    YALNIZ ayrışma kapısının içindedir: iki kanıt yolu (reset işareti ↔ damga) farklı tarih
+  //    söylüyorsa bu ÖLÇÜLMÜŞ bir anomalidir (ROADMAP §2-37; otorite kararı Rol-1'de — bu satır
+  //    karar vermez, donmuş yolun esas kaldığını beyan eder).
+  const sin = b.tohum_siniri;
+  if (!sin) {
+    p.push(`<span class="mut">tohum sınırı beyanı yok — uç vermedi (sınır "sağlam" DEĞİL, ölçüm yok)</span>`);
+  } else if (sin.replay_end == null) {
+    p.push(`<span class="mut">tohum sınırı ölçülemedi — kaynak: ${esc(String(sin.kaynak || "yok"))}</span>`);
+  } else {
+    p.push(`tohum (antrenman) penceresi <b>${esc(String(sin.replay_end))}</b> tarihinde biter · kaynak ${
+      esc(String(sin.kaynak || "—"))} (güven ${esc(String(sin.guven || "—"))})${
+      sin.i != null && sin.i === b.n_nokta - 1 ? " · sınırdan sonra canlı nokta yok" : ""}${
+      sin.konum_neden ? ' · <span class="mut">' + esc(sin.konum_neden) + "</span>" : ""}`);
+  }
+  if (sin && sin.yollar_ayrisik) {
+    p.push(`<span class="warn">sınırın iki kanıt yolu AYRIŞIK</span> — reset işareti ${
+      esc(String((sin.yollar || {})["reset_isareti"] || "—"))} ↔ damga ${
+      esc(String((sin.yollar || {})["trades.kaynak"] || "—"))} · DONMUŞ olan esas alınır (otorite kararı Rol-1'de, ROADMAP §2-37)`);
+  }
   // ⑤ SON YAZIM MAKBUZU: gece nokta kondu mu, konmadıysa NEDEN (uydurma sessizlik yok).
   const y = b.son_yazim;
   if (!y) p.push(`<span class="mut">son yazım makbuzu yok — döngü kaydı bu alanı taşımıyor (yazılmadı DEĞİL: ölçülemedi)</span>`);

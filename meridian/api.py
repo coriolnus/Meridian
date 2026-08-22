@@ -2286,12 +2286,14 @@ _EGRI_BOSLUK_ESIK_GUN = 5
 _EGRI_BOSLUK_TAVAN = 24
 
 
-def _egri_beyani(ec: dict | None, pf: dict | None) -> dict:
+def _egri_beyani(ec: dict | None, pf: dict | None, sinir: dict | None = None) -> dict:
     """Pano eğrisinin PENCERE BEYANI: hangi seri, hangi tabanda, ne kadar geride, nerede kırık.
 
     Girdiler ÇAĞIRANIN ELİNDEKİ okumalardır (`equity_curve.json` zarfı + `portfolio.json`) — bu
     fonksiyon hiçbir dosyayı ikinci kez okumaz. Tek istisnası `_son_dongu()`dur ve o da olay
-    defterinin damgasına göre ÖNBELLEKLİdir."""
+    defterinin damgasına göre ÖNBELLEKLİdir. `sinir` da aynı yasanın gereğidir (v264): tohum
+    penceresinin sınırı BURADA HESAPLANMAZ — çağıran onu `ledgerstamp.seed_boundary(rows, eq=…)`
+    ile elindeki okumalardan hesaplar ve verir; verilmezse beyan None taşır (ölçüm yok ≠ sağlam)."""
     import datetime as _dt
     from . import sermaye as _sr
 
@@ -2369,6 +2371,39 @@ def _egri_beyani(ec: dict | None, pf: dict | None) -> dict:
                             "LİSTELENİR ama grafiğe konumlandırılamaz"),
         })
 
+    # TOHUM SINIRI — DÖRDÜNCÜ PENCERE (WP2-D artığı, v264). Beyan üç pencereyi zaten söylüyordu
+    # (donukluk, delikler, resetler) ama serinin hangi kısmının ANTRENMAN TOHUMU (`replay_seed`,
+    # survivorship'li training) ve hangi kısmının kadanslı yazarın CANLI noktaları olduğunu
+    # söylemiyordu — 882 tohum noktası ile canlı kuyruk TEK çizgide, sınır beyansızdı. Sınırın
+    # yasası `ledgerstamp.seed_boundary`de kalır (TEK hesap; ikincisini kurmak `sermaye.koken`
+    # docstring'indeki "iki hesap" kusurunun aynısı olurdu); burada yalnız GRAFİK İNDİSİ eklenir —
+    # reset işaretleriyle aynı mekanik: indis sunucudan gider, bulunamazsa None + neden (yer
+    # uydurulmaz; damga yolunun tarihi eğri noktasına denk gelmeyebilir ve bu NORMALDİR).
+    # `yollar_ayrisik` OLDUĞU GİBİ taşınır: ROADMAP §2-37'nin ölçtüğü ayrışmanın (reset işareti ↔
+    # damga) panodaki tek görünürlüğü budur; hangi yolun otorite olduğu Rol-1 kararıdır ve bu
+    # blok o kararı VERMEZ — donmuş yolun seçili kaldığını beyan eder.
+    if sinir is None:
+        tohum = None
+    else:
+        _rd = sinir.get("replay_end")
+        _idx = None
+        if _rd is not None:
+            try:
+                _rdt = _dt.date.fromisoformat(str(_rd)[:10])
+                _idx = next((i for i, t, _v in tarihli if t == _rdt), None)
+            except (TypeError, ValueError):  # sessiz-yutma: biçimsiz sınır tarihi konumlanamaz — sınır yine LİSTELENİR, `konum_neden` durumu adıyla taşır; 0. noktaya çivilemek yer uydurmak olurdu
+                _idx = None
+        tohum = {
+            "replay_end": _rd, "kaynak": sinir.get("kaynak"), "guven": sinir.get("guven"),
+            "yollar": sinir.get("yollar"),
+            "yollar_ayrisik": bool(sinir.get("yollar_ayrisik")),
+            "i": _idx,
+            "konum_neden": (None if _idx is not None else
+                            ("tohum sınırı ölçülemedi — grafiğe konum konmaz" if _rd is None else
+                             "sınır tarihi seride bulunamadı (damga yolu eğri noktasına denk "
+                             "gelmeyebilir) — sınır LİSTELENİR ama grafiğe konumlandırılamaz")),
+        }
+
     # SON YAZIM MAKBUZU — kadanslı yazarın kendi hükmü (`loop._persist_equity_point`), olay
     # defterinden `_son_dongu()` ile. Makbuz yoksa None: "yazılmadı" DİYEMEYİZ, ölçemedik.
     sd = _son_dongu()
@@ -2382,6 +2417,7 @@ def _egri_beyani(ec: dict | None, pf: dict | None) -> dict:
         "bosluklar": bosluklar, "en_buyuk_bosluk": en_buyuk,
         "bosluk_kirpildi": bosluk_kirpildi, "bosluk_tavani": _EGRI_BOSLUK_TAVAN,
         "reset_isaretleri": isaretler, "n_isaret": len(isaretler),
+        "tohum_siniri": tohum,
         "son_yazim": son_yazim if isinstance(son_yazim, dict) else None,
         "son_dongu_tarih": (sd or {}).get("date") if isinstance(sd, dict) else None,
         "beyan": ("seri, kitabın BEYANLI sermaye ofseti düşülmüş TEK tabanda çizilir "
@@ -2402,11 +2438,17 @@ def api_performance(request: Request):
     goal = config.goal()
     trades = store.read_jsonl("trades.jsonl")
     _ec = store.read_json("equity_curve.json", {"points": []})
+    # TOHUM SINIRI TEK HESAPTAN (v264): sınır yasası `ledgerstamp.seed_boundary`de; bu uç ona
+    # ELİNDEKİ iki okumayı verir (defter `rows`, zarf `eq`) — aynı istekte ikinci bir okuma anı
+    # doğmaz. /api/hermes'in karnesi (`learning.defter.sinir`) AYNI saf fonksiyonu çağırır.
+    from . import ledgerstamp as _ls
+    _sinir = _ls.seed_boundary(trades, eq=_ec)
     return {
         "equity_curve": _ec,
         # Eğrinin PENCERE BEYANI — hangi seri, ne kadar geride, nerede kırık.
         # Aynı zarftan türetilir (ikinci okuma YOK) ve panonun eğri altı şeridini besler.
-        "equity_curve_beyani": _egri_beyani(_ec, store.read_json("portfolio.json", {})),
+        "equity_curve_beyani": _egri_beyani(_ec, store.read_json("portfolio.json", {}),
+                                            sinir=_sinir),
         "score_detail": analytics.score_mod.score_detail(trades, goal),
         "kelly": analytics.score_mod.kelly_fraction(trades),          # realized-edge sizing ceiling (advisory)
         "tail_risk": analytics.score_mod.tail_risk(trades),           # block-bootstrap VaR/CVaR
