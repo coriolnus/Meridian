@@ -211,7 +211,7 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 | `M2` DSR-yarısı (`Ö-4` aracı) · `M7/M8/M9` · `M11` · `2B/2C/2D/A4` · kill#4 · `20c/20d` · korunum kovası (3) | WP5 | |
 | `26` değer-eşitliği — **kalan 9 çiftin GEREKÇE ENVANTERİ** | WP6 | ⚡ **2026-08-21 YENİDEN ÖLÇÜLDÜ, "26 kapısız çift" BAYAT.** Envanter v245'te yapılmış: **13'ü kaynağında zaten kapanmış · 5'i bağlanmış · 9'u bağlanmamış (her biri NEDENİYLE)**. `watchdog.EQUIVALENT_TRUTHS` bugün tam **9 olgu** taşıyor ve `_divergence_hesapla()` ÖLÇÜLDÜ: **ayrık 0 · eşit 7 · beyanlı-ayrı 2 · ölçülemeyen 0** — yani KAPILI taraf SAĞLAM. GERÇEKTEN AÇIK OLAN: bağlanmayan 9 çiftin gerekçeleri tek bir belgede TOPLANMAMIŞ; "her biri nedeniyle" deniyor ama neden nerede yazılı BİLİNMİYOR. Kalem artık "26 kapı kur" değil **"9 gerekçeyi bul, yazılı hâle getir, hâlâ geçerli mi ölç"**→ **YAPILDI (2026-08-22):** `docs/ENVANTER-DEGER-ESITLIGI-2026-08-22.md` — 26 = 12 kaynağında kapanmış + 5 bağlı + 9 bağlanmamış (gerekçeler yeniden türetildi, yazılı). **5 🔴 ayrık-değer bulgusu AYNI GÜN kapatıldı** (952dd2c) ve bekçiler genişletildi (C10e/C10f · v199 iki yönlü · v239 8a/8b). KALAN AÇIK: ortamlar-arası 3 çift (P0-b/P2 reçetesi belgede) + #11 guard.py okuyucusuz alanı |
 | `25a` KALDIR(14) / `25b` DAMGALA(6) / `25c` DİRİLT(3) / `25d` ezilme zinciri | WP6 | operatör 2026-08-16'da **beklet** dedi |
-| `F9` dagit kapsamı dışı 4 canlı artefakt · `H3` tur-2 seccomp · gözlemlenebilirlik a-e | WP6 | F9'un ajanı 529 ile düştü, hiç yazılmadı |
+| `F9` dagit kapsamı dışı 4 canlı artefakt · `H3` tur-2 seccomp · ~~gözlemlenebilirlik a-e~~ **a-e ✅ 2026-08-23: yedisi de ZATEN KAPALIYMIŞ (bayat-beyan #5; kanıt WP6-D arşiv bloğunda)** | WP6 | F9+H3-hazırlık ajanı uçuşta (2026-08-23); versiyonlu-state adımı da ona devredildi |
 | `Ö-49` çapa/beyan çürümesi kalanı | WP6 | yasa kuruldu, sınıf TAM kapanmadı |
 | operatör bloklarının kimliklendirilmesi (`§5`/A1 → `B-A1`) | WP6 | `Ö-N` ile aynı gerekçe: kimlik konumdan ayrılmalı |
 | `24e` çekimser teşviki · `24f` SKILL.md↔kod bağı · `24g` sprint sızıntısı · skill rozeti | WP7 | 24e "terfinin ASIL duvarı" |
@@ -1050,10 +1050,18 @@ sertleştirme, ölü/ezilen bileşenlerin budanması ve "aynı gerçek iki yerde
   `certifi` beyan-dışı (streamhealth.py:84 opsiyonel import) — beyan kalemi mini-tura verildi.
 - **H9 KADEME-B ✅ ÇEKİRDEK (2026-08-03):** flock kapıya indi (write_json/write_jsonl kilidi
   kendisi alır; write_text eklendi; db_backed dalında bilerek yok — çift-kilit kilitlenmesi;
-  events.jsonl append-only mezar-taşı testli). 14/14 + süreçler-arası flock kanıtı. AÇIK KUYRUK
-  (çağrı-noktası taşıma, ayrı tur): ATOMİK-DEĞİL 4 yol (memory.py:212 lessons.md · run.py:172 ·
-  hermes.py:1965 · skill_evolve.py:170) + fsync'siz/flock'suz kopya-kalıp 7 yol (auth._write
-  ayrıca sabit-tmp-adı — iki süreç çakışır); kapı hazır: store.write_text.
+  events.jsonl append-only mezar-taşı testli). 14/14 + süreçler-arası flock kanıtı.
+  ~~AÇIK KUYRUK (çağrı-noktası taşıma)~~ **✅ KAPANDI — VE SATIR BAYATTI (2026-08-23 ölçüldü,
+  altıncı bayat-beyan vakası):** göçün tamamı Kademe C'de (`e08a436`, 2026-08-09) ZATEN yapılmış —
+  bugünkü AST envanteri: 12 yazım/10 modül kapıdan (memory:241 · run:176 · skill_evolve:194 ·
+  auth:133 [sabit-tmp gitmiş, 0600 korunmuş] · config:392 · earnings:419,500 · sprint_run ·
+  adapters/data:171 · hermes:2889,3042), çıplak yazım SIFIR; bilinçli kapı-dışılar nedenli
+  (secrets fsync'li-elle · reflect kilit-dosyası · api BytesIO · mutation/prescreen sandbox).
+  Bugün eklenen: `tests/test_h9_cagri_noktasi_gocu_v267.py` (envanter-AST çivisi — yarın eklenen
+  kapı-dışı yazımı yakalar + auth._write 2-iplik×20 eşzamanlılık kanıtı + pozitif kontrol 4/4;
+  77 passed). YENİ AÇIK UÇ (XS): `sprint.py:525` ortam dosyası düz write_text + SONRADAN chmod —
+  kısa 0644 sır penceresi; secrets.py'nin fd-önce-0600 desenine çevrilmeli (motor-dosya penceresi:
+  046 inince).
 - **DASH-TOKEN LoadCredential HAZIR-BEKLEMEDE (2026-08-03; etkinleştirme OPERATÖR bakım-penceresi):**
   drop-in'ler deploy/oracle-a1/meridian.service.d/ (faz-1 LoadCredential, faz-2 ortam-kanalı-sıfır)
   + dash_token_credential.sh (rotasyon/kurulum/doğrulama/geri-alma; faz-2 farksal ölçümlü).
@@ -1147,8 +1155,17 @@ Kapı **Ö-20'nin yapısal panzehiridir**; her ekleme tek satır.)_
     `min_sample` yedeği, alarm jetonları, registry-bayrağı↔ARMED_SETUPS…). Her ekleme tek satır.
     *öncelik: yüksek — bugün bulunan split'lerin çoğu bu kapıyla kendiliğinden yakalanırdı.*
 
-#### WP6-D · Gözlemlenebilirlik/dağıtım iyileştirme adayları _(taşındı: Ö-2, eski satır :729-734 — 2026-08-13)_
-2. **Gözlemlenebilirlik/dağıtım iyileştirme adayları (2026-08-02 canlı vaka; tam metin §8 snapshot'ta korunur)** —
+#### WP6-D · Gözlemlenebilirlik/dağıtım iyileştirme adayları ✅ ARŞİV _(taşındı: Ö-2; 2026-08-23 KAPANDI — YEDİ KALEMİN YEDİSİ DE ZATEN KAPALIYMIŞ, beşinci bayat-beyan vakası)_
+_(2026-08-23 ölçümü: a-e + hermes:1965 göçü + CREDENTIALS_DIRECTORY okuyucusu — hepsi 08-02→08-09
+dalgalarında kapanmış [`f713815` açılış senkron-doğrulama `hermes_runtime.py:367` · senkron_ts her
+dönüşte `hermes.py:2849` · kota≠yapılandırmasız ayrı imza sınıfları `hermes.py:1903-1937` ·
+`_agent_budget_refund` üç ağa-çıkmayan yolda iade `hermes.py:1556` · `3142e70`
+candidate_review_empty_parse `hermes.py:3510` · `e08a436` hermes yazımları kapıdan ·
+`3e3a331` `_read_dash_token` CREDENTIALS_DIRECTORY-önce `api.py:191-236`]; adanmış çiviler
+v168/v169/kademe-c/v184 = 69 passed. Tek kalan kuyruk [dagit versiyonlu-state adımı] F9 ajanına
+devredildi. RPD cache-hit bacağı: yüzey YOK — `_agent_call` hattında önbellek kısa-devresi mevcut
+değil, kalem konusuz.)_
+2. ~~**Gözlemlenebilirlik/dağıtım iyileştirme adayları (2026-08-02 canlı vaka; tam metin §8 snapshot'ta korunur)**~~ —
    hermes-CLI kalemleri a-e (servis açılışında senkron-doğrulama · pano senkron-sonuç zaman-damgası ·
    bekçi "kota"≠"yapılandırmasız" ayrımı · RPD bütçesi ağa çıkmayan çağrıyı saymasın ·
    `candidate_review_empty_parse` uyarısı) + dagit versiyonlu-state adımı (diff-göster + onaylı-kopya;
