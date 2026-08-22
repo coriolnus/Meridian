@@ -1538,10 +1538,15 @@ def api_today(request: Request):
         # yedi açık pozisyonun yedisinde de adet ayrışıyordu ve panoda hiçbir izi yoktu.
         # `positions` OKUNAMAZSA `None` gider — `pozisyon_mutabakati` onu "0 ayrışma"ya ÇEVİRMEZ.
         _kpos = {t: (v or {}).get("qty") for t, v in ((_pf or {}).get("positions") or {}).items()}
+        # ADAPTÖR SÖZLEŞMESİ: `positions()` ARIZA hâlinde de `[]` döner (None değil). Taşımaya
+        # bakmadan boş listeyi "broker'da pozisyon yok" diye okumak, broker düştüğü an kitaptaki
+        # HER pozisyonu `yalniz_kitapta` saymak olurdu — yedi sahte ayrışma. `watchdog.koruma_report`
+        # aynı dalı `transport()["ok"]` ile çözüyor; burası da o kapıdan geçer.
+        _tasima_ok = bool((_alp.transport() or {}).get("ok"))
         d["pozisyon_mutabakati"] = _sr.pozisyon_mutabakati(
             kitap_pozisyonlar=(_kpos if (_pf or {}).get("positions") is not None else None),
             broker_pozisyonlar=({x["symbol"]: float(x["qty"]) for x in _bpos}
-                                if _bpos is not None else None))
+                                if (_bpos is not None and _tasima_ok) else None))
         d["broker_mutabakati"] = {
             **_sr.broker_mutabakati(
                 broker_equity=(float(_acct["equity"]) if _acct.get("equity") is not None else None),

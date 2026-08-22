@@ -61,6 +61,7 @@ def test_bos_iki_taraf_OLCULDU_sayilir():
 # Bu bölüm bir BORÇTAN doğdu: `broker_mutabakati` 2026-08-22'de `/api/today`e eklendi ama panoda
 # HİÇ çizilmedi. Yani operatörün "para tutmuyor" sorusunun cevabı üretiliyordu ve operatör onu
 # göremiyordu. Çivi olmadan aynı borç sessizce geri gelir.
+import ast
 import pathlib
 
 APP = pathlib.Path(__file__).resolve().parents[1] / "meridian" / "web" / "app.js"
@@ -85,3 +86,31 @@ def test_pano_olculemedi_ile_ayrisma_yoku_AYIRIYOR():
     assert "ölçülemedi" in govde, "pano ölçülemedi durumunu ayrı GÖSTERMİYOR"
     assert "ayrisan_sayisi" in govde and "== null" in govde, \
         "pano null kontrolü yapmıyor — 0 ile null aynı görünür"
+
+
+def test_cagri_yeri_TASIMA_saglıgını_soruyor():
+    """ADAPTÖR SÖZLEŞMESİ TUZAĞI: `alpaca.positions()` ARIZA hâlinde de `[]` döner (boş liste,
+    None DEĞİL). Çağrı yeri buna bakmadan boş listeyi geçerse `pozisyon_mutabakati` "broker'da hiç
+    pozisyon yok" diye okur ve kitaptaki her pozisyonu `yalniz_kitapta` sayar — broker düştüğünde
+    YEDİ SAHTE AYRIŞMA. `watchdog.koruma_report` bu dalı taşıma sağlığıyla çözüyor; çağrı yeri de
+    aynı kapıdan geçmeli.
+
+    Kusur ÖZ İNCELEMEDE bulundu (2026-08-22): fonksiyonun kendi çivileri sağlamdı, hatalı olan
+    ÇAĞRI YERİYDİ — birim testi geçen kod entegrasyonda yalan söyleyebilir.
+
+    AST İLE, METİNLE DEĞİL: ilk hâli `"transport()" in blok` diyordu ve TOTOLOJİYDİ — aynı metin
+    hemen üstteki YORUMDA geçiyor, yani kod silinince bile çivi yeşil kalıyordu (kasıtlı-kırmızı
+    bunu yakaladı). Şimdi `broker_pozisyonlar` argümanının KENDİ ifadesi sorgulanıyor."""
+    agac = ast.parse(API.read_text(encoding="utf-8"))
+    cagri = next((d for d in ast.walk(agac)
+                  if isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute)
+                  and d.func.attr == "pozisyon_mutabakati"), None)
+    assert cagri is not None, "pozisyon_mutabakati çağrısı bulunamadı — çapa çürüdü"
+    kw = next((k for k in cagri.keywords if k.arg == "broker_pozisyonlar"), None)
+    assert kw is not None, "broker_pozisyonlar adlandırılmış argüman olarak geçmiyor"
+    adlar = {n.id for n in ast.walk(kw.value) if isinstance(n, ast.Name)}
+    cagrilar = {n.func.attr for n in ast.walk(kw.value)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)}
+    assert ("_tasima_ok" in adlar) or ("transport" in cagrilar), (
+        f"broker_pozisyonlar ifadesi taşıma sağlığını SORMUYOR (adlar={sorted(adlar)}) — "
+        f"broker düştüğünde boş liste 'pozisyon yok' diye okunur ve SAHTE ayrışma raporlanır")
