@@ -1,0 +1,107 @@
+card_id: EDG-2026-042
+family: friksiyon_olcumu   # ÖLÇÜM-TANIMI kartı (EXE-007 sınıfı) — edge hipotezi DEĞİL
+thesis: >
+  Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
+  EDG-2026-040 duyarlılığı ölçtü ve başabaş bandını verdi: **5-15 bps/bacak** — slip=15'te
+  benimsenen C+mb paketi NEGATİF (−3.067$, CI sıfırın dışında). Gerçek friksiyonun eldeki tek
+  tahmini ise EDG-037/038'in n=4'lük BETİMLEYİCİ sayısı (medyan +29 bps; resmî damga aynen:
+  "SLİPAJ ÖLÇÜLEMEDİ (n=4 < 10)"). Yani bugün elimizde "sistem X bps'te ölür" bilgisi VAR,
+  "X'in içinde miyiz" bilgisi YOK.
+  n=4'ün kökü ölçüm hatası değil VERİ KITLIĞIYDI: 2026-08-13'te motorun broker'da doldurabildiği
+  tek şey tek seanslık 4 giriş emriydi; çıkış dolumu HİÇ yoktu (TIF kelepçesi + tutuş süresi).
+  O gün bugüne köprü kuruldu: E2 defteri (`entry_execution.jsonl`) ayna dolumlarını `resmi_acilis`
+  ve `fill_vs_resmi_acilis_bps` ile birlikte SÜREKLİ biriktiriyor; çıkış dolum yaması
+  (`_exit_fill_yamasi`) kapanan işlemlere `alpaca_fill_price` basıyor. TEZ: kanonik ölçüt
+  DEĞİŞTİRİLMEDEN (EDG-038'in ön-kayıtla dondurduğu D1 konsolide-açılış paydası) bu biriken
+  defterlerden gerçek friksiyonun bacak-başına bandı ölçülebilir ve EDG-040'ın başabaş bandına
+  KARŞI konumlanabilir. BU KART TEK ATIŞ DEĞİL, TEKRARLANABİLİR REÇETEDİR (EXE-007 deseni):
+  örneklem eşiği dolana dek her koşum BETİMLEYİCİ kalır ve hüküm taşımaz — n=4 vakasının
+  dürüstlüğü korunur, sayı uydurulmaz.
+
+evidence_refs:
+  - "EDG-2026-040 verdict: başabaş 5-15 bps/bacak; slip15 → −3.067$ (CI-üst<0); hasar fiyat kaynaklı"
+  - "EDG-2026-037 kill#1 resmî damga: 'SLİPAJ ÖLÇÜLEMEDİ (n=4 < 10) — sayılar BETİMLEYİCİdir' (tek seans 2026-08-06)"
+  - "EDG-2026-038 kanonik_olcut_on_kayit: payda = D1 KONSOLİDE resmî açılış (SIP günlük bar open); D3 '(h+l)/2' tuzağı ('yaltaklanan ölçüt') ön-kayıtla kapatıldı; Alpaca↔Massive çapraz farkı 0,00 bps"
+  - "EDG-2026-038 çıkış teşhisi: n=0'ın bağlayıcı kısıtı EMİR ÖMRÜ değil TUTUŞ SÜRESİ"
+  - "SAYIM (2026-08-22, değer HESAPLANMADAN): E2 ayna+submitted+fill dolu n=13 (13/13 fill_vs_resmi_acilis_bps dolu; 2026-08-05..08-19, tek ay) · trades alpaca_fill_price dolu n=5 · koruma_* çıkışı 0 · alpaca_fill_beyan 0"
+  - "Ö-52 / EXE-2026-007: live_paper damgası broker teyidi değil — teyitsiz satırın 'dolumu' kıyasa giremez"
+  - "loop.py _patch_entry_slippage: açılış yoksa bps=None, İKAME YASAK ('ikame, ölçülecek farkı tanımı gereği sıfır yapar')"
+
+universe: >
+  CANLI DEFTERLER, salt-okunur snapshot (ssh-stdin çekim deseni — emsal exe007/canli_cek.py;
+  canlıya tek bayt yazılmaz, ölçüm ana checkout state/'ine dokunmaz):
+  GİRİŞ BACAĞI: entry_execution.jsonl satırları — motor="ayna" VE karar="submitted" VE fill dolu.
+  Ölçü, DEFTERDE KAYITLI `fill_vs_resmi_acilis_bps` alanıdır (PIT: reconcile anında, modelin
+  kendi bar arşivinden [cboe/nasdaq konsolide] hesaplanıp dondurulmuş; koşum günü tarihçe
+  YENİDEN ÇEKİLMEZ). İşaret sözleşmesi E2'nin kendisi: aleyhte = +.
+  ÇIKIŞ BACAĞI: trades.jsonl satırları — alpaca_fill_price dolu VE kaynak=live_paper VE
+  broker_teyit=teyitli. Çıkış bps'i = bps_delta(alpaca_fill_price, exit) — yani gerçek broker
+  çıkışı vs iç motorun yazdığı çıkış; İŞARET: long satışta DÜŞÜK dolum aleyhte = +.
+  (alpaca_fill_beyan satırları ÖLÇÜM DEĞİLDİR, kıyasa girmez.)
+  CANLI DAVRANIŞ DEĞİŞMEZ: bu kart yalnız OKUR; goal.slippage_bps'e, emir yoluna, seçilime
+  DOKUNMAZ. Varsayımı değiştirme kararı ayrı operatör kalemidir ve bu kart onu VERMEZ.
+
+features_asof: >
+  ÜÇ KOVA (karıştırılamaz — mekanikleri farklı, EDG-040 beyanlı sınır #2 ile aynı gerekçe):
+    K1 giriş         — E2 ayna dolumları (marketable-limit açılış icrası)
+    K2 çıkış-hedef   — exit_reason ∈ {target, target_gap} + koruma_hedef
+    K3 çıkış-stop    — exit_reason ∈ {stop, stop_gap} + koruma_stop
+  (regime_flip/time_stop çıkışları K2'ye: limit/piyasa kapatmasıdır, stop mekaniği değil.)
+  Her kovada: n · seans sayısı · medyan bps · p25/p75 (betimleyici) · seans-kümeli bootstrap CI.
+  KÜMELEME BİRİMİ = SEANS (gün): aynı seansın dolumları aynı piyasa koşulunu paylaşır; ay-kümeli
+  emsal (B=5000, seed 20260812) burada UYGULANAMAZ çünkü bugünkü örneklemin tamamı tek ayda —
+  ay kümelemesi tek kümeye çöker ve CI tanımsızlaşır. B=5000, seed=20260812, yüzdelik CI AYNEN.
+  HER KOŞUMDA AYRICA: seans-başına pay dağılımı (en büyük seansın payı) ve model-farkı sütunu
+  (bps − 5): model varsayımına GÖRE fark, ham bps'in yanında.
+
+parameter_grid:
+  kovalar: [giris, cikis_hedef, cikis_stop]   # K += 3 — üç ayrı ölçüm hücresi
+  # K TOPLAM = 3. Pencere/eşik taraması YOK; genişletme ayrı kart ister.
+
+cost_model: yok   # friksiyonun KENDİSİ ölçülüyor; komisyon ayrı alan (costs) ve bu kartın konusu değil
+
+success_metric: >
+  ÖRNEKLEM EŞİKLERİ (ölçümden ÖNCE donuk; bugünkü sayımlar 13/5/0 — yani kart BUGÜN hüküm
+  ÜRETEMEZ ve bunu bilerek beyan eder):
+    K1 giriş: n ≥ 30 dolum VE ≥ 10 ayrı seans
+    K2/K3 çıkış: kova başına n ≥ 15 dolum VE ≥ 6 ayrı seans
+  EŞİK ALTINDA: çıktı BETİMLEYİCİdir, damga AYNEN EDG-037 biçiminde basılır:
+  "ÖLÇÜLEMEDİ (n=X < eşik) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+  EŞİK ÜSTÜNDE, kova başına KARAR KURALI (EDG-040 başabaş bandına [5-15 bps/bacak] karşı):
+    CI-alt > 15  → "GERÇEK FRİKSİYON BAŞABAŞIN ÜSTÜNDE" → EDG-040 ACİL kalemi RAKAMLA doğrulanır;
+                   operatör penceresi (paket friksiyon-negatif İŞLİYOR olabilir)
+    CI, [5,15]'i kesiyor → "BELİRSİZLİK BAŞABAŞIN İÇİNDE" → hüküm yok, ölçüm sürer;
+                   slippage_bps varsayımı DEĞİŞTİRİLMEZ
+    CI-üst < 5   → "MODEL MUHAFAZAKÂR" → EDG-040 ACİL kalemine şerh düşülür (yumuşar)
+  ASİMETRİ BEYANI: "başabaşın üstünde" sonucu canlı paranın negatif beklentiyle döndüğü
+  anlamına gelir; "muhafazakâr" sonucu yalnız bir şerhtir. Bedeller eşit değildir ve bu
+  ölçümden ÖNCE yazılmıştır.
+
+kill_criteria:
+  - "kanonik ölçüt DEĞİŞTİRİLEMEZ: payda EDG-038'in D1 konsolide açılışıdır (E2'de kayıtlı alan); koşum günü tarihçe yeniden çekilip payda türetilirse GEÇERSİZ (PIT ihlali + yaltaklanan-ölçüt tuzağı)"
+  - "resmi_acilis/bps alanı BOŞ satır kovaya 'tahminle' sokulursa geçersiz — None kalır, olculemedi sayılır (E2'nin kendi ikame yasağı)"
+  - "broker_teyit=teyitli OLMAYAN live_paper çıkışı kıyasa girerse geçersiz (Ö-52: karşılıksız satırın 'dolumu' uydurmadır); teyit damgası henüz basılmamışsa satır olculemedi kovasına düşer, karsiliksiz/teyitli SAYILMAZ"
+  - "tohum (replay_seed) satırı kıyasa girerse geçersiz"
+  - "kovalar birleştirilirse geçersiz — stop ve hedef mekaniği ayrı, tek medyana ezilemez"
+  - "alpaca_fill_beyan ölçüm yerine geçirilirse geçersiz (beyan ≠ ölçüm)"
+  - "tek seans kova örnekleminin >%40'ını taşıyorsa CI şerhsiz yayımlanamaz — şerh zorunlu (kümeleme yığılmayı azaltır, yok etmez)"
+  - "ölçüm canlı state'e ya da ana checkout state/'ine yazarsa geçersiz (salt-okunur snapshot zorunlu)"
+
+k_registry: {registered_at: "2026-08-22", trial_ids: [pending-042-giris, pending-042-cikis-hedef, pending-042-cikis-stop]}
+
+status: registered   # 2026-08-22 Rol-1 — ön-kayıt. İLK koşum: örneklem eşiği dolunca (E2 birikimine
+                     # bağlı; sayım bölümüne göre K1 için kabaca +4-6 hafta) ya da operatör isterse
+                     # BETİMLEYİCİ ara-koşum her zaman yapılabilir (hüküm taşımaz, damgası açık).
+
+beyanlı_sinirlar: >
+  (1) SEÇİLİM YANLILIĞI YAPISAL: yalnız DOLAN emrin friksiyonu ölçülebilir — kaçan/veto edilen
+  emrin "friksiyonu" tanımsız. Ölçülen şey "dolan emirlerin friksiyonu"dur ve gerçek beklenen
+  maliyetin ALT SINIRI olabilir (zor dolumlar örneklemden düşer). Bu sınır kaldırılamaz, beyan edilir.
+  (2) DÖNEM TEMSİLİ: bugünkü örneklemin tamamı tek aydan (2026-08) ve tek rejim penceresinden;
+  eşikler dolduğunda bile ilk hükümler "bu dönemin friksiyonu"dur, evrensel sabit değil.
+  (3) BAR-İÇİ STOP TETİK SLİPAJI bu kartla ÖLÇÜLMEZ (broker.py sıfır varsayımı) — o 23d'nin
+  kartıdır; K3 yalnız broker'ın stop-bacak dolumunu iç motorun yazdığı çıkışla kıyaslar.
+  (4) MEDYAN TEK SAYIYA İNDİRGER: EDG-038 aynı seansta 15↔134 bps ölçtü — dağılım geniş;
+  p25/p75 bu yüzden zorunlu çıktı, medyan tek başına karar taşımaz.
+  (5) Model-farkı sütunundaki '5' goal.slippage_bps'in BUGÜNKÜ değeridir; goal değişirse koşum
+  günkü değeri künyeler (sabitlemez).
