@@ -835,6 +835,11 @@ function mutabakatSatirlari(today) {
       `AÇIKLANAMAYAN ${money(v)}`].join("\n");
     out.push(`<div class="r"><span>Broker farkı</span><b class="${Math.abs(v) < 1 ? "" : "warn"}" title="${esc(ipucu)}">${money(v)}</b></div>`);
   }
+  const dokum = []
+    .concat((pm.ayrisan || []).map(x => `${x.ticker}: kitap ${x.kitap} / broker ${x.broker}`))
+    .concat((pm.yalniz_kitapta || []).map(x => `${x.ticker}: YALNIZ KİTAPTA (${x.kitap})`))
+    .concat((pm.yalniz_brokerda || []).map(x => `${x.ticker}: YALNIZ BROKER'DA (${x.broker})`))
+    .join("\n");
   const n = pm.ayrisan_sayisi;
   if (n == null) {
     if (pm.olculemedi_neden)
@@ -842,12 +847,10 @@ function mutabakatSatirlari(today) {
   } else if (n === 0) {
     out.push(`<div class="r"><span>Poz. ayrışması</span><b class="pos" title="kitap ve broker adetleri BİREBİR">yok</b></div>`);
   } else {
-    const dok = []
-      .concat((pm.ayrisan || []).map(x => `${x.ticker}: kitap ${x.kitap} / broker ${x.broker}`))
-      .concat((pm.yalniz_kitapta || []).map(x => `${x.ticker}: YALNIZ KİTAPTA (${x.kitap})`))
-      .concat((pm.yalniz_brokerda || []).map(x => `${x.ticker}: YALNIZ BROKER'DA (${x.broker})`))
-      .join("\n");
-    out.push(`<div class="r"><span>Poz. ayrışması</span><b class="warn" title="${esc(dok)}">${n} sembol</b></div>`);
+    // `dok` YUKARIDA hesaplanır: emisyon satırının HEMEN önüne bir deyim koymak, koşulsuz-emisyon
+    // tarayıcısının geriye yürüyüşünü kesiyor ve rengi "kapısız" gösteriyordu (v197 çivisi yakaladı).
+    // Renk yalnız anomalide basılır ve kapının GÖRÜNÜR olması kuralın parçası.
+    out.push(`<div class="r"><span>Poz. ayrışması</span><b class="warn" title="${esc(dokum)}">${n} sembol</b></div>`);
   }
   return out.join("");
 }

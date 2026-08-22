@@ -246,8 +246,17 @@ def test_k5_makbuz_bes_alan_eq_now_dali(ayna):
     out = loop.mirror_submit_armed(meta, "2026-08-02", eq_now=95_000.0, halted=False, source="loop")
     assert out["ok"] is True and out["submitted"] == 1
     mk = meta["size_law"]["P-1"]
-    assert set(mk) == {"eq_kaynak", "eq_now", "peak", "size_mult", "kitap_rev"}, \
-        f"makbuz 5 alanla yazılmadı: {sorted(mk)}"
+    # ALTI ALAN (2026-08-22, Ö-53): `eq_ayna` BİLİNÇLİ eklendi. Makbuz bugüne dek yalnız KİTABIN
+    # sermayesini yazıyordu, oysa `submit_plan`e AYNANIN tabanı (`acct["equity"]`) gidiyor — yani
+    # aynanın FİİLEN boyutlandığı sayı hiç kayıtlı değildi ve yedi pozisyondaki adet sapması
+    # kayıttan açıklanamıyordu. Tam-küme iddiası KORUNUYOR (alan sızması hâlâ kırar); genişletme
+    # bu satırı bilerek değiştirmeyi gerektirdi — kapının amacı tam olarak bu.
+    assert set(mk) == {"eq_kaynak", "eq_now", "eq_ayna", "peak", "size_mult", "kitap_rev"}, \
+        f"makbuz 6 alanla yazılmadı: {sorted(mk)}"
+    # İKİ TABAN AYRI SAYI TAŞIR: fikstürde broker 100.000, kitap 95.000. Eşit çıkarlarsa makbuz
+    # aynı sayıyı iki kez yazıyor demektir ve sapmayı açıklama gücü SIFIRDIR.
+    assert mk["eq_ayna"] == 100_000.0, "eq_ayna aynanın (broker hesabının) tabanını taşımıyor"
+    assert mk["eq_ayna"] != mk["eq_now"], "iki taban aynı sayıya çökmüş — makbuz sapmayı açıklayamaz"
     assert mk["eq_kaynak"] == "eq_now"
     assert mk["eq_now"] == 95_000.0 and mk["peak"] == 100_000.0
     assert mk["size_mult"] == round(derisk_mult(95_000.0, 100_000.0), 4)   # 0,6 — %5 düşüşün çarpanı
