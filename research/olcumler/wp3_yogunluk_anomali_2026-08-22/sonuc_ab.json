@@ -1,0 +1,428 @@
+{
+ "gorev": "wp3_yogunluk_anomali A/B",
+ "yukleme": {
+  "n_sembol": 251,
+  "spy_ilk": "2021-01-04",
+  "spy_son": "2026-08-12",
+  "sn": 0.8
+ },
+ "kollar": [
+  {
+   "arm": "H_A_yeni_dunya_v5",
+   "pencere": [
+    "2026-04-30",
+    "2026-07-30"
+   ],
+   "sure_sn": 59.0,
+   "n_islem_kapali": 90,
+   "n_islem_defter": 90,
+   "n_plan": 129,
+   "verdicts": {
+    "GO": 7,
+    "REVIEW": 101,
+    "NO_GO": 21
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     16
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     3
+    ],
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     1
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.2R açık risk)",
+     1
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     1
+    ]
+   ],
+   "entry_rejects": {
+    "max_chase": 14,
+    "open_below_stop": 4
+   },
+   "earnings_gate": {
+    "plan": 129,
+    "olculemedi_replay": 129
+   },
+   "eq_son": 90101.0,
+   "eq_min": 90082.0
+  },
+  {
+   "arm": "H_B_eski_dunya_v3",
+   "pencere": [
+    "2026-04-30",
+    "2026-07-30"
+   ],
+   "sure_sn": 59.2,
+   "n_islem_kapali": 23,
+   "n_islem_defter": 23,
+   "n_plan": 141,
+   "verdicts": {
+    "GO": 24,
+    "REVIEW": 74,
+    "NO_GO": 43
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     38
+    ],
+    [
+     "max 5 pozisyon dolu",
+     16
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     12
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     5
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.2R açık risk)",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     2
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     1
+    ]
+   ],
+   "entry_rejects": {
+    "entry_missed_limit": 9,
+    "max_chase": 6,
+    "open_below_stop": 2
+   },
+   "earnings_gate": {
+    "plan": 141,
+    "olculemedi_replay": 141
+   },
+   "eq_son": 95234.0,
+   "eq_min": 95229.0
+  },
+  {
+   "arm": "H_C_eski+E1serbest",
+   "pencere": [
+    "2026-04-30",
+    "2026-07-30"
+   ],
+   "sure_sn": 56.4,
+   "n_islem_kapali": 34,
+   "n_islem_defter": 34,
+   "n_plan": 124,
+   "verdicts": {
+    "GO": 10,
+    "REVIEW": 56,
+    "NO_GO": 58
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     47
+    ],
+    [
+     "max 5 pozisyon dolu",
+     24
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     12
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     7
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     4
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.5R açık risk)",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     1
+    ]
+   ],
+   "entry_rejects": {
+    "max_chase": 5,
+    "open_below_stop": 3
+   },
+   "earnings_gate": {
+    "plan": 124,
+    "olculemedi_replay": 124
+   },
+   "eq_son": 95600.0,
+   "eq_min": 95598.0
+  },
+  {
+   "arm": "H_D_eski+rampa1536",
+   "pencere": [
+    "2026-04-30",
+    "2026-07-30"
+   ],
+   "sure_sn": 56.1,
+   "n_islem_kapali": 44,
+   "n_islem_defter": 44,
+   "n_plan": 131,
+   "verdicts": {
+    "GO": 10,
+    "REVIEW": 56,
+    "NO_GO": 65
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     43
+    ],
+    [
+     "max 5 pozisyon dolu",
+     42
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     14
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     11
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     7
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.2R açık risk)",
+     6
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     5
+    ],
+    [
+     "'consumer' sektör tavanı %40 aşılıyor",
+     3
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     2
+    ]
+   ],
+   "entry_rejects": {
+    "entry_missed_limit": 13,
+    "max_chase": 6,
+    "open_below_stop": 3
+   },
+   "earnings_gate": {
+    "plan": 131,
+    "olculemedi_replay": 131
+   },
+   "eq_son": 92945.0,
+   "eq_min": 92906.0
+  },
+  {
+   "arm": "H_E_eski+slot20boyut05",
+   "pencere": [
+    "2026-04-30",
+    "2026-07-30"
+   ],
+   "sure_sn": 60.0,
+   "n_islem_kapali": 66,
+   "n_islem_defter": 66,
+   "n_plan": 135,
+   "verdicts": {
+    "GO": 12,
+    "REVIEW": 113,
+    "NO_GO": 10
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     7
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     7
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     2
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     1
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     1
+    ]
+   ],
+   "entry_rejects": {
+    "entry_missed_limit": 22,
+    "max_chase": 15,
+    "open_below_stop": 3,
+    "qty_zero": 1
+   },
+   "earnings_gate": {
+    "plan": 135,
+    "olculemedi_replay": 135
+   },
+   "eq_son": 94002.0,
+   "eq_min": 94000.0
+  },
+  {
+   "arm": "F3_A_yeni_dunya_v5",
+   "pencere": [
+    "2025-07-01",
+    "2026-04-30"
+   ],
+   "sure_sn": 192.3,
+   "n_islem_kapali": 263,
+   "n_islem_defter": 263,
+   "n_plan": 450,
+   "verdicts": {
+    "REVIEW": 264,
+    "GO": 11,
+    "NO_GO": 175
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.3R açık risk)",
+     58
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     39
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.2R açık risk)",
+     39
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     39
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     21
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     18
+    ]
+   ],
+   "entry_rejects": {
+    "open_below_stop": 3,
+    "max_chase": 8
+   },
+   "earnings_gate": {
+    "plan": 450,
+    "olculemedi_replay": 450
+   },
+   "eq_son": 121971.0,
+   "eq_min": 95073.0
+  },
+  {
+   "arm": "F3_B_eski_dunya_v3",
+   "pencere": [
+    "2025-07-01",
+    "2026-04-30"
+   ],
+   "sure_sn": 193.8,
+   "n_islem_kapali": 57,
+   "n_islem_defter": 57,
+   "n_plan": 488,
+   "verdicts": {
+    "REVIEW": 250,
+    "NO_GO": 182,
+    "GO": 56
+   },
+   "nogo_nedenleri_top12": [
+    [
+     "max 5 pozisyon dolu",
+     150
+    ],
+    [
+     "NOT: earnings_kapsami_yok — kazanç takvimi bu sembolü kapsam",
+     41
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.2R açık risk)",
+     35
+    ],
+    [
+     "'tech' sektör tavanı %40 aşılıyor",
+     27
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.1R açık risk)",
+     21
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.0R açık risk)",
+     15
+    ],
+    [
+     "'comms' sektör tavanı %40 aşılıyor",
+     8
+    ],
+    [
+     "'industrials' sektör tavanı %40 aşılıyor",
+     8
+    ],
+    [
+     "'consumer' sektör tavanı %40 aşılıyor",
+     7
+    ],
+    [
+     "'health' sektör tavanı %40 aşılıyor",
+     7
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.5R açık risk)",
+     4
+    ],
+    [
+     "portföy ısısı sert tavanı %5.0R aşıyor (~5.4R açık risk)",
+     4
+    ]
+   ],
+   "entry_rejects": {
+    "entry_missed_limit": 10,
+    "max_chase": 3,
+    "open_below_stop": 2
+   },
+   "earnings_gate": {
+    "plan": 488,
+    "olculemedi_replay": 488
+   },
+   "eq_son": 94741.0,
+   "eq_min": 93929.0
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+WP3 — YEREL↔CANLI REPLAY YOĞUNLUK ANOMALİSİ TEŞHİSİ (2026-08-22)
+Teşhis koşumu — TARAMA DEĞİL, HÜKÜM YOK (hüküm Rol-1'in).
+
+Dosyalar:
+  canli_cek.py     A1 ssh-stdin SALT-OKUMA kanıt çekimi (emsal exe007) → canli_ham.json
+                   koşum: ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+                          'cd /opt/meridian && ./.venv/bin/python -' < canli_cek.py > canli_ham.json
+  canli_ham.json   canlı inc_cache özeti + bars kapsamı + evren + goal/bounds/strategy sha
+  olcum_ab.py      yerel kontrollü A/B teşhis koşumu (7 kol; bkz. dosya docstring —
+                   soğuk-başlangıç sınırı BEYANLI; config.goal/obs süreç-içi yamalı; state'e yazım SIFIR)
+  sonuc_ab.json    kol sonuçları (n_islem, verdicts, NO_GO nedenleri, entry_rejects)
+  kosum.log        koşum ilerleme kaydı
+  RAPOR.md         ölçüm raporu (fark tablosu + daraltma + elma-armut cevabı)
+
+Defter tarafı vekil: research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state/meridian.db
+(salt-okuma, mode=ro; sorgular RAPOR.md'de).
