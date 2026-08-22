@@ -1,81 +1,40 @@
 {
- "ne": "Ç1 çıkış sınamasının yuvarlama-yöntemi düzeltmesi (koşum SONRASI, kalıcı yakalamadan)",
- "neden": "oz_sinama Ç1, beklenen çıkışı Python float round ile kurdu; motor exit_fill np.float64'tür (raw_exit pandas .loc) ve round(np.float64,4) 5. hane tam-orta noktasında bir tık ayrışır (sayısal kanıt: 195.5*(1-0.0005)=195.40225 → py .4023, np .4022; aynı IEEE değeri). Ç2 (yuvarlamasız özdeşlik, asıl slip sınaması) ve broker_slip eşitliği o satırların HEPSİNDE zaten geçiyordu.",
- "yontem": "yakalama_{run}.json (koşum içi kalıcı ham çiftler) üzerinden her çıkış için round(np.float64(raw_exit)*(1-s),4) == defter_exit yeniden sınandı",
+ "ne": "Ç1 çıkış sınamasının yuvarlama-yolu düzeltmesi (koşum SONRASI, kalıcı yakalamadan; HÜKÜM YOK)",
+ "neden": "oz_sinama Ç1 beklenen çıkışı Python float round ile kurdu; motorda exit_fill TİPİ raw_exit'in KAYNAĞINA bağlı: bar-fiyatlı çıkışlar (time_stop/regime_flip/stop_gap/target_gap/eod) pandas .loc'tan np.float64 taşır → round(np.float64,4) 5. hane tam-orta noktasında Python round(float,4)ten bir tık (1e-4) ayrışır; target çıkışı plan aritmetiğinden saf Python float taşır → Python yuvarlaması. Sayısal kanıt: 195.40225 → py .4023 / np .4022 (defter np); 730.93435 → py .9343 / np .9344 (defter py, reason=target). Ç2 (yuvarlamasız slip özdeşliği ≤1e-9) ve broker_slip eşitliği bu satırların HEPSİNDE koşum içinde ZATEN geçti — ayrışma slipte değil, yeniden-üretimin yuvarlama yolundaydı.",
+ "yontem": "yakalama_{run}.json (koşum-içi kalıcı ham çiftler) üzerinden her çıkış için round(py) ve round(np.float64) yolları ayrı ayrı deftere kıyaslandı; iki yoldan biri tutmayan satır ACIKLANAMAYAN sayılır",
  "sonuc": {
   "kontrol": {
    "n_cikis": 885,
-   "C1_python_round_bozuk": 13,
-   "C1_numpy_round_bozuk": 1,
-   "np_bozuk_ornek": [
-    {
-     "ticker": "META",
-     "ts": "2025-02-14",
-     "raw_exit": 731.3,
-     "defter_exit": 730.9343,
-     "qty": 27,
-     "broker_slip": 0.0005,
-     "reason": "target"
-    }
-   ]
+   "iki_yol_ayni_ve_tutan": 871,
+   "yalniz_python_tutan": 1,
+   "yalniz_numpy_tutan": 13,
+   "ACIKLANAMAYAN": 0,
+   "aciklanamayan_ornek": []
   },
   "slip15": {
    "n_cikis": 884,
-   "C1_python_round_bozuk": 7,
-   "C1_numpy_round_bozuk": 1,
-   "np_bozuk_ornek": [
-    {
-     "ticker": "MU",
-     "ts": "2024-06-05",
-     "raw_exit": 133.3,
-     "defter_exit": 133.1001,
-     "qty": 61,
-     "broker_slip": 0.0015,
-     "reason": "target"
-    }
-   ]
+   "iki_yol_ayni_ve_tutan": 876,
+   "yalniz_python_tutan": 1,
+   "yalniz_numpy_tutan": 7,
+   "ACIKLANAMAYAN": 0,
+   "aciklanamayan_ornek": []
   },
   "slip25": {
    "n_cikis": 876,
-   "C1_python_round_bozuk": 41,
-   "C1_numpy_round_bozuk": 1,
-   "np_bozuk_ornek": [
-    {
-     "ticker": "NOW",
-     "ts": "2023-05-30",
-     "raw_exit": 110.3,
-     "defter_exit": 110.0243,
-     "qty": 45,
-     "broker_slip": 0.0025,
-     "reason": "target"
-    }
-   ]
+   "iki_yol_ayni_ve_tutan": 834,
+   "yalniz_python_tutan": 1,
+   "yalniz_numpy_tutan": 41,
+   "ACIKLANAMAYAN": 0,
+   "aciklanamayan_ornek": []
   },
   "slip35": {
    "n_cikis": 862,
-   "C1_python_round_bozuk": 12,
-   "C1_numpy_round_bozuk": 2,
-   "np_bozuk_ornek": [
-    {
-     "ticker": "NOW",
-     "ts": "2023-05-30",
-     "raw_exit": 110.3,
-     "defter_exit": 109.9139,
-     "qty": 43,
-     "broker_slip": 0.0035,
-     "reason": "target"
-    },
-    {
-     "ticker": "META",
-     "ts": "2025-02-14",
-     "raw_exit": 731.3,
-     "defter_exit": 728.7405,
-     "qty": 14,
-     "broker_slip": 0.0035,
-     "reason": "target"
-    }
-   ]
+   "iki_yol_ayni_ve_tutan": 848,
+   "yalniz_python_tutan": 2,
+   "yalniz_numpy_tutan": 12,
+   "ACIKLANAMAYAN": 0,
+   "aciklanamayan_ornek": []
   }
  },
- "hukum_notu": "HÜKÜM YOK — mekanik sayım; kill#2 kapısının ilk-20 sınaması koşumda zaten geçti"
+ "kill2_notu": "kill#2 kapısının ilk-20 sınaması koşumda geçti (4/4 hücre). Bu dosya, ilk-20 DIŞINDA Ç1in düştüğü 13/7/41/12 satırın tamamının yuvarlama-yolu vakası olduğunu ve slip enjeksiyonuyla çelişen TEK satır olmadığını gösterir."
 }
