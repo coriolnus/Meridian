@@ -1,0 +1,166 @@
+{
+ "taban": "edg032c — B1-sonrası dünya DONMUŞ TABANI",
+ "dondurma_tarihi_utc": "2026-08-22T20:45:39+00:00",
+ "neden": "Operatör B1 kararı (2026-08-22, c150902) pullback'i ARMED_SETUPS'tan çıkardı; broker.py+guard.py de aynı gün değişti (21:19). Eski taban edg032b bugünkü motorla yeniden üretilemez (EDG-2026-045 kill#1 YAPISAL düşüş kaydı). Rol-1 kararı: gelecek kartlar (045/046+) BU tabana kıyaslanır.",
+ "kanonik_taban_dosyalari": {
+  "islemler_tam": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1/islemler_tam_kontrol.json",
+  "islemler_slim": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1/islemler_kontrol.json",
+  "seanslar": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1/seanslar_kontrol.json",
+  "sonuc": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/kosum1/sonuc_kontrol.json",
+  "not": "kosum2/ aynı dosyaların bayt-özdeş ikinci üretimi (determinizm tanığı)"
+ },
+ "determinizm_kaniti": {
+  "dosya": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032c_taban_2026-08-22/determinizm.json",
+  "kapi_sha256": {
+   "islemler_tam_kontrol.json": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+   "islemler_kontrol.json": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+   "seanslar_kontrol.json": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83"
+  },
+  "gecti": true
+ },
+ "motor_sha256": {
+  "kosum1_once": {
+   "broker.py": {
+    "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "sha256_16": "52e67c5db43f52d5",
+    "mtime_ns": 1787422741457650475
+   },
+   "backtest.py": {
+    "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "sha256_16": "b59c059f43d4e410",
+    "mtime_ns": 1787349934977599301
+   },
+   "strategy.py": {
+    "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "sha256_16": "263eb8fef7d10089",
+    "mtime_ns": 1787417249039052433
+   },
+   "guard.py": {
+    "sha256": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+    "sha256_16": "467034e580311150",
+    "mtime_ns": 1787422791001664719
+   }
+  },
+  "kosum2_sonra": {
+   "broker.py": {
+    "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "sha256_16": "52e67c5db43f52d5",
+    "mtime_ns": 1787422741457650475
+   },
+   "backtest.py": {
+    "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "sha256_16": "b59c059f43d4e410",
+    "mtime_ns": 1787349934977599301
+   },
+   "strategy.py": {
+    "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "sha256_16": "263eb8fef7d10089",
+    "mtime_ns": 1787417249039052433
+   },
+   "guard.py": {
+    "sha256": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+    "sha256_16": "467034e580311150",
+    "mtime_ns": 1787422791001664719
+   }
+  },
+  "dort_noktada_sabit": true
+ },
+ "sasi": {
+  "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py",
+  "sha256": "75cef79215a7404f386517678df3d264d65d671ad23734a0b6559427177c85da",
+  "uyarlama": {
+   "eski_ARMED_BEKLENEN": [
+    "breakout_vcp",
+    "pullback",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "yeni_ARMED_BEKLENEN": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "motor_ARMED_SETUPS": [
+    "breakout_vcp",
+    "exhaustion_hammer",
+    "momentum_burst"
+   ],
+   "beyan": "TEK uyarlama: yüklenen şasi modülünün ARMED_BEKLENEN sabiti B1 yasasına çevrildi (dünya-beklentisi; motor DEĞİL). Başka hiçbir sabit/assert/parametre değişmedi; parametre enjeksiyonu YOK (merkez hücre olduğu gibi)."
+  }
+ },
+ "yasa": {
+  "ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "kaynak": "meridian/strategy.py:1059 (B1, c150902)"
+ },
+ "config_sha256": {
+  "sandbox_kaynagi_edg022": {
+   "goal.yaml": "099590dedee1ccf2ce2fd731965df1fb122548676423d5fd644c211549567043",
+   "strategy.yaml": "9f3e4732315abe5200d03a31c790a9a84f2914df70c2521280224610c1123f79",
+   "bounds.yaml": "3e810b547ca95f9a0b718129b12d07b260826bbd0a55389a0b410cd219d33515"
+  },
+  "repo_state_bugun": {
+   "goal.yaml": "0f0a7b4bd912d6bd7a7ede80338070e7f0c250764bdf6a042be7c98d0621e24d",
+   "bounds.yaml": "3acb44b141e092274c5e84b79d63a6c34bdb94d532090052d167dfa7ce59a3b0"
+  },
+  "sasi_kaydi_sha16": {
+   "goal.yaml": {
+    "sandbox": "099590dedee1ccf2",
+    "edg022": "099590dedee1ccf2",
+    "repo_state": "0f0a7b4bd912d6bd"
+   },
+   "strategy.yaml": {
+    "sandbox": "9f3e4732315abe52",
+    "edg022": "9f3e4732315abe52",
+    "repo_state": "758d30c39c18c4fd"
+   },
+   "bounds.yaml": {
+    "sandbox": "3e810b547ca95f9a",
+    "edg022": "3e810b547ca95f9a",
+    "repo_state": "3acb44b141e09227"
+   }
+  },
+  "not": "koşum EDG-022 DONMUŞ kopyalarıyla koşar (şasi hazirla()); repo state/goal+bounds bugünkü İZLİ değerler bağlam içindir, koşumda OKUNMAZ"
+ },
+ "pencere": {
+  "start": "2022-01-01",
+  "end": "2026-07-30",
+  "strategy_version": 3
+ },
+ "evren": {
+  "n_sembol": 251,
+  "n_endeks_satir": 1408,
+  "not": "n_endeks_satir koşum-günü önbellek uzunluğudur, pencereye kırpılmaz (edg040 daraltılmış-istisna dersi)"
+ },
+ "hucre": {
+  "eksen": "merkez",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "cost_model": {
+  "slippage_bps": 5.0,
+  "commission_per_share": 0.0,
+  "not": "motorun kendi maliyet modeli — dokunulmadı (kart: pessimistic_band_v2 rapor bandı ayrı)"
+ },
+ "butunluk_gecerli": true,
+ "taban_ozeti_betimleyici": {
+  "islem_n": 885,
+  "setup_dagilimi": {
+   "breakout_vcp": 318,
+   "exhaustion_hammer": 228,
+   "momentum_burst": 339
+  },
+  "net_pnl_trades": 23806.13,
+  "net_pnl_equity": 23806.13,
+  "maxdd_kanonik": 0.1263,
+  "sharpe": 0.594,
+  "avg_r": 0.083,
+  "win_rate": 0.365
+ },
+ "hukum_yok": "Bu künye HÜKÜM İÇERMEZ; taban kimliği + determinizm kanıtıdır. B1'in etkisine dair çıkarım bu koşumun işi DEĞİLDİR."
+}

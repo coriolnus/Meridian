@@ -1,0 +1,48 @@
+{
+ "adim": "EDG-032c DETERMİNİZM ÇİFT KAPISI_smoke",
+ "olcum_zamani": "2026-08-22T20:19:12+00:00",
+ "tanim": "TAM koşum iki kez, taze süreç + bakir sandbox; işlem defteri (tam+slim) ve seanslar sha256 BAYT-ÖZDEŞ olmalı. Ek kanıt: alan_envanteri baytları + sonuc ölçüm blokları derin-eşit + motor sha dört noktada sabit.",
+ "kapi_dosyalari": {
+  "islemler_tam_kontrol.json": {
+   "kosum1_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "kosum2_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "bayt_ozdes": true
+  },
+  "islemler_kontrol.json": {
+   "kosum1_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "kosum2_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "bayt_ozdes": true
+  },
+  "seanslar_kontrol.json": {
+   "kosum1_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "kosum2_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "bayt_ozdes": true
+  }
+ },
+ "kapi_bayt_ozdes": true,
+ "ek_kanit_alan_envanteri": {
+  "kosum1_sha256": "48dbd1f6de166a58f00e4911081a9087cf31a6312ff9b48b521a07066b00de54",
+  "kosum2_sha256": "48dbd1f6de166a58f00e4911081a9087cf31a6312ff9b48b521a07066b00de54",
+  "bayt_ozdes": true
+ },
+ "ek_kanit_sonuc_bloklari_esit": {
+  "performans": true,
+  "doluluk": true,
+  "tepe_isi": true,
+  "betim": true,
+  "tasnif_tum_seans": true,
+  "birincil": true,
+  "ci95_ay_kumeli": true,
+  "islem": true,
+  "replay": true,
+  "hucre": true
+ },
+ "sonuc_blok_fark": null,
+ "motor_dort_noktada_sabit": true,
+ "kosum_icinde_motor_ayni": {
+  "kosum1": true,
+  "kosum2": true
+ },
+ "DETERMINIZM_GECTI": true,
+ "hukum": null
+}

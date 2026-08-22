@@ -1,0 +1,197 @@
+{
+ "adim": "EDG-032c ESKİ↔YENİ FARK ÖZETİ (BETİMLEYİCİ — hüküm yok)",
+ "olcum_zamani": "2026-08-22T20:45:39+00:00",
+ "beyan": "Tek koşumluk fark betimleyicidir; 'B1 iyi/kötü etki etti' çıkarımı bu koşumun işi DEĞİLDİR ve bu dosyadan yapılamaz (CI yok, tasarım yok).",
+ "n": {
+  "eski_edg032b": 885,
+  "yeni_edg032c": 885,
+  "fark": 0
+ },
+ "setup_dagilimi": {
+  "eski": {
+   "breakout_vcp": 315,
+   "exhaustion_hammer": 225,
+   "momentum_burst": 339,
+   "pullback": 6
+  },
+  "yeni": {
+   "breakout_vcp": 318,
+   "exhaustion_hammer": 228,
+   "momentum_burst": 339
+  }
+ },
+ "pullback": {
+  "eski_n": 6,
+  "yeni_n": 0,
+  "eski_pullback_pnl": -2417.85
+ },
+ "net_pnl_trades": {
+  "eski": 20684.69,
+  "yeni": 23806.13,
+  "fark": 3121.44
+ },
+ "performans_kiyas": {
+  "net_pnl_equity": {
+   "eski": 20684.69,
+   "yeni": 23806.13
+  },
+  "maxdd_kanonik": {
+   "eski": 0.1268,
+   "yeni": 0.1263
+  },
+  "maxdd_m2m": {
+   "eski": 0.1268,
+   "yeni": 0.1263
+  },
+  "sharpe": {
+   "eski": 0.521,
+   "yeni": 0.594
+  },
+  "avg_r": {
+   "eski": 0.076,
+   "yeni": 0.083
+  },
+  "win_rate": {
+   "eski": 0.363,
+   "yeni": 0.365
+  },
+  "total_return": {
+   "eski": 0.2068,
+   "yeni": 0.2381
+  },
+  "score": {
+   "eski": -0.1081,
+   "yeni": -0.0967
+  }
+ },
+ "exit_reason": {
+  "eski": {
+   "stop": 379,
+   "regime_flip": 171,
+   "time_stop": 152,
+   "target": 99,
+   "stop_gap": 57,
+   "target_gap": 27
+  },
+  "yeni": {
+   "stop": 380,
+   "regime_flip": 168,
+   "time_stop": 152,
+   "target": 101,
+   "stop_gap": 57,
+   "target_gap": 27
+  }
+ },
+ "yillik_pnl": {
+  "eski": {
+   "2022": -3881.56,
+   "2023": 9563.59,
+   "2024": 5442.66,
+   "2025": 11739.58,
+   "2026": -2179.58
+  },
+  "yeni": {
+   "2022": -3881.56,
+   "2023": 10178.52,
+   "2024": 5368.11,
+   "2025": 11337.8,
+   "2026": 803.26
+  }
+ },
+ "islem_eslemesi": {
+  "anahtar": "(ticker, ts_open); çok-satırlı anahtarlar sıra içinde eşlendi",
+  "cok_satirli_anahtar_n": {
+   "eski": 0,
+   "yeni": 0
+  },
+  "ortak_ayni_satir_n": 194,
+  "ortak_farkli_satir_n": 681,
+  "farkli_alan_frekansi": {
+   "r_multiple": 511,
+   "id": 480,
+   "costs": 341,
+   "pnl_dollars": 340,
+   "qty": 340,
+   "entry": 19,
+   "mfe_r": 2,
+   "mae_r": 2,
+   "pnl_pct": 1,
+   "exit": 1
+  },
+  "yalniz_eskide_n": 10,
+  "yalniz_eskide_setup": {
+   "breakout_vcp": 1,
+   "momentum_burst": 3,
+   "pullback": 6
+  },
+  "yalniz_eskide_pnl": -2660.55,
+  "yalniz_yenide_n": 10,
+  "yalniz_yenide_setup": {
+   "breakout_vcp": 4,
+   "exhaustion_hammer": 3,
+   "momentum_burst": 3
+  },
+  "yalniz_yenide_pnl": 367.1
+ },
+ "doldurma_etkisi_seans_izdusumu": {
+  "tanim": "pullback'in boşalttığı slot/ısıyı başka işlemlerin doldurup doldurmadığının seans izdüşümü: aynı günün n_acik (açık pozisyon) kıyası + doluluk blokları",
+  "ortak_gun_n": 1147,
+  "n_acik_farkli_gun_n": 17,
+  "n_acik_max_mutlak_fark": 1,
+  "n_acik_farkli_ilk10": [
+   "2023-02-16",
+   "2023-05-22",
+   "2023-05-23",
+   "2025-02-07",
+   "2025-02-11",
+   "2026-05-01",
+   "2026-05-08",
+   "2026-05-11",
+   "2026-05-12",
+   "2026-05-22"
+  ],
+  "doluluk": {
+   "eski": {
+    "pozisyon_gun_open_fazi": 4983,
+    "ort_acik_pozisyon": 4.344,
+    "doluluk_orani_slot": 0.2172,
+    "toplam_bars_held": 5306
+   },
+   "yeni": {
+    "pozisyon_gun_open_fazi": 4976,
+    "ort_acik_pozisyon": 4.338,
+    "doluluk_orani_slot": 0.2169,
+    "toplam_bars_held": 5296
+   }
+  },
+  "eszamanli_poz_max": {
+   "eski": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   },
+   "yeni": {
+    "open_fazi": 13,
+    "islem_araligi": 13
+   }
+  }
+ },
+ "ilk_ayrisma": {
+  "indeks": 52,
+  "eski": {
+   "ticker": "LRCX",
+   "ts_open": "2023-02-02",
+   "ts_close": "2023-02-17",
+   "setup": "momentum_burst",
+   "exit_reason": "stop",
+   "pnl_dollars": -347.65
+  },
+  "yeni": {
+   "ticker": "META",
+   "ts_open": "2023-02-14",
+   "ts_close": "2023-02-15",
+   "setup": "exhaustion_hammer",
+   "exit_reason": "stop_gap",
+   "pnl_dollars": -137.92
+  }
+ }
+}

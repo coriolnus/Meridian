@@ -1,0 +1,55 @@
+# EDG-032c · YENİ DONMUŞ TABAN — B1-sonrası dünya (2026-08-22)
+#
+# NİÇİN YENİ TABAN (paradigma olayı):
+#   Operatör B1 kararı (2026-08-22, commit c150902) pullback'i ARMED_SETUPS'tan çıkardı
+#   (strategy.py:1059 → 3'lü yasa: breakout_vcp · exhaustion_hammer · momentum_burst);
+#   broker.py + guard.py de aynı gün değişti (21:19, "25b"). Eski donmuş taban edg032b
+#   (885 işlem, 6'sı pullback) bugünkü motorla YENİDEN ÜRETİLEMEZ — EDG-2026-045 bunu
+#   kill#1'de YAPISAL düşüşle belgeledi (edg045_stop_slip_2026-08-22/
+#   DURDU_kill1_sasi_kapisi.json). Rol-1 kararı: yeni taban dondurulur; gelecek kartlar
+#   (045/046+) BU tabana kıyaslanır.
+#
+# ŞASİ: edg032b_tamsatir_2026-08-13/olcum.py YENİDEN KURULMADI — importlib ile modül
+#   olarak yüklendi, SANDBOX'ı bu dizine çevrildi (artefakt koruması YAPISAL),
+#   kosum("kontrol") yolu OLDUĞU GİBİ çağrıldı (exe006b/edg040/edg045 deseni AYNEN).
+#   HİÇBİR parametre enjeksiyonu YOK: merkez hücre (slot 20 · size 0.5R · zarf 5R),
+#   bugünkü motor + bugünkü yasa. Şasinin ozdeslik() kapısı (032-cmb kıyası) ÇAĞRILMADI —
+#   o eski dünyanın kimlik kapısıydı; bu koşumun kapısı DETERMİNİZM ÇİFT KAPISI.
+#   TEK UYARLAMA (BEYANLI): yüklenen modülün ARMED_BEKLENEN sabiti (eski dünyanın 4'lü
+#   yasası, olcum.py:106) B1 yasasına (3'lü) çevrildi — dünya-BEKLENTİSİ sabitidir, motor
+#   DEĞİL; motor ARMED_SETUPS'u B1 yasasından saparsa koşum başlamadan durur (assert).
+#
+# DETERMİNİZM ÇİFT KAPISI (edg032b'nin kendi standardı) — GEÇTİ (2026-08-22):
+#   TAM koşum İKİ KEZ, her biri taze süreçte + bakir sandbox'la (state_kontrol koşum
+#   öncesi silinir; donmuş EDG-022 kopyalarından yeniden kurulur). İki koşum BAYT-ÖZDEŞ:
+#     islemler_tam_kontrol.json  sha256 5f54b533465f640f…  (kosum1 == kosum2)
+#     islemler_kontrol.json      sha256 447b5ea137d75247…  (kosum1 == kosum2)
+#     seanslar_kontrol.json      sha256 983f2e2d91a35979…  (kosum1 == kosum2)
+#   Ek kanıt: alan_envanteri baytları özdeş + sonuc ölçüm blokları derin-eşit + motor
+#   sha'ları dört noktada (k1-önce/k1-sonra/k2-önce/k2-sonra) sabit. → determinizm.json
+#   Duman hattı (2022-01→06) ayrıca çift koşuldu ve özdeşti → determinizm_smoke.json
+#
+# KÜNYE: TABAN_KUNYESI.json (motor sha256 ×4 dosya · config sha · yasa · evren 251 ·
+#   pencere 2022-01-01→2026-07-30 · sv=3 · hücre merkez · bütünlük geçerli=True).
+#   KANONİK TABAN DOSYALARI: kosum1/ (kosum2/ bayt-özdeş ikinci üretim — tanık).
+#
+# ESKİ↔YENİ FARK (BETİMLEYİCİ — fark_ozeti_edg032b.json; HÜKÜM YOK):
+#   n 885→885 (tesadüfi eşitlik) · pullback 6→0 · net_pnl_trades 20684.69→23806.13
+#   (Δ+3121.44) · ilk 52 defter satırı ÖZDEŞ (2022 tamamı dahil; yıl P&L'i birebir
+#   -3881.56); ilk ayrışma, eski dünyanın İLK pullback işleminin silahlandığı güne denk
+#   (V ts_open 2023-02-14). Yalnız-eskide 10 işlem (6 pullback + 4 komşu), yalnız-yenide
+#   10 işlem (bvcp 4 · eh 3 · mb 3 — boşalan slotları dolduran YENİ dünya işlemleri);
+#   ortak 875 işlemin 681'i alan düzeyinde farklı (çoğunluk zincirleme: id/qty/costs/
+#   pnl_dollars/r_multiple — equity yolu değişince boyutlama değişir), doluluk/ısı tepesi
+#   pratikte aynı (eşzamanlı max 13→13; n_acik farkı yalnız 17/1147 günde, max ±1).
+#   NOT: Bu tek koşumluk fark BETİMLEYİCİDİR; "B1 iyi/kötü etki etti" çıkarımı bu
+#   koşumdan YAPILAMAZ (o ayrı bir soru; tasarımı/CI'ı yok). broker/guard (25b)
+#   deltasının payı pullback'ten AYRIŞTIRILAMAZ (tek koşum, iki değişken).
+#
+# YENİDEN ÜRETİM (sıra zorunlu; her adım ayrı süreç):
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg032c_taban_2026-08-22/olcum.py kosum1
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg032c_taban_2026-08-22/olcum.py kosum2
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg032c_taban_2026-08-22/olcum.py determinizm
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg032c_taban_2026-08-22/olcum.py kunye
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg032c_taban_2026-08-22/olcum.py fark
+# (duman hattı: aynı komutlar --smoke ile; log: kosum_tam.log)

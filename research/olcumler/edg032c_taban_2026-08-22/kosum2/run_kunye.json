@@ -1,0 +1,87 @@
+{
+ "ad": "kosum2",
+ "smoke": false,
+ "baslangic_utc": "2026-08-22T20:32:06+00:00",
+ "bitis_utc": "2026-08-22T20:45:14+00:00",
+ "sure_sn": 788.3,
+ "sasi": {
+  "yol": "/Users/erdemozturk/AI-Trading/research/olcumler/edg032b_tamsatir_2026-08-13/olcum.py",
+  "sha256": "75cef79215a7404f386517678df3d264d65d671ad23734a0b6559427177c85da"
+ },
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "beyan": "TEK uyarlama: yüklenen şasi modülünün ARMED_BEKLENEN sabiti B1 yasasına çevrildi (dünya-beklentisi; motor DEĞİL). Başka hiçbir sabit/assert/parametre değişmedi; parametre enjeksiyonu YOK (merkez hücre olduğu gibi)."
+ },
+ "motor_sha_once": {
+  "broker.py": {
+   "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+   "sha256_16": "52e67c5db43f52d5",
+   "mtime_ns": 1787422741457650475
+  },
+  "backtest.py": {
+   "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "sha256_16": "b59c059f43d4e410",
+   "mtime_ns": 1787349934977599301
+  },
+  "strategy.py": {
+   "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+   "sha256_16": "263eb8fef7d10089",
+   "mtime_ns": 1787417249039052433
+  },
+  "guard.py": {
+   "sha256": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+   "sha256_16": "467034e580311150",
+   "mtime_ns": 1787422791001664719
+  }
+ },
+ "motor_sha_sonra": {
+  "broker.py": {
+   "sha256": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+   "sha256_16": "52e67c5db43f52d5",
+   "mtime_ns": 1787422741457650475
+  },
+  "backtest.py": {
+   "sha256": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+   "sha256_16": "b59c059f43d4e410",
+   "mtime_ns": 1787349934977599301
+  },
+  "strategy.py": {
+   "sha256": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+   "sha256_16": "263eb8fef7d10089",
+   "mtime_ns": 1787417249039052433
+  },
+  "guard.py": {
+   "sha256": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c",
+   "sha256_16": "467034e580311150",
+   "mtime_ns": 1787422791001664719
+  }
+ },
+ "motor_ayni_kosum_icinde": true,
+ "sandbox": {
+  "state_dizini": "state_kontrol",
+  "bakir_baslatildi": true,
+  "beyan": "koşum öncesi silindi; şasi hazirla() donmuş EDG-022 kopyalarından yeniden kurdu"
+ },
+ "tasinan_dosyalar_sha256": {
+  "sonuc_kontrol.json": "f70185bbfe85e671d55bfaf88e1bc0c8481cd78ebd61099cd19fcb80791b0f92",
+  "seanslar_kontrol.json": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+  "islemler_kontrol.json": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+  "islemler_tam_kontrol.json": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+  "alan_envanteri_kontrol.json": "b5ccfd4422e09207a8b4b01168094c1080b363fe805010d70b675254a99d7de0"
+ }
+}
