@@ -1,0 +1,35 @@
+# EXE-2026-003 — gölge kapsam genişletme (planlı kol) · ölçüm koşumu · 2026-08-22
+# Kart: research/cards/EXE-2026-003-golge-planli-kol.yaml (dokunulmadı)
+# Ajan: ölçüm ajanı (hüküm YOK — Rol-1 işler)
+
+## 1) VERİ ÇEKİMİ — canlı A1 state/'ten SALT-OKUNUR kopya (canlıya tek bayt yazılmadı)
+cd research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state
+for f in intraday_shadow_orders.jsonl intraday_shadow_planli_orders.jsonl \
+         counterfactuals.jsonl entry_execution.jsonl goal.yaml bounds.yaml \
+         meridian.db data_quality.json heartbeat.json intraday_decisions.jsonl cf_open.json; do
+  scp -q -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87:/opt/meridian/state/$f ./
+done
+# Çekim anı: 2026-08-22 ~14:11 yerel. Canlı dosya damgaları (ssh ls -la, aynı gün):
+#   intraday_shadow_planli_orders.jsonl  Aug 21 16:59 (5 satır)
+#   intraday_shadow_orders.jsonl         Aug 20 15:29 (11 satır)
+#   counterfactuals.jsonl                Aug 21 20:31 (7258 satır)
+#   /opt/meridian/meridian/intraday_shadow.py mtime = Aug 16 20:13 UTC → v217 dağıtım kanıtı
+# Canlı events.jsonl (salt-okunur grep, kopyalanmadı — 64322 satır):
+#   intraday_shadow_planli_order: 5 olay (ilk 2026-08-20T13:31Z, son 2026-08-21T16:59Z)
+#   intraday_shadow_planli_failed: 0 olay
+
+## 2) KABLO SINAMASI (ölçüm üretmez; sandbox yönlendirmesi + kol sayımı doğrulaması)
+/Users/erdemozturk/AI-Trading/.venv/bin/python olcum.py --smoke
+#   → kollar() n={'silahli': 11, 'planli': 5}, etiketsiz=0 — canlıda elle sayılanla birebir
+
+## 3) TAM KOŞUM
+/Users/erdemozturk/AI-Trading/.venv/bin/python olcum.py
+#   → sonuc.json
+
+## ŞASİ (yeniden kurulmadı, çağrıldı — emsal exe006b):
+#   meridian.intraday_shadow.kollar / planli_kol_uretimi / golge_cf_eslestirme (B=10.000 dahil)
+#   meridian.faz5_cikis.cikis_olcumu (EXE-2026-002 gerçek-çift hattı)
+#   config.STATE → canli_state/ (store._state ve storage.db_path her çağrıda config'ten okur;
+#   depo mimarisinin ölçüm-sandbox sözleşmesi, store.py:42 + storage.py:128)
+
+## DOKUNULMAYANLAR: kart · state/ (ana checkout + canlı) · motor dosyaları · git · test suite

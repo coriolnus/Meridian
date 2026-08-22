@@ -1,0 +1,175 @@
+# state/goal.yaml — IMMUTABLE. Hermes may NEVER edit this file.
+# Written by intake on 2026-07-14. Any change is a human action, not an agent action.
+# schema_version / style / session_tz: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması
+# dördüncü kova, 2026-08-07; docs/ARTEFAKT-TARAMASI-2026-08-07.md B-1; explore_rate ile aynı
+# sınıf, K1'in 2026-07-30 taramasından kaçmış üçü). Tek eşleşmeleri guard.py GOAL_KEYS üyelik
+# seti (drift koruması — değeri değerlendirmez). DİKKAT ad çakışması: kodda görünen
+# `storage.schema_version()` bir DB fonksiyonudur, BU anahtar değil. Saat dilimi gerçekte
+# barclock/exchange_calendars'tan gelir; stil hiçbir kapıya bağlı değildir. Bu üçünü
+# değiştirmek hiçbir davranışı değiştirmez.
+schema_version: 1
+universe: "S&P 500"
+style: "swing_momentum"
+session_tz: "America/New_York"
+
+# success
+target_return_30d: 0.07
+min_sharpe: 1.2
+
+# failure
+max_drawdown: 0.16   # 0.08→0.16 (OPERATÖR KARARI 2026-08-13 penceresi): benimsenen C+mb paketinin
+                     # ÖLÇÜLEN max-dd'si %12.7 (EDG-032 damgası) — eski çizgi paketin normal
+                     # bölgesinde yanlış-alarm üretirdi. Yeni çizgi = ölçülen × ~1.3 tampon (ölçüm
+                     # kapılarıyla aynı disiplin): %16 aşımı artık GERÇEK "ölçüm-dışı" sinyalidir.
+                     # Eski 3/8 rampasının 0.08'le sayıca bağı v237'de zaten koptu (derisk_floor_dd).
+# failure_below: 30 GÜNLÜK gerçekleşen getiri bu eşiğin altına düşerse deney BAŞARISIZDIR.
+# ÖLÇÜLÜYOR (K1, 2026-07-30): watchdog.goal_failure_report() → GOAL_FAILURE alarmı. Tanımlandığı
+# 2026-07-14'ten 07-30'a kadar hiçbir kod bu hükmü okumuyordu (score.py yalnız hedef üçlüsünü
+# composite'e katıyor); yani deney başarısız olsa bunu söyleyecek tek satır kod yoktu.
+failure_below: -0.04
+
+# learning
+reflection_every: 5
+min_sample: 30
+# one_variable_only: YAPIŞIK DÜĞME — kural KOŞULSUZ uygulanır (guard.py:134 `len(changes)!=1`
+# reddi), bu anahtarın DEĞERİNİ hiçbir kod okumaz; ad yalnız hata METNİNDE geçer (artefakt
+# taraması B-3, 2026-08-07). `false` yazmak tek-değişken yasasını GEVŞETMEZ — ve bu İYİDİR
+# (yasa yumuşak olmamalı); yalan olan, kapatılamaz bir şeyin düğme gibi durması. Bu satır o
+# yalanı düzeltir: düğme değil, yasanın BEYANIDIR.
+one_variable_only: true
+# backtest_gate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (artefakt taraması B-1'in EN AĞIRI: bir
+# KAPI sözü verir, hiçbir davranışı yoktur; tek eşleşme GOAL_KEYS üyeliği). Gerçek geri-test
+# kapıları başka yerde yaşar ve bu anahtara bakmaz: DSR/PBO ship-yolu sertliği (validation),
+# guard.classify_gate, Faz-6 kilit zinciri (health.faz6_kilitleri). `false` yazmak hiçbir
+# kapıyı açmaz/kapamaz. Gerçek bir kapıya bağlanması ayrı ve bilinçli bir karardır — bağlanana
+# kadar bu satır bir düğme değil, tarihî bir niyet kaydıdır.
+backtest_gate: true
+rollback_if_worse_by: 0.10
+# explore_rate: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). Tek eşleşmesi
+# guard.py'nin GOAL_KEYS üyelik setidir (drift koruması, değerlendirme değil). Gerçek keşif
+# kararları başka yerlerden gelir: reflect.py `--explore` CLI bayrağı ve loop.py'nin maruziyet
+# bütçesi koşulu — ikisi de bu 0.15'i OKUMAZ. Bu değeri değiştirmek hiçbir davranışı değiştirmez;
+# gerçek bir olasılığa bağlanması ayrı bir karardır (ROADMAP K1 kalemi).
+explore_rate: 0.15
+max_accepted_changes_per_month: 8      # anti-overfit throttle
+
+# frictions
+commission_per_share: 0.0
+slippage_bps: 5
+fill: next_bar_open
+
+# ---------------------------------------------------------------------------------------------
+# E1 — GİRİŞ İCRA YASASI (WP-E, kart EXE-2026-001, 2026-07-31). BURADA, çünkü icra yasası bir
+# ARAMA DEĞİŞKENİ DEĞİLDİR: `strategy.yaml`a konsaydı Hermes kendi dolum fiyatını seçebilirdi
+# (bir ajanın kendi karnesini yazması). Değişmez dosyada = yalnız insan değiştirir.
+# Yasayı OKUYAN tek yer `broker.entry_law()`; iki motor da (iç `fill_entry` + ayna
+# `alpaca.submit_plan`) oradan okur — kopya yok.
+execution_v2:
+  # limit = tetik + min(limit_atr_mult·ATR14, limit_pct_cap·tetik).
+  # OPERATÖR KARARI 2026-08-03 ("önerin neyse uygula" — E1 grid hükmü 413d141 üzerine):
+  # E1 bacağı BAĞLAMAZ hale getirildi (0,5·ATR/%1 → 100·ATR/%4). Ölçüm: grid'in üç noktası da
+  # geriye-dönük defterde ZARARLI ve monoton (−7,2k/−1,2k/−2,9k$), tek artı kolon limitsiz
+  # (+2.957$/+1.959$-E3); kaçan dolumlar sistematik kazanan. %4 = MAX_ENTRY_GAP_PCT dış zarfı —
+  # felaket-gap koruması KALIR (iki tavan çelişmez, sıkı olan bağlar; artık dış zarf bağlayan
+  # taraftır). AMAÇLANAN İKİNCİ ETKİ: paper dolumları E2 defterini (entry_execution.jsonl)
+  # GERÇEK veriyle doldurur — limitin gerçek değeri ilk kez ölçülür olur. GERİ-DÖNÜŞ KAPISI:
+  # canlıya-geçiş (autonomy_level>0) E2 kanıtıyla yeniden hüküm ŞARTINA bağlıdır; o hüküm
+  # verilmeden bu satırlar canlı-para moduna taşınamaz. Eski kart-varsayılanı (0.5, 0.01)
+  # broker.py modül-sabitlerinde yedek olarak durur (config yoksa yasa ona düşer).
+  limit_atr_mult: 100.0
+  limit_pct_cap: 0.04
+  # gap davranışı: gönderim anında fiyat zaten tetiğin üstündeyse (buy-stop GEÇERSİZ — bugünkü
+  # 95/95 reddin kökü) ne olacak? "marketable_limit" = limit fiyatlı emir (tavan yine limit),
+  # "cancel" = gap-risk vetosu (emir gönderilmez, iç motor da doldurmaz).
+  gap_behavior: marketable_limit
+  # TIF (E1-v2, 2026-08-07 — ÖNCEKİ DEĞER `day` İDİ): bracket'ta `time_in_force` TEKTİR ve
+  # emrin TAMAMINA — giriş + iki KORUMA bacağına — uygulanır. `day` seçmek, dolmuş bir
+  # pozisyonun stop'unu her seans kapanışında öldürüyordu; canlı ölçüm 2026-08-06
+  # 20:00-20:02Z'de dört pozisyonu çıplak buldu. Bayat tetik gerekçesi ÇÜRÜMEDİ — aracı
+  # değişti: dolmamış giriş artık günlük kadansta `cancel_open_entries()` ile iptal edilir
+  # (o mekanizma dolmuş parent'ın koruma bacaklarına DOKUNMAZ, alpaca.py:354 yasası).
+  # Kart revizyonu: EXE-2026-001-R1. `day` beyaz-listeden ÇIKARILDI — bu satır `day` yazsa
+  # bile yasa artık kabul etmez (broker.ENTRY_TIF_ALLOWED), yani değeri burada da dürüst tut.
+  tif: gtc
+
+# ---------------------------------------------------------------------------------------------
+# E3 — KÖTÜMSER MALİYET BANDI (WP-E, 2026-07-31). NEDEN VAR: yürürlükteki friksiyon modeli
+# `slippage_bps: 5` (tek yön) + komisyon 0'dır ve bu, GÜN İÇİ ortalama bir spread varsayar.
+# Girişlerimizin TAMAMI AÇILIŞTA olur ve açılış mikroyapısı farklıdır: efektif spread seans
+# açılışında gün ortasının katıdır ve large-cap'te bile onlarca bps'e çıkar
+# (Bogousslavsky-Muravyev 2023 JFM; Lou-Polk-Skouras 2019 JFE gece/gündüz ayrışması).
+# BU BLOK HİÇBİR DOLUMU DEĞİŞTİRMEZ — yalnız RAPOR yüzeyinde `net_kotumser` ikiz sütununu besler
+# (analytics.result_verdict / profit_waterfall). Karar yüzeylerine (probgate/prescreen) GİRMEZ.
+# `ampirik_*` alanları BOŞ doğar: E2 slipaj defteri biriktikçe `analytics.pessimistic_band_update`
+# onları ÖLÇÜMLE doldurur. Ölçülmeden None kalırlar — varsayılan bir sayı yazmak, ölçülmemiş bir
+# şeyi ölçülmüş göstermek olurdu.
+pessimistic_band_v2:
+  acilis_spread_bps: 20.0      # large-cap açılış efektif spread'i (yarısı tek yönde ödenir)
+  mevcut_model_bps: 10.0       # yürürlükteki model: 5 bps × 2 bacak = 10 bps round-trip
+  kaynak: "Bogousslavsky-Muravyev 2023 JFM (açılış efektif spread) + Lou-Polk-Skouras 2019 JFE"
+  ampirik_bps: null            # E2 defterinden ölçülen gerçek (fill − resmî açılış) — HENÜZ YOK
+  ampirik_n: 0
+  ampirik_guncelleme: null
+
+# hard risk limits — immutable to Hermes, enforced in guard.py
+limits:
+  autonomy_level: 0                    # 0=paper autonomous, 1=live+approval, 2=live autonomous
+  max_position_r: 1.0
+  # OPERATÖR KARARI 2026-08-12 (karar penceresi §E.1 — "C paketi @ 5R BENİMSENDİ"): 5 → 20.
+  # ÖLÇÜM (EDG-2026-026, kart research/cards/EDG-2026-026-slot20-boyut05.yaml): slot20 + 0,5R
+  # kolu B'ye (slot5 + 1,0R) karşı 772 vs 410 işlem (CI [+271,+455]), net P&L +9.869$ vs +775$,
+  # max-dd %12,4 vs %17,8 (DÜŞTÜ), sharpe 0,285 vs 0,018 — üç kill de temiz. FİNAL-PAKET
+  # doğrulaması EDG-2026-032'de 3/3 geçti (C+mb: 885 işlem, +20.685$, dd %12,7, sharpe 0,521).
+  # BERABERİNDE GİDEN AYAR: `position_size_r` 1,0 → 0,5 (state/strategy.yaml params — motor onu
+  # GOAL'DAN DEĞİL strateji yüzeyinden okur, strategy.py:487/553/610/…). İkisi AYRILMAZ: slot 20
+  # tek başına ısı zarfını 5R'de bağlar ve boyut yarıya inmeden ölçülen davranışı vermez.
+  # ZARF DEĞİŞMEDİ: heat_hard_r 5,0R KALDI (EDG-2026-028 zarf-10'u ölçtü ve ELEDİ — sharpe
+  # 0,285 → 0,037). Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) artık
+  # eşitlik değil BOL: 5,0 <= 20,0 — sert tavan bağlayan taraf, slot sayısı değil.
+  # YAN ETKİ (bilinçli, 026 kartında beyanlı): `max_sector_exposure_pct` kuralının paydası
+  # `max_open_positions`tır (guard.py:352) — sektör başına fiili tavan 2 isimden 8 isme çıkar.
+  max_open_positions: 20
+  max_daily_loss_pct: 3.0
+  max_sector_exposure_pct: 40.0
+  no_trade_before_bars: 3              # skip the first N bars after the open
+  # --- PORTFÖY ISISI / KORELASYON EŞİKLERİ (C24, 2026-08-02: koddan buraya TAŞINDI) --------------
+  # Üçü de `meridian/guard.py`de modül sabitiydi: canlı defterde plan kesiyorlardı ama ne burada
+  # (operatörün değişmez zarfı) ne bounds.yaml'da (arama uzayı) görünüyorlardı. DEĞERLER AYNEN
+  # TAŞINDI — davranış bit-bit değişmedi. Hermes bunları öneremez (guard.LIMIT_KEYS); değiştiren
+  # yalnız operatördür. guard anahtar yoksa aynı varsayılanlara düşer (fail-safe).
+  heat_hard_r: 5.0                     # toplam açık risk (R) bunu AŞARSA → NO_GO (sert tavan)
+  # ZARF GERİLİMİ KAPANDI — OPERATÖR KARARI 2026-08-03 (d01ccb5): 4,5 → 5,0R, zarf aritmetiğine
+  # TAM EŞİT (5 poz × 1,0R); tam-boyutlu 5. pozisyon artık yapısal olarak mümkün. Tarihsel bağlam:
+  # 4,5R kod-mirası güvenlik payıydı; 390 planlık defterde tek-bağlayıcı vaka 1'di (4,58R —
+  # o vaka yeni tavanda geçerdi). RİSK-ARTIRAN bilinçli karar; kod vermiyor, operatör verdi.
+  # Tutarlılık çivisi `heat_hard_r <= max_open × max_position_r` (v166) eşitlikte sağlanır.
+  # ↑ 2026-08-12 DÜZELTMESİ (yukarıdaki cümle o günün aritmetiğidir): slot 5 → 20 olunca eşitlik
+  #   BİTTİ, çivi bol sağlanıyor (5,0 <= 20,0). Zarf gerilimi TERSİNE döndü: artık bağlayan taraf
+  #   slot sayısı değil ISI TAVANI — 0,5R'lik pozisyonlarla 5R zarfı ~10 isimde dolar, 20 slot
+  #   nadiren bağlar (026'nın "gerçek ısı-tavanı heat_hard_r" bulgusu bu).
+  heat_review_r: 3.5                  # toplam açık risk (R) bunu aşarsa → REVIEW (yumuşak bayrak)
+  corr_review: 0.85                    # adayın açık pozisyonlarla getiri korelasyonu → REVIEW
+  # --- DE-RISK RAMPASI (OPT Faz-1 kablolaması, 2026-08-12: koddan buraya TAŞINDI) ----------------
+  # C24 deseni BİREBİR (yukarıdaki üç ısı eşiği): iki sayı `broker.derisk_mult` GÖVDESİNDE gömülü
+  # sabitlerdi (0,03 / 0,08) — canlı defterde her emrin boyunu ve eşzamanlı pozisyon tavanını
+  # belirliyorlardı ama ne burada ne bounds.yaml'da görünüyorlardı. guard.py C24 yorumu bu kalemi
+  # adıyla bekliyordu: "adı konmuş sınıfın ikinci örneği: `broker.max_positions_at` rampası".
+  # DEĞERLER DEĞİŞTİ (taşıma DEĞİL, KARAR): 0,03/0,08 → 0,15/0,36. OPERATÖR KARARI 2026-08-12
+  # (§E.1 + §E.3): ölçüm EDG-2026-023 — 3/8 kolu 135 işlem / −7.761$ / işlem-R −0,078; 15/36 kolu
+  # 410 işlem / +775$ / işlem-R +0,032 (işlem farkı CI [+210,+342]). kill#3 (dd ×2,29) otomatik
+  # hükmü ENGELLEDİ; hükmü operatör verdi. Rampa 026/032 paketinin de tabanıdır (o koşumlar bu
+  # bandı monkeypatch'le kurdu — artık kablo gerçek).
+  # TEK RAMPA HER MODDA — MOD DALLANMASI YOK: Rol-1'in "gerçek-para 3/8 sabit kalsın" önerisi
+  # operatör kararıyla AŞILDI ("gerçek para'yı da birebir aynı yap"). Kodda eski 3/8'e giden bir
+  # yol bırakılmadı; `broker.py` fail-safe varsayılanları da 0,15/0,36'dır.
+  # OPERATÖR KALEMİ: `guard.LIMIT_KEYS` — Hermes öneremez, bounds.yaml'da satırı YOKTUR
+  # (risk-artıran vana = karar penceresi; ROADMAP §2-10(3) uygulama politikası).
+  # ŞERH: `derisk_floor_dd` 2026-08-12'ye dek `max_drawdown` (0,08) ile SAYICA aynıydı ve
+  # tests/test_dalga_w1_v216.py::Ç5 o eşitliği çiviliyordu. Bağ BİLEREK koptu: biri emir-boyutu
+  # rampasının tabanı, diğeri deneyin başarısızlık hükmü eşiğidir (ayrı sınıf, ayrı okuyucu).
+  derisk_full_dd: 0.15                 # bu çekilmeye KADAR tam boy (rampanın üst ucu)
+  derisk_floor_dd: 0.36                # bu çekilmede ve ötesinde YENİ boy YOK (rampanın tabanı)
+  # kill_switch_file: BİLGİLENDİRİCİ — HİÇBİR KOD OKUMAZ (K1 denetimi, 2026-07-30). health.py yolu
+  # SABİT kodlar (STATE/"HALT") ve bu anahtara hiç bakmaz. Yani buradaki yolu değiştirmek
+  # kill-switch'i TAŞIMAZ — dosya yine state/HALT olur. Yanlış kontrol hissi vermemesi için yazılı.
+  kill_switch_file: "state/HALT"

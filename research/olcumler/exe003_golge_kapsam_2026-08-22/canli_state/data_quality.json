@@ -1,0 +1,9 @@
+{
+  "date": "2026-08-21",
+  "index_ok": true,
+  "index_issues": [],
+  "tickers_failed": [],
+  "universe": 251,
+  "crosscheck": "source_lagging",
+  "data_halt": false
+}

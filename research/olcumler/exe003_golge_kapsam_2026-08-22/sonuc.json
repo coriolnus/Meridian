@@ -1,0 +1,423 @@
+{
+ "kart": "EXE-2026-003",
+ "smoke": false,
+ "sandbox": "/Users/erdemozturk/AI-Trading/research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state",
+ "dagitim_kaniti": {
+  "tarih": "2026-08-16",
+  "kaynak": "/opt/meridian/meridian/intraday_shadow.py mtime 2026-08-16 20:13 UTC (SSH ls, 2026-08-22) + ilk planli obs olayı 2026-08-20T13:31Z (canlı events.jsonl)"
+ },
+ "veri_tazeligi": {
+  "intraday_shadow_orders.jsonl": "2026-08-20",
+  "intraday_shadow_planli_orders.jsonl": "2026-08-21",
+  "counterfactuals.jsonl": "2026-08-19",
+  "intraday_decisions.jsonl": "2026-08-21T19:59:00.835340+00:00"
+ },
+ "kollar_n": {
+  "silahli": 11,
+  "planli": 5
+ },
+ "etiketsiz_n": 0,
+ "birincil_planli_uretim": {
+  "kart": "EXE-2026-003",
+  "pencere_seans": 20,
+  "seans_n": 2,
+  "pencere_tam_mi": false,
+  "dolum_n": 5,
+  "satir_n": 5,
+  "hedef": 40,
+  "kill_esigi": 10,
+  "durum": "olculemedi",
+  "hukum": "PENCERE DOLMADI (2/20 seans) — kartın birincil ölçütü de kill#2 de bu pencereye bakar; şu ana kadar 5 dolum"
+ },
+ "birincil_sema_kaniti": {
+  "silahli_n": 11,
+  "silahli_once_n": 7,
+  "silahli_sonra_n": 4,
+  "planli_n": 5,
+  "silahli_kol_alani_tasiyan": 0,
+  "silahli_anahtar_kumesi_once": [
+   [
+    "atr",
+    "atr_kaynak",
+    "bar_open",
+    "bar_t",
+    "close_ts",
+    "date",
+    "decision_as_of",
+    "entry_trigger",
+    "gap_at_submit",
+    "gap_at_submit_kaynak",
+    "gate_inputs_as_of",
+    "gates",
+    "limit",
+    "pivot",
+    "pivot_kaynak",
+    "plan_id",
+    "qty",
+    "red_nedeni",
+    "risk_dollars",
+    "sim_fill",
+    "sim_price",
+    "sim_price_rule",
+    "status",
+    "stop",
+    "target",
+    "ticker"
+   ]
+  ],
+  "silahli_anahtar_kumesi_sonra": [
+   [
+    "atr",
+    "atr_kaynak",
+    "bar_open",
+    "bar_t",
+    "close_ts",
+    "date",
+    "decision_as_of",
+    "entry_trigger",
+    "gap_at_submit",
+    "gap_at_submit_kaynak",
+    "gate_inputs_as_of",
+    "gates",
+    "limit",
+    "pivot",
+    "pivot_kaynak",
+    "plan_id",
+    "qty",
+    "red_nedeni",
+    "risk_dollars",
+    "sim_fill",
+    "sim_price",
+    "sim_price_rule",
+    "status",
+    "stop",
+    "target",
+    "ticker"
+   ]
+  ],
+  "silahli_sema_once_sonra_ozdes": true,
+  "planli_esittir_silahli_arti_kol": true,
+  "planli_kol_disi_status": [
+   "would_submit"
+  ]
+ },
+ "nufus_baglami_4a": {
+  "dagitimdan_beri": {
+   "2026-08-20": {
+    "firsat_n": 3,
+    "yazilan_n": 3,
+    "kacirilan": []
+   },
+   "2026-08-21": {
+    "firsat_n": 2,
+    "yazilan_n": 2,
+    "kacirilan": []
+   }
+  },
+  "toplam_firsat": 5,
+  "toplam_yazilan": 5,
+  "yazim_orani": 1.0,
+  "yazim_orani_olculemedi_nedeni": null
+ },
+ "ikincil_golge_cf": {
+  "kart": "EXE-2026-003",
+  "kilidi_acmaz": true,
+  "n_min": 40,
+  "seviye": 0.95,
+  "n_golge": 16,
+  "n_evren": 16,
+  "n_cf": 7258,
+  "kaynaklar": {
+   "golge_silahli": "state/intraday_shadow_orders.jsonl",
+   "golge_planli": "state/intraday_shadow_planli_orders.jsonl",
+   "cf": "state/counterfactuals.jsonl"
+  },
+  "formul": "kazanc_bps = (cf_giris − golge_sim_fill) / cf_giris × 10000",
+  "bootstrap": "tarih-kümeli (faz5_cikis.tarih_kumeli_bootstrap) · B=10000",
+  "sinir": "İKİ SİMÜLASYON karşılaştırması (gölge dakika-sim × cf EOD-sim): ölçülen ZAMANLAMA etkisidir, gerçek icra kalitesi değil. cf defterinde `side` yok — kart formülü işaretsiz uygulanır (bugün canlı yol yalnız long üretiyor, ama bu varsayım koda gömülmedi). Bu hat FAZ-5 KİLİDİNİ AÇMAZ.",
+  "durum": "olculdu",
+  "neden": null,
+  "kollar": {
+   "silahli": {
+    "n": 3,
+    "n_min_dolu_mu": false,
+    "ort_bps": -13.6844,
+    "ci": {
+     "alt": -108.8421,
+     "ust": 106.5773,
+     "n_kume": 3,
+     "B": 10000,
+     "sifiri_disliyor": false,
+     "neden": null
+    },
+    "ciftler": [
+     {
+      "ad": "P-2026-08-05-NUE·2026-08-06·silahli",
+      "kol": "silahli",
+      "plan_id": "P-2026-08-05-NUE",
+      "ticker": "NUE",
+      "date": "2026-08-06",
+      "plan_tarihi": "2026-08-05",
+      "cf_id": "CF-2026-08-05-NUE-breakout_vcp",
+      "cf_giris": 273.6468,
+      "sim_fill": 274.70823489354325,
+      "cf_status": "closed",
+      "cf_aday_n": 1,
+      "kazanc_bps": -38.7885
+     },
+     {
+      "ad": "P-2026-08-13-MRK·2026-08-14·silahli",
+      "kol": "silahli",
+      "plan_id": "P-2026-08-13-MRK",
+      "ticker": "MRK",
+      "date": "2026-08-14",
+      "plan_tarihi": "2026-08-13",
+      "cf_id": "CF-2026-08-13-MRK-breakout_vcp",
+      "cf_giris": 134.2121,
+      "sim_fill": 135.67289218281653,
+      "cf_status": "closed",
+      "cf_aday_n": 1,
+      "kazanc_bps": -108.8421
+     },
+     {
+      "ad": "P-2026-08-14-MRNA·2026-08-17·silahli",
+      "kol": "silahli",
+      "plan_id": "P-2026-08-14-MRNA",
+      "ticker": "MRNA",
+      "date": "2026-08-17",
+      "plan_tarihi": "2026-08-14",
+      "cf_id": "CF-2026-08-14-MRNA-exhaustion_hammer",
+      "cf_giris": 64.2821,
+      "sim_fill": 63.59699860071186,
+      "cf_status": "closed",
+      "cf_aday_n": 1,
+      "kazanc_bps": 106.5773
+     }
+    ],
+    "ciftler_kirpildi": 0
+   },
+   "planli": {
+    "n": 0,
+    "n_min_dolu_mu": false,
+    "ort_bps": null,
+    "ci": {
+     "alt": null,
+     "ust": null,
+     "n_kume": 0,
+     "B": 0,
+     "sifiri_disliyor": null,
+     "neden": "hiç ölçülebilir gözlem yok — ortalama da aralık da kurulamaz"
+    },
+    "ciftler": [],
+    "ciftler_kirpildi": 0
+   }
+  },
+  "toplam": {
+   "n": 3,
+   "n_min_dolu_mu": false,
+   "ort_bps": -13.6844,
+   "ci": {
+    "alt": -108.8421,
+    "ust": 106.5773,
+    "n_kume": 3,
+    "B": 10000,
+    "sifiri_disliyor": false,
+    "neden": null
+   },
+   "ciftler": [
+    {
+     "ad": "P-2026-08-05-NUE·2026-08-06·silahli",
+     "kol": "silahli",
+     "plan_id": "P-2026-08-05-NUE",
+     "ticker": "NUE",
+     "date": "2026-08-06",
+     "plan_tarihi": "2026-08-05",
+     "cf_id": "CF-2026-08-05-NUE-breakout_vcp",
+     "cf_giris": 273.6468,
+     "sim_fill": 274.70823489354325,
+     "cf_status": "closed",
+     "cf_aday_n": 1,
+     "kazanc_bps": -38.7885
+    },
+    {
+     "ad": "P-2026-08-13-MRK·2026-08-14·silahli",
+     "kol": "silahli",
+     "plan_id": "P-2026-08-13-MRK",
+     "ticker": "MRK",
+     "date": "2026-08-14",
+     "plan_tarihi": "2026-08-13",
+     "cf_id": "CF-2026-08-13-MRK-breakout_vcp",
+     "cf_giris": 134.2121,
+     "sim_fill": 135.67289218281653,
+     "cf_status": "closed",
+     "cf_aday_n": 1,
+     "kazanc_bps": -108.8421
+    },
+    {
+     "ad": "P-2026-08-14-MRNA·2026-08-17·silahli",
+     "kol": "silahli",
+     "plan_id": "P-2026-08-14-MRNA",
+     "ticker": "MRNA",
+     "date": "2026-08-17",
+     "plan_tarihi": "2026-08-14",
+     "cf_id": "CF-2026-08-14-MRNA-exhaustion_hammer",
+     "cf_giris": 64.2821,
+     "sim_fill": 63.59699860071186,
+     "cf_status": "closed",
+     "cf_aday_n": 1,
+     "kazanc_bps": 106.5773
+    }
+   ],
+   "ciftler_kirpildi": 0
+  },
+  "eslesmeyen": {
+   "n": 13,
+   "oran": 0.8125,
+   "sinif_dagilimi": {
+    "cf_dolum_yok": 1,
+    "cf_yok": 12
+   },
+   "nedenler": [
+    {
+     "ad": "P-2026-08-05-AMGN-momentum_burst·2026-08-06·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-05, AMGN) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-05-EMR·2026-08-06·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-05, EMR) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-05-BKNG·2026-08-06·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-05, BKNG) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-07-VLO-exhaustion_hammer·2026-08-10·silahli",
+     "sinif": "cf_dolum_yok",
+     "neden": "cf defterinde plan satırı yok (yalnız uyuyan/eşik-altı kayıt)"
+    },
+    {
+     "ad": "P-2026-08-13-CRM·2026-08-14·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-13, CRM) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-MRVL·2026-08-20·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, MRVL) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-BDX·2026-08-20·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, BDX) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-MRK·2026-08-20·silahli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, MRK) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-TMO-pead·2026-08-20·planli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, TMO) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-TGT·2026-08-20·planli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, TGT) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-19-EL-episodic_pivot·2026-08-20·planli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-19, EL) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-20-DE-episodic_pivot·2026-08-21·planli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-20, DE) karşılığı YOK"
+    },
+    {
+     "ad": "P-2026-08-20-TMO·2026-08-21·planli",
+     "sinif": "cf_yok",
+     "neden": "cf defterinde (2026-08-20, TMO) karşılığı YOK"
+    }
+   ],
+   "adlar_kirpildi": 0
+  }
+ },
+ "ikincil_cf_yok_teshisi": {
+  "cf_open_n": 45,
+  "cf_yok_bekleyen": [
+   "P-2026-08-05-AMGN-momentum_burst·2026-08-06·silahli",
+   "P-2026-08-05-BKNG·2026-08-06·silahli",
+   "P-2026-08-05-EMR·2026-08-06·silahli",
+   "P-2026-08-13-CRM·2026-08-14·silahli",
+   "P-2026-08-19-BDX·2026-08-20·silahli",
+   "P-2026-08-19-EL-episodic_pivot·2026-08-20·planli",
+   "P-2026-08-19-MRK·2026-08-20·silahli",
+   "P-2026-08-19-MRVL·2026-08-20·silahli",
+   "P-2026-08-19-TGT·2026-08-20·planli",
+   "P-2026-08-19-TMO-pead·2026-08-20·planli",
+   "P-2026-08-20-DE-episodic_pivot·2026-08-21·planli",
+   "P-2026-08-20-TMO·2026-08-21·planli"
+  ],
+  "bekleyen_n": 12,
+  "acikta_da_yok": [],
+  "ad_cozulemedi": [],
+  "not": "bekleyen = karşılığı cf_open.json'da AÇIK duran cf_yok satırı (cf kapanınca eşleşebilir — boru-hattı gecikmesi); acikta_da_yok = ne kapanmışta ne açıkta karşılığı olan cf_yok satırı (gerçek kapsam sorusu)"
+ },
+ "gercek_cift_hatti_exe002": {
+  "gecer": false,
+  "durum": "olculdu",
+  "neden": "ÖRNEKLEM YETERSİZ (11/20) — ölçüm KOŞTU, hüküm için asgari eşleşmiş çift sayısı dolmadı (kart EXE-2026-002: n_min=20). Bu bir başarısızlık değil ÖLÇÜLMÜŞ bir yetersizliktir ve zamanla kendiliğinden dolar; kilit o zamana kadar FAIL-CLOSED kapalıdır",
+  "esik": "eşleştirilmiş kazanç %95 CI ALT SINIRI > E3 maliyet bandı (5.0 bps) VE n >= 20 (kart EXE-2026-002; tarih-kümeli bootstrap B=10000)"
+ },
+ "gercek_cift_olcum_ozeti": {
+  "n_defter": 11,
+  "n_evren": 11,
+  "n_min": 20,
+  "n_eslesen": 11,
+  "ortalama_bps": -17.8907,
+  "ci": {
+   "ort": -17.8907,
+   "alt": -48.1191,
+   "ust": 35.1341,
+   "n": 11,
+   "n_kume": 5,
+   "B": 10000,
+   "seviye": 0.95,
+   "sifiri_disliyor": false,
+   "yontem": "TARİH-KÜMELİ (cluster) bootstrap · yeniden örneklenen birim = SEANS · B=10000 · tohum=11 · yüzdelik aralığı",
+   "kume_boylari": {
+    "2026-08-06": 4,
+    "2026-08-10": 1,
+    "2026-08-14": 2,
+    "2026-08-17": 1,
+    "2026-08-20": 3
+   },
+   "neden": null
+  },
+  "ortalama_R": -0.0293
+ },
+ "kill1_gecikme": {
+  "p95_dongu_suresi_degisimi": null,
+  "olculemedi_nedeni": "motorda döngü-süresi enstrümanı yok; tek gecikme telemetrisi (store.io_latency, yazım-p95) döngü süresi değil ve dağıtım-öncesi taban geriye dönük kurulamaz",
+  "vekil_karar_gecikmesi_s": {
+   "sinir": "VEKİL — kartın metriği değil; silahli satır başına bar-kapanış→karar damgası; tek dal, n küçük",
+   "dagitim_oncesi": {
+    "n": 7,
+    "ort_s": 0.288,
+    "min_s": 0.083,
+    "max_s": 0.44
+   },
+   "dagitim_sonrasi": {
+    "n": 4,
+    "ort_s": 0.37,
+    "min_s": 0.253,
+    "max_s": 0.652
+   }
+  }
+ }
+}

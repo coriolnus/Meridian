@@ -1,0 +1,130 @@
+# state/bounds.yaml — IMMUTABLE. The sandbox Hermes may move inside.
+# Hermes may propose ONE variable per hypothesis, on-step and in-range. Enforced in guard.py.
+entry.rs_rating_min:      {min: 60,  max: 95,  step: 1,   type: int}
+entry.pivot_proximity_pct: {min: 0.5, max: 8.0, step: 0.1, type: float}
+entry.min_volume_ratio:   {min: 1.0, max: 4.0, step: 0.1, type: float}
+entry.min_score:          {min: 40,  max: 90,  step: 1,   type: int}
+exit.profit_target_r:     {min: 2.0, max: 6.0, step: 0.5, type: float}
+exit.time_stop_days:      {min: 3,   max: 40,  step: 1,   type: int}
+exit.trail_atr_mult:      {min: 1.0, max: 5.0, step: 0.1, type: float}
+exit.breakeven_r:         {min: 0.0, max: 3.0, step: 0.5, type: float}
+stop_loss_atr_mult:       {min: 0.8, max: 4.0, step: 0.1, type: float}
+# position_size_r: CANLI DEĞER 1.0 → 0.5 (operatör kararı 2026-08-12, karar penceresi §E.1;
+# EDG-2026-026 C kolu + 032 final-paket). Satır DEĞİŞMEDİ ve değişmemeliydi: 0,5 zaten aralık-içi
+# ve adım-üstü. Arama uzayı bir DEĞER değil bir KUMHAVUZUDUR — canlı değer state/strategy.yaml'da.
+position_size_r:          {min: 0.1, max: 1.0, step: 0.1, type: float}
+regime.min_exposure_score: {min: 0,   max: 80,  step: 5,   type: int}
+# Batch L — new edge/exit knobs, default OFF (0) so baseline is unchanged; Hermes can explore them.
+exit.giveback_pct:        {min: 0.0, max: 0.6, step: 0.1, type: float}   # peak-profit give-back exit (#10)
+exit.chandelier_lookback: {min: 0,   max: 30,  step: 5,   type: int}     # swing-high chandelier trail (#9)
+entry.max_ext_atr:        {min: 0.0, max: 12.0, step: 1.0, type: float}  # 50SMA extension climax filter (#13)
+entry.rs_dual_horizon:    {min: 0,   max: 1,   step: 1,   type: int}     # dual-horizon RS gate on/off (#12)
+exit.scale_out_r:         {min: 1.0, max: 4.0, step: 0.5, type: float}   # bank partial at this R (#8)
+exit.scale_out_frac:      {min: 0.0, max: 0.75, step: 0.25, type: float} # fraction to bank; 0 = off (#8)
+# öneri #3 — VCP skor bileşen ağırlıkları (seçilim fonksiyonu artık kapı disipliniyle tunlanabilir).
+# Formül normalize: ağırlıklar oynayınca ölçek [0,100] kalır. Varsayılanlar eski sabitler.
+entry.w_rs:               {min: 0.10, max: 0.60, step: 0.05, type: float}
+entry.w_tight:            {min: 0.05, max: 0.55, step: 0.05, type: float}
+entry.w_vol:              {min: 0.05, max: 0.45, step: 0.05, type: float}
+entry.w_prox:             {min: 0.00, max: 0.40, step: 0.05, type: float}
+# G2 skor yeniden inşası (ROADMAP §E Aşama 7 G2, 2026-07-29) — YENİ bileşenler, VARSAYILAN KAPALI.
+# Batch L deseni: satırlar burada olduğu için Hermes onları KUM HAVUZUNDA arayabilir, ama strategy.yaml
+# onları taşımadığından canlı etkileri 0'dır ve bileşik skor birebir eskisidir. Canlıya geçiş ancak
+# OOS kapısından geçen bir adayla olur. Kanıt: g2_olcum 2026-07-29 (rvol gerçek @5 IC 0.234 / @10 0.219
+# ANLAMLI, cf @10 0.047 / @20 0.062 ANLAMLI; bant 1.5-2.0 → +1.84% n=955; mom12_1 cf @20 +0.055).
+entry.w_rvolband:         {min: 0.00, max: 0.40, step: 0.05, type: float}  # rvol BANT puanı ağırlığı
+entry.w_mom:              {min: 0.00, max: 0.40, step: 0.05, type: float}  # 12-1 momentum rütbe ağırlığı
+entry.min_rvol:           {min: 0.0,  max: 2.0,  step: 0.1,  type: float}  # rvol taban filtresi; 0 = kapalı
+# EDG-2026-016 TURNOVER (2026-08-01, kart hükmü SUCCESS) — YENİ BİLEŞEN, VARSAYILAN KAPALI.
+# Batch L/G2 deseni birebir: satır burada olduğu için Hermes onu KUM HAVUZUNDA arayabilir, strategy.yaml
+# taşımadığı için canlı etkisi 0'dır ve bileşik skor birebir eskisidir (çivi: test_turnover_kablolama_v149).
+# ELLE AĞIRLIK YOK: kartın entegrasyon kararı düğmenin ölçüsünü ÖĞRENME DÖNGÜSÜNE bırakır; ilk örneği
+# gece sprinti alır, canlıya geçiş yine OOS kapısından geçen bir adayla olur.
+# Kanıt (research/cards/EDG-2026-016 + wp2_olcum/sonuc_016.json, n=885.803 sembol-gün, 242 sembol,
+# 2009-2026): turnover21 = medyan21(hacim)/as_of_shares(t) üst %20 dilim evren-fazlası @10 +0,31%
+# CI[+0,15,+0,49] · @20 +0,65% CI[+0,34,+1,01]; rvol20+mom21 kontrolünde ARTIK sağ (kova-tabanı +0,56%,
+# kova-içi +0,77%, artık-IC @20 0,0284); q5 TEKDÜZE MONOTON; maliyet-sonrası @20 net +0,55%.
+# ÇEKİNCE (hükme iliştirik): hayatta-kalma yanlılığı pozitif bulguyu yukarı çarpıtır ve büyüklüğü bu
+# veriyle ölçülemez; alt-dönem kararlılığı ÖLÇÜLMEDİ; sabit-bps maliyet modeli kayma taşımaz.
+entry.w_turnover:         {min: 0.00, max: 0.40, step: 0.05, type: float}  # devir hızı yüzdelik puanı ağırlığı
+# G3b ÇIKIŞ REFORMU (ROADMAP §3.2 G3b, 2026-07-30) — DÖRT YENİ SATIR, HEPSİ VARSAYILAN KAPALI/NÖTR.
+# Batch L deseni birebir: satırlar burada olduğu için kum havuzunda ARANABİLİR, strategy.yaml onları
+# taşımadığı için canlı etkileri SIFIRDIR (çivi testi: test_g3b_cikis_v124).
+# Kanıt tabanı — G3b ön-ölçümü (2026-07-29, cf n≈2100): kapanış-KONUMU sürekli sinyal olarak SIFIR
+# (IC≈0), ama PİVOT-ALTI kapanış kısa ufukta gerçek negatif (@5bar -0.74% vs pivot-üstü +0.32%, n=302;
+# @20'de kısmen toparlar) → erken itlaf YALNIZ "pivot-altı kapanış" biçiminde savunulabilir.
+exit.early_kill_pivot:    {min: 0,   max: 1,   step: 1,   type: int}     # pivot-altı kapanış → ertesi açılış çık; 0 = kapalı
+# ERKEN İTLAF PENCERESİ: kural yalnız ilk `early_kill_bars` yönetim barında geçerlidir. Varsayılan 1 =
+# ROADMAP'in düz okunuşu ("kırılım günü kapanışı"), yani pozisyonun GÖRDÜĞÜ ilk kapanış. Kanıt ufku 5
+# bar olduğu için aralık 10'a kadar açık — ama kalibrasyon kapıdan geçmek zorunda.
+exit.early_kill_bars:     {min: 1,   max: 10,  step: 1,   type: int}     # itlaf penceresi (bar); early_kill_pivot=0 iken ATIL
+# YAPI-TABANLI STOP: 0 = ATR stopu (varsayılan, bugünkü yasa), 1 = pivot − tampon.
+stop_mode:                {min: 0,   max: 1,   step: 1,   type: int}     # 0=atr (varsayılan) / 1=pivot_alti
+stop_buffer_atr:          {min: 0.1, max: 1.0, step: 0.1, type: float}   # pivot_alti tamponu (ATR katı); stop_mode=0 iken ATIL
+# Y3 REJİM/RİSK DÖRTLÜSÜ (ROADMAP §3.1 Y3, 2026-07-30) — İNEN DÖRT SATIRIN BUGÜN ÜÇÜ BURADA;
+# dördüncüsü (`regime.spy_sma_gate`) EMEKLİ ve mezar taşı hemen aşağıda. Kalan üçü VARSAYILAN
+# KAPALI (0). Batch L deseni birebir: satırlar burada olduğu için kum havuzunda ARANABİLİR,
+# strategy.yaml onları taşımadığı için canlı etkileri SIFIRDIR (çivi testi: test_hafta3b_v125).
+# Beklenti getiri DEĞİL risk: vol ~-1/3, MaxDD ~yarı. Üçü de guard/loop giriş-kapısı zincirinde
+# bayrak-arkasıdır ve açılışları gölge-varyant/prescreen ölçümünden geçmek zorundadır.
+#
+# --- MEZAR TAŞI: regime.spy_sma_gate — DÜŞÜRÜLDÜ (8b6bbbc, 2026-08-01) --------------------------
+# Düşen satır: `regime.spy_sma_gate: {min: 0, max: 1, step: 1, type: int}`.
+# NEREYE EMEKLİ OLDU: kapı DEĞİL, PANO GÖSTERGESİ. Yasa `meridian/regime.py::spy_sma_gate` içinde
+#   YAŞAMAYA DEVAM EDİYOR — SPY'ın 200-SMA'nın altında mı üstünde mi olduğu hâlâ ÖLÇÜLÜP panoya
+#   basılıyor; ölen şey ölçüm değil, ölçümün karar yoluna bağlı olan ucu. `blocks_new_entries`
+#   SABİT False'tur ve knob 1 verilse bile değişmez (`knob_emekli` = regime.SPY_SMA_EMEKLI beyanı).
+# NEDEN: kart EDG-2026-005 ÖLÇÜLDÜ ve kill#1 tetiklendi — tek atfedilebilir pencerede (IS 2022-24)
+#   Sharpe −0,254→−0,898, PARA-v3 −0,029→−0,0878; vol anlamlı düşüyor ama bedeli getiri. OOS'ta 55
+#   bloke günde 0 giriş engellendi (doğrudan etki TAM SIFIR). Ayrıntı: research/cards/
+#   EDG-2026-005-sma-gate.yaml + research/olcumler/wpg_olcum/RAPOR.md.
+# SATIR NEDEN DÜŞTÜ (eşik değişikliği DEĞİL): knob hükümsüzdü — makine onu örneklemeye devam
+#   ediyordu ve altı değerlendirme, sonucu YAPISAL OLARAK sabit olan bir düğmeye harcandı. Bir
+#   arama uzayında etkisiz bir eksen tutmak, kapsamayı değil yalnız bütçeyi büyütür.
+# SESSİZ-DİRİLİŞ ÇİVİLERİ (üçü birlikte; biri tek başına yetmez):
+#   1. tests/test_altyapi_kucukler_v172.py::test_wpg_bounds_ta_spy_sma_gate_SATIRI_YOK
+#      — satırın GERİ GELMESİNİ yasaklar (bu dosya; ad geri eklenirse makine yeniden örneklerdi).
+#   2. tests/test_hafta3b_v125.py::test_Y3_sma_gostergesi_yeni_girisi_KAPATMAZ
+#      — knob 1 + endeks SMA'nın ALTINDA + kapı sözlüğü elden verilmiş hâlde bile hüküm GO;
+#        yani satır bir şekilde geri gelse DAHİ karar yolu değişmez (ikinci savunma hattı).
+#   3. tests/test_hafta3b_v125.py::test_Y3_zorla_tasfiye_YOK — emeklilik tasfiye ucunu da kapsar.
+# VIX/VIX3M: VERİ KAYNAĞI DOĞRULANDI ve YOK (2026-07-30) — Massive endeks uçları HTTP 403
+# NOT_AUTHORIZED, FMP quote ^VIX/VIX/^VIX3M/VIX3M dördü de BOŞ. Satır arama uzayında yerini alsın
+# ve ölçüm yolu hazır olsun diye İNER, ama kapı `veri_yok` beyanıyla DEVRE DIŞIDIR: knob 1 yapılsa
+# bile karar üretmez (regime.VIX_DATA_STATUS). Oran UYDURULMAZ, vekil bir seri VIX adıyla sunulmaz.
+regime.vix_backwardation_gate: {min: 0, max: 1, step: 1, type: int}      # VIX>VIX3M akut anahtarı; BUGÜN veri_yok → atıl
+# C12 (denetim 2026-08-02): AŞAĞIDAKİ İKİ SATIR 2026-08-02'YE KADAR YAPISAL OLARAK ATILDI — arama
+# uzayında duruyorlardı ama HİÇBİR üretim çağıranı kapının okuduğu portföy alanlarını göndermiyordu,
+# yani en sıkı tavanla (0,1/0,1) bile hüküm değişmiyordu. Kablo bağlandı: canlı döngü, replay ve
+# cf_backfill artık equity/sector_notional/heat_pct + plan notional/risk_dollars geçiriyor
+# (`guard.y3_portfolio_inputs` / `guard.y3_plan_inputs`). ARTIK ATEŞLENEBİLİRLER — 0 varsayılanı
+# değişmedi, yani bugünkü canlı davranış aynı. KAPSAM DIŞI KALAN ÜRETİCİLER (beyan): gölge-v1/v2
+# (`shadow_variants._judge`) ve `mutation.py` — o iki yoldaki bir Y3 kolu tavanı UYGULAMAZ.
+portfolio.sector_cap:     {min: 0.0, max: 30.0, step: 5.0, type: float}  # sektör NOTIONAL payı tavanı %; 0 = kapalı (bant 25-30)
+portfolio.heat_cap:       {min: 0.0, max: 8.0,  step: 1.0, type: float}  # açık risk / NAV tavanı %; 0 = kapalı (bant 6-8)
+# =================================================================================================
+# DE-RISK RAMPASI — BU DOSYADA SATIRI YOK, VE BU BİLİNÇLİ (OPT Faz-1 kablolaması, 2026-08-12)
+# =================================================================================================
+# NE OLDU: `broker.derisk_mult`in iki eşiği (fonksiyon gövdesinde gömülü 0,03 / 0,08) parametreye
+# çevrildi ve operatör kararıyla 0,15 / 0,36'ya taşındı (EDG-2026-023 ölçümü + karar penceresi
+# §E.1/§E.3). Yürürlükteki değerler `state/goal.yaml` → `limits.derisk_full_dd` /
+# `limits.derisk_floor_dd`; okuyan tek yer `broker.derisk_ramp()`.
+# ARAMA ARALIĞI YAZILMADI, ÇÜNKÜ ÖYLE BİR KARAR YOK (uydurma yasağı): 2026-08-12 penceresinde
+# operatör bir ARALIK değil TEK NOKTA seçti (0,15 / 0,36 — EDG-023'ün iki kollu ölçümünden).
+# Buraya bir min/max/step yazmak, verilmemiş bir kararı kayda geçirmek olurdu. Kodun uyguladığı
+# TEK kelepçe akıl-sağlığıdır: `0 <= full_dd < floor_dd <= 1` (broker.derisk_ramp) — bir arama
+# aralığı DEĞİL, ters/anlamsız bandı reddeden fail-safe.
+# NEDEN SATIR YOK — İKİ AYRI YASA, İKİSİ DE BU DEPODA YAZILI:
+#   1. İKİ SAHİP YASAĞI: bir ad hem `guard.LIMIT_KEYS`te hem burada olamaz. `validate_change`
+#      LIMIT_KEYS'teki her adı reddeder (guard.py:166), yani buradaki satır Hermes'e ASLA
+#      geçmez — ama `config.bounds().keys()` UCB arama eksenlerini üretir (analytics.py:2781,
+#      api.py:3446), dolayısıyla eksen ÖRNEKLENİR ve her örnek "immutable" retine harcanır.
+#      Çivi emsali: tests/test_kovab_dalga3_v166.py::test_c24_uc_esik_de_HERMESE_KAPALI —
+#      "bounds.yaml'a da girmiş → iki sahip, sessiz ayrışma".
+#   2. HÜKÜMSÜZ EKSEN YASAĞI: `regime.spy_sma_gate` mezar taşı (8b6bbbc, yukarıda) tam bu zararı
+#      anlatıyor — "bir arama uzayında etkisiz bir eksen tutmak, kapsamayı değil yalnız bütçeyi
+#      büyütür". Altı değerlendirme, sonucu yapısal olarak sabit bir düğmeye harcanmıştı.
+# UYGULAMA POLİTİKASI (ROADMAP §2-10(3)): rampa/slot/boyut/ısı = HEP-PENCEREYE sınıfı (risk-artıran
+# vanalar). Bunlar makine tarafından evriltilmez; kapı-içi evrim kenar-iyileştirmeleri içindir.
+# BU SATIRLARIN GERİ GELMESİ İSTENİRSE: önce ad `guard.LIMIT_KEYS`ten ÇIKARILIR (yani operatör
+# kalemi olmaktan çıkarılır) — yoksa yukarıdaki iki yasa aynı anda çiğnenir.

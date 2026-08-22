@@ -1,0 +1,16 @@
+{
+ "kart": "EXE-2026-003",
+ "smoke": true,
+ "kollar_n": {
+  "silahli": 11,
+  "planli": 5
+ },
+ "etiketsiz_n": 0,
+ "veri_tazeligi": {
+  "intraday_shadow_orders.jsonl": "2026-08-20",
+  "intraday_shadow_planli_orders.jsonl": "2026-08-21",
+  "counterfactuals.jsonl": "2026-08-19",
+  "intraday_decisions.jsonl": "2026-08-21T19:59:00.835340+00:00"
+ },
+ "sandbox": "/Users/erdemozturk/AI-Trading/research/olcumler/exe003_golge_kapsam_2026-08-22/canli_state"
+}
