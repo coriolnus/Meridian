@@ -1,0 +1,89 @@
+{
+ "kosum": "sabit_mevcut",
+ "smoke": false,
+ "kol_kimligi": {
+  "dunya": "sabit",
+  "secilim": "mevcut",
+  "lambda_ceza": null,
+  "medyan_atrpct": null,
+  "goal_slippage_bps_kaydi": 5.0,
+  "goal_kaydi_notu": "sabit dünya: broker slip'ine hiç dokunulmadı",
+  "uygulanan_slip_bps": {
+   "min": 5.0,
+   "medyan": 5.0,
+   "max": 5.0
+  },
+  "defter_score_hep_int": true
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 885,
+ "net_pnl_trades": 23806.13,
+ "net_pnl_equity": 23806.13,
+ "pf": 1.1293,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.1263,
+ "maxdd_m2m": 0.1263,
+ "sharpe": 0.594,
+ "avg_r": 0.083,
+ "win_rate": 0.365,
+ "total_return": 0.2381,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 318,
+   "pnl": 6171.45,
+   "avg_r": 0.0397
+  },
+  "exhaustion_hammer": {
+   "n": 228,
+   "pnl": 4711.24,
+   "avg_r": 0.1403
+  },
+  "momentum_burst": {
+   "n": 339,
+   "pnl": 12923.44,
+   "avg_r": 0.0847
+  }
+ },
+ "exit_reason_dagilim": {
+  "stop": 380,
+  "regime_flip": 168,
+  "time_stop": 152,
+  "target": 101,
+  "stop_gap": 57,
+  "target_gap": 27
+ },
+ "verdict_dagilim": {
+  "GO": 64,
+  "REVIEW": 872,
+  "NO_GO": 593
+ },
+ "toplam_plan": 1529,
+ "silahlanan_plan": 936,
+ "entry_rejects": {
+  "open_below_stop": 23,
+  "max_chase": 28
+ },
+ "secilim_farki_sort": null,
+ "butunluk_gecerli": true,
+ "sasi_kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_ayni": true
+}

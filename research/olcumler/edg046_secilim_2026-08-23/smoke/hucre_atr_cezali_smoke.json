@@ -1,0 +1,94 @@
+{
+ "kosum": "atr_cezali",
+ "smoke": true,
+ "kol_kimligi": {
+  "dunya": "atr",
+  "secilim": "cezali",
+  "lambda_ceza": 5.0,
+  "medyan_atrpct": 0.03532295331765375,
+  "goal_slippage_bps_kaydi": 5.0,
+  "goal_kaydi_notu": "goal.slippage_bps 5'te SABİT kalır (dosyaya/sözlüğe dokunulmadı); atr dünyasında gerçek slip işlem-başına broker sarmalayıcısından — kanıt öz-sınama G1/G2",
+  "uygulanan_slip_bps": {
+   "min": 3.152812,
+   "medyan": 5.0,
+   "max": 6.252777
+  },
+  "defter_score_hep_int": true
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 8,
+ "net_pnl_trades": -2160.26,
+ "net_pnl_equity": -2160.26,
+ "pf": 0.0,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": null,
+ "maxdd_m2m": 0.0216,
+ "sharpe": null,
+ "avg_r": null,
+ "win_rate": null,
+ "total_return": null,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 1,
+   "pnl": -106.05,
+   "avg_r": -0.28
+  },
+  "exhaustion_hammer": {
+   "n": 2,
+   "pnl": -402.09,
+   "avg_r": -0.532
+  },
+  "momentum_burst": {
+   "n": 5,
+   "pnl": -1652.12,
+   "avg_r": -0.8448
+  }
+ },
+ "exit_reason_dagilim": {
+  "regime_flip": 7,
+  "stop": 1
+ },
+ "verdict_dagilim": {
+  "GO": 3,
+  "REVIEW": 6,
+  "NO_GO": 0
+ },
+ "toplam_plan": 9,
+ "silahlanan_plan": 9,
+ "entry_rejects": {
+  "open_below_stop": 1
+ },
+ "secilim_farki_sort": {
+  "tur_n": 3,
+  "sira_degisen_tur_n": 2,
+  "kayan_aday_toplam": 7,
+  "aday_toplam": 9,
+  "sort_okuma_n": 9,
+  "ham_okuma_n": 18,
+  "atr_olculemeyen_aday_n": 0,
+  "sd_sifir_tur_n": 0,
+  "gun_sonu_sortsuz_n": 0
+ },
+ "butunluk_gecerli": true,
+ "sasi_kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_ayni": true
+}

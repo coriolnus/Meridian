@@ -1,0 +1,3550 @@
+{
+ "ozet": {
+  "tur_n": 505,
+  "sira_degisen_tur_n": 247,
+  "kayan_aday_toplam": 807,
+  "aday_toplam": 1532,
+  "sort_okuma_n": 1532,
+  "ham_okuma_n": 2842,
+  "atr_olculemeyen_aday_n": 0,
+  "sd_sifir_tur_n": 146,
+  "gun_sonu_sortsuz_n": 0
+ },
+ "turlar": [
+  {
+   "tarih": "2022-01-06",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-01-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-01-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-08-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-08-18",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-11-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-11-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-11-18",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-11-21",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-11-22",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-11-30",
+   "aday_n": 17,
+   "z_kumesi_n": 17,
+   "kayan_aday_n": 12,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-12-02",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-12-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-12-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-12-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-12-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-12-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-12-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-12-14",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-01-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-01-26",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-01-31",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-01",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-02",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-02-07",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-02-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-02-10",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-02-13",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-14",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-02-15",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-02-23",
+   "aday_n": 16,
+   "z_kumesi_n": 16,
+   "kayan_aday_n": 16,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-04-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-14",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-18",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-19",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-20",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-21",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-04-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-04-26",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-04-27",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-01",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-02",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-03",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-04",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-05",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-10",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-11",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-18",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-24",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-05-25",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-26",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-05-30",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-01",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-02",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-12",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-14",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-06-16",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-23",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-27",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-06-28",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-18",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-19",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-21",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-24",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-07-25",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-26",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-27",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-28",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-07-31",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-08-01",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-08-02",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-08-03",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-08-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-08-07",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-08-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-08-14",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-08-30",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-09-01",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-09-05",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-09-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-09-14",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-06",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-11-07",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-09",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-10",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-20",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-11-29",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-11-30",
+   "aday_n": 19,
+   "z_kumesi_n": 19,
+   "kayan_aday_n": 16,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-01",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-04",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-06",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-08",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-11",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-13",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-14",
+   "aday_n": 15,
+   "z_kumesi_n": 15,
+   "kayan_aday_n": 14,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-15",
+   "aday_n": 11,
+   "z_kumesi_n": 11,
+   "kayan_aday_n": 10,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2023-12-18",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-20",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-21",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2023-12-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-04",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-10",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-11",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-12",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-18",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 6,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-19",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-24",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-26",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-29",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-01-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-01-31",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-01",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-02",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 8,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-05",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-06",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-08",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-09",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-14",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-16",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-20",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-02-22",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-27",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-28",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-02-29",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-01",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-04",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-07",
+   "aday_n": 8,
+   "z_kumesi_n": 8,
+   "kayan_aday_n": 6,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-11",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-13",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-15",
+   "aday_n": 10,
+   "z_kumesi_n": 10,
+   "kayan_aday_n": 8,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-20",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-21",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-22",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-03-25",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-03-27",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-04-02",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-04-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-04-04",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-04-09",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-05-07",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-05-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-05-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-05-22",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-05-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-05-24",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-05-28",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-05-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-05-31",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-03",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-05",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-11",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-12",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-13",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-14",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-18",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-21",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-26",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-06-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-06-28",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-01",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-07-10",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-07-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-07-16",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-07-18",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-19",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-23",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-07-26",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-07-31",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-08-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-08-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-08-19",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-08-20",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-08-21",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-08-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-08-28",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-08-30",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-04",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-09-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-10",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-09-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-09-12",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-09-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-18",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-19",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-20",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-09-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-24",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-09-30",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-01",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-02",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-09",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-11",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-15",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-16",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-17",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-18",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-21",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-22",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-23",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-24",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-25",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-29",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-10-30",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-10-31",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-01",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-05",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-06",
+   "aday_n": 40,
+   "z_kumesi_n": 40,
+   "kayan_aday_n": 34,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-07",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-11",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-14",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-18",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-19",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-20",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-21",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-22",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-11-25",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-11-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-02",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-04",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-12-05",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-12-12",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-23",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2024-12-24",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2024-12-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-01-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-01-17",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-21",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-22",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-01-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-24",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-01-28",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 6,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-29",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-01-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-02-03",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-02-04",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-05",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-06",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-07",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-02-10",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-11",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-12",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-02-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-02-14",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-18",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-19",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-20",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-02-21",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-21",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-27",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-28",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-05-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-06-02",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-06-03",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-06-05",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-06-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-06-10",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-06-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-02",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-03",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-14",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-16",
+   "aday_n": 10,
+   "z_kumesi_n": 10,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-17",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-18",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-24",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-28",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-29",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-07-30",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-07-31",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-01",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-05",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-06",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-07",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-11",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-14",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-18",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-20",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-08-22",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-08-28",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-03",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-05",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-08",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-11",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-15",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-17",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-18",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-19",
+   "aday_n": 10,
+   "z_kumesi_n": 10,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-22",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-23",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-24",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-25",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-26",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-09-29",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-09-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-01",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-03",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-06",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-07",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-08",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-09",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-13",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-14",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-15",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-17",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-20",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-21",
+   "aday_n": 8,
+   "z_kumesi_n": 8,
+   "kayan_aday_n": 6,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-22",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-23",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-24",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-27",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-28",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-10-29",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-10-31",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-03",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-05",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-06",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-07",
+   "aday_n": 10,
+   "z_kumesi_n": 10,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-10",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-11",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-13",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-14",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-25",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-11-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-11-28",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-12-01",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-12-02",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-12-03",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-12-04",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-12-05",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-12-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2025-12-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-12-18",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-12-19",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2025-12-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-02",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-05",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-06",
+   "aday_n": 11,
+   "z_kumesi_n": 11,
+   "kayan_aday_n": 9,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-07",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-08",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-09",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-13",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-14",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-15",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-21",
+   "aday_n": 8,
+   "z_kumesi_n": 8,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-26",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-01-28",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-29",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-01-30",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-02",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-03",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-04",
+   "aday_n": 17,
+   "z_kumesi_n": 17,
+   "kayan_aday_n": 14,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-06",
+   "aday_n": 8,
+   "z_kumesi_n": 8,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-09",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-10",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-02-11",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-20",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-25",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-02-26",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 4,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-08",
+   "aday_n": 8,
+   "z_kumesi_n": 8,
+   "kayan_aday_n": 7,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-10",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-14",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-16",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-20",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-23",
+   "aday_n": 9,
+   "z_kumesi_n": 9,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-24",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-28",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-04-29",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-04-30",
+   "aday_n": 11,
+   "z_kumesi_n": 11,
+   "kayan_aday_n": 9,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-01",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-04",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-05",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-06",
+   "aday_n": 6,
+   "z_kumesi_n": 6,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-07",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-08",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-11",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-13",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-14",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-19",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-20",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-21",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-26",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-27",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-05-28",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-05-29",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-01",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-02",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-06-03",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-04",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-08",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-09",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-12",
+   "aday_n": 4,
+   "z_kumesi_n": 4,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-15",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-06-17",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-06-18",
+   "aday_n": 15,
+   "z_kumesi_n": 15,
+   "kayan_aday_n": 13,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-22",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-06-23",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-06-24",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-25",
+   "aday_n": 7,
+   "z_kumesi_n": 7,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-06-30",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-07-01",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-07-07",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-07-08",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-07-13",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-07-14",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 3,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-07-15",
+   "aday_n": 3,
+   "z_kumesi_n": 3,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2026-07-16",
+   "aday_n": 1,
+   "z_kumesi_n": 1,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2026-07-21",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  }
+ ]
+}

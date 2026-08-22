@@ -1,0 +1,61 @@
+# EDG-2026-046 · friksiyon-bilinçli seçilim — 4 hücre + şasi kapısı (2026-08-23)
+# Kart: research/cards/EDG-2026-046-friksiyon-bilincli-secilim.yaml (OKU-DOKUNMA; hüküm Rol-1'in).
+# Şasi çapası: edg032c_taban_2026-08-22 (kartın sasi_capasi_guncellemesi bloğu) — kapı kıyası
+# kosum1/ kanonik dosyalarına + TABAN_KUNYESI.json kapı sha'larına.
+#
+# HÜCRELER (K += 4; hepsi merkez: slot 20 · 0,5R · 5R zarf — parametre enjeksiyonu YOK):
+#   sabit_mevcut · sabit_cezali · atr_mevcut · atr_cezali
+#   dünya  : sabit 5 bps (bugünkü model) ↔ ATR%-orantılı slip_i = 5bps × (ATR%_i / medyan-ATR%)
+#   seçilim: mevcut skor-sıralı ↔ ATR%-cezalı skor' = skor − 5·z(ATR%)  [λ=5 TEK NOKTA DONUK]
+#
+# ENJEKSİYON NOKTALARI (koddan OKUNDU, varsayılmadı — görev şartı; satırlar koşum günü doğrulandı):
+#   * ADAY-SIRALAMA YOLU (cezanın hedefi): meridian/backtest.py:438
+#       `candidates.sort(key=lambda s: s.score, reverse=True)`
+#     — kabul skor-sıralıdır (EDG-034 Faz-0 + keşif belgesi §0 teyidi). Ceza YALNIZ bu sıralamaya
+#     iner: `strat.scan_entry` süreç-içi sarmalanır, sinyal bir VEKİLE sarılır; vekilin `score`u
+#     yalnız satır-438 lambda'sının kod nesnesinden (replay.__code__.co_consts'tan bulunur,
+#     kaynak satır assert'li) okunduğunda cezalıdır. Plan üretimi (backtest.py:462 plan["score"]),
+#     candidate_log (:441) ve kapının score_band okuması (guard.py:534-536 plan.get("score"))
+#     HAM skoru görür — kanıt: defter score alanları int + ham/sort okuma sayaçları + sentetik
+#     ön-sınama (gerçek lambda kod nesnesiyle, koşumdan önce).
+#   * z(ATR%) GÜNLÜK, ADAY KÜMESİ İÇİNDE (PIT: yalnız plan alanları sig.atr / sig.entry_trigger):
+#     gün sınırı regime_mod.build_regime_json sarmalayıcısından (backtest.py:377 — scan
+#     bloğundan önce çağrılır). std popülasyon (ddof=0); ATR ölçülemeyen sinyal (motor yasası:
+#     backtest.py:543-544 `float(sig.atr) if >0 else None`) z kümesine GİRMEZ, cezası 0; std=0
+#     ya da n<2 → tüm cezalar 0 (sayaçlı).
+#   * SLİP YÜZEYİ (ATR dünyası): broker.py:476 `self.slip = slippage_bps/10000`; değdiği üç
+#     satır: giriş :611 `next_open*(1+self.slip)` · kısmi satış :734 `level*(1-self.slip)` ·
+#     çıkış :765 `raw_exit*(1-self.slip)`. PaperBroker.fill_entry/close_position/scale_out
+#     süreç-içi sarmalanır (edg040 fiyat-kancası deseni); fill sırasında self.slip işlem-özel
+#     s_i, dönüşte taban; çıkış/kısmi satış aynı işlemin s_i'sini öder (ticker→s_i haritası).
+#     ATR%_i = atr/entry_trigger; atr = motorun fill'e geçirdiği silahlanma-anı ATR'si
+#     (backtest.py:337 `atr=armed_atr.get(t)`). ATR ölçülemeyen girişte s_i = TABAN 5 bps
+#     (0-slip friksiyonsuz-dolum uydurması olurdu; sayaçlı). goal.slippage_bps'e DOKUNULMAZ
+#     (5 kalır — sabit hücrelerin ve şasi kimliğinin çivisi).
+#   * MEDYAN-ATR% ÇAPASI (beyanlı, ölçümden önce donuk kural): sabit_mevcut hücresinde DOLAN
+#     girişlerin ATR% medyanı (statistics.median; ölçülemeyenler dışarıda) — dört hücrede AYNI
+#     donmuş skaler (cezalı hücrenin kendi seçiliminden türetilseydi dünya tanımı seçilime
+#     bağlanırdı). Değer: medyan_atrpct.json (duman kendi medyanını duman-sabit_mevcut'tan alır).
+#
+# ÖZ-SINAMA (kill#2): satır başına beklenen slip, 1e-9, likidite terimi AYRIŞTIRILMIŞ (edg040
+#   rekonstrüksiyonu satır-slip'li); Ç1 defterin kendisine çivili — yuvarlama edg045
+#   `defter_yuvarla` KARMA modeli AYNEN (np.float64 bar-fiyat yolları: stop_gap/target_gap/
+#   time_stop/regime_flip/eod_markout/delisted_markout · Python-float plan-alanı yolları:
+#   stop/target). Kill#2 TÜM satırlara uygulanır.
+#
+# KİLL'LER: kill#1 şasi kapısı (sabit_mevcut ≢ edg032c/kosum1 üç defter sha256 → DUR exit 2) ·
+#   kill#2 öz-sınama · λ donuk · PIT (ceza yalnız plan alanları) · iki-dünya (4 hücre birlikte) ·
+#   motor sha (broker/backtest/strategy/guard) hücre başı önce/sonra.
+#
+# Δ+CI (kart, donuk): Δ(sabit_cezali−sabit_mevcut) ve Δ(atr_cezali−atr_mevcut) — cezalının
+#   kıyası AYNI dünyanın mevcut hücresine; ek betimleyici Δ(atr_mevcut−sabit_mevcut) (dünya
+#   etkisi). EŞLENİK ay-kümeli bootstrap B=5000 seed 20260812 (edg040 delta_pnl_ci AYNEN).
+#   Seçilim farkı: cezalı hücrelerde sort-düzeyi (gün başına ham↔cezalı sıra) + defter-düzeyi
+#   (ticker, ts_open) kıyası.
+#
+# KOŞUM (sıra zorunlu; her adım ayrı süreç; yeniden koşumda state_* ve çıktı dosyaları elle
+# kaldırılır — şasi hazirla() var-olan state'i yeniden kullanır):
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg046_secilim_2026-08-23/olcum.py --smoke   # [1] duman: dört tel
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg046_secilim_2026-08-23/olcum.py           # [2]-[5] tam (4 hücre ~55 dk)
+# Loglar: kosum_smoke.log · kosum_tam.log — rapor: sonuc_grid.json (+ hucre_*.json,
+# oz_sinama_*.json, secilim_sort_*.json, medyan_atrpct.json, sasi_kapisi.json)

@@ -1,0 +1,24 @@
+{
+ "bayt_kiyas_edg032c": {
+  "islemler_tam": {
+   "yerel_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "edg032c_sha256": "22905e198b446ec92efe38ee30bfd8b0f138dd1e316ec196c870293b66fdfbc5",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  },
+  "islemler_slim": {
+   "yerel_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "edg032c_sha256": "4855b8b851e5a6be149797f26f169f4def0ed622a48cb5f7ca716b532d7ce86f",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  },
+  "seanslar": {
+   "yerel_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "edg032c_sha256": "6ac1a5165eabc99fede37bb02acc27a886c67ca61815878a498f6cdb385c5d9d",
+   "bayt_ozdes": true,
+   "olculemedi_nedeni": null
+  }
+ },
+ "kunye_sha_tutarli": null,
+ "kill1_gecti": true
+}

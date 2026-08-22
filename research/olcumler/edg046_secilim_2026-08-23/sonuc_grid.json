@@ -1,0 +1,772 @@
+{
+ "kart": "EDG-2026-046",
+ "smoke": false,
+ "olcum_zamani": "2026-08-22T22:31:21+00:00",
+ "motor_sha256_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "uyarlama_beyani": {
+  "eski_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "pullback",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "yeni_ARMED_BEKLENEN": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "motor_ARMED_SETUPS": [
+   "breakout_vcp",
+   "exhaustion_hammer",
+   "momentum_burst"
+  ],
+  "beyan": "edg032c TEK uyarlaması AYNEN: yüklenen şasi modülünün ARMED_BEKLENEN sabiti B1 yasasına çevrildi (dünya-beklentisi; motor DEĞİL). Parametre enjeksiyonu YOK."
+ },
+ "enjeksiyon_noktalari": {
+  "aday_siralama": "meridian/backtest.py:438 `candidates.sort(key=lambda s: s.score, reverse=True)`",
+  "slip_satirlari": "broker.py:611 (giriş) · :734 (kısmi satış) · :765 (çıkış) — self.slip (broker.py:476); sarmalayıcı süreç-içi",
+  "atr_kaynagi": "backtest.py:543-544 armed_atr[sig.ticker] (silahlanma-anı ATR; ölçülemedi→None) → fill_entry atr kw (backtest.py:337)"
+ },
+ "ceza_on_sinamasi": {
+  "gecti": true,
+  "beklenen_cezali": [
+   95.345225,
+   82.318469,
+   89.336306
+  ],
+  "cezali_sira_skorlari": [
+   90,
+   88,
+   89
+  ],
+  "sort_okuma_n": 3,
+  "ham_okuma_n": 2
+ },
+ "lambda_ceza": 5.0,
+ "taban_bps": 5.0,
+ "sasi_kapisi": {
+  "bayt_kiyas_edg032c": {
+   "islemler_tam": {
+    "yerel_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "edg032c_sha256": "5f54b533465f640fbb5ebeed5799058f2691861e2fa0732f1ae25465c1865a96",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "islemler_slim": {
+    "yerel_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "edg032c_sha256": "447b5ea137d752478a911c1db4e2184f139b4a56ffc52269f79148f9865aabb3",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   },
+   "seanslar": {
+    "yerel_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "edg032c_sha256": "983f2e2d91a35979a8101e21aa88e58810a457da729e1f978b7b06ca414bbb83",
+    "bayt_ozdes": true,
+    "olculemedi_nedeni": null
+   }
+  },
+  "kunye_sha_tutarli": true,
+  "kill1_gecti": true
+ },
+ "hucreler": {
+  "sabit_mevcut": {
+   "kosum": "sabit_mevcut",
+   "smoke": false,
+   "kol_kimligi": {
+    "dunya": "sabit",
+    "secilim": "mevcut",
+    "lambda_ceza": null,
+    "medyan_atrpct": null,
+    "goal_slippage_bps_kaydi": 5.0,
+    "goal_kaydi_notu": "sabit dünya: broker slip'ine hiç dokunulmadı",
+    "uygulanan_slip_bps": {
+     "min": 5.0,
+     "medyan": 5.0,
+     "max": 5.0
+    },
+    "defter_score_hep_int": true
+   },
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 885,
+   "net_pnl_trades": 23806.13,
+   "net_pnl_equity": 23806.13,
+   "pf": 1.1293,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.1263,
+   "maxdd_m2m": 0.1263,
+   "sharpe": 0.594,
+   "avg_r": 0.083,
+   "win_rate": 0.365,
+   "total_return": 0.2381,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 318,
+     "pnl": 6171.45,
+     "avg_r": 0.0397
+    },
+    "exhaustion_hammer": {
+     "n": 228,
+     "pnl": 4711.24,
+     "avg_r": 0.1403
+    },
+    "momentum_burst": {
+     "n": 339,
+     "pnl": 12923.44,
+     "avg_r": 0.0847
+    }
+   },
+   "exit_reason_dagilim": {
+    "stop": 380,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 57,
+    "target_gap": 27
+   },
+   "verdict_dagilim": {
+    "GO": 64,
+    "REVIEW": 872,
+    "NO_GO": 593
+   },
+   "toplam_plan": 1529,
+   "silahlanan_plan": 936,
+   "entry_rejects": {
+    "open_below_stop": 23,
+    "max_chase": 28
+   },
+   "secilim_farki_sort": null,
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_ayni": true
+  },
+  "sabit_cezali": {
+   "kosum": "sabit_cezali",
+   "smoke": false,
+   "kol_kimligi": {
+    "dunya": "sabit",
+    "secilim": "cezali",
+    "lambda_ceza": 5.0,
+    "medyan_atrpct": null,
+    "goal_slippage_bps_kaydi": 5.0,
+    "goal_kaydi_notu": "sabit dünya: broker slip'ine hiç dokunulmadı",
+    "uygulanan_slip_bps": {
+     "min": 5.0,
+     "medyan": 5.0,
+     "max": 5.0
+    },
+    "defter_score_hep_int": true
+   },
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 872,
+   "net_pnl_trades": 34530.25,
+   "net_pnl_equity": 34530.25,
+   "pf": 1.1865,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.1204,
+   "maxdd_m2m": 0.1204,
+   "sharpe": 0.825,
+   "avg_r": 0.112,
+   "win_rate": 0.375,
+   "total_return": 0.3453,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 328,
+     "pnl": 13778.68,
+     "avg_r": 0.0929
+    },
+    "exhaustion_hammer": {
+     "n": 225,
+     "pnl": 6638.57,
+     "avg_r": 0.1594
+    },
+    "momentum_burst": {
+     "n": 319,
+     "pnl": 14113.0,
+     "avg_r": 0.099
+    }
+   },
+   "exit_reason_dagilim": {
+    "stop": 371,
+    "regime_flip": 169,
+    "time_stop": 151,
+    "target": 97,
+    "stop_gap": 55,
+    "target_gap": 29
+   },
+   "verdict_dagilim": {
+    "GO": 63,
+    "REVIEW": 857,
+    "NO_GO": 613
+   },
+   "toplam_plan": 1533,
+   "silahlanan_plan": 920,
+   "entry_rejects": {
+    "open_below_stop": 20,
+    "max_chase": 28
+   },
+   "secilim_farki_sort": {
+    "tur_n": 505,
+    "sira_degisen_tur_n": 247,
+    "kayan_aday_toplam": 807,
+    "aday_toplam": 1533,
+    "sort_okuma_n": 1533,
+    "ham_okuma_n": 2844,
+    "atr_olculemeyen_aday_n": 0,
+    "sd_sifir_tur_n": 146,
+    "gun_sonu_sortsuz_n": 0
+   },
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_ayni": true
+  },
+  "atr_mevcut": {
+   "kosum": "atr_mevcut",
+   "smoke": false,
+   "kol_kimligi": {
+    "dunya": "atr",
+    "secilim": "mevcut",
+    "lambda_ceza": null,
+    "medyan_atrpct": 0.029353968374498458,
+    "goal_slippage_bps_kaydi": 5.0,
+    "goal_kaydi_notu": "goal.slippage_bps 5'te SABİT kalır (dosyaya/sözlüğe dokunulmadı); atr dünyasında gerçek slip işlem-başına broker sarmalayıcısından — kanıt öz-sınama G1/G2",
+    "uygulanan_slip_bps": {
+     "min": 2.201943,
+     "medyan": 5.014787,
+     "max": 16.895652
+    },
+    "defter_score_hep_int": true
+   },
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 887,
+   "net_pnl_trades": 21690.93,
+   "net_pnl_equity": 21690.93,
+   "pf": 1.1181,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.1298,
+   "maxdd_m2m": 0.1298,
+   "sharpe": 0.549,
+   "avg_r": 0.076,
+   "win_rate": 0.363,
+   "total_return": 0.2169,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 316,
+     "pnl": 7378.75,
+     "avg_r": 0.0492
+    },
+    "exhaustion_hammer": {
+     "n": 231,
+     "pnl": 2674.33,
+     "avg_r": 0.1082
+    },
+    "momentum_burst": {
+     "n": 340,
+     "pnl": 11637.85,
+     "avg_r": 0.0784
+    }
+   },
+   "exit_reason_dagilim": {
+    "stop": 381,
+    "regime_flip": 168,
+    "time_stop": 152,
+    "target": 101,
+    "stop_gap": 58,
+    "target_gap": 27
+   },
+   "verdict_dagilim": {
+    "GO": 65,
+    "REVIEW": 873,
+    "NO_GO": 590
+   },
+   "toplam_plan": 1528,
+   "silahlanan_plan": 938,
+   "entry_rejects": {
+    "open_below_stop": 23,
+    "max_chase": 28
+   },
+   "secilim_farki_sort": null,
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_ayni": true
+  },
+  "atr_cezali": {
+   "kosum": "atr_cezali",
+   "smoke": false,
+   "kol_kimligi": {
+    "dunya": "atr",
+    "secilim": "cezali",
+    "lambda_ceza": 5.0,
+    "medyan_atrpct": 0.029353968374498458,
+    "goal_slippage_bps_kaydi": 5.0,
+    "goal_kaydi_notu": "goal.slippage_bps 5'te SABİT kalır (dosyaya/sözlüğe dokunulmadı); atr dünyasında gerçek slip işlem-başına broker sarmalayıcısından — kanıt öz-sınama G1/G2",
+    "uygulanan_slip_bps": {
+     "min": 2.201943,
+     "medyan": 4.885612,
+     "max": 16.895652
+    },
+    "defter_score_hep_int": true
+   },
+   "hucre_sasi": {
+    "eksen": "zarf",
+    "slot": 20,
+    "position_size_r": 0.5,
+    "heat_hard_r": 5.0,
+    "zarf_enjekte": false
+   },
+   "islem_n": 873,
+   "net_pnl_trades": 33181.24,
+   "net_pnl_equity": 33181.24,
+   "pf": 1.179,
+   "pf_olculemedi_nedeni": null,
+   "maxdd_kanonik": 0.119,
+   "maxdd_m2m": 0.119,
+   "sharpe": 0.798,
+   "avg_r": 0.107,
+   "win_rate": 0.375,
+   "total_return": 0.3318,
+   "setup_bazinda": {
+    "breakout_vcp": {
+     "n": 327,
+     "pnl": 14729.7,
+     "avg_r": 0.1001
+    },
+    "exhaustion_hammer": {
+     "n": 226,
+     "pnl": 4696.07,
+     "avg_r": 0.1295
+    },
+    "momentum_burst": {
+     "n": 320,
+     "pnl": 13755.47,
+     "avg_r": 0.0981
+    }
+   },
+   "exit_reason_dagilim": {
+    "stop": 371,
+    "regime_flip": 169,
+    "time_stop": 151,
+    "target": 97,
+    "stop_gap": 56,
+    "target_gap": 29
+   },
+   "verdict_dagilim": {
+    "GO": 64,
+    "REVIEW": 857,
+    "NO_GO": 611
+   },
+   "toplam_plan": 1532,
+   "silahlanan_plan": 921,
+   "entry_rejects": {
+    "open_below_stop": 20,
+    "max_chase": 28
+   },
+   "secilim_farki_sort": {
+    "tur_n": 505,
+    "sira_degisen_tur_n": 247,
+    "kayan_aday_toplam": 807,
+    "aday_toplam": 1532,
+    "sort_okuma_n": 1532,
+    "ham_okuma_n": 2842,
+    "atr_olculemeyen_aday_n": 0,
+    "sd_sifir_tur_n": 146,
+    "gun_sonu_sortsuz_n": 0
+   },
+   "butunluk_gecerli": true,
+   "sasi_kill3_temiz": true,
+   "oz_sinama_kill2_gecti": true,
+   "motor_sha_once": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_sonra": {
+    "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+    "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+    "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+    "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+   },
+   "motor_sha_ayni": true
+  }
+ },
+ "medyan_atrpct": 0.029353968374498458,
+ "delta_ci": {
+  "sabit_cezali_vs_sabit_mevcut": {
+   "delta_pnl": 10724.12,
+   "ci95": [
+    -1611.64,
+    25494.14
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "atr_cezali_vs_atr_mevcut": {
+   "delta_pnl": 11490.31,
+   "ci95": [
+    -868.39,
+    26146.63
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "hayır (0 içinde)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  },
+  "dunya_etkisi_atr_mevcut_vs_sabit_mevcut_BETIMLEYICI": {
+   "delta_pnl": -2115.2,
+   "ci95": [
+    -4056.14,
+    -547.38
+   ],
+   "n_ay": 55,
+   "takvim_disi_islem": {
+    "taban": 0,
+    "hucre": 0
+   },
+   "sifir_disinda": "evet (CI-üst < 0)",
+   "yontem": "EŞLENİK ay-kümeli bootstrap · birim = AY (iki kol AYNI ayı görür) · B=5000 · seed=20260812 · yüzdelik"
+  }
+ },
+ "secilim_farki_defter": {
+  "sabit_cezali_vs_sabit_mevcut": {
+   "n_a": 885,
+   "n_b": 872,
+   "ortak_n": 773,
+   "yalniz_a_n": 112,
+   "yalniz_b_n": 99,
+   "yalniz_a_ornek": [
+    [
+     "ABBV",
+     "2025-09-12"
+    ],
+    [
+     "AMAT",
+     "2024-01-25"
+    ],
+    [
+     "AMD",
+     "2023-07-14"
+    ],
+    [
+     "AMD",
+     "2023-07-19"
+    ],
+    [
+     "AMD",
+     "2025-07-30"
+    ],
+    [
+     "AMD",
+     "2025-08-14"
+    ],
+    [
+     "APO",
+     "2023-11-30"
+    ],
+    [
+     "AVGO",
+     "2024-01-22"
+    ],
+    [
+     "AVGO",
+     "2025-09-22"
+    ],
+    [
+     "AVGO",
+     "2025-09-26"
+    ],
+    [
+     "AXP",
+     "2023-02-06"
+    ],
+    [
+     "BIIB",
+     "2025-11-14"
+    ],
+    [
+     "BKNG",
+     "2024-11-01"
+    ],
+    [
+     "BKNG",
+     "2024-11-06"
+    ],
+    [
+     "BMY",
+     "2024-11-12"
+    ]
+   ],
+   "yalniz_b_ornek": [
+    [
+     "ADBE",
+     "2023-05-30"
+    ],
+    [
+     "ADI",
+     "2023-02-16"
+    ],
+    [
+     "ADI",
+     "2026-01-07"
+    ],
+    [
+     "AEP",
+     "2025-10-30"
+    ],
+    [
+     "AFL",
+     "2024-06-03"
+    ],
+    [
+     "AIG",
+     "2023-12-13"
+    ],
+    [
+     "ALB",
+     "2026-04-30"
+    ],
+    [
+     "AMGN",
+     "2025-11-06"
+    ],
+    [
+     "AMZN",
+     "2023-02-08"
+    ],
+    [
+     "APD",
+     "2024-11-26"
+    ],
+    [
+     "APO",
+     "2024-02-12"
+    ],
+    [
+     "AXP",
+     "2024-03-01"
+    ],
+    [
+     "BAC",
+     "2025-07-17"
+    ],
+    [
+     "BKR",
+     "2025-08-15"
+    ],
+    [
+     "BKR",
+     "2026-04-27"
+    ]
+   ]
+  },
+  "atr_cezali_vs_atr_mevcut": {
+   "n_a": 887,
+   "n_b": 873,
+   "ortak_n": 775,
+   "yalniz_a_n": 112,
+   "yalniz_b_n": 98,
+   "yalniz_a_ornek": [
+    [
+     "ABBV",
+     "2025-09-12"
+    ],
+    [
+     "AMAT",
+     "2024-01-25"
+    ],
+    [
+     "AMD",
+     "2023-07-14"
+    ],
+    [
+     "AMD",
+     "2023-07-19"
+    ],
+    [
+     "AMD",
+     "2025-07-30"
+    ],
+    [
+     "AMD",
+     "2025-08-14"
+    ],
+    [
+     "APO",
+     "2023-11-30"
+    ],
+    [
+     "AVGO",
+     "2024-01-22"
+    ],
+    [
+     "AVGO",
+     "2025-09-22"
+    ],
+    [
+     "AVGO",
+     "2025-09-26"
+    ],
+    [
+     "AXP",
+     "2023-02-06"
+    ],
+    [
+     "BIIB",
+     "2025-11-14"
+    ],
+    [
+     "BKNG",
+     "2024-11-01"
+    ],
+    [
+     "BKNG",
+     "2024-11-06"
+    ],
+    [
+     "BMY",
+     "2024-11-12"
+    ]
+   ],
+   "yalniz_b_ornek": [
+    [
+     "ADBE",
+     "2023-05-30"
+    ],
+    [
+     "ADI",
+     "2026-01-07"
+    ],
+    [
+     "AEP",
+     "2025-10-30"
+    ],
+    [
+     "AFL",
+     "2024-06-03"
+    ],
+    [
+     "AIG",
+     "2023-12-13"
+    ],
+    [
+     "ALB",
+     "2026-04-30"
+    ],
+    [
+     "AMGN",
+     "2025-11-06"
+    ],
+    [
+     "AMZN",
+     "2023-02-08"
+    ],
+    [
+     "APD",
+     "2024-11-26"
+    ],
+    [
+     "APO",
+     "2024-02-12"
+    ],
+    [
+     "AXP",
+     "2024-03-01"
+    ],
+    [
+     "BAC",
+     "2025-07-17"
+    ],
+    [
+     "BKR",
+     "2025-08-15"
+    ],
+    [
+     "BKR",
+     "2026-04-27"
+    ],
+    [
+     "BX",
+     "2025-08-04"
+    ]
+   ]
+  },
+  "not": "a = mevcut hücre, b = cezalı hücre; anahtar (ticker, ts_open)"
+ },
+ "hukum_yok": "Bu rapor HÜKÜM İÇERMEZ. İKİ-DÜNYA karar kuralının okunması Rol-1'in; 'aday/değil' yorumu bu betikte yasak.",
+ "motor_sha256_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_ayni_toplam": true
+}

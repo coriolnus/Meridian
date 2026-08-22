@@ -1,0 +1,84 @@
+{
+ "kosum": "sabit_mevcut",
+ "smoke": true,
+ "kol_kimligi": {
+  "dunya": "sabit",
+  "secilim": "mevcut",
+  "lambda_ceza": null,
+  "medyan_atrpct": null,
+  "goal_slippage_bps_kaydi": 5.0,
+  "goal_kaydi_notu": "sabit dünya: broker slip'ine hiç dokunulmadı",
+  "uygulanan_slip_bps": {
+   "min": 5.0,
+   "medyan": 5.0,
+   "max": 5.0
+  },
+  "defter_score_hep_int": true
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 8,
+ "net_pnl_trades": -2163.48,
+ "net_pnl_equity": -2163.48,
+ "pf": 0.0,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": null,
+ "maxdd_m2m": 0.0216,
+ "sharpe": null,
+ "avg_r": null,
+ "win_rate": null,
+ "total_return": null,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 1,
+   "pnl": -108.28,
+   "avg_r": -0.286
+  },
+  "exhaustion_hammer": {
+   "n": 2,
+   "pnl": -403.44,
+   "avg_r": -0.534
+  },
+  "momentum_burst": {
+   "n": 5,
+   "pnl": -1651.76,
+   "avg_r": -0.845
+  }
+ },
+ "exit_reason_dagilim": {
+  "regime_flip": 7,
+  "stop": 1
+ },
+ "verdict_dagilim": {
+  "GO": 3,
+  "REVIEW": 6,
+  "NO_GO": 0
+ },
+ "toplam_plan": 9,
+ "silahlanan_plan": 9,
+ "entry_rejects": {
+  "open_below_stop": 1
+ },
+ "secilim_farki_sort": null,
+ "butunluk_gecerli": true,
+ "sasi_kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_ayni": true
+}

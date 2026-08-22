@@ -1,0 +1,36 @@
+{
+ "ozet": {
+  "tur_n": 3,
+  "sira_degisen_tur_n": 2,
+  "kayan_aday_toplam": 7,
+  "aday_toplam": 9,
+  "sort_okuma_n": 9,
+  "ham_okuma_n": 18,
+  "atr_olculemeyen_aday_n": 0,
+  "sd_sifir_tur_n": 0,
+  "gun_sonu_sortsuz_n": 0
+ },
+ "turlar": [
+  {
+   "tarih": "2022-01-06",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 0,
+   "sira_degisti": false
+  },
+  {
+   "tarih": "2022-01-11",
+   "aday_n": 5,
+   "z_kumesi_n": 5,
+   "kayan_aday_n": 5,
+   "sira_degisti": true
+  },
+  {
+   "tarih": "2022-01-12",
+   "aday_n": 2,
+   "z_kumesi_n": 2,
+   "kayan_aday_n": 2,
+   "sira_degisti": true
+  }
+ ]
+}

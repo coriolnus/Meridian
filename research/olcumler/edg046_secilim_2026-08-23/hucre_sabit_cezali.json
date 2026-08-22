@@ -1,0 +1,99 @@
+{
+ "kosum": "sabit_cezali",
+ "smoke": false,
+ "kol_kimligi": {
+  "dunya": "sabit",
+  "secilim": "cezali",
+  "lambda_ceza": 5.0,
+  "medyan_atrpct": null,
+  "goal_slippage_bps_kaydi": 5.0,
+  "goal_kaydi_notu": "sabit dünya: broker slip'ine hiç dokunulmadı",
+  "uygulanan_slip_bps": {
+   "min": 5.0,
+   "medyan": 5.0,
+   "max": 5.0
+  },
+  "defter_score_hep_int": true
+ },
+ "hucre_sasi": {
+  "eksen": "zarf",
+  "slot": 20,
+  "position_size_r": 0.5,
+  "heat_hard_r": 5.0,
+  "zarf_enjekte": false
+ },
+ "islem_n": 872,
+ "net_pnl_trades": 34530.25,
+ "net_pnl_equity": 34530.25,
+ "pf": 1.1865,
+ "pf_olculemedi_nedeni": null,
+ "maxdd_kanonik": 0.1204,
+ "maxdd_m2m": 0.1204,
+ "sharpe": 0.825,
+ "avg_r": 0.112,
+ "win_rate": 0.375,
+ "total_return": 0.3453,
+ "setup_bazinda": {
+  "breakout_vcp": {
+   "n": 328,
+   "pnl": 13778.68,
+   "avg_r": 0.0929
+  },
+  "exhaustion_hammer": {
+   "n": 225,
+   "pnl": 6638.57,
+   "avg_r": 0.1594
+  },
+  "momentum_burst": {
+   "n": 319,
+   "pnl": 14113.0,
+   "avg_r": 0.099
+  }
+ },
+ "exit_reason_dagilim": {
+  "stop": 371,
+  "regime_flip": 169,
+  "time_stop": 151,
+  "target": 97,
+  "stop_gap": 55,
+  "target_gap": 29
+ },
+ "verdict_dagilim": {
+  "GO": 63,
+  "REVIEW": 857,
+  "NO_GO": 613
+ },
+ "toplam_plan": 1533,
+ "silahlanan_plan": 920,
+ "entry_rejects": {
+  "open_below_stop": 20,
+  "max_chase": 28
+ },
+ "secilim_farki_sort": {
+  "tur_n": 505,
+  "sira_degisen_tur_n": 247,
+  "kayan_aday_toplam": 807,
+  "aday_toplam": 1533,
+  "sort_okuma_n": 1533,
+  "ham_okuma_n": 2844,
+  "atr_olculemeyen_aday_n": 0,
+  "sd_sifir_tur_n": 146,
+  "gun_sonu_sortsuz_n": 0
+ },
+ "butunluk_gecerli": true,
+ "sasi_kill3_temiz": true,
+ "oz_sinama_kill2_gecti": true,
+ "motor_sha_once": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_sonra": {
+  "broker.py": "52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac",
+  "backtest.py": "b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5",
+  "strategy.py": "263eb8fef7d10089653bc72fd7dd86ba1ee3f3003c2e28ea2c915569af8b8140",
+  "guard.py": "467034e580311150b2b0b9d441c7e83b4a396688e6506c8001f0f9cc2912db6c"
+ },
+ "motor_sha_ayni": true
+}

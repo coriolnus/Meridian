@@ -1,0 +1,8 @@
+{
+ "medyan_atrpct": 0.03532295331765375,
+ "n_olculen": 8,
+ "n_olculemeyen": 0,
+ "min": 0.022273327359795193,
+ "max": 0.044173312262079684,
+ "tanim": "sabit_mevcut hücresinde DOLAN girişlerin ATR% (fill'e giden armed_atr / plan entry_trigger) medyanı — statistics.median; ölçülemeyen (atr None) girişler kümeye girmez. Dört hücrede AYNI DONMUŞ skaler."
+}

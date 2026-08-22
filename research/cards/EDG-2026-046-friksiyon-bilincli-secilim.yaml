@@ -40,7 +40,26 @@ kill_criteria:
   - "seçilim cezası ATR dışı bir alana genişletilirse geçersiz (menzil% seçilim anında YOK — PIT)"
   - "iki-dünya şartı atlanıp tek dünyadan hüküm çıkarılırsa geçersiz (yaltaklanan-dünya tuzağı)"
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-046-sm, pending-046-sc, pending-046-am, pending-046-ac]}
-status: registered   # 2026-08-22 Rol-1 — ön-kayıt (ACİL (b) bacağı; hammadde: keşif belgesi).
+status: measured     # 2026-08-23 Rol-1 HÜKMÜ aşağıda. (ön-kayıt 08-22; K=4 aynen, kill 0)
+
+verdict: >
+  HÜKÜM (Rol-1, 2026-08-23): **MEKANİZMA KANITSIZ — KART KAPANIR (donuk kural, iki-dünya şartı).**
+  Koşul 1 SAĞLANMADI: Δ(cezalı−mevcut | ATR-dünyası) = +11.490,31 ama CI95 [−868,39, +26.146,63]
+  → CI-alt < 0. Koşul 2 sağlandı (sabit-dünya kaybı yok: +10.724,12 [−1.611,64, +25.494,14]) ama
+  kural VE bağlacıdır. Nokta tahminleri iki dünyada da güçlü artı ve NEREDEYSE AYNI (+10,7k/+11,5k;
+  247/505 gün aynı sıra-değişimi) — bu, kazancın friksiyon-kanallı OLMADIĞININ işaretidir: ceza
+  sabit-friksiyon dünyasında da aynı kazancı üretiyorsa mekanizma "beklenen-friksiyondan kaçınma"
+  değil, düşük-ATR% isimlerine örnekleme-özgü stil eğimidir. Tam "yaltaklanan-dünya/yaltaklanan-
+  mekanizma" sınıfı: kural bunu ADAY yapmamak için önceden donduruldu, kural uygulanır.
+  BETİMLEYİCİ YAN-BULGU (hüküm değil, friksiyon-programı haritasına): dünya etkisi
+  Δ(atr_mevcut−sabit_mevcut) = −2.115,20 CI95 [−4.056,14, −547,38] CI-üst<0 — ATR%-orantılı model
+  gerçeğe daha yakınsa bugünkü sabit-5bps modeli defteri ~2,1k şişiriyor (045'in stop-slip
+  bulgusuyla AYNI YÖNDE üçüncü iyimser-varsayım göstergesi; ancak bu bir MODEL-ŞARTLI çıkarımdır,
+  beyanlı sınır (3) aynen geçerli). CANLANMA KOŞULLARI (yeni kartla, bu kart yeniden açılmaz):
+  (a) EDG-042 n≥30 gerçek bandı |bps|~ATR% ilişkisini doğrular VE örneklem gücü artarsa (CI
+  genişliği ±%115'ten anlamlı daralırsa) yeni λ-kartı; (b) 042 ilişkiyi ÇÜRÜTÜRSE bu hat tümüyle
+  ölür. EDG-042 bağı şerhi (kart kuralı): 042-K1 n≥30 Spearman CI 0-içi çıkarsa bu hükmün
+  "mekanizma kanıtsız" okuması "öncül de çürük" olarak güncellenir — hüküm yönü DEĞİŞMEZ.
 sasi_capasi_guncellemesi_2026_08_22: >
   ROL-1 YENİDEN-ÇAPALAMA (ölçümden ÖNCE — bu kartta HİÇBİR hücre ölçülmemişken; veri bakılmadı).
   Kartın şasi referansı edg032b → **edg032c_taban_2026-08-22** olarak güncellenir. NEDEN: B1
