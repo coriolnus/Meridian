@@ -1,0 +1,77 @@
+# EDG-2026-045 · bar-içi stop-dolum slipajı taraması (2026-08-22)
+# Kart: research/cards/EDG-2026-045-stop-slip.yaml (OKU-DOKUNMA; hücreler {5,10,20} bps,
+#   öz-sınama, kill kriterleri, CI yöntemi ORADA DONUK — hüküm Rol-1'in, bu koşum SAYI getirir)
+# Ö2 OKUMA KURALI (kart kill#5): 042-K3 bandı gelmeden bu kartla EDG-040 hükmü REVİZE EDİLMEZ.
+#
+# ŞASİ: edg032b_tamsatir_2026-08-13/olcum.py YENİDEN KURULMADI — importlib ile modül olarak
+#   yüklendi, `SANDBOX`ı bu dizine çevrildi (edg040/exe006b deseni AYNEN; artefakt koruması
+#   YAPISAL), `kosum(run, smoke)` yolu olduğu gibi çağrıldı. İmza tahmini yok.
+#
+# ENJEKSİYON YÜZEYİ — broker.py _touch_exit KODDAN OKUNDU (görev şartı; satırlar birebir):
+#   broker.py:684    eff_stop = max(pos.stop, pos.trail_stop)
+#   broker.py:686-687        # kademe-1: AÇILIŞ — gerçek fiyat basar, DOKUNULMAZ
+#       if o <= eff_stop:
+#           return o, "stop_gap"
+#   broker.py:691-692        # kademe-2: bar içi — TAM eff_stop sayılır → ENJEKSİYON HEDEFİ
+#       if l <= eff_stop:
+#           return eff_stop, "stop"
+#   backtest.py:364-366  ex = broker._touch_exit(...) → broker.close_position(t, ex[0], ex[1], …)
+#   broker.py:753    def close_position(self, ticker, raw_exit, reason, ts)
+#   broker.py:765        exit_fill = raw_exit * (1.0 - self.slip)   # genel 5bps modeli — DOKUNULMAZ
+#   "stop" reason'ı BAŞKA YOLDAN üretilmez: strategy.ManageDecision çıkışları
+#   early_kill_pivot/giveback/time_stop/regime_flip (strategy.py:1160-1185); diğer close
+#   reason'ları stop_gap/target_gap/target/eod_markout/delisted_markout (backtest.py:312/366/
+#   556/563). Betik başında KAYNAK ÇİVİSİ assert'i bu satırları broker.py metninde arar —
+#   bulunamazsa ölçüm başlamadan DURUR (satır varsayılmaz, sınanır).
+#
+# ENJEKSİYON NASIL: `PaperBroker.close_position` süreç-içi sarmalanır (motor DOSYASI yamasız;
+#   kill#4 sha kontrolü ayrıca kanıtlar): reason=="stop" iken raw_exit → raw_exit×(1−ek_slip),
+#   yani stop-tetik dolumu eff_stop×(1−ek_slip) sayılır; motorun kendi genel slipajı (5 bps)
+#   HER ZAMANKİ GİBİ üstüne işler → defter dolumu eff_stop×(1−ek_slip)×(1−0.0005). stop_gap ve
+#   diğer TÜM reason'larda raw_exit DEĞİŞMEDEN geçer (sızmazlık kill#3'te satır satır kanıtlı).
+#   goal SÖZLÜĞÜNE DOKUNULMAZ (edg040'ın tersine): cost_model.slippage_bps==5.0 her koşumda
+#   assert'li. KONTROL@0 sarmalayıcı AÇIKKEN koşuldu (raw_exit×1.0 bayt-nötr): bayt-özdeşlik
+#   şasiyi VE enjeksiyon yüzeyinin nötrlüğünü BİRLİKTE kanıtlar.
+#
+# ÖZ-SINAMA (kill#2, kart formülü uyarlanmış — TÜM kapanışlar üstünde, ilk-N değil):
+#   S1 stop satırlarında |(1 − fill/eff_stop) − ek_slip| ≤ 1e-9 (fill = enjekte stop-dolum
+#      seviyesi, genel modelden ÖNCE; eff_stop = orig raw_exit)
+#   S2 round((eff_stop×(1−ek_slip))×(1−broker.slip),4) == defter['exit'] — DEFTERE ÇİVİLİ
+#   S3 orig == max(pos.stop, pos.trail_stop) birebir — kanal kimliği ölçüldü, varsayılmadı
+#   Z1 SIZMAZLIK (kill#3): stop_gap + diğer TÜM reason'larda enjekte == orig (fark ≡ 0,
+#      max|fark| raporda) VE round(orig×(1−slip),4) == defter['exit']
+#   T  trail künyesi: stop satırlarında pos.trail_stop > pos.stop payı (ayrı kova YOK —
+#      kartın beyanlı sınırı 2; R dağılımı trail/hard alt-kümelerde de raporlanır)
+#   A  ayırt edicilik: aynı S1 farkı ek=0 beklentisiyle hücrelerde ≈ ek_slip çıkmalı
+#
+# ŞASİ KAPISI (kill#1): kontrol@0 TAM → islemler_tam/islemler(slim)/seanslar edg032b DONMUŞ
+#   artefaktıyla sha256 BAYT-ÖZDEŞ + referansın kendi ozdeslik() kapısı; DARALTILMIŞ
+#   n_endeks_satir istisnası edg040/043'ten AYNEN (yalnız replay bloğu + yalnız o anahtar).
+#
+# ΔP&L CI (görev [4]): hücre vs DONMUŞ taban = edg032b/islemler_tam_kontrol.json —
+#   EŞLENİK ay-kümeli bootstrap, birim=AY, iki kol AYNI ayı görür, B=5000, seed=20260812.
+#
+# MOTOR SHA (kill#4): broker.py+backtest.py tam sha koşum-öncesi/sonrası KÜRESEL +
+#   HÜCRE-BAŞI önce/sonra (hucre_*.json) — koşum İÇİNDE değişirse o hücre geçersiz
+#   (kartın uçuş-commit dersi). Şasinin kendi kill3_mtime'ı (8 dosya) ayrıca işler.
+#
+# NET P&L: performans.net_pnl_trades (KANONİK; islem.net_pnl YOK — exe006 tuzağı).
+# PF: tam defterden Σ(pnl>0)/|Σ(pnl<0)| (EDG-037 tanımı; donmuş defterde 1,1119 doğrulanmıştı).
+#
+# ════════════════════════════════════════════════════════════════════════════════════════
+# DURDU (2026-08-22, duman denemesinde) — KOŞMADAN ÖNCE OKU: kill#1 YAPISAL düşüşte.
+#   Operatör B1 kararı (commit c150902, 19:47:29) pullback'i ARMED_SETUPS'tan çıkardı;
+#   broker.py + guard.py de sonrasında değişti (21:19:01). Şasinin kendi ARMED assert'i
+#   (edg032b/olcum.py:386) koşum başında çöker ve donmuş taban 6 pullback işlemi içerdiği
+#   için ek_slip=0 bayt-özdeşliği bugünkü motorla YAPISAL imkânsız. Kanıt + zaman çizgisi:
+#   DURDU_kill1_sasi_kapisi.json + kosum_smoke.log. Bu şasiyle yeniden koşum, ancak
+#   edg032b dünyasını üretebilen motor checkout'unda ya da Rol-1 yeni taban dondurursa
+#   anlamlıdır. Aşağıdaki komutlar o güne kadar KOŞULMAZ.
+# ════════════════════════════════════════════════════════════════════════════════════════
+#
+# [1] DUMAN (~2×2 dk) — kablo: kontrol@0 duman + stopslip10 duman (Ö1 hücresi);
+#     duman bayt-kıyas + öz-sınama + stop_gap-sızmazlık dar pencerede (2022-01→06)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py --smoke 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_smoke.log
+#
+# [2] TAM (~12-13 dk/koşum · kontrol@0 + 3 hücre ≈ 50 dk)
+cd /Users/erdemozturk/AI-Trading && uv run python research/olcumler/edg045_stop_slip_2026-08-22/olcum.py 2>&1 | tee research/olcumler/edg045_stop_slip_2026-08-22/kosum_tam.log

@@ -1,0 +1,35 @@
+{
+ "kart": "EDG-2026-045",
+ "olcum_zamani": "2026-08-22 23:05 +0300 (duman denemesi; kosum_smoke.log mtime kanıt) · bu kayıt 23:09",
+ "DURDU": "kill#1 (şasi kapısı) YAPISAL düşüş — ek_slip=0 koşumu edg032b ile bayt-özdeş OLAMAZ; hücre koşulmadı",
+ "ne_oldu": {
+  "duman_kosumu": "kontrol@0 duman, şasinin (edg032b/olcum.py:386) KENDİ assert'inde çöktü — replay hiç başlamadı. Kanıt: kosum_smoke.log (bu dizinde).",
+  "assert_metni": "AssertionError: repo ARMED_SETUPS beklenenden farklı: ('breakout_vcp', 'exhaustion_hammer', 'momentum_burst')",
+  "sasi_beklentisi": "ARMED_BEKLENEN = ('breakout_vcp', 'pullback', 'exhaustion_hammer', 'momentum_burst') (edg032b/olcum.py:106)",
+  "motor_bugun": "strategy.py:1059 ARMED_SETUPS = ('breakout_vcp', 'exhaustion_hammer', 'momentum_burst') — pullback SİLAHSIZ"
+ },
+ "kok_neden_zaman_cizgisi": {
+  "edg040_kontrol_gecti": "2026-08-22T11:31:40Z — o anki motor: broker.py 212b273d849f8f4d · backtest.py b59c059f43d4e410 · strategy.py cba15854a42414c2 · guard.py 009a13c29755b318 (edg040_friksiyon_2026-08-22/sonuc_kontrol.json motor_sha256_16)",
+  "strategy_degisimi": "2026-08-22 19:47:29 +0300 — commit c150902 'B1 KARARI (operatör, A): pullback SİLAHSIZLANDI' strategy.py'den pullback'i çıkardı; sha16 cba15854a42414c2 → 263eb8fef7d10089 (bağımsız tanık: edg043_friksiyon_limit_2026-08-22/olay_strategy_degisimi.json — aynı değişim edg043'ün slip25_B hücresini koşum SIRASINDA yakalamıştı)",
+  "broker_degisimi": "broker.py mtime=birth=2026-08-22 21:19:01 +0300 — sha256 şimdi 52e67c5db43f52d5978927c3a7acba8c46b769d1f79fc1ebccdd55e67b5929ac (edg040'ın kaydettiği 212b273d849f8f4d... DEĞİL; birth==mtime → dosya yeniden yazılmış, içerik FARKLI = gerçek değişim, içerik-aynı git yeniden-yazımı değil)",
+  "guard_degisimi": "guard.py sha16 şimdi 467034e580311150 (edg040 kaydı 009a13c29755b318 — o da değişmiş)",
+  "backtest_ayni": "backtest.py sha256 b59c059f43d4e410c198eb36ced18539d7575e7060d8c11337386a6ebf77cbd5 — edg040 kaydıyla AYNI (tek değişmeyen)",
+  "bu_olcumun_baslangici": "bu duman denemesi 23:05 +0300 (motor değişimlerinden SONRA) — yani sürüklenme koşum İÇİNDE değil, koşum BAŞLAMADAN ÖNCE olmuştu; kill#4 (koşum-içi değişim) bu denemede tetiklenmedi, tetiklenen kapı kill#1'in yüzeyidir"
+ },
+ "neden_yapisal_imkansiz": {
+  "madde1": "kill#1 tanımı (kart, donuk): ek_slip=0 TAM koşumu edg032b DONMUŞ defteriyle BAYT-ÖZDEŞ olmalı. Donmuş taban (islemler_tam_kontrol.json, 885 satır) 6 adet setup=pullback işlemi İÇERİR (ölçüldü). Pullback silahsız motorda bu işlemler DOĞAMAZ → bayt-özdeşlik yapısal olarak imkânsız.",
+  "madde2": "şasinin kendi ARMED assert'i (olcum.py:386) aynı gerçeği koşum başında yakalayıp çöker — kapıya gelinemez bile. Bu assert şasinin PARÇASIDIR; etrafından dolanmak (ARMED_SETUPS'ı süreç-içi geri silahlamak) motoru elle değiştirmek olur ve kartın 'edg032b şasisi AYNEN' evrenini de, ölçüm ajanının motor-dokunmazlık sözleşmesini de bozar — YAPILMADI.",
+  "madde3": "broker.py + guard.py de bilinmeyen davranışsal delta taşıyor (yalnız backtest.py aynı) — pullback sorunu çözülse bile bayt-özdeşlik bu iki dosyanın 11:31'deki içeriği geri gelmeden kanıtlanamaz."
+ },
+ "olculebilenler": {
+  "kaynak_civileri_yeni_brokerda_tuttu": "enjeksiyon yüzeyinin 4 çivili satırı (return o, \"stop_gap\" · return eff_stop, \"stop\" · exit_fill = raw_exit * (1.0 - self.slip) · eff_stop = max(pos.stop, pos.trail_stop)) YENİ broker.py'de birebir MEVCUT (betiğin kaynak-çivisi assert'i çökmeden ÖNCE geçti) — yüzey yaşıyor, dünya kimliği öldü",
+  "donmus_taban_stop_kirilimi": "885 işlem: stop 379 · stop_gap 57 · target 99 · target_gap 27 · time_stop 152 · regime_flip 171; setup: breakout_vcp 315 · momentum_burst 339 · exhaustion_hammer 225 · pullback 6; net_pnl_trades +20684.69 (edg040 kaydıyla birebir)",
+  "duman_taban_kirilimi": "smoke taban 8 işlem: stop 1 · regime_flip 7; pullback 0"
+ },
+ "harcanan_ve_kalan": {
+  "hucre_kosulmadi": "stopslip5 / stopslip10 / stopslip20 hiçbiri koşulmadı; hiçbir ölçüm sayısı üretilmedi (trial_ids pending-045-s5/s10/s20 — K muhasebesi Rol-1'in)",
+  "bu_dizindeki_artiklar": "kosum_smoke.log (çökme kanıtı) + state_kontrol_smoke/ (şasinin hazirla() kurduğu sandbox; replay başlamadan çöküldü, içi donmuş EDG-022 config kopyaları + bars symlink) + olcum.py + KOMUT.txt (koşuma hazır, DURDU şerhli)",
+  "yeniden_kosulabilirlik": "Bu ölçüm, motorun edg032b dünyasını yeniden üretebildiği bir checkout'ta (ör. c150902 ÖNCESİ motor; ya da Rol-1 yeni taban dondurursa o tabana karşı) betik DEĞİŞMEDEN koşulabilir — betiğin kendisi motor-sürümü varsaymaz, çivileri sınar"
+ },
+ "hukum_yok": "Bu dosya HÜKÜM İÇERMEZ. Kart kill#1 'bayt-özdeş değilse DURUR' der; sayılar yukarıda, karar (yeni taban mı, eski motor checkout'u mu, kartın iptali mi) Rol-1'in. Ö2 okuma kuralı gereği bu durdurmadan EDG-040 hükmüne dair HİÇBİR çıkarım yapılmadı."
+}

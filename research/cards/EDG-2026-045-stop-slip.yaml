@@ -17,7 +17,7 @@ evidence_refs:
   - "EDG-2026-040: simetrik enjeksiyon deseni + öz-sınama (likidite-ayrıştırmalı, 1e-9) — AYNEN devralınır"
   - "EDG-2026-042 K3 (çıkış-stop kovası): gerçek stop dolumları biriktikçe gerçek bant"
 universe: >
-  edg032b şasisi AYNEN; TEK değişken: bar-içi stop dolumuna ("stop" reason, kademe-2) ek
+  edg032b şasisi AYNEN [2026-08-22 yeniden-çapalama: edg032c — aşağıdaki blok]; TEK değişken: bar-içi stop dolumuna ("stop" reason, kademe-2) ek
   aleyhte slipaj — eff_stop×(1−ek_slip) satış dolumu. stop_gap (kademe-1) DOKUNULMAZ (zaten
   gerçek fiyat). Enjeksiyon edg040 deseniyle (motor yamasız, param kanalı; öz-sınama uyarlanır:
   stop dolumlarında (1 − fill/eff_stop) == ek_slip, 1e-9). Kapı-kapalı/mevcut yasa aynen.
@@ -41,6 +41,15 @@ kill_criteria:
   - "Ö2 okuma kuralı ihlali: 042-K3 bandı gelmeden bu kartla EDG-040 hükmü revize edilirse geçersiz"
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-045-s5, pending-045-s10, pending-045-s20]}
 status: registered   # 2026-08-22 Rol-1 — ön-kayıt (23d'nin kartı; kanıt wp1_23d_kanit).
+sasi_capasi_guncellemesi_2026_08_22: >
+  ROL-1 YENİDEN-ÇAPALAMA (ölçümden ÖNCE — bu kartta HİÇBİR hücre ölçülmemişken; veri bakılmadı).
+  Kartın şasi referansı edg032b → **edg032c_taban_2026-08-22** olarak güncellenir. NEDEN: B1
+  operatör kararı (pullback silahsız, c150902) dünyayı değiştirdi — edg032b tabanı 6 pullback
+  işlemi içerir ve bugünkü motorla yeniden üretilemez; EDG-2026-045'in ilk koşumu kill#1'de
+  DOĞRU şekilde durdu (DURDU_kill1_sasi_kapisi.json). Eski dünyayı ölçmek yaşamadığımız bir
+  soruyu cevaplamak olurdu. EŞİKLER/K/KARAR KURALLARI DEĞİŞMEDİ — yalnız kıyas tabanının adı.
+  edg032c determinizm çift-kapısıyla donduruluyor; künyesi TABAN_KUNYESI.json'da.
+
 beyanlı_sinirlar: >
   (1) Sabit-bps ek-slip gerçek stop dinamiğini (hızlı piyasada kayma likiditeye bağlı) temsil
   etmez — alt sınır sınıfı. (2) trail_stop aynı kademeden geçer, ayrı kova açılmadı (grid

@@ -15,7 +15,7 @@ evidence_refs:
   - "EDG-2026-038: isim-içi varyans 15↔134 bps; kanonik ölçüt D1"
   - "EDG-2026-042: K1 betimleyici medyan +15, uçlar −131..+327 — ilişki n≥30'da bağımsız sınanacak"
 universe: >
-  edg032b şasisi AYNEN; İKİ knob: (1) friksiyon dünyası — {sabit-5bps (bugünkü model),
+  edg032b şasisi AYNEN [2026-08-22 yeniden-çapalama: edg032c — aşağıdaki blok]; İKİ knob: (1) friksiyon dünyası — {sabit-5bps (bugünkü model),
   ATR%-orantılı: slip_i = 5bps × (ATR%_i / medyan-ATR%), edg040 enjeksiyon deseni+öz-sınama} ·
   (2) seçilim — {mevcut skor, ATR%-cezalı: skor' = skor − λ·z(ATR%), λ TEK NOKTA donuk: z-skor
   başına 5 puan}. λ taraması YOK (grid şişirme; başka λ ayrı kart). CANLI DEĞİŞMEZ.
@@ -41,6 +41,15 @@ kill_criteria:
   - "iki-dünya şartı atlanıp tek dünyadan hüküm çıkarılırsa geçersiz (yaltaklanan-dünya tuzağı)"
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-046-sm, pending-046-sc, pending-046-am, pending-046-ac]}
 status: registered   # 2026-08-22 Rol-1 — ön-kayıt (ACİL (b) bacağı; hammadde: keşif belgesi).
+sasi_capasi_guncellemesi_2026_08_22: >
+  ROL-1 YENİDEN-ÇAPALAMA (ölçümden ÖNCE — bu kartta HİÇBİR hücre ölçülmemişken; veri bakılmadı).
+  Kartın şasi referansı edg032b → **edg032c_taban_2026-08-22** olarak güncellenir. NEDEN: B1
+  operatör kararı (pullback silahsız, c150902) dünyayı değiştirdi — edg032b tabanı 6 pullback
+  işlemi içerir ve bugünkü motorla yeniden üretilemez; EDG-2026-045'in ilk koşumu kill#1'de
+  DOĞRU şekilde durdu (DURDU_kill1_sasi_kapisi.json). Eski dünyayı ölçmek yaşamadığımız bir
+  soruyu cevaplamak olurdu. EŞİKLER/K/KARAR KURALLARI DEĞİŞMEDİ — yalnız kıyas tabanının adı.
+  edg032c determinizm çift-kapısıyla donduruluyor; künyesi TABAN_KUNYESI.json'da.
+
 beyanlı_sinirlar: >
   (1) |bps|~ATR% ilişkisi n=13 betimleyici — kart ilişkiyi VARSAYMAZ, koşullu dünyayı ölçer;
   öncül EDG-042'de bağımsız birikir. (2) İşaret tahmin edilemediği için ceza |friksiyon|
