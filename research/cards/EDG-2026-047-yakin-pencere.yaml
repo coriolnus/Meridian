@@ -1,0 +1,50 @@
+card_id: EDG-2026-047
+family: icra_pencere
+thesis: >
+  WP1-B 23e: "açılış-sonrası 15 dk beklemek friksiyon riskini düşürür" iddiası bugüne dek tek
+  ölçümden geliyor (n=401 sembol-seans, konsolide 15-dk bar: 13:30-13:45 UTC menzil 146,7 bps →
+  13:45-14:00 84,9 bps, −%42; bedel +3,4 bps sürüklenme). Tahtanın "replayde MODELLENEMEZ" notu
+  MOTOR için doğru ama VERİ için eskidi: canlıda `state/bars_intraday/*.jsonl` dakika arşivi
+  birikiyor (2026-07-27→, ~20 seans, 249/251 ticker, seans başına ~68 bin satır). BU KART motor
+  değiştirmez, replay'e dokunmaz: arşivden pencere istatistiğini KENDİ verimizle yeniden ölçer ve
+  pencere-kaydırma operatör kararına fiyat etiketi üretir. Karar (canlı tarama/emir penceresini
+  kaydırmak) STRATEJİ-KİMLİĞİ değişikliğidir ve HER DURUMDA operatördedir — kart karar vermez.
+evidence_refs:
+  - "docs/TASARIM-23E-23F-13-2026-08-22.md (arşiv envanteri + yoğunluk ölçümü; canlı damga 2026-08-22T18:42:33Z)"
+  - "ROADMAP WP1-B 23e satırı (146,7→84,9 bps, +3,4 bps sürüklenme — n=401 dış ölçüm)"
+  - "exe007 emsali: canlıdan ssh-stdin SALT-OKUMA çekim deseni"
+universe: >
+  Canlı `state/bars_intraday/*.jsonl` arşivinin TAMAMI (çekim anındaki tüm seans dosyaları;
+  beklenen ~20 seans, 2026-07-27→). Çekim SALT-OKUMA (ssh-stdin cat → yerel kopya; canlı state'e
+  YAZIM YOK, worker davranışı etkilenmez). İki mercek: L1 evren-geneli (tüm ticker×seans) ·
+  L2 plan-çapalı (arşiv penceresindeki trade_plans sinyal isimlerinin sinyal-ertesi seansları —
+  karar-ilgili dilim). Pencereler (UTC): A=13:30-13:44 · B=13:45-13:59 (dakika barı [başlangıç,60sn)).
+features_asof: >
+  Satır birimi: ticker×seans×pencere. Metrikler dakika barlarından: (m1) pencere menzili
+  bps = (maks_high − min_low)/pencere_ilk_open × 1e4 · (m2) sürüklenme bps = (B_ilk_open −
+  A_ilk_open)/A_ilk_open × 1e4, işaretli VE mutlak · (m3) pencere hacim payı (seans toplamına
+  oran; kapsam beyanı için). Ö1 kıyası: seans-kümeli eşlenik bootstrap (birim=SEANS, B=5000,
+  seed=20260823) ile Δ%menzil = medyan_ticker[(m1_B − m1_A)/m1_A] dağılımı.
+parameter_grid:
+  hucreler: [yakin_pencere_L1]   # K += 1 (yalnız Ö1 hükümlü; L2 ve tüm m2/m3 çıktıları betimleyici, K harcamaz)
+cost_model: dogrudan_bar_olcumu   # replay/friksiyon modeli YOK — ham dakika barı istatistiği
+success_metric: >
+  Ö1 (HÜKÜMLÜ, donuk): L1'de Δ%menzil seans-kümeli CI95. CI-üst < −%20 → "yakın-pencere
+  daralması BİZİM veride de anlamlı" beyanı tahtaya düşer ve pencere-kaydırma kalemi §5 operatör
+  karar kalemine döner (fiyat etiketi: Ö2). CI 0'ı ya da −%20'yi keserse → beyan YOK, kalem
+  "dış-ölçüm doğrulanamadı, arşiv birikimiyle yeniden" notuyla bekler. Ö2 (BETİMLEYİCİ, hüküm
+  değil): m2 işaretli medyan + p25/p75 + |m2| medyanı — kaydırmanın bedel tarafı; L2 aynı
+  tabloyla (n<30 ticker×seans ise yalnız sayı beyanı). HİÇBİR sonuç canlı davranış değiştirmez.
+kill_criteria:
+  - "çekim yapılamazsa (ssh yolu/izni yok) ölçüm YAPILMAZ — ölçülemedi + neden; kart açık kalır (uydurma yasağı)"
+  - "bar damgalarının saat dilimi ÖLÇÜLMEDEN pencere kesilirse geçersiz — 13:30 UTC açılış yoğunluk sıçramasıyla doğrulanır (doğrulanamazsa ölçülemedi)"
+  - "kapsam <15 seans YA DA <200 ticker → Ö1 hükmü YOK, tüm çıktı betimleyici damgalı"
+  - "eşik/pencere sınırları ölçümden sonra değişirse geçersiz (A/B tanımı donuk)"
+  - "canlı state'e tek bayt yazım → geçersiz (salt-okuma sözleşmesi)"
+k_registry: {registered_at: "2026-08-23", trial_ids: [pending-047-L1]}
+status: registered   # 2026-08-23 Rol-1 — ön-kayıt (gece filosu; ölçüm ajanı karta dokunmaz)
+beyanli_sinirlar: >
+  (1) Arşiv ~20 seans TEK piyasa dönemi (2026 yazı) — mevsimsellik/rejim genellemesi iddia
+  edilmez; dış n=401 ölçümüyle yönsel kıyas yapılır, birleştirilmez. (2) Menzil bps bir RİSK
+  vekilidir, doğrudan dolum maliyeti değil (dolum maliyeti EDG-042'nin işi). (3) L2 dilimi
+  planların sinyal-ertesi seansına bakar; canlı emir saatleri birebir modellenmez.
