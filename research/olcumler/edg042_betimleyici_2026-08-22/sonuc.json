@@ -1,0 +1,222 @@
+{
+  "kart": "EDG-2026-042",
+  "kosum": "betimleyici_ara_kosum",
+  "kosum_izni": "kart status notu: 'operatör isterse BETİMLEYİCİ ara-koşum her zaman yapılabilir (hüküm taşımaz, damgası açık)'",
+  "cekim_kunyesi": {
+    "dosya": "canli_ham.json",
+    "sha256": "d7eaf4b1bbc45801b22fa42742112cd56e6a3fcf7a901f917131442cbd6482a3",
+    "cekim_zamani": "2026-08-22T13:36:55+00:00",
+    "makine": "A1 (canli)"
+  },
+  "model_varsayimi_bps": 5.0,
+  "model_varsayimi_kaynak": "goal.slippage_bps (koşum günü, canlı snapshot)",
+  "giris": {
+    "n": 13,
+    "seans_sayisi": 4,
+    "damga": "ÖLÇÜLEMEDİ (n=13 < 30) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 30,
+      "seans": 10
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": 15.017,
+    "p25_bps": -43.038,
+    "p75_bps": 40.839,
+    "min_bps": -130.739,
+    "maks_bps": 327.46,
+    "en_buyuk_seans_payi_pct": 38.5,
+    "tek_seans_serhi_gerekli": false,
+    "medyan_model_farki_bps": 10.017,
+    "satir_dokumu": [
+      {
+        "ticker": "AMGN",
+        "tarih": "2026-08-05",
+        "bps": 15.017,
+        "model_farki_bps": 10.017
+      },
+      {
+        "ticker": "BKNG",
+        "tarih": "2026-08-05",
+        "bps": 134.49,
+        "model_farki_bps": 129.49
+      },
+      {
+        "ticker": "EMR",
+        "tarih": "2026-08-05",
+        "bps": 54.618,
+        "model_farki_bps": 49.618
+      },
+      {
+        "ticker": "NUE",
+        "tarih": "2026-08-05",
+        "bps": 16.131,
+        "model_farki_bps": 11.131
+      },
+      {
+        "ticker": "CRM",
+        "tarih": "2026-08-13",
+        "bps": -81.978,
+        "model_farki_bps": -86.978
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-13",
+        "bps": 40.839,
+        "model_farki_bps": 35.839
+      },
+      {
+        "ticker": "HUM",
+        "tarih": "2026-08-14",
+        "bps": -43.038,
+        "model_farki_bps": -48.038
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-14",
+        "bps": -130.739,
+        "model_farki_bps": -135.739
+      },
+      {
+        "ticker": "BDX",
+        "tarih": "2026-08-19",
+        "bps": 13.175,
+        "model_farki_bps": 8.175
+      },
+      {
+        "ticker": "LLY",
+        "tarih": "2026-08-19",
+        "bps": 29.786,
+        "model_farki_bps": 24.786
+      },
+      {
+        "ticker": "MRK",
+        "tarih": "2026-08-19",
+        "bps": -9.756,
+        "model_farki_bps": -14.756
+      },
+      {
+        "ticker": "MRNA",
+        "tarih": "2026-08-19",
+        "bps": -122.075,
+        "model_farki_bps": -127.075
+      },
+      {
+        "ticker": "MRVL",
+        "tarih": "2026-08-19",
+        "bps": 327.46,
+        "model_farki_bps": 322.46
+      }
+    ],
+    "olculemedi": {
+      "n": 0,
+      "satirlar": []
+    },
+    "kova_disi": {
+      "e2_toplam": 30,
+      "ayna_submitted": 15,
+      "ayna_submitted_fill_bos": 2,
+      "not": "fill boş satır kovaya girmez (kart filtresi: fill dolu); dolmama oranı bu kartın konusu değil"
+    }
+  },
+  "cikis_hedef": {
+    "n": 0,
+    "seans_sayisi": 0,
+    "damga": "ÖLÇÜLEMEDİ (n=0 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": null,
+    "p25_bps": null,
+    "p75_bps": null,
+    "min_bps": null,
+    "maks_bps": null,
+    "en_buyuk_seans_payi_pct": null,
+    "tek_seans_serhi_gerekli": null,
+    "medyan_model_farki_bps": null,
+    "satir_dokumu": [],
+    "olculemedi": {
+      "n": 2,
+      "satirlar": [
+        {
+          "id": "T00099",
+          "ticker": "MRK",
+          "tarih": "2026-08-19",
+          "exit_reason": "target",
+          "broker_teyit": null,
+          "neden": "broker_teyit damgası basılmamış (alan boş) — teyitsiz satır kıyasa giremez, karsiliksiz/teyitli SAYILMAZ"
+        },
+        {
+          "id": "T00100",
+          "ticker": "MRNA",
+          "tarih": "2026-08-19",
+          "exit_reason": "target_gap",
+          "broker_teyit": null,
+          "neden": "broker_teyit damgası basılmamış (alan boş) — teyitsiz satır kıyasa giremez, karsiliksiz/teyitli SAYILMAZ"
+        }
+      ]
+    }
+  },
+  "cikis_stop": {
+    "n": 0,
+    "seans_sayisi": 0,
+    "damga": "ÖLÇÜLEMEDİ (n=0 < 15) — sayılar betimleyicidir, istatistiksel hüküm taşımaz.",
+    "esik": {
+      "n": 15,
+      "seans": 6
+    },
+    "esik_dolu": false,
+    "ci": null,
+    "medyan_bps": null,
+    "p25_bps": null,
+    "p75_bps": null,
+    "min_bps": null,
+    "maks_bps": null,
+    "en_buyuk_seans_payi_pct": null,
+    "tek_seans_serhi_gerekli": null,
+    "medyan_model_farki_bps": null,
+    "satir_dokumu": [],
+    "olculemedi": {
+      "n": 3,
+      "satirlar": [
+        {
+          "id": "T00101",
+          "ticker": "HUM",
+          "tarih": "2026-08-19",
+          "exit_reason": "stop",
+          "broker_teyit": null,
+          "neden": "broker_teyit damgası basılmamış (alan boş) — teyitsiz satır kıyasa giremez, karsiliksiz/teyitli SAYILMAZ"
+        },
+        {
+          "id": "T00102",
+          "ticker": "MRVL",
+          "tarih": "2026-08-21",
+          "exit_reason": "stop",
+          "broker_teyit": null,
+          "neden": "broker_teyit damgası basılmamış (alan boş) — teyitsiz satır kıyasa giremez, karsiliksiz/teyitli SAYILMAZ"
+        },
+        {
+          "id": "T00103",
+          "ticker": "LLY",
+          "tarih": "2026-08-21",
+          "exit_reason": "stop_gap",
+          "broker_teyit": null,
+          "neden": "broker_teyit damgası basılmamış (alan boş) — teyitsiz satır kıyasa giremez, karsiliksiz/teyitli SAYILMAZ"
+        }
+      ]
+    }
+  },
+  "cikis_ortak": {
+    "trades_toplam": 893,
+    "kaynak_disi_replay_seed": 885,
+    "kaynak_disi_diger": 0,
+    "live_paper": 8,
+    "live_paper_afp_bos": 3,
+    "alpaca_fill_beyan_dolu": 0,
+    "siniflanamayan_exit_reason": [],
+    "not": "kill #4: replay_seed kıyasa girmedi · kill #6: alpaca_fill_beyan ölçüm değil, yalnız sayıldı · afp boş live_paper satırı kovaya girmez (kart filtresi)"
+  }
+}

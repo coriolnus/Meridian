@@ -1,0 +1,25 @@
+EDG-2026-042 — BETİMLEYİCİ ARA-KOŞUM (2026-08-22, operatör istedi)
+Kart izni: status notu — "operatör isterse BETİMLEYİCİ ara-koşum her zaman yapılabilir
+(hüküm taşımaz, damgası açık)". Bu koşum HÜKÜM İŞLEMEZ; hükmü Rol-1 işler.
+
+[1] Canlı ham çekim (salt-okuma, ssh-stdin deseni — canlıya dosya yazılmadı):
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 \
+        'cd /opt/meridian && ./.venv/bin/python -' \
+        < research/olcumler/edg042_betimleyici_2026-08-22/canli_cek.py \
+        > research/olcumler/edg042_betimleyici_2026-08-22/canli_ham.json
+    çekim zamanı : 2026-08-22T13:36:55+00:00 (UTC)
+    sha256(canli_ham.json) = d7eaf4b1bbc45801b22fa42742112cd56e6a3fcf7a901f917131442cbd6482a3
+    goal.slippage_bps (koşum günü künyesi) = 5
+
+[2] Ölçüm (yerel, snapshot üzerinde; state/'e, karta, motor dosyalarına yazım YOK):
+    cd research/olcumler/edg042_betimleyici_2026-08-22 && python3 olcum.py
+    → sonuc.json
+
+ÖZET (ayrıntı sonuc.json'da; damgalar kartın donuk biçiminde):
+  K1 giriş      : n=13, seans=4 → "ÖLÇÜLEMEDİ (n=13 < 30) — sayılar betimleyicidir,
+                  istatistiksel hüküm taşımaz." CI hesaplanmadı (eşik altı).
+  K2 çıkış-hedef: ölçülebilen n=0 (afp-dolu 2 satırın broker_teyit damgası boş → kill #3
+                  gereği olculemedi; bps hesaplanmadı) → "ÖLÇÜLEMEDİ (n=0 < 15) — ..."
+  K3 çıkış-stop : ölçülebilen n=0 (afp-dolu 3 satır aynı nedenle olculemedi) → "ÖLÇÜLEMEDİ (n=0 < 15) — ..."
+  Kıyasa girmeyenler: replay_seed 885 (kill #4), alpaca_fill_beyan 0 (kill #6),
+  ayna+submitted fill-boş 2 (kart filtresi dışı), live_paper afp-boş 3 (kart filtresi dışı).

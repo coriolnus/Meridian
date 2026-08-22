@@ -35,8 +35,13 @@ universe: >
   kendi bar arşivinden [cboe/nasdaq konsolide] hesaplanıp dondurulmuş; koşum günü tarihçe
   YENİDEN ÇEKİLMEZ). İşaret sözleşmesi E2'nin kendisi: aleyhte = +.
   ÇIKIŞ BACAĞI: trades.jsonl satırları — alpaca_fill_price dolu VE kaynak=live_paper VE
-  broker_teyit=teyitli. Çıkış bps'i = bps_delta(alpaca_fill_price, exit) — yani gerçek broker
-  çıkışı vs iç motorun yazdığı çıkış; İŞARET: long satışta DÜŞÜK dolum aleyhte = +.
+  broker_teyit=teyitli. Çıkış bps'i: aleyhte_bps = −bps_delta(alpaca_fill_price, exit) — yani
+  gerçek broker çıkışı vs iç motorun yazdığı çıkış; İŞARET: long satışta DÜŞÜK dolum aleyhte = +.
+  [DÜZELTME 2026-08-22, Rol-1 — ÖLÇÜM ÖNCESİ: ilk yazımda formül `bps_delta(alpaca, exit)`
+  idi ve işaret cümlesiyle ÇELİŞİYORDU (düşük satış dolumu − üretirdi). Çelişkiyi betimleyici
+  ara-koşumun ajanı yakaladı; o koşumda teyitli satır 0 olduğundan formül HİÇ ÇALIŞMADI —
+  K2/K3 hücreleri hiç ölçülmeden reçete netleştirildi. Bu bir eşik değişikliği DEĞİLDİR;
+  eşikler ve karar kuralları yerinde.]
   (alpaca_fill_beyan satırları ÖLÇÜM DEĞİLDİR, kıyasa girmez.)
   CANLI DAVRANIŞ DEĞİŞMEZ: bu kart yalnız OKUR; goal.slippage_bps'e, emir yoluna, seçilime
   DOKUNMAZ. Varsayımı değiştirme kararı ayrı operatör kalemidir ve bu kart onu VERMEZ.
@@ -89,9 +94,24 @@ kill_criteria:
 
 k_registry: {registered_at: "2026-08-22", trial_ids: [pending-042-giris, pending-042-cikis-hedef, pending-042-cikis-stop]}
 
-status: registered   # 2026-08-22 Rol-1 — ön-kayıt. İLK koşum: örneklem eşiği dolunca (E2 birikimine
-                     # bağlı; sayım bölümüne göre K1 için kabaca +4-6 hafta) ya da operatör isterse
-                     # BETİMLEYİCİ ara-koşum her zaman yapılabilir (hüküm taşımaz, damgası açık).
+status: measuring    # 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
+                     # (ön-kayıt aynı gün; hükümlü ilk koşum: eşikler dolunca)
+
+ara_kosum_2026_08_22: >
+  BETİMLEYİCİ ARA-KOŞUM (operatör istedi; kartın izni gereği HÜKÜM TAŞIMAZ; Rol-1 işledi).
+  Artefakt: research/olcumler/edg042_betimleyici_2026-08-22/ (canlı snapshot sha d7eaf4b1…,
+  çekim 2026-08-22T13:36:55Z, goal.slippage_bps=5 künyeli).
+  K1 GİRİŞ (n=13, 4 seans — eşik 30/10 DOLMADI, damga aynen basıldı): medyan +15,017 bps ·
+  p25/p75 −43,0/+40,8 · min/maks −130,7/+327,5 · en büyük seans payı %38,5 (şerh eşiği %40'ın
+  altında) · medyan model-farkı +10,0 bps. CI HESAPLANMADI (eşik altı — kartın kuralı).
+  K2/K3 ÇIKIŞ: n=0 ölçülebilir — beş aday satırın beşi de `broker_teyit` damgasız ve kartın
+  kill kriteri teyitsiz satırı kıyasa SOKMAZ (satır satır dökümlü). Bu bir kusur değil
+  SIRALAMADIR: damga ilk reconcile turunda basılır (Ö-52 dağıtıldı), sonraki koşumda çıkış
+  kovaları ölçülebilir hâle gelir.
+  BETİMLEYİCİ GÖZLEM (hüküm DEĞİL, karar kuralı UYGULANMADI): 13 dolumun medyanı model
+  varsayımının (5) üç katı ve EDG-040 başabaş bandının [5-15] ÜST SINIRINDA; dağılım vahşi
+  (EDG-038'in 15↔134 gözlemiyle tutarlı). n=4 tahmini +29 demişti; n=13 medyanı +15 diyor —
+  ikisi de "modelden yukarı" yönünde, hiçbiri istatistiksel hüküm değil.
 
 beyanlı_sinirlar: >
   (1) SEÇİLİM YANLILIĞI YAPISAL: yalnız DOLAN emrin friksiyonu ölçülebilir — kaçan/veto edilen
